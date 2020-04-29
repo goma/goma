@@ -19,6 +19,12 @@
 #ifndef GOMA_DP_UTILS_H
 #define GOMA_DP_UTILS_H
 
+#include <stddef.h>
+
+#include "az_aztec.h"
+#include "dp_map_comm_vec.h"
+#include "dp_types.h"
+#include "mpi.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

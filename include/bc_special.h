@@ -13,6 +13,11 @@
 #ifndef GOMA_BC_SPECIAL_H
 #define GOMA_BC_SPECIAL_H
 
+#include "el_elm.h"
+#include "exo_struct.h"
+#include "rf_bc_const.h"
+#include "sl_util_structs.h"
+
 #ifdef EXTERN
 #undef EXTERN
 #endif

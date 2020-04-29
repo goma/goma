@@ -14,10 +14,6 @@
  *$Id: ac_loca_interface.c,v 5.8 2008-12-19 22:54:25 rbsecor Exp $
  */
 
-#ifdef USE_RCSID
-static char rcsid[] =
-"$Id: ac_loca_interface.c,v 5.8 2008-12-19 22:54:25 rbsecor Exp $";
-#endif
 
 /* DOCUMENTATION FOR CONTINUATION LIBRARY:    10/26/1999
  *    Andrew Salinger  Org. 9221, MS-1111, 845-3523
@@ -100,14 +96,128 @@ static char rcsid[] =
 
 /* Put include statements for your code here. */
 
-#include "std.h"
-#include "goma.h"
-#include "loca_util_const.h"
+#include "ac_conti.h"
+#include "ac_hunt.h"
+#include "ac_particles.h"
+#include "ac_stability.h"
+#include "ac_stability_util.h"
+#include "ac_update_parameter.h"
+#include "bc_colloc.h"
+#include "bc_contact.h"
+#include "bc_curve.h"
+#include "bc_dirich.h"
+#include "bc_integ.h"
+#include "bc/rotate.h"
+#include "bc_special.h"
+#include "bc_surfacedomain.h"
+#include "dp_comm.h"
+#include "dp_map_comm_vec.h"
+#include "dp_types.h"
+#include "dp_utils.h"
+#include "dp_vif.h"
+#include "dpi.h"
+#include "el_elm.h"
+#include "el_elm_info.h"
+#include "el_geom.h"
 #include "el_quality.h"
+#include "exo_conn.h"
+#include "exo_struct.h"
+#include "loca_const.h"
+#include "loca_util_const.h"
+#include "md_timer.h"
+#include "mm_as.h"
+#include "mm_as_alloc.h"
+#include "mm_as_const.h"
+#include "mm_as_structs.h"
+#include "mm_augc_util.h"
+#include "mm_bc.h"
+#include "mm_chemkin.h"
+#include "mm_dil_viscosity.h"
+#include "mm_eh.h"
+#include "mm_elem_block_structs.h"
+#include "mm_fill.h"
+#include "mm_fill_aux.h"
+#include "mm_fill_fill.h"
+#include "mm_fill_jac.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_porous.h"
+#include "mm_fill_potential.h"
+#include "mm_fill_pthings.h"
+#include "mm_fill_ptrs.h"
+#include "mm_fill_rs.h"
+#include "mm_fill_shell.h"
+#include "mm_fill_solid.h"
+#include "mm_fill_species.h"
+#include "mm_fill_stress.h"
+#include "mm_fill_terms.h"
+#include "mm_fill_util.h"
+#include "mm_flux.h"
+#include "mm_input.h"
+#include "mm_interface.h"
+#include "mm_more_utils.h"
+#include "mm_mp.h"
+#include "mm_mp_const.h"
+#include "mm_mp_structs.h"
+#include "mm_ns_bc.h"
+#include "mm_numjac.h"
+#include "mm_post_def.h"
+#include "mm_post_proc.h"
+#include "mm_prob_def.h"
+#include "mm_qtensor_model.h"
+#include "mm_shell_bc.h"
+#include "mm_shell_util.h"
+#include "mm_sol_nonlinear.h"
+#include "mm_species.h"
+#include "mm_std_models.h"
+#include "mm_unknown_map.h"
+#include "mm_viscosity.h"
+#include "rd_dpi.h"
+#include "rd_exo.h"
+#include "rd_mesh.h"
+#include "rf_allo.h"
+#include "rf_bc.h"
+#include "rf_bc_const.h"
+#include "rf_element_storage_const.h"
+#include "rf_element_storage_struct.h"
+#include "rf_fem.h"
+#include "rf_fem_const.h"
+#include "rf_fill_const.h"
+#include "rf_io.h"
+#include "rf_io_const.h"
+#include "rf_io_structs.h"
+#include "rf_masks.h"
+#include "rf_mp.h"
+#include "rf_node_const.h"
+#include "rf_pre_proc.h"
+#include "rf_shape.h"
+#include "rf_solve.h"
+#include "rf_solver.h"
+#include "rf_solver_const.h"
+#include "rf_util.h"
+#include "rf_vars_const.h"
+#include "sl_amesos_interface.h"
+#include "sl_aux.h"
+#include "sl_auxutil.h"
+#include "sl_eggroll.h"
+#include "sl_lu.h"
+#include "sl_matrix_util.h"
+#include "sl_umf.h"
+#include "sl_util.h"
+#include "std.h"
+#include "user_ac.h"
+#include "user_bc.h"
+#include "user_mp.h"
+#include "user_mp_gen.h"
+#include "user_post.h"
+#include "user_pre.h"
+#include "wr_dpi.h"
+#include "wr_exo.h"
+#include "wr_side_data.h"
+#include "wr_soln.h"
+
 #ifdef KOMPLEX
 #include "azk_komplex.h"
 #endif
-#include "sl_amesos_interface.h"
 
 /*****************************************************************************/
 /*****************************************************************************/
@@ -306,9 +416,6 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
   /********************** First Executable Statment **********************/
 
   /* As of 10/26/2001, LOCA works in parallel for all continuation algs. */
-#ifdef DEBUG
-  DPRINTF(stderr, "%s() begins...\n", yo);
-#endif
 
   /* Perform initialization (as in ac_conti.c) */
   p_gsize = &gsize;
@@ -320,28 +427,21 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
    * tnv_post is calculated in load_nodal_tkn
    * tev_post is calculated in load_elem_tkn
    */
-#ifdef DEBUG
-  DPRINTF(stderr, "cnt_nodal_vars() begins...\n");
-#endif
   tnv = cnt_nodal_vars();
   tev = cnt_elem_vars();
   
-#ifdef DEBUG
-  DPRINTF(stderr, "Found %d total primitive nodal variables to output.\n", tnv);
-  DPRINTF(stderr, "Found %d total primitive elem variables to output.\n", tev);
-#endif
   
   if (tnv < 0)
     {
       DPRINTF(stderr, "%s:\tbad tnv.\n", yo);
-      EH(-1, "\t");
+      EH(GOMA_ERROR, "\t");
     }
   
   rd = (struct Results_Description *) 
     smalloc(sizeof(struct Results_Description));
 
   if (rd == NULL) 
-    EH(-1, "Could not grab Results Description.");
+    EH(GOMA_ERROR, "Could not grab Results Description.");
 
   (void) memset((void *) rd, 0, sizeof(struct Results_Description));
   
@@ -363,7 +463,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
   if (error)
     {
       DPRINTF(stderr, "%s:  problem with load_nodal_tkn()\n", yo);
-      EH(-1,"\t");
+      EH(GOMA_ERROR,"\t");
     }
 
   /* load elem types, names */
@@ -371,7 +471,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
   if (error)
     {
       DPRINTF(stderr, "%s:  problem with load_elem_tkn()\n", yo);
-      EH(-1,"\t");
+      EH(GOMA_ERROR,"\t");
     }
 #ifdef PARALLEL
   check_parallel_error("Results file error");
@@ -381,9 +481,6 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
    * Write out the names of the nodal variables that we will be sending to
    * the EXODUS II output file later.
    */
-#ifdef DEBUG
-  DPRINTF(stderr, "wr_result_prelim() starts...\n", tnv);
-#endif
 
   gvec_elem = (double ***) smalloc ( (exo->num_elem_blocks)*sizeof(double **));
   for (i = 0; i < exo->num_elem_blocks; i++)
@@ -391,9 +488,6 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
 
   wr_result_prelim_exo(rd, exo, ExoFileOut, gvec_elem);
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d: wr_result_prelim_exo() ends...\n", ProcID, tnv);
-#endif
 
   /* 
    * This gvec workhorse transports output variables as nodal based vectors
@@ -491,7 +585,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
           if (loca_in->Cont_Alg != LOCA_LSA_ONLY)
             {
               fprintf(stderr, "%s: Bad cont->upType, %d\n", yo, cont->upType);
-              EH(-1,"Bad cont->upType");
+              EH(GOMA_ERROR,"Bad cont->upType");
             }
           break;                        /* duh */
         }
@@ -509,7 +603,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
     {
 
 #ifdef PARALLEL
-  if (Num_Proc > 1) EH(-1, "Whoa.  No front allowed with nproc>1");  
+  if (Num_Proc > 1) EH(GOMA_ERROR, "Whoa.  No front allowed with nproc>1");  
   check_parallel_error("Front solver not allowed with nprocs>1");
 #endif
           
@@ -542,7 +636,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
       EH(err,"problems in frontal setup ");
 
 #else
-      EH(-1,"Don't have frontal solver compiled and linked in");
+      EH(GOMA_ERROR,"Don't have frontal solver compiled and linked in");
 #endif
     }
 
@@ -603,7 +697,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
   pg->matrices[pg->imtrx].resid_vector = resid_vector;
 
   if (strcmp( Matrix_Format, "epetra") == 0) {
-    EH(-1, "Error epetra Matrix format not currently supported with loca interface");
+    EH(GOMA_ERROR, "Error epetra Matrix format not currently supported with loca interface");
   }
   /* Allocate sparse matrix (MSR format) */
   else if( strcmp( Matrix_Format, "msr" ) == 0)
@@ -680,7 +774,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
 
     }
   else
-    EH(-1,"Attempted to allocate unknown sparse matrix format");
+    EH(GOMA_ERROR,"Attempted to allocate unknown sparse matrix format");
 
   /* Load initial solution guess */
   init_vec(x, cx, exo, dpi, x_AC, nAC, &timeValueRead);
@@ -741,7 +835,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
   if(loca_in->Cont_Alg == HP_CONTINUATION || Linear_Stability)
     {
       if(Linear_Solver == FRONT)
-        EH(-1, "Cannot have mass matrix with frontal solver!");
+        EH(GOMA_ERROR, "Cannot have mass matrix with frontal solver!");
       passdown.mass_matrix = (double *) array_alloc(1, NZeros+5, sizeof(double));
       init_vec_value(passdown.mass_matrix, 0.0, NZeros+5);
 
@@ -830,7 +924,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
       passdown.file = fopen(Soln_OutFile, "w");
       if (passdown.file == NULL) {
         DPRINTF(stdout, "%s:  opening soln file for writing\n", yo);
-        EH(-1, "\t");
+        EH(GOMA_ERROR, "\t");
       }
     }
 #ifdef PARALLEL
@@ -1007,7 +1101,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
 
   /* Make sure Komplex library is compiled for Hopf tracking */
 #ifndef KOMPLEX
-      EH(-1, "Hopf Tracking Algorithm Requires Komplex Library!\n"
+      EH(GOMA_ERROR, "Hopf Tracking Algorithm Requires Komplex Library!\n"
            "Recompile with KOMPLEX flag set.\n");
 #endif
 
@@ -1034,11 +1128,11 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
       DPRINTF(stdout, "Reading previous null vector (real part) ...\n");
       err = rd_vectors_from_exoII(con.hopf_info.y_vec, 
 				  loca_in->NV_exoII_infile, 0, 0, INT_MAX, &timeValueRead);
-      if (err != 0) EH(-1, "do_loca: error reading real part of null vector");
+      if (err != 0) EH(GOMA_ERROR, "do_loca: error reading real part of null vector");
       DPRINTF(stdout, "Reading previous null vector (imaginary part) ...\n");
       err = rd_vectors_from_exoII(con.hopf_info.z_vec, 
 				  loca_in->NV_imag_infile, 0, 0, INT_MAX, &timeValueRead);
-      if (err != 0) EH(-1, "do_loca: error reading imag. part of null vector");
+      if (err != 0) EH(GOMA_ERROR, "do_loca: error reading imag. part of null vector");
 
   /* If using MSR matrix format, instantiate amat (struct AZ_MATRIX).
      VBR case was already handled above. */
@@ -1053,10 +1147,10 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
 /*
     case SQP_OPTIMIZATION:
 #ifdef SQP_OPTIMIZER
-      EH(-1, "sqp optimization not yet available in Goma!");
+      EH(GOMA_ERROR, "sqp optimization not yet available in Goma!");
       solve_sqp_optimization(con_par_ptr, passdown.mesh, nstep);
 #else
-      EH(-1, "sqp optimization requested but not compiled in!");
+      EH(GOMA_ERROR, "sqp optimization requested but not compiled in!");
 #endif
       break;
 */
@@ -1102,7 +1196,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
             con.eigen_info.Every_n_Steps   = eigen->Eigen_Solve_Freq;
             con.eigen_info.sort            = TRUE;
           }
-        else EH(-1, "Number of eigenvalues must be specified!");
+        else EH(GOMA_ERROR, "Number of eigenvalues must be specified!");
       }
 
   /* Check starting mesh element quality if requested */
@@ -1146,7 +1240,8 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
       one_base(exo);
       wr_mesh_exo(exo, loca_in->NV_exoII_outfile, 0);
       wr_result_prelim_exo(rd, exo, loca_in->NV_exoII_outfile, NULL);
-      if (Num_Proc > 1) wr_dpi(dpi, loca_in->NV_exoII_outfile, 0);
+      if (Num_Proc > 1)
+        wr_dpi(dpi, loca_in->NV_exoII_outfile);
       *passdown.nprint = 0;
 
   /* Write the null vector to this file */
@@ -1491,9 +1586,6 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
         
     passdown.theta = tran->theta;
         
-#ifdef DEBUG
-    DPRINTF(stderr, "%s: starting solve_nonlinear_problem\n", yo);
-#endif
 
     err = solve_nonlinear_problem(ams,
 				  x, 
@@ -1531,9 +1623,6 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
 				  passdown.x_sens_p,
                                   con_ptr);
 
-#ifdef DEBUG
-    fprintf(stderr, "%s: returned from solve_nonlinear_problem\n", yo);
-#endif
 
 /* Bail out if a deformation gradient occurs */
     if (err == -1)
@@ -1547,9 +1636,6 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
     if (converged)
       {
         if ( Write_Intermediate_Solutions == 0 && Unlimited_Output ) {
-#ifdef DEBUG
-         DPRINTF(stderr, "%s: write_solution call WIS\n", yo);
-#endif
             write_solution(ExoFileOut,
                            passdown.resid_vector,
                            x,
@@ -1570,9 +1656,6 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
                            NULL,
                            passdown.exo,
                            passdown.dpi);
-#ifdef DEBUG
-         DPRINTF(stderr, "%s: write_solution end call WIS\n", yo);
-#endif
        }
 
     DPRINTF(stdout,
@@ -1784,7 +1867,7 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
         case UMFPACK2:
         case UMFPACK2F:
           if (strcmp(Matrix_Format, "msr"))
-            EH(-1,"ERROR: umfpack solver needs msr matrix format");
+            EH(GOMA_ERROR,"ERROR: umfpack solver needs msr matrix format");
 
           Factor_Flag = 1;
           if (Linear_Solver == UMFPACK2F) Factor_Flag = 0;
@@ -1801,7 +1884,7 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
 
         case SPARSE13a:
           if (strcmp(Matrix_Format, "msr"))
-            EH(-1,"ERROR: lu solver needs msr matrix format");
+            EH(GOMA_ERROR,"ERROR: lu solver needs msr matrix format");
 
 	  dcopy1(NumUnknowns[pg->imtrx], xr, x);
           lu(NumUnknowns[pg->imtrx], NumExtUnknowns[pg->imtrx], NZeros, a, ija, x, 2);
@@ -1849,7 +1932,7 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
             }
           else
             {
-              EH(-1, "Unknown factorization reuse specification.");
+              EH(GOMA_ERROR, "Unknown factorization reuse specification.");
             }
 
       /*}*/
@@ -1914,7 +1997,7 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
              } else if ( strcmp( Matrix_Format,"epetra" ) == 0 ) {
                  amesos_solve_epetra(Amesos_Package, ams, x, xr, pg->imtrx);
              } else {
-                 EH(-1," Sorry, only MSR and Epetra matrix formats are currently supported with the Amesos solver suite\n");
+                 EH(GOMA_ERROR," Sorry, only MSR and Epetra matrix formats are currently supported with the Amesos solver suite\n");
              }
         strcpy(stringer, " 1 ");
         break;
@@ -1928,14 +2011,14 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
           error = cmsr_ma28 (NumUnknowns[pg->imtrx], NZeros, a, ija, x, xr);
 #endif
 #ifndef HARWELL
-          EH(-1, "That linear solver package is not implemented.");
+          EH(GOMA_ERROR, "That linear solver package is not implemented.");
 #endif
           strcpy(stringer, " 1 ");
           break;
 
         case FRONT:
 
-          if (Num_Proc > 1) EH(-1, "Whoa.  No front allowed with nproc>1");
+          if (Num_Proc > 1) EH(GOMA_ERROR, "Whoa.  No front allowed with nproc>1");
 #ifdef HAVE_FRONT  
 
 /* Initialize frontal solver arguments */
@@ -2000,7 +2083,7 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
           break;
 
         default:
-          EH(-1, "That linear solver package is not implemented.");
+          EH(GOMA_ERROR, "That linear solver package is not implemented.");
           break;
         }
 
@@ -2616,7 +2699,7 @@ void matvec_mult_conwrap(double *x, double *y)
 /* Error message if not MSR or VBR */
   else
     {
-      EH(-1, "Matrix format must be MSR or VBR!");
+      EH(GOMA_ERROR, "Matrix format must be MSR or VBR!");
     }
 
 }
@@ -2685,7 +2768,7 @@ void mass_matvec_mult_conwrap(double *x, double *y)
 /* Error message if not MSR or VBR */
   else
     {
-      EH(-1, "Matrix format must be MSR or VBR!");
+      EH(GOMA_ERROR, "Matrix format must be MSR or VBR!");
     }
 
   return;
@@ -2773,7 +2856,7 @@ void shifted_linear_solver_conwrap(double *x, double *y,
     case UMFPACK2:
     case UMFPACK2F:
       if (strcmp(Matrix_Format, "msr"))
-	EH(-1,"ERROR: umfpack solver needs msr matrix format");
+	EH(GOMA_ERROR,"ERROR: umfpack solver needs msr matrix format");
 
       Factor_Flag = ( (jac_flag == NEW_JACOBIAN) ? 0 : 3);
       if (Linear_Solver == UMFPACK2F) Factor_Flag = 0;
@@ -2790,7 +2873,7 @@ void shifted_linear_solver_conwrap(double *x, double *y,
 
     case SPARSE13a:
       if (strcmp(Matrix_Format, "msr"))
-	EH(-1,"ERROR: lu solver needs msr matrix format");
+	EH(GOMA_ERROR,"ERROR: lu solver needs msr matrix format");
 
         dcopy1(NumUnknowns[pg->imtrx], x, y);
         lu(NumUnknowns[pg->imtrx], NumExtUnknowns[pg->imtrx], NZeros, a, ija, y, 2);
@@ -2806,7 +2889,7 @@ void shifted_linear_solver_conwrap(double *x, double *y,
       if( strcmp( Matrix_Format,"msr" ) == 0 ) {
 	amesos_solve_msr( Amesos_Package, ams, y, x, 1, pg->imtrx );
       } else {
-	EH(-1," Sorry, only MSR  matrix format supported for loca eigenvalue");
+	EH(GOMA_ERROR," Sorry, only MSR  matrix format supported for loca eigenvalue");
       }
       first_linear_solver_call = FALSE;
       strcpy(stringer, " 1 ");
@@ -2847,7 +2930,7 @@ void shifted_linear_solver_conwrap(double *x, double *y,
             }
           else
             {
-              EH(-1, "Unknown factorization reuse specification.");
+              EH(GOMA_ERROR, "Unknown factorization reuse specification.");
             }
         }
 
@@ -2942,18 +3025,18 @@ void shifted_linear_solver_conwrap(double *x, double *y,
         err = cmsr_ma28 (NumUnknowns[pg->imtrx], NZeros, a, ija, y, x);
 #endif
 #ifndef HARWELL
-      EH(-1, "That linear solver package is not implemented.");
+      EH(GOMA_ERROR, "That linear solver package is not implemented.");
 #endif
       strcpy(stringer, " 1 ");
       break;
 
     case FRONT:
       /* Frontal solver cannot be used for eigensolves! */
-      EH(-1, "Frontal solver cannot be used for eigensolves!");
+      EH(GOMA_ERROR, "Frontal solver cannot be used for eigensolves!");
       break;
 
     default:
-      EH(-1, "That linear solver package is not implemented for eigensolves");
+      EH(GOMA_ERROR, "That linear solver package is not implemented for eigensolves");
       break;
     }
 
@@ -3509,7 +3592,7 @@ void solution_output_conwrap(int num_soln_flag,
             {
 	      if (Linear_Stability == LSA_3D_OF_2D) 
 		{
-		  EH(-1, "With LOCA, you need to have more than one 3D wave number specified");
+		  EH(GOMA_ERROR, "With LOCA, you need to have more than one 3D wave number specified");
 		}
 
               LSA_3D_of_2D_wave_number = 0.0;

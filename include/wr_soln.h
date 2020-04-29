@@ -19,6 +19,8 @@
 #include "exo_struct.h"
 #include "dpi.h"
 
+struct Results_Description;
+
 extern void
 write_solution
         (char output_file[], double resid_vector[], double x[], double **x_sens_p, double x_old[], double xdot[],

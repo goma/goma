@@ -50,6 +50,7 @@
 
 #include "rf_fem_const.h"
 #include "mm_elem_block_structs.h"
+#include "mm_as_structs.h"
 
 /*
  * New size variables provide hints to interprocessor communications as to

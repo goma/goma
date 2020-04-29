@@ -55,7 +55,7 @@
  * --------------------------------------------------------------------------
  *
  * Revision 3.6  2000/01/14 17:57:12  mmhopki
- * Ooops!  Don't need to exit() after EH(-1, ).  rf_eigensolver.h is chucked.
+ * Ooops!  Don't need to exit() after EH(GOMA_ERROR, ).  rf_eigensolver.h is chucked.
  *
  * Revision 3.5  2000/01/14 17:49:39  mmhopki
  * Mongo update:
@@ -72,14 +72,15 @@
  *
  */
 
-#ifdef USE_RCSID
-static const char rcs_id[] = "$Id: sl_eggroll02.c,v 5.2 2007-09-18 18:53:47 prschun Exp $";
-#endif
 
 #include <stdio.h>
 #include <math.h>
 
-#include "goma.h"
+#include "mm_eh.h"
+#include "sl_auxutil.h"
+#include "sl_eggroll.h"
+#include "sl_eggroll_def.h"
+#include "std.h"
 
 /* Iterative arnoldi eigenvalue extraction that uses shift-and-invert
  * strategy
@@ -138,7 +139,7 @@ gevp_arnoldi_rc(int nj,
     case 32: goto l32;
     case 33: goto l33;
     default: 
-      EH(-1, "Uh-oh!  I shouldn't be here!");
+      EH(GOMA_ERROR, "Uh-oh!  I shouldn't be here!");
       break;
     }
 
@@ -194,7 +195,7 @@ gevp_arnoldi_rc(int nj,
 		       pass_number, r_sigma, i_sigma);
 	break;
 	default:
-	  EH(-1, "Uh-oh!  I shouldn't be here!");
+	  EH(GOMA_ERROR, "Uh-oh!  I shouldn't be here!");
 	  break;
 	}
 

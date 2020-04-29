@@ -23,8 +23,6 @@
 /* Putting in a single #include here to get rid of that damn "empty
  * translation unit" warning on compilation... */
 
-#include <stdio.h>
-
 /*
  *  The whole program is put in an ifdef block around the usage of 
  *  chemkin. It doesn't make sense to compile this program if chemkin
@@ -42,7 +40,6 @@
  * Include the GOMA standard header information
  */
 #include "std.h"
-
 /* Chemkin include files */
 #include "cpc_defs.h"
 #include "ck_chemkin_const.h"
@@ -50,21 +47,16 @@
 /* GOMA include files  */
 
 #include "rf_allo.h"
-
 #include "rf_fem_const.h"
 #include "rf_vars_const.h"
 #include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
-
 #include "dp_types.h"
-
 #include "rf_util.h"
-
 #include "mm_chemkin.h"
 
 /******************************************************************************

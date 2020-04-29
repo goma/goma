@@ -20,29 +20,36 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 
 /* GOMA include files */
+
+#include "mm_fill_ptrs.h"
 
 #include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_masks.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_mp.h"
 #include "el_elm.h"
 #include "el_geom.h"
-#include "rf_bc_const.h"
-#include "rf_solver_const.h"
-#include "rf_fill_const.h"
 #include "rf_vars_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
 #include "mm_mp.h"
 #include "mm_mp_structs.h"
+#include "dpi.h"
+#include "el_elm_info.h"
+#include "exo_struct.h"
+#include "mm_elem_block_structs.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_stress.h"
+#include "mm_mp_const.h"
+#include "mm_shell_util.h"
+#include "mm_unknown_map.h"
+#include "rd_mesh.h"
+#include "rf_node_const.h"
+#include "sl_util.h"
+#include "sl_util_structs.h"
+#include "stdbool.h"
 
 extern	dbl *p0;		/* Defined in mm_as_alloc.c */
 
@@ -50,7 +57,6 @@ extern	dbl *p0;		/* Defined in mm_as_alloc.c */
 #include "mm_eh.h"
 
 #define GOMA_MM_FILL_PTRS_C
-#include "goma.h"
 
 /***********************************************************************/
 #ifdef DEBUG_NOT
@@ -134,7 +140,7 @@ linkParent_ei(const int elem, const int relatedElem, const int v,
     {
       fprintf(stderr, "inconsistent entry in ei[imtrx]->owningElementForColVar[%d], %d, %d\n",
 	      v, ei[imtrx]->owningElementForColVar[v], relatedElem);
-      EH(-1, "linkedParent_ei() error\n");
+      EH(GOMA_ERROR, "linkedParent_ei() error\n");
     }
 
 
@@ -220,12 +226,6 @@ load_ei(const int elem, const Exo_DB *exo, struct Element_Indices *ei_ptr_fill, 
       ei_ptr = ei_ptr_fill;
     }
 
-#ifdef DEBUG_HKM
-  // if (elem == 1032) {
-    // printf("we are here\n");
-  // }
-#endif
-
 
   /*
    * Clear the list of related elements whose Element_Indices structs
@@ -257,7 +257,7 @@ load_ei(const int elem, const Exo_DB *exo, struct Element_Indices *ei_ptr_fill, 
   if (mn < 0) {
     fprintf(stderr, "Negative material index for eb block %d \n",
             ei_ptr->elem_blk_index);
-    EH(-1, "Ignore element block logic error");
+    EH(GOMA_ERROR, "Ignore element block logic error");
   }
 
   /*   
@@ -596,15 +596,6 @@ load_ei(const int elem, const Exo_DB *exo, struct Element_Indices *ei_ptr_fill, 
                * part of a valid element interpolation?
                */
               enunks = nunks;
-#ifdef DEBUG_HKM
-              if (elem == 165) {
-                if (v == 0) {
-                  // if (gnn == 319) {
-                  //printf("we are here2\n");
-                  //}
-                }
-              }
-#endif
               if (nunks) 
                 {
                   /*
@@ -622,13 +613,6 @@ load_ei(const int elem, const Exo_DB *exo, struct Element_Indices *ei_ptr_fill, 
 	      
               if (enunks) 
                 {
-#ifdef DEBUG_HKM
-                  if (ei_ptr->ielem == 165) {
-                    //  if ( ei_ptr->ielem != elem) {
-                    // printf("we are here \n");
-                    // }
-                  }
-#endif
                   ei_ptr->owningElementForColVar[v] = elem;
                 }
               /*
@@ -704,7 +688,7 @@ load_ei(const int elem, const Exo_DB *exo, struct Element_Indices *ei_ptr_fill, 
                         }
                       if (not_matched) 
                         {
-                          EH(-1, "ERROR");
+                          EH(GOMA_ERROR, "ERROR");
                         }
 
                       /*
@@ -938,7 +922,7 @@ load_ei(const int elem, const Exo_DB *exo, struct Element_Indices *ei_ptr_fill, 
                       if (ei_ptr->dof[v] > MDE)
                         {
                           fprintf(stderr,"ERROR ei_ptr->dof[v]=%d is greater than MDE=%d\n",ei_ptr->dof[v],MDE);
-                          EH(-1, "INCREASE MDE!");
+                          EH(GOMA_ERROR, "INCREASE MDE!");
                         }
                     } /* for (ivarDes = 0; ivarDes < nv->Num_Var_Desc_Per_Type[v] */
                 }
@@ -965,15 +949,8 @@ load_ei(const int elem, const Exo_DB *exo, struct Element_Indices *ei_ptr_fill, 
   if (ledof > MDE * MAX_PROB_VAR) 
     {
       fprintf(stderr,"ERROR ledof is greater than MDE*MAX_PROB_VAR\n");
-      EH(-1, "INCREASE MDE or MAX_PROB_VAR!"); 
+      EH(GOMA_ERROR, "INCREASE MDE or MAX_PROB_VAR!"); 
     }
-  /*
-    #ifdef DEBUG_HKM
-    if (ei_ptr->ielem == 6) {
-    print_ei_index_desc();
-    }
-    #endif
-  */
   /* 
    * Here we'll count up the dofs for the external variables, 
    * if any exist
@@ -1014,12 +991,6 @@ load_ei(const int elem, const Exo_DB *exo, struct Element_Indices *ei_ptr_fill, 
               ImAParent = 1;
             }
         }
-  
-#ifdef DEBUG_HKM
-      // if (elem == 70) {
-      //printf("we are here\n");
-      //}
-#endif
       /*
        * Special section for children elements. i.e., those elements
        * such as shells that have parents.
@@ -1035,11 +1006,6 @@ load_ei(const int elem, const Exo_DB *exo, struct Element_Indices *ei_ptr_fill, 
               n_eb_Parent = find_elemblock_index(elem_Parent, exo);
               /* Get the material number of the parent element */
               n_mn_Parent = Matilda[n_eb_Parent];
-#ifdef DEBUG_HKM
-              //   if (elem == 1032) {
-              //	printf("we are here\n");
-              //}
-#endif
               PROBLEM_DESCRIPTION_STRUCT * pd_Parent = pd_glob[n_mn_Parent];
 	 
               /* Get the element type of the parent */
@@ -1331,9 +1297,6 @@ load_elem_dofptr(const int ielem,
   int err;
   struct Level_Set_Data *ls_old;
 
-#ifdef DEBUG
-  int dim, eshape, etype, nnodes;
-#endif /* DEBUG */
 
   x_static	       = x;
   x_old_static	       = x_old;
@@ -1371,15 +1334,6 @@ load_elem_dofptr(const int ielem,
     load_ei(ielem, exo, 0, imtrx);
   }
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d: Loading elem dof ptrs in (d%d, s%d, t%d, n%d)\n",
-	  ProcID, dim, eshape, etype, nnodes);
-  for (i = 0; i < nnodes; i++) {
-    gnn = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
-    fprintf(stderr, "P_%d: Node name %d is %d\n", ProcID, i, gnn);
-  }
-
-#endif  
 
   /*
    * Load up pointers into ...
@@ -1627,7 +1581,7 @@ load_elem_dofptr(const int ielem,
   }
 
   if (*p0 != 0.) {
-      EH(-1, "Hey, this zero is not zero!");
+      EH(GOMA_ERROR, "Hey, this zero is not zero!");
   }
 
   eqn = R_MOMENTUM3;
@@ -2058,7 +2012,7 @@ load_elem_dofptr(const int ielem,
 	pd_glob[0]->CoordinateSystem == CARTESIAN_2pt5D ||
 	pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN) ) {
       if( upd->ep[pg->imtrx][R_STRESS33] == -1 )
-	  EH(-1,"Hey,the STRESS33 is needed in CYLINDRICAL VE problems!");
+	  EH(GOMA_ERROR,"Hey,the STRESS33 is needed in CYLINDRICAL VE problems!");
     }
   } 
   
@@ -2116,7 +2070,7 @@ load_elem_dofptr(const int ielem,
   eqn = R_POR_SATURATION;
   if ( upd->ep[pg->imtrx][eqn] >= 0)
     {
-      EH(-1,"Saturation-based formulation not implemented yet");
+      EH(GOMA_ERROR,"Saturation-based formulation not implemented yet");
     }
 
   eqn = R_TFMP_MASS;
@@ -2276,10 +2230,6 @@ load_elem_dofptr_all(const int ielem,
   int status;
   int k;
   int R_s[MAX_MODES][DIM][DIM], R_g[DIM][DIM];
-
-#ifdef DEBUG
-  int dim, eshape, etype, nnodes;
-#endif /* DEBUG */
 
   if (upd->Total_Num_Matrices == 1) return 0;
 
@@ -2562,7 +2512,7 @@ load_elem_dofptr_all(const int ielem,
     }
 
     if (*p0 != 0.) {
-      EH(-1, "Hey, this zero is not zero!");
+      EH(GOMA_ERROR, "Hey, this zero is not zero!");
     }
 
     eqn = R_MOMENTUM3;
@@ -2914,7 +2864,7 @@ load_elem_dofptr_all(const int ielem,
           pd_glob[0]->CoordinateSystem == SWIRLING ||
           pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN) ) {
         if( upd->ep[imtrx][R_STRESS33] == -1 )
-	  EH(-1,"Hey,the STRESS33 is needed in CYLINDRICAL VE problems!");
+	  EH(GOMA_ERROR,"Hey,the STRESS33 is needed in CYLINDRICAL VE problems!");
       }
     } 
   
@@ -2972,7 +2922,7 @@ load_elem_dofptr_all(const int ielem,
     eqn = R_POR_SATURATION;
     if ( upd->ep[imtrx][eqn] >= 0 )
       {
-        EH(-1,"Saturation-based formulation not implemented yet");
+        EH(GOMA_ERROR,"Saturation-based formulation not implemented yet");
       }
   
     eqn  = R_MASS;

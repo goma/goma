@@ -24,22 +24,15 @@
  ******************************************************************************/
 
 
-#include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 #include <math.h>
 
 #include "std.h"
 #include "rf_fem_const.h"
-#include "rf_fem.h"
 #include "mm_eh.h"
 #include "rf_vars_const.h"
-#include "mm_as_const.h"
 #include "mm_as_structs.h"
-#include "mm_as.h"
-
 #include "mm_mp_structs.h"
-
 #include "rf_allo.h"
 
 /**************************************************************************/
@@ -61,7 +54,7 @@ propertyJac_realloc(PROPERTYJAC_STRUCT **jac_ptr, int num)
 {
   PROPERTYJAC_STRUCT *jac;
   if (jac_ptr == NULL) {
-    EH(-1,"Interface error");
+    EH(GOMA_ERROR,"Interface error");
   }
   jac = *jac_ptr;
   if (jac == NULL) {
@@ -147,7 +140,7 @@ propertyJac_addEnd(PROPERTYJAC_STRUCT *jac, int varType, int matID,
 
   vd = get_vd_ptr(varType, matID, isubvar);
   if (vd == NULL) {
-    EH(-1,"Error can't find variable description");
+    EH(GOMA_ERROR,"Error can't find variable description");
   }
   jac->Var_List[iTerm] = vd;
   jac->idof[iTerm] = isubvar; 
@@ -156,7 +149,7 @@ propertyJac_addEnd(PROPERTYJAC_STRUCT *jac, int varType, int matID,
   jac->JacVector[iTerm] = jacEntry;
   if (iTerm > 0) {
     if (fabs(propValue - jac->Property_Value) > 1.0E-5) {
-      EH(-1,"Incompatible propertyValue search");
+      EH(GOMA_ERROR,"Incompatible propertyValue search");
     }    
   }
   jac->Property_Value = propValue;
@@ -192,7 +185,7 @@ propertyJac_add1SpEnd(PROPERTYJAC_STRUCT *jac,
    */
   i = propertyJac_find_species_unk(jac);
   if (i != -1) {
-    EH(-1,"Tried to add species twice");
+    EH(GOMA_ERROR,"Tried to add species twice");
   }
   if (iTerm + num_species > jac->NUM_TERMS_MALLOC) {
     propertyJac_realloc(&jac, iTerm + num_species);
@@ -202,7 +195,7 @@ propertyJac_add1SpEnd(PROPERTYJAC_STRUCT *jac,
     if (vd == NULL) {
       vd = get_vd_ptr(MASS_FRACTION, matID, i);
       if (vd == NULL) {
-	EH(-1, "Error");
+	EH(GOMA_ERROR, "Error");
       }
     }
     jac->Var_List[iTerm + i] = vd;
@@ -238,7 +231,7 @@ propertyJac_searchadd(PROPERTYJAC_STRUCT *jac, int varType, int matID,
       if (jac->MatID[i] == matID) {
 	if (jac->idof[i] == isubvar) {
 	  if (fabs(propValue - jac->Property_Value) > 1.0E-5) {
-            EH(-1,"Incompatible propertyValue search");
+            EH(GOMA_ERROR,"Incompatible propertyValue search");
 	  }
 	  iTerm = i;
 	}

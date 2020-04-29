@@ -18,9 +18,7 @@
 
 /* Standard include files */
 
-#include <stdlib.h>
 #include <stdio.h>
-#include <strings.h>
 #include <string.h>
 #include <math.h>
 
@@ -29,30 +27,39 @@
 #include "rf_allo.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_masks.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_mp.h"
 #include "el_elm.h"
 #include "el_geom.h"
 #include "rf_bc_const.h"
 #include "rf_solver_const.h"
-#include "rf_fill_const.h"
 #include "rf_vars_const.h"
 #include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "mm_eh.h"
-
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
+#include "ac_stability.h"
+#include "ac_stability_util.h"
+#include "az_aztec.h"
+#include "bc_colloc.h"
+#include "el_elm_info.h"
+#include "mm_bc.h"
+#include "mm_fill_aux.h"
+#include "mm_fill_fill.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_terms.h"
+#include "mm_fill_util.h"
+#include "mm_unknown_map.h"
+#include "mm_viscosity.h"
+#include "rf_bc.h"
+#include "rf_node_const.h"
+#include "rf_solver.h"
+#include "sl_util_structs.h"
+#include "exo_struct.h"
 
 #define GOMA_MM_FILL_STRESS_C
 #include "mm_fill_stress.h"
-#include "goma.h"
 
 
 extern struct Boundary_Condition *inlet_BC[MAX_VARIABLE_TYPES+MAX_CONC];
@@ -837,7 +844,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				      
 				      if ( w > 1 )
 					{
-					  EH(-1, "Need more arrays for each species.");
+					  EH(GOMA_ERROR, "Need more arrays for each species.");
 					}
 				      
 				      lec->J[peqn][pvar][i][j] +=
@@ -1687,7 +1694,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 	err = level_set_property(neg_alpha, pos_alpha, width, &alpha, d_alpha_dF);
 	EH(err, "level_set_property() failed for mobility parameter.");
       } else {
-	EH(-1, "Unknown mobility parameter model");
+	EH(GOMA_ERROR, "Unknown mobility parameter model");
       }
       
       /* get time constant */
@@ -1713,7 +1720,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 	err = level_set_property(neg_xi, pos_xi, width, &xi, d_xi_dF);
 	EH(err, "level_set_property() failed for ptt xi parameter.");
       } else {
-	EH(-1, "Unknown PTT Xi parameter model");
+	EH(GOMA_ERROR, "Unknown PTT Xi parameter model");
       }
       
       ucwt = 1.0 - xi / 2.0 ;
@@ -1728,7 +1735,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 	err = level_set_property(neg_eps, pos_eps, width, &eps, d_eps_dF);
 	EH(err, "level_set_property() failed for ptt epsilon parameter.");
       } else {
-	EH(-1, "Unknown PTT Epsilon parameter model");
+	EH(GOMA_ERROR, "Unknown PTT Epsilon parameter model");
       }
 
       if (lambda == 0) {
@@ -2174,7 +2181,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				      
 				      if ( w > 1 )
 					{
-					  EH(-1, "Need more arrays for each species.");
+					  EH(GOMA_ERROR, "Need more arrays for each species.");
 					}
 				      
 				      lec->J[peqn][MAX_PROB_VAR + w][i][j] +=
@@ -3627,7 +3634,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 				      
 				      if ( w > 1 )
 					{
-					  EH(-1, "Need more arrays for each species.");
+					  EH(GOMA_ERROR, "Need more arrays for each species.");
 					}
 				      
 				      lec->J[peqn][MAX_PROB_VAR + w][i][j] +=
@@ -5478,14 +5485,6 @@ load_neighbor_pointers( Exo_DB *exo,
 	 */
 	nv = Nodes[gnn]->Nodal_Vars_Info[pg->imtrx];
 	nunks = get_nv_ndofs_modMF(nv, v);
-#ifdef DEBUG_HKM
-	if (nunks != node_info(ln, etype, v, gnn)) {
-	  fprintf(stderr,"load_neighbor_pointers ERROR P_%d:", ProcID);
-	  fprintf(stderr,"old and new nunks differ: %d %d\n",
-		  nunks, node_info(ln, etype, v, gnn));
-	  EH(-1, "load_neighbor_pointers: nunks problem");
-	}
-#endif
 	dof[v] += nunks;
 	EH(nunks, "problem with nun for this var.");
 	      
@@ -5568,7 +5567,7 @@ load_neighbor_pointers( Exo_DB *exo,
       }
     }
   } else if (strcmp( Matrix_Format, "epetra") == 0) {
-    EH(-1, "load_neighbor_pointers unsupported by epetra");
+    EH(GOMA_ERROR, "load_neighbor_pointers unsupported by epetra");
   }
 }
 /***************************************************************************/

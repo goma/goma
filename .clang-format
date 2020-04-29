@@ -8,5 +8,6 @@ UseTab: Never
 AlignConsecutiveMacros: true
 AlignEscapedNewlines: true
 AlignTrailingComments: true
+BinPackParameters: false
 ...
 

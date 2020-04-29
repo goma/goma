@@ -862,6 +862,7 @@ struct Uniform_Problem_Description {
   int XFEM;                /* Flag indicating that XFEM is in use */
   int SegregatedSolve;     /* Flag indicating segregated solve should be used */
   int SegregatedSubcycles;
+  int PSPG_advection_correction;
   int matrix_index[MAX_VARIABLE_TYPES];
 };
 typedef struct Uniform_Problem_Description UPD_STRUCT;
@@ -3193,12 +3194,6 @@ struct Lubrication_Auxiliaries {
 };
 
 typedef struct Lubrication_Auxiliaries LUBRICATION_AUXILIARIES_STRUCT;
-
-typedef struct {
-  dbl supg_tau;
-  dbl d_supg_tau_dv[DIM][MDE];
-  dbl d_supg_tau_dX[DIM][MDE];
-} SUPG_terms;
 
 /******************************************************************************/
 /******************************************************************************/

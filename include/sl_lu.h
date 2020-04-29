@@ -14,6 +14,7 @@
 #ifndef GOMA_SL_LU_H
 #define GOMA_SL_LU_H
 
+#include "sl_auxutil.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

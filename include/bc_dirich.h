@@ -14,6 +14,7 @@
 #define GOMA_BC_DIRICH_H
 
 
+#include "bc_curve.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

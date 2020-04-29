@@ -13,6 +13,9 @@
 #ifndef GOMA_BC_SURFACEDOMAIN_H
 #define GOMA_BC_SURFACEDOMAIN_H
 
+#include "el_elm.h"
+#include "mm_eh.h"
+#include "rf_fem_const.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

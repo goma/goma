@@ -6,6 +6,8 @@
 #ifndef INCLUDE_SL_EPETRA_UTIL_H_
 #define INCLUDE_SL_EPETRA_UTIL_H_
 
+#include "dpi.h"
+#include "exo_struct.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

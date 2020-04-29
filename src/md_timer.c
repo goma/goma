@@ -57,7 +57,6 @@
 #endif
 
 #ifdef linux
-#include <sys/times.h>
 #include <time.h>
 #endif
 
@@ -69,7 +68,7 @@
 
 #define GOMA_MD_TIMER_C
 #include "std.h"
-#include "goma.h"
+#include "md_timer.h"
 
 /*
  * ut -- return user time in seconds (double).

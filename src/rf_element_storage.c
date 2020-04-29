@@ -17,16 +17,14 @@
 
 //#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <strings.h>
+#include <math.h>
+#include <stdio.h>
 
 #include "std.h"
 #include "rf_fem.h"
-#include "el_elm.h"
-#include "el_elm_info.h"
 #include "exo_struct.h"
 #include "mm_elem_block_structs.h"
-#include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
 #include "mm_mp_structs.h"
@@ -37,8 +35,11 @@
 #include "rf_io.h"
 #include "mm_eh.h"
 #include "mm_input.h"
-
-#include <math.h>
+#include "exodusII.h"
+#include "mm_mp_const.h"
+#include "rf_element_storage_struct.h"
+#include "rf_fem_const.h"
+#include "rf_io_const.h"
 
 /************************************************************************/
 /************************************************************************/
@@ -122,7 +123,7 @@ init_element_storage(ELEM_BLK_STRUCT *eb_ptr)
   double *base_ptr = NULL;
 
   if (upd->Total_Num_Matrices > 1) {
-    EH(-1, "Element storage not setup to work with multiple matrices.");
+    EH(GOMA_ERROR, "Element storage not setup to work with multiple matrices.");
   }
 
   /*
@@ -235,7 +236,7 @@ set_init_Element_Storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
       Draining_curve   = mp_glob[mn]->u_saturation[8];
       if (Guess_Flag ==4 || Guess_Flag == 5)
 	{
-	  EH(-1,"Not a smooth restart for hysteretic saturation function. If you really want to do this use read_exoII_file or call us");
+	  EH(GOMA_ERROR,"Not a smooth restart for hysteretic saturation function. If you really want to do this use read_exoII_file or call us");
 	}
 
       if(Guess_Flag == 5 || Guess_Flag == 6)
@@ -310,7 +311,7 @@ set_init_Element_Storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
 		}
 	      else
 		{
-		  EH(-1,"Cannot find an element variable for sat. hysteresis");
+		  EH(GOMA_ERROR,"Cannot find an element variable for sat. hysteresis");
 		}
 
 	      ifound = 0;
@@ -337,7 +338,7 @@ set_init_Element_Storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
 		}
 	      else
 		{
-		  EH(-1,"Cannot find an element variable for sat. hysteresis");
+		  EH(GOMA_ERROR,"Cannot find an element variable for sat. hysteresis");
 		}
 
 	      ifound = 0;
@@ -363,7 +364,7 @@ set_init_Element_Storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
 		}
 	      else
 		{
-		  EH(-1,"Cannot find an element variable for sat. hysteresis");
+		  EH(GOMA_ERROR,"Cannot find an element variable for sat. hysteresis");
 		}
 
 	    }
@@ -392,7 +393,7 @@ set_init_Element_Storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
 	    }
 	  else
 	    {
-	      EH(-1,"TANH_HYST must have 1.0 or 0.0 in  9th spot");
+	      EH(GOMA_ERROR,"TANH_HYST must have 1.0 or 0.0 in  9th spot");
 	    }
 
 	  for (i = 0; i < eb_ptr->Num_Elems_In_Block; i++) 
@@ -412,12 +413,12 @@ set_init_Element_Storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
       ip_total        = eb_ptr->IP_total;
       if (Guess_Flag ==4 || Guess_Flag == 5)
 	{
-	  EH(-1,"Not a smooth restart for solidification shrinkage model.Use read_exoII_file or call us");
+	  EH(GOMA_ERROR,"Not a smooth restart for solidification shrinkage model.Use read_exoII_file or call us");
 	}
 
       if(Guess_Flag == 5 || Guess_Flag == 6)
 	{
-	  EH(-1,"Initializing solidified shrinkage model from exoII file not available yet. Use zero");
+	  EH(GOMA_ERROR,"Initializing solidified shrinkage model from exoII file not available yet. Use zero");
 	}
 	
       // Load em up as all unsolidified

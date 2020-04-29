@@ -20,6 +20,12 @@
 #ifndef GOMA_MM_POST_DEF_H
 #define GOMA_MM_POST_DEF_H
 
+#include "std.h"
+#include "el_elm.h"
+#include "rf_io_const.h"
+#include "rf_fem_const.h"
+
+
 /*
  *  These Define parameters help us parse the force and flux calculation
  *  requests.   
@@ -649,6 +655,7 @@ extern int HELICITY;              /* v dot vorticity  */
 extern int LAMB_VECTOR;           /* Lamb Vector = vorticity x v  */
 extern int Q_FCN;           /* 2nd invariant of grad_v  */
 extern int POYNTING_VECTORS;	/* EM Poynting Vectors*/
+extern int PSPG_PP;           /* 2nd invariant of grad_v  */
 /*
  *  Post-processing Step 1: add a new variable flag to end of mm_post_proc.h
  *

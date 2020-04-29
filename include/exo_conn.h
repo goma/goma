@@ -13,6 +13,9 @@
 #ifndef GOMA_EXO_CONN_H
 #define GOMA_EXO_CONN_H
 
+#include "dpi.h"
+#include "el_quality.h"
+#include "exo_struct.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

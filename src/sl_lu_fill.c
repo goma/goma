@@ -15,19 +15,10 @@
  * $Id: sl_lu_fill.c,v 5.1 2007-09-18 18:53:48 prschun Exp $
  */
 
-#include <stdio.h>
 #include <stdlib.h>
 
-#include "spMatrix.h"
-#include "spConfig.h"
-
 #include "std.h"
-#include "exo_struct.h"
-#include "dpi.h"
-#include "dp_types.h"
-#include "sl_util_structs.h"
 #include "sl_util.h"
-#include "mm_eh.h"
 
 /*
  * HKM -> I wonder if first_time_fill needs to have global scope?
@@ -37,6 +28,7 @@
  */
 int first_time_fill = TRUE;
 #ifdef HAVE_SPARSE
+#include "spMatrix.h"
 
 void
 luf (const int N,
@@ -210,6 +202,7 @@ luf (const int N,
 } /* END of routine luf */
 
 #else //HAVE_SPARSE
+#include "mm_eh.h"
 void
 luf (const int N,
      const int NExt,
@@ -219,7 +212,7 @@ luf (const int N,
      double x[],
      const int factor_flag )
 {
-  EH(-1, "Goma not configured with sparse solver support");
+  EH(GOMA_ERROR, "Goma not configured with sparse solver support");
 }
 #endif // HAVE_SPARSE
 /******************************************************************************/

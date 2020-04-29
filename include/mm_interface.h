@@ -17,6 +17,11 @@
 #ifndef GOMA_MM_INTERFACE_H_
 #define GOMA_MM_INTERFACE_H_
 
+#include "el_elm.h"
+#include "mm_fill_jac.h"
+#include "rf_bc_const.h"
+#include "rf_vars_const.h"
+#include "std.h"
 /*
  *  Interface_Source Structure
  * ------------------------------

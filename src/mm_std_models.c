@@ -14,13 +14,9 @@
  *$Id: mm_std_models.c,v 5.31 2010-07-30 20:48:38 prschun Exp $
  */
 
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: mm_std_models.c,v 5.31 2010-07-30 20:48:38 prschun Exp $";
-#endif
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <strings.h>
 #include <string.h>
 #include <math.h>
 
@@ -29,36 +25,27 @@ static char rcsid[] = "$Id: mm_std_models.c,v 5.31 2010-07-30 20:48:38 prschun E
 #include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_masks.h"
 #include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_mp.h"
 #include "el_elm.h"
 #include "el_geom.h"
 #include "rf_bc_const.h"
-#include "rf_solver_const.h"
-#include "rf_fill_const.h"
-#include "rf_vars_const.h"
 #include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
-
 #include "mm_eh.h"
-
 #include "mm_fill_species.h"
-#include "mm_fill_population.h"
-#include "mm_qtensor_model.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_stress.h"
+#include "mm_fill_terms.h"
+#include "mm_fill_util.h"
+#include "mm_viscosity.h"
+#include "user_mp.h"
+
 #define GOMA_MM_STD_MODELS_C
 #include "mm_std_models.h"
-
-
-
-#include "goma.h"
 
 /*********** R O U T I N E S   I N   T H I S   F I L E ************************
 *
@@ -624,7 +611,7 @@ gravity_vibrational_source (dbl f[DIM], /* Body force. */
   g_mag = sqrt(g_mag);
   if(g_mag == 0.)
     {
-      EH(-1,"Problems in GRAV_VIBRATIONAL force routine - must have nonzero gravity vector ");
+      EH(GOMA_ERROR,"Problems in GRAV_VIBRATIONAL force routine - must have nonzero gravity vector ");
     }
 
   /**********************************************************/
@@ -674,7 +661,7 @@ suspend_momentum_source(dbl f[DIM], /* Body force. */
     }
   else
     {
-      EH(-1, "No suspension momentum source without suspension density model.");
+      EH(GOMA_ERROR, "No suspension momentum source without suspension density model.");
       return(status);
     }
 
@@ -753,13 +740,13 @@ fill_momentum_source( double f[DIM] )
 
   if(mp->DensityModel != FILL)
     {
-      EH(-1, "No fill momentum source without fill density model.");
+      EH(GOMA_ERROR, "No fill momentum source without fill density model.");
       return(0);
     }
   
   if (  ls != NULL )
     {
-      EH(-1, "Use LEVEL_SET instead of FILL density model.");
+      EH(GOMA_ERROR, "Use LEVEL_SET instead of FILL density model.");
       return(0);
     }
     
@@ -1365,7 +1352,7 @@ foam_pmdi10_co2_species_source(int species_no,   /* Current species number */
   }
 
   if (wH2O == -1) {
-    EH(-1, "Expected to find a speices with source FOAM_PMDI_10_H2O");
+    EH(GOMA_ERROR, "Expected to find a speices with source FOAM_PMDI_10_H2O");
     return 0;
   }
   double CH2O = fv->c[wH2O];
@@ -1443,12 +1430,12 @@ foam_pmdi10_co2_liq_species_source(int species_no,   /* Current species number *
   }
 
   if (!pd->gv[MOMENT1]) {
-    EH(-1, "Expected to find moment equations for FOAM_PMDI_10_CO2_LIQ");
+    EH(GOMA_ERROR, "Expected to find moment equations for FOAM_PMDI_10_CO2_LIQ");
     return -1;
   }
 
   if (wH2O == -1) {
-    EH(-1, "Expected to find a speices with source FOAM_PMDI_10_H2O");
+    EH(GOMA_ERROR, "Expected to find a speices with source FOAM_PMDI_10_H2O");
     return -1;
   }
 
@@ -1469,7 +1456,7 @@ foam_pmdi10_co2_liq_species_source(int species_no,   /* Current species number *
     }
   else
     {
-      EH(-1, "Expected DENSITY_FOAM_PMDI_10 density model");
+      EH(GOMA_ERROR, "Expected DENSITY_FOAM_PMDI_10 density model");
     }
 
   double CH2O = fv->c[wH2O];
@@ -1562,14 +1549,14 @@ foam_pmdi10_co2_gas_species_source(int species_no,   /* Current species number *
   }
 
   if (!pd->gv[MOMENT1]) {
-    EH(-1, "Expected to find moment equations for FOAM_PMDI_10_CO2_LIQ");
+    EH(GOMA_ERROR, "Expected to find moment equations for FOAM_PMDI_10_CO2_LIQ");
   }
 
   if (wH2O == -1) {
-    EH(-1, "Expected to find a speices with source FOAM_PMDI_10_H2O");
+    EH(GOMA_ERROR, "Expected to find a speices with source FOAM_PMDI_10_H2O");
     return -1;
   } else if (wCO2Liq == -1) {
-    EH(-1, "Expected to find a speices with source FOAM_PMDI_10_CO2_LIQ");
+    EH(GOMA_ERROR, "Expected to find a speices with source FOAM_PMDI_10_CO2_LIQ");
     return -1;
   }
 
@@ -1590,7 +1577,7 @@ foam_pmdi10_co2_gas_species_source(int species_no,   /* Current species number *
     }
   else
     {
-      EH(-1, "Expected DENSITY_FOAM_PMDI_10 density model");
+      EH(GOMA_ERROR, "Expected DENSITY_FOAM_PMDI_10 density model");
     }
 
   double source;
@@ -1968,7 +1955,7 @@ vary_rho_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
     }
   else
     {
-      EH(-1,"Must have Density Model set to SOLVENT_POLYMER");
+      EH(GOMA_ERROR,"Must have Density Model set to SOLVENT_POLYMER");
     }
 
   eqn = TEMPERATURE;
@@ -2050,7 +2037,7 @@ foam_pmdi_10_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 	DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
 
 	if (mp->DensityModel != DENSITY_FOAM_PMDI_10) {
-	  EH(-1, "Expected FOAM_PMDI_10 Density Model for FOAM_PMDI Heat Source");
+	  EH(GOMA_ERROR, "Expected FOAM_PMDI_10 Density Model for FOAM_PMDI Heat Source");
 	  mp->heat_capacity = 0.0;
 	  return 0.0;
 	}
@@ -2068,7 +2055,7 @@ foam_pmdi_10_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 	}
 
 	if (wRXN == -1) {
-	  EH(-1, "Expected to find a species with source type FOAM_PMDI_10_RXN");
+	  EH(GOMA_ERROR, "Expected to find a species with source type FOAM_PMDI_10_RXN");
 	  return 0;
 	}
 
@@ -2235,7 +2222,7 @@ joule_heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h, dbl time )
        }
      else 
        {
-	 EH(-1,"Unimplemented electrical conductivity model");
+	 EH(GOMA_ERROR,"Unimplemented electrical conductivity model");
        }
   
   /* Load current density */
@@ -2246,7 +2233,7 @@ joule_heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h, dbl time )
     }
   } else if ( mp->len_u_heat_source == 1 ) {
 #if MAX_EXTERNAL_FIELD < 3
-    EH(-1, "User Joule Heating source expected MAX_EXTERNAL_FIELD >= 3");
+    EH(GOMA_ERROR, "User Joule Heating source expected MAX_EXTERNAL_FIELD >= 3");
 #else
     char err_msg[MAX_CHAR_IN_INPUT];
     b = (int) mp->u_heat_source[0];
@@ -2260,7 +2247,7 @@ joule_heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h, dbl time )
 #endif
   } else if ( mp->len_u_heat_source == 2 ) {
 #if MAX_EXTERNAL_FIELD < 3
-    EH(-1, "User Joule Heating source expected MAX_EXTERNAL_FIELD >= 3");
+    EH(GOMA_ERROR, "User Joule Heating source expected MAX_EXTERNAL_FIELD >= 3");
 #else
     char err_msg[MAX_CHAR_IN_INPUT];
     b = (int) mp->u_heat_source[0];
@@ -2274,7 +2261,7 @@ joule_heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h, dbl time )
     }
 #endif
   } else {
-    EH(-1,"Woah, not sure you have the right inputs to the Joule heating source");
+    EH(GOMA_ERROR,"Woah, not sure you have the right inputs to the Joule heating source");
   }
 
   
@@ -2534,7 +2521,7 @@ foam_pmdi_10_heat_cap( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp, double time)
   Cp_gas = mp->u_heat_capacity[1];
 
   if (mp->DensityModel != DENSITY_FOAM_PMDI_10) {
-    EH(-1, "Expected FOAM_PMDI_10 Density Model for FOAM_PMDI Heat Capacity");
+    EH(GOMA_ERROR, "Expected FOAM_PMDI_10 Density Model for FOAM_PMDI Heat Capacity");
     mp->heat_capacity = 0.0;
     return 0.0;
   }
@@ -2557,9 +2544,9 @@ foam_pmdi_10_heat_cap( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp, double time)
   }
 
   if (wCO2 == -1 && !pd->gv[MOMENT1]) {
-    EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2 or Moment equations");
+    EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_CO2 or Moment equations");
   } else if (wH2O == -1) {
-    EH(-1, "Expected a Species Source of FOAM_PMDI_10_H2O");
+    EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_H2O");
   }
 
   double volF = mp->volumeFractionGas;
@@ -2959,7 +2946,7 @@ printf("velo %g %g %g\n",v_mesh_sfs[0],v_mesh_sfs[1],v_mesh_sfs[2]);*/
 }
 else
 {
-EH(-1,"Invalid Rotational V_mesh_sfs_model.");
+EH(GOMA_ERROR,"Invalid Rotational V_mesh_sfs_model.");
 }
 
 return (1);
@@ -3046,7 +3033,7 @@ Diffusivity (void)
 	  }
 	  break;
 	default:
-	  EH(-1,
+	  EH(GOMA_ERROR,
 	     "Variable function not yet implemented in material property table");
 	  break;
 	}
@@ -3320,7 +3307,7 @@ Free_Vol_Theory_Diffusivity(int species_no,  /* current species number*/
 
           case SPECIES_MOLE_FRACTION:
           default:
-             EH(-1,"Undefined Species formulation in FREE_VOL_DIFFUSIVITY\n");
+             EH(GOMA_ERROR,"Undefined Species formulation in FREE_VOL_DIFFUSIVITY\n");
           break;
     }
 
@@ -3382,7 +3369,7 @@ Free_Vol_Theory_Diffusivity(int species_no,  /* current species number*/
       break;
   
     default:
-      EH(-1, "Invalid Free Volume model number.");
+      EH(GOMA_ERROR, "Invalid Free Volume model number.");
       break;
      
     } /* end of switch(fv_model_number) */
@@ -3718,7 +3705,7 @@ Generalized_FV_Diffusivity(int species_no)  /* current species number*/
       case SPECIES_MOLE_FRACTION:
       case SPECIES_VOL_FRACTION:
       default:
-         EH(-1,"Undefined Species formulation in Generalized_FV_Diffusivity\n");
+         EH(GOMA_ERROR,"Undefined Species formulation in Generalized_FV_Diffusivity\n");
          break;
       }
 
@@ -3922,7 +3909,7 @@ hydro_flux(struct Species_Conservation_Terms *st,
   if (mp->Species_Var_Type == SPECIES_MASS_FRACTION ||
       mp->Species_Var_Type == SPECIES_MOLE_FRACTION ||
       mp->Species_Var_Type == SPECIES_VOL_FRACTION) {
-    EH(-1,
+    EH(GOMA_ERROR,
        "Possible Conflict: Hydro Flux Expression hasn't been checked out for this species var type");
   }
 
@@ -4051,7 +4038,7 @@ hydro_flux(struct Species_Conservation_Terms *st,
       else if (mp->GamDiffType[w] == LEVEL_SET) 
 	{
 	  double width;
-	  if ( ls == NULL ) EH(-1,"Need to activate to Level Set Interface Tracking to use this model.\n");
+	  if ( ls == NULL ) EH(GOMA_ERROR,"Need to activate to Level Set Interface Tracking to use this model.\n");
 
 	  width = ( mp->u_gadiffusivity[w][2] == 0.0) ? ls->Length_Scale : mp->u_gadiffusivity[w][2];
 
@@ -4076,7 +4063,7 @@ hydro_flux(struct Species_Conservation_Terms *st,
       else if (mp->MuDiffType[w] == LEVEL_SET ) 
 	{
 	  double width;
-	  if ( ls == NULL ) EH(-1,"Need to activate to Level Set Interface Tracking to use this model.\n");
+	  if ( ls == NULL ) EH(GOMA_ERROR,"Need to activate to Level Set Interface Tracking to use this model.\n");
 
 	  width = ( mp->u_mdiffusivity[w][2] == 0.0) ? ls->Length_Scale : mp->u_mdiffusivity[w][2];
 
@@ -4110,7 +4097,7 @@ hydro_flux(struct Species_Conservation_Terms *st,
       else if (mp->GravDiffType[w] == LEVEL_SET ) 
 	{
 	  double width;
-	  if ( ls == NULL ) EH(-1,"Need to activate to Level Set Interface Tracking to use this model.\n");
+	  if ( ls == NULL ) EH(GOMA_ERROR,"Need to activate to Level Set Interface Tracking to use this model.\n");
 
 	  width = ( mp->u_gdiffusivity[w][2] == 0.0) ? ls->Length_Scale : mp->u_gdiffusivity[w][2];
 
@@ -5462,11 +5449,7 @@ void rotate_tensor(double A[DIM][DIM], double A_prime[DIM][DIM],
 *
 ******************************************************************************/
 
-int
-antoine_psat(int species_no,
-             double param[],
-             double *f,
-             double *dfdt)
+int antoine_psat(double param[], double *f, double *dfdt)
 
 {
   /*local variables */
@@ -5515,12 +5498,7 @@ return 0;
 *
 ******************************************************************************/
 
-int
-riedel_psat(int species_no,
-             double param[],
-             double *f,
-             double *dfdt)
-
+int riedel_psat(double param[], double *f, double *dfdt)
 {
   /*local variables */
 
@@ -5592,7 +5570,7 @@ suspension_pm_fluid_momentum_source(
     }
   else
     {
-      EH(-1,"MomentumSourceModel is SUSPENSION_PM, but DensityModel is not.\nThis is bad.");
+      EH(GOMA_ERROR,"MomentumSourceModel is SUSPENSION_PM, but DensityModel is not.\nThis is bad.");
       return(status);
     }
 
@@ -5653,7 +5631,7 @@ suspension_pm_particle_momentum_source(
     }
   else
     {
-      EH(-1,"MomentumSourceModel is SUSPENSION_PM, but DensityModel is not.\nThis is bad.");
+      EH(GOMA_ERROR,"MomentumSourceModel is SUSPENSION_PM, but DensityModel is not.\nThis is bad.");
       return(status);
     }
 
@@ -6022,7 +6000,7 @@ foam_species_source(double *param)
   dbl dr1_df, dr1_dg, dr1_ds1, dr2_df, dr2_dg, dr2_ds1;
 
   if (MAX_CONC < 3) {
-    EH(-1, "foam_species_source expects MAX_CONC >= 3");
+    EH(GOMA_ERROR, "foam_species_source expects MAX_CONC >= 3");
     return -1;
   }
 
@@ -6175,7 +6153,7 @@ electrode_species_source(int species_no,   /* Current species number */
   dbl util1, util2, util3;
   
   if (MAX_CONC < 3) {
-    EH(-1,"electrode_species_source expects MAX_CONC >= 3");
+    EH(GOMA_ERROR,"electrode_species_source expects MAX_CONC >= 3");
     return -1;
   }
 
@@ -6204,7 +6182,7 @@ electrode_species_source(int species_no,   /* Current species number */
         }
       else if(mp->InterfacialAreaModel == THERMAL_BATTERY) 
         {                                          
-          EH(-1, "Non-constant interfacial-area model for anode awaits to be implemented");
+          EH(GOMA_ERROR, "Non-constant interfacial-area model for anode awaits to be implemented");
         }
 
       if(mp->ThermodynamicPotentialModel == LiSi)  /* Calculate temperature-dependent thermodynamic potential for */
@@ -6269,7 +6247,7 @@ electrode_species_source(int species_no,   /* Current species number */
         }
       else 
         {                                          
-          EH(-1, "Variable interfacial-area model other than THERMAL_BATTERY awaits to be implemented");
+          EH(GOMA_ERROR, "Variable interfacial-area model other than THERMAL_BATTERY awaits to be implemented");
         }
 
       if(mp->ThermodynamicPotentialModel == FeS2) /* Calculate temperature-dependent thermodynamic potential for */
@@ -6361,7 +6339,7 @@ ion_reaction_source ( int species_no )   /* current species number */
 {
 
 #if MAX_CONC < 7
-  EH(-1, "ion_reaction_source expects MAX_CONC to be >= 7");
+  EH(GOMA_ERROR, "ion_reaction_source expects MAX_CONC to be >= 7");
   return -1;
 #else
 

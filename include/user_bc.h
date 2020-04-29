@@ -14,6 +14,10 @@
 #ifndef GOMA_USER_BC_H
 #define GOMA_USER_BC_H
 
+#include "el_elm.h"
+#include "rf_fem_const.h"
+#include "std.h"
+
 extern dbl velo_vary_fnc
 (const int ,		/* velo_condition                            */
        const dbl ,		/* x1                                        */

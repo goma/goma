@@ -19,25 +19,21 @@
 #include <stdlib.h>
 
 #include "std.h"
-
 #include "rf_fem.h"
 #include "el_elm.h"
 #include "el_geom.h"
-
 #include "exo_struct.h"
 #include "rf_vars_const.h"
-
-#include "mm_as_const.h"
 #include "mm_as_structs.h"
-
-#include "rf_io_const.h"
-
-#include "rf_vars_const.h"
 #include "rf_node_const.h"
 #include "rf_mp.h"
 #include "rf_allo.h"
-
-#include "goma.h"
+#include "dpi.h"
+#include "el_elm_info.h"
+#include "mm_as.h"
+#include "mm_eh.h"
+#include "rf_bc.h"
+#include "rf_bc_const.h"
 
 /****************************************************************************/
 /****************************************************************************/
@@ -198,7 +194,7 @@ init_nodes (Exo_DB *exo, Dpi *dpi)
     fprintf(stderr,
   "Proc %d : init_nodes ERROR total nodes, %d, differs from num_proc_nodes, %d\n",
 	    ProcID, total_nodes, number_proc_nodes);
-    EH(-1, "init_nodes: Shouldn't be here");
+    EH(GOMA_ERROR, "init_nodes: Shouldn't be here");
   }
 
   /*
@@ -494,7 +490,7 @@ first_matID_at_node(const int nodeNum)
     fprintf(stderr,
      "first_matID_at_node ERROR P_%d: mat list is empty at node %d\n",
 	    ProcID, nodeNum);
-    EH(-1,"first_matID_at_node ERROR");
+    EH(GOMA_ERROR,"first_matID_at_node ERROR");
     return -1;
   }
   return umi_ptr->List[0];
@@ -661,7 +657,7 @@ vcrr_add(VCRR_STRUCT ***vcrr_hdl, const int eqn, const int mn_curr,
           if (vcrr_ptr->MatID_Row_Redirect == mn_apply) {
 	    nf = FALSE;
 	  } else {
-	    EH(-1, "incompatibility");
+	    EH(GOMA_ERROR, "incompatibility");
 	  }
 	}
       }

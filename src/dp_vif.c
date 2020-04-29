@@ -34,50 +34,43 @@
  * Revised: 1997/06/19 08:48 MDT pasacki@sandia.gov
  */
 
-#include <math.h>
-#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: dp_vif.c,v 5.24 2010-07-21 16:39:26 hkmoffa Exp $";
-#endif
+
+#include "dp_vif.h"
 
 #include "std.h"
+#include "ac_stability.h"
 #include "rf_io_const.h"
-#include "rf_io_structs.h"
 #include "rf_io.h"
 #include "rf_solver.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
 #include "rf_mp.h"
 #include "rf_allo.h"
-
 #include "rf_bc_const.h"
-  
-#include "rf_solver_const.h"
-#include "sl_eggroll.h"
-
 #include "mm_eh.h"
 #include "dp_utils.h"
-#include "sl_util_structs.h"
-#include "rf_vars_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
 #include "mm_mp.h"
-
 #include "mm_post_def.h"
-
 #include "mm_chemkin.h"
+#include "ac_particles.h"
+#include "dp_types.h"
+#include "el_elm.h"
+#include "mm_as_const.h"
+#include "mm_fill_ls.h"
+#include "mm_mp_const.h"
+#include "mm_mp_structs.h"
+#include "mpi.h"
 
 /* #include "mm_names.h" -- use extern defs from rf_bc_const.h for these vars */
 
 #include "rf_bc.h"
 
-#include "rf_solver.h"
-
 #define GOMA_DP_VIF_C
-#include "goma.h"
 
 #ifndef CDIM
 #define CDIM 3
@@ -106,9 +99,6 @@ noahs_raven(void)
 {
 #ifdef PARALLEL
   DDD n;
-#ifdef DEBUG
-  printf("P_%d entering noahs_raven...\n", ProcID);
-#endif
 
   /*
    *  Also send the upd structure information at this time
@@ -205,9 +195,6 @@ raven_landing(void)
    * the ark.
    */
 
-#ifdef DEBUG
-  printf("P_%d raven_landing..\n", ProcID);
-#endif
 
   efv->Num_external_field = Num_Var_External;
   
@@ -580,9 +567,6 @@ raven_landing(void)
 	PBCs = NULL;
     }
     
-#ifdef DEBUG
-  printf("P%d raven_landing done\n", ProcID);
-#endif
 
   return;
 }
@@ -607,9 +591,6 @@ noahs_ark(void)
   DDD n = NULL;			/* initialize to avoid picky complaints 
 				 * from compilers when PARALLEL is undefd */
 
-#ifdef DEBUG
-  printf("P_%d entering noahs_ark()...\n", ProcID);
-#endif
 
 #ifdef PARALLEL
   Noahs_Ark   = ddd_alloc();
@@ -619,10 +600,6 @@ noahs_ark(void)
    * Stuff read into rd_file_specs()
    */
 
-#ifdef DEBUG
-  printf("P_%d building Noahs_Ark [A] element %d\n",
-	  ProcID, n->num_members);
-#endif
 
 
   ddd_add_member(n, ExoFile, MAX_FNL, MPI_CHAR);
@@ -638,10 +615,6 @@ noahs_ark(void)
    * rd_genl_specs()
    */
 
-#ifdef DEBUG
-  printf("P_%d building Noahs_Ark [B] element %d\n",
-	  ProcID, n->num_members);
-#endif
 
 
   /*  ddd_add_member(n, &Num_Proc, 1, MPI_INT); ...dal */
@@ -687,10 +660,6 @@ noahs_ark(void)
    * variables, we'll only communicate those.
    */
 
-#ifdef DEBUG
-  printf("P_%d building Noahs_Ark [C] element %d\n",
-	  ProcID, n->num_members);
-#endif
 
 
   if ( efv->ev != T_NOTHING )
@@ -711,10 +680,6 @@ noahs_ark(void)
    * rd_timeint_specs()
    */
 
-#ifdef DEBUG
-  printf("P_%d building Noahs_Ark [D] element %d\n",
-	  ProcID, n->num_members);
-#endif
 
 
   ddd_add_member(n, &tran->MaxTimeSteps, 1, MPI_INT);
@@ -739,10 +704,6 @@ noahs_ark(void)
       ddd_add_member(n, &tran->use_var_norm[i], 1, MPI_INT);
     }
 
-#ifdef DEBUG
-  printf("P_%d building Noahs_Ark [E] element %d\n",
-	  ProcID, n->num_members);
-#endif
   ddd_add_member(n, &tran->fix_freq, 1, MPI_INT);
   ddd_add_member(n, &tran->print_freq, 1, MPI_INT);
   ddd_add_member(n, &tran->print_delt, 1, MPI_DOUBLE);
@@ -761,10 +722,6 @@ noahs_ark(void)
    * Solver stuff
    */
 
-#ifdef DEBUG
-  printf("P_%d building Noahs_Ark [F] element %d\n",
-	  ProcID, n->num_members);
-#endif
 
   ddd_add_member(n, Matrix_Solver, MAX_CHAR_IN_INPUT, MPI_CHAR);
   ddd_add_member(n, Matrix_Format, MAX_CHAR_IN_INPUT, MPI_CHAR);
@@ -859,10 +816,6 @@ noahs_ark(void)
    * processors conception of NZeroes.
    */
 
-#ifdef DEBUG
-  printf("P_%d building Noahs_Ark [G] element %d\n",
-	  ProcID, n->num_members);
-#endif
 
   ddd_add_member(n, &NZeros, 1, MPI_INT);
 
@@ -927,10 +880,6 @@ noahs_ark(void)
    * Boundary Conditions.
    */
 
-#ifdef DEBUG
-  printf("P_%d building Noahs_Ark [H] element %d\n",
-	  ProcID, n->num_members);
-#endif
 
   /*
    * Set up skeleton of the BC_Types...
@@ -966,10 +915,6 @@ noahs_ark(void)
       ddd_add_member(n, &BC_Types[i].table_index, 1, MPI_INT);         
     }
 
-#ifdef DEBUG
-  printf("P_%d building Noahs_Ark [I] element %d\n",
-	  ProcID, n->num_members);
-#endif
 
   /*
    * This will transport all of the new dynamically allocated BC Descriptions
@@ -1065,10 +1010,6 @@ noahs_ark(void)
       ddd_add_member(n, &(ext_Tables[i]->Emin), 1, MPI_DOUBLE);
     }
 
-#ifdef DEBUG
-  printf("P_%d building Noahs_Ark [J] element %d\n",
-	  ProcID, n->num_members);
-#endif
 
   ddd_add_member(n, &PRESSURE_DATUM, 1, MPI_INT);            
   ddd_add_member(n, &pressure_datum_element, 1, MPI_INT);            
@@ -1085,10 +1026,6 @@ noahs_ark(void)
    * of BC_Desc[], then see the BC_Types[] conniptions above for a method
    * of implementing this.
    */
-#ifdef DEBUG
-  printf("P_%d building Noahs_Ark [K] element %d\n",
-	  ProcID, n->num_members);
-#endif
 
   for ( i=0; i<Num_ROT; i++)
     {
@@ -1112,7 +1049,7 @@ noahs_ark(void)
 
       /*
        * The ptr to a list of elements on the side set is empty for now.
-       * It gets filled later in bc_rotate.c; when it does it will mean
+       * It gets filled later in bc/rotate.c; when it does it will mean
        * different things to different processors...
        */
 /*
@@ -1124,10 +1061,6 @@ noahs_ark(void)
   /*
    * Materials and Equation Specifications...
    */
-#ifdef DEBUG
-  printf("P_%d building Noahs_Ark [L] element %d\n",
-	  ProcID, n->num_members);
-#endif
   /*
    * Broadcast the Uniform_Problem_Description Information
    */
@@ -1148,6 +1081,9 @@ noahs_ark(void)
   ddd_add_member(n, &upd->Process_Temperature, 1, MPI_DOUBLE);            
   ddd_add_member(n, &upd->Acoustic_Frequency, 1, MPI_DOUBLE);            
   ddd_add_member(n, &upd->Light_Cosmu, 1, MPI_DOUBLE);            
+  ddd_add_member(n, &upd->SegregatedSolve, 1, MPI_INT);
+  ddd_add_member(n, &upd->SegregatedSubcycles, 1, MPI_INT);
+  ddd_add_member(n, &upd->PSPG_advection_correction, 1, MPI_INT);
 
   ddd_add_member(n, pg->time_step_control_disabled, MAX_NUM_MATRICES, MPI_INT);
   ddd_add_member(n, pg->matrix_subcycle_count, MAX_NUM_MATRICES, MPI_INT);
@@ -1446,10 +1382,6 @@ noahs_ark(void)
    * Just transport the interpolations that this problem will actually use...
    */
 
-#ifdef DEBUG
-  printf("P_%d building Noahs_Ark [M] element %d\n",
-	  ProcID, n->num_members);
-#endif
 
   for ( i=0; i<Num_Interpolations; i++)
     {
@@ -1561,10 +1493,6 @@ noahs_ark(void)
     }
 
 
-#ifdef DEBUG
-  printf("P_%d building Noahs_Ark [N] element %d\n",
-	  ProcID, n->num_members);
-#endif
   /*
    * Material properties...
    */
@@ -2608,10 +2536,6 @@ noahs_ark(void)
    * transported on the first flight so that variably lengthed u_post_proc[]
    * could be moved with the main body.
    */
-#ifdef DEBUG
-  printf("P_%d building Noahs_Ark [O] element %d\n",
-	  ProcID, n->num_members);
-#endif
 
   ddd_add_member(n, &STREAM, 1, MPI_INT);
   ddd_add_member(n, &STREAM_NORMAL_STRESS, 1, MPI_INT);
@@ -2725,6 +2649,7 @@ noahs_ark(void)
   ddd_add_member(n, &Q_FCN, 1, MPI_INT);
   ddd_add_member(n, &POYNTING_VECTORS, 1, MPI_INT);
   ddd_add_member(n, &len_u_post_proc, 1, MPI_INT);
+  ddd_add_member(n, &PSPG_PP, 1, MPI_INT);
 
   if ( nn_post_fluxes > 0 )
     {
@@ -2840,9 +2765,6 @@ noahs_ark(void)
 
   ddd_set_commit(n);
 
-#ifdef DEBUG
-  printf("P_%d exiting noahs_ark()\n", ProcID);
-#endif
 
   return;
 }
@@ -3043,10 +2965,6 @@ ark_landing(void)
       m->Porous_Names = alloc_VecFixedStrings(m->Num_Porous_Eqn,
 			       		       sizeof(CK_NAME_STR));
 
-#ifdef DEBUG
-      printf("P%d: conditionally allocating %d elements.\n", ProcID,
-	      m->len_u_Volume_Expansion);
-#endif      
 
       dalloc( m->len_u_Volume_Expansion,
 	      m->    u_Volume_Expansion);
@@ -3205,11 +3123,6 @@ ark_landing(void)
 
 	  dalloc( m->len_u_diffusivity[j],
 		  m->    u_diffusivity[j]);
-#ifdef DEBUG
-          printf("P_%d: ark_landing assigning %d doubles for u_diff: species %4d: %x\n",
-		 ProcID, m->len_u_diffusivity[j], j,  m->u_diffusivity[j]);
-	  fflush(stdout);
-#endif	  
 
 	  dalloc( m->len_u_gadiffusivity[j],  
                   m->    u_gadiffusivity[j]);
@@ -3256,11 +3169,6 @@ ark_landing(void)
         {
 	  dalloc( m->len_u_porous_diffusivity[j],
 		  m->    u_porous_diffusivity[j]);
-#ifdef DEBUG
-          printf("P_%d: ark_landing assigning %d doubles for u_porous_diff: porous phases %4d: %x\n",
-		 ProcID, m->len_u_porous_diffusivity[j], j,  m->u_porous_diffusivity[j]);
-	  fflush(stdout);
-#endif	  
 	  dalloc( m->len_u_porous_vol_expansion[j],
 		  m->    u_porous_vol_expansion[j]);
 
@@ -3395,9 +3303,6 @@ ark_landing(void)
        dalloc( pp_volume[i]->num_params, pp_volume[i]->params );
     }
 
-#ifdef DEBUG
-  printf("P%d: Finished ark_landing\n", ProcID); fflush(stdout);
-#endif      
 
   return;
 }
@@ -3436,15 +3341,12 @@ noahs_dove(void)
 	printf("P_%d: ERROR: NULL address but nonzero length, %s line %d!\n",
 	       ProcID,  __FILE__, __LINE__);
 	fflush(stdout);
-	EH(-1,"noahs_dove fatal error");
+	EH(GOMA_ERROR,"noahs_dove fatal error");
       }
       ddd_add_member(n, m->Matrl_Elem_Blk_Ids,
 		     m->Num_Matrl_Elem_Blk, MPI_INT);
     }
       
-#ifdef DEBUG
-    printf("P%d: Noahs Dove registration [A]\n", ProcID); fflush(stdout);
-#endif
     crdv( m->len_u_Volume_Expansion,
 	  m->    u_Volume_Expansion);
 
@@ -3472,9 +3374,6 @@ noahs_dove(void)
     crdv( m->len_u_heat_source,
 	  m->    u_heat_source);
 
-#ifdef DEBUG
-    printf("P%d: Noahs Dove registration [B]\n", ProcID); fflush(stdout);
-#endif
     crdv( m->len_u_mass_source,
 	  m->    u_mass_source);
 
@@ -3613,33 +3512,12 @@ noahs_dove(void)
 	for(k = 0; k < Particle_Number_Output_Variables[j]; k++)
 	  ddd_add_member(n, Particle_Output_Variables[j][k], MAX_PARTICLE_OUTPUT_VARIABLE_LENGTH, MPI_CHAR);
 
-#ifdef DEBUG
-    printf("P%d: Noahs Dove registration [C] for %d species\n", 
-	   ProcID, pd_glob[i]->Num_Species); fflush(stdout);
-#endif
     /*
      * Species constants...
      */
 
     for (j = 0; j < pd_glob[i]->Num_Species; j++)
       {
-#ifdef DEBUG
-	printf("P%d: Dove species %d has u lengths: %d %d %d %d %d %d %d %d %d %d %d %d\n",
-	       ProcID, j, 
-	       m->len_u_diffusivity[j],
-	       m->len_u_gadiffusivity[j],
-	       m->len_u_mdiffusivity[j],
-	       m->len_u_cdiffusivity[j],
-	       m->len_u_fdiffusivity[j],
-	       m->len_u_gdiffusivity[j],
-	       m->len_u_nscoeff[j],
-	       m->len_SBM_Lengths2[j],
-	       m->len_u_qdiffusivity[j],
-	       m->len_u_species_source[j],
-	       m->len_u_species_vol_expansion[j],
-	       m->len_u_vapor_pressure[j]);
-	fflush(stdout);
-#endif
 	crdv( m->len_u_diffusivity[j],
 	      m->    u_diffusivity[j]);
 	crdv( m->len_u_gadiffusivity[j],
@@ -3666,10 +3544,6 @@ noahs_dove(void)
 	      m->    u_vapor_pressure[j]);
 	crdv( m->len_u_reference_concn[j],
 	      m->    u_reference_concn[j]);
-#ifdef DEBUG
-	printf("\tP%d: End of Loop for species %d\n", ProcID, j);
-	fflush(stdout);
-#endif
       }
 
       /*
@@ -3744,10 +3618,6 @@ noahs_dove(void)
 	  m->    u_DiffCoeff_function_constants);
 
 
-#ifdef DEBUG
-    printf("P%d: Noahs Dove registration [D]\n", ProcID);
-    fflush(stdout);
-#endif
 
     crdv( e->len_u_mu,
 	  e->    u_mu);
@@ -3797,9 +3667,6 @@ noahs_dove(void)
 	  v->shift);
   }
 
-#ifdef DEBUG
-  printf("P%d: Noahs Dove registration [E]\n", ProcID);  fflush(stdout);
-#endif
 
   for (i = 0; i < Num_BC; i++)
     {

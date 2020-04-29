@@ -15,20 +15,29 @@
  *$Id: el_quality.c,v 5.5 2010-03-17 22:23:53 hkmoffa Exp $
  */
 
-#ifdef USE_RCSID
-static char rcsid[] =
-"$Id: el_quality.c,v 5.5 2010-03-17 22:23:53 hkmoffa Exp $";
-#endif
 
 #include <math.h>
-#include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 
 #include "az_aztec.h"
+#include "el_elm.h"
+#include "el_geom.h"
+#include "mm_as.h"
+#include "mm_as_structs.h"
+#include "mm_eh.h"
+#include "mm_fill_ptrs.h"
+#include "mm_fill_util.h"
+#include "mm_unknown_map.h"
+#include "rd_mesh.h"
+#include "rf_allo.h"
+#include "rf_fem.h"
+#include "rf_fem_const.h"
+#include "rf_mp.h"
+#include "std.h"
+#include "el_elm_info.h"
+#include "exo_struct.h"
 
 #define GOMA_EL_QUALITY_C
-#include "goma.h"
 #include "el_quality.h"
 
 /*************** R O U T I N E S   I N   T H I S   F I L E ********************
@@ -586,7 +595,7 @@ static double vertex_angle(double **xy, int i, int n, int *sense)
     }
   else 
     {
-      EH(-1,"vertex_angle: n must be 4 or 8, or else there is an algorithm error"); 
+      EH(GOMA_ERROR,"vertex_angle: n must be 4 or 8, or else there is an algorithm error"); 
     }
 
   /* Load coordinates of v2 and the two neighbor nodes */

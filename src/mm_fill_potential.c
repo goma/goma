@@ -14,40 +14,34 @@
 /* Standard include files */
 
 #include <string.h>
-#include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 
 /* GOMA include files */
 
+#include "mm_fill_potential.h"
+
 #include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_masks.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_mp.h"
 #include "el_elm.h"
-#include "el_geom.h"
 #include "rf_bc_const.h"
-#include "rf_solver_const.h"
-#include "rf_solver.h"
-#include "rf_fill_const.h"
-#include "rf_vars_const.h"
 #include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "mm_eh.h"
-
 #include "mm_mp.h"
 #include "mm_mp_structs.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_solid.h"
+#include "mm_fill_species.h"
+#include "mm_fill_terms.h"
+#include "user_mp.h"
+#include "mm_qtensor_model.h"
 
 
 #define GOMA_MM_FILL_POTENTIAL_C
-#include "goma.h"
 
 /*********** R O U T I N E S   I N   T H I S   F I L E ***********************
 *
@@ -321,7 +315,7 @@ assemble_potential(double time,	/* present time value */
             }
           else
             {
-              EH(-1, "Solution-temperature model other than THERMAL_BATTERY awaits future implementation");
+              EH(GOMA_ERROR, "Solution-temperature model other than THERMAL_BATTERY awaits future implementation");
             }
       /* set the solution temperature to the 298 K if it is zero - safety feature */
       if (T == 0.0) T = 298.0;
@@ -680,7 +674,7 @@ assemble_potential(double time,	/* present time value */
     }
   else
     {
-      EH(-1,"Unrecognized current source model");
+      EH(GOMA_ERROR,"Unrecognized current source model");
     }
   /********** End of specification of the current source model **********/
 
@@ -1358,7 +1352,7 @@ current_BV_surf(double func[DIM],
     }
   else
     {
-      EH(-1, "Solution-temperature model not yet implemented");
+      EH(GOMA_ERROR, "Solution-temperature model not yet implemented");
     }
   if (pd->e[pg->imtrx][R_ENERGY]) /* if energy equation is active, re-set electrolyte temperature */
     {
@@ -1743,10 +1737,10 @@ assemble_Enorm(void)
     return 0;
 
   if(!pd->v[pg->imtrx][VOLTAGE])
-    EH(-1, "Must have VOLTAGE equation active to use ENORM.");
+    EH(GOMA_ERROR, "Must have VOLTAGE equation active to use ENORM.");
 
   if(pd->v[pg->imtrx][MESH_DISPLACEMENT1])
-    EH(-1, "Sorry, assemble_Enorm has not been rigged for ALE.");
+    EH(GOMA_ERROR, "Sorry, assemble_Enorm has not been rigged for ALE.");
 
   wt = fv->wt;
   h3 = fv->h3;
@@ -2344,7 +2338,7 @@ int i, j, a, w;
 	   electrolyte_temperature(time, dt, 0);
 	   T = mp->electrolyte_temperature;
          } else {
-	   EH(-1,
+	   EH(GOMA_ERROR,
 	      "Solution-temperature model other than THERMAL_BATTERY awaits future implementation");
          }
          /*
@@ -2481,7 +2475,7 @@ int i, j, a, w;
             }
          else
             {
-              EH(-1, "Solution-temperature model other than THERMAL_BATTERY awaits future implementation");
+              EH(GOMA_ERROR, "Solution-temperature model other than THERMAL_BATTERY awaits future implementation");
             } 
          if (T == 0.0) T = 298.0; /* set the solution temperature to the 298 K if it is zero - safety feature */
 
@@ -2574,7 +2568,7 @@ int i, j, a, w;
              }
           else
              {
-              EH(-1, "Invalid solution temperature model");
+              EH(GOMA_ERROR, "Invalid solution temperature model");
              }
          }
 
@@ -2788,7 +2782,7 @@ int i, j, a, w;
     }
   else
     {
-      EH(-1,"Unrecognized electrical conductivity model");
+      EH(GOMA_ERROR,"Unrecognized electrical conductivity model");
     }
 return(k);
 }

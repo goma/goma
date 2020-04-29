@@ -14,16 +14,26 @@
  * $Id: sl_eggrollwrap.c,v 5.2 2007-09-18 18:53:47 prschun Exp $
  */
 
-#ifdef USE_RCSID
-static const char rcs_id[] = "$Id: sl_eggrollwrap.c,v 5.2 2007-09-18 18:53:47 prschun Exp $";
-#endif
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <strings.h>
 
-#include "goma.h"
+#include "ac_stability.h"
+#include "dpi.h"
+#include "exo_struct.h"
+#include "mm_eh.h"
+#include "mm_more_utils.h"
+#include "mm_post_proc.h"
+#include "rd_exo.h"
+#include "rf_io_const.h"
+#include "rf_io_structs.h"
+#include "sl_auxutil.h"
+#include "sl_eggroll.h"
+#include "sl_umf.h"
+#include "std.h"
+#include "wr_dpi.h"
+#include "wr_exo.h"
 
 /* Routines that handle the eigensolver.
  *
@@ -161,7 +171,7 @@ eggrollwrap(int *istuff,	/* info for eigenvalue extraction */
   /* Check for something that seems to make no difference if it's on,
    * except for occasionally causing seg faults... */
   if(recycle != 0)
-    EH(-1, "Eigen recycle currently doesn't work, turn it off.");
+    EH(GOMA_ERROR, "Eigen recycle currently doesn't work, turn it off.");
 
   /* Set initial vector
    */
@@ -224,7 +234,7 @@ eggrollwrap(int *istuff,	/* info for eigenvalue extraction */
       case  4: /* v2 = inv(J-sM)*M*v1 */
 	Factor_Flag = 3;
 	if(first_linear_solver_call)
-	  EH(-1, "Tried to transform eigenvectors before a solve!");
+	  EH(GOMA_ERROR, "Tried to transform eigenvectors before a solve!");
 	gevp_transformation(UMF_system_id, first_linear_solver_call,
 			    Factor_Flag, matr_form, 1, nj, nnz_j,
 			    &ija[0], &jac[0], &mas[0], &mat[0],
@@ -232,7 +242,7 @@ eggrollwrap(int *istuff,	/* info for eigenvalue extraction */
 			    &v2[0], &v1[0], dwork[0], dwork[1]);
 	break;
       default:
-	EH(-1, "Uh-oh!  I shouldn't be here!");
+	EH(GOMA_ERROR, "Uh-oh!  I shouldn't be here!");
 	break;
       } /* switch(action) */
     if (ic > 10000)
@@ -322,7 +332,7 @@ eggrollwrap(int *istuff,	/* info for eigenvalue extraction */
 	  /* Update exo file for distributed problem info 
 	   */
 	  if (Num_Proc > 1) {
-	    wr_dpi(dpi, ExoFileOut, 0);
+            wr_dpi(dpi, ExoFileOut);
 	  }
 	  for (j = 0; j < tnv; j++) {
 	    extract_nodal_vec(&evect[i][0], rd->nvtype[j], rd->nvkind[j], 

@@ -15,35 +15,28 @@
 #include <string.h>
 #include <math.h>
 
-#include "std.h" 
+#include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
 #include "rf_io_const.h"
 #include "rf_io.h"
 #include "rf_mp.h"
 #include "el_elm.h"
-#include "el_geom.h"
 #include "rf_allo.h"
 #include "rf_bc.h"
-#include "rf_masks.h"
 #include "mm_eh.h"
 #include "exo_struct.h"
-
 #include "dpi.h"
-#include "dp_types.h"
 #include "rf_vars_const.h"
-#include "mm_mp_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
 #include "mm_as_const.h"
-
 #include "rf_node_const.h"
-
 #include "rd_mesh.h"
 #include "mm_bc.h"
-#include "rf_util.h"
-
-#include "goma.h"
+#include "dp_utils.h"
+#include "el_elm_info.h"
+#include "rf_bc_const.h"
 #ifndef MAX_NODAL_BCS
 #define MAX_NODAL_BCS  35
 #endif
@@ -196,7 +189,7 @@ find_first_opening(const int *list, const int lengthList)
   /*
    *  create an error exit here
    */
-  EH(-1, "too many duplications");
+  EH(GOMA_ERROR, "too many duplications");
   return -1;
 }
 /*****************************************************************************/
@@ -251,7 +244,7 @@ add_to_node_unk_bc_list(int *list, int ibc)
   /*
    *  create an error exit here
    */
-  EH(-1, "add_to_node_unk_bc_list out of room");
+  EH(GOMA_ERROR, "add_to_node_unk_bc_list out of room");
 }
 /*****************************************************************************/
 /*****************************************************************************/
@@ -499,7 +492,7 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
                   offset_mom1 = get_nv_offset_idof(nv, R_MOMENTUM1, idof, 0, &vd_retn1);
                   offset_mom2 = get_nv_offset_idof(nv, R_MOMENTUM2, idof, 0, &vd_retn2);
                   if (vd_retn1->MatID != vd_retn2->MatID) {
-                    EH(-1,"Unforseen occurrence");
+                    EH(GOMA_ERROR,"Unforseen occurrence");
                   }
                   if (offset_mom1 < 0) break;
                   idup1 = find_first_opening(BC_Unk_List[inode][offset_mom1],
@@ -625,9 +618,6 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
      * that flow chart somewhat religiously
      */
 
-#ifdef DEBUG
-    fprintf(stderr, "P_%d has num_bc_nodes = %d\n", ProcID, num_bc_nodes);
-#endif
 
     /*
      * When running distributed, some processors have small chunks of the overall
@@ -2025,9 +2015,9 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
         {
           if (matrix_used_BC[ibc] == 0)
             {
-              fprintf(stderr,
-                      "WARNING: Boundary condition %d, %s, applied on NS %d, is never used\n",
-                      ibc, BC_Types[ibc].desc->name1, BC_Types[ibc].BC_ID);
+              WH_MANY(-1,
+               "Boundary condition %d, %s, applied on NS %d, is never used\n",
+                        ibc, BC_Types[ibc].desc->name1, BC_Types[ibc].BC_ID);
             }
         }
       free(matrix_used_BC);
@@ -2084,7 +2074,6 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
   int tilt_save = -1;
   int val = 0;
 #endif
-
   strcpy(ofbc_fn, BC_3D_INFO_FILENAME); /* def in rf_bc_const.h */
 
   if (Unlimited_Output) {
@@ -2098,7 +2087,7 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
       sprintf(Err_Msg, 
 	      "P_%d: cannot open file \"%s\" to write 3D BC info",
 	      ProcID, ofbc_fn);
-      EH(-1, Err_Msg);
+      EH(GOMA_ERROR, Err_Msg);
     }
     if (Num_Proc > 1) {
       fprintf(ofbc, "BC Duplication and Rotation list for Processor %d:\n",
@@ -2247,7 +2236,7 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
               sprintf(Err_Msg, 
                       "Node (%d) wants > %d sidesets - boost MAX_SS_PER_NODE.", 
                       inode+1, MAX_SS_PER_NODE);
-              EH(-1, Err_Msg);
+              EH(GOMA_ERROR, Err_Msg);
             }
 	
             SS_list[inode][iptr] = exo->ss_id[iss];
@@ -2411,7 +2400,7 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
         fprintf(stderr, "Warning: %s\n", Err_Msg);
 #if 0	
         /* Leave this barn door open to help test further... */
-        EH(-1, err_msg);
+        EH(GOMA_ERROR, err_msg);
 #endif
       }
 
@@ -2461,7 +2450,7 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
           }
           if      (ROT_Types[irc].eq_type == R_MESH1) eq = VECT_EQ_MESH;
           else if (ROT_Types[irc].eq_type == R_MOMENTUM1) eq = VECT_EQ_MOM;
-          else EH(-1,"Illegal vector equation");
+          else EH(GOMA_ERROR,"Illegal vector equation");
 
           if (ROT_list[inode][eq] == -1) {
             ROT_list[inode][eq] = irc;
@@ -2508,6 +2497,10 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
     BC_dup_nodes[pg->imtrx] = alloc_int_1(num_bc_nodes, -1);
     BC_dup_list[pg->imtrx] = (int ***) alloc_ptr_1(num_bc_nodes);
     BC_dup_ptr[pg->imtrx] = 0;
+    bool *explicit_rot_print = malloc(sizeof(bool) * Num_BC);
+    for (int i = 0; i < Num_BC; i++) {
+      explicit_rot_print[i] = false;
+    }
 
     /* 
      * loop through nodes and rearrange the BC list 
@@ -2668,7 +2661,7 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
 
                         if ( BC_Types[ibc1].desc->method == 
                              DIRICHLET && p != q) { 
-                          EH(-1, "Can't change equation type of DIRICHLET!");
+                          EH(GOMA_ERROR, "Can't change equation type of DIRICHLET!");
                         }
                       }
 
@@ -2723,7 +2716,7 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
                   }
                   fprintf(stderr, "P_%d death, nss = %d\n",
                           ProcID, exo->num_side_sets);
-                  EH(-1,"Rotation BC not found");
+                  EH(GOMA_ERROR,"Rotation BC not found");
                 }
 #endif
 
@@ -2822,11 +2815,13 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
                 /* Check to make sure user isn't trying to rotate without 
                  * specifying a rotation condition */
                 if (BC_Types[ibc1].desc->rotate != NO_ROT) {
-                  sprintf(Err_Msg, 
-                          "BC [%d] %s %2s %d is a rotated condition, but lacks explicit ROT",
-                          ibc1, BC_Types[ibc1].desc->name1,
-                          BC_Types[ibc1].Set_Type, BC_Types[ibc1].BC_ID);
-                  EH(-1, Err_Msg);
+                  if (!explicit_rot_print[ibc1]) {
+                  DPRINTF(stdout, "BC [%d] %s %2s %d is a rotated condition, but lacks explicit ROT\n\twill "
+                          "use automatic rotations\n",
+                          ibc1, BC_Types[ibc1].desc->name1, BC_Types[ibc1].Set_Type,
+                          BC_Types[ibc1].BC_ID);
+                  }
+                  explicit_rot_print[ibc1] = true;
                 }
 
                 /* save all WEAK conditions */
@@ -2980,9 +2975,12 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
       } /* end of if BC_list */
     } /* end of loop over nodes */
 
+
     /******************************************************************************/
     /* CLEAN UP                                                                   */
     /******************************************************************************/
+
+    free(explicit_rot_print);
 
     /* Now print out BC_dup list for 3-D problems */
     /* Also check for potentially conflicting combinations */

@@ -138,11 +138,11 @@ rd_image_to_mesh(int N_ext, Exo_DB *exo)
   /* Scalar floats */
 
   /* Stop if parallel run */
-  if(Num_Proc > 1) EH(-1, "pixel mapping is not yet available in parallel. Run serial then use the mapped exoII file");
+  if(Num_Proc > 1) EH(GOMA_ERROR, "pixel mapping is not yet available in parallel. Run serial then use the mapped exoII file");
 
   /* Stop if more than one pixel file read. This will be fixed soon (PRS 8/10/2011 */
 
-  if(N_ext > 0) EH(-1,"Sorry, you have to read and convert one pixel file at a time right now.");
+  if(N_ext > 0) EH(GOMA_ERROR,"Sorry, you have to read and convert one pixel file at a time right now.");
 
   /* Turn matID into blockId --Not necessarly the same */
 
@@ -156,13 +156,13 @@ rd_image_to_mesh(int N_ext, Exo_DB *exo)
 	}
     }
 
-  if(!ifound) EH(-1,"Trouble in rd_pixel_image: cannot find blkid");
+  if(!ifound) EH(GOMA_ERROR,"Trouble in rd_pixel_image: cannot find blkid");
 
   /* Sort out interpolations */
   if (( si = in_list(efv->i[N_ext], 0, Num_Interpolations, 
 		     Unique_Interpolations)) == -1)
     {
-      EH(-1,"Seems to be a problem finding IntegrationMap interpolation for pixels.");
+      EH(GOMA_ERROR,"Seems to be a problem finding IntegrationMap interpolation for pixels.");
     }
 
   /*** Open exodus files and initialize *************************/

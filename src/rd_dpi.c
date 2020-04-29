@@ -60,11 +60,8 @@
 
 #define GOMA_RD_DPI_C
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include <stdio.h>
+#include <stdlib.h>
 
 #ifdef STDC_HEADERS
 #include <stdlib.h>
@@ -73,17 +70,13 @@
 #include <string.h>
 
 #ifndef lint
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: rd_dpi.c,v 5.2 2008-05-08 21:18:21 hkmoffa Exp $";
 #endif
-#endif
-
-#define NO_NETCDF_2
 
 /* for pure netCDF 3 - but still not yet. */
 
-
 #include "netcdf.h"
+#include "exodusII.h"
+#include "rd_mesh.h"
 
 /*
  * Sigh, if you need to run netCDF 2 then here's some definitions to tide
@@ -111,13 +104,8 @@ static char rcsid[] = "$Id: rd_dpi.c,v 5.2 2008-05-08 21:18:21 hkmoffa Exp $";
 
 
 
-#ifdef  NO_NETCDF_2
 #define NETCDF_3
-#endif
 
-#ifndef NO_NETCDF_2
-#define NETCDF_2
-#endif
 
 #ifndef NC_MAX_VAR_DIMS
 #define NC_MAX_VAR_DIMS		MAX_VAR_DIMS    
@@ -133,15 +121,11 @@ static char rcsid[] = "$Id: rd_dpi.c,v 5.2 2008-05-08 21:18:21 hkmoffa Exp $";
 
 #include "std.h"
 #include "rf_allo.h"
-#include "rf_io_const.h"	/* to know MAX_FNL */
 #include "mm_eh.h"
 #include "exo_struct.h"
 #include "dpi.h"
-#include "rf_fem.h"		/* want First_Unknown for uni_dpi() */
 #include "rf_mp.h"		/* to know ProcID */
 #include "rd_dpi.h"
-
-#include "goma.h"
 
 static int get_variable_call_count = 0;
 
@@ -162,11 +146,7 @@ static void get_variable
 /**********************************************************************/
 /**********************************************************************/
 
-int
-rd_dpi(Dpi *d,
-       char *fn,
-       const int verbosity)
-{
+int rd_dpi(Dpi *d, char *fn) {
   int err, len, status = 0, u;
   struct Shadow_Identifiers si;
   zeroStructures(&si, 1);
@@ -211,7 +191,7 @@ rd_dpi(Dpi *d,
   err = nc_open(fn, NC_NOWRITE, &u);
   if ( err != NC_NOERR )
     {
-      EH(-1, "nc_open() problem.");
+      EH(GOMA_ERROR, "nc_open() problem.");
     }
 #endif
 #ifdef NETCDF_2
@@ -350,14 +330,6 @@ rd_dpi(Dpi *d,
   int len_ss_block_list_global = 0;
   getdim(u, si.len_ss_block_list_global, &len_ss_block_list_global);
 
-#ifdef DEBUG
-  fprintf(stderr, "Processor %d has d->num_side_sets = %d\n", ProcID,
-	  d->num_side_sets);
-  fprintf(stderr, "Processor %d has d->num_elem_blocks = %d\n", ProcID,
-	  d->num_elem_blocks);
-  fprintf(stderr, "Processor %d has d->num_side_sets_global = %d\n", ProcID,
-	  d->num_side_sets_global);
-#endif  
 
   /*
    * 4. Get variable identifiers from netCDF.
@@ -910,7 +882,7 @@ rd_dpi(Dpi *d,
   err = nc_close(u);
   if ( err != NC_NOERR )
     {
-      EH(-1, "nc_close() problem.");
+      EH(GOMA_ERROR, "nc_close() problem.");
     }
 #endif
 #ifdef NETCDF_2
@@ -970,7 +942,7 @@ getdid(int netcdf_unit,			/* should already be open	(in) */
       sprintf(err_msg, "nc_inq_dimid() on %s id=%d", 
 	      string_name, 
 	      *dimension_identifier_address);
-      EH(-1, err_msg);
+      EH(GOMA_ERROR, err_msg);
     }
 #endif
 
@@ -985,10 +957,6 @@ getdid(int netcdf_unit,			/* should already be open	(in) */
   *dimension_identifier_address = err;
 #endif  
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d dim id is %d for %s\n", ProcID, 
-	  *dimension_identifier_address, string_name);
-#endif  
 
   return;
 }
@@ -1027,7 +995,7 @@ getvid(int netcdf_unit,		         /* open netCDF unit identifier (in) */
       sprintf(err_msg, "nc_inq_varid() on %s id=%d", 
 		   string_name, 
 		   *variable_identifier_address);
-      EH(-1, err_msg);
+      EH(GOMA_ERROR, err_msg);
     }
 #endif
 
@@ -1041,10 +1009,6 @@ getvid(int netcdf_unit,		         /* open netCDF unit identifier (in) */
   *variable_identifier_address = err;
 #endif  
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d var id is %d for %s\n", ProcID, 
-	  *variable_identifier_address, string_name);
-#endif  
 
   return;
 }
@@ -1093,7 +1057,7 @@ getdim(int netcdf_unit,
       if ( err != NC_NOERR )
 	{
 	  sprintf(err_msg, "nc_inq_dimlen() on did=%d", dimension_id);
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
       *where = (int) swhere;
 #endif
@@ -1289,7 +1253,7 @@ uni_dpi(Dpi *dpi,
 /* free_dpi() -- free internal dynamically allocated memory in a 
  *               Dpi struct
  *
- * During rd_dpi(), various arrays are allocated. To cleanly 
+ * During rd_dpi(), various arrays are allocated. To cleanly
  * free up this  memory, this routine can be used. Typically, 
  * if dpi is a (Dpi *), then
  *
@@ -1419,11 +1383,6 @@ get_variable(const int netcdf_unit,
              void *variable_address)
 {
   int err = 0;
-#ifndef NO_NETCDF_2
-  int i;
-  long count[NC_MAX_VAR_DIMS];
-  long start[NC_MAX_VAR_DIMS];
-#endif
   char err_msg[MAX_CHAR_ERR_MSG];
 
   get_variable_call_count++;
@@ -1438,7 +1397,6 @@ get_variable(const int netcdf_unit,
       return;
     }
 
-#ifdef NO_NETCDF_2		/* pure netCDF 3 calls... */
   switch ( netcdf_type )
     {
     case NC_INT:
@@ -1472,62 +1430,15 @@ get_variable(const int netcdf_unit,
         break;
 
     default:
-      EH(-1, "Specified netCDF data type unrecognized or unimplemented.");
+      EH(GOMA_ERROR, "Specified netCDF data type unrecognized or unimplemented.");
       break;
     }
-#endif
 
   if (err != NC_NOERR)
     {
-      EH(-1, err_msg);
+      EH(GOMA_ERROR, err_msg);
     }
 
-#ifndef NO_NETCDF_2		/* backward compatibility mode to netcdf2 */
-
-  if ( num_dimensions < 0 || num_dimensions > 2 )
-    {
-      sprintf(err_msg, "Bad or too large dimension value %d",
-              num_dimensions);
-      EH(-1, err_msg);
-    }
-
-  for ( i=0; i<num_dimensions; i++)
-    {
-      count[i] = 1;
-      start[i] = 0;
-    }
-
-  if ( num_dimensions > 0 )
-    {
-      if ( dimension_val_1 < 1 )
-        {
-          EH(-1, "Bad dimension specification.");
-        }
-      count[0] = dimension_val_1;
-    }
-
-  if ( num_dimensions > 1 )
-    {
-      if ( dimension_val_2 < 1 )
-        {
-          EH(-1, "Bad dimension specification.");
-        }
-      count[1] = dimension_val_2;
-    }
-
-  err = ncvarget(netcdf_unit, variable_identifier, start, count,
-                 variable_address);
-  if ( err < 0 )
-    {
-      sprintf(err_msg,
-              "get_variable (%d call), varid %d (%d dim %d,%d)\n",
-              get_variable_call_count,
-              variable_identifier, num_dimensions,
-              dimension_val_1, dimension_val_2);
-      EH(err, err_msg);
-    }
-
-#endif
 
   return;
 }
@@ -1552,7 +1463,7 @@ init_dpi_struct(Dpi *d)
 {
   if ( d == NULL )
     {
-      EH(-1, "Empty structure to initialize?");
+      EH(GOMA_ERROR, "Empty structure to initialize?");
     }
   /*
    * Initialize the entire structure to zeroes and NULL's

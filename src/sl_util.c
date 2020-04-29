@@ -40,21 +40,17 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-#include <stdlib.h>
 
 #include "std.h"
 #include "rf_allo.h"
-
 #include "rf_io.h"		/* for Debug_Flag */
-
 #include "rf_fem.h"
 #include "rf_mp.h"
 #include "rf_solver.h"
-
-#include "el_geom.h"		/* for Num_Internal_Nodes & friends */
-#include "el_elm.h"
-
-#include "mm_post_def.h"
+#include "rf_solver_const.h"
+#include "dpi.h"
+#include "exo_struct.h"
+#include "stdbool.h"
 
 /*
  * This function has been updated to reflect the deprecation of Aztec
@@ -71,15 +67,12 @@
 #endif
 #endif
 
-#include "az_aztec.h"
-#include "az_aztec_defs.h"
-
-#include "mm_eh.h"		/* Error handler. */
-
 #include "sl_util.h"		/* Variables of interest */
+
+#include "az_aztec.h"
+#include "mm_eh.h"		/* Error handler. */
 #include "sl_util_structs.h"
 #include "dp_types.h"
-
 #include "mm_as_structs.h"
 #include "mm_as.h"
 
@@ -129,10 +122,6 @@ sl_init(unsigned int option_mask,		/* option flag */
 #ifndef COUPLED_FILL
   int Do_Explicit_Fill;
 #endif /* not COUPLED_FILL */
-#ifdef DEBUG
-  char logfile[80];
-  FILE *out;
-#endif /* DEBUG */
   struct Aztec_Linear_Solver_System *A;
   int imtrx = pg->imtrx;
 
@@ -142,28 +131,16 @@ sl_init(unsigned int option_mask,		/* option flag */
   Do_Explicit_Fill = ( option_mask & 2 );
 #endif /* not COUPLED_FILL */
 
-#ifdef DEBUG
-#ifdef COUPLED_FILL
-  fprintf(stderr, "Initializing Aztec with %d\n", Do_Jacobian);
-#else /* COUPLED_FILL */
-  fprintf(stderr, "Initializing Aztec with %d, %d\n", Do_Jacobian, Do_Explicit_Fill);
-#endif /* COUPLED_FILL */
-  sprintf(logfile, "azide_%dof%d", ProcID, Num_Proc);
-  out = fopen(logfile, "a");
-#endif /* DEBUG */
 
   if ( Num_Calls >= upd->Total_Num_Matrices )
     {
-      EH(-1, "Calls should match the number of matrices");
+      EH(GOMA_ERROR, "Calls should match the number of matrices");
     }
   else
     {
       /* One of these blocks for each matrix system to be solved. */
       if ( Do_Jacobian )
 	{
-#ifdef DEBUG
-	  DPRINTF(stderr, "Initializing Aztec for the Jacobian.\n");
-#endif /* DEBUG */
 
 	  A = ams[imtrx];					/* Whoa, mule! */
 
@@ -298,35 +275,6 @@ sl_init(unsigned int option_mask,		/* option flag */
                   A->data_org[AZ_N_ext_blk]   = A->data_org[AZ_N_external];
 		}
 
-#ifdef DEBUG
-	      fprintf(stderr, "P_%d: data_org[] has length %d\n", 
-		      ProcID, length);
-	      fprintf(stderr, "P_%d: data_org[%d] = %d\n", 
-		      ProcID, AZ_matrix_type, A->data_org[AZ_matrix_type]);
-
-	      /*
-	      for ( i=0; i<A->N_update; i++)
-		{
-		  fprintf(stderr, "P_%d: update[%d] (global name) = %d\n", 
-			  ProcID, i, A->update[i]);
-		}
-	      for ( i=0; i<A->N_update; i++)
-		{
-		  fprintf(stderr, "P_%d: update_index[%d] (local name) = %d\n", 
-			  ProcID, i, A->update_index[i]);
-		}
-	      for ( i=0; i<num_external_dofs[pg->imtrx]; i++)
-		{
-		  fprintf(stderr, "P_%d: external[%d] (global name) = %d\n", 
-			  ProcID, i, A->external[i]);
-		}
-	      for ( i=0; i<num_external_dofs[pg->imtrx]; i++)
-		{
-		  fprintf(stderr, "P_%d: extern_index[%d] (local name) = %d\n",
-			  ProcID, i, A->extern_index[i]);
-		}
-	      */
-#endif /* DEBUG */
 	      A->data_org[AZ_N_neigh]     = dpi->num_neighbors;
 	      A->data_org[AZ_total_send]  = ptr_dof_send[imtrx][dpi->num_neighbors];
 	      A->data_org[AZ_name]        = 1+imtrx;	       /* Whoa, mule! */
@@ -342,11 +290,6 @@ sl_init(unsigned int option_mask,		/* option flag */
 		  A->data_org[AZ_neighbors   + p] = cx[p].neighbor_name;
 		  A->data_org[AZ_rec_length  + p] = cx[p].num_dofs_recv;
 		  A->data_org[AZ_send_length + p] = cx[p].num_dofs_send;
-#ifdef DEBUG
-		  fprintf(out, "P_%d: recv %d from and send %d to P_%d\n",
-			  ProcID, cx[p].num_dofs_recv, cx[p].num_dofs_send,
-			  cx[p].neighbor_name);
-#endif /* DEBUG */
 		}
 
 	      /*
@@ -359,61 +302,6 @@ sl_init(unsigned int option_mask,		/* option flag */
 		  A->data_org[AZ_send_list + i] = list_dof_send[imtrx][i];
 		}
 
-#ifdef DEBUG
-	      fprintf(out, "P_%d: ptr_dof_send[%d] = %d\n", ProcID,
-		      dpi->num_neighbors, ptr_dof_send[dpi->num_neighbors]);
-	      for ( i=0; i<ptr_dof_send[dpi->num_neighbors]; i++)
-		{
-		  fprintf(out, "P_%d: A->data_org[AZ_send_list+%d]=%d\n",
-			  ProcID, i, A->data_org[AZ_send_list + i]);
-		}
-
-
-	      /*
-	       * Dump out all of data_org...
-	       */
-
-	      fprintf(out, "data_org[AZ_matrix_type] = %d\n", 
-		      A->data_org[AZ_matrix_type]);
-	      fprintf(out, "data_org[AZ_N_internal] = %d\n", 
-		      A->data_org[AZ_N_internal]);
-	      fprintf(out, "data_org[AZ_N_border] = %d\n", 
-		      A->data_org[AZ_N_border]);
-	      fprintf(out, "data_org[AZ_N_external] = %d\n", 
-		      A->data_org[AZ_N_external]);
-	      fprintf(out, "data_org[AZ_N_int_blk] = %d\n", 
-		      A->data_org[AZ_N_int_blk]);
-	      fprintf(out, "data_org[AZ_N_bord_blk] = %d\n", 
-		      A->data_org[AZ_N_bord_blk]);
-	      fprintf(out, "data_org[AZ_N_ext_blk] = %d\n", 
-		      A->data_org[AZ_N_ext_blk]);
-	      fprintf(out, "data_org[AZ_N_neigh] = %d\n", 
-		      A->data_org[AZ_N_neigh]);
-	      fprintf(out, "data_org[AZ_total_send] = %d\n", 
-		      A->data_org[AZ_total_send]);
-	      fprintf(out, "data_org[AZ_name] = %d\n", 
-		      A->data_org[AZ_name]);
-
-	      for ( i=0; i<A->data_org[AZ_N_neigh]; i++)
-		{
-		  fprintf(out, "data_org[AZ_neighbors+%d] = %d\n", i,
-			  A->data_org[AZ_neighbors+i]);
-
-		  fprintf(out, "data_org[AZ_rec_length+%d] = %d\n", i,
-			  A->data_org[AZ_rec_length+i]);
-		  
-		  fprintf(out, "data_org[AZ_send_length+%d] = %d\n", i,
-			  A->data_org[AZ_send_length+i]);
-		}
-
-
-	      for ( i=0; i<A->data_org[AZ_total_send]; i++)
-		{
-		  fprintf(out, "data_org[AZ_send_list+%d] = %d\n", i,
-			  A->data_org[AZ_send_list+i]);
-		}
-
-#endif /* DEBUG */
 	    }
 
 	  if ( Debug_Flag > 0 )
@@ -443,9 +331,6 @@ sl_init(unsigned int option_mask,		/* option flag */
 #ifndef COUPLED_FILL
       if ( Do_Explicit_Fill )
 	{
-#ifdef DEBUG
-	  DPRINTF(stderr, "Initializing Aztec for the fill equation.\n");
-#endif /* DEBUG */
 	  A = ams[FIL];				 /* Whoa, mule! */
 
 	  /* 
@@ -559,20 +444,6 @@ sl_init(unsigned int option_mask,		/* option flag */
 		{
 		  A->data_org[AZ_send_list + i] = list_fill_node_send[i];
 		}
-#ifdef DEBUG
-              for ( p=0; p<dpi->num_neighbors; p++)
-                {
-            fprintf(stderr, "P_%d neighbor %i, num_fill_nodes_recv= %d\n",
-                             ProcID, p, cx[p].num_fill_nodes_recv );
-            fprintf(stderr, "P_%d neighbor %i, num_fill_nodes_send= %d\n",
-                             ProcID, p, cx[p].num_fill_nodes_send );
-                }
-              for ( i=0; i<ptr_fill_node_send[dpi->num_neighbors]; i++)
-                {
-                  fprintf(stderr, "P_%d i=%d, send fill_node %d\n",
-                          ProcID, i, list_fill_node_send[i] );
-                }
-#endif /* DEBUG */
 	    }
 #ifdef MATRIX_DUMP
           A->Number_Jac_Dump = Number_Jac_Dump;
@@ -602,9 +473,6 @@ sl_init(unsigned int option_mask,		/* option flag */
 #endif /* not COUPLED_FILL */      
     }
   Num_Calls++;
-#ifdef DEBUG
-  fclose(out);
-#endif /* DEBUG */
 } /* END of routine sl_init */
 /******************************************************************************/
 
@@ -792,7 +660,7 @@ set_aztec_options_params ( int options[],
     {
       fprintf(stderr, 
 	      "Valid solvers: cg, gmres, cgs, tfqmr, bicgstab, y12m, lu, umf, umff\n");
-      EH(-1, "Unknown linear solver specification.");
+      EH(GOMA_ERROR, "Unknown linear solver specification.");
     }
 
   /*
@@ -828,7 +696,7 @@ set_aztec_options_params ( int options[],
     {
       fprintf(stderr, 
 	      "Valid scalings are: none, Jacobi, BJacobi, row_sum, sym_diag, sym_row_sum\n");
-      EH(-1, "Unknown matrix scaling specification.");
+      EH(GOMA_ERROR, "Unknown matrix scaling specification.");
     }
 
   /*
@@ -982,7 +850,7 @@ set_aztec_options_params ( int options[],
     {
       fprintf(stderr, 
 	      "\nValid Preconditioners:  none, Jacobi, Neumann, ls, sym_GS, dom_decomp (Aztec 2.1)\n");
-      EH(-1, "Unknown Aztec preconditioner specification.");
+      EH(GOMA_ERROR, "Unknown Aztec preconditioner specification.");
     }
   
   if ( options[AZ_precond] == AZ_dom_decomp )
@@ -1020,7 +888,7 @@ set_aztec_options_params ( int options[],
 	{
 	  fprintf(stderr, "Matrix subdomain solver = %s ?!?\n", 
 		  Matrix_Subdomain_Solver);
-	  EH(-1, "Unknown specification. Valid Matrix subdomain solver = lu, ilu, ilut, rilu, bilu, icc");
+	  EH(GOMA_ERROR, "Unknown specification. Valid Matrix subdomain solver = lu, ilu, ilut, rilu, bilu, icc");
 	}
     }
 
@@ -1052,13 +920,13 @@ set_aztec_options_params ( int options[],
   else if ( strcmp(Matrix_Residual_Norm_Type, "weighted") == 0 )
     {
       options[AZ_conv] = AZ_weighted;
-      EH(-1, "Weighted norm unavailable; allocate bigger params[].");
+      EH(GOMA_ERROR, "Weighted norm unavailable; allocate bigger params[].");
     }
   else
     {
       fprintf(stderr,
 	      "Valid norms are: r0, rhs, Anorm, sol, (weighted)\n");
-      EH(-1, "Unknown matrix residual norm type.");
+      EH(GOMA_ERROR, "Unknown matrix residual norm type.");
     }
 
   /*
@@ -1089,7 +957,7 @@ set_aztec_options_params ( int options[],
     {
       if ( i < 0 ) 
 	{
-	  EH(-1, "Matrix output type must specify a *positive* integer.");
+	  EH(GOMA_ERROR, "Matrix output type must specify a *positive* integer.");
 	}
       options[AZ_output] = i;
     }
@@ -1097,7 +965,7 @@ set_aztec_options_params ( int options[],
     {
       fprintf(stderr,
 	      "Valid outputs are: all, none, warnings(2.x) last, <integer>\n");
-      EH(-1, "Unknown matrix output type.");
+      EH(GOMA_ERROR, "Unknown matrix output type.");
     }
 
   /* 
@@ -1130,7 +998,7 @@ set_aztec_options_params ( int options[],
     {
       fprintf(stderr,
 	      "Valid factorization reuses are: calc, recalc, reuse\n");
-      EH(-1, "Unknown factorization reuse.");
+      EH(GOMA_ERROR, "Unknown factorization reuse.");
     }
 
   /*
@@ -1142,7 +1010,7 @@ set_aztec_options_params ( int options[],
     {
       if ( i < 0 )
 	{
-	  EH(-1, "Matrix graph fillin should be positive.");
+	  EH(GOMA_ERROR, "Matrix graph fillin should be positive.");
 	}
       options[AZ_graph_fill] = i;
     }
@@ -1151,7 +1019,7 @@ set_aztec_options_params ( int options[],
       fprintf(stderr, "\nYou said \"%s\"\n", Matrix_Graph_Fillin);
       fprintf(stderr, "Found %d args\n", iread);
       fprintf(stderr, "Valid argument is a single nonnegative integer.\n");
-      EH(-1, "Undecipherable Matrix graph fillin argument.");
+      EH(GOMA_ERROR, "Undecipherable Matrix graph fillin argument.");
     }
 
   /*
@@ -1171,7 +1039,7 @@ set_aztec_options_params ( int options[],
       fprintf(stderr, "\nYou said \"%s\"\n", Matrix_Maximum_Iterations);
       fprintf(stderr, "Found %d args\n", iread);
       fprintf(stderr, "Valid argument is a single positive integer.\n");
-      EH(-1, "Undecipherable maximum linear solve iteration argument.");
+      EH(GOMA_ERROR, "Undecipherable maximum linear solve iteration argument.");
     }
 
   /*
@@ -1196,7 +1064,7 @@ set_aztec_options_params ( int options[],
     {
       if ( i < 0 )
 	{
-	  EH(-1, "Matrix factorization overlap must be nonnegative.");
+	  EH(GOMA_ERROR, "Matrix factorization overlap must be nonnegative.");
 	}
       options[AZ_overlap] = i;
     }
@@ -1204,7 +1072,7 @@ set_aztec_options_params ( int options[],
     {
       fprintf(stderr, 
 	      "Valid Aztec 2.1 factor overlaps: none(1), diag, k(2).\n");
-      EH(-1, "Unknown factor overlap specification.");
+      EH(GOMA_ERROR, "Unknown factor overlap specification.");
     }
 
   /*
@@ -1222,7 +1090,7 @@ set_aztec_options_params ( int options[],
   else
     {
       fprintf(stderr, "Valid Matrix overlap types: standard, symmetric.\n");
-      EH(-1, "Unknown Matrix overlap type specification.");
+      EH(GOMA_ERROR, "Unknown Matrix overlap type specification.");
     }
 
   /*
@@ -1250,7 +1118,7 @@ set_aztec_options_params ( int options[],
   else
     {
       fprintf(stderr, "\nValid Aztec orthogonalizations: classic, modified.\n");
-      EH(-1, "Unknown orthogonalization specification.");
+      EH(GOMA_ERROR, "Unknown orthogonalization specification.");
     }
 
   /* 
@@ -1268,7 +1136,7 @@ set_aztec_options_params ( int options[],
   else
     {
       fprintf(stderr, "Valid auxiliary vectors: resid, rand.\n");
-      EH(-1, "Unknown auxiliary vector specification.");
+      EH(GOMA_ERROR, "Unknown auxiliary vector specification.");
     }
 
   /* 
@@ -1279,14 +1147,14 @@ set_aztec_options_params ( int options[],
     {
       if ( i < 0 || i > 1 )
 	{
-	  EH(-1, "Matrix factorization save must be 0 or 1.");
+	  EH(GOMA_ERROR, "Matrix factorization save must be 0 or 1.");
 	}
       options[AZ_keep_info] = i;
     }
   else
     {
       fprintf(stderr, "Valid Matrix factorization save: 0, 1\n");
-      EH(-1, "Unknown Matrix factorization save specification.");
+      EH(GOMA_ERROR, "Unknown Matrix factorization save specification.");
     }
 
   /*
@@ -1307,7 +1175,7 @@ set_aztec_options_params ( int options[],
   else
     {
       fprintf(stderr, "Valid Matrix reorder options: none, rcm.\n");
-      EH(-1, "Unknown Matrix reorder specification.");
+      EH(GOMA_ERROR, "Unknown Matrix reorder specification.");
     }
 
   if ( sscanf(Matrix_Convergence_Tolerance, "%lf", &f) == 1 )
@@ -1317,7 +1185,7 @@ set_aztec_options_params ( int options[],
   else
     {
       fprintf(stderr, "Valid Residual Ratio Tolerance is 1 float.\n");
-      EH(-1, "Unknown Residual Ratio Tolerance.");
+      EH(GOMA_ERROR, "Unknown Residual Ratio Tolerance.");
     }
 
   if ( sscanf(Matrix_Drop_Tolerance, "%lf", &f) == 1 )
@@ -1327,7 +1195,7 @@ set_aztec_options_params ( int options[],
   else
     {
       fprintf(stderr, "Valid matrix drop tolerance is 1 float.\n");
-      EH(-1, "Unknown matrix drop tolerance.");
+      EH(GOMA_ERROR, "Unknown matrix drop tolerance.");
     }
 
 
@@ -1338,7 +1206,7 @@ set_aztec_options_params ( int options[],
   else
     {
       fprintf(stderr, "Valid Matrix ILUT fill factor is 1 float.\n");
-      EH(-1, "Unknown Matrix ILUT fill factor specification.");
+      EH(GOMA_ERROR, "Unknown Matrix ILUT fill factor specification.");
     }
 
 
@@ -1349,7 +1217,7 @@ set_aztec_options_params ( int options[],
   else
     {
       fprintf(stderr, "Valid Matrix RILU relax factor is 1 float.\n");
-      EH(-1, "Unknown Matrix RILU relax factor specification.");
+      EH(GOMA_ERROR, "Unknown Matrix RILU relax factor specification.");
     }
 
 #ifdef TRILINOS
@@ -1361,7 +1229,7 @@ set_aztec_options_params ( int options[],
   else
     {
       fprintf(stderr, "Valid Matrix BILU Threshold is 1 float.\n");
-      EH(-1, "Unknown Matrix BILU Threshold specification.");
+      EH(GOMA_ERROR, "Unknown Matrix BILU Threshold specification.");
     }
 
   if ( sscanf(Matrix_Relative_Threshold, "%lf", &f) == 1 )
@@ -1371,7 +1239,7 @@ set_aztec_options_params ( int options[],
   else
     {
       fprintf(stderr, "Valid Matrix Relative Threshold is 1 float.\n");
-      EH(-1, "Unknown Matrix Relative Threshold specification.");
+      EH(GOMA_ERROR, "Unknown Matrix Relative Threshold specification.");
     }
 
   if ( sscanf(Matrix_Absolute_Threshold, "%lf", &f) == 1 )
@@ -1381,7 +1249,7 @@ set_aztec_options_params ( int options[],
   else
     {
       fprintf(stderr, "Valid Matrix Absolute Threshold is 1 float.\n");
-      EH(-1, "Unknown Matrix Absolute Threshold specification.");
+      EH(GOMA_ERROR, "Unknown Matrix Absolute Threshold specification.");
     }
 #endif
 
@@ -1532,27 +1400,27 @@ void hide_external
 
   if ( n < 0 )
     {
-      EH(-1, "Original system is too small.");
+      EH(GOMA_ERROR, "Original system is too small.");
     }
 
   if ( m < 0 )
     {
-      EH(-1, "Truncated system is too small.");
+      EH(GOMA_ERROR, "Truncated system is too small.");
     }
 
   if ( m > n )
     {
-      EH(-1, "Attempt to truncate to a LARGER system?!?");
+      EH(GOMA_ERROR, "Attempt to truncate to a LARGER system?!?");
     }
 
   if ( ija == NULL || a == NULL )
     {
-      EH(-1, "Either ija[] or a[] is empty.");
+      EH(GOMA_ERROR, "Either ija[] or a[] is empty.");
     }
 
   if ( ija[0] != (n+1) )
     {
-      EH(-1, "Order n is inconsistent with ija[0] notion.");
+      EH(GOMA_ERROR, "Order n is inconsistent with ija[0] notion.");
     }
 
   if ( m == n ) return;
@@ -1680,27 +1548,27 @@ show_external(int n,		/* order of the original system      (in) */
 
   if ( n < 0 )
     {
-      EH(-1, "Original system is too small.");
+      EH(GOMA_ERROR, "Original system is too small.");
     }
 
   if ( m < 0 )
     {
-      EH(-1, "Truncated system is too small.");
+      EH(GOMA_ERROR, "Truncated system is too small.");
     }
 
   if ( m > n )
     {
-      EH(-1, "Attempt to truncate to a LARGER system?!?");
+      EH(GOMA_ERROR, "Attempt to truncate to a LARGER system?!?");
     }
 
   if ( ija == NULL || a == NULL )
     {
-      EH(-1, "Either ija[] or a[] is empty.");
+      EH(GOMA_ERROR, "Either ija[] or a[] is empty.");
     }
 
   if ( ija[0] != (m+1) )
     {
-      EH(-1, "Order m is inconsistent with ija[0] notion.");
+      EH(GOMA_ERROR, "Order m is inconsistent with ija[0] notion.");
     }
 
   if ( m == n ) return;
@@ -1848,7 +1716,7 @@ solve_NxN_system(dbl *A,
     {
       fprintf(stderr, "You requested a dense matrix of size %d x %d.\n",
 	      rank, rank);
-      EH(-1, "Increase MAX_NXN_RANK in sl_util.h.");
+      EH(GOMA_ERROR, "Increase MAX_NXN_RANK in sl_util.h.");
     }
 
   for(i = 0; i < rank; i++)
@@ -1863,7 +1731,7 @@ solve_NxN_system(dbl *A,
 	scale += fabs(A[index++]);
       scale += fabs(b[i]);
       if(scale < 1.0e-14)
-	EH(-1, "row sum < 1.0e-14.");
+	EH(GOMA_ERROR, "row sum < 1.0e-14.");
       index = i * row_size;
       for(j = 0; j < rank; j++)
 	A[index++] /= scale;
@@ -1919,7 +1787,7 @@ solve_NxN_system(dbl *A,
       for(j = rank - 1; j > i; j--)
 	b[p[i]] -= A[index--] * x[j];
       if(fabs(A[index]) < 1.0e-14)
-	EH(-1, "A[index] < 1.0e-14.");
+	EH(GOMA_ERROR, "A[index] < 1.0e-14.");
       x[i] = b[p[i]] / A[index];
     }
 }

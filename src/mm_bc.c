@@ -19,9 +19,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <math.h>
 
-#include "std.h" 
+#include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
 #include "rf_io_const.h"
@@ -32,18 +31,27 @@
 #include "rf_allo.h"
 #include "rf_bc.h"
 #include "mm_names.h"
-#include "rf_masks.h"
 #include "mm_eh.h"
-
 #include "dpi.h"
 #include "rf_vars_const.h"
-#include "mm_mp_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
 #include "mm_as_const.h"
+#include "bc_colloc.h"
+#include "el_elm_info.h"
+#include "exo_struct.h"
+#include "mm_bc.h"
+#include "mm_elem_block_structs.h"
+#include "mm_ns_bc.h"
+#include "mm_post_proc.h"
+#include "mm_unknown_map.h"
+#include "rd_mesh.h"
+#include "rf_bc_const.h"
+#include "rf_node_const.h"
+#include "rf_shape.h"
+#include "stdbool.h"
 
 #define GOMA_MM_BC_C
-#include "goma.h"
 
 /*
  * These two workhorse variables help get more specific information out
@@ -517,7 +525,7 @@ set_nodal_Dirichlet_BC(int inode, int ibc,
     
     eqn = boundary_condition->desc->equation; 
     if (eqn > V_LAST) {
-      EH(-1,"Bad eqn");
+      EH(GOMA_ERROR,"Bad eqn");
     }
     if (eqn != R_MASS) {
       offset = get_nodal_unknown_offset(nv, eqn, matID, 0, &vd);
@@ -560,7 +568,7 @@ set_nodal_Dirichlet_BC(int inode, int ibc,
         {
 	  if (boundary_condition->BC_Name == F_DIODE_BC)
 	    {
-	      EH(-1, "F_DIODE_BC has special needs. You need to comment this line out and follow instructions");
+	      EH(GOMA_ERROR, "F_DIODE_BC has special needs. You need to comment this line out and follow instructions");
 	      /*real hack here for diode level-set.  Let liquid out, but not back in.  
 	        if you want to use this comment out the EH above and go to bc_dirich.c and uncomment the if{} protection
                 clearly marked for this BC */
@@ -584,7 +592,7 @@ set_nodal_Dirichlet_BC(int inode, int ibc,
        */
       w = boundary_condition->BC_Data_Int[0];
       if (w >= (upd->Max_Num_Species)) {
-	EH(-1, "Species number on BC Y card exceeds number of species available");
+	EH(GOMA_ERROR, "Species number on BC Y card exceeds number of species available");
       }
       offset = get_nodal_unknown_offset(nv, eqn, matID, w, &vd);
       if (offset < 0) {
@@ -728,7 +736,7 @@ set_nodal_Dirichlet_BC(int inode, int ibc,
 	 */
 	w = boundary_condition->BC_Data_Int[1];
 	if (w >= (upd->Max_Num_Species)) {
-	  EH(-1, "Species number on BC Y card exceeds number of species available");
+	  EH(GOMA_ERROR, "Species number on BC Y card exceeds number of species available");
 	}
 	offset = get_nodal_unknown_offset(nv, eqn, matID, w, &vd);
 	if (offset < 0) {
@@ -809,10 +817,6 @@ alloc_First_Elem_BC (struct elem_side_bc_struct ****First_Elem_Side_BC_Array,
 {
   int imtrx;
 
-#ifdef DEBUG
-  printf ("alloc_First_Elem_BC: size of (struct elem_side_bc_struct) = %lu\n",
-	  sizeof(struct elem_side_bc_struct));
-#endif
   size_t sz_side = sizeof (struct elem_side_bc_struct ***);
   size_t sz_edge = sizeof (struct elem_edge_bc_struct ***);
   *First_Elem_Side_BC_Array = malloc(sz_side * (size_t) upd->Total_Num_Matrices);
@@ -866,7 +870,7 @@ searchEBForNode(int eb_id_target, Exo_DB *exo, int nodeTarget, int *ielemList, i
     }
   if (ebindex_target == -1) 
     {
-      EH(-1, "searchEBForNode Error: eb_id_target not found");
+      EH(GOMA_ERROR, "searchEBForNode Error: eb_id_target not found");
     }
   int nelems = exo->eb_num_elems[ebindex_target];
   int npe = exo->eb_num_nodes_per_elem[ebindex_target];
@@ -1001,7 +1005,7 @@ set_up_Surf_BC(struct elem_side_bc_struct **First_Elem_Side_BC_Array[ ],
 		       */
 		      if ( exo->ns_num_nodes[ins] != 1)
 			{
-			  EH(-1,"not 1");
+			  EH(GOMA_ERROR,"not 1");
 			}
 		      for (i = 0; i < exo->ns_num_nodes[ins]; i++)
 			{
@@ -1018,7 +1022,7 @@ set_up_Surf_BC(struct elem_side_bc_struct **First_Elem_Side_BC_Array[ ],
 			      nfound = searchEBForNode(ebid_target, exo, inode, elemList, 5);
 			      if (nfound != 1) 
 				{
-				  EH(-1, "nfound != 1");
+				  EH(GOMA_ERROR, "nfound != 1");
 				}
 			      num_nodes_on_side = 1;
 			      local_node_list[0] = inode;
@@ -1071,18 +1075,6 @@ set_up_Surf_BC(struct elem_side_bc_struct **First_Elem_Side_BC_Array[ ],
 
 	for (iss = 0; iss < exo->num_side_sets; iss++) {
 
-#ifdef DEBUG
-          printf ("    Info on local side set number %d:\n", iss);
-          printf ("\tID of the side set = %d\n", Proc_SS_Ids[iss]);
-	  printf ("\tNumber of elements = %d\n",  Proc_SS_Elem_Count[iss]);
-	  printf ("\tNumber of nodes    = %d\n",  Proc_SS_Node_Count[iss]);
-          printf ("\tNumber of nodes per element = %d\n",
-		  Proc_SS_Node_Count[iss] / Proc_SS_Elem_Count[iss] );
-	  printf ("\tValue of the pointer into the Element list = %d\n", 
-		  Proc_SS_Elem_Pointers[iss]);
-	  printf ("\tValue of the pointer into the Node list = %d\n", 
-		  Proc_SS_Node_Pointers[iss]);
-#endif
 
           /* 
 	   * Check for a match between the ID of the current side set
@@ -1097,9 +1089,6 @@ set_up_Surf_BC(struct elem_side_bc_struct **First_Elem_Side_BC_Array[ ],
 	    for (i = 0; i < exo->ss_num_sides[iss]; i++) {
 	      ielem = exo->ss_elem_list[exo->ss_elem_index[iss]+i];
 	      side  = exo->ss_side_list[exo->ss_elem_index[iss]+i];
-#ifdef DEBUG
-	      fprintf(stderr, "Side/elem = %d, %d\n", ielem, side);
-#endif
 	      /*
 		for (i = 0; i < Proc_SS_Elem_Count[iss]; i++) {
 	      */
@@ -1378,7 +1367,7 @@ set_up_Surf_BC(struct elem_side_bc_struct **First_Elem_Side_BC_Array[ ],
 	    {
 	      sr = sprintf(err_msg, 
 			   "%s: Q_VELO_SLIP specified without corresponding VELO_SLIP condition", yo);
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	}
     }
@@ -1392,8 +1381,13 @@ set_up_Surf_BC(struct elem_side_bc_struct **First_Elem_Side_BC_Array[ ],
   mom_rotate_ss = calloc((size_t) upd->Total_Num_Matrices, sizeof(int *));
   num_mom_rotate = calloc((size_t) upd->Total_Num_Matrices, sizeof(int));
 
-  if (Num_ROT == 0) check_for_bc_conflicts2D(exo, dpi);
-  if (Num_ROT > 0)  check_for_bc_conflicts3D(exo, dpi);
+  if (Num_ROT == 0 && exo->num_dim < 3) {
+    check_for_bc_conflicts2D(exo, dpi);
+  } else if (Num_ROT == 0 && exo->num_dim == 3) {
+    check_for_bc_conflicts3D(exo, dpi);
+  } else if (Num_ROT > 0) {
+    check_for_bc_conflicts3D(exo, dpi);
+  }
 
   return;
 } /* End of set_up_Surf_BC */
@@ -1542,7 +1536,7 @@ Exo_DB *exo, Dpi *dpi) {
         if ( !found_ns_global ) {
           sr = sprintf(err_msg, "NS_ID %d for BC (%d) not found",
           ns_id, ibc+1);
-          EH(-1, err_msg);
+          EH(GOMA_ERROR, err_msg);
         }
 
         // Here we need to use setup_Elem_Edge_BC to attach this
@@ -1597,9 +1591,6 @@ set_up_Edge_BC (struct elem_edge_bc_struct **First_Elem_Edge_BC_Array[ ],
   int l, k, k_node;
   int node_list[MDE];
   int node_ctr = -1;
-#ifdef DEBUG
-  int side;
-#endif
 #ifdef PARALLEL
   int iss1g, iss2g;
 #endif
@@ -1666,7 +1657,7 @@ set_up_Edge_BC (struct elem_edge_bc_struct **First_Elem_Edge_BC_Array[ ],
 	    {
 	      sr = sprintf(err_msg, "Primary SS_ID %d for BC (%d) not found",
 			   ss_id1, ibc+1);
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 
 
@@ -1689,7 +1680,7 @@ set_up_Edge_BC (struct elem_edge_bc_struct **First_Elem_Edge_BC_Array[ ],
 	    {
 	      sr = sprintf(err_msg, "Secondary SS_ID %d for BC (%d) not found",
 			   ss_id2, ibc+1);
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 
 
@@ -1708,10 +1699,6 @@ set_up_Edge_BC (struct elem_edge_bc_struct **First_Elem_Edge_BC_Array[ ],
 	      for ( i=0; i<exo->ss_num_sides[iss1]; i++)
 		{
 		  ielem = exo->ss_elem_list[exo->ss_elem_index[iss1]+i];
-#ifdef DEBUG
-		  side  = exo->ss_side_list[exo->ss_elem_index[iss1]+i];
-		  fprintf(stderr, "Side/elem = %d, %d\n", ielem, side);
-#endif
 		  num_nodes_on_side = ( exo->ss_node_side_index[iss1][i+1] -
 					exo->ss_node_side_index[iss1][i] );
 
@@ -1761,7 +1748,7 @@ set_up_Edge_BC (struct elem_edge_bc_struct **First_Elem_Edge_BC_Array[ ],
 			    }
 			}
 
-		      if (node_ctr == 0) EH(-1, "No nodes on edge");
+		      if (node_ctr == 0) EH(GOMA_ERROR, "No nodes on edge");
 
 		      if (num_nodes_on_edge != -1) 
 			{ 
@@ -1770,7 +1757,7 @@ set_up_Edge_BC (struct elem_edge_bc_struct **First_Elem_Edge_BC_Array[ ],
 			   */
 			  if (num_nodes_on_edge != node_ctr) 
 			    {
-			      EH(-1, "Number of edge nodes varies w/ element!");
+			      EH(GOMA_ERROR, "Number of edge nodes varies w/ element!");
 			    }
 			  num_nodes_on_edge = node_ctr;
 			} 
@@ -1786,9 +1773,6 @@ set_up_Edge_BC (struct elem_edge_bc_struct **First_Elem_Edge_BC_Array[ ],
                                                            ielem, 
                                                            node_list, exo);
 
-#ifdef DEBUG		    /* create elem_side_bc's for SS1 and SS2 */
-                        printf("ielem %d, ibc %d, ss_1 %d, ss_2 %d\n", ielem, ibc, ss_id1, ss_id2);
-#endif
                         setup_Elem_BC (&(this_edge_bc->elem_side_bc_1), 
                                        &BC_Types[ibc],
                                        ibc, num_nodes_on_side, ielem, 
@@ -1882,7 +1866,7 @@ set_up_Edge_BC (struct elem_edge_bc_struct **First_Elem_Edge_BC_Array[ ],
 			       */
 			      if (num_nodes_on_edge != node_ctr) 
 				{
-				  EH(-1, "Number of edge nodes varies w/ element!");
+				  EH(GOMA_ERROR, "Number of edge nodes varies w/ element!");
 				}
 			      num_nodes_on_edge = node_ctr;
 			    } 
@@ -1977,7 +1961,7 @@ set_up_Embedded_BC (void)
       
       if ( ls == NULL)
         {
-          EH(-1,"Attempt to apply bc on LS but level set is not active, did you intend PF?\n");
+          EH(GOMA_ERROR,"Attempt to apply bc on LS but level set is not active, did you intend PF?\n");
         }
         
       bc->next = ls->embedded_bc;
@@ -1994,12 +1978,12 @@ set_up_Embedded_BC (void)
       
       if ( pfd == NULL )
         {
-          EH(-1,"Attempt to apply bc on PF but phase functions are not active.\n");
+          EH(GOMA_ERROR,"Attempt to apply bc on PF but phase functions are not active.\n");
         }
         
       if ( pf >= pfd->num_phase_funcs )
         {
-          EH(-1,"Attempt to apply bc to invalid phase function.\n");
+          EH(GOMA_ERROR,"Attempt to apply bc to invalid phase function.\n");
         }
         
       bc->next = pfd->ls[pf]->embedded_bc;
@@ -2090,11 +2074,6 @@ find_bc_unk_offset(struct Boundary_Condition *bc, int curr_mat,
    * If we haven't assigned ieqn by this point for rotated bc's
    * we have made an error
    */
-#ifdef DEBUG_HKM
-  if (ieqn >= MAX_VARIABLE_TYPES) {
-    EH(-1, "ERROR");
-  }
-#endif
   /*
    * If the equation has zero degrees of freedom at this node
    * return. Otherwise, get the number of variable description
@@ -2177,7 +2156,7 @@ find_bc_unk_offset(struct Boundary_Condition *bc, int curr_mat,
        */
       if (in_list(matIndex, 0, node->Mat_List.Length, 
 		  node->Mat_List.List) == -1) {
-	EH(-1,"TROUBLE");
+	EH(GOMA_ERROR,"TROUBLE");
       }
     }
   }
@@ -2305,7 +2284,7 @@ setup_Elem_BC(struct elem_side_bc_struct **elem_side_bc,
 	sprintf(err_msg, 
 		"MAX_BC_PER_SIDE(%d) exceeded - elem [%d], BC %d",
 		MAX_BC_PER_SIDE, ielem, ibc);
-	EH(-1, err_msg);
+	EH(GOMA_ERROR, err_msg);
       }
       vcrr_determination(side, bc_type, ielem, ibc);
     } else {
@@ -2418,7 +2397,7 @@ initialize_Boundary_Condition (struct Boundary_Condition *bc_ptr)
       *************************************************************************/
 {
   if (bc_ptr == NULL) {
-    EH(-1, "initialize_Boundary_Condition FATAL ERROR");
+    EH(GOMA_ERROR, "initialize_Boundary_Condition FATAL ERROR");
   }
   
   /*
@@ -2536,7 +2515,7 @@ find_id_side(const int ielem,			/* element index number */
 	{
 	  sr = sprintf(err_msg, "%s: lost SS node [%d] = %d  %d  %d",
 		       yo, i, local_ss_node_list[i], num_nodes_on_side, ielem );
- 	  EH(-1, err_msg); 
+ 	  EH(GOMA_ERROR, err_msg); 
 	}
     }
 
@@ -2596,7 +2575,7 @@ find_id_side(const int ielem,			/* element index number */
 	       "%s: problem for elem (%d), dimension %d, %d nodes on side.", 
 	       yo, ielem+1, ielem_dim, num_nodes_on_side);
 
-  EH(-1, err_msg);
+  EH(GOMA_ERROR, err_msg);
 
   return (-1);
 }
@@ -2612,7 +2591,7 @@ find_id_side_BC(const int ielem,		/* element index number */
 		int id_local_elem_coord[],	/* Local node numbers of the side (out) */
 		const Exo_DB *exo)		/* ptr to FE db         (in) */
 {
-  int sideid, iss, ielem_type;
+  int sideid, ielem_type;
 
   /* Run the usual routine */
   sideid = find_id_side(ielem, num_nodes_on_side,
@@ -2623,8 +2602,26 @@ find_id_side_BC(const int ielem,		/* element index number */
 
   /* If we're working with tetrahedral elements, re-work the side id */
   if ( ielem_type == LINEAR_TET ) {
-    iss = BC_Types[ibc].Set_Index;
-    sideid = find_id_side_SS(ielem, iss, exo);
+    bool nodes[4] = {false,false,false,false};
+    for (int i = 0; i < 4; i++) {
+      int node_id = exo->elem_node_list[exo->elem_node_pntr[ielem]+i];
+      for (int j = 0; j < num_nodes_on_side; j++) {
+        if (node_id == local_ss_node_list[j]) {
+          nodes[i] = true;
+        }
+      }
+    }
+    if (nodes[0] && nodes[1] && nodes[3]) {
+      return 1;
+    } else if (nodes[1] && nodes[2] && nodes[3]) {
+      return 2;
+    } else if (nodes[0] && nodes[2] && nodes[3]) {
+      return 3;
+    } else if (nodes[0] && nodes[1] && nodes[2]) {
+      return 4;
+    } else {
+      EH(GOMA_ERROR, "Unknown tet layout");
+    }
   }
 
   return(sideid);    
@@ -2835,7 +2832,7 @@ elem_side_matrl_list(struct elem_side_bc_struct *side)
 #ifdef DEBUG_IGNORE_ELEMENT_BLOCK_CAPABILITY
       if (mlist->List[j] < 0) {
         fprintf(stderr,"node list contains negative mn number\n");
-        EH(-1, "logic error with ignored element block");
+        EH(GOMA_ERROR, "logic error with ignored element block");
       }
 #endif
       matrl_list[mlist->List[j]]++;
@@ -2891,7 +2888,7 @@ vcrr_determination(struct elem_side_bc_struct *side,
 	  }
 	}
 	if (nf) {
-	  EH(-1,"Problems with material mappings");
+	  EH(GOMA_ERROR,"Problems with material mappings");
 	}
         /*
 	 * If we are here, then we need to add an entry for
@@ -2958,7 +2955,7 @@ set_up_BC_connectivity(void)
 	}
       }
       if (!ifound) {
-	EH(-1,"set_up_BC_connectivity failure");
+	EH(GOMA_ERROR,"set_up_BC_connectivity failure");
       }
       break;
     default:

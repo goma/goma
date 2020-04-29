@@ -21,101 +21,35 @@
  * Revised:
  */
 
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: dp_utils.c,v 5.1 2007-09-18 18:53:41 prschun Exp $";
-#endif
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "std.h"
-#include "el_elm.h"
-#include "rf_vars_const.h"
-#include "mm_as_const.h"
-#include "mm_as_structs.h"
-#include "mm_as.h"
-#include "rf_masks.h"
-#include "rf_bc_const.h"
-
 #include "mm_eh.h"
-
-#include "exo_struct.h"
-#include "dpi.h"
 #include "dp_types.h"
-
 #include "rf_mp.h"
 #include "rf_io_const.h"
+#include "dp_utils.h"
+#include "mpi.h"
+#include "rf_allo.h"
+#include "rf_fem_const.h"
 
 #define GOMA_DP_UTILS_C
-#include "goma.h"
 
 static char mpistringbuffer[80];
 
 static Spfrtn sr;
 
 #include "az_aztec.h"
+
 int Proc_Config[AZ_PROC_SIZE];
 
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
 
-#ifdef DEBUG_HKM
-#ifdef USE_CHEMKIN
-static int ddd_size = 0;
-void
-binMPI(int blocksize, MPI_Datatype type)
-    
-    /*******************************************************************
-     *
-     * binMPI():
-     *
-     *  Routine to debug nasty MPI problems.
-     *
-     ********************************************************************/
-{
-  static int bins[400];
-  static int firsttime= TRUE;
-  int i, index, sum;
-  if (firsttime || blocksize == -2) {
-    firsttime = FALSE;
-    for (i = 0; i < 400; i++) {
-      bins[i] = 0;
-    }
-  }
-  if (blocksize == -2) return;
-  if (blocksize == -1) {
-    sum = 0;
-    cpc_mp_init(Num_Proc, 0, ProcID, NULL);    
-    cpc_print_sync_start(TRUE);
-    printf(" Proc %d  Type      Blocks of type\n", ProcID);
-    printf("-------------------------------------------------------------\n");
-    for (i = 0; i < 400; i++) {
-      if (bins[i] > 0) {
-         printf("%12d     %12d\n", i, bins[i]);
-         sum += bins[i];
-      }     
-    }
-    printf("-------------------------------------------------------------\n");
-    printf("            %12d\n", sum);
-    cpc_print_sync_end(TRUE);
-  } else {
-    index = (int)  type;
-    if (index <= 0 || index >= 400) {
-        printf("binMPI error, index = %d\n", index);
-        exit(-1);
-    }
-    if (blocksize <= 0) {
-        printf("binMPI error, blocksize = %d\n", blocksize);
-        exit(-1);
-    }
-    bins[index] += blocksize;
-  }
-  return;
-}
-#endif
-#endif
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -131,9 +65,6 @@ ddd_alloc(void)
   p->block_count = (int *) calloc(n, sizeof(int));
   p->data_type   = (MPI_Datatype *) calloc(n, sizeof(MPI_Datatype));
   p->address     = (MPI_Aint *) calloc(n, sizeof(MPI_Aint));
-#ifdef DEBUG
-  fprintf(stderr, "P_%d in ddd_alloc()\n", ProcID);
-#endif  
   return(p);
 }
 
@@ -208,7 +139,7 @@ ddd_add_member2(void *address, int blockcount, size_t byte_size)
 
   if (byte_size <= 0) {
     fprintf(stderr," ddd_add_member2 ERROR: byte_size = %ld\n", (long int)byte_size);
-    EH(-1,"ddd_add_member2 parameter error");
+    EH(GOMA_ERROR,"ddd_add_member2 parameter error");
   }
   length = blockcount * byte_size;
   if (length > 0) {
@@ -261,7 +192,7 @@ ddd_add_member(DDD p,
     {
       sr = sprintf(err_msg, "Attempt to add member %d type %s w/ 0 length!",
 		   i, type2string(type));
-      EH(-1, err_msg);
+      EH(GOMA_ERROR, err_msg);
     }
 
   if ( address == NULL )
@@ -269,10 +200,7 @@ ddd_add_member(DDD p,
       sprintf(err_msg, 
 	      "attempt to add member %d type %s blockcount %d with a NULL address!",
 	      i, type2string(type), blockcount);
-#ifdef DEBUG_HKM
-      printf("%s\n", err_msg); fflush(stdout);
-#endif
-      EH(-1, err_msg);
+      EH(GOMA_ERROR, err_msg);
     }
 
   if ( i > p->max_members-1 )
@@ -293,24 +221,10 @@ ddd_add_member(DDD p,
    *  This is just the identity operator on most systems
    */
   MPI_Get_address(address, &p->address[i]);
-#ifdef DEBUG
-   /* the check below does not work on dec or tflop */
-  if ((int) address != p->address[i]) {
-    printf("MPI_ADDRESS DOES SOMETHING WHOOHOO\n");
-    printf("address = %d  p->address[i] = %d\n",
-	   (int) address, p->address[i]);
-  }
-#endif
 
 #endif
   p->num_members++;
 
-#ifdef DEBUG_HKM
-#ifdef USE_CHEMKIN
-  ddd_size += blockcount;
-  binMPI(blockcount, type);
-#endif
-#endif
   return;
 }
 /************************************************************************/
@@ -469,17 +383,17 @@ ReduceBcast_BOR(int *ivec, int length)
     return;
   }
   if (ivec == NULL) {
-    EH(-1, " ReduceBcast_BOR fatal Interface error");
+    EH(GOMA_ERROR, " ReduceBcast_BOR fatal Interface error");
   }
   ivec_recv = alloc_int_1(length, INT_NOINIT);
   err = MPI_Reduce(ivec, ivec_recv, length, MPI_INT, MPI_BOR, 0,
 	           MPI_COMM_WORLD);
   if (err != MPI_SUCCESS) {
-    EH(-1, " ReduceBcast_BOR fatal MPI Error");
+    EH(GOMA_ERROR, " ReduceBcast_BOR fatal MPI Error");
   }
   err = MPI_Bcast(ivec_recv, V_LAST, MPI_INT, 0, MPI_COMM_WORLD);
   if (err != MPI_SUCCESS) {
-    EH(-1, " ReduceBcast_BOR fatal MPI Error");
+    EH(GOMA_ERROR, " ReduceBcast_BOR fatal MPI Error");
   }  
   for (k = 0; k < V_LAST; k++) {
     ivec[k] = ivec_recv[k];
@@ -522,7 +436,7 @@ gmaxloc_int(const int value, const int local_loc, int *global_maxloc)
   err = MPI_Allreduce((void *)in_buf, (void *) out_buf, 1, MPI_2INT,
 	   	      MPI_MAXLOC, MPI_COMM_WORLD);
   if (err != MPI_SUCCESS) {
-    EH(-1, "gmaxloc_int: MPI_Allreduce returned an error");
+    EH(GOMA_ERROR, "gmaxloc_int: MPI_Allreduce returned an error");
   }
   *global_maxloc = out_buf[1];
   return out_buf[0];
@@ -566,7 +480,7 @@ gminloc_int(const int value, const int local_loc, int *global_minloc)
   err = MPI_Allreduce((void *)in_buf, (void *) out_buf, 1, MPI_2INT,
 		      MPI_MINLOC, MPI_COMM_WORLD);
   if (err != MPI_SUCCESS) {
-    EH(-1, "gminloc_int: MPI_Allreduce returned an error");
+    EH(GOMA_ERROR, "gminloc_int: MPI_Allreduce returned an error");
   }
   *global_minloc = out_buf[1];
   return out_buf[0];
@@ -600,7 +514,7 @@ gmin_int(int value)
   err = MPI_Allreduce((void *) &value, (void *) &out_buf, 1, MPI_INT,
 		      MPI_MIN, MPI_COMM_WORLD);
   if (err != MPI_SUCCESS) {
-    EH(-1, "gmin_int: MPI_Allreduce returned an error");
+    EH(GOMA_ERROR, "gmin_int: MPI_Allreduce returned an error");
   }
   return out_buf;
 #else
@@ -632,7 +546,7 @@ gmax_int(int value)
   err = MPI_Allreduce((void *) &value, (void *) &out_buf, 1, MPI_INT,
 		      MPI_MAX, MPI_COMM_WORLD);
   if (err != MPI_SUCCESS) {
-    EH(-1, "gmax_int: MPI_Allreduce returned an error");
+    EH(GOMA_ERROR, "gmax_int: MPI_Allreduce returned an error");
   }
   return out_buf;
 #else
@@ -664,7 +578,7 @@ gsum_Int(int value)
   err = MPI_Allreduce((void *) &value, (void *) &out_buf, 1, MPI_INT,
 		      MPI_SUM, MPI_COMM_WORLD);
   if (err != MPI_SUCCESS) {
-    EH(-1, "gsum_Int: MPI_Allreduce returned an error");
+    EH(GOMA_ERROR, "gsum_Int: MPI_Allreduce returned an error");
   }
   return out_buf;
 #else
@@ -697,7 +611,7 @@ gavg_double(double value)
   err = MPI_Allreduce((void *) &value, (void *) &out_buf, 1, MPI_DOUBLE,
 	     	      MPI_SUM, MPI_COMM_WORLD);
   if (err != MPI_SUCCESS) {
-    EH(-1, "gavg_double: MPI_Allreduce returned an error");
+    EH(GOMA_ERROR, "gavg_double: MPI_Allreduce returned an error");
   }
   return out_buf / Num_Proc;
 #else

@@ -14,6 +14,12 @@
 #ifndef GOMA_USER_MP_H
 #define GOMA_USER_MP_H
 
+#include "el_elm.h"
+#include "rf_fem_const.h"
+#include "std.h"
+#include "user_ac.h"
+
+struct Elastic_Constitutive;
 #ifdef EXTERN
 #undef EXTERN
 #endif

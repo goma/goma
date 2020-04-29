@@ -20,7 +20,6 @@
 
 /* Standard include files */
 
-#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
@@ -29,34 +28,36 @@
 #include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_masks.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
 #include "rf_mp.h"
 #include "el_elm.h"
-#include "el_geom.h"
 #include "rf_bc_const.h"
-#include "rf_solver_const.h"
-#include "rf_fill_const.h"
-#include "rf_vars_const.h"
 #include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
 #include "mm_fill_ls.h"
-
 #include "mm_eh.h"
-
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
-
 #include "mm_fill_terms.h"
 #include "mm_std_models_shell.h"
+#include "bc_colloc.h"
+#include "el_elm_info.h"
+#include "mm_elem_block_structs.h"
+#include "mm_fill_aux.h"
+#include "mm_fill_solid.h"
+#include "mm_fill_species.h"
+#include "mm_fill_util.h"
+#include "mm_numjac.h"
+#include "mm_qtensor_model.h"
+#include "mm_shell_util.h"
+#include "rf_allo.h"
+#include "rf_element_storage_struct.h"
+#include "user_mp.h"
+#include "exo_struct.h"
+
 #define GOMA_MM_FILL_POROUS_C
 #include "mm_fill_porous.h"
-#include "sl_aux.h"
-#include "goma.h"
 
 /*
  * Global variables defined here. Declared frequently via rf_bc.h
@@ -1001,7 +1002,7 @@ int assemble_pore_sink_mass(double time, /* present time valuel; KSC           *
     } /* End of if Assemble_Jacobian */
 
 
-//   EH(-1,"if you got here you need to contact P. R. Schunk.  Pore-Sink-mass");
+//   EH(GOMA_ERROR,"if you got here you need to contact P. R. Schunk.  Pore-Sink-mass");
   return status;
 
 }
@@ -1113,9 +1114,9 @@ load_porous_properties(void)
 	   cr->MeshMotion == DYNAMIC_LAGRANGIAN))
     {
       if (mp->PorousMediaType == POROUS_BRINKMAN) {
-	EH(-1, "Variable porosity not allowed with brinkman");
+	EH(GOMA_ERROR, "Variable porosity not allowed with brinkman");
       }
-      if (!pd->v[pg->imtrx][POR_POROSITY]) EH(-1, "Can't solve for DEFORM w/o solving for porosity");
+      if (!pd->v[pg->imtrx][POR_POROSITY]) EH(GOMA_ERROR, "Can't solve for DEFORM w/o solving for porosity");
       /* two ways to calculate porosity */
       porosity = mp->porosity = fv->porosity;
       if (pd->TimeIntegration == TRANSIENT)
@@ -1127,7 +1128,7 @@ load_porous_properties(void)
     }
   else
     {
-      EH(-1, "No models for porosity");
+      EH(GOMA_ERROR, "No models for porosity");
     }
 
   /* 
@@ -1221,7 +1222,7 @@ load_porous_properties(void)
        }
      else
        {
-	 EH(-1,"No other PorousFluxModel allowed for tensor perm");
+	 EH(GOMA_ERROR,"No other PorousFluxModel allowed for tensor perm");
        }
    }
    return 0;
@@ -1285,7 +1286,7 @@ load_porous_properties(void)
      pmv_old->cap_pres = fv_old->p_gas - fv_old->p_liq;
    }
 					   
- } else EH(-1, "Illegal medium type");
+ } else EH(GOMA_ERROR, "Illegal medium type");
 
 /* 
  * this is a big mess - for each property of the porous media, we need
@@ -1603,7 +1604,7 @@ load_porous_properties_nodes(int lnn)
     }
   else 
     {
-      EH(-1, "Unknown model for porosity or incorrect MeshMotion option");
+      EH(GOMA_ERROR, "Unknown model for porosity or incorrect MeshMotion option");
     }
   
   if (mp->PorousMediaType == POROUS_SATURATED) {
@@ -2157,7 +2158,7 @@ load_nodal_shell_porous_properties(double tt, double dt, int eqn)
       }
     else
       {
-       EH(-1, "Only CONSTANT and EXTERNAL_FIELD porosity models are supported in shell porous open equation");
+       EH(GOMA_ERROR, "Only CONSTANT and EXTERNAL_FIELD porosity models are supported in shell porous open equation");
       }
 
     phi = mp->porosity;                         /* Porosity */
@@ -2503,7 +2504,7 @@ get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
 
   if(mp->HeatSourceModel == USER )
     {
-      EH(-1,"User heat source model not defined");
+      EH(GOMA_ERROR,"User heat source model not defined");
     }
   else if (mp->HeatSourceModel == CONSTANT )
     {
@@ -2511,7 +2512,7 @@ get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
     }
   else
     {
-      EH(-1,"Unrecognized heat source model");
+      EH(GOMA_ERROR,"Unrecognized heat source model");
     }
 
   /*
@@ -3085,7 +3086,7 @@ get_porous_part_sat_terms_decoupled(struct Porous_Media_Terms *pmt,
    * RE-DERIVE THE EQUATIONS ALA' TIME DERIVATIVES FOR DECOUPLED APPROACH AND
    * CHANGE ACCORDINGLY 
    */
-  if (pd->e[pg->imtrx][R_POR_GAS_PRES]) EH(-1,"Must update get_porous_part_sat_terms_decouple for two phase");
+  if (pd->e[pg->imtrx][R_POR_GAS_PRES]) EH(GOMA_ERROR,"Must update get_porous_part_sat_terms_decouple for two phase");
  
 
   /***********************************************************************
@@ -3118,8 +3119,8 @@ get_porous_part_sat_terms_decoupled(struct Porous_Media_Terms *pmt,
     /*
      * Gas solvent component, e.g. air 
      */
-    if (pd->e[pg->imtrx][R_POR_GAS_PRES]) EH(-1,"Need to implement gas phase transport in decoupled version");
-    if (pd->e[pg->imtrx][R_POR_POROSITY]) EH(-1,"Need to implement solid transport in decoupled version");
+    if (pd->e[pg->imtrx][R_POR_GAS_PRES]) EH(GOMA_ERROR,"Need to implement gas phase transport in decoupled version");
+    if (pd->e[pg->imtrx][R_POR_POROSITY]) EH(GOMA_ERROR,"Need to implement solid transport in decoupled version");
 
   } else {
     pmt->Inventory_solvent_dot[i_pl] = 0.0;
@@ -3486,14 +3487,6 @@ get_porous_fully_sat_terms(struct Porous_Media_Terms *pmt,
   CONVECTION_VELOCITY_DEPENDENCE_STRUCT *d_vconv = &d_vconv_struct;
 
   zero_structure(pmt , sizeof(struct Porous_Media_Terms), 1);
-#ifdef DEBUG_HKM
-  /*
-   * If we are not solving the por_liq_pres equation, doop!
-   */
-  if (! pd->v[pg->imtrx][POR_LIQ_PRES]) {
-    EH(-1,"We shouldn't be here if POR_LIQ_PRESS eqn isn't defined");
-  }
-#endif
   if(efv->ev_porous_decouple)
     {
       /*compute porosity using linear pressure expansion model, incremental
@@ -3631,7 +3624,7 @@ get_porous_fully_sat_terms(struct Porous_Media_Terms *pmt,
   	  (pmv->liq_darcy_velocity[a] + vconv[a] * mp->porosity);
       }
     } else {
-      EH(-1, 
+      EH(GOMA_ERROR, 
 	"Unimplemented flux constitutive relation in saturated media. Check Porous Diffusion Constitutive Equation card");
     }
   
@@ -3710,7 +3703,7 @@ get_porous_fully_sat_terms(struct Porous_Media_Terms *pmt,
 
   if(mp->HeatSourceModel == USER )
     {
-      EH(-1,"User heat source model not defined");
+      EH(GOMA_ERROR,"User heat source model not defined");
     }
   else if (mp->HeatSourceModel == CONSTANT )
     {
@@ -3718,7 +3711,7 @@ get_porous_fully_sat_terms(struct Porous_Media_Terms *pmt,
     }
   else
     {
-      EH(-1,"Unrecognized heat source model");
+      EH(GOMA_ERROR,"Unrecognized heat source model");
     }
 
 
@@ -3850,7 +3843,7 @@ get_porous_fully_sat_terms(struct Porous_Media_Terms *pmt,
 	  (mp->PermeabilityModel == KOZENY_CARMAN ||
 	   mp->PermeabilityModel == SINK_MASS_PERM)) 
 	{
-	  EH(-1,"Permeability tensor can only have constant components for now");
+	  EH(GOMA_ERROR,"Permeability tensor can only have constant components for now");
 	}
 
       var = POR_LIQ_PRES;
@@ -4585,7 +4578,7 @@ porous_normal_velocity_bc (double func[],
       }
 
     }
-  else EH(-1,"No Slip called with incorrect block id");
+  else EH(GOMA_ERROR,"No Slip called with incorrect block id");
   /* note, we may not want to quit at this point */
   return;
 }  /*  end of porous_normal_velocity_bc */
@@ -4728,7 +4721,7 @@ put_gas_flux_in_pores (double func[],
       }
 
     }
-  else EH(-1,"No Slip called with incorrect block id");
+  else EH(GOMA_ERROR,"No Slip called with incorrect block id");
   /* note, we may not want to quit at this point */
   return;
 } /*  end of  put_gas_flux_in_pores  */
@@ -4793,7 +4786,7 @@ porous_vapor_equil_bc(double func[],
      *       this at the moment.
      */
     *func = - fv->T;
-    EH(-1,"porous_vapor_equil_bc is broken. Fix it first");
+    EH(GOMA_ERROR,"porous_vapor_equil_bc is broken. Fix it first");
 
     if (af->Assemble_Jacobian) {
       var = TEMPERATURE;
@@ -4804,7 +4797,7 @@ porous_vapor_equil_bc(double func[],
 	}
       }
     }
-  } else EH(-1,"porous_vapor_equil_bc");
+  } else EH(GOMA_ERROR,"porous_vapor_equil_bc");
   return;
 }  /*  end of   porous_vapor_equil_bc  */
 /*****************************************************************************/
@@ -4983,7 +4976,7 @@ load_permeability(void)
     }
   else
     {
-      EH(-1, "Unknown model for permeability");
+      EH(GOMA_ERROR, "Unknown model for permeability");
     }
 
   return  mp->permeability;
@@ -5070,7 +5063,7 @@ load_permeability_tensor(void)
     }
   else if (mp->PermeabilityModel == SM_TENSOR)
     {
-      EH(-1,"SM_TENSOR perm model is implemented but not yet tested");
+      EH(GOMA_ERROR,"SM_TENSOR perm model is implemented but not yet tested");
       /*FOR particle SM_TENSOR (SinkMass_Tensor) - Porosity dependence on permeability with
        *mp->u_permeability[0] k_max in K11 direction (maximum saturated permeability or conductivity)
        *mp->u_permeability[1] k_rmin is the relative minumum permeability
@@ -5196,7 +5189,7 @@ load_permeability_tensor(void)
     }
   else
     {
-      EH(-1, "Unknown model for tensor permeability");
+      EH(GOMA_ERROR, "Unknown model for tensor permeability");
     }
 
       
@@ -5302,7 +5295,7 @@ load_permeability_tensor(void)
     }
   else
     {
-      EH(-1,"Not sure where to go from here dude: load_permeability_tensor");
+      EH(GOMA_ERROR,"Not sure where to go from here dude: load_permeability_tensor");
     }
   /* Permeablity only depends on mesh motion,  currently */
   if (pd->v[pg->imtrx][MESH_DISPLACEMENT1])
@@ -5385,7 +5378,7 @@ load_shell_permeability_tensor(void)
     NTperm[2][2] = 2*k;
 
   } else {
-    EH(-1,"Woah, pick another permeability model.  load_shell_permeability_tensor()");
+    EH(GOMA_ERROR,"Woah, pick another permeability model.  load_shell_permeability_tensor()");
   }
 
   /* Calculate rotation matrix */
@@ -6310,7 +6303,7 @@ load_saturation(double porosity, double cap_pres, double d_cap_pres[2])
 	if (saturation > 1.0) 
 	  {
 	    /*	    fprintf(stderr,"sat way greater than unity, %lf %lf %lf %lf %lf", saturation, cap_pres_clip, s_max, con_a, con_b);
-		    EH(-1," Stopped! in tanh_hyst"); */
+		    EH(GOMA_ERROR," Stopped! in tanh_hyst"); */
 	  }
 	if (saturation > 1.0) saturation = mp->saturation = 1.0;
 	if( saturation < 0.0 ) 
@@ -6344,7 +6337,7 @@ load_saturation(double porosity, double cap_pres, double d_cap_pres[2])
 	  {
 	    saturation = mp->saturation = 1.0;
 	    /*  fprintf(stderr,"sat way greater than unity, %lf %lf %lf %lf %lf", saturation, cap_pres_clip, s_max, con_a, con_b);
-		EH(-1," Stopped! in tanh_hyst"); */
+		EH(GOMA_ERROR," Stopped! in tanh_hyst"); */
 	  }
 	if( saturation < 0.0 ) 
 	  {
@@ -6551,7 +6544,7 @@ load_saturation(double porosity, double cap_pres, double d_cap_pres[2])
 	} 
 	else 
 	  { 
-	    EH(-1, "Material Table Model Error-Unknown Function Column ");
+	    EH(GOMA_ERROR, "Material Table Model Error-Unknown Function Column ");
 	  }
       }
       
@@ -6601,7 +6594,7 @@ load_saturation(double porosity, double cap_pres, double d_cap_pres[2])
 	  }
 	  break;
 	default:
-	  EH(-1, "Variable function not yet implemented in material property table");
+	  EH(GOMA_ERROR, "Variable function not yet implemented in material property table");
 	}
       }
     }
@@ -6645,7 +6638,7 @@ load_saturation(double porosity, double cap_pres, double d_cap_pres[2])
     }
   else
     {
-      EH(-1, "No models for saturation");
+      EH(GOMA_ERROR, "No models for saturation");
     }
   return saturation;
 }  /* end   load_saturation  */
@@ -7079,7 +7072,7 @@ load_gas_conc(double porosity, double cap_pres, double d_cap_pres[2])
     }
   else 
     {
-      EH(-1, "No models for gas phase conc.");
+      EH(GOMA_ERROR, "No models for gas phase conc.");
     }
   return;
 }  /*  end of   load_gas_conc    */
@@ -7476,7 +7469,7 @@ load_gas_conc_flat(double porosity, double cap_pres, double d_cap_pres[2])
   }
   else 
     {
-      EH(-1, "No models for gas phase conc.");
+      EH(GOMA_ERROR, "No models for gas phase conc.");
     }
   return;
 }  /*  end of   load_gas_conc_flat    */
@@ -7949,7 +7942,7 @@ load_gas_conc_EOS(double porosity, double cap_pres, double d_cap_pres[2])
   }
   else 
     {
-      EH(-1, "No models for gas phase conc.");
+      EH(GOMA_ERROR, "No models for gas phase conc.");
     }
   return;
 }  /*  end of   load_gas_conc_EOS    */
@@ -8717,7 +8710,7 @@ load_liq_perm(double porosity, double cap_pres, double saturation,
   }
   else
   {
-   EH(-1, "No models for liquid relative permeability");
+   EH(GOMA_ERROR, "No models for liquid relative permeability");
   }
   return;
 } /* end  load_liq_perm  */
@@ -8788,7 +8781,7 @@ load_gas_perm(double porosity, double cap_pres, double saturation,
   }
   else
   {
-    EH(-1, "No models for gas permeability");
+    EH(GOMA_ERROR, "No models for gas permeability");
   }
   return;
 } /* end  load_gas_perm  */
@@ -8885,7 +8878,7 @@ load_gas_diff(double porosity, double cap_pres, double saturation,
       }
     }
   } else {
-    EH(-1, "No models for gas phase diffusion in a porous medium");
+    EH(GOMA_ERROR, "No models for gas phase diffusion in a porous medium");
   }
   return;
 }  /*  end  load_gas_diff  */
@@ -10106,7 +10099,7 @@ load_mass_flux(double porosity, double cap_pres, double saturation,
 	}
       else
 	{
-	  EH(-1,"unimplemented darcy flux model");
+	  EH(GOMA_ERROR,"unimplemented darcy flux model");
 	}
   
       if ( cr->PorousFluxModel == DARCY_FICKIAN)
@@ -10383,7 +10376,7 @@ load_mass_flux(double porosity, double cap_pres, double saturation,
 			}
 		      else
 			{
-			  EH(-1,"Unimplemented Porous Flux model");
+			  EH(GOMA_ERROR,"Unimplemented Porous Flux model");
 			}
 
 		      if (cr->PorousFluxModel == DARCY_FICKIAN)
@@ -10483,7 +10476,7 @@ porous_pressure(double *func, double d_func[], int eb_mat_solid,
       d_func[PRESSURE] = 1.0;
     }
   } else {
-    EH(-1,"Penetration called with incorrect block id");
+    EH(GOMA_ERROR,"Penetration called with incorrect block id");
   }
   return;
 } /* end  porous_pressure  */
@@ -10627,7 +10620,7 @@ sat_darcy_continuous_bc(double func[],
     /* add convection fluxes into the total diffusion flux term 
      * here vconv is the velocity of the solid phase */
 
-    if (mp->PorousMediaType == CONTINUOUS)EH(-1,"DARCY_CONTINUOUS requires a porous phase: Are your mat IDs switched?");
+    if (mp->PorousMediaType == CONTINUOUS)EH(GOMA_ERROR,"DARCY_CONTINUOUS requires a porous phase: Are your mat IDs switched?");
     if (mp->PorousMediaType == POROUS_UNSATURATED) { factor = mp->rel_liq_perm; d_factor[0] = mp->d_rel_liq_perm[POR_LIQ_PRES];}
     if (mp->PorousMediaType == POROUS_TWO_PHASE) { factor = mp->rel_liq_perm; d_factor[0] = mp->d_rel_liq_perm[POR_LIQ_PRES];}
     if (mp->PorousMediaType == POROUS_SATURATED) factor = 1 / mp->viscosity;
@@ -10908,7 +10901,7 @@ sat_darcy_continuous_bc(double func[],
     }	
   }
   else {
-    EH(-1,"No Slip called with incorrect block id");
+    EH(GOMA_ERROR,"No Slip called with incorrect block id");
   }
   return;
 }  /* end  sat_darcy_continuous_bc  */
@@ -10937,7 +10930,7 @@ por_liq_flux_fill ( double *func,
    */
   if (Current_EB_ptr->Elem_Blk_Id == eb_mat_solid) {
 	  
-	  if (mp->PorousMediaType == CONTINUOUS)EH(-1,"POR_LIQ_FLUX_FILL requires a porous phase");
+	  if (mp->PorousMediaType == CONTINUOUS)EH(GOMA_ERROR,"POR_LIQ_FLUX_FILL requires a porous phase");
 	  
 	  /* Check if we're in the mushy zone. */
 	  /* Add contributions from level set side of boundary to flux */
@@ -10996,7 +10989,7 @@ por_liq_flux_fill ( double *func,
 
   } 
   else {
-    EH(-1,"POROUS_LIQ_PRESSURE_FILL called with incorrect block id");
+    EH(GOMA_ERROR,"POROUS_LIQ_PRESSURE_FILL called with incorrect block id");
   }
 
 
@@ -11022,7 +11015,7 @@ porous_liq_fill(double *func,
    */
   if (Current_EB_ptr->Elem_Blk_Id == eb_mat_solid) {
     
-    if (mp->PorousMediaType == CONTINUOUS)EH(-1,"POROUS_LIQ_PRESSURE requires a porous phase");
+    if (mp->PorousMediaType == CONTINUOUS)EH(GOMA_ERROR,"POROUS_LIQ_PRESSURE requires a porous phase");
     
     /* Check if we're in the mushy zone. */
      /* Add contributions from level set side of boundary to flux */
@@ -11071,7 +11064,7 @@ porous_liq_fill(double *func,
       }
   } 
   else {
-    EH(-1,"POROUS_LIQ_PRESSURE_FILL called with incorrect block id");
+    EH(GOMA_ERROR,"POROUS_LIQ_PRESSURE_FILL called with incorrect block id");
   }
   return;
 }  /* end  porous_liq_pressure_fill_bc  */
@@ -11141,7 +11134,7 @@ interpolate_table_sat(struct Data_Table *table, double x[])
       if(iinter == 1) 
       { 
 	fprintf(stderr," MP Interpolate Error - Need more than 1 point per set");
-	EH(-1, "Table interpolation not implemented");
+	EH(GOMA_ERROR, "Table interpolation not implemented");
       }
       
       istartx=iinter;
@@ -11170,7 +11163,7 @@ interpolate_table_sat(struct Data_Table *table, double x[])
       table->slope[0]= ( f[istarty+1+Np1*iad] - f[istarty+1+iinter+Np1*iad] ) / ( t[istarty+1] - t[istarty+1+iinter] );
       break;
   default:
-      EH(-1, "Table interpolation order for Saturation not implemented");
+      EH(GOMA_ERROR, "Table interpolation order for Saturation not implemented");
   }
   
   return(func);
@@ -11352,7 +11345,7 @@ por_mass_source_model( double d_MassSource[MAX_VARIABLE_TYPES + MAX_CONC][MDE] )
 
      default:
 
-     EH(-1, "No valid porous sink models were found");
+     EH(GOMA_ERROR, "No valid porous sink models were found");
     }
 
   /****** Calculate their Jacobian sensitivities */

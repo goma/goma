@@ -14,7 +14,6 @@
 
 /* Standard include files */
 
-#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
@@ -24,34 +23,29 @@
 #include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_masks.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_mp.h"
 #include "el_elm.h"
 #include "el_geom.h"
 #include "rf_bc_const.h"
-#include "rf_solver_const.h"
-#include "rf_solver.h"
-#include "rf_fill_const.h"
-#include "rf_vars_const.h"
 #include "mm_mp_const.h"
-#include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
 #include "mm_std_models_shell.h"
-#include "mm_qp_storage.h"
-
 #include "mm_eh.h"
+#include "mm_elem_block_structs.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_util.h"
+#include "mm_shell_util.h"
+#include "mm_viscosity.h"
+#include "rf_allo.h"
+#include "shell_tfmp_struct.h"
+#include "exo_struct.h"
 
 #define GOMA_MM_SHELL_BC_C
 #include "mm_shell_bc.h"
+
 #include "shell_tfmp_util.h"
-#include "goma.h"
 
 /*
  * Global variables defined here. Declared frequently via rf_bc.h
@@ -1402,7 +1396,7 @@ void
 
   
     }
-  else EH(-1,"LUBP_SH_FP_MATCH BC called with incorrect block id");
+  else EH(GOMA_ERROR,"LUBP_SH_FP_MATCH BC called with incorrect block id");
   /* note, we may not want to quit at this point */
   return;
 }
@@ -1453,7 +1447,7 @@ put_lub_flux_in_film(int id, /* local element node number for the
     if (Current_EB_ptr->Elem_Blk_Id != i_mat_lubp)
       { 
 	if (Current_EB_ptr->Elem_Blk_Id != i_mat_filmp) {
-	  EH(-1, "put_lub_flux_in_film: Improper lubp and filmp block ids");
+	  EH(GOMA_ERROR, "put_lub_flux_in_film: Improper lubp and filmp block ids");
 	}
 	/* note, this may not account for all situations - we may not want
 	   to quit here, but we'll do it for now */

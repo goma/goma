@@ -66,6 +66,8 @@
 /* Viscoelastic Constitutive equation weight functions */
 #define GALERKIN        1
 #define SUPG            2
+#define SUPG_GP         3
+#define SUPG_SHAKIB     4
 
 #define YZBETA_NONE     0
 #define YZBETA_ONE      1

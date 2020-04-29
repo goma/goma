@@ -29,45 +29,33 @@
  * Revised: 
  */
 
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: dp_map_comm_vec.c,v 5.1 2007-09-18 18:53:41 prschun Exp $";
-#endif
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 
 #include "std.h"
-#include "el_elm.h"
-
+#include "el_elm_info.h"
 #include "rf_allo.h"
-
 #include "rf_fem_const.h"
-#include "rf_fem.h"
-
-#include "rf_io_const.h"
-#include "rf_io.h"
-
 #include "rf_mp.h"
 #include "rf_vars_const.h"
-#include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-#include "rf_masks.h"
-#include "rf_bc_const.h"
-
 #include "mm_eh.h"
-
 #include "exo_struct.h"
 #include "dpi.h"
 #include "dp_types.h"
+#include "dp_map_comm_vec.h"
+#include "dp_utils.h"
+#include "el_elm_info.h"
+#include "rf_node_const.h"
+#include "rf_util.h"
 
 #ifdef PARALLEL
 #include "mpi.h"
 #endif
 
 #define GOMA_DP_MAP_COMM_VEC_C
-#include "goma.h"
 
 /*
  * This is the single place where these variables are defined. Usually they
@@ -250,7 +238,7 @@ setup_nodal_comm_map(Exo_DB *exo, Dpi *dpi, Comm_Ex **cx)
 		  dpi->node_index_global);
     if (lnn == -1) {
       fprintf(stderr,"%s %d: couldn't find gnn = %d\n", yo, ProcID, gnn);
-      EH(-1,"failed dp mapping");
+      EH(GOMA_ERROR,"failed dp mapping");
     }
     list_node_send[i] = lnn;
   }
@@ -297,7 +285,7 @@ exchange_neighbor_proc_info(int num_neighbors, COMM_NP_STRUCT *np_ptr)
     if (retn != MPI_SUCCESS) {
       fprintf(stderr,"%s Proc %d: Irecv to %d failed post: %d\n", yo, ProcID,
 	      np_ptr->neighbor_ProcID, retn);
-      EH(-1,"MPI failure");
+      EH(GOMA_ERROR,"MPI failure");
     }
     np_ptr++;
   }
@@ -313,7 +301,7 @@ exchange_neighbor_proc_info(int num_neighbors, COMM_NP_STRUCT *np_ptr)
     if (retn != MPI_SUCCESS) {
       fprintf(stderr,"%s Proc %d: Isend to %d failed post: %d\n", yo, ProcID,
 	      np_ptr->neighbor_ProcID, retn);
-      EH(-1,"MPI failure");
+      EH(GOMA_ERROR,"MPI failure");
     }
     np_ptr++;    
   }
@@ -327,13 +315,13 @@ exchange_neighbor_proc_info(int num_neighbors, COMM_NP_STRUCT *np_ptr)
     if (retn != MPI_SUCCESS) {
       fprintf(stderr,"%s Proc %d: Irecv to %d failed: %d\n", yo, ProcID,
 	      np_ptr->neighbor_ProcID, retn);
-      EH(-1,"MPI failure");
+      EH(GOMA_ERROR,"MPI failure");
     }
     retn = MPI_Wait(&(np_ptr->send_request), &(np_ptr->send_status));
     if (retn != MPI_SUCCESS) {
       fprintf(stderr,"%s Proc %d: Isend to %d failed: %d\n", yo, ProcID,
 	      np_ptr->neighbor_ProcID, retn);
-      EH(-1,"MPI failure");
+      EH(GOMA_ERROR,"MPI failure");
     }    
     np_ptr++;  
   }
@@ -341,7 +329,7 @@ exchange_neighbor_proc_info(int num_neighbors, COMM_NP_STRUCT *np_ptr)
   if (num_neighbors > 0) {
     fprintf(stderr,"%s this processor has neighbors but PARALLEL ifdef not on\n",
 	    yo); 
-    EH(-1,"MPI failure");
+    EH(GOMA_ERROR,"MPI failure");
   }
 #endif
   mtype++;
@@ -642,7 +630,7 @@ build_node_recv_indeces(Exo_DB *exo, Dpi *dpi)
     fprintf(stderr,
 	    "Proc %d: num_owner_changes %d not equal to dpi->num_neighbors %d\n",
 	    ProcID, num_owner_changes, dpi->num_neighbors);
-    EH(-1, "External node ownership inconsistency!");
+    EH(GOMA_ERROR, "External node ownership inconsistency!");
   }
 
   /*
@@ -652,7 +640,7 @@ build_node_recv_indeces(Exo_DB *exo, Dpi *dpi)
     ptr_node_recv[i+1] += ptr_node_recv[i];
   }
   if (ptr_node_recv[dpi->num_neighbors] != dpi->num_external_nodes) {
-    EH(-1, "Mismatch in external node ownership.");
+    EH(GOMA_ERROR, "Mismatch in external node ownership.");
   }
   
   return;
@@ -709,7 +697,7 @@ build_fill_node_recv_indeces(int *fill_node_list, Exo_DB *exo, Dpi *dpi)
     ptr_fill_node_recv[i+1] += ptr_fill_node_recv[i];
   }
   if (ptr_fill_node_recv[dpi->num_neighbors] != external_fill_unknowns) {
-    EH(-1, "Mismatch in external fill node ownership.");
+    EH(GOMA_ERROR, "Mismatch in external fill node ownership.");
   }
   return;
 }

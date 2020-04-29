@@ -14,49 +14,53 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <string.h>
 
 #include "std.h"
-
-
 #include "exo_struct.h"
 #include "dpi.h"
-
 #include "rf_allo.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
 #include "rf_io_const.h"
-#include "rf_io_structs.h"
 #include "rf_io.h"
 #include "rf_mp.h"
-#include "rf_solver_const.h"
-#include "rf_solver.h"
-
-#include "rf_masks.h"
-
 #include "el_geom.h"
 #include "rf_vars_const.h"
 #include "mm_mp_const.h"
-#include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_post_def.h"
 #include "mm_as.h"
-
 #include "mm_mp.h"
 #include "mm_mp_structs.h"
-
 #include "mm_eh.h"
-
-#include "exo_struct.h"		/* defn of Exo_DB */
 #include "dp_types.h"
 #include "loca_const.h"
+#include "ac_update_parameter.h"
+#include "az_aztec.h"
+#include "bc_contact.h"
+#include "el_elm.h"
+#include "mm_augc_util.h"
+#include "mm_fill.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_ptrs.h"
+#include "mm_fill_terms.h"
+#include "mm_fill_util.h"
+#include "mm_flux.h"
+#include "mm_unknown_map.h"
+#include "mpi.h"
+#include "rd_mesh.h"
+#include "rf_bc.h"
+#include "rf_bc_const.h"
+#include "rf_node_const.h"
+#include "rf_solve.h"
+#include "rf_util.h"
+#include "sl_auxutil.h"
+#include "sl_util_structs.h"
+#include "user_ac.h"
 
 
 #define GOMA_MM_AUGC_UTIL_C
-#include "goma.h"
 
-#include "sl_eggroll.h"
-#include "sl_util.h"		/* defines sl_init() */
 
 /*
  * Prototype declarations of static functions.
@@ -123,17 +127,11 @@ load_extra_unknownsAC(int iAC,    /* ID NUMBER OF AC'S */
   int mn;
   int ibc, idf;
   struct Boundary_Condition *BC_Type;
-#ifdef DEBUG  
-  static const char yo[] = "load_extra_unknownsAC";
-#endif
 
   /*
    * 		BEGIN EXECUTION
    */
 
-#ifdef DEBUG
-  fprintf(stderr, "load_extra_unknownsAC() begins...\n");
-#endif
 
   if (iAC < 0) return; 
 
@@ -785,9 +783,6 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
   struct Boundary_Condition *BC_Type;
 
   double lambda, delta, value;
-#ifdef DEBUG  
-  static const char yo[]="update_parameterAC";
-#endif
 
   /*
    * 		BEGIN EXECUTION
@@ -798,9 +793,6 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
    * based on the current value of xa[iAC]
    */
 
-#ifdef DEBUG
-  fprintf(stderr, "update_parameterAC() begins...\n");
-#endif
 
   lambda = xa[iAC];
   augc[iAC].tmp1 = lambda;
@@ -852,7 +844,7 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
       int ibc_user,idf_user,count;
   
       if( Num_Proc != 1)	{
-	EH(-1,"aprepro AC condition not ready for parallel");
+	EH(GOMA_ERROR,"aprepro AC condition not ready for parallel");
       } 
       sprintf(cmd_str,"%s %s %s %s %s %s %.20g","bcdiff.pl"
 	      ,"-p",augc[iAC].Params_File,"-i",Input_File,
@@ -871,13 +863,13 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
 	  count++;
 	  if( fscanf(jfp,"%d",&ibc_user) != 1)
 	    {
-	      EH(-1,"error reading bcdiff");
+	      EH(GOMA_ERROR,"error reading bcdiff");
 	    }
 	  if( ibc_user !=  -1)
 	    {
 	      if( fscanf(jfp,"%d %lf %lf",&idf_user,&temp,&lambda_user) != 3)
 		{
-		  EH(-1,"error reading bcdiff");
+		  EH(GOMA_ERROR,"error reading bcdiff");
 		}
 	      switch (BC_Types[ibc_user].BC_Name)
 		{
@@ -934,20 +926,20 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
 	  count++;
 	  if( fscanf(jfp,"%d",&ibc_user) != 1)
 	    {
-	      EH(-1,"error reading bcdiff");
+	      EH(GOMA_ERROR,"error reading bcdiff");
 	    }
 	  if( ibc_user !=  -1)
 	    {
 	      if( fscanf(jfp,"%d %lf %lf",&idf_user,&temp,&lambda_user) != 3)
 		{
-		  EH(-1,"error reading bcdiff");
+		  EH(GOMA_ERROR,"error reading bcdiff");
 		}
 	      augc[ibc_user].DataFlt[idf_user] = lambda_user;
 	    }	/* if ibc_user  */
 	}	/* while ibc_user  */
       fclose(jfp);
 #else
-      EH(-1, 
+      EH(GOMA_ERROR, 
 	 "aprepro must be run prior to running goma on this platform.");
 #endif 
     }
@@ -2198,11 +2190,11 @@ overlap_aug_cond ( int ija[],
   solid_eb = augc[nAC-1].solid_eb + 1;
   fluid_eb = augc[nAC-1].fluid_eb + 1;
   lm_eb    = augc[nAC-1].lm_eb + 1;
-  if (solid_eb == fluid_eb) EH(-1, "Solid and fluid must be on different blocks!");
+  if (solid_eb == fluid_eb) EH(GOMA_ERROR, "Solid and fluid must be on different blocks!");
 
   if ( Do_Overlap && lm_eb == solid_eb ) ac_lm = 1;
   else if ( Do_Overlap && lm_eb == fluid_eb ) ac_lm = 2;
-  else EH(-1, "Shouldn't be here.");
+  else EH(GOMA_ERROR, "Shouldn't be here.");
   
 /* Just fill this in for use as argument */
   for (i=0; i<DIM; i++) { h[i] = 1.0; }
@@ -2818,7 +2810,7 @@ estimate_dAC_ALC(int iAC,
           case AC_LGRM:
             if (augc[jAC].MFID != VOLUME_FLUX)
               {
-                EH(-1, "This Lagrange multiplier type is not yet supported!");
+                EH(GOMA_ERROR, "This Lagrange multiplier type is not yet supported!");
               }
             else
               {
@@ -2970,7 +2962,7 @@ estimate_dAC_ALC(int iAC,
           case AC_LGRM:
             if (augc[jAC].MFID != VOLUME_FLUX)
               {
-                EH(-1, "This Lagrange multiplier type is not yet supported!");
+                EH(GOMA_ERROR, "This Lagrange multiplier type is not yet supported!");
               }
             else
               {
@@ -3131,7 +3123,7 @@ std_lgr_cond ( int iAC,
 	  break;
 	default:
 			  
-	  EH(-1,"Cannot find Lagrange Multiplier condition.");
+	  EH(GOMA_ERROR,"Cannot find Lagrange Multiplier condition.");
 	}
   }
   else if ( augc[iAC].Type == AC_PF_CONSTRAINT )
@@ -3301,11 +3293,11 @@ create_overlap_acs(Exo_DB *exo, int iAC)
     }
   else  
     {
-      EH(-1, "Augmenting Condition Lagrange multiplier must live on fluid or solid block!");
+      EH(GOMA_ERROR, "Augmenting Condition Lagrange multiplier must live on fluid or solid block!");
     }
 
 /* At present, only 2D problems are supported */
-  if (dim != 2) EH(-1, "Overlap AC algorithm is only for 2D problems!");
+  if (dim != 2) EH(GOMA_ERROR, "Overlap AC algorithm is only for 2D problems!");
 
 /* Determine number of quadrature points per side (on solid block) */
 /* For now, only P0 interpolation of Lagrange equation will be supported */
@@ -3476,7 +3468,7 @@ assign_overlap_acs( double x[], Exo_DB *exo )
     }
   if ( augc[iAC].Type != AC_OVERLAP )
     {
-      EH(-1, "Cannot locate first overlap AC\n");
+      EH(GOMA_ERROR, "Cannot locate first overlap AC\n");
     } 
 
 /* Read inputs from existing overlap AC */
@@ -3575,7 +3567,7 @@ create_periodic_acs(Exo_DB *exo)
               ss1 = i;
             }
         }
-      if ( !found ) EH(-1,"SSID1 not found in mesh for periodic bc");
+      if ( !found ) EH(GOMA_ERROR,"SSID1 not found in mesh for periodic bc");
   
       found = FALSE;
       for (i=0; i<exo->num_side_sets; i++)
@@ -3586,11 +3578,11 @@ create_periodic_acs(Exo_DB *exo)
               ss2 = i;
             }
         }
-      if ( !found ) EH(-1,"SSID2 not found in mesh for periodic bc");
+      if ( !found ) EH(GOMA_ERROR,"SSID2 not found in mesh for periodic bc");
 
       /* require SS's match */
       if ( exo->ss_num_sides[ss1] != exo->ss_num_sides[ss2] ) {
-        EH(-1,"Periodic bc's only supported for matching side sets!");
+        EH(GOMA_ERROR,"Periodic bc's only supported for matching side sets!");
       }
   
       num_nodes_on_side = ( exo->ss_node_side_index[ss1][1] -
@@ -3631,7 +3623,7 @@ create_periodic_acs(Exo_DB *exo)
       }
   
       if ( count1 != count2 ) {
-        EH(-1,"Periodic bc's only supported for matching side sets!");
+        EH(GOMA_ERROR,"Periodic bc's only supported for matching side sets!");
       }
       
       /* now look to match nodes between lists */
@@ -3659,7 +3651,7 @@ create_periodic_acs(Exo_DB *exo)
 	  }
 	}
 	if ( !found ) {
-          EH(-1,"Periodic bc's only supported for matching side sets!");
+          EH(GOMA_ERROR,"Periodic bc's only supported for matching side sets!");
         }
       }
       

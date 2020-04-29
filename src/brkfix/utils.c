@@ -25,15 +25,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "goma.h"
-
 #include "brkfix/brkfix.h"
 #include "rf_allo.h"
 #include "mm_eh.h"
-#include "exo_struct.h"
-#include "brkfix/exo_utils.h"
 #include "brkfix/utils.h"
 #include "string.h"
+#include "el_elm_info.h"
+#include "rf_io_const.h"
+#include "std.h"
 /*
  * Function declarations of static functions defined here.
  */
@@ -128,7 +127,7 @@ count_node_node_interactions(int num_nodes,
 		{
 		  sr = sprintf(err_msg, "@ node=%d. Increase max neighbors.",
 			       eqn_node);
-		  EH(-1, err_msg);
+		  EH(GOMA_ERROR, err_msg);
 		  EH(sr, err_msg);
 		}
 	    }
@@ -522,7 +521,7 @@ get_filename_num_procs(const char *basename)
     {
       sr = sprintf(err_msg, "Trouble passing system\n(\n    %s\n)\n", 
 		   string_system_command);
-      EH(-1, err_msg);
+      EH(GOMA_ERROR, err_msg);
     }
 
   s = fopen( fixXXXXXX, "r");

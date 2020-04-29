@@ -18,67 +18,146 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "std.h"
 
 #ifdef HAVE_SUNMATH
 #include <sunmath.h>
 #endif
-
-#ifdef PARALLEL
-#include "az_aztec.h"
-#endif
-extern void handle_ieee(void );
-
-#include "el_geom.h"
-#include "rf_allo.h"
-#include "rf_solver.h"
-#include "rf_fem_const.h"
-#include "rf_fem.h"
-#include "rf_mp.h"
-
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
-
-#include "rf_bc_const.h"
-#include "rf_element_storage_struct.h"
-#include "mm_elem_block.h"
-#include "rf_vars_const.h"
-
-#ifdef USE_CHEMKIN
-#include "ck_chemkin_const.h" 
-#endif
-#include "mm_mp_const.h"
-#include "mm_as_const.h"
-#include "mm_as_structs.h"
-#include "rf_node.h"
-#include "mm_as.h"
-
-#include "mm_eh.h"
-
-#include "mm_mp.h"
-#include "mm_mp_structs.h"
-
-#include "mm_chemkin.h"
-
-/* #include "mm_names.h" -- use extern defs from rf_bc_const.h for these vars */
-
-#include "exo_struct.h"
-#include "dpi.h"
-
-#include "dp_utils.h"
-#include "dp_types.h"
-
-#include "brk_utils.h"
-
-#include "rf_solve_segregated.h"
 
 #ifdef FP_EXCEPT
 #define __USE_GNU
 #include <fenv.h>
 #endif
 
-#include "goma.h"
+
+#ifdef PARALLEL
+#include "az_aztec.h"
+#endif
+extern void handle_ieee(void );
+
+#ifdef USE_CHEMKIN
+#include "ck_chemkin_const.h" 
+#endif
+#include "ac_conti.h"
+#include "ac_hunt.h"
+#include "ac_particles.h"
+#include "ac_stability.h"
+#include "ac_stability_util.h"
+#include "ac_update_parameter.h"
+#include "bc_colloc.h"
+#include "bc_contact.h"
+#include "bc_curve.h"
+#include "bc_dirich.h"
+#include "bc_integ.h"
+#include "bc/rotate.h"
+#include "bc_special.h"
+#include "bc_surfacedomain.h"
+#include "brk_utils.h"
+#include "dp_comm.h"
+#include "dp_map_comm_vec.h"
+#include "dp_types.h"
+#include "dp_utils.h"
+#include "dp_vif.h"
+#include "dpi.h"
+#include "el_elm.h"
+#include "el_elm_info.h"
+#include "el_geom.h"
+#include "el_quality.h"
+#include "exo_conn.h"
+#include "exo_struct.h"
+#include "loca_const.h"
+#include "md_timer.h"
+#include "mm_as.h"
+#include "mm_as_alloc.h"
+#include "mm_as_const.h"
+#include "mm_as_structs.h"
+#include "mm_augc_util.h"
+#include "mm_bc.h"
+#include "mm_chemkin.h"
+#include "mm_dil_viscosity.h"
+#include "mm_eh.h"
+#include "mm_elem_block_structs.h"
+#include "mm_fill.h"
+#include "mm_fill_aux.h"
+#include "mm_fill_fill.h"
+#include "mm_fill_jac.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_porous.h"
+#include "mm_fill_potential.h"
+#include "mm_fill_pthings.h"
+#include "mm_fill_ptrs.h"
+#include "mm_fill_rs.h"
+#include "mm_fill_shell.h"
+#include "mm_fill_solid.h"
+#include "mm_fill_species.h"
+#include "mm_fill_stress.h"
+#include "mm_fill_terms.h"
+#include "mm_fill_util.h"
+#include "mm_flux.h"
+#include "mm_input.h"
+#include "mm_interface.h"
+#include "mm_more_utils.h"
+#include "mm_mp.h"
+#include "mm_mp_const.h"
+#include "mm_mp_structs.h"
+#include "mm_ns_bc.h"
+#include "mm_numjac.h"
+#include "mm_post_def.h"
+#include "mm_post_proc.h"
+#include "mm_prob_def.h"
+#include "mm_qtensor_model.h"
+#include "mm_shell_bc.h"
+#include "mm_shell_util.h"
+#include "mm_sol_nonlinear.h"
+#include "mm_species.h"
+#include "mm_std_models.h"
+#include "mm_unknown_map.h"
+#include "mm_viscosity.h"
+#include "rd_dpi.h"
+#include "rd_exo.h"
+#include "rd_mesh.h"
+#include "rf_allo.h"
+#include "rf_bc.h"
+#include "rf_bc_const.h"
+#include "rf_element_storage_const.h"
+#include "rf_element_storage_struct.h"
+#include "rf_fem.h"
+#include "rf_fem_const.h"
+#include "rf_fill_const.h"
+#include "rf_io.h"
+#include "rf_io_const.h"
+#include "rf_io_structs.h"
+#include "rf_masks.h"
+#include "rf_mp.h"
+#include "rf_node.h"
+#include "rf_node_const.h"
+#include "rf_pre_proc.h"
+#include "rf_shape.h"
+#include "rf_solve.h"
+#include "rf_solve_segregated.h"
+#include "rf_solver.h"
+#include "rf_solver_const.h"
+#include "rf_util.h"
+#include "rf_vars_const.h"
+#include "sl_aux.h"
+#include "sl_auxutil.h"
+#include "sl_eggroll.h"
+#include "sl_lu.h"
+#include "sl_matrix_util.h"
+#include "sl_umf.h"
+#include "sl_util.h"
+#include "std.h"
+#include "user_ac.h"
+#include "user_bc.h"
+#include "user_mp.h"
+#include "user_mp_gen.h"
+#include "user_post.h"
+#include "user_pre.h"
+#include "wr_dpi.h"
+#include "wr_exo.h"
+#include "wr_side_data.h"
+#include "wr_soln.h"
+
+
 
 /*
  * Global variables defined here.
@@ -247,7 +326,15 @@ double time_goma_started;	/* Save it here... */
  */
 
 char **Argv;
+
 int Argc;
+
+ELEM_BLK_STRUCT *Element_Blocks = NULL;       /* Pointer to array of global
+                                                 element block information. */
+
+ELEM_BLK_STRUCT *Current_EB_ptr = NULL; /* Pointer to the current element block
+                                           structure. This is calculated in the
+                                           fill */
 
 int
 main(int argc, char **argv)
@@ -400,10 +487,6 @@ main(int argc, char **argv)
 		{
 		  clc[i]->string[j] = '\0';
 		}
-#ifdef DEBUG
-	      fprintf(stderr, "clc[%d]->string is at 0x%x\n", i, clc[i]->string);
-	      fprintf(stderr, "clc[%d]         is at 0x%x\n", i, clc[i]);
-#endif
 	    }
 	}
 
@@ -430,12 +513,6 @@ main(int argc, char **argv)
   error = pd_alloc();
   EH(error, "pd_alloc problem");
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d at barrier after pd_alloc\n", ProcID);
-#ifdef PARALLEL
-  error = MPI_Barrier(MPI_COMM_WORLD);
-#endif
-#endif
 
   log_msg("Allocating mp, gn, ...");
 
@@ -475,12 +552,6 @@ main(int argc, char **argv)
   error = efv_alloc();
   EH(error, "efv_alloc problem");
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d at barrier before read_input_file()\n", ProcID);
-#ifdef PARALLEL
-  error = MPI_Barrier(MPI_COMM_WORLD);
-#endif
-#endif
 
   /*
    * Read ASCII input file, data files, related exodusII FEM databases.
@@ -496,9 +567,6 @@ main(int argc, char **argv)
       log_msg("Overriding any input file specs w/ any command line specs...");
       if (argc > 1) apply_command_line(clc, nclc);
 
-#ifdef DEBUG
-      DPRINTF(stderr, "apply_command_line() is done.\n");
-#endif
     }
 
   /*
@@ -527,35 +595,18 @@ main(int argc, char **argv)
    * onto the ark later on.
    */
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d at barrier before noahs_raven()\n", ProcID);
-  error = MPI_Barrier(MPI_COMM_WORLD);
-#endif
 
   noahs_raven();
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d at barrier before MPI_Bcast of Noahs_Raven\n", ProcID);
-  error = MPI_Barrier(MPI_COMM_WORLD);
-#endif
 
   MPI_Bcast(MPI_BOTTOM, 1, Noahs_Raven->new_type, 0, MPI_COMM_WORLD);
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d at barrier after Bcast/before raven_landing()\n", 
-	  ProcID);
-  error = MPI_Barrier(MPI_COMM_WORLD);
-#endif  
   /*
    * Get the other processors ready to handle ark data.
    */
 
   raven_landing();
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d at barrier before noahs_ark()\n", ProcID);
-  error = MPI_Barrier(MPI_COMM_WORLD);
-#endif
   
   
   /*
@@ -686,9 +737,6 @@ main(int argc, char **argv)
    * mesh information, let's allocate space for elemental assembly structures
    *
    */
-#ifdef DEBUG
-  DPRINTF(stderr, "About to assembly_alloc()...\n");
-#endif
   log_msg("Assembly allocation...");
 
   error = assembly_alloc(EXO_ptr);
@@ -707,9 +755,6 @@ main(int argc, char **argv)
 
   add_info_stamp(EXO_ptr);
 
-#ifdef DEBUG
-  fprintf(stderr, "added qa and info stamps\n");
-#endif
 
   /*
    * If the output EXODUS II database file is different from the input
@@ -752,9 +797,6 @@ main(int argc, char **argv)
    *           element edge info, First_Elem_Edge_BC_Array.
    *        -> Determine Unique_Element_Types[] array
    */
-#ifdef DEBUG
-  fprintf(stderr, "pre_process()...\n");
-#endif
   log_msg("Pre processing of mesh...");
 #ifdef PARALLEL
   error = MPI_Barrier(MPI_COMM_WORLD);
@@ -771,9 +813,6 @@ main(int argc, char **argv)
    * element types in the problem.
    */
 
-#ifdef DEBUG
-  fprintf(stderr, "bf_init()...\n");
-#endif
   log_msg("Basis function initialization...");
   error = bf_init(EXO_ptr);
   EH( error, "Problem from bf_init");
@@ -790,9 +829,6 @@ main(int argc, char **argv)
    * Allocate space for each communication exchange description.
    */
 #ifdef PARALLEL
-#ifdef DEBUG
-  fprintf(stderr, "P_%d: Parallel cx allocation\n", ProcID);
-#endif
     cx = malloc(sizeof(Comm_Ex *) * upd->Total_Num_Matrices);
   if (DPI_ptr->num_neighbors > 0) {
 
@@ -838,6 +874,7 @@ main(int argc, char **argv)
    */
   if ( Brk_Flag == 2 ) {
     write_brk_file(Brk_File, EXO_ptr);
+    MPI_Finalize();
     exit(0);
   }
   
@@ -858,9 +895,6 @@ main(int argc, char **argv)
      * mesh to be 1-based. After writing, return to the 0 based indexing
      * that is more convenient in C.
      */
-#ifdef DEBUG
-    fprintf(stderr, "1-base; wr_mesh; 0-base\n");
-#endif
     one_base(EXO_ptr);
     wr_mesh_exo(EXO_ptr, ExoFileOut, 0);
     zero_base(EXO_ptr);
@@ -872,13 +906,8 @@ main(int argc, char **argv)
      */
     if (Num_Proc > 1) {
 #ifdef PARALLEL
-#ifdef DEBUG
-      fprintf(stderr, "P_%d at barrier before wr_dpi()\n", ProcID);
-      fprintf(stderr, "P_%d ExoFileOut = \"%s\"\n", ProcID, ExoFileOut);
-      error = MPI_Barrier(MPI_COMM_WORLD);
 #endif
-#endif
-      wr_dpi(DPI_ptr, ExoFileOut, 0);
+      wr_dpi(DPI_ptr, ExoFileOut);
     }
   }
 
@@ -914,28 +943,6 @@ main(int argc, char **argv)
         break;
     }
   }  
-#ifdef DEBUG
-  switch (Continuation) {
-  case ALC_ZEROTH:
-      DPRINTF(stderr, "%s: continue_problem (zeroth order) ...\n", yo);
-      break;
-  case  ALC_FIRST:
-      DPRINTF(stderr, "%s: continue_problem (first order) ...\n", yo);
-      break;
-  case HUN_ZEROTH:
-      DPRINTF(stderr, "%s: hunt_problem (zeroth order) ...\n", yo);
-      break;
-  case  HUN_FIRST:
-      DPRINTF(stderr, "%s: hunt_problem (first order) ...\n", yo);
-      break;
-  case LOCA:
-      DPRINTF(stderr, "%s: do_loca ...\n", yo);
-      break;
-  default:
-      DPRINTF(stderr, "%s: solve_problem...\n", yo);
-      break;
-  }
-#endif
 
     
   if( TimeIntegration == TRANSIENT)
@@ -944,9 +951,6 @@ main(int argc, char **argv)
         if (Debug_Flag) {
           P0PRINTF("%s: solve_problem...TRANSIENT superceded Continuation...\n", yo);
           }
-#ifdef DEBUG
-   DPRINTF(stderr, "%s: solve_problem...TRANSIENT superceded Continuation...\n", yo);
-#endif
         solve_problem(EXO_ptr, DPI_ptr, NULL);
         }  
 
@@ -1025,10 +1029,6 @@ main(int argc, char **argv)
 	{
 	  for (i=0; i<argc; i++)
 	    {
-#ifdef DEBUG
-	      fprintf(stderr, "clc[%d]->string &= 0x%x\n", i, clc[i]->string);
-	      fprintf(stderr, "clc[%d]         &= 0x%x\n", i, clc[i]);
-#endif
 	      safer_free((void **) &(clc[i]->string));
 	      safer_free((void **) (clc + i));
 	    }

@@ -22,6 +22,8 @@
 #ifndef GOMA_RF_MP_H
 #define GOMA_RF_MP_H
 
+#include <mpi.h>
+
 /*
  * Parameters describing the characteristics of the Parallel Machine
  * and utility vectors used during MPI communications to monitor status

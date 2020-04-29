@@ -43,19 +43,13 @@
 
 #include <sys/types.h>
 #include <time.h>
-#include <errno.h>
 #include <sys/utsname.h>
-#include <pwd.h>
-#include <fcntl.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>		/* for getuid() */
 
 #ifndef lint
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: wr_exo.c,v 5.3 2008-05-02 19:07:58 hkmoffa Exp $";
-#endif
 #endif
 
 static int has_been_called=0;
@@ -63,20 +57,29 @@ static int has_been_called=0;
 #include "std.h"
 #include "exo_struct.h"
 #include "mm_eh.h"
-#include "rf_vars_const.h"
 #include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-#include "rf_bc.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
 #include "rf_allo.h"
 #include "rf_mp.h"		/* are we serial or parallel? */
 #include "rf_io_structs.h"	/* for Results_Description */
+#include "el_elm.h"
+#include "el_elm_info.h"
+#include "exodusII.h"
+#include "md_timer.h"
+#include "mm_elem_block_structs.h"
+#include "mm_fill_util.h"
+#include "mm_mp.h"
+#include "mm_mp_structs.h"
+#include "mm_post_def.h"
+#include "rf_bc_const.h"
+#include "rf_io_const.h"
+#include "wr_exo.h"
 
 #define GOMA_WR_EXO_C
-#include "goma.h"
 
 extern char **Argv;		/* global shadow of argv, def'd in main.c */
 
@@ -90,9 +93,6 @@ wr_mesh_exo(Exo_DB *x,		/* def'd in exo_struct.h */
             char *filename,	/* where to write */
             int verbosity)	/* how much to tell while writing */
 {
-#ifdef DEBUG
-  char *yo = "wr_nodal_results_exo: ";
-#endif
   int i;
   int status=0;
 
@@ -118,12 +118,6 @@ wr_mesh_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 
   x->io_wordsize = 8;
 
-#ifdef DEBUG
-  fprintf(stderr, "%s: ex_open with:\n", yo);
-  fprintf(stderr, "\t\tfilename    = \"%s\"\n", filename);
-  fprintf(stderr, "\t\tcomp_ws     = %d\n", x->comp_wordsize);
-  fprintf(stderr, "\t\tio_wordsize = %d\n", x->io_wordsize);
-#endif
 
   x->cmode = EX_CLOBBER;
   x->exoid = ex_create(filename, x->cmode, &x->comp_wordsize, 
@@ -541,21 +535,18 @@ wr_result_prelim_exo(struct Results_Description *rd,
   char	*gvar_names[MAX_NGV];	
                                 /* array containing num_vars variable names */
 
-#ifdef DEBUG  
-  static char *yo="wr_result_prelim_exo: ";
-#endif
   /*
    * We don't support history variables.
    */
 
   if ( rd->nhv > 0 )
     {
-      EH(-1, "Not prepared to write history variables.");
+      EH(GOMA_ERROR, "Not prepared to write history variables.");
     }
 
   if ( filename == NULL )
     {
-      EH(-1, "No file specified to write EXODUS II info.");
+      EH(GOMA_ERROR, "No file specified to write EXODUS II info.");
     }
 
   /*
@@ -576,34 +567,17 @@ wr_result_prelim_exo(struct Results_Description *rd,
   if ( filename_exists )
     {
       exo->io_wordsize = 0;	/* query the file */
-#ifdef DEBUG
-      fprintf(stderr, "%s: \"%s\" already exists\n", yo, filename);
-#endif
     }
   else
     {
       exo->io_wordsize = 8;
-#ifdef DEBUG
-      fprintf(stderr, "%s: \"%s\" does not exist, going for double\n", yo, 
-              filename);
-#endif
     }
 
   exo->cmode = EX_WRITE;
 
-#ifdef DEBUG
-  fprintf(stderr, "%s: ex_open with:\n", yo);
-  fprintf(stderr, "\t\tfilename    = \"%s\"\n", filename);
-  fprintf(stderr, "\t\tcomp_ws     = %d\n", exo->comp_wordsize);
-  fprintf(stderr, "\t\tio_wordsize = %d\n", exo->io_wordsize);
-#endif
 
   if ( filename_exists )
     {
-#ifdef DEBUG
-      fprintf(stderr, "P_%d at barrier < ex_open in wr_result_prelim_exo()\n", 
-              ProcID);
-#endif
 
       exo->exoid = ex_open(filename, exo->cmode, &exo->comp_wordsize, 
                            &exo->io_wordsize, &exo->version);
@@ -645,13 +619,7 @@ wr_result_prelim_exo(struct Results_Description *rd,
       for ( i=0; i<rd->nev; i++)
         {
           var_names[i] = rd->evname[i];
-#ifdef DEBUG
-          printf("%s: elem var_name[%d] = %s\n", yo, i, var_names[i]);
-#endif
         }
-#ifdef DEBUG
-      printf("%s: varnames loaded\n", yo);
-#endif
       error = ex_put_variable_names(exo->exoid, EX_ELEM_BLOCK, num_vars, var_names);
       EH(error, "ex_put_variable_names elem block");
 
@@ -671,13 +639,7 @@ wr_result_prelim_exo(struct Results_Description *rd,
       for ( i=0; i<rd->nnv; i++)
         {
           var_names[i] = rd->nvname[i];
-#ifdef DEBUG
-          printf("%s: nodal var_name[%d] = %s\n", yo, i, var_names[i]);
-#endif
         }
-#ifdef DEBUG
-      printf("%s: varnames loaded\n", yo);
-#endif
       error = ex_put_variable_names(exo->exoid, EX_NODAL, num_vars, var_names);
       EH(error, "ex_put_variable_names nodal");
     }
@@ -719,21 +681,18 @@ wr_result_prelim_exo_segregated(struct Results_Description **rd,
     total_nnv += rd[pg->imtrx]->nnv;
   }
 
-#ifdef DEBUG
-  static char *yo="wr_result_prelim_exo: ";
-#endif
   /*
    * We don't support history variables.
    */
 
   if ( rd[0]->nhv > 0 )
     {
-      EH(-1, "Not prepared to write history variables.");
+      EH(GOMA_ERROR, "Not prepared to write history variables.");
     }
 
   if ( filename == NULL )
     {
-      EH(-1, "No file specified to write EXODUS II info.");
+      EH(GOMA_ERROR, "No file specified to write EXODUS II info.");
     }
 
   /*
@@ -754,34 +713,17 @@ wr_result_prelim_exo_segregated(struct Results_Description **rd,
   if ( filename_exists )
     {
       exo->io_wordsize = 0;     /* query the file */
-#ifdef DEBUG
-      fprintf(stderr, "%s: \"%s\" already exists\n", yo, filename);
-#endif
     }
   else
     {
       exo->io_wordsize = 8;
-#ifdef DEBUG
-      fprintf(stderr, "%s: \"%s\" does not exist, going for double\n", yo,
-              filename);
-#endif
     }
 
   exo->cmode = EX_WRITE;
 
-#ifdef DEBUG
-  fprintf(stderr, "%s: ex_open with:\n", yo);
-  fprintf(stderr, "\t\tfilename    = \"%s\"\n", filename);
-  fprintf(stderr, "\t\tcomp_ws     = %d\n", exo->comp_wordsize);
-  fprintf(stderr, "\t\tio_wordsize = %d\n", exo->io_wordsize);
-#endif
 
   if ( filename_exists )
     {
-#ifdef DEBUG
-      fprintf(stderr, "P_%d at barrier < ex_open in wr_result_prelim_exo()\n",
-              ProcID);
-#endif
 
       exo->exoid = ex_open(filename, exo->cmode, &exo->comp_wordsize,
                            &exo->io_wordsize, &exo->version);
@@ -829,20 +771,14 @@ wr_result_prelim_exo_segregated(struct Results_Description **rd,
         }
 
         if (pg->imtrx >= upd->Total_Num_Matrices) {
-          EH(-1, "Error counting element variables");
+          EH(GOMA_ERROR, "Error counting element variables");
           return;
         }
 
         var_names[count] = rd[pg->imtrx]->evname[i];
-#ifdef DEBUG
-          printf("%s: elem var_name[%d] = %s\n", yo, count, var_names[count]);
-#endif
         i++;
         count++;
       }
-#ifdef DEBUG
-      printf("%s: varnames loaded\n", yo);
-#endif
       error = ex_put_variable_names(exo->exoid, EX_ELEM_BLOCK,  total_nev, var_names);
       EH(error, "ex_put_variable_names elem block");
 
@@ -868,20 +804,14 @@ wr_result_prelim_exo_segregated(struct Results_Description **rd,
         }
 
         if (pg->imtrx >= upd->Total_Num_Matrices) {
-          EH(-1, "Error counting nodal variables");
+          EH(GOMA_ERROR, "Error counting nodal variables");
           return;
         }
 
         var_names[count] = rd[pg->imtrx]->nvname[i];
-  #ifdef DEBUG
-        printf("%s: nodal var_name[%d] = %s\n", yo, count, var_names[count]);
-  #endif
         i++;
         count++;
       }
-#ifdef DEBUG
-      printf("%s: varnames loaded\n", yo);
-#endif
       error = ex_put_variable_names(exo->exoid, EX_NODAL, total_nnv, var_names);
       EH(error, "ex_put_variable_names nodal");
     }
@@ -918,7 +848,7 @@ wr_nodal_result_exo(Exo_DB *exo, char *filename, double vector[],
       sr = sprintf(err_msg, 
                    "ex_open() = %d on \"%s\" failure @ step %d, time = %g",
                    exo->exoid, filename, time_step, time_value);
-      EH(-1, err_msg);
+      EH(GOMA_ERROR, err_msg);
     }
   error      = ex_put_time(exo->exoid, time_step, &time_value);
   EH(error, "ex_put_time");
@@ -953,11 +883,6 @@ wr_elem_result_exo(Exo_DB *exo, const char *filename, double ***vector,
                        &exo->io_wordsize, &exo->version);
   EH(exo->exoid, "ex_open");
 
-#ifdef DEBUG
-  fprintf(stderr, "\t\tfilename    = \"%s\"\n", filename);
-  fprintf(stderr, "\t\tcomp_ws     = %d\n", exo->comp_wordsize);
-  fprintf(stderr, "\t\tio_wordsize = %d\n", exo->io_wordsize);
-#endif
 
   error = ex_put_time (exo->exoid, time_step, &local_time_value );
   EH(error, "ex_put_time");
@@ -1025,7 +950,7 @@ wr_global_result_exo( Exo_DB *exo,
   exo->exoid = ex_open(filename, exo->cmode, &exo->comp_wordsize, 
                        &exo->io_wordsize, &exo->version);
   if (exo->exoid < 0) {
-    EH(-1,"wr_nodal_result_exo: could not open the output file");
+    EH(GOMA_ERROR,"wr_nodal_result_exo: could not open the output file");
   }
 
   error = ex_put_var( exo->exoid, time_step, EX_GLOBAL, 1, 0, ngv, u );
@@ -1190,7 +1115,7 @@ create_truth_table(struct Results_Description *rd, Exo_DB *exo,
     sr = sprintf(err_msg, 
                  "%s: Elem var count mismatch: tev(%d)<>rd->nev(%d)!?",
                  yo, tev, rd->nev);
-    EH(-1, err_msg);
+    EH(GOMA_ERROR, err_msg);
     /*
     fprintf(stderr,
             "%s: Disagreement over number of element variables\n",
@@ -1553,7 +1478,7 @@ create_truth_table_segregated(struct Results_Description **rd, Exo_DB *exo,
     sr = sprintf(err_msg,
                  "%s: Elem var count mismatch: tev(%d)<>rd->nev(%d)!?",
                  yo, tev, total_nev);
-    EH(-1, err_msg);
+    EH(GOMA_ERROR, err_msg);
     /*
     fprintf(stderr,
             "%s: Disagreement over number of element variables\n",
@@ -1937,7 +1862,7 @@ add_info_stamp(Exo_DB *exo)
 
   for ( i=0; i<exo->num_info; i++)
     {
-      I[i] = (char *) smalloc(MAX_LINE_LENGTH*sizeof(char));
+    I[i] = (char *) calloc((MAX_LINE_LENGTH+1),sizeof(char));
     }
 
   /*
@@ -1955,7 +1880,7 @@ add_info_stamp(Exo_DB *exo)
 
   for ( i=n; i<exo->num_info; i++)
     {
-      for ( k=0; k<MAX_LINE_LENGTH; k++)
+      for ( k=0; k<MAX_LINE_LENGTH+1; k++)
         {
           I[i][k] = '\0';
         }
@@ -2027,7 +1952,7 @@ add_info_stamp(Exo_DB *exo)
       strcpy(buf, ".");
     }
 
-  strcpy(I[n+3], buf);
+  strncpy(I[n+3], buf, MAX_LINE_LENGTH+1);
 
   /*
    * -6 -- the name of the user
@@ -2078,11 +2003,7 @@ add_info_stamp(Exo_DB *exo)
  * Revised: 
  */
 
-void 
-wr_resetup_exo(Exo_DB *exo,
-               char *filename,
-               int verbosity)
-{
+void wr_resetup_exo(Exo_DB *exo, char *filename) {
   int error;
   int i;
   int status;
@@ -2092,21 +2013,11 @@ wr_resetup_exo(Exo_DB *exo,
    */
 
   exo->cmode = EX_WRITE;
-
-#ifdef DEBUG
-  fprintf(stderr, "%s: begins\n", yo);
-#endif
-
   exo->io_wordsize   = 0;	/* i.e., query */
   exo->comp_wordsize = sizeof(dbl);
   exo->exoid         = ex_open(filename, exo->cmode, &exo->comp_wordsize, 
                                &exo->io_wordsize, &exo->version);
 
-#ifdef DEBUG
-  fprintf(stderr, "\t\tfilename    = \"%s\"\n", filename);
-  fprintf(stderr, "\t\tcomp_ws     = %d\n", exo->comp_wordsize);
-  fprintf(stderr, "\t\tio_wordsize = %d\n", exo->io_wordsize);
-#endif
 
   /*
    * Results setup...
@@ -2171,16 +2082,11 @@ wr_result_exo(Exo_DB *exo, char *filename)
   int status;
   int time_index;
   char err_msg[MAX_CHAR_IN_INPUT];
+
   /*
    * This file should already exist.
    */
-
   exo->cmode = EX_WRITE;
-
-#ifdef DEBUG
-  fprintf(stderr, "%s: begins\n", yo);
-#endif
-
   exo->io_wordsize   = 0;	/* i.e., query */
   exo->comp_wordsize = sizeof(dbl);
   exo->exoid         = ex_open(filename, 
@@ -2189,11 +2095,6 @@ wr_result_exo(Exo_DB *exo, char *filename)
                                &exo->io_wordsize, 
                                &exo->version);
 
-#ifdef DEBUG
-  fprintf(stderr, "\t\tfilename    = \"%s\"\n", filename);
-  fprintf(stderr, "\t\tcomp_ws     = %d\n", exo->comp_wordsize);
-  fprintf(stderr, "\t\tio_wordsize = %d\n", exo->io_wordsize);
-#endif
 
   /*
    * Element variable truth table and values at ONE TIME ONLY.
@@ -2202,19 +2103,6 @@ wr_result_exo(Exo_DB *exo, char *filename)
   if ( exo->num_elem_vars > 0 )
     {
 
-#ifdef DEBUG
-      fprintf(stderr, "\t\tneb         = %d\n", exo->num_elem_blocks);
-      fprintf(stderr, "\t\tnev         = %d\n", exo->num_elem_vars);
-      fprintf(stderr, "\t\tevt:        =   \n");
-      for ( i=0; i<exo->num_elem_blocks; i++)
-        {
-          for ( j=0; j<exo->num_elem_vars; j++)
-            {
-              fprintf(stderr, "block index %d, elem var index %d is %d\n",
-                      i, j, exo->elem_var_tab[i*(exo->num_elem_vars)+j]);
-            }
-        }
-#endif
 
       /*
        * This has already been done.
@@ -2248,7 +2136,7 @@ wr_result_exo(Exo_DB *exo, char *filename)
                           sprintf(err_msg, 
                                                     "ex_put_var() elem bad rtn: time %d, elemvar %d, EB ID %d",
                                                     time_index, k+1, exo->eb_id[j]);
-                          EH(-1, err_msg);
+                          EH(GOMA_ERROR, err_msg);
                         }
                     }
                 }

@@ -15,9 +15,9 @@
  * $Header: /projects/seataf/CVS/ACCESS/analysis/goma/brkfix/emuck.c,v 1.2 2007-04-01 20:23:32 tabaer Exp $
  */
 
-#include <stdio.h>
+#include "brkfix/emuck.h"
 
-#include "goma.h"
+#include <stdio.h>
 
 #include "brkfix/brkfix.h"
 #include "mm_eh.h"
@@ -26,7 +26,7 @@
 #include "exo_conn.h"
 #include "brkfix/utils.h"
 #include "dpi.h"
-#include "brkfix/emuck.h"
+#include "el_elm_info.h"
 
 /* assign_elem_ownership() - assign set proc based on nodal decomp
  *
@@ -135,7 +135,7 @@ assign_elem_ownership
   num_unassigned_elems = exo->num_elems;
 
 #ifdef DEBUG  
-  D_P(info, 1, "Starting Phase I element assignment\n");
+  DPRINTF(stderr, 1, "Starting Phase I element assignment\n");
 
   fprintf(stderr, "Starting Phase I (homogeneous node owner) attempt.\n");
 #endif
@@ -282,7 +282,7 @@ assign_elem_ownership
 
   if ( num_unassigned_elems != 0 )
     {
-      EH(-1, "Something is wrong. Three phases didn't kill all elems.");
+      EH(GOMA_ERROR, "Something is wrong. Three phases didn't kill all elems.");
     }
 
   err = get_max_val_index(element_owner_dist, num_sets, &max_val, &max_dex);
@@ -360,7 +360,7 @@ build_elem_elem_xtra(Exo_DB *exo) /* monolith FE db w/ connectivity     (in) */
 
   if ( ! exo->elem_elem_conn_exists )
     {
-      EH(-1, "Cannot build xtra w/o basic info.");
+      EH(GOMA_ERROR, "Cannot build xtra w/o basic info.");
     }
 
   /*
@@ -445,7 +445,7 @@ build_elem_elem_xtra(Exo_DB *exo) /* monolith FE db w/ connectivity     (in) */
 
 	      if ( n1 != n2 )
 		{
-		  EH(-1, "Difft number of nodes on facing elems!?!");
+		  EH(GOMA_ERROR, "Difft number of nodes on facing elems!?!");
 		}
 
 	      twist = in_list(snl_this[0], 0, n2, snl_other);
@@ -494,12 +494,12 @@ build_elem_elem_dpi(Exo_DB *monolith,
 
   if ( ! monolith->elem_elem_conn_exists )
     {
-      EH(-1, "Need monolithic connectivity.");
+      EH(GOMA_ERROR, "Need monolithic connectivity.");
     }
 
   if ( ! piece->elem_elem_conn_exists )
     {
-      EH(-1, "Need decomposed e-e connectivity.");
+      EH(GOMA_ERROR, "Need decomposed e-e connectivity.");
     }
 
   ne  = piece->num_elems;
@@ -595,7 +595,7 @@ build_elem_elem_dpi(Exo_DB *monolith,
     {
       if ( dpi->elem_owner[i] < 0 )
 	{
-	  EH(-1, "This proc thinks an element is unclaimed!");
+	  EH(GOMA_ERROR, "This proc thinks an element is unclaimed!");
 	}
     }
 
@@ -603,7 +603,7 @@ build_elem_elem_dpi(Exo_DB *monolith,
     {
       if ( dpi->elem_elem_list_global[i] == UNASSIGNED )
 	{
-	  EH(-1, "Unassigned piece elem_elem_list_global[] !");
+	  EH(GOMA_ERROR, "Unassigned piece elem_elem_list_global[] !");
 	}
     }
 

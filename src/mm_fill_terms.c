@@ -27,41 +27,58 @@
 
 /* GOMA include files */
 #define GOMA_MM_FILL_TERMS_C
+#include "mm_fill_terms.h"
+
 #include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_masks.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_mp.h"
 #include "el_elm.h"
 #include "el_geom.h"
 #include "rf_bc_const.h"
-#include "rf_solver_const.h"
 #include "rf_solver.h"
-#include "rf_fill_const.h"
 #include "rf_vars_const.h"
 #include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
 #include "mm_eh.h"
-#include "mm_std_models.h"
-#include "mm_std_models_shell.h"
 #include "mm_fill_population.h"
 #include "mm_fill_common.h"
-
 #include "mm_mp.h"
 #include "mm_mp_structs.h"
-#include "mm_fill_terms.h"
-
-
-#include "goma.h"
 #include "mm_species.h"
 #include "rf_allo.h"
-#include "mm_fill_terms.h"
 #include "mm_fill_util.h"
+#include "ac_particles.h"
+#include "az_aztec.h"
+#include "bc_colloc.h"
+#include "bc_contact.h"
+#include "el_elm_info.h"
+#include "mm_dil_viscosity.h"
+#include "mm_fill_aux.h"
+#include "mm_fill_fill.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_ptrs.h"
+#include "mm_fill_rs.h"
+#include "mm_fill_shell.h"
+#include "mm_fill_solid.h"
+#include "mm_fill_species.h"
+#include "mm_fill_stress.h"
+#include "mm_fill_stabilization.h"
+#include "mm_flux.h"
+#include "mm_ns_bc.h"
+#include "mm_post_def.h"
+#include "mm_qtensor_model.h"
+#include "mm_shell_util.h"
+#include "mm_unknown_map.h"
+#include "mm_viscosity.h"
+#include "rf_bc.h"
+#include "sl_util.h"
+#include "sl_util_structs.h"
+#include "user_mp.h"
+#include "user_mp_gen.h"
+#include "exo_struct.h"
+#include "stdbool.h"
 
 // direct call to a fortran LAPACK eigenvalue routine
 extern FSUB_TYPE dsyev_(char *JOBZ, char *UPLO, int *N, double *A, int *LDA,
@@ -157,8 +174,6 @@ extern FSUB_TYPE dsyev_(char *JOBZ, char *UPLO, int *N, double *A, int *LDA,
 *                                          assemble_energy_path_dependence()
 *  heat_source                 double
 *  ls_modulate_heatsource 
-*  calc_pspg
-*  calc_cont_gls
 *  assemble_ls_latent_heat_source
 *  assemble_acoustic		int 
 *  assemble_acoustic_reynolds_stress int
@@ -357,7 +372,7 @@ assemble_mesh (double time,
      }
    else
      {
-       EH(-1, "Unrecognized MeshSourceModel");
+       EH(GOMA_ERROR, "Unrecognized MeshSourceModel");
      }
 
   /*
@@ -1270,8 +1285,8 @@ assemble_energy(double time,	/* present time value */
 
   dbl rho;				/* Density (no variations allowed
 					   here, for now) */
-  CONDUCTIVITY_DEPENDENCE_STRUCT d_k_struct; /* Thermal conductivity dependence. */
-  CONDUCTIVITY_DEPENDENCE_STRUCT *d_k = &d_k_struct;
+  //CONDUCTIVITY_DEPENDENCE_STRUCT d_k_struct; /* Thermal conductivity dependence. */
+  //CONDUCTIVITY_DEPENDENCE_STRUCT *d_k = &d_k_struct;
 
   dbl Cp;				/* Heat capacity. */
   HEAT_CAPACITY_DEPENDENCE_STRUCT d_Cp_struct; /* Heat capacity dependence. */
@@ -1393,7 +1408,7 @@ assemble_energy(double time,	/* present time value */
   else if( mp->Ewt_funcModel == SUPG )
     {
       if( !pd->gv[R_MOMENTUM1])
-        EH(-1, " must have momentum equation velocity field for energy equation upwinding. You may want to turn it off");
+        EH(GOMA_ERROR, " must have momentum equation velocity field for energy equation upwinding. You may want to turn it off");
       supg = mp->Ewt_func;
     }
 
@@ -1415,8 +1430,9 @@ assemble_energy(double time,	/* present time value */
 	{
 	  h_elem_inv=1./h_elem;
 	}
-
     }
+  
+
 /* end Petrov-Galerkin addition */
 
   /*
@@ -1430,9 +1446,7 @@ assemble_energy(double time,	/* present time value */
 
   rho = density(d_rho, time);
 
-  /* CHECK FOR REMOVAL */
-  conductivity( d_k, time );
-
+  //  conductivity( d_k, time );
   Cp = heat_capacity( d_Cp, time );
 
   h = heat_source( d_h, time, tt, dt );
@@ -2636,9 +2650,7 @@ assemble_momentum(dbl time,       /* current time */
   dbl wt_func;
 
   /* SUPG variables */
-  dbl supg;
-
-  const double *hsquared = pg_data->hsquared ;
+  SUPG_terms supg_terms;
   
   //Continuity stabilization
   dbl continuity_stabilization;
@@ -2682,84 +2694,28 @@ assemble_momentum(dbl time,       /* current time */
 
   d_area = det_J * wt * h3;
 
-  supg = 0.;
+  dbl supg = 0.;
 
   if( mp->Mwt_funcModel == GALERKIN)
     { supg = 0.; }
-  else if( mp->Mwt_funcModel == SUPG)
+  else if( mp->Mwt_funcModel == SUPG || mp->Mwt_funcModel == SUPG_GP || mp->Mwt_funcModel == SUPG_SHAKIB)
     { supg = mp->Mwt_func; }
-
-  double tau_supg = 0;
-  double d_tau_supg_dv[DIM][MDE];
-  double d_tau_supg_dX[DIM][MDE];
-
 
   /*** Density ***/
   rho = density(d_rho, time);
 
-  if (supg!=0.)
-    {
-      double rho = pg_data->rho_avg;
-      double mu = pg_data->mu_avg;
-      double hh_siz = 0.;
-      for ( p=0; p<dim; p++)
-        {
-          hh_siz += hsquared[p];
-        }
-      // Average value of h**2 in the element
-      hh_siz = hh_siz/ ((double )dim);
+  if (supg != 0.) {
+    dbl gamma[DIM][DIM];
 
-      // Average value of v**2 in the element
-      double vv_speed = 0.0;
-      for ( a=0; a<wim; a++)
-        {
-          vv_speed += pg_data->v_avg[a]*pg_data->v_avg[a];
-        }
-
-      // Use vv_speed and hh_siz for tau_pspg, note it has a continuous dependence on Re
-      double tau_supg1 = vv_speed/hh_siz + (9.0*mu/rho)/(hh_siz*hh_siz);
-      if (  pd->TimeIntegration != STEADY)
-        {
-          tau_supg1 += 4.0/(dt*dt);
-        }
-      tau_supg = PS_scaling/sqrt(tau_supg1);
-
-      // tau_pspg derivatives wrt v from vv_speed
-      if (pd->v[pg->imtrx][VELOCITY1] )
-        {
-          for ( b=0; b<dim; b++)
-            {
-              var = VELOCITY1+b;
-              if ( pd->v[pg->imtrx][var] )
-                {
-                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-                    {
-                      d_tau_supg_dv[b][j] = -tau_supg/tau_supg1;
-                      d_tau_supg_dv[b][j] *= 1/hh_siz * pg_data->v_avg[b]*pg_data->dv_dnode[b][j];
-                    }
-                }
-            }
-        }
-
-      // tau_pspg derivatives wrt mesh from hh_siz
-      if (pd->v[pg->imtrx][MESH_DISPLACEMENT1] )
-        {
-          for ( b=0; b<dim; b++)
-            {
-              var = MESH_DISPLACEMENT1+b;
-              if ( pd->v[pg->imtrx][var] )
-                {
-                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-                    {
-                      d_tau_supg_dX[b][j] = tau_supg/tau_supg1;
-                      d_tau_supg_dX[b][j] *= (vv_speed + 18.0*(mu/rho)/hh_siz) / (hh_siz*hh_siz);
-                      d_tau_supg_dX[b][j] *= pg_data->hhv[b][b]*pg_data->dhv_dxnode[b][j]/((double)dim);
-
-		    }
-		}
-	    }
-	}
+    for (a = 0; a < VIM; a++) {
+      for (b = 0; b < VIM; b++) {
+        gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+      }
     }
+
+    dbl mu = viscosity(gn, gamma, NULL);
+    supg_tau(&supg_terms, dim, (2/(rho*sqrt(3))) * mu, pg_data, dt, mp->Mwt_funcModel == SUPG_SHAKIB, VELOCITY1);
+  }
   /* end Petrov-Galerkin addition */
 
   if( pd->gv[POLYMER_STRESS11] )
@@ -2870,7 +2826,7 @@ assemble_momentum(dbl time,       /* current time */
 	}
       else
 	{
-	  EH(-1,"Unrecognizable Permeability model");
+	  EH(GOMA_ERROR,"Unrecognizable Permeability model");
 	}
     }
   else
@@ -2945,6 +2901,13 @@ assemble_momentum(dbl time,       /* current time */
       calc_cont_gls(&cont_gls, d_cont_gls, time, pg_data);
     }
 
+  double pspg[3] = {0.0, 0.0, 0.0};
+  PSPG_DEPENDENCE_STRUCT d_pspg;
+
+  if (upd->PSPG_advection_correction) {
+    calc_pspg(pspg, &d_pspg, time, tt, dt, pg_data);
+  } 
+
   /*
    * Residuals_________________________________________________________________
    */
@@ -3001,7 +2964,7 @@ assemble_momentum(dbl time,       /* current time */
 		{
 		  for (p=0; p<dim; p++)
 		    {
-		      wt_func += supg * tau_supg * v[p] * bfm->grad_phi[i][p];
+		      wt_func += supg * supg_terms.supg_tau * v[p] * bfm->grad_phi[i][p];
 		    }
 		}
 	      grad_phi_i_e_a = bfm->grad_phi_e[i][a];
@@ -3052,6 +3015,13 @@ assemble_momentum(dbl time,       /* current time */
 		  advection += (v[1] - x_dot[1]) * grad_v[1][a];
 		  if (wim == 3) advection += (v[2] - x_dot[2]) * grad_v[2][a];
 #endif
+
+                  if (upd->PSPG_advection_correction) {
+		    advection -= pspg[0] * grad_v[0][a];
+		    advection -= pspg[1] * grad_v[1][a];
+		    if (wim == 3) advection -= pspg[2] * grad_v[2][a];
+                  }
+
 		  advection *= rho;
 		  advection *= - wt_func*d_area;
 		  advection *= advection_etm;
@@ -3085,7 +3055,7 @@ assemble_momentum(dbl time,       /* current time */
 		    }
 		  else if (vis == 0. && mp->viscosity == 0.)
 		    {
-		      EH(-1, "cannot have both flowing liquid viscosity and mp->viscosity equal to zero");
+		      EH(GOMA_ERROR, "cannot have both flowing liquid viscosity and mp->viscosity equal to zero");
 		    }
 		}
 
@@ -3236,7 +3206,7 @@ assemble_momentum(dbl time,       /* current time */
 		{
 		  for(p=0; p<dim; p++)
 		    {
-		      wt_func += supg * tau_supg * v[p] * bfm->grad_phi[i][p];
+		      wt_func += supg * supg_terms.supg_tau * v[p] * bfm->grad_phi[i][p];
 		    }
 		}
 
@@ -3354,9 +3324,6 @@ assemble_momentum(dbl time,       /* current time */
 
 		      /*lec->J[peqn][pvar][ii][j] += mass + advection + porous + diffusion + source;*/
 		      J[j] += mass + advection + porous + diffusion + source; 
-#ifdef DEBUG_HKM
-		      checkFinite(J[j]);
-#endif
 		    }
 		}
 
@@ -3439,9 +3406,6 @@ assemble_momentum(dbl time,       /* current time */
 
 			  /*lec->J[peqn][pvar][ii][j] += mass + advection + porous + diffusion + source;*/
 			  J[j] += mass + advection + porous;
-#ifdef DEBUG_HKM
-			  checkFinite(J[j]);
-#endif
 			}
 		    }
 		}
@@ -3550,7 +3514,7 @@ assemble_momentum(dbl time,       /* current time */
 				}
 			      else if (mp->viscosity == 0.0 )
 				{
-				  EH(-1, "Error in Porous Brinkman specs.  See PRS ");
+				  EH(GOMA_ERROR, "Error in Porous Brinkman specs.  See PRS ");
 				}
 			    }
 			}
@@ -3680,11 +3644,11 @@ assemble_momentum(dbl time,       /* current time */
 			  double d_wt_func = 0;
 			  if(supg!=0.)
 			    {
-			      d_wt_func = supg * tau_supg * phi_j*bfm->grad_phi[i][b];
+			      d_wt_func = supg * supg_terms.supg_tau * phi_j*bfm->grad_phi[i][b];
 
 			      for(p=0;p<dim;p++)
 				{
-				  d_wt_func += supg * d_tau_supg_dv[b][j] *
+				  d_wt_func += supg * supg_terms.d_supg_tau_dv[b][j] *
 				    v[p] * bfm->grad_phi[i][p];
 
 				}
@@ -3715,7 +3679,7 @@ assemble_momentum(dbl time,       /* current time */
 				    }
 				  else if (mp->viscosity == 0)
 				    {
-				      EH(-1, "incorrect viscosity settings on porous_brinkman");
+				      EH(GOMA_ERROR, "incorrect viscosity settings on porous_brinkman");
 				    }
 				}
 
@@ -3745,7 +3709,7 @@ assemble_momentum(dbl time,       /* current time */
 				}
 			      else
 				{
-				  EH(-1, "incorrect viscosity settings on porous_brinkman");
+				  EH(GOMA_ERROR, "incorrect viscosity settings on porous_brinkman");
 				}
 			    }
 
@@ -3767,6 +3731,14 @@ assemble_momentum(dbl time,       /* current time */
 			      if(wim==3) advection_a += (v[2] - x_dot[2]) * bf[var]->grad_phi_e[j][b][2][a];
 #endif
 
+                              if (upd->PSPG_advection_correction) {
+		                advection_a -= pspg[0] * bf[var]->grad_phi_e[j][b][0][a];
+		                advection_a -= pspg[1] * bf[var]->grad_phi_e[j][b][1][a];
+		                if (wim == 3) advection_a -= pspg[2] * bf[var]->grad_phi_e[j][b][2][a];
+		                advection_a -= d_pspg.v[0][b][j] * grad_v[0][a];
+		                advection_a -= d_pspg.v[1][b][j] * grad_v[1][a];
+		                if (wim == 3) advection_a -= d_pspg.v[2][b][j] * grad_v[2][a];
+                              }
 
 			      advection_a *= rho * -wt_func * d_area;
 			      advection_b = 0.;
@@ -3775,6 +3747,11 @@ assemble_momentum(dbl time,       /* current time */
                                   advection_b += (v[0] - x_dot[0]) * grad_v[0][a];
                                   advection_b += (v[1] - x_dot[1]) * grad_v[1][a];
                                   if(wim==3) advection_b += (v[2] - x_dot[2]) * grad_v[2][a];
+                                  if (upd->PSPG_advection_correction) {
+		                    advection_b -= pspg[0] * grad_v[0][a];
+		                    advection_b -= pspg[1] * grad_v[1][a];
+		                    if (wim == 3) advection_b -= pspg[2] * grad_v[2][a];
+                                  }
                                   advection_b *= d_wt_func * rho * d_area;
                                 }
 			      advection = advection_a + advection_b;
@@ -4223,6 +4200,17 @@ assemble_momentum(dbl time,       /* current time */
 
 		    /*  phi_j = bf[var]->phi[j]; */
 
+                    advection = 0;
+
+                    if (upd->PSPG_advection_correction) {
+                      advection -= d_pspg.P[0][j] * grad_v[0][a];
+                      advection -= d_pspg.P[1][j] * grad_v[1][a];
+                      if (wim == 3) advection -= d_pspg.P[2][j] * grad_v[2][a];
+                    }
+		    advection *= rho;
+		    advection *= - wt_func*d_area;
+		    advection *= advection_etm;
+
 		    diffusion = 0.;
 
 		    if ( diffusion_on)
@@ -4270,7 +4258,7 @@ assemble_momentum(dbl time,       /* current time */
 #endif /* DEBUG_MOMENTUM_JAC */
 
 		    /*lec->J[peqn][pvar][ii][j] += diffusion ;  */
-		    J[j] += diffusion;
+		    J[j] += advection + diffusion;
 		  }
 	      }
 
@@ -4429,7 +4417,7 @@ assemble_momentum(dbl time,       /* current time */
 
 				else if (vis == 0. && mp->viscosity == 0.)
 				  {
-				    EH(-1, "cannot have both flowing liquid viscosity and mp->viscosity equal to zero");
+				    EH(GOMA_ERROR, "cannot have both flowing liquid viscosity and mp->viscosity equal to zero");
 				  }
 
 			      }
@@ -4932,7 +4920,7 @@ assemble_continuity(dbl time_value,   /* current time */
 	}
       else
 	{
-	  EH(-1, "invalid porosity model");
+	  EH(GOMA_ERROR, "invalid porosity model");
 	}
     }
   
@@ -6279,7 +6267,7 @@ assemble_volume(bool owner)
 	}
       else
 	{
-	  EH(-1," must have momentum equation on for this AC");
+	  EH(GOMA_ERROR," must have momentum equation on for this AC");
 	}
       break;
     case 5: /* ideal gas version */
@@ -6291,7 +6279,7 @@ assemble_volume(bool owner)
       break;
 
     default:
-      EH(-1, "assemble_volume() unknown integral calculation\n");
+      EH(GOMA_ERROR, "assemble_volume() unknown integral calculation\n");
       break;
     }
 
@@ -6501,7 +6489,7 @@ assemble_curvature (void) /*  time step size      */
 
   /* only relevant if level set field exists */
 
-  if ( ls == NULL ) EH(-1," Curvature equation can only be used in conjunction with level set.");
+  if ( ls == NULL ) EH(GOMA_ERROR," Curvature equation can only be used in conjunction with level set.");
 
   peqn = upd->ep[pg->imtrx][eqn];
 
@@ -6762,7 +6750,7 @@ assemble_div_normals(void) /*  time step size      */
 
   /* only relevant if level set field exists */
 
-  if ( ls == NULL ) EH(-1," Curvature equation can only be used in conjunction with level set.");
+  if ( ls == NULL ) EH(GOMA_ERROR," Curvature equation can only be used in conjunction with level set.");
 
   peqn = upd->ep[pg->imtrx][eqn];
 
@@ -6982,7 +6970,7 @@ assemble_LSvelocity( bool owner, int ielem )
     }
 
   if ( vel_dim == -1 )
-    EH(-1, "assemble_LSVelocity(): Couldn't identify velocity component and phase.\n");
+    EH(GOMA_ERROR, "assemble_LSVelocity(): Couldn't identify velocity component and phase.\n");
 
   load_lsi(alpha);
   load_lsi_derivs();
@@ -8618,11 +8606,6 @@ load_fv(void)
   
 
 
-#ifdef DEBUG_HKM
-  if (ei[upd->matrix_index[v]]->ielem == 165) {
-    //printf("load_fv: we are here\n");
-  }
-#endif
 
 
   for (p = 0; p < dim; p++)
@@ -10222,18 +10205,6 @@ load_fv_grads(void)
 			      - fv->n[p] * fv->n[q] * fv->grad_n[q][p]);
 	    }
 	}
-#ifdef DEBUG_HKM
-      /*
-	for (p = 0; p < VIM; p++)
-	{
-	for (q = 0; q < VIM; q++)
-	{
-	printf("load_fv_grads: fv->grad_n[%d][%d] = %g\n", p, q, fv->grad_n[p][q]);
-	}
-	}
-	printf("load_fv_grads: fv->div_s_n = %g\n", fv->div_s_n);
-      */
-#endif 
     }
 
   // Calculation of the surface curvature dyadic
@@ -11695,9 +11666,6 @@ load_fv_mesh_derivs(int okToZero)
   int mode;                     /* modal counter */
   int transient_run, discontinuous_porous_media;
  
-#ifdef DEBUG_HKM
-  int doExtra = 0;
-#endif
 
   dbl T_i, v_ri, P_i, d_ri, F_i, d_dot_ri;
   dbl em_er_ri, em_ei_ri, em_hr_ri, em_hi_ri;
@@ -14061,11 +14029,6 @@ if ( pd->gv[SHELL_LUB_CURV_2] )
     {
       if (pd->gv[NORMAL1]) v = NORMAL1;
       if (pd->gv[SHELL_NORMAL1]) v = SHELL_NORMAL1;
-#ifdef DEBUG_HKM
-      if (ei[pg->imtrx]->ielem == 165) {
-	//printf("we are here 165\n");
-      }
-#endif	  
       bfv = bf[v];
       vdofs     = ei[upd->matrix_index[v]]->dof[v];
       siz = sizeof(double)*DIM*DIM*DIM*MDE;
@@ -16005,7 +15968,7 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
 	{
 	  foam_species_source(mp->u_species_source[0]);
 	} else {
-	  EH(-1, "Must specify FOAM species source in the material's file");
+	  EH(GOMA_ERROR, "Must specify FOAM species source in the material's file");
 	}
     
       rho = 0.;
@@ -16125,7 +16088,7 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
     }
   else if (mp->DensityModel == DENSITY_CONSTANT_LAST_CONC) {
     if (matrl_species_var_type != SPECIES_CONCENTRATION) {
-      EH(-1,"unimplemented");
+      EH(GOMA_ERROR,"unimplemented");
     }
     if (pd->Num_Species >  pd->Num_Species_Eqn) {
       w =  pd->Num_Species_Eqn;
@@ -16147,7 +16110,7 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
   }
   else
     {
-      EH(-1,"Unrecognized density model");
+      EH(GOMA_ERROR,"Unrecognized density model");
     }
 
   if( ls != NULL && mp->mp2nd != NULL &&
@@ -16360,11 +16323,11 @@ conductivity( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
 
       rho = density(d_rho, time);
       if (mp->len_u_thermal_conductivity < 2) {
-	EH(-1, "Expected at least 2 constants for thermal conductivity FOAM_PMDI_10");
+	EH(GOMA_ERROR, "Expected at least 2 constants for thermal conductivity FOAM_PMDI_10");
 	return 0;
       }
       if (mp->DensityModel != DENSITY_FOAM_PMDI_10) {
-	EH(-1, "FOAM_PMDI_10 Thermal conductivity requires FOAM_PMDI_10 density");
+	EH(GOMA_ERROR, "FOAM_PMDI_10 Thermal conductivity requires FOAM_PMDI_10 density");
 	return 0;
       }
 
@@ -16420,7 +16383,7 @@ conductivity( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
 		    }
 	          break;
 	        default:
-		      EH(-1, "Variable function not yet implemented in material property table");
+		      EH(GOMA_ERROR, "Variable function not yet implemented in material property table");
 	        }
 	    }
         }
@@ -16454,7 +16417,7 @@ conductivity( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
     }
   else
     {
-      EH(-1,"Unrecognized thermal conductivity model");
+      EH(GOMA_ERROR,"Unrecognized thermal conductivity model");
     }
 
   if( ls != NULL && 
@@ -16669,14 +16632,14 @@ heat_capacity( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp,
 		    }
 	          break;
 	        default:
-		      EH(-1, "Variable function not yet implemented in material property table");
+		      EH(GOMA_ERROR, "Variable function not yet implemented in material property table");
 	        }
             }
 	}
     }
   else
     {
-      EH(-1,"Unrecognized heat capacity model");
+      EH(GOMA_ERROR,"Unrecognized heat capacity model");
     }
 
   if( ls != NULL && 
@@ -16880,7 +16843,7 @@ acoustic_impedance( CONDUCTIVITY_DEPENDENCE_STRUCT *d_R,
   if(mp->Acoustic_ImpedanceModel == USER )
     {
 
-	EH(-1,"user acoustic impedance code not ready yet");
+	EH(GOMA_ERROR,"user acoustic impedance code not ready yet");
 	/*
 	  usr_acoustic_impedance(mp->u_acoustic_impedance,time);
 	*/
@@ -16948,7 +16911,7 @@ acoustic_impedance( CONDUCTIVITY_DEPENDENCE_STRUCT *d_R,
 		    }
 	          break;
 	        default:
-		      EH(-1, "Variable function not yet implemented in material property table");
+		      EH(GOMA_ERROR, "Variable function not yet implemented in material property table");
 	        }
 	    }
         }
@@ -16976,7 +16939,7 @@ acoustic_impedance( CONDUCTIVITY_DEPENDENCE_STRUCT *d_R,
     }
   else
     {
-      EH(-1,"Unrecognized acoustic impedance model");
+      EH(GOMA_ERROR,"Unrecognized acoustic impedance model");
     }
 
   if( ls != NULL && 
@@ -17057,7 +17020,7 @@ wave_number( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
 		    }
 	          break;
 	        default:
-		      EH(-1, "Variable function not yet implemented in material property table");
+		      EH(GOMA_ERROR, "Variable function not yet implemented in material property table");
 	        }
 	    }
         }
@@ -17085,7 +17048,7 @@ wave_number( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
     }
   else
     {
-      EH(-1,"Unrecognized acoustic wave number model");
+      EH(GOMA_ERROR,"Unrecognized acoustic wave number model");
     }
 
   if( ls != NULL && 
@@ -17238,7 +17201,7 @@ acoustic_absorption( CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha,
 		    }
 	          break;
 	        default:
-		      EH(-1, "Variable function not yet implemented in material property table");
+		      EH(GOMA_ERROR, "Variable function not yet implemented in material property table");
 	        }
 	    }
         }
@@ -17266,7 +17229,7 @@ acoustic_absorption( CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha,
     }
   else
     {
-      EH(-1,"Unrecognized acoustic absorption model");
+      EH(GOMA_ERROR,"Unrecognized acoustic absorption model");
     }
 
   if( ls != NULL && 
@@ -17421,7 +17384,7 @@ light_absorption( CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha,
 		    }
 	          break;
 	        default:
-		      EH(-1, "Variable function not yet implemented in material property table");
+		      EH(GOMA_ERROR, "Variable function not yet implemented in material property table");
 	        }
 	    }
         }
@@ -17449,7 +17412,7 @@ light_absorption( CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha,
     }
   else
     {
-      EH(-1,"Unrecognized light absorption model");
+      EH(GOMA_ERROR,"Unrecognized light absorption model");
     }
 
   if( ls != NULL && 
@@ -17605,7 +17568,7 @@ refractive_index( CONDUCTIVITY_DEPENDENCE_STRUCT *d_n,
 		    }
 	          break;
 	        default:
-		      EH(-1, "Variable function not yet implemented in material property table");
+		      EH(GOMA_ERROR, "Variable function not yet implemented in material property table");
 	        }
 	    }
         }
@@ -17633,7 +17596,7 @@ refractive_index( CONDUCTIVITY_DEPENDENCE_STRUCT *d_n,
     }
   else
     {
-      EH(-1,"Unrecognized refractive index model");
+      EH(GOMA_ERROR,"Unrecognized refractive index model");
     }
 
   if( ls != NULL && 
@@ -17787,7 +17750,7 @@ extinction_index( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
 		    }
 	          break;
 	        default:
-		      EH(-1, "Variable function not yet implemented in material property table");
+		      EH(GOMA_ERROR, "Variable function not yet implemented in material property table");
 	        }
 	    }
         }
@@ -17815,7 +17778,7 @@ extinction_index( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
     }
   else
     {
-      EH(-1,"Unrecognized extinction index model");
+      EH(GOMA_ERROR,"Unrecognized extinction index model");
     }
 
   if( ls != NULL && 
@@ -17907,7 +17870,7 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
       for ( a=0; a<dim; a++)
 	{
 	  eqn = R_MOMENTUM1 + a;
-	  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
+	  if ( pd->e[upd->matrix_index[eqn]][eqn] & T_SOURCE )
 	    {
 	      f[a] = mp->momentum_source[a];
               var  = TEMPERATURE;
@@ -17979,7 +17942,7 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
       for ( a=0; a<force_dim; a++)
 	{
 	  eqn   = R_MOMENTUM1+a;			
-	  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
+	  if ( pd->e[upd->matrix_index[eqn]][eqn] & T_SOURCE )
 	    {
 	      f[a] = mp->momentum_source[a];
  	    }
@@ -17995,7 +17958,7 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
 	  for ( a=0; a<dim; a++)
 	    {
 	      eqn   = R_MOMENTUM1+a;			
-	      if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
+	      if ( pd->e[upd->matrix_index[eqn]][eqn] & T_SOURCE )
 		{
 		  f[a] = rho*mp->momentum_source[a];
 		}
@@ -18025,7 +17988,7 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
 	  for ( a=0; a<dim; a++)
 	    {
 	      eqn   = R_MOMENTUM1+a;			
-	      if (pd->e[pg->imtrx][eqn] & T_SOURCE)
+	      if (pd->e[upd->matrix_index[eqn]][eqn] & T_SOURCE)
 		{
 		  f[a] = rho*mp->momentum_source[a];
 		}
@@ -18061,10 +18024,72 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
 	}
       else
         {
-          EH(-1, "Unknown density model for variable density");
+          EH(GOMA_ERROR, "Unknown density model for variable density");
         }
 
     }
+  else if (mp->MomentumSourceModel == VARIABLE_DENSITY_NO_GAS)
+  {
+    if ( mp->DensityModel == DENSITY_FOAM_PMDI_10 ||
+              mp->DensityModel == DENSITY_FOAM_PBE ||
+              mp->DensityModel == DENSITY_FOAM ||
+              mp->DensityModel == DENSITY_FOAM_TIME ||
+              mp->DensityModel == DENSITY_FOAM_TIME_TEMP ||
+              mp->DensityModel == DENSITY_MOMENT_BASED)
+    {
+      DENSITY_DEPENDENCE_STRUCT d_rho_struct;  /* density dependence */
+      DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
+      double rho = density(d_rho, time);
+      load_lsi(ls->Length_Scale);
+      double Heaviside;
+      if (mp->mp2nd->densitymask[0] == 0) {
+        Heaviside = 1-lsi->H;
+      } else {
+        Heaviside = lsi->H;
+      }
+      for ( a=0; a<dim; a++)
+      {
+        eqn   = R_MOMENTUM1+a;
+        if (pd->e[upd->matrix_index[eqn]][eqn] & T_SOURCE)
+        {
+          f[a] = Heaviside * rho*mp->momentum_source[a];
+        }
+        if (df != NULL && pd->v[pg->imtrx][MASS_FRACTION])
+        {
+          for (w = 0; w < pd->Num_Species_Eqn; w++)
+          {
+            var = MASS_FRACTION;
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
+            {
+              df->C[a][w][j] = Heaviside * d_rho->C[w][j]*mp->momentum_source[a];
+            }
+          }
+        }
+        if ( df != NULL && pd->v[pg->imtrx][TEMPERATURE] )
+        {
+          var = TEMPERATURE;
+          for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
+          {
+            df->T[a][j] = Heaviside  * d_rho->T[j]*mp->momentum_source[a];
+          }
+        }
+        if ( df != NULL && pd->v[pg->imtrx][FILL] )
+        {
+          var = FILL;
+          phi = bf[var]->phi;
+          for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
+          {
+            df->F[a][j] = Heaviside * d_rho->F[j]*mp->momentum_source[a];
+          }
+        }
+      }
+    }
+    else
+    {
+      EH(GOMA_ERROR, "Unknown density model for variable density no gas");
+    }
+
+  }
   else if (mp->MomentumSourceModel == SUSPENSION_PM)
     {
       err = suspension_pm_fluid_momentum_source(f, df);
@@ -18149,7 +18174,7 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
        	for ( a=0; a<dim; a++)
  		{
  	  	eqn   = R_MOMENTUM1+a;			
- 	  	if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
+ 	  	if ( pd->e[upd->matrix_index[eqn]][eqn] & T_SOURCE )
  	    		{
 /*  Graviational piece	*/
  	      		f[a] = mp->momentum_source[a];
@@ -18169,7 +18194,7 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
      }
   else
     {
-      EH(-1,"No such Navier-Stokes Source Model");
+      EH(GOMA_ERROR,"No such Navier-Stokes Source Model");
     }
 
   if( ls != NULL &&
@@ -18323,11 +18348,11 @@ apply_table_mp( double *func, struct Data_Table *table)
     }
     else if(strcmp(table->t_name[i], "FAUX_PLASTIC")==0)
     {
-      EH(-1, "Oops, I shouldn't be using this call for FAUX_PLASTIC.");
+      EH(GOMA_ERROR, "Oops, I shouldn't be using this call for FAUX_PLASTIC.");
     }
     else
     {
-      EH(-1, "Material Table Model Error-Unknown Function Column ");
+      EH(GOMA_ERROR, "Material Table Model Error-Unknown Function Column ");
     }
   }
 
@@ -18550,7 +18575,7 @@ interpolate_table( struct Data_Table *table,
       if(iinter == 1) 
       { 
 	fprintf(stderr," MP Interpolate Error - Need more than 1 point per set");
-	EH(-1, "Table interpolation not implemented");
+	EH(GOMA_ERROR, "Table interpolation not implemented");
       }
 
       istartx=iinter;
@@ -18602,7 +18627,7 @@ interpolate_table( struct Data_Table *table,
        break;
 
   default:
-      EH(-1, "Table interpolation order not implemented");
+      EH(GOMA_ERROR, "Table interpolation order not implemented");
   }
 
   return(func);
@@ -18847,7 +18872,7 @@ table_distance_search( struct Data_Table *table,
       if(iinter == 1) 
       { 
 	fprintf(stderr," MP Interpolate Error - Need more than 1 point per set");
-	EH(-1, "Table interpolation not implemented");
+	EH(GOMA_ERROR, "Table interpolation not implemented");
       }
 
       istartx=iinter;
@@ -18899,7 +18924,7 @@ table_distance_search( struct Data_Table *table,
        break;
 
   default:
-      EH(-1, "Table interpolation order not implemented");
+      EH(GOMA_ERROR, "Table interpolation order not implemented");
   }
 
   return(dist_min);
@@ -19073,7 +19098,7 @@ continuous_surface_tension_old(double st, double csf[DIM][DIM], struct Level_Set
   var =  ls->var;
 
   if (var != FILL) {
-    EH(-1, "Unknown fill variable");
+    EH(GOMA_ERROR, "Unknown fill variable");
   }
 
   /* Fetch the level set interface functions. */
@@ -19291,7 +19316,7 @@ quad_isomap_invert( const double x1,
 
 	default:
 	fprintf(stderr,"\n Unknown element order - quad_isomap\n");
-	EH(-1,"Fatal Error");
+	EH(GOMA_ERROR,"Fatal Error");
 	}
 
 /**  gather local node numbers  **/
@@ -19456,7 +19481,7 @@ quad_isomap_invert( const double x1,
             fprintf(stderr," pquad iteration failed %d %g %g %g\n",iter,
  			xi[0],xi[1],xi[2]);
             fprintf(stderr," point %g %g %g\n",x1,y1,z1);
-		EH(-1,"Fatal Error");
+		EH(GOMA_ERROR,"Fatal Error");
                 }
 
 /*evaluate function             */
@@ -19564,7 +19589,7 @@ quad_isomap_invert( const double x1,
 
 	default:
 	fprintf(stderr,"\n Unknown element order - quad_isomap\n");
-	EH(-1,"Fatal Error");
+	EH(GOMA_ERROR,"Fatal Error");
 	}
 
         for( i=0; i<elem_nodes; i++)
@@ -19779,7 +19804,7 @@ load_matrl_statevector(MATRL_PROP_STRUCT *mp_local)
 	sv[var_type] = scalar_fv_fill_altmatrl(esp->poynt[1], lvdesc, num_dofs,
 					       var_type);
       } else {
-        EH(-1,"Unimplemented");
+        EH(GOMA_ERROR,"Unimplemented");
       }
 
     }
@@ -20181,11 +20206,11 @@ double FoamVolumeSource(double time,
 	}
 
 	if (wCO2Liq == -1) {
-	  EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2_LIQ");
+	  EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_CO2_LIQ");
 	} else if (wCO2Gas == -1) {
-	  EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2_GAS");
+	  EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_CO2_GAS");
 	} else if (wH2O == -1) {
-	  EH(-1, "Expected a Species Source of FOAM_PMDI_10_H2O");
+	  EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_H2O");
 	}
 
 	double M_CO2 = mp->u_density[0];
@@ -20333,9 +20358,9 @@ double FoamVolumeSource(double time,
 	}
 
 	if (wCO2 == -1) {
-	  EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2");
+	  EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_CO2");
 	} else if (wH2O == -1) {
-	  EH(-1, "Expected a Species Source of FOAM_PMDI_10_H2O");
+	  EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_H2O");
 	}
 
 	double M_CO2 = mp->u_density[0];
@@ -20767,7 +20792,7 @@ double REFVolumeSource (double time,
        foam_species_source(mp->u_species_source[0]);
 
      } else {
-       EH(-1, "Must specify FOAM species source in the material's file");
+       EH(GOMA_ERROR, "Must specify FOAM species source in the material's file");
      } 
 
   if (pd->TimeIntegration != STEADY ) 
@@ -21271,7 +21296,7 @@ assemble_PPPS_generalized(Exo_DB *exo)
   if(pd->v[pg->imtrx][MESH_DISPLACEMENT1] && af->Assemble_Jacobian)
     {
       npass = 2;
-      EH(-1,"need to work out numerical jacobian for PSPP and moving mesh");
+      EH(GOMA_ERROR,"need to work out numerical jacobian for PSPP and moving mesh");
     }
 
   for (ipass = 0; ipass < npass; ipass++)
@@ -21317,7 +21342,7 @@ assemble_PPPS_generalized(Exo_DB *exo)
 		}
 	    }
 	  mu = viscosity(gn, gamma, d_mu);
-	  if(gn->ConstitutiveEquation != NEWTONIAN ) EH(-1,"PSPP not available for non_Newtonian yet.   Sorry."); 
+	  if(gn->ConstitutiveEquation != NEWTONIAN ) EH(GOMA_ERROR,"PSPP not available for non_Newtonian yet.   Sorry."); 
 
 	  visc_e += mu*d_vol;
       
@@ -21430,8 +21455,8 @@ assemble_PPPS_generalized(Exo_DB *exo)
       
       dsyev_("V", "U", &(ei[pg->imtrx]->ielem_dim), A, &(ei[pg->imtrx]->ielem_dim), W, WORK, &LWORK, &INFO, 1, 1); 
       
-      if (INFO > 0) EH(-1, "dsyev falied to converge");
-      if (INFO < 0) EH(-1, "an argument of dsyev had an illegal value");
+      if (INFO > 0) EH(GOMA_ERROR, "dsyev falied to converge");
+      if (INFO < 0) EH(GOMA_ERROR, "an argument of dsyev had an illegal value");
       
       for(j = 0; j < ei[pg->imtrx]->ielem_dim; j++)
 	{
@@ -21576,7 +21601,7 @@ assemble_PPPS_generalized(Exo_DB *exo)
 		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      /* lec->J[peqn][pvar][i][j] += numerical piece; */
-		      EH(-1,"need to finish off numerical jacobian for PPSP mesh displ");
+		      EH(GOMA_ERROR,"need to finish off numerical jacobian for PPSP mesh displ");
 		    }
 		}
 	    }
@@ -21751,6 +21776,9 @@ apply_distributed_sources ( int elem, double width,
                     
               switch (bc->BC_Name )
                 {
+                case LS_STRESS_JUMP_BC:
+                  assemble_ls_stress_jump(bc->BC_Data_Float[0], bc->BC_Data_Float[1], bc->BC_Data_Int[0]);
+                  break;
                 case LS_CAPILLARY_BC:
                   assemble_csf_tensor();
                   break;
@@ -22050,8 +22078,172 @@ assemble_pf_capillary (double *pf_surf_tens )
 return (1);
 
 }
-		      
 
+int assemble_ls_stress_jump(double viscosity_scale, double stress_scale, int heaviside_type) {
+  if (!pd->e[pg->imtrx][R_MOMENTUM1]) {
+    return (0);
+  }
+
+  double wt = fv->wt;
+  double h3 = fv->h3;
+  double det_J = bf[R_MOMENTUM1]->detJ;
+  if (ls->on_sharp_surf) /* sharp interface */
+  {
+    det_J = fv->sdet;
+  }
+  double d_area = wt * det_J * h3;
+
+  int dim = pd->Num_Dim;
+  int wim = dim;
+  if (pd->CoordinateSystem == SWIRLING || pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
+    wim = wim + 1;
+
+  // hard code jump for test
+  double pos_mup = ve[0]->gn->pos_ls_mup;
+  double neg_mup = ve[0]->gn->mu0;
+  double ls_viscosity_jump = fabs(mp->viscosity - mp->mp2nd->viscosity);
+  double Heaviside = 1;
+
+  switch (heaviside_type) {
+  case -1:
+    Heaviside = 1-lsi->H;
+    break;
+  case 1:
+    Heaviside = lsi->H;
+    break;
+  default:
+    Heaviside = 1;
+    break;
+  }
+
+  load_lsi(ls->Length_Scale);
+  switch (ls->ghost_stress) {
+  case LS_POSITIVE:
+    ls_viscosity_jump += neg_mup;
+    break;
+  case LS_NEGATIVE:
+    ls_viscosity_jump += pos_mup;
+    break;
+  case LS_OFF:
+  default:
+    ls_viscosity_jump += fabs(pos_mup - neg_mup);
+    break;
+  }
+  /*
+   * Residuals ____________________________________________________________________________
+   */
+  if (af->Assemble_Residual) {
+
+    for (int a = 0; a < wim; a++) {
+      int eqn = R_MOMENTUM1 + a;
+      int peqn = upd->ep[pg->imtrx][eqn];
+      for (int i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+
+        int ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
+
+        if (ei[pg->imtrx]->active_interp_ledof[ledof]) {
+
+          int ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
+
+          double n_gv_n = 0;
+          double n_tau_n = 0;
+          for (int p = 0; p < VIM; p++) {
+            for (int q = 0; q < VIM; q++) {
+              n_gv_n += lsi->normal[p] * (fv->grad_v[p][q] + fv->grad_v[q][p]) * lsi->normal[q];
+              n_tau_n += lsi->normal[p] * fv->S[0][p][q] * lsi->normal[q];
+            }
+          }
+          double source = lsi->delta * lsi->normal[a] * (viscosity_scale * ls_viscosity_jump * n_gv_n + Heaviside * stress_scale * n_tau_n) *
+                          bf[eqn]->phi[i];
+          source *= d_area;
+          lec->R[peqn][ii] += source;
+        }
+      }
+    }
+  }
+
+  /*
+   * Yacobian terms...
+   */
+
+  if (af->Assemble_Jacobian) {
+    for (int a = 0; a < wim; a++) {
+      int eqn = R_MOMENTUM1 + a;
+      int peqn = upd->ep[pg->imtrx][eqn];
+
+      for (int i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+
+        int ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
+
+        if (ei[pg->imtrx]->active_interp_ledof[ledof]) {
+
+          int ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
+
+          double n_tau_n = 0;
+          double n_gv_n = 0;
+          for (int p = 0; p < VIM; p++) {
+            for (int q = 0; q < VIM; q++) {
+              n_gv_n += lsi->normal[q] * (fv->grad_v[p][q] + fv->grad_v[q][p]) * lsi->normal[p];
+              n_tau_n += lsi->normal[q] * fv->S[0][q][p] * lsi->normal[p];
+            }
+          }
+          for (int b = 0; b < wim; b++) {
+            int var = R_MOMENTUM1 + b;
+            if (pd->v[pg->imtrx][var]) {
+              int pvar = upd->vp[pg->imtrx][var];
+              for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                double n_gv_n_dv = 0;
+                for (int p = 0; p < VIM; p++) {
+                  for (int q = 0; q < VIM; q++) {
+                    n_gv_n_dv +=
+                        lsi->normal[p] *
+                        (bf[var]->grad_phi_e[j][b][p][q] + bf[var]->grad_phi_e[j][b][q][p]) *
+                        lsi->normal[q];
+                  }
+                }
+                double source = lsi->normal[a] * lsi->delta * viscosity_scale * ls_viscosity_jump * n_gv_n_dv *
+                                bf[eqn]->phi[i];
+                source *= d_area;
+
+                lec->J[peqn][pvar][ii][j] += source;
+              }
+            }
+          }
+
+          /* J_m_F
+           */
+          int var = LS;
+          if (pd->v[pg->imtrx][var]) {
+            int pvar = upd->vp[pg->imtrx][var];
+
+            for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              double n_tau_n_dF = 0;
+              double n_gv_n_dF = 0;
+              for (int p = 0; p < VIM; p++) {
+                for (int q = 0; q < VIM; q++) {
+                  n_tau_n_dF += lsi->d_normal_dF[q][j] * fv->S[0][q][p] * lsi->normal[p];
+                  n_tau_n_dF += lsi->normal[q] * fv->S[0][q][p] * lsi->d_normal_dF[p][j];
+                  n_gv_n_dF += lsi->normal[q] * fv->grad_v[q][p] * lsi->d_normal_dF[p][j];
+                }
+              }
+              double source = lsi->d_delta_dF[j] * lsi->normal[a] *
+                              (viscosity_scale * ls_viscosity_jump * n_gv_n + stress_scale * n_tau_n) * bf[eqn]->phi[i];
+              source += lsi->delta * lsi->d_normal_dF[a][j] *
+                        (viscosity_scale * ls_viscosity_jump * n_gv_n + stress_scale * n_tau_n) * bf[eqn]->phi[i];
+              source += lsi->delta * lsi->normal[a] * (viscosity_scale * n_gv_n_dF + stress_scale * n_tau_n_dF) * bf[eqn]->phi[i];
+              source *= d_area;
+
+              lec->J[peqn][pvar][ii][j] += source;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return (1);
+}
 
 int
 assemble_csf_tensor ( void )
@@ -22870,7 +23062,7 @@ assemble_cap_hysing(double dt, double scale)
   */
   if ( ls->CalcSurfDependencies )
     {
-      EH(-1, "Calc surf dependencies not implemented");
+      EH(GOMA_ERROR, "Calc surf dependencies not implemented");
 
     }
 #endif
@@ -22994,7 +23186,7 @@ assemble_cap_hysing(double dt, double scale)
 		  var = MESH_DISPLACEMENT1;
 		  if(pd->v[pg->imtrx][var])
 		    {
-		      EH(-1, "Jacobian terms for hysing capillary wrt mesh not implemented");
+		      EH(GOMA_ERROR, "Jacobian terms for hysing capillary wrt mesh not implemented");
 		    }
 
 		}
@@ -23070,7 +23262,7 @@ assemble_cap_denner_diffusion(double dt, double scale)
   */
   if ( ls->CalcSurfDependencies )
     {
-      EH(-1, "Calc surf dependencies not implemented");
+      EH(GOMA_ERROR, "Calc surf dependencies not implemented");
     }
 #endif
 
@@ -23205,7 +23397,7 @@ assemble_cap_denner_diffusion(double dt, double scale)
 		  var = MESH_DISPLACEMENT1;
 		  if(pd->v[pg->imtrx][var])
 		    {
-		      EH(-1, "Jacobian terms for denner capillary diffusion wrt mesh not implemented");
+		      EH(GOMA_ERROR, "Jacobian terms for denner capillary diffusion wrt mesh not implemented");
 		    }
 
 		}
@@ -23279,7 +23471,7 @@ assemble_cap_denner_diffusion_n(double dt, double scale)
   */
   if ( ls->CalcSurfDependencies )
     {
-      EH(-1, "Calc surf dependencies not implemented");
+      EH(GOMA_ERROR, "Calc surf dependencies not implemented");
     }
 #endif
 
@@ -23437,7 +23629,7 @@ assemble_cap_denner_diffusion_n(double dt, double scale)
 		  var = MESH_DISPLACEMENT1;
 		  if(pd->v[pg->imtrx][var])
 		    {
-		      EH(-1, "Jacobian terms for denner capillary diffusion wrt mesh not implemented");
+		      EH(GOMA_ERROR, "Jacobian terms for denner capillary diffusion wrt mesh not implemented");
 		    }
 
 		}
@@ -23466,7 +23658,7 @@ assemble_curvature_with_normals_source(void)
 
   if (!pd->e[pg->imtrx][R_CURVATURE]  )
     {
-      EH(-1,"Error: Level set curvature equation needs to be activated to use LS_CAP_CURVE\n");
+      EH(GOMA_ERROR,"Error: Level set curvature equation needs to be activated to use LS_CAP_CURVE\n");
     }
 
   eqn = R_MOMENTUM1;
@@ -23667,7 +23859,7 @@ assemble_curvature_source(void)
 
   if (! pd->e[pg->imtrx][R_CURVATURE] )
     {
-      EH(-1,"Error: Level set curvature equation needs to be activated to use LS_CAP_CURVE\n");
+      EH(GOMA_ERROR,"Error: Level set curvature equation needs to be activated to use LS_CAP_CURVE\n");
     }	
 
   eqn = R_MOMENTUM1;
@@ -24061,7 +24253,7 @@ assemble_t_source ( double T, double time )
        pd->i[pg->imtrx][eqn] != I_Q1_G  &&
        pd->i[pg->imtrx][eqn] != I_Q2_G )
     {
-      EH(-1, "LS_T requires discontinuous temperature enrichment (Q1_XV, Q2_XV, Q1_G, Q2_G)");
+      EH(GOMA_ERROR, "LS_T requires discontinuous temperature enrichment (Q1_XV, Q2_XV, Q1_G, Q2_G)");
     }
 
   wt = fv->wt;
@@ -24925,7 +25117,7 @@ assemble_cont_t_source ( double *xi )
    */
   eqn = R_ENERGY;
   if ( pd->i[pg->imtrx][eqn] == I_Q1_G || pd->i[pg->imtrx][eqn] == I_Q2_G )
-    EH(-1,"LS_CONT_T_BC not yet implemented for _G type enrichment.");
+    EH(GOMA_ERROR,"LS_CONT_T_BC not yet implemented for _G type enrichment.");
 
   /* need difference in T between other side and this side */
   var = TEMPERATURE;
@@ -25440,7 +25632,7 @@ assemble_cont_vel_source ( double *xi, Exo_DB *exo )
    */
   eqn = R_MOMENTUM1;
   if ( pd->i[pg->imtrx][eqn] == I_Q1_G || pd->i[pg->imtrx][eqn] == I_Q2_G )
-    EH(-1,"LS_CONT_VEL_BC not yet implemented for _G type enrichment.");
+    EH(GOMA_ERROR,"LS_CONT_VEL_BC not yet implemented for _G type enrichment.");
 
    for ( a=0; a < wim; a++ )
     {
@@ -25859,7 +26051,7 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
     
   default:
     sprintf(Err_Msg, "BC %s not found", BC_Types[bc_input_id].desc->name1);
-    EH(-1, Err_Msg);
+    EH(GOMA_ERROR, Err_Msg);
     break;
   }
 #if 0
@@ -26524,14 +26716,14 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
     
   default:
     sprintf(Err_Msg, "BC %s not found", BC_Types[bc_input_id].desc->name1);
-    EH(-1, Err_Msg);
+    EH(GOMA_ERROR, Err_Msg);
     break;
   }
 #if 0
   DPRINTF(stderr,"kinematic extv at (%g,%g) vnorm=%g, fdot=%g\n",fv->x[0],fv->x[1],vnorm,fv_dot->F);
 #endif
     
-  if ( tt != 0. ) EH(-1,"LS_EIK_KINEMATIC currently requires backward Euler");
+  if ( tt != 0. ) EH(GOMA_ERROR,"LS_EIK_KINEMATIC currently requires backward Euler");
   
 #ifdef COUPLED_FILL
   /* finite difference calculation of path dependencies for
@@ -27335,7 +27527,7 @@ assemble_p_source ( double pressure, const int bcflag )
 
      } /* end of STRESS_TENSOR */
     else
-	{EH(-1, "Invalid LS_FLOW_PRESSURE boundary condition flag (-1|0|1)\n");}
+	{EH(GOMA_ERROR, "Invalid LS_FLOW_PRESSURE boundary condition flag (-1|0|1)\n");}
 
 #if 0
 fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign, force[0],force[1]);
@@ -27977,7 +28169,7 @@ assemble_uvw_source ( int eqn, double val )
        pd->i[pg->imtrx][eqn] != I_Q1_G  &&
        pd->i[pg->imtrx][eqn] != I_Q2_G )
     {
-      EH(-1, "LS_UVW requires discontinuous velocity enrichment (Q1_XV, Q2_XV, Q1_G, Q2_G)");
+      EH(GOMA_ERROR, "LS_UVW requires discontinuous velocity enrichment (Q1_XV, Q2_XV, Q1_G, Q2_G)");
     }
 
   a = eqn - R_MOMENTUM1;
@@ -28273,7 +28465,7 @@ assemble_uvw_source ( int eqn, double val )
        pd->i[pg->imtrx][eqn] != I_Q1_G  &&
        pd->i[pg->imtrx][eqn] != I_Q2_G )
     {
-      EH(-1, "LS_UVW requires discontinuous velocity enrichment");
+      EH(GOMA_ERROR, "LS_UVW requires discontinuous velocity enrichment");
     }
 
   a = eqn - R_MOMENTUM1;
@@ -28822,7 +29014,7 @@ assemble_fill_path_dependence ( void )
 
                         break;
                       default:
-                        EH(-1,"Unknown Fill_Weight_Fcn");
+                        EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
                       }
 
                       source *= det_J * wt * h3;
@@ -29287,7 +29479,7 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
 	}
       else
 	{
-	  EH(-1,"Unrecognizable Permeability model");
+	  EH(GOMA_ERROR,"Unrecognizable Permeability model");
 	}
 
       /* Load up remaining parameters for the Brinkman Equation. */
@@ -29784,7 +29976,7 @@ assemble_continuity_path_dependence (dbl time_value,
 					}
 					else
 					{
-						EH(-1, "invalid porosity model");
+						EH(GOMA_ERROR, "invalid porosity model");
 					}
 					var = MASS_FRACTION;
 					for (w=0; w<pd->Num_Species-1; w++)
@@ -30114,12 +30306,12 @@ assemble_LM_source ( double *xi,
       cp = ss_surf->closest_point;
 
       /* use kitchen sink approach for now at solids location */
-      if ( cp->elem == -1 ) EH(-1,"Invalid element at closest_point");
+      if ( cp->elem == -1 ) EH(GOMA_ERROR,"Invalid element at closest_point");
 
       /* Associate the correct AC number with this point */
       id_side = cp->elem_side;
       ioffset = first_overlap_ac(cp->elem, id_side);
-      if (ioffset == -1) EH(-1,"Bad AC index");
+      if (ioffset == -1) EH(GOMA_ERROR,"Bad AC index");
 
       setup_shop_at_point( cp->elem, cp->xi, exo );
 
@@ -30394,6 +30586,7 @@ fluid_stress( double Pi[DIM][DIM],
       particle_stress(tau_p, d_tau_p_dv, d_tau_p_dvd,d_tau_p_dy,d_tau_p_dmesh,d_tau_p_dp, w0);
     }
 
+    evss_f = 0;
   if ( pd->gv[POLYMER_STRESS11] && (vn->evssModel == EVSS_F || vn->evssModel == EVSS_GRADV) )
     {
       evss_f = 1.0;
@@ -30415,7 +30608,7 @@ fluid_stress( double Pi[DIM][DIM],
           Heaviside = 1 - lsi->H;
           break;
         default:
-          EH(-1, "Unknown Level Set Ghost Stress value");
+          EH(GOMA_ERROR, "Unknown Level Set Ghost Stress value");
           break;
         }
     }
@@ -31098,7 +31291,7 @@ fluid_stress( double Pi[DIM][DIM],
                           for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                             {
                               d_Pi->S[p][q][mode][b][c][j] =
-                                ((double)delta(b,p) * (double)delta(c,q)) * bf[var]->phi[j] * Heaviside
+                                ((double)delta(b,p) * (double)delta(c,q)) * bf[var]->phi[j]
                                 + mu_over_mu_num * d_mun_dS[mode][b][c][j] *
 				( gamma[p][q] - evss_f * gamma_cont[p][q] );
                             }
@@ -32075,7 +32268,7 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
   struct Level_Set_Data *ls_old = ls;
 
   if (MAX_CONC < 3) {
-    EH(-1, "heat_source expects MAX_CONC >= 3");
+    EH(GOMA_ERROR, "heat_source expects MAX_CONC >= 3");
     return 0;
   }
 
@@ -32268,7 +32461,7 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
                     }
                 break;
            default:
-                EH(-1,"invalid Species Type for PHOTO_CURING\n");
+                EH(GOMA_ERROR,"invalid Species Type for PHOTO_CURING\n");
            }
        Xconv *= mp->specific_volume[pd->Num_Species_Eqn];
        Xconv_init *= mp->specific_volume[pd->Num_Species_Eqn];
@@ -32496,7 +32689,7 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
     }
   else
     {
-      EH(-1,"Unrecognized heat source model");
+      EH(GOMA_ERROR,"Unrecognized heat source model");
     }
 	
 	if( ls != NULL &&
@@ -32623,1015 +32816,6 @@ ls_modulate_heatsource(double *f,
   return(0);
 }
 
-
-int
-calc_pspg( dbl pspg[DIM],
-          PSPG_DEPENDENCE_STRUCT *d_pspg,
-          dbl time_value, /* current time */
-          dbl tt,	/* parameter to vary time integration from
-                                           explicit (tt = 1) to implicit (tt = 0)    */
-          dbl dt,	/* current time step size                    */
-          const PG_DATA *pg_data )
-{
-  const dbl h_elem_avg = pg_data->h_elem_avg;
-  const dbl *hsquared = pg_data->hsquared;      	/* element size information for PSPG         */
-  const dbl U_norm = pg_data->U_norm;	                /* global velocity norm for PSPG calcs       */
-  const dbl mu_avg = pg_data->mu_avg;	                /* element viscosity for PSPG calculations   */
-  const dbl rho_avg = pg_data->rho_avg;                 /* element density for PSPG calculations   */
-  const dbl *v_avg = pg_data->v_avg;                    /* element velocity for PSPG calculations   */
-
-  int dim, wim;
-  int p, a, b, c;
-  int var;
-  int w, j;
-
-  int pspg_global;
-  int pspg_local;
-
-  dbl *v = fv->v;				/* Velocity field. */
-  dbl *grad_P = fv->grad_P;
-
-  /*
-   * Variables for vicosity and derivative
-   */
-  dbl mu;
-  VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;  /* viscosity dependence */
-  VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
-
-  /*
-   * density and sensitivity terms
-   */
-  dbl rho;
-  dbl rho_t;
-  DENSITY_DEPENDENCE_STRUCT d_rho_struct;  /* density dependence */
-  DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
-
-  dbl f[DIM];				/* Body force. */
-  MOMENTUM_SOURCE_DEPENDENCE_STRUCT df_struct;  /* Body force dependence */
-  MOMENTUM_SOURCE_DEPENDENCE_STRUCT *df = &df_struct;
-
-  /*
-   * Interpolation functions...
-   */
-
-  dbl phi_j;
-
-  /*
-   * Variables for Pressure Stabilization Petrov-Galerkin...
-   */
-  int meqn, meqn1;
-  int r;
-  int v_s[MAX_MODES][DIM][DIM], v_g[DIM][DIM];
-
-  dbl mass, advection, diffusion, source, porous;
-
-  dbl momentum[DIM];           /* momentum residual for PSPG */
-  dbl x_dot[DIM];
-  dbl v_dot[DIM];
-  dbl *grad_v[DIM];
-  dbl div_s[DIM];
-  dbl div_G[DIM];
-
-  /* variables for Brinkman porous flow */
-  dbl por=0, por2=0, per=0, vis=0, dvis_dT[MDE], sc=0, speed=0;
-
-  dbl h_elem=0;
-  dbl Re;
-  dbl tau_pspg=0.;
-  dbl tau_pspg1=0.;
-  dbl d_tau_pspg_dX[DIM][MDE];
-  dbl d_tau_pspg_dv[DIM][MDE];
-
-  dbl hh_siz, vv_speed;
-
-  dbl gamma[DIM][DIM];                  /* shrearrate tensor based on velocity */
-
-  int w0=0;
-
-  int mode;
-
-  /* For particle momentum model.
-   */
-  int species;			/* species number for particle phase,  */
-  dbl ompvf;			/* 1 - partical volume fraction */
-  int particle_momentum_on; 	/* boolean. */
-  /* particle stress for suspension balance model*/
-  dbl tau_p[DIM][DIM];
-  dbl d_tau_p_dv[DIM][DIM][DIM][MDE];
-  dbl d_tau_p_dvd[DIM][DIM][DIM][MDE];
-  dbl d_tau_p_dy[DIM][DIM][MAX_CONC][MDE];
-  dbl d_tau_p_dmesh[DIM][DIM][DIM][MDE];
-  dbl d_tau_p_dp[DIM][DIM][MDE];
-
-  static int is_initialized=FALSE;
-
-  dim   = pd->Num_Dim;
-  wim   = dim;
-  if(pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D) wim = wim+1;
-
-  /* initialize */
-  for ( a=0; a<DIM; a++ ) pspg[a] = 0.;
-
-  if ( d_pspg == NULL )
-  {
-    /* I guess we won't be needing these! */
-    d_mu = NULL;
-    d_rho = NULL;
-    df = NULL;
-  }
-  else if ( !is_initialized )
-  {
-
-    memset(d_pspg->v, 0, sizeof(double)*DIM*DIM*MDE);
-    memset(d_pspg->X, 0, sizeof(double)*DIM*DIM*MDE);
-    memset(d_pspg->T, 0, sizeof(double)*DIM*MDE);
-    memset(d_pspg->P, 0, sizeof(double)*DIM*MDE);
-    memset(d_pspg->C, 0, sizeof(double)*DIM*MAX_CONC*MDE);
-    memset(d_pspg->S, 0, sizeof(double)*DIM*MAX_MODES*DIM*DIM*MDE);
-    memset(d_pspg->g, 0, sizeof(double)*DIM*DIM*DIM*MDE);
-  }
-
-  /* This is the flag for the standard global PSPG */
-  if(PSPG == 1)
-  {
-    pspg_global = TRUE;
-    pspg_local = FALSE;
-  }
-  /* This is the flag for the standard local PSPG */
-  else if(PSPG == 2)
-  {
-    pspg_global = FALSE;
-    pspg_local = TRUE;
-  }
-  else
-  {
-    return 0;
-  }
-
-  if( pd->v[pg->imtrx][POLYMER_STRESS11] )
-  {
-        stress_eqn_pointer(v_s);
-
-    v_g[0][0] = VELOCITY_GRADIENT11;
-    v_g[0][1] = VELOCITY_GRADIENT12;
-    v_g[1][0] = VELOCITY_GRADIENT21;
-    v_g[1][1] = VELOCITY_GRADIENT22;
-    v_g[0][2] = VELOCITY_GRADIENT13;
-    v_g[1][2] = VELOCITY_GRADIENT23;
-    v_g[2][0] = VELOCITY_GRADIENT31;
-    v_g[2][1] = VELOCITY_GRADIENT32;
-    v_g[2][2] = VELOCITY_GRADIENT33;
-  }
-
-  /* initialize dependencies */
-  memset( d_tau_pspg_dv, 0, sizeof(double) * DIM*MDE);
-  memset( d_tau_pspg_dX, 0, sizeof(double) * DIM*MDE);
-
-
-  if( cr->MassFluxModel == DM_SUSPENSION_BALANCE && PSPG)
-  {
-    w0 = gn->sus_species_no;
-    /* This is the divergence of the particle stress  */
-    /* divergence_particle_stress(div_tau_p, d_div_tau_p_dgd, d_div_tau_p_dy,
-         d_div_tau_p_dv, d_div_tau_p_dX, w0); */
-  }
-
-
-  if(pd->e[pg->imtrx][R_PMOMENTUM1])
-  {
-    particle_momentum_on = 1;
-    species = (int) mp->u_density[0];
-    ompvf = 1.0 - fv->c[species];
-  }
-  else
-  {
-    particle_momentum_on = 0;
-    species = -1;
-    ompvf = 1.0;
-  }
-
-
-  // Global average for pspg_global's element size
-  h_elem = h_elem_avg;
-
-  /*** Density ***/
-  rho = density(d_rho, time_value);
-
-  if(pspg_global)
-  {
-
-    /* Now calculate the element Reynolds number based on a global
-       * norm of the velocity and determine tau_pspg discretely from Re
-       * The global version has no Jacobian dependencies
-       */
-    Re = rho * U_norm * h_elem / (2.0 * mu_avg);
-
-    if (Re <= 3.0)
-    {
-      tau_pspg = PS_scaling * h_elem * h_elem / (12.0 * mu_avg);
-    }
-    else if (Re > 3.0)
-    {
-      tau_pspg = PS_scaling * h_elem / (2.0 * rho * U_norm);
-    }
-  }
-  else if (pspg_local)
-  {
-    hh_siz = 0.;
-    for ( p=0; p<dim; p++)
-    {
-      hh_siz += hsquared[p];
-    }
-    // Average value of h**2 in the element
-    hh_siz = hh_siz/ ((double )dim);
-
-    // Average value of v**2 in the element
-      vv_speed = 0.0;
-    for ( a=0; a<wim; a++)
-    {
-      vv_speed += v_avg[a]*v_avg[a];
-    }
-
-    // Use vv_speed and hh_siz for tau_pspg, note it has a continuous dependence on Re
-    tau_pspg1 = rho_avg*rho_avg*vv_speed/hh_siz + (9.0*mu_avg*mu_avg)/(hh_siz*hh_siz);
-    if (  pd->TimeIntegration != STEADY)
-    {
-      tau_pspg1 += 4.0/(dt*dt);
-    }
-    tau_pspg = PS_scaling/sqrt(tau_pspg1);
-
-    // tau_pspg derivatives wrt v from vv_speed
-    if ( d_pspg != NULL && pd->v[pg->imtrx][VELOCITY1] )
-    {
-      for ( b=0; b<dim; b++)
-      {
-        var = VELOCITY1+b;
-        if ( pd->v[pg->imtrx][var] )
-        {
-          for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-          {
-            d_tau_pspg_dv[b][j] = -tau_pspg/tau_pspg1;
-                      d_tau_pspg_dv[b][j] *= rho_avg*rho_avg/hh_siz * v_avg[b]*pg_data->dv_dnode[b][j];
-          }
-        }
-      }
-    }
-
-    // tau_pspg derivatives wrt mesh from hh_siz
-    if ( d_pspg != NULL && pd->v[pg->imtrx][MESH_DISPLACEMENT1] && pspg_local)
-    {
-      for ( b=0; b<dim; b++)
-      {
-        var = MESH_DISPLACEMENT1+b;
-        if ( pd->v[pg->imtrx][var] )
-        {
-          for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-          {
-                      d_tau_pspg_dX[b][j] = tau_pspg/tau_pspg1;
-            d_tau_pspg_dX[b][j] *= (rho_avg*rho_avg*vv_speed + 18.0*mu_avg*mu_avg/hh_siz) / (hh_siz*hh_siz);
-            d_tau_pspg_dX[b][j] *= pg_data->hhv[b][b]*pg_data->dhv_dxnode[b][j]/((double)dim);
-
-          }
-        }
-      }
-    }
-  }
-
-  for ( a=0; a<VIM; a++) grad_v[a] = fv->grad_v[a];
-
-  /* load up shearrate tensor based on velocity */
-  for ( a=0; a<VIM; a++)
-  {
-    for ( b=0; b<VIM; b++)
-    {
-      gamma[a][b] = grad_v[a][b] + grad_v[b][a];
-    }
-  }
-
-  /*
-   * get viscosity for velocity second derivative/diffusion
-   * term in PSPG stuff
-   */
-  mu = viscosity(gn, gamma, d_mu );
-
-
-  /* get variables we will need for momentum residual */
-
-  for ( a=0; a<wim; a++)
-  {
-    if (  pd->TimeIntegration != STEADY &&  pd->v[pg->imtrx][MESH_DISPLACEMENT1+a] )
-    {
-      x_dot[a] = fv_dot->x[a];
-    }
-    else
-    {
-      x_dot[a] = 0.;
-    }
-
-    if (  pd->TimeIntegration != STEADY )
-    {
-      v_dot[a] = fv_dot->v[a];
-    }
-    else
-    {
-      v_dot[a] = 0.;
-    }
-  }
-
-  for ( p=0; p<wim; p++) div_s[p] = 0.;
-  if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
-  {
-    for ( p=0; p<wim; p++)
-    {
-      for ( mode=0; mode<vn->modes; mode++)
-      {
-        div_s[p] += fv->div_S[mode][p];
-      }
-    }
-  }
-
-
-  if( !is_initialized ) {
-    memset( tau_p,      0, sizeof(double) * DIM*DIM);
-    memset( d_tau_p_dv, 0, sizeof(double) * DIM*DIM*DIM*MDE);
-    memset( d_tau_p_dvd, 0, sizeof(double) * DIM*DIM*DIM*MDE);
-    memset( d_tau_p_dy, 0, sizeof(double) * DIM*DIM*MAX_CONC*MDE);
-    memset( d_tau_p_dmesh, 0, sizeof(double) * DIM*DIM*DIM*MDE);
-    memset( d_tau_p_dp, 0, sizeof(double) * DIM*DIM*MDE);
-  }
-
-  if( cr->MassFluxModel == DM_SUSPENSION_BALANCE
-      || cr->MassFluxModel == HYDRODYNAMIC_QTENSOR_OLD
-      || cr->MassFluxModel == HYDRODYNAMIC_QTENSOR)
-    particle_stress(tau_p,d_tau_p_dv,d_tau_p_dvd,d_tau_p_dy,d_tau_p_dmesh,d_tau_p_dp, w0);
-
-  if ( pd->v[pg->imtrx][VELOCITY_GRADIENT11] &&  pd->v[pg->imtrx][POLYMER_STRESS11])
-  {
-    for ( p=0; p<wim; p++)
-    {
-      div_G[p] = fv->div_G[p];
-    }
-  }
-  else
-  {
-    for ( p=0; p<wim; p++)
-    {
-      div_G[p] = 0.;
-    }
-  }
-
-  if (pd->e[pg->imtrx][R_MOMENTUM1] & T_POROUS_BRINK )
-  {
-    if (mp->PorousMediaType != POROUS_BRINKMAN)
-      WH(-1, "Set Porous term multiplier in continuous medium");
-    /* Short-hand notation for the four parameters in the Brinkman Equation. */
-    por = mp->porosity;
-    por2 = por * por;
-    per = mp->permeability;
-    if(mp->FlowingLiquidViscosityModel == CONSTANT)
-    {
-      /* Do nothing */
-    }
-    else if (mp->FlowingLiquidViscosityModel == MOLTEN_GLASS)
-    {
-      molten_glass_viscosity(&(mp->FlowingLiquid_viscosity), dvis_dT, mp->u_FlowingLiquid_viscosity);
-    }
-    else if (mp->FlowingLiquidViscosityModel == USER)
-    {
-      usr_FlowingLiquidViscosity(mp->u_FlowingLiquid_viscosity);
-      var = TEMPERATURE;
-      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-      {
-        dvis_dT[j]= mp->d_FlowingLiquid_viscosity[var]*bf[var]->phi[j];
-      }
-    }
-    else
-    {
-      EH(-1,"Don't recognize your FlowingLiquidViscosity model");
-    }
-    vis = mp->FlowingLiquid_viscosity;
-    sc  = mp->Inertia_coefficient;
-  }
-  else
-  {
-    por = 1.;
-    por2 = 1.;
-    per = 1.;
-    vis = mp->viscosity;
-    sc  = 0.;
-  }
-
-  /* for porous media stuff */
-  speed = 0.0;
-  for ( a=0; a<wim; a++)
-  {
-    speed += v[a]*v[a];
-  }
-  speed = sqrt(speed);
-
-  /* get momentum source term */
-  momentum_source_term(f, df, time_value);
-
-  if(pd->e[pg->imtrx][R_PMOMENTUM1])
-  {
-    rho_t = ompvf * rho;
-    meqn1 = R_PMOMENTUM1;
-  }
-  else
-  {
-    rho_t = rho;
-    meqn1 = R_MOMENTUM1;
-  }
-
-  for ( a=0; a<wim; a++)
-  {
-    meqn = meqn1 + a;
-
-    mass = 0.;
-    if ( ( pd->e[pg->imtrx][meqn] & T_MASS ) && ( pd->TimeIntegration != STEADY ) )
-    {
-      mass =  rho_t * v_dot[a] / por;
-      mass *= pd->etm[pg->imtrx][meqn][(LOG2_MASS)];
-    }
-
-    advection = 0.;
-    if ( pd->e[pg->imtrx][meqn] & T_ADVECTION )
-    {
-      for ( p=0; p<wim; p++)
-      {
-        advection += rho_t * (v[p]- x_dot[p]) * grad_v[p][a] / por2;
-      }
-      advection *= pd->etm[pg->imtrx][meqn][(LOG2_ADVECTION)];
-    }
-
-    diffusion = 0.;
-    if ( pd->e[pg->imtrx][meqn] & T_DIFFUSION )
-    {
-      diffusion = grad_P[a] - div_s[a];
-                  /*diffusion  -= div_tau_p[a]  */
-      diffusion -= mu * div_G[a];
-      diffusion *= pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)];
-    }
-
-    source = 0.;
-    if ( pd->e[pg->imtrx][meqn] & T_SOURCE )
-    {
-      source = -f[a];
-      source *= pd->etm[pg->imtrx][meqn][(LOG2_SOURCE)];
-    }
-
-    porous = 0.;
-    if ( pd->e[pg->imtrx][meqn] & T_POROUS_BRINK )
-    {
-      porous = v[a]*(rho_t*sc*speed/sqrt(per)+vis/per);
-      porous *= pd->etm[pg->imtrx][meqn][(LOG2_POROUS_BRINK)];
-    }
-
-    momentum[a] = mass + advection + diffusion + source + porous;
-    pspg[a] = tau_pspg * momentum[a];
-
-
-    if ( d_pspg != NULL && pd->v[pg->imtrx][VELOCITY1] )
-    {
-      for ( b=0; b<wim; b++ )
-      {
-        var = VELOCITY1 + b;
-        for ( j=0; j<ei[pg->imtrx]->dof[var]; j++ )
-        {
-          phi_j = bf[var]->phi[j];
-
-          mass = 0.;
-          if ( ( pd->e[pg->imtrx][meqn] & T_MASS ) && ( pd->TimeIntegration != STEADY ) )
-          {
-            mass =  rho_t / por * (1.+2.*tt) * phi_j/dt * (double)delta(a,b);
-            mass *= pd->etm[pg->imtrx][meqn][(LOG2_MASS)];
-          }
-
-          advection = 0.;
-          if ( pd->e[pg->imtrx][meqn] & T_ADVECTION )
-          {
-            advection = phi_j * grad_v[b][a];
-            for ( p=0; p<wim; p++)
-            {
-              advection += (v[p]- x_dot[p]) * bf[var]->grad_phi_e[j][b][p][a];
-            }
-            advection *= rho_t / por2;
-            advection *= pd->etm[pg->imtrx][meqn][(LOG2_ADVECTION)];
-          }
-
-          diffusion = 0.;
-          if ( pd->e[pg->imtrx][meqn] & T_DIFFUSION )
-          {
-            diffusion -= d_mu->v[b][j] * div_G[a];
-            /*diffusion -= d_div_tau_p_dv[a][b][j];*/
-            diffusion *= pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)];
-          }
-
-          source = 0.;
-          if ( pd->e[pg->imtrx][meqn] & T_SOURCE )
-          {
-            source -= df->v[a][b][j] * pd->etm[pg->imtrx][meqn][(LOG2_SOURCE)];
-          }
-
-          porous = 0.;
-          if ( pd->e[pg->imtrx][meqn] & T_POROUS_BRINK )
-          {
-            porous = (rho_t*sc*speed/sqrt(per) + vis/per) * phi_j;
-            for ( p=0; p<wim; p++)
-            {
-              porous += rho_t*sc/sqrt(per) *  2.*v[p] * v[a];
-            }
-            porous *= pd->etm[pg->imtrx][meqn][(LOG2_POROUS_BRINK)];
-          }
-          d_pspg->v[a][b][j] = tau_pspg * ( mass + advection + diffusion + source + porous )
-                               + d_tau_pspg_dv[b][j] * momentum[a];
-
-        }
-      }
-    }
-
-    if ( d_pspg != NULL && pd->v[pg->imtrx][MESH_DISPLACEMENT1] )
-    {
-      for ( b=0; b<wim; b++ )
-      {
-        var = MESH_DISPLACEMENT1 + b;
-        for ( j=0; j<ei[pg->imtrx]->dof[var]; j++ )
-        {
-          phi_j = bf[var]->phi[j];
-
-          advection = 0.;
-          if  ( ( pd->e[pg->imtrx][meqn] & T_ADVECTION ) && ( pd->TimeIntegration != STEADY ) )
-          {
-            advection = -(1.+2.*tt) * phi_j/dt * grad_v[b][a];
-            for ( p=0; p<wim; p++)
-            {
-              advection += (v[p]- x_dot[p]) * fv->d_grad_v_dmesh[p][a] [b][j];
-            }
-            advection *= rho_t / por2;
-            advection *= pd->etm[pg->imtrx][meqn][(LOG2_ADVECTION)];
-          }
-
-          diffusion = 0.;
-          if ( pd->e[pg->imtrx][meqn] & T_DIFFUSION )
-          {
-            diffusion = fv->d_grad_P_dmesh[a][b][j]
-                        - d_mu->X[b][j] * div_G[a]
-                                          - mu * fv->d_div_G_dmesh[a] [b][j] ;
-            /* diffusion -= d_div_tau_p_dX[a][b][j];*/
-            for ( mode=0; mode<vn->modes; mode++)
-            {
-              diffusion -= fv->d_div_S_dmesh[mode][a] [b][j];
-            }
-            diffusion *= pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)];
-          }
-
-          source = 0.;
-          if ( pd->e[pg->imtrx][meqn] & T_SOURCE )
-          {
-            source -= df->X[a][b][j] * pd->etm[pg->imtrx][meqn][(LOG2_SOURCE)];
-          }
-
-          d_pspg->X[a][b][j] = tau_pspg * ( advection + diffusion + source ) +
-                               + d_tau_pspg_dX[b][j] * momentum[a];
-
-        }
-      }
-    }
-
-    var = TEMPERATURE;
-    if ( d_pspg != NULL && pd->v[pg->imtrx][var] )
-    {
-      double d_rho_t_dT;
-
-      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++ )
-      {
-        phi_j = bf[var]->phi[j];
-
-        d_rho_t_dT = ompvf * d_rho->T[j];
-
-        mass = 0.;
-        if ( ( pd->e[pg->imtrx][meqn] & T_MASS ) && ( pd->TimeIntegration != STEADY ) )
-        {
-          mass = d_rho_t_dT/por * v_dot[a];
-          mass *= pd->etm[pg->imtrx][meqn][(LOG2_MASS)];
-        }
-
-        advection = 0.;
-        if ( pd->e[pg->imtrx][meqn] & T_ADVECTION )
-        {
-          advection = 0.;
-          for ( p=0; p<wim; p++)
-          {
-            advection += (v[p]- x_dot[p]) * grad_v[p][a];
-          }
-          advection *= d_rho_t_dT / por2;
-          advection *= pd->etm[pg->imtrx][meqn][(LOG2_ADVECTION)];
-        }
-
-        diffusion = 0.;
-        if ( pd->e[pg->imtrx][meqn] & T_DIFFUSION )
-        {
-          diffusion -= d_mu->T[j] * div_G[a];
-          diffusion *= pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)];
-        }
-
-        source = 0.;
-        if ( pd->e[pg->imtrx][meqn] & T_SOURCE )
-        {
-          source -= df->T[a][j] * pd->etm[pg->imtrx][meqn][(LOG2_SOURCE)];
-        }
-
-        porous = 0.;
-        if ( pd->e[pg->imtrx][meqn] & T_POROUS_BRINK )
-        {
-          porous = v[a] * (d_rho_t_dT*sc*speed/sqrt(per) + dvis_dT[j]/per);
-          porous *= pd->etm[pg->imtrx][meqn][(LOG2_POROUS_BRINK)];
-        }
-        d_pspg->T[a][j] = tau_pspg * ( mass + advection + diffusion + source + porous );
-
-
-      }
-    }
-
-    var = PRESSURE;
-    if ( d_pspg != NULL && pd->v[pg->imtrx][var] )
-    {
-      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++ )
-      {
-        diffusion = 0.;
-        if ( pd->e[pg->imtrx][meqn] & T_DIFFUSION )
-        {
-          diffusion = bf[var]->grad_phi[j][a]
-                      - d_mu->P[j] * div_G[a];
-          diffusion *= pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)];
-        }
-
-        d_pspg->P[a][j] = tau_pspg * ( diffusion );
-
-      }
-    }
-
-    var = MASS_FRACTION;
-    if ( d_pspg != NULL && pd->v[pg->imtrx][var] )
-    {
-      double d_rho_t_dC;
-
-      for (w=0; w<pd->Num_Species_Eqn; w++)
-      {
-        for ( j=0; j<ei[pg->imtrx]->dof[var]; j++ )
-        {
-          phi_j = bf[var]->phi[j];
-
-          d_rho_t_dC = ompvf * d_rho->C[w][j];
-          if ( particle_momentum_on && w==species )
-            d_rho_t_dC -= phi_j * rho;
-
-          mass = 0.;
-          if ( ( pd->e[pg->imtrx][meqn] & T_MASS ) && ( pd->TimeIntegration != STEADY ) )
-          {
-            mass = d_rho_t_dC/por * v_dot[a];
-            mass *= pd->etm[pg->imtrx][meqn][(LOG2_MASS)];
-          }
-
-          advection = 0.;
-          if ( pd->e[pg->imtrx][meqn] & T_ADVECTION )
-          {
-            advection = 0.;
-            for ( p=0; p<wim; p++)
-            {
-              advection += (v[p]- x_dot[p]) * grad_v[p][a];
-            }
-            advection *= d_rho_t_dC / por2;
-            advection *= pd->etm[pg->imtrx][meqn][(LOG2_ADVECTION)];
-          }
-
-          diffusion = 0.;
-          if ( pd->e[pg->imtrx][meqn] & T_DIFFUSION )
-          {
-            diffusion -= d_mu->C[w][j] * div_G[a] ;
-            /*diffusion  -= d_div_tau_p_dy[a][w][j]; */
-            diffusion *= pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)];
-          }
-
-          source = 0.;
-          if ( pd->e[pg->imtrx][meqn] & T_SOURCE )
-          {
-            source -= df->C[a][w][j] * pd->etm[pg->imtrx][meqn][(LOG2_SOURCE)];
-          }
-
-          porous = 0.;
-          if ( pd->e[pg->imtrx][meqn] & T_POROUS_BRINK )
-          {
-            porous = v[a] * (d_rho_t_dC*sc*speed/sqrt(per));
-            porous *= pd->etm[pg->imtrx][meqn][(LOG2_POROUS_BRINK)];
-          }
-          d_pspg->C[a][w][j] = tau_pspg * ( mass + advection + diffusion + source + porous );
-
-        }
-      }
-    }
-
-    var = POLYMER_STRESS11;
-    if ( d_pspg != NULL && pd->v[pg->imtrx][var] )
-    {
-      for ( mode=0; mode<vn->modes; mode++)
-      {
-        for ( b=0; b<VIM; b++)
-        {
-          for ( c=0; c<VIM; c++)
-          {
-            var = v_s[mode][b][c];
-            for ( j=0; j<ei[pg->imtrx]->dof[var]; j++ )
-            {
-              phi_j = bf[var]->phi[j];
-
-              diffusion = 0.;
-              if ( pd->e[pg->imtrx][meqn] & T_DIFFUSION )
-              {
-                diffusion = -(double)delta(a,c) * bf[var]->grad_phi[j] [b];
-
-                if ( pd->CoordinateSystem != CARTESIAN )
-                {
-                  for ( r=0; r<VIM; r++)
-                  {
-                    diffusion -= (double)delta(a,c) * phi_j * fv->grad_e[b][r][c];
-                  }
-                  for ( r=0; r<wim; r++)
-                  {
-                    diffusion -= (double)delta(a,r) * phi_j * fv->grad_e[c][b][r];
-                  }
-                }
-
-                diffusion *= pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)];
-              }
-
-              d_pspg->S[a][mode][b][c][j] = tau_pspg * diffusion;
-
-            }
-          }
-        }
-      }
-    }
-
-    var = VELOCITY_GRADIENT11;
-    if ( d_pspg != NULL && pd->v[pg->imtrx][var] )
-    {
-      for ( b=0; b<VIM; b++)
-      {
-        for ( c=0; c<VIM; c++)
-        {
-          var = v_g[b][c];
-          for ( j=0; j<ei[pg->imtrx]->dof[var]; j++ )
-          {
-            phi_j = bf[var]->phi[j];
-
-            diffusion = 0.;
-            if ( pd->e[pg->imtrx][meqn] & T_DIFFUSION )
-            {
-              diffusion = -(double)delta(a,c) * bf[var]->grad_phi[j] [b];
-
-              if ( pd->CoordinateSystem != CARTESIAN )
-              {
-                for ( r=0; r<VIM; r++)
-                {
-                  diffusion -= (double)delta(a,c) * phi_j * fv->grad_e[b][r][c];
-                }
-                for ( r=0; r<wim; r++)
-                {
-                  diffusion -= (double)delta(a,r) * phi_j * fv->grad_e[c][b][r];
-                }
-              }
-              diffusion *= mu;
-              /* diffusion -= d_div_tau_p_dgd0[a][b][c][j]; */
-              diffusion *= pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)];
-            }
-
-            d_pspg->g[a][b][c][j] = tau_pspg * diffusion;
-
-          }
-        }
-      }
-    }
-  }
-  is_initialized = TRUE;
-return 0;
-}
-
-
-int
-calc_cont_gls( dbl *cont_gls,
-                CONT_GLS_DEPENDENCE_STRUCT *d_cont_gls,
-		dbl time_value,                          /*Current time value, needed for density */
- 	        const PG_DATA *pg_data)                  /*Petrov-Galerkin data, needed for tau_cont   */
-{
-  dbl div_v = fv->div_v;
-  dbl tau_cont, d_tau_dmesh[DIM][MDE], d_tau_dv[DIM][MDE];
-  dbl advection_etm, advection, Re, div_phi_j_e_b, div_v_dmesh;
-  int eqn; 
-  int var, dim, wim, b, j, p;
-  int advection_on=0;
-  static int is_initialized = FALSE;
-
-  //Density terms
-  dbl rho;
-  DENSITY_DEPENDENCE_STRUCT d_rho_struct;
-  DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
-
-  //Petrov-Galerkin values
-  dbl h_elem = 0, U, hh_siz, vv;
-  const dbl h_elem_avg = pg_data->h_elem_avg;
-  const dbl *hsquared = pg_data->hsquared; 
-  const dbl U_norm = pg_data->U_norm;
-  const dbl *v_avg = pg_data->v_avg;
-  const dbl mu_avg = pg_data->mu_avg;
-  
-  //Initialize and Define
-  dim = pd->Num_Dim;
-  wim=dim;
-  if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-     pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
-
-  tau_cont = 0;
-  *cont_gls = 0.0;
-  eqn = R_PRESSURE;
-  advection_on = pd->e[pg->imtrx][eqn] & T_ADVECTION;
-  advection_etm = pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
-
-  if (d_cont_gls==NULL)
-    {
-      d_rho = NULL;
-    }
-  else if(!is_initialized)
-    {
-      memset(d_cont_gls->v, 0, sizeof(double)*DIM*MDE);
-      memset(d_cont_gls->X, 0, sizeof(double)*DIM*MDE);
-    }
-
-  /* Calculate stabilization parameter tau_cont
-   * From Wall:
-   * tau_cont = h_elem*u_norm*max{Re,1}/2;
-   * The Reynolds number, Re, is defined as in calc_pspg
-   */
-  if(Cont_GLS==1)
-    {
-      h_elem = h_elem_avg;
-      U = U_norm;
-    }
-  else
-    {
-      hh_siz = 0.0;
-      vv = 0.0;
-      for(p=0; p<dim; p++)
-	{
-	  hh_siz += hsquared[p]/((double)dim);
-	  vv += v_avg[p]*v_avg[p];
-	}
-      h_elem = sqrt(hh_siz);
-      U = sqrt(vv);
-    }
-  
-  tau_cont = U*h_elem /2.0;
-
-  //We need density for the Reynolds number
-  rho = density(d_rho, time_value);
-  Re = rho*U*h_elem / (2.0*mu_avg);
-  if (Re > 1.0)
-    {
-      tau_cont *= Re;
-    }
-  
-  //d_tau terms for Jacobian
-  if(d_cont_gls != NULL && pd->v[pg->imtrx][VELOCITY1])
-    {
-      for(b=0; b<dim; b++)
-	{
-	  var = VELOCITY1+b;
-	  if(pd->v[pg->imtrx][var])
-	    {
-	      for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
-		{
-		  if(Cont_GLS==1 || U==0)
-		    {
-		      d_tau_dv[b][j] = 0.0;
-		    }
-		  else if(Re > 1.0)
-		    {		      
-		      d_tau_dv[b][j] = rho/(2.0*mu_avg) * h_elem*h_elem * v_avg[b]*pg_data->dv_dnode[b][j];			
-		    }
-		  else
-		    {		     		
-		      d_tau_dv[b][j] = h_elem/(2.0*U) * v_avg[b]*pg_data->dv_dnode[b][j];			
-		    }
-		}
-	    }
-	}
-    }
-
-  if(d_cont_gls != NULL && pd->v[pg->imtrx][MESH_DISPLACEMENT1])
-    {
-      for(b=0; b<dim; b++)
-	{
-	  var = MESH_DISPLACEMENT1+b;
-	  if(pd->v[pg->imtrx][var])
-	    {
-	      for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
-		{
-		  if(Cont_GLS==1 || h_elem==0)
-		    {
-		      d_tau_dmesh[b][j] = 0.0;
-		    }
-		  else if(Re > 1.0)
-		    {	      	
-		      d_tau_dmesh[b][j] = rho/(2.0*mu_avg) * U*U * pg_data->hhv[b][b]*pg_data->dhv_dxnode[b][j]/((double)dim);		
-		    }
-		  else
-		    {
-		      d_tau_dmesh[b][j] = U/(2.0*h_elem) * pg_data->hhv[b][b]*pg_data->dhv_dxnode[b][j]/((double)dim);
-		    }
-		}
-	    }
-	}
-    }
-
-  
-  /*
-   * Calculate residual 
-   * This term refers to the standard del dot v . 
-   */
-  advection = 0.0;
-  if (advection_on)
-    {
-      if (pd->v[pg->imtrx][VELOCITY1])
-	{
-	  advection = div_v;
-	  advection *= advection_etm;
-	}
-    }
-
-  /*Multiply tau_cont by residual resulting in cont_gls
-   *This eventually then gets combined with the stabilization functional
-   *in assemble_momentum to form the GLS stabilization for continuity
-   */
-  *cont_gls = tau_cont*advection;
-
-
-  //Determine Jacobian terms
-
-  //J_v
-  for (b=0; b<wim; b++)
-    {
-      var = VELOCITY1+b;
-      if (pd->v[pg->imtrx][var] && d_cont_gls!=NULL)
-	{	  
-	for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
-	  {				  
-	    advection  = 0.;			  
-	    if (advection_on)
-	      {
-		div_phi_j_e_b = 0.;
-		for (p=0; p<VIM; p++)
-		  {
-		    div_phi_j_e_b += bf[var]->grad_phi_e[j][b] [p][p];
-		  }
-		advection = div_phi_j_e_b*advection_etm;
-	      }
-	    d_cont_gls->v[b][j] = tau_cont*advection + d_tau_dv[b][j]*div_v*advection_etm;
-	  }
-	}
-    }
-
-
-  //J_d 
-  for (b=0; b<dim; b++)
-    {
-      var = MESH_DISPLACEMENT1+b;
-      if (pd->v[pg->imtrx][var])
-	{
-	  for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
-	    {
-	      advection = 0.0;
-	      if (advection_on)
-		{
-		  if (pd->v[pg->imtrx][VELOCITY1] && d_cont_gls!=NULL)
-		    {
-		      div_v_dmesh = fv->d_div_v_dmesh[b][j];
-		      advection += div_v_dmesh;
-		    }
-		}
-	      advection *= advection_etm;
-	      d_cont_gls->X[b][j] = tau_cont*advection + d_tau_dmesh[b][j]*div_v*advection_etm;
-	    }
-	}
-    }
-
-
-  is_initialized = TRUE;
-  return 0;
-}
 
 
 int
@@ -34452,7 +33636,7 @@ assemble_acoustic(double time,	/* present time value */
   else if (eqn == R_ACOUS_PIMAG)
 	{ P = fv->api; P_conj = -fv->apr; conj_var = ACOUS_PREAL; sign_conj=-1.;}
   else
-	{ EH(-1,"Invalid Acoustic eqn");}
+	{ EH(GOMA_ERROR,"Invalid Acoustic eqn");}
   /*
    * Residuals___________________________________________________________
    */
@@ -35320,7 +34504,7 @@ acoustic_flux( double q[DIM],
     		}
 	}
   else
-	{ EH(-1,"Invalid Acoustic eqn");}
+	{ EH(GOMA_ERROR,"Invalid Acoustic eqn");}
 
   for ( p=0; p<VIM; p++)
 	{
@@ -36134,7 +35318,7 @@ assemble_poynting(double time,	/* present time value */
          petrov = 1;
          break;  
     default:
-         EH(-1,"light intensity equation");
+         EH(GOMA_ERROR,"light intensity equation");
          break;
    }
   if(py_eqn >= R_LIGHT_INTP && py_eqn <= R_LIGHT_INTD)
@@ -36177,7 +35361,7 @@ assemble_poynting(double time,	/* present time value */
                  }
             break;
         default:
-            EH(-1,"Residence Time Weight Function");
+            EH(GOMA_ERROR,"Residence Time Weight Function");
             break;
         }
    }
@@ -36657,7 +35841,7 @@ assemble_emwave(double time,	/* present time value */
          EMF = fv->em_hi[2];  EMF_conj = fv->em_hr[2]; dir=2;
          break;
     default:
-         EH(-1,"Invalid EM variable name.\n");
+         EH(GOMA_ERROR,"Invalid EM variable name.\n");
    }
   switch(em_var)
    {

@@ -13,6 +13,8 @@
 #ifndef GOMA_RD_EXO_H
 #define GOMA_RD_EXO_H
 
+#include "exo_struct.h"
+#include "rd_dpi.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

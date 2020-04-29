@@ -20,37 +20,125 @@
 #include <math.h>
 				/* It would be nice if the routines in this
 				   file didn't have include dependencies!   */
-#include "std.h"
-#include "rf_fem_const.h"
-#include "rf_fem.h"
-#include "rf_solver.h"
-#include "rf_allo.h"
-#include "rf_io_const.h"
-#include "rf_io.h"
-#include "rf_masks.h"
-#include "rf_mp.h"
+#include "ac_conti.h"
+#include "ac_hunt.h"
+#include "ac_particles.h"
+#include "ac_stability.h"
+#include "ac_stability_util.h"
+#include "ac_update_parameter.h"
+#include "bc_colloc.h"
+#include "bc_contact.h"
+#include "bc_curve.h"
+#include "bc_dirich.h"
+#include "bc_integ.h"
+#include "bc/rotate.h"
+#include "bc_special.h"
+#include "bc_surfacedomain.h"
+#include "dp_comm.h"
+#include "dp_map_comm_vec.h"
+#include "dp_types.h"
+#include "dp_utils.h"
+#include "dp_vif.h"
+#include "dpi.h"
 #include "el_elm.h"
+#include "el_elm_info.h"
 #include "el_geom.h"
-#include "rf_bc_const.h"
-
-#include "mm_eh.h"
-#include "mm_mp_const.h"
-#include "rf_vars_const.h"
+#include "el_quality.h"
+#include "exo_conn.h"
+#include "exo_struct.h"
+#include "exodusII.h"
+#include "loca_const.h"
+#include "md_timer.h"
+#include "mm_as.h"
+#include "mm_as_alloc.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
-#include "mm_as.h"
-
+#include "mm_augc_util.h"
+#include "mm_bc.h"
+#include "mm_chemkin.h"
+#include "mm_dil_viscosity.h"
+#include "mm_eh.h"
+#include "mm_elem_block_structs.h"
+#include "mm_fill.h"
+#include "mm_fill_aux.h"
+#include "mm_fill_fill.h"
+#include "mm_fill_jac.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_porous.h"
+#include "mm_fill_potential.h"
+#include "mm_fill_pthings.h"
+#include "mm_fill_ptrs.h"
+#include "mm_fill_rs.h"
+#include "mm_fill_shell.h"
+#include "mm_fill_solid.h"
+#include "mm_fill_species.h"
+#include "mm_fill_stress.h"
+#include "mm_fill_terms.h"
+#include "mm_fill_util.h"
+#include "mm_flux.h"
+#include "mm_input.h"
+#include "mm_interface.h"
+#include "mm_more_utils.h"
 #include "mm_mp.h"
+#include "mm_mp_const.h"
 #include "mm_mp_structs.h"
+#include "mm_ns_bc.h"
+#include "mm_numjac.h"
+#include "mm_post_def.h"
+#include "mm_post_proc.h"
+#include "mm_prob_def.h"
+#include "mm_qtensor_model.h"
+#include "mm_shell_bc.h"
+#include "mm_shell_util.h"
+#include "mm_sol_nonlinear.h"
+#include "mm_species.h"
+#include "mm_std_models.h"
 #include "mm_unknown_map.h"
-
-#include "exodusII.h"
-
-#include "exo_struct.h"
-
+#include "mm_viscosity.h"
+#include "rd_dpi.h"
+#include "rd_exo.h"
+#include "rd_mesh.h"
 #include "rd_pixel_image.h"
+#include "rf_allo.h"
+#include "rf_bc.h"
+#include "rf_bc_const.h"
+#include "rf_element_storage_const.h"
+#include "rf_element_storage_struct.h"
+#include "rf_fem.h"
+#include "rf_fem_const.h"
+#include "rf_fill_const.h"
+#include "rf_io.h"
+#include "rf_io_const.h"
+#include "rf_io_structs.h"
+#include "rf_masks.h"
+#include "rf_mp.h"
+#include "rf_node_const.h"
+#include "rf_pre_proc.h"
+#include "rf_shape.h"
+#include "rf_solve.h"
+#include "rf_solver.h"
+#include "rf_solver_const.h"
+#include "rf_util.h"
+#include "rf_vars_const.h"
+#include "sl_aux.h"
+#include "sl_auxutil.h"
+#include "sl_eggroll.h"
+#include "sl_lu.h"
+#include "sl_matrix_util.h"
+#include "sl_umf.h"
+#include "sl_util.h"
+#include "std.h"
+#include "user_ac.h"
+#include "user_bc.h"
+#include "user_mp.h"
+#include "user_mp_gen.h"
+#include "user_post.h"
+#include "user_pre.h"
+#include "wr_dpi.h"
+#include "wr_exo.h"
+#include "wr_side_data.h"
+#include "wr_soln.h"
 
-#include "goma.h"
 
 
 /************ R O U T I N E S   I N   T H I S   F I L E  **********************
@@ -346,7 +434,7 @@ countmap_vardofs(const int varType, const int num_nodes, int *map)
   int node, nun, count = 0;
   NODAL_VARS_STRUCT *nv;
   if (varType < 0 || varType > MAX_VARIABLE_TYPES-1 ) {
-    EH(-1, "Attempt to count a bogus variable.");
+    EH(GOMA_ERROR, "Attempt to count a bogus variable.");
   }
   for (node = 0; node < num_nodes; node++) {
     nv = Nodes[node]->Nodal_Vars_Info[pg->imtrx];
@@ -582,11 +670,6 @@ time_step_control(const double delta_t,  const double delta_t_old,
     vd = Index_Solution_Inv(i, &inode, NULL, NULL, &idof, pg->imtrx);
     eqn = vd->Variable_Type;
 
-#ifdef DEBUG_HKM
-    if (eqn != idv[pg->imtrx][i][0]) {
-      EH(-1,"error in  Index_Solution_Inv mapping");
-    }
-#endif
   
     /* ignore corrections caused by changing side of interface */
     if ( ls!= NULL && xfem != NULL && ls->Length_Scale == 0.)
@@ -904,7 +987,7 @@ time_step_control(const double delta_t,  const double delta_t_old,
 	    use_var_norm[0],use_var_norm[1],use_var_norm[2],
 	    use_var_norm[3],use_var_norm[4],use_var_norm[5],
             use_var_norm[6]);
-    EH(-1, "Poorly formed time step norm.");
+    EH(GOMA_ERROR, "Poorly formed time step norm.");
   }
 
   scaling   = 1.0 / (num_unknowns * (2.0 + delta_t_old / delta_t));
@@ -1159,9 +1242,6 @@ path_step_control ( int N,
   double delta_s, beta;
   int iter_desired;
 
-#ifdef DEBUG
-  static const char yo[] = "path_step_control";
-#endif
 
   /* EXTERNAL VARIABLES */
 
@@ -1759,14 +1839,14 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
 	    }
 	  else
 	    {
-	      EH(-1,"something wrong with efv->ipix");
+	      EH(GOMA_ERROR,"something wrong with efv->ipix");
 	    }
 	}
 #ifndef LIBRARY_MODE
       else if ( strcmp(efv->file_nm[w], "IMPORT") == 0 ||
                 strcmp(efv->file_nm[w], "IMPORT_EV") == 0 )
 	{
-          EH(-1, "External fields can only be imported in LIBRARY_MODE!");
+          EH(GOMA_ERROR, "External fields can only be imported in LIBRARY_MODE!");
 	}
 #endif
     }    
@@ -1999,14 +2079,14 @@ read_initial_guess(double u[], const int np, double uAC[], const int nAC)
 	      "%s: line %d of the initial guess file %s had an error, nchar = %d\n", 
 	      yo, i, Init_GuessFile, nchar);
       fprintf(stderr, "%s:\t line = \"%s\"", yo, input);
-      EH(-1, yo);
+      EH(GOMA_ERROR, yo);
     }
     if (!interpret_double(input, u + i)) {
       fprintf(stderr,
 	      "%s: line %d of the initial guess file %s had an error, %d\n", 
 	      yo, i, Init_GuessFile, nchar);
       fprintf(stderr, "%s:\t line = \"%s\"", yo, input);
-      EH(-1, yo);
+      EH(GOMA_ERROR, yo);
     }
   }
 
@@ -2194,9 +2274,6 @@ rd_vectors_from_exoII(double u[], const char *file_nm, const int action_flag,
   int   var;
   MATRL_PROP_STRUCT *matrl = 0;
   double ftimeValue;
-#ifdef DEBUG
-  static const char yo[] = "rd_vectors_from_exoII";
-#endif
 
   CPU_word_size = sizeof(double);
   IO_word_size  = 0;    
@@ -2397,9 +2474,6 @@ rd_trans_vectors_from_exoII(double u[], const char *file_nm,
   double ftimeValue, time_higher, time_lower;
   double *val_low, *val_high, slope, yint;
   int time_step_read, time_step_higher, time_step_lower, time_step_max;
-#ifdef DEBUG
-  static const char yo[] = "rd_trans_vectors_from_exoII";
-#endif
 
   
 
@@ -2709,9 +2783,6 @@ rd_globals_from_exoII(double u[], const char *file_nm, const int start, const in
   char	ret_char[3];		/* any returned character */
   int   num_global_vars = -1;        /* number of global variables present */
   double *global_vars;          /* global variable values */
-#ifdef DEBUG
-  static const char yo[] = "rd_globals_from_exoII";
-#endif
 
   CPU_word_size = sizeof(double);
   IO_word_size  = 0;    
@@ -2830,12 +2901,6 @@ inject_nodal_vec(double sol_vec[], const int varType, const int k,
       for (j = 0; j < (int) nv->Num_Var_Desc_Per_Type[varType]; j++) {
         vindex = nv->Var_Type_Index[varType][j];
 	vd = nv->Var_Desc_List[vindex];
-#ifdef DEBUG_HKM
-	if (idof < 0 || idof > vd->Ndof) {
-          fprintf(stderr,"init_vec ERROR: bad idof\n");
-	  EH(-1, "init_vec bad idof");
-	}
-#endif
 	if (k == (int) vd->Subvar_Index) {
           index = (Nodes[i]->First_Unknown[pg->imtrx] +
 		   nv->Nodal_Offset[vindex] + idof);
@@ -2898,7 +2963,7 @@ build_node_index_var(const int varType, const int num_nodes,
   int imtrx;
   NODAL_VARS_STRUCT *nv;
   if (varType < 0 || varType > MAX_VARIABLE_TYPES-1) {
-      EH(-1, "Attempt to count a bogus variable.");
+      EH(GOMA_ERROR, "Attempt to count a bogus variable.");
   }
   count = 0;
   for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
@@ -2939,7 +3004,7 @@ count_vardofs(const int varType, const int num_nodes)
   int imtrx;
   NODAL_VARS_STRUCT *nv;
   if (varType < 0 || varType > MAX_VARIABLE_TYPES-1) {
-      EH(-1, "Attempt to count a bogus variable.");
+      EH(GOMA_ERROR, "Attempt to count a bogus variable.");
   }
   count = 0;
   for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)

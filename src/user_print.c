@@ -21,48 +21,17 @@
  * "$Id: user_print.c,v 5.1 2007-09-18 18:53:49 prschun Exp $";
  */
 
-#ifdef USE_RCSID
-static char rcsid[] =
-"$Id: user_print.c,v 5.1 2007-09-18 18:53:49 prschun Exp $";
-#endif
 
-#include <stdio.h>
-#include <math.h>
 
-#include "std.h"
 
-#include "rf_allo.h"
-#include "rf_fem_const.h"
-#include "rf_fem.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_mp.h"
-#include "rf_solver.h"
 
-#include "rf_masks.h"
-#include "el_geom.h"
 
-#include "rf_bc_const.h"
-#include "rf_bc.h"
-#include "rf_vars_const.h"
-#include "mm_as_const.h"
-#include "mm_as_structs.h"
 
-#include "mm_mp_structs.h"
 
-#include "mm_post_def.h"
-#include "mm_post_proc.h"
-#include "mm_as.h"
-#include "mm_eh.h"
 
-#ifdef DEBUG_HKM
-#ifdef PARALLEL
-#include "mpi.h"
-#endif
-#endif
 
 #include "usr_print.h"
+
 /*
 static int	first_call=TRUE;
 static char	sf[] = "%.9e ";	* standard output format for plotting data *
@@ -84,25 +53,12 @@ usr_print ( double *t,	            /* time value */
   /*
    * Put a hook in here to print out norms of the solution components
    */
-#ifdef DEBUG_HKM
-  printf("\tP_%d:  usr_print: Calling Norms routine\n", ProcID);
-  fflush(stdout);
-#ifdef PARALLEL
-  (void) MPI_Barrier(MPI_COMM_WORLD);
-#endif
-  /* usr_out_hkm(status, *t, dt, x); */
-#endif
-#ifdef DEBUG_HKM 
-#ifdef PARALLEL
-  (void) MPI_Barrier(MPI_COMM_WORLD);
-#endif
-#endif
 
   /*
    * Safety catch line -- comment out the line below if you can verify this
    * routine does what you want.
    */
-  /* EH(-1, "No usr_print defined."); */
+  /* EH(GOMA_ERROR, "No usr_print defined."); */
 
   /*
   if ( first_call )
@@ -114,7 +70,7 @@ usr_print ( double *t,	            /* time value */
 	}
       else
 	{
-	  EH(-1, "Could not open user output file.");
+	  EH(GOMA_ERROR, "Could not open user output file.");
 	}
     }
     */

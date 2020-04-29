@@ -82,7 +82,6 @@ extern double second_(void);
 
 #include <math.h>
 #include <stdio.h>
-#include <float.h>
 #include <stdlib.h>
 
 #include "loca_const.h"

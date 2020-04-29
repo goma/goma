@@ -16,6 +16,8 @@
 #ifndef GOMA_WR_COORDS_H
 #define GOMA_WR_COORDS_H
 
+#include "exo_struct.h"
+#include "wr_side_data.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

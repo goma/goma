@@ -16,6 +16,7 @@
 #include "dp_types.h"
 #include "exo_struct.h"
 #include "dpi.h"
+#include "ac_hunt.h"
 
 #ifdef EXTERN
 #undef EXTERN

@@ -13,7 +13,6 @@
 
 /* Standard include files */
  
-#include <stdio.h>
 #include <string.h>
 #include <math.h>
  
@@ -22,32 +21,21 @@
 #include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_mp.h"
 #include "el_elm.h"
 #include "el_geom.h"
- 
-#include "rf_masks.h"
-#include "rf_bc_const.h"
-#include "rf_solver_const.h"
-#include "rf_fill_const.h"
-#include "rf_vars_const.h"
-#include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
-#include "mm_mp.h"
-#include "mm_mp_structs.h"
-#include "mm_mp_const.h"
- 
 #include "mm_eh.h"
-#include "mm_post_def.h"
+#include "el_elm_info.h"
+#include "exo_struct.h"
+#include "mm_fill_ptrs.h"
+#include "mm_fill_util.h"
+#include "mm_post_proc.h"
+#include "mm_unknown_map.h"
+#include "rd_mesh.h"
 
 #define GOMA_MM_FLUX_C
 #define GOMA_MM_POST_PROC_UTIL_C
-#include "goma.h"
 
 
 
@@ -71,9 +59,6 @@ find_id_elem(const double x,	  /* x-coordinate */
 	     const int e_start,   /* start of search */  
 	     const int e_end)     /* end of search */  
 {
-#ifdef DEBUG
-  static char *yo = "find_id_elem";
-#endif
 
   int element_no = -1;		/*local element number */
   int i;			/*local element counters */
@@ -141,12 +126,12 @@ if(!mode)
   }
 else if (mode) /*do a local search using exo->node_elem */
   {
-    EH(-1, " Local node-elem list search not available for find_id_elem");
+    EH(GOMA_ERROR, " Local node-elem list search not available for find_id_elem");
   }
  
 else
   {
-    EH(-1,"problem in find_elem_id: need current element number");
+    EH(GOMA_ERROR,"problem in find_elem_id: need current element number");
   }
   return(element_no);		/* failsafe default? */
 }

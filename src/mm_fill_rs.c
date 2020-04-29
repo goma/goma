@@ -15,39 +15,36 @@
 /* Standard include files */
 
 #include <string.h>
-#include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 
 /* GOMA include files */
 
+#include "mm_fill_rs.h"
+
 #include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_masks.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
 #include "rf_io.h"
 #include "rf_mp.h"
 #include "el_elm.h"
-#include "el_geom.h"
-#include "rf_bc_const.h"
-#include "rf_solver_const.h"
-#include "rf_solver.h"
-#include "rf_fill_const.h"
-#include "rf_vars_const.h"
 #include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "mm_eh.h"
-
 #include "mm_mp.h"
 #include "mm_mp_structs.h"
+#include "exo_struct.h"
+#include "mm_elem_block_structs.h"
+#include "mm_fill_solid.h"
+#include "mm_fill_terms.h"
+#include "mm_shell_util.h"
+#include "rd_mesh.h"
+#include "rf_allo.h"
+#include "mm_qtensor_model.h"
 
 #define GOMA_MM_FILL_RS_C
-#include "goma.h"
 
 /*********** R O U T I N E S   I N   T H I S   F I L E ***********************
 *
@@ -234,7 +231,7 @@ assemble_real_solid(double time_value,
      }
    else
      {
-       EH(-1, "Unrecognized RealSolidSourceModel");
+       EH(GOMA_ERROR, "Unrecognized RealSolidSourceModel");
      }
 
   /*
@@ -1154,7 +1151,7 @@ solid_stress_tensor(dbl TT[DIM][DIM],
       for ( a=0; a<dim; a++)
 	{
 	  if (mp->CapStress == COMPRESSIBLE) {
-	    EH(-1,"Need to reconcile the COMPRESSIBLE model pressures.  Not ready yet");
+	    EH(GOMA_ERROR,"Need to reconcile the COMPRESSIBLE model pressures.  Not ready yet");
 	    /* Compressible model of effective stress law with
 	     *  partially saturated media from Zienkeivicz and Garg and Nur */
 	    if (elc_rs->lame_lambda_model != POWER_LAW) 
@@ -1169,12 +1166,12 @@ solid_stress_tensor(dbl TT[DIM][DIM],
 	      }
 	    
 	  } else if (mp->CapStress == PARTIALLY_WETTING) {
-	    EH(-1,"See Lagragian case, this effective stress may not be correct!.  Not ready yet");
+	    EH(GOMA_ERROR,"See Lagragian case, this effective stress may not be correct!.  Not ready yet");
 	    TT[a][a] -= mp->saturation * fv->p_liq; 
 	    if (pd->v[pg->imtrx][POR_GAS_PRES])  TT[a][a] -= (1. - mp->saturation) * fv->p_gas; 
 	    
 	  } else if (mp->CapStress == WETTING) {
-	    EH(-1,"Need to reconcile the WETTING model pressures.  Not ready yet");
+	    EH(GOMA_ERROR,"Need to reconcile the WETTING model pressures.  Not ready yet");
 	    /* If liquid is wetting, so that all surfaces are covered
 	       by a thin layer of liquid */
 	    TT[a][a] -= (1 - mp->porosity * (1. - mp->saturation)) * fv->p_liq;  
@@ -1182,7 +1179,7 @@ solid_stress_tensor(dbl TT[DIM][DIM],
 	  } else if (mp->PorousMediaType == POROUS_SATURATED) { 
 	    TT[a][a] -= fv->p_liq; 
 	    
-	  } else EH(-1,"no way to put liquid stress into porous matrix");
+	  } else EH(GOMA_ERROR,"no way to put liquid stress into porous matrix");
 	}
     }
   
@@ -1850,7 +1847,7 @@ if (cr->RealSolidFluxModel == LINEAR)
 	  /* PLANE STRESS CASES */
 	  else if (cr->RealSolidFluxModel == INCOMP_PSTRESS)
 	    {
-	      EH(-1, "need to fix Plane Stress cases");
+	      EH(GOMA_ERROR, "need to fix Plane Stress cases");
 	    }
 	  break;
 	case 3:
@@ -2020,9 +2017,9 @@ if (cr->RealSolidFluxModel == LINEAR)
       }
       /* end of INCOMPRESSIBLE MODELS */
     } else if (cr->RealSolidFluxModel == INCOMP_PSTRESS || cr->RealSolidFluxModel == HOOKEAN_PSTRESS) {
-      EH(-1,"Need to fix PSTRESS implementation");
+      EH(GOMA_ERROR,"Need to fix PSTRESS implementation");
 
-    } else EH(-1,"Illegal Mesh Constitutive Equation");
+    } else EH(GOMA_ERROR,"Illegal Mesh Constitutive Equation");
 
   return(status);
   }   
@@ -2119,7 +2116,7 @@ get_convection_velocity_rs(double vconv[DIM], /*Calculated convection velocity *
    
    if ( pd->MeshInertia == 1)
      {
-       if ( pd->TimeIntegration != STEADY ) EH(-1, "Can't have Unsteady Mesh Inertia ");
+       if ( pd->TimeIntegration != STEADY ) EH(GOMA_ERROR, "Can't have Unsteady Mesh Inertia ");
        /*
 	* Velocity of solid in lab coordinates is the velocity of the stress free state
 	* dotted into the deformation gradient tensor for the material
@@ -2234,7 +2231,7 @@ f_kinematic_displacement_bc(double func[DIM],
 	if(elc_rs_glob[mn]->v_mesh_sfs_model == ROTATIONAL ||
 	   elc_rs_glob[mn]->v_mesh_sfs_model == ROTATIONAL_3D)
              {
-        if(len_u < 1)  EH(-1,"need roll radius parameter on KIN_DISPLACEMENT");
+        if(len_u < 1)  EH(GOMA_ERROR,"need roll radius parameter on KIN_DISPLACEMENT");
         roll_rad = u_pars[0];
              }
 	else if(elc_rs_glob[mn]->v_mesh_sfs_model == CONSTANT ||
@@ -2244,7 +2241,7 @@ f_kinematic_displacement_bc(double func[DIM],
              }
         else
           {
-           EH(-1,"Unknown Conv. Lag. Velocity Model for KIN_DISPL.\n");
+           EH(GOMA_ERROR,"Unknown Conv. Lag. Velocity Model for KIN_DISPL.\n");
           }
 	if(elc_rs_glob[mn]->v_mesh_sfs_model == ROTATIONAL)
           {

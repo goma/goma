@@ -14,15 +14,17 @@
  * $Id: sl_eggroll01.c,v 5.2 2007-09-18 18:53:47 prschun Exp $
  */
 
-#ifdef USE_RCSID
-static const char rcs_id[] = "$Id: sl_eggroll01.c,v 5.2 2007-09-18 18:53:47 prschun Exp $";
-#endif
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 
-#include "goma.h"
+#include "md_timer.h"
+#include "mm_eh.h"
+#include "sl_auxutil.h"
+#include "sl_eggroll.h"
+#include "sl_eggroll_def.h"
+#include "std.h"
 
 /* Solves for leading eigenvalues
  *
@@ -101,7 +103,7 @@ gevp_solver_rc(int nj,
     case 65: goto l65;
     case 66: goto l66;
     default:
-      EH(-1, "Uh-oh!  I shouldn't be here!");
+      EH(GOMA_ERROR, "Uh-oh!  I shouldn't be here!");
       break;
     }
 
@@ -126,7 +128,7 @@ gevp_solver_rc(int nj,
       transformation = 3;
       break;
     default:
-      EH(-1, "Uh-oh!  I shouldn't be here!");
+      EH(GOMA_ERROR, "Uh-oh!  I shouldn't be here!");
       break;
     }
 
@@ -216,7 +218,7 @@ l02:
 	  case 2: nev_want_to_get = nev_want;
 	    break;
 	  default:
-	    EH(-1, "Uh-oh!  I shouldn't be here!");
+	    EH(GOMA_ERROR, "Uh-oh!  I shouldn't be here!");
 	    break;
 	  }
       }

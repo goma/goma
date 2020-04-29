@@ -14,6 +14,12 @@
 #ifndef GOMA_MM_FILL_RS_H
 #define GOMA_MM_FILL_RS_H
 
+#include "el_elm.h"
+#include "exo_struct.h"
+#include "mm_as_structs.h"
+#include "mm_fill_ptrs.h"
+#include "rf_fem_const.h"
+#include "std.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

@@ -40,9 +40,8 @@
 #define GOMA_MK_DM_C
 
 #include <stdio.h>
-
 #include <stdlib.h>
-#include "goma.h"
+
 #include "dpi.h"
 #include "brkfix/brkfix.h"
 #include "rf_allo.h"
@@ -51,22 +50,16 @@
 #include "brkfix/brkfix_types.h"
 #include "brkfix/nodesc.h"
 #include "brkfix/mk_dm.h"
+#include "el_elm_info.h"
+#include "rd_exo.h"
+#include "std.h"
 
 /*
  * Function prototypes for functions defined in this file...
  */
 
-void 
-make_goma_dofmap(Exo_DB *x,
-		 Bevm ***mult,
-		 int ***evd,
-		 int ***Lucky,
-		 int *num_basic_eqnvars,
-		 int *node_kind, 
-		 int *node_dof0, 
-		 Node_Description **pnd,
-		 int *nkn)
-{
+void make_goma_dofmap(Exo_DB *x, Bevm ***mult, int ***Lucky, int *num_basic_eqnvars, int *node_kind,
+                      int *node_dof0, Node_Description **pnd, int *nkn) {
   int current_dof;
   int num_kinds_nodes;
   int d;
@@ -225,7 +218,7 @@ make_goma_dofmap(Exo_DB *x,
 	      sr = sprintf(err_msg, 
 			   "Difficulty finding local node in n=%d, e=%d",
 			   n, e);
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 
 	  eb_index = fence_post(e, ebl, neb+1);
@@ -290,7 +283,7 @@ make_goma_dofmap(Exo_DB *x,
        */
       if ( num_abevs > MAX_PROB_VAR )
 	{
-	  EH(-1, "Too many active eqnvars this node");
+	  EH(GOMA_ERROR, "Too many active eqnvars this node");
 	}
       
       for ( m=0; m<num_abevs; m++)
@@ -445,7 +438,7 @@ make_goma_dofmap(Exo_DB *x,
 	      sr = sprintf(err_msg, 
 			   "@ node (%d) num_kinds_nodes >= MAX_NODE_KINDS", 
 			   n+1);
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	}
 

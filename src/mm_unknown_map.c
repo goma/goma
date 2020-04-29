@@ -15,10 +15,6 @@
  *$Id: mm_unknown_map.c,v 5.13 2010-04-07 22:27:00 prschun Exp $
  */
 
-#ifdef USE_RCSID
-static char rcsid[] =
-"$Id: mm_unknown_map.c,v 5.13 2010-04-07 22:27:00 prschun Exp $";
-#endif
 
 /*
  * Notes:
@@ -35,37 +31,36 @@ static char rcsid[] =
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <strings.h>
 
 #include "std.h"
-#include "rf_bc.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_io_const.h"
 #include "rf_io.h"
-#include "rf_masks.h"
 #include "el_geom.h"
 #include "el_elm.h"
 #include "rf_mp.h"
 #include "rf_allo.h"
 #include "rf_solver.h"
-
-#include "rf_masks.h"
 #include "rf_vars_const.h"
-#include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
 #include "mm_mp.h"
 #include "mm_mp_structs.h"
-
-
 #include "sl_util_structs.h"
-
 #include "mm_eh.h"
 #include "exo_struct.h"
-
-#include "goma.h"
+#include "dp_map_comm_vec.h"
+#include "dp_types.h"
+#include "dp_utils.h"
+#include "dpi.h"
+#include "el_elm_info.h"
+#include "mm_unknown_map.h"
+#include "rd_mesh.h"
+#include "rf_bc_const.h"
+#include "rf_node_const.h"
+#include "rf_solver_const.h"
+#include "rf_util.h"
 
 #ifdef PARALLEL
 #include "mpi.h"
@@ -250,9 +245,6 @@ setup_local_nodal_vars(Exo_DB *exo, Dpi *dpi)
   int   imtrx;
   NODAL_VARS_STRUCT **tmp_nodal_vars = NULL, *nv, *nv_match;
   VARIABLE_DESCRIPTION_STRUCT *var_ptr;
-#ifdef DEBUG_HKM
-  int inun;
-#endif
 
   /*
    * Calculate the total number of nodes on this processor
@@ -260,12 +252,6 @@ setup_local_nodal_vars(Exo_DB *exo, Dpi *dpi)
 
   total_nodes = Num_Internal_Nodes + Num_Border_Nodes + Num_External_Nodes;
   
-#ifdef DEBUG
-  fprintf(stderr, "%s: Num_Internal_Nodes = %d\n", yo, Num_Internal_Nodes);
-  fprintf(stderr, "%s: Num_Border_Nodes   = %d\n", yo, Num_Border_Nodes);
-  fprintf(stderr, "%s: Num_External_Nodes = %d\n", yo, Num_External_Nodes);
-  fprintf(stderr, "%s: total_nodes        = %d\n", yo, total_nodes);
-#endif
   
   /*
    *  Allocate memory for the variable mask array of structures and
@@ -380,10 +366,6 @@ setup_local_nodal_vars(Exo_DB *exo, Dpi *dpi)
     pd = pd_glob[mn];
     mp = mp_glob[mn];
     
-#ifdef DEBUG
-    fprintf(stderr, "Looking in EBID %d, for elements %d thru %d\n",
-	    exo->eb_id[ebi], e_start, e_end);
-#endif
 
     for (e = e_start; e < e_end; e++) {
 
@@ -403,9 +385,6 @@ setup_local_nodal_vars(Exo_DB *exo, Dpi *dpi)
        */
       index = Proc_Connect_Ptr[e];
 
-#ifdef DEBUG
-      fprintf(stderr, "Element %d has %d nodes.\n", e, num_nodes);
-#endif
       /*
        *  Loop over the local element nodes in the current element
        */
@@ -419,9 +398,6 @@ setup_local_nodal_vars(Exo_DB *exo, Dpi *dpi)
 	 */
 	i = Proc_Elem_Connect[index++];
 	
-#ifdef DEBUG
-	fprintf(stderr, "P_%d, At elem %d, node %d = %d\n", ProcID, e, n, i);
-#endif
 
 	/*
 	 * For each kind of variable type in the problem, depending on its
@@ -481,32 +457,6 @@ setup_local_nodal_vars(Exo_DB *exo, Dpi *dpi)
 	          *  This is done in the loop below. Therefore, a printout from
 	          *  below is just informational.
 	          */
-#ifdef DEBUG_HKM
-                 inun = node_info(n, Elem_Type(exo, e), var_type, i);
-	         EH(inun, "node_info");
-	         if (inun != nun[imtrx][var_type]) 
-                   {
-                    fprintf(stderr,
-		    "setup_local_nodal_vars NOTE P_%d, Node %d: old vs new node_info:",
-		    ProcID, i);
-	            fprintf(stderr," %d %d var = %d\n", inun, nun[var_type], var_type);
-	           }
-	  
-	         /*
-	          * Save this estimate only if it is higher than all
-	          * previous estimates for ndof/node for all of this particular
-	          * kind of variable...
-	          *
-	          * At the last, Dolphin should be full of at least some
-	          * zeroes, but all the "-1" entries should have been
-	          * superseded by some estimate from nun...
-	          */
-
-	         if (Dolphin[imtrx][i][var_type] < inun) 
-                   {
-	            Dolphin[imtrx][i][var_type] = inun;
-	           }
-#endif
 	       } /* Loop over variables list */
            } /* Loop over matrices */
          } /* Loop over local nodes in an element */
@@ -546,19 +496,6 @@ setup_local_nodal_vars(Exo_DB *exo, Dpi *dpi)
           for (var_type = V_FIRST; var_type < V_LAST; var_type++) 
              {
               ebi = get_nv_ndofs_modMF(nv_match, var_type);
-#ifdef DEBUG_HKM
-              if ((Dolphin[imtrx][i][var_type] != -1) || (ebi != 0)) 
-                { 
-	         if (ebi != Dolphin[imtrx][i][var_type]) 
-                   {
-	            fprintf(stderr,"ERROR in old vs new, Proc %d\n", ProcID);
-	            fprintf(stderr,"\tnew dofs [i=%d][var = %d] = %d\n",
-		            i, var_type, ebi);
-	            fprintf(stderr,"\told dofs [i=%d][var = %d] = %d\n",
-		            i, var_type, Dolphin[imtrx][i][var_type]);
-	           }
-                }
-#endif
               /*
                * Now populate the Dolphin array with the new way
                * -> The DEBUG block above has proved that old vs new
@@ -586,9 +523,6 @@ setup_local_nodal_vars(Exo_DB *exo, Dpi *dpi)
    *  When in debug mode, print out a complete listing of variables at
    *  every node
    */
-#ifdef DEBUG_HKM
-  print_vars_at_nodes();
-#endif
 }
 /****************************************************************************/
 /****************************************************************************/
@@ -768,13 +702,6 @@ setup_external_nodal_vars(Exo_DB *exo, Dpi *dpi, Comm_Ex **cx)
         }     
       exchange_neighbor_proc_info(dpi->num_neighbors, np_base[imtrx]);
   
-#ifdef DEBUG_HKM
-      printf("P_%d at barrier after exchange in setup_external_nodal_vars\n",
-             ProcID); fflush(stdout);
-#ifdef PARALLEL
-      MPI_Barrier(MPI_COMM_WORLD);
-#endif
-#endif
 
       for (i = 0; i < dpi->num_external_nodes; i++) 
         {
@@ -832,17 +759,7 @@ setup_external_nodal_vars(Exo_DB *exo, Dpi *dpi, Comm_Ex **cx)
    *  When in debug mode, print out a complete listing of variables at
    *  every node
    */
-#ifdef DEBUG_HKM
-  print_vars_at_nodes();
-#endif
   
-#ifdef DEBUG_HKM
-  printf("P_%d at barrier at end of setup_external_nodal_vars\n",
-	 ProcID); fflush(stdout);
-#ifdef PARALLEL
-  MPI_Barrier(MPI_COMM_WORLD);
-#endif
-#endif
 }
 /****************************************************************************/
 /****************************************************************************/
@@ -874,23 +791,11 @@ find_MaxUnknownNode(void)
     }
   }
 
-#ifdef DEBUG_HKM
-  printf("P_%d: Maxunknowns at a node = %d\n", ProcID, maxUnknowns);
-  fflush(stdout);
-#endif
  
 #ifdef PARALLEL
   if (Num_Proc > 1) {
-#ifdef DEBUG_HKM
-  printf("P_%d: Calling MPI_Allreduce\n", ProcID);
-  fflush(stdout);
-#endif
     retn = MPI_Allreduce(&maxUnknowns, &gmax, 1, MPI_INT,
 			 MPI_MAX, MPI_COMM_WORLD);
-#ifdef DEBUG_HKM
-  printf("P_%d: Returning from MPI_Allreduce\n", ProcID);
-  fflush(stdout);
-#endif
     if (retn != MPI_SUCCESS) {
       fprintf(stderr, "find_MaxUnknownNode MPI error, P_%d, error = %d\n",
 	      ProcID, retn);
@@ -902,10 +807,6 @@ find_MaxUnknownNode(void)
   gmax = maxUnknowns;
 #endif
 
-#ifdef DEBUG_HKM
-  printf("P_%d: Maxunknowns at all gnode = %d\n", ProcID, gmax);
-  fflush(stdout);
-#endif
   return gmax;
 }
 /****************************************************************************/
@@ -977,16 +878,6 @@ set_unknown_map(Exo_DB *exo, Dpi *dpi)
 	             liver = Dolphin[imtrx][i][var_type];
 	             count += liver;
 	            }
-#ifdef DEBUG_HKM
-	          nv = Nodes[i]->Nodal_Vars_Info[imtrx];
-	          i1 = find_var_type_index_in_nv(var_type, nv);
-	          if (Local_Offset[imtrx][i][var_type] != nv->Nodal_Offset[i1]) 
-                    {
-	             printf("Local offsets at node %d and var_type %d  differ: %d %d\n",
-		             i, var_type, Local_Offset[i][var_type], nv->Nodal_Offset[i1]);
-	             EH(-1, "ERROR in new vs old");
-	            }
-#endif
                  }
               }
            if (count != nv->Num_Unknowns) 
@@ -1015,20 +906,6 @@ set_unknown_map(Exo_DB *exo, Dpi *dpi)
             }
          }
      }
-#ifdef DEBUG
-  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
-     {
-      for (i = 0; i < Num_Internal_Nodes; i++) 
-         {
-          for (var_type = V_FIRST; var_type < V_LAST; var_type++) 
-             {
-              fprintf(stderr, "Local_Offset[%d][%d][%s]\t= %d\tDolphin[%d][%d][%s]\t=%d\n", 
-	              imtrx, i, Var_Name[var_type].name2, Local_Offset[imtrx][i][var_type], 
-	              imtrx, i, Var_Name[var_type].name2, Dolphin[imtrx][i][var_type]);
-             }
-         }
-     }
-#endif
 
   /* 
    * Determine total number of Unknowns to be solved for in this Proc 
@@ -1129,13 +1006,6 @@ set_unknown_map(Exo_DB *exo, Dpi *dpi)
       NumUnknowns[imtrx]    = num_internal_dofs[imtrx] + num_boundary_dofs[imtrx];
       NumExtUnknowns[imtrx] = num_external_dofs[imtrx];
      }
-#ifdef DEBUG  
-  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
-     {
-      printf("%s:\t Matrix %d has %d NumUnknowns \n", yo, imtrx+1, NumUnknowns[imtrx]);
-      printf("%s:\t Matrix %d has %d NumExtUnknowns \n", yo, imtrx+1, NumExtUnknowns[imtrx]);
-     }
-#endif
 
   /* 
    * Produce the equation - variable interaction mask array (rf_masks.h) 
@@ -4319,24 +4189,6 @@ Index_Solution (const int nodeNum, const int varType, const int subvarIndex,
   /*
    * Do extra debugging of argument list when in debug mode
    */
-#ifdef DEBUG_HKM
-  /*
-   * Check the bounds on varType
-   */
-  if (varType < V_FIRST || varType > V_LAST) {
-    EH( -1, "Unknown variable type.");
-  }
-  
-  if (nodeNum < 0) {
-    EH( -1, "negative node number");
-  }
-  if (iNdof < 0) {
-    EH( -1, "negative nunk number");
-  }
-  if (matID < -2) {
-   EH( -1, "bad MATID");
-  }
-#endif
 
   /*
    * Quick return for var types not present at this node
@@ -4348,7 +4200,7 @@ Index_Solution (const int nodeNum, const int varType, const int subvarIndex,
     if (subvarIndex >= upd->Max_Num_Species_Eqn) {
 	printf("ERROR Index_Solution: subvarIndex is bad: %d\n", 
 	       subvarIndex);
-	EH(-1,"ERROR Index_Solution: subvarIndex is bad");
+	EH(GOMA_ERROR,"ERROR Index_Solution: subvarIndex is bad");
     }
     index = nv->Num_Var_Desc_Per_Type[varType] / upd->Max_Num_Species_Eqn;
     for (i = 0; i < nv->Num_Var_Desc; i++) {
@@ -4402,19 +4254,6 @@ Index_Solution (const int nodeNum, const int varType, const int subvarIndex,
    */
   if (dofp < 1) return (-1);
 
-#ifdef DEBUG_HKM
-  if (iNdof >= dofp) {
-    /*
-     * HKM -> Special backwards compatibility check to prevent this
-     *        error checking, because it will be violated for the
-     *        old treatment of discontinuous variables.
-     */
-    if (vd_match->Ndof != 1) {
-      printf("ERROR Index_Solution: iNunk >= dofp: %d %d\n", iNdof, dofp);
-      EH( -1, "bad iNunk");
-    }
-  }
-#endif
   /*
    *  The index is determined by several arrays:
    *    First_Unknown[matrix number][nodeNum] -> index into the processor node list for
@@ -4668,7 +4507,7 @@ Index_Solution_Inv(const int gindex, int *inode, int *i_Var_Desc,
     }
     bottom += vd->Ndof;
   }
-  EH(-1, "Index_Solution_Inv ERROR");
+  EH(GOMA_ERROR, "Index_Solution_Inv ERROR");
   return NULL;
 }
 /*****************************************************************************/

@@ -14,44 +14,24 @@
  *$Id: user_mp.c,v 5.5 2009-01-12 16:41:49 hkmoffa Exp $
  */
 
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: user_mp.c,v 5.5 2009-01-12 16:41:49 hkmoffa Exp $";
-#endif
 
 /* Standard include files */
 
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
 
 /* GOMA include files */
 
 #include "std.h"
 #include "rf_fem_const.h"
-#include "rf_fem.h"
-#include "rf_masks.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_mp.h"
 #include "el_elm.h"
-#include "el_geom.h"
-#include "rf_bc_const.h"
-#include "rf_solver_const.h"
-#include "rf_fill_const.h"
-#include "rf_vars_const.h"
-#include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
-#include "mm_mp_const.h"
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
-
 #include "mm_eh.h"
+#include "user_mp.h"
 
 #define GOMA_USER_MP_C
-#include "goma.h"
 
 /*********** R O U T I N E S   I N   T H I S   F I L E *************************
 *
@@ -142,7 +122,7 @@ static char rcsid[] = "$Id: user_mp.c,v 5.5 2009-01-12 16:41:49 hkmoffa Exp $";
  *    } 
  *  else
  *    {
- *	EH(-1,"No user-defined function for this material");
+ *	EH(GOMA_ERROR,"No user-defined function for this material");
  *    }
  * ----------------------------------------------------------------------------
  */
@@ -165,7 +145,7 @@ usr_thermal_conductivity(dbl *param, dbl time) /* user-defined parameter list */
 
  /* Comment out or remove this line if using this routine */
 
-    EH(-1,"No user_defined thermal conductivity model implemented");
+    EH(GOMA_ERROR,"No user_defined thermal conductivity model implemented");
  /**********************************************************/
 
  
@@ -229,7 +209,7 @@ usr_electrical_conductivity(dbl *param, dbl time)	/* user-defined parameter list
 
  /* Comment out our remove this line if using this routine */
 
-    EH(-1,"No user_defined electrical conductivity model implemented"); 
+    EH(GOMA_ERROR,"No user_defined electrical conductivity model implemented"); 
  /**********************************************************/
  
  /************Initialize everything for safety**************/
@@ -291,7 +271,7 @@ usr_density(dbl *param)         /* pointer to user-defined parameter list    */
 
  /* Comment out our remove this line if using this routine */
 
-   EH(-1,"No user_defined density model implemented"); 
+   EH(GOMA_ERROR,"No user_defined density model implemented"); 
  /**********************************************************/
  
  /************Initialize everything for safety**************/
@@ -367,7 +347,7 @@ usr_density(dbl *param)         /* pointer to user-defined parameter list    */
  *    } 
  *  else
  *    {
- *	EH(-1,"No user-defined function for this material");
+ *	EH(GOMA_ERROR,"No user-defined function for this material");
  *    }
  * ----------------------------------------------------------------------------
  */
@@ -389,7 +369,7 @@ usr_heat_capacity(dbl *param, dbl time)	/* pt to user-defined parameter list */
 
  /* Comment out our remove this line if using this routine */
 
-   EH(-1,"No user_defined heat capacity model implemented");
+   EH(GOMA_ERROR,"No user_defined heat capacity model implemented");
  /**********************************************************/
 
 
@@ -478,7 +458,7 @@ usr_heat_capacity(dbl *param, dbl time)	/* pt to user-defined parameter list */
  *    } 
  *  else
  *    {
- *	EH(-1,"No user-defined function for this material");
+ *	EH(GOMA_ERROR,"No user-defined function for this material");
  *    }
  * ----------------------------------------------------------------------------
  */
@@ -503,7 +483,7 @@ usr_heat_source(dbl *param, dbl time)	/* ptr to the user-defined parameter list 
 
  /* Comment out our remove this line if using this routine */
 
-    EH(-1,"No user_defined heat source model implemented");
+    EH(GOMA_ERROR,"No user_defined heat source model implemented");
  /**********************************************************/
 
 
@@ -602,7 +582,7 @@ usr_heat_source(dbl *param, dbl time)	/* ptr to the user-defined parameter list 
  *    } 
  *  else
  *    {
- *	EH(-1,"No user-defined function for this material");
+ *	EH(GOMA_ERROR,"No user-defined function for this material");
  *    }                                                        
  * ----------------------------------------------------------------------------
  */
@@ -628,7 +608,7 @@ usr_species_source(int species_no, /* Current species number                 */
 
  /* Comment out our remove this line if using this routine */
 
-   EH(-1,"No user_defined species source model implemented");
+   EH(GOMA_ERROR,"No user_defined species source model implemented");
  /**********************************************************/
 
 
@@ -720,7 +700,7 @@ usr_species_source(int species_no, /* Current species number                 */
  *    } 
  *  else
  *    {
- *	EH(-1,"No user-defined function for this material");
+ *	EH(GOMA_ERROR,"No user-defined function for this material");
  *    }
  * ----------------------------------------------------------------------------
  */
@@ -745,7 +725,7 @@ usr_current_source(dbl *param)	/* pointer to user-defined parameter list */
 
  /* Comment out our remove this line if using this routine */
 
-    EH(-1,"No user_defined current source model implemented");  
+    EH(GOMA_ERROR,"No user_defined current source model implemented");  
  /**********************************************************/
 
 
@@ -835,7 +815,7 @@ usr_current_source(dbl *param)	/* pointer to user-defined parameter list */
  *    } 
  *  else
  *    {
- *	EH(-1,"No user-defined function for this material");
+ *	EH(GOMA_ERROR,"No user-defined function for this material");
  *    }
  * ----------------------------------------------------------------------------
  */
@@ -858,7 +838,7 @@ usr_viscosity(dbl *param)	/* pointer to user-defined parameter list    */
 
  /* Comment out our remove this line if using this routine */
 
- EH(-1,"No user_defined viscosity model implemented");
+ EH(GOMA_ERROR,"No user_defined viscosity model implemented");
 
  /**********************************************************/
 
@@ -936,7 +916,7 @@ usr_surface_tension(dbl *param)	/* ptr to user-defined parameter list        */
 
  /* Comment out our remove this line if using this routine */
 
-  EH(-1,"No user_defined surface_tension model implemented");  
+  EH(GOMA_ERROR,"No user_defined surface_tension model implemented");  
 
  /**********************************************************/
 
@@ -1036,7 +1016,7 @@ usr_surface_tension(dbl *param)	/* ptr to user-defined parameter list        */
  *    } 
  *  else
  *    {
- *	EH(-1,"No user-defined function for this material");
+ *	EH(GOMA_ERROR,"No user-defined function for this material");
  *    }
  * ----------------------------------------------------------------------------
  */
@@ -1061,7 +1041,7 @@ usr_momentum_source(dbl *param)	/* ptr to user-defined parameter list        */
 
  /* Comment out our remove this line if using this routine */
 
-    EH(-1,"No user_momentum_source model implemented");  
+    EH(GOMA_ERROR,"No user_momentum_source model implemented");  
  /**********************************************************/
 
 
@@ -1164,7 +1144,7 @@ usr_lame_mu(struct Elastic_Constitutive *ep, dbl *param)		/* ptr to user-defined
 
   
 
- EH(-1,"No user_lame_mu model implemented.");   
+ EH(GOMA_ERROR,"No user_lame_mu model implemented.");   
 
  /**********************************************************/
 
@@ -1309,7 +1289,7 @@ usr_lame_lambda(struct Elastic_Constitutive *ep, dbl *param)	/* ptr to user-defi
 
  /* Comment out our remove this line if using this routine */
 
-   EH(-1,"No user_lame_lambda model implemented.");   
+   EH(GOMA_ERROR,"No user_lame_lambda model implemented.");   
 
  /**********************************************************/
 
@@ -1436,7 +1416,7 @@ usr_expansion(dbl *param, 	 /* ptr to user-defined parameter list        */
 
  /* Comment out our remove this line if using this routine */
 
-  EH(-1,"No user_expansion model implemented.");     
+  EH(GOMA_ERROR,"No user_expansion model implemented.");     
 
  /**********************************************************/
 
@@ -1533,7 +1513,7 @@ usr_diffusivity(int species_no,	/* Species number of diffusivity etc. needed */
 
  /* Comment out our remove this line if using this routine */
 
-   EH(-1,"No user_diffusivity model implemented");
+   EH(GOMA_ERROR,"No user_diffusivity model implemented");
  
  /**********************************************************/
 
@@ -1626,7 +1606,7 @@ usr_FlowingLiquidViscosity(dbl *param) /* ptr to user-defined parameter list */
 
  /* Comment out our remove this line if using this routine */
 
-   EH(-1,"No user_FlowingLiquidViscosity model implemented");
+   EH(GOMA_ERROR,"No user_FlowingLiquidViscosity model implemented");
 
  /**********************************************************/
 
@@ -1702,7 +1682,7 @@ double  usr_heat_flux(const double gradP[],     /*   pressure gradient  */
                    const double time)
 #endif
 {
-	EH(-1,"No usr_heat_flux model supplied");
+	EH(GOMA_ERROR,"No usr_heat_flux model supplied");
 	return(1.);
 } /* End of usr_heat_flux */
 /****************************************************************************/
@@ -1717,7 +1697,7 @@ usr_permeability(dbl *param) /* user-defined parameter list */
 
  /* Comment out or remove this line if using this routine */
                                                                                 
- /*   EH(-1,"No user_defined  permeability model implemented");  */
+ /*   EH(GOMA_ERROR,"No user_defined  permeability model implemented");  */
 
  /**********************************************************/
 
@@ -1801,7 +1781,7 @@ usr_yield_stress(dbl *param, dbl time)	/* pointer to user-defined parameter list
  
  /* Comment out our remove this line if using this routine */
 
- EH(-1,"No user_defined yield stress model implemented");  
+ EH(GOMA_ERROR,"No user_defined yield stress model implemented");  
  
  /**********************************************************/
  

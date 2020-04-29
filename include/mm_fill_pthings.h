@@ -13,6 +13,9 @@
 #ifndef GOMA_MM_FILL_PTHINGS_H
 #define GOMA_MM_FILL_PTHINGS_H
 
+#include "el_elm.h"
+#include "mm_fill_potential.h"
+#include "std.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

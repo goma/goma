@@ -17,6 +17,11 @@
 #ifndef GOMA_MM_MORE_UTILS_H
 #define GOMA_MM_MORE_UTILS_H
 
+#include "exo_struct.h"
+#include "mm_input.h"
+#include "std.h"
+
+struct Results_Description;
 #ifdef EXTERN
 #undef EXTERN
 #endif

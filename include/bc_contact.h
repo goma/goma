@@ -13,6 +13,14 @@
 #ifndef GOMA_BC_CONTACT_H
 #define GOMA_BC_CONTACT_H
 
+#include "bc_special.h"
+#include "dpi.h"
+#include "el_elm.h"
+#include "exo_struct.h"
+#include "mm_as_structs.h"
+#include "rf_fem_const.h"
+
+struct elem_side_bc_struct;
 #ifdef EXTERN
 #undef EXTERN
 #endif

@@ -1,14 +1,32 @@
 #ifdef HAVE_STRATIMIKOS
 
+#include <iostream>
+#include <utility>
+
 #include "Stratimikos_DefaultLinearSolverBuilder.hpp"
 #include "Thyra_LinearOpWithSolveFactoryHelpers.hpp"
 #include "Thyra_EpetraThyraWrappers.hpp"
 #include "Thyra_EpetraLinearOp.hpp"
-#include "Thyra_get_Epetra_Operator.hpp"
-#include "Teuchos_GlobalMPISession.hpp"
 #include "Teuchos_VerboseObject.hpp"
-#include "Teuchos_XMLParameterListHelpers.hpp"
 #include "Teuchos_StandardCatchMacros.hpp"
+#include "Epetra_DataAccess.h"
+#include "Teuchos_ENull.hpp"
+#include "Teuchos_FancyOStream.hpp"
+#include "Teuchos_ParameterList.hpp"
+#include "Teuchos_ParameterListExceptions.hpp"
+#include "Teuchos_Ptr.hpp"
+#include "Teuchos_RCP.hpp"
+#include "Teuchos_RCPDecl.hpp"
+#include "Teuchos_VerbosityLevel.hpp"
+#include "Teuchos_XMLParameterListCoreHelpers.hpp"
+#include "Teuchos_config.h"
+#include "Thyra_LinearOpBase_decl.hpp"
+#include "Thyra_LinearOpWithSolveBase_decl.hpp"
+#include "Thyra_LinearOpWithSolveFactoryBase_decl.hpp"
+#include "Thyra_OperatorVectorTypes.hpp"
+#include "Thyra_SolveSupportTypes.hpp"
+#include "Thyra_VectorBase.hpp"
+#include "sl_epetra_interface.h"
 
 #ifdef HAVE_TEKO
 // Teko-Package includes
@@ -16,27 +34,27 @@
 #endif
 
 #ifdef HAVE_MPI
-#  include "Epetra_MpiComm.h"
 #else
 #  include "Epetra_SerialComm.h"
 #endif
 
 #include "Epetra_Map.h"
-#include "Epetra_MultiVector.h"
 #include "Epetra_Vector.h"
 #include "Epetra_RowMatrix.h"
-
 #include "sl_util_structs.h"
 #include "sl_stratimikos_interface.h"
 
 extern "C" {
 
 int stratimikos_solve(struct Aztec_Linear_Solver_System *ams, double *x_,
-    double *b_, int *iterations, char *stratimikos_file)
+    double *b_, int *iterations, char stratimikos_file[MAX_NUM_MATRICES][MAX_CHAR_IN_INPUT], int imtrx)
 {
   using Teuchos::RCP;
   bool success = true;
   bool verbose = true;
+  static RCP<Teuchos::ParameterList> solverParams_static[MAX_NUM_MATRICES];
+  static bool param_set[MAX_NUM_MATRICES] = {false};
+  static bool param_echo[MAX_NUM_MATRICES] = {false};
 
   try {
     Epetra_Map map = ams->RowMatrix->RowMatrixRowMap();
@@ -58,8 +76,12 @@ int stratimikos_solve(struct Aztec_Linear_Solver_System *ams, double *x_,
         Teuchos::VerboseObjectBase::getDefaultOStream();
 
     // Get parameters from file
-    RCP<Teuchos::ParameterList> solverParams;
-    solverParams = Teuchos::getParametersFromXmlFile(stratimikos_file);
+    if (!param_set[imtrx]) {
+      param_set[imtrx] = true;
+      solverParams_static[imtrx] = Teuchos::getParametersFromXmlFile(stratimikos_file[imtrx]);
+    }
+
+    RCP<Teuchos::ParameterList> solverParams = solverParams_static[imtrx];
 
     // Set up base builder
     Stratimikos::DefaultLinearSolverBuilder linearSolverBuilder;
@@ -75,7 +97,12 @@ int stratimikos_solve(struct Aztec_Linear_Solver_System *ams, double *x_,
         linearSolverBuilder.createLinearSolveStrategy("");
 
 
-    linearSolverBuilder.writeParamsFile(*solverFactory, "echo_stratimikos.xml");
+    if (!param_echo[imtrx]) {
+      std::string echo_file(stratimikos_file[imtrx]);
+      echo_file = "echo_" + echo_file;
+      linearSolverBuilder.writeParamsFile(*solverFactory, echo_file);
+      param_echo[imtrx] = true;
+    }
     
     // set output stream
     solverFactory->setOStream(outstream);
@@ -120,6 +147,7 @@ int stratimikos_solve(struct Aztec_Linear_Solver_System *ams, double *x_,
 #else /* HAVE_STRATIMIKOS */
 
 #include "mpi.h"
+
 extern "C" {
 #include "std.h"
 #include "mm_eh.h"
@@ -127,7 +155,7 @@ extern "C" {
 int stratimikos_solve(struct Aztec_Linear_Solver_System *ams, double *x_,
     double *b_, int *iterations, char *stratimikos_file)
 {
-  EH(-1, "Not built with stratimikos support!");
+  EH(GOMA_ERROR, "Not built with stratimikos support!");
   return -1;
 }
 

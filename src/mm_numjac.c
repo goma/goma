@@ -16,9 +16,6 @@
  *$Id: mm_numjac.c,v 5.5 2009-04-24 23:42:33 hkmoffa Exp $
  */
 
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: mm_numjac.c,v 5.5 2009-04-24 23:42:33 hkmoffa Exp $";
-#endif
 
 /* Standard include files */
 #include <stdio.h>
@@ -28,32 +25,43 @@ static char rcsid[] = "$Id: mm_numjac.c,v 5.5 2009-04-24 23:42:33 hkmoffa Exp $"
 
 /* GOMA include files */
 
+#include "mm_numjac.h"
+
 #include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_mp.h"
 #include "rf_solver.h"
 #include "el_elm.h"
-#include "el_geom.h"
-
 #include "mm_eh.h"
 #include "rf_vars_const.h"
 #include "mm_mp_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "rf_masks.h"
 #include "rf_bc_const.h"
 #include "rf_solver_const.h"
-#include "rf_fill_const.h"
-
 #include "sl_util.h"
 #include "mm_qp_storage.h"
+#include "dpi.h"
+#include "el_elm_info.h"
+#include "exo_struct.h"
+#include "mm_fill.h"
+#include "mm_fill_aux.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_ptrs.h"
+#include "mm_fill_stress.h"
+#include "mm_mp.h"
+#include "mm_mp_structs.h"
+#include "mpi.h"
+#include "rd_mesh.h"
+#include "rf_allo.h"
+#include "rf_bc.h"
+#include "rf_node_const.h"
+#include "sl_matrix_util.h"
+#include "sl_util_structs.h"
+#include "mm_std_models.h"
+
 #define GOMA_MM_NUMJAC_C
-#include "goma.h"
 
 static void piksr2		/* mm_numjac.c                               */
 (int ,			/* n                                         */
@@ -378,7 +386,7 @@ numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
   Coloring *coloring = NULL;
 
   if(strcmp(Matrix_Format, "msr"))
-    EH(-1, "Cannot compute numerical jacobian values for non-MSR formats.");
+    EH(GOMA_ERROR, "Cannot compute numerical jacobian values for non-MSR formats.");
 
 /* calculates the total number of non-zero entries in the analytical jacobian, a[] */
   nnonzero = NZeros+1;
@@ -400,7 +408,7 @@ numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
   memcpy(resid_vector_save, resid_vector, numProcUnknowns*(sizeof(double)));
 
   /* Cannot do this with Front */
-  if (Linear_Solver == FRONT) EH(-1,"Cannot use frontal solver with numjac. Use umf or lu");
+  if (Linear_Solver == FRONT) EH(GOMA_ERROR,"Cannot use frontal solver with numjac. Use umf or lu");
 
   /* Initialization */
 
@@ -499,7 +507,7 @@ numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
 	      elem_count++;
 #endif
 	    } else if (item_in_int_linked_list(elem_list, my_elem_num)) {
-	      EH(-1, "Jacobian elem coloring error, trying to assemble already accounted for element");
+	      EH(GOMA_ERROR, "Jacobian elem coloring error, trying to assemble already accounted for element");
 	    } else {
 	      int_linked_list_prepend(elem_list, my_elem_num);
 #ifdef DEBUG_FD_COLORING
@@ -782,7 +790,7 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
 
   DPRINTF(stderr, "\n Starting Numerical Jacobian Checker\n");
   if(strcmp(Matrix_Format, "msr"))
-    EH(-1, "Cannot compute numerical jacobian values for non-MSR formats.");
+    EH(GOMA_ERROR, "Cannot compute numerical jacobian values for non-MSR formats.");
 
 /* calculates the total number of non-zero entries in the analytical jacobian, a[] */
   nnonzero = NZeros+1;
@@ -807,10 +815,10 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
   aj_1 =  (double *) array_alloc(1, NumUnknowns[pg->imtrx], sizeof(double));
 #endif
 
-  if (aj_off_diag == NULL || scale == NULL) EH(-1, "No room for storage for computing numerical jacobian");
+  if (aj_off_diag == NULL || scale == NULL) EH(GOMA_ERROR, "No room for storage for computing numerical jacobian");
 
   /* Cannot do this with Front */
-  if (Linear_Solver == FRONT) EH(-1,"Cannot use frontal solver with numjac. Use umf or lu");
+  if (Linear_Solver == FRONT) EH(GOMA_ERROR,"Cannot use frontal solver with numjac. Use umf or lu");
 
   /* Initialization */
   memset(aj_off_diag, 0, nnonzero*sizeof(dbl));
@@ -1669,7 +1677,7 @@ numerical_jacobian_fill(int ijaf[],	/* fill Vector of integer pointers into a ma
   x_save	   = (double *) array_alloc(1, num_fill_unknowns, sizeof(double));
   scale		   = (double *) array_alloc(1, num_fill_unknowns, sizeof(double));
 
-  if (nj == NULL || scale == NULL) EH(-1, "No room for numerical jacobian arrays");
+  if (nj == NULL || scale == NULL) EH(GOMA_ERROR, "No room for numerical jacobian arrays");
 
   if (Debug_Flag == -2) epsilon1 = 1.e-6;
 
@@ -1865,7 +1873,7 @@ AF_restore_Jacobian_Flag(void)
      *************************************************************************/
 {
   if (originalChoice_Jacobian == -23) {
-    EH(-1,"restore_Jacobian_Action_Flag ERROR: no original choice");
+    EH(GOMA_ERROR,"restore_Jacobian_Action_Flag ERROR: no original choice");
   }
   af->Assemble_Jacobian = originalChoice_Jacobian;
   originalChoice_Jacobian = -23;

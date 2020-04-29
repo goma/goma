@@ -10,13 +10,6 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifdef USE_RCSID
-#ifndef lint
-static char *cvs_userout_id =
-  "$Id: user_out_hkm.c,v 5.1 2007-09-18 18:53:48 prschun Exp $";
-#endif
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,42 +17,128 @@ static char *cvs_userout_id =
 #include <limits.h>
 #include <float.h>
 
-#include "std.h"
-
+#include "ac_conti.h"
+#include "ac_hunt.h"
+#include "ac_particles.h"
+#include "ac_stability.h"
+#include "ac_stability_util.h"
+#include "ac_update_parameter.h"
+#include "bc_colloc.h"
+#include "bc_contact.h"
+#include "bc_curve.h"
+#include "bc_dirich.h"
+#include "bc_integ.h"
+#include "bc/rotate.h"
+#include "bc_special.h"
+#include "bc_surfacedomain.h"
+#include "dp_comm.h"
+#include "dp_map_comm_vec.h"
+#include "dp_types.h"
+#include "dp_utils.h"
+#include "dp_vif.h"
+#include "dpi.h"
+#include "el_elm.h"
+#include "el_elm_info.h"
+#include "el_geom.h"
+#include "el_quality.h"
+#include "exo_conn.h"
+#include "exo_struct.h"
+#include "loca_const.h"
+#include "md_timer.h"
+#include "mm_as.h"
+#include "mm_as_alloc.h"
+#include "mm_as_const.h"
+#include "mm_as_structs.h"
+#include "mm_augc_util.h"
+#include "mm_bc.h"
+#include "mm_chemkin.h"
+#include "mm_dil_viscosity.h"
+#include "mm_eh.h"
+#include "mm_elem_block_structs.h"
+#include "mm_fill.h"
+#include "mm_fill_aux.h"
+#include "mm_fill_fill.h"
+#include "mm_fill_jac.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_porous.h"
+#include "mm_fill_potential.h"
+#include "mm_fill_pthings.h"
+#include "mm_fill_ptrs.h"
+#include "mm_fill_rs.h"
+#include "mm_fill_shell.h"
+#include "mm_fill_solid.h"
+#include "mm_fill_species.h"
+#include "mm_fill_stress.h"
+#include "mm_fill_terms.h"
+#include "mm_fill_util.h"
+#include "mm_flux.h"
+#include "mm_input.h"
+#include "mm_interface.h"
+#include "mm_more_utils.h"
+#include "mm_mp.h"
+#include "mm_mp_const.h"
+#include "mm_mp_structs.h"
+#include "mm_ns_bc.h"
+#include "mm_numjac.h"
+#include "mm_post_def.h"
+#include "mm_post_proc.h"
+#include "mm_prob_def.h"
+#include "mm_qtensor_model.h"
+#include "mm_shell_bc.h"
+#include "mm_shell_util.h"
+#include "mm_sol_nonlinear.h"
+#include "mm_species.h"
+#include "mm_std_models.h"
+#include "mm_unknown_map.h"
+#include "mm_viscosity.h"
+#include "rd_dpi.h"
+#include "rd_exo.h"
+#include "rd_mesh.h"
 #include "rf_allo.h"
-#include "rf_fem_const.h"
+#include "rf_bc.h"
+#include "rf_bc_const.h"
+#include "rf_element_storage_const.h"
+#include "rf_element_storage_struct.h"
 #include "rf_fem.h"
+#include "rf_fem_const.h"
+#include "rf_fill_const.h"
+#include "rf_io.h"
 #include "rf_io_const.h"
 #include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_mp.h"
-#include "rf_solver.h"
-
-#include "exo_struct.h"
-
 #include "rf_masks.h"
-#include "el_geom.h"
+#include "rf_mp.h"
+#include "rf_node_const.h"
+#include "rf_pre_proc.h"
+#include "rf_shape.h"
+#include "rf_solve.h"
+#include "rf_solver.h"
+#include "rf_solver_const.h"
+#include "rf_util.h"
 #include "rf_vars_const.h"
-#include "mm_unknown_map.h"
+#include "sl_aux.h"
+#include "sl_auxutil.h"
+#include "sl_eggroll.h"
+#include "sl_lu.h"
+#include "sl_matrix_util.h"
+#include "sl_umf.h"
+#include "sl_util.h"
+#include "std.h"
+#include "user_ac.h"
+#include "user_bc.h"
+#include "user_mp.h"
+#include "user_mp_gen.h"
+#include "user_out_hkm.h"
+#include "user_post.h"
+#include "user_pre.h"
+#include "wr_dpi.h"
+#include "wr_exo.h"
+#include "wr_side_data.h"
+#include "wr_soln.h"
 
 #ifdef USE_CHEMKIN
 #include "ck_chemkin_const.h"
 #endif
 
-#include "rf_bc_const.h"
-#include "rf_bc.h"
-
-#include "mm_as_const.h"
-#include "mm_as_structs.h"
-#include "mm_as.h"
-
-#include "mm_mp_structs.h"
-#include "mm_post_proc.h"
-
-#include "mm_mp.h"
-#include "user_out_hkm.h"
-
-#include "goma.h"
 
 /***************************************************************************/
 /************* GLOBAL FUNCTIONS IN THIS FILE     ***************************/
@@ -277,9 +356,6 @@ usr_out_hkm(int status, double time, double dt, double *soln)
 		       g_Tmin, iTmin, Tavg);
       }
 #ifdef PARALLEL
-#ifdef DEBUG_HKM
-      MPI_Barrier(MPI_COMM_WORLD);
-#endif
 #endif
       /*
        * Translate the solution from mass to mole fractions. Then,
@@ -295,9 +371,6 @@ usr_out_hkm(int status, double time, double dt, double *soln)
 	SOLN_TO_MOLES(soln, soln_mole, soln_lastSpecies,
 		      soln_mole_lastSpecies, matID_prop);
 #ifdef PARALLEL
-#ifdef DEBUG_HKM
-        MPI_Barrier(MPI_COMM_WORLD);
-#endif
 #endif
 	for (k = 0; k < matID_prop->Num_Species_Eqn; k++) {
 	  SOLN_VALUES(MASS_FRACTION, k, soln_mole, &Tmax, &g_Tmax,
@@ -318,9 +391,6 @@ usr_out_hkm(int status, double time, double dt, double *soln)
 	}
       }
 #ifdef PARALLEL
-#ifdef DEBUG_HKM
-      MPI_Barrier(MPI_COMM_WORLD);
-#endif
 #endif
       /*
      * Free Memory
@@ -458,15 +528,6 @@ static void SOLN_VALUES(int var_type, int sub_index, double soln[],
 	       *   so there are additional complications
 	       */
               ndof = 0;
-#ifdef DEBUG_HKM
-	      if (((EXO_ptr->eb_id[ebi] + 1) % 2) != 0) {
-		if (Dolphin[pg->imtrx][i][var_type] > 1) {
-		  if (Nodes[i]->DISC_BNDRY) {
-		    ndof = 1;
-		  }
-		}
-	      }
-#endif
 	      if ((i_eqn =
 		   Index_Solution(i, var_type, sub_index, ndof, mn, pg->imtrx)) >= 0) {
 		num_nodes_mn++;
@@ -561,13 +622,6 @@ static void SOLN_TO_MOLES(double soln[], double soln_mole[],
 			 DPI_ptr->num_boundary_nodes);
   mn = matID_prop->MatID;
   for (node = 0; node < num_owned_nodes; node++) {
-#ifdef DEBUG_HKM
-    if (Dolphin[pg->imtrx][node][MASS_FRACTION] > 1) {
-      ndof = mn;
-    } else {
-      ndof = 0;
-    }
-#endif
     if ((i_eqn =
 	 Index_Solution(node, MASS_FRACTION, 0, ndof, mn, pg->imtrx)) >= 0) { 
       for (k = 0, sumwt = 0.0; k < matID_prop->Num_Species_Eqn; k++) {
@@ -634,13 +688,6 @@ static void GET_SOLN_LASTSPECIES(double soln[], double soln_lastSpecies[],
   if (soln_lastSpecies == NULL) return;
   if (matID_prop->Num_Species_Eqn < matID_prop->Num_Species) {
     for (node = 0; node < num_owned_nodes; node++) {
-#ifdef DEBUG_HKM
-      if (Dolphin[pg->imtrx][node][MASS_FRACTION] > 1) {
-        ndof = mn;
-      } else {
-        ndof = 0;
-      }
-#endif
       if ((i_eqn =
 	   Index_Solution(node, MASS_FRACTION, 0, ndof, mn, pg->imtrx)) >= 0) {
 	soln_lastSpecies[i_eqn] = 1.0;
@@ -651,13 +698,6 @@ static void GET_SOLN_LASTSPECIES(double soln[], double soln_lastSpecies[],
     }
   } else {
     for (node = 0; node < num_owned_nodes; node++) {
-#ifdef DEBUG_HKM
-      if (Dolphin[pg->imtrx][node][MASS_FRACTION] > 1) {
-        ndof = mn;
-      } else {
-        ndof = 0;
-      }
-#endif
       if ((i_eqn =
 	   Index_Solution(node, MASS_FRACTION, 0, ndof, mn, pg->imtrx)) >= 0) {
 	soln_lastSpecies[i_eqn] = soln[i_eqn];
@@ -768,11 +808,6 @@ static void WRITE_SENKIN_FILE(int    status,
 	 Index_Solution(mesh_id, node, TEMPERATURE, 0, mn, pg->imtrx)) >= 0) {
       T = soln[indx_T];
     }
-#ifdef DEBUG
-    else {
-      EH(-1,"error indx_T is bad\n");
-    }
-#endif
   }
   else {
     T = matID_prop->reference[TEMPERATURE];

@@ -15,32 +15,33 @@
  *$Id: sl_matrix_util.c,v 5.2 2007-12-07 17:14:37 hkmoffa Exp $
  */
 
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: sl_matrix_util.c,v 5.2 2007-12-07 17:14:37 hkmoffa Exp $";
-#endif
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <strings.h>
 #include <string.h>
 #include <math.h>
 
 #include "std.h"
 #include "rf_allo.h"
-#include "rf_fem_const.h"
 #include "rf_fem.h"
 #include "rf_mp.h"
-#include "rf_io_const.h"
-#include "rf_io.h"
 #include "rf_solver.h"
 #include "mm_eh.h"
 #include "sl_util_structs.h"
-
-#include "sl_epetra_interface.h"
 #include "sl_epetra_util.h"
+#include "dpi.h"
+#include "el_geom.h"
+#include "exo_struct.h"
+#include "mm_as.h"
+#include "mm_as_structs.h"
+#include "mm_unknown_map.h"
+#include "mpi.h"
+#include "rf_node_const.h"
+#include "rf_solver_const.h"
+#include "rf_vars_const.h"
+#include "sl_matrix_util.h"
+#include "sl_util.h"
 
 #define GOMA_SL_MATRIX_UTIL_C
-#include "goma.h"
 
 /* canine_chaos() - return useful information about the matrix problem
  * 
@@ -119,7 +120,7 @@ print_msr_matrix(int n, int *ija, double *a, double *x)
 #endif  
 
   if (n < 1) {
-    EH(-1, "Bad matrix order.");
+    EH(GOMA_ERROR, "Bad matrix order.");
   }
   sprintf(filename, "A%d_of_%d.%d", ProcID+1, Num_Proc, num_call);
   of = fopen(filename, "w");
@@ -226,7 +227,7 @@ print_vbr_matrix( struct Aztec_Linear_Solver_System *ams, /* matrix info */
 
   if ( ams->nnz < 1 )
     {
-      EH(-1, "Bad matrix order.");
+      EH(GOMA_ERROR, "Bad matrix order.");
     }
 
   sprintf(filename, "A%d_of_%d", ProcID+1, Num_Proc);
@@ -487,7 +488,7 @@ row_sum_scaling_scale ( struct Aztec_Linear_Solver_System *ams,
   } else if (strcmp(Matrix_Format, "epetra") == 0) {
     row_sum_scale_epetra(ams, b, scale);
   } else {
-    EH(-1, "Unknown sparse matrix format");
+    EH(GOMA_ERROR, "Unknown sparse matrix format");
   }
 }
 
@@ -525,7 +526,7 @@ row_sum_scaling_scale_AC( double **cAC,
     {
       if (fabs(row_sums[iAC]) < DBL_SMALL)
         {
-          EH(-1, "Zero row sum scale for AC!\n");
+          EH(GOMA_ERROR, "Zero row sum scale for AC!\n");
         }
       row_sum_inv = 1./row_sums[iAC];
 
@@ -611,12 +612,12 @@ row_sum_scale_MSR ( int N,
       x[0] = Coor[0][inode]; x[1] = Coor[1][inode];
       if (pd_glob[0]->Num_Dim == 3) x[2] = Coor[2][inode];
       if (dofname) {
-        printf("row_sum_scaling_scale ERROR: Row %d is zero, dofname = %s, x=(%g,%g,%g)\n",
+        fprintf(stderr, "row_sum_scaling_scale ERROR: Row %d is zero, dofname = %s, x=(%g,%g,%g)\n",
                irow, dofname[pg->imtrx][irow],x[0],x[1],x[2]);
       } else {
-        printf("row_sum_scaling_scale ERROR: Row %d is zero, dofname = unknown\n",
+        fprintf(stderr, "row_sum_scaling_scale ERROR: Row %d is zero, dofname = unknown\n",
                irow);
-        printf("\t var_type = %d, matid = %d, Node = %d, x=(%g,%g,%g)\n", vd->Variable_Type,
+        fprintf(stderr, "\t var_type = %d, matid = %d, Node = %d, x=(%g,%g,%g)\n", vd->Variable_Type,
                vd->MatID, inode,x[0],x[1],x[2]);
       }
 #else
@@ -625,7 +626,7 @@ row_sum_scale_MSR ( int N,
       row_sum = 1.;
 #endif
 #else
-      EH(-1, "row_sum_scale_MSR ERROR: row_sum = 0.0,");
+      EH(GOMA_ERROR, "row_sum_scale_MSR ERROR: row_sum = 0.0,");
 #endif
     }
 
@@ -687,7 +688,7 @@ row_sum_scale_VBR ( int     N,
 		}
 	    }
 
-	  if ( sign != 1.0 && sign != -1.0 ) EH(-1,"Can't find diagonal sign in row_scale_VBR");
+	  if ( sign != 1.0 && sign != -1.0 ) EH(GOMA_ERROR,"Can't find diagonal sign in row_scale_VBR");
 
 	  scale[i] *= sign;
 
@@ -773,7 +774,7 @@ matrix_scaling( struct Aztec_Linear_Solver_System *ams,
     }
   else
     {
-      EH(-1, "Matrix format must be MSR or VBR!");
+      EH(GOMA_ERROR, "Matrix format must be MSR or VBR!");
     }
 } /* END of routine matrix_scaling */
 /******************************************************************************/

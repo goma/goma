@@ -14,9 +14,6 @@
  * $Id: mm_qtensor_model.c,v 5.2 2009-05-20 15:31:33 hkmoffa Exp $
  */
 
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: mm_qtensor_model.c,v 5.2 2009-05-20 15:31:33 hkmoffa Exp $";
-#endif
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -28,33 +25,25 @@ static char rcsid[] = "$Id: mm_qtensor_model.c,v 5.2 2009-05-20 15:31:33 hkmoffa
 #include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_masks.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_mp.h"
 #include "el_elm.h"
 #include "el_geom.h"
-#include "rf_bc_const.h"
-#include "rf_solver_const.h"
-#include "rf_fill_const.h"
-#include "rf_vars_const.h"
 #include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
-
 #include "mm_eh.h"
-
-#include "mm_fill_species.h"
-#include "mm_std_models.h"
+#include "el_elm_info.h"
+#include "mm_fill_fill.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_terms.h"
+#include "mm_fill_util.h"
+#include "mm_numjac.h"
+#include "mm_viscosity.h"
 
 #define GOMA_MM_QTENSOR_MODEL_C
 #include "mm_qtensor_model.h"
-#include "goma.h"
 
 /*********** R O U T I N E S   I N   T H I S   F I L E ************************
 *
@@ -189,7 +178,7 @@ assemble_qtensor(dbl *el_length) /* 2 x approximate element length scales */
      delta_xi[i] = 0.0;
   }
 
-/*   if(pd->e[pg->imtrx][R_MESH1]) EH(-1, "assemble_qtensor is not deformable mesh friendly."); */
+/*   if(pd->e[pg->imtrx][R_MESH1]) EH(GOMA_ERROR, "assemble_qtensor is not deformable mesh friendly."); */
 
   ielem_type = ei[pg->imtrx]->ielem_type;	/* element type */
   ip_total = elem_info(NQUAD, ielem_type); /* number of quadrature points */
@@ -540,12 +529,12 @@ assemble_new_qtensor(dbl *el_length) /* 2 x approximate element length scales */
 
 
   /* Catch cases which are not available */
-  if(pd->e[pg->imtrx][R_MESH1]) EH(-1, "assemble_qtensor is not deformable mesh friendly.");
-  if (pd->Num_Dim == 3) EH(-1, "qtensor not ready for 3D problems yet!");
+  if(pd->e[pg->imtrx][R_MESH1]) EH(GOMA_ERROR, "assemble_qtensor is not deformable mesh friendly.");
+  if (pd->Num_Dim == 3) EH(GOMA_ERROR, "qtensor not ready for 3D problems yet!");
   if (pd->CoordinateSystem != CARTESIAN
    && pd->CoordinateSystem != PROJECTED_CARTESIAN
    && pd->CoordinateSystem != CARTESIAN_2pt5D)
-    EH(-1, "Qtensor requires CARTESIAN coordinates for now!");
+    EH(GOMA_ERROR, "Qtensor requires CARTESIAN coordinates for now!");
 
   /* Do some initializations */
   memset(qtensor, 0, MDE*DIM*DIM*sizeof(double));
@@ -1320,7 +1309,7 @@ hydro_qtensor_flux (struct Species_Conservation_Terms *st,
 
   if(!pd->e[pg->imtrx][VORT_DIR3] && 0)
     {
-      EH(-1, "Cannot use QTENSOR without the VORT_DIR{1,2,3} equations/variables active!");
+      EH(GOMA_ERROR, "Cannot use QTENSOR without the VORT_DIR{1,2,3} equations/variables active!");
       exit(-1);
     }
 
@@ -1396,7 +1385,7 @@ hydro_qtensor_flux (struct Species_Conservation_Terms *st,
       else if (mp->GamDiffType[w] == LEVEL_SET ) 
 	{
 	  double width;
-	  if ( ls == NULL ) EH(-1,"Need to activate to Level Set Interface Tracking to use this model.\n");
+	  if ( ls == NULL ) EH(GOMA_ERROR,"Need to activate to Level Set Interface Tracking to use this model.\n");
 
 	  width = ( mp->u_gadiffusivity[w][2] == 0.0) ? ls->Length_Scale : mp->u_gadiffusivity[w][2];
 
@@ -1419,7 +1408,7 @@ hydro_qtensor_flux (struct Species_Conservation_Terms *st,
       else if (mp->MuDiffType[w] == LEVEL_SET ) 
 	{
 	  double width;
-	  if ( ls == NULL ) EH(-1,"Need to activate to Level Set Interface Tracking to use this model.\n");
+	  if ( ls == NULL ) EH(GOMA_ERROR,"Need to activate to Level Set Interface Tracking to use this model.\n");
 
 	  width = ( mp->u_mdiffusivity[w][2] == 0.0) ? ls->Length_Scale : mp->u_mdiffusivity[w][2];
 
@@ -1449,7 +1438,7 @@ hydro_qtensor_flux (struct Species_Conservation_Terms *st,
       else if (mp->GravDiffType[w] == LEVEL_SET ) 
 	{
 	  double width;
-	  if ( ls == NULL ) EH(-1,"Need to activate to Level Set Interface Tracking to use this model.\n");
+	  if ( ls == NULL ) EH(GOMA_ERROR,"Need to activate to Level Set Interface Tracking to use this model.\n");
 
 	  width = ( mp->u_gdiffusivity[w][2] == 0.0) ? ls->Length_Scale : mp->u_gdiffusivity[w][2];
 
@@ -1689,7 +1678,7 @@ hydro_qtensor_flux_new (struct Species_Conservation_Terms *st,
 
   if(!vort_dir_on)
     {
-      EH(-1, "Cannot use this QTENSOR model without the VORT_DIR{1,2,3} equations/variables active!");
+      EH(GOMA_ERROR, "Cannot use this QTENSOR model without the VORT_DIR{1,2,3} equations/variables active!");
       exit(-1);
     }
 
@@ -1757,7 +1746,7 @@ hydro_qtensor_flux_new (struct Species_Conservation_Terms *st,
       else if (mp->GamDiffType[w] == LEVEL_SET ) 
 	{
 	  double width;
-	  if ( ls == NULL ) EH(-1,"Need to activate to Level Set Interface Tracking to use this model.\n");
+	  if ( ls == NULL ) EH(GOMA_ERROR,"Need to activate to Level Set Interface Tracking to use this model.\n");
 
 	  width = ( mp->u_gadiffusivity[w][2] == 0.0) ? ls->Length_Scale : mp->u_gadiffusivity[w][2];
 
@@ -1780,7 +1769,7 @@ hydro_qtensor_flux_new (struct Species_Conservation_Terms *st,
       else if (mp->MuDiffType[w] == LEVEL_SET ) 
 	{
 	  double width;
-	  if ( ls == NULL ) EH(-1,"Need to activate to Level Set Interface Tracking to use this model.\n");
+	  if ( ls == NULL ) EH(GOMA_ERROR,"Need to activate to Level Set Interface Tracking to use this model.\n");
 
 	  width = ( mp->u_mdiffusivity[w][2] == 0.0) ? ls->Length_Scale : mp->u_mdiffusivity[w][2];
 
@@ -1810,7 +1799,7 @@ hydro_qtensor_flux_new (struct Species_Conservation_Terms *st,
       else if (mp->GravDiffType[w] == LEVEL_SET ) 
 	{
 	  double width;
-	  if ( ls == NULL ) EH(-1,"Need to activate to Level Set Interface Tracking to use this model.\n");
+	  if ( ls == NULL ) EH(GOMA_ERROR,"Need to activate to Level Set Interface Tracking to use this model.\n");
 
 	  width = ( mp->u_gdiffusivity[w][2] == 0.0) ? ls->Length_Scale : mp->u_gdiffusivity[w][2];
 

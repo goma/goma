@@ -15,17 +15,15 @@
  *$Id: sl_lu.c,v 5.2 2007-12-07 17:14:37 hkmoffa Exp $
  */
 
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: sl_lu.c,v 5.2 2007-12-07 17:14:37 hkmoffa Exp $";
-#endif
 
-#include <stdio.h>
 #include <stdlib.h>
-#include "spMatrix.h"
-#include "spConfig.h"
+
+#include "mm_as.h"
+#include "mm_as_structs.h"
+#include "sl_lu.h"
+#include "std.h"
 
 #define GOMA_SL_LU_C
-#include "goma.h"
 
 /*
  * Uncomment the following line to write out the RHS, a, and ija vectors
@@ -82,6 +80,7 @@ int first_time = TRUE;
     --------------------------------------------------------------------
 */
 #ifdef HAVE_SPARSE
+#include "spMatrix.h"
 
 static int call=0;
 
@@ -214,6 +213,7 @@ lu(const int N,
 
 } /* END of routine lu */
 #else // HAVE_SPARSE
+#include "mm_eh.h"
 void
 lu(const int N,
    const int NExt,
@@ -223,7 +223,7 @@ lu(const int N,
    double x[],
    const int factor_flag)
 {
-  EH(-1, "Goma not configured with sparse support");
+  EH(GOMA_ERROR, "Goma not configured with sparse support");
 }
 #endif // HAVE_SPARSE
 /*****************************************************************************/

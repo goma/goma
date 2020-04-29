@@ -10,29 +10,20 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-/* mm_fill_aux -- auxiliary routines useful during assembly of R, J
- *
- */
-#include <stdlib.h>
+#include "mm_fill_aux.h"
+
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
 
-
 #include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_masks.h"
 #include "rf_mp.h"
 #include "rf_io_const.h"
-#include "rf_io_structs.h"
 #include "rf_io.h"
 #include "el_elm.h"
 #include "el_geom.h"
-#include "rf_allo.h"
-#include "rf_bc_const.h"
-#include "rf_solver_const.h"
-#include "rf_fill_const.h"
 #include "rf_vars_const.h"
 #include "mm_mp_const.h"
 #include "mm_as_const.h"
@@ -40,15 +31,23 @@
 #include "mm_as.h"
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
-
 #include "exo_struct.h"
+#include "dpi.h"
+#include "el_elm_info.h"
+#include "mm_fill_ptrs.h"
+#include "mm_fill_util.h"
+#include "mm_post_def.h"
+#include "mm_unknown_map.h"
+#include "mm_viscosity.h"
+#include "mpi.h"
+#include "rf_node_const.h"
+#include "mm_qtensor_model.h"
 
 extern	dbl *p0;		/* Defined in mm_as_alloc.c */
 
 #include "mm_eh.h"
 
 #define GOMA_MM_FILL_AUX_C
-#include "goma.h"
 /* 
  *  flag to use default normal and determinant in CARTESIAN
  *  coordinates - otherwise multiply by coordinate scale factors 
@@ -139,11 +138,6 @@ int load_coordinate_scales(const int c, struct Field_Variables *f)
   static int i_warning = 0;
   static int i_warning1 = 0;
 
-#ifdef DEBUG_HKM
-  if (ei[pg->imtrx]->ielem == 165) {
-   // printf("we are here\n");
-  }
-#endif
 
   status = 0;
 
@@ -272,11 +266,11 @@ int load_coordinate_scales(const int c, struct Field_Variables *f)
       theta = f->x[1];
       if ( r == 0. )
 	{
-	  EH(-1, "Bad spherical coordinate -- @ r=0!");
+	  EH(GOMA_ERROR, "Bad spherical coordinate -- @ r=0!");
 	}
       if ( theta == 0. || theta == M_PIE )
 	{
-	  EH(-1, "Bad spherical coordinate -- @ theta=0,pi!");
+	  EH(GOMA_ERROR, "Bad spherical coordinate -- @ theta=0,pi!");
 	}
       f->h[1]     = r;
       f->h[2]     = r*sin(theta);
@@ -1184,7 +1178,7 @@ h_elem_siz(dbl hsquared[DIM], dbl hh[DIM][DIM],
   }
   else
     {
-      EH(-1,"SUPG not allowed for tetrahedral elements yet, or whatever weird element you have");
+      EH(GOMA_ERROR,"SUPG not allowed for tetrahedral elements yet, or whatever weird element you have");
     }
 }
 /*************************************************************************/
@@ -1447,7 +1441,7 @@ surface_determinant_and_normal(
         }
       else
         {
-          EH(-1, "Incorrect side for TRIANGLE");
+          EH(GOMA_ERROR, "Incorrect side for TRIANGLE");
         }
       break;
     case QUADRILATERAL:
@@ -1470,11 +1464,11 @@ surface_determinant_and_normal(
         }
       else
         {
-          EH(-1, "Incorrect side for QUADRILATERAL");
+          EH(GOMA_ERROR, "Incorrect side for QUADRILATERAL");
         }
       break;
     default:
-      EH(-1, "Invalid shape");
+      EH(GOMA_ERROR, "Invalid shape");
     }
     break;
 
@@ -1525,7 +1519,7 @@ surface_determinant_and_normal(
         }
       else
         {
-          EH(-1, "Incorrect side for HEXAHEDRAL");
+          EH(GOMA_ERROR, "Incorrect side for HEXAHEDRAL");
         }
       break;
 
@@ -1552,12 +1546,12 @@ surface_determinant_and_normal(
         }
       else
         {
-          EH(-1, "Incorrect side for TETRAHEDRON");
+          EH(GOMA_ERROR, "Incorrect side for TETRAHEDRON");
         }
       break;
 
     default:
-      EH(-1, "Invalid shape");
+      EH(GOMA_ERROR, "Invalid shape");
     }
     break;
   }
@@ -1620,7 +1614,7 @@ surface_determinant_and_normal(
        */
       if(det_h01==0)
 	{
-	  EH(-1, "The shell elements need to be aligned in the X-Y plane for this problem to work");
+	  EH(GOMA_ERROR, "The shell elements need to be aligned in the X-Y plane for this problem to work");
 	}
 
       r_det_h01 = 1. / det_h01;
@@ -1806,7 +1800,7 @@ edge_determinant_and_vectors(
   switch (ielem_surf_dim) {
 
   case 0:
-    EH(-1, "Edges undefined in 1D");
+    EH(GOMA_ERROR, "Edges undefined in 1D");
     return;
 
     /* 2D Problem . . . */
@@ -1843,7 +1837,7 @@ edge_determinant_and_vectors(
 	sign = -1.;
 	break;
       default:
-	EH(-1,"Side not connected to edge");
+	EH(GOMA_ERROR,"Side not connected to edge");
       }
       break;
     case(2):
@@ -1855,7 +1849,7 @@ edge_determinant_and_vectors(
 	sign = -1.;
 	break;
       default:
-	EH(-1,"Side not connected to edge");
+	EH(GOMA_ERROR,"Side not connected to edge");
       }
       break;
     case(3):
@@ -1867,7 +1861,7 @@ edge_determinant_and_vectors(
 	sign = -1.;
 	break;
       default:
-	EH(-1,"Side not connected to edge");
+	EH(GOMA_ERROR,"Side not connected to edge");
       }
       break;
     case(4):
@@ -1879,12 +1873,12 @@ edge_determinant_and_vectors(
 	sign = -1.;
       break;
       default:
-	EH(-1,"Side not connected to edge");
+	EH(GOMA_ERROR,"Side not connected to edge");
       }
       break;
       
     default:
-      EH(-1,"Edge not found");
+      EH(GOMA_ERROR,"Edge not found");
     }
     
     fv->stangent[1][0]= 0.;
@@ -1970,7 +1964,7 @@ edge_determinant_and_vectors(
       sign = -1.;
       break;
     default:
-      EH(-1,"Side not connected to edge");
+      EH(GOMA_ERROR,"Side not connected to edge");
     }
     break;
 
@@ -1983,7 +1977,7 @@ edge_determinant_and_vectors(
       sign = -1.;
       break;
     default:
-      EH(-1,"Side not connected to edge");
+      EH(GOMA_ERROR,"Side not connected to edge");
     }
     break;
 
@@ -1996,7 +1990,7 @@ edge_determinant_and_vectors(
       sign = -1.;
       break;
     default:
-      EH(-1,"Side not connected to edge");
+      EH(GOMA_ERROR,"Side not connected to edge");
     }
     break;
 
@@ -2009,7 +2003,7 @@ edge_determinant_and_vectors(
       sign = -1.;
       break;
     default:
-      EH(-1,"Side not connected to edge");
+      EH(GOMA_ERROR,"Side not connected to edge");
     }
     break;
 
@@ -2022,7 +2016,7 @@ edge_determinant_and_vectors(
       sign = -1.;
       break;
     default:
-      EH(-1,"Side not connected to edge");
+      EH(GOMA_ERROR,"Side not connected to edge");
     }
     break;
 
@@ -2035,7 +2029,7 @@ edge_determinant_and_vectors(
       sign = -1.;
       break;
     default:
-      EH(-1,"Side not connected to edge");
+      EH(GOMA_ERROR,"Side not connected to edge");
     }
     break;
 
@@ -2048,7 +2042,7 @@ edge_determinant_and_vectors(
       sign = -1.;
       break;
     default:
-      EH(-1,"Side not connected to edge");
+      EH(GOMA_ERROR,"Side not connected to edge");
     }
     break;
 
@@ -2061,7 +2055,7 @@ edge_determinant_and_vectors(
       sign = -1.;
       break;
     default:
-      EH(-1,"Side not connected to edge");
+      EH(GOMA_ERROR,"Side not connected to edge");
     }
     break;
 
@@ -2074,7 +2068,7 @@ edge_determinant_and_vectors(
       sign = -1.;
       break;
     default:
-      EH(-1,"Side not connected to edge");
+      EH(GOMA_ERROR,"Side not connected to edge");
     }
     break;
 
@@ -2087,7 +2081,7 @@ edge_determinant_and_vectors(
       sign = -1.;
       break;
     default:
-      EH(-1,"Side not connected to edge");
+      EH(GOMA_ERROR,"Side not connected to edge");
     }
     break;
 
@@ -2100,7 +2094,7 @@ edge_determinant_and_vectors(
       sign = -1.;
       break;
     default:
-      EH(-1,"Side not connected to edge");
+      EH(GOMA_ERROR,"Side not connected to edge");
     }
     break;
 
@@ -2113,12 +2107,12 @@ edge_determinant_and_vectors(
       sign = -1.;
       break;
     default:
-      EH(-1,"Side not connected to edge");
+      EH(GOMA_ERROR,"Side not connected to edge");
     }
     break;
 
     default:
-      EH(-1,"Edge not found");
+      EH(GOMA_ERROR,"Edge not found");
   }
 
     if (pd->CoordinateSystem == CARTESIAN && DEFAULT_CARTESIAN) {
@@ -2303,7 +2297,7 @@ edge_determinant_and_vectors(
     return;
     
   default:
-    EH(-1, "Bad dimension to calc_edge_det.");
+    EH(GOMA_ERROR, "Bad dimension to calc_edge_det.");
     break;
   }
 
@@ -2334,7 +2328,7 @@ calc_CL_normal ( double snormal[DIM],
   double sign=1.0;
   int dim = elem_dim;
   char err_msg[MAX_CHAR_IN_INPUT];
-  if( dim < 3 ) EH(-1,"VAR_CA_EDGE invalid for 2D simulations ");
+  if( dim < 3 ) EH(GOMA_ERROR,"VAR_CA_EDGE invalid for 2D simulations ");
 
   clnormal[0]= snormal[1] * tangent[2] - snormal[2] * tangent[1];
   clnormal[1]= snormal[2] * tangent[0] - snormal[0] * tangent[2];
@@ -2359,7 +2353,7 @@ calc_CL_normal ( double snormal[DIM],
   else if ( fabs( dot ) < 1.e-15 )
     {
       sprintf(err_msg,"Free surface normal and contact line normal orthogonal at elem %d \n",elem);
-      EH(-1,err_msg);
+      EH(GOMA_ERROR,err_msg);
     }
   
   

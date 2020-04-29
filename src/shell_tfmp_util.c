@@ -2,23 +2,24 @@
  * This file released under MIT license
  * */
 
+#include "shell_tfmp_util.h"
+
 #include <string.h>
 #include <math.h>
+
 #include "std.h"
 #include "rf_fem_const.h"
 #include "el_geom.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
 #include "mm_eh.h"
-#include "mm_as_alloc.h"
 #include "mm_mp.h"
 #include "mm_mp_const.h"
 #include "mm_mp_structs.h"
 #include "mm_shell_util.h"
-#include "shell_tfmp_util.h"
-#include "mm_mp.h"
-#include "mm_mp_const.h"
 #include "mm_std_models_shell.h"
+#include "el_elm.h"
+#include "shell_tfmp_struct.h"
 
 enum clipping_kind my_clipping_kind = restorative;
 
@@ -518,7 +519,7 @@ void h0_minus_ndotd (
   } else if (n_dot_up < 0.0) {
     h_sign = -1.0;
   } else {
-    EH(-1, "Something is wrong! n_dot_up == 0.0");
+    EH(GOMA_ERROR, "Something is wrong! n_dot_up == 0.0");
     return;
   }
 
@@ -556,7 +557,7 @@ void h0_minus_ndotd (
             }
           }
 
-          if (pd->e[R_SHELL_NORMAL1]) {
+          if (pd->e[pg->imtrx][R_SHELL_NORMAL1]) {
             for (i = 0; i<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; i++) {
               d2h_dtime_dnormal[k][i] -= h_sign*fv_dot->d[k]*bf[SHELL_NORMAL1]->phi[i];
               d2h_dtime_dnormal[k][i] -= h_sign*fv->d[k]*bf[SHELL_NORMAL1]->phi[i]*(1.0+2.0*tt)/delta_t;
@@ -613,7 +614,7 @@ void rmesh_minus_rroller (
 ) {
   // Check to see if Height_UFunctionModel is ROLLER, otherwise break
   if( mp->HeightUFunctionModel != ROLLER){
-    EH(-1,"I cannot roll without an 'Upper Height Function Model = ROLLER'  !!");
+    EH(GOMA_ERROR,"I cannot roll without an 'Upper Height Function Model = ROLLER'  !!");
   }
 
   //notice there is no more need of normal
@@ -676,7 +677,7 @@ void rmesh_minus_rroller (
 
   } else {
     // don't know how to do anything else yet
-    EH(-1, "I don't know how to set gradII_h unless 'Elastohydrodynamic Lubrication Shell Integration Kind' is 'S'.\n"
+    EH(GOMA_ERROR, "I don't know how to set gradII_h unless 'Elastohydrodynamic Lubrication Shell Integration Kind' is 'S'.\n"
            "Check your material file or implement new features.");
   }
   // set dh_dmesh
@@ -913,7 +914,7 @@ void load_gap_model(GAP_STRUCT *gap) {
          dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, gap->time, gap->delta_t);
 
   if (fpclassify(gap->h)!= fp_type && gap->h != 0.0) {
-    EH(-1, "mass term is not normal after retrieving initial value from height_function_model()");
+    EH(GOMA_ERROR, "mass term is not normal after retrieving initial value from height_function_model()");
   }
 
   for (int l=0; l<DIM; l++)  {

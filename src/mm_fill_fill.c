@@ -20,6 +20,20 @@
 #include <math.h>
 
 #include "std.h"		/* This needs to be here. */
+#include "ac_stability.h"
+#include "ac_stability_util.h"
+#include "el_elm_info.h"
+#include "exo_struct.h"
+#include "mm_bc.h"
+#include "mm_fill_aux.h"
+#include "mm_fill_fill.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_terms.h"
+#include "mm_fill_util.h"
+#include "mm_fill_stabilization.h"
+#include "mm_qtensor_model.h"
+#include "mm_unknown_map.h"
+#include "rf_node_const.h"
 
 /*
  * Set default memory usage for Aztec's call to y12m higher than
@@ -38,41 +52,25 @@
 #endif
 #endif
 
-#include "az_aztec.h"
-
 /* goma include files (of course!) */
 
 #include "rf_allo.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_masks.h"
-#include "rf_io_const.h"
 #include "rf_io.h"
-#include "rf_mp.h"
 #include "el_elm.h"
 #include "el_geom.h"
-#include "rf_bc.h"
-#include "rf_bc_const.h"
-#include "rf_solver_const.h"
-#include "rf_solver.h"
-#include "rf_fill_const.h"
 #include "rf_vars_const.h"
 #include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "mm_eh.h"
-
 #include "mm_mp.h"
 #include "mm_mp_structs.h"
-
 #include "mm_shell_util.h"
 
-#include "sl_util.h"
-
 #define GOMA_MM_FILL_FILL_C
-#include "goma.h"
 
 /*
  * This variable is used for more than one linear solver package.
@@ -123,24 +121,20 @@ static int neighbor_species
 *
 *       NAME			TYPE			CALLED BY
 *  -----------------------------------------------------------------
-*  assemble_fill         	void	
+*  assemble_fill         	void
 *
 *
 ******************************************************************************/
 
 #ifdef COUPLED_FILL
-int 
-assemble_fill(double tt, 
-	      double dt, 
-	      dbl hsquared[DIM], 
-	      dbl hh[DIM][DIM], 
-	      dbl dh_dxnode[DIM][MDE],
-	      const int applied_eqn,
-	      double xi[DIM],
-	      Exo_DB *exo,
-	      double time
-	      )
-{
+int assemble_fill(double tt,
+                  double dt,
+                  const PG_DATA *pg_data,
+                  const int applied_eqn,
+                  double xi[3],
+                  Exo_DB *exo,
+                  double time,
+                  struct LS_Mass_Lumped_Penalty *mass_lumped_penalty) {
 /******************************************************************************
  *
  * assemble_fill -- integrate fill equation.  This routine assembles
@@ -217,6 +211,10 @@ assemble_fill(double tt,
   double vmag_old, tau_gls;
   double h_elem;
 
+  /* Alternative newer SUPG style */
+  SUPG_terms supg_terms;
+
+
   status = 0;
   eqn	 = applied_eqn;
 
@@ -259,7 +257,7 @@ assemble_fill(double tt,
 	}
 
   h_elem = 0.;
-  for ( a=0; a<dim; a++) h_elem += hsquared[a];
+  for ( a=0; a<dim; a++) h_elem += pg_data->hsquared[a];
   /* This is the size of the element */
   h_elem = sqrt(h_elem/ ((double )dim));
 
@@ -307,7 +305,7 @@ assemble_fill(double tt,
  }
  if ( pd->e[pg->imtrx][R_LUBP_2] ) {
 
-   EH(-1," if you have a fill equation turned on in the R_LUBP_2 phase, you are in the wrong place");
+   EH(GOMA_ERROR," if you have a fill equation turned on in the R_LUBP_2 phase, you are in the wrong place");
     /* Set up shells */
     n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
     lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
@@ -431,6 +429,13 @@ assemble_fill(double tt,
 		     pd->e[pg->imtrx][R_MESH1]);
     }
 
+  if (Fill_Weight_Fcn == FILL_WEIGHT_SUPG_SHAKIB ||
+      Fill_Weight_Fcn == FILL_WEIGHT_SUPG_GP) {
+    supg_tau(&supg_terms, dim, 0, pg_data, dt,
+             Fill_Weight_Fcn == FILL_WEIGHT_SUPG_SHAKIB, R_FILL);
+  }
+
+
   /* Compute and save v.grad(phi) and vcent.grad(phi). */
   memset(v_dot_Dphi, 0, sizeof(double)*MDE);
 
@@ -473,6 +478,123 @@ assemble_fill(double tt,
     {
       tau_gls = 1./sqrt((2./dt)*(2./dt) + (2.*vmag_old/h_elem)*(2.*vmag_old/h_elem));
     }
+
+  if (ls != NULL && ls->Semi_Implicit_Integration &&
+      (Fill_Weight_Fcn == FILL_WEIGHT_SUPG_SHAKIB || Fill_Weight_Fcn == FILL_WEIGHT_SUPG_GP)) {
+    F_dot = (fv->F - fv_old->F) / dt;
+    v_dot_DF = 0;
+    for (int a = 0; a < VIM; a++) {
+      v_dot_DF += (0.5 * (fv->v[a] + fv_old->v[a])) * (0.5 * (fv->grad_F[a] + fv_old->grad_F[a]));
+    }
+
+    for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+      v_dot_Dphi[i] = 0;
+      for (int a = 0; a < VIM; a++) {
+        v_dot_Dphi[i] += (0.5 * (fv->v[a] + fv_old->v[a])) * bf[eqn]->grad_phi[i][a];
+      }
+    }
+  } else if (ls != NULL && !ls->Semi_Implicit_Integration &&
+             (Fill_Weight_Fcn == FILL_WEIGHT_SUPG_SHAKIB ||
+              Fill_Weight_Fcn == FILL_WEIGHT_SUPG_GP)) {
+    F_dot = fv_dot->F;
+    v_dot_DF = 0;
+    for (int a = 0; a < VIM; a++) {
+      v_dot_DF += fv->v[a] * fv->grad_F[a];
+    }
+
+    for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+      v_dot_Dphi[i] = 0;
+      for (int a = 0; a < VIM; a++) {
+        v_dot_Dphi[i] += fv->v[a] * bf[eqn]->grad_phi[i][a];
+      }
+    }
+  } else if (ls != NULL && ls->Semi_Implicit_Integration) {
+    EH(GOMA_ERROR, "Error Level Set Semi-Implicit Time Integration can only be used "
+           "with SUPG_GP and SUPG_SHAKIB");
+    return -1;
+  }
+
+  double p_e = 0;
+  double d_p_e[MDE];
+  double d_inv_F_norm[MDE];
+  double inv_F_norm = 0;
+  if (ls != NULL && ls->Toure_Penalty) {
+    for (int i = 0; i < ei[pg->imtrx]->dof[R_FILL]; i++) {
+      p_e += mass_lumped_penalty->penalty[i] * bf[R_FILL]->phi[i];
+      if (ls->Semi_Implicit_Integration) {
+        p_e += mass_lumped_penalty->penalty_old[i] * bf[R_FILL]->phi[i];
+      }
+    }
+    if (ls->Semi_Implicit_Integration) {
+      p_e *= 0.5;
+    }
+
+    for (int k = 0; k < ei[pg->imtrx]->dof[R_FILL]; k++) {
+      d_p_e[k] = 0;
+      for (int i = 0; i < ei[pg->imtrx]->dof[R_FILL]; i++) {
+        d_p_e[k] += mass_lumped_penalty->d_penalty[i][k] * bf[R_FILL]->phi[i];
+      }
+      if (ls->Semi_Implicit_Integration) {
+        d_p_e[k] *= 0.5;
+      }
+    }
+
+    double F_norm = 0;
+    for (int i = 0; i < dim; i++) {
+      F_norm += fv->grad_F[i] * fv->grad_F[i];
+    }
+    F_norm = sqrt(F_norm);
+    inv_F_norm = 1 / (F_norm + 1e-32);
+    for (int j = 0; j < ei[pg->imtrx]->dof[eqn]; j++) {
+      d_inv_F_norm[j] = 0;
+      for (int i = 0; i < dim; i++) {
+        d_inv_F_norm[j] += 2 * fv->grad_F[i] * bf[eqn]->grad_phi[j][i];
+      }
+      d_inv_F_norm[j] *= -0.5 * inv_F_norm * inv_F_norm * inv_F_norm;
+    }
+  }
+
+  dbl k_dc = 0;
+  // dbl d_k_dc[MDE] = {0};
+  if (ls != NULL && ls->YZbeta != YZBETA_NONE) {
+    dbl strong_residual = 0;
+    strong_residual = fv_dot_old->F;
+    for (int p = 0; p < VIM; p++) {
+      strong_residual += fv->v[p] * fv_old->grad_F[p];
+    }
+    // strong_residual -= s_terms.MassSource[w];
+    dbl h_elem = 0;
+    for (int a = 0; a < ei[pg->imtrx]->ielem_dim; a++) {
+      h_elem += pg_data->hsquared[a];
+    }
+    /* This is the size of the element */
+    h_elem = sqrt(h_elem / ((double)ei[pg->imtrx]->ielem_dim));
+
+    dbl inner = 0;
+    for (int i = 0; i < dim; i++) {
+      inner += fv_old->grad_F[i] * fv_old->grad_F[i];
+    }
+
+    dbl yzbeta = 0;
+
+    dbl inv_sqrt_inner = (1 / sqrt(inner + 1e-12));
+    dbl dc1 = fabs(strong_residual) * inv_sqrt_inner * h_elem * 0.5;
+    dbl dc2 = fabs(strong_residual) * h_elem * h_elem * 0.25;
+
+    // dc1 = fmin(supg_terms.supg_tau,dc1);//0.5*(dc1 + dc2);
+    yzbeta = fmin(supg_terms.supg_tau, 0.5 * (dc1 + dc2)); // 0.5*(dc1 + dc2);
+    //    for (int k = 0; k <  ei[pg->imtrx]->dof[eqn]; k++) {
+    //      d_k_dc[k] = 0;
+    //    }
+
+    k_dc = yzbeta;
+  }
+
+  dbl pspg[3] = {0.0, 0.0, 0.0};
+  PSPG_DEPENDENCE_STRUCT d_pspg;
+  if (upd->PSPG_advection_correction) {
+    calc_pspg(pspg, &d_pspg, time, tt, dt, pg_data);
+  }
 
   /**********************************************************************
    **********************************************************************
@@ -574,19 +696,54 @@ assemble_fill(double tt,
 
 	      break;
 
-	    default:
+            case FILL_WEIGHT_SUPG_GP:
+            case FILL_WEIGHT_SUPG_SHAKIB: {
+              dbl wt_func = bf[eqn]->phi[i] + supg_terms.supg_tau * v_dot_Dphi[i];
 
-	      EH(-1,"Unknown Fill_Weight_Fcn");
+              mass = F_dot * wt_func;
+              advection = v_dot_DF;
+
+              if (upd->PSPG_advection_correction) {
+                advection -= pspg[0] * grad_F[0];
+                advection -= pspg[1] * grad_F[1];
+                if (VIM == 3) advection -= pspg[2] * grad_F[2];
+              }
+
+              if (ls != NULL && ls->Enable_Div_Term) {
+                advection += fv->F * fv->div_v;
+              }
+
+              advection *= wt_func;
+            } break;
+
+            default:
+
+	      EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 	    }
 	  mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 	  advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 
-	  /* hang on to the integrand (without the "dV") for use below. */
-	  rmp[i] = mass + advection;
+          dbl discontinuity_capturing = 0;
+          for (int a = 0; a < dim; a++) {
+            discontinuity_capturing += k_dc * fv->grad_F[a] * bf[eqn]->grad_phi[i][a];
+          }
 
-	  lec->R[peqn][i] += (mass + advection) * wt * det_J * h3;
+          dbl source = 0;
+          if (ls != NULL && ls->Toure_Penalty) {
+            for (int a = 0; a < dim; a++) {
+              source += p_e * fv->grad_F[a] * inv_F_norm * bf[eqn]->grad_phi[i][a];
+              //          double tmp = 1.0 / sqrt(fv->grad_F[0] * fv->grad_F[0] +
+              //                                  fv->grad_F[1] * fv->grad_F[1]);
+              //          source += p_e * fv->grad_F[a] * tmp *
+              //          bf[eqn]->grad_phi[i][a];
+            }
+          }
 
+          /* hang on to the integrand (without the "dV") for use below. */
+          rmp[i] = mass + advection + source + discontinuity_capturing;
+
+          lec->R[peqn][i] += (mass + advection + source + discontinuity_capturing) * wt * det_J * h3;
 	}
     }
 
@@ -723,16 +880,60 @@ assemble_fill(double tt,
 
 		      break;
 
-		    default:
+                    case FILL_WEIGHT_SUPG_GP:
+                    case FILL_WEIGHT_SUPG_SHAKIB: {
+                      dbl wt_func = bf[eqn]->phi[i] + supg_terms.supg_tau * v_dot_Dphi[i];
+                      if (ls != NULL && ls->Semi_Implicit_Integration) {
+                        mass = (phi_j) / dt * wt_func;
+                        advection = 0.5 * v_dot_Dphi[j] * wt_func;
+                      } else {
 
-		      EH(-1,"Unknown Fill_Weight_Fcn");
+                        mass = (phi_j * (1. + 2. * tt) * dtinv) * wt_func;
+                        advection = 0;
+                        for (int a = 0; a < dim; a++) {
+                          advection += fv->v[a] * bf[var]->grad_phi[j][a];
+                        }
+                        if (upd->PSPG_advection_correction) {
+                          advection -= pspg[0] * bf[var]->grad_phi[j][0];
+                          advection -= pspg[1] * bf[var]->grad_phi[j][1];
+                          if (VIM == 3) advection -= pspg[2] * bf[var]->grad_phi[j][2];
+                        }
+
+                        if (ls != NULL && ls->Enable_Div_Term) {
+                          advection += bf[var]->phi[j] * fv->div_v;
+                        }
+                        advection *= wt_func;
+                      }
+                    } break;
+
+                    default:
+
+		      EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 		    } /* switch(Fill_Weight_Fcn) */
+                    dbl source = 0;
+                    if (ls != NULL && ls->Toure_Penalty) {
+                      for (int a = 0; a < dim; a++) {
+                        source += p_e * fv->grad_F[a] * d_inv_F_norm[j] * bf[eqn]->grad_phi[i][a];
+                        source +=
+                            p_e * bf[eqn]->grad_phi[j][a] * inv_F_norm * bf[eqn]->grad_phi[i][a];
+                        source += d_p_e[j] * fv->grad_F[a] * inv_F_norm * bf[eqn]->grad_phi[i][a];
+                        //              source +=
+                        //                  fv->grad_F[a] * d_inv_F_norm * bf[eqn]->grad_phi[i][a];
+                      }
+                    }
 
-		  mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
-	          advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+                    mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+                    advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 
-		  lec->J[peqn][pvar][i][j] += (mass + advection) * wt * h3 * det_J;
+                    dbl discontinuity_capturing = 0;
+                    for (int a = 0; a < dim; a++) {
+                      discontinuity_capturing +=
+                          k_dc * bf[var]->grad_phi[j][a] * bf[eqn]->grad_phi[i][a];
+                    }
+
+                    lec->J[peqn][pvar][i][j] +=
+                        (mass + advection + source + discontinuity_capturing) * wt * h3 * det_J;
 
 		} /* for: FILL DoFs */
 
@@ -796,10 +997,31 @@ assemble_fill(double tt,
 			  advection += phi_j * grad_F[b] * wfcn;
 
 			  break;
+                        case FILL_WEIGHT_SUPG_GP:
+                        case FILL_WEIGHT_SUPG_SHAKIB: {
+                          dbl wt_func = bf[eqn]->phi[i];
+                          for (int a = 0; a < dim; a++) {
+                            wt_func += supg_terms.supg_tau * fv->v[a] * bf[eqn]->grad_phi[i][a];
+                          }
 
-			default:
+                          dbl d_wt_func = 0;
+                          for (int a = 0; a < dim; a++) {
+                            d_wt_func +=
+                                supg_terms.supg_tau * bf[eqn]->phi[j] * bf[eqn]->grad_phi[i][a] +
+                                supg_terms.d_supg_tau_dv[b][j] * fv->v[a] * bf[eqn]->grad_phi[i][a];
+                          }
+                          mass = fv_dot->F * d_wt_func;
+                          advection = 0;
+                          for (int a = 0; a < dim; a++) {
+                            advection += fv->v[a] * bf[eqn]->grad_phi[j][a];
+                          }
+                          advection *= d_wt_func;
+                          advection += bf[var]->phi[j] * bf[eqn]->grad_phi[j][b] * wt_func;
+                        } break;
 
-			  EH(-1,"Unknown Fill_Weight_Fcn");
+                        default:
+
+			  EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 			} /* switch(Fill_Weight_Fcn) */
 
@@ -855,7 +1077,7 @@ assemble_fill(double tt,
 
 			default:
 
-			  EH(-1,"Unknown Fill_Weight_Fcn");
+			  EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 			} /* switch(Fill_Weight_Fcn) */
 
@@ -984,7 +1206,7 @@ assemble_fill(double tt,
 
 			default:
 
-			  EH(-1,"Unknown Fill_Weight_Fcn");
+			  EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 			} /* switch(Fill_Weight_Fcn) */
 
@@ -1116,20 +1338,20 @@ assemble_fill(double tt,
 			  advection  = phi_j * (1. + 2.*tt) * dtinv * grad_F[b]*phi_i;
 			  for(a=0; a < VIM; a++)
 			    {
-			      EH(-1,"This is easy.  Need to copy essentials from TG case above");
+			      EH(GOMA_ERROR,"This is easy.  Need to copy essentials from TG case above");
 			    }
 
 			  break;
 
 			case FILL_WEIGHT_SUPG:  /* Streamline Upwind Petrov Galerkin (SUPG) */
 
-			  EH(-1,"Level set fill for Eulerian solid mech incompatible for FILL_WEIGHT_SUPG");
+			  EH(GOMA_ERROR,"Level set fill for Eulerian solid mech incompatible for FILL_WEIGHT_SUPG");
 
 			  break;
 
 			default:
 
-			  EH(-1,"Unknown Fill_Weight_Fcn");
+			  EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 			} /* switch(Fill_Weight_Fcn) */
 
@@ -1695,7 +1917,7 @@ assemble_fill_ext_v(double tt,
               
 	    default:
 
-	      EH(-1,"Unknown Fill_Weight_Fcn");
+	      EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 	    }
 
@@ -1836,7 +2058,7 @@ assemble_fill_ext_v(double tt,
                       
 		    default:
 
-		      EH(-1,"Unknown Fill_Weight_Fcn");
+		      EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 		    } /* switch(Fill_Weight_Fcn) */
 
@@ -1920,7 +2142,7 @@ assemble_fill_ext_v(double tt,
                        
 		    default:
 		      
-		      EH(-1,"Unknown Fill_Weight_Fcn");
+		      EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 		      
 		    } /* switch(Fill_Weight_Fcn) */
 		  
@@ -1979,7 +2201,7 @@ assemble_fill_ext_v(double tt,
 
 			default:
 
-			  EH(-1,"Unknown Fill_Weight_Fcn");
+			  EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 			} /* switch(Fill_Weight_Fcn) */
 		      
@@ -2242,7 +2464,7 @@ assemble_fill_gradf(double tt,
               
 	    default:
 
-	      EH(-1,"Unknown Fill_Weight_Fcn");
+	      EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 	    }
 
@@ -2311,7 +2533,7 @@ assemble_fill_gradf(double tt,
                       
 		    default:
 
-		      EH(-1,"Unknown Fill_Weight_Fcn");
+		      EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 		    } /* switch(Fill_Weight_Fcn) */
 
@@ -2372,7 +2594,7 @@ assemble_fill_gradf(double tt,
 
 			default:
 
-			  EH(-1,"Unknown Fill_Weight_Fcn");
+			  EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 			} /* switch(Fill_Weight_Fcn) */
 		      
@@ -3707,12 +3929,6 @@ integrate_explicit_eqn(
   num_total_nodes     = dpi->num_universe_nodes;
   fill_zeros          = local_nnz_plus; /* big estimate for assembly*/
   
-#ifdef DEBUG
-  fprintf(stderr, "P_%d: lo=%d, lo+=%d, lnnz=%d, lnnz+=%d\n", ProcID,
-	  local_order, local_order_plus, local_nnz, local_nnz_plus);
-  fprintf(stderr, "P_%d: go=%d, go+=%d, gnnz=%d, gnnz+=%d\n", ProcID,
-	  global_order, global_order_plus, global_nnz, global_nnz_plus);
-#endif /* DEBUG */
 
 
   asdv(&delta_x, num_fill_unknowns);
@@ -3924,7 +4140,7 @@ integrate_explicit_eqn(
 		}
 	      else
 		{
-		  EH(-1, "Unknown factorization reuse specification.");
+		  EH(GOMA_ERROR, "Unknown factorization reuse specification.");
 		}
 	    }
 	  
@@ -3986,13 +4202,13 @@ integrate_explicit_eqn(
 			   delta_x, rf);
 #endif /* HARWELL */
 #ifndef HARWELL
-	  EH(-1, "That linear solver package is not implemented.");
+	  EH(GOMA_ERROR, "That linear solver package is not implemented.");
 #endif /* HARWELL */
 	  strcpy(stringer, " 1 ");
 	  break;
 	  
 	default:
-	  EH(-1, "That linear solver package is not implemented.");
+	  EH(GOMA_ERROR, "That linear solver package is not implemented.");
 	  break;
 	}
       
@@ -4265,13 +4481,13 @@ fill_matrix(double afill[],	/* matrix for fill variables only      */
       else if(pd->i[pg->imtrx][FILL]==I_PQ1)
 	{
 	  if (dim == 2) ielem_type_fill = C_BILINEAR_QUAD;
-	  if (dim == 3) EH(-1,"Sorry PQ1 interpolation has not been implemented in 3D yet.");
+	  if (dim == 3) EH(GOMA_ERROR,"Sorry PQ1 interpolation has not been implemented in 3D yet.");
 	  discontinuous = 1;
 	}
       else if(pd->i[pg->imtrx][FILL]==I_PQ2)
 	{
 	  if (dim == 2) ielem_type_fill = BIQUAD_QUAD;
-	  if (dim == 3) EH(-1,"Sorry PQ2 interpolation has not been implemented in 3D yet.");
+	  if (dim == 3) EH(GOMA_ERROR,"Sorry PQ2 interpolation has not been implemented in 3D yet.");
 	  discontinuous = 1;
 	}
       else
@@ -4298,7 +4514,7 @@ fill_matrix(double afill[],	/* matrix for fill variables only      */
 	      
 	      if( k == MAX_INLET_BC )
 		{
-		  EH(-1,"Maximum FILL_INLET BCs exceeded.  Adjust MAX_INLET_BC in mm_fill_fill.c");
+		  EH(GOMA_ERROR,"Maximum FILL_INLET BCs exceeded.  Adjust MAX_INLET_BC in mm_fill_fill.c");
 		}
 	    }
 	  
@@ -4473,7 +4689,7 @@ fill_matrix(double afill[],	/* matrix for fill variables only      */
 		      EH( err, "assemble_level_project");
 		      break;
 		    default:
-		      EH(-1,"Unknown equation in fill_matrix.\n");
+		      EH(GOMA_ERROR,"Unknown equation in fill_matrix.\n");
 		    }
 		}
 	      /* END  for (ip = 0; ip < ip_total; ip++)                               */
@@ -5076,7 +5292,7 @@ get_side_info(const int ielem_type,
       local_elem_node_id[1] = 0;
       break;
     default:
-      EH(-1,"Illegal side number for 2-D element");
+      EH(GOMA_ERROR,"Illegal side number for 2-D element");
       break;
     }
     break;
@@ -5101,7 +5317,7 @@ get_side_info(const int ielem_type,
       local_elem_node_id[2] = 5;
       break;
     default:
-      EH(-1,"Illegal side number for 2-D element");
+      EH(GOMA_ERROR,"Illegal side number for 2-D element");
       break;
     }
     break;
@@ -5128,7 +5344,7 @@ get_side_info(const int ielem_type,
       local_elem_node_id[1] = 0;
       break;
     default:
-      EH(-1,"Illegal side number for 2-D element");
+      EH(GOMA_ERROR,"Illegal side number for 2-D element");
       break;
     }
     break;
@@ -5158,7 +5374,7 @@ get_side_info(const int ielem_type,
       local_elem_node_id[2] = 7;
       break;
     default:
-      EH(-1,"Illegal side number for 2-D element");
+      EH(GOMA_ERROR,"Illegal side number for 2-D element");
       break;
     }
     break;
@@ -5204,7 +5420,7 @@ get_side_info(const int ielem_type,
       local_elem_node_id[3] = 7;
       break;
     default:
-      EH(-1,"Illegal side number for 2-D element");
+      EH(GOMA_ERROR,"Illegal side number for 2-D element");
       break;
     }
     break;
@@ -5280,7 +5496,7 @@ get_side_info(const int ielem_type,
       local_elem_node_id[8] = 22;
       break;
     default:
-      EH(-1,"Illegal side number for 2-D element");
+      EH(GOMA_ERROR,"Illegal side number for 2-D element");
       break;
     }
     break;
@@ -5309,13 +5525,13 @@ get_side_info(const int ielem_type,
       local_elem_node_id[2] = 1;
       break;
     default:
-      EH(-1,"Illegal side number for 3-D tetrahedral element");
+      EH(GOMA_ERROR,"Illegal side number for 3-D tetrahedral element");
       break;
     }
     break;
 
   default:
-    EH(-1, "Unknown or unimplemented element type.");
+    EH(GOMA_ERROR, "Unknown or unimplemented element type.");
     break;
 
   }
@@ -6370,7 +6586,7 @@ assemble_phase_function ( double time_value,
 		      break;
 
 		    default:
-		      EH(-1, "That Fill Weight Function type not currently supported for phase function\n");
+		      EH(GOMA_ERROR, "That Fill Weight Function type not currently supported for phase function\n");
 		      break;
 		    }
 
@@ -6475,7 +6691,7 @@ assemble_phase_function ( double time_value,
 				break;
 
 			    default:
-			      EH(-1, "That Fill Weight Function type not currently supported for phase function\n");
+			      EH(GOMA_ERROR, "That Fill Weight Function type not currently supported for phase function\n");
 			      break;
 				}
 
@@ -6506,7 +6722,7 @@ assemble_phase_function ( double time_value,
 			     // tmp *= wt*h3*det_J;
 			     // break;
 			    default:
-			      EH(-1, "That Fill Weight Function type not currently supported for phase function\n");
+			      EH(GOMA_ERROR, "That Fill Weight Function type not currently supported for phase function\n");
 			      break;
 			     }
 

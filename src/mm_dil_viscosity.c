@@ -16,42 +16,22 @@
 
 /* Standard include files */
 
-#include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
-#include <math.h>
 
 /* GOMA include files */
 
 #include "std.h"
 #include "rf_fem_const.h"
-#include "rf_fem.h"
-#include "rf_masks.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_mp.h"
-#include "el_elm.h"
-#include "el_geom.h"
-#include "rf_bc_const.h"
-#include "rf_solver.h"
-#include "rf_solver_const.h"
-#include "rf_fill_const.h"
-#include "rf_vars_const.h"
 #include "mm_mp_const.h"
-#include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
-
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
-
 #include "mm_eh.h"
+#include "mm_fill_ls.h"
+#include "rf_allo.h"
 
 #define GOMA_MM_DIL_VISCOSITY_C
-/* Contains mm_dil_viscosity.h */
-#include "goma.h"
 #include "mm_dil_viscosity.h"
 
 static void transferMultipleOfDerivatives(const dbl ratioVisc,
@@ -195,7 +175,7 @@ dil_viscosity (GEN_NEWT_STRUCT *gn_local, const dbl muValue, const VISCOSITY_DEP
   dbl ratioVisc = mp->dilationalViscosityRatio;
   if (d_dilMu != 0) {
     if (d_mu == 0) {
-      EH(-1,"shouldn't be here");
+      EH(GOMA_ERROR,"shouldn't be here");
     }
   }
 
@@ -207,15 +187,15 @@ dil_viscosity (GEN_NEWT_STRUCT *gn_local, const dbl muValue, const VISCOSITY_DEP
   if (gn_local->ConstitutiveEquation == NEWTONIAN) {
   
     if(mp->DilationalViscosityModel == USER ) {
-      EH(-1,"User Dilational Viscosity Model is Unimplemented");
+      EH(GOMA_ERROR,"User Dilational Viscosity Model is Unimplemented");
     } else if (mp->DilationalViscosityModel == USER_GEN) {
-      EH(-1,"UserGen Dilational Viscosity Model is Unimplemented");
+      EH(GOMA_ERROR,"UserGen Dilational Viscosity Model is Unimplemented");
     } else if (mp->DilationalViscosityModel == FILL) {
-      EH(-1," Dilational Viscosity Model for FILL is Unimplemented");
+      EH(GOMA_ERROR," Dilational Viscosity Model for FILL is Unimplemented");
     } else if (mp->DilationalViscosityModel == TABLE) {
-      EH(-1," Dilational Viscosity Model for TABLE is Unimplemented");
+      EH(GOMA_ERROR," Dilational Viscosity Model for TABLE is Unimplemented");
     } else if (mp->DilationalViscosityModel == LEVEL_SET) {
-      EH(-1, "Dilational Viscosity Model Unimplemented for LEVEL_SET");
+      EH(GOMA_ERROR, "Dilational Viscosity Model Unimplemented for LEVEL_SET");
     } else if (mp->DilationalViscosityModel == DILVISCM_KAPPAWIPESMU ) {
       // Don't need to fill in dependencies since the terms disappear
       kappa = 2.0 *  muValue / 3.0;
@@ -229,10 +209,10 @@ dil_viscosity (GEN_NEWT_STRUCT *gn_local, const dbl muValue, const VISCOSITY_DEP
       }
 
     } else if (mp->DilationalViscosityModel == DILVISCM_KAPPABUBBLES) {
-      EH(-1," Newtonian model with KappaBubbles dil visc doesn't make sense");
+      EH(GOMA_ERROR," Newtonian model with KappaBubbles dil visc doesn't make sense");
   
     } else {
-      EH(-1,"Unrecognized viscosity model for Newtonian fluid");
+      EH(GOMA_ERROR,"Unrecognized viscosity model for Newtonian fluid");
     }
 
       /*       return(status); */
@@ -248,7 +228,7 @@ dil_viscosity (GEN_NEWT_STRUCT *gn_local, const dbl muValue, const VISCOSITY_DEP
     } else if (mp->DilationalViscosityModel == DILVISCM_KAPPACONSTANT) {
       kappa = mp->dilationalViscosity;
     } else {
-      EH(-1, "unsupported Kappa Option");
+      EH(GOMA_ERROR, "unsupported Kappa Option");
     }
   } 
 
@@ -314,7 +294,7 @@ dil_viscosity (GEN_NEWT_STRUCT *gn_local, const dbl muValue, const VISCOSITY_DEP
       }
 
     } else {
-      EH(-1, "unsupported Kappa Option");
+      EH(GOMA_ERROR, "unsupported Kappa Option");
     }
 
   }
@@ -370,7 +350,7 @@ dil_viscosity (GEN_NEWT_STRUCT *gn_local, const dbl muValue, const VISCOSITY_DEP
 
 
     } else {
-      EH(-1, "unsupported Kappa Option");
+      EH(GOMA_ERROR, "unsupported Kappa Option");
     }
 
   }
@@ -388,7 +368,7 @@ dil_viscosity (GEN_NEWT_STRUCT *gn_local, const dbl muValue, const VISCOSITY_DEP
 	transferMultipleOfDerivatives(ratioVisc, d_mu, d_dilMu);
       }
     } else {
-      EH(-1, "unsupported Kappa Option");
+      EH(GOMA_ERROR, "unsupported Kappa Option");
     }
   }
 

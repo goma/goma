@@ -24,35 +24,29 @@
  */
 
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
 
-#include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 
-#include "goma.h"
-
-#include "brkfix/brkfix.h"		/* useful general stuff */
 #include "mm_eh.h"			/* error handling */
 #include "rf_allo.h"		/* multi-dim array allocation */
 #include "exo_struct.h"		/* some definitions for EXODUS II */
 #include "brkfix/bbb.h"
 #include "dpi.h"		/* distributed processing information */
-#include "brkfix/nodesc.h"		/* node descriptions */
 #include "rd_dpi.h"
-
 #include "brkfix/fix.h"
+#include "exodusII.h"
+#include "mm_elem_block_structs.h"
+#include "rd_exo.h"
+#include "rd_mesh.h"
+#include "rf_element_storage_const.h"
+#include "std.h"
+#include "wr_exo.h"
 
 char *program_name;		/* name this program was run with */
 
@@ -109,7 +103,7 @@ fix_exo_file(int num_procs, char* exo_mono_name)
   if ( num_procs < 1 ) {
     sr = sprintf(err_msg, "Bad number of processors specified: %d.",
                  num_procs);
-    EH(-1, err_msg);
+    EH(GOMA_ERROR, err_msg);
   } else if (num_procs == 1) {
     sprintf(err_msg, "fix_exo_file(), %s, called with %d processors", exo_mono_name, num_procs);
     WH(-1, err_msg);
@@ -202,7 +196,7 @@ fix_exo_file(int num_procs, char* exo_mono_name)
 
       zero_base(poly);
 
-      rd_dpi(dpin, polylith_name, 0);
+      rd_dpi(dpin, polylith_name);
       free_dpi(dpin);
       free(dpin);
 
@@ -233,7 +227,7 @@ fix_exo_file(int num_procs, char* exo_mono_name)
 				       EXODB_ACTION_RD_MESH + 
 				       EXODB_ACTION_RD_RES0 ));
   zero_base(poly);
-  rd_dpi(dpin, polylith_name, 0);
+  rd_dpi(dpin, polylith_name);
 
 
   mono = (Exo_DB *) smalloc(sizeof(Exo_DB));
@@ -281,7 +275,7 @@ fix_exo_file(int num_procs, char* exo_mono_name)
 				       EXODB_ACTION_RD_MESH ) );
       zero_base(poly);
 
-      rd_dpi(dpin, polylith_name, 0);
+      rd_dpi(dpin, polylith_name);
 
       build_global_coords(poly, dpin, mono);
 
@@ -315,7 +309,7 @@ fix_exo_file(int num_procs, char* exo_mono_name)
 
   one_base(mono);
   wr_mesh_exo(mono, monolith_file_name, 0);
-  wr_resetup_exo(mono, monolith_file_name, 0);
+  wr_resetup_exo(mono, monolith_file_name);
   zero_base(mono);
 
   /*
@@ -363,7 +357,7 @@ fix_exo_file(int num_procs, char* exo_mono_name)
 					   EXODB_ACTION_RD_MESH +
 					   EXODB_ACTION_RD_RES0 ));
 	  zero_base(poly);
-	  rd_dpi(dpin, polylith_name, 0);
+          rd_dpi(dpin, polylith_name);
 	  
 	  /*
 	   * Now indicate what variables and time planes to read from the
@@ -557,7 +551,7 @@ setup_exo_res_desc(Exo_DB *exo)
 {
   if ( ! ( exo->state & EXODB_STATE_RES0 ) )
     {
-      EH(-1, "Setup to read bulk results requires preliminary info.");
+      EH(GOMA_ERROR, "Setup to read bulk results requires preliminary info.");
     }
 
   /*

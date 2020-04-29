@@ -6,18 +6,19 @@
 #define EPETRA_MPI
 #endif
 
-#include <iostream>
-#include <exception>
+#include <stdio.h>
+#include <stdlib.h>
+#include <algorithm>
+#include <vector>
 
-#include "mpi.h"
-#include "Epetra_Comm.h"
 #include "Epetra_Map.h"
-#include "Epetra_RowMatrix.h"
 #include "Epetra_CrsMatrix.h"
 #include "Epetra_Vector.h"
+#include "Epetra_ConfigDefs.h"
+#include "dpi.h"
+#include "exo_struct.h"
 
 #ifdef EPETRA_MPI
-#include "Epetra_MpiComm.h"
 #else
 #include "Epetra_SerialComm.h"
 #endif
@@ -27,34 +28,27 @@ extern "C" {
 #include "rf_fem_const.h"
 #include "rf_fem.h"
 #include "rf_masks.h"
-#include "rf_mp.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
 #include "rf_io.h"
-#include "el_elm.h"
 #include "el_geom.h"
-#include "rf_bc_const.h"
-#include "rf_solver.h"
-#include "rf_solver_const.h"
-#include "rf_fill_const.h"
 #include "rf_vars_const.h"
-#include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
 #include "rf_node_const.h"
-#include "rf_allo.h"
 #include "mm_eh.h"
-
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
-
-#include "goma.h"
+#include "dp_comm.h"
+#include "dp_types.h"
+#include "mm_unknown_map.h"
+#include "rf_solve.h"
+#include "sl_util_structs.h"
+#include "mm_fill_util.h"
 }
 
-#include "mm_fill_util.h"
-#include "sl_epetra_interface.h"
 #include "sl_epetra_util.h"
+
+#include "sl_epetra_interface.h"
 
 extern "C" {
 
@@ -127,7 +121,7 @@ void EpetraCreateGomaProblemGraph(struct Aztec_Linear_Solver_System *ams, Exo_DB
      * node stored in the global array
      */
     if (row_num_unknowns != nv->Num_Unknowns) {
-      EH(-1, "Inconsistency counting unknowns.");
+      EH(GOMA_ERROR, "Inconsistency counting unknowns.");
     }
 
     /*
@@ -159,7 +153,7 @@ void EpetraCreateGomaProblemGraph(struct Aztec_Linear_Solver_System *ams, Exo_DB
         col_num_unknowns = fill_variable_vector(inter_node, inter_node_varType,
             inter_node_matID);
         if (col_num_unknowns != nvCol->Num_Unknowns) {
-          EH(-1, "Inconsistency counting unknowns.");
+          EH(GOMA_ERROR, "Inconsistency counting unknowns.");
         }
 
         /*
@@ -338,7 +332,7 @@ void EpetraLoadLec(int ielem, struct Aztec_Linear_Solver_System *ams,
                           fprintf(stderr,
                               "Oh fiddlesticks: je = %d, je_new = %d\n",
                               col_index, je_new);
-                          EH(-1, "LEC Indexing error");
+                          EH(GOMA_ERROR, "LEC Indexing error");
                         }
                         EH(col_index, "Bad var index.");
                         Indices.push_back(ams->GlobalIDs[col_index]);
@@ -381,7 +375,7 @@ void EpetraLoadLec(int ielem, struct Aztec_Linear_Solver_System *ams,
                       if (ei[pg->imtrx]->owningElementForColVar[v] != -1) {
                         ei_ptr = ei[pg->imtrx]->owningElement_ei_ptr[v];
                         if (ei_ptr == 0) {
-                          EH(-1, "ei_ptr == 0\n");
+                          EH(GOMA_ERROR, "ei_ptr == 0\n");
                           exit(-1);
                         }
                       }
@@ -418,7 +412,7 @@ void EpetraLoadLec(int ielem, struct Aztec_Linear_Solver_System *ams,
                       if (ei[pg->imtrx]->owningElementForColVar[v] != -1) {
                         ei_ptr = ei[pg->imtrx]->owningElement_ei_ptr[v];
                         if (ei_ptr == 0) {
-                          EH(-1, "ei slave pointer is null");
+                          EH(GOMA_ERROR, "ei slave pointer is null");
                           exit(-1);
                         }
                       }
@@ -433,7 +427,7 @@ void EpetraLoadLec(int ielem, struct Aztec_Linear_Solver_System *ams,
                         fprintf(stderr,
                             "Oh fiddlesticks: je = %d, je_new = %d\n",
                             col_index, je_new);
-                        EH(-1, "LEC Indexing error");
+                        EH(GOMA_ERROR, "LEC Indexing error");
                       }
                       EH(col_index, "Bad var index.");
                       Indices.push_back(ams->GlobalIDs[col_index]);

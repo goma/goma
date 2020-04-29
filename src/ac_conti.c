@@ -16,12 +16,53 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <math.h>
 #include <string.h>
 
 #define GOMA_AC_CONTI_C
-#include "goma.h"
 #include "brk_utils.h"
+#include "ac_conti.h"
+#include "ac_update_parameter.h"
+#include "az_aztec.h"
+#include "dp_comm.h"
+#include "dp_types.h"
+#include "dp_utils.h"
+#include "dpi.h"
+#include "el_geom.h"
+#include "el_quality.h"
+#include "exo_struct.h"
+#include "mm_as.h"
+#include "mm_as_structs.h"
+#include "mm_augc_util.h"
+#include "mm_bc.h"
+#include "mm_eh.h"
+#include "mm_fill_util.h"
+#include "mm_flux.h"
+#include "mm_more_utils.h"
+#include "mm_mp.h"
+#include "mm_mp_const.h"
+#include "mm_mp_structs.h"
+#include "mm_post_def.h"
+#include "mm_post_proc.h"
+#include "mm_sol_nonlinear.h"
+#include "mpi.h"
+#include "rf_allo.h"
+#include "rf_bc.h"
+#include "rf_fem.h"
+#include "rf_fem_const.h"
+#include "rf_io.h"
+#include "rf_io_structs.h"
+#include "rf_mp.h"
+#include "rf_node_const.h"
+#include "rf_solve.h"
+#include "rf_solver.h"
+#include "rf_solver_const.h"
+#include "rf_util.h"
+#include "sl_auxutil.h"
+#include "sl_util_structs.h"
+#include "std.h"
+#include "wr_exo.h"
+#include "wr_soln.h"
+
 int w;
 
 #include "sl_util.h"		/* defines sl_init() */
@@ -185,9 +226,6 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
   /*
    * 		BEGIN EXECUTION
    */
-#ifdef DEBUG
-  fprintf(stderr, "%s() begins...\n", yo);
-#endif
 
   is_steady_state = TRUE;
 
@@ -204,7 +242,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
       file = fopen(Soln_OutFile, "w");
       if (file == NULL) {
 	DPRINTF(stderr, "%s:  opening soln file for writing\n", yo);
-        EH(-1, "\t");
+        EH(GOMA_ERROR, "\t");
       }
     }
 #ifdef PARALLEL
@@ -214,9 +252,6 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
   /*
    * Some preliminaries to help setup EXODUS II database output.
    */
-#ifdef DEBUG
-  fprintf(stderr, "cnt_nodal_vars() begins...\n");
-#endif
 
   /*
    * tnv_post is calculated in load_nodal_tkn
@@ -225,22 +260,18 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
   tnv = cnt_nodal_vars();
   tev = cnt_elem_vars();
 
-#ifdef DEBUG
-  fprintf(stderr, "Found %d total primitive nodal variables to output.\n", tnv);
-  fprintf(stderr, "Found %d total primitive elem variables to output.\n", tev);
-#endif
 
   if (tnv < 0)
     {
       DPRINTF(stderr, "%s:\tbad tnv.\n", yo);
-      EH(-1, "\t");
+      EH(GOMA_ERROR, "\t");
     }
 
   rd = (struct Results_Description *)
     smalloc(sizeof(struct Results_Description));
 
   if (rd == NULL) 
-    EH(-1, "Could not grab Results Description.");
+    EH(GOMA_ERROR, "Could not grab Results Description.");
 
   (void) memset((void *) rd, 0, sizeof(struct Results_Description));
 
@@ -277,7 +308,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
   if (error)
     {
       DPRINTF(stderr, "%s:  problem with load_nodal_tkn()\n", yo);
-      EH(-1,"\t");
+      EH(GOMA_ERROR,"\t");
     }
 
   /* load elem types, names */
@@ -289,7 +320,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
   if (error)
     {
       DPRINTF(stderr, "%s:  problem with load_elem_tkn()\n", yo);
-      EH(-1,"\t");
+      EH(GOMA_ERROR,"\t");
     }
 #ifdef PARALLEL
   check_parallel_error("Results file error");
@@ -299,9 +330,6 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
    * Write out the names of the nodal variables that we will be sending to
    * the EXODUS II output file later.
    */
-#ifdef DEBUG
-  fprintf(stderr, "wr_result_prelim() starts...\n", tnv);
-#endif
 
   gvec_elem = (double ***) smalloc ( (exo->num_elem_blocks)*sizeof(double **));
   for (i = 0; i < exo->num_elem_blocks; i++)
@@ -312,9 +340,6 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
                        ExoFileOut,
                        gvec_elem );
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d: wr_result_prelim_exo() ends...\n", ProcID, tnv);
-#endif
 
   /*
    * This gvec workhorse transports output variables as nodal based vectors
@@ -418,11 +443,11 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
           break;
         case 6:                 /* ANGULAR CONTINUATION TYPE */
           /* NOTE:  This requires LOCA and is not available via the command line! */
-          EH(-1, "Angular continuation is available only in LOCA!");
+          EH(GOMA_ERROR, "Angular continuation is available only in LOCA!");
           break;
         default:
           fprintf(stderr, "%s: Bad cont->upType, %d\n", yo, cont->upType);
-          EH(-1,"Bad cont->upType");
+          EH(GOMA_ERROR,"Bad cont->upType");
           break;			/* duh */
         }
 
@@ -482,7 +507,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
   if (Linear_Solver == FRONT)
     {
 #ifdef PARALLEL
-  if (Num_Proc > 1) EH(-1, "Whoa.  No front allowed with nproc>1");
+  if (Num_Proc > 1) EH(GOMA_ERROR, "Whoa.  No front allowed with nproc>1");
   check_parallel_error("Front solver not allowed with nprocs>1");
 #endif
 
@@ -515,7 +540,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
       EH(err,"problems in frontal setup ");
 
 #else
-      EH(-1,"Don't have frontal solver compiled and linked in");
+      EH(GOMA_ERROR,"Don't have frontal solver compiled and linked in");
 #endif
     }
 
@@ -636,7 +661,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 
     }
   else
-    EH(-1,"Attempted to allocate unknown sparse matrix format");
+    EH(GOMA_ERROR,"Attempted to allocate unknown sparse matrix format");
 
   init_vec(x, cx, exo, dpi, x_AC, nAC, &timeValueRead);
 
@@ -730,7 +755,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 	  break;
 	default:
 	  DPRINTF(stderr, "%s: Bad aldALC, %d\n", yo, aldALC);
-          EH(-1,"\t");
+          EH(GOMA_ERROR,"\t");
 	  break;		/* duh */
 	}
 #ifdef PARALLEL
@@ -765,13 +790,13 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 		  break;
 		default:
 		  DPRINTF(stderr, "%s: Bad aldALC, %d\n", yo, aldALC);
-                  EH(-1,"\t");
+                  EH(GOMA_ERROR,"\t");
 		  break;	/* duh */
 		}
 	      break;
 	    default:
 	      DPRINTF(stderr, "%s: Bad Continuation, %d\n", yo, Continuation);
-              EH(-1,"\t");
+              EH(GOMA_ERROR,"\t");
 	      break;		/* duh */
 	    }
 	}
@@ -796,7 +821,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 	      break;
 	    default:
               DPRINTF(stdout, "%s: Bad Continuation, %d\n", yo, Continuation);
-              EH(-1,"\t");
+              EH(GOMA_ERROR,"\t");
 	      break;		/* duh */
 	    }
           DPRINTF(stdout, "\n\tStep number: %4d of %4d (max)", n+1, MaxPathSteps);
@@ -836,7 +861,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 	              default:
                         DPRINTF(stdout, "%s: Bad user continuation type, %d\n",
                                 yo, cont->upType);
-                        EH(-1,"\t");
+                        EH(GOMA_ERROR,"\t");
 	                break;
                     }
                   DPRINTF(stdout, " Parameter= % 10.6e delta_s= %10.6e",
@@ -846,7 +871,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 
 	    default:
 	      DPRINTF(stderr, "%s: Bad cont->upType, %d\n", yo, cont->upType);
-              EH(-1,"\t");
+              EH(GOMA_ERROR,"\t");
 	      break;		/* duh */
 	    }
           if (cont->upType != 5)
@@ -861,9 +886,6 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
       ni = 0;
       do {
 
-#ifdef DEBUG
-	DPRINTF(stderr, "%s: starting solve_nonlinear_problem\n", yo);
-#endif
                 err = solve_nonlinear_problem(ams[JAC],
                                         x,
                                         delta_t,
@@ -900,9 +922,6 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
                                         x_sens_p,
                                       NULL);
 
-#ifdef DEBUG
-	fprintf(stderr, "%s: returned from solve_nonlinear_problem\n", yo);
-#endif
 
 	if (err == -1)
 	  converged = 0;
@@ -910,16 +929,10 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 	if (converged)
 	  {
 	    if (Write_Intermediate_Solutions == 0) {
-#ifdef DEBUG
-	      DPRINTF(stderr, "%s: write_solution call WIS\n", yo);
-#endif
             write_solution(ExoFileOut, resid_vector, x, x_sens_p,
 			     x_old, xdot, xdot_old, tev, tev_post, gv, rd,
 			     gvec, gvec_elem, &nprint,
                            delta_s, theta, path1, NULL, exo, dpi);
-#ifdef DEBUG
-	      fprintf(stderr, "%s: write_solution end call WIS\n", yo);
-#endif
 	    }
 #ifdef PARALLEL
 	    check_parallel_error("Error writing exodusII file");
@@ -1080,7 +1093,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 		break;
 	      default:
 		DPRINTF(stderr, "%s: Bad aldALC, %d\n", yo, aldALC);
-                EH(-1,"\t");
+                EH(GOMA_ERROR,"\t");
 		break;		/* duh */
 	      }
 #ifdef PARALLEL
@@ -1132,13 +1145,13 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 		    break;
 		  default:
 		    DPRINTF(stderr, "%s: Bad aldALC, %d\n", yo, aldALC);
-                    EH(-1,"\t");
+                    EH(GOMA_ERROR,"\t");
 		    break;		/* duh */
 		  }
 		break;
 	      default:
 		DPRINTF(stderr, "%s: Bad Continuation, %d\n", yo, Continuation);
-                EH(-1,"\t");
+                EH(GOMA_ERROR,"\t");
 		break;		/* duh */
 	      }
 #ifdef PARALLEL
@@ -1271,7 +1284,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 	  break;
 	default:
 	  DPRINTF(stderr, "%s: Bad aldALC, %d\n", yo, aldALC);
-          EH(-1,"\t");
+          EH(GOMA_ERROR,"\t");
 	  break;		/* duh */
 	}
 
@@ -1307,7 +1320,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 	      break;
 	    default:
 	      DPRINTF(stderr, "%s: Bad aldALC, %d\n", yo, aldALC);
-              EH(-1,"\t");
+              EH(GOMA_ERROR,"\t");
 	      break;		/* duh */
 	    }
 	  break;
@@ -1342,7 +1355,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
       DPRINTF(stdout, "\n\tFailed to reach end of hunt in maximum number of successful steps (%d).\n\tSorry.\n",
 	      MaxPathSteps);
       /*
-      EH(-1,"\t");
+      EH(GOMA_ERROR,"\t");
       */
     }
 #ifdef PARALLEL
@@ -1363,13 +1376,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
    */
   if (Anneal_Mesh)
     {
-#ifdef DEBUG
-      fprintf(stderr, "%s: anneal_mesh()...\n", yo);
-#endif
       err = anneal_mesh(x, tev, tev_post, NULL, rd, path1, exo, dpi);
-#ifdef DEBUG
-      fprintf(stderr, "%s: anneal_mesh()-done\n", yo);
-#endif
       EH(err, "anneal_mesh() bad return.");
     }
 #ifdef PARALLEL

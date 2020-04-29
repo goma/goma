@@ -14,23 +14,13 @@
  *$Id: mm_fill_jac.c,v 5.2 2008-10-02 15:36:28 hkmoffa Exp $
  */
 
+#include "mm_fill_jac.h"
+
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
-#include <math.h>
 
 #include "std.h"
 #include "rf_allo.h"
-#include "rf_vars_const.h"
-#include "mm_mp_const.h"
-#include "mm_as_structs.h"
-#include "mm_mp_structs.h"
-#include "mm_mp.h"
-#include "mm_species.h"
-#include "rf_bc_const.h"
-#include "mm_fill_jac.h"
-#include "mm_interface.h"
-#include "mm_eh.h"
 
 /************************************************************************/
 /************************************************************************/

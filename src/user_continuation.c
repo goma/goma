@@ -11,45 +11,18 @@
 \************************************************************************/
  
 
-#ifdef USE_RCSID
-static const char rcsid[] = "$Id: user_continuation.c,v 5.3 2008-03-22 00:55:51 hkmoffa Exp $";
-#endif
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
 
 /* GOMA include files */
 
-#include "std.h"
-#include "rf_fem_const.h"
-#include "rf_fem.h"
-#include "rf_masks.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_mp.h"
-#include "el_elm.h"
-#include "el_geom.h"
-#include "rf_bc_const.h"
-#include "rf_solver_const.h"
-#include "rf_fill_const.h"
-#include "rf_vars_const.h"
-#include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
-#include "mm_mp.h"
-#include "mm_mp_structs.h"
-#include "mm_mp_const.h"
-
 #include "mm_eh.h"
-#include "mm_flux.h"
-
-#include "mm_flux.h"
+#include "ac_update_parameter.h"
+#include "dp_types.h"
+#include "dpi.h"
+#include "exo_struct.h"
 
 #define GOMA_USER_AC_C
-#include "goma.h"
 #include "user_continuation.h"
 
 #define BC 1
@@ -225,7 +198,7 @@ update_user_parameter(double lambda, double *x, double *xdot, double *x_AC,
 
 
 /* If using this function, comment out this line. */
-  EH(-1, "No user continuation conditions entered!");
+  EH(GOMA_ERROR, "No user continuation conditions entered!");
 
 
 /* Evaluate any intermediate quantities and/or assign constants here */
@@ -278,7 +251,7 @@ update_user_TP_parameter(double lambda, double *x, double *xdot,
 
 
 /* If using this function, comment out this line. */
-  EH(-1, "No user TP continuation conditions entered!");
+  EH(GOMA_ERROR, "No user TP continuation conditions entered!");
 
 
 /* Evaluate any intermediate quantities and/or assign constants here */
@@ -328,7 +301,7 @@ do_user_update(int n, int first_cp, int first_tp,
     }
   else
     {
-      EH(-1, "User parameter type settings inconsistent!");
+      EH(GOMA_ERROR, "User parameter type settings inconsistent!");
     }
 
 /* Store new and old values */

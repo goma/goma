@@ -16,6 +16,10 @@
 #ifndef GOMA_SAM_PEREA_H
 #define GOMA_SAM_PEREA_H
 
+#include "brkfix/brkfix_types.h"
+#include "brkfix/nodesc.h"
+#include "exo_struct.h"
+#include "wr_side_data.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

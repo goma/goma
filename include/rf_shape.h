@@ -14,6 +14,7 @@
 #ifndef GOMA_RF_SHAPE_H
 #define GOMA_RF_SHAPE_H
 
+#include "rf_pre_proc.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

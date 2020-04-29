@@ -19,9 +19,8 @@
  * Revision history has goneaway from this place.
  */
 
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: rf_solve.c,v 5.21 2010-03-17 22:23:54 hkmoffa Exp $";
-#endif
+
+#include "rf_solve.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -29,24 +28,67 @@ static char rcsid[] = "$Id: rf_solve.c,v 5.21 2010-03-17 22:23:54 hkmoffa Exp $"
 #include <string.h>
 
 #include "std.h"
-
 #include "exo_struct.h"
 #include "rf_fem_const.h"
 #include "rf_vars_const.h"
-#include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "rf_node_const.h"
 #include "usr_print.h"
-#include "sl_amesos_interface.h"
 #include "brk_utils.h"
-
 #include "sl_epetra_interface.h"
 #include "sl_epetra_util.h"
-
 #include "rf_solve_segregated.h"
+#include "ac_particles.h"
+#include "az_aztec.h"
+#include "dp_comm.h"
+#include "dp_types.h"
+#include "dp_utils.h"
+#include "dpi.h"
+#include "el_elm.h"
+#include "el_elm_info.h"
+#include "el_geom.h"
+#include "mm_as.h"
+#include "mm_augc_util.h"
+#include "mm_bc.h"
+#include "mm_eh.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_ptrs.h"
+#include "mm_fill_stress.h"
+#include "mm_fill_util.h"
+#include "mm_flux.h"
+#include "mm_more_utils.h"
+#include "mm_mp.h"
+#include "mm_mp_const.h"
+#include "mm_mp_structs.h"
+#include "mm_post_def.h"
+#include "mm_post_proc.h"
+#include "mm_sol_nonlinear.h"
+#include "mm_unknown_map.h"
+#include "mm_viscosity.h"
+#include "mpi.h"
+#include "rd_exo.h"
+#include "rd_mesh.h"
+#include "rf_allo.h"
+#include "rf_bc.h"
+#include "rf_bc_const.h"
+#include "rf_fem.h"
+#include "rf_io.h"
+#include "rf_io_const.h"
+#include "rf_io_structs.h"
+#include "rf_mp.h"
+#include "rf_solver.h"
+#include "rf_solver_const.h"
+#include "rf_util.h"
+#include "sl_auxutil.h"
+#include "sl_matrix_util.h"
+#include "sl_util.h"
+#include "sl_util_structs.h"
+#include "wr_dpi.h"
+#include "wr_exo.h"
+#include "wr_soln.h"
+#include "ac_stability_util.h"
 
 #define GOMA_RF_SOLVE_C
-#include "goma.h"
 #include "el_quality.h"
 
 #include "adapt/omega_h_interface.h"
@@ -196,7 +238,7 @@ initial_guess_stress_to_log_conf(double *x, int num_total_nodes)
         }
       else
 	{
-	  EH(-1, "Unknown model for Polymer Time Constant in initial guess log conf to stress");
+	  EH(GOMA_ERROR, "Unknown model for Polymer Time Constant in initial guess log conf to stress");
 	}
 
       // skip node if stress variables not found
@@ -454,9 +496,6 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
    * 		BEGIN EXECUTION
    */
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d solve_problem() begins...\n",ProcID);
-#endif /* DEBUG */
 
   /* Set step_fix only if parallel run and only if fix freq is enabled*/
   if (Num_Proc > 1 && tran->fix_freq > 0) {
@@ -491,7 +530,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     if (file == NULL) {
       fprintf(stdout, "%s:  opening soln file, %s, for writing\n", 
 	      yo, Soln_OutFile);
-      EH(-1, "Can not open solution file\n");
+      EH(GOMA_ERROR, "Can not open solution file\n");
     }
   }
   
@@ -501,30 +540,23 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
    * Some preliminaries to help setup EXODUS II database output.
    */
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d cnt_nodal_vars() begins...\n",ProcID);
-#endif /* DEBUG */
 
   tnv = cnt_nodal_vars();
   /*  tnv_post is calculated in load_nodal_tkn*/
   tev = cnt_elem_vars();
   /*  tev_post is calculated in load_elem_tkn*/
   
-#ifdef DEBUG
-  fprintf(stderr, "Found %d total primitive nodal variables to output.\n", tnv);
-  fprintf(stderr, "Found %d total primitive elem variables to output.\n", tev);
-#endif /* DEBUG */
   
   if (tnv < 0)
   {
     DPRINTF(stderr, "%s:\tbad tnv.\n", yo);
-    EH(-1, "\t");
+    EH(GOMA_ERROR, "\t");
   }
   
   if ( tev < 0 )
   {
     DPRINTF(stderr, "%s:\tMaybe bad tev? See goma design committee ;) \n", yo);
-    EH(-1, "\t");
+    EH(GOMA_ERROR, "\t");
   }
 
   /*
@@ -569,7 +601,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     error = load_global_var_info(rd, 4, "MESH_VOLUME");
 
     if ( rd->ngv > MAX_NGV ) 
-      EH(-1, "Augmenting condition values overflowing MAX_NGV.  Change and rerun .");
+      EH(GOMA_ERROR, "Augmenting condition values overflowing MAX_NGV.  Change and rerun .");
 
   if (callnum == 1)
     {
@@ -598,7 +630,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
   error = load_nodal_tkn(rd, &tnv, &tnv_post);  
   if (error !=0) {
     DPRINTF(stderr, "%s:  problem with load_nodal_tkn()\n", yo);
-    EH(-1,"\t");
+    EH(GOMA_ERROR,"\t");
   }
 
   /*
@@ -630,7 +662,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
   error = load_elem_tkn(rd, exo, tev, &tev_post);  
   if (error !=0) {
     DPRINTF(stderr, "%s:  problem with load_elem_tkn()\n", yo);
-    EH(-1,"\t");
+    EH(GOMA_ERROR,"\t");
   }
 #ifdef PARALLEL
   check_parallel_error("Results file error");
@@ -641,9 +673,6 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
    * the EXODUS II output file later - do only once if in library mode.
    */
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d %d wr_result_prelim() starts...\n",ProcID, tnv);
-#endif /* DEBUG */
 
   if (callnum == 1)
     {
@@ -659,9 +688,6 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     }
 
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d: %d wr_result_prelim_exo() ends...\n", ProcID, tnv);
-#endif /* DEBUG */
 
   /* 
    * This gvec workhorse transports output variables as nodal based vectors
@@ -682,19 +708,11 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 
   numProcUnknowns = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d: numProcUnknowns = %d (%d+%d)\n",ProcID, numProcUnknowns, 
-	  NumUnknowns[pg->imtrx], NumExtUnknowns[pg->imtrx]);
-#endif /* DEBUG */
   
   asdv(&resid_vector, numProcUnknowns);
   asdv(&resid_vector_sens, numProcUnknowns);
   asdv(&scale, numProcUnknowns);
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d: begin Solver allocation\n",ProcID);
-  fprintf(stderr, "P_%d: NUM_ALSS=%d\n",ProcID, NUM_ALSS);
-#endif /* DEBUG */
 
   /*
    * Allocate Aztec structures and initialize all elements to zero
@@ -718,9 +736,6 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 #endif /* not COUPLED_FILL */
 #endif /* MPI */
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d: Solver allocation complete\n",ProcID);
-#endif /* DEBUG */
 
   /* Allocate solution arrays on first call only */
   if (callnum == 1)
@@ -839,7 +854,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     ams[JAC]->rpntr = NULL;
     ams[JAC]->cpntr = NULL;
   } else {
-    EH(-1, "Attempted to allocate unknown sparse matrix format");
+    EH(GOMA_ERROR, "Attempted to allocate unknown sparse matrix format");
   }
 	  
   /* 
@@ -949,9 +964,6 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
    *            STEADY STATE SOLUTION PROCEDURE
    ***************************************************************************/
   if (TimeIntegration == STEADY) {
-#ifdef DEBUG
-    fprintf(stderr, "P_%d %d beginning STEADY analysis...\n", ProcID, tnv);
-#endif /* DEBUG */
       
     theta = 0.0;        /* for steady problems. theta def in rf_fem.h */
     delta_t = 0.0;
@@ -980,9 +992,6 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     check_parallel_error("Solver initialization problems");
 #endif /* PARALLEL */
 
-#ifdef DEBUG
-    fprintf(stderr, "Proc_%d %s: starting solve_nonlinear_problem\n",ProcID, yo);
-#endif /* DEBUG */
 
     /* Call prefront (or mf_setup) if necessary */
     if (Linear_Solver == FRONT) {
@@ -1004,7 +1013,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
       }
 	    
 #ifdef PARALLEL
-      if (Num_Proc > 1) EH(-1, "Whoa.  No front allowed with nproc>1");
+      if (Num_Proc > 1) EH(GOMA_ERROR, "Whoa.  No front allowed with nproc>1");
       check_parallel_error("Front solver not allowed with nprocs>1");
 #endif /* PARALLEL */
 	  
@@ -1024,7 +1033,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
       EH(err,"problems in frontal setup ");
 
 #else /* HAVE_FRONT */
-      EH(-1,"Don't have frontal solver compiled and linked in");
+      EH(GOMA_ERROR,"Don't have frontal solver compiled and linked in");
 #endif /* HAVE_FRONT */
     }
       
@@ -1043,9 +1052,6 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 				  &time_step_reform, is_steady_state,
                                   x_AC, x_AC_dot, time1, resid_vector_sens,
                                     x_sens, x_sens_p, NULL);
-#ifdef DEBUG
-    fprintf(stderr, "%s: returned from solve_nonlinear_problem\n", yo);
-#endif /* DEBUG */
       
     if (!converged) {
       DPRINTF(stderr, 
@@ -1278,13 +1284,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
        * zero, too.
        */
 
-#ifdef DEBUG
-      fprintf(stderr, "%s: anneal_mesh()...\n", yo);
-#endif /* DEBUG */
       err = anneal_mesh(x, tev, tev_post, gv,  rd, time1, exo, dpi);
-#ifdef DEBUG
-      fprintf(stderr, "%s: anneal_mesh()-done\n", yo);
-#endif /* DEBUG */
       EH(err, "anneal_mesh() bad return.");
     }
 
@@ -1500,24 +1500,9 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 		     &fss->ntra);
       EH(err,"problems in frontal setup ");
 #else /* HAVE_FRONT */
-      EH(-1,"Don't have frontal solver compiled and linked in");
+      EH(GOMA_ERROR,"Don't have frontal solver compiled and linked in");
 #endif /* HAVE_FRONT */
     }
-      
-#ifdef COUPLED_FILL
-    /*
-     * Prior to the primary time stepping loop, do any one time 
-     * initialization required for the Aztec linear solver, for
-     * the full Jacobian linear system.
-     */
-#else /* COUPLED_FILL */
-    /*
-     * Prior to the primary time stepping loop, do any one time 
-     * initialization required for the Aztec linear solver, both
-     * for the full Jacobian linear system *and* the explicit fill
-     * equation linear system.
-     */
-#endif /* COUPLED_FILL */
 
     /*
      * Now, just pass pointer to ams structure with all Aztec stuff
@@ -1702,7 +1687,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
               xfem->active_vol =  alloc_dbl_1(numProcUnknowns, 0.0);
               if (ls == NULL)
                 {
-                  EH(-1,"Currently, XFEM requires traditional level set (not pf)");
+                  EH(GOMA_ERROR,"Currently, XFEM requires traditional level set (not pf)");
                 }
             }
         }
@@ -1746,12 +1731,12 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
               DPRINTF(stdout, "\n\t Using semi-Lagrangian Level Set Evolution\n");
               break;
             default:
-              EH(-1,"Level Set Evolution scheme not found \n");
+              EH(GOMA_ERROR,"Level Set Evolution scheme not found \n");
           }
 
 
 	  if ( ls->Length_Scale < 0.0 )
-	      EH(-1, "\tError: a Level Set Length Scale needs to be specified\n");
+	      EH(GOMA_ERROR, "\tError: a Level Set Length Scale needs to be specified\n");
             
 	  if( ls->Integration_Depth > 0 || ls->SubElemIntegration || ls->AdaptIntegration )
 	    {
@@ -1789,7 +1774,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 
 	      DPRINTF(stdout,"\n\t Projection level set initialization \n");
 #ifdef COUPLED_FILL
-	      EH(-1,"Use of \"PROJECT\" is obsolete.");
+	      EH(GOMA_ERROR,"Use of \"PROJECT\" is obsolete.");
 #else /* COUPLED_FILL */
 	      init_vec_value (xf, 0.0, num_fill_unknowns);
 	      err = integrate_explicit_eqn(ams[FIL], rf, xf, xf_old, xfdot, 
@@ -1862,7 +1847,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	      break;
 
 	  case SM_OBJECT:
-	    EH(-1, "CGM not supported, SM_OBJECT level set initialization");
+	    EH(GOMA_ERROR, "CGM not supported, SM_OBJECT level set initialization");
 #ifndef COUPLED_FILL
               if (Explicit_Fill)
 		{
@@ -1908,7 +1893,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 
 	  case CORRECT :
 #ifdef COUPLED_FILL
-	    EH(-1,"Use of \"CORRECT\" is obsolete.");
+	    EH(GOMA_ERROR,"Use of \"CORRECT\" is obsolete.");
 #else /* COUPLED_FILL */
 	    {
 	      double step_size =  ls->Length_Scale/10.0;
@@ -2026,7 +2011,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 			      DPRINTF(stdout, "\n\t Using semi-Lagrangian Level Set Evolution for R_PHASE0\n");
 			      break;
 			    default:
-			      EH(-1,"PHASE Function Evolution scheme not found \n");
+			      EH(GOMA_ERROR,"PHASE Function Evolution scheme not found \n");
 			      break;
 			    }
 			  }
@@ -2330,11 +2315,6 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
       exchange_dof(cx[0], dpi, x, 0);
       exchange_dof(cx[0], dpi, xdot, 0);
         
-#ifdef DEBUG
-      if (nt == 0) {
-	print_array(x, numProcUnknowns, "x_A", type_double, ProcID);
-      }
-#endif /* DEBUG */
 
       if (nAC > 0) {
 
@@ -2467,11 +2447,6 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
       evpl_glob[0]->update_flag = 0; /*See get_evp_stress_tensor for description */
       af->Sat_hyst_reevaluate = FALSE; /*See load_saturation for description*/
 
-#ifdef DEBUG
-      if (nt == 0) {
-	print_array(x, numProcUnknowns, "x_B", type_double, ProcID);
-      }
-#endif /* DEBUG */
 
       /*
        * HKM -> I do not know if these operations are needed. I added
@@ -2779,7 +2754,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 		    "reset delta_t = %g to maintain printing frequency\n"
 		    , delta_t_new);
 	    if (delta_t_new <= 0) 
-		EH(-1, "error with time-step printing control");
+		EH(GOMA_ERROR, "error with time-step printing control");
 	    } 
           else if(time >= time_print) 
             {
@@ -2790,7 +2765,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 		      "reset delta_t = %g to maintain printing frequency\n"
 		      , delta_t_new);
 	      if (delta_t_new <= 0) 
-                { EH(-1, "error with time-step printing control"); }
+                { EH(GOMA_ERROR, "error with time-step printing control"); }
 	    }
 	  }
 	}
@@ -2877,7 +2852,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 					break;
 				
 			case CORRECT:
-				EH(-1,"Use of \"CORRECT\" is obsolete.");
+				EH(GOMA_ERROR,"Use of \"CORRECT\" is obsolete.");
 				break;
 			default:
 				break;
@@ -3439,6 +3414,12 @@ fprintf(stderr,"should be not successful %d %d %d \n",inewton,converged,success_
 
     safer_free((void **) &gvec_elem);
     safer_free((void **) &rd);
+    for (int i = 0; i < num_total_nodes; i++) {
+      free(Local_Offset[0][i]);
+      free(Dolphin[0][i]);
+    }
+    free(Dolphin[0]);
+    free(Local_Offset[0]);
     safer_free((void **) &Local_Offset);
     safer_free((void **) &Dolphin);
   }
@@ -3452,9 +3433,6 @@ free_shape_fcn_tree( Subgrid_Tree );
 
   if (file != NULL) fclose(file);
  
-#ifdef DEBUG
-  fprintf(stderr, "%s: leaving solve_problem()\n", yo);
-#endif /* DEBUG */
 
   return;
 } /* END of routine solve_problem()  */
@@ -3868,7 +3846,7 @@ anneal_mesh(double x[], int tev, int tev_post, double *glob_vars_val,
   rd->nev = rd_nev_save;
 
   if( Num_Proc > 1 )
-      wr_dpi(dpi, afilename, 0);
+    wr_dpi(dpi, afilename);
 	      
   for (i = 0; i < rd->TotalNVSolnOutput; i++) {
     /* 

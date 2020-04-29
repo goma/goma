@@ -14,6 +14,15 @@
 #ifndef GOMA_MM_NS_BC_H
 #define GOMA_MM_NS_BC_H
 
+#include "el_elm.h"
+#include "exo_struct.h"
+#include "mm_as_structs.h"
+#include "mm_fill_jac.h"
+#include "mm_mp_const.h"
+#include "mm_numjac.h"
+#include "rf_bc_const.h"
+#include "rf_fem_const.h"
+#include "std.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif
@@ -47,6 +56,23 @@ EXTERN void fvelo_normal_bc
        const double ,		/* interface zone half-width           */
        const double ,		/* interface zone shift                */
        const double );		/* gas leak angle (degrees)            */
+EXTERN void fvelo_normal_auto_bc
+(double [DIM],		/* func                                      */
+       double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
+       const double ,		/* vnormal - normal velocity                 */
+       const int,               /* contact flag */
+       const double [MAX_PDIM], /* x_dot - Bad name, says Phil!
+                                 * -mesh velocity vector                     */
+       const double ,		/* tt - parameter to vary time integration
+                                 * from explicit (tt = 1) to
+                                 * implicit (tt = 0)                         */
+       const double ,		/* dt - current value of the time step       */
+       const int ,               /* bc id */
+       const double ,		/* interface zone half-width           */
+       const double ,		/* interface zone shift                */
+       const double, 		/* gas leak angle (degrees)            */
+const int id_side,
+const int global_node);    /*contact angle to start gas leaking */
 
 EXTERN void fmesh_etch_bc
 (double *,            /* func                                      */
@@ -172,6 +198,11 @@ EXTERN void fvelo_tangent_3d
 				 * method from BE(0) to CN(1/2) to FE(1)     */
        const double );		/* dt - current value of the time step size  */
 
+EXTERN void fzero_velo_tangent_3d(double func[DIM],
+                                  double d_func[DIM][MAX_VARIABLE_TYPES+MAX_CONC][MDE],
+                                  const int id_side,
+                                  int global_node);
+
 
 EXTERN void fvelo_tangential_solid_bc
 (double [],		/* func                                      */
@@ -239,6 +270,17 @@ fvelo_slip_ls_heaviside(double func[MAX_PDIM],
 			const double vsz,	/* is applied           */
 			const double tt,
                         const double dt);
+void
+fvelo_slip_ls_oriented(double func[MAX_PDIM],
+                        double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                        double width,
+                        double beta_negative,
+                        double beta_positive,
+                        double gamma_negative,
+                        double gamma_positive,
+                        const double vsx,      /* velocity components of solid  */
+                        const double vsy,	/* surface on which slip condition   */
+                       const double vsz);	/* is applied           */
 
 void
 fvelo_airfilm_bc(double func[MAX_PDIM],

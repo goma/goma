@@ -14,25 +14,18 @@
  *$Id: mm_fill_interface.c,v 5.3 2010-03-18 23:47:45 hkmoffa Exp $
  */
 
-#include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 
 #include "std.h"
 #include "rf_vars_const.h"
-
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
-
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-
 #include "mm_species.h"
-#include "mm_std_models.h"
-
 #include "rf_bc_const.h"
 #include "mm_fill_jac.h"
 #include "mm_interface.h"
@@ -40,6 +33,10 @@
 #include "mm_ns_bc.h"
 #include "mm_eh.h"
 #include "mm_qp_storage.h"
+#include "el_elm.h"
+#include "mm_elem_block_structs.h"
+#include "mm_mp_const.h"
+#include "mm_qtensor_model.h"
 
 #define RGAS_CONST  8.314510E7  /* Gas Contant in g cm^2/(sec^2 g-mole K) */
 #define RGAS_CALS   1.987093    /* Gas Constant in cal g-mole-1 K-1 */
@@ -343,9 +340,9 @@ source_vle_prxn(INTERFACE_SOURCE_STRUCT *is, BOUNDARY_CONDITION_STRUCT *bc,
    * Find the vapor pressure
    */
   if        (mp_liq->VaporPressureModel[wspec] == ANTOINE) {
-    antoine_psat(wspec, mp_liq->u_vapor_pressure[wspec], &psat_w, &dpsatdT_w);
+    antoine_psat(mp_liq->u_vapor_pressure[wspec], &psat_w, &dpsatdT_w);
   } else if (mp_liq->VaporPressureModel[wspec] == RIEDEL) {
-    riedel_psat(wspec, mp_liq->u_vapor_pressure[wspec], &psat_w, &dpsatdT_w);
+    riedel_psat(mp_liq->u_vapor_pressure[wspec], &psat_w, &dpsatdT_w);
   } else {
     psat_w = mp_liq->vapor_pressure[wspec];
   }
@@ -354,7 +351,7 @@ source_vle_prxn(INTERFACE_SOURCE_STRUCT *is, BOUNDARY_CONDITION_STRUCT *bc,
    * Find the concentration in the liquid phase, C_l_mix
    */
   if (is[intf_id].SpeciesVT != SPECIES_CONCENTRATION) {
-    EH(-1, "unimplemented complication");
+    EH(GOMA_ERROR, "unimplemented complication");
   }
   C_l_mix = 0.0;
   for (k = 0, pos = mp_gas->Num_Species; k < mp_liq->Num_Species; 
@@ -489,7 +486,7 @@ is_equil_prxn(JACOBIAN_VAR_DESC_STRUCT *func_jac,
    * var type. This will be relaxed in the future.
    */
   if (upd->Species_Var_Type != SPECIES_CONCENTRATION) {
-    EH(-1,"unimplemented");
+    EH(GOMA_ERROR,"unimplemented");
   }
 
   /*
@@ -590,7 +587,7 @@ is_equil_prxn(JACOBIAN_VAR_DESC_STRUCT *func_jac,
     C_wspec = mp->StateVector[SPECIES_UNK_0 + wspec_a];
     func_value = volflux * C_wspec;
   } else {
-    EH(-1, "unimplemented");
+    EH(GOMA_ERROR, "unimplemented");
   }
 
   /*
@@ -747,7 +744,7 @@ source_is_equil_prxn(INTERFACE_SOURCE_STRUCT *is,
    * Find the concentration in the b phase, C_b_mix
    */
   if (is[intf_id].SpeciesVT != SPECIES_CONCENTRATION) {
-    EH(-1, "unimplemented complication");
+    EH(GOMA_ERROR, "unimplemented complication");
   }
   C_b_mix = 0.0;
   for (k = 0, pos = mp_a->Num_Species; k < mp_b->Num_Species; 

@@ -10,14 +10,14 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: dp_comm.c,v 5.1 2007-09-18 18:53:41 prschun Exp $";
-#endif
+#include "dp_comm.h"
+#include "dp_map_comm_vec.h"
+#include "dp_types.h"
+#include "dpi.h"
+#include "rf_allo.h"
+#include "rf_fem.h"
 
 /* System Include files */
-
-#include <stdlib.h>
-#include <stdio.h>
 
 /* User include files */
 /*
@@ -38,7 +38,6 @@ static char rcsid[] = "$Id: dp_comm.c,v 5.1 2007-09-18 18:53:41 prschun Exp $";
 */
 
 #define GOMA_DP_COMM_C
-#include "goma.h"
 
 /********************************************************************/
 /********************************************************************/

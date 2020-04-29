@@ -12,19 +12,23 @@
 
 /* Utilities for interfacing with brkfix to brk exodus files */
 
-/* Probably should only include needed files */
-#include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "std.h"
 #include "exo_struct.h"
-
-#include "goma.h"
-
 #include "brk_utils.h"
-#include "brkfix/brkfix_types.h"
 #include "brkfix/brk.h"
 #include "brkfix/fix.h"
+#include "el_elm_info.h"
+#include "mm_as.h"
+#include "mm_as_structs.h"
+#include "mm_eh.h"
+#include "rd_mesh.h"
+#include "rf_fem_const.h"
+#include "rf_io.h"
+#include "rf_masks.h"
+#include "rf_mp.h"
 
 int Brk_Flag;
 
@@ -43,7 +47,7 @@ check_for_brkfile(char* brkfile_name) {
   }
 
   if (Num_Proc > 1 && Brk_Flag == 2) {
-    EH(-1, "Cannot create brkfile on parallel run, run on only 1 processor");
+    EH(GOMA_ERROR, "Cannot create brkfile on parallel run, run on only 1 processor");
   }
 
   return;
@@ -57,7 +61,7 @@ write_brk_file(char* brkfile_name, Exo_DB *exo) {
   brkfile = fopen(brkfile_name, "w");
 
   if (brkfile == NULL) {
-    EH(-1, "Cannot open BRK File for writing");
+    EH(GOMA_ERROR, "Cannot open BRK File for writing");
     return;
   }
   

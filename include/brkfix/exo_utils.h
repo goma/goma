@@ -16,6 +16,8 @@
 #ifndef GOMA_EXO_UTILS_H
 #define GOMA_EXO_UTILS_H
 
+#include "exo_struct.h"
+
 #ifdef EXTERN
 #undef EXTERN
 #endif

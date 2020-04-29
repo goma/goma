@@ -21,7 +21,6 @@
  
 #include <stdio.h>
 #include <string.h>
-#include <math.h>
  
 /* GOMA include files */
  
@@ -30,43 +29,46 @@
 #include "el_geom.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
 #include "rf_io.h"
-#include "rf_mp.h"
- 
 #include "rf_bc_const.h"
-#include "rf_solver_const.h"
-#include "rf_fill_const.h"
 #include "mm_elem_block_structs.h"
 #include "rf_vars_const.h"
 #include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "mm_mp.h"
 #include "mm_mp_structs.h"
-
 #include "mm_fill_jac.h"
 #include "mm_interface.h"
-
 #include "el_elm_info.h"
 #include "mm_fill_aux.h"
 #include "mm_fill_species.h"
 #include "mm_fill_terms.h"
 #include "mm_fill_util.h"
 #include "mm_fill_potential.h"
-#include "mm_qp_storage.h"
-#include "mm_shell_bc.h" 
-
-
+#include "mm_shell_bc.h"
+#include "bc/rotate_coordinates.h"
 #include "mm_eh.h"
 #include "user_bc.h"
+#include "ac_stability.h"
+#include "ac_stability_util.h"
+#include "bc_colloc.h"
+#include "bc_integ.h"
+#include "exo_struct.h"
+#include "mm_fill_fill.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_porous.h"
+#include "mm_fill_rs.h"
+#include "mm_fill_shell.h"
+#include "mm_fill_solid.h"
+#include "mm_ns_bc.h"
+#include "rd_mesh.h"
+#include "rf_bc.h"
+#include "rf_solver.h"
 
 
 #define GOMA_BC_INTEG_C
-#include "goma.h"
 
 int
 apply_integrated_bc(double x[],           /* Solution vector for the current processor    */
@@ -361,7 +363,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
       if (ss_index == -1 && is_ns != 0) {
 	sprintf(Err_Msg, "Could not find BC_ID %d in ss_to_blks",
 	        BC_Types[bc_input_id].BC_ID);
-	EH(-1, Err_Msg);
+	EH(GOMA_ERROR, Err_Msg);
       }
 
       /*
@@ -482,19 +484,22 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 
 	switch (bc->BC_Name) {
 	    
-	case KINEMATIC_PETROV_BC:
+        case KINEMATIC_PETROV_BC:
 	case KINEMATIC_BC:
 	case VELO_NORMAL_BC:
 	case VELO_NORMAL_LS_BC:
 	case VELO_NORMAL_LS_PETROV_BC:
-		
+        {
+
+//        if (goma_automatic_rotations.rotation_nodes == NULL) {
+
 	  contact_flag = (ls != NULL);
 
 	  /*  first all external boundaries with velocity
 	      second - internal boundaries with an explicit block id
 	      third  - internal boundaries with implicit iapply logic
 	  */
-	  if ( (SS_Internal_Boundary[ss_index] == -1 && pd->v[pg->imtrx][VELOCITY1])
+          if ( (SS_Internal_Boundary[ss_index] == -1 && pd->v[pg->imtrx][VELOCITY1])
 	       || (SS_Internal_Boundary[ss_index] != -1 &&
 		   bc->BC_Data_Int[0] == ei[pg->imtrx]->elem_blk_id)
 	       || (SS_Internal_Boundary[ss_index] != -1 && 
@@ -505,7 +510,9 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
                                 bc->BC_Data_Float[1], bc->BC_Data_Float[2],
                                 bc->BC_Data_Float[3]);
 	    }
-	  break;
+        }
+//        }
+          break;
 
 	case VELO_TANGENT_LS_BC:
 		
@@ -675,6 +682,9 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			   theta, delta_t);
 	  if (neg_elem_volume) return (status);
 	  break;
+        case ZERO_VELO_TANGENT_3D_BC:
+          fzero_velo_tangent_3d(func, d_func, elem_side_bc->id_side, 0);
+          break;
 
 	case VELO_TANGENT_SOLID_BC:
 	case VELO_SLIP_SOLID_BC:
@@ -773,6 +783,17 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 				   theta, delta_t);
 	  break;
 
+        case VELO_SLIP_LS_ORIENTED_BC:
+          fvelo_slip_ls_oriented( func, d_func,
+                                   bc->BC_Data_Float[0],
+                                   bc->BC_Data_Float[1],
+                                   bc->BC_Data_Float[2],
+                                   bc->BC_Data_Float[3],
+                                   bc->BC_Data_Float[4],
+                                   bc->BC_Data_Float[5],
+                                   bc->BC_Data_Float[6],
+                                 bc->BC_Data_Float[7]);
+          break;
 
 	case Q_VELO_SLIP_BC:
 	  q_velo_slip_bc(func, d_func, 
@@ -1312,7 +1333,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 
 
 	case HYDROSTATIC_SYMM_BC:
-	  EH(-1, "HYDROSTATIC_SYMM is no longer supported.");
+	  EH(GOMA_ERROR, "HYDROSTATIC_SYMM is no longer supported.");
 	  /* 	    hydrostatic_n_dot_T(func, d_func); */
 	  break;
 
@@ -1831,13 +1852,13 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	   * sure your heats of reaction are deployed based on the flux 
 	   * (and hence reaction) rates, either through YFLUX_BV, or 
 	   * YFLUX_USER, etc. */
-	  EH(-1, "HEAT_OF_RXN_BC: not yet implemented.");
+	  EH(GOMA_ERROR, "HEAT_OF_RXN_BC: not yet implemented.");
 	  break;
 	      
 	case PSPG_BC:
 	  /* MMH: LSA LSA LSA Stopped here.  ALMOST done with bc_integ.c LSA LSA LSA */
 	  if (!PSPG) {
-	    EH(-1,
+	    EH(GOMA_ERROR,
 	       "You don't have PSPG turned on and you trying to apply a PSPG boundary condition");
 	  }
 	  PSPG_consistency_bc(func, d_func,  x_dot, time_value, delta_t,
@@ -2074,7 +2095,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 
 	default:
 	  sprintf(Err_Msg, "Integrated BC %s not found", bc_desc->name1);
-	  EH(-1, Err_Msg);
+	  EH(GOMA_ERROR, Err_Msg);
 	  break;
 
 
@@ -2133,7 +2154,41 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	      }
 	    }
 	  }
-	  
+//          if (goma_automatic_rotations.rotation_nodes != NULL) {
+//            switch (bc->BC_Name) {
+
+//            case KINEMATIC_PETROV_BC:
+//            case KINEMATIC_BC:
+//            case VELO_NORMAL_BC:
+//            case VELO_NORMAL_LS_BC:
+//            case VELO_NORMAL_LS_PETROV_BC:
+
+//              contact_flag = (ls != NULL);
+
+//              /*  first all external boundaries with velocity
+//                  second - internal boundaries with an explicit block id
+//                  third  - internal boundaries with implicit iapply logic
+//              */
+//          func[0] = 0.0; func[1] =0.0; func[2] = 0.0;
+//            memset(d_func, 0, DIM*(MAX_VARIABLE_TYPES + MAX_CONC)*MDE*sizeof(double));
+//              if ( (SS_Internal_Boundary[ss_index] == -1 && pd->v[pg->imtrx][VELOCITY1])
+//                   || (SS_Internal_Boundary[ss_index] != -1 &&
+//                       bc->BC_Data_Int[0] == ei[pg->imtrx]->elem_blk_id)
+//                   || (SS_Internal_Boundary[ss_index] != -1 &&
+//                       bc->BC_Data_Int[0] == -1 && iapply && pd->v[pg->imtrx][VELOCITY1]))
+//                {
+
+//                  fvelo_normal_auto_bc(func, d_func, bc->BC_Data_Float[0], contact_flag,
+//                                  x_dot, theta, delta_t, (int) bc->BC_Name,
+//                                    bc->BC_Data_Float[1], bc->BC_Data_Float[2],
+//                                    bc->BC_Data_Float[3], elem_side_bc->id_side, I);
+//                }
+//              break;
+//            default:
+//              break;
+//            }
+//          }
+
 	  
 	  if( (BC_Types[bc_input_id].BC_Name == TENSION_SHEET_BC ) && (Dolphin[pg->imtrx][I][MESH_DISPLACEMENT1] > 0 ) )
 	    {
@@ -2290,7 +2345,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
   		      bc->BC_Name == VELO_NORMAL_LS_PETROV_BC ||
   		      bc->BC_Name == KIN_DISPLACEMENT_PETROV_BC) {
 		    if (pd->Num_Dim != 2) {
- 		      EH(-1,"KINEMATIC_PETROV or KIN_DISPLACEMENT_PETROV not available in 3D yet");
+ 		      EH(GOMA_ERROR,"KINEMATIC_PETROV or KIN_DISPLACEMENT_PETROV not available in 3D yet");
 		    }
 		    id_side = elem_side_bc->id_side;
 		    i_basis = 1 - id_side%2;
@@ -2318,7 +2373,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			 eb_in_matrl(BC_Types[bc_input_id].BC_Data_Int[1], mn)))
 		      {
 			//type = pd_glob[mn]->w[eqn];
-			//if (bfi[type] == NULL) EH(-1,"Illegal cross basis func");
+			//if (bfi[type] == NULL) EH(GOMA_ERROR,"Illegal cross basis func");
 			
 			/* note that here, we don't have the ln_to_dof
 			   array for the adjacent 
@@ -2343,7 +2398,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 		      }
 		  }
 		} else {
-		  EH(-1,"Illegal bc phase definition");
+		  EH(GOMA_ERROR,"Illegal bc phase definition");
 		}
 	      }
 
@@ -2385,14 +2440,18 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 		ieqn = MAX_PROB_EQN + bc->species_eq;
 	      } else {
 		ieqn = upd->ep[pg->imtrx][eqn];
-	      }
+                if (goma_automatic_rotations.automatic_rotations && (bc->desc->rotate != NO_ROT)) {
+                  ieqn = equation_index_auto_rotate(elem_side_bc, I, eqn, p, ldof_eqn, bc);
+                }
+              }
 
 	      /*
 	       *  Add the current contribution to the local element
 	       *  residual vector
 	       */
 	      if (ldof_eqn != -1) {
-		lec->R[ieqn][ldof_eqn] += weight * fv->sdet * func[p];
+                lec->R[ieqn][ldof_eqn] += weight * fv->sdet * func[p];
+
 		
 #ifdef DEBUG_BC
 		if (IFPD == NULL) IFPD = fopen("darcy.txt", "a");
@@ -2567,7 +2626,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
                            weight *= phi_i;
                         }
                         else {
-                           EH(-1,"Only SINGLE_PHASE is handled in stress BC implementation");
+                           EH(GOMA_ERROR,"Only SINGLE_PHASE is handled in stress BC implementation");
                         }
 
                        /*
@@ -2658,7 +2717,55 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
     } /*(end for ibc) */
   } /*End for ip = 1,...*/  
   return (status);
-} /* END of routine apply_integrated_bc */
+}
+/* END of routine apply_integrated_bc */
+
+int equation_index_auto_rotate(const ELEM_SIDE_BC_STRUCT *elem_side_bc,
+                               int I,
+                               int eqn,
+                               int p,
+                               int ldof_eqn,
+                               const BOUNDARY_CONDITION_STRUCT *bc) {
+  int ieqn;
+  if (!goma_automatic_rotations.automatic_rotations) {
+    EH(GOMA_ERROR, "equation_index_auto_rotate requires 3D automatic rotations");
+    return -1;
+  }
+  int node = ei[pg->imtrx]->gnn_list[eqn][ldof_eqn];
+  if (node != I) {
+    EH(GOMA_ERROR, "issue with rotation node and ei");
+  }
+  int n_index = -1;
+  for (int i = 0; i < goma_automatic_rotations.rotation_nodes[node].n_normals; i++) {
+    if (goma_automatic_rotations.rotation_nodes[node].element[i] == ei[pg->imtrx]->ielem &&
+        goma_automatic_rotations.rotation_nodes[node].face[i] == elem_side_bc->id_side) {
+      n_index = i;
+      break;
+    }
+  }
+  EH(n_index, "Rotations incorrectly setup");
+  int rot_dir = (int) goma_automatic_rotations.rotation_nodes[I].face_coordinate_association[n_index];
+
+  int t1dir = 0;
+  int t2dir = 0;
+  for (int k = 0; k < DIM; k++) {
+    if (k != rot_dir) {
+      t1dir = k;
+      break;
+    }
+  }
+  for (int k = 0; k < DIM; k++) {
+    if (k != rot_dir && k != t1dir) {
+      t2dir = k;
+    }
+  }
+  int eq_idx[DIM];
+  eq_idx[0] = rot_dir;
+  eq_idx[1] = t1dir;
+  eq_idx[2] = t2dir;
+  ieqn = upd->ep[pg->imtrx][eqn + eq_idx[p]];
+  return ieqn;
+}
 
 /*******************************************************************************/
 /*******************************************************************************/

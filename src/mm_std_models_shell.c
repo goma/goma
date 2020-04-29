@@ -14,13 +14,8 @@
  *$Id: mm_std_models_shell.c,v 5.31 2010-07-30 20:48:38 prschun Exp $
  */
 
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: mm_std_models_shell.c,v 5.31 2010-07-30 20:48:38 prschun Exp $";
-#endif
 
-#include <stdlib.h>
 #include <stdio.h>
-#include <strings.h>
 #include <string.h>
 #include <math.h>
 
@@ -28,33 +23,20 @@ static char rcsid[] = "$Id: mm_std_models_shell.c,v 5.31 2010-07-30 20:48:38 prs
 
 #include "std.h"
 #include "rf_fem_const.h"
-#include "rf_fem.h"
-#include "rf_masks.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_mp.h"
 #include "el_elm.h"
-#include "el_geom.h"
 #include "rf_bc_const.h"
-#include "rf_solver_const.h"
-#include "rf_fill_const.h"
-#include "rf_vars_const.h"
 #include "mm_mp_const.h"
-#include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
-
 #include "mm_eh.h"
-
 #include "shell_tfmp_util.h"
+#include "bc_colloc.h"
+#include "mm_shell_util.h"
 
 #define GOMA_MM_STD_MODELS_SHELL_C
 #include "mm_std_models_shell.h"
-#include "goma.h"
 
 /*********** R O U T I N E S   I N   T H I S   F I L E ************************
 *
@@ -394,7 +376,7 @@ height_function_model (double *H_U,
      H_low = mp->u_heightU_function_constants[2];
 
      Length = fv->x[0] - x_0;
-     if (Length > 0.95*r) EH(-1, "Problem in calculating height function model CIRCLE_MELT");
+     if (Length > 0.95*r) EH(GOMA_ERROR, "Problem in calculating height function model CIRCLE_MELT");
 
      *H_U = H_low + r - sqrt(r*r - Length*Length) + fv->sh_dh;
      *dH_U_dtime = Length/sqrt(r*r - Length*Length);
@@ -477,7 +459,7 @@ height_function_model (double *H_U,
  }
  else
    {
-     EH(-1,"Not a supported height-function model");
+     EH(GOMA_ERROR,"Not a supported height-function model");
    }
 
  if(mp->HeightLFunctionModel == CONSTANT_SPEED)
@@ -549,7 +531,7 @@ height_function_model (double *H_U,
 /*  compute radial direction	*/
 
      dist = sqrt(SQUARE(fv->x[0]-axis_pt[0])+SQUARE(fv->x[1]-axis_pt[1]));
-     if(dist > R ) EH(-1,"point outside of roll");
+     if(dist > R ) EH(GOMA_ERROR,"point outside of roll");
      if(dist > R )
         {
          *H_L = -R;
@@ -604,7 +586,7 @@ height_function_model (double *H_U,
 	 disp += mp->u_veloL_function_constants[i] / i * pow(tn,i);
        }
      } else {
-       EH(-1, "To use LOWER_DISTANCE for Lower Height Function Model, SLIDER_POLY_TIME must be used for the Lower Velocity Function.");
+       EH(GOMA_ERROR, "To use LOWER_DISTANCE for Lower Height Function Model, SLIDER_POLY_TIME must be used for the Lower Velocity Function.");
      }
           
      // Get height from table lookup
@@ -628,12 +610,12 @@ height_function_model (double *H_U,
      *dH_L_dtime = (H2-*H_L)/(time_scale*time*0.0001);
 
    } else {
-     EH(-1, "Lower Height Function does not know how to handle this type of TABLE.");
+     EH(GOMA_ERROR, "Lower Height Function does not know how to handle this type of TABLE.");
    }
  }
  else
    {
-     EH(-1,"Not a supported height-function model");
+     EH(GOMA_ERROR,"Not a supported height-function model");
    }
 
  H = *H_U - *H_L;
@@ -814,7 +796,7 @@ velocity_function_model (double veloU[DIM],
    }
  else
    {
-     EH(-1,"Not a supported velocity-function model");
+     EH(GOMA_ERROR,"Not a supported velocity-function model");
    }
 
  if(mp->VeloLFunctionModel == CONSTANT)
@@ -833,7 +815,7 @@ velocity_function_model (double veloU[DIM],
    }
  else if (mp->VeloLFunctionModel == USER)
    {
-     EH(-1,"USER is no longer a supported lower velocity-function model (see SLIDER_POLY_TIME).");
+     EH(GOMA_ERROR,"USER is no longer a supported lower velocity-function model (see SLIDER_POLY_TIME).");
    }
  else if (mp->VeloLFunctionModel == SLIDER_POLY_TIME)
    {
@@ -990,7 +972,7 @@ velocity_function_model (double veloU[DIM],
    }
  else
    {
-     EH(-1,"Not a supported velocity-function model");
+     EH(GOMA_ERROR,"Not a supported velocity-function model");
    }
 
  /* Note that this is the relative velocity of the upper and lower surfaces */
@@ -1084,7 +1066,7 @@ film_evaporation_model (double C,             /* Suspension concentration */
    }
  else
    {
-     EH(-1,"Not a supported film evaporation model");
+     EH(GOMA_ERROR,"Not a supported film evaporation model");
    }
 
 /* Pre-multiply the evaporation function with heaviside function 
@@ -1216,7 +1198,7 @@ disjoining_pressure_model (double H,                              /* Film thickn
    {
      if (!(efv->ev))
        {
-         EH(-1,"Model TWO_TERM_EXT_CA requires contact angle input from external file !");
+         EH(GOMA_ERROR,"Model TWO_TERM_EXT_CA requires contact angle input from external file !");
        }
 
      angle =  fv->external_field[0];
@@ -1268,7 +1250,7 @@ disjoining_pressure_model (double H,                              /* Film thickn
 
  else
    {
-     EH(-1,"Not a supported disjoining pressure model");
+     EH(GOMA_ERROR,"Not a supported disjoining pressure model");
    }
 
 /************** CALCULATE DISJOINING PRESSURE GRADIENT AND ITS SENSITIVITIES **************/
@@ -1346,7 +1328,7 @@ diffusion_coefficient_model (double mu,              /* Viscosity of the liquid 
 
  else
    {
-     EH(-1,"Not a supported diffusion coefficient model");
+     EH(GOMA_ERROR,"Not a supported diffusion coefficient model");
    }
 
  return(DiffCoeff);
@@ -1377,7 +1359,7 @@ porous_shell_closed_porosity_model(void) {
     phi = mp->u_PorousShellClosedPorosity_function_constants[0];
 
   } else {
-    EH(-1,"Not a supported porosity model");    
+    EH(GOMA_ERROR,"Not a supported porosity model");    
   }
   return(phi);
 }
@@ -1409,7 +1391,7 @@ porous_shell_closed_radius_model(void) {
     r = 1.0;
 
   } else {
-    EH(-1,"Not a supported radius model");    
+    EH(GOMA_ERROR,"Not a supported radius model");    
   }
 
   return(r);
@@ -1436,7 +1418,7 @@ porous_shell_closed_height_model(void) {
     H = mp->u_PorousShellClosedHeight_function_constants[0]*
       fv->external_field[mp->por_shell_closed_height_ext_field_index];
   } else {
-    EH(-1,"Not a supported height model");    
+    EH(GOMA_ERROR,"Not a supported height model");    
   }
   return(H);
 }
@@ -1473,7 +1455,7 @@ porous_shell_cross_perm_model(void) {
     }
   else
     {
-      EH(-1,"Unrecognized Porous Shell Cross Permeability  model");
+      EH(GOMA_ERROR,"Unrecognized Porous Shell Cross Permeability  model");
     }
 
   return(kappa);
@@ -1545,7 +1527,7 @@ void dynamic_contact_angle_model(
     break;
 
   default:
-    EH(-1,"Wrong upper contact angle model");
+    EH(GOMA_ERROR,"Wrong upper contact angle model");
     cosU   = 0.0;
     cosU_V = 0.0;
     break;
@@ -1586,7 +1568,7 @@ void dynamic_contact_angle_model(
     break;
 
   default:
-    EH(-1,"Wrong lower contact angle model");
+    EH(GOMA_ERROR,"Wrong lower contact angle model");
     cosL   = 0.0;
     cosL_V = 0.0;
     break;

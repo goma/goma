@@ -31,37 +31,45 @@
 #include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_mp.h"
 #include "el_elm.h"
 #include "el_geom.h"
- 
 #include "rf_masks.h"
 #include "rf_bc_const.h"
-#include "rf_solver_const.h"
-#include "rf_fill_const.h"
-#include "mm_elem_block_structs.h"
 #include "rf_vars_const.h"
- 
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "mm_mp.h"
 #include "mm_mp_structs.h"
 #include "mm_mp_const.h"
-
-#include "mm_fill_jac.h"
 #include "mm_fill_common.h"
-#include "mm_interface.h"
-
- 
 #include "mm_eh.h"
+#include "ac_stability.h"
+#include "ac_stability_util.h"
+#include "bc_colloc.h"
+#include "bc_contact.h"
+#include "dpi.h"
+#include "el_elm_info.h"
+#include "exo_struct.h"
+#include "mm_as_alloc.h"
+#include "mm_fill_aux.h"
+#include "mm_fill_fill.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_porous.h"
+#include "mm_fill_ptrs.h"
+#include "mm_fill_species.h"
+#include "mm_fill_terms.h"
+#include "mm_fill_util.h"
+#include "mm_flux.h"
+#include "mm_ns_bc.h"
+#include "mm_post_proc.h"
+#include "mm_unknown_map.h"
+#include "rf_bc.h"
+#include "rf_node_const.h"
+#include "rf_solver.h"
+#include "sl_util.h"
 
 #define GOMA_BC_CONTACT_C
-#include "goma.h"
 
 
 int
@@ -440,7 +448,7 @@ apply_contact_bc (
             {
                printf("For LAGRANGE_NO_SLIP_BC, AC Lagrange Multiplier must be on solid elements.\n");
                printf("Possibly, you want LS_NO_SLIP.\n");
-               EH(-1,"LAGRANGE_NO_SLIP_BC error.");
+               EH(GOMA_ERROR,"LAGRANGE_NO_SLIP_BC error.");
             }
             
           if (pass == 1) ioffset = first_overlap_ac(ielem, elem_side_bc->id_side);
@@ -533,7 +541,7 @@ apply_contact_bc (
                    * without apply a force at all in this area
                    */
                   /*
-                  if (ioffset == -1) EH(-1,"Bad AC index");
+                  if (ioffset == -1) EH(GOMA_ERROR,"Bad AC index");
                    */
                   setup_shop_at_point(ielem, xi, exo);
                   if (ioffset == -1)
@@ -669,7 +677,7 @@ apply_contact_bc (
 	      
 	      else
 		{
-		  EH(-1,"Illegal bc method definition");
+		  EH(GOMA_ERROR,"Illegal bc method definition");
 		}
 
 	      /*
@@ -775,7 +783,7 @@ apply_contact_bc (
                          (cross-mesh term) */
                       jac = d_func[p][var][0] * weight * fv->sdet;
                       nu = index_eq;
-                      if ( nu < 0 ) EH(-1,"Bad variable index");
+                      if ( nu < 0 ) EH(GOMA_ERROR,"Bad variable index");
                       bAC[iAC][nu] += jac;
 
                       /* Sensitivities to solid displacement not affected */
@@ -791,7 +799,7 @@ apply_contact_bc (
                           /* Sensitivities to solid Lagrangeo multiplier */
                           jac = d_func[p][var][0] * weight * fv->sdet;
                           nu = index_eq;
-                          if ( nu < 0 ) EH(-1,"Bad variable index");
+                          if ( nu < 0 ) EH(GOMA_ERROR,"Bad variable index");
                           bAC[iAC][nu] += jac; 
                         }
 
@@ -1037,7 +1045,7 @@ contact_fn_dot_T(double func[DIM],
     } /* if velocity variable is defined.   */
   else 
     {
-      EH(-1,"Must have a deforming mesh region for this bc");
+      EH(GOMA_ERROR,"Must have a deforming mesh region for this bc");
     }
 } /* END of routine contact_fn_dot_T */
 
@@ -1137,7 +1145,7 @@ Lagrange_mult_equation(double func[DIM],
     } /* if velocity variable is defined.   */
   else 
     {
-      EH(-1,"Must have a deforming mesh region for this bc");
+      EH(GOMA_ERROR,"Must have a deforming mesh region for this bc");
     }
 } /* END of routine Lagrange_mult_equation */
 
@@ -1639,6 +1647,9 @@ assemble_embedded_bc (
         case LS_CONT_VEL_BC:
           assemble_cont_vel_source( xi, exo );
           break;
+        case LS_STRESS_JUMP_BC:
+          assemble_ls_stress_jump(bc->BC_Data_Float[0], bc->BC_Data_Float[1], bc->BC_Data_Int[0]);
+          break;
         case LS_CAPILLARY_BC:
           assemble_csf_tensor();
           break;
@@ -1704,14 +1715,14 @@ assemble_embedded_bc (
                     ss_surf = closest_surf( ls->init_surf_list, x, exo, fv->x );
                     cp = ss_surf->closest_point;
                     if ( cp->elem == -1 )
-                      EH(-1,"Invalid element at closest_point");
+                      EH(GOMA_ERROR,"Invalid element at closest_point");
 
                     /* Associate correct AC number with this point */
                     iconn_sptr = exo->elem_ptr[cp->elem];
                     id_side = cp->elem_side;
                     ioffset = first_overlap_ac(cp->elem, id_side);
                     if (ioffset == -1)
-                      EH(-1,"Bad AC index");
+                      EH(GOMA_ERROR,"Bad AC index");
 
                     for (a=0; a<pd->Num_Dim; a++)
                       {
@@ -1720,7 +1731,7 @@ assemble_embedded_bc (
                   }
                 else
                   {
-                    EH(-1, "Level set must be slave SS for this BC!");
+                    EH(GOMA_ERROR, "Level set must be slave SS for this BC!");
                   }
               }
             else
@@ -1785,7 +1796,7 @@ assemble_embedded_bc (
               {
                 printf("For LS_LAGRANGE_NO_SLIP, AC Lagrange Multiplier must be on fluid elements.\n");
                 printf("Possibly, you want LAGRANGE_NO_SLIP.\n");
-                EH(-1,"LS_LAGRANGE_NO_SLIP error.");
+                EH(GOMA_ERROR,"LS_LAGRANGE_NO_SLIP error.");
               }
             /* get x_dot:
              * this may come from the motion of a mesh (slave to SS)
@@ -1803,7 +1814,7 @@ assemble_embedded_bc (
                 
                 /* use kitchen sink approach for now at solids location */
                 if ( cp->elem == -1 )
-                  EH(-1,"Invalid element at closest_point");
+                  EH(GOMA_ERROR,"Invalid element at closest_point");
                 iconn_sptr = exo->elem_ptr[cp->elem];
                 
                 setup_shop_at_point(cp->elem, cp->xi, exo);
@@ -1851,7 +1862,7 @@ assemble_embedded_bc (
                 else if (pass == 2)
                   ioffset = oAC;
                 if (ioffset == -1)
-                  EH(-1,"Bad AC index");
+                  EH(GOMA_ERROR,"Bad AC index");
               }
             
             for ( a=0; a<ei[pg->imtrx]->ielem_dim; a++)
@@ -1948,19 +1959,19 @@ assemble_embedded_bc (
                     
                     /* use kitchen sink approach for now at solids location */
                     if ( cp->elem == -1 )
-                      EH(-1,"Invalid element at closest_point");
+                      EH(GOMA_ERROR,"Invalid element at closest_point");
                     
                     /* Associate the correct AC number with this point */
                     id_side = cp->elem_side;
                     ioffset = first_overlap_ac(cp->elem, id_side);
                     if (ioffset == -1)
-                      EH(-1,"Bad AC index");
+                      EH(GOMA_ERROR,"Bad AC index");
                   }
                 else if ( ac_lm == 2)
                   {
                     ioffset = first_overlap_ac(ielem, -1);
                     if (ioffset == -1)
-                      EH(-1,"Bad AC index");
+                      EH(GOMA_ERROR,"Bad AC index");
                   }
                 
                 for (a=0; a<ei[pg->imtrx]->ielem_dim; a++)
@@ -2098,7 +2109,7 @@ apply_embedded_colloc_bc ( int ielem,      /* element number */
               }
             else
               {
-                EH(-1,"LS_UVW expects XFEM interpolation Q1_XV, Q2_XV, Q1_XG, Q2_XG, Q1_G, or Q2_G\n");
+                EH(GOMA_ERROR,"LS_UVW expects XFEM interpolation Q1_XV, Q2_XV, Q1_XG, Q2_XG, Q1_G, or Q2_G\n");
               }
             
             for ( i = 0; i < ei[pg->imtrx]->dof[eqn]; i+=2 )
@@ -2153,7 +2164,7 @@ apply_embedded_colloc_bc ( int ielem,      /* element number */
               }
             else
               {
-                EH(-1,"LS_CONT_FLUX expects XFEM interpolation P0_G, P1_G, Q1_G, or Q2_G\n");
+                EH(GOMA_ERROR,"LS_CONT_FLUX expects XFEM interpolation P0_G, P1_G, Q1_G, or Q2_G\n");
               }
             
             for ( i = 0; i < ei[pg->imtrx]->dof[eqn]; i+=2 )
@@ -2213,7 +2224,7 @@ apply_embedded_colloc_bc ( int ielem,      /* element number */
                   }
                 else
                   {
-                    EH(-1,"LS_CONT_TRACTION_BC expects XFEM interpolation P0_G, P1_G, Q1_G, or Q2_G\n");
+                    EH(GOMA_ERROR,"LS_CONT_TRACTION_BC expects XFEM interpolation P0_G, P1_G, Q1_G, or Q2_G\n");
                   }
 
                 for ( i = 0; i < ei[pg->imtrx]->dof[eqn]; i+=2 )
@@ -2275,7 +2286,7 @@ apply_embedded_colloc_bc ( int ielem,      /* element number */
                   }
                 else
                   {
-                    EH(-1,"LS_CONT_TRACTION_BC expects XFEM interpolation P0_G, P1_G, Q1_G, or Q2_G\n");
+                    EH(GOMA_ERROR,"LS_CONT_TRACTION_BC expects XFEM interpolation P0_G, P1_G, Q1_G, or Q2_G\n");
                   }
 
                 for ( i = 0; i < ei[pg->imtrx]->dof[eqn]; i+=2 )
@@ -2361,7 +2372,7 @@ find_subsurf_st_wt( const int ip, const int ip_total,
 
   case SHELL:
   case TRISHELL:
-    EH(-1,"subsurf integration for overset grids and ls subelement integration not supported for SHELLS");
+    EH(GOMA_ERROR,"subsurf integration for overset grids and ls subelement integration not supported for SHELLS");
     break;
 
   case LINE_SEGMENT:
@@ -2370,7 +2381,7 @@ find_subsurf_st_wt( const int ip, const int ip_total,
     break;
 
   default:
-    EH(-1, "Unsupported element shape.");
+    EH(GOMA_ERROR, "Unsupported element shape.");
     break;
   }
 
@@ -2394,7 +2405,7 @@ find_subsurf_st_wt( const int ip, const int ip_total,
       int nodes[3];
 
       /* this is currently hacked in for 2-D only */
-      if ( num_dim != 2 ) EH(-1, "Cross Mesh sub-integration only supported in 2-D\n");
+      if ( num_dim != 2 ) EH(GOMA_ERROR, "Cross Mesh sub-integration only supported in 2-D\n");
 
       switch( shape )
       {
@@ -2407,7 +2418,7 @@ find_subsurf_st_wt( const int ip, const int ip_total,
         break;
 
       default:
-        EH(-1, "Unsupported element shape.");
+        EH(GOMA_ERROR, "Unsupported element shape.");
         break;
       }
 
@@ -2474,13 +2485,13 @@ double dof_distance ( int var_type,
        pd->i[pg->imtrx][var_type] != I_P0_XV && pd->i[pg->imtrx][var_type] != I_P1_XV &&
        pd->i[pg->imtrx][var_type] != I_P0_G && pd->i[pg->imtrx][var_type] != I_P1_G )
     {
-      EH(-1, "This combination of LS and var interpolations is not supported!");
+      EH(GOMA_ERROR, "This combination of LS and var interpolations is not supported!");
     }
       
   /* define element var distance to be distance to node 0 */
   F_dof = ei[pd->mi[ls->var]]->ln_to_dof[ls->var][0];
   if ( F_dof < 0 ) {
-    EH(-1,"dof_distance expect LS var to be define at local node 0");
+    EH(GOMA_ERROR,"dof_distance expect LS var to be define at local node 0");
   }
   if (ls->var == LS)
     return *esp->F[F_dof];
@@ -2501,7 +2512,7 @@ double lnn_distance ( int ln )
   /* define element var distance to be distance to node 0 */
   F_dof = ei[pd->mi[ls->var]]->ln_to_dof[ls->var][0];
   if ( F_dof < 0 ) {
-    EH(-1,"dof_distance expect LS var to be define at local node 0");
+    EH(GOMA_ERROR,"dof_distance expect LS var to be define at local node 0");
   }
   if (ls->var == LS)
     return *esp->F[F_dof];
@@ -2536,7 +2547,7 @@ gnn_distance( const int I,
       
       if ( elem == -1 || ie == -1 )
         {
-	  EH(-1,"Combination of variable and LS interpolation types not supported.");
+	  EH(GOMA_ERROR,"Combination of variable and LS interpolation types not supported.");
         }
     }
 

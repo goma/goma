@@ -15,10 +15,6 @@
  *$Id: mm_more_utils.c,v 5.3 2008-03-24 17:43:55 hkmoffa Exp $
  */
 
-#ifdef USE_RCSID
-static char rcsid[] =
-"$Id: mm_more_utils.c,v 5.3 2008-03-24 17:43:55 hkmoffa Exp $";
-#endif
 
 /*
  *
@@ -46,31 +42,30 @@ static char rcsid[] =
 
 #include "std.h"
 #include "el_geom.h"
-
 #include "rf_allo.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
 #include "rf_io_const.h"
 #include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_bc.h"
 #include "el_elm.h"
- 
-#include "mm_post_def.h"
-#include "rf_vars_const.h"
 #include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_mp_structs.h"
-#include "mm_post_proc.h"
 #include "mm_as.h"
 #include "mm_eh.h"
 #include "mm_mp.h"
-
 #include "exo_struct.h"		/* defn of Exo_DB */
+#include "el_elm_info.h"
+#include "mm_fill_ptrs.h"
+#include "mm_fill_util.h"
+#include "mm_more_utils.h"
+#include "mm_unknown_map.h"
+#include "rd_mesh.h"
+#include "rf_bc_const.h"
+#include "rf_util.h"
 
 #define GOMA_MM_MORE_UTILS_C
-#include "goma.h"
 
 /* cnt_nodal_vars -- count total number of unknown nodal point variables
  *
@@ -106,9 +101,6 @@ cnt_nodal_vars(void)
   int tnv = 0;
   int v;
 
-#ifdef DEBUG
-  static const char yo[] = "cnt_nodal_vars";
-#endif
 
   /* For blot's sake, put the displacements first! */
   for (v = MESH_DISPLACEMENT1; v<(MESH_DISPLACEMENT3+1); v++)
@@ -320,7 +312,7 @@ set_nv_tkud(RESULTS_DESCRIPTION_STRUCT *r, /* of just results for Exodus II */
 {
   int status = 0;
   if (i > MAX_NNV) {
-    EH(-1, "too many nodal post-process variables for exodus");
+    EH(GOMA_ERROR, "too many nodal post-process variables for exodus");
   }
   r->nvtype[i] = v;
   r->nvkind[i] = k;
@@ -347,7 +339,7 @@ set_ev_tkud(RESULTS_DESCRIPTION_STRUCT *r, /* elem result of Exodus II       */
 {
   int status = 0;
   if (i > MAX_NEV) {
-    EH(-1, "too many element post-process variables for exodus");
+    EH(GOMA_ERROR, "too many element post-process variables for exodus");
   }
   r->evtype[i] = v;
   strcpy(r->evname[i], name);
@@ -375,7 +367,7 @@ load_global_var_info(struct Results_Description *r, /* global results Exodus */
 
   status = 0;
 
-  if (r->ngv > MAX_NGV) EH(-1, "too many global post-process varibles for exodus.  Change in rf_solve.c and in names in load_global_var_info");
+  if (r->ngv > MAX_NGV) EH(GOMA_ERROR, "too many global post-process varibles for exodus.  Change in rf_solve.c and in names in load_global_var_info");
 
   strcpy(r->gvname[i], name);
 
@@ -702,9 +694,6 @@ extract_nodal_eb_vec(double sol_vec[], int var_no, int ktype, int matIndex,
   int lastSpeciesSum, iDof, j;
   MATRL_PROP_STRUCT *matrl;
   double rho;
-#ifdef DEBUG_HKM
-  int nunks, interpType;
-#endif
 
   /*
    * Find out the material number, mn, from the element block index
@@ -775,20 +764,6 @@ extract_nodal_eb_vec(double sol_vec[], int var_no, int ktype, int matIndex,
       /*
        * HKM -> Special compatibility section
        */
-#ifdef DEBUG_HKM
-      interpType = pd_glob[mn]->i[pg->imtrx][var_no];
-      nunks = node_info(i, ielem_type, var_no, I);
-      if (nunks > 1) {
-	if (interpType == I_P0 || interpType == I_P1) {
-	} else {
-	  if (((exo->eb_id[eb_index] + 1) % 2) == 0) {
-	    iDof = 0;
-	  } else {
-	    iDof = 1;
-	  }
-	}
-      }
-#endif
       if (lastSpeciesSum) {
 	index = Index_Solution(I, var_no, 0, iDof, matIndex, pg->imtrx);
 	if (index != -1) {
@@ -1162,7 +1137,7 @@ elements_attached_to_NS(int *element_list,
 	
 	if( (index = in_list( NS_ID, 0, exo->ns_node_len, exo->ns_id )) == -1 )
 	{	
-		EH(-1,"Node set ID not found\n");
+		EH(GOMA_ERROR,"Node set ID not found\n");
 	}
 	
 	num_nodes = exo->ns_num_nodes[index];

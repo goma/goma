@@ -13,6 +13,11 @@
 #ifndef GOMA_MM_VISCOSITY_H
 #define GOMA_MM_VISCOSITY_H
 
+#include "el_elm.h"
+#include "mm_as_structs.h"
+#include "mm_mp_structs.h"
+#include "mm_qtensor_model.h"
+#include "std.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

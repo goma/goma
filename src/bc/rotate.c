@@ -9,48 +9,47 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
-
-/*
- *$Id: bc_rotate.c,v 5.4 2008-10-07 14:33:41 hkmoffa Exp $
- */
-
 /* Standard include files */
  
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
- 
+
 #include "std.h"
- 
 #include "rf_allo.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
 #include "rf_io_const.h"
-#include "rf_io_structs.h"
 #include "rf_io.h"
-#include "rf_mp.h"
 #include "el_elm.h"
 #include "el_geom.h"
-
 #include "exo_struct.h"
-#include "rf_masks.h"
 #include "rf_bc_const.h"
 #include "rf_bc.h"
-#include "rf_solver_const.h"
-#include "rf_fill_const.h"
 #include "rf_solver.h"
 #include "rf_vars_const.h"
-#include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
-#include "mm_mp.h"
- 
 #include "mm_eh.h"
-
-#include "mm_fill_jac.h"
+#include "bc/rotate_coordinates.h"
+#include "ac_stability.h"
+#include "ac_stability_util.h"
+#include "bc/rotate.h"
+#include "el_elm_info.h"
+#include "gds/gds_vector.h"
+#include "mm_as_alloc.h"
+#include "mm_bc.h"
+#include "mm_elem_block_structs.h"
+#include "mm_fill_aux.h"
+#include "mm_fill_ptrs.h"
+#include "mm_fill_terms.h"
+#include "mm_fill_util.h"
+#include "mm_post_proc.h"
+#include "mm_unknown_map.h"
+#include "rd_mesh.h"
+#include "rf_node_const.h"
+#include "sl_util_structs.h"
 
 /*
  *  Variable Definitions
@@ -59,8 +58,6 @@ struct Rotation_Vectors ****rotation = NULL;
 int dup_blks_list[MAX_MAT_PER_SS+1];
 
 #define GOMA_BC_ROTATE_C
-#include "goma.h"
-
 #include "sl_epetra_interface.h"
 
 
@@ -98,10 +95,6 @@ apply_rotated_bc (
      *      for 2D problems.
      ****************************************************************************/
 {
-#ifdef DEBUG
-  static char *yo = "apply_rotated_bc";
-  int k;
-#endif
   char err_msg[MAX_CHAR_IN_INPUT]; 
   int i, I, ibc, j, id, blk_index, ss_index; /* counters */
   int err;                    /* status variable for functions */
@@ -166,7 +159,7 @@ apply_rotated_bc (
                */
 	      if ((ss_index = 
 		   in_list(ss_rot, 0, Proc_Num_Side_Sets, ss_to_blks[0])) == -1) {
-		EH(-1,"Cannot match side set id with that in ss_to_blks array");
+		EH(GOMA_ERROR,"Cannot match side set id with that in ss_to_blks array");
 	      } else {
 		for (j = 0; j < MAX_MAT_PER_SS; j++) {
 		  dup_blks_list[j] = ss_to_blks[j+1][ss_index];
@@ -175,7 +168,7 @@ apply_rotated_bc (
 	      if ((blk_index = in_list(Current_EB_ptr->Elem_Blk_Id, 0,
 				       MAX_MAT_PER_SS+1,
 				       dup_blks_list)) == -1) {
-		EH(-1,"Cannot match current element block with that in ss_to_blks array");
+		EH(GOMA_ERROR,"Cannot match current element block with that in ss_to_blks array");
 	      }
 	      blk_index++;
 	      if (SS_Internal_Boundary[ss_index] != -1 && ((blk_index % 2) == 1)) {
@@ -202,7 +195,7 @@ apply_rotated_bc (
 		   in_list(ss_rot, 0, exo->num_side_sets, ss_to_blks[0])) == -1) {
 		sprintf(err_msg, "Could not find SS %d in ss_to_blks",
 			ss_rot);
-		EH(-1, err_msg);
+		EH(GOMA_ERROR, err_msg);
 	      } else {
 		for (j=0; j<MAX_MAT_PER_SS; j++) {
 		  dup_blks_list[j] = ss_to_blks[j+1][ss_index];
@@ -210,19 +203,9 @@ apply_rotated_bc (
 	      }
 	      if ((blk_index = in_list(Current_EB_ptr->Elem_Blk_Id, 0,
 				       MAX_MAT_PER_SS+1, dup_blks_list)) == -1) {
-#ifdef DEBUG
-		fprintf(stderr, 
-			"%s: Found ssindex=%d, SSID=%d, dup_blks_list = ",
-			yo, ss_index, exo->ss_id[ss_index]);
-		for ( k=0; k<MAX_MAT_PER_SS; k++)
-		{
-		  fprintf(stderr, "%d ", dup_blks_list[k]);
-		}
-		fprintf(stderr, "\n");
-#endif
 		sprintf(err_msg, "Could not find EB %d in dup_blks_list",
 			Current_EB_ptr->Elem_Blk_Id);
-		EH(-1, err_msg);
+		EH(GOMA_ERROR, err_msg);
 	      }
 	      blk_index++;
 	      if( SS_Internal_Boundary[ss_index] != -1 && ((blk_index % 2) == 1) ) {
@@ -270,7 +253,7 @@ apply_rotated_bc (
 			  (int) elem_side_bc->num_nodes_on_side,
 			  (elem_side_bc->local_elem_node_id));      
       } else {
-	EH(-1,"Illegal dimension in old rotation scheme");
+	EH(GOMA_ERROR,"Illegal dimension in old rotation scheme");
       }
 	
       do_LSA_mods(LSA_SURFACE);
@@ -759,7 +742,7 @@ rotate_mesh_eqn (
       sprintf(Err_Msg,
 	      "rotate_mesh_eqn: Limited to 1 mesh dof: found %d dofs\n",
 	      ndof);
-      EH(-1, Err_Msg);
+      EH(GOMA_ERROR, Err_Msg);
     }
     peqn_mesh[ldir] = upd->ep[pg->imtrx][R_MESH1 + ldir];
   }
@@ -806,7 +789,7 @@ rotate_mesh_eqn (
 	     * Find the global equation number
 	     */
 	    if ((index_eqn = Index_Solution(I, eqn, 0, 0, -2, pg->imtrx)) == -1) { 
-	      EH(-1, "Cant find eqn index");
+	      EH(GOMA_ERROR, "Cant find eqn index");
 	    }
 	    /*
 	     * Loop over the nodes that determine the value of the
@@ -846,13 +829,6 @@ rotate_mesh_eqn (
 	      if (Dolphin[pg->imtrx][I][MESH_DISPLACEMENT1] > 0 &&
 		  Dolphin[pg->imtrx][J][MESH_DISPLACEMENT1] > 0) { 
 		K = in_list(J, bpntr[I], bpntr[I+1], bindx);
-#ifdef DEBUG_HKM
-		if (K == -1) {
-		  fprintf(stderr,"Couldn't find proc blk_col %d in blk_row %d\n",
-			  J, I);
-		  EH(-1, "rotate_mesh_eqn ERROR: vbr matrix structure error");
-		}
-#endif
 		nv = Nodes[J]->Nodal_Vars_Info[pg->imtrx];
 		blk_col = get_nv_offset_idof(nv, var, 0, 0, NULL);
 		/*
@@ -871,7 +847,7 @@ rotate_mesh_eqn (
              * Find the global equation number
              */
             if ((index_eqn = Index_Solution(I, eqn, 0, 0, -2, pg->imtrx)) == -1) {
-              EH(-1, "Cant find eqn index");
+              EH(GOMA_ERROR, "Cant find eqn index");
             }
             /*
              * Loop over the nodes that determine the value of the
@@ -1158,10 +1134,10 @@ rotate_momentum_eqn (
 		    ktype = 0;
 		    ndof = 0;
 		    if ((index_eqn =  Index_Solution(I, eqn, ktype, ndof, -2, pg->imtrx)) == -1 ) { 
-		      EH(-1, "Cant find eqn index");
+		      EH(GOMA_ERROR, "Cant find eqn index");
 		    }
 		    if ((index_var =  Index_Solution(J, var, ktype, ndof, -2, pg->imtrx)) == -1 ) { 
-		      EH(-1, "Cant find var index");
+		      EH(GOMA_ERROR, "Cant find var index");
 		    }
 		      
 		    index = (index_eqn == index_var) ? index_eqn :
@@ -1233,11 +1209,11 @@ rotate_momentum_eqn (
                     ndof = 0;
                     if ((index_eqn = Index_Solution(I, eqn, ktype, ndof, -2, pg->imtrx))
                         == -1) {
-                      EH(-1, "Cant find eqn index");
+                      EH(GOMA_ERROR, "Cant find eqn index");
                     }
                     if ((index_var = Index_Solution(J, var, ktype, ndof, -2, pg->imtrx))
                         == -1) {
-                      EH(-1, "Cant find var index");
+                      EH(GOMA_ERROR, "Cant find var index");
                     }
 
                     /* !!!!!!!!!!!!!!!!! Warning !!!!!!!!!!!!!!!!! */
@@ -1584,7 +1560,7 @@ rotate_res_jac_mom (
      at the surface - for convenience in the following loops */
   double    dsvector_dx[MAX_PDIM][MAX_PDIM][MAX_PDIM][MDE];
   /* sensitivity of surface vectors with respect to nodal positions */
-  
+
   double    rotated_resid[MDE];
   double    rotated_jacobian_vector[MAX_PDIM][MAX_PDIM][MDE];
   double    rotated_jacobian_scalar[MAX_PDIM][MDE];
@@ -1612,15 +1588,15 @@ rotate_res_jac_mom (
       
     case 1:
       svector[0][0] = snormal[0];
-      for ( id=0; id<ei[pg->imtrx]->dof[ShapeVar]; id++ ) 
+      for ( id=0; id<ei[pg->imtrx]->dof[ShapeVar]; id++ )
         {
-	  Id = Proc_Elem_Connect[iconnect_ptr + id];
-	  ldof = ei[pg->imtrx]->ln_to_dof[ShapeVar][id];
-	  if (Dolphin[pg->imtrx][I][MESH_DISPLACEMENT1] > 0 && Dolphin[pg->imtrx][Id][MESH_DISPLACEMENT1] > 0 )
-	    { 
-	      dsvector_dx[0][0][0][ldof] = dsnormal_dx[0][0][ldof];
-	    } /*end of Baby_Dolphin[pg->imtrx] */
-	}
+          Id = Proc_Elem_Connect[iconnect_ptr + id];
+          ldof = ei[pg->imtrx]->ln_to_dof[ShapeVar][id];
+          if (Dolphin[pg->imtrx][I][MESH_DISPLACEMENT1] > 0 && Dolphin[pg->imtrx][Id][MESH_DISPLACEMENT1] > 0 )
+            {
+              dsvector_dx[0][0][0][ldof] = dsnormal_dx[0][0][ldof];
+            } /*end of Baby_Dolphin[pg->imtrx] */
+        }
       break;
       
     case 2:
@@ -1629,19 +1605,19 @@ rotate_res_jac_mom (
           svector[0][kdir] = snormal[kdir];
           svector[1][kdir] = sign * stangent[0][kdir];
           for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
-	    {
-	      for ( id=0; id<ei[pg->imtrx]->dof[ShapeVar]; id++ ) 
-		{
-		  Id = Proc_Elem_Connect[iconnect_ptr + id];
-		  ldof = ei[pg->imtrx]->ln_to_dof[ShapeVar][id];
-		  if (Dolphin[pg->imtrx][I][MESH_DISPLACEMENT1] > 0 && Dolphin[pg->imtrx][Id][MESH_DISPLACEMENT1] > 0 )
-		    { 
-		      dsvector_dx[0][kdir][ldir][ldof] = dsnormal_dx[kdir][ldir][ldof];
-		      dsvector_dx[1][kdir][ldir][ldof] = sign * dstangent_dx[0][kdir][ldir][ldof];
-		    } /*end of Baby_Dolphin[pg->imtrx] */
-		}
-	    }
-	}
+            {
+              for ( id=0; id<ei[pg->imtrx]->dof[ShapeVar]; id++ )
+                {
+                  Id = Proc_Elem_Connect[iconnect_ptr + id];
+                  ldof = ei[pg->imtrx]->ln_to_dof[ShapeVar][id];
+                  if (Dolphin[pg->imtrx][I][MESH_DISPLACEMENT1] > 0 && Dolphin[pg->imtrx][Id][MESH_DISPLACEMENT1] > 0 )
+                    {
+                      dsvector_dx[0][kdir][ldir][ldof] = dsnormal_dx[kdir][ldir][ldof];
+                      dsvector_dx[1][kdir][ldir][ldof] = sign * dstangent_dx[0][kdir][ldir][ldof];
+                    } /*end of Baby_Dolphin[pg->imtrx] */
+                }
+            }
+        }
       break;
       
     case 3:
@@ -1651,21 +1627,21 @@ rotate_res_jac_mom (
           svector[1][kdir] = sign * stangent[0][kdir];
           svector[2][kdir] = sign * stangent[1][kdir];
           for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
-	    {
-	      for ( id=0; id<ei[pg->imtrx]->dof[ShapeVar]; id++ ) 
-		{
-		  Id = Proc_Elem_Connect[iconnect_ptr + id];
-		  ldof = ei[pg->imtrx]->ln_to_dof[ShapeVar][id];
-		  if (Dolphin[pg->imtrx][I][MESH_DISPLACEMENT1] > 0 && Dolphin[pg->imtrx][Id][MESH_DISPLACEMENT1] > 0 )
-		    { 
-		      
-		      dsvector_dx[0][kdir][ldir][ldof] = dsnormal_dx[kdir][ldir][ldof];
-		      dsvector_dx[1][kdir][ldir][ldof] = sign * dstangent_dx[0][kdir][ldir][ldof];
-		      dsvector_dx[2][kdir][ldir][ldof] = sign * dstangent_dx[1][kdir][ldir][ldof];
-		    } /*end of Baby_Dolphin[pg->imtrx] */
-		}
-	    }
-	}
+            {
+              for ( id=0; id<ei[pg->imtrx]->dof[ShapeVar]; id++ )
+                {
+                  Id = Proc_Elem_Connect[iconnect_ptr + id];
+                  ldof = ei[pg->imtrx]->ln_to_dof[ShapeVar][id];
+                  if (Dolphin[pg->imtrx][I][MESH_DISPLACEMENT1] > 0 && Dolphin[pg->imtrx][Id][MESH_DISPLACEMENT1] > 0 )
+                    {
+
+                      dsvector_dx[0][kdir][ldir][ldof] = dsnormal_dx[kdir][ldir][ldof];
+                      dsvector_dx[1][kdir][ldir][ldof] = sign * dstangent_dx[0][kdir][ldir][ldof];
+                      dsvector_dx[2][kdir][ldir][ldof] = sign * dstangent_dx[1][kdir][ldir][ldof];
+                    } /*end of Baby_Dolphin[pg->imtrx] */
+                }
+            }
+        }
       break;
       
     default:
@@ -2175,7 +2151,7 @@ calculate_all_rotation_vectors (Exo_DB *exo,		/* the mesh */
 		      }
 		    }
 		  }
-		} else EH(-1, "can't calculate normal vector");
+		} else EH(GOMA_ERROR, "can't calculate normal vector");
 
 		do_LSA_mods(LSA_SURFACE);
 
@@ -2277,7 +2253,7 @@ calculate_all_rotation_vectors (Exo_DB *exo,		/* the mesh */
 				== -1) {
 			      if (rotation[I][eq][p]->d_vector_n >= MNROT) {
 				/* illegal number of sensitivities */
-				EH(-1, "Increase the number of available rotation sensitivities (MNROT)");
+				EH(GOMA_ERROR, "Increase the number of available rotation sensitivities (MNROT)");
 			      }
 			      j_new = rotation[I][eq][p]->d_vector_n++;
 			      rotation[I][eq][p]->d_vector_J[j_new] = 
@@ -2459,7 +2435,7 @@ calculate_2D_rotation_vectors (Exo_DB *exo,		/* the mesh */
 							
 			  while( ss_to_blks[index+1][iss] != curr_eb && index <(MAX_MAT_PER_SS+1)) index++;
 							
-			  if( index == (MAX_MAT_PER_SS+1) ) EH(-1," WTH.  \n");
+			  if( index == (MAX_MAT_PER_SS+1) ) EH(GOMA_ERROR," WTH.  \n");
 							
 			  if ( (index % 2) != 0 ) add_vectors = FALSE;
 						
@@ -3169,7 +3145,7 @@ set_pointers_to_vectors (
     *binormal  = dum_vect + 2;
     *normal2 = NULL; *normal3 = NULL; *tangent1 = NULL; *tangent2 = NULL;
 
-  } else EH(-1,"Illegal topology type");
+  } else EH(GOMA_ERROR,"Illegal topology type");
   
   for (p=0; p<dim; p++) {
     dum_vect[p].ok = 0;
@@ -3211,18 +3187,18 @@ set_pointers_to_vectors (
 	
       case ROT_N2:
 	*normal2 = vector + p;
-	EH(-1,"Second Normal Rotation not enabled yet");
+	EH(GOMA_ERROR,"Second Normal Rotation not enabled yet");
 	break;
 	
       case ROT_N3:
 	*normal3 = vector + p;
-	EH(-1,"Third Normal Rotation not enabled yet");
+	EH(GOMA_ERROR,"Third Normal Rotation not enabled yet");
 	break;
 	
       case ROT_T:
 	*line_tangent = vector + p;
 	if (ROT_Types[irc].type == FACE) 
-	       EH(-1,"Need to specify T1 or T2 on Surfaces");
+	       EH(GOMA_ERROR,"Need to specify T1 or T2 on Surfaces");
 	break;
 	
       case ROT_T1:
@@ -3236,7 +3212,7 @@ set_pointers_to_vectors (
       case ROT_B:
 	*binormal = vector + p;
 	if (ROT_Types[irc].type == FACE) 
-	       EH(-1,"Need to specify T1 or T2 on Surfaces");
+	       EH(GOMA_ERROR,"Need to specify T1 or T2 on Surfaces");
 	break;
 	
       case ROT_S:
@@ -3272,7 +3248,7 @@ set_pointers_to_vectors (
 	break;
 	
       default:
-	EH(-1,"illegal rotation vector");
+	EH(GOMA_ERROR,"illegal rotation vector");
       } /* end of switch */
     }
   }	    
@@ -3310,14 +3286,95 @@ rotate_eqns_at_node_2D( int iconn,
 						
 /******************************************************************************************/
 
+void rotate_momentum_auto(int id,  /* Elemental stiffness matrix row index */
+                          int I,   /* Global node number                   */
+                          int dim, /* physical dim of problem              */
+                          struct Aztec_Linear_Solver_System *ams)
 
+/*
+ * Function which corrects the global residual vector "resid_vect" and
+ * the global Jacobian vector "a" so that the vector momentum equations for surface nodes
+ * are projected into a normal and tangential coordinate system.
+ */
 
+{
+  /* LOCAL VARIABLES */
+  int pvar, peq;
+  int n;
+  int kdir, ldir;
+  double rotated_resid[MDE];
+  double rotated_jacobian_scalar[MAX_PDIM][MDE];
 
+  /************************ EXECUTION BEGINS **********************************/
 
+  if (goma_automatic_rotations.rotation_nodes[I].n_normals == 0) {
+    return; // not a rotated node
+  }
 
+  /* Correct residual equation first at local node "id" or global node "I" */
+  /*                Rx -> Rn    and Ry -> Rt                                   */
+  /*       i.e.,    Rn = nx*Rx + ny*Ry + nz*Rz                                 */
+  /*                Rt1 = t1x*Rx + t1y*Ry + t1z*Rz                             */
+  /*                Rt2 = t2x*Rx + t2y*Ry + t2z*Rz                             */
 
+  double rc[DIM][DIM];
+  for (unsigned int i = 0; i < 3; i++) {
+    for (unsigned int j = 0; j < 3; j++) {
+      rc[i][j] = gds_vector_get(goma_automatic_rotations.rotation_nodes[I].rotated_coord[i], j);
+    }
+  }
 
+  /* Now add on projection into n-t space */
+  for (kdir = 0; kdir < dim; kdir++) {
+    rotated_resid[kdir] = 0.;
+    for (ldir = 0; ldir < dim; ldir++) {
+      peq = upd->ep[pg->imtrx][R_MOMENTUM1 + ldir];
+      rotated_resid[kdir] += rc[kdir][ldir] * lec->R[peq][id];
+    }
+  } /* end of loop over direction */
 
+  for (kdir = 0; kdir < dim; kdir++) {
+    peq = upd->ep[pg->imtrx][R_MOMENTUM1 + kdir];
+    lec->R[peq][id] = rotated_resid[kdir];
+  }
 
+  /*                                                                      */
+  /*   Now correct Jacobian                                               */
+  if (af->Assemble_Jacobian) {
+    for (int var = V_FIRST; var < V_LAST; var++) {
+      if (pd->v[pg->imtrx][var]) {
+        pvar = upd->vp[pg->imtrx][var];
+        for (n = 0; n < ei[pg->imtrx]->dof[var]; n++) {
 
+          rotated_jacobian_scalar[0][n] = 0.;
+          rotated_jacobian_scalar[1][n] = 0.;
+          rotated_jacobian_scalar[2][n] = 0.;
 
+          for (kdir = 0; kdir < dim; kdir++) {
+            for (ldir = 0; ldir < dim; ldir++) {
+              rotated_jacobian_scalar[kdir][n] +=
+                  rc[kdir][ldir] * lec->J[upd->ep[pg->imtrx][R_MOMENTUM1 + ldir]][pvar][id][n];
+            }
+          }
+
+        } /* end of loop over nodes */
+
+        /* reinject d_mesh/d_pressure back into lec-J for global assembly */
+        for (kdir = 0; kdir < dim; kdir++) {
+          /* loop over sensitivities */
+          for (n = 0; n < ei[pg->imtrx]->dof[var]; n++) {
+
+            lec->J[upd->ep[pg->imtrx][R_MOMENTUM1 + kdir]][pvar][id][n] =
+                rotated_jacobian_scalar[kdir][n];
+          }
+        }
+
+      } /* end of if variable */
+    }
+  }
+
+  /* Put rotated residual back into lec for scattering into global matrix */
+  /* Note this is the last thing we do so our chain rule still works for
+     mesh derivatives wrt rotation vector */
+
+} /* END of rotate_momentum_eqn */

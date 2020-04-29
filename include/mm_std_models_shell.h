@@ -13,6 +13,9 @@
 #ifndef GOMA_MM_STD_MODELS_SHELL_H
 #define GOMA_MM_STD_MODELS_SHELL_H
 
+#include "el_elm.h"
+#include "mm_shell_bc.h"
+#include "std.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

@@ -16,6 +16,10 @@
 #ifndef GOMA_MK_DM_H
 #define GOMA_MK_DM_H
 
+#include "brkfix/brkfix_types.h"
+#include "brkfix/nodesc.h"
+#include "exo_struct.h"
+#include "wr_side_data.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif
@@ -28,15 +32,8 @@
 #define EXTERN extern
 #endif
 
-EXTERN void make_goma_dofmap	/* mk_dm.c */
-(Exo_DB *,		/* full mesh description */
-       Bevm ***,		/* mult - basic eqnvar multiplicities */
-       int ***,			/* evd - eqnvar dependencies */
-       int ***,			/* Lucky - local nodal dof existence profs */
-       int *,			/* num_basic_eqnvars - for ea elemblock */
-       int *,			/* node_kind - list for every global node */
-       int *,			/* node_dof0 - name of first dof for ea node */
-       Node_Description **,	/* pnd - pointer array to node descriptions */
-       int *);			/* nkn - actual number of node descriptions */
+EXTERN void make_goma_dofmap /* mk_dm.c */
+    (Exo_DB *x, Bevm ***mult, int ***Lucky, int *num_basic_eqnvars, int *node_kind, int *node_dof0,
+     Node_Description **pnd, int *nkn);			/* nkn - actual number of node descriptions */
 
 #endif /* GOMA_MK_DM_H */

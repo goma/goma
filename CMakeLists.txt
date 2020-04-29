@@ -190,7 +190,7 @@ set(GOMA_INCLUDES
         include/bc_curve.h
         include/bc_dirich.h
         include/bc_integ.h
-        include/bc_rotate.h
+        include/bc/rotate.h
         include/bc_special.h
         include/bc_surfacedomain.h
         include/brkfix/
@@ -237,6 +237,7 @@ set(GOMA_INCLUDES
         include/mm_fill_stress.h
         include/mm_fill_terms.h
         include/mm_fill_util.h
+        include/mm_fill_stabilization.h
         include/mm_flux.h
         include/mm_input.h
         include/mm_interface.h
@@ -287,6 +288,7 @@ set(GOMA_INCLUDES
         include/rf_solve_segregated.h
         include/rf_util.h
         include/rf_vars_const.h
+        include/bc/rotate_coordinates.h
         include/shell_tfmp_struct.h
         include/shell_tfmp_util.h
         include/sl_amesos_interface.h
@@ -340,7 +342,7 @@ set(GOMA_SOURCES
         src/bc_curve.c
         src/bc_dirich.c
         src/bc_integ.c
-        src/bc_rotate.c
+        src/bc/rotate.c
         src/bc_special.c
         src/bc_surfacedomain.c
         src/brkfix/
@@ -385,6 +387,7 @@ set(GOMA_SOURCES
         src/mm_fill_stress.c
         src/mm_fill_terms.c
         src/mm_fill_util.c
+        src/mm_fill_stabilization.c
         src/mm_flux.c
         src/mm_input_bc.c
         src/mm_input.c
@@ -428,6 +431,7 @@ set(GOMA_SOURCES
         src/rf_solve_segregated.c
         src/rf_util.c
         src/rf_vars.c
+        src/bc/rotate_coordinates.c
         src/shell_tfmp_util.c
         src/sl_amesos_interface.C
         src/sl_aux.c
@@ -495,13 +499,20 @@ set(GOMA_USER_SOURCES
 )
 
 set(GOMA_UTIL_INCLUDES
+  include/bc/rotate_util.h
   include/mm_eh.h
 )
 
 set(GOMA_UTIL_SOURCES
+  src/bc/rotate_util.c
   src/mm_eh.c
 )
 
+set(GDS_INCLUDES
+        include/gds/gds_vector.h)
+
+set(GDS_SOURCES
+        src/gds/gds_vector.c)
 
 # Set a default build type for single-configuration
 # CMake generators if no build type is set. 
@@ -583,8 +594,11 @@ add_library(goma ${GOMA_SOURCES} ${GOMA_INCLUDES})
 target_include_directories(goma PUBLIC include)
 target_include_directories(goma PRIVATE ${GOMA_TPL_INCLUDES})
 target_link_directories(goma PUBLIC ${GOMA_TPL_LIBRARY_DIRS})
-target_link_libraries(goma ${GOMA_TPL_LIBRARIES})
+target_link_libraries(goma ${GOMA_TPL_LIBRARIES} gds)
 target_compile_definitions(goma PUBLIC ${GOMA_COMPILE_DEFINITIONS})
+
+add_library(gds ${GDS_SOURCES} ${GDS_INCLUDES})
+target_include_directories(gds PUBLIC include)
 
 add_library(goma_util ${GOMA_UTIL_SOURCES} ${GOMA_UTIL_INCLUDES})
 target_include_directories(goma_util PUBLIC include ${GOMA_TPL_INCLUDES})

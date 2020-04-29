@@ -27,12 +27,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "goma.h"
-
-#include "brkfix/brkfix.h"
 #include "mm_eh.h"
 #include "exo_struct.h"
 #include "brkfix/wr_coords.h"
+#include "std.h"
 
 void
 write_coords(char *fn,		/* filename for coordinates */
@@ -46,7 +44,7 @@ write_coords(char *fn,		/* filename for coordinates */
 
   if ( s == NULL )
     {
-      EH(-1, "Problem opening coordinate file.");
+      EH(GOMA_ERROR, "Problem opening coordinate file.");
     }
 
   fprintf(s, "%% coordinates of verteces for inertial partition\n");
@@ -91,7 +89,7 @@ write_coords(char *fn,		/* filename for coordinates */
       break;
       
     default:
-      EH(-1, "Bad num_dim in EXODUSII FE database.");
+      EH(GOMA_ERROR, "Bad num_dim in EXODUSII FE database.");
       break;
     }
   err = fclose(s);

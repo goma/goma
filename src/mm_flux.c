@@ -19,43 +19,64 @@
  
 #include <stdio.h>
 #include <stdlib.h>
-#include <strings.h>
 #include <string.h>
 #include <math.h>
  
 /* GOMA include files */
 
+#include "mm_flux.h"
+
 #include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
 #include "rf_io.h"
 #include "rf_mp.h"
 #include "el_elm.h"
 #include "el_geom.h"
- 
-#include "rf_masks.h"
 #include "rf_bc_const.h"
-#include "rf_solver_const.h"
-#include "rf_fill_const.h"
-#include "rf_vars_const.h"
-#include "mm_mp_const.h" 
+#include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "mm_mp.h"
 #include "mm_mp_structs.h"
- 
 #include "mm_eh.h"
 #include "mm_post_def.h"
-
 #include "mm_std_models_shell.h"
-#include "mm_std_models.h"
 #include "mm_fill_common.h"
+#include "ac_stability.h"
+#include "ac_stability_util.h"
+#include "bc_colloc.h"
+#include "dpi.h"
+#include "el_elm_info.h"
+#include "exo_conn.h"
+#include "exo_struct.h"
+#include "mm_as_alloc.h"
+#include "mm_bc.h"
+#include "mm_fill_aux.h"
+#include "mm_fill_fill.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_porous.h"
+#include "mm_fill_ptrs.h"
+#include "mm_fill_rs.h"
+#include "mm_fill_solid.h"
+#include "mm_fill_species.h"
+#include "mm_fill_stress.h"
+#include "mm_fill_terms.h"
+#include "mm_fill_util.h"
+#include "mm_ns_bc.h"
+#include "mm_qtensor_model.h"
+#include "mm_shell_util.h"
+#include "mm_unknown_map.h"
+#include "mm_viscosity.h"
+#include "mpi.h"
+#include "rd_mesh.h"
+#include "rf_allo.h"
+#include "rf_bc.h"
+#include "user_mp.h"
+#include "wr_side_data.h"
+
 #define GOMA_MM_FLUX_C
-#include "goma.h"
 
 static int load_fv_sens
 ( void );
@@ -1038,7 +1059,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 			  else if (pd->v[pg->imtrx][MESH_DISPLACEMENT1])
 			    local_q +=  fv->snormal[a]*( fv->d[a] ) ;
 			  else
-			    EH(-1,"Inconsistency in volume-flux specification. Contact Developers");
+			    EH(GOMA_ERROR,"Inconsistency in volume-flux specification. Contact Developers");
                         }
                           local_flux += weight*det* local_q ;
 		      break;
@@ -1184,7 +1205,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
                         } 
                       else 
                         {
-                          EH(-1, "Solution-temperature model not yet implemented");
+                          EH(GOMA_ERROR, "Solution-temperature model not yet implemented");
                         }
                       /* set solution temperature to 298 K if it is zero - safety feature */
                       if (T == 0.0)
@@ -1229,7 +1250,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
                         } 
                       else 
                         {
-                          EH(-1, "Solution-temperature model not yet implemented");
+                          EH(GOMA_ERROR, "Solution-temperature model not yet implemented");
                         }
                       /* set solution temperature to 298 K if it is zero - safety feature */
                       if (T == 0.0)
@@ -1312,7 +1333,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
  			   }
  			  else
  			   {
- 			      EH(-1, "Illegal flux type");
+ 			      EH(GOMA_ERROR, "Illegal flux type");
  			   }
                                    local_flux += weight * det * local_q;
  		      break;
@@ -1340,7 +1361,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
  			  }
  			  else
  			   {
- 			      EH(-1, "Illegal flux type");
+ 			      EH(GOMA_ERROR, "Illegal flux type");
  			   }
                                    local_flux += weight * det * local_q;
  		      break;
@@ -1355,7 +1376,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 		    case TORQUE:
 		      if(pd->CoordinateSystem == PROJECTED_CARTESIAN ||
 		         pd->CoordinateSystem == CARTESIAN_2pt5D)
-			EH(-1, "TORQUE has not been updated for the PROJECTED_CARTESIAN coordinate system.");
+			EH(GOMA_ERROR, "TORQUE has not been updated for the PROJECTED_CARTESIAN coordinate system.");
 
 		      if(pd->CoordinateSystem == SWIRLING || 
 			 pd->CoordinateSystem == CYLINDRICAL)
@@ -1409,7 +1430,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 			}
 		      else
 			{
-			  EH(-1,"Torque cannot be calculated in this case.");
+			  EH(GOMA_ERROR,"Torque cannot be calculated in this case.");
 			}
 		      break;
 		  
@@ -1441,7 +1462,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 			}
 		      else
 			{
-			  EH(-1,"unrecognized porous media type in mm_flux.c");
+			  EH(GOMA_ERROR,"unrecognized porous media type in mm_flux.c");
 			}
 		      break;
 
@@ -1528,7 +1549,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 			    }
 			  else
 			    {
-			      EH(-1, "Illegal flux type");
+			      EH(GOMA_ERROR, "Illegal flux type");
 			    }
 			}
 		      else
@@ -1703,7 +1724,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 			    }
 			  else
 			    {
-			      EH(-1, "Illegal flux type");
+			      EH(GOMA_ERROR, "Illegal flux type");
 			    }
 			}
 		      else
@@ -1736,7 +1757,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 			    }
 			  else
 			    {
-			      EH(-1, "Illegal flux type");
+			      EH(GOMA_ERROR, "Illegal flux type");
 			    }
 			}
 		      else
@@ -1770,7 +1791,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 			    }
 			  else
 			    {
-			      EH(-1, "Illegal flux type");
+			      EH(GOMA_ERROR, "Illegal flux type");
 			    }
 			}
 		      else
@@ -1925,7 +1946,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
                                  {local_Torque[b] = fv->x[b]*kernel;}
                             }
                          else 
-                            {EH(-1,"Repulsive force not found\n");} 
+                            {EH(GOMA_ERROR,"Repulsive force not found\n");} 
                          }
 
 			      local_flux += weight * det * local_q;
@@ -1967,12 +1988,12 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
                       memset( E_imag,0, sizeof(double)*DIM);
 		      if(pd->CoordinateSystem == PROJECTED_CARTESIAN ||
 		         pd->CoordinateSystem == CARTESIAN_2pt5D)
-			EH(-1, "POYNTING has not been updated for the PROJECTED_CARTESIAN coordinate system.");
+			EH(GOMA_ERROR, "POYNTING has not been updated for the PROJECTED_CARTESIAN coordinate system.");
 
 		      if(pd->CoordinateSystem == SWIRLING || 
 			 pd->CoordinateSystem == CYLINDRICAL)
 			{
-			EH(-1, "POYNTING has not been checked for CYLINDRICAL yet.");
+			EH(GOMA_ERROR, "POYNTING has not been checked for CYLINDRICAL yet.");
 			  for ( a=0; a<VIM; a++)
 			    {
 			      for ( b=0; b<VIM; b++)
@@ -2014,7 +2035,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 			}
 		      else
 			{
-			  EH(-1,"Torque cannot be calculated in this case.");
+			  EH(GOMA_ERROR,"Torque cannot be calculated in this case.");
 			}
 		      break;
 		  
@@ -2167,7 +2188,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 
 		    default:
 		      
-		      EH(-1, "Illegal flux type");
+		      EH(GOMA_ERROR, "Illegal flux type");
 		      break;
 		    }  /*  end of switch */
 	    
@@ -3959,7 +3980,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
  			  break;
 
 			default:
-			  EH(-1,"Constraint sensitivities haven't been implemented for that flux type.");
+			  EH(GOMA_ERROR,"Constraint sensitivities haven't been implemented for that flux type.");
 			  break;
 			}
 		    }
@@ -3990,7 +4011,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
       		num_dist_fact_in_set = exo->ns_num_distfacts[nset_id];
       		elem_list = &exo->ns_node_list[exo->ns_node_index[nset_id]];
 		if (num_node_in_set != 1) 
-		   EH(-1,"more than one node, this is for 2D only");
+		   EH(GOMA_ERROR,"more than one node, this is for 2D only");
 		gnn = elem_list[0];
 		sign = (species_id < 0 ) ? -1. : 1.;
 		kine_sset = abs(species_id);
@@ -4207,12 +4228,12 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 			}
 			else
 			    {
-			EH(-1, "Point force has not been updated for the PROJECTED_CARTESIAN coordinate system.");
+			EH(GOMA_ERROR, "Point force has not been updated for the PROJECTED_CARTESIAN coordinate system.");
 			    }
 			}
 		      break;
 		    default:
-		      EH(-1, "Illegal flux type");
+		      EH(GOMA_ERROR, "Illegal flux type");
 		      break;
 		    }  /*  end of switch */
 #ifdef PARALLEL
@@ -4305,14 +4326,14 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 			}
 			  break;
 			default:
-			  EH(-1,"Constraint sensitivities haven't been implemented for that flux type.");
+			  EH(GOMA_ERROR,"Constraint sensitivities haven't been implemented for that flux type.");
 			  break;
 			}
 		      }  /*  J_AC  */
 					}	/*  blk_id  */
 				}
 		       }  /* ss_sides loop	*/
-		   if(corner_elem == -1) EH(-1,"corner element not found");
+		   if(corner_elem == -1) EH(GOMA_ERROR,"corner element not found");
 
 		  }	/* if sset_id	*/
     		}	/* if nset_id	*/
@@ -4320,7 +4341,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
     		{
 #ifndef PARALLEL
       (void) sprintf(Err_Msg, "%s could not locate SSID %d.", yo, side_set_id);
-      EH(-1, Err_Msg);
+      EH(GOMA_ERROR, Err_Msg);
 #endif      
     		}
 
@@ -4650,7 +4671,7 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
 		quantity == I_SURF_TEMP )
 	  {
  	   if(Num_Proc > 1)
- 		EH(-1,"SURFACE_SPECIES not recommended in parallel\n");
+ 		EH(GOMA_ERROR,"SURFACE_SPECIES not recommended in parallel\n");
 	   if( quantity == I_SURF_SPECIES)
 	     {
 	   	for(i=0;i<ei[pg->imtrx]->num_local_nodes;i++)	
@@ -4671,7 +4692,7 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
  		   }
 	     }
 	   else
-	     EH(-1,"That SURF quantity not available.");
+	     EH(GOMA_ERROR,"That SURF quantity not available.");
 
 	  if(pd->Num_Dim == 3)
 		{
@@ -4680,7 +4701,7 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
  		    ierr = interface_crossing_3DL( ls_F, xf3D, side_id, ecrd);
 		   }
 		else
-	     	    EH(-1,"Only SURF 3D element is TRILINEAR_HEX.");
+	     	    EH(GOMA_ERROR,"Only SURF 3D element is TRILINEAR_HEX.");
 		}
 	  else
 		{
@@ -4689,7 +4710,7 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
  		    ierr = interface_crossing_2DQ( ls_F, xf2D, side_id, nint2D, ecrd);
 		   }
 		else
-	     	    EH(-1,"Only SURF 2D element is BIQUAD_QUAD.");
+	     	    EH(GOMA_ERROR,"Only SURF 2D element is BIQUAD_QUAD.");
 		}
 	if(ierr)
   	  {
@@ -5153,7 +5174,7 @@ compute_volume_integrand(const int quantity, const int elem,
 	  }
 	if ( J_AC != NULL)
 	  {
-	    EH(-1,"Appropriate Jacobian entries for the DISSIP volume integral are not available.\n");
+	    EH(GOMA_ERROR,"Appropriate Jacobian entries for the DISSIP volume integral are not available.\n");
 	  }
 
     }
@@ -5186,7 +5207,7 @@ compute_volume_integrand(const int quantity, const int elem,
 
 	if ( J_AC != NULL)
 	  {
-	    EH(-1,"Appropriate Jacobian entries for the I_JOULE volume integral are not available.\n");
+	    EH(GOMA_ERROR,"Appropriate Jacobian entries for the I_JOULE volume integral are not available.\n");
 	  }
 
       }
@@ -5224,7 +5245,7 @@ compute_volume_integrand(const int quantity, const int elem,
 
 	if ( J_AC != NULL )
 	  {
-	    EH(-1,"Jacobian entries for II_GAMMA_DOT Volume integral not implemented.");
+	    EH(GOMA_ERROR,"Jacobian entries for II_GAMMA_DOT Volume integral not implemented.");
 	  }
       }
       break;
@@ -5507,7 +5528,7 @@ compute_volume_integrand(const int quantity, const int elem,
 
 	if ( J_AC != NULL)
 	  {
-	    EH(-1,"Appropriate Jacobian entries for the MOM volume integral are not available.\n");
+	    EH(GOMA_ERROR,"Appropriate Jacobian entries for the MOM volume integral are not available.\n");
 	  }
 
       }
@@ -5549,7 +5570,7 @@ compute_volume_integrand(const int quantity, const int elem,
                   }
               }
       }
-/*      EH(-1,"This volumetric integral not yet implemented \n");  */
+/*      EH(GOMA_ERROR,"This volumetric integral not yet implemented \n");  */
       }
       break;
 
@@ -5587,7 +5608,7 @@ compute_volume_integrand(const int quantity, const int elem,
                   }
               }
       }
-/*      EH(-1,"This volumetric integral not yet implemented \n");  */
+/*      EH(GOMA_ERROR,"This volumetric integral not yet implemented \n");  */
       }
       break;
 
@@ -5604,7 +5625,7 @@ compute_volume_integrand(const int quantity, const int elem,
 
 	if( vn->ConstitutiveEquation != NOPOLYMER )
 	  {
-	    EH(-1,"Computation of stress integral for POLYMER models currently no supported.\n");
+	    EH(GOMA_ERROR,"Computation of stress integral for POLYMER models currently no supported.\n");
 	  }
 			       
 
@@ -5882,7 +5903,7 @@ compute_volume_integrand(const int quantity, const int elem,
 	  }
 
 	if ( dir == -1 )
-	  EH(-1, "compute_volume_integrand(): ACK! I'm confused!\n");
+	  EH(GOMA_ERROR, "compute_volume_integrand(): ACK! I'm confused!\n");
 	  
 	alpha = params == NULL ? ls->Length_Scale : 2.0*params[0];
 	
@@ -5948,7 +5969,7 @@ compute_volume_integrand(const int quantity, const int elem,
 	  }
 
 	if ( dir == -1 )
-	  EH(-1, "compute_volume_integrand(): ACK! I'm confused!\n");
+	  EH(GOMA_ERROR, "compute_volume_integrand(): ACK! I'm confused!\n");
 	  
 	alpha = params == NULL ? ls->Length_Scale : 2.0*params[0];
 	
@@ -6013,7 +6034,7 @@ compute_volume_integrand(const int quantity, const int elem,
 
 	if ( J_AC != NULL)
 	  {
-	    EH(-1,"Appropriate Jacobian entries for the Porous Liquid INV volume integral are not available.\n");
+	    EH(GOMA_ERROR,"Appropriate Jacobian entries for the Porous Liquid INV volume integral are not available.\n");
 	  }
 
       }
@@ -6043,14 +6064,14 @@ compute_volume_integrand(const int quantity, const int elem,
            *sum += factor*weight*det*(-fv->grad_V[dir]);
 		}		
 	else
-	  EH(-1,"You need to include the potential and/or electric field variables to compute this integrated quantity\n/");
+	  EH(GOMA_ERROR,"You need to include the potential and/or electric field variables to compute this integrated quantity\n/");
 
       }
 
       break;
 
     case I_TFMP_FORCE:
-      if(pd->e[R_TFMP_MASS]) {
+      if(pd->e[pg->imtrx][R_TFMP_MASS]) {
 	n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
 	lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
 	det = fv->sdet; //Different determinant since this is a shell
@@ -6255,7 +6276,7 @@ compute_surface_integrand (const int quantity,
       
       if ( J_AC != NULL )
 	{
-	  EH(-1, "Global surface sentivities are on my to-do list.") ;
+	  EH(GOMA_ERROR, "Global surface sentivities are on my to-do list.") ;
 	}
       break;
     case NEG_LS_FLUX:
@@ -6277,7 +6298,7 @@ compute_surface_integrand (const int quantity,
 
 	if ( J_AC != NULL )
 	  {
-	    EH(-1, "Global surface sentivities are on my to-do list.") ;
+	    EH(GOMA_ERROR, "Global surface sentivities are on my to-do list.") ;
 	  }
       }
       break;
@@ -6760,7 +6781,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 	    det = fv->sdet*fv->h3;
 
 	    if(pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN)
-	      EH(-1, "evalute_flux_sens has not been updated for the PROJECTED_CARTESIAN coordinate system.");
+	      EH(GOMA_ERROR, "evalute_flux_sens has not been updated for the PROJECTED_CARTESIAN coordinate system.");
 
 	    if(pd_glob[0] ->CoordinateSystem == CYLINDRICAL ||
                pd_glob[0] ->CoordinateSystem == SWIRLING   )
@@ -7086,7 +7107,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		}
 		  else
 		{
-		EH(-1,"Unrecognized heat capacity model");
+		EH(GOMA_ERROR,"Unrecognized heat capacity model");
 		}
 
                 if ( cr->HeatFluxModel == CR_HF_FOURIER_0 )
@@ -7148,7 +7169,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
                     local_q += fv->snormal[j]*fv_sens->d[j]
                                + normal_sens[j]*fv->d[j];
 			  else
-			    EH(-1,"Inconsistency in volume-flux specification. Contact Developers");
+			    EH(GOMA_ERROR,"Inconsistency in volume-flux specification. Contact Developers");
 
                   }
                     local_flux += weight*det*local_q;
@@ -7201,7 +7222,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 	      case TORQUE:
 		if(pd->CoordinateSystem == PROJECTED_CARTESIAN ||
 		   pd->CoordinateSystem == CARTESIAN_2pt5D)
-		  EH(-1, "TORQUE has not been updated for the PROJECTED_CARTESIAN coordinate system.");
+		  EH(GOMA_ERROR, "TORQUE has not been updated for the PROJECTED_CARTESIAN coordinate system.");
 
 		if(pd->CoordinateSystem == SWIRLING || 
 		   pd->CoordinateSystem == CYLINDRICAL)
@@ -7268,7 +7289,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		  }
 		else
 		  {
-		    EH(-1,"Torque cannot be calculated in this case.");
+		    EH(GOMA_ERROR,"Torque cannot be calculated in this case.");
 		  }
 
 		break;
@@ -7296,7 +7317,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
                 }
 		else
 		{
-	EH(-1,"Force Sensitivity Calculation for Solids  not Available");
+	EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
                 for ( a=0; a<VIM; a++)
                   {
                     for ( b=0; b<VIM; b++)
@@ -7330,7 +7351,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		}
 		else
 		{
-	EH(-1,"Force Sensitivity Calculation for Solids  not Available"); 
+	EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available"); 
 		for ( a=0; a<VIM; a++)
 		  {
 		    for ( b=0; b<VIM; b++)
@@ -7363,12 +7384,12 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
                 }
 			else
 			{
-			EH(-1, "Illegal flux type");
+			EH(GOMA_ERROR, "Illegal flux type");
 			}
 		}
 		else
 		{
-	EH(-1,"Force Sensitivity Calculation for Solids  not Available"); 
+	EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available"); 
                 for ( a=0; a<VIM; a++)
                   {
                     for ( b=0; b<VIM; b++)
@@ -7397,7 +7418,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		}
 		else
 		{
-	EH(-1,"Force Sensitivity Calculation for Solids  not Available");
+	EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
 		for ( a=0; a<VIM; a++)
 		  {
                         local_q += (TT_sens[0][a]*fv->snormal[a]
@@ -7424,7 +7445,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		}
 		else
 		{
-	EH(-1,"Force Sensitivity Calculation for Solids  not Available");
+	EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
 		for ( a=0; a<VIM; a++)
 		  {
                         local_q += (TT_sens[0][a]*fv->snormal[a]);
@@ -7451,7 +7472,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		}
 		else
 		{
-	EH(-1,"Force Sensitivity Calculation for Solids  not Available");
+	EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
 		for ( a=0; a<VIM; a++)
 		  {
                         local_q += (TT_sens[0][a]*fv->snormal[a]);
@@ -7477,7 +7498,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		}
 		else
 		{
-	EH(-1,"Force Sensitivity Calculation for Solids  not Available");
+	EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
 		for ( a=0; a<VIM; a++)
 		  {
                         local_q += ( TT_sens[1][a]*fv->snormal[a]);
@@ -7503,7 +7524,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		}
 		else
 		{
-	EH(-1,"Force Sensitivity Calculation for Solids  not Available");
+	EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
 		for ( a=0; a<VIM; a++)
 		  {
                         local_q += ( TT_sens[1][a]*fv->snormal[a]);
@@ -7530,7 +7551,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		}
 		else
 		{
-	EH(-1,"Force Sensitivity Calculation for Solids  not Available");
+	EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
 		for ( a=0; a<VIM; a++)
 		  {
                         local_q += ( TT_sens[1][a]*fv->snormal[a]);
@@ -7558,12 +7579,12 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 			}
 			else
 			{
-			EH(-1, "Illegal flux type");
+			EH(GOMA_ERROR, "Illegal flux type");
 			}
 		}
 		else
 		{
-	EH(-1,"Force Sensitivity Calculation for Solids  not Available"); 
+	EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available"); 
 		for ( a=0; a<VIM; a++)
 		  {
                        local_q += (TT_sens[2][a]*fv->snormal[a]);
@@ -7591,12 +7612,12 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 			}
 			else
 			{
-			EH(-1, "Illegal flux type");
+			EH(GOMA_ERROR, "Illegal flux type");
 			}
 		}
 		else
 		{
-	EH(-1,"Force Sensitivity Calculation for Solids  not Available"); 
+	EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available"); 
 		for ( a=0; a<VIM; a++)
 		  {
                        local_q += (TT_sens[2][a]*fv->snormal[a]);
@@ -7625,12 +7646,12 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 			}
 			else
 			{
-			EH(-1, "Illegal flux type");
+			EH(GOMA_ERROR, "Illegal flux type");
 			}
 		}
 		else
 		{
-	EH(-1,"Force Sensitivity Calculation for Solids  not Available"); 
+	EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available"); 
 		for ( a=0; a<VIM; a++)
 		  {
                        local_q += (TT_sens[2][a]*fv->snormal[a]);
@@ -7642,7 +7663,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 
 	      default:
 
-		EH(-1, "Illegal flux type");
+		EH(GOMA_ERROR, "Illegal flux type");
 		break;
 	      }  /*  end of switch */
 	    
@@ -7698,7 +7719,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
       		num_dist_fact_in_set = exo->ns_num_distfacts[nset_id];
       		elem_list = &exo->ns_node_list[exo->ns_node_index[nset_id]];
 		if (num_node_in_set != 1) 
-		   EH(-1,"more than one node, this is for 2D only");
+		   EH(GOMA_ERROR,"more than one node, this is for 2D only");
 		gnn = elem_list[0];
 		sign = (species_id < 0 ) ? -1. : 1.;
 		kine_sset = abs(species_id);
@@ -7877,12 +7898,12 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 			}
 			else
 			    {
-			EH(-1, "Point force has not been updated for the PROJECTED_CARTESIAN coordinate system.");
+			EH(GOMA_ERROR, "Point force has not been updated for the PROJECTED_CARTESIAN coordinate system.");
 			    }
 			}
 		      break;
 		    default:
-		      EH(-1, "Illegal flux type");
+		      EH(GOMA_ERROR, "Illegal flux type");
 		      break;
 		    }  /*  end of switch */
 #ifdef PARALLEL
@@ -7904,14 +7925,14 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
                  }     /*  mat_id  */
               }        
            }           /*  ss_sides loop  */
-	if(corner_elem == -1) EH(-1,"corner element not found");
+	if(corner_elem == -1) EH(GOMA_ERROR,"corner element not found");
          }             /*  if sset_id     */
       }                /*  if nset_id     */
   		else
     		{
 #ifndef PARALLEL
       (void) sprintf(Err_Msg, "%s could not locate SSID %d.", yo, side_set_id);
-      EH(-1, Err_Msg);
+      EH(GOMA_ERROR, Err_Msg);
 #endif      
     		}
     }
@@ -9674,7 +9695,7 @@ double int_angle[8], xloc;
 
  
 if( elem_type != BIQUAD_QUAD)
- 	{EH(-1,"adaptive integration for 2D quads only!");}
+ 	{EH(GOMA_ERROR,"adaptive integration for 2D quads only!");}
 
 #ifndef NO_CHEBYSHEV_PLEASE 
 chev_order = ls->Adaptive_Order;
@@ -10038,7 +10059,7 @@ for(i=0 ; i<is2D/2 ; i++)
 		chev_order , m_int[i].coeff , m_int[i].endpts,
 		 &m_int[i].sense, nint2D);
 #else	
-	 EH(-1,"Turn off NO_CHEBYSHEV_PLEASE please.\n");
+	 EH(GOMA_ERROR,"Turn off NO_CHEBYSHEV_PLEASE please.\n");
 #endif
 	  }
 
@@ -10087,7 +10108,7 @@ switch (wt_type)
 				m_int[i].sense, m_int[i].bf_mom , 
 				m_int[i].coeff, chev_order, m_int[i].endpts );
 #else
-			EH(-1,"Turn off NO_CHEBYSHEV_PLEASE please\n");
+			EH(GOMA_ERROR,"Turn off NO_CHEBYSHEV_PLEASE please\n");
 #endif				
 			for(j=0 ; j<9 ; j++)	
 				{bf_mom[j] += m_int[i].hfactor*m_int[i].bf_mom[j];}
@@ -10106,7 +10127,7 @@ switch (wt_type)
 				m_int[i].bf_mom , m_int[i].coeff, 
 				m_int[i].sdet_c , chev_order, m_int[i].endpts);
 #else
-			EH(-1,"Turn off NO_CHEBYSHEV_PLEASE please at compile time.\n");
+			EH(GOMA_ERROR,"Turn off NO_CHEBYSHEV_PLEASE please at compile time.\n");
 #endif				
 			for(j=0 ; j<9 ; j++)	
 				{bf_mom[j] += m_int[i].bf_mom[j];}
@@ -10269,7 +10290,7 @@ switch (interface_type)
  		ca = 1;	cb = 1;
 		break;
  	default:
- 		EH(-1,"shouldn't get here - F_type switch \n");
+ 		EH(GOMA_ERROR,"shouldn't get here - F_type switch \n");
  		break;
  	} /* end of F_type switch */
 
@@ -10305,7 +10326,7 @@ for (i=0 ; i<n_chev ; i++)
  	switch (j)
 		{
 		case 0:
-			EH(-1," no interior intersections found\n"); break;
+			EH(GOMA_ERROR," no interior intersections found\n"); break;
 		case 1:
 			fval[i]=xint[0]; break;
 		case 2:
@@ -15680,7 +15701,7 @@ switch (interface_type)
 	}  /* end F-type switch */
 	break;
 default:
-	EH(-1,"unknown Chebyshev polynomial order");
+	EH(GOMA_ERROR,"unknown Chebyshev polynomial order");
 	break;
 }
 
@@ -20044,7 +20065,7 @@ switch (interface_type)
 	}  /* end F-type switch */
 	break;
 default:
-	EH(-1,"unknown Chebyshev polynomial order");
+	EH(GOMA_ERROR,"unknown Chebyshev polynomial order");
 	break;
 }
 

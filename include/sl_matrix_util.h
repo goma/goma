@@ -18,6 +18,11 @@
 #ifndef GOMA_SL_MATRIX_UTIL_H
 #define GOMA_SL_MATRIX_UTIL_H
 
+#include "dpi.h"
+#include "exo_struct.h"
+#include "sl_lu.h"
+
+struct Aztec_Linear_Solver_System;
 #ifdef EXTERN
 #undef EXTERN
 #endif

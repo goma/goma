@@ -32,29 +32,17 @@
  *    chemkin_initialize_mp
  ***************************************************************************/
 
-#include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 
 #include "std.h"
-#include "rf_fem_const.h"
-#include "rf_vars_const.h"
-#include "mm_mp_const.h"
-#include "mm_as_const.h"
-#include "mm_as_structs.h"
-#include "mm_as.h"
+#include "mm_eh.h"
 
 #ifdef USE_CHEMKIN
 #include "cpc_defs.h"
 #include "ck_chemkin_const.h"
 #endif
 
-#include "mm_mp_structs.h"
-#include "mm_mp.h"
-
 #include "mm_chemkin.h"
-
-#include "goma.h"
 
 /*****************************************************************************/
 /*****************************************************************************/
@@ -105,7 +93,7 @@ chemkin_not_linked(char *errString)
   fprintf(stderr,"\tHowever, CHEMKIN has not been linked in!\n");
   fprintf(stderr,
 	  "\tGOMA must be recompiled with the USE_CHEMKIN definition!\n");
-  EH(-1, "chemkin not linked in\n");
+  EH(GOMA_ERROR, "chemkin not linked in\n");
 }
 #endif
 /*****************************************************************************/
@@ -252,7 +240,7 @@ chemkin_mat_prop_init(MATRL_PROP_STRUCT *mat_ptr, int mn,
     printf("%s: Mismatch in names!", yo);
     printf("\t\tCouldn't find %s in list of chemkin vol domains\n",
 	   mat_ptr->Material_Name);
-    EH(-1, yo);
+    EH(GOMA_ERROR, yo);
   }
 
   /*
@@ -344,11 +332,6 @@ chemkin_initialize_mp(void)
   int initCKExtractGuts = TRUE;
   int infoproc = 0;
 #ifdef PARALLEL
-#ifdef DEBUG_HKM
-  printf("P_%d at barrier before cpc_initialize_mp()\n", ProcID);
-  fflush(stdout);
-  (void) MPI_Barrier(MPI_COMM_WORLD);
-#endif
 #endif
 #ifdef DEBUG_CPC_MP
   pl = 1;

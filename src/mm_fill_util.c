@@ -14,10 +14,6 @@
  *$Id: mm_fill_util.c,v 5.24 2010-02-26 21:40:14 prschun Exp $
  */
 
-#ifdef USE_RCSID
-static char rcsid[] =
-    "$Id: mm_fill_util.c,v 5.24 2010-02-26 21:40:14 prschun Exp $";
-#endif
 
 /*
  * Added load_elem_dofptr stuff to setup elemental level indeces pointing
@@ -37,27 +33,31 @@ static char rcsid[] =
 #include "mm_as_structs.h"
 #include "mm_mp_const.h"
 #include "rf_allo.h"
-#include "rf_bc_const.h"
 #include "rf_fem.h"
 #include "rf_fem_const.h"
-#include "rf_fill_const.h"
 #include "rf_io.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
 #include "rf_masks.h"
 #include "rf_mp.h"
 #include "rf_solver.h"
-#include "rf_solver_const.h"
 #include "rf_vars_const.h"
 #include "std.h"
-
 #include "mm_eh.h"
-
 #include "mm_mp.h"
 #include "mm_mp_structs.h"
+#include "bc_contact.h"
+#include "dp_utils.h"
+#include "dpi.h"
+#include "el_elm_info.h"
+#include "exo_struct.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_util.h"
+#include "mm_post_def.h"
+#include "rd_mesh.h"
+#include "rf_node_const.h"
+#include "rf_shape.h"
+#include "sl_util_structs.h"
 
 #define GOMA_MM_FILL_UTIL_C
-#include "goma.h"
 
 /*********** R O U T I N E S   I N   T H I S   F I L E *************************
  *
@@ -104,14 +104,6 @@ static int find_VBR_problem_graph(int *[], int *[], int *[], int *[], int *[],
 
 static int var_if_interp_type_enabled(PROBLEM_DESCRIPTION_STRUCT *pd_ptr,
                                int interp_type); 
-static dbl yzbeta1(dbl scale, int dim, dbl Y, dbl Z, dbl d_Z[MDE], dbl beta,
-                       dbl u, dbl d_u[MDE], dbl grad_u[DIM],
-                       dbl d_grad_u[MDE][DIM], dbl h_elem, int interp_eqn,
-                       dbl deriv[MDE]); 
-
-static dbl yzbeta2(dbl scale, dbl Y, dbl Z, dbl d_Z[MDE], dbl deriv[MDE], dbl h_elem, int interp_eqn);
-
-static const dbl DIFFUSION_EPSILON = 1e-8;
 
 /*****************************************************************************/
 /*****************************************************************************/
@@ -179,7 +171,7 @@ int beer_belly(void) {
 
   if ((si = in_list(pd->IntegrationMap, 0, Num_Interpolations,
                     Unique_Interpolations)) == -1) {
-    EH(-1, "Seems to be a problem finding the IntegrationMap interpolation.");
+    EH(GOMA_ERROR, "Seems to be a problem finding the IntegrationMap interpolation.");
   }
   MapBf = bfd[si];
 
@@ -663,7 +655,7 @@ int beer_belly(void) {
     break;
 
   default:
-    EH(-1, "Bad dim.");
+    EH(GOMA_ERROR, "Bad dim.");
     break;
   }
 
@@ -1172,7 +1164,7 @@ void calc_unseeded_edge_tangents(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
@@ -1186,7 +1178,7 @@ void calc_unseeded_edge_tangents(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
@@ -1200,7 +1192,7 @@ void calc_unseeded_edge_tangents(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
@@ -1214,7 +1206,7 @@ void calc_unseeded_edge_tangents(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
@@ -1228,7 +1220,7 @@ void calc_unseeded_edge_tangents(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
@@ -1242,7 +1234,7 @@ void calc_unseeded_edge_tangents(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
@@ -1256,7 +1248,7 @@ void calc_unseeded_edge_tangents(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
@@ -1270,7 +1262,7 @@ void calc_unseeded_edge_tangents(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
@@ -1284,7 +1276,7 @@ void calc_unseeded_edge_tangents(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
@@ -1298,7 +1290,7 @@ void calc_unseeded_edge_tangents(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
@@ -1312,7 +1304,7 @@ void calc_unseeded_edge_tangents(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
@@ -1326,13 +1318,13 @@ void calc_unseeded_edge_tangents(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
 
   default:
-    EH(-1, "Edge not found");
+    EH(GOMA_ERROR, "Edge not found");
     break;
   }
 
@@ -1440,7 +1432,7 @@ void calc_unseeded_edge_tangents_TET(
       sign = 1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
@@ -1454,7 +1446,7 @@ void calc_unseeded_edge_tangents_TET(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
@@ -1468,7 +1460,7 @@ void calc_unseeded_edge_tangents_TET(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
@@ -1482,7 +1474,7 @@ void calc_unseeded_edge_tangents_TET(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
@@ -1496,7 +1488,7 @@ void calc_unseeded_edge_tangents_TET(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
@@ -1510,13 +1502,13 @@ void calc_unseeded_edge_tangents_TET(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
 
   default:
-    EH(-1, "Edge not found for TETS");
+    EH(GOMA_ERROR, "Edge not found for TETS");
     break;
   }
 
@@ -1618,7 +1610,7 @@ void calc_unseeded_edge_tangents_TET(
         }
       }
     } else {
-      EH(-1, "Cannot find id_edge in unseeded_TET");
+      EH(GOMA_ERROR, "Cannot find id_edge in unseeded_TET");
     }
   }
 
@@ -1721,7 +1713,7 @@ void simple_normalize_vector(struct Rotation_Vectors *vector, const int dim) {
   for (p = 0, sum = 0.; p < dim; p++)
     sum += vector->vector[p] * vector->vector[p];
   if (fabs(sum - 1.) > 1e-10)
-    EH(-1, "Bad normalization");
+    EH(GOMA_ERROR, "Bad normalization");
   return;
 }
 /********************************************************************************/
@@ -1870,7 +1862,7 @@ int load_bf_grad(void)
           }
           break;
         default:
-          EH(-1, "Unexpected Dimension");
+          EH(GOMA_ERROR, "Unexpected Dimension");
           break;
         }
 
@@ -2382,7 +2374,7 @@ int load_bf_mesh_derivs(void) {
 #endif
           break;
         default:
-          EH(-1, "Unknown dimension.");
+          EH(GOMA_ERROR, "Unknown dimension.");
           break;
         }
 
@@ -3012,9 +3004,7 @@ Revised:	   1997/10/28 16:48 MST pasacki@sandia.gov
     nnz = find_MSR_problem_graph(&ija_temp, itotal_nodes, exo);
   }
 
-#ifndef DEBUG_HKM
   if (Debug_Flag)
-#endif
   {
     printf("Processor %d nnz = %d\n", ProcID, nnz);
   }
@@ -3225,9 +3215,6 @@ find_problem_graph_fill(int *ija[],         /* column pointer array */
    */
   nz_temp = num_fill_unknowns * Max_NP_Elem;
   *ija = alloc_int_1(nz_temp, -1);
-#ifdef DEBUG
-  printf("Initial ija allocation to %d\n", nz_temp);
-#endif
   nsur_elem = alloc_int_1(itotal_nodes, 0);
   isur_elem = alloc_int_2(itotal_nodes, max_neigh_elem, -1);
 
@@ -3298,13 +3285,10 @@ find_problem_graph_fill(int *ija[],         /* column pointer array */
               if (nz_ptr + 1 == nz_temp) {
                 /* reallocate ija larger!! */
                 nz_temp += num_fill_unknowns * Max_NP_Elem;
-#ifdef DEBUG
-                printf("Reallocate ija to %d\n", nz_temp);
-#endif
 
                 *ija = (int *)realloc((void *)*ija, nz_temp * sizeof(int));
                 if (*ija == NULL)
-                  EH(-1, "No space for ija_temp");
+                  EH(GOMA_ERROR, "No space for ija_temp");
                 for (itmp = nz_ptr; itmp < nz_temp; (*ija)[itmp++] = -1)
                   ;
               }
@@ -3374,7 +3358,7 @@ find_MSR_problem_graph(int *ija[],       /* column pointer array            */
 
   *ija = ija_ptr = alloc_int_1(nz_temp, -1);
   if (*ija == NULL) {
-    EH(-1, "No space for ija_temp");
+    EH(GOMA_ERROR, "No space for ija_temp");
   }
 
   inode_varType = alloc_int_1(MaxVarPerNode, INT_NOINIT);
@@ -3411,7 +3395,7 @@ find_MSR_problem_graph(int *ija[],       /* column pointer array            */
      * node stored in the global array
      */
     if (row_num_unknowns != nv->Num_Unknowns) {
-      EH(-1, "Inconsistency counting unknowns.");
+      EH(GOMA_ERROR, "Inconsistency counting unknowns.");
     }
 
     /*
@@ -3449,7 +3433,7 @@ find_MSR_problem_graph(int *ija[],       /* column pointer array            */
         col_num_unknowns = fill_variable_vector(inter_node, inter_node_varType,
                                                 inter_node_matID);
         if (col_num_unknowns != nvCol->Num_Unknowns) {
-          EH(-1, "Inconsistency counting unknowns.");
+          EH(GOMA_ERROR, "Inconsistency counting unknowns.");
         }
 
         /*
@@ -3526,7 +3510,7 @@ find_MSR_problem_graph(int *ija[],       /* column pointer array            */
                 *ija = ija_ptr =
                     (int *)realloc((void *)*ija, nz_temp * sizeof(int));
                 if (*ija == NULL)
-                  EH(-1, "No space for ija_temp");
+                  EH(GOMA_ERROR, "No space for ija_temp");
                 for (itmp = nz_ptr; itmp < nz_temp; ija_ptr[itmp++] = -1)
                   ;
               }
@@ -3570,10 +3554,6 @@ static int find_VBR_problem_graph(int *indx[], int *bindx[], int *bpntr[],
   int i, j, k, nnz_blocs = 0; /* number of non-zero blocks */
   int nnz = 0, row_ptr = 0, col_ptr = 0;
   NODAL_VARS_STRUCT *nvRow, *nvCol;
-#ifdef DEBUG
-  char filename[80];
-  FILE *of;
-#endif
 
   *bpntr = alloc_int_1(row_nodes + 1, INT_NOINIT);
   *rpntr = alloc_int_1(row_nodes + 1, INT_NOINIT);
@@ -3618,40 +3598,6 @@ static int find_VBR_problem_graph(int *indx[], int *bindx[], int *bpntr[],
   }
   (*cpntr)[col_nodes] = col_ptr;
 
-#ifdef DEBUG
-
-  sprintf(filename, "vbr%d_of_%d", ProcID + 1, Num_Proc);
-  of = fopen(filename, "w");
-
-  fprintf(of, "P_%d nnz=%d\n\n", ProcID, nnz);
-  fprintf(of, "P_%d nnz_blocs=%d\n\n", ProcID, nnz_blocs);
-  fprintf(of, "P_%d row_nodes=%d\n\n", ProcID, row_nodes);
-  fprintf(of, "P_%d col_nodes=%d\n\n", ProcID, col_nodes);
-
-  for (i = 0; i < nnz_blocs; i++) {
-    fprintf(of, "P_%d bindx[%d]=%d\n", ProcID, i, exo->node_node_list[i]);
-  }
-  fprintf(of, "\n");
-
-  for (i = 0; i < nnz_blocs + 1; i++) {
-    fprintf(of, "P_%d indx[%d]=%d\n", ProcID, i, (*indx)[i]);
-  }
-
-  fprintf(of, "\n");
-  for (i = 0; i < row_nodes + 1; i++) {
-    fprintf(of, "P_%d bpntr[%d]=%d\n", ProcID, i, (*bpntr)[i]);
-  }
-
-  fprintf(of, "\n");
-  for (i = 0; i < row_nodes + 1; i++) {
-    fprintf(of, "P_%d rpntr[%d]=%d\n", ProcID, i, (*rpntr)[i]);
-  }
-
-  fprintf(of, "\n");
-  for (j = 0; j < col_nodes + 1; j++) {
-    fprintf(of, "P_%d cpntr[%d]=%d\n", ProcID, j, (*cpntr)[j]);
-  }
-#endif
 
   return (nnz);
 }
@@ -3685,7 +3631,7 @@ int fill_variable_vector(int inode, int ivec_varType[], int ivec_matID[])
     }
   }
   if (index > MaxVarPerNode) {
-    EH(-1, "fill_variable_vector: index is greater than MaxVarPerNode");
+    EH(GOMA_ERROR, "fill_variable_vector: index is greater than MaxVarPerNode");
   }
   return index;
 }
@@ -3818,7 +3764,7 @@ double newshape(const double xi[],    /* local coordinates    */
         value = ((Inode == 1) ? 0.5 : -0.5);
         break;
       default:
-        /*EH(-1, "Not a valid Iquant choice!");*/ /*Clever way out of this, for
+        /*EH(GOMA_ERROR, "Not a valid Iquant choice!");*/ /*Clever way out of this, for
                                                      Iquant=2 */
         break;
       }
@@ -3860,7 +3806,7 @@ double newshape(const double xi[],    /* local coordinates    */
         break;
       }
     } else {
-      EH(-1, "Only LINEAR_BAR or QUAD_BAR 1D elements supported now!");
+      EH(GOMA_ERROR, "Only LINEAR_BAR or QUAD_BAR 1D elements supported now!");
     }
     break;
 
@@ -3894,7 +3840,7 @@ double newshape(const double xi[],    /* local coordinates    */
          baby_dolphin, but to it up above */
 
     } else {
-      EH(-1, "Only Q1 and Q2 elements allowed for shells");
+      EH(GOMA_ERROR, "Only Q1 and Q2 elements allowed for shells");
     }
     break;
 
@@ -3904,7 +3850,7 @@ double newshape(const double xi[],    /* local coordinates    */
     } else if (interpolation == I_Q2) {
       value = shape(s, t, u, QUAD_TRI, Iquant, Inode);
     } else {
-      EH(-1, "Don't recognize this basis type for triangles");
+      EH(GOMA_ERROR, "Don't recognize this basis type for triangles");
     }
 
     break;
@@ -3917,7 +3863,7 @@ double newshape(const double xi[],    /* local coordinates    */
         value = 0;
       }
     } else {
-      EH(-1, "Don't recognize this basis type for linear triangular shells");
+      EH(GOMA_ERROR, "Don't recognize this basis type for linear triangular shells");
     }
 
     break;
@@ -3945,7 +3891,7 @@ double newshape(const double xi[],    /* local coordinates    */
         break;
 
       default:
-        EH(-1, "Bad pressure quantity specified.");
+        EH(GOMA_ERROR, "Bad pressure quantity specified.");
         break;
       }
     } else if (interpolation == I_P1) {
@@ -4002,7 +3948,7 @@ double newshape(const double xi[],    /* local coordinates    */
         break;
 
       default:
-        EH(-1, "Bad pressure quantity specified.");
+        EH(GOMA_ERROR, "Bad pressure quantity specified.");
         break;
       }
     } else if (interpolation == I_Q1 || interpolation == I_Q1_D) {
@@ -4027,7 +3973,7 @@ double newshape(const double xi[],    /* local coordinates    */
        * on all external surfaces */
 
       if (Inode >= 8)
-        EH(-1, "This element has at least 8 nodes!");
+        EH(GOMA_ERROR, "This element has at least 8 nodes!");
 
       switch (Iquant) {  /* select quantity */
       case PSI:          /* shape function */
@@ -4112,25 +4058,25 @@ double newshape(const double xi[],    /* local coordinates    */
         case 4:
           if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]->EDGE !=
               1)
-            EH(-1, "Subparametric node not on edge ");
+            EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = 0.5 * (1. - s * s) * (t - 1.) * t;
           break;
         case 5:
           if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]->EDGE !=
               1)
-            EH(-1, "Subparametric node not on edge ");
+            EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = 0.5 * (1. - t * t) * (s + 1.) * s;
           break;
         case 6:
           if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]->EDGE !=
               1)
-            EH(-1, "Subparametric node not on edge ");
+            EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = 0.5 * (1. - s * s) * (t + 1.) * t;
           break;
         case 7:
           if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]->EDGE !=
               1)
-            EH(-1, "Subparametric node not on edge ");
+            EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = 0.5 * (1. - t * t) * (s - 1.) * s;
           break;
         }
@@ -4214,25 +4160,25 @@ double newshape(const double xi[],    /* local coordinates    */
         case 4:
           if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]->EDGE !=
               1)
-            EH(-1, "Subparametric node not on edge ");
+            EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = -s * (t - 1.) * t;
           break;
         case 5:
           if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]->EDGE !=
               1)
-            EH(-1, "Subparametric node not on edge ");
+            EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = 0.5 * (1. - t * t) * (2 * s + 1.);
           break;
         case 6:
           if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]->EDGE !=
               1)
-            EH(-1, "Subparametric node not on edge ");
+            EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = -s * (t + 1.) * t;
           break;
         case 7:
           if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]->EDGE !=
               1)
-            EH(-1, "Subparametric node not on edge ");
+            EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = 0.5 * (1. - t * t) * (2 * s - 1.);
           break;
         }
@@ -4316,25 +4262,25 @@ double newshape(const double xi[],    /* local coordinates    */
         case 4:
           if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]->EDGE !=
               1)
-            EH(-1, "Subparametric node not on edge ");
+            EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = 0.5 * (1. - s * s) * (2 * t - 1.);
           break;
         case 5:
           if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]->EDGE !=
               1)
-            EH(-1, "Subparametric node not on edge ");
+            EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = -t * (s + 1.) * s;
           break;
         case 6:
           if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]->EDGE !=
               1)
-            EH(-1, "Subparametric node not on edge ");
+            EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = 0.5 * (1. - s * s) * (2 * t + 1.);
           break;
         case 7:
           if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]->EDGE !=
               1)
-            EH(-1, "Subparametric node not on edge ");
+            EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = -t * (s - 1.) * s;
           break;
         }
@@ -4342,7 +4288,7 @@ double newshape(const double xi[],    /* local coordinates    */
 
       default:
         fprintf(stderr, "Bad BIQUAD_QUAD case: %d!\n", Iquant);
-        EH(-1, "Bad selection of phi,dphids, etc.");
+        EH(GOMA_ERROR, "Bad selection of phi,dphids, etc.");
         break;
       }
     } else if (interpolation == I_PQ1) {
@@ -4376,11 +4322,11 @@ double newshape(const double xi[],    /* local coordinates    */
         break;
 
       default:
-        EH(-1, "Bad pressure quantity specified.");
+        EH(GOMA_ERROR, "Bad pressure quantity specified.");
         break;
       }
     } else {
-      EH(-1, "Don't recognize this basis type for Linear tetrahedron");
+      EH(GOMA_ERROR, "Don't recognize this basis type for Linear tetrahedron");
     }
 
     break;
@@ -4411,7 +4357,7 @@ double newshape(const double xi[],    /* local coordinates    */
         break;
 
       default:
-        EH(-1, "Bad pressure quantity specified.");
+        EH(GOMA_ERROR, "Bad pressure quantity specified.");
         break;
       }
     } else if (interpolation == I_P1) {
@@ -4482,7 +4428,7 @@ double newshape(const double xi[],    /* local coordinates    */
         break;
 
       default:
-        EH(-1, "Bad pressure quantity specified.");
+        EH(GOMA_ERROR, "Bad pressure quantity specified.");
         break;
       }
     }
@@ -5022,7 +4968,7 @@ void determine_ShapeVar(PROBLEM_DESCRIPTION_STRUCT *pd_ptr)
     pd_ptr->ShapeVar = in_list(pd_ptr->IntegrationMap, 0, MAX_VARIABLE_TYPES,
                                pd_ptr->i[pg->imtrx]);
     if (pd_ptr->ShapeVar == -1) {
-      EH(-1,
+      EH(GOMA_ERROR,
          "Error: Specified Element Mapping has no corresponding variable .");
     }
     if (pd_ptr->e[pg->imtrx][R_MESH1] &&
@@ -5076,10 +5022,6 @@ void determine_ProjectionVar(PROBLEM_DESCRIPTION_STRUCT *pd_ptr)
     P0PRINTF("Warning: No suitable basis function was found for a Projection "
              "Operation\n");
   }
-#ifdef DEBUG_HKM
-  P0PRINTF("Projection Variable set to %d with interp type = %d\n",
-           pd_ptr->ProjectionVar, pd_ptr->i[pg->imtrx][pd_ptr->ProjectionVar]);
-#endif
 }
 
 /*************************************************************************/
@@ -5132,7 +5074,7 @@ double calc_tensor_invariant(dbl T[DIM][DIM],       // Original tensor
 
   // Error checking
   if (DIM != 3)
-    EH(-1, "calc_tensor_invariants() has not been instrumented for 1 or 2 "
+    EH(GOMA_ERROR, "calc_tensor_invariants() has not been instrumented for 1 or 2 "
            "dimensions");
 
   // Select invariant and calculate
@@ -5219,403 +5161,10 @@ double calc_tensor_invariant(dbl T[DIM][DIM],       // Original tensor
     }
 
   } else {
-    EH(-1, "You requested an invariant that I don't know how to calculate.");
+    EH(GOMA_ERROR, "You requested an invariant that I don't know how to calculate.");
   }
 
   // Return value of invariant
   return TI;
 
 } // End of calc_tensor_invariants()
-
-void supg_tau_shakib(SUPG_terms *supg_terms, int dim, double dt,
-                     int interp_eqn) {
-  double G[DIM][DIM];
-
-  for (int i = 0; i < DIM; i++) {
-    for (int j = 0; j < DIM; j++) {
-      G[i][j] = 0;
-      for (int k = 0; k < DIM; k++) {
-        G[i][j] += bf[interp_eqn]->B[k][i] * bf[interp_eqn]->B[k][j];
-      }
-    }
-  }
-
-  double v_d_gv = 0;
-  for (int i = 0; i < dim; i++) {
-    for (int j = 0; j < dim; j++) {
-      v_d_gv += fv->v[i] * G[i][j] * fv->v[j];
-    }
-  }
-
-  double d_v_d_gv[DIM][MDE];
-  for (int a = 0; a < dim; a++) {
-    for (int k = 0; k < ei[pg->imtrx]->dof[VELOCITY1]; k++) {
-      d_v_d_gv[a][k] = 0.0;
-      for (int i = 0; i < dim; i++) {
-        for (int j = 0; j < dim; j++) {
-          d_v_d_gv[a][k] +=
-              delta(a, i) * bf[VELOCITY1 + a]->phi[k] * G[i][j] * fv->v[j] +
-              delta(a, j) * fv->v[i] * G[i][j] * bf[VELOCITY1 + a]->phi[k];
-        }
-      }
-    }
-  }
-
-  double beta = 2 / sqrt(15);
-  supg_terms->supg_tau = beta / (sqrt(4 / (dt * dt) + v_d_gv));
-
-  for (int a = 0; a < dim; a++) {
-    for (int k = 0; k < ei[pg->imtrx]->dof[VELOCITY1]; k++) {
-      supg_terms->d_supg_tau_dv[a][k] = -0.5 * d_v_d_gv[a][k] *
-                                        (1 / (4 / (dt * dt) + v_d_gv)) *
-                                        supg_terms->supg_tau;
-    }
-  }
-
-  for (int a = 0; a < dim; a++) {
-    if (pd->e[pg->imtrx][MESH_DISPLACEMENT1 + a]) {
-      EH(-1,
-         "Mesh displacement derivatives not implemented for shakib supg_tau");
-    }
-  }
-}
-
-void supg_tau_gauss_point(SUPG_terms *supg_terms, int dim, dbl diffusivity,
-                          PG_DATA *pg_data) {
-  double vnorm = 0;
-
-  for (int i = 0; i < VIM; i++) {
-    vnorm += fv->v[i] * fv->v[i];
-  }
-  vnorm = sqrt(vnorm);
-
-  double hk = 0;
-  for (int a = 0; a < ei[pg->imtrx]->ielem_dim; a++) {
-    hk += pg_data->hsquared[a];
-  }
-  /* This is the size of the element */
-  hk = sqrt(hk / ((double)ei[pg->imtrx]->ielem_dim));
-
-  double D = diffusivity;
-
-  double hk_dX[DIM][MDE];
-  for (int a = 0; a < dim; a++) {
-    for (int j = 0; j < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1 + a]; j++) {
-      double tmp = 0;
-      for (int b = 0; b < dim; b++) {
-        tmp += (2 * pg_data->hhv[b][a] * pg_data->dhv_dxnode[b][j]) /
-               (2 * sqrt(pg_data->hsquared[b]));
-      }
-      hk_dX[a][j] = tmp / dim;
-    }
-  }
-
-  double Pek = 0.5 * vnorm * hk / (D + DBL_EPSILON);
-
-  double eta = Pek;
-  double eta_dX[DIM][MDE];
-  double eta_dV[DIM][MDE];
-  if (Pek > 1) {
-    eta = 1;
-    for (int i = 0; i < DIM; i++) {
-      for (int j = 0; j < MDE; j++) {
-        eta_dX[i][j] = 0;
-        eta_dV[i][j] = 0;
-      }
-    }
-  } else {
-    for (int i = 0; i < DIM; i++) {
-      for (int j = 0; j < MDE; j++) {
-        if (pd->e[pg->imtrx][VELOCITY1 + i]) {
-          eta_dV[i][j] = 0.5 * 0.5 * hk * fv->v[i] * bf[VELOCITY1 + i]->phi[j] /
-                         (vnorm * D);
-        }
-
-        if (pd->e[pg->imtrx][MESH_DISPLACEMENT1 + i]) {
-          eta_dX[i][j] = 0.5 * vnorm * hk_dX[i][j] / D;
-        }
-      }
-    }
-  }
-
-  if (vnorm > 0) {
-    supg_terms->supg_tau = 0.5 * hk * eta / vnorm;
-
-    for (int a = 0; a < VIM; a++) {
-      int var = VELOCITY1 + a;
-      for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-        supg_terms->d_supg_tau_dv[a][j] = 0.5 * hk * eta * fv->v[a] *
-                                              bf[var]->phi[j] /
-                                              (-vnorm * vnorm * vnorm) +
-                                          0.5 * hk * eta_dV[a][j] / vnorm;
-      }
-
-      var = MESH_DISPLACEMENT1 + a;
-      for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-        supg_terms->d_supg_tau_dX[a][j] =
-            0.5 * hk_dX[a][j] * eta / vnorm + 0.5 * hk * eta_dX[a][j] / vnorm;
-      }
-    }
-
-  } else {
-    supg_terms->supg_tau = 0;
-    for (int i = 0; i < DIM; i++) {
-      for (int j = 0; j < MDE; j++) {
-        supg_terms->d_supg_tau_dv[i][j] = 0.0;
-      }
-      for (int j = 0; j < MDE; j++) {
-        supg_terms->d_supg_tau_dX[i][j] = 0.0;
-      }
-    }
-  }
-}
-
-void supg_tau(SUPG_terms *supg_terms, int dim, dbl diffusivity,
-              PG_DATA *pg_data, double dt, int shakib, int interp_eqn) {
-  if (shakib) {
-    supg_tau_shakib(supg_terms, dim, dt, interp_eqn);
-  } else {
-    supg_tau_gauss_point(supg_terms, dim, diffusivity, pg_data);
-  }
-}
-
-static dbl yzbeta1(dbl scale, int dim, dbl Y, dbl Z, dbl d_Z[MDE], dbl beta,
-                       dbl u, dbl d_u[MDE], dbl grad_u[DIM],
-                       dbl d_grad_u[MDE][DIM], dbl h_elem, int interp_eqn,
-                       dbl deriv[MDE]) {
-
-//  static const dbl EPSILON = 1e-10;
-  dbl Y_inv = 1.0 / Y;
-//  dbl resid_scale = Y_inv * Z + EPSILON;
-  dbl inner = 0;
-  for (int i = 0; i < dim; i++) {
-    inner += Y_inv * Y_inv * grad_u[i] * grad_u[i];
-  }
-  for (int i = 0; i < MDE; i++) {
-    deriv[i] = 0;
-  }
-  return 1 * fabs(Z) * (1.0/(sqrt(inner+1e-12))) * h_elem * 0.5;
-
-}
-
-static dbl yzbeta2(dbl scale, dbl Y, dbl Z, dbl d_Z[MDE], dbl deriv[MDE], dbl h_elem, int interp_eqn)
-{
-//  static const dbl EPSILON = 1e-10;
-  for (int k = 0; k < ei[pg->imtrx]->dof[interp_eqn]; k++) {
-    deriv[k] = 0;
-  }
-  dbl yzbeta = 1.0 * fabs(Z) * h_elem * h_elem * 0.025;
-  return yzbeta;
-}
-
-dbl yzbeta(dbl scale, int dim, dbl Y, dbl Z, dbl d_Z[MDE], dbl beta,
-                       dbl u, dbl d_u[MDE], dbl grad_u[DIM],
-                       dbl d_grad_u[MDE][DIM], dbl h_elem, int interp_eqn,
-                       dbl deriv[MDE]) {
-  dbl Y_inv = 1.0 / Y;
-
-  dbl gradunit[DIM];
-  dbl grad_u_norm = 0;
-
-  for (int i = 0; i < dim; i++) {
-    grad_u_norm  += grad_u[i] * grad_u[i];
-  }
-  grad_u_norm = sqrt(grad_u_norm) + DBL_EPSILON;
-  dbl inv_grad_u_norm = 1 / grad_u_norm;
-
-  for (int j = 0; j < ei[pd->mi[interp_eqn]]->dof[interp_eqn]; j++) {
-    dbl inner = 0;
-    for (int i = 0; i < dim; i++) {
-      inner += Y_inv * grad_u[i] * Y_inv * grad_u[i];
-    }
-    inner += DIFFUSION_EPSILON;
-
-    dbl d_inner = 0;
-    for (int i = 0; i < dim; i++) {
-      d_inner += 2 * Y_inv * d_grad_u[j][i] * Y_inv * grad_u[i];
-    }
-
-
-//    dbl scalar_part = Y_inv * u + DIFFUSION_EPSILON;
-
-//    dbl p = 1-beta;
-//    dbl q = (beta/2.0 - 1);
-
-
-    dbl d_grad_u_norm = 0;
-    for (int i = 0; i < dim; i++) {
-      d_grad_u_norm += bf[interp_eqn]->grad_phi[j][i] * grad_u[i];
-    }
-    d_grad_u_norm *= inv_grad_u_norm;
-
-    dbl d_inv_grad_u_norm = - inv_grad_u_norm * inv_grad_u_norm * d_grad_u_norm;
-
-    for (int i = 0; i < dim; i++) {
-      gradunit[i] = grad_u[i] * inv_grad_u_norm;
-    }
-
-    dbl h_dc = 0;
-    for (int i = 0; i < ei[pd->mi[interp_eqn]]->dof[interp_eqn]; i++) {
-      for (int j =0; j < dim; j++) {
-        h_dc += fabs(gradunit[j] * d_grad_u[i][j]);
-      }
-    }
-
-    //h_dc = 2 / h_dc;
-
-//    dbl d_h_dc = 0;
-
-
-    //deriv[j] = (Z+DIFFUSION_EPSILON) / (fabs(Z+DIFFUSION_EPSILON)) * d_Z[j] * pow(inner,q);
-    //deriv[j] += fabs(Z+DIFFUSION_EPSILON) * d_inner * q * pow(inner, q-1);
-
-    deriv[j] = d_inv_grad_u_norm;
-  }
-  return inv_grad_u_norm;
-}
-
-
-dbl yzbeta_model(int model, dbl scale, dbl beta, int dim, dbl Y,
-                             dbl Z, dbl d_Z[MDE], dbl u, dbl d_u[MDE],
-                             dbl grad_u[DIM], dbl d_grad_u[MDE][DIM],
-                             dbl h_elem, int interp_eqn, dbl deriv[MDE]) {
-  dbl dc = 0;
-  switch (model) {
-  case YZBETA_ONE:
-    dc = yzbeta1(scale, dim, Y, Z, d_Z, 1.0, u, d_u, grad_u, d_grad_u,
-                      h_elem, interp_eqn, deriv);
-    break;
-  case YZBETA_TWO:
-    dc = yzbeta2(scale, Y, Z, d_Z, deriv, h_elem, interp_eqn);
-    break;
-  case YZBETA_MIXED: {
-    dbl deriv1[MDE] = {0};
-    dbl deriv2[MDE] = {0};
-    dbl dc1, dc2;
-    dc1 = yzbeta1(scale, dim, Y, Z, d_Z, 1.0, u, d_u, grad_u, d_grad_u,
-                    h_elem, interp_eqn, deriv);
-    dc2 = yzbeta2(scale, Y, Z, d_Z, deriv, h_elem, interp_eqn);
-    for (int j = 0; j < ei[pd->mi[interp_eqn]]->dof[interp_eqn]; j++) {
-      deriv[j] = 0.5 * (deriv1[j] + deriv2[j]);
-    }
-    dc = 0.5 * (dc1 + dc2);
-  } break;
-  case YZBETA_CUSTOM:
-    dc = yzbeta(scale, dim, Y, Z, d_Z, beta, u, d_u, grad_u, d_grad_u,
-                      h_elem, interp_eqn, deriv);
-    break;
-  default:
-    EH(-1, "Unknown YZBETA Model");
-    break;
-  }
-
-  return dc;
-}
-void get_supg_tau(SUPG_terms *supg_terms,
-                  int dim,
-                  dbl diffusivity,
-                  PG_DATA *pg_data)
-{
-  double vnorm = 0;
-
-  for (int i = 0; i < VIM; i++) {
-    vnorm += fv->v[i]*fv->v[i];
-  }
-  vnorm = sqrt(vnorm);
-
-  double hk = 0;
-  for (int i = 0; i < dim; i++) {
-    hk += sqrt(pg_data->hsquared[i]);
-  }
-
-  hk /= (double) dim;
-
-  double D = diffusivity;
-
-  double hk_dX[DIM][MDE];
-  for (int a = 0; a < dim; a++)
-    {
-      for (int j = 0; j < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1+a]; j++)
-        {
-          double tmp = 0;
-          for (int b = 0; b < dim; b++)
-            {
-              tmp += (2*pg_data->hhv[b][a] * pg_data->dhv_dxnode[b][j])/(2*sqrt(pg_data->hsquared[b]));
-            }
-          hk_dX[a][j] = tmp/dim;
-        }
-    }
-
-  double Pek = 0.5 * vnorm * hk / D;
-
-  double eta = Pek;
-  double eta_dX[DIM][MDE];
-  double eta_dV[DIM][MDE];
-  if (Pek > 1) {
-    eta = 1;
-    for (int i = 0; i < DIM; i++)
-    {
-      for (int j = 0; j < MDE; j++)
-      {
-        eta_dX[i][j] = 0;
-        eta_dV[i][j] = 0;
-      }
-    }
-  }
-  else
-  {
-    for (int i = 0; i < DIM; i++)
-    {
-      for (int j = 0; j < MDE; j++)
-      {
-        if (pd->e[VELOCITY1+i])
-        {
-          eta_dV[i][j] = 0.5 * 0.5 * hk * fv->v[i]*bf[VELOCITY1+i]->phi[j] / (vnorm*D);
-
-        }
-
-        if (pd->e[MESH_DISPLACEMENT1+i])
-        {
-          eta_dX[i][j] = 0.5 * vnorm * hk_dX[i][j] / D;
-
-        }
-      }
-    }
-  }
-
-  if (vnorm > 0) {
-    supg_terms->supg_tau = 0.5 * hk * eta / vnorm;
-
-    for (int a = 0; a < VIM; a++)
-      {
-        int var = VELOCITY1 + a;
-        for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++)
-          {
-            supg_terms->d_supg_tau_dv[a][j] = 0.5*hk*eta*fv->v[a]*bf[var]->phi[j] /
-                (- vnorm*vnorm*vnorm) + 0.5 * hk * eta_dV[a][j] / vnorm;
-          }
-
-        var = MESH_DISPLACEMENT1 + a;
-        for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++)
-          {
-            supg_terms->d_supg_tau_dX[a][j] = 0.5 * hk_dX[a][j] * eta / vnorm + 0.5 * hk * eta_dX[a][j] / vnorm;
-          }
-      }
-
-
-  } else {
-    supg_terms->supg_tau = 0;
-    for (int i = 0; i < DIM; i++)
-      {
-        for (int j = 0; j < MDE; j++)
-          {
-            supg_terms->d_supg_tau_dv[i][j] = 0.0;
-          }
-        for (int j = 0; j < MDE; j++)
-          {
-            supg_terms->d_supg_tau_dX[i][j] = 0.0;
-          }
-      }
-  }
-
-}

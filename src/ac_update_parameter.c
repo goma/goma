@@ -11,54 +11,27 @@
 \************************************************************************/
  
 
-#ifdef USE_RCSID
-static const char rcs_id[] = "$Id: ac_update_parameter.c,v 5.3 2008-12-19 22:54:25 rbsecor Exp $";
-#endif
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <math.h>
-#include <string.h>
 
 #include "std.h"
-
 #include "exo_struct.h"
 #include "dpi.h"
-
-#include "rf_allo.h"
-#include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_mp.h"
-#include "rf_solver_const.h"
-#include "rf_solver.h"
-
-#include "rf_masks.h"
-
-#include "el_geom.h"
-#include "rf_vars_const.h"
 #include "mm_mp_const.h"
-#include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "mm_mp.h"
 #include "mm_mp_structs.h"
-
-#include "mm_post_def.h"
-#include "mm_post_proc.h"
 #include "mm_eh.h"
-
-#include "exo_struct.h"		/* defn of Exo_DB */
 #include "dp_types.h"
-
-#include "sl_util.h"		/* defines sl_init() */
+#include "ac_update_parameter.h"
+#include "rf_bc.h"
+#include "rf_bc_const.h"
 
 #define GOMA_AC_UPDATE_PARAMETER_C
 #include "user_continuation.h"
-#include "goma.h"
 
 /*
 
@@ -87,15 +60,6 @@ update_parameterC(int iCC,       /* CONDITION NUMBER */
   int ic, mn, mpr;
   int ibc, idf;
 
-#ifdef DEBUG
-  static const char yo[] = "update_parameterC";
-
-  /*
-   * 		BEGIN EXECUTION
-   */
-
-  fprintf(stderr, "%s() begins...\n", yo);
-#endif
 
 /* Calls from ac_conti.c (nCC=0) */
   if (nCC == 0) {
@@ -125,7 +89,7 @@ update_parameterC(int iCC,       /* CONDITION NUMBER */
       update_user_parameter(lambda, x, xdot, x_AC, cx, exo, dpi);
     }
  
-    else EH(-1, "Bad continuation type!");
+    else EH(GOMA_ERROR, "Bad continuation type!");
   }
 
 /* Calls from LOCA */
@@ -182,7 +146,7 @@ update_parameterC(int iCC,       /* CONDITION NUMBER */
   }
 
   else {
-    if (cont->upType != 6) EH(-1, "Bad continuation type!");
+    if (cont->upType != 6) EH(GOMA_ERROR, "Bad continuation type!");
   }
  }
 
@@ -203,15 +167,6 @@ update_parameterTP(int iTC,       /* CONDITION NUMBER */
   int ic, mn, mpr;
   int ibc, idf;
 
-#ifdef DEBUG
-  static const char yo[] = "update_parameterTP";
-
-  /*
-   * 		BEGIN EXECUTION
-   */
-
-  fprintf(stderr, "%s() begins...\n", yo);
-#endif
 
   /*
    *    BC parameters
@@ -265,7 +220,7 @@ update_parameterTP(int iTC,       /* CONDITION NUMBER */
   }
 
   else {
-    if (loca_in->TPupType != 6) EH(-1, "Bad TP continuation type!");
+    if (loca_in->TPupType != 6) EH(GOMA_ERROR, "Bad TP continuation type!");
   }
 }
 
@@ -284,16 +239,6 @@ update_parameterHC(int iHC,      /* Hunting condition number */
   int ic, mn, mpr;
   int ibc, idf;
 
-#ifdef DEBUG
-  static const char yo[] = "update_parameterHC";
-
-
-  /*
-   * 		BEGIN EXECUTION
-   */
-
-  fprintf(stderr, "%s() begins...\n", yo);
-#endif
 
   /*
    *    BC parameters
@@ -346,7 +291,7 @@ update_parameterHC(int iHC,      /* Hunting condition number */
     update_user_parameter(lambda, x, xdot, x_AC, cx, exo, dpi);
   }
 
-  else EH(-1, "Bad HC continuation type!");
+  else EH(GOMA_ERROR, "Bad HC continuation type!");
 
 }
 
@@ -366,15 +311,6 @@ update_parameterS(double lambda, /* PARAMETER VALUE */
   int ic, mn, mpr;
   int ibc, idf;
 
-#ifdef DEBUG
-  static const char yo[] = "update_parameterS";
-
-  /*
-   * 		BEGIN EXECUTION
-   */
-
-  fprintf(stderr, "%s() begins...\n", yo);
-#endif
 
   /*
    *    BC parameters
@@ -426,7 +362,7 @@ update_parameterS(double lambda, /* PARAMETER VALUE */
     update_user_parameter(lambda, x, xdot, NULL, cx, exo, dpi);
   }
 
-  else EH(-1, "Bad sens. parameter type!");
+  else EH(GOMA_ERROR, "Bad sens. parameter type!");
 
 }
 
@@ -1192,12 +1128,12 @@ update_UM_parameter(double lambda, /* Parameter value */
         float_length = gn_glob[mn]->len_u_tau_y;
         break;
       default:
-        EH(-1, "No model available for that property!");
+        EH(GOMA_ERROR, "No model available for that property!");
         break;
     }
         if (ic >= float_length)
           {
-            EH(-1, "Float index larger than user parameter list length!");
+            EH(GOMA_ERROR, "Float index larger than user parameter list length!");
           }
 
 
@@ -1246,7 +1182,7 @@ update_UM_parameter(double lambda, /* Parameter value */
             mp_glob[mn]->u_FlowingLiquid_viscosity[ic] = lambda;
         break;
       default:
-        EH(-1, "No model available for that property!");
+        EH(GOMA_ERROR, "No model available for that property!");
         break;
     }
 }/* END of routine update_UM_parameter  */
@@ -1289,11 +1225,6 @@ retrieve_parameterS(double *lambda, /* PARAMETER VALUE */
   int mn,mpr;
   int ibc, idf;
   
-#ifdef DEBUG
-  static const char yo[]="retrieve_parameterS";
-
-  fprintf(stderr, "%s() begins...\n", yo);
-#endif
 
   if (sens_type == 1) {
 
@@ -1329,7 +1260,7 @@ retrieve_parameterS(double *lambda, /* PARAMETER VALUE */
       retrieve_UM_parameter(lambda, mn, mpr, ic, cx, exo, dpi);
   }
 
-  else EH(-1, "Bad sens. parameter type!");
+  else EH(GOMA_ERROR, "Bad sens. parameter type!");
  
 }/* END of routine retrieve_parameterS  */
 /*****************************************************************************/
@@ -2052,12 +1983,12 @@ retrieve_UM_parameter(double *lambda, /* Parameter value */
         float_length = gn_glob[mn]->len_u_tau_y;
         break;
       default:
-        EH(-1, "No model available for that property!");
+        EH(GOMA_ERROR, "No model available for that property!");
         break;
     }
         if (ic >= float_length)
           {
-            EH(-1, "Float index larger than user parameter list length!");
+            EH(GOMA_ERROR, "Float index larger than user parameter list length!");
           }
 
 
@@ -2106,7 +2037,7 @@ retrieve_UM_parameter(double *lambda, /* Parameter value */
         *lambda = gn_glob[mn]->u_tau_y[ic];
         break;
       default:
-        EH(-1, "No model available for that property!");
+        EH(GOMA_ERROR, "No model available for that property!");
         break;
     }
 }/* END of routine retrieve_UM_parameter  */

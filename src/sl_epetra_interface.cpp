@@ -6,14 +6,14 @@
 #define EPETRA_MPI
 #endif
 
-#include <iostream>
-#include <exception>
+#include <stdio.h>
 
 #include "mpi.h"
-#include "Epetra_Comm.h"
 #include "Epetra_Map.h"
-#include "Epetra_RowMatrix.h"
 #include "Epetra_CrsMatrix.h"
+#include "Epetra_DataAccess.h"
+
+class Epetra_RowMatrix;
 
 #ifdef EPETRA_MPI
 #include "Epetra_MpiComm.h"

@@ -10,9 +10,6 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifdef USE_RCSID
-static const char rcs_id[] = "$Id";
-#endif
 
 /*
 

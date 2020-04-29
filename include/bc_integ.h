@@ -14,6 +14,11 @@
 #define GOMA_BC_INTEG_H
 
 
+#include "bc_dirich.h"
+#include "exo_struct.h"
+#include "mm_as_structs.h"
+#include "rf_bc_const.h"
+#include "rf_fem_const.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif
@@ -63,5 +68,12 @@ EXTERN void apply_table_wic_bc
 
 
 #endif
+
+int equation_index_auto_rotate(const ELEM_SIDE_BC_STRUCT *elem_side_bc,
+                               int I,
+                               int eqn,
+                               int p,
+                               int ldof_eqn,
+                               const BOUNDARY_CONDITION_STRUCT *bc);
 
 #endif /* GOMA_BC_INTEG_H */

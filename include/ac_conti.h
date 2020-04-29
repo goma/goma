@@ -13,6 +13,10 @@
 #ifndef GOMA_AC_CONTI_H
 #define GOMA_AC_CONTI_H
 
+#include "dp_types.h"
+#include "dpi.h"
+#include "exo_struct.h"
+#include "mm_shell_bc.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

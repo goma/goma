@@ -16,21 +16,14 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <strings.h>
 
 #include "std.h"
-
 #include "rf_allo.h"
-
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-
-#include "rf_io_structs.h"
 #include "rf_io.h"
 #include "rf_vars_const.h"
-#include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
@@ -39,26 +32,19 @@
 #include "dp_types.h"
 #include "dpi.h"
 #include "dp_map_comm_vec.h"
-#include "sl_util.h"
-#include "sl_util_structs.h"
 #include "mm_unknown_map.h"
-#include "dp_map_comm_vec.h"
 #include "mm_bc.h"
 #include "rd_mesh.h"
 #include "rf_node_const.h"
 #include "rf_solve.h"
 #include "mm_eh.h"
-#include "rf_masks.h"
 #include "rf_util.h"
-
 #include "rf_bc_const.h"
 #include "rf_bc.h"
-#include "mm_elem_block_structs.h"
 #include "rf_element_storage_const.h"
-#include "mm_fill_shell.h"
 #include "mm_shell_util.h"
-
 #include "dp_utils.h"
+#include "mpi.h"
 
 static void
 associate_bc_to_matrix(void);
@@ -113,7 +99,7 @@ set_bc_equation(void)
           BC_Types[ibc].equation = R_SOLID3;
           break;
         default:
-          EH(-1, "Error in linking BC to equation");
+          EH(GOMA_ERROR, "Error in linking BC to equation");
           break;
         }
       }
@@ -290,26 +276,17 @@ int setup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
    */
   setup_local_nodal_vars(exo, dpi);
 
-#ifdef DEBUG_HKM
-  printf("%s: Proc %d after setup_local_nodal_vars\n", yo, ProcID); fflush(stdout);
-#endif
   /*
    * setup communications patterns between ghost and owned
    * nodes.
    */
   setup_nodal_comm_map(exo, dpi, cx);
-#ifdef DEBUG_HKM
-  printf("%s: Proc %d after setup_nodal_comm_map\n", yo, ProcID); fflush(stdout);
-#endif
 
   /*
    * Find the global maximum number of unknowns located at any one
    * node on any processor
    */
   MaxVarPerNode = find_MaxUnknownNode();
-#ifdef DEBUG_HKM
-  printf("%s: Proc %d after find_MaxUnknownNode\n", yo, ProcID); fflush(stdout);
-#endif
   
   /*
    * Exchange my idea of what materials I have at each node with
@@ -324,9 +301,6 @@ int setup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
    * at that node.
    */
   setup_external_nodal_vars(exo, dpi, cx);
-#ifdef DEBUG_HKM
-  printf("%s: Proc %d after setup_external_nodal_vars\n", yo, ProcID); fflush(stdout);
-#endif
 
   /*
    * Finish setting the unknown map on this processor
@@ -338,9 +312,6 @@ int setup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
    * exchange the solution vector in as efficient a manner as
    * possible
    */
-#ifdef DEBUG_HKM
-  printf("P_%d: setup_dof_comm_map() begins...\n", ProcID); fflush(stdout);
-#endif
   log_msg("setup_dof_comm_map...");
   setup_dof_comm_map(exo, dpi, cx);
 
@@ -366,9 +337,6 @@ int setup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
    * of the FILL variable type equations alone, if needed
    */
   if (Explicit_Fill) {
-#ifdef DEBUG
-    fprintf(stderr, "P_%d: setup_fill_comm_map() begins...\n", ProcID);
-#endif /* DEBUG */
     log_msg("setup_fill_comm_map...");
     setup_fill_comm_map(exo, dpi, cx);
   }
@@ -392,18 +360,12 @@ int setup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
    *  Set up the structures necessary to carry out
    *  surface integrals
    */
-#ifdef DEBUG
-  fprintf(stderr, "P_%d set_up_Surf_BC() begins...\n",ProcID);
-#endif
   log_msg("set_up_Surf_BC...");
   set_up_Surf_BC(First_Elem_Side_BC_Array, exo, dpi); 
 
   /*
    *  Set up the Edge boundary condition structures
    */
-#ifdef DEBUG
-  fprintf(stderr, "P_%d: set_up_Edge_BC() begins...\n",ProcID);
-#endif
   log_msg("set_up_Edge_BC...");
   set_up_Edge_BC(First_Elem_Edge_BC_Array, exo, dpi); 
 
@@ -508,7 +470,7 @@ check_discontinuous_interp_type(PROBLEM_DESCRIPTION_STRUCT *curr_pd,
 		curr_pd->MaterialName);
 	fprintf(stderr,"\tbut incompatible interp type specified: %d\n",
 		interp_type);
-	EH(-1,"incompatible interp type");
+	EH(GOMA_ERROR,"incompatible interp type");
 	break;
 	    case I_G0:
     case I_G1:
@@ -523,7 +485,7 @@ check_discontinuous_interp_type(PROBLEM_DESCRIPTION_STRUCT *curr_pd,
     default:
      	fprintf(stderr,"check_interpolation_discontinuous ERROR");
 	fprintf(stderr,"unknown interpolation type\n");
-	EH(-1,"unknown interpolation type");
+	EH(GOMA_ERROR,"unknown interpolation type");
     }
   }
 }
@@ -676,18 +638,6 @@ coordinate_discontinuous_variables(Exo_DB *exo,	Dpi *dpi)
               ivec[k] = curr_pd->v[imtrx][k];
              }
       ReduceBcast_BOR(ivec, V_LAST);
-#ifdef DEBUG_HKM
-      print_sync_start(TRUE);
-      for (k = 0; k < V_LAST; k++) 
-         {
-          if (curr_pd->v[pg->imtrx][k] != ivec[k]) 
-            {
-             printf("P_%d: v field for var_type %d changed from %d to %d\n",
-	            ProcID, k, curr_pd->v[pg->imtrx][k], ivec[k]);
-            }
-         }
-      print_sync_end(TRUE);
-#endif
           for (k = 0; k < V_LAST; k++) 
              {
               curr_pd->v[imtrx][k] = ivec[k];
@@ -885,7 +835,7 @@ bc_set_index(Exo_DB *exo)
       DPRINTF(stderr,"On P_%d, bc_set_index: ERROR Can't find ns or ss id %d for"
 	      " boundary condition %d with type %s \n",
 	      ProcID, bc_ptr->BC_ID, ibc, bc_ptr->Set_Type);
-      EH(-1,"Error in specification of boundary condition");
+      EH(GOMA_ERROR,"Error in specification of boundary condition");
     }
   }
 }
@@ -1091,7 +1041,7 @@ bc_matrl_index(Exo_DB *exo)
 #ifdef DEBUG_IGNORE_ELEMENT_BLOCK_CAPABILITY
                    if (matrlLP->List[i] < 0) {
                      fprintf(stderr,"Material list contains negative number\n");
-                     EH(-1,"logic error in ignoring an element block");
+                     EH(GOMA_ERROR,"logic error in ignoring an element block");
                    }
 #endif
 		   bin_matrl[matrlLP->List[i]]++;
@@ -1208,7 +1158,7 @@ bc_matrl_index(Exo_DB *exo)
          if (num_matrl_needed > 1) {
 	   printf("%s P_%d: problem in finding a needed second matrl index:\n",
 		  yo, ProcID);
-	   EH(-1,"bc_matrl_index ERROR");
+	   EH(GOMA_ERROR,"bc_matrl_index ERROR");
 	 }
        }
      }
@@ -1216,14 +1166,6 @@ bc_matrl_index(Exo_DB *exo)
       * For debug purposes, print out everything that we have found
       * out and decided about this bc on all of the processors.
       */
-#ifdef DEBUG_HKM
-     print_sync_start(FALSE);
-     bc_matrl_index_print(bc_ptr, bin_matrl, bin_matrl_elem,
-			  min_node_matrl, max_node_matrl,
-			  node_matrl_1, node_matrl_2, node_matrl_3,
-			  node_matrl_4, ibc);
-     print_sync_end(FALSE);
-#endif
 
      /*
       * MP Fix: We may not get the same results on all processors
@@ -1250,18 +1192,6 @@ bc_matrl_index(Exo_DB *exo)
 	       MPI_COMM_WORLD);
 
 
-#ifdef DEBUG_HKM
-     print_sync_start(FALSE);
-     if ( !ProcID ) {
-       printf("Final matrl_index's for ibc = %d:\n", ibc);
-       printf("\tBC_matrl_index_1 = %d\n",  bc_ptr->BC_matrl_index_1);
-       printf("\tBC_matrl_index_2 = %d\n",  bc_ptr->BC_matrl_index_2);
-       printf("\tBC_matrl_index_3 = %d\n",  bc_ptr->BC_matrl_index_3);
-       printf("\tBC_matrl_index_4 = %d\n",  bc_ptr->BC_matrl_index_4);
-       fflush(stdout);
-     }
-     print_sync_end(FALSE);
-#endif
 #endif
      
   }
@@ -1343,7 +1273,7 @@ determine_dvi_index(void)
           fprintf(stderr,
 		  "Boundary condition %s can't be put on external domain bc\n",
 		  bc_desc->name1);
-	  EH(-1,"Boundary Condition incompatibility");
+	  EH(GOMA_ERROR,"Boundary Condition incompatibility");
 	}
 	bc_ptr->DV_Indexing_Type = DVI_VSIG;
 	break;
@@ -1363,7 +1293,7 @@ determine_dvi_index(void)
           fprintf(stderr,
 		  "Boundary condition %s can't be put on external domain bc\n",
 		  bc_desc->name1);
-	  EH(-1,"Boundary Condition incompatibility");
+	  EH(GOMA_ERROR,"Boundary Condition incompatibility");
 	}
 	bc_ptr->DV_Indexing_Type = DVI_MULTI_PHASE_SINGLE;
         break;
@@ -1373,7 +1303,7 @@ determine_dvi_index(void)
           fprintf(stderr,
 		  "Boundary condition %s can't be put on external domain bc\n",
 		  bc_desc->name1);
-	  EH(-1,"Boundary Condition incompatibility");
+	  EH(GOMA_ERROR,"Boundary Condition incompatibility");
 	}
 	bc_ptr->DV_Indexing_Type = DVI_DVVSIG;
 	break;
@@ -1404,7 +1334,7 @@ determine_dvi_index(void)
           fprintf(stderr,
 		  "Boundary condition %s can't be put on external domain bc\n",
 		  bc_desc->name1);
-	  EH(-1,"Boundary Condition incompatibility");
+	  EH(GOMA_ERROR,"Boundary Condition incompatibility");
 	}
 	bc_ptr->DV_Indexing_Type = DVI_MULTI_PHASE_VD;
 	break;
@@ -1414,7 +1344,7 @@ determine_dvi_index(void)
           fprintf(stderr,
 		  "Boundary condition %s can't be put on external domain bc\n",
 		  bc_desc->name1);
-	  EH(-1,"Boundary Condition incompatibility");
+	  EH(GOMA_ERROR,"Boundary Condition incompatibility");
 	}
 
     }
@@ -1491,13 +1421,6 @@ setup_external_nodal_matrls(Exo_DB *exo, Dpi *dpi, Comm_Ex *cx)
   }
   exchange_neighbor_proc_info(dpi->num_neighbors, np_base);
   
-#ifdef DEBUG_HKM
-  printf("P_%d at barrier after exchange in setup_external_nodal_matrls\n",
-	  ProcID); fflush(stdout);
-#ifdef PARALLEL
-  MPI_Barrier(MPI_COMM_WORLD);
-#endif
-#endif
 
   for (i = 0; i < dpi->num_external_nodes; i++) {
     node_num = dpi->num_internal_nodes + dpi->num_boundary_nodes + i;
@@ -1517,12 +1440,6 @@ setup_external_nodal_matrls(Exo_DB *exo, Dpi *dpi, Comm_Ex *cx)
       }
     }   
   }
-#ifdef DEBUG_HKM
-  if ((k = find_MaxMatrlPerNode()) != max_Matrl) {
-    printf("ERROR! %d %d\n", max_Matrl, k);
-    exit (-1);
-  }
-#endif
 
   /*
    *  Free memory allocated in this routine
@@ -1536,13 +1453,6 @@ setup_external_nodal_matrls(Exo_DB *exo, Dpi *dpi, Comm_Ex *cx)
    *  every node
    */
 
-#ifdef DEBUG_HKM
-  printf("P_%d at barrier at end of setup_external_nodal_matrlx\n",
-	 ProcID); fflush(stdout);
-#ifdef PARALLEL
-  MPI_Barrier(MPI_COMM_WORLD);
-#endif
-#endif
 }
 /***************************************************************************/
 /***************************************************************************/

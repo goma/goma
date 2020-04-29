@@ -13,6 +13,10 @@
 #ifndef GOMA_DP_MAP_COMM_VEC_H
 #define GOMA_DP_MAP_COMM_VEC_H
 
+#include "dp_comm.h"
+#include "dp_types.h"
+#include "dpi.h"
+#include "exo_struct.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif
