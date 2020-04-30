@@ -518,7 +518,7 @@ void adapt_mesh(Omega_h::Mesh &mesh) {
   //    "initial_metric",OMEGA_H_ISO_SIZE,OMEGA_H_ABSOLUTE});
   genopts.should_limit_lengths = true;
   genopts.min_length = 1e-6;
-  genopts.max_length = 0.04;
+  genopts.max_length = 0.8;
   genopts.should_limit_gradation = true;
   genopts.max_gradation_rate = 0.3;
   Omega_h::add_implied_isos_tag(&mesh);
@@ -619,9 +619,9 @@ void adapt_mesh_omega_h(struct Aztec_Linear_Solver_System **ams,
             Omega_h::Write<Omega_h::Real>(mesh.nverts() * Omega_h::symm_ncomps(mesh.dim()));
         auto f0 = OMEGA_H_LAMBDA(Omega_h::LO index) {
           auto F = var_values[index];
-          auto iso_size = 0.1;
-          if (std::abs(F) < ls->Length_Scale*2) {
-            iso_size = 1e-3;
+          auto iso_size = 0.8;
+          if (std::abs(F) < 1) {
+            iso_size = 0.1;
           }
           auto target_metric = Omega_h::compose_metric(Omega_h::identity_matrix<2, 2>(),
                                                        Omega_h::vector_2(iso_size, iso_size));

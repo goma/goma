@@ -2426,6 +2426,8 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 //                              &nprint, delta_t, theta, 0, x_pp,
 //                              exo, dpi);
 //        nprint++;
+        nullify_dirichlet_bcs();
+        find_and_set_Dirichlet(x, xdot, exo, dpi);
       }
 
       numProcUnknowns = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
