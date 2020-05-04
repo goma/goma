@@ -61,6 +61,7 @@
 #include "wr_exo.h"
 #include "wr_soln.h"
 #include "dpi.h"
+#include "adapt/omega_h_interface.h"
 
 #define GOMA_RF_SOLVE_SEGREGATED_C
 #include "rf_solve_segregated.h"
@@ -1368,6 +1369,7 @@ void solve_problem_segregated(
        *  TOP OF THE TIME STEP LOOP -> Loop over time steps whether
        *                               they be successful or not
        *******************************************************************/
+      int adapt_step = 0;
       for (n = 0; n < MaxTimeSteps; n++) {
 
         tran->step = n;
@@ -1423,6 +1425,35 @@ void solve_problem_segregated(
                *  }
                */
             }
+            if (pg->imtrx == 0 && (nt == 0 || nt % 3 == 0)) {
+              adapt_mesh_omega_h(ams, exo, dpi, x, x_old, x_older, xdot, xdot_old, x_oldest,
+                                 resid_vector, x_update, scale, adapt_step);
+              adapt_step++;
+              num_total_nodes = dpi->num_universe_nodes;
+              num_total_nodes = dpi->num_universe_nodes;
+              for (int imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+              numProcUnknowns[imtrx] = NumUnknowns[imtrx] + NumExtUnknowns[imtrx];
+              dcopy1(numProcUnknowns[imtrx], x[imtrx], x_old[imtrx]);
+              dcopy1(numProcUnknowns[imtrx], x_old[imtrx], x_older[imtrx]);
+              dcopy1(numProcUnknowns[imtrx], x_older[imtrx], x_oldest[imtrx]);
+              realloc_dbl_1(&x_pred[imtrx], numProcUnknowns[imtrx], 0);
+              realloc_dbl_1(&gvec[imtrx], Num_Node, 0);
+              realloc_dbl_1(&xdot_older[imtrx], numProcUnknowns[imtrx], 0);
+              memset(xdot[imtrx], 0, sizeof(double) * numProcUnknowns[imtrx]);
+              memset(xdot_older[imtrx], 0, sizeof(double) * numProcUnknowns[imtrx]);
+              memset(x_pred[imtrx], 0, sizeof(double) * numProcUnknowns[imtrx]);
+              memset(resid_vector[imtrx], 0, sizeof(double) * numProcUnknowns[imtrx]);
+              memset(scale[imtrx], 0, sizeof(double) * numProcUnknowns[imtrx]);
+              memset(x_update[imtrx], 0, sizeof(double) * (numProcUnknowns[imtrx] + numProcUnknowns[imtrx]));
+                dcopy1(numProcUnknowns[imtrx], xdot[imtrx], xdot_old[imtrx]);
+              }
+              wr_result_prelim_exo_segregated(rd, exo, ExoFileOut, gvec_elem);
+              nprint = 0;
+              nullify_dirichlet_bcs();
+              find_and_set_Dirichlet(x[pg->imtrx], xdot[pg->imtrx], exo, dpi);
+            }
+
+            numProcUnknowns[pg->imtrx] = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
 
             if (pg->matrix_subcycle_count[pg->imtrx] > 1) {
               double sub_time = time;

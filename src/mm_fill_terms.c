@@ -7969,8 +7969,8 @@ load_fv(void)
     fv_dot_old->F = 0;
     for (int i = 0; i < ei[upd->matrix_index[v]]->dof[v]; i++) {
       if (upd->Total_Num_Matrices > 1) {
-        fv_dot_old->F += *(pg->matrices[upd->matrix_index[v]].xdot_old - pg->matrices[upd->matrix_index[v]].xdot +
-                                  esp_dot->F[i]) * bf[v]->phi[i];
+//        fv_dot_old->F += *(pg->matrices[upd->matrix_index[v]].xdot_old - pg->matrices[upd->matrix_index[v]].xdot +
+//                                  esp_dot->F[i]) * bf[v]->phi[i];
       } else {
         fv_dot_old->F +=  *(xdot_old_static - xdot_static +
                                   esp_dot->F[i]) * bf[v]->phi[i];
