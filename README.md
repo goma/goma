@@ -1,7 +1,18 @@
-# Goma 6.1
+# Goma 6.2
 A Full-Newton Finite Element Program for Free and Moving Boundary Problems with Coupled Fluid/Solid Momentum, Energy, Mass, and Chemical Species Transport
 
 For more information see the [Goma website](http://goma.github.io)
+
+Changes in version 6.2
+
+* Many bug fixes
+* Stratimikos support
+* Log conformation tensor stress model
+* Hysing and Denner surface tension models for level set
+* Suspension balance updates
+* Updated SUPG for species
+* Quadratic triangles
+* And more...
 
 Changes in version 6.1
 
