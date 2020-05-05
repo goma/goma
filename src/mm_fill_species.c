@@ -3578,7 +3578,9 @@ flory_huggins(double func[],
   double df3_dc[MAX_CONC][MAX_CONC],df_dc[MAX_CONC][MAX_CONC];
   double truedf_dc[MAX_CONC][MAX_CONC];
   double phi_j, A;
-  double C[MAX_CONC], vol[MAX_CONC], sv[MAX_CONC];
+  double C[MAX_CONC] = {0.0};
+  double vol[MAX_CONC] = {0.0};
+  double sv[MAX_CONC];
   double y_mol[MAX_CONC], y_mass[MAX_CONC];
   double mw[MAX_CONC], prod[MAX_CONC]; 
   double activity[MAX_CONC];

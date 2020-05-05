@@ -1843,7 +1843,7 @@ int i, mode=0, strs=0;
      case GIESEKUS:
             alpha = ve_glob[mn][mode]->alpha;
             lambda = ve_glob[mn][mode]->time_const;
-            Ws = at*lambda*abs(srate);
+            Ws = at*lambda*fabs(srate);
             A_alpha = 8*alpha*(1.-alpha);
             mup = viscosity(ve[mode]->gn, gamma, NULL);
             if(Ws >= 0.1) 
@@ -1877,7 +1877,7 @@ int i, mode=0, strs=0;
           break;
      case OLDROYDB:
             lambda = ve_glob[mn][mode]->time_const;
-            Ws = at*lambda*abs(srate);
+            Ws = at*lambda*fabs(srate);
             mup = viscosity(ve[mode]->gn, gamma, NULL);
             switch (strs) {
                case 0:   /* S11 */

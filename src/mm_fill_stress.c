@@ -5970,7 +5970,8 @@ analytical_exp_s(double s[DIM][DIM],
   double tmp;
 
 
-  double B[DIM][DIM], D[DIM][DIM],eig_S[DIM],Q1[DIM][DIM],Q2[DIM][DIM];
+  double B[DIM][DIM], D[DIM][DIM],Q1[DIM][DIM],Q2[DIM][DIM];
+  double eig_S[DIM] = {0.0};
   memset(D, 0.0, sizeof(double)*DIM*DIM);
 
   /* Use Eigenvalue algorithm from Wikipedia - https://en.wikipedia.org/wiki/

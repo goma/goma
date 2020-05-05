@@ -40,7 +40,6 @@ extern int mf_setup
        int *);			/* allocated */
 #endif
 
-int w;
 
 #include "sl_util.h"		/* defines sl_init() */
 #include "el_quality.h"

@@ -82,6 +82,7 @@
  */
 
 double mm_fill_total;
+int PRS_mat_ielem;
 
 static void load_lec 
 ( Exo_DB*,                 /* Exodus database pointer */

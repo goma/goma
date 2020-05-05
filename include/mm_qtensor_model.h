@@ -120,7 +120,7 @@ EXTERN void assemble_new_qtensor /* Ryan's qtensor */
 extern int MMH_ip;
 
 /*don't ask about this skeleton. I need the local material-referenced element number deep in the bowels of the assembly routines, and passing exo struct down there is brutal. */
-int PRS_mat_ielem; 
+extern int PRS_mat_ielem;
 
 #define QTENSOR_SMALL_DBL 1.0e-14
 

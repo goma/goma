@@ -79,15 +79,11 @@ struct Variable_Initialization	Var_init[MAX_VARIABLE_TYPES + MAX_CONC];
 struct Variable_Initialization	Var_init_mat[MAX_NUMBER_MATLS]
 						[MAX_VARIABLE_TYPES + MAX_CONC];
 
-struct Boundary_Condition *BC_Types;
-
-struct Rotation_Specs *ROT_Types;
-
-struct AC_Information *augc;
+extern struct AC_Information *augc;
 
 struct HC_Information *hunt;
 
-struct Eigensolver_Info *eigen;
+extern struct Eigensolver_Info *eigen;
 
 struct Continuation_Conditions *cpcc;
 
@@ -15279,7 +15275,7 @@ read_surface_objects ( FILE* ifp,
 
 {
   int iread;
-  char name[10];
+  char name[32];
   struct LS_Surf *surf;
   char echo_string[MAX_CHAR_ECHO_INPUT]="\0";
   char *echo_file = Echo_Input_File;

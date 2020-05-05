@@ -22,8 +22,6 @@
 #define GOMA_AC_CONTI_C
 #include "goma.h"
 #include "brk_utils.h"
-int w;
-
 #include "sl_util.h"		/* defines sl_init() */
 
 #ifdef HAVE_FRONT
