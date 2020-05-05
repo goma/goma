@@ -120,7 +120,6 @@ struct elem_edge_bc_struct ***First_Elem_Edge_BC_Array;
 #define ROUND_TO_ONE 0.9999999
 
 
-int w;
 
 /*
  * Declarations of static functions defined in this file.

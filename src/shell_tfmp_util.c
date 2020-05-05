@@ -502,7 +502,7 @@ void h0_minus_ndotd (
   // assume the web is always the lower member of the gap boundary
   double n_dot_up = 0.0;
 
-  double up[DIM];
+  double up[DIM] = {0.0};
   if (pd->Num_Dim == 2) {
     up[0] = up[2] = 0.0;
     up[1] = 1.0;

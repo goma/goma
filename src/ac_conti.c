@@ -63,7 +63,6 @@
 #include "wr_exo.h"
 #include "wr_soln.h"
 
-int w;
 
 #include "sl_util.h"		/* defines sl_init() */
 

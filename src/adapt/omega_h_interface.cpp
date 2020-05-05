@@ -440,9 +440,9 @@ void convert_back_to_goma_exo(
   init_dpi_struct(dpi);
 
 //  const char * tmpfile = "tmp.e";
-  strncpy(ExoFile, "tmp.e", 128);
-  strncpy(ExoFileOutMono, path, 128);
-  strncpy(ExoFileOut, path, 128);
+  strncpy(ExoFile, "tmp.e", 127);
+  strncpy(ExoFileOutMono, path, 127);
+  strncpy(ExoFileOut, path, 127);
   int num_total_nodes = dpi->num_internal_nodes + dpi->num_boundary_nodes + dpi->num_external_nodes;
 
   for (int imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {

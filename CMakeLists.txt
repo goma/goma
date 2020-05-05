@@ -354,6 +354,7 @@ set(GOMA_SOURCES
         src/el_elm_info.c
         src/el_quality.c
         src/exo_conn.c
+        src/globals.c
         src/loca_bord.c
         src/loca_eigen_c2f.F
         src/loca_eigen_cayley.F
