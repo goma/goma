@@ -2835,6 +2835,14 @@ struct viscosity_dependence
 };
 typedef struct viscosity_dependence VISCOSITY_DEPENDENCE_STRUCT;
 
+/* struct for d_saramito */
+struct saramito_coefficient_dependence
+{
+  double s[DIM][DIM];      /* stress dependence. */
+  double tau_y;            /* yield stress dependence. */
+};
+typedef struct saramito_coefficient_dependence SARAMITO_DEPENDENCE_STRUCT;
+
 /* struct for d_dilMu */
 struct dilViscosity_dependence
 {

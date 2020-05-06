@@ -1434,6 +1434,15 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
   VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
   VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
 
+	SARAMITO_DEPENDENCE_STRUCT d_saramito_struct;
+  SARAMITO_DEPENDENCE_STRUCT *d_saramito = &d_saramito_struct;
+
+	// todo: will want to parse necessary parameters... for now hard code
+	const bool saramitoEnabled = TRUE;
+	const dbl yieldStress = 2e1;
+	dbl saramitoCoeff = 1.;
+
+
   dbl d_mup_dv_pj; 
   dbl d_mup_dmesh_pj; 
 
@@ -1671,6 +1680,21 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
       /* get polymer viscosity */
       mup = viscosity(ve[mode]->gn, gamma, d_mup);
 
+		if(saramitoEnabled == TRUE){
+			saramitoCoeff = compute_saramito_model_terms(s, yieldStress, d_saramito);
+
+		}
+		else{
+			saramitoCoeff = 1.;
+			d_saramito->tau_y = 0;
+			
+			for(int i=0; i<VIM; ++i){
+				for(int j=0; j<VIM; ++j){
+				d_saramito->s[i][j] = 0;
+				}
+			}
+		}
+
       /* get Geisekus mobility parameter */
       alpha = ve[mode]->alpha;
       
@@ -1785,16 +1809,17 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 			  source = 0.;
 			  if ( pd->e[eqn] & T_SOURCE )
 			    {
-			      source +=  Z* s[a][b] - at * mup * ( g[a][b] +  gt[a][b]);
+				// consider whether saramitoCoeff should multiply here
+			      source +=  saramitoCoeff * Z* s[a][b] - at * mup * ( g[a][b] +  gt[a][b]);
 			      
 			      if(alpha != 0.)
 				{
 				  source1 = ( s_dot_s[a][b]/mup);
 				  
-				  source1 *= alpha * lambda;
+				  source1 *= alpha * lambda * saramitoCoeff;
 				  source  += source1;
 				}
-			      
+
 			      source *= wt_func * det_J * h3 * wt;
 			      
 			      source *= pd->etm[eqn][(LOG2_SOURCE)];
@@ -1834,9 +1859,11 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 		      if( ucwt != 0.) R_advection -= ucwt*(gt_dot_s[a][b] + s_dot_g[a][b]);
 		      if( lcwt != 0.) R_advection += lcwt*(s_dot_gt[a][b] + g_dot_s[a][b]);
 
-		      R_source =   Z*s[a][b] - at * mup * ( g[a][b] +  gt[a][b]);
+		      R_source =   Z*s[a][b];
 			      
 		      if(alpha != 0.) R_source  +=  alpha * lambda*( s_dot_s[a][b]/mup);
+					R_source *= saramitoCoeff;
+					R_source += - at * mup * ( g[a][b] +  gt[a][b]);
 		      
 		      for ( i=0; i<ei->dof[eqn]; i++)
 			{
@@ -1907,7 +1934,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				      if(alpha != 0.)
 					{
 					  source1 -= s_dot_s[a][b]/(mup*mup)*d_mup->T[j];
-					  source1 *= lambda * alpha ;
+					  source1 *= lambda * alpha * saramitoCoeff ;
 					  source  += source1;
 					}
 				      source *= wt_func * det_J * wt * h3;
@@ -2067,7 +2094,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					  if(alpha != 0.)
 					    {
 					      source_a = -s_dot_s[a][b]/(mup*mup);
-					      source_a *= wt_func * alpha * lambda * d_mup_dv_pj;
+					      source_a *= wt_func * saramitoCoeff * alpha * lambda * d_mup_dv_pj;
 					    }
 					  
 					  source_b = 0.;
@@ -2118,7 +2145,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					  if(alpha != 0.)
 					    {
 					      source_b -= s_dot_s[a][b]/(mup*mup);
-					      source_b *= alpha * lambda * d_mup->C[w][j];
+					      source_b *= alpha * lambda * saramitoCoeff * d_mup->C[w][j];
 					    }
 					  source = source_a + source_b;
 					  source *= wt_func * det_J * wt * h3;
@@ -2157,7 +2184,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				      if(alpha != 0.)
 					{
 					  source_b -= ( s_dot_s[a][b]/(mup*mup));
-					  source_b *= d_mup->P[j] * alpha * lambda;
+					  source_b *= d_mup->P[j] * alpha * lambda * saramitoCoeff;
 					}
 				      source  = source_a + source_b;
 				      source *= wt_func * det_J * wt * h3;
@@ -2312,7 +2339,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					  
 					  if(alpha != 0.)
 					    {
-					      source_b += -s_dot_s[a][b]/(mup*mup) * alpha * lambda;
+					      source_b += -s_dot_s[a][b]/(mup*mup) * alpha * lambda * saramitoCoeff;
 					    }
 					  
 					  source_a *= wt_func * (d_det_J_dmesh_pj * h3 + det_J * dh3dmesh_pj);
@@ -2474,19 +2501,23 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					  
 					  if ( pd->e[eqn] & T_SOURCE )
 					    {
-					      source_a  =  Z * phi_j * (double)delta(a,p) * (double)delta(b,q);
- 					      if( p == q) source_a +=  s[a][b] * dZ_dtrace * phi_j;  
-		      
+					      source_a  =  Z * (double)delta(a,p) * (double)delta(b,q);
+ 					      if( p == q) source_a +=  s[a][b] * dZ_dtrace; 
+								source_a *= saramitoCoeff;
+								// sensitivities for saramito model:
+								source_a +=  d_saramito->s[p][q] * s[a][b] * Z;
+		      			
 					      source_b  =0.;
 					      if(alpha != 0.)
 						{
-						  source_b  =  phi_j *  alpha * lambda *
-						    (s[q][b] * (double)delta(a,p) + s[a][p] * (double)delta(b,q))/mup;
+						  source_b  = alpha * lambda * saramitoCoeff * 
+						              (s[q][b] * (double)delta(a,p) + s[a][p] * (double)delta(b,q))/mup +
+							         	  d_saramito->s[p][q] * alpha * lambda*( s_dot_s[a][b]/mup);
 						}
 					      
 					      source  = source_a + source_b;
 					      
-					      source *= det_J * h3 * wt_func * wt * pd->etm[eqn][(LOG2_SOURCE)];
+					      source *= phi_j * det_J * h3 * wt_func * wt * pd->etm[eqn][(LOG2_SOURCE)];
 					      
 					    }
 					  
@@ -6080,4 +6111,110 @@ compute_d_exp_s_ds(dbl s[DIM][DIM],                   //s - stress
 
 }
 
+dbl
+compute_saramito_model_terms(dbl stress[DIM][DIM],
+														 dbl yieldStress,
+														 SARAMITO_DEPENDENCE_STRUCT* d_sCoeff)
+{
+	/* start by computing the norm of the deviatoric stress,  sqrt(J_2), 
+	 * J_2 = 1/(2*DIM)[
+	                   (stress_{0,0} - stress_{1,1})**2 + 
+										 (stress_{0,0} - stress_{2,2})**2 + 
+										 (stress_{2,2} - stress_{1,1})**2
+										 ] +
+										 stress_{0,1}**2 + stress_{0,2}**2 + stress_{2,1}**2
+
+	 * see the following wikipedia page:
+	 * https://en.wikipedia.org/wiki/Cauchy_stress_tensor#Invariants_of_the_stress_deviator_tensor
+	 */
+	dbl invDenom = 1./(2.*VIM);
+
+	// square of the deviatoric sress norm
+
+	dbl normOfStressDSqr = pow(stress[0][0] - stress[1][1], 2)*invDenom + pow(stress[0][1], 2);
+	if(VIM>2){
+		normOfStressDSqr += pow(stress[0][0] - stress[2][2], 2)*invDenom + pow(stress[0][2], 2)
+		                + pow(stress[1][1] - stress[2][2], 2)*invDenom + pow(stress[1][2], 2);
+	}
+
+	const dbl normOfStressD = sqrt(normOfStressDSqr);
+
+	dbl sCoeff = fmax(0, (normOfStressD - yieldStress)/(normOfStressD));
+
+	// take care of indeterminate behavior for normOfStressD == 0
+	if(normOfStressD == 0){ sCoeff = 0; }
+
+	// if normStress_d < yieldStress, set sensitivities to zero and return 
+	if( (sCoeff) == 0 ){
+		for(int i=0; i<VIM; i++){
+			for(int j=0; j<VIM; j++){
+				d_sCoeff->s[i][j] = 0.;
+			}
+		}
+
+		d_sCoeff->tau_y = 0.;
+	}
+	else{
+		// otherwise, sensitivities need to be calculated
+		d_sCoeff->tau_y = -1./(normOfStressD);
+
+		dbl d_sCoeff_d_normOfStressD = yieldStress/(normOfStressDSqr);
+
+		// first assign elements values of d(normOfStressDSqr)/d(stress);
+		d_sCoeff->s[0][0] = 2.*invDenom*( stress[0][0] - stress[1][1]);
+		d_sCoeff->s[0][1] = 2.*stress[0][1];
+		d_sCoeff->s[1][0] = d_sCoeff->s[0][1];
+		d_sCoeff->s[1][1] = - d_sCoeff->s[0][0];
+
+		if(VIM>2){
+			d_sCoeff->s[0][0] += 2.*invDenom*( stress[0][0] - stress[2][2]);
+			d_sCoeff->s[1][1] += 2.*invDenom*( stress[1][1] - stress[2][2]);
+			// no change for d_sCoeff_d_stress[0][1]
+			d_sCoeff->s[0][2] = 2.*stress[0][2];
+			d_sCoeff->s[0][2] = 2.*stress[1][2];
+			d_sCoeff->s[2][2] = 2.*invDenom*( 2*stress[2][2] - stress[0][0] - stress[1][1]);
+		}
+
+
+		/* use the chain rule to computute sCoeff sensitivies to stress components
+			* d(sCoeff)/d(stress)  =   d(sCoeff)/d(normOfStressD)
+			*                        * d(normOfStressD)/d(normOfStressDSqr)
+			*                        * d(normOfStressDSqr)/d(stress)
+			* 
+			*                      =   d(sCoeff)/d(normOfStressD)
+			*                        * 0.5/normOfStressD
+			*                        * d(normOfStressDSqr)/d(stress) 
+			*/ 
+			
+		// invDenom will be used as d(normOfStressD)/d(stress)
+		invDenom = 0.5/normOfStressD*d_sCoeff_d_normOfStressD;
+
+		for(int i=0; i<VIM; i++){
+			for(int j=i; j<VIM; j++){
+			d_sCoeff->s[i][j] *= invDenom;
+			d_sCoeff->s[j][i] = d_sCoeff->s[i][j];
+			}
+		}
+	}
+	// for debugging purposes.
+	/*
+		for(int i=0; i<VIM; i++){
+			for(int j=0; j<VIM; j++){
+				printf("\nstress[%d][%d] = %E", i, j, stress[i][j]);
+			}
+		}
+		printf("\n");
+		for(int i=0; i<VIM; i++){
+			for(int j=0; j<VIM; j++){
+				printf("\nd(sCoeff)/d(stress[%d][%d] = %E)", i, j, d_sCoeff->s[i][j]);
+			}
+		}
+		printf("\n");
+		printf("yield stress = %E", yieldStress);
+		printf("\n");
+		printf("|stress_d|**2 = %E", normOfStressDSqr);
+		printf("\n-------------------------------------------------------------");
+	*/
+	return sCoeff;
+}
 
