@@ -584,8 +584,6 @@ set(GOMA_TPL_LIBRARIES
   ${MPI_Fortran_LIBRARIES}
 )
 
-message("${GOMA_TPL_LIBRARIES}")
-
 add_library(goma_user ${GOMA_USER_SOURCES} ${GOMA_USER_INCLUDES})
 target_include_directories(goma_user PUBLIC include)
 target_include_directories(goma_user PRIVATE ${GOMA_TPL_INCLUDES})
