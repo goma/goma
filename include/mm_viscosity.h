@@ -127,6 +127,12 @@ PROTO((dbl ,          /* reference zero shear rate fluid viscosity */
        dbl ,          /* reference high shear rate fluid viscosity */
        dbl ));        /* exponent for constitutive equation */
 
+EXTERN int bond_viscosity_sh
+PROTO((int ,          /* species_sus number for structure factor */
+       dbl ,          /* reference zero shear rate fluid viscosity */
+       dbl ,          /* reference high shear rate fluid viscosity */
+       dbl ));        /* exponent for constitutive equation */
+
 EXTERN int cure_viscosity	/* mm_viscosity.c                            */
 PROTO((int ,			/* species - num, solid volume fraction      */
        dbl ,			/* mu0 - carrier fluid viscosity             */
