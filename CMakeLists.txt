@@ -37,6 +37,16 @@ set(CMAKE_CXX_COMPILER ${Trilinos_CXX_COMPILER} )
 set(CMAKE_C_COMPILER ${Trilinos_C_COMPILER} )
 set(CMAKE_Fortran_COMPILER ${Trilinos_Fortran_COMPILER} )
 
+option(ENABLE_CCACHE OFF)
+if (ENABLE_CCACHE)
+    message (STATUS "Searching for ccache.")
+    find_program(CCACHE_FOUND ccache)
+    if(CCACHE_FOUND)
+        message (STATUS "Ccache found.")
+        set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+        set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+    endif(CCACHE_FOUND)
+endif()
 
 # Trilinos required packages
 foreach(package Amesos AztecOO Epetra)
