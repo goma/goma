@@ -4094,7 +4094,7 @@ assemble_momentum(dbl time,       /* current time */
 					{
 					  for ( q=0; q<VIM; q++)
 					    {
-					      diffusion +=
+					      diffusion -=
 						grad_phi_i_e_a[p][q] * d_Pi->g[q][p][b][c][j];
 					    }
 					}
@@ -28866,15 +28866,15 @@ fluid_stress( double Pi[DIM][DIM],
 	    }
 	}
     }
-
+  
   memset( tau_p,      0, sizeof(double) * DIM*DIM);
   memset( d_tau_p_dv, 0, sizeof(double) * DIM*DIM*DIM*MDE);
   memset( d_tau_p_dvd, 0, sizeof(double) * DIM*DIM*DIM*MDE);
   memset( d_tau_p_dy, 0, sizeof(double) * DIM*DIM*MAX_CONC*MDE);
   memset( d_tau_p_dmesh, 0, sizeof(double) * DIM*DIM*DIM*MDE);
   memset( d_tau_p_dp, 0, sizeof(double) * DIM*DIM*MDE);
-
-/*   if( cr->MassFluxModel == DM_SUSPENSION_BALANCE|| mp->QTensorDiffType[w0] == CONSTANT) */
+  
+  /*   if( cr->MassFluxModel == DM_SUSPENSION_BALANCE|| mp->QTensorDiffType[w0] == CONSTANT) */
   if( cr->MassFluxModel == DM_SUSPENSION_BALANCE || cr->MassFluxModel == HYDRODYNAMIC_QTENSOR)
     {
       w0 = gn->sus_species_no;
@@ -28889,7 +28889,7 @@ fluid_stress( double Pi[DIM][DIM],
     {
       evss_f = 0.;
     }
-
+  
   if ( evss_f )
     {
       for ( a=0; a<VIM; a++)
@@ -28904,7 +28904,7 @@ fluid_stress( double Pi[DIM][DIM],
     {
       memset(gamma_cont, 0, sizeof(double)*DIM*DIM);
     }
-
+  
   /* load up shear rate tensor based on velocity */
   for ( a=0; a<VIM; a++)
     {
@@ -28916,30 +28916,33 @@ fluid_stress( double Pi[DIM][DIM],
   if (do_dilational_visc) {
     // use previously calculated div_v.
   }
-
+  
   if ( pd->v[POLYMER_STRESS11] )
     {
       mus = viscosity(gn, gamma, d_mus);
+      mu = viscosity(gn, gamma, d_mu);
     }
   else
     {
+      mus = viscosity(gn, gamma, d_mus);
       mu = viscosity(gn, gamma, d_mu);
     }
-
+  
+  mu_num =1.;
   if ( pd->v[POLYMER_STRESS11] )
     {
       /* initialize the derivative wrt to stress and velocity gradient */
-
+      
       memset( d_mun_dS, 0, sizeof(double) * MAX_MODES*DIM*DIM*MDE);
       memset( d_mun_dG, 0, sizeof(double) * DIM*DIM*MDE);
-
+      
       /* This is the adaptive viscosity from Sun et al., 1999.
        * The term multiplies the continuous and discontinuous
        * shear-rate, so it should cancel out and not affect the
        * solution, other than increasing the stability of the
        * algorithm in areas of high shear and stress.
        */
-
+      
       mu_num = numerical_viscosity(s, gamma_cont, d_mun_dS, d_mun_dG);
 
       mu_over_mu_num = mus;
@@ -29162,9 +29165,6 @@ fluid_stress( double Pi[DIM][DIM],
         }
     }
 
-  /*
-   * Calculate the dilational viscosity, if necessary
-   */
   if (mp->DilationalViscosityModel != DILVISCM_KAPPAWIPESMU) {
     kappa = dil_viscosity(gn, gamma, mu, d_mu, d_dilMu);
     kappa = 0.0;
@@ -29183,12 +29183,12 @@ fluid_stress( double Pi[DIM][DIM],
       for ( b=0; b<VIM; b++)
         {
           Pi[a][b]  = -P * (double)delta(a,b)
-	    + mu * gamma[a][b] - tau_p[a][b];
+	    + mus * gamma[a][b] - tau_p[a][b];
         }
 
       // Add in the diagonal contribution
       if (!kappaWipesMu) {
-	Pi[a][a] -= (mu / 3.0 - 0.5 * kappa) * gamma[a][a];
+	Pi[a][a] -= (mus / 3.0 - 0.5 * kappa) * gamma[a][a];
       }
     }
 
@@ -29198,7 +29198,8 @@ fluid_stress( double Pi[DIM][DIM],
         {
           for ( b=0; b<VIM; b++)
             {
-              Pi[a][b]  += - evss_f * (mu - mus) * gamma_cont[a][b]
+              Pi[a][b]  += evss_f * mu_num  * 
+		(gamma[a][b]-gamma_cont[a][b])
 		+ s[a][b];
             }
         }
@@ -29216,32 +29217,20 @@ fluid_stress( double Pi[DIM][DIM],
             {
               for ( j=0; j<ei->dof[var]; j++)
                 {
-                  d_Pi->T[p][q][j] = d_mu->T[j] * gamma[p][q];
+                  d_Pi->T[p][q][j] = d_mus->T[j] * gamma[p][q];
                 }
             }
         }
       if (!kappaWipesMu) {
 	for (p = 0; p < VIM; p++) {
 	  for (j = 0; j < ei->dof[var]; j++) {
-	    d_Pi->T[p][p][j] -= (d_mu->T[j]/3.0 - 0.5 * d_dilMu->T[j]) * gamma[p][p];
+	    d_Pi->T[p][p][j] -= (d_mus->T[j]/3.0 - 0.5 * d_dilMu->T[j]) * gamma[p][p];
 	  }
 	}
       }
-      if ( pd->v[POLYMER_STRESS11] )
-        {
-          for ( p=0; p<VIM; p++)
-            {
-              for ( q=0; q<VIM; q++)
-                {
-                  for ( j=0; j<ei->dof[var]; j++)
-                    {
-                      d_Pi->T[p][q][j] -= evss_f * ( d_mu->T[j] - d_mus->T[j] )* gamma_cont[p][q];
-                    }
-                }
-	    }
-        }
+      
     }
-
+  
   var = BOND_EVOLUTION;
   if ( d_Pi != NULL && pd->v[var] )
     {
@@ -29262,19 +29251,6 @@ fluid_stress( double Pi[DIM][DIM],
 	  }
 	}
       }
-      if ( pd->v[POLYMER_STRESS11] )
-        {
-          for ( p=0; p<VIM; p++)
-            {
-              for ( q=0; q<VIM; q++)
-                {
-                  for ( j=0; j<ei->dof[var]; j++)
-                    {
-                      d_Pi->nn[p][q][j] -= evss_f * ( d_mu->nn[j] - d_mus->nn[j] )* gamma_cont[p][q];
-                    }
-                }
-	    }
-        }
     }
 
   var = RESTIME;
@@ -29334,22 +29310,9 @@ fluid_stress( double Pi[DIM][DIM],
 	  }
 	}
       }
-      if ( pd->v[POLYMER_STRESS11] )
-        {
-          for ( p=0; p<VIM; p++)
-            {
-              for ( q=0; q<VIM; q++)
-                {
-                  for ( j=0; j<ei->dof[var]; j++)
-                    {
-                      d_Pi->F[p][q][j] -= evss_f * ( d_mu->F[j] - d_mus->F[j] ) * gamma_cont[p][q];
-                    }
-                }
-	    }
-        }
     }
 #endif /* COUPLED_FILL */
-
+  
   
   if ( d_Pi != NULL && pd->v[PHASE1] )
     {
@@ -29377,24 +29340,6 @@ fluid_stress( double Pi[DIM][DIM],
 	  }
 	}
       }
-      if ( pd->v[POLYMER_STRESS11] )
-        {
-          for ( p=0; p<VIM; p++)
-            {
-              for ( q=0; q<VIM; q++)
-                {
-		  for( a=0; a<pfd->num_phase_funcs; a++)
-		    {
-		      var = PHASE1 + a;
-		      for ( j=0; j<ei->dof[var]; j++)
-			{
-			  d_Pi->pf[p][q][a][j] -= evss_f * ( d_mu->pf[a][j] - d_mus->pf[a][j] ) * gamma_cont[p][q];
-			}
-		    }
-                }
-	    }
-        }
-
     }
 
 
@@ -29421,7 +29366,7 @@ fluid_stress( double Pi[DIM][DIM],
                          * Compare with the old way in the CYLINDRICAL
                          * chunk below... */
                         d_Pi->v[p][q][b][j] =
-			  mu * (bf[VELOCITY1+q]->grad_phi_e[j][b][p][q] +
+			  (mu + evss_f*mu_num) * (bf[VELOCITY1+q]->grad_phi_e[j][b][p][q] +
 				bf[VELOCITY1+p]->grad_phi_e[j][b][q][p] )
                           + d_mu->v[b][j] * gamma[p][q]
                           - d_tau_p_dv[p][q][b][j];
@@ -29455,7 +29400,7 @@ fluid_stress( double Pi[DIM][DIM],
 		  for ( j=0; j<ei->dof[VELOCITY1]; j++)
 		    {
 		      d_Pi->v[p][q][b][j] =
-			mu * (grad_phi_e[j][b][p][q] + grad_phi_e[j][b][q][p])
+			(mu + evss_f*mu_num)* (grad_phi_e[j][b][p][q] + grad_phi_e[j][b][q][p])
 			+ d_mu->v[b][j] * gamma[p][q]
 			- d_tau_p_dv[p][q][b][j];
 		    }
@@ -29472,23 +29417,6 @@ fluid_stress( double Pi[DIM][DIM],
 	  }
 	}
       }
-
-      if ( pd->v[POLYMER_STRESS11] )
-        {
-          for ( p=0; p<VIM; p++)
-            {
-              for ( q=0; q<VIM; q++)
-                {
-                  for ( b=0; b<wim; b++)
-                    {
-                      for ( j=0; j<ei->dof[var]; j++)
-                        {
-                          d_Pi->v[p][q][b][j] -= evss_f * ( d_mu->v[b][j] - d_mus->v[b][j] ) * gamma_cont[p][q];
-                        }
-                    }
-                }
-	    }
-        }
     }
 
   // Vorticity direction dependence for qtensor
@@ -29522,7 +29450,7 @@ fluid_stress( double Pi[DIM][DIM],
                   for ( j=0; j<ei->dof[MESH_DISPLACEMENT1]; j++)
                     {
                       d_Pi->X[p][q][b][j] =
-			mu * ( fv->d_grad_v_dmesh[p][q] [b][j]
+			(mu+ evss_f*mu_num)  * ( fv->d_grad_v_dmesh[p][q] [b][j]
                                + fv->d_grad_v_dmesh[q][p] [b][j] ) +
                         + d_mu->X [b][j] * gamma[p][q] - d_tau_p_dmesh[p][q][b][j];
                     }
@@ -29538,25 +29466,8 @@ fluid_stress( double Pi[DIM][DIM],
 	    }    
 	  }
 	}
-      
-      if ( pd->v[POLYMER_STRESS11] )
-        {
-          for ( p=0; p<VIM; p++)
-            {
-              for ( q=0; q<VIM; q++)
-                {
-                  for ( b=0; b<dim; b++)
-                    {
-                      for ( j=0; j<ei->dof[MESH_DISPLACEMENT1]; j++)
-                        {
-                          d_Pi->X[p][q][b][j] -=
-			    evss_f * (d_mu->X [b][j] - d_mus->X [b][j]) * gamma_cont[p][q];
-                        }
-                    }
-                }
-            }
-        }
-    }
+    }     
+
 
   if ( d_Pi != NULL && pd->v[POLYMER_STRESS11] )
     {
@@ -29575,8 +29486,8 @@ fluid_stress( double Pi[DIM][DIM],
                             {
                               d_Pi->S[p][q][mode][b][c][j] =
 				((double)delta(b,p) * (double)delta(c,q)) * bf[var]->phi[j]
-                                + mu_over_mu_num * d_mun_dS[mode][b][c][j] *
-				( gamma[p][q] - evss_f * gamma_cont[p][q] );
+                                +  evss_f * d_mun_dS[mode][b][c][j] *
+				( gamma[p][q] - gamma_cont[p][q] );
                             }
                         }
                     }
@@ -29599,10 +29510,10 @@ fluid_stress( double Pi[DIM][DIM],
                       for ( j=0; j<ei->dof[var]; j++)
                         {
                           d_Pi->g[p][q][b][c][j] =
-			    mu_over_mu_num * d_mun_dG[b][c][j] *
-			    ( gamma[p][q] - evss_f * gamma_cont[p][q] )
-                            + evss_f *
-			    ( (mu - mus) * bf[var]->phi[j] *
+			    evss_f * d_mun_dG[b][c][j] *
+			    ( gamma[p][q] - gamma_cont[p][q] )
+                            -evss_f * mu_num *
+			    (  bf[var]->phi[j] *
 			      ((double)delta(c,p) * (double)delta(b,q) +
 			       (double)delta(b,p) * (double)delta(c,q)) );
                         }
@@ -29637,25 +29548,9 @@ fluid_stress( double Pi[DIM][DIM],
 	  }    
 	}
         
-
-      if ( pd->v[POLYMER_STRESS11] )
-        {
-          for ( p=0; p<VIM; p++)
-            {
-              for ( q=0; q<VIM; q++)
-                {
-                  for ( w=0; w<pd->Num_Species_Eqn; w++)
-                    {
-                      for ( j=0; j<ei->dof[var]; j++)
-                        {
-                          d_Pi->C[p][q][w][j] -=
-                            evss_f * ( d_mu->C[w][j] - d_mus->C[w][j] ) * gamma_cont[p][q];
-                        }
-                    }
-                }
-            }
-        }
     }
+    
+
 
   var = PRESSURE;
   if ( d_Pi != NULL && pd->v[var] )
@@ -29675,22 +29570,10 @@ fluid_stress( double Pi[DIM][DIM],
 	      d_Pi->P[p][p][j] -= (d_mu->P[j] /3.0 - 0.5 * d_dilMu->P[j]) * gamma[p][p];
 	    }
 	  }  
-        }
-
-      if ( pd->v[POLYMER_STRESS11] )
-        {
-          for ( p=0; p<VIM; p++)
-            {
-              for ( q=0; q<VIM; q++)
-                {
-                  for ( j=0; j<ei->dof[var]; j++)
-                    {
-                      d_Pi->P[p][q][j] -= evss_f * ( d_mu->P[j] - d_mus->P[j] )* gamma_cont[p][q];
-                    }
-                }
-	    }
-        }
+	}
     }
+
+
 }
 
 void
