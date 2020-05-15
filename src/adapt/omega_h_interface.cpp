@@ -846,7 +846,7 @@ void adapt_mesh(Omega_h::Mesh &mesh) {
   std::cout << "Mesh imbalance = " << imb << "\n";
   mesh.balance();
   imb = mesh.imbalance();
-  std::cout << "Mesh imbalance = " << imb << "\n";
+  std::cout << "Mesh imbalance after balance = " << imb << "\n";
 
 }
 
