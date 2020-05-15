@@ -1898,7 +1898,10 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
        {
 	 EH(model_read, "High Rate Viscosity");
        }
+      ECHO(es,echo_file);
 
+    if(ConstitutiveEquation != BOND )
+      {
       model_read = look_for_mat_prop(imp, "Time Constant", 
 				     &(gn_glob[mn]->lamModel), 
 				     &(gn_glob[mn]->lam), NO_USER, NULL,
@@ -1932,6 +1935,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
        }
 
       ECHO(es,echo_file);
+     }
     }
 
   if(ConstitutiveEquation == CARREAU || 
@@ -1988,6 +1992,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
      ConstitutiveEquation == CARREAU_WLF_CONC_PL ||
      ConstitutiveEquation == CARREAU_WLF_CONC_EXP ||
      ConstitutiveEquation == THERMAL||
+     ConstitutiveEquation == BOND ||
      ConstitutiveEquation == FOAM_EPOXY)
     {
       model_read = look_for_mat_prop(imp, "Thermal Exponent", 
@@ -2027,6 +2032,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   if(ConstitutiveEquation == CARREAU_WLF ||
      ConstitutiveEquation == BINGHAM_WLF || 
      ConstitutiveEquation == CARREAU_WLF_CONC_PL ||
+     ConstitutiveEquation == BOND ||
      ConstitutiveEquation == CARREAU_WLF_CONC_EXP )
     {
       model_read = look_for_mat_prop(imp, "Thermal WLF Constant2", 
@@ -2065,6 +2071,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   if(ConstitutiveEquation == BINGHAM  ||
      ConstitutiveEquation == BINGHAM_WLF  ||
+     ConstitutiveEquation == BOND ||
      ConstitutiveEquation == HERSCHEL_BULKLEY)
     {
       model_read = look_for_mat_prop(imp, "Yield Stress", 
@@ -2078,6 +2085,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     }
 
   if( ConstitutiveEquation == BINGHAM ||
+      ConstitutiveEquation == BOND ||
       ConstitutiveEquation == BINGHAM_WLF)
     {
       model_read = look_for_mat_prop(imp, "Yield Exponent", 
