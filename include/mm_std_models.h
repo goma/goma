@@ -58,6 +58,10 @@ EXTERN int epoxy_species_source /* mm_std_models.c                           */
 PROTO((int ,			/* species_no - Current species number       */
        double *));		/* param - user-defined parameter list       */
 
+EXTERN int bond_species_source /* mm_std_models.c                           */
+PROTO((int ,			/* species_no - Current species number       */
+       double *));		/* param - user-defined parameter list       */
+
 EXTERN double epoxy_heat_source	/* mm_std_models.c                           */
 PROTO((HEAT_SOURCE_DEPENDENCE_STRUCT *,
        double ,			/* tt - parameter to vary time integration   *

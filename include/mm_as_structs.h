@@ -2290,6 +2290,7 @@ struct Porous_Media_Terms {
   dbl d_MassSource_dv[MAX_PMV] [DIM][MDE];
   dbl d_MassSource_dpv[MAX_PMV] [DIM][MDE];
   dbl d_MassSource_dT[MAX_PMV][MDE];
+  dbl d_MassSource_dsh[MAX_PMV][MDE];
   dbl d_MassSource_dV[MAX_PMV][MDE];
   dbl d_MassSource_dSM[MAX_PMV][MDE];  /*sink mass sensitivity */
 
@@ -2402,6 +2403,7 @@ struct Species_Conservation_Terms
   dbl d_MassSource_dv[MAX_CONC] [DIM][MDE];
   dbl d_MassSource_dpv[MAX_CONC] [DIM][MDE];
   dbl d_MassSource_dT[MAX_CONC][MDE];
+  dbl d_MassSource_dsh[MAX_CONC][MDE];
   dbl d_MassSource_dI[MAX_CONC][MDE];
   dbl d_MassSource_dV[MAX_CONC][MDE];
   dbl d_MassSource_dpmv[MAX_CONC] [MAX_PMV][MDE];

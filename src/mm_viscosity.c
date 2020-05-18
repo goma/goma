@@ -468,6 +468,34 @@ viscosity(struct Generalized_Newtonian *gn_local,
     {
       mu = bond_viscosity(gn_local, gamma_dot, d_mu);
     }
+  else if (gn_local->ConstitutiveEquation == BOND_SH)
+    {
+      err = bond_viscosity_sh(gn_local->sus_species_no,gn_local->mu0, gn_local->muinf, gn_local->aexp);
+      EH(err, "bond_viscosity_sh");
+      
+      mu = mp->viscosity;
+      
+       var = MASS_FRACTION;
+      if ( d_mu != NULL && pd->v[var] )
+	{
+	  w = gn_local->sus_species_no;
+	  var_offset = MAX_VARIABLE_TYPES + w;
+	  for ( j=0; j<ei->dof[var]; j++)
+	    {
+	      d_mu->C[w][j] =mp->d_viscosity[var_offset]*bf[var]->phi[j];
+	    }
+	}
+  
+     var = BOND_EVOLUTION;
+      if ( d_mu != NULL && pd->v[var] )
+	
+	{
+	  for ( j=0; j<ei->dof[var]; j++)
+	    {
+	      d_mu->nn[j]= mp->d_viscosity[var]*bf[var]->phi[j];
+	    }
+	}
+    }
   else if (gn_local->ConstitutiveEquation == EPOXY)
     {
       err = epoxy_viscosity(gn_local->cure_species_no, gn_local->mu0,
@@ -2066,6 +2094,12 @@ carreau_suspension_viscosity(struct Generalized_Newtonian *gn_local,
   
   calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
 
+  if(fabs(gammadot) <= 1.0e-7)
+    {
+     gammadot = .0001 ;
+    }
+ 
+ 
   vdofs = ei->dof[VELOCITY1];
   
   if ( pd->e[R_MESH1] )
@@ -3293,6 +3327,63 @@ bond_viscosity(struct Generalized_Newtonian *gn_local,
 
   return(mu);
 } /* end of bond_viscosity */
+
+/******************************************************************************************
+ *     Function that computes the viscosity of a solution  whose behavior depends on the 
+ *     structure formation of of the system via the relation: 
+ *     
+ *                     mu = mu_inf + (mu0-mu_inf)*c[bond_species]**Aexp
+ *       where
+ *                      mu_inf    = plateau viscosity at high shear
+ *                      mu0       = reference  viscosity when x is zero
+ *                      Aexp      = exponent for bond dependence of viscosity
+ *                      c(bond_species_no) = concentration tracking structure-factor with a source *                                           term using shear-rate invariant variable
+ *
+ *     Function sets the viscosity members of mp.
+ *
+ *    Author: RRR
+ *      Date: 4/14/20
+ *
+ *
+ ******************************************************************************************/
+
+
+int bond_viscosity_sh(int bond_species, /* integer associated with conc eqn for bond */
+		      dbl mu0,         /* reference zero shear rate fluid viscosity */
+		      dbl mu_inf,     /* reference high shear rate fluid viscosity */
+		      dbl Aexp)        /* exponent for constitutive equation */
+{
+  /* Local Variables */
+
+  dbl nn; /* Convenient local variables */
+  int status = 1;
+
+  if (! pd->v[MASS_FRACTION] )
+    {
+      return(0);
+    }
+
+                                       
+  nn= fv->c[bond_species]; /* structure-factor variable */
+  if( nn <= 0.0)
+    {
+      mp->viscosity = mu_inf;
+      mp->d_viscosity[MAX_VARIABLE_TYPES+bond_species] 	= 0. ;
+    }
+  else if( nn > 0 && nn <= 1.0)
+    {
+      mp->viscosity = mu_inf + ( mu0- mu_inf ) * pow(nn, Aexp);
+      mp->d_viscosity[MAX_VARIABLE_TYPES+bond_species] = ( mu0- mu_inf ) *Aexp*pow(nn, Aexp-1.);
+    }
+  else
+    {
+      mp->viscosity =  mu0;
+      mp->d_viscosity[MAX_VARIABLE_TYPES+bond_species] = 0.;
+    }
+    
+
+  return(status);
+} /* end of bond_viscosity_sh */
 
 
 double

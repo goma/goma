@@ -127,6 +127,12 @@ PROTO((GEN_NEWT_STRUCT *,               /* gn_local                          */
        dbl [DIM][DIM],	        	/* gamma_dot - strain rate tensor    */
        VISCOSITY_DEPENDENCE_STRUCT *)); /* d_mu - viscosity dependence       */
 
+EXTERN int bond_viscosity_sh
+PROTO((int ,          /* species_sus number for structure factor */
+       dbl ,          /* reference zero shear rate fluid viscosity */
+       dbl ,          /* reference high shear rate fluid viscosity */
+       dbl ));        /* exponent for constitutive equation */
+
 EXTERN int cure_viscosity	/* mm_viscosity.c                            */
 PROTO((int ,			/* species - num, solid volume fraction      */
        dbl ,			/* mu0 - carrier fluid viscosity             */
