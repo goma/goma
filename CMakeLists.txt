@@ -9,6 +9,7 @@ enable_language(Fortran)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(PROJECT_NAME goma)
 list(APPEND CMAKE_MODULE_PATH "${goma_SOURCE_DIR}/cmake")
@@ -22,7 +23,6 @@ MESSAGE(STATUS "Trilinos_DIR = ${Trilinos_DIR}")
 
 set(MPI_C_COMPILER ${Trilinos_C_COMPILER})
 find_package(MPI REQUIRED)
-message(STATUS "Run: ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} ${MPIEXEC_PREFLAGS} EXECUTABLE ${MPIEXEC_POSTFLAGS} ARGS")
 # Avoid linking to too many libraries by removing duplicates
 # reverse so that correct order for linking is preserved
 list(REVERSE Trilinos_LIBRARIES)
