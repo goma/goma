@@ -182,12 +182,13 @@ int resetup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
 
 int resetup_matrix(struct Aztec_Linear_Solver_System **ams, Exo_DB *exo, Dpi* dpi) {
   if (strcmp(Matrix_Format, "epetra") == 0) {
-  for (int imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
-    EpetraDeleteRowMatrix(ams[imtrx]->RowMatrix);
-    ams[imtrx]->RowMatrix = EpetraCreateRowMatrix(
-            num_internal_dofs[imtrx] + num_boundary_dofs[imtrx]);
+  for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+    EpetraDeleteRowMatrix(ams[pg->imtrx]->RowMatrix);
+    ams[pg->imtrx]->RowMatrix = EpetraCreateRowMatrix(
+            num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]);
         EpetraCreateGomaProblemGraph(ams[pg->imtrx], exo, dpi);
   }
+  pg->imtrx = 0;
   }
   else {
     EH(-1, "Unsupported matrix storage format use epetra");

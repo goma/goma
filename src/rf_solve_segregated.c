@@ -1425,12 +1425,18 @@ void solve_problem_segregated(
                *  }
                */
             }
-            if (pg->imtrx == 0 && (nt == 0 || nt % 3 == 0)) {
+            if (ls->adapt && pg->imtrx == 0 && (nt == 0 || nt % ls->adapt_freq == 0)) {
               adapt_mesh_omega_h(ams, exo, dpi, x, x_old, x_older, xdot, xdot_old, x_oldest,
                                  resid_vector, x_update, scale, adapt_step);
               adapt_step++;
               num_total_nodes = dpi->num_universe_nodes;
               num_total_nodes = dpi->num_universe_nodes;
+              if (nt == 0) {
+                if (ls->Num_Var_Init > 0) {
+                  pg->imtrx = Fill_Matrix;
+                  ls_var_initialization(x, exo, dpi, cx);
+                }
+              }
               for (int imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
               numProcUnknowns[imtrx] = NumUnknowns[imtrx] + NumExtUnknowns[imtrx];
               dcopy1(numProcUnknowns[imtrx], x[imtrx], x_old[imtrx]);
@@ -1448,9 +1454,15 @@ void solve_problem_segregated(
                 dcopy1(numProcUnknowns[imtrx], xdot[imtrx], xdot_old[imtrx]);
               }
               wr_result_prelim_exo_segregated(rd, exo, ExoFileOut, gvec_elem);
+              pg->imtrx = 0;
               nprint = 0;
               nullify_dirichlet_bcs();
               find_and_set_Dirichlet(x[pg->imtrx], xdot[pg->imtrx], exo, dpi);
+              x_static = x[pg->imtrx];
+              x_old_static = x_old[pg->imtrx];
+              xdot_static = xdot[pg->imtrx];
+              xdot_old_static = xdot_old[pg->imtrx];
+              pg->imtrx = 0;
             }
 
             numProcUnknowns[pg->imtrx] = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];

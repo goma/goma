@@ -1404,6 +1404,11 @@ noahs_ark(void)
       ddd_add_member(n, &ls->Init_Method, 1,        MPI_INT);
       ddd_add_member(n, &ls->Num_Var_Init, 1,        MPI_INT);
       ddd_add_member(n, &ls->Length_Scale, 1,       MPI_DOUBLE);
+      ddd_add_member(n, &ls->adapt, 1,        MPI_INT);
+      ddd_add_member(n, &ls->adapt_freq, 1,        MPI_INT);
+      ddd_add_member(n, &ls->adapt_inner_size, 1,       MPI_DOUBLE);
+      ddd_add_member(n, &ls->adapt_outer_size, 1,       MPI_DOUBLE);
+      ddd_add_member(n, &ls->adapt_width, 1,       MPI_DOUBLE);
       ddd_add_member(n, &ls->Control_Width, 1,      MPI_DOUBLE);
       ddd_add_member(n, &ls->Renorm_Tolerance, 1,   MPI_DOUBLE);
       ddd_add_member(n, &ls->Renorm_Method, 1,      MPI_INT);

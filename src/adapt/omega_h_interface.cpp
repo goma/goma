@@ -187,9 +187,9 @@ void convert_to_omega_h_mesh_parallel(
     }
   }
 
-  for (auto e : owned_elems) {
-    std::cout << "proc " << ProcID << " owns elem " << dpi->elem_index_global[e] << "\n";
-  }
+//  for (auto e : owned_elems) {
+//    std::cout << "proc " << ProcID << " owns elem " << dpi->elem_index_global[e] << "\n";
+//  }
   int nnodes_per_elem = exo->eb_num_nodes_per_elem[0];
 
   std::set<LO> local_verts;
@@ -199,9 +199,9 @@ void convert_to_omega_h_mesh_parallel(
     }
   }
 
-  for (auto it : local_verts) {
-    std::cout << "proc " << ProcID << " has local vert " << it << "\n";
-  }
+//  for (auto it : local_verts) {
+//    std::cout << "proc " << ProcID << " has local vert " << it << "\n";
+//  }
 
   std::vector<LO> old_locals(local_verts.begin(), local_verts.end());
   std::sort(old_locals.begin(), old_locals.end());
@@ -227,14 +227,11 @@ void convert_to_omega_h_mesh_parallel(
 
   for (int i = 0; i < owned_elems.size(); i++) {
     auto e = owned_elems[i];
-    std::cout << "elem " << e << "[";
     for (int j = 0; j < nnodes_per_elem; j++) {
       auto old_index = exo->eb_conn[0][e * nnodes_per_elem + j];
       auto new_index = old_to_new[old_index];
       h_conn[i * nnodes_per_elem + j] = new_index;
-      std::cout << new_index << " (" << old_index << ") ";
     }
-    std::cout << "]\n";
   }
 
   auto dim = exo->num_dim;
@@ -259,10 +256,10 @@ void convert_to_omega_h_mesh_parallel(
     if (exo->num_dim == 3)
       h_coords[i * dim + 2] = exo->z_coord[idx];
   }
-  for (size_t i = 0; i < old_locals.size(); i++) {
-    std::cout << "Proc " << ProcID << " coords " << i << " glob " << new_verts[i] << " ( "
-              << h_coords[i * dim] << " , " << h_coords[i * dim + 1] << " )\n";
-  }
+//  for (size_t i = 0; i < old_locals.size(); i++) {
+//    std::cout << "Proc " << ProcID << " coords " << i << " glob " << new_verts[i] << " ( "
+//              << h_coords[i * dim] << " , " << h_coords[i * dim + 1] << " )\n";
+//  }
   auto coords = Reals(h_coords.write());
   mesh->add_coords(coords);
   Write<LO> elem_class_ids_w(LO(owned_elems.size()));
@@ -414,9 +411,9 @@ void convert_to_omega_h_mesh_parallel(
             Omega_h::Write<Omega_h::Real>(mesh->nverts() * Omega_h::symm_ncomps(mesh->dim()));
         auto f0 = OMEGA_H_LAMBDA(Omega_h::LO index) {
           auto F = var_values[index];
-          auto iso_size = 0.05;
-          if (std::abs(F) < 0.05) {
-            iso_size = 0.002;
+          auto iso_size = ls->adapt_outer_size;
+          if (std::abs(F) < ls->adapt_width) {
+            iso_size = ls->adapt_inner_size;
           }
           auto target_metric = Omega_h::compose_metric(Omega_h::identity_matrix<2, 2>(),
                                                        Omega_h::vector_2(iso_size, iso_size));
@@ -439,6 +436,149 @@ void convert_to_omega_h_mesh_parallel(
     }
     mesh->add_tag(Omega_h::VERT, efv->name[w], 1, Omega_h::Reals(var_values));
   }
+  std::vector<int> side_set_ids(std::size_t(dpi->num_side_sets_global));
+  for (int i = 0; i < dpi->num_side_sets_global; i++) {
+    side_set_ids[i] = dpi->ss_id_global[i];
+  }
+  //  CALL(ex_get_ids(file, EX_SIDE_SET, side_set_ids.data()));
+  Write<LO> side_class_ids_w(mesh->nents(dim - 1), -1);
+  auto sides_are_exposed = mark_exposed_sides(mesh);
+  classify_sides_by_exposure(mesh, sides_are_exposed);
+  Write<I8> side_class_dims_w = deep_copy(mesh->get_array<I8>(dim - 1, "class_dim"));
+  auto exposed_sides2side = collect_marked(sides_are_exposed);
+  map_value_into(0, exposed_sides2side, side_class_ids_w);
+#if 0
+  if (dpi->num_side_sets_global) {
+    int max_side_set_id = 0;
+    if (side_set_ids.size()) {
+      max_side_set_id = *std::max_element(side_set_ids.begin(), side_set_ids.end());
+    }
+    std::vector<int> node_set_ids(std::size_t(exo->num_node_sets));
+    //    CALL(ex_get_ids(file, EX_NODE_SET, node_set_ids.data()));
+    for (int i = 0; i < exo->num_node_sets; i++) {
+      node_set_ids[i] = exo->ns_id[i];
+    }
+    std::vector<char> names_memory;
+    std::vector<char *> name_ptrs;
+    setup_names(int(dpi->num_node_sets_global + dpi->num_side_sets_global), names_memory, name_ptrs);
+    //    CALL(ex_get_names(file, EX_NODE_SET, name_ptrs.data()));
+
+    for (size_t i = 0; i < exo->num_node_sets; ++i) {
+      int global_offset;
+      for (global_offset = 0; global_offset < dpi->num_node_sets_global; global_offset++) {
+        if (exo->ns_id[i] == dpi->ns_id_global[global_offset]) break;
+      }
+      assert(global_offset < dpi->num_node_sets_global);
+      int nentries;
+      //      CALL(ex_get_set_param(file, EX_NODE_SET, node_set_ids[i], &nentries, &ndist_factors));
+      nentries = exo->ns_num_nodes[i];
+      if (verbose) {
+        std::cout << "node set " << node_set_ids[i] << " has " << nentries << " nodes\n";
+      }
+
+      int nnodes_owned = 0;
+      for (int index = 0; index < nentries; index++) {
+        int exoindex = exo->ns_node_list[exo->ns_node_index[i] + index];
+        if (exo_to_global.find(exoindex) != exo_to_global.end()) {
+          nnodes_owned++;
+        }
+      }
+
+      HostWrite<LO> h_set_nodes2nodes(nnodes_owned);
+      int index = 0;
+      for (int idx = 0; idx < nentries; idx++) {
+        int exoindex = exo->ns_node_list[exo->ns_node_index[i] + index];
+        if (exo_to_global.find(exoindex) != exo_to_global.end()) {
+          h_set_nodes2nodes[index] = exo_to_global.at(exoindex);
+          index++;
+        }
+      }
+      //      CALL(ex_get_set(file, EX_NODE_SET, node_set_ids[i], h_set_nodes2nodes.data(),
+      //      nullptr));
+      auto set_nodes2nodes = LOs(h_set_nodes2nodes.write());
+      auto nodes_are_in_set = mark_image(set_nodes2nodes, mesh->nverts());
+      auto sides_are_in_set = mark_up_all(mesh, VERT, dim - 1, nodes_are_in_set);
+      auto set_sides2side = collect_marked(sides_are_in_set);
+      auto surface_id = dpi->ns_id_global[global_offset] + dpi->num_node_sets_global;
+      if (verbose) {
+        std::cout << "node set #" << node_set_ids[i] << " \"" << name_ptrs[i]
+                  << "\" will be surface " << surface_id << '\n';
+      }
+      map_value_into(surface_id, set_sides2side, side_class_ids_w);
+      map_value_into(I8(dim - 1), set_sides2side, side_class_dims_w);
+    }
+    for (int offset = 0; offset < dpi->num_node_sets_global; offset++) {
+      auto surface_id = dpi->ns_id_global[offset] + dpi->num_side_sets_global;
+      mesh->class_sets[name_ptrs[offset]].push_back({I8(dim - 1), surface_id});
+    }
+  }
+#endif
+  if (1 && exo->num_side_sets) {
+    std::vector<char> names_memory;
+    std::vector<char *> name_ptrs;
+    setup_names(int(dpi->num_side_sets_global), names_memory, name_ptrs);
+    //    CALL(ex_get_names(file, EX_SIDE_SET, name_ptrs.data()));
+    for (size_t i = 0; i < exo->num_side_sets; ++i) {
+      int global_offset;
+      for (global_offset = 0; global_offset < dpi->num_side_sets_global; global_offset++) {
+        if (exo->ss_id[i] == dpi->ss_id_global[global_offset]) break;
+      }
+      assert(global_offset < dpi->num_side_sets_global);
+      int nsides;
+      //      CALL(ex_get_set_param(file, EX_SIDE_SET, side_set_ids[i], &nsides, &ndist_factors));
+      nsides = exo->ss_num_sides[i];
+      int nnodes = 0;
+      for (int side =0; side < nsides; side++) {
+        nnodes += exo->ss_node_cnt_list[i][side];
+      }
+      int nnodes_owned = 0;
+      for (int side =0; side < nnodes; side++) {
+        int exoindex = exo->ss_node_list[i][side];
+        if (exo_to_global.find(exoindex) != exo_to_global.end()) {
+          nnodes_owned++;
+        }
+      }
+
+      HostWrite<LO> h_set_nodes(nnodes_owned);
+      int index = 0;
+      for (int idx = 0; idx < nnodes; idx++) {
+        int exoindex = exo->ss_node_list[i][idx];
+        if (exo_to_global.find(exoindex) != exo_to_global.end()) {
+          h_set_nodes[index] = exo_to_global.at(exoindex);
+          index++;
+        }
+      }
+      auto set_nodes2nodes = LOs(h_set_nodes.write());
+      auto nodes_are_in_set = mark_image(set_nodes2nodes, mesh->nverts());
+      auto sides_are_in_set = mark_up_all(mesh, VERT, dim - 1, nodes_are_in_set);
+      auto set_sides2side = collect_marked(sides_are_in_set);
+      auto surface_id = dpi->ss_id_global[global_offset];
+      if (verbose) {
+        std::cout << "P" << ProcID << " side set #" << surface_id << " \"" << name_ptrs[i] << "\" has "
+                  << nsides
+                  << " sides, will be surface " << surface_id << "\n";
+
+        std::cout << "P" << ProcID << " side set #" << surface_id << " nodes = ";
+        for (int i = 0; i < h_set_nodes.size(); i++) {
+          std::cout << mesh->globals(0).data()[h_set_nodes.data()[i]] << " ";
+        }
+        std::cout << "\n";
+      }
+      map_value_into(surface_id, set_sides2side, side_class_ids_w);
+      map_value_into(I8(dim - 1), set_sides2side, side_class_dims_w);
+      mesh->class_sets[name_ptrs[i]].push_back({I8(dim - 1), surface_id});
+    }
+    for (int offset = 0; offset < dpi->num_side_sets_global; offset++) {
+      auto surface_id = dpi->ss_id_global[offset];
+      mesh->class_sets[name_ptrs[offset]].push_back({I8(dim - 1), surface_id});
+    }
+  }
+  auto elem_class_ids = LOs(elem_class_ids_w);
+  auto side_class_ids = LOs(side_class_ids_w);
+  auto side_class_dims = Read<I8>(side_class_dims_w);
+  mesh->add_tag(dim, "class_id", 1, elem_class_ids);
+  mesh->add_tag(dim - 1, "class_id", 1, side_class_ids);
+  mesh->set_tag(dim - 1, "class_dim", side_class_dims);
   /*
   classify_elements(mesh);
   auto elem_class_ids = LOs(elem_class_ids_w);
@@ -455,13 +595,13 @@ void convert_to_omega_h_mesh_parallel(
 //  mesh->set_parting(OMEGA_H_GHOSTED);
    */
   classify_elements(mesh);
-  auto elem_class_ids = LOs(elem_class_ids_w);
+//  auto elem_class_ids = LOs(elem_class_ids_w);
   // auto side_class_ids = LOs(side_class_ids_w);
   // auto side_class_dims = Read<I8>(side_class_dims_w);
   //  mesh->add_tag(dim, "class_id", 1, elem_class_ids);
   mesh->set_parting(OMEGA_H_GHOSTED);
-  auto sides_are_exposed = mark_exposed_sides(mesh);
-  classify_sides_by_exposure(mesh, sides_are_exposed);
+//  auto sides_are_exposed = mark_exposed_sides(mesh);
+//  classify_sides_by_exposure(mesh, sides_are_exposed);
   // mesh->add_tag(dim - 1, "class_id", 1, side_class_ids);
   // mesh->set_tag(dim - 1, "class_dim", side_class_dims);
   finalize_classification(mesh);
@@ -718,7 +858,9 @@ static OMEGA_H_INLINE int side_osh2exo(int dim, int side) {
 void convert_back_to_goma_exo(
     const char *path, Mesh *mesh, Exo_DB *exo, Dpi *dpi, bool verbose, int classify_with) {
 
+//  Omega_h::exodus::write(std::to_string(ProcID) + "tmp.e", mesh, true, classify_with);
   Omega_h::exodus::write("tmp.e", mesh, true, classify_with);
+//  Omega_h::binary::write("tmp.osh", mesh);
 
   for (int imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
     free(idv[imtrx]);
@@ -903,6 +1045,9 @@ void adapt_mesh_omega_h(struct Aztec_Linear_Solver_System **ams,
   //    Omega_h::exodus::convert_to_omega_h_mesh(exo, dpi, exodus_file, &mesh, verbose,
   //    classify_with);
   //  }
+  mesh.set_parting(OMEGA_H_ELEM_BASED);
+  Omega_h::exodus::write(std::to_string(ProcID) + "convert.e", &mesh, true, classify_with);
+  mesh.set_parting(OMEGA_H_GHOSTED);
   auto writer_c = Omega_h::vtk::Writer("convert.vtk", &mesh);
 
   writer_c.write(step);

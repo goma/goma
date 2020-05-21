@@ -1965,25 +1965,110 @@ rd_levelset_specs(FILE *ifp,
             }
           if( fabs( ls->Length_Scale ) == 0.0 ) WH(-1,"Possible Syntax error.  Level set length scale is zero.");
 
-	  SPF(echo_string,"%s = %.4g",input, ls->Length_Scale);
+          SPF(echo_string, "%s = %.4g", input, ls->Length_Scale);
+      } else {
+        SPF(echo_string, " (%s = %f) %s", "Level Set Length Scale", ls->Length_Scale,
+            default_string);
+      }
+
+      ECHO(echo_string, echo_file);
+
+      iread = look_for_optional(ifp, "Level Set Adaptive Mesh", input, '=');
+      if (iread == 1) {
+
+        if (fscanf(ifp, "%s", input) != 1) {
+          EH(GOMA_ERROR, "Error reading Level Set Adaptive Mesh.");
         }
-      else
-	{
-	  SPF(echo_string," (%s = %f) %s","Level Set Length Scale", ls->Length_Scale, default_string); 
-	}
 
-      ECHO(echo_string,echo_file);
+        strip(input);
+        stringup(input);
 
-      ls->Init_Method  = -1;
-      iread = look_for_optional(ifp,"Level Set Initialization Method",input,'=');
-      if (iread == 1) 
-        {   
-          if ( fscanf(ifp,"%s",input) != 1)
-            {
-              EH( -1, "error reading Level Set Initialization string");
-            }
- 
-          if ( strcmp( input,"Projection") == 0 )
+        if ((strcmp(input, "ON") == 0) || (strcmp(input, "YES") == 0)) {
+          ls->adapt = TRUE;
+        }
+
+        ECHO("\n***Level Set Adaptive Mesh***\n", echo_file);
+        SPF(echo_string, eoformat, "Level Set Adaptive Mesh", input);
+        ECHO(echo_string, echo_file);
+      }
+
+      if (ls->adapt) {
+
+        ls->adapt_width = 3.0 * ls->Length_Scale;
+        iread = look_for_optional(ifp, "Level Set Adapt Width", input, '=');
+        if (iread == 1) {
+          if (fscanf(ifp, "%lf", &(ls->adapt_width)) != 1) {
+            EH(-1, "error reading Level Set Adapt Width");
+          }
+          if (fabs(ls->adapt_outer_size) <= 0.0)
+            WH(-1, "Possible Syntax error.  Level set adapt width <= 0");
+
+          SPF(echo_string, "%s = %.4g", input, ls->adapt_width);
+        } else {
+          SPF(echo_string, " (%s = %f) %s", "Level Set Adapt Width", ls->adapt_width,
+              default_string);
+        }
+
+        ECHO(echo_string, echo_file);
+        ls->adapt_inner_size = -1.0;
+        iread = look_for_optional(ifp, "Level Set Adapt Inner Size", input, '=');
+        if (iread == 1) {
+          if (fscanf(ifp, "%lf", &(ls->adapt_inner_size)) != 1) {
+            EH(-1, "error reading Level Set Adapt Inner Size");
+          }
+          if (fabs(ls->adapt_inner_size) <= 0.0)
+            WH(-1, "Possible Syntax error.  Level set adapt inner size <= 0");
+
+          SPF(echo_string, "%s = %.4g", input, ls->adapt_inner_size);
+        } else {
+          SPF(echo_string, " (%s = %f) %s", "Level Set Adapt Inner Size", ls->adapt_inner_size,
+              default_string);
+        }
+
+        ECHO(echo_string, echo_file);
+
+        ls->adapt_outer_size = -1.0;
+        iread = look_for_optional(ifp, "Level Set Adapt Outer Size", input, '=');
+        if (iread == 1) {
+          if (fscanf(ifp, "%lf", &(ls->adapt_outer_size)) != 1) {
+            EH(-1, "error reading Level Set Adapt Outer Size");
+          }
+
+          SPF(echo_string, "%s = %.4g", input, ls->adapt_outer_size);
+        } else {
+          SPF(echo_string, " (%s = %f) %s", "Level Set Adapt Outer Size", ls->adapt_outer_size,
+              default_string);
+        }
+        if (fabs(ls->adapt_outer_size) <= 0.0)
+          EH(-1, "Possible Syntax error.  Level set adapt outer size <= 0");
+
+        ECHO(echo_string, echo_file);
+        ls->adapt_freq = 3;
+        iread = look_for_optional(ifp, "Level Set Adapt Frequency", input, '=');
+        if (iread == 1) {
+          if (fscanf(ifp, "%d", &(ls->adapt_freq)) != 1) {
+            EH(-1, "error reading Level Set Adapt Frequency");
+          }
+          if (fabs(ls->adapt_freq) <= 0)
+            EH(-1, "Syntax error.  Level set adapt freq <= 0");
+
+          SPF(echo_string, "%s = %.4g", input, ls->adapt_freq);
+        } else {
+          SPF(echo_string, " (%s = %f) %s", "Level Set Adapt Outer Size", ls->adapt_freq,
+              default_string);
+        }
+
+        ECHO(echo_string, echo_file);
+      }
+
+      ls->Init_Method = -1;
+      iread = look_for_optional(ifp, "Level Set Initialization Method", input, '=');
+      if (iread == 1) {
+        if (fscanf(ifp, "%s", input) != 1) {
+          EH(-1, "error reading Level Set Initialization string");
+        }
+
+        if ( strcmp( input,"Projection") == 0 )
             {
               ls->Init_Method = PROJECT;  
 	      ECHO("Level Set Initialization Method = Projection", echo_file);

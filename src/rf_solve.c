@@ -2396,13 +2396,17 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
       }
 #endif
 
-      if (nt == 0 || nt % 3 == 0) {
+      if (ls->adapt && (nt == 0 || nt % ls->adapt_freq == 0)) {
         adapt_mesh_omega_h(ams, exo, dpi, &x, &x_old, &x_older, &xdot, &xdot_old, &x_oldest,
                            &resid_vector, &x_update, &scale, adapt_step);
         adapt_step++;
         num_total_nodes = dpi->num_universe_nodes;
         num_total_nodes = dpi->num_universe_nodes;
         numProcUnknowns = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
+        if (nt == 0) {
+          if( ls->Num_Var_Init > 0 )
+            ls_var_initialization ( &x, exo, dpi, cx );
+        }
         dcopy1(numProcUnknowns, x, x_old);
         dcopy1(numProcUnknowns, x_old, x_older);
         dcopy1(numProcUnknowns, x_older, x_oldest);
@@ -2418,10 +2422,6 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
         memset(x_update, 0, sizeof(double) * (numProcUnknowns + numProcUnknowns));
         dcopy1(numProcUnknowns, xdot, xdot_old);
         wr_result_prelim_exo(rd, exo, ExoFileOut, gvec_elem);
-        if (nt == 0) {
-          	  if( ls->Num_Var_Init > 0 )
-	    ls_var_initialization ( &x, exo, dpi, cx );
-        }
         nprint = 0;
 //        (void) write_solution(ExoFileOut, resid_vector, x, x_sens_p,
 //                              x_old, xdot, xdot_old, tev, tev_post, gv,

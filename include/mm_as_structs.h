@@ -2730,6 +2730,11 @@ struct Level_Set_Data {
   int Init_Method;
   int Num_Var_Init;
   double Length_Scale;
+  int adapt;
+  double adapt_inner_size;
+  double adapt_outer_size;
+  double adapt_width;
+  int adapt_freq;
   double Control_Width;
   double Renorm_Tolerance;
   int Renorm_Method;
