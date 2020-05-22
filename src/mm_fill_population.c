@@ -2374,7 +2374,7 @@ int assemble_moments(double time, /* present time value */
     }
     eta = 1;
 
-    if (vnorm > 0) {
+    if (vnorm > 1e-10) {
       supg_tau = 0.5 * hk * eta / vnorm;
 
       for (j = 0; j < ei[pd->mi[VELOCITY1]]->dof[VELOCITY1]; j++) {

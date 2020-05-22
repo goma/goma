@@ -187,9 +187,9 @@ void convert_to_omega_h_mesh_parallel(
     }
   }
 
-//  for (auto e : owned_elems) {
-//    std::cout << "proc " << ProcID << " owns elem " << dpi->elem_index_global[e] << "\n";
-//  }
+  //  for (auto e : owned_elems) {
+  //    std::cout << "proc " << ProcID << " owns elem " << dpi->elem_index_global[e] << "\n";
+  //  }
   int nnodes_per_elem = exo->eb_num_nodes_per_elem[0];
 
   std::set<LO> local_verts;
@@ -199,9 +199,9 @@ void convert_to_omega_h_mesh_parallel(
     }
   }
 
-//  for (auto it : local_verts) {
-//    std::cout << "proc " << ProcID << " has local vert " << it << "\n";
-//  }
+  //  for (auto it : local_verts) {
+  //    std::cout << "proc " << ProcID << " has local vert " << it << "\n";
+  //  }
 
   std::vector<LO> old_locals(local_verts.begin(), local_verts.end());
   std::sort(old_locals.begin(), old_locals.end());
@@ -256,10 +256,10 @@ void convert_to_omega_h_mesh_parallel(
     if (exo->num_dim == 3)
       h_coords[i * dim + 2] = exo->z_coord[idx];
   }
-//  for (size_t i = 0; i < old_locals.size(); i++) {
-//    std::cout << "Proc " << ProcID << " coords " << i << " glob " << new_verts[i] << " ( "
-//              << h_coords[i * dim] << " , " << h_coords[i * dim + 1] << " )\n";
-//  }
+  //  for (size_t i = 0; i < old_locals.size(); i++) {
+  //    std::cout << "Proc " << ProcID << " coords " << i << " glob " << new_verts[i] << " ( "
+  //              << h_coords[i * dim] << " , " << h_coords[i * dim + 1] << " )\n";
+  //  }
   auto coords = Reals(h_coords.write());
   mesh->add_coords(coords);
   Write<LO> elem_class_ids_w(LO(owned_elems.size()));
@@ -380,49 +380,66 @@ void convert_to_omega_h_mesh_parallel(
   auto coords = Reals(h_coords.write());
   mesh->add_coords(coords);
    */
-  std::map<LO,LO> exo_to_global;
+  std::map<LO, LO> exo_to_global;
   for (int node = 0; node < mesh->globals(0).size(); node++) {
     int exo_index = in_list(mesh->globals(0)[node], 0, exo->num_nodes, dpi->node_index_global);
-    exo_to_global.insert(std::pair<LO,LO>(exo_index, node));
+    exo_to_global.insert(std::pair<LO, LO>(exo_index, node));
   }
   for (int j = V_FIRST; j < V_LAST; j++) {
     int imtrx = upd->matrix_index[j];
 
     if (imtrx >= 0) {
-      auto var_values = Omega_h::Write<Omega_h::Real>(mesh->nverts());
-      for (int i = 0; i < exo->num_nodes; i++) {
-        if (exo_to_global.find(i) != exo_to_global.end()) {
-          auto gnode = exo_to_global[i];
-          int ja = Index_Solution(i, j, 0, 0, -2, imtrx);
-          EH(ja, "could not find solution");
-          var_values[gnode] = x[imtrx][ja];
-        }
-      }
-      mesh->add_tag(Omega_h::VERT, Exo_Var_Names[j].name2, 1, Omega_h::Reals(var_values));
-      if (j == FILL) {
-        //        auto H_values = Omega_h::Write<Omega_h::Real>(mesh.nverts());
-        //        auto f0 = OMEGA_H_LAMBDA(Omega_h::LO index) {
-        //          H_values[index] =
-        //              indicator(smooth_H(var_values[index], ls->Length_Scale), ls->Length_Scale);
-        //        };
-        //        Omega_h::parallel_for(mesh.nverts(), f0, "set_indicator_values");
-        //        mesh.add_tag(Omega_h::VERT, "indicator", 1, Omega_h::Reals(H_values));
-        auto target_metrics =
-            Omega_h::Write<Omega_h::Real>(mesh->nverts() * Omega_h::symm_ncomps(mesh->dim()));
-        auto f0 = OMEGA_H_LAMBDA(Omega_h::LO index) {
-          auto F = var_values[index];
-          auto iso_size = ls->adapt_outer_size;
-          if (std::abs(F) < ls->adapt_width) {
-            iso_size = ls->adapt_inner_size;
+      if (j == MASS_FRACTION) {
+        for (int mf = 0; mf < upd->Max_Num_Species; mf++) {
+          auto var_values = Omega_h::Write<Omega_h::Real>(mesh->nverts());
+          for (int i = 0; i < exo->num_nodes; i++) {
+            if (exo_to_global.find(i) != exo_to_global.end()) {
+              auto gnode = exo_to_global[i];
+              int ja = Index_Solution(i, j, mf, 0, -2, imtrx);
+              EH(ja, "could not find solution");
+              var_values[gnode] = x[imtrx][ja];
+            }
           }
-          auto target_metric = Omega_h::compose_metric(Omega_h::identity_matrix<2, 2>(),
-                                                       Omega_h::vector_2(iso_size, iso_size));
-          Omega_h::set_vector(target_metrics, index, Omega_h::symm2vector(target_metric));
-        };
+          std::string species_name = Exo_Var_Names[j].name2 + std::to_string(mf);
+          mesh->add_tag(Omega_h::VERT, species_name, 1, Omega_h::Reals(var_values));
+        }
+      } else {
+        auto var_values = Omega_h::Write<Omega_h::Real>(mesh->nverts());
+        for (int i = 0; i < exo->num_nodes; i++) {
+          if (exo_to_global.find(i) != exo_to_global.end()) {
+            auto gnode = exo_to_global[i];
+            int ja = Index_Solution(i, j, 0, 0, -2, imtrx);
+            EH(ja, "could not find solution");
+            var_values[gnode] = x[imtrx][ja];
+          }
+        }
+        mesh->add_tag(Omega_h::VERT, Exo_Var_Names[j].name2, 1, Omega_h::Reals(var_values));
+        if (j == FILL) {
+          //        auto H_values = Omega_h::Write<Omega_h::Real>(mesh.nverts());
+          //        auto f0 = OMEGA_H_LAMBDA(Omega_h::LO index) {
+          //          H_values[index] =
+          //              indicator(smooth_H(var_values[index], ls->Length_Scale),
+          //              ls->Length_Scale);
+          //        };
+          //        Omega_h::parallel_for(mesh.nverts(), f0, "set_indicator_values");
+          //        mesh.add_tag(Omega_h::VERT, "indicator", 1, Omega_h::Reals(H_values));
+          auto target_metrics =
+              Omega_h::Write<Omega_h::Real>(mesh->nverts() * Omega_h::symm_ncomps(mesh->dim()));
+          auto f0 = OMEGA_H_LAMBDA(Omega_h::LO index) {
+            auto F = var_values[index];
+            auto iso_size = ls->adapt_outer_size;
+            if (std::abs(F) < ls->adapt_width) {
+              iso_size = ls->adapt_inner_size;
+            }
+            auto target_metric = Omega_h::compose_metric(Omega_h::identity_matrix<2, 2>(),
+                                                         Omega_h::vector_2(iso_size, iso_size));
+            Omega_h::set_vector(target_metrics, index, Omega_h::symm2vector(target_metric));
+          };
 
-        Omega_h::parallel_for(mesh->nverts(), f0, "set_iso_metric_values");
-        mesh->add_tag(Omega_h::VERT, "iso_size_metric", Omega_h::symm_ncomps(mesh->dim()),
-                      Omega_h::Reals(target_metrics));
+          Omega_h::parallel_for(mesh->nverts(), f0, "set_iso_metric_values");
+          mesh->add_tag(Omega_h::VERT, "iso_size_metric", Omega_h::symm_ncomps(mesh->dim()),
+                        Omega_h::Reals(target_metrics));
+        }
       }
     }
   }
@@ -521,18 +538,19 @@ void convert_to_omega_h_mesh_parallel(
     for (size_t i = 0; i < exo->num_side_sets; ++i) {
       int global_offset;
       for (global_offset = 0; global_offset < dpi->num_side_sets_global; global_offset++) {
-        if (exo->ss_id[i] == dpi->ss_id_global[global_offset]) break;
+        if (exo->ss_id[i] == dpi->ss_id_global[global_offset])
+          break;
       }
       assert(global_offset < dpi->num_side_sets_global);
       int nsides;
       //      CALL(ex_get_set_param(file, EX_SIDE_SET, side_set_ids[i], &nsides, &ndist_factors));
       nsides = exo->ss_num_sides[i];
       int nnodes = 0;
-      for (int side =0; side < nsides; side++) {
+      for (int side = 0; side < nsides; side++) {
         nnodes += exo->ss_node_cnt_list[i][side];
       }
       int nnodes_owned = 0;
-      for (int side =0; side < nnodes; side++) {
+      for (int side = 0; side < nnodes; side++) {
         int exoindex = exo->ss_node_list[i][side];
         if (exo_to_global.find(exoindex) != exo_to_global.end()) {
           nnodes_owned++;
@@ -554,9 +572,8 @@ void convert_to_omega_h_mesh_parallel(
       auto set_sides2side = collect_marked(sides_are_in_set);
       auto surface_id = dpi->ss_id_global[global_offset];
       if (verbose) {
-        std::cout << "P" << ProcID << " side set #" << surface_id << " \"" << name_ptrs[i] << "\" has "
-                  << nsides
-                  << " sides, will be surface " << surface_id << "\n";
+        std::cout << "P" << ProcID << " side set #" << surface_id << " \"" << name_ptrs[i]
+                  << "\" has " << nsides << " sides, will be surface " << surface_id << "\n";
 
         std::cout << "P" << ProcID << " side set #" << surface_id << " nodes = ";
         for (int i = 0; i < h_set_nodes.size(); i++) {
@@ -595,13 +612,13 @@ void convert_to_omega_h_mesh_parallel(
 //  mesh->set_parting(OMEGA_H_GHOSTED);
    */
   classify_elements(mesh);
-//  auto elem_class_ids = LOs(elem_class_ids_w);
+  //  auto elem_class_ids = LOs(elem_class_ids_w);
   // auto side_class_ids = LOs(side_class_ids_w);
   // auto side_class_dims = Read<I8>(side_class_dims_w);
   //  mesh->add_tag(dim, "class_id", 1, elem_class_ids);
   mesh->set_parting(OMEGA_H_GHOSTED);
-//  auto sides_are_exposed = mark_exposed_sides(mesh);
-//  classify_sides_by_exposure(mesh, sides_are_exposed);
+  //  auto sides_are_exposed = mark_exposed_sides(mesh);
+  //  classify_sides_by_exposure(mesh, sides_are_exposed);
   // mesh->add_tag(dim - 1, "class_id", 1, side_class_ids);
   // mesh->set_tag(dim - 1, "class_dim", side_class_dims);
   finalize_classification(mesh);
@@ -858,9 +875,9 @@ static OMEGA_H_INLINE int side_osh2exo(int dim, int side) {
 void convert_back_to_goma_exo(
     const char *path, Mesh *mesh, Exo_DB *exo, Dpi *dpi, bool verbose, int classify_with) {
 
-//  Omega_h::exodus::write(std::to_string(ProcID) + "tmp.e", mesh, true, classify_with);
+  //  Omega_h::exodus::write(std::to_string(ProcID) + "tmp.e", mesh, true, classify_with);
   Omega_h::exodus::write("tmp.e", mesh, true, classify_with);
-//  Omega_h::binary::write("tmp.osh", mesh);
+  //  Omega_h::binary::write("tmp.osh", mesh);
 
   for (int imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
     free(idv[imtrx]);
@@ -964,7 +981,14 @@ void adapt_mesh(Omega_h::Mesh &mesh) {
   for (int j = V_FIRST; j < V_LAST; j++) {
     int imtrx = upd->matrix_index[j];
     if (imtrx >= 0) {
-      opts.xfer_opts.type_map[Exo_Var_Names[j].name2] = OMEGA_H_LINEAR_INTERP;
+      if (j == MASS_FRACTION) {
+        for (int mf = 0; mf < upd->Max_Num_Species; mf++) {
+          std::string species_name = Exo_Var_Names[j].name2 + std::to_string(mf);
+          opts.xfer_opts.type_map[species_name] = OMEGA_H_LINEAR_INTERP;
+        }
+      } else {
+        opts.xfer_opts.type_map[Exo_Var_Names[j].name2] = OMEGA_H_LINEAR_INTERP;
+      }
     }
   }
   for (int w = 0; w < efv->Num_external_field; w++) {
@@ -989,7 +1013,6 @@ void adapt_mesh(Omega_h::Mesh &mesh) {
   mesh.balance();
   imb = mesh.imbalance();
   std::cout << "Mesh imbalance after balance = " << imb << "\n";
-
 }
 
 extern "C" {
@@ -998,12 +1021,25 @@ void copy_solution(Exo_DB *exo, Dpi *dpi, double **x, Omega_h::Mesh &mesh) {
   for (int j = V_FIRST; j < V_LAST; j++) {
     int imtrx = upd->matrix_index[j];
     if (imtrx >= 0) {
-      auto var_values = mesh.get_array<Omega_h::Real>(Omega_h::VERT, Exo_Var_Names[j].name2);
+      if (j == MASS_FRACTION) {
+        for (int mf = 0; mf < upd->Max_Num_Species; mf++) {
+          std::string species_name = Exo_Var_Names[j].name2 + std::to_string(mf);
+          auto var_values = mesh.get_array<Omega_h::Real>(Omega_h::VERT, species_name);
 
-      for (int i = 0; i < dpi->num_internal_nodes + dpi->num_boundary_nodes; i++) {
-        int ja = Index_Solution(i, j, 0, 0, -2, imtrx);
-        EH(ja, "could not find solution");
-        x[imtrx][ja] = var_values[i];
+          for (int i = 0; i < dpi->num_internal_nodes + dpi->num_boundary_nodes; i++) {
+            int ja = Index_Solution(i, j, mf, 0, -2, imtrx);
+            EH(ja, "could not find solution");
+            x[imtrx][ja] = var_values[i];
+          }
+        }
+      } else {
+        auto var_values = mesh.get_array<Omega_h::Real>(Omega_h::VERT, Exo_Var_Names[j].name2);
+
+        for (int i = 0; i < dpi->num_internal_nodes + dpi->num_boundary_nodes; i++) {
+          int ja = Index_Solution(i, j, 0, 0, -2, imtrx);
+          EH(ja, "could not find solution");
+          x[imtrx][ja] = var_values[i];
+        }
       }
     }
   }

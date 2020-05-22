@@ -2000,7 +2000,7 @@ rd_levelset_specs(FILE *ifp,
           if (fscanf(ifp, "%lf", &(ls->adapt_width)) != 1) {
             EH(-1, "error reading Level Set Adapt Width");
           }
-          if (fabs(ls->adapt_outer_size) <= 0.0)
+          if (fabs(ls->adapt_width) <= 0.0)
             WH(-1, "Possible Syntax error.  Level set adapt width <= 0");
 
           SPF(echo_string, "%s = %.4g", input, ls->adapt_width);

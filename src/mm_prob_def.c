@@ -423,7 +423,12 @@ setup_pd(void)
 		  (ce == R_SHELL_FILMP) ||
                   (ce == R_SHELL_FILMH) ||
                   (ce == R_SHELL_PARTC) || 
-		  (ce == R_SHELL_ENERGY))
+		  (ce == R_SHELL_ENERGY) ||
+                      (ce == R_MOMENT0) ||
+                      (ce == R_MOMENT1) ||
+                      (ce == R_MOMENT2) ||
+                      (ce == R_MOMENT3)
+                    )
 	        {
 	         if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_MASS)] != 0. )
 		   {
