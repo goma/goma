@@ -1438,8 +1438,10 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
   SARAMITO_DEPENDENCE_STRUCT *d_saramito = &d_saramito_struct;
 
 	// todo: will want to parse necessary parameters... for now hard code
-	const bool saramitoEnabled = TRUE;
-	const dbl yieldStress = 2e1;
+	const bool saramitoEnabled = (vn->ConstitutiveEquation == SARAMITO_OLDROYDB ||
+	                              vn->ConstitutiveEquation == SARAMITO_PTT      ||
+		                            vn->ConstitutiveEquation == SARAMITO_GIESEKUS);
+
 	dbl saramitoCoeff = 1.;
 
 
@@ -1681,8 +1683,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
       mup = viscosity(ve[mode]->gn, gamma, d_mup);
 
 		if(saramitoEnabled == TRUE){
-			saramitoCoeff = compute_saramito_model_terms(s, yieldStress, d_saramito);
-
+			saramitoCoeff = compute_saramito_model_terms(s, ve[mode]->gn->tau_y, d_saramito);
 		}
 		else{
 			saramitoCoeff = 1.;
