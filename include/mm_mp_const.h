@@ -236,6 +236,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define SSM_EPOXY_DEA  12
 #define CARREAU_SUSPENSION 	13
 #define SSM_CARREAU_SUSPENSION 	13
+#define SSM_BOND 	14
 
 #define SUSPENSION_PM  14	/* Particle suspension, a la Yuri Buyevich 
 				 * suspension model.  It seemed best to define
@@ -264,6 +265,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define BINGHAM_WLF    27         /* Bingham WLF viscosity model */
 #define SYLGARD    28         /* Sylgard viscosity model */
 #define PRANDTL_MIXING 29     /* Shell Turbulent Viscosity Model */
+#define BOND_SH               26   /* bond evolution structure model for viscosity with shear rate variable*/
 
 
 
@@ -303,6 +305,16 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define VISCM_CK_LIQ   19    /* Chemkin Liquid phase package call    */
 #define VISCM_CK_CPC   20    /* Chemkin Condensed phase package call */
 #define VISCM_CARREAU_WLF_CONC   21 
+#define VISCM_BOND               23   /* bond evolution structure model for viscosity */
+#define VISCM_CONST_PHASE_FUNCTION 24
+#define VISCM_CARREAU_WLF_CONC_EXP  25   /*  Carreau viscosity with WLF temperature 
+				      dependence and concentration shifting*/
+#define VISCM_BOND_SH               26   /* bond evolution structure model for viscosity with shear rate variable*/
+					
+#define VISCM_FOAM_EPOXY    33
+#define VISCM_BINGHAM_WLF    27         /* Bingham WLF viscosity model */
+#define VISCM_SYLGARD    28         /* Sylgard viscosity model */
+#define VISCM_PRANDTL_MIXING 29     /* Shell Turbulent Viscosity Model */
 /*
  * Dilational Viscosity Model
  *

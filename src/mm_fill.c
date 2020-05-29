@@ -557,7 +557,7 @@ matrix_fill(
 			 resid_vector, 0);
   EH(err, "load_elem_dofptr");
 
-  err = bf_mp_init(pd);
+  err = bf_mp_init(pd);  
   mn = ei->mn;
   pde = (int*) pd->e;
 

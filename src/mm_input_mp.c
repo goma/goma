@@ -1617,7 +1617,11 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     {
       ConstitutiveEquation = BOND;
     } 
-  else if ( !strcmp(model_name, "CARREAU_WLF_CONC_PL") )
+   else if ( !strcmp(model_name, "BOND_SH") )
+    {
+      ConstitutiveEquation = BOND_SH;
+    } 
+ else if ( !strcmp(model_name, "CARREAU_WLF_CONC_PL") )
     {
       ConstitutiveEquation = CARREAU_WLF_CONC_PL;
     } 
@@ -1768,6 +1772,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       ConstitutiveEquation == CARREAU_WLF_CONC_PL ||
       ConstitutiveEquation == CARREAU_WLF_CONC_EXP ||
       ConstitutiveEquation == BOND ||
+      ConstitutiveEquation == BOND_SH ||
       ConstitutiveEquation == FOAM_EPOXY)
     {
       model_read = look_for_mat_prop(imp, "Low Rate Viscosity", 
@@ -1860,6 +1865,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
      ConstitutiveEquation == BINGHAM_WLF ||
      ConstitutiveEquation == CARREAU_WLF_CONC_PL ||
      ConstitutiveEquation == CARREAU_WLF_CONC_EXP ||
+     ConstitutiveEquation == BOND_SH ||
      ConstitutiveEquation == BOND )
     {
       model_read = look_for_mat_prop(imp, "High Rate Viscosity", 
@@ -1939,6 +1945,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
      ConstitutiveEquation == BINGHAM_WLF ||
      ConstitutiveEquation == CARREAU_WLF_CONC_PL ||
      ConstitutiveEquation == CARREAU_WLF_CONC_EXP ||
+     ConstitutiveEquation == BOND_SH ||
      ConstitutiveEquation == BOND )
     {
       model_read = look_for_mat_prop(imp, "Aexp", &(gn_glob[mn]->aexpModel), 
@@ -2110,6 +2117,8 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       ConstitutiveEquation == HERSCHEL_BULKLEY ||
       ConstitutiveEquation == CARREAU_WLF_CONC_PL ||
       ConstitutiveEquation == CARREAU_WLF_CONC_EXP ||
+      ConstitutiveEquation == BOND ||
+      ConstitutiveEquation == BOND_SH ||
       ConstitutiveEquation == FOAM_EPOXY)
     {
       model_read = look_for_mat_prop(imp, "Thixotropic Factor", 
@@ -2231,7 +2240,20 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       ECHO(es,echo_file);
     }
 
-  if( ConstitutiveEquation == FOAM_EPOXY )
+  if( ConstitutiveEquation == BOND_SH )
+    {
+
+      iread = look_for_optional(imp, "Suspension Species Number", input, '=');
+      if ( fscanf(imp,"%d",&species_no) != 1)
+	{
+	  EH( -1, "error reading Suspension Species Number");
+	}    
+      gn_glob[mn]->sus_species_no = species_no;
+
+      SPF(endofstring(es)," %d", species_no);
+      ECHO(es,echo_file);
+    }
+   if( ConstitutiveEquation == FOAM_EPOXY )
     {
 
       iread = look_for_optional(imp, "Suspension Species Number", input, '=');
@@ -8356,7 +8378,36 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  SPF_DBL_VEC(endofstring(es), 5,  mat_ptr->u_species_source[species_no]);
 	}
       
-      else if ( !strcmp(model_name, "FOAM_EPOXY") )
+       else if ( !strcmp(model_name, "SSM_BOND") )
+	{
+	  SpeciesSourceModel = SSM_BOND;
+	  model_read = 1;
+	  mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
+	  if ( fscanf(imp, "%lf %lf %lf %lf %lf", 
+			  &a0, &a1, &a2, &a3, &a4)
+		   != 5 )
+	    {
+	      sr = sprintf(err_msg, 
+			   "Matl %s needs  5 constants for %s %s model.\n",
+			   pd_glob[mn]->MaterialName,
+			   "Species Source", "SSM_BOND");
+	      EH(-1, err_msg);
+	    }
+
+	  mat_ptr->u_species_source[species_no] = (dbl *)
+						 array_alloc(1,5,sizeof(dbl)); 
+
+	  mat_ptr->len_u_species_source[species_no] = 5;
+	  
+	  mat_ptr->u_species_source[species_no][0] = a0;  /* rate for breakup k2 */
+	  mat_ptr->u_species_source[species_no][1] = a1;  /* rate for aggregation k1 */ 
+	  mat_ptr->u_species_source[species_no][2] = a2;  /* n0 for breakup eqn */
+	  mat_ptr->u_species_source[species_no][3] = a3;  /* exponent for breakup eqn */
+	  mat_ptr->u_species_source[species_no][4] = a4;  /* exponent for aggregation eqn */
+
+	  SPF_DBL_VEC(endofstring(es), 5,  mat_ptr->u_species_source[species_no]);
+	}
+     else if ( !strcmp(model_name, "FOAM_EPOXY") )
 	{
 	  SpeciesSourceModel = FOAM_EPOXY;
 	  model_read = 1;

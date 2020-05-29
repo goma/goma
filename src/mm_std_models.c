@@ -998,6 +998,90 @@ return 0;
 /* END of routine epoxy_species_source */
 /*****************************************************************************/
 
+int
+bond_species_source(int species_no,   /* Current species number */
+                     double *param )   /* pointer to user-defined parameter list */
+     
+{
+  /* Local Variables */
+  int eqn, var, var_offset;
+  /*  int p, q, a, b, c;*/
+  
+  /*  int v,w;*/
+  
+  /*  int mdofs,vdofs;*/
+  
+  /*  dbl C[MAX_CONC]; Convenient local variables */
+  dbl n0, aexp, bexp, nn;
+  dbl k1, k2;
+  dbl shear;
+  dbl gterm_a, gterm_b;
+  dbl d_gterm_a, d_gterm_b;
+  dbl offset = 0.00001;
+  
+  /* Begin Execution */
+  
+
+  /* structure factor, nn */
+  nn = fv->c[species_no];
+  shear = fv->SH;
+  k1 = param[0];
+  k2 = param[1];
+  n0 = param[2];
+  aexp = param[3];
+  bexp = param[4];
+
+  shear = fv->SH;
+  if (shear >= .0)
+    {
+      gterm_a = pow( shear + offset, aexp);
+      gterm_b = pow( shear + offset, bexp); 
+      d_gterm_a = aexp*pow( shear + offset, aexp-1.);
+      d_gterm_b = bexp*pow( shear + offset, bexp-1.);
+    }
+  else
+    {
+      gterm_a = 0.;
+      gterm_b = 0.; 
+      d_gterm_a = 0.;
+      d_gterm_b = 0.;
+    }
+
+
+ /* clip negative values */
+  if(nn < 1.e-5) nn = 1.e-5;
+
+ 
+  /**********************************************************/
+  
+  /* Species piece */
+  eqn = MASS_FRACTION;
+  if ( pd->e[eqn] & T_SOURCE )
+    {
+      mp->species_source[species_no] =  -k1*nn*gterm_a + k2*(n0-nn)*gterm_b;
+      
+      /* Jacobian entries for source term */
+      var = MASS_FRACTION;
+      if (pd->v[var] )
+	{
+	  var_offset = MAX_VARIABLE_TYPES + species_no;
+	  mp->d_species_source[var_offset] = 
+	    -k1*gterm_a - k2*gterm_b;
+	}
+
+      var =  SHEAR_RATE;
+      if (pd->v[var] )
+	{
+	  mp->d_species_source[var] = 
+	    -k1*nn*d_gterm_a + k2*(n0-nn)*d_gterm_b;
+	}
+    }
+return 0;
+}
+/*****************************************************************************/
+/* END of routine bond_species_source */
+/*****************************************************************************/
+
 /* 
  * foam_epoxy_species_source:
  *
@@ -6153,6 +6237,7 @@ assemble_bond_evolution(double time,	/* present time value */
       nn_dot = 0.0;
 
     }
+  
   /* clip negative values 
   if(nn < 1.e-5) nn = 0.;*/
   nn = MAX(nn,0.);
