@@ -2514,15 +2514,15 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     {
       vn_glob[mn]->ConstitutiveEquation = PTT;
     } 
-  else if ( !strcmp(model_name, "SARAMITO-OLDROYDB") )
+  else if ( !strcmp(model_name, "SARAMITO_OLDROYDB") )
     {
       vn_glob[mn]->ConstitutiveEquation = SARAMITO_OLDROYDB;
     }
-  else if ( !strcmp(model_name, "SARAMITO-GIESEKUS") )
+  else if ( !strcmp(model_name, "SARAMITO_GIESEKUS") )
     {
       vn_glob[mn]->ConstitutiveEquation = SARAMITO_GIESEKUS;
     }
-  else if ( !strcmp(model_name, "SARAMITO-PTT") )
+  else if ( !strcmp(model_name, "SARAMITO_PTT") )
     {
       vn_glob[mn]->ConstitutiveEquation = SARAMITO_PTT;
     } 
