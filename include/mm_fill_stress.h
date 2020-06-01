@@ -198,4 +198,9 @@ compute_d_exp_s_ds(dbl [DIM][DIM],                   //s - stress
                    dbl [DIM][DIM],                   // exp_s
                    dbl [DIM][DIM][DIM][DIM]);        // d_exp_s_ds
 
+dbl
+compute_saramito_model_terms(dbl [DIM][DIM],   // stresss
+                             dbl ,             // yield stress
+                             SARAMITO_DEPENDENCE_STRUCT* ); // struct for sCoeff sensitvities
+
 #endif /* GOMA_MM_FILL_STRESS_H */

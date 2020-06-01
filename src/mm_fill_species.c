@@ -352,8 +352,8 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
    */
   rho  = density(d_rho, time);
 
-
   SUPG_terms supg_terms;
+  zero_structure(&supg_terms, sizeof(SUPG_terms), 1);
 
   if( mp->Spwt_funcModel == GALERKIN)
     {
@@ -390,7 +390,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
     {
 
       if (supg != 0.) {
-        dbl D = 1e-6;
+        dbl D = 1.0e-6;
         if (mp->DiffusivityModel[w] == CONSTANT) {
           D = mp->diffusivity[w];
         }
@@ -1714,6 +1714,30 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			    } /* for (j) .. J_s_SH */
 			}/* if (pd) */
 		    } /* if( cr) */ 
+
+		  if ( mp->SpeciesSourceModel[w] == SSM_BOND ) /* These terms only appear for the Bond src term model */
+		    {
+		      var = SHEAR_RATE;
+		      if ( pd->v[var])
+			{
+			  source = 0.0;
+			  if ( pd->e[eqn] & T_SOURCE )
+			    {
+			      pvar = upd->vp[var];
+			      for( j=0;  j<ei->dof[var] ; j++)
+				{
+				  source += s_terms.d_MassSource_dsh[w][j];
+				  source *= wt_func;
+				  source *= h3 * det_J * wt;
+				  source *= pd->etm[eqn][(LOG2_SOURCE)];
+				  
+				  lec->J[MAX_PROB_VAR + w][pvar][ii][j] += source;
+			      
+				} /* for (j) .. J_s_SH */
+			    } /* if pd -eqn)*/
+			} /* if (pd -var) */
+		    } /* if( mp->SpeciesSource) */ 
+
 
 		  /*
 		   * J_s_G:
@@ -11024,6 +11048,33 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	  }
 	}
       }
+      else if (mp->SpeciesSourceModel[w]  == SSM_BOND )
+      {
+	err = bond_species_source(w, mp->u_species_source[w]);
+	st->MassSource[w]    =  mp->species_source[w];
+	if ( af->Assemble_Jacobian )
+	{
+	  var = SHEAR_RATE;
+	  if(pd->v[var])
+	  {
+	    for ( j=0; j<ei->dof[var]; j++)
+	    {
+	      st->d_MassSource_dsh[w][j]= mp->d_species_source[var]*bf[var]->phi[j];
+	    }
+	  }
+
+	  var = MASS_FRACTION;
+	  if (pd->v[MASS_FRACTION] )
+	  {
+	    var_offset = MAX_VARIABLE_TYPES + w;
+	    for ( j=0; j<ei->dof[var]; j++)
+	    {
+	      st->d_MassSource_dc[w][w] [j]=mp->d_species_source[var_offset]
+		  *bf[var]->phi[j];
+	    }
+	  }
+	}
+      }
       else if (mp->SpeciesSourceModel[w]  == BUTLER_VOLMER)     /* added by KSC: 05/15/06 */
       {
         dbl dh[3], p[10];
@@ -14089,6 +14140,14 @@ ls_modulate_speciessource(int w,
 	      for ( i=0; i<ei[pg->imtrx]->dof[var]; i++)
 		{
 		  st->d_MassSource_dT[w][i] *=factor;
+		}
+	    }
+
+	  if( pd->v[pg->imtrx][var=SHEAR_RATE] )
+	    {
+	      for ( i=0; i<ei->dof[var]; i++)
+		{
+		  st->d_MassSource_dsh[w][i] *=factor;
 		}
 	    }
 

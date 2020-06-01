@@ -1715,7 +1715,7 @@ bf_mp_init(struct Problem_Description *pd)
   int ifound;
   int t, v;
   int status;
-  int shape;
+  int ishape;
 
   status = 0;
 
@@ -1726,7 +1726,7 @@ bf_mp_init(struct Problem_Description *pd)
 #endif
 
    /* This is needed to check for matching element shapes */
-   shape = ei[pg->imtrx]->ielem_shape;
+   ishape = ei[pg->imtrx]->ielem_shape;
 
   /*
    * For now, assume variable interpolations 
@@ -1761,9 +1761,8 @@ bf_mp_init(struct Problem_Description *pd)
                 fprintf(stderr, "checking t = %d\n", t);
 #endif
 
-
                 if ((pd->i[imtrx][v] == bfd[t]->interpolation)
-                    && (shape == bfd[t]->element_shape))
+                    && (ishape == bfd[t]->element_shape))
                   {
                     bf[v] = bfd[t];
                   }

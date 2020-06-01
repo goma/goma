@@ -549,7 +549,6 @@ matrix_fill(
   err = load_elem_dofptr(ielem, exo, x, x_old, xdot, xdot_old, 0);
   EH(err, "load_elem_dofptr");
 
-
   err = bf_mp_init(pd);
   mn = ei[pg->imtrx]->mn;
   pde = (int*) pd->e[pg->imtrx];

@@ -130,10 +130,16 @@ EXTERN int thermal_viscosity	/* mm_viscosity.c                            */
 (dbl ,			/* mu0 - ref temperature fluid viscosity     */
        dbl );			/* Aexp - exponent for constitutive equation */
 
-EXTERN int bond_viscosity
-(dbl ,          /* reference zero shear rate fluid viscosity */
-       dbl ,          /* reference high shear rate fluid viscosity */
-       dbl );        /* exponent for constitutive equation */
+
+EXTERN double bond_viscosity(struct Generalized_Newtonian *gn_local,
+                             dbl gamma_dot[DIM][DIM], /* strain rate tensor */
+                             VISCOSITY_DEPENDENCE_STRUCT *d_mu);
+
+EXTERN int bond_viscosity_sh(int bond_species, /* integer associated with conc eqn for bond */
+                      dbl mu0,         /* reference zero shear rate fluid viscosity */
+                      dbl mu_inf,     /* reference high shear rate fluid viscosity */
+                      dbl Aexp);        /* exponent for constitutive equation */
+
 
 EXTERN int cure_viscosity	/* mm_viscosity.c                            */
 (int ,			/* species - num, solid volume fraction      */
