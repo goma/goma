@@ -5,15 +5,22 @@
 #include "mm_shell_bc.h"
 #include "shell_tfmp_struct.h"
 
-#ifndef _SHELL_TFMP_UTIL
-#define _SHELL_TFMP_UTIL
+#ifndef GOMA_SHELL_TFMP_UTIL
+#define GOMA_SHELL_TFMP_UTIL
 
+#ifdef EXTERN
+#undef EXTERN
+#endif
+#ifdef GOMA_SHELL_TFMP_UTIL_C
+#define EXTERN extern
+#else
+#define EXTERN
+#endif
 
 //Still Experimental
 enum clipping_kind{none, continuity, restorative, constant_sat, var_swap};
 
-// Make global variables (really? - eesh!)
-EXTERN enum clipping_kind my_clipping_kind;
+extern enum clipping_kind my_clipping_kind;
 
 // load_viscosity_model(&mu_l, &mu_g)
 // OUTPUTS:
@@ -180,4 +187,4 @@ EXTERN void load_gap_model
 EXTERN void load_roller_normal_into_fv
 (void);
 
-#endif // _SHELL_TFMP_UTIL
+#endif // GOMA_SHELL_TFMP_UTIL

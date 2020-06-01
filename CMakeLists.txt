@@ -8,6 +8,7 @@ enable_language(Fortran)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(PROJECT_NAME goma)
 list(APPEND CMAKE_MODULE_PATH "${goma_SOURCE_DIR}/cmake")

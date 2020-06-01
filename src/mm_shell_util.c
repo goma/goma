@@ -20,6 +20,7 @@ static char rcsid[] =
 "$Id: mm_shell_util.c,v 5.17 2010-07-21 16:39:27 hkmoffa Exp $";
 #endif
 
+#define GOMA_SHELL_TFMP_UTIL_C
 /* Standard include files */
 #include <string.h>
 #include <stdlib.h>
