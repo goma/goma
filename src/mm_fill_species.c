@@ -1718,18 +1718,18 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 		  if ( mp->SpeciesSourceModel[w] == SSM_BOND ) /* These terms only appear for the Bond src term model */
 		    {
 		      var = SHEAR_RATE;
-		      if ( pd->v[var])
+		      if ( pd->v[pg->imtrx][var])
 			{
 			  source = 0.0;
-			  if ( pd->e[eqn] & T_SOURCE )
+			  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 			    {
-			      pvar = upd->vp[var];
-			      for( j=0;  j<ei->dof[var] ; j++)
+			      pvar = upd->vp[pg->imtrx][var];
+			      for( j=0;  j<ei[pg->imtrx]->dof[var] ; j++)
 				{
 				  source += s_terms.d_MassSource_dsh[w][j];
 				  source *= wt_func;
 				  source *= h3 * det_J * wt;
-				  source *= pd->etm[eqn][(LOG2_SOURCE)];
+				  source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 				  
 				  lec->J[MAX_PROB_VAR + w][pvar][ii][j] += source;
 			      
@@ -11055,19 +11055,19 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	if ( af->Assemble_Jacobian )
 	{
 	  var = SHEAR_RATE;
-	  if(pd->v[var])
+	  if(pd->v[pg->imtrx][var])
 	  {
-	    for ( j=0; j<ei->dof[var]; j++)
+	    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      st->d_MassSource_dsh[w][j]= mp->d_species_source[var]*bf[var]->phi[j];
 	    }
 	  }
 
 	  var = MASS_FRACTION;
-	  if (pd->v[MASS_FRACTION] )
+	  if (pd->v[pg->imtrx][MASS_FRACTION] )
 	  {
 	    var_offset = MAX_VARIABLE_TYPES + w;
-	    for ( j=0; j<ei->dof[var]; j++)
+	    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      st->d_MassSource_dc[w][w] [j]=mp->d_species_source[var_offset]
 		  *bf[var]->phi[j];
@@ -14145,7 +14145,7 @@ ls_modulate_speciessource(int w,
 
 	  if( pd->v[pg->imtrx][var=SHEAR_RATE] )
 	    {
-	      for ( i=0; i<ei->dof[var]; i++)
+	      for ( i=0; i<ei[pg->imtrx]->dof[var]; i++)
 		{
 		  st->d_MassSource_dsh[w][i] *=factor;
 		}

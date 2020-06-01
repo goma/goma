@@ -480,7 +480,7 @@ viscosity(struct Generalized_Newtonian *gn_local,
 	{
 	  w = gn_local->sus_species_no;
 	  var_offset = MAX_VARIABLE_TYPES + w;
-	  for ( j=0; j<ei->dof[var]; j++)
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      d_mu->C[w][j] =mp->d_viscosity[var_offset]*bf[var]->phi[j];
 	    }
@@ -3343,7 +3343,7 @@ bond_viscosity(struct Generalized_Newtonian *gn_local,
       return(0);
     }
 
-  if ( pd->e[TEMPERATURE] )
+  if ( pd->gv[TEMPERATURE] )
        {temp = fv->T;}
   else
        {temp = upd->Process_Temperature;}
@@ -3370,11 +3370,11 @@ bond_viscosity(struct Generalized_Newtonian *gn_local,
     }
   fexp = gn_local->fexp;
 
-  vdofs = ei->dof[VELOCITY1];
+  vdofs = ei[pg->imtrx]->dof[VELOCITY1];
 
-  if ( pd->e[R_MESH1] )
+  if ( pd->e[pg->imtrx][R_MESH1] )
     {
-      mdofs = ei->dof[R_MESH1];
+      mdofs = ei[pg->imtrx]->dof[R_MESH1];
     }
 
   var = TEMPERATURE;
@@ -3428,9 +3428,9 @@ bond_viscosity(struct Generalized_Newtonian *gn_local,
       mu = mp->viscosity;
       
   var = BOND_EVOLUTION;
-  if ( d_mu != NULL && pd->v[var] )
+  if ( d_mu != NULL && pd->v[pg->imtrx][var] )
 	{
-	  for ( j=0; j<ei->dof[var]; j++)
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      d_mu->nn[j]= mp->d_viscosity[var]*bf[var]->phi[j];
 	    }
@@ -3442,9 +3442,9 @@ bond_viscosity(struct Generalized_Newtonian *gn_local,
  *       */
 
   var = TEMPERATURE;
-  if ( d_mu != NULL && pd->e[var] )
+  if ( d_mu != NULL && pd->e[pg->imtrx][var] )
     {
-      for ( j=0; j<ei->dof[var]; j++)
+      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
         {
           d_mu->T[j]= mp->d_viscosity[var] * bf[var]->phi[j];
         }
@@ -3453,7 +3453,7 @@ bond_viscosity(struct Generalized_Newtonian *gn_local,
   /*
    * d( mu )/dmesh
    */
-  if ( d_mu != NULL && pd->e[R_MESH1] )
+  if ( d_mu != NULL && pd->e[pg->imtrx][R_MESH1] )
     {
       for ( b=0; b<VIM; b++)
 	{
@@ -3476,7 +3476,7 @@ bond_viscosity(struct Generalized_Newtonian *gn_local,
   /*
    * d( mu )/dv
    */
-  if ( d_mu != NULL && pd->e[R_MOMENTUM1] )
+  if ( d_mu != NULL && pd->e[pg->imtrx][R_MOMENTUM1] )
     {
       for ( a=0; a<VIM; a++)
         {
