@@ -1682,19 +1682,21 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
       /* get polymer viscosity */
       mup = viscosity(ve[mode]->gn, gamma, d_mup);
 
-      if(saramitoEnabled == TRUE){
-	saramitoCoeff = compute_saramito_model_terms(s, ve[mode]->gn->tau_y, d_saramito);
-      }
-      else{
-	saramitoCoeff = 1.;
-	d_saramito->tau_y = 0;
+      if(saramitoEnabled == TRUE)
+	{
+	  saramitoCoeff = compute_saramito_model_terms(s, ve[mode]->gn->tau_y, d_saramito);
+	}
+      else
+	{
+	  saramitoCoeff = 1.;
+	  d_saramito->tau_y = 0;
 			
-	for(int i=0; i<VIM; ++i){
-	  for(int j=0; j<VIM; ++j){
-	    d_saramito->s[i][j] = 0;
+	  for(int i=0; i<VIM; ++i){
+	    for(int j=0; j<VIM; ++j){
+	      d_saramito->s[i][j] = 0;
+	    }
 	  }
 	}
-      }
 
       /* get Geisekus mobility parameter */
       alpha = ve[mode]->alpha;
