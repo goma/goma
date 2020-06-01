@@ -2563,7 +2563,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       if ( !strcmp(model_name, "EVSS_G") )
 	{
 	  if( vn_glob[mn]->ConstitutiveEquation == PTT || 
-		    vn_glob[mn]->ConstitutiveEquation == SARAMITO_PTT ) 
+	      vn_glob[mn]->ConstitutiveEquation == SARAMITO_PTT ) 
 	    EH(-1,"Error: EVSS_G stress formulation is not implemented in this case.");
 
 	  vn_glob[mn]->evssModel = EVSS_G;
@@ -2591,7 +2591,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       else
 	{
 	  if( vn_glob[mn]->ConstitutiveEquation == PTT || 
-		    vn_glob[mn]->ConstitutiveEquation == SARAMITO_PTT ) 
+	      vn_glob[mn]->ConstitutiveEquation == SARAMITO_PTT ) 
 	    EH(-1,"Error: EVSS_G stress formulation is not implemented in this case.");
 
 	  vn_glob[mn]->evssModel = EVSS_G; /* default to Rajagopalan's 
@@ -2848,7 +2848,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	}
 
       if (vn_glob[mn]->ConstitutiveEquation == GIESEKUS ||
-			    vn_glob[mn]->ConstitutiveEquation == SARAMITO_GIESEKUS )
+	  vn_glob[mn]->ConstitutiveEquation == SARAMITO_GIESEKUS )
 	{
 	  strcpy(search_string, "Mobility Parameter");
 
@@ -2888,33 +2888,33 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	 * If one of the Saramito model combinations is enabled, ensure that a yield stress card is
 	 * present
 	*/
-	if (vn_glob[mn]->ConstitutiveEquation == SARAMITO_OLDROYDB || 
-		  vn_glob[mn]->ConstitutiveEquation == SARAMITO_PTT      ||
-			vn_glob[mn]->ConstitutiveEquation == SARAMITO_GIESEKUS)
+      if (vn_glob[mn]->ConstitutiveEquation == SARAMITO_OLDROYDB || 
+	  vn_glob[mn]->ConstitutiveEquation == SARAMITO_PTT      ||
+	  vn_glob[mn]->ConstitutiveEquation == SARAMITO_GIESEKUS)
 	{
-				/* Should yield stress be a modal property? Let's assume not for now */
-			strcpy(search_string, "Polymer Yield Stress");
+	  /* Should yield stress be a modal property? Let's assume not for now */
+	  strcpy(search_string, "Polymer Yield Stress");
 
-			dbl tau_y_val;
-      model_read = look_for_mat_prop(imp, search_string, 
-																		 &(ConstitutiveEquation), 
-																		 &tau_y_val,
-																		 NO_USER, NULL,
-																		 model_name, SCALAR_INPUT, &NO_SPECIES,es);
+	  dbl tau_y_val;
+	  model_read = look_for_mat_prop(imp, search_string, 
+					 &(ConstitutiveEquation), 
+					 &tau_y_val,
+					 NO_USER, NULL,
+					 model_name, SCALAR_INPUT, &NO_SPECIES,es);
 
-			if( model_read < 1 )
-			{
-				if( model_read == -1) SPF(err_msg,"%s card is missing.",search_string);
-				if( model_read == -2) SPF(err_msg,"Only CONSTANT %s mode model supported.", search_string);
-				fprintf(stderr,"%s\n",err_msg);
-				exit(-1);
-			}
+	  if( model_read < 1 )
+	    {
+	      if( model_read == -1) SPF(err_msg,"%s card is missing.",search_string);
+	      if( model_read == -2) SPF(err_msg,"Only CONSTANT %s mode model supported.", search_string);
+	      fprintf(stderr,"%s\n",err_msg);
+	      exit(-1);
+	    }
 			       
-      for(mm=0;mm<vn_glob[mn]->modes;mm++)
-			{
-				ve_glob[mn][mm]->gn->tau_y = tau_y_val;
-			}
-			ECHO(es,echo_file);
+	  for(mm=0;mm<vn_glob[mn]->modes;mm++)
+	    {
+	      ve_glob[mn][mm]->gn->tau_y = tau_y_val;
+	    }
+	  ECHO(es,echo_file);
 	}
 
 
