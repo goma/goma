@@ -5059,16 +5059,16 @@ load_elastic_properties(struct Elastic_Constitutive *elcp,
 {
   /*local variables */
   int err;
-  int nnn, ins, inode, dim, dofs;
+  int nnn1, nnn2, ins, inode1, inode2, dim, dofs;
   int a, b, q, v, i, j, w;
 
   ELASTIC_CONST_STRUCT *elc_ptr;
 
   memset(d_mu_dx, 0.0, sizeof(double)*DIM*MDE);
 
-  elc_ptr = elcp;  
+  elc_ptr = elcp;
 
-  double dist, iie, value;
+  double dist1, dist2, iie, value;
 
   dim = ei->ielem_dim;
 
@@ -5094,38 +5094,160 @@ load_elastic_properties(struct Elastic_Constitutive *elcp,
        *  u_mu[3]  is the decay length (problem dependent)
        */
 
-      nnn = -1;
+      nnn1 = -1;
       for (ins = 0; ins < Proc_Num_Node_Sets; ins++) {
 	
 	/* Check for a match between the ID of the current node set and the node set
 	   ID specified in the input file - continue if a match is found */
 	
-	if (Proc_NS_Ids[ins] ==  (int) elc_ptr->u_mu[0]) nnn = ins;
+	if (Proc_NS_Ids[ins] ==  (int) elc_ptr->u_mu[0]) nnn1 = ins;
       }
  
-      if( nnn == -1 ) 
+      if( nnn1 == -1 ) 
        {
          if( Num_Proc == 1 )
-             EH(-1,"Cannot find NS number on Lame MU CONTACT_LINE model");
+	  {
+           EH(-1,"Cannot find NS number on Lame MU CONTACT_LINE model");
+	  }
+	 else
+	  {
+	   *mu = elc_ptr->lame_mu = elc_ptr->u_mu[1];
+	  }
        }
       else
        {
-         if( Proc_NS_Count[ nnn] != 1 ) 
+         if( Proc_NS_Count[ nnn1] != 1 ) 
           {
             if( Num_Proc == 1 ) 
                   EH(-1,"Illegal NS number on Lame MU CONTACT_LINE model");
           }
          else
           {
-           inode = Proc_NS_List[Proc_NS_Pointers[ nnn]];
+           inode1 = Proc_NS_List[Proc_NS_Pointers[ nnn1]];
 
-           dist = pow( (  pow(fv->x0[0] - Coor[0][inode],2.0) 
- 		        + pow(fv->x0[1] - Coor[1][inode],2.0) ), 0.5) 
-                                      / elc_ptr->u_mu[3];
-           *mu = elc_ptr->lame_mu = elc_ptr->u_mu[1] + 0.1 / (pow(dist,3.0) 
+           dist1 = sqrt(  (fv->x0[0] - Coor[0][inode1]) * (fv->x0[0] - Coor[0][inode1]) 
+			+ (fv->x0[1] - Coor[1][inode1]) * (fv->x0[1] - Coor[1][inode1]) )
+                                       / elc_ptr->u_mu[3];
+           *mu = elc_ptr->lame_mu = elc_ptr->u_mu[1] + 0.1 / (dist1 * dist1 * dist1 
                                              + 0.1 / elc_ptr->u_mu[2]);
           }
        }
+    }
+  else if (elc_ptr->lame_mu_model == CONTACT_LINE2 )
+    {
+      /* make mu (shear modulus) become very large near a two critical points,
+       * and decay to lower value radially from those points
+       * this helps keep elements near the critical points from shearing excessively
+       * while elements far away won't dilate much
+       *  u_mu[0]  is the node set number for the point
+       *  u_mu[1]  is minimum value of the shear modulus (comparable to lambda, e.g. 1.0)
+       *  u_mu[2]  is the maximum value of the shear modulus (large, e.g. 1e4) for point one
+       *  u_mu[3]  is the decay length (problem dependent) for point one
+       *  u_mu[4]  is the node set number for the second point
+       *  u_mu[5]  is the maximum value of the shear modulus (large, e.g. 1e4) for point two
+       *  u_mu[6]  is the decay length (problem dependent) for point two
+       */
+
+      nnn1 = -1;
+      nnn2 = -1;
+      for (ins = 0; ins < Proc_Num_Node_Sets; ins++) {
+	
+	/* Check for a match between the ID of the current node set and the node set
+	   ID's specified in the input file - continue if a match is found */
+	
+	if (Proc_NS_Ids[ins] ==  (int) elc_ptr->u_mu[0]) nnn1 = ins;
+	if (Proc_NS_Ids[ins] ==  (int) elc_ptr->u_mu[4]) nnn2 = ins;
+      }
+
+      if ( nnn1 == -1 && nnn2 == -1 )
+	{
+	  if ( Num_Proc == 1 )
+	    {
+	      EH(-1,"Cannot find either NS numbers on Lame MU CONTACT_LINE2 model");
+	    }
+	  else
+	    {
+	      *mu = elc_ptr->lame_mu = elc_ptr->u_mu[1];
+	    }
+	}
+      else if ( nnn1 != -1 && nnn2 == -1 )
+	{
+	  if ( Num_Proc == 1 )
+	    {
+	      EH(-1,"Cannot find second NS number on Lame MU CONTACT_LINE2 model");
+	    }
+	  else
+	    {
+	      if ( Proc_NS_Count[ nnn1] != 1 )
+		{
+		  if ( Num_Proc == 1 )
+		    EH(-1,"Illegal first NS number on Lame MU CONTACT_LINE2 model");
+		}
+	      else
+		{
+		  inode1 = Proc_NS_List[Proc_NS_Pointers[ nnn1]];
+
+		  dist1 = sqrt(  (fv->x0[0] - Coor[0][inode1]) * (fv->x0[0] - Coor[0][inode1])
+			       + (fv->x0[1] - Coor[1][inode1]) * (fv->x0[1] - Coor[1][inode1]) )
+		                                / elc_ptr->u_mu[3];
+
+		  *mu = elc_ptr->lame_mu = elc_ptr->u_mu[1] + 0.1 / (dist1 * dist1 * dist1
+								     + 0.1 / elc_ptr->u_mu[2]);
+		}
+	    }
+	}
+      else if (nnn1 == -1 && nnn2 != -1 )
+	{
+	  if ( Num_Proc == 1 )
+	    {
+	      EH(-1,"Cannot find first NS number on Lame MU CONTACT_LINE2 model");
+	    }
+	  else
+	    {
+	      if ( Proc_NS_Count[ nnn2] != 1 )
+		{
+		  if ( Num_Proc == 1 )
+		    EH(-1,"Illegal second NS number on Lame MU CONTACT_LINE2 model");
+		}
+	      else
+		{
+		  inode2 = Proc_NS_List[Proc_NS_Pointers[ nnn2]];
+
+		  dist2 = sqrt(  (fv->x0[0] - Coor[0][inode2]) * (fv->x0[0] - Coor[0][inode2])
+			       + (fv->x0[1] - Coor[1][inode2]) * (fv->x0[1] - Coor[1][inode2]) )
+		                                / elc_ptr->u_mu[6];
+
+		  *mu = elc_ptr->lame_mu = elc_ptr->u_mu[1] + 0.1 / (dist2 * dist2 * dist2
+								     + 0.1 / elc_ptr->u_mu[5]);
+		}
+	    }
+	}
+      else
+	{
+	  if ( Proc_NS_Count[ nnn1] != 1 || Proc_NS_Count[ nnn2] != 1 )
+	    {
+	      if ( Num_Proc == 1 )
+		EH(-1,"Illegal NS number on Lame MU CONTACT_LINE2 model");
+	    }
+	  else
+	    {
+	      inode1 = Proc_NS_List[Proc_NS_Pointers[ nnn1]];
+	      inode2 = Proc_NS_List[Proc_NS_Pointers[ nnn2]];
+
+	      dist1 = sqrt(  (fv->x0[0] - Coor[0][inode1]) * (fv->x0[0] - Coor[0][inode1])
+			   + (fv->x0[1] - Coor[1][inode1]) * (fv->x0[1] - Coor[1][inode1]) )
+		                            / elc_ptr->u_mu[3];
+
+	      dist2 = sqrt(  (fv->x0[0] - Coor[0][inode2]) * (fv->x0[0] - Coor[0][inode2])
+			   + (fv->x0[1] - Coor[1][inode2]) * (fv->x0[1] - Coor[1][inode2]) )
+		                            / elc_ptr->u_mu[6];
+
+	      *mu = elc_ptr->lame_mu = elc_ptr->u_mu[1] + 0.1 / (dist1 * dist1 * dist1
+						                 + 0.1 / elc_ptr->u_mu[2])
+                                                        + 0.1 / (dist2 * dist2 * dist2
+								 + 0.1 / elc_ptr->u_mu[5]);
+	    }
+	}
     }
   else if (elc_ptr->lame_mu_model == POWER_LAW )
     {
