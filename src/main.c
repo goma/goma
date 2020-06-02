@@ -51,7 +51,7 @@ extern void handle_ieee(void );
 #include "bc/rotate.h"
 #include "bc_special.h"
 #include "bc_surfacedomain.h"
-#include "brk_utils.h"
+#include "decomp_interface.h"
 #include "dp_comm.h"
 #include "dp_map_comm_vec.h"
 #include "dp_types.h"
@@ -185,7 +185,7 @@ int     ExoTimePlane = INT_MAX;    /* Time plane # or continuation # of soln to 
 
 char	Echo_Input_File[MAX_FNL]="\0";	/* echo of problem def file  */
 
-char    Brk_File[MAX_FNL]="\0";        /* input file for brk called as subroutine */
+int Brk_Flag = 0;
 
 char    DomainMappingFile[MAX_FNL]="\0"; /* Domain Mapping file. Maps the materials
 				       and names of material boundaries
@@ -641,23 +641,9 @@ main(int argc, char **argv)
 
 #endif          /* End of ifdef PARALLEL */
 
-
-  /*
-   * We sent the packed line to all processors that contained geometry
-   * creation commands.  Now we need to step through it and create
-   * geometry as we go (including possibly reading an ACIS .sat file).
-   *
-   */
-
-  /* Check to see if BRK File option exists and if so check if file exits */
-  if (Brk_Flag == 1) {
-    check_for_brkfile(Brk_File);
-  }
-  check_parallel_error("Error encountered in check for brkfile");
-
   /* Now break the exodus files */
   if (Num_Proc > 1 && ProcID == 0 && Brk_Flag == 1) {
-    call_brk();
+    decompose_exodus_files();
   }
   check_parallel_error("Error in brking exodus files");
   MPI_Barrier(MPI_COMM_WORLD);
@@ -862,22 +848,6 @@ main(int argc, char **argv)
    * check for parallel errors before continuing
    */
   check_parallel_error("Error encountered in problem setup");
-
-  /***********************************************************************/
-  /***********************************************************************/
-  /***********************************************************************/
-  /*
-   *               CREATE BRK_FILE IF ONE DOES NOT EXIST
-   *
-   * If no Brk_File exists but the option was configured in the input or
-   * optional command we create one now and exit from goma.
-   */
-  if ( Brk_Flag == 2 ) {
-    write_brk_file(Brk_File, EXO_ptr);
-    MPI_Finalize();
-    exit(0);
-  }
-  
   /***********************************************************************/
   /***********************************************************************/
   /***********************************************************************/
@@ -990,7 +960,7 @@ main(int argc, char **argv)
 #endif
 
   if (ProcID == 0 && Brk_Flag == 1 && Num_Proc > 1) {
-    fix_output();
+    join_exodus_file();
   }
   
   /***********************************************************************/

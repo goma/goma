@@ -20,10 +20,10 @@
 #include <string.h>
 
 #define GOMA_AC_HUNT_C
-#include "brk_utils.h"
 #include "ac_hunt.h"
 #include "ac_update_parameter.h"
 #include "az_aztec.h"
+#include "decomp_interface.h"
 #include "dp_comm.h"
 #include "dp_types.h"
 #include "dp_utils.h"
@@ -1383,7 +1383,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
         MPI_Barrier(MPI_COMM_WORLD);
 #endif
       	if (ProcID == 0 && Brk_Flag == 1) {
-          fix_output();
+          join_exodus_file();
         }
 	/* Fix step is relative to print step */
         step_fix += cont->fix_freq*cont->print_freq;

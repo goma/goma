@@ -2,7 +2,7 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2014 Sandia Corporation.                                  *
+* Copyright (c) 2014,2020 Sandia Corporation.                                  *
 *                                                                         *
 * Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,  *
 * the U.S. Government retains certain rights in this software.            *
@@ -10,191 +10,15 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
 
-/* 
- *
- * This defines useful data for distributed processing tasks used by GOMA
- * for mixed finite element solution of coupled conjugate problems.
- * 
- * Notes:
- *	  [1]	Defines a data structure with information that should be
- *              useful in distributed computing contexts.
- *
- *        [2]   Defines some C preprocessor definitions useful for accessing
- *              same data through netCDF.
- *
- *	  [3]   Documention about each variable is still kind of sketchy.
- *		Fill it in more later...
- *
- *	  [4]   Attempt to handle both netCDF 3.3 and back down to netCDF 2.4.3
- *		that EXODUS II seems to rely upon.
- *
- *	  [5]   Note every piece of data in the DPI structure has a 
- *		corresponding entry in the Shadow Identifiers at the bottom.
- *		Those exists as a means of containing the integer identifiers
- *		that netCDF associates with each dimension or variable.
- *
- *	  [6]   Instead of usurping the elem_map[] and node_map[] from
- *		EXODUS II for our devious parallel purposes, make strict
- *		dpi versions of same and name accordingly.
- *
- *	  [7]   Eliminate useless variables, like netcdf_id that are transient
- *              anyway and have no business being permanently recorded in
- *              the data file. A few other variables have been eliminated on
- *		similar grounds.
- *
- * ! Where the names are different (eg., num_node_sets_proc ) from the
- *   structure components, it's because the name conflicts with one already
- *   in use by the EXODUS II database.
- *
- * Created: 1997/05/17 14:08 MDT pasacki@sandia.gov
- *
- * Revised: 1997/05/18 06:06 MDT pasacki@sandia.gov
- *
- * Revised: 1998/12/16 13:51 MST pasacki@sandia.gov
- */
-
-/*
- *$Id: dpi.h,v 5.1 2007-09-18 18:53:41 prschun Exp $
- */
-
 #ifndef GOMA_DPI_H
 #define GOMA_DPI_H
 
-#include "rf_fem_const.h" // MAX_PROB_VAR
-
-/*
- * netCDF Dimensions.
- */
-
-#define DIM_LEN_EB_NUM_PRIVATE_ELEMS		"len_eb_num_private_elems"
-#define DIM_LEN_ELEM_ELEM_LIST			"len_elem_elem_list"
-#define DIM_LEN_ELEM_VAR_TAB_GLOBAL		"len_elem_var_tab_global"
-#define DIM_LEN_NODE_DESCRIPTION		"len_node_description"
-#define DIM_LEN_NS_NODE_LIST			"len_ns_node_list"
-#define DIM_LEN_NS_DISTFACT_LIST		"len_ns_distfact_list"
-#define DIM_LEN_SS_ELEM_LIST			"len_ss_elem_list"
-#define DIM_LEN_SS_DISTFACT_LIST		"len_ss_distfact_list"
-#define DIM_LEN_STRING				"len_string_dpi"
-#define DIM_LEN_PTR_SET_MEMBERSHIP		"len_ptr_set_membership"
-#define DIM_LEN_SET_MEMBERSHIP			"len_set_membership"
-#define DIM_NUM_ELEM_BLOCKS			"num_elem_blocks_proc"
-#define DIM_NUM_ELEM_BLOCKS_GLOBAL		"num_elem_blocks_global"
-#define DIM_NUM_ELEMS				"num_elems_proc"
-#define DIM_NUM_GLOBAL_NODE_DESCRIPTIONS	"num_global_node_descriptions"
-#define DIM_NUM_NEIGHBORS			"num_neighbors"
-#define DIM_NUM_NODE_SETS			"num_node_sets_proc"
-#define DIM_NUM_NODE_SETS_GLOBAL		"num_node_sets_global"
-#define DIM_NUM_NODES				"num_nodes_proc"
-#define DIM_NUM_PROPS_EB			"num_props_eb"
-#define DIM_NUM_PROPS_NS			"num_props_ns"
-#define DIM_NUM_PROPS_SS			"num_props_ss"
-#define DIM_NUM_SIDE_SETS			"num_side_sets_proc"
-#define DIM_NUM_SIDE_SETS_GLOBAL		"num_side_sets_global"
-#define DIM_NUM_UNIVERSE_NODES			"num_universe_nodes"
-#define DIM_LEN_SS_BLOCK_INDEX_GLOBAL           "len_ss_block_index_global"
-#define DIM_LEN_SS_BLOCK_LIST_GLOBAL            "len_ss_block_list_global"
-
-/*
- * netCDF Variables.
- */
-
-#define VAR_EB_ELEM_TYPE_GLOBAL			"eb_elem_type_global"
-#define VAR_EB_ID_GLOBAL			"eb_id_global"
-#define VAR_EB_INDEX_GLOBAL			"eb_index_global"
-#define VAR_EB_NUM_ATTR_GLOBAL			"eb_num_attr_global"
-#define VAR_EB_NUM_ELEMS_GLOBAL			"eb_num_elems_global"
-#define VAR_EB_NUM_NODES_PER_ELEM_GLOBAL	"eb_num_nodes_per_elem_global"
-#define VAR_EB_NUM_PRIVATE_ELEMS		"eb_num_private_elems"
-#define VAR_EB_PROP_GLOBAL			"eb_prop_global"
-#define VAR_EB_PTR_GLOBAL			"eb_ptr_global"
-#define VAR_ELEM_INDEX_GLOBAL			"elem_index_global"
-#define VAR_ELEM_VAR_TAB_GLOBAL			"elem_var_tab_global"
-#define VAR_ELEM_OWNER				"elem_owner"
-#define VAR_ELEM_ELEM_LIST_GLOBAL		"elem_elem_list_global"
-#define VAR_ELEM_ELEM_FACE_GLOBAL		"elem_elem_face_global"
-#define VAR_ELEM_ELEM_TWST_GLOBAL		"elem_elem_twst_global"
-#define VAR_ELEM_ELEM_PROC_GLOBAL		"elem_elem_proc_global"
-#define VAR_GLOBAL_NODE_DESCRIPTION		"global_node_description"
-#define VAR_MY_NAME				"my_name"
-#define VAR_NEIGHBOR				"neighbor"
-#define VAR_NODE_INDEX_GLOBAL			"node_index_global"
-#define VAR_NS_DISTFACT_INDEX_GLOBAL		"ns_distfact_index_global"
-#define VAR_NS_DISTFACT_LEN_GLOBAL		"ns_distfact_len_global"
-#define VAR_NS_DISTFACT_LIST_INDEX_GLOBAL	"ns_distfact_list_index_global"
-#define VAR_NS_ID_GLOBAL			"ns_id_global"
-#define VAR_NS_INDEX_GLOBAL			"ns_index_global"
-#define VAR_NS_NODE_INDEX_GLOBAL		"ns_node_index_global"
-#define VAR_NS_NODE_LEN_GLOBAL			"ns_node_len_global"
-#define VAR_NS_NODE_LIST_INDEX_GLOBAL		"ns_node_list_index_global"
-#define VAR_NS_NUM_DISTFACTS_GLOBAL		"ns_num_distfacts_global"
-#define VAR_NS_NUM_NODES_GLOBAL			"ns_num_nodes_global"
-#define VAR_NS_PROP_GLOBAL			"ns_prop_global"
-#define VAR_NUM_BOUNDARY_NODES			"num_boundary_nodes"
-#define VAR_NUM_DOFS_GLOBAL			"num_dofs_global"
-#define VAR_NUM_ELEMS_GLOBAL			"num_elems_global"
-#define VAR_NUM_EXTERNAL_NODES			"num_external_nodes"
-#define VAR_NUM_INTERNAL_NODES			"num_internal_nodes"
-#define VAR_NUM_NODES_GLOBAL			"num_nodes_global"
-#define VAR_PTR_SET_MEMBERSHIP			"ptr_set_membership"
-#define VAR_SET_MEMBERSHIP			"set_membership"
-#define VAR_SS_DISTFACT_INDEX_GLOBAL		"ss_distfact_index_global"
-#define VAR_SS_DISTFACT_LEN_GLOBAL		"ss_distfact_len_global"
-#define VAR_SS_DISTFACT_LIST_INDEX_GLOBAL	"ss_distfact_list_index_global"
-#define VAR_SS_ELEM_INDEX_GLOBAL		"ss_elem_index_global"
-#define VAR_SS_ELEM_LEN_GLOBAL			"ss_elem_len_global"
-#define VAR_SS_ELEM_LIST_INDEX_GLOBAL		"ss_elem_list_index_global"
-#define VAR_SS_ID_GLOBAL			"ss_id_global"
-#define VAR_SS_INDEX_GLOBAL			"ss_index_global"
-#define VAR_SS_NODE_LEN_GLOBAL			"ss_node_len_global"
-#define VAR_SS_NUM_DISTFACTS_GLOBAL		"ss_num_distfacts_global"
-#define VAR_SS_NUM_SIDES_GLOBAL			"ss_num_sides_global"
-#define VAR_SS_PROP_GLOBAL			"ss_prop_global"
-#define VAR_UNDEFINED_BASIC_EQNVAR_ID		"undefined_basic_eqnvar_id"
-
-#define VAR_SS_BLOCK_INDEX_GLOBAL               "ss_block_index_global"
-#define VAR_SS_BLOCK_LIST_GLOBAL                "ss_block_list_global"
-#define VAR_SS_INTERNAL_GLOBAL                  "ss_internal_global"
-
-/*
- * Some defaults describing the maximum problem sizes that were considered
- * during multiphysics problem decomposition in brk and fix. Note that eqnvars
- * in that context typically are beefier than goma per se, in that tensor
- * and concentration multiplicity are not limited by these values.
- */
-
-#define UNDEFINED_EQNVARID			(-55555)
-#define LEN_NODE_DESCRIPTION			(4*MAX_PROB_VAR+1)
-
 struct Distributed_Processing_Information
 {
-  /*
-   * dimensions (array dimensions).
-   */
-
-  int len_eb_num_private_elems;
-  int len_elem_var_tab_global;	/* New! */
-  int len_elem_elem_list;	/* for connectivities */
-  int len_node_description;
-  int len_ns_node_list;		/* New! */
-  int len_ns_distfact_list;	/* New! */
-  int len_ss_elem_list;		/* New! */
-  int len_ss_distfact_list;	/* New! */
-  int len_string;		/* New! */
-
-  int len_ptr_set_membership;
-  int len_set_membership;
-  int num_elem_blocks;
-  int num_elem_blocks_global;	
+  int num_elem_blocks_global;
   int num_elems;		/* New! */
-  int num_global_node_descriptions;
   int num_neighbors;
-  int num_node_sets;
-  int num_node_sets_global;	
-  int num_nodes;		/* New! */
-  int num_props_eb;		/* New! */
-  int num_props_ns;		/* New! */
-  int num_props_ss;		/* New! */
-  int num_side_sets;
+  int num_node_sets_global;
   int num_side_sets_global;
 
   /*
@@ -202,20 +26,9 @@ struct Distributed_Processing_Information
    */
   
   int *eb_id_global;		/* [neb_global] */
-  char **eb_elem_type_global;	/* New! - [neb_global][MAX_STR_LENGTH] */
-  int *eb_index_global;		/* [neb_proc] */
-  int *eb_num_attr_global;	/* New! - [neb_global] */
-  int *eb_num_elems_global;	/* [neb_global] */
   int *eb_num_nodes_per_elem_global; /* New! - [neb_global] */
-  int *eb_num_private_elems;	/* [neb_proc] */
-  int **eb_prop_global;		/* New! [num_props_eb][num_elem_blocks_glob] */
 
   int *elem_index_global;	/* New! [num_elems_proc] */
-
-  int *elem_var_tab_global;	/* New! [num_elem_blocks_glob*num_elem_vars]
-				 *    = [len_elem_var_tab_global]
-				 * This flattened 2d->1d array has the index
-				 * for the element variables cycling faster. */
 
   /*
    * Some new stuff to help in the assembly of element based methods, such
@@ -227,14 +40,8 @@ struct Distributed_Processing_Information
 				 * from exo->elem_elem_pntr[elem] */
 
   int *elem_elem_list_global;	/* Face-ordered names of elems facing this. */
-  int *elem_elem_twst_global;	/* Twist of facing elements. */
-  int *elem_elem_face_global;	/* Face name of facing element. */
-  int *elem_elem_proc_global;	/* Owning proc of facing element. */
 
 
-  int **global_node_description;/* [num_global_node_descriptions]
-				 *                  [len_node_description] */
-  int my_name;			/* scalar */
   int *neighbor;		/* Array of neighboring processor id's to this
 				   proc. Values range from 0 to Nproc - 1
 				   length = [num_neighbors] */
@@ -242,32 +49,9 @@ struct Distributed_Processing_Information
 				   The index is the processor node number
 				   length - [num_nodes_proc] */
   int *ns_id_global;		/* [num_node_sets_global] */
-  int *ns_index_global;		/* [num_node_sets] */
 
-  int ns_distfact_len_global;	/* New! - Length of nodeset dist facts(glob) */
-  int ns_node_len_global;	/* New! - Length of nodeset node lists(glob) */
-
-  int *ns_num_distfacts_global;	/* [num_node_sets_global] */
-  int *ns_num_nodes_global;	/* [num_node_sets_global] */
-
-  int *ns_node_list_index_global; /* New! - where to map into ns_node_list[] 
-				   * global - length is [ns_node_len] 
-				   * Mucho convenient for concatenated arrays
-				   * like this!
-				   */
-
-  int *ns_node_index_global;	/* New! [num_node_sets_global] */
-  int *ns_distfact_index_global;/* New! [num_node_sets_global] */
   int *ss_internal_global;
 
-  int *ns_distfact_list_index_global; /* New! - where to put distfacts from
-				       * this processor in the global list
-				       * length is [ns_distfact_len]
-				       * Mucho convenient for concatenated 
-				       * arrays like this!
-				       */
-
-  int **ns_prop_global;		/* New! [ns_num_props][num_node_sets_global] */
   int num_dofs_global;		/* scalar
 				 * Total number of unknowns in the global
 				 * problem */
@@ -304,209 +88,55 @@ struct Distributed_Processing_Information
 
   int *set_membership;		/* [len_set_membership] */
 
-  int ss_distfact_len_global;	/* New! - Length of ss distfacts list (glob) */
-  int ss_elem_len_global;	/* New! - Length of ss elem list (glob) */
-
   int *ss_id_global;		/* [num_side_sets_global] */
-  int *ss_distfact_index_global; /* New! - [num_side_sets_global] */
-  int *ss_elem_index_global;	/* New! - [num_side_sets_global] */
 
-  int *ss_elem_list_index_global; /* New! - [ss_elem_len] maps to the right
-				   * place in the global ss_elem_list[] array
-				   * Mucho convenient for concatenated arrays
-				   * like this!
-				   */
-
-  int *ss_distfact_list_index_global; /* New! - [ss_distfact_len] maps
-				      * every local distfact into the right
-				      * place in the global distfact list.
-				      * I.e, these numbers have no local
-				      * meaning but as a map to the global
-				      * counterpart...
-				      */
 
   int *ss_index_global;		/* [num_side_sets] */
 
-  int *ss_num_distfacts_global;	/* [num_side_sets_global] */
+  // New Nemesis
+  int *num_ns_global_node_counts;
+  int *num_ns_global_df_counts;
 
-  int *ss_num_sides_global;	/* [num_side_sets_global] */
+  int *num_ss_global_side_counts;
+  int *num_ss_global_df_counts;
 
-  int **ss_prop_global;		/* New! - [ss_num_props][num_side_sets_glob] */
+  int * global_elem_block_ids;
+  int * global_elem_block_counts;
 
-  int undefined_basic_eqnvar_id; /* scalar - pad ends of the rectangular shaped
-				  * 2d arrays of node descriptions with these*/
+  int num_proc;
+  int num_proc_in_file;
+  char ftype;
 
+  int num_node_cmaps;
+  int num_elem_cmaps;
+
+  int num_internal_elems;
+  int num_border_elems;
+
+  int *proc_node_internal;
+  int *proc_node_boundary;
+  int *proc_node_external;
+
+  int *proc_elem_internal;
+  int *proc_elem_border;
+
+  int *node_cmap_ids;
+  int *elem_cmap_ids;
+  int *node_cmap_node_counts;
+  int *elem_cmap_elem_counts;
+
+  int **node_map_node_ids;
+  int **node_map_proc_ids;
+
+  int **elem_cmap_elem_ids;
+  int **elem_cmap_proc_ids;
+  int **elem_cmap_side_ids;
+
+  //broken
   int *ss_block_index_global;
   int *ss_block_list_global;
-
 };
-
 typedef struct Distributed_Processing_Information Dpi;
+
 extern Dpi *DPI_ptr;
-
-/*
- * When you update the structure above, then you'll need to make room for
- * an idenfier below if you want to facilitate netCDF i/o later on.
- *
- * What are these things? Well, netCDF likes to assign integer names to
- * the dimensions and variables as well as the strings you like to use.
- *
- * These integer identifiers are stored in this structure.
- *
- * Yes, yes, I know, that a better alternative to this distributed
- * marbles on a sidewalk is possible. If it bothers you because you know
- * the RIGHT THING TO DO and have the time, please have at it...
- */
-
-struct Shadow_Identifiers
-{
-  /*
-   * dimensions (array dimensions).
-   */
-
-  int len_eb_num_private_elems;
-  int len_elem_var_tab_global;
-  int len_elem_elem_list;
-  int len_node_description;
-
-  int len_ns_node_list;
-  int len_ns_distfact_list;
-  int len_ss_elem_list;
-  int len_ss_distfact_list;
-  int len_string;
-
-  int len_ptr_set_membership;
-  int len_set_membership;
-  int num_elem_blocks;
-  int num_elem_blocks_global;	
-  int num_elems;
-  int num_global_node_descriptions;
-  int num_neighbors;
-  int num_node_sets;
-  int num_node_sets_global;	
-  int num_nodes;
-  int num_props_eb;
-  int num_props_ns;
-  int num_props_ss;
-  int num_side_sets;
-  int num_side_sets_global;
-  int num_universe_nodes;
-  int len_ss_block_index_global;
-  int len_ss_block_list_global;
-
-  /*
-   * variables (arrays).
-   */
-  
-  int eb_elem_type_global;
-  int eb_id_global;
-  int eb_index_global;
-  int eb_num_attr_global;
-  int eb_num_elems_global;
-  int eb_num_nodes_per_elem_global;
-  int eb_num_private_elems;
-  int eb_prop_global;
-  int elem_index_global;
-  int elem_var_tab_global;
-  int elem_owner;
-  int elem_elem_list_global;
-  int elem_elem_face_global;
-  int elem_elem_twst_global;
-  int elem_elem_proc_global;
-  int global_node_description;
-  int my_name;
-  int neighbor;
-  int node_index_global;
-  int ns_distfact_index_global;
-  int ns_distfact_len_global;
-  int ns_distfact_list_index_global;
-  int ns_id_global;		/* List of global node set identifiers. */
-  int ns_index_global;		/* Global nodeset INDEX for each local */
-  int ns_node_index_global;
-  int ns_node_len_global;
-  int ns_node_list_index_global;
-  int ns_num_distfacts_global;	/* Number of distribution factors in ea */
-  int ns_num_nodes_global;	/* Number of nodes in ea global node set. */
-  int ns_prop_global;
-  int num_dofs_global;
-  int num_elems_global;
-  int num_internal_nodes;	/* Number of nodes for which this processor
-				 * has primary responsibility but which
-				 * never need to be communicated to/from
-				 * neighboring processors. */
-  int num_boundary_nodes;	/* Number of nodes for which this processor
-				 * has primary responsibility but which are 
-				 * associated with unknowns that need to be
-				 * sent out to other neighboring processors.*/
-  int num_external_nodes;	/* Number of nodes for which this processor
-				 * has secondary responsibility. Such nodes
-				 * are associated with values that need
-				 * to be gathered from other processors and
-				 * are used in calculations. */
-  int num_owned_nodes;          /* num_internal_nodes + num_boundary_nodes */
-  int num_nodes_global;
-
-  int ptr_set_membership;
-
-  int set_membership;	
-
-  int ss_distfact_index_global;
-  int ss_distfact_len_global;
-  int ss_distfact_list_index_global;
-  int ss_elem_index_global;
-  int ss_elem_len_global;
-  int ss_elem_list_index_global;
-
-  int ss_block_index_global;
-  int ss_block_list_global;
-  int ss_internal_global;
-
-
-  int ss_id_global;		/* List of global side set identifiers. */
-  int ss_index_global;		/* Global sideset INDEX for each local
-				 * set/proc sideset index */
-  int ss_node_len_global;
-  int ss_num_distfacts_global;	/* Number of distribution factors in ea
-				 * global side set. */
-  int ss_num_sides_global;	/* Number of sides(&elems) in ea global ss. */
-  int ss_prop_global;
-  int undefined_basic_eqnvar_id; /* Pad ends of rect. 2d arrays w/ these. */
-};
-
-/*
- * Yes, some of this information will already be present as part of
- * the companion EXODUS II finite element data model. 
- *
- * It's replicated here for convenience, mostly in cases where the value 
- * in question is needed for an array dimension.
- *
- * Legend:
- *
- * Name				Description
- * ----				-----------
- *
- * len_eb_num_private_elems	Integer describes the length of the
- *				eb_num_private_elems[] array. Thus, the value
- *				of this variable is typically equal to the
- *				number of element blocks traversed by this
- *				set/proc.
- *
- * len_node_description		Integer is the length of a node description.
- *				For the current node description structure, the
- *				length of a node description is 4*MAXEQNVARS+1.
- *
- *  int num_universe_nodes;	 * The sum of all the previous three.
- *
- * Caution! The indeces appropriate for the arrays below are *global*
- *
- * On a given proc/set, there are two equivalent means for determining
- * the equivalent global identities:
- *
- *	eb_id = E->eb_id[local_index];
- *
- *    eb_id = D->eb_id_global[D->eb_index_global[local_index]];
- *
- * and likewise for nodesets and sidesets.
- */
-
 #endif

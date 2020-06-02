@@ -44,7 +44,7 @@ extern int  ExoTimePlane;         /* initial time plane to use */
 
 extern char Echo_Input_File[MAX_FNL];	 /* echo of problem def file  */
 
-extern char Brk_File[MAX_FNL];    /* Brk file for breaking EXODUS II for parallel */
+extern int Brk_Flag;
 
 extern char DomainMappingFile[MAX_FNL]; /* Domain Mapping file. Maps the materials
 				       and names of material boundaries 

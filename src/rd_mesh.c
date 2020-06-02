@@ -193,7 +193,7 @@ read_mesh_exoII(Exo_DB *exo,
     }
   else
     {
-      rd_dpi(dpi, ExoFile);	/* local extra info for distributed
+      rd_dpi(exo, dpi, ExoFile);	/* local extra info for distributed
 				   processing kept here, too.
 				   some of this is stored in EXODUS names, 
 				   like the element number map, but some
@@ -727,6 +727,8 @@ setup_old_exo(Exo_DB *e, Dpi *dpi, int num_proc)
      {
         ss_to_blks[0][ss_index] = e->ss_id[ss_index];
 
+        // TODO: Broken
+        EH(-1, "Broken ss_block_index");
         int global_ss_index = dpi->ss_index_global[ss_index];
         int start = dpi->ss_block_index_global[global_ss_index];
         int end = dpi->ss_block_index_global[global_ss_index +1];
@@ -1597,6 +1599,7 @@ multiname(char *in_name,
 	  const int number_processors)
 {
   char proc_string[MAX_FNL];
+  char zero_padded_string[10];
   char err_msg[MAX_CHAR_IN_INPUT];
 
   int i;
@@ -1634,7 +1637,25 @@ multiname(char *in_name,
       proc_string[i] = '\0';
     }
 
-  sprintf(proc_string, ".%d.%d", number_processors, processor_name);
+  int zpad = 0;
+  int proc_tmp = number_processors / 10;
+  while (proc_tmp > 0) {
+    zpad++;
+    proc_tmp /= 10;
+  }
+
+  int pad_index = 0;
+  while (pad_index < zpad) {
+    zero_padded_string[pad_index] = '0';
+    pad_index++;
+  }
+  if (pad_index >= 10) {
+    EH(GOMA_ERROR, "Zero padding failure >9 zero pads, not possible!");
+  }
+  zero_padded_string[pad_index] = '\0';
+
+
+  sprintf(proc_string, ".%d.%s%d", number_processors, zero_padded_string, processor_name);
 
   strcat(in_name, proc_string);
   

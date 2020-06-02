@@ -104,6 +104,8 @@ static void put_variable(const int netcdf_unit, const nc_type netcdf_type,
                          const void *variable_address);		/* variable_address */
 
 int wr_dpi(Dpi *d, char *filename) {
+  EH(-1, "Broken wr_dpi");
+#if 0
   int err;
   int status;
   int u;			/* short hand for unit... */
@@ -742,6 +744,7 @@ int wr_dpi(Dpi *d, char *filename) {
     }
 
   return(status);
+#endif
 }
 
 /* define_dimension() - register a dimension name with a value assign ID

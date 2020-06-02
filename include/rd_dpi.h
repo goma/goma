@@ -30,7 +30,7 @@
 #endif
 
 EXTERN int rd_dpi       /* rd_dpi.c */
-    (Dpi *d, char *fn);		/* verbosity - how much to talk */
+    (Exo_DB *exo, Dpi *d, char *fn);		/* verbosity - how much to talk */
 
 EXTERN void getdid		/* rd_dpi.c */
 (int ,			/* netcdf_unit */

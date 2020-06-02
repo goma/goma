@@ -16,7 +16,7 @@
 #include <string.h>
 
 #include "std.h"
-#include "brk_utils.h"
+#include "decomp_interface.h"
 #include "exo_struct.h"
 #include "mm_as_structs.h"
 #include "rf_fem_const.h"
@@ -2240,7 +2240,7 @@ void solve_problem_segregated(
             MPI_Barrier(MPI_COMM_WORLD);
 #endif
             if (ProcID == 0 && Brk_Flag == 1) {
-              fix_output();
+              join_exodus_file();
             }
             /* Fix step is relative to print step */
             step_fix += tran->fix_freq * tran->print_freq;

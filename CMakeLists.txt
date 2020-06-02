@@ -203,8 +203,7 @@ set(GOMA_INCLUDES
         include/bc/rotate.h
         include/bc_special.h
         include/bc_surfacedomain.h
-        include/brkfix/
-        include/brk_utils.h
+        include/decomp_interface.h
         include/dp_comm.h
         include/dpi.h
         include/dp_map_comm_vec.h
@@ -319,22 +318,7 @@ set(GOMA_INCLUDES
         include/wr_dpi.h
         include/wr_exo.h
         include/wr_side_data.h
-        include/wr_soln.h
-        include/brkfix/bbb.h
-        include/brkfix/brkfix.h
-        include/brkfix/brkfix_types.h
-        include/brkfix/brk.h
-        include/brkfix/emuck.h
-        include/brkfix/exo_utils.h
-        include/brkfix/fix.h
-        include/brkfix/mk_dm.h
-        include/brkfix/nodesc.h
-        include/brkfix/ppi.h
-        include/brkfix/rd_in.h
-        include/brkfix/sam_perea.h
-        include/brkfix/utils.h
-        include/brkfix/wr_coords.h
-        include/brkfix/wr_graph_file.h)
+        include/wr_soln.h)
 
 set(GOMA_SOURCES
         src/adapt/omega_h_interface.cpp
@@ -355,8 +339,7 @@ set(GOMA_SOURCES
         src/bc/rotate.c
         src/bc_special.c
         src/bc_surfacedomain.c
-        src/brkfix/
-        src/brk_utils.c
+        src/decomp_interface.c
         src/dp_comm.c
         src/dp_map_comm_vec.c
         src/dp_utils.c
@@ -472,18 +455,7 @@ set(GOMA_SOURCES
         src/wr_dpi.c
         src/wr_exo.c
         src/wr_side_data.c
-        src/wr_soln.c
-        src/brkfix/bbb.c
-        src/brkfix/brk_exo_file.c
-        src/brkfix/emuck.c
-        src/brkfix/fix_exo_file.c
-        src/brkfix/mk_dm.c
-        src/brkfix/ppi.c
-        src/brkfix/rd_in.c
-        src/brkfix/sam_perea.c
-        src/brkfix/utils.c
-        src/brkfix/wr_coords.c
-        src/brkfix/wr_graph_file.c)
+        src/wr_soln.c)
 
 set(GOMA_USER_INCLUDES
         include/user_bc.h

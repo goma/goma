@@ -49,7 +49,7 @@
 #define smalloc(arg)	          safe_malloc((arg),          __FILE__, __LINE__)
 #define alloc_ptr_1(arg)       alloc_ptr_1_FL((arg),          __FILE__, __LINE__)
 #define alloc_ptr_2(arg1,arg2) alloc_ptr_2_FL((arg1), (arg2), __FILE__, __LINE__)
-#define alloc_int_1(arg1,arg2) alloc_int_1_FL((arg1), (arg2), __FILE__, __LINE__)
+#define alloc_int_1(nvalues, value) alloc_int_1_FL((nvalues), (value), __FILE__, __LINE__)
 #define alloc_short_1(arg1,arg2) \
                              alloc_short_1_FL((arg1), (arg2), __FILE__, __LINE__)
 #define alloc_dbl_1(arg1,arg2) alloc_dbl_1_FL((arg1), (arg2), __FILE__, __LINE__)

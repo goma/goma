@@ -769,11 +769,7 @@ rd_file_specs(FILE *ifp,
 
   if ( foundBrkFile == 1 && Brk_Flag != 1 ) {
     Brk_Flag = 1;
-    read_string(ifp,input,'\n');
-    strip(input);
-    strcpy(Brk_File,input);
-
-    SPF(echo_string, eoformat, "Brk file", Brk_File); ECHO(echo_string, echo_file);
+    SPF(echo_string, eoformat, "Brk file"); ECHO(echo_string, echo_file);
   }
 
   /*
@@ -12581,12 +12577,6 @@ translate_command_line( int argc,
 		else if( strcmp( argv[istr],"-brk") == 0 )
 		{
                   Brk_Flag = 1;
-		  (*nclc)++;
-                  istr++;
-                  clc[*nclc]->type = NOECHO;
-		  strcpy_rtn = strcpy(clc[*nclc]->string, argv[istr]);
-		  strcpy_rtn = strcpy( Brk_File, clc[*nclc]->string);
-		  istr++;
 		}
 /*
  * Unknown '-' option: print an error and abort
