@@ -102,7 +102,6 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
   ex_error = ex_get_id_map(exoid, EX_ELEM_MAP, d->elem_index_global);
   CHECK_EX_ERROR(ex_error, "ex_get_id_map EX_ELEM_MAP");
 
-
   // Load Balance Information
   ex_error = ex_get_loadbal_param(
       exoid, &d->num_internal_nodes, &d->num_boundary_nodes, &d->num_external_nodes,
@@ -112,13 +111,19 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
   d->num_owned_nodes = d->num_internal_nodes + d->num_boundary_nodes;
 
   d->proc_elem_internal = alloc_int_1(d->num_internal_elems, 0);
-  d->proc_elem_border = alloc_int_1(d->num_border_elems, 0);
+  if (d->num_border_elems > 0) {
+    d->proc_elem_border = alloc_int_1(d->num_border_elems, 0);
+  }
   ex_error = ex_get_processor_elem_maps(exoid, d->proc_elem_internal, d->proc_elem_border, ProcID);
   CHECK_EX_ERROR(ex_error, "ex_get_processor_elem_maps");
 
   d->proc_node_internal = alloc_int_1(d->num_internal_nodes, 0);
-  d->proc_node_boundary = alloc_int_1(d->num_boundary_nodes, 0);
-  d->proc_node_external = alloc_int_1(d->num_external_nodes, 0);
+  if (d->num_boundary_nodes > 0) {
+    d->proc_node_boundary = alloc_int_1(d->num_boundary_nodes, 0);
+  }
+  if (d->num_external_nodes > 0) {
+    d->proc_node_external = alloc_int_1(d->num_external_nodes, 0);
+  }
 
   ex_error = ex_get_processor_node_maps(exoid, d->proc_node_internal, d->proc_node_boundary,
                                         d->proc_node_external, ProcID);
@@ -126,8 +131,10 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
 
   d->node_cmap_ids = alloc_int_1(d->num_node_cmaps, 0);
   d->node_cmap_node_counts = alloc_int_1(d->num_node_cmaps, 0);
-  d->elem_cmap_ids = alloc_int_1(d->num_elem_cmaps, 0);
-  d->elem_cmap_elem_counts = alloc_int_1(d->num_elem_cmaps, 0);
+  if (d->num_elem_cmaps > 0) {
+    d->elem_cmap_ids = alloc_int_1(d->num_elem_cmaps, 0);
+    d->elem_cmap_elem_counts = alloc_int_1(d->num_elem_cmaps, 0);
+  }
 
   ex_error = ex_get_cmap_params(exoid, d->node_cmap_ids, d->node_cmap_node_counts, d->elem_cmap_ids,
                                 d->elem_cmap_elem_counts, ProcID);
@@ -144,9 +151,11 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
     CHECK_EX_ERROR(ex_error, "ex_get_node_cmap %d", i);
   }
 
-  d->elem_cmap_elem_ids = calloc(sizeof(int *), d->num_elem_cmaps);
-  d->elem_cmap_side_ids = calloc(sizeof(int *), d->num_elem_cmaps);
-  d->elem_cmap_proc_ids = calloc(sizeof(int *), d->num_elem_cmaps);
+  if (d->num_elem_cmaps > 0) {
+    d->elem_cmap_elem_ids = calloc(sizeof(int *), d->num_elem_cmaps);
+    d->elem_cmap_side_ids = calloc(sizeof(int *), d->num_elem_cmaps);
+    d->elem_cmap_proc_ids = calloc(sizeof(int *), d->num_elem_cmaps);
+  }
 
   for (int i = 0; i < d->num_elem_cmaps; i++) {
     d->elem_cmap_elem_ids[i] = alloc_int_1(d->elem_cmap_elem_counts[i], 0);
@@ -254,7 +263,10 @@ void uni_dpi(Dpi *dpi, Exo_DB *exo) {
  * Created: 1997/08/23 15:50 MDT pasacki@sandia.gov
  */
 
-void free_dpi(Dpi *d) { return; }
+void free_dpi(Dpi *d) {
+  EH(GOMA_ERROR, "Not implemented free_dpi");
+  return;
+}
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
