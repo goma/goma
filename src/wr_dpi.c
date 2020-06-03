@@ -9,14 +9,14 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
+
 /* wr_dpi() -- write distributed processing information
  *
  * Notes:
  *	    [1] Use netCDF to write out this great new data.
  *
  *	    [2] This should nicely augment EXODUS II finite element data.
- *		
+ *
  *	    [3] Try to use names that are identical to the names of the
  *              structure elements defined in "dpi.h"
  *
@@ -41,7 +41,7 @@
 #endif
 
 /* #define NO_NETCDF_2		 for pure netCDF 3 -- still impure since
- * EXODUS II v3.00 still requires backwards compatibility 
+ * EXODUS II v3.00 still requires backwards compatibility
  */
 
 #include "netcdf.h"
@@ -57,54 +57,123 @@
  * using...
  */
 
-
 #ifndef NC_MAX_VAR_DIMS
-#define NC_MAX_VAR_DIMS		MAX_VAR_DIMS    
+#define NC_MAX_VAR_DIMS MAX_VAR_DIMS
 #endif
 
 #ifndef NC_MAX_NAME
-#define NC_MAX_NAME		MAX_NC_NAME
+#define NC_MAX_NAME MAX_NC_NAME
 #endif
 
 #ifndef NC_INT
-#define NC_INT			NC_LONG
+#define NC_INT NC_LONG
 #endif
 
 /*
  * Might need some NO_NETCDF_2 definitions here ...
  */
 
-#include "std.h"
-#include "mm_eh.h"
 #include "dpi.h"
+#include "mm_eh.h"
+#include "std.h"
 
 /*
  * Prototypes of functions defined here, but needed elsewhere.
  */
 
-static void define_dimension
-(const int ,		/* unit */
-       const char *,		/* string */
-       const int ,		/* value */
-       int *);			/* identifier */
+static void define_dimension(const int,    /* unit */
+                             const char *, /* string */
+                             const int,    /* value */
+                             int *);       /* identifier */
 
-static void define_variable
-(const int ,		/* netcdf_unit */
-       const char *,		/* name_string */
-       const nc_type ,		/* netcdf_type */
-       const int ,		/* num_dimensions (less than 3 for now) */
-       const int ,		/* dimension_id_1 */
-       const int ,		/* dimension_id_2 */
-       const int ,		/* dimension_val_1 */
-       const int ,		/* dimension_val_2 */
-       int *);			/* identifier */
+static void define_variable(const int,     /* netcdf_unit */
+                            const char *,  /* name_string */
+                            const nc_type, /* netcdf_type */
+                            const int,     /* num_dimensions (less than 3 for now) */
+                            const int,     /* dimension_id_1 */
+                            const int,     /* dimension_id_2 */
+                            const int,     /* dimension_val_1 */
+                            const int,     /* dimension_val_2 */
+                            int *);        /* identifier */
 
-static void put_variable(const int netcdf_unit, const nc_type netcdf_type,
+static void put_variable(const int netcdf_unit,
+                         const nc_type netcdf_type,
                          const int variable_identifier,
-                         const void *variable_address);		/* variable_address */
+                         const void *variable_address); /* variable_address */
+
+#define CHECK_EX_ERROR(err, format, ...)                              \
+  do {                                                                \
+    if (err < 0) {                                                    \
+      goma_eh(GOMA_ERROR, __FILE__, __LINE__, format, ##__VA_ARGS__); \
+    }                                                                 \
+  } while (0)
 
 int wr_dpi(Dpi *d, char *filename) {
-  EH(-1, "Broken wr_dpi");
+  float version = -4.98; /* initialize. ex_open() changes this. */
+  int comp_wordsize = sizeof(dbl);
+  int io_wordsize = 0;
+  int exoid = ex_open(filename, EX_WRITE, &comp_wordsize, &io_wordsize, &version);
+  CHECK_EX_ERROR(exoid, "ex_open");
+
+  int ex_error;
+
+  ex_error =
+      ex_put_init_global(exoid, d->num_nodes_global, d->num_elems_global, d->num_elem_blocks_global,
+                         d->num_node_sets_global, d->num_side_sets_global);
+  CHECK_EX_ERROR(ex_error, "ex_put_init_global");
+
+  ex_error = ex_put_ns_param_global(exoid, d->ns_id_global, d->num_ns_global_node_counts,
+                                    d->num_ns_global_df_counts);
+  CHECK_EX_ERROR(ex_error, "ex_put_ns_param_global");
+
+  ex_error = ex_put_ss_param_global(exoid, d->ss_id_global, d->num_ss_global_side_counts,
+                                    d->num_ss_global_df_counts);
+  CHECK_EX_ERROR(ex_error, "ex_put_ss_param_global");
+
+  ex_error = ex_put_eb_info_global(exoid, d->global_elem_block_ids, d->global_elem_block_counts);
+  CHECK_EX_ERROR(ex_error, "ex_put_eb_info_global");
+
+  ex_error = ex_put_init_info(exoid, d->num_proc, d->num_proc_in_file, &d->ftype);
+  CHECK_EX_ERROR(ex_error, "ex_put_init_info");
+
+  ex_error = ex_put_id_map(exoid, EX_NODE_MAP, d->node_index_global);
+  CHECK_EX_ERROR(ex_error, "ex_put_id_map EX_NODE_MAP");
+
+  ex_error = ex_put_id_map(exoid, EX_ELEM_MAP, d->elem_index_global);
+  CHECK_EX_ERROR(ex_error, "ex_put_id_map EX_ELEM_MAP");
+
+  ex_error = ex_put_loadbal_param(exoid, d->num_internal_nodes, d->num_boundary_nodes,
+                                  d->num_external_nodes, d->num_internal_elems, d->num_border_elems,
+                                  d->num_node_cmaps, d->num_elem_cmaps, ProcID);
+  CHECK_EX_ERROR(ex_error, "ex_put_loadbal_param");
+
+  ex_error = ex_put_processor_elem_maps(exoid, d->proc_elem_internal, d->proc_elem_border, ProcID);
+  CHECK_EX_ERROR(ex_error, "ex_put_processor_elem_maps");
+
+  ex_error = ex_put_processor_node_maps(exoid, d->proc_node_internal, d->proc_node_boundary,
+                                        d->proc_node_external, ProcID);
+  CHECK_EX_ERROR(ex_error, "ex_put_processor_node_maps");
+
+  ex_error = ex_put_cmap_params(exoid, d->node_cmap_ids, d->node_cmap_node_counts, d->elem_cmap_ids,
+                                d->elem_cmap_elem_counts, ProcID);
+  CHECK_EX_ERROR(ex_error, "ex_put_cmap_params");
+
+  for (int i = 0; i < d->num_node_cmaps; i++) {
+    ex_error = ex_put_node_cmap(exoid, d->node_cmap_ids[i], d->node_map_node_ids[i],
+                                d->node_map_proc_ids[i], ProcID);
+    CHECK_EX_ERROR(ex_error, "ex_put_node_cmap cmap %d", i);
+  }
+  for (int i = 0; i < d->num_elem_cmaps; i++) {
+    ex_error = ex_put_elem_cmap(exoid, d->elem_cmap_ids[i], d->elem_cmap_elem_ids[i],
+                                d->elem_cmap_side_ids[i], d->elem_cmap_proc_ids[i], ProcID);
+    CHECK_EX_ERROR(ex_error, "ex_put_elem_cmap cmap %d", i);
+  }
+
+  return 0;
+}
+
+static void old_wr_dpi(Dpi *d, char *filename) {
+
 #if 0
   int err;
   int status;
@@ -762,12 +831,7 @@ int wr_dpi(Dpi *d, char *filename) {
  * Revised:
  */
 
-static void
-define_dimension(const int unit,
-		 const char *string,
-		 const int value,
-		 int *identifier)
-{
+static void define_dimension(const int unit, const char *string, const int value, int *identifier) {
   int err;
   char err_msg[MAX_CHAR_ERR_MSG];
 
@@ -775,18 +839,15 @@ define_dimension(const int unit,
    * Dimensions with value zero are problematic, so filter them out.
    */
 
-  if ( value <= 0 )
-    {
-      *identifier = -1;
-      return;
-    }
-  err  = nc_def_dim(unit, string, value, identifier);
-  if ( err != NC_NOERR )
-    {
-      sprintf(err_msg, "nc_def_dim() on %s [<%d] id=%d", string, 
-		   value, *identifier);
-      EH(GOMA_ERROR, err_msg);
-    }
+  if (value <= 0) {
+    *identifier = -1;
+    return;
+  }
+  err = nc_def_dim(unit, string, value, identifier);
+  if (err != NC_NOERR) {
+    sprintf(err_msg, "nc_def_dim() on %s [<%d] id=%d", string, value, *identifier);
+    EH(GOMA_ERROR, err_msg);
+  }
 
   return;
 }
@@ -805,75 +866,64 @@ define_dimension(const int unit,
  * Revised:
  */
 
-static void 
-define_variable(const int netcdf_unit,
-		const char *name_string,
-		const nc_type netcdf_type,
-		const int num_dimensions,
-		const int dimension_id_1,
-		const int dimension_id_2,
-		const int dimension_val_1,
-		const int dimension_val_2,
-		int *identifier)
-{			    
+static void define_variable(const int netcdf_unit,
+                            const char *name_string,
+                            const nc_type netcdf_type,
+                            const int num_dimensions,
+                            const int dimension_id_1,
+                            const int dimension_id_2,
+                            const int dimension_val_1,
+                            const int dimension_val_2,
+                            int *identifier) {
   int err;
   char err_msg[MAX_CHAR_ERR_MSG];
 
   int dim[NC_MAX_VAR_DIMS];
 
-  if ( num_dimensions < 0 )
-    {
-      EH(GOMA_ERROR, "Bad dimension specified.");
-    }
+  if (num_dimensions < 0) {
+    EH(GOMA_ERROR, "Bad dimension specified.");
+  }
 
-  if ( num_dimensions > 0 )
-    {
-      if ( dimension_id_1 < 0 )
-	{
-	  return;		/* Do not even create a variable. */
-	  /*
-	  sprintf(err_msg, "Bad 1st netCDF dimension ID %d for %s\n",
-		       dimension_id_1, name_string);
-	  EH(GOMA_ERROR, err_msg);
-	  */
-	}
-      if ( dimension_val_1 < 1 )
-	{
-	  return;
-	}
+  if (num_dimensions > 0) {
+    if (dimension_id_1 < 0) {
+      return; /* Do not even create a variable. */
+      /*
+      sprintf(err_msg, "Bad 1st netCDF dimension ID %d for %s\n",
+                   dimension_id_1, name_string);
+      EH(GOMA_ERROR, err_msg);
+      */
     }
+    if (dimension_val_1 < 1) {
+      return;
+    }
+  }
 
-  if ( num_dimensions > 1 )
-    {
-      if ( dimension_id_2 < 0 )
-	{
-	  sprintf(err_msg, "Bad 2nd netCDF dimension ID %d for %s\n",
-		       dimension_id_1, name_string);
-	  EH(GOMA_ERROR, err_msg);
-	}
-      if ( dimension_val_2 < 1 )
-	{
-	  return;
-	}
+  if (num_dimensions > 1) {
+    if (dimension_id_2 < 0) {
+      sprintf(err_msg, "Bad 2nd netCDF dimension ID %d for %s\n", dimension_id_1, name_string);
+      EH(GOMA_ERROR, err_msg);
     }
+    if (dimension_val_2 < 1) {
+      return;
+    }
+  }
 
   dim[0] = MAX(dimension_id_1, 1);
   dim[1] = MAX(dimension_id_2, 1);
 
-  err    = nc_def_var(netcdf_unit, name_string, netcdf_type, num_dimensions, 
-		      dim, identifier);
-  if ( err != NC_NOERR )
-    {
-      sprintf(err_msg, "nc_def_var on %s (%d-D) id=%d", name_string, 
-		   num_dimensions, *identifier);
-      EH(GOMA_ERROR, err_msg);
-    }
+  err = nc_def_var(netcdf_unit, name_string, netcdf_type, num_dimensions, dim, identifier);
+  if (err != NC_NOERR) {
+    sprintf(err_msg, "nc_def_var on %s (%d-D) id=%d", name_string, num_dimensions, *identifier);
+    EH(GOMA_ERROR, err_msg);
+  }
 
   return;
 }
 
-static void put_variable(const int netcdf_unit, const nc_type netcdf_type,
-                         const int variable_identifier, const void *variable_address) {
+static void put_variable(const int netcdf_unit,
+                         const nc_type netcdf_type,
+                         const int variable_identifier,
+                         const void *variable_address) {
   int err;
   char err_msg[MAX_CHAR_ERR_MSG];
 
@@ -882,58 +932,45 @@ static void put_variable(const int netcdf_unit, const nc_type netcdf_type,
    * identifier, then don't even try to put it.
    */
 
-  if ( variable_identifier < 0 )
-    {
-      return;
+  if (variable_identifier < 0) {
+    return;
+  }
+
+  switch (netcdf_type) {
+  case NC_INT:
+    err = nc_put_var_int(netcdf_unit, variable_identifier, variable_address);
+    if (err != NC_NOERR) {
+      sprintf(err_msg, "nc_put_var_int() varid=%d", variable_identifier);
+      EH(GOMA_ERROR, err_msg);
     }
+    break;
 
-  switch ( netcdf_type )
-    {
-    case NC_INT:
-      err = nc_put_var_int(netcdf_unit, variable_identifier, variable_address);
-      if ( err != NC_NOERR )
-	{
-	  sprintf(err_msg, "nc_put_var_int() varid=%d", 
-		       variable_identifier);
-	  EH(GOMA_ERROR, err_msg);
-	}
-      break;
-      
-    case NC_CHAR:
-      err = nc_put_var_text(netcdf_unit, variable_identifier, 
-			    variable_address);
-      if ( err != NC_NOERR )
-	{
-	  sprintf(err_msg, "nc_put_var_text() varid=%d", 
-		       variable_identifier);
-	  EH(GOMA_ERROR, err_msg);
-	}
-      break;
-
-    case NC_DOUBLE:
-      err = nc_put_var_double(netcdf_unit, variable_identifier, 
-			      variable_address);
-      if ( err != NC_NOERR )
-	{
-	  sprintf(err_msg, "nc_put_var_double() varid=%d", 
-		       variable_identifier);
-	  EH(GOMA_ERROR, err_msg);
-	}
-	break;
-
-    default:
-      EH(GOMA_ERROR, "Specified netCDF data type unrecognized or unimplemented.");
-      break;
+  case NC_CHAR:
+    err = nc_put_var_text(netcdf_unit, variable_identifier, variable_address);
+    if (err != NC_NOERR) {
+      sprintf(err_msg, "nc_put_var_text() varid=%d", variable_identifier);
+      EH(GOMA_ERROR, err_msg);
     }
+    break;
 
+  case NC_DOUBLE:
+    err = nc_put_var_double(netcdf_unit, variable_identifier, variable_address);
+    if (err != NC_NOERR) {
+      sprintf(err_msg, "nc_put_var_double() varid=%d", variable_identifier);
+      EH(GOMA_ERROR, err_msg);
+    }
+    break;
+
+  default:
+    EH(GOMA_ERROR, "Specified netCDF data type unrecognized or unimplemented.");
+    break;
+  }
 
   return;
 }
 
 #ifdef YOU_NEED_IT
-static char *
-string_type(nc_type t)
-{
+static char *string_type(nc_type t) {
   static char t_int[] = "INT";
   static char t_dbl[] = "DOUBLE";
   static char t_chr[] = "CHAR";
@@ -941,33 +978,32 @@ string_type(nc_type t)
   static char t_byt[] = "BYTE";
   static char t_unk[] = "UNKNOWN";
 
-  switch (t)
-    {
-    case NC_INT:
-      return(t_int);
-      break;
+  switch (t) {
+  case NC_INT:
+    return (t_int);
+    break;
 
-    case NC_DOUBLE:
-      return(t_dbl);
-      break;
+  case NC_DOUBLE:
+    return (t_dbl);
+    break;
 
-    case NC_CHAR:
-      return(t_chr);
-      break;
+  case NC_CHAR:
+    return (t_chr);
+    break;
 
-    case NC_FLOAT:
-      return(t_flt);
-      break;
+  case NC_FLOAT:
+    return (t_flt);
+    break;
 
-    case NC_BYTE:
-      return(t_byt);
-      break;
+  case NC_BYTE:
+    return (t_byt);
+    break;
 
-    default:
-      return(t_unk);
-      break;
-    }
-      
-  return(t_unk);
+  default:
+    return (t_unk);
+    break;
+  }
+
+  return (t_unk);
 }
 #endif

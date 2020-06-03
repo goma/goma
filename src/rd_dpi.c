@@ -49,7 +49,7 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
   int comp_wordsize = sizeof(dbl);
   int io_wordsize = 0;
   int exoid = ex_open(fn, EX_READ, &comp_wordsize, &io_wordsize, &version);
-
+  CHECK_EX_ERROR(exoid, "ex_open");
   int ex_error;
 
   ex_error = ex_get_init_global(exoid, &d->num_nodes_global, &d->num_elems_global,
@@ -64,7 +64,7 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
   d->num_ns_global_df_counts = alloc_int_1(d->num_node_sets_global, 0);
   ex_error = ex_get_ns_param_global(exoid, d->ns_id_global, d->num_ns_global_node_counts,
                                     d->num_ns_global_df_counts);
-
+  CHECK_EX_ERROR(ex_error, "ex_get_ns_param_global");
   // Side Set Global
   d->ss_id_global = alloc_int_1(d->num_side_sets_global, 0);
   d->num_ss_global_side_counts = alloc_int_1(d->num_side_sets_global, 0);
@@ -72,7 +72,7 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
   ex_error = ex_get_ns_param_global(exoid, d->ss_id_global, d->num_ss_global_side_counts,
                                     d->num_ss_global_df_counts);
 
-  CHECK_EX_ERROR(ex_error, "ex_get_ns_param_global");
+  CHECK_EX_ERROR(ex_error, "ex_get_ss_param_global");
   // Block Global
   d->global_elem_block_ids = alloc_int_1(d->num_elem_blocks_global, 0);
   d->global_elem_block_counts = alloc_int_1(d->num_elem_blocks_global, 0);
@@ -166,6 +166,126 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
     CHECK_EX_ERROR(ex_error, "ex_get_elem_cmap %d", i);
   }
 
+  // Setup old dpi information
+
+  d->eb_id_global = calloc(d->num_elem_blocks_global, sizeof(int));
+  int *eb_num_nodes_local = calloc(sizeof(int), d->num_elem_blocks_global);
+  d->eb_num_nodes_per_elem_global = calloc(sizeof(int), d->num_elem_blocks_global);
+  for (int i = 0; i < exo->num_elem_blocks; i++) {
+    for (int j = 0; j < d->num_elem_blocks_global; j++) {
+      if (d->global_elem_block_ids[j] == exo->eb_id[i]) {
+        eb_num_nodes_local[j] = exo->eb_num_nodes_per_elem[i];
+        d->eb_id_global[i] = d->global_elem_block_ids[j];
+      }
+    }
+  }
+
+  d->ss_index_global = malloc(sizeof(int) * exo->num_side_sets);
+  for (int i = 0; i < exo->num_side_sets; i++) {
+    for (int j = 0; j < d->num_side_sets_global; j++) {
+      if (exo->ss_id[i] == d->ss_id_global[j]) {
+        d->ss_index_global[i] = j;
+      }
+    }
+  }
+
+  int *local_ss_internal = find_ss_internal_boundary(exo);
+  int *global_ss_internal = calloc(d->num_side_sets_global, sizeof(int));
+  d->ss_internal_global = calloc(d->num_side_sets_global, sizeof(int));
+
+  for (int i = 0; i < exo->num_side_sets; i++) {
+    int global_ss_index = d->ss_index_global[i];
+    global_ss_internal[global_ss_index] = local_ss_internal[i];
+  }
+
+  if (d->num_side_sets_global > 0) {
+    d->ss_block_index_global = calloc(exo->num_side_sets + 1, sizeof(int));
+    d->ss_block_list_global =
+        calloc(d->num_elem_blocks_global * d->num_side_sets_global, sizeof(int));
+    int *ss_block_count_proc =
+        calloc(d->num_elem_blocks_global * d->num_side_sets_global, sizeof(int));
+    int *ss_block_count_global =
+        calloc(d->num_elem_blocks_global * d->num_side_sets_global, sizeof(int));
+
+    for (int ss_id = 0; ss_id < exo->num_side_sets; ss_id++) {
+      for (int elem_index = exo->ss_elem_index[ss_id];
+           elem_index < (exo->ss_elem_index[ss_id] + exo->ss_num_sides[ss_id]); elem_index++) {
+        int elem = exo->ss_elem_list[elem_index];
+        int block = find_elemblock_index(elem, exo);
+        if (block == -1) {
+          EH(GOMA_ERROR, "Element block not found ss_block_list");
+        }
+        for (int j = 0; j < d->num_elem_blocks_global; j++) {
+          if (d->eb_id_global[j] == exo->eb_id[block]) {
+            ss_block_count_proc[ss_id * d->num_elem_blocks_global + j] = 1;
+          }
+        }
+      }
+    }
+
+    MPI_Allreduce(ss_block_count_proc, ss_block_count_global,
+                  d->num_elem_blocks_global * d->num_side_sets_global, MPI_INT, MPI_MAX,
+                  MPI_COMM_WORLD);
+
+    int ss_block_index = 0;
+    for (int ss_id = 0; ss_id < d->num_side_sets_global; ss_id++) {
+      int ss_start = ss_block_index;
+      for (int j = 0; j < d->num_elem_blocks_global; j++) {
+        int offset = ss_id * d->num_elem_blocks_global + j;
+        if (ss_block_count_global[offset] > 0) {
+          d->ss_block_list_global[ss_block_index] = j;
+          ss_block_index++;
+        }
+      }
+      d->ss_block_index_global[ss_id] = ss_start;
+      d->ss_block_index_global[ss_id + 1] = ss_block_index;
+    }
+
+    free(ss_block_count_proc);
+    free(ss_block_count_global);
+
+    d->elem_owner = alloc_int_1(exo->num_elems, ProcID);
+    for (int ecmap = 0; ecmap < d->num_elem_cmaps; ecmap++) {
+      for (int j = 0; j < d->elem_cmap_elem_counts[ecmap]; j++) {
+        d->elem_owner[d->elem_cmap_elem_ids[ecmap][j] - 1] = d->elem_cmap_proc_ids[ecmap][j];
+      }
+    }
+
+    //        // check if block is in array for ss already
+    //        int known = 0;
+    //        for (int i = ss_start; i < ss_block_index; i++) {
+    //          if (d->ss_block_list_global[i] == block) {
+    //            known = 1;
+    //          }
+    //        }
+    //
+    //        if (!known) {
+    //          d->ss_block_list_global[ss_block_index] = block;
+    //          ss_block_index++;
+    //        }
+    //      }
+    //
+    //      d->ss_block_index_global[ss_id] = ss_start;
+    //      d->ss_block_index_global[ss_id+1] = ss_block_index;
+    //    }
+  }
+
+  const int num_mpi_async = 2;
+  MPI_Request request_array[num_mpi_async];
+
+  MPI_Iallreduce(eb_num_nodes_local, d->eb_num_nodes_per_elem_global, d->num_elem_blocks_global,
+                 MPI_INT, MPI_MAX, MPI_COMM_WORLD, &(request_array[0]));
+
+  MPI_Iallreduce(global_ss_internal, d->ss_internal_global, d->num_side_sets_global, MPI_INT,
+                 MPI_MAX, MPI_COMM_WORLD, &(request_array[1]));
+
+  MPI_Waitall(num_mpi_async, request_array, MPI_STATUSES_IGNORE);
+
+  free(eb_num_nodes_local);
+  free(local_ss_internal);
+  free(global_ss_internal);
+  ex_error = ex_close(exoid);
+  CHECK_EX_ERROR(ex_error, "ex_close");
   return 0;
 }
 

@@ -288,85 +288,77 @@ read_mesh_exoII(Exo_DB *exo,
  *	    the code, you'll need to break those hybrids into pieces.
  */
 
-int * find_ss_internal_boundary(Exo_DB *e)
-{
+int *find_ss_internal_boundary(Exo_DB *e) {
   char err_msg[MAX_CHAR_ERR_MSG];
   int *ss_is_internal = alloc_int_1(e->num_side_sets, -1);
   int *first_side_node_list = alloc_int_1(MAX_NODES_PER_SIDE, -1);
   int *other_side_node_list = alloc_int_1(MAX_NODES_PER_SIDE, -1);
 
-  for (int ss_index = 0; ss_index < e->num_side_sets; ss_index++)
-    {
+  for (int ss_index = 0; ss_index < e->num_side_sets; ss_index++) {
+    if (e->ss_num_sides[ss_index] > 0) {
       /*
-         * It suffices to check the first element/side pair. The nodes here
-         * are cross-checked with the nodes in subsequent element/side pairs
-         * in this same sideset.
-         */
-      int side  = 0;
-      int start    = e->ss_node_side_index[ss_index][side];
-      int end    = e->ss_node_side_index[ss_index][side+1];
-      for (int i = 0; i < (end-start); i++)
-        {
-          first_side_node_list[i] = e->ss_node_list[ss_index][start+i];
-        }
-
-      /*
-         * Sort the node numbers into ascending order.
-         */
-      if ((end-start) < 1)
-        {
-          EH(GOMA_ERROR, "Bad side node index listing!");
-        }
-      integer_sort((end-start), first_side_node_list);
+       * It suffices to check the first element/side pair. The nodes here
+       * are cross-checked with the nodes in subsequent element/side pairs
+       * in this same sideset.
+       */
+      int side = 0;
+      int start = e->ss_node_side_index[ss_index][side];
+      int end = e->ss_node_side_index[ss_index][side + 1];
+      for (int i = 0; i < (end - start); i++) {
+        first_side_node_list[i] = e->ss_node_list[ss_index][start + i];
+      }
 
       /*
-         * Now look at the 2nd through last elem/sides nodegroups for any match,
-         * but only if there are at least 2 sides in this sideset.
-         *
-         *	"Just one side?"
-         *
-         *	"You're external, buddy!
-         */
+       * Sort the node numbers into ascending order.
+       */
+      if ((end - start) < 1) {
+        EH(GOMA_ERROR, "Bad side node index listing!");
+      }
+      integer_sort((end - start), first_side_node_list);
 
-      int num_sides   = e->ss_num_sides[ss_index];
-      if (num_sides > 1)
-        {
-          side        = 1;
-          int match_found = FALSE;
-          do
-            {
-              int start    = e->ss_node_side_index[ss_index][side];
-              int end    = e->ss_node_side_index[ss_index][side+1];
-              for (int i = 0; i < (end-start); i++) {
-                  other_side_node_list[i] = e->ss_node_list[ss_index][start+i];
-                }
-              if ((end-start) < 1) {
-                  sprintf(err_msg,
-                          "SS ID %d (%d sides), side_index[%d]=%d, side_index[%d]=%d",
-                          e->ss_id[ss_index], e->ss_num_sides[ss_index],
-                          side, start, side+1, end);
-                  EH(GOMA_ERROR, err_msg);
-                }
-              integer_sort((end-start), other_side_node_list);
-              int equal_vectors = TRUE;
-              for (int i = 0; i < (end-start); i++)
-                {
-                  equal_vectors &= (other_side_node_list[i] == first_side_node_list[i]);
-                }
-              match_found = equal_vectors;
-              side++;
-            } while (side<num_sides && !match_found);
+      /*
+       * Now look at the 2nd through last elem/sides nodegroups for any match,
+       * but only if there are at least 2 sides in this sideset.
+       *
+       *	"Just one side?"
+       *
+       *	"You're external, buddy!
+       */
 
-          if (match_found)
-            {
-              /*
-               * Set this indicator to the SS ID, but any quantity not
-               * equal to "0" would do just as well.
-               */
-              ss_is_internal[ss_index] = e->ss_id[ss_index];
-            }
+      int num_sides = e->ss_num_sides[ss_index];
+      if (num_sides > 1) {
+        side = 1;
+        int match_found = FALSE;
+        do {
+          int start = e->ss_node_side_index[ss_index][side];
+          int end = e->ss_node_side_index[ss_index][side + 1];
+          for (int i = 0; i < (end - start); i++) {
+            other_side_node_list[i] = e->ss_node_list[ss_index][start + i];
+          }
+          if ((end - start) < 1) {
+            sprintf(err_msg, "SS ID %d (%d sides), side_index[%d]=%d, side_index[%d]=%d",
+                    e->ss_id[ss_index], e->ss_num_sides[ss_index], side, start, side + 1, end);
+            EH(GOMA_ERROR, err_msg);
+          }
+          integer_sort((end - start), other_side_node_list);
+          int equal_vectors = TRUE;
+          for (int i = 0; i < (end - start); i++) {
+            equal_vectors &= (other_side_node_list[i] == first_side_node_list[i]);
+          }
+          match_found = equal_vectors;
+          side++;
+        } while (side < num_sides && !match_found);
+
+        if (match_found) {
+          /*
+           * Set this indicator to the SS ID, but any quantity not
+           * equal to "0" would do just as well.
+           */
+          ss_is_internal[ss_index] = e->ss_id[ss_index];
         }
+      }
     }
+  }
   free(other_side_node_list);
   free(first_side_node_list);
   return ss_is_internal;
@@ -593,23 +585,19 @@ setup_old_exo(Exo_DB *e, Dpi *dpi, int num_proc)
 
    Proc_SS_Node_Count       = (int *) smalloc(Proc_Num_Side_Sets*sizeof(int));
 
-   for ( i=0; i<e->num_side_sets; i++)
-     {
+   for (i = 0; i < e->num_side_sets; i++) {
+     if (e->ss_num_sides[i] > 0) {
        nodes_1st_side = e->ss_node_cnt_list[i][0];
-       for ( j=0; j<e->ss_num_sides[i]; j++)
-	 {
-	   nodes_this_side = e->ss_node_cnt_list[i][j];
-	   if ( nodes_this_side != nodes_1st_side )
-	     {
-	       sprintf(err_msg, 
-		    "Whoa! SS %d has sides with varying numbers of nodes.", 
-		       e->ss_id[i]);
-	       EH(GOMA_ERROR, err_msg);
-	     }
-
-	 }
-       /*       Proc_SS_Node_Count[i] = nodes_this_side; */
+       for (j = 0; j < e->ss_num_sides[i]; j++) {
+         nodes_this_side = e->ss_node_cnt_list[i][j];
+         if (nodes_this_side != nodes_1st_side) {
+           sprintf(err_msg, "Whoa! SS %d has sides with varying numbers of nodes.", e->ss_id[i]);
+           EH(GOMA_ERROR, err_msg);
+         }
+       }
      }
+     /*       Proc_SS_Node_Count[i] = nodes_this_side; */
+   }
 
    /*
     * I like this better....
@@ -726,9 +714,6 @@ setup_old_exo(Exo_DB *e, Dpi *dpi, int num_proc)
     for ( ss_index=0; ss_index<e->num_side_sets; ss_index++) 
      {
         ss_to_blks[0][ss_index] = e->ss_id[ss_index];
-
-        // TODO: Broken
-        EH(-1, "Broken ss_block_index");
         int global_ss_index = dpi->ss_index_global[ss_index];
         int start = dpi->ss_block_index_global[global_ss_index];
         int end = dpi->ss_block_index_global[global_ss_index +1];

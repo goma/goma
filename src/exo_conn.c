@@ -1308,12 +1308,15 @@ get_exterior_faces( int elem,
 #ifdef PARALLEL
   
 
-  if(Num_Proc > 1 )
-    elem_elem_list = dpi->elem_elem_list_global;  /* This global list has the 
+  if(Num_Proc > 1 ) {
+    // TODO: NEMESIS DPI
+    EH(GOMA_ERROR, "Not implemented nemesis parallel format");
+    elem_elem_list = dpi->elem_elem_list_global;  /* This global list has the
 						 * element connectivity of the original 
 						 * monolith.  Including the actual exterior
 						 * faces 
 						 */
+  }
 #endif
 
   for( index = exo->elem_elem_pntr[elem], face=0; 

@@ -12577,6 +12577,9 @@ translate_command_line( int argc,
 		else if( strcmp( argv[istr],"-brk") == 0 )
 		{
                   Brk_Flag = 1;
+                  (*nclc)++;
+                  istr++;
+                  clc[*nclc]->type = NOECHO;
 		}
 /*
  * Unknown '-' option: print an error and abort
