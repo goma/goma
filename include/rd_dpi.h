@@ -32,6 +32,9 @@
 EXTERN int rd_dpi       /* rd_dpi.c */
     (Exo_DB *exo, Dpi *d, char *fn);		/* verbosity - how much to talk */
 
+int zero_dpi(Dpi *d);
+int one_dpi(Dpi *d);
+
 EXTERN void getdid		/* rd_dpi.c */
 (int ,			/* netcdf_unit */
        char *,			/* string_name */

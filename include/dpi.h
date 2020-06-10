@@ -84,10 +84,6 @@ struct Distributed_Processing_Information
   int num_nodes_global;		/* The total number of nodes in the global
 	                         * problem
 				 *   (scalar) */
-  int *ptr_set_membership;	/* [len_ptr_set_membership] */
-
-  int *set_membership;		/* [len_set_membership] */
-
   int *ss_id_global;		/* [num_side_sets_global] */
 
 
@@ -132,9 +128,13 @@ struct Distributed_Processing_Information
   int **elem_cmap_proc_ids;
   int **elem_cmap_side_ids;
 
-  //broken
   int *ss_block_index_global;
   int *ss_block_list_global;
+
+  // old dpi
+  int *node_owner;
+  int *num_node_recv;
+  int *num_node_send;
 };
 typedef struct Distributed_Processing_Information Dpi;
 

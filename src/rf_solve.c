@@ -2793,7 +2793,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 
 	if (converged && ls != NULL) 
 	{
-	  int ibc, ls_adc_event;
+	  int ibc, ls_adc_event = FALSE;
 		/* Resolve LS_ADC boundaries ( Attach/Dewet/Coalesce ) */
 		for( ibc=0;ibc<Num_BC;ibc++)
 		{

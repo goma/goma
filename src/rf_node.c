@@ -242,8 +242,7 @@ init_nodes (Exo_DB *exo, Dpi *dpi)
         {
          Nodes[i]->Type.External = TRUE;
          Nodes[i]->Type.Owned = FALSE;
-         where = dpi->ptr_set_membership[i];
-         Nodes[i]->Proc = dpi->set_membership[where];
+         Nodes[i]->Proc = dpi->node_owner[i];
         }
      }
 

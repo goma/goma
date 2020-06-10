@@ -369,8 +369,7 @@ setup_dof_comm_map(Exo_DB *exo, Dpi *dpi, Comm_Ex **cx)
          {
           local_node_number = dpi->num_internal_nodes +
 	                      dpi->num_boundary_nodes + i;
-          where = dpi->ptr_set_membership[local_node_number];
-          owner = dpi->set_membership[where];
+          owner = dpi->node_owner[local_node_number];
           index_owner = in_list(owner, 0, dpi->num_neighbors, dpi->neighbor);
           dofs_i_want = Nodes[local_node_number]->Nodal_Vars_Info[imtrx]->Num_Unknowns;
           cx[imtrx][index_owner].num_dofs_recv += dofs_i_want;
@@ -445,133 +444,6 @@ setup_dof_comm_map(Exo_DB *exo, Dpi *dpi, Comm_Ex **cx)
 /****************************************************************************/
 /****************************************************************************/
 
-void
-setup_fill_comm_map(Exo_DB *exo, Dpi *dpi, Comm_Ex *cx)
-
-    /************************************************************************
-     *
-     * setup_fill_comm_map():
-     *
-     *
-     *    Set up the communications pattern for exchanging the FILL var_type
-     * unknowns from owned nodes to ghost nodes. This fill pattern is
-     * predicated on a vector of FILL unknowns that has a length less than or
-     * equal to the number of nodes. It may be less than the number of nodes if
-     * there isn't a FILL unknown located at every node. The vector of FILL
-     * unknowns is only contains entries for nodes that contain a FILL unknown
-     * dof. It's order is the same as the processor order of nodes, except
-     * for the fact that entries for certain nodes may be missing, as
-     * explained above.
-     *
-     *  NOTE: It would have been much cleaner to define the communications
-     *        pattern in terms of a vector of doubles defined at every node,
-     *        irrespective of whether there was a FILL dof there or not.
-     *        Those false entries without a real FILL dof associated with them
-     *        could then just have been ignored.
-     ************************************************************************/
-{
-  NODAL_VARS_STRUCT *nv;
-  int p, i,  index, local_node_number;
-  int imtrx;
-  /*
-   * calculate the total number of unknowns of type FILL on this processor
-   */
-  num_fill_unknowns      = count_vardofs(FILL, dpi->num_universe_nodes);
-  internal_fill_unknowns = count_vardofs(FILL, dpi->num_internal_nodes);
-  owned_fill_unknowns    = count_vardofs(FILL, 
-		           (dpi->num_internal_nodes + dpi->num_boundary_nodes));
-  boundary_fill_unknowns = owned_fill_unknowns - internal_fill_unknowns;
-  external_fill_unknowns = num_fill_unknowns - owned_fill_unknowns;
-
-  /*
-   * Malloc and calculate a few arrays:
-   *
-   * node_index_fill -> global node index of fill unknowns
-   * fill_node_list  -> processor node index of fill unknowns
-   */
-  node_index_fill = alloc_int_1(num_fill_unknowns, 0);
-  fill_node_list  = alloc_int_1(num_fill_unknowns, 0);
-  build_node_index_var(FILL, dpi->num_universe_nodes,
-		       dpi->node_index_global, node_index_fill,
-		       fill_node_list);
-
-  /*
-   * Calculate ptr_fill_node_recv. Then, use this to calculate the
-   * number of fill node entries that this processor expects to receive
-   * from the p'th processor, cx[p].num_fill_nodes_recv
-   */
-  build_fill_node_recv_indeces(fill_node_list, exo, dpi);
-  for (p = 0; p < dpi->num_neighbors; p++) {
-    cx[p].num_fill_nodes_recv= (ptr_fill_node_recv[p+1] -
-				ptr_fill_node_recv[p]);
-  }
-
-  /*
-   *  Count up the number of FILL degrees of freedom that need to be sent
-   *  from this processor to the p'th processor. 
-   */  
-  for (p = 0; p < dpi->num_neighbors; p++) 
-     {
-      cx[p].num_fill_nodes_send = 0;
-      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
-         {
-          for (i = ptr_node_send[p]; i < ptr_node_send[p+1]; i++) 
-             {
-              local_node_number = list_node_send[i];
-              nv = Nodes[local_node_number]->Nodal_Vars_Info[imtrx];
-              if (nv->Num_Var_Desc_Per_Type[FILL] > 0) 
-                {
-	         cx[p].num_fill_nodes_send++;
-                }
-             }
-         }
-     }
-  
-  /*
-   *  Set up the index array for pointing into list_fill_dof_send,
-   *  ptr_fill_node_send. The pth entry points to the first entry
-   *  in list_fill_node_send that
-   *  gets sent to the pth processor.
-   *
-   *    ptr_fill_node_send[] gets allocated here, and is never freed.
-   */
-  ptr_fill_node_send = alloc_int_1(dpi->num_neighbors + 1, 0);
-  for (p = 0; p < dpi->num_neighbors; p++) {
-    ptr_fill_node_send[p+1] = (ptr_fill_node_send[p]
-			       + cx[p].num_fill_nodes_send);
-  }
-
-  /*
-   *  Set up the index array, list_fill_node_send, that points to FILL
-   *  degrees of freedom that get sent from this processor to neighboring
-   *  processors. list_fill_node_send[i] is the offset from the base of the
-   *  FILL solution vector to the i'th dof that needs to be sent to
-   *  a neighboring processor.
-   *
-   *     list_fill_node_send[] is allocated here, and is never freed.
-   */
-  if (dpi->num_neighbors > 0) 
-    {
-     list_fill_node_send = alloc_int_1(ptr_fill_node_send[dpi->num_neighbors], -1);
-     index = 0;
-     for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
-        {
-         for (i = 0; i < ptr_node_send[dpi->num_neighbors]; i++) 
-            {
-             local_node_number = list_node_send[i];
-             nv = Nodes[local_node_number]->Nodal_Vars_Info[imtrx];
-             if (nv->Num_Var_Desc_Per_Type[FILL] > 0) 
-               {
-                list_fill_node_send[index] = in_list(local_node_number, 0, num_fill_unknowns, fill_node_list);
-                index++;
-               }
-            }
-        }
-    }
-}
-/****************************************************************************/
-/****************************************************************************/
-/****************************************************************************/
 
 static void 
 build_node_recv_indeces(Exo_DB *exo, Dpi *dpi)
@@ -608,8 +480,7 @@ build_node_recv_indeces(Exo_DB *exo, Dpi *dpi)
   for (i = 0; i < dpi->num_external_nodes; i++) {
     local_node_number = dpi->num_internal_nodes + dpi->num_boundary_nodes + i;
     node_ptr = Nodes[local_node_number];
-    where = dpi->ptr_set_membership[local_node_number];
-    owner = dpi->set_membership[where];
+    owner = dpi->node_owner[local_node_number];
     node_ptr->Proc = owner;
     index_owner = in_list(owner, 0, dpi->num_neighbors, dpi->neighbor);
     ptr_node_recv[index_owner+1]++;
@@ -648,62 +519,6 @@ build_node_recv_indeces(Exo_DB *exo, Dpi *dpi)
 /*********************************************************************************/
 /*********************************************************************************/
 /*********************************************************************************/
-
-static void
-build_fill_node_recv_indeces(int *fill_node_list, Exo_DB *exo, Dpi *dpi)
-    
-    /****************************************************************************
-     *
-     * build_fill_node_recv_indeces() -- for ea neighbor proc, what this proc wants
-     *
-     * This is a simple list based on the concept of nodes. It is used to
-     * created indeces on a per processor basis that can be used to communicate
-     * information associated with the fill variable.
-     *
-     * Using the mesh and distributed processing information, this builds the
-     * integer vectors
-     *
-     *              ptr_fill_node_recv
-     *
-     * that are defined in rf_fem.h that decribe this processor's communication
-     * with all of its neighbors. Then, the individual pointers in the Comm_Ex
-     * structures are pointed into this list.
-     *
-     *************************************************************************/
-{
-  int i,  local_node_number, index_owner, owner, where;
-  int local_fill_node_index;
-
-  ptr_fill_node_recv = alloc_int_1(dpi->num_neighbors + 1, 0);
-
-  /*
-   * Gather the frequency profile for each processor among the external
-   * nodes...
-   */
-  for (i = 0; i < external_fill_unknowns; i++) {
-    local_fill_node_index = internal_fill_unknowns
-                       	  + boundary_fill_unknowns + i;
-    local_node_number = fill_node_list[local_fill_node_index];
-    where = dpi->ptr_set_membership[local_node_number];
-    owner = dpi->set_membership[where];
-    index_owner = in_list(owner, 0, dpi->num_neighbors, dpi->neighbor);
-    ptr_fill_node_recv[index_owner+1]++;   
-  }
-
-  /*
-   * Convert frequency into pointer list.
-   */
-  for (i = 0; i < dpi->num_neighbors; i++) {
-    ptr_fill_node_recv[i+1] += ptr_fill_node_recv[i];
-  }
-  if (ptr_fill_node_recv[dpi->num_neighbors] != external_fill_unknowns) {
-    EH(GOMA_ERROR, "Mismatch in external fill node ownership.");
-  }
-  return;
-}
-/***********************************************************************/
-/***********************************************************************/
-/***********************************************************************/
 
 void
 output_comm_stats(Dpi *dpi, Comm_Ex **cx)

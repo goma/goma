@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #endif
 
+#include <el_elm_info.h>
 #include <string.h>
 
 #include "dpi.h"
@@ -109,6 +110,7 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
   CHECK_EX_ERROR(ex_error, "ex_get_loadbal_param");
 
   d->num_owned_nodes = d->num_internal_nodes + d->num_boundary_nodes;
+  d->num_universe_nodes = d->num_internal_nodes + d->num_boundary_nodes + d->num_external_nodes;
 
   d->proc_elem_internal = alloc_int_1(d->num_internal_elems, 0);
   if (d->num_border_elems > 0) {
@@ -286,9 +288,273 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
   free(global_ss_internal);
   ex_error = ex_close(exoid);
   CHECK_EX_ERROR(ex_error, "ex_close");
+
+  int min_external;
+  MPI_Allreduce(&d->num_external_nodes, &min_external, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
+  if (min_external == 0) {
+    EH(-1, "Found 0 external nodes, use nodal decomposition");
+  }
+
+  zero_dpi(d);
+
+  // setup node owners
+  d->num_neighbors = d->num_node_cmaps;
+  d->neighbor = alloc_int_1(d->num_neighbors, -1);
+  d->node_owner = alloc_int_1(exo->num_nodes, ProcID);
+  d->num_node_recv = alloc_int_1(d->num_neighbors, 0);
+  d->num_node_send = alloc_int_1(d->num_neighbors, 0);
+  for (int i = 0; i < d->num_node_cmaps; i++) {
+    int neighbor = d->node_map_proc_ids[i][0];
+    for (int j = 0; j < d->node_cmap_node_counts[i]; j++) {
+      if (neighbor != d->node_map_proc_ids[i][j]) {
+        EH(GOMA_ERROR, "Unexpected proc id in node map proc ids");
+      }
+      if (d->node_owner[d->node_map_node_ids[i][j]] != ProcID) {
+        EH(GOMA_ERROR, "External node found multiple procs");
+      }
+      d->node_owner[d->node_map_node_ids[i][j]] = neighbor;
+      d->num_node_recv[i]++;
+    }
+    d->neighbor[i] = neighbor;
+  }
+
+  int *num_send_nodes = alloc_int_1(d->num_neighbors, 0);
+  int **global_send_nodes = malloc(sizeof(int *) * d->num_neighbors);
+  int *num_recv_nodes = alloc_int_1(d->num_neighbors, 0);
+  int **global_recv_nodes = malloc(sizeof(int *) * d->num_neighbors);
+
+  MPI_Request *requests = calloc(sizeof(MPI_Request), 2 * d->num_neighbors);
+
+  for (int i = 0; i < d->num_neighbors; i++) {
+    num_recv_nodes[i] = 0;
+    for (int j = 0; j < d->num_external_nodes; j++) {
+      if (d->node_owner[d->num_internal_nodes + d->num_boundary_nodes + j] == d->neighbor[i]) {
+        num_recv_nodes[i] += 1;
+      }
+    }
+    MPI_Isend(&num_recv_nodes[i], 1, MPI_INT, d->neighbor[i], 206, MPI_COMM_WORLD, &requests[i]);
+  }
+  for (int i = 0; i < d->num_neighbors; i++) {
+    MPI_Irecv(&num_send_nodes[i], 1, MPI_INT, d->neighbor[i], 206, MPI_COMM_WORLD,
+              &requests[d->num_neighbors + i]);
+  }
+
+  MPI_Waitall(d->num_neighbors * 2, requests, MPI_STATUSES_IGNORE);
+
+  for (int i = 0; i < d->num_neighbors; i++) {
+    global_recv_nodes[i] = malloc(sizeof(int) * num_recv_nodes[i]);
+    int recv_index = 0;
+    for (int j = 0; j < d->num_external_nodes; j++) {
+      int local_node = d->num_internal_nodes + d->num_boundary_nodes + j;
+      if (d->node_owner[local_node] == d->neighbor[i]) {
+        global_recv_nodes[i][recv_index++] = d->node_index_global[local_node];
+      }
+    }
+    MPI_Isend(global_recv_nodes[i], num_recv_nodes[i], MPI_INT, d->neighbor[i], 207, MPI_COMM_WORLD,
+              &requests[i]);
+  }
+  for (int i = 0; i < d->num_neighbors; i++) {
+    global_send_nodes[i] = malloc(sizeof(int) * num_send_nodes[i]);
+    MPI_Irecv(global_send_nodes[i], num_send_nodes[i], MPI_INT, d->neighbor[i], 207, MPI_COMM_WORLD,
+              &requests[d->num_neighbors + i]);
+  }
+
+  MPI_Waitall(d->num_neighbors * 2, requests, MPI_STATUSES_IGNORE);
+  free(requests);
+
+  // verify we have the send nodes
+  for (int i = 0; i < d->num_neighbors; i++) {
+    for (int j = 0; j < num_send_nodes[i]; j++) {
+      int exists = in_list(global_send_nodes[i][j], d->num_internal_nodes,
+                           d->num_internal_nodes + d->num_boundary_nodes, d->node_index_global);
+      if (exists == -1) {
+        EH(GOMA_ERROR, "Required node to communicate doesn't exist in border nodes");
+      }
+    }
+  }
+
+#define DEBUG_MPI
+#ifdef DEBUG_MPI
+
+  int *global_owners_min = alloc_int_1(d->num_nodes_global, Num_Proc + 1);
+  int *global_owners_max = alloc_int_1(d->num_nodes_global, -1);
+  int *all_global_owners_min = alloc_int_1(d->num_nodes_global, Num_Proc + 1);
+  int *all_global_owners_max = alloc_int_1(d->num_nodes_global, -1);
+  for (int i = 0; i < exo->num_nodes; i++) {
+    int gindex = d->node_index_global[i];
+    int owner = d->node_owner[i];
+    global_owners_max[gindex] = owner;
+    global_owners_min[gindex] = owner;
+  }
+
+  MPI_Allreduce(global_owners_min, all_global_owners_min, d->num_nodes_global, MPI_INT, MPI_MIN,
+                MPI_COMM_WORLD);
+  MPI_Allreduce(global_owners_max, all_global_owners_max, d->num_nodes_global, MPI_INT, MPI_MAX,
+                MPI_COMM_WORLD);
+
+  for (int i = 0; i < d->num_nodes_global; i++) {
+    if (all_global_owners_min[i] != all_global_owners_max[i]) {
+      EH(GOMA_ERROR, "Inconsistent node owners");
+    }
+  }
+  free(global_owners_min);
+  free(global_owners_max);
+  free(all_global_owners_max);
+  free(all_global_owners_min);
+
+#endif
+
+  // reorder external nodes
+  int *new_external_node_order = alloc_int_1(d->num_external_nodes, 0);
+  int *old_to_new_external_node_order = alloc_int_1(d->num_external_nodes, 0);
+  int *old_node_owner = alloc_int_1(d->num_external_nodes, 0);
+  int new_index = 0;
+  int offset = d->num_internal_nodes + d->num_boundary_nodes;
+  for (int j = 0; j < d->num_neighbors; j++) {
+    int neighbor = d->neighbor[j];
+    for (int i = 0; i < d->num_external_nodes; i++) {
+      old_node_owner[i] = d->node_owner[i + offset];
+      if (d->node_owner[d->num_internal_nodes + d->num_boundary_nodes + i] == neighbor) {
+        new_external_node_order[new_index] = i;
+        old_to_new_external_node_order[i] = new_index;
+        new_index++;
+      }
+    }
+  }
+  if (new_index != d->num_external_nodes) {
+    EH(GOMA_ERROR, "incorrect new ordering");
+  }
+
+  // node index global
+  int *old_global_indices = alloc_int_1(d->num_external_nodes, 0);
+  for (int i = 0; i < d->num_external_nodes; i++) {
+    old_global_indices[i] = d->node_index_global[d->num_internal_nodes + d->num_boundary_nodes + i];
+  }
+  for (int i = 0; i < d->num_external_nodes; i++) {
+    d->node_index_global[d->num_internal_nodes + d->num_boundary_nodes + i] =
+        old_global_indices[new_external_node_order[i]];
+  }
+  free(old_global_indices);
+
+  double *x_old = alloc_dbl_1(d->num_external_nodes, 0);
+  double *y_old = alloc_dbl_1(d->num_external_nodes, 0);
+  double *z_old = alloc_dbl_1(d->num_external_nodes, 0);
+  for (int i = 0; i < d->num_external_nodes; i++) {
+    x_old[i] = exo->x_coord[offset + i];
+    if (exo->num_dim > 1) {
+      y_old[i] = exo->y_coord[offset + i];
+    }
+    if (exo->num_dim > 2) {
+      z_old[i] = exo->z_coord[offset + i];
+    }
+  }
+  for (int i = 0; i < d->num_external_nodes; i++) {
+    exo->x_coord[offset + i] = x_old[new_external_node_order[i]];
+    if (exo->num_dim > 1) {
+      exo->y_coord[offset + i] = y_old[new_external_node_order[i]];
+    }
+    if (exo->num_dim > 2) {
+      exo->z_coord[offset + i] = z_old[new_external_node_order[i]];
+    }
+  }
+  free(x_old);
+  free(y_old);
+  free(z_old);
+
+  // conn
+  for (int block = 0; block < exo->num_elem_blocks; block++) {
+    int num_nodes_per_blk = exo->eb_num_nodes_per_elem[block] * exo->eb_num_elems[block];
+    for (int i = 0; i < num_nodes_per_blk; i++) {
+      if (exo->eb_conn[block][i] >= offset) {
+        exo->eb_conn[block][i] =
+            old_to_new_external_node_order[exo->eb_conn[block][i] - offset] + offset;
+      }
+    }
+  }
+
+  // ns
+  for (int ns = 0; ns < exo->num_node_sets; ns++) {
+    for (int j = 0; j < exo->ns_node_len; j++) {
+      if (exo->ns_node_list[j] >= offset) {
+        exo->ns_node_list[j] =
+            old_to_new_external_node_order[exo->ns_node_list[j] - offset] + offset;
+      }
+    }
+  }
+
+  // ss
+  for (int ins = 0; ins < exo->num_side_sets; ins++) {
+    for (int side_index = 0; side_index < exo->ss_num_sides[ins]; side_index++) {
+      for (int lni = exo->ss_node_side_index[ins][side_index];
+           lni < exo->ss_node_side_index[ins][side_index + 1]; lni++) {
+        int inode = exo->ss_node_list[ins][lni];
+        if (inode >= offset) {
+          exo->ss_node_list[ins][lni] = old_to_new_external_node_order[inode - offset] + offset;
+        }
+      }
+    }
+  }
+
+  // update node owners
+  for (int i = 0; i < d->num_external_nodes; i++) {
+    d->node_owner[offset + old_to_new_external_node_order[i]] = old_node_owner[i];
+  }
+
+  for (int i = 0; i < d->num_node_cmaps; i++) {
+    for (int j = 0; j < d->node_cmap_node_counts[i]; j++) {
+      d->node_map_node_ids[i][j] =
+          old_to_new_external_node_order[d->node_map_node_ids[i][j] - offset];
+    }
+  }
+
+  free(new_external_node_order);
+  free(old_to_new_external_node_order);
+  free(old_node_owner);
+  free(num_send_nodes);
+  free(num_recv_nodes);
+  for (int i = 0; i < d->num_neighbors; i++) {
+    free(global_send_nodes[i]);
+    free(global_recv_nodes[i]);
+  }
+  free(global_send_nodes);
+  free(global_recv_nodes);
+
   return 0;
 }
+int zero_dpi(Dpi *d) {
+  for (int i = 0; i < d->num_universe_nodes; i++) {
+    d->node_index_global[i] -= 1;
+  }
 
+  for (int i = 0; i < (d->num_internal_elems + d->num_border_elems); i++) {
+    d->elem_index_global[i] -= 1;
+  }
+
+  for (int cmap = 0; cmap < d->num_node_cmaps; cmap++) {
+    for (int node = 0; node < d->node_cmap_node_counts[cmap]; node++) {
+      d->node_map_node_ids[cmap][node] -= 1;
+    }
+  }
+
+  return GOMA_SUCCESS;
+}
+int one_dpi(Dpi *d) {
+  for (int i = 0; i < d->num_universe_nodes; i++) {
+    d->node_index_global[i] += 1;
+  }
+
+  for (int i = 0; i < (d->num_internal_elems + d->num_border_elems); i++) {
+    d->elem_index_global[i] += 1;
+  }
+
+  for (int cmap = 0; cmap < d->num_node_cmaps; cmap++) {
+    for (int node = 0; node < d->node_cmap_node_counts[cmap]; node++) {
+      d->node_map_node_ids[cmap][node] += 1;
+    }
+  }
+
+  return GOMA_SUCCESS;
+}
 /* uni_dpi() -- setup distributed processing information for one processor
  *
  * When the problem is not partitioned, we need to set some acceptable
@@ -355,10 +621,6 @@ void uni_dpi(Dpi *dpi, Exo_DB *exo) {
 
   dpi->ns_id_global = exo->ns_id;
 
-  dpi->set_membership[0] = -1;
-  dpi->ptr_set_membership[0] = 0;
-  dpi->ptr_set_membership[1] = 1;
-
   dpi->ss_id_global = exo->ss_id;
 
   dpi->ss_internal_global = find_ss_internal_boundary(exo);
@@ -384,8 +646,69 @@ void uni_dpi(Dpi *dpi, Exo_DB *exo) {
  */
 
 void free_dpi(Dpi *d) {
-  EH(GOMA_ERROR, "Not implemented free_dpi");
-  return;
+  free(d->ns_id_global);
+  free(d->num_ns_global_node_counts);
+  free(d->num_ns_global_df_counts);
+  free(d->ss_id_global);
+  free(d->num_ss_global_side_counts);
+  free(d->num_ss_global_df_counts);
+  free(d->global_elem_block_ids);
+  free(d->global_elem_block_counts);
+  free(d->node_index_global);
+  free(d->elem_index_global);
+  free(d->proc_elem_internal);
+  if (d->num_border_elems > 0) {
+    free(d->proc_elem_border);
+  }
+  free(d->proc_node_internal);
+  if (d->num_boundary_nodes > 0) {
+    free(d->proc_node_boundary);
+  }
+  if (d->num_external_nodes > 0) {
+    free(d->proc_node_external);
+  }
+  free(d->node_cmap_ids);
+  free(d->node_cmap_node_counts);
+  if (d->num_elem_cmaps > 0) {
+    free(d->elem_cmap_ids);
+    free(d->elem_cmap_elem_counts);
+  }
+
+  for (int i = 0; i < d->num_node_cmaps; i++) {
+    free(d->node_map_node_ids[i]);
+    free(d->node_map_proc_ids[i]);
+  }
+  free(d->node_map_node_ids);
+  free(d->node_map_proc_ids);
+
+  for (int i = 0; i < d->num_elem_cmaps; i++) {
+    free(d->elem_cmap_elem_ids[i]);
+    free(d->elem_cmap_side_ids[i]);
+    free(d->elem_cmap_proc_ids[i]);
+  }
+
+  if (d->num_elem_cmaps > 0) {
+    free(d->elem_cmap_elem_ids);
+    free(d->elem_cmap_side_ids);
+    free(d->elem_cmap_proc_ids);
+  }
+
+  free(d->eb_id_global);
+  free(d->eb_num_nodes_per_elem_global);
+  free(d->ss_index_global);
+
+  free(d->ss_internal_global);
+
+  if (d->num_side_sets_global > 0) {
+    free(d->ss_block_index_global);
+    free(d->ss_block_list_global);
+  }
+
+  free(d->elem_owner);
+  free(d->neighbor);
+  free(d->node_owner);
+  free(d->num_node_recv);
+  free(d->num_node_send);
 }
 /************************************************************************/
 /************************************************************************/
@@ -415,8 +738,6 @@ void free_dpi_uni(Dpi *d) {
   safer_free((void **)&(d->elem_index_global));
   safer_free((void **)&(d->node_index_global));
   safer_free((void **)&(d->neighbor));
-  safer_free((void **)&(d->ptr_set_membership));
-  safer_free((void **)&(d->set_membership));
   safer_free((void **)&(d->ss_index_global));
   free(d->ss_internal_global);
 

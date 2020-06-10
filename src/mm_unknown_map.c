@@ -644,6 +644,7 @@ setup_external_nodal_vars(Exo_DB *exo, Dpi *dpi, Comm_Ex **cx)
   int i, p, node_num, var_type;
   int imtrx;
   struct nv_packed **nvp = NULL, **nvp_send = NULL, **nvp_recv = NULL;
+  struct nv_packed **nvp_save = NULL;
   NODAL_VARS_STRUCT *nv, *nv_match;
   COMM_NP_STRUCT *np_ptr, **np_base = NULL;
   /*
@@ -665,8 +666,8 @@ setup_external_nodal_vars(Exo_DB *exo, Dpi *dpi, Comm_Ex **cx)
 
          nvp_recv[imtrx] = alloc_struct_1(struct nv_packed,
 			                  ptr_node_recv[dpi->num_neighbors] * MaxVarPerNode);
-         nvp[imtrx] = alloc_struct_1(struct nv_packed,
-			             ptr_node_recv[dpi->num_neighbors] * MaxVarPerNode);
+//         nvp[imtrx] = alloc_struct_1(struct nv_packed,
+//			             ptr_node_recv[dpi->num_neighbors] * MaxVarPerNode);
         }
 
   np_base =  (COMM_NP_STRUCT **) alloc_ptr_1(upd->Total_Num_Matrices);
@@ -751,9 +752,19 @@ setup_external_nodal_vars(Exo_DB *exo, Dpi *dpi, Comm_Ex **cx)
   /*
    *  Free memory allocated in this routine
    */
+
+    if (dpi->num_neighbors > 0) {
+      for (int i = 0; i < upd->Total_Num_Matrices; i++) {
+        free(np_base[i]);
+//        free(nvp_save[i]);
+        free(nvp_send[i]);
+        free(nvp_recv[i]);
+      }
+    }
   safer_free((void **) &np_base);
   safer_free((void **) &nvp_send);
   safer_free((void **) &nvp_recv);
+  safer_free((void **) &nvp);
     }
   /*
    *  When in debug mode, print out a complete listing of variables at

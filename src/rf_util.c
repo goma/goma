@@ -2426,7 +2426,8 @@ rd_vectors_from_exoII(double u[], const char *file_nm, const int action_flag,
 	error = ex_get_var(exoid, time_step, EX_NODAL, vdex, 1, num_nodes,
 			   efv->ext_fld_ndl_val[variable_no]);
 	EH(error, "ex_get_var nodal");
-      }        
+      }
+      exchange_node(cx[0], DPI_ptr, efv->ext_fld_ndl_val[variable_no]);
     }
   }
 
@@ -2618,10 +2619,8 @@ rd_trans_vectors_from_exoII(double u[], const char *file_nm,
 
   /*
    *  Exchange the degrees of freedom with neighboring processors
-   *  Actually, we may not need to do this as we have "broken" the external field
-   *  variable file already.   Each proc will read from that file ont he fly. 
    */
-  /// exchange_node(cx, dpi, efv->ext_fld_ndl_val[variable_no]);  
+  exchange_node(cx, dpi, efv->ext_fld_ndl_val[variable_no]);
 
   return 0;
 } /* end rd_trans_vectors_from_exoII*/
