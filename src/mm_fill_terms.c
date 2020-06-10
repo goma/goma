@@ -10874,7 +10874,21 @@ load_fv_grads(void)
       dofs = ei->dof[EM_E1_REAL];
       v = EM_E1_REAL;
 
-      grad_vector_fv_fill(esp->em_er, bf[v]->grad_phi_e, dofs, fv->grad_em_er);
+      //grad_vector_fv_fill(esp->em_er, bf[v]->grad_phi_e, dofs, fv->grad_em_er);
+      for (p = 0; p < VIM; p++) {
+          for (q = 0; q < VIM; q++) {
+              fv->grad_em_er[p][q] = 0.0;
+              fv_old->grad_em_er[p][q] = 0.0;
+              for (r = 0; r < wim; r++) {
+                  for (i = 0; i < dofs; i++) {
+                      fv->grad_em_er[p][q] += (*esp->em_er[r][i]) * bf[v]->grad_phi_e[i][r] [p][q];
+                      if ( pd->TimeIntegration != STEADY ) {
+                          fv_old->grad_em_er[p][q] += (*esp_old->em_er[r][i]) * bf[v]->grad_phi_e[i][r][p][q];
+                        }
+                    }
+                }
+            }
+        }
 
     } else if ( zero_unused_grads && upd->vp[EM_E1_REAL] == -1
            && upd->vp[EM_E2_REAL] == -1 &&  upd->vp[EM_E3_REAL] == -1 ) {
@@ -10892,7 +10906,21 @@ load_fv_grads(void)
       dofs = ei->dof[EM_E1_IMAG];
       v = EM_E1_IMAG;
 
-      grad_vector_fv_fill(esp->em_ei, bf[v]->grad_phi_e, dofs, fv->grad_em_ei);
+      //grad_vector_fv_fill(esp->em_ei, bf[v]->grad_phi_e, dofs, fv->grad_em_ei);
+      for (p = 0; p < VIM; p++) {
+          for (q = 0; q < VIM; q++) {
+              fv->grad_em_ei[p][q] = 0.0;
+              fv_old->grad_em_ei[p][q] = 0.0;
+              for (r = 0; r < wim; r++) {
+                  for (i = 0; i < dofs; i++) {
+                      fv->grad_em_ei[p][q] += (*esp->em_ei[r][i]) * bf[v]->grad_phi_e[i][r] [p][q];
+                      if ( pd->TimeIntegration != STEADY ) {
+                          fv_old->grad_em_ei[p][q] += (*esp_old->em_ei[r][i]) * bf[v]->grad_phi_e[i][r][p][q];
+                        }
+                    }
+                }
+            }
+        }
 
     } else if ( zero_unused_grads && upd->vp[EM_E1_IMAG] == -1
            && upd->vp[EM_E2_IMAG] == -1 &&  upd->vp[EM_E3_IMAG] == -1 ) {
@@ -10910,7 +10938,21 @@ load_fv_grads(void)
       dofs = ei->dof[EM_H1_REAL];
       v = EM_H1_REAL;
 
-      grad_vector_fv_fill(esp->em_hr, bf[v]->grad_phi_e, dofs, fv->grad_em_hr);
+      //grad_vector_fv_fill(esp->em_hr, bf[v]->grad_phi_e, dofs, fv->grad_em_hr);
+      for (p = 0; p < VIM; p++) {
+          for (q = 0; q < VIM; q++) {
+              fv->grad_em_hr[p][q] = 0.0;
+              fv_old->grad_em_hr[p][q] = 0.0;
+              for (r = 0; r < wim; r++) {
+                  for (i = 0; i < dofs; i++) {
+                      fv->grad_em_hr[p][q] += (*esp->em_hr[r][i]) * bf[v]->grad_phi_e[i][r] [p][q];
+                      if ( pd->TimeIntegration != STEADY ) {
+                          fv_old->grad_em_hr[p][q] += (*esp_old->em_hr[r][i]) * bf[v]->grad_phi_e[i][r][p][q];
+                        }
+                    }
+                }
+            }
+        }
 
     } else if ( zero_unused_grads && upd->vp[EM_H1_REAL] == -1
            && upd->vp[EM_H2_REAL] == -1 &&  upd->vp[EM_H3_REAL] == -1 ) {
@@ -10928,7 +10970,21 @@ load_fv_grads(void)
       dofs = ei->dof[EM_H1_IMAG];
       v = EM_H1_IMAG;
 
-      grad_vector_fv_fill(esp->em_hi, bf[v]->grad_phi_e, dofs, fv->grad_em_hi);
+      //grad_vector_fv_fill(esp->em_hi, bf[v]->grad_phi_e, dofs, fv->grad_em_hi);
+      for (p = 0; p < VIM; p++) {
+          for (q = 0; q < VIM; q++) {
+              fv->grad_em_hi[p][q] = 0.0;
+              fv_old->grad_em_hi[p][q] = 0.0;
+              for (r = 0; r < wim; r++) {
+                  for (i = 0; i < dofs; i++) {
+                      fv->grad_em_hi[p][q] += (*esp->em_hi[r][i]) * bf[v]->grad_phi_e[i][r] [p][q];
+                      if ( pd->TimeIntegration != STEADY ) {
+                          fv_old->grad_em_hi[p][q] += (*esp_old->em_hi[r][i]) * bf[v]->grad_phi_e[i][r][p][q];
+                        }
+                    }
+                }
+            }
+        }
 
     } else if ( zero_unused_grads && upd->vp[EM_H1_IMAG] == -1
            && upd->vp[EM_H2_IMAG] == -1 &&  upd->vp[EM_H3_IMAG] == -1 ) {

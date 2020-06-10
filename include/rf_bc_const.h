@@ -567,6 +567,9 @@
 #define EM_HR_SOMMERFELD_BC 1086
 #define EM_HI_SOMMERFELD_BC 1087
 
+#define E_ER_PLANEWAVE_BC 1200
+#define E_EI_PLANEWAVE_BC 1201
+
 /* pressure */
 
 #define P_BC 100000

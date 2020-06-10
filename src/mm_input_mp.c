@@ -3587,6 +3587,30 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     }
   ECHO(es,echo_file);
 
+  /*
+   * There is now a defined magnetic permeability.
+   */
+  rewind(imp);
+  strcpy(search_string,"Magnetic Permeability");
+  model_read = look_for_mat_prop(imp, search_string,
+                                 &(mat_ptr->MagneticPermeabilityModel),
+                                 &(mat_ptr->magnetic_permeability),
+                                 &(mat_ptr->u_magnetic_permeability),
+                                 &(mat_ptr->len_u_magnetic_permeability),
+                                 model_name, SCALAR_INPUT, &NO_SPECIES,es);
+  if (model_read == -1) {
+    if(strncmp(model_name," ",1) != 0) {
+      SPF(err_msg,"Syntax error or invalid model for %s\n",search_string);
+      EH(-1,err_msg);
+    }
+    else {
+      mat_ptr->MagneticPermeabilityModel = CONSTANT;
+      mat_ptr->magnetic_permeability = 1.;
+      SPF(es,"\t(%s = %s %.4g)", search_string,"CONSTANT", mat_ptr->magnetic_permeability );
+    }
+  }
+  ECHO(es,echo_file);
+
   strcpy(search_string, "Electrical Surface Diffusivity");
   model_read = look_for_mat_prop(imp, search_string, 
 				 &(mat_ptr->Elect_Surf_DiffusivityModel), 

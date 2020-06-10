@@ -1785,6 +1785,16 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
                    (int) bc->BC_Name
                   );
               break;
+        case E_ER_PLANEWAVE_BC:
+        case E_EI_PLANEWAVE_BC:
+            apply_ewave_planewave_vec
+                (func,
+                 d_func,
+                 xi,
+                 (int) bc->BC_Name,
+                 bc->BC_Data_Float
+                );
+            break;
         case LIGHTP_TRANS_BC:
 	case LIGHTM_TRANS_BC:
 	case LIGHTD_TRANS_BC:

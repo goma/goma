@@ -1953,6 +1953,10 @@ struct Diet_Field_Variables
   dbl em_ei[DIM];			/* EM wave Fields */
   dbl em_hr[DIM];			/* EM wave Fields */
   dbl em_hi[DIM];			/* EM wave Fields */
+  dbl grad_em_er[DIM][DIM];             /* EM wave Fields */
+  dbl grad_em_ei[DIM][DIM];             /* EM wave Fields */
+  dbl grad_em_hr[DIM][DIM];             /* EM wave Fields */
+  dbl grad_em_hi[DIM][DIM];             /* EM wave Fields */
   /*  
    * Grads of scalars... concentration is the only one we need in the
    * old form for VOF/Taylor-Galerkin stuff.

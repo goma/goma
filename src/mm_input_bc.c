@@ -1676,6 +1676,40 @@ rd_bc_specs(FILE *ifp,
 		SPF(endofstring(echo_string)," %d", BC_Types[ibc].BC_Data_Int[2]);
 
 	  break;
+          /*
+           * Fall through for all cases which require twelve floating point
+           * values as data input
+           */
+        case E_ER_PLANEWAVE_BC:
+        case E_EI_PLANEWAVE_BC:
+          if ( fscanf(ifp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf",
+                      &BC_Types[ibc].BC_Data_Float[0],
+                      &BC_Types[ibc].BC_Data_Float[1],
+                      &BC_Types[ibc].BC_Data_Float[2],
+                      &BC_Types[ibc].BC_Data_Float[3],
+                      &BC_Types[ibc].BC_Data_Float[4],
+                      &BC_Types[ibc].BC_Data_Float[5],
+                      &BC_Types[ibc].BC_Data_Float[6],
+                      &BC_Types[ibc].BC_Data_Float[7],
+                      &BC_Types[ibc].BC_Data_Float[8],
+                      &BC_Types[ibc].BC_Data_Float[9],
+                      &BC_Types[ibc].BC_Data_Float[10],
+                      &BC_Types[ibc].BC_Data_Float[11]) != 12)
+            {
+              sr = sprintf(err_msg, "%s: Expected 12(!) flts for %s.",
+                           yo, BC_Types[ibc].desc->name1);
+              EH(-1, err_msg);
+            }
+          for(i=0;i<12;i++) SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].BC_Data_Float[i]);
+
+          if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[2]) != 1)
+                {
+                 BC_Types[ibc].BC_Data_Int[2] = -1;
+                }
+          else
+                SPF(endofstring(echo_string)," %d", BC_Types[ibc].BC_Data_Int[2]);
+
+          break;
 
 	case CAP_REPULSE_USER_BC:
 

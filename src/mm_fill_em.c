@@ -97,8 +97,7 @@ assemble_emwave(double time,	/* present time value */
                   const PG_DATA *pg_data,
                   const int em_eqn,	/* emwave eqn id and var id	*/
                   const int em_var,
-                  const int em_conjvar )
-{
+                  const int em_conjvar ) {
   int eqn, var, peqn, pvar, dim, p, q, b, w, i, j, status;
   int dir=0;			/* identity of conjugate variable  */
 
@@ -202,8 +201,7 @@ assemble_emwave(double time,	/* present time value */
 
   //impedance = csqrt(mag_permeability/rel_permittivity);
 
-  switch(em_var)
-   {
+  switch(em_var) {
     case EM_E1_REAL:
          EMF = fv->em_er[0];  EMF_conj = fv->em_ei[0]; dir=0;
          break;
@@ -243,12 +241,11 @@ assemble_emwave(double time,	/* present time value */
     default:
          EH(-1,"Invalid EM variable name.\n");
          return -1;
-   }
-  switch(em_var)
-   {
-    case EM_E1_REAL:
-    case EM_E2_REAL:
-    case EM_E3_REAL:
+  }
+  switch(em_var) {
+  case EM_E1_REAL:
+  case EM_E2_REAL:
+  case EM_E3_REAL:
          emf_coeff = -omega*cimag(cpx_permittivity);
          conj_coeff = -omega*creal(cpx_permittivity);
          //emf_coeff = 0;
@@ -633,6 +630,238 @@ assemble_emwave(double time,	/* present time value */
 
   return(status);
 } /* end of assemble_em */
+
+/* assemble_ewave -- assemble terms (Residual &| Jacobian) for EM harmonic
+ *                    wave equations
+ *                   Substitue H for curl(E) so that goma solves
+ *                   1 complex vector equation and 1 complex vector primitive
+ *
+ * in:
+ *     ei -- pointer to Element Indecesstructure
+ *     pd -- pointer to Problem Descriptionstructure
+ *     af -- pointer to Action Flagstructure
+ *     bf -- pointer to Basis Functionstructure
+ *     fv -- pointer to Field Variablestructure
+ *       fv_old -- pointer to old Diet Field Variablestructure
+ *       fv_dot -- pointer to dot Diet Field Variablestructure
+ *     cr -- pointer to Constitutive Relationstructure
+ *     md -- pointer to Mesh Derivativestructure
+ *     me -- pointer to Material Entitystructure
+ *
+ * out:
+ *     a   -- gets loaded up with proper contribution
+ *     lec -- gets loaded up with local contributions to resid, Jacobian
+ *     r   -- residual RHS vector
+ *
+ * Created: Wednesday April 22, 2020 - Andrew Cochrane
+ *
+ *
+ */
+
+int assemble_ewave(double time, // present time
+                   double tt,   // time integration method parameter
+                   double dt,   // current time step size
+                   const int em_eqn, // eqn id
+                   const int em_var //  variable id - should match me_eqn
+                   ) {
+  int eqn, var, dim, peqn,  i;
+  dbl mag_permeability=mp->magnetic_permeability;
+  double omega, re_coeff, im_coeff;
+  dbl n;				/* Refractive index. */
+  CONDUCTIVITY_DEPENDENCE_STRUCT d_n_struct;
+  CONDUCTIVITY_DEPENDENCE_STRUCT *d_n = &d_n_struct;
+
+  dbl k;				/* Acoustic wave number. */
+  CONDUCTIVITY_DEPENDENCE_STRUCT d_k_struct;
+  CONDUCTIVITY_DEPENDENCE_STRUCT *d_k = &d_k_struct;
+
+  double Er[DIM];
+  double Ei[DIM];
+  double gradEr[DIM][DIM];
+  double gradEi[DIM][DIM];
+
+
+
+
+
+  for (int p=0; p<DIM; p++){
+    Er[p] = fv->em_er[p];
+    Ei[p] = fv->em_ei[p];
+    for (int q=0; q<DIM; q++){
+      gradEr[p][q] = fv->grad_em_er[p][q];
+      gradEi[p][q] = fv->grad_em_ei[p][q];
+
+      // found that p is the direction of the derivative
+      // q is the component of the e-field
+    }
+  }
+
+  int curl_var, field_index;
+  double curl_field[DIM];
+
+  dbl advection;			/* For terms and their derivatives */
+
+  dbl diffusion;
+
+  dbl phi_i;
+  dbl grad_phi_i[DIM];
+
+  /*
+   * Interpolation functions for variables and some of their derivatives.
+   */
+
+  dbl phi_j;
+
+  dbl h3;			/* Volume element (scale factors). */
+  dbl dh3dmesh_bj;		/* Sensitivity to (b,j) mesh dof. */
+
+  dbl det_J;
+
+  dbl d_det_J_dmeshbj;			/* for specified (b,j) mesh dof */
+  dbl dgrad_phi_i_dmesh[DIM];		/* ditto.  */
+  dbl wt;
+
+  struct emwave_stabilization em_stab;
+  em_stab.em_eqn = em_eqn;
+  em_stab.em_var = em_var;
+  em_stab.type = EM_STAB_NONE; // enum supports phi_div, dphi_div,
+                           // divphi_div, phi_divsquared and
+                           // dphi_divsquared
+
+  /* initialize grad_phi_i */
+  for (i = 0; i < DIM; i++) {
+    grad_phi_i[i] = 0;
+  }
+  // initialize curl field
+  for (int p=0; p<DIM; p++) {
+    curl_field [p] = 0.0;
+  }
+
+
+  dim   = pd->Num_Dim;
+  eqn   = em_eqn;
+  /*
+   * Bail out fast if there's nothing to do...
+   */
+  if ( ! pd->e[eqn] )
+    {
+      return(1);
+    }
+
+  wt = fv->wt;				/* Gauss point weight. */
+  h3 = fv->h3;			/* Differential volume element. */
+  det_J = bf[eqn]->detJ;		/* Really, ought to be mesh eqn. */
+
+  /*
+   * Material property constants, etc. Any variations at this Gauss point
+   * are calculated with user-defined subroutine options.
+   *
+   * Properties to consider here are R and k. R and k we will allow to vary
+   * with temperature, spatial coordinates, and species concentration.
+   */
+
+  omega = upd->Acoustic_Frequency;
+  n = refractive_index( d_n, time );
+
+  k = extinction_index( d_k, time );
+
+  // Compute complex material properties
+  complex double cpx_refractive_index, cpx_rel_permittivity,
+      cpx_permittivity;//, impedance;
+  double r_elperm, i_elperm;
+
+  cpx_refractive_index = n + _Complex_I*k; // k > 0 is extinction
+  cpx_rel_permittivity = SQUARE(cpx_refractive_index);
+  cpx_permittivity = cpx_rel_permittivity*mp->permittivity;
+
+  // assumed to be constant in an element block
+  r_elperm = creal(cpx_permittivity);
+  i_elperm = cimag(cpx_permittivity);
+
+
+
+  switch(em_eqn) {
+  case R_EM_E1_REAL:
+  case R_EM_E2_REAL:
+  case R_EM_E3_REAL:
+    curl_var = EM_E1_REAL;
+    field_index = em_eqn - R_EM_E1_REAL;
+    re_coeff = -omega*omega*mag_permeability*r_elperm;
+    im_coeff =  omega*omega*mag_permeability*i_elperm;
+    for (int p=0; p<DIM; p++) {
+      for (int q=0; q<DIM; q++) {
+        for (int r=0; r<DIM; r++) {
+          curl_field[p] += permute(p,q,r)*fv->grad_em_er[q][r];
+        }
+      }
+    }
+    em_stab.stabilization_field_var = EM_E1_REAL;
+    calc_emwave_stabilization_term(&em_stab, 1.0);
+    break;
+  case R_EM_E1_IMAG:
+  case R_EM_E2_IMAG:
+  case R_EM_E3_IMAG:
+    curl_var = EM_E1_IMAG;
+    field_index = em_eqn - R_EM_E1_IMAG;
+    re_coeff = -omega*omega*mag_permeability*i_elperm;
+    im_coeff = -omega*omega*mag_permeability*r_elperm;
+    for (int p=0; p<DIM; p++) {
+      for (int q=0; q<DIM; q++) {
+        for (int r=0; r<DIM; r++) {
+
+          curl_field[p] += permute(p,q,r)*fv->grad_em_ei[q][r];
+        }
+      }
+    }
+    em_stab.stabilization_field_var = EM_E1_IMAG;
+    calc_emwave_stabilization_term(&em_stab, 1.0);
+    break;
+  default:
+    EH(-1, "assemble_ewave must be called with only electric field for em_eqn!");
+    break;
+  }
+  if ( af->Assemble_Residual ) {
+    eqn = em_eqn;
+    peqn = upd->ep[eqn];
+    var = em_var;
+    for ( i=0; i<ei->dof[eqn]; i++) {
+      phi_i = bf[eqn]->phi[i];
+
+      advection = 0.;
+      if ( pd->e[eqn] & T_ADVECTION )
+        {
+          advection += re_coeff*fv->em_er[field_index];
+          advection += im_coeff+fv->em_ei[field_index];
+          advection *= phi_i*h3;
+          advection *= det_J*wt;
+          advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+        }
+      diffusion = 0.;
+      if ( pd->e[eqn] & T_DIFFUSION )
+        {
+          for (int p=0; p<VIM; p++)
+            {
+              grad_phi_i[p] = bf[eqn]->grad_phi[i] [p];
+            }
+
+          for (int p=0; p<VIM; p++) {
+            for (int  q=0; q<VIM; q++) {
+              diffusion -= delta(field_index,p)*permute(field_index,p,q)*grad_phi_i[p]*curl_field[q];
+            }
+          }
+
+          diffusion += em_stab.residual_term[i];
+
+          diffusion *= det_J * wt;
+          diffusion *= h3;
+          diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+        }
+
+      lec->R[peqn][i] += advection + diffusion;
+    }
+  }
+  return(0);
+}
 
 int apply_em_farfield_direct_vec(double func[DIM],
                 double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
@@ -1307,6 +1536,144 @@ int apply_em_sommerfeld_vec(double func[DIM],
   return 0;
 } // end of apply_em_sommerfeld_vec
 
+int apply_ewave_planewave_vec(double func[DIM],
+                double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                double xi[DIM],        /* Local stu coordinates */
+                const int bc_name,
+                double *bc_data) {
+  /***********************************************************************
+   * TODO AMC: rewrite this description + add Jacobians
+   * apply_ewave_planewave_vec():
+   *
+   *  Function for specifying surface integral terms for plane wave test.
+   *
+   *  Surface Integral = n_bound CROSS Curl E_i dS
+   *
+   *   func =
+   *
+   *
+   *  The boundary condition E_PLANEWAVE employs this
+   *  function.
+   *
+   *
+   * Input:
+   *
+   *  em_eqn   = which equation is this applied to
+   *  em_var   = which variable is this value sensitive to
+   *
+   * Output:
+   *
+   *  func[0] = value of the function mentioned above
+   *  d_func[0][varType][lvardof] =
+   *              Derivate of func[0] wrt
+   *              the variable type, varType, and the local variable
+   *              degree of freedom, lvardof, corresponding to that
+   *              variable type.
+   *
+   *   Author: Andrew Cochrane (5/19/2020)
+   *
+   ********************************************************************/
+
+  double impedance = sqrt(mp->magnetic_permeability/mp->permittivity);
+  double omega = upd->Acoustic_Frequency;
+  double n[DIM]; // surface normal vector
+
+  //double complex E1[DIM], H1[DIM]; // complex fields inside domain
+
+  // This BC assumes that the boundary is far from the subject and
+  // the material properties are the same on both sides
+  // Need the wave number
+
+  double kappa = omega*sqrt(mp->permittivity*mp->magnetic_permeability);
+
+  // need Surface Normal vector
+  for (int p=0; p<DIM; p++) {
+    n[p] = fv->snormal[p];
+  }
+
+  // polarization P, propagation direction k of incident plane wave
+  // as well as origin offset from input deck
+  complex double P[DIM];
+  double k[DIM];
+  double x_orig[DIM];
+
+  P[0] = bc_data[0] + _Complex_I*bc_data[3];
+  P[1] = bc_data[1] + _Complex_I*bc_data[4];
+  P[2] = bc_data[2] + _Complex_I*bc_data[5];
+
+  k[0] = bc_data[6];
+  k[1] = bc_data[7];
+  k[2] = bc_data[8];
+
+  x_orig[0] = bc_data[9];
+  x_orig[1] = bc_data[10];
+  x_orig[2] = bc_data[11];
+
+  // normalize k and use wavenumber kappa
+  double k_mag = sqrt(k[0]*k[0] + k[1]*k[1] + k[2]*k[2]);
+
+  k[0] = k[0]/k_mag;
+  k[1] = k[1]/k_mag;
+  k[2] = k[2]/k_mag;
+
+  double x[DIM];
+  x[0] = fv->x[0] - x_orig[0];
+  x[1] = fv->x[1] - x_orig[1];
+  x[2] = fv->x[2] - x_orig[2];
+
+
+  double kappa_dot_x = 0.0;
+  for (int q=0; q<DIM; q++){
+    kappa_dot_x += k[q]*x[q];
+  }
+  kappa_dot_x *= kappa;
+
+  complex double E[DIM] = {0.0};
+  complex double CurlE[DIM] = {0.0};
+  complex double nCrossCurlE[DIM] = {0.0};
+
+  for (int p=0; p<DIM; p++) {
+    E[p] += P[p] * cexp(_Complex_I*kappa_dot_x);
+  }
+
+    // Compute Curl(E)
+    // [Curl(E)]_e = sum_{f,g} [permute(e,f,g)*[d_dx]_f([E]_g)]
+    for (int e=0; e<DIM; e++) {
+      for (int f=0; f<DIM; f++) {
+        for (int g=0; g<DIM; g++) {
+          CurlE[e] += permute(e,f,g)
+                     *kappa*k[f]*P[g]
+                     *cexp(_Complex_I*kappa_dot_x);
+        }
+      }
+    }
+
+    // Compute n CROSS Curl(E)
+    for (int e=0; e<DIM; e++) {
+      for (int f=0; f<DIM; f++) {
+        for (int g=0; g<DIM; g++) {
+          nCrossCurlE[e] += permute(e,f,g)*n[f]*CurlE[g];
+        }
+      }
+    }
+
+  // Residual Components
+
+  switch (bc_name) {
+    case E_ER_PLANEWAVE_BC:
+      for (int p=0; p<DIM; p++) {
+        func[p] += creal(nCrossCurlE[p]);
+      }
+      break;
+    case E_EI_PLANEWAVE_BC:
+    for (int p=0; p<DIM; p++) {
+      func[p] += cimag(nCrossCurlE[p]);
+    }
+    break;
+  }
+  return 0;
+} // end of apply_ewave_planewave_vec
+
 void
 calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
                                double stabilization_coefficient
@@ -1501,13 +1868,14 @@ calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
               }
             }
           }
+        break;
         case EM_H1_REAL:
           for( int i=0; i<ei->dof[em_stab->em_eqn]; i++){
             em_stab->residual_term[i]
                 = bf[em_stab->em_eqn]->phi[i]
                   *stabilization_coefficient
-                  *creal(div_stabilization_field_squared)
-                  *mag_permeability;
+                  *creal(div_stabilization_field_squared);
+                  //*mag_permeability;
             for (int b=0; b<DIM; b++){
               for (int j=0; j<ei->dof[em_stab->em_var]; j++){
                 em_stab->jacobian_term[i][b][j]
@@ -1538,13 +1906,14 @@ calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
               }
             }
           }
+        break;
         case EM_H1_IMAG:
           for( int i=0; i<ei->dof[em_stab->em_eqn]; i++){
             em_stab->residual_term[i]
                 = bf[em_stab->em_eqn]->phi[i]
                   *stabilization_coefficient
-                  *cimag(div_stabilization_field_squared)
-                  *mag_permeability;
+                  *cimag(div_stabilization_field_squared);
+                  //*mag_permeability;
             for (int b=0; b<DIM; b++){
               for (int j=0; j<ei->dof[em_stab->em_var]; j++){
                 em_stab->jacobian_term[i][b][j]
@@ -1556,7 +1925,7 @@ calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
               }
             }
           }
-          break;
+        break;
         default:
           EH(-1,"must set the stabilization field var with type==phi_divsquared");
           return;
@@ -1596,6 +1965,7 @@ calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
               }
             }
           }
+        break;
         case EM_H1_REAL:
           for( int i=0; i<ei->dof[em_stab->em_eqn]; i++){
             em_stab->residual_term[i]
@@ -1614,7 +1984,7 @@ calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
               }
             }
           }
-          break;
+        break;
         case EM_E1_IMAG:
           for( int i=0; i<ei->dof[em_stab->em_eqn]; i++){
             em_stab->residual_term[i]
@@ -1634,6 +2004,7 @@ calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
               }
             }
           }
+        break;
         case EM_H1_IMAG:
           for( int i=0; i<ei->dof[em_stab->em_eqn]; i++){
             em_stab->residual_term[i]
@@ -1652,7 +2023,7 @@ calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
               }
             }
           }
-          break;
+        break;
         default:
           EH(-1,"must set the stabilization field var with type==phi_divsquared");
           return;
