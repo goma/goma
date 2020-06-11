@@ -1731,7 +1731,7 @@ matrix_fill(
 #endif
 	}  
       if(pde [R_EM_E1_REAL] && !pde[R_EM_H1_REAL]) {
-        err = assemble_ewave(time_value, theta, delta_t,
+        err = assemble_ewave_tensor_bf(time_value, theta, delta_t,
                                 R_EM_E1_REAL, EM_E1_REAL);
         EH( err, "assemble_ewave");
 #ifdef CHECK_FINITE
@@ -1751,7 +1751,7 @@ matrix_fill(
 	}
 
       if(pde [R_EM_E2_REAL] && !pde[R_EM_H2_REAL]) {
-        err = assemble_ewave(time_value, theta, delta_t,
+        err = assemble_ewave_tensor_bf(time_value, theta, delta_t,
                                 R_EM_E2_REAL, EM_E2_REAL);
         EH( err, "assemble_ewave");
 #ifdef CHECK_FINITE
@@ -1771,7 +1771,7 @@ matrix_fill(
 	}
 
       if(pde [R_EM_E3_REAL] && !pde[R_EM_H3_REAL]) {
-        err = assemble_ewave(time_value, theta, delta_t,
+        err = assemble_ewave_tensor_bf(time_value, theta, delta_t,
                                 R_EM_E3_REAL, EM_E3_REAL);
         EH( err, "assemble_ewave");
 #ifdef CHECK_FINITE
@@ -1791,7 +1791,7 @@ matrix_fill(
 	}
 
       if(pde [R_EM_E1_IMAG] && !pde[R_EM_H1_IMAG]) {
-        err = assemble_ewave(time_value, theta, delta_t,
+        err = assemble_ewave_tensor_bf(time_value, theta, delta_t,
                                 R_EM_E1_IMAG, EM_E1_IMAG);
         EH( err, "assemble_ewave");
 #ifdef CHECK_FINITE
@@ -1811,7 +1811,7 @@ matrix_fill(
 	}
 
       if(pde [R_EM_E2_IMAG] && !pde[R_EM_H2_IMAG]) {
-        err = assemble_ewave(time_value, theta, delta_t,
+        err = assemble_ewave_tensor_bf(time_value, theta, delta_t,
                                 R_EM_E2_IMAG, EM_E2_IMAG);
         EH( err, "assemble_ewave");
 #ifdef CHECK_FINITE
@@ -1831,7 +1831,7 @@ matrix_fill(
 	}
 
       if(pde [R_EM_E3_IMAG] && !pde[R_EM_H3_IMAG]) {
-        err = assemble_ewave(time_value, theta, delta_t,
+        err = assemble_ewave_tensor_bf(time_value, theta, delta_t,
                                 R_EM_E3_IMAG, EM_E3_IMAG);
         EH( err, "assemble_ewave");
 #ifdef CHECK_FINITE
