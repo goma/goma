@@ -49,7 +49,8 @@ enum type_elem {BILINEAR_QUAD = 0,
 		BIQUAD_SHELL,    /* 2D, quadratic elements for 3D shells */
 		BILINEAR_TRISHELL,  /* 2D, linear triangular elements for 3D shells */
                 P1_SHELL,	/* 2D, discontinuous linear elements for 3D shells  */
-                P0_SHELL	/* 2D, discontinuous constant elements for 3D shells */
+                P0_SHELL,	/* 2D, discontinuous constant elements for 3D shells */
+                NULL_ELEM_TYPE
 }
 Type_Elem;
 

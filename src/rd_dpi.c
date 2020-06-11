@@ -70,7 +70,7 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
   d->ss_id_global = alloc_int_1(d->num_side_sets_global, 0);
   d->num_ss_global_side_counts = alloc_int_1(d->num_side_sets_global, 0);
   d->num_ss_global_df_counts = alloc_int_1(d->num_side_sets_global, 0);
-  ex_error = ex_get_ns_param_global(exoid, d->ss_id_global, d->num_ss_global_side_counts,
+  ex_error = ex_get_ss_param_global(exoid, d->ss_id_global, d->num_ss_global_side_counts,
                                     d->num_ss_global_df_counts);
 
   CHECK_EX_ERROR(ex_error, "ex_get_ss_param_global");
@@ -247,11 +247,12 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
     free(ss_block_count_global);
 
     d->elem_owner = alloc_int_1(exo->num_elems, ProcID);
-    for (int ecmap = 0; ecmap < d->num_elem_cmaps; ecmap++) {
-      for (int j = 0; j < d->elem_cmap_elem_counts[ecmap]; j++) {
-        d->elem_owner[d->elem_cmap_elem_ids[ecmap][j] - 1] = d->elem_cmap_proc_ids[ecmap][j];
-      }
-    }
+
+//    for (int ecmap = 0; ecmap < d->num_elem_cmaps; ecmap++) {
+//      for (int j = 0; j < d->elem_cmap_elem_counts[ecmap]; j++) {
+//        d->elem_owner[d->elem_cmap_elem_ids[ecmap][j] - 1] = d->elem_cmap_proc_ids[ecmap][j];
+//      }
+//    }
 
     //        // check if block is in array for ss already
     //        int known = 0;
@@ -316,6 +317,21 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
       d->num_node_recv[i]++;
     }
     d->neighbor[i] = neighbor;
+  }
+
+  for (int i = 0; i < exo->num_elem_blocks; i++) {
+    for (int j = 0; j < exo->eb_num_elems[i]; j++) {
+      int min_proc = ProcID;
+      int nnode_per_elem = exo->eb_num_nodes_per_elem[i];
+      for (int k = 0; k < nnode_per_elem; k++) {
+        int local_node = exo->eb_conn[i][j*nnode_per_elem + k];
+        int proc = d->node_owner[local_node];
+        if (proc < min_proc) {
+          min_proc = proc;
+        }
+      }
+      d->elem_owner[i * exo->num_elem_blocks +j] = min_proc;
+    }
   }
 
   int *num_send_nodes = alloc_int_1(d->num_neighbors, 0);
@@ -611,6 +627,10 @@ void uni_dpi(Dpi *dpi, Exo_DB *exo) {
   dpi->node_index_global = alloc_int_1(len, INT_NOINIT);
   for (i = 0; i < len; i++) {
     dpi->node_index_global[i] = i;
+  }
+  dpi->ss_index_global = alloc_int_1(len, INT_NOINIT);
+  for (i = 0; i < exo->num_side_sets; i++) {
+    dpi->ss_index_global[i] = i;
   }
 
   dpi->eb_id_global = exo->eb_id;

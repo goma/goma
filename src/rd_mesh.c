@@ -471,9 +471,12 @@ setup_old_exo(Exo_DB *e, Dpi *dpi, int num_proc)
 
   for ( i=0; i<e->num_elem_blocks; i++)
     {
-      e->eb_elem_itype[i] = get_type(e->eb_elem_type[i], 
-				     e->eb_num_nodes_per_elem[i],
-				     e->eb_num_attr[i]);
+    if (e->eb_num_elems[i] > 0) {
+      e->eb_elem_itype[i] =
+          get_type(e->eb_elem_type[i], e->eb_num_nodes_per_elem[i], e->eb_num_attr[i]);
+    } else {
+      e->eb_elem_itype[i] = NULL_ELEM_TYPE;
+    }
     }
 
   /*

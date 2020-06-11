@@ -546,9 +546,12 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
               eb_ptr = Element_Blocks + i;
 	      eb_ptr->Elem_Blk_Num = i;
 	      eb_ptr->Elem_Blk_Id = x->eb_id[i];
-	      eb_ptr->Elem_Type = get_type(x->eb_elem_type[i], 
-					   x->eb_num_nodes_per_elem[i],
-					   x->eb_num_attr[i]);
+              if (x->eb_num_elems[i] > 0) {
+                eb_ptr->Elem_Type =
+                    get_type(x->eb_elem_type[i], x->eb_num_nodes_per_elem[i], x->eb_num_attr[i]);
+              } else {
+                eb_ptr->Elem_Type = NULL_ELEM_TYPE;
+              }
 	      eb_ptr->Num_Nodes_Per_Elem = x->eb_num_nodes_per_elem[i];
 	      eb_ptr->Num_Attr_Per_Elem = x->eb_num_attr[i];
               int mindex = map_mat_index(eb_ptr->Elem_Blk_Id);
@@ -559,7 +562,11 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
               }
 	      eb_ptr->ElemStorage = NULL;
 	      eb_ptr->Num_Elems_In_Block = x->eb_num_elems[i];
-              eb_ptr->IP_total = elem_info(NQUAD, eb_ptr->Elem_Type);
+              if (x->eb_num_elems[i] > 0) {
+                eb_ptr->IP_total = elem_info(NQUAD, eb_ptr->Elem_Type);
+              } else {
+                eb_ptr->IP_total = 0;
+              }
 	      
               /*
 	       * Go on to read the information about the element block

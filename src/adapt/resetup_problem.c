@@ -1,11 +1,11 @@
 
 #include "adapt/resetup_problem.h"
 #include "dp_types.h"
+#include "dpi.h"
 #include "mm_as.h"
 #include "mm_as_structs.h"
 #include "mm_eh.h"
 #include "mm_unknown_map.h"
-#include "dpi.h"
 #include "rf_allo.h"
 #include "rf_fem.h"
 #include "rf_node_const.h"
@@ -17,6 +17,7 @@
 #include <mm_bc.h>
 #include <rf_bc.h>
 #include <rf_pre_proc.h>
+#include <rf_solve.h>
 
 int resetup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
                   Dpi *dpi)	/* distributed processing information */
@@ -52,7 +53,7 @@ int resetup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
    * setup communications patterns between ghost and owned
    * nodes.
    */
-//  setup_nodal_comm_map(exo, dpi, cx);
+  setup_nodal_comm_map(exo, dpi, cx);
 
   /*
    * Find the global maximum number of unknowns located at any one
@@ -64,7 +65,7 @@ int resetup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
    * Exchange my idea of what materials I have at each node with
    * my surrounding processors. Make sure we are all in sync
    */
-  //setup_external_nodal_matrls(exo, dpi, cx[0]);
+  setup_external_nodal_matrls(exo, dpi, cx[0]);
 
   /*
    * Exchange my idea of what degrees of freedom I have with my
