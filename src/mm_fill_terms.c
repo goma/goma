@@ -9843,8 +9843,36 @@ load_fv_grads(void)
 	    }
 	}
     }
-  
-  
+
+    if (pd->v[EM_E1_REAL]) {
+      v = EM_E1_REAL;
+      dofs = ei->dof[v];
+      bfn = bf[v];
+
+      for (p = 0; p < DIM; p++) {
+        fv->curl_em_er[p] = 0.0;
+        for (i = 0; i < dofs; i++) {
+          for (a = 0; a < dim; a++) {
+            fv->curl_em_er[p] += *esp->em_er[a][i] * bfn->curl_phi_e[i][a][p];
+          }
+        }
+      }
+    }
+    if (pd->v[EM_E1_IMAG]) {
+      v = EM_E1_REAL;
+      dofs = ei->dof[v];
+      bfn = bf[v];
+
+      for (p = 0; p < DIM; p++) {
+        fv->curl_em_ei[p] = 0.0;
+        for (i = 0; i < dofs; i++) {
+          for (a = 0; a < VIM; a++) {
+            fv->curl_em_ei[p] += *esp->em_ei[a][i] * bfn->curl_phi_e[i][a][p];
+          }
+        }
+      }
+    }
+
   /*
    * div(v)
    */
@@ -10875,11 +10903,11 @@ load_fv_grads(void)
       v = EM_E1_REAL;
 
       //grad_vector_fv_fill(esp->em_er, bf[v]->grad_phi_e, dofs, fv->grad_em_er);
-      for (p = 0; p < VIM; p++) {
-          for (q = 0; q < VIM; q++) {
+      for (p = 0; p < dim; p++) {
+          for (q = 0; q < dim; q++) {
               fv->grad_em_er[p][q] = 0.0;
               fv_old->grad_em_er[p][q] = 0.0;
-              for (r = 0; r < wim; r++) {
+              for (r = 0; r < dim; r++) {
                   for (i = 0; i < dofs; i++) {
                       fv->grad_em_er[p][q] += (*esp->em_er[r][i]) * bf[v]->grad_phi_e[i][r] [p][q];
                       if ( pd->TimeIntegration != STEADY ) {
@@ -10907,11 +10935,11 @@ load_fv_grads(void)
       v = EM_E1_IMAG;
 
       //grad_vector_fv_fill(esp->em_ei, bf[v]->grad_phi_e, dofs, fv->grad_em_ei);
-      for (p = 0; p < VIM; p++) {
-          for (q = 0; q < VIM; q++) {
+      for (p = 0; p < dim; p++) {
+          for (q = 0; q < dim; q++) {
               fv->grad_em_ei[p][q] = 0.0;
               fv_old->grad_em_ei[p][q] = 0.0;
-              for (r = 0; r < wim; r++) {
+              for (r = 0; r < dim; r++) {
                   for (i = 0; i < dofs; i++) {
                       fv->grad_em_ei[p][q] += (*esp->em_ei[r][i]) * bf[v]->grad_phi_e[i][r] [p][q];
                       if ( pd->TimeIntegration != STEADY ) {

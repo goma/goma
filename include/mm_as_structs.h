@@ -1679,6 +1679,8 @@ struct Field_Variables
   dbl grad_em_ei[DIM][DIM];		/* Gradient of EM Efield (imag) */
   dbl grad_em_hr[DIM][DIM];		/* Gradient of EM Hfield (real) */
   dbl grad_em_hi[DIM][DIM];		/* Gradient of EM Hfield (imag) */
+  dbl curl_em_er[DIM];		/* Curl of EM Efield (real) */
+  dbl curl_em_ei[DIM];		/* Curl of EM Efield (imag) */
 
   /* these gradients of tensors are complete for Cartesian coordinates,
    * and currently work for axisymmetic coordinates, in context,

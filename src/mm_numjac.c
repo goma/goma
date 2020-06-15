@@ -556,7 +556,7 @@ numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
 	/*needed for saturation hyst. func. */
 	PRS_mat_ielem = ielem - exo->eb_ptr[ebn];
 
-	matrix_fill_stress(ams, x_1, resid_vector_1,
+	matrix_fill(ams, x_1, resid_vector_1,
 			   x_old, x_older,  xdot, xdot_old, x_update,
 			   &delta_t, &theta,
 			   first_elem_side_BC_array,

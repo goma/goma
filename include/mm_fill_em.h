@@ -73,5 +73,10 @@ EXTERN void calc_emwave_stabilization_term
 (struct emwave_stabilization*,
  double);
 
+int assemble_ewave_tensor_bf(double time, // present time
+                   double tt,   // time integration method parameter
+                   double dt,   // current time step size
+                   const int em_eqn, // eqn id
+                   const int em_var); //  variable id - should match me_eqn
 
 #endif /* GOMA_MM_FILL_EM_H */
