@@ -968,6 +968,62 @@ int assemble_ewave_tensor_bf(double time, // present time
       }
     }
   }
+  if ( af->Assemble_Jacobian ) {
+    for (int i = 0; i < ei->dof[eqn]; i++) {
+      for (int a = 0; a < dim; a++) {
+        int eqn_real = EM_E1_REAL+a;
+        int eqn_imag = EM_E1_IMAG+a;
+        int peqn_real = upd->ep[eqn_real];
+        int peqn_imag = upd->ep[eqn_imag];
+
+        for (int b = 0; b < dim; b++) {
+          int var = EM_E1_REAL + b;
+          int pvar_real = upd->ep[var];
+          for (int j = 0; j < ei->dof[var]; j++) {
+            double diffusion_real = 0;
+            double diffusion_imag = 0;
+            for (int q = 0; q < dim; q++) {
+              diffusion_real += bf[eqn_real]->curl_phi_e[i][a][q] * bf[eqn_real]->curl_phi_e[j][b][q]; 
+            }
+
+            double stab_scale = 10;
+            double stab_real = stab_scale * bf[eqn_real]->grad_phi[i][a] * (bf[var]->grad_phi_e[j][b][0][0] + 
+                bf[var]->grad_phi_e[j][b][1][1]  + bf[var]->grad_phi_e[j][b][2][2]);
+            double stab_imag = 0;
+
+            double advection_real = -bf[eqn_real]->phi[i] * (delta(a,b) * re_coeff * bf[var]->phi[j]);
+            double advection_imag = -bf[eqn_imag]->phi[i] * (delta(a,b) * im_coeff * bf[var]->phi[j]);
+
+            lec->J[peqn_real][pvar_real][i][j] += (diffusion_real + advection_real + stab_real) * bf[eqn_real]->detJ * fv->wt * fv->h3;
+            lec->J[peqn_imag][pvar_real][i][j] += (diffusion_imag + advection_imag + stab_imag) * bf[eqn_imag]->detJ * fv->wt * fv->h3;
+          }
+        }
+
+        for (int b = 0; b < dim; b++) {
+          int var = EM_E1_IMAG + b;
+          int pvar_imag = upd->ep[var];
+          for (int j = 0; j < ei->dof[var]; j++) {
+            double diffusion_real = 0;
+            double diffusion_imag = 0;
+            for (int q = 0; q < dim; q++) {
+              diffusion_imag += bf[eqn_imag]->curl_phi_e[i][a][q] * bf[var]->curl_phi_e[j][b][q];
+            }
+
+            double stab_scale = 10;
+            double stab_real = 0;
+            double stab_imag = stab_scale * bf[eqn_real]->grad_phi[i][a] * (bf[var]->grad_phi_e[j][b][0][0] + 
+                bf[var]->grad_phi_e[j][b][1][1]  + bf[var]->grad_phi_e[j][b][2][2]);
+
+            double advection_real = -bf[eqn_real]->phi[i] * (delta(a,b) * im_coeff * bf[var]->phi[j]);
+            double advection_imag = -bf[eqn_imag]->phi[i] * (delta(a,b) * re_coeff * bf[var]->phi[j]);
+            lec->J[peqn_real][pvar_imag][i][j] += (diffusion_real + advection_real + stab_real) * bf[eqn_real]->detJ * fv->wt * fv->h3;
+            lec->J[peqn_imag][pvar_imag][i][j] += (diffusion_imag + advection_imag + stab_imag) * bf[eqn_imag]->detJ * fv->wt * fv->h3;
+          }
+        }
+
+      }
+    }
+  }
   return(0);
 } // end of assemble_ewave_tensor_bf
 
