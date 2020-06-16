@@ -570,6 +570,9 @@
 #define E_ER_PLANEWAVE_BC 1200
 #define E_EI_PLANEWAVE_BC 1201
 
+#define EM_CONT_REAL_BC 1202
+#define EM_CONT_IMAG_BC 1203
+
 /* pressure */
 
 #define P_BC 100000

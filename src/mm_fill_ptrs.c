@@ -1831,6 +1831,14 @@ load_elem_dofptr(const int ielem,
   if (upd->ep[eqn] >= 0) {
     load_varType_Interpolation_ptrs(eqn, esp->ars, esp_old->ars, esp_dot->ars);
   }
+  eqn = R_EM_CONT_REAL;
+  if (upd->ep[eqn] >= 0) {
+    load_varType_Interpolation_ptrs(eqn, esp->epr, esp_old->epr, esp_dot->epr);
+  }
+  eqn = R_EM_CONT_IMAG;
+  if (upd->ep[eqn] >= 0) {
+    load_varType_Interpolation_ptrs(eqn, esp->epi, esp_old->epi, esp_dot->epi);
+  }
   eqn = R_SHELL_BDYVELO;
   if (upd->ep[eqn] >= 0) {
     load_varType_Interpolation_ptrs(eqn, esp->sh_bv, esp_old->sh_bv, esp_dot->sh_bv);

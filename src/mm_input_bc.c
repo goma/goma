@@ -752,6 +752,8 @@ rd_bc_specs(FILE *ifp,
 	case EM_H2I_BC:
 	case EM_H3R_BC:
 	case EM_H3I_BC:
+        case EM_CONT_REAL_BC:
+        case EM_CONT_IMAG_BC:
 	case SHELL_TFMP_SAT_BC:
   
 	    if (fscanf(ifp, "%lf", &BC_Types[ibc].BC_Data_Float[0]) != 1) {

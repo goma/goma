@@ -1749,6 +1749,16 @@ matrix_fill(
 	  if (err) return -1;
 #endif
 	}
+      if( pde[R_EM_CONT_REAL] )
+	{
+	  err = assemble_em_continuity();
+	  EH( err, "assemble_em_continuity");
+#ifdef CHECK_FINITE
+	  err = CHECKFINITE("assemble_em_continuity"); 
+	  if (err) return -1;
+#endif
+          if( neg_elem_volume ) return -1;
+	}
 
       if(pde [R_EM_E2_REAL] && !pde[R_EM_H2_REAL]) {
 //        err = assemble_ewave_tensor_bf(time_value, theta, delta_t,

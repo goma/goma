@@ -403,6 +403,9 @@ SINGLE_PHASE, DVI_SINGLE_PHASE_DB},
   { "API_NOBC", "API_NOBC_BC", WEAK_INT_SURF, API_NOBC_BC, R_ACOUS_PIMAG, SCALAR, NO_ROT, {0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "APR_VELOCITY", "APR_VELOCITY_BC", WEAK_INT_SURF, APR_VELOCITY_BC, R_ACOUS_PREAL, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "API_VELOCITY", "API_VELOCITY_BC", WEAK_INT_SURF, API_VELOCITY_BC, R_ACOUS_PIMAG, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
+  { "EM_CONT_R", "EM_CONT_REAL_BC", DIRICHLET, EM_CONT_REAL_BC, R_EM_CONT_REAL, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
+  { "EM_CONT_I", "EM_CONT_IMAG_BC", DIRICHLET, EM_CONT_IMAG_BC, R_EM_CONT_IMAG, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
+  { "EM_E2R", "EM_E2R_BC", DIRICHLET, EM_E2R_BC, R_EM_E2_REAL, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "EM_E1R", "EM_E1R_BC", DIRICHLET, EM_E1R_BC, R_EM_E1_REAL, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "EM_E2R", "EM_E2R_BC", DIRICHLET, EM_E2R_BC, R_EM_E2_REAL, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "EM_E3R", "EM_E3R_BC", DIRICHLET, EM_E3R_BC, R_EM_E3_REAL, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
@@ -1074,6 +1077,8 @@ struct Equation_Names EQ_Name[] = {
     { "R_EM_H1_IMAG", "EM_H1_IMAG", R_EM_H1_IMAG},/*   197  */
     { "R_EM_H2_IMAG", "EM_H2_IMAG", R_EM_H2_IMAG},
     { "R_EM_H3_IMAG", "EM_H3_IMAG", R_EM_H3_IMAG},/*   199  */
+    { "R_EM_CONT_REAL", "EM_CONT_REAL", R_EM_CONT_REAL},/*   200  */
+    { "R_EM_CONT_IMAG", "EM_CONT_IMAG", R_EM_CONT_IMAG},/*   201  */
     /*
      *  Note -> these entries must remain until we get rid
      *          of putting the species unknowns after V_LAST
@@ -1361,6 +1366,8 @@ struct Equation_Names Var_Name[] =  {
     { "EM_H1_IMAG", "HIX", EM_H1_IMAG},//  197
     { "EM_H2_IMAG", "HIY", EM_H2_IMAG},
     { "EM_H3_IMAG", "HIZ", EM_H3_IMAG},
+    { "EM_CONT_REAL", "EPR", EM_CONT_REAL},
+    { "EM_CONT_IMAG", "EPI", EM_CONT_IMAG},
 
     { "MESH_POSITION1", "X",  MESH_POSITION1 } ,
     { "MESH_POSITION2", "Y",  MESH_POSITION2 } ,	/* 201 */
@@ -1607,17 +1614,19 @@ struct Equation_Names Exo_Var_Names[] =
   { "Thin Film Multiphase Saturation", "TFMP_SAT", TFMP_SAT },
   { "Residence Time Function", "RST", RESTIME },
   { "Electric Field, Real x-component", "ERX", EM_E1_REAL },
-  { "Electric Field, Real y-component", "ERY", EM_E1_REAL },
-  { "Electric Field, Real z-component", "ERZ", EM_E1_REAL },
+  { "Electric Field, Real y-component", "ERY", EM_E2_REAL },
+  { "Electric Field, Real z-component", "ERZ", EM_E3_REAL },
   { "Electric Field, Imaginary x-component", "EIX", EM_E1_IMAG },
-  { "Electric Field, Imaginary y-component", "EIY", EM_E1_IMAG },
-  { "Electric Field, Imaginary z-component", "EIZ", EM_E1_IMAG },
+  { "Electric Field, Imaginary y-component", "EIY", EM_E2_IMAG },
+  { "Electric Field, Imaginary z-component", "EIZ", EM_E3_IMAG },
   { "Magnetic Field, Real x-component", "HRX", EM_H1_REAL },
-  { "Magnetic Field, Real y-component", "HRY", EM_H1_REAL },
-  { "Magnetic Field, Real z-component", "HRZ", EM_H1_REAL },
+  { "Magnetic Field, Real y-component", "HRY", EM_H2_REAL },
+  { "Magnetic Field, Real z-component", "HRZ", EM_H3_REAL },
   { "Magnetic Field, Imaginary x-component", "HIX", EM_H1_IMAG },
-  { "Magnetic Field, Imaginary y-component", "HIY", EM_H1_IMAG },
-  { "Magnetic Field, Imaginary z-component", "HIZ", EM_H1_IMAG },
+  { "Magnetic Field, Imaginary y-component", "HIY", EM_H2_IMAG },
+  { "Magnetic Field, Imaginary z-component", "HIZ", EM_H3_IMAG },
+  { "lagrange mult em cont real", "EPR", EM_CONT_REAL },
+  { "lagrange mult em cont imag", "EPI", EM_CONT_IMAG },
 };
 
 int Num_Exo_Var_Names = sizeof(Exo_Var_Names) / sizeof(struct Equation_Names);  
@@ -1891,17 +1900,19 @@ struct Equation_Names Var_Units[] =
   { "Thin Film Multiphase Saturation", "[1]", TFMP_SAT},
   { "Residence Time Function", "[1]", RESTIME},  
   { "Electric Field, Real x-component", "E1R", EM_E1_REAL },
-  { "Electric Field, Real y-component", "E2R", EM_E1_REAL },
-  { "Electric Field, Real z-component", "E3R", EM_E1_REAL },
+  { "Electric Field, Real y-component", "E2R", EM_E2_REAL },
+  { "Electric Field, Real z-component", "E3R", EM_E3_REAL },
   { "Electric Field, Imaginary x-component", "E1I", EM_E1_IMAG },
-  { "Electric Field, Imaginary y-component", "E2I", EM_E1_IMAG },
-  { "Electric Field, Imaginary z-component", "E3I", EM_E1_IMAG },
+  { "Electric Field, Imaginary y-component", "E2I", EM_E2_IMAG },
+  { "Electric Field, Imaginary z-component", "E3I", EM_E3_IMAG },
   { "Magnetic Field, Real x-component", "H1R", EM_H1_REAL },
-  { "Magnetic Field, Real y-component", "H2R", EM_H1_REAL },
-  { "Magnetic Field, Real z-component", "H3R", EM_H1_REAL },
+  { "Magnetic Field, Real y-component", "H2R", EM_H2_REAL },
+  { "Magnetic Field, Real z-component", "H3R", EM_H3_REAL },
   { "Magnetic Field, Imaginary x-component", "H1I", EM_H1_IMAG },
-  { "Magnetic Field, Imaginary y-component", "H2I", EM_H1_IMAG },
-  { "Magnetic Field, Imaginary z-component", "H3I", EM_H1_IMAG },
+  { "Magnetic Field, Imaginary y-component", "H2I", EM_H2_IMAG },
+  { "Magnetic Field, Imaginary z-component", "H3I", EM_H3_IMAG },
+  { "lagrange mult em cont real", "EPR", EM_CONT_REAL },
+  { "lagrange mult em cont imag", "EPI", EM_CONT_IMAG },
 };
 
 int Num_Var_Units = sizeof(Var_Units) / sizeof(struct Equation_Names);  

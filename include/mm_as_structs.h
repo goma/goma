@@ -508,6 +508,8 @@ struct Element_Variable_Pointers
   dbl *sh_Kd[MDE];              /* sh_Kd[MDE], Shell surface curvature */
   dbl *apr[MDE];				/* acoustic pressure real part */
   dbl *api[MDE];				/* acoustic pressure imag part */
+  dbl *epr[MDE];				/* em lagr pressure real part */
+  dbl *epi[MDE];				/* em lagr pressure imag part */
   dbl *ars[MDE];				/* acoustic reynolds stress */
   dbl *sink_mass[MDE];				/* porous sink mass*/
   dbl *sh_bv[MDE];				/* acoustic boundary velocity */
@@ -620,6 +622,8 @@ struct Element_Stiffness_Pointers
   dbl **apr;			 /* *apr[MDE], acoustic pressure */
   dbl **api;			 /* *api[MDE], acoustic pressure */
   dbl **ars;			 /* *ars[MDE], acoustic reynolds stress */
+  dbl **epr;			 /* *epr[MDE], em pressure */
+  dbl **epi;			 /* *epi[MDE], em pressure */
   dbl **sink_mass;               /* Porous sink mass */
   dbl **sh_bv;                    /* sh_bv[MDE], acoustic bdy velocity */
   dbl **sh_p;                    /* sh_p[MDE], lub pressure */
@@ -1569,6 +1573,7 @@ struct Field_Variables
   dbl sh_J;                     /* Shell surface diffusion flux */
   dbl sh_Kd;                    /* Shell surface curvature */
   dbl apr, api, ars, sh_bv;			/* Acoustic pressure */
+  dbl epr, epi;                 /* LAGR MULT EM continuity */
   dbl sink_mass;                /* porous sink mass */
 
   dbl external_field[MAX_EXTERNAL_FIELD];           /* External field to be read and held const*/
@@ -1921,6 +1926,7 @@ struct Diet_Field_Variables
   dbl sh_J;                     /* shell surface diffusion flux */
   dbl sh_Kd;                    /* shell surface curvature */
   dbl apr, api, ars, sh_bv;			/* Acoustic pressure */
+  dbl epr, epi;
   dbl sink_mass;                /* porous sink mass */
   dbl sh_p;                    /* lub approx. */
   dbl lubp;                    /* lub approx. */

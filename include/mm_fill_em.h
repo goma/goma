@@ -79,4 +79,5 @@ int assemble_ewave_tensor_bf(double time, // present time
                    const int em_eqn, // eqn id
                    const int em_var); //  variable id - should match me_eqn
 
+int assemble_em_continuity(void);
 #endif /* GOMA_MM_FILL_EM_H */

@@ -8205,6 +8205,20 @@ load_fv(void)
       stateVector[v] = fv->P + upd->Pressure_Datum;
     } 
 
+  if (pdv[EM_CONT_REAL]) 
+    {
+      v = EM_CONT_REAL;
+      scalar_fv_fill(esp->epr, esp_dot->epr, esp_old->epr, bf[v]->phi, ei->dof[v],
+		     &(fv->epr), &(fv_dot->epr), &(fv_old->epr));
+      stateVector[v] = fv->epr;
+    } 
+  if (pdv[EM_CONT_IMAG]) 
+    {
+      v = EM_CONT_IMAG;
+      scalar_fv_fill(esp->epi, esp_dot->epi, esp_old->epi, bf[v]->phi, ei->dof[v],
+		     &(fv->epi), &(fv_dot->epi), &(fv_old->epi));
+      stateVector[v] = fv->epi;
+    } 
   /*
    *  Set the state vector pressure datum to include an additional
    *  uniform pressure datum. 

@@ -20,6 +20,7 @@
 
 /* Standard include files */
  
+#include "rf_fem_const.h"
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -2016,6 +2017,16 @@ load_variable (double *x_var,        /* variable value */
     case ACOUS_PIMAG:
       *x_var = fv->api;
       var = ACOUS_PIMAG;
+      *d_x_var = 1.;
+      break;
+    case EM_CONT_REAL:
+      *x_var = fv->epr;
+      var = EM_CONT_REAL;
+      *d_x_var = 1.;
+      break;
+    case EM_CONT_IMAG:
+      *x_var = fv->epi;
+      var = EM_CONT_IMAG;
       *d_x_var = 1.;
       break;
     case POR_SINK_MASS:

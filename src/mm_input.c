@@ -8073,6 +8073,10 @@ rd_eq_specs(FILE *ifp,
       ce = set_eqn(R_MASS_SURF, pd_ptr);
     } else if (!strcasecmp(ts, "continuity")) {
       ce = set_eqn(R_PRESSURE, pd_ptr);
+    } else if (!strcasecmp(ts, "continuity_em_real")) {
+      ce = set_eqn(R_EM_CONT_REAL, pd_ptr);
+    } else if (!strcasecmp(ts, "continuity_em_imag")) {
+      ce = set_eqn(R_EM_CONT_IMAG, pd_ptr);
     } else if (!strcasecmp(ts, "fill")) {
       ce = set_eqn(R_FILL, pd_ptr);
 #ifndef COUPLED_FILL
@@ -8790,6 +8794,10 @@ rd_eq_specs(FILE *ifp,
       cv = set_var(ACOUS_PIMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "ARS")) {
       cv = set_var(ACOUS_REYN_STRESS, pd_ptr);  
+    } else if (!strcasecmp(ts, "EPR")) {
+      cv = set_var(EM_CONT_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "EPI")) {
+      cv = set_var(EM_CONT_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "SH_BV")) {
       cv = set_var(SHELL_BDYVELO, pd_ptr);  
     } else if (!strcasecmp(ts, "SH_P")) {
@@ -9223,6 +9231,9 @@ rd_eq_specs(FILE *ifp,
        * Two terms.... 
        */
     case R_PRESSURE:
+    case R_EM_CONT_REAL:
+    case R_EM_CONT_IMAG:
+
 	if ( fscanf(ifp, "%lf %lf", 
 		    &(pd_ptr->etm[ce][(LOG2_ADVECTION)]),
 		    &(pd_ptr->etm[ce][(LOG2_SOURCE)]))
