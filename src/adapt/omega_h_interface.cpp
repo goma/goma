@@ -119,11 +119,11 @@ static OMEGA_H_INLINE int side_osh2exo(int dim, int side) {
   case 2:
     switch (side) {
     case 1:
-      return 1;
-    case 2:
       return 2;
-    case 0:
+    case 2:
       return 3;
+    case 0:
+      return 1;
     }
     return -1;
   case 3:
@@ -142,14 +142,14 @@ static OMEGA_H_INLINE int side_osh2exo(int dim, int side) {
   return -1;
 }
 
-void write_dull(
-    filesystem::path const& path, Mesh* mesh, bool verbose, int classify_with) {
+void write_dull(filesystem::path const &path, Mesh *mesh, bool verbose, int classify_with) {
   begin_code("exodus::write");
   auto comp_ws = int(sizeof(Real));
   auto io_ws = comp_ws;
   auto mode = EX_CLOBBER | EX_MAPS_INT64_API;
   auto file = ex_create(path.c_str(), mode, &comp_ws, &io_ws);
-  if (file < 0) Omega_h_fail("can't create Exodus file %s\n", path.c_str());
+  if (file < 0)
+    Omega_h_fail("can't create Exodus file %s\n", path.c_str());
   auto title = "Omega_h " OMEGA_H_SEMVER " Exodus Output";
   std::set<LO> region_set;
   auto dim = mesh->dim();
@@ -169,10 +169,8 @@ void write_dull(
     }
   }
   auto nelem_blocks = int(region_set.size());
-  auto nside_sets =
-      (classify_with & exodus::SIDE_SETS) ? int(surface_set.size()) : 0;
-  auto nnode_sets =
-      (classify_with & exodus::NODE_SETS) ? int(surface_set.size()) : 0;
+  auto nside_sets = (classify_with & exodus::SIDE_SETS) ? int(surface_set.size()) : 0;
+  auto nnode_sets = (classify_with & exodus::NODE_SETS) ? int(surface_set.size()) : 0;
   if (verbose) {
     std::cout << "init params for " << path << ":\n";
     std::cout << " Exodus ID " << file << '\n';
@@ -186,19 +184,21 @@ void write_dull(
     std::cout << " num_node_sets " << nnode_sets << '\n';
     std::cout << " num_side_sets " << nside_sets << '\n';
   }
-  CALL(ex_put_init(file, title, dim, mesh->nverts(), mesh->nelems(),
-      nelem_blocks, nnode_sets, nside_sets));
+  CALL(ex_put_init(file, title, dim, mesh->nverts(), mesh->nelems(), nelem_blocks, nnode_sets,
+                   nside_sets));
   Few<Write<Real>, 3> coord_blk;
-  for (Int i = 0; i < dim; ++i) coord_blk[i] = Write<Real>(mesh->nverts());
+  for (Int i = 0; i < dim; ++i)
+    coord_blk[i] = Write<Real>(mesh->nverts());
   auto coords = mesh->coords();
   auto f0 = OMEGA_H_LAMBDA(LO i) {
-    for (Int j = 0; j < dim; ++j) coord_blk[j][i] = coords[i * dim + j];
+    for (Int j = 0; j < dim; ++j)
+      coord_blk[j][i] = coords[i * dim + j];
   };
   parallel_for(mesh->nverts(), f0, "copy_coords");
   HostRead<Real> h_coord_blk[3];
-  for (Int i = 0; i < dim; ++i) h_coord_blk[i] = HostRead<Real>(coord_blk[i]);
-  CALL(ex_put_coord(file, h_coord_blk[0].data(), h_coord_blk[1].data(),
-      h_coord_blk[2].data()));
+  for (Int i = 0; i < dim; ++i)
+    h_coord_blk[i] = HostRead<Real>(coord_blk[i]);
+  CALL(ex_put_coord(file, h_coord_blk[0].data(), h_coord_blk[1].data(), h_coord_blk[2].data()));
   auto all_conn = mesh->ask_elem_verts();
   auto elems2file_idx = Write<LO>(mesh->nelems());
   auto elem_file_offset = LO(0);
@@ -208,34 +208,30 @@ void write_dull(
     auto block_elems2elem = collect_marked(elems_in_block);
     auto nblock_elems = block_elems2elem.size();
     if (verbose) {
-      std::cout << "element block " << block_id << " has " << nblock_elems
-                << " of type " << type_name << '\n';
+      std::cout << "element block " << block_id << " has " << nblock_elems << " of type "
+                << type_name << '\n';
     }
     auto deg = element_degree(mesh->family(), dim, VERT);
-    CALL(ex_put_block(
-        file, EX_ELEM_BLOCK, block_id, type_name, nblock_elems, deg, 0, 0, 0));
+    CALL(ex_put_block(file, EX_ELEM_BLOCK, block_id, type_name, nblock_elems, deg, 0, 0, 0));
     auto block_conn = read(unmap(block_elems2elem, all_conn, deg));
     auto block_conn_ex = add_to_each(block_conn, 1);
     auto h_block_conn = HostRead<LO>(block_conn_ex);
-    CALL(ex_put_conn(
-        file, EX_ELEM_BLOCK, block_id, h_block_conn.data(), nullptr, nullptr));
+    CALL(ex_put_conn(file, EX_ELEM_BLOCK, block_id, h_block_conn.data(), nullptr, nullptr));
     auto f = OMEGA_H_LAMBDA(LO block_elem) {
-      elems2file_idx[block_elems2elem[block_elem]] =
-          elem_file_offset + block_elem;
+      elems2file_idx[block_elems2elem[block_elem]] = elem_file_offset + block_elem;
     };
     parallel_for(nblock_elems, f);
     elem_file_offset += nblock_elems;
   }
   if (classify_with) {
     for (auto set_id : surface_set) {
-      auto sides_in_set = land_each(each_eq_to(side_class_ids, set_id),
-          each_eq_to(side_class_dims, I8(dim - 1)));
+      auto sides_in_set =
+          land_each(each_eq_to(side_class_ids, set_id), each_eq_to(side_class_dims, I8(dim - 1)));
       if (classify_with & exodus::SIDE_SETS) {
         auto set_sides2side = collect_marked(sides_in_set);
         auto nset_sides = set_sides2side.size();
         if (verbose) {
-          std::cout << "side set " << set_id << " has " << nset_sides
-                    << " sides\n";
+          std::cout << "side set " << set_id << " has " << nset_sides << " sides\n";
         }
         auto sides2elems = mesh->ask_up(dim - 1, dim);
         Write<int> set_sides2elem(nset_sides);
@@ -255,7 +251,7 @@ void write_dull(
         auto h_set_sides2local = HostRead<int>(set_sides2local);
         CALL(ex_put_set_param(file, EX_SIDE_SET, set_id, nset_sides, 0));
         CALL(ex_put_set(file, EX_SIDE_SET, set_id, h_set_sides2elem.data(),
-            h_set_sides2local.data()));
+                        h_set_sides2local.data()));
       }
       if (classify_with & exodus::NODE_SETS) {
         auto nodes_in_set = mark_down(mesh, dim - 1, VERT, sides_in_set);
@@ -263,45 +259,42 @@ void write_dull(
         auto set_nodes2node_ex = add_to_each(set_nodes2node, 1);
         auto nset_nodes = set_nodes2node.size();
         if (verbose) {
-          std::cout << "node set " << set_id << " has " << nset_nodes
-                    << " nodes\n";
+          std::cout << "node set " << set_id << " has " << nset_nodes << " nodes\n";
         }
         auto h_set_nodes2node = HostRead<LO>(set_nodes2node_ex);
         CALL(ex_put_set_param(file, EX_NODE_SET, set_id, nset_nodes, 0));
-        CALL(ex_put_set(
-            file, EX_NODE_SET, set_id, h_set_nodes2node.data(), nullptr));
+        CALL(ex_put_set(file, EX_NODE_SET, set_id, h_set_nodes2node.data(), nullptr));
       }
     }
     std::vector<std::string> set_names(surface_set.size());
-    for (auto& pair : mesh->class_sets) {
-      auto& name = pair.first;
-      for (auto& cp : pair.second) {
-        if (cp.dim != I8(dim - 1)) continue;
+    for (auto &pair : mesh->class_sets) {
+      auto &name = pair.first;
+      for (auto &cp : pair.second) {
+        if (cp.dim != I8(dim - 1))
+          continue;
         std::size_t index = 0;
         for (auto surface_id : surface_set) {
           if (surface_id == cp.id) {
             set_names[index] = name;
             if (verbose && (classify_with & exodus::NODE_SETS)) {
-              std::cout << "node set " << surface_id << " will be called \""
-                        << name << "\"\n";
+              std::cout << "node set " << surface_id << " will be called \"" << name << "\"\n";
             }
             if (verbose && (classify_with & exodus::SIDE_SETS)) {
-              std::cout << "side set " << surface_id << " will be called \""
-                        << name << "\"\n";
+              std::cout << "side set " << surface_id << " will be called \"" << name << "\"\n";
             }
           }
           ++index;
         }
       }
     }
-    std::vector<char*> set_name_ptrs(surface_set.size(), nullptr);
+    std::vector<char *> set_name_ptrs(surface_set.size(), nullptr);
     for (std::size_t i = 0; i < set_names.size(); ++i) {
       if (set_names[i].empty()) {
         std::stringstream ss;
         ss << "surface_" << i;
         set_names[i] = ss.str();
       }
-      set_name_ptrs[i] = const_cast<char*>(set_names[i].c_str());
+      set_name_ptrs[i] = const_cast<char *>(set_names[i].c_str());
     }
     if (classify_with & exodus::NODE_SETS) {
       CALL(ex_put_names(file, EX_NODE_SET, set_name_ptrs.data()));
@@ -1045,18 +1038,17 @@ void convert_to_omega_h_mesh(
   end_code();
 }
 
-
 void convert_back_to_goma_exo_parallel(
     const char *path, Mesh *mesh, Exo_DB *exo, Dpi *dpi, bool verbose, int classify_with) {
 
   //  Omega_h::exodus::write(std::to_string(ProcID) + "tmp.e", mesh, true, classify_with);
   char out_par[MAX_FNL];
-  strncpy(out_par, "tmp_oh.e", MAX_FNL-1);
+  strncpy(out_par, "tmp_oh.e", MAX_FNL - 1);
   multiname(out_par, ProcID, Num_Proc);
   mesh->set_parting(OMEGA_H_ELEM_BASED);
   Omega_h::exodus::write(out_par, mesh, true, classify_with);
   mesh->set_parting(OMEGA_H_GHOSTED);
-  strncpy(out_par, "tmp.e", MAX_FNL-1);
+  strncpy(out_par, "tmp.e", MAX_FNL - 1);
   multiname(out_par, ProcID, Num_Proc);
   auto comp_ws = int(sizeof(Real));
   auto io_ws = comp_ws;
@@ -1080,28 +1072,207 @@ void convert_back_to_goma_exo_parallel(
       surface_set.insert(h_side_class_ids[i]);
     }
   }
-  auto nside_sets =
-      (classify_with & exodus::SIDE_SETS) ? int(surface_set.size()) : 0;
-  auto nnode_sets =
-      (classify_with & exodus::NODE_SETS) ? int(surface_set.size()) : 0;
+  auto nside_sets = (classify_with & exodus::SIDE_SETS) ? int(surface_set.size()) : 0;
+  auto nnode_sets = (classify_with & exodus::NODE_SETS) ? int(surface_set.size()) : 0;
   //  Omega_h::binary::write("tmp.osh", mesh);
 
-  ex_put_init(exoid, title, dim, mesh->nverts(), mesh->nelems(), nelem_blocks, nnode_sets, nside_sets);
+  auto all_conn = mesh->ask_elem_verts();
+  auto deg = element_degree(mesh->family(), dim, VERT);
+  auto vert_owners = mesh->ask_owners(0).ranks;
+  std::set<int> neighbors_set;
+  for (int i = 0; i < vert_owners.size(); i++) {
+    if (vert_owners[i] != ProcID) {
+      neighbors_set.insert(vert_owners[i]);
+    }
+  }
+
+  int my_neighbors = neighbors_set.size();
+  int max_neighbors;
+  MPI_Allreduce(&my_neighbors, &max_neighbors, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+  std::vector<int> neighbors(neighbors_set.begin(), neighbors_set.end());
+  std::vector<int> neighbor_recv(max_neighbors);
+  std::fill(neighbor_recv.begin(), neighbor_recv.end(), 0);
+  std::sort(neighbors.begin(), neighbors.end());
+  for (int i = neighbors.size(); i < max_neighbors; i++) {
+    neighbors.push_back(-1);
+  }
+  for (int i = 0; i < vert_owners.size(); i++) {
+    int proc = vert_owners[i];
+    if (proc != ProcID) {
+      for (int j = 0; j < neighbors.size(); j++) {
+        if (neighbors[j] == proc) {
+          neighbor_recv[j] += 1;
+        }
+      }
+    }
+  }
+
+  std::vector<int> allneighbors(max_neighbors * Num_Proc);
+  std::vector<int> allneighrecv(max_neighbors * Num_Proc);
+
+  MPI_Allgather(neighbors.data(), max_neighbors, MPI_INT, allneighbors.data(), max_neighbors,
+                MPI_INT, MPI_COMM_WORLD);
+  MPI_Allgather(neighbor_recv.data(), max_neighbors, MPI_INT, allneighrecv.data(), max_neighbors,
+                MPI_INT, MPI_COMM_WORLD);
+
+  std::vector<MPI_Request> requests;
+
+  std::vector<std::vector<int>> neighbor_needed(my_neighbors);
+  for (int i = 0; i < my_neighbors; i++) {
+    int proc = neighbors[i];
+    for (int j = 0; j < vert_owners.size(); j++) {
+      if (vert_owners[j] == proc) {
+        neighbor_needed[i].push_back(mesh->globals(0)[j]);
+      }
+    }
+    assert(neighbor_needed[i].size() == neighbor_recv[i]);
+    requests.emplace_back();
+    MPI_Isend(neighbor_needed[i].data(), neighbor_needed[i].size(), MPI_INT, proc,
+              ProcID * 100 + proc, MPI_COMM_WORLD, &requests[i]);
+  }
+  std::vector<std::vector<int>> neighbor_send(my_neighbors);
+  for (int i = 0; i < my_neighbors; i++) {
+    int proc = neighbors[i];
+    int index = -1;
+    for (int i = proc * max_neighbors; i < proc + max_neighbors; i++) {
+      if (allneighbors[i] == ProcID) {
+        index = i;
+      }
+    }
+    assert(index != -1);
+    neighbor_send[i].resize(allneighrecv[index]);
+    requests.emplace_back();
+    MPI_Irecv(neighbor_send[i].data(), neighbor_send[i].size(), MPI_INT, proc, proc * 100 + ProcID,
+              MPI_COMM_WORLD, &requests[my_neighbors + i]);
+  }
+
+  MPI_Waitall(requests.size(), requests.data(), MPI_STATUSES_IGNORE);
+
+  std::set<int> boundary_nodes;
+  for (int i = 0; i < my_neighbors; i++) {
+    for (auto gnode : neighbor_send[i]) {
+      bool found = false;
+      for (int k = 0; k < mesh->globals(0).size(); k++) {
+        if (mesh->globals(0)[k] == gnode) {
+          boundary_nodes.insert(k);
+          found = true;
+          break;
+        }
+      }
+      assert(found);
+    }
+  }
+  std::vector<bool> keep_nodes(mesh->nverts());
+  std::fill(keep_nodes.begin(), keep_nodes.end(), false);
+
+  std::vector<int> mesh_owned_elements;
+  for (int i = 0; i < mesh->nelems(); i++) {
+    bool fully_other = true;
+    for (int j = 0; j < deg; j++) {
+      auto local = all_conn[i * deg + j];
+      if (vert_owners[local] == ProcID) {
+        fully_other = false;
+      }
+    }
+    if (!fully_other) {
+      mesh_owned_elements.push_back(i);
+      for (int j = 0; j < deg; j++) {
+        auto local = all_conn[i * deg + j];
+        keep_nodes[local] = true;
+      }
+    }
+  }
+  std::vector<int> external_nodes;
+  std::vector<int> proc_node_counts(my_neighbors);
+  std::vector<int> proc_node_idx(my_neighbors + 1);
+  std::fill(proc_node_counts.begin(), proc_node_counts.end(), 0);
+  for (int i = 0; i < my_neighbors; i++) {
+    int proc = neighbors[i];
+    for (int j = 0; j < vert_owners.size(); j++) {
+      if (vert_owners[j] == proc && keep_nodes[j]) {
+        external_nodes.push_back(j);
+        proc_node_counts[i] += 1;
+      }
+    }
+  }
+  proc_node_idx[0] = 0;
+  for (int i = 0; i < my_neighbors; i++) {
+    proc_node_idx[i + 1] = proc_node_idx[i] + proc_node_counts[i];
+  }
+  std::vector<int> external_nodes_sorted(external_nodes.begin(), external_nodes.end());
+  std::vector<int> boundary_nodes_sorted(boundary_nodes.begin(), boundary_nodes.end());
+  std::sort(boundary_nodes_sorted.begin(), boundary_nodes_sorted.end());
+  std::vector<int> internal_nodes;
+  for (int j = 0; j < vert_owners.size(); j++) {
+    if (vert_owners[j] == ProcID) {
+      if (!std::binary_search(boundary_nodes_sorted.begin(), boundary_nodes_sorted.end(), j)) {
+        internal_nodes.push_back(j);
+      }
+    }
+  }
+
+  std::vector<int> reduced_conn;
+  std::vector<int> global_elem;
+  std::vector<int> old_to_new_node_map(mesh->nverts());
+  std::vector<int> old_to_new_elem_map(mesh->nelems());
+  std::fill(old_to_new_node_map.begin(), old_to_new_node_map.end(), -1);
+  std::fill(old_to_new_elem_map.begin(), old_to_new_elem_map.end(), -1);
+  std::set<int> new_nodes;
+  for (auto offset : mesh_owned_elements) {
+    for (int j = 0; j < deg; j++) {
+      reduced_conn.push_back(all_conn[offset * deg + j]);
+    }
+    global_elem.push_back(mesh->globals(mesh->dim())[offset]);
+  }
+  std::vector<int> new_nodes_v;
+  new_nodes_v.reserve(internal_nodes.size() + boundary_nodes_sorted.size() + external_nodes.size());
+  for (auto inn : internal_nodes) {
+    new_nodes_v.push_back(inn);
+  }
+  for (auto bnn : boundary_nodes_sorted) {
+    new_nodes_v.push_back(bnn);
+  }
+  for (auto enn : external_nodes) {
+    new_nodes_v.push_back(enn);
+  }
+  std::vector<int> global_node(new_nodes_v.size());
+  for (size_t i = 0; i < new_nodes_v.size(); i++) {
+    global_node[i] = mesh->globals(0)[new_nodes_v[i]];
+    old_to_new_node_map[new_nodes_v[i]] = i;
+  }
+  for (size_t i = 0; i < mesh_owned_elements.size(); i++) {
+    old_to_new_elem_map[mesh_owned_elements[i]] = i;
+  }
+
+  for (size_t i = 0; i < reduced_conn.size(); i++) {
+    auto old = reduced_conn[i];
+    auto new_node = old_to_new_node_map[old];
+    assert(new_node != -1);
+    reduced_conn[i] = new_node + 1;
+  }
+
+  ex_put_init(exoid, title, dim, global_node.size(), global_elem.size(), nelem_blocks, nnode_sets,
+              nside_sets);
 
   Few<Write<Real>, 3> coord_blk;
-  for (Int i = 0; i < dim; ++i) coord_blk[i] = Write<Real>(mesh->nverts());
+  for (Int i = 0; i < dim; ++i)
+    coord_blk[i] = Write<Real>(new_nodes_v.size());
   auto coords = mesh->coords();
-  auto f0 = OMEGA_H_LAMBDA(LO i) {
-    for (Int j = 0; j < dim; ++j) coord_blk[j][i] = coords[i * dim + j];
-  };
-  parallel_for(mesh->nverts(), f0, "copy_coords");
+  for (int i = 0; i < new_nodes_v.size(); i++) {
+    auto local_node = new_nodes_v[i];
+    for (Int j = 0; j < dim; ++j) {
+      coord_blk[j][i] = coords[local_node * dim + j];
+    }
+  }
   HostRead<Real> h_coord_blk[3];
-  for (Int i = 0; i < dim; ++i) h_coord_blk[i] = HostRead<Real>(coord_blk[i]);
-  CALL(ex_put_coord(exoid, h_coord_blk[0].data(), h_coord_blk[1].data(),
-                      h_coord_blk[2].data()));
-  auto all_conn = mesh->ask_elem_verts();
+  for (Int i = 0; i < dim; ++i)
+    h_coord_blk[i] = HostRead<Real>(coord_blk[i]);
+  CALL(ex_put_coord(exoid, h_coord_blk[0].data(), h_coord_blk[1].data(), h_coord_blk[2].data()));
   auto elems2file_idx = Write<LO>(mesh->nelems());
   auto elem_file_offset = LO(0);
+
+  // TODO
+  assert(region_set.size() == 1);
 
   for (auto block_id : region_set) {
     auto type_name = (dim == 3) ? "tetra4" : "tri3";
@@ -1109,39 +1280,39 @@ void convert_back_to_goma_exo_parallel(
     auto block_elems2elem = collect_marked(elems_in_block);
     auto nblock_elems = block_elems2elem.size();
     if (verbose) {
-      std::cout << "element block " << block_id << " has " << nblock_elems
-                << " of type " << type_name << '\n';
+      std::cout << "element block " << block_id << " has " << nblock_elems << " of type "
+                << type_name << '\n';
     }
-    auto deg = element_degree(mesh->family(), dim, VERT);
-    CALL(ex_put_block(
-        exoid, EX_ELEM_BLOCK, block_id, type_name, nblock_elems, deg, 0, 0, 0));
+    CALL(ex_put_block(exoid, EX_ELEM_BLOCK, block_id, type_name, global_elem.size(), deg, 0, 0, 0));
     auto block_conn = read(unmap(block_elems2elem, all_conn, deg));
     auto block_conn_ex = add_to_each(block_conn, 1);
     auto h_block_conn = HostRead<LO>(block_conn_ex);
-    CALL(ex_put_conn(
-        exoid, EX_ELEM_BLOCK, block_id, h_block_conn.data(), nullptr, nullptr));
+    CALL(ex_put_conn(exoid, EX_ELEM_BLOCK, block_id, reduced_conn.data(), nullptr, nullptr));
     auto f = OMEGA_H_LAMBDA(LO block_elem) {
-      elems2file_idx[block_elems2elem[block_elem]] =
-          elem_file_offset + block_elem;
+      elems2file_idx[block_elems2elem[block_elem]] = elem_file_offset + block_elem;
     };
     parallel_for(nblock_elems, f);
     elem_file_offset += nblock_elems;
   }
-  if (classify_with) {
+
+  std::vector<int> nset_global_node;
+  std::vector<int> sset_global_side;
+  if (1 && classify_with) {
     for (auto set_id : surface_set) {
-      auto sides_in_set = land_each(each_eq_to(side_class_ids, set_id),
-                                    each_eq_to(side_class_dims, I8(dim - 1)));
+      auto sides_in_set =
+          land_each(each_eq_to(side_class_ids, set_id), each_eq_to(side_class_dims, I8(dim - 1)));
       if (classify_with & exodus::SIDE_SETS) {
+        std::vector<int> sides2elem_new;
+        std::vector<int> sides2local_new;
         auto set_sides2side = collect_marked(sides_in_set);
         auto nset_sides = set_sides2side.size();
         if (verbose) {
-          std::cout << "side set " << set_id << " has " << nset_sides
-                    << " sides\n";
+          std::cout << "side set " << set_id << " has " << nset_sides << " sides\n";
         }
         auto sides2elems = mesh->ask_up(dim - 1, dim);
         Write<int> set_sides2elem(nset_sides);
         Write<int> set_sides2local(nset_sides);
-        auto f1 = OMEGA_H_LAMBDA(LO set_side) {
+        for (int set_side = 0; set_side < nset_sides; set_side++) {
           auto side = set_sides2side[set_side];
           auto side_elem = sides2elems.a2ab[side];
           auto elem = sides2elems.ab2b[side_elem];
@@ -1150,78 +1321,164 @@ void convert_back_to_goma_exo_parallel(
           auto which_down = code_which_down(code);
           set_sides2elem[set_side] = elem_in_file + 1;
           set_sides2local[set_side] = side_osh2exo(dim, which_down);
-        };
-        parallel_for(nset_sides, f1, "set_sides2elem");
+          if (std::find(mesh_owned_elements.begin(), mesh_owned_elements.end(), elem_in_file) !=
+              mesh_owned_elements.end()) {
+            sides2elem_new.push_back(old_to_new_elem_map[elem_in_file] + 1);
+            sides2local_new.push_back(side_osh2exo(dim, which_down));
+          }
+        }
         auto h_set_sides2elem = HostRead<int>(set_sides2elem);
         auto h_set_sides2local = HostRead<int>(set_sides2local);
-        CALL(ex_put_set_param(exoid, EX_SIDE_SET, set_id, nset_sides, 0));
-        CALL(ex_put_set(exoid, EX_SIDE_SET, set_id, h_set_sides2elem.data(),
-                        h_set_sides2local.data()));
+        CALL(ex_put_set_param(exoid, EX_SIDE_SET, set_id, sides2elem_new.size(), 0));
+        sset_global_side.push_back(sides2elem_new.size());
+        CALL(ex_put_set(exoid, EX_SIDE_SET, set_id, sides2elem_new.data(), sides2local_new.data()));
       }
       if (classify_with & exodus::NODE_SETS) {
         auto nodes_in_set = mark_down(mesh, dim - 1, VERT, sides_in_set);
         auto set_nodes2node = collect_marked(nodes_in_set);
         auto set_nodes2node_ex = add_to_each(set_nodes2node, 1);
         auto nset_nodes = set_nodes2node.size();
+        std::vector<int> nset_nodes_new;
+        for (int i = 0; i < set_nodes2node.size(); i++) {
+          int local_node = old_to_new_node_map[set_nodes2node[i]];
+          if (local_node != -1 && vert_owners[set_nodes2node[i]] == ProcID) {
+            nset_nodes_new.push_back(local_node + 1);
+          }
+        }
         if (verbose) {
-          std::cout << "node set " << set_id << " has " << nset_nodes
-                    << " nodes\n";
+          std::cout << "node set " << set_id << " has " << nset_nodes << " nodes\n";
         }
         auto h_set_nodes2node = HostRead<LO>(set_nodes2node_ex);
-        CALL(ex_put_set_param(exoid, EX_NODE_SET, set_id, nset_nodes, 0));
-        CALL(ex_put_set(
-            exoid, EX_NODE_SET, set_id, h_set_nodes2node.data(), nullptr));
+        nset_global_node.push_back(nset_nodes_new.size());
+        CALL(ex_put_set_param(exoid, EX_NODE_SET, set_id, nset_nodes_new.size(), 0));
+        CALL(ex_put_set(exoid, EX_NODE_SET, set_id, nset_nodes_new.data(), nullptr));
       }
-    }
-    std::vector<std::string> set_names(surface_set.size());
-    for (auto& pair : mesh->class_sets) {
-      auto& name = pair.first;
-      for (auto& cp : pair.second) {
-        if (cp.dim != I8(dim - 1)) continue;
-        std::size_t index = 0;
-        for (auto surface_id : surface_set) {
-          if (surface_id == cp.id) {
-            set_names[index] = name;
-            if (verbose && (classify_with & exodus::NODE_SETS)) {
-              std::cout << "node set " << surface_id << " will be called \""
-                        << name << "\"\n";
+      std::vector<std::string> set_names(surface_set.size());
+      for (auto &pair : mesh->class_sets) {
+        auto &name = pair.first;
+        for (auto &cp : pair.second) {
+          if (cp.dim != I8(dim - 1))
+            continue;
+          std::size_t index = 0;
+          for (auto surface_id : surface_set) {
+            if (surface_id == cp.id) {
+              set_names[index] = name;
+              if (verbose && (classify_with & exodus::NODE_SETS)) {
+                std::cout << "node set " << surface_id << " will be called \"" << name << "\"\n";
+              }
+              if (verbose && (classify_with & exodus::SIDE_SETS)) {
+                std::cout << "side set " << surface_id << " will be called \"" << name << "\"\n";
+              }
             }
-            if (verbose && (classify_with & exodus::SIDE_SETS)) {
-              std::cout << "side set " << surface_id << " will be called \""
-                        << name << "\"\n";
-            }
+            ++index;
           }
-          ++index;
         }
       }
-    }
-    std::vector<char*> set_name_ptrs(surface_set.size(), nullptr);
-    for (std::size_t i = 0; i < set_names.size(); ++i) {
-      if (set_names[i].empty()) {
-        std::stringstream ss;
-        ss << "surface_" << i;
-        set_names[i] = ss.str();
+      std::vector<char *> set_name_ptrs(surface_set.size(), nullptr);
+      for (std::size_t i = 0; i < set_names.size(); ++i) {
+        if (set_names[i].empty()) {
+          std::stringstream ss;
+          ss << "surface_" << i;
+          set_names[i] = ss.str();
+        }
+        set_name_ptrs[i] = const_cast<char *>(set_names[i].c_str());
       }
-      set_name_ptrs[i] = const_cast<char*>(set_names[i].c_str());
-    }
-    if (classify_with & exodus::NODE_SETS) {
-      CALL(ex_put_names(exoid, EX_NODE_SET, set_name_ptrs.data()));
-    }
-    if (classify_with & exodus::SIDE_SETS) {
-      CALL(ex_put_names(exoid, EX_SIDE_SET, set_name_ptrs.data()));
+      if (classify_with & exodus::NODE_SETS) {
+        CALL(ex_put_names(exoid, EX_NODE_SET, set_name_ptrs.data()));
+      }
+      if (classify_with & exodus::SIDE_SETS) {
+        CALL(ex_put_names(exoid, EX_SIDE_SET, set_name_ptrs.data()));
+      }
     }
   }
-  auto node_map = Write<LO>(mesh->nverts());
-  auto elem_map = Write<LO>(mesh->nelems());
-  for (int i = 0; i < mesh->globals(0).size(); i++) {
-    node_map[i] = mesh->globals(0)[i];
-  }
-  for (int i = 0; i < mesh->globals(0).size(); i++) {
-    elem_map[i] = mesh->globals(mesh->dim())[i];
-  }
+  std::vector<int> node_map(global_node.begin(), global_node.end());
+  auto add1 = [](int &v) { v++; };
+  std::for_each(node_map.begin(), node_map.end(), add1);
+  std::vector<int> elem_map(global_elem.begin(), global_elem.end());
+  std::for_each(elem_map.begin(), elem_map.end(), add1);
 
   ex_put_id_map(exoid, EX_NODE_MAP, node_map.data());
   ex_put_id_map(exoid, EX_ELEM_MAP, elem_map.data());
+
+  int max_sets = surface_set.size();
+  int gmax_sets;
+  MPI_Allreduce(&max_sets, &gmax_sets, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+  std::vector<int> all_sets(gmax_sets * Num_Proc + 1);
+  std::fill(all_sets.begin(), all_sets.end(), -1);
+  std::vector<int> my_sets(surface_set.begin(), surface_set.end());
+  my_sets.resize(gmax_sets);
+  MPI_Allgather(my_sets.data(), my_sets.size(), MPI_INT, all_sets.data(), gmax_sets, MPI_INT,
+                MPI_COMM_WORLD);
+  std::set<int> global_set_uniq;
+  for (auto c : all_sets) {
+    if (c != -1) {
+      global_set_uniq.insert(c);
+    }
+  }
+
+  std::vector<int> global_sets(global_set_uniq.begin(), global_set_uniq.end());
+  std::sort(global_sets.begin(), global_sets.end());
+  std::vector<int> global_node_counts(global_sets.size());
+  std::vector<int> global_side_counts(global_sets.size());
+  std::vector<int> df_counts(global_sets.size());
+  std::fill(df_counts.begin(), df_counts.end(), 0);
+
+  for (size_t setidx = 0; setidx < global_sets.size(); setidx++) {
+    auto set = global_sets[setidx];
+    auto my_offset = std::find(my_sets.begin(), my_sets.end(), set);
+    if (my_offset != my_sets.end()) {
+      int index = std::distance(my_sets.begin(), my_offset);
+      MPI_Allreduce(&nset_global_node[index], &global_node_counts[setidx], 1, MPI_INT, MPI_SUM,
+                    MPI_COMM_WORLD);
+      MPI_Allreduce(&sset_global_side[index], &global_side_counts[setidx], 1, MPI_INT, MPI_SUM,
+                    MPI_COMM_WORLD);
+    }
+  }
+  CALL(ex_put_init_global(exoid, mesh->nglobal_ents(0), mesh->nglobal_ents(mesh->dim()), 1,
+                          global_sets.size(), global_sets.size()));
+
+  CALL(ex_put_ns_param_global(exoid, global_sets.data(), global_node_counts.data(),
+                              df_counts.data()));
+  CALL(ex_put_ss_param_global(exoid, global_sets.data(), global_side_counts.data(),
+                              df_counts.data()));
+
+  std::vector<int> eb_id(1);
+  eb_id[0] = 1;
+  std::vector<int> eb_counts(1);
+  eb_counts[0] = mesh->nglobal_ents(mesh->dim());
+
+  CALL(ex_put_eb_info_global(exoid, eb_id.data(), eb_counts.data()));
+  char ftype = 'p';
+  CALL(ex_put_init_info(exoid, Num_Proc, 1, &ftype));
+
+  CALL(ex_put_loadbal_param(exoid, internal_nodes.size(), boundary_nodes_sorted.size(),
+                            external_nodes.size(), global_elem.size(), 0, my_neighbors, 0, ProcID));
+
+  std::vector<int> elem_internal(global_elem.size());
+  std::iota(elem_internal.begin(), elem_internal.end(), 1);
+
+  CALL(ex_put_processor_elem_maps(exoid, elem_internal.data(), NULL, ProcID));
+  std::vector<int> node_mesh(global_node.size());
+  std::iota(node_mesh.begin(), node_mesh.end(), 1);
+
+  CALL(ex_put_processor_node_maps(exoid, node_mesh.data(), &node_mesh[internal_nodes.size()],
+                                  &node_mesh[internal_nodes.size() + boundary_nodes_sorted.size()],
+                                  ProcID));
+
+  CALL(ex_put_cmap_params(exoid, neighbors.data(), proc_node_counts.data(), NULL, NULL, ProcID));
+
+  std::vector<int> node_map_node_ids(external_nodes.size());
+  std::vector<int> node_map_proc_ids(external_nodes.size());
+  for (int i = 0; i < my_neighbors; i++) {
+    std::fill(node_map_proc_ids.begin() + proc_node_idx[i],
+              node_map_proc_ids.begin() + proc_node_idx[i + 1], neighbors[i]);
+  }
+  for (size_t i = 0; i < external_nodes.size(); i++) {
+    node_map_node_ids[i] = old_to_new_node_map[external_nodes[i]] + 1;
+  }
+  for (int i = 0; i < my_neighbors; i++) {
+    CALL(ex_put_node_cmap(exoid, neighbors[i], &node_map_node_ids[proc_node_idx[i]], &node_map_proc_ids[proc_node_idx[i]], ProcID));
+  }
 
   CALL(ex_close(exoid));
 
@@ -1234,7 +1491,7 @@ void convert_back_to_goma_exo_parallel(
   free_Surf_BC(First_Elem_Side_BC_Array, exo);
   free_Edge_BC(First_Elem_Edge_BC_Array, exo, dpi);
   free_nodes();
-  free_dpi_uni(dpi);
+  free_dpi(dpi);
   free_exo(exo);
   init_exo_struct(exo);
   init_dpi_struct(dpi);
@@ -1533,7 +1790,7 @@ void adapt_mesh_omega_h(struct Aztec_Linear_Solver_System **ams,
 
   auto writer = Omega_h::vtk::Writer("transfer.vtk", &mesh);
   writer.write(step);
-//  adapt_mesh(mesh);
+  //    adapt_mesh(mesh);
 
   std::string filename;
   std::stringstream ss;
@@ -1554,7 +1811,7 @@ void adapt_mesh_omega_h(struct Aztec_Linear_Solver_System **ams,
 
   if (Num_Proc > 1) {
     Omega_h::exodus::convert_back_to_goma_exo_parallel(ss2.str().c_str(), &mesh, exo, dpi, true,
-                                              classify_with);
+                                                       classify_with);
   } else {
     Omega_h::exodus::convert_back_to_goma_exo(ss2.str().c_str(), &mesh, exo, dpi, true,
                                               classify_with);
