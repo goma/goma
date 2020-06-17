@@ -99,9 +99,9 @@ EXTERN void build_list		/* rd_mesh.c */
        int *);			/* current_max_size */
 
 EXTERN void multiname		/* rd_mesh.c */
-(char *,			/* in_name - generic global name "pref.suf" */
-       int,			/* integer processor_name */
-       int);			/* number_processors - total */
+(char * in_name,			/* in_name - generic global name "pref.suf" */
+       int proc,			/* integer processor_name */
+       int num_proc);			/* number_processors - total */
 
 EXTERN void strip_suffix	/* rd_mesh.c */
 (char *,			/* result - "a" */

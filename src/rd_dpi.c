@@ -201,7 +201,7 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
   }
 
   if (d->num_side_sets_global > 0) {
-    d->ss_block_index_global = calloc(exo->num_side_sets + 1, sizeof(int));
+    d->ss_block_index_global = calloc(d->num_side_sets_global + 1, sizeof(int));
     d->ss_block_list_global =
         calloc(d->num_elem_blocks_global * d->num_side_sets_global, sizeof(int));
     int *ss_block_count_proc =
@@ -729,6 +729,7 @@ void free_dpi(Dpi *d) {
   free(d->node_owner);
   free(d->num_node_recv);
   free(d->num_node_send);
+  free(d->exodus_to_omega_h_node);
 }
 /************************************************************************/
 /************************************************************************/

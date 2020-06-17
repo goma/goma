@@ -604,6 +604,7 @@ noahs_ark(void)
 
   ddd_add_member(n, ExoFile, MAX_FNL, MPI_CHAR);
   ddd_add_member(n, ExoFileOut, MAX_FNL, MPI_CHAR);
+  ddd_add_member(n, ExoFileOutMono, MAX_FNL, MPI_CHAR);
   ddd_add_member(n, Init_GuessFile, MAX_FNL, MPI_CHAR);
   ddd_add_member(n, Soln_OutFile, MAX_FNL, MPI_CHAR);
   ddd_add_member(n, ExoAuxFile, MAX_FNL, MPI_CHAR);

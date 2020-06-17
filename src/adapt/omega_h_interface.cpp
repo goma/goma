@@ -1127,6 +1127,7 @@ void convert_back_to_goma_exo_parallel(
     }
     assert(neighbor_needed[i].size() == neighbor_recv[i]);
     requests.emplace_back();
+    std::cout << "Proc " << ProcID << " sending to proc " << proc << " with tag " << ProcID*100 + proc << "\n";
     MPI_Isend(neighbor_needed[i].data(), neighbor_needed[i].size(), MPI_INT, proc,
               ProcID * 100 + proc, MPI_COMM_WORLD, &requests[i]);
   }
@@ -1139,11 +1140,13 @@ void convert_back_to_goma_exo_parallel(
         index = i;
       }
     }
-    assert(index != -1);
-    neighbor_send[i].resize(allneighrecv[index]);
-    requests.emplace_back();
-    MPI_Irecv(neighbor_send[i].data(), neighbor_send[i].size(), MPI_INT, proc, proc * 100 + ProcID,
-              MPI_COMM_WORLD, &requests[my_neighbors + i]);
+    if (index != -1) {
+      neighbor_send[i].resize(allneighrecv[index]);
+      requests.emplace_back();
+      std::cout << "Proc " << ProcID << " recv from proc " << proc << " with tag " << proc*100 + ProcID << "\n";
+      MPI_Irecv(neighbor_send[i].data(), neighbor_send[i].size(), MPI_INT, proc,
+                proc * 100 + ProcID, MPI_COMM_WORLD, &requests[my_neighbors + i]);
+    }
   }
 
   MPI_Waitall(requests.size(), requests.data(), MPI_STATUSES_IGNORE);
@@ -1477,7 +1480,8 @@ void convert_back_to_goma_exo_parallel(
     node_map_node_ids[i] = old_to_new_node_map[external_nodes[i]] + 1;
   }
   for (int i = 0; i < my_neighbors; i++) {
-    CALL(ex_put_node_cmap(exoid, neighbors[i], &node_map_node_ids[proc_node_idx[i]], &node_map_proc_ids[proc_node_idx[i]], ProcID));
+    CALL(ex_put_node_cmap(exoid, neighbors[i], &node_map_node_ids[proc_node_idx[i]],
+                          &node_map_proc_ids[proc_node_idx[i]], ProcID));
   }
 
   CALL(ex_close(exoid));
@@ -1500,6 +1504,7 @@ void convert_back_to_goma_exo_parallel(
   strncpy(ExoFile, "tmp.e", 127);
   strncpy(ExoFileOutMono, path, 127);
   strncpy(ExoFileOut, path, 127);
+  multiname(ExoFileOut, ProcID, Num_Proc);
   int num_total_nodes = dpi->num_internal_nodes + dpi->num_boundary_nodes + dpi->num_external_nodes;
 
   for (int imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
@@ -1515,8 +1520,16 @@ void convert_back_to_goma_exo_parallel(
 
   read_mesh_exoII(exo, dpi);
   one_base(exo);
-  wr_mesh_exo(exo, ExoFileOutMono, 0);
+  wr_mesh_exo(exo, ExoFileOut, 0);
   zero_base(exo);
+
+  wr_dpi(dpi, ExoFileOut);
+  dpi->exodus_to_omega_h_node = (int *)malloc(sizeof(int) * global_node.size());
+  for (int i = 0; i < old_to_new_node_map.size(); i++) {
+    if (old_to_new_node_map[i] != -1) {
+      dpi->exodus_to_omega_h_node[old_to_new_node_map[i]] = i;
+    }
+  }
 
   end_code();
 }
@@ -1562,6 +1575,8 @@ void convert_back_to_goma_exo(
   one_base(exo);
   wr_mesh_exo(exo, ExoFileOutMono, 0);
   zero_base(exo);
+
+  dpi->exodus_to_omega_h_node = NULL;
 
   end_code();
 }
@@ -1674,27 +1689,39 @@ void copy_solution(Exo_DB *exo, Dpi *dpi, double **x, Omega_h::Mesh &mesh) {
           std::string species_name = Exo_Var_Names[j].name2 + std::to_string(mf);
           auto var_values = mesh.get_array<Omega_h::Real>(Omega_h::VERT, species_name);
 
-          for (int i = 0; i < dpi->num_internal_nodes + dpi->num_boundary_nodes; i++) {
+          for (int i = 0; i < dpi->num_universe_nodes; i++) {
             int ja = Index_Solution(i, j, mf, 0, -2, imtrx);
             EH(ja, "could not find solution");
-            x[imtrx][ja] = var_values[i];
+            int index = i;
+            if (dpi->exodus_to_omega_h_node != NULL) {
+              index = dpi->exodus_to_omega_h_node[i];
+            }
+            x[imtrx][ja] = var_values[index];
           }
         }
       } else {
         auto var_values = mesh.get_array<Omega_h::Real>(Omega_h::VERT, Exo_Var_Names[j].name2);
 
-        for (int i = 0; i < dpi->num_internal_nodes + dpi->num_boundary_nodes; i++) {
+        for (int i = 0; i < dpi->num_universe_nodes; i++) {
           int ja = Index_Solution(i, j, 0, 0, -2, imtrx);
           EH(ja, "could not find solution");
-          x[imtrx][ja] = var_values[i];
+          int index = i;
+          if (dpi->exodus_to_omega_h_node != NULL) {
+            index = dpi->exodus_to_omega_h_node[i];
+          }
+          x[imtrx][ja] = var_values[index];
         }
       }
     }
   }
   for (int w = 0; w < efv->Num_external_field; w++) {
     auto var_values = mesh.get_array<Omega_h::Real>(Omega_h::VERT, efv->name[w]);
-    for (int i = 0; i < dpi->num_internal_nodes + dpi->num_boundary_nodes; i++) {
-      efv->ext_fld_ndl_val[w][i] = var_values[i];
+    for (int i = 0; i < dpi->num_universe_nodes; i++) {
+      int index = i;
+      if (dpi->exodus_to_omega_h_node != NULL) {
+        index = dpi->exodus_to_omega_h_node[i];
+      }
+      efv->ext_fld_ndl_val[w][i] = var_values[index];
     }
   }
 }
@@ -1843,7 +1870,8 @@ void adapt_mesh_omega_h(struct Aztec_Linear_Solver_System **ams,
   }
 
   for (int w = 0; w < efv->Num_external_field; w++) {
-    realloc_dbl_1(&efv->ext_fld_ndl_val[w], dpi->num_internal_nodes + dpi->num_external_nodes, 0);
+    realloc_dbl_1(&efv->ext_fld_ndl_val[w],
+                  dpi->num_internal_nodes + dpi->num_boundary_nodes + dpi->num_external_nodes, 0);
   }
   resetup_matrix(ams, exo, dpi);
   copy_solution(exo, dpi, x, mesh);

@@ -2045,12 +2045,12 @@ rd_levelset_specs(FILE *ifp,
           if (fscanf(ifp, "%d", &(ls->adapt_freq)) != 1) {
             EH(-1, "error reading Level Set Adapt Frequency");
           }
-          if (fabs(ls->adapt_freq) <= 0)
+          if (ls->adapt_freq <= 0)
             EH(-1, "Syntax error.  Level set adapt freq <= 0");
 
-          SPF(echo_string, "%s = %.4g", input, ls->adapt_freq);
+          SPF(echo_string, "%s = %d", input, ls->adapt_freq);
         } else {
-          SPF(echo_string, " (%s = %f) %s", "Level Set Adapt Outer Size", ls->adapt_freq,
+          SPF(echo_string, " (%s = %d) %s", "Level Set Adapt Outer Size", ls->adapt_freq,
               default_string);
         }
 

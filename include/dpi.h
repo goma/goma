@@ -135,6 +135,9 @@ struct Distributed_Processing_Information
   int *node_owner;
   int *num_node_recv;
   int *num_node_send;
+
+  // omega_h
+  int *exodus_to_omega_h_node;
 };
 typedef struct Distributed_Processing_Information Dpi;
 

@@ -73,7 +73,7 @@ int resetup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
    * Owned nodes tell ghost nodes what variables are active
    * at that node.
    */
-  //setup_external_nodal_vars(exo, dpi, cx);
+  setup_external_nodal_vars(exo, dpi, cx);
 
   /*
    * Finish setting the unknown map on this processor
@@ -86,12 +86,12 @@ int resetup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
    * possible
    */
   //log_msg("setup_dof_comm_map...");
-  //setup_dof_comm_map(exo, dpi, cx);
+  setup_dof_comm_map(exo, dpi, cx);
 
   /*
    * Output some statistics concerning the communications pattern
    */
-  //if (Num_Proc > 1) output_comm_stats(dpi, cx);
+  if (Num_Proc > 1) output_comm_stats(dpi, cx);
 
   /*
    * I extracted this from setup_fill_comm_map because some of the
