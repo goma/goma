@@ -1127,33 +1127,36 @@ void convert_back_to_goma_exo_parallel(
     }
     assert(neighbor_needed[i].size() == neighbor_recv[i]);
     requests.emplace_back();
-    std::cout << "Proc " << ProcID << " sending to proc " << proc << " with tag " << ProcID*100 + proc << "\n";
+    std::cout << "Proc " << ProcID << " send proc " << proc << " count "
+              << neighbor_needed[i].size() << " with tag " << ProcID * 100 + proc << "\n";
     MPI_Isend(neighbor_needed[i].data(), neighbor_needed[i].size(), MPI_INT, proc,
               ProcID * 100 + proc, MPI_COMM_WORLD, &requests[i]);
   }
-  std::vector<std::vector<int>> neighbor_send(my_neighbors);
-  for (int i = 0; i < my_neighbors; i++) {
-    int proc = neighbors[i];
-    int index = -1;
-    for (int i = proc * max_neighbors; i < proc + max_neighbors; i++) {
-      if (allneighbors[i] == ProcID) {
-        index = i;
-      }
-    }
-    if (index != -1) {
-      neighbor_send[i].resize(allneighrecv[index]);
+  std::vector<std::vector<int>> neighbor_send;
+  std::vector<int> neighbor_send_id;
+  int nindex = 0;
+  int req_index = requests.size();
+  for (int i = 0; i < allneighbors.size(); i++) {
+    if (allneighbors[i] == ProcID) {
+      int proc = i / max_neighbors;
+      neighbor_send.emplace_back();
+      neighbor_send[nindex].resize(allneighrecv[i]);
+      neighbor_send_id.emplace_back(proc);
       requests.emplace_back();
-      std::cout << "Proc " << ProcID << " recv from proc " << proc << " with tag " << proc*100 + ProcID << "\n";
-      MPI_Irecv(neighbor_send[i].data(), neighbor_send[i].size(), MPI_INT, proc,
-                proc * 100 + ProcID, MPI_COMM_WORLD, &requests[my_neighbors + i]);
+      std::cout << "Proc " << ProcID << " recv proc " << proc << " count "
+                << neighbor_send[nindex].size() << " with tag " << proc * 100 + ProcID << "\n";
+      MPI_Irecv(neighbor_send[nindex].data(), neighbor_send[nindex].size(), MPI_INT, proc,
+                proc * 100 + ProcID, MPI_COMM_WORLD, &requests[req_index]);
+      nindex++;
+      req_index++;
     }
   }
 
   MPI_Waitall(requests.size(), requests.data(), MPI_STATUSES_IGNORE);
 
   std::set<int> boundary_nodes;
-  for (int i = 0; i < my_neighbors; i++) {
-    for (auto gnode : neighbor_send[i]) {
+  for (auto &bound_nodes : neighbor_send) {
+    for (auto gnode : bound_nodes) {
       bool found = false;
       for (int k = 0; k < mesh->globals(0).size(); k++) {
         if (mesh->globals(0)[k] == gnode) {
