@@ -96,6 +96,7 @@ extern int ***Dolphin;
 extern int *NumUnknowns;    /* Number of unknown variables updated by this   */
 extern int *NumExtUnknowns; /* Number of unknown variables updated by this   */
 extern int ***idv;
+extern Comm_Ex **cx;
 #undef DISABLE_CPP
 }
 
@@ -1202,8 +1203,14 @@ void convert_back_to_goma_exo_parallel(
     }
   }
   proc_node_idx[0] = 0;
+  std::vector<int> node_cmap_ids;
+  std::vector<int> node_cmap_to_neighbor;
   for (int i = 0; i < my_neighbors; i++) {
     proc_node_idx[i + 1] = proc_node_idx[i] + proc_node_counts[i];
+    if (proc_node_counts[i] > 0) {
+      node_cmap_ids.push_back(neighbors[i]);
+      node_cmap_to_neighbor.push_back(i);
+    }
   }
   std::vector<int> external_nodes_sorted(external_nodes.begin(), external_nodes.end());
   std::vector<int> boundary_nodes_sorted(boundary_nodes.begin(), boundary_nodes.end());
@@ -1458,7 +1465,8 @@ void convert_back_to_goma_exo_parallel(
   CALL(ex_put_init_info(exoid, Num_Proc, 1, &ftype));
 
   CALL(ex_put_loadbal_param(exoid, internal_nodes.size(), boundary_nodes_sorted.size(),
-                            external_nodes.size(), global_elem.size(), 0, my_neighbors, 0, ProcID));
+                            external_nodes.size(), global_elem.size(), 0, node_cmap_ids.size(), 0,
+                            ProcID));
 
   std::vector<int> elem_internal(global_elem.size());
   std::iota(elem_internal.begin(), elem_internal.end(), 1);
@@ -1471,20 +1479,26 @@ void convert_back_to_goma_exo_parallel(
                                   &node_mesh[internal_nodes.size() + boundary_nodes_sorted.size()],
                                   ProcID));
 
-  CALL(ex_put_cmap_params(exoid, neighbors.data(), proc_node_counts.data(), NULL, NULL, ProcID));
+  std::vector<int> cmap_node_counts;
+  cmap_node_counts.reserve(node_cmap_to_neighbor.size());
+  for (auto idx : node_cmap_to_neighbor) {
+    cmap_node_counts.push_back(proc_node_counts[idx]);
+  }
+
+  CALL(ex_put_cmap_params(exoid, node_cmap_ids.data(), cmap_node_counts.data(), NULL, NULL, ProcID));
 
   std::vector<int> node_map_node_ids(external_nodes.size());
   std::vector<int> node_map_proc_ids(external_nodes.size());
-  for (int i = 0; i < my_neighbors; i++) {
-    std::fill(node_map_proc_ids.begin() + proc_node_idx[i],
-              node_map_proc_ids.begin() + proc_node_idx[i + 1], neighbors[i]);
+  for (auto nidx : node_cmap_to_neighbor) {
+    std::fill(node_map_proc_ids.begin() + proc_node_idx[nidx],
+              node_map_proc_ids.begin() + proc_node_idx[nidx + 1], neighbors[nidx]);
   }
   for (size_t i = 0; i < external_nodes.size(); i++) {
     node_map_node_ids[i] = old_to_new_node_map[external_nodes[i]] + 1;
   }
-  for (int i = 0; i < my_neighbors; i++) {
-    CALL(ex_put_node_cmap(exoid, neighbors[i], &node_map_node_ids[proc_node_idx[i]],
-                          &node_map_proc_ids[proc_node_idx[i]], ProcID));
+  for (auto nidx : node_cmap_to_neighbor) {
+    CALL(ex_put_node_cmap(exoid, neighbors[nidx], &node_map_node_ids[proc_node_idx[nidx]],
+                          &node_map_proc_ids[proc_node_idx[nidx]], ProcID));
   }
 
   CALL(ex_close(exoid));
@@ -1502,6 +1516,8 @@ void convert_back_to_goma_exo_parallel(
   free_exo(exo);
   init_exo_struct(exo);
   init_dpi_struct(dpi);
+
+
 
   //  const char * tmpfile = "tmp.e";
   strncpy(ExoFile, "tmp.e", 127);
@@ -1531,6 +1547,18 @@ void convert_back_to_goma_exo_parallel(
   for (int i = 0; i < old_to_new_node_map.size(); i++) {
     if (old_to_new_node_map[i] != -1) {
       dpi->exodus_to_omega_h_node[old_to_new_node_map[i]] = i;
+    }
+  }
+  if (dpi->num_neighbors > 0) {
+    for (int imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+      free(cx[imtrx]);
+      free(Request);
+      free(Status);
+      cx[imtrx] = alloc_struct_1(Comm_Ex, DPI_ptr->num_neighbors);
+      Request = alloc_struct_1(MPI_Request,
+                               Num_Requests * DPI_ptr->num_neighbors);
+      Status = alloc_struct_1(MPI_Status,
+                              Num_Requests * DPI_ptr->num_neighbors);
     }
   }
 
@@ -1820,7 +1848,7 @@ void adapt_mesh_omega_h(struct Aztec_Linear_Solver_System **ams,
 
   auto writer = Omega_h::vtk::Writer("transfer.vtk", &mesh);
   writer.write(step);
-  //    adapt_mesh(mesh);
+  adapt_mesh(mesh);
 
   std::string filename;
   std::stringstream ss;

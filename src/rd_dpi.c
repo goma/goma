@@ -342,6 +342,11 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
   MPI_Request *requests = calloc(sizeof(MPI_Request), 2 * d->num_neighbors);
 
   for (int i = 0; i < d->num_neighbors; i++) {
+    MPI_Irecv(&num_send_nodes[i], 1, MPI_INT, d->neighbor[i], 206, MPI_COMM_WORLD,
+              &requests[d->num_neighbors + i]);
+    printf("Proc %d recv from Proc %d tag %d", d->neighbor[i], ProcID, 206);
+  }
+  for (int i = 0; i < d->num_neighbors; i++) {
     num_recv_nodes[i] = 0;
     for (int j = 0; j < d->num_external_nodes; j++) {
       if (d->node_owner[d->num_internal_nodes + d->num_boundary_nodes + j] == d->neighbor[i]) {
@@ -349,13 +354,17 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
       }
     }
     MPI_Isend(&num_recv_nodes[i], 1, MPI_INT, d->neighbor[i], 206, MPI_COMM_WORLD, &requests[i]);
-  }
-  for (int i = 0; i < d->num_neighbors; i++) {
-    MPI_Irecv(&num_send_nodes[i], 1, MPI_INT, d->neighbor[i], 206, MPI_COMM_WORLD,
-              &requests[d->num_neighbors + i]);
+    printf("Proc %d sending to Proc %d tag %d", ProcID, d->neighbor[i], 206);
   }
 
   MPI_Waitall(d->num_neighbors * 2, requests, MPI_STATUSES_IGNORE);
+
+  for (int i = 0; i < d->num_neighbors; i++) {
+    global_send_nodes[i] = malloc(sizeof(int) * num_send_nodes[i]);
+    MPI_Irecv(global_send_nodes[i], num_send_nodes[i], MPI_INT, d->neighbor[i], 207, MPI_COMM_WORLD,
+              &requests[d->num_neighbors + i]);
+    printf("Proc %d recv from Proc %d tag %d", d->neighbor[i], ProcID, 207);
+  }
 
   for (int i = 0; i < d->num_neighbors; i++) {
     global_recv_nodes[i] = malloc(sizeof(int) * num_recv_nodes[i]);
@@ -368,11 +377,7 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
     }
     MPI_Isend(global_recv_nodes[i], num_recv_nodes[i], MPI_INT, d->neighbor[i], 207, MPI_COMM_WORLD,
               &requests[i]);
-  }
-  for (int i = 0; i < d->num_neighbors; i++) {
-    global_send_nodes[i] = malloc(sizeof(int) * num_send_nodes[i]);
-    MPI_Irecv(global_send_nodes[i], num_send_nodes[i], MPI_INT, d->neighbor[i], 207, MPI_COMM_WORLD,
-              &requests[d->num_neighbors + i]);
+    printf("Proc %d sending to Proc %d tag %d", ProcID, d->neighbor[i], 207);
   }
 
   MPI_Waitall(d->num_neighbors * 2, requests, MPI_STATUSES_IGNORE);
