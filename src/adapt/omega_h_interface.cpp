@@ -1047,7 +1047,7 @@ void convert_back_to_goma_exo_parallel(
   strncpy(out_par, "tmp_oh.e", MAX_FNL - 1);
   multiname(out_par, ProcID, Num_Proc);
   mesh->set_parting(OMEGA_H_ELEM_BASED);
-  Omega_h::exodus::write(out_par, mesh, true, classify_with);
+//  Omega_h::exodus::write(out_par, mesh, true, classify_with);
   mesh->set_parting(OMEGA_H_GHOSTED);
   strncpy(out_par, "tmp.e", MAX_FNL - 1);
   multiname(out_par, ProcID, Num_Proc);
@@ -1057,6 +1057,20 @@ void convert_back_to_goma_exo_parallel(
   std::set<LO> region_set;
   auto dim = mesh->dim();
   auto title = "Omega_h " OMEGA_H_SEMVER " Exodus Output";
+
+  auto class_sets = mesh->class_sets;
+  // TODO multiblock
+  std::set<LO> surface_set;
+  std::set<LO> node_set;
+  for (auto& [key, value]: class_sets) {
+    for (int i = 0; i < value.size(); i++) {
+      if (i < dpi->num_side_sets_global) {
+        surface_set.insert(value[i].id);
+      } else {
+        node_set.insert(value[i].id);
+      }
+    }
+  }
   auto elem_class_ids = mesh->get_array<ClassId>(dim, "class_id");
   auto h_elem_class_ids = HostRead<LO>(elem_class_ids);
   for (LO i = 0; i < h_elem_class_ids.size(); ++i) {
@@ -1067,14 +1081,8 @@ void convert_back_to_goma_exo_parallel(
   auto h_side_class_ids = HostRead<LO>(side_class_ids);
   auto h_side_class_dims = HostRead<I8>(side_class_dims);
   auto nelem_blocks = int(region_set.size());
-  std::set<LO> surface_set;
-  for (LO i = 0; i < h_side_class_ids.size(); ++i) {
-    if (h_side_class_dims[i] == I8(dim - 1)) {
-      surface_set.insert(h_side_class_ids[i]);
-    }
-  }
   auto nside_sets = (classify_with & exodus::SIDE_SETS) ? int(surface_set.size()) : 0;
-  auto nnode_sets = (classify_with & exodus::NODE_SETS) ? int(surface_set.size()) : 0;
+  auto nnode_sets = (classify_with & exodus::NODE_SETS) ? int(node_set.size()) : 0;
   //  Omega_h::binary::write("tmp.osh", mesh);
 
   auto all_conn = mesh->ask_elem_verts();
@@ -1344,7 +1352,10 @@ void convert_back_to_goma_exo_parallel(
         auto h_set_sides2local = HostRead<int>(set_sides2local);
         CALL(ex_put_set_param(exoid, EX_SIDE_SET, set_id, sides2elem_new.size(), 0));
         sset_global_side.push_back(sides2elem_new.size());
-        CALL(ex_put_set(exoid, EX_SIDE_SET, set_id, sides2elem_new.data(), sides2local_new.data()));
+        if (sides2elem_new.size() > 0) {
+          CALL(ex_put_set(exoid, EX_SIDE_SET, set_id, sides2elem_new.data(),
+                          sides2local_new.data()));
+        }
       }
       if (classify_with & exodus::NODE_SETS) {
         auto nodes_in_set = mark_down(mesh, dim - 1, VERT, sides_in_set);
@@ -1364,7 +1375,9 @@ void convert_back_to_goma_exo_parallel(
         auto h_set_nodes2node = HostRead<LO>(set_nodes2node_ex);
         nset_global_node.push_back(nset_nodes_new.size());
         CALL(ex_put_set_param(exoid, EX_NODE_SET, set_id, nset_nodes_new.size(), 0));
-        CALL(ex_put_set(exoid, EX_NODE_SET, set_id, nset_nodes_new.data(), nullptr));
+        if (nset_nodes_new.size() > 0) {
+          CALL(ex_put_set(exoid, EX_NODE_SET, set_id, nset_nodes_new.data(), nullptr));
+        }
       }
       std::vector<std::string> set_names(surface_set.size());
       for (auto &pair : mesh->class_sets) {
@@ -1787,9 +1800,9 @@ void adapt_mesh_omega_h(struct Aztec_Linear_Solver_System **ams,
   //    Omega_h::exodus::convert_to_omega_h_mesh(exo, dpi, exodus_file, &mesh, verbose,
   //    classify_with);
   //  }
-  mesh.set_parting(OMEGA_H_ELEM_BASED);
-  Omega_h::exodus::write(std::to_string(ProcID) + "convert.e", &mesh, true, classify_with);
-  mesh.set_parting(OMEGA_H_GHOSTED);
+//  mesh.set_parting(OMEGA_H_ELEM_BASED);
+//  Omega_h::exodus::write(std::to_string(ProcID) + "convert.e", &mesh, true, classify_with);
+//  mesh.set_parting(OMEGA_H_GHOSTED);
   auto writer_c = Omega_h::vtk::Writer("convert.vtk", &mesh);
 
   writer_c.write(step);
