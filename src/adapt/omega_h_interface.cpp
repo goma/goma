@@ -724,18 +724,13 @@ void convert_to_omega_h_mesh_parallel(
     }
   }
 #endif
-  if (1 && exo->num_side_sets) {
+  if (1 && dpi->num_side_sets_global) {
     std::vector<char> names_memory;
     std::vector<char *> name_ptrs;
     setup_names(int(dpi->num_side_sets_global), names_memory, name_ptrs);
     //    CALL(ex_get_names(file, EX_SIDE_SET, name_ptrs.data()));
-    for (size_t i = 0; i < exo->num_side_sets; ++i) {
-      int global_offset;
-      for (global_offset = 0; global_offset < dpi->num_side_sets_global; global_offset++) {
-        if (exo->ss_id[i] == dpi->ss_id_global[global_offset])
-          break;
-      }
-      assert(global_offset < dpi->num_side_sets_global);
+    for (size_t i = 0; i < dpi->num_side_sets_global; ++i) {
+      assert(exo->ss_id[i] == dpi->ss_id_global[i]);
       int nsides;
       //      CALL(ex_get_set_param(file, EX_SIDE_SET, side_set_ids[i], &nsides, &ndist_factors));
       nsides = exo->ss_num_sides[i];
@@ -751,20 +746,56 @@ void convert_to_omega_h_mesh_parallel(
         }
       }
 
-      HostWrite<LO> h_set_nodes(nnodes_owned);
+      int max_nnodes;
+      MPI_Allreduce(&nnodes_owned, &max_nnodes, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+      std::vector<int> all_owned(max_nnodes * Num_Proc);
+      std::vector<int> my_owned(max_nnodes);
+      std::fill(my_owned.begin(), my_owned.end(), -1);
+
+      HostWrite<LO> h_set_nodes_q(nnodes_owned);
       int index = 0;
       for (int idx = 0; idx < nnodes; idx++) {
         int exoindex = exo->ss_node_list[i][idx];
         if (exo_to_global.find(exoindex) != exo_to_global.end()) {
-          h_set_nodes[index] = exo_to_global.at(exoindex);
+          h_set_nodes_q[index] = mesh->globals(0)[exo_to_global.at(exoindex)];
           index++;
         }
       }
+      for (int i = 0; i < index; i++) {
+        my_owned[i] = h_set_nodes_q[i];
+      }
+
+      MPI_Allgather(my_owned.data(), max_nnodes, MPI_INT, all_owned.data(), max_nnodes, MPI_INT, MPI_COMM_WORLD);
+      int count_my_nodes = 0;
+      std::vector<int> my_nodes_sorted(mesh->nverts());
+      for (int i = 0; i < mesh->nverts(); i++) {
+        my_nodes_sorted[i] = mesh->globals(0)[i];
+      }
+      std::sort(my_nodes_sorted.begin(), my_nodes_sorted.end());
+      std::vector<int> mark_nodes;
+      mark_nodes.reserve(all_owned.size());
+      for (int j = 0; j < all_owned.size(); j++) {
+        if (all_owned[j] != -1 && std::binary_search(my_nodes_sorted.begin(), my_nodes_sorted.end(), all_owned[j])) {
+          // TODO
+          for (int k = 0; k < mesh->nverts(); k++) {
+            if (mesh->globals(0)[k] == all_owned[j]) {
+              mark_nodes.push_back(k);
+              break;
+            }
+          }
+        }
+      }
+
+      HostWrite<LO> h_set_nodes(mark_nodes.size());
+      for (int j = 0; j < mark_nodes.size(); j++) {
+        h_set_nodes[j] = mark_nodes[j];
+      }
+
       auto set_nodes2nodes = LOs(h_set_nodes.write());
       auto nodes_are_in_set = mark_image(set_nodes2nodes, mesh->nverts());
       auto sides_are_in_set = mark_up_all(mesh, VERT, dim - 1, nodes_are_in_set);
       auto set_sides2side = collect_marked(sides_are_in_set);
-      auto surface_id = dpi->ss_id_global[global_offset];
+      auto surface_id = dpi->ss_id_global[i];
       if (verbose) {
         std::cout << "P" << ProcID << " side set #" << surface_id << " \"" << name_ptrs[i]
                   << "\" has " << nsides << " sides, will be surface " << surface_id << "\n";
