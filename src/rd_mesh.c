@@ -1625,12 +1625,21 @@ multiname(char *in_name,
       proc_string[i] = '\0';
     }
 
-  int zpad = 0;
-  int proc_tmp = number_processors / 10;
-  while (proc_tmp > 0) {
-    zpad++;
+  int total_digits = 0;
+  int proc_tmp = number_processors;
+  do {
+    total_digits++;
     proc_tmp /= 10;
-  }
+  } while (proc_tmp > 0);
+
+  int my_digits = 0;
+  proc_tmp = processor_name;
+  do {
+    my_digits++;
+    proc_tmp /= 10;
+  } while (proc_tmp > 0);
+
+  int zpad = total_digits - my_digits;
 
   int pad_index = 0;
   while (pad_index < zpad) {
@@ -1644,6 +1653,7 @@ multiname(char *in_name,
 
 
   sprintf(proc_string, ".%d.%s%d", number_processors, zero_padded_string, processor_name);
+  printf("Proc %d multiname %s\n", ProcID, proc_string);
 
   strcat(in_name, proc_string);
   
