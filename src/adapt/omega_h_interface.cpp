@@ -625,9 +625,15 @@ void convert_to_omega_h_mesh_parallel(
             if (std::abs(F) < ls->adapt_width) {
               iso_size = ls->adapt_inner_size;
             }
-            auto target_metric = Omega_h::compose_metric(Omega_h::identity_matrix<2, 2>(),
-                                                         Omega_h::vector_2(iso_size, iso_size));
-            Omega_h::set_vector(target_metrics, index, Omega_h::symm2vector(target_metric));
+            if (mesh->dim() == 2) {
+              auto target_metric = Omega_h::compose_metric(Omega_h::identity_matrix<2, 2>(),
+                                                           Omega_h::vector_2(iso_size, iso_size));
+              Omega_h::set_vector(target_metrics, index, Omega_h::symm2vector(target_metric));
+            } else {
+              auto target_metric = Omega_h::compose_metric(Omega_h::identity_matrix<3, 3>(),
+                                                           Omega_h::vector_3(iso_size, iso_size, iso_size));
+              Omega_h::set_vector(target_metrics, index, Omega_h::symm2vector(target_metric));
+            }
           };
 
           Omega_h::parallel_for(mesh->nverts(), f0, "set_iso_metric_values");
@@ -1733,14 +1739,15 @@ void adapt_mesh(Omega_h::Mesh &mesh) {
     opts.xfer_opts.type_map[efv->name[w]] = OMEGA_H_LINEAR_INTERP;
   }
   opts.max_length_allowed = 5;
-  opts.max_length_desired = 1.6;
+  opts.max_length_desired = 1.8;
   opts.should_coarsen_slivers = true;
   opts.should_refine = true;
-  opts.min_quality_desired = 0.6;
+  opts.min_quality_desired = 0.5;
   int count = 1000;
 
   for (int i = 0; i < count; i++) {
     if (Omega_h::approach_metric(&mesh, opts)) {
+      std::cout << "Adapt count " << i << "\n";
       Omega_h::adapt(&mesh, opts);
     } else {
       break;
@@ -1818,7 +1825,7 @@ void adapt_mesh_omega_h(struct Aztec_Linear_Solver_System **ams,
 
   static std::string base_name;
   static bool first_call = true;
-  static auto lib = Omega_h::Library();
+  auto lib = Omega_h::Library();
   auto classify_with = Omega_h::exodus::NODE_SETS | Omega_h::exodus::SIDE_SETS;
   auto verbose = true;
   Omega_h::Mesh mesh(&lib);
