@@ -35,6 +35,7 @@
 #include "mm_mp_const.h"
 #include "rf_bc_const.h"
 #include "rf_vars_const.h"
+#include "sl_util_structs.h"
 
 #ifndef MNROT
 #define MNROT                                                                  \
