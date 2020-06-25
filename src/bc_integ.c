@@ -978,7 +978,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	    if (BC_Types[bc_input_id].BC_Name == CAPILLARY_TABLE_BC)
                {
 	  apply_table_wic_bc(func, d_func, &BC_Types[bc_input_id], time_value);
-              pb = func[0];
+              pb += func[0];
                }
 
 	    fn_dot_T(cfunc, d_cfunc, elem_side_bc->id_side,
@@ -2700,11 +2700,11 @@ apply_table_wic_bc( double func[],
    *    convenient.
    */
   if (BC_Type->BC_Name == TABLE_WICV_BC) {
-    func[0] = BC_Type->table->slope[0]*BC_Type->BC_Data_Float[0];
-    func[1] = BC_Type->table->slope[1]*BC_Type->BC_Data_Float[0];
-    func[2] = BC_Type->table->slope[2]*BC_Type->BC_Data_Float[0];
+    func[0] = BC_Type->table->slope[0]*BC_Type->table->yscale;
+    func[1] = BC_Type->table->slope[1]*BC_Type->table->yscale;
+    func[2] = BC_Type->table->slope[2]*BC_Type->table->yscale;
   } else {
-    func[0] = interp_val*BC_Type->BC_Data_Float[0];
+    func[0] = interp_val*BC_Type->table->yscale;
   }
 }
 /*******************************************************************************/

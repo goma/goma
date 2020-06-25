@@ -12608,12 +12608,12 @@ setup_table_BC(FILE *ifp,
   
      /* Read scaling factor */
  
-  if ( fscanf(ifp, "%lf", &BC_Type->BC_Data_Float[0]) != 1)
+  if ( fscanf(ifp, "%lf", &BC_Type->table->yscale) != 1)
     {
-      BC_Type->BC_Data_Float[0] = 1.0;
+      BC_Type->table->yscale = 1.0;
     }
 
-  SPF(endofstring(es)," %.4g", BC_Type->BC_Data_Float[0]); 
+  SPF(endofstring(es)," %.4g", BC_Type->table->yscale); 
 
   /* read interpolation order */
 

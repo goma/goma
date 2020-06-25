@@ -35,11 +35,11 @@ ARCH = rhel6_ompi
 # Goma library path, by default we assume all major non-standard libraries are under
 # the goma library path
 
-GOMA_LIBS = /home/goma/production/$(ARCH)
+GOMA_LIBS = /usr/local/sandia/gomalibs_2020
 
 # MPI install location, used for include, lib, and bin directories
 
-MPI_TOP = /usr/bin/openmpi-1.6.3
+MPI_TOP = /usr/lib/x86_64x86_64-linux-gnu/openmpi
 
 # GCC_TOP is the corresponding location of the gcc compilers and libs that are
 # used by the MPI compilers
@@ -108,14 +108,22 @@ DEFINES ?= -Dlinux \
            -DENABLE_AMESOS \
            -DTRILINOS \
            -DCHECK_FINITE\
-           -DNO_CHEBYSHEV_PLEASE \
            -DMDE=27 \
-           -DMAX_PROB_VAR=15 \
-           -DMAX_EXTERNAL_FIELD=4 \
-           -DMAX_CONC=4 \
+           -DMAX_PROB_VAR=16 \
+           -DMAX_EXTERNAL_FIELD=6 \
+           -DMAX_CONC=8 \
            -DCOUPLED_FILL \
+           -DPHASE_COUPLED_FILL \
+           -DNEW_HOFFMAN_FCN_PLEASE \
+           -DALE_DCA_INFO_PLEASE \
+           -DRELAX_ON_TRANSIENT_PLEASE \
+           -DRESET_TRANSIENT_RELAXATION_PLEASE  \
+           -DALLOW_NEGATIVE_TIMES_PLEASE  \
+           -DDM_COORD_SCALE_PLEASE \
+           -DVAR_UPDATE_UNITY_SCALE \
            -DPARALLEL \
            -DHAVE_STRATIMIKOS \
+           -DFEATURE_ROLLON_PLEASE \
            -DEIGEN_SERIAL
 
 # Other defines:
@@ -169,7 +177,7 @@ LD_LIBRARY_PATH := $(GCC_LIB64):$(GCC_LIB):${LD_LIBRARY_PATH}
 # If built with build-goma-dependencies.sh, includes flags for SEACAS, UMFpack, and all other necessary
 # libraries and includes otherwise not listed below.
 
-TRILINOS_TOP ?= $(GOMA_LIBS)/trilinos-12.12.1-Built
+TRILINOS_TOP ?= $(GOMA_LIBS)/trilinos-12.18.1
 
 include $(TRILINOS_TOP)/include/Makefile.export.Trilinos
 
@@ -607,13 +615,13 @@ SHELL_INC= shell_tfmp_util.h
 
 # _____ User routines "user_" prefix __________________________________________
 
-USER_SRC= user_ac.c\
-          user_bc.c\
+USER_SRC= user_ac_3M.c\
+          user_bc_3M.c\
           user_continuation.c\
-          user_mp.c \
+          user_mp_3M.c \
           user_mp_gen.c \
           user_out_hkm.c\
-          user_post.c\
+          user_post_3M.c\
           user_pre.c\
           user_print.c \
           user_senkin.F
