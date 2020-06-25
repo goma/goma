@@ -44,21 +44,20 @@ extern void set_unknown_map
 (Exo_DB *,		/* exo - ptr to FE EXODUS II database        */
        Dpi *);			/* dpi - ptr to parallel info                */
 
-extern int Index_Solution(
- const int,                     /* Global Node Number                        */
- const int,                     /* Variable Type                             */
- const int,                     /* Subvar index                              */
- const int,                     /* Local nodal degree of freedom. This is    *
-				 * equal to zero, except for centroid        *
-				 * pressures, and hermite cubic interpolated *
-				 * variables.                                */
- const int,                     /* material id -> or -1 if the specification *
-				 * of the material doesn't matter in this    *
-				 * instance. It would matter if the soln     *
-				 * number at this node varied depending on   *
-				 * the material id                           */
- const int                      /* Matrix ID */ 
-    );
+extern int Index_Solution(const int nodeNum,     /* Global Node Number                        */
+                          const int varType,     /* Variable Type                             */
+                          const int subvarIndex, /* Subvar index                              */
+                          const int iNdof,       /* Local nodal degree of freedom. This is    *
+                                                  * equal to zero, except for centroid        *
+                                                  * pressures, and hermite cubic interpolated *
+                                                  * variables.                                */
+                          const int matID,       /* material id -> or -1 if the specification *
+                                                  * of the material doesn't matter in this    *
+                                                  * instance. It would matter if the soln     *
+                                                  * number at this node varied depending on   *
+                                                  * the material id                           */
+                          const int imtrx        /* Matrix ID */
+);
 
 extern int variable_type_nodalInterp(int);
 

@@ -1838,8 +1838,34 @@ rd_timeint_specs(FILE *ifp,
     SPF(echo_string,"%s = %d", "Maximum steady state steps", tran->MaxSteadyStateSteps); ECHO(echo_string, echo_file);
   }
 
+  tran->ale_adapt = 0;
 
-  
+  iread = look_for_optional(ifp,"ALE Adapt",input,'=');
+  if (iread == 1) {
+    (void) read_string(ifp,input,'\n');
+    strip(input); stringup(input);
+
+    if ((strcmp(input,"ON") == 0) || (strcmp(input,"YES") == 0 )) {
+      tran->ale_adapt = 1;
+    }
+    else if ((strcmp(input,"OFF") == 0) || (strcmp(input,"NO") == 0 )) {
+      tran->ale_adapt = 0;
+    } else {
+      EH(GOMA_ERROR, "Expected either yes or no for ALE Adapt");
+    }
+    SPF(echo_string,"%s = %s", "ALE Adapt", input); ECHO(echo_string, echo_file);
+  }
+
+  iread = look_for_optional(ifp,"ALE Adapt ISO Size",input,'=');
+  if (iread == 1) {
+    tran->ale_adapt_iso_size = read_dbl(ifp, "ALE Adapt ISO Size");
+    if (tran->ale_adapt_iso_size < 0) {
+      EH(GOMA_ERROR, "Expected ALE Adapt ISO Size >= 0");
+    }
+    SPF(echo_string, "%s = %g", "ALE Adapt ISO Size", tran->ale_adapt_iso_size); ECHO(echo_string, echo_file);
+  }
+
+
 
 }    
 /* rd_timeint_specs -- read input file for time integration specifications */

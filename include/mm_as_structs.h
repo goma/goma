@@ -1118,6 +1118,9 @@ struct Transient_Information {
 
   double delta_t_old;
   double time_value_old;
+
+  int ale_adapt;
+  double ale_adapt_iso_size;
 };
 
 struct Eigensolver_Info

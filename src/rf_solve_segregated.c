@@ -1425,14 +1425,14 @@ void solve_problem_segregated(
                *  }
                */
             }
-            if (ls->adapt && pg->imtrx == 0 && (nt == 0 || nt % ls->adapt_freq == 0)) {
+            if ((tran->ale_adapt || (ls !=NULL && ls->adapt)) && pg->imtrx == 0 && (nt == 0 || ((ls !=NULL && nt % ls->adapt_freq == 0) || (tran->ale_adapt && nt % 3 == 0)))) {
               adapt_mesh_omega_h(ams, exo, dpi, x, x_old, x_older, xdot, xdot_old, x_oldest,
                                  resid_vector, x_update, scale, adapt_step);
               adapt_step++;
               num_total_nodes = dpi->num_universe_nodes;
               num_total_nodes = dpi->num_universe_nodes;
               if (nt == 0) {
-                if (ls->Num_Var_Init > 0) {
+                if (ls != NULL && ls->Num_Var_Init > 0) {
                   pg->imtrx = Fill_Matrix;
                   ls_var_initialization(x, exo, dpi, cx);
                 }

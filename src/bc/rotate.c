@@ -55,7 +55,9 @@
  *  Variable Definitions
  */
 struct Rotation_Vectors ****rotation = NULL;
+int **local_ROT_list = NULL;
 int dup_blks_list[MAX_MAT_PER_SS+1];
+int rotation_allocated = FALSE;
 
 #define GOMA_BC_ROTATE_C
 #include "sl_epetra_interface.h"
@@ -1899,7 +1901,6 @@ rotate_res_jac_mom (
 } /* END of rotate_res_jac_mom */
 /*****************************************************************************/
 
-static int rotation_allocated = FALSE;
 
 
 void
@@ -2331,7 +2332,6 @@ calculate_2D_rotation_vectors (Exo_DB *exo,		/* the mesh */
   int num_total_nodes;
   int dim;
   int mesh_count=0, mom_count=0;
-  static int **local_ROT_list ;
   int *gnn_side_list, local_node_side_list[MAX_NODES_PER_SIDE];
   int num_nodes_on_side, num_local_nodes, iconnect_ptr;
 	
