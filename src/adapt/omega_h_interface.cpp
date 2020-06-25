@@ -99,8 +99,11 @@ extern int ***idv;
 extern int **local_ROT_list;
 extern int rotation_allocated;
 extern Comm_Ex **cx;
+#include "bc/rotate_coordinates.h"
 #undef DISABLE_CPP
 }
+
+//#define DEBUG_OMEGA_H
 
 namespace Omega_h {
 
@@ -939,8 +942,10 @@ void convert_back_to_goma_exo_parallel(
     }
     assert(neighbor_needed[i].size() == neighbor_recv[i]);
     requests.emplace_back();
-    std::cout << "Proc " << ProcID << " send proc " << proc << " count "
-              << neighbor_needed[i].size() << " with tag " << ProcID * 100 + proc << "\n";
+    if (verbose) {
+      std::cout << "Proc " << ProcID << " send proc " << proc << " count "
+                << neighbor_needed[i].size() << " with tag " << ProcID * 100 + proc << "\n";
+    }
     MPI_Isend(neighbor_needed[i].data(), neighbor_needed[i].size(), MPI_INT, proc,
               ProcID * 100 + proc, MPI_COMM_WORLD, &requests[i]);
   }
@@ -955,8 +960,10 @@ void convert_back_to_goma_exo_parallel(
       neighbor_send[nindex].resize(allneighrecv[i]);
       neighbor_send_id.emplace_back(proc);
       requests.emplace_back();
-      std::cout << "Proc " << ProcID << " recv proc " << proc << " count "
-                << neighbor_send[nindex].size() << " with tag " << proc * 100 + ProcID << "\n";
+      if (verbose) {
+        std::cout << "Proc " << ProcID << " recv proc " << proc << " count "
+                  << neighbor_send[nindex].size() << " with tag " << proc * 100 + ProcID << "\n";
+      }
       MPI_Irecv(neighbor_send[nindex].data(), neighbor_send[nindex].size(), MPI_INT, proc,
                 proc * 100 + ProcID, MPI_COMM_WORLD, &requests[req_index]);
       nindex++;
@@ -1348,6 +1355,22 @@ void convert_back_to_goma_exo_parallel(
     rotation_allocated = FALSE;
   }
 
+  if (goma_automatic_rotations.rotation_nodes != NULL) {
+    for (int i = 0; i < exo->num_nodes; i++) {
+      for (int j = 0; j < GOMA_MAX_NORMALS_PER_NODE; j++) {
+        gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].normals[j]);
+        gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].average_normals[j]);
+        gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].tangent1s[j]);
+        gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].tangent2s[j]);
+      }
+      for (int j = 0; j < DIM; j++) {
+        gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].rotated_coord[j]);
+      }
+    }
+    free(goma_automatic_rotations.rotation_nodes);
+    goma_automatic_rotations.rotation_nodes = NULL;
+  }
+
 
   //  const char * tmpfile = "tmp.e";
   strncpy(ExoFile, "tmp.e", 127);
@@ -1429,6 +1452,22 @@ void convert_back_to_goma_exo(
     free(local_ROT_list);
     local_ROT_list = NULL;
     rotation_allocated = FALSE;
+  }
+
+  if (goma_automatic_rotations.rotation_nodes != NULL) {
+    for (int i = 0; i < exo->num_nodes; i++) {
+      for (int j = 0; j < GOMA_MAX_NORMALS_PER_NODE; j++) {
+        gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].normals[j]);
+        gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].average_normals[j]);
+        gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].tangent1s[j]);
+        gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].tangent2s[j]);
+      }
+      for (int j = 0; j < DIM; j++) {
+        gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].rotated_coord[j]);
+      }
+    }
+    free(goma_automatic_rotations.rotation_nodes);
+    goma_automatic_rotations.rotation_nodes = NULL;
   }
 
   //  const char * tmpfile = "tmp.e";
@@ -1550,10 +1589,14 @@ void adapt_mesh(Omega_h::Mesh &mesh) {
     }
   }
   auto imb = mesh.imbalance();
-  std::cout << "Mesh imbalance = " << imb << "\n";
+  if (ProcID == 0) {
+    std::cout << "Mesh imbalance = " << imb << "\n";
+  }
   mesh.balance();
   imb = mesh.imbalance();
-  std::cout << "Mesh imbalance after balance = " << imb << "\n";
+  if (ProcID == 0) {
+    std::cout << "Mesh imbalance after balance = " << imb << "\n";
+  }
 }
 
 extern "C" {
@@ -1623,7 +1666,10 @@ void adapt_mesh_omega_h(struct Aztec_Linear_Solver_System **ams,
   static bool first_call = true;
   auto lib = Omega_h::Library();
   auto classify_with = Omega_h::exodus::NODE_SETS | Omega_h::exodus::SIDE_SETS;
-  auto verbose = true;
+  auto verbose = false;
+#ifdef DEBUG_OMEGA_H
+  verbose = true;
+#endif
   Omega_h::Mesh mesh(&lib);
 
   auto exodus_file = 0; // Omega_h::exodus::open("cup.g", verbose);
@@ -1715,10 +1761,10 @@ void adapt_mesh_omega_h(struct Aztec_Linear_Solver_System **ams,
   ss2 << base_name << "-s." << step;
 
   if (Num_Proc > 1) {
-    Omega_h::exodus::convert_back_to_goma_exo_parallel(ss2.str().c_str(), &mesh, exo, dpi, true,
+    Omega_h::exodus::convert_back_to_goma_exo_parallel(ss2.str().c_str(), &mesh, exo, dpi, verbose,
                                                        classify_with);
   } else {
-    Omega_h::exodus::convert_back_to_goma_exo(ss2.str().c_str(), &mesh, exo, dpi, true,
+    Omega_h::exodus::convert_back_to_goma_exo(ss2.str().c_str(), &mesh, exo, dpi, verbose,
                                               classify_with);
   }
 

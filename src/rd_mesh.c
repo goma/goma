@@ -1653,8 +1653,6 @@ multiname(char *in_name,
 
 
   sprintf(proc_string, ".%d.%s%d", number_processors, zero_padded_string, processor_name);
-  printf("Proc %d multiname %s\n", ProcID, proc_string);
-
   strcat(in_name, proc_string);
   
   return;
