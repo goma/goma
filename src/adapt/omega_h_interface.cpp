@@ -103,7 +103,7 @@ extern Comm_Ex **cx;
 #undef DISABLE_CPP
 }
 
-#define DEBUG_OMEGA_H
+//#define DEBUG_OMEGA_H
 
 namespace Omega_h {
 
@@ -509,6 +509,7 @@ void convert_to_omega_h_mesh_parallel(
       int nsides;
       //      CALL(ex_get_set_param(file, EX_SIDE_SET, side_set_ids[i], &nsides, &ndist_factors));
       nsides = exo->ss_num_sides[i];
+      if (verbose)
       std::cout << "Proc" << ProcID << " has " << nsides << "sides\n";
       int snl[MAX_NODES_PER_SIDE];	/* Side Node List - NOT Saturday Night Live! */
 
@@ -523,8 +524,10 @@ void convert_to_omega_h_mesh_parallel(
             ss_side_nodes.insert(snl[j]);
             if (exo_to_global.find(snl[j]) != exo_to_global.end()) {
               ss_side_nodes_global.insert(mesh->globals(0)[exo_to_global[snl[j]]]);
+              if (verbose)
               std::cout << "node found " << mesh->globals(0)[exo_to_global[snl[j]]] << " " << dpi->node_index_global[snl[j]] << "\n";
             } else {
+              if (verbose)
               std::cout << "node not found " << dpi->node_index_global[snl[j]] << "\n";
 
             }
@@ -532,12 +535,14 @@ void convert_to_omega_h_mesh_parallel(
         }
       }
 
-      std::cout << "ss#" << dpi->ss_id_global[i] << " Proc " << ProcID << " ss_side_nodes ";
+      if (verbose) {
+        std::cout << "ss#" << dpi->ss_id_global[i] << " Proc " << ProcID << " ss_side_nodes ";
 
-      for (auto n : ss_side_nodes) {
-        std::cout << n << " ";
+        for (auto n : ss_side_nodes) {
+          std::cout << n << " ";
+        }
+        std::cout << "\n";
       }
-      std::cout << "\n";
 
       int nnodes = 0;
       for (int side = 0; side < nsides; side++) {
@@ -627,6 +632,7 @@ void convert_to_omega_h_mesh_parallel(
       }
       std::sort(sides.begin(), sides.end());
 
+      if (verbose)
       std::cout << "Proc" << ProcID << " has found " << sides.size() << "sides\n";
       Write<LO> set_sides2side(sides.size());
 
@@ -1810,7 +1816,7 @@ void adapt_mesh_omega_h(struct Aztec_Linear_Solver_System **ams,
 
   auto writer = Omega_h::vtk::Writer("transfer.vtk", &mesh);
   writer.write(step);
-  //adapt_mesh(mesh);
+  adapt_mesh(mesh);
 
   std::string filename;
   std::stringstream ss;
