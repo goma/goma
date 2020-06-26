@@ -103,7 +103,7 @@ extern Comm_Ex **cx;
 #undef DISABLE_CPP
 }
 
-//#define DEBUG_OMEGA_H
+#define DEBUG_OMEGA_H
 
 namespace Omega_h {
 
@@ -509,6 +509,36 @@ void convert_to_omega_h_mesh_parallel(
       int nsides;
       //      CALL(ex_get_set_param(file, EX_SIDE_SET, side_set_ids[i], &nsides, &ndist_factors));
       nsides = exo->ss_num_sides[i];
+      std::cout << "Proc" << ProcID << " has " << nsides << "sides\n";
+      int snl[MAX_NODES_PER_SIDE];	/* Side Node List - NOT Saturday Night Live! */
+
+      std::set<int> ss_side_nodes;
+      std::set<int> ss_side_nodes_global;
+      for (int es = 0; es < exo->ss_num_sides[i]; es++) {
+        for (int q = exo->ss_elem_index[i]; q < exo->ss_elem_index[i+1]; q++) {
+          int elem = exo->ss_elem_list[q];
+          int side = exo->ss_side_list[q];
+          int num_nodes = build_side_node_list(elem, side-1, exo, snl);
+          for (int j = 0; j < num_nodes; j++) {
+            ss_side_nodes.insert(snl[j]);
+            if (exo_to_global.find(snl[j]) != exo_to_global.end()) {
+              ss_side_nodes_global.insert(mesh->globals(0)[exo_to_global[snl[j]]]);
+              std::cout << "node found " << mesh->globals(0)[exo_to_global[snl[j]]] << " " << dpi->node_index_global[snl[j]] << "\n";
+            } else {
+              std::cout << "node not found " << dpi->node_index_global[snl[j]] << "\n";
+
+            }
+          }
+        }
+      }
+
+      std::cout << "ss#" << dpi->ss_id_global[i] << " Proc " << ProcID << " ss_side_nodes ";
+
+      for (auto n : ss_side_nodes) {
+        std::cout << n << " ";
+      }
+      std::cout << "\n";
+
       int nnodes = 0;
       for (int side = 0; side < nsides; side++) {
         nnodes += exo->ss_node_cnt_list[i][side];
@@ -516,10 +546,11 @@ void convert_to_omega_h_mesh_parallel(
       int nnodes_owned = 0;
       for (int side = 0; side < nnodes; side++) {
         int exoindex = exo->ss_node_list[i][side];
-        if (exo_to_global.find(exoindex) != exo_to_global.end()) {
+//        if (exo_to_global.find(exoindex) != exo_to_global.end()) {
           nnodes_owned++;
-        }
+//        }
       }
+
 
       int max_nnodes;
       MPI_Allreduce(&nnodes_owned, &max_nnodes, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
@@ -531,29 +562,32 @@ void convert_to_omega_h_mesh_parallel(
       int index = 0;
       for (int idx = 0; idx < nnodes; idx++) {
         int exoindex = exo->ss_node_list[i][idx];
-        if (exo_to_global.find(exoindex) != exo_to_global.end()) {
-          h_set_nodes_q[index] = mesh->globals(0)[exo_to_global.at(exoindex)];
+//        if (exo_to_global.find(exoindex) != exo_to_global.end()) {
+          h_set_nodes_q[index] = dpi->node_index_global[exoindex];
           index++;
-        }
+//        }
       }
       for (int i = 0; i < index; i++) {
         my_owned[i] = h_set_nodes_q[i];
       }
+      std::set<int> my_owned_set(my_owned.begin(), my_owned.end());
 
       MPI_Allgather(my_owned.data(), max_nnodes, MPI_INT, all_owned.data(), max_nnodes, MPI_INT, MPI_COMM_WORLD);
+      std::set<int> owned_set(all_owned.begin(), all_owned.end());
       int count_my_nodes = 0;
       std::vector<int> my_nodes_sorted(mesh->nverts());
       for (int i = 0; i < mesh->nverts(); i++) {
         my_nodes_sorted[i] = mesh->globals(0)[i];
       }
       std::sort(my_nodes_sorted.begin(), my_nodes_sorted.end());
+      std::vector<int> all_owned_set(owned_set.begin(), owned_set.end());
       std::vector<int> mark_nodes;
-      mark_nodes.reserve(all_owned.size());
-      for (int j = 0; j < all_owned.size(); j++) {
-        if (all_owned[j] != -1 && std::binary_search(my_nodes_sorted.begin(), my_nodes_sorted.end(), all_owned[j])) {
+      mark_nodes.reserve(all_owned_set.size());
+      for (int j = 0; j < all_owned_set.size(); j++) {
+        if (all_owned_set[j] != -1 && std::binary_search(my_nodes_sorted.begin(), my_nodes_sorted.end(), all_owned_set[j])) {
           // TODO
           for (int k = 0; k < mesh->nverts(); k++) {
-            if (mesh->globals(0)[k] == all_owned[j]) {
+            if (mesh->globals(0)[k] == all_owned_set[j]) {
               mark_nodes.push_back(k);
               break;
             }
@@ -569,7 +603,37 @@ void convert_to_omega_h_mesh_parallel(
       auto set_nodes2nodes = LOs(h_set_nodes.write());
       auto nodes_are_in_set = mark_image(set_nodes2nodes, mesh->nverts());
       auto sides_are_in_set = mark_up_all(mesh, VERT, dim - 1, nodes_are_in_set);
-      auto set_sides2side = collect_marked(sides_are_in_set);
+      auto set_sides2side_tmp = collect_marked(sides_are_in_set);
+      int max_sides;
+      int my_size = set_sides2side_tmp.size();
+      MPI_Allreduce(&my_size, &max_sides,1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+      std::vector<int> send_sides(max_sides);
+       std::fill(send_sides.begin(), send_sides.end(), -1);
+       for (int j = 0; j < my_size; j++) {
+         send_sides[j] = mesh->globals(dim-1)[set_sides2side_tmp[j]];
+       }
+      std::vector<int> all_sides(max_sides * Num_Proc);
+      MPI_Allgather(send_sides.data(), max_sides, MPI_INT, all_sides.data(), max_sides, MPI_INT, MPI_COMM_WORLD);
+
+
+      std::vector<int> sides;
+
+      for (int j = 0; j < all_sides.size(); j++) {
+        for (int k = 0; k < mesh->globals(dim-1).size(); k++) {
+          if (all_sides[j] == mesh->globals(dim-1)[k]) {
+            sides.push_back(k);
+          }
+        }
+      }
+      std::sort(sides.begin(), sides.end());
+
+      std::cout << "Proc" << ProcID << " has found " << sides.size() << "sides\n";
+      Write<LO> set_sides2side(sides.size());
+
+      for (int j = 0; j < sides.size(); j++) {
+        set_sides2side[j] = sides[j];
+      }
+
       auto surface_id = dpi->ss_id_global[i];
       if (verbose) {
         std::cout << "P" << ProcID << " side set #" << surface_id << " \"" << name_ptrs[i]
@@ -579,7 +643,12 @@ void convert_to_omega_h_mesh_parallel(
         for (int i = 0; i < h_set_nodes.size(); i++) {
           std::cout << mesh->globals(0).data()[h_set_nodes.data()[i]] << " ";
         }
-        std::cout << "\n";
+        std::cout << "P" << ProcID << " side set #" << surface_id << " sides = ";
+        for (int i = 0; i < set_sides2side.size(); i++) {
+          std::cout << mesh->globals(dim-1).data()[set_sides2side.data()[i]] << " ";
+        }
+        std::cout << "\n\n\n";
+
       }
       map_value_into(surface_id, set_sides2side, side_class_ids_w);
       map_value_into(I8(dim - 1), set_sides2side, side_class_dims_w);
@@ -1741,7 +1810,7 @@ void adapt_mesh_omega_h(struct Aztec_Linear_Solver_System **ams,
 
   auto writer = Omega_h::vtk::Writer("transfer.vtk", &mesh);
   writer.write(step);
-  adapt_mesh(mesh);
+  //adapt_mesh(mesh);
 
   std::string filename;
   std::stringstream ss;
