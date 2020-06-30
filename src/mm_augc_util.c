@@ -183,6 +183,7 @@ load_extra_unknownsAC(int iAC,    /* ID NUMBER OF AC'S */
         case SPLINEZ_RS_BC:
         case FILLET_BC:
         case DOUBLE_RAD_BC:
+        case FEATURE_ROLLON_BC:
         case ROLL_FLUID_BC:
         case UVARY_BC:
         case VVARY_BC:
@@ -891,6 +892,7 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
 		case SPLINEZ_RS_BC:
 		case FILLET_BC:
                 case DOUBLE_RAD_BC:
+                case FEATURE_ROLLON_BC:
 		case ROLL_FLUID_BC:
 		case UVARY_BC:
 		case VVARY_BC:
@@ -966,6 +968,7 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
         case SPLINEZ_RS_BC:
         case FILLET_BC:
         case DOUBLE_RAD_BC:
+        case FEATURE_ROLLON_BC:
         case ROLL_FLUID_BC:
         case UVARY_BC:
         case VVARY_BC:

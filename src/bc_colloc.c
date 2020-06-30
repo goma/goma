@@ -373,6 +373,16 @@ apply_point_colloc_bc (
 		       BC_Types[bc_input_id].u_BC,BC_Types[bc_input_id].len_u_BC);
 		break;
 
+	    case FEATURE_ROLLON_BC:
+#ifdef FEATURE_ROLLON_PLEASE
+		f_feature_rollon(ielem_dim, &func, d_func, 
+		       BC_Types[bc_input_id].u_BC,BC_Types[bc_input_id].len_u_BC,
+		       BC_Types[bc_input_id].BC_Data_Int[0],time_intermediate);
+#else
+		EH(-1, "FEATURE_ROLLON_PLEASE define needed and feature_rollon.h - talk to RBS");
+#endif
+		break;
+
 	    case ROLL_FLUID_BC:
                 icount = BC_Types[bc_input_id].BC_Data_Int[2];
 xsurf[0] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+1];
@@ -1080,6 +1090,10 @@ fprintf(stderr,"circle %g %g %g %g\n",xcirc,ycirc,xcen2, ycen2);
 
 } /* END of routine f_double_rad                                             */
 /*****************************************************************************/
+
+#ifdef FEATURE_ROLLON_PLEASE
+#include "feature_rollon.h"
+#endif
 
 void 
 f_roll_fluid (int ielem_dim,
@@ -3711,8 +3725,8 @@ apply_table_bc( double *func,
       }
 
   interp_val = interpolate_table( BC_Type->table, x_table, &slope, dfunc_dx );
-  interp_val *= BC_Type->BC_Data_Float[0];
-  slope *= BC_Type->BC_Data_Float[0];
+  interp_val *= BC_Type->table->yscale;
+  slope *= BC_Type->table->yscale;
   
   var = BC_Type->table->f_index ;
 

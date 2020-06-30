@@ -2094,12 +2094,13 @@ fvelo_tangential_bc(double func[],
       }
     else
       {
+#ifdef FEATURE_ROLLON_PLEASE
+#include "feature_rollon_velo.h"
+#else
 	vel_user[0] = velo_vary_fnc(UVARY_BC, fv->x[0], fv->x[1], fv->x[2]
 				    , u_par, time_value);
 	vel_user[1] = velo_vary_fnc(VVARY_BC, fv->x[0], fv->x[1], fv->x[2]
 				    , u_par, time_value);
-	vtang_user = fv->stangent[0][0]*vel_user[0] + fv->stangent[0][1]*vel_user[1];
-  	*func -= vtang_user;
   	if (af->Assemble_Jacobian) 
     	  {
 	    if( pd->e[R_MESH1] )
@@ -2113,6 +2114,12 @@ fvelo_tangential_bc(double func[],
 		vel_user_dx[1][1] = dvelo_vary_fnc_d2(VVARY_BC, fv->x[0], fv->x[1]
 						      , fv->x[2], u_par, time_value);
 	      }
+    	  }
+#endif
+	vtang_user = fv->stangent[0][0]*vel_user[0] + fv->stangent[0][1]*vel_user[1];
+  	*func -= vtang_user;
+  	if (af->Assemble_Jacobian) 
+    	  {
 	    for (kdir=0; kdir<pd->Num_Dim; kdir++)
 	      {
 		for (p=0; p<pd->Num_Dim; p++)
