@@ -3725,8 +3725,8 @@ apply_table_bc( double *func,
       }
 
   interp_val = interpolate_table( BC_Type->table, x_table, &slope, dfunc_dx );
-  interp_val *= BC_Type->BC_Data_Float[0];
-  slope *= BC_Type->BC_Data_Float[0];
+  interp_val *= BC_Type->table->yscale;
+  slope *= BC_Type->table->yscale;
   
   var = BC_Type->table->f_index ;
 
