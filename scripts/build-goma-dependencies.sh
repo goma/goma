@@ -233,16 +233,16 @@ TRILINOS_VERSION="12.18.1"
 TRILINOS_VERSION_DASH="12-18-1"
 TRILINOS_MD5="9c1d151169949bca6cf203831e4d6aee"
 
-MUMPS_VERSION="5.3.1"
-MUMPS_MD5="31b64a11c1df6a56b1750411efb20986"
+MUMPS_VERSION="5.3.3"
+MUMPS_MD5="789d2647dce4277863fb5942d385fe89"
 
 OPENMPI_VERSION="4.0.3"
 OPENMPI_MD5="851553085013939f24cdceb1af06b828"
 OPENMPI_ARCHIVE_URL="https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-$OPENMPI_VERSION.tar.bz2"
 OPENMPI_EXTRA_CONFIGURE_FLAGS=""
 
-CMAKE_VERSION="3.17.1"
-CMAKE_MD5="958959aa5e0338144eed7320e9b48561"
+CMAKE_VERSION="3.17.3"
+CMAKE_MD5="06bb006122e8e094f942bc9b2d999c92"
 
 SUITESPARSE_VERSION="4.5.6"
 SUITESPARSE_MD5="eeb87a842a9b3b0425cf08d97fb3c5ec"
@@ -368,13 +368,13 @@ fi
 if [ "$build_cmake" == "false" ] ; then
     log_echo "Native cmake found newer than 3.10.0, skipping download"
 else
-    ARCHIVE_NAMES+=("cmake-$CMAKE_VERSION.tar.gz")
+    ARCHIVE_NAMES+=("cmake-$CMAKE_VERSION-Linux-x86_64.tar.gz")
     ARCHIVE_MD5SUMS+=("$CMAKE_MD5")
-    ARCHIVE_URLS+=("https://github.com/Kitware/CMake/releases/download/v$CMAKE_VERSION/cmake-$CMAKE_VERSION.tar.gz")
-    ARCHIVE_DIR_NAMES+=("cmake-$CMAKE_VERSION")
+    ARCHIVE_URLS+=("https://github.com/Kitware/CMake/releases/download/v3.17.3/cmake-3.17.3-Linux-x86_64.tar.gz")
+    ARCHIVE_DIR_NAMES+=("cmake-$CMAKE_VERSION-Linux-x86_64")
     ARCHIVE_HOMEPAGES+=("https://cmake.org/")
     ARCHIVE_REAL_NAMES+=("CMake")
-    log_echo "Cmake not found, will build."
+    log_echo "Cmake not found, will download."
     log_echo
 fi
 
@@ -818,23 +818,15 @@ export CXX=${SYSTEM_CXX}
 if [ "$build_cmake" == "false" ] ; then
     log_echo "Native cmake found of sufficient version, skipping build"
 else
-    cd $GOMA_LIB/cmake-$CMAKE_VERSION
+    cd $GOMA_LIB/cmake-$CMAKE_VERSION-Linux-x86_64
     if [ -f bin/cmake ]
     then
         log_echo "cmake is already built"
     else
-        CC=$SYSTEM_CC CXX=$SYSTEM_CXX FC=$SYSTEM_FC ./bootstrap --prefix=$GOMA_LIB/cmake-$CMAKE_VERSION 2>&1 | tee -a $COMPILE_LOG
-        make -j$MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
-        make install 2>&1 | tee -a $COMPILE_LOG
-        if [ -f $GOMA_LIB/cmake-$CMAKE_VERSION/bin/cmake ]
-        then
-            log_echo "Built CMake version $CMAKE_VERSION"
-        else
-            log_echo "Failed to build CMake version $CMAKE_VERSION"
-            exit 1
-        fi
+        log_echo "Downloaded cmake does not include cmake in bin"
+        exit 1
     fi
-    export PATH=$GOMA_LIB/cmake-$CMAKE_VERSION/bin:$PATH
+    export PATH=$GOMA_LIB/cmake-$CMAKE_VERSION-Linux-x86_64/bin:$PATH
 fi
 
 
