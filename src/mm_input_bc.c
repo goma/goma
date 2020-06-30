@@ -1942,6 +1942,7 @@ rd_bc_specs(FILE *ifp,
 	      EH(-1, err_msg);
 	    }			   
 	  BC_Types[ibc].len_u_BC = num_const;	  
+	  BC_Types[ibc].max_DFlt = num_const+1;
 
 	  for(i=0;i<num_const;i++) SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].u_BC[i]);
 
@@ -1975,6 +1976,7 @@ rd_bc_specs(FILE *ifp,
 	      EH(-1, err_msg);
 	    }			   
 	  BC_Types[ibc].len_u_BC = num_const;	  
+	  BC_Types[ibc].max_DFlt = num_const+3;
 
 	  for(i=0;i<num_const;i++) SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].u_BC[i]);
 
@@ -1987,6 +1989,7 @@ rd_bc_specs(FILE *ifp,
         case YFLUX_USER_BC:
         case YUSER_BC:
 	case YFLUX_ALLOY_BC:
+        case FEATURE_ROLLON_BC:
 	  if ( fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[0]) != 1)
 	    {
 	      sr = sprintf(err_msg, "Expected 1 int for %s on %sID=%d\n",
@@ -2006,6 +2009,7 @@ rd_bc_specs(FILE *ifp,
 	      EH(-1, err_msg);
 	    }			   
 	  BC_Types[ibc].len_u_BC = num_const;	  
+	  BC_Types[ibc].max_DFlt = num_const;
 
 	  SPF(endofstring(echo_string)," %d", BC_Types[ibc].BC_Data_Int[0]);
 	  for(i=0;i<num_const;i++) SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].u_BC[i]);
@@ -2048,6 +2052,7 @@ rd_bc_specs(FILE *ifp,
 	      EH(-1, err_msg);
 	    }			   
 	  BC_Types[ibc].len_u_BC = num_const;	  
+	  BC_Types[ibc].max_DFlt = num_const;
 
 	  SPF(endofstring(echo_string)," %s", input);
 	  for(i=0;i<num_const;i++) SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].u_BC[i]);
