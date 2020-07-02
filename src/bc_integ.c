@@ -2189,7 +2189,6 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	      if (BC_Types[bc_input_id].BC_Name != CAPILLARY_BC  &&
 		  BC_Types[bc_input_id].BC_Name != CAPILLARY_SHEAR_VISC_BC  &&
 		  BC_Types[bc_input_id].BC_Name != ELEC_TRACTION_BC  &&
-                  BC_Types[bc_input_id].BC_Name != YFLUX_USER_BC &&
 		  BC_Types[bc_input_id].BC_Name != CAP_REPULSE_BC &&
 		  BC_Types[bc_input_id].BC_Name != CAP_REPULSE_ROLL_BC &&
 		  BC_Types[bc_input_id].BC_Name != CAP_REPULSE_USER_BC &&
