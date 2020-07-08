@@ -102,20 +102,31 @@ amesos_solve_msr( char *choice,
   /* Choose correct solver */
   if (FirstRun) {
     std::string Pkg_Choice  = choice;
-    if( Pkg_Choice == "UMF") 
-      Pkg_Name = "Amesos_Umfpack";
-    else if ( Pkg_Choice == "KLU") 
+    if ( Pkg_Choice == "KLU")
       Pkg_Name = "Amesos_Klu";
+#ifdef HAVE_AMESOS_UMFPACK
+    else if( Pkg_Choice == "UMF")
+      Pkg_Name = "Amesos_Umfpack";
+#endif
     else if ( Pkg_Choice == "LAPACK") 
       Pkg_Name = "Amesos_Lapack";
-    else if ( Pkg_Choice == "SUPERLU") 
+#if defined(HAVE_AMESOS_SUPERLUDIST)
+    else if ( Pkg_Choice == "SUPERLU")
       Pkg_Name = "Amesos_Superludist";
-    else if ( Pkg_Choice == "SUPERLU_PARALLEL") 
+    else if ( Pkg_Choice == "SUPERLU_PARALLEL")
       Pkg_Name = "Amesos_Superludist";
+#elif defined(HAVE_AMESOS_SUPERLU)
+    else if ( Pkg_Choice == "SUPERLU")
+      Pkg_Name = "Amesos_Superlu";
+#endif
+#ifdef HAVE_AMESOS_SCALAPACK
     else if ( Pkg_Choice == "SCALAPACK") 
       Pkg_Name = "Amesos_Scalapack";
+#endif
+#ifdef HAVE_AMESOS_MUMPS
     else if ( Pkg_Choice == "MUMPS") 
       Pkg_Name = "Amesos_Mumps";
+#endif
     else {
       std::cout << "Error: Unsupport Amesos solver package"<<std::endl ;
       exit(-1);
@@ -196,20 +207,31 @@ int amesos_solve_epetra( char *choice,
 
   std::string Pkg_Choice  = choice;
 
-  if (Pkg_Choice == "UMF")
-    Pkg_Name = "Amesos_Umfpack";
-  else if (Pkg_Choice == "KLU")
-    Pkg_Name = "Amesos_Klu";
-  else if (Pkg_Choice == "LAPACK")
-    Pkg_Name = "Amesos_Lapack";
-  else if (Pkg_Choice == "SUPERLU")
-    Pkg_Name = "Amesos_Superludist";
-  else if (Pkg_Choice == "SUPERLU_PARALLEL")
-    Pkg_Name = "Amesos_Superludist";
-  else if (Pkg_Choice == "SCALAPACK")
-    Pkg_Name = "Amesos_Scalapack";
-  else if (Pkg_Choice == "MUMPS")
-    Pkg_Name = "Amesos_Mumps";
+   if ( Pkg_Choice == "KLU")
+      Pkg_Name = "Amesos_Klu";
+#ifdef HAVE_AMESOS_UMFPACK
+    else if( Pkg_Choice == "UMF")
+      Pkg_Name = "Amesos_Umfpack";
+#endif
+    else if ( Pkg_Choice == "LAPACK")
+      Pkg_Name = "Amesos_Lapack";
+#if defined(HAVE_AMESOS_SUPERLUDIST)
+    else if ( Pkg_Choice == "SUPERLU")
+      Pkg_Name = "Amesos_Superludist";
+    else if ( Pkg_Choice == "SUPERLU_PARALLEL")
+      Pkg_Name = "Amesos_Superludist";
+#elif defined(HAVE_AMESOS_SUPERLU)
+    else if ( Pkg_Choice == "SUPERLU")
+      Pkg_Name = "Amesos_Superlu";
+#endif
+#ifdef HAVE_AMESOS_SCALAPACK
+    else if ( Pkg_Choice == "SCALAPACK")
+      Pkg_Name = "Amesos_Scalapack";
+#endif
+#ifdef HAVE_AMESOS_MUMPS
+    else if ( Pkg_Choice == "MUMPS")
+      Pkg_Name = "Amesos_Mumps";
+#endif
   else {
     std::cout << "Error: Unsupport Amesos solver package" << std::endl;
     exit(-1);
