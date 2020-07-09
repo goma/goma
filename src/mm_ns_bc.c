@@ -5363,7 +5363,7 @@ fn_dot_T(double cfunc[MDE][DIM],
 	 double d_cfunc[MDE][DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
 	 const int id_side,	/* ID of the side of the element             */
 	 const double sigma,	/* surface tension                           */
-	 const double pb,	/* applied pressure                          */
+	 const double pb[DIM],	/* applied pressure                          */
 	 struct elem_side_bc_struct *elem_side_bc,
 	 const int iconnect_ptr,
 	 double dsigma_dx[DIM][MDE])
@@ -5372,7 +5372,7 @@ fn_dot_T(double cfunc[MDE][DIM],
 *
 *  Function which calculates the calculates the capillary free surface stress
 *  balance:
-*        2H*sigma*n + pb + pr/(dist)**2 = n.T
+*        2H*sigma*n + pb[0]*n + pb[1]*t1 + pb[2]*t2 (not enabled yet) = n.T
 *  This vector condition is to be added on component wise to the momentum equations.
 *  pb is the applied pressure as in a vacuum or a forcing function
 *
@@ -5415,8 +5415,13 @@ fn_dot_T(double cfunc[MDE][DIM],
 		    {
 		      for (a=0; a<dim; a++)
 			{
-                          d_cfunc[ldof][a][var][j] -= (pb * fv->dsnormal_dx[a][jvar][j] )
-                                            * bf[VELOCITY1+a]->phi[ldof];  
+                          d_cfunc[ldof][a][var][j] -= (pb[0] * fv->dsnormal_dx[a][jvar][j] ) 
+							* bf[VELOCITY1+a]->phi[ldof];  
+                          d_cfunc[ldof][a][var][j] -= (pb[1] * fv->dstangent_dx[0][a][jvar][j] ) 
+							* bf[VELOCITY1+a]->phi[ldof];  
+			  if( ei->ielem_dim == DIM)
+                               d_cfunc[ldof][a][var][j] -= (pb[2] * fv->dstangent_dx[0][a][jvar][j] ) 
+							* bf[VELOCITY1+a]->phi[ldof];  
 			  for (p=0; p<VIM; p++)
 			    {
 			      
@@ -5523,7 +5528,10 @@ fn_dot_T(double cfunc[MDE][DIM],
 	      
 	      for (a=0; a<dim; a++)
 		{  
-		  cfunc[ldof][a] -= pb * fv->snormal[a] * bf[VELOCITY1+a]->phi[ldof]; 
+		  cfunc[ldof][a] -= pb[0] * fv->snormal[a] * bf[VELOCITY1+a]->phi[ldof]; 
+		  cfunc[ldof][a] -= pb[1] * fv->stangent[0][a] * bf[VELOCITY1+a]->phi[ldof]; 
+	 	  if( ei->ielem_dim == DIM)
+		      cfunc[ldof][a] -= pb[2] * fv->stangent[1][a] * bf[VELOCITY1+a]->phi[ldof]; 
 		  for (p=0; p<VIM; p++)
 		    { 
 		      cfunc[ldof][a] -= sigma * mp->surface_tension * bf[VELOCITY1+a]->grad_phi_e[ldof][a] [p][p];  
