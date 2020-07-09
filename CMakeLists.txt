@@ -57,7 +57,7 @@ foreach(package Amesos AztecOO Epetra)
 endforeach()
 
 # Trilinos required TPLs
-foreach(package MPI UMFPACK)
+foreach(package MPI)
   LIST(FIND Trilinos_TPL_LIST ${package} trilinos_package_index)
   if(${trilinos_package_index} LESS 0)
     message(FATAL_ERROR "Trilinos not built with TPL ${package}")
@@ -72,15 +72,6 @@ foreach(package SuperLUDist MUMPS)
   endif()
 endforeach()
 
-# UMFPACK in trilinos
-LIST(FIND Trilinos_TPL_LIST UMFPACK trilinos_package_index)
-if(${trilinos_package_index} LESS 0)
-  message(STATUS "Trilinos not built with UMFPACK TPL")
-else()
-  message(STATUS "Trilinos built with UMFPACK TPL")
-  message(STATUS "\tEnabling UMFPACK in Goma")
-  list(APPEND GOMA_COMPILE_DEFINITIONS HAVE_UMFPACK)
-endif()
 
 # stratimikos and teko
 LIST(FIND Trilinos_PACKAGE_LIST Stratimikos stratimikos_package_index)
@@ -130,6 +121,19 @@ find_package(Omega_h 9)
 if (Omega_h_FOUND)
   set(GOMA_TPL_LIBRARIES ${GOMA_TPL_LIBRARIES} Omega_h::omega_h)
   list(APPEND GOMA_COMPILE_DEFINITIONS HAVE_OMEGA_H)
+# UMFPACK in trilinos
+LIST(FIND Trilinos_TPL_LIST UMFPACK trilinos_package_index)
+if(${trilinos_package_index} LESS 0)
+  message(STATUS "Trilinos not built with UMFPACK TPL")
+  message(STATUS "Checking for other umfpack")
+  find_package(UMFPACK REQUIRED)
+  list(APPEND GOMA_COMPILE_DEFINITIONS HAVE_UMFPACK)
+  set(GOMA_TPL_LIBRARIES ${GOMA_TPL_LIBRARIES} ${UMFPACK_LIBRARIES})
+  set(GOMA_TPL_INCLUDES ${GOMA_TPL_INCLUDES} ${UMFPACK_INCLUDES})
+else()
+  message(STATUS "Trilinos built with UMFPACK TPL")
+  message(STATUS "\tEnabling UMFPACK in Goma")
+  list(APPEND GOMA_COMPILE_DEFINITIONS HAVE_UMFPACK)
 endif()
 
 macro(option_definition OPTION VALUE)
@@ -534,6 +538,7 @@ endforeach()
 message("\n")
 
 set(GOMA_TPL_INCLUDES
+  ${GOMA_TPL_INCLUDES}
   ${Sparse_INCLUDES}
   ${SEACASExodus_INCLUDE_DIRS}
   ${SEACASChaco_INCLUDE_DIRS}
