@@ -494,7 +494,9 @@ goma_error associate_directions(Exo_DB *exo, goma_rotation_node_s *rotation) {
                 set_dir[0] = false;
                 set_dir[1] = false;
                 set_dir[2] = false;
-                set_dir[ca_best[u_index]] = true;
+                for (int k = 0; k <= u_index; k++) {
+                  set_dir[ca_best[k]] = true;
+                }
                 double dotu = fabs(gds_vector_get(cav[u_index], ca_best[u_index]));
                 double dotv = fabs(gds_vector_get(cav[v_index], ca_best[u_index]));
                 if (dotu > dotv) {

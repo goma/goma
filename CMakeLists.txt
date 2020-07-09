@@ -121,6 +121,7 @@ find_package(Omega_h 9)
 if (Omega_h_FOUND)
   set(GOMA_TPL_LIBRARIES ${GOMA_TPL_LIBRARIES} Omega_h::omega_h)
   list(APPEND GOMA_COMPILE_DEFINITIONS HAVE_OMEGA_H)
+endif()
 # UMFPACK in trilinos
 LIST(FIND Trilinos_TPL_LIST UMFPACK trilinos_package_index)
 if(${trilinos_package_index} LESS 0)
