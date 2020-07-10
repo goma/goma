@@ -2864,8 +2864,12 @@ assemble_stress_log_conf(dbl tt,
                   d_lambda = eig_values[b]-eig_values[a];
                   if (DOUBLE_NONZERO(d_lambda))
                     {
-                      if (DOUBLE_NONZERO(eig_values[b]) && DOUBLE_NONZERO(eig_values[a]))
-                             tmp1[a][b] += (log(eig_values[b]/eig_values[a]))/d_lambda;
+                      double eiglog_a = log(DBL_SMALL), eiglog_b = log(DBL_SMALL);
+                      if (DOUBLE_NONZERO(eig_values[b]))
+                         { eiglog_b = log(eig_values[b]);}
+                      if (DOUBLE_NONZERO(eig_values[a]))
+                         { eiglog_a = log(eig_values[a]);}
+                      tmp1[a][b] += (eiglog_b - eiglog_a)/d_lambda;
                       tmp1[a][b] *= (eig_values[a]*M1[b][a] + eig_values[b]*M1[a][b]);
                     }
 		  else
@@ -2880,7 +2884,10 @@ assemble_stress_log_conf(dbl tt,
                     {
                       source_term1[a][b] += alpha*(2.0 * D[a][a] - 1.0 - D_dot_D[a][a])/lambda;
  	            }
-                  if(DOUBLE_NONZERO(eig_values[a])) source_term1[a][b] /= eig_values[a];
+                  if(DOUBLE_NONZERO(eig_values[a])) 
+                    {source_term1[a][b] /= eig_values[a];}
+                  else
+                    {source_term1[a][b] /= DBL_SMALL;}
   	          source_term1[a][b] += 2.0*M1[a][a];
                 }
             }
@@ -2906,7 +2913,7 @@ assemble_stress_log_conf(dbl tt,
 			  wt_func = bf[eqn]->phi[i];
 			  
 			  //SUPG weighting, this is SUPG with s, not e^s
-			  if(supg!=0.0)
+			  if(DOUBLE_NONZERO(supg))
 			    {
 			      for(w=0; w<dim; w++)
 				{
