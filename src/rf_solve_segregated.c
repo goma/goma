@@ -1425,7 +1425,7 @@ void solve_problem_segregated(
                *  }
                */
             }
-            if ((tran->ale_adapt || (ls !=NULL && ls->adapt)) && pg->imtrx == 0 && (nt == 0 || ((ls !=NULL && nt % ls->adapt_freq == 0) || (tran->ale_adapt && nt % 3 == 0)))) {
+            if ((tran->ale_adapt || (ls !=NULL && ls->adapt)) && pg->imtrx == 0 && (nt == 0 || ((ls !=NULL && nt % ls->adapt_freq == 0) || (tran->ale_adapt && nt % 5 == 0)))) {
               adapt_mesh_omega_h(ams, exo, dpi, x, x_old, x_older, xdot, xdot_old, x_oldest,
                                  resid_vector, x_update, scale, adapt_step);
               adapt_step++;

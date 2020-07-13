@@ -483,33 +483,21 @@ goma_error associate_directions(Exo_DB *exo, goma_rotation_node_s *rotation) {
           bool set_dir[3] = {false, false, false};
           gds_vector *cav[3] = {ca1, ca2, ca3};
 
-          for (int u_index = 0; u_index < 3; u_index++) {
-            goma_error err = find_best_direction(set_dir, cav[u_index], &(ca_best[u_index]));
-            EH(err, "find_best_direction ca %d", u_index);
-          }
-
-          for (int u_index = 0; u_index < 3; u_index++) {
-            for (int v_index = u_index + 1; v_index < 3; v_index++) {
-              if (ca_best[u_index] == ca_best[v_index]) {
-                set_dir[0] = false;
-                set_dir[1] = false;
-                set_dir[2] = false;
-                for (int k = 0; k <= u_index; k++) {
-                  set_dir[ca_best[k]] = true;
-                }
-                double dotu = fabs(gds_vector_get(cav[u_index], ca_best[u_index]));
-                double dotv = fabs(gds_vector_get(cav[v_index], ca_best[u_index]));
-                if (dotu > dotv) {
-                  find_best_direction(set_dir, cav[v_index], &(ca_best[v_index]));
-                } else {
-                  find_best_direction(set_dir, cav[u_index], &(ca_best[u_index]));
-                }
-              }
+          double max = 0;
+          int best_perm = 0;
+          for (int perm = 0; perm < 3; perm++) {
+            double dot = 0;
+            for (int index = 0; index < 3; index++) {
+              dot += fabs(gds_vector_get(cav[index], (index+perm)%3));
+            }
+            if (dot > max) {
+              max = dot; 
+              best_perm = perm;
             }
           }
 
-          if (ca_best[0] == ca_best[1] || ca_best[1] == ca_best[2] || ca_best[0] == ca_best[2]) {
-            EH(-1, "best direction for corner critical angle error");
+          for (int index = 0; index < 3; index++) {
+            ca_best[index] = (index+best_perm) % 3;
           }
 
           for (int u_index = 0; u_index < rotation[i].n_normals; u_index++) {
@@ -523,6 +511,7 @@ goma_error associate_directions(Exo_DB *exo, goma_rotation_node_s *rotation) {
               }
             }
             assert(max > 0);
+            assert(ca_best[best] >= 0 && ca_best[best] < 3);
             rotation[i].associate_direction[u_index] = ca_best[best];
             dir_set[best] = true;
           }
