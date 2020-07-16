@@ -2862,19 +2862,19 @@ assemble_stress_log_conf(dbl tt,
 	      if ( a != b )
  	        {
                   d_lambda = eig_values[b]-eig_values[a];
-                  if (DOUBLE_NONZERO(d_lambda))
+                  if (DOUBLE_NONZERO(d_lambda))  
                     {
                       double eiglog_a = log(DBL_SMALL), eiglog_b = log(DBL_SMALL);
                       if (DOUBLE_NONZERO(eig_values[b]))
-                         { eiglog_b = log(eig_values[b]);}
+                         { eiglog_b = fmax(eiglog_b,log(eig_values[b]));}
                       if (DOUBLE_NONZERO(eig_values[a]))
-                         { eiglog_a = log(eig_values[a]);}
+                         { eiglog_a = fmax(eiglog_a,log(eig_values[a]));}
                       tmp1[a][b] += (eiglog_b - eiglog_a)/d_lambda;
                       tmp1[a][b] *= (eig_values[a]*M1[b][a] + eig_values[b]*M1[a][b]);
                     }
 		  else
 		    {
-                      tmp1[a][b] += M1[a][b] + M1[b][a];
+                      tmp1[a][b] += eig_values[b]*(M1[a][b] + M1[b][a]);
 	            }
 	        }
               if ( a == b )
@@ -2884,10 +2884,7 @@ assemble_stress_log_conf(dbl tt,
                     {
                       source_term1[a][b] += alpha*(2.0 * D[a][a] - 1.0 - D_dot_D[a][a])/lambda;
  	            }
-                  if(DOUBLE_NONZERO(eig_values[a])) 
-                    {source_term1[a][b] /= eig_values[a];}
-                  else
-                    {source_term1[a][b] /= DBL_SMALL;}
+                  source_term1[a][b] /= fmax(DBL_SMALL,eig_values[a]);
   	          source_term1[a][b] += 2.0*M1[a][a];
                 }
             }
@@ -2949,7 +2946,6 @@ assemble_stress_log_conf(dbl tt,
                               source *= pd->etm[eqn][(LOG2_SOURCE)];
                             }
                           lec->R[upd->ep[eqn]][i] += mass + advection + source;
-
 			}//i loop
 		    }//if a<=b
 		}// b loop
