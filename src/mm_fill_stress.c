@@ -2508,14 +2508,18 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
  					      if( p == q) source_a +=  s[a][b] * dZ_dtrace; 
 					      source_a *= saramitoCoeff;
 					      // sensitivities for saramito model:
-					      source_a +=  d_saramito->s[p][q] * s[a][b] * Z;
+                                              if (p <= q) {
+                                                source_a +=  d_saramito->s[p][q] * s[a][b] * Z;
+                                              }
 		      			
 					      source_b  =0.;
 					      if(alpha != 0.)
 						{
 						  source_b  = alpha * lambda * saramitoCoeff * 
-						    (s[q][b] * (double)delta(a,p) + s[a][p] * (double)delta(b,q))/mup +
-						    d_saramito->s[p][q] * alpha * lambda*( s_dot_s[a][b]/mup);
+						    (s[q][b] * (double)delta(a,p) + s[a][p] * (double)delta(b,q))/mup; 
+                                                  if (p <= q) {
+						    source_b += d_saramito->s[p][q] * alpha * lambda*( s_dot_s[a][b]/mup);
+                                                  }
 						}
 					      
 					      source  = source_a + source_b;
@@ -6156,58 +6160,60 @@ compute_saramito_model_terms(dbl stress[DIM][DIM],
   // take care of indeterminate behavior for normOfStressD == 0
   if(normOfStressD == 0){ sCoeff = 0; }
 
-  // if normStress_d < yieldStress, set sensitivities to zero and return 
-  if( (sCoeff) == 0 ){
-    for(int i=0; i<VIM; i++){
-      for(int j=0; j<VIM; j++){
-	d_sCoeff->s[i][j] = 0.;
+  if (d_sCoeff != NULL) {
+    // if normStress_d < yieldStress, set sensitivities to zero and return 
+    if( (sCoeff) == 0 ){
+      for(int i=0; i<VIM; i++){
+        for(int j=0; j<VIM; j++){
+          d_sCoeff->s[i][j] = 0.;
+        }
+      }
+
+      d_sCoeff->tau_y = 0.;
+    }
+    else{
+      // otherwise, sensitivities need to be calculated
+      d_sCoeff->tau_y = -1./(normOfStressD);
+
+      dbl d_sCoeff_d_normOfStressD = yieldStress/(normOfStressDSqr);
+
+      // first assign elements values of d(normOfStressDSqr)/d(stress);
+      d_sCoeff->s[0][0] = 2.*invDenom*( stress[0][0] - stress[1][1]);
+      d_sCoeff->s[0][1] = 2.*stress[0][1];
+      d_sCoeff->s[1][0] = d_sCoeff->s[0][1];
+      d_sCoeff->s[1][1] = - d_sCoeff->s[0][0];
+
+      if(VIM>2){
+        d_sCoeff->s[0][0] += 2.*invDenom*( stress[0][0] - stress[2][2]);
+        d_sCoeff->s[1][1] += 2.*invDenom*( stress[1][1] - stress[2][2]);
+        // no change for d_sCoeff_d_stress[0][1]
+        d_sCoeff->s[0][2] = 2.*stress[0][2];
+        d_sCoeff->s[0][2] = 2.*stress[1][2];
+        d_sCoeff->s[2][2] = 2.*invDenom*( 2*stress[2][2] - stress[0][0] - stress[1][1]);
+      }
+
+
+      /* use the chain rule to computute sCoeff sensitivies to stress components
+       * d(sCoeff)/d(stress)  =   d(sCoeff)/d(normOfStressD)
+       *                        * d(normOfStressD)/d(normOfStressDSqr)
+       *                        * d(normOfStressDSqr)/d(stress)
+       * 
+       *                      =   d(sCoeff)/d(normOfStressD)
+       *                        * 0.5/normOfStressD
+       *                        * d(normOfStressDSqr)/d(stress) 
+       */ 
+                          
+      // invDenom will be used as d(normOfStressD)/d(stress)
+      invDenom = 0.5/normOfStressD*d_sCoeff_d_normOfStressD;
+
+      for(int i=0; i<VIM; i++){
+        for(int j=i; j<VIM; j++){
+          d_sCoeff->s[i][j] *= invDenom;
+          d_sCoeff->s[j][i] = d_sCoeff->s[i][j];
+        }
       }
     }
-
-    d_sCoeff->tau_y = 0.;
-  }
-  else{
-    // otherwise, sensitivities need to be calculated
-    d_sCoeff->tau_y = -1./(normOfStressD);
-
-    dbl d_sCoeff_d_normOfStressD = yieldStress/(normOfStressDSqr);
-
-    // first assign elements values of d(normOfStressDSqr)/d(stress);
-    d_sCoeff->s[0][0] = 2.*invDenom*( stress[0][0] - stress[1][1]);
-    d_sCoeff->s[0][1] = 2.*stress[0][1];
-    d_sCoeff->s[1][0] = d_sCoeff->s[0][1];
-    d_sCoeff->s[1][1] = - d_sCoeff->s[0][0];
-
-    if(VIM>2){
-      d_sCoeff->s[0][0] += 2.*invDenom*( stress[0][0] - stress[2][2]);
-      d_sCoeff->s[1][1] += 2.*invDenom*( stress[1][1] - stress[2][2]);
-      // no change for d_sCoeff_d_stress[0][1]
-      d_sCoeff->s[0][2] = 2.*stress[0][2];
-      d_sCoeff->s[0][2] = 2.*stress[1][2];
-      d_sCoeff->s[2][2] = 2.*invDenom*( 2*stress[2][2] - stress[0][0] - stress[1][1]);
-    }
-
-
-    /* use the chain rule to computute sCoeff sensitivies to stress components
-     * d(sCoeff)/d(stress)  =   d(sCoeff)/d(normOfStressD)
-     *                        * d(normOfStressD)/d(normOfStressDSqr)
-     *                        * d(normOfStressDSqr)/d(stress)
-     * 
-     *                      =   d(sCoeff)/d(normOfStressD)
-     *                        * 0.5/normOfStressD
-     *                        * d(normOfStressDSqr)/d(stress) 
-     */ 
-			
-    // invDenom will be used as d(normOfStressD)/d(stress)
-    invDenom = 0.5/normOfStressD*d_sCoeff_d_normOfStressD;
-
-    for(int i=0; i<VIM; i++){
-      for(int j=i; j<VIM; j++){
-	d_sCoeff->s[i][j] *= invDenom;
-	d_sCoeff->s[j][i] = d_sCoeff->s[i][j];
-      }
-    }
-  }
+  } // d_sCoeff != NULL
   // for debugging purposes.
   /*
     for(int i=0; i<VIM; i++){
