@@ -980,7 +980,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	    if ( ielem_dim == DIM)
 		{
 		 pb[DIM-1] = 0.0;
-		 WH(-1,"3rd Direction bulk stress not connected to CAPILLARY BC yet...\n");
+		 /*WH(-1,"3rd Direction bulk stress not connected to CAPILLARY BC yet...\n");*/
 		}
 	    if (BC_Types[bc_input_id].BC_Name == CAPILLARY_TABLE_BC)
                {
