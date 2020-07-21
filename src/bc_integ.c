@@ -114,7 +114,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
   double xi[DIM];             /* Local element coordinates of Gauss point. */
   double x_dot[MAX_PDIM];
   double x_rs_dot[MAX_PDIM];
-  double wt, weight, pb;
+  double wt, weight, pb[DIM];
   double xsurf[MAX_PDIM];
   double dsigma_dx[DIM][MDE];
   double func[DIM];
@@ -970,15 +970,22 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	  if ( bc->BC_Data_Int[0] == ei->elem_blk_id ||
 	       ( bc->BC_Data_Int[0] == -1 && iapply ) ) {
 
+	    int dir;
 	    /* set up surface repulsion force and zero it if 
 	     * bc is CAP_REPULSE or CAP_RECOIL_PRESS
 	     * because then force is calculated
 	     * later */
-	    pb = BC_Types[bc_input_id].BC_Data_Float[1];
+	    for( dir=0 ; dir<ielem_dim ; dir++)
+	       { pb[dir] = BC_Types[bc_input_id].BC_Data_Float[dir+1];}
+	    if ( ielem_dim == DIM)
+		{
+		 pb[DIM-1] = 0.0;
+		 /*WH(-1,"3rd Direction bulk stress not connected to CAPILLARY BC yet...\n");*/
+		}
 	    if (BC_Types[bc_input_id].BC_Name == CAPILLARY_TABLE_BC)
                {
 	  apply_table_wic_bc(func, d_func, &BC_Types[bc_input_id], time_value);
-              pb += func[0];
+              pb[0] += func[0];
                }
 
 	    fn_dot_T(cfunc, d_cfunc, elem_side_bc->id_side,
