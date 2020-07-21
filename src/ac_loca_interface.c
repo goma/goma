@@ -327,7 +327,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
   DPRINTF(stderr, "cnt_nodal_vars() begins...\n");
 #endif
   tnv = cnt_nodal_vars();
-  tev = cnt_elem_vars();
+  tev = cnt_elem_vars(exo);
   
 #ifdef DEBUG
   DPRINTF(stderr, "Found %d total primitive nodal variables to output.\n", tnv);
@@ -966,7 +966,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
             multiname(loca_in->NV_exoII_infile, ProcID, Num_Proc);
           DPRINTF(stderr, "Reading previous null vector ...\n");
           err = rd_vectors_from_exoII(con.turning_point_info.nv,
-				      loca_in->NV_exoII_infile, 0, 0, INT_MAX, &timeValueRead);
+                                      loca_in->NV_exoII_infile, 0, 0, INT_MAX, &timeValueRead,exo);
           if (err != 0)
             {
               DPRINTF(stderr, "do_loca:  err from rd_vectors_from_exoII\n");
@@ -986,7 +986,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
         multiname(loca_in->NV_exoII_infile, ProcID, Num_Proc);
       DPRINTF(stderr, "Reading previous null vector ...\n");
       err = rd_vectors_from_exoII(con.pitchfork_info.psi,
-                                  loca_in->NV_exoII_infile, 0, 0, INT_MAX, &timeValueRead);
+                                  loca_in->NV_exoII_infile, 0, 0, INT_MAX, &timeValueRead,exo);
       if (err != 0)
         {
           DPRINTF(stderr, "do_loca:  err from rd_vectors_from_exoII\n");
@@ -1025,11 +1025,11 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
   /* Load y_vec and z_vec from these files */
       DPRINTF(stderr, "Reading previous null vector (real part) ...\n");
       err = rd_vectors_from_exoII(con.hopf_info.y_vec, 
-				  loca_in->NV_exoII_infile, 0, 0, INT_MAX, &timeValueRead);
+                                  loca_in->NV_exoII_infile, 0, 0, INT_MAX, &timeValueRead,exo);
       if (err != 0) EH(-1, "do_loca: error reading real part of null vector");
       DPRINTF(stderr, "Reading previous null vector (imaginary part) ...\n");
       err = rd_vectors_from_exoII(con.hopf_info.z_vec, 
-				  loca_in->NV_imag_infile, 0, 0, INT_MAX, &timeValueRead);
+                                  loca_in->NV_imag_infile, 0, 0, INT_MAX, &timeValueRead,exo);
       if (err != 0) EH(-1, "do_loca: error reading imag. part of null vector");
 
   /* If using MSR matrix format, instantiate amat (struct AZ_MATRIX).

@@ -518,7 +518,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 
   tnv = cnt_nodal_vars();
   /*  tnv_post is calculated in load_nodal_tkn*/
-  tev = cnt_elem_vars();
+  tev = cnt_elem_vars(exo);
   /*  tev_post is calculated in load_elem_tkn*/
   
 #ifdef DEBUG

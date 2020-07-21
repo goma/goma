@@ -3981,7 +3981,7 @@ set_interaction_masks(Exo_DB *exo)
 
 int
 Index_Solution (const int nodeNum, const int varType, const int subvarIndex,
-	        const int iNdof, const int matID)
+                const int iNdof, const int matID)
 
     /********************************************************************
      *

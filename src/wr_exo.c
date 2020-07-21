@@ -913,6 +913,15 @@ create_truth_table(struct Results_Description *rd, Exo_DB *exo,
 	    exo->truth_table_existance_key[j - V_FIRST] = 1;
 	  }
         }
+        if ( pd_glob[mat_num]->i[j] == I_P1 )
+          {
+           if ( exo->truth_table_existance_key[j - V_FIRST] == 0 )
+             {
+              /* We just found a candidate for an element variable */
+              tev += getdofs(type2shape(exo->eb_elem_itype[mat_num]),I_P1);;
+              exo->truth_table_existance_key[j - V_FIRST] = 1;
+             }
+          }
       }
     }
 
@@ -1014,6 +1023,30 @@ create_truth_table(struct Results_Description *rd, Exo_DB *exo,
 		   exo->eb_num_elems[eb_indx] );
 	  }
 	}
+        if ( pd_glob[mat_num]->i[j] == I_P1 )
+          {
+          int dof  = getdofs(type2shape(exo->eb_elem_itype[mat_num]),I_P1);
+           /* We just found a candidate for an element variable */
+          for(int k =0;k<dof;k++)
+          {
+           exo->elem_var_tab[i++] = 1;
+           found_match = TRUE;
+           ev_indx++;
+           /* malloc the entry for this block by number of elems for this block
+              but - only if the variable exists for this block! (by the truth table) */
+
+
+          if ( has_been_called == 0 )
+            {
+             /* NOTE: this final array dim is only to be malloc'd once; when a user
+                is annealing the mesh, anneal mesh calls wr_result_prelim_exo again,
+                and hence create_truth_table, which would realloc this dim of gvec_elem.
+                this test will prevent that. - RRL */
+             asdv ( &gvec_elem[eb_indx][ev_indx - 1],
+                    exo->eb_num_elems[eb_indx] );
+            }
+          }
+          }
       }
       if ( found_match == FALSE && exo->truth_table_existance_key[j - V_FIRST] == 1 ) {
 	exo->elem_var_tab[i++] = 0;

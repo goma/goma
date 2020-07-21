@@ -698,7 +698,17 @@ assign_var_name(const int varType, const int idof,
   int sr;
   if (varType == MASS_FRACTION) {
     assign_species_name(idof, mp_ptr, species_name, species_desc, matID);
-  } else {
+  }
+  else if(matID!=-1 && pd_glob[matID]->i[varType] == I_P0)
+  {
+    sprintf(species_name,  "%s_E", Var_Name[varType].name2);
+    strcpy(species_desc, Var_Name[varType].name1);
+  }
+  else if(matID!=-1 && pd_glob[matID]->i[varType] == I_P1)
+  {
+    sprintf(species_name,  "%s_E%d", Var_Name[varType].name2,idof+1);
+    strcpy(species_desc, Var_Name[varType].name1);
+  }else {
     strcpy(species_name, Var_Name[varType].name2);
     strcpy(species_desc, Var_Name[varType].name1);
 

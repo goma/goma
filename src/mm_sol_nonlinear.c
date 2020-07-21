@@ -2345,8 +2345,8 @@ EH(-1,"version not compiled with frontal solver");
 
 	/* Now element vars */
 	for (i = 0; i < tev; i++) {
-	  extract_elem_vec(x, i, rd->evtype[i], gvec_elem, exo);
-	  wr_elem_result_exo(exo, ExoFileOut, gvec_elem, i, 
+          extract_elem_vec(x, i, rd->evtype[i], gvec_elem, exo,0);
+          wr_elem_result_exo(exo, ExoFileOut, gvec_elem, i,
 			     *nprint+1, time_value , rd);
 	}
 	/* Add additional user-specified post processing variables */
@@ -2359,8 +2359,8 @@ EH(-1,"version not compiled with frontal solver");
 	  if (TIME_DERIVATIVES != -1 && (TimeIntegration != STEADY)) {
 	    for (i = 0; i < tev; i++) {
 	      i_post = tev_post + i;
-	      extract_elem_vec(xdot, i_post, rd->evtype[i_post], 
-			       gvec_elem, exo);
+              extract_elem_vec(xdot, i_post, rd->evtype[i_post],
+                               gvec_elem, exo,0);
 	      wr_elem_result_exo(exo, ExoFileOut, gvec_elem, i_post, 
 				 *nprint+1, time_value, rd);
 	    }

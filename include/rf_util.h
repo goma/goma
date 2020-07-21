@@ -184,7 +184,8 @@ PROTO((double [],		/* u - solution vector                       */
 				 * The default value is INT_MAX, which       *
 				 * implies the last time plane in the        *
 				 * exodus file.                              */
-       double *timeValueRead)); /* Value of the time in the time plane read  */
+       double *timeValueRead, /* Value of the time in the time plane read  */
+       const Exo_DB *));
 
 extern int rd_trans_vectors_from_exoII /* rf_util.c                          */
 PROTO((double [],		/* u - solution vector                       */
