@@ -2616,6 +2616,8 @@ noahs_ark()
   ddd_add_member(n, &LAMB_VECTOR, 1, MPI_INT);
   ddd_add_member(n, &Q_FCN, 1, MPI_INT);
   ddd_add_member(n, &POYNTING_VECTORS, 1, MPI_INT);
+  ddd_add_member(n, &SARAMITO_YIELD, 1, MPI_INT);
+  ddd_add_member(n, &STRESS_NORM, 1, MPI_INT);
   ddd_add_member(n, &len_u_post_proc, 1, MPI_INT);
 
   if ( nn_post_fluxes > 0 )
