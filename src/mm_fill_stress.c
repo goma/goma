@@ -472,7 +472,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 			  advection = 0.;
 			  if ( pd->e[eqn] & T_ADVECTION )
 			    {
-			      if(lambda != 0.)
+			      if(DOUBLE_NONZERO(lambda))
 				{
 				  
 				  advection += ( v_dot_del_s[a][b]  -  x_dot_del_s[a][b]
@@ -505,7 +505,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 			  if ( pd->e[eqn] & T_SOURCE )
 			    {
 			      source +=  s[a][b];
-			      if(alpha != 0.)
+			      if(DOUBLE_NONZERO(alpha))
 				{
 				  source1 += (s_dot_g[a][b] + s_dot_gt[a][b] 
 					      + g_dot_s[a][b] + gt_dot_s[a][b] + s_dot_s[a][b]/mup 
@@ -597,7 +597,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				  advection = 0.;
 				  if ( pd->e[eqn] & T_ADVECTION )
 				    {
-				      if(lambda != 0.)
+				      if(DOUBLE_NONZERO(lambda))
 					{
 					  advection += ( v_dot_del_g[a][b] - x_dot_del_g[a][b] +
 							 v_dot_del_g[b][a] - x_dot_del_g[b][a]) -
@@ -618,7 +618,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				  source1    = 0.;
 				  if ( pd->e[eqn] & T_SOURCE )
 				    {
-				      if(alpha != 0.)
+			              if(DOUBLE_NONZERO(alpha))
 					{
 					  source1 += ( -s_dot_s[a][b]/(mup*mup) +
 						       ( g_dot_g[a][b] +  gt_dot_gt[a][b] 
@@ -680,7 +680,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				      
 				      if ( pd->e[eqn] & T_ADVECTION )
 					{
-					  if(lambda != 0.)
+					  if(DOUBLE_NONZERO(lambda))
 					    {
 					      advection_a = phi_j * 
 						(grad_s[p][a][b] + 
@@ -732,7 +732,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				      if ( pd->e[eqn] & T_SOURCE )
 					{
 					  source_a = 0.;
-					  if(alpha != 0.)
+			                  if(DOUBLE_NONZERO(alpha))
 					    {
 					      source_a = -s_dot_s[a][b]/(mup*mup) +  g_dot_g[a][b] 
 						+  gt_dot_gt[a][b] 
@@ -800,7 +800,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				      advection = 0.;
 				      if ( pd->e[eqn] & T_ADVECTION )
 					{
-					  if(lambda != 0.)
+					  if(DOUBLE_NONZERO(lambda))
 					    {
 					      advection += ( v_dot_del_g[a][b] - x_dot_del_g[a][b] +
 							     v_dot_del_g[b][a] - x_dot_del_g[b][a]) -
@@ -821,7 +821,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				      if ( pd->e[eqn] & T_SOURCE )
 					{
 					  
-					  if(alpha != 0.)
+			                  if(DOUBLE_NONZERO(alpha))
 					    {
 					      source += -s_dot_s[a][b]/(mup*mup) + g_dot_g[a][b] 
 						+  gt_dot_gt[a][b] 
@@ -871,7 +871,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				  advection = 0.;
 				  if ( pd->e[eqn] & T_ADVECTION )
 				    {
-				      if(lambda != 0.)
+				      if(DOUBLE_NONZERO(lambda))
 					{
 					  
 					  advection += ( v_dot_del_g[a][b] - x_dot_del_g[a][b] +
@@ -893,7 +893,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				  
 				  if ( pd->e[eqn] & T_SOURCE )
 				    {
-				      if(alpha != 0.)
+			              if(DOUBLE_NONZERO(alpha))
 					{
 					  source += ( -s_dot_s[a][b]/(mup*mup) 
 						      + ( g_dot_g[a][b] +  gt_dot_gt[a][b] 
@@ -968,7 +968,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				      
 				      if ( pd->e[eqn] & T_ADVECTION )
 					{
-					  if(lambda != 0.)
+					  if(DOUBLE_NONZERO(lambda))
 					    {
 					      /*
 					       * Four parts: 
@@ -1082,7 +1082,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					  source_a =  s[a][b];
 					  source_b = 0.;
 					  
-					  if(alpha != 0.)
+			                  if(DOUBLE_NONZERO(alpha))
 					    {
 					      source_a += (s_dot_g[a][b] + s_dot_gt[a][b] 
 							   + g_dot_s[a][b] + gt_dot_s[a][b] + s_dot_s[a][b]/mup 
@@ -1159,7 +1159,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					  
 					  if ( pd->e[eqn] & T_ADVECTION )
 					    {
-					      if(lambda != 0.)
+					      if(DOUBLE_NONZERO(lambda))
 						{
 						  
 						  for( r=0; r<dim; r++)
@@ -1203,7 +1203,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					  if ( pd->e[eqn] & T_SOURCE )
 					    {
 					      
-					      if(alpha != 0.)
+			                      if(DOUBLE_NONZERO(alpha))
 						{
 						  source +=  phi_j *( s[a][p] * (double)delta(b,q) 
 								      + s[a][q] * (double)delta(b,p) 
@@ -1258,7 +1258,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					  
 					  if ( pd->e[eqn] & T_ADVECTION )
 					    {
-					      if(lambda != 0.)
+					      if(DOUBLE_NONZERO(lambda))
 						{
 						  if((a == p) && (b == q))
 						    {
@@ -1298,7 +1298,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					      source_a  =  phi_j * (double)delta(a,p) * (double)delta(b,q);
 					      
 					      source_b  = 0.;
-					      if(alpha != 0.)
+			                      if(DOUBLE_NONZERO(alpha))
 						{
 						  source_b  =  phi_j *( g[q][b] * (double)delta(a,p) 
 									+ gt[q][b] * (double)delta(a,p) 
@@ -1720,7 +1720,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 
       /* get tensor dot products for future use */
       
-      if( alpha != 0.) (void) tensor_dot(s, s, s_dot_s, VIM);
+      if(DOUBLE_NONZERO(alpha)) (void) tensor_dot(s, s, s_dot_s, VIM);
 
       if( ucwt != 0. )
 	{
@@ -1784,7 +1784,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 			  advection = 0.;
 			  if ( pd->e[eqn] & T_ADVECTION )
  			    {
-			      if(lambda != 0.)
+			      if(DOUBLE_NONZERO(lambda))
 				{
 				  
 				  advection +=  v_dot_del_s[a][b]  -  x_dot_del_s[a][b];
@@ -1815,7 +1815,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 			      // consider whether saramitoCoeff should multiply here
 			      source +=  saramitoCoeff * Z* s[a][b] - at * mup * ( g[a][b] +  gt[a][b]);
 			      
-			      if(alpha != 0.)
+			      if(DOUBLE_NONZERO(alpha))
 				{
 				  source1 = ( s_dot_s[a][b]/mup);
 				  
@@ -1864,7 +1864,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 
 		      R_source =   Z*s[a][b];
 			      
-		      if(alpha != 0.) R_source  +=  alpha * lambda*( s_dot_s[a][b]/mup);
+		      if(DOUBLE_NONZERO(alpha)) R_source  +=  alpha * lambda*( s_dot_s[a][b]/mup);
 		      R_source *= saramitoCoeff;
 		      R_source += - at * mup * ( g[a][b] +  gt[a][b]);
 		      
@@ -1915,7 +1915,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				  advection = 0.;
 				  if ( pd->e[eqn] & T_ADVECTION )
 				    {
-			      	      if(lambda != 0.)
+			      	      if(DOUBLE_NONZERO(lambda))
 					{
 				  
 					  advection +=  v_dot_del_s[a][b]  -  x_dot_del_s[a][b];
@@ -1934,7 +1934,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				      source = -(g[a][b] +  gt[a][b])
 					*(at*d_mup->T[j]+mup*d_at_dT[j]);
 				      
-				      if(alpha != 0.)
+			              if(DOUBLE_NONZERO(alpha))
 					{
 					  source1 -= s_dot_s[a][b]/(mup*mup)*d_mup->T[j];
 					  source1 *= lambda * alpha * saramitoCoeff ;
@@ -1992,7 +1992,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				      
 				      if ( pd->e[eqn] & T_ADVECTION )
 					{
-					  if(lambda != 0.)
+					  if(DOUBLE_NONZERO(lambda))
 					    {
 					      advection_a = phi_j * 
 						(grad_s[p][a][b]);
@@ -2094,7 +2094,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					  source_c *= wt_func;
 					  
 					  source_a = 0.;
-					  if(alpha != 0.)
+			                  if(DOUBLE_NONZERO(alpha))
 					    {
 					      source_a = -s_dot_s[a][b]/(mup*mup);
 					      source_a *= wt_func * saramitoCoeff * alpha * lambda * d_mup_dv_pj;
@@ -2145,7 +2145,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					  source_a =   -at * d_mup->C[w][j] * ( g[a][b] +  gt[a][b]);
 					  
 					  source_b = 0.;
-					  if(alpha != 0.)
+			                  if(DOUBLE_NONZERO(alpha))
 					    {
 					      source_b -= s_dot_s[a][b]/(mup*mup);
 					      source_b *= alpha * lambda * saramitoCoeff * d_mup->C[w][j];
@@ -2184,7 +2184,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				      source_a +=  -at * d_mup->P[j] * ( g[a][b] +  gt[a][b]);
 
 				      source_b = 0.;
-				      if(alpha != 0.)
+			              if(DOUBLE_NONZERO(alpha))
 					{
 					  source_b -= ( s_dot_s[a][b]/(mup*mup));
 					  source_b *= d_mup->P[j] * alpha * lambda * saramitoCoeff;
@@ -2253,7 +2253,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				      
 				      if ( pd->e[eqn] & T_ADVECTION )
 					{
-					  if(lambda != 0.)
+					  if(DOUBLE_NONZERO(lambda))
 					    {
 					      /*
 					       * Four parts: 
@@ -2340,7 +2340,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					  source_a =  R_source;
 					  source_b = -at * (g[a][b] +  gt[a][b]);
 					  
-					  if(alpha != 0.)
+			                  if(DOUBLE_NONZERO(alpha))
 					    {
 					      source_b += -s_dot_s[a][b]/(mup*mup) * alpha * lambda * saramitoCoeff;
 					    }
@@ -2393,7 +2393,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					      advection_a   = 0.;
 					      if ( pd->e[eqn] & T_ADVECTION )
 						{
-						  if(lambda != 0.)
+						  if(DOUBLE_NONZERO(lambda))
 						    {
 						  
 						      advection -=  ucwt * (s[p][b] * (double)delta(a,q) + s[a][p] * (double)delta(b,q));
@@ -2467,7 +2467,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					  
 					  if ( pd->e[eqn] & T_ADVECTION )
 					    {
-					      if(lambda != 0.)
+					      if(DOUBLE_NONZERO(lambda))
 						{
 						  if((a == p) && (b == q))
 						    {
@@ -2511,7 +2511,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					      source_a +=  d_saramito->s[p][q] * s[a][b] * Z;
 		      			
 					      source_b  =0.;
-					      if(alpha != 0.)
+			                      if(DOUBLE_NONZERO(alpha))
 						{
 						  source_b  = alpha * lambda * saramitoCoeff * 
 						    (s[q][b] * (double)delta(a,p) + s[a][p] * (double)delta(b,q))/mup +
@@ -2862,24 +2862,29 @@ assemble_stress_log_conf(dbl tt,
 	      if ( a != b )
  	        {
                   d_lambda = eig_values[b]-eig_values[a];
-                  if (fabs(d_lambda) > 1.e-8)
+                  if (DOUBLE_NONZERO(d_lambda))  
                     {
-                      tmp1[a][b] += (log(eig_values[b]) - log(eig_values[a]))/d_lambda;
+                      double eiglog_a = log(DBL_SMALL), eiglog_b = log(DBL_SMALL);
+                      if (DOUBLE_NONZERO(eig_values[b]))
+                         { eiglog_b = fmax(eiglog_b,log(eig_values[b]));}
+                      if (DOUBLE_NONZERO(eig_values[a]))
+                         { eiglog_a = fmax(eiglog_a,log(eig_values[a]));}
+                      tmp1[a][b] += (eiglog_b - eiglog_a)/d_lambda;
                       tmp1[a][b] *= (eig_values[a]*M1[b][a] + eig_values[b]*M1[a][b]);
                     }
 		  else
 		    {
-                      tmp1[a][b] += M1[a][b] + M1[b][a];
+                      tmp1[a][b] += eig_values[b]*(M1[a][b] + M1[b][a]);
 	            }
 	        }
               if ( a == b )
                 {
                   source_term1[a][b] += Z * (1.0 - D[a][a]) /lambda;
-                  if(alpha != 0)
+		  if(DOUBLE_NONZERO(alpha))
                     {
                       source_term1[a][b] += alpha*(2.0 * D[a][a] - 1.0 - D_dot_D[a][a])/lambda;
  	            }
-                  source_term1[a][b] /= eig_values[a];
+                  source_term1[a][b] /= fmax(DBL_SMALL,eig_values[a]);
   	          source_term1[a][b] += 2.0*M1[a][a];
                 }
             }
@@ -2905,7 +2910,7 @@ assemble_stress_log_conf(dbl tt,
 			  wt_func = bf[eqn]->phi[i];
 			  
 			  //SUPG weighting, this is SUPG with s, not e^s
-			  if(supg!=0.0)
+			  if(DOUBLE_NONZERO(supg))
 			    {
 			      for(w=0; w<dim; w++)
 				{
@@ -2941,7 +2946,6 @@ assemble_stress_log_conf(dbl tt,
                               source *= pd->etm[eqn][(LOG2_SOURCE)];
                             }
                           lec->R[upd->ep[eqn]][i] += mass + advection + source;
-
 			}//i loop
 		    }//if a<=b
 		}// b loop

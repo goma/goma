@@ -294,7 +294,7 @@ PROTO((double [MDE][DIM],	/* cfunc                                     */
        double [MDE][DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_cfunc     */
        const int ,		/* id_side - ID of the side of the element   */
        const double ,		/* sigma - surface tension                   */
-       const double ,		/* pb - applied pressure                     */
+       const double[DIM] ,		/* pb - applied pressure                     */
        struct elem_side_bc_struct *, /* elem_side_bc                         */
        const int ,		/* iconnect_ptr                              */
        double [DIM][MDE]));	/* dsigma_dx                               */
