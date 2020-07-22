@@ -208,7 +208,7 @@ static void get_elem_type_info(std::string const &type, int *p_dim, Omega_h_Fami
 }
 
 void convert_to_omega_h_mesh_parallel(
-    Exo_DB *exo, Dpi *dpi, int file, double **x, Mesh *mesh, bool verbose, int classify_with) {
+    Exo_DB *exo, Dpi *dpi, double **x, Mesh *mesh, bool verbose) {
   std::vector<LO> local_to_global(exo->num_nodes);
   for (int i = 0; i < exo->num_nodes; i++) {
     local_to_global[i] = dpi->node_index_global[i];
@@ -244,7 +244,7 @@ void convert_to_omega_h_mesh_parallel(
 
   std::map<LO, LO> old_to_new;
   std::map<LO, LO> new_to_old;
-  for (int i = 0; i < old_locals.size(); i++) {
+  for (size_t i = 0; i < old_locals.size(); i++) {
     old_to_new.insert(std::pair<LO, LO>(old_locals[i], i));
     new_to_old.insert(std::pair<LO, LO>(i, old_locals[i]));
   }
@@ -252,14 +252,14 @@ void convert_to_omega_h_mesh_parallel(
   HostWrite<GO> vert_global;
   vert_global = decltype(vert_global)(GO(new_local_verts.size()), "global vertices");
 
-  for (int i = 0; i < old_locals.size(); i++) {
+  for (size_t i = 0; i < old_locals.size(); i++) {
     vert_global[i] = dpi->node_index_global[old_locals[i]];
   }
 
   HostWrite<LO> h_conn;
   h_conn = decltype(h_conn)(LO(owned_elems.size() * nnodes_per_elem), "host connectivity");
 
-  for (int i = 0; i < owned_elems.size(); i++) {
+  for (size_t i = 0; i < owned_elems.size(); i++) {
     auto e = owned_elems[i];
     for (int j = 0; j < nnodes_per_elem; j++) {
       auto old_index = exo->eb_conn[0][e * nnodes_per_elem + j];
@@ -281,7 +281,7 @@ void convert_to_omega_h_mesh_parallel(
   HostWrite<Real> h_coords(LO(new_verts.size() * dim));
   std::vector<LO> exo_from_omega;
 
-  for (size_t i = 0; i < new_verts.size(); i++) {
+  for (int i = 0; i < new_verts.size(); i++) {
     int idx = in_list(new_verts[i], 0, exo->num_nodes, dpi->node_index_global);
     assert(idx != -1);
     exo_from_omega.push_back(idx);
@@ -504,7 +504,7 @@ void convert_to_omega_h_mesh_parallel(
     std::vector<char *> name_ptrs;
     setup_names(int(dpi->num_side_sets_global), names_memory, name_ptrs);
     //    CALL(ex_get_names(file, EX_SIDE_SET, name_ptrs.data()));
-    for (size_t i = 0; i < dpi->num_side_sets_global; ++i) {
+    for (int i = 0; i < dpi->num_side_sets_global; ++i) {
       assert(exo->ss_id[i] == dpi->ss_id_global[i]);
       int nsides;
       //      CALL(ex_get_set_param(file, EX_SIDE_SET, side_set_ids[i], &nsides, &ndist_factors));
@@ -550,7 +550,7 @@ void convert_to_omega_h_mesh_parallel(
       }
       int nnodes_owned = 0;
       for (int side = 0; side < nnodes; side++) {
-        int exoindex = exo->ss_node_list[i][side];
+//        int exoindex = exo->ss_node_list[i][side];
 //        if (exo_to_global.find(exoindex) != exo_to_global.end()) {
           nnodes_owned++;
 //        }
@@ -579,7 +579,6 @@ void convert_to_omega_h_mesh_parallel(
 
       MPI_Allgather(my_owned.data(), max_nnodes, MPI_INT, all_owned.data(), max_nnodes, MPI_INT, MPI_COMM_WORLD);
       std::set<int> owned_set(all_owned.begin(), all_owned.end());
-      int count_my_nodes = 0;
       std::vector<int> my_nodes_sorted(mesh->nverts());
       for (int i = 0; i < mesh->nverts(); i++) {
         my_nodes_sorted[i] = mesh->globals(0)[i];
@@ -588,7 +587,7 @@ void convert_to_omega_h_mesh_parallel(
       std::vector<int> all_owned_set(owned_set.begin(), owned_set.end());
       std::vector<int> mark_nodes;
       mark_nodes.reserve(all_owned_set.size());
-      for (int j = 0; j < all_owned_set.size(); j++) {
+      for (size_t j = 0; j < all_owned_set.size(); j++) {
         if (all_owned_set[j] != -1 && std::binary_search(my_nodes_sorted.begin(), my_nodes_sorted.end(), all_owned_set[j])) {
           // TODO
           for (int k = 0; k < mesh->nverts(); k++) {
@@ -601,7 +600,7 @@ void convert_to_omega_h_mesh_parallel(
       }
 
       HostWrite<LO> h_set_nodes(mark_nodes.size());
-      for (int j = 0; j < mark_nodes.size(); j++) {
+      for (size_t j = 0; j < mark_nodes.size(); j++) {
         h_set_nodes[j] = mark_nodes[j];
       }
 
@@ -623,7 +622,7 @@ void convert_to_omega_h_mesh_parallel(
 
       std::vector<int> sides;
 
-      for (int j = 0; j < all_sides.size(); j++) {
+      for (size_t j = 0; j < all_sides.size(); j++) {
         for (int k = 0; k < mesh->globals(dim-1).size(); k++) {
           if (all_sides[j] == mesh->globals(dim-1)[k]) {
             sides.push_back(k);
@@ -636,7 +635,7 @@ void convert_to_omega_h_mesh_parallel(
       std::cout << "Proc" << ProcID << " has found " << sides.size() << "sides\n";
       Write<LO> set_sides2side(sides.size());
 
-      for (int j = 0; j < sides.size(); j++) {
+      for (size_t j = 0; j < sides.size(); j++) {
         set_sides2side[j] = sides[j];
       }
 
@@ -943,9 +942,11 @@ void convert_back_to_goma_exo_parallel(
   // TODO multiblock
   std::set<LO> surface_set;
   std::set<LO> node_set;
-  for (auto& [key, value]: class_sets) {
-    for (int i = 0; i < value.size(); i++) {
-      if (i < dpi->num_side_sets_global) {
+  for (auto& it : class_sets) {
+    auto key = it.first;
+    auto value = it.second;
+    for (size_t i = 0; i < value.size(); i++) {
+      if (static_cast<int>(i) < dpi->num_side_sets_global) {
         surface_set.insert(value[i].id);
       } else {
         node_set.insert(value[i].id);
@@ -989,7 +990,7 @@ void convert_back_to_goma_exo_parallel(
   for (int i = 0; i < vert_owners.size(); i++) {
     int proc = vert_owners[i];
     if (proc != ProcID) {
-      for (int j = 0; j < neighbors.size(); j++) {
+      for (size_t j = 0; j < neighbors.size(); j++) {
         if (neighbors[j] == proc) {
           neighbor_recv[j] += 1;
         }
@@ -1015,7 +1016,7 @@ void convert_back_to_goma_exo_parallel(
         neighbor_needed[i].push_back(mesh->globals(0)[j]);
       }
     }
-    assert(neighbor_needed[i].size() == neighbor_recv[i]);
+    assert(neighbor_needed[i].size() == static_cast<size_t>(neighbor_recv[i]));
     requests.emplace_back();
     if (verbose) {
       std::cout << "Proc " << ProcID << " send proc " << proc << " count "
@@ -1028,7 +1029,7 @@ void convert_back_to_goma_exo_parallel(
   std::vector<int> neighbor_send_id;
   int nindex = 0;
   int req_index = requests.size();
-  for (int i = 0; i < allneighbors.size(); i++) {
+  for (size_t i = 0; i < allneighbors.size(); i++) {
     if (allneighbors[i] == ProcID) {
       int proc = i / max_neighbors;
       neighbor_send.emplace_back();
@@ -1164,7 +1165,7 @@ void convert_back_to_goma_exo_parallel(
   for (Int i = 0; i < dim; ++i)
     coord_blk[i] = Write<Real>(new_nodes_v.size());
   auto coords = mesh->coords();
-  for (int i = 0; i < new_nodes_v.size(); i++) {
+  for (size_t i = 0; i < new_nodes_v.size(); i++) {
     auto local_node = new_nodes_v[i];
     for (Int j = 0; j < dim; ++j) {
       coord_blk[j][i] = coords[local_node * dim + j];
@@ -1472,7 +1473,7 @@ void convert_back_to_goma_exo_parallel(
 
   wr_dpi(dpi, ExoFileOut);
   dpi->exodus_to_omega_h_node = (int *)malloc(sizeof(int) * global_node.size());
-  for (int i = 0; i < old_to_new_node_map.size(); i++) {
+  for (size_t i = 0; i < old_to_new_node_map.size(); i++) {
     if (old_to_new_node_map[i] != -1) {
       dpi->exodus_to_omega_h_node[old_to_new_node_map[i]] = i;
     }
@@ -1493,7 +1494,7 @@ void convert_back_to_goma_exo_parallel(
   end_code();
 }
 void convert_back_to_goma_exo(
-    const char *path, Mesh *mesh, Exo_DB *exo, Dpi *dpi, bool verbose, int classify_with) {
+    const char *path, Mesh *mesh, Exo_DB *exo, Dpi *dpi, int classify_with) {
 
   //  Omega_h::exodus::write(std::to_string(ProcID) + "tmp.e", mesh, true, classify_with);
   Omega_h::exodus::write("tmp.e", mesh, true, classify_with);
@@ -1676,7 +1677,7 @@ void adapt_mesh(Omega_h::Mesh &mesh) {
 
 extern "C" {
 
-void copy_solution(Exo_DB *exo, Dpi *dpi, double **x, Omega_h::Mesh &mesh) {
+void copy_solution(Dpi *dpi, double **x, Omega_h::Mesh &mesh) {
   for (int j = V_FIRST; j < V_LAST; j++) {
     int imtrx = upd->matrix_index[j];
     if (imtrx >= 0) {
@@ -1746,10 +1747,7 @@ void adapt_mesh_omega_h(struct Aztec_Linear_Solver_System **ams,
   verbose = true;
 #endif
   Omega_h::Mesh mesh(&lib);
-
-  auto exodus_file = 0; // Omega_h::exodus::open("cup.g", verbose);
-  Omega_h::exodus::convert_to_omega_h_mesh_parallel(exo, dpi, exodus_file, x, &mesh, verbose,
-                                                    classify_with);
+  Omega_h::exodus::convert_to_omega_h_mesh_parallel(exo, dpi, x, &mesh, verbose);
   //  if (lib.world()->size() > 1) {
   //  } else {
   //    Omega_h::exodus::convert_to_omega_h_mesh(exo, dpi, exodus_file, &mesh, verbose,
@@ -1839,7 +1837,7 @@ void adapt_mesh_omega_h(struct Aztec_Linear_Solver_System **ams,
     Omega_h::exodus::convert_back_to_goma_exo_parallel(ss2.str().c_str(), &mesh, exo, dpi, verbose,
                                                        classify_with);
   } else {
-    Omega_h::exodus::convert_back_to_goma_exo(ss2.str().c_str(), &mesh, exo, dpi, verbose,
+    Omega_h::exodus::convert_back_to_goma_exo(ss2.str().c_str(), &mesh, exo, dpi,
                                               classify_with);
   }
 
@@ -1873,7 +1871,7 @@ void adapt_mesh_omega_h(struct Aztec_Linear_Solver_System **ams,
                   dpi->num_internal_nodes + dpi->num_boundary_nodes + dpi->num_external_nodes, 0);
   }
   resetup_matrix(ams, exo, dpi);
-  copy_solution(exo, dpi, x, mesh);
+  copy_solution(dpi, x, mesh);
   step++;
 }
 
