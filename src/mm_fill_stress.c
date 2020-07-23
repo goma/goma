@@ -1684,7 +1684,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 
       if(saramitoEnabled == TRUE)
 	{
-	  saramitoCoeff = compute_saramito_model_terms(s, ve[mode]->gn->tau_y, d_saramito);
+	  saramitoCoeff = compute_saramito_model_terms(s, ve[mode]->gn->tau_y, ve[mode]->gn->fexp, d_saramito);
 	}
       else
 	{
@@ -6134,6 +6134,7 @@ compute_d_exp_s_ds(dbl s[DIM][DIM],                   //s - stress
 dbl
 compute_saramito_model_terms(dbl stress[DIM][DIM],
 			     dbl yieldStress,
+				 dbl yieldExpon,
 			     SARAMITO_DEPENDENCE_STRUCT* d_sCoeff)
 {
   /* start by computing the norm of the deviatoric stress,  sqrt(J_2), 
@@ -6159,14 +6160,27 @@ compute_saramito_model_terms(dbl stress[DIM][DIM],
 
   const dbl normOfStressD = sqrt(normOfStressDSqr);
 
-  dbl sCoeff = fmax(0, (normOfStressD - yieldStress)/(normOfStressD));
+  const dbl sc = 1. - yieldStress/normOfStressD;
+
+  dbl sCoeff;
+  dbl expYSC=1;
+  if(yieldExpon > 0){
+	  expYSC = exp(yieldExpon*sc);
+	  sCoeff = log( 1. + expYSC )/(yieldExpon);
+  }
+  else{
+	  sCoeff = fmax(0, sc);
+  }
 
   // take care of indeterminate behavior for normOfStressD == 0
-  if(normOfStressD == 0){ sCoeff = 0; }
+  if(normOfStressD == 0){ 
+	  if(yieldStress <= 0){sCoeff = 1;}
+	  else                {sCoeff = 0;} 
+	}
 
   if (d_sCoeff != NULL) {
     // if normStress_d < yieldStress, set sensitivities to zero and return 
-    if( (sCoeff) == 0 ){
+    if( (sCoeff) == 0 || yieldStress <= 0){
       for(int i=0; i<VIM; i++){
         for(int j=0; j<VIM; j++){
           d_sCoeff->s[i][j] = 0.;
@@ -6174,28 +6188,33 @@ compute_saramito_model_terms(dbl stress[DIM][DIM],
       }
 
       d_sCoeff->tau_y = 0.;
+  }
+  else{
+    // otherwise, sensitivities need to be calculated
+	d_sCoeff->tau_y = -1./(normOfStressD);
+	dbl d_sCoeff_d_normOfStressD = yieldStress/(normOfStressDSqr);
+	if(yieldExpon > 0){
+		const dbl expYSCDerivativeTerm = expYSC/(1+expYSC);
+		d_sCoeff->tau_y          *= expYSCDerivativeTerm;
+		d_sCoeff_d_normOfStressD *= expYSCDerivativeTerm;
+	}
+    // first assign elements values of d(normOfStressDSqr)/d(stress);
+    d_sCoeff->s[0][0] = 2.*invDenom*( stress[0][0] - stress[1][1]);
+    d_sCoeff->s[0][1] = 2.*stress[0][1];
+    d_sCoeff->s[1][0] = d_sCoeff->s[0][1];
+    d_sCoeff->s[1][1] = -d_sCoeff->s[0][0];
+
+    if(VIM>2){
+      d_sCoeff->s[0][0] += 2.*invDenom*( stress[0][0] - stress[2][2]);
+	    d_sCoeff->s[0][1] += 4.*invDenom*stress[0][1];
+	    d_sCoeff->s[1][0] += 4.*invDenom*stress[1][0];
+      d_sCoeff->s[1][1] += 2.*invDenom*(stress[1][1] - stress[2][2]);
+      d_sCoeff->s[0][2] = 2.*stress[0][2];
+	    d_sCoeff->s[2][0] = d_sCoeff->s[0][2];
+      d_sCoeff->s[1][2] = 2.*stress[1][2];
+	    d_sCoeff->s[2][1] = d_sCoeff->s[1][2];
+      d_sCoeff->s[2][2] = 2.*invDenom*( 2*stress[2][2] - stress[0][0] - stress[1][1]);
     }
-    else{
-      // otherwise, sensitivities need to be calculated
-      d_sCoeff->tau_y = -1./(normOfStressD);
-
-      dbl d_sCoeff_d_normOfStressD = yieldStress/(normOfStressDSqr);
-
-      // first assign elements values of d(normOfStressDSqr)/d(stress);
-      d_sCoeff->s[0][0] = 2.*invDenom*( stress[0][0] - stress[1][1]);
-      d_sCoeff->s[0][1] = 2.*stress[0][1];
-      d_sCoeff->s[1][0] = d_sCoeff->s[0][1];
-      d_sCoeff->s[1][1] = - d_sCoeff->s[0][0];
-
-      if(VIM>2){
-        d_sCoeff->s[0][0] += 2.*invDenom*( stress[0][0] - stress[2][2]);
-        d_sCoeff->s[1][1] += 2.*invDenom*( stress[1][1] - stress[2][2]);
-        // no change for d_sCoeff_d_stress[0][1]
-        d_sCoeff->s[0][2] = 2.*stress[0][2];
-        d_sCoeff->s[0][2] = 2.*stress[1][2];
-        d_sCoeff->s[2][2] = 2.*invDenom*( 2*stress[2][2] - stress[0][0] - stress[1][1]);
-      }
-
 
       /* use the chain rule to computute sCoeff sensitivies to stress components
        * d(sCoeff)/d(stress)  =   d(sCoeff)/d(normOfStressD)
