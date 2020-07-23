@@ -6165,8 +6165,8 @@ compute_saramito_model_terms(dbl stress[DIM][DIM],
   dbl sCoeff;
   dbl expYSC=1;
   if(yieldExpon > 0){
-	  expYSC = exp(yieldExpon*sc);
-	  sCoeff = log( 1. + expYSC )/(yieldExpon);
+	  expYSC = exp(sc/yieldExpon);
+	  sCoeff = log( 1. + expYSC )*yieldExpon;
   }
   else{
 	  sCoeff = fmax(0, sc);
