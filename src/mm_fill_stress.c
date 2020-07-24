@@ -6206,13 +6206,13 @@ compute_saramito_model_terms(dbl stress[DIM][DIM],
 
     if(VIM>2){
       d_sCoeff->s[0][0] += 2.*invDenom*( stress[0][0] - stress[2][2]);
-	    d_sCoeff->s[0][1] += 4.*invDenom*stress[0][1];
-	    d_sCoeff->s[1][0] += 4.*invDenom*stress[1][0];
+	  d_sCoeff->s[0][1] += 4.*invDenom*stress[0][1];
+	  d_sCoeff->s[1][0] += 4.*invDenom*stress[1][0];
       d_sCoeff->s[1][1] += 2.*invDenom*(stress[1][1] - stress[2][2]);
       d_sCoeff->s[0][2] = 2.*stress[0][2];
-	    d_sCoeff->s[2][0] = d_sCoeff->s[0][2];
+	  d_sCoeff->s[2][0] = d_sCoeff->s[0][2];
       d_sCoeff->s[1][2] = 2.*stress[1][2];
-	    d_sCoeff->s[2][1] = d_sCoeff->s[1][2];
+	  d_sCoeff->s[2][1] = d_sCoeff->s[1][2];
       d_sCoeff->s[2][2] = 2.*invDenom*( 2*stress[2][2] - stress[0][0] - stress[1][1]);
     }
 
