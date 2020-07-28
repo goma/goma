@@ -1293,8 +1293,8 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 				    resid_vector, x_old, x_older,
 				    xdot, xdot_old, x_update,
 				    &converged, &nprint, tnv,
-				    tnv_post, rd, gindex, p_gsize,
-				    gvec, time1, exo, dpi);
+                                    tnv_post,tev,tev_post, rd, gindex, p_gsize,
+                                    gvec,gvec_elem, time1, exo, dpi);
       EH(err, "Problem from solve_stability_problem.");
     }
     

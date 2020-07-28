@@ -74,10 +74,13 @@ eggrollwrap(int *istuff,	/* info for eigenvalue extraction */
 	    int *nprint,	/* counter for time step number */
 	    int tnv,		/* number of nodal results */
 	    int tnv_post,	/* number of post processing results */
+            int tev,            /* Number of elements variable results */
+            int tev_post,       /* Number of post processing results */
 	    struct Results_Description *rd,
 	    int *gindex,
 	    int *p_gsize,
 	    dbl	*gvec,
+            dbl	***gvec_elem,            /* gvec_elem*/
 	    dbl time_value,
 	    Exo_DB *exo,	/* ptr to finite element mesh db */
 	    int Num_Proc,	/* number of processors used */
@@ -95,6 +98,7 @@ eggrollwrap(int *istuff,	/* info for eigenvalue extraction */
     /*    read_form, soln_tech, push_mode, */
     push_mode, 
     init_shft, recycle;
+  int step=0;
   dbl
     stol, ivector,
     dwork[20]; 
@@ -318,7 +322,7 @@ eggrollwrap(int *istuff,	/* info for eigenvalue extraction */
 	  one_base(exo);
 	  wr_mesh_exo(exo, ExoFileOut, 0);
 	  zero_base(exo);
-	  wr_result_prelim_exo(rd, exo, ExoFileOut, NULL);
+          wr_result_prelim_exo(rd, exo, ExoFileOut, gvec_elem);
 	  /* Update exo file for distributed problem info 
 	   */
 	  if (Num_Proc > 1) {
@@ -330,6 +334,35 @@ eggrollwrap(int *istuff,	/* info for eigenvalue extraction */
 	    wr_nodal_result_exo(exo, ExoFileOut, gvec, j+1, 1, 
 				time_value);
 	  }
+          /* Now element quantities */
+          for(int iev = 0; iev < tev; iev++) {
+            bool is_P1 = FALSE;
+            int dof = 0;
+            for (int mn = 0; mn < upd->Num_Mat; mn++) {
+            if(pd_glob[mn]->i[rd->evtype[iev]]==I_P1)
+            {
+              dof = MAX(getdofs(type2shape(exo->eb_elem_itype[mn]),I_P1),dof);
+              is_P1 = TRUE;
+            }
+            }
+            if(is_P1){
+              for(int k =0;k<dof;k++)
+              {
+                extract_elem_vec(&evect[i][0], iev, rd->evtype[iev], gvec_elem, exo,k);
+                step = (*nprint)+1;
+                wr_elem_result_exo(exo, ExoFileOut, gvec_elem, iev, step,
+                                   time_value, rd);
+                iev++;
+              }
+
+            }
+            else{
+            extract_elem_vec(&evect[i][0], iev, rd->evtype[iev], gvec_elem, exo,0);
+            step = (*nprint)+1;
+            wr_elem_result_exo(exo, ExoFileOut, gvec_elem, iev, step,
+                               time_value, rd);
+            }
+          }
 
 	  /*
 	   *  Add additional user-specified post processing variables 

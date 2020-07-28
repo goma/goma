@@ -81,10 +81,13 @@ solve_stability_problem(struct Aztec_Linear_Solver_System *ams,
 			int *nprint,			/* Counter for time step number */
 			int tnv,			/* Number of nodal results */
 			int tnv_post,			/* Number of post processing results */
+                        int tev,                        /* Number of element results */
+                        int tev_post,                   /* Number of post processing results element variables. */
 			struct Results_Description  *rd,
 			int *gindex,
 			int *p_gsize,
 			double *gvec,
+                        double	***gvec_elem,
 			double time_value,
 			Exo_DB *exo,			/* Ptr to finite element mesh db */
 			Dpi *dpi)			/* Ptr to distributed processing info */
@@ -109,14 +112,14 @@ solve_stability_problem(struct Aztec_Linear_Solver_System *ams,
     res = solve_full_stability_problem(ams, x, delta_t, theta, resid_vector, 
 				       x_old, x_older, xdot, xdot_old,
 				       x_update, converged, nprint, tnv,
-				       tnv_post, rd, gindex, p_gsize, gvec,
+                                       tnv_post,tev,tev_post, rd, gindex, p_gsize, gvec,gvec_elem,
 				       time_value, exo, dpi);
   else
     res = solve_3D_of_2D_stability_problem(ams, x, delta_t, theta,
 					   resid_vector, x_old, x_older,
 					   xdot, xdot_old, x_update,
-					   converged, nprint, tnv, tnv_post,
-					   rd, gindex, p_gsize, gvec,
+                                           converged, nprint, tnv, tnv_post, tev,tev_post,
+                                           rd, gindex, p_gsize, gvec,gvec_elem,
 					   time_value, exo, dpi);
   return(res);
 }/* END of routine solve_stability_problem */
@@ -142,10 +145,13 @@ solve_full_stability_problem(struct Aztec_Linear_Solver_System *ams,
 			     int *nprint, /* Counter for time step number */
 			     int tnv, /* Number of nodal results */
 			     int tnv_post, /* Number of post processing results */
+                             int tev, /* Number of element variable results */
+                             int tev_post, /* Number of post processing element results */
 			     struct Results_Description  *rd,
 			     int *gindex,
 			     int *p_gsize,
 			     double *gvec,
+                             double	***gvec_elem,
 			     double time_value,
 			     Exo_DB *exo, /* Ptr to finite element mesh db */
 			     Dpi *dpi) /* Ptr to distributed processing info */
@@ -359,7 +365,7 @@ solve_full_stability_problem(struct Aztec_Linear_Solver_System *ams,
       eggrollwrap(istuff, dstuff, ija, jacobian_matrix, mass_matrix,
 		  x, ExoFileOut, ProblemType, delta_t,  theta, x_old, 
 		  xdot, xdot_old, resid_vector, converged, nprint, tnv, 
-		  tnv_post, rd, gindex, p_gsize, gvec, 
+                  tnv_post, tev,tev_post, rd, gindex, p_gsize, gvec, gvec_elem,
 		  time_value, exo, Num_Proc, dpi);
     }
       
@@ -396,12 +402,15 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
 				 double x_update[], /* */
 				 int *converged, /* Whether the Newton has converged */
 				 int *nprint, /* Counter for time step number */
-				 int tnv, /* Number of nodal results */
-				 int tnv_post, /* Number of post processing results */
+                                 int tev, /* Number of element results */
+                                 int tev_post, /* Number of element post processing results */
+                                 int tnv, /* Number of nodal results */
+                                 int tnv_post, /* Number of post processing results */
 				 struct Results_Description  *rd,
 				 int *gindex,
 				 int *p_gsize,
 				 double *gvec,
+                                 double ***gvec_elem,
 				 double time_value,
 				 Exo_DB *exo, /* Ptr to finite element mesh db */
 				 Dpi *dpi) /* Ptr to distributed processing info */
@@ -763,8 +772,8 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
 		      jacobian_matrix, mass_matrix, x,
 		      ExoFileOut, ProblemType, delta_t, theta,
 		      x_old, xdot, xdot_old, resid_vector,
-		      converged, nprint, tnv, tnv_post, rd, gindex,
-		      p_gsize, gvec, time_value, exo, Num_Proc, dpi); 
+                      converged, nprint, tnv, tnv_post, tev, tev_post, rd, gindex,
+                      p_gsize, gvec,gvec_elem, time_value, exo, Num_Proc, dpi);
 	}
     } /* for(wn = 0; wn < LSA_num_wave_numbers; wn++) */
       

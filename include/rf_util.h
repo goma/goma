@@ -70,6 +70,11 @@ PROTO(( double *,
         int ,                  /* 1-based */
         int ));                /* this is zero or the species number */
 
+int
+rd_exoII_ev(double *u, int varType, int mn, MATRL_PROP_STRUCT *matrl,
+            char **elem_var_names, int num_elems_block, int num_elem_vars, int exoII_id,
+            int time_step, int spec,const Exo_DB *exo);
+
 extern double time_step_control	/* rf_util.c                                 */
 PROTO((const double ,		/* delta_t_old                               */
        const double ,		/* delta_t_older                             */

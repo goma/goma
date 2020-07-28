@@ -66,10 +66,13 @@ PROTO((struct Aztec_Linear_Solver_System *,
        int *,                   /* nprint - counter for time step number */
        int ,                    /* tnv - total number nodal variables */
        int ,                    /* tnv_post - same for extra postproc vars */
+       int ,                    /* tev - total number element variables */
+       int ,                    /* tev_post - same for extra postproc element vars */
        struct Results_Description  *, /* rd - for output */
        int *,                   /* gindex */
        int *,                   /* p_gsize */
        double *,                /* gvec */
+       double	***,            /* gvec_elem*/
        double,                  /* time_value */
        Exo_DB *,                /* ptr to finite element mesh database */
        Dpi *));                 /* distributed processing information */
@@ -91,10 +94,13 @@ PROTO((struct Aztec_Linear_Solver_System *,
        int *,                   /* nprint - counter for time step number */
        int ,                    /* tnv - total number nodal variables */
        int ,                    /* tnv_post - same for extra postproc vars */
+       int ,                    /* tev - total number element variables */
+       int ,                    /* tev_post - same for extra postproc element vars */
        struct Results_Description  *, /* rd - for output */
        int *,                   /* gindex */
        int *,                   /* p_gsize */
        double *,                /* gvec */
+       double	***,            /* gvec_elem*/
        double,                  /* time_value */
        Exo_DB *,                /* ptr to finite element mesh database */
        Dpi *));                 /* distributed processing information */
@@ -116,10 +122,13 @@ PROTO((struct Aztec_Linear_Solver_System *,
        int *,                   /* nprint - counter for time step number */
        int ,                    /* tnv - total number nodal variables */
        int ,                    /* tnv_post - same for extra postproc vars */
+       int ,                    /* tev - total number element variables */
+       int ,                    /* tev_post - same for extra postproc element vars */
        struct Results_Description  *, /* rd - for output */
        int *,                   /* gindex */
        int *,                   /* p_gsize */
        double *,                /* gvec */
+       double	***,            /* gvec_elem*/
        double,                  /* time_value */
        Exo_DB *,                /* ptr to finite element mesh database */
        Dpi *));                 /* distributed processing information */

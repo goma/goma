@@ -187,10 +187,13 @@ PROTO((int *,			/* Info for eigenvalue extraction */
        int *,			/* Counter for time step number */
        int ,			/* Number of nodal results */
        int ,			/* Number of post processing results */
+       int ,			/* Number of element results */
+       int ,			/* Number of element post processing results */
        struct Results_Description *,
        int *,
        int *,
        dbl *,
+       dbl ***,
        dbl ,
        Exo_DB *,		/* Ptr to finite element mesh db */
        int ,			/* Number of processors used */
