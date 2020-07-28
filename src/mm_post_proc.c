@@ -81,6 +81,7 @@ static char rcsid[] =
 #include "mm_std_models.h"
 #include "shell_tfmp_struct.h"
 #include "shell_tfmp_util.h"
+#include "mm_fill_stress.h"
 /*
  * Global variable definitions.
  * This is the 1 place these variables are defined. If you need them
@@ -287,6 +288,8 @@ int HELICITY = -1;
 int LAMB_VECTOR = -1;
 int Q_FCN = -1;		      
 int POYNTING_VECTORS = -1;   	/* conduction flux vectors*/
+int SARAMITO_YIELD = -1;
+int STRESS_NORM = -1;
 
 int len_u_post_proc = 0;	/* size of dynamically allocated u_post_proc
 				 * actually is */
@@ -2188,6 +2191,34 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       local_post[POYNTING_VECTORS + a] = poynt[a];
       local_lumped[POYNTING_VECTORS + a] = 1.;
      }
+  }
+  
+  if(STRESS_NORM != -1)
+  {  
+    for (int mode = 0; mode < vn->modes; mode++) {
+      dbl invDenom = 1./(2.*VIM);
+          
+      // square of the deviatoric sress norm
+                                      
+      dbl normOfStressDSqr = pow(fv->S[mode][0][0] - fv->S[mode][1][1], 2)*invDenom + pow(fv->S[mode][0][1], 2);
+      if(VIM>2){
+        normOfStressDSqr += pow(fv->S[mode][0][0] - fv->S[mode][2][2], 2)*invDenom + pow(fv->S[mode][0][2], 2)
+          + pow(fv->S[mode][1][1] - fv->S[mode][2][2], 2)*invDenom + pow(fv->S[mode][1][2], 2);
+      }
+          
+      dbl normOfStressD = sqrt(normOfStressDSqr);
+      local_post[STRESS_NORM + mode] = normOfStressD;
+      local_lumped[STRESS_NORM + mode] = 1.;
+    }
+  }
+
+  if(SARAMITO_YIELD != -1)
+  {  
+    for (int mode = 0; mode < vn->modes; mode++) {
+      dbl coeff = compute_saramito_model_terms(fv->S[mode], ve[mode]->gn->tau_y, NULL);
+      local_post[SARAMITO_YIELD + mode] = coeff;
+      local_lumped[SARAMITO_YIELD + mode] = 1.;
+    }
   }
 
   /* calculate real-solid stress here !!  */
@@ -7156,6 +7187,8 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Lamb Vector", &LAMB_VECTOR);
   iread = look_for_post_proc(ifp, "Q Function", &Q_FCN);
   iread = look_for_post_proc(ifp, "Poynting Vectors", &POYNTING_VECTORS);
+  iread = look_for_post_proc(ifp, "Saramito Yield Coeff", &SARAMITO_YIELD);
+  iread = look_for_post_proc(ifp, "VE Stress Norm", &STRESS_NORM);
 
   /*
    * Initialize for surety before communication to other processors.
@@ -10092,6 +10125,50 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
   else
     {
       LOG_CONF_MAP = -1;
+    }
+
+  if (STRESS_NORM != -1 && Num_Var_In_Type[POLYMER_STRESS11])
+    {
+      STRESS_NORM = index_post;
+      int num_modes = 0;
+      for (int i = 0; i < MAX_MODES; i++) {
+        if (Num_Var_In_Type[v_s[i][0][0]]) {
+          num_modes++;
+        }
+      }
+      for (int mode = 0; mode<num_modes; mode++) {
+        sprintf(species_name, "STRESS_NORM_%d", mode);
+        sprintf(species_desc, "stress norm mode_%d", mode);
+        set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]", species_desc, FALSE);
+        index++;
+        index_post++;
+      }
+    }
+  else
+    {
+      STRESS_NORM = -1;
+    }
+
+  if (SARAMITO_YIELD != -1 && Num_Var_In_Type[POLYMER_STRESS11])
+    {
+      SARAMITO_YIELD = index_post;
+      int num_modes = 0;
+      for (int i = 0; i < MAX_MODES; i++) {
+        if (Num_Var_In_Type[v_s[i][0][0]]) {
+          num_modes++;
+        }
+      }
+      for (int mode = 0; mode<num_modes; mode++) {
+        sprintf(species_name, "SARAMITO_COEFF_%d", mode);
+        sprintf(species_desc, "saramito coeff mode_%d", mode);
+        set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]", species_desc, FALSE);
+        index++;
+        index_post++;
+      }
+    }
+  else
+    {
+      SARAMITO_YIELD = -1;
     }
 
     /*if (J_FLUX != -1)
