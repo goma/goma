@@ -858,7 +858,8 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
       else n = 1;
       err = create_eigen_outfiles(passdown.exo,
                                   passdown.dpi,
-                                  passdown.rd);
+                                  passdown.rd,
+                                  passdown.gvec_elem);
       EH(err, "Unable to open eigenvector output files!");
     }
 

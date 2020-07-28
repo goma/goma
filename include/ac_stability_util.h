@@ -43,7 +43,7 @@ EXTERN void modify_normal_vector_for_LSA_3D_of_2D
 PROTO(( void ));
 
 EXTERN int create_eigen_outfiles
-PROTO((Exo_DB *, Dpi *, RESULTS_DESCRIPTION_STRUCT *));
+PROTO((Exo_DB *, Dpi *, RESULTS_DESCRIPTION_STRUCT *, double ***));
 
 EXTERN void get_eigen_outfile_name
 PROTO((char *, int, int));

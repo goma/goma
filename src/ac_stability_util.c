@@ -981,7 +981,7 @@ modify_normal_vector_for_LSA_3D_of_2D(void)
 /*************************************************************************/
 int
 create_eigen_outfiles(Exo_DB *exo, Dpi *dpi,
-                      RESULTS_DESCRIPTION_STRUCT *rd)
+                      RESULTS_DESCRIPTION_STRUCT *rd, double ***gvec_elem)
 /*
  * Routine to open an array of MxN eigenvector output files.
  * M = specified Eigen_Record_Modes
@@ -1028,7 +1028,7 @@ create_eigen_outfiles(Exo_DB *exo, Dpi *dpi,
    and initialize with basic mesh information */
           one_base(exo);
           wr_mesh_exo(exo, fname, 0);
-          wr_result_prelim_exo(rd, exo, fname, NULL);
+          wr_result_prelim_exo(rd, exo, fname, gvec_elem);
           if (Num_Proc > 1) wr_dpi(dpi, fname, 0);
           zero_base(exo);
 
