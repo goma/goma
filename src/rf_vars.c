@@ -708,7 +708,8 @@ assign_var_name(const int varType, const int idof,
   {
     sprintf(species_name,  "%s_E%d", Var_Name[varType].name2,idof+1);
     strcpy(species_desc, Var_Name[varType].name1);
-  }else {
+  }
+  else {
     strcpy(species_name, Var_Name[varType].name2);
     strcpy(species_desc, Var_Name[varType].name1);
 

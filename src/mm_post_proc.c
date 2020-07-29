@@ -11653,14 +11653,14 @@ load_elem_tkn (struct Results_Description *rd,
                 /* Append a suffix onto the var name to differentiate from its
                  nodal counterpart */
                 for(i=1;i<=dof;i++){
-                sprintf(appended_name,  "%s_E%d", Exo_Var_Names[j].name2,i);
-                set_ev_tkud(rd, index, j, appended_name,
+                  sprintf(appended_name,  "%s_E%d", Exo_Var_Names[j].name2,i);
+                  set_ev_tkud(rd, index, j, appended_name,
                             Var_Units[j].name2, Exo_Var_Names[j].name1, FALSE);
-                index++;
+                  index++;
                 }
                 ev_var_mask[j - V_FIRST] = 1; /* Only count this variable once */
               }
-            }
+        }
       }
     }
   }

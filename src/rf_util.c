@@ -2982,7 +2982,7 @@ inject_elem_vec(double sol_vec[], const int varType, const int k,
     if (ielem_type == BIQUAD_QUAD ||
         ielem_type == TRIQUAD_HEX ||
         ielem_type == C_BILINEAR_QUAD ||
-    ielem_type == C_TRILINEAR_HEX ) {
+        ielem_type == C_TRILINEAR_HEX ) {
       for (i = 0; i < num_local_nodes; i++) {
         I     = Proc_Elem_Connect[iconnect_ptr + i];
         /* NOTE: here, the element variables (such as PRESSURE) are being
@@ -3007,7 +3007,7 @@ inject_elem_vec(double sol_vec[], const int varType, const int k,
         }
       }
     }
-    }
+   }
     else {
       int i = 0;
       I     = Proc_Elem_Connect[iconnect_ptr + i];

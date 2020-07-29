@@ -339,11 +339,11 @@ eggrollwrap(int *istuff,	/* info for eigenvalue extraction */
             bool is_P1 = FALSE;
             int dof = 0;
             for (int mn = 0; mn < upd->Num_Mat; mn++) {
-            if(pd_glob[mn]->i[rd->evtype[iev]]==I_P1)
-            {
-              dof = MAX(getdofs(type2shape(exo->eb_elem_itype[mn]),I_P1),dof);
-              is_P1 = TRUE;
-            }
+              if(pd_glob[mn]->i[rd->evtype[iev]]==I_P1)
+              {
+                dof = MAX(getdofs(type2shape(exo->eb_elem_itype[mn]),I_P1),dof);
+                is_P1 = TRUE;
+              }
             }
             if(is_P1){
               for(int k =0;k<dof;k++)
@@ -354,7 +354,6 @@ eggrollwrap(int *istuff,	/* info for eigenvalue extraction */
                                    time_value, rd);
                 iev++;
               }
-
             }
             else{
             extract_elem_vec(&evect[i][0], iev, rd->evtype[iev], gvec_elem, exo,0);

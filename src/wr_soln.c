@@ -119,11 +119,11 @@ write_solution(char output_file[], /* name EXODUS II file */
     bool is_P1 = FALSE;
     int dof = 0;
     for (int mn = 0; mn < upd->Num_Mat; mn++) {
-    if(pd_glob[mn]->i[rd->evtype[i]]==I_P1)
-    {
-      dof = MAX(getdofs(type2shape(exo->eb_elem_itype[mn]),I_P1),dof);
-      is_P1 = TRUE;
-    }
+      if(pd_glob[mn]->i[rd->evtype[i]]==I_P1)
+      {
+        dof = MAX(getdofs(type2shape(exo->eb_elem_itype[mn]),I_P1),dof);
+        is_P1 = TRUE;
+      }
     }
     if(is_P1){
       for(int k =0;k<dof;k++)
@@ -134,7 +134,6 @@ write_solution(char output_file[], /* name EXODUS II file */
                            time_value, rd);
         i++;
       }
-
     }
     else{
     extract_elem_vec(x, i, rd->evtype[i], gvec_elem, exo,0);

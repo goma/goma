@@ -643,12 +643,12 @@ wr_result_prelim_exo(struct Results_Description *rd,
       error = ex_put_variable_param(exo->exoid, EX_ELEM_BLOCK, num_vars);
       EH(error, "ex_put_variable_param elem block");
       for ( i=0; i<rd->nev; i++)
-	{
+      {
 	  var_names[i] = rd->evname[i];
 #ifdef DEBUG
 	  printf("%s: elem var_name[%d] = %s\n", yo, i, var_names[i]);
 #endif
-	}
+      }
 #ifdef DEBUG
       printf("%s: varnames loaded\n", yo);
 #endif
