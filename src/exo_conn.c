@@ -1156,7 +1156,7 @@ sides2nodes(const int face,	/* assume face number 0,1,...,num_faces-1 */
 	  break;
 
 	default:
-	  EH(GOMA_ERROR, "Bad face for TETRAHEDRON.");
+	  EH(GOMA_ERROR, "Bad face for TETRAHEDRON. face %d", face);
 	  break;
 	}
       break;

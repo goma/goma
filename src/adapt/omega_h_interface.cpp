@@ -516,7 +516,7 @@ void convert_to_omega_h_mesh_parallel(
       std::set<int> ss_side_nodes;
       std::set<int> ss_side_nodes_global;
       for (int es = 0; es < exo->ss_num_sides[i]; es++) {
-        for (int q = exo->ss_elem_index[i]; q < exo->ss_elem_index[i+1]; q++) {
+        for (int q = exo->ss_elem_index[i]; q < (exo->ss_elem_index[i]+exo->ss_num_sides[i]); q++) {
           int elem = exo->ss_elem_list[q];
           int side = exo->ss_side_list[q];
           int num_nodes = build_side_node_list(elem, side-1, exo, snl);
