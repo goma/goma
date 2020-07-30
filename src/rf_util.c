@@ -2690,7 +2690,7 @@ int rd_exoII_ev(double *u,
     error = ex_get_var(exoII_id, time_step, EX_ELEM_BLOCK, vdex, mn + 1, num_elems_block, variable);
     EH(error, "ex_get_var element");
     inject_elem_vec(u, varType, 0, spec, mn, variable, exo, num_elems_block);
-    safer_free((void **) &variable);
+    safer_free((void **)&variable);
   }
   return status;
 } /* END of routine rd_exoII_util */
