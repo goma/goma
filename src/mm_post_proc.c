@@ -11626,25 +11626,40 @@ load_elem_tkn (struct Results_Description *rd,
   for (i = 0; i < upd->Num_Mat; i++) {
     for ( j = V_FIRST; j < V_LAST; j++) {
       if ( pd_glob[i]->v[j] != V_NOTHING ) {
-	if ( FALSE && pd_glob[i]->i[j] == I_P0 ) {
-	  if ( Num_Var_In_Type[j] > 1 ) {
-	    fprintf(stderr,
+        if (pd_glob[i]->i[j] == I_P0) {
+          if (Num_Var_In_Type[j] > 1) {
+            fprintf(stderr,
 		    "%s: Too many components in variable type (%s - %s) for element variable\n",
 		    yo,
 		    Exo_Var_Names[j].name2,
 		    Exo_Var_Names[j].name1 );
 	    exit (-1);
-	  }
-	  if (ev_var_mask[j - V_FIRST] == 0) {
+          }
+          if (ev_var_mask[j - V_FIRST] == 0) {
 	    /* We just found a candidate for an element variable */
 	    /* Append a suffix onto the var name to differentiate from its
 	     nodal counterpart */
-	    sprintf(appended_name,  "%s_E", Exo_Var_Names[j].name2 );
-	    set_ev_tkud(rd, index, j, appended_name,
-			Var_Units[j].name2, Exo_Var_Names[j].name1, FALSE);
-	    index++;
-	    ev_var_mask[j - V_FIRST] = 1; /* Only count this variable once */
+            sprintf(appended_name, "%s_E", Exo_Var_Names[j].name2);
+            set_ev_tkud(rd, index, j, appended_name, Var_Units[j].name2, Exo_Var_Names[j].name1,
+                        FALSE);
+            index++;
+            ev_var_mask[j - V_FIRST] = 1; /* Only count this variable once */
 	  }
+        }
+        if (pd_glob[i]->i[j] == I_P1) {
+          int dof = getdofs(type2shape(exo->eb_elem_itype[i]), I_P1);
+          if (ev_var_mask[j - V_FIRST] == 0) {
+            /* We just found a candidate for an element variable */
+            /* Append a suffix onto the var name to differentiate from its
+             nodal counterpart */
+            for (i = 1; i <= dof; i++) {
+              sprintf(appended_name, "%s_E%d", Exo_Var_Names[j].name2, i);
+              set_ev_tkud(rd, index, j, appended_name, Var_Units[j].name2, Exo_Var_Names[j].name1,
+                          FALSE);
+              index++;
+            }
+            ev_var_mask[j - V_FIRST] = 1; /* Only count this variable once */
+          }
         }
       }
     }
