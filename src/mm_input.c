@@ -768,8 +768,16 @@ rd_file_specs(FILE *ifp,
   foundBrkFile = look_for_optional(ifp,"Brk file",input,'=');
 
   if ( foundBrkFile == 1 && Brk_Flag != 1 ) {
-    Brk_Flag = 1;
-    SPF(echo_string, eoformat, "Brk file"); ECHO(echo_string, echo_file);
+    (void) read_string(ifp,input,'\n');
+    strip(input);
+    if (strcasecmp(input, "YES") == 0 || strcasecmp(input, "ON") == 0) {
+      Brk_Flag = 1;
+    } else if (strcasecmp(input, "NO") || strcasecmp(input, "OFF") == 0) {
+      Brk_Flag = 0;
+    } else {
+      EH(GOMA_ERROR, "Unexpected input for Brk_Flag: %s, expected (YES/NO) or (ON/OFF)", input);
+    }
+    SPF(echo_string, eoformat, "Brk file", input); ECHO(echo_string, echo_file);
   }
 
   /*

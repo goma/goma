@@ -91,9 +91,6 @@ static void build_node_recv_indeces /* dp_map_comm_vec.c */
 (Exo_DB *,		/* exo */
        Dpi *);			/* dpi */
 
-static void
-build_fill_node_recv_indeces(int *, Exo_DB *, Dpi *);
-
 /*********************************************************************************/
 /*********************************************************************************/
 /*********************************************************************************/
@@ -350,7 +347,7 @@ setup_dof_comm_map(Exo_DB *exo, Dpi *dpi, Comm_Ex **cx)
      * from owned nodes to ghost nodes.
      *****************************************************************************/
 {
-  int i, p, where, owner, index_owner, dofs_i_want, local_node_number;
+  int i, p, owner, index_owner, dofs_i_want, local_node_number;
   int imtrx;
   int index, base;
 
@@ -466,7 +463,7 @@ build_node_recv_indeces(Exo_DB *exo, Dpi *dpi)
      * structures are pointed into this list.
      ********************************************************************/
 {
-  int i, local_node_number, index_owner, owner,  where, prev_owner, num_owner_changes;
+  int i, local_node_number, index_owner, owner,  prev_owner, num_owner_changes;
   NODE_INFO_STRUCT *node_ptr;
 
   ptr_node_recv = alloc_int_1(dpi->num_neighbors+1, 0);
