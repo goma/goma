@@ -537,15 +537,7 @@ build_big_bones(Exo_DB *p,	/* EXODUS info from representative polylith */
    * the Dpi...
    */
 
-  if ( m->num_elem_vars > 0 )
-    {
-      m->elem_var_tab = (int *) smalloc(m->num_elem_vars *
-					m->num_elem_blocks * si);
-      for ( i=0; i<(m->num_elem_vars*m->num_elem_blocks); i++)
-	{
-	  m->elem_var_tab[i] = d->elem_var_tab_global[i];
-	}
-    }
+  m->elem_var_tab=NULL;
 
   m->state |= EXODB_STATE_MESH;
   m->state |= EXODB_STATE_RES0;
@@ -1097,9 +1089,9 @@ build_global_res(Exo_DB *p,	/* EXODUS info from representative polylith */
 		  index        = b * p->num_elem_vars + v;
 		  index_global = b_global * p->num_elem_vars + v;
 
-		  if ( p->elem_var_tab[index] != 0 )
+                  if (  p->elem_var_tab[index] != 0 )
 		    {
-		      if ( m->elem_var_tab[index_global] == 0 )
+                      if ( m->elem_var_tab!=NULL && m->elem_var_tab[index_global] == 0 )
 			{
 			  sr = sprintf(err_msg, 
 				       "Inconsistency in element variable truth tables EBID %d",

@@ -1185,7 +1185,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 		    {
 		      index = j * x->num_elem_vars + k;
 
-		      if ( x->elem_var_tab[index] != 0 )
+                      if (x->elem_var_tab!=NULL && x->elem_var_tab[index] != 0 )
 			{
 			  status = ex_get_var(x->exoid, time_index, EX_ELEM_BLOCK,
 					      k+1,
@@ -1975,7 +1975,7 @@ free_exo_ev(Exo_DB *x)
 	  for ( k=0; k<x->num_elem_vars; k++)
 	    {
 	      index = j * x->num_elem_vars + k;
-	      if ( x->elem_var_tab[index] != 0 )
+              if ( x->elem_var_tab==NULL || x->elem_var_tab[index] != 0 )
 		{
 		  free(x->ev[i][index]);
 		}
@@ -2107,7 +2107,7 @@ alloc_exo_ev(Exo_DB *x,
 	  for ( k=0; k<x->num_elem_vars; k++)
 	    {
 	      index = j * x->num_elem_vars + k;
-	      if ( x->elem_var_tab[index] != 0 )
+              if ( x->elem_var_tab==NULL || x->elem_var_tab[index] != 0 )
 		{
 		  x->ev[i][index] = (dbl *) smalloc(x->eb_num_elems[j]*
 						    sizeof(dbl));

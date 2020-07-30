@@ -1555,11 +1555,14 @@ wr_resetup_exo(Exo_DB *exo,
 				     exo->num_elem_vars,
 				     exo->elem_var_names);
       EH(status, "ex_put_variable_names elem block");
+      if(exo->elem_var_tab!=NULL)
+      {
       status = ex_put_truth_table(exo->exoid, EX_ELEM_BLOCK,
 				   exo->num_elem_blocks,
 				   exo->num_elem_vars, 
 				   exo->elem_var_tab);
       EH(status, "ex_put_truth_table elem block");
+      }
     }
 
   if ( exo->num_node_vars > 0 )
@@ -1665,7 +1668,7 @@ wr_result_exo(Exo_DB *exo,
 		{
 		  index = j * exo->num_elem_vars + k;
 		  
-		  if ( exo->elem_var_tab[index] != 0 )
+                  if (exo->elem_var_tab==NULL || exo->elem_var_tab[index] != 0 )
 		    {
 		      status = ex_put_var(exo->exoid, time_index, EX_ELEM_BLOCK, k+1,
 					  exo->eb_id[j],
