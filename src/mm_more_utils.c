@@ -146,9 +146,7 @@ cnt_nodal_vars(void)
  * Revised:	
  */
 
-int 
-cnt_elem_vars(const Exo_DB *exo)
-{
+int cnt_elem_vars(const Exo_DB *exo) {
   int   i, j;
   int	tev, *ev_var_mask;
   char	*yo;
@@ -165,26 +163,26 @@ cnt_elem_vars(const Exo_DB *exo)
     for ( j = V_FIRST; j < V_LAST; j++) {
       if ( pd_glob[i]->v[j] != V_NOTHING ) {
         if (pd_glob[i]->i[j] == I_P0) {
-	  if (Num_Var_In_Type[j] > 1) {
-	    fprintf(stderr,
+          if (Num_Var_In_Type[j] > 1) {
+            fprintf(stderr,
 		    "%s: Too many components in variable type for element variable %s (%s)\n",
 		    yo,
 		    Exo_Var_Names[j].name2,
 		    Exo_Var_Names[j].name1 );
 	    exit (-1);
-	  }
-	  if (ev_var_mask[j - V_FIRST] == 0) {
+          }
+          if (ev_var_mask[j - V_FIRST] == 0) {
 	    /* We just found a candidate for an element variable */
 	    tev += Num_Var_In_Type[j];
 	    ev_var_mask[j - V_FIRST] = 1; /* Only count this variable once */
 	  }
         }
-        if (pd_glob[i]->i[j] == I_P1 ) {
-	  if (ev_var_mask[j - V_FIRST] == 0) {
-	    /* We just found a candidate for an element variable */
-            tev += getdofs(type2shape(exo->eb_elem_itype[i]),I_P1);
+        if (pd_glob[i]->i[j] == I_P1) {
+          if (ev_var_mask[j - V_FIRST] == 0) {
+            /* We just found a candidate for an element variable */
+            tev += getdofs(type2shape(exo->eb_elem_itype[i]), I_P1);
             ev_var_mask[j - V_FIRST] = 1; /* Only count this variable once */
-	  }
+          }
         }
       }
     }
@@ -907,28 +905,27 @@ extract_nodal_eb_vec(double sol_vec[], int var_no, int ktype, int matIndex,
 /********************************************************************************/
 /********************************************************************************/
 
-void 
-extract_elem_vec(const double sol_vec[],
-                 const int    ev_indx,
-                 const int    var_no,
-                 double ***gvec_elem,
-                 const Exo_DB *exo,
-                 const int dof)
-     
-  /***************************************************
-   *
-   * This function puts the element values of the selected variable
-   * into a global solution vector which contains all the elements,
-   *
-   * Now this is set up to be at least compatible w/ parallel computing.
-   * We actually load the nodal vector for the current processor only.
-   *
-   *
-   * Written by: Randy Lober  13 August 1998
-   *
-   * Revised: 
-   *
-   ***************************************************/
+void extract_elem_vec(const double sol_vec[],
+                      const int ev_indx,
+                      const int var_no,
+                      double ***gvec_elem,
+                      const Exo_DB *exo,
+                      const int dof)
+
+/***************************************************
+ *
+ * This function puts the element values of the selected variable
+ * into a global solution vector which contains all the elements,
+ *
+ * Now this is set up to be at least compatible w/ parallel computing.
+ * We actually load the nodal vector for the current processor only.
+ *
+ *
+ * Written by: Randy Lober  13 August 1998
+ *
+ * Revised:
+ *
+ ***************************************************/
 {
   int eb_index;
   int mn, e_start, e_end, ielem, ielem_type, num_local_nodes;
@@ -988,8 +985,8 @@ extract_elem_vec(const double sol_vec[],
 	     per element, or we have a problem treating it as an element
 	     variable. Hence the found_quantity check.                       */
           index = Index_Solution(I, var, ktype, dof, mn);
-	  if (index != -1) {
-	    /* This should be the one node that has our value - set the element
+          if (index != -1) {
+            /* This should be the one node that has our value - set the element
 	       value to this */
 	    gvec_elem[eb_index][ev_indx][ielem - e_start] = sol_vec[index];
 	    if (found_quantity == TRUE) {
@@ -1000,12 +997,11 @@ extract_elem_vec(const double sol_vec[],
 	      exit (-1);
 	    }
 	    found_quantity = TRUE;
-	  }
-	}
-      }
-      else{
+          }
+        }
+      } else {
         int i = 0;
-        I     = Proc_Elem_Connect[iconnect_ptr + i];
+        I = Proc_Elem_Connect[iconnect_ptr + i];
         /* NOTE: here, the element variables (such as PRESSURE) are being
            extracted from the solution vector coming off of the hanging
            interior nodes, or a given specified node for such a quantity.
@@ -1019,14 +1015,13 @@ extract_elem_vec(const double sol_vec[],
           gvec_elem[eb_index][ev_indx][ielem - e_start] = sol_vec[index];
           if (found_quantity == TRUE) {
             fprintf(stderr,
-                    "Warning: Too many nodes returning quantities for element variable %s (%s) - may not be accurate\n",
-                    Exo_Var_Names[var].name2,
-                    Exo_Var_Names[var].name1 );
-            exit (-1);
+                    "Warning: Too many nodes returning quantities for element variable %s (%s) - "
+                    "may not be accurate\n",
+                    Exo_Var_Names[var].name2, Exo_Var_Names[var].name1);
+            exit(-1);
           }
           found_quantity = TRUE;
         }
-
       }
       if (found_quantity == FALSE) {
 	gvec_elem[eb_index][ev_indx][ielem - e_start] = 0.;   

@@ -979,9 +979,10 @@ modify_normal_vector_for_LSA_3D_of_2D(void)
 /*************************************************************************/
 /*************************************************************************/
 /*************************************************************************/
-int
-create_eigen_outfiles(Exo_DB *exo, Dpi *dpi,
-                      RESULTS_DESCRIPTION_STRUCT *rd, double ***gvec_elem)
+int create_eigen_outfiles(Exo_DB *exo,
+                          Dpi *dpi,
+                          RESULTS_DESCRIPTION_STRUCT *rd,
+                          double ***gvec_elem)
 /*
  * Routine to open an array of MxN eigenvector output files.
  * M = specified Eigen_Record_Modes

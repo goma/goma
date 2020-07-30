@@ -108,16 +108,14 @@ PROTO((double [],		/* sol_vec - full dof vector for this proc   */
        const int ,              /* matID - material index to scatter to      */
        const double []));	/* nodal_vec - condensed node based vector   */
 
-static void inject_elem_vec
-(double [],		/* sol_vec - full dof vector for this proc   */
-       const int ,		/* var_no - VELOCITY1, etc.                  */
-       const int ,		/* k - species index                         */
-       const int ,              /* idof - dof #                              */
-       const int ,              /* matID - material index to scatter to      */
-       const double [],	        /* nodal_vec - condensed node based vector   */
-       const Exo_DB *exo,       /* exodus database */
-       const int num_elems_blk); /* number of elements in the block. */
-
+static void inject_elem_vec(double[],          /* sol_vec - full dof vector for this proc   */
+                            const int,         /* var_no - VELOCITY1, etc.                  */
+                            const int,         /* k - species index                         */
+                            const int,         /* idof - dof #                              */
+                            const int,         /* matID - material index to scatter to      */
+                            const double[],    /* nodal_vec - condensed node based vector   */
+                            const Exo_DB *exo, /* exodus database */
+                            const int num_elems_blk); /* number of elements in the block. */
 
 static void init_structural_shell_coord
 PROTO((double []));             /* u[] - solution vector */
@@ -1437,7 +1435,7 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
     DPRINTF(stdout,
 	    "\nInitial guess read from \"%s\" ...(last soln in file)\n",
 	    ExoFile);
-    err = rd_vectors_from_exoII(u, ExoFile, 0, 0, INT_MAX, timeValueRead,exo);
+    err = rd_vectors_from_exoII(u, ExoFile, 0, 0, INT_MAX, timeValueRead, exo);
     if (err != 0) {
       DPRINTF(stderr, "%s: err fr rd_vectors_from_exoII()\n", yo);
       exit(-1);
@@ -1485,7 +1483,7 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
       DPRINTF(stdout, "\nInitial guess read from \"%s\" ...(last soln in file)\n",
 	      ExoAuxFile);
     }
-    err = rd_vectors_from_exoII(u, ExoAuxFile, 0, 0, ExoTimePlane, timeValueRead,exo);
+    err = rd_vectors_from_exoII(u, ExoAuxFile, 0, 0, ExoTimePlane, timeValueRead, exo);
     if (err != 0) {
       DPRINTF(stderr,
 	      "%s:  err fr rd_vectors_from_exoII()\n", yo);
@@ -1783,13 +1781,14 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
 	      DPRINTF(stdout,
 		      "%s:  reading fixed field \"%s\" from \"%s\" ...\n", 
 		      yo,efv->name[w], efv->file_nm[w]);
-              err = rd_vectors_from_exoII(u, efv->file_nm[w], 1, w, INT_MAX, &timeValueReadExt,exo);
-	      if ( err != 0 ) {
-		DPRINTF(stderr,
+              err =
+                  rd_vectors_from_exoII(u, efv->file_nm[w], 1, w, INT_MAX, &timeValueReadExt, exo);
+              if (err != 0) {
+                DPRINTF(stderr,
 			"%s:  err fr rd_vectors_from_exoII() while reading external fields\n",
 			yo);
-	      }
-	    }
+              }
+            }
        
 	  else if(efv->ipix[w] == 1) /*Original pixel to mesh tool */
 	    {
@@ -2200,29 +2199,32 @@ wr_soln_vec ( double u[],	/* solution vector */
 /*******************************************************************************/
 /*******************************************************************************/
 
-int
-rd_vectors_from_exoII(double u[], const char *file_nm, const int action_flag,
-		      const int variable_no, const int desired_time_step,
-                      double *timeValueRead,const Exo_DB *exo)
-    
-     /*******************************************************************
-      *
-      * rd_vectors_from_exoII:
-      *
-      * Read initial guess from exoIIv2 file
-      *
-      * in:  file_nm     = String name of the exodus file
-      *      action_flag = 0 read initial guess for problem
-      *                  = 1 read extern auxillary fixed variables 
-      *                  = 2 read element variables into elem_storage_struct
-      *	    variable_no =  Used only when action_flag = 1  
-      *                     Specifies the number of the external
-      *                     variable to be read
-      *                     (basically the card number in order)
-      *      desired_time_step = time step number to read from
-      *
-      * out:	u	        initial guess to solution vector.
-      *******************************************************************/
+int rd_vectors_from_exoII(double u[],
+                          const char *file_nm,
+                          const int action_flag,
+                          const int variable_no,
+                          const int desired_time_step,
+                          double *timeValueRead,
+                          const Exo_DB *exo)
+
+/*******************************************************************
+ *
+ * rd_vectors_from_exoII:
+ *
+ * Read initial guess from exoIIv2 file
+ *
+ * in:  file_nm     = String name of the exodus file
+ *      action_flag = 0 read initial guess for problem
+ *                  = 1 read extern auxillary fixed variables
+ *                  = 2 read element variables into elem_storage_struct
+ *	    variable_no =  Used only when action_flag = 1
+ *                     Specifies the number of the external
+ *                     variable to be read
+ *                     (basically the card number in order)
+ *      desired_time_step = time step number to read from
+ *
+ * out:	u	        initial guess to solution vector.
+ *******************************************************************/
 {
   int i, error, vdex,  num_dim, num_nodes, mn, icount;
   int num_elem, num_elem_blk, num_node_sets, num_side_sets, time_step;
@@ -2234,7 +2236,7 @@ rd_vectors_from_exoII(double u[], const char *file_nm, const int action_flag,
   int	num_vars;		/* number of var_type variables */
   char	**var_names = NULL;     /* array containing num_vars variable names */
   int   num_elem_vars = 0;
-  char	**elem_var_names = NULL;     /* array containing element variable names */
+  char **elem_var_names = NULL; /* array containing element variable names */
   int   w;                      /* counter for species concentration */
   int   var;
   MATRL_PROP_STRUCT *matrl = 0;
@@ -2303,10 +2305,11 @@ rd_vectors_from_exoII(double u[], const char *file_nm, const int action_flag,
 
   /* First extract all element variable names in exoII database */
   if (num_elem_vars > 0) {
-    elem_var_names = alloc_VecFixedStrings(num_elem_vars, (MAX_STR_LENGTH+1));
+    elem_var_names = alloc_VecFixedStrings(num_elem_vars, (MAX_STR_LENGTH + 1));
     error = ex_get_variable_names(exoid, EX_ELEM_BLOCK, num_elem_vars, elem_var_names);
     EH(error, "ex_get_variable_names element");
-    for (i = 0; i < num_elem_vars; i++) strip(elem_var_names[i]);
+    for (i = 0; i < num_elem_vars; i++)
+      strip(elem_var_names[i]);
   }
 
   /* If action_flag is 0, 
@@ -2347,24 +2350,22 @@ rd_vectors_from_exoII(double u[], const char *file_nm, const int action_flag,
 	    } else {
 	      matrl = mp_glob[mn];
 	    }
-            if(mn!=-1 && (pd_glob[mn]->i[var] == I_P0))
-            {
+            if (mn != -1 && (pd_glob[mn]->i[var] == I_P0)) {
               error = rd_exoII_ev(u, var, mn, matrl, elem_var_names, exo->eb_num_elems[mn],
                                   num_elem_vars, exoid, time_step, 0, exo);
-            }
-            else if(mn!=-1 && (pd_glob[mn]->i[var] == I_P1)){
-              int dof = getdofs(type2shape(exo->eb_elem_itype[mn]),I_P1);
-              for(int i=0;i<dof;i++){
-              error = rd_exoII_ev(u, var, mn, matrl, elem_var_names, exo->eb_num_elems[mn],
-                                  num_elem_vars, exoid, time_step, i, exo);
+            } else if (mn != -1 && (pd_glob[mn]->i[var] == I_P1)) {
+              int dof = getdofs(type2shape(exo->eb_elem_itype[mn]), I_P1);
+              for (int i = 0; i < dof; i++) {
+                error = rd_exoII_ev(u, var, mn, matrl, elem_var_names, exo->eb_num_elems[mn],
+                                    num_elem_vars, exoid, time_step, i, exo);
               }
+            } else {
+              error = rd_exoII_nv(u, var, mn, matrl, var_names, num_nodes, num_vars, exoid,
+                                  time_step, 0);
             }
-            else{
-	    error = rd_exoII_nv(u, var, mn, matrl, var_names, num_nodes,
-				num_vars, exoid, time_step, 0);
-            }
-	    if (!error) icount++;
-	  }
+            if (!error)
+              icount++;
+          }
 	}
       }
     }
@@ -2647,10 +2648,17 @@ rd_exoII_nv(double *u, int varType, int mn, MATRL_PROP_STRUCT *matrl,
 /*****************************************************************************/
 /*****************************************************************************/
 
-int
-rd_exoII_ev(double *u, int varType, int mn, MATRL_PROP_STRUCT *matrl,
-            char **elem_var_names, int num_elems_block, int num_elem_vars, int exoII_id,
-            int time_step, int spec,const Exo_DB *exo)
+int rd_exoII_ev(double *u,
+                int varType,
+                int mn,
+                MATRL_PROP_STRUCT *matrl,
+                char **elem_var_names,
+                int num_elems_block,
+                int num_elem_vars,
+                int exoII_id,
+                int time_step,
+                int spec,
+                const Exo_DB *exo)
 
 /*************************************************************************
  *
@@ -2667,21 +2675,21 @@ rd_exoII_ev(double *u, int varType, int mn, MATRL_PROP_STRUCT *matrl,
   int vdex = -1, i, error, status = 0;
   char exo_var_name[256], exo_var_desc[256];
   double *variable = NULL;
-  assign_var_name(varType, spec, matrl, exo_var_name,
-                  exo_var_desc, mn);
+  assign_var_name(varType, spec, matrl, exo_var_name, exo_var_desc, mn);
   for (i = 0; i < num_elem_vars; i++) {
     if (strcmp(elem_var_names[i], exo_var_name) == 0) {
       vdex = i + 1;
     }
   }
   if (vdex != -1) {
-    variable = alloc_dbl_1(num_elems_block, 0.0); // This should be at for number of elements in a block.
+    variable =
+        alloc_dbl_1(num_elems_block, 0.0); // This should be at for number of elements in a block.
     status = vdex;
-    DPRINTF(stdout,"Element variable %s for material %d found in exoII database - reading.\n",
-            exo_var_name,mn+1);
-    error = ex_get_var(exoII_id, time_step, EX_ELEM_BLOCK, vdex, mn+1, num_elems_block, variable);
+    DPRINTF(stdout, "Element variable %s for material %d found in exoII database - reading.\n",
+            exo_var_name, mn + 1);
+    error = ex_get_var(exoII_id, time_step, EX_ELEM_BLOCK, vdex, mn + 1, num_elems_block, variable);
     EH(error, "ex_get_var element");
-    inject_elem_vec(u, varType, 0, spec, mn, variable,exo,num_elems_block);
+    inject_elem_vec(u, varType, 0, spec, mn, variable, exo, num_elems_block);
     safer_free((void **) &variable);
   }
   return status;
@@ -2900,74 +2908,78 @@ inject_nodal_vec(double sol_vec[], const int varType, const int k,
   return;
 }
 
-static void
-inject_elem_vec(double sol_vec[], const int varType, const int k,
-                 const int idof, const int matID,
-                 const double elem_vec[],const Exo_DB *exo, const int num_elems_blk)
+static void inject_elem_vec(double sol_vec[],
+                            const int varType,
+                            const int k,
+                            const int idof,
+                            const int matID,
+                            const double elem_vec[],
+                            const Exo_DB *exo,
+                            const int num_elems_blk)
 
-  /**********************************************************************
-   *
-   * inject_elem_vec:
-   *
-   * Routine to scatter a variable vector "k" of variable type
-   * "var_no" to the solution vector "sol_vec".
-   *
-   *
-   *     Now, for distributed processing, this routine only scatters a
-   *     element variable into the full dof vector for the element blocks that this
-   *     processor owns. Forget the "global" part.
-   *
-   * It first tries to use the generic material unknown. Then, it
-   * tries to use the unknown corresponding to the first material
-   * index at that node.
-   *
-   * Author: 	P. R. Schunk (1511, SNL)
-   * Date:		10/12/94
-   * Revised: 1997/08/27 10:31 MDT pasacki@sandia.gov
-   *
-   * Parameter List:
-   *
-   * elem_vec[] == 	vector containing the solution variable type
-   *                    vector index by the local node number on the
-   *         		current processor.
-   *
-   * var_no      ==  	integer variable type which defines
-   *		        what variable is to be scattered into the
-   *                    solution vector. Additionally, only the
-   *                    generic material ID part of the solution
-   *                    vector will be overwritten.
-   *		        (see rf_fem_const.h - Variable Names)
-   *
-   *	k        == 	kth subvariable of type "var_no", k = 0 is first
-   *		       variable of this type. Subvariables are only
-   *                    used for MASS_FRACTION variable types.
-   *  idof       ==     Degree of freedom id for this variable. Usually,
-   *                    this is equal to zero. However, there are
-   *                    some cases of multiple degrees of freedom
-   *                    for a variable type at a node.
-   * matID       ==     Material ID for the variable to scatter to.
-   *                    -2: special value means to scatter to all
-   *                        variables of type VariableType no matter
-   *                        what material they refer to.
-   *                    -1: This number refers to the
-   *                        non-specific-to-a-material variable at
-   *                        the node.
-   *                    >=0: Variable which is specific to the
-   *                         material matID.
-   *
-   * elem_vec   ==	Processor solution vector
-   *******************************************************************/
+/**********************************************************************
+ *
+ * inject_elem_vec:
+ *
+ * Routine to scatter a variable vector "k" of variable type
+ * "var_no" to the solution vector "sol_vec".
+ *
+ *
+ *     Now, for distributed processing, this routine only scatters a
+ *     element variable into the full dof vector for the element blocks that this
+ *     processor owns. Forget the "global" part.
+ *
+ * It first tries to use the generic material unknown. Then, it
+ * tries to use the unknown corresponding to the first material
+ * index at that node.
+ *
+ * Author: 	P. R. Schunk (1511, SNL)
+ * Date:		10/12/94
+ * Revised: 1997/08/27 10:31 MDT pasacki@sandia.gov
+ *
+ * Parameter List:
+ *
+ * elem_vec[] == 	vector containing the solution variable type
+ *                    vector index by the local node number on the
+ *         		current processor.
+ *
+ * var_no      ==  	integer variable type which defines
+ *		        what variable is to be scattered into the
+ *                    solution vector. Additionally, only the
+ *                    generic material ID part of the solution
+ *                    vector will be overwritten.
+ *		        (see rf_fem_const.h - Variable Names)
+ *
+ *	k        == 	kth subvariable of type "var_no", k = 0 is first
+ *		       variable of this type. Subvariables are only
+ *                    used for MASS_FRACTION variable types.
+ *  idof       ==     Degree of freedom id for this variable. Usually,
+ *                    this is equal to zero. However, there are
+ *                    some cases of multiple degrees of freedom
+ *                    for a variable type at a node.
+ * matID       ==     Material ID for the variable to scatter to.
+ *                    -2: special value means to scatter to all
+ *                        variables of type VariableType no matter
+ *                        what material they refer to.
+ *                    -1: This number refers to the
+ *                        non-specific-to-a-material variable at
+ *                        the node.
+ *                    >=0: Variable which is specific to the
+ *                         material matID.
+ *
+ * elem_vec   ==	Processor solution vector
+ *******************************************************************/
 {
   int e_start, e_end, ielem, ielem_type, num_local_nodes;
   int iconnect_ptr, i, I, index;
   int found_quantity;
   e_start = exo->eb_ptr[matID];
-  e_end   = exo->eb_ptr[matID+1];
+  e_end = exo->eb_ptr[matID + 1];
   for (ielem = e_start; ielem < e_end; ielem++) {
 
-    ielem_type      = Elem_Type(exo, ielem); /* func defd in el_geom.h */
+    ielem_type = Elem_Type(exo, ielem); /* func defd in el_geom.h */
     num_local_nodes = elem_info(NNODES, ielem_type);
-    iconnect_ptr    = Proc_Connect_Ptr[ielem]; /* find ptr to beginning */
+    iconnect_ptr = Proc_Connect_Ptr[ielem]; /* find ptr to beginning */
     /* of this element's */
     /* connectivity list */
 
@@ -2979,12 +2991,10 @@ inject_elem_vec(double sol_vec[], const int varType, const int k,
     found_quantity = FALSE;
     /* Only do this for elements with a haning center node, otherwise the
        extraction of the quantity can be ambiguous for non-regular grid models */
-    if (ielem_type == BIQUAD_QUAD ||
-        ielem_type == TRIQUAD_HEX ||
-        ielem_type == C_BILINEAR_QUAD ||
-        ielem_type == C_TRILINEAR_HEX ) {
+    if (ielem_type == BIQUAD_QUAD || ielem_type == TRIQUAD_HEX || ielem_type == C_BILINEAR_QUAD ||
+        ielem_type == C_TRILINEAR_HEX) {
       for (i = 0; i < num_local_nodes; i++) {
-        I     = Proc_Elem_Connect[iconnect_ptr + i];
+        I = Proc_Elem_Connect[iconnect_ptr + i];
         /* NOTE: here, the element variables (such as PRESSURE) are being
            extracted from the solution vector coming off of the hanging
            interior nodes, or a given specified node for such a quantity.
@@ -2995,22 +3005,21 @@ inject_elem_vec(double sol_vec[], const int varType, const int k,
         if (index != -1) {
           /* This should be the one node that has our value - set the element
              value to this */
-            sol_vec[index] = elem_vec[ielem-e_start];
-        if (found_quantity == TRUE) {
+          sol_vec[index] = elem_vec[ielem - e_start];
+          if (found_quantity == TRUE) {
             fprintf(stderr,
-                    "Warning: Too many nodes returning quantities for element variable %s (%s) - may not be accurate\n",
-                    Exo_Var_Names[varType].name2,
-                    Exo_Var_Names[varType].name1 );
-            exit (-1);
+                    "Warning: Too many nodes returning quantities for element variable %s (%s) - "
+                    "may not be accurate\n",
+                    Exo_Var_Names[varType].name2, Exo_Var_Names[varType].name1);
+            exit(-1);
 
-          found_quantity = TRUE;
+            found_quantity = TRUE;
+          }
         }
       }
-    }
-   }
-    else {
+    } else {
       int i = 0;
-      I     = Proc_Elem_Connect[iconnect_ptr + i];
+      I = Proc_Elem_Connect[iconnect_ptr + i];
       /* NOTE: here, the element variables (such as PRESSURE) are being
          extracted from the solution vector coming off of the hanging
          interior nodes, or a given specified node for such a quantity.
@@ -3021,21 +3030,20 @@ inject_elem_vec(double sol_vec[], const int varType, const int k,
       if (index != -1) {
         /* This should be the one node that has our value - set the element
            value to this */
-          sol_vec[index] = elem_vec[ielem-e_start];
+        sol_vec[index] = elem_vec[ielem - e_start];
         if (found_quantity == TRUE) {
           fprintf(stderr,
-                  "Warning: Too many nodes returning quantities for element variable %s (%s) - may not be accurate\n",
-                  Exo_Var_Names[varType].name2,
-                  Exo_Var_Names[varType].name1 );
-          exit (-1);
+                  "Warning: Too many nodes returning quantities for element variable %s (%s) - may "
+                  "not be accurate\n",
+                  Exo_Var_Names[varType].name2, Exo_Var_Names[varType].name1);
+          exit(-1);
         }
         found_quantity = TRUE;
       }
-
     }
   }
 
- return;
+  return;
 }
 /************************************************************************/
 /************************************************************************/

@@ -537,12 +537,12 @@ build_big_bones(Exo_DB *p,	/* EXODUS info from representative polylith */
    * the Dpi...
    */
 
-  m->elem_var_tab=NULL;
+    m->elem_var_tab = NULL;
 
-  m->state |= EXODB_STATE_MESH;
-  m->state |= EXODB_STATE_RES0;
+    m->state |= EXODB_STATE_MESH;
+    m->state |= EXODB_STATE_RES0;
 
-  return;
+    return;
 }
 
 /*
@@ -1089,27 +1089,24 @@ build_global_res(Exo_DB *p,	/* EXODUS info from representative polylith */
 		  index        = b * p->num_elem_vars + v;
 		  index_global = b_global * p->num_elem_vars + v;
 
-                  if (  p->elem_var_tab[index] != 0 )
-		    {
-                      if ( m->elem_var_tab!=NULL && m->elem_var_tab[index_global] == 0 )
-			{
-			  sr = sprintf(err_msg, 
-				       "Inconsistency in element variable truth tables EBID %d",
-				       p->eb_id[b]);
-			  EH(-1, err_msg);
-			  EH(sr, err_msg);
-			}
+                  if (p->elem_var_tab[index] != 0) {
+                    if (m->elem_var_tab != NULL && m->elem_var_tab[index_global] == 0) {
+                      sr =
+                          sprintf(err_msg, "Inconsistency in element variable truth tables EBID %d",
+                                  p->eb_id[b]);
+                      EH(-1, err_msg);
+                      EH(sr, err_msg);
+                    }
 
-		      for ( e = 0; e < p->eb_num_elems[b]; e++)
-			{
-			  elem_local  = p->eb_ptr[b] + e;
-			  elem_global = d->elem_index_global[elem_local];
-			  eg          = elem_global - m->eb_ptr[b_global];
-			  m->ev[t][index_global][eg] = p->ev[t][index][e];
-			}
-		    }
-		}
-	    }
+                    for (e = 0; e < p->eb_num_elems[b]; e++) {
+                      elem_local = p->eb_ptr[b] + e;
+                      elem_global = d->elem_index_global[elem_local];
+                      eg = elem_global - m->eb_ptr[b_global];
+                      m->ev[t][index_global][eg] = p->ev[t][index][e];
+                    }
+                  }
+              }
+            }
 	}
     }
 

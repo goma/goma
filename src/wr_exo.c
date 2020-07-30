@@ -642,9 +642,8 @@ wr_result_prelim_exo(struct Results_Description *rd,
       num_vars = rd->nev;
       error = ex_put_variable_param(exo->exoid, EX_ELEM_BLOCK, num_vars);
       EH(error, "ex_put_variable_param elem block");
-      for ( i=0; i<rd->nev; i++)
-      {
-	  var_names[i] = rd->evname[i];
+      for (i = 0; i < rd->nev; i++) {
+        var_names[i] = rd->evname[i];
 #ifdef DEBUG
 	  printf("%s: elem var_name[%d] = %s\n", yo, i, var_names[i]);
 #endif
@@ -913,15 +912,14 @@ create_truth_table(struct Results_Description *rd, Exo_DB *exo,
 	    exo->truth_table_existance_key[j - V_FIRST] = 1;
 	  }
         }
-        if ( pd_glob[mat_num]->i[j] == I_P1 )
-          {
-           if ( exo->truth_table_existance_key[j - V_FIRST] == 0 )
-             {
-              /* We just found a candidate for an element variable */
-              tev += getdofs(type2shape(exo->eb_elem_itype[mat_num]),I_P1);;
-              exo->truth_table_existance_key[j - V_FIRST] = 1;
-             }
+        if (pd_glob[mat_num]->i[j] == I_P1) {
+          if (exo->truth_table_existance_key[j - V_FIRST] == 0) {
+            /* We just found a candidate for an element variable */
+            tev += getdofs(type2shape(exo->eb_elem_itype[mat_num]), I_P1);
+            ;
+            exo->truth_table_existance_key[j - V_FIRST] = 1;
           }
+        }
       }
     }
 
@@ -1023,30 +1021,25 @@ create_truth_table(struct Results_Description *rd, Exo_DB *exo,
 		   exo->eb_num_elems[eb_indx] );
 	  }
 	}
-        if ( pd_glob[mat_num]->i[j] == I_P1 )
-          {
-          int dof  = getdofs(type2shape(exo->eb_elem_itype[mat_num]),I_P1);
-           /* We just found a candidate for an element variable */
-          for(int k =0;k<dof;k++)
-          {
-           exo->elem_var_tab[i++] = 1;
-           found_match = TRUE;
-           ev_indx++;
-           /* malloc the entry for this block by number of elems for this block
-              but - only if the variable exists for this block! (by the truth table) */
+        if (pd_glob[mat_num]->i[j] == I_P1) {
+          int dof = getdofs(type2shape(exo->eb_elem_itype[mat_num]), I_P1);
+          /* We just found a candidate for an element variable */
+          for (int k = 0; k < dof; k++) {
+            exo->elem_var_tab[i++] = 1;
+            found_match = TRUE;
+            ev_indx++;
+            /* malloc the entry for this block by number of elems for this block
+               but - only if the variable exists for this block! (by the truth table) */
 
-
-          if ( has_been_called == 0 )
-            {
-             /* NOTE: this final array dim is only to be malloc'd once; when a user
-                is annealing the mesh, anneal mesh calls wr_result_prelim_exo again,
-                and hence create_truth_table, which would realloc this dim of gvec_elem.
-                this test will prevent that. - RRL */
-             asdv ( &gvec_elem[eb_indx][ev_indx - 1],
-                    exo->eb_num_elems[eb_indx] );
+            if (has_been_called == 0) {
+              /* NOTE: this final array dim is only to be malloc'd once; when a user
+                 is annealing the mesh, anneal mesh calls wr_result_prelim_exo again,
+                 and hence create_truth_table, which would realloc this dim of gvec_elem.
+                 this test will prevent that. - RRL */
+              asdv(&gvec_elem[eb_indx][ev_indx - 1], exo->eb_num_elems[eb_indx]);
             }
           }
-          }
+        }
       }
       if ( found_match == FALSE && exo->truth_table_existance_key[j - V_FIRST] == 1 ) {
 	exo->elem_var_tab[i++] = 0;
@@ -1555,13 +1548,10 @@ wr_resetup_exo(Exo_DB *exo,
 				     exo->num_elem_vars,
 				     exo->elem_var_names);
       EH(status, "ex_put_variable_names elem block");
-      if(exo->elem_var_tab!=NULL)
-      {
-      status = ex_put_truth_table(exo->exoid, EX_ELEM_BLOCK,
-				   exo->num_elem_blocks,
-				   exo->num_elem_vars, 
-				   exo->elem_var_tab);
-      EH(status, "ex_put_truth_table elem block");
+      if (exo->elem_var_tab != NULL) {
+        status = ex_put_truth_table(exo->exoid, EX_ELEM_BLOCK, exo->num_elem_blocks,
+                                    exo->num_elem_vars, exo->elem_var_tab);
+        EH(status, "ex_put_truth_table elem block");
       }
     }
 
@@ -1667,23 +1657,18 @@ wr_result_exo(Exo_DB *exo,
 	      for ( k=0; k<exo->num_elem_vars; k++)
 		{
 		  index = j * exo->num_elem_vars + k;
-		  
-                  if (exo->elem_var_tab==NULL || exo->elem_var_tab[index] != 0 )
-		    {
-		      status = ex_put_var(exo->exoid, time_index, EX_ELEM_BLOCK, k+1,
-					  exo->eb_id[j],
-					  exo->eb_num_elems[j],
-					  &(exo->ev[i][index][0]));
-		      if ( status < 0 )
-			{
-			  sprintf(err_msg, 
-                                  "ex_put_var() elem bad rtn: time %d, elemvar %d, EB ID %d",
-                                  time_index, k+1, exo->eb_id[j]);
-			  EH(-1, err_msg);
-			}
-		    }
-		}
-	    }
+
+                  if (exo->elem_var_tab == NULL || exo->elem_var_tab[index] != 0) {
+                    status = ex_put_var(exo->exoid, time_index, EX_ELEM_BLOCK, k + 1, exo->eb_id[j],
+                                        exo->eb_num_elems[j], &(exo->ev[i][index][0]));
+                    if (status < 0) {
+                      sprintf(err_msg, "ex_put_var() elem bad rtn: time %d, elemvar %d, EB ID %d",
+                              time_index, k + 1, exo->eb_id[j]);
+                      EH(-1, err_msg);
+                    }
+                  }
+              }
+            }
 	}
     }
 

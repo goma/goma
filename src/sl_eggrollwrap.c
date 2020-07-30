@@ -49,42 +49,41 @@ static const char rcs_id[] = "$Id: sl_eggrollwrap.c,v 5.2 2007-09-18 18:53:47 pr
  *   - Feb 98 -> Oct 98, another checkin
  *   - Jan 13, 2000, MMH rearranged and conformed to Goma style.
  */
-void
-eggrollwrap(int *istuff,	/* info for eigenvalue extraction */
-	    dbl *dstuff,	/* info for eigenvalue extraction */
-	    
-	    int *ija,		/* column pointer array */
-	    dbl *jac,		/* nonzero array */
-	    dbl *mas,		/* nonzero array - same structure 
-				   as jac[] (ija[]) */
-	    
-	    dbl *x,		/* Value of the solution vector */
-	    char *ExoFileOut,	/* Name of exoII output file */
-	    int prob_type,
-	    dbl delta_t,	/* time step size */
-	    dbl theta,		/* variable time integration parameter
-				   explicit (theta = 1) to 
-				   implicit (theta = 0) */
-	    dbl *x_old,		/* Value of the old solution vector */
-	    dbl *xdot,		/* Value of xdot predicted for new 
-				   solution */
-	    dbl *xdot_old,      /* dx/dt at previous time step */
-	    dbl *resid_vector,
-	    int *converged,	/* whether the Newton has converged */
-	    int *nprint,	/* counter for time step number */
-	    int tnv,		/* number of nodal results */
-	    int tnv_post,	/* number of post processing results */
-            int tev,            /* Number of elements variable results */
-            int tev_post,       /* Number of post processing results */
-	    struct Results_Description *rd,
-	    int *gindex,
-	    int *p_gsize,
-	    dbl	*gvec,
-            dbl	***gvec_elem,            /* gvec_elem*/
-	    dbl time_value,
-	    Exo_DB *exo,	/* ptr to finite element mesh db */
-	    int Num_Proc,	/* number of processors used */
-	    Dpi	*dpi)		/* ptr to distributed processing info */
+void eggrollwrap(int *istuff, /* info for eigenvalue extraction */
+                 dbl *dstuff, /* info for eigenvalue extraction */
+
+                 int *ija, /* column pointer array */
+                 dbl *jac, /* nonzero array */
+                 dbl *mas, /* nonzero array - same structure
+                              as jac[] (ija[]) */
+
+                 dbl *x,           /* Value of the solution vector */
+                 char *ExoFileOut, /* Name of exoII output file */
+                 int prob_type,
+                 dbl delta_t,   /* time step size */
+                 dbl theta,     /* variable time integration parameter
+                                   explicit (theta = 1) to
+                                   implicit (theta = 0) */
+                 dbl *x_old,    /* Value of the old solution vector */
+                 dbl *xdot,     /* Value of xdot predicted for new
+                                   solution */
+                 dbl *xdot_old, /* dx/dt at previous time step */
+                 dbl *resid_vector,
+                 int *converged, /* whether the Newton has converged */
+                 int *nprint,    /* counter for time step number */
+                 int tnv,        /* number of nodal results */
+                 int tnv_post,   /* number of post processing results */
+                 int tev,        /* Number of elements variable results */
+                 int tev_post,   /* Number of post processing results */
+                 struct Results_Description *rd,
+                 int *gindex,
+                 int *p_gsize,
+                 dbl *gvec,
+                 dbl ***gvec_elem, /* gvec_elem*/
+                 dbl time_value,
+                 Exo_DB *exo,  /* ptr to finite element mesh db */
+                 int Num_Proc, /* number of processors used */
+                 Dpi *dpi)     /* ptr to distributed processing info */
 {
   int 
     i, j, ic, 
@@ -98,7 +97,7 @@ eggrollwrap(int *istuff,	/* info for eigenvalue extraction */
     /*    read_form, soln_tech, push_mode, */
     push_mode, 
     init_shft, recycle;
-  int step=0;
+  int step = 0;
   dbl
     stol, ivector,
     dwork[20]; 
@@ -323,9 +322,9 @@ eggrollwrap(int *istuff,	/* info for eigenvalue extraction */
 	  wr_mesh_exo(exo, ExoFileOut, 0);
 	  zero_base(exo);
           wr_result_prelim_exo(rd, exo, ExoFileOut, gvec_elem);
-	  /* Update exo file for distributed problem info 
-	   */
-	  if (Num_Proc > 1) {
+          /* Update exo file for distributed problem info
+           */
+          if (Num_Proc > 1) {
 	    wr_dpi(dpi, ExoFileOut, 0);
 	  }
 	  for (j = 0; j < tnv; j++) {
@@ -335,38 +334,33 @@ eggrollwrap(int *istuff,	/* info for eigenvalue extraction */
 				time_value);
 	  }
           /* Now element quantities */
-          for(int iev = 0; iev < tev; iev++) {
+          for (int iev = 0; iev < tev; iev++) {
             bool is_P1 = FALSE;
             int dof = 0;
             for (int mn = 0; mn < upd->Num_Mat; mn++) {
-              if(pd_glob[mn]->i[rd->evtype[iev]]==I_P1)
-              {
-                dof = MAX(getdofs(type2shape(exo->eb_elem_itype[mn]),I_P1),dof);
+              if (pd_glob[mn]->i[rd->evtype[iev]] == I_P1) {
+                dof = MAX(getdofs(type2shape(exo->eb_elem_itype[mn]), I_P1), dof);
                 is_P1 = TRUE;
               }
             }
-            if(is_P1){
-              for(int k =0;k<dof;k++)
-              {
-                extract_elem_vec(&evect[i][0], iev, rd->evtype[iev], gvec_elem, exo,k);
-                step = (*nprint)+1;
-                wr_elem_result_exo(exo, ExoFileOut, gvec_elem, iev, step,
-                                   time_value, rd);
+            if (is_P1) {
+              for (int k = 0; k < dof; k++) {
+                extract_elem_vec(&evect[i][0], iev, rd->evtype[iev], gvec_elem, exo, k);
+                step = (*nprint) + 1;
+                wr_elem_result_exo(exo, ExoFileOut, gvec_elem, iev, step, time_value, rd);
                 iev++;
               }
-            }
-            else{
-            extract_elem_vec(&evect[i][0], iev, rd->evtype[iev], gvec_elem, exo,0);
-            step = (*nprint)+1;
-            wr_elem_result_exo(exo, ExoFileOut, gvec_elem, iev, step,
-                               time_value, rd);
+            } else {
+              extract_elem_vec(&evect[i][0], iev, rd->evtype[iev], gvec_elem, exo, 0);
+              step = (*nprint) + 1;
+              wr_elem_result_exo(exo, ExoFileOut, gvec_elem, iev, step, time_value, rd);
             }
           }
 
-	  /*
-	   *  Add additional user-specified post processing variables 
-	   */
-	  if (tnv_post > 0) {
+          /*
+           *  Add additional user-specified post processing variables
+           */
+          if (tnv_post > 0) {
 	    post_process_nodal(&evect[i][0], NULL, x_old, xdot, xdot_old,
 			       resid_vector, 1, &time_value, delta_t, 0.0,
                                NULL, exo, dpi, rd, ExoFileOut);
