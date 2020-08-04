@@ -6137,26 +6137,28 @@ compute_saramito_model_terms(dbl stress[DIM][DIM],
 				 dbl yieldExpon,
 			     SARAMITO_DEPENDENCE_STRUCT* d_sCoeff)
 {
-  /* start by computing the norm of the deviatoric stress,  sqrt(J_2), 
-   * J_2 = 1/(2*DIM)[
-   (stress_{0,0} - stress_{1,1})**2 + 
-   (stress_{0,0} - stress_{2,2})**2 + 
-   (stress_{2,2} - stress_{1,1})**2
-   ] +
-   stress_{0,1}**2 + stress_{0,2}**2 + stress_{2,1}**2
-
-   * see the following wikipedia page:
+  /* start by computing the norm of the deviatoric stress, sqrt(J_2)
+   *
+   * see the following wikipedia page for the mathematical details:
    * https://en.wikipedia.org/wiki/Cauchy_stress_tensor#Invariants_of_the_stress_deviator_tensor
    */
-  dbl invDenom = 1./(2.*VIM);
+
+  dbl trace = 0;
+  for(int i=0; i<VIM; i++){
+    trace += stress[i][i];
+  }
+
+  trace /= VIM;
 
   // square of the deviatoric sress norm
+  dbl normOfStressDSqr = 0;
+    for(int i=0; i<VIM; i++){
+      normOfStressDSqr += pow(stress[i][i] - trace, 2)/2.;
 
-  dbl normOfStressDSqr = pow(stress[0][0] - stress[1][1], 2)*invDenom + pow(stress[0][1], 2);
-  if(VIM>2){
-    normOfStressDSqr += pow(stress[0][0] - stress[2][2], 2)*invDenom + pow(stress[0][2], 2)
-      + pow(stress[1][1] - stress[2][2], 2)*invDenom + pow(stress[1][2], 2);
-  }
+      for(int j=i+1; j<VIM; j++){
+        normOfStressDSqr += pow(stress[i][j], 2);
+      }
+    }
 
   const dbl normOfStressD = sqrt(normOfStressDSqr);
 
@@ -6198,22 +6200,14 @@ compute_saramito_model_terms(dbl stress[DIM][DIM],
 		d_sCoeff->tau_y          *= expYSCDerivativeTerm;
 		d_sCoeff_d_normOfStressD *= expYSCDerivativeTerm;
 	}
-    // first assign elements values of d(normOfStressDSqr)/d(stress);
-    d_sCoeff->s[0][0] = 2.*invDenom*( stress[0][0] - stress[1][1]);
-    d_sCoeff->s[0][1] = 2.*stress[0][1];
-    d_sCoeff->s[1][0] = d_sCoeff->s[0][1];
-    d_sCoeff->s[1][1] = -d_sCoeff->s[0][0];
 
-    if(VIM>2){
-      d_sCoeff->s[0][0] += 2.*invDenom*( stress[0][0] - stress[2][2]);
-	  d_sCoeff->s[0][1] += 4.*invDenom*stress[0][1];
-	  d_sCoeff->s[1][0] += 4.*invDenom*stress[1][0];
-      d_sCoeff->s[1][1] += 2.*invDenom*(stress[1][1] - stress[2][2]);
-      d_sCoeff->s[0][2] = 2.*stress[0][2];
-	  d_sCoeff->s[2][0] = d_sCoeff->s[0][2];
-      d_sCoeff->s[1][2] = 2.*stress[1][2];
-	  d_sCoeff->s[2][1] = d_sCoeff->s[1][2];
-      d_sCoeff->s[2][2] = 2.*invDenom*( 2*stress[2][2] - stress[0][0] - stress[1][1]);
+    for(int i=0; i<VIM; i++){
+      d_sCoeff->s[i][i] = -trace;
+
+      for(int j=i; j<VIM; j++){
+        if(i==j){ d_sCoeff->s[i][i] += stress[i][i];   }
+        else    { d_sCoeff->s[i][j] = 2.*stress[i][j]; }
+      }
     }
 
       /* use the chain rule to computute sCoeff sensitivies to stress components
@@ -6226,12 +6220,12 @@ compute_saramito_model_terms(dbl stress[DIM][DIM],
        *                        * d(normOfStressDSqr)/d(stress) 
        */ 
                           
-      // invDenom will be used as d(normOfStressD)/d(stress)
-      invDenom = 0.5/normOfStressD*d_sCoeff_d_normOfStressD;
+      // invVIM will be used as d(normOfStressD)/d(stress)
+       dbl d_normOfStressD_d_Stress = 0.5/normOfStressD*d_sCoeff_d_normOfStressD;
 
       for(int i=0; i<VIM; i++){
         for(int j=i; j<VIM; j++){
-          d_sCoeff->s[i][j] *= invDenom;
+          d_sCoeff->s[i][j] *= d_normOfStressD_d_Stress;
           d_sCoeff->s[j][i] = d_sCoeff->s[i][j];
         }
       }
@@ -6247,7 +6241,7 @@ compute_saramito_model_terms(dbl stress[DIM][DIM],
     printf("\n");
     for(int i=0; i<VIM; i++){
     for(int j=0; j<VIM; j++){
-    printf("\nd(sCoeff)/d(stress[%d][%d] = %E)", i, j, d_sCoeff->s[i][j]);
+    printf("\nd(sCoeff)/d(stress[%d][%d)] = %E", i, j, d_sCoeff->s[i][j]);
     }
     }
     printf("\n");
