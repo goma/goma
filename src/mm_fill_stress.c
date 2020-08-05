@@ -6142,17 +6142,17 @@ compute_saramito_model_terms(dbl stress[DIM][DIM],
    * https://en.wikipedia.org/wiki/Cauchy_stress_tensor#Invariants_of_the_stress_deviator_tensor
    */
 
-  dbl trace = 0;
+  dbl traceOverVIM = 0;
   for (int i = 0; i < VIM; i++) {
-    trace += stress[i][i];
+    traceOverVIM += stress[i][i];
   }
 
-  trace /= VIM;
+  traceOverVIM /= VIM;
 
   // square of the deviatoric sress norm
   dbl normOfStressDSqr = 0;
   for (int i = 0; i < VIM; i++) {
-    normOfStressDSqr += pow(stress[i][i] - trace, 2) / 2.;
+    normOfStressDSqr += pow(stress[i][i] - traceOverVIM, 2) / 2.;
 
     for (int j = i + 1; j < VIM; j++) {
       normOfStressDSqr += pow(stress[i][j], 2);
@@ -6202,7 +6202,7 @@ compute_saramito_model_terms(dbl stress[DIM][DIM],
       }
 
       for (int i = 0; i < VIM; i++) {
-        d_sCoeff->s[i][i] = -trace;
+        d_sCoeff->s[i][i] = -traceOverVIM;
 
         for (int j = i; j < VIM; j++) {
           if (i == j) {
