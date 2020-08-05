@@ -6136,7 +6136,8 @@ compute_saramito_model_terms(dbl stress[DIM][DIM],
                                  dbl yieldStress,
                                  dbl yieldExpon,
                                  SARAMITO_DEPENDENCE_STRUCT *d_sCoeff) {
-  /* start by computing the norm of the deviatoric stress, sqrt(J_2)
+  /* start by computing the norm of sigma_d (the deviatoric stress) which is written as
+   * sqrt( trace(sigma_d*sigma_d)/2 )
    *
    * see the following wikipedia page for the mathematical details:
    * https://en.wikipedia.org/wiki/Cauchy_stress_tensor#Invariants_of_the_stress_deviator_tensor
@@ -6223,7 +6224,6 @@ compute_saramito_model_terms(dbl stress[DIM][DIM],
        *                        * d(normOfStressDSqr)/d(stress)
        */
 
-      // invVIM will be used as d(normOfStressD)/d(stress)
       dbl d_normOfStressD_d_Stress = 0.5 / normOfStressD * d_sCoeff_d_normOfStressD;
 
       for (int i = 0; i < VIM; i++) {
