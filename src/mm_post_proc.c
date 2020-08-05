@@ -2197,17 +2197,17 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   {  
     for (int mode = 0; mode < vn->modes; mode++) {
 
-      dbl trace = 0;
+      dbl traceOverVim = 0;
       for(int i=0; i<VIM; i++){
-        trace += fv->S[mode][i][i];
+        traceOverVim += fv->S[mode][i][i];
       }
 
-      trace /= VIM;
+      traceOverVim /= VIM;
 
       // square of the deviatoric sress norm
       dbl normOfStressDSqr = 0;
       for(int i=0; i<VIM; i++){
-        normOfStressDSqr += pow(fv->S[mode][i][i] - trace, 2)/2.;
+        normOfStressDSqr += pow(fv->S[mode][i][i] - traceOverVim, 2)/2.;
 
         for(int j=i+1; j<VIM; j++){
           normOfStressDSqr += pow(fv->S[mode][i][j], 2);
