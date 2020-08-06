@@ -2196,14 +2196,22 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   if(STRESS_NORM != -1)
   {  
     for (int mode = 0; mode < vn->modes; mode++) {
-      dbl invDenom = 1./(2.*VIM);
-          
+
+      dbl traceOverVim = 0;
+      for(int i=0; i<VIM; i++){
+        traceOverVim += fv->S[mode][i][i];
+      }
+
+      traceOverVim /= VIM;
+
       // square of the deviatoric sress norm
-                                      
-      dbl normOfStressDSqr = pow(fv->S[mode][0][0] - fv->S[mode][1][1], 2)*invDenom + pow(fv->S[mode][0][1], 2);
-      if(VIM>2){
-        normOfStressDSqr += pow(fv->S[mode][0][0] - fv->S[mode][2][2], 2)*invDenom + pow(fv->S[mode][0][2], 2)
-          + pow(fv->S[mode][1][1] - fv->S[mode][2][2], 2)*invDenom + pow(fv->S[mode][1][2], 2);
+      dbl normOfStressDSqr = 0;
+      for(int i=0; i<VIM; i++){
+        normOfStressDSqr += pow(fv->S[mode][i][i] - traceOverVim, 2)/2.;
+
+        for(int j=i+1; j<VIM; j++){
+          normOfStressDSqr += pow(fv->S[mode][i][j], 2);
+        }
       }
           
       dbl normOfStressD = sqrt(normOfStressDSqr);
@@ -2215,7 +2223,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   if(SARAMITO_YIELD != -1)
   {  
     for (int mode = 0; mode < vn->modes; mode++) {
-      dbl coeff = compute_saramito_model_terms(fv->S[mode], ve[mode]->gn->tau_y, NULL);
+      dbl coeff = compute_saramito_model_terms(fv->S[mode], ve[mode]->gn->tau_y, ve[mode]->gn->fexp, NULL);
       local_post[SARAMITO_YIELD + mode] = coeff;
       local_lumped[SARAMITO_YIELD + mode] = 1.;
     }

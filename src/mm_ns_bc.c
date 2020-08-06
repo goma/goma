@@ -7542,7 +7542,7 @@ stress_no_v_dot_gradS(double func[MAX_MODES][6],
 
       if(saramitoEnabled == TRUE)
 	{
-	  saramitoCoeff = compute_saramito_model_terms(s, ve[mode]->gn->tau_y, d_saramito);
+	  saramitoCoeff = compute_saramito_model_terms(s, ve[mode]->gn->tau_y, ve[mode]->gn->fexp, d_saramito);
 	}
       else
 	{
