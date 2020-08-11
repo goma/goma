@@ -135,7 +135,16 @@ then
     usage
     exit 1
 fi
-export GOMA_LIB=`readlink --canonicalize $1`
+
+if command -v readlink &> /dev/null; then
+    export GOMA_LIB=`readlink --canonicalize-missing $1`
+else
+    GOMA_LIB=$1
+    echo "WARNING: readlink not found make sure GOMA_LIB is a full path"
+    echo "Should be /home/username/gomalib not ~/gomalib, ./gomalib, ../gomalib, etc."
+    echo "current GOMA_LIB=$GOMA_LIB"
+    continue_check
+fi
 
 BUILD_LOG=$GOMA_LIB/goma_tpl_build.log
 COMPILE_LOG=$GOMA_LIB/goma_tpl_compile.log
@@ -229,9 +238,9 @@ HDF5_MD5="03095102a6118c32a75a9b9b40be66f2"
 NETCDF_VERSION="c-4.7.4"
 NETCDF_MD5="3e0a97e6abb9a989f8a8a2e395473597"
 
-TRILINOS_VERSION="12.18.1"
-TRILINOS_VERSION_DASH="12-18-1"
-TRILINOS_MD5="9c1d151169949bca6cf203831e4d6aee"
+TRILINOS_VERSION="13.0.0"
+TRILINOS_VERSION_DASH="13-0-0"
+TRILINOS_MD5="f0e9d7de4eb55598c5338b56bdc80df9"
 
 MUMPS_VERSION="5.3.3"
 MUMPS_MD5="789d2647dce4277863fb5942d385fe89"
@@ -1392,9 +1401,6 @@ else
 -D CMAKE_VERBOSE_MAKEFILE:BOOL=TRUE \
 -D BUILD_SHARED_LIBS:BOOL=OFF \
 -D TPL_ENABLE_Boost:BOOL=OFF \
--D Trilinos_ENABLE_ShyLU:BOOL=OFF \
--D Trilinos_ENABLE_ShyLU_NodeTacho:BOOL=OFF \
--D Trilinos_ENABLE_ShyLU_NodeBasker:BOOL=OFF \
 -D Trilinos_ENABLE_Triutils:BOOL=ON \
 -D Trilinos_ENABLE_SEACAS:BOOL=ON \
 -D Trilinos_ENABLE_Amesos:BOOL=ON \
@@ -1410,13 +1416,12 @@ else
 -D Trilinos_ENABLE_Teko:BOOL=ON \
 -D Trilinos_ENABLE_Amesos2:BOOL=ON \
 -D Trilinos_ENABLE_Belos:BOOL=ON \
--D Trilinos_ENABLE_Sacado:BOOL=ON \
 -D Trilinos_ENABLE_EpetraExt:BOOL=ON \
 -D Trilinos_ENABLE_Thyra:BOOL=ON \
 -D Trilinos_ENABLE_ThyraTpetraAdapters:BOOL=ON \
 -D Trilinos_ENABLE_Tpetra:BOOL=ON \
 -D Trilinos_ENABLE_Stratimikos:BOOL=ON \
--D Trilinos_ENABLE_TESTS:BOOL=ON \
+-D Trilinos_ENABLE_TESTS:BOOL=OFF \
 -D Trilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON \
       -D HDF5_LIBRARY_DIRS:PATH="$GOMA_LIB/hdf5-${HDF5_VERSION}/lib" \
       -D TPL_ENABLE_HDF5:BOOL=ON \
