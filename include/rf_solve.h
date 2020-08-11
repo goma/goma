@@ -63,6 +63,20 @@ PROTO(( double [],		/* x - solution vector */
 EXTERN int anneal_mesh_with_external_field   /* rf_solve.c */
 PROTO((const Exo_DB * ));                    /* *exo  */
 
+EXTERN int anneal_mesh_LSA	/* rf_solve.c */
+PROTO(( double [],		/* x - solution vector */
+	Exo_DB *,		/* exo - entire mesh desc. */
+	double **,		/* Saved mesh coordinates */
+        double **,              /* Saved displacement fields */
+	Dpi *));		/* dpi - distr proc info */
+
+EXTERN int unanneal_mesh_LSA	/* rf_solve.c */
+PROTO(( double [],		/* x - solution vector */
+	Exo_DB *,		/* exo - entire mesh desc. */
+	double **,		/* Saved mesh coordinates */
+        double **,              /* Saved displacement fields */
+	Dpi *));		/* dpi - distr proc info */
+
 #ifdef LIBRARY_MODE
 EXTERN int load_export_vars     /* rf_solve.c */
 PROTO((const int,               /* num_nodes */

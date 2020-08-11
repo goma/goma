@@ -3402,8 +3402,11 @@ void solution_output_conwrap(int num_soln_flag,
  */
 {
   int error, i_print;
+  int m,p;
   static int step_print=0;
   static int n_print=0;
+  int displacement_somewhere;
+  double **saved_xyz, **saved_displacement;
   
 #ifdef HAVE_ARPACK
   int i, n;
@@ -3423,7 +3426,20 @@ void solution_output_conwrap(int num_soln_flag,
       i_print = TRUE;
       step_print += cont->print_freq;
     }
-          
+
+  /*
+   * Allocate the saved coordinate and displacement fields.
+   */
+  saved_xyz = (double **) calloc(passdown.exo->num_dim, sizeof(double *));
+  saved_displacement = (double **) calloc(passdown.exo->num_dim, sizeof(double *));
+
+  for(p = 0; p < passdown.exo->num_dim; p++)
+  {
+    saved_xyz[p] = (double *) calloc(passdown.exo->num_nodes, sizeof(double));
+    saved_displacement[p] = (double *) calloc(passdown.exo->num_nodes, sizeof(double));
+  }
+
+
   if (i_print)
     {
       error = write_ascii_soln (x,
@@ -3462,7 +3478,13 @@ void solution_output_conwrap(int num_soln_flag,
           n_print++;
         }
     }
-      
+
+/* determine whether to anneal mesh if there is a mesh displacement field */
+   displacement_somewhere = FALSE;
+
+  for(m = 0; m < upd->Num_Mat; m++)
+      displacement_somewhere |= ( pd_glob[m]->e[R_MESH1] );
+
   /*
    * Backup old solutions
    * can use previous solutions for prediction one day
@@ -3493,15 +3515,21 @@ void solution_output_conwrap(int num_soln_flag,
       passdown.LSA_flag = TRUE;
       n = (passdown.do_3D_of_2D ? LSA_number_wave_numbers : 1);
 
+/* Anneal mesh if mesh displacement is solved */
+      if (displacement_somewhere )
+        {
+         error = anneal_mesh_LSA(x, passdown.exo, saved_xyz, saved_displacement, passdown.dpi);
+        }
+
   /* Loop over LSA wave numbers, or just zero */
       for (i=0; i<n; i++)
         {
 
   /* Set current wave number if applicable */
-	  
+
           if (n == 1)
             {
-	      if (Linear_Stability == LSA_3D_OF_2D) 
+	      if (Linear_Stability == LSA_3D_OF_2D)
 		{
 		  EH(-1, "With LOCA, you need to have more than one 3D wave number specified");
 		}
@@ -3521,10 +3549,28 @@ void solution_output_conwrap(int num_soln_flag,
           calc_eigenvalues_loca(con);
         }
 
+  /* Return mesh and solution vector to its original state */
+      if (displacement_somewhere )
+        {
+         error = unanneal_mesh_LSA(x, passdown.exo, saved_xyz, saved_displacement, passdown.dpi);
+        }
+
   /* Now reset LSA_flag */
       passdown.LSA_flag = FALSE;
     }
 #endif
+
+
+  /*
+   * Free up memories
+   */
+
+  for(p = 0; p < passdown.exo->num_dim; p++) {
+      safer_free((void **) &(saved_xyz[p]));
+      safer_free((void **) &(saved_displacement[p]));
+  }
+  safer_free((void **) &saved_xyz);
+  safer_free((void **) &saved_displacement);
 
 }
 /*****************************************************************************/

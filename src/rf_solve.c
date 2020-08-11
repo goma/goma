@@ -3960,6 +3960,218 @@ anneal_mesh_with_external_field(const Exo_DB *exo)
   return(0);
 } /* END of routine anneal_mesh_with_external_field */
 
+/*****************************************************************************/
+/*****************************************************************************/
+
+int
+anneal_mesh_LSA(double x[], Exo_DB *exo, double **saved_xyz, double **saved_displacement, Dpi *dpi)
+
+    /* anneal_mesh_LSA -- Stripped down version of anneal_mesh for
+     *                    linear stability analysis without outputting
+     *                    exodusII file
+     *
+     *
+     * Originally Created: 1997/08 Randy Schunk
+     *
+     * Cannibalized: 2020 Kristianto Tjiptowidjojo
+     */
+{
+  int p;
+  int gnn;
+  int idx, idy, idz;
+  int dim = exo->num_dim;
+  int num_nodes = exo->num_nodes;
+  double **new_coord;
+
+  /*
+   * Allocate the saved coordinate and displacement fields.
+   */
+  new_coord = (double **) calloc(dim, sizeof(double *));
+  saved_xyz = (double **) calloc(dim, sizeof(double *));
+  saved_displacement = (double **) calloc(dim, sizeof(double *));
+
+  for(p = 0; p < dim; p++)
+  {
+    new_coord[p] = (double *) calloc(num_nodes, sizeof(double));
+    dcopy1( num_nodes, Coor[p], new_coord[p] );
+    saved_xyz[p] = (double *) calloc(num_nodes, sizeof(double));
+    saved_displacement[p] = (double *) calloc(num_nodes, sizeof(double));
+  }
+
+  /*
+   * Save the old coordinates
+   */
+
+  if( dim > 0 )
+    {
+     dcopy1( num_nodes, Coor[0], saved_xyz[0]);
+    }
+  if( dim > 1 )
+    {
+     dcopy1( num_nodes, Coor[1], saved_xyz[1]);
+    }
+  if( dim > 2 )
+    {
+     dcopy1( num_nodes, Coor[2], saved_xyz[2] );
+    }
+
+  /* Displace the coordinates and save the displacement fields*/
+  for (gnn = 0; gnn < num_nodes; gnn++)
+    {
+      idx = Index_Solution (gnn, MESH_DISPLACEMENT1, 0, 0, -1);
+      if (idx > -1)
+        {
+         saved_displacement[0][gnn] = x[idx];
+         new_coord[0][gnn] += saved_displacement[0][gnn];
+         x[idx] = 0.0;
+        }
+      else
+        {
+         saved_displacement[0][gnn] = 0.0;
+        }
+
+      if( dim > 1 )
+        {
+         idy = Index_Solution (gnn, MESH_DISPLACEMENT2, 0, 0, -1);
+         if (idy > -1)
+           {
+            saved_displacement[1][gnn] = x[idy];
+            new_coord[1][gnn] += saved_displacement[1][gnn];
+            x[idy] = 0.0;
+           }
+         else
+           {
+            saved_displacement[1][gnn] = 0.0;
+           }
+         }
+      if( dim > 2 )
+        {
+         idz = Index_Solution (gnn, MESH_DISPLACEMENT3, 0, 0, -1);
+         if (idz > -1)
+           {
+            saved_displacement[2][gnn] = x[idz];
+            new_coord[2][gnn] += saved_displacement[2][gnn];
+            x[idz] = 0.0;
+           }
+         else
+           {
+            saved_displacement[2][gnn] = 0.0;
+           }
+        }
+    }
+
+
+  /*
+   * Save new coordinates
+   */
+
+  if ( dim > 0 )
+    {
+     dcopy1( num_nodes, new_coord[0], exo->x_coord);
+    }
+
+  if ( dim > 1 )
+    {
+     dcopy1( num_nodes, new_coord[0], exo->x_coord);
+    }
+
+  if ( dim > 2 )
+    {
+     dcopy1( num_nodes, new_coord[0], exo->x_coord);
+    }
+
+  /*
+   * Free up memories
+   */
+
+  for(p = 0; p < dim; p++) {
+    safer_free((void **) &(new_coord[p]));
+  }
+  safer_free((void **) &new_coord);
+
+
+  return(0);
+} /* END of routine anneal_mesh_LSA */
+/*****************************************************************************/
+
+/*****************************************************************************/
+/*****************************************************************************/
+
+
+int
+unanneal_mesh_LSA(double x[], Exo_DB *exo, double **saved_xyz, double **saved_displacement, Dpi *dpi)
+
+    /* anneal_mesh_LSA -- Undo anneal_mesh_LSA after completion of
+     *                    linear stability analysis in case it is needed
+     *                    for continuation
+     *
+     *
+     * Originally Created: 1997/08 Randy Schunk
+     *
+     * Cannibalized: 2020 Kristianto Tjiptowidjojo
+     */
+{
+  int gnn;
+  int idx, idy, idz;
+  int dim = exo->num_dim;
+  int num_nodes = exo->num_nodes;
+
+
+  /* Put back the displacement field in solution vector*/
+  for (gnn = 0; gnn < num_nodes; gnn++)
+    {
+      idx = Index_Solution (gnn, MESH_DISPLACEMENT1, 0, 0, -1);
+      if (idx > -1)
+        {
+         x[idx] = saved_displacement[0][gnn];
+        }
+
+      if( dim > 1 )
+        {
+         idy = Index_Solution (gnn, MESH_DISPLACEMENT2, 0, 0, -1);
+         if (idy > -1)
+           {
+            x[idy] = saved_displacement[1][gnn];
+           }
+         }
+      if( dim > 2 )
+        {
+         idz = Index_Solution (gnn, MESH_DISPLACEMENT3, 0, 0, -1);
+         if (idz > -1)
+           {
+            x[idz] = saved_displacement[2][gnn];
+           }
+        }
+    }
+
+
+  /*
+   * Put back the original  coordinates
+   */
+
+  if ( dim > 0 )
+    {
+     dcopy1( num_nodes, saved_xyz[0], exo->x_coord);
+    }
+
+  if ( dim > 1 )
+    {
+     dcopy1( num_nodes, saved_xyz[1], exo->y_coord);
+    }
+
+  if ( dim > 2 )
+    {
+     dcopy1( num_nodes, saved_xyz[2], exo->z_coord);
+    }
+
+
+  return(0);
+} /* END of routine unanneal_mesh_LSA */
+/*****************************************************************************/
+
+/*****************************************************************************/
+/*****************************************************************************/
+
 
 void
 shift_nodal_values ( int var,
