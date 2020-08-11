@@ -139,6 +139,7 @@ fi
 if command -v readlink &> /dev/null; then
     export GOMA_LIB=`readlink --canonicalize-missing $1`
 else
+    GOMA_LIB=$1
     echo "WARNING: readlink not found make sure GOMA_LIB is a full path"
     echo "Should be /home/username/gomalib not ~/gomalib, ./gomalib, ../gomalib, etc."
     echo "current GOMA_LIB=$GOMA_LIB"
