@@ -32,8 +32,8 @@
 EXTERN int cnt_nodal_vars	/* mm_more_utils.c                           */
 PROTO((void ));
 
-EXTERN int cnt_elem_vars	/* mm_more_utils.c                           */
-PROTO((const Exo_DB * ));
+EXTERN int cnt_elem_vars /* mm_more_utils.c                           */
+PROTO((const Exo_DB *));
 
 EXTERN int goal_post_nodal	/* mm_more_utils.c                           */
 PROTO((const int ));		/* var  */
@@ -94,13 +94,13 @@ PROTO((double [],		/* sol_vec                                   */
        int,	                /* timeDeriviative                           */
        double ));	        /* time                                      */
 
-EXTERN void extract_elem_vec	/* mm_more_utils.c                           */
-PROTO((const double [],		/* sol_vec                                   */
-       const int ,		/* ev_indx                                   */
-       const int ,		/* var_no                                    */
-       double ***,		/* gvec_elem                                 */
-       const Exo_DB *,
-       const int dof));	        /* degrees of freedom                                       */
+EXTERN void extract_elem_vec /* mm_more_utils.c                           */
+    PROTO((const double[],   /* sol_vec                                   */
+           const int,        /* ev_indx                                   */
+           const int,        /* var_no                                    */
+           double ***,       /* gvec_elem                                 */
+           const Exo_DB *,
+           const int dof)); /* degrees of freedom                                       */
 
 EXTERN void anneal_map		/* mm_more_utils.c                           */
 PROTO((const int ,		/* dim                                       */

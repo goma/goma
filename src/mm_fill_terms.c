@@ -35011,7 +35011,7 @@ assemble_emwave(double time,	/* present time value */
   dbl emf_coeff_dn=0, conj_coeff_dn=0;
   dbl emf_coeff_dk=0, conj_coeff_dk=0;
   dbl mag_permeability=1.4e-07;
-  int cross_field_var;
+  int cross_field_var = 0;
   dbl cross_field[DIM];
 
   dbl n;				/* Refractive index. */

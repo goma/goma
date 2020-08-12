@@ -2196,14 +2196,22 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   if(STRESS_NORM != -1)
   {  
     for (int mode = 0; mode < vn->modes; mode++) {
-      dbl invDenom = 1./(2.*VIM);
-          
+
+      dbl traceOverVim = 0;
+      for(int i=0; i<VIM; i++){
+        traceOverVim += fv->S[mode][i][i];
+      }
+
+      traceOverVim /= VIM;
+
       // square of the deviatoric sress norm
-                                      
-      dbl normOfStressDSqr = pow(fv->S[mode][0][0] - fv->S[mode][1][1], 2)*invDenom + pow(fv->S[mode][0][1], 2);
-      if(VIM>2){
-        normOfStressDSqr += pow(fv->S[mode][0][0] - fv->S[mode][2][2], 2)*invDenom + pow(fv->S[mode][0][2], 2)
-          + pow(fv->S[mode][1][1] - fv->S[mode][2][2], 2)*invDenom + pow(fv->S[mode][1][2], 2);
+      dbl normOfStressDSqr = 0;
+      for(int i=0; i<VIM; i++){
+        normOfStressDSqr += pow(fv->S[mode][i][i] - traceOverVim, 2)/2.;
+
+        for(int j=i+1; j<VIM; j++){
+          normOfStressDSqr += pow(fv->S[mode][i][j], 2);
+        }
       }
           
       dbl normOfStressD = sqrt(normOfStressDSqr);
@@ -2215,7 +2223,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   if(SARAMITO_YIELD != -1)
   {  
     for (int mode = 0; mode < vn->modes; mode++) {
-      dbl coeff = compute_saramito_model_terms(fv->S[mode], ve[mode]->gn->tau_y, NULL);
+      dbl coeff = compute_saramito_model_terms(fv->S[mode], ve[mode]->gn->tau_y, ve[mode]->gn->fexp, NULL);
       local_post[SARAMITO_YIELD + mode] = coeff;
       local_lumped[SARAMITO_YIELD + mode] = 1.;
     }
@@ -11626,40 +11634,46 @@ load_elem_tkn (struct Results_Description *rd,
   for (i = 0; i < upd->Num_Mat; i++) {
     for ( j = V_FIRST; j < V_LAST; j++) {
       if ( pd_glob[i]->v[j] != V_NOTHING ) {
+<<<<<<< HEAD
         if (pd_glob[i]->i[j] == I_P0 ) {
 	  if ( Num_Var_In_Type[j] > 1 ) {
 	    fprintf(stderr,
+=======
+        if (pd_glob[i]->i[j] == I_P0) {
+          if (Num_Var_In_Type[j] > 1) {
+            fprintf(stderr,
+>>>>>>> origin/master
 		    "%s: Too many components in variable type (%s - %s) for element variable\n",
 		    yo,
 		    Exo_Var_Names[j].name2,
 		    Exo_Var_Names[j].name1 );
 	    exit (-1);
-	  }
-	  if (ev_var_mask[j - V_FIRST] == 0) {
+          }
+          if (ev_var_mask[j - V_FIRST] == 0) {
 	    /* We just found a candidate for an element variable */
 	    /* Append a suffix onto the var name to differentiate from its
 	     nodal counterpart */
-            sprintf(appended_name,  "%s_E", Exo_Var_Names[j].name2 );
-            set_ev_tkud(rd, index, j, appended_name,
-                        Var_Units[j].name2, Exo_Var_Names[j].name1, FALSE);
-	    index++;
-	    ev_var_mask[j - V_FIRST] = 1; /* Only count this variable once */
+            sprintf(appended_name, "%s_E", Exo_Var_Names[j].name2);
+            set_ev_tkud(rd, index, j, appended_name, Var_Units[j].name2, Exo_Var_Names[j].name1,
+                        FALSE);
+            index++;
+            ev_var_mask[j - V_FIRST] = 1; /* Only count this variable once */
 	  }
         }
-        if ( pd_glob[i]->i[j] == I_P1 ) {
-              int dof  = getdofs(type2shape(exo->eb_elem_itype[i]),I_P1);
-              if (ev_var_mask[j - V_FIRST] == 0) {
-                /* We just found a candidate for an element variable */
-                /* Append a suffix onto the var name to differentiate from its
-                 nodal counterpart */
-                for(i=1;i<=dof;i++){
-                  sprintf(appended_name,  "%s_E%d", Exo_Var_Names[j].name2,i);
-                  set_ev_tkud(rd, index, j, appended_name,
-                            Var_Units[j].name2, Exo_Var_Names[j].name1, FALSE);
-                  index++;
-                }
-                ev_var_mask[j - V_FIRST] = 1; /* Only count this variable once */
-              }
+        if (pd_glob[i]->i[j] == I_P1) {
+          int dof = getdofs(type2shape(exo->eb_elem_itype[i]), I_P1);
+          if (ev_var_mask[j - V_FIRST] == 0) {
+            /* We just found a candidate for an element variable */
+            /* Append a suffix onto the var name to differentiate from its
+             nodal counterpart */
+            for (i = 1; i <= dof; i++) {
+              sprintf(appended_name, "%s_E%d", Exo_Var_Names[j].name2, i);
+              set_ev_tkud(rd, index, j, appended_name, Var_Units[j].name2, Exo_Var_Names[j].name1,
+                          FALSE);
+              index++;
+            }
+            ev_var_mask[j - V_FIRST] = 1; /* Only count this variable once */
+          }
         }
       }
     }
