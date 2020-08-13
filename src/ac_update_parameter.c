@@ -733,6 +733,19 @@ update_MT_parameter(double lambda, /* Parameter value */
     case TAGC_SHIFT_FUNC:
     case TAGC_SHIFT_FUNC1:
       vn_glob[mn]->shift[mpr-TAGC_SHIFT_FUNC] = lambda;
+
+    case TAGC_POLYMER_YIELD_STRESS:
+        for(int mm=0;mm<vn_glob[mn]->modes;mm++)
+        {
+                ve_glob[mn][mm]->gn->tau_y = lambda;
+        }
+      break;
+
+    case TAGC_POLYMER_YIELD_EXPONENT:
+        for(int mm=0;mm<vn_glob[mn]->modes;mm++)
+        {
+                ve_glob[mn][mm]->gn->fexp = lambda;
+        }
       break;
 
       /* 
@@ -1636,6 +1649,12 @@ retrieve_MT_parameter(double *lambda, /* Parameter value */
     case TAGC_SHIFT_FUNC1:
       *lambda = vn_glob[mn]->shift[mpr-TAGC_SHIFT_FUNC];
       break;
+      
+    case TAGC_POLYMER_YIELD_STRESS:
+      *lambda = ve_glob[mn][cont->upMPID-TAGC_POLYMER_YIELD_STRESS]->gn->tau_y;
+
+    case TAGC_POLYMER_YIELD_EXPONENT:
+      *lambda = ve_glob[mn][cont->upMPID-TAGC_POLYMER_YIELD_EXPONENT]->gn->fexp;
 
       /* 
        * Constants used in the Elasticity Constitutive Equations

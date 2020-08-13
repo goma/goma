@@ -645,6 +645,8 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define TAGC_PTT_EPS                       5400
 #define TAGC_SHIFT_FUNC                    5500
 #define TAGC_SHIFT_FUNC1                   5501
+#define TAGC_POLYMER_YIELD_STRESS          5600
+#define TAGC_POLYMER_YIELD_EXPONENT        5700
 
  /* 
   * Constants used in the Elasticity Constitutive Equations
