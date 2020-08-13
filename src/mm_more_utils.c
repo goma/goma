@@ -1023,31 +1023,6 @@ void extract_elem_vec(const double sol_vec[],
           found_quantity = TRUE;
         }
       }
-      else{
-        int i = 0;
-        I     = Proc_Elem_Connect[iconnect_ptr + i];
-        /* NOTE: here, the element variables (such as PRESSURE) are being
-           extracted from the solution vector coming off of the hanging
-           interior nodes, or a given specified node for such a quantity.
-           There should never be more than one of this quantity defined
-           per element, or we have a problem treating it as an element
-           variable. Hence the found_quantity check.                       */
-        index = Index_Solution(I, var, ktype, dof, mn);
-        if (index != -1) {
-          /* This should be the one node that has our value - set the element
-             value to this */
-          gvec_elem[eb_index][ev_indx][ielem - e_start] = sol_vec[index];
-          if (found_quantity == TRUE) {
-            fprintf(stderr,
-                    "Warning: Too many nodes returning quantities for element variable %s (%s) - may not be accurate\n",
-                    Exo_Var_Names[var].name2,
-                    Exo_Var_Names[var].name1 );
-            exit (-1);
-          }
-          found_quantity = TRUE;
-        }
-
-      }
       if (found_quantity == FALSE) {
 	gvec_elem[eb_index][ev_indx][ielem - e_start] = 0.;   
 	/* Field variable is zero where it

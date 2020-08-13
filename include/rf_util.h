@@ -181,7 +181,6 @@ PROTO((FILE *,
        const char *,            /* string                                    */
        const int));             /* num -> repetition number                  */
 
-<<<<<<< HEAD
 extern int rd_vectors_from_exoII /* rf_util.c                                */
 PROTO((double [],		/* u - solution vector                       */
 	const char *,		/* file_nm - name of EXODUS II file	     */
@@ -199,7 +198,7 @@ PROTO((double [],		/* u - solution vector                       */
 				 * exodus file.                              */
        double *timeValueRead, /* Value of the time in the time plane read  */
        const Exo_DB *));
-=======
+
 extern int rd_vectors_from_exoII  /* rf_util.c                                */
     PROTO((double[],              /* u - solution vector                       */
            const char *,          /* file_nm - name of EXODUS II file	     */
@@ -217,7 +216,6 @@ extern int rd_vectors_from_exoII  /* rf_util.c                                */
                                    * exodus file.                              */
            double *timeValueRead, /* Value of the time in the time plane read  */
            const Exo_DB *));
->>>>>>> origin/master
 
 extern int rd_trans_vectors_from_exoII /* rf_util.c                          */
 PROTO((double [],		/* u - solution vector                       */

@@ -1781,10 +1781,16 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
 	      DPRINTF(stdout,
 		      "%s:  reading fixed field \"%s\" from \"%s\" ...\n", 
 		      yo,efv->name[w], efv->file_nm[w]);
+              err =
+                  rd_vectors_from_exoII(u, efv->file_nm[w], 1, w, INT_MAX, &timeValueReadExt, exo);
+              if (err != 0) {
+                DPRINTF(stderr,
+			"%s:  err fr rd_vectors_from_exoII() while reading external fields\n",
 			yo);
               }
             }
        
+	  else if(efv->ipix[w] == 1) /*Original pixel to mesh tool */
 	    {
 	      DPRINTF(stderr, "\nMapping pixel image to mesh with original algorithm...");
       	      err = rd_image_to_mesh(w, exo); 

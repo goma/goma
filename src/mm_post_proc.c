@@ -11634,15 +11634,9 @@ load_elem_tkn (struct Results_Description *rd,
   for (i = 0; i < upd->Num_Mat; i++) {
     for ( j = V_FIRST; j < V_LAST; j++) {
       if ( pd_glob[i]->v[j] != V_NOTHING ) {
-<<<<<<< HEAD
-        if (pd_glob[i]->i[j] == I_P0 ) {
-	  if ( Num_Var_In_Type[j] > 1 ) {
-	    fprintf(stderr,
-=======
         if (pd_glob[i]->i[j] == I_P0) {
           if (Num_Var_In_Type[j] > 1) {
             fprintf(stderr,
->>>>>>> origin/master
 		    "%s: Too many components in variable type (%s - %s) for element variable\n",
 		    yo,
 		    Exo_Var_Names[j].name2,

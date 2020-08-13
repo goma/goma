@@ -1510,7 +1510,7 @@ void wr_resetup_exo(Exo_DB *exo, char *filename, int verbosity) {
       EH(status, "ex_put_truth_table elem block");
       }
     }
-  }
+
 
   if (exo->num_node_vars > 0) {
     status = ex_put_variable_param(exo->exoid, EX_NODAL, exo->num_node_vars);
