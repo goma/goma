@@ -2390,7 +2390,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 #ifdef DEBUG_BC
 		if (IFPD == NULL) IFPD = fopen("darcy.txt", "a");
 		fprintf (IFPD,
-                         "ielem = %d: BC_index = %d, lec->R\[[^\]]*\,[^\]]*\] += weight"
+                         "ielem = %d: BC_index = %d, lec->R[LEC_R_INDEX(%d,%d)] += weight"
 			 "* fv->sdet * func[p]: weight = %g, fv->sdet = %g, func[%d] = %g\n",
 			 ei->ielem, bc_input_id, ieqn, ldof_eqn,
 			 weight, fv->sdet, p, func[p]);
