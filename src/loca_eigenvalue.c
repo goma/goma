@@ -114,14 +114,15 @@ static int  eig_driver(char which[], char bmat[], int iparam[], int mode,
                        double sigma, double mu, double delta, double zeta,
                        int nev, int ncv, int info, double tol, double eta,
                        int printproc, int numOwnedUnks, int numUnks,
-                       int con_step_num, int jmax, int sort, MPI_Comm comm);
+                       int con_step_num, int jmax, int sort, MPI_Comm comm,
+                       double **saved_displacement);
 #endif
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
 
-void calc_eigenvalues_loca(struct con_struct *con)
+void calc_eigenvalues_loca(struct con_struct *con, double **saved_displacement)
 
 {
 #if defined (EIGEN_SERIAL) || defined (EIGEN_PARALLEL)
@@ -233,7 +234,8 @@ void calc_eigenvalues_loca(struct con_struct *con)
   az_fail_cnt = eig_driver(which, bmat, iparam, mode, sigma, mu, delta, zeta,
                            nev, ncv, info, tol, eta, cgi->printproc,
                            cgi->numOwnedUnks, cgi->numUnks,
-                           con->private_info.step_num, jmax, cei->sort, comm);
+                           con->private_info.step_num, jmax, cei->sort, comm,
+                           saved_displacement);
 
   if( info != 0){
     if (cgi->printproc > 1) printf("  Error %d in eigensolver\n",info);
@@ -260,7 +262,8 @@ void calc_eigenvalues_loca(struct con_struct *con)
 static int eig_driver(char which[], char bmat[], int iparam[], int mode,
    double sigma, double mu, double delta, double zeta, int nev, int ncv,
    int info, double tol, double eta, int printproc, int numOwnedUnks,
-   int numUnks, int con_step_num, int jmax, int sort, MPI_Comm comm)
+   int numUnks, int con_step_num, int jmax, int sort, MPI_Comm comm,
+   double **saved_displacement)
 
 /* matShifted is temp matrix, nnz is # nonzeros in matrix */
 {
@@ -680,7 +683,7 @@ static int eig_driver(char which[], char bmat[], int iparam[], int mode,
             if (printproc > 1)
               printf("Printing real eigenvector with value  %g\n", d[j]);
             eigenvector_output_conwrap(j, 1, &v[(j)*ldv], d[j],
-                                       NULL, 0, con_step_num);
+                                       NULL, 0, con_step_num, saved_displacement);
           }
 
           /* now calculate Rayleigh quotient */
@@ -706,7 +709,7 @@ static int eig_driver(char which[], char bmat[], int iparam[], int mode,
                  d[j], fabs(d[j+ncv]));
 
             eigenvector_output_conwrap(j, 2, &v[(j)*ldv], d[j], &v[(j+1)*ldv],
-                                       fabs(d[j+ncv]), con_step_num);
+                                       fabs(d[j+ncv]), con_step_num, saved_displacement);
           }
 
           d[j+2*ncv] = null_vector_resid

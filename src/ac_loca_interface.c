@@ -3518,7 +3518,7 @@ void solution_output_conwrap(int num_soln_flag,
 /* Anneal mesh if mesh displacement is solved */
       if (displacement_somewhere )
         {
-         error = anneal_mesh_LSA(x, passdown.exo, saved_xyz, saved_displacement, passdown.dpi);
+         error = anneal_mesh_LSA(x, passdown.exo, saved_xyz, saved_displacement);
         }
 
   /* Loop over LSA wave numbers, or just zero */
@@ -3546,13 +3546,13 @@ void solution_output_conwrap(int num_soln_flag,
             }
 
   /* Call eigensolver */
-          calc_eigenvalues_loca(con);
+          calc_eigenvalues_loca(con, saved_displacement);
         }
 
   /* Return mesh and solution vector to its original state */
       if (displacement_somewhere )
         {
-         error = unanneal_mesh_LSA(x, passdown.exo, saved_xyz, saved_displacement, passdown.dpi);
+         error = unanneal_mesh_LSA(x, passdown.exo, saved_xyz, saved_displacement);
         }
 
   /* Now reset LSA_flag */
@@ -3577,7 +3577,8 @@ void solution_output_conwrap(int num_soln_flag,
 /*****************************************************************************/
 /*****************************************************************************/
 void eigenvector_output_conwrap(int j, int num_soln_flag, double *xr, double evr,
-                                double *xi, double evi, int step_num)
+                                double *xi, double evi, int step_num,
+                                double **saved_displacement)
 /* Call to write out eigenvectors
  * Input:
  *    j    Eigenvalue number
@@ -3600,6 +3601,7 @@ void eigenvector_output_conwrap(int j, int num_soln_flag, double *xr, double evr
 /*  int n = LSA_current_wave_number; */
   int freq = eigen->Eigen_Write_Freq;
   char efile[MAX_FNL];
+  int m, displacement_somewhere;
 
   if (j >= eigen->Eigen_Record_Modes) return;
 
@@ -3615,6 +3617,18 @@ void eigenvector_output_conwrap(int j, int num_soln_flag, double *xr, double evr
   /* Get the eigenvector file name */
   strcpy(efile, eigen->Eigen_Output_File);
   get_eigen_outfile_name(efile, j, LSA_current_wave_number);
+
+/* determine whether to add steady state mesh displacement
+   if there is a mesh displacement field */
+   displacement_somewhere = FALSE;
+
+   for(m = 0; m < upd->Num_Mat; m++)
+       displacement_somewhere |= ( pd_glob[m]->e[R_MESH1] );
+
+   if (displacement_somewhere )
+     {
+      add_displacement_LSA(xr, passdown.exo, saved_displacement);
+     }
 
   /* Write the real vector using the real eigenvalue part as the time stamp */
   write_solution(efile,
@@ -3651,6 +3665,12 @@ void eigenvector_output_conwrap(int j, int num_soln_flag, double *xr, double evr
 
   /* Write imaginary part to next eigenvector file */
         {
+
+         if (displacement_somewhere )
+           {
+            add_displacement_LSA(xi, passdown.exo, saved_displacement);
+           }
+
           strcpy(efile, eigen->Eigen_Output_File);
           get_eigen_outfile_name(efile, j+1, LSA_current_wave_number);
           write_solution(efile,
