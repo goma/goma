@@ -58,7 +58,8 @@
 #include "mm_fill_util.h"
 #include "mm_fill_potential.h"
 #include "mm_qp_storage.h"
-#include "mm_shell_bc.h" 
+#include "mm_shell_bc.h"
+#include "mm_fill_em.h"
 
 
 #include "mm_eh.h"
@@ -1764,8 +1765,52 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
                       bc->BC_Data_Float[1], bc->BC_Data_Float[2],
                       bc->BC_Data_Float[3], bc->BC_Data_Int[0]);
 	    break;
-
-	case LIGHTP_TRANS_BC:
+          case EM_ER_FARFIELD_DIRECT_BC:
+          case EM_EI_FARFIELD_DIRECT_BC:
+          case EM_HR_FARFIELD_DIRECT_BC:
+          case EM_HI_FARFIELD_DIRECT_BC:
+              apply_em_farfield_direct_vec
+                  (func,
+                   d_func,
+                   xi,
+                   (int) bc->BC_Name,
+                   bc->BC_Data_Float
+                  );
+              break;
+          case EM_ER_SOMMERFELD_BC:
+          case EM_EI_SOMMERFELD_BC:
+          case EM_HR_SOMMERFELD_BC:
+          case EM_HI_SOMMERFELD_BC:
+              apply_em_sommerfeld_vec
+                  (func,
+                   d_func,
+                   xi,
+                   (int) bc->BC_Name,
+                   bc->BC_Data_Float
+                  );
+              break;
+          case EM_ER_FREE_BC:
+          case EM_EI_FREE_BC:
+          case EM_HR_FREE_BC:
+          case EM_HI_FREE_BC:
+              apply_em_free_vec
+                  (func,
+                   d_func,
+                   xi,
+                   (int) bc->BC_Name
+                  );
+              break;
+        case E_ER_PLANEWAVE_BC:
+        case E_EI_PLANEWAVE_BC:
+            apply_ewave_planewave_vec
+                (func,
+                 d_func,
+                 xi,
+                 (int) bc->BC_Name,
+                 bc->BC_Data_Float
+                );
+            break;
+        case LIGHTP_TRANS_BC:
 	case LIGHTM_TRANS_BC:
 	case LIGHTD_TRANS_BC:
 	    light_transmission (func, d_func, time_intermediate, 

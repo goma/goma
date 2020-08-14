@@ -336,7 +336,8 @@ logprintf(const char *format, ... )
   if ( current_severity < 0 )
     {
       DPRINTF(stderr, "%s ", time_result);
-      DPRINTF(stderr, "\nAbnormal termination -- see log file for details.\n");
+      DPRINTF(stderr, "\nAbnormal termination -- Logging is disabled at compile time.\n");
+      EH(current_severity, format);
       exit(current_severity);
     }
 #endif

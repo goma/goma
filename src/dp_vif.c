@@ -1705,6 +1705,7 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->Acoustic_ImpedanceModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->Acoustic_AbsorptionModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->Refractive_IndexModel, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->Extinction_IndexModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->Light_AbsorptionModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->Shell_User_ParModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->PermittivityModel, 1, MPI_INT);

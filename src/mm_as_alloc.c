@@ -1218,6 +1218,12 @@ assembly_alloc(Exo_DB *exo)
   if(Num_Var_In_Type[ACOUS_REYN_STRESS]) {
     esp->ars = (dbl **) alloc_ptr_1(MDE);
   }
+  if(Num_Var_In_Type[EM_CONT_REAL]) {
+    esp->epr = (dbl **) alloc_ptr_1(MDE);
+  }
+  if(Num_Var_In_Type[EM_CONT_IMAG]) {
+    esp->epi = (dbl **) alloc_ptr_1(MDE);
+  }
   if(Num_Var_In_Type[SHELL_BDYVELO]) {
     esp->sh_bv = (dbl **) alloc_ptr_1(MDE);
   }
