@@ -631,7 +631,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 		   *  Sum up all of the individual contributions and store it
 		   *  in the local element residual vector.
 		   */
-		  lec->R[MAX_PROB_VAR + w][ii] += 
+                  lec->R[LEC_R_INDEX((MAX_PROB_VAR + w),ii)] +=
 		    mass + advection +  diffusion + source;
 		  
 		}   /* if active_dofs */
@@ -906,10 +906,11 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				  source *= wt_func;
 				  source *= h3 * det_J * wt;
 				  source *= pd->etm[eqn][(LOG2_SOURCE)];
-				}
+                                }
 			      
-			      lec->J[MAX_PROB_VAR + w][MAX_PROB_VAR + w1][ii][j] += 
+                              lec->J[LEC_J_INDEX((MAX_PROB_VAR + w),(MAX_PROB_VAR + w1),ii,j)] +=
 				mass + advection + diffusion + source;
+
 			    }
 			}
 		    }
@@ -1060,7 +1061,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				    }
 				}
 			      
-			      lec->J[MAX_PROB_VAR + w][pvar][ii][j] += 
+                              lec->J[LEC_J_INDEX((MAX_PROB_VAR + w),pvar,ii,j)] +=
 				advection+ diffusion + source;
 			      
 			    }
@@ -1092,7 +1093,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				  diffusion *= h3 * det_J * wt * pd->etm[eqn][LOG2_DIFFUSION]; 
 				}
 			      
-			      lec->J[MAX_PROB_VAR + w][pvar][ii][j] += 
+                              lec->J[LEC_J_INDEX((MAX_PROB_VAR + w),pvar,ii,j)] +=
 				diffusion;
 			      
 			    }
@@ -1373,7 +1374,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				  source *= pd->etm[eqn][LOG2_SOURCE];
 				}
 			      
-			      lec->J[MAX_PROB_VAR + w][pvar][ii][j] += 
+                              lec->J[LEC_J_INDEX((MAX_PROB_VAR + w),pvar,ii,j)] +=
 				mass + advection + diffusion + source;
 			    }
 			}
@@ -1468,7 +1469,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			      source *= pd->etm[eqn][LOG2_SOURCE];
 			    }
 			  
-			  lec->J[MAX_PROB_VAR + w][pvar][ii][j] += mass + advection + diffusion + source;
+                          lec->J[LEC_J_INDEX((MAX_PROB_VAR + w),pvar,ii,j)] += mass + advection + diffusion + source;
 			}		/* for(j) .... */
 		    }			/* if ( e[eqn], v[var]) .... */	      
 		  var = LIGHT_INTP;
@@ -1486,7 +1487,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			      source *= pd->etm[eqn][LOG2_SOURCE];
 			    }
 			  
-			  lec->J[MAX_PROB_VAR + w][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX((MAX_PROB_VAR + w),pvar,ii,j)] += source;
 			}		/* for(j) .... */
 		    }			/* if ( e[eqn], v[var]) .... */	      
 		  var = LIGHT_INTM;
@@ -1504,7 +1505,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			      source *= pd->etm[eqn][LOG2_SOURCE];
 			    }
 			  
-			  lec->J[MAX_PROB_VAR + w][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX((MAX_PROB_VAR + w),pvar,ii,j)] += source;
 			}		/* for(j) .... */
 		    }			/* if ( e[eqn], v[var]) .... */	      
 		  var = LIGHT_INTD;
@@ -1522,7 +1523,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			      source *= pd->etm[eqn][LOG2_SOURCE];
 			    }
 			  
-			  lec->J[MAX_PROB_VAR + w][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX((MAX_PROB_VAR + w),pvar,ii,j)] += source;
 			}		/* for(j) .... */
 		    }			/* if ( e[eqn], v[var]) .... */	      
 		  
@@ -1584,7 +1585,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			      source *= pd->etm[eqn][LOG2_SOURCE];
 			    }
 			  
-			  lec->J[MAX_PROB_VAR + w][pvar][ii][j] += mass + advection + diffusion + source;
+                          lec->J[LEC_J_INDEX((MAX_PROB_VAR + w),pvar,ii,j)] += mass + advection + diffusion + source;
 			}  /* end of loop over j */
 		    }  /* end of var = VOLTAGE */
                 }
@@ -1613,7 +1614,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
 			    }
 			  
-			  lec->J[MAX_PROB_VAR + w][pvar][ii][j] += diffusion;
+                          lec->J[LEC_J_INDEX((MAX_PROB_VAR + w),pvar,ii,j)] += diffusion;
 			}		/* for(j) .... */
 		    }			/* if ( e[eqn], v[var]) .... */	      
                 }                       /* if cr->MassFluxModel == FICKIAN_CHARGED ...  */   
@@ -1668,7 +1669,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				* mp->AdvectiveScaling[w];
 			    }
 			  
-			  lec->J[MAX_PROB_VAR + w][pvar][ii][j] += advection + diffusion + mass;
+                          lec->J[LEC_J_INDEX((MAX_PROB_VAR + w),pvar,ii,j)] += advection + diffusion + mass;
 			}		/* for(j) .... */
 		    }			/* if ( e[eqn], v[var]) .... */
 		  
@@ -1696,7 +1697,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			      diffusion *= h3 * det_J * wt;
 			      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
 			      
-			      lec->J[MAX_PROB_VAR + w][pvar][ii][j] += diffusion;
+                              lec->J[LEC_J_INDEX((MAX_PROB_VAR + w),pvar,ii,j)] += diffusion;
 			      
 			    } /* for (j) .. J_s_SH */
 			}/* if (pd) */
@@ -1718,7 +1719,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				  source *= h3 * det_J * wt;
 				  source *= pd->etm[eqn][(LOG2_SOURCE)];
 				  
-				  lec->J[MAX_PROB_VAR + w][pvar][ii][j] += source;
+                                  lec->J[LEC_J_INDEX((MAX_PROB_VAR + w),pvar,ii,j)] += source;
 			      
 				} /* for (j) .. J_s_SH */
 			    } /* if pd -eqn)*/
@@ -1764,7 +1765,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				      diffusion *= h3 * det_J * wt;
 				      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
 				      
-				      lec->J[MAX_PROB_VAR + w][pvar][ii][j] += diffusion;
+                                      lec->J[LEC_J_INDEX((MAX_PROB_VAR + w),pvar,ii,j)] += diffusion;
 				    }
 				}
 			    }
@@ -2218,7 +2219,7 @@ assemble_mass_transport_path_dependence
                   pvar = upd->vp[var];
                   for ( j=0; j<ei->dof[var]; j++ )
                     {
-                      lec->J[MAX_PROB_VAR + w][pvar][ii][j] += lsi->d_H_dF[j] * residual * sign;
+                      lec->J[LEC_J_INDEX((MAX_PROB_VAR + w),pvar,ii,j)] += lsi->d_H_dF[j] * residual * sign;
                     }
 		}   /* if active_dofs */
 	      
@@ -13347,7 +13348,7 @@ assemble_invariant ( double tt,	/* parameter to vary time integration from
 		      source *= pd->etm[eqn][(LOG2_SOURCE)];
 		    }
 		  
-		  lec->R[peqn][i] += 
+		  lec->R[LEC_R_INDEX(peqn,i)] += 
 		    advection  + source +diffusion;      
   
 		}
@@ -13395,7 +13396,7 @@ assemble_invariant ( double tt,	/* parameter to vary time integration from
 				  
 			}
 			      
-		      lec->J[peqn][pvar][i][j] +=  advection;
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=  advection;
 		    }
 		}
 	    }
@@ -13434,7 +13435,7 @@ assemble_invariant ( double tt,	/* parameter to vary time integration from
 		    source *= pd->etm[eqn][(LOG2_SOURCE)];
 		  }
 
-	      lec->J[peqn][pvar][i][j] += advection + source + diffusion ;
+	      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection + source + diffusion ;
 	    }
 
 	  /*
@@ -13508,7 +13509,7 @@ assemble_invariant ( double tt,	/* parameter to vary time integration from
 			  source *=  wt_func*wt*pd->etm[eqn][(LOG2_SOURCE)];
 			}
 			      
-		      lec->J[peqn][pvar][i][j] += source + advection + diffusion;
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += source + advection + diffusion;
 		    }
 		}
 	    }

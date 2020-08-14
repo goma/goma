@@ -666,11 +666,11 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 				      if (af->Assemble_Jacobian) {
 					d_func[p][MESH_DISPLACEMENT1+p][id] = 1.;    
 					ldof_eqn = ei->ln_to_first_dof[MESH_DISPLACEMENT1+p][id];
-					lec->R[MESH_DISPLACEMENT1 + p][ldof_eqn] = 0.; 
+                                        lec->R[LEC_R_INDEX(MESH_DISPLACEMENT1 + p,ldof_eqn)] = 0.;
 					ldof_eqn = ei->ln_to_first_dof[MESH_DISPLACEMENT1+p][id];
                                         eqn = upd->ep[MESH_DISPLACEMENT1 + p];
 					zero_lec_row(lec->J,eqn	,ldof_eqn);
-					lec->J[eqn][eqn][ldof_eqn][ldof_eqn] 
+                                        lec->J[LEC_J_INDEX(eqn,eqn,ldof_eqn,ldof_eqn)]
 					  = DIRICHLET_PENALTY; 
 				      }
 				    }
@@ -1145,7 +1145,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 			  ieqn = upd->ep[eqn];
 			}
 			ldof_eqn = ei->ln_to_first_dof[eqn][id];
-			lec->R[ieqn][ldof_eqn] += weight * func[p];
+                        lec->R[LEC_R_INDEX(ieqn,ldof_eqn)] += weight * func[p];
 
 			/* 
 			 * add sensitivities into matrix
@@ -1199,7 +1199,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 					    {
 					      pvar = upd->vp[var];
 					      ldof_eqn = ei->ln_to_first_dof[eqn][id];
-					      lec->J[ieqn][pvar] [ldof_eqn][j] +=
+                                              lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] +=
 						weight * d_func[p][var][j];
 					    }
 					}
@@ -1238,7 +1238,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 					    {
 					      pvar = upd->vp[var];
 					      ldof_eqn = ei->ln_to_first_dof[eqn][id];
-					      lec->J[ieqn][pvar] [ldof_eqn][j] +=
+                                              lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] +=
 						weight * d_func_ss[p][var][j]; 
 					    }
 					}
@@ -1257,7 +1257,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 					    {
 					      //pvar = upd->vp[MAX_PROB_VAR + w];
 					      ldof_eqn = ei->ln_to_first_dof[eqn][id];
-					      lec->J[ieqn][MAX_PROB_VAR + w] [ldof_eqn][j] +=
+                                              lec->J[LEC_J_INDEX(ieqn,MAX_PROB_VAR + w,ldof_eqn,j)] +=
 						weight * d_func[p][MAX_PROB_VAR + w][j];
 					    }
 					} /* end of loop over species */   
@@ -1552,7 +1552,7 @@ apply_shell_grad_bc (double x[],           /* Solution vector for the current pr
                               ib = gnn_map[i];
 
                               /* Transfer residual term */
-                              lec->R[pe][ib] += local_r[pe][i];
+                              lec->R[LEC_R_INDEX(pe,ib)] += local_r[pe][i];
 
                               /* Loop through and transfer sensitivities */
                               for (var=0; var<MAX_VARIABLE_TYPES; var++)
@@ -1561,7 +1561,7 @@ apply_shell_grad_bc (double x[],           /* Solution vector for the current pr
                                   jdof = n_dof[var];
                                   for (j=0; j < jdof; j++)
                                     {
-                                      lec->J[pe][pv][ib][j] +=
+                                      lec->J[LEC_J_INDEX(pe,pv,ib,j)] +=
 					local_j[pe][pv][i][j];
                                     }
                                 }  /* End of term transfer */
@@ -1888,14 +1888,14 @@ assemble_sharp_integrated_bc( double x[],           /* Solution vector for the c
 			        {
 			          for ( j=0; j<ei->dof[var]; j++)
 				    {
-				      lec->J[ieqn][pvar][ldof_eqn][j] += wt * func[p] * bf[var]->phi[j];
+                                      lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] += wt * func[p] * bf[var]->phi[j];
 				    }
 				}
 			    }
 			}
 		      else
 		        {
-			  lec->R[ieqn][ldof_eqn] += wt * func[p];
+                          lec->R[LEC_R_INDEX(ieqn,ldof_eqn)] += wt * func[p];
 
 			  if ( af->Assemble_Jacobian ) 
 			    {
@@ -1909,7 +1909,7 @@ assemble_sharp_integrated_bc( double x[],           /* Solution vector for the c
 					{
 					  for ( j=0; j<ei->dof[var]; j++)
 					    {
-					      lec->J[ieqn][pvar][ldof_eqn][j] += 
+                                              lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] +=
 						wt*d_func[p][var][j];
 					    }
 					}
@@ -1919,7 +1919,7 @@ assemble_sharp_integrated_bc( double x[],           /* Solution vector for the c
 					    {
 					      for ( j=0; j<ei->dof[var]; j++)
 						{
-						  lec->J[ieqn][MAX_PROB_VAR + w][ldof_eqn][j] += 
+                                                  lec->J[LEC_J_INDEX(ieqn,MAX_PROB_VAR + w,ldof_eqn,j)] +=
 						    wt * d_func[p][MAX_VARIABLE_TYPES + w][j];
 						}  
 					    }
@@ -1933,7 +1933,7 @@ assemble_sharp_integrated_bc( double x[],           /* Solution vector for the c
 			        {
 			          for ( j=0; j<ei->dof[var]; j++)
 				    {
-				      lec->J[ieqn][pvar][ldof_eqn][j] += wt * func[p] * lsi->d_gfmag_dF[j] * lsi->gfmaginv;
+                                      lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] += wt * func[p] * lsi->d_gfmag_dF[j] * lsi->gfmaginv;
 				    }
 				} 
 			    } /* end of if( af->Assemble_Jacobian */

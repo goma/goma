@@ -818,11 +818,11 @@ apply_contact_bc (
 	       */
 	      if (pass == 1 && ieqn != -1 && ldof_eqn != -1) {
 		res = weight * fv->sdet * func[p];
-		lec->R[ieqn][ldof_eqn] += res;
+                lec->R[LEC_R_INDEX(ieqn,ldof_eqn)] += res;
 #ifdef DEBUG_BC
 		if (IFPD == NULL) IFPD = fopen("darcy.txt", "a");
 		fprintf (IFPD,
-			 "ielem = %d: BC_index = %d, lec->R[%d][%d] += weight"
+                         "ielem = %d: BC_index = %d, lec->R[LEC_R_INDEX(%d,%d)] += weight"
 			 "* fv->sdet * func[p]: weight = %g, fv->sdet = %g, func[%d] = %g\n",
 			 ei->ielem, bc_input_id, ieqn, ldof_eqn,
 			 weight, fv->sdet, p, func[p]);
@@ -856,7 +856,7 @@ apply_contact_bc (
 			if (pvar != -1) {
 			  for (j = 0; j < ei->dof[var]; j++) {
                             jac = weight * func[p] * fv->dsurfdet_dx[q][j];
-                            lec->J[ieqn][pvar] [ldof_eqn][j] += jac;
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] += jac;
 			  }
 			}
 		      }
@@ -870,7 +870,7 @@ apply_contact_bc (
 		      if (pvar != -1) {
 			for (j = 0; j < ei->dof[var]; j++) {
                           jac = weight * fv->sdet * d_func[p][var][j];
-                          lec->J[ieqn][pvar] [ldof_eqn][j] += jac;
+                          lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] += jac;
 			}
 		      } /* end of variable exists and BC is sensitive to it */
 		    } /* end of var loop over variable types */
@@ -1741,7 +1741,7 @@ assemble_embedded_bc (
 
                     res = fv->wt * phi_i * lagrange_mult[a] * fv->sdet * fv->h3;
                     if (pass == 1)
-                      lec->R[peqn][i] -= res;
+                      lec->R[LEC_R_INDEX(peqn,i)] -= res;
 
                     if ( af->Assemble_Jacobian )
                       {
@@ -1763,7 +1763,7 @@ assemble_embedded_bc (
                               }
                             else if (!ac_lm && pass == 1)
                               {
-                                lec->J[peqn][pvar][i][j] -= jac;
+                                lec->J[LEC_J_INDEX(peqn,pvar,i,j)] -= jac;
                               }
                           }
                       }
@@ -1901,7 +1901,7 @@ assemble_embedded_bc (
                   {
                     peqn = upd->ep[eqn];
                     /* hard coded to P0 for now */
-                    lec->R[peqn][0] += res;
+                    lec->R[LEC_R_INDEX(peqn,0)] += res;
                     
                     /* Sensitivities to fluid velocity */
                     v = VELOCITY1 + a;
@@ -1910,7 +1910,7 @@ assemble_embedded_bc (
                       {
                         phi_j = bf[v]->phi[j];
                         jac = -wt * phi_j * fv->sdet * fv->h3;
-                        lec->J[peqn][pvar][0][j] += jac;
+                        lec->J[LEC_J_INDEX(peqn,pvar,0,j)] += jac;
                       }
                   }
               }
@@ -1982,7 +1982,7 @@ assemble_embedded_bc (
                     
                     res = -wt * phi_i * lagrange_mult[a] * fv->sdet * fv->h3;
                     if (pass == 1)
-                      lec->R[peqn][i] += res;
+                      lec->R[LEC_R_INDEX(peqn,i)] += res;
                     
                     if ( ac_lm == 0 && af->Assemble_Jacobian )
                       {
@@ -1994,7 +1994,7 @@ assemble_embedded_bc (
                             phi_j = bf[v]->phi[j];
                             
                             jac = -wt * phi_i * phi_j * fv->sdet * fv->h3;
-                            lec->J[peqn][pvar][i][j] += jac;
+                            lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += jac;
                           }
                       }
                     else if (pass == 2)
@@ -2117,7 +2117,7 @@ apply_embedded_colloc_bc ( int ielem,      /* element number */
 
 		    if (af->Assemble_Residual)
                       {
-                        lec->R[peqn][idof_to] += bc->BC_ID  * lec->R[peqn][idof_from];
+                        lec->R[LEC_R_INDEX(peqn,idof_to)] += bc->BC_ID  * lec->R[LEC_R_INDEX(peqn,idof_from)];
                       }
 
                     if (af->Assemble_Jacobian)
@@ -2129,7 +2129,7 @@ apply_embedded_colloc_bc ( int ielem,      /* element number */
                               {
                                 for ( j = 0; j< ei->dof[var]; j++ )
                                   {
-                                    lec->J[peqn][pvar][idof_to][j] += bc->BC_ID  * lec->J[peqn][pvar][idof_from][j];
+                                    lec->J[LEC_J_INDEX(peqn,pvar,idof_to,j)] += bc->BC_ID  * lec->J[LEC_J_INDEX(peqn,pvar,idof_from,j)];
                                   }
                               }
                           }
@@ -2174,7 +2174,7 @@ apply_embedded_colloc_bc ( int ielem,      /* element number */
                       }
                     if (af->Assemble_Residual)
                       {
-                        lec->R[peqn][idof_to] += lec->R[peqn][idof_from];
+                        lec->R[LEC_R_INDEX(peqn,idof_to)] += lec->R[LEC_R_INDEX(peqn,idof_from)];
                       }
 
                     if (af->Assemble_Jacobian)
@@ -2186,7 +2186,7 @@ apply_embedded_colloc_bc ( int ielem,      /* element number */
                               {
                                 for ( j = 0; j< ei->dof[var]; j++ )
                                   {
-                                    lec->J[peqn][pvar][idof_to][j] += lec->J[peqn][pvar][idof_from][j];
+                                    lec->J[LEC_J_INDEX(peqn,pvar,idof_to,j)] += lec->J[LEC_J_INDEX(peqn,pvar,idof_from,j)];
                                   }
                               }
                           }
@@ -2234,7 +2234,7 @@ apply_embedded_colloc_bc ( int ielem,      /* element number */
                           }
                         if (af->Assemble_Residual)
                           {
-                            lec->R[peqn][idof_to] += lec->R[peqn][idof_from];
+                            lec->R[LEC_R_INDEX(peqn,idof_to)] += lec->R[LEC_R_INDEX(peqn,idof_from)];
                           }
 
                         if (af->Assemble_Jacobian)
@@ -2246,7 +2246,7 @@ apply_embedded_colloc_bc ( int ielem,      /* element number */
                                   {
                                     for ( j = 0; j< ei->dof[var]; j++ )
                                       {
-                                        lec->J[peqn][pvar][idof_to][j] += lec->J[peqn][pvar][idof_from][j];
+                                        lec->J[LEC_J_INDEX(peqn,pvar,idof_to,j)] += lec->J[LEC_J_INDEX(peqn,pvar,idof_from,j)];
                                       }
                                   }
                               }
@@ -2296,8 +2296,8 @@ apply_embedded_colloc_bc ( int ielem,      /* element number */
                           }
                         if (af->Assemble_Residual)
                           {
-                            lec->R[peqn][idof_to] += lec->R[peqn][idof_from];
-                            lec->R[peqn][idof_from] = lec->R[peqn][idof_to];
+                            lec->R[LEC_R_INDEX(peqn,idof_to)] += lec->R[LEC_R_INDEX(peqn,idof_from)];
+                            lec->R[LEC_R_INDEX(peqn,idof_from)] = lec->R[LEC_R_INDEX(peqn,idof_to)];
                           }
 
                         if (af->Assemble_Jacobian)
@@ -2309,8 +2309,8 @@ apply_embedded_colloc_bc ( int ielem,      /* element number */
                                   {
                                     for ( j = 0; j< ei->dof[var]; j++ )
                                       {
-                                        lec->J[peqn][pvar][idof_to][j] += lec->J[peqn][pvar][idof_from][j];
-                                        lec->J[peqn][pvar][idof_from][j] = lec->J[peqn][pvar][idof_to][j];
+                                        lec->J[LEC_J_INDEX(peqn,pvar,idof_to,j)] += lec->J[LEC_J_INDEX(peqn,pvar,idof_from,j)];
+                                        lec->J[LEC_J_INDEX(peqn,pvar,idof_from,j)] = lec->J[LEC_J_INDEX(peqn,pvar,idof_to,j)];
                                       }
                                   }
                               }
