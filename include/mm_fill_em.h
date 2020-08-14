@@ -73,6 +73,12 @@ EXTERN void calc_emwave_stabilization_term
 (struct emwave_stabilization*,
  double);
 
+int apply_ewave_planewave_vec(double func[DIM],
+                              double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                              double xi[DIM], /* Local stu coordinates */
+                              const int bc_name,
+                              double *bc_data);
+
 int assemble_ewave_tensor_bf(double time, // present time
                    double tt,   // time integration method parameter
                    double dt,   // current time step size
