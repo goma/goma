@@ -57,6 +57,7 @@
 #include "rf_element_storage_const.h"
 #include "mm_fill_shell.h"
 #include "mm_shell_util.h"
+#include "mm_fill_ptrs.h"
 
 #include "dp_utils.h"
 
@@ -295,6 +296,26 @@ int setup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
   /* Communicate non-shared but needed BC information */
   exchange_bc_info();
 
+  lec->max_dof = 0;
+  int e_start = exo->eb_ptr[0];
+  int e_end   = exo->eb_ptr[exo->num_elem_blocks];
+
+  for (int ielem = e_start; ielem < e_end; ielem++) {
+
+          load_ei(ielem, exo, ei);
+          for (int v = V_FIRST; v < V_LAST; v++)
+          {
+              if(lec->max_dof<ei->dof[v])
+              {
+                lec->max_dof = ei->dof[v];
+              }
+          }
+      }
+
+  lec->R = (dbl*)smalloc(MAX_LOCAL_VAR_DESC*lec->max_dof*sizeof(dbl));
+  lec->J = (dbl*)smalloc(MAX_LOCAL_VAR_DESC*MAX_LOCAL_VAR_DESC*lec->max_dof*lec->max_dof*sizeof(dbl));
+  lec->J_stress_neighbor = (dbl*)smalloc(4*lec->max_dof*MAX_LOCAL_VAR_DESC*lec->max_dof*sizeof(dbl));
+pd=pd_glob[0];
   return 0;
 }
 /************************************************************************/

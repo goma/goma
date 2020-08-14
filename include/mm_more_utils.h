@@ -33,7 +33,7 @@ EXTERN int cnt_nodal_vars	/* mm_more_utils.c                           */
 PROTO((void ));
 
 EXTERN int cnt_elem_vars /* mm_more_utils.c                           */
-    PROTO((const Exo_DB *));
+PROTO((const Exo_DB *));
 
 EXTERN int goal_post_nodal	/* mm_more_utils.c                           */
 PROTO((const int ));		/* var  */

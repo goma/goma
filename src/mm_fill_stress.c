@@ -526,7 +526,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 			   * locally into an accumulator)
 			   */
 			  
-			  lec->R[peqn][i] += 
+			  lec->R[LEC_R_INDEX(peqn,i)] += 
 			    mass + advection + diffusion + source;
 			}
 		    }
@@ -630,7 +630,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				      source *= pd->etm[eqn][(LOG2_SOURCE)];
 				    }
 				  
-				  lec->J[peqn][pvar][i][j] +=
+				  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 				    mass + advection + diffusion + source;
 				}
 			    }
@@ -763,7 +763,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					  source *= pd->etm[eqn][(LOG2_SOURCE)];
 					}
 				      
-				      lec->J[peqn][pvar][i][j] +=
+				      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 					mass + advection + diffusion + source;
 				    }
 				}
@@ -839,7 +839,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					  EH(-1, "Need more arrays for each species.");
 					}
 				      
-				      lec->J[peqn][pvar][i][j] +=
+				      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 					mass + advection + diffusion + source;
 				    }
 				}
@@ -904,7 +904,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				      source *= pd->etm[eqn][(LOG2_SOURCE)];
 				    }
 				  
-				  lec->J[peqn][pvar][i][j] +=
+				  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 				    mass + advection + diffusion + source;
 				}		      
 			    }
@@ -1120,7 +1120,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					  
 					}
 				      
-				      lec->J[peqn][pvar][i][j] +=
+				      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 					mass + advection  + diffusion + source;
 				    }
 				}
@@ -1220,7 +1220,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					      
 					    }
 					  
-					  lec->J[peqn][pvar][i][j] +=
+					  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 					    mass + advection  + diffusion + source;
 					}
 				    }
@@ -1315,7 +1315,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					      
 					    }
 					  
-					  lec->J[peqn][pvar][i][j] +=
+					  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 					    mass + advection + diffusion + source;
 					}
 				    }
@@ -1833,7 +1833,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 			   * locally into an accumulator)
 			   */
 			  
-			  lec->R[upd->ep[eqn]][i] += 
+			  lec->R[LEC_R_INDEX(upd->ep[eqn],i)] += 
 			    mass + advection + diffusion + source;
 			}
 		    }
@@ -1944,7 +1944,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				      source *= pd->etm[eqn][(LOG2_SOURCE)];
 				    }
 				  
-				  lec->J[peqn][pvar][i][j] +=
+				  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 				    mass + advection + source;
 				}
 			    }
@@ -2119,7 +2119,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					  source *= pd->etm[eqn][(LOG2_SOURCE)];
 					}
 				  
-				      lec->J[peqn][pvar][i][j] +=
+				      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 					mass + advection + diffusion + source;
 				    }
 				}
@@ -2161,7 +2161,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					  EH(-1, "Need more arrays for each species.");
 					}
 				      
-				      lec->J[peqn][MAX_PROB_VAR + w][i][j] +=
+				      lec->J[LEC_J_INDEX(peqn,MAX_PROB_VAR + w,i,j)] +=
 					source;
 				    }
 				}
@@ -2194,7 +2194,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				      source *= pd->etm[eqn][(LOG2_SOURCE)];
 				    }
 				  
-				  lec->J[peqn][pvar][i][j] +=
+				  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 				    source;
 				}		      
 			    }
@@ -2366,7 +2366,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				      
 					}
 				      
-				      lec->J[peqn][pvar][i][j] +=
+				      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 					mass + advection + diffusion + source;
 				    }
 				}
@@ -2428,7 +2428,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 						  source *= det_J * h3 * wt_func * wt * pd->etm[eqn][(LOG2_SOURCE)];
 						}
 					  
-					      lec->J[peqn][pvar][i][j] +=
+					      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 						advection + diffusion + source;
 					    }
 					}
@@ -2528,7 +2528,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					      
 					    }
 					  
-					  lec->J[peqn][pvar][i][j] +=
+					  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 					    mass + advection + diffusion + source;
 					}
 				    }
@@ -2949,7 +2949,7 @@ assemble_stress_log_conf(dbl tt,
                               source *= wt_func*det_J*h3*wt;     
                               source *= pd->etm[eqn][(LOG2_SOURCE)];
                             }
-                          lec->R[upd->ep[eqn]][i] += mass + advection + source;
+                          lec->R[LEC_R_INDEX(upd->ep[eqn],i)] += mass + advection + source;
 			}//i loop
 		    }//if a<=b
 		}// b loop
@@ -3341,7 +3341,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 			   * locally into an accumulator)
 			   */
 			  
-			  lec->R[upd->ep[eqn]][i] += 
+			  lec->R[LEC_R_INDEX(upd->ep[eqn],i)] += 
 			    mass + advection + source;
 			}
 		    }
@@ -3411,7 +3411,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 				      source *= pd->etm[eqn][(LOG2_SOURCE)];
 				    }
 				  
-				  lec->J[peqn][pvar][i][j] +=
+				  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 				    source;
 				}
 			    }
@@ -3508,7 +3508,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 					  source *= pd->etm[eqn][(LOG2_SOURCE)];
 					}
 				  
-				      lec->J[peqn][pvar][i][j] +=
+				      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 					mass + advection + source;
 				    }
 				}
@@ -3542,7 +3542,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 					  EH(-1, "Need more arrays for each species.");
 					}
 				      
-				      lec->J[peqn][MAX_PROB_VAR + w][i][j] +=
+				      lec->J[LEC_J_INDEX(peqn,MAX_PROB_VAR + w,i,j)] +=
 					source;
 				    }
 				}
@@ -3567,7 +3567,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 				      source *= pd->etm[eqn][(LOG2_SOURCE)];
 				    }
 				  
-				  lec->J[peqn][pvar][i][j] +=
+				  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 				    source;
 				}		      
 			    }
@@ -3719,7 +3719,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 				      
 					}
 				      
-				      lec->J[peqn][pvar][i][j] +=
+				      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 					mass + advection + source;
 				    }
 				}
@@ -3761,7 +3761,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 					      source *= det_J * h3 * wt_func * wt * pd->etm[eqn][(LOG2_SOURCE)];
 					    }
 					  
-					  lec->J[peqn][pvar][i][j] +=
+					  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 					    advection + source;
 					}
 				    }
@@ -3827,7 +3827,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 					      source *= det_J * h3 * wt_func * wt * pd->etm[eqn][(LOG2_SOURCE)];
 					    }
 					  
-					  lec->J[peqn][pvar][i][j] +=
+					  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 					    mass + advection + source;
 					}
 				    }
@@ -4039,7 +4039,7 @@ assemble_gradient(dbl tt,	/* parameter to vary time integration from
 		      source *= pd->etm[eqn][(LOG2_SOURCE)];
 		    }
 		  
-		  lec->R[upd->ep[eqn]][i] += 
+		  lec->R[LEC_R_INDEX(upd->ep[eqn],i)] += 
 		    advection  + source;      
 		}
 	    }
@@ -4088,7 +4088,7 @@ assemble_gradient(dbl tt,	/* parameter to vary time integration from
 			      
 			      source    = 0.;
 			      
-			      lec->J[peqn][pvar][i][j] +=
+			      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 				advection + source;
 			    }
 			}
@@ -4152,7 +4152,7 @@ assemble_gradient(dbl tt,	/* parameter to vary time integration from
 				  
 				}
 			      
-			      lec->J[peqn][pvar][i][j] +=
+			      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 				advection + source;
 			    }
 			}
@@ -4185,7 +4185,7 @@ assemble_gradient(dbl tt,	/* parameter to vary time integration from
 					}
 				    }
 				  
-				  lec->J[peqn][pvar][i][j] +=
+				  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 				    source;
 				}
 			    }
@@ -4825,7 +4825,7 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 					    ve[mode]->time_const * 
 					    vdotn  * (s[a][b]- s_n[mode][a][b]);
 
-					  lec->R[peqn][i] -= rhs;
+					  lec->R[LEC_R_INDEX(peqn,i)] -= rhs;
 					}
 				    }
 				}
@@ -4866,7 +4866,7 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 					      
 					      /* Work better without this?????, see PRS concern above 
 					         Or is this a correction ???*/
-					       lec->J[peqn][pvar][i][j] -= 
+					       lec->J[LEC_J_INDEX(peqn,pvar,i,j)] -= 
 						advection; 
 
 					       advection = 0;
@@ -4885,7 +4885,7 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 
 						      /* Notice how this is diagonal only */
 						      /* i.e., T_12_i is only depending on T_12_j on other face element*/
-						      lec->J_stress_neighbor[id_side-1][i][peqn][j] += advection;
+                                                      lec->J_stress_neighbor[LEC_J_STRESS_INDEX(id_side-1,i,peqn,j)] += advection;
 						    }
 						}
 
@@ -4911,7 +4911,7 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 							phi_j * fv->snormal[p] * alpha *
 							(s[a][b]- s_n[mode][a][b]);
 						      
-						      lec->J[peqn][pvar][i][j] -=
+						      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] -=
 							advection;
 						      
 						    }
@@ -4946,7 +4946,7 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 							ve[mode]->time_const *
 							(s[a][b]- s_n[mode][a][b]);
 						      
-						      lec->J[peqn][pvar][i][j] -=
+						      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] -=
 							advection;
 						    }
 						}
@@ -5549,14 +5549,14 @@ segregate_stress_update ( double x_update[] )
 
 					  while ( ldof_var <= ei->ln_to_dof[var][ln] )
 					    {
-					      lump += lec->J[ieqn][pvar][ldof_eqn][ldof_var];
+					      lump += lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,ldof_var)];
 					      ldof_var++;
 					    }
 					}
 				    }
 				}
 			    }
-			  x_update[ ei->gun_list[eqn][ldof_eqn] ] = lec->R[ieqn][ldof_eqn]/lump;
+			  x_update[ ei->gun_list[eqn][ldof_eqn] ] = lec->R[LEC_R_INDEX(ieqn,ldof_eqn)]/lump;
 			  ldof_eqn++;
 			}
 		    }

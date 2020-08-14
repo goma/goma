@@ -383,7 +383,7 @@ int assemble_emwave(double time, /* present time value */
         diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
       }
 
-      lec->R[peqn][i] += advection + diffusion;
+      lec->R[LEC_R_INDEX(peqn,i)] += advection + diffusion;
     }
   }
 
@@ -432,7 +432,7 @@ int assemble_emwave(double time, /* present time value */
             advection *= pd->etm[eqn][(LOG2_ADVECTION)];
           }
 
-          lec->J[peqn][pvar][i][j] += advection;
+          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection;
         }
       }
       /*
@@ -451,7 +451,7 @@ int assemble_emwave(double time, /* present time value */
             advection *= pd->etm[eqn][(LOG2_ADVECTION)];
           }
 
-          lec->J[peqn][pvar][i][j] += advection;
+          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection;
         }
       }
       /*
@@ -487,7 +487,7 @@ int assemble_emwave(double time, /* present time value */
               diffusion *= h3;
               diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
 
-              lec->J[peqn][pvar][i][j] += diffusion;
+              lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
             }
           }
         }
@@ -508,7 +508,7 @@ int assemble_emwave(double time, /* present time value */
               diffusion *= h3;
               diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
 
-              lec->J[peqn][pvar][i][j] += diffusion;
+              lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
             }
           }
         }
@@ -532,7 +532,7 @@ int assemble_emwave(double time, /* present time value */
             advection *= pd->etm[eqn][(LOG2_ADVECTION)];
           }
 
-          lec->J[peqn][pvar][i][j] += advection;
+          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection;
         }
       }
 
@@ -602,7 +602,7 @@ int assemble_emwave(double time, /* present time value */
               diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
             }
 
-            lec->J[peqn][pvar][i][j] += advection + diffusion;
+            lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection + diffusion;
           }
         }
       }
@@ -627,7 +627,7 @@ int assemble_emwave(double time, /* present time value */
               advection *= pd->etm[eqn][(LOG2_ADVECTION)];
             }
 
-            lec->J[peqn][MAX_PROB_VAR + w][i][j] += advection;
+            lec->J[LEC_J_INDEX(peqn,MAX_PROB_VAR + w,i,j)] += advection;
           }
         }
       }
@@ -827,7 +827,7 @@ int assemble_ewave(double time,      // present time
         diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
       }
 
-      lec->R[peqn][i] += advection + diffusion;
+      lec->R[LEC_R_INDEX(peqn,i)] += advection + diffusion;
     }
   }
   return (0);
@@ -944,9 +944,9 @@ int assemble_ewave_tensor_bf(double time,      // present time
         double advection_imag =
             -bf[eqn_imag]->phi[i] * (re_coeff * fv->em_ei[a] + im_coeff * fv->em_er[a]);
 
-        lec->R[peqn_real][i] += (advection_real + diffusion_real + stab_real + lagr_term_real) *
+        lec->R[LEC_R_INDEX(peqn_real,i)] += (advection_real + diffusion_real + stab_real + lagr_term_real) *
                                 bf[eqn_real]->detJ * fv->wt * fv->h3;
-        lec->R[peqn_imag][i] += (advection_imag + diffusion_imag + stab_imag + lagr_term_imag) *
+        lec->R[LEC_R_INDEX(peqn_imag,i)] += (advection_imag + diffusion_imag + stab_imag + lagr_term_imag) *
                                 bf[eqn_imag]->detJ * fv->wt * fv->h3;
       }
     }
@@ -983,9 +983,9 @@ int assemble_ewave_tensor_bf(double time,      // present time
             double advection_imag =
                 -bf[eqn_imag]->phi[i] * (delta(a, b) * im_coeff * bf[var]->phi[j]);
 
-            lec->J[peqn_real][pvar_real][i][j] += (diffusion_real + advection_real + stab_real) *
+            lec->J[LEC_J_INDEX(peqn_real,pvar_real,i,j)] += (diffusion_real + advection_real + stab_real) *
                                                   bf[eqn_real]->detJ * fv->wt * fv->h3;
-            lec->J[peqn_imag][pvar_real][i][j] += (diffusion_imag + advection_imag + stab_imag) *
+            lec->J[LEC_J_INDEX(peqn_imag,pvar_real,i,j)] += (diffusion_imag + advection_imag + stab_imag) *
                                                   bf[eqn_imag]->detJ * fv->wt * fv->h3;
           }
         }
@@ -1012,9 +1012,9 @@ int assemble_ewave_tensor_bf(double time,      // present time
                 -bf[eqn_real]->phi[i] * (delta(a, b) * im_coeff * bf[var]->phi[j]);
             double advection_imag =
                 -bf[eqn_imag]->phi[i] * (delta(a, b) * re_coeff * bf[var]->phi[j]);
-            lec->J[peqn_real][pvar_imag][i][j] += (diffusion_real + advection_real + stab_real) *
+            lec->J[LEC_J_INDEX(peqn_real,pvar_imag,i,j)] += (diffusion_real + advection_real + stab_real) *
                                                   bf[eqn_real]->detJ * fv->wt * fv->h3;
-            lec->J[peqn_imag][pvar_imag][i][j] += (diffusion_imag + advection_imag + stab_imag) *
+            lec->J[LEC_J_INDEX(peqn_imag,pvar_imag,i,j)] += (diffusion_imag + advection_imag + stab_imag) *
                                                   bf[eqn_imag]->detJ * fv->wt * fv->h3;
           }
         }
@@ -1027,8 +1027,8 @@ int assemble_ewave_tensor_bf(double time,      // present time
             // dbl lagr_term_imag = bf[eqn]->grad_phi[i][a] * i_elperm * bf[var]->phi[j];
             dbl lagr_term_real = bf[eqn]->grad_phi[i][a] * bf[var]->phi[j];
             dbl lagr_term_imag = 0;
-            lec->J[peqn_real][pvar][i][j] += (lagr_term_real)*bf[eqn_real]->detJ * fv->wt * fv->h3;
-            lec->J[peqn_imag][pvar][i][j] += (lagr_term_imag)*bf[eqn_real]->detJ * fv->wt * fv->h3;
+            lec->J[LEC_J_INDEX(peqn_real,pvar,i,j)] += (lagr_term_real)*bf[eqn_real]->detJ * fv->wt * fv->h3;
+            lec->J[LEC_J_INDEX(peqn_imag,pvar,i,j)] += (lagr_term_imag)*bf[eqn_real]->detJ * fv->wt * fv->h3;
           }
         }
 
@@ -1040,8 +1040,8 @@ int assemble_ewave_tensor_bf(double time,      // present time
             // dbl lagr_term_imag = bf[eqn]->grad_phi[i][a] * r_elperm * bf[var]->phi[j];
             dbl lagr_term_real = 0;
             dbl lagr_term_imag = bf[eqn]->grad_phi[i][a] * bf[var]->phi[j];
-            lec->J[peqn_real][pvar][i][j] += (lagr_term_real)*bf[eqn_real]->detJ * fv->wt * fv->h3;
-            lec->J[peqn_imag][pvar][i][j] += (lagr_term_imag)*bf[eqn_real]->detJ * fv->wt * fv->h3;
+            lec->J[LEC_J_INDEX(peqn_real,pvar,i,j)] += (lagr_term_real)*bf[eqn_real]->detJ * fv->wt * fv->h3;
+            lec->J[LEC_J_INDEX(peqn_imag,pvar,i,j)] += (lagr_term_imag)*bf[eqn_real]->detJ * fv->wt * fv->h3;
           }
         }
       }
@@ -1085,8 +1085,8 @@ int assemble_em_continuity() {
       double advection_imag =
           -bf[eqn_imag]->phi[i] * (r_elperm * div_E_imag + i_elperm * div_E_real);
 
-      lec->R[peqn_real][i] += (advection_real)*bf[eqn_real]->detJ * fv->wt * fv->h3;
-      lec->R[peqn_imag][i] += (advection_imag)*bf[eqn_imag]->detJ * fv->wt * fv->h3;
+      lec->R[LEC_R_INDEX(peqn_real,i)] += (advection_real)*bf[eqn_real]->detJ * fv->wt * fv->h3;
+      lec->R[LEC_R_INDEX(peqn_imag,i)] += (advection_imag)*bf[eqn_imag]->detJ * fv->wt * fv->h3;
     }
   }
   if (af->Assemble_Jacobian) {
@@ -1107,9 +1107,9 @@ int assemble_em_continuity() {
             advection_imag += -bf[eqn_imag]->phi[i] * i_elperm * bf[var]->grad_phi_e[j][b][q][q];
           }
 
-          lec->J[peqn_real][pvar_real][i][j] +=
+          lec->J[LEC_J_INDEX(peqn_real,pvar_real,i,j)] +=
               (advection_real)*bf[eqn_real]->detJ * fv->wt * fv->h3;
-          lec->J[peqn_imag][pvar_real][i][j] +=
+          lec->J[LEC_J_INDEX(peqn_imag,pvar_real,i,j)] +=
               (advection_imag)*bf[eqn_imag]->detJ * fv->wt * fv->h3;
         }
       }
@@ -1125,9 +1125,9 @@ int assemble_em_continuity() {
             advection_imag += -bf[eqn_imag]->phi[i] * r_elperm * bf[var]->grad_phi_e[j][b][q][q];
           }
 
-          lec->J[peqn_real][pvar_imag][i][j] +=
+          lec->J[LEC_J_INDEX(peqn_real,pvar_imag,i,j)] +=
               (advection_real)*bf[eqn_real]->detJ * fv->wt * fv->h3;
-          lec->J[peqn_imag][pvar_imag][i][j] +=
+          lec->J[LEC_J_INDEX(peqn_imag,pvar_imag,i,j)] +=
               (advection_imag)*bf[eqn_imag]->detJ * fv->wt * fv->h3;
         }
       }

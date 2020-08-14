@@ -3960,6 +3960,8 @@ anneal_mesh_with_external_field(const Exo_DB *exo)
   return(0);
 } /* END of routine anneal_mesh_with_external_field */
 
+/*****************************************************************************/
+/*****************************************************************************/
 
 void
 shift_nodal_values ( int var,

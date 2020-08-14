@@ -681,8 +681,8 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 	    }
 
 	    if (ldof_eqn != -1)   {
-	      lec->R[ieqn][ldof_eqn] += penalty * func;
-	      lec->R[ieqn][ldof_eqn] *= f_time;
+              lec->R[LEC_R_INDEX(ieqn,ldof_eqn)] += penalty * func;
+              lec->R[LEC_R_INDEX(ieqn,ldof_eqn)] *= f_time;
 
 	      /* 
 	       * add sensitivities into matrix
@@ -715,8 +715,8 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 			if (! doFullJac) {
 			  ldof_var = ei->ln_to_first_dof[var][id];
 			  if (ldof_var != -1) {  
-			    lec->J[ieqn][pvar][ldof_eqn][ldof_var] += penalty * d_func[var];
-			    lec->J[ieqn][pvar][ldof_eqn][ldof_var] *= f_time;
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,ldof_var)] += penalty * d_func[var];
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,ldof_var)] *= f_time;
 			  }
 			} else {
 			  
@@ -725,14 +725,14 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 			    for (j = 0; j < ei->dof[var]; j++) 
 			      {
 				jk = dof_map[j];
-				lec->J[ieqn][pvar][ldof_eqn][jk] += penalty * d_kfunc[0][var][j];
-				lec->J[ieqn][pvar][ldof_eqn][jk] *= f_time;
+                                lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,jk)] += penalty * d_kfunc[0][var][j];
+                                lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,jk)] *= f_time;
 			      }
 			  } else {
 			    for (j = 0; j < ei->dof[var]; j++) 
 			      {
-				lec->J[ieqn][pvar][ldof_eqn][j] += penalty * d_kfunc[0][var][j];
-				lec->J[ieqn][pvar][ldof_eqn][j] *= f_time;
+                                lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] += penalty * d_kfunc[0][var][j];
+                                lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] *= f_time;
 			      }
 			  }
 			}
@@ -743,8 +743,8 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 			 */
 			for (j = 0; j < ei->dof[var]; j++) {
 			  phi_j = bf[var]->phi[j];
-			  lec->J[ieqn][pvar] [ldof_eqn][j] += penalty * d_func[var] * phi_j;
-			  lec->J[ieqn][pvar] [ldof_eqn][j] *= f_time;
+                          lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] += penalty * d_func[var] * phi_j;
+                          lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] *= f_time;
 			}
 		      }
 		    } else {
@@ -753,8 +753,8 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 			if (Dolphin[I][var] > 0) {
 			  ldof_var = ei->ln_to_first_dof[var][id];
 			  if (ldof_var != -1) {
-			    lec->J[ieqn][pvar] [ldof_eqn][ldof_var] += penalty * d_func[MAX_VARIABLE_TYPES + w];
-			    lec->J[ieqn][pvar] [ldof_eqn][ldof_var] *= f_time;
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,ldof_var)] += penalty * d_func[MAX_VARIABLE_TYPES + w];
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,ldof_var)] *= f_time;
 			  }
 			}
 			/* if variable is not defined at this node,
@@ -762,8 +762,8 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 			else {
 			  for (j = 0; j < ei->dof[var]; j++) {
 			    phi_j = bf[var]->phi[j];
-			    lec->J[ieqn][pvar] [ldof_eqn][j] += penalty	* d_func[MAX_VARIABLE_TYPES + w] * phi_j;
-			    lec->J[ieqn][pvar] [ldof_eqn][j] *= f_time;
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] += penalty	* d_func[MAX_VARIABLE_TYPES + w] * phi_j;
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] *= f_time;
 			  }
 			}
 		      } /* end of loop over species */   

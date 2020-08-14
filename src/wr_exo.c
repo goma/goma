@@ -896,6 +896,15 @@ void create_truth_table(struct Results_Description *rd, Exo_DB *exo, double ***g
             exo->truth_table_existance_key[j - V_FIRST] = 1;
           }
         }
+        if ( pd_glob[mat_num]->i[j] == I_P1 )
+          {
+           if ( exo->truth_table_existance_key[j - V_FIRST] == 0 )
+             {
+              /* We just found a candidate for an element variable */
+              tev += getdofs(type2shape(exo->eb_elem_itype[mat_num]),I_P1);;
+              exo->truth_table_existance_key[j - V_FIRST] = 1;
+             }
+          }
       }
     }
 
@@ -1499,8 +1508,9 @@ void wr_resetup_exo(Exo_DB *exo, char *filename, int verbosity) {
       status = ex_put_truth_table(exo->exoid, EX_ELEM_BLOCK, exo->num_elem_blocks,
                                   exo->num_elem_vars, exo->elem_var_tab);
       EH(status, "ex_put_truth_table elem block");
+      }
     }
-  }
+
 
   if (exo->num_node_vars > 0) {
     status = ex_put_variable_param(exo->exoid, EX_NODAL, exo->num_node_vars);

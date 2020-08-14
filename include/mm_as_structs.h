@@ -125,6 +125,13 @@ typedef char CK_NAME_STR[64];
  */
 #define MAX_LOCAL_VAR_DESC (MAX_PROB_VAR + MAX_CONC)
 
+
+#define LEC_R_INDEX(peqn_macro, index_macro) ((lec->max_dof * (peqn_macro)) + index_macro)
+
+#define LEC_J_INDEX(peqn_macro, pvar_macro, index_i, index_j) (((MAX_PROB_VAR + MAX_CONC)*lec->max_dof*lec->max_dof)*(peqn_macro)) + ((lec->max_dof*lec->max_dof)*(pvar_macro))+(lec->max_dof*(index_i)) + index_j
+
+#define LEC_J_STRESS_INDEX(peqn, pvar, index_i, index_j) ((lec->max_dof*MAX_LOCAL_VAR_DESC*lec->max_dof)*(peqn)) + ((MAX_LOCAL_VAR_DESC*lec->max_dof)*(pvar))+(lec->max_dof*(index_i)) + index_j
+
 #ifndef MAX_PHASE_FUNC
 #define MAX_PHASE_FUNC 5
 #endif
@@ -700,17 +707,21 @@ struct Element_Quality_Metrics
 
 struct Local_Element_Contributions
 {
-  dbl R[MAX_PROB_VAR + MAX_CONC] [MDE];
-  dbl J[MAX_PROB_VAR + MAX_CONC][MAX_PROB_VAR + MAX_CONC] [MDE][MDE];
+  int max_dof;
+  dbl *R;
+  dbl *J;
+  //dbl R[MAX_PROB_VAR + MAX_CONC] [MDE];
+  //dbl J[MAX_PROB_VAR + MAX_CONC][MAX_PROB_VAR + MAX_CONC] [MDE][MDE];
   /* For face m and  mode k we have for mode imode
      d(tau_12_i)/d(tau_12_j) =
        J_stress_neighbor[m][i][POLYMER_STRESS11_k][j]
   */
-  dbl J_stress_neighbor[4][MDE][MAX_PROB_VAR + MAX_CONC][MDE];  
+  dbl *J_stress_neighbor;
+  //dbl J_stress_neighbor[4][MDE][MAX_PROB_VAR + MAX_CONC][MDE];
 
   /*
    * NOTE: concentration entries in local element arrays are stored at
-   *       the end of 
+   *       the end of
    *       the equation and variable lists (i.e. for species w use l
    *       ec->R[MAX_VARIABLE_TYPES + w][i]
    *       to get entry in local residual array
@@ -723,7 +734,6 @@ struct Local_Element_Contributions
    *  dbl x[MAX_VARIABLE_TYPES] [MDE];
    */
 };
-
 
 
 /*___________________________________________________________________________*/

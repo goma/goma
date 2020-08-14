@@ -2430,12 +2430,12 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	       *  residual vector
 	       */
 	      if (ldof_eqn != -1) {
-		lec->R[ieqn][ldof_eqn] += weight * fv->sdet * func[p];
+                lec->R[LEC_R_INDEX(ieqn,ldof_eqn)] += weight * fv->sdet * func[p];
 		
 #ifdef DEBUG_BC
 		if (IFPD == NULL) IFPD = fopen("darcy.txt", "a");
 		fprintf (IFPD,
-			 "ielem = %d: BC_index = %d, lec->R[%d][%d] += weight"
+                         "ielem = %d: BC_index = %d, lec->R[LEC_R_INDEX(%d,%d)] += weight"
 			 "* fv->sdet * func[p]: weight = %g, fv->sdet = %g, func[%d] = %g\n",
 			 ei->ielem, bc_input_id, ieqn, ldof_eqn,
 			 weight, fv->sdet, p, func[p]);
@@ -2481,7 +2481,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 		       *            element. We should make use of that
 		       *            feature to cut down the amount of work.
 		       */
-		      jac_ptr = lec->J[ieqn][pvar][ldof_eqn];
+                      jac_ptr = &(lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,0)]);
 		      phi_ptr = bf[var]->phi;
 		      for (jlv = 0; jlv < ei->Lvdesc_Numdof[lvdesc]; jlv++) {
 			j = ei->Lvdesc_to_lvdof[lvdesc][jlv];
@@ -2497,7 +2497,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			var = jacCol.Lvdof_var_type[w];
 			pvar = upd->vp[var];
 			j = jacCol.Lvdof_lvdof[w];
-			lec->J[ieqn][pvar][ldof_eqn][j] += 
+                        lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] +=
 			  tmp * jacCol.Jac_lvdof[w];
 		      }
 
@@ -2506,7 +2506,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			if (pd->v[var]) {
 			  pvar = upd->vp[var];
 			  for (j = 0; j < ei->dof[var]; j++) {
-			    lec->J[ieqn][pvar][ldof_eqn][j] +=
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] +=
 			      weight * func[p] * fv->dsurfdet_dx[q][j];
 			  }
 			}
@@ -2528,7 +2528,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			pvar = upd->vp[var];
 			if (pvar != -1) {
 			  for (j = 0; j < ei->dof[var]; j++) {
-			    lec->J[ieqn][pvar][ldof_eqn][j] +=
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] +=
 			      weight * func[p] * fv->dsurfdet_dx[q][j];
 			  }
 			}
@@ -2544,14 +2544,14 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			  (BC_Types[bc_input_id].desc->sens[var] ||	1)) {
 			if (var != MASS_FRACTION) {
 			  for (j = 0; j < ei->dof[var]; j++) {
-			    lec->J[ieqn][pvar] [ldof_eqn][j] +=
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] +=
 			      weight * fv->sdet * d_func[p][var][j];
 			  }
 			} else {
 			  /* variable type is MASS_FRACTION */
 			  for (w = 0; w < pd->Num_Species_Eqn; w++) {
 			    for (j = 0; j < ei->dof[var]; j++) {
-			      lec->J[ieqn][MAX_PROB_VAR + w][ldof_eqn][j] += 
+                              lec->J[LEC_J_INDEX(ieqn,MAX_PROB_VAR + w,ldof_eqn,j)] +=
 				weight * fv->sdet *
 				d_func[p][MAX_VARIABLE_TYPES + w][j];
 			    }
@@ -2626,7 +2626,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
                         *  residual vector
                         */
 
-                        lec->R[ieqn][ldof_eqn] += weight * fv->sdet * func_stress[imode][p];
+                        lec->R[LEC_R_INDEX(ieqn,ldof_eqn)] += weight * fv->sdet * func_stress[imode][p];
 
                        /*
                         *   Add sensitivities into matrix
@@ -2652,7 +2652,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
                                   pvar = upd->vp[var];
                                   if (pvar != -1) {
                                      for (j = 0; j < ei->dof[var]; j++) {
-                                         lec->J[ieqn][pvar][ldof_eqn][j] +=
+                                         lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] +=
                                          weight * func_stress[imode][p] * fv->dsurfdet_dx[q][j];
                                      }
                                  }
@@ -2670,7 +2670,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
                                   /* Case for variable type that is not MASS_FRACTION */
                                   if (var != MASS_FRACTION) {
                                      for (j = 0; j < ei->dof[var]; j++) {
-                                          lec->J[ieqn][pvar] [ldof_eqn][j] +=
+                                          lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] +=
                                           weight * fv->sdet * d_func_stress[imode][p][var][j];
                                      }
                                   }
@@ -2678,7 +2678,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
                                   else {
                                      for (w = 0; w < pd->Num_Species_Eqn; w++) {
                                          for (j = 0; j < ei->dof[var]; j++) {
-                                             lec->J[ieqn][MAX_PROB_VAR + w][ldof_eqn][j] +=
+                                             lec->J[LEC_J_INDEX(ieqn,MAX_PROB_VAR + w,ldof_eqn,j)] +=
                                              weight * fv->sdet * d_func_stress[imode][p][MAX_VARIABLE_TYPES + w][j];
                                          }
                                      }
