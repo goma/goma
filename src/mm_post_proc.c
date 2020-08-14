@@ -11593,7 +11593,7 @@ index_post, index_post_export);
   rd->nnv = index;
   *tnv_post = index - *tnv;
   
-  if ((TIME_DERIVATIVES != -1 && pd->TimeIntegration == TRANSIENT) 
+  if ((TIME_DERIVATIVES != -1 && pd_glob[0]->TimeIntegration == TRANSIENT)
       && index_post != (*tnv_post - *tnv))
     WH(-1, "Bad nodal post process variable count ");
 
@@ -11834,7 +11834,7 @@ load_elem_tkn (struct Results_Description *rd,
   *tev_post = index - tev;
   Num_Elem_Post_Proc_Var = index_post;
   
-  if ((TIME_DERIVATIVES != -1 && pd->TimeIntegration == TRANSIENT) 
+  if ((TIME_DERIVATIVES != -1 && pd_glob[0]->TimeIntegration == TRANSIENT)
       && index_post != (*tev_post - tev))
     WH(-1, "Bad elem post process variable count ");
 

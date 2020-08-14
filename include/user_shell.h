@@ -31,7 +31,7 @@
                   diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
                 }
           res[i] += (mass+diffusion)*wt*h3*det_J;
-          lec->R[peqn][i] += res[i];
+          lec->R[LEC_R_INDEX(peqn,i)] += res[i];
         }
     }
   /* Include Jacobian contributions from shell variables */
@@ -62,7 +62,7 @@
                       diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
                     }
               jac[i][pvar][j] += (mass + diffusion)*wt*h3*det_J;
-              lec->J[peqn][pvar][i][j] += jac[i][pvar][j];
+              lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += jac[i][pvar][j];
             }
           /* J_qs_qs:  Shell sensitivity */
           var = SURF_CHARGE;
@@ -85,7 +85,7 @@
                       diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
                     }
               jac[i][pvar][j] += (mass + diffusion)*wt*h3*det_J;
-              lec->J[peqn][pvar][i][j] += jac[i][pvar][j];
+              lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += jac[i][pvar][j];
             }
 
 

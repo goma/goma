@@ -563,7 +563,7 @@ assemble_mesh (double time,
 	       *    into the consitutive equation for stress
 	       */
 
-	      lec->R[peqn][i] += mass + diffusion + source + advection;
+              lec->R[LEC_R_INDEX(peqn,i)] += mass + diffusion + source + advection;
 	    }
 	}
     } 
@@ -611,7 +611,7 @@ assemble_mesh (double time,
 		  if ( pd->v[var] )
 		    {
 		      pvar = upd->vp[var];
-			  _J = lec->J[peqn][pvar][i];
+                          _J = &(lec->J[LEC_J_INDEX(peqn,pvar,i,0)]);
 
 		      for ( j=0; j<ei->dof[var]; j++)
 			{
@@ -754,7 +754,7 @@ assemble_mesh (double time,
 			    }
 			  
 			  _J[j] += mass + diffusion + source + advection;
-			/*  lec->J[peqn][pvar][i][j] += mass + diffusion + source + advection;*/
+                        /*  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + diffusion + source + advection;*/
 			}
 		    }
 		}
@@ -770,7 +770,7 @@ assemble_mesh (double time,
 		  if (pd->v[var])
 		    {
 		      pvar = upd->vp[var];
-			  _J = lec->J[peqn][pvar][i];
+                          _J = &(lec->J[LEC_J_INDEX(peqn,pvar,i,0)]);
 
 		      for ( j=0; j<ei->dof[var]; j++)
 			{
@@ -787,7 +787,7 @@ assemble_mesh (double time,
 			  diffusion *= diffusion_etm;
 
 			  _J[j] += diffusion;
-			 /* lec->J[peqn][pvar][i][j] += diffusion;*/
+                         /* lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;*/
 			}
 		    }
 		}
@@ -802,7 +802,7 @@ assemble_mesh (double time,
 		    {
 		      for ( w=0; w<pd->Num_Species_Eqn; w++)
 			{
-				_J = lec->J[peqn][MAX_PROB_VAR+w][i];
+                                _J = &(lec->J[LEC_J_INDEX(peqn,MAX_PROB_VAR+w,i,0)]);
 
 			  /* add inertia of moving mesh */
 			  advection = 0.;
@@ -862,7 +862,7 @@ assemble_mesh (double time,
 			    }
 
 			  _J[j] += advection + diffusion;
-			  /*lec->J[peqn][MAX_PROB_VAR + w][i][j] += advection + diffusion;*/
+                          /*lec->J[LEC_J_INDEX(peqn,MAX_PROB_VAR + w,i,j)] += advection + diffusion;*/
 			}
 		    }
 		}
@@ -877,7 +877,7 @@ assemble_mesh (double time,
 		{
 		  var = POR_LIQ_PRES;
 		  pvar = upd->vp[var];
-		  _J = lec->J[peqn][pvar][i];
+                  _J = &(lec->J[LEC_J_INDEX(peqn,pvar,i,0)]);
 		  
 			for ( j=0; j<ei->dof[var]; j++)
 		    {
@@ -938,7 +938,7 @@ assemble_mesh (double time,
 			}
 		      
 		      _J[j] += advection + diffusion;
-		     /* lec->J[peqn][pvar][i][j] += advection + diffusion;*/
+                     /* lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection + diffusion;*/
 		    }
 		}
 /*
@@ -1009,7 +1009,7 @@ assemble_mesh (double time,
 			  diffusion *= diffusion_etm;
 			}
 		      
-		      lec->J[peqn][pvar][i][j] += advection + diffusion;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection + diffusion;
 		    }
 		}
 /*
@@ -1042,7 +1042,7 @@ assemble_mesh (double time,
 			  diffusion *= pd->etm[eqn][LOG2_DIFFUSION];
 			}
 		      
-		      lec->J[peqn][pvar][i][j] += diffusion;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
 		    }
 		}
 /*
@@ -1075,7 +1075,7 @@ assemble_mesh (double time,
 			  diffusion *= pd->etm[eqn][LOG2_DIFFUSION];
 			}
 		      
-		      lec->J[peqn][pvar][i][j] +=  diffusion;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=  diffusion;
 		    }
 		}
 /*
@@ -1145,7 +1145,7 @@ assemble_mesh (double time,
 			      advection = advect_a + advect_b;
 			    }
 
- 			  lec->J[peqn][pvar][i][j] += advection + diffusion;
+                          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection + diffusion;
 			}
 		    }
 		}
@@ -1174,7 +1174,7 @@ assemble_mesh (double time,
 			  diffusion *= - d_area;
 			  diffusion *= diffusion_etm;
 
- 			  lec->J[peqn][pvar][i][j] +=  diffusion;
+                          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=  diffusion;
 			}
 		    }
 		}
@@ -1203,7 +1203,7 @@ assemble_mesh (double time,
 			  diffusion *= - d_area;
 			  diffusion *= diffusion_etm;
 
- 			  lec->J[peqn][pvar][i][j] +=  diffusion;
+                          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=  diffusion;
 			}
 		    }
 		}
@@ -1542,7 +1542,7 @@ assemble_energy(double time,	/* present time value */
 	      source *= pd->etm[eqn][(LOG2_SOURCE)];
 	    }
 
-	  lec->R[peqn][i] +=
+          lec->R[LEC_R_INDEX(peqn,i)] +=
 	    mass + advection +  diffusion + source;
 
 	}
@@ -1660,7 +1660,7 @@ assemble_energy(double time,	/* present time value */
 		      source *= pd->etm[eqn][(LOG2_SOURCE)];
 		    }
 
-		  lec->J[peqn][pvar][i][j] += mass + advection + diffusion + source;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + advection + diffusion + source;
 		}
 	    }
 
@@ -1695,7 +1695,7 @@ assemble_energy(double time,	/* present time value */
 		      source *= pd->etm[eqn][(LOG2_SOURCE)];
 		    }
 
-		  lec->J[peqn][pvar][i][j] += mass + advection + diffusion + source;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + advection + diffusion + source;
 		}
 	    }
 
@@ -1762,7 +1762,7 @@ assemble_energy(double time,	/* present time value */
 			  source *= pd->etm[eqn][(LOG2_SOURCE)];
 			}
 
-		      lec->J[peqn][pvar][i][j] += mass + advection + diffusion + source;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + advection + diffusion + source;
 
 		    }
 		}
@@ -1843,7 +1843,7 @@ assemble_energy(double time,	/* present time value */
 
 		      source = 0.;
 
-		      lec->J[peqn][pvar][i][j] += mass + advection + diffusion + source;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + advection + diffusion + source;
 		    }
 		}
 	    }
@@ -2046,7 +2046,7 @@ assemble_energy(double time,	/* present time value */
 			  source *= pd->etm[eqn][(LOG2_SOURCE)];
 			}
 
-		      lec->J[peqn][pvar][i][j] += mass + advection + diffusion + source;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + advection + diffusion + source;
 		    }
 		}
 	    }
@@ -2108,7 +2108,7 @@ assemble_energy(double time,	/* present time value */
 			  source *= pd->etm[eqn][(LOG2_SOURCE)];
 			}
 
-		      lec->J[peqn][MAX_PROB_VAR + w][i][j] += advection + mass + diffusion + source;
+                      lec->J[LEC_J_INDEX(peqn,MAX_PROB_VAR + w,i,j)] += advection + mass + diffusion + source;
 		    }
 		}
 	    }
@@ -2171,7 +2171,7 @@ assemble_energy(double time,	/* present time value */
 		      source *= pd->etm[eqn][(LOG2_SOURCE)];
 		    }
 		  
-		  lec->J[peqn][pvar][i][j] += advection + mass + diffusion + source;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection + mass + diffusion + source;
 		}
 	    }
 #endif /* COUPLED_FILL */
@@ -2200,7 +2200,7 @@ assemble_energy(double time,	/* present time value */
 		      		source *= h3;
 		      		source *= pd->etm[eqn][(LOG2_SOURCE)];
 		    	    }
-		  	lec->J[peqn][pvar][i][j] += source;
+                        lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += source;
 			}
 	    	      }
 
@@ -2228,7 +2228,7 @@ assemble_energy(double time,	/* present time value */
 		      source *= pd->etm[eqn][(LOG2_SOURCE)];
 		    }
 
-		  lec->J[peqn][pvar][i][j] += mass + advection + diffusion + source;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + advection + diffusion + source;
 		}
 	    }
 	  var = ACOUS_PIMAG;
@@ -2249,7 +2249,7 @@ assemble_energy(double time,	/* present time value */
 		      source *= pd->etm[eqn][(LOG2_SOURCE)];
 		    }
 
-		  lec->J[peqn][pvar][i][j] += mass + advection + diffusion + source;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + advection + diffusion + source;
 		}
 	    }
 
@@ -2267,7 +2267,7 @@ assemble_energy(double time,	/* present time value */
 		      source *= pd->etm[eqn][(LOG2_SOURCE)];
 		    }
 
-		  lec->J[peqn][pvar][i][j] +=  source;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=  source;
 		}
 	     }
 
@@ -2285,7 +2285,7 @@ assemble_energy(double time,	/* present time value */
 		      source *= h3;
 		      source *= pd->etm[eqn][(LOG2_SOURCE)];
 		    }
-		  lec->J[peqn][pvar][i][j] += source;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += source;
                 }
             }
 
@@ -2303,7 +2303,7 @@ assemble_energy(double time,	/* present time value */
 		      source *= h3;
 		      source *= pd->etm[eqn][(LOG2_SOURCE)];
 		    }
-		  lec->J[peqn][pvar][i][j] += source;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += source;
                }
             }
 	}
@@ -2804,7 +2804,7 @@ assemble_momentum(dbl time,       /* current time */
 	   * based on the number of degrees of freedom...
 	   */
 
-	  R = lec->R[peqn];
+          R = &(lec->R[LEC_R_INDEX(peqn,0)]);
 	  phi_i_vector = bfm->phi;
 #ifdef DEBUG_HKM
 	  checkFinite(phi_i_vector[0]);
@@ -2982,7 +2982,7 @@ assemble_momentum(dbl time,       /* current time */
 	       * locally into an accumulator)
 	       */
 
-	      /*lec->R[peqn][ii] += mass + advection + porous + diffusion + source;*/
+              /*lec->R[LEC_R_INDEX(peqn,ii)] += mass + advection + porous + diffusion + source;*/
               R[ii] += mass + advection + porous + diffusion + source + continuity_stabilization;
 
 #ifdef DEBUG_MOMENTUM_RES
@@ -3082,7 +3082,7 @@ assemble_momentum(dbl time,       /* current time */
 		  var = TEMPERATURE;
 		  pvar = upd->vp[var];
 		  phi_j_vector = bf[var]->phi;
-		  J = lec->J[peqn][pvar][ii];
+                  J = &(lec->J[LEC_J_INDEX(peqn,pvar,ii,0)]);
 
 		  for ( j=0; j<ei->dof[var]; j++)
 		    {
@@ -3186,7 +3186,7 @@ assemble_momentum(dbl time,       /* current time */
 			  advection *= (1.0 - p_vol_frac);
 			}
 
-		      /*lec->J[peqn][pvar][ii][j] += mass + advection + porous + diffusion + source;*/
+                      /*lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += mass + advection + porous + diffusion + source;*/
 		      J[j] += mass + advection + porous + diffusion + source; 
 #ifdef DEBUG_HKM
 		      checkFinite(J[j]);
@@ -3223,7 +3223,7 @@ assemble_momentum(dbl time,       /* current time */
 			  diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
 			}
 
-		      lec->J[peqn][pvar][ii][j] +=
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] +=
 			diffusion;
 		    }
 		}
@@ -3256,7 +3256,7 @@ assemble_momentum(dbl time,       /* current time */
 			  diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
 			}
 
-		      lec->J[peqn][pvar][ii][j] +=
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] +=
 			diffusion;
 		    }
 		}  
@@ -3272,7 +3272,7 @@ assemble_momentum(dbl time,       /* current time */
 		  var = FILL;
 		  pvar = upd->vp[var];
 
-		  J = lec->J[peqn][pvar][ii];
+                  J = &(lec->J[LEC_J_INDEX(peqn,pvar,ii,0)]);
 
 		  phi_j_vector = bf[var]->phi;
 
@@ -3403,7 +3403,7 @@ assemble_momentum(dbl time,       /* current time */
 			  advection *= (1.0 - p_vol_frac);
 			}
 		      J[j] +=  mass + advection + porous + diffusion + source;
-		      /*lec->J[peqn][pvar][ii][j] +=mass + advection + porous + diffusion + source; */
+                      /*lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] +=mass + advection + porous + diffusion + source; */
 		    }
 		}
 #endif /* COUPLED_FILL */
@@ -3419,7 +3419,7 @@ assemble_momentum(dbl time,       /* current time */
 		    {
 		      pvar = upd->vp[var];
 
-		      J = lec->J[peqn][pvar][ii];
+                      J = &(lec->J[LEC_J_INDEX(peqn,pvar,ii,0)]);
 
 		      phi_j_vector = bf[var]->phi;
 
@@ -3592,7 +3592,7 @@ assemble_momentum(dbl time,       /* current time */
 
 			  J[j] +=  mass + advection + porous + diffusion + source + continuity_stabilization;
 
-			  /*lec->J[peqn][pvar][ii][j] +=  mass + advection + porous + diffusion + source; */
+                          /*lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] +=  mass + advection + porous + diffusion + source; */
 			}
 		    }
 		}
@@ -3629,7 +3629,7 @@ assemble_momentum(dbl time,       /* current time */
 				diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
 			      }
 
-			    lec->J[peqn][pvar][ii][j] +=
+                            lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] +=
 			      diffusion;
 			  }
 		      }
@@ -3659,7 +3659,7 @@ assemble_momentum(dbl time,       /* current time */
 				source   *= pd->etm[eqn][(LOG2_SOURCE)];
 			      }
 
-			    lec->J[peqn][pvar][ii][j] += source;
+                            lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 			  }
 		      }
 		  }
@@ -3694,7 +3694,7 @@ assemble_momentum(dbl time,       /* current time */
 			    porous *= porous_brinkman_etm;
 			  }
 
-			lec->J[peqn][pvar][ii][j] += porous;
+                        lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += porous;
 		      }
 		  }
 	      }
@@ -3721,7 +3721,7 @@ assemble_momentum(dbl time,       /* current time */
 			    porous *= porous_brinkman_etm;
 			  }
 
-			lec->J[peqn][pvar][ii][j] += porous;
+                        lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += porous;
 		      }
 		  }
 	      }
@@ -3779,7 +3779,7 @@ assemble_momentum(dbl time,       /* current time */
 			    porous *= porous_brinkman_etm;
 			  }
 
-			lec->J[peqn][pvar][ii][j] += porous;
+                        lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += porous;
 		      }
 		  }
 	      }
@@ -3811,7 +3811,7 @@ assemble_momentum(dbl time,       /* current time */
 			    porous *= porous_brinkman_etm;
 			  }
 
-			lec->J[peqn][pvar][ii][j] += porous;
+                        lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += porous;
 		      }
 		  }
 	      }
@@ -3842,7 +3842,7 @@ assemble_momentum(dbl time,       /* current time */
 			    porous *= porous_brinkman_etm;
 			  }
 
-			lec->J[peqn][pvar][ii][j] += porous;
+                        lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += porous;
 		      }
 		  }
 	      }
@@ -3945,7 +3945,7 @@ assemble_momentum(dbl time,       /* current time */
 			    }
 
 
-			  lec->J[peqn][MAX_PROB_VAR + w][ii][j] +=
+                          lec->J[LEC_J_INDEX(peqn,MAX_PROB_VAR + w,ii,j)] +=
 			    mass + advection + porous + diffusion + source;
 			}
 		    }
@@ -3959,7 +3959,7 @@ assemble_momentum(dbl time,       /* current time */
 		var = PRESSURE;
 		pvar = upd->vp[var];
 
-		J = lec->J[peqn][pvar][ii];
+                J = &(lec->J[LEC_J_INDEX(peqn,pvar,ii,0)]);
 
 		for ( j=0; j<ei->dof[var]; j++)
 		  {
@@ -4012,7 +4012,7 @@ assemble_momentum(dbl time,       /* current time */
 			      a,i,j,mass,advection,porous,diffusion);
 #endif /* DEBUG_MOMENTUM_JAC */
 
-		    /*lec->J[peqn][pvar][ii][j] += diffusion ;  */
+                    /*lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += diffusion ;  */
 		    J[j] += diffusion;
 		  }
 	      }
@@ -4055,7 +4055,7 @@ assemble_momentum(dbl time,       /* current time */
 					diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
 				      }
 
-				    lec->J[peqn][pvar][ii][j] +=
+                                    lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] +=
 				      diffusion;
 				  }
 			      }
@@ -4102,7 +4102,7 @@ assemble_momentum(dbl time,       /* current time */
 				      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
 				    }
 
-				  lec->J[peqn][pvar][ii][j] +=diffusion;
+                                  lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] +=diffusion;
 				}
 			    }
 			}
@@ -4120,7 +4120,7 @@ assemble_momentum(dbl time,       /* current time */
 		      {
 			pvar = upd->vp[var];
 
-			J = lec->J[peqn][pvar][ii];
+                        J = &(lec->J[LEC_J_INDEX(peqn,pvar,ii,0)]);
 
 			for ( j=0; j<ei->dof[var]; j++)
 			  {
@@ -4987,7 +4987,7 @@ assemble_continuity(dbl time_value,   /* current time */
 	   *  Add up the individual contributions and sum them into the local element
 	   *  contribution for the total continuity equation for the ith local unknown
 	   */
-	  lec->R[peqn][i] += mass + advection + source + pressure_stabilization + h_flux; 
+          lec->R[LEC_R_INDEX(peqn,i)] += mass + advection + source + pressure_stabilization + h_flux;
 	}
     }
 
@@ -5018,7 +5018,7 @@ assemble_continuity(dbl time_value,   /* current time */
 		{
 		  pvar = upd->vp[var];
 			  
-		  J = lec->J[peqn][pvar][i];
+                  J = &(lec->J[LEC_J_INDEX(peqn,pvar,i,0)]);
 			  
 		  for ( j=0; j<ei->dof[var]; j++)
 		    {
@@ -5114,7 +5114,7 @@ assemble_continuity(dbl time_value,   /* current time */
 			}
 				  
 		      J[j] += advection + source + pressure_stabilization + h_flux; 
-		      /* lec->J[peqn][pvar][i][j] += advection + source + pressure_stabilization + h_flux; */
+                      /* lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection + source + pressure_stabilization + h_flux; */
 #ifdef DEBUG_CONTINUITY_JAC
 		      printf("J_c_v[%d] [%d][%d] += %10f + %10f + %10f + %10f\n",
 			     i,b,j,advection,source,pressure_stabilization,
@@ -5154,7 +5154,7 @@ assemble_continuity(dbl time_value,   /* current time */
 		    }
 		  pressure_stabilization *= d_area;
 		      
-		  lec->J[peqn][pvar][i][j] += pressure_stabilization;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += pressure_stabilization;
 		}
 	    }
 
@@ -5166,7 +5166,7 @@ assemble_continuity(dbl time_value,   /* current time */
 		    {
 		      pvar = upd->vp[var];
 		      
-		      lec->J[peqn][pvar][i][j] += d_area*phi_i*dFVS_dT[j]* source_etm;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += d_area*phi_i*dFVS_dT[j]* source_etm;
 		    }
 		}
 	    }
@@ -5190,7 +5190,7 @@ assemble_continuity(dbl time_value,   /* current time */
 
 		      /*  h_flux = 0.0; */	  	  
 	       
-		      lec->J[peqn][pvar][i][j] += h_flux;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += h_flux;
 		    }
 		}
 	    }
@@ -5204,7 +5204,7 @@ assemble_continuity(dbl time_value,   /* current time */
 	    {
 	      pvar = upd->vp[var];
 	      
-	      J = lec->J[peqn][pvar][i];
+              J = &(lec->J[LEC_J_INDEX(peqn,pvar,i,0)]);
 	      
 	      for ( j=0; j<ei->dof[var]; j++)
 		{			
@@ -5218,7 +5218,7 @@ assemble_continuity(dbl time_value,   /* current time */
 		  
 		  J[j] += source;
 		  
-		  /*lec->J[peqn][pvar][i][j] += source;*/
+                  /*lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += source;*/
 		  
 		}
 	    }
@@ -5232,7 +5232,7 @@ assemble_continuity(dbl time_value,   /* current time */
 	    {
 	      pvar = upd->vp[var];
 	      
-	      J = lec->J[peqn][pvar][i];
+              J = &(lec->J[LEC_J_INDEX(peqn,pvar,i,0)]);
 	      
 	      for ( j=0; j<ei->dof[var]; j++)
 		{
@@ -5271,7 +5271,7 @@ assemble_continuity(dbl time_value,   /* current time */
 		      
 		    }
 		  J[j] += advection  + source + pressure_stabilization;
-		  /*lec->J[peqn][pvar][i][j] += advection  + source + pressure_stabilization; */
+                  /*lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection  + source + pressure_stabilization; */
 #ifdef DEBUG_CONTINUITY_JAC
 		  printf("J_c_P[%d] [%d] += %10f %10f %10f\n",i,j,
 			 advection,source,pressure_stabilization);
@@ -5310,7 +5310,7 @@ assemble_continuity(dbl time_value,   /* current time */
 				  
 				  pressure_stabilization *=  h3 * det_J * wt;
 			      
-				  lec->J[peqn][pvar][i][j] += pressure_stabilization;
+                                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += pressure_stabilization;
 				}
 			    }
 			}
@@ -5346,7 +5346,7 @@ assemble_continuity(dbl time_value,   /* current time */
 				}
 			      pressure_stabilization *=  h3 * det_J * wt;
 			      
-			      lec->J[peqn][pvar][i][j] += pressure_stabilization;   
+                              lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += pressure_stabilization;
 			      
 			    }
 			}
@@ -5382,7 +5382,7 @@ assemble_continuity(dbl time_value,   /* current time */
 
 			  /*  h_flux = 0.0; */	  	  
 
-			  lec->J[peqn][pvar][i][j] += h_flux;
+                          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += h_flux;
 			}
 		    }  
 		}
@@ -5399,7 +5399,7 @@ assemble_continuity(dbl time_value,   /* current time */
 	      if (pdv[var])
 		{
 		  pvar = upd->vp[var];
-		  J = lec->J[peqn][pvar][i];
+                  J = &(lec->J[LEC_J_INDEX(peqn,pvar,i,0)]);
 		  for (j = 0; j < ei->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
@@ -5554,7 +5554,7 @@ assemble_continuity(dbl time_value,   /* current time */
 			    }
 			}
 
-		      /*lec->J[peqn][pvar][i][j] += advection  + source + pressure_stabilization +  h_flux + mass ; */
+                      /*lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection  + source + pressure_stabilization +  h_flux + mass ; */
 		      J[j] += advection  + source + pressure_stabilization +  h_flux + mass ; 
 		    }
 		}
@@ -5592,7 +5592,7 @@ assemble_continuity(dbl time_value,   /* current time */
 		      
 		      source = 0.;
 
-		      lec->J[peqn][pvar][i][j] += advection  + source; 
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection  + source;
 
 		    }
 		}
@@ -5739,7 +5739,7 @@ assemble_continuity(dbl time_value,   /* current time */
 			  source += source_a;
 			}
 
-		      lec->J[peqn][MAX_PROB_VAR + w][i][j] += mass_a + advection + source + pressure_stabilization; 
+                      lec->J[LEC_J_INDEX(peqn,MAX_PROB_VAR + w,i,j)] += mass_a + advection + source + pressure_stabilization;
 		    }
 		}
 	    }
@@ -5762,7 +5762,7 @@ assemble_continuity(dbl time_value,   /* current time */
 		      h_flux *= h3*det_J*wt*( rhos - rhof )/rhof;
 		      /*  h_flux = 0.0; */
 
-		      lec->J[peqn][MAX_PROB_VAR + w0][i][j] += h_flux;
+                      lec->J[LEC_J_INDEX(peqn,MAX_PROB_VAR + w0,i,j)] += h_flux;
 		    }
 		}
 	    }
@@ -6169,7 +6169,7 @@ assemble_curvature ( ) /*  time step size      */
 		  source *= pd->etm[eqn][(LOG2_SOURCE)];
 		}
 
-	      lec->R[peqn][i] += source + diffusion;  
+              lec->R[LEC_R_INDEX(peqn,i)] += source + diffusion;
 	    }
 	}
     }
@@ -6210,7 +6210,7 @@ assemble_curvature ( ) /*  time step size      */
 			  source *= pd->etm[eqn][(LOG2_SOURCE)];
 			}
 
-		      lec->J[peqn][pvar][i][j] += source;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += source;
 
 		    }
 		}
@@ -6266,7 +6266,7 @@ assemble_curvature ( ) /*  time step size      */
 			      diffusion *=  pd->etm[eqn][(LOG2_DIFFUSION)];
 			    }
 			  
-			  lec->J[peqn][pvar][i][j] += source + diffusion;
+                          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += source + diffusion;
 				  
 			}
 		    }
@@ -6300,7 +6300,7 @@ assemble_curvature ( ) /*  time step size      */
 			  diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
 			}
 
-		      lec->J[peqn][pvar][i][j] += diffusion;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
 
 		    }
 
@@ -6423,7 +6423,7 @@ assemble_div_normals (  ) /*  time step size      */
 		  source *= pd->etm[eqn][(LOG2_SOURCE)];
 		}
 
-	      lec->R[peqn][i] += source + diffusion;  
+              lec->R[LEC_R_INDEX(peqn,i)] += source + diffusion;
 	    }
 	}
     }
@@ -6463,7 +6463,7 @@ assemble_div_normals (  ) /*  time step size      */
 			  source *= pd->etm[eqn][(LOG2_SOURCE)];
 			}
 
-		      lec->J[peqn][pvar][i][j] += source;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += source;
 
 		    }
 		}
@@ -6498,7 +6498,7 @@ assemble_div_normals (  ) /*  time step size      */
 			    diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
 			  }
 		    
-			  lec->J[peqn][pvar][i][j] += diffusion;   
+                          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
 			}
 		    }
 		}
@@ -6839,7 +6839,7 @@ assemble_normals( )
 		      advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 		    }
 
-		  lec->R[peqn][ii] += source + advection;
+                  lec->R[LEC_R_INDEX(peqn,ii)] += source + advection;
 		}
 	    }
 	}
@@ -6892,7 +6892,7 @@ assemble_normals( )
 				  source *= pd->etm[eqn][(LOG2_SOURCE)];
 				}
 
-			      lec->J[peqn][pvar][ii][j] += source;
+                              lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 			    }
 			}
 		    }
@@ -6921,7 +6921,7 @@ assemble_normals( )
 			  advection *= pd->etm[eqn][(LOG2_ADVECTION)];	
 		    
 			}
-		      lec->J[peqn][pvar][ii][j] += advection;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += advection;
 		    }
 #endif  
 
@@ -6954,7 +6954,7 @@ assemble_normals( )
 			      advection1 *= pd->etm[eqn][(LOG2_ADVECTION)];
 
 			    }
-			  lec->J[peqn][pvar][ii][j] += advection + advection1;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += advection + advection1;
 			}
 		    }
 		}
@@ -7092,7 +7092,7 @@ assemble_ls_momentum_source(void)
 			}
 		      source *= wt*h3*det_J;
 		      
-		      lec->R[peqn][ii] += source;
+                      lec->R[LEC_R_INDEX(peqn,ii)] += source;
 		    }
 		}
 	    }
@@ -7140,7 +7140,7 @@ assemble_ls_momentum_source(void)
 			  source *= wt*det_J*h3;
 			}
 
-		      lec->J[peqn][pvar][ii][j] += source;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 		    }
 
 		  /*
@@ -7168,7 +7168,7 @@ assemble_ls_momentum_source(void)
 			  source *= wt*det_J*h3;
 		    
 			}
-		      lec->J[peqn][pvar][ii][j] += source;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 		    }
 #endif  
 		}
@@ -7253,7 +7253,7 @@ apply_ls_momentum_source(void)
 		  for( j=0; j<ei->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
-		      lec->J[peqn][pvar][ii][j] += source * phi_j;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source * phi_j;
 		    }
                 }
             }
@@ -7291,7 +7291,7 @@ apply_ls_momentum_source(void)
 		    
 		  source *= phi_i * det_J * wt * h3;
 
-		  lec->R[peqn][ii] += source;
+                  lec->R[LEC_R_INDEX(peqn,ii)] += source;
 		}
 	    }
 	}
@@ -7338,7 +7338,7 @@ apply_ls_momentum_source(void)
 
 			  source *= phi_i * det_J * wt * h3;
 
-			  lec->J[peqn][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 			}
 		    }
 		  /* J_m_F
@@ -7356,7 +7356,7 @@ apply_ls_momentum_source(void)
 
 			  source *= phi_i * det_J * wt * h3;
 
-			  lec->J[peqn][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 			}
 		    }
 		}
@@ -19674,7 +19674,7 @@ assemble_projection_stabilization(Exo_DB *exo)
               for ( i=0; i<ei->dof[eqn]; i++)
                 {
                   phi_i = bf[eqn]->phi[i];
-                  lec->R[peqn][i] += ls_scale_factor*PS_scaling*(fv->P - P_avg) * (phi_i - phi_avg[i]) / mu * d_vol;
+                  lec->R[LEC_R_INDEX(peqn,i)] += ls_scale_factor*PS_scaling*(fv->P - P_avg) * (phi_i - phi_avg[i]) / mu * d_vol;
                 }
             }
           if ( af->Assemble_Jacobian )
@@ -19689,7 +19689,7 @@ assemble_projection_stabilization(Exo_DB *exo)
                   for ( j=0; j<ei->dof[var]; j++)
                     {
                       phi_j = bf[var]->phi[j];
-                      lec->J[peqn][pvar][i][j] += ls_scale_factor*PS_scaling*(phi_j - phi_avg[j]) * (phi_i - phi_avg[i]) / mu * d_vol;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += ls_scale_factor*PS_scaling*(phi_j - phi_avg[j]) * (phi_i - phi_avg[i]) / mu * d_vol;
                     }
 					
 
@@ -19702,9 +19702,9 @@ assemble_projection_stabilization(Exo_DB *exo)
 
 			   if( ls != NULL && ls->PSPP_filter ) {
 
-		           lec->J[peqn][pvar][i][j] -=  ls_scale_factor*PS_scaling*(fv->P - P_avg) * (phi_i - phi_avg[i]) * d_mu->F[j] / (mu* mu) * d_vol ; 
+                           lec->J[LEC_J_INDEX(peqn,pvar,i,j)] -=  ls_scale_factor*PS_scaling*(fv->P - P_avg) * (phi_i - phi_avg[i]) * d_mu->F[j] / (mu* mu) * d_vol ;
 
-			     lec->J[peqn][pvar][i][j] += -(lsi->d_delta_dF[j]/lsi->delta_max) * PS_scaling*(fv->P - P_avg) * 
+                             lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += -(lsi->d_delta_dF[j]/lsi->delta_max) * PS_scaling*(fv->P - P_avg) *
 						                              (phi_i - phi_avg[i]) / mu * d_vol;
 			   }
 			  }
@@ -20019,7 +20019,7 @@ assemble_PPPS_generalized(Exo_DB *exo)
 	{
 	  for(j=0; j < ei->dof[eqn]; j++)
 	    {
-	      lec->R[peqn][i] += Ce[i][j]* (*esp->P[j]);
+              lec->R[LEC_R_INDEX(peqn,i)] += Ce[i][j]* (*esp->P[j]);
 	    }
 	}
 
@@ -20053,7 +20053,7 @@ assemble_PPPS_generalized(Exo_DB *exo)
 	  pvar = upd->vp[var];
 	  for ( j=0; j<ei->dof[var]; j++)
 	    {
-	      lec->J[peqn][pvar][i][j] += Ce[i][j];
+              lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += Ce[i][j];
 	    }
 	}
 	  
@@ -20070,7 +20070,7 @@ assemble_PPPS_generalized(Exo_DB *exo)
 		  pvar = upd->vp[var];
 		  for ( j=0; j<ei->dof[var]; j++)
 		    {
-		      /* lec->J[peqn][pvar][i][j] += numerical piece; */
+                      /* lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += numerical piece; */
 		      EH(-1,"need to finish off numerical jacobian for PPSP mesh displ");
 		    }
 		}
@@ -20094,7 +20094,7 @@ assemble_PPPS_generalized(Exo_DB *exo)
 		      EeT_We_Ee += Ee_hat[k][i] * WeEe[k][j];
 		    }
 		      
-		  lec->J[peqn][pvar][i][j] -= my_multiplier * PS_scaling * 
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] -= my_multiplier * PS_scaling *
 		    d_visc_e_dv[a][j] * (Me[i][j] - EeT_We_Ee)/visc_e/visc_e;
 		}
 	    }
@@ -20477,7 +20477,7 @@ assemble_pf_capillary (double *pf_surf_tens )
 		      
 		  source *= pd->etm[eqn][(LOG2_SOURCE)];
 
-		  lec->R[peqn][ii] += source;
+                  lec->R[LEC_R_INDEX(peqn,ii)] += source;
 		}
 	    }
 	}
@@ -20531,7 +20531,7 @@ assemble_pf_capillary (double *pf_surf_tens )
 			  source *= -det_J*wt*h3;
 			  source *= pd->etm[eqn][LOG2_SOURCE];
 
-			  lec->J[peqn][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 			}
 		    }
 		}
@@ -20643,7 +20643,7 @@ assemble_csf_tensor ( void )
 					for (j = 0; j < ei->dof[var]; j++)
 					  {
 					    phi_j = bf[var]->phi[j];
-					    lec->J[peqn][pvar][ii][j] += source * phi_j;
+                                            lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source * phi_j;
 					  }
                 }
             }
@@ -20708,7 +20708,7 @@ assemble_csf_tensor ( void )
 					source *= -det_J * wt * h3;
 					source *= pd->etm[eqn][LOG2_SOURCE];
 					
-					lec->R[peqn][ii] += source;
+                                        lec->R[LEC_R_INDEX(peqn,ii)] += source;
 				}
 			}
 		}
@@ -20784,7 +20784,7 @@ assemble_csf_tensor ( void )
 							source *= -d_area;
 							source *= source_etm;
 							
-							lec->J[peqn][pvar][ii][j] += source;
+                                                        lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 						}
 					}
 #endif
@@ -20829,7 +20829,7 @@ assemble_csf_tensor ( void )
 								source *= -d_area;
 								source *= source_etm;
 								
-								lec->J[peqn][pvar][ii][j] += source;
+                                                                lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 							}
 						}
 					}
@@ -20920,7 +20920,7 @@ assemble_div_n_source ( )
 	          for( j=0; j<ei->dof[var]; j++)
 	            {
 	              phi_j = bf[var]->phi[j];
-	              lec->J[peqn][pvar][ii][j] += source * phi_j;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source * phi_j;
 		    }
 	        }
             }
@@ -20961,7 +20961,7 @@ assemble_div_n_source ( )
 		  source *= pd->etm[eqn][(LOG2_SOURCE)];
 		  
 		
-		  lec->R[peqn][ii] += source;
+                  lec->R[LEC_R_INDEX(peqn,ii)] += source;
 		}
 	    }
 	}
@@ -21016,7 +21016,7 @@ assemble_div_n_source ( )
 			      source *= phi_i*wt*det_J*h3;
 			      source *= pd->etm[eqn][(LOG2_SOURCE)];
 
-			      lec->J[peqn][pvar][ii][j] += source;
+                              lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 			    }
 			}
 		    }
@@ -21040,7 +21040,7 @@ assemble_div_n_source ( )
 			  source *= phi_i*wt*det_J*h3;
 			  source *= pd->etm[eqn][(LOG2_SOURCE)];
 
-			  lec->J[peqn][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 			}
 		    }
 #endif
@@ -21070,7 +21070,7 @@ assemble_div_n_source ( )
 			      source1 *= wt*phi_i*det_J*h3;
 			      source1 *= pd->etm[eqn][(LOG2_SOURCE)];
 
-			      lec->J[peqn][pvar][ii][j] += source + source1;
+                              lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source + source1;
 
 			    }
 			}
@@ -21155,7 +21155,7 @@ assemble_div_s_n_source ( )
 	          for( j=0; j<ei->dof[var]; j++)
 	            {
 	              phi_j = bf[var]->phi[j];
-	              lec->J[peqn][pvar][ii][j] += source * phi_j;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source * phi_j;
 		    }
 	        }
             }
@@ -21196,7 +21196,7 @@ assemble_div_s_n_source ( )
 		  source *= pd->etm[eqn][(LOG2_SOURCE)];
 		  
 		
-		  lec->R[peqn][ii] += source;
+                  lec->R[LEC_R_INDEX(peqn,ii)] += source;
 		}
 	    }
 	}
@@ -21264,7 +21264,7 @@ assemble_div_s_n_source ( )
 			      source *= phi_i*wt*det_J*h3;
 			      source *= pd->etm[eqn][(LOG2_SOURCE)];
 
-			      lec->J[peqn][pvar][ii][j] += source;
+                              lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 			    }
 			}
 		    }
@@ -21286,7 +21286,7 @@ assemble_div_s_n_source ( )
                           source *= phi_i*wt*det_J*h3;
                           source *= pd->etm[eqn][(LOG2_SOURCE)];
 
-                         lec->J[peqn][pvar][ii][j] += source;
+                         lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                         }
                     }
 #endif
@@ -21422,7 +21422,7 @@ assemble_cap_hysing(double dt, double scale)
 
 		  diffusion *= -det_J * wt * h3 * (dt * mp->surface_tension * lsi_old->delta * scale);
 
-		  lec->R[peqn][ii] += source + diffusion;
+                  lec->R[LEC_R_INDEX(peqn,ii)] += source + diffusion;
 		}
 	    }
 	}
@@ -21481,7 +21481,7 @@ assemble_cap_hysing(double dt, double scale)
 			      }
 
 			      diffusion *= -det_J * wt * h3 * (dt * mp->surface_tension * lsi_old->delta * scale);
-			      lec->J[peqn][pvar][ii][j] += diffusion;
+                              lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += diffusion;
 			    }
 			}
 		    }
@@ -21601,7 +21601,7 @@ assemble_cap_denner_diffusion(double dt, double scale)
 
 		  diffusion *= -det_J * wt * h3 * (dt * mp->surface_tension * lsi->delta * scale);
 
-		  lec->R[peqn][ii] += diffusion;
+                  lec->R[LEC_R_INDEX(peqn,ii)] += diffusion;
 		}
 	    }
 	}
@@ -21658,7 +21658,7 @@ assemble_cap_denner_diffusion(double dt, double scale)
 			  }
 
 			  diffusion *= -det_J * wt * h3 * (dt * mp->surface_tension * scale);
-			  lec->J[peqn][pvar][ii][j] += diffusion;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += diffusion;
 			}
 		    }
 
@@ -21692,7 +21692,7 @@ assemble_cap_denner_diffusion(double dt, double scale)
 			      }
 
 			      diffusion *= -det_J * wt * h3 * (dt * mp->surface_tension * lsi->delta * scale);
-			      lec->J[peqn][pvar][ii][j] += diffusion;
+                              lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += diffusion;
 			    }
 			}
 		    }
@@ -21810,7 +21810,7 @@ assemble_cap_denner_diffusion_n(double dt, double scale)
 
 		  diffusion *= -det_J * wt * h3 * (dt * mp->surface_tension * lsi->delta * scale);
 
-		  lec->R[peqn][ii] += diffusion;
+                  lec->R[LEC_R_INDEX(peqn,ii)] += diffusion;
 		}
 	    }
 	}
@@ -21856,7 +21856,7 @@ assemble_cap_denner_diffusion_n(double dt, double scale)
 			  diffusion *= lsi->d_delta_dF[j];
 
 			  diffusion *= -det_J * wt * h3 * (dt * mp->surface_tension * scale);
-			  lec->J[peqn][pvar][ii][j] += diffusion;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += diffusion;
 			}
 		    }
 
@@ -21890,7 +21890,7 @@ assemble_cap_denner_diffusion_n(double dt, double scale)
 			      }
 
 			      diffusion *= -det_J * wt * h3 * (dt * mp->surface_tension * lsi->delta * scale);
-			      lec->J[peqn][pvar][ii][j] += diffusion;
+                              lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += diffusion;
 			    }
 			}
 		    }
@@ -21924,7 +21924,7 @@ assemble_cap_denner_diffusion_n(double dt, double scale)
 			      }
 
 			      diffusion *= -det_J * wt * h3 * (dt * mp->surface_tension * lsi->delta * scale);
-			      lec->J[peqn][pvar][ii][j] += diffusion;
+                              lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += diffusion;
 			    }
 			}
 		    }
@@ -22015,7 +22015,7 @@ assemble_curvature_with_normals_source ( )
 		  source *= wt*phi_i*det_J*h3;
 		  source *= pd->etm[eqn][(LOG2_SOURCE)];
 
-		  lec->R[peqn][ii] += source;
+                  lec->R[LEC_R_INDEX(peqn,ii)] += source;
 		}
 	    }
 	}
@@ -22065,7 +22065,7 @@ assemble_curvature_with_normals_source ( )
 			  source *= phi_i*wt*det_J*h3;
 			  source *= pd->etm[eqn][(LOG2_SOURCE)];
 
-			  lec->J[peqn][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 			}
 		    }
 
@@ -22087,7 +22087,7 @@ assemble_curvature_with_normals_source ( )
 			  source *= phi_i*wt*det_J*h3;
 			  source *= pd->etm[eqn][(LOG2_SOURCE)];
 
-			  lec->J[peqn][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 			}
 		    }
 		  /* 
@@ -22106,7 +22106,7 @@ assemble_curvature_with_normals_source ( )
 			  source *= phi_i*wt*det_J*h3;
 			  source *= pd->etm[eqn][(LOG2_SOURCE)];
 
-			  lec->J[peqn][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 			}
 		    }
 
@@ -22232,7 +22232,7 @@ assemble_curvature_source ( )
 	          for( j=0; j<ei->dof[var]; j++)
 	            {
 	              phi_j = bf[var]->phi[j];
-	              lec->J[peqn][pvar][ii][j] += source * phi_j;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source * phi_j;
 		    }
 	        }
             }
@@ -22274,7 +22274,7 @@ assemble_curvature_source ( )
 		      
 		  source *= pd->etm[eqn][(LOG2_SOURCE)];
 
-		  lec->R[peqn][ii] += source;
+                  lec->R[LEC_R_INDEX(peqn,ii)] += source;
 		}
 	    }
 	}
@@ -22321,7 +22321,7 @@ assemble_curvature_source ( )
 			  source *= det_J*wt*h3;
 			  source *= pd->etm[eqn][LOG2_SOURCE];
 
-			  lec->J[peqn][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 			}
 		    }
 #endif
@@ -22342,7 +22342,7 @@ assemble_curvature_source ( )
 			  source *= det_J*wt*h3;
 			  source *= pd->etm[eqn][LOG2_SOURCE];
 
-			  lec->J[peqn][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 			}
 		    }
 
@@ -22365,7 +22365,7 @@ assemble_curvature_source ( )
 			      source *= det_J*wt*h3;
 			      source *= pd->etm[eqn][LOG2_SOURCE];
 
-			      lec->J[peqn][pvar][ii][j] += source;
+                              lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 			    }
 			}
 		    }
@@ -22433,7 +22433,7 @@ assemble_q_source(double flux )
 	      for( j=0; j<ei->dof[var]; j++)
 	        {
 	          phi_j = bf[var]->phi[j];
-	          lec->J[peqn][pvar][ii][j] += source * phi_j;
+                  lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source * phi_j;
 	        }
             }
         }
@@ -22464,7 +22464,7 @@ assemble_q_source(double flux )
                source *= det_J * wt * h3;
                source *= pd->etm[eqn][(LOG2_SOURCE)];
 
-               lec->R[peqn][ii] += source;
+               lec->R[LEC_R_INDEX(peqn,ii)] += source;
             }
         }
     }
@@ -22505,7 +22505,7 @@ assemble_q_source(double flux )
                       source *= det_J * wt * h3;
                       source *= pd->etm[eqn][LOG2_SOURCE];
 
-                      lec->J[peqn][pvar][ii][j] += source;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                     }
                 }
 #endif
@@ -22676,7 +22676,7 @@ assemble_t_source ( double T, double time )
 	          for( j=0; j<ei->dof[var]; j++)
 	            {
 	              phi_j = bf[var]->phi[j];
-	              lec->J[peqn][pvar][ii][j] += source * phi_j;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source * phi_j;
 	            }
                 }
 	      if ( apply_SIC[i] )
@@ -22693,7 +22693,7 @@ assemble_t_source ( double T, double time )
 	          for( j=0; j<ei->dof[var]; j++)
 	            {
 	              phi_j = bf[var]->phi[j];
-	              lec->J[peqn][pvar][ii][j] += source * phi_j;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source * phi_j;
 	            }
                 }
             }
@@ -22728,7 +22728,7 @@ assemble_t_source ( double T, double time )
                   source *= det_J * wt * h3;
                   source *= pd->etm[eqn][(LOG2_SOURCE)];
 
-                  lec->R[peqn][ii] += source;
+                  lec->R[LEC_R_INDEX(peqn,ii)] += source;
                 }
 	      if ( apply_SIC[i] )
 	        {
@@ -22736,7 +22736,7 @@ assemble_t_source ( double T, double time )
                   source *= det_J * wt * h3 * BIG_PENALTY;
                   source *= pd->etm[eqn][(LOG2_SOURCE)];
 
-                  lec->R[peqn][ii] += source;
+                  lec->R[LEC_R_INDEX(peqn,ii)] += source;
                 }
             }
         }
@@ -22785,7 +22785,7 @@ assemble_t_source ( double T, double time )
                           source *= det_J * wt * h3;
                           source *= pd->etm[eqn][(LOG2_SOURCE)];
 
-                          lec->J[peqn][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                         }
                     }
 #ifdef COUPLED_FILL
@@ -22811,7 +22811,7 @@ assemble_t_source ( double T, double time )
                           source *= det_J * wt * h3;
                           source *= pd->etm[eqn][LOG2_SOURCE];
 
-                          lec->J[peqn][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                         }
                     }
 #endif
@@ -22838,7 +22838,7 @@ assemble_t_source ( double T, double time )
                           source *= det_J * wt * h3 * BIG_PENALTY;
                           source *= pd->etm[eqn][LOG2_SOURCE];
 
-                          lec->J[peqn][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                         }
                     }
                 }
@@ -22929,7 +22929,7 @@ assemble_qlaser_source(const double p[], double time )
 	      for( j=0; j<ei->dof[var]; j++)
 	        {
 	          phi_j = bf[var]->phi[j];
-	          lec->J[peqn][pvar][ii][j] += source * phi_j;
+                  lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source * phi_j;
 	        }
 	    }
 	}
@@ -22963,7 +22963,7 @@ assemble_qlaser_source(const double p[], double time )
 	      
 	      source *= pd->etm[eqn][(LOG2_SOURCE)];
 	      
-	      lec->R[peqn][ii] += source;
+              lec->R[LEC_R_INDEX(peqn,ii)] += source;
 	    }
 	}
     }
@@ -23001,7 +23001,7 @@ assemble_qlaser_source(const double p[], double time )
                         source *= det_J * wt * h3;
                         source *= pd->etm[eqn][LOG2_SOURCE];
 			
-                        lec->J[peqn][pvar][ii][j] += source;
+                        lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                       }
    		  }
 #ifdef COUPLED_FILL
@@ -23021,7 +23021,7 @@ assemble_qlaser_source(const double p[], double time )
                         source *= det_J * wt * h3;
                         source *= pd->etm[eqn][LOG2_SOURCE];
 			    
-                        lec->J[peqn][pvar][ii][j] += source;
+                        lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                       }
                   }
 #endif
@@ -23098,7 +23098,7 @@ assemble_qvapor_source ( const double p[])
 	      for( j=0; j<ei->dof[var]; j++)
 	        {
 	          phi_j = bf[var]->phi[j];
-	          lec->J[peqn][pvar][ii][j] += source * phi_j;
+                  lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source * phi_j;
 	        }
 	    }
 	}
@@ -23132,7 +23132,7 @@ assemble_qvapor_source ( const double p[])
 	      
 	      source *= pd->etm[eqn][(LOG2_SOURCE)];
 	      
-	      lec->R[peqn][ii] += source;
+              lec->R[LEC_R_INDEX(peqn,ii)] += source;
 	    }
 	}
     }
@@ -23170,7 +23170,7 @@ assemble_qvapor_source ( const double p[])
 		      source *= det_J * wt * h3;
 		      source *= pd->etm[eqn][LOG2_SOURCE];
 		      
-		      lec->J[peqn][pvar][ii][j] += source;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 		    }
 		}
 #ifdef COUPLED_FILL
@@ -23190,7 +23190,7 @@ assemble_qvapor_source ( const double p[])
 		      source *= det_J * wt * h3;
 		      source *= pd->etm[eqn][LOG2_SOURCE];
 			  
-		      lec->J[peqn][pvar][ii][j] += source;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 		    }
 		}
 #endif
@@ -23264,7 +23264,7 @@ assemble_qrad_source ( double htc, double Tref, double emiss, double sigma)
 	      for( j=0; j<ei->dof[var]; j++)
 	        {
 	          phi_j = bf[var]->phi[j];
-	          lec->J[peqn][pvar][ii][j] += source * phi_j;
+                  lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source * phi_j;
 	        }
 	    }
 	}
@@ -23298,7 +23298,7 @@ assemble_qrad_source ( double htc, double Tref, double emiss, double sigma)
 	      
 	      source *= pd->etm[eqn][(LOG2_SOURCE)];
 	      
-	      lec->R[peqn][ii] += source;
+              lec->R[LEC_R_INDEX(peqn,ii)] += source;
 	    }
 	}
     }
@@ -23336,7 +23336,7 @@ assemble_qrad_source ( double htc, double Tref, double emiss, double sigma)
 		      source *= det_J * wt * h3;
 		      source *= pd->etm[eqn][LOG2_SOURCE];
 		      
-		      lec->J[peqn][pvar][ii][j] += source;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 		    }
 		}
 #ifdef COUPLED_FILL
@@ -23356,7 +23356,7 @@ assemble_qrad_source ( double htc, double Tref, double emiss, double sigma)
 		      source *= det_J * wt * h3;
 		      source *= pd->etm[eqn][LOG2_SOURCE];
 			  
-		      lec->J[peqn][pvar][ii][j] += source;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 		    }
 		}
 #endif
@@ -23463,7 +23463,7 @@ assemble_cont_t_source ( double *xi )
                    source *= det_J * wt * h3 * BIG_PENALTY;
                    source *= pd->etm[eqn][(LOG2_SOURCE)];
 
-                   lec->R[peqn][ii] += source;
+                   lec->R[LEC_R_INDEX(peqn,ii)] += source;
 
                 }
             }
@@ -23514,7 +23514,7 @@ assemble_cont_t_source ( double *xi )
                           source *= det_J * wt * h3 * BIG_PENALTY;
                           source *= pd->etm[eqn][LOG2_SOURCE];
 
-                          lec->J[peqn][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                         }
      		    }
                   /* path dependence integral */
@@ -23549,7 +23549,7 @@ assemble_cont_t_source ( double *xi )
                               source *= pd->etm[eqn][(LOG2_SOURCE)];
 
 
-                              lec->J[peqn][pvar][ii][j] += source;
+                              lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                             }
                         }
                     }
@@ -23571,7 +23571,7 @@ assemble_cont_t_source ( double *xi )
                               source *= det_J * wt * h3 * BIG_PENALTY;
                               source *= pd->etm[eqn][(LOG2_SOURCE)];
 
-                              lec->J[peqn][pvar][ii][j] += source;
+                              lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                             }
                         }
                     }
@@ -23681,7 +23681,7 @@ assemble_ls_yflux_source ( int wspec,	/* species number of this boundary conditi
 	      for( j=0; j<ei->dof[var]; j++)
 	        {
 	          phi_j = bf[var]->phi[j];
-	          lec->J[peqn][pvar][ii][j] += source * phi_j;
+                  lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source * phi_j;
 	        }
 	    }
 	}
@@ -23715,7 +23715,7 @@ assemble_ls_yflux_source ( int wspec,	/* species number of this boundary conditi
 	      
 	      /*source *= pd->etm[eqn][(LOG2_SOURCE)];*/
 	      
-	      lec->R[peqn][ii] += source;
+              lec->R[LEC_R_INDEX(peqn,ii)] += source;
 	    }
 	}
     }
@@ -23756,7 +23756,7 @@ assemble_ls_yflux_source ( int wspec,	/* species number of this boundary conditi
 		      source *= det_J * wt * h3;
 		      /*source *= pd->etm[eqn][(LOG2_SOURCE)];*/
 		      
-		      lec->J[peqn][pvar][ii][j] += source;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 		    }
 		}
                 
@@ -23781,7 +23781,7 @@ assemble_ls_yflux_source ( int wspec,	/* species number of this boundary conditi
 		      source *= det_J * wt * h3;
 		      /*source *= pd->etm[eqn][(LOG2_SOURCE)];*/
 		      
-		      lec->J[peqn][pvar][ii][j] += source;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 		    }
 		}
 
@@ -23811,7 +23811,7 @@ assemble_ls_yflux_source ( int wspec,	/* species number of this boundary conditi
 		          source *= det_J * wt * h3;
 		          /*source *= pd->etm[eqn][(LOG2_SOURCE)];*/
 		      
-		          lec->J[peqn][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                         }
 		    }
 		} 
@@ -23836,7 +23836,7 @@ assemble_ls_yflux_source ( int wspec,	/* species number of this boundary conditi
 		          source *= det_J * wt * h3;
 		          /*source *= pd->etm[eqn][(LOG2_SOURCE)];*/
 		      
-		          lec->J[peqn][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                         }
 		    }
 		} 
@@ -23864,7 +23864,7 @@ assemble_ls_yflux_source ( int wspec,	/* species number of this boundary conditi
 		      source *= det_J * wt * h3;
 		      /*source *= pd->etm[eqn][(LOG2_SOURCE)];*/
 		      
-		      lec->J[peqn][pvar][ii][j] += source;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 		    }
 		}
 #endif
@@ -23987,7 +23987,7 @@ assemble_cont_vel_source ( double *xi, Exo_DB *exo )
                       source *= det_J * wt * h3 * BIG_PENALTY;
                       source *= pd->etm[eqn][(LOG2_SOURCE)];
 
-                      lec->R[peqn][ii] += source;
+                      lec->R[LEC_R_INDEX(peqn,ii)] += source;
                     }
                 }
             }
@@ -24032,7 +24032,7 @@ assemble_cont_vel_source ( double *xi, Exo_DB *exo )
                               source *= det_J * wt * h3 * BIG_PENALTY;
                               source *= pd->etm[eqn][LOG2_SOURCE];
 
-                              lec->J[peqn][pvar][ii][j] += source;
+                              lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                             }
                         }
 
@@ -24068,7 +24068,7 @@ assemble_cont_vel_source ( double *xi, Exo_DB *exo )
                                   source *= pd->etm[eqn][(LOG2_SOURCE)];
 
 
-                                  lec->J[peqn][pvar][ii][j] += source;
+                                  lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                                 }
                             }
                         }
@@ -24090,7 +24090,7 @@ assemble_cont_vel_source ( double *xi, Exo_DB *exo )
                                   source *= det_J * wt * h3 * BIG_PENALTY;
                                   source *= pd->etm[eqn][(LOG2_SOURCE)];
 
-                                  lec->J[peqn][pvar][ii][j] += source;
+                                  lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                                 }
                             }
                         }
@@ -24402,7 +24402,7 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
 	      for( j=0; j<ei->dof[var]; j++)
 		{
 		  phi_j = bf[var]->phi[j];
-		  lec->J[peqn][pvar][ii][j] += source * phi_j;
+                  lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source * phi_j;
 		}
             }
         }
@@ -24440,7 +24440,7 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
                /* no such term multiplier yet
                  source *= pd->etm[eqn][(LOG2_SOURCE)];
                */
-               lec->R[peqn][ii] += source;
+               lec->R[LEC_R_INDEX(peqn,ii)] += source;
             }
         }
     }
@@ -24492,7 +24492,7 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
                         source *= pd->etm[eqn][(LOG2_SOURCE)];
                       */
 
-                      lec->J[peqn][pvar][ii][j] += source;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                     }
                 }
 
@@ -24526,7 +24526,7 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
                             source *= pd->etm[eqn][(LOG2_SOURCE)];
                           */
 
-                          lec->J[peqn][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                         }
                     }
                 }
@@ -24561,7 +24561,7 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
                         source *= pd->etm[eqn][(LOG2_SOURCE)];
                       */
 
-                      lec->J[peqn][pvar][ii][j] += source;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                     }
                 }
                 
@@ -24589,7 +24589,7 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
                         source *= pd->etm[eqn][(LOG2_SOURCE)];
                       */
 
-                      lec->J[peqn][pvar][ii][j] += source;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                     }
                 }
 
@@ -24617,7 +24617,7 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
                         source *= pd->etm[eqn][(LOG2_SOURCE)];
                       */
 
-                      lec->J[peqn][pvar][ii][j] += source;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                     }
                 }
                                
@@ -24644,7 +24644,7 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
                              source *= pd->etm[eqn][(LOG2_SOURCE)];
                            */
 
-                          lec->J[peqn][MAX_PROB_VAR + w][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,MAX_PROB_VAR + w,ii,j)] += source;
                         }
                     }
                 }
@@ -24714,7 +24714,7 @@ assemble_interface_extension_velocity_sic ( int ext_vel_sign )
                  source *= pd->etm[eqn][(LOG2_SOURCE)];
                */
 
-               lec->R[peqn][ii] += source;
+               lec->R[LEC_R_INDEX(peqn,ii)] += source;
             }
         }
     }
@@ -24762,7 +24762,7 @@ assemble_interface_extension_velocity_sic ( int ext_vel_sign )
                         source *= pd->etm[eqn][(LOG2_SOURCE)];
                       */
 
-                      lec->J[peqn][pvar][ii][j] += source;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                     }
                 }
 
@@ -24788,7 +24788,7 @@ assemble_interface_extension_velocity_sic ( int ext_vel_sign )
                             source *= pd->etm[eqn][(LOG2_SOURCE)];
                           */
 
-                          lec->J[peqn][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                         }
                     }
                 }
@@ -24823,7 +24823,7 @@ assemble_interface_extension_velocity_sic ( int ext_vel_sign )
                         source *= pd->etm[eqn][(LOG2_SOURCE)];
                       */
 
-                      lec->J[peqn][pvar][ii][j] += source;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                     }
                 }
             }
@@ -25077,7 +25077,7 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
                for( j=0; j<ei->dof[var]; j++)
                  {
                    phi_j = bf[var]->phi[j];
-                   lec->J[peqn][pvar][ii][j] += (mass + advection + source) * phi_j;
+                   lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += (mass + advection + source) * phi_j;
                  }
             }
         }
@@ -25125,7 +25125,7 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
 	       advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 #endif
 
-               lec->R[peqn][ii] += mass + advection + source;
+               lec->R[LEC_R_INDEX(peqn,ii)] += mass + advection + source;
 
             }
         }
@@ -25195,7 +25195,7 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
                           advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 #endif
 
-                          lec->J[peqn][pvar][ii][j] += advection;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += advection;
                         }
                     }
                 }
@@ -25223,7 +25223,7 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
                       advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 #endif
 
-                      lec->J[peqn][pvar][ii][j] += advection;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += advection;
                     }
                 }
 		
@@ -25250,7 +25250,7 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
                       advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 #endif
 
-                      lec->J[peqn][pvar][ii][j] += advection;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += advection;
                     }
                 }
 		
@@ -25277,7 +25277,7 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
                           advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 #endif
 		      
-                          lec->J[peqn][MAX_PROB_VAR + w][ii][j] += advection;
+                          lec->J[LEC_J_INDEX(peqn,MAX_PROB_VAR + w,ii,j)] += advection;
 			}
                     }
                 }
@@ -25321,7 +25321,7 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
 		      advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 #endif
 		      
-                      lec->J[peqn][pvar][ii][j] += mass + advection + source;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += mass + advection + source;
                     }
                 }
             }
@@ -25872,7 +25872,7 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
 		  for( j=0; j<ei->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
-		      lec->J[peqn][pvar][ii][j] += source * phi_j;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source * phi_j;
 		    }
                 }
             }
@@ -25902,7 +25902,7 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
 		  source = phi_i * force[a] * lsi->delta * elem_sign;
 		  source *= det_J * wt * h3;
 		  source *= pd->etm[eqn][(LOG2_SOURCE)];
-		  lec->R[peqn][ii] += source;
+                  lec->R[LEC_R_INDEX(peqn,ii)] += source;
 		}
 	    }
 	}
@@ -25945,7 +25945,7 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
                           source *= det_J * wt * h3;
                           source *= pd->etm[eqn][LOG2_SOURCE];
 
-                          lec->J[peqn][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                         }
                     }
 #endif
@@ -25971,7 +25971,7 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
 			      source *= det_J * wt * h3;
 			      source *= pd->etm[eqn][LOG2_SOURCE];
 
-			      lec->J[peqn][pvar][ii][j] += source;
+                              lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 			    }
 			}
 
@@ -25990,7 +25990,7 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
 			      source *= det_J * wt * h3;
 			      source *= pd->etm[eqn][LOG2_SOURCE];
 
-			      lec->J[peqn][pvar][ii][j] += source;
+                              lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 			    }
 			}
 
@@ -26009,7 +26009,7 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
 			      source *= det_J * wt * h3;
 			      source *= pd->etm[eqn][LOG2_SOURCE];
 
-			      lec->J[peqn][pvar][ii][j] += source;
+                              lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 			    }
 			}
 
@@ -26029,7 +26029,7 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
 				  source *= det_J * wt * h3;
 				  source *= pd->etm[eqn][LOG2_SOURCE];
 
-				  lec->J[peqn][pvar][ii][j] += source;
+                                  lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 				}
 			    }
 			}
@@ -26049,7 +26049,7 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
 			      source *= det_J * wt * h3;
 			      source *= pd->etm[eqn][LOG2_SOURCE];
 
-			      lec->J[peqn][pvar][ii][j] += source;
+                              lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 			    }
 			}
 
@@ -26068,7 +26068,7 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
 			      source *= det_J * wt * h3;
 			      source *= pd->etm[eqn][LOG2_SOURCE];
 
-			      lec->J[peqn][pvar][ii][j] += source;
+                              lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 			    }
 			}
 
@@ -26087,7 +26087,7 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
 			      source *= det_J * wt * h3;
 			      source *= pd->etm[eqn][LOG2_SOURCE];
 
-			      lec->J[peqn][pvar][ii][j] += source;
+                              lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 			    }
 			}
 
@@ -26106,7 +26106,7 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
 			      source *= det_J * wt * h3;
 			      source *= pd->etm[eqn][LOG2_SOURCE];
 
-			      lec->J[peqn][pvar][ii][j] += source;
+                              lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 			    }
 			}
 
@@ -26128,7 +26128,7 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
 				  source *= det_J * wt * h3;
 				  source *= pd->etm[eqn][LOG2_SOURCE];
 
-				  lec->J[peqn][pvar][ii][j] += source;
+                                  lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 				}
 			    }
 			}
@@ -26150,7 +26150,7 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
 				  source *= det_J * wt * h3;
 				  source *= pd->etm[eqn][LOG2_SOURCE];
 
-				  lec->J[peqn][pvar][ii][j] += source;
+                                  lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 				}
 			    }
 			}
@@ -26173,7 +26173,7 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
 				  source *= det_J * wt * h3;
 				  source *= pd->etm[eqn][LOG2_SOURCE];
 
-				  lec->J[peqn][pvar][ii][j] += source;
+                                  lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 				}
 			    }
 			}
@@ -26315,7 +26315,7 @@ assemble_precoil_source (const double p[])
 		  for( j=0; j<ei->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
-		      lec->J[peqn][pvar][ii][j] += source * phi_j;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source * phi_j;
 		    }
                 }
             }
@@ -26352,7 +26352,7 @@ assemble_precoil_source (const double p[])
 		  source *= det_J * wt * h3;
 		  source *= pd->etm[eqn][(LOG2_SOURCE)];
 
-		  lec->R[peqn][ii] += source;
+                  lec->R[LEC_R_INDEX(peqn,ii)] += source;
 		}
 	    }
 	}
@@ -26395,7 +26395,7 @@ assemble_precoil_source (const double p[])
                           source *= det_J * wt * h3;
                           source *= pd->etm[eqn][LOG2_SOURCE];
 
-                          lec->J[peqn][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                         }
                     }
 #ifdef COUPLED_FILL
@@ -26419,7 +26419,7 @@ assemble_precoil_source (const double p[])
                           source *= det_J * wt * h3;
                           source *= pd->etm[eqn][LOG2_SOURCE];
 
-                          lec->J[peqn][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                         }
                     }
 #endif
@@ -26529,7 +26529,7 @@ assemble_uvw_source ( int eqn, double val )
                   source *= -det_J * wt * h3;
                   source *= pd->etm[eqn][(LOG2_SOURCE)];
 
-                  lec->R[peqn][ii] += source;
+                  lec->R[LEC_R_INDEX(peqn,ii)] += source;
                 }
 	      if ( extended_dof && sign_change( F_i, (double) ls->Elem_Sign ) )
                 {
@@ -26537,7 +26537,7 @@ assemble_uvw_source ( int eqn, double val )
                   source *= det_J * wt * h3 * BIG_PENALTY * sign;
                   source *= pd->etm[eqn][(LOG2_SOURCE)];
 
-                  lec->R[peqn][ii] += source;
+                  lec->R[LEC_R_INDEX(peqn,ii)] += source;
                 }
             }
         }
@@ -26589,7 +26589,7 @@ assemble_uvw_source ( int eqn, double val )
                               source *= -det_J * wt * h3;
                               source *= pd->etm[eqn][LOG2_SOURCE];
 
-                              lec->J[peqn][pvar][ii][j] += source;
+                              lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                             }
                         }
                     }
@@ -26612,7 +26612,7 @@ assemble_uvw_source ( int eqn, double val )
                           source *= -det_J * wt * h3;
                           source *= pd->etm[eqn][LOG2_SOURCE];
 
-                          lec->J[peqn][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                         }
                     }
                   /*
@@ -26638,7 +26638,7 @@ assemble_uvw_source ( int eqn, double val )
                           source *= -det_J * wt * h3;
                           source *= pd->etm[eqn][LOG2_SOURCE];
 
-                          lec->J[peqn][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                         }
                     }
 #endif
@@ -26663,7 +26663,7 @@ assemble_uvw_source ( int eqn, double val )
                           source *= det_J * wt * h3 * BIG_PENALTY * sign;
                           source *= pd->etm[eqn][LOG2_SOURCE];
 
-                          lec->J[peqn][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                         }
                     }
                   /*
@@ -26699,7 +26699,7 @@ assemble_uvw_source ( int eqn, double val )
                 	      source *= det_J * wt * h3 * BIG_PENALTY * sign;
                 	      source *= pd->etm[eqn][(LOG2_SOURCE)];
 
-                	      lec->J[peqn][pvar][ii][j] += source;
+                              lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                 	    }
                 	}
                       else
@@ -26712,7 +26712,7 @@ assemble_uvw_source ( int eqn, double val )
                 	      source *= det_J * wt * h3 * BIG_PENALTY;
                 	      source *= pd->etm[eqn][(LOG2_SOURCE)];
 
-                	      lec->J[peqn][pvar][ii][j] += source;
+                              lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                 	    }
                 	}
 	      	    }
@@ -26892,7 +26892,7 @@ assemble_uvw_source ( int eqn, double val )
 	          for( j=0; j<ei->dof[var]; j++)
 	            {
 	              phi_j = bf[var]->phi[j];
-	              lec->J[peqn][pvar][ii][j] += source * phi_j;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source * phi_j;
 	            }
                 }
 	      if ( apply_SIC[i] )
@@ -26909,7 +26909,7 @@ assemble_uvw_source ( int eqn, double val )
 	          for( j=0; j<ei->dof[var]; j++)
 	            {
 	              phi_j = bf[var]->phi[j];
-	              lec->J[peqn][pvar][ii][j] += source * phi_j;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source * phi_j;
 	            }
                 }
             }
@@ -26944,7 +26944,7 @@ assemble_uvw_source ( int eqn, double val )
                   source *= -det_J * wt * h3;
                   source *= pd->etm[eqn][(LOG2_SOURCE)];
 
-                  lec->R[peqn][ii] += source;
+                  lec->R[LEC_R_INDEX(peqn,ii)] += source;
                 }
 	      if ( apply_SIC[i] )
                 {
@@ -26952,7 +26952,7 @@ assemble_uvw_source ( int eqn, double val )
                   source *= det_J * wt * h3 * BIG_PENALTY * sign;
                   source *= pd->etm[eqn][(LOG2_SOURCE)];
 
-                  lec->R[peqn][ii] += source;
+                  lec->R[LEC_R_INDEX(peqn,ii)] += source;
                 }
             }
         }
@@ -27004,7 +27004,7 @@ assemble_uvw_source ( int eqn, double val )
                               source *= -det_J * wt * h3;
                               source *= pd->etm[eqn][LOG2_SOURCE];
 
-                              lec->J[peqn][pvar][ii][j] += source;
+                              lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                             }
                         }
                     }
@@ -27029,7 +27029,7 @@ assemble_uvw_source ( int eqn, double val )
                               source *= -det_J * wt * h3;
                               source *= pd->etm[eqn][LOG2_SOURCE];
 
-                              lec->J[peqn][pvar][ii][j] += source;
+                              lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                             }
                         }
                     }
@@ -27052,7 +27052,7 @@ assemble_uvw_source ( int eqn, double val )
                           source *= -det_J * wt * h3;
                           source *= pd->etm[eqn][LOG2_SOURCE];
 
-                          lec->J[peqn][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                         }
                     }
                   /*
@@ -27078,7 +27078,7 @@ assemble_uvw_source ( int eqn, double val )
                           source *= -det_J * wt * h3;
                           source *= pd->etm[eqn][LOG2_SOURCE];
 
-                          lec->J[peqn][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                         }
                     }
 #endif
@@ -27103,7 +27103,7 @@ assemble_uvw_source ( int eqn, double val )
                           source *= det_J * wt * h3 * BIG_PENALTY * sign;
                           source *= pd->etm[eqn][LOG2_SOURCE];
 
-                          lec->J[peqn][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                         }
                     }
                   /*
@@ -27121,7 +27121,7 @@ assemble_uvw_source ( int eqn, double val )
 		          source *= det_J * wt * h3 * BIG_PENALTY;
 		          source *= pd->etm[eqn][(LOG2_SOURCE)];
 
-		          lec->J[peqn][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                 	}
 	      	    }
                 }
@@ -27226,7 +27226,7 @@ assemble_extension_velocity_path_dependence(void)
                       source = resid * (2. * lsi->d_H_dF[j]) * phi_i;
                       source *= det_J * wt * h3;
 
-                      lec->J[peqn][pvar][ii][j] += source;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                     }
                 }
             }
@@ -27321,7 +27321,7 @@ assemble_fill_path_dependence ( void )
                       source *= det_J * wt * h3;
                       source *= pd->etm[eqn][(LOG2_SOURCE)];
 
-                      lec->J[peqn][pvar][ii][j] += source;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                     }
                 }
             }
@@ -27564,7 +27564,7 @@ assemble_energy_path_dependence(
           pvar = upd->vp[var];
           for ( j=0; j<ei->dof[var]; j++ )
             {
-	      lec->J[peqn][pvar][i][j] += lsi->d_H_dF[j] * energy_residual * sign;
+              lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += lsi->d_H_dF[j] * energy_residual * sign;
             }
 	}
     }
@@ -28017,7 +28017,7 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
 				  for ( j=0; j<ei->dof[var]; j++ )
 				  {
 
-					  lec->J[peqn][pvar][ii][j] += lsi->d_H_dF[j] * momentum_residual * sign;
+                                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += lsi->d_H_dF[j] * momentum_residual * sign;
 				  }
 
 			  }  /*end if (active_dofs) */
@@ -28531,7 +28531,7 @@ assemble_continuity_path_dependence (dbl time_value,
 			while ( j < dofs ) 
 			{
 				
-				lec->J[peqn][pvar][i][j] += lsi->d_H_dF[j] * continuity * sign;
+                                lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += lsi->d_H_dF[j] * continuity * sign;
 			
 				j++;
 				
@@ -28675,7 +28675,7 @@ assemble_LM_source ( double *xi,
 		  phi_i = bfm->phi[i];
 
                   /* Fluid momentum residuals */
-                  /*lec->R[peqn][i] += wt *(lagrange_mult[a]) *
+                  /*lec->R[LEC_R_INDEX(peqn,i)] += wt *(lagrange_mult[a]) *
                     det_J * 0.5 * length; */
                   source = -phi_i * (lagrange_mult[a]) * lsi->delta;
                   
@@ -28683,7 +28683,7 @@ assemble_LM_source ( double *xi,
                   source *= h3;
                   source *= pd->etm[eqn][(LOG2_SOURCE)];
                                  
-                  if (pass == 1) lec->R[peqn][ii] += source;
+                  if (pass == 1) lec->R[LEC_R_INDEX(peqn,ii)] += source;
 
                   /* Sensitivities to solid Lagrange multiplier
                      (cross-mesh term) */
@@ -32198,7 +32198,7 @@ assemble_ls_latent_heat_source ( double iso_therm,
 	      for( j=0; j<ei->dof[var]; j++)
 	        {
 	          phi_j = bf[var]->phi[j];
-	          lec->J[peqn][pvar][ii][j] += source * phi_j;
+                  lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source * phi_j;
 	        }
 	    }
 	}
@@ -32232,7 +32232,7 @@ assemble_ls_latent_heat_source ( double iso_therm,
 	      
 	      /*source *= pd->etm[eqn][(LOG2_SOURCE)];*/
 	      
-	      lec->R[peqn][ii] += source;
+              lec->R[LEC_R_INDEX(peqn,ii)] += source;
 	    }
 	}
     }
@@ -32272,7 +32272,7 @@ assemble_ls_latent_heat_source ( double iso_therm,
 		      source *= det_J * wt * h3;
 		      /*source *= pd->etm[eqn][(LOG2_SOURCE)];*/
 		      
-		      lec->J[peqn][pvar][ii][j] += source;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 		    }
 		}
                 
@@ -32296,7 +32296,7 @@ assemble_ls_latent_heat_source ( double iso_therm,
 		      source *= det_J * wt * h3;
 		      /*source *= pd->etm[eqn][(LOG2_SOURCE)];*/
 		      
-		      lec->J[peqn][pvar][ii][j] += source;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 		    }
 		}
 
@@ -32324,7 +32324,7 @@ assemble_ls_latent_heat_source ( double iso_therm,
 		          source *= det_J * wt * h3;
 		          /*source *= pd->etm[eqn][(LOG2_SOURCE)];*/
 		      
-		          lec->J[peqn][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                         }
 		    }
 		} 
@@ -32349,7 +32349,7 @@ assemble_ls_latent_heat_source ( double iso_therm,
 		          source *= det_J * wt * h3;
 		          /*source *= pd->etm[eqn][(LOG2_SOURCE)];*/
 		      
-		          lec->J[peqn][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                         }
 		    }
 		} 
@@ -32377,7 +32377,7 @@ assemble_ls_latent_heat_source ( double iso_therm,
 		      source *= det_J * wt * h3;
 		      /*source *= pd->etm[eqn][(LOG2_SOURCE)];*/
 		      
-		      lec->J[peqn][pvar][ii][j] += source;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
 		    }
 		}
 #endif
@@ -32480,7 +32480,7 @@ assemble_max_strain ()
       source *= dA * etm_source;
       
       // Assemble full residual
-      lec->R[peqn][i] += mass + source;
+      lec->R[LEC_R_INDEX(peqn,i)] += mass + source;
       
     }  // End of loop over DOF (i)
 
@@ -32524,7 +32524,7 @@ assemble_max_strain ()
 	  source = 0.0;
 	  
 	  // Assemble full Jacobian
-	  lec->J[peqn][pvar][i][j] += mass + source;
+          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + source;
 	  
 	} // End of loop over DOF (j)
 	
@@ -32574,7 +32574,7 @@ assemble_max_strain ()
 	    source *= phi_i * wt * etm_source;
 	    
 	    // Assemble full Jacobian
-	    lec->J[peqn][pvar][i][j] += mass + source;
+            lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + source;
 	    
 	  } // End of loop over DOF (j)
 	  
@@ -32676,7 +32676,7 @@ assemble_cur_strain ()
       source *= dA * etm_source;
       
       // Assemble full residual
-      lec->R[peqn][i] += mass + source;
+      lec->R[LEC_R_INDEX(peqn,i)] += mass + source;
       
     }  // End of loop over DOF (i)
 
@@ -32720,7 +32720,7 @@ assemble_cur_strain ()
 	  source = 0.0;
 	  
 	  // Assemble full Jacobian
-	  lec->J[peqn][pvar][i][j] += mass + source;
+          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + source;
 	  
 	} // End of loop over DOF (j)
 	
@@ -32765,7 +32765,7 @@ assemble_cur_strain ()
 	    source *= phi_i * wt * etm_source;
 	    
 	    // Assemble full Jacobian
-	    lec->J[peqn][pvar][i][j] += mass + source;
+            lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + source;
 	    
 	  } // End of loop over DOF (j)
 	  
@@ -32979,7 +32979,7 @@ assemble_acoustic(double time,	/* present time value */
 	      source *= pd->etm[eqn][(LOG2_SOURCE)];
 	    }
 
-	  lec->R[peqn][i] +=
+          lec->R[LEC_R_INDEX(peqn,i)] +=
 	    mass + advection +  diffusion + source;
 
 
@@ -33054,7 +33054,7 @@ assemble_acoustic(double time,	/* present time value */
 		      source *= pd->etm[eqn][(LOG2_SOURCE)];
 		    }
 
-		  lec->J[peqn][pvar][i][j] += mass + advection + diffusion + source;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + advection + diffusion + source;
 		}
 	    }
 	/*
@@ -33075,7 +33075,7 @@ assemble_acoustic(double time,	/* present time value */
 		      advection *= h3;
 		      advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 		    }
-		  lec->J[peqn][pvar][i][j] += advection;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection;
 		}
 	    }
 	  /*
@@ -33120,7 +33120,7 @@ assemble_acoustic(double time,	/* present time value */
 		      source *= pd->etm[eqn][(LOG2_SOURCE)];
 		    }
 
-		  lec->J[peqn][pvar][i][j] += mass + advection + diffusion + source;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + advection + diffusion + source;
 		}
 	    }
 
@@ -33211,7 +33211,7 @@ assemble_acoustic(double time,	/* present time value */
 			  source *= pd->etm[eqn][(LOG2_SOURCE)];
 			}
 
-		      lec->J[peqn][pvar][i][j] += mass + advection + diffusion + source;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + advection + diffusion + source;
 		    }
 		}
 	    }
@@ -33260,7 +33260,7 @@ assemble_acoustic(double time,	/* present time value */
 			  source *= pd->etm[eqn][(LOG2_SOURCE)];
 			}
 
-		      lec->J[peqn][MAX_PROB_VAR + w][i][j] += advection + mass + diffusion + source;
+                      lec->J[LEC_J_INDEX(peqn,MAX_PROB_VAR + w,i,j)] += advection + mass + diffusion + source;
 		    }
 		}
 	    }
@@ -33430,7 +33430,7 @@ assemble_acoustic_reynolds_stress(double time,	/* present time value */
 	      source *= pd->etm[eqn][(LOG2_SOURCE)];
 	    }
 
-	  lec->R[peqn][i] += mass + advection + source;
+          lec->R[LEC_R_INDEX(peqn,i)] += mass + advection + source;
 
 
 	}
@@ -33486,7 +33486,7 @@ assemble_acoustic_reynolds_stress(double time,	/* present time value */
 
 		  source = 0.;
 
-		  lec->J[peqn][pvar][i][j] += mass + advection + source;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + advection + source;
 		}
 	    }
 	  /*
@@ -33528,7 +33528,7 @@ assemble_acoustic_reynolds_stress(double time,	/* present time value */
 		        source *= pd->etm[eqn][(LOG2_SOURCE)];
 		    }
 
-		  lec->J[peqn][pvar][i][j] += mass + advection + source;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + advection + source;
 		}
 	    }
 	/*
@@ -33568,7 +33568,7 @@ assemble_acoustic_reynolds_stress(double time,	/* present time value */
 		        source *= pd->etm[eqn][(LOG2_SOURCE)];
 		    }
 
-		  lec->J[peqn][pvar][i][j] += advection + source;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection + source;
 		}
 	    }
 	  /*
@@ -33609,7 +33609,7 @@ assemble_acoustic_reynolds_stress(double time,	/* present time value */
 		      source *= pd->etm[eqn][(LOG2_SOURCE)];
 		    }
 
-		  lec->J[peqn][pvar][i][j] += mass + advection + source;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + advection + source;
 		}
 	    }
 
@@ -33665,7 +33665,7 @@ assemble_acoustic_reynolds_stress(double time,	/* present time value */
 			  source *= pd->etm[eqn][(LOG2_SOURCE)];
 			}
 
-		      lec->J[peqn][pvar][i][j] += mass + advection + source;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + advection + source;
 		    }
 		}
 	    }
@@ -33703,7 +33703,7 @@ assemble_acoustic_reynolds_stress(double time,	/* present time value */
 			 source *= pd->etm[eqn][(LOG2_SOURCE)];
 			}
 
-		      lec->J[peqn][MAX_PROB_VAR + w][i][j] += advection + mass + source;
+                      lec->J[LEC_J_INDEX(peqn,MAX_PROB_VAR + w,i,j)] += advection + mass + source;
 		    }
 		}
 	    }
@@ -33970,7 +33970,7 @@ assemble_ars_source ( double ars_jump, double grad_jump )
 		  for( j=0; j<ei->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
-		      lec->J[peqn][pvar][ii][j] += source * phi_j;
+                      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source * phi_j;
 		    }
                 }
             }
@@ -34007,7 +34007,7 @@ assemble_ars_source ( double ars_jump, double grad_jump )
 		  source *= det_J * wt * h3;
 		  source *= pd->etm[eqn][(LOG2_SOURCE)];
 
-		  lec->R[peqn][ii] += source;
+                  lec->R[LEC_R_INDEX(peqn,ii)] += source;
 		}
 	    }
 	}
@@ -34052,7 +34052,7 @@ assemble_ars_source ( double ars_jump, double grad_jump )
                           source *= det_J * wt * h3;
                           source *= pd->etm[eqn][LOG2_SOURCE];
 
-                          lec->J[peqn][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                         }
                     }
 #endif
@@ -34079,7 +34079,7 @@ assemble_ars_source ( double ars_jump, double grad_jump )
                           source *= det_J * wt * h3;
                           source *= pd->etm[eqn][LOG2_SOURCE];
 
-                          lec->J[peqn][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                         }
                     }
                    /*
@@ -34105,7 +34105,7 @@ assemble_ars_source ( double ars_jump, double grad_jump )
                           source *= det_J * wt * h3;
                           source *= pd->etm[eqn][LOG2_SOURCE];
 
-                          lec->J[peqn][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                         }
                     }
                 }
@@ -34706,7 +34706,7 @@ assemble_poynting(double time,	/* present time value */
 	      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
 	    }
 
-	  lec->R[peqn][i] += diffusion + advection;
+          lec->R[LEC_R_INDEX(peqn,i)] += diffusion + advection;
 	}
     }
 
@@ -34788,7 +34788,7 @@ assemble_poynting(double time,	/* present time value */
 		      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
 		    }
 
-		  lec->J[peqn][pvar][i][j] += diffusion + advection;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion + advection;
 		}
 	    }
 	  /*
@@ -34823,7 +34823,7 @@ assemble_poynting(double time,	/* present time value */
 		      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
 		    }
 
-		  lec->J[peqn][pvar][i][j] += diffusion + advection;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion + advection;
 		}
 	    }
 
@@ -34887,7 +34887,7 @@ assemble_poynting(double time,	/* present time value */
 			}
 
 
-		      lec->J[peqn][pvar][i][j] += diffusion;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
 		    }
 		}
 	    }
@@ -34912,7 +34912,7 @@ assemble_poynting(double time,	/* present time value */
 			  diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
 			}
 
-		      lec->J[peqn][MAX_PROB_VAR + w][i][j] += diffusion;
+                      lec->J[LEC_J_INDEX(peqn,MAX_PROB_VAR + w,i,j)] += diffusion;
 		    }
 		}
 	    }
@@ -34953,7 +34953,7 @@ assemble_poynting(double time,	/* present time value */
 			advection_b *= h3;
 			advection_b *= pd->etm[eqn][(LOG2_ADVECTION)];
 
-		        lec->J[peqn][pvar][i][j] += advection + advection_b;
+                        lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection + advection_b;
 	               }
 	           }
 	         }
@@ -35224,7 +35224,7 @@ assemble_emwave(double time,	/* present time value */
 	      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
 	    }
 
-          lec->R[peqn][i] += advection +  diffusion;
+          lec->R[LEC_R_INDEX(peqn,i)] += advection +  diffusion;
 
 
 	}
@@ -35275,7 +35275,7 @@ assemble_emwave(double time,	/* present time value */
             advection *= pd->etm[eqn][(LOG2_ADVECTION)];
           }
 
-          lec->J[peqn][pvar][i][j] += advection;
+          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection;
         }
       }
       /*
@@ -35294,7 +35294,7 @@ assemble_emwave(double time,	/* present time value */
             advection *= pd->etm[eqn][(LOG2_ADVECTION)];
           }
 
-          lec->J[peqn][pvar][i][j] += advection;
+          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection;
         }
       }
       /*
@@ -35327,7 +35327,7 @@ assemble_emwave(double time,	/* present time value */
               diffusion *= h3;
               diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
 
-              lec->J[peqn][pvar][i][j] += diffusion;
+              lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
             }
           }
         }
@@ -35352,7 +35352,7 @@ assemble_emwave(double time,	/* present time value */
 		      advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 		    }
 
-		  lec->J[peqn][pvar][i][j] += advection;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection;
 		}
 	    }
 
@@ -35430,7 +35430,7 @@ assemble_emwave(double time,	/* present time value */
 			}
 
 
-		      lec->J[peqn][pvar][i][j] += advection + diffusion;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection + diffusion;
 		    }
 		}
 	    }
@@ -35456,7 +35456,7 @@ assemble_emwave(double time,	/* present time value */
 		      advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 		    }
 
-		      lec->J[peqn][MAX_PROB_VAR + w][i][j] += advection;
+                      lec->J[LEC_J_INDEX(peqn,MAX_PROB_VAR + w,i,j)] += advection;
 		    }
 		}
 	    }
