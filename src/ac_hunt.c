@@ -155,6 +155,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   double        ***gvec_elem;
   FILE          *file=NULL;
   double 	toler_org[3];
+  double        exo_time=0;
 
   struct Results_Description  *rd=NULL;
 
@@ -234,7 +235,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 
   tnv = cnt_nodal_vars();
   /*  tnv_post is calculated in load_nodal_tkn*/
-  tev = cnt_elem_vars();
+  tev = cnt_elem_vars(exo);
   /*  tev_post is calculated in load_elem_tkn*/
 
 #ifdef DEBUG
@@ -918,10 +919,11 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 #ifdef DEBUG
 	  fprintf(stderr, "%s: write_solution call WIS\n", yo);
 #endif
+          exo_time = aldALC[0]*path1[0];
 	  write_solution(ExoFileOut, resid_vector, x, x_sens_p, x_old,
 			 xdot, xdot_old, tev, tev_post, gv,  rd, gindex,
 			 p_gsize, gvec, gvec_elem, &nprint, delta_s[0],
- 			 theta, path1[0], NULL, exo, dpi);
+ 			 theta, exo_time, NULL, exo, dpi);
 #ifdef DEBUG
 	  fprintf(stderr, "%s: write_solution end call WIS\n", yo);
 #endif
@@ -1347,10 +1349,11 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 	DPRINTF(stderr, "%s:  error writing ASCII soln file\n", yo);
       }
       if ( Write_Intermediate_Solutions == 0 ) {
+        exo_time = aldALC[0]*path1[0];
 	write_solution(ExoFileOut, resid_vector, x, x_sens_p,
 		       x_old, xdot, xdot_old, tev, tev_post,  gv,
 		       rd, gindex, p_gsize, gvec, gvec_elem, &nprint,
- 		       delta_s[0], theta, path1[0], NULL, exo, dpi);
+ 		       delta_s[0], theta, exo_time, NULL, exo, dpi);
 	nprint++;
       }
     }

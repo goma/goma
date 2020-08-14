@@ -2258,6 +2258,7 @@ noahs_ark()
       ddd_add_member(n, &vn_glob[i]->eps, 1, MPI_DOUBLE);
       ddd_add_member(n, &vn_glob[i]->evssModel, 1, MPI_INT);
       ddd_add_member(n, &vn_glob[i]->modes, 1, MPI_INT);
+      ddd_add_member(n, &vn_glob[i]->shiftModel, 1, MPI_INT);
       ddd_add_member(n, &vn_glob[i]->dg_J_model, 1, MPI_INT);
 
       /*
@@ -2272,6 +2273,7 @@ noahs_ark()
        */
 
       ddd_add_member(n, &vn_glob[i]->len_dg_J_model_wt, 1, MPI_INT);
+      ddd_add_member(n, &vn_glob[i]->len_shift, 1, MPI_INT);
 
       for ( mode=0; mode<MAX_MODES; mode++)
 	{
@@ -2520,6 +2522,7 @@ noahs_ark()
   ddd_add_member(n, &STREAM, 1, MPI_INT);
   ddd_add_member(n, &STREAM_NORMAL_STRESS, 1, MPI_INT);
   ddd_add_member(n, &STREAM_SHEAR_STRESS, 1, MPI_INT);
+  ddd_add_member(n, &STREAM_TENSION, 1, MPI_INT);
   ddd_add_member(n, &MEAN_SHEAR, 1, MPI_INT);
   ddd_add_member(n, &PRESSURE_CONT, 1, MPI_INT);
   ddd_add_member(n, &SH_DIV_S_V_CONT, 1, MPI_INT);
@@ -2607,9 +2610,15 @@ noahs_ark()
   ddd_add_member(n, &EIG3, 1, MPI_INT);
   ddd_add_member(n, &GRAD_SH, 1, MPI_INT);
   ddd_add_member(n, &GRAD_Y, 1, MPI_INT);
+  ddd_add_member(n, &HELICITY, 1, MPI_INT);
   ddd_add_member(n, &EXTERNAL_POST, 1, MPI_INT);
   ddd_add_member(n, &SURFACE_VECTORS, 1, MPI_INT);
   ddd_add_member(n, &SHELL_NORMALS, 1, MPI_INT);
+  ddd_add_member(n, &LAMB_VECTOR, 1, MPI_INT);
+  ddd_add_member(n, &Q_FCN, 1, MPI_INT);
+  ddd_add_member(n, &POYNTING_VECTORS, 1, MPI_INT);
+  ddd_add_member(n, &SARAMITO_YIELD, 1, MPI_INT);
+  ddd_add_member(n, &STRESS_NORM, 1, MPI_INT);
   ddd_add_member(n, &len_u_post_proc, 1, MPI_INT);
 
   if ( nn_post_fluxes > 0 )
@@ -3244,6 +3253,8 @@ ark_landing()
 
       dalloc( v->len_dg_J_model_wt,
 	      v->    dg_J_model_wt);
+      dalloc( v->len_shift,
+	      v->shift);
     }
 
   dalloc( len_u_post_proc, u_post_proc );
@@ -3656,6 +3667,9 @@ noahs_dove()
 
     crdv( v->len_dg_J_model_wt,
 	  v->    dg_J_model_wt);
+
+    crdv( v->len_shift,
+	  v->shift);
   }
 
 #ifdef DEBUG

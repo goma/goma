@@ -63,31 +63,33 @@ dbl *LSA_wave_numbers = NULL;
  * the (single) function into multiple parts because it was getting
  * too fat...
  */
-int
-solve_stability_problem(struct Aztec_Linear_Solver_System *ams,                 
-			double x[],			/* Value of the solution vector */
-			double delta_t,			/* Time step size */
-			double theta,			/* Variable time integration parameter
-							   explicit (theta = 1) to 
-							   implicit (theta = 0) */
-			double resid_vector[],
-			double x_old[],			/* Value of the old solution vector */
-			double x_older[],		/* */
-			double xdot[],			/* Value of xdot predicted for new 
-							   solution */
-			double xdot_old[],		/* */
-			double x_update[],		/* */
-			int *converged,			/* Whether the Newton has converged */
-			int *nprint,			/* Counter for time step number */
-			int tnv,			/* Number of nodal results */
-			int tnv_post,			/* Number of post processing results */
-			struct Results_Description  *rd,
-			int *gindex,
-			int *p_gsize,
-			double *gvec,
-			double time_value,
-			Exo_DB *exo,			/* Ptr to finite element mesh db */
-			Dpi *dpi)			/* Ptr to distributed processing info */
+int solve_stability_problem(struct Aztec_Linear_Solver_System *ams,
+                            double x[],     /* Value of the solution vector */
+                            double delta_t, /* Time step size */
+                            double theta,   /* Variable time integration parameter
+                                               explicit (theta = 1) to
+                                               implicit (theta = 0) */
+                            double resid_vector[],
+                            double x_old[],    /* Value of the old solution vector */
+                            double x_older[],  /* */
+                            double xdot[],     /* Value of xdot predicted for new
+                                                  solution */
+                            double xdot_old[], /* */
+                            double x_update[], /* */
+                            int *converged,    /* Whether the Newton has converged */
+                            int *nprint,       /* Counter for time step number */
+                            int tnv,           /* Number of nodal results */
+                            int tnv_post,      /* Number of post processing results */
+                            int tev,           /* Number of element results */
+                            int tev_post, /* Number of post processing results element variables. */
+                            struct Results_Description *rd,
+                            int *gindex,
+                            int *p_gsize,
+                            double *gvec,
+                            double ***gvec_elem,
+                            double time_value,
+                            Exo_DB *exo, /* Ptr to finite element mesh db */
+                            Dpi *dpi)    /* Ptr to distributed processing info */
 {
   int res;
 
@@ -106,49 +108,48 @@ solve_stability_problem(struct Aztec_Linear_Solver_System *ams,
   dcopy1(NumUnknowns,x,x_older);
 
   if(!(Linear_Stability == LSA_3D_OF_2D || Linear_Stability == LSA_3D_OF_2D_SAVE))
-    res = solve_full_stability_problem(ams, x, delta_t, theta, resid_vector, 
-				       x_old, x_older, xdot, xdot_old,
-				       x_update, converged, nprint, tnv,
-				       tnv_post, rd, gindex, p_gsize, gvec,
-				       time_value, exo, dpi);
+    res = solve_full_stability_problem(ams, x, delta_t, theta, resid_vector, x_old, x_older, xdot,
+                                       xdot_old, x_update, converged, nprint, tnv, tnv_post, tev,
+                                       tev_post, rd, gindex, p_gsize, gvec, gvec_elem, time_value,
+                                       exo, dpi);
   else
-    res = solve_3D_of_2D_stability_problem(ams, x, delta_t, theta,
-					   resid_vector, x_old, x_older,
-					   xdot, xdot_old, x_update,
-					   converged, nprint, tnv, tnv_post,
-					   rd, gindex, p_gsize, gvec,
-					   time_value, exo, dpi);
+    res = solve_3D_of_2D_stability_problem(ams, x, delta_t, theta, resid_vector, x_old, x_older,
+                                           xdot, xdot_old, x_update, converged, nprint, tnv,
+                                           tnv_post, tev, tev_post, rd, gindex, p_gsize, gvec,
+                                           gvec_elem, time_value, exo, dpi);
   return(res);
-}/* END of routine solve_stability_problem */
+} /* END of routine solve_stability_problem */
 
 /* This routine will perform all of the eigenvalue handling for
  * "regular" systems.  That means it is NOT for 3D stability of a 2D
  * flow. */
-int
-solve_full_stability_problem(struct Aztec_Linear_Solver_System *ams,                 
-			     double x[], /* Value of the solution vector */
-			     double delta_t, /* Time step size */
-			     double theta, /* Variable time integration parameter
-					    * explicit (theta = 1) to implicit
-					    * (theta = 0) */
-			     double resid_vector[],
-			     double x_old[], /* Value of the old solution vector */
-			     double x_older[], /* */
-			     double xdot[],  /* Value of xdot predicted for new 
-					      * solution */
-			     double xdot_old[], /* */
-			     double x_update[], /* */
-			     int *converged, /* Whether the Newton has converged */
-			     int *nprint, /* Counter for time step number */
-			     int tnv, /* Number of nodal results */
-			     int tnv_post, /* Number of post processing results */
-			     struct Results_Description  *rd,
-			     int *gindex,
-			     int *p_gsize,
-			     double *gvec,
-			     double time_value,
-			     Exo_DB *exo, /* Ptr to finite element mesh db */
-			     Dpi *dpi) /* Ptr to distributed processing info */
+int solve_full_stability_problem(struct Aztec_Linear_Solver_System *ams,
+                                 double x[],     /* Value of the solution vector */
+                                 double delta_t, /* Time step size */
+                                 double theta,   /* Variable time integration parameter
+                                                  * explicit (theta = 1) to implicit
+                                                  * (theta = 0) */
+                                 double resid_vector[],
+                                 double x_old[],    /* Value of the old solution vector */
+                                 double x_older[],  /* */
+                                 double xdot[],     /* Value of xdot predicted for new
+                                                     * solution */
+                                 double xdot_old[], /* */
+                                 double x_update[], /* */
+                                 int *converged,    /* Whether the Newton has converged */
+                                 int *nprint,       /* Counter for time step number */
+                                 int tnv,           /* Number of nodal results */
+                                 int tnv_post,      /* Number of post processing results */
+                                 int tev,           /* Number of element variable results */
+                                 int tev_post,      /* Number of post processing element results */
+                                 struct Results_Description *rd,
+                                 int *gindex,
+                                 int *p_gsize,
+                                 double *gvec,
+                                 double ***gvec_elem,
+                                 double time_value,
+                                 Exo_DB *exo, /* Ptr to finite element mesh db */
+                                 Dpi *dpi)    /* Ptr to distributed processing info */
 {
   int istuff[PARAMETER_ARRAY_LENGTH];
   double dstuff[PARAMETER_ARRAY_LENGTH];
@@ -356,11 +357,10 @@ solve_full_stability_problem(struct Aztec_Linear_Solver_System *ams,
       eggroll_init(NumUnknowns, NZeros, &istuff[0], &dstuff[0]);
       
       /* Call eggroll solver */
-      eggrollwrap(istuff, dstuff, ija, jacobian_matrix, mass_matrix,
-		  x, ExoFileOut, ProblemType, delta_t,  theta, x_old, 
-		  xdot, xdot_old, resid_vector, converged, nprint, tnv, 
-		  tnv_post, rd, gindex, p_gsize, gvec, 
-		  time_value, exo, Num_Proc, dpi);
+      eggrollwrap(istuff, dstuff, ija, jacobian_matrix, mass_matrix, x, ExoFileOut, ProblemType,
+                  delta_t, theta, x_old, xdot, xdot_old, resid_vector, converged, nprint, tnv,
+                  tnv_post, tev, tev_post, rd, gindex, p_gsize, gvec, gvec_elem, time_value, exo,
+                  Num_Proc, dpi);
     }
       
   /* Free space, and return ams->val to what it was when we came
@@ -380,31 +380,33 @@ solve_full_stability_problem(struct Aztec_Linear_Solver_System *ams,
 /* This routine will perform all of the eigenvalue handling for
  * calculations of 3D stability of a 2D flow.
  */
-int
-solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,                 
-				 double x[], /* Value of the solution vector */
-				 double delta_t, /* Time step size */
-				 double theta, /* Variable time integration parameter
-						* explicit (theta = 1) to implicit
-						* (theta = 0) */
-				 double resid_vector[],
-				 double x_old[], /* Value of the old solution vector */
-				 double x_older[], /* */
-				 double xdot[],  /* Value of xdot predicted for new 
-						  * solution */
-				 double xdot_old[], /* */
-				 double x_update[], /* */
-				 int *converged, /* Whether the Newton has converged */
-				 int *nprint, /* Counter for time step number */
-				 int tnv, /* Number of nodal results */
-				 int tnv_post, /* Number of post processing results */
-				 struct Results_Description  *rd,
-				 int *gindex,
-				 int *p_gsize,
-				 double *gvec,
-				 double time_value,
-				 Exo_DB *exo, /* Ptr to finite element mesh db */
-				 Dpi *dpi) /* Ptr to distributed processing info */
+int solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
+                                     double x[],     /* Value of the solution vector */
+                                     double delta_t, /* Time step size */
+                                     double theta,   /* Variable time integration parameter
+                                                      * explicit (theta = 1) to implicit
+                                                      * (theta = 0) */
+                                     double resid_vector[],
+                                     double x_old[],    /* Value of the old solution vector */
+                                     double x_older[],  /* */
+                                     double xdot[],     /* Value of xdot predicted for new
+                                                         * solution */
+                                     double xdot_old[], /* */
+                                     double x_update[], /* */
+                                     int *converged,    /* Whether the Newton has converged */
+                                     int *nprint,       /* Counter for time step number */
+                                     int tev,           /* Number of element results */
+                                     int tev_post, /* Number of element post processing results */
+                                     int tnv,      /* Number of nodal results */
+                                     int tnv_post, /* Number of post processing results */
+                                     struct Results_Description *rd,
+                                     int *gindex,
+                                     int *p_gsize,
+                                     double *gvec,
+                                     double ***gvec_elem,
+                                     double time_value,
+                                     Exo_DB *exo, /* Ptr to finite element mesh db */
+                                     Dpi *dpi)    /* Ptr to distributed processing info */
 {
   int istuff[PARAMETER_ARRAY_LENGTH];
   double dstuff[PARAMETER_ARRAY_LENGTH];
@@ -759,13 +761,11 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
 	  
 	  /* Call eggroll solver */
 	  printf("Entering eggrollwrap...\n"); fflush(stdout);
-	  eggrollwrap(istuff, dstuff, ija,
-		      jacobian_matrix, mass_matrix, x,
-		      ExoFileOut, ProblemType, delta_t, theta,
-		      x_old, xdot, xdot_old, resid_vector,
-		      converged, nprint, tnv, tnv_post, rd, gindex,
-		      p_gsize, gvec, time_value, exo, Num_Proc, dpi); 
-	}
+          eggrollwrap(istuff, dstuff, ija, jacobian_matrix, mass_matrix, x, ExoFileOut, ProblemType,
+                      delta_t, theta, x_old, xdot, xdot_old, resid_vector, converged, nprint, tnv,
+                      tnv_post, tev, tev_post, rd, gindex, p_gsize, gvec, gvec_elem, time_value,
+                      exo, Num_Proc, dpi);
+      }
     } /* for(wn = 0; wn < LSA_num_wave_numbers; wn++) */
       
   /* Free space, and return ams->val to what it was when we came

@@ -259,7 +259,8 @@ CXXSTD ?= -std=c++11
 CXXFLAGS = $(CCFLAGS) $(C_WARN_FLAGS) $(DEFINES) $(INCLUDES) -Wno-deprecated $(CXXSTD)
 
 # linker flags
-LD_FLAGS = $(CCFLAGS) $(Trilinos_EXTRA_LD_FLAGS)
+LD_EXTRA_FLAGS ?=
+LD_FLAGS = $(CCFLAGS) $(Trilinos_EXTRA_LD_FLAGS) $(LD_EXTRA_FLAGS)
 
 # LIBRARIES
 # ---------

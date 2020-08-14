@@ -115,7 +115,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
   double xi[DIM];             /* Local element coordinates of Gauss point. */
   double x_dot[MAX_PDIM];
   double x_rs_dot[MAX_PDIM];
-  double wt, weight, pb;
+  double wt, weight, pb[DIM];
   double xsurf[MAX_PDIM];
   double dsigma_dx[DIM][MDE];
   double func[DIM];
@@ -707,7 +707,15 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			bc->BC_Data_Float,
 			(int) bc->BC_Data_Int[0],
 			xsurf, theta, delta_t);
-	  break;  
+	  break;
+	case VELO_SLIP_POWER_CARD_BC:
+	case VELO_SLIP_POWER_BC:
+	  fvelo_slip_power_bc(func, d_func,
+			      (int) bc->BC_Name,
+			      (int) bc->max_DFlt,
+			      bc->BC_Data_Float,
+			      theta, delta_t);
+	break;
 
 	case AIR_FILM_BC:
 	case AIR_FILM_ROT_BC:
@@ -963,15 +971,22 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	  if ( bc->BC_Data_Int[0] == ei->elem_blk_id ||
 	       ( bc->BC_Data_Int[0] == -1 && iapply ) ) {
 
+	    int dir;
 	    /* set up surface repulsion force and zero it if 
 	     * bc is CAP_REPULSE or CAP_RECOIL_PRESS
 	     * because then force is calculated
 	     * later */
-	    pb = BC_Types[bc_input_id].BC_Data_Float[1];
+	    for( dir=0 ; dir<ielem_dim ; dir++)
+	       { pb[dir] = BC_Types[bc_input_id].BC_Data_Float[dir+1];}
+	    if ( ielem_dim == DIM)
+		{
+		 pb[DIM-1] = 0.0;
+		 /*WH(-1,"3rd Direction bulk stress not connected to CAPILLARY BC yet...\n");*/
+		}
 	    if (BC_Types[bc_input_id].BC_Name == CAPILLARY_TABLE_BC)
                {
 	  apply_table_wic_bc(func, d_func, &BC_Types[bc_input_id], time_value);
-              pb = func[0];
+              pb[0] += func[0];
                }
 
 	    fn_dot_T(cfunc, d_cfunc, elem_side_bc->id_side,
@@ -2226,7 +2241,6 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	      if (BC_Types[bc_input_id].BC_Name != CAPILLARY_BC  &&
 		  BC_Types[bc_input_id].BC_Name != CAPILLARY_SHEAR_VISC_BC  &&
 		  BC_Types[bc_input_id].BC_Name != ELEC_TRACTION_BC  &&
-                  BC_Types[bc_input_id].BC_Name != YFLUX_USER_BC &&
 		  BC_Types[bc_input_id].BC_Name != CAP_REPULSE_BC &&
 		  BC_Types[bc_input_id].BC_Name != CAP_REPULSE_ROLL_BC &&
 		  BC_Types[bc_input_id].BC_Name != CAP_REPULSE_USER_BC &&
@@ -2737,11 +2751,11 @@ apply_table_wic_bc( double func[],
    *    convenient.
    */
   if (BC_Type->BC_Name == TABLE_WICV_BC) {
-    func[0] = BC_Type->table->slope[0]*BC_Type->BC_Data_Float[0];
-    func[1] = BC_Type->table->slope[1]*BC_Type->BC_Data_Float[0];
-    func[2] = BC_Type->table->slope[2]*BC_Type->BC_Data_Float[0];
+    func[0] = BC_Type->table->slope[0]*BC_Type->table->yscale;
+    func[1] = BC_Type->table->slope[1]*BC_Type->table->yscale;
+    func[2] = BC_Type->table->slope[2]*BC_Type->table->yscale;
   } else {
-    func[0] = interp_val*BC_Type->BC_Data_Float[0];
+    func[0] = interp_val*BC_Type->table->yscale;
   }
 }
 /*******************************************************************************/

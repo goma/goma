@@ -4962,13 +4962,15 @@ calc_shearrate(dbl *gammadot,	/* strain rate invariant */
 	}
     }
   
-  *gammadot  =  sqrt(*gammadot/2.); 
+  *gammadot  =  sqrt(0.5*fabs(*gammadot)); 
   
   /* get stuff for Jacobian entries */
   v = VELOCITY1;
   vdofs = ei->dof[v];
   
-  if ( pd->e[R_MESH1] && (d_gd_dmesh != NULL || d_gd_dv != NULL))
+  if ( d_gd_dmesh != NULL || d_gd_dv != NULL)
+  {
+  if ( pd->e[R_MESH1] )
     {
       mdofs = ei->dof[R_MESH1];
     }
@@ -4988,6 +4990,7 @@ calc_shearrate(dbl *gammadot,	/* strain rate invariant */
 	    }
 	}
     }
+  }
   
   /*
    * d( gamma_dot )/dmesh
@@ -5374,7 +5377,7 @@ void get_supg_tau(struct SUPG_terms *supg_terms,
   double eta = Pek;
   double eta_dX[DIM][MDE];
   double eta_dV[DIM][MDE];
-  if (Pek > 1) {
+  if (Pek > 1 || vnorm <= 0.) {
     eta = 1;
     for (int i = 0; i < DIM; i++)
     {
@@ -5406,27 +5409,27 @@ void get_supg_tau(struct SUPG_terms *supg_terms,
     }
   }
 
-  if (vnorm > 0) {
-    supg_terms->supg_tau = 0.5 * hk * eta / vnorm;
+  if (vnorm > 0.) 
+    {
+      supg_terms->supg_tau = 0.5 * hk * eta / vnorm;
 
-    for (int a = 0; a < VIM; a++)
-      {
-        int var = VELOCITY1 + a;
-        for (int j = 0; j < ei->dof[var]; j++)
-          {
-            supg_terms->d_supg_tau_dv[a][j] = 0.5*hk*eta*fv->v[a]*bf[var]->phi[j] /
+      for (int a = 0; a < VIM; a++)
+	{
+	  int var = VELOCITY1 + a;
+	  for (int j = 0; j < ei->dof[var]; j++)
+	    {
+	      supg_terms->d_supg_tau_dv[a][j] = 0.5*hk*eta*fv->v[a]*bf[var]->phi[j] /
                 (- vnorm*vnorm*vnorm) + 0.5 * hk * eta_dV[a][j] / vnorm;
-          }
+	    }
 
-        var = MESH_DISPLACEMENT1 + a;
-        for (int j = 0; j < ei->dof[var]; j++)
-          {
-            supg_terms->d_supg_tau_dX[a][j] = 0.5 * hk_dX[a][j] * eta / vnorm + 0.5 * hk * eta_dX[a][j] / vnorm;
-          }
-      }
-
-
-  } else {
+	  var = MESH_DISPLACEMENT1 + a;
+	  for (int j = 0; j < ei->dof[var]; j++)
+	    {
+	      supg_terms->d_supg_tau_dX[a][j] = 0.5 * hk_dX[a][j] * eta / vnorm + 0.5 * hk * eta_dX[a][j] / vnorm;
+	    }
+	}
+    } 
+  else {
     supg_terms->supg_tau = 0;
     for (int i = 0; i < DIM; i++)
       {

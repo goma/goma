@@ -374,6 +374,16 @@ apply_point_colloc_bc (
 		       BC_Types[bc_input_id].u_BC,BC_Types[bc_input_id].len_u_BC);
 		break;
 
+	    case FEATURE_ROLLON_BC:
+#ifdef FEATURE_ROLLON_PLEASE
+		f_feature_rollon(ielem_dim, &func, d_func, 
+		       BC_Types[bc_input_id].u_BC,BC_Types[bc_input_id].len_u_BC,
+		       BC_Types[bc_input_id].BC_Data_Int[0],time_intermediate);
+#else
+		EH(-1, "FEATURE_ROLLON_PLEASE define needed and feature_rollon.h - talk to RBS");
+#endif
+		break;
+
 	    case ROLL_FLUID_BC:
                 icount = BC_Types[bc_input_id].BC_Data_Int[2];
 xsurf[0] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+1];
@@ -421,6 +431,61 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 		var_flag = BC_Types[bc_input_id].desc->equation;
 		fvelocity_parabola(var_flag, ielem_dim, 
 			BC_Types[bc_input_id].BC_Name,
+			&func, d_func, BC_Types[bc_input_id].u_BC,
+			time_intermediate,BC_Types[bc_input_id].len_u_BC);
+		break;
+		    
+	    case U_VES11_PARABOLA_BC:
+	    case U_VES12_PARABOLA_BC:
+	    case U_VES22_PARABOLA_BC:
+	    case U_VES13_PARABOLA_BC:
+	    case U_VES23_PARABOLA_BC:
+	    case U_VES33_PARABOLA_BC:
+	    case U_VES11_1_PARABOLA_BC:
+	    case U_VES12_1_PARABOLA_BC:
+	    case U_VES22_1_PARABOLA_BC:
+	    case U_VES13_1_PARABOLA_BC:
+	    case U_VES23_1_PARABOLA_BC:
+	    case U_VES33_1_PARABOLA_BC:
+	    case U_VES11_2_PARABOLA_BC:
+	    case U_VES12_2_PARABOLA_BC:
+	    case U_VES22_2_PARABOLA_BC:
+	    case U_VES13_2_PARABOLA_BC:
+	    case U_VES23_2_PARABOLA_BC:
+	    case U_VES33_2_PARABOLA_BC:
+	    case U_VES11_3_PARABOLA_BC:
+	    case U_VES12_3_PARABOLA_BC:
+	    case U_VES22_3_PARABOLA_BC:
+	    case U_VES13_3_PARABOLA_BC:
+	    case U_VES23_3_PARABOLA_BC:
+	    case U_VES33_3_PARABOLA_BC:
+	    case U_VES11_4_PARABOLA_BC:
+	    case U_VES12_4_PARABOLA_BC:
+	    case U_VES22_4_PARABOLA_BC:
+	    case U_VES13_4_PARABOLA_BC:
+	    case U_VES23_4_PARABOLA_BC:
+	    case U_VES33_4_PARABOLA_BC:
+	    case U_VES11_5_PARABOLA_BC:
+	    case U_VES12_5_PARABOLA_BC:
+	    case U_VES22_5_PARABOLA_BC:
+	    case U_VES13_5_PARABOLA_BC:
+	    case U_VES23_5_PARABOLA_BC:
+	    case U_VES33_5_PARABOLA_BC:
+	    case U_VES11_6_PARABOLA_BC:
+	    case U_VES12_6_PARABOLA_BC:
+	    case U_VES22_6_PARABOLA_BC:
+	    case U_VES13_6_PARABOLA_BC:
+	    case U_VES23_6_PARABOLA_BC:
+	    case U_VES33_6_PARABOLA_BC:
+	    case U_VES11_7_PARABOLA_BC:
+	    case U_VES12_7_PARABOLA_BC:
+	    case U_VES22_7_PARABOLA_BC:
+	    case U_VES13_7_PARABOLA_BC:
+	    case U_VES23_7_PARABOLA_BC:
+	    case U_VES33_7_PARABOLA_BC:
+		var_flag = BC_Types[bc_input_id].desc->equation;
+		f_vestress_parabola(var_flag, ielem_dim, 
+			U_PARABOLA_BC, ei->mn,
 			&func, d_func, BC_Types[bc_input_id].u_BC,
 			time_intermediate,BC_Types[bc_input_id].len_u_BC);
 		break;
@@ -766,13 +831,14 @@ f_fillet (const int ielem_dim,
 {    
 /**************************** EXECUTION BEGINS *******************************/
   double pt[DIM], side_th[2], rad, center[DIM], alpha, theta_mid, theta_avg, tmp;
-  double theta, siderad=-1., circ[DIM]={0.,0.,0.}, dsign, beta, cham_ang=-1., cham_rotn=0.;
+  double theta, siderad=-1., circ[DIM]={0.,0.,0.}, dsign, beta = 0, theta_side[2];
+  double cham_ang=-1., cham_rotn=0., gamma=0.;
   int iside=0, chamfer=0, i, dim=2;
 
   if(af->Assemble_LSA_Mass_Matrix)
     return;
 
-  if(num_const <= 5)
+  if(num_const < 5)
        EH(-1,"Need at least 5 parameters for 2D fillet geometry bc!\n");
 
   pt[0]=p[0];
@@ -819,12 +885,19 @@ f_fillet (const int ielem_dim,
   theta = atan2(fv->x[1]-center[1],fv->x[0]-center[0]);
   theta = theta > side_th[1]-1.5*M_PIE ? theta : theta + 2*M_PIE;
   theta_mid = atan2(center[1] - pt[1],center[0] - pt[0]);
+  theta_side[0] = side_th[0]-0.5*M_PIE;
+  theta_side[1] = side_th[1];
+  if(iside == 1) theta_side[0] = beta - M_PIE; 
+  if(iside == 2) theta_side[1] = beta + 0.5*M_PIE;
   if(cham_ang > 0)
-	{ cham_rotn = cham_ang - (theta_mid + 0.5*M_PIE);}
+	{
+          cham_rotn = cham_ang - (theta_mid + 0.5*M_PIE);
+          gamma = atan(-2.*cos(alpha)*sin(cham_rotn)/cos(alpha+cham_rotn));
+        }
 
   /**  use different f depending on theta  **/
 
-  if( (side_th[0]-0.5*M_PIE+cham_rotn) <= theta && theta <= theta_avg)
+  if( (theta_side[0]-gamma) <= theta && theta <= theta_avg)
      {
        if( iside == 1)
           {
@@ -840,7 +913,7 @@ f_fillet (const int ielem_dim,
           }
 
      }
-  else if ( theta_avg <= theta && (theta - 0.5*M_PIE) <= (side_th[1]+cham_rotn))
+  else if ( theta_avg <= theta && (theta - 0.5*M_PIE) <= (theta_side[1]+0*gamma))
      {
        if( iside == 2)
           {
@@ -861,8 +934,8 @@ f_fillet (const int ielem_dim,
        if( chamfer)
           {
 	   tmp = theta_mid+cham_rotn;
-           *func = (fv->x[1]-center[1]+rad*sin(alpha)*sin(tmp))*sin(tmp) 
-		+ (fv->x[0]-center[0]+rad*sin(alpha)*cos(tmp))*cos(tmp);
+           *func = (fv->x[1]-center[1])*sin(tmp)+(fv->x[0]-center[0])*cos(tmp)
+                     +rad*sin(alpha-cham_rotn);
            d_func[MESH_DISPLACEMENT1] = cos(tmp);
            d_func[MESH_DISPLACEMENT2] = sin(tmp);
           }
@@ -950,7 +1023,6 @@ f_double_rad (const int ielem_dim,
      xcen2 -= dist2*cos(theta2);  ycen2 -= dist2*sin(theta2);
 #if 0
 fprintf(stderr,"arc distances %g %g \n",dist1,dist2);
-fprintf(stderr,"thetas %g %g %g %g\n",theta1, theta2, alpha1, alpha2);
 fprintf(stderr,"rads %g %g %g %g\n",rad1, rad2, rad_curv,beta);
 fprintf(stderr,"circle %g %g %g %g\n",xcirc,ycirc,xcen2, ycen2);
 #endif
@@ -1019,6 +1091,10 @@ fprintf(stderr,"circle %g %g %g %g\n",xcirc,ycirc,xcen2, ycen2);
 
 } /* END of routine f_double_rad                                             */
 /*****************************************************************************/
+
+#ifdef FEATURE_ROLLON_PLEASE
+#include "feature_rollon.h"
+#endif
 
 void 
 f_roll_fluid (int ielem_dim,
@@ -1512,6 +1588,348 @@ int i;
   *func -= fv->v[var_flag-VELOCITY1];
   
 } /* END of routine fvelocity_parabola                                        */
+/*****************************************************************************/
+void 
+f_vestress_parabola (const int var_flag,
+        const int ielem_dim,
+        const int velo_condition,
+        const int mn,
+        double *func,
+        double d_func[],       /* defined [MAX_VARIABLE_TYPES + MAX_CONC] */
+        const double p[],      /* parameters passed in from the input deck*/
+        const double time,           /* time at which bc's are evaluated   */
+        const int num_const)           /* number of passed parameters   */
+{
+/*    parabolic velocity profile
+ *      p[0] = coordinate1
+ *      p[1] = coordinate2
+ *      p[2] = flow in positive coordinate direction
+ */
+double coord1, coord2, qflow, gap, pre_factor, tmp, expon;
+double pl_index=1.0, srate=0.0, temp=25.0, at=1., d_at_dT=0.,wlf_denom;
+double alpha=-1., lambda=-1.;
+double Ws, A_alpha, Ksqr, f, mup;
+double gamma[DIM][DIM];
+int i, mode=0, strs=0;
+
+   if ( ! pd->v[POLYMER_STRESS11] )
+	{ EH(-1,"Polymer Stress needed for VE Stress PARABOLA BC."); }
+
+   if (var_flag >= POLYMER_STRESS11_7)
+        {  mode = 7; strs = var_flag-POLYMER_STRESS11_7;}
+   else if (var_flag >= POLYMER_STRESS11_6)
+        {  mode = 6; strs = var_flag-POLYMER_STRESS11_6;}
+   else if (var_flag >= POLYMER_STRESS11_5)
+        {  mode = 5; strs = var_flag-POLYMER_STRESS11_5;}
+   else if (var_flag >= POLYMER_STRESS11_4)
+        {  mode = 4; strs = var_flag-POLYMER_STRESS11_4;}
+   else if (var_flag >= POLYMER_STRESS11_3)
+        {  mode = 3; strs = var_flag-POLYMER_STRESS11_3;}
+   else if (var_flag >= POLYMER_STRESS11_2)
+        {  mode = 2; strs = var_flag-POLYMER_STRESS11_2;}
+   else if (var_flag >= POLYMER_STRESS11_1)
+        {  mode = 1; strs = var_flag-POLYMER_STRESS11_1;}
+   else if (var_flag >= POLYMER_STRESS11)
+        {  mode = 0; strs = var_flag-POLYMER_STRESS11;}
+   else
+	{ EH(-1,"Polymer Stress mode not found - VE Stress PARABOLA BC."); }
+
+   if ( pd->e[TEMPERATURE] )
+       {temp = fv->T;}
+   else
+       {temp = upd->Process_Temperature;}
+      /*  shift factor  */
+   if(vn->shiftModel == CONSTANT)
+      {
+       at = vn->shift[0];
+       d_at_dT=0.; 
+      }
+   else if(vn->shiftModel == MODIFIED_WLF)
+      {
+      wlf_denom = vn->shift[1] + temp - mp->reference[TEMPERATURE];
+      if(wlf_denom != 0.)
+         {
+          at=exp(vn->shift[0]*(mp->reference[TEMPERATURE]-temp)/wlf_denom);
+          d_at_dT= -at*vn->shift[0]*vn->shift[1]
+                   /(wlf_denom*wlf_denom);
+         }
+      }
+
+	coord1 = MIN(p[0],p[1]);
+	coord2 = MAX(p[1],p[0]);
+	qflow = p[2];
+	gap = fabs(coord2-coord1);
+	pre_factor = 6.*qflow/(gap*gap*gap);
+        switch (pd->CoordinateSystem) {
+          case CARTESIAN:
+          case CARTESIAN_2pt5D:
+	       pre_factor = 6.*qflow/(gap*gap*gap);
+               break;
+          case CYLINDRICAL:
+          case SWIRLING:
+               switch (velo_condition) {
+                  case U_PARABOLA_BC:
+                      if(coord1 <= DBL_SMALL)
+                          { pre_factor = 2.*qflow/M_PIE/SQUARE(SQUARE(coord2));}
+                      else
+                          { 
+                           pre_factor = 2.*qflow/M_PIE/
+                                       (SQUARE(coord2)-SQUARE(coord1))/
+                                       (SQUARE(coord2)+SQUARE(coord1)
+                       -(SQUARE(coord2)-SQUARE(coord1))/log(coord2/coord1));
+                          }
+                      break;
+                  case V_PARABOLA_BC:
+	              pre_factor = 3.*qflow/M_PIE/(gap*gap*gap);
+                      break;
+                  }
+               break;
+          default:
+              EH(-1,"Stress parabola not ready for that Coordinate System yet!\n");
+          }
+
+  if(ielem_dim > 2)
+     {
+      EH(-1,"Stress parabola not ready for 3D yet!\n");
+      return;
+     }
+  for(i=0;i<ielem_dim;i++)
+     {
+      d_func[MESH_DISPLACEMENT1+i] = 0.0;
+     }
+
+  if(af->Assemble_LSA_Mass_Matrix)
+    d_func[var_flag] = 0.0;
+  else
+    d_func[var_flag] = -1.0;
+
+
+  if( gap > DBL_SMALL)
+  {
+    if(num_const == 3 || p[3] == 1.0)   /*  Newtonian solution   */
+      {
+
+       switch (pd->CoordinateSystem) {
+          case CARTESIAN:
+          case CARTESIAN_2pt5D:
+               switch (velo_condition) {
+                  case U_PARABOLA_BC:
+                      srate = pre_factor*(coord1+coord2-2.*fv->x[1]);
+                      if( pd->e[R_MESH1] )
+                         { d_func[MESH_DISPLACEMENT2] = -2.*pre_factor; }
+                      break;
+                  case V_PARABOLA_BC:
+	              srate = pre_factor*(coord1+coord2-2.*fv->x[0]);
+                      if( pd->e[R_MESH1] )
+                         { d_func[MESH_DISPLACEMENT1] = -2.*pre_factor; }
+                      break;
+                  case W_PARABOLA_BC:
+	              srate = pre_factor*(coord1+coord2-2.*fv->x[0]);
+                      if( pd->e[R_MESH1] )
+                         { d_func[MESH_DISPLACEMENT1] = -2.*pre_factor; }
+                      break;
+                  default:
+                      *func =0.; 
+                  }
+               break;
+          case CYLINDRICAL:
+          case SWIRLING:
+               switch (velo_condition) {
+                  case U_PARABOLA_BC:
+                      if(coord1 <= DBL_SMALL)
+                          {
+                           srate = pre_factor*(-2.*fv->x[1]); 
+                           if( pd->e[R_MESH1] )
+                              { d_func[MESH_DISPLACEMENT2] = -2.*pre_factor; }
+                          }
+                      else
+                          {
+                           srate = pre_factor*(-2.*fv->x[1]
+                +(SQUARE(coord2)-SQUARE(coord1))/log(coord2/coord1)/fv->x[1]);
+                           if( pd->e[R_MESH1] )
+                              { 
+                      d_func[MESH_DISPLACEMENT2] = pre_factor*(-2.
+                -(SQUARE(coord2)-SQUARE(coord1))/log(coord2/coord1)/SQUARE(fv->x[1]));
+                              }
+                          }
+                      break;
+                  case V_PARABOLA_BC:
+	              *func = pre_factor/fv->x[1]*(fv->x[0]-coord1)*(coord2-fv->x[0]);
+                      if( pd->e[R_MESH1] )
+                         {
+       d_func[MESH_DISPLACEMENT1] = pre_factor/fv->x[1]*(coord1+coord2-2.*fv->x[0]);
+       d_func[MESH_DISPLACEMENT2] = -(*func)/fv->x[1];
+                         }
+                      break;
+                  default:
+                      *func =0.; 
+                  }
+               break;
+          }
+     }
+    else if(num_const > 3 )   /*  Power-law  solution   */
+      {
+        if(p[3] < 0.0)
+            {pl_index = gn->nexp;}
+        else
+            {pl_index = p[3];}
+       switch (pd->CoordinateSystem) {
+          case CARTESIAN:
+          case CARTESIAN_2pt5D:
+               expon = 1.+1./pl_index;
+	       pre_factor = (2.*pl_index+1.)/(pl_index +1.)*qflow/pow(gap,expon+1.);
+               switch (velo_condition) {
+                  case U_PARABOLA_BC:
+                      tmp = 2*fv->x[1]-coord1-coord2;
+                      srate = pre_factor*(-2.*SGN(tmp)*expon*pow(fabs(tmp),1./pl_index));
+                      if( pd->e[R_MESH1] )
+                         {
+    			  d_func[MESH_DISPLACEMENT2] = -4.*pre_factor*
+				(expon*(expon-1.)*pow(fabs(tmp),1./pl_index-1.));
+                         }
+                      break;
+                  case V_PARABOLA_BC:
+                      tmp = 2*fv->x[0]-coord1-coord2;
+                      srate = pre_factor*(-2.*SGN(tmp)*expon*pow(fabs(tmp),1./pl_index));
+                      if( pd->e[R_MESH1] )
+                         {
+    			  d_func[MESH_DISPLACEMENT1] = -4.*pre_factor*
+				(expon*(expon-1.)*pow(fabs(tmp),1./pl_index-1.));
+                         }
+                      break;
+                  case W_PARABOLA_BC:
+                      tmp = 2*fv->x[0]-coord1-coord2;
+                      srate = pre_factor*(-2.*SGN(tmp)*expon*pow(fabs(tmp),1./pl_index));
+                      if( pd->e[R_MESH1] )
+                         {
+    			  d_func[MESH_DISPLACEMENT1] = -4.*pre_factor*
+				(expon*(expon-1.)*pow(fabs(tmp),1./pl_index-1.));
+                         }
+                      break;
+                  default:
+                      srate =0.; 
+                  }
+               break;
+          case CYLINDRICAL:
+          case SWIRLING:
+               expon = 1.+1./pl_index;
+               switch (velo_condition) {
+                  case U_PARABOLA_BC:
+                      if(coord1 <= DBL_SMALL)
+                          {
+	                   pre_factor = (3.*pl_index+1.)/(pl_index +1.)
+                                         *qflow/M_PIE/pow(gap,expon+2.);
+                           srate = pre_factor*(-expon*pow(fv->x[1],expon-1.));
+                           if( pd->e[R_MESH1] )
+                               {
+                                d_func[MESH_DISPLACEMENT2] = pre_factor*
+                                          (-expon*(expon-1.)*pow(fv->x[1],expon-2.));
+                               }
+                          }  else  {
+                              EH(-1,"Power-law annulus not done yet!\n");
+                          }
+                      break;
+                  case V_PARABOLA_BC:
+	              pre_factor = (2.*pl_index+1.)/(pl_index +1.)
+                                         *qflow/M_PIE/pow(gap,expon+1.);
+                      tmp = 2*fv->x[0]-coord1-coord2;
+                      srate = pre_factor/fv->x[1]*
+                                 (-2.*SGN(tmp)*expon*pow(fabs(tmp),expon-1.));
+                      if( pd->e[R_MESH1] )
+                         {
+                           d_func[MESH_DISPLACEMENT1] = pre_factor/fv->x[1]*
+                                 (-4.*expon*(expon-1.)*pow(fabs(tmp),expon-2.));
+                           d_func[MESH_DISPLACEMENT2] = -(srate)/fv->x[1];
+                         }
+                      break;
+                  default:
+                      srate =0.; 
+                  }
+               break;
+          }
+     }
+  }  else   {
+       srate = 0.0;
+  }
+
+/* Compute stresses from shear rate */
+  switch (vn->ConstitutiveEquation) {
+
+     case GIESEKUS:
+            alpha = ve_glob[mn][mode]->alpha;
+            lambda = ve_glob[mn][mode]->time_const;
+            Ws = at*lambda*abs(srate);
+            A_alpha = 8*alpha*(1.-alpha);
+            mup = viscosity(ve[mode]->gn, gamma, NULL);
+            if(Ws >= 0.1) 
+              {Ksqr = (sqrt(1.+2*A_alpha*SQUARE(Ws))-1.)/(A_alpha*SQUARE(Ws));}
+            else
+              {
+               Ksqr = 1.-0.5*A_alpha*SQUARE(Ws)+0.5*SQUARE(A_alpha)*
+                        pow(Ws,4)-0.625*pow(A_alpha,3)*pow(Ws,6)
+                        +0.875*pow(A_alpha,4)*pow(Ws,8);
+              }
+            f =(1.-sqrt(Ksqr))/(1.+(1.-2*alpha)*sqrt(Ksqr));
+
+            switch (strs) {
+               case 0:   /* S11 */
+                  *func = 2*mup*lambda*f*(1.-alpha*f)/(SQUARE(at*lambda)*alpha*(1.-f));
+                  *func += -mup*lambda*f/SQUARE(at*lambda);
+                  break;
+               case 1:   /* S12 */
+                  *func = srate*at*mup*SQUARE(1.-f)/(1.+(1.-2.*alpha)*f);
+                  d_func[TEMPERATURE] = d_at_dT*srate*mup;
+                  break;
+               case 2:   /* S22 */
+                  *func = -mup*lambda*f/SQUARE(at*lambda);
+                  break;
+               case 3:   /* S13 */
+               case 4:   /* S23 */
+               case 5:   /* S33 */
+                  *func = 0.0;
+                  break;
+               }
+          break;
+     case OLDROYDB:
+            lambda = ve_glob[mn][mode]->time_const;
+            Ws = at*lambda*abs(srate);
+            mup = viscosity(ve[mode]->gn, gamma, NULL);
+            switch (strs) {
+               case 0:   /* S11 */
+                  *func = 2*mup*lambda*SQUARE(srate);
+                  break;
+               case 1:   /* S12 */
+                  *func = srate*at*mup;
+                  d_func[TEMPERATURE] = d_at_dT*srate*mup;
+                  break;
+               case 2:   /* S22 */
+                  *func = 0.0;
+                  break;
+               case 3:   /* S13 */
+               case 4:   /* S23 */
+               case 5:   /* S33 */
+                  *func = 0.0;
+                  break;
+               }
+          break;
+     }
+
+  switch (strs) {
+      case 0:   /* S11 */
+           *func -= fv->S[mode][0][0];
+           break;
+      case 1:   /* S12 */
+           *func -= fv->S[mode][0][1];
+           break;
+      case 2:   /* S22 */
+           *func -= fv->S[mode][1][1];
+           break;
+      case 5:   /* S33 */
+           *func -= fv->S[mode][2][2];
+           break;
+      }
+  
+} /* END of routine f_vestress_parabola                                        */
 /*****************************************************************************/
 
 void
@@ -3383,8 +3801,8 @@ apply_table_bc( double *func,
       }
 
   interp_val = interpolate_table( BC_Type->table, x_table, &slope, dfunc_dx );
-  interp_val *= BC_Type->BC_Data_Float[0];
-  slope *= BC_Type->BC_Data_Float[0];
+  interp_val *= BC_Type->table->yscale;
+  slope *= BC_Type->table->yscale;
   
   var = BC_Type->table->f_index ;
 

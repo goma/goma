@@ -81,6 +81,7 @@ static char rcsid[] =
 #include "mm_std_models.h"
 #include "shell_tfmp_struct.h"
 #include "shell_tfmp_util.h"
+#include "mm_fill_stress.h"
 /*
  * Global variable definitions.
  * This is the 1 place these variables are defined. If you need them
@@ -228,6 +229,7 @@ int STRAIN_TENSOR = -1;		/* strain tensor for mesh deformation  */
 int STREAM = -1;	       	/* stream function*/
 int STREAM_NORMAL_STRESS = -1;	/* streamwise normal stress function*/
 int STREAM_SHEAR_STRESS = -1;	/* streamwise shear stress function*/
+int STREAM_TENSION = -1;	/* streamwise tension - (Ttt-Tnn)/R*/
 int STRESS_CONT = -1;	        /* stress at vertex & midside nodes*/
 int STRESS_TENSOR = -1;		/* stress tensor for mesh deformation 
 				 * (Lagrangian pressure) */
@@ -282,6 +284,12 @@ int EIG2 = -1;
 int EIG3 = -1;
 int GRAD_SH = -1;
 int GRAD_Y = -1;
+int HELICITY = -1;
+int LAMB_VECTOR = -1;
+int Q_FCN = -1;		      
+int POYNTING_VECTORS = -1;   	/* conduction flux vectors*/
+int SARAMITO_YIELD = -1;
+int STRESS_NORM = -1;
 
 int len_u_post_proc = 0;	/* size of dynamically allocated u_post_proc
 				 * actually is */
@@ -498,7 +506,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
      *
      ****************************************************************************/
 {
-  int dim, a, b, eqn, var, w, w1, i, j, I, index, status, mode;
+  int dim, a, b, c, eqn, var, w, w1, i, j, I, index, status, mode;
   dbl det_J;                   /* determinant of Jacobian: has "r" in it for
 			     	  axisymmetric case, no "r" for Cartesian*/
   dbl phi_i;		       /* Weighting functions for i-th residuals */
@@ -506,7 +514,6 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   dbl wt;
   dbl n[MAX_CONC][DIM];        /* Diffusion flux vector. */
   dbl qc[DIM];                 /* Conduction flux vector. */
-  dbl Dsh[DIM][DIM];
   int err, ldof, ldof_right, ileft, iright, midside, checkPorous;
   /*  int first_porous_var = POR_LAST - MAX_POROUS_NUM + 1;*/
   /*  int SPECIES = MAX_VARIABLE_TYPES; */
@@ -531,7 +538,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   double dTT_dcur_strain[MAX_PDIM][MAX_PDIM][MDE];
 
   /*  double elast_modulus;	*/
-  double speed, stream_grad, velo_sqrd;
+  double stream_grad, velo_sqrd, vdelvdx[DIM], curv;
   double vconv[MAX_PDIM]; /*Calculated convection velocity */
   double vconv_old[MAX_PDIM]; /*Calculated convection velocity at previous time*/
   CONVECTION_VELOCITY_DEPENDENCE_STRUCT d_vconv_struct;
@@ -562,6 +569,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 
   /* DG VE stuff */
   int v_s[MAX_MODES][DIM][DIM];
+  dbl ves[DIM][DIM];
 
   /* Variables for dielectrophoretic force calculations. */
   dbl coeff_a, coeff_b, coeff_c, coeff_d, CM_fact, dielectrophoretic_force_coeff;
@@ -633,7 +641,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
    */
 
   if (STREAM_NORMAL_STRESS != -1 && pd->e[R_MOMENTUM1]) {
-    speed = 0.;
+    velo_sqrd = 0.;
     stream_grad = 0.;
 
     for ( a=0; a<VIM; a++)
@@ -643,26 +651,92 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 	    gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
 	  }
       }
-    for ( a=0; a<dim; a++)
+    for ( a=0; a<VIM; a++)
       {
-	speed += fv->v[a] * fv->v[a];
-	for ( b=0; b<dim; b++)
+	velo_sqrd += fv->v[a] * fv->v[a];
+	for ( b=0; b<VIM; b++)
 	  {
 	    /* vv:gamma */
 	    stream_grad += fv->v[a] * gamma[a][b] * fv->v[b];
 	  }
       }
-    if (speed > 0.0) {
-      Ttt = mp->viscosity* stream_grad / sqrt(speed)/sqrt(speed);
+      stream_grad *= mp->viscosity;
+/*
+ **  viscoelastic stress tensor
+ **/
+   if ( pd->v[POLYMER_STRESS11] )
+      {
+       dbl log_c[DIM][DIM];
+       dbl exp_s[DIM][DIM];
+       dbl R1[DIM][DIM];
+       dbl eig_values[DIM];
+       dbl mup = 0.;
+       dbl lambda = 0.;
+       int ve_mode, p, r;
+       memset( ves, 0, sizeof(dbl)*DIM*DIM);
+       if(vn->evssModel==LOG_CONF || vn->evssModel == LOG_CONF_GRADV)
+         {
+          for ( ve_mode=0; ve_mode < vn->modes; ve_mode++)
+             {
+              for (p=0; p<VIM; p++)
+                 {
+                  for (r=0; r<VIM; r++)
+                     {
+                      log_c[p][r] = fv->S[ve_mode][p][r];
+                     }
+                 }
+#ifdef ANALEIG_PLEASE
+              analytical_exp_s(log_c, exp_s, eig_values, R1);
+#else
+              compute_exp_s(log_c, exp_s, eig_values, R1);
+#endif
+              mup = viscosity(ve[ve_mode]->gn, gamma, NULL);
+              if(ve[ve_mode]->time_constModel == CONSTANT)
+                {
+                 lambda = ve[ve_mode]->time_const;
+                }
+              for (a=0; a<VIM; a++)
+                 {
+                  for (b=0; b<VIM; b++)
+                     {
+                      ves[a][b] += mup/lambda*(exp_s[a][b]-(double)delta(a,b));
+                     }
+                 }
+             }
+         }
+       else
+         {
+          for ( a=0; a<VIM; a++)
+             {
+              for ( b=0; b<VIM; b++)
+                 {
+                  for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
+                     {
+                      ves[a][b] += fv->S[ve_mode][a][b];
+                     }
+                 }
+             }
+         }
+      for ( a=0; a<VIM; a++)
+        {
+	for ( b=0; b<VIM; b++)
+	  {
+	    stream_grad += fv->v[a] * ves[a][b] * fv->v[b];
+	  }
+        }
+      } // if pd->v[POLYMER_STRESS11]
+    if (DOUBLE_NONZERO(velo_sqrd)) {
+      Ttt =  stream_grad / velo_sqrd;
     } else {
       Ttt = 0.0;
     }
+
     local_post[STREAM_NORMAL_STRESS] = Ttt;
     local_lumped[STREAM_NORMAL_STRESS] = 1.;
   }
   if (STREAM_SHEAR_STRESS != -1 && pd->e[R_MOMENTUM1]) {
     nv[0] = fv->v[1];  nv[1] = -fv->v[0]; 
-    speed = 0.;
+    velo_sqrd = 0.;
     stream_grad = 0.;
 
     for ( a=0; a<VIM; a++)
@@ -674,20 +748,200 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       }
     for ( a=0; a<dim; a++)
       {
-	speed += fv->v[a] * fv->v[a];
+	velo_sqrd += fv->v[a] * fv->v[a];
 	for ( b=0; b<dim; b++)
 	  {
 	    /* vv:gamma */
 	    stream_grad += fv->v[a] * gamma[a][b] * nv[b];
 	  }
       }
-    if (speed > 0.0) {
-      Tnt = mp->viscosity* stream_grad / sqrt(speed)/sqrt(speed);
+    stream_grad *= mp->viscosity;
+/*
+ **  viscoelastic stress tensor
+ **/
+   if ( pd->v[POLYMER_STRESS11] )
+      {
+       dbl log_c[DIM][DIM];
+       dbl exp_s[DIM][DIM];
+       dbl R1[DIM][DIM];
+       dbl eig_values[DIM];
+       dbl mup = 0.;
+       dbl lambda = 0.;
+       int ve_mode, p, r;
+       memset( ves, 0, sizeof(dbl)*DIM*DIM);
+       if(vn->evssModel==LOG_CONF || vn->evssModel == LOG_CONF_GRADV)
+         {
+          for ( ve_mode=0; ve_mode < vn->modes; ve_mode++)
+             {
+              for (p=0; p<VIM; p++)
+                 {
+                  for (r=0; r<VIM; r++)
+                     {
+                      log_c[p][r] = fv->S[ve_mode][p][r];
+                     }
+                 }
+#ifdef ANALEIG_PLEASE
+              analytical_exp_s(log_c, exp_s, eig_values, R1);
+#else
+              compute_exp_s(log_c, exp_s, eig_values, R1);
+#endif
+              mup = viscosity(ve[ve_mode]->gn, gamma, NULL);
+              if(ve[ve_mode]->time_constModel == CONSTANT)
+                {
+                 lambda = ve[ve_mode]->time_const;
+                }
+              for (a=0; a<VIM; a++)
+                 {
+                  for (b=0; b<VIM; b++)
+                     {
+                      ves[a][b] += mup/lambda*(exp_s[a][b]-(double)delta(a,b));
+                     }
+                 }
+             }
+         }
+       else
+         {
+          for ( a=0; a<VIM; a++)
+             {
+              for ( b=0; b<VIM; b++)
+                 {
+                  for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
+                     {
+                      ves[a][b] += fv->S[ve_mode][a][b];
+                     }
+                 }
+             }
+         }
+      for ( a=0; a<VIM; a++)
+        {
+	for ( b=0; b<VIM; b++)
+	  {
+	    stream_grad += fv->v[a] * ves[a][b] * nv[b];
+	  }
+        }
+      } // if pd->v[POLYMER_STRESS11]
+    if (DOUBLE_NONZERO(velo_sqrd)) {
+      Tnt = stream_grad / velo_sqrd;
     } else {
       Tnt = 0.0;
     }
     local_post[STREAM_SHEAR_STRESS] = Tnt;
     local_lumped[STREAM_SHEAR_STRESS] = 1.;
+  }
+  if (STREAM_TENSION != -1 && pd->e[R_MOMENTUM1]) {
+    velo_sqrd = 0.;
+    stream_grad = 0.;
+    curv = 0.;
+
+    for ( a=0; a<VIM; a++)
+      {
+	for ( b=0; b<VIM; b++)
+	  {
+	    gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+	  }
+      }
+    memset( vdelvdx, 0, sizeof(dbl)*DIM);
+    for ( a=0; a<dim; a++)
+      { 
+       velo_sqrd += fv->v[a] * fv->v[a]; 
+        for ( b=0; b<dim; b++)
+          { 
+	   vdelvdx[b] += fv->v[a]*fv->grad_v[b][a];
+          }
+      }
+    for ( a=0; a<dim; a++)
+      {
+	for ( b=0; b<dim; b++)
+	  {
+	    /* (2*vv-Iv):gamma */
+	    stream_grad += (2.*fv->v[a]*fv->v[b]-delta(a,b)*velo_sqrd)*gamma[a][b];
+	  }
+      }
+    for ( a=0; a<dim; a++)
+      {
+        for ( b=0; b<dim; b++)
+          { 
+        for ( c=0; c<dim; c++)
+          { 
+           curv += SQUARE(velo_sqrd*fv->grad_v[c][b]-fv->v[b]*vdelvdx[c]);
+             }
+          }
+      }
+    if(DOUBLE_NONZERO(velo_sqrd))curv = sqrt(curv/CUBE(velo_sqrd));
+    stream_grad *= mp->viscosity;
+/*
+ **  viscoelastic stress tensor
+ **/
+   if ( pd->v[POLYMER_STRESS11] )
+      {
+       dbl log_c[DIM][DIM];
+       dbl exp_s[DIM][DIM];
+       dbl R1[DIM][DIM];
+       dbl eig_values[DIM];
+       dbl mup = 0.;
+       dbl lambda = 0.;
+       int ve_mode, p, r;
+       memset( ves, 0, sizeof(dbl)*DIM*DIM);
+       if(vn->evssModel==LOG_CONF || vn->evssModel == LOG_CONF_GRADV)
+         {
+          for ( ve_mode=0; ve_mode < vn->modes; ve_mode++)
+             {
+              for (p=0; p<VIM; p++)
+                 {
+                  for (r=0; r<VIM; r++)
+                     {
+                      log_c[p][r] = fv->S[ve_mode][p][r];
+                     }
+                 }
+#ifdef ANALEIG_PLEASE
+              analytical_exp_s(log_c, exp_s, eig_values, R1);
+#else
+              compute_exp_s(log_c, exp_s, eig_values, R1);
+#endif
+              mup = viscosity(ve[ve_mode]->gn, gamma, NULL);
+              if(ve[ve_mode]->time_constModel == CONSTANT)
+                {
+                 lambda = ve[ve_mode]->time_const;
+                }
+              for (a=0; a<VIM; a++)
+                 {
+                  for (b=0; b<VIM; b++)
+                     {
+                      ves[a][b] += mup/lambda*(exp_s[a][b]-(double)delta(a,b));
+                     }
+                 }
+             }
+         }
+       else
+         {
+          for ( a=0; a<VIM; a++)
+             {
+              for ( b=0; b<VIM; b++)
+                 {
+                  for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
+                     {
+                      ves[a][b] += fv->S[ve_mode][a][b];
+                     }
+                 }
+             }
+         }
+      for ( a=0; a<VIM; a++)
+        {
+	for ( b=0; b<VIM; b++)
+	  {
+	    stream_grad += (2.*fv->v[a]*fv->v[b]-delta(a,b)*velo_sqrd)*ves[a][b];
+	  }
+        }
+      } // if pd->v[POLYMER_STRESS11]
+/* Need to determine curvature to multiply here...*/
+
+    if (DOUBLE_NONZERO(velo_sqrd)) {
+      Ttt = curv * stream_grad / velo_sqrd;
+    } else {
+      Ttt = 0.0;
+    }
+    local_post[STREAM_TENSION] = Ttt;
+    local_lumped[STREAM_TENSION] = 1.;
   }
 
   if (DIV_VELOCITY != -1 && pd->e[PRESSURE]) {
@@ -818,33 +1072,48 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   }
 
   if (MEAN_SHEAR != -1 && pd->e[R_MOMENTUM1] ){
-    double gammadot;
+    double gammadot, gamma[DIM][DIM];
     for (a = 0; a < VIM; a++) {       
       for (b = 0; b < VIM; b++) {
-	Dsh[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+	  gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
         }
       }
     /* find second invariant of strain-rate */
-    calc_shearrate(&gammadot, Dsh, NULL, NULL);
+    calc_shearrate(&gammadot, gamma, NULL, NULL);
 
     local_post[MEAN_SHEAR] = gammadot;
     local_lumped[MEAN_SHEAR] = 1.;
   }
 
   if (GIES_CRIT != -1 && pd->e[R_MOMENTUM1] ){
-    dbl Dvt[DIM][DIM], Domega;
+    double gammadot, gamma[DIM][DIM];
+    double vorticity, omega[DIM][DIM];
     for (a = 0; a < VIM; a++) {       
       for (b = 0; b < VIM; b++) {
-	Dsh[a][b] = 0.5 * (fv->grad_v[a][b] + fv->grad_v[b][a]);
-	Dvt[a][b] = 0.5 * (fv->grad_v[a][b] - fv->grad_v[b][a]);
+	gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+	omega[a][b] = fv->grad_v[a][b] - fv->grad_v[b][a];
       }
     }
     /* find second invariant of strain-rate */
-    calc_shearrate(&Dnn, Dsh, NULL, NULL);
-    calc_shearrate(&Domega, Dvt, NULL, NULL);
-    local_post[GIES_CRIT] = (Dnn-Domega)/
-			(DBL_SMALL+Dnn+Domega);
+    calc_shearrate(&gammadot, gamma, NULL, NULL);
+    calc_shearrate(&vorticity, omega, NULL, NULL);
+    local_post[GIES_CRIT] = (gammadot - vorticity)/
+			(DBL_SMALL + gammadot + vorticity);
     local_lumped[GIES_CRIT] = 1.;
+  }
+
+  if (Q_FCN != -1 && pd->e[R_MOMENTUM1] ){
+    double gammadot, del_v[DIM][DIM];
+    for (a = 0; a < VIM; a++) {       
+      for (b = 0; b < VIM; b++) {
+	  del_v[a][b] = fv->grad_v[a][b];
+        }
+      }
+    /* find second invariant of velocity gradient tensor */
+    calc_shearrate(&gammadot, del_v, NULL, NULL);
+
+    local_post[Q_FCN] = gammadot;
+    local_lumped[Q_FCN] = 1.;
   }
 
   if (VELO_SPEED != -1 && pd->e[R_MOMENTUM1] ){
@@ -1119,8 +1388,6 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       local_lumped[DIFFUSION_VECTORS_POR_AIR_GPHASE + a] = 1.0;
     }
   }
-
-
 
   if(CONDUCTION_VECTORS != -1 && pd->e[R_ENERGY])
   {
@@ -1854,8 +2121,115 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     }
   }
 
-  /* calculate real-solid stress here !!  */
+  if (HELICITY != -1 && pd->e[R_MOMENTUM1]) {
+    /* MMH: Note that in the SWIRLING coordinate system, we really
+     * do have a 3-vector and not just a scalar.
+       *
+       * Same for PROJECTED_CARTESIAN, if VELOCITY3 can become
+       * non-zero. -MMH
+       */
+    if (pd->CoordinateSystem == SWIRLING ||
+	pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+	pd->CoordinateSystem == CARTESIAN_2pt5D ||
+	dim == 3) {
+	local_post[HELICITY] = 0.0;
+        for (j = 0; j < VIM; j++) {
+	    local_post[HELICITY] += fv->v[j]*fv->curl_v[j];
+            }
+	local_lumped[HELICITY] = 1.0;
+        } 
+  }
 
+  if (LAMB_VECTOR != -1 && pd->e[R_MOMENTUM1]) {
+      for (j = 0; j < VIM; j++) {
+	local_post[LAMB_VECTOR + j] = 0;
+        for (a = 0; a < VIM; a++) {
+        for (b = 0; b < VIM; b++) {
+	     local_post[LAMB_VECTOR + j] += permute(a,b,j)*fv->curl_v[a]*fv->v[b];
+            }
+          }
+	local_lumped[LAMB_VECTOR + j] = 1.0;
+      }
+    }
+
+  /* calculate poynting vectors for EM calculations here !!  */
+  if(POYNTING_VECTORS != -1)
+  {
+    double poynt[DIM];
+    int c;
+    memset(poynt, 0, sizeof(double)*DIM);
+  /*  Acoustic analogy -- scalar version  */
+    if (pd->e[R_ACOUS_PREAL] || pd->e[R_ACOUS_PIMAG])
+    {
+      double k, R, prefactor;
+      k = wave_number( NULL, time);
+      R = acoustic_impedance( NULL, time);
+      prefactor = 0.5/(k*R);
+
+      for ( a=0; a<DIM; a++)
+        {
+         poynt[a] += prefactor*(fv->api*fv->grad_apr[a]-fv->apr*fv->grad_api[a]);
+        }
+    }
+  /*  EM vector, E & H formulation   */
+    else if (pd->e[R_EM_E1_REAL] || pd->e[R_EM_E2_REAL] || pd->e[R_EM_E3_REAL])
+    {
+      for ( a=0; a<DIM; a++)
+        {
+          for ( b=0; b<DIM; b++)
+            {
+              for ( c=0; c<DIM; c++)
+                {
+                  poynt[a] += 0.5*permute(b,c,a)*
+                          (fv->em_er[b]*fv->em_hr[c] + fv->em_ei[b]*fv->em_hi[c]);
+                }
+            }
+        }
+    }
+    for ( a=0; a<dim; a++)
+     {
+      local_post[POYNTING_VECTORS + a] = poynt[a];
+      local_lumped[POYNTING_VECTORS + a] = 1.;
+     }
+  }
+  
+  if(STRESS_NORM != -1)
+  {  
+    for (int mode = 0; mode < vn->modes; mode++) {
+
+      dbl traceOverVim = 0;
+      for(int i=0; i<VIM; i++){
+        traceOverVim += fv->S[mode][i][i];
+      }
+
+      traceOverVim /= VIM;
+
+      // square of the deviatoric sress norm
+      dbl normOfStressDSqr = 0;
+      for(int i=0; i<VIM; i++){
+        normOfStressDSqr += pow(fv->S[mode][i][i] - traceOverVim, 2)/2.;
+
+        for(int j=i+1; j<VIM; j++){
+          normOfStressDSqr += pow(fv->S[mode][i][j], 2);
+        }
+      }
+          
+      dbl normOfStressD = sqrt(normOfStressDSqr);
+      local_post[STRESS_NORM + mode] = normOfStressD;
+      local_lumped[STRESS_NORM + mode] = 1.;
+    }
+  }
+
+  if(SARAMITO_YIELD != -1)
+  {  
+    for (int mode = 0; mode < vn->modes; mode++) {
+      dbl coeff = compute_saramito_model_terms(fv->S[mode], ve[mode]->gn->tau_y, ve[mode]->gn->fexp, NULL);
+      local_post[SARAMITO_YIELD + mode] = coeff;
+      local_lumped[SARAMITO_YIELD + mode] = 1.;
+    }
+  }
+
+  /* calculate real-solid stress here !!  */
   if(REAL_STRESS_TENSOR != -1 && pd->e[R_SOLID1])
     {
       mu = elc_rs->lame_mu;
@@ -2560,7 +2934,11 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     double eig_values[DIM];
     dbl exp_s[DIM][DIM];
     for (mode = 0; mode < vn->modes; mode++) {
+#ifdef ANALEIG_PLEASE
+      analytical_exp_s(fv->S[mode], exp_s, eig_values, R1);
+#else
       compute_exp_s(fv->S[mode], exp_s, eig_values, R1);
+#endif
       mup = viscosity(ve[mode]->gn, gamma, d_mup);
       // Polymer time constant
       lambda = 0.0;
@@ -4155,7 +4533,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 
         for( j = 0 ; j < p_dim ; j++)
         {
-	if(fabs(pp_particles[i]->xi_coord[j]) > 1.1)
+	if(fabs(pp_particles[i]->xi_coord[j]) > 2.0)
                 {
         fprintf(stderr,"particle %d - initial pt outside the domain\n",i);
         fprintf(stderr,"isoparametric coords  %g %g %g \n"
@@ -6758,6 +7136,7 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Stream Function", &STREAM);
   iread = look_for_post_proc(ifp, "Streamwise normal stress", &STREAM_NORMAL_STRESS);
   iread = look_for_post_proc(ifp, "Streamwise shear stress", &STREAM_SHEAR_STRESS);
+  iread = look_for_post_proc(ifp, "Streamwise Stress Difference", &STREAM_TENSION);
   iread = look_for_post_proc(ifp, "Mean shear rate", &MEAN_SHEAR);
   iread = look_for_post_proc(ifp, "Pressure contours", &PRESSURE_CONT);
   iread = look_for_post_proc(ifp, "Shell div_s_v contours", &SH_DIV_S_V_CONT);
@@ -6809,8 +7188,15 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Eigenvector3", &EIG3);
   iread = look_for_post_proc(ifp, "Shear gradient", &GRAD_SH);
   iread = look_for_post_proc(ifp, "Concentration gradient", &GRAD_Y);
+  iread = look_for_post_proc(ifp, "Vorticity Vector", &CURL_V);
+  iread = look_for_post_proc(ifp, "Helicity Value", &HELICITY);
   iread = look_for_post_proc(ifp, "User-Defined Post Processing", &USER_POST);
   iread = look_for_post_proc(ifp, "Heaviside", &HEAVISIDE);
+  iread = look_for_post_proc(ifp, "Lamb Vector", &LAMB_VECTOR);
+  iread = look_for_post_proc(ifp, "Q Function", &Q_FCN);
+  iread = look_for_post_proc(ifp, "Poynting Vectors", &POYNTING_VECTORS);
+  iread = look_for_post_proc(ifp, "Saramito Yield Coeff", &SARAMITO_YIELD);
+  iread = look_for_post_proc(ifp, "VE Stress Norm", &STRESS_NORM);
 
   /*
    * Initialize for surety before communication to other processors.
@@ -6886,7 +7272,6 @@ rd_post_process_specs(FILE *ifp,
 			     &POROUS_SUPGVELOCITY);
   iread = look_for_post_proc(ifp, "Relative Liquid Permeability",
 			     &REL_LIQ_PERM);
-  iread = look_for_post_proc(ifp, "Vorticity Vector", &CURL_V);
 
   iread = look_for_post_proc(ifp, "TFMP_gas_velo", &TFMP_GAS_VELO);
   iread = look_for_post_proc(ifp, "TFMP_liq_velo", &TFMP_LIQ_VELO);
@@ -8605,6 +8990,23 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
     {
       STREAM_SHEAR_STRESS = -1;
     }
+   if (STREAM_TENSION != -1 && Num_Var_In_Type[R_MOMENTUM1])
+     {
+       set_nv_tkud(rd, index, 0, 0, -2, "SSD","[1]",
+		   "Streamwise Stress Difference", FALSE);
+       index++;
+       if (STREAM_TENSION == 2)
+         {
+           Export_XP_ID[index_post_export] = index_post;
+           index_post_export++;
+         }
+       STREAM_TENSION = index_post;
+       index_post++;
+    }
+  else
+    {
+      STREAM_TENSION = -1;
+    }
    if (DIV_VELOCITY != -1 && Num_Var_In_Type[PRESSURE])
      {
        set_nv_tkud(rd, index, 0, 0, -2, "DIVV","[1]",
@@ -8769,6 +9171,25 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
     {
       GIES_CRIT = -1;
     }
+
+   if (Q_FCN != -1 && Num_Var_In_Type[R_MOMENTUM1])
+     {
+       set_nv_tkud(rd, index, 0, 0, -2, "Q_FCN","[1]", "Q Function",
+		   FALSE);
+       index++;
+       if (Q_FCN == 2)
+         {
+           Export_XP_ID[index_post_export] = index_post;
+           index_post_export++;
+         }
+       Q_FCN = index_post;
+       index_post++;
+    }
+  else
+    {
+      Q_FCN = -1;
+    }
+
 
    if (VELO_SPEED != -1 && Num_Var_In_Type[R_MOMENTUM1])
      {
@@ -9191,18 +9612,68 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
           EH(-1, "Post-processing vectors cannot be exported yet!");
         }
       CONDUCTION_VECTORS = index_post;
-      for (i=0; i<Num_Dim; i++)
-      {
-        sprintf(nm, "TCOND%d", i);
-        sprintf(ds, "Conduction in %d direction", i);
+      /* X Component */
+	sprintf(nm, "TCONDX");
+	sprintf(ds, "Conduction in X direction");
 	set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
 	index++;
 	index_post++;
-      }
+      /* Y Component */
+	sprintf(nm, "TCONDY");
+	sprintf(ds, "Conduction in Y direction");
+	set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+	index++;
+	index_post++;
+      /* Z Component */
+      if ( Num_Dim > 2 )
+	{
+	sprintf(nm, "TCONDZ");
+	sprintf(ds, "Conduction in Z direction");
+	set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+	index++;
+	index_post++;
+        }
     }
   else
     {
       CONDUCTION_VECTORS = -1;
+    }
+
+  if (POYNTING_VECTORS != -1 && 
+        ((Num_Var_In_Type[R_ACOUS_PREAL] || Num_Var_In_Type[R_ACOUS_PIMAG])
+        || (Num_Var_In_Type[R_EM_E1_REAL] || Num_Var_In_Type[R_EM_E2_REAL]
+                      || Num_Var_In_Type[R_EM_E3_REAL])))
+    {
+      if (POYNTING_VECTORS == 2)
+        {
+          EH(-1, "Post-processing vectors cannot be exported yet!");
+        }
+      POYNTING_VECTORS = index_post;
+      /* X Component */
+	sprintf(nm, "POYNTX");
+	sprintf(ds, "Poynting in X direction");
+	set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+	index++;
+	index_post++;
+      /* Y Component */
+	sprintf(nm, "POYNTY");
+	sprintf(ds, "Poynting in Y direction");
+	set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+	index++;
+	index_post++;
+      /* Z Component */
+      if ( Num_Dim > 2 )
+	{
+	sprintf(nm, "POYNTZ");
+	sprintf(ds, "Poynting in Z direction");
+	set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+	index++;
+	index_post++;
+        }
+    }
+  else
+    {
+      POYNTING_VECTORS = -1;
     }
 
   if (ELECTRIC_FIELD != -1 && Num_Var_In_Type[R_POTENTIAL])
@@ -9664,6 +10135,50 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
       LOG_CONF_MAP = -1;
     }
 
+  if (STRESS_NORM != -1 && Num_Var_In_Type[POLYMER_STRESS11])
+    {
+      STRESS_NORM = index_post;
+      int num_modes = 0;
+      for (int i = 0; i < MAX_MODES; i++) {
+        if (Num_Var_In_Type[v_s[i][0][0]]) {
+          num_modes++;
+        }
+      }
+      for (int mode = 0; mode<num_modes; mode++) {
+        sprintf(species_name, "STRESS_NORM_%d", mode);
+        sprintf(species_desc, "stress norm mode_%d", mode);
+        set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]", species_desc, FALSE);
+        index++;
+        index_post++;
+      }
+    }
+  else
+    {
+      STRESS_NORM = -1;
+    }
+
+  if (SARAMITO_YIELD != -1 && Num_Var_In_Type[POLYMER_STRESS11])
+    {
+      SARAMITO_YIELD = index_post;
+      int num_modes = 0;
+      for (int i = 0; i < MAX_MODES; i++) {
+        if (Num_Var_In_Type[v_s[i][0][0]]) {
+          num_modes++;
+        }
+      }
+      for (int mode = 0; mode<num_modes; mode++) {
+        sprintf(species_name, "SARAMITO_COEFF_%d", mode);
+        sprintf(species_desc, "saramito coeff mode_%d", mode);
+        set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]", species_desc, FALSE);
+        index++;
+        index_post++;
+      }
+    }
+  else
+    {
+      SARAMITO_YIELD = -1;
+    }
+
     /*if (J_FLUX != -1)
     {
       J_FLUX = index_post;
@@ -10089,6 +10604,84 @@ index_post, index_post_export);
   else
     {
       CURL_V = -1;
+    }
+  /* RBS: Output the Lamb vector.
+   */
+  if (LAMB_VECTOR != -1 && Num_Var_In_Type[R_MOMENTUM1])
+     {
+       if(pd->CoordinateSystem == SWIRLING ||
+	  pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+	  pd->CoordinateSystem == CARTESIAN_2pt5D ||
+	  Num_Dim == 3)
+	 {
+           if (LAMB_VECTOR == 2)
+             {
+               EH(-1, "Post-processing vectors cannot be exported yet!");
+             }
+	   LAMB_VECTOR = index_post;
+	   set_nv_tkud(rd, index, 0, 0, -2, "LAMBX", "[1]",
+		       "x-component of Lamb", FALSE);
+	   index++;
+	   index_post++;
+	   set_nv_tkud(rd, index, 0, 0, -2, "LAMBY", "[1]",
+		       "y-component of Lamb", FALSE);
+	   index++;
+	   index_post++;
+	   set_nv_tkud(rd, index, 0, 0, -2, "LAMBZ", "[1]",
+		       "z-component of Lamb", FALSE);
+	   index++;
+	   index_post++;
+	 }
+       else if(Num_Dim == 2)
+	 {
+	   LAMB_VECTOR = index_post;
+	   set_nv_tkud(rd, index, 0, 0, -2, "LAMBX", "[1]",
+		       "x-component of Lamb", FALSE);
+	   index++;
+	   index_post++;
+	   set_nv_tkud(rd, index, 0, 0, -2, "LAMBY", "[1]",
+		       "y-component of Lamb", FALSE);
+	   index++;
+	   index_post++;
+           if (LAMB_VECTOR == 2)
+             {
+               Export_XP_ID[index_post_export] = index_post;
+               index_post_export++;
+             }
+	 }
+     }
+  else
+    {
+      LAMB_VECTOR = -1;
+    }
+  /* RBS: Helicity quantity (scalar)
+   */
+  if (HELICITY != -1 && Num_Var_In_Type[R_MOMENTUM1])
+     {
+       if(pd->CoordinateSystem == SWIRLING ||
+	  pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+	  pd->CoordinateSystem == CARTESIAN_2pt5D ||
+	  Num_Dim == 3)
+	 {
+           if (HELICITY == 2)
+             {
+               EH(-1, "Post-processing vectors cannot be exported yet!");
+             }
+	   HELICITY = index_post;
+	   set_nv_tkud(rd, index, 0, 0, -2, "HELIX", "[1]",
+		       "helicity scalar", FALSE);
+	   index++;
+	   index_post++;
+	 }
+       else
+	 {
+	   WH(-1,"Why are you asking for Helicity in a 1D or 2D problem?");
+	   HELICITY = -1;
+	 }
+     }
+  else
+    {
+      HELICITY = -1;
     }
 
   if (HEAVISIDE != -1 && (Num_Var_In_Type[R_MOMENTUM1] || check ))
@@ -11041,25 +11634,40 @@ load_elem_tkn (struct Results_Description *rd,
   for (i = 0; i < upd->Num_Mat; i++) {
     for ( j = V_FIRST; j < V_LAST; j++) {
       if ( pd_glob[i]->v[j] != V_NOTHING ) {
-	if ( FALSE && pd_glob[i]->i[j] == I_P0 ) {
-	  if ( Num_Var_In_Type[j] > 1 ) {
-	    fprintf(stderr,
+        if (pd_glob[i]->i[j] == I_P0) {
+          if (Num_Var_In_Type[j] > 1) {
+            fprintf(stderr,
 		    "%s: Too many components in variable type (%s - %s) for element variable\n",
 		    yo,
 		    Exo_Var_Names[j].name2,
 		    Exo_Var_Names[j].name1 );
 	    exit (-1);
-	  }
-	  if (ev_var_mask[j - V_FIRST] == 0) {
+          }
+          if (ev_var_mask[j - V_FIRST] == 0) {
 	    /* We just found a candidate for an element variable */
 	    /* Append a suffix onto the var name to differentiate from its
 	     nodal counterpart */
-	    sprintf(appended_name,  "%s_E", Exo_Var_Names[j].name2 );
-	    set_ev_tkud(rd, index, j, appended_name,
-			Var_Units[j].name2, Exo_Var_Names[j].name1, FALSE);
-	    index++;
-	    ev_var_mask[j - V_FIRST] = 1; /* Only count this variable once */
+            sprintf(appended_name, "%s_E", Exo_Var_Names[j].name2);
+            set_ev_tkud(rd, index, j, appended_name, Var_Units[j].name2, Exo_Var_Names[j].name1,
+                        FALSE);
+            index++;
+            ev_var_mask[j - V_FIRST] = 1; /* Only count this variable once */
 	  }
+        }
+        if (pd_glob[i]->i[j] == I_P1) {
+          int dof = getdofs(type2shape(exo->eb_elem_itype[i]), I_P1);
+          if (ev_var_mask[j - V_FIRST] == 0) {
+            /* We just found a candidate for an element variable */
+            /* Append a suffix onto the var name to differentiate from its
+             nodal counterpart */
+            for (i = 1; i <= dof; i++) {
+              sprintf(appended_name, "%s_E%d", Exo_Var_Names[j].name2, i);
+              set_ev_tkud(rd, index, j, appended_name, Var_Units[j].name2, Exo_Var_Names[j].name1,
+                          FALSE);
+              index++;
+            }
+            ev_var_mask[j - V_FIRST] = 1; /* Only count this variable once */
+          }
         }
       }
     }

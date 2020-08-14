@@ -472,7 +472,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 			  advection = 0.;
 			  if ( pd->e[eqn] & T_ADVECTION )
 			    {
-			      if(lambda != 0.)
+			      if(DOUBLE_NONZERO(lambda))
 				{
 				  
 				  advection += ( v_dot_del_s[a][b]  -  x_dot_del_s[a][b]
@@ -505,7 +505,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 			  if ( pd->e[eqn] & T_SOURCE )
 			    {
 			      source +=  s[a][b];
-			      if(alpha != 0.)
+			      if(DOUBLE_NONZERO(alpha))
 				{
 				  source1 += (s_dot_g[a][b] + s_dot_gt[a][b] 
 					      + g_dot_s[a][b] + gt_dot_s[a][b] + s_dot_s[a][b]/mup 
@@ -597,7 +597,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				  advection = 0.;
 				  if ( pd->e[eqn] & T_ADVECTION )
 				    {
-				      if(lambda != 0.)
+				      if(DOUBLE_NONZERO(lambda))
 					{
 					  advection += ( v_dot_del_g[a][b] - x_dot_del_g[a][b] +
 							 v_dot_del_g[b][a] - x_dot_del_g[b][a]) -
@@ -618,7 +618,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				  source1    = 0.;
 				  if ( pd->e[eqn] & T_SOURCE )
 				    {
-				      if(alpha != 0.)
+			              if(DOUBLE_NONZERO(alpha))
 					{
 					  source1 += ( -s_dot_s[a][b]/(mup*mup) +
 						       ( g_dot_g[a][b] +  gt_dot_gt[a][b] 
@@ -680,7 +680,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				      
 				      if ( pd->e[eqn] & T_ADVECTION )
 					{
-					  if(lambda != 0.)
+					  if(DOUBLE_NONZERO(lambda))
 					    {
 					      advection_a = phi_j * 
 						(grad_s[p][a][b] + 
@@ -732,7 +732,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				      if ( pd->e[eqn] & T_SOURCE )
 					{
 					  source_a = 0.;
-					  if(alpha != 0.)
+			                  if(DOUBLE_NONZERO(alpha))
 					    {
 					      source_a = -s_dot_s[a][b]/(mup*mup) +  g_dot_g[a][b] 
 						+  gt_dot_gt[a][b] 
@@ -800,7 +800,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				      advection = 0.;
 				      if ( pd->e[eqn] & T_ADVECTION )
 					{
-					  if(lambda != 0.)
+					  if(DOUBLE_NONZERO(lambda))
 					    {
 					      advection += ( v_dot_del_g[a][b] - x_dot_del_g[a][b] +
 							     v_dot_del_g[b][a] - x_dot_del_g[b][a]) -
@@ -821,7 +821,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				      if ( pd->e[eqn] & T_SOURCE )
 					{
 					  
-					  if(alpha != 0.)
+			                  if(DOUBLE_NONZERO(alpha))
 					    {
 					      source += -s_dot_s[a][b]/(mup*mup) + g_dot_g[a][b] 
 						+  gt_dot_gt[a][b] 
@@ -871,7 +871,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				  advection = 0.;
 				  if ( pd->e[eqn] & T_ADVECTION )
 				    {
-				      if(lambda != 0.)
+				      if(DOUBLE_NONZERO(lambda))
 					{
 					  
 					  advection += ( v_dot_del_g[a][b] - x_dot_del_g[a][b] +
@@ -893,7 +893,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				  
 				  if ( pd->e[eqn] & T_SOURCE )
 				    {
-				      if(alpha != 0.)
+			              if(DOUBLE_NONZERO(alpha))
 					{
 					  source += ( -s_dot_s[a][b]/(mup*mup) 
 						      + ( g_dot_g[a][b] +  gt_dot_gt[a][b] 
@@ -968,7 +968,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				      
 				      if ( pd->e[eqn] & T_ADVECTION )
 					{
-					  if(lambda != 0.)
+					  if(DOUBLE_NONZERO(lambda))
 					    {
 					      /*
 					       * Four parts: 
@@ -1082,7 +1082,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					  source_a =  s[a][b];
 					  source_b = 0.;
 					  
-					  if(alpha != 0.)
+			                  if(DOUBLE_NONZERO(alpha))
 					    {
 					      source_a += (s_dot_g[a][b] + s_dot_gt[a][b] 
 							   + g_dot_s[a][b] + gt_dot_s[a][b] + s_dot_s[a][b]/mup 
@@ -1159,7 +1159,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					  
 					  if ( pd->e[eqn] & T_ADVECTION )
 					    {
-					      if(lambda != 0.)
+					      if(DOUBLE_NONZERO(lambda))
 						{
 						  
 						  for( r=0; r<dim; r++)
@@ -1203,7 +1203,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					  if ( pd->e[eqn] & T_SOURCE )
 					    {
 					      
-					      if(alpha != 0.)
+			                      if(DOUBLE_NONZERO(alpha))
 						{
 						  source +=  phi_j *( s[a][p] * (double)delta(b,q) 
 								      + s[a][q] * (double)delta(b,p) 
@@ -1258,7 +1258,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					  
 					  if ( pd->e[eqn] & T_ADVECTION )
 					    {
-					      if(lambda != 0.)
+					      if(DOUBLE_NONZERO(lambda))
 						{
 						  if((a == p) && (b == q))
 						    {
@@ -1298,7 +1298,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					      source_a  =  phi_j * (double)delta(a,p) * (double)delta(b,q);
 					      
 					      source_b  = 0.;
-					      if(alpha != 0.)
+			                      if(DOUBLE_NONZERO(alpha))
 						{
 						  source_b  =  phi_j *( g[q][b] * (double)delta(a,p) 
 									+ gt[q][b] * (double)delta(a,p) 
@@ -1434,6 +1434,17 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
   VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
   VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
 
+  SARAMITO_DEPENDENCE_STRUCT d_saramito_struct;
+  SARAMITO_DEPENDENCE_STRUCT *d_saramito = &d_saramito_struct;
+
+  // todo: will want to parse necessary parameters... for now hard code
+  const bool saramitoEnabled = (vn->ConstitutiveEquation == SARAMITO_OLDROYDB ||
+				vn->ConstitutiveEquation == SARAMITO_PTT      ||
+				vn->ConstitutiveEquation == SARAMITO_GIESEKUS);
+
+  dbl saramitoCoeff = 1.;
+
+
   dbl d_mup_dv_pj; 
   dbl d_mup_dmesh_pj; 
 
@@ -1460,7 +1471,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 
   dbl trace=0.0; /* trace of the stress tensor */
 
-/* SUPG variables */
+  /* SUPG variables */
   dbl h_elem=0, h_elem_inv=0, h_elem_deriv=0;
   dbl supg=0;
 
@@ -1545,7 +1556,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 	}
     }
 
-/* load up shearrate tensor based on velocity */
+  /* load up shearrate tensor based on velocity */
   for ( a=0; a<VIM; a++)
     {
       for ( b=0; b<VIM; b++)
@@ -1599,45 +1610,45 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 	}
 	
     }
-/* end Petrov-Galerkin addition */
+  /* end Petrov-Galerkin addition */
 
-      /*  shift factor  */
-   if( pd->e[TEMPERATURE])
-      {
+  /*  shift factor  */
+  if( pd->e[TEMPERATURE])
+    {
       if(vn->shiftModel == CONSTANT)
 	{
 	  at = vn->shift[0];
 	  for( j=0 ; j<ei->dof[TEMPERATURE] ; j++)
-		{
-		d_at_dT[j]=0.;
-		}
+	    {
+	      d_at_dT[j]=0.;
+	    }
 	}
       else if(vn->shiftModel == MODIFIED_WLF)
 	{
-  	wlf_denom = vn->shift[1] + fv->T - mp->reference[TEMPERATURE];
-  	if(wlf_denom != 0.)
-        	{
-      		at=exp(vn->shift[0]*(mp->reference[TEMPERATURE]-fv->T)/wlf_denom);
-	  	for( j=0 ; j<ei->dof[TEMPERATURE] ; j++)
-			{
-			d_at_dT[j]= -at*vn->shift[0]*vn->shift[1]
-				/(wlf_denom*wlf_denom)*bf[TEMPERATURE]->phi[j];
-			}
-        	}
-  	else
-    		{ 
-      		at = 1.;
-    		} 
-	  	for( j=0 ; j<ei->dof[TEMPERATURE] ; j++)
-			{
-			d_at_dT[j]=0.;
-			}
+	  wlf_denom = vn->shift[1] + fv->T - mp->reference[TEMPERATURE];
+	  if(wlf_denom != 0.)
+	    {
+	      at=exp(vn->shift[0]*(mp->reference[TEMPERATURE]-fv->T)/wlf_denom);
+	      for( j=0 ; j<ei->dof[TEMPERATURE] ; j++)
+		{
+		  d_at_dT[j]= -at*vn->shift[0]*vn->shift[1]
+		    /(wlf_denom*wlf_denom)*bf[TEMPERATURE]->phi[j];
+		}
+	    }
+	  else
+	    { 
+	      at = 1.;
+	    } 
+	  for( j=0 ; j<ei->dof[TEMPERATURE] ; j++)
+	    {
+	      d_at_dT[j]=0.;
+	    }
 	}
-      }
-    else
-      {
-	at = 1.;
-      }
+    }
+  else
+    {
+      at = 1.;
+    }
 
   /* Begin loop over modes */
   for ( mode=0; mode<vn->modes; mode++)
@@ -1671,6 +1682,22 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
       /* get polymer viscosity */
       mup = viscosity(ve[mode]->gn, gamma, d_mup);
 
+      if(saramitoEnabled == TRUE)
+	{
+	  saramitoCoeff = compute_saramito_model_terms(s, ve[mode]->gn->tau_y, ve[mode]->gn->fexp, d_saramito);
+	}
+      else
+	{
+	  saramitoCoeff = 1.;
+	  d_saramito->tau_y = 0;
+			
+	  for(int i=0; i<VIM; ++i){
+	    for(int j=0; j<VIM; ++j){
+	      d_saramito->s[i][j] = 0;
+	    }
+	  }
+	}
+
       /* get Geisekus mobility parameter */
       alpha = ve[mode]->alpha;
       
@@ -1693,7 +1720,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 
       /* get tensor dot products for future use */
       
-      if( alpha != 0.) (void) tensor_dot(s, s, s_dot_s, VIM);
+      if(DOUBLE_NONZERO(alpha)) (void) tensor_dot(s, s, s_dot_s, VIM);
 
       if( ucwt != 0. )
 	{
@@ -1757,7 +1784,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 			  advection = 0.;
 			  if ( pd->e[eqn] & T_ADVECTION )
  			    {
-			      if(lambda != 0.)
+			      if(DOUBLE_NONZERO(lambda))
 				{
 				  
 				  advection +=  v_dot_del_s[a][b]  -  x_dot_del_s[a][b];
@@ -1785,16 +1812,17 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 			  source = 0.;
 			  if ( pd->e[eqn] & T_SOURCE )
 			    {
-			      source +=  Z* s[a][b] - at * mup * ( g[a][b] +  gt[a][b]);
+			      // consider whether saramitoCoeff should multiply here
+			      source +=  saramitoCoeff * Z* s[a][b] - at * mup * ( g[a][b] +  gt[a][b]);
 			      
-			      if(alpha != 0.)
+			      if(DOUBLE_NONZERO(alpha))
 				{
 				  source1 = ( s_dot_s[a][b]/mup);
 				  
-				  source1 *= alpha * lambda;
+				  source1 *= alpha * lambda * saramitoCoeff;
 				  source  += source1;
 				}
-			      
+
 			      source *= wt_func * det_J * h3 * wt;
 			      
 			      source *= pd->etm[eqn][(LOG2_SOURCE)];
@@ -1820,7 +1848,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
       if ( af->Assemble_Jacobian )
 	{
 	  dbl R_source, R_advection; /* Places to put the raw residual portions 
-					        instead of constantly recalcing them */
+					instead of constantly recalcing them */
 	  for ( a=0; a<VIM; a++)
 	    {
 	      for ( b=0; b<VIM; b++)
@@ -1834,9 +1862,11 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 		      if( ucwt != 0.) R_advection -= ucwt*(gt_dot_s[a][b] + s_dot_g[a][b]);
 		      if( lcwt != 0.) R_advection += lcwt*(s_dot_gt[a][b] + g_dot_s[a][b]);
 
-		      R_source =   Z*s[a][b] - at * mup * ( g[a][b] +  gt[a][b]);
+		      R_source =   Z*s[a][b];
 			      
-		      if(alpha != 0.) R_source  +=  alpha * lambda*( s_dot_s[a][b]/mup);
+		      if(DOUBLE_NONZERO(alpha)) R_source  +=  alpha * lambda*( s_dot_s[a][b]/mup);
+		      R_source *= saramitoCoeff;
+		      R_source += - at * mup * ( g[a][b] +  gt[a][b]);
 		      
 		      for ( i=0; i<ei->dof[eqn]; i++)
 			{
@@ -1869,33 +1899,33 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				{
 				  phi_j = bf[var]->phi[j];
 				  
-			   	   mass = 0.;
+				  mass = 0.;
 			  
-			  	   if ( pd->TimeIntegration != STEADY )
-			    	     {
-			      	       if ( pd->e[eqn] & T_MASS )
-					 {
+				  if ( pd->TimeIntegration != STEADY )
+				    {
+				      if ( pd->e[eqn] & T_MASS )
+					{
 				  	  mass = s_dot[a][b];
 				  	  mass *= wt_func * d_at_dT[j] * lambda * det_J * wt;
 				  	  mass *= h3;
 				  	  mass *= pd->etm[eqn][(LOG2_MASS)];
-					 }
-			    	     }
+					}
+				    }
 			  
-			  	   advection = 0.;
-			  	   if ( pd->e[eqn] & T_ADVECTION )
- 			    	     {
-			      	      if(lambda != 0.)
+				  advection = 0.;
+				  if ( pd->e[eqn] & T_ADVECTION )
+				    {
+			      	      if(DOUBLE_NONZERO(lambda))
 					{
 				  
-				  	advection +=  v_dot_del_s[a][b]  -  x_dot_del_s[a][b];
-				  	if( ucwt != 0.) advection -= ucwt*(gt_dot_s[a][b] + s_dot_g[a][b]);
-				  	if( lcwt != 0.) advection += lcwt*(s_dot_gt[a][b] + g_dot_s[a][b]);
+					  advection +=  v_dot_del_s[a][b]  -  x_dot_del_s[a][b];
+					  if( ucwt != 0.) advection -= ucwt*(gt_dot_s[a][b] + s_dot_g[a][b]);
+					  if( lcwt != 0.) advection += lcwt*(s_dot_gt[a][b] + g_dot_s[a][b]);
 
-				  	advection *= wt_func * d_at_dT[j] * lambda *det_J * wt * h3;
-				  	advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+					  advection *= wt_func * d_at_dT[j] * lambda *det_J * wt * h3;
+					  advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 					}     
-			    	     }
+				    }
 			  
 				  source    = 0.;
 				  source1    = 0.;
@@ -1904,10 +1934,10 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				      source = -(g[a][b] +  gt[a][b])
 					*(at*d_mup->T[j]+mup*d_at_dT[j]);
 				      
-				      if(alpha != 0.)
+			              if(DOUBLE_NONZERO(alpha))
 					{
 					  source1 -= s_dot_s[a][b]/(mup*mup)*d_mup->T[j];
-					  source1 *= lambda * alpha ;
+					  source1 *= lambda * alpha * saramitoCoeff ;
 					  source  += source1;
 					}
 				      source *= wt_func * det_J * wt * h3;
@@ -1962,7 +1992,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				      
 				      if ( pd->e[eqn] & T_ADVECTION )
 					{
-					  if(lambda != 0.)
+					  if(DOUBLE_NONZERO(lambda))
 					    {
 					      advection_a = phi_j * 
 						(grad_s[p][a][b]);
@@ -2064,10 +2094,10 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					  source_c *= wt_func;
 					  
 					  source_a = 0.;
-					  if(alpha != 0.)
+			                  if(DOUBLE_NONZERO(alpha))
 					    {
 					      source_a = -s_dot_s[a][b]/(mup*mup);
-					      source_a *= wt_func * alpha * lambda * d_mup_dv_pj;
+					      source_a *= wt_func * saramitoCoeff * alpha * lambda * d_mup_dv_pj;
 					    }
 					  
 					  source_b = 0.;
@@ -2115,10 +2145,10 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					  source_a =   -at * d_mup->C[w][j] * ( g[a][b] +  gt[a][b]);
 					  
 					  source_b = 0.;
-					  if(alpha != 0.)
+			                  if(DOUBLE_NONZERO(alpha))
 					    {
 					      source_b -= s_dot_s[a][b]/(mup*mup);
-					      source_b *= alpha * lambda * d_mup->C[w][j];
+					      source_b *= alpha * lambda * saramitoCoeff * d_mup->C[w][j];
 					    }
 					  source = source_a + source_b;
 					  source *= wt_func * det_J * wt * h3;
@@ -2154,10 +2184,10 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				      source_a +=  -at * d_mup->P[j] * ( g[a][b] +  gt[a][b]);
 
 				      source_b = 0.;
-				      if(alpha != 0.)
+			              if(DOUBLE_NONZERO(alpha))
 					{
 					  source_b -= ( s_dot_s[a][b]/(mup*mup));
-					  source_b *= d_mup->P[j] * alpha * lambda;
+					  source_b *= d_mup->P[j] * alpha * lambda * saramitoCoeff;
 					}
 				      source  = source_a + source_b;
 				      source *= wt_func * det_J * wt * h3;
@@ -2223,7 +2253,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				      
 				      if ( pd->e[eqn] & T_ADVECTION )
 					{
-					  if(lambda != 0.)
+					  if(DOUBLE_NONZERO(lambda))
 					    {
 					      /*
 					       * Four parts: 
@@ -2310,9 +2340,9 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					  source_a =  R_source;
 					  source_b = -at * (g[a][b] +  gt[a][b]);
 					  
-					  if(alpha != 0.)
+			                  if(DOUBLE_NONZERO(alpha))
 					    {
-					      source_b += -s_dot_s[a][b]/(mup*mup) * alpha * lambda;
+					      source_b += -s_dot_s[a][b]/(mup*mup) * alpha * lambda * saramitoCoeff;
 					    }
 					  
 					  source_a *= wt_func * (d_det_J_dmesh_pj * h3 + det_J * dh3dmesh_pj);
@@ -2363,7 +2393,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					      advection_a   = 0.;
 					      if ( pd->e[eqn] & T_ADVECTION )
 						{
-						  if(lambda != 0.)
+						  if(DOUBLE_NONZERO(lambda))
 						    {
 						  
 						      advection -=  ucwt * (s[p][b] * (double)delta(a,q) + s[a][p] * (double)delta(b,q));
@@ -2437,7 +2467,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					  
 					  if ( pd->e[eqn] & T_ADVECTION )
 					    {
-					      if(lambda != 0.)
+					      if(DOUBLE_NONZERO(lambda))
 						{
 						  if((a == p) && (b == q))
 						    {
@@ -2474,19 +2504,27 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					  
 					  if ( pd->e[eqn] & T_SOURCE )
 					    {
-					      source_a  =  Z * phi_j * (double)delta(a,p) * (double)delta(b,q);
- 					      if( p == q) source_a +=  s[a][b] * dZ_dtrace * phi_j;  
-		      
+					      source_a  =  Z * (double)delta(a,p) * (double)delta(b,q);
+ 					      if( p == q) source_a +=  s[a][b] * dZ_dtrace; 
+					      source_a *= saramitoCoeff;
+					      // sensitivities for saramito model:
+                                              if (p <= q) {
+                                                source_a +=  d_saramito->s[p][q] * s[a][b] * Z;
+                                              }
+		      			
 					      source_b  =0.;
-					      if(alpha != 0.)
+			                      if(DOUBLE_NONZERO(alpha))
 						{
-						  source_b  =  phi_j *  alpha * lambda *
-						    (s[q][b] * (double)delta(a,p) + s[a][p] * (double)delta(b,q))/mup;
+						  source_b  = alpha * lambda * saramitoCoeff * 
+						    (s[q][b] * (double)delta(a,p) + s[a][p] * (double)delta(b,q))/mup; 
+                                                  if (p <= q) {
+						    source_b += d_saramito->s[p][q] * alpha * lambda*( s_dot_s[a][b]/mup);
+                                                  }
 						}
 					      
 					      source  = source_a + source_b;
 					      
-					      source *= det_J * h3 * wt_func * wt * pd->etm[eqn][(LOG2_SOURCE)];
+					      source *= phi_j * det_J * h3 * wt_func * wt * pd->etm[eqn][(LOG2_SOURCE)];
 					      
 					    }
 					  
@@ -2725,19 +2763,16 @@ assemble_stress_log_conf(dbl tt,
 	  lambda = mup/ve[mode]->time_const;
 	}
 
-      if(VIM==2)
-	{
-          compute_exp_s(s, exp_s, eig_values, R1);
-	}
-      else
-	{
-	  EH(-1, "Log-conformation tensor only tested for 2D.");	  
-	}
+#ifdef ANALEIG_PLEASE
+      analytical_exp_s(s, exp_s, eig_values, R1);
+#else
+      compute_exp_s(s, exp_s, eig_values, R1);
+#endif
 
       /* Check to make sure eigenvalues are positive (negative eigenvalues will not
          work for log-conformation formulation). These eigenvalues are for the
          conformation tensor, not the log-conformation tensor. */
-      if(eig_values[0] < 0. || eig_values[1] < 0.)
+      if(eig_values[0] < 0. || eig_values[1] < 0. || (VIM > 2 && eig_values[2] < 0.))
 	{
 	  WH(-1, "Error: Negative eigenvalue for conformation tensor");
 	  return -1;
@@ -2746,7 +2781,8 @@ assemble_stress_log_conf(dbl tt,
       memset(D, 0, sizeof(double)*DIM*DIM);
       D[0][0] = eig_values[0];
       D[1][1] = eig_values[1];
-      (void) tensor_dot(D, D, D_dot_D, 2);
+      if (VIM > 2) { D[2][2] = eig_values[2]; }
+      (void) tensor_dot(D, D, D_dot_D, VIM);
 
       // Decompose velocity gradient
 
@@ -2794,6 +2830,7 @@ assemble_stress_log_conf(dbl tt,
 
       //Predetermine advective terms
       trace = eig_values[0]+eig_values[1]; 
+      if (VIM > 2) { trace += eig_values[2]; }
       
       for(a=0; a<VIM; a++)
       	{
@@ -2813,7 +2850,7 @@ assemble_stress_log_conf(dbl tt,
       eps  = ve[mode]->eps;
 
       //Exponential term for PTT
-      Z = exp(eps*(trace - (double) dim));
+      Z = exp(eps*(trace - (double) VIM));
 
       siz = sizeof(double)*DIM*DIM;
       memset(tmp1, 0, siz);
@@ -2829,24 +2866,29 @@ assemble_stress_log_conf(dbl tt,
 	      if ( a != b )
  	        {
                   d_lambda = eig_values[b]-eig_values[a];
-                  if (fabs(d_lambda) > 1.e-8)
+                  if (DOUBLE_NONZERO(d_lambda))  
                     {
-                      tmp1[a][b] += (log(eig_values[b]) - log(eig_values[a]))/d_lambda;
+                      double eiglog_a = log(DBL_SMALL), eiglog_b = log(DBL_SMALL);
+                      if (DOUBLE_NONZERO(eig_values[b]))
+                         { eiglog_b = fmax(eiglog_b,log(eig_values[b]));}
+                      if (DOUBLE_NONZERO(eig_values[a]))
+                         { eiglog_a = fmax(eiglog_a,log(eig_values[a]));}
+                      tmp1[a][b] += (eiglog_b - eiglog_a)/d_lambda;
                       tmp1[a][b] *= (eig_values[a]*M1[b][a] + eig_values[b]*M1[a][b]);
                     }
 		  else
 		    {
-                      tmp1[a][b] += M1[a][b] + M1[b][a];
+                      tmp1[a][b] += eig_values[b]*(M1[a][b] + M1[b][a]);
 	            }
 	        }
               if ( a == b )
                 {
                   source_term1[a][b] += Z * (1.0 - D[a][a]) /lambda;
-                  if(alpha != 0)
+		  if(DOUBLE_NONZERO(alpha))
                     {
                       source_term1[a][b] += alpha*(2.0 * D[a][a] - 1.0 - D_dot_D[a][a])/lambda;
  	            }
-                  source_term1[a][b] /= eig_values[a];
+                  source_term1[a][b] /= fmax(DBL_SMALL,eig_values[a]);
   	          source_term1[a][b] += 2.0*M1[a][a];
                 }
             }
@@ -2872,7 +2914,7 @@ assemble_stress_log_conf(dbl tt,
 			  wt_func = bf[eqn]->phi[i];
 			  
 			  //SUPG weighting, this is SUPG with s, not e^s
-			  if(supg!=0.0)
+			  if(DOUBLE_NONZERO(supg))
 			    {
 			      for(w=0; w<dim; w++)
 				{
@@ -2908,7 +2950,6 @@ assemble_stress_log_conf(dbl tt,
                               source *= pd->etm[eqn][(LOG2_SOURCE)];
                             }
                           lec->R[upd->ep[eqn]][i] += mass + advection + source;
-
 			}//i loop
 		    }//if a<=b
 		}// b loop
@@ -4340,6 +4381,8 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
   double wt;                  /* Quadrature weights units - ergs/(sec*cm*K) = g*cm/(sec^3*K)     */
 
   dbl *phi_v=NULL;
+
+  dbl alpha = 0.5;
     
   /***************************************************************************/
 
@@ -4738,6 +4781,10 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 	    {
 	      vdotn += fv->v[a]* fv->snormal[a];
 	    }
+
+	  /* add alpha for upwinding and possible stability */
+	  vdotn *= alpha;
+
 	  vdotn_norm = sqrt(vdotn*vdotn);
 	  
 	  if ((vdotn <  0.) && (vdotn_norm > 1.e-7))
@@ -4861,7 +4908,7 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 						      
 						      advection =  phi_i * wt * fv->sdet * 
 							ve[mode]->time_const *
-							phi_j * fv->snormal[p] *
+							phi_j * fv->snormal[p] * alpha *
 							(s[a][b]- s_n[mode][a][b]);
 						      
 						      lec->J[peqn][pvar][i][j] -=
@@ -5606,7 +5653,10 @@ numerical_viscosity(dbl s[DIM][DIM],                       /* total stress */
 	  
 	  for ( j=0; j<ei->dof[var]; j++)
 	    {
-	      d_mun_dG[a][b][j] = eps*(sqrt(1.+ eps2*s_dbl_dot_s))/pow((1.+eps2*g_dbl_dot_g),1.5)
+	      /* d_mun_dG[a][b][j] = -eps*(sqrt(1.+ eps2*s_dbl_dot_s))/pow((1.+eps2*g_dbl_dot_g),1.5) */
+  	      /* 	*gamma_cont[a][b]*bf[var]->phi[j]; */
+	      d_mun_dG[a][b][j] = -eps*mun/(1.+eps2*g_dbl_dot_g)
+
   		*gamma_cont[a][b]*bf[var]->phi[j];
 	    }
 	}
@@ -5734,10 +5784,16 @@ compute_exp_s(double s[DIM][DIM],
   int INFO;
   int LWORK = 20;
   double WORK[LWORK];
-  memset(WORK, 0, sizeof(double)*LWORK);
 
   double A[VIM*VIM];
+  double D[DIM][DIM];
+  double EIGEN_MAX = sqrt(sqrt(DBL_MAX));
+  double eig_S[DIM];
   memset(A, 0.0, sizeof(double)*VIM*VIM);
+  memset(D, 0.0, sizeof(double)*DIM*DIM);
+  memset(eig_values, 0.0, sizeof(double)*DIM);
+  memset(eig_S, 0.0, sizeof(double)*DIM);
+  memset(WORK, 0, sizeof(double)*LWORK);
 
   // convert to column major
   for (i = 0; i < VIM; i++) {
@@ -5746,136 +5802,456 @@ compute_exp_s(double s[DIM][DIM],
     }
   }
 
-  double W[VIM];
 
   // eig solver
-  dsyev_("V", "U", &N, A, &LDA, W, WORK, &LWORK, &INFO, 1, 1);
+  dsyev_("V", "U", &N, A, &LDA, eig_S, WORK, &LWORK, &INFO, 1, 1);
 
-  double U[VIM][VIM];
-  double D[VIM][VIM];
 
   // transpose (revert to row major)
   for (i = 0; i < VIM; i++) {
     for (j = 0; j < VIM; j++) {
-      U[i][j] = A[j*VIM + i];
+      R[i][j] = A[j*VIM + i];
     }
   }
 
   // exponentiate diagonal
   for (i = 0; i < VIM; i++) {
-    for (j = 0; j < VIM; j++) {
-      if (i == j) {
-	D[i][j] = exp(W[i]);
-      } else {
-	D[i][j] = 0;
-      }
-    }
-  }
+	eig_values[i] = MIN(exp(eig_S[i]),EIGEN_MAX); 
+        }
 
   /* matrix multiplication, the slow way */
   for (i = 0; i < VIM; i++) {
     for (j = 0; j < VIM; j++) {
-      tmp = 0.;
-      for (k = 0; k < VIM; k++) {
-	tmp += U[i][k] * D[k][j];
+      exp_s[i][j] = R[i][j] * eig_values[j];
       }
-      exp_s[i][j] = tmp;
     }
-  }
   
   // multiply by transpose
   for (i = 0; i < VIM; i++) {
     for (j = 0; j < VIM; j++) {
       tmp = 0.;
       for (k = 0; k < VIM; k++) {
-	tmp += exp_s[i][k] * U[j][k];
-      }
+	tmp += exp_s[i][k] * R[j][k];
+        }
       D[i][j] = tmp;
+      }
     }
-  }
 
   for (i = 0; i < VIM; i++) {
     for (j = 0; j < VIM; j++) {
-      exp_s[i][j] = D[i][j];
-    }
-  }
-
- // Solve for R and eigenvalues of conformation tensor (exp_s)
-
- // convert to column major
-  for (i = 0; i < VIM; i++) {
-    for (j = 0; j < VIM; j++) {
-      A[i*VIM + j] = exp_s[j][i];
-    }    
-  }
-
-  // eig solver
-  dsyev_("V", "U", &N, A, &LDA, W, WORK, &LWORK, &INFO, 1, 1);
-
-  // transpose (revert to row major)
-  for (i = 0; i < VIM; i++) {
-    for (j = 0; j < VIM; j++) {
-      R[i][j] = A[j*VIM + i];
-    }    
-  }
-
-  // Eigenvalues of conformation tensor
-  for (i = 0; i < VIM; i++) {
-    eig_values[i] = W[i];
-  }
-
+	exp_s[i][j] = D[i][j];
+        }
+      }
 } // End compute_exp_s
+
+void
+analytical_exp_s(double s[DIM][DIM],
+	      double exp_s[DIM][DIM],
+              double eig_values[DIM],
+              double R[DIM][DIM])
+{
+
+  double I_S, II_S, disc, off_diag, q, p2, r, p, phi;
+  int i,j,k;
+  double tmp;
+
+
+  double B[DIM][DIM], D[DIM][DIM],eig_S[DIM],Q1[DIM][DIM],Q2[DIM][DIM];
+  memset(D, 0.0, sizeof(double)*DIM*DIM);
+
+  /* Use Eigenvalue algorithm from Wikipedia - https://en.wikipedia.org/wiki/
+     Eigenvalue_algorithm#Normal%2C_Hermitian%2C_and_real-symmetric_matrices */
+
+  /*  Make sure stress is symmetric  */
+  s[1][0] = s[0][1];  s[2][0] = s[0][2];  s[2][1] = s[1][2];
+
+  if ((VIM==2 || pd->CoordinateSystem == CYLINDRICAL))
+    {
+      eig_S[2] = s[2][2];
+      R[2][2] = 1.0;
+      I_S = s[0][0]+s[1][1];
+      II_S = s[0][0]*s[1][1] - SQUARE(s[0][1]);
+      disc = SQUARE(I_S) - 4*II_S;
+      eig_S[0] = 0.5*(I_S + sqrt(disc));
+      eig_S[1] = 0.5*(I_S - sqrt(disc));
+      if( DOUBLE_NONZERO(disc))	{
+         for (j = 0; j < pd->Num_Dim; j++) {
+            for (i = 0; i < pd->Num_Dim; i++) {
+               R[i][j] = s[i][j] - eig_S[1-j]*delta(i,j);
+               }
+            }
+      /*  Normalize eigenvectors   */
+         for (j = 0; j < pd->Num_Dim; j++) {
+            tmp = sqrt(SQUARE(R[0][j]) + SQUARE(R[1][j]));
+            if( DOUBLE_NONZERO(tmp))	{
+               for (i = 0; i < pd->Num_Dim; i++) {
+                  R[i][j] /= tmp;
+                  }
+               }
+            }
+         }
+      else
+         {
+          for (j = 0; j < pd->Num_Dim; j++) {
+             for (k = 0; k < pd->Num_Dim; k++) {
+                R[j][k] = delta(j,k);
+                }
+             }
+         }
+    }
+  else
+    {
+     off_diag = SQUARE(s[0][1]) + SQUARE(s[0][2]) + SQUARE(s[1][2]);
+     I_S = s[0][0] + s[1][1] + s[2][2];
+     II_S = s[0][0]*s[1][1]+s[0][0]*s[2][2]+s[1][1]*s[2][2]
+              -(SQUARE(s[0][1])+SQUARE(s[0][2])+SQUARE(s[1][2]));
+     if( DOUBLE_NONZERO(off_diag))	{
+        q = I_S/3.;
+        p2 = 2*off_diag;
+        for(i = 0 ; i < VIM ; i++)	{p2 += SQUARE(s[i][i]-q);}
+        p = sqrt(p2/6.);
+        for (i = 0; i < VIM; i++) {
+           for (j = 0; j < VIM; j++) {
+              B[i][j] = (s[i][j]-q*delta(i,j))/p;
+              }
+           }
+        r = B[0][0]*B[1][1]*B[2][2] + 2.*(B[0][1]*B[1][2]*B[0][2])
+              -B[0][0]*SQUARE(B[1][2])-B[1][1]*SQUARE(B[0][2])-B[2][2]*SQUARE(B[0][1]);
+        r *= 0.5;
+        if ( r <= -1.)
+           {phi = M_PIE/3.;}
+        else if (r >= 1.)
+           {phi =0.;}
+        else
+           {phi = acos(r)/3.;}
+        for (i = 0; i < VIM; i++) {
+           eig_S[i] = q + 2*p*cos(phi+i*2*M_PIE/3.);
+           }
+        }
+      else
+        {
+        for(i = 0 ; i < DIM ; i++)	{eig_S[i] = s[i][i];}
+        }
+
+     if( DOUBLE_NONZERO(I_S) || DOUBLE_NONZERO(II_S))	{
+        for (i = 0; i < VIM; i++) {
+          for (j = 0; j < VIM; j++) {
+            for (k = 0; k < VIM; k++) {
+               Q1[j][k] = s[j][k] - eig_S[(i+1)%3]*delta(j,k);
+               Q2[j][k] = s[j][k] - eig_S[(i+2)%3]*delta(j,k);
+               }
+            }
+          for (j = 0; j < VIM; j++) {
+            for (k = 0; k < VIM; k++) {
+               R[j][i] = Q1[j][k]*Q2[k][j];
+               }
+            }
+          }
+      /*  Normalize eigenvectors   */
+        for (j = 0; j < VIM; j++) {
+          tmp = sqrt(SQUARE(R[0][j]) + SQUARE(R[1][j]) + SQUARE(R[2][j]));
+          if( DOUBLE_NONZERO(tmp))	{
+            for (i = 0; i < VIM; i++) {
+               R[i][j] /= tmp;
+               }
+            }
+         }
+       }
+     else
+       {
+        for (j = 0; j < VIM; j++) {
+          for (k = 0; k < VIM; k++) {
+             R[j][k] = delta(j,k);
+             }
+          }
+       }
+    }
+
+
+  // exponentiate diagonal
+  for (i = 0; i < DIM; i++) {
+      eig_values[i] = exp(eig_S[i]);
+      }
+
+  /* matrix multiplication, the slow way */
+  for (i = 0; i < VIM; i++) {
+     for (j = 0; j < VIM; j++) {
+         exp_s[i][j] = R[i][j] * eig_values[j];
+         }
+     }
+  
+  // multiply by transpose
+  for (i = 0; i < VIM; i++) {
+     for (j = 0; j < VIM; j++) {
+         tmp = 0.;
+         for (k = 0; k < VIM; k++) {
+             tmp += exp_s[i][k] * R[j][k];
+             }
+         D[i][j] = tmp;
+         }
+     }
+  for (i = 0; i < VIM; i++) {
+     for (j = 0; j < VIM; j++) {
+         exp_s[i][j] = D[i][j];
+         }
+    }
+  
+} // End analytical_exp_s
 
 void
 compute_d_exp_s_ds(dbl s[DIM][DIM],                   //s - stress
 		   dbl exp_s[DIM][DIM],
 		   dbl d_exp_s_ds[DIM][DIM][DIM][DIM])
 {
-  double s_p[DIM][DIM];
-  double exp_s_p[DIM][DIM];
+  double s_p[DIM][DIM], s_n[DIM][DIM];
+  double exp_s_p[DIM][DIM], exp_s_n[DIM][DIM];
   double eig_values[DIM];
   double R1[DIM][DIM];
   int i,j,p,q;
+  double ds, ds_den, fd = FD_FACTOR;
 
-  memset(exp_s_p,    0, sizeof(double)*DIM*DIM);
-  memset(exp_s,      0, sizeof(double)*DIM*DIM);
+
   memset(d_exp_s_ds, 0, sizeof(double)*DIM*DIM*DIM*DIM);
  
-  compute_exp_s(s, exp_s, eig_values, R1);
-
+#if 1
   for (i = 0; i < VIM; i++) {
     for (j = 0; j < VIM; j++) {
        s_p[i][j] = s[i][j];
- }
-  }
+       s_n[i][j] = s[i][j];
+       }
+    }
 
-  double ds = 1e-9;
 
   for (i = 0; i < VIM; i++) {
-    for (j = 0; j < VIM; j++) {
+    for (j = i; j < VIM; j++) {
 
       // perturb s
+      ds = fd*s[i][j];
+      ds = (fabs(ds) < fd ? fd : ds);
       s_p[i][j] += ds;
+      s_n[i][j] -= ds;
       if( i != j) {
         s_p[j][i] = s_p[i][j];
+        s_n[j][i] = s_n[i][j];
       }
+      ds_den = 0.5/ds;
 
       // find exp_s at perturbed value
+#ifdef ANALEIG_PLEASE
+      analytical_exp_s(s_p, exp_s_p, eig_values, R1);
+#else
       compute_exp_s(s_p, exp_s_p, eig_values, R1);
+#endif
+#ifdef ANALEIG_PLEASE
+      analytical_exp_s(s_n, exp_s_n, eig_values, R1);
+#else
+      compute_exp_s(s_n, exp_s_n, eig_values, R1);
+#endif
 
       // approximate derivative
       for (p = 0; p < VIM; p++) {
 	for (q = 0; q < VIM; q++) {
-	  d_exp_s_ds[p][q][i][j] = (exp_s_p[p][q] - exp_s[p][q]) / ds;
+	  d_exp_s_ds[p][q][i][j] = ds_den*(exp_s_p[p][q] - exp_s_n[p][q]);
+	  if(i != j)d_exp_s_ds[p][q][j][i] = d_exp_s_ds[p][q][i][j];
 	}
       }
-     
       s_p[i][j] = s[i][j];
+      s_n[i][j] = s[i][j];
       if( i != j) {
         s_p[j][i] = s[j][i];
-      } 
+        s_n[j][i] = s[j][i];
+        } 
     }
   }
+#else
+#ifdef ANALEIG_PLEASE
+      analytical_exp_s(s, exp_s, eig_values, R1);
+#else
+      compute_exp_s(s, exp_s, eig_values, R1);
+#endif
+  memset(d_I_dS,    0, sizeof(double)*DIM*DIM);
+  memset(d_II_dS,    0, sizeof(double)*DIM*DIM);
+  memset(d_III_dS,    0, sizeof(double)*DIM*DIM);
+  memset(d_eig_ds,    0, sizeof(double)*DIM*DIM*DIM);
+
+  I_S = s[0][0] + s[1][1] + s[2][2];
+  II_S = s[0][0]*s[1][1]+s[0][0]*s[2][2]+s[1][1]*s[2][2]
+              -(SQUARE(s[0][1])+SQUARE(s[0][2])+SQUARE(s[1][2]));
+  III_S = s[0][0]*s[1][1]*s[2][2] + 2.*(s[0][1]*s[1][2]*s[0][2])
+              -s[0][0]*SQUARE(s[1][2])-s[1][1]*SQUARE(s[0][2])-s[2][2]*SQUARE(s[0][1]);
+  for (i = 0; i < DIM; i++) {
+      d_I_dS[i][i] = 1.;
+      }
+  d_II_S[0][0] = s[1][1] + s[2][2];
+  d_II_S[1][1] = s[0][0] + s[2][2];
+  d_II_S[2][2] = s[0][0] + s[1][1];
+  d_II_S[0][1] = d_II_S[1][0] = -2.*s[0][1];
+  d_II_S[0][2] = d_II_S[2][0] = -2.*s[0][2];
+  d_II_S[1][2] = d_II_S[2][1] = -2.*s[1][2];
+  d_III_S[0][0] = s[1][1]*s[2][2]-SQUARE(s[1][2]);
+  d_III_S[1][1] = s[0][0]*s[2][2]-SQUARE(s[0][2]);
+  d_III_S[2][2] = s[1][1]*s[0][0]-SQUARE(s[0][1]);
+  d_III_S[0][1] = d_III_S[1][0] = 2.*s[1][2]*s[0][2] - 2*s[2][2]*s[0][1];
+  d_III_S[0][2] = d_III_S[2][0] = 2.*s[0][1]*s[1][2] - 2*s[1][1]*s[0][2];
+  d_III_S[1][2] = d_III_S[2][1] = 2.*s[0][1]*s[1][2] - 2*s[1][1]*s[0][2];
+
+  for (i = 0; i < DIM; i++) {
+     eig_S[i] = log(eig_values[i]);
+     denom = 3*SQUARE(eig_S[i]) -2*eig_S[i]*I_S + II_S; 
+     if(DOUBLE_NONZERO(denom))  {
+        for (p = 0; p < DIM; p++) {
+           for (q = 0; q < DIM; p++) {
+              d_eig_ds[i][p][q] = denom_inv*
+                     (SQUARE(eig_S[i])*d_I_S[p][q]-eig_S[i]*d_II_S[p][q] + d_III_S[p][q]);
+              }
+           }
+        }
+  /* matrix multiplication, the slow way */
+  for (p = 0; i < VIM; i++) {
+     for (q = 0; j < VIM; j++) {
+        for (i = 0; i < DIM; i++) {
+           for (j = 0; j < DIM; j++) {
+              d_exp_s_ds[p][q][i][j] = eig_values[p]*d_eig_ds[p][i][j]*R1[q][p];
+              }
+           }
+        for (i = 0; i < VIM; i++) {
+           for (j = 0; j < VIM; j++) {
+              for (k = 0; k < VIM; k++) {
+                 d_exp_s_ds[p][q][i][j] += D[i][k] * R1[j][k];
+             }
+         }
+        }
+      }
+    }
+
+  
+ 
+   }
+#endif
+
 }
 
+dbl
+compute_saramito_model_terms(dbl stress[DIM][DIM],
+                                 dbl yieldStress,
+                                 dbl yieldExpon,
+                                 SARAMITO_DEPENDENCE_STRUCT *d_sCoeff) {
+  /* start by computing the norm of sigma_d (the deviatoric stress) which is written as
+   * sqrt( trace(sigma_d*sigma_d)/2 )
+   *
+   * see the following wikipedia page for the mathematical details:
+   * https://en.wikipedia.org/wiki/Cauchy_stress_tensor#Invariants_of_the_stress_deviator_tensor
+   */
 
+  dbl traceOverVIM = 0;
+  for (int i = 0; i < VIM; i++) {
+    traceOverVIM += stress[i][i];
+  }
+
+  traceOverVIM /= VIM;
+
+  // square of the deviatoric sress norm
+  dbl normOfStressDSqr = 0;
+  for (int i = 0; i < VIM; i++) {
+    normOfStressDSqr += pow(stress[i][i] - traceOverVIM, 2) / 2.;
+
+    for (int j = i + 1; j < VIM; j++) {
+      normOfStressDSqr += pow(stress[i][j], 2);
+    }
+  }
+
+  const dbl normOfStressD = sqrt(normOfStressDSqr);
+
+  const dbl sc = 1. - yieldStress / normOfStressD;
+
+  dbl sCoeff;
+  dbl expYSC = 1;
+  if (yieldExpon > 0) {
+    expYSC = exp(sc / yieldExpon);
+    sCoeff = log(1. + expYSC) * yieldExpon;
+  } else {
+    sCoeff = fmax(0, sc);
+  }
+
+  // take care of indeterminate behavior for normOfStressD == 0
+  if (normOfStressD == 0) {
+    if (yieldStress <= 0) {
+      sCoeff = 1;
+    } else {
+      sCoeff = 0;
+    }
+  }
+
+  if (d_sCoeff != NULL) {
+    // if normStress_d < yieldStress, set sensitivities to zero and return
+    if ((sCoeff) == 0 || yieldStress <= 0) {
+      for (int i = 0; i < VIM; i++) {
+        for (int j = 0; j < VIM; j++) {
+          d_sCoeff->s[i][j] = 0.;
+        }
+      }
+
+      d_sCoeff->tau_y = 0.;
+    } else {
+      // otherwise, sensitivities need to be calculated
+      d_sCoeff->tau_y = -1. / (normOfStressD);
+      dbl d_sCoeff_d_normOfStressD = yieldStress / (normOfStressDSqr);
+      if (yieldExpon > 0) {
+        const dbl expYSCDerivativeTerm = expYSC / (1 + expYSC);
+        d_sCoeff->tau_y *= expYSCDerivativeTerm;
+        d_sCoeff_d_normOfStressD *= expYSCDerivativeTerm;
+      }
+
+      for (int i = 0; i < VIM; i++) {
+        d_sCoeff->s[i][i] = -traceOverVIM;
+
+        for (int j = i; j < VIM; j++) {
+          if (i == j) {
+            d_sCoeff->s[i][i] += stress[i][i];
+          } else {
+            d_sCoeff->s[i][j] = 2. * stress[i][j];
+          }
+        }
+      }
+
+      /* use the chain rule to computute sCoeff sensitivies to stress components
+       * d(sCoeff)/d(stress)  =   d(sCoeff)/d(normOfStressD)
+       *                        * d(normOfStressD)/d(normOfStressDSqr)
+       *                        * d(normOfStressDSqr)/d(stress)
+       *
+       *                      =   d(sCoeff)/d(normOfStressD)
+       *                        * 0.5/normOfStressD
+       *                        * d(normOfStressDSqr)/d(stress)
+       */
+
+      dbl d_normOfStressD_d_Stress = 0.5 / normOfStressD * d_sCoeff_d_normOfStressD;
+
+      for (int i = 0; i < VIM; i++) {
+        for (int j = i; j < VIM; j++) {
+          d_sCoeff->s[i][j] *= d_normOfStressD_d_Stress;
+          d_sCoeff->s[j][i] = d_sCoeff->s[i][j];
+        }
+      }
+    }
+  } // d_sCoeff != NULL
+  // for debugging purposes.
+  /*
+    for(int i=0; i<VIM; i++){
+    for(int j=0; j<VIM; j++){
+    printf("\nstress[%d][%d] = %E", i, j, stress[i][j]);
+    }
+    }
+    printf("\n");
+    for(int i=0; i<VIM; i++){
+    for(int j=0; j<VIM; j++){
+    printf("\nd(sCoeff)/d(stress[%d][%d)] = %E", i, j, d_sCoeff->s[i][j]);
+    }
+    }
+    printf("\n");
+    printf("yield stress = %E", yieldStress);
+    printf("\n");
+    printf("|stress_d|**2 = %E", normOfStressDSqr);
+    printf("\n-------------------------------------------------------------");
+  */
+  return sCoeff;
+}

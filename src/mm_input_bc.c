@@ -1047,7 +1047,8 @@ rd_bc_specs(FILE *ifp,
 		      BC_Types[ibc].BC_Data_Float[4] = 0.;
 	    }
 	  else
-	    SPF(endofstring(echo_string)," %d %.4g", BC_Types[ibc].BC_Data_Int[0],BC_Types[ibc].BC_Data_Float[4]); 
+	    SPF(endofstring(echo_string)," %d %.4g",
+		BC_Types[ibc].BC_Data_Int[0], BC_Types[ibc].BC_Data_Float[4]);
 	  if ( fscanf(ifp, "%lf", 
 		      &BC_Types[ibc].BC_Data_Float[5]) != 1)
 	    {
@@ -1077,10 +1078,77 @@ rd_bc_specs(FILE *ifp,
 
 
 	  break;
+	case VELO_SLIP_POWER_CARD_BC:
+	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf",
+		      &BC_Types[ibc].BC_Data_Float[0],
+		      &BC_Types[ibc].BC_Data_Float[1],
+		      &BC_Types[ibc].BC_Data_Float[2],
+		      &BC_Types[ibc].BC_Data_Float[3],
+		      &BC_Types[ibc].BC_Data_Float[4]) != 5)
+	    {
+	      sr = sprintf(err_msg, "%s: Expected 5 flts for %s.",
+			   yo, BC_Types[ibc].desc->name1);
+	      EH(-1, err_msg);
+	    }
+	  BC_Types[ibc].max_DFlt = 5;
+	  SPF_DBL_VEC(endofstring(echo_string), 5,  BC_Types[ibc].BC_Data_Float);
+	  break;
+	case VELO_SLIP_POWER_BC:
+	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf",
+		      &BC_Types[ibc].BC_Data_Float[0],
+		      &BC_Types[ibc].BC_Data_Float[1],
+		      &BC_Types[ibc].BC_Data_Float[2],
+		      &BC_Types[ibc].BC_Data_Float[3],
+		      &BC_Types[ibc].BC_Data_Float[4]) != 5)
+	    {
+	      sr = sprintf(err_msg, "%s: Expected 5 flts for %s.",
+			   yo, BC_Types[ibc].desc->name1);
+	      EH(-1, err_msg);
+	    }
+	  BC_Types[ibc].max_DFlt = 5;
+	  SPF_DBL_VEC(endofstring(echo_string), 5,  BC_Types[ibc].BC_Data_Float);
+
+
+	  // Read in 3 tangential vector components for 3D
+
+	  if ( fscanf(ifp, "%lf",
+		      &BC_Types[ibc].BC_Data_Float[5]) != 1)
+	    {
+	      BC_Types[ibc].BC_Data_Float[5] = 0.0;
+	    }
+	  else
+	    {
+	      SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].BC_Data_Float[5]);
+	      BC_Types[ibc].max_DFlt = 6;
+	    }
+
+
+	  if ( fscanf(ifp, "%lf",
+		      &BC_Types[ibc].BC_Data_Float[6]) != 1)
+	    {
+	      BC_Types[ibc].BC_Data_Float[6] = 0.0;
+	    }
+	  else
+	    {
+	      SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].BC_Data_Float[6]);
+	      BC_Types[ibc].max_DFlt = 7;
+	    }
+
+	  if ( fscanf(ifp, "%lf",
+		      &BC_Types[ibc].BC_Data_Float[7]) != 1)
+	    {
+	      BC_Types[ibc].BC_Data_Float[7] = 0.0;
+	    }
+	  else
+	    {
+	      SPF(endofstring(echo_string)," %g", BC_Types[ibc].BC_Data_Float[7]);
+	      BC_Types[ibc].max_DFlt = 8;
+	    }
+	  break;
 
 	  /*
 	   * Fall through for all cases which require five floating point
-	   * values as data input 
+	   * values as data input
 	   */
 
 	case VELO_EK_3D_BC:
@@ -1832,7 +1900,55 @@ rd_bc_specs(FILE *ifp,
         case KIN_CHEM_BC:
 	case CURRENT_USER_BC:
 	case CURRENT_USER_SIC_BC:
-        case VOLT_USER_BC:
+	case VOLT_USER_BC:
+        case U_VES11_PARABOLA_BC:
+        case U_VES12_PARABOLA_BC:
+        case U_VES22_PARABOLA_BC:
+        case U_VES13_PARABOLA_BC:
+        case U_VES23_PARABOLA_BC:
+        case U_VES33_PARABOLA_BC:
+        case U_VES11_1_PARABOLA_BC:
+        case U_VES12_1_PARABOLA_BC:
+        case U_VES22_1_PARABOLA_BC:
+        case U_VES13_1_PARABOLA_BC:
+        case U_VES23_1_PARABOLA_BC:
+        case U_VES33_1_PARABOLA_BC:
+        case U_VES11_2_PARABOLA_BC:
+        case U_VES12_2_PARABOLA_BC:
+        case U_VES22_2_PARABOLA_BC:
+        case U_VES13_2_PARABOLA_BC:
+        case U_VES23_2_PARABOLA_BC:
+        case U_VES33_2_PARABOLA_BC:
+        case U_VES11_3_PARABOLA_BC:
+        case U_VES12_3_PARABOLA_BC:
+        case U_VES22_3_PARABOLA_BC:
+        case U_VES13_3_PARABOLA_BC:
+        case U_VES23_3_PARABOLA_BC:
+        case U_VES33_3_PARABOLA_BC:
+        case U_VES11_4_PARABOLA_BC:
+        case U_VES12_4_PARABOLA_BC:
+        case U_VES22_4_PARABOLA_BC:
+        case U_VES13_4_PARABOLA_BC:
+        case U_VES23_4_PARABOLA_BC:
+        case U_VES33_4_PARABOLA_BC:
+        case U_VES11_5_PARABOLA_BC:
+        case U_VES12_5_PARABOLA_BC:
+        case U_VES22_5_PARABOLA_BC:
+        case U_VES13_5_PARABOLA_BC:
+        case U_VES23_5_PARABOLA_BC:
+        case U_VES33_5_PARABOLA_BC:
+        case U_VES11_6_PARABOLA_BC:
+        case U_VES12_6_PARABOLA_BC:
+        case U_VES22_6_PARABOLA_BC:
+        case U_VES13_6_PARABOLA_BC:
+        case U_VES23_6_PARABOLA_BC:
+        case U_VES33_6_PARABOLA_BC:
+        case U_VES11_7_PARABOLA_BC:
+        case U_VES12_7_PARABOLA_BC:
+        case U_VES22_7_PARABOLA_BC:
+        case U_VES13_7_PARABOLA_BC:
+        case U_VES23_7_PARABOLA_BC:
+        case U_VES33_7_PARABOLA_BC:
 	  num_const = read_constants(ifp, &(BC_Types[ibc].u_BC), NO_SPECIES);
  
 	  if ( num_const < 0 )
@@ -1875,6 +1991,7 @@ rd_bc_specs(FILE *ifp,
 	      EH(-1, err_msg);
 	    }			   
 	  BC_Types[ibc].len_u_BC = num_const;	  
+	  BC_Types[ibc].max_DFlt = num_const+1;
 
 	  for(i=0;i<num_const;i++) SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].u_BC[i]);
 
@@ -1908,6 +2025,7 @@ rd_bc_specs(FILE *ifp,
 	      EH(-1, err_msg);
 	    }			   
 	  BC_Types[ibc].len_u_BC = num_const;	  
+	  BC_Types[ibc].max_DFlt = num_const+3;
 
 	  for(i=0;i<num_const;i++) SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].u_BC[i]);
 
@@ -1920,6 +2038,7 @@ rd_bc_specs(FILE *ifp,
         case YFLUX_USER_BC:
         case YUSER_BC:
 	case YFLUX_ALLOY_BC:
+        case FEATURE_ROLLON_BC:
 	  if ( fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[0]) != 1)
 	    {
 	      sr = sprintf(err_msg, "Expected 1 int for %s on %sID=%d\n",
@@ -1939,6 +2058,7 @@ rd_bc_specs(FILE *ifp,
 	      EH(-1, err_msg);
 	    }			   
 	  BC_Types[ibc].len_u_BC = num_const;	  
+	  BC_Types[ibc].max_DFlt = num_const;
 
 	  SPF(endofstring(echo_string)," %d", BC_Types[ibc].BC_Data_Int[0]);
 	  for(i=0;i<num_const;i++) SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].u_BC[i]);
@@ -1981,6 +2101,7 @@ rd_bc_specs(FILE *ifp,
 	      EH(-1, err_msg);
 	    }			   
 	  BC_Types[ibc].len_u_BC = num_const;	  
+	  BC_Types[ibc].max_DFlt = num_const;
 
 	  SPF(endofstring(echo_string)," %s", input);
 	  for(i=0;i<num_const;i++) SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].u_BC[i]);

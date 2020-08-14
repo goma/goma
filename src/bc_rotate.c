@@ -1087,6 +1087,8 @@ rotate_momentum_eqn (
   double    rotated_jacobian_vector[MAX_PDIM][MAX_PDIM][MDE];
   double    rotated_jacobian_scalar[MAX_PDIM][MDE];
   double    rotated_jacobian_conc[MAX_PDIM][MAX_CONC][MDE];
+  int v_s[MAX_MODES][DIM][DIM];
+  int v_g[DIM][DIM];
 
 /************************ EXECUTION BEGINS **********************************/
   eq = VECT_EQ_MOM;
@@ -1096,6 +1098,20 @@ rotate_momentum_eqn (
 /*       i.e.,    Rn = nx*Rx + ny*Ry + nz*Rz                                 */
 /*                Rt1 = t1x*Rx + t1y*Ry + t1z*Rz                             */
 /*                Rt2 = t2x*Rx + t2y*Ry + t2z*Rz                             */
+  if( pd->v[POLYMER_STRESS11] )
+    {
+      (void) stress_eqn_pointer(v_s);
+
+      v_g[0][0] = VELOCITY_GRADIENT11;
+      v_g[0][1] = VELOCITY_GRADIENT12;
+      v_g[1][0] = VELOCITY_GRADIENT21;
+      v_g[1][1] = VELOCITY_GRADIENT22;
+      v_g[0][2] = VELOCITY_GRADIENT13;
+      v_g[1][2] = VELOCITY_GRADIENT23;
+      v_g[2][0] = VELOCITY_GRADIENT31;
+      v_g[2][1] = VELOCITY_GRADIENT32;
+      v_g[2][2] = VELOCITY_GRADIENT33;
+    }
 
 
   /* Now add on projection into n-t space */
@@ -1337,7 +1353,95 @@ rotate_momentum_eqn (
 	  }
 
       } /* end of if variable */
+
+      var = POLYMER_STRESS11;
+      if (pd->v[var]) {
+	for (int mode = 0; mode < vn->modes; mode++) {
+	  for (int p = 0; p < VIM; p++) {
+	    for (int q = 0; q < VIM; q++) {
+	      if (q >= p) {
+                var = v_s[mode][p][q];
+	        pvar = upd->vp[var];
+	        for ( n=0; n<ei->dof[var]; n++) {
+
+	          rotated_jacobian_scalar[0][n] = 0.;
+	          rotated_jacobian_scalar[1][n] = 0.;
+	          rotated_jacobian_scalar[2][n] = 0.;
+	          
+	          for (kdir = 0; kdir < dim; kdir++) {
+	            if (rotation[I][eq][kdir]->ok) {
+	              eqn=R_MOMENTUM1+kdir;
+	              for (ldir = 0; ldir < dim; ldir++)
+	        	{
+	        	  rotated_jacobian_scalar[kdir][n] += 
+	        	    rotation[I][eq][kdir]->vector[ldir] * lec->J[upd->ep[R_MOMENTUM1+ldir]][pvar][id][n];
+	        	}
+		    }
+		  }
+
+	        } /* end of loop over nodes */
+	        
+	        /* reinject d_mesh/d_pressure back into lec-J for global assembly */
+	        for (kdir = 0; kdir < dim; kdir++)
+	          {
+	            if (rotation[I][eq][kdir]->ok) {
+	              /* loop over sensitivities */
+	              for ( n=0; n< ei->dof[var]; n++ ) 
+	        	{
+	        	  
+	        	  lec->J[upd->ep[R_MOMENTUM1+ kdir]][pvar][id][n]
+	        	    = rotated_jacobian_scalar[kdir][n];
+	        	}
+	            }
+	          }
+	      }
+	    }
+	  }
+	}
+      } /* end of if variable */
       
+      var = VELOCITY_GRADIENT11;
+      if (pd->v[var]) {
+	for (int p = 0; p < VIM; p++) {
+	  for (int q = 0; q < VIM; q++) {
+            var = v_g[p][q];
+	    pvar = upd->vp[var];
+	    for ( n=0; n<ei->dof[var]; n++) {
+
+	      rotated_jacobian_scalar[0][n] = 0.;
+	      rotated_jacobian_scalar[1][n] = 0.;
+	      rotated_jacobian_scalar[2][n] = 0.;
+	      
+	      for (kdir = 0; kdir < dim; kdir++) {
+	        if (rotation[I][eq][kdir]->ok) {
+	          eqn=R_MOMENTUM1+kdir;
+	          for (ldir = 0; ldir < dim; ldir++)
+		    {
+		      rotated_jacobian_scalar[kdir][n] += 
+			rotation[I][eq][kdir]->vector[ldir] * lec->J[upd->ep[R_MOMENTUM1+ldir]][pvar][id][n];
+		    }
+		}
+	      }
+
+	    } /* end of loop over nodes */
+	    
+	    /* reinject d_mesh/d_pressure back into lec-J for global assembly */
+	    for (kdir = 0; kdir < dim; kdir++)
+	      {
+	        if (rotation[I][eq][kdir]->ok) {
+	          /* loop over sensitivities */
+	          for ( n=0; n< ei->dof[var]; n++ ) 
+		    {
+	    	  
+		      lec->J[upd->ep[R_MOMENTUM1+ kdir]][pvar][id][n]
+			= rotated_jacobian_scalar[kdir][n];
+		    }
+	        }
+	      }
+	  }
+	}
+      } /* end of if variable */
+
       /* momentum wrt. temperature */
       var = TEMPERATURE;
       if (pd->v[var]){
@@ -1593,6 +1697,22 @@ rotate_res_jac_mom (
   /***************************** execution begins **********************************/
   
   ShapeVar = pd->ShapeVar;
+  int v_s[MAX_MODES][DIM][DIM];
+  int v_g[DIM][DIM];
+  if( pd->v[POLYMER_STRESS11] )
+    {
+      (void) stress_eqn_pointer(v_s);
+
+      v_g[0][0] = VELOCITY_GRADIENT11;
+      v_g[0][1] = VELOCITY_GRADIENT12;
+      v_g[1][0] = VELOCITY_GRADIENT21;
+      v_g[1][1] = VELOCITY_GRADIENT22;
+      v_g[0][2] = VELOCITY_GRADIENT13;
+      v_g[1][2] = VELOCITY_GRADIENT23;
+      v_g[2][0] = VELOCITY_GRADIENT31;
+      v_g[2][1] = VELOCITY_GRADIENT32;
+      v_g[2][2] = VELOCITY_GRADIENT33;
+    }
   
   
   /* Correct residual equation first at local node "irow_index" or global node "I" */
@@ -1786,6 +1906,75 @@ rotate_res_jac_mom (
 	      lec->J[peq][pvar][irow_index][n] = rotated_jacobian_scalar[ldir][n];
 	    }
 	} /* end of loop over nodes */
+      } /* end of if variable */
+      var = POLYMER_STRESS11;
+      if (pd->v[var]) {
+	for (int mode = 0; mode < vn->modes; mode++) {
+	  for (int p = 0; p < VIM; p++) {
+	    for (int q = 0; q < VIM; q++) {
+              if (q >= p) {
+                var = v_s[mode][p][q];
+	        pvar = upd->vp[var];
+          	for ( n=0; n<ei->dof[var]; n++) {
+          	  
+          	  for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
+          	    {
+          	      rotated_jacobian_scalar[kdir][n] = 0.;
+          	    }
+          	  
+          	  for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
+          	    {
+          	      peq = upd->ep[R_MOMENTUM1+ldir];
+          	      for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
+          		{
+          		  rotated_jacobian_scalar[kdir][n] += 
+          		    svector[kdir][ldir]*lec->J[peq][pvar][irow_index][n];
+          		}
+          	    }
+          	  /*reinject back into lec-J  for global assembly */
+          	  for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
+          	    {
+          	      peq = upd->ep[R_MOMENTUM1+ldir];
+          	      lec->J[peq][pvar][irow_index][n] = rotated_jacobian_scalar[ldir][n];
+          	    }
+          	} /* end of loop over nodes */
+	      }
+	    }
+	  }
+	}
+      } /* end of if variable */
+
+      var = VELOCITY_GRADIENT11;
+      if (pd->v[var]) {
+	for (int p = 0; p < VIM; p++) {
+	  for (int q = 0; q < VIM; q++) {
+            var = v_g[p][q];
+	    pvar = upd->vp[var];
+	    for ( n=0; n<ei->dof[var]; n++) {
+                
+	      for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
+		{
+		  rotated_jacobian_scalar[kdir][n] = 0.;
+		}
+                
+	      for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
+		{
+		  peq = upd->ep[R_MOMENTUM1+ldir];
+		  for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
+		    {
+		      rotated_jacobian_scalar[kdir][n] += 
+			svector[kdir][ldir]*lec->J[peq][pvar][irow_index][n];
+		    }
+		}
+	      /*reinject back into lec-J  for global assembly */
+	      for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
+		{
+		  peq = upd->ep[R_MOMENTUM1+ldir];
+		  lec->J[peq][pvar][irow_index][n] = rotated_jacobian_scalar[ldir][n];
+		}
+	    } /* end of loop over nodes */
+	  }
+	}
       } /* end of if variable */
       
       /* momentum wrt. temperature */

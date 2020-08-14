@@ -1680,7 +1680,7 @@ bf_mp_init(struct Problem_Description *pd)
   int ifound;
   int t, v;
   int status;
-  int shape;
+  int ishape;
 
   status = 0;
 
@@ -1691,7 +1691,7 @@ bf_mp_init(struct Problem_Description *pd)
 #endif
 
    /* This is needed to check for matching element shapes */
-   shape = ei->ielem_shape;
+   ishape = ei->ielem_shape;
 
   /*
    * For now, assume variable interpolations 
@@ -1737,7 +1737,7 @@ bf_mp_init(struct Problem_Description *pd)
 	      fprintf(stderr, "checking t = %d\n", t);
 #endif
 	      if ((pd->i[v] == bfd[t]->interpolation)
-                   && (shape == bfd[t]->element_shape))
+                   && (ishape == bfd[t]->element_shape))
 		{
 		  bf[v] = bfd[t];
 		}
@@ -1826,6 +1826,9 @@ init_Viscoelastic_Nonmodal(struct Viscoelastic_Nonmodal *v)
   v->dg_J_model           = 0;
   v->dg_J_model_wt        = NULL;
   v->len_dg_J_model_wt    = 0;
+  v->shiftModel           = 0;
+  v->shift                = NULL;
+  v->len_shift            = 0;
   return;
 }
 
