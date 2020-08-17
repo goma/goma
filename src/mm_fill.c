@@ -54,6 +54,7 @@
 #include "mm_fill_fill.h"
 #include "mm_fill_stress.h"
 #include "mm_fill_shell.h"
+#include "mm_fill_em.h"
 
 #include "exo_struct.h"
 #include "dpi.h"
@@ -856,13 +857,13 @@ matrix_fill(
 		    lm_dof = ei->gun_list[R_LAGR_MULT1 + b][i];
 		    eqn = upd->ep[R_LAGR_MULT1 + b];
 		    var = upd->vp[LAGR_MULT1 + b];
-		    lec->R[eqn][i] = x[lm_dof];
+                    lec->R[LEC_R_INDEX(eqn,i)] = x[lm_dof];
 		  }
        
 		if(af->Assemble_Jacobian)
 		  {
 		    zero_lec_row(lec->J, eqn, i);
-		    lec->J[eqn][var][i][i] = 1.0;
+                    lec->J[LEC_J_INDEX(eqn,var,i,i)] = 1.0;
 		  }
 	      }
 	    }
@@ -879,13 +880,13 @@ matrix_fill(
 		  {
 		    eqn = upd->ep[R_LAGR_MULT1 + b];
 		    var = upd->vp[LAGR_MULT1 + b];
-		    lec->R[eqn][i] = 0.;
+                    lec->R[LEC_R_INDEX(eqn,i)] = 0.;
 		  }
        
 		if(af->Assemble_Jacobian)
 		  {
 		    zero_lec_row(lec->J, eqn, i);
-		    lec->J[eqn][var][i][i] = 1.e-15;
+                    lec->J[LEC_J_INDEX(eqn,var,i,i)] = 1.e-15;
 		  }
 	      }
 	    }
@@ -946,13 +947,13 @@ matrix_fill(
 		      {
 			eqn = upd->ep[R_SOLID1 + b];
 			var = upd->vp[R_SOLID1 + b];
-			lec->R[eqn][i] = 0.;
+                        lec->R[LEC_R_INDEX(eqn,i)] = 0.;
 		      }
 			     
 		    if (af->Assemble_Jacobian)
 		      {
 			zero_lec_row(lec->J, eqn, i);
-			lec->J[eqn][var][i][i] = 1.e-15;
+                        lec->J[LEC_J_INDEX(eqn,var,i,i)] = 1.e-15;
 		      }
 		  }
 		}
@@ -1729,7 +1730,15 @@ matrix_fill(
 	  if (err) return -1;
 #endif
 	}  
-
+      if(pde [R_EM_E1_REAL] && !pde[R_EM_H1_REAL]) {
+        err = assemble_ewave_tensor_bf(time_value, theta, delta_t,
+                                R_EM_E1_REAL, EM_E1_REAL);
+        EH( err, "assemble_ewave");
+#ifdef CHECK_FINITE
+        err = CHECKFINITE("assemble_ewave");
+        if (err) return -1;
+#endif
+      } else
       if( pde[R_EM_E1_REAL] )
 	{
           err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
@@ -1740,7 +1749,26 @@ matrix_fill(
 	  if (err) return -1;
 #endif
 	}
+      if( pde[R_EM_CONT_REAL] )
+	{
+	  err = assemble_em_continuity();
+	  EH( err, "assemble_em_continuity");
+#ifdef CHECK_FINITE
+	  err = CHECKFINITE("assemble_em_continuity"); 
+	  if (err) return -1;
+#endif
+          if( neg_elem_volume ) return -1;
+	}
 
+      if(pde [R_EM_E2_REAL] && !pde[R_EM_H2_REAL]) {
+//        err = assemble_ewave_tensor_bf(time_value, theta, delta_t,
+//                                R_EM_E2_REAL, EM_E2_REAL);
+//        EH( err, "assemble_ewave");
+//#ifdef CHECK_FINITE
+//        err = CHECKFINITE("assemble_ewave");
+//        if (err) return -1;
+//#endif
+      } else
       if( pde[R_EM_E2_REAL] )
 	{
           err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
@@ -1752,6 +1780,15 @@ matrix_fill(
 #endif
 	}
 
+      if(pde [R_EM_E3_REAL] && !pde[R_EM_H3_REAL]) {
+//        err = assemble_ewave_tensor_bf(time_value, theta, delta_t,
+//                                R_EM_E3_REAL, EM_E3_REAL);
+//        EH( err, "assemble_ewave");
+//#ifdef CHECK_FINITE
+//        err = CHECKFINITE("assemble_ewave");
+//        if (err) return -1;
+//#endif
+      } else
       if( pde[R_EM_E3_REAL] )
 	{
           err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
@@ -1763,6 +1800,15 @@ matrix_fill(
 #endif
 	}
 
+      if(pde [R_EM_E1_IMAG] && !pde[R_EM_H1_IMAG]) {
+//        err = assemble_ewave_tensor_bf(time_value, theta, delta_t,
+//                                R_EM_E1_IMAG, EM_E1_IMAG);
+//        EH( err, "assemble_ewave");
+//#ifdef CHECK_FINITE
+//        err = CHECKFINITE("assemble_ewave");
+//        if (err) return -1;
+//#endif
+      } else
       if( pde[R_EM_E1_IMAG] )
 	{
           err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
@@ -1774,6 +1820,15 @@ matrix_fill(
 #endif
 	}
 
+      if(pde [R_EM_E2_IMAG] && !pde[R_EM_H2_IMAG]) {
+//        err = assemble_ewave_tensor_bf(time_value, theta, delta_t,
+//                                R_EM_E2_IMAG, EM_E2_IMAG);
+//        EH( err, "assemble_ewave");
+//#ifdef CHECK_FINITE
+//        err = CHECKFINITE("assemble_ewave");
+//        if (err) return -1;
+//#endif
+      } else
       if( pde[R_EM_E2_IMAG] )
 	{
           err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
@@ -1785,6 +1840,15 @@ matrix_fill(
 #endif
 	}
 
+      if(pde [R_EM_E3_IMAG] && !pde[R_EM_H3_IMAG]) {
+//        err = assemble_ewave_tensor_bf(time_value, theta, delta_t,
+//                                R_EM_E3_IMAG, EM_E3_IMAG);
+//        EH( err, "assemble_ewave");
+//#ifdef CHECK_FINITE
+//        err = CHECKFINITE("assemble_ewave");
+//        if (err) return -1;
+//#endif
+      } else
       if( pde[R_EM_E3_IMAG] )
 	{
           err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
@@ -2585,7 +2649,7 @@ matrix_fill(
       int neighbor;  
       int index, face;
 	      
-      var = 4*MDE*(MAX_PROB_VAR+MAX_CONC)*MDE;
+      var = 4*lec->max_dof*(MAX_PROB_VAR+MAX_CONC)*lec->max_dof;
       memset(lec->J_stress_neighbor, 0, sizeof(double)*var); 
 
       for (face = 0; face < ei->num_sides; face++)
@@ -3171,12 +3235,12 @@ matrix_fill(
 	  if(node->DBSH_SLOPE_X == 1)
 	    {
 	      eqn = R_MESH1;
-	      lec->R[upd->ep[eqn]][i] = 1.0*BIG_PENALTY;
+              lec->R[LEC_R_INDEX(upd->ep[eqn],i)] = 1.0*BIG_PENALTY;
 	    }
 	  if(node->DBSH_SLOPE_Y == 1)
 	    {
 	      eqn = R_MESH2;
-	      lec->R[upd->ep[eqn]][i] = 0.0*BIG_PENALTY;
+              lec->R[LEC_R_INDEX(upd->ep[eqn],i)] = 0.0*BIG_PENALTY;
 	    }
 	}
     }
@@ -3190,14 +3254,14 @@ matrix_fill(
      * then stick in a Dirichlet condition.  The end effect should be
      * that our original 2D steady-state problem has an appended
      * system equivalent to the identity problem, "I x = 0". */
-    for(i = 0; i < MDE; i++)
+    for(i = 0; i < lec->max_dof; i++)
       {
 	eqn = upd->ep[R_MOMENTUM3];
 	var = upd->vp[VELOCITY3];
 	zero_lec_row(lec->J, eqn, i);
 	zero_lec_column(lec->J, var, i);
-	lec->J[eqn][var][i][i] = 1.0;
-	lec->R[eqn][i] = 0.0;
+        lec->J[LEC_J_INDEX(eqn,var,i,i)] = 1.0;
+        lec->R[LEC_R_INDEX(eqn,i)] = 0.0;
       }
   /* If we're doing normal mode LSA, and we're on wavenumber 0, then
    * the jacobian contributions to the w-momentum equation are
@@ -3211,8 +3275,8 @@ matrix_fill(
      && af->Assemble_LSA_Jacobian_Matrix
      && LSA_3D_of_2D_wave_number == 0
      && LSA_3D_of_2D_pass == 1)
-    for(i = 0; i < MDE; i++)
-      lec->J[R_MOMENTUM3][VELOCITY3][i][i] = 1.0;
+    for(i = 0; i < lec->max_dof; i++)
+      lec->J[LEC_J_INDEX(R_MOMENTUM3,VELOCITY3,i,i)] = 1.0;
 
   if ( ls != NULL && ls->Ignore_F_deps )
     {
@@ -3228,10 +3292,10 @@ matrix_fill(
                 {
                   for (j = 0; j < ei->dof[var]; j++)
                     {
-                      lec->J[peqn][pvar][i][j] = 0.;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] = 0.;
                       /*
-			if ( lec->J[peqn][pvar][i][j] != 0. )
-                        DPRINTF(stderr,"lec->J[eqn=%d][var=FILL][%d][%d] = %g\n",eqn,i,j,lec->J[peqn][pvar][i][j]);
+                        if ( lec->J[LEC_J_INDEX(peqn,pvar,i,j)] != 0. )
+                        DPRINTF(stderr,"lec->J[eqn=%d][var=FILL][%d][%d] = %g\n",eqn,i,j,lec->J[LEC_J_INDEX(peqn,pvar,i,j)]);
                       */
                     }
                 }
@@ -3252,7 +3316,7 @@ matrix_fill(
                 {
                   for (j = 0; j < ei->dof[var]; j++)
                     {
-                      lec->J[peqn][pvar][i][j] = 0.;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] = 0.;
                     }
                 }
             }
@@ -3295,7 +3359,7 @@ matrix_fill(
 			      printf("J[%d][%d][%d][%d]: %9.3g ", eqn, var, id, jd, lec->J[eqn][var][id][jd] );
 			    }
 			}
-		      printf("\tR[%d][%d]: %7.4g\n", eqn, id, lec->R[eqn][id] );
+                      printf("\tR[%d][%d]: %7.4g\n", eqn, id, lec->R[LEC_R_INDEX(eqn,id)] );
 		    }
 					
 		}
@@ -3305,6 +3369,8 @@ matrix_fill(
       while ( (elem_side_bc =  elem_side_bc->next_side_bc) != NULL );
     }
 #endif	
+
+
 
   load_lec(exo, ielem, ams, x, resid_vector, estifm);
 
@@ -3781,13 +3847,13 @@ matrix_fill_stress(
 		    lm_dof = ei->gun_list[R_LAGR_MULT1 + b][i];
 		    eqn = upd->ep[R_LAGR_MULT1 + b];
 		    var = upd->vp[LAGR_MULT1 + b];
-		    lec->R[eqn][i] = x[lm_dof];
+                    lec->R[LEC_R_INDEX(eqn,i)] = x[lm_dof];
 		  }
        
 		if(af->Assemble_Jacobian)
 		  {
 		    zero_lec_row(lec->J, eqn, i);
-		    lec->J[eqn][var][i][i] = 1.0;
+                    lec->J[LEC_J_INDEX(eqn,var,i,i)] = 1.0;
 		  }
 	      }
 	    }
@@ -3804,13 +3870,13 @@ matrix_fill_stress(
 		  {
 		    eqn = upd->ep[R_LAGR_MULT1 + b];
 		    var = upd->vp[LAGR_MULT1 + b];
-		    lec->R[eqn][i] = 0.;
+                    lec->R[LEC_R_INDEX(eqn,i)] = 0.;
 		  }
        
 		if(af->Assemble_Jacobian)
 		  {
 		    zero_lec_row(lec->J, eqn, i);
-		    lec->J[eqn][var][i][i] = 1.e-15;
+                    lec->J[LEC_J_INDEX(eqn,var,i,i)] = 1.e-15;
 		  }
 	      }
 	    }
@@ -3868,13 +3934,13 @@ matrix_fill_stress(
 		      {
 			eqn = upd->ep[R_SOLID1 + b];
 			var = upd->vp[R_SOLID1 + b];
-			lec->R[eqn][i] = 0.;
+                        lec->R[LEC_R_INDEX(eqn,i)] = 0.;
 		      }
 			     
 		    if (af->Assemble_Jacobian)
 		      {
 			zero_lec_row(lec->J, eqn, i);
-			lec->J[eqn][var][i][i] = 1.e-15;
+                        lec->J[LEC_J_INDEX(eqn,var,i,i)] = 1.e-15;
 		      }
 		  }
 		}
@@ -4012,6 +4078,139 @@ matrix_fill_stress(
 	  if (err) return -1;
 #endif
         }
+      if( pde[R_EM_E1_REAL] )
+        {
+          err = assemble_emwave(time_value, theta, delta_t, &pg_data,
+                                  R_EM_E1_REAL, EM_E1_REAL, EM_E1_IMAG);
+          EH( err, "assemble_emwave");
+#ifdef CHECK_FINITE
+          err = CHECKFINITE("assemble_emwave");
+          if (err) return -1;
+#endif
+        }
+
+      if( pde[R_EM_E2_REAL] )
+        {
+          err = assemble_emwave(time_value, theta, delta_t, &pg_data,
+                                  R_EM_E2_REAL, EM_E2_REAL, EM_E2_IMAG);
+          EH( err, "assemble_emwave");
+#ifdef CHECK_FINITE
+          err = CHECKFINITE("assemble_emwave");
+          if (err) return -1;
+#endif
+        }
+
+      if( pde[R_EM_E3_REAL] )
+        {
+          err = assemble_emwave(time_value, theta, delta_t, &pg_data,
+                                  R_EM_E3_REAL, EM_E3_REAL, EM_E3_IMAG);
+          EH( err, "assemble_emwave");
+#ifdef CHECK_FINITE
+          err = CHECKFINITE("assemble_emwave");
+          if (err) return -1;
+#endif
+        }
+
+      if( pde[R_EM_E1_IMAG] )
+        {
+          err = assemble_emwave(time_value, theta, delta_t, &pg_data,
+                                  R_EM_E1_IMAG, EM_E1_IMAG, EM_E1_REAL);
+          EH( err, "assemble_emwave");
+#ifdef CHECK_FINITE
+          err = CHECKFINITE("assemble_emwave");
+          if (err) return -1;
+#endif
+        }
+
+      if( pde[R_EM_E2_IMAG] )
+        {
+          err = assemble_emwave(time_value, theta, delta_t, &pg_data,
+                                  R_EM_E2_IMAG, EM_E2_IMAG, EM_E2_REAL);
+          EH( err, "assemble_emwave");
+#ifdef CHECK_FINITE
+          err = CHECKFINITE("assemble_emwave");
+          if (err) return -1;
+#endif
+        }
+
+      if( pde[R_EM_E3_IMAG] )
+        {
+          err = assemble_emwave(time_value, theta, delta_t, &pg_data,
+                                  R_EM_E3_IMAG, EM_E3_IMAG, EM_E3_REAL);
+          EH( err, "assemble_emwave");
+#ifdef CHECK_FINITE
+          err = CHECKFINITE("assemble_emwave");
+          if (err) return -1;
+#endif
+        }
+
+      if( pde[R_EM_H1_REAL] )
+        {
+          err = assemble_emwave(time_value, theta, delta_t, &pg_data,
+                                  R_EM_H1_REAL, EM_H1_REAL, EM_H1_IMAG);
+          EH( err, "assemble_emwave");
+#ifdef CHECK_FINITE
+          err = CHECKFINITE("assemble_emwave");
+          if (err) return -1;
+#endif
+        }
+
+      if( pde[R_EM_H2_REAL] )
+        {
+          err = assemble_emwave(time_value, theta, delta_t, &pg_data,
+                                  R_EM_H2_REAL, EM_H2_REAL, EM_H2_IMAG);
+          EH( err, "assemble_emwave");
+#ifdef CHECK_FINITE
+          err = CHECKFINITE("assemble_emwave");
+          if (err) return -1;
+#endif
+        }
+
+      if( pde[R_EM_H3_REAL] )
+        {
+          err = assemble_emwave(time_value, theta, delta_t, &pg_data,
+                                  R_EM_H3_REAL, EM_H3_REAL, EM_H3_IMAG);
+          EH( err, "assemble_emwave");
+#ifdef CHECK_FINITE
+          err = CHECKFINITE("assemble_emwave");
+          if (err) return -1;
+#endif
+        }
+
+      if( pde[R_EM_H1_IMAG] )
+        {
+          err = assemble_emwave(time_value, theta, delta_t, &pg_data,
+                                  R_EM_H1_IMAG, EM_H1_IMAG, EM_H1_REAL);
+          EH( err, "assemble_emwave");
+#ifdef CHECK_FINITE
+          err = CHECKFINITE("assemble_emwave");
+          if (err) return -1;
+#endif
+        }
+
+      if( pde[R_EM_H2_IMAG] )
+        {
+          err = assemble_emwave(time_value, theta, delta_t, &pg_data,
+                                  R_EM_H2_IMAG, EM_H2_IMAG, EM_H2_REAL);
+          EH( err, "assemble_emwave");
+#ifdef CHECK_FINITE
+          err = CHECKFINITE("assemble_emwave");
+          if (err) return -1;
+#endif
+        }
+
+      if( pde[R_EM_H3_IMAG] )
+        {
+          err = assemble_emwave(time_value, theta, delta_t, &pg_data,
+                                  R_EM_H3_IMAG, EM_H3_IMAG, EM_H3_REAL);
+          EH( err, "assemble_emwave");
+#ifdef CHECK_FINITE
+          err = CHECKFINITE("assemble_emwave");
+          if (err) return -1;
+#endif
+        }
+
+
         
       /******************************************************************************/
     }
@@ -4057,7 +4256,7 @@ matrix_fill_stress(
       int neighbor;  
       int index, face;
 	      
-      var = 4*MDE*(MAX_PROB_VAR+MAX_CONC)*MDE;
+      var = 4*lec->max_dof*(MAX_PROB_VAR+MAX_CONC)*lec->max_dof;
       memset(lec->J_stress_neighbor, 0, sizeof(double)*var); 
 
       for (face = 0; face < ei->num_sides; face++)
@@ -4616,12 +4815,12 @@ matrix_fill_stress(
 	  if(node->DBSH_SLOPE_X == 1)
 	    {
 	      eqn = R_MESH1;
-	      lec->R[upd->ep[eqn]][i] = 1.0*BIG_PENALTY;
+              lec->R[LEC_R_INDEX(upd->ep[eqn],i)] = 1.0*BIG_PENALTY;
 	    }
 	  if(node->DBSH_SLOPE_Y == 1)
 	    {
 	      eqn = R_MESH2;
-	      lec->R[upd->ep[eqn]][i] = 0.0*BIG_PENALTY;
+              lec->R[LEC_R_INDEX(upd->ep[eqn],i)] = 0.0*BIG_PENALTY;
 	    }
 	}
     }
@@ -4635,14 +4834,14 @@ matrix_fill_stress(
      * then stick in a Dirichlet condition.  The end effect should be
      * that our original 2D steady-state problem has an appended
      * system equivalent to the identity problem, "I x = 0". */
-    for(i = 0; i < MDE; i++)
+    for(i = 0; i < lec->max_dof; i++)
       {
 	eqn = upd->ep[R_MOMENTUM3];
 	var = upd->vp[VELOCITY3];
 	zero_lec_row(lec->J, eqn, i);
 	zero_lec_column(lec->J, var, i);
-	lec->J[eqn][var][i][i] = 1.0;
-	lec->R[eqn][i] = 0.0;
+        lec->J[LEC_J_INDEX(eqn,var,i,i)] = 1.0;
+        lec->R[LEC_R_INDEX(eqn,i)] = 0.0;
       }
   /* If we're doing normal mode LSA, and we're on wavenumber 0, then
    * the jacobian contributions to the w-momentum equation are
@@ -4656,8 +4855,8 @@ matrix_fill_stress(
      && af->Assemble_LSA_Jacobian_Matrix
      && LSA_3D_of_2D_wave_number == 0
      && LSA_3D_of_2D_pass == 1)
-    for(i = 0; i < MDE; i++)
-      lec->J[R_MOMENTUM3][VELOCITY3][i][i] = 1.0;
+    for(i = 0; i < lec->max_dof; i++)
+      lec->J[LEC_J_INDEX(R_MOMENTUM3,VELOCITY3,i,i)] = 1.0;
 
   /*
    * Load local element stiffness matrix (lec) into global matrix, depending
@@ -4834,7 +5033,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 			  if (ldof != -1) {	      
 			    for (m = 0; m < nunks; m++ ) { 
 			      estifm[ivar*fss->ncn[ielem] + ieqn]
-				= lec->J[peqn][pvar][idof][ldof]; 
+                                = lec->J[LEC_J_INDEX(peqn,pvar,idof,ldof)];
 			      ldof++; 
 			      ivar++; 
 			    } 
@@ -4913,7 +5112,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 					{
 					  if (k == j) {
 					    estifm[ivar*fss->ncn[ielem] + ieqn] = 
-					      lec->J_stress_neighbor[face][idof][peqn][ldof];
+                                              lec->J_stress_neighbor[LEC_J_STRESS_INDEX(face,idof,peqn,ldof)];
 					  }
 					  ldof++; 
 					  ivar++; 
@@ -4960,7 +5159,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 		  EH(-1, "LEC indexing error");
 		}
 	      }
-	      resid_vector[ie] += lec->R[MAX_PROB_VAR + ke][i];
+              resid_vector[ie] += lec->R[LEC_R_INDEX(MAX_PROB_VAR + ke,i)];
 	    }
 	  }
 	} else {
@@ -4968,7 +5167,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 	  for (i = 0; i < dofs; i++) {
 	    ledof = ei->lvdof_to_ledof[e][i];
 	    ie = ei->ieqn_ledof[ledof];
-	    resid_vector[ie] += lec->R[pe][i];
+            resid_vector[ie] += lec->R[LEC_R_INDEX(pe,i)];
 	  }
 	}
       }
@@ -5002,14 +5201,14 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 		  ie = Index_Solution(gnn, e, ke, nvdof,
 				      ei->matID_ledof[ledof]);
   
-		  resid_vector[ie] += lec->R[MAX_PROB_VAR + ke][i];
+                  resid_vector[ie] += lec->R[LEC_R_INDEX(MAX_PROB_VAR + ke,i)];
 #ifdef DEBUG_LEC
 		  {
-		    if (fabs(lec->R[MAX_PROB_VAR + ke][i]) > DBL_SMALL
+                    if (fabs(lec->R[LEC_R_INDEX(MAX_PROB_VAR + ke,i)]) > DBL_SMALL
 			|| Print_Zeroes) {
 		      fprintf(rrrr, "%7d %7d MF%-3d %9d -  %12d - %10.3g\n",
 			      DPI_ptr->node_index_global[gnn],
-			      gnn, ke, i, ie, lec->R[MAX_PROB_VAR + ke][i]);   
+                              gnn, ke, i, ie, lec->R[LEC_R_INDEX(MAX_PROB_VAR + ke,i)]);
 		    }
 		  }	
 #endif
@@ -5051,15 +5250,16 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 			      ja = (ie == je) ?
 				ie : in_list(je, ija[ie], ija[ie+1], ija);
 			      EH(ja, "Could not find vbl in sparse matrix.");
-			      a[ja] += lec->J[pe][pv][i][j];
+                              a[ja] += lec->J[LEC_J_INDEX(pe,pv,i,j)];
+
 #ifdef DEBUG_LEC
 			      {
-				if (fabs(lec->J[pe][pv][i][j]) > DBL_SMALL ||
+                                if (fabs(lec->J[LEC_J_INDEX(pe,pv,i,j)]) > DBL_SMALL ||
 				    Print_Zeroes) {
 				  fprintf(llll,
 					  "%9d %9d %9d %9d -  %12d - %10.3g\n",
 					  pe, pv, i, j, ja,
-					  lec->J[pe][pv][i][j]);   
+                                          lec->J[LEC_J_INDEX(pe,pv,i,j)]);
 				}
 			      } 
 #endif
@@ -5083,14 +5283,14 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 			    ja  = (ie == je) ? ie :
 			      in_list(je, ija[ie], ija[ie+1], ija);
 			    EH(ja, "Could not find vbl in sparse matrix.");
-			    a[ja] += lec->J[pe][pv][i][j];
+                            a[ja] += lec->J[LEC_J_INDEX(pe,pv,i,j)];
 #ifdef DEBUG_LEC
 			    {
-			      if (fabs(lec->J[pe][pv][i][j]) > DBL_SMALL ||
+                              if (fabs(lec->J[LEC_J_INDEX(pe,pv,i,j)]) > DBL_SMALL ||
 				  Print_Zeroes) {
 				fprintf(llll,
 					"%9d %9d %9d %9d -  %12d - %10.3g\n",
-					pe, pv, i, j, ja, lec->J[pe][pv][i][j]);   
+                                        pe, pv, i, j, ja, lec->J[LEC_J_INDEX(pe,pv,i,j)]);
 			      }
 			    }	
 #endif	
@@ -5115,14 +5315,14 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 	      ledof = ei->lvdof_to_ledof[e][i];
 	      if (ei->owned_ledof[ledof]) {
 		ie = ei->gun_list[e][i];
-		resid_vector[ie] += lec->R[pe][i];
+                resid_vector[ie] += lec->R[LEC_R_INDEX(pe,i)];
 #ifdef DEBUG_LEC
 		{
-		  if (fabs(lec->R[pe][i]) > DBL_SMALL ||
+                  if (fabs(lec->R[LEC_R_INDEX(pe,i)]) > DBL_SMALL ||
 		      Print_Zeroes) {
 
 		    fprintf(rrrr, "%9d %9d -  %12d - %10.3g\n",
-			    pe, i, ie, lec->R[pe][i]);   
+                            pe, i, ie, lec->R[LEC_R_INDEX(pe,i)]);
 
 		  }
 		}	
@@ -5166,15 +5366,15 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 			    EH(je, "Bad var index.");
 			    ja = (ie == je) ? ie : in_list(je, ija[ie], ija[ie+1], ija);
 			    EH(ja, "Could not find vbl in sparse matrix.");  
-			    a[ja] += lec->J[pe][pv][i][j];
+                            a[ja] += lec->J[LEC_J_INDEX(pe,pv,i,j)];
 
 #ifdef DEBUG_LEC
 			    {
-			      if (fabs(lec->J[pe][pv][i][j]) > DBL_SMALL || Print_Zeroes) 
+                              if (fabs(lec->J[LEC_J_INDEX(pe,pv,i,j)]) > DBL_SMALL || Print_Zeroes)
 				{
 				  fprintf(llll,
 					  "%9d %9d %9d %9d -  %12d - %10.3g\n",
-					  pe, pv, i, j, ja, lec->J[pe][pv][i][j]);   
+                                          pe, pv, i, j, ja, lec->J[LEC_J_INDEX(pe,pv,i,j)]);
 				}
 			    }	
 #endif	
@@ -5209,14 +5409,14 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 			  ja = (ie == je) ? ie :
 			    in_list(je, ija[ie], ija[ie+1], ija);
 			  EH(ja, "Could not find vbl in sparse matrix.");
-			  a[ja] += lec->J[pe][pv][i][j];
+                          a[ja] += lec->J[LEC_J_INDEX(pe,pv,i,j)];
 #ifdef DEBUG_LEC
 			  {
-			    if (fabs(lec->J[pe][pv][i][j]) > DBL_SMALL ||
+                            if (fabs(lec->J[LEC_J_INDEX(pe,pv,i,j)]) > DBL_SMALL ||
 				Print_Zeroes) {
 			      fprintf(llll,
 				      "%9d %9d %9d %9d -  %12d - %10.3g\n",
-				      pe, pv, i, j, ja, lec->J[pe][pv][i][j]);   
+                                      pe, pv, i, j, ja, lec->J[LEC_J_INDEX(pe,pv,i,j)]);
 			    }
 			  }	
 #endif	
@@ -5268,7 +5468,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 				lec_row = ei->ln_to_first_dof[e][i];
 				for (idofs = 0; idofs < Dolphin[I][e]; idofs++)
 				  {
-				    *(resid_vector + rpntr[I] + blk_row + idofs) += lec->R[pe][lec_row +idofs];
+                                    *(resid_vector + rpntr[I] + blk_row + idofs) += lec->R[LEC_R_INDEX(pe,lec_row +idofs)];
 
 				    if (af->Assemble_Jacobian)
 				      {
@@ -5305,7 +5505,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 							    for (jdofs = 0; jdofs < Dolphin[J][v]; jdofs++) 
 							      {		      
 								*(a_ptr + row_dofs*( blk_col + jdofs ) + blk_row + idofs )
-								  += lec->J[pe][pv][ lec_row + idofs ][ lec_col + jdofs ];
+                                                                  += lec->J[LEC_J_INDEX(pe,pv,lec_row + idofs,lec_col + jdofs) ];
 							      }
 							  }
 						      }  
@@ -5316,7 +5516,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 							for (jdofs = 0; jdofs < Dolphin[J][v]; jdofs++) 
 							  {			  
 							    *(a_ptr + row_dofs*(blk_col + jdofs) + blk_row + idofs)
-							      += lec->J[pe][pv][lec_row + idofs][lec_col + jdofs];
+                                                              += lec->J[LEC_J_INDEX(pe,pv,lec_row + idofs,lec_col + jdofs)];
 							  }
 						      }
 						  }
@@ -5331,7 +5531,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 			    lec_row = ei->ln_to_first_dof[e][i];
 			    for (idofs = 0; idofs < Dolphin[I][e]; idofs++)
 			      {
-				*(resid_vector + rpntr[I] + blk_row + idofs) += lec->R[pe][lec_row +idofs];
+                                *(resid_vector + rpntr[I] + blk_row + idofs) += lec->R[LEC_R_INDEX(pe,lec_row +idofs)];
 				if (af->Assemble_Jacobian)
 				  {
 				    for (v = V_FIRST; v < V_LAST; v++) 
@@ -5367,7 +5567,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 							for (jdofs = 0; jdofs < Dolphin[J][v]; jdofs++) 
 							  {			  
 							    *(a_ptr + row_dofs*( blk_col + jdofs) + blk_row + idofs)
-							      += lec->J[pe][pv][ lec_row + idofs ][ lec_col + jdofs ];
+                                                              += lec->J[LEC_J_INDEX(pe,pv,lec_row + idofs,lec_col + jdofs) ];
 							  }
 						      }
 						  }
@@ -5388,7 +5588,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 						    for (jdofs = 0; jdofs < Dolphin[J][v]; jdofs++) 
 						      {		      
 							*(a_ptr + row_dofs*( blk_col + jdofs ) + blk_row + idofs )
-							  += lec->J[pe][pv][ lec_row + idofs ][ lec_col + jdofs ];
+                                                          += lec->J[LEC_J_INDEX(pe,pv,lec_row + idofs,lec_col + jdofs) ];
 						      }
 						  }
 					      }
@@ -5420,9 +5620,9 @@ zero_lec(void)
       *  This routine zeroes the local element stiffness vector and Jacobian.
       **************************************************************************/
 {
-  memset(lec->R, 0, sizeof(lec->R));  
-  memset(lec->J, 0, sizeof(lec->J)); 
-  memset(lec->J_stress_neighbor, 0, sizeof(lec->J_stress_neighbor));
+  memset(lec->R, 0, MAX_LOCAL_VAR_DESC*lec->max_dof*sizeof(dbl));
+  memset(lec->J, 0, MAX_LOCAL_VAR_DESC*MAX_LOCAL_VAR_DESC*lec->max_dof*lec->max_dof*sizeof(dbl));
+  memset(lec->J_stress_neighbor, 0, 4*lec->max_dof*MAX_LOCAL_VAR_DESC*lec->max_dof*sizeof(dbl));
 }
 /****************************************************************************/
 
@@ -5452,10 +5652,10 @@ checkfinite(const char *file, const int line, const char *message)
         {
           for (i = 0; i < ei->dof[eqn]; i++)
             {
-              j = finite(lec->R[peqn][i]);
+              j = finite(lec->R[LEC_R_INDEX(peqn,i)]);
               if (!j) {
 		fprintf(stderr, "lec->R[%s][edof=%d] = %g\n",
-			EQ_Name[eqn].name1,i,lec->R[peqn][i]);
+                        EQ_Name[eqn].name1,i,lec->R[LEC_R_INDEX(peqn,i)]);
 		all_finite = FALSE;
 		goto non_finite_entry;
               }
@@ -5472,10 +5672,10 @@ checkfinite(const char *file, const int line, const char *message)
 		      }
                       for (j = 0; j < ei_ptr->dof[var]; j++)
                         {
-                          if (!isfinite(lec->J[peqn][pvar][i][j]))
+                          if (!isfinite(lec->J[LEC_J_INDEX(peqn,pvar,i,j)]))
                             {
                               fprintf(stderr,"lec->J[%s][%s][edof=%d][vdof=%d] = %g\n",
-				      EQ_Name[eqn].name1, Var_Name[var].name1, i, j, lec->J[peqn][pvar][i][j]);
+                                      EQ_Name[eqn].name1, Var_Name[var].name1, i, j, lec->J[LEC_J_INDEX(peqn,pvar,i,j)]);
 			      all_finite = FALSE;
 			      goto non_finite_entry;
                             }

@@ -576,31 +576,71 @@ numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
       global_qp_storage_destroy();
 
       for (j = 0; j < numProcUnknowns; j++) {
-	if (color == coloring->column_color[j]) {
-	  for (idx = coloring->colptr[j]; idx < coloring->colptr[j+1]; idx++) {
-	    i = coloring->rowptr[idx];
-	    var_i = idv[i][0];
-	    var_j = idv[j][0];
+        if (color == coloring->column_color[j]) {
+          for (idx = coloring->colptr[j]; idx < coloring->colptr[j + 1];
+               idx++) {
+            i = coloring->rowptr[idx];
+            var_i = idv[i][0];
+            var_j = idv[j][0];
+            int gnode;
+            int ivd;
+            int i_offset;
+            int idof;
+            Index_Solution_Inv(i, &gnode, &ivd, &i_offset, &idof);
 
-	    for (mode=0; mode < vn->modes; mode++)
-	      {
-		/* Only for stress terms */
-		if (idv[i][0] >= v_s[mode][0][0] && idv[i][0] <= v_s[mode][2][2])
-		  {
+            if (pd->v[EM_E1_REAL]) {
+              if (Inter_Mask[var_i][var_j]) {
+                int ja = (i == j) ? j
+                                  : in_list(j, ams->bindx[i], ams->bindx[i + 1],
+                                            ams->bindx);
+                if (ja == -1) {
+                  sprintf(errstring,
+                          "Index not found (%d, %d) for interaction (%d, %d)",
+                          i, j, idv[i][0], idv[j][0]);
+                  EH(ja, errstring);
+                }
+                if (Nodes[gnode]->DBC && Nodes[gnode]->DBC[i_offset] != -1 &&
+                    i == j) {
+                  nj[ja] = 1.0;
+                } else if (Nodes[gnode]->DBC &&
+                           Nodes[gnode]->DBC[i_offset] != -1) {
+                  nj[ja] = 0.0;
+                } else {
+                  nj[ja] = (resid_vector_1[i] - resid_vector[i]) / (dx_col[j]);
+                }
+              }
+            }
 
-		    if (Inter_Mask[var_i][var_j]) {
+            for (mode = 0; mode < vn->modes; mode++) {
+              /* Only for stress terms */
+              if (idv[i][0] >= v_s[mode][0][0] &&
+                  idv[i][0] <= v_s[mode][2][2]) {
 
-		      int ja = (i == j) ? j : in_list(j, ams->bindx[i], ams->bindx[i+1], ams->bindx);
-		      if (ja == -1) {
-			sprintf(errstring, "Index not found (%d, %d) for interaction (%d, %d)", i, j, idv[i][0], idv[j][0]);
-			EH(ja, errstring);
-		      }
-		      nj[ja] = (resid_vector_1[i] - resid_vector[i]) / (dx_col[j]);
-		    }
-		  }
-	      } // Loop over modes
-	  }
-	}
+                if (Inter_Mask[var_i][var_j]) {
+
+                  int ja = (i == j) ? j
+                                    : in_list(j, ams->bindx[i],
+                                              ams->bindx[i + 1], ams->bindx);
+                  if (ja == -1) {
+                    sprintf(errstring,
+                            "Index not found (%d, %d) for interaction (%d, %d)",
+                            i, j, idv[i][0], idv[j][0]);
+                    EH(ja, errstring);
+                  }
+                  if (Nodes[gnode]->DBC && Nodes[gnode]->DBC[i_offset] != -1 &&
+                      i == j) {
+                    nj[ja] = 1.0;
+                  } else if (Nodes[gnode]->DBC &&
+                             Nodes[gnode]->DBC[i_offset] != -1) {
+                    nj[ja] = 0.0;
+                  } else {
+                    nj[ja] = (resid_vector_1[i] - resid_vector[i]) / (dx_col[j]);
+                  }
+                }
+              }
+            } // Loop over modes
+          }
+        }
       }
 
       /*

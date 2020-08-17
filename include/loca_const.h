@@ -226,7 +226,8 @@ extern void solution_output_conwrap(int type, double *x, double param,
                                     double *x3, double param3, int stp,
                                     int nits, struct con_struct *con);
 extern void eigenvector_output_conwrap(int j, int type, double *xr, double evr,
-                                       double *xi, double evi, int step_num);
+                                       double *xi, double evi, int step_num,
+                                       double **saved_displacement);
 extern void calc_rhs_continuation(int rhs_type, double *x, double *a,
                            double *x_dot, double *scale_vec, double *x_tmp,
                            double con_par, double perturb, double *r_vec,
@@ -244,7 +245,7 @@ extern void create_shifted_matrix_conwrap(void);
 extern void shifted_linear_solver_conwrap(double *x, double *y,
                                           int jac_flag, double tol);
 extern void destroy_shifted_matrix_conwrap(void);
-extern void calc_eigenvalues_loca(struct con_struct *con);
+extern void calc_eigenvalues_loca(struct con_struct *con, double **saved_displacement);
 
 
 extern int continuation_hook(double *x, double *delta_x, void *con_void,

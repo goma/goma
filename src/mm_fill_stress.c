@@ -526,7 +526,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 			   * locally into an accumulator)
 			   */
 			  
-			  lec->R[peqn][i] += 
+			  lec->R[LEC_R_INDEX(peqn,i)] += 
 			    mass + advection + diffusion + source;
 			}
 		    }
@@ -630,7 +630,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				      source *= pd->etm[eqn][(LOG2_SOURCE)];
 				    }
 				  
-				  lec->J[peqn][pvar][i][j] +=
+				  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 				    mass + advection + diffusion + source;
 				}
 			    }
@@ -763,7 +763,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					  source *= pd->etm[eqn][(LOG2_SOURCE)];
 					}
 				      
-				      lec->J[peqn][pvar][i][j] +=
+				      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 					mass + advection + diffusion + source;
 				    }
 				}
@@ -839,7 +839,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					  EH(-1, "Need more arrays for each species.");
 					}
 				      
-				      lec->J[peqn][pvar][i][j] +=
+				      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 					mass + advection + diffusion + source;
 				    }
 				}
@@ -904,7 +904,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				      source *= pd->etm[eqn][(LOG2_SOURCE)];
 				    }
 				  
-				  lec->J[peqn][pvar][i][j] +=
+				  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 				    mass + advection + diffusion + source;
 				}		      
 			    }
@@ -1120,7 +1120,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					  
 					}
 				      
-				      lec->J[peqn][pvar][i][j] +=
+				      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 					mass + advection  + diffusion + source;
 				    }
 				}
@@ -1220,7 +1220,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					      
 					    }
 					  
-					  lec->J[peqn][pvar][i][j] +=
+					  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 					    mass + advection  + diffusion + source;
 					}
 				    }
@@ -1315,7 +1315,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					      
 					    }
 					  
-					  lec->J[peqn][pvar][i][j] +=
+					  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 					    mass + advection + diffusion + source;
 					}
 				    }
@@ -1684,7 +1684,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 
       if(saramitoEnabled == TRUE)
 	{
-	  saramitoCoeff = compute_saramito_model_terms(s, ve[mode]->gn->tau_y, d_saramito);
+	  saramitoCoeff = compute_saramito_model_terms(s, ve[mode]->gn->tau_y, ve[mode]->gn->fexp, d_saramito);
 	}
       else
 	{
@@ -1833,7 +1833,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 			   * locally into an accumulator)
 			   */
 			  
-			  lec->R[upd->ep[eqn]][i] += 
+			  lec->R[LEC_R_INDEX(upd->ep[eqn],i)] += 
 			    mass + advection + diffusion + source;
 			}
 		    }
@@ -1944,7 +1944,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				      source *= pd->etm[eqn][(LOG2_SOURCE)];
 				    }
 				  
-				  lec->J[peqn][pvar][i][j] +=
+				  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 				    mass + advection + source;
 				}
 			    }
@@ -2119,7 +2119,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					  source *= pd->etm[eqn][(LOG2_SOURCE)];
 					}
 				  
-				      lec->J[peqn][pvar][i][j] +=
+				      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 					mass + advection + diffusion + source;
 				    }
 				}
@@ -2161,7 +2161,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					  EH(-1, "Need more arrays for each species.");
 					}
 				      
-				      lec->J[peqn][MAX_PROB_VAR + w][i][j] +=
+				      lec->J[LEC_J_INDEX(peqn,MAX_PROB_VAR + w,i,j)] +=
 					source;
 				    }
 				}
@@ -2194,7 +2194,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				      source *= pd->etm[eqn][(LOG2_SOURCE)];
 				    }
 				  
-				  lec->J[peqn][pvar][i][j] +=
+				  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 				    source;
 				}		      
 			    }
@@ -2366,7 +2366,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				      
 					}
 				      
-				      lec->J[peqn][pvar][i][j] +=
+				      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 					mass + advection + diffusion + source;
 				    }
 				}
@@ -2428,7 +2428,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 						  source *= det_J * h3 * wt_func * wt * pd->etm[eqn][(LOG2_SOURCE)];
 						}
 					  
-					      lec->J[peqn][pvar][i][j] +=
+					      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 						advection + diffusion + source;
 					    }
 					}
@@ -2528,7 +2528,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					      
 					    }
 					  
-					  lec->J[peqn][pvar][i][j] +=
+					  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 					    mass + advection + diffusion + source;
 					}
 				    }
@@ -2949,7 +2949,7 @@ assemble_stress_log_conf(dbl tt,
                               source *= wt_func*det_J*h3*wt;     
                               source *= pd->etm[eqn][(LOG2_SOURCE)];
                             }
-                          lec->R[upd->ep[eqn]][i] += mass + advection + source;
+                          lec->R[LEC_R_INDEX(upd->ep[eqn],i)] += mass + advection + source;
 			}//i loop
 		    }//if a<=b
 		}// b loop
@@ -3341,7 +3341,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 			   * locally into an accumulator)
 			   */
 			  
-			  lec->R[upd->ep[eqn]][i] += 
+			  lec->R[LEC_R_INDEX(upd->ep[eqn],i)] += 
 			    mass + advection + source;
 			}
 		    }
@@ -3411,7 +3411,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 				      source *= pd->etm[eqn][(LOG2_SOURCE)];
 				    }
 				  
-				  lec->J[peqn][pvar][i][j] +=
+				  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 				    source;
 				}
 			    }
@@ -3508,7 +3508,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 					  source *= pd->etm[eqn][(LOG2_SOURCE)];
 					}
 				  
-				      lec->J[peqn][pvar][i][j] +=
+				      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 					mass + advection + source;
 				    }
 				}
@@ -3542,7 +3542,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 					  EH(-1, "Need more arrays for each species.");
 					}
 				      
-				      lec->J[peqn][MAX_PROB_VAR + w][i][j] +=
+				      lec->J[LEC_J_INDEX(peqn,MAX_PROB_VAR + w,i,j)] +=
 					source;
 				    }
 				}
@@ -3567,7 +3567,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 				      source *= pd->etm[eqn][(LOG2_SOURCE)];
 				    }
 				  
-				  lec->J[peqn][pvar][i][j] +=
+				  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 				    source;
 				}		      
 			    }
@@ -3719,7 +3719,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 				      
 					}
 				      
-				      lec->J[peqn][pvar][i][j] +=
+				      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 					mass + advection + source;
 				    }
 				}
@@ -3761,7 +3761,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 					      source *= det_J * h3 * wt_func * wt * pd->etm[eqn][(LOG2_SOURCE)];
 					    }
 					  
-					  lec->J[peqn][pvar][i][j] +=
+					  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 					    advection + source;
 					}
 				    }
@@ -3827,7 +3827,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 					      source *= det_J * h3 * wt_func * wt * pd->etm[eqn][(LOG2_SOURCE)];
 					    }
 					  
-					  lec->J[peqn][pvar][i][j] +=
+					  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 					    mass + advection + source;
 					}
 				    }
@@ -4039,7 +4039,7 @@ assemble_gradient(dbl tt,	/* parameter to vary time integration from
 		      source *= pd->etm[eqn][(LOG2_SOURCE)];
 		    }
 		  
-		  lec->R[upd->ep[eqn]][i] += 
+		  lec->R[LEC_R_INDEX(upd->ep[eqn],i)] += 
 		    advection  + source;      
 		}
 	    }
@@ -4088,7 +4088,7 @@ assemble_gradient(dbl tt,	/* parameter to vary time integration from
 			      
 			      source    = 0.;
 			      
-			      lec->J[peqn][pvar][i][j] +=
+			      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 				advection + source;
 			    }
 			}
@@ -4152,7 +4152,7 @@ assemble_gradient(dbl tt,	/* parameter to vary time integration from
 				  
 				}
 			      
-			      lec->J[peqn][pvar][i][j] +=
+			      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 				advection + source;
 			    }
 			}
@@ -4185,7 +4185,7 @@ assemble_gradient(dbl tt,	/* parameter to vary time integration from
 					}
 				    }
 				  
-				  lec->J[peqn][pvar][i][j] +=
+				  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 				    source;
 				}
 			    }
@@ -4825,7 +4825,7 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 					    ve[mode]->time_const * 
 					    vdotn  * (s[a][b]- s_n[mode][a][b]);
 
-					  lec->R[peqn][i] -= rhs;
+					  lec->R[LEC_R_INDEX(peqn,i)] -= rhs;
 					}
 				    }
 				}
@@ -4866,7 +4866,7 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 					      
 					      /* Work better without this?????, see PRS concern above 
 					         Or is this a correction ???*/
-					       lec->J[peqn][pvar][i][j] -= 
+					       lec->J[LEC_J_INDEX(peqn,pvar,i,j)] -= 
 						advection; 
 
 					       advection = 0;
@@ -4885,7 +4885,7 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 
 						      /* Notice how this is diagonal only */
 						      /* i.e., T_12_i is only depending on T_12_j on other face element*/
-						      lec->J_stress_neighbor[id_side-1][i][peqn][j] += advection;
+                                                      lec->J_stress_neighbor[LEC_J_STRESS_INDEX(id_side-1,i,peqn,j)] += advection;
 						    }
 						}
 
@@ -4911,7 +4911,7 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 							phi_j * fv->snormal[p] * alpha *
 							(s[a][b]- s_n[mode][a][b]);
 						      
-						      lec->J[peqn][pvar][i][j] -=
+						      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] -=
 							advection;
 						      
 						    }
@@ -4946,7 +4946,7 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 							ve[mode]->time_const *
 							(s[a][b]- s_n[mode][a][b]);
 						      
-						      lec->J[peqn][pvar][i][j] -=
+						      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] -=
 							advection;
 						    }
 						}
@@ -5549,14 +5549,14 @@ segregate_stress_update ( double x_update[] )
 
 					  while ( ldof_var <= ei->ln_to_dof[var][ln] )
 					    {
-					      lump += lec->J[ieqn][pvar][ldof_eqn][ldof_var];
+					      lump += lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,ldof_var)];
 					      ldof_var++;
 					    }
 					}
 				    }
 				}
 			    }
-			  x_update[ ei->gun_list[eqn][ldof_eqn] ] = lec->R[ieqn][ldof_eqn]/lump;
+			  x_update[ ei->gun_list[eqn][ldof_eqn] ] = lec->R[LEC_R_INDEX(ieqn,ldof_eqn)]/lump;
 			  ldof_eqn++;
 			}
 		    }
@@ -6133,86 +6133,102 @@ compute_d_exp_s_ds(dbl s[DIM][DIM],                   //s - stress
 
 dbl
 compute_saramito_model_terms(dbl stress[DIM][DIM],
-			     dbl yieldStress,
-			     SARAMITO_DEPENDENCE_STRUCT* d_sCoeff)
-{
-  /* start by computing the norm of the deviatoric stress,  sqrt(J_2), 
-   * J_2 = 1/(2*DIM)[
-   (stress_{0,0} - stress_{1,1})**2 + 
-   (stress_{0,0} - stress_{2,2})**2 + 
-   (stress_{2,2} - stress_{1,1})**2
-   ] +
-   stress_{0,1}**2 + stress_{0,2}**2 + stress_{2,1}**2
-
-   * see the following wikipedia page:
+                                 dbl yieldStress,
+                                 dbl yieldExpon,
+                                 SARAMITO_DEPENDENCE_STRUCT *d_sCoeff) {
+  /* start by computing the norm of sigma_d (the deviatoric stress) which is written as
+   * sqrt( trace(sigma_d*sigma_d)/2 )
+   *
+   * see the following wikipedia page for the mathematical details:
    * https://en.wikipedia.org/wiki/Cauchy_stress_tensor#Invariants_of_the_stress_deviator_tensor
    */
-  dbl invDenom = 1./(2.*VIM);
+
+  dbl traceOverVIM = 0;
+  for (int i = 0; i < VIM; i++) {
+    traceOverVIM += stress[i][i];
+  }
+
+  traceOverVIM /= VIM;
 
   // square of the deviatoric sress norm
+  dbl normOfStressDSqr = 0;
+  for (int i = 0; i < VIM; i++) {
+    normOfStressDSqr += pow(stress[i][i] - traceOverVIM, 2) / 2.;
 
-  dbl normOfStressDSqr = pow(stress[0][0] - stress[1][1], 2)*invDenom + pow(stress[0][1], 2);
-  if(VIM>2){
-    normOfStressDSqr += pow(stress[0][0] - stress[2][2], 2)*invDenom + pow(stress[0][2], 2)
-      + pow(stress[1][1] - stress[2][2], 2)*invDenom + pow(stress[1][2], 2);
+    for (int j = i + 1; j < VIM; j++) {
+      normOfStressDSqr += pow(stress[i][j], 2);
+    }
   }
 
   const dbl normOfStressD = sqrt(normOfStressDSqr);
 
-  dbl sCoeff = fmax(0, (normOfStressD - yieldStress)/(normOfStressD));
+  const dbl sc = 1. - yieldStress / normOfStressD;
+
+  dbl sCoeff;
+  dbl expYSC = 1;
+  if (yieldExpon > 0) {
+    expYSC = exp(sc / yieldExpon);
+    sCoeff = log(1. + expYSC) * yieldExpon;
+  } else {
+    sCoeff = fmax(0, sc);
+  }
 
   // take care of indeterminate behavior for normOfStressD == 0
-  if(normOfStressD == 0){ sCoeff = 0; }
+  if (normOfStressD == 0) {
+    if (yieldStress <= 0) {
+      sCoeff = 1;
+    } else {
+      sCoeff = 0;
+    }
+  }
 
   if (d_sCoeff != NULL) {
-    // if normStress_d < yieldStress, set sensitivities to zero and return 
-    if( (sCoeff) == 0 ){
-      for(int i=0; i<VIM; i++){
-        for(int j=0; j<VIM; j++){
+    // if normStress_d < yieldStress, set sensitivities to zero and return
+    if ((sCoeff) == 0 || yieldStress <= 0) {
+      for (int i = 0; i < VIM; i++) {
+        for (int j = 0; j < VIM; j++) {
           d_sCoeff->s[i][j] = 0.;
         }
       }
 
       d_sCoeff->tau_y = 0.;
-    }
-    else{
+    } else {
       // otherwise, sensitivities need to be calculated
-      d_sCoeff->tau_y = -1./(normOfStressD);
-
-      dbl d_sCoeff_d_normOfStressD = yieldStress/(normOfStressDSqr);
-
-      // first assign elements values of d(normOfStressDSqr)/d(stress);
-      d_sCoeff->s[0][0] = 2.*invDenom*( stress[0][0] - stress[1][1]);
-      d_sCoeff->s[0][1] = 2.*stress[0][1];
-      d_sCoeff->s[1][0] = d_sCoeff->s[0][1];
-      d_sCoeff->s[1][1] = - d_sCoeff->s[0][0];
-
-      if(VIM>2){
-        d_sCoeff->s[0][0] += 2.*invDenom*( stress[0][0] - stress[2][2]);
-        d_sCoeff->s[1][1] += 2.*invDenom*( stress[1][1] - stress[2][2]);
-        // no change for d_sCoeff_d_stress[0][1]
-        d_sCoeff->s[0][2] = 2.*stress[0][2];
-        d_sCoeff->s[0][2] = 2.*stress[1][2];
-        d_sCoeff->s[2][2] = 2.*invDenom*( 2*stress[2][2] - stress[0][0] - stress[1][1]);
+      d_sCoeff->tau_y = -1. / (normOfStressD);
+      dbl d_sCoeff_d_normOfStressD = yieldStress / (normOfStressDSqr);
+      if (yieldExpon > 0) {
+        const dbl expYSCDerivativeTerm = expYSC / (1 + expYSC);
+        d_sCoeff->tau_y *= expYSCDerivativeTerm;
+        d_sCoeff_d_normOfStressD *= expYSCDerivativeTerm;
       }
 
+      for (int i = 0; i < VIM; i++) {
+        d_sCoeff->s[i][i] = -traceOverVIM;
+
+        for (int j = i; j < VIM; j++) {
+          if (i == j) {
+            d_sCoeff->s[i][i] += stress[i][i];
+          } else {
+            d_sCoeff->s[i][j] = 2. * stress[i][j];
+          }
+        }
+      }
 
       /* use the chain rule to computute sCoeff sensitivies to stress components
        * d(sCoeff)/d(stress)  =   d(sCoeff)/d(normOfStressD)
        *                        * d(normOfStressD)/d(normOfStressDSqr)
        *                        * d(normOfStressDSqr)/d(stress)
-       * 
+       *
        *                      =   d(sCoeff)/d(normOfStressD)
        *                        * 0.5/normOfStressD
-       *                        * d(normOfStressDSqr)/d(stress) 
-       */ 
-                          
-      // invDenom will be used as d(normOfStressD)/d(stress)
-      invDenom = 0.5/normOfStressD*d_sCoeff_d_normOfStressD;
+       *                        * d(normOfStressDSqr)/d(stress)
+       */
 
-      for(int i=0; i<VIM; i++){
-        for(int j=i; j<VIM; j++){
-          d_sCoeff->s[i][j] *= invDenom;
+      dbl d_normOfStressD_d_Stress = 0.5 / normOfStressD * d_sCoeff_d_normOfStressD;
+
+      for (int i = 0; i < VIM; i++) {
+        for (int j = i; j < VIM; j++) {
+          d_sCoeff->s[i][j] *= d_normOfStressD_d_Stress;
           d_sCoeff->s[j][i] = d_sCoeff->s[i][j];
         }
       }
@@ -6228,7 +6244,7 @@ compute_saramito_model_terms(dbl stress[DIM][DIM],
     printf("\n");
     for(int i=0; i<VIM; i++){
     for(int j=0; j<VIM; j++){
-    printf("\nd(sCoeff)/d(stress[%d][%d] = %E)", i, j, d_sCoeff->s[i][j]);
+    printf("\nd(sCoeff)/d(stress[%d][%d)] = %E", i, j, d_sCoeff->s[i][j]);
     }
     }
     printf("\n");
@@ -6239,4 +6255,3 @@ compute_saramito_model_terms(dbl stress[DIM][DIM],
   */
   return sCoeff;
 }
-

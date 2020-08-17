@@ -20,6 +20,7 @@
 
 /* Standard include files */
  
+#include "rf_fem_const.h"
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -680,8 +681,8 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 	    }
 
 	    if (ldof_eqn != -1)   {
-	      lec->R[ieqn][ldof_eqn] += penalty * func;
-	      lec->R[ieqn][ldof_eqn] *= f_time;
+              lec->R[LEC_R_INDEX(ieqn,ldof_eqn)] += penalty * func;
+              lec->R[LEC_R_INDEX(ieqn,ldof_eqn)] *= f_time;
 
 	      /* 
 	       * add sensitivities into matrix
@@ -714,8 +715,8 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 			if (! doFullJac) {
 			  ldof_var = ei->ln_to_first_dof[var][id];
 			  if (ldof_var != -1) {  
-			    lec->J[ieqn][pvar][ldof_eqn][ldof_var] += penalty * d_func[var];
-			    lec->J[ieqn][pvar][ldof_eqn][ldof_var] *= f_time;
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,ldof_var)] += penalty * d_func[var];
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,ldof_var)] *= f_time;
 			  }
 			} else {
 			  
@@ -724,14 +725,14 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 			    for (j = 0; j < ei->dof[var]; j++) 
 			      {
 				jk = dof_map[j];
-				lec->J[ieqn][pvar][ldof_eqn][jk] += penalty * d_kfunc[0][var][j];
-				lec->J[ieqn][pvar][ldof_eqn][jk] *= f_time;
+                                lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,jk)] += penalty * d_kfunc[0][var][j];
+                                lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,jk)] *= f_time;
 			      }
 			  } else {
 			    for (j = 0; j < ei->dof[var]; j++) 
 			      {
-				lec->J[ieqn][pvar][ldof_eqn][j] += penalty * d_kfunc[0][var][j];
-				lec->J[ieqn][pvar][ldof_eqn][j] *= f_time;
+                                lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] += penalty * d_kfunc[0][var][j];
+                                lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] *= f_time;
 			      }
 			  }
 			}
@@ -742,8 +743,8 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 			 */
 			for (j = 0; j < ei->dof[var]; j++) {
 			  phi_j = bf[var]->phi[j];
-			  lec->J[ieqn][pvar] [ldof_eqn][j] += penalty * d_func[var] * phi_j;
-			  lec->J[ieqn][pvar] [ldof_eqn][j] *= f_time;
+                          lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] += penalty * d_func[var] * phi_j;
+                          lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] *= f_time;
 			}
 		      }
 		    } else {
@@ -752,8 +753,8 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 			if (Dolphin[I][var] > 0) {
 			  ldof_var = ei->ln_to_first_dof[var][id];
 			  if (ldof_var != -1) {
-			    lec->J[ieqn][pvar] [ldof_eqn][ldof_var] += penalty * d_func[MAX_VARIABLE_TYPES + w];
-			    lec->J[ieqn][pvar] [ldof_eqn][ldof_var] *= f_time;
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,ldof_var)] += penalty * d_func[MAX_VARIABLE_TYPES + w];
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,ldof_var)] *= f_time;
 			  }
 			}
 			/* if variable is not defined at this node,
@@ -761,8 +762,8 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 			else {
 			  for (j = 0; j < ei->dof[var]; j++) {
 			    phi_j = bf[var]->phi[j];
-			    lec->J[ieqn][pvar] [ldof_eqn][j] += penalty	* d_func[MAX_VARIABLE_TYPES + w] * phi_j;
-			    lec->J[ieqn][pvar] [ldof_eqn][j] *= f_time;
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] += penalty	* d_func[MAX_VARIABLE_TYPES + w] * phi_j;
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] *= f_time;
 			  }
 			}
 		      } /* end of loop over species */   
@@ -2436,6 +2437,16 @@ load_variable (double *x_var,        /* variable value */
       var = ACOUS_PIMAG;
       *d_x_var = 1.;
       break;
+    case EM_CONT_REAL:
+      *x_var = fv->epr;
+      var = EM_CONT_REAL;
+      *d_x_var = 1.;
+      break;
+    case EM_CONT_IMAG:
+      *x_var = fv->epi;
+      var = EM_CONT_IMAG;
+      *d_x_var = 1.;
+      break;
     case POR_SINK_MASS:
       *x_var = fv->sink_mass;
       var = POR_SINK_MASS;
@@ -2575,7 +2586,68 @@ load_variable (double *x_var,        /* variable value */
       *x_var = fv->restime;
       var = RESTIME;
       *d_x_var = 1.;
-      break;  
+      break;
+    case EM_E1_REAL:
+      *x_var = fv->em_er[0];
+      var = EM_E1_REAL;
+      *d_x_var = 1.;
+      break;
+    case EM_E2_REAL:
+      *x_var = fv->em_er[1];
+      var = EM_E2_REAL;
+      *d_x_var = 1.;
+      break;
+    case EM_E3_REAL:
+      *x_var = fv->em_er[2];
+      var = EM_E3_REAL;
+      *d_x_var = 1.;
+      break;
+    case EM_E1_IMAG:
+      *x_var = fv->em_ei[0];
+      var = EM_E1_IMAG;
+      *d_x_var = 1.;
+      break;
+    case EM_E2_IMAG:
+      *x_var = fv->em_ei[1];
+      var = EM_E2_IMAG;
+      *d_x_var = 1.;
+      break;
+    case EM_E3_IMAG:
+      *x_var = fv->em_ei[2];
+      var = EM_E3_IMAG;
+      *d_x_var = 1.;
+      break;
+    case EM_H1_REAL:
+      *x_var = fv->em_hr[0];
+      var = EM_H1_REAL;
+      *d_x_var = 1.;
+      break;
+    case EM_H2_REAL:
+      *x_var = fv->em_hr[1];
+      var = EM_H2_REAL;
+      *d_x_var = 1.;
+      break;
+    case EM_H3_REAL:
+      *x_var = fv->em_hr[2];
+      var = EM_H3_REAL;
+      *d_x_var = 1.;
+      break;
+    case EM_H1_IMAG:
+      *x_var = fv->em_hi[0];
+      var = EM_H1_IMAG;
+      *d_x_var = 1.;
+      break;
+    case EM_H2_IMAG:
+      *x_var = fv->em_hi[1];
+      var = EM_H2_IMAG;
+      *d_x_var = 1.;
+      break;
+    case EM_H3_IMAG:
+      *x_var = fv->em_hi[2];
+      var = EM_H3_IMAG;
+      *d_x_var = 1.;
+      break;
+
     case MASS_FRACTION:
       *x_var = fv->c[wspec];
       var = MASS_FRACTION;
@@ -3240,6 +3312,10 @@ bc_eqn_index(int id,               /* local node number                 */
     else if (ieqn == R_MOMENTUM1) ieqn += kdir;
     else if (ieqn == R_SOLID1)    ieqn += kdir;
     else if (ieqn == R_LAGR_MULT1)ieqn += kdir;
+    else if (ieqn == R_EM_H1_REAL)ieqn += kdir;// AMC: These vector bcs are not rotated..
+    else if (ieqn == R_EM_H1_IMAG)ieqn += kdir;
+    else if (ieqn == R_EM_E1_REAL)ieqn += kdir;
+    else if (ieqn == R_EM_E1_IMAG)ieqn += kdir;
     else EH(-1,"Can't have a rotated vector BC!");
   }
 

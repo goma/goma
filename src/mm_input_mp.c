@@ -2893,12 +2893,28 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  vn_glob[mn]->ConstitutiveEquation == SARAMITO_GIESEKUS)
 	{
 	  /* Should yield stress be a modal property? Let's assume not for now */
-	  strcpy(search_string, "Polymer Yield Stress");
-
 	  dbl tau_y_val;
+	  dbl fexp_val;
+
+	  strcpy(search_string, "Polymer Yield Stress");
 	  model_read = look_for_mat_prop(imp, search_string, 
 					 &(ConstitutiveEquation), 
 					 &tau_y_val,
+					 NO_USER, NULL,
+					 model_name, SCALAR_INPUT, &NO_SPECIES,es);
+
+	  if( model_read < 1 )
+	    {
+	      if( model_read == -1) SPF(err_msg,"%s card is missing.",search_string);
+	      if( model_read == -2) SPF(err_msg,"Only CONSTANT %s mode model supported.", search_string);
+	      fprintf(stderr,"%s\n",err_msg);
+	      exit(-1);
+	    }
+
+	  strcpy(search_string, "Yield Exponent");
+	  model_read = look_for_mat_prop(imp, search_string, 
+					 &(ConstitutiveEquation), 
+					 &fexp_val,
 					 NO_USER, NULL,
 					 model_name, SCALAR_INPUT, &NO_SPECIES,es);
 
@@ -2913,6 +2929,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  for(mm=0;mm<vn_glob[mn]->modes;mm++)
 	    {
 	      ve_glob[mn][mm]->gn->tau_y = tau_y_val;
+		  ve_glob[mn][mm]->gn->fexp = fexp_val;
 	    }
 	  ECHO(es,echo_file);
 	}
@@ -3665,6 +3682,30 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  SPF(es,"\t(%s = %s %.4g)", search_string,"CONSTANT", mat_ptr->permittivity );
 	}
     }
+  ECHO(es,echo_file);
+
+  /*
+   * There is now a defined magnetic permeability.
+   */
+  rewind(imp);
+  strcpy(search_string,"Magnetic Permeability");
+  model_read = look_for_mat_prop(imp, search_string,
+                                 &(mat_ptr->MagneticPermeabilityModel),
+                                 &(mat_ptr->magnetic_permeability),
+                                 &(mat_ptr->u_magnetic_permeability),
+                                 &(mat_ptr->len_u_magnetic_permeability),
+                                 model_name, SCALAR_INPUT, &NO_SPECIES,es);
+  if (model_read == -1) {
+    if(strncmp(model_name," ",1) != 0) {
+      SPF(err_msg,"Syntax error or invalid model for %s\n",search_string);
+      EH(-1,err_msg);
+    }
+    else {
+      mat_ptr->MagneticPermeabilityModel = CONSTANT;
+      mat_ptr->magnetic_permeability = 1.;
+      SPF(es,"\t(%s = %s %.4g)", search_string,"CONSTANT", mat_ptr->magnetic_permeability );
+    }
+  }
   ECHO(es,echo_file);
 
   strcpy(search_string, "Electrical Surface Diffusivity");

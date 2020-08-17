@@ -6333,7 +6333,7 @@ assemble_bond_evolution(double time,	/* present time value */
 		}
 	    }
 
-	  lec->R[peqn][i] += 
+	  lec->R[LEC_R_INDEX(peqn,i)] += 
 	    mass +  advection + diffusion + source;
 	}
     }
@@ -6432,7 +6432,7 @@ assemble_bond_evolution(double time,	/* present time value */
 			}
 		    }
 
-		  lec->J[peqn][pvar][i][j] += mass + advection + diffusion + source;
+		  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + advection + diffusion + source;
 		}
 	    }
 
@@ -6482,7 +6482,7 @@ assemble_bond_evolution(double time,	/* present time value */
 			    }
 			}
 
-		      lec->J[peqn][pvar][i][j] += mass + advection + source;
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + advection + source;
 
 		    }
 		}
@@ -6655,7 +6655,7 @@ assemble_bond_evolution(double time,	/* present time value */
 			    }
 			}
 		      
-		      lec->J[peqn][pvar][i][j] += mass + advection  + diffusion + source;
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + advection  + diffusion + source;
 		    }
 		}
 	    }
