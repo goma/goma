@@ -236,7 +236,7 @@ INCLUDES = $(GOMA_INC) $(SPARSE_INC) $(TRILINOS_INC) \
 # =================
 
 # override CCFLAGS with DEBUG_CCFLAGS if building debug target
-DEBUG_FLAGS ?= -g -gdwarf-2
+DEBUG_FLAGS ?= -ggdb3 -rdynamic
 
 # All compiler options
 CCFLAGS ?= -O2
@@ -607,6 +607,8 @@ SHELL_SRC= shell_tfmp_util.c
 
 SHELL_INC= shell_tfmp_util.h
 
+GLOBALS_SRC = globals.c
+
 # _____ User routines "user_" prefix __________________________________________
 
 USER_SRC= user_ac.c\
@@ -633,7 +635,7 @@ USER_INC= user_ac.h\
 # _____ Full macros ___________________________________________________________
 
 GOMA_SRC = $(BC_SRC) $(EL_SRC) $(RF_SRC) $(MAIN_SRC) $(SL_SRC) $(MD_SRC) $(MM_SRC)\
-           $(SHELL_SRC) $(DP_SRC) $(AC_SRC) $(LOCA_SRC) $(BFU_SRC) 
+           $(SHELL_SRC) $(DP_SRC) $(AC_SRC) $(LOCA_SRC) $(BFU_SRC) $(GLOBALS_SRC)
 
 BRKFIX_SRC = $(BF_SRC)
 
