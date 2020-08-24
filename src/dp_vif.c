@@ -1773,6 +1773,7 @@ noahs_ark(void)
       ddd_add_member(n, &mp_glob[i]->Acoustic_ImpedanceModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->Acoustic_AbsorptionModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->Refractive_IndexModel, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->Extinction_IndexModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->Light_AbsorptionModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->Shell_User_ParModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->PermittivityModel, 1, MPI_INT);
@@ -2724,6 +2725,8 @@ noahs_ark(void)
   ddd_add_member(n, &LAMB_VECTOR, 1, MPI_INT);
   ddd_add_member(n, &Q_FCN, 1, MPI_INT);
   ddd_add_member(n, &POYNTING_VECTORS, 1, MPI_INT);
+  ddd_add_member(n, &SARAMITO_YIELD, 1, MPI_INT);
+  ddd_add_member(n, &STRESS_NORM, 1, MPI_INT);
   ddd_add_member(n, &len_u_post_proc, 1, MPI_INT);
 
   if ( nn_post_fluxes > 0 )

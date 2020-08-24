@@ -186,6 +186,12 @@ struct Material_Properties
   dbl *u_elect_surf_diffusivity;
   int Elect_Surf_DiffusivityModel;
  
+  dbl magnetic_permeability;
+  dbl d_magnetic_permeability[MAX_VARIABLE_TYPES + MAX_CONC];
+  int len_u_magnetic_permeability;
+  dbl *u_magnetic_permeability;
+  int MagneticPermeabilityModel;
+
   dbl shell_user_par;
   dbl d_shell_user_par[MAX_VARIABLE_TYPES + MAX_CONC];
   int len_u_shell_user_par;

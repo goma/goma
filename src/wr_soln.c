@@ -52,6 +52,7 @@ write_solution(char output_file[], double resid_vector[], double x[], double **x
     wr_nodal_result_exo(exo, output_file, gvec, i+1, step, time_value);
   }
 
+
   /* Special case for global post processing, usually file output */
 #ifdef DEBUG
   fprintf(stderr, "%s: done with regular nodal vars; start global\n", yo);
@@ -96,10 +97,32 @@ write_solution(char output_file[], double resid_vector[], double x[], double **x
 
   /* Now element quantities */
   for(i = 0; i < tev; i++) {
-    extract_elem_vec(x, i, rd->evtype[i], gvec_elem, exo);
+    bool is_P1 = FALSE;
+    int dof = 0;
+    for (int mn = 0; mn < upd->Num_Mat; mn++) {
+    if(pd_glob[mn]->i[pg->imtrx][rd->evtype[i]]==I_P1)
+    {
+      dof = MAX(getdofs(type2shape(exo->eb_elem_itype[mn]),I_P1),dof);
+      is_P1 = TRUE;
+    }
+    }
+    if(is_P1){
+      for(int k =0;k<dof;k++)
+      {
+        extract_elem_vec(x, i, rd->evtype[i], gvec_elem, exo,k);
+        step = (*nprint)+1;
+        wr_elem_result_exo(exo, output_file, gvec_elem, i, step,
+                           time_value, rd);
+        i++;
+      }
+
+    }
+    else{
+    extract_elem_vec(x, i, rd->evtype[i], gvec_elem, exo,0);
     step = (*nprint)+1;
     wr_elem_result_exo(exo, output_file, gvec_elem, i, step, 
 		       time_value, rd);
+    }
   }
   /* Finally, global values */
   
@@ -126,7 +149,7 @@ write_solution(char output_file[], double resid_vector[], double x[], double **x
       if (TIME_DERIVATIVES != -1 && (TimeIntegration != STEADY)) {
 	for (i = 0; i < tev; i++) {
 	  i_post = tev_post + i;
-	  extract_elem_vec(xdot, i_post, rd->evtype[i_post], gvec_elem, exo);
+          extract_elem_vec(xdot, i_post, rd->evtype[i_post], gvec_elem, exo,0);
 	  wr_elem_result_exo(exo, output_file, gvec_elem, i_post,
 			     *nprint+1, time_value, rd);
 	}

@@ -79,6 +79,7 @@ static char rcsid[] =
 #include "mm_std_models.h"
 #include "shell_tfmp_struct.h"
 #include "shell_tfmp_util.h"
+#include "mm_fill_stress.h"
 /*
  * Global variable definitions.
  * This is the 1 place these variables are defined. If you need them
@@ -296,6 +297,8 @@ int HELICITY = -1;
 int LAMB_VECTOR = -1;
 int Q_FCN = -1;		      
 int POYNTING_VECTORS = -1;   	/* conduction flux vectors*/
+int SARAMITO_YIELD = -1;
+int STRESS_NORM = -1;
 
 int len_u_post_proc = 0;	/* size of dynamically allocated u_post_proc
 				 * actually is */
@@ -2459,6 +2462,42 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       local_post[POYNTING_VECTORS + a] = poynt[a];
       local_lumped[POYNTING_VECTORS + a] = 1.;
      }
+  }
+  
+  if(STRESS_NORM != -1)
+  {  
+    for (int mode = 0; mode < vn->modes; mode++) {
+
+      dbl traceOverVim = 0;
+      for(int i=0; i<VIM; i++){
+        traceOverVim += fv->S[mode][i][i];
+      }
+
+      traceOverVim /= VIM;
+
+      // square of the deviatoric sress norm
+      dbl normOfStressDSqr = 0;
+      for(int i=0; i<VIM; i++){
+        normOfStressDSqr += pow(fv->S[mode][i][i] - traceOverVim, 2)/2.;
+
+        for(int j=i+1; j<VIM; j++){
+          normOfStressDSqr += pow(fv->S[mode][i][j], 2);
+        }
+      }
+          
+      dbl normOfStressD = sqrt(normOfStressDSqr);
+      local_post[STRESS_NORM + mode] = normOfStressD;
+      local_lumped[STRESS_NORM + mode] = 1.;
+    }
+  }
+
+  if(SARAMITO_YIELD != -1)
+  {  
+    for (int mode = 0; mode < vn->modes; mode++) {
+      dbl coeff = compute_saramito_model_terms(fv->S[mode], ve[mode]->gn->tau_y, ve[mode]->gn->fexp, NULL);
+      local_post[SARAMITO_YIELD + mode] = coeff;
+      local_lumped[SARAMITO_YIELD + mode] = 1.;
+    }
   }
 
   /* calculate real-solid stress here !!  */
@@ -7661,6 +7700,8 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Lamb Vector", &LAMB_VECTOR);
   iread = look_for_post_proc(ifp, "Q Function", &Q_FCN);
   iread = look_for_post_proc(ifp, "Poynting Vectors", &POYNTING_VECTORS);
+  iread = look_for_post_proc(ifp, "Saramito Yield Coeff", &SARAMITO_YIELD);
+  iread = look_for_post_proc(ifp, "VE Stress Norm", &STRESS_NORM);
 
   /*
    * Initialize for surety before communication to other processors.
@@ -10623,6 +10664,50 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
         }
     }
 
+  if (STRESS_NORM != -1 && Num_Var_In_Type[pg->imtrx][POLYMER_STRESS11])
+    {
+      STRESS_NORM = index_post;
+      int num_modes = 0;
+      for (int i = 0; i < MAX_MODES; i++) {
+        if (Num_Var_In_Type[pg->imtrx][v_s[i][0][0]]) {
+          num_modes++;
+        }
+      }
+      for (int mode = 0; mode<num_modes; mode++) {
+        sprintf(species_name, "STRESS_NORM_%d", mode);
+        sprintf(species_desc, "stress norm mode_%d", mode);
+        set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]", species_desc, FALSE);
+        index++;
+        index_post++;
+      }
+    }
+  else
+    {
+      STRESS_NORM = -1;
+    }
+
+  if (SARAMITO_YIELD != -1 && Num_Var_In_Type[pg->imtrx][POLYMER_STRESS11])
+    {
+      SARAMITO_YIELD = index_post;
+      int num_modes = 0;
+      for (int i = 0; i < MAX_MODES; i++) {
+        if (Num_Var_In_Type[pg->imtrx][v_s[i][0][0]]) {
+          num_modes++;
+        }
+      }
+      for (int mode = 0; mode<num_modes; mode++) {
+        sprintf(species_name, "SARAMITO_COEFF_%d", mode);
+        sprintf(species_desc, "saramito coeff mode_%d", mode);
+        set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]", species_desc, FALSE);
+        index++;
+        index_post++;
+      }
+    }
+  else
+    {
+      SARAMITO_YIELD = -1;
+    }
+
     /*if (J_FLUX != -1)
     {
       J_FLUX = index_post;
@@ -11944,7 +12029,7 @@ index_post, index_post_export);
   rd->nnv = index;
   *tnv_post = index - *tnv;
   
-  if ((TIME_DERIVATIVES != -1 && pd->TimeIntegration == TRANSIENT) 
+  if ((TIME_DERIVATIVES != -1 && pd_glob[0]->TimeIntegration == TRANSIENT)
       && index_post != (*tnv_post - *tnv))
     WH(-1, "Bad nodal post process variable count ");
 
@@ -11985,25 +12070,40 @@ load_elem_tkn (struct Results_Description *rd,
   for (i = 0; i < upd->Num_Mat; i++) {
     for ( j = V_FIRST; j < V_LAST; j++) {
       if ( pd_glob[i]->v[pg->imtrx][j] != V_NOTHING ) {
-	if ( FALSE && pd_glob[i]->i[pg->imtrx][j] == I_P0 ) {
+	if (pd_glob[i]->i[pg->imtrx][j] == I_P0 ) {
 	  if ( Num_Var_In_Type[pg->imtrx][j] > 1 ) {
-	    fprintf(stderr,
+            fprintf(stderr,
 		    "%s: Too many components in variable type (%s - %s) for element variable\n",
 		    yo,
 		    Exo_Var_Names[j].name2,
 		    Exo_Var_Names[j].name1 );
 	    exit (-1);
-	  }
-	  if (ev_var_mask[j - V_FIRST] == 0) {
+          }
+          if (ev_var_mask[j - V_FIRST] == 0) {
 	    /* We just found a candidate for an element variable */
 	    /* Append a suffix onto the var name to differentiate from its
 	     nodal counterpart */
-	    sprintf(appended_name,  "%s_E", Exo_Var_Names[j].name2 );
-	    set_ev_tkud(rd, index, j, appended_name,
-			Var_Units[j].name2, Exo_Var_Names[j].name1, FALSE);
-	    index++;
-	    ev_var_mask[j - V_FIRST] = 1; /* Only count this variable once */
+            sprintf(appended_name, "%s_E", Exo_Var_Names[j].name2);
+            set_ev_tkud(rd, index, j, appended_name, Var_Units[j].name2, Exo_Var_Names[j].name1,
+                        FALSE);
+            index++;
+            ev_var_mask[j - V_FIRST] = 1; /* Only count this variable once */
 	  }
+        }
+        if (pd_glob[i]->i[j] == I_P1) {
+          int dof = getdofs(type2shape(exo->eb_elem_itype[i]), I_P1);
+          if (ev_var_mask[j - V_FIRST] == 0) {
+            /* We just found a candidate for an element variable */
+            /* Append a suffix onto the var name to differentiate from its
+             nodal counterpart */
+            for (i = 1; i <= dof; i++) {
+              sprintf(appended_name, "%s_E%d", Exo_Var_Names[j].name2, i);
+              set_ev_tkud(rd, index, j, appended_name, Var_Units[j].name2, Exo_Var_Names[j].name1,
+                          FALSE);
+              index++;
+            }
+            ev_var_mask[j - V_FIRST] = 1; /* Only count this variable once */
+          }
         }
       }
     }
@@ -12170,7 +12270,7 @@ load_elem_tkn (struct Results_Description *rd,
   *tev_post = index - tev;
   Num_Elem_Post_Proc_Var = index_post;
   
-  if ((TIME_DERIVATIVES != -1 && pd->TimeIntegration == TRANSIENT) 
+  if ((TIME_DERIVATIVES != -1 && pd_glob[0]->TimeIntegration == TRANSIENT)
       && index_post != (*tev_post - tev))
     WH(-1, "Bad elem post process variable count ");
 

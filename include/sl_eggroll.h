@@ -164,35 +164,38 @@ extern void gevp_transformation	/* sl_eggroll03.c */
        dbl ,			/* r_sigma */
        dbl );			/* i_sigma */
 
-extern void eggrollwrap		/* sl_eggrollwrap.c */
-(int *,			/* Info for eigenvalue extraction */
-       dbl *,			/* Info for eigenvalue extraction */
-       int *,			/* Column pointer array */
-       dbl *,			/* Nonzero array */
-       dbl *,			/* Nonzero array - same structure 
-				   as jac[] (ija[]) */
-       dbl *,			/* Value of the solution vector */
-       char *,			/* Name of exoII output file */
-       int ,
-       dbl ,			/* Time step size */
-       dbl ,			/* Variable time integration parameter
-				   explicit (theta = 1) to 
-				   implicit (theta = 0) */
-       dbl *,			/* Value of the old solution vector */
-       dbl *,			/* Value of xdot predicted for new 
-				   solution */
-       dbl *,
-       dbl *,
-       int *,			/* Whether the Newton has converged */
-       int *,			/* Counter for time step number */
-       int ,			/* Number of nodal results */
-       int ,			/* Number of post processing results */
-       struct Results_Description *,
-       int *,
-       int *,
-       dbl *,
-       dbl ,
-       Exo_DB *,		/* Ptr to finite element mesh db */
-       int ,			/* Number of processors used */
-       Dpi *);			/* Ptr to distributed processing info */
+extern void eggrollwrap /* sl_eggrollwrap.c */
+          (int *,			/* Info for eigenvalue extraction */
+           dbl *,       /* Info for eigenvalue extraction */
+           int *,       /* Column pointer array */
+           dbl *,       /* Nonzero array */
+           dbl *,       /* Nonzero array - same structure
+                           as jac[] (ija[]) */
+           dbl *,       /* Value of the solution vector */
+           char *,      /* Name of exoII output file */
+           int,
+           dbl,   /* Time step size */
+           dbl,   /* Variable time integration parameter
+                     explicit (theta = 1) to
+                     implicit (theta = 0) */
+           dbl *, /* Value of the old solution vector */
+           dbl *, /* Value of xdot predicted for new
+                     solution */
+           dbl *,
+           dbl *,
+           int *, /* Whether the Newton has converged */
+           int *, /* Counter for time step number */
+           int,   /* Number of nodal results */
+           int,   /* Number of post processing results */
+           int,   /* Number of element results */
+           int,   /* Number of element post processing results */
+           struct Results_Description *,
+           int *,
+           int *,
+           dbl *,
+           dbl ***,
+           dbl,
+           Exo_DB *, /* Ptr to finite element mesh db */
+           int,      /* Number of processors used */
+           Dpi *);			/* Ptr to distributed processing info */
 #endif

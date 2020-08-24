@@ -223,7 +223,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
    * tev_post is calculated in load_elem_tkn
    */
   tnv = cnt_nodal_vars();
-  tev = cnt_elem_vars();
+  tev = cnt_elem_vars(exo);
 
 #ifdef DEBUG
   fprintf(stderr, "Found %d total primitive nodal variables to output.\n", tnv);

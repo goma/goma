@@ -458,6 +458,7 @@ update_BC_parameter(double lambda, /* Parameter value */
  	case SPLINEZ_RS_BC:
 	case FILLET_BC:
 	case DOUBLE_RAD_BC:
+	case FEATURE_ROLLON_BC:
 	case ROLL_FLUID_BC:
 	case UVARY_BC:
 	case VVARY_BC:
@@ -488,6 +489,15 @@ update_BC_parameter(double lambda, /* Parameter value */
         case TABLE_WICS_BC:
                 BC_Type = &BC_Types[ibc];
                 BC_Type->table->f[idf] = lambda;
+                break;
+        case CAPILLARY_TABLE_BC:
+                BC_Type = &BC_Types[ibc];
+		if(idf < 3)
+			{
+  	  		BC_Types[ibc].BC_Data_Float[idf] = lambda;
+			}	else	{
+                	BC_Type->table->yscale = lambda;
+			}
                 break;
 	case FRICTION_ACOUSTIC_BC:
 		if(idf > 1)
@@ -723,6 +733,19 @@ update_MT_parameter(double lambda, /* Parameter value */
     case TAGC_SHIFT_FUNC:
     case TAGC_SHIFT_FUNC1:
       vn_glob[mn]->shift[mpr-TAGC_SHIFT_FUNC] = lambda;
+
+    case TAGC_POLYMER_YIELD_STRESS:
+        for(int mm=0;mm<vn_glob[mn]->modes;mm++)
+        {
+                ve_glob[mn][mm]->gn->tau_y = lambda;
+        }
+      break;
+
+    case TAGC_POLYMER_YIELD_EXPONENT:
+        for(int mm=0;mm<vn_glob[mn]->modes;mm++)
+        {
+                ve_glob[mn][mm]->gn->fexp = lambda;
+        }
       break;
 
       /* 
@@ -1356,6 +1379,7 @@ retrieve_BC_parameter(double *lambda, /* Parameter value */
  	case SPLINEZ_RS_BC:
 	case FILLET_BC:
 	case DOUBLE_RAD_BC:
+	case FEATURE_ROLLON_BC:
 	case ROLL_FLUID_BC:
 	case UVARY_BC:
 	case VVARY_BC:
@@ -1386,6 +1410,15 @@ retrieve_BC_parameter(double *lambda, /* Parameter value */
         case TABLE_WICS_BC:
                 BC_Type = &BC_Types[ibc];
                 *lambda = BC_Type->table->f[idf];
+                break;
+        case CAPILLARY_TABLE_BC:
+                BC_Type = &BC_Types[ibc];
+		if(idf < 3)
+			{
+  	  		*lambda = BC_Types[ibc].BC_Data_Float[idf];
+			}	else	{
+                	*lambda = BC_Type->table->yscale;
+			}
                 break;
 	case FRICTION_ACOUSTIC_BC:
 		if(idf > 1)
@@ -1617,6 +1650,12 @@ retrieve_MT_parameter(double *lambda, /* Parameter value */
     case TAGC_SHIFT_FUNC1:
       *lambda = vn_glob[mn]->shift[mpr-TAGC_SHIFT_FUNC];
       break;
+      
+    case TAGC_POLYMER_YIELD_STRESS:
+      *lambda = ve_glob[mn][cont->upMPID-TAGC_POLYMER_YIELD_STRESS]->gn->tau_y;
+
+    case TAGC_POLYMER_YIELD_EXPONENT:
+      *lambda = ve_glob[mn][cont->upMPID-TAGC_POLYMER_YIELD_EXPONENT]->gn->fexp;
 
       /* 
        * Constants used in the Elasticity Constitutive Equations

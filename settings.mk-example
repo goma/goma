@@ -28,7 +28,7 @@ GOMA_LIBS = /home/goma/production/$(ARCH)
 
 # MPI install location, used for include, lib, and bin directories
 
-MPI_TOP = $(GOMA_LIBS)/openmpi-4.0.2
+MPI_TOP = $(GOMA_LIBS)/openmpi-4.0.3
 GOMA_MPI_LIB = -L$(MPI_TOP)/lib  -lmpi  -lmpi_mpifh
 
 CC = $(MPI_TOP)/bin/mpicc
@@ -56,7 +56,7 @@ CXXSTD = -std=gnu++11
 
 # Trilinos install directory (include, lib)
 
-TRILINOS_TOP = $(GOMA_LIBS)/trilinos-12.18.1
+TRILINOS_TOP = $(GOMA_LIBS)/trilinos-13.0.0
 
 # Install location
 # will install files in $PREFIX/include/goma, $PREFIX/lib, $PREFIX/bin

@@ -360,7 +360,7 @@ int assemble_porous_transport(double time, /* present time valuel; KSC          
 	     *  Sum up all of the individual contributions and store it
 	     *  in the local element residual vector.
 	     */
-	    lec->R[peqn][ii] += 
+            lec->R[LEC_R_INDEX(peqn,ii)] +=
 		mass + advection + advection_supg + diffusion + source;
 		    
 	  }   /* if active_dofs */	
@@ -423,7 +423,7 @@ int assemble_porous_transport(double time, /* present time valuel; KSC          
 		if (mp->Porous_Mass_Lump) {
 		  mass = - pmv_ml->d_Inventory_Solvent_dot_dpmv[i][w][w1] *
 		      wt_func * wt_total * pd->etm[pg->imtrx][eqn][(LOG2_MASS)];		    
-		  lec->J[peqn][pvar][ii][ii] += mass;
+                  lec->J[LEC_J_INDEX(peqn,pvar,ii,ii)] += mass;
 		}
 		
 		/*
@@ -545,7 +545,7 @@ int assemble_porous_transport(double time, /* present time valuel; KSC          
 		    }
 		  }
 				  
-		  lec->J[peqn][pvar][ii][j] += 
+                  lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] +=
 		      mass + advection + advection_supg + diffusion + source;
 		}
 	      }
@@ -648,7 +648,7 @@ int assemble_porous_transport(double time, /* present time valuel; KSC          
 		    source *= pd->etm[pg->imtrx][eqn][LOG2_SOURCE];
 		  }
 				  
-		  lec->J[peqn][pvar][ii][j] += 
+                  lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] +=
 		      mass + advection + diffusion + source;
 		}
 	      }
@@ -691,7 +691,7 @@ int assemble_porous_transport(double time, /* present time valuel; KSC          
 		  source *= pd->etm[pg->imtrx][eqn][LOG2_SOURCE]; 
 		}
 		
-		lec->J[peqn][pvar][ii][j] += advection + diffusion + source;
+                lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += advection + diffusion + source;
 	      }	
 	    }
 	    /*             
@@ -710,7 +710,7 @@ int assemble_porous_transport(double time, /* present time valuel; KSC          
 		  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 		    source = pm_terms.d_MassSource_dSM[w][j] * det_J * h3 * wt * phi_i;
 		    source *= pd->etm[pg->imtrx][eqn][LOG2_SOURCE];
-		    lec->J[peqn][pvar][ii][j] += source ;
+                    lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source ;
 	      
 		  }
 		}
@@ -725,7 +725,7 @@ int assemble_porous_transport(double time, /* present time valuel; KSC          
 		  advection *= - wt_func;
 				 				  
 		  advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)] * h3 * det_J * wt;
-		  lec->J[peqn][pvar][ii][j] += advection ;
+                  lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += advection ;
 		}		  
 	      }
 
@@ -739,7 +739,7 @@ int assemble_porous_transport(double time, /* present time valuel; KSC          
 		  diffusion *= - wt_func;
 				 				  
 		  diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)] * h3 * det_J * wt;
-		  lec->J[peqn][pvar][ii][j] += diffusion ;
+                  lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += diffusion ;
 		}		  
 	      }
 
@@ -871,7 +871,7 @@ int assemble_pore_sink_mass(double time, /* present time valuel; KSC           *
                 source *= wt_total * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
                }
 
-             lec->R[peqn][i] += mass + source;
+             lec->R[LEC_R_INDEX(peqn,i)] += mass + source;
             }
         }
     }
@@ -926,7 +926,7 @@ int assemble_pore_sink_mass(double time, /* present time valuel; KSC           *
                    source *=  wt_total * pd->etm[pg->imtrx][eqn][LOG2_SOURCE];
                   }
 
-                lec->J[peqn][pvar][i][j] += mass + source;
+                lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + source;
                }
            }
 
@@ -949,7 +949,7 @@ int assemble_pore_sink_mass(double time, /* present time valuel; KSC           *
                    source *= wt_total * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
                   }
 
-                lec->J[peqn][pvar][i][j] += source;
+                lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += source;
                }
            }
 
@@ -992,7 +992,7 @@ int assemble_pore_sink_mass(double time, /* present time valuel; KSC           *
                        source *= wt * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
                       }
 
-                    lec->J[peqn][pvar][i][j] += mass + source;
+                    lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + source;
                    }
                }
            }

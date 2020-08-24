@@ -8759,14 +8759,14 @@ void assemble_boundary_extension_velocity(double x[], Exo_DB *exo, Dpi *dpi) {
             x +
             ei[pg->imtrx]->ieqn_ledof[ei[pg->imtrx]->lvdof_to_ledof[eqn][i]];
 
-        lec->R[peqn][i] += BIG_PENALTY * *val_ptr;
+              lec->R[LEC_R_INDEX(peqn,i)] += BIG_PENALTY * *val_ptr;
 
         val_ptr =
             x +
             ei[pg->imtrx]
                 ->ieqn_ledof[ei[pg->imtrx]->lvdof_to_ledof[eqn][closest_node]];
 
-        lec->R[peqn][i] -= BIG_PENALTY * *val_ptr;
+              lec->R[LEC_R_INDEX(peqn,i)] -= BIG_PENALTY * *val_ptr;
 
         if (af->Assemble_Jacobian) {
           /*
@@ -8775,8 +8775,8 @@ void assemble_boundary_extension_velocity(double x[], Exo_DB *exo, Dpi *dpi) {
           var = eqn;
           pvar = upd->vp[pg->imtrx][var];
 
-          lec->J[peqn][pvar][i][i] += BIG_PENALTY;
-          lec->J[peqn][pvar][i][closest_node] -= BIG_PENALTY;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,i)] += BIG_PENALTY;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,closest_node)] -= BIG_PENALTY;
         }
       }
     }
@@ -8968,7 +8968,7 @@ int assemble_extension_velocity(dbl hsquared[DIM], dbl hh[DIM][DIM],
         advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
       }
 
-      lec->R[peqn][i] += advection;
+          lec->R[LEC_R_INDEX(peqn,i)] += advection;
     }
   }
 
@@ -9016,7 +9016,7 @@ int assemble_extension_velocity(dbl hsquared[DIM], dbl hh[DIM][DIM],
             advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
           }
 
-          lec->J[peqn][pvar][i][j] += advection;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection;
         }
       }
 
@@ -9062,7 +9062,7 @@ int assemble_extension_velocity(dbl hsquared[DIM], dbl hh[DIM][DIM],
             advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
           }
 
-          lec->J[peqn][pvar][i][j] += advection;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection;
         }
       }
 #endif /* not COUPLED_FILL */
@@ -9112,7 +9112,7 @@ int assemble_extension_velocity(dbl hsquared[DIM], dbl hh[DIM][DIM],
                   wt_func * wt * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
             }
 
-            lec->J[peqn][pvar][i][j] += advection;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection;
           }
         }
       }

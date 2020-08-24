@@ -10,6 +10,10 @@
 * This software is distributed under the GNU General Public License.	  *
 \************************************************************************/
 
+#ifndef ARSCND_NAME
+#define ARSCND_NAME second
+#endif
+
 C loca_eigen_cayley.F,v
 
 C====================================================================
@@ -183,7 +187,7 @@ c     dneigh  ARPACK compute Ritz values and error bounds routine.
 c     dngets  ARPACK reorder Ritz values and error bounds routine.
 c     dsortc  ARPACK sorting routine.
 c     ivout   ARPACK utility routine that prints integers.
-c     second  ARPACK utility routine for timing.
+c     ARSCND_NAME  ARPACK utility routine for timing.
 c     dmout   ARPACK utility routine that prints matrices
 c     dvout   ARPACK utility routine that prints vectors.
 c     dlamch  LAPACK routine that determines machine constants.
@@ -313,7 +317,7 @@ c     | External Subroutines |
 c     %----------------------%
 c
       external   dcopy, dgetv0, dnaitr, dnconv, dneigh, dngets, dnapps,
-     &           dvout, ivout, second
+     &           dvout, ivout, ARSCND_NAME
 c
 c     %--------------------%
 c     | External Functions |
@@ -336,7 +340,7 @@ c
       lastis = .false.
       if (ido .eq. 0) then
 c 
-         call second (t0)
+         call ARSCND_NAME (t0)
 c 
          msglvl = mnaup2
 c 
@@ -877,7 +881,7 @@ c        | the first step of the next call to dnaitr.  |
 c        %---------------------------------------------%
 c
          cnorm = .true.
-         call second (t2)
+         call ARSCND_NAME (t2)
          if (bmat .eq. 'G') then
             nbx = nbx + 1
             call dcopy (n, resid, 1, workd(n+1), 1)
@@ -902,7 +906,7 @@ c        | WORKD(1:N) := B*RESID            |
 c        %----------------------------------%
 c
          if (bmat .eq. 'G') then
-            call second (t3)
+            call ARSCND_NAME (t3)
             tmvbx = tmvbx + (t3 - t2)
          end if
 c 
@@ -941,7 +945,7 @@ c     %------------%
 c     | Error Exit |
 c     %------------%
 c
-      call second (t1)
+      call ARSCND_NAME (t1)
       tnaup2 = t1 - t0
 c     
  9000 continue
@@ -1367,7 +1371,7 @@ c\Routines called:
 c     dnaup2  ARPACK routine that implements the Implicitly Restarted
 c             Arnoldi Iteration.
 c     ivout   ARPACK utility routine that prints integers.
-c     second  ARPACK utility routine for timing.
+c     ARSCND_NAME  ARPACK utility routine for timing.
 c     dvout   ARPACK utility routine that prints vectors.
 c     dlamch  LAPACK routine that determines machine constants.
 c
@@ -1480,7 +1484,7 @@ c     %----------------------%
 c     | External Subroutines |
 c     %----------------------%
 c
-      external   dnaup2, dvout, ivout, second, dstatn
+      external   dnaup2, dvout, ivout, ARSCND_NAME, dstatn
 c
 c     %--------------------%
 c     | External Functions |
@@ -1502,7 +1506,7 @@ c        | & message level for debugging |
 c        %-------------------------------%
 c
          call dstatn
-         call second (t0)
+         call ARSCND_NAME (t0)
          msglvl = mnaupd
 c
 c        %----------------%
@@ -1690,7 +1694,7 @@ c
      &               '_naupc: Associated Ritz estimates')
       end if
 c
-      call second (t1)
+      call ARSCND_NAME (t1)
       tnaupd = t1 - t0
 c
       if (msglvl .gt. 0) then
@@ -3048,7 +3052,7 @@ c     pdneigh  Parallel ARPACK compute Ritz values and error bounds routine.
 c     pdngets  Parallel ARPACK reorder Ritz values and error bounds routine.
 c     dsortc   ARPACK sorting routine.
 c     pivout   Parallel ARPACK utility routine that prints integers.
-c     second   ARPACK utility routine for timing.
+c     ARSCND_NAME   ARPACK utility routine for timing.
 c     pdmout   Parallel ARPACK utility routine that prints matrices
 c     pdvout   ARPACK utility routine that prints vectors.
 c     pdlamch  ScaLAPACK routine that determines machine constants.
@@ -3193,7 +3197,7 @@ c     %----------------------%
 c
       external   dcopy, pdgetv0, pdnaitr, dnconv, 
      &           pdneigh, pdngets, pdnapps,
-     &           pdvout, pivout, second
+     &           pdvout, pivout, ARSCND_NAME
 c
 c     %--------------------%
 c     | External Functions |
@@ -3215,7 +3219,7 @@ c     %-----------------------%
 c
       if (ido .eq. 0) then
 c 
-         call second (t0)
+         call ARSCND_NAME (t0)
 c 
          msglvl = mnaup2
 c 
@@ -3759,7 +3763,7 @@ c        | the first step of the next call to pdnaitr. |
 c        %---------------------------------------------%
 c
          cnorm = .true.
-         call second (t2)
+         call ARSCND_NAME (t2)
          if (bmat .eq. 'G') then
             nbx = nbx + 1
             call dcopy (n, resid, 1, workd(n+1), 1)
@@ -3784,7 +3788,7 @@ c        | WORKD(1:N) := B*RESID            |
 c        %----------------------------------%
 c
          if (bmat .eq. 'G') then
-            call second (t3)
+            call ARSCND_NAME (t3)
             tmvbx = tmvbx + (t3 - t2)
          endif
 c
@@ -3825,7 +3829,7 @@ c     %------------%
 c     | Error Exit |
 c     %------------%
 c
-      call second (t1)
+      call ARSCND_NAME (t1)
       tnaup2 = t1 - t0
 c     
  9000 continue
@@ -4253,7 +4257,7 @@ c\Routines called:
 c     pdnaup2  Parallel ARPACK routine that implements the implicitly 
 c              restarted Arnoldi Iteration.
 c     pivout   Parallel ARPACK utility routine that prints integers.
-c     second   ARPACK utility routine for timing.
+c     ARSCND_NAME   ARPACK utility routine for timing.
 c     pdvout   Parallel ARPACK utility routine that prints vectors.
 c     pdlamch  ScaLAPACK routine that determines machine constants.
 c
@@ -4374,7 +4378,7 @@ c     %----------------------%
 c     | External Subroutines |
 c     %----------------------%
 c
-      external   pdnaup2, pdvout, pivout, second, dstatn
+      external   pdnaup2, pdvout, pivout, ARSCND_NAME, dstatn
 c
 c     %--------------------%
 c     | External Functions |
@@ -4396,7 +4400,7 @@ c        | & message level for debugging |
 c        %-------------------------------%
 c
          call dstatn
-         call second (t0)
+         call ARSCND_NAME (t0)
          msglvl = mnaupd
 c
 c        %----------------%
@@ -4585,7 +4589,7 @@ c
      &               '_naupd: Associated Ritz estimates')
       end if
 c
-      call second (t1)
+      call ARSCND_NAME (t1)
       tnaupd = t1 - t0
 c
       if (msglvl .gt. 0) then

@@ -183,6 +183,7 @@ load_extra_unknownsAC(int iAC,    /* ID NUMBER OF AC'S */
         case SPLINEZ_RS_BC:
         case FILLET_BC:
         case DOUBLE_RAD_BC:
+        case FEATURE_ROLLON_BC:
         case ROLL_FLUID_BC:
         case UVARY_BC:
         case VVARY_BC:
@@ -444,6 +445,13 @@ load_extra_unknownsAC(int iAC,    /* ID NUMBER OF AC'S */
 	xa[iAC] = vn_glob[mn]->shift[augc[iAC].MPID-TAGC_SHIFT_FUNC];
 	break;
 
+      case TAGC_POLYMER_YIELD_STRESS:
+        xa[iAC] = ve_glob[mn][augc[iAC].MPID-TAGC_POLYMER_YIELD_STRESS]->gn->tau_y;
+        break;
+
+      case TAGC_POLYMER_YIELD_EXPONENT:
+        xa[iAC] = ve_glob[mn][augc[iAC].MPID-TAGC_POLYMER_YIELD_EXPONENT]->gn->fexp;
+        break;
 	/* 
 	 * Constants used in the Elasticity Constitutive Equations
 	 */
@@ -891,6 +899,7 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
 		case SPLINEZ_RS_BC:
 		case FILLET_BC:
                 case DOUBLE_RAD_BC:
+                case FEATURE_ROLLON_BC:
 		case ROLL_FLUID_BC:
 		case UVARY_BC:
 		case VVARY_BC:
@@ -966,6 +975,7 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
         case SPLINEZ_RS_BC:
         case FILLET_BC:
         case DOUBLE_RAD_BC:
+        case FEATURE_ROLLON_BC:
         case ROLL_FLUID_BC:
         case UVARY_BC:
         case VVARY_BC:
@@ -1207,6 +1217,14 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
       case TAGC_SHIFT_FUNC:
       case TAGC_SHIFT_FUNC1:
 	vn_glob[mn]->shift[augc[iAC].MPID-TAGC_SHIFT_FUNC] = lambda;
+	break;
+
+      case TAGC_POLYMER_YIELD_STRESS:
+        ve_glob[mn][augc[iAC].MPID-TAGC_POLYMER_YIELD_STRESS]->gn->tau_y = lambda;
+	break;
+
+      case TAGC_POLYMER_YIELD_EXPONENT:
+	ve_glob[mn][augc[iAC].MPID-TAGC_POLYMER_YIELD_EXPONENT]->gn->fexp = lambda;
 	break;
 
 	/* 

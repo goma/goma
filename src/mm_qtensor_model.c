@@ -889,7 +889,7 @@ assemble_vorticity_direction(void)
 		  source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 		}
 	  
-	      lec->R[peqn][i] += 
+	      lec->R[LEC_R_INDEX(peqn,i)] += 
 		advection  + source ;  
 	      /* Save a convenient local copy for numerical Jacobians */
 	      R_old[a][i] += advection  + source ;
@@ -921,7 +921,7 @@ assemble_vorticity_direction(void)
 		      source *= wt_func*dV;
 		      source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 		    }		      
-		  lec->J[peqn][pvar][i][j] +=source;
+		  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=source;
 		}
 	    }
 	}
@@ -997,7 +997,7 @@ assemble_vorticity_direction(void)
 		      wt_func = bf[eqn]->phi[i];
 		      R_new[a][i] = (-vort_dir_pert[a]*pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)]+
 				     fv->vd[a]*pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)])*wt_func * dV;
-		      lec->J[peqn][pvar][i][j] += (R_old[a][i]-R_new[a][i])/eps;
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (R_old[a][i]-R_new[a][i])/eps;
 		      
 		    }
 		}
@@ -1247,7 +1247,7 @@ assemble_vorticity_direction(void)
 			R_new[a][i] = (-vort_dir_pert[a]*pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)]+
 				       fv->vd[a]*pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)])*wt_func 
 			  * wt * hh3 * detJ1;
-			lec->J[peqn][pvar][i][j] += (R_old[a][i]-R_new[a][i])/eps;
+			lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (R_old[a][i]-R_new[a][i])/eps;
 			
 		      }
 		  }

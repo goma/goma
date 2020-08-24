@@ -1149,7 +1149,7 @@ assembly_alloc(Exo_DB *exo)
     esp->sh_K = (dbl **) alloc_ptr_1(MDE);
   }
 
-  if (Num_Var_In_Type[SHELL_CURVATURE2]) {
+  if (Num_Var_In_Type[imtrx][SHELL_CURVATURE2]) {
     esp->sh_K2 = (dbl **) alloc_ptr_1(MDE);
   }
 
@@ -1240,6 +1240,12 @@ assembly_alloc(Exo_DB *exo)
   if(Num_Var_In_Type[imtrx][ACOUS_REYN_STRESS]) {
     esp->ars = (dbl **) alloc_ptr_1(MDE);
   }
+  if(Num_Var_In_Type[imtrx][EM_CONT_REAL]) {
+    esp->epr = (dbl **) alloc_ptr_1(MDE);
+  }
+  if(Num_Var_In_Type[imtrx][EM_CONT_IMAG]) {
+    esp->epi = (dbl **) alloc_ptr_1(MDE);
+  }
   if(Num_Var_In_Type[imtrx][SHELL_BDYVELO]) {
     esp->sh_bv = (dbl **) alloc_ptr_1(MDE);
   }
@@ -1293,27 +1299,27 @@ assembly_alloc(Exo_DB *exo)
     esp->poynt = (dbl ***) alloc_ptr_2(vim, MDE);
   }
   /* EM_wave components  */
-  if (Num_Var_In_Type[EM_E1_REAL] || Num_Var_In_Type[EM_E2_REAL] || Num_Var_In_Type[EM_E3_REAL]) {
+  if (Num_Var_In_Type[imtrx][EM_E1_REAL] || Num_Var_In_Type[imtrx][EM_E2_REAL] || Num_Var_In_Type[imtrx][EM_E3_REAL]) {
     esp->em_er = (dbl ***) alloc_ptr_2(vim, MDE);
   }
-  if (Num_Var_In_Type[EM_E1_IMAG] || Num_Var_In_Type[EM_E2_IMAG] || Num_Var_In_Type[EM_E3_IMAG]) {
+  if (Num_Var_In_Type[imtrx][EM_E1_IMAG] || Num_Var_In_Type[imtrx][EM_E2_IMAG] || Num_Var_In_Type[imtrx][EM_E3_IMAG]) {
     esp->em_ei = (dbl ***) alloc_ptr_2(vim, MDE);
   }
-  if (Num_Var_In_Type[EM_H1_REAL] || Num_Var_In_Type[EM_H2_REAL] || Num_Var_In_Type[EM_H3_REAL]) {
+  if (Num_Var_In_Type[imtrx][EM_H1_REAL] || Num_Var_In_Type[imtrx][EM_H2_REAL] || Num_Var_In_Type[imtrx][EM_H3_REAL]) {
     esp->em_hr = (dbl ***) alloc_ptr_2(vim, MDE);
   }
-  if (Num_Var_In_Type[EM_H1_IMAG] || Num_Var_In_Type[EM_H2_IMAG] || Num_Var_In_Type[EM_H3_IMAG]) {
+  if (Num_Var_In_Type[imtrx][EM_H1_IMAG] || Num_Var_In_Type[imtrx][EM_H2_IMAG] || Num_Var_In_Type[imtrx][EM_H3_IMAG]) {
     esp->em_hi = (dbl ***) alloc_ptr_2(vim, MDE);
   }
 
-  if(Num_Var_In_Type[TFMP_PRES]) {
+  if(Num_Var_In_Type[imtrx][TFMP_PRES]) {
     esp->tfmp_pres = (dbl **) alloc_ptr_1(MDE);
   }
-  if(Num_Var_In_Type[TFMP_SAT]) {
+  if(Num_Var_In_Type[imtrx][TFMP_SAT]) {
     esp->tfmp_sat = (dbl **) alloc_ptr_1(MDE);
   }
 
-  if (Num_Var_In_Type[RESTIME] ) {
+  if (Num_Var_In_Type[imtrx][RESTIME] ) {
     esp->restime = (dbl **) alloc_ptr_1(MDE);
   }  
 
@@ -1715,7 +1721,7 @@ bf_mp_init(struct Problem_Description *pd)
   int ifound;
   int t, v;
   int status;
-  int shape;
+  int ishape;
 
   status = 0;
 
@@ -1726,7 +1732,7 @@ bf_mp_init(struct Problem_Description *pd)
 #endif
 
    /* This is needed to check for matching element shapes */
-   shape = ei[pg->imtrx]->ielem_shape;
+   ishape = ei[pg->imtrx]->ielem_shape;
 
   /*
    * For now, assume variable interpolations 
@@ -1760,10 +1766,10 @@ bf_mp_init(struct Problem_Description *pd)
                 fprintf(stderr, "bfd[0] is at %p\n", bfd[0]);
                 fprintf(stderr, "checking t = %d\n", t);
 #endif
+               if ((pd->i[imtrx][v] == bfd[t]->interpolation)
+                   && (ishape == bfd[t]->element_shape))
 
-
-                if ((pd->i[imtrx][v] == bfd[t]->interpolation)
-                    && (shape == bfd[t]->element_shape))
+                
                   {
                     bf[v] = bfd[t];
                   }

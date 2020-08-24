@@ -979,9 +979,10 @@ modify_normal_vector_for_LSA_3D_of_2D(void)
 /*************************************************************************/
 /*************************************************************************/
 /*************************************************************************/
-int
-create_eigen_outfiles(Exo_DB *exo, Dpi *dpi,
-                      RESULTS_DESCRIPTION_STRUCT *rd)
+int create_eigen_outfiles(Exo_DB *exo,
+                          Dpi *dpi,
+                          RESULTS_DESCRIPTION_STRUCT *rd,
+                          double ***gvec_elem)
 /*
  * Routine to open an array of MxN eigenvector output files.
  * M = specified Eigen_Record_Modes
@@ -1028,7 +1029,7 @@ create_eigen_outfiles(Exo_DB *exo, Dpi *dpi,
    and initialize with basic mesh information */
           one_base(exo);
           wr_mesh_exo(exo, fname, 0);
-          wr_result_prelim_exo(rd, exo, fname, NULL);
+          wr_result_prelim_exo(rd, exo, fname, gvec_elem);
           if (Num_Proc > 1) wr_dpi(dpi, fname, 0);
           zero_base(exo);
 
@@ -1093,3 +1094,215 @@ get_eigen_outfile_name(char *in_name, int j, int k)
   strcpy(in_name, new_name);
   return;
 }
+
+/*****************************************************************************/
+/*****************************************************************************/
+
+int
+anneal_mesh_LSA(double x[], Exo_DB *exo, double **saved_xyz, double **saved_displacement)
+
+    /* anneal_mesh_LSA -- Stripped down version of anneal_mesh for
+     *                    linear stability analysis without outputting
+     *                    exodusII file
+     *
+     *
+     * Originally Created: 1997/08 Randy Schunk
+     *
+     * Cannibalized: 2020 Kristianto Tjiptowidjojo
+     */
+
+{
+  int gnn;
+  int idx, idy, idz;
+  int dim = exo->num_dim;
+  int num_nodes = exo->num_nodes;
+
+  /*
+   * Save the old coordinates
+   */
+
+  if( dim > 0 )
+    {
+     dcopy1( num_nodes, Coor[0], saved_xyz[0]);
+    }
+  if( dim > 1 )
+    {
+     dcopy1( num_nodes, Coor[1], saved_xyz[1]);
+    }
+  if( dim > 2 )
+    {
+     dcopy1( num_nodes, Coor[2], saved_xyz[2] );
+    }
+
+  /* Displace the coordinates and save the displacement fields*/
+  for (gnn = 0; gnn < num_nodes; gnn++)
+    {
+      idx = Index_Solution (gnn, MESH_DISPLACEMENT1, 0, 0, -1);
+      if (idx > -1)
+        {
+         saved_displacement[0][gnn] = x[idx];
+         exo->x_coord[gnn] += saved_displacement[0][gnn];
+         x[idx] = 0.0;
+        }
+      else
+        {
+         saved_displacement[0][gnn] = 0.0;
+        }
+
+      if( dim > 1 )
+        {
+         idy = Index_Solution (gnn, MESH_DISPLACEMENT2, 0, 0, -1);
+         if (idy > -1)
+           {
+            saved_displacement[1][gnn] = x[idy];
+            exo->y_coord[gnn] += saved_displacement[1][gnn];
+            x[idy] = 0.0;
+           }
+         else
+           {
+            saved_displacement[1][gnn] = 0.0;
+           }
+         }
+
+      if( dim > 2 )
+        {
+         idz = Index_Solution (gnn, MESH_DISPLACEMENT3, 0, 0, -1);
+         if (idz > -1)
+           {
+            saved_displacement[2][gnn] = x[idz];
+            exo->z_coord[gnn] += saved_displacement[2][gnn];
+            x[idz] = 0.0;
+           }
+         else
+           {
+            saved_displacement[2][gnn] = 0.0;
+           }
+        }
+    }
+
+  return(0);
+} /* END of routine anneal_mesh_LSA */
+
+/*****************************************************************************/
+/*****************************************************************************/
+
+
+int
+unanneal_mesh_LSA(double x[], Exo_DB *exo, double **saved_xyz, double **saved_displacement)
+
+    /* anneal_mesh_LSA -- Undo anneal_mesh_LSA after completion of
+     *                    linear stability analysis in case it is needed
+     *                    for continuation
+     *
+     *
+     * Originally Created: 1997/08 Randy Schunk
+     *
+     * Cannibalized: 2020 Kristianto Tjiptowidjojo
+     */
+
+{
+  int gnn;
+  int idx, idy, idz;
+  int dim = exo->num_dim;
+  int num_nodes = exo->num_nodes;
+
+
+  /* Put back the displacement field in solution vector*/
+  for (gnn = 0; gnn < num_nodes; gnn++)
+    {
+      idx = Index_Solution (gnn, MESH_DISPLACEMENT1, 0, 0, -1);
+      if (idx > -1)
+        {
+         x[idx] = saved_displacement[0][gnn];
+        }
+
+      if( dim > 1 )
+        {
+         idy = Index_Solution (gnn, MESH_DISPLACEMENT2, 0, 0, -1);
+         if (idy > -1)
+           {
+            x[idy] = saved_displacement[1][gnn];
+           }
+         }
+      if( dim > 2 )
+        {
+         idz = Index_Solution (gnn, MESH_DISPLACEMENT3, 0, 0, -1);
+         if (idz > -1)
+           {
+            x[idz] = saved_displacement[2][gnn];
+           }
+        }
+    }
+
+  /*
+   * Put back the original  coordinates
+   */
+
+  if ( dim > 0 )
+    {
+     dcopy1( num_nodes, saved_xyz[0], exo->x_coord);
+    }
+
+  if ( dim > 1 )
+    {
+     dcopy1( num_nodes, saved_xyz[1], exo->y_coord);
+    }
+
+  if ( dim > 2 )
+    {
+     dcopy1( num_nodes, saved_xyz[2], exo->z_coord);
+    }
+
+
+  return(0);
+} /* END of routine unanneal_mesh_LSA */
+/*****************************************************************************/
+/*****************************************************************************/
+
+void
+add_displacement_LSA(double x[], Exo_DB *exo, double **saved_displacement)
+
+    /* add_displacement_LSA -- Add mesh displacement from steady state solution
+     *                         into calculated eigenvector
+     *
+     * Created by: 2020 Kristianto Tjiptowidjojo
+     */
+
+{
+  int gnn;
+  int idx, idy, idz;
+  int dim = exo->num_dim;
+  int num_nodes = exo->num_nodes;
+
+
+  /* Add the displacement field in solution vector*/
+  for (gnn = 0; gnn < num_nodes; gnn++)
+    {
+      idx = Index_Solution (gnn, MESH_DISPLACEMENT1, 0, 0, -1);
+      if (idx > -1)
+        {
+         x[idx] += saved_displacement[0][gnn];
+        }
+
+      if( dim > 1 )
+        {
+         idy = Index_Solution (gnn, MESH_DISPLACEMENT2, 0, 0, -1);
+         if (idy > -1)
+           {
+            x[idy] += saved_displacement[1][gnn];
+           }
+         }
+      if( dim > 2 )
+        {
+         idz = Index_Solution (gnn, MESH_DISPLACEMENT3, 0, 0, -1);
+         if (idz > -1)
+           {
+            x[idz] += saved_displacement[2][gnn];
+           }
+        }
+    }
+
+  return;
+} /* END of routine add_displacement_LSA */
+/*****************************************************************************/
+/*****************************************************************************/

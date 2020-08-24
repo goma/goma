@@ -145,12 +145,12 @@ EXTERN void alloc_VBR_sparse_arrays(struct Aztec_Linear_Solver_System *,
                                     Dpi *);   /* distributed processing info */
 
 EXTERN void zero_lec_row /* mm_fill_util.c                            */
-    (double[][MAX_PROB_VAR + MAX_CONC][MDE][MDE], /* local_J             */
+    (double *, /* local_J             */
      int,  /* eqn_type - Eqn Type of row to be zeroed   */
      int); /* ldof - Local dof of that equation type    */
 
 EXTERN void zero_lec_column                       /* mm_fill_util.c */
-    (double[][MAX_PROB_VAR + MAX_CONC][MDE][MDE], /* local_J */
+    (double *, /* local_J */
      int,  /* var_type - Variable type to be zeroed */
      int); /* ldof - Local dof of that variable */
 

@@ -1488,8 +1488,8 @@ put_lub_flux_in_film(int id, /* local element node number for the
 	  ieqn_filmp = R_SHELL_FILMP;
 	  id_doflubp = ei[pg->imtrx]->ln_to_dof[ieqn_lubp][id];
 	  id_doffilmp = ei[pg->imtrx]->ln_to_dof[ieqn_filmp][id];
-	  lec->R[upd->ep[pg->imtrx][ieqn_filmp]][id_doffilmp] =
-	       -lec->R[upd->ep[pg->imtrx][ieqn_lubp]][id_doflubp];
+          lec->R[LEC_R_INDEX(upd->ep[pg->imtrx][ieqn_filmp],id_doffilmp)] =
+               -lec->R[LEC_R_INDEX(upd->ep[pg->imtrx][ieqn_lubp],id_doflubp)];
     }
     
     /*
@@ -1518,8 +1518,8 @@ put_lub_flux_in_film(int id, /* local element node number for the
 		pvar = upd->vp[pg->imtrx][var];
 		for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 		  {
-		    lec->J[peqn_filmp][pvar][id_doffilmp][j_id] =
-		      -lec->J[peqn_lubp][pvar][id_doflubp][j_id];
+                    lec->J[LEC_J_INDEX(peqn_filmp,pvar,id_doffilmp,j_id)] =
+                      -lec->J[LEC_J_INDEX(peqn_lubp,pvar,id_doflubp,j_id)];
 		  }
 	      }
 	  }
@@ -1533,8 +1533,8 @@ put_lub_flux_in_film(int id, /* local element node number for the
 	    pvar = upd->vp[pg->imtrx][var];
 	    for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 	      {			
-		lec->J[peqn_filmp][pvar][id_doffilmp][j_id] =
-		  -lec->J[peqn_lubp][pvar][id_doflubp][j_id];
+                lec->J[LEC_J_INDEX(peqn_filmp,pvar,id_doffilmp,j_id)] =
+                  -lec->J[LEC_J_INDEX(peqn_lubp,pvar,id_doflubp,j_id)];
 	      }
 	  }
 				

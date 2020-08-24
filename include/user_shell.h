@@ -26,12 +26,12 @@
               if (pd0->e[0][eqn] & T_MASS)
                 {
                   mass = phi_i*(fv->sh_u-2*fv->qs);
-                  mass *= pd0->etm[0][eqn][(LOG2_MASS)];
+                  mass *= pd0->etm[pg->imtrx][eqn][(LOG2_MASS)];
                   diffusion = 0.0;
-                  diffusion *= pd0->etm[0][eqn][(LOG2_DIFFUSION)];
+                  diffusion *= pd0->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
                 }
           res[i] += (mass+diffusion)*wt*h3*det_J;
-          lec->R[peqn][i] += res[i];
+          lec->R[LEC_R_INDEX(peqn,i)] += res[i];
         }
     }
   /* Include Jacobian contributions from shell variables */
@@ -43,7 +43,7 @@
 
           /* J_qs_qs:  Shell sensitivity */
           var = SHELL_USER;
-          pvar = upd->vp[0][var];
+          pvar = upd->vp[pg->imtrx][var];
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
             {
               phi_j = bf[var]->phi[j];
@@ -54,19 +54,19 @@
                   if (pd0->e[0][eqn] & T_MASS)
                     {
                       mass += phi_i*phi_t;
-                      mass *= pd0->etm[0][eqn][(LOG2_MASS)];
+                      mass *= pd0->etm[pg->imtrx][eqn][(LOG2_MASS)];
                     }
               diffusion = 0.0;
                   if (pd0->e[0][eqn] & T_MASS)
                     {
-                      diffusion *= pd0->etm[0][eqn][(LOG2_DIFFUSION)];
+                      diffusion *= pd0->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
                     }
               jac[i][pvar][j] += (mass + diffusion)*wt*h3*det_J;
-              lec->J[peqn][pvar][i][j] += jac[i][pvar][j];
+              lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += jac[i][pvar][j];
             }
           /* J_qs_qs:  Shell sensitivity */
           var = SURF_CHARGE;
-          pvar = upd->vp[0][var];
+          pvar = upd->vp[pg->imtrx][var];
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
             {
               phi_j = bf[var]->phi[j];
@@ -77,15 +77,15 @@
                   if (pd0->e[0][eqn] & T_MASS)
                     {
                       mass += phi_i*(-2*phi_t);
-                      mass *= pd0->etm[0][eqn][(LOG2_MASS)];
+                      mass *= pd0->etm[pg->imtrx][eqn][(LOG2_MASS)];
                     }
               diffusion = 0.0;
                   if (pd0->e[0][eqn] & T_MASS)
                     {
-                      diffusion *= pd0->etm[0][eqn][(LOG2_DIFFUSION)];
+                      diffusion *= pd0->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
                     }
               jac[i][pvar][j] += (mass + diffusion)*wt*h3*det_J;
-              lec->J[peqn][pvar][i][j] += jac[i][pvar][j];
+              lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += jac[i][pvar][j];
             }
 
 
