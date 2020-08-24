@@ -191,8 +191,6 @@ static int total_internal_dofweight = 0;
 static int total_boundary_dofweight = 0;
 static int total_external_dofweight = 0;
 
-char *program_name;		/* name this program was run with */
-
 const char program_description[] = "GOMA distributed problem decomposition tool";
 
 const char copyright[]="Copyright (c) 1999-2000 Sandia National Laboratories. All rights reserved.";
@@ -235,13 +233,13 @@ static char *chaco_user_params_file[] =
 
 Bevm ***mult; 
 
-int *ep;			/* element pointers into node list */
-int *np;			/* node pointers into element list */
+static int *ep;			/* element pointers into node list */
+static int *np;			/* node pointers into element list */
 
-int *nl;			/* node list */
-int *el;			/* element list */
+static int *nl;			/* node list */
+static int *el;			/* element list */
 
-int *ebl;			/* element block list */
+static int *ebl;			/* element block list */
 
 /*
  * Each node can be associated with one of a handful of prototypes.

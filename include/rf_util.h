@@ -267,11 +267,5 @@ PROTO((
        const Exo_DB *exo		/* Ptr to Exodus database */
        ));
 
-/*
- * Extern statements for variables defined in rf_util.c
- */
-
-extern Strcpy_rtn strcpy_rtn;
-
 #endif
 
