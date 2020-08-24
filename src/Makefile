@@ -236,7 +236,7 @@ INCLUDES = $(GOMA_INC) $(SPARSE_INC) $(TRILINOS_INC) \
 # =================
 
 # override CCFLAGS with DEBUG_CCFLAGS if building debug target
-DEBUG_FLAGS ?= -gdb3 -rdynamic
+DEBUG_FLAGS ?= -ggdb3 -rdynamic
 
 # All compiler options
 CCFLAGS ?= -O2
