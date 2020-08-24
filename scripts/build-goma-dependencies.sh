@@ -413,6 +413,7 @@ function setMPIvars() {
 }
 
 function setCompilerVars() {
+    export GCC_EXTRA_FFLAGS=""
     if [[ "$CC_NAME" == "intel" ]]; then
         #Special flag only needed by intel compiler because reasons? No really why does GCC not need -fopenmp?
         export COMPILER_FLAG_MPI="-qopenmp"
@@ -439,6 +440,10 @@ function setCompilerVars() {
         EXTRA_CXX_FLAGS=""
         export FORTRAN_LIBS="-L$INTEL_PARALLEL_STUDIO_ROOT/lib/intel64 -lifcore"
     elif [[ "$CC_NAME" == "gnu" ]]; then
+        GCC_VERSION=$(gcc --version | grep ^gcc | sed 's/^.* //g')
+        if [[ "$GCC_VERSION" = $(echo -e "$GCC_VERSION\n10.0.0\n" | sort -V |tail -n1) ]]; then
+            export GCC_EXTRA_FFLAGS="-fallow-argument-mismatch"
+        fi
         export MPI_C_COMPILER="mpicc"
         export MPI_CXX_COMPILER="mpiCC"
         # mpif90 and mpif77 are depricated in favor of just mpifort.
@@ -1052,7 +1057,7 @@ else
 < FFLAGS	= -O -cg89
 ---
 > FC      = $MPI_F77_COMPILER
-> FFLAGS	= -O $BLAS_FLAGS -fallow-argument-mismatch
+> FFLAGS	= -O $BLAS_FLAGS $GCC_EXTRA_FFLAGS
 115c115
 < MAKE    = /bin/make
 ---
@@ -1274,13 +1279,7 @@ else
         cd $GOMA_LIB/scalapack-$SCALAPACK_VERSION/src
         mkdir build
         cd build
-        GCC_VERSION=$(gcc --version | grep ^gcc | sed 's/^.* //g')
-        if [[ "$GCC_VERSION" = $(echo -e "$GCC_VERSION\n10.0.0\n" | sort -V |tail -n1) ]]; then
-            extra_fflags="-fallow-argument-mismatch"
-        else
-            extra_fflags=""
-        fi
-        cmake .. -DCMAKE_INSTALL_PREFIX=$GOMA_LIB/scalapack-$SCALAPACK_VERSION -DBUILD_SHARED=OFF -DCMAKE_C_COMPILER=$MPI_C_COMPILER -DCMAKE_CXX_COMPILER=$MPI_CXX_COMPILER -DCMAKE_Fortran_Compiler=$MPI_F90_COMPILER -DCMAKE_Fortran_FLAGS="$extra_fflags"
+        cmake .. -DCMAKE_INSTALL_PREFIX=$GOMA_LIB/scalapack-$SCALAPACK_VERSION -DBUILD_SHARED=OFF -DCMAKE_C_COMPILER=$MPI_C_COMPILER -DCMAKE_CXX_COMPILER=$MPI_CXX_COMPILER -DCMAKE_Fortran_Compiler=$MPI_F90_COMPILER -DCMAKE_Fortran_FLAGS="$GCC_EXTRA_FFLAGS"
         2>&1 | tee -a $COMPILE_LOG
         make -j$MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
         make install 2>&1 | tee -a $COMPILE_LOG
@@ -1302,13 +1301,6 @@ if [ -e lib/libdmumps.a ]
 then
     log_echo "MUMPS already built"
 else
-  GCC_VERSION=$(gcc --version | grep ^gcc | sed 's/^.* //g')
-  if [[ "$GCC_VERSION" = $(echo -e "$GCC_VERSION\n10.0.0\n" | sort -V |tail -n1) ]]; then
-      extra_fflags="-fallow-argument-mismatch"
-  else
-      extra_fflags=""
-  fi
-
     cat > Makefile.inc <<EOF
 # Begin orderings
 #LSCOTCHDIR = /usr/lib
@@ -1363,7 +1355,7 @@ LIBOTHERS =
 CDEFS   = -DAdd_
 
 #Begin Optimized options
-OPTF    = -O2  -DALLOW_NON_INIT $extra_fflags
+OPTF    = -O2  -DALLOW_NON_INIT $GCC_EXTRA_FFLAGS
 OPTL    = -O2
 OPTC    = -O2
 #End Optimized options
