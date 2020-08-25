@@ -1357,7 +1357,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
   int peqn, pvar;
   int evss_gradv=0;
 
-  int i, j, status, mode, imtrx;
+  int i, j, status, mode;
   dbl v[DIM];			        /* Velocity field. */
   dbl x_dot[DIM];			/* current position field derivative wrt time. */
   dbl h3;		        	/* Volume element (scale factors). */
