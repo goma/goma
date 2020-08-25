@@ -8,9 +8,10 @@ enable_language(CXX)
 enable_language(Fortran)
 
 set(CMAKE_C_STANDARD 99)
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
 
-set(PROJECT_NAME goma)
 list(APPEND CMAKE_MODULE_PATH "${goma_SOURCE_DIR}/cmake")
 
 set(CMAKE_PREFIX_PATH ${Trilinos_PREFIX} ${CMAKE_PREFIX_PATH})
@@ -21,8 +22,9 @@ MESSAGE(STATUS "Trilinos_DIR = ${Trilinos_DIR}")
 #message(STATUS "Trilinos LD Flags = ${Trilinos_EXTRA_LD_FLAGS}")
 
 set(MPI_C_COMPILER ${Trilinos_C_COMPILER})
+set(MPI_CXX_COMPILER ${Trilinos_CXX_COMPILER})
+set(MPI_Fortran_COMPILER ${Trilinos_Fortran_COMPILER})
 find_package(MPI REQUIRED)
-
 # Avoid linking to too many libraries by removing duplicates
 # reverse so that correct order for linking is preserved
 list(REVERSE Trilinos_LIBRARIES)
@@ -37,21 +39,30 @@ set(CMAKE_CXX_COMPILER ${Trilinos_CXX_COMPILER} )
 set(CMAKE_C_COMPILER ${Trilinos_C_COMPILER} )
 set(CMAKE_Fortran_COMPILER ${Trilinos_Fortran_COMPILER} )
 
-include_directories(${Trilinos_INCLUDE_DIRS} ${Trilinos_TPL_INCLUDE_DIRS} ${MPI_C_INCLUDE_PATH})
+option(ENABLE_CCACHE OFF)
+if (ENABLE_CCACHE)
+    message (STATUS "Searching for ccache.")
+    find_program(CCACHE_FOUND ccache)
+    if(CCACHE_FOUND)
+        message (STATUS "Ccache found.")
+        set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+        set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+    endif(CCACHE_FOUND)
+endif()
 
 # Trilinos required packages
 foreach(package Amesos AztecOO Epetra)
   LIST(FIND Trilinos_PACKAGE_LIST ${package} trilinos_package_index)
   if(${trilinos_package_index} LESS 0)
-  message(FATAL_ERROR "Trilinos not built with ${package}")
+  message(FATAL_ERROR "Trilinos not built with ${package} a required package")
   endif()
 endforeach()
 
 # Trilinos required TPLs
-foreach(package MPI UMFPACK)
+foreach(package MPI)
   LIST(FIND Trilinos_TPL_LIST ${package} trilinos_package_index)
   if(${trilinos_package_index} LESS 0)
-    message(FATAL_ERROR "Trilinos not built with TPL ${package}")
+    message(FATAL_ERROR "Trilinos not built with TPL ${package} a required TPL")
   endif()
 endforeach()
 
@@ -63,15 +74,6 @@ foreach(package SuperLUDist MUMPS)
   endif()
 endforeach()
 
-# UMFPACK in trilinos
-LIST(FIND Trilinos_TPL_LIST UMFPACK trilinos_package_index)
-if(${trilinos_package_index} LESS 0)
-  message(STATUS "Trilinos not built with UMFPACK TPL")
-else()
-  message(STATUS "Trilinos built with UMFPACK TPL")
-  message(STATUS "\tEnabling UMFPACK in Goma")
-  list(APPEND GOMA_COMPILE_DEFINITIONS HAVE_UMFPACK)
-endif()
 
 # stratimikos and teko
 LIST(FIND Trilinos_PACKAGE_LIST Stratimikos stratimikos_package_index)
@@ -90,7 +92,6 @@ find_package(SEACASExodus REQUIRED HINTS ${Trilinos_DIR}/../SEACASExodus)
 MESSAGE(STATUS "SEACASExodus_DIR = ${SEACASExodus_DIR}")
 find_package(SEACASChaco REQUIRED HINTS ${Trilinos_DIR}/../SEACASChaco)
 MESSAGE(STATUS "SEACASChaco_DIR = ${SEACASChaco_DIR}")
-
 
 message("")
 
@@ -118,6 +119,26 @@ else()
   set(Sparse_INCLUDES "")
 endif()
 
+# UMFPACK in trilinos
+LIST(FIND Trilinos_TPL_LIST UMFPACK trilinos_package_index)
+if(${trilinos_package_index} LESS 0)
+  message(STATUS "Trilinos not built with UMFPACK TPL")
+  message(STATUS "Checking for other umfpack")
+  find_package(UMFPACK)
+  if (UMFPACK_FOUND)
+    message(STATUS "UMFPACK found")
+    list(APPEND GOMA_COMPILE_DEFINITIONS HAVE_UMFPACK)
+    set(GOMA_TPL_LIBRARIES ${GOMA_TPL_LIBRARIES} ${UMFPACK_LIBRARIES})
+    set(GOMA_TPL_INCLUDES ${GOMA_TPL_INCLUDES} ${UMFPACK_INCLUDES})
+  else()
+    message(STATUS "UMFPACK library not found")
+  endif()
+else()
+  message(STATUS "Trilinos built with UMFPACK TPL")
+  message(STATUS "\tEnabling UMFPACK in Goma")
+  list(APPEND GOMA_COMPILE_DEFINITIONS HAVE_UMFPACK)
+endif()
+
 macro(option_definition OPTION VALUE)
   option(${OPTION} "${OPTION}" ${VALUE})
   if(${OPTION})
@@ -130,8 +151,8 @@ option_definition(ENABLE_AMESOS ON)
 option_definition(TRILINOS ON)
 option_definition(CHECK_FINITE ON)
 option_definition(NO_CHEBYSHEV_PLEASE ON)
-option_definition(COUPLED_FILL ON)
 option_definition(PARALLEL ON)
+option_definition(COUPLED_FILL ON)
 option_definition(FP_EXCEPT OFF)
 if (ARPACK_FOUND)
   option(EIGEN_SERIAL "EIGEN_SERIAL" ON)
@@ -173,6 +194,8 @@ set(MAX_PROB_VAR "15" CACHE STRING "set MAX_PROB_VAR")
 list(APPEND GOMA_COMPILE_DEFINITIONS MAX_PROB_VAR=${MAX_PROB_VAR})
 
 set(GOMA_INCLUDES
+        include/adapt/omega_h_interface.h
+        include/adapt/resetup_problem.h
         include/ac_conti.h
         include/ac_hunt.h
         include/ac_particles.h
@@ -184,11 +207,10 @@ set(GOMA_INCLUDES
         include/bc_curve.h
         include/bc_dirich.h
         include/bc_integ.h
-        include/bc_rotate.h
+        include/bc/rotate.h
         include/bc_special.h
         include/bc_surfacedomain.h
-        include/brkfix/
-        include/brk_utils.h
+        include/decomp_interface.h
         include/dp_comm.h
         include/dpi.h
         include/dp_map_comm_vec.h
@@ -231,6 +253,7 @@ set(GOMA_INCLUDES
         include/mm_fill_stress.h
         include/mm_fill_terms.h
         include/mm_fill_util.h
+        include/mm_fill_stabilization.h
         include/mm_flux.h
         include/mm_input.h
         include/mm_interface.h
@@ -281,6 +304,7 @@ set(GOMA_INCLUDES
         include/rf_solve_segregated.h
         include/rf_util.h
         include/rf_vars_const.h
+        include/bc/rotate_coordinates.h
         include/shell_tfmp_struct.h
         include/shell_tfmp_util.h
         include/sl_amesos_interface.h
@@ -293,7 +317,6 @@ set(GOMA_INCLUDES
         include/sl_epetra_util.h
         include/sl_lu.h
         include/sl_matrix_util.h
-        include/sl_rcm.h
         include/sl_stratimikos_interface.h
         include/sl_umf.h
         include/sl_util.h
@@ -302,23 +325,7 @@ set(GOMA_INCLUDES
         include/wr_dpi.h
         include/wr_exo.h
         include/wr_side_data.h
-        include/wr_soln.h
-        include/brkfix/bbb.h
-        include/brkfix/brkfix.h
-        include/brkfix/brkfix_types.h
-        include/brkfix/brk.h
-        include/brkfix/emuck.h
-        include/brkfix/exo_utils.h
-        include/brkfix/fix.h
-        include/brkfix/mk_dm.h
-        include/brkfix/nodesc.h
-        include/brkfix/ppi.h
-        include/brkfix/rd_in.h
-        include/brkfix/sam_perea.h
-        include/brkfix/utils.h
-        include/brkfix/wr_coords.h
-        include/brkfix/wr_graph_file.h
-)
+        include/wr_soln.h)
 
 set(GOMA_SOURCES
         src/ac_conti.c
@@ -337,8 +344,7 @@ set(GOMA_SOURCES
         src/bc_rotate.c
         src/bc_special.c
         src/bc_surfacedomain.c
-        src/brkfix/
-        src/brk_utils.c
+        src/decomp_interface.c
         src/dp_comm.c
         src/dp_map_comm_vec.c
         src/dp_utils.c
@@ -380,6 +386,7 @@ set(GOMA_SOURCES
         src/mm_fill_stress.c
         src/mm_fill_terms.c
         src/mm_fill_util.c
+        src/mm_fill_stabilization.c
         src/mm_flux.c
         src/mm_input_bc.c
         src/mm_input.c
@@ -423,6 +430,7 @@ set(GOMA_SOURCES
         src/rf_solve_segregated.c
         src/rf_util.c
         src/rf_vars.c
+        src/bc/rotate_coordinates.c
         src/shell_tfmp_util.c
         src/sl_amesos_interface.C
         src/sl_aux.c
@@ -437,10 +445,10 @@ set(GOMA_SOURCES
         src/sl_eggrollwrap.c
         src/sl_epetra_interface.cpp
         src/sl_epetra_util.cpp
-        src/sl_front_setup.c
         src/sl_leastsquares.C
         src/sl_lu.c
         src/sl_lu_fill.c
+        src/sl_front_setup.c
         src/sl_lustat.c
         src/sl_ma28.c
         src/sl_matrix_dump.c
@@ -452,18 +460,7 @@ set(GOMA_SOURCES
         src/wr_dpi.c
         src/wr_exo.c
         src/wr_side_data.c
-        src/wr_soln.c
-        src/brkfix/bbb.c
-        src/brkfix/brk_exo_file.c
-        src/brkfix/emuck.c
-        src/brkfix/fix_exo_file.c
-        src/brkfix/mk_dm.c
-        src/brkfix/ppi.c
-        src/brkfix/rd_in.c
-        src/brkfix/sam_perea.c
-        src/brkfix/utils.c
-        src/brkfix/wr_coords.c
-        src/brkfix/wr_graph_file.c)
+        src/wr_soln.c)
 
 set(GOMA_USER_INCLUDES
         include/user_bc.h
@@ -490,18 +487,28 @@ set(GOMA_USER_SOURCES
 )
 
 set(GOMA_UTIL_INCLUDES
+  include/bc/rotate_util.h
   include/mm_eh.h
 )
 
 set(GOMA_UTIL_SOURCES
+  src/bc/rotate_util.c
   src/mm_eh.c
 )
 
 # Set a default build type for single-configuration
-# CMake generators if no build type is set.
-IF(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
-  SET(CMAKE_BUILD_TYPE Release)
-ENDIF(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
+# CMake generators if no build type is set. 
+# https://blog.kitware.com/cmake-and-the-default-build-type/
+set(default_build_type "Release")
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
+  set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
+      STRING "Choose the type of build." FORCE)
+  # Set the possible values of build type for cmake-gui
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+    "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+endif()
+
 set(GOMA_WARNINGS "-Wall -Wextra -Wno-unused-parameter" CACHE STRING "set warnings for goma C and CXX")
 set(GOMA_DEBUG_FLAGS "-O0 -ggdb3" CACHE STRING "set debug flags for goma C and CXX")
 set(GOMA_RELEASE_FLAGS "-O2 -DNDEBUG" CACHE STRING "set release flags for goma C and CXX")
@@ -526,59 +533,65 @@ endforeach()
 message("\n")
 
 set(GOMA_TPL_INCLUDES
+  ${GOMA_TPL_INCLUDES}
   ${Sparse_INCLUDES}
-  ${Trilinos_INCLUDE_DIRS}
-  ${Trilinos_TPL_INCLUDE_DIRS}
   ${SEACASExodus_INCLUDE_DIRS}
   ${SEACASChaco_INCLUDE_DIRS}
   ${SEACASExodus_TPL_INCLUDE_DIRS}
   ${SEACASChaco_TPL_INCLUDE_DIRS}
+  ${Trilinos_INCLUDE_DIRS}
+  ${Trilinos_TPL_INCLUDE_DIRS}
+  ${MPI_C_INCLUDE_PATH}
 )
 
 set(GOMA_TPL_LIBRARY_DIRS
-  ${Trilinos_LIBRARY_DIRS}
-  ${Trilinos_TPL_LIBRARY_DIRS}
   ${SEACASExodus_LIBRARY_DIRS}
   ${SEACASExodus_TPL_LIBRARY_DIRS}
   ${SEACASChaco_LIBRARY_DIRS}
   ${SEACASChaco_TPL_LIBRARY_DIRS}
+  ${Trilinos_LIBRARY_DIRS}
+  ${Trilinos_TPL_LIBRARY_DIRS}
 )
 
 set(GOMA_TPL_LIBRARIES
-  ${GOMA_TPL_LIBRARIES}
-  ${Trilinos_LIBRARIES}
-  ${Trilinos_TPL_LIBRARIES}
-  ${Trilinos_EXTRA_LD_FLAGS}
   ${SEACASExodus_LIBRARIES}
   ${SEACASExodus_TPL_LIBRARIES}
   ${SEACASChaco_LIBRARIES}
   ${SEACASChaco_TPL_LIBRARIES}
+  ${GOMA_TPL_LIBRARIES}
+  ${Trilinos_LIBRARIES}
+  ${Trilinos_TPL_LIBRARIES}
+  ${Trilinos_EXTRA_LD_FLAGS}
+  ${MPI_C_LIBRARIES}
+  ${MPI_Fortran_LIBRARIES}
 )
 
 add_library(goma_user ${GOMA_USER_SOURCES} ${GOMA_USER_INCLUDES})
 target_include_directories(goma_user PUBLIC include)
+target_include_directories(goma_user PRIVATE ${GOMA_TPL_INCLUDES})
 target_compile_definitions(goma_user PUBLIC ${GOMA_COMPILE_DEFINITIONS})
 
 add_library(goma ${GOMA_SOURCES} ${GOMA_INCLUDES})
 target_include_directories(goma PUBLIC include)
-target_include_directories(goma PRIVATE include ${GOMA_TPL_INCLUDES})
+target_include_directories(goma PRIVATE ${GOMA_TPL_INCLUDES})
 target_link_directories(goma PUBLIC ${GOMA_TPL_LIBRARY_DIRS})
 target_link_libraries(goma ${GOMA_TPL_LIBRARIES})
 target_compile_definitions(goma PUBLIC ${GOMA_COMPILE_DEFINITIONS})
 
 add_library(goma_util ${GOMA_UTIL_SOURCES} ${GOMA_UTIL_INCLUDES})
-target_include_directories(goma_util PUBLIC include)
-target_link_libraries(goma_util)
+target_include_directories(goma_util PUBLIC include ${GOMA_TPL_INCLUDES})
+target_link_libraries(goma_util PUBLIC ${GOMA_TPL_LIBRARIES})
 target_compile_definitions(goma_util PUBLIC ${GOMA_COMPILE_DEFINITIONS})
 
 add_executable(goma_exe src/main.c)
 set_target_properties(goma_exe PROPERTIES OUTPUT_NAME "goma")
-target_include_directories(goma_exe PRIVATE include ${GOMA_TPL_INCLUDES})
-target_link_libraries(goma_exe ${GOMA_TPL_LIBRARIES} goma goma_user goma_util)
+target_include_directories(goma_exe PUBLIC include PRIVATE ${GOMA_TPL_INCLUDES})
+target_link_libraries(goma_exe PUBLIC ${GOMA_TPL_LIBRARIES} goma goma_user goma_util)
 target_compile_definitions(goma_exe PUBLIC ${GOMA_COMPILE_DEFINITIONS})
 
-
-option(ENABLE_TESTING "ENABLE_TESTING" OFF)
-if(ENABLE_TESTING)
-  add_subdirectory(tests)
-endif()
+install(TARGETS goma_exe
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include/goma
+)
