@@ -250,8 +250,8 @@ OPENMPI_MD5="851553085013939f24cdceb1af06b828"
 OPENMPI_ARCHIVE_URL="https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-$OPENMPI_VERSION.tar.bz2"
 OPENMPI_EXTRA_CONFIGURE_FLAGS=""
 
-CMAKE_VERSION="3.17.3"
-CMAKE_MD5="06bb006122e8e094f942bc9b2d999c92"
+CMAKE_VERSION="3.18.2"
+CMAKE_MD5="09a831bdcc6b05b89b51e5d7191de969"
 
 SUITESPARSE_VERSION="4.5.6"
 SUITESPARSE_MD5="eeb87a842a9b3b0425cf08d97fb3c5ec"
@@ -379,7 +379,7 @@ if [ "$build_cmake" == "false" ] ; then
 else
     ARCHIVE_NAMES+=("cmake-$CMAKE_VERSION-Linux-x86_64.tar.gz")
     ARCHIVE_MD5SUMS+=("$CMAKE_MD5")
-    ARCHIVE_URLS+=("https://github.com/Kitware/CMake/releases/download/v3.17.3/cmake-3.17.3-Linux-x86_64.tar.gz")
+    ARCHIVE_URLS+=("https://github.com/Kitware/CMake/releases/download/v$CMAKE_VERSION/cmake-$CMAKE_VERSION-Linux-x86_64.tar.gz")
     ARCHIVE_DIR_NAMES+=("cmake-$CMAKE_VERSION-Linux-x86_64")
     ARCHIVE_HOMEPAGES+=("https://cmake.org/")
     ARCHIVE_REAL_NAMES+=("CMake")
@@ -413,6 +413,7 @@ function setMPIvars() {
 }
 
 function setCompilerVars() {
+    export GCC_EXTRA_FFLAGS=""
     if [[ "$CC_NAME" == "intel" ]]; then
         #Special flag only needed by intel compiler because reasons? No really why does GCC not need -fopenmp?
         export COMPILER_FLAG_MPI="-qopenmp"
@@ -439,6 +440,10 @@ function setCompilerVars() {
         EXTRA_CXX_FLAGS=""
         export FORTRAN_LIBS="-L$INTEL_PARALLEL_STUDIO_ROOT/lib/intel64 -lifcore"
     elif [[ "$CC_NAME" == "gnu" ]]; then
+        GCC_VERSION=$(gcc --version | grep ^gcc | sed 's/^.* //g')
+        if [[ "$GCC_VERSION" = $(echo -e "$GCC_VERSION\n10.0.0\n" | sort -V |tail -n1) ]]; then
+            export GCC_EXTRA_FFLAGS="-fallow-argument-mismatch"
+        fi
         export MPI_C_COMPILER="mpicc"
         export MPI_CXX_COMPILER="mpiCC"
         # mpif90 and mpif77 are depricated in favor of just mpifort.
@@ -1052,7 +1057,7 @@ else
 < FFLAGS	= -O -cg89
 ---
 > FC      = $MPI_F77_COMPILER
-> FFLAGS	= -O $BLAS_FLAGS
+> FFLAGS	= -O $BLAS_FLAGS $GCC_EXTRA_FFLAGS
 115c115
 < MAKE    = /bin/make
 ---
@@ -1274,7 +1279,8 @@ else
         cd $GOMA_LIB/scalapack-$SCALAPACK_VERSION/src
         mkdir build
         cd build
-        cmake .. -DCMAKE_INSTALL_PREFIX=$GOMA_LIB/scalapack-$SCALAPACK_VERSION -DBUILD_SHARED=OFF -DCMAKE_C_COMPILER=$MPI_C_COMPILER -DCMAKE_CXX_COMPILER=$MPI_CXX_COMPILER -DCMAKE_Fortran_Compiler=$MPI_F90_COMPILER 2>&1 | tee -a $COMPILE_LOG
+        cmake .. -DCMAKE_INSTALL_PREFIX=$GOMA_LIB/scalapack-$SCALAPACK_VERSION -DBUILD_SHARED=OFF -DCMAKE_C_COMPILER=$MPI_C_COMPILER -DCMAKE_CXX_COMPILER=$MPI_CXX_COMPILER -DCMAKE_Fortran_Compiler=$MPI_F90_COMPILER -DCMAKE_Fortran_FLAGS="$GCC_EXTRA_FFLAGS"
+        2>&1 | tee -a $COMPILE_LOG
         make -j$MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
         make install 2>&1 | tee -a $COMPILE_LOG
         mkdir -p $GOMA_LIB/scalapack-$SCALAPACK_VERSION/include
@@ -1295,7 +1301,6 @@ if [ -e lib/libdmumps.a ]
 then
     log_echo "MUMPS already built"
 else
-
     cat > Makefile.inc <<EOF
 # Begin orderings
 #LSCOTCHDIR = /usr/lib
@@ -1350,7 +1355,7 @@ LIBOTHERS =
 CDEFS   = -DAdd_
 
 #Begin Optimized options
-OPTF    = -O2  -DALLOW_NON_INIT
+OPTF    = -O2  -DALLOW_NON_INIT $GCC_EXTRA_FFLAGS
 OPTL    = -O2
 OPTC    = -O2
 #End Optimized options

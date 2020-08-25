@@ -269,12 +269,9 @@ extern void read_porosity_data
  * Extern statements for variables defined in rf_util.c
  */
 
-extern Strcpy_rtn strcpy_rtn;
-
 extern int
 rd_exoII_ev(double *u, int varType, int mn, MATRL_PROP_STRUCT *matrl, 
 	    char **var_names, int num_nodes, int num_vars, int exoII_id,
 	    int time_step, int spec);
-
 #endif
 

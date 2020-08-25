@@ -324,6 +324,7 @@ double *u_post_proc = 0;       	/* user-provided values used in calculating
 /*
  *  Global Variables Defined in this file:
  */
+static int *listel;
 
 /**********************************************************************/
 /**********************************************************************/

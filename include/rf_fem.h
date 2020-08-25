@@ -33,32 +33,32 @@
 
 /* Geometric Parameters  */ 
 
-int  CoordinateSystem;  /* Indicates type of coordinate system (see fem_const.h)*/
+extern int  CoordinateSystem;  /* Indicates type of coordinate system (see fem_const.h)*/
 
 
 /* FEM Interpolation Parameters (see fem_const.h) */
 
-int  VelocityPressure;  /* Indicates which element type is used             */
+extern int  VelocityPressure;  /* Indicates which element type is used             */
 	                /* for velocity and pressure interpolation.         */
-int  Velocity;		/* Indicates which type of interpolation is used    */
+extern int  Velocity;		/* Indicates which type of interpolation is used    */
 			/* for velocity. (set by value of VelocityPressure) */
-int  Pressure;		/* Indicates which type of interpolation is used    */
+extern int  Pressure;		/* Indicates which type of interpolation is used    */
 			/* for pressure. (set by value of VelocityPressure) */
-int  Temperature;       /* Indicates which type of interpolation is used    */
+extern int  Temperature;       /* Indicates which type of interpolation is used    */
 			/* for temperature.                                 */
-int  MeshDisplacement;  /* Indicates which element type is used             */
+extern int  MeshDisplacement;  /* Indicates which element type is used             */
                         /* for mesh displacement interpolation.             */
-int  MassFraction;      /* Indicates which type of interpolation is used    */
+extern int  MassFraction;      /* Indicates which type of interpolation is used    */
                         /* for mass fraction and density.                   */
-int  nEQM;		/* Indicates one or more element quality metrics    */
+extern int  nEQM;		/* Indicates one or more element quality metrics    */
 			/* are to be performed.				    */
-int  Use_DG;		/* Indicates when Discontinuous Galerkin	    */
+extern int  Use_DG;		/* Indicates when Discontinuous Galerkin	    */
                         /* inpterpolation is in use.			    */
-int Do_Overlap;         /* Indicates that Overlap AC's will be used         */
+extern int Do_Overlap;         /* Indicates that Overlap AC's will be used         */
 
 /* Parameters to select Problem type (see fem_const.h)*/
 
-int  ProblemType,	/* Select type of problem to be solved		    */
+extern int  ProblemType,	/* Select type of problem to be solved		    */
      ProblemCoupling,   /* Select fully coupled or dilute solution method   */
      StateEq,	        /* Select equation of state                         */
      Multicomponent;	/* Select fomulation for multicomponent transport   */
@@ -66,24 +66,24 @@ int  ProblemType,	/* Select type of problem to be solved		    */
 
 /* global variable to account for extra terms in axisymmetric or swirling
    flow problems: define in setup_pd */
-int VIM;
+extern int VIM;
 
 /* Boundary Condition information */
 
-int Num_BC;		/* number of boundary conditions which are defined  */
+extern int Num_BC;		/* number of boundary conditions which are defined  */
 
-int Num_Interface_Srcs;	/* number *_D interfaces*/
-int IntSrc_BCID[MAX_INTERFACE];
+extern int Num_Interface_Srcs;	/* number *_D interfaces*/
+extern int IntSrc_BCID[MAX_INTERFACE];
 /* Rotation information */
-int Num_ROT;		/* number of rotations which are defined  */
+extern int Num_ROT;		/* number of rotations which are defined  */
 
 /* Import & Export field counts (used in coupled mode only) */
-int Num_Import_NV;	/* number of nodal vars to import */
-int Num_Import_EV;	/* number of nodal vars to import */
-int Num_Export_XS;	/* number of solution vars to export */
-int Num_Export_XP;	/* number of post-proc vars to export */
-int Export_XS_ID[MAX_EXTERNAL_FIELD]; /* ID's of solution vars to export */
-int Export_XP_ID[MAX_EXTERNAL_FIELD]; /* ID's of post proc vars to export */
+extern int Num_Import_NV;	/* number of nodal vars to import */
+extern int Num_Import_EV;	/* number of nodal vars to import */
+extern int Num_Export_XS;	/* number of solution vars to export */
+extern int Num_Export_XP;	/* number of post-proc vars to export */
+extern int Export_XS_ID[MAX_EXTERNAL_FIELD]; /* ID's of solution vars to export */
+extern int Export_XP_ID[MAX_EXTERNAL_FIELD]; /* ID's of post proc vars to export */
 
 
 /*
@@ -106,16 +106,16 @@ int Export_XP_ID[MAX_EXTERNAL_FIELD]; /* ID's of post proc vars to export */
  * Total: 2 unique_kinds of basis_functions
  */
 
-int	Num_Basis_Functions;
-int	Unique_Basis_Functions[MAX_BASIS_FUNCTIONS];
+extern int	Num_Basis_Functions;
+extern int	Unique_Basis_Functions[MAX_BASIS_FUNCTIONS];
 
 /*
  * Count up unique element types read in from the EXODUS II database, where
  * each element block has an element type associated with it.
  */
 
-int	Num_Element_Types;
-int	Unique_Element_Types[MAX_ELEMENT_TYPES];
+extern int	Num_Element_Types;
+extern int	Unique_Element_Types[MAX_ELEMENT_TYPES];
 
 
 /*
@@ -125,64 +125,64 @@ int	Unique_Element_Types[MAX_ELEMENT_TYPES];
  * 
  */
 
-int	Num_Interpolations;
-int	Unique_Interpolations[MAX_INTERPOLATIONS];
-int	Highest_Interpolation;
+extern int	Num_Interpolations;
+extern int	Unique_Interpolations[MAX_INTERPOLATIONS];
+extern int	Highest_Interpolation;
 
-int	Num_Shapes;
-int	Unique_Shapes[MAX_ELEMENT_SHAPES];
+extern int	Num_Shapes;
+extern int	Unique_Shapes[MAX_ELEMENT_SHAPES];
 
 
 /* Parameters to select time integration technique                           */
-int  TimeIntegration;   /* Select time integration method                    */
+extern int  TimeIntegration;   /* Select time integration method                    */
 #ifndef COUPLED_FILL
-int  Explicit_Fill;     /* Select time integration method                    */
-int  exp_subcycle;      /* Subcycling frequency for Fill equation            */
+extern int  Explicit_Fill;     /* Select time integration method                    */
+extern int  exp_subcycle;      /* Subcycling frequency for Fill equation            */
 #endif /* not COUPLED_FILL */
-int  Use_Level_Set;     /* Global switch to turn on level set computations   */
-int  Use_Phase_Field;   /* Global switch to turn on phase-field computations   */
+extern int  Use_Level_Set;     /* Global switch to turn on level set computations   */
+extern int  Use_Phase_Field;   /* Global switch to turn on phase-field computations   */
 		
 /* double  theta;  */   /* Time step parameter: theta = 0. => Backward Euler
 			                        theta = 1. => Forward  Euler */
 
-double  eps;            /* Time step error                                   */
-int  print_freq;
-double print_delt;
-double print_delt2_time, print_delt2;
+extern double  eps;            /* Time step error                                   */
+extern int  print_freq;
+extern double print_delt;
+extern double print_delt2_time, print_delt2;
 
 /* Parameters for continuation */
-int     Continuation;
-int     ContType;
-int     BdyCondID;
-int     DataFltID;
-int     MatID;
-int     MatPropID;
-int     MatPropSIID;
-int     MaxPathSteps;
-double  Delta_s0;
-double  Delta_s_min;
-double  Delta_s_max;
-double  PathMax;
+extern int     Continuation;
+extern int     ContType;
+extern int     BdyCondID;
+extern int     DataFltID;
+extern int     MatID;
+extern int     MatPropID;
+extern int     MatPropSIID;
+extern int     MaxPathSteps;
+extern double  Delta_s0;
+extern double  Delta_s_min;
+extern double  Delta_s_max;
+extern double  PathMax;
 
-double  print_delt2_path;
-double  BegParameterValue;
-double  EndParameterValue;
+extern double  print_delt2_path;
+extern double  BegParameterValue;
+extern double  EndParameterValue;
 
 /* Parameters for augmenting conditions */
-int     nAC;
+extern int     nAC;
 
 /* Parameters for multiple continuation conditions */
-int     nCC, nTC, nUC, nUTC;
+extern int     nCC, nTC, nUC, nUTC;
 
 /* Parameters for hunting conditions */
-int     nHC;
+extern int     nHC;
 
 /* Internal Flags that indicate what needs to be calculated within the
    Residual and Coefficient Matrix Function                                 */
 
    /* The following flags can have TRUE and FALSE values */        
 
-int  NumRegUnk_PN ;      /* Number of regular unknowns defined at each      */
+extern int  NumRegUnk_PN ;      /* Number of regular unknowns defined at each      */
                          /* global node.  This is defined as the number of  */
                          /* unknowns which have basis functions defined at  */
                          /* all global nodes in the element.  Unknowns      */
@@ -193,7 +193,7 @@ int  NumRegUnk_PN ;      /* Number of regular unknowns defined at each      */
 /* Internal Parameters that calculate information needed in the
    Residual and Coefficient Matrix Function                                 */
 
-int  NumSolnVelocities; /* Number of velocities to be solved for            */
+extern int  NumSolnVelocities; /* Number of velocities to be solved for            */
                         /* (0, 1, 2, or 3)                                  */ 
 
 
@@ -359,11 +359,11 @@ extern int ***Local_Offset;
 extern int 	***Dolphin;	
 
 /* Information about element Topology */
-int num_vertex;
-int num_curve;
-int num_surface;
-int num_body;
-int *body_nodes;
+extern int num_vertex;
+extern int num_curve;
+extern int num_surface;
+extern int num_body;
+extern int *body_nodes;
 
 /*
  * dofname -- holds strings telling the name of the variable (u1, T, P, etc)

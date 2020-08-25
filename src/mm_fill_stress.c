@@ -5913,11 +5913,10 @@ compute_exp_s(double s[DIM][DIM],
   double A[VIM*VIM];
   double D[DIM][DIM];
   double EIGEN_MAX = sqrt(sqrt(DBL_MAX));
-  double eig_S[DIM];
+  double eig_S[DIM] = {0.0};
   memset(A, 0.0, sizeof(double)*VIM*VIM);
   memset(D, 0.0, sizeof(double)*DIM*DIM);
   memset(eig_values, 0.0, sizeof(double)*DIM);
-  memset(eig_S, 0.0, sizeof(double)*DIM);
   memset(WORK, 0, sizeof(double)*LWORK);
 
   // convert to column major
@@ -5980,7 +5979,8 @@ analytical_exp_s(double s[DIM][DIM],
   double tmp;
 
 
-  double B[DIM][DIM], D[DIM][DIM],eig_S[DIM],Q1[DIM][DIM],Q2[DIM][DIM];
+  double B[DIM][DIM], D[DIM][DIM],Q1[DIM][DIM],Q2[DIM][DIM];
+  double eig_S[DIM] = {0.0};
   memset(D, 0.0, sizeof(double)*DIM*DIM);
 
   /* Use Eigenvalue algorithm from Wikipedia - https://en.wikipedia.org/wiki/

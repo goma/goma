@@ -61,18 +61,18 @@ static char rcsid[] =
  * have a mm_mp_structs and mm_mp.h to declare what these are.
  */
 
-int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwrite  *
+extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwrite  *
 					 * with material-specific            *
 					 * initialization                    */
 
-struct Variable_Initialization	Var_init[MAX_VARIABLE_TYPES + MAX_CONC];
+extern struct Variable_Initialization	Var_init[MAX_VARIABLE_TYPES + MAX_CONC];
 
-struct Variable_Initialization	Var_init_mat[MAX_NUMBER_MATLS]
+extern struct Variable_Initialization	Var_init_mat[MAX_NUMBER_MATLS]
 						[MAX_VARIABLE_TYPES + MAX_CONC];
 
-struct Boundary_Condition *BC_Types;
+extern struct Boundary_Condition *BC_Types;
 
-struct Rotation_Specs *ROT_Types;
+extern struct Rotation_Specs *ROT_Types;
 
 static Spfrtn sr;
 
@@ -85,8 +85,6 @@ static Spfrtn sr;
 //static char default_string[MAX_CHAR_IN_INPUT] = "Defaulting";
 
 //static char specify_string[MAX_CHAR_IN_INPUT] = "          ";
-
-Strcpy_rtn strcpy_rtn;		/* Data type def'd in std.h */
 
 //static char current_mat_file_name[MAX_FNL];
 

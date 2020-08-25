@@ -97,7 +97,7 @@ static const int spc = sizeof(char *);
 static const int spi = sizeof(int *);
 static const int spd = sizeof(dbl *);
 
-Spfrtn sr;			/* sprintf() return type */
+static Spfrtn sr;			/* sprintf() return type */
 int 
 rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
        const char *fn,

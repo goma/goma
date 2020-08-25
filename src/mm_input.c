@@ -83,11 +83,11 @@ struct Boundary_Condition *BC_Types;
 
 struct Rotation_Specs *ROT_Types;
 
-struct AC_Information *augc;
+extern struct AC_Information *augc;
 
 struct HC_Information *hunt;
 
-struct Eigensolver_Info *eigen;
+extern struct Eigensolver_Info *eigen;
 
 struct Continuation_Conditions *cpcc;
 
@@ -100,6 +100,8 @@ struct User_Continuation_Info *tpuc;
 struct Level_Set_Data *ls;
 struct Level_Set_Interface *lsi;
 struct Phase_Function_Data *pfd;
+
+static char aprepro_command[1024];
 
 static Spfrtn sr;
 
@@ -121,7 +123,7 @@ static char default_string[MAX_CHAR_IN_INPUT] = "(default)";
 //static char specify_string[MAX_CHAR_IN_INPUT] = "          ";
 
 
-Strcpy_rtn strcpy_rtn;		/* Data type def'd in std.h */
+static Strcpy_rtn strcpy_rtn;		/* Data type def'd in std.h */
 
 static int	run_aprepro=0;
 

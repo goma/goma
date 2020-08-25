@@ -54,16 +54,6 @@
 
 #include "brkfix/fix.h"
 
-char *program_name;		/* name this program was run with */
-
-int *ep;			/* element pointers into node list */
-int *np;			/* node pointers into element list */
-
-int *nl;			/* node list */
-int *el;			/* element list */
-
-int *ebl;			/* element block list */
-
 /*
  * Prototypes of functions defined in this file.
  */

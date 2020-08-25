@@ -148,10 +148,6 @@ Type_Elem;
 #define DIM		MAX_PDIM
 #endif
 
-char   element_type[ 32 + 1]; /* Hardwired to be equivalent to MAX_STR_LENGTH
-                                 in exodusII.h */
-int *listel;                  /* Pointer to element order map from exoII  */
-
 extern int ID_Side_Quad[];	/* defined in exo_conn.c */
 
 extern int ID_Side_Hex[];	/* defined in exo_conn.c */
