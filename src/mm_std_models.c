@@ -804,7 +804,7 @@ epoxy_dea_species_source( int species_no,    /* Current species number */
   
   /* Begin Execution */
   
-  if ( pd->e[TEMPERATURE] )
+  if ( pd->gv[TEMPERATURE] )
        {T = fv->T;}
   else
        {T = upd->Process_Temperature;}
@@ -939,7 +939,7 @@ epoxy_species_source(int species_no,   /* Current species number */
   /* Begin Execution */
   
 
-  if ( pd->e[TEMPERATURE] )
+  if ( pd->gv[TEMPERATURE] )
        {T = fv->T;}
   else
        {T = upd->Process_Temperature;}
@@ -1065,13 +1065,13 @@ bond_species_source(int species_no,   /* Current species number */
   
   /* Species piece */
   eqn = MASS_FRACTION;
-  if ( pd->e[eqn] & T_SOURCE )
+  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
     {
       mp->species_source[species_no] =  -k1*nn*gterm_a + k2*(n0-nn)*gterm_b;
       
       /* Jacobian entries for source term */
       var = MASS_FRACTION;
-      if (pd->v[var] )
+      if (pd->v[pg->imtrx][var] )
 	{
 	  var_offset = MAX_VARIABLE_TYPES + species_no;
 	  mp->d_species_source[var_offset] = 
@@ -1079,7 +1079,7 @@ bond_species_source(int species_no,   /* Current species number */
 	}
 
       var =  SHEAR_RATE;
-      if (pd->v[var] )
+      if (pd->v[pg->imtrx][var] )
 	{
 	  mp->d_species_source[var] = 
 	    -k1*nn*d_gterm_a + k2*(n0-nn)*d_gterm_b;
@@ -1145,7 +1145,7 @@ foam_epoxy_species_source(int species_no,   /* Current species number */
   /* Begin Execution */
   
 
-  if ( pd->e[TEMPERATURE] )
+  if ( pd->gv[TEMPERATURE] )
        {T = fv->T;}
   else
        {T = upd->Process_Temperature;}
@@ -5906,7 +5906,7 @@ epoxy_flowing_liquid_viscosity(dbl *vis, /* Base FLOWING LIQUID VISCOITY  */
     }
 
 
-  if ( pd->e[TEMPERATURE] )
+  if ( pd->gv[TEMPERATURE] )
        {T = fv->T;}
   else
        {T = upd->Process_Temperature;}
@@ -5931,7 +5931,7 @@ epoxy_flowing_liquid_viscosity(dbl *vis, /* Base FLOWING LIQUID VISCOITY  */
 
      /* d_flow_mu_dT */
      var = TEMPERATURE;
-     if(pd->v[var])
+     if(pd->v[pg->imtrx][var])
        {
         if( T <= 0.)
           {
@@ -5951,7 +5951,7 @@ epoxy_flowing_liquid_viscosity(dbl *vis, /* Base FLOWING LIQUID VISCOITY  */
 
      /* d_flow_mu_dC */
      var = MASS_FRACTION;
-     if(pd->v[var])
+     if(pd->v[pg->imtrx][var])
        {
         if(alpha < alpha_g)
           {

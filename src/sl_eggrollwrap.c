@@ -338,7 +338,7 @@ void eggrollwrap(int *istuff, /* info for eigenvalue extraction */
             bool is_P1 = FALSE;
             int dof = 0;
             for (int mn = 0; mn < upd->Num_Mat; mn++) {
-              if (pd_glob[mn]->i[rd->evtype[iev]] == I_P1) {
+              if (pd_glob[mn]->i[upd->matrix_index[rd->evtype[iev]]][rd->evtype[iev]] == I_P1) {
                 dof = MAX(getdofs(type2shape(exo->eb_elem_itype[mn]), I_P1), dof);
                 is_P1 = TRUE;
               }

@@ -556,7 +556,7 @@ void h0_minus_ndotd (
             }
           }
 
-          if (pd->e[R_SHELL_NORMAL1]) {
+          if (pd->e[pg->imtrx][R_SHELL_NORMAL1]) {
             for (i = 0; i<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; i++) {
               d2h_dtime_dnormal[k][i] -= h_sign*fv_dot->d[k]*bf[SHELL_NORMAL1]->phi[i];
               d2h_dtime_dnormal[k][i] -= h_sign*fv->d[k]*bf[SHELL_NORMAL1]->phi[i]*(1.0+2.0*tt)/delta_t;
@@ -565,7 +565,7 @@ void h0_minus_ndotd (
         }
         for(i = 0; i<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; i++) {
           dh_dmesh[k][i] -= h_sign*normal[k]*bf[MESH_DISPLACEMENT1]->phi[i];
-          if (pd->v[SHELL_NORMAL1 + k]) {
+          if (pd->v[pg->imtrx][SHELL_NORMAL1 + k]) {
             dh_dnormal[k][i] -= h_sign*fv->d[k]*bf[SHELL_NORMAL1]->phi[i];
           }
         }

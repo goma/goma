@@ -4079,42 +4079,42 @@ set_interaction_masks(Exo_DB *exo)
         case R_EM_H2_IMAG:
         case R_EM_H3_IMAG:
           v=EM_E1_REAL;
-          if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[e][v] = 1;
+          if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
           v=EM_E2_REAL;
-          if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[e][v] = 1;
+          if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
           v=EM_E3_REAL;
-          if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[e][v] = 1;
+          if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
           v=EM_E1_IMAG;
-          if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[e][v] = 1;
+          if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
           v=EM_E2_IMAG;
-          if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[e][v] = 1;
+          if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
           v=EM_E3_IMAG;
-          if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[e][v] = 1;
+          if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
           v=EM_H1_REAL;
           if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
           v=EM_H2_REAL;
-          if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[e][v] = 1;
+          if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
           v=EM_H3_REAL;
-          if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[e][v] = 1;
+          if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
           v=EM_H1_IMAG;
-          if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[e][v] = 1;
+          if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
           v=EM_H2_IMAG;
           if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
           v=EM_H3_IMAG;
-          if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[e][v] = 1;
+          if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
           v=EM_CONT_REAL;
-          if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[e][v] = 1;
+          if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
           v=EM_CONT_IMAG;
-          if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[e][v] = 1;
+          if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
           break;
         case EM_CONT_REAL:
         case EM_CONT_IMAG:
           v=EM_E1_REAL;
-          if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[e][v] = 1;
+          if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
           v=EM_E2_REAL;
           if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
           v=EM_E3_REAL;
-          if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[e][v] = 1;
+          if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
           v=EM_E1_IMAG;
           if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
           v=EM_E2_IMAG;

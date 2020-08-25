@@ -6050,7 +6050,7 @@ compute_volume_integrand(const int quantity, const int elem,
       break;
 
     case I_TFMP_FORCE:
-      if(pd->e[R_TFMP_MASS]) {
+      if(pd->e[pg->imtrx][R_TFMP_MASS]) {
 	n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
 	lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
 	det = fv->sdet; //Different determinant since this is a shell

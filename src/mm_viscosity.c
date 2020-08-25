@@ -476,11 +476,11 @@ viscosity(struct Generalized_Newtonian *gn_local,
       mu = mp->viscosity;
       
        var = MASS_FRACTION;
-      if ( d_mu != NULL && pd->v[var] )
+      if ( d_mu != NULL && pd->v[pg->imtrx][var] )
 	{
 	  w = gn_local->sus_species_no;
 	  var_offset = MAX_VARIABLE_TYPES + w;
-	  for ( j=0; j<ei->dof[var]; j++)
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      d_mu->C[w][j] =mp->d_viscosity[var_offset]*bf[var]->phi[j];
 	    }
@@ -1263,7 +1263,7 @@ bingham_viscosity(struct Generalized_Newtonian *gn_local,
  	}
   fexp = gn_local->fexp;
 
-  if ( pd->e[pg->imtrx][TEMPERATURE] )
+  if ( pd->gv[TEMPERATURE] )
        {temp = fv->T;}
   else
        {temp = upd->Process_Temperature;}
@@ -1493,7 +1493,7 @@ bingham_wlf_viscosity(struct Generalized_Newtonian *gn_local,
   lambda = gn_local->lam;
   wlfc2 = gn_local->wlfc2;
 
-  if ( pd->e[pg->imtrx][TEMPERATURE] )
+  if ( pd->gv[TEMPERATURE] )
        {temp = fv->T;}
   else
        {temp = upd->Process_Temperature;}
@@ -1692,7 +1692,7 @@ carreau_wlf_viscosity(struct Generalized_Newtonian *gn_local,
   wlfc2 = gn_local->wlfc2;
   lambda = gn_local->lam;
 
-  if ( pd->e[pg->imtrx][TEMPERATURE] )
+  if ( pd->gv[TEMPERATURE] )
        {temp = fv->T;}
   else
        {temp = upd->Process_Temperature;}
@@ -2542,7 +2542,7 @@ epoxy_viscosity(int species,    /* species number for cure equation */
     }
     
   
-  if ( pd->e[pg->imtrx][TEMPERATURE] )
+  if ( pd->gv[TEMPERATURE] )
        {T = fv->T;}
   else
        {T = upd->Process_Temperature;}
@@ -2769,7 +2769,7 @@ sylgard_viscosity(int species,    /* species number for cure equation */
     }
     
   
-  if ( pd->e[pg->imtrx][TEMPERATURE] )
+  if ( pd->gv[TEMPERATURE] )
        {T = fv->T;}
   else
        {T = upd->Process_Temperature;}
@@ -2918,7 +2918,7 @@ filled_epoxy_viscosity(int species_sus,	/* species num, solid volume fraction*/
       exit(-1);
     }
                                        
-  if ( pd->e[pg->imtrx][TEMPERATURE] )
+  if ( pd->gv[TEMPERATURE] )
        {T = fv->T;}
   else
        {T = upd->Process_Temperature;}
@@ -3093,7 +3093,7 @@ foam_epoxy_viscosity(int species_fluor, int species_cur, dbl mu0,
       exponent = 4./.3;
     }
 
-  if (pd->e[pg->imtrx][TEMPERATURE]) {
+  if (pd->gv[TEMPERATURE]) {
     T = fv->T;
   } else {
     T = upd->Process_Temperature;
@@ -3193,7 +3193,7 @@ thermal_viscosity(dbl mu0,	/* reference temperature fluid viscosity */
     }
 
                                        
-  if ( pd->e[pg->imtrx][TEMPERATURE] )
+  if ( pd->gv[TEMPERATURE] )
        {T = fv->T;}
   else
        {T = upd->Process_Temperature;}
@@ -3345,7 +3345,7 @@ bond_viscosity(struct Generalized_Newtonian *gn_local,
       return(0);
     }
 
-  if ( pd->e[TEMPERATURE] )
+  if ( pd->gv[TEMPERATURE] )
        {temp = fv->T;}
   else
        {temp = upd->Process_Temperature;}
@@ -3372,11 +3372,11 @@ bond_viscosity(struct Generalized_Newtonian *gn_local,
     }
   fexp = gn_local->fexp;
 
-  vdofs = ei->dof[VELOCITY1];
+  vdofs = ei[pg->imtrx]->dof[VELOCITY1];
 
-  if ( pd->e[R_MESH1] )
+  if ( pd->e[pg->imtrx][R_MESH1] )
     {
-      mdofs = ei->dof[R_MESH1];
+      mdofs = ei[pg->imtrx]->dof[R_MESH1];
     }
 
   var = TEMPERATURE;
@@ -3430,9 +3430,9 @@ bond_viscosity(struct Generalized_Newtonian *gn_local,
       mu = mp->viscosity;
       
   var = BOND_EVOLUTION;
-  if ( d_mu != NULL && pd->v[var] )
+  if ( d_mu != NULL && pd->v[pg->imtrx][var] )
 	{
-	  for ( j=0; j<ei->dof[var]; j++)
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      d_mu->nn[j]= mp->d_viscosity[var]*bf[var]->phi[j];
 	    }
@@ -3444,9 +3444,9 @@ bond_viscosity(struct Generalized_Newtonian *gn_local,
  *       */
 
   var = TEMPERATURE;
-  if ( d_mu != NULL && pd->e[var] )
+  if ( d_mu != NULL && pd->e[pg->imtrx][var] )
     {
-      for ( j=0; j<ei->dof[var]; j++)
+      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
         {
           d_mu->T[j]= mp->d_viscosity[var] * bf[var]->phi[j];
         }
@@ -3455,7 +3455,7 @@ bond_viscosity(struct Generalized_Newtonian *gn_local,
   /*
    * d( mu )/dmesh
    */
-  if ( d_mu != NULL && pd->e[R_MESH1] )
+  if ( d_mu != NULL && pd->e[pg->imtrx][R_MESH1] )
     {
       for ( b=0; b<VIM; b++)
 	{
@@ -3478,7 +3478,7 @@ bond_viscosity(struct Generalized_Newtonian *gn_local,
   /*
    * d( mu )/dv
    */
-  if ( d_mu != NULL && pd->e[R_MOMENTUM1] )
+  if ( d_mu != NULL && pd->e[pg->imtrx][R_MOMENTUM1] )
     {
       for ( a=0; a<VIM; a++)
         {
@@ -3530,7 +3530,7 @@ int bond_viscosity_sh(int bond_species, /* integer associated with conc eqn for 
   dbl nn; /* Convenient local variables */
   int status = 1;
 
-  if (! pd->v[MASS_FRACTION] )
+  if (! pd->gv[MASS_FRACTION] )
     {
       return(0);
     }
@@ -3620,7 +3620,7 @@ carreau_wlf_conc_viscosity(struct Generalized_Newtonian *gn_local,
  
  /*  temperature shift factor  */
  
-  if ( pd->e[pg->imtrx][TEMPERATURE] )
+  if ( pd->gv[TEMPERATURE] )
        {temp = fv->T;}
   else
        {temp = upd->Process_Temperature;}

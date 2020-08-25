@@ -1086,7 +1086,7 @@ load_ei(const int elem, const Exo_DB *exo, struct Element_Indices *ei_ptr_fill, 
                            *  then we assign the column variable information to the 
                            *  parent element.
                            *
-                           *  The pd->e[v] stuff is for the mesh equations.
+                           *  The pd->e[imtrx][v] stuff is for the mesh equations.
                            */
                           if (ei_ptr->owningElementForColVar[v] == -1 || 
                               ((pd_glob[mn])->e[imtrx][v] == 0))

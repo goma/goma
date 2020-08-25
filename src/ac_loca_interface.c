@@ -3486,7 +3486,7 @@ void solution_output_conwrap(int num_soln_flag,
    displacement_somewhere = FALSE;
 
   for(m = 0; m < upd->Num_Mat; m++)
-      displacement_somewhere |= ( pd_glob[m]->e[R_MESH1] );
+      displacement_somewhere |= ( pd_glob[m]->gv[R_MESH1] );
 
   /*
    * Backup old solutions
@@ -3626,7 +3626,7 @@ void eigenvector_output_conwrap(int j, int num_soln_flag, double *xr, double evr
    displacement_somewhere = FALSE;
 
    for(m = 0; m < upd->Num_Mat; m++)
-       displacement_somewhere |= ( pd_glob[m]->e[R_MESH1] );
+       displacement_somewhere |= ( pd_glob[m]->gv[R_MESH1] );
 
    if (displacement_somewhere )
      {

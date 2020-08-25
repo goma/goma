@@ -1008,7 +1008,7 @@ void extract_elem_vec(const double sol_vec[],
            There should never be more than one of this quantity defined
            per element, or we have a problem treating it as an element
            variable. Hence the found_quantity check.                       */
-        index = Index_Solution(I, var, ktype, dof, mn);
+        index = Index_Solution(I, var, ktype, dof, mn, upd->matrix_index[var]);
         if (index != -1) {
           /* This should be the one node that has our value - set the element
              value to this */

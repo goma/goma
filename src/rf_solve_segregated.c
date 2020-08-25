@@ -305,7 +305,7 @@ void solve_problem_segregated(
     tnv[pg->imtrx] =
         cnt_nodal_vars(); /*  tnv_post is calculated in load_nodal_tkn*/
     tev[pg->imtrx] =
-        cnt_elem_vars(); /*  tev_post is calculated in load_elem_tkn*/
+        cnt_elem_vars(exo); /*  tev_post is calculated in load_elem_tkn*/
 
     if (tnv[pg->imtrx] < 0) {
       DPRINTF(stderr, "%s:\tbad tnv.\n", yo);

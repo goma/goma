@@ -1730,7 +1730,7 @@ assemble_energy(double time,	/* present time value */
 			source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 		      }
 
-		    lec->J[peqn][pvar][i][j] += mass + advection + diffusion + source;
+		    lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + advection + diffusion + source;
 		  }
 	      }
 	  }
@@ -1793,7 +1793,7 @@ assemble_energy(double time,	/* present time value */
 		      source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 		    }
 
-		  lec->J[peqn][pvar][i][j] += mass + advection + diffusion + source;
+		  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + advection + diffusion + source;
 		}
 	    }
 	  /*
@@ -3368,7 +3368,7 @@ assemble_momentum(dbl time,       /* current time */
 		    {
 		      pvar = upd->vp[pg->imtrx][var];
 		      phi_j_vector = bf[var]->phi;
-		      J = lec->J[peqn][pvar][ii];
+		      J = &(lec->J[LEC_J_INDEX(peqn,pvar,ii,0)]);
 
 		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
@@ -6095,7 +6095,7 @@ assemble_continuity(dbl time_value,   /* current time */
 		{
 		  pvar = upd->vp[pg->imtrx][var];
 
-		  J = lec->J[peqn][pvar][i];
+                  J = &(lec->J[LEC_J_INDEX(peqn,pvar,i,0)]);
 
 		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
@@ -6125,7 +6125,7 @@ assemble_continuity(dbl time_value,   /* current time */
 	    {
 	      pvar = upd->vp[pg->imtrx][var];
 
-	      J = lec->J[peqn][pvar][i];
+              J = &(lec->J[LEC_J_INDEX(peqn,pvar,i,0)]);
 
 	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
@@ -8602,14 +8602,14 @@ load_fv(void)
   if (pdgv[EM_CONT_REAL]) 
     {
       v = EM_CONT_REAL;
-      scalar_fv_fill(esp->epr, esp_dot->epr, esp_old->epr, bf[v]->phi, ei->dof[v],
+      scalar_fv_fill(esp->epr, esp_dot->epr, esp_old->epr, bf[v]->phi, ei[upd->matrix_index[v]]->dof[v],
 		     &(fv->epr), &(fv_dot->epr), &(fv_old->epr));
       stateVector[v] = fv->epr;
     } 
   if (pdgv[EM_CONT_IMAG]) 
     {
       v = EM_CONT_IMAG;
-      scalar_fv_fill(esp->epi, esp_dot->epi, esp_old->epi, bf[v]->phi, ei->dof[v],
+      scalar_fv_fill(esp->epi, esp_dot->epi, esp_old->epi, bf[v]->phi, ei[upd->matrix_index[v]]->dof[v],
 		     &(fv->epi), &(fv_dot->epi), &(fv_old->epi));
       stateVector[v] = fv->epi;
     } 
@@ -9396,7 +9396,7 @@ load_fv(void)
     }
   }
   
-  if (pdgv[EM_E1_IMAG] || pdgv[EM_E2_IMAG] || pdgv[EM_E3_IMAG]) 
+  if (pdgv[EM_E1_IMAG] || pdgv[EM_E2_IMAG] || pdgv[EM_E3_IMAG]) {
     for ( p=0; p<DIM; p++) {
       v = EM_E1_IMAG + p;
       fv->em_ei[p] = 0.0;
@@ -9416,7 +9416,7 @@ load_fv(void)
     }
   }
 
-  if (pdv[EM_H1_REAL] || pdv[EM_H2_REAL] || pdv[EM_H3_REAL]) {
+  if (pdgv[EM_H1_REAL] || pdgv[EM_H2_REAL] || pdgv[EM_H3_REAL]) {
     for ( p=0; p<DIM; p++) {
       v = EM_H1_REAL + p;
       fv->em_hr[p] = 0.0;
@@ -9436,7 +9436,7 @@ load_fv(void)
     }
   }
 
-  if (pdgv[EM_H1_IMAG] || pdgv[EM_H2_IMAG] || pdgv[EM_H3_IMAG]) 
+  if (pdgv[EM_H1_IMAG] || pdgv[EM_H2_IMAG] || pdgv[EM_H3_IMAG]) {
     for ( p=0; p<DIM; p++) {
       v = EM_H1_IMAG + p;
       fv->em_hi[p] = 0.0;
@@ -10346,9 +10346,9 @@ load_fv_grads(void)
 	}
     }
 
-    if (pd->v[EM_E1_REAL]) {
+    if (pd->gv[EM_E1_REAL]) {
       v = EM_E1_REAL;
-      dofs = ei->dof[v];
+      dofs = ei[upd->matrix_index[v]]->dof[v];
       bfn = bf[v];
 
       for (p = 0; p < DIM; p++) {
@@ -10360,9 +10360,9 @@ load_fv_grads(void)
         }
       }
     }
-    if (pd->v[EM_E1_IMAG]) {
+    if (pd->gv[EM_E1_IMAG]) {
       v = EM_E1_REAL;
-      dofs = ei->dof[v];
+      dofs = ei[upd->matrix_index[v]]->dof[v];
       bfn = bf[v];
 
       for (p = 0; p < DIM; p++) {
@@ -11450,8 +11450,8 @@ load_fv_grads(void)
    */
   if (pd->gv[EM_E1_REAL] || pd->gv[EM_E2_REAL] || pd->gv[EM_E3_REAL]) 
     {
-      dofs = ei[pg->imtrx]->dof[EM_E1_REAL];
       v = EM_E1_REAL;
+      dofs = ei[upd->matrix_index[v]]->dof[v];
 
       //grad_vector_fv_fill(esp->em_er, bf[v]->grad_phi_e, dofs, fv->grad_em_er);
       for (p = 0; p < dim; p++) {
@@ -11467,6 +11467,7 @@ load_fv_grads(void)
                     }
                 }
             }
+      }
     } else if ( zero_unused_grads && upd->vp[pg->imtrx][EM_E1_REAL] == -1
            && upd->vp[pg->imtrx][EM_E2_REAL] == -1 &&  upd->vp[pg->imtrx][EM_E3_REAL] == -1 ) {
       for ( p=0; p<DIM; p++)
@@ -11478,10 +11479,11 @@ load_fv_grads(void)
 	}
 
     }
+
   if (pd->gv[EM_E1_IMAG] || pd->gv[EM_E2_IMAG] || pd->gv[EM_E3_IMAG]) 
     {
-      dofs = ei[pg->imtrx]->dof[EM_E1_IMAG];
       v = EM_E1_IMAG;
+      dofs = ei[upd->matrix_index[v]]->dof[v];
 
       //grad_vector_fv_fill(esp->em_ei, bf[v]->grad_phi_e, dofs, fv->grad_em_ei);
       for (p = 0; p < dim; p++) {
@@ -11511,8 +11513,8 @@ load_fv_grads(void)
     }
   if (pd->gv[EM_H1_REAL] || pd->gv[EM_H2_REAL] || pd->gv[EM_H3_REAL]) 
     {
-      dofs = ei[pg->imtrx]->dof[EM_H1_REAL];
       v = EM_H1_REAL;
+      dofs = ei[upd->matrix_index[v]]->dof[v];
 
       //grad_vector_fv_fill(esp->em_hr, bf[v]->grad_phi_e, dofs, fv->grad_em_hr);
       for (p = 0; p < VIM; p++) {
@@ -11528,6 +11530,7 @@ load_fv_grads(void)
                     }
                 }
             }
+      }
     } else if ( zero_unused_grads && upd->vp[pg->imtrx][EM_H1_REAL] == -1
            && upd->vp[pg->imtrx][EM_H2_REAL] == -1 &&  upd->vp[pg->imtrx][EM_H3_REAL] == -1 ) {
       for ( p=0; p<DIM; p++)
@@ -11541,8 +11544,8 @@ load_fv_grads(void)
     }
   if (pd->gv[EM_H1_IMAG] || pd->gv[EM_H2_IMAG] || pd->gv[EM_H3_IMAG]) 
     {
-      dofs = ei[pg->imtrx]->dof[EM_H1_IMAG];
       v = EM_H1_IMAG;
+      dofs = ei[upd->matrix_index[v]]->dof[v];
 
       //grad_vector_fv_fill(esp->em_hi, bf[v]->grad_phi_e, dofs, fv->grad_em_hi);
       for (p = 0; p < VIM; p++) {
@@ -21047,7 +21050,7 @@ assemble_projection_time_stabilization(Exo_DB *exo, double time, double tt, doub
               for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
                 {
                   phi_i = bf[eqn]->phi[i];
-                  lec->R[peqn][i] += ls_scale_factor*PS_scaling*dt*(fv_dot->P - P_dot_avg) * (phi_i - phi_avg[i]) / mu * d_vol;
+                  lec->R[LEC_R_INDEX(peqn,i)] += ls_scale_factor*PS_scaling*dt*(fv_dot->P - P_dot_avg) * (phi_i - phi_avg[i]) / mu * d_vol;
                 }
             }
           if ( af->Assemble_Jacobian )
@@ -21062,7 +21065,7 @@ assemble_projection_time_stabilization(Exo_DB *exo, double time, double tt, doub
                   for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       phi_j = bf[var]->phi[j];
-                      lec->J[peqn][pvar][i][j] += ls_scale_factor*dt*PS_scaling*(((1+2.*tt) / dt) * (phi_j - phi_avg[j])) * (phi_i - phi_avg[i]) / mu * d_vol;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += ls_scale_factor*dt*PS_scaling*(((1+2.*tt) / dt) * (phi_j - phi_avg[j])) * (phi_i - phi_avg[i]) / mu * d_vol;
                     }
 
 
@@ -21075,7 +21078,7 @@ assemble_projection_time_stabilization(Exo_DB *exo, double time, double tt, doub
 
                           if( ls != NULL && ls->PSPP_filter ) {
 
-                              lec->J[peqn][pvar][i][j] += -(lsi->d_delta_dF[j]/lsi->delta_max) * dt * PS_scaling*(fv_dot->P - P_dot_avg) *
+                              lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += -(lsi->d_delta_dF[j]/lsi->delta_max) * dt * PS_scaling*(fv_dot->P - P_dot_avg) *
                                   (phi_i - phi_avg[i]) / mu * d_vol;
                             }
                         }
@@ -23059,7 +23062,7 @@ assemble_cap_denner_diffusion(double dt, double scale)
   double diffusion;
 
   eqn = R_MOMENTUM1;
-  if ( ! pd->e[eqn] )
+  if ( ! pd->e[pg->imtrx][eqn] )
     {
       return(0);
     }
@@ -23268,7 +23271,7 @@ assemble_cap_denner_diffusion_n(double dt, double scale)
   double diffusion;
 
   eqn = R_MOMENTUM1;
-  if ( ! pd->e[eqn] )
+  if ( ! pd->e[pg->imtrx][eqn] )
     {
       return(0);
     }

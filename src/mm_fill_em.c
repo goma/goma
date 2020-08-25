@@ -15,7 +15,6 @@
  *
  */
 
-#include <complex.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -55,6 +54,8 @@
 #include "mm_fill_util.h"
 #include "mm_species.h"
 #include "rf_allo.h"
+
+#include <complex.h>
 
 /*  _______________________________________________________________________  */
 
@@ -164,7 +165,7 @@ int assemble_emwave(double time, /* present time value */
   /*
    * Bail out fast if there's nothing to do...
    */
-  if (!pd->e[eqn]) {
+  if (!pd->e[pg->imtrx][eqn]) {
     return (status);
   }
 
@@ -343,12 +344,12 @@ int assemble_emwave(double time, /* present time value */
     eqn = em_eqn;
     peqn = upd->ep[pg->imtrx][eqn];
     var = em_var;
-    for (i = 0; i < ei->dof[eqn]; i++) {
+    for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
 
       /* this is an optimization for xfem */
       if (xfem != NULL) {
         int xfem_active, extended_dof, base_interp, base_dof;
-        xfem_dof_state(i, pd->i[eqn], ei->ielem_shape, &xfem_active, &extended_dof, &base_interp,
+        xfem_dof_state(i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape, &xfem_active, &extended_dof, &base_interp,
                        &base_dof);
         if (extended_dof && !xfem_active)
           continue;
@@ -356,7 +357,7 @@ int assemble_emwave(double time, /* present time value */
       phi_i = bf[eqn]->phi[i];
 
       advection = 0.;
-      if (pd->e[eqn] & T_ADVECTION) {
+      if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
         advection += emf_coeff * EMF;
         advection += conj_coeff * EMF_conj;
         advection *= phi_i * h3;
@@ -365,7 +366,7 @@ int assemble_emwave(double time, /* present time value */
       }
 
       diffusion = 0.;
-      if (pd->e[eqn] & T_DIFFUSION) {
+      if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
         for (p = 0; p < VIM; p++) {
           grad_phi_i[p] = bf[eqn]->grad_phi[i][p];
         }
@@ -394,12 +395,12 @@ int assemble_emwave(double time, /* present time value */
   if (af->Assemble_Jacobian) {
     eqn = em_eqn;
     peqn = upd->ep[pg->imtrx][eqn];
-    for (i = 0; i < ei->dof[eqn]; i++) {
+    for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
 
       // this is an optimization for xfem
       if (xfem != NULL) {
         int xfem_active, extended_dof, base_interp, base_dof;
-        xfem_dof_state(i, pd->i[eqn], ei->ielem_shape, &xfem_active, &extended_dof, &base_interp,
+        xfem_dof_state(i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape, &xfem_active, &extended_dof, &base_interp,
                        &base_dof);
         if (extended_dof && !xfem_active)
           continue;
@@ -420,13 +421,13 @@ int assemble_emwave(double time, /* present time value */
        * EMF
        */
       var = em_var;
-      if (pd->v[var]) {
+      if (pd->v[pg->imtrx][var]) {
         pvar = upd->vp[pg->imtrx][var];
-        for (j = 0; j < ei->dof[var]; j++) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
           phi_j = bf[var]->phi[j];
 
           advection = 0.;
-          if (pd->e[eqn] & T_ADVECTION) {
+          if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
             advection += phi_i * emf_coeff * phi_j * det_J * wt;
             advection *= h3;
             advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
@@ -439,13 +440,13 @@ int assemble_emwave(double time, /* present time value */
        *  EMF_conj
        */
       var = em_conjvar;
-      if (pd->v[var]) {
+      if (pd->v[pg->imtrx][var]) {
         pvar = upd->vp[pg->imtrx][var];
-        for (j = 0; j < ei->dof[var]; j++) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
           phi_j = bf[var]->phi[j];
 
           advection = 0.;
-          if (pd->e[eqn] & T_ADVECTION) {
+          if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
             advection += phi_i * conj_coeff * phi_j * det_J * wt;
             advection *= h3;
             advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
@@ -459,9 +460,9 @@ int assemble_emwave(double time, /* present time value */
        */
       for (b = 0; b < dim; b++) {
         var = cross_field_var + b;
-        if (pd->v[var]) {
+        if (pd->v[pg->imtrx][var]) {
           pvar = upd->vp[pg->imtrx][var];
-          for (j = 0; j < ei->dof[var]; j++) {
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             // for a cross product, this isn't quite right
             // but it will work as along as all scalar
             // components of the vector field have the
@@ -469,7 +470,7 @@ int assemble_emwave(double time, /* present time value */
             phi_j = bf[var]->phi[j];
 
             diffusion = 0.;
-            if (pd->e[eqn] & T_DIFFUSION) {
+            if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
               for (p = 0; p < VIM; p++) {
                 grad_phi_i[p] = bf[eqn]->grad_phi[i][p];
               }
@@ -497,11 +498,11 @@ int assemble_emwave(double time, /* present time value */
        */
       for (b = 0; b < dim; b++) {
         var = em_stab.stabilization_field_var + b;
-        if (pd->v[var]) {
+        if (pd->v[pg->imtrx][var]) {
           pvar = upd->vp[pg->imtrx][var];
-          for (j = 0; j < ei->dof[var]; j++) {
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             diffusion = 0.;
-            if (pd->e[eqn] & T_DIFFUSION) {
+            if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
               diffusion += em_stab.jacobian_term[i][b][j];
 
               diffusion *= det_J * wt;
@@ -517,13 +518,13 @@ int assemble_emwave(double time, /* present time value */
        * J_e_T
        */
       var = TEMPERATURE;
-      if (pd->v[var]) {
+      if (pd->v[pg->imtrx][var]) {
         pvar = upd->vp[pg->imtrx][var];
-        for (j = 0; j < ei->dof[var]; j++) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
           phi_j = bf[var]->phi[j];
 
           advection = 0.;
-          if (pd->e[eqn] & T_ADVECTION) {
+          if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
             advection += phi_i *
                          (EMF * (emf_coeff_dn * d_n->T[j] + emf_coeff_dk * d_k->T[j]) +
                           EMF_conj * (conj_coeff_dn * d_n->T[j] + conj_coeff_dk * d_k->T[j])) *
@@ -541,9 +542,9 @@ int assemble_emwave(double time, /* present time value */
        */
       for (b = 0; b < dim; b++) {
         var = MESH_DISPLACEMENT1 + b;
-        if (pd->v[var]) {
+        if (pd->v[pg->imtrx][var]) {
           pvar = upd->vp[pg->imtrx][var];
-          for (j = 0; j < ei->dof[var]; j++) {
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             phi_j = bf[var]->phi[j];
 
             dh3dmesh_bj = fv->dh3dq[b] * bf[var]->phi[j];
@@ -551,7 +552,7 @@ int assemble_emwave(double time, /* present time value */
             d_det_J_dmeshbj = bf[eqn]->d_det_J_dm[b][j];
 
             advection = 0.;
-            if (pd->e[eqn] & T_ADVECTION) {
+            if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
               advection +=
                   phi_i *
                   (EMF * (emf_coeff_dn * d_n->X[b][j] + emf_coeff_dk * d_k->X[b][j]) +
@@ -570,7 +571,7 @@ int assemble_emwave(double time, /* present time value */
              *	diff_d = Int(...grad_phi_i.q dh3/dmesh |Jv|  )
              */
             diffusion = 0.;
-            if (pd->e[eqn] & T_DIFFUSION) {
+            if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
               diff_a = 0.;
               for (p = 0; p < dim; p++) {
                 dgrad_phi_i_dmesh[p] = bf[eqn]->d_grad_phi_dmesh[i][p][b][j];
@@ -611,13 +612,13 @@ int assemble_emwave(double time, /* present time value */
        * J_e_c
        */
       var = MASS_FRACTION;
-      if (pd->e[eqn] && pd->v[var]) {
+      if (pd->e[pg->imtrx][eqn] && pd->v[pg->imtrx][var]) {
         for (w = 0; w < pd->Num_Species_Eqn; w++) {
-          for (j = 0; j < ei->dof[var]; j++) {
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             phi_j = bf[var]->phi[j];
 
             advection = 0.;
-            if (pd->e[eqn] & T_ADVECTION) {
+            if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
               advection +=
                   phi_i *
                   (EMF * (emf_coeff_dn * d_n->C[w][j] + emf_coeff_dk * d_k->C[w][j]) +
@@ -721,7 +722,7 @@ int assemble_ewave(double time,      // present time
   /*
    * Bail out fast if there's nothing to do...
    */
-  if (!pd->e[eqn]) {
+  if (!pd->e[pg->imtrx][eqn]) {
     return (1);
   }
 
@@ -796,11 +797,11 @@ int assemble_ewave(double time,      // present time
   if (af->Assemble_Residual) {
     eqn = em_eqn;
     peqn = upd->ep[pg->imtrx][eqn];
-    for (i = 0; i < ei->dof[eqn]; i++) {
+    for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
       phi_i = bf[eqn]->phi[i];
 
       advection = 0.;
-      if (pd->e[eqn] & T_ADVECTION) {
+      if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
         advection += re_coeff * fv->em_er[field_index];
         advection += im_coeff + fv->em_ei[field_index];
         advection *= phi_i * h3;
@@ -808,7 +809,7 @@ int assemble_ewave(double time,      // present time
         advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
       }
       diffusion = 0.;
-      if (pd->e[eqn] & T_DIFFUSION) {
+      if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
         for (int p = 0; p < VIM; p++) {
           grad_phi_i[p] = bf[eqn]->grad_phi[i][p];
         }
@@ -875,7 +876,7 @@ int assemble_ewave_tensor_bf(double time,      // present time
   /*
    * Bail out fast if there's nothing to do...
    */
-  if (!pd->e[eqn]) {
+  if (!pd->e[pg->imtrx][eqn]) {
     return (1);
   }
 
@@ -908,7 +909,7 @@ int assemble_ewave_tensor_bf(double time,      // present time
 
   double stab_scale = 10;
   if (af->Assemble_Residual) {
-    for (int i = 0; i < ei->dof[eqn]; i++) {
+    for (int i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
       for (int a = 0; a < dim; a++) {
         int eqn_real = EM_E1_REAL + a;
         int eqn_imag = EM_E1_IMAG + a;
@@ -926,7 +927,7 @@ int assemble_ewave_tensor_bf(double time,      // present time
         double stab_imag = 0;
         double lagr_term_real = 0;
         double lagr_term_imag = 0;
-        if (pd->v[R_EM_CONT_REAL] && pd->v[R_EM_CONT_IMAG]) {
+        if (pd->gv[R_EM_CONT_REAL] && pd->gv[R_EM_CONT_IMAG]) {
           // lagr_term_real = bf[eqn_real]->grad_phi[i][a] * (r_elperm * fv->epr + i_elperm *
           // fv->epi); lagr_term_imag = bf[eqn_real]->grad_phi[i][a] * (r_elperm * fv->epi + i_elperm
           // * fv->epr);
@@ -952,7 +953,7 @@ int assemble_ewave_tensor_bf(double time,      // present time
     }
   }
   if (af->Assemble_Jacobian) {
-    for (int i = 0; i < ei->dof[eqn]; i++) {
+    for (int i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
       for (int a = 0; a < dim; a++) {
         int eqn_real = EM_E1_REAL + a;
         int eqn_imag = EM_E1_IMAG + a;
@@ -962,7 +963,7 @@ int assemble_ewave_tensor_bf(double time,      // present time
         for (int b = 0; b < dim; b++) {
           int var = EM_E1_REAL + b;
           int pvar_real = upd->vp[pg->imtrx][var];
-          for (int j = 0; j < ei->dof[var]; j++) {
+          for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             double diffusion_real = 0;
             double diffusion_imag = 0;
             for (int q = 0; q < dim; q++) {
@@ -972,7 +973,7 @@ int assemble_ewave_tensor_bf(double time,      // present time
 
             double stab_real = 0;
             double stab_imag = 0;
-            if (!(pd->v[R_EM_CONT_REAL] && pd->v[R_EM_CONT_IMAG])) {
+            if (!(pd->gv[R_EM_CONT_REAL] && pd->gv[R_EM_CONT_IMAG])) {
               stab_real = stab_scale * bf[eqn_real]->grad_phi[i][a] *
                           (bf[var]->grad_phi_e[j][b][0][0] + bf[var]->grad_phi_e[j][b][1][1] +
                            bf[var]->grad_phi_e[j][b][2][2]);
@@ -993,7 +994,7 @@ int assemble_ewave_tensor_bf(double time,      // present time
         for (int b = 0; b < dim; b++) {
           int var = EM_E1_IMAG + b;
           int pvar_imag = upd->vp[pg->imtrx][var];
-          for (int j = 0; j < ei->dof[var]; j++) {
+          for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             double diffusion_real = 0;
             double diffusion_imag = 0;
             for (int q = 0; q < dim; q++) {
@@ -1002,7 +1003,7 @@ int assemble_ewave_tensor_bf(double time,      // present time
 
             double stab_real = 0;
             double stab_imag = 0;
-            if (!(pd->v[R_EM_CONT_REAL] && pd->v[R_EM_CONT_IMAG])) {
+            if (!(pd->gv[R_EM_CONT_REAL] && pd->gv[R_EM_CONT_IMAG])) {
               stab_imag = stab_scale * bf[eqn_real]->grad_phi[i][a] *
                           (bf[var]->grad_phi_e[j][b][0][0] + bf[var]->grad_phi_e[j][b][1][1] +
                            bf[var]->grad_phi_e[j][b][2][2]);
@@ -1022,7 +1023,7 @@ int assemble_ewave_tensor_bf(double time,      // present time
         {
           int var = EM_CONT_REAL;
           int pvar = upd->vp[pg->imtrx][var];
-          for (int j = 0; j < ei->dof[var]; j++) {
+          for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             // dbl lagr_term_real = bf[eqn]->grad_phi[i][a] * r_elperm * bf[var]->phi[j];
             // dbl lagr_term_imag = bf[eqn]->grad_phi[i][a] * i_elperm * bf[var]->phi[j];
             dbl lagr_term_real = bf[eqn]->grad_phi[i][a] * bf[var]->phi[j];
@@ -1035,7 +1036,7 @@ int assemble_ewave_tensor_bf(double time,      // present time
         {
           int var = EM_CONT_IMAG;
           int pvar = upd->vp[pg->imtrx][var];
-          for (int j = 0; j < ei->dof[var]; j++) {
+          for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             // dbl lagr_term_real = bf[eqn]->grad_phi[i][a] * i_elperm * bf[var]->phi[j];
             // dbl lagr_term_imag = bf[eqn]->grad_phi[i][a] * r_elperm * bf[var]->phi[j];
             dbl lagr_term_real = 0;
@@ -1051,7 +1052,7 @@ int assemble_ewave_tensor_bf(double time,      // present time
 } // end of assemble_ewave_tensor_bf
 
 int assemble_em_continuity() {
-  if (!(pd->e[R_EM_CONT_REAL] && pd->e[R_EM_CONT_IMAG])) {
+  if (!(pd->e[pg->imtrx][R_EM_CONT_REAL] && pd->e[pg->imtrx][R_EM_CONT_IMAG])) {
     return -1;
   }
 
@@ -1074,7 +1075,7 @@ int assemble_em_continuity() {
     div_E_imag += fv->grad_em_ei[i][i];
   }
   if (af->Assemble_Residual) {
-    for (int i = 0; i < ei->dof[R_EM_CONT_REAL]; i++) {
+    for (int i = 0; i < ei[pg->imtrx]->dof[R_EM_CONT_REAL]; i++) {
       int eqn_real = EM_CONT_REAL;
       int eqn_imag = EM_CONT_IMAG;
       int peqn_real = upd->ep[pg->imtrx][eqn_real];
@@ -1090,7 +1091,7 @@ int assemble_em_continuity() {
     }
   }
   if (af->Assemble_Jacobian) {
-    for (int i = 0; i < ei->dof[R_EM_CONT_REAL]; i++) {
+    for (int i = 0; i < ei[pg->imtrx]->dof[R_EM_CONT_REAL]; i++) {
       int eqn_real = EM_CONT_REAL;
       int eqn_imag = EM_CONT_IMAG;
       int peqn_real = upd->ep[pg->imtrx][eqn_real];
@@ -1099,7 +1100,7 @@ int assemble_em_continuity() {
       for (int b = 0; b < dim; b++) {
         int var = EM_E1_REAL + b;
         int pvar_real = upd->vp[pg->imtrx][var];
-        for (int j = 0; j < ei->dof[var]; j++) {
+        for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
           double advection_real = 0;
           double advection_imag = 0;
           for (int q = 0; q < dim; q++) {
@@ -1117,7 +1118,7 @@ int assemble_em_continuity() {
       for (int b = 0; b < dim; b++) {
         int var = EM_E1_IMAG + b;
         int pvar_imag = upd->vp[pg->imtrx][var];
-        for (int j = 0; j < ei->dof[var]; j++) {
+        for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
           double advection_real = 0;
           double advection_imag = 0;
           for (int q = 0; q < dim; q++) {
@@ -1283,16 +1284,16 @@ int apply_em_farfield_direct_vec(double func[DIM],
         Im_curl_H[p] += permute(p, q, r) * fv->grad_em_hi[r][q];
         // assuming all variables have same degrees of freedom
 
-        for (int b = 0; b < ei->dof[EM_E1_REAL]; b++) {
+        for (int b = 0; b < ei[pg->imtrx]->dof[EM_E1_REAL]; b++) {
           d_dERb_Re_curl_E[p][r][b] += permute(p, q, r) * bf[EM_E1_REAL + r]->grad_phi[b][q];
         }
-        for (int b = 0; b < ei->dof[EM_E1_IMAG]; b++) {
+        for (int b = 0; b < ei[pg->imtrx]->dof[EM_E1_IMAG]; b++) {
           d_dEIb_Im_curl_E[p][r][b] += permute(p, q, r) * bf[EM_E1_IMAG + r]->grad_phi[b][q];
         }
-        for (int b = 0; b < ei->dof[EM_H1_REAL]; b++) {
+        for (int b = 0; b < ei[pg->imtrx]->dof[EM_H1_REAL]; b++) {
           d_dHRb_Re_curl_H[p][r][b] += permute(p, q, r) * bf[EM_H1_REAL + r]->grad_phi[b][q];
         }
-        for (int b = 0; b < ei->dof[EM_H1_IMAG]; b++) {
+        for (int b = 0; b < ei[pg->imtrx]->dof[EM_H1_IMAG]; b++) {
           d_dHIb_Im_curl_H[p][r][b] += permute(p, q, r) * bf[EM_H1_IMAG + r]->grad_phi[b][q];
         }
       }
@@ -1395,7 +1396,7 @@ int apply_em_farfield_direct_vec(double func[DIM],
 
   if (af->Assemble_Jacobian) {
     /*
-        for (int j=0; j< ei->dof[EM_E2_REAL]; j++){
+        for (int j=0; j< ei[pg->imtrx]->dof[EM_E2_REAL]; j++){
               d_func[0][EM_E2_REAL][j] = -bf[EM_E2_REAL]->grad_phi[j][2];
               d_func[0][EM_E3_REAL][j] =  bf[EM_E3_REAL]->grad_phi[j][1];
                      0        1           -        1                  2
@@ -1408,7 +1409,7 @@ int apply_em_farfield_direct_vec(double func[DIM],
 
       //for (int q=0; q<DIM; q++) {
         for (int r=0; r<DIM; r++) {
-          for (int j=0; j<ei->dof[EM_E1_REAL + r]; j++) {
+          for (int j=0; j<ei[pg->imtrx]->dof[EM_E1_REAL + r]; j++) {
             d_func[p][EM_E1_REAL + r][j] += -d_dERb_Re_curl_E[p][r][j];
           }
         }
@@ -1420,7 +1421,7 @@ int apply_em_farfield_direct_vec(double func[DIM],
       // for (int q=0; q<pd->Num_Dim; q++) {
       for (int g = 0; g < pd->Num_Dim; g++) {
         int gvar = var + g;
-        for (int j = 0; j < ei->dof[gvar]; j++) {
+        for (int j = 0; j < ei[pg->imtrx]->dof[gvar]; j++) {
           switch (bc_name) {
           case EM_ER_FARFIELD_DIRECT_BC:
             // d_func[p][gvar][j] += d_dERb_Re_curl_E[p][g][j]*creal(reduction_factor);
@@ -1470,7 +1471,7 @@ int apply_em_farfield_direct_vec(double func[DIM],
       for (int q=0; q<pd->Num_Dim; q++) {
         for (int g=0; g<3; g++) {
           int gvar = EM_E1_REAL + g;
-          for (int j=0; j<ei->dof[gvar]; j++) {
+          for (int j=0; j<ei[pg->imtrx]->dof[gvar]; j++) {
 
 
             //d_func[p][gvar][j] = phi_j;
@@ -1490,7 +1491,7 @@ int apply_em_farfield_direct_vec(double func[DIM],
     case EM_HI_FARFIELD_DIRECT_BC:
       for (int g=0; g<pd->Num_Dim; g++){
         int gvar = var + g;
-        for (int j=0; j<ei->dof[gvar]; j++) {
+        for (int j=0; j<ei[pg->imtrx]->dof[gvar]; j++) {
           double phi_j = bf[gvar]->phi[j];
           for (int p=0; p<pd->Num_Dim; p++) {
             for (int q=0; q<pd->Num_Dim; q++) {
@@ -1919,10 +1920,10 @@ void calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
    */
   switch (em_stab->type) {
   case EM_STAB_NONE:
-    for (int i = 0; i < ei->dof[em_stab->em_eqn]; i++) {
+    for (int i = 0; i < ei[pg->imtrx]->dof[em_stab->em_eqn]; i++) {
       em_stab->residual_term[i] = 0.0;
       for (int b = 0; b < DIM; b++) {
-        for (int j = 0; j < ei->dof[em_stab->em_var]; j++) {
+        for (int j = 0; j < ei[pg->imtrx]->dof[em_stab->em_var]; j++) {
           em_stab->jacobian_term[i][b][j] = 0.0;
         }
       }
@@ -2022,12 +2023,12 @@ void calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
       div_stabilization_field += grad_stabilization_field[p][p];
     }
 
-    for (int i = 0; i < ei->dof[em_stab->em_eqn]; i++) {
+    for (int i = 0; i < ei[pg->imtrx]->dof[em_stab->em_eqn]; i++) {
       em_stab->residual_term[i] = bf[em_stab->em_eqn]->grad_phi[i][cartesian_index] *
                                   stabilization_coefficient * creal(div_stabilization_field);
 
       for (int b = 0; b < DIM; b++) {
-        for (int j = 0; j < ei->dof[em_stab->em_var]; j++) {
+        for (int j = 0; j < ei[pg->imtrx]->dof[em_stab->em_var]; j++) {
           em_stab->jacobian_term[i][b][j] =
               bf[em_stab->em_eqn]->grad_phi[i][cartesian_index] * stabilization_coefficient *
               bf[em_stab->stabilization_field_var + b]->grad_phi[j][b];
@@ -2044,18 +2045,18 @@ void calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
     for (int p = 0; p < VIM; p++) {
       div_stabilization_field += grad_stabilization_field[p][p];
     }
-    for (int i = 0; i < ei->dof[em_stab->em_eqn]; i++) {
+    for (int i = 0; i < ei[pg->imtrx]->dof[em_stab->em_eqn]; i++) {
       for (int p = 0; p < DIM; p++) {
         div_phi[i] += bf[em_stab->em_eqn]->grad_phi[i][p];
       }
     }
 
-    for (int i = 0; i < ei->dof[em_stab->em_eqn]; i++) {
+    for (int i = 0; i < ei[pg->imtrx]->dof[em_stab->em_eqn]; i++) {
       em_stab->residual_term[i] =
           div_phi[i] * stabilization_coefficient * creal(div_stabilization_field);
 
       for (int b = 0; b < DIM; b++) {
-        for (int j = 0; j < ei->dof[em_stab->em_var]; j++) {
+        for (int j = 0; j < ei[pg->imtrx]->dof[em_stab->em_var]; j++) {
           em_stab->jacobian_term[i][b][j] =
               div_phi[i] * stabilization_coefficient *
               bf[em_stab->stabilization_field_var + b]->grad_phi[j][b];
@@ -2073,12 +2074,12 @@ void calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
     div_stabilization_field_squared = div_stabilization_field * div_stabilization_field;
     switch (em_stab->stabilization_field_var) {
     case EM_E1_REAL:
-      for (int i = 0; i < ei->dof[em_stab->em_eqn]; i++) {
+      for (int i = 0; i < ei[pg->imtrx]->dof[em_stab->em_eqn]; i++) {
         em_stab->residual_term[i] = bf[em_stab->em_eqn]->phi[i] * stabilization_coefficient *
                                     creal(div_stabilization_field_squared);
         //*mp->permittivity;
         for (int b = 0; b < DIM; b++) {
-          for (int j = 0; j < ei->dof[em_stab->em_var]; j++) {
+          for (int j = 0; j < ei[pg->imtrx]->dof[em_stab->em_var]; j++) {
             em_stab->jacobian_term[i][b][j] =
                 bf[em_stab->em_eqn]->phi[i] * stabilization_coefficient * 2.0 *
                 div_stabilization_field * bf[em_stab->stabilization_field_var + b]->grad_phi[j][b];
@@ -2087,12 +2088,12 @@ void calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
       }
       break;
     case EM_H1_REAL:
-      for (int i = 0; i < ei->dof[em_stab->em_eqn]; i++) {
+      for (int i = 0; i < ei[pg->imtrx]->dof[em_stab->em_eqn]; i++) {
         em_stab->residual_term[i] = bf[em_stab->em_eqn]->phi[i] * stabilization_coefficient *
                                     creal(div_stabilization_field_squared);
         //*mag_permeability;
         for (int b = 0; b < DIM; b++) {
-          for (int j = 0; j < ei->dof[em_stab->em_var]; j++) {
+          for (int j = 0; j < ei[pg->imtrx]->dof[em_stab->em_var]; j++) {
             em_stab->jacobian_term[i][b][j] =
                 bf[em_stab->em_eqn]->phi[i] * stabilization_coefficient * 2.0 *
                 div_stabilization_field * bf[em_stab->stabilization_field_var + b]->grad_phi[j][b];
@@ -2101,12 +2102,12 @@ void calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
       }
       break;
     case EM_E1_IMAG:
-      for (int i = 0; i < ei->dof[em_stab->em_eqn]; i++) {
+      for (int i = 0; i < ei[pg->imtrx]->dof[em_stab->em_eqn]; i++) {
         em_stab->residual_term[i] = bf[em_stab->em_eqn]->phi[i] * stabilization_coefficient *
                                     cimag(div_stabilization_field_squared);
         //*mp->permittivity;
         for (int b = 0; b < DIM; b++) {
-          for (int j = 0; j < ei->dof[em_stab->em_var]; j++) {
+          for (int j = 0; j < ei[pg->imtrx]->dof[em_stab->em_var]; j++) {
             em_stab->jacobian_term[i][b][j] =
                 bf[em_stab->em_eqn]->phi[i] * stabilization_coefficient * 2.0 *
                 div_stabilization_field * bf[em_stab->stabilization_field_var + b]->grad_phi[j][b];
@@ -2115,12 +2116,12 @@ void calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
       }
       break;
     case EM_H1_IMAG:
-      for (int i = 0; i < ei->dof[em_stab->em_eqn]; i++) {
+      for (int i = 0; i < ei[pg->imtrx]->dof[em_stab->em_eqn]; i++) {
         em_stab->residual_term[i] = bf[em_stab->em_eqn]->phi[i] * stabilization_coefficient *
                                     cimag(div_stabilization_field_squared);
         //*mag_permeability;
         for (int b = 0; b < DIM; b++) {
-          for (int j = 0; j < ei->dof[em_stab->em_var]; j++) {
+          for (int j = 0; j < ei[pg->imtrx]->dof[em_stab->em_var]; j++) {
             em_stab->jacobian_term[i][b][j] =
                 bf[em_stab->em_eqn]->phi[i] * stabilization_coefficient * 2.0 *
                 div_stabilization_field * bf[em_stab->stabilization_field_var + b]->grad_phi[j][b];
@@ -2148,13 +2149,13 @@ void calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
     div_stabilization_field_squared = div_stabilization_field * div_stabilization_field;
     switch (em_stab->stabilization_field_var) {
     case EM_E1_REAL:
-      for (int i = 0; i < ei->dof[em_stab->em_eqn]; i++) {
+      for (int i = 0; i < ei[pg->imtrx]->dof[em_stab->em_eqn]; i++) {
         em_stab->residual_term[i] = bf[em_stab->em_eqn]->grad_phi[i][cartesian_index] *
                                     stabilization_coefficient *
                                     creal(div_stabilization_field_squared) / mag_permeability;
         //*mp->permittivity;
         for (int b = 0; b < DIM; b++) {
-          for (int j = 0; j < ei->dof[em_stab->em_var]; j++) {
+          for (int j = 0; j < ei[pg->imtrx]->dof[em_stab->em_var]; j++) {
             em_stab->jacobian_term[i][b][j] =
                 bf[em_stab->em_eqn]->phi[i] * stabilization_coefficient * 2.0 *
                 div_stabilization_field * bf[em_stab->stabilization_field_var + b]->grad_phi[j][b];
@@ -2163,13 +2164,13 @@ void calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
       }
       break;
     case EM_H1_REAL:
-      for (int i = 0; i < ei->dof[em_stab->em_eqn]; i++) {
+      for (int i = 0; i < ei[pg->imtrx]->dof[em_stab->em_eqn]; i++) {
         em_stab->residual_term[i] = bf[em_stab->em_eqn]->grad_phi[i][cartesian_index] *
                                     stabilization_coefficient *
                                     creal(div_stabilization_field_squared);
         //*mag_permeability;
         for (int b = 0; b < DIM; b++) {
-          for (int j = 0; j < ei->dof[em_stab->em_var]; j++) {
+          for (int j = 0; j < ei[pg->imtrx]->dof[em_stab->em_var]; j++) {
             em_stab->jacobian_term[i][b][j] =
                 bf[em_stab->em_eqn]->phi[i] * stabilization_coefficient * 2.0 *
                 div_stabilization_field * bf[em_stab->stabilization_field_var + b]->grad_phi[j][b];
@@ -2178,13 +2179,13 @@ void calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
       }
       break;
     case EM_E1_IMAG:
-      for (int i = 0; i < ei->dof[em_stab->em_eqn]; i++) {
+      for (int i = 0; i < ei[pg->imtrx]->dof[em_stab->em_eqn]; i++) {
         em_stab->residual_term[i] = bf[em_stab->em_eqn]->grad_phi[i][cartesian_index] *
                                     stabilization_coefficient *
                                     cimag(div_stabilization_field_squared) / mag_permeability;
         //*mp->permittivity;
         for (int b = 0; b < DIM; b++) {
-          for (int j = 0; j < ei->dof[em_stab->em_var]; j++) {
+          for (int j = 0; j < ei[pg->imtrx]->dof[em_stab->em_var]; j++) {
             em_stab->jacobian_term[i][b][j] =
                 bf[em_stab->em_eqn]->phi[i] * stabilization_coefficient * 2.0 *
                 div_stabilization_field * bf[em_stab->stabilization_field_var + b]->grad_phi[j][b];
@@ -2193,13 +2194,13 @@ void calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
       }
       break;
     case EM_H1_IMAG:
-      for (int i = 0; i < ei->dof[em_stab->em_eqn]; i++) {
+      for (int i = 0; i < ei[pg->imtrx]->dof[em_stab->em_eqn]; i++) {
         em_stab->residual_term[i] = bf[em_stab->em_eqn]->grad_phi[i][cartesian_index] *
                                     stabilization_coefficient *
                                     cimag(div_stabilization_field_squared);
         //*mag_permeability;
         for (int b = 0; b < DIM; b++) {
-          for (int j = 0; j < ei->dof[em_stab->em_var]; j++) {
+          for (int j = 0; j < ei[pg->imtrx]->dof[em_stab->em_var]; j++) {
             em_stab->jacobian_term[i][b][j] =
                 bf[em_stab->em_eqn]->phi[i] * stabilization_coefficient * 2.0 *
                 div_stabilization_field * bf[em_stab->stabilization_field_var + b]->grad_phi[j][b];
@@ -2215,10 +2216,10 @@ void calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
     break;
   case EM_STAB_NONE:
   default:
-    for (int i = 0; i < ei->dof[em_stab->em_eqn]; i++) {
+    for (int i = 0; i < ei[pg->imtrx]->dof[em_stab->em_eqn]; i++) {
       em_stab->residual_term[i] = 0.0;
       for (int b = 0; b < DIM; b++) {
-        for (int j = 0; j < ei->dof[em_stab->em_var]; j++) {
+        for (int j = 0; j < ei[pg->imtrx]->dof[em_stab->em_var]; j++) {
           em_stab->jacobian_term[i][b][j] = 0.0;
         }
       }

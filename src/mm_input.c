@@ -8498,7 +8498,6 @@ rd_eq_specs(FILE *ifp,
 	    " either -DMAX_CONC option in Goma.mk or change it in rf_fem_const.h.",
 	    pd_ptr->Num_Species, MAX_CONC, pd_ptr->Num_Species);
     EH(-1, err_msg);
-    ABORTH(-1, "IMMEDIATE PARALLEL EXIT - can't recover gracefully");
   }
 
   /*
@@ -8879,9 +8878,9 @@ rd_eq_specs(FILE *ifp,
     } else if (!strcasecmp(ts, "continuity")) {
       ce = set_eqn(R_PRESSURE, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "continuity_em_real")) {
-      ce = set_eqn(R_EM_CONT_REAL, mtrx_index0, pd_ptr)
+      ce = set_eqn(R_EM_CONT_REAL, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "continuity_em_imag")) {
-      ce = set_eqn(R_EM_CONT_IMAG, mtrx_index0, pd_ptr)
+      ce = set_eqn(R_EM_CONT_IMAG, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "fill")) {
       ce = set_eqn(R_FILL, mtrx_index0, pd_ptr);
 #ifndef COUPLED_FILL
@@ -12539,7 +12538,6 @@ translate_command_line( int argc,
 	    sprintf(err_msg, "ERROR EXIT: unknown dash option: %s\n",
 		    argv[istr]);
 	    EH(-1, err_msg);
-	    ABORTH(-1, "IMMEDIATE PARALLEL EXIT - can't recover gracefully");
 	  }
 	} /* end of if argv starts with '-' */
 /* 
@@ -15292,7 +15290,7 @@ read_surface_objects ( FILE* ifp,
 
 {
   int iread;
-  char name[10];
+  char name[30];
   struct LS_Surf *surf;
   char echo_string[MAX_CHAR_ECHO_INPUT]="\0";
   char *echo_file = Echo_Input_File;

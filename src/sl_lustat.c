@@ -104,8 +104,10 @@ static char rcsid[] = "$Id: sl_lustat.c,v 5.1 2007-09-18 18:53:48 prschun Exp $"
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#ifdef HAVE_SPARSE
 #include "spConfig.h"
 #include "spMatrix.h"
+#endif
 
 #include "goma.h"
 
@@ -138,6 +140,7 @@ static void histogram
 
 /* static int call=0; */
 
+#ifdef HAVE_SPARSE
 void
 lustat ( int n,
          int nnz,
@@ -210,6 +213,7 @@ lustat ( int n,
   plot_a(n, nnz, a, ija);
 
 } /* END of routine lustat */
+#endif
 /*****************************************************************************/
 
 static void

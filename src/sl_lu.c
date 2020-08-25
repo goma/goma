@@ -21,12 +21,13 @@ static char rcsid[] = "$Id: sl_lu.c,v 5.2 2007-12-07 17:14:37 hkmoffa Exp $";
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "spMatrix.h"
-#include "spConfig.h"
 
 #define GOMA_SL_LU_C
 #include "goma.h"
 
+#ifdef HAVE_SPARSE
+#include "spMatrix.h"
+#include "spConfig.h"
 /*
  * Uncomment the following line to write out the RHS, a, and ija vectors
  * to an ASCII file...
@@ -81,7 +82,6 @@ int first_time = TRUE;
           routines called: (sparse1.3 package is used)
     --------------------------------------------------------------------
 */
-#ifdef HAVE_SPARSE
 
 static int call=0;
 

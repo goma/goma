@@ -5419,7 +5419,7 @@ fn_dot_T(double cfunc[MDE][DIM],
 							* bf[VELOCITY1+a]->phi[ldof];  
                           d_cfunc[ldof][a][var][j] -= (pb[1] * fv->dstangent_dx[0][a][jvar][j] ) 
 							* bf[VELOCITY1+a]->phi[ldof];  
-			  if( ei->ielem_dim == DIM)
+			  if( ei[pg->imtrx]->ielem_dim == DIM)
                                d_cfunc[ldof][a][var][j] -= (pb[2] * fv->dstangent_dx[0][a][jvar][j] ) 
 							* bf[VELOCITY1+a]->phi[ldof];  
 			  for (p=0; p<VIM; p++)
@@ -5530,7 +5530,7 @@ fn_dot_T(double cfunc[MDE][DIM],
 		{  
 		  cfunc[ldof][a] -= pb[0] * fv->snormal[a] * bf[VELOCITY1+a]->phi[ldof]; 
 		  cfunc[ldof][a] -= pb[1] * fv->stangent[0][a] * bf[VELOCITY1+a]->phi[ldof]; 
-	 	  if( ei->ielem_dim == DIM)
+	 	  if( ei[pg->imtrx]->ielem_dim == DIM)
 		      cfunc[ldof][a] -= pb[2] * fv->stangent[1][a] * bf[VELOCITY1+a]->phi[ldof]; 
 		  for (p=0; p<VIM; p++)
 		    { 

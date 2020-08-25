@@ -2564,7 +2564,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 
 				    }
 				  
-				  lec->J[peqn][pvar][i][j] +=
+				  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 				    mass + advection + diffusion + source;
 				}
 			    }
@@ -2789,7 +2789,7 @@ assemble_stress_log_conf(dbl tt,
       //Velocity
       v[a] = fv->v[a];
       //
-      if(pd->TimeIntegration!=STEADY && pd->v[MESH_DISPLACEMENT1+a])
+      if(pd->TimeIntegration!=STEADY && pd->gv[MESH_DISPLACEMENT1+a])
 	{
 	  x_dot[a] = fv_dot->x[a];
 	}
@@ -5686,7 +5686,7 @@ segregate_stress_update ( double x_update[] )
 				    }
 				}
 			    }
-			  x_update[ ei->gun_list[eqn][ldof_eqn] ] = lec->R[LEC_R_INDEX(ieqn,ldof_eqn)]/lump;
+			  x_update[ ei[pg->imtrx]->gun_list[eqn][ldof_eqn] ] = lec->R[LEC_R_INDEX(ieqn,ldof_eqn)]/lump;
 			  ldof_eqn++;
 			}
 		    }

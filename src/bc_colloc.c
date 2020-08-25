@@ -1187,7 +1187,7 @@ f_roll_fluid (int ielem_dim,
      v_roll[1] =  omega*roll_rad*v_dir[1];
      v_roll[2] =  omega*roll_rad*v_dir[2];
 
-     if( TimeIntegration == TRANSIENT && pd->e[R_MESH1] )
+     if( TimeIntegration == TRANSIENT && pd->gv[R_MESH1] )
           {
             /* Add the mesh motion to the substrate velocity */
             v_roll[0] += fv_dot->x[0];
@@ -1279,7 +1279,7 @@ fprintf(stderr,"more %g %g %g %g\n",res,jac, dthick_dV,dthick_dP);
         for (jvar=0; jvar<ei->ielem_dim; jvar++)
           {
             var = MESH_DISPLACEMENT1 + jvar;
-            if (pd->v[var])
+            if (pd->v[pg->imtrx][var])
               {
                     for (k = 0; k < pd->Num_Dim; k++)
                       {
@@ -1296,7 +1296,7 @@ fprintf(stderr,"more %g %g %g %g\n",res,jac, dthick_dV,dthick_dP);
 #endif
 #if 0
    var = PRESSURE;
-    if (pd->v[var])
+    if (pd->v[pg->imtrx][var])
       {
         if(Pflag )
           {
@@ -1429,21 +1429,21 @@ int i;
                switch (velo_condition) {
                   case U_PARABOLA_BC:
                       *func = pre_factor*(fv->x[1]-coord1)*(coord2-fv->x[1]);
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
         d_func[MESH_DISPLACEMENT2] = pre_factor*(coord1+coord2-2.*fv->x[1]);
                          }
                       break;
                   case V_PARABOLA_BC:
 	              *func = pre_factor*(fv->x[0]-coord1)*(coord2-fv->x[0]);
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
        d_func[MESH_DISPLACEMENT1] = pre_factor*(coord1+coord2-2.*fv->x[0]);
                          }
                       break;
                   case W_PARABOLA_BC:
 	              *func = pre_factor*(fv->x[0]-coord1)*(coord2-fv->x[0]);
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
        d_func[MESH_DISPLACEMENT1] = pre_factor*(coord1+coord2-2.*fv->x[0]);
                          }
@@ -1459,7 +1459,7 @@ int i;
                       if(coord1 <= DBL_SMALL)
                           {
                            *func = pre_factor*(SQUARE(coord2)-SQUARE(fv->x[1]));
-                           if( pd->e[R_MESH1] )
+                           if( pd->e[pg->imtrx][R_MESH1] )
                               { 
                       d_func[MESH_DISPLACEMENT2] = pre_factor*(-2.*fv->x[1]); 
                               }
@@ -1469,7 +1469,7 @@ int i;
                            *func = pre_factor*(SQUARE(coord1)-SQUARE(fv->x[1])
                                     +(SQUARE(coord2)-SQUARE(coord1))*
                                     (log(fv->x[1]/coord1)/log(coord2/coord1)));
-                           if( pd->e[R_MESH1] )
+                           if( pd->e[pg->imtrx][R_MESH1] )
                               { 
                       d_func[MESH_DISPLACEMENT2] = pre_factor*(-2.*fv->x[1]
                 +(SQUARE(coord2)-SQUARE(coord1))/log(coord2/coord1)/fv->x[1]);
@@ -1478,7 +1478,7 @@ int i;
                       break;
                   case V_PARABOLA_BC:
 	              *func = pre_factor/fv->x[1]*(fv->x[0]-coord1)*(coord2-fv->x[0]);
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
        d_func[MESH_DISPLACEMENT1] = pre_factor/fv->x[1]*(coord1+coord2-2.*fv->x[0]);
        d_func[MESH_DISPLACEMENT2] = -(*func)/fv->x[1];
@@ -1505,7 +1505,7 @@ int i;
                   case U_PARABOLA_BC:
                       temp = 2*fv->x[1]-coord1-coord2;
                       *func = pre_factor*(pow(gap,expon) - pow(fabs(temp),expon));
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
     d_func[MESH_DISPLACEMENT2] = pre_factor*(-2.*SGN(temp)*expon*pow(fabs(temp),1./pl_index));
                          }
@@ -1513,7 +1513,7 @@ int i;
                   case V_PARABOLA_BC:
                       temp = 2*fv->x[0]-coord1-coord2;
                       *func = pre_factor*(pow(gap,expon) - pow(fabs(temp),expon));
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
     d_func[MESH_DISPLACEMENT1] = pre_factor*(-2.*SGN(temp)*expon*pow(fabs(temp),1./pl_index));
                          }
@@ -1521,7 +1521,7 @@ int i;
                   case W_PARABOLA_BC:
                       temp = 2*fv->x[0]-coord1-coord2;
                       *func = pre_factor*(pow(gap,expon) - pow(fabs(temp),expon));
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
     d_func[MESH_DISPLACEMENT1] = pre_factor*(-2.*SGN(temp)*expon*pow(fabs(temp),1./pl_index));
                          }
@@ -1540,7 +1540,7 @@ int i;
 	                   pre_factor = (3.*pl_index+1.)/(pl_index +1.)
                                          *qflow/M_PIE/pow(gap,expon+2.);
                            *func = pre_factor*(pow(gap,expon) - pow(fv->x[1],expon));
-                           if( pd->e[R_MESH1] )
+                           if( pd->e[pg->imtrx][R_MESH1] )
                                {
                                 d_func[MESH_DISPLACEMENT2] = pre_factor*
                                           (-expon*pow(fv->x[1],expon-1.));
@@ -1554,7 +1554,7 @@ int i;
                                          *qflow/M_PIE/pow(gap,expon+1.);
                       temp = 2*fv->x[0]-coord1-coord2;
                       *func = pre_factor/fv->x[1]*(pow(gap,expon) - pow(fabs(temp),expon));
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
                            d_func[MESH_DISPLACEMENT1] = pre_factor/fv->x[1]*
                                  (-2.*SGN(temp)*expon*pow(fabs(temp),expon-1.));
@@ -1634,7 +1634,7 @@ int i, mode=0, strs=0;
    else
 	{ EH(-1,"Polymer Stress mode not found - VE Stress PARABOLA BC."); }
 
-   if ( pd->e[TEMPERATURE] )
+   if ( pd->gv[TEMPERATURE] )
        {temp = fv->T;}
    else
        {temp = upd->Process_Temperature;}
@@ -1858,7 +1858,7 @@ int i, mode=0, strs=0;
      case GIESEKUS:
             alpha = ve_glob[mn][mode]->alpha;
             lambda = ve_glob[mn][mode]->time_const;
-            Ws = at*lambda*abs(srate);
+            Ws = at*lambda*fabs(srate);
             A_alpha = 8*alpha*(1.-alpha);
             mup = viscosity(ve[mode]->gn, gamma, NULL);
             if(Ws >= 0.1) 
@@ -1892,7 +1892,7 @@ int i, mode=0, strs=0;
           break;
      case OLDROYDB:
             lambda = ve_glob[mn][mode]->time_const;
-            Ws = at*lambda*abs(srate);
+            Ws = at*lambda*fabs(srate);
             mup = viscosity(ve[mode]->gn, gamma, NULL);
             switch (strs) {
                case 0:   /* S11 */

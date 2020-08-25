@@ -198,7 +198,7 @@ extern int rd_vectors_from_exoII /* rf_util.c                                */
        const Exo_DB *);
 
 extern int rd_vectors_from_exoII  /* rf_util.c                                */
-    PROTO((double[],              /* u - solution vector                       */
+    (double[],              /* u - solution vector                       */
            const char *,          /* file_nm - name of EXODUS II file	     */
            const int,             /* action_flag -                             *
                                          0 -- read initial guess for problem   *
@@ -213,7 +213,7 @@ extern int rd_vectors_from_exoII  /* rf_util.c                                */
                                    * implies the last time plane in the        *
                                    * exodus file.                              */
            double *timeValueRead, /* Value of the time in the time plane read  */
-           const Exo_DB *));
+           const Exo_DB *);
 
 extern int rd_trans_vectors_from_exoII /* rf_util.c                          */
 (double [],		/* u - solution vector                       */
@@ -264,14 +264,5 @@ extern void read_porosity_data
 (
        const Exo_DB *exo		/* Ptr to Exodus database */
        );
-
-/*
- * Extern statements for variables defined in rf_util.c
- */
-
-extern int
-rd_exoII_ev(double *u, int varType, int mn, MATRL_PROP_STRUCT *matrl, 
-	    char **var_names, int num_nodes, int num_vars, int exoII_id,
-	    int time_step, int spec);
 #endif
 

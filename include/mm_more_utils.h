@@ -100,7 +100,7 @@ EXTERN void extract_elem_vec /* mm_more_utils.c                           */
            const int,        /* var_no                                    */
            double ***,       /* gvec_elem                                 */
            const Exo_DB *,
-           const int dof)); /* degrees of freedom                                       */
+           const int dof); /* degrees of freedom                                       */
 
 EXTERN void anneal_map		/* mm_more_utils.c                           */
 (const int ,		/* dim                                       */

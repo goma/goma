@@ -136,7 +136,7 @@ EXTERN double bond_viscosity
        VISCOSITY_DEPENDENCE_STRUCT *); /* d_mu - viscosity dependence       */
 
 EXTERN int bond_viscosity_sh
-PROTO((int ,          /* species_sus number for structure factor */
+(int ,          /* species_sus number for structure factor */
        dbl ,          /* reference zero shear rate fluid viscosity */
        dbl ,          /* reference high shear rate fluid viscosity */
        dbl );        /* exponent for constitutive equation */

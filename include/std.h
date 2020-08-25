@@ -32,7 +32,6 @@
  */
 #else /* HAVE_CONFIG_H */
 
-#define HAVE_UMFPACK 1
 #define HAVE_AZTEC 1
 /* Trilinos now seems to define these */
 #ifndef GOMA_HAVE_BLAS

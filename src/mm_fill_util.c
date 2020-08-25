@@ -2059,7 +2059,7 @@ int load_bf_grad(void)
          * variable.  I had one, but it is not presently being used.
          */
 
- 	if (pd->gv[EM_E1_REAL]  ||  CURL_V != -1)
+ 	if (pd->gv[EM_E1_REAL]  ||  CURL_V != -1) {
           siz = DIM * DIM * MDE * sizeof(double);
           memset(&(bfv->curl_phi_e[0][0][0]), 0, siz);
 
@@ -5568,13 +5568,13 @@ void get_supg_tau(SUPG_terms *supg_terms,
     {
       for (int j = 0; j < MDE; j++)
       {
-        if (pd->e[VELOCITY1+i])
+        if (pd->e[pg->imtrx][VELOCITY1+i])
         {
           eta_dV[i][j] = 0.5 * 0.5 * hk * fv->v[i]*bf[VELOCITY1+i]->phi[j] / (vnorm*D);
 
         }
 
-        if (pd->e[MESH_DISPLACEMENT1+i])
+        if (pd->e[pg->imtrx][MESH_DISPLACEMENT1+i])
         {
           eta_dX[i][j] = 0.5 * vnorm * hk_dX[i][j] / D;
 

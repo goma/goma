@@ -551,7 +551,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
     }
 
   v = RESTIME;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (b=0; b<dim; b++)
 	{
@@ -1137,7 +1137,7 @@ anneal_mesh_LSA(double x[], Exo_DB *exo, double **saved_xyz, double **saved_disp
   /* Displace the coordinates and save the displacement fields*/
   for (gnn = 0; gnn < num_nodes; gnn++)
     {
-      idx = Index_Solution (gnn, MESH_DISPLACEMENT1, 0, 0, -1);
+      idx = Index_Solution (gnn, MESH_DISPLACEMENT1, 0, 0, -1, upd->matrix_index[MESH_DISPLACEMENT1]);
       if (idx > -1)
         {
          saved_displacement[0][gnn] = x[idx];
@@ -1151,7 +1151,7 @@ anneal_mesh_LSA(double x[], Exo_DB *exo, double **saved_xyz, double **saved_disp
 
       if( dim > 1 )
         {
-         idy = Index_Solution (gnn, MESH_DISPLACEMENT2, 0, 0, -1);
+         idy = Index_Solution (gnn, MESH_DISPLACEMENT2, 0, 0, -1, upd->matrix_index[MESH_DISPLACEMENT2]);
          if (idy > -1)
            {
             saved_displacement[1][gnn] = x[idy];
@@ -1166,7 +1166,7 @@ anneal_mesh_LSA(double x[], Exo_DB *exo, double **saved_xyz, double **saved_disp
 
       if( dim > 2 )
         {
-         idz = Index_Solution (gnn, MESH_DISPLACEMENT3, 0, 0, -1);
+         idz = Index_Solution (gnn, MESH_DISPLACEMENT3, 0, 0, -1, upd->matrix_index[MESH_DISPLACEMENT3]);
          if (idz > -1)
            {
             saved_displacement[2][gnn] = x[idz];
@@ -1210,7 +1210,7 @@ unanneal_mesh_LSA(double x[], Exo_DB *exo, double **saved_xyz, double **saved_di
   /* Put back the displacement field in solution vector*/
   for (gnn = 0; gnn < num_nodes; gnn++)
     {
-      idx = Index_Solution (gnn, MESH_DISPLACEMENT1, 0, 0, -1);
+      idx = Index_Solution (gnn, MESH_DISPLACEMENT1, 0, 0, -1, upd->matrix_index[MESH_DISPLACEMENT1]);
       if (idx > -1)
         {
          x[idx] = saved_displacement[0][gnn];
@@ -1218,7 +1218,7 @@ unanneal_mesh_LSA(double x[], Exo_DB *exo, double **saved_xyz, double **saved_di
 
       if( dim > 1 )
         {
-         idy = Index_Solution (gnn, MESH_DISPLACEMENT2, 0, 0, -1);
+         idy = Index_Solution (gnn, MESH_DISPLACEMENT2, 0, 0, -1, upd->matrix_index[MESH_DISPLACEMENT2]);;
          if (idy > -1)
            {
             x[idy] = saved_displacement[1][gnn];
@@ -1226,7 +1226,7 @@ unanneal_mesh_LSA(double x[], Exo_DB *exo, double **saved_xyz, double **saved_di
          }
       if( dim > 2 )
         {
-         idz = Index_Solution (gnn, MESH_DISPLACEMENT3, 0, 0, -1);
+         idz = Index_Solution (gnn, MESH_DISPLACEMENT3, 0, 0, -1, upd->matrix_index[MESH_DISPLACEMENT3]);
          if (idz > -1)
            {
             x[idz] = saved_displacement[2][gnn];
@@ -1278,7 +1278,7 @@ add_displacement_LSA(double x[], Exo_DB *exo, double **saved_displacement)
   /* Add the displacement field in solution vector*/
   for (gnn = 0; gnn < num_nodes; gnn++)
     {
-      idx = Index_Solution (gnn, MESH_DISPLACEMENT1, 0, 0, -1);
+      idx = Index_Solution (gnn, MESH_DISPLACEMENT1, 0, 0, -1, upd->matrix_index[MESH_DISPLACEMENT1]);
       if (idx > -1)
         {
          x[idx] += saved_displacement[0][gnn];
@@ -1286,7 +1286,7 @@ add_displacement_LSA(double x[], Exo_DB *exo, double **saved_displacement)
 
       if( dim > 1 )
         {
-         idy = Index_Solution (gnn, MESH_DISPLACEMENT2, 0, 0, -1);
+         idy = Index_Solution (gnn, MESH_DISPLACEMENT2, 0, 0, -1, upd->matrix_index[MESH_DISPLACEMENT2]);
          if (idy > -1)
            {
             x[idy] += saved_displacement[1][gnn];
@@ -1294,7 +1294,7 @@ add_displacement_LSA(double x[], Exo_DB *exo, double **saved_displacement)
          }
       if( dim > 2 )
         {
-         idz = Index_Solution (gnn, MESH_DISPLACEMENT3, 0, 0, -1);
+         idz = Index_Solution (gnn, MESH_DISPLACEMENT3, 0, 0, -1, upd->matrix_index[MESH_DISPLACEMENT3]);
          if (idz > -1)
            {
             x[idz] += saved_displacement[2][gnn];

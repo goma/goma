@@ -128,7 +128,7 @@ user_post(dbl *param)		/* ptr to the user-defined parameter list */
 
 /* Now, calculate post-process variable and put it in post_value */
 /* E.G. if you want the product of temperature and concentration */
-/*    if (pd->v[VELOCITY1]) */
+/*    if (pd->v[pg->imtrx][VELOCITY1]) */
 /*        post_value = V[0] - 1.; */
 /*        post_value = V[0] - log(X[1] / 10)/ log(0.9); */
 

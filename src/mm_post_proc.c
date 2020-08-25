@@ -12091,7 +12091,7 @@ load_elem_tkn (struct Results_Description *rd,
             ev_var_mask[j - V_FIRST] = 1; /* Only count this variable once */
 	  }
         }
-        if (pd_glob[i]->i[j] == I_P1) {
+        if (pd_glob[i]->i[pg->imtrx][j] == I_P1) {
           int dof = getdofs(type2shape(exo->eb_elem_itype[i]), I_P1);
           if (ev_var_mask[j - V_FIRST] == 0) {
             /* We just found a candidate for an element variable */

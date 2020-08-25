@@ -594,9 +594,9 @@ numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
             int ivd;
             int i_offset;
             int idof;
-            Index_Solution_Inv(i, &gnode, &ivd, &i_offset, &idof);
+            Index_Solution_Inv(i, &gnode, &ivd, &i_offset, &idof, pg->imtrx);
 
-            if (pd->v[EM_E1_REAL]) {
+            if (pd->v[pg->imtrx][EM_E1_REAL]) {
               if (Inter_Mask[var_i][var_j]) {
                 int ja = (i == j) ? j
                                   : in_list(j, ams->bindx[i], ams->bindx[i + 1],
@@ -604,14 +604,14 @@ numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
                 if (ja == -1) {
                   sprintf(errstring,
                           "Index not found (%d, %d) for interaction (%d, %d)",
-                          i, j, idv[i][0], idv[j][0]);
+                          i, j, idv[pg->imtrx][i][0], idv[pg->imtrx][j][0]);
                   EH(ja, errstring);
                 }
-                if (Nodes[gnode]->DBC && Nodes[gnode]->DBC[i_offset] != -1 &&
+                if (Nodes[gnode]->DBC[pg->imtrx] && Nodes[gnode]->DBC[pg->imtrx][i_offset] != -1 &&
                     i == j) {
                   nj[ja] = 1.0;
-                } else if (Nodes[gnode]->DBC &&
-                           Nodes[gnode]->DBC[i_offset] != -1) {
+                } else if (Nodes[gnode]->DBC[pg->imtrx] &&
+                           Nodes[gnode]->DBC[pg->imtrx][i_offset] != -1) {
                   nj[ja] = 0.0;
                 } else {
                   nj[ja] = (resid_vector_1[i] - resid_vector[i]) / (dx_col[j]);
@@ -621,8 +621,7 @@ numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
 
             for (mode = 0; mode < vn->modes; mode++) {
               /* Only for stress terms */
-		if (idv[pg->imtrx][i][0] >= v_s[mode][0][0] && idv[pg->imtrx][i][0] <= v_s[mode][2][2])
-                  idv[i][0] <= v_s[mode][2][2]) {
+		if (idv[pg->imtrx][i][0] >= v_s[mode][0][0] && idv[pg->imtrx][i][0] <= v_s[mode][2][2]) {
 
 		    if (Inter_Mask[pg->imtrx][var_i][var_j]) {
 
@@ -630,16 +629,15 @@ numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
                                     : in_list(j, ams->bindx[i],
                                               ams->bindx[i + 1], ams->bindx);
                   if (ja == -1) {
-			sprintf(errstring, "Index not found (%d, %d) for interaction (%d, %d)", i, j, idv[pg->imtrx][i][0], idv[pg->imtrx][j][0]);
-                            "Index not found (%d, %d) for interaction (%d, %d)",
-                            i, j, idv[i][0], idv[j][0]);
+                    sprintf(errstring, "Index not found (%d, %d) for interaction (%d, %d)", i, j,
+                            idv[pg->imtrx][i][0], idv[pg->imtrx][j][0]);
                     EH(ja, errstring);
                   }
-                  if (Nodes[gnode]->DBC && Nodes[gnode]->DBC[i_offset] != -1 &&
+                  if (Nodes[gnode]->DBC[pg->imtrx] && Nodes[gnode]->DBC[pg->imtrx][i_offset] != -1 &&
                       i == j) {
                     nj[ja] = 1.0;
-                  } else if (Nodes[gnode]->DBC &&
-                             Nodes[gnode]->DBC[i_offset] != -1) {
+                  } else if (Nodes[gnode]->DBC[pg->imtrx] &&
+                             Nodes[gnode]->DBC[pg->imtrx][i_offset] != -1) {
                     nj[ja] = 0.0;
                   } else {
                     nj[ja] = (resid_vector_1[i] - resid_vector[i]) / (dx_col[j]);

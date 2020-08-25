@@ -1098,7 +1098,7 @@ rotate_momentum_eqn (
 /*       i.e.,    Rn = nx*Rx + ny*Ry + nz*Rz                                 */
 /*                Rt1 = t1x*Rx + t1y*Ry + t1z*Rz                             */
 /*                Rt2 = t2x*Rx + t2y*Ry + t2z*Rz                             */
-  if( pd->v[POLYMER_STRESS11] )
+  if( pd->v[pg->imtrx][POLYMER_STRESS11] )
     {
       (void) stress_eqn_pointer(v_s);
 
@@ -1355,14 +1355,14 @@ rotate_momentum_eqn (
       } /* end of if variable */
 
       var = POLYMER_STRESS11;
-      if (pd->v[var]) {
+      if (pd->v[pg->imtrx][var]) {
 	for (int mode = 0; mode < vn->modes; mode++) {
 	  for (int p = 0; p < VIM; p++) {
 	    for (int q = 0; q < VIM; q++) {
 	      if (q >= p) {
                 var = v_s[mode][p][q];
 	        pvar = upd->vp[pg->imtrx][var];
-	        for ( n=0; n<ei->dof[var]; n++) {
+	        for ( n=0; n<ei[pg->imtrx]->dof[var]; n++) {
 
 	          rotated_jacobian_scalar[0][n] = 0.;
 	          rotated_jacobian_scalar[1][n] = 0.;
@@ -1386,7 +1386,7 @@ rotate_momentum_eqn (
 	          {
 	            if (rotation[I][eq][kdir]->ok) {
 	              /* loop over sensitivities */
-	              for ( n=0; n< ei->dof[var]; n++ ) 
+	              for ( n=0; n< ei[pg->imtrx]->dof[var]; n++ ) 
 	        	{
 	        	  
                           lec->J[LEC_J_INDEX(upd->ep[pg->imtrx][R_MOMENTUM1+ kdir],pvar,id,n)]
@@ -1401,12 +1401,12 @@ rotate_momentum_eqn (
       } /* end of if variable */
       
       var = VELOCITY_GRADIENT11;
-      if (pd->v[var]) {
+      if (pd->v[pg->imtrx][var]) {
 	for (int p = 0; p < VIM; p++) {
 	  for (int q = 0; q < VIM; q++) {
             var = v_g[p][q];
 	    pvar = upd->vp[pg->imtrx][var];
-	    for ( n=0; n<ei->dof[var]; n++) {
+	    for ( n=0; n<ei[pg->imtrx]->dof[var]; n++) {
 
 	      rotated_jacobian_scalar[0][n] = 0.;
 	      rotated_jacobian_scalar[1][n] = 0.;
@@ -1430,7 +1430,7 @@ rotate_momentum_eqn (
 	      {
 	        if (rotation[I][eq][kdir]->ok) {
 	          /* loop over sensitivities */
-	          for ( n=0; n< ei->dof[var]; n++ ) 
+	          for ( n=0; n< ei[pg->imtrx]->dof[var]; n++ ) 
 		    {
 	    	  
                       lec->J[LEC_J_INDEX(upd->ep[pg->imtrx][R_MOMENTUM1+ kdir],pvar,id,n)]
@@ -1699,7 +1699,7 @@ rotate_res_jac_mom (
   ShapeVar = pd->ShapeVar;
   int v_s[MAX_MODES][DIM][DIM];
   int v_g[DIM][DIM];
-  if( pd->v[POLYMER_STRESS11] )
+  if( pd->v[pg->imtrx][POLYMER_STRESS11] )
     {
       (void) stress_eqn_pointer(v_s);
 
@@ -1908,14 +1908,14 @@ rotate_res_jac_mom (
 	} /* end of loop over nodes */
       } /* end of if variable */
       var = POLYMER_STRESS11;
-      if (pd->v[var]) {
+      if (pd->v[pg->imtrx][var]) {
 	for (int mode = 0; mode < vn->modes; mode++) {
 	  for (int p = 0; p < VIM; p++) {
 	    for (int q = 0; q < VIM; q++) {
               if (q >= p) {
                 var = v_s[mode][p][q];
 	        pvar = upd->vp[pg->imtrx][var];
-          	for ( n=0; n<ei->dof[var]; n++) {
+          	for ( n=0; n<ei[pg->imtrx]->dof[var]; n++) {
           	  
           	  for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
           	    {
@@ -1945,12 +1945,12 @@ rotate_res_jac_mom (
       } /* end of if variable */
 
       var = VELOCITY_GRADIENT11;
-      if (pd->v[var]) {
+      if (pd->v[pg->imtrx][var]) {
 	for (int p = 0; p < VIM; p++) {
 	  for (int q = 0; q < VIM; q++) {
             var = v_g[p][q];
 	    pvar = upd->vp[pg->imtrx][var];
-	    for ( n=0; n<ei->dof[var]; n++) {
+	    for ( n=0; n<ei[pg->imtrx]->dof[var]; n++) {
                 
 	      for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
 		{

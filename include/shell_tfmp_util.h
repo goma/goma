@@ -5,8 +5,14 @@
 #include "mm_shell_bc.h"
 #include "shell_tfmp_struct.h"
 
-#ifndef _SHELL_TFMP_UTIL
-#define _SHELL_TFMP_UTIL
+#ifndef GOMA_SHELL_TFMP_UTIL
+#define GOMA_SHELL_TFMP_UTIL
+
+#ifdef EXTERN
+#undef EXTERN
+#endif
+
+#define EXTERN extern
 
 
 //Still Experimental
@@ -180,4 +186,4 @@ EXTERN void load_gap_model
 EXTERN void load_roller_normal_into_fv
 (void);
 
-#endif // _SHELL_TFMP_UTIL
+#endif // GOMA_SHELL_TFMP_UTIL

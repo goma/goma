@@ -1784,7 +1784,7 @@ int assemble_density(void) /*  time step size      */
         source += rho - fv->rho;
         source *= wt_func * det_J * h3 * wt;
 
-        lec->R[peqn][i] += source;
+        lec->R[LEC_R_INDEX(peqn,i)] += source;
       }
     }
   }
@@ -1809,7 +1809,7 @@ int assemble_density(void) /*  time step size      */
             source -= bf[var]->phi[j];
             source *= wt_func * det_J * wt * h3;
 
-            lec->J[peqn][pvar][i][j] += source;
+            lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += source;
           }
         }
 
@@ -1827,7 +1827,7 @@ int assemble_density(void) /*  time step size      */
             source -= d_rho_dMOM[1][j];
             source *= wt_func * det_J * wt * h3;
 
-            lec->J[peqn][pvar][i][j] += source;
+            lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += source;
           }
         }
 
@@ -1845,7 +1845,7 @@ int assemble_density(void) /*  time step size      */
             source -= d_rho_dT[j];
             source *= wt_func * det_J * wt * h3;
 
-            lec->J[peqn][pvar][i][j] += source;
+            lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += source;
           }
         }
 
@@ -1859,7 +1859,7 @@ int assemble_density(void) /*  time step size      */
               source -= d_rho_dC[a][j];
               source *= wt_func * det_J * wt * h3;
 
-              lec->J[peqn][pvar][i][j] += source;
+              lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += source;
             }
           }
         }
@@ -1881,7 +1881,7 @@ int assemble_density(void) /*  time step size      */
               source *=
                   wt_func * (h3 * d_det_J_dmeshbj + dh3dmesh_bj * det_J) * wt;
 
-              lec->J[peqn][pvar][i][j] += source;
+              lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += source;
             }
           }
         }
@@ -2550,7 +2550,7 @@ int assemble_moments(double time, /* present time value */
           source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
         }
 
-        lec->R[peqn][i] += Heaviside * (mass + advection) + source + diffusion + discontinuity_capturing;
+        lec->R[LEC_R_INDEX(peqn,i)] += Heaviside * (mass + advection) + source + diffusion + discontinuity_capturing;
       }
     }
   }
@@ -2611,7 +2611,7 @@ int assemble_moments(double time, /* present time value */
               source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
             }
 
-            lec->J[peqn][pvar][i][j] += source;
+            lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += source;
           }
         }
 
@@ -2682,7 +2682,7 @@ int assemble_moments(double time, /* present time value */
                 source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
               }
 
-              lec->J[peqn][pvar][i][j] +=
+              lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
                   Heaviside * (mass + advection) + source + diffusion + discontinuity_capturing;
             }
           }
@@ -2743,7 +2743,7 @@ int assemble_moments(double time, /* present time value */
                 source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
               }
 
-              lec->J[peqn][pvar][i][j] +=
+              lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
                   Heaviside * (mass + advection) + source;
             }
           }
@@ -2870,7 +2870,7 @@ int assemble_moments(double time, /* present time value */
                 source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
               }
 
-              lec->J[peqn][pvar][i][j] +=
+              lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
                   Heaviside * (mass + advection) + source;
             }
           }
@@ -2892,7 +2892,7 @@ int assemble_moments(double time, /* present time value */
                 source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
               }
 
-              lec->J[peqn][MAX_PROB_VAR + w][i][j] += source;
+              lec->J[LEC_J_INDEX(peqn,MAX_PROB_VAR + w,i,j)] += source;
             }
           }
         }

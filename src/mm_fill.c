@@ -4051,7 +4051,7 @@ matrix_fill_stress(
       err = load_bf_grad();
       EH( err, "load_bf_grad");
       
-      if (pde[R_MESH1] || pd->v[R_MESH1])
+      if (pde[R_MESH1] || pd->v[pg->imtrx][R_MESH1])
 	{
 	  err = load_bf_mesh_derivs(); 
 	  EH( err, "load_bf_mesh_derivs");
@@ -4064,7 +4064,7 @@ matrix_fill_stress(
       err = load_fv_grads();
       EH( err, "load_fv_grads");	  
             
-      if ( pde[R_MESH1] ||  pd->v[R_MESH1])
+      if ( pde[R_MESH1] ||  pd->v[pg->imtrx][R_MESH1])
 	{
 	  err = load_fv_mesh_derivs(1);
 	  EH( err, "load_fv_mesh_derivs");

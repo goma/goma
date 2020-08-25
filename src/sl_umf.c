@@ -65,7 +65,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include "umfpack.h"
 #define GOMA_SL_UMF_C
 #include "goma.h"
 
@@ -74,6 +73,9 @@
 #define UMF_MAX_SYSTEMS   20
 #endif
 
+#ifdef HAVE_UMFPACK
+
+#include "umfpack.h"
 /* This returns an integer identifier that should be unique to your
  * system.  There were problems with UMF mixing up systems becuase it
  * would identify unique systems just by its size.
@@ -351,3 +353,21 @@ SL_UMF ( int system_id,
 /*****************************************************************************/
 /* END of file sl_umf.c */
 /*****************************************************************************/
+#else // HAVE_UMFPACK
+int
+SL_UMF ( int system_id,
+	 int *first,
+	 int *fact_optn,
+	 int *matr_form,
+	 int *nj,
+	 int *nnz_j,
+	 int *row,
+	 int *col,
+	 double *a,
+	 double *b,
+	 double *x  )
+{
+
+  EH(GOMA_ERROR, "Goma not built with UMFPACK support");
+} /* END of routine SL_UMF */
+#endif // HAVE_UMFPACK
