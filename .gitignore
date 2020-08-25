@@ -26,3 +26,5 @@ cmake-debug
 /*.files
 /*.includes
 *.orig
+/.spack-env/
+/spack.lock
