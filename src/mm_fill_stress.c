@@ -1528,21 +1528,16 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
   /*
    * Field variables...
    */
-  
-  for ( a=0; a<dim; a++)
-    {
-      v[a] = fv->v[a];
 
-      /* note, these are zero for steady calculations */
-      x_dot[a] = 0.0;
-      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
-	{
-	  if (  pd->TimeIntegration != STEADY &&  pd->v[imtrx][MESH_DISPLACEMENT1+a] )
-	    {
-	      x_dot[a] = fv_dot->x[a];
-	    }
-	}
+  for (a = 0; a < dim; a++) {
+    v[a] = fv->v[a];
+
+    /* note, these are zero for steady calculations */
+    x_dot[a] = 0.0;
+    if (pd->TimeIntegration != STEADY && pd->gv[MESH_DISPLACEMENT1 + a]) {
+      x_dot[a] = fv_dot->x[a];
     }
+  }
 
   /*
    * In Cartesian coordinates, this velocity gradient tensor will
@@ -1618,42 +1613,30 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
   /* end Petrov-Galerkin addition */
 
   /*  shift factor  */
-   if( pd->e[pg->imtrx][TEMPERATURE])
-    {
-      if(vn->shiftModel == CONSTANT)
-	{
-	  at = vn->shift[0];
-	  for( j=0 ; j<ei[pg->imtrx]->dof[TEMPERATURE] ; j++)
-	    {
-	      d_at_dT[j]=0.;
-	    }
-	}
-      else if(vn->shiftModel == MODIFIED_WLF)
-	{
-	  wlf_denom = vn->shift[1] + fv->T - mp->reference[TEMPERATURE];
-	  if(wlf_denom != 0.)
-	    {
-	      at=exp(vn->shift[0]*(mp->reference[TEMPERATURE]-fv->T)/wlf_denom);
-	  	for( j=0 ; j<ei[pg->imtrx]->dof[TEMPERATURE] ; j++)
-		{
-		  d_at_dT[j]= -at*vn->shift[0]*vn->shift[1]
-		    /(wlf_denom*wlf_denom)*bf[TEMPERATURE]->phi[j];
-		}
-	    }
-	  else
-	    { 
-	      at = 1.;
-	    } 
-	  	for( j=0 ; j<ei[pg->imtrx]->dof[TEMPERATURE] ; j++)
-	    {
-	      d_at_dT[j]=0.;
-	    }
-	}
+  if (pd->gv[TEMPERATURE]) {
+    if (vn->shiftModel == CONSTANT) {
+      at = vn->shift[0];
+      for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
+        d_at_dT[j] = 0.;
+      }
+    } else if (vn->shiftModel == MODIFIED_WLF) {
+      wlf_denom = vn->shift[1] + fv->T - mp->reference[TEMPERATURE];
+      if (wlf_denom != 0.) {
+        at = exp(vn->shift[0] * (mp->reference[TEMPERATURE] - fv->T) / wlf_denom);
+        for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
+          d_at_dT[j] = -at * vn->shift[0] * vn->shift[1] / (wlf_denom * wlf_denom) *
+                       bf[TEMPERATURE]->phi[j];
+        }
+      } else {
+        at = 1.;
+      }
+      for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
+        d_at_dT[j] = 0.;
+      }
     }
-  else
-    {
-      at = 1.;
-    }
+  } else {
+    at = 1.;
+  }
 
   /* Begin loop over modes */
   for ( mode=0; mode<vn->modes; mode++)
@@ -1687,7 +1670,6 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
       /* get polymer viscosity */
       mup = viscosity(ve[mode]->gn, gamma, d_mup);
 
-      double d_alpha_dF[MDE];
       if(saramitoEnabled == TRUE)
 	{
 	  saramitoCoeff = compute_saramito_model_terms(s, ve[mode]->gn->tau_y, ve[mode]->gn->fexp, d_saramito);
@@ -1704,6 +1686,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 	  }
 	}
 
+      double d_alpha_dF[MDE];
       /* get Geisekus mobility parameter */
       if (ve[mode]->alphaModel == CONSTANT) {
 	alpha = ve[mode]->alpha;
