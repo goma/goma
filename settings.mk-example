@@ -77,7 +77,9 @@ PREFIX = /home/goma/build
 #            -DMAX_CONC=4 \
 #            -DCOUPLED_FILL \
 #            -DPARALLEL \
-#            -DEIGEN_SERIAL 
+#            -DEIGEN_SERIAL \ 
+#            -DHAVE_UMFPACK \
+#            -DHAVE_SPARSE 
 
 # If you want stratimikos support, use the above DEFINES and add the following
 #	     -DHAVE_STRATIMIKOS

@@ -117,6 +117,7 @@ DEFINES ?= -Dlinux \
            -DPARALLEL \
            -DHAVE_STRATIMIKOS \
            -DHAVE_SPARSE \
+           -DHAVE_UMFPACK \
            -DEIGEN_SERIAL
 
 # Other defines:
