@@ -295,3 +295,6 @@ achieved albeit at a less than quadratic rate
 int     nHC;
 
 int PRS_mat_ielem;
+
+struct Boundary_Condition *BC_Types;
+struct Rotation_Specs     *ROT_Types;

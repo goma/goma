@@ -60,8 +60,6 @@
 #define GOMA_MM_INPUT_C
 #include "mm_input.h"
 
-char aprepro_command[1024];
-
 static int 
 look_forward_optional_until(FILE *ifp, const char *string, char *untilstring, char input[],
 			    const char ch_term);

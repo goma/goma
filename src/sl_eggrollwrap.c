@@ -21,8 +21,11 @@
 
 #include "ac_stability.h"
 #include "dpi.h"
+#include "el_elm_info.h"
 #include "exo_struct.h"
 #include "mm_eh.h"
+#include "mm_as.h"
+#include "mm_as_const.h"
 #include "mm_more_utils.h"
 #include "mm_post_proc.h"
 #include "rd_exo.h"

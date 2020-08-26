@@ -15,41 +15,43 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "std.h"
-#include "rf_allo.h"
-#include "rf_fem_const.h"
-#include "rf_fem.h"
-#include "rf_io_const.h"
-#include "rf_io.h"
-#include "el_elm.h"
-#include "el_geom.h"
-#include "exo_struct.h"
-#include "rf_bc_const.h"
-#include "rf_bc.h"
-#include "rf_solver.h"
-#include "rf_vars_const.h"
-#include "mm_as_const.h"
-#include "mm_as_structs.h"
-#include "mm_as.h"
-#include "mm_eh.h"
-#include "bc/rotate_coordinates.h"
 #include "ac_stability.h"
 #include "ac_stability_util.h"
 #include "bc/rotate.h"
+#include "bc/rotate_coordinates.h"
+#include "el_elm.h"
 #include "el_elm_info.h"
+#include "el_geom.h"
+#include "exo_struct.h"
 #include "gds/gds_vector.h"
+#include "mm_as.h"
 #include "mm_as_alloc.h"
+#include "mm_as_const.h"
+#include "mm_as_structs.h"
 #include "mm_bc.h"
+#include "mm_eh.h"
 #include "mm_elem_block_structs.h"
 #include "mm_fill_aux.h"
 #include "mm_fill_ptrs.h"
+#include "mm_fill_stress.h"
 #include "mm_fill_terms.h"
 #include "mm_fill_util.h"
+#include "mm_mp.h"
 #include "mm_post_proc.h"
 #include "mm_unknown_map.h"
 #include "rd_mesh.h"
+#include "rf_allo.h"
+#include "rf_bc.h"
+#include "rf_bc_const.h"
+#include "rf_fem.h"
+#include "rf_fem_const.h"
+#include "rf_io.h"
+#include "rf_io_const.h"
 #include "rf_node_const.h"
+#include "rf_solver.h"
+#include "rf_vars_const.h"
 #include "sl_util_structs.h"
+#include "std.h"
 
 /*
  *  Variable Definitions
@@ -3518,13 +3520,13 @@ void rotate_momentum_auto(int id,  /* Elemental stiffness matrix row index */
     rotated_resid[kdir] = 0.;
     for (ldir = 0; ldir < dim; ldir++) {
       peq = upd->ep[pg->imtrx][R_MOMENTUM1 + ldir];
-      rotated_resid[kdir] += rc[kdir][ldir] * lec->R[peq][id];
+      rotated_resid[kdir] += rc[kdir][ldir] * lec->R[LEC_R_INDEX(peq,id)];
     }
   } /* end of loop over direction */
 
   for (kdir = 0; kdir < dim; kdir++) {
     peq = upd->ep[pg->imtrx][R_MOMENTUM1 + kdir];
-    lec->R[peq][id] = rotated_resid[kdir];
+    lec->R[LEC_R_INDEX(peq,id)] = rotated_resid[kdir];
   }
 
   /*                                                                      */
@@ -3542,7 +3544,7 @@ void rotate_momentum_auto(int id,  /* Elemental stiffness matrix row index */
           for (kdir = 0; kdir < dim; kdir++) {
             for (ldir = 0; ldir < dim; ldir++) {
               rotated_jacobian_scalar[kdir][n] +=
-                  rc[kdir][ldir] * lec->J[upd->ep[pg->imtrx][R_MOMENTUM1 + ldir]][pvar][id][n];
+                  rc[kdir][ldir] * lec->J[LEC_J_INDEX(upd->ep[pg->imtrx][R_MOMENTUM1 + ldir],pvar,id,n)];
             }
           }
 
@@ -3553,7 +3555,7 @@ void rotate_momentum_auto(int id,  /* Elemental stiffness matrix row index */
           /* loop over sensitivities */
           for (n = 0; n < ei[pg->imtrx]->dof[var]; n++) {
 
-            lec->J[upd->ep[pg->imtrx][R_MOMENTUM1 + kdir]][pvar][id][n] =
+            lec->J[LEC_J_INDEX(upd->ep[pg->imtrx][R_MOMENTUM1 + kdir],pvar,id,n)] =
                 rotated_jacobian_scalar[kdir][n];
           }
         }

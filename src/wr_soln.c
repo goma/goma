@@ -15,7 +15,9 @@
 
 #include <stdio.h>
 
+#include "el_elm_info.h"
 #include "mm_as.h"
+#include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_more_utils.h"
 #include "mm_post_def.h"

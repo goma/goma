@@ -22192,7 +22192,7 @@ int assemble_ls_stress_jump(double viscosity_scale, double stress_scale, int hea
           double source = lsi->delta * lsi->normal[a] * (viscosity_scale * ls_viscosity_jump * n_gv_n + Heaviside * stress_scale * n_tau_n) *
                           bf[eqn]->phi[i];
           source *= d_area;
-          lec->R[peqn][ii] += source;
+          lec->R[LEC_R_INDEX(peqn,ii)] += source;
         }
       }
     }
@@ -22241,7 +22241,7 @@ int assemble_ls_stress_jump(double viscosity_scale, double stress_scale, int hea
                                 bf[eqn]->phi[i];
                 source *= d_area;
 
-                lec->J[peqn][pvar][ii][j] += source;
+                lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
               }
             }
           }
@@ -22269,7 +22269,7 @@ int assemble_ls_stress_jump(double viscosity_scale, double stress_scale, int hea
               source += lsi->delta * lsi->normal[a] * (viscosity_scale * n_gv_n_dF + stress_scale * n_tau_n_dF) * bf[eqn]->phi[i];
               source *= d_area;
 
-              lec->J[peqn][pvar][ii][j] += source;
+              lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
             }
           }
         }

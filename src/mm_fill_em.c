@@ -22,7 +22,6 @@
 
 /* GOMA include files */
 #define GOMA_MM_FILL_EM_C
-#include "goma.h"
 #include "el_elm.h"
 #include "el_geom.h"
 #include "mm_as.h"
@@ -32,6 +31,7 @@
 #include "mm_mp_const.h"
 #include "mm_std_models.h"
 #include "mm_std_models_shell.h"
+#include "mm_fill_ls.h"
 #include "rf_bc_const.h"
 #include "rf_fem.h"
 #include "rf_fem_const.h"

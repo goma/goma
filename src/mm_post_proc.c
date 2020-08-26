@@ -96,8 +96,6 @@
  * This is the 1 place these variables are defined. If you need them
  * elsewhere, then include them via mm_post_def.h
  */
-int *listel;                  /* Pointer to element order map from exoII  */
-
 int nn_post_fluxes;		/* Dimension of the following structure */
 int nn_post_fluxes_sens;	/* Dimension of the following structure */
 int nn_post_data;               /* Dimension of the following structure */

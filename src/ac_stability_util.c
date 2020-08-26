@@ -39,6 +39,9 @@
 #include "rd_mesh.h"
 #include "wr_dpi.h"
 #include "wr_exo.h"
+#include "el_geom.h"
+#include "rf_util.h"
+#include "mm_unknown_map.h"
 
 #define GOMA_AC_STABILITY_UTIL_C
 

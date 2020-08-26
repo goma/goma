@@ -60,6 +60,7 @@
 #include "sl_matrix_util.h"
 #include "sl_util_structs.h"
 #include "mm_std_models.h"
+#include "mm_unknown_map.h"
 
 #define GOMA_MM_NUMJAC_C
 

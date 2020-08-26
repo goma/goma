@@ -5168,5 +5168,3 @@ double calc_tensor_invariant(dbl T[DIM][DIM],       // Original tensor
   return TI;
 
 } // End of calc_tensor_invariants()
-
-    {
