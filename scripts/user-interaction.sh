@@ -112,6 +112,8 @@ function mpi_test {
                 MPI_BASE_DIR="/usr/lib64/openmpi"
             elif [ -d "/usr/lib/openmpi" ] ; then
                 MPI_BASE_DIR="/usr/lib/openmpi"
+            elif [ -d "/usr/lib/x86_64-linux-gnu/openmpi" ] ; then
+                MPI_BASE_DIR="/usr/lib/x86_64-linux-gnu/openmpi"
             else
                 echo "You have openMPI natively installed but I was unable to find it"
                 echo "Please enter your openMPI path"

@@ -97,6 +97,8 @@ struct Level_Set_Data *ls;
 struct Level_Set_Interface *lsi;
 struct Phase_Function_Data *pfd;
 
+static char aprepro_command[1024];
+
 static Spfrtn sr;
 
 
@@ -117,7 +119,7 @@ static char default_string[MAX_CHAR_IN_INPUT] = "(default)";
 //static char specify_string[MAX_CHAR_IN_INPUT] = "          ";
 
 
-Strcpy_rtn strcpy_rtn;		/* Data type def'd in std.h */
+static Strcpy_rtn strcpy_rtn;		/* Data type def'd in std.h */
 
 static int	run_aprepro=0;
 
@@ -9003,6 +9005,10 @@ rd_eq_specs(FILE *ifp,
       ce = set_eqn(R_MASS_SURF, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "continuity")) {
       ce = set_eqn(R_PRESSURE, mtrx_index0, pd_ptr);
+    } else if (!strcasecmp(ts, "continuity_em_real")) {
+      ce = set_eqn(R_EM_CONT_REAL, mtrx_index0, pd_ptr);
+    } else if (!strcasecmp(ts, "continuity_em_imag")) {
+      ce = set_eqn(R_EM_CONT_IMAG, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "fill")) {
       ce = set_eqn(R_FILL, mtrx_index0, pd_ptr);
 #ifndef COUPLED_FILL
@@ -9725,6 +9731,10 @@ rd_eq_specs(FILE *ifp,
       cv = set_var(ACOUS_PIMAG, mtrx_index0, pd_ptr);  
     } else if (!strcasecmp(ts, "ARS")) {
       cv = set_var(ACOUS_REYN_STRESS, mtrx_index0, pd_ptr);  
+    } else if (!strcasecmp(ts, "EPR")) {
+      cv = set_var(EM_CONT_REAL, mtrx_index0, pd_ptr);  
+    } else if (!strcasecmp(ts, "EPI")) {
+      cv = set_var(EM_CONT_IMAG, mtrx_index0, pd_ptr);  
     } else if (!strcasecmp(ts, "SH_BV")) {
       cv = set_var(SHELL_BDYVELO, mtrx_index0, pd_ptr);  
     } else if (!strcasecmp(ts, "SH_P")) {
@@ -10168,6 +10178,9 @@ rd_eq_specs(FILE *ifp,
        * Two terms.... 
        */
     case R_PRESSURE:
+    case R_EM_CONT_REAL:
+    case R_EM_CONT_IMAG:
+
 	if ( fscanf(ifp, "%lf %lf", 
 		    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)]),
 		    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)]))
@@ -10514,16 +10527,16 @@ rd_eq_specs(FILE *ifp,
     case R_LIGHT_INTD:
     case R_RESTIME:  
     case R_EM_E1_REAL:
-    case R_EM_E1_IMAG:
     case R_EM_E2_REAL:
-    case R_EM_E2_IMAG:
     case R_EM_E3_REAL:
+    case R_EM_E1_IMAG:
+    case R_EM_E2_IMAG:
     case R_EM_E3_IMAG:
     case R_EM_H1_REAL:
-    case R_EM_H1_IMAG:
     case R_EM_H2_REAL:
-    case R_EM_H2_IMAG:
     case R_EM_H3_REAL:
+    case R_EM_H1_IMAG:
+    case R_EM_H2_IMAG:
     case R_EM_H3_IMAG:
 
 	if ( fscanf(ifp, "%lf %lf %lf %lf %lf", 
@@ -13532,12 +13545,12 @@ setup_table_BC(FILE *ifp,
   
      /* Read scaling factor */
  
-  if ( fscanf(ifp, "%lf", &BC_Type->BC_Data_Float[0]) != 1)
+  if ( fscanf(ifp, "%lf", &BC_Type->table->yscale) != 1)
     {
-      BC_Type->BC_Data_Float[0] = 1.0;
+      BC_Type->table->yscale = 1.0;
     }
 
-  SPF(endofstring(es)," %.4g", BC_Type->BC_Data_Float[0]); 
+  SPF(endofstring(es)," %.4g", BC_Type->table->yscale); 
 
   /* read interpolation order */
 

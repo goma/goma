@@ -5,6 +5,5 @@
 spack:
   # add package specs to the `specs` list
   specs: [cmake, openmpi, arpack-ng, sparse, trilinos+amesos+amesos2+aztec+belos+boost+chaco+epetra+epetraext+exodus+explicit_template_instantiation+fortran+hdf5+hypre+ifpack+ifpack2+kokkos+matio+metis+ml+mpi+muelu+mumps+netcdf+pnetcdf+shared+stratimikos+suite-sparse+superlu-dist+teko+teuchos+tpetra+x11+zlib+zoltan+zoltan2
-      build_type=Release gotype=long_long ^superlu-dist@5.4.0, omega-h@develop ^trilinos+amesos+amesos2+aztec+belos+boost+chaco+epetra+epetraext+exodus+explicit_template_instantiation+fortran+hdf5+hypre+ifpack+ifpack2+kokkos+matio+metis+ml+mpi+muelu+mumps+netcdf+pnetcdf+shared+stratimikos+suite-sparse+superlu-dist+teko+teuchos+tpetra+x11+zlib+zoltan+zoltan2
       build_type=Release gotype=long_long ^superlu-dist@5.4.0]
   view: true

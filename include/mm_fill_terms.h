@@ -139,17 +139,6 @@ EXTERN int assemble_poynting	/* mm_fill_terms.c                           */
 	const int ,		/*  Light intensity eqn id and var id		     */
 	const int );	
 
-EXTERN int assemble_emwave	/* mm_fill_terms.c                           */
-(	double ,		/* time - present time value         */
-	double ,		/* tt - parameter to vary time integration
-			        	* from explicit (tt = 1) to 
-					* implicit (tt = 0)                   */
-	double ,		/* dt - current time step size               */
-	const PG_DATA *,	/* dvc_dnode                                 */
-	const int ,		/*  Light intensity eqn id and var id		     */
-	const int ,		/*  Light intensity eqn id and var id		     */
-	const int );	
-
 EXTERN int assemble_acoustic_reynolds_stress	/* mm_fill_terms.c */
 ( double,					/* time */
         double,					/* tt */

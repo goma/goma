@@ -63,7 +63,6 @@
 #include "wr_exo.h"
 #include "wr_soln.h"
 
-
 #include "sl_util.h"		/* defines sl_init() */
 
 #ifdef HAVE_FRONT
@@ -257,7 +256,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
    * tev_post is calculated in load_elem_tkn
    */
   tnv = cnt_nodal_vars();
-  tev = cnt_elem_vars();
+  tev = cnt_elem_vars(exo);
 
 
   if (tnv < 0)

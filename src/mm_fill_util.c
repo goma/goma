@@ -2051,7 +2051,7 @@ int load_bf_grad(void)
          * variable.  I had one, but it is not presently being used.
          */
 
-        if (CURL_V != -1) {
+ 	if (pd->gv[EM_E1_REAL]  ||  CURL_V != -1) {
           siz = DIM * DIM * MDE * sizeof(double);
           memset(&(bfv->curl_phi_e[0][0][0]), 0, siz);
 
@@ -3639,8 +3639,8 @@ int fill_variable_vector(int inode, int ivec_varType[], int ivec_matID[])
 /*****************************************************************************/
 /*****************************************************************************/
 
-void zero_lec_row(
-    double local_J[MAX_PROB_VAR + MAX_CONC][MAX_PROB_VAR + MAX_CONC][MDE][MDE],
+void
+zero_lec_row(double *local_J,
     int eqn_type, /* Eqn Type of row to be zeroed     */
     int ldof)     /* Local dof of that equation type  */
 
@@ -3660,7 +3660,7 @@ void zero_lec_row(
    * *******************************/
 
   for (i_var = 0; i_var < MAX_PROB_EQN + MAX_CONC; i_var++) {
-    memset(local_J[eqn_type][i_var][ldof], 0, sizeof(double) * MDE);
+     memset(&(local_J[LEC_J_INDEX(eqn_type,i_var,ldof,0)]), 0, sizeof(double)*lec->max_dof);
   }
 
 } /* END of routine zero_lec_row                                        */
@@ -3674,8 +3674,8 @@ void zero_lec_row(
  *
  * Author: Matt Hopkins, 12/7/00
  */
-void zero_lec_column(
-    double local_J[MAX_PROB_VAR + MAX_CONC][MAX_PROB_VAR + MAX_CONC][MDE][MDE],
+void
+zero_lec_column(double *local_J,
     int var_type, /* Variable type of column to be zeroed */
     int ldof)     /* Local dof of that variable type */
 {
@@ -3683,7 +3683,7 @@ void zero_lec_column(
 
   for (eqn = 0; eqn < MAX_PROB_EQN + MAX_CONC; eqn++)
     for (dof = 0; dof < MDE; dof++)
-      local_J[eqn][var_type][dof][ldof] = 0.0;
+      local_J[LEC_J_INDEX(eqn,var_type,dof,ldof)] = 0.0;
 }
 /*****************************************************************************/
 /*****************************************************************************/
@@ -5035,12 +5035,12 @@ void set_solid_inertia(void)
 
   tran->solid_inertia = FALSE;
   for (mn = 0; mn < upd->Num_Mat; mn++) {
-    if (pd->TimeIntegration != STEADY &&
+      if(pd_glob[mn]->TimeIntegration != STEADY &&
         pd_glob[mn]->etm[pg->imtrx][R_MESH1][(LOG2_MASS)] &&
         pd_glob[mn]->MeshMotion == DYNAMIC_LAGRANGIAN) {
       tran->solid_inertia = TRUE;
-    } else if (pd->TimeIntegration != STEADY &&
-               pd_glob[mn]->etm[pg->imtrx][R_SOLID1][(LOG2_MASS)] &&
+    }
+      else if (pd_glob[mn]->TimeIntegration != STEADY &&
                pd_glob[mn]->MeshMotion == TOTAL_ALE) {
       tran->solid_inertia = TRUE;
     }
@@ -5168,3 +5168,5 @@ double calc_tensor_invariant(dbl T[DIM][DIM],       // Original tensor
   return TI;
 
 } // End of calc_tensor_invariants()
+
+    {

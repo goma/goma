@@ -8,7 +8,7 @@ enable_language(CXX)
 enable_language(Fortran)
 
 set(CMAKE_C_STANDARD 99)
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
 
@@ -22,6 +22,8 @@ MESSAGE(STATUS "Trilinos_DIR = ${Trilinos_DIR}")
 #message(STATUS "Trilinos LD Flags = ${Trilinos_EXTRA_LD_FLAGS}")
 
 set(MPI_C_COMPILER ${Trilinos_C_COMPILER})
+set(MPI_CXX_COMPILER ${Trilinos_CXX_COMPILER})
+set(MPI_Fortran_COMPILER ${Trilinos_Fortran_COMPILER})
 find_package(MPI REQUIRED)
 # Avoid linking to too many libraries by removing duplicates
 # reverse so that correct order for linking is preserved
@@ -52,7 +54,7 @@ endif()
 foreach(package Amesos AztecOO Epetra)
   LIST(FIND Trilinos_PACKAGE_LIST ${package} trilinos_package_index)
   if(${trilinos_package_index} LESS 0)
-  message(FATAL_ERROR "Trilinos not built with ${package}")
+  message(FATAL_ERROR "Trilinos not built with ${package} a required package")
   endif()
 endforeach()
 
@@ -60,7 +62,7 @@ endforeach()
 foreach(package MPI)
   LIST(FIND Trilinos_TPL_LIST ${package} trilinos_package_index)
   if(${trilinos_package_index} LESS 0)
-    message(FATAL_ERROR "Trilinos not built with TPL ${package}")
+    message(FATAL_ERROR "Trilinos not built with TPL ${package} a required TPL")
   endif()
 endforeach()
 
@@ -129,10 +131,15 @@ LIST(FIND Trilinos_TPL_LIST UMFPACK trilinos_package_index)
 if(${trilinos_package_index} LESS 0)
   message(STATUS "Trilinos not built with UMFPACK TPL")
   message(STATUS "Checking for other umfpack")
-  find_package(UMFPACK REQUIRED)
-  list(APPEND GOMA_COMPILE_DEFINITIONS HAVE_UMFPACK)
-  set(GOMA_TPL_LIBRARIES ${GOMA_TPL_LIBRARIES} ${UMFPACK_LIBRARIES})
-  set(GOMA_TPL_INCLUDES ${GOMA_TPL_INCLUDES} ${UMFPACK_INCLUDES})
+  find_package(UMFPACK)
+  if (UMFPACK_FOUND)
+    message(STATUS "UMFPACK found")
+    list(APPEND GOMA_COMPILE_DEFINITIONS HAVE_UMFPACK)
+    set(GOMA_TPL_LIBRARIES ${GOMA_TPL_LIBRARIES} ${UMFPACK_LIBRARIES})
+    set(GOMA_TPL_INCLUDES ${GOMA_TPL_INCLUDES} ${UMFPACK_INCLUDES})
+  else()
+    message(STATUS "UMFPACK library not found")
+  endif()
 else()
   message(STATUS "Trilinos built with UMFPACK TPL")
   message(STATUS "\tEnabling UMFPACK in Goma")
@@ -237,6 +244,7 @@ set(GOMA_INCLUDES
         include/mm_elem_block_structs.h
         include/mm_fill_aux.h
         include/mm_fill_common.h
+        include/mm_fill_em.h
         include/mm_fill_fill.h
         include/mm_fill.h
         include/mm_fill_jac.h
@@ -372,6 +380,7 @@ set(GOMA_SOURCES
         src/mm_fill_aux.c
         src/mm_fill.c
         src/mm_fill_common.c
+        src/mm_fill_em.c
         src/mm_fill_fill.c
         src/mm_fill_interface.c
         src/mm_fill_jac.c
@@ -576,12 +585,12 @@ set(GOMA_TPL_LIBRARIES
 
 add_library(goma_user ${GOMA_USER_SOURCES} ${GOMA_USER_INCLUDES})
 target_include_directories(goma_user PUBLIC include)
-target_include_directories(goma_user PRIVATE ${GOMA_TPL_INCLUDES})
+target_include_directories(goma_user SYSTEM PRIVATE ${GOMA_TPL_INCLUDES})
 target_compile_definitions(goma_user PUBLIC ${GOMA_COMPILE_DEFINITIONS})
 
 add_library(goma ${GOMA_SOURCES} ${GOMA_INCLUDES})
 target_include_directories(goma PUBLIC include)
-target_include_directories(goma PRIVATE ${GOMA_TPL_INCLUDES})
+target_include_directories(goma SYSTEM PRIVATE ${GOMA_TPL_INCLUDES})
 target_link_directories(goma PUBLIC ${GOMA_TPL_LIBRARY_DIRS})
 target_link_libraries(goma ${GOMA_TPL_LIBRARIES} gds)
 target_compile_definitions(goma PUBLIC ${GOMA_COMPILE_DEFINITIONS})
@@ -590,13 +599,15 @@ add_library(gds ${GDS_SOURCES} ${GDS_INCLUDES})
 target_include_directories(gds PUBLIC include)
 
 add_library(goma_util ${GOMA_UTIL_SOURCES} ${GOMA_UTIL_INCLUDES})
-target_include_directories(goma_util PUBLIC include ${GOMA_TPL_INCLUDES})
+target_include_directories(goma_util PUBLIC include)
+target_include_directories(goma_util SYSTEM PRIVATE ${GOMA_TPL_INCLUDES})
 target_link_libraries(goma_util PUBLIC ${GOMA_TPL_LIBRARIES})
 target_compile_definitions(goma_util PUBLIC ${GOMA_COMPILE_DEFINITIONS})
 
 add_executable(goma_exe src/main.c)
 set_target_properties(goma_exe PROPERTIES OUTPUT_NAME "goma")
-target_include_directories(goma_exe PUBLIC include PRIVATE ${GOMA_TPL_INCLUDES})
+target_include_directories(goma_exe PUBLIC include)
+target_include_directories(goma_exe SYSTEM PRIVATE ${GOMA_TPL_INCLUDES})
 target_link_libraries(goma_exe PUBLIC ${GOMA_TPL_LIBRARIES} goma goma_user goma_util)
 target_compile_definitions(goma_exe PUBLIC ${GOMA_COMPILE_DEFINITIONS})
 
@@ -606,8 +617,3 @@ install(TARGETS goma_exe
   RUNTIME DESTINATION bin
   INCLUDES DESTINATION include/goma
 )
-
-option(ENABLE_TESTING "ENABLE_TESTING" OFF)
-if(ENABLE_TESTING)
-  add_subdirectory(tests)
-endif()

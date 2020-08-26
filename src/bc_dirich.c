@@ -129,14 +129,14 @@ put_dirichlet_in_matrix(double x[], const int num_total_nodes)
                    {
 		    zero_lec_row(lec->J, eqn, ldof_eqn);
 		    if (!(af->Assemble_LSA_Mass_Matrix)) {
-		      lec->J[eqn][var][ldof_eqn][ldof_eqn] = DIRICHLET_PENALTY;
+                      lec->J[LEC_J_INDEX(eqn,var,ldof_eqn,ldof_eqn)] = DIRICHLET_PENALTY;
 		    }
 		    if (BC_Types[ibc].BC_relax == -1.0) {
-		      lec->R[eqn][ldof_eqn] = 0.0;
+                      lec->R[LEC_R_INDEX(eqn,ldof_eqn)] = 0.0;
 		    } else {
 		      ieqn  = node->First_Unknown[pg->imtrx] + offset;
 		      V_set = BC_Types[ibc].BC_Data_Float[0];
-		      lec->R[eqn][ldof_eqn] = DIRICHLET_PENALTY * (x[ieqn] - V_set); 
+                      lec->R[LEC_R_INDEX(eqn,ldof_eqn)] = DIRICHLET_PENALTY * (x[ieqn] - V_set);
 		    }
                    }    /* end of DX_NOTHING test  */
 		    // Add for F_DIODE_BC   }

@@ -32,7 +32,7 @@
  *
  *		[1] Say we are interested in the energy equation. If
  *                  we are interested in doing anything with it, then
- *                  if ( pd->e[R_ENERGY] )
+ *                  if ( pd->e[pg->imtrx][R_ENERGY] )
  *                     {
  *                        ...stuff if energy eqn is active...
  *                     }
@@ -41,7 +41,7 @@
  *                  then we can "and" this variable to see if the term
  *                  of interest is to be assembled.
  *
- *			if ( pd->e[R_ENERGY] & T_MASS )
+ *			if ( pd->e[pg->imtrx][R_ENERGY] & T_MASS )
  * 			   {
  *                            ... set up capacitance term of
  *                                energy equation...
@@ -49,7 +49,7 @@
  * 
  *		[3] Term multipliers can be obtained via...
  *
- * 			f_em = pd->etm[R_ENERGY][LOG2_MASS]
+ * 			f_em = pd->etm[pg->imtrx][R_ENERGY][LOG2_MASS]
  *
  *				
  *

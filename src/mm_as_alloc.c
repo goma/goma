@@ -1221,6 +1221,12 @@ assembly_alloc(Exo_DB *exo)
   if(Num_Var_In_Type[imtrx][ACOUS_REYN_STRESS]) {
     esp->ars = (dbl **) alloc_ptr_1(MDE);
   }
+  if(Num_Var_In_Type[imtrx][EM_CONT_REAL]) {
+    esp->epr = (dbl **) alloc_ptr_1(MDE);
+  }
+  if(Num_Var_In_Type[imtrx][EM_CONT_IMAG]) {
+    esp->epi = (dbl **) alloc_ptr_1(MDE);
+  }
   if(Num_Var_In_Type[imtrx][SHELL_BDYVELO]) {
     esp->sh_bv = (dbl **) alloc_ptr_1(MDE);
   }
@@ -1667,7 +1673,7 @@ bf_mp_init(struct Problem_Description *pd)
   int ifound;
   int t, v;
   int status;
-  int shape;
+  int ishape;
 
   status = 0;
 
@@ -1675,7 +1681,7 @@ bf_mp_init(struct Problem_Description *pd)
 
 
    /* This is needed to check for matching element shapes */
-   shape = ei[pg->imtrx]->ielem_shape;
+   ishape = ei[pg->imtrx]->ielem_shape;
 
   /*
    * For now, assume variable interpolations 
@@ -1704,10 +1710,10 @@ bf_mp_init(struct Problem_Description *pd)
             bf[v] = NULL;
             for (t = 0; t < Num_Basis_Functions; t++)
               {
+               if ((pd->i[imtrx][v] == bfd[t]->interpolation)
+                   && (ishape == bfd[t]->element_shape))
 
-
-                if ((pd->i[imtrx][v] == bfd[t]->interpolation)
-                    && (shape == bfd[t]->element_shape))
+                
                   {
                     bf[v] = bfd[t];
                   }

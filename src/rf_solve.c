@@ -120,7 +120,6 @@ struct elem_edge_bc_struct ***First_Elem_Edge_BC_Array;
 #define ROUND_TO_ONE 0.9999999
 
 
-
 /*
  * Declarations of static functions defined in this file.
  */
@@ -542,7 +541,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 
   tnv = cnt_nodal_vars();
   /*  tnv_post is calculated in load_nodal_tkn*/
-  tev = cnt_elem_vars();
+  tev = cnt_elem_vars(exo);
   /*  tev_post is calculated in load_elem_tkn*/
   
   
@@ -1288,12 +1287,10 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
     }
 
     if (Linear_Stability) {
-      err = solve_stability_problem(ams[JAC], x, delta_t, theta,
-				    resid_vector, x_old, x_older,
-				    xdot, xdot_old, x_update,
-				    &converged, &nprint, tnv,
-				    tnv_post, rd, gindex, p_gsize,
-				    gvec, time1, exo, dpi);
+      err =
+          solve_stability_problem(ams[JAC], x, delta_t, theta, resid_vector, x_old, x_older, xdot,
+                                  xdot_old, x_update, &converged, &nprint, tnv, tnv_post, tev,
+                                  tev_post, rd, gindex, p_gsize, gvec, gvec_elem, time1, exo, dpi);
       EH(err, "Problem from solve_stability_problem.");
     }
     
@@ -4013,6 +4010,8 @@ anneal_mesh_with_external_field(const Exo_DB *exo)
   return(0);
 } /* END of routine anneal_mesh_with_external_field */
 
+/*****************************************************************************/
+/*****************************************************************************/
 
 void
 shift_nodal_values ( int var,

@@ -461,12 +461,27 @@ viscosity(struct Generalized_Newtonian *gn_local,
     }
   else if (gn_local->ConstitutiveEquation == BOND)
     {
-      err = bond_viscosity(gn_local->mu0, gn_local->muinf, gn_local->aexp);
-      EH(err, "bond_viscosity");
+      mu = bond_viscosity(gn_local, gamma_dot, d_mu);
+    }
+  else if (gn_local->ConstitutiveEquation == BOND_SH)
+    {
+      err = bond_viscosity_sh(gn_local->sus_species_no,gn_local->mu0, gn_local->muinf, gn_local->aexp);
+      EH(err, "bond_viscosity_sh");
       
       mu = mp->viscosity;
       
-      var = BOND_EVOLUTION;
+       var = MASS_FRACTION;
+      if ( d_mu != NULL && pd->v[pg->imtrx][var] )
+	{
+	  w = gn_local->sus_species_no;
+	  var_offset = MAX_VARIABLE_TYPES + w;
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+	    {
+	      d_mu->C[w][j] =mp->d_viscosity[var_offset]*bf[var]->phi[j];
+	    }
+	}
+  
+     var = BOND_EVOLUTION;
       if ( d_mu != NULL && pd->v[pg->imtrx][var] )
 	
 	{
@@ -1243,7 +1258,7 @@ bingham_viscosity(struct Generalized_Newtonian *gn_local,
  	}
   fexp = gn_local->fexp;
 
-  if ( pd->e[pg->imtrx][TEMPERATURE] )
+  if ( pd->gv[TEMPERATURE] )
        {temp = fv->T;}
   else
        {temp = upd->Process_Temperature;}
@@ -1473,7 +1488,7 @@ bingham_wlf_viscosity(struct Generalized_Newtonian *gn_local,
   lambda = gn_local->lam;
   wlfc2 = gn_local->wlfc2;
 
-  if ( pd->e[pg->imtrx][TEMPERATURE] )
+  if ( pd->gv[TEMPERATURE] )
        {temp = fv->T;}
   else
        {temp = upd->Process_Temperature;}
@@ -1672,7 +1687,7 @@ carreau_wlf_viscosity(struct Generalized_Newtonian *gn_local,
   wlfc2 = gn_local->wlfc2;
   lambda = gn_local->lam;
 
-  if ( pd->e[pg->imtrx][TEMPERATURE] )
+  if ( pd->gv[TEMPERATURE] )
        {temp = fv->T;}
   else
        {temp = upd->Process_Temperature;}
@@ -2115,6 +2130,12 @@ carreau_suspension_viscosity(struct Generalized_Newtonian *gn_local,
   calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
 
   vdofs = ei[pg->imtrx]->dof[VELOCITY1];
+  if(fabs(gammadot) <= 1.0e-7)
+    {
+     gammadot = .0001 ;
+    }
+ 
+ 
   
   if ( pd->e[pg->imtrx][R_MESH1] )
     {
@@ -2516,7 +2537,7 @@ epoxy_viscosity(int species,    /* species number for cure equation */
     }
     
   
-  if ( pd->e[pg->imtrx][TEMPERATURE] )
+  if ( pd->gv[TEMPERATURE] )
        {T = fv->T;}
   else
        {T = upd->Process_Temperature;}
@@ -2743,7 +2764,7 @@ sylgard_viscosity(int species,    /* species number for cure equation */
     }
     
   
-  if ( pd->e[pg->imtrx][TEMPERATURE] )
+  if ( pd->gv[TEMPERATURE] )
        {T = fv->T;}
   else
        {T = upd->Process_Temperature;}
@@ -2892,7 +2913,7 @@ filled_epoxy_viscosity(int species_sus,	/* species num, solid volume fraction*/
       exit(-1);
     }
                                        
-  if ( pd->e[pg->imtrx][TEMPERATURE] )
+  if ( pd->gv[TEMPERATURE] )
        {T = fv->T;}
   else
        {T = upd->Process_Temperature;}
@@ -3067,7 +3088,7 @@ foam_epoxy_viscosity(int species_fluor, int species_cur, dbl mu0,
       exponent = 4./.3;
     }
 
-  if (pd->e[pg->imtrx][TEMPERATURE]) {
+  if (pd->gv[TEMPERATURE]) {
     T = fv->T;
   } else {
     T = upd->Process_Temperature;
@@ -3166,7 +3187,7 @@ thermal_viscosity(dbl mu0,	/* reference temperature fluid viscosity */
     }
 
                                        
-  if ( pd->e[pg->imtrx][TEMPERATURE] )
+  if ( pd->gv[TEMPERATURE] )
        {T = fv->T;}
   else
        {T = upd->Process_Temperature;}
@@ -3283,39 +3304,252 @@ cure_viscosity(int species,	/* species num, solid volume fraction        */
  *
  ******************************************************************************************/
 
-
-int bond_viscosity(dbl mu0,         /* reference zero shear rate fluid viscosity */
-		   dbl mu_inf,     /* reference high shear rate fluid viscosity */
-		   dbl Aexp)        /* exponent for constitutive equation */
+double
+bond_viscosity(struct Generalized_Newtonian *gn_local,
+		  dbl gamma_dot[DIM][DIM], /* strain rate tensor */
+		  VISCOSITY_DEPENDENCE_STRUCT *d_mu)
 {
   /* Local Variables */
   dbl mu;   /* viscosity */
+  dbl temp;	/*  Temperature*/
+  dbl gammadot;                 /* strain rate invariant */
+
+  dbl d_gd_dv[DIM][MDE];        /* derivative of strain rate invariant 
+                                   wrt velocity */
+  dbl d_gd_dmesh[DIM][MDE];     /* derivative of strain rate invariant 
+                                   wrt mesh */
+
+  dbl d_yield=0, d_yield_d_at=0;
+  dbl mu0;
+  dbl mu_inf;
+  dbl atexp;
+  dbl Aexp;
+  dbl wlf_denom = 0.0;
+  dbl wlfc2;
+  dbl at_shift, d_at_dT = 0.0;
+  dbl tau_y = 0.0;
+  dbl fexp, yield, exp_term;
+  dbl Tref;
 
   dbl nn; /* Convenient local variables */
-  int status = 1;
+  int a, b, i, j, vdofs, mdofs=0, var;
 
   if (! pd->v[pg->imtrx][BOND_EVOLUTION] )
     {
       return(0);
     }
 
+  if ( pd->gv[TEMPERATURE] )
+       {temp = fv->T;}
+  else
+       {temp = upd->Process_Temperature;}
                                        
-  nn= fv->nn;
-  if( nn <= 0.0)
+  calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
+
+  mu0 = gn_local->mu0;
+  mu_inf = gn_local->muinf;
+  Aexp = gn_local->aexp;
+  atexp = gn_local->atexp;
+  wlfc2 = gn_local->wlfc2;
+  if( gn_local->tau_yModel == CONSTANT )
     {
-      mu = mu_inf;
-      mp->viscosity = mu;
-      mp->d_viscosity[BOND_EVOLUTION] 	= 0. ;
+      tau_y = gn_local->tau_y;
+    }
+  else if (gn_local->tau_yModel == USER )
+    {
+      usr_yield_stress(gn_local->u_tau_y, tran->time_value);
+      tau_y = gn_local->tau_y;
     }
   else
     {
-      mu = mu_inf + mu0 * pow(nn, Aexp);
-      mp->viscosity = mu;
-      mp->d_viscosity[BOND_EVOLUTION] = mu0 *Aexp*pow(nn, Aexp-1.);
+      EH(-1,"Invalid Yield Stress Model");
+    }
+  fexp = gn_local->fexp;
+
+  vdofs = ei[pg->imtrx]->dof[VELOCITY1];
+
+  if ( pd->e[pg->imtrx][R_MESH1] )
+    {
+      mdofs = ei[pg->imtrx]->dof[R_MESH1];
     }
 
-  return(status);
+  var = TEMPERATURE;
+  at_shift = 1.;
+  if ((temp != 0.) && (mp->reference[TEMPERATURE] != 0.) )
+     { 
+      Tref = mp->reference[TEMPERATURE];
+      wlf_denom = wlfc2 + temp - Tref;
+      if(wlf_denom != 0.)
+        {
+          at_shift=exp(atexp*(Tref-temp)/wlf_denom);
+          if(!isfinite(at_shift)) { at_shift = DBL_MAX; }
+          d_at_dT = at_shift*atexp/wlf_denom*(-1.-(Tref-temp)/wlf_denom);
+        }
+     }
+
+
+  nn= fv->nn;
+  if( nn <= 0.0)
+    {
+      mu = at_shift * mu_inf;
+      mp->viscosity = mu;
+      mp->d_viscosity[BOND_EVOLUTION] 	= 0. ;
+      mp->d_viscosity[TEMPERATURE] 	= d_at_dT * mu_inf;
+    }
+  else
+    {
+      mu = at_shift * (mu_inf + (mu0-mu_inf) * pow(nn, Aexp));
+      mp->viscosity = mu;
+      mp->d_viscosity[BOND_EVOLUTION] = at_shift*(mu0-mu_inf) *Aexp*pow(nn, Aexp-1.);
+      mp->d_viscosity[TEMPERATURE] 	= d_at_dT * (mu_inf + (mu0-mu_inf) * pow(nn, Aexp));
+      if((gammadot != 0.) && (at_shift != 0.))
+        {
+      exp_term = exp(-at_shift*fexp*gammadot);
+      yield = tau_y * (1. - exp_term)/(at_shift*gammadot);
+      d_yield = tau_y * ((1.+at_shift*fexp*gammadot)*exp_term )/at_shift/SQUARE(gammadot);
+      d_yield_d_at = d_yield*gammadot/at_shift ;
+        }
+      else
+        {
+         yield = tau_y * fexp;
+         d_yield = 0.;
+         d_yield_d_at = 0.;
+        }
+      mp->viscosity += nn*yield;
+      mp->d_viscosity[BOND_EVOLUTION] += yield;
+      mp->d_viscosity[TEMPERATURE] += nn * (at_shift*d_yield_d_at + d_at_dT*yield);
+
+    }
+
+      mu = mp->viscosity;
+      
+  var = BOND_EVOLUTION;
+  if ( d_mu != NULL && pd->v[pg->imtrx][var] )
+	{
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+	    {
+	      d_mu->nn[j]= mp->d_viscosity[var]*bf[var]->phi[j];
+	    }
+	}
+  if ( d_mu != NULL ) d_mu->gd =  at_shift * d_yield * nn;
+
+  /*
+ *    * d( mu )/dT
+ *       */
+
+  var = TEMPERATURE;
+  if ( d_mu != NULL && pd->e[pg->imtrx][var] )
+    {
+      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+        {
+          d_mu->T[j]= mp->d_viscosity[var] * bf[var]->phi[j];
+        }
+    }
+
+  /*
+   * d( mu )/dmesh
+   */
+  if ( d_mu != NULL && pd->e[pg->imtrx][R_MESH1] )
+    {
+      for ( b=0; b<VIM; b++)
+	{
+	  for ( j=0; j<mdofs; j++)
+	    {
+	      if(gammadot != 0.0 && Include_Visc_Sens )
+		{
+		  d_mu->X [b][j] =
+		    d_mu->gd * d_gd_dmesh [b][j] ;
+		}
+	      else
+		{
+		  /* printf("\ngammadot is zero in viscosity function");*/
+		  d_mu->X [b][j] = 0.0;
+		}
+	    }
+	}
+    }
+  
+  /*
+   * d( mu )/dv
+   */
+  if ( d_mu != NULL && pd->e[pg->imtrx][R_MOMENTUM1] )
+    {
+      for ( a=0; a<VIM; a++)
+        {
+          for ( i=0; i<vdofs; i++)
+	    {
+	      if(gammadot != 0.0 && Include_Visc_Sens )
+	        {
+	          d_mu->v[a][i] =
+		    d_mu->gd * d_gd_dv[a][i] ;
+	        }
+	      else
+	        {
+	          d_mu->v[a][i] = 0.0 ;
+	        }
+	    }
+        }
+    }
+
+  return(mu);
 } /* end of bond_viscosity */
+
+/******************************************************************************************
+ *     Function that computes the viscosity of a solution  whose behavior depends on the 
+ *     structure formation of of the system via the relation: 
+ *     
+ *                     mu = mu_inf + (mu0-mu_inf)*c[bond_species]**Aexp
+ *       where
+ *                      mu_inf    = plateau viscosity at high shear
+ *                      mu0       = reference  viscosity when x is zero
+ *                      Aexp      = exponent for bond dependence of viscosity
+ *                      c(bond_species_no) = concentration tracking structure-factor with a source *                                           term using shear-rate invariant variable
+ *
+ *     Function sets the viscosity members of mp.
+ *
+ *    Author: RRR
+ *      Date: 4/14/20
+ *
+ *
+ ******************************************************************************************/
+
+
+int bond_viscosity_sh(int bond_species, /* integer associated with conc eqn for bond */
+		      dbl mu0,         /* reference zero shear rate fluid viscosity */
+		      dbl mu_inf,     /* reference high shear rate fluid viscosity */
+		      dbl Aexp)        /* exponent for constitutive equation */
+{
+  /* Local Variables */
+
+  dbl nn; /* Convenient local variables */
+  int status = 1;
+
+  if (! pd->gv[MASS_FRACTION] )
+    {
+      return(0);
+    }
+
+                                       
+  nn= fv->c[bond_species]; /* structure-factor variable */
+  if( nn <= 0.0)
+    {
+      mp->viscosity = mu_inf;
+      mp->d_viscosity[MAX_VARIABLE_TYPES+bond_species] 	= 0. ;
+    }
+  else if( nn > 0 && nn <= 1.0)
+    {
+      mp->viscosity = mu_inf + ( mu0- mu_inf ) * pow(nn, Aexp);
+      mp->d_viscosity[MAX_VARIABLE_TYPES+bond_species] = ( mu0- mu_inf ) *Aexp*pow(nn, Aexp-1.);
+    }
+  else
+    {
+      mp->viscosity =  mu0;
+      mp->d_viscosity[MAX_VARIABLE_TYPES+bond_species] = 0.;
+    }
+    
+
+  return(status);
+} /* end of bond_viscosity_sh */
 
 
 double
@@ -3380,7 +3614,7 @@ carreau_wlf_conc_viscosity(struct Generalized_Newtonian *gn_local,
  
  /*  temperature shift factor  */
  
-  if ( pd->e[pg->imtrx][TEMPERATURE] )
+  if ( pd->gv[TEMPERATURE] )
        {temp = fv->T;}
   else
        {temp = upd->Process_Temperature;}

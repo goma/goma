@@ -225,7 +225,7 @@
 
 #ifdef HAVE_FRONT
 extern int mf_setup
-(int *,                   /* nelem_glob */
+      (int *,                   /* nelem_glob */
        int *,                   /* neqn_glob */
        int *,                   /* mxdofel */
        int *,                   /* nfullsum */
@@ -428,8 +428,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
    * tev_post is calculated in load_elem_tkn
    */
   tnv = cnt_nodal_vars();
-  tev = cnt_elem_vars();
-  
+  tev = cnt_elem_vars(exo);
   
   if (tnv < 0)
     {
@@ -958,10 +957,8 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
           n = LSA_number_wave_numbers;
         }
       else n = 1;
-      err = create_eigen_outfiles(passdown.exo,
-                                  passdown.dpi,
-                                  passdown.rd);
-      EH(err, "Unable to open eigenvector output files!");
+        err = create_eigen_outfiles(passdown.exo, passdown.dpi, passdown.rd, passdown.gvec_elem);
+        EH(err, "Unable to open eigenvector output files!");
     }
 
   /********************************************************* 
@@ -1067,8 +1064,8 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
           if (Num_Proc > 1)
             multiname(loca_in->NV_exoII_infile, ProcID, Num_Proc);
           DPRINTF(stdout, "Reading previous null vector ...\n");
-          err = rd_vectors_from_exoII(con.turning_point_info.nv,
-				      loca_in->NV_exoII_infile, 0, 0, INT_MAX, &timeValueRead);
+          err = rd_vectors_from_exoII(con.turning_point_info.nv, loca_in->NV_exoII_infile, 0, 0,
+                                      INT_MAX, &timeValueRead, exo);
           if (err != 0)
             {
               DPRINTF(stderr, "do_loca:  err from rd_vectors_from_exoII\n");
@@ -1087,8 +1084,8 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
       if (Num_Proc > 1)
         multiname(loca_in->NV_exoII_infile, ProcID, Num_Proc);
       DPRINTF(stdout, "Reading previous null vector ...\n");
-      err = rd_vectors_from_exoII(con.pitchfork_info.psi,
-                                  loca_in->NV_exoII_infile, 0, 0, INT_MAX, &timeValueRead);
+      err = rd_vectors_from_exoII(con.pitchfork_info.psi, loca_in->NV_exoII_infile, 0, 0, INT_MAX,
+                                  &timeValueRead, exo);
       if (err != 0)
         {
           DPRINTF(stderr, "do_loca:  err from rd_vectors_from_exoII\n");
@@ -1126,12 +1123,12 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
 
   /* Load y_vec and z_vec from these files */
       DPRINTF(stdout, "Reading previous null vector (real part) ...\n");
-      err = rd_vectors_from_exoII(con.hopf_info.y_vec, 
-				  loca_in->NV_exoII_infile, 0, 0, INT_MAX, &timeValueRead);
+      err = rd_vectors_from_exoII(con.hopf_info.y_vec, loca_in->NV_exoII_infile, 0, 0, INT_MAX,
+                                  &timeValueRead, exo);
       if (err != 0) EH(GOMA_ERROR, "do_loca: error reading real part of null vector");
       DPRINTF(stdout, "Reading previous null vector (imaginary part) ...\n");
-      err = rd_vectors_from_exoII(con.hopf_info.z_vec, 
-				  loca_in->NV_imag_infile, 0, 0, INT_MAX, &timeValueRead);
+      err = rd_vectors_from_exoII(con.hopf_info.z_vec, loca_in->NV_imag_infile, 0, 0, INT_MAX,
+                                  &timeValueRead, exo);
       if (err != 0) EH(GOMA_ERROR, "do_loca: error reading imag. part of null vector");
 
   /* If using MSR matrix format, instantiate amat (struct AZ_MATRIX).
@@ -3493,8 +3490,11 @@ void solution_output_conwrap(int num_soln_flag,
  */
 {
   int error, i_print;
+  int m,p;
   static int step_print=0;
   static int n_print=0;
+  int displacement_somewhere;
+  double **saved_xyz, **saved_displacement;
   
 #ifdef HAVE_ARPACK
   int i, n;
@@ -3514,7 +3514,20 @@ void solution_output_conwrap(int num_soln_flag,
       i_print = TRUE;
       step_print += cont->print_freq;
     }
-          
+
+  /*
+   * Allocate the saved coordinate and displacement fields.
+   */
+  saved_xyz = (double **) calloc(passdown.exo->num_dim, sizeof(double *));
+  saved_displacement = (double **) calloc(passdown.exo->num_dim, sizeof(double *));
+
+  for(p = 0; p < passdown.exo->num_dim; p++)
+  {
+    saved_xyz[p] = (double *) calloc(passdown.exo->num_nodes, sizeof(double));
+    saved_displacement[p] = (double *) calloc(passdown.exo->num_nodes, sizeof(double));
+  }
+
+
   if (i_print)
     {
       error = write_ascii_soln (x,
@@ -3551,7 +3564,13 @@ void solution_output_conwrap(int num_soln_flag,
           n_print++;
         }
     }
-      
+
+/* determine whether to anneal mesh if there is a mesh displacement field */
+   displacement_somewhere = FALSE;
+
+  for(m = 0; m < upd->Num_Mat; m++)
+      displacement_somewhere |= ( pd_glob[m]->gv[R_MESH1] );
+
   /*
    * Backup old solutions
    * can use previous solutions for prediction one day
@@ -3582,15 +3601,21 @@ void solution_output_conwrap(int num_soln_flag,
       passdown.LSA_flag = TRUE;
       n = (passdown.do_3D_of_2D ? LSA_number_wave_numbers : 1);
 
+/* Anneal mesh if mesh displacement is solved */
+      if (displacement_somewhere )
+        {
+         error = anneal_mesh_LSA(x, passdown.exo, saved_xyz, saved_displacement);
+        }
+
   /* Loop over LSA wave numbers, or just zero */
       for (i=0; i<n; i++)
         {
 
   /* Set current wave number if applicable */
-	  
+
           if (n == 1)
             {
-	      if (Linear_Stability == LSA_3D_OF_2D) 
+	      if (Linear_Stability == LSA_3D_OF_2D)
 		{
 		  EH(GOMA_ERROR, "With LOCA, you need to have more than one 3D wave number specified");
 		}
@@ -3607,7 +3632,13 @@ void solution_output_conwrap(int num_soln_flag,
             }
 
   /* Call eigensolver */
-          calc_eigenvalues_loca(con);
+          calc_eigenvalues_loca(con, saved_displacement);
+        }
+
+  /* Return mesh and solution vector to its original state */
+      if (displacement_somewhere )
+        {
+         error = unanneal_mesh_LSA(x, passdown.exo, saved_xyz, saved_displacement);
         }
 
   /* Now reset LSA_flag */
@@ -3615,12 +3646,25 @@ void solution_output_conwrap(int num_soln_flag,
     }
 #endif
 
+
+  /*
+   * Free up memories
+   */
+
+  for(p = 0; p < passdown.exo->num_dim; p++) {
+      safer_free((void **) &(saved_xyz[p]));
+      safer_free((void **) &(saved_displacement[p]));
+  }
+  safer_free((void **) &saved_xyz);
+  safer_free((void **) &saved_displacement);
+
 }
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
 void eigenvector_output_conwrap(int j, int num_soln_flag, double *xr, double evr,
-                                double *xi, double evi, int step_num)
+                                double *xi, double evi, int step_num,
+                                double **saved_displacement)
 /* Call to write out eigenvectors
  * Input:
  *    j    Eigenvalue number
@@ -3643,6 +3687,7 @@ void eigenvector_output_conwrap(int j, int num_soln_flag, double *xr, double evr
 /*  int n = LSA_current_wave_number; */
   int freq = eigen->Eigen_Write_Freq;
   char efile[MAX_FNL];
+  int m, displacement_somewhere;
 
   if (j >= eigen->Eigen_Record_Modes) return;
 
@@ -3658,6 +3703,18 @@ void eigenvector_output_conwrap(int j, int num_soln_flag, double *xr, double evr
   /* Get the eigenvector file name */
   strcpy(efile, eigen->Eigen_Output_File);
   get_eigen_outfile_name(efile, j, LSA_current_wave_number);
+
+/* determine whether to add steady state mesh displacement
+   if there is a mesh displacement field */
+   displacement_somewhere = FALSE;
+
+   for(m = 0; m < upd->Num_Mat; m++)
+       displacement_somewhere |= ( pd_glob[m]->gv[R_MESH1] );
+
+   if (displacement_somewhere )
+     {
+      add_displacement_LSA(xr, passdown.exo, saved_displacement);
+     }
 
   /* Write the real vector using the real eigenvalue part as the time stamp */
     write_solution(efile,
@@ -3692,6 +3749,12 @@ void eigenvector_output_conwrap(int j, int num_soln_flag, double *xr, double evr
 
   /* Write imaginary part to next eigenvector file */
         {
+
+         if (displacement_somewhere )
+           {
+            add_displacement_LSA(xi, passdown.exo, saved_displacement);
+           }
+
           strcpy(efile, eigen->Eigen_Output_File);
           get_eigen_outfile_name(efile, j+1, LSA_current_wave_number);
             write_solution(efile,

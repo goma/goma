@@ -347,8 +347,8 @@ get_nodal_unknown_offset(NODAL_VARS_STRUCT *nv, const int varType,
       if (vd_ptr) *vd_ptr = NULL;
       return -1;
     }
-    index = nv->Nodal_Offset[i_match];
     if (vd_ptr) *vd_ptr = nv->Var_Desc_List[index];
+    index = nv->Nodal_Offset[i_match];
     return (index);
   } 
   for (i = 0; i < num; i++) {
@@ -365,8 +365,8 @@ get_nodal_unknown_offset(NODAL_VARS_STRUCT *nv, const int varType,
     if (vd_ptr) *vd_ptr = NULL;
     return -1;
   }
-  index = nv->Nodal_Offset[i_match] + subVarType;
   if (vd_ptr) *vd_ptr = nv->Var_Desc_List[index];
+  index = nv->Nodal_Offset[i_match] + subVarType;
   return (index);
 }
 /************************************************************************/

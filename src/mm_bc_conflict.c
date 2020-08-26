@@ -1373,6 +1373,7 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
 			    break;
 			case FILLET_BC:
 			case DOUBLE_RAD_BC:
+			case FEATURE_ROLLON_BC:
 			    a1 = BC_Types[ibc1].BC_Data_Float[0] ;
 			    a2 = BC_Types[ibc1].BC_Data_Float[1] ;			
 			    a3 = BC_Types[ibc1].BC_Data_Float[2] ;			

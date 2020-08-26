@@ -559,7 +559,7 @@ apply_integrated_curve_bc(
 		      ieqn = upd->ep[pg->imtrx][eqn];
 		      if (eqn == R_MASS) ieqn = MAX_PROB_VAR 
 					   + BC_Types[bc_input_id].species_eq;
-		      lec->R[ieqn][ldof_eqn] += weight * fv->edge_det * func[p];
+                      lec->R[LEC_R_INDEX(ieqn,ldof_eqn)] += weight * fv->edge_det * func[p];
 
 		      /* 
 		       * add sensitivities into matrix
@@ -584,7 +584,7 @@ apply_integrated_curve_bc(
 				  pvar = upd->vp[pg->imtrx][var];
 				  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 				    {
-				      lec->J[ieqn][pvar] [ldof_eqn][j] += weight * func[p] * 
+                                      lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] += weight * func[p] *
 					fv->dedgedet_dx[q][j];
 				    }
 				}
@@ -601,7 +601,7 @@ apply_integrated_curve_bc(
 				  {
 				    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 				      {
-					lec->J[ieqn][pvar] [ldof_eqn][j] += weight * fv->edge_det
+                                        lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] += weight * fv->edge_det
 					    * (d_func[p][var][j] + d_func_ss[p][var][j]);
 				      }
 				  }
@@ -611,7 +611,7 @@ apply_integrated_curve_bc(
 				      {
 					for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 					  {
-					    lec->J[ieqn][MAX_PROB_VAR + w] [ldof_eqn][j] += 
+                                            lec->J[LEC_J_INDEX(ieqn,MAX_PROB_VAR + w,ldof_eqn,j)] +=
 						weight * fv->edge_det * d_func[p][MAX_VARIABLE_TYPES + w][j];
 					  }
 				      } /* end of loop over species */   
@@ -1029,12 +1029,12 @@ apply_point_colloc_edge_bc (
 			    {
 			      k = Index_Solution(I, MESH_DISPLACEMENT1+p, 0, 0, -2, pg->imtrx);
 			      ldof_eqn = ei[pg->imtrx]->ln_to_first_dof[MESH_DISPLACEMENT1+p][id];
-			      lec->R[MESH_DISPLACEMENT1 + p][ldof_eqn] = 0.; 
+                              lec->R[LEC_R_INDEX(MESH_DISPLACEMENT1 + p,ldof_eqn)] = 0.;
 			      d_func[p][MESH_DISPLACEMENT1+p][id] = 1.;
 			      
 	                      eqn = upd->ep[pg->imtrx][MESH_DISPLACEMENT1 + p];
 			      zero_lec_row(lec->J,eqn,ldof_eqn);
-			      lec->J[eqn][eqn][ldof_eqn][ldof_eqn] 
+                              lec->J[LEC_J_INDEX(eqn,eqn,ldof_eqn,ldof_eqn)]
 				= DIRICHLET_PENALTY; 
 			      
 			      xdot[k] = 0.0;
@@ -1138,7 +1138,7 @@ apply_point_colloc_edge_bc (
 		  ieqn = upd->ep[pg->imtrx][eqn];
 		  if (eqn == R_MASS) ieqn = MAX_PROB_VAR 
 				       + BC_Types[bc_input_id].species_eq;
-		  lec->R[ieqn][ldof_eqn] += BIG_PENALTY * func[p];
+                  lec->R[LEC_R_INDEX(ieqn,ldof_eqn)] += BIG_PENALTY * func[p];
 
 		/* 
 		 * add sensitivities into matrix
@@ -1162,7 +1162,7 @@ apply_point_colloc_edge_bc (
 				{
 				  pvar = upd->vp[pg->imtrx][var];
 				  ldof_eqn = ei[pg->imtrx]->ln_to_first_dof[eqn][id];
-				  lec->J[ieqn][pvar] [ldof_eqn][j] += BIG_PENALTY * ( d_func[p][var][j] +
+                                  lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] += BIG_PENALTY * ( d_func[p][var][j] +
 										      d_func_ss[p][var][j] );
 				}
 			    }
@@ -1174,7 +1174,7 @@ apply_point_colloc_edge_bc (
 				    {
 				      // pvar = upd->vp[pg->imtrx][MAX_PROB_VAR + w];
 				      ldof_eqn = ei[pg->imtrx]->ln_to_first_dof[eqn][id];
-				      lec->J[ieqn][MAX_PROB_VAR + w] [ldof_eqn][j] += BIG_PENALTY * d_func[p][MAX_VARIABLE_TYPES + w][j];
+                                      lec->J[LEC_J_INDEX(ieqn,MAX_PROB_VAR + w,ldof_eqn,j)] += BIG_PENALTY * d_func[p][MAX_VARIABLE_TYPES + w][j];
 				    }
 				} /* end of loop over species */   
 			    } /* end of if MASS_FRACTION */

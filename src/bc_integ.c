@@ -49,6 +49,7 @@
 #include "mm_fill_potential.h"
 #include "mm_shell_bc.h"
 #include "bc/rotate_coordinates.h"
+#include "mm_fill_em.h"
 #include "mm_eh.h"
 #include "user_bc.h"
 #include "ac_stability.h"
@@ -116,7 +117,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
   double xi[DIM];             /* Local element coordinates of Gauss point. */
   double x_dot[MAX_PDIM];
   double x_rs_dot[MAX_PDIM];
-  double wt, weight, pb;
+  double wt, weight, pb[DIM];
   double xsurf[MAX_PDIM];
   double dsigma_dx[DIM][MDE];
   double func[DIM];
@@ -1004,15 +1005,22 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	  if ( bc->BC_Data_Int[0] == ei[pg->imtrx]->elem_blk_id ||
 	       ( bc->BC_Data_Int[0] == -1 && iapply ) ) {
 
+	    int dir;
 	    /* set up surface repulsion force and zero it if 
 	     * bc is CAP_REPULSE or CAP_RECOIL_PRESS
 	     * because then force is calculated
 	     * later */
-	    pb = BC_Types[bc_input_id].BC_Data_Float[1];
+	    for( dir=0 ; dir<ielem_dim ; dir++)
+	       { pb[dir] = BC_Types[bc_input_id].BC_Data_Float[dir+1];}
+	    if ( ielem_dim == DIM)
+		{
+		 pb[DIM-1] = 0.0;
+		 /*WH(-1,"3rd Direction bulk stress not connected to CAPILLARY BC yet...\n");*/
+		}
 	    if (BC_Types[bc_input_id].BC_Name == CAPILLARY_TABLE_BC)
                {
 	  apply_table_wic_bc(func, d_func, &BC_Types[bc_input_id], time_value);
-              pb = func[0];
+              pb[0] += func[0];
                }
 
 	    fn_dot_T(cfunc, d_cfunc, elem_side_bc->id_side,
@@ -1791,8 +1799,52 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
                       bc->BC_Data_Float[1], bc->BC_Data_Float[2],
                       bc->BC_Data_Float[3], bc->BC_Data_Int[0]);
 	    break;
-
-	case LIGHTP_TRANS_BC:
+          case EM_ER_FARFIELD_DIRECT_BC:
+          case EM_EI_FARFIELD_DIRECT_BC:
+          case EM_HR_FARFIELD_DIRECT_BC:
+          case EM_HI_FARFIELD_DIRECT_BC:
+              apply_em_farfield_direct_vec
+                  (func,
+                   d_func,
+                   xi,
+                   (int) bc->BC_Name,
+                   bc->BC_Data_Float
+                  );
+              break;
+          case EM_ER_SOMMERFELD_BC:
+          case EM_EI_SOMMERFELD_BC:
+          case EM_HR_SOMMERFELD_BC:
+          case EM_HI_SOMMERFELD_BC:
+              apply_em_sommerfeld_vec
+                  (func,
+                   d_func,
+                   xi,
+                   (int) bc->BC_Name,
+                   bc->BC_Data_Float
+                  );
+              break;
+          case EM_ER_FREE_BC:
+          case EM_EI_FREE_BC:
+          case EM_HR_FREE_BC:
+          case EM_HI_FREE_BC:
+              apply_em_free_vec
+                  (func,
+                   d_func,
+                   xi,
+                   (int) bc->BC_Name
+                  );
+              break;
+        case E_ER_PLANEWAVE_BC:
+        case E_EI_PLANEWAVE_BC:
+            apply_ewave_planewave_vec
+                (func,
+                 d_func,
+                 xi,
+                 (int) bc->BC_Name,
+                 bc->BC_Data_Float
+                );
+            break;
+        case LIGHTP_TRANS_BC:
 	case LIGHTM_TRANS_BC:
 	case LIGHTD_TRANS_BC:
 	    light_transmission (func, d_func, time_intermediate, 
@@ -2257,7 +2309,6 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	      if (BC_Types[bc_input_id].BC_Name != CAPILLARY_BC  &&
 		  BC_Types[bc_input_id].BC_Name != CAPILLARY_SHEAR_VISC_BC  &&
 		  BC_Types[bc_input_id].BC_Name != ELEC_TRACTION_BC  &&
-                  BC_Types[bc_input_id].BC_Name != YFLUX_USER_BC &&
 		  BC_Types[bc_input_id].BC_Name != CAP_REPULSE_BC &&
 		  BC_Types[bc_input_id].BC_Name != CAP_REPULSE_ROLL_BC &&
 		  BC_Types[bc_input_id].BC_Name != CAP_REPULSE_USER_BC &&
@@ -2450,13 +2501,13 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	       *  residual vector
 	       */
 	      if (ldof_eqn != -1) {
-                lec->R[ieqn][ldof_eqn] += weight * fv->sdet * func[p];
+                lec->R[LEC_R_INDEX(ieqn,ldof_eqn)] += weight * fv->sdet * func[p];
 
 		
 #ifdef DEBUG_BC
 		if (IFPD == NULL) IFPD = fopen("darcy.txt", "a");
 		fprintf (IFPD,
-			 "ielem = %d: BC_index = %d, lec->R[%d][%d] += weight"
+                         "ielem = %d: BC_index = %d, lec->R[LEC_R_INDEX(%d,%d)] += weight"
 			 "* fv->sdet * func[p]: weight = %g, fv->sdet = %g, func[%d] = %g\n",
 			 ei[pg->imtrx]->ielem, bc_input_id, ieqn, ldof_eqn,
 			 weight, fv->sdet, p, func[p]);
@@ -2502,7 +2553,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 		       *            element. We should make use of that
 		       *            feature to cut down the amount of work.
 		       */
-		      jac_ptr = lec->J[ieqn][pvar][ldof_eqn];
+                      jac_ptr = &(lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,0)]);
 		      phi_ptr = bf[var]->phi;
 		      for (jlv = 0; jlv < ei[pg->imtrx]->Lvdesc_Numdof[lvdesc]; jlv++) {
 			j = ei[pg->imtrx]->Lvdesc_to_lvdof[lvdesc][jlv];
@@ -2518,7 +2569,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			var = jacCol.Lvdof_var_type[w];
 			pvar = upd->vp[pg->imtrx][var];
 			j = jacCol.Lvdof_lvdof[w];
-			lec->J[ieqn][pvar][ldof_eqn][j] += 
+                        lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] +=
 			  tmp * jacCol.Jac_lvdof[w];
 		      }
 
@@ -2527,7 +2578,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			if (pd->v[pg->imtrx][var]) {
 			  pvar = upd->vp[pg->imtrx][var];
 			  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-			    lec->J[ieqn][pvar][ldof_eqn][j] +=
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] +=
 			      weight * func[p] * fv->dsurfdet_dx[q][j];
 			  }
 			}
@@ -2549,7 +2600,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			pvar = upd->vp[pg->imtrx][var];
 			if (pvar != -1) {
 			  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-			    lec->J[ieqn][pvar][ldof_eqn][j] +=
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] +=
 			      weight * func[p] * fv->dsurfdet_dx[q][j];
 			  }
 			}
@@ -2565,14 +2616,14 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			  (BC_Types[bc_input_id].desc->sens[var] ||	1)) {
 			if (var != MASS_FRACTION) {
 			  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-			    lec->J[ieqn][pvar] [ldof_eqn][j] +=
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] +=
 			      weight * fv->sdet * d_func[p][var][j];
 			  }
 			} else {
 			  /* variable type is MASS_FRACTION */
 			  for (w = 0; w < pd->Num_Species_Eqn; w++) {
 			    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-			      lec->J[ieqn][MAX_PROB_VAR + w][ldof_eqn][j] += 
+                              lec->J[LEC_J_INDEX(ieqn,MAX_PROB_VAR + w,ldof_eqn,j)] +=
 				weight * fv->sdet *
 				d_func[p][MAX_VARIABLE_TYPES + w][j];
 			    }
@@ -2647,7 +2698,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
                         *  residual vector
                         */
 
-                        lec->R[ieqn][ldof_eqn] += weight * fv->sdet * func_stress[imode][p];
+                        lec->R[LEC_R_INDEX(ieqn,ldof_eqn)] += weight * fv->sdet * func_stress[imode][p];
 
                        /*
                         *   Add sensitivities into matrix
@@ -2673,7 +2724,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
                                   pvar = upd->vp[pg->imtrx][var];
                                   if (pvar != -1) {
                                      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-                                         lec->J[ieqn][pvar][ldof_eqn][j] +=
+                                         lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] +=
                                          weight * func_stress[imode][p] * fv->dsurfdet_dx[q][j];
                                      }
                                  }
@@ -2691,7 +2742,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
                                   /* Case for variable type that is not MASS_FRACTION */
                                   if (var != MASS_FRACTION) {
                                      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-                                          lec->J[ieqn][pvar] [ldof_eqn][j] +=
+                                          lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] +=
                                           weight * fv->sdet * d_func_stress[imode][p][var][j];
                                      }
                                   }
@@ -2699,7 +2750,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
                                   else {
                                      for (w = 0; w < pd->Num_Species_Eqn; w++) {
                                          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-                                             lec->J[ieqn][MAX_PROB_VAR + w][ldof_eqn][j] +=
+                                             lec->J[LEC_J_INDEX(ieqn,MAX_PROB_VAR + w,ldof_eqn,j)] +=
                                              weight * fv->sdet * d_func_stress[imode][p][MAX_VARIABLE_TYPES + w][j];
                                          }
                                      }
@@ -2820,11 +2871,11 @@ apply_table_wic_bc( double func[],
    *    convenient.
    */
   if (BC_Type->BC_Name == TABLE_WICV_BC) {
-    func[0] = BC_Type->table->slope[0]*BC_Type->BC_Data_Float[0];
-    func[1] = BC_Type->table->slope[1]*BC_Type->BC_Data_Float[0];
-    func[2] = BC_Type->table->slope[2]*BC_Type->BC_Data_Float[0];
+    func[0] = BC_Type->table->slope[0]*BC_Type->table->yscale;
+    func[1] = BC_Type->table->slope[1]*BC_Type->table->yscale;
+    func[2] = BC_Type->table->slope[2]*BC_Type->table->yscale;
   } else {
-    func[0] = interp_val*BC_Type->BC_Data_Float[0];
+    func[0] = interp_val*BC_Type->table->yscale;
   }
 }
 /*******************************************************************************/

@@ -29,6 +29,7 @@
 int first_time_fill = TRUE;
 #ifdef HAVE_SPARSE
 #include "spMatrix.h"
+#include "spConfig.h"
 
 void
 luf (const int N,

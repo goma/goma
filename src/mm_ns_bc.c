@@ -2438,12 +2438,13 @@ fvelo_tangential_bc(double func[],
       }
     else
       {
+#ifdef FEATURE_ROLLON_PLEASE
+#include "feature_rollon_velo.h"
+#else
 	vel_user[0] = velo_vary_fnc(UVARY_BC, fv->x[0], fv->x[1], fv->x[2]
 				    , u_par, time_value);
 	vel_user[1] = velo_vary_fnc(VVARY_BC, fv->x[0], fv->x[1], fv->x[2]
 				    , u_par, time_value);
-	vtang_user = fv->stangent[0][0]*vel_user[0] + fv->stangent[0][1]*vel_user[1];
-  	*func -= vtang_user;
   	if (af->Assemble_Jacobian) 
     	  {
 	    if( pd->e[pg->imtrx][R_MESH1] )
@@ -2457,6 +2458,12 @@ fvelo_tangential_bc(double func[],
 		vel_user_dx[1][1] = dvelo_vary_fnc_d2(VVARY_BC, fv->x[0], fv->x[1]
 						      , fv->x[2], u_par, time_value);
 	      }
+    	  }
+#endif
+	vtang_user = fv->stangent[0][0]*vel_user[0] + fv->stangent[0][1]*vel_user[1];
+  	*func -= vtang_user;
+  	if (af->Assemble_Jacobian) 
+    	  {
 	    for (kdir=0; kdir<pd->Num_Dim; kdir++)
 	      {
 		for (p=0; p<pd->Num_Dim; p++)
@@ -5700,7 +5707,7 @@ fn_dot_T(double cfunc[MDE][DIM],
 	 double d_cfunc[MDE][DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
 	 const int id_side,	/* ID of the side of the element             */
 	 const double sigma,	/* surface tension                           */
-	 const double pb,	/* applied pressure                          */
+	 const double pb[DIM],	/* applied pressure                          */
 	 struct elem_side_bc_struct *elem_side_bc,
 	 const int iconnect_ptr,
 	 double dsigma_dx[DIM][MDE])
@@ -5709,7 +5716,7 @@ fn_dot_T(double cfunc[MDE][DIM],
 *
 *  Function which calculates the calculates the capillary free surface stress
 *  balance:
-*        2H*sigma*n + pb + pr/(dist)**2 = n.T
+*        2H*sigma*n + pb[0]*n + pb[1]*t1 + pb[2]*t2 (not enabled yet) = n.T
 *  This vector condition is to be added on component wise to the momentum equations.
 *  pb is the applied pressure as in a vacuum or a forcing function
 *
@@ -5752,8 +5759,13 @@ fn_dot_T(double cfunc[MDE][DIM],
 		    {
 		      for (a=0; a<dim; a++)
 			{
-                          d_cfunc[ldof][a][var][j] -= (pb * fv->dsnormal_dx[a][jvar][j] )
-                                            * bf[VELOCITY1+a]->phi[ldof];  
+                          d_cfunc[ldof][a][var][j] -= (pb[0] * fv->dsnormal_dx[a][jvar][j] ) 
+							* bf[VELOCITY1+a]->phi[ldof];  
+                          d_cfunc[ldof][a][var][j] -= (pb[1] * fv->dstangent_dx[0][a][jvar][j] ) 
+							* bf[VELOCITY1+a]->phi[ldof];  
+			  if( ei[pg->imtrx]->ielem_dim == DIM)
+                               d_cfunc[ldof][a][var][j] -= (pb[2] * fv->dstangent_dx[0][a][jvar][j] ) 
+							* bf[VELOCITY1+a]->phi[ldof];  
 			  for (p=0; p<VIM; p++)
 			    {
 			      
@@ -5860,7 +5872,10 @@ fn_dot_T(double cfunc[MDE][DIM],
 	      
 	      for (a=0; a<dim; a++)
 		{  
-		  cfunc[ldof][a] -= pb * fv->snormal[a] * bf[VELOCITY1+a]->phi[ldof]; 
+		  cfunc[ldof][a] -= pb[0] * fv->snormal[a] * bf[VELOCITY1+a]->phi[ldof]; 
+		  cfunc[ldof][a] -= pb[1] * fv->stangent[0][a] * bf[VELOCITY1+a]->phi[ldof]; 
+	 	  if( ei[pg->imtrx]->ielem_dim == DIM)
+		      cfunc[ldof][a] -= pb[2] * fv->stangent[1][a] * bf[VELOCITY1+a]->phi[ldof]; 
 		  for (p=0; p<VIM; p++)
 		    { 
 		      cfunc[ldof][a] -= sigma * mp->surface_tension * bf[VELOCITY1+a]->grad_phi_e[ldof][a] [p][p];  
@@ -7721,6 +7736,15 @@ stress_no_v_dot_gradS(double func[MAX_MODES][6],
   VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
   dbl d_mup_dv_pj;
 
+  dbl saramitoCoeff;
+  SARAMITO_DEPENDENCE_STRUCT d_saramito_struct;
+  SARAMITO_DEPENDENCE_STRUCT *d_saramito = &d_saramito_struct;
+
+  // todo: will want to parse necessary parameters... for now hard code
+  const bool saramitoEnabled = (vn->ConstitutiveEquation == SARAMITO_OLDROYDB ||
+				vn->ConstitutiveEquation == SARAMITO_PTT      ||
+				vn->ConstitutiveEquation == SARAMITO_GIESEKUS);
+
   /*  shift function */
   dbl at = 0.0;
   dbl d_at_dT[MDE];
@@ -7860,6 +7884,21 @@ stress_no_v_dot_gradS(double func[MAX_MODES][6],
       /* get polymer viscosity */
       mup = viscosity(ve[mode]->gn, gamma, d_mup);
 
+      if(saramitoEnabled == TRUE)
+	{
+	  saramitoCoeff = compute_saramito_model_terms(s, ve[mode]->gn->tau_y, ve[mode]->gn->fexp, d_saramito);
+	}
+      else
+	{
+	  saramitoCoeff = 1.;
+	  d_saramito->tau_y = 0;
+			
+	  for(int i=0; i<VIM; ++i){
+	    for(int j=0; j<VIM; ++j){
+	      d_saramito->s[i][j] = 0;
+	    }
+	  }
+	}
       /* get Geisekus mobility parameter */
       alpha = ve[mode]->alpha;
 
@@ -7930,10 +7969,10 @@ stress_no_v_dot_gradS(double func[MAX_MODES][6],
 
                  /* Source term */
                  source = 0.;
-                 source +=  Z * s[a][b] - at * mup * ( g[a][b] +  gt[a][b]);
+                 source +=  saramitoCoeff * Z * s[a][b] - at * mup * ( g[a][b] +  gt[a][b]);
                  if (alpha != 0.)
                    {
-                    source += alpha * lambda * s_dot_s[a][b]/mup;
+                    source += saramitoCoeff * alpha * lambda * s_dot_s[a][b]/mup;
                    }
                  source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
@@ -7977,7 +8016,7 @@ stress_no_v_dot_gradS(double func[MAX_MODES][6],
                               source =  -at * d_mup_dv_pj * ( g[a][b] +  gt[a][b]);
                               if (alpha != 0.0)
                                 {
-                                 source -= alpha * lambda * d_mup_dv_pj * s_dot_s[a][b]/(mup*mup);
+                                 source -= saramitoCoeff * alpha * lambda * d_mup_dv_pj * s_dot_s[a][b]/(mup*mup);
                                 }
                               source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
@@ -8003,7 +8042,7 @@ stress_no_v_dot_gradS(double func[MAX_MODES][6],
                           source =  -at * d_mup->P[j] * ( g[a][b] +  gt[a][b]);
                           if (alpha != 0.0)
                             {
-                             source -= alpha * lambda * d_mup->P[j] * s_dot_s[a][b]/(mup*mup);
+                             source -= saramitoCoeff * alpha * lambda * d_mup->P[j] * s_dot_s[a][b]/(mup*mup);
                             }
                           source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
@@ -8043,7 +8082,7 @@ stress_no_v_dot_gradS(double func[MAX_MODES][6],
                                     *( at * d_mup->T[j] + mup * d_at_dT[j] );
                           if (alpha != 0.0)
                             {
-                             source -= alpha * lambda * d_mup->T[j] * s_dot_s[a][b]/(mup*mup);
+                             source -= saramitoCoeff * alpha * lambda * d_mup->T[j] * s_dot_s[a][b]/(mup*mup);
                             }
                           source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
@@ -8074,7 +8113,7 @@ stress_no_v_dot_gradS(double func[MAX_MODES][6],
                               source = - at * d_mup->X[p][j] * ( g[a][b] +  gt[a][b]);
                               if (alpha != 0.)
                                 {
-                                 source -= alpha * lambda * d_mup->X[p][j] * s_dot_s[a][b]/(mup*mup);
+                                 source -= saramitoCoeff * alpha * lambda * d_mup->X[p][j] * s_dot_s[a][b]/(mup*mup);
                                 }
                               source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
@@ -8105,7 +8144,7 @@ stress_no_v_dot_gradS(double func[MAX_MODES][6],
                               source = - at * d_mup->C[w][j] * ( g[a][b] +  gt[a][b]);
                               if (alpha != 0.)
                                 {
-                                 source -= alpha * lambda * d_mup->C[w][j] * s_dot_s[a][b]/(mup*mup);
+                                 source -= saramitoCoeff * alpha * lambda * d_mup->C[w][j] * s_dot_s[a][b]/(mup*mup);
                                 }
                               source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
@@ -8188,12 +8227,19 @@ stress_no_v_dot_gradS(double func[MAX_MODES][6],
                                      advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 
                                      /* source term */
-                                     source = Z * phi_j * (double)delta(a,p) * (double)delta(b,q);
+                                     source = saramitoCoeff * Z * phi_j * (double)delta(a,p) * (double)delta(b,q);
                                      if( p == q)  source +=  s[a][b] * dZ_dtrace * phi_j;
+                                     if (p <= q) {
+                                       source += phi_j * d_saramito->s[p][q] * Z * s[a][b];
+                                     }
+
                                      if (alpha != 0.)
                                        {
-                                        source +=  phi_j *  alpha * lambda *
+                                        source +=  saramitoCoeff * phi_j *  alpha * lambda *
                                                    ( s[q][b] * (double)delta(a,p) + s[a][p] * (double)delta(b,q) )/mup;
+                                         if (p <= q) {
+                                            source +=  phi_j * d_saramito->s[p][q] *  alpha * lambda * s_dot_s[a][b] / mup;
+                                         }
                                        }
                                      source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 

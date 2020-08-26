@@ -21,6 +21,7 @@
 /* Standard include files */
  
 #include <math.h>
+#include "rf_fem_const.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -395,6 +396,16 @@ apply_point_colloc_bc (
 		       BC_Types[bc_input_id].u_BC,BC_Types[bc_input_id].len_u_BC);
 		break;
 
+	    case FEATURE_ROLLON_BC:
+#ifdef FEATURE_ROLLON_PLEASE
+		f_feature_rollon(ielem_dim, &func, d_func, 
+		       BC_Types[bc_input_id].u_BC,BC_Types[bc_input_id].len_u_BC,
+		       BC_Types[bc_input_id].BC_Data_Int[0],time_intermediate);
+#else
+		EH(-1, "FEATURE_ROLLON_PLEASE define needed and feature_rollon.h - talk to RBS");
+#endif
+		break;
+
 	    case ROLL_FLUID_BC:
                 icount = BC_Types[bc_input_id].BC_Data_Int[2];
 xsurf[0] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+1];
@@ -729,8 +740,8 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
             }
 
 	    if (ldof_eqn != -1)   {
-	      lec->R[ieqn][ldof_eqn] += penalty * func;
-	      lec->R[ieqn][ldof_eqn] *= f_time;
+              lec->R[LEC_R_INDEX(ieqn,ldof_eqn)] += penalty * func;
+              lec->R[LEC_R_INDEX(ieqn,ldof_eqn)] *= f_time;
 
 	      /* 
 	       * add sensitivities into matrix
@@ -763,8 +774,8 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 			if (! doFullJac) {
 			  ldof_var = ei[pg->imtrx]->ln_to_first_dof[var][id];
 			  if (ldof_var != -1) {  
-			    lec->J[ieqn][pvar][ldof_eqn][ldof_var] += penalty * d_func[var];
-			    lec->J[ieqn][pvar][ldof_eqn][ldof_var] *= f_time;
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,ldof_var)] += penalty * d_func[var];
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,ldof_var)] *= f_time;
 			  }
 			} else {
 			  
@@ -773,14 +784,14 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 			    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) 
 			      {
 				jk = dof_map[j];
-				lec->J[ieqn][pvar][ldof_eqn][jk] += penalty * d_kfunc[0][var][j];
-				lec->J[ieqn][pvar][ldof_eqn][jk] *= f_time;
+                                lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,jk)] += penalty * d_kfunc[0][var][j];
+                                lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,jk)] *= f_time;
 			      }
 			  } else {
 			    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) 
 			      {
-				lec->J[ieqn][pvar][ldof_eqn][j] += penalty * d_kfunc[0][var][j];
-				lec->J[ieqn][pvar][ldof_eqn][j] *= f_time;
+                                lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] += penalty * d_kfunc[0][var][j];
+                                lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] *= f_time;
 			      }
 			  }
 			}
@@ -791,8 +802,8 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 			 */
 			for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 			  phi_j = bf[var]->phi[j];
-			  lec->J[ieqn][pvar] [ldof_eqn][j] += penalty * d_func[var] * phi_j;
-			  lec->J[ieqn][pvar] [ldof_eqn][j] *= f_time;
+                          lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] += penalty * d_func[var] * phi_j;
+                          lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] *= f_time;
 			}
 		      }
 		    } else {
@@ -801,8 +812,8 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 			if (Dolphin[pg->imtrx][I][var] > 0) {
 			  ldof_var = ei[pg->imtrx]->ln_to_first_dof[var][id];
 			  if (ldof_var != -1) {
-			    lec->J[ieqn][pvar] [ldof_eqn][ldof_var] += penalty * d_func[MAX_VARIABLE_TYPES + w];
-			    lec->J[ieqn][pvar] [ldof_eqn][ldof_var] *= f_time;
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,ldof_var)] += penalty * d_func[MAX_VARIABLE_TYPES + w];
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,ldof_var)] *= f_time;
 			  }
 			}
 			/* if variable is not defined at this node,
@@ -810,8 +821,8 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 			else {
 			  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 			    phi_j = bf[var]->phi[j];
-			    lec->J[ieqn][pvar] [ldof_eqn][j] += penalty	* d_func[MAX_VARIABLE_TYPES + w] * phi_j;
-			    lec->J[ieqn][pvar] [ldof_eqn][j] *= f_time;
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] += penalty	* d_func[MAX_VARIABLE_TYPES + w] * phi_j;
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] *= f_time;
 			  }
 			}
 		      } /* end of loop over species */   
@@ -1141,6 +1152,10 @@ fprintf(stderr,"circle %g %g %g %g\n",xcirc,ycirc,xcen2, ycen2);
 } /* END of routine f_double_rad                                             */
 /*****************************************************************************/
 
+#ifdef FEATURE_ROLLON_PLEASE
+#include "feature_rollon.h"
+#endif
+
 void 
 f_roll_fluid (int ielem_dim,
         double *func,
@@ -1232,7 +1247,7 @@ f_roll_fluid (int ielem_dim,
      v_roll[1] =  omega*roll_rad*v_dir[1];
      v_roll[2] =  omega*roll_rad*v_dir[2];
 
-     if( TimeIntegration == TRANSIENT && pd->e[R_MESH1] )
+     if( TimeIntegration == TRANSIENT && pd->gv[R_MESH1] )
           {
             /* Add the mesh motion to the substrate velocity */
             v_roll[0] += fv_dot->x[0];
@@ -1324,7 +1339,7 @@ fprintf(stderr,"more %g %g %g %g\n",res,jac, dthick_dV,dthick_dP);
         for (jvar=0; jvar<ei->ielem_dim; jvar++)
           {
             var = MESH_DISPLACEMENT1 + jvar;
-            if (pd->v[var])
+            if (pd->v[pg->imtrx][var])
               {
                     for (k = 0; k < pd->Num_Dim; k++)
                       {
@@ -1341,7 +1356,7 @@ fprintf(stderr,"more %g %g %g %g\n",res,jac, dthick_dV,dthick_dP);
 #endif
 #if 0
    var = PRESSURE;
-    if (pd->v[var])
+    if (pd->v[pg->imtrx][var])
       {
         if(Pflag )
           {
@@ -1474,21 +1489,21 @@ int i;
                switch (velo_condition) {
                   case U_PARABOLA_BC:
                       *func = pre_factor*(fv->x[1]-coord1)*(coord2-fv->x[1]);
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
         d_func[MESH_DISPLACEMENT2] = pre_factor*(coord1+coord2-2.*fv->x[1]);
                          }
                       break;
                   case V_PARABOLA_BC:
 	              *func = pre_factor*(fv->x[0]-coord1)*(coord2-fv->x[0]);
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
        d_func[MESH_DISPLACEMENT1] = pre_factor*(coord1+coord2-2.*fv->x[0]);
                          }
                       break;
                   case W_PARABOLA_BC:
 	              *func = pre_factor*(fv->x[0]-coord1)*(coord2-fv->x[0]);
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
        d_func[MESH_DISPLACEMENT1] = pre_factor*(coord1+coord2-2.*fv->x[0]);
                          }
@@ -1504,7 +1519,7 @@ int i;
                       if(coord1 <= DBL_SMALL)
                           {
                            *func = pre_factor*(SQUARE(coord2)-SQUARE(fv->x[1]));
-                           if( pd->e[R_MESH1] )
+                           if( pd->e[pg->imtrx][R_MESH1] )
                               { 
                       d_func[MESH_DISPLACEMENT2] = pre_factor*(-2.*fv->x[1]); 
                               }
@@ -1514,7 +1529,7 @@ int i;
                            *func = pre_factor*(SQUARE(coord1)-SQUARE(fv->x[1])
                                     +(SQUARE(coord2)-SQUARE(coord1))*
                                     (log(fv->x[1]/coord1)/log(coord2/coord1)));
-                           if( pd->e[R_MESH1] )
+                           if( pd->e[pg->imtrx][R_MESH1] )
                               { 
                       d_func[MESH_DISPLACEMENT2] = pre_factor*(-2.*fv->x[1]
                 +(SQUARE(coord2)-SQUARE(coord1))/log(coord2/coord1)/fv->x[1]);
@@ -1523,7 +1538,7 @@ int i;
                       break;
                   case V_PARABOLA_BC:
 	              *func = pre_factor/fv->x[1]*(fv->x[0]-coord1)*(coord2-fv->x[0]);
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
        d_func[MESH_DISPLACEMENT1] = pre_factor/fv->x[1]*(coord1+coord2-2.*fv->x[0]);
        d_func[MESH_DISPLACEMENT2] = -(*func)/fv->x[1];
@@ -1550,7 +1565,7 @@ int i;
                   case U_PARABOLA_BC:
                       temp = 2*fv->x[1]-coord1-coord2;
                       *func = pre_factor*(pow(gap,expon) - pow(fabs(temp),expon));
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
     d_func[MESH_DISPLACEMENT2] = pre_factor*(-2.*SGN(temp)*expon*pow(fabs(temp),1./pl_index));
                          }
@@ -1558,7 +1573,7 @@ int i;
                   case V_PARABOLA_BC:
                       temp = 2*fv->x[0]-coord1-coord2;
                       *func = pre_factor*(pow(gap,expon) - pow(fabs(temp),expon));
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
     d_func[MESH_DISPLACEMENT1] = pre_factor*(-2.*SGN(temp)*expon*pow(fabs(temp),1./pl_index));
                          }
@@ -1566,7 +1581,7 @@ int i;
                   case W_PARABOLA_BC:
                       temp = 2*fv->x[0]-coord1-coord2;
                       *func = pre_factor*(pow(gap,expon) - pow(fabs(temp),expon));
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
     d_func[MESH_DISPLACEMENT1] = pre_factor*(-2.*SGN(temp)*expon*pow(fabs(temp),1./pl_index));
                          }
@@ -1585,7 +1600,7 @@ int i;
 	                   pre_factor = (3.*pl_index+1.)/(pl_index +1.)
                                          *qflow/M_PIE/pow(gap,expon+2.);
                            *func = pre_factor*(pow(gap,expon) - pow(fv->x[1],expon));
-                           if( pd->e[R_MESH1] )
+                           if( pd->e[pg->imtrx][R_MESH1] )
                                {
                                 d_func[MESH_DISPLACEMENT2] = pre_factor*
                                           (-expon*pow(fv->x[1],expon-1.));
@@ -1599,7 +1614,7 @@ int i;
                                          *qflow/M_PIE/pow(gap,expon+1.);
                       temp = 2*fv->x[0]-coord1-coord2;
                       *func = pre_factor/fv->x[1]*(pow(gap,expon) - pow(fabs(temp),expon));
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
                            d_func[MESH_DISPLACEMENT1] = pre_factor/fv->x[1]*
                                  (-2.*SGN(temp)*expon*pow(fabs(temp),expon-1.));
@@ -1679,7 +1694,7 @@ int i, mode=0, strs=0;
    else
 	{ EH(-1,"Polymer Stress mode not found - VE Stress PARABOLA BC."); }
 
-   if ( pd->e[TEMPERATURE] )
+   if ( pd->gv[TEMPERATURE] )
        {temp = fv->T;}
    else
        {temp = upd->Process_Temperature;}
@@ -2482,6 +2497,16 @@ load_variable (double *x_var,        /* variable value */
       var = ACOUS_PIMAG;
       *d_x_var = 1.;
       break;
+    case EM_CONT_REAL:
+      *x_var = fv->epr;
+      var = EM_CONT_REAL;
+      *d_x_var = 1.;
+      break;
+    case EM_CONT_IMAG:
+      *x_var = fv->epi;
+      var = EM_CONT_IMAG;
+      *d_x_var = 1.;
+      break;
     case POR_SINK_MASS:
       *x_var = fv->sink_mass;
       var = POR_SINK_MASS;
@@ -2621,7 +2646,68 @@ load_variable (double *x_var,        /* variable value */
       *x_var = fv->restime;
       var = RESTIME;
       *d_x_var = 1.;
-      break;  
+      break;
+    case EM_E1_REAL:
+      *x_var = fv->em_er[0];
+      var = EM_E1_REAL;
+      *d_x_var = 1.;
+      break;
+    case EM_E2_REAL:
+      *x_var = fv->em_er[1];
+      var = EM_E2_REAL;
+      *d_x_var = 1.;
+      break;
+    case EM_E3_REAL:
+      *x_var = fv->em_er[2];
+      var = EM_E3_REAL;
+      *d_x_var = 1.;
+      break;
+    case EM_E1_IMAG:
+      *x_var = fv->em_ei[0];
+      var = EM_E1_IMAG;
+      *d_x_var = 1.;
+      break;
+    case EM_E2_IMAG:
+      *x_var = fv->em_ei[1];
+      var = EM_E2_IMAG;
+      *d_x_var = 1.;
+      break;
+    case EM_E3_IMAG:
+      *x_var = fv->em_ei[2];
+      var = EM_E3_IMAG;
+      *d_x_var = 1.;
+      break;
+    case EM_H1_REAL:
+      *x_var = fv->em_hr[0];
+      var = EM_H1_REAL;
+      *d_x_var = 1.;
+      break;
+    case EM_H2_REAL:
+      *x_var = fv->em_hr[1];
+      var = EM_H2_REAL;
+      *d_x_var = 1.;
+      break;
+    case EM_H3_REAL:
+      *x_var = fv->em_hr[2];
+      var = EM_H3_REAL;
+      *d_x_var = 1.;
+      break;
+    case EM_H1_IMAG:
+      *x_var = fv->em_hi[0];
+      var = EM_H1_IMAG;
+      *d_x_var = 1.;
+      break;
+    case EM_H2_IMAG:
+      *x_var = fv->em_hi[1];
+      var = EM_H2_IMAG;
+      *d_x_var = 1.;
+      break;
+    case EM_H3_IMAG:
+      *x_var = fv->em_hi[2];
+      var = EM_H3_IMAG;
+      *d_x_var = 1.;
+      break;
+
     case MASS_FRACTION:
       *x_var = fv->c[wspec];
       var = MASS_FRACTION;
@@ -3286,7 +3372,10 @@ bc_eqn_index(int id,               /* local node number                 */
     else if (ieqn == R_MOMENTUM1) ieqn += kdir;
     else if (ieqn == R_SOLID1)    ieqn += kdir;
     else if (ieqn == R_LAGR_MULT1)ieqn += kdir;
-    else EH(GOMA_ERROR,"Can't have a rotated vector BC!");
+    else if (ieqn == R_EM_H1_REAL)ieqn += kdir;// AMC: These vector bcs are not rotated..
+    else if (ieqn == R_EM_H1_IMAG)ieqn += kdir;
+    else if (ieqn == R_EM_E1_REAL)ieqn += kdir;
+    else if (ieqn == R_EM_E1_IMAG)ieqn += kdir;
   }
 
   /*
@@ -3778,8 +3867,8 @@ apply_table_bc( double *func,
       }
 
   interp_val = interpolate_table( BC_Type->table, x_table, &slope, dfunc_dx );
-  interp_val *= BC_Type->BC_Data_Float[0];
-  slope *= BC_Type->BC_Data_Float[0];
+  interp_val *= BC_Type->table->yscale;
+  slope *= BC_Type->table->yscale;
   
   var = BC_Type->table->f_index ;
 

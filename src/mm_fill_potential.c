@@ -915,7 +915,7 @@ assemble_potential(double time,	/* present time value */
 	      source *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 	    }
 
-	  lec->R[peqn][i] += diffusion + source;  
+	  lec->R[LEC_R_INDEX(peqn,i)] += diffusion + source;  
 	  
 	} /* end of loop over i */
     } /* end of Assemble_Residual */
@@ -952,7 +952,7 @@ assemble_potential(double time,	/* present time value */
 
 	  if ( pd->v[pg->imtrx][var] )
 	    {
-	      pvar = upd->vp[0][var];
+	      pvar = upd->vp[pg->imtrx][var];
 	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  for ( p=0; p<dim; p++)
@@ -986,7 +986,7 @@ assemble_potential(double time,	/* present time value */
 		      source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 		    }
 
-		  lec->J[peqn][pvar][i][j] += diffusion + source;
+		  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion + source;
 		}
 	    }
 
@@ -996,7 +996,7 @@ assemble_potential(double time,	/* present time value */
 	  var = TEMPERATURE;
 	  if ( pd->v[pg->imtrx][var] )
 	    {
-	      pvar = upd->vp[0][var];
+	      pvar = upd->vp[pg->imtrx][var];
 	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  for ( p=0; p<dim; p++)
@@ -1024,7 +1024,7 @@ assemble_potential(double time,	/* present time value */
 		      source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 		    }
 
-		  lec->J[peqn][pvar][i][j] += diffusion + source;
+		  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion + source;
 		}
 	    }
 
@@ -1036,7 +1036,7 @@ assemble_potential(double time,	/* present time value */
 	      var = VELOCITY1+b;
 	      if ( pd->v[pg->imtrx][var] )
 		{
-		  pvar = upd->vp[0][var];
+		  pvar = upd->vp[pg->imtrx][var];
 		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
                       source = 0.0;
@@ -1047,7 +1047,7 @@ assemble_potential(double time,	/* present time value */
 			  source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 			}
 
-		      lec->J[peqn][pvar][i][j] += source;
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += source;
 
 		    }
 		}
@@ -1061,7 +1061,7 @@ assemble_potential(double time,	/* present time value */
 	      var = MESH_DISPLACEMENT1+b;
 	      if ( pd->v[pg->imtrx][var] )
 		{
-		  pvar = upd->vp[0][var];
+		  pvar = upd->vp[pg->imtrx][var];
 		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      dh3dmesh_bj = fv->dh3dq[b] * bf[var]->phi[j];
@@ -1172,7 +1172,7 @@ assemble_potential(double time,	/* present time value */
 			  source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 			}
 
-		      lec->J[peqn][pvar][i][j] += diffusion + source;   
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion + source;   
 		    }
 		}
 	    }
@@ -1231,7 +1231,7 @@ assemble_potential(double time,	/* present time value */
 			  source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 			}
 
-		      lec->J[peqn][MAX_PROB_VAR + w][i][j] += diffusion + source;
+                      lec->J[LEC_J_INDEX(peqn,MAX_PROB_VAR + w,i,j)] += diffusion + source;
 		    } /* end of loop over j */
 		} /* end of loop over w */
 	    } /* end of var = MASS_FRACTION */
@@ -1791,7 +1791,7 @@ assemble_Enorm(void)
 	      source *= pd->etm[pg->imtrx][R_ENORM][(LOG2_SOURCE)];
 	    }
 
-	  lec->R[upd->ep[pg->imtrx][R_ENORM]] [i] += advection + source;
+          lec->R[LEC_R_INDEX(upd->ep[pg->imtrx][R_ENORM],i)] += advection + source;
 	} /* for i = 0 ... dof[R_ENORM] */
     } /* if(Assemble_Residual) */
 
@@ -1812,7 +1812,7 @@ assemble_Enorm(void)
 		  advection *= wt_func * detJ * wt * h3;
 		  advection *= pd->etm[pg->imtrx][R_ENORM][(LOG2_ADVECTION)];
 		}
-	      lec->J[upd->ep[pg->imtrx][R_ENORM]][upd->vp[0][VOLTAGE]] [i][k] += advection;
+              lec->J[LEC_J_INDEX(upd->ep[pg->imtrx][R_ENORM],upd->vp[pg->imtrx][VOLTAGE],i,k)] += advection;
 	    } /* for k = 0 ... dof[VOLTAGE] */
 
 	  /* J_Enorm_Enorm */
@@ -1827,7 +1827,7 @@ assemble_Enorm(void)
 		  source *= pd->etm[pg->imtrx][R_ENORM][(LOG2_SOURCE)];
 		}
 
-	      lec->J[upd->ep[pg->imtrx][R_ENORM]][upd->vp[0][ENORM]] [i][k] += source;
+              lec->J[LEC_J_INDEX(upd->ep[pg->imtrx][R_ENORM],upd->vp[pg->imtrx][ENORM],i,k)] += source;
 	    } /* for k = 0 ... dof[ENORM] */
 	} /* for i = 0 ... dof[R_ENORM] */
     } /* if (Assemble_Jacobian) */
@@ -1978,7 +1978,7 @@ assemble_electric_field(void) /* Least square equation Efield = grad (voltage) *
 		  source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 		}
 	      
-	      lec->R[upd->ep[pg->imtrx][eqn]][i] += 
+              lec->R[LEC_R_INDEX(upd->ep[pg->imtrx][eqn],i)] +=
 		advection  + source;      
 	    }
 	} 
@@ -2005,7 +2005,7 @@ assemble_electric_field(void) /* Least square equation Efield = grad (voltage) *
 	      var = VOLTAGE;
 	      if ( pd->v[pg->imtrx][var] )
 		{
-		  pvar = upd->vp[0][var];
+		  pvar = upd->vp[pg->imtrx][var];
 		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
@@ -2022,7 +2022,7 @@ assemble_electric_field(void) /* Least square equation Efield = grad (voltage) *
 		      
 		      source    = 0.;
 		      
-		      lec->J[peqn][pvar][i][j] +=
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 			advection + source;
 		    }
 		}
@@ -2034,7 +2034,7 @@ assemble_electric_field(void) /* Least square equation Efield = grad (voltage) *
 		  var = MESH_DISPLACEMENT1+p;
 		  if ( pd->v[pg->imtrx][var] )
 		    {
-		      pvar = upd->vp[0][var];
+		      pvar = upd->vp[pg->imtrx][var];
 		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  phi_j = bf[var]->phi[j];
@@ -2084,7 +2084,7 @@ assemble_electric_field(void) /* Least square equation Efield = grad (voltage) *
 				  
 			    }
 			  
-			  lec->J[peqn][pvar][i][j] +=
+			  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 			    advection + source;
 			}
 		    }
@@ -2098,7 +2098,7 @@ assemble_electric_field(void) /* Least square equation Efield = grad (voltage) *
 	      
 	      if ( pd->v[pg->imtrx][var] )
 		{
-		  pvar = upd->vp[0][var];
+		  pvar = upd->vp[pg->imtrx][var];
 		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
@@ -2110,7 +2110,7 @@ assemble_electric_field(void) /* Least square equation Efield = grad (voltage) *
 			  source = phi_j  * det_J * h3 * wt_func * wt * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 			}
 		      
-		      lec->J[peqn][pvar][i][j] +=
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
 			source;
 		    }
 		}

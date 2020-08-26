@@ -195,6 +195,7 @@
 
 #ifdef HAVE_UMFPACK
 
+#include "umfpack.h"
 /* This returns an integer identifier that should be unique to your
  * system.  There were problems with UMF mixing up systems becuase it
  * would identify unique systems just by its size.

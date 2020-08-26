@@ -840,7 +840,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 		   * locally into an accumulator)
 		   */
 		  
-		  lec->R[peqn][ii] += 
+		  lec->R[LEC_R_INDEX(peqn,ii)] += 
 		    mass + advection + porous + diffusion + source;
 		  
 		} /* end of if (active_dof) */
@@ -969,7 +969,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 			      source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 			    }
 			  
-			  lec->J[peqn][pvar][ii][j] +=
+			  lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] +=
 			    mass + advection + porous + diffusion + source;
 			}
 		    }
@@ -1068,7 +1068,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 				  source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 				}
 			      
-			      lec->J[peqn][pvar][ii][j] +=
+			      lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] +=
 				mass + advection + porous + diffusion + source;
 			    }
 			}
@@ -1177,7 +1177,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 				  EH(GOMA_ERROR, "Need more arrays for each species.");
 				}
 			      
-			      lec->J[peqn][MAX_PROB_VAR + w][ii][j] +=
+                              lec->J[LEC_J_INDEX(peqn,MAX_PROB_VAR + w,ii,j)] +=
 				mass + advection + porous + diffusion + source;
 			    }
 			}
@@ -1226,7 +1226,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 		    
 		    source    = 0.;
 		    
-		    lec->J[peqn][pvar][ii][j] +=
+		    lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] +=
 		    mass + advection + porous + diffusion + source;
 		    }		      
 		    }
@@ -1284,7 +1284,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 		     mass *= p_vol_frac;
 		     advection *= p_vol_frac;
 		     
-		     lec->J[peqn][pvar][ii][j] +=
+                     lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] +=
 		     mass + advection + porous + diffusion + source;
 		     }
 		     }
@@ -1333,7 +1333,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 		    mass *= p_vol_frac;
 		    advection *= p_vol_frac;
 		    
-		    lec->J[peqn][pvar][ii][j] +=
+		    lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] +=
 		    diffusion;
 		    }
 		    }
@@ -1532,7 +1532,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 			  mass *= p_vol_frac;
 			  advection *= p_vol_frac;
 
-			  lec->J[peqn][pvar][ii][j] +=
+			  lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] +=
 			    mass + advection + porous + diffusion + source;
 			    }
 		    }
@@ -2123,7 +2123,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 		  /*  h_flux = 0.0; */
 	    } 
 
-	  lec->R[peqn][i] += advection  + source + pressure_stabilization + h_flux;
+	  lec->R[LEC_R_INDEX(peqn,i)] += advection  + source + pressure_stabilization + h_flux;
 	}
     }
   
@@ -2243,7 +2243,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 			}			    
 			
 /* MMH */
-		      lec->J[peqn][pvar][i][j] += 0*(advection + source + pressure_stabilization + h_flux);
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += 0*(advection + source + pressure_stabilization + h_flux);
 		    }
 		}
 	    }
@@ -2317,7 +2317,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
       
 		  pressure_stabilization *= tau_pspg * h3 * det_J * wt ;
 		      
-		  lec->J[peqn][pvar][i][j] += pressure_stabilization;
+		  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += pressure_stabilization;
 		}
 	    }
 	  if ( (cr->MassFluxModel == HYDRODYNAMIC) &&  pd->v[pg->imtrx][var] )
@@ -2339,7 +2339,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 
 		      /*  h_flux = 0.0; */	  	  
 	       
-		      lec->J[peqn][pvar][i][j] += h_flux;
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += h_flux;
 		    }
 		}
 	    }
@@ -2401,7 +2401,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 		      
 		    }
 
-		  lec->J[peqn][pvar][i][j] += advection  + source + pressure_stabilization;
+		  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection  + source + pressure_stabilization;
 		}
 	    }  
 	
@@ -2450,7 +2450,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 				     
 			      pressure_stabilization *=  tau_pspg * h3 * det_J * wt;
 			      
-			      lec->J[peqn][pvar][i][j] += pressure_stabilization;
+			      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += pressure_stabilization;
 			      
 			    }
 			}
@@ -2501,7 +2501,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 				     
 			      pressure_stabilization *=  mu * tau_pspg * h3 * det_J * wt;
 			      
-			      lec->J[peqn][pvar][i][j] += pressure_stabilization;
+			      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += pressure_stabilization;
 			      
 			    }
 			}
@@ -2538,7 +2538,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 
 			  /*  h_flux = 0.0; */	  	  
 
-			  lec->J[peqn][pvar][i][j] += h_flux;
+			  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += h_flux;
 
 			}
 		    }  
@@ -2729,7 +2729,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 			    }
 			}
 
-		      lec->J[peqn][pvar][i][j] += advection  + source + pressure_stabilization +  h_flux;
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection  + source + pressure_stabilization +  h_flux;
 		    }
 		}
 	    }
@@ -2767,7 +2767,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 		      source = 0.;
 
 
-		      lec->J[peqn][pvar][i][j] += advection  + source;
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection  + source;
 		    }
 		}
 	    }
@@ -2854,7 +2854,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 			  pressure_stabilization *= tau_pspg * h3 * det_J * wt ;
 			}
 		      
-		      lec->J[peqn][MAX_PROB_VAR + w][i][j] += source + pressure_stabilization;
+		      lec->J[LEC_J_INDEX(peqn,MAX_PROB_VAR + w,i,j)] += source + pressure_stabilization;
 		    }
 		}
 	    }
@@ -2877,7 +2877,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 		      h_flux *= h3*det_J*wt*( rhos - rhof )/rhof;
 		      /*  h_flux = 0.0; */
 
-		      lec->J[peqn][MAX_PROB_VAR + w0][i][j] += h_flux;
+                      lec->J[LEC_J_INDEX(peqn,MAX_PROB_VAR + w0,i,j)] += h_flux;
 		    }
 		}
 	    }

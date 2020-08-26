@@ -1,5 +1,18 @@
+/************************************************************************ *
+* Goma - Multiphysics finite element software                             *
+* Sandia National Laboratories                                            *
+*                                                                         *
+* Copyright (c) 2020 Goma Developers                                      *
+*                                                                         *
+* Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,  *
+* the U.S. Government retains certain rights in this software.            *
+*                                                                         *
+* This software is distributed under the GNU General Public License.      *
+\************************************************************************/
 #include "rf_fem.h"
 #include "rf_solver.h"
+
+/* File containing the many of Goma's global variables, moved for -fno-common */
 
 int  CoordinateSystem;  /* Indicates type of coordinate system (see fem_const.h)*/
 
@@ -280,3 +293,5 @@ the viscosity sensititives convergence can be
 achieved albeit at a less than quadratic rate
       */
 int     nHC;
+
+int PRS_mat_ielem;

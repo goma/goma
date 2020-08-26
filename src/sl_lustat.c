@@ -95,6 +95,8 @@
 
 
 
+#ifdef HAVE_SPARSE
+#endif
 
 
 #ifdef MATRIX_STATISTICS
@@ -126,6 +128,7 @@ static void histogram
 
 /* static int call=0; */
 
+#ifdef HAVE_SPARSE
 void
 lustat ( int n,
          int nnz,
@@ -198,6 +201,7 @@ lustat ( int n,
   plot_a(n, nnz, a, ija);
 
 } /* END of routine lustat */
+#endif
 /*****************************************************************************/
 
 static void

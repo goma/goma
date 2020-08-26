@@ -1,7 +1,18 @@
-# Goma 6.1
+# Goma 6.2
 A Full-Newton Finite Element Program for Free and Moving Boundary Problems with Coupled Fluid/Solid Momentum, Energy, Mass, and Chemical Species Transport
 
 For more information see the [Goma website](http://goma.github.io)
+
+Changes in version 6.2
+
+* Many bug fixes
+* Stratimikos support
+* Log conformation tensor stress model
+* Hysing and Denner surface tension models for level set
+* Suspension balance updates
+* Updated SUPG for species
+* Quadratic triangles
+* And more...
 
 Changes in version 6.1
 
@@ -29,11 +40,11 @@ The build-goma-dependencies.sh script relies on several packages readily availab
 
 For Ubuntu this will install the necessary packages to run the script:
 
-`sudo apt-get install build-essential m4 zlib1g-dev libx11-dev gfortran`
+`sudo apt-get install git build-essential m4 zlib1g-dev libx11-dev gfortran`
 
 For CentOS
 
-`sudo yum install gcc-c++ gcc-gfortran m4 zlib-static libX11-devel`
+`sudo yum install git patch gcc gcc-c++ gcc-gfortran m4 make wget bzip2 tar zlib-devel libX11-devel`
 
 The [scripts README](scripts/README.md) gives a more specific list of minimum requirements. Please ensure the script requirements are met before attempting to use it.
 

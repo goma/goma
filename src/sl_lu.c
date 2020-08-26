@@ -25,6 +25,9 @@
 
 #define GOMA_SL_LU_C
 
+#ifdef HAVE_SPARSE
+#include "spMatrix.h"
+#include "spConfig.h"
 /*
  * Uncomment the following line to write out the RHS, a, and ija vectors
  * to an ASCII file...
@@ -79,7 +82,6 @@ int first_time = TRUE;
           routines called: (sparse1.3 package is used)
     --------------------------------------------------------------------
 */
-#ifdef HAVE_SPARSE
 #include "spMatrix.h"
 
 static int call=0;

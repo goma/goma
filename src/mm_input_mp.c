@@ -1671,7 +1671,11 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     {
       ConstitutiveEquation = BOND;
     } 
-  else if ( !strcmp(model_name, "CARREAU_WLF_CONC_PL") )
+   else if ( !strcmp(model_name, "BOND_SH") )
+    {
+      ConstitutiveEquation = BOND_SH;
+    } 
+ else if ( !strcmp(model_name, "CARREAU_WLF_CONC_PL") )
     {
       ConstitutiveEquation = CARREAU_WLF_CONC_PL;
     } 
@@ -1826,6 +1830,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       ConstitutiveEquation == CARREAU_WLF_CONC_PL ||
       ConstitutiveEquation == CARREAU_WLF_CONC_EXP ||
       ConstitutiveEquation == BOND ||
+      ConstitutiveEquation == BOND_SH ||
       ConstitutiveEquation == FOAM_EPOXY ||
       ConstitutiveEquation == FOAM_PMDI_10)
     {
@@ -1919,6 +1924,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
      ConstitutiveEquation == BINGHAM_WLF ||
      ConstitutiveEquation == CARREAU_WLF_CONC_PL ||
      ConstitutiveEquation == CARREAU_WLF_CONC_EXP ||
+     ConstitutiveEquation == BOND_SH ||
      ConstitutiveEquation == BOND )
     {
       model_read = look_for_mat_prop(imp, "High Rate Viscosity", 
@@ -1951,7 +1957,10 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
        {
 	 EH(model_read, "High Rate Viscosity");
        }
+      ECHO(es,echo_file);
 
+    if(ConstitutiveEquation != BOND )
+      {
       model_read = look_for_mat_prop(imp, "Time Constant", 
 				     &(gn_glob[mn]->lamModel), 
 				     &(gn_glob[mn]->lam), NO_USER, NULL,
@@ -1985,6 +1994,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
        }
 
       ECHO(es,echo_file);
+     }
     }
 
   if(ConstitutiveEquation == CARREAU || 
@@ -1994,6 +2004,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
      ConstitutiveEquation == BINGHAM_WLF ||
      ConstitutiveEquation == CARREAU_WLF_CONC_PL ||
      ConstitutiveEquation == CARREAU_WLF_CONC_EXP ||
+     ConstitutiveEquation == BOND_SH ||
      ConstitutiveEquation == BOND )
     {
       model_read = look_for_mat_prop(imp, "Aexp", &(gn_glob[mn]->aexpModel), 
@@ -2040,6 +2051,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
      ConstitutiveEquation == CARREAU_WLF_CONC_PL ||
      ConstitutiveEquation == CARREAU_WLF_CONC_EXP ||
      ConstitutiveEquation == THERMAL||
+     ConstitutiveEquation == BOND ||
      ConstitutiveEquation == FOAM_EPOXY ||
      ConstitutiveEquation == FOAM_PMDI_10)
     {
@@ -2080,6 +2092,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   if(ConstitutiveEquation == CARREAU_WLF ||
      ConstitutiveEquation == BINGHAM_WLF || 
      ConstitutiveEquation == CARREAU_WLF_CONC_PL ||
+     ConstitutiveEquation == BOND ||
      ConstitutiveEquation == CARREAU_WLF_CONC_EXP )
     {
       model_read = look_for_mat_prop(imp, "Thermal WLF Constant2", 
@@ -2118,6 +2131,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   if(ConstitutiveEquation == BINGHAM  ||
      ConstitutiveEquation == BINGHAM_WLF  ||
+     ConstitutiveEquation == BOND ||
      ConstitutiveEquation == HERSCHEL_BULKLEY)
     {
       model_read = look_for_mat_prop(imp, "Yield Stress", 
@@ -2131,6 +2145,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     }
 
   if( ConstitutiveEquation == BINGHAM ||
+      ConstitutiveEquation == BOND ||
       ConstitutiveEquation == BINGHAM_WLF)
     {
       model_read = look_for_mat_prop(imp, "Yield Exponent", 
@@ -2163,6 +2178,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       ConstitutiveEquation == CARREAU_WLF_CONC_PL ||
       ConstitutiveEquation == CARREAU_WLF_CONC_EXP ||
       ConstitutiveEquation == BOND ||
+      ConstitutiveEquation == BOND_SH ||
       ConstitutiveEquation == FOAM_EPOXY)
     {
       model_read = look_for_mat_prop(imp, "Thixotropic Factor", 
@@ -2284,7 +2300,20 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       ECHO(es,echo_file);
     }
 
-  if( ConstitutiveEquation == FOAM_EPOXY )
+  if( ConstitutiveEquation == BOND_SH )
+    {
+
+      iread = look_for_optional(imp, "Suspension Species Number", input, '=');
+      if ( fscanf(imp,"%d",&species_no) != 1)
+	{
+	  EH( -1, "error reading Suspension Species Number");
+	}    
+      gn_glob[mn]->sus_species_no = species_no;
+
+      SPF(endofstring(es)," %d", species_no);
+      ECHO(es,echo_file);
+    }
+   if( ConstitutiveEquation == FOAM_EPOXY )
     {
 
       iread = look_for_optional(imp, "Suspension Species Number", input, '=');
@@ -2552,6 +2581,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 				 &(a0), NO_USER, NULL, model_name, NO_INPUT, 
 				 &NO_SPECIES,es);
   stringup(model_name);
+
   if ( !strcmp(model_name, "GIESEKUS") )
     {
       vn_glob[mn]->ConstitutiveEquation = GIESEKUS;
@@ -2569,6 +2599,18 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	    !strcmp(model_name, "PHAN-THIEN TANNER") )
     {
       vn_glob[mn]->ConstitutiveEquation = PTT;
+    } 
+  else if ( !strcmp(model_name, "SARAMITO_OLDROYDB") )
+    {
+      vn_glob[mn]->ConstitutiveEquation = SARAMITO_OLDROYDB;
+    }
+  else if ( !strcmp(model_name, "SARAMITO_GIESEKUS") )
+    {
+      vn_glob[mn]->ConstitutiveEquation = SARAMITO_GIESEKUS;
+    }
+  else if ( !strcmp(model_name, "SARAMITO_PTT") )
+    {
+      vn_glob[mn]->ConstitutiveEquation = SARAMITO_PTT;
     } 
   else if ( !strcmp(model_name, "NOPOLYMER") )
     {
@@ -2606,7 +2648,8 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 				     &NO_SPECIES,es);
       if ( !strcmp(model_name, "EVSS_G") )
 	{
-	  if( vn_glob[mn]->ConstitutiveEquation == PTT ) 
+	  if( vn_glob[mn]->ConstitutiveEquation == PTT || 
+	      vn_glob[mn]->ConstitutiveEquation == SARAMITO_PTT ) 
 	    EH(GOMA_ERROR,"Error: EVSS_G stress formulation is not implemented in this case.");
 
 	  vn_glob[mn]->evssModel = EVSS_G;
@@ -2637,7 +2680,8 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	}
       else
 	{
-	  if( vn_glob[mn]->ConstitutiveEquation == PTT ) 
+	  if( vn_glob[mn]->ConstitutiveEquation == PTT || 
+	      vn_glob[mn]->ConstitutiveEquation == SARAMITO_PTT ) 
 	    EH(GOMA_ERROR,"Error: EVSS_G stress formulation is not implemented in this case.");
 
 	  vn_glob[mn]->evssModel = EVSS_G; /* default to Rajagopalan's 
@@ -2951,7 +2995,8 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	exit(-1);
       }
       
-      if (vn_glob[mn]->ConstitutiveEquation == GIESEKUS )
+      if (vn_glob[mn]->ConstitutiveEquation == GIESEKUS ||
+	  vn_glob[mn]->ConstitutiveEquation == SARAMITO_GIESEKUS )
 	{
 	  strcpy(search_string, "Mobility Parameter");
 
@@ -3014,7 +3059,59 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	   }
        }
 
-      if (vn_glob[mn]->ConstitutiveEquation == PTT )
+	/*
+	 * If one of the Saramito model combinations is enabled, ensure that a yield stress card is
+	 * present
+	*/
+      if (vn_glob[mn]->ConstitutiveEquation == SARAMITO_OLDROYDB || 
+	  vn_glob[mn]->ConstitutiveEquation == SARAMITO_PTT      ||
+	  vn_glob[mn]->ConstitutiveEquation == SARAMITO_GIESEKUS)
+	{
+	  /* Should yield stress be a modal property? Let's assume not for now */
+	  dbl tau_y_val;
+	  dbl fexp_val;
+
+	  strcpy(search_string, "Polymer Yield Stress");
+	  model_read = look_for_mat_prop(imp, search_string, 
+					 &(ConstitutiveEquation), 
+					 &tau_y_val,
+					 NO_USER, NULL,
+					 model_name, SCALAR_INPUT, &NO_SPECIES,es);
+
+	  if( model_read < 1 )
+	    {
+	      if( model_read == -1) SPF(err_msg,"%s card is missing.",search_string);
+	      if( model_read == -2) SPF(err_msg,"Only CONSTANT %s mode model supported.", search_string);
+	      fprintf(stderr,"%s\n",err_msg);
+	      exit(-1);
+	    }
+
+	  strcpy(search_string, "Yield Exponent");
+	  model_read = look_for_mat_prop(imp, search_string, 
+					 &(ConstitutiveEquation), 
+					 &fexp_val,
+					 NO_USER, NULL,
+					 model_name, SCALAR_INPUT, &NO_SPECIES,es);
+
+	  if( model_read < 1 )
+	    {
+	      if( model_read == -1) SPF(err_msg,"%s card is missing.",search_string);
+	      if( model_read == -2) SPF(err_msg,"Only CONSTANT %s mode model supported.", search_string);
+	      fprintf(stderr,"%s\n",err_msg);
+	      exit(-1);
+	    }
+			       
+	  for(mm=0;mm<vn_glob[mn]->modes;mm++)
+	    {
+	      ve_glob[mn][mm]->gn->tau_y = tau_y_val;
+		  ve_glob[mn][mm]->gn->fexp = fexp_val;
+	    }
+	  ECHO(es,echo_file);
+	}
+
+
+      if (vn_glob[mn]->ConstitutiveEquation == PTT || 
+			    vn_glob[mn]->ConstitutiveEquation == SARAMITO_PTT )
 	{
 	  strcpy(search_string, "PTT Xi parameter");
 
@@ -3863,6 +3960,30 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  SPF(es,"\t(%s = %s %.4g)", search_string,"CONSTANT", mat_ptr->permittivity );
 	}
     }
+  ECHO(es,echo_file);
+
+  /*
+   * There is now a defined magnetic permeability.
+   */
+  rewind(imp);
+  strcpy(search_string,"Magnetic Permeability");
+  model_read = look_for_mat_prop(imp, search_string,
+                                 &(mat_ptr->MagneticPermeabilityModel),
+                                 &(mat_ptr->magnetic_permeability),
+                                 &(mat_ptr->u_magnetic_permeability),
+                                 &(mat_ptr->len_u_magnetic_permeability),
+                                 model_name, SCALAR_INPUT, &NO_SPECIES,es);
+  if (model_read == -1) {
+    if(strncmp(model_name," ",1) != 0) {
+      SPF(err_msg,"Syntax error or invalid model for %s\n",search_string);
+      EH(-1,err_msg);
+    }
+    else {
+      mat_ptr->MagneticPermeabilityModel = CONSTANT;
+      mat_ptr->magnetic_permeability = 1.;
+      SPF(es,"\t(%s = %s %.4g)", search_string,"CONSTANT", mat_ptr->magnetic_permeability );
+    }
+  }
   ECHO(es,echo_file);
 
   strcpy(search_string, "Electrical Surface Diffusivity");
@@ -9055,7 +9176,36 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  SPF_DBL_VEC(endofstring(es), 5,  mat_ptr->u_species_source[species_no]);
 	}
       
-      else if ( !strcmp(model_name, "FOAM_EPOXY") )
+       else if ( !strcmp(model_name, "SSM_BOND") )
+	{
+	  SpeciesSourceModel = SSM_BOND;
+	  model_read = 1;
+	  mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
+	  if ( fscanf(imp, "%lf %lf %lf %lf %lf", 
+			  &a0, &a1, &a2, &a3, &a4)
+		   != 5 )
+	    {
+	      sr = sprintf(err_msg, 
+			   "Matl %s needs  5 constants for %s %s model.\n",
+			   pd_glob[mn]->MaterialName,
+			   "Species Source", "SSM_BOND");
+	      EH(-1, err_msg);
+	    }
+
+	  mat_ptr->u_species_source[species_no] = (dbl *)
+						 array_alloc(1,5,sizeof(dbl)); 
+
+	  mat_ptr->len_u_species_source[species_no] = 5;
+	  
+	  mat_ptr->u_species_source[species_no][0] = a0;  /* rate for breakup k2 */
+	  mat_ptr->u_species_source[species_no][1] = a1;  /* rate for aggregation k1 */ 
+	  mat_ptr->u_species_source[species_no][2] = a2;  /* n0 for breakup eqn */
+	  mat_ptr->u_species_source[species_no][3] = a3;  /* exponent for breakup eqn */
+	  mat_ptr->u_species_source[species_no][4] = a4;  /* exponent for aggregation eqn */
+
+	  SPF_DBL_VEC(endofstring(es), 5,  mat_ptr->u_species_source[species_no]);
+	}
+     else if ( !strcmp(model_name, "FOAM_EPOXY") )
 	{
 	  SpeciesSourceModel = FOAM_EPOXY;
 	  model_read = 1;

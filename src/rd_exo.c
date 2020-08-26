@@ -95,7 +95,7 @@ static const int spc = sizeof(char *);
 static const int spi = sizeof(int *);
 static const int spd = sizeof(dbl *);
 
-extern Spfrtn sr;			/* sprintf() return type */
+static Spfrtn sr;			/* sprintf() return type */
 int
 rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
        const char *fn,
@@ -1147,22 +1147,18 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 		    {
 		      index = j * x->num_elem_vars + k;
 
-		      if ( x->elem_var_tab[index] != 0 )
-			{
-			  status = ex_get_var(x->exoid, time_index, EX_ELEM_BLOCK,
-					      k+1,
-					      x->eb_id[j],
-					      x->eb_num_elems[j],
-					      x->ev[i][index]);
-			  if ( status < 0 )
-			    {
-			      sr = sprintf(err_msg,  "ex_get_elem_var() bad rtn: time %d, elemvar %d, EB ID %d",
-					   time_index, k+1, x->eb_id[j]);
+                      if (x->elem_var_tab != NULL && x->elem_var_tab[index] != 0) {
+                        status = ex_get_var(x->exoid, time_index, EX_ELEM_BLOCK, k + 1, x->eb_id[j],
+                                            x->eb_num_elems[j], x->ev[i][index]);
+                        if (status < 0) {
+                          sr = sprintf(err_msg,
+                                       "ex_get_elem_var() bad rtn: time %d, elemvar %d, EB ID %d",
+                                       time_index, k + 1, x->eb_id[j]);
 			      EH(GOMA_ERROR, err_msg);
-			    }
-			}
-		    }
-		}
+                        }
+                      }
+                  }
+                }
 	    }
 
 	  /*
@@ -1917,12 +1913,11 @@ free_exo_ev(Exo_DB *x)
 	  for ( k=0; k<x->num_elem_vars; k++)
 	    {
 	      index = j * x->num_elem_vars + k;
-	      if ( x->elem_var_tab[index] != 0 )
-		{
-		  free(x->ev[i][index]);
-		}
-	    }
-	}
+              if (x->elem_var_tab == NULL || x->elem_var_tab[index] != 0) {
+                free(x->ev[i][index]);
+              }
+          }
+        }
       free(x->ev[i]);
     }
   free(x->ev);
@@ -2049,13 +2044,11 @@ alloc_exo_ev(Exo_DB *x,
 	  for ( k=0; k<x->num_elem_vars; k++)
 	    {
 	      index = j * x->num_elem_vars + k;
-	      if ( x->elem_var_tab[index] != 0 )
-		{
-		  x->ev[i][index] = (dbl *) smalloc(x->eb_num_elems[j]*
-						    sizeof(dbl));
-		}
-	    }
-	}
+              if (x->elem_var_tab == NULL || x->elem_var_tab[index] != 0) {
+                x->ev[i][index] = (dbl *)smalloc(x->eb_num_elems[j] * sizeof(dbl));
+              }
+          }
+        }
     }
 
   x->state |= EXODB_STATE_ELVA;

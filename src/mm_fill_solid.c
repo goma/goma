@@ -2235,8 +2235,8 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 	  ieqn_solid = R_MESH1 + p;
 	  id_dofmom = ei[pg->imtrx]->ln_to_dof[ieqn_mom][id];
 	  id_dofmesh = ei[pg->imtrx]->ln_to_dof[ieqn_solid][id];
-	  lec->R[upd->ep[pg->imtrx][ieqn_solid]][id_dofmesh] =
-	      scale * lec->R[upd->ep[pg->imtrx][ieqn_mom]][id_dofmom];
+          lec->R[LEC_R_INDEX(upd->ep[pg->imtrx][ieqn_solid],id_dofmesh)] =
+              scale * lec->R[LEC_R_INDEX(upd->ep[pg->imtrx][ieqn_mom],id_dofmom)];
 	}
       }
     }
@@ -2276,8 +2276,8 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 			pvar = upd->vp[pg->imtrx][var];
 			for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 			  {
-			    lec->J[peqn_solid][pvar][id_dofmesh][j_id] =
-				scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                            lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofmesh,j_id)] =
+                                scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 			  }
 		      }
 		  }
@@ -2291,8 +2291,8 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 		    pvar = upd->vp[pg->imtrx][var];
 		    for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 		      {			
-			lec->J[peqn_solid][pvar][id_dofmesh][j_id] =
-			    scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                        lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofmesh,j_id)] =
+                            scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 		      }
 		  }
 		
@@ -2306,8 +2306,8 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 		    pvar = upd->vp[pg->imtrx][var];
 		    for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 		      {
-			lec->J[peqn_solid][pvar][id_dofmesh][j_id] =
-			    scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                        lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofmesh,j_id)] =
+                            scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 		      }
 		  }
 		
@@ -2322,10 +2322,10 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 			pvar = MAX_PROB_VAR + w;
 			for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 			  {
-			    if (fabs(lec->J[peqn_solid][pvar][id_dofmesh][j_id]) > 1.e-8)
+                            if (fabs(lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofmesh,j_id)]) > 1.e-8)
 			      {
-				lec->J[peqn_solid][pvar][id_dofmesh][j_id] =
-				    scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                                lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofmesh,j_id)] =
+                                    scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 			      }
 			  }
 		      }
@@ -2340,10 +2340,10 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 		      {
 			for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 			  {
-			    if (fabs(lec->J[peqn_solid][pvar][id_dofmesh][j_id]) > 1.e-8)
+                            if (fabs(lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofmesh,j_id)]) > 1.e-8)
 			      {
-				lec->J[peqn_solid][pvar][id_dofmesh][j_id] =
-				    scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                                lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofmesh,j_id)] =
+                                    scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 			      }
 			  }
 		      }
@@ -2356,10 +2356,10 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 		      {
 			for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 			  {
-			    if (fabs(lec->J[peqn_solid][pvar][id_dofmesh][j_id]) > 1.e-8)
+                            if (fabs(lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofmesh,j_id)]) > 1.e-8)
 			      {
-				lec->J[peqn_solid][pvar][id_dofmesh][j_id] =
-				    scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                                lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofmesh,j_id)] =
+                                    scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 			      }
 			  }
 		      }
@@ -2372,10 +2372,10 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 		      {
 			for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 			  {
-			    if (fabs(lec->J[peqn_solid][pvar][id_dofmesh][j_id]) > 1.e-8)
+                            if (fabs(lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofmesh,j_id)]) > 1.e-8)
 			      {
-				lec->J[peqn_solid][pvar][id_dofmesh][j_id] =
-				    scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                                lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofmesh,j_id)] =
+                                    scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 			      }
 			  }
 		      }
@@ -2391,8 +2391,8 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 			pvar = upd->vp[pg->imtrx][var];
 			for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 			  {
-			    lec->J[peqn_solid][pvar][id_dofmesh][j_id] =
-				scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                            lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofmesh,j_id)] =
+                                scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 			  }
 		      }
 		  }
@@ -2416,8 +2416,8 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 				    pvar = upd->vp[pg->imtrx][var];
 				    for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 				      {
-					lec->J[peqn_solid][pvar][id_dofmesh][j_id] =
-					  scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                                        lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofmesh,j_id)] =
+                                          scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 				      }
 				  }
 			      }
@@ -2450,8 +2450,8 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 				pvar = upd->vp[pg->imtrx][var];
 				for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 				  {
-				    lec->J[peqn_solid][pvar][id_dofmesh][j_id] =
-				      scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                                    lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofmesh,j_id)] =
+                                      scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 				    
 				  }
 			      }
@@ -2560,8 +2560,8 @@ put_liquid_stress_in_solid_ALE(int id, /* local element node number for the
 	      {
 		ieqn_mom = R_MOMENTUM1 + p;
 		ieqn_solid = R_SOLID1 + p;
-		lec->R[upd->ep[pg->imtrx][ieqn_solid]][id_dofsol] += 
-		    scale*lec->R[upd->ep[pg->imtrx][ieqn_mom]][id_dofmom];
+                lec->R[LEC_R_INDEX(upd->ep[pg->imtrx][ieqn_solid],id_dofsol)] +=
+                    scale*lec->R[LEC_R_INDEX(upd->ep[pg->imtrx][ieqn_mom],id_dofmom)];
 /*fprintf(stderr,"solid_fluid %g %g %g\n",scale,fv->x[0],fv->P);*/
 	      }
 	}
@@ -2593,8 +2593,8 @@ put_liquid_stress_in_solid_ALE(int id, /* local element node number for the
 		      {
 			for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 			  {
-			    lec->J[peqn_solid][pvar][id_dofsol][j_id] +=
-				scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                            lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofsol,j_id)] +=
+                                scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 			  }
 		      }
 		  }
@@ -2610,8 +2610,8 @@ put_liquid_stress_in_solid_ALE(int id, /* local element node number for the
 		      {
 			for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 			  {
-			    lec->J[peqn_solid][pvar][id_dofsol][j_id] += 
-				scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                            lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofsol,j_id)] +=
+                                scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 			  }
 		      }
 		  }
@@ -2626,8 +2626,8 @@ put_liquid_stress_in_solid_ALE(int id, /* local element node number for the
 		  {
 		    for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 		      {			
-			lec->J[peqn_solid][pvar][id_dofsol][j_id] += 
-			    scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                        lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofsol,j_id)] +=
+                            scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 		      }
 		  }
 		
@@ -2641,8 +2641,8 @@ put_liquid_stress_in_solid_ALE(int id, /* local element node number for the
 		  {
 		    for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 		      {
-			lec->J[peqn_solid][pvar][id_dofsol][j_id] += 
-			    scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                        lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofsol,j_id)] +=
+                            scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 		      }
 		  }
 		
@@ -2657,8 +2657,8 @@ put_liquid_stress_in_solid_ALE(int id, /* local element node number for the
 		        pvar = upd->vp[pg->imtrx][var] + w;
 			for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 			  {
-			    lec->J[peqn_solid][pvar][id_dofsol][j_id] += 
-                                scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                            lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofsol,j_id)] +=
+                                scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 			  }
 		      }
 		  }
@@ -2676,8 +2676,8 @@ put_liquid_stress_in_solid_ALE(int id, /* local element node number for the
 		      {
 			for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 			  {
-			    lec->J[peqn_solid][pvar][id_dofsol][j_id] +=
-				scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                            lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofsol,j_id)] +=
+                                scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 			  }
 		      }
 		  }
@@ -2693,8 +2693,8 @@ put_liquid_stress_in_solid_ALE(int id, /* local element node number for the
 			pvar = upd->vp[pg->imtrx][var];
 			for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 			  {
-			    lec->J[peqn_solid][pvar][id_dofsol][j_id] += 
-				scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                            lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofsol,j_id)] +=
+                                scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 			  }
 		      }
 		  }
