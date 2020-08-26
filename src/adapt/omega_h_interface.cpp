@@ -120,6 +120,10 @@ namespace Omega_h {
   } while (0)
 
 namespace exodus {
+enum ClassifyWith {
+  NODE_SETS = 0x1,
+  SIDE_SETS = 0x2,
+};
 static OMEGA_H_INLINE int side_osh2exo(int dim, int side) {
   switch (dim) {
   case 2:
@@ -207,8 +211,7 @@ static void get_elem_type_info(std::string const &type, int *p_dim, Omega_h_Fami
   }
 }
 
-void convert_to_omega_h_mesh_parallel(
-    Exo_DB *exo, Dpi *dpi, double **x, Mesh *mesh, bool verbose) {
+void convert_to_omega_h_mesh_parallel(Exo_DB *exo, Dpi *dpi, double **x, Mesh *mesh, bool verbose) {
   std::vector<LO> local_to_global(exo->num_nodes);
   for (int i = 0; i < exo->num_nodes; i++) {
     local_to_global[i] = dpi->node_index_global[i];
@@ -290,7 +293,7 @@ void convert_to_omega_h_mesh_parallel(
     double d_y = 0;
     double d_z = 0;
 
-    if (pd->gv[R_MESH1]) { //anneal
+    if (pd->gv[R_MESH1]) { // anneal
       int x_idx = Index_Solution(idx, R_MESH1, 0, 0, -1, pd->mi[R_MESH1]);
       int y_idx = Index_Solution(idx, R_MESH2, 0, 0, -1, pd->mi[R_MESH2]);
       int z_idx = -1;
@@ -368,8 +371,9 @@ void convert_to_omega_h_mesh_parallel(
                                                            Omega_h::vector_2(iso_size, iso_size));
               Omega_h::set_vector(target_metrics, index, Omega_h::symm2vector(target_metric));
             } else {
-              auto target_metric = Omega_h::compose_metric(Omega_h::identity_matrix<3, 3>(),
-                                                           Omega_h::vector_3(iso_size, iso_size, iso_size));
+              auto target_metric =
+                  Omega_h::compose_metric(Omega_h::identity_matrix<3, 3>(),
+                                          Omega_h::vector_3(iso_size, iso_size, iso_size));
               Omega_h::set_vector(target_metrics, index, Omega_h::symm2vector(target_metric));
             }
           };
@@ -377,7 +381,7 @@ void convert_to_omega_h_mesh_parallel(
           Omega_h::parallel_for(mesh->nverts(), f0, "set_iso_metric_values");
           mesh->add_tag(Omega_h::VERT, "iso_size_metric", Omega_h::symm_ncomps(mesh->dim()),
                         Omega_h::Reals(target_metrics));
-        } else if (ls !=NULL && ls->adapt && (j == FILL)) {
+        } else if (ls != NULL && ls->adapt && (j == FILL)) {
           //        auto H_values = Omega_h::Write<Omega_h::Real>(mesh.nverts());
           //        auto f0 = OMEGA_H_LAMBDA(Omega_h::LO index) {
           //          H_values[index] =
@@ -399,8 +403,9 @@ void convert_to_omega_h_mesh_parallel(
                                                            Omega_h::vector_2(iso_size, iso_size));
               Omega_h::set_vector(target_metrics, index, Omega_h::symm2vector(target_metric));
             } else {
-              auto target_metric = Omega_h::compose_metric(Omega_h::identity_matrix<3, 3>(),
-                                                           Omega_h::vector_3(iso_size, iso_size, iso_size));
+              auto target_metric =
+                  Omega_h::compose_metric(Omega_h::identity_matrix<3, 3>(),
+                                          Omega_h::vector_3(iso_size, iso_size, iso_size));
               Omega_h::set_vector(target_metrics, index, Omega_h::symm2vector(target_metric));
             }
           };
@@ -510,26 +515,27 @@ void convert_to_omega_h_mesh_parallel(
       //      CALL(ex_get_set_param(file, EX_SIDE_SET, side_set_ids[i], &nsides, &ndist_factors));
       nsides = exo->ss_num_sides[i];
       if (verbose)
-      std::cout << "Proc" << ProcID << " has " << nsides << "sides\n";
-      int snl[MAX_NODES_PER_SIDE];	/* Side Node List - NOT Saturday Night Live! */
+        std::cout << "Proc" << ProcID << " has " << nsides << "sides\n";
+      int snl[MAX_NODES_PER_SIDE]; /* Side Node List - NOT Saturday Night Live! */
 
       std::set<int> ss_side_nodes;
       std::set<int> ss_side_nodes_global;
       for (int es = 0; es < exo->ss_num_sides[i]; es++) {
-        for (int q = exo->ss_elem_index[i]; q < (exo->ss_elem_index[i]+exo->ss_num_sides[i]); q++) {
+        for (int q = exo->ss_elem_index[i]; q < (exo->ss_elem_index[i] + exo->ss_num_sides[i]);
+             q++) {
           int elem = exo->ss_elem_list[q];
           int side = exo->ss_side_list[q];
-          int num_nodes = build_side_node_list(elem, side-1, exo, snl);
+          int num_nodes = build_side_node_list(elem, side - 1, exo, snl);
           for (int j = 0; j < num_nodes; j++) {
             ss_side_nodes.insert(snl[j]);
             if (exo_to_global.find(snl[j]) != exo_to_global.end()) {
               ss_side_nodes_global.insert(mesh->globals(0)[exo_to_global[snl[j]]]);
               if (verbose)
-              std::cout << "node found " << mesh->globals(0)[exo_to_global[snl[j]]] << " " << dpi->node_index_global[snl[j]] << "\n";
+                std::cout << "node found " << mesh->globals(0)[exo_to_global[snl[j]]] << " "
+                          << dpi->node_index_global[snl[j]] << "\n";
             } else {
               if (verbose)
-              std::cout << "node not found " << dpi->node_index_global[snl[j]] << "\n";
-
+                std::cout << "node not found " << dpi->node_index_global[snl[j]] << "\n";
             }
           }
         }
@@ -550,12 +556,11 @@ void convert_to_omega_h_mesh_parallel(
       }
       int nnodes_owned = 0;
       for (int side = 0; side < nnodes; side++) {
-//        int exoindex = exo->ss_node_list[i][side];
-//        if (exo_to_global.find(exoindex) != exo_to_global.end()) {
-          nnodes_owned++;
-//        }
+        //        int exoindex = exo->ss_node_list[i][side];
+        //        if (exo_to_global.find(exoindex) != exo_to_global.end()) {
+        nnodes_owned++;
+        //        }
       }
-
 
       int max_nnodes;
       MPI_Allreduce(&nnodes_owned, &max_nnodes, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
@@ -567,17 +572,18 @@ void convert_to_omega_h_mesh_parallel(
       int index = 0;
       for (int idx = 0; idx < nnodes; idx++) {
         int exoindex = exo->ss_node_list[i][idx];
-//        if (exo_to_global.find(exoindex) != exo_to_global.end()) {
-          h_set_nodes_q[index] = dpi->node_index_global[exoindex];
-          index++;
-//        }
+        //        if (exo_to_global.find(exoindex) != exo_to_global.end()) {
+        h_set_nodes_q[index] = dpi->node_index_global[exoindex];
+        index++;
+        //        }
       }
       for (int i = 0; i < index; i++) {
         my_owned[i] = h_set_nodes_q[i];
       }
       std::set<int> my_owned_set(my_owned.begin(), my_owned.end());
 
-      MPI_Allgather(my_owned.data(), max_nnodes, MPI_INT, all_owned.data(), max_nnodes, MPI_INT, MPI_COMM_WORLD);
+      MPI_Allgather(my_owned.data(), max_nnodes, MPI_INT, all_owned.data(), max_nnodes, MPI_INT,
+                    MPI_COMM_WORLD);
       std::set<int> owned_set(all_owned.begin(), all_owned.end());
       std::vector<int> my_nodes_sorted(mesh->nverts());
       for (int i = 0; i < mesh->nverts(); i++) {
@@ -588,7 +594,8 @@ void convert_to_omega_h_mesh_parallel(
       std::vector<int> mark_nodes;
       mark_nodes.reserve(all_owned_set.size());
       for (size_t j = 0; j < all_owned_set.size(); j++) {
-        if (all_owned_set[j] != -1 && std::binary_search(my_nodes_sorted.begin(), my_nodes_sorted.end(), all_owned_set[j])) {
+        if (all_owned_set[j] != -1 &&
+            std::binary_search(my_nodes_sorted.begin(), my_nodes_sorted.end(), all_owned_set[j])) {
           // TODO
           for (int k = 0; k < mesh->nverts(); k++) {
             if (mesh->globals(0)[k] == all_owned_set[j]) {
@@ -610,21 +617,21 @@ void convert_to_omega_h_mesh_parallel(
       auto set_sides2side_tmp = collect_marked(sides_are_in_set);
       int max_sides;
       int my_size = set_sides2side_tmp.size();
-      MPI_Allreduce(&my_size, &max_sides,1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+      MPI_Allreduce(&my_size, &max_sides, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
       std::vector<int> send_sides(max_sides);
-       std::fill(send_sides.begin(), send_sides.end(), -1);
-       for (int j = 0; j < my_size; j++) {
-         send_sides[j] = mesh->globals(dim-1)[set_sides2side_tmp[j]];
-       }
+      std::fill(send_sides.begin(), send_sides.end(), -1);
+      for (int j = 0; j < my_size; j++) {
+        send_sides[j] = mesh->globals(dim - 1)[set_sides2side_tmp[j]];
+      }
       std::vector<int> all_sides(max_sides * Num_Proc);
-      MPI_Allgather(send_sides.data(), max_sides, MPI_INT, all_sides.data(), max_sides, MPI_INT, MPI_COMM_WORLD);
-
+      MPI_Allgather(send_sides.data(), max_sides, MPI_INT, all_sides.data(), max_sides, MPI_INT,
+                    MPI_COMM_WORLD);
 
       std::vector<int> sides;
 
       for (size_t j = 0; j < all_sides.size(); j++) {
-        for (int k = 0; k < mesh->globals(dim-1).size(); k++) {
-          if (all_sides[j] == mesh->globals(dim-1)[k]) {
+        for (int k = 0; k < mesh->globals(dim - 1).size(); k++) {
+          if (all_sides[j] == mesh->globals(dim - 1)[k]) {
             sides.push_back(k);
           }
         }
@@ -632,7 +639,7 @@ void convert_to_omega_h_mesh_parallel(
       std::sort(sides.begin(), sides.end());
 
       if (verbose)
-      std::cout << "Proc" << ProcID << " has found " << sides.size() << "sides\n";
+        std::cout << "Proc" << ProcID << " has found " << sides.size() << "sides\n";
       Write<LO> set_sides2side(sides.size());
 
       for (size_t j = 0; j < sides.size(); j++) {
@@ -650,10 +657,9 @@ void convert_to_omega_h_mesh_parallel(
         }
         std::cout << "P" << ProcID << " side set #" << surface_id << " sides = ";
         for (int i = 0; i < set_sides2side.size(); i++) {
-          std::cout << mesh->globals(dim-1).data()[set_sides2side.data()[i]] << " ";
+          std::cout << mesh->globals(dim - 1).data()[set_sides2side.data()[i]] << " ";
         }
         std::cout << "\n\n\n";
-
       }
       map_value_into(surface_id, set_sides2side, side_class_ids_w);
       map_value_into(I8(dim - 1), set_sides2side, side_class_dims_w);
@@ -927,7 +933,7 @@ void convert_back_to_goma_exo_parallel(
   strncpy(out_par, "tmp_oh.e", MAX_FNL - 1);
   multiname(out_par, ProcID, Num_Proc);
   mesh->set_parting(OMEGA_H_ELEM_BASED);
-//  Omega_h::exodus::write(out_par, mesh, true, classify_with);
+  //  Omega_h::exodus::write(out_par, mesh, true, classify_with);
   mesh->set_parting(OMEGA_H_GHOSTED);
   strncpy(out_par, "tmp.e", MAX_FNL - 1);
   multiname(out_par, ProcID, Num_Proc);
@@ -942,7 +948,7 @@ void convert_back_to_goma_exo_parallel(
   // TODO multiblock
   std::set<LO> surface_set;
   std::set<LO> node_set;
-  for (auto& it : class_sets) {
+  for (auto &it : class_sets) {
     auto key = it.first;
     auto value = it.second;
     for (size_t i = 0; i < value.size(); i++) {
@@ -1384,7 +1390,8 @@ void convert_back_to_goma_exo_parallel(
     cmap_node_counts.push_back(proc_node_counts[idx]);
   }
 
-  CALL(ex_put_cmap_params(exoid, node_cmap_ids.data(), cmap_node_counts.data(), NULL, NULL, ProcID));
+  CALL(
+      ex_put_cmap_params(exoid, node_cmap_ids.data(), cmap_node_counts.data(), NULL, NULL, ProcID));
 
   std::vector<int> node_map_node_ids(external_nodes.size());
   std::vector<int> node_map_proc_ids(external_nodes.size());
@@ -1447,7 +1454,6 @@ void convert_back_to_goma_exo_parallel(
     goma_automatic_rotations.rotation_nodes = NULL;
   }
 
-
   //  const char * tmpfile = "tmp.e";
   strncpy(ExoFile, "tmp.e", 127);
   strncpy(ExoFileOutMono, path, 127);
@@ -1484,10 +1490,8 @@ void convert_back_to_goma_exo_parallel(
       free(Request);
       free(Status);
       cx[imtrx] = alloc_struct_1(Comm_Ex, DPI_ptr->num_neighbors);
-      Request = alloc_struct_1(MPI_Request,
-                               Num_Requests * DPI_ptr->num_neighbors);
-      Status = alloc_struct_1(MPI_Status,
-                              Num_Requests * DPI_ptr->num_neighbors);
+      Request = alloc_struct_1(MPI_Request, Num_Requests * DPI_ptr->num_neighbors);
+      Status = alloc_struct_1(MPI_Status, Num_Requests * DPI_ptr->num_neighbors);
     }
   }
 
@@ -1497,7 +1501,7 @@ void convert_back_to_goma_exo(
     const char *path, Mesh *mesh, Exo_DB *exo, Dpi *dpi, int classify_with) {
 
   //  Omega_h::exodus::write(std::to_string(ProcID) + "tmp.e", mesh, true, classify_with);
-  Omega_h::exodus::write("tmp.e", mesh, true, classify_with);
+  //Omega_h::exodus::write("tmp.e", mesh, true, classify_with);
   //  Omega_h::binary::write("tmp.osh", mesh);
 
   for (int imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
@@ -1513,7 +1517,6 @@ void convert_back_to_goma_exo(
   free_exo(exo);
   init_exo_struct(exo);
   init_dpi_struct(dpi);
-
 
   if (rotation_allocated) {
     for (int i = 0; i < exo->num_nodes; i++) {
@@ -1753,9 +1756,9 @@ void adapt_mesh_omega_h(struct Aztec_Linear_Solver_System **ams,
   //    Omega_h::exodus::convert_to_omega_h_mesh(exo, dpi, exodus_file, &mesh, verbose,
   //    classify_with);
   //  }
-//  mesh.set_parting(OMEGA_H_ELEM_BASED);
-//  Omega_h::exodus::write(std::to_string(ProcID) + "convert.e", &mesh, true, classify_with);
-//  mesh.set_parting(OMEGA_H_GHOSTED);
+  //  mesh.set_parting(OMEGA_H_ELEM_BASED);
+  //  Omega_h::exodus::write(std::to_string(ProcID) + "convert.e", &mesh, true, classify_with);
+  //  mesh.set_parting(OMEGA_H_GHOSTED);
   auto writer_c = Omega_h::vtk::Writer("convert.vtk", &mesh);
 
   writer_c.write(step);
@@ -1837,8 +1840,7 @@ void adapt_mesh_omega_h(struct Aztec_Linear_Solver_System **ams,
     Omega_h::exodus::convert_back_to_goma_exo_parallel(ss2.str().c_str(), &mesh, exo, dpi, verbose,
                                                        classify_with);
   } else {
-    Omega_h::exodus::convert_back_to_goma_exo(ss2.str().c_str(), &mesh, exo, dpi,
-                                              classify_with);
+    Omega_h::exodus::convert_back_to_goma_exo(ss2.str().c_str(), &mesh, exo, dpi, classify_with);
   }
 
   resetup_problem(exo, dpi);

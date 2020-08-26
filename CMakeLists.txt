@@ -119,6 +119,8 @@ endif()
 
 find_package(Omega_h 9)
 if (Omega_h_FOUND)
+  # prevent -Werror
+  set_target_properties(Omega_h::omega_h PROPERTIES INTERFACE_COMPILE_OPTIONS "")
   set(GOMA_TPL_LIBRARIES ${GOMA_TPL_LIBRARIES} Omega_h::omega_h)
   list(APPEND GOMA_COMPILE_DEFINITIONS HAVE_OMEGA_H)
 endif()
