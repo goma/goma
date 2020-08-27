@@ -3498,7 +3498,7 @@ void rotate_momentum_auto(int id,  /* Elemental stiffness matrix row index */
 
   /************************ EXECUTION BEGINS **********************************/
 
-  if (goma_automatic_rotations.rotation_nodes[I].n_normals == 0) {
+  if (!goma_automatic_rotations.rotation_nodes[I].is_rotated) {
     return; // not a rotated node
   }
 

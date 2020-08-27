@@ -3070,7 +3070,7 @@ matrix_fill(
 
         rotate_momentum = 0;
 
-        if (goma_automatic_rotations.rotation_nodes[I].n_normals && pde[R_MOMENTUM1]) {
+        if (goma_automatic_rotations.rotation_nodes[I].is_rotated && pde[R_MOMENTUM1]) {
             rotate_momentum = 1;
         }
 
@@ -4598,7 +4598,7 @@ matrix_fill_stress(
 
         rotate_momentum = 0;
 
-        if (goma_automatic_rotations.rotation_nodes[I].n_normals && pde[R_MOMENTUM1]) {
+        if (goma_automatic_rotations.rotation_nodes[I].is_rotated && pde[R_MOMENTUM1]) {
             rotate_momentum = 1;
         }
 

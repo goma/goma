@@ -2782,38 +2782,25 @@ int equation_index_auto_rotate(const ELEM_SIDE_BC_STRUCT *elem_side_bc,
     EH(GOMA_ERROR, "equation_index_auto_rotate requires 3D automatic rotations");
     return -1;
   }
-  int node = ei[pg->imtrx]->gnn_list[eqn][ldof_eqn];
-  if (node != I) {
-    EH(GOMA_ERROR, "issue with rotation node and ei");
-  }
-  int n_index = -1;
-  for (int i = 0; i < goma_automatic_rotations.rotation_nodes[node].n_normals; i++) {
-    if (goma_automatic_rotations.rotation_nodes[node].element[i] == ei[pg->imtrx]->ielem &&
-        goma_automatic_rotations.rotation_nodes[node].face[i] == elem_side_bc->id_side) {
-      n_index = i;
-      break;
-    }
-  }
-  EH(n_index, "Rotations incorrectly setup");
-  int rot_dir = (int) goma_automatic_rotations.rotation_nodes[I].face_coordinate_association[n_index];
-
-  int t1dir = 0;
-  int t2dir = 0;
-  for (int k = 0; k < DIM; k++) {
-    if (k != rot_dir) {
-      t1dir = k;
-      break;
-    }
-  }
-  for (int k = 0; k < DIM; k++) {
-    if (k != rot_dir && k != t1dir) {
-      t2dir = k;
-    }
+  if (p != 0) {
+    EH(GOMA_ERROR, "tangent rotated conditions not setup for 3D");
   }
   int eq_idx[DIM];
+
+  int rot_dir = 0;
+  double max_dot = 0;
+  for (int i = 0; i < 3; i++) {
+    double dot = 0;
+    for (int j = 0; j < 3; j++) {
+      dot += goma_automatic_rotations.rotation_nodes[I].rotated_coord[i]->data[j] * fv->snormal[j];
+    }
+    if (dot > max_dot) {
+      rot_dir = i;
+      max_dot = dot;
+    }
+  }
+
   eq_idx[0] = rot_dir;
-  eq_idx[1] = t1dir;
-  eq_idx[2] = t2dir;
   ieqn = upd->ep[pg->imtrx][eqn + eq_idx[p]];
   return ieqn;
 }

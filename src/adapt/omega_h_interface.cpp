@@ -1444,12 +1444,12 @@ void convert_back_to_goma_exo_parallel(
 
   if (goma_automatic_rotations.rotation_nodes != NULL) {
     for (int i = 0; i < exo->num_nodes; i++) {
-      for (int j = 0; j < GOMA_MAX_NORMALS_PER_NODE; j++) {
-        gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].normals[j]);
-        gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].average_normals[j]);
-        gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].tangent1s[j]);
-        gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].tangent2s[j]);
-      }
+      //for (int j = 0; j < GOMA_MAX_NORMALS_PER_NODE; j++) {
+      //  gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].normals[j]);
+      //  gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].average_normals[j]);
+      //  gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].tangent1s[j]);
+      //  gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].tangent2s[j]);
+      //}
       for (int j = 0; j < DIM; j++) {
         gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].rotated_coord[j]);
       }
@@ -1539,12 +1539,12 @@ void convert_back_to_goma_exo(
 
   if (goma_automatic_rotations.rotation_nodes != NULL) {
     for (int i = 0; i < exo->num_nodes; i++) {
-      for (int j = 0; j < GOMA_MAX_NORMALS_PER_NODE; j++) {
-        gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].normals[j]);
-        gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].average_normals[j]);
-        gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].tangent1s[j]);
-        gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].tangent2s[j]);
-      }
+      //for (int j = 0; j < GOMA_MAX_NORMALS_PER_NODE; j++) {
+      //  gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].normals[j]);
+      //  gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].average_normals[j]);
+      //  gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].tangent1s[j]);
+      //  gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].tangent2s[j]);
+      //}
       for (int j = 0; j < DIM; j++) {
         gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].rotated_coord[j]);
       }

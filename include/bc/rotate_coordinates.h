@@ -10,38 +10,13 @@
 
 struct Boundary_Condition;
 
-#ifndef GOMA_MAX_NORMALS_PER_NODE
-#define GOMA_MAX_NORMALS_PER_NODE 12
-#endif
-
 #ifndef GOMA_ROTATION_CRITICAL_ANGLE
-#define GOMA_ROTATION_CRITICAL_ANGLE 46
+#define GOMA_ROTATION_CRITICAL_ANGLE 45
 #endif
-
-
-typedef enum {
-  GOMA_ROTATION_SURFACE, // all normals within GOMA_ROTATION_CRITICAL_ANGLE
-  GOMA_ROTATION_EDGE,    // all normals are facing in 2 directions
-  GOMA_ROTATION_CORNER,   // normals are facing in 3 directions
-  GOMA_ROTATION_SINGLE   // single node is rotated, easy case
-} goma_rotation_type_e;
 
 typedef struct {
-  gds_vector *normals[GOMA_MAX_NORMALS_PER_NODE];
-  gds_vector *average_normals[GOMA_MAX_NORMALS_PER_NODE];
-  gds_vector *tangent1s[GOMA_MAX_NORMALS_PER_NODE];
-  gds_vector *tangent2s[GOMA_MAX_NORMALS_PER_NODE];
   gds_vector *rotated_coord[DIM];
-  unsigned int associate_direction[GOMA_MAX_NORMALS_PER_NODE];
-  unsigned int associate_critical_normal[GOMA_MAX_NORMALS_PER_NODE];
-  unsigned int critical_normal_index[3];
-  bool direction_is_associated[GOMA_MAX_NORMALS_PER_NODE];
-  unsigned int tangent1_seeddir[GOMA_MAX_NORMALS_PER_NODE];
-  int element[GOMA_MAX_NORMALS_PER_NODE];
-  int face[GOMA_MAX_NORMALS_PER_NODE];
-  unsigned int face_coordinate_association[GOMA_MAX_NORMALS_PER_NODE];
-  int n_normals;
-  goma_rotation_type_e type;
+  bool is_rotated;
 } goma_rotation_node_s;
 
 typedef struct {
