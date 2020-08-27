@@ -9,7 +9,6 @@ static const auto zero_comp = Catch::Floating::WithinAbsMatcher(0.0, 1e-15);
 TEST_CASE("gds vector Allocation", "[gds][gds_vector]") {
   gds_vector *v = gds_vector_alloc(3);
   REQUIRE(v->size == 3);
-  REQUIRE(v->data != NULL);
   gds_vector_free(v);
 }
 

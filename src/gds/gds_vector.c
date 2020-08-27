@@ -10,6 +10,7 @@ static const size_t double_size = sizeof(double);
 
 gds_vector *gds_vector_alloc(size_t size) {
   gds_vector *v = malloc(gds_vector_size + double_size * size);
+  v->size = size;
   return v;
 }
 

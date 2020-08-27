@@ -5,7 +5,6 @@ find_package(Catch2 REQUIRED)
 
 set(GOMA_TEST_SOURCES
     gds/gds_vector.cpp
-    bc/rotate_coordinates.cpp
 )
 
 add_executable(goma_unit_tests unit_tests_main.cpp ${GOMA_TEST_SOURCES})

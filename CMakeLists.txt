@@ -617,3 +617,9 @@ install(TARGETS goma_exe
   RUNTIME DESTINATION bin
   INCLUDES DESTINATION include/goma
 )
+
+option(ENABLE_TESTING "ENABLE_TESTING" OFF)
+if(ENABLE_TESTING)
+  enable_testing()
+  add_subdirectory(tests)
+endif()
