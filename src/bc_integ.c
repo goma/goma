@@ -684,7 +684,8 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	  if (neg_elem_volume) return (status);
 	  break;
         case ZERO_VELO_TANGENT_3D_BC:
-          fzero_velo_tangent_3d(func, d_func, elem_side_bc->id_side, 0);
+          EH(GOMA_ERROR, "ZERO_VELO_TANGENT_3D_BC not implemented");
+          //fzero_velo_tangent_3d(func, d_func, elem_side_bc->id_side, 0);
           break;
 
 	case VELO_TANGENT_SOLID_BC:

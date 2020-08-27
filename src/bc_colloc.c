@@ -611,7 +611,8 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 	      break;
 
 	    case VELO_TANG1_COLLOC_BC:
-              fzero_velo_tangent_3d(kfunc, d_kfunc, elem_side_bc->id_side, I);
+              EH(GOMA_ERROR, "VELO_TANG1_COLLOC_BC not implemented");
+              //fzero_velo_tangent_3d(kfunc, d_kfunc, elem_side_bc->id_side, I);
               doFullJac = 1;
               func = kfunc[1];
               for (int var = 0; var < MAX_VARIABLE_TYPES; var++) {
@@ -621,7 +622,8 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
               }
               break;
 	    case VELO_TANG2_COLLOC_BC:
-              fzero_velo_tangent_3d(kfunc, d_kfunc, elem_side_bc->id_side, I);
+              EH(GOMA_ERROR, "VELO_TANG2_COLLOC_BC not implemented");
+              //fzero_velo_tangent_3d(kfunc, d_kfunc, elem_side_bc->id_side, I);
               doFullJac = 1;
 	      func = kfunc[2];
               for (int var = 0; var < MAX_VARIABLE_TYPES; var++) {

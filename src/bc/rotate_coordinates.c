@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "bc/rotate_util.h"
 #include "el_elm.h"
 #include "el_elm_info.h"
 #include "el_geom.h"
@@ -26,12 +27,8 @@
 #include "std.h"
 #include "stdbool.h"
 
-static const double critical_angle_radians = GOMA_ROTATION_CRITICAL_ANGLE * M_PI / 180;
-
-#define DEBUG_AUTO_ROTATE
-#ifdef DEBUG_AUTO_ROTATE
-static void
-write_rotations_to_file(const char *filename, Exo_DB *exo, goma_rotation_node_s *rotations);
+#ifndef GOMA_MAX_NORMALS_PER_NODE
+#define GOMA_MAX_NORMALS_PER_NODE 14
 #endif
 
 goma_rotation_s goma_automatic_rotations = {false, NULL};
@@ -122,6 +119,21 @@ setup_rotated_bc_nodes(Exo_DB *exo, struct Boundary_Condition *bc_types, int num
     side_set_seen[i] = false;
   }
 
+  struct node_normal {
+    gds_vector **normals;
+    int n_normals;
+  };
+
+  struct node_normal *node_normals = malloc(sizeof(struct node_normal) * exo->num_nodes);
+  for (int i = 0; i < exo->num_nodes; i++) {
+    node_normals[i].normals = malloc(sizeof(gds_vector *)*GOMA_MAX_NORMALS_PER_NODE);
+    node_normals[i].n_normals = 0;
+    for (int j = 0; j < GOMA_MAX_NORMALS_PER_NODE; j++) {
+      node_normals[i].normals[j] = gds_vector_alloc(3);
+    }
+  }
+
+
   int err;
   for (int bc_index = 0; bc_index < num_bc; bc_index++) {
     if (bc_is_rotated[bc_index]) {
@@ -189,36 +201,35 @@ setup_rotated_bc_nodes(Exo_DB *exo, struct Boundary_Condition *bc_types, int num
                                          ielem_dim - 1, id_side, num_nodes_on_side,
                                          local_side_node_list);
 
-          int n_index = rotations[I].n_normals;
-          rotations[I].n_normals++;
-          assert(rotations[I].n_normals < GOMA_MAX_NORMALS_PER_NODE);
-          gds_vector_set(rotations[I].normals[n_index], 0, fv->snormal[0]);
-          gds_vector_set(rotations[I].normals[n_index], 1, fv->snormal[1]);
-          gds_vector_set(rotations[I].normals[n_index], 2, fv->snormal[2]);
-          rotations[I].element[n_index] = ielem;
-          rotations[I].face[n_index] = id_side;
+          int n_index = node_normals[I].n_normals;
+          node_normals[I].n_normals++;
+          if (node_normals[I].n_normals > GOMA_MAX_NORMALS_PER_NODE) {
+            EH(GOMA_ERROR, "GOMA_MAX_NORMALS_PER_NODE too small, currently %d", GOMA_MAX_NORMALS_PER_NODE);
+          }
+          gds_vector_set(node_normals[I].normals[n_index], 0, fv->snormal[0]);
+          gds_vector_set(node_normals[I].normals[n_index], 1, fv->snormal[1]);
+          gds_vector_set(node_normals[I].normals[n_index], 2, fv->snormal[2]);
+          rotations[I].is_rotated = true;
         }
       }
     }
   }
 
-  error = set_rotation_types(exo, rotations);
-  EH(error, "set_rotation_types");
-  error = set_average_normals_and_tangents(exo, rotations);
-  EH(error, "set_average_normals_and_tangents");
-  error = associate_directions(exo, rotations);
-  EH(error, "associate_directions");
-  error = set_rotated_coordinate_system(exo, rotations);
-  EH(error, "set_rotated_coordinate_system");
-  error = set_face_normal_association(exo, rotations);
-  EH(error, "set_face_normal_association");
-
-#ifdef DEBUG_AUTO_ROTATE
-  write_rotations_to_file("normals.csv", exo, rotations);
-#endif
+  for (int i = 0; i < exo->num_nodes; i++) {
+    if (rotations[i].is_rotated) {
+      goma_best_coordinate_system_3D(node_normals[i].normals, node_normals[i].n_normals, rotations[i].rotated_coord);
+    }
+  }
 
   goma_automatic_rotations.automatic_rotations = true;
   goma_automatic_rotations.rotation_nodes = rotations;
+  for (int i = 0; i < exo->num_nodes; i++) {
+    for (int j = 0; j < GOMA_MAX_NORMALS_PER_NODE; j++) {
+      gds_vector_free(node_normals[i].normals[j]);
+    }
+    free(node_normals[i].normals);
+  }
+  free(node_normals);
   free(bc_is_rotated);
   return GOMA_SUCCESS;
 }
