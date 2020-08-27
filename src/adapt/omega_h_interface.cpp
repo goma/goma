@@ -1058,11 +1058,15 @@ void convert_back_to_goma_exo_parallel(
   std::set<int> boundary_nodes;
   for (auto &bound_nodes : neighbor_send) {
     for (auto gnode : bound_nodes) {
+#ifndef NDEBUG
       bool found = false;
+#endif
       for (int k = 0; k < mesh->globals(0).size(); k++) {
         if (mesh->globals(0)[k] == gnode) {
           boundary_nodes.insert(k);
+#ifndef NDEBUG
           found = true;
+#endif
           break;
         }
       }

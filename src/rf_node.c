@@ -179,7 +179,7 @@ init_nodes (Exo_DB *exo, Dpi *dpi)
      *
      *****************************************************************/
 {
-  int i, ss_index, side_index, node_num, total_nodes, k, ibc, where;
+  int i, ss_index, side_index, node_num, total_nodes, k, ibc;
   NODE_INFO_STRUCT *tptr;
   int number_proc_nodes = exo->num_nodes;
   struct BC_descriptions *bc_desc;

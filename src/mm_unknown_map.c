@@ -644,7 +644,6 @@ setup_external_nodal_vars(Exo_DB *exo, Dpi *dpi, Comm_Ex **cx)
   int i, p, node_num, var_type;
   int imtrx;
   struct nv_packed **nvp = NULL, **nvp_send = NULL, **nvp_recv = NULL;
-  struct nv_packed **nvp_save = NULL;
   NODAL_VARS_STRUCT *nv, *nv_match;
   COMM_NP_STRUCT *np_ptr, **np_base = NULL;
   /*
