@@ -7191,7 +7191,7 @@ rd_solver_specs(FILE *ifp,
       }
     else
       {
-	EH( -1, "invalid choice: Pressure Stabilization yes, no, global or local, or pspp");
+	EH( -1, "invalid choice: %s, expected Pressure Stabilization yes, no, global or local, or pspp", input);
       }
     SPF(echo_string,eoformat, "Pressure Stabilization", input ); ECHO(echo_string,echo_file);
   }

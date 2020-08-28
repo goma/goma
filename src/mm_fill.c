@@ -3069,13 +3069,21 @@ matrix_fill(
 
 
         rotate_momentum = 0;
+        rotate_mesh = 0;
 
         if (goma_automatic_rotations.rotation_nodes[I].is_rotated && pde[R_MOMENTUM1]) {
             rotate_momentum = 1;
         }
 
+        if (goma_automatic_rotations.rotation_nodes[I].is_rotated && pde[R_MESH1]) {
+            rotate_mesh = 1;
+        }
+
         if (rotate_momentum) {
           rotate_momentum_auto(id_mom,  I, ielem_dim, ams);
+        }
+        if (rotate_mesh) {
+          rotate_mesh_auto(id_mom,  I, ielem_dim, ams);
         }
       }
     } /* end of loop over nodes */

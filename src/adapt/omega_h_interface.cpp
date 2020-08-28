@@ -120,10 +120,10 @@ namespace Omega_h {
   } while (0)
 
 namespace exodus {
-//enum ClassifyWith {
-//  NODE_SETS = 0x1,
-//  SIDE_SETS = 0x2,
-//};
+enum ClassifyWith {
+  NODE_SETS = 0x1,
+  SIDE_SETS = 0x2,
+};
 static OMEGA_H_INLINE int side_osh2exo(int dim, int side) {
   switch (dim) {
   case 2:

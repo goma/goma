@@ -3569,3 +3569,96 @@ void rotate_momentum_auto(int id,  /* Elemental stiffness matrix row index */
      mesh derivatives wrt rotation vector */
 
 } /* END of rotate_momentum_eqn */
+
+void rotate_mesh_auto(int id,  /* Elemental stiffness matrix row index */
+                          int I,   /* Global node number                   */
+                          int dim, /* physical dim of problem              */
+                          struct Aztec_Linear_Solver_System *ams)
+
+/*
+ * Function which corrects the global residual vector "resid_vect" and
+ * the global Jacobian vector "a" so that the vector momentum equations for surface nodes
+ * are projected into a normal and tangential coordinate system.
+ */
+
+{
+  /* LOCAL VARIABLES */
+  int pvar, peq;
+  int n;
+  int kdir, ldir;
+  double rotated_resid[MDE];
+  double rotated_jacobian_scalar[MAX_PDIM][MDE];
+
+  /************************ EXECUTION BEGINS **********************************/
+
+  if (!goma_automatic_rotations.rotation_nodes[I].is_rotated) {
+    return; // not a rotated node
+  }
+
+  /* Correct residual equation first at local node "id" or global node "I" */
+  /*                Rx -> Rn    and Ry -> Rt                                   */
+  /*       i.e.,    Rn = nx*Rx + ny*Ry + nz*Rz                                 */
+  /*                Rt1 = t1x*Rx + t1y*Ry + t1z*Rz                             */
+  /*                Rt2 = t2x*Rx + t2y*Ry + t2z*Rz                             */
+
+  double rc[DIM][DIM];
+  for (unsigned int i = 0; i < 3; i++) {
+    for (unsigned int j = 0; j < 3; j++) {
+      rc[i][j] = gds_vector_get(goma_automatic_rotations.rotation_nodes[I].rotated_coord[i], j);
+    }
+  }
+
+  /* Now add on projection into n-t space */
+  for (kdir = 0; kdir < dim; kdir++) {
+    rotated_resid[kdir] = 0.;
+    for (ldir = 0; ldir < dim; ldir++) {
+      peq = upd->ep[pg->imtrx][R_MESH1 + ldir];
+      rotated_resid[kdir] += rc[kdir][ldir] * lec->R[LEC_R_INDEX(peq,id)];
+    }
+  } /* end of loop over direction */
+
+  for (kdir = 0; kdir < dim; kdir++) {
+    peq = upd->ep[pg->imtrx][R_MESH1 + kdir];
+    lec->R[LEC_R_INDEX(peq,id)] = rotated_resid[kdir];
+  }
+
+  /*                                                                      */
+  /*   Now correct Jacobian                                               */
+  if (af->Assemble_Jacobian) {
+    for (int var = V_FIRST; var < V_LAST; var++) {
+      if (pd->v[pg->imtrx][var]) {
+        pvar = upd->vp[pg->imtrx][var];
+        for (n = 0; n < ei[pg->imtrx]->dof[var]; n++) {
+
+          rotated_jacobian_scalar[0][n] = 0.;
+          rotated_jacobian_scalar[1][n] = 0.;
+          rotated_jacobian_scalar[2][n] = 0.;
+
+          for (kdir = 0; kdir < dim; kdir++) {
+            for (ldir = 0; ldir < dim; ldir++) {
+              rotated_jacobian_scalar[kdir][n] +=
+                  rc[kdir][ldir] * lec->J[LEC_J_INDEX(upd->ep[pg->imtrx][R_MESH1 + ldir],pvar,id,n)];
+            }
+          }
+
+        } /* end of loop over nodes */
+
+        /* reinject d_mesh/d_pressure back into lec-J for global assembly */
+        for (kdir = 0; kdir < dim; kdir++) {
+          /* loop over sensitivities */
+          for (n = 0; n < ei[pg->imtrx]->dof[var]; n++) {
+
+            lec->J[LEC_J_INDEX(upd->ep[pg->imtrx][R_MESH1 + kdir],pvar,id,n)] =
+                rotated_jacobian_scalar[kdir][n];
+          }
+        }
+
+      } /* end of if variable */
+    }
+  }
+
+  /* Put rotated residual back into lec for scattering into global matrix */
+  /* Note this is the last thing we do so our chain rule still works for
+     mesh derivatives wrt rotation vector */
+
+} /* END of rotate_mesh_eqn */
