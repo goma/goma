@@ -669,7 +669,7 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 "-------- --- ------- ------- ------- ------- ------- ------- --- ---------------\n");
 
 
-  if (Num_ROT == 0 && exo->num_dim == 3) {
+  if (Num_ROT == 0 && inewton == 0 && exo->num_dim == 3) {
     setup_rotated_bc_nodes(exo, BC_Types, Num_BC, x);
   }
 //  free_rotations(exo, &goma_automatic_rotations.rotation_nodes);

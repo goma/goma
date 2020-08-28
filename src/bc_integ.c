@@ -2795,9 +2795,9 @@ int equation_index_auto_rotate(const ELEM_SIDE_BC_STRUCT *elem_side_bc,
     for (int j = 0; j < 3; j++) {
       dot += goma_automatic_rotations.rotation_nodes[I].rotated_coord[i]->data[j] * fv->snormal[j];
     }
-    if (dot > max_dot) {
+    if (fabs(dot) > max_dot) {
       rot_dir = i;
-      max_dot = dot;
+      max_dot = fabs(dot);
     }
   }
 
