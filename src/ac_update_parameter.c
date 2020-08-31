@@ -1652,9 +1652,11 @@ retrieve_MT_parameter(double *lambda, /* Parameter value */
       
     case TAGC_POLYMER_YIELD_STRESS:
       *lambda = ve_glob[mn][cont->upMPID-TAGC_POLYMER_YIELD_STRESS]->gn->tau_y;
+      break;
 
     case TAGC_POLYMER_YIELD_EXPONENT:
       *lambda = ve_glob[mn][cont->upMPID-TAGC_POLYMER_YIELD_EXPONENT]->gn->fexp;
+      break;
 
       /* 
        * Constants used in the Elasticity Constitutive Equations
