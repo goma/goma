@@ -6,7 +6,7 @@
 #include "mm_eh.h"
 #include "rf_bc_const.h"
 #include "el_elm.h"
-#include "gds/gds_vector.h"
+#include "util/goma_normal.h"
 
 struct Boundary_Condition;
 
@@ -15,7 +15,7 @@ struct Boundary_Condition;
 #endif
 
 typedef struct {
-  gds_vector *rotated_coord[DIM];
+  goma_normal *rotated_coord[DIM];
   bool is_rotated;
 } goma_rotation_node_s;
 

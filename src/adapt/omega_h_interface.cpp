@@ -1451,7 +1451,7 @@ void convert_back_to_goma_exo_parallel(
       //  gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].tangent2s[j]);
       //}
       for (int j = 0; j < DIM; j++) {
-        gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].rotated_coord[j]);
+        goma_normal_free((goma_automatic_rotations.rotation_nodes)[i].rotated_coord[j]);
       }
     }
     free(goma_automatic_rotations.rotation_nodes);
@@ -1546,7 +1546,7 @@ void convert_back_to_goma_exo(
       //  gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].tangent2s[j]);
       //}
       for (int j = 0; j < DIM; j++) {
-        gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].rotated_coord[j]);
+        goma_normal_free((goma_automatic_rotations.rotation_nodes)[i].rotated_coord[j]);
       }
     }
     free(goma_automatic_rotations.rotation_nodes);

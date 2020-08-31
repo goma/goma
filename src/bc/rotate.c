@@ -3511,7 +3511,7 @@ void rotate_momentum_auto(int id,  /* Elemental stiffness matrix row index */
   double rc[DIM][DIM];
   for (unsigned int i = 0; i < 3; i++) {
     for (unsigned int j = 0; j < 3; j++) {
-      rc[i][j] = gds_vector_get(goma_automatic_rotations.rotation_nodes[I].rotated_coord[i], j);
+      rc[i][j] = gds_vector_get(goma_automatic_rotations.rotation_nodes[I].rotated_coord[i]->normal, j);
     }
   }
 
@@ -3604,7 +3604,7 @@ void rotate_mesh_auto(int id,  /* Elemental stiffness matrix row index */
   double rc[DIM][DIM];
   for (unsigned int i = 0; i < 3; i++) {
     for (unsigned int j = 0; j < 3; j++) {
-      rc[i][j] = gds_vector_get(goma_automatic_rotations.rotation_nodes[I].rotated_coord[i], j);
+      rc[i][j] = gds_vector_get(goma_automatic_rotations.rotation_nodes[I].rotated_coord[i]->normal, j);
     }
   }
 
@@ -3653,6 +3653,26 @@ void rotate_mesh_auto(int id,  /* Elemental stiffness matrix row index */
           }
         }
 
+
+        // add derivatives of calculated coordinates
+        if (var >= R_MESH1 && var <= R_MESH3) {
+          double rc_dx[DIM][DIM];
+          int p = var - R_MESH1;
+          for (unsigned int i = 0; i < 3; i++) {
+            for (unsigned int j = 0; j < 3; j++) {
+              // d / d_p normal of dof n
+              rc_dx[i][j] = gds_vector_get(goma_automatic_rotations.rotation_nodes[I].rotated_coord[i]->d_normal_dx[p][n], j);
+            }
+          }
+          for (kdir = 0; kdir < dim; kdir++) {
+            /* loop over sensitivities */
+            int peqn_mesh = upd->ep[pg->imtrx][R_MESH1 +kdir];
+            for (n = 0; n < ei[pg->imtrx]->dof[var]; n++) {
+
+              lec->J[LEC_J_INDEX(peqn_mesh,pvar,id,n)] += rc_dx[kdir][p] * lec->R[LEC_R_INDEX(peqn_mesh, id)];
+            }
+          }
+        }
       } /* end of if variable */
     }
   }

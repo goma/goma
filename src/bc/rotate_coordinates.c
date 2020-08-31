@@ -75,7 +75,7 @@ goma_error allocate_rotations(Exo_DB *exo, goma_rotation_node_s **rotations) {
   if (goma_automatic_rotations.rotation_nodes != NULL) {
     for (int i = 0; i < exo->num_nodes; i++) {
       for (int j = 0; j < DIM; j++) {
-        gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].rotated_coord[j]);
+        goma_normal_free((goma_automatic_rotations.rotation_nodes)[i].rotated_coord[j]);
       }
     }
     free(goma_automatic_rotations.rotation_nodes);
@@ -83,7 +83,7 @@ goma_error allocate_rotations(Exo_DB *exo, goma_rotation_node_s **rotations) {
   *rotations = calloc((size_t)exo->num_nodes, sizeof(goma_rotation_node_s));
   for (int i = 0; i < exo->num_nodes; i++) {
     for (int j = 0; j < DIM; j++) {
-      (*rotations)[i].rotated_coord[j] = gds_vector_alloc(3);
+      (*rotations)[i].rotated_coord[j] = goma_normal_alloc(3);
     }
   }
 
@@ -120,19 +120,18 @@ setup_rotated_bc_nodes(Exo_DB *exo, struct Boundary_Condition *bc_types, int num
   }
 
   struct node_normal {
-    gds_vector **normals;
+    goma_normal **normals;
     int n_normals;
   };
 
   struct node_normal *node_normals = malloc(sizeof(struct node_normal) * exo->num_nodes);
   for (int i = 0; i < exo->num_nodes; i++) {
-    node_normals[i].normals = malloc(sizeof(gds_vector *)*GOMA_MAX_NORMALS_PER_NODE);
+    node_normals[i].normals = malloc(sizeof(goma_normal *) * GOMA_MAX_NORMALS_PER_NODE);
     node_normals[i].n_normals = 0;
     for (int j = 0; j < GOMA_MAX_NORMALS_PER_NODE; j++) {
-      node_normals[i].normals[j] = gds_vector_alloc(3);
+      node_normals[i].normals[j] = goma_normal_alloc(3);
     }
   }
-
 
   int err;
   for (int bc_index = 0; bc_index < num_bc; bc_index++) {
@@ -151,8 +150,7 @@ setup_rotated_bc_nodes(Exo_DB *exo, struct Boundary_Condition *bc_types, int num
         int ielem = exo->ss_elem_list[exo->ss_elem_index[ss_index] + e];
 
         err = load_elem_dofptr(ielem, exo, pg->matrices[pg->imtrx].x, pg->matrices[pg->imtrx].x_old,
-                               pg->matrices[pg->imtrx].xdot, pg->matrices[pg->imtrx].xdot_old,
-                               0);
+                               pg->matrices[pg->imtrx].xdot, pg->matrices[pg->imtrx].xdot_old, 0);
         err = bf_mp_init(pd);
 
         int iconnect_ptr = ei[pg->imtrx]->iconnect_ptr;
@@ -204,11 +202,22 @@ setup_rotated_bc_nodes(Exo_DB *exo, struct Boundary_Condition *bc_types, int num
           int n_index = node_normals[I].n_normals;
           node_normals[I].n_normals++;
           if (node_normals[I].n_normals > GOMA_MAX_NORMALS_PER_NODE) {
-            EH(GOMA_ERROR, "GOMA_MAX_NORMALS_PER_NODE too small, currently %d", GOMA_MAX_NORMALS_PER_NODE);
+            EH(GOMA_ERROR, "GOMA_MAX_NORMALS_PER_NODE too small, currently %d",
+               GOMA_MAX_NORMALS_PER_NODE);
           }
-          gds_vector_set(node_normals[I].normals[n_index], 0, fv->snormal[0]);
-          gds_vector_set(node_normals[I].normals[n_index], 1, fv->snormal[1]);
-          gds_vector_set(node_normals[I].normals[n_index], 2, fv->snormal[2]);
+          gds_vector_set(node_normals[I].normals[n_index]->normal, 0, fv->snormal[0]);
+          gds_vector_set(node_normals[I].normals[n_index]->normal, 1, fv->snormal[1]);
+          gds_vector_set(node_normals[I].normals[n_index]->normal, 2, fv->snormal[2]);
+          for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < MDE; j++) {
+              gds_vector_set(node_normals[I].normals[n_index]->d_normal_dx[i][j], 0,
+                             fv->dsnormal_dx[0][i][j]);
+              gds_vector_set(node_normals[I].normals[n_index]->d_normal_dx[i][j], 1,
+                             fv->dsnormal_dx[1][i][j]);
+              gds_vector_set(node_normals[I].normals[n_index]->d_normal_dx[i][j], 2,
+                             fv->dsnormal_dx[2][i][j]);
+            }
+          }
           rotations[I].is_rotated = true;
         }
       }
@@ -217,7 +226,8 @@ setup_rotated_bc_nodes(Exo_DB *exo, struct Boundary_Condition *bc_types, int num
 
   for (int i = 0; i < exo->num_nodes; i++) {
     if (rotations[i].is_rotated) {
-      goma_best_coordinate_system_3D(node_normals[i].normals, node_normals[i].n_normals, rotations[i].rotated_coord);
+      goma_best_coordinate_system_3D(node_normals[i].normals, node_normals[i].n_normals,
+                                     rotations[i].rotated_coord);
     }
   }
 

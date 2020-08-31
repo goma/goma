@@ -500,10 +500,12 @@ set(GOMA_USER_SOURCES
 set(GOMA_UTIL_INCLUDES
   include/bc/rotate_util.h
   include/mm_eh.h
+  include/util/goma_normal.h
 )
 
 set(GOMA_UTIL_SOURCES
   src/bc/rotate_util.c
+  src/util/goma_normal.c
   src/mm_eh.c
 )
 
@@ -601,7 +603,7 @@ target_include_directories(gds PUBLIC include)
 add_library(goma_util ${GOMA_UTIL_SOURCES} ${GOMA_UTIL_INCLUDES})
 target_include_directories(goma_util PUBLIC include)
 target_include_directories(goma_util SYSTEM PRIVATE ${GOMA_TPL_INCLUDES})
-target_link_libraries(goma_util PUBLIC ${GOMA_TPL_LIBRARIES})
+target_link_libraries(goma_util PUBLIC ${GOMA_TPL_LIBRARIES} gds)
 target_compile_definitions(goma_util PUBLIC ${GOMA_COMPILE_DEFINITIONS})
 
 add_executable(goma_exe src/main.c)
