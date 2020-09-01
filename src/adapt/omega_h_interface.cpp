@@ -1,8 +1,8 @@
 #ifdef HAVE_OMEGA_H
 #include "adapt/omega_h_interface.h"
 
-#include <algorithm>
 #include <iostream>
+#include <algorithm>
 #include <sstream>
 
 #include "Omega_h_align.hpp"

@@ -224,6 +224,8 @@ setup_rotated_bc_nodes(Exo_DB *exo, struct Boundary_Condition *bc_types, int num
     }
   }
 
+  free(side_set_seen);
+
   for (int i = 0; i < exo->num_nodes; i++) {
     if (rotations[i].is_rotated) {
       goma_best_coordinate_system_3D(node_normals[i].normals, node_normals[i].n_normals,
@@ -235,7 +237,7 @@ setup_rotated_bc_nodes(Exo_DB *exo, struct Boundary_Condition *bc_types, int num
   goma_automatic_rotations.rotation_nodes = rotations;
   for (int i = 0; i < exo->num_nodes; i++) {
     for (int j = 0; j < GOMA_MAX_NORMALS_PER_NODE; j++) {
-      gds_vector_free(node_normals[i].normals[j]);
+      goma_normal_free(node_normals[i].normals[j]);
     }
     free(node_normals[i].normals);
   }

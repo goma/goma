@@ -41,8 +41,25 @@ goma_normal_val goma_normal_dot(goma_normal *u, goma_normal *v);
 
 void goma_normal_scale(goma_normal *normal, const goma_normal_val *val); 
 
+void goma_normal_rotate_around_vector(goma_normal *rotated, goma_normal *vec_to_rotate,
+                                      goma_normal *axis, goma_normal_val angle_radians); 
+
+goma_normal_val cos_goma_normal_val(const goma_normal_val *val);
+
+goma_normal_val sin_goma_normal_val(const goma_normal_val *val);
+
 goma_normal_val fabs_goma_normal_val(const goma_normal_val *val); 
 
 goma_normal_val goma_normal_val_inverse(goma_normal_val *val); 
+
+goma_normal_val acos_goma_normal_val(const goma_normal_val *val); 
+
+goma_normal_val add_goma_normal_val(const goma_normal_val *val, double value);
+
+goma_normal_val sub_goma_normal_val(const goma_normal_val *val, double value); 
+
+goma_normal_val scale_goma_normal_val(const goma_normal_val *val, double value);
+
+goma_normal_val mul_goma_normal_val(const goma_normal_val *left, const goma_normal_val *right);
 
 #endif // UTIL_GOMA_NORMAL_H

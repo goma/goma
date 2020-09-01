@@ -182,6 +182,70 @@ void goma_normal_scale(goma_normal *normal, const goma_normal_val *val) {
   gds_vector_free(tmp1);
 }
 
+void goma_normal_rotate_around_vector(goma_normal *rotated, goma_normal *vec_to_rotate,
+                                      goma_normal *axis, goma_normal_val angle_radians) {
+
+  size_t size = 3;
+  goma_normal *cross = goma_normal_alloc(size);
+  goma_normal *temp1 = goma_normal_alloc(size);
+  goma_normal *temp2 = goma_normal_alloc(size);
+  goma_normal_cross(axis, vec_to_rotate, cross);
+
+  goma_normal_copy(temp1, vec_to_rotate);
+  goma_normal_val cos_val = cos_goma_normal_val(&angle_radians);
+  goma_normal_val sin_val = sin_goma_normal_val(&angle_radians);
+  goma_normal_scale(temp1, &cos_val);
+
+  goma_normal_scale(cross, &sin_val);
+  goma_normal_val dot = goma_normal_dot(vec_to_rotate, axis);
+
+  // dot * (1 - cos(angle_radians))
+  goma_normal_copy(temp2, axis);
+  goma_normal_val tmp = scale_goma_normal_val(&cos_val, -1.0);
+  goma_normal_val tmp2 = add_goma_normal_val(&tmp, 1.0);
+  tmp = mul_goma_normal_val(&dot, &tmp2);
+  goma_normal_scale(temp2, &tmp);
+
+  goma_normal_zero(rotated);
+  goma_normal_add(rotated, temp1);
+  goma_normal_add(rotated, cross);
+  goma_normal_add(rotated, temp2);
+
+  goma_normal_free(cross);
+  goma_normal_free(temp1);
+  goma_normal_free(temp2);
+}
+
+goma_normal_val cos_goma_normal_val(const goma_normal_val *val) {
+
+  goma_normal_val retval;
+
+  retval.val = cos(val->val);
+
+  double tmp = -sin(val->val);
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < MDE; j++) {
+      retval.d_val[i][j] = tmp * val->d_val[i][j];
+    }
+  }
+  return retval;
+}
+
+goma_normal_val sin_goma_normal_val(const goma_normal_val *val) {
+
+  goma_normal_val retval;
+
+  retval.val = sin(val->val);
+
+  double tmp = cos(val->val);
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < MDE; j++) {
+      retval.d_val[i][j] = tmp * val->d_val[i][j];
+    }
+  }
+  return retval;
+}
+
 goma_normal_val fabs_goma_normal_val(const goma_normal_val *val) {
 
   goma_normal_val retval;
@@ -193,6 +257,62 @@ goma_normal_val fabs_goma_normal_val(const goma_normal_val *val) {
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < MDE; j++) {
       retval.d_val[i][j] = sign * val->d_val[i][j];
+    }
+  }
+  return retval;
+}
+
+goma_normal_val acos_goma_normal_val(const goma_normal_val *val) {
+
+  goma_normal_val retval;
+
+  retval.val = acos(val->val);
+
+  double tmp = 1.0 / sqrt(1 - val->val * val->val);
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < MDE; j++) {
+      retval.d_val[i][j] = -val->d_val[i][j] * tmp;
+    }
+  }
+  return retval;
+}
+
+goma_normal_val sub_goma_normal_val(const goma_normal_val *val, double value) {
+  goma_normal_val retval = *val;
+  retval.val = val->val - value;
+  return retval;
+}
+
+goma_normal_val add_goma_normal_val(const goma_normal_val *val, double value) {
+  goma_normal_val retval = *val;
+  retval.val = val->val + value;
+  return retval;
+}
+
+
+goma_normal_val scale_goma_normal_val(const goma_normal_val *val, double value) {
+
+  goma_normal_val retval;
+
+  retval.val = value * val->val;
+
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < MDE; j++) {
+      retval.d_val[i][j] = val->d_val[i][j] * value;
+    }
+  }
+  return retval;
+}
+
+goma_normal_val mul_goma_normal_val(const goma_normal_val *left, const goma_normal_val *right) {
+
+  goma_normal_val retval;
+
+  retval.val = left->val * right->val;
+
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < MDE; j++) {
+      retval.d_val[i][j] = left->d_val[i][j] * right->val + left->val * right->d_val[i][j];
     }
   }
   return retval;
