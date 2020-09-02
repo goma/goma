@@ -61,7 +61,9 @@
 #include "wr_exo.h"
 #include "wr_soln.h"
 #include "dpi.h"
+#ifdef HAVE_OMEGA_H
 #include "adapt/omega_h_interface.h"
+#endif
 
 #define GOMA_RF_SOLVE_SEGREGATED_C
 #include "rf_solve_segregated.h"
@@ -1425,6 +1427,7 @@ void solve_problem_segregated(
                *  }
                */
             }
+#ifdef HAVE_OMEGA_H
             if ((tran->ale_adapt || (ls !=NULL && ls->adapt)) && pg->imtrx == 0 && (nt == 0 || ((ls !=NULL && nt % ls->adapt_freq == 0) || (tran->ale_adapt && nt % 5 == 0)))) {
               adapt_mesh_omega_h(ams, exo, dpi, x, x_old, x_older, xdot, xdot_old, x_oldest,
                                  resid_vector, x_update, scale, adapt_step);
@@ -1464,6 +1467,7 @@ void solve_problem_segregated(
               xdot_old_static = xdot_old[pg->imtrx];
               pg->imtrx = 0;
             }
+#endif
 
             numProcUnknowns[pg->imtrx] = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
 

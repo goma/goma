@@ -91,7 +91,9 @@
 #define GOMA_RF_SOLVE_C
 #include "el_quality.h"
 
+#ifdef HAVE_OMEGA_H
 #include "adapt/omega_h_interface.h"
+#endif
 
 #ifdef HAVE_FRONT
 extern int mf_setup
@@ -2392,7 +2394,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
               }
       }
 #endif
-
+#ifdef HAVE_OMEGA_H
       if (ls !=NULL && (ls->adapt && (nt == 0 || nt % ls->adapt_freq == 0))) {
         adapt_mesh_omega_h(ams, exo, dpi, &x, &x_old, &x_older, &xdot, &xdot_old, &x_oldest,
                            &resid_vector, &x_update, &scale, adapt_step);
@@ -2429,6 +2431,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
         nullify_dirichlet_bcs();
         find_and_set_Dirichlet(x, xdot, exo, dpi);
       }
+#endif
 
       numProcUnknowns = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
       /*
