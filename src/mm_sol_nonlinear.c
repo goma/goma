@@ -403,7 +403,7 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
   dbl		a_start;	/* mark start of assembly */
   dbl		a_end;		/* mark end of assembly */
 
-  char		ctod[80];	/* hold current time of day */
+  char		ctod[80] = {'\0'};	/* hold current time of day */
 
   dbl		s_start;	/* mark start of solve */
   dbl		s_end;		/* mark end of solve */

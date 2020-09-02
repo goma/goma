@@ -68,7 +68,7 @@ goma_normal_val goma_normal_val_inverse(goma_normal_val *val) {
 
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < MDE; j++) {
-      val->d_val[i][j] = - val->d_val[i][j] * inv.val * inv.val;
+      inv.d_val[i][j] = - val->d_val[i][j] * inv.val * inv.val;
     }
   }
 
@@ -148,9 +148,10 @@ void goma_normal_cross(goma_normal *u, goma_normal *v, goma_normal *cross) {
 void goma_normal_free(goma_normal *normal) {
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < MDE; j++) {
-      free(normal->d_normal_dx[i][j]);
+      gds_vector_free(normal->d_normal_dx[i][j]);
     }
   }
+  gds_vector_free(normal->normal);
   free(normal);
 }
 

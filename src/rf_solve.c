@@ -2395,7 +2395,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
       }
 #endif
 #ifdef HAVE_OMEGA_H
-      if (ls !=NULL && (ls->adapt && (nt == 0 || nt % ls->adapt_freq == 0))) {
+      if ((tran->ale_adapt || (ls !=NULL && ls->adapt)) && pg->imtrx == 0 && (nt == 0 || ((ls !=NULL && nt % ls->adapt_freq == 0) || (tran->ale_adapt && nt % 5 == 0)))) {
         adapt_mesh_omega_h(ams, exo, dpi, &x, &x_old, &x_older, &xdot, &xdot_old, &x_oldest,
                            &resid_vector, &x_update, &scale, adapt_step);
         adapt_step++;

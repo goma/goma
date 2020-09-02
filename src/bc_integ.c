@@ -2289,13 +2289,13 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
             index_eq = bc_eqn_index(id, I, bc_input_id, ei[pg->imtrx]->mn,
 				    p, &eqn, &matID_apply, &vd);
 
-	    if (index_eq >= 0) {
+	    if (goma_automatic_rotations.rotation_nodes != NULL && index_eq >= 0) {
 	      /*
 	       * Obtain the first local variable degree of freedom
 	       * at the current node, whether or not it actually an
 	       * interpolating degree of freedom
 	       */
-	      ldof_eqn = ei[pg->imtrx]->ln_to_first_dof[eqn][id];
+	      ldof_eqn = ei[pg->imtrx]->ln_to_first_dof[R_MESH2][id];
 
 	      /*
 	       *   for weakly integrated boundary conditions,
