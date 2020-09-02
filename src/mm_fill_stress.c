@@ -5891,8 +5891,8 @@ compute_exp_s(double s[DIM][DIM],
 
   int INFO;
   int LWORK = 20;
-  double WORK[LWORK];
-  double A[VIM*VIM];
+  double WORK[20];
+  double A[DIM*DIM];
   double D[DIM][DIM];
   double EIGEN_MAX = sqrt(sqrt(DBL_MAX));
   double eig_S[DIM] = {0.0};

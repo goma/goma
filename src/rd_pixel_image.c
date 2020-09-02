@@ -81,7 +81,7 @@ rd_image_to_mesh(int N_ext, Exo_DB *exo)
 
   /* Field variables--These will come in through the input deck as well.  Hardwired here  */
   int num_nod_vars = 1;                           // Number of field variables
-  char *nod_var_names[num_nod_vars];              // Declare variable names array
+  char *nod_var_names[1];              // Declare variable names array
  
   /* File handling variables */
   int CPU_word_size = sizeof(float);

@@ -4041,7 +4041,7 @@ exchange_fvelo_slip_bc_info(int ibc /* Index into BC_Types for VELO_SLIP_BC */)
   int velo_slip_root = 0;
   /* Offset for where to place coordinates in BC_Data_Float */
   int float_offset;
-  double node_coord[pd->Num_Dim]; /* temporary buffer for node coordinates */
+  double node_coord[DIM]; /* temporary buffer for node coordinates */
 
   float_offset = BC_Types[ibc].max_DFlt+1;
   /* Skip this if calculation is not needed */
@@ -9727,7 +9727,7 @@ void fapply_moving_CA_sinh(
   int iter, iter_max=20;
   double eps_tol=1.0e-12;
 #endif
-  double liq_visc = 0.0, gamma[VIM][VIM];
+  double liq_visc = 0.0, gamma[DIM][DIM];
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;  /* viscosity dependence */
   VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
 
@@ -9806,7 +9806,7 @@ void fapply_moving_CA_sinh(
 	{
          if( dcl_shearrate > 0)
            {
-             memset( gamma, 0, sizeof(double)*VIM*VIM);
+             memset( gamma, 0, sizeof(double)*DIM*DIM);
 	     gamma[0][1] = gamma[1][0] = dcl_shearrate;
              fv->T = mp->reference[TEMPERATURE];
              liq_visc = viscosity(gn, gamma, NULL);
@@ -15655,7 +15655,7 @@ fgamma1_deriv_bc(double func[DIM],
   int dim, i, j, p, b;
   int eqn, var;
   int dofs;
-  double grad_gamma1[VIM];
+  double grad_gamma1[DIM];
   if (af->Assemble_LSA_Mass_Matrix)  return;
   BASIS_FUNCTIONS_STRUCT *bf_ptr;
   dim   = pd->Num_Dim;
@@ -15744,7 +15744,7 @@ fgamma2_deriv_bc(double func[DIM],
   int dim, i, j, p, b;
   int eqn, var;
   int dofs;
-  double grad_gamma2[VIM];
+  double grad_gamma2[DIM];
   if (af->Assemble_LSA_Mass_Matrix)  return;
   BASIS_FUNCTIONS_STRUCT *bf_ptr;
   dim   = pd->Num_Dim;

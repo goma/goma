@@ -14,7 +14,6 @@ static void goma_normal_assign_best_direction(goma_normal *normal,
     goma_normal *tangent,
     goma_normal *binormal,
     goma_normal *coord[3]) {
-  int permute_max = 0;
   double max_val = 0;
   int n_max = -1;
   int t_max = -1;

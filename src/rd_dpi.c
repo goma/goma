@@ -274,7 +274,7 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
   }
 
   const int num_mpi_async = 2;
-  MPI_Request request_array[num_mpi_async];
+  MPI_Request request_array[2];
 
   MPI_Iallreduce(eb_num_nodes_local, d->eb_num_nodes_per_elem_global, d->num_elem_blocks_global,
                  MPI_INT, MPI_MAX, MPI_COMM_WORLD, &(request_array[0]));

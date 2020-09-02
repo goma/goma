@@ -72,8 +72,8 @@ static void moment_correction_wright(double *moments, int n_moments,
   // Press, 2013. ProQuest Ebook Central,
   // http://ebookcentral.proquest.com/lib/unm/detail.action?docID=1139558.
 
-  double m1[n_moments];
-  double m2[n_moments];
+  double m1[MAX_MOMENTS];
+  double m2[MAX_MOMENTS];
 
   moments_set_lognormal(1, 3, n_moments, moments, m1);
   moments_set_lognormal(2, 3, n_moments, moments, m2);

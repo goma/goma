@@ -185,7 +185,7 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
   int num_nod_vars;                  // Number of field variables (no duplicates)
   int dupflag;                       // Flag for checking duplicates
   char ** nod_var_names;             // Variable names array, no duplicates
-  char *nod_var_names_temp[efv->Num_external_pixel_field]; // Variable names array, including possible duplicates
+  char *nod_var_names_temp[MAX_EXTERNAL_FIELD]; // Variable names array, including possible duplicates
  
   /* File handling variables */
   int CPU_word_size = sizeof(float);
