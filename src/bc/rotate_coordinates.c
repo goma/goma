@@ -54,17 +54,17 @@ goma_error check_if_equation_is_rotation(int equation, bool *is_rotated) {
 
 goma_error setup_bc_is_rotated_list(struct Boundary_Condition *bc_types,
                                     int num_bc,
-                                    bool **bc_is_rotated_list) {
+                                    bool **bc_rotate_list) {
   assert(num_bc > 0);
-  *bc_is_rotated_list = calloc((size_t)num_bc, sizeof(bool));
+  *bc_rotate_list = calloc((size_t)num_bc, sizeof(bool));
   for (int bc_index = 0; bc_index < num_bc; bc_index++) {
-    (*bc_is_rotated_list)[bc_index] = false;
+    (*bc_rotate_list)[bc_index] = false;
     if (!strcmp(bc_types[bc_index].Set_Type, "SS")) {
-      bool bc_is_rotated;
+      bool bc_is_rotated = false;
       check_if_equation_is_rotation(BC_Desc[bc_types[bc_index].BC_Desc_index].equation,
                                     &bc_is_rotated);
       if (bc_is_rotated) {
-        (*bc_is_rotated_list)[bc_index] = true;
+        (*bc_rotate_list)[bc_index] = true;
       }
     }
   }
@@ -106,10 +106,9 @@ setup_rotated_bc_nodes(Exo_DB *exo, struct Boundary_Condition *bc_types, int num
     return GOMA_SUCCESS;
   }
 
-  goma_rotation_node_s *rotations;
-  bool *bc_is_rotated;
-  goma_error error;
-  error = setup_bc_is_rotated_list(bc_types, num_bc, &bc_is_rotated);
+  goma_rotation_node_s *rotations = NULL;
+  bool *bc_is_rotated = NULL;
+  goma_error error = setup_bc_is_rotated_list(bc_types, num_bc, &bc_is_rotated);
   EH(error, "setup_bc_rotate_list");
   error = allocate_rotations(exo, &rotations);
   EH(error, "allocate_rotations");
@@ -133,7 +132,9 @@ setup_rotated_bc_nodes(Exo_DB *exo, struct Boundary_Condition *bc_types, int num
     }
   }
 
-  int err;
+  int old_assemble_jacobian_setting = af->Assemble_Jacobian;
+  af->Assemble_Jacobian = true;
+  int err = 0;
   for (int bc_index = 0; bc_index < num_bc; bc_index++) {
     if (bc_is_rotated[bc_index]) {
       int ss_index = bc_types[bc_index].Set_Index;
@@ -143,15 +144,19 @@ setup_rotated_bc_nodes(Exo_DB *exo, struct Boundary_Condition *bc_types, int num
       // only operate on a side set once
       if (side_set_seen[ss_index]) {
         continue;
-      } else {
-        side_set_seen[ss_index] = true;
       }
+
+      side_set_seen[ss_index] = true;
+      int vector_equation = vector_equation_from_equation(bc_types[bc_index].equation);
+      
       for (int e = 0; e < exo->ss_num_sides[ss_index]; e++) {
         int ielem = exo->ss_elem_list[exo->ss_elem_index[ss_index] + e];
 
         err = load_elem_dofptr(ielem, exo, pg->matrices[pg->imtrx].x, pg->matrices[pg->imtrx].x_old,
                                pg->matrices[pg->imtrx].xdot, pg->matrices[pg->imtrx].xdot_old, 0);
+        EH(err, "load_elem_dofptr");
         err = bf_mp_init(pd);
+        EH(err, "bf_mp_init");
 
         int iconnect_ptr = ei[pg->imtrx]->iconnect_ptr;
         int ielem_type = ei[pg->imtrx]->ielem_type;
@@ -160,7 +165,7 @@ setup_rotated_bc_nodes(Exo_DB *exo, struct Boundary_Condition *bc_types, int num
         int local_side_node_list[MAX_NODES_PER_SIDE];
 
         /* find SIDE info for primary side */
-        int num_nodes_on_side;
+        int num_nodes_on_side = 0;
 
         int id_side = exo->ss_side_list[exo->ss_elem_index[ss_index] + e];
         get_side_info(ielem_type, id_side, &num_nodes_on_side, local_side_node_list);
@@ -219,10 +224,12 @@ setup_rotated_bc_nodes(Exo_DB *exo, struct Boundary_Condition *bc_types, int num
             }
           }
           rotations[I].is_rotated = true;
+          rotations[I].eqn_is_rotated[vector_equation] = true;
         }
       }
     }
   }
+  af->Assemble_Jacobian = old_assemble_jacobian_setting;
 
   free(side_set_seen);
 
@@ -246,6 +253,27 @@ setup_rotated_bc_nodes(Exo_DB *exo, struct Boundary_Condition *bc_types, int num
   return GOMA_SUCCESS;
 }
 
+int vector_equation_from_equation(int equation) {
+  switch (equation) {
+    case R_MESH1:
+    case R_MESH2:
+    case R_MESH3:
+    case R_MESH_NORMAL:
+    case R_MESH_TANG1:
+    case R_MESH_TANG2:
+      return VECT_EQ_MESH;
+    case R_MOMENTUM1:
+    case R_MOMENTUM2:
+    case R_MOMENTUM3:
+    case R_MOM_NORMAL:
+    case R_MOM_TANG1:
+    case R_MOM_TANG2:
+      return VECT_EQ_MOM;
+    default:
+      return -1;
+  }
+}
+
 int offset_from_rotated_equation(int eqn) {
   switch (eqn) {
   case R_MOM_NORMAL:
@@ -264,3 +292,4 @@ int offset_from_rotated_equation(int eqn) {
     return -1;
   }
 }
+

@@ -80,9 +80,8 @@ void goma_normal_normalize(goma_normal *normal) {
   if (dot.val == 0) {
     return;
   }
-
-  goma_normal_val inv = goma_normal_val_inverse(&dot);
-
+  goma_normal_val sqrt_val = sqrt_goma_normal_val(&dot);
+  goma_normal_val inv = goma_normal_val_inverse(&sqrt_val);
   goma_normal_scale(normal, &inv);
 }
 
@@ -313,6 +312,21 @@ goma_normal_val mul_goma_normal_val(const goma_normal_val *left, const goma_norm
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < MDE; j++) {
       retval.d_val[i][j] = left->d_val[i][j] * right->val + left->val * right->d_val[i][j];
+    }
+  }
+  return retval;
+}
+
+goma_normal_val sqrt_goma_normal_val(const goma_normal_val *val) {
+
+  goma_normal_val retval;
+
+  retval.val = sqrt(val->val);
+  double tmp = 1.0 / (2 * retval.val);
+
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < MDE; j++) {
+      retval.d_val[i][j] = val->d_val[i][j] * tmp;
     }
   }
   return retval;

@@ -3055,10 +3055,9 @@ matrix_fill(
 
   
   if (pde[R_MOMENTUM1] && goma_automatic_rotations.automatic_rotations ) {
-    int id_mom; /* local temporary things */
     /* determine if rotation is needed */
     for (i = 0; i < num_local_nodes; i++) {
-      id_mom  = ei[pg->imtrx]->ln_to_dof[VELOCITY1][i];
+      int id_mom  = ei[pg->imtrx]->ln_to_dof[VELOCITY1][i];
       /*
        *  To address a particular residual equation, map the local
        *   elemental node number i into a global index I
@@ -3067,27 +3066,43 @@ matrix_fill(
       I = Proc_Elem_Connect[iconnect_ptr + i];
       if (I < (dpi->num_internal_nodes + dpi->num_boundary_nodes)) {
 
+        int rotate_momentum = 0;
 
-        rotate_momentum = 0;
-        rotate_mesh = 0;
-
-        if (goma_automatic_rotations.rotation_nodes[I].is_rotated && pde[R_MOMENTUM1]) {
+        if (goma_automatic_rotations.rotation_nodes[I].eqn_is_rotated[vector_equation_from_equation(R_MOMENTUM1)] && pde[R_MOMENTUM1]) {
             rotate_momentum = 1;
-        }
-
-        if (goma_automatic_rotations.rotation_nodes[I].is_rotated && pde[R_MESH1]) {
-            rotate_mesh = 1;
         }
 
         if (rotate_momentum) {
           rotate_momentum_auto(id_mom,  I, ielem_dim, ams);
         }
+      }
+    } /* end of loop over nodes */
+  } /* end of if Num_ROT > 0 */
+  if (pde[R_MESH1] && goma_automatic_rotations.automatic_rotations ) {
+    /* determine if rotation is needed */
+    for (i = 0; i < num_local_nodes; i++) {
+      int id_mesh  = ei[pg->imtrx]->ln_to_dof[R_MESH1][i];
+      /*
+       *  To address a particular residual equation, map the local
+       *   elemental node number i into a global index I
+       *  You only have to rotate equations at nodes that you own?!?
+       */
+      I = Proc_Elem_Connect[iconnect_ptr + i];
+      if (I < (dpi->num_internal_nodes + dpi->num_boundary_nodes)) {
+
+        int rotate_mesh = 0;
+
+        if (goma_automatic_rotations.rotation_nodes[I].eqn_is_rotated[vector_equation_from_equation(R_MESH1)] && pde[R_MESH1]) {
+            rotate_mesh = 1;
+        }
+
         if (rotate_mesh) {
-          rotate_mesh_auto(id_mom,  I, ielem_dim, ams);
+          rotate_mesh_auto(id_mesh,  I, ielem_dim, ams);
         }
       }
     } /* end of loop over nodes */
   } /* end of if Num_ROT > 0 */
+
 
   /******************************************************************************/
   /*                              BLOCK 9                                       */

@@ -17,6 +17,7 @@ struct Boundary_Condition;
 typedef struct {
   goma_normal *rotated_coord[DIM];
   bool is_rotated;
+  bool eqn_is_rotated[NUM_VECTOR_EQUATIONS];
 } goma_rotation_node_s;
 
 typedef struct {
@@ -31,8 +32,8 @@ goma_error check_if_equation_is_rotation(int equation, bool *is_rotated);
 goma_error setup_bc_is_rotated_list(struct Boundary_Condition *bc_types, int num_bc,
                                     bool **bc_rotate_list);
 
-goma_error setup_rotated_bc_nodes(Exo_DB *exo, struct Boundary_Condition *bc_types, int num_bc,
-                                  double *x);
+goma_error
+setup_rotated_bc_nodes(Exo_DB *exo, struct Boundary_Condition *bc_types, int num_bc, double *x);
 
 goma_error set_rotation_types(Exo_DB *exo, goma_rotation_node_s *rotation);
 
@@ -41,5 +42,6 @@ goma_error set_average_normals_and_tangents(Exo_DB *exo, goma_rotation_node_s *r
 goma_error set_rotated_coordinate_system(Exo_DB *exo, goma_rotation_node_s *rotation);
 goma_error free_rotations(Exo_DB *exo, goma_rotation_node_s **rotations);
 goma_error set_face_normal_association(Exo_DB *exo, goma_rotation_node_s *rotations);
+int vector_equation_from_equation(int equation);
 int offset_from_rotated_equation(int eqn);
 #endif

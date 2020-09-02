@@ -62,4 +62,6 @@ goma_normal_val scale_goma_normal_val(const goma_normal_val *val, double value);
 
 goma_normal_val mul_goma_normal_val(const goma_normal_val *left, const goma_normal_val *right);
 
+goma_normal_val sqrt_goma_normal_val(const goma_normal_val *val);
+
 #endif // UTIL_GOMA_NORMAL_H
