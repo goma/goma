@@ -120,10 +120,12 @@ namespace Omega_h {
   } while (0)
 
 namespace exodus {
+#ifndef OMEGA_H_USE_SEACASEXODUS
 enum ClassifyWith {
   NODE_SETS = 0x1,
   SIDE_SETS = 0x2,
 };
+#endif
 static OMEGA_H_INLINE int side_osh2exo(int dim, int side) {
   switch (dim) {
   case 2:
