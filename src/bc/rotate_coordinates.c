@@ -52,9 +52,8 @@ goma_error check_if_equation_is_rotation(int equation, bool *is_rotated) {
   return GOMA_SUCCESS;
 }
 
-goma_error setup_bc_is_rotated_list(struct Boundary_Condition *bc_types,
-                                    int num_bc,
-                                    bool **bc_rotate_list) {
+goma_error
+setup_bc_is_rotated_list(struct Boundary_Condition *bc_types, int num_bc, bool **bc_rotate_list) {
   assert(num_bc > 0);
   *bc_rotate_list = calloc((size_t)num_bc, sizeof(bool));
   for (int bc_index = 0; bc_index < num_bc; bc_index++) {
@@ -141,14 +140,8 @@ setup_rotated_bc_nodes(Exo_DB *exo, struct Boundary_Condition *bc_types, int num
       if (ss_index == -1) { // ss isn't on this processor
         continue;
       }
-      // only operate on a side set once
-      if (side_set_seen[ss_index]) {
-        continue;
-      }
-
-      side_set_seen[ss_index] = true;
       int vector_equation = vector_equation_from_equation(bc_types[bc_index].equation);
-      
+
       for (int e = 0; e < exo->ss_num_sides[ss_index]; e++) {
         int ielem = exo->ss_elem_list[exo->ss_elem_index[ss_index] + e];
 
@@ -180,53 +173,57 @@ setup_rotated_bc_nodes(Exo_DB *exo, struct Boundary_Condition *bc_types, int num
 
         /* use nodal points only!! */
         for (int k = 0; k < num_ROT_nodes; k++) {
-          /* Find the local element node number for the current node */
           int id = elem_node_id[k];
           int I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + id];
-          double xi[DIM];
-          /* make sure we still need to calculate rotation vectors */
-          find_nodal_stu(id, ielem_type, &xi[0], &xi[1], &xi[2]);
-          err = load_basis_functions(xi, bfd);
-          EH(err, "problem from load_basis_functions");
-          err = beer_belly();
-          EH(err, "beer_belly");
-          err = load_fv();
-          EH(err, "load_fv");
-          err = load_bf_grad();
-          EH(err, "load_bf_grad");
-          err = load_bf_mesh_derivs();
-          EH(err, "load_bf_mesh_derivs");
+          if (!side_set_seen[ss_index]) {
+            /* Find the local element node number for the current node */
+            double xi[DIM];
+            /* make sure we still need to calculate rotation vectors */
+            find_nodal_stu(id, ielem_type, &xi[0], &xi[1], &xi[2]);
+            err = load_basis_functions(xi, bfd);
+            EH(err, "problem from load_basis_functions");
+            err = beer_belly();
+            EH(err, "beer_belly");
+            err = load_fv();
+            EH(err, "load_fv");
+            err = load_bf_grad();
+            EH(err, "load_bf_grad");
+            err = load_bf_mesh_derivs();
+            EH(err, "load_bf_mesh_derivs");
 
-          /* put NORMAL vector into array */
-          /* calculate the determinant of the surface jacobian  and the normal to
-           * the surface all at one time */
-          surface_determinant_and_normal(ei[pg->imtrx]->ielem, iconnect_ptr, num_local_nodes,
-                                         ielem_dim - 1, id_side, num_nodes_on_side,
-                                         local_side_node_list);
+            /* put NORMAL vector into array */
+            /* calculate the determinant of the surface jacobian  and the normal to
+             * the surface all at one time */
+            surface_determinant_and_normal(ei[pg->imtrx]->ielem, iconnect_ptr, num_local_nodes,
+                                           ielem_dim - 1, id_side, num_nodes_on_side,
+                                           local_side_node_list);
 
-          int n_index = node_normals[I].n_normals;
-          node_normals[I].n_normals++;
-          if (node_normals[I].n_normals > GOMA_MAX_NORMALS_PER_NODE) {
-            EH(GOMA_ERROR, "GOMA_MAX_NORMALS_PER_NODE too small, currently %d",
-               GOMA_MAX_NORMALS_PER_NODE);
-          }
-          gds_vector_set(node_normals[I].normals[n_index]->normal, 0, fv->snormal[0]);
-          gds_vector_set(node_normals[I].normals[n_index]->normal, 1, fv->snormal[1]);
-          gds_vector_set(node_normals[I].normals[n_index]->normal, 2, fv->snormal[2]);
-          for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < MDE; j++) {
-              gds_vector_set(node_normals[I].normals[n_index]->d_normal_dx[i][j], 0,
-                             fv->dsnormal_dx[0][i][j]);
-              gds_vector_set(node_normals[I].normals[n_index]->d_normal_dx[i][j], 1,
-                             fv->dsnormal_dx[1][i][j]);
-              gds_vector_set(node_normals[I].normals[n_index]->d_normal_dx[i][j], 2,
-                             fv->dsnormal_dx[2][i][j]);
+            int n_index = node_normals[I].n_normals;
+            node_normals[I].n_normals++;
+            if (node_normals[I].n_normals > GOMA_MAX_NORMALS_PER_NODE) {
+              EH(GOMA_ERROR, "GOMA_MAX_NORMALS_PER_NODE too small, currently %d",
+                 GOMA_MAX_NORMALS_PER_NODE);
+            }
+            gds_vector_set(node_normals[I].normals[n_index]->normal, 0, fv->snormal[0]);
+            gds_vector_set(node_normals[I].normals[n_index]->normal, 1, fv->snormal[1]);
+            gds_vector_set(node_normals[I].normals[n_index]->normal, 2, fv->snormal[2]);
+            for (int i = 0; i < 3; i++) {
+              for (int j = 0; j < MDE; j++) {
+                gds_vector_set(node_normals[I].normals[n_index]->d_normal_dx[i][j], 0,
+                               fv->dsnormal_dx[0][i][j]);
+                gds_vector_set(node_normals[I].normals[n_index]->d_normal_dx[i][j], 1,
+                               fv->dsnormal_dx[1][i][j]);
+                gds_vector_set(node_normals[I].normals[n_index]->d_normal_dx[i][j], 2,
+                               fv->dsnormal_dx[2][i][j]);
+              }
             }
           }
           rotations[I].is_rotated = true;
           rotations[I].eqn_is_rotated[vector_equation] = true;
         }
       }
+
+      side_set_seen[ss_index] = true;
     }
   }
   af->Assemble_Jacobian = old_assemble_jacobian_setting;
@@ -255,22 +252,22 @@ setup_rotated_bc_nodes(Exo_DB *exo, struct Boundary_Condition *bc_types, int num
 
 int vector_equation_from_equation(int equation) {
   switch (equation) {
-    case R_MESH1:
-    case R_MESH2:
-    case R_MESH3:
-    case R_MESH_NORMAL:
-    case R_MESH_TANG1:
-    case R_MESH_TANG2:
-      return VECT_EQ_MESH;
-    case R_MOMENTUM1:
-    case R_MOMENTUM2:
-    case R_MOMENTUM3:
-    case R_MOM_NORMAL:
-    case R_MOM_TANG1:
-    case R_MOM_TANG2:
-      return VECT_EQ_MOM;
-    default:
-      return -1;
+  case R_MESH1:
+  case R_MESH2:
+  case R_MESH3:
+  case R_MESH_NORMAL:
+  case R_MESH_TANG1:
+  case R_MESH_TANG2:
+    return VECT_EQ_MESH;
+  case R_MOMENTUM1:
+  case R_MOMENTUM2:
+  case R_MOMENTUM3:
+  case R_MOM_NORMAL:
+  case R_MOM_TANG1:
+  case R_MOM_TANG2:
+    return VECT_EQ_MOM;
+  default:
+    return -1;
   }
 }
 
@@ -295,14 +292,14 @@ int offset_from_rotated_equation(int eqn) {
 
 int first_equation_from_vector_equation(int eqn) {
   switch (eqn) {
-    case R_MESH1:
-    case R_MESH2:
-    case R_MESH3:
-      return R_MESH1;
-    case R_MOMENTUM1:
-    case R_MOMENTUM2:
-    case R_MOMENTUM3:
-      return R_MOMENTUM1;
+  case R_MESH1:
+  case R_MESH2:
+  case R_MESH3:
+    return R_MESH1;
+  case R_MOMENTUM1:
+  case R_MOMENTUM2:
+  case R_MOMENTUM3:
+    return R_MOMENTUM1;
   default:
     return -1;
   }
