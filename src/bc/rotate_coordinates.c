@@ -293,3 +293,18 @@ int offset_from_rotated_equation(int eqn) {
   }
 }
 
+int first_equation_from_vector_equation(int eqn) {
+  switch (eqn) {
+    case R_MESH1:
+    case R_MESH2:
+    case R_MESH3:
+      return R_MESH1;
+    case R_MOMENTUM1:
+    case R_MOMENTUM2:
+    case R_MOMENTUM3:
+      return R_MOMENTUM1;
+  default:
+    return -1;
+  }
+}
+

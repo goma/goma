@@ -3419,38 +3419,92 @@ bc_eqn_index(int id,               /* local node number                 */
                                     BC_dup_list[pg->imtrx][bc_node][node_offset]);
 
       } else if ((ieqn >= R_MESH_NORMAL) && (ieqn <= R_MESH_TANG2)) {
-        /*
-         * If it's a rotated boundary condition, the boundary
-         * condition could have been moved to another coordinate
-         * within check_for_bc_conflicts2D(). Therefore, we need
-         * to check all coordinate directions for the presence of the
-         * current boundary condition.
-         */
-        for (jeqn = R_MESH1; jeqn <= R_MESH3; jeqn++) {
-          offset_j = get_nodal_unknown_offset(nv, jeqn, matID, 0, &vd2);
-          if (offset_j >= 0) {
-            i_calc = search_bc_dup_list(bc_input_id, 
-                                        BC_dup_list[pg->imtrx][bc_node][offset_j]);
-            if (i_calc != -1) {
+        if (goma_automatic_rotations.automatic_rotations) {
+          if (ieqn == R_MESH_NORMAL) {
+            int best_dir = -1;
+            double dot_max = 0;
+            for (int dir = 0; dir < 3; dir++) {
+              double dot = 0;
+              for (int j = 0; j < 3; j++) {
+                dot +=
+                    goma_automatic_rotations.rotation_nodes[I].rotated_coord[dir]->normal->data[j] *
+                    fv->snormal[j];
+              }
+              if (fabs(dot) > dot_max) {
+                best_dir = dir;
+                dot_max = fabs(dot);
+              }
+            }
+            offset_j = get_nodal_unknown_offset(nv, R_MESH1 + best_dir, matID, 0, &vd2);
+            if (offset_j >= 0) {
               node_offset = offset_j;
-              ieqn = jeqn;
+              ieqn = R_MESH1 + best_dir;
               vd = vd2;
-              break;
+              i_calc = 0;
+            }
+          } else {
+            EH(GOMA_ERROR, "Automatic rotations only for normal conditions");
+          }
+        } else {
+          /*
+           * If it's a rotated boundary condition, the boundary
+           * condition could have been moved to another coordinate
+           * within check_for_bc_conflicts2D(). Therefore, we need
+           * to check all coordinate directions for the presence of the
+           * current boundary condition.
+           */
+          for (jeqn = R_MESH1; jeqn <= R_MESH3; jeqn++) {
+            offset_j = get_nodal_unknown_offset(nv, jeqn, matID, 0, &vd2);
+            if (offset_j >= 0) {
+              i_calc = search_bc_dup_list(bc_input_id, BC_dup_list[pg->imtrx][bc_node][offset_j]);
+              if (i_calc != -1) {
+                node_offset = offset_j;
+                ieqn = jeqn;
+                vd = vd2;
+                break;
+              }
             }
           }
         }
-
       } else if ((ieqn >= R_MOM_NORMAL) && (ieqn <= R_MOM_TANG2)) {
-        for (jeqn = R_MOMENTUM1; jeqn <= R_MOMENTUM3; jeqn++) {
-          offset_j = get_nodal_unknown_offset(nv, jeqn, matID, 0, &vd2);
-          if (offset_j >= 0) {
-            i_calc = search_bc_dup_list(bc_input_id, 
-                                        BC_dup_list[pg->imtrx][bc_node][offset_j]);
-            if (i_calc != -1) {
+        if (goma_automatic_rotations.automatic_rotations) {
+          if (ieqn == R_MOM_NORMAL) {
+            int best_dir = -1;
+            double dot_max = 0;
+            for (int dir = 0; dir < 3; dir++) {
+              double dot = 0;
+              for (int j = 0; j < 3; j++) {
+                dot +=
+                    goma_automatic_rotations.rotation_nodes[I].rotated_coord[dir]->normal->data[j] *
+                    fv->snormal[j];
+              }
+              if (fabs(dot) > dot_max) {
+                best_dir = dir;
+                dot_max = fabs(dot);
+              }
+            }
+            offset_j = get_nodal_unknown_offset(nv, R_MOMENTUM1 + best_dir, matID, 0, &vd2);
+            if (offset_j >= 0) {
               node_offset = offset_j;
-              ieqn = jeqn;
+              ieqn = R_MOMENTUM1 + best_dir;
               vd = vd2;
-              break;
+              i_calc = 0;
+            }
+          } else {
+            EH(GOMA_ERROR, "Automatic rotations only for normal conditions");
+          }
+        } else {
+          for (jeqn = R_MOMENTUM1; jeqn <= R_MOMENTUM3; jeqn++) {
+            offset_j = get_nodal_unknown_offset(nv, jeqn, matID, 0, &vd2);
+            if (offset_j >= 0) {
+              i_calc = search_bc_dup_list(bc_input_id, 
+                                          BC_dup_list[pg->imtrx][bc_node][offset_j]);
+              if (i_calc != -1) {
+                node_offset = offset_j;
+                ieqn = jeqn;
+                vd = vd2;
+                break;
+              }
             }
           }
         }

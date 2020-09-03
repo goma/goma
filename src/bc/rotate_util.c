@@ -188,10 +188,10 @@ static goma_error get_average_edge_normals(goma_normal **normals,
       continue;
     }
 
-    if (fabs(gds_vector_dot(normals[i]->normal, n1[0]->normal)) <
+    if (fabs(gds_vector_dot(normals[i]->normal, n1[0]->normal)) >=
         cos(GOMA_ROTATION_CRITICAL_ANGLE)) {
       n1[n_n1++] = normals[i];
-    } else if (fabs(gds_vector_dot(normals[i]->normal, n2[0]->normal)) <
+    } else if (fabs(gds_vector_dot(normals[i]->normal, n2[0]->normal)) >=
                cos(GOMA_ROTATION_CRITICAL_ANGLE)) {
       n2[n_n2++] = normals[i];
     } else {

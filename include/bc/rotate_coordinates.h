@@ -44,4 +44,5 @@ goma_error free_rotations(Exo_DB *exo, goma_rotation_node_s **rotations);
 goma_error set_face_normal_association(Exo_DB *exo, goma_rotation_node_s *rotations);
 int vector_equation_from_equation(int equation);
 int offset_from_rotated_equation(int eqn);
+int first_equation_from_vector_equation(int eqn);
 #endif
