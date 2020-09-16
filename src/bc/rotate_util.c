@@ -6,10 +6,6 @@
 #include "util/goma_normal.h"
 #include <assert.h>
 
-#ifndef GOMA_ROTATIONS_CRITICAL_ANGLE
-#define GOMA_ROTATIONS_CRITICAL_ANGLE (M_PI / 4.0) // 45 degrees
-#endif
-
 static void goma_normal_assign_best_direction(goma_normal *normal,
     goma_normal *tangent,
     goma_normal *binormal,
@@ -90,9 +86,18 @@ static void goma_normal_assign_best_direction(goma_normal *normal,
   goma_normal_copy(coord[t_max], tangent);
   goma_normal_copy(coord[b_max], binormal);
   
-  // recompute third component to ensure righthanded
-  goma_normal_cross(coord[0], coord[1], coord[2]);
-  goma_normal_normalize(coord[2]);
+  // recompute binormal component to ensure righthanded
+  // this lets us keep normal directions for surface and corners
+  if (b_max == 0) {
+    goma_normal_cross(coord[1], coord[2], coord[0]);
+    goma_normal_normalize(coord[0]);
+  } else if (b_max == 1) {
+    goma_normal_cross(coord[2], coord[0], coord[1]);
+    goma_normal_normalize(coord[1]);
+  } else {
+    goma_normal_cross(coord[0], coord[1], coord[2]);
+    goma_normal_normalize(coord[2]);
+  }
 }
 
 goma_error
@@ -250,6 +255,8 @@ goma_edge_coordinate_system(goma_normal **normals, int n_normals, goma_normal *c
   goma_normal_free(new_n1);
   goma_normal_free(new_n2);
   goma_normal_free(cross);
+  goma_normal_free(n1);
+  goma_normal_free(n2);
 
   return GOMA_SUCCESS;
 }
