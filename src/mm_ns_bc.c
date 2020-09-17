@@ -4027,7 +4027,7 @@ exchange_fvelo_slip_bc_info(int ibc /* Index into BC_Types for VELO_SLIP_BC */)
 
   float_offset = BC_Types[ibc].max_DFlt+1;
   /* Skip this if calculation is not needed */
-  if (BC_Types[ibc].BC_Data_Int[0] == -1 || BC_Types[ibc].BC_Data_Int[0] == 0) {
+  if (BC_Types[ibc].BC_Data_Int[0] == -1) {
     return 0;
   }
 
