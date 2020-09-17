@@ -406,7 +406,6 @@ TEST_CASE("goma_best_coordinate_system_3D 2 normals surface", "[bc][automatic_ro
   REQUIRE(helper_one_coordinate_near_normal(rotated_coord, normals[0]));
   REQUIRE(helper_one_coordinate_near_normal(rotated_coord, normals[1]));
 
-
   helper_free_normals(&normals, n_normals);
   for (int j = 0; j < 3; j++) {
     goma_normal_free(rotated_coord[j]);
@@ -503,7 +502,7 @@ TEST_CASE("goma_best_coordinate_system_3D 2 normals edge", "[bc][automatic_rotat
   double m9[3] = {INV_SQRT_2, INV_SQRT_2, 0.0};
   helper_set_normal_from_vector(normals[0], m9);
 
-  double m10[3] = {INV_SQRT_2 + 0.2, -INV_SQRT_2 -0.3, 0.0};
+  double m10[3] = {INV_SQRT_2 + 0.2, -INV_SQRT_2 - 0.3, 0.0};
   helper_set_normal_from_vector(normals[1], m10);
 
   error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
@@ -539,10 +538,10 @@ TEST_CASE("goma_best_coordinate_system_3D 2 normals edge", "[bc][automatic_rotat
   REQUIRE(helper_one_coordinate_matches_normal(rotated_coord, other_normal));
 
   // COORD 7
-  double m13[3] = {0.0, INV_SQRT_2, INV_SQRT_2+0.2};
+  double m13[3] = {0.0, INV_SQRT_2, INV_SQRT_2 + 0.2};
   helper_set_normal_from_vector(normals[0], m13);
 
-  double m14[3] = {0.0, -INV_SQRT_2-0.3, INV_SQRT_2};
+  double m14[3] = {0.0, -INV_SQRT_2 - 0.3, INV_SQRT_2};
   helper_set_normal_from_vector(normals[1], m14);
 
   error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
@@ -557,12 +556,11 @@ TEST_CASE("goma_best_coordinate_system_3D 2 normals edge", "[bc][automatic_rotat
   helper_set_normal_from_vector(other_normal, xn);
   REQUIRE(helper_one_coordinate_matches_normal(rotated_coord, other_normal));
 
-  
   // COORD 8
-  double m15[3] = {INV_SQRT_2, 0.0, INV_SQRT_2+0.2};
+  double m15[3] = {INV_SQRT_2, 0.0, INV_SQRT_2 + 0.2};
   helper_set_normal_from_vector(normals[0], m15);
 
-  double m16[3] = {-INV_SQRT_2-0.3, 0.0, INV_SQRT_2};
+  double m16[3] = {-INV_SQRT_2 - 0.3, 0.0, INV_SQRT_2};
   helper_set_normal_from_vector(normals[1], m16);
 
   error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
@@ -577,7 +575,6 @@ TEST_CASE("goma_best_coordinate_system_3D 2 normals edge", "[bc][automatic_rotat
   helper_set_normal_from_vector(other_normal, yn);
   REQUIRE(helper_one_coordinate_matches_normal(rotated_coord, other_normal));
 
-
   goma_normal_free(other_normal);
   helper_free_normals(&normals, n_normals);
   for (int j = 0; j < 3; j++) {
@@ -585,17 +582,435 @@ TEST_CASE("goma_best_coordinate_system_3D 2 normals edge", "[bc][automatic_rotat
   }
 }
 
-TEST_CASE("goma_best_coordinate_system_3D varying normals", "[bc][automatic_rotations]") {
+TEST_CASE("goma_best_coordinate_system_3D varying normals surface", "[bc][automatic_rotations]") {
   goma_normal **normals;
-  int n_normals = 1;
+  int n_normals = 8;
   helper_create_normals(&normals, n_normals);
 
   goma_normal *rotated_coord[3];
   for (int j = 0; j < 3; j++) {
     rotated_coord[j] = goma_normal_alloc(3);
   }
+
+  // Generic surface cases
+  // All same
+  //
+  double xn[3] = {1.0, 0.0, 0.0};
+  double yn[3] = {0.0, 1.0, 0.0};
+  double zn[3] = {0.0, 0.0, 1.0};
+
+  // Set 1
+  for (int i = 0; i < n_normals; i++) {
+    helper_set_normal_from_vector(normals[i], xn);
+  }
+
   goma_error error;
   error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+
+  REQUIRE(error != GOMA_ERROR);
+
+  REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
+  REQUIRE(helper_one_coordinate_matches_normal(rotated_coord, normals[0]));
+
+  // Set 2
+  for (int i = 0; i < n_normals; i++) {
+    helper_set_normal_from_vector(normals[i], yn);
+  }
+
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+
+  REQUIRE(error != GOMA_ERROR);
+
+  REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
+  REQUIRE(helper_one_coordinate_matches_normal(rotated_coord, normals[0]));
+  
+  // Set 3
+  for (int i = 0; i < n_normals; i++) {
+    helper_set_normal_from_vector(normals[i], zn);
+  }
+
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+
+  REQUIRE(error != GOMA_ERROR);
+
+  REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
+  REQUIRE(helper_one_coordinate_matches_normal(rotated_coord, normals[0]));
+
+  // Now some normals that are near but not the same
+  // Set 4
+  for (int i = 0; i < n_normals; i++) {
+    helper_set_normal_from_vector(normals[i], xn);
+  }
+
+  double m1[3] = {0.90453403, 0.30151134, 0.30151134};
+  double m2[3] = {0.90453403, -0.30151134, 0.30151134};
+  double m3[3] = {0.90453403, -0.30151134, -0.30151134};
+  double m4[3] = {0.90453403, 0.30151134, -0.30151134};
+  helper_set_normal_from_vector(normals[0], m1);
+  helper_set_normal_from_vector(normals[1], m2);
+  helper_set_normal_from_vector(normals[2], m3);
+  helper_set_normal_from_vector(normals[3], m4);
+
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+
+  REQUIRE(error != GOMA_ERROR);
+
+  REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
+  for (int i = 0; i < n_normals; i++) {
+    REQUIRE(helper_one_coordinate_near_normal(rotated_coord, normals[i]));
+  }
+
+
+  // Set 5
+  for (int i = 0; i < n_normals; i++) {
+    helper_set_normal_from_vector(normals[i], yn);
+  }
+  double m5[3] = {0.30151134, 0.90453403, 0.30151134};
+  double m6[3] = {-0.30151134, 0.90453403, 0.30151134};
+  double m7[3] = {-0.30151134, 0.90453403, -0.30151134};
+  double m8[3] = {0.30151134, 0.90453403, -0.30151134};
+  helper_set_normal_from_vector(normals[0], m5);
+  helper_set_normal_from_vector(normals[1], m6);
+  helper_set_normal_from_vector(normals[2], m7);
+  helper_set_normal_from_vector(normals[3], m8);
+
+  error = goma_best_coordinate_system_3D(normals, 5, rotated_coord);
+
+  REQUIRE(error != GOMA_ERROR);
+
+  REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
+  for (int i = 0; i < 5; i++) {
+    REQUIRE(helper_one_coordinate_near_normal(rotated_coord, normals[i]));
+  }
+
+  // Set 6
+  yn[1] = -1.0;
+  for (int i = 0; i < n_normals; i++) {
+    helper_set_normal_from_vector(normals[i], yn);
+  }
+  double m9[3] = {0.30151134, -0.90453403, 0.30151134};
+  double m10[3] = {0.34815531, -0.87038828, 0.34815531};
+  double m11[3] = {-0.30151134, 0.90453403, -0.30151134};
+  double m12[3] = {-0.34815531, -0.87038828, 0.34815531};
+  helper_set_normal_from_vector(normals[0], m9);
+  helper_set_normal_from_vector(normals[1], m10);
+  helper_set_normal_from_vector(normals[2], m11);
+  helper_set_normal_from_vector(normals[3], m12);
+
+  error = goma_best_coordinate_system_3D(normals, 5, rotated_coord);
+
+  REQUIRE(error != GOMA_ERROR);
+  REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
+
+  for (int i = 0; i < 5; i++) {
+    REQUIRE(helper_one_coordinate_near_normal(rotated_coord, normals[i]));
+  }
+  // Set 7
+
+  double m13[3] = {0.30151134,  0.30151134, -0.90453403};
+  double m14[3] = {0.34815531, 0.34815531, -0.87038828};
+  double m15[3] = {0, 0, -1.0};
+  helper_set_normal_from_vector(normals[0], m13);
+  helper_set_normal_from_vector(normals[1], m14);
+  helper_set_normal_from_vector(normals[2], m15);
+
+  error = goma_best_coordinate_system_3D(normals, 3, rotated_coord);
+
+  REQUIRE(error != GOMA_ERROR);
+
+  REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
+  for (int i = 0; i < 3; i++) {
+    REQUIRE(helper_one_coordinate_near_normal(rotated_coord, normals[i]));
+  }
+
+
+  // cleanup
+
+  helper_free_normals(&normals, n_normals);
+  for (int j = 0; j < 3; j++) {
+    goma_normal_free(rotated_coord[j]);
+  }
+}
+
+TEST_CASE("goma_best_coordinate_system_3D varying normals edge", "[bc][automatic_rotations]") {
+  goma_normal **normals;
+  int n_normals = 8;
+  helper_create_normals(&normals, n_normals);
+
+  goma_normal *rotated_coord[3];
+  for (int j = 0; j < 3; j++) {
+    rotated_coord[j] = goma_normal_alloc(3);
+  }
+
+  // Generic edge cases
+  // All same
+  //
+  double xn[3] = {1.0, 0.0, 0.0};
+  double yn[3] = {0.0, 1.0, 0.0};
+  double zn[3] = {0.0, 0.0, 1.0};
+
+  // Set 1
+  for (int i = 0; i < 4; i++) {
+    helper_set_normal_from_vector(normals[i], xn);
+  }
+
+  for (int i = 4; i < n_normals; i++) {
+    helper_set_normal_from_vector(normals[i], yn);
+  }
+
+  goma_error error;
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+
+  REQUIRE(error != GOMA_ERROR);
+
+  REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
+  for (int i = 0; i < n_normals; i++) {
+    REQUIRE(helper_one_coordinate_matches_normal(rotated_coord, normals[i]));
+  }
+
+  // Set 2
+  for (int i = 0; i < 4; i++) {
+    helper_set_normal_from_vector(normals[i], zn);
+  }
+
+  for (int i = 4; i < n_normals; i++) {
+    helper_set_normal_from_vector(normals[i], yn);
+  }
+
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+
+  REQUIRE(error != GOMA_ERROR);
+
+  REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
+  for (int i = 0; i < n_normals; i++) {
+    REQUIRE(helper_one_coordinate_matches_normal(rotated_coord, normals[i]));
+  }
+
+  // Set 3
+  for (int i = 0; i < 4; i++) {
+    helper_set_normal_from_vector(normals[i], zn);
+  }
+
+  for (int i = 4; i < n_normals; i++) {
+    helper_set_normal_from_vector(normals[i], xn);
+  }
+
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+
+  REQUIRE(error != GOMA_ERROR);
+
+  REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
+  for (int i = 0; i < n_normals; i++) {
+    REQUIRE(helper_one_coordinate_matches_normal(rotated_coord, normals[i]));
+  }
+  
+  // Varying edges, not all same direction
+  // Set 3
+  //
+
+  for (int i = 0; i < 4; i++) {
+    helper_set_normal_from_vector(normals[i], yn);
+  }
+
+  for (int i = 4; i < n_normals; i++) {
+    helper_set_normal_from_vector(normals[i], zn);
+  }
+  double m1[3] = {0.0, INV_SQRT_2+0.3, INV_SQRT_2};
+  double m2[3] = {0.0, INV_SQRT_2, INV_SQRT_2+0.3};
+  double m3[3] = {0.0, INV_SQRT_2+0.2, INV_SQRT_2};
+  double m4[3] = {0.0, INV_SQRT_2, INV_SQRT_2+0.2};
+  helper_set_normal_from_vector(normals[0], m1);
+  helper_set_normal_from_vector(normals[1], m2);
+  helper_set_normal_from_vector(normals[4], m3);
+  helper_set_normal_from_vector(normals[5], m4);
+
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+
+  REQUIRE(error != GOMA_ERROR);
+
+  REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
+  for (int i = 0; i < n_normals; i++) {
+    REQUIRE(helper_one_coordinate_near_normal(rotated_coord, normals[i]));
+  }
+
+  // Set 4
+  // same as 3 but only 1 is on another edge
+
+  error = goma_best_coordinate_system_3D(normals, 5, rotated_coord);
+
+  REQUIRE(error != GOMA_ERROR);
+
+  REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
+  for (int i = 0; i < 5; i++) {
+    REQUIRE(helper_one_coordinate_near_normal(rotated_coord, normals[i]));
+  }
+  
+  // Set 5
+  // 3 normals
+
+  for (int i = 0; i < 4; i++) {
+    helper_set_normal_from_vector(normals[i], yn);
+  }
+
+  for (int i = 4; i < n_normals; i++) {
+    helper_set_normal_from_vector(normals[i], zn);
+  }
+  double m5[3] = {3,1,1};
+  double m6[3] = {3.5,1,1};
+  double m7[3] = {0,3.5,0.5};
+  helper_set_normal_from_vector(normals[0], m5);
+  helper_set_normal_from_vector(normals[1], m6);
+  helper_set_normal_from_vector(normals[2], m7);
+
+  error = goma_best_coordinate_system_3D(normals, 3, rotated_coord);
+
+  REQUIRE(error != GOMA_ERROR);
+
+  REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
+  for (int i = 0; i < 3; i++) {
+    REQUIRE(helper_one_coordinate_near_normal(rotated_coord, normals[i]));
+  }
+
+  // Set 5
+  // 4 normals
+
+  for (int i = 0; i < 4; i++) {
+    helper_set_normal_from_vector(normals[i], yn);
+  }
+
+  for (int i = 4; i < n_normals; i++) {
+    helper_set_normal_from_vector(normals[i], zn);
+  }
+  double m8[3] = {0,3,0.5};
+  helper_set_normal_from_vector(normals[3], m8);
+
+  error = goma_best_coordinate_system_3D(normals, 4, rotated_coord);
+
+  REQUIRE(error != GOMA_ERROR);
+
+  REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
+  for (int i = 0; i < 4; i++) {
+    REQUIRE(helper_one_coordinate_near_normal(rotated_coord, normals[i]));
+  }
+
+
+  // cleanup
+  helper_free_normals(&normals, n_normals);
+  for (int j = 0; j < 3; j++) {
+    goma_normal_free(rotated_coord[j]);
+  }
+}
+
+TEST_CASE("goma_best_coordinate_system_3D varying normals corner", "[bc][automatic_rotations]") {
+  goma_normal **normals;
+  int n_normals = 8;
+  helper_create_normals(&normals, n_normals);
+
+  goma_normal *rotated_coord[3];
+  for (int j = 0; j < 3; j++) {
+    rotated_coord[j] = goma_normal_alloc(3);
+  }
+
+  // corner base cases
+  double xn[3] = {1.0, 0.0, 0.0};
+  double yn[3] = {0.0, 1.0, 0.0};
+  double zn[3] = {0.0, 0.0, 1.0};
+
+  // Set 1
+  helper_set_normal_from_vector(normals[0], xn);
+  helper_set_normal_from_vector(normals[1], yn);
+  helper_set_normal_from_vector(normals[2], zn);
+
+  goma_error error;
+  error = goma_best_coordinate_system_3D(normals, 3, rotated_coord);
+
+  REQUIRE(error != GOMA_ERROR);
+
+  REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
+  for (int i = 0; i < 3; i++) {
+    REQUIRE(helper_one_coordinate_matches_normal(rotated_coord, normals[i]));
+  }
+
+  // Set 2
+  // permuted set 1
+  helper_set_normal_from_vector(normals[0], zn);
+  helper_set_normal_from_vector(normals[1], yn);
+  helper_set_normal_from_vector(normals[2], xn);
+
+  error = goma_best_coordinate_system_3D(normals, 3, rotated_coord);
+
+  REQUIRE(error != GOMA_ERROR);
+
+  REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
+  for (int i = 0; i < 3; i++) {
+    REQUIRE(helper_one_coordinate_matches_normal(rotated_coord, normals[i]));
+  }
+
+  // Set 3
+  // permuted set 1
+  helper_set_normal_from_vector(normals[0], yn);
+  helper_set_normal_from_vector(normals[1], zn);
+  helper_set_normal_from_vector(normals[2], xn);
+
+  error = goma_best_coordinate_system_3D(normals, 3, rotated_coord);
+
+  REQUIRE(error != GOMA_ERROR);
+
+  REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
+  for (int i = 0; i < 3; i++) {
+    REQUIRE(helper_one_coordinate_matches_normal(rotated_coord, normals[i]));
+  }
+
+  // Set 4
+  // permuted set 1
+  helper_set_normal_from_vector(normals[0], yn);
+  helper_set_normal_from_vector(normals[1], xn);
+  helper_set_normal_from_vector(normals[2], zn);
+
+  error = goma_best_coordinate_system_3D(normals, 3, rotated_coord);
+
+  REQUIRE(error != GOMA_ERROR);
+
+  REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
+  for (int i = 0; i < 3; i++) {
+    REQUIRE(helper_one_coordinate_matches_normal(rotated_coord, normals[i]));
+  }
+
+  // Set 5
+  double m1[3] = {INV_SQRT_2 + 0.5, INV_SQRT_2, 0};
+  double m2[3] = {INV_SQRT_2, -INV_SQRT_2 - 0.5, 0};
+  double m3[3] = {0, 0.2, -INV_SQRT_2};
+
+  helper_set_normal_from_vector(normals[0], m1);
+  helper_set_normal_from_vector(normals[1], m2);
+  helper_set_normal_from_vector(normals[2], m3);
+
+  error = goma_best_coordinate_system_3D(normals, 3, rotated_coord);
+
+  REQUIRE(error != GOMA_ERROR);
+
+  REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
+  for (int i = 0; i < 3; i++) {
+    REQUIRE(helper_one_coordinate_near_normal(rotated_coord, normals[i]));
+  }
+  
+  // Set 6
+  helper_set_normal_from_vector(normals[0], m1);
+  helper_set_normal_from_vector(normals[1], m2);
+  helper_set_normal_from_vector(normals[2], m3);
+  helper_set_normal_from_vector(normals[3], zn);
+  helper_set_normal_from_vector(normals[4], xn);
+
+  error = goma_best_coordinate_system_3D(normals, 5, rotated_coord);
+
+  REQUIRE(error != GOMA_ERROR);
+
+  REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
+  for (int i = 0; i < 5; i++) {
+    REQUIRE(helper_one_coordinate_near_normal(rotated_coord, normals[i]));
+  }
+
+
   helper_free_normals(&normals, n_normals);
   for (int j = 0; j < 3; j++) {
     goma_normal_free(rotated_coord[j]);

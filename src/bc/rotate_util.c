@@ -289,13 +289,43 @@ goma_corner_coordinate_system(goma_normal **normals, int n_normals, goma_normal 
   return GOMA_ERROR;
 
 corner_coord_critical_found : {
+  // find closest to x for first
+  int first_crit;
+  double max_dot = 0;
+  for (int i = 0; i < 3; i++) {
+    double dot = fabs(gds_vector_get(normals[critical_angle[i]]->normal, 0));
+    if (dot > max_dot) {
+      first_crit = i;
+      max_dot = dot;
+    }
+  }
+
+  if (max_dot == 0) {
+    return GOMA_ERROR;
+  }
+
+  // closest to y for second
+  int second_crit;
+  max_dot = 0;
+  for (int i = 0; i < 3; i++) {
+    double dot = fabs(gds_vector_get(normals[critical_angle[i]]->normal, 1));
+    if (dot > max_dot) {
+      second_crit = i;
+      max_dot = dot;
+    }
+  }
+
+  if (max_dot == 0) {
+    return GOMA_ERROR;
+  }
+  
   goma_normal *first = goma_normal_alloc(3);
   goma_normal *second = goma_normal_alloc(3);
   goma_normal *third = goma_normal_alloc(3);
 
-  goma_normal_copy(first, normals[critical_angle[0]]);
+  goma_normal_copy(first, normals[critical_angle[first_crit]]);
   goma_normal_normalize(first);
-  goma_normal_cross(first, normals[critical_angle[1]], second);
+  goma_normal_cross(first, normals[critical_angle[second_crit]], second);
   goma_normal_normalize(second);
   goma_normal_cross(first, second, third);
   goma_normal_normalize(third);
@@ -377,9 +407,9 @@ bool goma_check_edge_rotation_case(goma_normal **normals, int n_normals) {
   // make sure all angles are near one of the critical angles
   for (int u_index = 0; u_index < n_normals; u_index++) {
     bool match_one =
-        fabs(gds_vector_dot(normals[u_index]->normal, normals[crit_normal[0]]->normal)) <
+        fabs(gds_vector_dot(normals[u_index]->normal, normals[crit_normal[0]]->normal)) >=
             cos(GOMA_ROTATION_CRITICAL_ANGLE) ||
-        fabs(gds_vector_dot(normals[u_index]->normal, normals[crit_normal[1]]->normal)) <
+        fabs(gds_vector_dot(normals[u_index]->normal, normals[crit_normal[1]]->normal)) >=
             cos(GOMA_ROTATION_CRITICAL_ANGLE);
     if (!match_one) {
       return false;
