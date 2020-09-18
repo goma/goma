@@ -290,7 +290,7 @@ goma_corner_coordinate_system(goma_normal **normals, int n_normals, goma_normal 
 
 corner_coord_critical_found : {
   // find closest to x for first
-  int first_crit;
+  int first_crit = -1;
   double max_dot = 0;
   for (int i = 0; i < 3; i++) {
     double dot = fabs(gds_vector_get(normals[critical_angle[i]]->normal, 0));
@@ -300,12 +300,12 @@ corner_coord_critical_found : {
     }
   }
 
-  if (max_dot == 0) {
+  if (first_crit == -1) {
     return GOMA_ERROR;
   }
 
   // closest to y for second
-  int second_crit;
+  int second_crit = -1;
   max_dot = 0;
   for (int i = 0; i < 3; i++) {
     double dot = fabs(gds_vector_get(normals[critical_angle[i]]->normal, 1));
@@ -315,7 +315,7 @@ corner_coord_critical_found : {
     }
   }
 
-  if (max_dot == 0) {
+  if (second_crit == -1) {
     return GOMA_ERROR;
   }
   
