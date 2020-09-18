@@ -500,11 +500,11 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	      second - internal boundaries with an explicit block id
 	      third  - internal boundaries with implicit iapply logic
 	  */
-          if ( (SS_Internal_Boundary[ss_index] == -1 && pd->v[pg->imtrx][VELOCITY1])
+          if ( (SS_Internal_Boundary[ss_index] == -1 && pd->gv[VELOCITY1])
 	       || (SS_Internal_Boundary[ss_index] != -1 &&
 		   bc->BC_Data_Int[0] == ei[pg->imtrx]->elem_blk_id)
 	       || (SS_Internal_Boundary[ss_index] != -1 && 
-		   bc->BC_Data_Int[0] == -1 && iapply && pd->v[pg->imtrx][VELOCITY1]))
+		   bc->BC_Data_Int[0] == -1 && iapply && pd->gv[VELOCITY1]))
 	    {
 	      fvelo_normal_bc(func, d_func, bc->BC_Data_Float[0], contact_flag,
 			      x_dot, theta, delta_t, (int) bc->BC_Name,

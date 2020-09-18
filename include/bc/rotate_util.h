@@ -1,6 +1,14 @@
 #ifndef GOMA_BC_ROTATE_UTIL_H
 #define GOMA_BC_ROTATE_UTIL_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifndef GOMA_ROTATIONS_CRITICAL_ANGLE
+#define GOMA_ROTATIONS_CRITICAL_ANGLE (M_PI_4) // pi / 4 -> 45 degrees
+#endif
+
 #include "mm_eh.h"
 #include "util/goma_normal.h"
 
@@ -21,5 +29,9 @@ bool goma_check_edge_rotation_case(goma_normal **normals, int n_normals);
 
 goma_error
 goma_best_coordinate_system_3D(goma_normal **normals, int n_normals, goma_normal *coord[3]);
+
+#ifdef __cplusplus
+} // extern C
+#endif
 
 #endif // GOMA_BC_ROTATE_UTIL_H
