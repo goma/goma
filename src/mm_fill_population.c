@@ -1201,9 +1201,15 @@ int growth_rate_model(int species_index, double *nodes, double *weights,
         scale = mp->moment_growth_scale * (eta0 / mu);
         break;
       case VISCOSITY_PRESSURE_GROWTH_RATE: {
+        double ref_p = fv_old->P - mp->moment_growth_reference_pressure;
+        if (ref_p > 1) {
         double inv_pressure = 1.0 / (fv_old->P - mp->moment_growth_reference_pressure);
         scale =
             mp->moment_growth_scale * (eta0 / mu) * inv_pressure * inv_pressure;
+        } else {
+        scale =
+            mp->moment_growth_scale * (eta0 / mu);
+        }
       } break;
       default:
         EH(GOMA_ERROR, "Unknown growth kernel");

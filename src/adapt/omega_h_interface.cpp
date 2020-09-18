@@ -1765,9 +1765,9 @@ void adapt_mesh_omega_h(struct Aztec_Linear_Solver_System **ams,
   //  mesh.set_parting(OMEGA_H_ELEM_BASED);
   //  Omega_h::exodus::write(std::to_string(ProcID) + "convert.e", &mesh, true, classify_with);
   //  mesh.set_parting(OMEGA_H_GHOSTED);
-  auto writer_c = Omega_h::vtk::Writer("convert.vtk", &mesh);
+  //auto writer_c = Omega_h::vtk::Writer("convert.vtk", &mesh);
 
-  writer_c.write(step);
+  //writer_c.write(step);
   //  std::vector<int> gnode(mesh.nverts());
   ////  for (int node = 0; node < mesh.globals(0).size(); node++) {
   ////    int exo_index = in_list(mesh.globals(0)[node], 0, exo->num_nodes, dpi->node_index_global);
@@ -1821,8 +1821,8 @@ void adapt_mesh_omega_h(struct Aztec_Linear_Solver_System **ams,
   //      mesh.add_tag(Omega_h::VERT, efv->name[w], 1, Omega_h::Reals(var_values));
   //  }
 
-  auto writer = Omega_h::vtk::Writer("transfer.vtk", &mesh);
-  writer.write(step);
+  //auto writer = Omega_h::vtk::Writer("transfer.vtk", &mesh);
+  //writer.write(step);
   adapt_mesh(mesh);
 
   std::string filename;
@@ -1830,8 +1830,8 @@ void adapt_mesh_omega_h(struct Aztec_Linear_Solver_System **ams,
 
   ss << "adapt." << step << ".vtk";
 
-  auto writer_adapt = Omega_h::vtk::Writer(ss.str(), &mesh);
-  writer_adapt.write(step);
+  //auto writer_adapt = Omega_h::vtk::Writer(ss.str(), &mesh);
+  //writer_adapt.write(step);
 
   if (first_call) {
     base_name = std::string(ExoFileOutMono);
