@@ -33,7 +33,7 @@ goma_error setup_bc_is_rotated_list(struct Boundary_Condition *bc_types, int num
                                     bool **bc_rotate_list);
 
 goma_error
-setup_rotated_bc_nodes(Exo_DB *exo, struct Boundary_Condition *bc_types, int num_bc, double *x);
+setup_rotated_bc_nodes(Exo_DB *exo, Dpi * dpi, struct Boundary_Condition *bc_types, int num_bc, double *x);
 
 goma_error set_rotation_types(Exo_DB *exo, goma_rotation_node_s *rotation);
 

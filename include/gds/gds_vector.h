@@ -10,6 +10,7 @@ extern "C" {
 
 typedef struct {
   size_t size;
+  size_t struct_size;
   // flexible array size (uses [1] so valid in c++, c99 would allow [])
   double data[1];
 } gds_vector;
