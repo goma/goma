@@ -2,11 +2,11 @@
 
 #include <assert.h>
 #include <math.h>
+#include <mpi.h>
 #include <rf_bc.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <mpi.h>
 
 #include "bc/rotate_util.h"
 #include "el_elm.h"
@@ -33,7 +33,6 @@
 #endif
 
 goma_rotation_s goma_automatic_rotations = {false, NULL};
-
 
 goma_error check_if_equation_is_rotation(int equation, bool *is_rotated) {
   switch (equation) {
@@ -113,11 +112,9 @@ typedef struct {
   int second;
 } int_pair;
 
-static int
-int_compare(const void *left, const void *right)
-{
-  int left_val = *((int *) left);
-  int right_val = *((int *) right);
+static int int_compare(const void *left, const void *right) {
+  int left_val = *((int *)left);
+  int right_val = *((int *)right);
   if (left_val > right_val)
     return 1;
   else if (left_val < right_val)
@@ -126,11 +123,9 @@ int_compare(const void *left, const void *right)
     return 0;
 }
 
-static int
-int_pair_compare_first(const void *left, const void *right)
-{
-  int_pair * left_val = ((int_pair *) left);
-  int_pair * right_val = ((int_pair *) right);
+static int int_pair_compare_first(const void *left, const void *right) {
+  int_pair *left_val = ((int_pair *)left);
+  int_pair *right_val = ((int_pair *)right);
   if (left_val->first > right_val->first) {
     return 1;
   } else if (left_val->first < right_val->first) {
@@ -140,12 +135,9 @@ int_pair_compare_first(const void *left, const void *right)
   }
 }
 
-
-static int
-int_pair_compare(const void *left, const void *right)
-{
-  int_pair * left_val = ((int_pair *) left);
-  int_pair * right_val = ((int_pair *) right);
+static int int_pair_compare(const void *left, const void *right) {
+  int_pair *left_val = ((int_pair *)left);
+  int_pair *right_val = ((int_pair *)right);
   if (left_val->first > right_val->first) {
     return 1;
   } else if (left_val->first < right_val->first) {
@@ -161,20 +153,15 @@ int_pair_compare(const void *left, const void *right)
   }
 }
 
-goma_error exchange_neighbor_ss_edges(
-    Exo_DB *exo, Dpi *dpi, struct Boundary_Condition *bc_types, int num_bc, bool *bc_is_rotated, int_pair ***ss_elem_sides, int **ss_elem_sides_count) {
+goma_error exchange_neighbor_ss_edges(Exo_DB *exo,
+                                      Dpi *dpi,
+                                      struct Boundary_Condition *bc_types,
+                                      int num_bc,
+                                      bool *bc_is_rotated) {
   int *rotated_side_sets = calloc(exo->num_side_sets, sizeof(int));
-  int num_rotated_side_sets = 0;
-  for (int bc_index = 0; bc_index < num_bc; bc_index++) {
-    if (bc_is_rotated[bc_index]) {
-      int ss_index = bc_types[bc_index].Set_Index;
-      if (ss_index == -1) { // ss isn't on this processor
-        continue;
-      }
-      if ((in_list(ss_index, 0, num_rotated_side_sets, rotated_side_sets) == -1)) {
-        rotated_side_sets[num_rotated_side_sets++] = ss_index;
-      }
-    }
+  int num_rotated_side_sets = exo->num_side_sets;
+  for (int i = 0; i < exo->num_side_sets; i++) {
+    rotated_side_sets[i] = i;
   }
 
   ss_edge_share *ss_edge_info = calloc(dpi->num_side_sets_global, sizeof(ss_edge_share));
@@ -231,13 +218,12 @@ goma_error exchange_neighbor_ss_edges(
     assert(offset == ss_edge_info[i].total_nodes);
   }
 
-
   MPI_Request *requests = malloc(sizeof(MPI_Request) * 2 * dpi->num_neighbors);
 
   int *recv_nodes = calloc(dpi->num_neighbors * dpi->num_side_sets_global, sizeof(int));
   for (int i = 0; i < dpi->num_neighbors; i++) {
-    MPI_Irecv(&recv_nodes[i*dpi->num_side_sets_global], dpi->num_side_sets_global,
-              MPI_INT, dpi->neighbor[i], 102+dpi->neighbor[i], MPI_COMM_WORLD, &(requests[i]));
+    MPI_Irecv(&recv_nodes[i * dpi->num_side_sets_global], dpi->num_side_sets_global, MPI_INT,
+              dpi->neighbor[i], 102 + dpi->neighbor[i], MPI_COMM_WORLD, &(requests[i]));
   }
 
   int *send_nodes = calloc(dpi->num_side_sets_global, sizeof(int));
@@ -245,10 +231,10 @@ goma_error exchange_neighbor_ss_edges(
     send_nodes[j] = ss_edge_info[j].total_nodes;
   }
   for (int i = 0; i < dpi->num_neighbors; i++) {
-    MPI_Isend(send_nodes, dpi->num_side_sets_global, MPI_INT, dpi->neighbor[i], 102+ProcID,
+    MPI_Isend(send_nodes, dpi->num_side_sets_global, MPI_INT, dpi->neighbor[i], 102 + ProcID,
               MPI_COMM_WORLD, &(requests[dpi->num_neighbors + i]));
   }
-  MPI_Waitall(2*dpi->num_neighbors, requests, MPI_STATUSES_IGNORE);
+  MPI_Waitall(2 * dpi->num_neighbors, requests, MPI_STATUSES_IGNORE);
 
   int **global_nodes = calloc(dpi->num_side_sets_global, sizeof(int *));
   int *ss_global_nodes = calloc(dpi->num_side_sets_global, sizeof(int));
@@ -281,7 +267,7 @@ goma_error exchange_neighbor_ss_edges(
     }
   }
 
-  MPI_Waitall(2*dpi->num_neighbors, requests, MPI_STATUSES_IGNORE);
+  MPI_Waitall(2 * dpi->num_neighbors, requests, MPI_STATUSES_IGNORE);
 
   int_pair *global_to_local = calloc(exo->num_nodes, sizeof(int_pair));
   for (int i = 0; i < exo->num_nodes; i++) {
@@ -294,7 +280,8 @@ goma_error exchange_neighbor_ss_edges(
   for (int i = 0; i < dpi->num_side_sets_global; i++) {
     for (int j = 0; j < ss_global_nodes[i]; j++) {
       int_pair global_node = {global_nodes[i][j], -1};
-      int_pair* match = (int_pair *) bsearch(&global_node, global_to_local, exo->num_nodes, sizeof(int_pair), int_pair_compare_first);
+      int_pair *match = (int_pair *)bsearch(&global_node, global_to_local, exo->num_nodes,
+                                            sizeof(int_pair), int_pair_compare_first);
       if (match != NULL) {
         global_nodes[i][j] = match->second;
       } else {
@@ -303,7 +290,8 @@ goma_error exchange_neighbor_ss_edges(
     }
     for (int j = 0; j < ss_edge_info[i].total_nodes; j++) {
       int_pair global_node = {ss_edge_info[i].global_node_ids[j], -1};
-      int_pair* match = (int_pair *) bsearch(&global_node, global_to_local, exo->num_nodes, sizeof(int_pair), int_pair_compare_first);
+      int_pair *match = (int_pair *)bsearch(&global_node, global_to_local, exo->num_nodes,
+                                            sizeof(int_pair), int_pair_compare_first);
       if (match != NULL) {
         ss_edge_info[i].global_node_ids[j] = match->second;
       } else {
@@ -328,9 +316,9 @@ goma_error exchange_neighbor_ss_edges(
     for (int j = 0; j < ss_global_nodes[i]; j++) {
       int node = global_nodes[i][j];
       if (node != -1) {
-        for (int idx = exo->node_elem_pntr[node]; idx < exo->node_elem_pntr[node+1]; idx++) {
+        for (int idx = exo->node_elem_pntr[node]; idx < exo->node_elem_pntr[node + 1]; idx++) {
           int elem = exo->node_elem_list[idx];
-          int ielem_type = exo->eb_elem_itype[ exo->elem_eb[elem] ];
+          int ielem_type = exo->eb_elem_itype[exo->elem_eb[elem]];
           int shape = type2shape(ielem_type);
           int n_sides = shape2sides(shape);
           for (int side = 0; side < n_sides; side++) {
@@ -339,7 +327,7 @@ goma_error exchange_neighbor_ss_edges(
 
             /* find SIDE info for primary side */
             int num_nodes_on_side = 0;
-            get_side_info(ielem_type, side+1, &num_nodes_on_side, local_side_node_list);
+            get_side_info(ielem_type, side + 1, &num_nodes_on_side, local_side_node_list);
 
             /* use nodal points only!! */
             bool found = false;
@@ -358,8 +346,10 @@ goma_error exchange_neighbor_ss_edges(
               bool all_known = true;
               for (int k = 0; k < num_nodes_on_side; k++) {
                 int sn = side_nodes[k];
-                int *p = bsearch(&sn, global_nodes[i], ss_global_nodes[i], sizeof(int), int_compare);
-                int *q = bsearch(&sn, ss_edge_info[i].global_node_ids, ss_edge_info[i].total_nodes, sizeof(int), int_compare);
+                int *p =
+                    bsearch(&sn, global_nodes[i], ss_global_nodes[i], sizeof(int), int_compare);
+                int *q = bsearch(&sn, ss_edge_info[i].global_node_ids, ss_edge_info[i].total_nodes,
+                                 sizeof(int), int_compare);
                 if (q == NULL) {
                   all_known = false;
                 }
@@ -370,10 +360,13 @@ goma_error exchange_neighbor_ss_edges(
 
               if (found_all && !all_known) {
                 if (ss_elem_sides_count_local[i] > 1) {
-                  qsort(ss_elem_sides_local[i], ss_elem_sides_count_local[i], sizeof(int_pair), int_pair_compare);
+                  qsort(ss_elem_sides_local[i], ss_elem_sides_count_local[i], sizeof(int_pair),
+                        int_pair_compare);
                 }
                 int_pair elem_side = {elem, side};
-                int_pair *exists = bsearch(&elem_side, ss_elem_sides_local[i], ss_elem_sides_count_local[i], sizeof(int_pair), int_pair_compare);
+                int_pair *exists =
+                    bsearch(&elem_side, ss_elem_sides_local[i], ss_elem_sides_count_local[i],
+                            sizeof(int_pair), int_pair_compare);
                 if (exists == NULL) {
                   ss_elem_sides_local[i][ss_elem_sides_count_local[i]] = elem_side;
                   ss_elem_sides_count_local[i] += 1;
@@ -381,14 +374,84 @@ goma_error exchange_neighbor_ss_edges(
               }
             }
           }
-
         }
       }
     }
   }
 
-  *ss_elem_sides = ss_elem_sides_local;
-  *ss_elem_sides_count = ss_elem_sides_count_local;
+  // fix exodus sidesets
+  int *old_ss_elem_list = exo->ss_elem_list;
+  int *old_ss_side_list = exo->ss_side_list;
+  // find new sizes;
+  int new_size = 0;
+  for (int i = 0; i < exo->num_side_sets; i++) {
+    int global_ss_index = -1;
+    for (int j = 0; j < dpi->num_side_sets_global; j++) {
+      if (dpi->ss_id_global[j] == exo->ss_id[i]) {
+        global_ss_index = j;
+        break;
+      }
+    }
+
+    new_size += exo->ss_num_sides[i];
+    if (ss_elem_sides_count_local[global_ss_index] > 0) {
+      new_size += ss_elem_sides_count_local[global_ss_index];
+    }
+  }
+
+  exo->ss_elem_list = calloc(new_size, sizeof(int));
+  exo->ss_side_list = calloc(new_size, sizeof(int));
+  // setup new lists
+  int full_offset = 0;
+  for (int i = 0; i < exo->num_side_sets; i++) {
+    int global_ss_index = -1;
+    for (int j = 0; j < dpi->num_side_sets_global; j++) {
+      if (dpi->ss_id_global[j] == exo->ss_id[i]) {
+        global_ss_index = j;
+        break;
+      }
+    }
+
+    for (int j = 0; j < exo->ss_num_sides[i]; j++) {
+      exo->ss_elem_list[full_offset + j] = old_ss_elem_list[exo->ss_elem_index[i] + j];
+      exo->ss_side_list[full_offset + j] = old_ss_side_list[exo->ss_elem_index[i] + j];
+    }
+    if (ss_elem_sides_count_local[global_ss_index] > 0) {
+      int offset = exo->ss_num_sides[i];
+      for (int j = 0; j < ss_elem_sides_count_local[global_ss_index]; j++) {
+        exo->ss_elem_list[j+offset +full_offset] = ss_elem_sides_local[global_ss_index][j].first;
+        exo->ss_side_list[j+offset + full_offset] = ss_elem_sides_local[global_ss_index][j].second + 1;
+      }
+    }
+    exo->ss_elem_index[i] = full_offset;
+    full_offset += exo->ss_num_sides[i] + ss_elem_sides_count_local[global_ss_index];
+    exo->ss_num_sides[i] += ss_elem_sides_count_local[global_ss_index];
+  }
+  assert(full_offset == new_size);
+  exo->ss_elem_len = full_offset;
+
+  free(requests);
+  free(rotated_side_sets);
+  for (int i = 0; i < num_rotated_side_sets; i++) {
+    free(ss_edge_info[i].node_per_side);
+    free(ss_edge_info[i].global_node_ids);
+  }
+  free(ss_edge_info);
+  free(recv_nodes);
+  free(send_nodes);
+
+  for (int i = 0; i < dpi->num_side_sets_global; i++) {
+    free(global_nodes[i]);
+  }
+  free(global_nodes);
+  free(offsets);
+  free(global_to_local);
+  for (int i = 0; i < exo->num_side_sets; i++) {
+    free(ss_elem_sides_local[i]);
+  }
+  free(ss_elem_sides_count_local);
+  free(ss_elem_sides_local);
+
   return GOMA_SUCCESS;
 }
 
@@ -425,9 +488,7 @@ goma_error setup_rotated_bc_nodes(
     }
   }
 
-  int_pair **ss_elem_sides;
-  int *ss_elem_sides_count;
-  exchange_neighbor_ss_edges(exo, dpi, bc_types, num_bc, bc_is_rotated, &ss_elem_sides, &ss_elem_sides_count);
+  exchange_neighbor_ss_edges(exo, dpi, bc_types, num_bc, bc_is_rotated);
 
   int old_assemble_jacobian_setting = af->Assemble_Jacobian;
   af->Assemble_Jacobian = true;
@@ -435,98 +496,11 @@ goma_error setup_rotated_bc_nodes(
   for (int bc_index = 0; bc_index < num_bc; bc_index++) {
     if (bc_is_rotated[bc_index]) {
       int ss_index = bc_types[bc_index].Set_Index;
-      int global_ss_index = -1;
-      for (int i = 0; i < dpi->num_side_sets_global; i++) {
-        if (dpi->ss_id_global[i] == exo->ss_id[ss_index]) {
-          global_ss_index = i;
-          break;
-        }
-      }
       if (ss_index == -1) { // ss isn't on this processor
         continue;
       }
       int vector_equation = vector_equation_from_equation(bc_types[bc_index].equation);
 
-      for (int e = 0; e < ss_elem_sides_count[global_ss_index]; e++) {
-        int ielem = ss_elem_sides[global_ss_index][e].first;
-
-        err = load_elem_dofptr(ielem, exo, pg->matrices[pg->imtrx].x, pg->matrices[pg->imtrx].x_old,
-                               pg->matrices[pg->imtrx].xdot, pg->matrices[pg->imtrx].xdot_old, 0);
-        EH(err, "load_elem_dofptr");
-        err = bf_mp_init(pd);
-        EH(err, "bf_mp_init");
-
-        int iconnect_ptr = ei[pg->imtrx]->iconnect_ptr;
-        int ielem_type = ei[pg->imtrx]->ielem_type;
-        int num_local_nodes = ei[pg->imtrx]->num_local_nodes;
-        int ielem_dim = ei[pg->imtrx]->ielem_dim;
-        int local_side_node_list[MAX_NODES_PER_SIDE];
-
-        /* find SIDE info for primary side */
-        int num_nodes_on_side = 0;
-
-        int id_side = ss_elem_sides[global_ss_index][e].second + 1;
-        get_side_info(ielem_type, id_side, &num_nodes_on_side, local_side_node_list);
-
-        /*
-         * LOOP over NODES to which this condition applies
-         */
-        int num_ROT_nodes = 0;
-
-        num_ROT_nodes = num_nodes_on_side;
-        int *elem_node_id = &(local_side_node_list[0]);
-
-        /* use nodal points only!! */
-        for (int k = 0; k < num_ROT_nodes; k++) {
-          int id = elem_node_id[k];
-          int I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + id];
-          if (!side_set_seen[ss_index]) {
-            /* Find the local element node number for the current node */
-            double xi[DIM];
-            /* make sure we still need to calculate rotation vectors */
-            find_nodal_stu(id, ielem_type, &xi[0], &xi[1], &xi[2]);
-            err = load_basis_functions(xi, bfd);
-            EH(err, "problem from load_basis_functions");
-            err = beer_belly();
-            EH(err, "beer_belly");
-            err = load_fv();
-            EH(err, "load_fv");
-            err = load_bf_grad();
-            EH(err, "load_bf_grad");
-            err = load_bf_mesh_derivs();
-            EH(err, "load_bf_mesh_derivs");
-
-            /* put NORMAL vector into array */
-            /* calculate the determinant of the surface jacobian  and the normal to
-             * the surface all at one time */
-            surface_determinant_and_normal(ei[pg->imtrx]->ielem, iconnect_ptr, num_local_nodes,
-                                           ielem_dim - 1, id_side, num_nodes_on_side,
-                                           local_side_node_list);
-
-            int n_index = node_normals[I].n_normals;
-            node_normals[I].n_normals++;
-            if (node_normals[I].n_normals > GOMA_MAX_NORMALS_PER_NODE) {
-              EH(GOMA_ERROR, "GOMA_MAX_NORMALS_PER_NODE too small, currently %d",
-                 GOMA_MAX_NORMALS_PER_NODE);
-            }
-            gds_vector_set(node_normals[I].normals[n_index]->normal, 0, fv->snormal[0]);
-            gds_vector_set(node_normals[I].normals[n_index]->normal, 1, fv->snormal[1]);
-            gds_vector_set(node_normals[I].normals[n_index]->normal, 2, fv->snormal[2]);
-            for (int i = 0; i < 3; i++) {
-              for (int j = 0; j < MDE; j++) {
-                gds_vector_set(node_normals[I].normals[n_index]->d_normal_dx[i][j], 0,
-                               fv->dsnormal_dx[0][i][j]);
-                gds_vector_set(node_normals[I].normals[n_index]->d_normal_dx[i][j], 1,
-                               fv->dsnormal_dx[1][i][j]);
-                gds_vector_set(node_normals[I].normals[n_index]->d_normal_dx[i][j], 2,
-                               fv->dsnormal_dx[2][i][j]);
-              }
-            }
-          }
-          rotations[I].is_rotated = true;
-          rotations[I].eqn_is_rotated[vector_equation] = true;
-        }
-      }
       for (int e = 0; e < exo->ss_num_sides[ss_index]; e++) {
         int ielem = exo->ss_elem_list[exo->ss_elem_index[ss_index] + e];
 
