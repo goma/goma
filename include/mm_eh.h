@@ -52,10 +52,11 @@ typedef int goma_error;
  */
 extern char Err_Msg[MAX_CHAR_ERR_MSG];
 
-EXTERN void goma_eh(const int error_flag, const char *file, const int line, const char *format, ...);
+EXTERN void
+goma_eh(const int error_flag, const char *file, const int line, const char *format, ...);
 
 EXTERN void
-goma_wh(const int error_flag, const char *const file, const int line, const char * format, ...);
+goma_wh(const int error_flag, const char *const file, const int line, const char *format, ...);
 
 EXTERN void save_place  /* mm_eh.c                                   */
     (const int,         /* severity                                  */
@@ -82,16 +83,34 @@ EXTERN void smooth_stop_with_msg(const char *msg);
  *		EH(return_code, "I am informative.");
  */
 
+#ifdef NDEBUG
+#define GOMA_ASSERT(IASSERT)
+#else
+#define GOMA_ASSERT(IASSERT)                                                     \
+  do {                                                                           \
+    if (!(IASSERT)) {                                                            \
+      goma_eh(GOMA_ERROR, __FILE__, __LINE__, "Assertion %s failed.", #IASSERT); \
+    }                                                                            \
+  } while (0)
+#endif
+
+#define GOMA_ASSERT_ALWAYS(IASSERT)                                              \
+  do {                                                                           \
+    if (!(IASSERT)) {                                                            \
+      goma_eh(GOMA_ERROR, __FILE__, __LINE__, "Assertion %s failed.", #IASSERT); \
+    }                                                                            \
+  } while (0)
+
 #define GOMA_EH(IERR, FORMAT, ...) goma_eh(IERR, __FILE__, __LINE__, FORMAT, ##__VA_ARGS__)
 // We wrap in a do while with a static variable to only print warnings once
 // at a location
-#define GOMA_WH(IERR, FORMAT, ...)                         \
-  do {                                            \
-    static bool print = true;                     \
-    if (print) {                                  \
+#define GOMA_WH(IERR, FORMAT, ...)                              \
+  do {                                                          \
+    static bool print = true;                                   \
+    if (print) {                                                \
       goma_wh(IERR, __FILE__, __LINE__, FORMAT, ##__VA_ARGS__); \
-      print = false;                              \
-    }                                             \
+      print = false;                                            \
+    }                                                           \
   } while (0)
 
 #define GOMA_WH_MANY(IERR, FORMAT, ...) goma_wh(IERR, __FILE__, __LINE__, FORMAT, ##__VA_ARGS__)
