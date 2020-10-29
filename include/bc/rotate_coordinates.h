@@ -27,6 +27,8 @@ typedef struct {
 
 extern goma_rotation_s goma_automatic_rotations;
 
+goma_error exchange_neighbor_ss_edges(Exo_DB *exo,
+                                      Dpi *dpi);
 goma_error check_if_equation_is_rotation(int equation, bool *is_rotated);
 
 goma_error setup_bc_is_rotated_list(struct Boundary_Condition *bc_types, int num_bc,

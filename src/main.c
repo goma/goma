@@ -1046,6 +1046,8 @@ main(int argc, char **argv)
   fflush(stdout);
   fflush(stderr);
   log_msg("GOMA ends normally.");
+  free(Status);
+  free(Request);
   return (0);
 }
 /***********************************************************************/

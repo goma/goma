@@ -35,6 +35,7 @@
 #include "rf_allo.h"
 #include "rf_mp.h"
 #include "std.h"
+#include "bc/rotate_coordinates.h"
 
 // Helper for exodus return values
 #define CHECK_EX_ERROR(err, format, ...)                              \
@@ -271,6 +272,7 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
     //      d->ss_block_index_global[ss_id] = ss_start;
     //      d->ss_block_index_global[ss_id+1] = ss_block_index;
     //    }
+
   }
 
   const int num_mpi_async = 2;
