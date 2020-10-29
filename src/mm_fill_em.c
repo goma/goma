@@ -258,7 +258,7 @@ int assemble_emwave(double time, /* present time value */
     dir = 2;
     break;
   default:
-    EH(-1, "Invalid EM variable name.\n");
+    GOMA_EH(-1, "Invalid EM variable name.\n");
     return -1;
   }
   switch (em_var) {
@@ -333,7 +333,7 @@ int assemble_emwave(double time, /* present time value */
     calc_emwave_stabilization_term(&em_stab, 1.0);
     break;
   default:
-    EH(-1, "assemble_emwave must be called with a usable em_var\n");
+    GOMA_EH(-1, "assemble_emwave must be called with a usable em_var\n");
     return -1;
   }
   /*
@@ -791,7 +791,7 @@ int assemble_ewave(double time,      // present time
     calc_emwave_stabilization_term(&em_stab, 1.0);
     break;
   default:
-    EH(-1, "assemble_ewave must be called with only electric field for em_eqn!");
+    GOMA_EH(-1, "assemble_ewave must be called with only electric field for em_eqn!");
     break;
   }
   if (af->Assemble_Residual) {
@@ -1389,7 +1389,7 @@ int apply_em_farfield_direct_vec(double func[DIM],
     // real = 0;
     // imag = 0;
     reduction_factor = 0;
-    EH(-1, "Must call apply_em_farfield_direct with an applicable BC_NAME");
+    GOMA_EH(-1, "Must call apply_em_farfield_direct with an applicable BC_NAME");
     return -1;
     break;
   }
@@ -1963,7 +1963,7 @@ void calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
       }
       break;
     default:
-      EH(-1, "Cannot have unset stabilization_field_var");
+      GOMA_EH(-1, "Cannot have unset stabilization_field_var");
       break;
     }
     break;
@@ -1988,12 +1988,12 @@ void calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
       }
       break;
     default:
-      EH(-1, "Must use the first EQN_VAR for a given 3-valued field, e.g. EM_E1_REAL");
+      GOMA_EH(-1, "Must use the first EQN_VAR for a given 3-valued field, e.g. EM_E1_REAL");
     }
     break;
 
   default:
-    // WH(-1,"Cannot use calc_emwave_stabilization without defining type in the struct");
+    // GOMA_WH(-1,"Cannot use calc_emwave_stabilization without defining type in the struct");
     // return -1;
     break;
   }
@@ -2130,7 +2130,7 @@ void calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
       }
       break;
     default:
-      EH(-1, "must set the stabilization field var with type==phi_divsquared");
+      GOMA_EH(-1, "must set the stabilization field var with type==phi_divsquared");
       return;
       break;
     }
@@ -2209,7 +2209,7 @@ void calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
       }
       break;
     default:
-      EH(-1, "must set the stabilization field var with type==phi_divsquared");
+      GOMA_EH(-1, "must set the stabilization field var with type==phi_divsquared");
       return;
       break;
     }

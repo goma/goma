@@ -295,7 +295,7 @@ goma_error exchange_neighbor_ss_edges(Exo_DB *exo,
       if (match != NULL) {
         ss_edge_info[i].global_node_ids[j] = match->second;
       } else {
-        EH(GOMA_ERROR, "no mapping to local node for local ss node");
+        GOMA_EH(GOMA_ERROR, "no mapping to local node for local ss node");
       }
     }
     qsort(global_nodes[i], ss_global_nodes[i], sizeof(int), int_compare);
@@ -465,9 +465,9 @@ goma_error setup_rotated_bc_nodes(
   goma_rotation_node_s *rotations = NULL;
   bool *bc_is_rotated = NULL;
   goma_error error = setup_bc_is_rotated_list(bc_types, num_bc, &bc_is_rotated);
-  EH(error, "setup_bc_rotate_list");
+  GOMA_EH(error, "setup_bc_rotate_list");
   error = allocate_rotations(exo, &rotations);
-  EH(error, "allocate_rotations");
+  GOMA_EH(error, "allocate_rotations");
 
   bool *side_set_seen = malloc(sizeof(bool) * exo->num_side_sets);
   for (int i = 0; i < exo->num_side_sets; i++) {
@@ -506,9 +506,9 @@ goma_error setup_rotated_bc_nodes(
 
         err = load_elem_dofptr(ielem, exo, pg->matrices[pg->imtrx].x, pg->matrices[pg->imtrx].x_old,
                                pg->matrices[pg->imtrx].xdot, pg->matrices[pg->imtrx].xdot_old, 0);
-        EH(err, "load_elem_dofptr");
+        GOMA_EH(err, "load_elem_dofptr");
         err = bf_mp_init(pd);
-        EH(err, "bf_mp_init");
+        GOMA_EH(err, "bf_mp_init");
 
         int iconnect_ptr = ei[pg->imtrx]->iconnect_ptr;
         int ielem_type = ei[pg->imtrx]->ielem_type;
@@ -540,15 +540,15 @@ goma_error setup_rotated_bc_nodes(
             /* make sure we still need to calculate rotation vectors */
             find_nodal_stu(id, ielem_type, &xi[0], &xi[1], &xi[2]);
             err = load_basis_functions(xi, bfd);
-            EH(err, "problem from load_basis_functions");
+            GOMA_EH(err, "problem from load_basis_functions");
             err = beer_belly();
-            EH(err, "beer_belly");
+            GOMA_EH(err, "beer_belly");
             err = load_fv();
-            EH(err, "load_fv");
+            GOMA_EH(err, "load_fv");
             err = load_bf_grad();
-            EH(err, "load_bf_grad");
+            GOMA_EH(err, "load_bf_grad");
             err = load_bf_mesh_derivs();
-            EH(err, "load_bf_mesh_derivs");
+            GOMA_EH(err, "load_bf_mesh_derivs");
 
             /* put NORMAL vector into array */
             /* calculate the determinant of the surface jacobian  and the normal to
@@ -560,7 +560,7 @@ goma_error setup_rotated_bc_nodes(
             int n_index = node_normals[I].n_normals;
             node_normals[I].n_normals++;
             if (node_normals[I].n_normals > GOMA_MAX_NORMALS_PER_NODE) {
-              EH(GOMA_ERROR, "GOMA_MAX_NORMALS_PER_NODE too small, currently %d",
+              GOMA_EH(GOMA_ERROR, "GOMA_MAX_NORMALS_PER_NODE too small, currently %d",
                  GOMA_MAX_NORMALS_PER_NODE);
             }
             gds_vector_set(node_normals[I].normals[n_index]->normal, 0, fv->snormal[0]);

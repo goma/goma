@@ -121,7 +121,7 @@ void supg_tau_shakib(
 
   for (int a = 0; a < dim; a++) {
     if (pd->e[pg->imtrx][MESH_DISPLACEMENT1 + a]) {
-      EH(GOMA_ERROR, "Mesh displacement derivatives not implemented for shakib supg_tau");
+      GOMA_EH(GOMA_ERROR, "Mesh displacement derivatives not implemented for shakib supg_tau");
     }
   }
 }
@@ -376,7 +376,7 @@ dbl yzbeta_model(int model,
     dc = yzbeta(scale, dim, Y, Z, d_Z, beta, u, d_u, grad_u, d_grad_u, h_elem, interp_eqn, deriv);
     break;
   default:
-    EH(GOMA_ERROR, "Unknown YZBETA Model");
+    GOMA_EH(GOMA_ERROR, "Unknown YZBETA Model");
     break;
   }
 
@@ -837,7 +837,7 @@ int calc_pspg(dbl pspg[DIM],
 
   if (pd->e[upd->matrix_index[R_MOMENTUM1]][R_MOMENTUM1] & T_POROUS_BRINK) {
     if (mp->PorousMediaType != POROUS_BRINKMAN)
-      WH(-1, "Set Porous term multiplier in continuous medium");
+      GOMA_WH(-1, "Set Porous term multiplier in continuous medium");
     /* Short-hand notation for the four parameters in the Brinkman Equation. */
     por = mp->porosity;
     por2 = por * por;
@@ -854,7 +854,7 @@ int calc_pspg(dbl pspg[DIM],
         dvis_dT[j] = mp->d_FlowingLiquid_viscosity[var] * bf[var]->phi[j];
       }
     } else {
-      EH(GOMA_ERROR, "Don't recognize your FlowingLiquidViscosity model");
+      GOMA_EH(GOMA_ERROR, "Don't recognize your FlowingLiquidViscosity model");
     }
     vis = mp->FlowingLiquid_viscosity;
     sc = mp->Inertia_coefficient;

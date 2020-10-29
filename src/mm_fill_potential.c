@@ -315,7 +315,7 @@ assemble_potential(double time,	/* present time value */
             }
           else
             {
-              EH(GOMA_ERROR, "Solution-temperature model other than THERMAL_BATTERY awaits future implementation");
+              GOMA_EH(GOMA_ERROR, "Solution-temperature model other than THERMAL_BATTERY awaits future implementation");
             }
       /* set the solution temperature to the 298 K if it is zero - safety feature */
       if (T == 0.0) T = 298.0;
@@ -674,7 +674,7 @@ assemble_potential(double time,	/* present time value */
     }
   else
     {
-      EH(GOMA_ERROR,"Unrecognized current source model");
+      GOMA_EH(GOMA_ERROR,"Unrecognized current source model");
     }
   /********** End of specification of the current source model **********/
 
@@ -1352,7 +1352,7 @@ current_BV_surf(double func[DIM],
     }
   else
     {
-      EH(GOMA_ERROR, "Solution-temperature model not yet implemented");
+      GOMA_EH(GOMA_ERROR, "Solution-temperature model not yet implemented");
     }
   if (pd->e[pg->imtrx][R_ENERGY]) /* if energy equation is active, re-set electrolyte temperature */
     {
@@ -1385,7 +1385,7 @@ current_BV_surf(double func[DIM],
   if (pd->MeshMotion == LAGRANGIAN && pd->MeshInertia == 1)
     {
       err = belly_flop(elc->lame_mu);
-      EH(err, "error in belly flop");
+      GOMA_EH(err, "error in belly flop");
       if( neg_elem_volume ) return;
     }
 
@@ -1395,7 +1395,7 @@ current_BV_surf(double func[DIM],
    {
      err = get_convection_velocity(vconv, vconv_old, d_vconv, dt, tt);
    }
-  EH(err, "Error in calculating effective convection velocity");
+  GOMA_EH(err, "Error in calculating effective convection velocity");
 
   /* compute molar rate using Butler-Volmer kinetics */ 
   r = nu * k * conc * (exp(grpa) - exp(-grpc)); 
@@ -1737,10 +1737,10 @@ assemble_Enorm(void)
     return 0;
 
   if(!pd->v[pg->imtrx][VOLTAGE])
-    EH(GOMA_ERROR, "Must have VOLTAGE equation active to use ENORM.");
+    GOMA_EH(GOMA_ERROR, "Must have VOLTAGE equation active to use ENORM.");
 
   if(pd->v[pg->imtrx][MESH_DISPLACEMENT1])
-    EH(GOMA_ERROR, "Sorry, assemble_Enorm has not been rigged for ALE.");
+    GOMA_EH(GOMA_ERROR, "Sorry, assemble_Enorm has not been rigged for ALE.");
 
   wt = fv->wt;
   h3 = fv->h3;
@@ -2338,7 +2338,7 @@ int i, j, a, w;
 	   electrolyte_temperature(time, dt, 0);
 	   T = mp->electrolyte_temperature;
          } else {
-	   EH(GOMA_ERROR,
+	   GOMA_EH(GOMA_ERROR,
 	      "Solution-temperature model other than THERMAL_BATTERY awaits future implementation");
          }
          /*
@@ -2475,7 +2475,7 @@ int i, j, a, w;
             }
          else
             {
-              EH(GOMA_ERROR, "Solution-temperature model other than THERMAL_BATTERY awaits future implementation");
+              GOMA_EH(GOMA_ERROR, "Solution-temperature model other than THERMAL_BATTERY awaits future implementation");
             } 
          if (T == 0.0) T = 298.0; /* set the solution temperature to the 298 K if it is zero - safety feature */
 
@@ -2568,7 +2568,7 @@ int i, j, a, w;
              }
           else
              {
-              EH(GOMA_ERROR, "Invalid solution temperature model");
+              GOMA_EH(GOMA_ERROR, "Invalid solution temperature model");
              }
          }
 
@@ -2752,7 +2752,7 @@ int i, j, a, w;
   else if (mp->Elec_ConductivityModel == EXTERNAL_FIELD)
     {
       i_elec_cond =  mp->elec_cond_external_field; 
-      EH(i_elec_cond, "Electrical conductivity external field not found!");
+      GOMA_EH(i_elec_cond, "Electrical conductivity external field not found!");
       k = fv->external_field[i_elec_cond]*mp->u_electrical_conductivity[0];
 
       //Maybe all sensitivies should be set to 0 by default, and changed
@@ -2782,7 +2782,7 @@ int i, j, a, w;
     }
   else
     {
-      EH(GOMA_ERROR,"Unrecognized electrical conductivity model");
+      GOMA_EH(GOMA_ERROR,"Unrecognized electrical conductivity model");
     }
 return(k);
 }

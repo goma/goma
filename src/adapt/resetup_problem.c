@@ -192,7 +192,7 @@ int resetup_matrix(struct Aztec_Linear_Solver_System **ams, Exo_DB *exo, Dpi* dp
   pg->imtrx = 0;
   }
   else {
-    EH(-1, "Unsupported matrix storage format use epetra");
+    GOMA_EH(-1, "Unsupported matrix storage format use epetra");
   }
   return 0;
 }

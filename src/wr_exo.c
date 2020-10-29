@@ -122,7 +122,7 @@ wr_mesh_exo(Exo_DB *x,		/* def'd in exo_struct.h */
   x->cmode = EX_CLOBBER;
   x->exoid = ex_create(filename, x->cmode, &x->comp_wordsize, 
                        &x->io_wordsize);
-  EH(x->exoid, "ex_create");
+  GOMA_EH(x->exoid, "ex_create");
       
   if ( verbosity > 1 )
     {
@@ -151,7 +151,7 @@ wr_mesh_exo(Exo_DB *x,		/* def'd in exo_struct.h */
                        x->num_node_sets,
                        x->num_side_sets);
 
-  EH(status, "ex_put_init");
+  GOMA_EH(status, "ex_put_init");
 
   if ( verbosity > 0 )
     {
@@ -172,13 +172,13 @@ wr_mesh_exo(Exo_DB *x,		/* def'd in exo_struct.h */
   if ( x->num_qa_rec > 0 )
     {
       status = ex_put_qa(x->exoid, x->num_qa_rec, x->qa_record);
-      EH(status, "ex_put_qa");
+      GOMA_EH(status, "ex_put_qa");
     }
 
   if ( x->num_info > 0 )
     {
       status = ex_put_info(x->exoid, x->num_info, x->info);
-      EH(status, "ex_put_info");
+      GOMA_EH(status, "ex_put_info");
     }
 
   if ( verbosity > 0 )
@@ -202,10 +202,10 @@ wr_mesh_exo(Exo_DB *x,		/* def'd in exo_struct.h */
     }
 
   status = ex_put_coord(x->exoid, x->x_coord, x->y_coord, x->z_coord);
-  EH(status, "ex_put_coord");
+  GOMA_EH(status, "ex_put_coord");
 
   status = ex_put_coord_names(x->exoid, x->coord_names);
-  EH(status, "ex_get_coord_names");
+  GOMA_EH(status, "ex_get_coord_names");
 
   if ( x->num_nodes > 0 )
     {
@@ -216,7 +216,7 @@ wr_mesh_exo(Exo_DB *x,		/* def'd in exo_struct.h */
       if ( x->node_map_exists )
         {
           status = ex_put_id_map(x->exoid, EX_NODE_MAP, x->node_map);
-          EH(status, "ex_put_id_map node");
+          GOMA_EH(status, "ex_put_id_map node");
         }
     }
 
@@ -226,13 +226,13 @@ wr_mesh_exo(Exo_DB *x,		/* def'd in exo_struct.h */
       if ( x->elem_map_exists )
         {
           status = ex_put_id_map(x->exoid, EX_ELEM_MAP, x->elem_map);
-          EH(status, "ex_put_id_map elem");
+          GOMA_EH(status, "ex_put_id_map elem");
         }
 
       if ( x->elem_order_map_exists )
         {
           status = ex_put_map(x->exoid, x->elem_order_map);
-          EH(status, "ex_put_map");
+          GOMA_EH(status, "ex_put_map");
         }
     }
 
@@ -254,20 +254,20 @@ wr_mesh_exo(Exo_DB *x,		/* def'd in exo_struct.h */
                                 x->eb_num_elems[i],
                                 x->eb_num_nodes_per_elem[i], 0, 0,
                                 x->eb_num_attr[i]);
-          EH(status, "ex_put_blocks elem");
+          GOMA_EH(status, "ex_put_blocks elem");
 
           if ( (x->eb_num_elems[i] * x->eb_num_nodes_per_elem[i]) > 0 )
             {
               status = ex_put_conn(x->exoid, EX_ELEM_BLOCK,
                                    x->eb_id[i],
                                    x->eb_conn[i], 0, 0);
-              EH(status, "ex_put_conn elem");
+              GOMA_EH(status, "ex_put_conn elem");
             }
 
           if ( (x->eb_num_elems[i]*x->eb_num_attr[i]) > 0 )
             {
               status = ex_put_attr(x->exoid, EX_ELEM_BLOCK, x->eb_id[i], x->eb_attr[i]);
-              EH(status, "ex_put_attr elem");
+              GOMA_EH(status, "ex_put_attr elem");
             }
         }
     }
@@ -295,7 +295,7 @@ wr_mesh_exo(Exo_DB *x,		/* def'd in exo_struct.h */
       ns_specs.sets_dist_fact      = x->ns_distfact_list;
 
       status = ex_put_concat_sets(x->exoid, EX_NODE_SET, &ns_specs);
-      EH(status, "ex_put_concat_sets node_sets");
+      GOMA_EH(status, "ex_put_concat_sets node_sets");
     }
 
 
@@ -323,7 +323,7 @@ wr_mesh_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 
       status = ex_put_concat_sets(x->exoid, EX_SIDE_SET, &ss_specs);
 
-      EH(status, "ex_put_concat_sets side_sets");
+      GOMA_EH(status, "ex_put_concat_sets side_sets");
     }
 
 
@@ -355,7 +355,7 @@ wr_mesh_exo(Exo_DB *x,		/* def'd in exo_struct.h */
         }
       status = ex_put_prop_names(x->exoid, EX_NODE_SET, x->ns_num_props - 1,
                                  &(x->ns_prop_name[1]) );
-      EH(status, "ex_put_prop_names(EX_NODE_SET)");
+      GOMA_EH(status, "ex_put_prop_names(EX_NODE_SET)");
 
       /* 
        * the following loop begins at 1 so as avoid writing
@@ -374,7 +374,7 @@ wr_mesh_exo(Exo_DB *x,		/* def'd in exo_struct.h */
               status = ex_put_prop_array(x->exoid, EX_NODE_SET, 
                                          x->ns_prop_name[i],
                                          x->ns_prop[i]);
-              EH(status, "ex_put_prop_array(EX_NODE_SET)");
+              GOMA_EH(status, "ex_put_prop_array(EX_NODE_SET)");
             }
         }
       
@@ -398,7 +398,7 @@ wr_mesh_exo(Exo_DB *x,		/* def'd in exo_struct.h */
         }
       status = ex_put_prop_names(x->exoid, EX_SIDE_SET, x->ss_num_props - 1,
                                  &(x->ss_prop_name[1]));
-      EH(status, "ex_get_prop_names(EX_SIDE_SET)");
+      GOMA_EH(status, "ex_get_prop_names(EX_SIDE_SET)");
           
       for ( i=1; i<x->ss_num_props; i++)
         {
@@ -408,7 +408,7 @@ wr_mesh_exo(Exo_DB *x,		/* def'd in exo_struct.h */
               status = ex_put_prop_array(x->exoid, EX_SIDE_SET, 
                                          x->ss_prop_name[i],
                                          x->ss_prop[i]);
-              EH(status, "ex_put_prop_array(EX_SIDE_SET)");
+              GOMA_EH(status, "ex_put_prop_array(EX_SIDE_SET)");
             }
         }
     }
@@ -427,7 +427,7 @@ wr_mesh_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 
       status = ex_put_prop_names(x->exoid, EX_ELEM_BLOCK, x->eb_num_props - 1,
                                  &(x->eb_prop_name[1]) );
-      EH(status, "ex_put_prop_names(EX_ELEM_BLOCK)");
+      GOMA_EH(status, "ex_put_prop_names(EX_ELEM_BLOCK)");
 
       for ( i=1; i<x->eb_num_props; i++)
         {
@@ -437,14 +437,14 @@ wr_mesh_exo(Exo_DB *x,		/* def'd in exo_struct.h */
               status = ex_put_prop_array(x->exoid, EX_ELEM_BLOCK, 
                                          x->eb_prop_name[i],
                                          x->eb_prop[i]);
-              EH(status, "ex_put_prop_array(EX_ELEM_BLOCK)");
+              GOMA_EH(status, "ex_put_prop_array(EX_ELEM_BLOCK)");
             }
         }
         
     }
       
   status = ex_close(x->exoid);
-  EH(status, "ex_close()");
+  GOMA_EH(status, "ex_close()");
   
   return(status);
 }
@@ -541,12 +541,12 @@ wr_result_prelim_exo(struct Results_Description *rd,
 
   if ( rd->nhv > 0 )
     {
-      EH(GOMA_ERROR, "Not prepared to write history variables.");
+      GOMA_EH(GOMA_ERROR, "Not prepared to write history variables.");
     }
 
   if ( filename == NULL )
     {
-      EH(GOMA_ERROR, "No file specified to write EXODUS II info.");
+      GOMA_EH(GOMA_ERROR, "No file specified to write EXODUS II info.");
     }
 
   /*
@@ -581,13 +581,13 @@ wr_result_prelim_exo(struct Results_Description *rd,
 
       exo->exoid = ex_open(filename, exo->cmode, &exo->comp_wordsize, 
                            &exo->io_wordsize, &exo->version);
-      EH(exo->exoid, "ex_open");
+      GOMA_EH(exo->exoid, "ex_open");
     }
   else
     {
       exo->exoid = ex_create(filename, exo->cmode, &exo->comp_wordsize, 
                            &exo->io_wordsize);
-      EH(exo->exoid, "ex_create");
+      GOMA_EH(exo->exoid, "ex_create");
     }
 
 
@@ -601,13 +601,13 @@ wr_result_prelim_exo(struct Results_Description *rd,
     {
       num_vars = rd->ngv;
       error = ex_put_variable_param(exo->exoid, EX_GLOBAL, num_vars);
-      EH(error, "ex_put_variable_param global");
+      GOMA_EH(error, "ex_put_variable_param global");
       for ( i=0; i<rd->ngv; i++)
         {
          gvar_names[i] = rd->gvname[i];
         }
       error = ex_put_variable_names(exo->exoid, EX_GLOBAL, num_vars, gvar_names);
-      EH(error, "ex_put_variable_names global");
+      GOMA_EH(error, "ex_put_variable_names global");
     }
       
   /* -------------------- Element Variables -------------------------- */
@@ -615,13 +615,13 @@ wr_result_prelim_exo(struct Results_Description *rd,
     {
       num_vars = rd->nev;
       error = ex_put_variable_param(exo->exoid, EX_ELEM_BLOCK, num_vars);
-      EH(error, "ex_put_variable_param elem block");
+      GOMA_EH(error, "ex_put_variable_param elem block");
       for ( i=0; i<rd->nev; i++)
         {
           var_names[i] = rd->evname[i];
         }
       error = ex_put_variable_names(exo->exoid, EX_ELEM_BLOCK, num_vars, var_names);
-      EH(error, "ex_put_variable_names elem block");
+      GOMA_EH(error, "ex_put_variable_names elem block");
 
       /* Create truth table at this time - saves mucho cycles later
          Also malloc the gvec_elem final dim. Easier to do right
@@ -637,17 +637,17 @@ wr_result_prelim_exo(struct Results_Description *rd,
     {
       num_vars = rd->nnv;
       error = ex_put_variable_param(exo->exoid, EX_NODAL, num_vars);
-      EH(error, "ex_put_variable_param EX_NODAL");
+      GOMA_EH(error, "ex_put_variable_param EX_NODAL");
       for ( i=0; i<rd->nnv; i++)
         {
           var_names[i] = rd->nvname[i];
         }
       error = ex_put_variable_names(exo->exoid, EX_NODAL, num_vars, var_names);
-      EH(error, "ex_put_variable_names nodal");
+      GOMA_EH(error, "ex_put_variable_names nodal");
     }
 
   error = ex_close(exo->exoid);
-  EH(error, "ex_close");
+  GOMA_EH(error, "ex_close");
 
   return;
 }
@@ -689,12 +689,12 @@ wr_result_prelim_exo_segregated(struct Results_Description **rd,
 
   if ( rd[0]->nhv > 0 )
     {
-      EH(GOMA_ERROR, "Not prepared to write history variables.");
+      GOMA_EH(GOMA_ERROR, "Not prepared to write history variables.");
     }
 
   if ( filename == NULL )
     {
-      EH(GOMA_ERROR, "No file specified to write EXODUS II info.");
+      GOMA_EH(GOMA_ERROR, "No file specified to write EXODUS II info.");
     }
 
   /*
@@ -729,13 +729,13 @@ wr_result_prelim_exo_segregated(struct Results_Description **rd,
 
       exo->exoid = ex_open(filename, exo->cmode, &exo->comp_wordsize,
                            &exo->io_wordsize, &exo->version);
-      EH(exo->exoid, "ex_open");
+      GOMA_EH(exo->exoid, "ex_open");
     }
   else
     {
       exo->exoid = ex_create(filename, exo->cmode, &exo->comp_wordsize,
                            &exo->io_wordsize);
-      EH(exo->exoid, "ex_create");
+      GOMA_EH(exo->exoid, "ex_create");
     }
 
 
@@ -749,20 +749,20 @@ wr_result_prelim_exo_segregated(struct Results_Description **rd,
     {
       num_vars = rd[0]->ngv;
       error = ex_put_variable_param(exo->exoid, EX_GLOBAL, num_vars);
-      EH(error, "ex_put_variable_param global");
+      GOMA_EH(error, "ex_put_variable_param global");
       for ( i=0; i<rd[0]->ngv; i++)
         {
          gvar_names[i] = rd[0]->gvname[i];
         }
       error = ex_put_variable_names(exo->exoid, EX_GLOBAL, num_vars, gvar_names);
-      EH(error, "ex_put_variable_names global");
+      GOMA_EH(error, "ex_put_variable_names global");
     }
 
   /* -------------------- Element Variables -------------------------- */
   if ( total_nev > 0 )
     {
       error = ex_put_variable_param(exo->exoid, EX_ELEM_BLOCK, total_nev);
-      EH(error, "ex_put_variable_param elem block");
+      GOMA_EH(error, "ex_put_variable_param elem block");
       pg->imtrx = 0;
       int count = 0;
       i = 0;
@@ -773,7 +773,7 @@ wr_result_prelim_exo_segregated(struct Results_Description **rd,
         }
 
         if (pg->imtrx >= upd->Total_Num_Matrices) {
-          EH(GOMA_ERROR, "Error counting element variables");
+          GOMA_EH(GOMA_ERROR, "Error counting element variables");
           return;
         }
 
@@ -782,7 +782,7 @@ wr_result_prelim_exo_segregated(struct Results_Description **rd,
         count++;
       }
       error = ex_put_variable_names(exo->exoid, EX_ELEM_BLOCK,  total_nev, var_names);
-      EH(error, "ex_put_variable_names elem block");
+      GOMA_EH(error, "ex_put_variable_names elem block");
 
       /* Create truth table at this time - saves mucho cycles later
          Also malloc the gvec_elem final dim. Easier to do right
@@ -795,7 +795,7 @@ wr_result_prelim_exo_segregated(struct Results_Description **rd,
   if ( total_nnv > 0 )
     {
       error = ex_put_variable_param(exo->exoid, EX_NODAL, total_nnv);
-      EH(error, "ex_put_variable_param EX_NODAL");
+      GOMA_EH(error, "ex_put_variable_param EX_NODAL");
       pg->imtrx = 0;
       int count = 0;
       i = 0;
@@ -806,7 +806,7 @@ wr_result_prelim_exo_segregated(struct Results_Description **rd,
         }
 
         if (pg->imtrx >= upd->Total_Num_Matrices) {
-          EH(GOMA_ERROR, "Error counting nodal variables");
+          GOMA_EH(GOMA_ERROR, "Error counting nodal variables");
           return;
         }
 
@@ -815,11 +815,11 @@ wr_result_prelim_exo_segregated(struct Results_Description **rd,
         count++;
       }
       error = ex_put_variable_names(exo->exoid, EX_NODAL, total_nnv, var_names);
-      EH(error, "ex_put_variable_names nodal");
+      GOMA_EH(error, "ex_put_variable_names nodal");
     }
 
   error = ex_close(exo->exoid);
-  EH(error, "ex_close");
+  GOMA_EH(error, "ex_close");
 
   return;
 }
@@ -850,13 +850,13 @@ wr_nodal_result_exo(Exo_DB *exo, char *filename, double vector[],
       sr = sprintf(err_msg, 
                    "ex_open() = %d on \"%s\" failure @ step %d, time = %g",
                    exo->exoid, filename, time_step, time_value);
-      EH(GOMA_ERROR, err_msg);
+      GOMA_EH(GOMA_ERROR, err_msg);
     }
   error      = ex_put_time(exo->exoid, time_step, &time_value);
-  EH(error, "ex_put_time");
+  GOMA_EH(error, "ex_put_time");
   error      = ex_put_var(exo->exoid, time_step, EX_NODAL, variable_index, 1,
 				exo->num_nodes, vector);
-  EH(error, "ex_put_var nodal");
+  GOMA_EH(error, "ex_put_var nodal");
   error      = ex_close(exo->exoid);
   return;
 }
@@ -883,11 +883,11 @@ wr_elem_result_exo(Exo_DB *exo, const char *filename, double ***vector,
   exo->io_wordsize = 0;		/* query */
   exo->exoid = ex_open(filename, exo->cmode, &exo->comp_wordsize, 
                        &exo->io_wordsize, &exo->version);
-  EH(exo->exoid, "ex_open");
+  GOMA_EH(exo->exoid, "ex_open");
 
 
   error = ex_put_time (exo->exoid, time_step, &local_time_value );
-  EH(error, "ex_put_time");
+  GOMA_EH(error, "ex_put_time");
 
   /* If the truth table has NOT been set up, this will be really slow... */
 
@@ -898,7 +898,7 @@ wr_elem_result_exo(Exo_DB *exo, const char *filename, double ***vector,
         error = ex_put_var(exo->exoid, time_step, EX_ELEM_BLOCK, variable_index+1,
                            exo->eb_id[i], exo->eb_num_elems[i],
                            vector[i][variable_index]);
-	      EH(error, "ex_put_var elem");
+	      GOMA_EH(error, "ex_put_var elem");
       }
     }
     else {
@@ -910,12 +910,12 @@ wr_elem_result_exo(Exo_DB *exo, const char *filename, double ***vector,
                                 exo->eb_id[i],
                                 exo->eb_num_elems[i],
                                 vector[i][variable_index] );
-      EH(error, "ex_put_var elem");
+      GOMA_EH(error, "ex_put_var elem");
     }
   }
 
   error      = ex_close ( exo->exoid );
-  EH(error, "ex_close");
+  GOMA_EH(error, "ex_close");
 
   return;
 }
@@ -952,12 +952,12 @@ wr_global_result_exo( Exo_DB *exo,
   exo->exoid = ex_open(filename, exo->cmode, &exo->comp_wordsize, 
                        &exo->io_wordsize, &exo->version);
   if (exo->exoid < 0) {
-    EH(GOMA_ERROR,"wr_nodal_result_exo: could not open the output file");
+    GOMA_EH(GOMA_ERROR,"wr_nodal_result_exo: could not open the output file");
   }
 
   error = ex_put_var( exo->exoid, time_step, EX_GLOBAL, 1, 0, ngv, u );
 
-  EH(error, "ex_put_var glob_vars");
+  GOMA_EH(error, "ex_put_var glob_vars");
 
   error = ex_close( exo->exoid);
 
@@ -1126,7 +1126,7 @@ create_truth_table(struct Results_Description *rd, Exo_DB *exo,
     sr = sprintf(err_msg, 
                  "%s: Elem var count mismatch: tev(%d)<>rd->nev(%d)!?",
                  yo, tev, rd->nev);
-    EH(GOMA_ERROR, err_msg);
+    GOMA_EH(GOMA_ERROR, err_msg);
     /*
     fprintf(stderr,
             "%s: Disagreement over number of element variables\n",
@@ -1364,7 +1364,7 @@ create_truth_table(struct Results_Description *rd, Exo_DB *exo,
 				    exo->num_elem_blocks,
 				    rd->nev,
 				    exo->elem_var_tab );
-  EH(error, "ex_put_truth_table EX_ELEM_BLOCK");
+  GOMA_EH(error, "ex_put_truth_table EX_ELEM_BLOCK");
 
   /* Now set truth table exists flag */
   exo->elem_var_tab_exists = TRUE;
@@ -1513,7 +1513,7 @@ create_truth_table_segregated(struct Results_Description **rd, Exo_DB *exo,
     sr = sprintf(err_msg,
                  "%s: Elem var count mismatch: tev(%d)<>rd->nev(%d)!?",
                  yo, tev, total_nev);
-    EH(GOMA_ERROR, err_msg);
+    GOMA_EH(GOMA_ERROR, err_msg);
     /*
     fprintf(stderr,
             "%s: Disagreement over number of element variables\n",
@@ -1727,7 +1727,7 @@ create_truth_table_segregated(struct Results_Description **rd, Exo_DB *exo,
 				    exo->num_elem_blocks,
 				    total_nev,
 				    exo->elem_var_tab );
-  EH(error, "ex_put_truth_table EX_ELEM_BLOCK");
+  GOMA_EH(error, "ex_put_truth_table EX_ELEM_BLOCK");
 
   /* Now set truth table exists flag */
   exo->elem_var_tab_exists = TRUE;
@@ -2061,35 +2061,35 @@ void wr_resetup_exo(Exo_DB *exo, char *filename) {
   if ( exo->num_glob_vars > 0 )
     {
       status = ex_put_variable_param(exo->exoid, EX_GLOBAL, exo->num_glob_vars);
-      EH(status, "ex_put_variable_param global");
+      GOMA_EH(status, "ex_put_variable_param global");
       status = ex_put_variable_names(exo->exoid, EX_GLOBAL, exo->num_glob_vars,
 				exo->glob_var_names);
-      EH(status, "ex_put_variable_names global");
+      GOMA_EH(status, "ex_put_variable_names global");
     }
 
   if ( exo->num_elem_vars > 0 )
     {
       status = ex_put_variable_param(exo->exoid, EX_ELEM_BLOCK, exo->num_elem_vars);
-      EH(status, "ex_put_variable_param elem block");
+      GOMA_EH(status, "ex_put_variable_param elem block");
       status = ex_put_variable_names(exo->exoid, EX_ELEM_BLOCK,
 				     exo->num_elem_vars,
 				     exo->elem_var_names);
-      EH(status, "ex_put_variable_names elem block");
+      GOMA_EH(status, "ex_put_variable_names elem block");
       status = ex_put_truth_table(exo->exoid, EX_ELEM_BLOCK,
 				   exo->num_elem_blocks,
 				   exo->num_elem_vars, 
 				   exo->elem_var_tab);
-      EH(status, "ex_put_truth_table elem block");
+      GOMA_EH(status, "ex_put_truth_table elem block");
     }
 
   if ( exo->num_node_vars > 0 )
     {
       status = ex_put_variable_param(exo->exoid, EX_NODAL, exo->num_node_vars);
-      EH(status, "ex_put_variable_param nodal");
+      GOMA_EH(status, "ex_put_variable_param nodal");
       status = ex_put_variable_names(exo->exoid, EX_NODAL,
 				exo->num_node_vars,
 				exo->node_var_names);
-      EH(status, "ex_put_variable_names nodal");
+      GOMA_EH(status, "ex_put_variable_names nodal");
     }
 
   if ( exo->num_times > 0 )
@@ -2097,7 +2097,7 @@ void wr_resetup_exo(Exo_DB *exo, char *filename) {
       for ( i=0; i<exo->num_times; i++)
         {
           status = ex_put_time(exo->exoid, i+1, &(exo->time_vals[i]));
-          EH(status, "ex_put_times");
+          GOMA_EH(status, "ex_put_times");
         }
     }
 
@@ -2147,7 +2147,7 @@ wr_result_exo(Exo_DB *exo, char *filename)
                                    exo->num_elem_blocks,
                                    exo->num_elem_vars, 
                                    exo->elem_var_tab);
-      EH(status, "ex_put_elem_var_tab");
+      GOMA_EH(status, "ex_put_elem_var_tab");
       */
 
       for ( i=0; i<exo->num_ev_time_indeces; i++)
@@ -2171,7 +2171,7 @@ wr_result_exo(Exo_DB *exo, char *filename)
                           sprintf(err_msg, 
                                                     "ex_put_var() elem bad rtn: time %d, elemvar %d, EB ID %d",
                                                     time_index, k+1, exo->eb_id[j]);
-                          EH(GOMA_ERROR, err_msg);
+                          GOMA_EH(GOMA_ERROR, err_msg);
                         }
                     }
                 }
@@ -2195,13 +2195,13 @@ wr_result_exo(Exo_DB *exo, char *filename)
                 exo->nv_indeces[j], 1,
                 exo->num_nodes,
                 &(exo->nv[i][j][0]));
-              EH(status, "ex_put_var nodal");
+              GOMA_EH(status, "ex_put_var nodal");
             }
         }
     }
 
   status = ex_close(exo->exoid);
-  EH(status, "ex_close()");
+  GOMA_EH(status, "ex_close()");
   
   return;
 }

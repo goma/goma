@@ -235,7 +235,7 @@ setup_nodal_comm_map(Exo_DB *exo, Dpi *dpi, Comm_Ex **cx)
 		  dpi->node_index_global);
     if (lnn == -1) {
       fprintf(stderr,"%s %d: couldn't find gnn = %d\n", yo, ProcID, gnn);
-      EH(GOMA_ERROR,"failed dp mapping");
+      GOMA_EH(GOMA_ERROR,"failed dp mapping");
     }
     list_node_send[i] = lnn;
   }
@@ -282,7 +282,7 @@ exchange_neighbor_proc_info(int num_neighbors, COMM_NP_STRUCT *np_ptr)
     if (retn != MPI_SUCCESS) {
       fprintf(stderr,"%s Proc %d: Irecv to %d failed post: %d\n", yo, ProcID,
 	      np_ptr->neighbor_ProcID, retn);
-      EH(GOMA_ERROR,"MPI failure");
+      GOMA_EH(GOMA_ERROR,"MPI failure");
     }
     np_ptr++;
   }
@@ -298,7 +298,7 @@ exchange_neighbor_proc_info(int num_neighbors, COMM_NP_STRUCT *np_ptr)
     if (retn != MPI_SUCCESS) {
       fprintf(stderr,"%s Proc %d: Isend to %d failed post: %d\n", yo, ProcID,
 	      np_ptr->neighbor_ProcID, retn);
-      EH(GOMA_ERROR,"MPI failure");
+      GOMA_EH(GOMA_ERROR,"MPI failure");
     }
     np_ptr++;    
   }
@@ -312,13 +312,13 @@ exchange_neighbor_proc_info(int num_neighbors, COMM_NP_STRUCT *np_ptr)
     if (retn != MPI_SUCCESS) {
       fprintf(stderr,"%s Proc %d: Irecv to %d failed: %d\n", yo, ProcID,
 	      np_ptr->neighbor_ProcID, retn);
-      EH(GOMA_ERROR,"MPI failure");
+      GOMA_EH(GOMA_ERROR,"MPI failure");
     }
     retn = MPI_Wait(&(np_ptr->send_request), &(np_ptr->send_status));
     if (retn != MPI_SUCCESS) {
       fprintf(stderr,"%s Proc %d: Isend to %d failed: %d\n", yo, ProcID,
 	      np_ptr->neighbor_ProcID, retn);
-      EH(GOMA_ERROR,"MPI failure");
+      GOMA_EH(GOMA_ERROR,"MPI failure");
     }    
     np_ptr++;  
   }
@@ -326,7 +326,7 @@ exchange_neighbor_proc_info(int num_neighbors, COMM_NP_STRUCT *np_ptr)
   if (num_neighbors > 0) {
     fprintf(stderr,"%s this processor has neighbors but PARALLEL ifdef not on\n",
 	    yo); 
-    EH(GOMA_ERROR,"MPI failure");
+    GOMA_EH(GOMA_ERROR,"MPI failure");
   }
 #endif
   mtype++;
@@ -498,7 +498,7 @@ build_node_recv_indeces(Exo_DB *exo, Dpi *dpi)
     fprintf(stderr,
 	    "Proc %d: num_owner_changes %d not equal to dpi->num_neighbors %d\n",
 	    ProcID, num_owner_changes, dpi->num_neighbors);
-    EH(GOMA_ERROR, "External node ownership inconsistency!");
+    GOMA_EH(GOMA_ERROR, "External node ownership inconsistency!");
   }
 
   /*
@@ -508,7 +508,7 @@ build_node_recv_indeces(Exo_DB *exo, Dpi *dpi)
     ptr_node_recv[i+1] += ptr_node_recv[i];
   }
   if (ptr_node_recv[dpi->num_neighbors] != dpi->num_external_nodes) {
-    EH(GOMA_ERROR, "Mismatch in external node ownership.");
+    GOMA_EH(GOMA_ERROR, "Mismatch in external node ownership.");
   }
   
   return;

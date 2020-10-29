@@ -117,7 +117,7 @@ ns_data_print(pp_Data * p,
     if (ebIndex_first == -1) {
       sprintf(err_msg, "Can't find an element block with the elem Block id %d\n", elemBlock_id);
     if (Num_Proc == 1) {
-      EH(GOMA_ERROR, err_msg);
+      GOMA_EH(GOMA_ERROR, err_msg);
     }
     }
     mat_num = Matilda[ebIndex_first];
@@ -138,7 +138,7 @@ ns_data_print(pp_Data * p,
   else
     {
       sprintf(err_msg, "Node set ID %d not found.", node_set_id);
-      if( Num_Proc == 1 ) EH(GOMA_ERROR,err_msg);
+      if( Num_Proc == 1 ) GOMA_EH(GOMA_ERROR,err_msg);
     }
 
   /* first right time stamp or run stamp to separate the sets */
@@ -185,7 +185,7 @@ ns_data_print(pp_Data * p,
         idx = Index_Solution(node, MESH_DISPLACEMENT1, 0, 0, -1, pg->imtrx);
         if (idx == -1) {
           x_pos = Coor[0][node];
-          WH(idx, "Mesh variable not found.  May get undeformed coords.");
+          GOMA_WH(idx, "Mesh variable not found.  May get undeformed coords.");
         } else {
           x_pos = Coor[0][node] + x[idx];
         }
@@ -261,7 +261,7 @@ ns_data_print(pp_Data * p,
 	    
 	    if ( ! exo->node_elem_conn_exists )
 	      {
-		EH(GOMA_ERROR, "Cannot compute angle without node_elem_conn.");
+		GOMA_EH(GOMA_ERROR, "Cannot compute angle without node_elem_conn.");
 	      }
 	    
 	    elem_list[0] = exo->node_elem_list[exo->node_elem_pntr[node]];
@@ -275,13 +275,13 @@ ns_data_print(pp_Data * p,
 				    exo->elem_node_pntr[elem_list[0]+1],
 				    exo->elem_node_list);
 
-	    EH(local_node[0], "Can not find node in elem node connectivity!?! ");
+	    GOMA_EH(local_node[0], "Can not find node in elem node connectivity!?! ");
 	    local_node[0] -= exo->elem_node_pntr[elem_list[0]];
 	    /* check for neighbors*/
 	    if( mat_num == find_mat_number(elem_list[0], exo))
 	      {elem_ct = 1;}
 	    else
-	      {WH(-1,"block id doesn't match first element");}
+	      {GOMA_WH(-1,"block id doesn't match first element");}
 	    for (face=0 ; face<ei[pg->imtrx]->num_sides ; face++)
 	      {
 		ielem = exo->elem_elem_list[exo->elem_elem_pntr[elem_list[0]]+face];
@@ -310,7 +310,7 @@ ns_data_print(pp_Data * p,
 		if ( local_node[ielem] < 0 || local_node[ielem] > 3 ) 
 		  {
 		    if (strncasecmp(qtity_str, "theta", 5 ) == 0) {
-		      EH(GOMA_ERROR, "Node out of bounds.");
+		      GOMA_EH(GOMA_ERROR, "Node out of bounds.");
 		    }
 		  }
 
@@ -354,19 +354,19 @@ ns_data_print(pp_Data * p,
 
 		err = load_basis_functions(xi, bfd);
 
-		EH( err, "problem from load_basis_functions");
+		GOMA_EH( err, "problem from load_basis_functions");
 	    
 		err = beer_belly();
-		EH( err, "beer_belly");
+		GOMA_EH( err, "beer_belly");
 	    
 		err = load_fv();
-		EH( err, "load_fv");
+		GOMA_EH( err, "load_fv");
 	    
 		err = load_bf_grad();
-		EH( err, "load_bf_grad");
+		GOMA_EH( err, "load_bf_grad");
 
 		err = load_bf_mesh_derivs(); 
-		EH(err, "load_bf_mesh_derivs");
+		GOMA_EH(err, "load_bf_mesh_derivs");
 		
 		if (doPressure) {
 		  ordinate = fv->P;
@@ -474,7 +474,7 @@ ns_data_print(pp_Data * p,
              int dof_map[MDE];
 	    if ( ! exo->node_elem_conn_exists )
 	      {
-		EH(GOMA_ERROR, "Cannot compute angle without node_elem_conn.");
+		GOMA_EH(GOMA_ERROR, "Cannot compute angle without node_elem_conn.");
 	      }
 	    
 	    elem_list[0] = exo->node_elem_list[exo->node_elem_pntr[node]];
@@ -488,7 +488,7 @@ ns_data_print(pp_Data * p,
 				    exo->elem_node_pntr[elem_list[0]+1],
 				    exo->elem_node_list);
 
-	    EH(local_node[0], "Can not find node in elem node connectivity!?! ");
+	    GOMA_EH(local_node[0], "Can not find node in elem node connectivity!?! ");
 	    local_node[0] -= exo->elem_node_pntr[elem_list[0]];
 
 		load_ei(elem_list[0], exo, 0, pg->imtrx);
@@ -496,13 +496,13 @@ ns_data_print(pp_Data * p,
 		find_nodal_stu(local_node[0], ei[pg->imtrx]->ielem_type, xi, xi+1, xi+2);
 		err = load_basis_functions(xi, bfd);
 
-		EH( err, "problem from load_basis_functions");
+		GOMA_EH( err, "problem from load_basis_functions");
 	    
 		err = beer_belly();
-		EH( err, "beer_belly");
+		GOMA_EH( err, "beer_belly");
 	    
 		err = load_fv();
-		EH( err, "load_fv");
+		GOMA_EH( err, "load_fv");
 	    
             n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
             lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
@@ -553,13 +553,13 @@ ns_data_print(pp_Data * p,
 		        }
                break;
                default:
-                    WH(-1,"Undefined Species Type in untracked species\n");
+                    GOMA_WH(-1,"Undefined Species Type in untracked species\n");
                }
             iprint = 1;
           }
 	else
 	  {
-	    WH(id_var,
+	    GOMA_WH(id_var,
 	       "Requested print variable is not defined at all nodes. May get 0.");
 	    if(id_var == -1) iprint = 0;
 	  }
@@ -642,7 +642,7 @@ ns_data_sens_print(const struct Post_Processing_Data_Sens *p,
   else
   {
     sprintf(err_msg, "Node set ID %d not found.", node_set_id);
-    if( Num_Proc == 1 ) EH(GOMA_ERROR,err_msg);
+    if( Num_Proc == 1 ) GOMA_EH(GOMA_ERROR,err_msg);
   }
 
   /* first right time stamp or run stamp to separate the sets */
@@ -694,7 +694,7 @@ ns_data_sens_print(const struct Post_Processing_Data_Sens *p,
         idx = Index_Solution (node, MESH_DISPLACEMENT1, 0, 0, -1, pg->imtrx);
         if (idx == -1) {
 	  x_pos = Coor[0][node];
-          WH(idx, "Mesh variable not found.  May get undeformed coords.");
+          GOMA_WH(idx, "Mesh variable not found.  May get undeformed coords.");
         } else {
 	  x_pos = Coor[0][node] + x[idx];
         }
@@ -718,7 +718,7 @@ ns_data_sens_print(const struct Post_Processing_Data_Sens *p,
         } else {
 	  id_var = Index_Solution(node, quantity, 0, 0, mat_id, pg->imtrx);
         }
-        WH(id_var,
+        GOMA_WH(id_var,
 	   "Requested print variable is not defined at all nodes. May get 0.");
 
         if ((uf=fopen(filenm,"a")) != NULL) {
@@ -775,7 +775,7 @@ psid2nn ( int psid )
     {
       if( Num_Proc == 1 )
        {
-        EH(nsp, "Failed to match nodeset.");
+        GOMA_EH(nsp, "Failed to match nodeset.");
        }
       else
         return(-1);
@@ -803,7 +803,7 @@ nsid2nn ( int psid )
     {
       if( Num_Proc == 1 )
        {
-        EH(nsp, "Failed to match nodeset.");
+        GOMA_EH(nsp, "Failed to match nodeset.");
        }
       else
         return(-1);

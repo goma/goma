@@ -213,7 +213,7 @@ luf (const int N,
      double x[],
      const int factor_flag )
 {
-  EH(GOMA_ERROR, "Goma not configured with sparse solver support");
+  GOMA_EH(GOMA_ERROR, "Goma not configured with sparse solver support");
 }
 #endif // HAVE_SPARSE
 /******************************************************************************/

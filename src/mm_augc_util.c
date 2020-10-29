@@ -852,13 +852,13 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
       int ibc_user,idf_user,count;
   
       if( Num_Proc != 1)	{
-	EH(GOMA_ERROR,"aprepro AC condition not ready for parallel");
+	GOMA_EH(GOMA_ERROR,"aprepro AC condition not ready for parallel");
       } 
       sprintf(cmd_str,"%s %s %s %s %s %s %.20g","bcdiff.pl"
 	      ,"-p",augc[iAC].Params_File,"-i",Input_File,
 	      augc[iAC].AP_param,lambda);
       err = system(cmd_str);
-      EH(err, "Error could not create process for bcdiff.pl");
+      GOMA_EH(err, "Error could not create process for bcdiff.pl");
  
       augc[iAC].DataFlt[0] = lambda;
 
@@ -871,13 +871,13 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
 	  count++;
 	  if( fscanf(jfp,"%d",&ibc_user) != 1)
 	    {
-	      EH(GOMA_ERROR,"error reading bcdiff");
+	      GOMA_EH(GOMA_ERROR,"error reading bcdiff");
 	    }
 	  if( ibc_user !=  -1)
 	    {
 	      if( fscanf(jfp,"%d %lf %lf",&idf_user,&temp,&lambda_user) != 3)
 		{
-		  EH(GOMA_ERROR,"error reading bcdiff");
+		  GOMA_EH(GOMA_ERROR,"error reading bcdiff");
 		}
 	      switch (BC_Types[ibc_user].BC_Name)
 		{
@@ -935,20 +935,20 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
 	  count++;
 	  if( fscanf(jfp,"%d",&ibc_user) != 1)
 	    {
-	      EH(GOMA_ERROR,"error reading bcdiff");
+	      GOMA_EH(GOMA_ERROR,"error reading bcdiff");
 	    }
 	  if( ibc_user !=  -1)
 	    {
 	      if( fscanf(jfp,"%d %lf %lf",&idf_user,&temp,&lambda_user) != 3)
 		{
-		  EH(GOMA_ERROR,"error reading bcdiff");
+		  GOMA_EH(GOMA_ERROR,"error reading bcdiff");
 		}
 	      augc[ibc_user].DataFlt[idf_user] = lambda_user;
 	    }	/* if ibc_user  */
 	}	/* while ibc_user  */
       fclose(jfp);
 #else
-      EH(GOMA_ERROR, 
+      GOMA_EH(GOMA_ERROR, 
 	 "aprepro must be run prior to running goma on this platform.");
 #endif 
     }
@@ -2208,11 +2208,11 @@ overlap_aug_cond ( int ija[],
   solid_eb = augc[nAC-1].solid_eb + 1;
   fluid_eb = augc[nAC-1].fluid_eb + 1;
   lm_eb    = augc[nAC-1].lm_eb + 1;
-  if (solid_eb == fluid_eb) EH(GOMA_ERROR, "Solid and fluid must be on different blocks!");
+  if (solid_eb == fluid_eb) GOMA_EH(GOMA_ERROR, "Solid and fluid must be on different blocks!");
 
   if ( Do_Overlap && lm_eb == solid_eb ) ac_lm = 1;
   else if ( Do_Overlap && lm_eb == fluid_eb ) ac_lm = 2;
-  else EH(GOMA_ERROR, "Shouldn't be here.");
+  else GOMA_EH(GOMA_ERROR, "Shouldn't be here.");
   
 /* Just fill this in for use as argument */
   for (i=0; i<DIM; i++) { h[i] = 1.0; }
@@ -2336,7 +2336,7 @@ overlap_aug_cond ( int ija[],
 					   dAC,
 					   *mf_args->time,
 					   exo);
-                  EH(err, " apply_contact_bc");
+                  GOMA_EH(err, " apply_contact_bc");
                 }  /* END of "if (ielem != jelem || iside != jside)" */
 
               jelem = ielem;
@@ -2828,7 +2828,7 @@ estimate_dAC_ALC(int iAC,
           case AC_LGRM:
             if (augc[jAC].MFID != VOLUME_FLUX)
               {
-                EH(GOMA_ERROR, "This Lagrange multiplier type is not yet supported!");
+                GOMA_EH(GOMA_ERROR, "This Lagrange multiplier type is not yet supported!");
               }
             else
               {
@@ -2878,7 +2878,7 @@ estimate_dAC_ALC(int iAC,
             break;
 
           default:
-            EH (-1, "Unknown AC type!");
+            GOMA_EH(-1, "Unknown AC type!");
         }
     }
 
@@ -2980,7 +2980,7 @@ estimate_dAC_ALC(int iAC,
           case AC_LGRM:
             if (augc[jAC].MFID != VOLUME_FLUX)
               {
-                EH(GOMA_ERROR, "This Lagrange multiplier type is not yet supported!");
+                GOMA_EH(GOMA_ERROR, "This Lagrange multiplier type is not yet supported!");
               }
             else
               {
@@ -3030,7 +3030,7 @@ estimate_dAC_ALC(int iAC,
             break;
 
           default:
-            EH (-1, "Unknown AC type!");
+            GOMA_EH(-1, "Unknown AC type!");
         }
     }
 
@@ -3141,7 +3141,7 @@ std_lgr_cond ( int iAC,
 	  break;
 	default:
 			  
-	  EH(GOMA_ERROR,"Cannot find Lagrange Multiplier condition.");
+	  GOMA_EH(GOMA_ERROR,"Cannot find Lagrange Multiplier condition.");
 	}
   }
   else if ( augc[iAC].Type == AC_PF_CONSTRAINT )
@@ -3311,11 +3311,11 @@ create_overlap_acs(Exo_DB *exo, int iAC)
     }
   else  
     {
-      EH(GOMA_ERROR, "Augmenting Condition Lagrange multiplier must live on fluid or solid block!");
+      GOMA_EH(GOMA_ERROR, "Augmenting Condition Lagrange multiplier must live on fluid or solid block!");
     }
 
 /* At present, only 2D problems are supported */
-  if (dim != 2) EH(GOMA_ERROR, "Overlap AC algorithm is only for 2D problems!");
+  if (dim != 2) GOMA_EH(GOMA_ERROR, "Overlap AC algorithm is only for 2D problems!");
 
 /* Determine number of quadrature points per side (on solid block) */
 /* For now, only P0 interpolation of Lagrange equation will be supported */
@@ -3486,7 +3486,7 @@ assign_overlap_acs( double x[], Exo_DB *exo )
     }
   if ( augc[iAC].Type != AC_OVERLAP )
     {
-      EH(GOMA_ERROR, "Cannot locate first overlap AC\n");
+      GOMA_EH(GOMA_ERROR, "Cannot locate first overlap AC\n");
     } 
 
 /* Read inputs from existing overlap AC */
@@ -3585,7 +3585,7 @@ create_periodic_acs(Exo_DB *exo)
               ss1 = i;
             }
         }
-      if ( !found ) EH(GOMA_ERROR,"SSID1 not found in mesh for periodic bc");
+      if ( !found ) GOMA_EH(GOMA_ERROR,"SSID1 not found in mesh for periodic bc");
   
       found = FALSE;
       for (i=0; i<exo->num_side_sets; i++)
@@ -3596,11 +3596,11 @@ create_periodic_acs(Exo_DB *exo)
               ss2 = i;
             }
         }
-      if ( !found ) EH(GOMA_ERROR,"SSID2 not found in mesh for periodic bc");
+      if ( !found ) GOMA_EH(GOMA_ERROR,"SSID2 not found in mesh for periodic bc");
 
       /* require SS's match */
       if ( exo->ss_num_sides[ss1] != exo->ss_num_sides[ss2] ) {
-        EH(GOMA_ERROR,"Periodic bc's only supported for matching side sets!");
+        GOMA_EH(GOMA_ERROR,"Periodic bc's only supported for matching side sets!");
       }
   
       num_nodes_on_side = ( exo->ss_node_side_index[ss1][1] -
@@ -3641,7 +3641,7 @@ create_periodic_acs(Exo_DB *exo)
       }
   
       if ( count1 != count2 ) {
-        EH(GOMA_ERROR,"Periodic bc's only supported for matching side sets!");
+        GOMA_EH(GOMA_ERROR,"Periodic bc's only supported for matching side sets!");
       }
       
       /* now look to match nodes between lists */
@@ -3669,7 +3669,7 @@ create_periodic_acs(Exo_DB *exo)
 	  }
 	}
 	if ( !found ) {
-          EH(GOMA_ERROR,"Periodic bc's only supported for matching side sets!");
+          GOMA_EH(GOMA_ERROR,"Periodic bc's only supported for matching side sets!");
         }
       }
       

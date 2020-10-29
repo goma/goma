@@ -18,17 +18,17 @@ void call_decomp(char *exodus_file) {
     DPRINTF(stdout, "decomp command: %s\n", decomp_command);
   }
   if (snerr < 0 || snerr >= MAX_DECOMP_COMMAND) {
-    EH(GOMA_ERROR, "Error creating decomp command snprintf");
+    GOMA_EH(GOMA_ERROR, "Error creating decomp command snprintf");
   }
 
   int syserr = system(decomp_command);
   if (syserr != 0) {
-    EH(GOMA_ERROR, "System call failed for decomp command.");
+    GOMA_EH(GOMA_ERROR, "System call failed for decomp command.");
   }
 
   if (WEXITSTATUS(syserr) == 127)
   {
-    EH(GOMA_ERROR, "System call failed, decomp not found, add SEACAS utils to PATH");
+    GOMA_EH(GOMA_ERROR, "System call failed, decomp not found, add SEACAS utils to PATH");
   }
 }
 
@@ -55,4 +55,4 @@ void decompose_exodus_files(void) {
   }
   call_decomp(ExoFile);
 }
-void join_exodus_file(char *filename) { EH(GOMA_ERROR, "join exodus file not implemented"); }
+void join_exodus_file(char *filename) { GOMA_EH(GOMA_ERROR, "join exodus file not implemented"); }

@@ -123,7 +123,7 @@ init_element_storage(ELEM_BLK_STRUCT *eb_ptr)
   double *base_ptr = NULL;
 
   if (upd->Total_Num_Matrices > 1) {
-    EH(GOMA_ERROR, "Element storage not setup to work with multiple matrices.");
+    GOMA_EH(GOMA_ERROR, "Element storage not setup to work with multiple matrices.");
   }
 
   /*
@@ -236,28 +236,28 @@ set_init_Element_Storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
       Draining_curve   = mp_glob[mn]->u_saturation[8];
       if (Guess_Flag ==4 || Guess_Flag == 5)
 	{
-	  EH(GOMA_ERROR,"Not a smooth restart for hysteretic saturation function. If you really want to do this use read_exoII_file or call us");
+	  GOMA_EH(GOMA_ERROR,"Not a smooth restart for hysteretic saturation function. If you really want to do this use read_exoII_file or call us");
 	}
 
       if(Guess_Flag == 5 || Guess_Flag == 6)
 	{
-	  WH(-1,"Initializing Hysteretic Curve values at all Gauss points with read_exoII_file");
+	  GOMA_WH(-1,"Initializing Hysteretic Curve values at all Gauss points with read_exoII_file");
 	  CPU_word_size = sizeof(double);
 	  IO_word_size  = 0;    
 
 	  exoid = ex_open(ExoAuxFile, EX_READ, &CPU_word_size, &IO_word_size , &version);
-	  EH(exoid, "ex_open");
+	  GOMA_EH(exoid, "ex_open");
 
 	  error = ex_get_init(exoid, title, &num_dim, &num_nodes, &num_elem,
 			      &num_elem_blk, &num_node_sets, &num_side_sets);
-	  EH(error, "ex_get_init for efv or init guess");
+	  GOMA_EH(error, "ex_get_init for efv or init guess");
 
 	  /*
 	   * Obtain the number of time steps in the exodus file, time_step,
 	   * We will read only from the last time step
 	   */
 	  error = ex_inquire(exoid, EX_INQ_TIME, &time_step, &ret_float, ret_char);
-	  EH(error, "ex_inquire");
+	  GOMA_EH(error, "ex_inquire");
 
 	  /* Based on problem type and available info in database, extract 
 	   * appropriate fields
@@ -268,13 +268,13 @@ set_init_Element_Storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
 	   * space for storage of their names.
 	   */
 	  error = ex_get_variable_param(exoid, EX_ELEM_BLOCK, &num_vars);
-	  EH(error, "ex_get_variable_param");
+	  GOMA_EH(error, "ex_get_variable_param");
   
 	  /* First extract all nodal variable names in exoII database */
 	  if (num_vars > 0) {
 	    var_names = alloc_VecFixedStrings(num_vars, (MAX_STR_LENGTH+1));
 	    error = ex_get_variable_names(exoid, EX_ELEM_BLOCK, num_vars, var_names);
-	    EH(error, "ex_get_variable_names");
+	    GOMA_EH(error, "ex_get_variable_names");
 	    for (i = 0; i < num_vars; i++) strip(var_names[i]);
 	  } else {
 	    fprintf(stderr,
@@ -311,7 +311,7 @@ set_init_Element_Storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
 		}
 	      else
 		{
-		  EH(GOMA_ERROR,"Cannot find an element variable for sat. hysteresis");
+		  GOMA_EH(GOMA_ERROR,"Cannot find an element variable for sat. hysteresis");
 		}
 
 	      ifound = 0;
@@ -338,7 +338,7 @@ set_init_Element_Storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
 		}
 	      else
 		{
-		  EH(GOMA_ERROR,"Cannot find an element variable for sat. hysteresis");
+		  GOMA_EH(GOMA_ERROR,"Cannot find an element variable for sat. hysteresis");
 		}
 
 	      ifound = 0;
@@ -364,7 +364,7 @@ set_init_Element_Storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
 		}
 	      else
 		{
-		  EH(GOMA_ERROR,"Cannot find an element variable for sat. hysteresis");
+		  GOMA_EH(GOMA_ERROR,"Cannot find an element variable for sat. hysteresis");
 		}
 
 	    }
@@ -393,7 +393,7 @@ set_init_Element_Storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
 	    }
 	  else
 	    {
-	      EH(GOMA_ERROR,"TANH_HYST must have 1.0 or 0.0 in  9th spot");
+	      GOMA_EH(GOMA_ERROR,"TANH_HYST must have 1.0 or 0.0 in  9th spot");
 	    }
 
 	  for (i = 0; i < eb_ptr->Num_Elems_In_Block; i++) 
@@ -413,12 +413,12 @@ set_init_Element_Storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
       ip_total        = eb_ptr->IP_total;
       if (Guess_Flag ==4 || Guess_Flag == 5)
 	{
-	  EH(GOMA_ERROR,"Not a smooth restart for solidification shrinkage model.Use read_exoII_file or call us");
+	  GOMA_EH(GOMA_ERROR,"Not a smooth restart for solidification shrinkage model.Use read_exoII_file or call us");
 	}
 
       if(Guess_Flag == 5 || Guess_Flag == 6)
 	{
-	  EH(GOMA_ERROR,"Initializing solidified shrinkage model from exoII file not available yet. Use zero");
+	  GOMA_EH(GOMA_ERROR,"Initializing solidified shrinkage model from exoII file not available yet. Use zero");
 	}
 	
       // Load em up as all unsolidified

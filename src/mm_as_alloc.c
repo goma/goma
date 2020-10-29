@@ -163,16 +163,16 @@ pd_alloc(void)
   }
   if (upd == NULL) {
     status = -1;
-    EH(status, 
+    GOMA_EH(status, 
        "Hay un problema conseguiendo la memoria para Uniform_Problem_Description");
   }
   if (pd_glob == NULL) {
     status = -1;
-    EH(status, "Problem getting memory for Problem_Description");
+    GOMA_EH(status, "Problem getting memory for Problem_Description");
   }
   if (pg == NULL) {
     status = -1;
-    EH(status, "Problem getting memory for Problem_Graph");
+    GOMA_EH(status, "Problem getting memory for Problem_Graph");
   }
 
   return(status);
@@ -203,7 +203,7 @@ efv_alloc(void)
   if ( efv == NULL )
     {
       status = -1;
-      EH( status, "Problem getting memory for External_Field_Variables");
+      GOMA_EH( status, "Problem getting memory for External_Field_Variables");
     }
 
   memset(efv,0,sz);
@@ -241,7 +241,7 @@ mp_alloc(void)
 
   mp_glob = (MATRL_PROP_STRUCT **) alloc_ptr_1(MAX_NUMBER_MATLS);
   if (mp_glob == NULL) {
-    EH( -1, "Problem getting memory for Material_Properties");
+    GOMA_EH( -1, "Problem getting memory for Material_Properties");
   }
   
   for (mn = 0; mn < MAX_NUMBER_MATLS; mn++) {
@@ -301,7 +301,7 @@ cr_alloc(void)
   if ( cr_glob == NULL )
     {
       status = -1;
-      EH( status, "Problem getting memory for Constitutive_Relations");
+      GOMA_EH( status, "Problem getting memory for Constitutive_Relations");
     }
 
   return(status);
@@ -329,7 +329,7 @@ int gn_alloc(void)
   if ( gn_glob == NULL)
     {
       status = -1;
-      EH( status, "Problem getting memory for Generalized_Newtonian");
+      GOMA_EH( status, "Problem getting memory for Generalized_Newtonian");
     }
 
   sz = sizeof(struct Generalized_Newtonian);
@@ -340,7 +340,7 @@ int gn_alloc(void)
 
       if (gn_glob[mn] == NULL) {
         status = -1;
-        EH( status, "Problem getting memory for Generalized_Newtonian material");
+        GOMA_EH( status, "Problem getting memory for Generalized_Newtonian material");
       }
       memset(gn_glob[mn], 0, sz);
 
@@ -415,7 +415,7 @@ int ve_alloc(void)
   if ( ve_glob == NULL)
     {
       status = -1;
-      EH( status, "Problem getting memory for Viscoelastic_Constitutive");
+      GOMA_EH( status, "Problem getting memory for Viscoelastic_Constitutive");
     }
 
   return(status);
@@ -457,7 +457,7 @@ elc_alloc(void)
   if ( elc_glob == NULL )
     {
       status = -1;
-      EH( status, "Problem getting memory for Elastic_Constitutive");
+      GOMA_EH( status, "Problem getting memory for Elastic_Constitutive");
     }
 
   return(status);
@@ -499,7 +499,7 @@ evp_alloc(void)
   if ( evpl_glob == NULL )
     {
       status = -1;
-      EH( status, "Problem getting memory for Viscoplastic_Constitutive");
+      GOMA_EH( status, "Problem getting memory for Viscoplastic_Constitutive");
     }
 
   return(status);
@@ -535,7 +535,7 @@ evp_tensor_alloc(Exo_DB *exo)
 	  if ( evpl_glob[mn] == NULL )
 	    {
 	      status = -1;
-	      EH( status, "Problem getting memory for Viscoplastic_Constitutive");
+	      GOMA_EH( status, "Problem getting memory for Viscoplastic_Constitutive");
 	    }
 
 	  evpl_glob[mn]->F_vp_glob =(dbl ****)array_alloc(4,exo->num_elems,ip_total,DIM,DIM, sizeof(dbl));
@@ -622,7 +622,7 @@ elc_rs_alloc(void)
   if ( elc_rs_glob == NULL )
     {
       status = -1;
-      EH( status, "Problem getting memory for Elastic_Constitutive");
+      GOMA_EH( status, "Problem getting memory for Elastic_Constitutive");
     }
 
   return(status);
@@ -651,7 +651,7 @@ int tran_alloc(void)
   if ( tran == NULL )
     {
       status = -1;
-      EH( status, "Problem getting memory for Transient_Information");
+      GOMA_EH( status, "Problem getting memory for Transient_Information");
     }
 
   /*
@@ -669,7 +669,7 @@ int tran_alloc(void)
   if ( eqm == NULL )
     {
       status = -1;
-      EH( status, "Problem getting memory for Element_Quality_Metrics");
+      GOMA_EH( status, "Problem getting memory for Element_Quality_Metrics");
     }
 
   return(status);
@@ -702,7 +702,7 @@ libio_alloc(void)
   if ( libio == NULL )
     {
       status = -1;
-      EH(status,
+      GOMA_EH(status,
 	 "Problem getting memory for Library_IO");
     }
 
@@ -736,7 +736,7 @@ eigen_alloc(void)
   if ( eigen == NULL )
     {
       status = -1;
-      EH(status,
+      GOMA_EH(status,
 	 "Problem getting memory for Eigensolver_Info");
     }
 
@@ -771,7 +771,7 @@ cont_alloc(void)
   if ( cont == NULL )
     {
       status = -1;
-      EH(status,
+      GOMA_EH(status,
 	 "Problem getting memory for Continuation_Information");
     }
 
@@ -804,7 +804,7 @@ int loca_alloc(void)
   if ( loca_in == NULL )
     {
       status = -1;
-      EH( status, "Problem getting memory for Loca_Input");
+      GOMA_EH( status, "Problem getting memory for Loca_Input");
     }
 
   return(status);
@@ -961,7 +961,7 @@ assembly_alloc(Exo_DB *exo)
   if ( (esp_old == NULL) || (esp_dot == NULL) )
     {
       status = -1;
-      EH( status, "Problem getting memory for Element_Variable_Pointers");
+      GOMA_EH( status, "Problem getting memory for Element_Variable_Pointers");
     }
 
 
@@ -1374,7 +1374,7 @@ assembly_alloc(Exo_DB *exo)
     }
   else
     {
-      EH(GOMA_ERROR, "Cannot classify shapes...");
+      GOMA_EH(GOMA_ERROR, "Cannot classify shapes...");
     }
 */
 
@@ -1457,7 +1457,7 @@ assembly_alloc(Exo_DB *exo)
   }
   if (fv == NULL) {
     status = -1;
-    EH( status, "Problem getting memory for Field_Variables");
+    GOMA_EH( status, "Problem getting memory for Field_Variables");
   }
   memset( fv, 0, sizeof( struct Field_Variables ) );
 
@@ -1469,7 +1469,7 @@ assembly_alloc(Exo_DB *exo)
   if ( fv_sens == NULL )
   {
     status = -1;
-    EH( status, "Problem getting memory for Field_Variables (sens)");
+    GOMA_EH( status, "Problem getting memory for Field_Variables (sens)");
   }
   memset( fv_sens, 0, sizeof( struct Field_Variables ) );
 
@@ -1485,7 +1485,7 @@ assembly_alloc(Exo_DB *exo)
   }
   if (fv_old == NULL) {
     status = -1;
-    EH( status, "Problem getting memory for Diet_Field_Variables");
+    GOMA_EH( status, "Problem getting memory for Diet_Field_Variables");
   }
 
   /*
@@ -1540,7 +1540,7 @@ assembly_alloc(Exo_DB *exo)
   }
   if (lec == NULL) {
     status = -1;
-    EH(status, "Problem getting memory for Local_Element_Contributions");
+    GOMA_EH(status, "Problem getting memory for Local_Element_Contributions");
   }
 
   /*
@@ -1553,7 +1553,7 @@ assembly_alloc(Exo_DB *exo)
   }
   if (LubAux == NULL) {
     status = -1;
-    EH( status, "Problem getting memory for Lubrication_Auxiliaries");
+    GOMA_EH( status, "Problem getting memory for Lubrication_Auxiliaries");
   }
   memset( LubAux, 0, sizeof( struct Lubrication_Auxiliaries ) );
 
@@ -1564,7 +1564,7 @@ assembly_alloc(Exo_DB *exo)
   }
   if (LubAux_old == NULL) {
     status = -1;
-    EH( status, "Problem getting memory for Lubrication_Auxiliaries Old");
+    GOMA_EH( status, "Problem getting memory for Lubrication_Auxiliaries Old");
   }
   memset( LubAux_old, 0, sizeof( struct Lubrication_Auxiliaries ) );
 
@@ -1637,7 +1637,7 @@ bf_init(Exo_DB *exo)
                               {
 			       if ( bf[v] != bfd[t]) 
                                  {
-			          WH(-1, "bf[] struct isn't general enough to handle"
+			          GOMA_WH(-1, "bf[] struct isn't general enough to handle"
 			             " variables with multiple interpolations in a single problem\n"
                                      " We will carefully reset bf for each element");
 			         }
@@ -1647,7 +1647,7 @@ bf_init(Exo_DB *exo)
 		        }
 		     if ( bf[v] == NULL )
 		       {
-		        EH( -1, "Could not find a match for variable.");
+		        GOMA_EH( -1, "Could not find a match for variable.");
 		       }
 	           }
 	        }
@@ -1720,7 +1720,7 @@ bf_mp_init(struct Problem_Description *pd)
               }
             if (bf[v] == NULL)
               {
-                EH( -1, "Could not find a match for variable.");
+                GOMA_EH( -1, "Could not find a match for variable.");
               }
           }
       }
@@ -1750,11 +1750,11 @@ bf_mp_init(struct Problem_Description *pd)
 		}
 	    }
           if (!ifound && efv->i[v] != I_TABLE) {
-            EH(GOMA_ERROR, "Could not find a match for EXTERNAL variable. Match some active field interpolation with those of external variables");
+            GOMA_EH(GOMA_ERROR, "Could not find a match for EXTERNAL variable. Match some active field interpolation with those of external variables");
           }
 	  if (bfex[v] == NULL && efv->i[v] != I_TABLE)
 	    {
-	      EH( -1, "Could not find a match for EXTERNAL variable.");
+	      GOMA_EH( -1, "Could not find a match for EXTERNAL variable.");
 	    }
 	}
     }

@@ -189,7 +189,7 @@ find_first_opening(const int *list, const int lengthList)
   /*
    *  create an error exit here
    */
-  EH(GOMA_ERROR, "too many duplications");
+  GOMA_EH(GOMA_ERROR, "too many duplications");
   return -1;
 }
 /*****************************************************************************/
@@ -244,7 +244,7 @@ add_to_node_unk_bc_list(int *list, int ibc)
   /*
    *  create an error exit here
    */
-  EH(GOMA_ERROR, "add_to_node_unk_bc_list out of room");
+  GOMA_EH(GOMA_ERROR, "add_to_node_unk_bc_list out of room");
 }
 /*****************************************************************************/
 /*****************************************************************************/
@@ -492,7 +492,7 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
                   offset_mom1 = get_nv_offset_idof(nv, R_MOMENTUM1, idof, 0, &vd_retn1);
                   offset_mom2 = get_nv_offset_idof(nv, R_MOMENTUM2, idof, 0, &vd_retn2);
                   if (vd_retn1->MatID != vd_retn2->MatID) {
-                    EH(GOMA_ERROR,"Unforseen occurrence");
+                    GOMA_EH(GOMA_ERROR,"Unforseen occurrence");
                   }
                   if (offset_mom1 < 0) break;
                   idup1 = find_first_opening(BC_Unk_List[inode][offset_mom1],
@@ -931,7 +931,7 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
                             }
                           }
                         } else {
-                          WH(-1, "Missing type of rotation in BC conflict resolution");
+                          GOMA_WH(-1, "Missing type of rotation in BC conflict resolution");
                         }
                       }
 
@@ -1126,7 +1126,7 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
                             }
                           }
                         } else {
-                          WH(-1, "Missing type of rotation in BC conflict resolution");
+                          GOMA_WH(-1, "Missing type of rotation in BC conflict resolution");
                         }
                       }
                       /*
@@ -1258,7 +1258,7 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
                             }
                           }
                         } else {
-                          WH(-1, "Missing type of rotation in BC conflict resolution");
+                          GOMA_WH(-1, "Missing type of rotation in BC conflict resolution");
                         }
                       }
 
@@ -1322,7 +1322,7 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
                             bct2 == CA_OR_FIX_BC ||
                             bct2 == SHEET_ENDSLOPE_BC ) {
                           /* put additional check for equation type MESH */
-                          WH(-1, "Illegal action possible for CA_BC w/o MESH");
+                          GOMA_WH(-1, "Illegal action possible for CA_BC w/o MESH");
                           i_delete = 0;
                           /* 
                            * make sure this ends up on the same equation as kinematic or capillary 
@@ -1331,7 +1331,7 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
                                   "Contact angle at node %d from %s and %s?",
                                   inode+1, BC_Types[ibc1].desc->name1,
                                   BC_Types[ibc2].desc->name1);
-                          WH(-1, Err_Msg);
+                          GOMA_WH(-1, Err_Msg);
                         } else {
                           if (Debug_Flag > 0) {
                             fprintf(stderr,
@@ -1529,7 +1529,7 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
 			    det = 0.;	/* default to zero */
 			    break;
                           default:
-			    WH(-1, "Intersection between unreconcilable rotated conditions");
+			    GOMA_WH(-1, "Intersection between unreconcilable rotated conditions");
 			    det = 1.;	/* default to nonzero value */
 			    break;
                           }
@@ -1637,7 +1637,7 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
                               }
                             }
                           } else {
-                            WH(-1, "Missing type of rotation in BC conflict resolution");
+                            GOMA_WH(-1, "Missing type of rotation in BC conflict resolution");
                           }
                         }
 
@@ -2016,7 +2016,7 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
         {
           if (matrix_used_BC[ibc] == 0)
             {
-              WH_MANY(-1,
+              GOMA_WH_MANY(-1,
                "Boundary condition %d, %s, applied on NS %d, is never used\n",
                         ibc, BC_Types[ibc].desc->name1, BC_Types[ibc].BC_ID);
             }
@@ -2088,7 +2088,7 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
       sprintf(Err_Msg, 
 	      "P_%d: cannot open file \"%s\" to write 3D BC info",
 	      ProcID, ofbc_fn);
-      EH(GOMA_ERROR, Err_Msg);
+      GOMA_EH(GOMA_ERROR, Err_Msg);
     }
     if (Num_Proc > 1) {
       fprintf(ofbc, "BC Duplication and Rotation list for Processor %d:\n",
@@ -2237,7 +2237,7 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
               sprintf(Err_Msg, 
                       "Node (%d) wants > %d sidesets - boost MAX_SS_PER_NODE.", 
                       inode+1, MAX_SS_PER_NODE);
-              EH(GOMA_ERROR, Err_Msg);
+              GOMA_EH(GOMA_ERROR, Err_Msg);
             }
 	
             SS_list[inode][iptr] = exo->ss_id[iss];
@@ -2401,7 +2401,7 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
         fprintf(stderr, "Warning: %s\n", Err_Msg);
 #if 0	
         /* Leave this barn door open to help test further... */
-        EH(GOMA_ERROR, err_msg);
+        GOMA_EH(GOMA_ERROR, err_msg);
 #endif
       }
 
@@ -2451,7 +2451,7 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
           }
           if      (ROT_Types[irc].eq_type == R_MESH1) eq = VECT_EQ_MESH;
           else if (ROT_Types[irc].eq_type == R_MOMENTUM1) eq = VECT_EQ_MOM;
-          else EH(GOMA_ERROR,"Illegal vector equation");
+          else GOMA_EH(GOMA_ERROR,"Illegal vector equation");
 
           if (ROT_list[inode][eq] == -1) {
             ROT_list[inode][eq] = irc;
@@ -2662,7 +2662,7 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
 
                         if ( BC_Types[ibc1].desc->method == 
                              DIRICHLET && p != q) { 
-                          EH(GOMA_ERROR, "Can't change equation type of DIRICHLET!");
+                          GOMA_EH(GOMA_ERROR, "Can't change equation type of DIRICHLET!");
                         }
                       }
 
@@ -2717,7 +2717,7 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
                   }
                   fprintf(stderr, "P_%d death, nss = %d\n",
                           ProcID, exo->num_side_sets);
-                  EH(GOMA_ERROR,"Rotation BC not found");
+                  GOMA_EH(GOMA_ERROR,"Rotation BC not found");
                 }
 #endif
 

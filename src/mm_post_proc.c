@@ -650,7 +650,7 @@ static int calc_standard_fields(double **post_proc_vect,
 
   if (pd->v[pg->imtrx][R_MESH1] && ei[pg->imtrx]->ielem_dim >= dim) {
     err = belly_flop(elc->lame_mu);
-    EH(err, "error in belly flop");
+    GOMA_EH(err, "error in belly flop");
     if (err == 2) exit(-1);
   }
  
@@ -1141,9 +1141,9 @@ static int calc_standard_fields(double **post_proc_vect,
 	}
 
 	if (wCO2 == -1) {
-	  EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_CO2");
+	  GOMA_EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_CO2");
 	} else if (wH2O == -1) {
-	  EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_H2O");
+	  GOMA_EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_H2O");
 	}
 
 	double rho_gas = 0;
@@ -1195,7 +1195,7 @@ static int calc_standard_fields(double **post_proc_vect,
       double neg_lambda = ve[mode]->time_const;
       double width     = ls->Length_Scale;
       err = level_set_property(neg_lambda, pos_lambda, width, &lambda, NULL);
-      EH(err, "level_set_property() failed for polymer time constant.");
+      GOMA_EH(err, "level_set_property() failed for polymer time constant.");
     }
     local_post[POLYMER_TIME_CONST] = lambda;
     local_lumped[POLYMER_TIME_CONST] = 1.;
@@ -1214,7 +1214,7 @@ static int calc_standard_fields(double **post_proc_vect,
       double neg_xi = ve[mode]->xi;
       double width     = ls->Length_Scale;
       err = level_set_property(neg_xi, pos_xi, width, &xi, NULL);
-      EH(err, "level_set_property() failed for polymer time constant.");
+      GOMA_EH(err, "level_set_property() failed for polymer time constant.");
     }
     local_post[PTT_XI] = xi;
     local_lumped[PTT_XI] = 1.;
@@ -1233,7 +1233,7 @@ static int calc_standard_fields(double **post_proc_vect,
       double neg_eps = ve[mode]->eps;
       double width     = ls->Length_Scale;
       err = level_set_property(neg_eps, pos_eps, width, &eps, NULL);
-      EH(err, "level_set_property() failed for polymer time constant.");
+      GOMA_EH(err, "level_set_property() failed for polymer time constant.");
     }
     local_post[PTT_EPSILON] = eps;
     local_lumped[PTT_EPSILON] = 1.;
@@ -1252,7 +1252,7 @@ static int calc_standard_fields(double **post_proc_vect,
       double neg_alpha = ve[mode]->alpha;
       double width     = ls->Length_Scale;
       err = level_set_property(neg_alpha, pos_alpha, width, &alpha, NULL);
-      EH(err, "level_set_property() failed for polymer time constant.");
+      GOMA_EH(err, "level_set_property() failed for polymer time constant.");
     }
     local_post[MOBILITY_PARAMETER] = alpha;
     local_lumped[MOBILITY_PARAMETER] = 1.;
@@ -1518,7 +1518,7 @@ static int calc_standard_fields(double **post_proc_vect,
 	 Particle_Model_Data[6] <= 0.0 ||
 	 Particle_Density <= 0.0 ||
 	 Particle_Radius <= 0.0)
-	WH(-1, "Not performing Dielectrophoretic Force Vectors output becuase of inconsistent Partile_Model_Data.");
+	GOMA_WH(-1, "Not performing Dielectrophoretic Force Vectors output becuase of inconsistent Partile_Model_Data.");
       coeff_a = Particle_Model_Data[1] - Particle_Model_Data[2];
       coeff_b = (Particle_Model_Data[4] - Particle_Model_Data[3]) / Particle_Model_Data[5];
       coeff_c = Particle_Model_Data[1] + 2.0 * Particle_Model_Data[2];
@@ -1545,7 +1545,7 @@ static int calc_standard_fields(double **post_proc_vect,
 	 Particle_Model_Data[6] <= 0.0 ||
 	 Particle_Density <= 0.0 ||
 	 Particle_Radius <= 0.0)
-	WH(-1, "Not performing Dielectrophoretic Force Vectors output becuase of inconsistent Partile_Model_Data.");
+	GOMA_WH(-1, "Not performing Dielectrophoretic Force Vectors output becuase of inconsistent Partile_Model_Data.");
       coeff_a = Particle_Model_Data[1] - Particle_Model_Data[2];
       coeff_b = (Particle_Model_Data[4] - Particle_Model_Data[3]) / Particle_Model_Data[5];
       coeff_c = Particle_Model_Data[1] + 2.0 * Particle_Model_Data[2];
@@ -1722,7 +1722,7 @@ static int calc_standard_fields(double **post_proc_vect,
 	sh_n[0] = cos( fv->sh_ang[0] );
 	sh_n[1] = sin( fv->sh_ang[0] );
       } else {
-        EH(GOMA_ERROR,"Not hard at all to implement SHELL_NORMALS for 3D, so just do it!");
+        GOMA_EH(GOMA_ERROR,"Not hard at all to implement SHELL_NORMALS for 3D, so just do it!");
       }
     } else if ( pd->e[pg->imtrx][R_LUBP] ) {
       int *n_dof = NULL;
@@ -1736,7 +1736,7 @@ static int calc_standard_fields(double **post_proc_vect,
       fv->wt = wt;
       safe_free((void *) n_dof);
     } else {
-      EH(GOMA_ERROR,"Not sure how I got here.");
+      GOMA_EH(GOMA_ERROR,"Not sure how I got here.");
     }
     for ( a=0; a<dim; a++) {
       local_post[SHELL_NORMALS + a] = sh_n[a];
@@ -1929,7 +1929,7 @@ static int calc_standard_fields(double **post_proc_vect,
       /* get the convection velocity (it's different for arbitrary and
 	 lagrangian meshes) */
 	  err = get_convection_velocity(vconv, vconv_old, d_vconv,  delta_t, theta);
-      EH(err, "Error in calculating effective convection velocity");
+      GOMA_EH(err, "Error in calculating effective convection velocity");
 
 	for ( j=0; j<dim; j++)
 	  {
@@ -2105,7 +2105,7 @@ static int calc_standard_fields(double **post_proc_vect,
 		}
         break;
       default:
-        WH(-1,"Undefined Species Type in UNTRACKED_SPEC\n");
+        GOMA_WH(-1,"Undefined Species Type in UNTRACKED_SPEC\n");
       }
       local_lumped[UNTRACKED_SPEC] = 1.0;
   } /* end of UNTRACKED_SPEC*/
@@ -2498,7 +2498,7 @@ static int calc_standard_fields(double **post_proc_vect,
     {
       mu = elc_rs->lame_mu;
       err = belly_flop_rs(mu);
-      EH(err, "error in belly flop");
+      GOMA_EH(err, "error in belly flop");
       if (err == 2) return(err);
       /* 
        * Total mesh stress tensor...
@@ -2661,7 +2661,7 @@ static int calc_standard_fields(double **post_proc_vect,
        */
       mu = elc_rs->lame_mu;
       err = belly_flop_rs(mu);
-      EH(err, "error in belly flop");
+      GOMA_EH(err, "error in belly flop");
       if (err == 2) return(err);
        err = solid_stress_tensor(TT, dTT_dx, dTT_drs, dTT_dp, dTT_dc,
                                dTT_dp_liq, dTT_dp_gas, dTT_dporosity,
@@ -3218,11 +3218,11 @@ static int calc_standard_fields(double **post_proc_vect,
        */
       if(lambda==0.0)
         {
-          EH( -1, "The conformation tensor needs a non-zero polymer time constant.");
+          GOMA_EH( -1, "The conformation tensor needs a non-zero polymer time constant.");
         }
       if(mup==0.0)
         {
-          EH( -1, "The conformation tensor needs a non-zero polymer viscosity.");
+          GOMA_EH( -1, "The conformation tensor needs a non-zero polymer viscosity.");
         }
       
       if (pd->v[pg->imtrx][v_s[mode][0][0]]) {      
@@ -3440,7 +3440,7 @@ static int calc_standard_fields(double **post_proc_vect,
 	}
       }
       if (! midside) {
-           WH(-1,"calc_standard_fields: Couldn't find eqn whose interp spanned all local nodes");
+           GOMA_WH(-1,"calc_standard_fields: Couldn't find eqn whose interp spanned all local nodes");
       }
       if (i > 3 && i < 8) {
         ileft = i - 4;
@@ -3532,10 +3532,10 @@ post_process_average(double x[],	 /* Solution vector for the current processor *
 
       err = load_elem_dofptr(ielem, exo, x, x_old,
                              xdot, xdot_old, 0);
-      EH(err, "load_elem_dofptr");
+      GOMA_EH(err, "load_elem_dofptr");
 
       err = bf_mp_init(pd);
-      EH(err, "bf_mp_init");
+      GOMA_EH(err, "bf_mp_init");
 
       fv->wt = 1.e30;
 
@@ -3548,16 +3548,16 @@ post_process_average(double x[],	 /* Solution vector for the current processor *
           find_nodal_stu(node, ei[pg->imtrx]->ielem_type, xi, xi+1, xi+2 );
 
           err = load_basis_functions(xi, bfd);
-          EH( err, "problem from load_basis_functions");
+          GOMA_EH( err, "problem from load_basis_functions");
 
           err = beer_belly();
-          EH( err, "beer_belly");
+          GOMA_EH( err, "beer_belly");
 
           err = load_fv();
-          EH( err, "load_fv");
+          GOMA_EH( err, "load_fv");
 
           err = load_bf_grad();
-          EH( err, "load_bf_grad");
+          GOMA_EH( err, "load_bf_grad");
 
           if (ei[pg->imtrx]->deforming_mesh && (pd->e[pg->imtrx][R_MESH1] || pd->v[pg->imtrx][R_MESH1]))
             {
@@ -3565,11 +3565,11 @@ post_process_average(double x[],	 /* Solution vector for the current processor *
              // printf(" We are here\n");
               }
               err = load_bf_mesh_derivs();
-              EH( err, "load_bf_mesh_derivs");
+              GOMA_EH( err, "load_bf_mesh_derivs");
             }
 
           err = load_fv_grads();
-          EH( err, "load_fv_grads");
+          GOMA_EH( err, "load_fv_grads");
 
           if (ei[pg->imtrx]->deforming_mesh && (pd->e[pg->imtrx][R_MESH1] || pd->v[pg->imtrx][R_MESH1]))
             {
@@ -3577,13 +3577,13 @@ post_process_average(double x[],	 /* Solution vector for the current processor *
              //	printf(" We are here2\n");
               }
               err = load_fv_mesh_derivs(0);
-              EH( err, "load_fv_mesh_derivs");
+              GOMA_EH( err, "load_fv_mesh_derivs");
             }
 
           if (mp->PorousMediaType != CONTINUOUS)
             {
               err = load_porous_properties();
-              EH( err, "load_porous_properties");
+              GOMA_EH( err, "load_porous_properties");
             }
 
           computeCommonMaterialProps_gp(time);
@@ -3657,7 +3657,7 @@ sum_average_nodal(double **avg_count, double ** avg_sum, int global_node, double
               }
               break;
             default:
-              EH(GOMA_ERROR, "Unknown nodal average type");
+              GOMA_EH(GOMA_ERROR, "Unknown nodal average type");
               break;
             }
         }
@@ -3695,7 +3695,7 @@ sum_average_nodal(double **avg_count, double ** avg_sum, int global_node, double
               }
               break;
             default:
-              EH(GOMA_ERROR, "Unknown nodal average non-variable type");
+              GOMA_EH(GOMA_ERROR, "Unknown nodal average non-variable type");
               break;
             }
         }
@@ -3867,16 +3867,16 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
     io_word_size  = 0;
     mesh_exoid    = ex_open(ExoFile, EX_READ, &cpu_word_size, &io_word_size, 
 			    &version);
-    EH(mesh_exoid, "ex_open");
+    GOMA_EH(mesh_exoid, "ex_open");
     /*
      * Turn off annoying warning about nonexistent element order maps
      * Only describe the problem if it is fatal.
      */
     ex_opts(EX_ABORT);
     err = ex_get_map (mesh_exoid, listel);
-    EH(err, "ex_get_map");
+    GOMA_EH(err, "ex_get_map");
     err = ex_close(mesh_exoid);
-    EH(err, "ex_close");
+    GOMA_EH(err, "ex_close");
 
     /*
      * If a valid mapping was not storred in the original exodus file,
@@ -3948,7 +3948,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 	    }
 
 	   if (DIFFUSION_VECTORS == -1) 
-	     EH(GOMA_ERROR, "Need diffusion vectors for flux-function");
+	     GOMA_EH(GOMA_ERROR, "Need diffusion vectors for flux-function");
 	   if (pd->TimeIntegration != STEADY )
 	     {
 	       DPRINTF(stdout, 
@@ -3968,7 +3968,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 	{
 	  listnde         = (int *) smalloc(num_universe_nodes * sizeof(int));
 	  if(CONDUCTION_VECTORS == -1) 
-	    EH(GOMA_ERROR, "Need conduction vectors for flux-function");
+	    GOMA_EH(GOMA_ERROR, "Need conduction vectors for flux-function");
 	  if (pd->TimeIntegration != STEADY )
 	    {
 	      DPRINTF(stdout,
@@ -4103,9 +4103,9 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 	      
 	  
            err = load_elem_dofptr(ielem, exo, x, x_old, xdot, xdot_old, 0);
-	   EH(err, "load_elem_dofptr");
+	   GOMA_EH(err, "load_elem_dofptr");
 	   err = bf_mp_init(pd);
-	   EH(err, "bf_mp_init");
+	   GOMA_EH(err, "bf_mp_init");
 	   ielem_type      = ei[pg->imtrx]->ielem_type;
 	   ip_total        = elem_info(NQUAD, ielem_type); /* number of
 							    * quadrature pts */
@@ -4204,7 +4204,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 	      * Old usage: fill_shape
 	      */  
 	     err = load_basis_functions( xi, bfd);
-	     EH( err, "problem from load_basis_functions");
+	     GOMA_EH( err, "problem from load_basis_functions");
 		  
 	     /*
 	      * This has elemental Jacobian transformation and some 
@@ -4212,13 +4212,13 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 	      * Old usage: calc_Jac, jelly_belly
 	      */  
 	     err = beer_belly();
-	     EH( err, "beer_belly");
+	     GOMA_EH( err, "beer_belly");
 		  
 	     /*
 	      * Load up field variable values at this Gauss point.
 	      */
 	     err = load_fv();
-	     EH( err, "load_fv");
+	     GOMA_EH( err, "load_fv");
 		  
 	     /*
 	      * Here, load in the final part of the necessary basis function
@@ -4234,14 +4234,14 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 	      * 		grad() operator depends on the coordinate system.
 	      */  
 	     err = load_bf_grad();
-	     EH(err, "load_bf_grad");
+	     GOMA_EH(err, "load_bf_grad");
 		  
 	     /*
 	      * Load up physical space gradients of field variables at this
 	      * Gauss point.
 	      */
 	     err = load_fv_grads();
-	     EH(err, "load_fv_grads");	  
+	     GOMA_EH(err, "load_fv_grads");	  
 		  
 	     /*
 	      * Load up porous media variables and properties, if needed 
@@ -4250,15 +4250,15 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 		 mp->PorousMediaType == POROUS_SATURATED ||
 	         mp->PorousMediaType == POROUS_TWO_PHASE ) {
 	       err = load_porous_properties(); 
-	       EH(err, "load_porous_properties");
+	       GOMA_EH(err, "load_porous_properties");
 	     }
 	     if (mp->PorousMediaType == POROUS_SATURATED) {
 	       err = get_porous_fully_sat_terms(&pm_terms, *time_ptr, delta_t);
-	       EH(err,"problem in getting the saturated porous darcy  terms");
+	       GOMA_EH(err,"problem in getting the saturated porous darcy  terms");
 	     } else if (mp->PorousMediaType == POROUS_UNSATURATED ||
 			mp->PorousMediaType == POROUS_TWO_PHASE) {
 	       err = get_porous_part_sat_terms(&pm_terms, *time_ptr, delta_t);
-	       EH(err,"problem in getting the partially-saturated porous  terms");
+	       GOMA_EH(err,"problem in getting the partially-saturated porous  terms");
 	     }
 
 	     computeCommonMaterialProps_gp(*time_ptr);
@@ -4271,7 +4271,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 	     err = calc_standard_fields(post_proc_vect, lumped_mass, delta_t, theta, ielem,
                                         ielem_type, ip, ip_total, rd, &pm_terms, *time_ptr, exo, xi,
                                         &pg_data);
-	     EH(err, "calc_standard_fields");
+	     GOMA_EH(err, "calc_standard_fields");
 	   } /* END  for (ip = 0; ip < ip_total; ip++)                      */
 	 } /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
      }  /* END for (ieb loop) */
@@ -4360,7 +4360,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
                err = load_elem_dofptr(elem_list[i], exo, x, x_old, xdot,
                                       xdot_old, 0);
 	       err = bf_mp_init(pd);     
-	       EH(err, "load_elem_dofptr");
+	       GOMA_EH(err, "load_elem_dofptr");
 	       iconnect_ptr    = ei[pg->imtrx]->iconnect_ptr;
 	       ielem_type      = ei[pg->imtrx]->ielem_type;
 	       ip_total        = elem_info(NQUAD_SURF, ielem_type);
@@ -4388,20 +4388,20 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 		   find_nodal_stu(id, ielem_type, &xi[0], &xi[1], &xi[2]);
 
 		   err = load_basis_functions( xi, bfd);
-		   EH( err, "problem from load_basis_functions");
+		   GOMA_EH( err, "problem from load_basis_functions");
 	
 		   err = beer_belly();
-		   EH( err, "beer_belly");
+		   GOMA_EH( err, "beer_belly");
 	
 		   /* precalculate variables at  current integration pt.*/
 		   err = load_fv();
-		   EH( err, "load_fv");
+		   GOMA_EH( err, "load_fv");
 	       
 		   err = load_bf_grad();
-		   EH( err, "load_bf_grad");
+		   GOMA_EH( err, "load_bf_grad");
 	
 		   err = load_bf_mesh_derivs(); 
-		   EH( err, "load_bf_mesh_derivs");
+		   GOMA_EH( err, "load_bf_mesh_derivs");
 	    
 		   surface_determinant_and_normal (ei[pg->imtrx]->ielem, iconnect_ptr, 
 						   num_local_nodes, 
@@ -4444,7 +4444,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 					       Proc_Num_Side_Sets, 
 					       ss_to_blks[0])) == -1)
 			 {
-			   EH(GOMA_ERROR,"Cannot match side SSID to ss_to_blks[].");
+			   GOMA_EH(GOMA_ERROR,"Cannot match side SSID to ss_to_blks[].");
 			 }
 
 		       if( exo->eb_id[find_elemblock_index(ei[pg->imtrx]->ielem, exo)] == 
@@ -4477,7 +4477,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 		   /* also convert from node number to dof number */
 		   ldof = ei[pg->imtrx]->ln_to_dof[eqn][id];
 		   if (ldof < 0) {
-                     EH(GOMA_ERROR,"post_process_nodal: bad surface projection");
+                     GOMA_EH(GOMA_ERROR,"post_process_nodal: bad surface projection");
 		   }
 		   phi_i = bf[eqn]->phi[ldof];
 		   for (var = 0; var < rd->TotalNVPostOutput; var++) {
@@ -4586,7 +4586,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 	    
 	       err = load_elem_dofptr(ielem, exo, x, x_old, xdot, xdot_old, 0);
 	    
-	       EH(err, "load_elem_dofptr");
+	       GOMA_EH(err, "load_elem_dofptr");
 
 	       iconnect_ptr    = ei[pg->imtrx]->iconnect_ptr;
       
@@ -4637,7 +4637,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 		   else
 		     {
 #if 1
-		       EH(GOMA_ERROR,"No stream function in 3D ");
+		       GOMA_EH(GOMA_ERROR,"No stream function in 3D ");
 #endif
 		     }
 		   err = correct_stream_fcn(&kount, iel, del_stream_fcn, 
@@ -4710,7 +4710,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 			 }
 		       else
 			 {
-			   EH(GOMA_ERROR,"No flux lines in 3D ");
+			   GOMA_EH(GOMA_ERROR,"No flux lines in 3D ");
 			 }
 		       err = correct_stream_fcn(&kountm[w], iel, del_stream_fcn, 
 						post_proc_vect[FLUXLINES + w], listndm[w]);
@@ -4756,7 +4756,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 		     } 
 		   else 
 		     {
-		       EH(GOMA_ERROR,"No energy flux lines in 3D ");
+		       GOMA_EH(GOMA_ERROR,"No energy flux lines in 3D ");
 		     }
 		   err = correct_stream_fcn(&kounte, iel, del_stream_fcn,
 					    post_proc_vect[ENERGY_FLUXLINES], listnde);
@@ -4991,7 +4991,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 				     0, exo->num_elems);
 
             if( pp_particles[i]->Current_element_id == -1)
-			EH(GOMA_ERROR,"Cannot locate one of your particles");
+			GOMA_EH(GOMA_ERROR,"Cannot locate one of your particles");
 	}	/* if steady	*/
 
   /* find basis functions associated with velocity variables */
@@ -5014,7 +5014,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 
         if(err == 0)
                 {
-                WH(-1,"map inversion for particle path failed");
+                GOMA_WH(-1,"map inversion for particle path failed");
                 goto next_particle;
                 }
 
@@ -5032,19 +5032,19 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
         }
 
         err = load_basis_functions(&pp_particles[i]->xi_coord[0], bfd);
-        EH( err, "problem from load_basis_functions");
+        GOMA_EH( err, "problem from load_basis_functions");
 
         err = beer_belly();
-        EH( err, "beer_belly");
+        GOMA_EH( err, "beer_belly");
 
         err = load_fv();
-        EH( err, "load_fv");
+        GOMA_EH( err, "load_fv");
 
         err = load_bf_grad();
-        EH( err, "load_bf_grad");
+        GOMA_EH( err, "load_bf_grad");
 
         err = load_fv_grads();
-        EH( err, "load_fv_grads");
+        GOMA_EH( err, "load_fv_grads");
 
 	if(pd->TimeIntegration == STEADY || 
 		tran->time_value == tran->init_time+tran->delta_t)
@@ -5099,7 +5099,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
                 {
         err = usr_ptracking (jfp, i+1, p_x, p_vel, p_xold, p_velold,
                         TRUE, p_time, p_step);
-        EH(err,"problem with usr_ptracking");
+        GOMA_EH(err,"problem with usr_ptracking");
                 }
 	}	/* if steady	*/
 	else
@@ -5141,7 +5141,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 
         if(err == 0)
                 {
-                WH(-1,"map inversion for particle path failed");
+                GOMA_WH(-1,"map inversion for particle path failed");
                 goto next_particle;
                 }
 
@@ -5158,19 +5158,19 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
         }
 
         err = load_basis_functions(&pp_particles[i]->xi_coord[0], bfd);
-        EH( err, "problem from load_basis_functions");
+        GOMA_EH( err, "problem from load_basis_functions");
 
         err = beer_belly();
-        EH( err, "beer_belly");
+        GOMA_EH( err, "beer_belly");
 
         err = load_fv();
-        EH( err, "load_fv");
+        GOMA_EH( err, "load_fv");
 
         err = load_bf_grad();
-        EH( err, "load_bf_grad");
+        GOMA_EH( err, "load_bf_grad");
 
         err = load_fv_grads();
-        EH( err, "load_fv_grads");
+        GOMA_EH( err, "load_fv_grads");
 
 /*  assemble mass matrix and rhs */
 
@@ -5285,7 +5285,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 			(pd->TimeIntegration == TRANSIENT && 
 				p_step < tran->Delta_t_min))
 			{
-                 	WH(-1,"particle timestep below minimum");
+                 	GOMA_WH(-1,"particle timestep below minimum");
                  	goto next_particle;
  			}
                 continue;
@@ -5307,7 +5307,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 
         err = usr_ptracking (jfp, i+1, p_x, p_vel, p_xold, p_velold,
                         FALSE, p_time, p_step);
-        EH(err,"problem with usr_ptracking");
+        GOMA_EH(err,"problem with usr_ptracking");
 
         vscale=0.;
         for ( j=0 ; j < p_dim ; j++)
@@ -5484,7 +5484,7 @@ post_process_elem(double x[], /* soln vector */
 			  ev_indx,      /* Variable index for zz_error  */
 			  gvec_elem,    /* elem var vals[eb_indx][ev_indx][elem] */
 			  exo, dpi, compute_elem_size ) != 0 ) {
-      EH(GOMA_ERROR, " calc_zz_error_vel failure");
+      GOMA_EH(GOMA_ERROR, " calc_zz_error_vel failure");
     } else {
       /* If we get to here, calc_zz_error_vel worked and we need to increment ev_indx */
       if ( compute_elem_size ) {
@@ -5587,7 +5587,7 @@ post_process_global(double *x,	 /* Solution vector for the current processor */
       }
       break;
     default:
-      EH(GOMA_ERROR, "Unknown global post process type");
+      GOMA_EH(GOMA_ERROR, "Unknown global post process type");
       break;
     }
   }
@@ -5636,7 +5636,7 @@ calc_zz_error_vel(double x[], /* Solution vector                       */
 
   /* Sanity check for mesh topology data */
   if ( ! exo->node_elem_conn_exists ) {
-    EH(GOMA_ERROR, "Attempt to access undeveloped node->elem connectivity.");
+    GOMA_EH(GOMA_ERROR, "Attempt to access undeveloped node->elem connectivity.");
   }  
 
   i_node_coords = (double *) smalloc (3*sizeof(double));
@@ -5739,7 +5739,7 @@ calc_zz_error_vel(double x[], /* Solution vector                       */
       if ( i_elem == i_start ) max_dim = i_elem_dim;
       if ( i_elem_dim != max_dim || 
 	   i_elem_dim != exo->num_dim ) {
-	EH (-1,
+	GOMA_EH(-1,
 	    "Cannot mix element dimensionality for error computation");
       }
 
@@ -5775,7 +5775,7 @@ calc_zz_error_vel(double x[], /* Solution vector                       */
 	 test if interpolation ever changes. This is a no no. */
 	if ( i_elem == i_start ) last_interp = pd->i[pg->imtrx][VELOCITY1];
 	if ( pd->i[pg->imtrx][VELOCITY1] != last_interp ) {
-	  EH (-1,
+	  GOMA_EH(-1,
 	      "Cannot mix velocity interpolation levels for error computation");
 	}
       }
@@ -5892,10 +5892,10 @@ calc_zz_error_vel(double x[], /* Solution vector                       */
 
 	err = load_elem_dofptr(elem_id, exo, x, x_old, xdot, 
                                xdot_old, 0);
-	EH(err, "load_elem_dofptr");     
+	GOMA_EH(err, "load_elem_dofptr");     
  
 	err = bf_mp_init(pd);
-	EH(err, "bf_mp_init");
+	GOMA_EH(err, "bf_mp_init");
 
 	mat_num = ei[pg->imtrx]->mn;
 
@@ -6002,7 +6002,7 @@ calc_zz_error_vel(double x[], /* Solution vector                       */
 		  rhs[9] += zgp*zgp * tau * det * wt;
 		  break;
 		default:
-		  EH(GOMA_ERROR, "Unsupported size in building RHS of least"
+		  GOMA_EH(GOMA_ERROR, "Unsupported size in building RHS of least"
 		     " squares patch for error");
 		  break;
 		}
@@ -6016,7 +6016,7 @@ calc_zz_error_vel(double x[], /* Solution vector                       */
 
 	  if (lu_decomp_backsub_driver(s_lhs, rhs, indx, max_terms,
 				       do_the_lu_decomp) == -1) {
-	    EH(GOMA_ERROR, " Error occurred in calc_zz_error_vel" );
+	    GOMA_EH(GOMA_ERROR, " Error occurred in calc_zz_error_vel" );
 	    status = -1;
 	    return (status);
 	  }
@@ -6177,10 +6177,10 @@ calc_zz_error_vel(double x[], /* Solution vector                       */
 
     if (valid_elem_mask[i_elem] == 1) {
       err = load_elem_dofptr(i_elem, exo, x, x_old, xdot, xdot_old, 0);
-      EH(err, "load_elem_dofptr"); 
+      GOMA_EH(err, "load_elem_dofptr"); 
 
       err = bf_mp_init(pd);
-      EH(err, "bf_mp_init");
+      GOMA_EH(err, "bf_mp_init");
 
       /* Extract the info for this elem of the patch */
 
@@ -6351,7 +6351,7 @@ calc_zz_error_vel(double x[], /* Solution vector                       */
       fprintf( stdout,
 	       "\n (Max error < target error, error reduction objective met)\n" );
     } else {
-      EH( -1, 
+      GOMA_EH( -1, 
 	  "Undetermined state encountered during error/remeshing size data calculation\n" );
     }
       
@@ -6468,7 +6468,7 @@ abs_error_at_elem ( int i_elem,
     wt = fv->wt;
 
     err = load_basis_functions(xi, bfd);
-    EH( err, 
+    GOMA_EH( err, 
 	"problem from load_basis_functions" );
 
     /* This has elemental Jacobian transformation and some 
@@ -6478,24 +6478,24 @@ abs_error_at_elem ( int i_elem,
        for the point xi[] in the element pointed to by the ei struct */
 		  
     err = beer_belly();
-    EH( err,
+    GOMA_EH( err,
 	"beer_belly" );
 		  
     /* Load up field variable values at this Gauss point. */
     /* Now fill fv with tau goodies, and cycle over the gauss points 
        filling the tau components into tau_gp_fem */
     err = load_fv();
-    EH( err, "load_fv");
+    GOMA_EH( err, "load_fv");
 		  
     /* Load up physical space gradients of field variables at this
        Gauss point. */
     /* NOTE: load_bf_grad MUST be called before load_fv_grads as this
        call depends on it! - RRL 10/30/98 */
     err = load_bf_grad();
-    EH( err, "load_bf_grad");
+    GOMA_EH( err, "load_bf_grad");
 
     err = load_fv_grads();
-    EH( err, "load_fv_grads");
+    GOMA_EH( err, "load_fv_grads");
 
     /* Now generate & save the tau shear stress tensor components for this
        gauss point. */
@@ -6781,7 +6781,7 @@ fill_lhs_lspatch(double * i_node_coords,
 
     err = load_basis_functions( xi,
 				bfd );
-    EH( err, 
+    GOMA_EH( err, 
 	"problem from load_basis_functions" );
 
     /*
@@ -6793,7 +6793,7 @@ fill_lhs_lspatch(double * i_node_coords,
        for the point xi[] in the element pointed to by the ei struct */
 		  
     err = beer_belly();
-    EH( err,
+    GOMA_EH( err,
 	"beer_belly" );
 		  
     /*
@@ -6802,7 +6802,7 @@ fill_lhs_lspatch(double * i_node_coords,
     /* Now fill fv with tau goodies, and cycle over the gauss points 
        filling the tau components into tau_gp_ptch */
     err = load_fv();
-    EH( err, "load_fv");
+    GOMA_EH( err, "load_fv");
 		  		  
     /*
      * Load up physical space gradients of field variables at this
@@ -6811,10 +6811,10 @@ fill_lhs_lspatch(double * i_node_coords,
     /* NOTE: load_bf_grad MUST be called before load_fv_grads as this
        call depends on it! - RRL 10/30/98 */
     err = load_bf_grad();
-    EH( err, "load_bf_grad");
+    GOMA_EH( err, "load_bf_grad");
 
     err = load_fv_grads();
-    EH( err, "load_fv_grads");
+    GOMA_EH( err, "load_fv_grads");
 
     /* Now generate & save the tau shear stress tensor components for this
        gauss point. */
@@ -7158,7 +7158,7 @@ fill_lhs_lspatch(double * i_node_coords,
 
       break;
     default:
-      EH( -1, 
+      GOMA_EH( -1, 
 	  "Unsupported size in building LHS of least squares patch for error" );
       break;
     }
@@ -7274,7 +7274,7 @@ calc_stream_fcn(double x[],				/* soln vector */
  if (pd->CoordinateSystem == CARTESIAN || 
      pd->CoordinateSystem == CARTESIAN_2pt5D) {
    if (pd_glob[0]->i[pg->imtrx][R_MOMENTUM1] == I_Q1) {
-     WH(-1, "Stream function with Q1 mapping may not be accurate ");
+     GOMA_WH(-1, "Stream function with Q1 mapping may not be accurate ");
 
      for (i = 0; i < ei[pg->imtrx]->num_sides; i++) {
        i1 = i;
@@ -7309,7 +7309,7 @@ calc_stream_fcn(double x[],				/* soln vector */
             pd->CoordinateSystem == SWIRLING) {
 
    if (pd_glob[0]->i[pg->imtrx][R_MOMENTUM1] == I_Q1) {
-     WH(-1, "Stream function with Q1 may not be accurate ");
+     GOMA_WH(-1, "Stream function with Q1 may not be accurate ");
      for (i = 0; i < ei[pg->imtrx]->num_sides; i++) {
        i1 = i;
        i2 = i+1;
@@ -7350,7 +7350,7 @@ calc_stream_fcn(double x[],				/* soln vector */
    }
 
  } else {
-   EH(GOMA_ERROR,"Stream function routine called with incompatible coord system");
+   GOMA_EH(GOMA_ERROR,"Stream function routine called with incompatible coord system");
  }
  return (status);
 } /* End routine stream function */
@@ -7436,7 +7436,7 @@ correct_stream_fcn(int *kount,	/* a counter for element connectivity ??     */
   double s, stream_fcn[9];
 
   if (ei[pg->imtrx]->num_sides > 4) {
-    EH(GOMA_ERROR, "correct_stream_fcn not available in 3D");
+    GOMA_EH(GOMA_ERROR, "correct_stream_fcn not available in 3D");
     return -1;
   }
 
@@ -7518,7 +7518,7 @@ correct_stream_fcn(int *kount,	/* a counter for element connectivity ??     */
     (*kount)++;
   }
   if (*kount > 1 ) {
-    WH(-1, "calc_stream_fcn: POSSIBLE ERROR - Connectivity not sufficiently continuous\n"); 
+    GOMA_WH(-1, "calc_stream_fcn: POSSIBLE ERROR - Connectivity not sufficiently continuous\n"); 
   }
  nextelement:
   *kount = *kount;
@@ -7764,7 +7764,7 @@ rd_post_process_specs(FILE *ifp,
   if (look_for_optional(ifp, "Error ZZ velocity elem size", input, '=') 
       == 1) { 
     if (ERROR_ZZ_VEL == -1) {
-      EH(GOMA_ERROR, "'Error ZZ velocity elem size' card REQUIRES 'Error ZZ "
+      GOMA_EH(GOMA_ERROR, "'Error ZZ velocity elem size' card REQUIRES 'Error ZZ "
 	 "velocity = yes' card - please add");
     } else {
       ERROR_ZZ_VEL_ELSIZE = 1;
@@ -7778,7 +7778,7 @@ rd_post_process_specs(FILE *ifp,
   if (look_for_optional(ifp, "Error ZZ heat flux elem size", input, '=')
       == 1) { 
     if (ERROR_ZZ_Q == -1) {
-      EH( -1,
+      GOMA_EH( -1,
 	  "'Error ZZ heat flux elem size' card REQUIRES 'Error ZZ heat flux = yes' card - please add" );
     } else {
       ERROR_ZZ_Q_ELSIZE = 1;
@@ -7794,7 +7794,7 @@ rd_post_process_specs(FILE *ifp,
 			   input,
 			   '=' ) == 1 ) { 
     if ( ERROR_ZZ_P == -1 ) {
-      EH( -1,
+      GOMA_EH( -1,
 	  "'Error ZZ pressure elem size' card REQUIRES 'Error ZZ pressure = yes' card - please add" );
     } else {
       ERROR_ZZ_P_ELSIZE = 1;
@@ -7828,7 +7828,7 @@ rd_post_process_specs(FILE *ifp,
 		   &pp_error_data[i].error_params[3],
 		   &pp_error_data[i].error_params[4],
 		   &pp_error_data[i].error_params[5] ) != 6 ) {
-	EH( -1,
+	GOMA_EH( -1,
 	    " Error reading 'Error ZZ velocity elem size' card values - expecting 6 floats" );
       }
 #ifdef RRL_DEBUG
@@ -7868,7 +7868,7 @@ rd_post_process_specs(FILE *ifp,
 		   &pp_error_data[i].error_params[3],
 		   &pp_error_data[i].error_params[4],
 		   &pp_error_data[i].error_params[5] ) != 6 ) {
-	EH( -1,
+	GOMA_EH( -1,
 	    " Error reading 'Error ZZ heat flux elem size' card values - expecting 6 floats" );
       }
 #ifdef RRL_DEBUG
@@ -7907,7 +7907,7 @@ rd_post_process_specs(FILE *ifp,
 		   &pp_error_data[i].error_params[3],
 		   &pp_error_data[i].error_params[4],
 		   &pp_error_data[i].error_params[5] ) != 6 ) {
-	EH( -1,
+	GOMA_EH( -1,
 	    " Error reading 'Error ZZ pressure elem size' card values - expecting 6 floats" );
       }
 #ifdef RRL_DEBUG
@@ -7978,7 +7978,7 @@ rd_post_process_specs(FILE *ifp,
 	  
 	  if (fscanf(ifp, "%s", ts) != 1)
 	    {
-	      EH( -1, "error reading Post Processing Flux input variable");
+	      GOMA_EH( -1, "error reading Post Processing Flux input variable");
 	    }
 
 	  pp_fluxes[i]->flux_type = -1;
@@ -7993,7 +7993,7 @@ rd_post_process_specs(FILE *ifp,
 		  
 	    }
 	  if(pp_fluxes[i]->flux_type == -1)       {
-	    EH( -1, "Invalid Flux name");
+	    GOMA_EH( -1, "Invalid Flux name");
 	  }
 	  SPF(echo_string,"%s = %s", "FLUX", pp_fluxes[i]->flux_type_name);
 
@@ -8030,7 +8030,7 @@ rd_post_process_specs(FILE *ifp,
 	  /* read file name */
 	  if (fscanf(ifp, "%s", ts) != 1)
 	    {
-	      EH( -1, "error reading Post Processing Flux filename");
+	      GOMA_EH( -1, "error reading Post Processing Flux filename");
 	    }
 	  strcpy(pp_fluxes[i]->flux_filenm, ts);
 	  
@@ -8104,7 +8104,7 @@ rd_post_process_specs(FILE *ifp,
 	  /* Read FLUX  type: i.e. FORCE_X, HEAT FLUX, etc. */
 	  if (fscanf(ifp, "%s", ts) != 1)
 	    {
-	      EH( -1, "error reading FLUX_SENS name");
+	      GOMA_EH( -1, "error reading FLUX_SENS name");
 	    }
 	  
 	  pp_fluxes_sens[i]->flux_type = -1;
@@ -8120,7 +8120,7 @@ rd_post_process_specs(FILE *ifp,
 	  
 	  if(pp_fluxes_sens[i]->flux_type == -1)  
 	    {
-	      EH( -1, "Invalid Flux name in Flux Sensitivity");
+	      GOMA_EH( -1, "Invalid Flux name in Flux Sensitivity");
 	    }
 	  
 	  sprintf(echo_string,"%s = %s","FLUX",pp_fluxes_sens[i]->flux_type_name); 
@@ -8274,10 +8274,10 @@ rd_post_process_specs(FILE *ifp,
 			  id3 = cont->upMDID;
 			  break;
 			case 5:
-			  EH(GOMA_ERROR,"sensitivities to UF not done");
+			  GOMA_EH(GOMA_ERROR,"sensitivities to UF not done");
 			  break;
 			case 6:
-			  EH(GOMA_ERROR,"sensitivities to AN not done");
+			  GOMA_EH(GOMA_ERROR,"sensitivities to AN not done");
 			  break;
 			}
 		      if(id1 == pp_fluxes_sens[i]->sens_id &&
@@ -8294,7 +8294,7 @@ rd_post_process_specs(FILE *ifp,
 	  /* read file name */
 	  if (fscanf(ifp, "%s", ts) != 1)
 	    {
-	      EH( -1, "error reading Post Processing Flux Sens filename");
+	      GOMA_EH( -1, "error reading Post Processing Flux Sens filename");
 	    }
 	  strcpy(pp_fluxes_sens[i]->flux_filenm, ts);
 	  
@@ -8368,7 +8368,7 @@ rd_post_process_specs(FILE *ifp,
       save_position = ftell(ifp);
       fgetsretval = fgets(data_line_buffer, MAX_CHAR_IN_INPUT, ifp);
       if (fgetsretval == NULL) {
-	EH(GOMA_ERROR, "Error reading post processing line");
+	GOMA_EH(GOMA_ERROR, "Error reading post processing line");
       }
 
       fseek(ifp, save_position, SEEK_SET);
@@ -8543,7 +8543,7 @@ rd_post_process_specs(FILE *ifp,
 	  /* Read DATA  type: i.e. VELOCITY1, VOLTAGE, etc. */
 	  if (fscanf(ifp, "%s", input) != 1)
 	    {
-	      EH( -1, "error reading DATA_SENS name");
+	      GOMA_EH( -1, "error reading DATA_SENS name");
 	    }
 	  /* Search for appropriate integer identifier in Var_Name struct */
 
@@ -8568,13 +8568,13 @@ rd_post_process_specs(FILE *ifp,
 	    {
 	      for (k=0; k<Num_Post_Var_Names; k++)
 		{
-		  EH(GOMA_ERROR,"Unrecognized print variable. ");
+		  GOMA_EH(GOMA_ERROR,"Unrecognized print variable. ");
 		  if(!strcmp(input,Post_Var_Name[k].name1))
 		    pp_data_sens[i]->data_type = -1;  /* Ok this says it is a Post var */
 		  strcpy(pp_data_sens[i]->data_type_name, input);
 		}
 	    }
-	  if(pp_data_sens[i]->data_type == -2)  EH(GOMA_ERROR, "Invalid choice of print_sens variable");
+	  if(pp_data_sens[i]->data_type == -2)  GOMA_EH(GOMA_ERROR, "Invalid choice of print_sens variable");
 
 
 
@@ -8738,10 +8738,10 @@ rd_post_process_specs(FILE *ifp,
 			  id3 = cont->upMDID;
 			  break;
 			case 5:
-			  EH(GOMA_ERROR,"sensitivities to UF not done");
+			  GOMA_EH(GOMA_ERROR,"sensitivities to UF not done");
 			  break;
 			case 6:
-			  EH(GOMA_ERROR,"sensitivities to AN not done");
+			  GOMA_EH(GOMA_ERROR,"sensitivities to AN not done");
 			  break;
 			}
 		      if(id1 == pp_data_sens[i]->sens_id &&
@@ -8758,7 +8758,7 @@ rd_post_process_specs(FILE *ifp,
 	  nargs = sscanf(first_string, "%s", second_string);
 	  if ( nargs == 0 )
 	    {
-	      EH(GOMA_ERROR,"Found zero arguments for the Data Sensitivity file name");
+	      GOMA_EH(GOMA_ERROR,"Found zero arguments for the Data Sensitivity file name");
 	    }
 	  strcpy(pp_data_sens[i]->data_filenm, second_string);
 	}   /*   data card count loop  */
@@ -8805,7 +8805,7 @@ rd_post_process_specs(FILE *ifp,
 		     &pp_particles[i]->coord[1],
 		     &pp_particles[i]->coord[2]) != 3)
             {
-              EH( -1, "error reading particle input data (check to make sure you have 3 coord values");
+              GOMA_EH( -1, "error reading particle input data (check to make sure you have 3 coord values");
             }
 	  SPF(echo_string,"%s = %g %g %g", "PARTICLE", pp_particles[i]->coord[0],pp_particles[i]->coord[1],pp_particles[i]->coord[2]);
 
@@ -8814,13 +8814,13 @@ rd_post_process_specs(FILE *ifp,
 		     &pp_particles[i]->End_Time,
 		     &pp_particles[i]->Delta_s) != 3)
             {
-	      EH( -1, "error reading particle time data (Start_time, End_Time, Delta_s)");
+	      GOMA_EH( -1, "error reading particle time data (Start_time, End_Time, Delta_s)");
             }
 	  SPF(endofstring(echo_string)," %g %g %g",pp_particles[i]->Start_Time,pp_particles[i]->End_Time,pp_particles[i]->Delta_s);
 	  if (fscanf(ifp, "%lf %lf", &pp_particles[i]->mass,
 		     &pp_particles[i]->mobility) != 2)
             {
-	      WH( -1, "defaulting to zero mass, mobility");
+	      GOMA_WH( -1, "defaulting to zero mass, mobility");
 	      pp_particles[i]->mass=0.0;
 	      pp_particles[i]->mobility=0.0;
             }
@@ -8830,7 +8830,7 @@ rd_post_process_specs(FILE *ifp,
 		     &pp_particles[i]->force[1],
 		     &pp_particles[i]->force[2]) != 3)
             {
-	      WH( -1, "defaulting to zero external force");
+	      GOMA_WH( -1, "defaulting to zero external force");
 	      pp_particles[i]->force[0]=0.0;
 	      pp_particles[i]->force[1]=0.0;
 	      pp_particles[i]->force[2]=0.0;
@@ -8841,7 +8841,7 @@ rd_post_process_specs(FILE *ifp,
 	  nargs = sscanf(first_string, "%s", second_string);
 	  if ( nargs == 0 )
 	    {
-	      EH(GOMA_ERROR,"Found zero arguments for the Particle file name");
+	      GOMA_EH(GOMA_ERROR,"Found zero arguments for the Particle file name");
 	    }
 	  strcpy(pp_particles[i]->filenm, second_string);
 	  SPF(endofstring(echo_string)," %s",pp_particles[i]->filenm);
@@ -8888,7 +8888,7 @@ rd_post_process_specs(FILE *ifp,
 
 	  if ( fscanf(ifp, "%s", ts) != 1 )
 	    {
-	      EH(GOMA_ERROR,"error reading Post Processing volume integral card \n");
+	      GOMA_EH(GOMA_ERROR,"error reading Post Processing volume integral card \n");
 	    }
 
 	  pp_volume[i]->volume_type = -1;
@@ -8928,7 +8928,7 @@ rd_post_process_specs(FILE *ifp,
 
 	  if ( nargs == 0 )
 	    {
-              EH(GOMA_ERROR,"Found zero arguments for the Volumetric Integration file name");
+              GOMA_EH(GOMA_ERROR,"Found zero arguments for the Volumetric Integration file name");
             }
 
 	  strcpy(pp_volume[i]->volume_fname, second_string);
@@ -8972,7 +8972,7 @@ rd_post_process_specs(FILE *ifp,
     int i;
     if ( fscanf(ifp, "%s", ts) != 1 )
       {
-	EH(GOMA_ERROR,"error reading Volume Integration Output Format card \n");
+	GOMA_EH(GOMA_ERROR,"error reading Volume Integration Output Format card \n");
       }
     if ( !strcasecmp( ts, "Verbose" ) ) {
       ppvi_type = PPVI_VERBOSE;
@@ -8993,7 +8993,7 @@ rd_post_process_specs(FILE *ifp,
       }
     }
     else {
-      WH(-1, "The Volumetric Integration Output Format was not recognized");
+      GOMA_WH(-1, "The Volumetric Integration Output Format was not recognized");
       ppvi_type = PPVI_VERBOSE;
     }
   }
@@ -9042,7 +9042,7 @@ rd_post_process_specs(FILE *ifp,
 
 	  if (fscanf(ifp, "%s", ts) != 1)
 	    {
-	      EH( -1, "error reading Post Processing Global input variable");
+	      GOMA_EH( -1, "error reading Post Processing Global input variable");
 	    }
 
 	  pp_global[i]->type = -1;
@@ -9056,7 +9056,7 @@ rd_post_process_specs(FILE *ifp,
 		}
 	    }
 	  if(pp_global[i]->type == -1)       {
-	    EH( -1, "Invalid Global name");
+	    GOMA_EH( -1, "Invalid Global name");
 	  }
 	  SPF(echo_string,"%s = %s", "GLOBAL", pp_global[i]->type_name);
 
@@ -9070,14 +9070,14 @@ rd_post_process_specs(FILE *ifp,
 	      /* read file name */
 	      if (fscanf(ifp, "%s", ts) != 1)
 		{
-		  EH( -1, "error reading Post Processing Global filename");
+		  GOMA_EH( -1, "error reading Post Processing Global filename");
 		}
 	      strcpy(pp_global[i]->filenm, ts);
 	      SPF(endofstring(echo_string)," %s", pp_global[i]->filenm);
 	    }
 	    break;
 	  default:
-	    EH(GOMA_ERROR, "Unsupported GLOBAL Post Processing Type");
+	    GOMA_EH(GOMA_ERROR, "Unsupported GLOBAL Post Processing Type");
 	    break;
 	  }
 
@@ -9122,7 +9122,7 @@ rd_post_process_specs(FILE *ifp,
           char * fgetsret = fgets(data_line_buffer, MAX_CHAR_IN_INPUT, ifp);
           if (fgetsret == NULL)
           {
-            EH(GOMA_ERROR, "Error reading post processing line in Averages");
+            GOMA_EH(GOMA_ERROR, "Error reading post processing line in Averages");
           }
 
           fseek(ifp, save_position, SEEK_SET);
@@ -9135,7 +9135,7 @@ rd_post_process_specs(FILE *ifp,
 
 	  if (read_average_items < 2)
 	    {
-	      EH(GOMA_ERROR, "Error in reading Average post_processing");
+	      GOMA_EH(GOMA_ERROR, "Error in reading Average post_processing");
 	    }
 
 	  for (k=0; k<Num_Var_Names; k++)
@@ -9155,7 +9155,7 @@ rd_post_process_specs(FILE *ifp,
 					 "_AVG");
 		      if (err < 0 || err >= MAX_VAR_NAME_LNGTH)
 			{
-			  EH(GOMA_ERROR, "Error writing mass fraction variable for average");
+			  GOMA_EH(GOMA_ERROR, "Error writing mass fraction variable for average");
 			}
 		    }
 		  else
@@ -9190,7 +9190,7 @@ rd_post_process_specs(FILE *ifp,
 		else
 		  {
 		    fprintf(stderr, "Error reading unknown variable type: %s\n", variable_name);
-		    EH(GOMA_ERROR, "Unknown variable type for post processing");
+		    GOMA_EH(GOMA_ERROR, "Unknown variable type for post processing");
 		  }
 	      }
 
@@ -9247,7 +9247,7 @@ look_for_post_proc(FILE *ifp,	/* pointer to file                           */
     } else if (strcmp(input, "no") == 0) {
       *flag_variable = -1;
     } else {
-      EH( -1, "Unknown problem option");
+      GOMA_EH( -1, "Unknown problem option");
     }
     SPF(echo_string,"%s = %s",search_string,input); ECHO(echo_string,echo_file);
   }
@@ -9255,7 +9255,7 @@ look_for_post_proc(FILE *ifp,	/* pointer to file                           */
 #ifndef LIBRARY_MODE
   if (Num_Export_XP > 0)
     {
-      WH(-1, "Post-process exp option only available in LIBRARY_MODE!");
+      GOMA_WH(-1, "Post-process exp option only available in LIBRARY_MODE!");
       Num_Export_XP = 0;
     }
 #endif
@@ -9504,7 +9504,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
   if (STREAM != -1 &&  Num_Var_In_Type[pg->imtrx][VELOCITY1])
      {
        if (Num_Dim == 3) {
-	 WH(-1,"Cant do stream function in 3D");
+	 GOMA_WH(-1,"Cant do stream function in 3D");
 	 STREAM = -1;
        } else {
 	 set_nv_tkud(rd, index, 0, 0, -2, "STREAM","[1]",
@@ -9836,7 +9836,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
      {
        if (CONC_CONT == 2)
          {
-           EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+           GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
          }
       CONC_CONT = index_post;
       for (w = 0; w < upd->Max_Num_Species_Eqn; w++)
@@ -9856,7 +9856,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
 
       if (STRESS_CONT == 2)
         {
-          EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+          GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
         }
 
       for ( mode=0; mode<MAX_MODES; mode++)
@@ -10002,7 +10002,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
      { 
        if (DIELECTROPHORETIC_FIELD == 2)
          {
-           EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+           GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
          }
        DIELECTROPHORETIC_FIELD = index_post;
        for(i = 0; i < Num_Dim; i++)
@@ -10037,7 +10037,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
      {
        if (ENORMSQ_FIELD == 2)
          {
-           EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+           GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
          }
        ENORMSQ_FIELD = index_post;
        for(i = 0; i < Num_Dim; i++)
@@ -10071,7 +10071,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
    if (DIFFUSION_VECTORS != -1) {
      if (DIFFUSION_VECTORS == 2)
        {
-         EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+         GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
        }
      DIFFUSION_VECTORS = index_post;
      if (upd->Max_Num_Species_Eqn == 0) DIFFUSION_VECTORS = -1;
@@ -10131,13 +10131,13 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
    if (FLUXLINES != -1 && Num_Var_In_Type[pg->imtrx][R_MASS]) {
      if (FLUXLINES == 2)
        {
-         EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+         GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
        }
      if (Num_Dim == 3) {
-       WH(-1,"Cant do flux function in 3D");
+       GOMA_WH(-1,"Cant do flux function in 3D");
        FLUXLINES = -1;
      } else if (TimeIntegration != STEADY) {
-       WH(-1,"Cant do flux function in transient");
+       GOMA_WH(-1,"Cant do flux function in transient");
        FLUXLINES = -1;
      } else {
        FLUXLINES = index_post;
@@ -10156,7 +10156,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
     {
       if (CONDUCTION_VECTORS == 2)
         {
-          EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+          GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
         }
       CONDUCTION_VECTORS = index_post;
       /* X Component */
@@ -10189,7 +10189,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
     {
       if (POYNTING_VECTORS == 2)
         {
-          EH(-1, "Post-processing vectors cannot be exported yet!");
+          GOMA_EH(-1, "Post-processing vectors cannot be exported yet!");
         }
       POYNTING_VECTORS = index_post;
       /* X Component */
@@ -10219,7 +10219,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
     {
       if (ELECTRIC_FIELD == 2)
         {
-          EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+          GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
         }
       ELECTRIC_FIELD = index_post;
 
@@ -10265,10 +10265,10 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
   if (ENERGY_FLUXLINES != -1 && Num_Var_In_Type[pg->imtrx][R_ENERGY])
   {
     if (Num_Dim == 3) {
-      WH(-1,"Cant do flux function in 3D");
+      GOMA_WH(-1,"Cant do flux function in 3D");
       ENERGY_FLUXLINES = -1;
     } else if (TimeIntegration != STEADY) {
-      WH(-1,"Cant do flux function in transient");
+      GOMA_WH(-1,"Cant do flux function in transient");
       ENERGY_FLUXLINES = -1;
     } else {
       ENERGY_FLUXLINES = index_post;
@@ -10289,7 +10289,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
     {
       if (STRESS_TENSOR == 2)
         {
-          EH(GOMA_ERROR, "Post-processing tensors cannot be exported yet!");
+          GOMA_EH(GOMA_ERROR, "Post-processing tensors cannot be exported yet!");
         }
       STRESS_TENSOR = index_post;
       set_nv_tkud(rd, index, 0, 0, -2, "T11","[1]",
@@ -10326,7 +10326,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
     {
       if (REAL_STRESS_TENSOR == 2)
         {
-          EH(GOMA_ERROR, "Post-processing tensors cannot be exported yet!");
+          GOMA_EH(GOMA_ERROR, "Post-processing tensors cannot be exported yet!");
         }
       REAL_STRESS_TENSOR = index_post;
       set_nv_tkud(rd, index, 0, 0, -2, "T11_RS","[1]",
@@ -10362,7 +10362,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
     {
       if (STRAIN_TENSOR == 2)
         {
-          EH(GOMA_ERROR, "Post-processing tensors cannot be exported yet!");
+          GOMA_EH(GOMA_ERROR, "Post-processing tensors cannot be exported yet!");
         }
       STRAIN_TENSOR = index_post;
       set_nv_tkud(rd, index, 0, 0, -2, "E11","[1]",
@@ -10400,7 +10400,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
     {
       if (EVP_DEF_GRAD_TENSOR == 2)
         {
-          EH(GOMA_ERROR, "Post-processing tensors cannot be exported yet!");
+          GOMA_EH(GOMA_ERROR, "Post-processing tensors cannot be exported yet!");
         }
       EVP_DEF_GRAD_TENSOR = index_post;
       set_nv_tkud(rd, index, 0, 0, -2, "FVP11","[1]",
@@ -10499,7 +10499,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
     {
       if (LAGRANGE_CONVECTION == 2)
         {
-          EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+          GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
         }
       LAGRANGE_CONVECTION = index_post;
       for (i = 0; i < Num_Dim; i++)
@@ -10516,7 +10516,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
     {
       if (SURFACE_VECTORS == 2)
         {
-          EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+          GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
         }
       SURFACE_VECTORS = index_post;
       
@@ -10556,7 +10556,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
     {
       if (SHELL_NORMALS == 2)
         {
-          EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+          GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
         }
       SHELL_NORMALS = index_post;
       
@@ -10630,7 +10630,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
 
       if (Num_Dim > 2)
         {
-          EH(GOMA_ERROR, "Log Conf Stress not implemented for 3D");
+          GOMA_EH(GOMA_ERROR, "Log Conf Stress not implemented for 3D");
         }
     }
 
@@ -10842,7 +10842,7 @@ index_post, index_post_export);
       Num_Var_In_Type[pg->imtrx][R_POR_LIQ_PRES] &&  check) {
     if (POROUS_RHO_TOTAL_SOLVENTS == 2)
       {
-        EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+        GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
       }
     POROUS_RHO_TOTAL_SOLVENTS = index_post;
     sprintf(species_name, "Rho_Total_liq");
@@ -10871,7 +10871,7 @@ index_post, index_post_export);
       Num_Var_In_Type[pg->imtrx][R_POR_LIQ_PRES] && check) {
     if (POROUS_RHO_GAS_SOLVENTS == 2)
       {
-        EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+        GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
       }
     POROUS_RHO_GAS_SOLVENTS = index_post;
     if (Num_Var_In_Type[pg->imtrx][R_POR_LIQ_PRES]) {
@@ -10920,7 +10920,7 @@ index_post, index_post_export);
       Num_Var_In_Type[pg->imtrx][R_POR_GAS_PRES] && check) {
     if (DARCY_VELOCITY_GAS == 2)
       {
-        EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+        GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
       }
     DARCY_VELOCITY_GAS = index_post;
     for (i = 0; i < Num_Dim; i++) {
@@ -10936,7 +10936,7 @@ index_post, index_post_export);
       Num_Var_In_Type[pg->imtrx][R_POR_LIQ_PRES] && check) {
     if (DARCY_VELOCITY_LIQ == 2)
       {
-        EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+        GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
       }
     DARCY_VELOCITY_LIQ = index_post;
     for (i = 0; i < Num_Dim; i++) {
@@ -10997,7 +10997,7 @@ index_post, index_post_export);
       Num_Var_In_Type[pg->imtrx][R_POR_LIQ_PRES] && check) {
     if (POROUS_SUPGVELOCITY == 2)
       {
-        EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+        GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
       }
     POROUS_SUPGVELOCITY = index_post;
     for (i = 0; i < Num_Dim; i++) {
@@ -11045,7 +11045,7 @@ index_post, index_post_export);
 	 {
            if (CURL_V == 2)
              {
-               EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+               GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
              }
 	   CURL_V = index_post;
 	   set_nv_tkud(rd, index, 0, 0, -2, "VORTX", "[1]",
@@ -11076,7 +11076,7 @@ index_post, index_post_export);
 	 }
        else
 	 {
-	   WH(-1,"Why are you asking for vorticity on a 1D problem?");
+	   GOMA_WH(-1,"Why are you asking for vorticity on a 1D problem?");
 	   CURL_V = -1;
 	 }
      }
@@ -11108,7 +11108,7 @@ index_post, index_post_export);
 	 {
            if (LAMB_VECTOR == 2)
              {
-               EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+               GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
              }
 	   LAMB_VECTOR = index_post;
 	   set_nv_tkud(rd, index, 0, 0, -2, "LAMBX", "[1]",
@@ -11153,7 +11153,7 @@ index_post, index_post_export);
 	 {
            if (HELICITY == 2)
              {
-               EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+               GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
              }
 	   HELICITY = index_post;
 	   set_nv_tkud(rd, index, 0, 0, -2, "HELIX", "[1]",
@@ -11163,7 +11163,7 @@ index_post, index_post_export);
 	 }
        else
 	 {
-	   WH(-1,"Why are you asking for Helicity in a 1D or 2D problem?");
+	   GOMA_WH(-1,"Why are you asking for Helicity in a 1D or 2D problem?");
 	   HELICITY = -1;
 	 }
      }
@@ -11314,7 +11314,7 @@ index_post, index_post_export);
     {
       if (PRINCIPAL_STRESS == 2)
         {
-          EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+          GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
         }
       PRINCIPAL_STRESS = index_post;
 
@@ -11342,7 +11342,7 @@ index_post, index_post_export);
     {
       if (PRINCIPAL_REAL_STRESS == 2)
         {
-          EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+          GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
         }
       PRINCIPAL_REAL_STRESS = index_post;
 
@@ -11371,7 +11371,7 @@ index_post, index_post_export);
     {
       if (LUB_HEIGHT == 2)
         {
-          EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+          GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
         }
       LUB_HEIGHT = index_post;
       sprintf(nm, "LUB_H");
@@ -11385,7 +11385,7 @@ index_post, index_post_export);
     {
       if (LUB_HEIGHT_2 == 2)
         {
-          EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+          GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
         }
       LUB_HEIGHT_2 = index_post;
       sprintf(nm, "LUB_H_2");
@@ -11399,7 +11399,7 @@ index_post, index_post_export);
     {
       if (LUB_VELO_UPPER == 2)
         {
-          EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+          GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
         }
       LUB_VELO_UPPER = index_post;
       sprintf(nm, "LUB_VUX");
@@ -11423,7 +11423,7 @@ index_post, index_post_export);
     {
       if (LUB_VELO_LOWER == 2)
         {
-          EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+          GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
         }
       LUB_VELO_LOWER = index_post;
       sprintf(nm, "LUB_VLX");
@@ -11447,7 +11447,7 @@ index_post, index_post_export);
     {
       if (LUB_VELO_FIELD == 2)
         {
-          EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+          GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
         }
       LUB_VELO_FIELD = index_post;
       sprintf(nm, "LUB_VELO_X");
@@ -11471,7 +11471,7 @@ index_post, index_post_export);
     {
       if (LUB_VELO_FIELD_2 == 2)
         {
-          EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+          GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
         }
       LUB_VELO_FIELD_2 = index_post;
       sprintf(nm, "LUB_VELO_2_X");
@@ -11495,7 +11495,7 @@ index_post, index_post_export);
     {
       if (DISJ_PRESS == 2)
         {
-          EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+          GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
         }
       DISJ_PRESS = index_post;
       sprintf(nm, "DISJ_PRESS");
@@ -11509,7 +11509,7 @@ index_post, index_post_export);
     {
       if (SH_SAT_OPEN == 2)
         {
-          EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+          GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
         }
       SH_SAT_OPEN = index_post;
       sprintf(nm, "SH_SAT_OPEN");
@@ -11523,7 +11523,7 @@ index_post, index_post_export);
     {
       if (SH_SAT_OPEN_2 == 2)
         {
-          EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+          GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
         }
       SH_SAT_OPEN_2 = index_post;
       sprintf(nm, "SH_SAT_OPEN_2");
@@ -11538,7 +11538,7 @@ index_post, index_post_export);
     {
       if (SH_STRESS_TENSOR == 2)
         {
-          EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+          GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
         }
       SH_STRESS_TENSOR = index_post;
       sprintf(nm, "SH_S11");
@@ -11563,7 +11563,7 @@ index_post, index_post_export);
     {
       if (SH_TANG == 2)
         {
-          EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+          GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
         }
       SH_TANG = index_post;
 
@@ -11606,7 +11606,7 @@ index_post, index_post_export);
     {
       if (PP_LAME_MU == 2)
         {
-          EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+          GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
         }
       PP_LAME_MU = index_post;
       sprintf(nm, "LAME_MU");
@@ -11620,7 +11620,7 @@ index_post, index_post_export);
     {
       if (PP_LAME_LAMBDA == 2)
         {
-          EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+          GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
         }
       PP_LAME_LAMBDA = index_post;
       sprintf(nm, "LAME_LAMBDA");
@@ -11662,7 +11662,7 @@ index_post, index_post_export);
     {
       if (TFMP_GAS_VELO == 2)
         {
-          EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+          GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
         }
       TFMP_GAS_VELO = index_post;
       sprintf(nm, "TFMP_GAS_VX");
@@ -11690,7 +11690,7 @@ index_post, index_post_export);
     {
       if (TFMP_LIQ_VELO == 2)
         {
-          EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+          GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
         }
       TFMP_LIQ_VELO = index_post;
       sprintf(nm, "TFMP_LIQ_VX");
@@ -11718,7 +11718,7 @@ index_post, index_post_export);
     {
       if (TFMP_INV_PECLET == 2)
         {
-          EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+          GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
         }
       TFMP_INV_PECLET = index_post;
       sprintf(nm, "TFMP_INV_PECLET");
@@ -11735,7 +11735,7 @@ index_post, index_post_export);
     {
       if (TFMP_KRG == 2)
         {
-          EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+          GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
         }
       TFMP_KRG = index_post;
       sprintf(nm, "TFMP_KRG");
@@ -11784,7 +11784,7 @@ index_post, index_post_export);
      {
       if (NS_RESIDUALS == 2)
         {
-          EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+          GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
         }
       NS_RESIDUALS = index_post;
       set_nv_tkud(rd, index, 0, 0, -2, "RMX", "[1]",
@@ -11808,7 +11808,7 @@ index_post, index_post_export);
      {
       if (MM_RESIDUALS == 2)
         {
-          EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+          GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
         }
       MM_RESIDUALS = index_post;
       set_nv_tkud(rd, index, 0, 0, -2, "RDX", "[1]",
@@ -11930,7 +11930,7 @@ index_post, index_post_export);
   if (TIME_DERIVATIVES != -1  && (TimeIntegration != STEADY)) {
     if (TIME_DERIVATIVES == 2)
       {
-        EH(GOMA_ERROR, "Post-processing time derivatives cannot be exported yet!");
+        GOMA_EH(GOMA_ERROR, "Post-processing time derivatives cannot be exported yet!");
       }
     for (var = V_FIRST; var < V_LAST; var++) {
       if (Num_Var_In_Type[pg->imtrx][var]) {
@@ -12001,10 +12001,10 @@ index_post, index_post_export);
   
   if ((TIME_DERIVATIVES != -1 && pd_glob[0]->TimeIntegration == TRANSIENT)
       && index_post != (*tnv_post - *tnv))
-    WH(-1, "Bad nodal post process variable count ");
+    GOMA_WH(-1, "Bad nodal post process variable count ");
 
   if (TIME_DERIVATIVES == -1  && index_post != *tnv_post)
-    WH(-1, "Bad nodal post process variable count ");
+    GOMA_WH(-1, "Bad nodal post process variable count ");
 
   return(status);
 }
@@ -12242,10 +12242,10 @@ load_elem_tkn (struct Results_Description *rd,
   
   if ((TIME_DERIVATIVES != -1 && pd_glob[0]->TimeIntegration == TRANSIENT)
       && index_post != (*tev_post - tev))
-    WH(-1, "Bad elem post process variable count ");
+    GOMA_WH(-1, "Bad elem post process variable count ");
 
   if (TIME_DERIVATIVES == -1  && index_post != *tev_post)
-    WH(-1, "Bad elem post process variable count ");
+    GOMA_WH(-1, "Bad elem post process variable count ");
 
   return(status);
 }
@@ -12324,7 +12324,7 @@ find_id_edge (const int ielem,			/* 0-based element number */
       id_local_elem_coord[i] = in_list (local_edge_node_list[i], 0, 
 		    num_local_nodes, &(exo->node_list[iconnect_ptr]));
       if ((id_local_elem_coord[i]) == -1) {
-	 EH(GOMA_ERROR,"find_id_edge ERROR: side set nodal map error\n");
+	 GOMA_EH(GOMA_ERROR,"find_id_edge ERROR: side set nodal map error\n");
        }
     }
 
@@ -12444,13 +12444,13 @@ find_id_edge (const int ielem,			/* 0-based element number */
       *param_dir = 0;
       return 1; // node number
     }
-    /*EH(GOMA_ERROR,"Can't have edges in 1D");*/
+    /*GOMA_EH(GOMA_ERROR,"Can't have edges in 1D");*/
       break;
 
     } /* END switch ielem_dim */
 
  /* An error condition has occurred, if here */
-    EH(GOMA_ERROR,"find_id_edge ERROR: no edge was found !\n");
+    GOMA_EH(GOMA_ERROR,"find_id_edge ERROR: no edge was found !\n");
     return (0);
 
 }
@@ -12507,7 +12507,7 @@ find_id_edge_TET (const int ielem,			/* 0-based element number */
     for (i = 0; i < num_nodes_on_edge; i++) {
        if ((id_local_elem_coord[i] = in_list (local_edge_node_list[i], 0, 
 		   num_local_nodes, &(exo->node_list[iconnect_ptr])) ) == -1) {
-	 EH(GOMA_ERROR,"find_id_edge_TET ERROR: side set nodal map error\n");
+	 GOMA_EH(GOMA_ERROR,"find_id_edge_TET ERROR: side set nodal map error\n");
        }
     }
 
@@ -12557,16 +12557,16 @@ find_id_edge_TET (const int ielem,			/* 0-based element number */
        }
        break;
    case 2:
-     EH(GOMA_ERROR,"find_id_edge_TET not working in 2D");
+     GOMA_EH(GOMA_ERROR,"find_id_edge_TET not working in 2D");
      break;
    case 1:
-     EH(GOMA_ERROR,"Can't have edges in 1D");
+     GOMA_EH(GOMA_ERROR,"Can't have edges in 1D");
        break;
 
     } /* END switch ielem_dim */
 
  /* An error condition has occurred, if here */
-    EH(GOMA_ERROR,"find_id_edge_TET ERROR: no edge was found !\n");
+    GOMA_EH(GOMA_ERROR,"find_id_edge_TET ERROR: no edge was found !\n");
     return (0);
 
 }

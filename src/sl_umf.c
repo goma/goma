@@ -253,10 +253,10 @@ SL_UMF ( int system_id,
 
     /* If system_id isn't -1, then we're probably making some sort of mistake... */
     if(system_id != -1)
-      EH(GOMA_ERROR, "Entered SL_UMF with *first == 1, but system_id != -1");
+      GOMA_EH(GOMA_ERROR, "Entered SL_UMF with *first == 1, but system_id != -1");
     /* If we've already gone through all of our slots, get out. */
     if(number_systems == UMF_MAX_SYSTEMS)
-      EH(GOMA_ERROR, "Already created UMF_MAX_SYSTEMS systems");
+      GOMA_EH(GOMA_ERROR, "Already created UMF_MAX_SYSTEMS systems");
 
     system_id = number_systems;
     ums = &ums_a[number_systems++];
@@ -286,9 +286,9 @@ SL_UMF ( int system_id,
 
     /* system_id should have the appropriate identifier. */
     if(system_id == -1)
-      EH(GOMA_ERROR, "Conflicting orders: system_id == -1 and *first != 1");
+      GOMA_EH(GOMA_ERROR, "Conflicting orders: system_id == -1 and *first != 1");
     if(system_id < 0 || system_id >= UMF_MAX_SYSTEMS)
-      EH(GOMA_ERROR, "Index out of range: system_id");
+      GOMA_EH(GOMA_ERROR, "Index out of range: system_id");
 
     /* Grab the hopeful system. */
     ums = &ums_a[system_id];
@@ -296,7 +296,7 @@ SL_UMF ( int system_id,
     /* Run through some sanity checks to help ensure we're dealing
      * with the correct system. */
     if(ums->n != *nj || ums->nnz != *nnz_j)
-      EH(GOMA_ERROR, "Tried to access a bad system");
+      GOMA_EH(GOMA_ERROR, "Tried to access a bad system");
     break;
 
   case -1:
@@ -304,15 +304,15 @@ SL_UMF ( int system_id,
 
     /* system_id should have the appropriate identifier. */
     if(system_id == -1)
-      EH(GOMA_ERROR, "Conflicting orders: system_id == -1 and *first != 1");
+      GOMA_EH(GOMA_ERROR, "Conflicting orders: system_id == -1 and *first != 1");
     if(system_id < 0 || system_id >= UMF_MAX_SYSTEMS)
-      EH(GOMA_ERROR, "Index out of range: system_id");
+      GOMA_EH(GOMA_ERROR, "Index out of range: system_id");
 
     ums = &ums_a[system_id];
     /* Run through some sanity checks to help ensure we're dealing
      * with the correct system. */
     if(ums->n != *nj || ums->nnz != *nnz_j)
-      EH(GOMA_ERROR, "Tried to free a bad system");
+      GOMA_EH(GOMA_ERROR, "Tried to free a bad system");
 
     umfpack_di_free_symbolic(&ums->symbolic);
     ums->symbolic = NULL;  
@@ -396,12 +396,12 @@ SL_UMF ( int system_id,
       if ( err != UMFPACK_OK )
         {
 	  fprintf(stderr,"UMFPACK error = %d\n",err);
-	  EH(GOMA_ERROR,"Error computing matrix transpose using umfpack_di_transpose\n");
+	  GOMA_EH(GOMA_ERROR,"Error computing matrix transpose using umfpack_di_transpose\n");
 	}
 
       break;
     case 2: /* CSR FORMAT - NOT DONE YET */
-      EH(GOMA_ERROR, "Sorry, cannot convert CSR systems");
+      GOMA_EH(GOMA_ERROR, "Sorry, cannot convert CSR systems");
       break;
     }
 
@@ -423,7 +423,7 @@ SL_UMF ( int system_id,
       umf_option = 0;
       break;
     default:
-      EH(GOMA_ERROR, "Bad *fact_optn");
+      GOMA_EH(GOMA_ERROR, "Bad *fact_optn");
     }
 
     /* load default control parameters for UMF */
@@ -489,7 +489,7 @@ SL_UMF ( int system_id,
          double *b,
          double *x  )
 {
-  EH(GOMA_ERROR, "Goma not compiled with UMFPACK support");
+  GOMA_EH(GOMA_ERROR, "Goma not compiled with UMFPACK support");
 }
 
 #endif

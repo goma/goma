@@ -160,20 +160,20 @@ apply_integrated_curve_bc(
     
     /* ****************************************/
     err = load_basis_functions( xi, bfd);
-    EH( err, "problem from load_basis_functions");
+    GOMA_EH( err, "problem from load_basis_functions");
     
     err = beer_belly();
-    EH( err, "beer_belly");
+    GOMA_EH( err, "beer_belly");
     
     /* precalculate variables at  current integration pt.*/
     err = load_fv();
-    EH( err, "load_fv");
+    GOMA_EH( err, "load_fv");
 
     err = load_bf_grad();
-    EH( err, "load_bf_grad");
+    GOMA_EH( err, "load_bf_grad");
     
     err = load_bf_mesh_derivs(); 
-    EH( err, "load_bf_mesh_derivs");
+    GOMA_EH( err, "load_bf_mesh_derivs");
       
     /* use primary side to find edge vectors */
     edge_determinant_and_vectors (ielem, iconnect_ptr, num_local_nodes, ielem_dim - 1,  
@@ -192,10 +192,10 @@ apply_integrated_curve_bc(
      * Gauss point.
      */
     err = load_fv_grads();
-    EH( err, "load_fv_grads");
+    GOMA_EH( err, "load_fv_grads");
     
     err = load_fv_mesh_derivs(1);
-    EH( err, "load_fv_mesh_derivs");
+    GOMA_EH( err, "load_fv_mesh_derivs");
     
     /*
      * Load up porous media variables and properties, if needed 
@@ -204,7 +204,7 @@ apply_integrated_curve_bc(
 	mp->PorousMediaType == POROUS_SATURATED || 
 	mp->PorousMediaType == POROUS_TWO_PHASE){
       err = load_porous_properties(); 
-      EH( err, "load_porous_properties"); 
+      GOMA_EH( err, "load_porous_properties"); 
     }
 
     if (mp->SurfaceTensionModel != CONSTANT) 
@@ -232,7 +232,7 @@ apply_integrated_curve_bc(
 	if ((ss_index = 
 	     in_list(BC_Types[bc_input_id].BC_ID, 0, Proc_Num_Side_Sets, ss_to_blks[0])) == -1)
 	  {
-	    EH(GOMA_ERROR,"Cannot match side set id with that in ss_to_blks array");
+	    GOMA_EH(GOMA_ERROR,"Cannot match side set id with that in ss_to_blks array");
 	  }
 
 
@@ -320,7 +320,7 @@ apply_integrated_curve_bc(
 
 		if( elem_edge_bc->shared )
 		  {
-		    EH(GOMA_ERROR,"CA_EDGE_CURVE_INT cannot be used with shared edges.");
+		    GOMA_EH(GOMA_ERROR,"CA_EDGE_CURVE_INT cannot be used with shared edges.");
 		  }
 		break;
 
@@ -473,7 +473,7 @@ apply_integrated_curve_bc(
 		break;
 			      
 	      default:
-		EH(GOMA_ERROR, "Integrated BC not found");
+		GOMA_EH(GOMA_ERROR, "Integrated BC not found");
 		break;
 	      } /* end of switch over bc type */
 		
@@ -534,7 +534,7 @@ apply_integrated_curve_bc(
 			       eb_in_matrl(BC_Types[bc_input_id].BC_Data_Int[1], mn)   ) )
 			  {
 			    type = pd_glob[mn]->w[pg->imtrx][eqn];
-			    if (bfi[type] == NULL) EH(GOMA_ERROR,"Illegal cross basis func");
+			    if (bfi[type] == NULL) GOMA_EH(GOMA_ERROR,"Illegal cross basis func");
 			    /* note that here, we don't have the ln_to_dof array for the adjacent 
 			       material - for now assume that ldof_eqn = id */
 			    phi_i = bfi[type]->phi[id];
@@ -543,7 +543,7 @@ apply_integrated_curve_bc(
 			}
 			      
 		      }
-		      else EH(GOMA_ERROR,"Illegal bc phase definition");
+		      else GOMA_EH(GOMA_ERROR,"Illegal bc phase definition");
 
 		      /* for strong conditions weight the function by BIG_PENALTY */
 		      if (BC_Types[bc_input_id].desc->method == STRONG_INT_EDGE) weight *= BIG_PENALTY;
@@ -733,9 +733,9 @@ apply_point_colloc_edge_bc (
       find_nodal_stu(id, ielem_type, &xi[0], &xi[1], &xi[2]);
 
       err = load_basis_functions( xi, bfd );
-      EH( err, "problem from load_basis_functions");
+      GOMA_EH( err, "problem from load_basis_functions");
       err = load_fv();
-      EH( err, "load_fv");
+      GOMA_EH( err, "load_fv");
 
     /*
      * Load up porous media variables and properties, if needed 
@@ -744,7 +744,7 @@ apply_point_colloc_edge_bc (
 	mp->PorousMediaType == POROUS_TWO_PHASE || 
 	mp->PorousMediaType == POROUS_SATURATED){
       err = load_porous_properties(); 
-      EH( err, "load_porous_properties"); 
+      GOMA_EH( err, "load_porous_properties"); 
     }
 
     if (mp->SurfaceTensionModel != CONSTANT) 
@@ -859,14 +859,14 @@ apply_point_colloc_edge_bc (
 						 BC_Types[bc_input_id].BC_Name, 
 						 bc_input_id, theta, delta_t);
 		    
-		    EH(err, "Illegal entry in Generalized Dirichlet Condition ");
+		    GOMA_EH(err, "Illegal entry in Generalized Dirichlet Condition ");
 		    break;
 		    
 		  case CA_EDGE_CURVE_BC:
 
 		    if( elem_edge_bc->shared )
 		      {
-			EH(GOMA_ERROR,"CA_EDGE_CURVE cannot be used with shared edges.");
+			GOMA_EH(GOMA_ERROR,"CA_EDGE_CURVE cannot be used with shared edges.");
                       }
                       /* fall through */
 		  case CA_EDGE_BC:
@@ -874,13 +874,13 @@ apply_point_colloc_edge_bc (
 		     * need surface vectors
 		     */ 
 		    err = beer_belly();
-		    EH( err, "beer_belly");
+		    GOMA_EH( err, "beer_belly");
 		    
 		    err = load_bf_grad();
-		    EH( err, "load_bf_grad");
+		    GOMA_EH( err, "load_bf_grad");
 		    
 		    err = load_bf_mesh_derivs(); 
-		    EH( err, "load_bf_mesh_derivs");
+		    GOMA_EH( err, "load_bf_mesh_derivs");
 		    
 		    /* use primary side to find edge vectors */
 		    edge_determinant_and_vectors (ielem, iconnect_ptr, num_local_nodes, ielem_dim - 1,  
@@ -965,13 +965,13 @@ apply_point_colloc_edge_bc (
 		     * need surface vectors
 		     */ 
 		    err = beer_belly();
-		    EH( err, "beer_belly");
+		    GOMA_EH( err, "beer_belly");
 		    
 		    err = load_bf_grad();
-		    EH( err, "load_bf_grad");
+		    GOMA_EH( err, "load_bf_grad");
 		    
 		    err = load_bf_mesh_derivs(); 
-		    EH( err, "load_bf_mesh_derivs");
+		    GOMA_EH( err, "load_bf_mesh_derivs");
 		    
 		    /* use primary side to find edge vectors */
 		    edge_determinant_and_vectors (ielem, iconnect_ptr, num_local_nodes, ielem_dim - 1,  
@@ -1069,28 +1069,28 @@ apply_point_colloc_edge_bc (
 				( xi[param_dir] ==  1.0 ? 0 : -1 ) ) );
 		      }
 
-		    EH( iquad, "problem finding iquad in apply_point_collocated_edge_bc");
+		    GOMA_EH( iquad, "problem finding iquad in apply_point_collocated_edge_bc");
 
 		    find_edge_s (iquad, ielem_type, elem_edge_bc->id_edge, pd->Num_Dim, xiq, &s);
 
 		    err = load_basis_functions( xiq, bfd );
-		    EH( err, "problem from load_basis_functions");
+		    GOMA_EH( err, "problem from load_basis_functions");
 
 		    err = load_fv();
-		    EH( err, "load_fv");
+		    GOMA_EH( err, "load_fv");
 		    
 
 		    /*
 		     * need surface vectors
 		     */ 
 		    err = beer_belly();
-		    EH( err, "beer_belly");
+		    GOMA_EH( err, "beer_belly");
 		    
 		    err = load_bf_grad();
-		    EH( err, "load_bf_grad");
+		    GOMA_EH( err, "load_bf_grad");
 		    
 		    err = load_bf_mesh_derivs(); 
-		    EH( err, "load_bf_mesh_derivs");
+		    GOMA_EH( err, "load_bf_mesh_derivs");
 		    
 		    /* use primary side to find edge vectors */
 		    edge_determinant_and_vectors(ielem, iconnect_ptr, num_local_nodes, ielem_dim - 1,  
@@ -1123,7 +1123,7 @@ apply_point_colloc_edge_bc (
 
 
 		  default:
-		    EH(GOMA_ERROR, " Non-existant collocated edge condition");
+		    GOMA_EH(GOMA_ERROR, " Non-existant collocated edge condition");
 
 		  } /* end of SWITCH statement */
 

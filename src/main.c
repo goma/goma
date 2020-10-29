@@ -511,46 +511,46 @@ main(int argc, char **argv)
    *  the problem description structures on all processors
    */
   error = pd_alloc();
-  EH(error, "pd_alloc problem");
+  GOMA_EH(error, "pd_alloc problem");
 
 
   log_msg("Allocating mp, gn, ...");
 
   error = mp_alloc();
-  EH(error, "mp_alloc problem");
+  GOMA_EH(error, "mp_alloc problem");
 
   error = gn_alloc();
-  EH(error, "gn_alloc problem");
+  GOMA_EH(error, "gn_alloc problem");
 
   error = ve_alloc();
-  EH(error, "ve_alloc problem");
+  GOMA_EH(error, "ve_alloc problem");
 
   error = elc_alloc();
-  EH(error, "elc_alloc problem");
+  GOMA_EH(error, "elc_alloc problem");
 
   error = elc_rs_alloc();
-  EH(error, "elc_alloc problem");
+  GOMA_EH(error, "elc_alloc problem");
 
   error = cr_alloc();
-  EH(error, "cr_alloc problem");
+  GOMA_EH(error, "cr_alloc problem");
 
   error = evp_alloc();
-  EH(error, "evp_alloc problem");
+  GOMA_EH(error, "evp_alloc problem");
 
   error = tran_alloc();
-  EH(error, "tran_alloc problem");
+  GOMA_EH(error, "tran_alloc problem");
 
   error = eigen_alloc();
-  EH(error, "eigen_alloc problem");
+  GOMA_EH(error, "eigen_alloc problem");
 
   error = cont_alloc();
-  EH(error, "cont_alloc problem");
+  GOMA_EH(error, "cont_alloc problem");
 
   error = loca_alloc();
-  EH(error, "loca_alloc problem");
+  GOMA_EH(error, "loca_alloc problem");
 
   error = efv_alloc();
-  EH(error, "efv_alloc problem");
+  GOMA_EH(error, "efv_alloc problem");
 
 
   /*
@@ -710,13 +710,13 @@ main(int argc, char **argv)
    */
 
   error = setup_pd();
-  EH( error, "Problem setting up Problem_Description.");
+  GOMA_EH( error, "Problem setting up Problem_Description.");
   /*
    * Let's check to see if we need the large elasto-plastic global tensors
    * and allocate them if so 
    */
   error = evp_tensor_alloc(EXO_ptr);
-  EH( error, "Problems setting up evp tensors");
+  GOMA_EH( error, "Problems setting up evp tensors");
   
   /*
    * Now that we know about what kind of problem we're solving and the
@@ -726,7 +726,7 @@ main(int argc, char **argv)
   log_msg("Assembly allocation...");
 
   error = assembly_alloc(EXO_ptr);
-  EH( error, "Problem from assembly_alloc");
+  GOMA_EH( error, "Problem from assembly_alloc");
 
   if (Debug_Flag)  {
     DPRINTF(stderr, "%s:  setting up EXODUS II output files...\n", yo);
@@ -801,7 +801,7 @@ main(int argc, char **argv)
 
   log_msg("Basis function initialization...");
   error = bf_init(EXO_ptr);
-  EH( error, "Problem from bf_init");
+  GOMA_EH( error, "Problem from bf_init");
 
   /*
    * check for parallel errors before continuing
@@ -1029,7 +1029,7 @@ main(int argc, char **argv)
   if (Linear_Solver == FRONT) 	
     {
   unlerr = unlink(front_scratch_directory);
-  WH(unlerr, "Unlink problem with front scratch file");
+  GOMA_WH(unlerr, "Unlink problem with front scratch file");
     }
 
 

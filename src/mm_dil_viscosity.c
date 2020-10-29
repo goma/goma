@@ -175,7 +175,7 @@ dil_viscosity (GEN_NEWT_STRUCT *gn_local, const dbl muValue, const VISCOSITY_DEP
   dbl ratioVisc = mp->dilationalViscosityRatio;
   if (d_dilMu != 0) {
     if (d_mu == 0) {
-      EH(GOMA_ERROR,"shouldn't be here");
+      GOMA_EH(GOMA_ERROR,"shouldn't be here");
     }
   }
 
@@ -187,15 +187,15 @@ dil_viscosity (GEN_NEWT_STRUCT *gn_local, const dbl muValue, const VISCOSITY_DEP
   if (gn_local->ConstitutiveEquation == NEWTONIAN) {
   
     if(mp->DilationalViscosityModel == USER ) {
-      EH(GOMA_ERROR,"User Dilational Viscosity Model is Unimplemented");
+      GOMA_EH(GOMA_ERROR,"User Dilational Viscosity Model is Unimplemented");
     } else if (mp->DilationalViscosityModel == USER_GEN) {
-      EH(GOMA_ERROR,"UserGen Dilational Viscosity Model is Unimplemented");
+      GOMA_EH(GOMA_ERROR,"UserGen Dilational Viscosity Model is Unimplemented");
     } else if (mp->DilationalViscosityModel == FILL) {
-      EH(GOMA_ERROR," Dilational Viscosity Model for FILL is Unimplemented");
+      GOMA_EH(GOMA_ERROR," Dilational Viscosity Model for FILL is Unimplemented");
     } else if (mp->DilationalViscosityModel == TABLE) {
-      EH(GOMA_ERROR," Dilational Viscosity Model for TABLE is Unimplemented");
+      GOMA_EH(GOMA_ERROR," Dilational Viscosity Model for TABLE is Unimplemented");
     } else if (mp->DilationalViscosityModel == LEVEL_SET) {
-      EH(GOMA_ERROR, "Dilational Viscosity Model Unimplemented for LEVEL_SET");
+      GOMA_EH(GOMA_ERROR, "Dilational Viscosity Model Unimplemented for LEVEL_SET");
     } else if (mp->DilationalViscosityModel == DILVISCM_KAPPAWIPESMU ) {
       // Don't need to fill in dependencies since the terms disappear
       kappa = 2.0 *  muValue / 3.0;
@@ -209,10 +209,10 @@ dil_viscosity (GEN_NEWT_STRUCT *gn_local, const dbl muValue, const VISCOSITY_DEP
       }
 
     } else if (mp->DilationalViscosityModel == DILVISCM_KAPPABUBBLES) {
-      EH(GOMA_ERROR," Newtonian model with KappaBubbles dil visc doesn't make sense");
+      GOMA_EH(GOMA_ERROR," Newtonian model with KappaBubbles dil visc doesn't make sense");
   
     } else {
-      EH(GOMA_ERROR,"Unrecognized viscosity model for Newtonian fluid");
+      GOMA_EH(GOMA_ERROR,"Unrecognized viscosity model for Newtonian fluid");
     }
 
       /*       return(status); */
@@ -228,7 +228,7 @@ dil_viscosity (GEN_NEWT_STRUCT *gn_local, const dbl muValue, const VISCOSITY_DEP
     } else if (mp->DilationalViscosityModel == DILVISCM_KAPPACONSTANT) {
       kappa = mp->dilationalViscosity;
     } else {
-      EH(GOMA_ERROR, "unsupported Kappa Option");
+      GOMA_EH(GOMA_ERROR, "unsupported Kappa Option");
     }
   } 
 
@@ -294,7 +294,7 @@ dil_viscosity (GEN_NEWT_STRUCT *gn_local, const dbl muValue, const VISCOSITY_DEP
       }
 
     } else {
-      EH(GOMA_ERROR, "unsupported Kappa Option");
+      GOMA_EH(GOMA_ERROR, "unsupported Kappa Option");
     }
 
   }
@@ -350,7 +350,7 @@ dil_viscosity (GEN_NEWT_STRUCT *gn_local, const dbl muValue, const VISCOSITY_DEP
 
 
     } else {
-      EH(GOMA_ERROR, "unsupported Kappa Option");
+      GOMA_EH(GOMA_ERROR, "unsupported Kappa Option");
     }
 
   }
@@ -368,7 +368,7 @@ dil_viscosity (GEN_NEWT_STRUCT *gn_local, const dbl muValue, const VISCOSITY_DEP
 	transferMultipleOfDerivatives(ratioVisc, d_mu, d_dilMu);
       }
     } else {
-      EH(GOMA_ERROR, "unsupported Kappa Option");
+      GOMA_EH(GOMA_ERROR, "unsupported Kappa Option");
     }
   }
 

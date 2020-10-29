@@ -967,7 +967,7 @@ sdc_stefan_flow(JACOBIAN_VAR_DESC_STRUCT *func_jac,
   if (mp == mp2) {
     mp2 =  mp_glob[bc->BC_matrl_index_1];
     if (mp == mp2) {
-      EH(GOMA_ERROR,"cant find second material");
+      GOMA_EH(GOMA_ERROR,"cant find second material");
     }
   }
 
@@ -1009,7 +1009,7 @@ sdc_stefan_flow(JACOBIAN_VAR_DESC_STRUCT *func_jac,
       side_qp_storage_findalloc(IS_EQUIL_PRXN_BC, ip, elem_side_bc);
     break;
   default:
-    EH(GOMA_ERROR,"ERROR");
+    GOMA_EH(GOMA_ERROR,"ERROR");
   }
   if (*is_hdl == NULL) {
     *is_hdl = alloc_struct_1(INTERFACE_SOURCE_STRUCT, Num_Interface_Srcs);
@@ -1025,12 +1025,12 @@ sdc_stefan_flow(JACOBIAN_VAR_DESC_STRUCT *func_jac,
   vd = is[intf_id].Var_List[0];
   if (vd->MatID != mp->MatID) {
     if (vd->MatID != mp2->MatID) {
-      EH(GOMA_ERROR,"unclear materials -> Matid = -1?");
+      GOMA_EH(GOMA_ERROR,"unclear materials -> Matid = -1?");
     }
     k = mp2->Num_Species;
     vd = is[intf_id].Var_List[k];
     if (vd->MatID != mp->MatID) {
-      EH(GOMA_ERROR,"unclear interfacial source term ordering");
+      GOMA_EH(GOMA_ERROR,"unclear interfacial source term ordering");
     }
     pos_mp = mp2->Num_Species;
   }
@@ -1060,7 +1060,7 @@ sdc_stefan_flow(JACOBIAN_VAR_DESC_STRUCT *func_jac,
       source_is_equil_prxn(is, bc_rxn, mp_a, mp_b, have_T,intf_id);	
       break;
     default:
-      EH(GOMA_ERROR,"ERROR");
+      GOMA_EH(GOMA_ERROR,"ERROR");
     }
 
     /*
@@ -1322,7 +1322,7 @@ mass_flux_surface(JACOBIAN_VAR_DESC_STRUCT *func_jac,
 	    }
 	    break;
           default:
-	    EH(GOMA_ERROR,"Not Covered");
+	    GOMA_EH(GOMA_ERROR,"Not Covered");
           }
         }
       }
@@ -1488,7 +1488,7 @@ vol_flux_surface(JACOBIAN_VAR_DESC_STRUCT *func_jac,
 	    }
 	    break;
           default:
-	    EH(GOMA_ERROR,"Not Covered");
+	    GOMA_EH(GOMA_ERROR,"Not Covered");
           }
         }
       }
@@ -1975,7 +1975,7 @@ fvelo_tangential_bc(double func[],
   if (alpha != 0.) {
  
     if(dcl_node == -1)
-      EH(GOMA_ERROR, "problem with nodeset specified in VELO_TANGENT BC");
+      GOMA_EH(GOMA_ERROR, "problem with nodeset specified in VELO_TANGENT BC");
 
     /* calculate position of dynamic contact line from dcl_node               */
     for (icount = 0; icount < pd->Num_Dim; icount ++) {
@@ -2073,7 +2073,7 @@ fvelo_tangential_bc(double func[],
 			  {
 			  if (ei[pg->imtrx]->gnn_list[var][j] == dcl_node) jdcl = j;
 			  }
-			  EH(jdcl, "Dynamic contact line node not found in element");
+			  GOMA_EH(jdcl, "Dynamic contact line node not found in element");
 		      
 			  d_func[0][p][jdcl] -= beta * x_dot[kdir]
 			  * exp(-dist * alpha) * (xsurf[p]- xdcl[p]) / dist * alpha;
@@ -2174,9 +2174,9 @@ fvelo_tangential_bc(double func[],
 	double *n_esp, shell_var[MDE];
   	/* See if there is a friend for this element */
 	nf = num_elem_friends[el1];
-	if (nf == 0) EH(GOMA_ERROR,"no element friends");
+	if (nf == 0) GOMA_EH(GOMA_ERROR,"no element friends");
 	el2 = elem_friends[el1][0];
-	if (nf != 1) WH(-1, "WARNING: Not set up for more than one element friend!");
+	if (nf != 1) GOMA_WH(-1, "WARNING: Not set up for more than one element friend!");
 	n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
 	load_neighbor_var_data(el1, el2, n_dof, dof_map, n_dofptr, id_side, xi, exo);
     	for (kdir=0; kdir<n_dof[SHELL_BDYVELO]; kdir++)
@@ -2238,7 +2238,7 @@ fvelo_tangential_bc(double func[],
 	*func += (fv->v[kdir] - x_dot[kdir] * beta * ead) * fv->stangent[0][kdir];
       } 
   } else if (pd->Num_Dim == 3) {
-    EH(GOMA_ERROR,"Velo-tangent in 3D is ill-defined");
+    GOMA_EH(GOMA_ERROR,"Velo-tangent in 3D is ill-defined");
   }
   
 }
@@ -2312,7 +2312,7 @@ fvelo_slip_electrokinetic_bc(double func[MAX_PDIM],
 	*func -= (fv->v[kdir]) * fv->stangent[0][kdir];
       } 
   } else if (pd->Num_Dim == 3) {
-    EH(GOMA_ERROR,"Velo-electrokinetic in 3D is ill-defined");
+    GOMA_EH(GOMA_ERROR,"Velo-electrokinetic in 3D is ill-defined");
   }
   
 } /* END of routine fvelo_slip_electrokinetic_bc  */
@@ -2522,7 +2522,7 @@ fvelo_tangential_solid_bc(
     }
     else if (type != VELO_SLIP_SOLID_BC)
     {
-      EH(GOMA_ERROR,"BC must be VELO_TANGENT_SOLID or VELO_SLIP_SOLID");
+      GOMA_EH(GOMA_ERROR,"BC must be VELO_TANGENT_SOLID or VELO_SLIP_SOLID");
     }
   if(alpha == 0.) 
     {
@@ -2569,7 +2569,7 @@ fvelo_tangential_solid_bc(
 
   dim = pd->Num_Dim;
   if (dim !=2 && type == VELO_TANGENT_SOLID_BC ) 
-	EH(GOMA_ERROR,"VELO_TANGENT_SOLID not implemented in 3D yet");
+	GOMA_EH(GOMA_ERROR,"VELO_TANGENT_SOLID not implemented in 3D yet");
 
   if(af->Assemble_LSA_Mass_Matrix)
     {
@@ -2583,7 +2583,7 @@ fvelo_tangential_solid_bc(
 	      else if (pd->MeshMotion == TOTAL_ALE)	    
 		var = SOLID_DISPLACEMENT1 + jvar; 
 	      else
-		EH(GOMA_ERROR, "Bad pd->MeshMotion");
+		GOMA_EH(GOMA_ERROR, "Bad pd->MeshMotion");
 	      if (pd->v[pg->imtrx][var]) 
 		for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) 
 		  { 
@@ -2671,7 +2671,7 @@ fvelo_tangential_solid_bc(
 	{
 	  for(a=0; a<DIM; a++) v_solid_mesh[a]=x_dot[a];
 	  err = belly_flop(elc->lame_mu);
-	  EH(err, "error in belly flop");
+	  GOMA_EH(err, "error in belly flop");
 	  err = get_convection_velocity(vconv, vconv_old, d_vconv, dt, tt);
 
 	}
@@ -2679,13 +2679,13 @@ fvelo_tangential_solid_bc(
 	{
 	  for(a=0; a<DIM; a++) v_solid_mesh[a]=x_rs_dot[a];
 	  err = belly_flop_rs(elc_rs->lame_mu);
-	  EH(err, "error in belly flop");
+	  GOMA_EH(err, "error in belly flop");
 	  err = get_convection_velocity_rs(vconv, vconv_old, d_vconv, dt, tt);
 
 	}
       else
 	{
-	  EH(GOMA_ERROR,"Shouldn't be in this section of velo_tangent_solid with an arbitrary solid");
+	  GOMA_EH(GOMA_ERROR,"Shouldn't be in this section of velo_tangent_solid with an arbitrary solid");
 	}
 
       if (mp->PorousMediaType == POROUS_SATURATED || 
@@ -2939,9 +2939,9 @@ fvelo_tangential_solid_bc(
  	}
 /*      else if (mp->PorousMediaType == POROUS_UNSATURATED)
 	{
-	  EH(GOMA_ERROR,"VELO_TANGENT_SOLID not for  POROUS_UNSATURATED MEDIA. USE NO_SLIP");
+	  GOMA_EH(GOMA_ERROR,"VELO_TANGENT_SOLID not for  POROUS_UNSATURATED MEDIA. USE NO_SLIP");
 	}  */
-      else  EH(GOMA_ERROR,"bad media type in VELO_TANGENT_SOLID");
+      else  GOMA_EH(GOMA_ERROR,"bad media type in VELO_TANGENT_SOLID");
     }
 
 }
@@ -2992,7 +2992,7 @@ fvelo_normal_solid_bc(
   /* Calculate the residual contribution	*/
 
   dim = pd->Num_Dim;
-  if (dim !=2) EH(GOMA_ERROR,"VELO_NORMAL_SOLID not implemented in 3D yet");
+  if (dim !=2) GOMA_EH(GOMA_ERROR,"VELO_NORMAL_SOLID not implemented in 3D yet");
 
   if (af->Assemble_LSA_Mass_Matrix)
     {
@@ -3006,7 +3006,7 @@ fvelo_normal_solid_bc(
 	      else if (pd->MeshMotion == TOTAL_ALE)	    
 		var = SOLID_DISPLACEMENT1 + jvar; 
 	      else
-		EH(GOMA_ERROR, "Bad pd->MeshMotion");
+		GOMA_EH(GOMA_ERROR, "Bad pd->MeshMotion");
 	      if (pd->v[pg->imtrx][var]) 
 		for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) 
 		  { 
@@ -3064,7 +3064,7 @@ fvelo_normal_solid_bc(
 	{
 	  for(a=0; a<DIM; a++) v_solid_mesh[a]=x_dot[a];
 	  err = belly_flop(elc->lame_mu);
-	  EH(err, "error in belly flop");
+	  GOMA_EH(err, "error in belly flop");
 	  err = get_convection_velocity(vconv, vconv_old, d_vconv, dt, tt);
 
 	}
@@ -3072,13 +3072,13 @@ fvelo_normal_solid_bc(
 	{
 	  for(a=0; a<DIM; a++) v_solid_mesh[a]=x_rs_dot[a];
 	  err = belly_flop_rs(elc_rs->lame_mu);
-	  EH(err, "error in belly flop");
+	  GOMA_EH(err, "error in belly flop");
 	  err = get_convection_velocity_rs(vconv, vconv_old, d_vconv, dt, tt);
 
 	}
       else
 	{
-	  EH(GOMA_ERROR,"Shouldn't be in this section of velo_tangent_solid with an arbitrary solid");
+	  GOMA_EH(GOMA_ERROR,"Shouldn't be in this section of velo_tangent_solid with an arbitrary solid");
 	}
 
       if (mp->PorousMediaType == POROUS_SATURATED || mp->PorousMediaType == CONTINUOUS)
@@ -3188,9 +3188,9 @@ fvelo_normal_solid_bc(
 	}
       else if (mp->PorousMediaType == POROUS_UNSATURATED)
 	{
-	  EH(GOMA_ERROR,"VELO_TANGENT_SOLID not for  POROUS_UNSATURATED MEDIA. USE NO_SLIP");
+	  GOMA_EH(GOMA_ERROR,"VELO_TANGENT_SOLID not for  POROUS_UNSATURATED MEDIA. USE NO_SLIP");
 	}
-      else  EH(GOMA_ERROR,"bad media type in VELO_TANGENT_SOLID");
+      else  GOMA_EH(GOMA_ERROR,"bad media type in VELO_TANGENT_SOLID");
     }
 
 }
@@ -3550,7 +3550,7 @@ fvelo_slip_bc(double func[MAX_PDIM],
    /* sometimes the tangent/normals flip causing havoc....*/
      if(v_solid < 0)
 	{
-         WH(-1,"fvelo_slip: normals and tangents have flipped! - try CONTACT_LINE model\n");
+         GOMA_WH(-1,"fvelo_slip: normals and tangents have flipped! - try CONTACT_LINE model\n");
          velo_avg *= tang_sgn;
          v_solid *= tang_sgn;
          pgrad *= tang_sgn;
@@ -3906,7 +3906,7 @@ fvelo_slip_power_bc(double func[MAX_PDIM],
     }
   else if (pd->Num_Dim == 3 && type == VELO_SLIP_POWER_BC)
     {
-      EH(GOMA_ERROR, "Must provide constant tangent for VELO_SLIP_POWER");
+      GOMA_EH(GOMA_ERROR, "Must provide constant tangent for VELO_SLIP_POWER");
     }
   else
     {
@@ -4018,7 +4018,7 @@ fvelo_slip_power_bc(double func[MAX_PDIM],
     }
   else
     {
-      EH(GOMA_ERROR, "Unknown type for fvelo_slip_power_bc");
+      GOMA_EH(GOMA_ERROR, "Unknown type for fvelo_slip_power_bc");
     }
 
   return;
@@ -4058,7 +4058,7 @@ exchange_fvelo_slip_bc_info(int ibc /* Index into BC_Types for VELO_SLIP_BC */)
   mpi_error = MPI_Allreduce(MPI_IN_PLACE, &velo_slip_root, 1,
                             MPI_INT, MPI_MAX, MPI_COMM_WORLD);
   if (mpi_error != MPI_SUCCESS) {
-    EH(GOMA_ERROR, "Error in MPI Allreduce");
+    GOMA_EH(GOMA_ERROR, "Error in MPI Allreduce");
     return -1;
   }
 #endif /* #ifdef PARALLEL */
@@ -4077,7 +4077,7 @@ exchange_fvelo_slip_bc_info(int ibc /* Index into BC_Types for VELO_SLIP_BC */)
                         velo_slip_root, MPI_COMM_WORLD);
 
   if (mpi_error != MPI_SUCCESS) {
-    EH(GOMA_ERROR, "Error in MPI Allreduce");
+    GOMA_EH(GOMA_ERROR, "Error in MPI Allreduce");
     return -1;
   }
 #endif
@@ -4714,7 +4714,7 @@ load_surface_tension (
 	  dil = 1.;
 	  for(a=0; a<DIM; a++) {
 	    for(b=0; b<DIM; b++) {
-	      EH(GOMA_ERROR,"Need to get correct deformation gradient!!");
+	      GOMA_EH(GOMA_ERROR,"Need to get correct deformation gradient!!");
 	      dil += fv->stangent[0][a]*fv->stangent[0][b]*fv->deform_grad[a][b];
 	    }
 	  }
@@ -4790,7 +4790,7 @@ load_surface_tension (
 	}
       else
 	{
-	  EH(GOMA_ERROR, "Surface tension model not defined" );
+	  GOMA_EH(GOMA_ERROR, "Surface tension model not defined" );
 	}
       return;
 }
@@ -4902,7 +4902,7 @@ elec_surf_stress(double cfunc[MDE][DIM],
   	eqn = MESH_DISPLACEMENT1;
 	}
   else
-	EH(GOMA_ERROR,"invalid ELEC_TRACTION type");
+	GOMA_EH(GOMA_ERROR,"invalid ELEC_TRACTION type");
 
   /* The E field. The sign doesn't matter here, but let's be anal. */
   for(p=0; p < VIM; p++)
@@ -5153,7 +5153,7 @@ sheet_tension ( double cfunc[MDE][DIM],
   
   if( detJ < 1.e-6 )
   {
-	EH(GOMA_ERROR, "error in sheet_tension.");
+	GOMA_EH(GOMA_ERROR, "error in sheet_tension.");
   }
 
   dY_dS = sign*dY_dxi/detJ;
@@ -5340,7 +5340,7 @@ sheet_tension ( double cfunc[MDE][DIM],
 	      var = POLYMER_STRESS11;
 	      if( pd->v[pg->imtrx][var] )
 		{
-		  EH(GOMA_ERROR,"TENSION_SHEET BC is not instrumented for polymeric fluid interactions\n");
+		  GOMA_EH(GOMA_ERROR,"TENSION_SHEET BC is not instrumented for polymeric fluid interactions\n");
 		}
 
               if ( var_sh_tens)
@@ -5565,7 +5565,7 @@ fn_dot_T(double cfunc[MDE][DIM],
     } /* if velocity variable is defined.   */
   else 
     {
-      EH(GOMA_ERROR,"Bad coord system in capillary or liquid momentum equations not defined");
+      GOMA_EH(GOMA_ERROR,"Bad coord system in capillary or liquid momentum equations not defined");
     }
 
   return;
@@ -5794,7 +5794,7 @@ apply_repulsion_roll (double cfunc[MDE][DIM],
              {
                k = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
                i = Index_Solution (k, MESH_DISPLACEMENT1, 0, 0, -1, pg->imtrx);
-               EH(i, "Could not resolve index_solution.");
+               GOMA_EH(i, "Could not resolve index_solution.");
                for(a=0 ; a<dim ; a++)
                   {
                    point[a] = Coor[a][k] + x[i+a];
@@ -5805,7 +5805,7 @@ apply_repulsion_roll (double cfunc[MDE][DIM],
                           +SQUARE(coord[2]-point[2]));
            }  else      {
            dcl_dist = 0.;
-           WH(-1,"No DCL node for CAP_REPULSE_TABLE....\n");
+           GOMA_WH(-1,"No DCL node for CAP_REPULSE_TABLE....\n");
            }
 /*  modifying function for DCL  */
            mod_factor = 1. - exp(-dcl_dist/exp_scale);
@@ -6231,7 +6231,7 @@ apply_repulsion_table (double cfunc[MDE][DIM],
                 { bc_table_id = a; }
            }
       if(bc_table_id == -1)
-          {EH(GOMA_ERROR,"GD_TABLE id not found for CAP_REPULSE_TABLE\n");}
+          {GOMA_EH(GOMA_ERROR,"GD_TABLE id not found for CAP_REPULSE_TABLE\n");}
       bc_tab = BC_Types + bc_table_id;
       dist = table_distance_search(bc_tab->table, coord, &slope, d_tfcn);
       if(bc_tab->table->t_index[0] == MESH_POSITION1)
@@ -6251,7 +6251,7 @@ apply_repulsion_table (double cfunc[MDE][DIM],
              {
                k = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
                i = Index_Solution (k, MESH_DISPLACEMENT1, 0, 0, -1, pg->imtrx);
-               EH(i, "Could not resolve index_solution.");
+               GOMA_EH(i, "Could not resolve index_solution.");
                for(a=0 ; a<dim ; a++)
                   {
                    point[a] = Coor[a][k] + x[i+a];
@@ -6262,7 +6262,7 @@ apply_repulsion_table (double cfunc[MDE][DIM],
                           +SQUARE(coord[2]-point[2]));
            }  else	{
            dcl_dist = 0.;
-           WH(-1,"No DCL node for CAP_REPULSE_TABLE....\n");
+           GOMA_WH(-1,"No DCL node for CAP_REPULSE_TABLE....\n");
            }
 /*  modifying function for DCL  */
            mod_factor = 1. - exp(-dcl_dist/exp_scale);
@@ -6580,7 +6580,7 @@ apply_vapor_recoil (double cfunc[MDE][DIM],
     } /* if velocity variable is defined.   */
   else 
     {
-      EH(GOMA_ERROR,"Bad coord system in capillary or liquid momentum equations not defined");
+      GOMA_EH(GOMA_ERROR,"Bad coord system in capillary or liquid momentum equations not defined");
     }
 
 } /* END of routine apply_vapor_recoil                                          */
@@ -6791,7 +6791,7 @@ hydrostatic_n_dot_T(double *func,
   for (p = 0; p < pd->Num_Dim; p++) {
     func[p] = -fv->P * fv->snormal[p];
   }
-  WH(-1, "Hydrostatic Symmetry condition may cause singular matrix!");
+  GOMA_WH(-1, "Hydrostatic Symmetry condition may cause singular matrix!");
      
 } /* END of routine hydrostatic_n_dot_T                                      */
 /*****************************************************************************/
@@ -9415,7 +9415,7 @@ evaluate_gibbs_criterion(
   /* 2D only for now */
 
 
-if (pd->Num_Dim == 3) EH(GOMA_ERROR,"CA_OR_FIX only in 2D now");
+if (pd->Num_Dim == 3) GOMA_EH(GOMA_ERROR,"CA_OR_FIX only in 2D now");
 
 if(((sign_of(pos[0]) == sign_of(sign_origx) && 
    fabs(pos[0]) > 1.e-6)) ||
@@ -9872,7 +9872,7 @@ void fapply_moving_CA_sinh(
 			ca_no += eps;
 			iter++;
 			}
-		if(fabs(eps) > eps_tol)EH(GOMA_ERROR,"Hoffman iteration not converged");
+		if(fabs(eps) > eps_tol)GOMA_EH(GOMA_ERROR,"Hoffman iteration not converged");
 		g_sca = ca_no;
 		ca_no = 1.0E+06; iter = 0; eps=10.*eps_tol;
 		while (iter <= iter_max && fabs(eps) > eps_tol)
@@ -9950,7 +9950,7 @@ void fapply_moving_CA_sinh(
   		v_new = sqrt(g*v0)*rhs/(2.*sqrt(1.+rhs));
 		break;
 	default:
-		EH(GOMA_ERROR,"bad DCA bc name\n");
+		GOMA_EH(GOMA_ERROR,"bad DCA bc name\n");
 	}
 
   /*
@@ -10479,8 +10479,8 @@ apply_ST_scalar(double func[MAX_PDIM],
     sign = -1.0 * sign;
   }
 
-  WH(1, "Sign on Surface Tangent Scalar is be incorrect in certain cases");  
-  if (ei[pg->imtrx]->ielem_dim == 3) EH(GOMA_ERROR,"Need to update surface tangent for 3D");
+  GOMA_WH(1, "Sign on Surface Tangent Scalar is be incorrect in certain cases");  
+  if (ei[pg->imtrx]->ielem_dim == 3) GOMA_EH(GOMA_ERROR,"Need to update surface tangent for 3D");
 
   /*
    *  Calculate the residual contribution
@@ -10573,7 +10573,7 @@ apply_ST_3D(double func[MAX_PDIM],
   t[1] = ty;
   t[2] = tz;
   
-  if (ei[pg->imtrx]->ielem_dim != 3) EH(GOMA_ERROR,"Using 3D surface tangent in 2D");
+  if (ei[pg->imtrx]->ielem_dim != 3) GOMA_EH(GOMA_ERROR,"Using 3D surface tangent in 2D");
 /* Calculate the residual contribution					     */
 
     for (p = 0; p < ei[pg->imtrx]->ielem_dim; p++)
@@ -10647,7 +10647,7 @@ apply_ST_scalar_3D(double func[MAX_PDIM],
   if(af->Assemble_LSA_Mass_Matrix)
     return;
 
-  if (ei[pg->imtrx]->ielem_dim != 3) EH(GOMA_ERROR,"Using 3D surface tangent in 2D");
+  if (ei[pg->imtrx]->ielem_dim != 3) GOMA_EH(GOMA_ERROR,"Using 3D surface tangent in 2D");
 /* Calculate the residual contribution					     */
 
     for (p = 0; p < ei[pg->imtrx]->ielem_dim; p++)
@@ -11072,7 +11072,7 @@ apply_sharp_ca(  double func[MAX_PDIM],
     }
   else
     {
-      EH(GOMA_ERROR,"Hello!....SHARP_CA_2D.   2D!  2D!      Doesn't work for three dimensional problems.  \n");
+      GOMA_EH(GOMA_ERROR,"Hello!....SHARP_CA_2D.   2D!  2D!      Doesn't work for three dimensional problems.  \n");
     }
   return;
 }
@@ -11096,7 +11096,7 @@ apply_wetting_velocity(	double func[MAX_PDIM],
 
   if ( ls == NULL ) 
     {
-      EH(GOMA_ERROR,"Boundary condition WETTING_SPEED_LINEAR requires active level set dofs.\n");
+      GOMA_EH(GOMA_ERROR,"Boundary condition WETTING_SPEED_LINEAR requires active level set dofs.\n");
     }
 	
   /*	load_lsi(ls->Length_Scale);	*/
@@ -11290,7 +11290,7 @@ apply_linear_wetting_sic( double func[MAX_PDIM],
 	
   if ( ls == NULL ) 
     {
-      EH(GOMA_ERROR,"Boundary condition WETTING_SPEED_LINEAR requires active level set dofs.\n");
+      GOMA_EH(GOMA_ERROR,"Boundary condition WETTING_SPEED_LINEAR requires active level set dofs.\n");
     }
 	
   /*	load_lsi(ls->Length_Scale);	*/
@@ -11556,7 +11556,7 @@ apply_sharp_wetting_velocity(double func[MAX_PDIM],
 	
   if ( ls == NULL ) 
     {
-      EH(GOMA_ERROR,"Sharp LS wetting Boundary conditions requires active level set dofs.\n");
+      GOMA_EH(GOMA_ERROR,"Sharp LS wetting Boundary conditions requires active level set dofs.\n");
     }
 	
   for(a=0;a<MAX_PDIM;a++) wet_vector[a]=0.0;
@@ -11633,7 +11633,7 @@ apply_sharp_wetting_velocity(double func[MAX_PDIM],
 	  ca_no += eps;
 	  iter++;
 	}
-      if(fabs(eps) > eps_tol)EH(GOMA_ERROR,"Hoffman iteration not converged");
+      if(fabs(eps) > eps_tol)GOMA_EH(GOMA_ERROR,"Hoffman iteration not converged");
       g_sca = ca_no;
       ca_no = 1.0E+06; iter = 0; eps=10.*eps_tol;
       while (iter <= iter_max && fabs(eps) > eps_tol)
@@ -11645,7 +11645,7 @@ apply_sharp_wetting_velocity(double func[MAX_PDIM],
 	  ca_no += eps;
 	  iter++;
 	}
-      if(fabs(eps) > eps_tol)EH(GOMA_ERROR,"Hoffman iteration not converged");
+      if(fabs(eps) > eps_tol)GOMA_EH(GOMA_ERROR,"Hoffman iteration not converged");
       g_dca = ca_no;
       ca_no = g_dca - g_sca;
       wet_speed = ca_no*g/liq_visc;
@@ -11709,7 +11709,7 @@ apply_sharp_wetting_velocity(double func[MAX_PDIM],
       wet_speed = sqrt(g*v0)*rhs/(2.*sqrt(1.+rhs));
       break;
     default:
-      EH(GOMA_ERROR,"bad DCA bc name\n");
+      GOMA_EH(GOMA_ERROR,"bad DCA bc name\n");
       break;
     }
 #if 0
@@ -12148,7 +12148,7 @@ apply_blake_wetting_velocity(	double func[MAX_PDIM],
 	
   if ( ls == NULL ) 
     {
-      EH(GOMA_ERROR,"Boundary condition WETTING_SPEED bcs requires active level set dofs.\n");
+      GOMA_EH(GOMA_ERROR,"Boundary condition WETTING_SPEED bcs requires active level set dofs.\n");
     }
   /*  Should change surface_tension to come from mp->  */
   g = surf_tens * mp->surface_tension;
@@ -12246,7 +12246,7 @@ apply_blake_wetting_velocity(	double func[MAX_PDIM],
 	      ca_no += eps;
 	      iter++;
 	    }
-	  if(fabs(eps) > eps_tol)EH(GOMA_ERROR,"Hoffman iteration not converged");
+	  if(fabs(eps) > eps_tol)GOMA_EH(GOMA_ERROR,"Hoffman iteration not converged");
 	  g_sca = ca_no;
 	  ca_no = 1.0E+06; iter = 0; eps=10.*eps_tol;
 	  while (iter <= iter_max && fabs(eps) > eps_tol)
@@ -12258,7 +12258,7 @@ apply_blake_wetting_velocity(	double func[MAX_PDIM],
 	      ca_no += eps;
 	      iter++;
 	    }
-	  if(fabs(eps) > eps_tol)EH(GOMA_ERROR,"Hoffman iteration not converged");
+	  if(fabs(eps) > eps_tol)GOMA_EH(GOMA_ERROR,"Hoffman iteration not converged");
 	  g_dca = ca_no;
 	  ca_no = g_dca - g_sca;
 	  wet_speed = ca_no*g/liq_visc;
@@ -12322,7 +12322,7 @@ apply_blake_wetting_velocity(	double func[MAX_PDIM],
 	  wet_speed = sqrt(g*v0)*rhs/(2.*sqrt(1.+rhs));
 	  break;
 	default:
-	  EH(GOMA_ERROR,"bad DCA bc name\n");
+	  GOMA_EH(GOMA_ERROR,"bad DCA bc name\n");
 	  break;
 	}
 		
@@ -12375,7 +12375,7 @@ apply_blake_wetting_velocity(	double func[MAX_PDIM],
 		*drhs_ddpj/pow(1+rhs,1.5);
 	      break;
 	    default:
-	      EH(GOMA_ERROR,"bad DCA bc name\n");
+	      GOMA_EH(GOMA_ERROR,"bad DCA bc name\n");
 	      break;
 	    }
 			
@@ -12705,7 +12705,7 @@ apply_blake_wetting_velocity_sic( double func[MAX_PDIM],
   
   if ( ls == NULL ) 
     {
-      EH(GOMA_ERROR,"Boundary condition BLAKE_DIRICHLET requires active level set dofs.\n");
+      GOMA_EH(GOMA_ERROR,"Boundary condition BLAKE_DIRICHLET requires active level set dofs.\n");
     }
 
   if ( rolling_substrate == TRUE ) 
@@ -12736,7 +12736,7 @@ apply_blake_wetting_velocity_sic( double func[MAX_PDIM],
 	  bc_type = SHIK_DIRICHLET_BC;
 	  break;
 	default:
-	  EH(GOMA_ERROR,"Tried to imposing rolling substrate on non-rolling BC.\n");
+	  GOMA_EH(GOMA_ERROR,"Tried to imposing rolling substrate on non-rolling BC.\n");
 	  break;
 	}
     }
@@ -12744,7 +12744,7 @@ apply_blake_wetting_velocity_sic( double func[MAX_PDIM],
   if( wetting_length <= 0.0 ) wetting_length = ls->Length_Scale;
   if( wetting_length <= 0.0 )
     {
-      EH(GOMA_ERROR,"Boundary condition BLAKE_DIRICHLET positive level set length scale or wetting length.\n");
+      GOMA_EH(GOMA_ERROR,"Boundary condition BLAKE_DIRICHLET positive level set length scale or wetting length.\n");
     }
   
   load_lsi(wetting_length);
@@ -12860,7 +12860,7 @@ apply_blake_wetting_velocity_sic( double func[MAX_PDIM],
 	      ca_no += eps;
 	      iter++;
 	    }
-	  if(fabs(eps) > eps_tol)EH(GOMA_ERROR,"Hoffman iteration not converged");
+	  if(fabs(eps) > eps_tol)GOMA_EH(GOMA_ERROR,"Hoffman iteration not converged");
 	  g_sca = ca_no;
 	  ca_no = 1.0E+06; iter = 0; eps=10.*eps_tol;
 	  while (iter <= iter_max && fabs(eps) > eps_tol)
@@ -12872,7 +12872,7 @@ apply_blake_wetting_velocity_sic( double func[MAX_PDIM],
 	      ca_no += eps;
 	      iter++;
 	    }
-	  if(fabs(eps) > eps_tol)WH(-1,"Hoffman iteration not converged");
+	  if(fabs(eps) > eps_tol)GOMA_WH(-1,"Hoffman iteration not converged");
 	  g_dca = ca_no;
 	  ca_no = g_dca - g_sca;
 	  wet_speed = ca_no*g/liq_visc;
@@ -12944,7 +12944,7 @@ apply_blake_wetting_velocity_sic( double func[MAX_PDIM],
 	  wet_speed = sqrt(g*v0)*rhs/(2.*sqrt(1.+rhs));
 	  break;
 	default:
-	  EH(GOMA_ERROR,"bad DCA bc name\n");
+	  GOMA_EH(GOMA_ERROR,"bad DCA bc name\n");
 	  break;
 	}
   
@@ -13023,7 +13023,7 @@ apply_blake_wetting_velocity_sic( double func[MAX_PDIM],
 		*drhs_ddpj/pow(1+rhs,1.5);
 	      break;
 	    default:
-	      EH(GOMA_ERROR,"bad DCA bc name\n");
+	      GOMA_EH(GOMA_ERROR,"bad DCA bc name\n");
 	      break;
 	    }
 			
@@ -13543,7 +13543,7 @@ continuous_tangent_velocity(double func[DIM],
 	} 
 
     } else if (pd->Num_Dim == 3) {
-      EH(GOMA_ERROR," CONT_TANG_VEL in 3D is ill-defined");
+      GOMA_EH(GOMA_ERROR," CONT_TANG_VEL in 3D is ill-defined");
     }
 }
 /****************************************************************************/
@@ -13607,7 +13607,7 @@ continuous_normal_velocity(double func[DIM],
 	} 
 
     } else if (pd->Num_Dim == 3) {
-      EH(GOMA_ERROR," CONT_NORM_VEL in 3D is ill-defined");
+      GOMA_EH(GOMA_ERROR," CONT_NORM_VEL in 3D is ill-defined");
     }
 
 
@@ -13643,7 +13643,7 @@ discontinuous_velocity(
     /* Calculate the residual contribution	*/
     if(mode == EVAPORATION) idblock = eb_mat_gas;
     else if (mode == DISSOLUTION) idblock = eb_mat_liquid;
-    else EH(GOMA_ERROR,"Don't recognize your mode on the DISCONTINUOUS_VELO BC");
+    else GOMA_EH(GOMA_ERROR,"Don't recognize your mode on the DISCONTINUOUS_VELO BC");
 
     /* only apply if within gas phase */
     if (Current_EB_ptr->Elem_Blk_Id == idblock)
@@ -14899,7 +14899,7 @@ calculate_laser_flux ( const double p[],
       ns_id1=1001;
       /* find the x location of 1001 */
       node_1         = psid2nn(ns_id1);
-      EH(node_1, "Could not find the nsid needed for keyhole calculation.");
+      GOMA_EH(node_1, "Could not find the nsid needed for keyhole calculation.");
       initial_pos1   = Coor[0][node_1];
       idx1 = Index_Solution(node_1, MESH_DISPLACEMENT1, 0, 0, -2, pg->imtrx);
       delta_pos1     = x[idx1];
@@ -15253,7 +15253,7 @@ qside_contact_resis(double func[DIM],
     }
   else
     {
-      EH(GOMA_ERROR,"T_CONTACT_RESIS has incorrect material ids");
+      GOMA_EH(GOMA_ERROR,"T_CONTACT_RESIS has incorrect material ids");
     }
 
   if (af->Assemble_Jacobian) {
@@ -15435,7 +15435,7 @@ qside_ls( double func[DIM],
     }
   else
     {
-      EH(GOMA_ERROR,"Cannot find matching block id in problem.");
+      GOMA_EH(GOMA_ERROR,"Cannot find matching block id in problem.");
     }
 }
 
@@ -15630,7 +15630,7 @@ apply_hysteresis_wetting_sic (	double *func,
 								double *float_data )
 {
 
-EH(GOMA_ERROR, "Sorry, this model has not been included with this distribution \n");
+GOMA_EH(GOMA_ERROR, "Sorry, this model has not been included with this distribution \n");
 return ;
 }
 #else
@@ -16004,7 +16004,7 @@ fprintf(stderr,"refl n nbdy X Y mu mut dir %g %g %g %g %g %g %g\n",refindex,bdy_
 	  *func = fv->poynt[1] - Xrefl*fv->poynt[0] - Yrefl*bdy_incident;
 	  }
   else
-	{EH(GOMA_ERROR,"invalid light transmission bc\n");}
+	{GOMA_EH(GOMA_ERROR,"invalid light transmission bc\n");}
 
   if (af->Assemble_Jacobian)
     {
@@ -16116,7 +16116,7 @@ qside_light_jump(double func[DIM],
     }
   else
     {
-      EH(GOMA_ERROR,"LIGHT_JUMP has incorrect material ids");
+      GOMA_EH(GOMA_ERROR,"LIGHT_JUMP has incorrect material ids");
     }
 
   mp_1 = mp_glob[Current_EB_ptr->Elem_Blk_Id-1];
@@ -16223,7 +16223,7 @@ fprintf(stderr,"light intensity %g %g %g \n",fv->poynt[0],fv->poynt[1],*func);
 	}
 	}
   else
-	{EH(GOMA_ERROR,"invalid light transmission bc\n");}
+	{GOMA_EH(GOMA_ERROR,"invalid light transmission bc\n");}
 fprintf(stderr,"light intensity %g %g %g \n",fv->poynt[0],fv->poynt[1],*func);
 
   if (af->Assemble_Jacobian)

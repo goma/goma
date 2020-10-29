@@ -312,7 +312,7 @@ int *find_ss_internal_boundary(Exo_DB *e) {
        * Sort the node numbers into ascending order.
        */
       if ((end - start) < 1) {
-        EH(GOMA_ERROR, "Bad side node index listing!");
+        GOMA_EH(GOMA_ERROR, "Bad side node index listing!");
       }
       integer_sort((end - start), first_side_node_list);
 
@@ -338,7 +338,7 @@ int *find_ss_internal_boundary(Exo_DB *e) {
           if ((end - start) < 1) {
             sprintf(err_msg, "SS ID %d (%d sides), side_index[%d]=%d, side_index[%d]=%d",
                     e->ss_id[ss_index], e->ss_num_sides[ss_index], side, start, side + 1, end);
-            EH(GOMA_ERROR, err_msg);
+            GOMA_EH(GOMA_ERROR, err_msg);
           }
           integer_sort((end - start), other_side_node_list);
           int equal_vectors = TRUE;
@@ -486,7 +486,7 @@ setup_old_exo(Exo_DB *e, Dpi *dpi, int num_proc)
 
    if ( e->eb_ptr[Proc_Num_Elem_Blk] != Num_Internal_Elems )
      {
-       EH(GOMA_ERROR, "Inconsistent element count.");
+       GOMA_EH(GOMA_ERROR, "Inconsistent element count.");
      }
 
    /*
@@ -595,7 +595,7 @@ setup_old_exo(Exo_DB *e, Dpi *dpi, int num_proc)
          nodes_this_side = e->ss_node_cnt_list[i][j];
          if (nodes_this_side != nodes_1st_side) {
            sprintf(err_msg, "Whoa! SS %d has sides with varying numbers of nodes.", e->ss_id[i]);
-           EH(GOMA_ERROR, err_msg);
+           GOMA_EH(GOMA_ERROR, err_msg);
          }
        }
      }
@@ -700,7 +700,7 @@ setup_old_exo(Exo_DB *e, Dpi *dpi, int num_proc)
        sprintf(err_msg, 
 	  "SS %d hits lots of EBs. Set MAX_MAX_PER_SS to %d in rf_bc_const.h",
 	       e->ss_id[ss_index_max], mmps);
-       EH(GOMA_ERROR, err_msg);
+       GOMA_EH(GOMA_ERROR, err_msg);
      }
 
 
@@ -758,13 +758,13 @@ setup_old_exo(Exo_DB *e, Dpi *dpi, int num_proc)
    if (Num_Node/Num_Proc < 1) {
      sprintf(err_msg, "Whoa! Problem with %d nodes on %d processors.",
 	     Num_Node, Num_Proc);
-     EH(GOMA_ERROR, err_msg);
+     GOMA_EH(GOMA_ERROR, err_msg);
    }
 
    if (Num_Elem/Num_Proc < 1) {
      sprintf(err_msg, "Whoa! Problem with %d elems on %d processors.",
 	     Num_Elem, Num_Proc);
-     EH(GOMA_ERROR, err_msg);
+     GOMA_EH(GOMA_ERROR, err_msg);
    }
 
   /*
@@ -854,7 +854,7 @@ check_sidesets(Exo_DB *e,	   /* EXODUS II FE db has all mesh info (in) */
 	    {
 	      sprintf(err_msg, "BC %s on SS %d is not in mesh!",
 		      bct[i].desc->name1, bct[i].BC_ID);
-	        EH(GOMA_ERROR, err_msg);  	/* assume this is a fatal problem */
+	        GOMA_EH(GOMA_ERROR, err_msg);  	/* assume this is a fatal problem */
 	    }
 	}
     }
@@ -954,7 +954,7 @@ check_nodesets(Exo_DB *e,	   /* EXODUS II FE db has all mesh info (in) */
 	    {
 	       sprintf(err_msg, "BC %s on NS %d is not in mesh!",
 		       bct[i].desc->name1, bct[i].BC_ID);
-	        EH(GOMA_ERROR, err_msg);  	/* assume this is a fatal problem */
+	        GOMA_EH(GOMA_ERROR, err_msg);  	/* assume this is a fatal problem */
 	    }
 	}
     }
@@ -1061,7 +1061,7 @@ check_elemblocks(Exo_DB *e,	   /* EXODUS II FE db has all mesh info (in) */
       if (in_list(ebid_mat, 0, neb, ebid) == -1) {
 	sprintf(err_msg, "EB ID %d for MAT %s is not in mesh!",
 		ebid_mat, p[i]->MaterialName);
-	EH(GOMA_ERROR, err_msg);	/* assume this is a fatal problem */
+	GOMA_EH(GOMA_ERROR, err_msg);	/* assume this is a fatal problem */
       }
     }
   }
@@ -1184,7 +1184,7 @@ setup_matilda(Exo_DB *e,  int *matilda)
       matilda[eb] = -1;
       eb_ptr->MatlProp_ptr = NULL;
 #else
-      EH(GOMA_ERROR, "Trouble with matilda.");
+      GOMA_EH(GOMA_ERROR, "Trouble with matilda.");
 #endif
     } else {
       matilda[eb] = m;
@@ -1262,7 +1262,7 @@ find_elemblock_index(const int element,
   if (element < 0 || element > exo->num_elems ) {
     sprintf(Err_Msg, "element %d out of range %d <= elem < %d",
             element, 0, exo->num_elems);
-    EH(GOMA_ERROR, Err_Msg);
+    GOMA_EH(GOMA_ERROR, Err_Msg);
   }
   while (eb < exo->num_elem_blocks && !found ) {
     eb++;
@@ -1300,7 +1300,7 @@ find_mat_number(const int ielem, const Exo_DB *exo)
 {
   int ebi;			/* element block index */
   ebi = find_elemblock_index(ielem, exo);
-  EH(ebi,
+  GOMA_EH(ebi,
      "find_mat_number: Can not find matl - unknown element block index");
   return(Matilda[ebi]);
 } /* END of find_mat_num */
@@ -1341,7 +1341,7 @@ map_mat_index(const int ebid)
 	    "P_%d: Couldn't find Element block %d in any material, proceeding anyway with trepidation\n",
 	    ProcID, ebid);
             }
-    //EH(GOMA_ERROR, "Trouble in map_mat_index");
+    //GOMA_EH(GOMA_ERROR, "Trouble in map_mat_index");
     return -1;
   }
   return m;
@@ -1428,7 +1428,7 @@ sseb_conn(Exo_DB *e,		/* see exo_struct.h for full def         (in) */
 	  eb_index = fence_post(elem, e->eb_ptr, e->num_elem_blocks+1);
 	  if ( eb_index == -1 )
 	    {
-	      EH(GOMA_ERROR, "Could not locate element in element block collection.");
+	      GOMA_EH(GOMA_ERROR, "Could not locate element in element block collection.");
 	    }
 
 	  
@@ -1604,20 +1604,20 @@ multiname(char *in_name,
     {
       sprintf(err_msg, "processor_name = %d ( less than zero).", 
               processor_name);
-      EH(GOMA_ERROR, err_msg);
+      GOMA_EH(GOMA_ERROR, err_msg);
     }
   else if ( processor_name > number_processors - 1 )
     {
       sprintf(err_msg, "processor_name = %d ( too high ).", 
 	      processor_name);
-      EH(GOMA_ERROR, err_msg);
+      GOMA_EH(GOMA_ERROR, err_msg);
     }
 
   if ( number_processors < 1 )
     {
       sprintf(err_msg, "number_processors = %d ( less than one ).", 
               number_processors);
-      EH(GOMA_ERROR, err_msg);
+      GOMA_EH(GOMA_ERROR, err_msg);
     }
   
   for ( i=0; i<MAX_FNL; i++)
@@ -1647,7 +1647,7 @@ multiname(char *in_name,
     pad_index++;
   }
   if (pad_index >= 10) {
-    EH(GOMA_ERROR, "Zero padding failure >9 zero pads, not possible!");
+    GOMA_EH(GOMA_ERROR, "Zero padding failure >9 zero pads, not possible!");
   }
   zero_padded_string[pad_index] = '\0';
 
@@ -1887,12 +1887,12 @@ Elem_Type(const Exo_DB *exo,
   eb_index = fence_post(element, exo->eb_ptr, (exo->num_elem_blocks)+1);
   if (eb_index < 0)
     {
-      EH(GOMA_ERROR, "Fence post does not include this element.");
+      GOMA_EH(GOMA_ERROR, "Fence post does not include this element.");
     }
 
   if (eb_index > exo->num_elem_blocks - 1)
     {
-      EH(GOMA_ERROR, "Index too high.");
+      GOMA_EH(GOMA_ERROR, "Index too high.");
     }
 
   type = exo->eb_elem_itype[eb_index];
@@ -1927,7 +1927,7 @@ void
 integer_sort(int length, int *array)
 {
   if (length < 1) {
-      EH(GOMA_ERROR, "Negative or zero length array to sort?");
+      GOMA_EH(GOMA_ERROR, "Negative or zero length array to sort?");
   }
   qsort(array, length, sizeof(int), integer_compare);
   return;

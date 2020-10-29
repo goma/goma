@@ -33,7 +33,7 @@ void load_tfmp_viscosity_model
       *mu_l = mp->tfmp_viscosity_const[1];
       break;
     default:
-      WH(-1, "There is no tfmp viscosity");
+      GOMA_WH(-1, "There is no tfmp viscosity");
       return;
       break;
   }
@@ -141,7 +141,7 @@ switch (mp->tfmp_rel_perm_model) {
     return;
     break;
   default:
-    WH(-1, "relative permeability model not set");
+    GOMA_WH(-1, "relative permeability model not set");
     return;
     break;
   }
@@ -203,7 +203,7 @@ void load_gas_dissolution_model(
   default:
     lambda = Vd = 1.0;
     if (mp->tfmp_dissolution_model != NO_MODEL) {
-      WH(-1, "The lattice model is not set and the dissolution model is not NO_MODEL");
+      GOMA_WH(-1, "The lattice model is not set and the dissolution model is not NO_MODEL");
       return;
     }
     break;
@@ -519,7 +519,7 @@ void h0_minus_ndotd (
   } else if (n_dot_up < 0.0) {
     h_sign = -1.0;
   } else {
-    EH(GOMA_ERROR, "Something is wrong! n_dot_up == 0.0");
+    GOMA_EH(GOMA_ERROR, "Something is wrong! n_dot_up == 0.0");
     return;
   }
 
@@ -537,7 +537,7 @@ void h0_minus_ndotd (
       for (k=0; k<DIM; k++) { // vector direction k
         *h -= h_sign*(normal[k])*(fv->d[k]);
         if(*h < 0.0) {
-          WH(-1, "negative h in load_displacement_coupling_model()");
+          GOMA_WH(-1, "negative h in load_displacement_coupling_model()");
         }
         for (l = 0; l<DIM; l++) { // gradient direction l
 
@@ -614,7 +614,7 @@ void rmesh_minus_rroller (
 ) {
   // Check to see if Height_UFunctionModel is ROLLER, otherwise break
   if( mp->HeightUFunctionModel != ROLLER){
-    EH(GOMA_ERROR,"I cannot roll without an 'Upper Height Function Model = ROLLER'  !!");
+    GOMA_EH(GOMA_ERROR,"I cannot roll without an 'Upper Height Function Model = ROLLER'  !!");
   }
 
   //notice there is no more need of normal
@@ -677,7 +677,7 @@ void rmesh_minus_rroller (
 
   } else {
     // don't know how to do anything else yet
-    EH(GOMA_ERROR, "I don't know how to set gradII_h unless 'Elastohydrodynamic Lubrication Shell Integration Kind' is 'S'.\n"
+    GOMA_EH(GOMA_ERROR, "I don't know how to set gradII_h unless 'Elastohydrodynamic Lubrication Shell Integration Kind' is 'S'.\n"
            "Check your material file or implement new features.");
   }
   // set dh_dmesh
@@ -914,7 +914,7 @@ void load_gap_model(GAP_STRUCT *gap) {
          dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, gap->time, gap->delta_t);
 
   if (fpclassify(gap->h)!= fp_type && gap->h != 0.0) {
-    EH(GOMA_ERROR, "mass term is not normal after retrieving initial value from height_function_model()");
+    GOMA_EH(GOMA_ERROR, "mass term is not normal after retrieving initial value from height_function_model()");
   }
 
   for (int l=0; l<DIM; l++)  {

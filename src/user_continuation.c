@@ -198,7 +198,7 @@ update_user_parameter(double lambda, double *x, double *xdot, double *x_AC,
 
 
 /* If using this function, comment out this line. */
-  EH(GOMA_ERROR, "No user continuation conditions entered!");
+  GOMA_EH(GOMA_ERROR, "No user continuation conditions entered!");
 
 
 /* Evaluate any intermediate quantities and/or assign constants here */
@@ -251,7 +251,7 @@ update_user_TP_parameter(double lambda, double *x, double *xdot,
 
 
 /* If using this function, comment out this line. */
-  EH(GOMA_ERROR, "No user TP continuation conditions entered!");
+  GOMA_EH(GOMA_ERROR, "No user TP continuation conditions entered!");
 
 
 /* Evaluate any intermediate quantities and/or assign constants here */
@@ -301,7 +301,7 @@ do_user_update(int n, int first_cp, int first_tp,
     }
   else
     {
-      EH(GOMA_ERROR, "User parameter type settings inconsistent!");
+      GOMA_EH(GOMA_ERROR, "User parameter type settings inconsistent!");
     }
 
 /* Store new and old values */

@@ -225,7 +225,7 @@ lu(const int N,
    double x[],
    const int factor_flag)
 {
-  EH(GOMA_ERROR, "Goma not configured with sparse support");
+  GOMA_EH(GOMA_ERROR, "Goma not configured with sparse support");
 }
 #endif // HAVE_SPARSE
 /*****************************************************************************/

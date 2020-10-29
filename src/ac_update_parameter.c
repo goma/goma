@@ -89,7 +89,7 @@ update_parameterC(int iCC,       /* CONDITION NUMBER */
       update_user_parameter(lambda, x, xdot, x_AC, cx, exo, dpi);
     }
  
-    else EH(GOMA_ERROR, "Bad continuation type!");
+    else GOMA_EH(GOMA_ERROR, "Bad continuation type!");
   }
 
 /* Calls from LOCA */
@@ -146,7 +146,7 @@ update_parameterC(int iCC,       /* CONDITION NUMBER */
   }
 
   else {
-    if (cont->upType != 6) EH(GOMA_ERROR, "Bad continuation type!");
+    if (cont->upType != 6) GOMA_EH(GOMA_ERROR, "Bad continuation type!");
   }
  }
 
@@ -220,7 +220,7 @@ update_parameterTP(int iTC,       /* CONDITION NUMBER */
   }
 
   else {
-    if (loca_in->TPupType != 6) EH(GOMA_ERROR, "Bad TP continuation type!");
+    if (loca_in->TPupType != 6) GOMA_EH(GOMA_ERROR, "Bad TP continuation type!");
   }
 }
 
@@ -291,7 +291,7 @@ update_parameterHC(int iHC,      /* Hunting condition number */
     update_user_parameter(lambda, x, xdot, x_AC, cx, exo, dpi);
   }
 
-  else EH(GOMA_ERROR, "Bad HC continuation type!");
+  else GOMA_EH(GOMA_ERROR, "Bad HC continuation type!");
 
 }
 
@@ -362,7 +362,7 @@ update_parameterS(double lambda, /* PARAMETER VALUE */
     update_user_parameter(lambda, x, xdot, NULL, cx, exo, dpi);
   }
 
-  else EH(GOMA_ERROR, "Bad sens. parameter type!");
+  else GOMA_EH(GOMA_ERROR, "Bad sens. parameter type!");
 
 }
 
@@ -1152,12 +1152,12 @@ update_UM_parameter(double lambda, /* Parameter value */
         float_length = gn_glob[mn]->len_u_tau_y;
         break;
       default:
-        EH(GOMA_ERROR, "No model available for that property!");
+        GOMA_EH(GOMA_ERROR, "No model available for that property!");
         break;
     }
         if (ic >= float_length)
           {
-            EH(GOMA_ERROR, "Float index larger than user parameter list length!");
+            GOMA_EH(GOMA_ERROR, "Float index larger than user parameter list length!");
           }
 
 
@@ -1206,7 +1206,7 @@ update_UM_parameter(double lambda, /* Parameter value */
             mp_glob[mn]->u_FlowingLiquid_viscosity[ic] = lambda;
         break;
       default:
-        EH(GOMA_ERROR, "No model available for that property!");
+        GOMA_EH(GOMA_ERROR, "No model available for that property!");
         break;
     }
 }/* END of routine update_UM_parameter  */
@@ -1284,7 +1284,7 @@ retrieve_parameterS(double *lambda, /* PARAMETER VALUE */
       retrieve_UM_parameter(lambda, mn, mpr, ic, cx, exo, dpi);
   }
 
-  else EH(GOMA_ERROR, "Bad sens. parameter type!");
+  else GOMA_EH(GOMA_ERROR, "Bad sens. parameter type!");
  
 }/* END of routine retrieve_parameterS  */
 /*****************************************************************************/
@@ -2025,12 +2025,12 @@ retrieve_UM_parameter(double *lambda, /* Parameter value */
         float_length = gn_glob[mn]->len_u_tau_y;
         break;
       default:
-        EH(GOMA_ERROR, "No model available for that property!");
+        GOMA_EH(GOMA_ERROR, "No model available for that property!");
         break;
     }
         if (ic >= float_length)
           {
-            EH(GOMA_ERROR, "Float index larger than user parameter list length!");
+            GOMA_EH(GOMA_ERROR, "Float index larger than user parameter list length!");
           }
 
 
@@ -2079,7 +2079,7 @@ retrieve_UM_parameter(double *lambda, /* Parameter value */
         *lambda = gn_glob[mn]->u_tau_y[ic];
         break;
       default:
-        EH(GOMA_ERROR, "No model available for that property!");
+        GOMA_EH(GOMA_ERROR, "No model available for that property!");
         break;
     }
 }/* END of routine retrieve_UM_parameter  */

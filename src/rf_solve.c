@@ -238,7 +238,7 @@ initial_guess_stress_to_log_conf(double *x, int num_total_nodes)
         }
       else
 	{
-	  EH(GOMA_ERROR, "Unknown model for Polymer Time Constant in initial guess log conf to stress");
+	  GOMA_EH(GOMA_ERROR, "Unknown model for Polymer Time Constant in initial guess log conf to stress");
 	}
 
       // skip node if stress variables not found
@@ -530,7 +530,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     if (file == NULL) {
       fprintf(stdout, "%s:  opening soln file, %s, for writing\n", 
 	      yo, Soln_OutFile);
-      EH(GOMA_ERROR, "Can not open solution file\n");
+      GOMA_EH(GOMA_ERROR, "Can not open solution file\n");
     }
   }
   
@@ -550,13 +550,13 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
   if (tnv < 0)
   {
     DPRINTF(stderr, "%s:\tbad tnv.\n", yo);
-    EH(GOMA_ERROR, "\t");
+    GOMA_EH(GOMA_ERROR, "\t");
   }
   
   if ( tev < 0 )
   {
     DPRINTF(stderr, "%s:\tMaybe bad tev? See goma design committee ;) \n", yo);
-    EH(GOMA_ERROR, "\t");
+    GOMA_EH(GOMA_ERROR, "\t");
   }
 
   /*
@@ -566,12 +566,12 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
   if (Do_Overlap && augc[nAC-1].Type == AC_OVERLAP)
     {
       err = create_overlap_acs(exo, nAC-1);
-      EH(err, "Problem with create_overlap_acs!");
+      GOMA_EH(err, "Problem with create_overlap_acs!");
     }
   if (nAC > 0 && augc[0].Type == AC_PERIODIC)
     {
       err = create_periodic_acs(exo);
-      EH(err, "Problem with create_periodic_acs!");
+      GOMA_EH(err, "Problem with create_periodic_acs!");
     }
 
   /*
@@ -601,7 +601,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     error = load_global_var_info(rd, 4, "MESH_VOLUME");
 
     if ( rd->ngv > MAX_NGV ) 
-      EH(GOMA_ERROR, "Augmenting condition values overflowing MAX_NGV.  Change and rerun .");
+      GOMA_EH(GOMA_ERROR, "Augmenting condition values overflowing MAX_NGV.  Change and rerun .");
 
   if (callnum == 1)
     {
@@ -630,7 +630,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
   error = load_nodal_tkn(rd, &tnv, &tnv_post);  
   if (error !=0) {
     DPRINTF(stderr, "%s:  problem with load_nodal_tkn()\n", yo);
-    EH(GOMA_ERROR,"\t");
+    GOMA_EH(GOMA_ERROR,"\t");
   }
 
   /*
@@ -662,7 +662,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
   error = load_elem_tkn(rd, exo, tev, &tev_post);  
   if (error !=0) {
     DPRINTF(stderr, "%s:  problem with load_elem_tkn()\n", yo);
-    EH(GOMA_ERROR,"\t");
+    GOMA_EH(GOMA_ERROR,"\t");
   }
 #ifdef PARALLEL
   check_parallel_error("Results file error");
@@ -789,7 +789,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 
   if (strcmp(Matrix_Format, "epetra") == 0) {
     err = check_compatible_solver();
-    EH(err, "Incompatible matrix solver for epetra, epetra supports amesos and aztecoo solvers.");
+    GOMA_EH(err, "Incompatible matrix solver for epetra, epetra supports amesos and aztecoo solvers.");
     check_parallel_error("Matrix format / Solver incompatibility");
     ams[JAC]->RowMatrix = EpetraCreateRowMatrix(num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]);
     EpetraCreateGomaProblemGraph(ams[JAC], exo, dpi);
@@ -854,7 +854,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     ams[JAC]->rpntr = NULL;
     ams[JAC]->cpntr = NULL;
   } else {
-    EH(GOMA_ERROR, "Attempted to allocate unknown sparse matrix format");
+    GOMA_EH(GOMA_ERROR, "Attempted to allocate unknown sparse matrix format");
   }
 	  
   /* 
@@ -947,7 +947,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 
   /* Now load imports, and also base_p_por if applicable */
   error = load_import_fields(base_p_por, exo, callnum);
-  EH(error, "Problem with load_import_fields!");
+  GOMA_EH(error, "Problem with load_import_fields!");
 #else
   /****************************Anneal from external***********************/
   if (efv->ev_porous_decouple)
@@ -1013,7 +1013,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
       }
 	    
 #ifdef PARALLEL
-      if (Num_Proc > 1) EH(GOMA_ERROR, "Whoa.  No front allowed with nproc>1");
+      if (Num_Proc > 1) GOMA_EH(GOMA_ERROR, "Whoa.  No front allowed with nproc>1");
       check_parallel_error("Front solver not allowed with nprocs>1");
 #endif /* PARALLEL */
 	  
@@ -1030,10 +1030,10 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 		     front_scratch_directory,
 		     &fss->ntra);
 	  
-      EH(err,"problems in frontal setup ");
+      GOMA_EH(err,"problems in frontal setup ");
 
 #else /* HAVE_FRONT */
-      EH(GOMA_ERROR,"Don't have frontal solver compiled and linked in");
+      GOMA_EH(GOMA_ERROR,"Don't have frontal solver compiled and linked in");
 #endif /* HAVE_FRONT */
     }
       
@@ -1064,7 +1064,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     }
 
     log_msg("Returning from solve_nonlinear_problem with %d", err);
-    EH(err, "Problem from solve_nonlinear_problem.");
+    GOMA_EH(err, "Problem from solve_nonlinear_problem.");
   
       /* Check element quality */
       good_mesh = element_quality(exo, x, ams[0]->proc_config);
@@ -1074,7 +1074,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 			       x_AC, nAC, 0.0, file);
     }
       
-    EH(error, "Error writing ASCII soln file.");
+    GOMA_EH(error, "Error writing ASCII soln file.");
       
     if (Write_Intermediate_Solutions == 0) {
       nprint = 0;
@@ -1203,7 +1203,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
  		search_minmax=TRUE;
  		}
  	  if( search_minmax && Num_Proc > 1)
- 		  WH(-1,"Species surfaces not recommended in parallel\n");
+ 		  GOMA_WH(-1,"Species surfaces not recommended in parallel\n");
  	  if( search_minmax && Num_Proc == 1)
   	  {
   		  int inode,offset,idof;
@@ -1239,7 +1239,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
             		if(pp_volume[i]->num_params < pd->Num_Species+1)
                  		{
          DPRINTF(stdout,"params %d %d\n",pp_volume[i]->num_params,pd->Num_Species);
-         WH(-1,"SURF_SPECIES parameters should number Num_Species+1");
+         GOMA_WH(-1,"SURF_SPECIES parameters should number Num_Species+1");
                 		}
  			if( pp_volume[i]->species_no == -1 )
  				{
@@ -1285,7 +1285,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
        */
 
       err = anneal_mesh(x, tev, tev_post, gv,  rd, time1, exo, dpi);
-      EH(err, "anneal_mesh() bad return.");
+      GOMA_EH(err, "anneal_mesh() bad return.");
     }
 
     if (Linear_Stability) {
@@ -1293,7 +1293,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
           solve_stability_problem(ams[JAC], x, delta_t, theta, resid_vector, x_old, x_older, xdot,
                                   xdot_old, x_update, &converged, &nprint, tnv, tnv_post, tev,
                                   tev_post, rd, gindex, p_gsize, gvec, gvec_elem, time1, exo, dpi);
-      EH(err, "Problem from solve_stability_problem.");
+      GOMA_EH(err, "Problem from solve_stability_problem.");
     }
     
     if(Particle_Dynamics)
@@ -1307,7 +1307,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	    time = (n+1) * Particle_Output_Time_Step;
 	    DPRINTF(stdout, "\nComputing particles for time %g (%2.0f%% done)\n", time, (dbl)n/(dbl)Particle_Max_Time_Steps*100.0);
 	    err = compute_particles(exo, x, x_old, xdot, xdot_old, resid_vector, time, Particle_Output_Time_Step, n);
-	    EH(err, "Error performing particle calculations.");
+	    GOMA_EH(err, "Error performing particle calculations.");
 	  }
       }
   }  /* if(steady) */
@@ -1496,9 +1496,9 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 		     fss->constraint,
 		     front_scratch_directory,
 		     &fss->ntra);
-      EH(err,"problems in frontal setup ");
+      GOMA_EH(err,"problems in frontal setup ");
 #else /* HAVE_FRONT */
-      EH(GOMA_ERROR,"Don't have frontal solver compiled and linked in");
+      GOMA_EH(GOMA_ERROR,"Don't have frontal solver compiled and linked in");
 #endif /* HAVE_FRONT */
     }
 
@@ -1685,7 +1685,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
               xfem->active_vol =  alloc_dbl_1(numProcUnknowns, 0.0);
               if (ls == NULL)
                 {
-                  EH(GOMA_ERROR,"Currently, XFEM requires traditional level set (not pf)");
+                  GOMA_EH(GOMA_ERROR,"Currently, XFEM requires traditional level set (not pf)");
                 }
             }
         }
@@ -1729,12 +1729,12 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
               DPRINTF(stdout, "\n\t Using semi-Lagrangian Level Set Evolution\n");
               break;
             default:
-              EH(GOMA_ERROR,"Level Set Evolution scheme not found \n");
+              GOMA_EH(GOMA_ERROR,"Level Set Evolution scheme not found \n");
           }
 
 
 	  if ( ls->Length_Scale < 0.0 )
-	      EH(GOMA_ERROR, "\tError: a Level Set Length Scale needs to be specified\n");
+	      GOMA_EH(GOMA_ERROR, "\tError: a Level Set Length Scale needs to be specified\n");
             
 	  if( ls->Integration_Depth > 0 || ls->SubElemIntegration || ls->AdaptIntegration )
 	    {
@@ -1772,7 +1772,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 
 	      DPRINTF(stdout,"\n\t Projection level set initialization \n");
 #ifdef COUPLED_FILL
-	      EH(GOMA_ERROR,"Use of \"PROJECT\" is obsolete.");
+	      GOMA_EH(GOMA_ERROR,"Use of \"PROJECT\" is obsolete.");
 #else /* COUPLED_FILL */
 	      init_vec_value (xf, 0.0, num_fill_unknowns);
 	      err = integrate_explicit_eqn(ams[FIL], rf, xf, xf_old, xfdot, 
@@ -1845,7 +1845,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	      break;
 
 	  case SM_OBJECT:
-	    EH(GOMA_ERROR, "CGM not supported, SM_OBJECT level set initialization");
+	    GOMA_EH(GOMA_ERROR, "CGM not supported, SM_OBJECT level set initialization");
 #ifndef COUPLED_FILL
               if (Explicit_Fill)
 		{
@@ -1856,7 +1856,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	    break;
 
 	  default:
-	      WH(-1,"Level Set Initialization method not found \n");
+	      GOMA_WH(-1,"Level Set Initialization method not found \n");
 	  } /* end of switch( eqntype )  */
 
           exchange_dof(cx[0], dpi, x, 0);
@@ -1891,7 +1891,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 
 	  case CORRECT :
 #ifdef COUPLED_FILL
-	    EH(GOMA_ERROR,"Use of \"CORRECT\" is obsolete.");
+	    GOMA_EH(GOMA_ERROR,"Use of \"CORRECT\" is obsolete.");
 #else /* COUPLED_FILL */
 	    {
 	      double step_size =  ls->Length_Scale/10.0;
@@ -1910,7 +1910,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	  default:
 	      if ( ls->Evolution == LS_EVOLVE_ADVECT_EXPLICIT ||
                    ls->Evolution == LS_EVOLVE_ADVECT_COUPLED )
-                 WH(-1,"No level set renormalization is on.\n");
+                 GOMA_WH(-1,"No level set renormalization is on.\n");
 	  } /* end of switch(ls->Renorm_Method ) */
 	}
 	  /*
@@ -2009,7 +2009,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 			      DPRINTF(stdout, "\n\t Using semi-Lagrangian Level Set Evolution for R_PHASE0\n");
 			      break;
 			    default:
-			      EH(GOMA_ERROR,"PHASE Function Evolution scheme not found \n");
+			      GOMA_EH(GOMA_ERROR,"PHASE Function Evolution scheme not found \n");
 			      break;
 			    }
 			  }
@@ -2609,13 +2609,13 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	/* Dump out user specified information to separate file.
 	 */
 	err = usr_print(&time, delta_t, x, NULL, -1); 
-	EH(err, "usr_print");
+	GOMA_EH(err, "usr_print");
 
 	/* Particle calculations.  time = time at *beginning* of
 	 * current timestep, n = timestep. */ 
 	if(Particle_Dynamics)
 	  err = compute_particles(exo, x, x_old, xdot, xdot_old, resid_vector, time, delta_t, n);
-	EH(err, "Error performing particle calculations.");
+	GOMA_EH(err, "Error performing particle calculations.");
 
 	error = 0;
 	if (i_print) {
@@ -2761,7 +2761,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 		    "reset delta_t = %g to maintain printing frequency\n"
 		    , delta_t_new);
 	    if (delta_t_new <= 0) 
-		EH(GOMA_ERROR, "error with time-step printing control");
+		GOMA_EH(GOMA_ERROR, "error with time-step printing control");
 	    } 
           else if(time >= time_print) 
             {
@@ -2772,7 +2772,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 		      "reset delta_t = %g to maintain printing frequency\n"
 		      , delta_t_new);
 	      if (delta_t_new <= 0) 
-                { EH(GOMA_ERROR, "error with time-step printing control"); }
+                { GOMA_EH(GOMA_ERROR, "error with time-step printing control"); }
 	    }
 	  }
 	}
@@ -2786,7 +2786,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
           {
             error = advance_porosity_ev(n, num_total_nodes,
                                         x, base_p_por, base_p_liq);
-            EH(error, "Problem with advance_porosity_ev()!");
+            GOMA_EH(error, "Problem with advance_porosity_ev()!");
           }
 #endif
 
@@ -2859,7 +2859,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 					break;
 				
 			case CORRECT:
-				EH(GOMA_ERROR,"Use of \"CORRECT\" is obsolete.");
+				GOMA_EH(GOMA_ERROR,"Use of \"CORRECT\" is obsolete.");
 				break;
 			default:
 				break;
@@ -2986,7 +2986,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 		search_minmax=TRUE;
 		}
 	  if( search_minmax && Num_Proc > 1)
-		  WH(-1,"Species surfaces not recommended in parallel\n");
+		  GOMA_WH(-1,"Species surfaces not recommended in parallel\n");
 	  if( search_minmax && Num_Proc == 1)
  	  {
  		  int inode,offset,idof;
@@ -3022,7 +3022,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
            		if(pp_volume[i]->num_params < pd->Num_Species+1)
                 		{
          DPRINTF(stdout,"params %d %d\n",pp_volume[i]->num_params,pd->Num_Species);
-         WH(-1,"SURF_SPECIES parameters should number Num_Species+1");
+         GOMA_WH(-1,"SURF_SPECIES parameters should number Num_Species+1");
                 		}
  			if( pp_volume[i]->species_no == -1 )
  				{
@@ -3112,7 +3112,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	       * zero, too.
 	       */
 	      err = anneal_mesh(x, tev, tev_post, gv, rd, time1, exo, dpi);
-	      EH(err, "anneal_mesh() bad return.");
+	      GOMA_EH(err, "anneal_mesh() bad return.");
 	    }
 	  goto free_and_clear;
 	  }
@@ -3257,7 +3257,7 @@ fprintf(stderr,"should be not successful %d %d %d \n",inewton,converged,success_
        * displaced coordinates. Set the displacement field to
        * zero, too.
 	err = anneal_mesh(x, tev, tev_post, gv, rd, time_value, exo, dpi);
-	EH(err, "anneal_mesh() bad return.");
+	GOMA_EH(err, "anneal_mesh() bad return.");
       }
        */
       
@@ -3272,7 +3272,7 @@ fprintf(stderr,"should be not successful %d %d %d \n",inewton,converged,success_
   if (Num_Export_XS > 0 || Num_Export_XP > 0)
     {
       err = load_export_vars(num_total_nodes, x, x_pp);
-      EH(err, "Problem with saving export variables");
+      GOMA_EH(err, "Problem with saving export variables");
     }
 #endif
 
@@ -3693,7 +3693,7 @@ anneal_mesh(double x[], int tev, int tev_post, double *glob_vars_val,
 
   if ( !displacement_somewhere ) 
   {
-    WH(-1, "Attempt to anneal w/ no active displacement eqn anywhere!");
+    GOMA_WH(-1, "Attempt to anneal w/ no active displacement eqn anywhere!");
     return(0);
   }
 

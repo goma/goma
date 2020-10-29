@@ -570,7 +570,7 @@ matrix_fill(
    * give a zero by default...
    */
   err = load_elem_dofptr(ielem, exo, x, x_old, xdot, xdot_old, 0);
-  EH(err, "load_elem_dofptr");
+  GOMA_EH(err, "load_elem_dofptr");
 
 
   err = bf_mp_init(pd);  
@@ -607,13 +607,13 @@ matrix_fill(
   else if(pd->i[pg->imtrx][MASS_FRACTION]==I_PQ1)
     {
       if (pd->Num_Dim == 2) ielem_type_mass = BILINEAR_QUAD;
-      if (pd->Num_Dim == 3) EH(GOMA_ERROR,"Sorry PQ1 interpolation has not been implemented in 3D yet.");
+      if (pd->Num_Dim == 3) GOMA_EH(GOMA_ERROR,"Sorry PQ1 interpolation has not been implemented in 3D yet.");
       discontinuous_mass = 1;
     }
   else if(pd->i[pg->imtrx][MASS_FRACTION]==I_PQ2)
     {
       if (pd->Num_Dim == 2) ielem_type_mass = BIQUAD_QUAD;
-      if (pd->Num_Dim == 3) EH(GOMA_ERROR,"Sorry PQ2 interpolation has not been implemented in 3D yet.");
+      if (pd->Num_Dim == 3) GOMA_EH(GOMA_ERROR,"Sorry PQ2 interpolation has not been implemented in 3D yet.");
       discontinuous_mass = 1;
     }
   else
@@ -633,12 +633,12 @@ matrix_fill(
     }
   else if(pd->i[pg->imtrx][POLYMER_STRESS11]==I_PQ1)
     {
-      if (pd->Num_Dim == 3) EH(GOMA_ERROR,"Sorry PQ1 interpolation has not been implemented in 3D yet.");
+      if (pd->Num_Dim == 3) GOMA_EH(GOMA_ERROR,"Sorry PQ1 interpolation has not been implemented in 3D yet.");
       discontinuous_stress = 1;
     }
   else if(pd->i[pg->imtrx][POLYMER_STRESS11]==I_PQ2)
     {
-      if (pd->Num_Dim == 3) EH(GOMA_ERROR,"Sorry PQ2 interpolation has not been implemented in 3D yet.");
+      if (pd->Num_Dim == 3) GOMA_EH(GOMA_ERROR,"Sorry PQ2 interpolation has not been implemented in 3D yet.");
       discontinuous_stress = 1;
     }
 
@@ -683,7 +683,7 @@ matrix_fill(
         {
 #if 0
 	  /* Squawk then turn off the switch. */
-          WH( -1, "Negative subelement volume detected.");
+          GOMA_WH( -1, "Negative subelement volume detected.");
 	  neg_elem_volume = FALSE;
 #endif
 #if 1
@@ -945,7 +945,7 @@ matrix_fill(
 
   if (pde[R_SOLID1])
     {
-      if (pd->etm[pg->imtrx][R_SOLID1][(LOG2_MASS)]) EH(GOMA_ERROR,"Cannot do real inertia for TALE yet. Remove this line if trying to perform EULERIAN solid mechanics");
+      if (pd->etm[pg->imtrx][R_SOLID1][(LOG2_MASS)]) GOMA_EH(GOMA_ERROR,"Cannot do real inertia for TALE yet. Remove this line if trying to perform EULERIAN solid mechanics");
       eqn = R_SOLID1;
       if (pd->TimeIntegration != STEADY && 
 	  pd->etm[pg->imtrx][R_SOLID1][(LOG2_MASS)] &&
@@ -1022,7 +1022,7 @@ matrix_fill(
       if (PSPP == 1)
 	{
 	  err = assemble_projection_stabilization(exo, time_value);
-	  EH(err, "assemble_projection_stabilization");
+	  GOMA_EH(err, "assemble_projection_stabilization");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_projection_stabilization"); 
 	  if (err) return -1;
@@ -1032,7 +1032,7 @@ matrix_fill(
       if (PSPP == 2)
 	{
 	  err = assemble_PPPS_generalized(exo); 
-	  EH(err, "assemble_PPPS_generalized");
+	  GOMA_EH(err, "assemble_PPPS_generalized");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_PPPS_generalized"); 
 	  if (err) return -1;
@@ -1042,7 +1042,7 @@ matrix_fill(
       if (PSPP == 3)
         {
           err = assemble_projection_time_stabilization(exo, time_value, theta, delta_t);
-          EH(err, "assemble_projection_stabilization");
+          GOMA_EH(err, "assemble_projection_stabilization");
 #ifdef CHECK_FINITE
           CHECKFINITE("assemble_projection_stabilization");
 #endif
@@ -1099,7 +1099,7 @@ matrix_fill(
 	   */
       
 	  err = load_basis_functions(xi, bfd);
-	  EH( err, "problem from load_basis_functions");
+	  GOMA_EH( err, "problem from load_basis_functions");
       
 	  /*
 	   * This has elemental Jacobian transformation and some 
@@ -1112,7 +1112,7 @@ matrix_fill(
 	   */
       
 	  err = beer_belly();
-	  EH( err, "beer_belly");
+	  GOMA_EH( err, "beer_belly");
 	  if( neg_elem_volume ) return -1;
           if( zero_detJ ) return -1;
       
@@ -1125,7 +1125,7 @@ matrix_fill(
 	   */
 
 	  err = load_fv();
-	  EH( err, "load_fv");
+	  GOMA_EH( err, "load_fv");
 
 
 	  /*
@@ -1136,7 +1136,7 @@ matrix_fill(
 	   */
       
 	  err = load_bf_grad();
-	  EH( err, "load_bf_grad");
+	  GOMA_EH( err, "load_bf_grad");
       
 	  /*
 	   * Finally, load the mesh derivatives of the gradients of the
@@ -1150,7 +1150,7 @@ matrix_fill(
           if (pd->gv[R_MESH1])
 	    {
 	      err = load_bf_mesh_derivs(); 
-	      EH( err, "load_bf_mesh_derivs");
+	      GOMA_EH( err, "load_bf_mesh_derivs");
 	    }
       
 	  /*
@@ -1158,14 +1158,14 @@ matrix_fill(
 	   * Gauss point.
 	   */
 	  err = load_fv_grads();
-	  EH( err, "load_fv_grads");	  
+	  GOMA_EH( err, "load_fv_grads");	  
             
 
 
           if (pd->gv[R_MESH1])
 	    {
 	      err = load_fv_mesh_derivs(1);
-	      EH( err, "load_fv_mesh_derivs");
+	      GOMA_EH( err, "load_fv_mesh_derivs");
 	    }
 
 	  /*
@@ -1180,7 +1180,7 @@ matrix_fill(
 	  if ( ls != NULL && ls->Evolution == LS_EVOLVE_SLAVE )
             {
               err = assemble_fill_fake(theta, delta_t);
-	      EH( err, "assemble_fill_fake");
+	      GOMA_EH( err, "assemble_fill_fake");
 #ifdef CHECK_FINITE
 	      err = CHECKFINITE("assemble_fill_fake"); 
 	      if (err) return -1;
@@ -1192,7 +1192,7 @@ matrix_fill(
 	      if(pfd != NULL) ls = pfd->ls[0]; 
 	      err = assemble_fill_ext_v(theta, delta_t, pg_data.hsquared, pg_data.hh, pg_data.dh_dxnode);
 	      ls = ls_old; /*Make things right again */
-	      EH( err, "assemble_fill_ext_v");
+	      GOMA_EH( err, "assemble_fill_ext_v");
 #ifdef CHECK_FINITE
 	      err = CHECKFINITE("assemble_fill_ext_v"); 
 	      if (err) return -1;
@@ -1201,7 +1201,7 @@ matrix_fill(
 	  else if(  tran->Fill_Equation == FILL_EQN_ADVECT )
 	    {
               err = assemble_fill(theta, delta_t, &pg_data, R_FILL, xi, exo, time_value, &mass_lumped_penalty);
-	      EH( err, "assemble_fill");
+	      GOMA_EH( err, "assemble_fill");
 #ifdef CHECK_FINITE
 	      err = CHECKFINITE("assemble_fill");
 	      if (err) return -1;
@@ -1212,7 +1212,7 @@ matrix_fill(
 		  ls = pfd->ls[0]; 
                   err = assemble_fill(theta, delta_t, &pg_data, R_PHASE1, xi, exo, time_value, &mass_lumped_penalty);
 		  ls = ls_old; /*Make things right again */
-		  EH( err, "assemble_fill");
+		  GOMA_EH( err, "assemble_fill");
 #ifdef CHECK_FINITE
 		  err = CHECKFINITE("assemble_fill");
 		  if (err) return -1;
@@ -1221,7 +1221,7 @@ matrix_fill(
 	    }
 #else /* COUPLED_FILL */
 	  err = assemble_fill_fake(theta, delta_t);
-	  EH( err, "assemble_fill_fake");
+	  GOMA_EH( err, "assemble_fill_fake");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_fill_fake"); 
 	  if (err) return -1;
@@ -1283,16 +1283,16 @@ matrix_fill(
 	{
 	  for(i=0 ; i<ei[pg->imtrx]->num_local_nodes ; i++)	{ls_F[i]=*esp->F[i];}
 	  i=adaptive_weight(ad_wtpos, ip_total, ielem_dim, ls_F, ls->Length_Scale, 2, ielem_type);
-	  WH(i,"problem with adaptive weight routine");
+	  GOMA_WH(i,"problem with adaptive weight routine");
 	  for(i=0 ; i<ei[pg->imtrx]->num_local_nodes ; i++)	{ls_F[i]=-ls_F[i];}
 	  i=adaptive_weight(ad_wtneg, ip_total, ielem_dim, ls_F, ls->Length_Scale, 2, ielem_type);
-	  WH(i,"problem with adaptive weight routine");
+	  GOMA_WH(i,"problem with adaptive weight routine");
 	  ip_total = 2*elem_info(NQUAD, ielem_type); 
 	}
     }
   else
     {
-      EH(GOMA_ERROR,"Unrecognized integration scheme!");
+      GOMA_EH(GOMA_ERROR,"Unrecognized integration scheme!");
     }
   
   /* Loop over all the Volume Quadrature integration points */
@@ -1382,7 +1382,7 @@ matrix_fill(
         }
       else
         {
-          EH(GOMA_ERROR,"Unrecognized integration scheme!");
+          GOMA_EH(GOMA_ERROR,"Unrecognized integration scheme!");
         }
 	      
 
@@ -1410,7 +1410,7 @@ matrix_fill(
 
       err = load_basis_functions(xi, bfd);
 
-      EH( err, "problem from load_basis_functions");
+      GOMA_EH( err, "problem from load_basis_functions");
 
       /*
        * This has elemental Jacobian transformation and some 
@@ -1423,7 +1423,7 @@ matrix_fill(
        */
       
       err = beer_belly();
-      EH(err, "beer_belly");
+      GOMA_EH(err, "beer_belly");
       if (neg_elem_volume) return -1;
       if( zero_detJ ) return -1;
       
@@ -1435,7 +1435,7 @@ matrix_fill(
        * coordinates.
        */
       err = load_fv();
-      EH( err, "load_fv");
+      GOMA_EH( err, "load_fv");
 
       /*
        * Here, load in the final part of the necessary basis function
@@ -1445,7 +1445,7 @@ matrix_fill(
        */
       
       err = load_bf_grad();
-      EH( err, "load_bf_grad");
+      GOMA_EH( err, "load_bf_grad");
       
       /*
        * Finally, load the mesh derivatives of the gradients of the
@@ -1458,7 +1458,7 @@ matrix_fill(
       if (pd->gv[R_MESH1])
 	{
 	  err = load_bf_mesh_derivs(); 
-	  EH( err, "load_bf_mesh_derivs");
+	  GOMA_EH( err, "load_bf_mesh_derivs");
 	}
       
       /*
@@ -1466,13 +1466,13 @@ matrix_fill(
        * Gauss point.
        */
       err = load_fv_grads();
-      EH( err, "load_fv_grads");
+      GOMA_EH( err, "load_fv_grads");
 
 
       if (pd->gv[R_MESH1])
 	{
 	  err = load_fv_mesh_derivs(1);
-	  EH( err, "load_fv_mesh_derivs");
+	  GOMA_EH( err, "load_fv_mesh_derivs");
 	}
 
       /* special section for XFEM with diffuse integration */
@@ -1543,7 +1543,7 @@ matrix_fill(
 	  err = assemble_stress_fortin(theta, delta_t, pg_data.hsquared,
 				       pg_data.hhv, pg_data.dhv_dxnode, pg_data.v_avg, pg_data.dv_dnode);
 	  err = segregate_stress_update( x_update );
-	  EH(err, "assemble_stress_fortin");
+	  GOMA_EH(err, "assemble_stress_fortin");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_stress_fortin"); 
 	  if (err) return -1;
@@ -1553,7 +1553,7 @@ matrix_fill(
 	{
 	  err = assemble_stress(theta, delta_t, pg_data.hsquared, pg_data.hhv,
 				pg_data.dhv_dxnode, pg_data.v_avg, pg_data.dv_dnode);
-	  EH(err, "assemble_stress");
+	  GOMA_EH(err, "assemble_stress");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_stress"); 
 	  if (err) return -1;
@@ -1563,7 +1563,7 @@ matrix_fill(
 	{
 	  err = assemble_stress_level_set(theta, delta_t, pg_data.hsquared, pg_data.hhv,
 					  pg_data.dhv_dxnode, pg_data.v_avg, pg_data.dv_dnode);
-	  EH(err, "assemble_stress_level_set");
+	  GOMA_EH(err, "assemble_stress_level_set");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_stress_level_set"); 
 	  if (err) return -1;
@@ -1574,10 +1574,10 @@ matrix_fill(
           err = assemble_stress_log_conf(theta, delta_t, pg_data.hsquared,
                                                      pg_data.hhv, pg_data.dhv_dxnode, pg_data.v_avg, pg_data.dv_dnode);
 
-          EH(err, "assemble_stress_log_conf");
+          GOMA_EH(err, "assemble_stress_log_conf");
 	  if (err) return -1;
           err = segregate_stress_update( x_update );
-          EH(err, "assemble_stress_update");
+          GOMA_EH(err, "assemble_stress_update");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_stress_log_conf");
           if (err) return -1;
@@ -1589,7 +1589,7 @@ matrix_fill(
 	{
 	  err = assemble_invariant(theta, delta_t);
 	  
-	  EH(err, "assemble_invariant");
+	  GOMA_EH(err, "assemble_invariant");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_invariant"); 
 	  if (err) return -1;
@@ -1599,7 +1599,7 @@ matrix_fill(
       if (pde[R_ENORM])
 	{
 	  err = assemble_Enorm();
-	  EH(err, "assemble_Enorm");
+	  GOMA_EH(err, "assemble_Enorm");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_Enorm"); 
 	  if (err) return -1;
@@ -1609,7 +1609,7 @@ matrix_fill(
       if (pde[R_GRADIENT11])
 	{
 	  err = assemble_gradient(theta, delta_t);
-	  EH(err, "assemble_gradient");
+	  GOMA_EH(err, "assemble_gradient");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_gradient"); 
 	  if (err) return -1;
@@ -1619,7 +1619,7 @@ matrix_fill(
       if (pde[R_MESH1] && !pde[R_SHELL_CURVATURE] && !pde[R_SHELL_TENSION])
 	{
 	  err = assemble_mesh(time_value, theta, delta_t, ielem, ip, ip_total);
-	  EH(err, "assemble_mesh");
+	  GOMA_EH(err, "assemble_mesh");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_mesh"); 
 	  if (err) return -1;
@@ -1637,7 +1637,7 @@ matrix_fill(
       if (mp->PorousMediaType != CONTINUOUS)
 	{
 	  err = load_porous_properties();
-	  EH( err, "load_porous_properties");
+	  GOMA_EH( err, "load_porous_properties");
 	  if ((mp->PorousMediaType == POROUS_UNSATURATED ||
 	       mp->PorousMediaType == POROUS_SHELL_UNSATURATED ||
 	       mp->PorousMediaType == POROUS_TWO_PHASE      ) &&
@@ -1647,7 +1647,7 @@ matrix_fill(
 		{
 		  /* gotta evaluate the various terms of the equation first */
 		  err = get_porous_part_sat_terms(&pm_terms, theta, delta_t);
-		  EH(err,"problem in getting the partially-saturated porous  terms");
+		  GOMA_EH(err,"problem in getting the partially-saturated porous  terms");
 
 		  /* Determine what curve to follow and if switch is in order */
 		  err = evaluate_sat_hyst_criterion(ip, PRS_mat_ielem, &pm_terms, theta, delta_t);
@@ -1656,7 +1656,7 @@ matrix_fill(
 		   * load up the saturation again in this case.
 		   */  
 		  err = load_porous_properties();
-		  EH( err, "load_porous_properties");
+		  GOMA_EH( err, "load_porous_properties");
 		}
 	    }
 	}
@@ -1664,7 +1664,7 @@ matrix_fill(
       if (pde[R_MASS]) 
         {	
           err = assemble_mass_transport(time_value, theta, delta_t, &pg_data);
-	  EH( err, "assemble_mass_transport");	  
+	  GOMA_EH( err, "assemble_mass_transport");	  
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_mass_transport"); 
 	  if (err) return -1;	
@@ -1674,7 +1674,7 @@ matrix_fill(
 
       if (pde[R_POR_LIQ_PRES] || pde[R_POR_SATURATION]) {
 	err = assemble_porous_transport(time_value, theta, delta_t);
-	EH(err, "assemble_porous");
+	GOMA_EH(err, "assemble_porous");
 #ifdef CHECK_FINITE
 	err = CHECKFINITE("assemble_porous"); 
 	if (err) return -1;	  
@@ -1685,7 +1685,7 @@ matrix_fill(
       if (pde[R_SOLID1] && assemble_rs)
 	{
 	  err = assemble_real_solid(time_value, theta, delta_t);
-	  EH( err, "assemble_mesh");
+	  GOMA_EH( err, "assemble_mesh");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_mesh"); 
 	  if (err) return -1;
@@ -1695,7 +1695,7 @@ matrix_fill(
       if( pde[R_ENERGY] )
 	{
           err = assemble_energy(time_value, theta, delta_t, &pg_data);
-	  EH( err, "assemble_energy");
+	  GOMA_EH( err, "assemble_energy");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_energy"); 
 	  if (err) return -1;
@@ -1705,7 +1705,7 @@ matrix_fill(
       if( pde[R_POTENTIAL] )
 	{
           err = assemble_potential(time_value, theta, delta_t);
-	  EH( err, "assemble_potential");
+	  GOMA_EH( err, "assemble_potential");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_potential"); 
 	  if (err) return -1;
@@ -1716,7 +1716,7 @@ matrix_fill(
 	{
           err = assemble_acoustic(time_value, theta, delta_t, &pg_data, 
 				  R_ACOUS_PREAL, ACOUS_PREAL);
-	  EH( err, "assemble_acoustic");
+	  GOMA_EH( err, "assemble_acoustic");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_acoustic"); 
 	  if (err) return -1;
@@ -1727,7 +1727,7 @@ matrix_fill(
 	{
           err = assemble_acoustic(time_value, theta, delta_t, &pg_data, 
 				  R_ACOUS_PIMAG, ACOUS_PIMAG);
-	  EH( err, "assemble_acoustic");
+	  GOMA_EH( err, "assemble_acoustic");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_acoustic"); 
 	  if (err) return -1;
@@ -1737,7 +1737,7 @@ matrix_fill(
       if( pde[R_ACOUS_REYN_STRESS] )
 	{
           err = assemble_acoustic_reynolds_stress(time_value, theta, delta_t, &pg_data);
-	  EH( err, "assemble_acoustic_reynolds_stress");
+	  GOMA_EH( err, "assemble_acoustic_reynolds_stress");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_acoustic_reynolds_stress"); 
 	  if (err) return -1;
@@ -1748,7 +1748,7 @@ matrix_fill(
 	{
           err = assemble_poynting(time_value, theta, delta_t, &pg_data, 
 				  R_LIGHT_INTP, LIGHT_INTP);
-	  EH( err, "assemble_poynting");
+	  GOMA_EH( err, "assemble_poynting");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_poynting"); 
 	  if (err) return -1;
@@ -1759,7 +1759,7 @@ matrix_fill(
 	{
           err = assemble_poynting(time_value, theta, delta_t, &pg_data, 
 				  R_LIGHT_INTM, LIGHT_INTM);
-	  EH( err, "assemble_poynting");
+	  GOMA_EH( err, "assemble_poynting");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_poynting"); 
 	  if (err) return -1;
@@ -1770,7 +1770,7 @@ matrix_fill(
 	{
           err = assemble_poynting(time_value, theta, delta_t, &pg_data, 
 				  R_LIGHT_INTD, LIGHT_INTD);
-	  EH( err, "assemble_poynting");
+	  GOMA_EH( err, "assemble_poynting");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_poynting"); 
 	  if (err) return -1;
@@ -1781,7 +1781,7 @@ matrix_fill(
 	{
           err = assemble_poynting(time_value, theta, delta_t, &pg_data, 
 				  R_RESTIME, RESTIME);
-	  EH( err, "assemble_poynting");
+	  GOMA_EH( err, "assemble_poynting");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_poynting"); 
 	  if (err) return -1;
@@ -1790,7 +1790,7 @@ matrix_fill(
       if(pde [R_EM_E1_REAL] && !pde[R_EM_H1_REAL]) {
         err = assemble_ewave_tensor_bf(time_value, theta, delta_t,
                                 R_EM_E1_REAL, EM_E1_REAL);
-        EH( err, "assemble_ewave");
+        GOMA_EH( err, "assemble_ewave");
 #ifdef CHECK_FINITE
         err = CHECKFINITE("assemble_ewave");
         if (err) return -1;
@@ -1800,7 +1800,7 @@ matrix_fill(
 	{
           err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
 				  R_EM_E1_REAL, EM_E1_REAL, EM_E1_IMAG);
-	  EH( err, "assemble_emwave");
+	  GOMA_EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_emwave"); 
 	  if (err) return -1;
@@ -1809,7 +1809,7 @@ matrix_fill(
       if( pde[R_EM_CONT_REAL] )
 	{
 	  err = assemble_em_continuity();
-	  EH( err, "assemble_em_continuity");
+	  GOMA_EH( err, "assemble_em_continuity");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_em_continuity"); 
 	  if (err) return -1;
@@ -1820,7 +1820,7 @@ matrix_fill(
       if(pde [R_EM_E2_REAL] && !pde[R_EM_H2_REAL]) {
 //        err = assemble_ewave_tensor_bf(time_value, theta, delta_t,
 //                                R_EM_E2_REAL, EM_E2_REAL);
-//        EH( err, "assemble_ewave");
+//        GOMA_EH( err, "assemble_ewave");
 //#ifdef CHECK_FINITE
 //        err = CHECKFINITE("assemble_ewave");
 //        if (err) return -1;
@@ -1830,7 +1830,7 @@ matrix_fill(
 	{
           err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
 				  R_EM_E2_REAL, EM_E2_REAL, EM_E2_IMAG);
-	  EH( err, "assemble_emwave");
+	  GOMA_EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_emwave"); 
 	  if (err) return -1;
@@ -1840,7 +1840,7 @@ matrix_fill(
       if(pde [R_EM_E3_REAL] && !pde[R_EM_H3_REAL]) {
 //        err = assemble_ewave_tensor_bf(time_value, theta, delta_t,
 //                                R_EM_E3_REAL, EM_E3_REAL);
-//        EH( err, "assemble_ewave");
+//        GOMA_EH( err, "assemble_ewave");
 //#ifdef CHECK_FINITE
 //        err = CHECKFINITE("assemble_ewave");
 //        if (err) return -1;
@@ -1850,7 +1850,7 @@ matrix_fill(
 	{
           err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
 				  R_EM_E3_REAL, EM_E3_REAL, EM_E3_IMAG);
-	  EH( err, "assemble_emwave");
+	  GOMA_EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_emwave"); 
 	  if (err) return -1;
@@ -1860,7 +1860,7 @@ matrix_fill(
       if(pde [R_EM_E1_IMAG] && !pde[R_EM_H1_IMAG]) {
 //        err = assemble_ewave_tensor_bf(time_value, theta, delta_t,
 //                                R_EM_E1_IMAG, EM_E1_IMAG);
-//        EH( err, "assemble_ewave");
+//        GOMA_EH( err, "assemble_ewave");
 //#ifdef CHECK_FINITE
 //        err = CHECKFINITE("assemble_ewave");
 //        if (err) return -1;
@@ -1870,7 +1870,7 @@ matrix_fill(
 	{
           err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
                                   R_EM_E1_IMAG, EM_E1_IMAG, EM_E1_REAL);
-	  EH( err, "assemble_emwave");
+	  GOMA_EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_emwave"); 
 	  if (err) return -1;
@@ -1880,7 +1880,7 @@ matrix_fill(
       if(pde [R_EM_E2_IMAG] && !pde[R_EM_H2_IMAG]) {
 //        err = assemble_ewave_tensor_bf(time_value, theta, delta_t,
 //                                R_EM_E2_IMAG, EM_E2_IMAG);
-//        EH( err, "assemble_ewave");
+//        GOMA_EH( err, "assemble_ewave");
 //#ifdef CHECK_FINITE
 //        err = CHECKFINITE("assemble_ewave");
 //        if (err) return -1;
@@ -1890,7 +1890,7 @@ matrix_fill(
 	{
           err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
                                   R_EM_E2_IMAG, EM_E2_IMAG, EM_E2_REAL);
-	  EH( err, "assemble_emwave");
+	  GOMA_EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_emwave"); 
 	  if (err) return -1;
@@ -1900,7 +1900,7 @@ matrix_fill(
       if(pde [R_EM_E3_IMAG] && !pde[R_EM_H3_IMAG]) {
 //        err = assemble_ewave_tensor_bf(time_value, theta, delta_t,
 //                                R_EM_E3_IMAG, EM_E3_IMAG);
-//        EH( err, "assemble_ewave");
+//        GOMA_EH( err, "assemble_ewave");
 //#ifdef CHECK_FINITE
 //        err = CHECKFINITE("assemble_ewave");
 //        if (err) return -1;
@@ -1910,7 +1910,7 @@ matrix_fill(
 	{
           err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
                                   R_EM_E3_IMAG, EM_E3_IMAG, EM_E3_REAL);
-	  EH( err, "assemble_emwave");
+	  GOMA_EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_emwave"); 
 	  if (err) return -1;
@@ -1921,7 +1921,7 @@ matrix_fill(
 	{
           err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
 				  R_EM_H1_REAL, EM_H1_REAL, EM_H1_IMAG);
-	  EH( err, "assemble_emwave");
+	  GOMA_EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_emwave"); 
 	  if (err) return -1;
@@ -1932,7 +1932,7 @@ matrix_fill(
 	{
           err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
 				  R_EM_H2_REAL, EM_H2_REAL, EM_H2_IMAG);
-	  EH( err, "assemble_emwave");
+	  GOMA_EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_emwave"); 
 	  if (err) return -1;
@@ -1943,7 +1943,7 @@ matrix_fill(
 	{
           err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
 				  R_EM_H3_REAL, EM_H3_REAL, EM_H3_IMAG);
-	  EH( err, "assemble_emwave");
+	  GOMA_EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_emwave"); 
 	  if (err) return -1;
@@ -1954,7 +1954,7 @@ matrix_fill(
 	{
           err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
                                   R_EM_H1_IMAG, EM_H1_IMAG, EM_H1_REAL);
-	  EH( err, "assemble_emwave");
+	  GOMA_EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_emwave"); 
 	  if (err) return -1;
@@ -1965,7 +1965,7 @@ matrix_fill(
 	{
           err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
                                   R_EM_H2_IMAG, EM_H2_IMAG, EM_H2_REAL);
-	  EH( err, "assemble_emwave");
+	  GOMA_EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_emwave"); 
 	  if (err) return -1;
@@ -1976,7 +1976,7 @@ matrix_fill(
 	{
           err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
                                   R_EM_H3_IMAG, EM_H3_IMAG, EM_H3_REAL);
-	  EH( err, "assemble_emwave");
+	  GOMA_EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_emwave"); 
 	  if (err) return -1;
@@ -1986,7 +1986,7 @@ matrix_fill(
       if( pde[R_POR_SINK_MASS] )
 	{
 	  err = assemble_pore_sink_mass(time_value, theta, delta_t);
-	  EH( err, "assemble_pore_sink_mass");
+	  GOMA_EH( err, "assemble_pore_sink_mass");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_pore_sink_mass"); 
 	  if (err) return -1;
@@ -1996,7 +1996,7 @@ matrix_fill(
       if( pde[R_EFIELD1] )
 	{
           err = assemble_electric_field();
-	  EH( err, "assemble_electric_field");
+	  GOMA_EH( err, "assemble_electric_field");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_electric_field"); 
 	  if (err) return -1;
@@ -2006,7 +2006,7 @@ matrix_fill(
       if( pde[R_SURF_CHARGE] )
         {
           err = assemble_surface_charge(time_value, theta, delta_t, wt, xi, exo, R_SURF_CHARGE);
-          EH( err, "assemble_surface_charge");
+          GOMA_EH( err, "assemble_surface_charge");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_surface_charge"); 
 	  if (err) return -1;
@@ -2016,7 +2016,7 @@ matrix_fill(
       if( pde[R_SHELL_USER] )
         {
           err = assemble_surface_charge(time_value, theta, delta_t, wt, xi, exo, R_SHELL_USER);
-          EH( err, "assemble_surface_charge");
+          GOMA_EH( err, "assemble_surface_charge");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_surface_charge"); 
 	  if (err) return -1;
@@ -2026,7 +2026,7 @@ matrix_fill(
       if( pde[R_SHELL_BDYVELO] )
         {
           err = assemble_surface_charge(time_value, theta, delta_t, wt, xi, exo, R_SHELL_BDYVELO);
-          EH( err, "assemble_surface_charge");
+          GOMA_EH( err, "assemble_surface_charge");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_surface_charge"); 
 	  if (err) return -1;
@@ -2035,13 +2035,13 @@ matrix_fill(
         
       if( pde[R_SHELL_LUBP] )
         {
-	  EH(GOMA_ERROR,"SHELL_LUBP routine not available yet");
+	  GOMA_EH(GOMA_ERROR,"SHELL_LUBP routine not available yet");
         }
 
       if( pde[R_LUBP] )
         {
           err = assemble_lubrication(R_LUBP, time_value, theta, delta_t, xi, exo);
-          EH( err, "assemble_lubrication");
+          GOMA_EH( err, "assemble_lubrication");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_lubrication"); 
 	  if (err) return -1;
@@ -2052,7 +2052,7 @@ matrix_fill(
       if( pde[R_LUBP_2] )
         {
           err = assemble_lubrication(R_LUBP_2, time_value, theta, delta_t, xi, exo);
-          EH( err, "assemble_lubrication");
+          GOMA_EH( err, "assemble_lubrication");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_lubrication"); 
 	  if (err) return -1;
@@ -2063,7 +2063,7 @@ matrix_fill(
       if( pde[R_MAX_STRAIN] )
         {
           err = assemble_max_strain();
-          EH( err, "assemble_max_strain");
+          GOMA_EH( err, "assemble_max_strain");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_max_strain"); 
 	  if (err) return -1;
@@ -2073,7 +2073,7 @@ matrix_fill(
       if( pde[R_CUR_STRAIN] )
         {
           err = assemble_cur_strain();
-          EH( err, "assemble_cur_strain");
+          GOMA_EH( err, "assemble_cur_strain");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_cur_strain"); 
 	  if (err) return -1;
@@ -2083,7 +2083,7 @@ matrix_fill(
       if( pde[R_SHELL_LUB_CURV] )
         {
           err = assemble_lubrication_curvature(time_value, theta, delta_t, &pg_data, xi, exo);
-          EH( err, "assemble_lubrication_curvature");
+          GOMA_EH( err, "assemble_lubrication_curvature");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_lubrication_curvature"); 
 	  if (err) return -1;
@@ -2095,7 +2095,7 @@ matrix_fill(
 	  ls_old = ls;
 	  ls = pfd->ls[0];
           err = assemble_lubrication_curvature_2(time_value, theta, delta_t, &pg_data, xi, exo);
-          EH( err, "assemble_lubrication_curvature_2");
+          GOMA_EH( err, "assemble_lubrication_curvature_2");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_lubrication_curvature_2"); 
 	  if (err) return -1;
@@ -2106,7 +2106,7 @@ matrix_fill(
       if( pde[R_SHELL_ENERGY] )
         {
           err = assemble_shell_energy(time_value, theta, delta_t, xi, &pg_data, exo);
-          EH( err, "assemble_shell_energy");
+          GOMA_EH( err, "assemble_shell_energy");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_shell_energy"); 
 	  if (err) return -1;
@@ -2116,7 +2116,7 @@ matrix_fill(
       if( pde[R_SHELL_DELTAH] )
         {
           err = assemble_shell_deltah(time_value, theta, delta_t, xi, exo);
-          EH( err, "assemble_shell_deltah");
+          GOMA_EH( err, "assemble_shell_deltah");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_shell_deltah"); 
 	  if (err) return -1;
@@ -2128,7 +2128,7 @@ matrix_fill(
       if( pde[R_SHELL_FILMP] && pde[R_SHELL_FILMH] )
 	{
 	  err = assemble_film(time_value, theta, delta_t, xi, exo);
-	  EH( err, "assemble_film");
+	  GOMA_EH( err, "assemble_film");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_film"); 
 	  if (err) return -1;
@@ -2136,11 +2136,11 @@ matrix_fill(
         }
       else if( (!(pde[R_SHELL_FILMP])) && pde[R_SHELL_FILMH] )
 	{
-	  EH( -1, "Both SHELL_FILMP and SHELL_FILMH must be activated !");
+	  GOMA_EH( -1, "Both SHELL_FILMP and SHELL_FILMH must be activated !");
 	}
       else if( pde[R_SHELL_FILMP] && (!(pde[R_SHELL_FILMH])) )
 	{
-	  EH( -1, "Both SHELL_FILMP and SHELL_FILMH must be activated !");
+	  GOMA_EH( -1, "Both SHELL_FILMP and SHELL_FILMH must be activated !");
 	}
 
 
@@ -2149,7 +2149,7 @@ matrix_fill(
       if( pde[R_SHELL_FILMP] && pde[R_SHELL_FILMH] && pde[R_SHELL_PARTC] )
 	{
 	  err = assemble_film_particles(time_value, theta, delta_t, xi, &pg_data, exo);
-	  EH( err, "assemble_film_particles");
+	  GOMA_EH( err, "assemble_film_particles");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_film_particles"); 
 	  if (err) return -1;
@@ -2159,7 +2159,7 @@ matrix_fill(
       else if( pde[R_LUBP] && pde[R_SHELL_PARTC] )
 	{
 	  err = assemble_film_particles(time_value, theta, delta_t, xi, &pg_data, exo);
-	  EH( err, "assemble_film_particles");
+	  GOMA_EH( err, "assemble_film_particles");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_film_particles"); 
 	  if (err) return -1;
@@ -2168,19 +2168,19 @@ matrix_fill(
 
       else if( (!(pde[R_SHELL_FILMP])) && pde[R_SHELL_FILMH] && pde[R_SHELL_PARTC] )
 	{
-	  EH( -1, " SHELL_PARTC requires SHELL_FILMP and SHELL_FILMH !");
+	  GOMA_EH( -1, " SHELL_PARTC requires SHELL_FILMP and SHELL_FILMH !");
 	}
 
       else if( pde[R_SHELL_FILMP] && !(pde[R_SHELL_FILMH]) && pde[R_SHELL_PARTC] )
         {
-          EH( -1, " SHELL_PARTC requires SHELL_FILMP and SHELL_FILMH !");
+          GOMA_EH( -1, " SHELL_PARTC requires SHELL_FILMP and SHELL_FILMH !");
         }
 
 
       if( pde[R_SHELL_SAT_CLOSED] )
         {
           err = assemble_porous_shell_closed(theta, delta_t, xi, exo);
-          EH( err, "assemble_porous_shell_closed");
+          GOMA_EH( err, "assemble_porous_shell_closed");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_porous_shell_closed"); 
 	  if (err) return -1;
@@ -2189,9 +2189,9 @@ matrix_fill(
 
       if( pde[R_SHELL_SAT_GASN] )
         {
-	  if ( !pde[R_SHELL_SAT_CLOSED] ) EH( -1, "SHELL_SAT_GASN required SHELL_SAT_CLOSED!");
+	  if ( !pde[R_SHELL_SAT_CLOSED] ) GOMA_EH( -1, "SHELL_SAT_GASN required SHELL_SAT_CLOSED!");
           err = assemble_porous_shell_gasn(theta, delta_t, xi, exo); 
-          EH( err, "assemble_porous_shell_gasn");
+          GOMA_EH( err, "assemble_porous_shell_gasn");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_porous_shell_gasn"); 
 	  if (err) return -1;
@@ -2201,7 +2201,7 @@ matrix_fill(
       if( pde[R_SHELL_SAT_OPEN] )
         {
           err = assemble_porous_shell_open( theta, delta_t, xi, exo);
-          EH( err, "assemble_porous_shell_open");
+          GOMA_EH( err, "assemble_porous_shell_open");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_porous_shell_open"); 
 	  if (err) return -1;
@@ -2211,7 +2211,7 @@ matrix_fill(
       if( pde[R_SHELL_SAT_OPEN_2] )
         {
           err = assemble_porous_shell_open_2( theta, delta_t, xi, exo);
-          EH( err, "assemble_porous_shell_open_2");
+          GOMA_EH( err, "assemble_porous_shell_open_2");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_porous_shell_open_2"); 
 	  if (err) return -1;
@@ -2220,7 +2220,7 @@ matrix_fill(
       if( pde[R_SHELL_ANGLE1] )
         {
           err = assemble_shell_angle(time_value, theta, delta_t, xi, exo);
-          EH( err, "assemble_shell_angle");
+          GOMA_EH( err, "assemble_shell_angle");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_shell_angle"); 
 	  if (err) return -1;
@@ -2230,7 +2230,7 @@ matrix_fill(
       if( pde[R_N_DOT_CURL_V] )
         {
           err = assemble_shell_surface_rheo_pieces(time_value, theta, delta_t, xi, exo);
-          EH( err, "assemble_shell_surface_rheo_pieces");
+          GOMA_EH( err, "assemble_shell_surface_rheo_pieces");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_shell_surface_rheo_pieces"); 
 	  if (err) return -1;
@@ -2241,7 +2241,7 @@ matrix_fill(
       if( pde[R_SHELL_CURVATURE] && pde[R_SHELL_TENSION])
 	{
 	  err = assemble_shell_structure(time_value, theta, delta_t, wt, xi, exo);
-	  EH( err, "assemble_shell_structure");
+	  GOMA_EH( err, "assemble_shell_structure");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_shell_structure"); 
 	  if (err) return -1;
@@ -2250,7 +2250,7 @@ matrix_fill(
 	    {
 	      err = assemble_shell_coordinates(time_value, theta, delta_t, wt, xi, 
 					       exo);
-	      EH( err, "assemble_shell_coordinates");
+	      GOMA_EH( err, "assemble_shell_coordinates");
 #ifdef CHECK_FINITE
 	      err = CHECKFINITE("assemble_shell_coordinates"); 
 	      if (err) return -1;
@@ -2262,7 +2262,7 @@ matrix_fill(
       else if ( !pde[R_SHELL_CURVATURE] && pde[R_SHELL_TENSION])
 	{
 	  err = assemble_shell_tension(time_value, theta, delta_t, wt, xi, exo);
-	  EH( err, "assemble_shell_tension");
+	  GOMA_EH( err, "assemble_shell_tension");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_shell_tension"); 
 	  if (err) return -1;
@@ -2270,7 +2270,7 @@ matrix_fill(
 	  if( pde[R_MESH1] ) 
 	    {
 	      err = assemble_shell_coordinates(time_value, theta, delta_t, wt, xi, exo);
-	      EH( err, "assemble_shell_coordinates");
+	      GOMA_EH( err, "assemble_shell_coordinates");
 #ifdef CHECK_FINITE
 	      err = CHECKFINITE("assemble_shell_coordinates"); 
 	      if (err) return -1;
@@ -2281,13 +2281,13 @@ matrix_fill(
       /* Shell structure with only sh_K, not sh_tens is verboten! */
       else if (pde[R_MESH1] && pde[R_SHELL_CURVATURE] && !pde[R_SHELL_TENSION] && !pde[R_SHELL_CURVATURE2])
 	{
-	  EH( -1, "Must have both SHELL_TENSION AND SHELL_CURVATURE eqs");
+	  GOMA_EH( -1, "Must have both SHELL_TENSION AND SHELL_CURVATURE eqs");
 	}
 
       if( pde[R_SHELL_DIFF_FLUX] )
         {
           err = assemble_shell_diffusion(time_value, theta, delta_t, wt, xi, exo);
-          EH( err, "assemble_shell_diffusion");
+          GOMA_EH( err, "assemble_shell_diffusion");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_shell_diffusion"); 
 	  if (err) return -1;
@@ -2300,7 +2300,7 @@ matrix_fill(
         )
         {
           err = assemble_shell_web_structure(time_value, theta, delta_t, wt, xi, exo);
-          EH( err, "assemble_shell_web_structure");
+          GOMA_EH( err, "assemble_shell_web_structure");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_shell_web_structure");
           if (err) return -1;
@@ -2309,7 +2309,7 @@ matrix_fill(
             {
               err = assemble_shell_web_coordinates(time_value, theta, delta_t, wt, xi,
                                                exo);
-              EH( err, "assemble_shell_web_coordinates");
+              GOMA_EH( err, "assemble_shell_web_coordinates");
 #ifdef CHECK_FINITE
               err = CHECKFINITE("assemble_shell_web_coordinates");
               if (err) return -1;
@@ -2321,11 +2321,11 @@ matrix_fill(
             && !(pde[R_SHELL_CURVATURE]) )
         {
           if (!pde[R_SHELL_NORMAL1] || !pde[R_SHELL_NORMAL2]) {
-	    EH(GOMA_ERROR, 
+	    GOMA_EH(GOMA_ERROR, 
 	       "Both SHELL_NORMAL1 and SHELL_NORMAL2 required with SHELL_DIFF_CURVATURE eqn!");
 	  }
           err = assemble_shell_geometry(time_value, theta, delta_t, wt, xi, exo);  
-	  EH( err, "assemble_shell_geometry");
+	  GOMA_EH( err, "assemble_shell_geometry");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_shell_geometry"); 
 	  if (err) return -1;
@@ -2337,7 +2337,7 @@ matrix_fill(
         {
 
           err = assemble_shell_normal(xi, exo);
-          EH( err, "assemble_shell_normal");
+          GOMA_EH( err, "assemble_shell_normal");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_shell_normal"); 
 	  if (err) return -1;
@@ -2347,7 +2347,7 @@ matrix_fill(
       if ( pde[R_SHELL_CURVATURE] && pde[R_SHELL_CURVATURE2])
         {
          err = assemble_shell_curvature(xi, exo);
-         EH( err, "assemble_shell_curvature");
+         GOMA_EH( err, "assemble_shell_curvature");
 #ifdef CHECK_FINITE
          err = CHECKFINITE("assemble_shell_curvature"); 
 	 if (err) return -1;
@@ -2358,7 +2358,7 @@ matrix_fill(
       if ( (pde[R_MESH1] && pde[R_SHELL_NORMAL1] && pde[R_SHELL_NORMAL2] && pde[R_SHELL_NORMAL3]))
         {
 	  err = assemble_shell_mesh(time_value, theta, delta_t, xi, exo);
-         EH( err, "assemble_shell_mesh");
+         GOMA_EH( err, "assemble_shell_mesh");
 #ifdef CHECK_FINITE
          err = CHECKFINITE("assemble_shell_mesh"); 
 	 if (err) return -1;
@@ -2369,7 +2369,7 @@ matrix_fill(
       if(pde[R_TFMP_MASS] && pde[R_TFMP_BOUND])
 	{
 	  err = assemble_shell_tfmp( time_value, theta, delta_t, xi, &pg_data, exo );
-	  EH( err, "assemble_shell_tfmp");
+	  GOMA_EH( err, "assemble_shell_tfmp");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_shell_tfmp");
 	  if (err) {
@@ -2380,7 +2380,7 @@ matrix_fill(
       if(!pde[R_TFMP_MASS] && pde[R_TFMP_BOUND])
       {
         err = assemble_shell_lubrication( time_value, theta, delta_t, xi, exo );
-        EH( err, "assemble_shell_lubrication");
+        GOMA_EH( err, "assemble_shell_lubrication");
 #ifdef CHECK_FINITE
         err = CHECKFINITE("assemble_shell_lubrication");
         if (err) {
@@ -2389,14 +2389,14 @@ matrix_fill(
 #endif
 
     if (neg_lub_height) {
-      WH(-1, "returning from matrix fill because neg_lub_height after assemble_shell_lubrication");
+      GOMA_WH(-1, "returning from matrix fill because neg_lub_height after assemble_shell_lubrication");
       return -1;
     }
   }
       if( pde[R_MOMENTUM1] )
 	{
             err = assemble_momentum(time_value, theta, delta_t, h_elem_avg, &pg_data, xi, exo);
-            EH( err, "assemble_momentum");
+            GOMA_EH( err, "assemble_momentum");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_momentum"); 
 	  if (err) return -1;
@@ -2406,7 +2406,7 @@ matrix_fill(
       if( pde[R_PMOMENTUM1] )
 	{
           err = assemble_pmomentum(time_value, theta, delta_t);
-	  EH( err, "assemble_pmomentum");
+	  GOMA_EH( err, "assemble_pmomentum");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_pmomentum"); 
 	  if (err) return -1;
@@ -2419,7 +2419,7 @@ matrix_fill(
 	  pde[R_MOMENT3] )
 	{
 	  err = assemble_moments(time_value, theta, delta_t, &pg_data);
-          EH( err, "assemble_moments");
+          GOMA_EH( err, "assemble_moments");
 #ifdef CHECK_FINITE
 	  CHECKFINITE("assemble_moments");
 #endif
@@ -2427,7 +2427,7 @@ matrix_fill(
       if( pde[R_DENSITY_EQN] )
 	{
 	  err = assemble_density();
-          EH( err, "assemble_density");
+          GOMA_EH( err, "assemble_density");
 #ifdef CHECK_FINITE
 	  CHECKFINITE("assemble_density");
 #endif
@@ -2440,7 +2440,7 @@ matrix_fill(
 	  if(  tran->Fill_Equation == FILL_EQN_EIKONAL )
 	    {
 	      err = assemble_fill_gradf(theta, delta_t, pg_data.hsquared, pg_data.hh, pg_data.dh_dxnode);
-	      EH( err, "assemble_fill_gradf");
+	      GOMA_EH( err, "assemble_fill_gradf");
 #ifdef CHECK_FINITE
 	      err = CHECKFINITE("assemble_fill_gradf"); 
 	      if (err) return -1;
@@ -2464,7 +2464,7 @@ matrix_fill(
 	  else	    
 	    err = assemble_curvature( );
 
-	  EH(err,"assemble curvature projection");
+	  GOMA_EH(err,"assemble curvature projection");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble curvature projection"); 
 	  if (err) return -1;
@@ -2474,7 +2474,7 @@ matrix_fill(
       if( pde[R_NORMAL1] )
 	{
 	  err = assemble_normals();
-	  EH(err,"assemble_normals");
+	  GOMA_EH(err,"assemble_normals");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_normals"); 
 	  if (err) return -1;
@@ -2484,7 +2484,7 @@ matrix_fill(
       if( pde[R_PRESSURE] )
 	{
             err = assemble_continuity(time_value, theta, delta_t, &pg_data);
-            EH( err, "assemble_continuity");
+            GOMA_EH( err, "assemble_continuity");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_continuity"); 
 	  if (err) return -1;
@@ -2495,7 +2495,7 @@ matrix_fill(
       if(pde[R_VORT_DIR1]) /* Then R_VORT_DIR2 and R_VORT_DIR3 should be on*/
 	{
 	  err = assemble_vorticity_direction();
-	  EH(err, "assemble_vorticity_direction");
+	  GOMA_EH(err, "assemble_vorticity_direction");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_vorticity_direction"); 
 	  if (err) return -1;
@@ -2505,7 +2505,7 @@ matrix_fill(
       if(pde[R_BOND_EVOLUTION]) 
 	{
 	  err = assemble_bond_evolution(time_value, theta, delta_t);
-	  EH(err, "assemble_bond_evolution");
+	  GOMA_EH(err, "assemble_bond_evolution");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_bond_evolution"); 
 	  if (err) return -1;
@@ -2519,7 +2519,7 @@ matrix_fill(
 	  if(pfd != NULL) ls = pfd->ls[0]; 
 	  
 	  err = assemble_phase_function( time_value, theta, delta_t, xi, exo );
-	  EH (err, "assemble_phase_functions");
+	  GOMA_EH(err, "assemble_phase_functions");
 	   ls = ls_old;
 
 #ifdef CHECK_FINITE
@@ -2533,7 +2533,7 @@ matrix_fill(
 					    augc[0].lm_value, 
 					    pfd->jac_info->d_pf_lm, 
 					    pfd->jac_info->d_lm_pf );
-	      EH(err," assemble_pf_constraint \n");
+	      GOMA_EH(err," assemble_pf_constraint \n");
 	    }
 	}
 #else /* PHASE_COUPLED_FILL */
@@ -2542,7 +2542,7 @@ matrix_fill(
 	  ls_old = ls;
 	  ls = pfd->ls[0];
 	  err = assemble_fill_fake(theta, delta_t);
-	  EH( err, "assemble_fill_fake");
+	  GOMA_EH( err, "assemble_fill_fake");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_fill_fake"); 
 	  if (err) return -1;
@@ -2556,7 +2556,7 @@ matrix_fill(
           if( Num_Proc > 1 && 
               dpi->elem_owner[ ielem ] != ProcID ) owner = FALSE;
 	  err = assemble_volume( owner );
-	  EH( err, "assemble_volume");
+	  GOMA_EH( err, "assemble_volume");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_volume"); 
 	  if (err) return -1;
@@ -2569,7 +2569,7 @@ matrix_fill(
           if( Num_Proc > 1 && 
               dpi->elem_owner[ ielem ] != ProcID ) owner = FALSE;
 	  err = assemble_LSvelocity( owner, ielem );
-	  EH( err, "assemble_LSvelocity");
+	  GOMA_EH( err, "assemble_LSvelocity");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_LSvelocity"); 
 	  if (err) return -1;
@@ -2582,7 +2582,7 @@ matrix_fill(
 	   * BC first. Maybe keep this here as a blank template for volume integrals
 	   */
 	  /*err = assemble_volume_lagrange_multiplier( time_value, theta, delta_t ); */
-	  EH( err, "assemble_volume_lagrange_multiplier");
+	  GOMA_EH( err, "assemble_volume_lagrange_multiplier");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_volume_lagrange_multiplier"); 
 	  if (err) return -1;
@@ -2710,7 +2710,7 @@ matrix_fill(
         neighbor = exo->elem_elem_list[index];
 
         if (Num_Proc > 1 ) {
-          WH(-1, "DG doesn't seem to work in parallel");
+          GOMA_WH(-1, "DG doesn't seem to work in parallel");
         }
 
         id_side = face + 1;
@@ -2718,7 +2718,7 @@ matrix_fill(
         err = assemble_surface_species(exo, x, delta_t, theta,
                                        ielem_type, ielem_type_mass, id_side,
                                        neighbor, ielem, num_local_nodes);
-        EH( err, "assemble_surface_species");
+        GOMA_EH( err, "assemble_surface_species");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_surface_species"); 
 	  if (err) return -1;
@@ -2735,7 +2735,7 @@ matrix_fill(
       memset(lec->J_stress_neighbor, 0, sizeof(double)*var); 
 
       if (Num_Proc > 1) {
-        EH(GOMA_ERROR, "Discontinuous Galerkin for stress not implemented in parallel");
+        GOMA_EH(GOMA_ERROR, "Discontinuous Galerkin for stress not implemented in parallel");
         return -1;
       }
 
@@ -2752,7 +2752,7 @@ matrix_fill(
 	    err = assemble_surface_stress(exo, x, ams, x_update, delta_t, theta, 
 					  ielem_type, ielem_type_mass, id_side, 
 					  neighbor, ielem, num_local_nodes);
-	    EH( err, "assemble_surface_stress"); 
+	    GOMA_EH( err, "assemble_surface_stress"); 
 #ifdef CHECK_FINITE
 	    err = CHECKFINITE("assemble_surface_stress"); 
 	    if (err) return -1;
@@ -2804,7 +2804,7 @@ matrix_fill(
 				  ielem, ielem_type, num_local_nodes, ielem_dim,
 				  iconnect_ptr, elem_side_bc, num_total_nodes,
 				  WEAK_INT_SURF, time_value, element_search_grid, exo);
-	EH(err, " apply_integrated_bc");
+	GOMA_EH(err, " apply_integrated_bc");
 #ifdef CHECK_FINITE
 	err = CHECKFINITE("apply_integrated_bc");
 	if (err) return -1;
@@ -2818,7 +2818,7 @@ matrix_fill(
                                   ielem, ielem_type, num_local_nodes, ielem_dim,
 				  iconnect_ptr, elem_side_bc, num_total_nodes,
                                   WEAK_SHELL_GRAD, time_value, exo);
-        EH(err, " apply_shell_grad_bc");
+        GOMA_EH(err, " apply_shell_grad_bc");
 #ifdef CHECK_FINITE
 	err = CHECKFINITE("apply_shell_grad_bc"); 
 	if (err) return -1;
@@ -2832,7 +2832,7 @@ matrix_fill(
 					    ielem, ielem_type, num_local_nodes, ielem_dim, 
 					    iconnect_ptr, elem_side_bc, WEAK_SHARP_INT, exo );
 	}
-      EH(err, " apply_sharp_integrated_bc");
+      GOMA_EH(err, " apply_sharp_integrated_bc");
 #ifdef CHECK_FINITE
       err = CHECKFINITE("apply_sharp_integrated_bc"); 
       if (err) return -1;
@@ -2882,7 +2882,7 @@ matrix_fill(
 					ielem_dim, iconnect_ptr, 
 					elem_edge_bc, num_total_nodes, 
 					WEAK_INT_EDGE, exo); 
-	EH( err, " apply_integrated_curve_bc"); 
+	GOMA_EH( err, " apply_integrated_curve_bc"); 
 #ifdef CHECK_FINITE
 	err = CHECKFINITE("apply_integrated_curve_bc"); 
 	if (err) return -1;
@@ -2987,7 +2987,7 @@ matrix_fill(
 				 ielem, ielem_type, num_local_nodes, 
 				 ielem_dim, iconnect_ptr, num_total_nodes,
 				 exo);
-	  EH(err, " apply_rotated_bc");
+	  GOMA_EH(err, " apply_rotated_bc");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("apply_rotated_bc"); 
 	  if (err) return -1;
@@ -3171,7 +3171,7 @@ matrix_fill(
 					ielem_type, num_local_nodes, ielem_dim,
 					iconnect_ptr, elem_side_bc, num_total_nodes, 
 					local_node_list_fs, time_value, exo);
-	    EH( err, " apply_point_colloc_bc");
+	    GOMA_EH( err, " apply_point_colloc_bc");
 #ifdef CHECK_FINITE
 	    err = CHECKFINITE("apply_point_colloc_bc"); 
 	    if (err) return -1;
@@ -3191,7 +3191,7 @@ matrix_fill(
 				      ielem_dim, iconnect_ptr, elem_side_bc, 
 				      num_total_nodes, 
 				      STRONG_INT_SURF, time_value, element_search_grid, exo);
-	    EH( err, " apply_integrated_bc");
+	    GOMA_EH( err, " apply_integrated_bc");
 #ifdef CHECK_FINITE
 	    err = CHECKFINITE("apply_integrated_bc"); 
 	    if (err) return -1;
@@ -3225,7 +3225,7 @@ matrix_fill(
 				   elem_side_bc, num_total_nodes, SPECIAL,
 				   CA_id, CA_fselem, CA_sselem, exo,
 				   time_value);
-	    EH( err, " apply_special_bc");
+	    GOMA_EH( err, " apply_special_bc");
 #ifdef CHECK_FINITE
 	    err = CHECKFINITE("apply_special_bc"); 
 	    if (err) return -1;
@@ -3248,7 +3248,7 @@ matrix_fill(
 	      }
 	    else
 	      {
-		EH(GOMA_ERROR,"YOU cannot apply CONTACT_SURF BCs in mm_names.h with FILL field. R_PHASE only");
+		GOMA_EH(GOMA_ERROR,"YOU cannot apply CONTACT_SURF BCs in mm_names.h with FILL field. R_PHASE only");
 	      }
 
 	    err = apply_contact_bc (x, resid_vector, delta_t, theta,
@@ -3258,7 +3258,7 @@ matrix_fill(
 				    ielem_dim, iconnect_ptr, elem_side_bc, 
 				    num_total_nodes, CONTACT_SURF,
 				    -1, NULL, NULL, NULL, NULL, time_value, exo);
-	    EH( err, " apply_contact_bc");
+	    GOMA_EH( err, " apply_contact_bc");
 #ifdef CHECK_FINITE
 	    err = CHECKFINITE("apply_contact_bc"); 
 	    if (err) return -1;
@@ -3308,7 +3308,7 @@ matrix_fill(
 					ielem, ielem_type, num_local_nodes, 
 					ielem_dim,  iconnect_ptr, elem_edge_bc, 
 					num_total_nodes, STRONG_INT_EDGE, exo); 
-	EH( err, " apply_integrated_curve_bc");
+	GOMA_EH( err, " apply_integrated_curve_bc");
 #ifdef CHECK_FINITE
 	err = CHECKFINITE("apply_integrated_curve_bc"); 
 	if (err) return -1;
@@ -3328,7 +3328,7 @@ matrix_fill(
 					 iconnect_ptr, elem_edge_bc, 
 					 num_total_nodes, 
 					 local_node_list_fs, time_value);
-	EH( err, " apply_point_colloc_bc");
+	GOMA_EH( err, " apply_point_colloc_bc");
 #ifdef CHECK_FINITE
 	err = CHECKFINITE("apply_point_colloc_bc"); 
 	if (err) return -1;
@@ -3355,7 +3355,7 @@ matrix_fill(
    ********************************************************************************/
   
   err = put_dirichlet_in_matrix(x, num_total_nodes);
-  EH(err, " put_dirichlet_in_matrix");
+  GOMA_EH(err, " put_dirichlet_in_matrix");
 #ifdef CHECK_FINITE
   err = CHECKFINITE("put_dirichlet_in_matrix"); 
   if (err) return -1;
@@ -3558,7 +3558,7 @@ matrix_fill(
 	
 	if (count != Num_CAs_done)
 	  {
-	    WH(-1,"\nNot all contact angle conditions were applied!\n");
+	    GOMA_WH(-1,"\nNot all contact angle conditions were applied!\n");
 	    for (j = 0;j < count;j++)
 	  	{
 	          fprintf(stderr,"CA:%d ID:%d fselem:%d sselem:%d Proc:%d\n",j,CA_id[j],CA_fselem[j],CA_sselem[j],CA_proc[j]);
@@ -3763,7 +3763,7 @@ matrix_fill_stress(
     }
 
   err = load_elem_dofptr(ielem, exo, x, x_old, xdot, xdot_old, 0);
-  EH(err, "load_elem_dofptr");
+  GOMA_EH(err, "load_elem_dofptr");
 
   err = bf_mp_init(pd);
   mn = ei[pg->imtrx]->mn;
@@ -3794,12 +3794,12 @@ matrix_fill_stress(
     }
   else if(pd->i[pg->imtrx][POLYMER_STRESS11]==I_PQ1)
     {
-      if (pd->Num_Dim == 3) EH(GOMA_ERROR,"Sorry PQ1 interpolation has not been implemented in 3D yet.");
+      if (pd->Num_Dim == 3) GOMA_EH(GOMA_ERROR,"Sorry PQ1 interpolation has not been implemented in 3D yet.");
       discontinuous_stress = 1;
     }
   else if(pd->i[pg->imtrx][POLYMER_STRESS11]==I_PQ2)
     {
-      if (pd->Num_Dim == 3) EH(GOMA_ERROR,"Sorry PQ2 interpolation has not been implemented in 3D yet.");
+      if (pd->Num_Dim == 3) GOMA_EH(GOMA_ERROR,"Sorry PQ2 interpolation has not been implemented in 3D yet.");
       discontinuous_stress = 1;
     }
 
@@ -3993,7 +3993,7 @@ matrix_fill_stress(
 
   if (pde[R_SOLID1])
     {
-      if (pd->etm[pg->imtrx][R_SOLID1][(LOG2_MASS)]) EH(GOMA_ERROR,"Cannot do real inertia for TALE yet. Remove this line if trying to perform EULERIAN solid mechanics");
+      if (pd->etm[pg->imtrx][R_SOLID1][(LOG2_MASS)]) GOMA_EH(GOMA_ERROR,"Cannot do real inertia for TALE yet. Remove this line if trying to perform EULERIAN solid mechanics");
       eqn = R_SOLID1;
       if (pd->TimeIntegration != STEADY && 
 	  pd->etm[pg->imtrx][R_SOLID1][(LOG2_MASS)] &&
@@ -4098,23 +4098,23 @@ matrix_fill_stress(
        */
 
       err = load_basis_functions(xi, bfd);
-      EH( err, "problem from load_basis_functions");
+      GOMA_EH( err, "problem from load_basis_functions");
 
       err = beer_belly();
-      EH(err, "beer_belly");
+      GOMA_EH(err, "beer_belly");
       if (neg_elem_volume) return -1;
       if( zero_detJ ) return -1;
       
       err = load_fv();
-      EH( err, "load_fv");
+      GOMA_EH( err, "load_fv");
        
       err = load_bf_grad();
-      EH( err, "load_bf_grad");
+      GOMA_EH( err, "load_bf_grad");
       
       if (pde[R_MESH1] || pd->v[pg->imtrx][R_MESH1])
 	{
 	  err = load_bf_mesh_derivs(); 
-	  EH( err, "load_bf_mesh_derivs");
+	  GOMA_EH( err, "load_bf_mesh_derivs");
 	}
       
       /*
@@ -4122,12 +4122,12 @@ matrix_fill_stress(
        * Gauss point.
        */
       err = load_fv_grads();
-      EH( err, "load_fv_grads");	  
+      GOMA_EH( err, "load_fv_grads");	  
             
       if ( pde[R_MESH1] ||  pd->v[pg->imtrx][R_MESH1])
 	{
 	  err = load_fv_mesh_derivs(1);
-	  EH( err, "load_fv_mesh_derivs");
+	  GOMA_EH( err, "load_fv_mesh_derivs");
 	}
 
       computeCommonMaterialProps_gp(time_value);
@@ -4143,7 +4143,7 @@ matrix_fill_stress(
                                      pg_data.hhv, pg_data.dhv_dxnode, pg_data.v_avg, pg_data.dv_dnode);
 	  if (err) return -1;
 	  err = segregate_stress_update( x_update );
-          EH(err, "assemble_stress_log_conf");
+          GOMA_EH(err, "assemble_stress_log_conf");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_stress_log_conf");
 	  if (err) return -1;
@@ -4153,7 +4153,7 @@ matrix_fill_stress(
         {
           err = assemble_emwave(time_value, theta, delta_t, &pg_data,
                                   R_EM_E1_REAL, EM_E1_REAL, EM_E1_IMAG);
-          EH( err, "assemble_emwave");
+          GOMA_EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_emwave");
           if (err) return -1;
@@ -4164,7 +4164,7 @@ matrix_fill_stress(
         {
           err = assemble_emwave(time_value, theta, delta_t, &pg_data,
                                   R_EM_E2_REAL, EM_E2_REAL, EM_E2_IMAG);
-          EH( err, "assemble_emwave");
+          GOMA_EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_emwave");
           if (err) return -1;
@@ -4175,7 +4175,7 @@ matrix_fill_stress(
         {
           err = assemble_emwave(time_value, theta, delta_t, &pg_data,
                                   R_EM_E3_REAL, EM_E3_REAL, EM_E3_IMAG);
-          EH( err, "assemble_emwave");
+          GOMA_EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_emwave");
           if (err) return -1;
@@ -4186,7 +4186,7 @@ matrix_fill_stress(
         {
           err = assemble_emwave(time_value, theta, delta_t, &pg_data,
                                   R_EM_E1_IMAG, EM_E1_IMAG, EM_E1_REAL);
-          EH( err, "assemble_emwave");
+          GOMA_EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_emwave");
           if (err) return -1;
@@ -4197,7 +4197,7 @@ matrix_fill_stress(
         {
           err = assemble_emwave(time_value, theta, delta_t, &pg_data,
                                   R_EM_E2_IMAG, EM_E2_IMAG, EM_E2_REAL);
-          EH( err, "assemble_emwave");
+          GOMA_EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_emwave");
           if (err) return -1;
@@ -4208,7 +4208,7 @@ matrix_fill_stress(
         {
           err = assemble_emwave(time_value, theta, delta_t, &pg_data,
                                   R_EM_E3_IMAG, EM_E3_IMAG, EM_E3_REAL);
-          EH( err, "assemble_emwave");
+          GOMA_EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_emwave");
           if (err) return -1;
@@ -4219,7 +4219,7 @@ matrix_fill_stress(
         {
           err = assemble_emwave(time_value, theta, delta_t, &pg_data,
                                   R_EM_H1_REAL, EM_H1_REAL, EM_H1_IMAG);
-          EH( err, "assemble_emwave");
+          GOMA_EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_emwave");
           if (err) return -1;
@@ -4230,7 +4230,7 @@ matrix_fill_stress(
         {
           err = assemble_emwave(time_value, theta, delta_t, &pg_data,
                                   R_EM_H2_REAL, EM_H2_REAL, EM_H2_IMAG);
-          EH( err, "assemble_emwave");
+          GOMA_EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_emwave");
           if (err) return -1;
@@ -4241,7 +4241,7 @@ matrix_fill_stress(
         {
           err = assemble_emwave(time_value, theta, delta_t, &pg_data,
                                   R_EM_H3_REAL, EM_H3_REAL, EM_H3_IMAG);
-          EH( err, "assemble_emwave");
+          GOMA_EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_emwave");
           if (err) return -1;
@@ -4252,7 +4252,7 @@ matrix_fill_stress(
         {
           err = assemble_emwave(time_value, theta, delta_t, &pg_data,
                                   R_EM_H1_IMAG, EM_H1_IMAG, EM_H1_REAL);
-          EH( err, "assemble_emwave");
+          GOMA_EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_emwave");
           if (err) return -1;
@@ -4263,7 +4263,7 @@ matrix_fill_stress(
         {
           err = assemble_emwave(time_value, theta, delta_t, &pg_data,
                                   R_EM_H2_IMAG, EM_H2_IMAG, EM_H2_REAL);
-          EH( err, "assemble_emwave");
+          GOMA_EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_emwave");
           if (err) return -1;
@@ -4274,7 +4274,7 @@ matrix_fill_stress(
         {
           err = assemble_emwave(time_value, theta, delta_t, &pg_data,
                                   R_EM_H3_IMAG, EM_H3_IMAG, EM_H3_REAL);
-          EH( err, "assemble_emwave");
+          GOMA_EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_emwave");
           if (err) return -1;
@@ -4316,7 +4316,7 @@ matrix_fill_stress(
 	    err = assemble_surface_stress(exo, x, ams, x_update, delta_t, theta, 
 					  ielem_type, ielem_type_mass, id_side, 
 					  neighbor, ielem, num_local_nodes);
-	    EH( err, "assemble_surface_stress"); 
+	    GOMA_EH( err, "assemble_surface_stress"); 
 #ifdef CHECK_FINITE
 	    err = CHECKFINITE("assemble_surface_stress"); 
 	    if (err) return -1;
@@ -4368,7 +4368,7 @@ matrix_fill_stress(
 				  ielem, ielem_type, num_local_nodes, ielem_dim,
 				  iconnect_ptr, elem_side_bc, num_total_nodes,
 				  WEAK_INT_SURF, time_value, element_search_grid, exo);
-	EH(err, " apply_integrated_bc");
+	GOMA_EH(err, " apply_integrated_bc");
 #ifdef CHECK_FINITE
 	err = CHECKFINITE("apply_integrated_bc"); 
 	if (err) return -1;
@@ -4382,7 +4382,7 @@ matrix_fill_stress(
                                   ielem, ielem_type, num_local_nodes, ielem_dim,
 				  iconnect_ptr, elem_side_bc, num_total_nodes,
                                   WEAK_SHELL_GRAD, time_value, exo);
-        EH(err, " apply_shell_grad_bc");
+        GOMA_EH(err, " apply_shell_grad_bc");
 #ifdef CHECK_FINITE
 	err = CHECKFINITE("apply_shell_grad_bc"); 
 	if (err) return -1;
@@ -4396,7 +4396,7 @@ matrix_fill_stress(
 					    ielem, ielem_type, num_local_nodes, ielem_dim, 
 					    iconnect_ptr, elem_side_bc, WEAK_SHARP_INT, exo );
 	}
-      EH(err, " apply_sharp_integrated_bc");
+      GOMA_EH(err, " apply_sharp_integrated_bc");
 #ifdef CHECK_FINITE
       err = CHECKFINITE("apply_sharp_integrated_bc"); 
       if (err) return -1;
@@ -4446,7 +4446,7 @@ matrix_fill_stress(
 					ielem_dim, iconnect_ptr, 
 					elem_edge_bc, num_total_nodes, 
 					WEAK_INT_EDGE, exo); 
-	EH( err, " apply_integrated_curve_bc"); 
+	GOMA_EH( err, " apply_integrated_curve_bc"); 
 #ifdef CHECK_FINITE
 	err = CHECKFINITE("apply_integrated_curve_bc"); 
 	if (err) return -1;
@@ -4539,7 +4539,7 @@ matrix_fill_stress(
 				 ielem, ielem_type, num_local_nodes, 
 				 ielem_dim, iconnect_ptr, num_total_nodes,
 				 exo);
-	  EH(err, " apply_rotated_bc");
+	  GOMA_EH(err, " apply_rotated_bc");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("apply_rotated_bc"); 
 	  if (err) return -1;
@@ -4685,7 +4685,7 @@ matrix_fill_stress(
 					ielem_type, num_local_nodes, ielem_dim,
 					iconnect_ptr, elem_side_bc, num_total_nodes, 
 					local_node_list_fs, time_value, exo);
-	    EH( err, " apply_point_colloc_bc");
+	    GOMA_EH( err, " apply_point_colloc_bc");
 #ifdef CHECK_FINITE
 	    err = CHECKFINITE("apply_point_colloc_bc"); 
 	    if (err) return -1;
@@ -4705,7 +4705,7 @@ matrix_fill_stress(
 				      ielem_dim, iconnect_ptr, elem_side_bc, 
 				      num_total_nodes, 
 				      STRONG_INT_SURF, time_value, element_search_grid, exo);
-	    EH( err, " apply_integrated_bc");
+	    GOMA_EH( err, " apply_integrated_bc");
 #ifdef CHECK_FINITE
 	    err = CHECKFINITE("apply_integrated_bc"); 
 	    if (err) return -1;
@@ -4739,7 +4739,7 @@ matrix_fill_stress(
 				   elem_side_bc, num_total_nodes, SPECIAL,
 				   CA_id, CA_fselem, CA_sselem, exo,
 				   time_value);
-	    EH( err, " apply_special_bc");
+	    GOMA_EH( err, " apply_special_bc");
 #ifdef CHECK_FINITE
 	    err = CHECKFINITE("apply_special_bc"); 
 	    if (err) return -1;
@@ -4762,7 +4762,7 @@ matrix_fill_stress(
 	      }
 	    else
 	      {
-		EH(GOMA_ERROR,"YOU cannot apply CONTACT_SURF BCs in mm_names.h with FILL field. R_PHASE only");
+		GOMA_EH(GOMA_ERROR,"YOU cannot apply CONTACT_SURF BCs in mm_names.h with FILL field. R_PHASE only");
 	      }
 
 	    err = apply_contact_bc (x, resid_vector, delta_t, theta,
@@ -4772,7 +4772,7 @@ matrix_fill_stress(
 				    ielem_dim, iconnect_ptr, elem_side_bc, 
 				    num_total_nodes, CONTACT_SURF,
 				    -1, NULL, NULL, NULL, NULL, time_value, exo);
-	    EH( err, " apply_contact_bc");
+	    GOMA_EH( err, " apply_contact_bc");
 #ifdef CHECK_FINITE
 	    err = CHECKFINITE("apply_contact_bc"); 
 	    if (err) return -1;
@@ -4822,7 +4822,7 @@ matrix_fill_stress(
 					ielem, ielem_type, num_local_nodes, 
 					ielem_dim,  iconnect_ptr, elem_edge_bc, 
 					num_total_nodes, STRONG_INT_EDGE, exo); 
-	EH( err, " apply_integrated_curve_bc");
+	GOMA_EH( err, " apply_integrated_curve_bc");
 #ifdef CHECK_FINITE
 	err = CHECKFINITE("apply_integrated_curve_bc"); 
 	if (err) return -1;
@@ -4842,7 +4842,7 @@ matrix_fill_stress(
 					 iconnect_ptr, elem_edge_bc, 
 					 num_total_nodes, 
 					 local_node_list_fs, time_value);
-	EH( err, " apply_point_colloc_bc");
+	GOMA_EH( err, " apply_point_colloc_bc");
 #ifdef CHECK_FINITE
 	err = CHECKFINITE("apply_point_colloc_bc"); 
 	if (err) return -1;
@@ -4869,7 +4869,7 @@ matrix_fill_stress(
    ********************************************************************************/
   
   err = put_dirichlet_in_matrix(x, num_total_nodes);
-  EH(err, " put_dirichlet_in_matrix");
+  GOMA_EH(err, " put_dirichlet_in_matrix");
 #ifdef CHECK_FINITE
   err = CHECKFINITE("put_dirichlet_in_matrix"); 
   if (err) return -1;
@@ -4984,7 +4984,7 @@ matrix_fill_stress(
 	
 	if (count != Num_CAs_done)
 	  {
-	    WH(-1,"\nNot all contact angle conditions were applied!\n");
+	    GOMA_WH(-1,"\nNot all contact angle conditions were applied!\n");
 	    for (j = 0;j < count;j++)
 	  	{
 	          fprintf(stderr,"CA:%d ID:%d fselem:%d sselem:%d Proc:%d\n",j,CA_id[j],CA_fselem[j],CA_sselem[j],CA_proc[j]);
@@ -5091,7 +5091,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 
 			  if (ei[pg->imtrx]->owningElementForColVar[k] != ielem) {
 			    if (ei[pg->imtrx]->owningElementForColVar[k] != -1) {
-			      EH(GOMA_ERROR, "Frontal solver can't handle Shell element jacobians\n");
+			      GOMA_EH(GOMA_ERROR, "Frontal solver can't handle Shell element jacobians\n");
 			    }
 			  }
 			  ldof = ei[pg->imtrx]->ln_to_first_dof[k][l];
@@ -5170,7 +5170,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 				if (pvar != -1) {
 				  if (ei[pg->imtrx]->owningElementForColVar[k] != ielem) {
 				    if (ei[pg->imtrx]->owningElementForColVar[k] != -1) {
-				      EH(GOMA_ERROR, "Frontal solver can't handle Shell element jacobians\n");
+				      GOMA_EH(GOMA_ERROR, "Frontal solver can't handle Shell element jacobians\n");
 				    }
 				  }
 				  ldof = ei[pg->imtrx]->ln_to_first_dof[k][l];
@@ -5227,7 +5227,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 		if (ie != je_new) {
 		  fprintf(stderr, "Oh fiddlesticks: ie = %d, je_new = %d\n",
 			  ie, je_new);
-		  EH(GOMA_ERROR, "LEC indexing error");
+		  GOMA_EH(GOMA_ERROR, "LEC indexing error");
 		}
 	      }
               resid_vector[ie] += lec->R[LEC_R_INDEX(MAX_PROB_VAR + ke,i)];
@@ -5317,10 +5317,10 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 				if (Nodes[ei_ptr->gnn_list[v][j]]->Mat_List.Length < 2) {
 				}
 			      }
-			      EH(je, "Bad var index.");
+			      GOMA_EH(je, "Bad var index.");
 			      ja = (ie == je) ?
 				ie : in_list(je, ija[ie], ija[ie+1], ija);
-			      EH(ja, "Could not find vbl in sparse matrix.");
+			      GOMA_EH(ja, "Could not find vbl in sparse matrix.");
                               a[ja] += lec->J[LEC_J_INDEX(pe,pv,i,j)];
 
 #ifdef DEBUG_LEC
@@ -5348,12 +5348,12 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 			    if (je != je_new) {
 			      fprintf(stderr, "Oh fiddlesticks: je = %d, je_new = %d\n",
 				      je, je_new);
-			      EH(GOMA_ERROR, "LEC Indexing error");
+			      GOMA_EH(GOMA_ERROR, "LEC Indexing error");
 			    }
-			    EH(je, "Bad var index.");
+			    GOMA_EH(je, "Bad var index.");
 			    ja  = (ie == je) ? ie :
 			      in_list(je, ija[ie], ija[ie+1], ija);
-			    EH(ja, "Could not find vbl in sparse matrix.");
+			    GOMA_EH(ja, "Could not find vbl in sparse matrix.");
                             a[ja] += lec->J[LEC_J_INDEX(pe,pv,i,j)];
 #ifdef DEBUG_LEC
 			    {
@@ -5410,7 +5410,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 			  if (ei[pg->imtrx]->owningElementForColVar[v] != -1) {
 			    ei_ptr = ei[pg->imtrx]->owningElement_ei_ptr[v];		
 			    if (ei_ptr == 0) {
-			      EH(GOMA_ERROR, "ei_ptr == 0\n");
+			      GOMA_EH(GOMA_ERROR, "ei_ptr == 0\n");
 			      exit(-1);
 			    }  
 			  }
@@ -5434,9 +5434,9 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 			      if (Nodes[ei[pg->imtrx]->gnn_list[v][j]]->Mat_List.Length < 2) {
 			      }
 			    }
-			    EH(je, "Bad var index.");
+			    GOMA_EH(je, "Bad var index.");
 			    ja = (ie == je) ? ie : in_list(je, ija[ie], ija[ie+1], ija);
-			    EH(ja, "Could not find vbl in sparse matrix.");  
+			    GOMA_EH(ja, "Could not find vbl in sparse matrix.");  
                             a[ja] += lec->J[LEC_J_INDEX(pe,pv,i,j)];
 
 #ifdef DEBUG_LEC
@@ -5459,7 +5459,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 			  if (ei[pg->imtrx]->owningElementForColVar[v] != -1) {
 			    ei_ptr = ei[pg->imtrx]->owningElement_ei_ptr[v];
 			    if (ei_ptr == 0) {
-			      EH(GOMA_ERROR, "ei slave pointer is null");
+			      GOMA_EH(GOMA_ERROR, "ei slave pointer is null");
 			      exit(-1);
 			    }
 			  } 
@@ -5474,12 +5474,12 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 			    fprintf(stderr,
 				    "Oh fiddlesticks: je = %d, je_new = %d\n",
 				    je, je_new);
-			    EH(GOMA_ERROR, "LEC Indexing error");
+			    GOMA_EH(GOMA_ERROR, "LEC Indexing error");
 			  }
-			  EH(je, "Bad var index.");
+			  GOMA_EH(je, "Bad var index.");
 			  ja = (ie == je) ? ie :
 			    in_list(je, ija[ie], ija[ie+1], ija);
-			  EH(ja, "Could not find vbl in sparse matrix.");
+			  GOMA_EH(ja, "Could not find vbl in sparse matrix.");
                           a[ja] += lec->J[LEC_J_INDEX(pe,pv,i,j)];
 #ifdef DEBUG_LEC
 			  {
@@ -5554,7 +5554,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 						  if (ei[pg->imtrx]->owningElementForColVar[v] != -1) {
 						    ei_ptr = ei[pg->imtrx]->owningElement_ei_ptr[v];
 						    if (ei_ptr == 0) {
-						      EH(GOMA_ERROR,"ei_ptr == 0\n");
+						      GOMA_EH(GOMA_ERROR,"ei_ptr == 0\n");
 						      exit(-1);
 						    }
 						  }		
@@ -5563,7 +5563,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 						  {
 						    J = Proc_Elem_Connect[ei_ptr->iconnect_ptr + j]; /* J is the global column block index */  
 						    K = in_list(J, bpntr[I], bpntr[I+1], bindx);  /* K is the block index */
-						    EH(K, " Can't locate column index in bindx ");
+						    GOMA_EH(K, " Can't locate column index in bindx ");
 						    a_ptr = a + indx[K]; /* a_ptr points to first entry in val of Kth block */
 			       
 						    if (v == MASS_FRACTION) 
@@ -5625,7 +5625,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 					      {
 						J =  Proc_Elem_Connect[ei_ptr->iconnect_ptr + j]; /* J is the global column block index */
 						K = in_list(J, bpntr[I], bpntr[I+1], bindx);  /* K is the block index */
-						EH(K, " Can't locate column index in bindx ");
+						GOMA_EH(K, " Can't locate column index in bindx ");
 						a_ptr = a + indx[K]; /* a_ptr points to first entry in val of Kth block */
 				
 						  if (v == MASS_FRACTION) 

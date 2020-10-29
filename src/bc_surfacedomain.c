@@ -91,12 +91,12 @@ mass_flux_sd_bc(double func[],
        pd->MeshMotion == DYNAMIC_LAGRANGIAN ) && pd->MeshInertia == 1)
     {
       err = belly_flop(elc->lame_mu);
-      EH(err, "error in belly flop");
+      GOMA_EH(err, "error in belly flop");
       if( neg_elem_volume ) return;
     }
   if (mp->PorousMediaType == CONTINUOUS)
     err = get_convection_velocity(vconv, vconv_old, d_vconv, dt, tt);
-  EH(err, "Error in calculating effective convection velocity");
+  GOMA_EH(err, "Error in calculating effective convection velocity");
 
   if (af->Assemble_Residual) {
       *func -= mp->mass_flux[wspec];

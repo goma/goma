@@ -99,7 +99,7 @@ shape (const double s,		/* quadrature point coordinates */
 
     default:
       fprintf(stderr, "Bad LINEAR_TRI case: %d!\n", Iquant);
-      EH( -1, "Bad selection of phi,dphids, etc.");
+      GOMA_EH( -1, "Bad selection of phi,dphids, etc.");
       break;
     }
     break;
@@ -179,7 +179,7 @@ shape (const double s,		/* quadrature point coordinates */
 
     default:
       fprintf(stderr, "Bad LINEAR_TRI case: %d!\n", Iquant);
-      EH( -1, "Bad selection of phi,dphids, etc.");
+      GOMA_EH( -1, "Bad selection of phi,dphids, etc.");
       break;
     }
     break;
@@ -253,7 +253,7 @@ shape (const double s,		/* quadrature point coordinates */
       fprintf(stderr, "\tIelem_type = %d\n", Ielem_type);
       fprintf(stderr, "\tIquant     = %d\n", Iquant);
       fprintf(stderr, "\tInode      = %d\n", Inode);
-      EH( -1, "Bad selection of phi,dphids, etc.");
+      GOMA_EH( -1, "Bad selection of phi,dphids, etc.");
       break;
     }
     break;
@@ -355,7 +355,7 @@ shape (const double s,		/* quadrature point coordinates */
 
     default:
       fprintf(stderr, "Bad S_BIQUAD_QUAD case: %d!\n", Iquant);
-      EH( -1, "Bad selection of phi,dphids, etc.");
+      GOMA_EH( -1, "Bad selection of phi,dphids, etc.");
       break;
     }
     break;
@@ -468,7 +468,7 @@ shape (const double s,		/* quadrature point coordinates */
 
     default:
       fprintf(stderr, "Bad BIQUAD_QUAD case: %d!\n", Iquant);
-      EH( -1, "Bad selection of phi,dphids, etc.");
+      GOMA_EH( -1, "Bad selection of phi,dphids, etc.");
       break;
     }
     break;
@@ -664,7 +664,7 @@ shape (const double s,		/* quadrature point coordinates */
 
     default:
       fprintf(stderr, "Bad TRILINEAR_HEX case: %d!\n", Iquant);
-      EH( -1, "Bad selection of phi,dphids, etc.");
+      GOMA_EH( -1, "Bad selection of phi,dphids, etc.");
       break;
     }
     break;
@@ -939,7 +939,7 @@ shape (const double s,		/* quadrature point coordinates */
 
     default:
       fprintf(stderr, "Bad S_TRIQUAD_HEX case: %d!\n", Iquant);
-      EH( -1, "Bad selection of phi,dphids, etc.");
+      GOMA_EH( -1, "Bad selection of phi,dphids, etc.");
       break;
     }
     break;
@@ -1298,7 +1298,7 @@ shape (const double s,		/* quadrature point coordinates */
       
     default:
       fprintf(stderr, "Bad TRIQUAD_HEX case: %d!\n", Iquant);
-      EH( -1, "Bad selection of phi,dphids, etc.");
+      GOMA_EH( -1, "Bad selection of phi,dphids, etc.");
       break;
     }
 
@@ -1342,7 +1342,7 @@ shape (const double s,		/* quadrature point coordinates */
       fprintf(stderr, "\tIelem_type = %d\n", Ielem_type);
       fprintf(stderr, "\tIquant     = %d\n", Iquant);
       fprintf(stderr, "\tInode      = %d\n", Inode);
-      EH( -1, "Bad selection of phi,dphids, etc.");
+      GOMA_EH( -1, "Bad selection of phi,dphids, etc.");
       break;
     }
     break;
@@ -1386,7 +1386,7 @@ shape (const double s,		/* quadrature point coordinates */
  
     default:
       fprintf(stderr, "Bad QUAD_BAR case: %d!\n", Iquant);
-      EH( -1, "Bad selection of phi,dphids, etc.");
+      GOMA_EH( -1, "Bad selection of phi,dphids, etc.");
       break;
     }
     break;

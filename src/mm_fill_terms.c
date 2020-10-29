@@ -372,14 +372,14 @@ assemble_mesh (double time,
      }
    else
      {
-       EH(GOMA_ERROR, "Unrecognized MeshSourceModel");
+       GOMA_EH(GOMA_ERROR, "Unrecognized MeshSourceModel");
      }
 
   /*
    * Get the deformation gradients and tensors if needed
    */
   err = belly_flop(mu);
-  EH(err, "error in belly flop");
+  GOMA_EH(err, "error in belly flop");
   if (err == 2) return(err);
 
   /*
@@ -554,7 +554,7 @@ assemble_mesh (double time,
 	      advection = 0.;
 	      if ( advection_on )
 		{
-		  WH(-1,"Warning: mesh advection unverified.\n");
+		  GOMA_WH(-1,"Warning: mesh advection unverified.\n");
 		  for ( p=0; p<dim; p++)
 		    {
 		      for ( q=0; q<dim; q++)
@@ -1408,7 +1408,7 @@ assemble_energy(double time,	/* present time value */
   else if( mp->Ewt_funcModel == SUPG )
     {
       if( !pd->gv[R_MOMENTUM1])
-        EH(GOMA_ERROR, " must have momentum equation velocity field for energy equation upwinding. You may want to turn it off");
+        GOMA_EH(GOMA_ERROR, " must have momentum equation velocity field for energy equation upwinding. You may want to turn it off");
       supg = mp->Ewt_func;
     }
 
@@ -1466,12 +1466,12 @@ assemble_energy(double time,	/* present time value */
       cr->MeshMotion == DYNAMIC_LAGRANGIAN)
     {
       err = get_convection_velocity(vconv, vconv_old, d_vconv, dt, tt);
-      EH(err, "Error in calculating effective convection velocity");
+      GOMA_EH(err, "Error in calculating effective convection velocity");
     }
   else if ( cr->MeshMotion == TOTAL_ALE)
     {
       err = get_convection_velocity_rs(vconv, vconv_old, d_vconv, dt, tt);
-      EH(err, "Error in calculating effective convection velocity_rs");
+      GOMA_EH(err, "Error in calculating effective convection velocity_rs");
     }
 
 
@@ -2807,7 +2807,7 @@ assemble_momentum(dbl time,       /* current time */
 
 
       if (mp->PorousMediaType != POROUS_BRINKMAN)
-	WH(-1, "Set Porous term multiplier in continuous medium");
+	GOMA_WH(-1, "Set Porous term multiplier in continuous medium");
 
       vis = flowing_liquid_viscosity(d_flow_mu);
 
@@ -2826,7 +2826,7 @@ assemble_momentum(dbl time,       /* current time */
 	}
       else
 	{
-	  EH(GOMA_ERROR,"Unrecognizable Permeability model");
+	  GOMA_EH(GOMA_ERROR,"Unrecognizable Permeability model");
 	}
     }
   else
@@ -3055,7 +3055,7 @@ assemble_momentum(dbl time,       /* current time */
 		    }
 		  else if (vis == 0. && mp->viscosity == 0.)
 		    {
-		      EH(GOMA_ERROR, "cannot have both flowing liquid viscosity and mp->viscosity equal to zero");
+		      GOMA_EH(GOMA_ERROR, "cannot have both flowing liquid viscosity and mp->viscosity equal to zero");
 		    }
 		}
 
@@ -3514,7 +3514,7 @@ assemble_momentum(dbl time,       /* current time */
 				}
 			      else if (mp->viscosity == 0.0 )
 				{
-				  EH(GOMA_ERROR, "Error in Porous Brinkman specs.  See PRS ");
+				  GOMA_EH(GOMA_ERROR, "Error in Porous Brinkman specs.  See PRS ");
 				}
 			    }
 			}
@@ -3679,7 +3679,7 @@ assemble_momentum(dbl time,       /* current time */
 				    }
 				  else if (mp->viscosity == 0)
 				    {
-				      EH(GOMA_ERROR, "incorrect viscosity settings on porous_brinkman");
+				      GOMA_EH(GOMA_ERROR, "incorrect viscosity settings on porous_brinkman");
 				    }
 				}
 
@@ -3709,7 +3709,7 @@ assemble_momentum(dbl time,       /* current time */
 				}
 			      else
 				{
-				  EH(GOMA_ERROR, "incorrect viscosity settings on porous_brinkman");
+				  GOMA_EH(GOMA_ERROR, "incorrect viscosity settings on porous_brinkman");
 				}
 			    }
 
@@ -4417,7 +4417,7 @@ assemble_momentum(dbl time,       /* current time */
 
 				else if (vis == 0. && mp->viscosity == 0.)
 				  {
-				    EH(GOMA_ERROR, "cannot have both flowing liquid viscosity and mp->viscosity equal to zero");
+				    GOMA_EH(GOMA_ERROR, "cannot have both flowing liquid viscosity and mp->viscosity equal to zero");
 				  }
 
 			      }
@@ -4856,7 +4856,7 @@ assemble_continuity(dbl time_value,   /* current time */
   if ( lagrangian_mesh_motion && pd->gv[R_MESH1])
     {
       err = belly_flop(elc->lame_mu);
-      EH(err, "error in belly flop");
+      GOMA_EH(err, "error in belly flop");
       if (err == 2) return(err);
     }
 
@@ -4869,7 +4869,7 @@ assemble_continuity(dbl time_value,   /* current time */
   if(total_ale_and_velo_off && pd->gv[R_SOLID1])
     {
       err = belly_flop_rs(elc_rs->lame_mu);
-      EH(err, "error in belly flop for real solid");
+      GOMA_EH(err, "error in belly flop for real solid");
       if (err == 2) return(err);	  
     }
 
@@ -4920,7 +4920,7 @@ assemble_continuity(dbl time_value,   /* current time */
 	}
       else
 	{
-	  EH(GOMA_ERROR, "invalid porosity model");
+	  GOMA_EH(GOMA_ERROR, "invalid porosity model");
 	}
     }
   
@@ -4928,14 +4928,14 @@ assemble_continuity(dbl time_value,   /* current time */
        electrode_kinetics_on ) /*  RSL 7/25/00  */
     {
       err = get_continuous_species_terms(&s_terms, 0.0, tt, dt, pg_data->hsquared);
-      EH(err,"problem in getting the species terms");
+      GOMA_EH(err,"problem in getting the species terms");
     }
 
   if ( ion_reactions_on ) /*  RSL 3/19/01 and 6/6/02  */
     {
       zero_structure(&s_terms, sizeof(struct Species_Conservation_Terms), 1);
       err = get_continuous_species_terms(&s_terms, time, tt, dt, pg_data->hsquared);
-      EH(err,"problem in getting the species terms");
+      GOMA_EH(err,"problem in getting the species terms");
     }
 
 	  
@@ -6267,7 +6267,7 @@ assemble_volume(bool owner)
 	}
       else
 	{
-	  EH(GOMA_ERROR," must have momentum equation on for this AC");
+	  GOMA_EH(GOMA_ERROR," must have momentum equation on for this AC");
 	}
       break;
     case 5: /* ideal gas version */
@@ -6279,7 +6279,7 @@ assemble_volume(bool owner)
       break;
 
     default:
-      EH(GOMA_ERROR, "assemble_volume() unknown integral calculation\n");
+      GOMA_EH(GOMA_ERROR, "assemble_volume() unknown integral calculation\n");
       break;
     }
 
@@ -6489,7 +6489,7 @@ assemble_curvature (void) /*  time step size      */
 
   /* only relevant if level set field exists */
 
-  if ( ls == NULL ) EH(GOMA_ERROR," Curvature equation can only be used in conjunction with level set.");
+  if ( ls == NULL ) GOMA_EH(GOMA_ERROR," Curvature equation can only be used in conjunction with level set.");
 
   peqn = upd->ep[pg->imtrx][eqn];
 
@@ -6750,7 +6750,7 @@ assemble_div_normals(void) /*  time step size      */
 
   /* only relevant if level set field exists */
 
-  if ( ls == NULL ) EH(GOMA_ERROR," Curvature equation can only be used in conjunction with level set.");
+  if ( ls == NULL ) GOMA_EH(GOMA_ERROR," Curvature equation can only be used in conjunction with level set.");
 
   peqn = upd->ep[pg->imtrx][eqn];
 
@@ -6970,7 +6970,7 @@ assemble_LSvelocity( bool owner, int ielem )
     }
 
   if ( vel_dim == -1 )
-    EH(GOMA_ERROR, "assemble_LSVelocity(): Couldn't identify velocity component and phase.\n");
+    GOMA_EH(GOMA_ERROR, "assemble_LSVelocity(): Couldn't identify velocity component and phase.\n");
 
   load_lsi(alpha);
   load_lsi_derivs();
@@ -7142,7 +7142,7 @@ assemble_normals(void)
   /* only relevant if level set field exists */
 
   if ( ls == NULL ) {
-    WH(-1," Normals to level set can only be used in conjunction with level set.");
+    GOMA_WH(-1," Normals to level set can only be used in conjunction with level set.");
     return(status);
   }
 
@@ -7382,7 +7382,7 @@ assemble_ls_momentum_source(void)
   /* only relevant if level set field exists */
 
   if ( ls == NULL ) {
-    WH(-1," Normals to level set can only be used in conjunction with level set.");
+    GOMA_WH(-1," Normals to level set can only be used in conjunction with level set.");
     return(status);
   }
 
@@ -7916,7 +7916,7 @@ load_fv(void)
   /* load eqn and variable number in tensor form */
   if( pdgv[POLYMER_STRESS11] ) {
     status = stress_eqn_pointer(v_s);
-    EH(status, "stress_eqn_pointer(v_s)");
+    GOMA_EH(status, "stress_eqn_pointer(v_s)");
   }
   if( pdgv[VELOCITY_GRADIENT11] ) {
     v_g[0][0] = VELOCITY_GRADIENT11;
@@ -8793,7 +8793,7 @@ load_fv(void)
     }
 
   status = load_coordinate_scales(pd->CoordinateSystem, fv);
-  EH(status, "load_coordinate_scales(fv)");
+  GOMA_EH(status, "load_coordinate_scales(fv)");
 
   /*
    * Velocity (vector)...
@@ -15443,7 +15443,7 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
         err = level_set_property(rho0, rho1, width, &rho, NULL);
       else
         err = level_set_property(rho0, rho1, width, &rho, d_rho->F);
-      EH(err, "level_set_property() failed for density.");
+      GOMA_EH(err, "level_set_property() failed for density.");
     }
 
   else if (mp->DensityModel == DENSITY_CONST_PHASE_FUNC ) 
@@ -16003,7 +16003,7 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
 	{
 	  foam_species_source(mp->u_species_source[0]);
 	} else {
-	  EH(GOMA_ERROR, "Must specify FOAM species source in the material's file");
+	  GOMA_EH(GOMA_ERROR, "Must specify FOAM species source in the material's file");
 	}
     
       rho = 0.;
@@ -16123,7 +16123,7 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
     }
   else if (mp->DensityModel == DENSITY_CONSTANT_LAST_CONC) {
     if (matrl_species_var_type != SPECIES_CONCENTRATION) {
-      EH(GOMA_ERROR,"unimplemented");
+      GOMA_EH(GOMA_ERROR,"unimplemented");
     }
     if (pd->Num_Species >  pd->Num_Species_Eqn) {
       w =  pd->Num_Species_Eqn;
@@ -16145,7 +16145,7 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
   }
   else
     {
-      EH(GOMA_ERROR,"Unrecognized density model");
+      GOMA_EH(GOMA_ERROR,"Unrecognized density model");
     }
 
   if( ls != NULL && mp->mp2nd != NULL &&
@@ -16358,11 +16358,11 @@ conductivity( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
 
       rho = density(d_rho, time);
       if (mp->len_u_thermal_conductivity < 2) {
-	EH(GOMA_ERROR, "Expected at least 2 constants for thermal conductivity FOAM_PMDI_10");
+	GOMA_EH(GOMA_ERROR, "Expected at least 2 constants for thermal conductivity FOAM_PMDI_10");
 	return 0;
       }
       if (mp->DensityModel != DENSITY_FOAM_PMDI_10) {
-	EH(GOMA_ERROR, "FOAM_PMDI_10 Thermal conductivity requires FOAM_PMDI_10 density");
+	GOMA_EH(GOMA_ERROR, "FOAM_PMDI_10 Thermal conductivity requires FOAM_PMDI_10 density");
 	return 0;
       }
 
@@ -16418,7 +16418,7 @@ conductivity( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
 		    }
 	          break;
 	        default:
-		      EH(GOMA_ERROR, "Variable function not yet implemented in material property table");
+		      GOMA_EH(GOMA_ERROR, "Variable function not yet implemented in material property table");
 	        }
 	    }
         }
@@ -16447,12 +16447,12 @@ conductivity( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
   else if (mp->ConductivityModel == EXTERNAL_FIELD)
     {
       i_therm_cond = mp->thermal_cond_external_field; 
-      EH(i_therm_cond, "Thermal cond. external field not found!");
+      GOMA_EH(i_therm_cond, "Thermal cond. external field not found!");
       k = fv->external_field[i_therm_cond]*mp->u_thermal_conductivity[0];
     }
   else
     {
-      EH(GOMA_ERROR,"Unrecognized thermal conductivity model");
+      GOMA_EH(GOMA_ERROR,"Unrecognized thermal conductivity model");
     }
 
   if( ls != NULL && 
@@ -16667,14 +16667,14 @@ heat_capacity( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp,
 		    }
 	          break;
 	        default:
-		      EH(GOMA_ERROR, "Variable function not yet implemented in material property table");
+		      GOMA_EH(GOMA_ERROR, "Variable function not yet implemented in material property table");
 	        }
             }
 	}
     }
   else
     {
-      EH(GOMA_ERROR,"Unrecognized heat capacity model");
+      GOMA_EH(GOMA_ERROR,"Unrecognized heat capacity model");
     }
 
   if( ls != NULL && 
@@ -16878,7 +16878,7 @@ acoustic_impedance( CONDUCTIVITY_DEPENDENCE_STRUCT *d_R,
   if(mp->Acoustic_ImpedanceModel == USER )
     {
 
-	EH(GOMA_ERROR,"user acoustic impedance code not ready yet");
+	GOMA_EH(GOMA_ERROR,"user acoustic impedance code not ready yet");
 	/*
 	  usr_acoustic_impedance(mp->u_acoustic_impedance,time);
 	*/
@@ -16946,7 +16946,7 @@ acoustic_impedance( CONDUCTIVITY_DEPENDENCE_STRUCT *d_R,
 		    }
 	          break;
 	        default:
-		      EH(GOMA_ERROR, "Variable function not yet implemented in material property table");
+		      GOMA_EH(GOMA_ERROR, "Variable function not yet implemented in material property table");
 	        }
 	    }
         }
@@ -16974,7 +16974,7 @@ acoustic_impedance( CONDUCTIVITY_DEPENDENCE_STRUCT *d_R,
     }
   else
     {
-      EH(GOMA_ERROR,"Unrecognized acoustic impedance model");
+      GOMA_EH(GOMA_ERROR,"Unrecognized acoustic impedance model");
     }
 
   if( ls != NULL && 
@@ -17055,7 +17055,7 @@ wave_number( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
 		    }
 	          break;
 	        default:
-		      EH(GOMA_ERROR, "Variable function not yet implemented in material property table");
+		      GOMA_EH(GOMA_ERROR, "Variable function not yet implemented in material property table");
 	        }
 	    }
         }
@@ -17083,7 +17083,7 @@ wave_number( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
     }
   else
     {
-      EH(GOMA_ERROR,"Unrecognized acoustic wave number model");
+      GOMA_EH(GOMA_ERROR,"Unrecognized acoustic wave number model");
     }
 
   if( ls != NULL && 
@@ -17236,7 +17236,7 @@ acoustic_absorption( CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha,
 		    }
 	          break;
 	        default:
-		      EH(GOMA_ERROR, "Variable function not yet implemented in material property table");
+		      GOMA_EH(GOMA_ERROR, "Variable function not yet implemented in material property table");
 	        }
 	    }
         }
@@ -17264,7 +17264,7 @@ acoustic_absorption( CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha,
     }
   else
     {
-      EH(GOMA_ERROR,"Unrecognized acoustic absorption model");
+      GOMA_EH(GOMA_ERROR,"Unrecognized acoustic absorption model");
     }
 
   if( ls != NULL && 
@@ -17419,7 +17419,7 @@ light_absorption( CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha,
 		    }
 	          break;
 	        default:
-		      EH(GOMA_ERROR, "Variable function not yet implemented in material property table");
+		      GOMA_EH(GOMA_ERROR, "Variable function not yet implemented in material property table");
 	        }
 	    }
         }
@@ -17447,7 +17447,7 @@ light_absorption( CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha,
     }
   else
     {
-      EH(GOMA_ERROR,"Unrecognized light absorption model");
+      GOMA_EH(GOMA_ERROR,"Unrecognized light absorption model");
     }
 
   if( ls != NULL && 
@@ -17603,7 +17603,7 @@ refractive_index( CONDUCTIVITY_DEPENDENCE_STRUCT *d_n,
 		    }
 	          break;
 	        default:
-		      EH(GOMA_ERROR, "Variable function not yet implemented in material property table");
+		      GOMA_EH(GOMA_ERROR, "Variable function not yet implemented in material property table");
 	        }
 	    }
         }
@@ -17631,7 +17631,7 @@ refractive_index( CONDUCTIVITY_DEPENDENCE_STRUCT *d_n,
     }
   else
     {
-      EH(GOMA_ERROR,"Unrecognized refractive index model");
+      GOMA_EH(GOMA_ERROR,"Unrecognized refractive index model");
     }
 
   if( ls != NULL && 
@@ -17785,7 +17785,7 @@ extinction_index( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
 		    }
 	          break;
 	        default:
-		      EH(GOMA_ERROR, "Variable function not yet implemented in material property table");
+		      GOMA_EH(GOMA_ERROR, "Variable function not yet implemented in material property table");
 	        }
 	    }
         }
@@ -17813,7 +17813,7 @@ extinction_index( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
     }
   else
     {
-      EH(GOMA_ERROR,"Unrecognized extinction index model");
+      GOMA_EH(GOMA_ERROR,"Unrecognized extinction index model");
     }
 
   if( ls != NULL && 
@@ -18059,7 +18059,7 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
 	}
       else
         {
-          EH(GOMA_ERROR, "Unknown density model for variable density");
+          GOMA_EH(GOMA_ERROR, "Unknown density model for variable density");
         }
 
     }
@@ -18121,44 +18121,44 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
     }
     else
     {
-      EH(GOMA_ERROR, "Unknown density model for variable density no gas");
+      GOMA_EH(GOMA_ERROR, "Unknown density model for variable density no gas");
     }
 
   }
   else if (mp->MomentumSourceModel == SUSPENSION_PM)
     {
       err = suspension_pm_fluid_momentum_source(f, df);
-      EH(err,"Problems in suspension_pm_fluid_momentum_source");
+      GOMA_EH(err,"Problems in suspension_pm_fluid_momentum_source");
     }
   else if (mp->MomentumSourceModel == SUSPEND || mp->MomentumSourceModel == SUSPENSION)
     {
       err = suspend_momentum_source(f, df);
-      EH(err,"Problems in suspend_momentum_source");
+      GOMA_EH(err,"Problems in suspend_momentum_source");
     }
   else if (mp->MomentumSourceModel == BOUSS )
     {
       err = bouss_momentum_source(f, df, 0, TRUE);
-      EH(err,"Problems in bouss_momentum_source");
+      GOMA_EH(err,"Problems in bouss_momentum_source");
     }
   else if (mp->MomentumSourceModel == BOUSS_JXB )
     {
       err = bouss_momentum_source(f, df, 1, FALSE);
-      EH(err,"Problems in bouss_momentum_source");
+      GOMA_EH(err,"Problems in bouss_momentum_source");
     }
   else if (mp->MomentumSourceModel == BOUSSINESQ )
     {
       err = bouss_momentum_source(f, df, 0, FALSE);
-      EH(err,"Problems in bouss_momentum_source");
+      GOMA_EH(err,"Problems in bouss_momentum_source");
     }
   else if (mp->MomentumSourceModel == EHD_POLARIZATION )
     {
       err = EHD_POLARIZATION_source(f, df);
-      EH(err,"Problems in EHD_POLARIZATION force routine");
+      GOMA_EH(err,"Problems in EHD_POLARIZATION force routine");
     }
   else if (mp->MomentumSourceModel == GRAV_VIBRATIONAL )
     {
       err = gravity_vibrational_source(f, df, time);
-      EH(err,"Problems in GRAV_VIBRATIONAL force routine");
+      GOMA_EH(err,"Problems in GRAV_VIBRATIONAL force routine");
     }
   else if (mp->MomentumSourceModel == FILL_SRC)
     {
@@ -18229,7 +18229,7 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
      }
   else
     {
-      EH(GOMA_ERROR,"No such Navier-Stokes Source Model");
+      GOMA_EH(GOMA_ERROR,"No such Navier-Stokes Source Model");
     }
 
   if( ls != NULL &&
@@ -18383,11 +18383,11 @@ apply_table_mp( double *func, struct Data_Table *table)
     }
     else if(strcmp(table->t_name[i], "FAUX_PLASTIC")==0)
     {
-      EH(GOMA_ERROR, "Oops, I shouldn't be using this call for FAUX_PLASTIC.");
+      GOMA_EH(GOMA_ERROR, "Oops, I shouldn't be using this call for FAUX_PLASTIC.");
     }
     else
     {
-      EH(GOMA_ERROR, "Material Table Model Error-Unknown Function Column ");
+      GOMA_EH(GOMA_ERROR, "Material Table Model Error-Unknown Function Column ");
     }
   }
 
@@ -18610,7 +18610,7 @@ interpolate_table( struct Data_Table *table,
       if(iinter == 1) 
       { 
 	fprintf(stderr," MP Interpolate Error - Need more than 1 point per set");
-	EH(GOMA_ERROR, "Table interpolation not implemented");
+	GOMA_EH(GOMA_ERROR, "Table interpolation not implemented");
       }
 
       istartx=iinter;
@@ -18662,7 +18662,7 @@ interpolate_table( struct Data_Table *table,
        break;
 
   default:
-      EH(GOMA_ERROR, "Table interpolation order not implemented");
+      GOMA_EH(GOMA_ERROR, "Table interpolation order not implemented");
   }
 
   return(func);
@@ -18907,7 +18907,7 @@ table_distance_search( struct Data_Table *table,
       if(iinter == 1) 
       { 
 	fprintf(stderr," MP Interpolate Error - Need more than 1 point per set");
-	EH(GOMA_ERROR, "Table interpolation not implemented");
+	GOMA_EH(GOMA_ERROR, "Table interpolation not implemented");
       }
 
       istartx=iinter;
@@ -18959,7 +18959,7 @@ table_distance_search( struct Data_Table *table,
        break;
 
   default:
-      EH(GOMA_ERROR, "Table interpolation order not implemented");
+      GOMA_EH(GOMA_ERROR, "Table interpolation order not implemented");
   }
 
   return(dist_min);
@@ -19133,7 +19133,7 @@ continuous_surface_tension_old(double st, double csf[DIM][DIM], struct Level_Set
   var =  ls->var;
 
   if (var != FILL) {
-    EH(GOMA_ERROR, "Unknown fill variable");
+    GOMA_EH(GOMA_ERROR, "Unknown fill variable");
   }
 
   /* Fetch the level set interface functions. */
@@ -19351,7 +19351,7 @@ quad_isomap_invert( const double x1,
 
 	default:
 	fprintf(stderr,"\n Unknown element order - quad_isomap\n");
-	EH(GOMA_ERROR,"Fatal Error");
+	GOMA_EH(GOMA_ERROR,"Fatal Error");
 	}
 
 /**  gather local node numbers  **/
@@ -19516,7 +19516,7 @@ quad_isomap_invert( const double x1,
             fprintf(stderr," pquad iteration failed %d %g %g %g\n",iter,
  			xi[0],xi[1],xi[2]);
             fprintf(stderr," point %g %g %g\n",x1,y1,z1);
-		EH(GOMA_ERROR,"Fatal Error");
+		GOMA_EH(GOMA_ERROR,"Fatal Error");
                 }
 
 /*evaluate function             */
@@ -19624,7 +19624,7 @@ quad_isomap_invert( const double x1,
 
 	default:
 	fprintf(stderr,"\n Unknown element order - quad_isomap\n");
-	EH(GOMA_ERROR,"Fatal Error");
+	GOMA_EH(GOMA_ERROR,"Fatal Error");
 	}
 
         for( i=0; i<elem_nodes; i++)
@@ -19839,7 +19839,7 @@ load_matrl_statevector(MATRL_PROP_STRUCT *mp_local)
 	sv[var_type] = scalar_fv_fill_altmatrl(esp->poynt[1], lvdesc, num_dofs,
 					       var_type);
       } else {
-        EH(GOMA_ERROR,"Unimplemented");
+        GOMA_EH(GOMA_ERROR,"Unimplemented");
       }
 
     }
@@ -20241,11 +20241,11 @@ double FoamVolumeSource(double time,
 	}
 
 	if (wCO2Liq == -1) {
-	  EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_CO2_LIQ");
+	  GOMA_EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_CO2_LIQ");
 	} else if (wCO2Gas == -1) {
-	  EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_CO2_GAS");
+	  GOMA_EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_CO2_GAS");
 	} else if (wH2O == -1) {
-	  EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_H2O");
+	  GOMA_EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_H2O");
 	}
 
 	double M_CO2 = mp->u_density[0];
@@ -20393,9 +20393,9 @@ double FoamVolumeSource(double time,
 	}
 
 	if (wCO2 == -1) {
-	  EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_CO2");
+	  GOMA_EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_CO2");
 	} else if (wH2O == -1) {
-	  EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_H2O");
+	  GOMA_EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_H2O");
 	}
 
 	double M_CO2 = mp->u_density[0];
@@ -20827,7 +20827,7 @@ double REFVolumeSource (double time,
        foam_species_source(mp->u_species_source[0]);
 
      } else {
-       EH(GOMA_ERROR, "Must specify FOAM species source in the material's file");
+       GOMA_EH(GOMA_ERROR, "Must specify FOAM species source in the material's file");
      } 
 
   if (pd->TimeIntegration != STEADY ) 
@@ -21331,7 +21331,7 @@ assemble_PPPS_generalized(Exo_DB *exo)
   if(pd->v[pg->imtrx][MESH_DISPLACEMENT1] && af->Assemble_Jacobian)
     {
       npass = 2;
-      EH(GOMA_ERROR,"need to work out numerical jacobian for PSPP and moving mesh");
+      GOMA_EH(GOMA_ERROR,"need to work out numerical jacobian for PSPP and moving mesh");
     }
 
   for (ipass = 0; ipass < npass; ipass++)
@@ -21377,7 +21377,7 @@ assemble_PPPS_generalized(Exo_DB *exo)
 		}
 	    }
 	  mu = viscosity(gn, gamma, d_mu);
-	  if(gn->ConstitutiveEquation != NEWTONIAN ) EH(GOMA_ERROR,"PSPP not available for non_Newtonian yet.   Sorry."); 
+	  if(gn->ConstitutiveEquation != NEWTONIAN ) GOMA_EH(GOMA_ERROR,"PSPP not available for non_Newtonian yet.   Sorry."); 
 
 	  visc_e += mu*d_vol;
       
@@ -21490,8 +21490,8 @@ assemble_PPPS_generalized(Exo_DB *exo)
       
       dsyev_("V", "U", &(ei[pg->imtrx]->ielem_dim), A, &(ei[pg->imtrx]->ielem_dim), W, WORK, &LWORK, &INFO, 1, 1); 
       
-      if (INFO > 0) EH(GOMA_ERROR, "dsyev falied to converge");
-      if (INFO < 0) EH(GOMA_ERROR, "an argument of dsyev had an illegal value");
+      if (INFO > 0) GOMA_EH(GOMA_ERROR, "dsyev falied to converge");
+      if (INFO < 0) GOMA_EH(GOMA_ERROR, "an argument of dsyev had an illegal value");
       
       for(j = 0; j < ei[pg->imtrx]->ielem_dim; j++)
 	{
@@ -21636,7 +21636,7 @@ assemble_PPPS_generalized(Exo_DB *exo)
 		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
                       /* lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += numerical piece; */
-		      EH(GOMA_ERROR,"need to finish off numerical jacobian for PPSP mesh displ");
+		      GOMA_EH(GOMA_ERROR,"need to finish off numerical jacobian for PPSP mesh displ");
 		    }
 		}
 	    }
@@ -21726,7 +21726,7 @@ apply_distributed_sources ( int elem, double width,
 	for(i=0 ; i<ei[pg->imtrx]->num_local_nodes ; i++)	{ls_F[i]=*esp->F[i];}
 	i = adaptive_weight( ad_wt, ip_total, ei[pg->imtrx]->ielem_dim, ls_F, ls->Length_Scale,
 				3, ielem_type);
-	WH(i, "problem with adaptive weight routine");
+	GOMA_WH(i, "problem with adaptive weight routine");
     }
 
   for( ip=0; ip<ip_total ; ip++ )
@@ -21757,30 +21757,30 @@ apply_distributed_sources ( int elem, double width,
           if ( num_elem_passes == 2 ) ls->Elem_Sign = -1 + 2*ipass;
                
           err = load_basis_functions( xi, bfd);
-          EH( err, "problem from load_basis_functions");
+          GOMA_EH( err, "problem from load_basis_functions");
 
           err = beer_belly();
-          EH( err, "beer_belly");
+          GOMA_EH( err, "beer_belly");
 
           err = load_fv();
-          EH( err, "load_fv");
+          GOMA_EH( err, "load_fv");
 
           err = load_bf_grad();
-          EH( err, "load_bf_grad");
+          GOMA_EH( err, "load_bf_grad");
 
           if ( pd->e[pg->imtrx][R_MESH1] )
             {
               err = load_bf_mesh_derivs();
-              EH( err, "load_bf_mesh_derivs");
+              GOMA_EH( err, "load_bf_mesh_derivs");
             }
 
           err = load_fv_grads();
-          EH( err, "load_fv_grads");
+          GOMA_EH( err, "load_fv_grads");
 
           if ( pd->e[pg->imtrx][R_MESH1] )
             {
               err = load_fv_mesh_derivs(1);
-              EH( err, "load_fv_mesh_derivs");
+              GOMA_EH( err, "load_fv_mesh_derivs");
             }
 
           load_lsi( ls->Length_Scale );
@@ -21917,14 +21917,14 @@ apply_distributed_sources ( int elem, double width,
               if( pd->e[pg->imtrx][R_MOMENTUM1] )
                 {
                   err = assemble_momentum_path_dependence(time, theta, dt, pg_data);
-                  EH( err, "assemble_momentum_path_dependence");
+                  GOMA_EH( err, "assemble_momentum_path_dependence");
                 }
               if( pd->e[pg->imtrx][R_PRESSURE] )
                 {
 #ifndef DARWIN_HACK
 	           err = assemble_continuity_path_dependence(
                      time, theta, dt,pg_data);
-                   EH( err, "assemble_continuity_path_dependence");
+                   GOMA_EH( err, "assemble_continuity_path_dependence");
 #endif
                 }
 	      if( pd->e[pg->imtrx][R_ENERGY] )
@@ -23097,7 +23097,7 @@ assemble_cap_hysing(double dt, double scale)
   */
   if ( ls->CalcSurfDependencies )
     {
-      EH(GOMA_ERROR, "Calc surf dependencies not implemented");
+      GOMA_EH(GOMA_ERROR, "Calc surf dependencies not implemented");
 
     }
 #endif
@@ -23221,7 +23221,7 @@ assemble_cap_hysing(double dt, double scale)
 		  var = MESH_DISPLACEMENT1;
 		  if(pd->v[pg->imtrx][var])
 		    {
-		      EH(GOMA_ERROR, "Jacobian terms for hysing capillary wrt mesh not implemented");
+		      GOMA_EH(GOMA_ERROR, "Jacobian terms for hysing capillary wrt mesh not implemented");
 		    }
 
 		}
@@ -23297,7 +23297,7 @@ assemble_cap_denner_diffusion(double dt, double scale)
   */
   if ( ls->CalcSurfDependencies )
     {
-      EH(GOMA_ERROR, "Calc surf dependencies not implemented");
+      GOMA_EH(GOMA_ERROR, "Calc surf dependencies not implemented");
     }
 #endif
 
@@ -23432,7 +23432,7 @@ assemble_cap_denner_diffusion(double dt, double scale)
 		  var = MESH_DISPLACEMENT1;
 		  if(pd->v[pg->imtrx][var])
 		    {
-		      EH(GOMA_ERROR, "Jacobian terms for denner capillary diffusion wrt mesh not implemented");
+		      GOMA_EH(GOMA_ERROR, "Jacobian terms for denner capillary diffusion wrt mesh not implemented");
 		    }
 
 		}
@@ -23506,7 +23506,7 @@ assemble_cap_denner_diffusion_n(double dt, double scale)
   */
   if ( ls->CalcSurfDependencies )
     {
-      EH(GOMA_ERROR, "Calc surf dependencies not implemented");
+      GOMA_EH(GOMA_ERROR, "Calc surf dependencies not implemented");
     }
 #endif
 
@@ -23664,7 +23664,7 @@ assemble_cap_denner_diffusion_n(double dt, double scale)
 		  var = MESH_DISPLACEMENT1;
 		  if(pd->v[pg->imtrx][var])
 		    {
-		      EH(GOMA_ERROR, "Jacobian terms for denner capillary diffusion wrt mesh not implemented");
+		      GOMA_EH(GOMA_ERROR, "Jacobian terms for denner capillary diffusion wrt mesh not implemented");
 		    }
 
 		}
@@ -23693,7 +23693,7 @@ assemble_curvature_with_normals_source(void)
 
   if (!pd->e[pg->imtrx][R_CURVATURE]  )
     {
-      EH(GOMA_ERROR,"Error: Level set curvature equation needs to be activated to use LS_CAP_CURVE\n");
+      GOMA_EH(GOMA_ERROR,"Error: Level set curvature equation needs to be activated to use LS_CAP_CURVE\n");
     }
 
   eqn = R_MOMENTUM1;
@@ -23894,7 +23894,7 @@ assemble_curvature_source(void)
 
   if (! pd->e[pg->imtrx][R_CURVATURE] )
     {
-      EH(GOMA_ERROR,"Error: Level set curvature equation needs to be activated to use LS_CAP_CURVE\n");
+      GOMA_EH(GOMA_ERROR,"Error: Level set curvature equation needs to be activated to use LS_CAP_CURVE\n");
     }	
 
   eqn = R_MOMENTUM1;
@@ -24288,7 +24288,7 @@ assemble_t_source ( double T, double time )
        pd->i[pg->imtrx][eqn] != I_Q1_G  &&
        pd->i[pg->imtrx][eqn] != I_Q2_G )
     {
-      EH(GOMA_ERROR, "LS_T requires discontinuous temperature enrichment (Q1_XV, Q2_XV, Q1_G, Q2_G)");
+      GOMA_EH(GOMA_ERROR, "LS_T requires discontinuous temperature enrichment (Q1_XV, Q2_XV, Q1_G, Q2_G)");
     }
 
   wt = fv->wt;
@@ -25127,7 +25127,7 @@ assemble_cont_t_source ( double *xi )
        pd->i[pg->imtrx][eqn] != I_Q1_G  &&
        pd->i[pg->imtrx][eqn] != I_Q2_G )
     {
-      WH(-1,"Warning: attempting to apply LS_CONT_T without discontinuous enrichment.\n");
+      GOMA_WH(-1,"Warning: attempting to apply LS_CONT_T without discontinuous enrichment.\n");
       return(0);
     }
 
@@ -25152,7 +25152,7 @@ assemble_cont_t_source ( double *xi )
    */
   eqn = R_ENERGY;
   if ( pd->i[pg->imtrx][eqn] == I_Q1_G || pd->i[pg->imtrx][eqn] == I_Q2_G )
-    EH(GOMA_ERROR,"LS_CONT_T_BC not yet implemented for _G type enrichment.");
+    GOMA_EH(GOMA_ERROR,"LS_CONT_T_BC not yet implemented for _G type enrichment.");
 
   /* need difference in T between other side and this side */
   var = TEMPERATURE;
@@ -25635,7 +25635,7 @@ assemble_cont_vel_source ( double *xi, Exo_DB *exo )
        pd->i[pg->imtrx][eqn] != I_Q1_G  &&
        pd->i[pg->imtrx][eqn] != I_Q2_G )
     {
-      WH(-1,"Warning: attempting to apply LS_CONT_VEL without discontinuous enrichment.\n");
+      GOMA_WH(-1,"Warning: attempting to apply LS_CONT_VEL without discontinuous enrichment.\n");
       return(0);
     }
 
@@ -25667,7 +25667,7 @@ assemble_cont_vel_source ( double *xi, Exo_DB *exo )
    */
   eqn = R_MOMENTUM1;
   if ( pd->i[pg->imtrx][eqn] == I_Q1_G || pd->i[pg->imtrx][eqn] == I_Q2_G )
-    EH(GOMA_ERROR,"LS_CONT_VEL_BC not yet implemented for _G type enrichment.");
+    GOMA_EH(GOMA_ERROR,"LS_CONT_VEL_BC not yet implemented for _G type enrichment.");
 
    for ( a=0; a < wim; a++ )
     {
@@ -26086,7 +26086,7 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
     
   default:
     sprintf(Err_Msg, "BC %s not found", BC_Types[bc_input_id].desc->name1);
-    EH(GOMA_ERROR, Err_Msg);
+    GOMA_EH(GOMA_ERROR, Err_Msg);
     break;
   }
 #if 0
@@ -26751,14 +26751,14 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
     
   default:
     sprintf(Err_Msg, "BC %s not found", BC_Types[bc_input_id].desc->name1);
-    EH(GOMA_ERROR, Err_Msg);
+    GOMA_EH(GOMA_ERROR, Err_Msg);
     break;
   }
 #if 0
   DPRINTF(stderr,"kinematic extv at (%g,%g) vnorm=%g, fdot=%g\n",fv->x[0],fv->x[1],vnorm,fv_dot->F);
 #endif
     
-  if ( tt != 0. ) EH(GOMA_ERROR,"LS_EIK_KINEMATIC currently requires backward Euler");
+  if ( tt != 0. ) GOMA_EH(GOMA_ERROR,"LS_EIK_KINEMATIC currently requires backward Euler");
   
 #ifdef COUPLED_FILL
   /* finite difference calculation of path dependencies for
@@ -27335,7 +27335,7 @@ assemble_p_source ( double pressure, const int bcflag )
    }
 
       err = belly_flop(elc->lame_mu);
-      EH(err, "error in belly flop");
+      GOMA_EH(err, "error in belly flop");
       if (err == 2) exit(-1);
                 /*
                  * Total mesh stress tensor...
@@ -27562,7 +27562,7 @@ assemble_p_source ( double pressure, const int bcflag )
 
      } /* end of STRESS_TENSOR */
     else
-	{EH(GOMA_ERROR, "Invalid LS_FLOW_PRESSURE boundary condition flag (-1|0|1)\n");}
+	{GOMA_EH(GOMA_ERROR, "Invalid LS_FLOW_PRESSURE boundary condition flag (-1|0|1)\n");}
 
 #if 0
 fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign, force[0],force[1]);
@@ -28204,7 +28204,7 @@ assemble_uvw_source ( int eqn, double val )
        pd->i[pg->imtrx][eqn] != I_Q1_G  &&
        pd->i[pg->imtrx][eqn] != I_Q2_G )
     {
-      EH(GOMA_ERROR, "LS_UVW requires discontinuous velocity enrichment (Q1_XV, Q2_XV, Q1_G, Q2_G)");
+      GOMA_EH(GOMA_ERROR, "LS_UVW requires discontinuous velocity enrichment (Q1_XV, Q2_XV, Q1_G, Q2_G)");
     }
 
   a = eqn - R_MOMENTUM1;
@@ -28500,7 +28500,7 @@ assemble_uvw_source ( int eqn, double val )
        pd->i[pg->imtrx][eqn] != I_Q1_G  &&
        pd->i[pg->imtrx][eqn] != I_Q2_G )
     {
-      EH(GOMA_ERROR, "LS_UVW requires discontinuous velocity enrichment");
+      GOMA_EH(GOMA_ERROR, "LS_UVW requires discontinuous velocity enrichment");
     }
 
   a = eqn - R_MOMENTUM1;
@@ -29049,7 +29049,7 @@ assemble_fill_path_dependence ( void )
 
                         break;
                       default:
-                        EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
+                        GOMA_EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
                       }
 
                       source *= det_J * wt * h3;
@@ -29208,12 +29208,12 @@ assemble_energy_path_dependence(
       cr->MeshMotion == DYNAMIC_LAGRANGIAN)
     {
       err = get_convection_velocity(vconv, vconv_old, NULL, dt, tt);
-      EH(err, "Error in calculating effective convection velocity");
+      GOMA_EH(err, "Error in calculating effective convection velocity");
     }
   else if ( cr->MeshMotion == TOTAL_ALE)
     {
       err = get_convection_velocity_rs(vconv, vconv_old, NULL, dt, tt);
-      EH(err, "Error in calculating effective convection velocity_rs");
+      GOMA_EH(err, "Error in calculating effective convection velocity_rs");
     }
 
 
@@ -29495,7 +29495,7 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
   if ( pd->e[pg->imtrx][eqn] & T_POROUS_BRINK )
     {
       if (mp->PorousMediaType != POROUS_BRINKMAN)
-	WH(-1, "Set Porous term multiplier in continuous medium");
+	GOMA_WH(-1, "Set Porous term multiplier in continuous medium");
 
       /* Load variable FlowingLiquid_viscosity */
       vis = flowing_liquid_viscosity(d_flow_mu);
@@ -29514,7 +29514,7 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
 	}
       else
 	{
-	  EH(GOMA_ERROR,"Unrecognizable Permeability model");
+	  GOMA_EH(GOMA_ERROR,"Unrecognizable Permeability model");
 	}
 
       /* Load up remaining parameters for the Brinkman Equation. */
@@ -29893,14 +29893,14 @@ assemble_continuity_path_dependence (dbl time_value,
 		 cr->MeshMotion == DYNAMIC_LAGRANGIAN) && pd->e[pg->imtrx][R_MESH1])
     {
 		err = belly_flop(elc->lame_mu);
-		EH(err, "error in belly flop");
+		GOMA_EH(err, "error in belly flop");
 		if (err == 2) return(err);
     }
 	
 	if ((cr->MeshMotion == TOTAL_ALE && !pd->v[pg->imtrx][VELOCITY1]) && pd->e[pg->imtrx][R_SOLID1])
     {
 		err = belly_flop_rs(elc_rs->lame_mu);
-		EH(err, "error in belly flop for real solid");
+		GOMA_EH(err, "error in belly flop for real solid");
 		if (err == 2) return(err);
     }
 	
@@ -29941,14 +29941,14 @@ assemble_continuity_path_dependence (dbl time_value,
 		 mp->SpeciesSourceModel[0]  == ELECTRODE_KINETICS )
 	  {
 	    err = get_continuous_species_terms(&s_terms, 0.0, tt, dt, pg_data->hsquared);
-	    EH(err,"problem in getting the species terms");
+	    GOMA_EH(err,"problem in getting the species terms");
 	  }
 	
 	if ( mp->SpeciesSourceModel[0]  == ION_REACTIONS )
 	{
 		zero_structure(&s_terms, sizeof(struct Species_Conservation_Terms), 1);
 		err = get_continuous_species_terms(&s_terms, time, tt, dt, pg_data->hsquared);
-		EH(err,"problem in getting the species terms");
+		GOMA_EH(err,"problem in getting the species terms");
 	}
 	
 	if( (cr->MassFluxModel == HYDRODYNAMIC) && ( mp->DensityModel == SUSPENSION )
@@ -30011,7 +30011,7 @@ assemble_continuity_path_dependence (dbl time_value,
 					}
 					else
 					{
-						EH(GOMA_ERROR, "invalid porosity model");
+						GOMA_EH(GOMA_ERROR, "invalid porosity model");
 					}
 					var = MASS_FRACTION;
 					for (w=0; w<pd->Num_Species-1; w++)
@@ -30341,12 +30341,12 @@ assemble_LM_source ( double *xi,
       cp = ss_surf->closest_point;
 
       /* use kitchen sink approach for now at solids location */
-      if ( cp->elem == -1 ) EH(GOMA_ERROR,"Invalid element at closest_point");
+      if ( cp->elem == -1 ) GOMA_EH(GOMA_ERROR,"Invalid element at closest_point");
 
       /* Associate the correct AC number with this point */
       id_side = cp->elem_side;
       ioffset = first_overlap_ac(cp->elem, id_side);
-      if (ioffset == -1) EH(GOMA_ERROR,"Bad AC index");
+      if (ioffset == -1) GOMA_EH(GOMA_ERROR,"Bad AC index");
 
       setup_shop_at_point( cp->elem, cp->xi, exo );
 
@@ -30643,7 +30643,7 @@ fluid_stress( double Pi[DIM][DIM],
           Heaviside = 1 - lsi->H;
           break;
         default:
-          EH(GOMA_ERROR, "Unknown Level Set Ghost Stress value");
+          GOMA_EH(GOMA_ERROR, "Unknown Level Set Ghost Stress value");
           break;
         }
     }
@@ -31600,11 +31600,11 @@ fluid_stress_conf( double Pi[DIM][DIM],
 	}  	  
       if(lambda==0.0)
 	{
-	  EH( -1, "The conformation tensor needs a non-zero polymer time constant.");
+	  GOMA_EH( -1, "The conformation tensor needs a non-zero polymer time constant.");
 	}
       if(mup==0.0)
 	{
-	  EH( -1, "The conformation tensor needs a non-zero polymer viscosity.");
+	  GOMA_EH( -1, "The conformation tensor needs a non-zero polymer viscosity.");
 	}
     }
 
@@ -32279,7 +32279,7 @@ heat_flux( double q[DIM],
     }
   else
     {
-      EH( -1, "Unimplemented thermal constitutive relation.");
+      GOMA_EH( -1, "Unimplemented thermal constitutive relation.");
     }
 }
 
@@ -32303,7 +32303,7 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
   struct Level_Set_Data *ls_old = ls;
 
   if (MAX_CONC < 3) {
-    EH(GOMA_ERROR, "heat_source expects MAX_CONC >= 3");
+    GOMA_EH(GOMA_ERROR, "heat_source expects MAX_CONC >= 3");
     return 0;
   }
 
@@ -32428,7 +32428,7 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
                      (SQUARE(fv->apr)+SQUARE(fv->api));
          }
        else
-        { WH(-1,"No Intensity field found in PHOTO_CURING\n"); }
+        { GOMA_WH(-1,"No Intensity field found in PHOTO_CURING\n"); }
 
       /* insure concentrations are positive  */
 	for ( j=0; j<pd->Num_Species_Eqn; j++)
@@ -32496,7 +32496,7 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
                     }
                 break;
            default:
-                EH(GOMA_ERROR,"invalid Species Type for PHOTO_CURING\n");
+                GOMA_EH(GOMA_ERROR,"invalid Species Type for PHOTO_CURING\n");
            }
        Xconv *= mp->specific_volume[pd->Num_Species_Eqn];
        Xconv_init *= mp->specific_volume[pd->Num_Species_Eqn];
@@ -32724,7 +32724,7 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
     }
   else
     {
-      EH(GOMA_ERROR,"Unrecognized heat source model");
+      GOMA_EH(GOMA_ERROR,"Unrecognized heat source model");
     }
 	
 	if( ls != NULL &&
@@ -32845,7 +32845,7 @@ ls_modulate_heatsource(double *f,
 		
       if(  pd->v[pg->imtrx][var=POLYMER_STRESS11] )
 	{
-	  WH(-1,"LS modulation of heat source sensitivity wrt to polymer stress dofs not implemented.");
+	  GOMA_WH(-1,"LS modulation of heat source sensitivity wrt to polymer stress dofs not implemented.");
 	}
     }
   return(0);
@@ -33671,7 +33671,7 @@ assemble_acoustic(double time,	/* present time value */
   else if (eqn == R_ACOUS_PIMAG)
 	{ P = fv->api; P_conj = -fv->apr; conj_var = ACOUS_PREAL; sign_conj=-1.;}
   else
-	{ EH(GOMA_ERROR,"Invalid Acoustic eqn");}
+	{ GOMA_EH(GOMA_ERROR,"Invalid Acoustic eqn");}
   /*
    * Residuals___________________________________________________________
    */
@@ -34539,7 +34539,7 @@ acoustic_flux( double q[DIM],
     		}
 	}
   else
-	{ EH(GOMA_ERROR,"Invalid Acoustic eqn");}
+	{ GOMA_EH(GOMA_ERROR,"Invalid Acoustic eqn");}
 
   for ( p=0; p<VIM; p++)
 	{
@@ -34977,7 +34977,7 @@ visc_diss_acoustic_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
                                   (double) mp->mp2nd->viscositymask[0],
                                   (double) mp->mp2nd->viscositymask[1],
                                   d_visc_cmb, mp->mp2nd->ViscosityModel );
-          EH(err, "ls_modulate_viscosity");
+          GOMA_EH(err, "ls_modulate_viscosity");
 /*  optionally set impedance to true value input on card	*/
   if(num_const == 4)
 	{
@@ -35329,7 +35329,7 @@ assemble_poynting(double time,	/* present time value */
       cr->MeshMotion == DYNAMIC_LAGRANGIAN)
     {
       err = get_convection_velocity(vconv, vconv_old, d_vconv, dt, tt);
-      EH(err, "Error in calculating effective convection velocity");
+      GOMA_EH(err, "Error in calculating effective convection velocity");
     }
 /* end Petrov-Galerkin addition */
 
@@ -35353,7 +35353,7 @@ assemble_poynting(double time,	/* present time value */
          petrov = 1;
          break;  
     default:
-         EH(GOMA_ERROR,"light intensity equation");
+         GOMA_EH(GOMA_ERROR,"light intensity equation");
          break;
    }
   if(py_eqn >= R_LIGHT_INTP && py_eqn <= R_LIGHT_INTD)
@@ -35396,7 +35396,7 @@ assemble_poynting(double time,	/* present time value */
                  }
             break;
         default:
-            EH(GOMA_ERROR,"Residence Time Weight Function");
+            GOMA_EH(GOMA_ERROR,"Residence Time Weight Function");
             break;
         }
    }

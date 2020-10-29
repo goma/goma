@@ -145,7 +145,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	{
 	  sr = sprintf(err_msg, "EXODUS II pathname \"%s\" too long (%d>%d).",
 		       fn, len, FILENAME_MAX_ACK);
-	  EH(GOMA_ERROR, err_msg);
+	  GOMA_EH(GOMA_ERROR, err_msg);
 	}
       x->path = (char *) smalloc(len*sizeof(char));
     }
@@ -178,7 +178,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
     {
       sr = sprintf(err_msg, "EXODUS II pathname \"%s\" too long (%d>%d).",
 		   fn, err, FILENAME_MAX_ACK);
-      EH(GOMA_ERROR, err_msg);
+      GOMA_EH(GOMA_ERROR, err_msg);
     }
 
   x->mode                  = EX_READ;
@@ -229,7 +229,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
   if ( err )
     {
        snprintf(err_msg, MAX_CHAR_ERR_MSG, "\nProc %d: Exodus file read error, mesh files may not exist.\n", ProcID);
-       EH(GOMA_ERROR, err_msg);
+       GOMA_EH(GOMA_ERROR, err_msg);
     }
 #endif
 
@@ -251,7 +251,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
       fprintf(stderr, "ex_open() rtn = %d\n", x->exoid);
     }
 
-  EH(x->exoid, "ex_open");
+  GOMA_EH(x->exoid, "ex_open");
 
   if ( task & EXODB_ACTION_RD_INIT )
     {
@@ -264,7 +264,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
       /*
 	if ( x->state != EXODB_STATE_GRND )
 	{
-	EH(GOMA_ERROR, "Attempt to rd init EXO db into previously used struct.");
+	GOMA_EH(GOMA_ERROR, "Attempt to rd init EXO db into previously used struct.");
 	}
       */
 
@@ -287,7 +287,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 			   &x->num_elem_blocks, 
 			   &x->num_node_sets,
 			   &x->num_side_sets);
-      EH(status, "ex_get_init");
+      GOMA_EH(status, "ex_get_init");
 
       if ( verbosity > 0 )
 	{
@@ -300,7 +300,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	}
 
       status = ex_inquire(x->exoid, EX_INQ_QA, &ri, &rf, &rc);
-      EH(status, "ex_inquire(EX_INQ_QA)");
+      GOMA_EH(status, "ex_inquire(EX_INQ_QA)");
       x->num_qa_rec = ri;
 
       if ( verbosity > 1 )
@@ -327,11 +327,11 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	    }
 
 	  status = ex_get_qa(x->exoid, x->qa_record);
-	  EH(status, "ex_get_qa");
+	  GOMA_EH(status, "ex_get_qa");
 	}
 
       status = ex_inquire(x->exoid, EX_INQ_INFO,  &ri, &rf, &rc);
-      EH(status, "ex_inquire(EX_INQ_INFO)");
+      GOMA_EH(status, "ex_inquire(EX_INQ_INFO)");
       x->num_info = ri;
 
       if ( x->num_info > 0 )
@@ -342,7 +342,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	    sr = sprintf(err_msg, 
 	    "Number of info records in \"%s\" is %d > %d. Recompile w/ MAX_INFO larger.", 
 	    fn, x->num_info, MAX_INFO);
-	    EH(GOMA_ERROR, err_msg);
+	    GOMA_EH(GOMA_ERROR, err_msg);
 	    }
 	  */      
 
@@ -353,51 +353,51 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	      x->info[i] = (char *) smalloc((MAX_LINE_LENGTH+1)*sizeof(char));
 	    }
 	  status = ex_get_info(x->exoid, (x->info));
-	  EH(status, "ex_get_info");
+	  GOMA_EH(status, "ex_get_info");
 	}
 
       status = ex_inquire(x->exoid, EX_INQ_API_VERS, &ri, &rf, &rc);
-      EH(status, "ex_inquire(EX_INQ_API_VERS)");
+      GOMA_EH(status, "ex_inquire(EX_INQ_API_VERS)");
       x->api_version = rf;
 
       status = ex_inquire(x->exoid, EX_INQ_DB_VERS, &ri, &rf, &rc);
-      EH(status, "ex_inquire(EX_INQ_DB_VERS)");
+      GOMA_EH(status, "ex_inquire(EX_INQ_DB_VERS)");
       x->db_version = rf;
 
       status = ex_inquire(x->exoid, EX_INQ_NS_NODE_LEN, &ri, &rf, &rc);
-      EH(status, "ex_inquire(EX_INQ_NS_NODE_LEN)");
+      GOMA_EH(status, "ex_inquire(EX_INQ_NS_NODE_LEN)");
       x->ns_node_len = ri;
 
       status = ex_inquire(x->exoid, EX_INQ_NS_DF_LEN, &ri, &rf, &rc);
-      EH(status, "ex_inquire(EX_INQ_NS_DF_LEN)");
+      GOMA_EH(status, "ex_inquire(EX_INQ_NS_DF_LEN)");
       x->ns_distfact_len = ri;
 
       status = ex_inquire(x->exoid, EX_INQ_SS_ELEM_LEN, &ri, &rf, &rc);
-      EH(status, "ex_inquire(EX_INQ_SS_ELEM_LEN)");
+      GOMA_EH(status, "ex_inquire(EX_INQ_SS_ELEM_LEN)");
       x->ss_elem_len = ri;
 
       status = ex_inquire(x->exoid, EX_INQ_SS_DF_LEN, &ri, &rf, &rc);
-      EH(status, "ex_inquire(EX_INQ_SS_DF_LEN)");
+      GOMA_EH(status, "ex_inquire(EX_INQ_SS_DF_LEN)");
       x->ss_distfact_len = ri;
 
       status = ex_inquire(x->exoid, EX_INQ_SS_NODE_LEN, &ri, &rf, &rc);
-      EH(status, "ex_inquire(EX_INQ_SS_NODE_LEN)");
+      GOMA_EH(status, "ex_inquire(EX_INQ_SS_NODE_LEN)");
       x->ss_node_len = ri;
 
       status = ex_inquire(x->exoid, EX_INQ_EB_PROP, &ri, &rf, &rc);
-      EH(status, "ex_inquire(EX_INQ_EB_PROP)");
+      GOMA_EH(status, "ex_inquire(EX_INQ_EB_PROP)");
       x->eb_num_props = ri;
 
       status = ex_inquire(x->exoid, EX_INQ_NS_PROP, &ri, &rf, &rc);
-      EH(status, "ex_inquire(EX_INQ_NS_PROP)");
+      GOMA_EH(status, "ex_inquire(EX_INQ_NS_PROP)");
       x->ns_num_props = ri;
 
       status = ex_inquire(x->exoid, EX_INQ_SS_PROP, &ri, &rf, &rc);
-      EH(status, "ex_inquire(EX_INQ_SS_PROP)");
+      GOMA_EH(status, "ex_inquire(EX_INQ_SS_PROP)");
       x->ss_num_props = ri;
 
       status = ex_inquire(x->exoid, EX_INQ_TIME, &ri, &rf, &rc);
-      EH(status, "ex_inquire()");
+      GOMA_EH(status, "ex_inquire()");
       x->num_times = ri;
       
       x->state |= EXODB_STATE_INIT;		/* Did it! */
@@ -408,12 +408,12 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
       
       if ( ! ( x->state & EXODB_STATE_INIT ) )
 	{
-	  EH(GOMA_ERROR, "Need to rd init info from EXO db before mesh.");
+	  GOMA_EH(GOMA_ERROR, "Need to rd init info from EXO db before mesh.");
 	}
 
       if ( x->state & EXODB_STATE_MESH )
 	{
-	  EH(GOMA_ERROR, "Attempt to rd mesh EXO db into previously used struct.");
+	  GOMA_EH(GOMA_ERROR, "Attempt to rd mesh EXO db into previously used struct.");
 	}
 
       x->x_coord = NULL;
@@ -436,7 +436,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	}
 
       status = ex_get_coord(x->exoid, x->x_coord, x->y_coord, x->z_coord);
-      EH(status, "ex_get_coord");
+      GOMA_EH(status, "ex_get_coord");
 
 #if DEBUG_LEVEL > 1
       for ( i=0; i<x->num_nodes; i++)
@@ -453,7 +453,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	      x->coord_names[i] = (char *) calloc(MAX_STR_LENGTH+1, sc);
 	    }
 	  status = ex_get_coord_names(x->exoid, x->coord_names);
-	  EH(status, "ex_get_coord_names");
+	  GOMA_EH(status, "ex_get_coord_names");
 	}
 
       if ( x->num_nodes > 0 )
@@ -463,7 +463,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	      x->node_map = (int *) smalloc(x->num_nodes * si);
 	      status = ex_get_id_map(x->exoid, EX_NODE_MAP, x->node_map);
 
-	      EH(status, "ex_get_node_num_map");
+	      GOMA_EH(status, "ex_get_node_num_map");
 	    }
 	}
 
@@ -473,13 +473,13 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	    {
 	      x->elem_map = (int *) smalloc(x->num_elems * si);
 	      status      = ex_get_id_map(x->exoid, EX_ELEM_MAP, x->elem_map);
-	      EH(status, "ex_get_elem_num_map");
+	      GOMA_EH(status, "ex_get_elem_num_map");
 	    }
 	  if ( x->elem_order_map_exists )
 	    {
 	      x->elem_order_map = (int *) smalloc(x->num_elems * si);
 	      status            = ex_get_map(x->exoid, x->elem_order_map);
-	      EH(status, "ex_get_map");
+	      GOMA_EH(status, "ex_get_map");
 	    }
 
 	  x->elem_eb = (int *) smalloc(x->num_elems * si);
@@ -518,7 +518,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	   *  Read the element block ID's from the exodus file
 	   */
 	  status = ex_get_ids(x->exoid, EX_ELEM_BLOCK, x->eb_id);
-	  EH(status, "ex_get_ids elem_blk_ids");
+	  GOMA_EH(status, "ex_get_ids elem_blk_ids");
 
 	  /*
 	   *  For each element block, specified by the id
@@ -537,7 +537,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 				    0,
 				    0,
 				    &x->eb_num_attr[i]);
-	      EH(status, "ex_get_block elem");
+	      GOMA_EH(status, "ex_get_block elem");
 
 	      /*
 	       *  Fill in the information in the current
@@ -585,7 +585,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 		  status = ex_get_conn(x->exoid, EX_ELEM_BLOCK,
 				       x->eb_id[i],
 				       x->eb_conn[i], 0, 0);
-		  EH(status, "ex_get_elem_conn");
+		  GOMA_EH(status, "ex_get_elem_conn");
 
 		  /* Build the element - element block index map */
 		  for (ii = 0; ii < x->eb_num_elems[i]; ii++ ) {	
@@ -599,7 +599,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 		    smalloc(x->eb_num_elems[i] * x->eb_num_attr[i] * sd);
 		  status = ex_get_attr(x->exoid, EX_ELEM_BLOCK, x->eb_id[i],
 				       x->eb_attr[i]);
-		  EH(status, "ex_get_attr elem");
+		  GOMA_EH(status, "ex_get_attr elem");
 		}
 	  
 	      x->eb_ptr[i+1] = x->eb_ptr[i] + x->eb_num_elems[i];
@@ -640,7 +640,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 
 	      status = ex_get_concat_sets(x->exoid, EX_NODE_SET,
 					  &ns_specs);
-	      EH(status, "ex_get_concat_node_sets");
+	      GOMA_EH(status, "ex_get_concat_node_sets");
 	}
 
 
@@ -685,7 +685,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	  status = ex_get_concat_sets(x->exoid, EX_SIDE_SET,
 				      &ss_specs);
 
-	  EH(status, "ex_get_concat_side_sets");
+	  GOMA_EH(status, "ex_get_concat_side_sets");
 
 	  /*
 	   * This information turns out to be useful in constructing more
@@ -745,7 +745,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	      x->ns_prop_name[i] = (char *) smalloc(MAX_STR_LENGTH * sc);
 	    }
 	  status = ex_get_prop_names(x->exoid, EX_NODE_SET, x->ns_prop_name);
-	  EH(status, "ex_get_prop_names(EX_NODE_SET)");
+	  GOMA_EH(status, "ex_get_prop_names(EX_NODE_SET)");
 
 	  x->ns_prop = (int **) smalloc(x->ns_num_props * spi);
 	  for ( i=0; i<x->ns_num_props; i++)
@@ -758,7 +758,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	      status = ex_get_prop_array(x->exoid, EX_NODE_SET, 
 					 x->ns_prop_name[i],
 					 x->ns_prop[i]);
-	      EH(status, "ex_get_prop_array(EX_NODE_SET)");
+	      GOMA_EH(status, "ex_get_prop_array(EX_NODE_SET)");
 	    }
 	}
       
@@ -774,7 +774,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	      x->ss_prop_name[i] = (char *) smalloc(MAX_STR_LENGTH * sc);
 	    }
 	  status = ex_get_prop_names(x->exoid, EX_SIDE_SET, x->ss_prop_name);
-	  EH(status, "ex_get_prop_names(EX_SIDE_SET)");
+	  GOMA_EH(status, "ex_get_prop_names(EX_SIDE_SET)");
 
 	  x->ss_prop = (int **) smalloc(x->ss_num_props * spi);
 	  for ( i=0; i<x->ss_num_props; i++)
@@ -787,7 +787,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	      status = ex_get_prop_array(x->exoid, EX_SIDE_SET, 
 					 x->ss_prop_name[i],
 					 x->ss_prop[i]);
-	      EH(status, "ex_get_prop_array(EX_SIDE_SET)");
+	      GOMA_EH(status, "ex_get_prop_array(EX_SIDE_SET)");
 	    }
 	}
       
@@ -803,7 +803,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	      x->eb_prop_name[i] = (char *) smalloc(MAX_STR_LENGTH * sc);
 	    }
 	  status = ex_get_prop_names(x->exoid, EX_ELEM_BLOCK, x->eb_prop_name);
-	  EH(status, "ex_get_prop_names(EX_ELEM_BLOCK)");
+	  GOMA_EH(status, "ex_get_prop_names(EX_ELEM_BLOCK)");
 
 	  x->eb_prop = (int **) smalloc(x->eb_num_props * spi);
 	  for ( i=0; i<x->eb_num_props; i++)
@@ -816,7 +816,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	      status = ex_get_prop_array(x->exoid, EX_ELEM_BLOCK, 
 					 x->eb_prop_name[i],
 					 x->eb_prop[i]);
-	      EH(status, "ex_get_prop_array(EX_ELEM_BLOCK)");
+	      GOMA_EH(status, "ex_get_prop_array(EX_ELEM_BLOCK)");
 	    }
 	}
       
@@ -843,7 +843,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 
       if ( ! ( x->state & EXODB_STATE_INIT ) )
 	{
-	  EH(GOMA_ERROR, "Need to rd init info from EXO db before result metadata.");
+	  GOMA_EH(GOMA_ERROR, "Need to rd init info from EXO db before result metadata.");
 	}
 
       /*
@@ -854,12 +854,12 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 
       if ( ! ( x->state & EXODB_STATE_MESH ) )
 	{
-	  EH(GOMA_ERROR, "Need to rd mesh info from EXO db before result metadata.");
+	  GOMA_EH(GOMA_ERROR, "Need to rd mesh info from EXO db before result metadata.");
 	}
 
       if ( x->state & EXODB_STATE_RES0 )
 	{
-	  EH(GOMA_ERROR, "Attempt to rd mesh EXO db into previously used struct.");
+	  GOMA_EH(GOMA_ERROR, "Attempt to rd mesh EXO db into previously used struct.");
 	}
 
       /*
@@ -878,13 +878,13 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
        */
 
       status = ex_get_variable_param(x->exoid, EX_GLOBAL, &x->num_glob_vars);
-      EH(status, "ex_get_variable_param global");
+      GOMA_EH(status, "ex_get_variable_param global");
 
       status = ex_get_variable_param(x->exoid, EX_ELEM_BLOCK, &x->num_elem_vars);
-      EH(status, "ex_get_variable_param elem");
+      GOMA_EH(status, "ex_get_variable_param elem");
 
       status = ex_get_variable_param(x->exoid, EX_NODAL, &x->num_node_vars);
-      EH(status, "ex_get_variable_param nodal");
+      GOMA_EH(status, "ex_get_variable_param nodal");
 
       /*
        * Get the names of the results variables: global, element and nodal.
@@ -899,7 +899,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	    }
 	  status = ex_get_variable_names(x->exoid, EX_GLOBAL, x->num_glob_vars,
 					 x->glob_var_names);
-	  EH(status, "ex_get_variable_names global");
+	  GOMA_EH(status, "ex_get_variable_names global");
 	}
 
       if ( x->num_elem_vars > 0 )
@@ -911,7 +911,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	    }
 	  status = ex_get_variable_names(x->exoid, EX_ELEM_BLOCK, x->num_elem_vars,
 					 x->elem_var_names);
-	  EH(status, "ex_get_variable_names elem_block");
+	  GOMA_EH(status, "ex_get_variable_names elem_block");
 	}
 
       if ( x->num_node_vars > 0 )
@@ -923,7 +923,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	    }
 	  status = ex_get_variable_names(x->exoid, EX_NODAL, x->num_node_vars,
 				    x->node_var_names);
-	  EH(status, "ex_get_variable_names nodal");
+	  GOMA_EH(status, "ex_get_variable_names nodal");
 	}
 
       /*
@@ -934,7 +934,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	{
 	  x->time_vals = (dbl *) smalloc(x->num_times * sd);
 	  status = ex_get_all_times(x->exoid, x->time_vals);
-	  EH(status, "ex_get_all_times");
+	  GOMA_EH(status, "ex_get_all_times");
 	}
 
       /*
@@ -948,7 +948,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 
 	  status = ex_get_truth_table(x->exoid, EX_ELEM_BLOCK, x->num_elem_blocks,
 				      x->num_elem_vars, x->elem_var_tab);
-	  EH(status, "ex_get_truth_table elem");
+	  GOMA_EH(status, "ex_get_truth_table elem");
 	}
       x->state |= EXODB_STATE_RES0;
     }
@@ -974,7 +974,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 				    i+1, 
 				    x->num_nodes,
 				    x->node_var_vals[i]);
-	  EH(status, "ex_get_nodal_var");
+	  GOMA_EH(status, "ex_get_nodal_var");
 	}
     }
 
@@ -987,7 +987,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
     {
       if ( !(x->state & EXODB_STATE_RES0) )
 	{
-	  EH(GOMA_ERROR, "Need to rd result metadata from EXO db before result data.");
+	  GOMA_EH(GOMA_ERROR, "Need to rd result metadata from EXO db before result data.");
 	}
 
       /*
@@ -1021,7 +1021,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	{
 	  sr = sprintf(err_msg, "Database has %d node vars, you want %d.",
 		       x->num_node_vars, x->num_nv_indeces);
-	  EH(GOMA_ERROR, err_msg);
+	  GOMA_EH(GOMA_ERROR, err_msg);
 	}
 #endif
 
@@ -1058,7 +1058,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 		  status = ex_get_var(x->exoid, time_index, EX_NODAL,
 				      nodal_var_index, 1, x->num_nodes,
 				      x->nv[i][j]);
-		  EH(status, "ex_get_nodal_var");
+		  GOMA_EH(status, "ex_get_nodal_var");
 		}
 	    }
 	}
@@ -1099,7 +1099,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	      status = ex_get_var(x->exoid, time_index, EX_GLOBAL, 1, 1,
 				  x->num_glob_vars,
 				  x->gv[i]);
-	      EH(status, "ex_get_glob_vars");
+	      GOMA_EH(status, "ex_get_glob_vars");
 	    }
 
 	  /*
@@ -1154,7 +1154,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
                           sr = sprintf(err_msg,
                                        "ex_get_elem_var() bad rtn: time %d, elemvar %d, EB ID %d",
                                        time_index, k + 1, x->eb_id[j]);
-			      EH(GOMA_ERROR, err_msg);
+			      GOMA_EH(GOMA_ERROR, err_msg);
                         }
                       }
                   }
@@ -1175,7 +1175,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 
 
   status = ex_close(x->exoid);
-  EH(status, "ex_close");
+  GOMA_EH(status, "ex_close");
 
   return(status);
 }
@@ -1814,7 +1814,7 @@ init_exo_struct(Exo_DB *x)
 {
   if ( x == NULL )
     {
-      EH(GOMA_ERROR, "Empty structure to initialize?");
+      GOMA_EH(GOMA_ERROR, "Empty structure to initialize?");
     }
 
   x->state                 = EXODB_STATE_GRND;
@@ -1899,7 +1899,7 @@ free_exo_ev(Exo_DB *x)
   if ( ! ( x->state & EXODB_STATE_ELVA ) )
     {
       return;
-      /*      EH(GOMA_ERROR, "Can't free what was never in chains.");*/
+      /*      GOMA_EH(GOMA_ERROR, "Can't free what was never in chains.");*/
     }
 
   free(x->ev_time_indeces);
@@ -1940,7 +1940,7 @@ free_exo_gv(Exo_DB *x)
   if ( ! ( x->state & EXODB_STATE_GBVA ) )
     {
       return;
-      /*      EH(GOMA_ERROR, "Can't free what was never in chains.");*/
+      /*      GOMA_EH(GOMA_ERROR, "Can't free what was never in chains.");*/
     }
 
   free(x->gv_time_indeces);
@@ -1971,7 +1971,7 @@ free_exo_nv(Exo_DB *x)
   if ( ! ( x->state & EXODB_STATE_NDVA ) )
     {
       return;			/* This was a useless call... */
-      /*       EH(GOMA_ERROR, "Can't free what was never in chains.");*/
+      /*       GOMA_EH(GOMA_ERROR, "Can't free what was never in chains.");*/
     }
 
   free(x->nv_indeces);
@@ -2015,7 +2015,7 @@ alloc_exo_ev(Exo_DB *x,
 
   if ( x->state & EXODB_STATE_ELVA )
     {
-      EH(GOMA_ERROR, "Please free before allocating...");
+      GOMA_EH(GOMA_ERROR, "Please free before allocating...");
     }
 
   x->num_ev_time_indeces = num_timeplanes;
@@ -2068,7 +2068,7 @@ alloc_exo_gv(Exo_DB *x,
 
   if ( x->state & EXODB_STATE_GBVA )
     {
-      EH(GOMA_ERROR, "Please free before allocating...");
+      GOMA_EH(GOMA_ERROR, "Please free before allocating...");
     }
 
   x->num_gv_time_indeces = num_timeplanes;
@@ -2113,7 +2113,7 @@ alloc_exo_nv(Exo_DB *x,
 
   if ( x->state & EXODB_STATE_NDVA )
     {
-      EH(GOMA_ERROR, "Please free before allocating...");
+      GOMA_EH(GOMA_ERROR, "Please free before allocating...");
     }
 
   x->num_nv_indeces      = num_nodal_vars;

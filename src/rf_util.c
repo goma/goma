@@ -366,7 +366,7 @@ put_fill_vector(const int N, double x[], const double fill_vector[],
       ie = Index_Solution(i, R_FILL, 0, ki, -1, pg->imtrx);
       if (ie != -1)  {
 	if (ie > NumUnknowns[pg->imtrx]) {
-	  EH(ie, "put_fill_vector");
+	  GOMA_EH(ie, "put_fill_vector");
 	} else {
 	  x[ie] = fill_vector[node_to_fill[i] + ki];
 	}
@@ -376,7 +376,7 @@ put_fill_vector(const int N, double x[], const double fill_vector[],
 	if (ie != -1) {
 	  x[ie] = fill_vector[node_to_fill[i] + ki];
 	} else {
-	  EH(ie, "put_fill_vector");
+	  GOMA_EH(ie, "put_fill_vector");
 	}
       }
     }
@@ -444,7 +444,7 @@ countmap_vardofs(const int varType, const int num_nodes, int *map)
   int node, nun, count = 0;
   NODAL_VARS_STRUCT *nv;
   if (varType < 0 || varType > MAX_VARIABLE_TYPES-1 ) {
-    EH(GOMA_ERROR, "Attempt to count a bogus variable.");
+    GOMA_EH(GOMA_ERROR, "Attempt to count a bogus variable.");
   }
   for (node = 0; node < num_nodes; node++) {
     nv = Nodes[node]->Nodal_Vars_Info[pg->imtrx];
@@ -997,7 +997,7 @@ time_step_control(const double delta_t,  const double delta_t_old,
 	    use_var_norm[0],use_var_norm[1],use_var_norm[2],
 	    use_var_norm[3],use_var_norm[4],use_var_norm[5],
             use_var_norm[6]);
-    EH(GOMA_ERROR, "Poorly formed time step norm.");
+    GOMA_EH(GOMA_ERROR, "Poorly formed time step norm.");
   }
 
   scaling   = 1.0 / (num_unknowns * (2.0 + delta_t_old / delta_t));
@@ -1849,14 +1849,14 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
 	    }
 	  else
 	    {
-	      EH(GOMA_ERROR,"something wrong with efv->ipix");
+	      GOMA_EH(GOMA_ERROR,"something wrong with efv->ipix");
 	    }
 	}
 #ifndef LIBRARY_MODE
       else if ( strcmp(efv->file_nm[w], "IMPORT") == 0 ||
                 strcmp(efv->file_nm[w], "IMPORT_EV") == 0 )
 	{
-          EH(GOMA_ERROR, "External fields can only be imported in LIBRARY_MODE!");
+          GOMA_EH(GOMA_ERROR, "External fields can only be imported in LIBRARY_MODE!");
 	}
 #endif
     }    
@@ -1999,7 +1999,7 @@ void init_shell_normal_unknowns(double x[], const Exo_DB *exo)
       load_ei(ielem, exo, 0, pg->imtrx);
       err = load_elem_dofptr(ielem, exo, x, x,
                              x, x, 0);
-      EH(err, "Can't load elem_dofptr in shell normals initialization");
+      GOMA_EH(err, "Can't load elem_dofptr in shell normals initialization");
 
       ielem_dim       = elem_info(NDIM, ielem_type);
       num_local_nodes = elem_info(NNODES, ielem_type);
@@ -2089,14 +2089,14 @@ read_initial_guess(double u[], const int np, double uAC[], const int nAC)
 	      "%s: line %d of the initial guess file %s had an error, nchar = %d\n", 
 	      yo, i, Init_GuessFile, nchar);
       fprintf(stderr, "%s:\t line = \"%s\"", yo, input);
-      EH(GOMA_ERROR, yo);
+      GOMA_EH(GOMA_ERROR, yo);
     }
     if (!interpret_double(input, u + i)) {
       fprintf(stderr,
 	      "%s: line %d of the initial guess file %s had an error, %d\n", 
 	      yo, i, Init_GuessFile, nchar);
       fprintf(stderr, "%s:\t line = \"%s\"", yo, input);
-      EH(GOMA_ERROR, yo);
+      GOMA_EH(GOMA_ERROR, yo);
     }
   }
 
@@ -2230,7 +2230,7 @@ wr_soln_vec ( double u[],	/* solution vector */
 
   if ( file == NULL ) 
    {
-     EH( -1, "Problem opening intermediate results file.");
+     GOMA_EH( -1, "Problem opening intermediate results file.");
    }
 
   for ( i=0; i<np; i++ )
@@ -2290,18 +2290,18 @@ rd_vectors_from_exoII(double u[], const char *file_nm, const int action_flag,
   IO_word_size  = 0;    
 
   exoid = ex_open(file_nm, EX_READ, &CPU_word_size, &IO_word_size , &version);
-  EH(exoid, "ex_open");
+  GOMA_EH(exoid, "ex_open");
 
   error = ex_get_init(exoid, title, &num_dim, &num_nodes, &num_elem,
 		      &num_elem_blk, &num_node_sets, &num_side_sets);
-  EH(error, "ex_get_init for efv or init guess");
+  GOMA_EH(error, "ex_get_init for efv or init guess");
 
   /*
    * Obtain the number of time steps in the exodus file, time_step,
    * We will read only from the last time step
    */
   error = ex_inquire(exoid, EX_INQ_TIME, &time_step, &ret_float, ret_char);
-  EH(error, "ex_inquire");
+  GOMA_EH(error, "ex_inquire");
 
   /* Figure out what time step to select. Will select the last time
    * step unless the input variable desired_time_step is set lower.
@@ -2329,15 +2329,15 @@ rd_vectors_from_exoII(double u[], const char *file_nm, const int action_flag,
    * space for storage of their names.
    */
   error = ex_get_variable_param(exoid, EX_NODAL, &num_vars);
-  EH(error, "ex_get_variable_param nodal");
+  GOMA_EH(error, "ex_get_variable_param nodal");
   error = ex_get_variable_param(exoid, EX_ELEM_BLOCK, &num_elem_vars);
-  EH(error, "ex_get_var_param elem");
+  GOMA_EH(error, "ex_get_var_param elem");
   
   /* First extract all nodal variable names in exoII database */
   if (num_vars > 0) {
     var_names = alloc_VecFixedStrings(num_vars, (MAX_STR_LENGTH+1));
     error = ex_get_variable_names(exoid, EX_NODAL, num_vars, var_names);
-    EH(error, "ex_get_variable_names nodal");
+    GOMA_EH(error, "ex_get_variable_names nodal");
     for (i = 0; i < num_vars; i++) strip(var_names[i]);
   } else {
     fprintf(stderr,
@@ -2348,7 +2348,7 @@ rd_vectors_from_exoII(double u[], const char *file_nm, const int action_flag,
   if (num_elem_vars > 0) {
     elem_var_names = alloc_VecFixedStrings(num_elem_vars, (MAX_STR_LENGTH+1));
     error = ex_get_variable_names(exoid, EX_ELEM_BLOCK, num_elem_vars, elem_var_names);
-    EH(error, "ex_get_variable_names element");
+    GOMA_EH(error, "ex_get_variable_names element");
     for (i = 0; i < num_elem_vars; i++) strip(elem_var_names[i]);
   }
 
@@ -2458,7 +2458,7 @@ rd_vectors_from_exoII(double u[], const char *file_nm, const int action_flag,
       } else {
 	error = ex_get_var(exoid, time_step, EX_NODAL, vdex, 1, num_nodes,
 			   efv->ext_fld_ndl_val[variable_no]);
-	EH(error, "ex_get_var nodal");
+	GOMA_EH(error, "ex_get_var nodal");
       }
       exchange_node(cx[0], DPI_ptr, efv->ext_fld_ndl_val[variable_no]);
     }
@@ -2467,7 +2467,7 @@ rd_vectors_from_exoII(double u[], const char *file_nm, const int action_flag,
   safer_free((void **) &var_names);
   safer_free((void **) &elem_var_names);
   error = ex_close(exoid);
-  EH(error, "ex_close");  
+  GOMA_EH(error, "ex_close");  
   return 0;
 } /* end rd_vectors_from_exoII*/
 /*****************************************************************************/
@@ -2516,17 +2516,17 @@ rd_trans_vectors_from_exoII(double u[], const char *file_nm,
   IO_word_size  = 0;    
 
   exoid = ex_open(file_nm, EX_READ, &CPU_word_size, &IO_word_size , &version);
-  EH(exoid, "ex_open");
+  GOMA_EH(exoid, "ex_open");
 
   error = ex_get_init(exoid, title, &num_dim, &num_nodes, &num_elem,
 		      &num_elem_blk, &num_node_sets, &num_side_sets);
-  EH(error, "ex_get_init for efv or init guess");
+  GOMA_EH(error, "ex_get_init for efv or init guess");
 
   /*
    * Obtain the number of time steps in the exodus file, time_step,
    */
   error = ex_inquire(exoid, EX_INQ_TIME, &time_step, &ret_float, ret_char);
-  EH(error, "ex_inquire");
+  GOMA_EH(error, "ex_inquire");
 
   /* Figure out what time step to select. Will select the closest time
    * step to the current time in the solution procedure.
@@ -2587,15 +2587,15 @@ rd_trans_vectors_from_exoII(double u[], const char *file_nm,
    * space for storage of their names.
    */
   error = ex_get_variable_param(exoid, EX_NODAL, &num_vars);
-  EH(error, "ex_get_variable_param nodal");
+  GOMA_EH(error, "ex_get_variable_param nodal");
   error = ex_get_variable_param(exoid, EX_ELEM_BLOCK, &num_elem_vars);
-  EH(error, "ex_get_variable_param elem");
+  GOMA_EH(error, "ex_get_variable_param elem");
   
   /* First extract all nodal variable names in exoII database */
   if (num_vars > 0) {
     var_names = alloc_VecFixedStrings(num_vars, (MAX_STR_LENGTH+1));
     error = ex_get_variable_names(exoid, EX_NODAL, num_vars, var_names);
-    EH(error, "ex_get_variable_names nodal");
+    GOMA_EH(error, "ex_get_variable_names nodal");
     for (i = 0; i < num_vars; i++) strip(var_names[i]);
   } else {
     fprintf(stderr,
@@ -2628,7 +2628,7 @@ rd_trans_vectors_from_exoII(double u[], const char *file_nm,
       } else {
 	error = ex_get_var(exoid, time_step_lower, EX_NODAL, vdex, 1, num_nodes, val_low);
         error = ex_get_var(exoid, time_step_higher, EX_NODAL, vdex, 1, num_nodes, val_high);
-	EH(error, "ex_get_var nodal");
+	GOMA_EH(error, "ex_get_var nodal");
 
         for (k=0; k<num_nodes; k++){
 		slope = (val_high[k] - val_low[k])/(time_higher - time_lower);
@@ -2647,7 +2647,7 @@ rd_trans_vectors_from_exoII(double u[], const char *file_nm,
 
   safer_free((void **) &var_names);
   error = ex_close(exoid);
-  EH(error, "ex_close");
+  GOMA_EH(error, "ex_close");
   //fclose(ofp);
 
   /*
@@ -2694,7 +2694,7 @@ rd_exoII_nv(double *u, int varType, int mn, MATRL_PROP_STRUCT *matrl,
     DPRINTF(stdout,"Nodal variable %s found in exoII database - reading.\n", 
 	    exo_var_name);
     error = ex_get_var(exoII_id, time_step, EX_NODAL, vdex, 1, num_nodes, variable);
-    EH(error, "ex_get_var nodal");
+    GOMA_EH(error, "ex_get_var nodal");
     inject_nodal_vec(u, varType, spec, 0, mn, variable);
     safer_free((void **) &variable);
   }
@@ -2738,7 +2738,7 @@ rd_exoII_ev(double *u, int varType, int mn, MATRL_PROP_STRUCT *matrl,
     DPRINTF(stdout,"Element variable %s for material %d found in exoII database - reading.\n",
             exo_var_name,mn+1);
     error = ex_get_var(exoII_id, time_step, EX_ELEM_BLOCK, vdex, mn+1, num_elems_block, variable);
-    EH(error, "ex_get_var element");
+    GOMA_EH(error, "ex_get_var element");
     inject_elem_vec(u, varType, 0, spec, mn, variable,exo,num_elems_block);
     safer_free((void **) &variable);
   }
@@ -2820,11 +2820,11 @@ rd_globals_from_exoII(double u[], const char *file_nm, const int start, const in
   IO_word_size  = 0;    
 
   exoid = ex_open(file_nm, EX_READ, &CPU_word_size, &IO_word_size , &version);
-  EH(exoid, "ex_open");
+  GOMA_EH(exoid, "ex_open");
 
   error = ex_get_init(exoid, title, &num_dim, &num_nodes, &num_elem,
 		      &num_elem_blk, &num_node_sets, &num_side_sets);
-  EH(error, "ex_get_init for efv or init guess");
+  GOMA_EH(error, "ex_get_init for efv or init guess");
 
   error = ex_get_variable_param( exoid, EX_GLOBAL, &num_global_vars );
 
@@ -2838,10 +2838,10 @@ rd_globals_from_exoII(double u[], const char *file_nm, const int start, const in
    * We will read only from the last time step
    */
       error = ex_inquire(exoid, EX_INQ_TIME, &time_step, &ret_float, ret_char);
-      EH(error, "ex_inquire");
+      GOMA_EH(error, "ex_inquire");
 
       error = ex_get_var( exoid, time_step, EX_GLOBAL, 1, 1, num_global_vars, global_vars );
-      EH(error, "ex_get_var global");
+      GOMA_EH(error, "ex_get_var global");
 
       /* 
        *  Read only the global vars that are there.  No more, no less
@@ -2856,7 +2856,7 @@ rd_globals_from_exoII(double u[], const char *file_nm, const int start, const in
       safer_free( (void **) &global_vars );
     }
   error = ex_close(exoid);
-  EH(error, "ex_close");  
+  GOMA_EH(error, "ex_close");  
   return num_global_vars;
 }
 
@@ -2943,10 +2943,10 @@ inject_nodal_vec(double sol_vec[], const int varType, const int k,
       int ndof = 0;
       if (pd->i[pg->imtrx][varType] == I_PQ1) {
 	ndof = 4;
-	WH(-1, "Using 4 dof injecting variable");
+	GOMA_WH(-1, "Using 4 dof injecting variable");
       } else if (pd->i[pg->imtrx][varType] == I_PQ2) {
 	ndof = 9;
-	WH(-1, "Using 9 dof injecting variable");
+	GOMA_WH(-1, "Using 9 dof injecting variable");
       }
 
       if (ndof > 0) {
@@ -3137,7 +3137,7 @@ build_node_index_var(const int varType, const int num_nodes,
   int imtrx;
   NODAL_VARS_STRUCT *nv;
   if (varType < 0 || varType > MAX_VARIABLE_TYPES-1) {
-      EH(GOMA_ERROR, "Attempt to count a bogus variable.");
+      GOMA_EH(GOMA_ERROR, "Attempt to count a bogus variable.");
   }
   count = 0;
   for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
@@ -3178,7 +3178,7 @@ count_vardofs(const int varType, const int num_nodes)
   int imtrx;
   NODAL_VARS_STRUCT *nv;
   if (varType < 0 || varType > MAX_VARIABLE_TYPES-1) {
-      EH(GOMA_ERROR, "Attempt to count a bogus variable.");
+      GOMA_EH(GOMA_ERROR, "Attempt to count a bogus variable.");
   }
   count = 0;
   for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
@@ -3250,7 +3250,7 @@ init_vec_value(double *vector, const double value, const int length)
     {
       if ( Debug_Flag > 1 )
 	{
-	  WH( -1, "Warning: attempted to initialize NULL vector." );
+	  GOMA_WH( -1, "Warning: attempted to initialize NULL vector." );
 	}
       return;
     }
@@ -3337,7 +3337,7 @@ load_import_fields(dbl *base_p_por,
             " Importing external #%d nvar field %s...\n", w, efv->name[w]);
           efv->ext_fld_ndl_val[w] = alloc_dbl_1(nn, 0.0);
           nv_start = nn * nv_count;
-          if (doing_ev) WH(-1, "Problem with order of external field cards!\n");
+          if (doing_ev) GOMA_WH(-1, "Problem with order of external field cards!\n");
           for (i=0; i<nn; i++)
             {
               efv->ext_fld_ndl_val[w][i] = libio->xnv_in[nv_start+i];
@@ -3486,7 +3486,7 @@ advance_porosity_ev(const int time_step, const int nn,
                                                                                 
   /* check for valid porosity external field index */
   i_por_ev = efv->ev_porous_index;
-  EH(i_por_ev, "Porosity external field not found!");
+  GOMA_EH(i_por_ev, "Porosity external field not found!");
                                                                                 
   /* Loop over nodes in problem */
   for (n=0; n<nn; n++)
@@ -3551,7 +3551,7 @@ advance_porosity_goma_first(const int time_step, const int nn,
                                                                                 
   /* check for valid porosity external field index */
   i_por_ev = efv->ev_porous_index;
-  EH(i_por_ev, "Porosity external field not found!");
+  GOMA_EH(i_por_ev, "Porosity external field not found!");
                                                                                 
   /* Loop over nodes in problem */
   for (n=0; n<nn; n++)
@@ -3594,7 +3594,7 @@ advance_porosity_jas_leads(const int time_step,
                                                                                 
   /* check for valid porosity external field index */
   i_por_ev = efv->ev_porous_index;
-  EH(i_por_ev, "Porosity external field not found!");
+  GOMA_EH(i_por_ev, "Porosity external field not found!");
                                                                                 
   /* Loop over nodes in problem */
   for (n=0; n<nn; n++)

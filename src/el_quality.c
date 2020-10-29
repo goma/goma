@@ -287,7 +287,7 @@ static double jacobian_metric(Exo_DB *exo, double *x, int *proc_config)
       eqsum += eq;
       if (eq < eqmin) eqmin = eq;
         }  else  {
-           WH(-1,"non 2D elements in Jacobian Quality\n");
+           GOMA_WH(-1,"non 2D elements in Jacobian Quality\n");
         }
 	/*    restore element shape to its original value  */
       bd->element_shape = store_shape;
@@ -558,7 +558,7 @@ static void load_vertex_xy(Exo_DB *exo, int ielem,
               node = ei[pg->imtrx]->dof_list[R_MESH1+i][k];
               index = Proc_Elem_Connect[Proc_Connect_Ptr[ielem]+node];
               nd = Index_Solution(index, MESH_DISPLACEMENT1+i, 0, 0, ei[pg->imtrx]->mn, pg->imtrx);
-              EH(nd, "Bad displacement unknown index!");
+              GOMA_EH(nd, "Bad displacement unknown index!");
               xy[i][k] = Coor[i][index] + x[nd];
             }
           else
@@ -595,7 +595,7 @@ static double vertex_angle(double **xy, int i, int n, int *sense)
     }
   else 
     {
-      EH(GOMA_ERROR,"vertex_angle: n must be 4 or 8, or else there is an algorithm error"); 
+      GOMA_EH(GOMA_ERROR,"vertex_angle: n must be 4 or 8, or else there is an algorithm error"); 
     }
 
   /* Load coordinates of v2 and the two neighbor nodes */

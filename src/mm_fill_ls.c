@@ -260,9 +260,9 @@ void semi_lagrange_step(const int num_total_nodes, int num_total_unknowns,
 #endif
 
   if (dim > 2)
-    EH(GOMA_ERROR, "SEMI_LAGRANGE time stepping not implemented in 3D.");
+    GOMA_EH(GOMA_ERROR, "SEMI_LAGRANGE time stepping not implemented in 3D.");
   if (ls->Isosurface_Subsurf_Type != LS_SURF_FACET)
-    EH(GOMA_ERROR, "Need FACET Isosurface type .");
+    GOMA_EH(GOMA_ERROR, "Need FACET Isosurface type .");
 
   global_fill_unknowns = num_fill_unknowns;
 
@@ -294,7 +294,7 @@ void semi_lagrange_step(const int num_total_nodes, int num_total_unknowns,
         v_node[0] = x[Index_Solution(inode, VELOCITY1, 0, 0, -1, pg->imtrx)];
         v_node[1] = x[Index_Solution(inode, VELOCITY2, 0, 0, -1, pg->imtrx)];
       } else {
-        EH(GOMA_ERROR, "Need equal interpolation order LS and VELOCITY1, VELOCITY2 for "
+        GOMA_EH(GOMA_ERROR, "Need equal interpolation order LS and VELOCITY1, VELOCITY2 for "
                "SEMI_LAGRANGE.\n");
       }
 
@@ -556,27 +556,27 @@ int apply_strong_fill_ca_bc(
 
     /* ****************************************/
     err = load_basis_functions(xi, bfd);
-    EH(err, "problem from load_basis_functions");
+    GOMA_EH(err, "problem from load_basis_functions");
 
     err = beer_belly();
-    EH(err, "beer_belly");
+    GOMA_EH(err, "beer_belly");
 
     /* precalculate variables at  current integration pt.*/
     err = load_fv();
-    EH(err, "load_fv");
+    GOMA_EH(err, "load_fv");
 
     err = load_bf_grad();
-    EH(err, "load_bf_grad");
+    GOMA_EH(err, "load_bf_grad");
 
     err = load_fv_grads();
-    EH(err, "load_fv_grads");
+    GOMA_EH(err, "load_fv_grads");
 
     /* calculate the determinant of the surface jacobian and the normal to
      * the surface all at one time */
 
     err = get_side_info(ielem_type, elem_side_bc->id_side, &nodes_per_side,
                         local_elem_node_id);
-    EH(err, "get_side_info");
+    GOMA_EH(err, "get_side_info");
 
     surface_determinant_and_normal(
         ielem, ei[pg->imtrx]->iconnect_ptr, num_local_nodes,
@@ -653,7 +653,7 @@ int apply_strong_fill_ca_bc(
 
               je = node_to_fill[J] + kj;
               ja = (ie == je) ? ie : in_list(je, ijaf[ie], ijaf[ie + 1], ijaf);
-              EH(ja, "Could not find vbl in sparse matrix.");
+              GOMA_EH(ja, "Could not find vbl in sparse matrix.");
 
               for (a = 0; a < dim; a++) {
                 afill[ja] += BIG_PENALTY * wt * fv->sdet * phi_i * delta_func *
@@ -773,7 +773,7 @@ huygens_renormalization ( double *x,
       Hrenorm_smolianksi_only(exo, cx, dpi, x, list, num_total_nodes,
                               num_ls_unkns, num_total_unkns, time);
     } else {
-      EH(GOMA_ERROR, "You shouldn't actually be here. \n");
+      GOMA_EH(GOMA_ERROR, "You shouldn't actually be here. \n");
     }
 
     free_surf_list(&list);
@@ -1186,7 +1186,7 @@ int assemble_level_correct(
 
             je = node_to_fill[J] + kj;
             ja = (ie == je) ? ie : in_list(je, ijaf[ie], ijaf[ie + 1], ijaf);
-            EH(ja, "Could not find vbl in sparse matrix.");
+            GOMA_EH(ja, "Could not find vbl in sparse matrix.");
 
             afill[ja] += wt * h3 * det_J * phi_i * phi_j * (1 + 2. * tt) / dt;
 
@@ -1325,7 +1325,7 @@ int assemble_level_project(
 
             je = node_to_fill[J] + kj;
             ja = (ie == je) ? ie : in_list(je, ijaf[ie], ijaf[ie + 1], ijaf);
-            EH(ja, "Could not find vbl in sparse matrix.");
+            GOMA_EH(ja, "Could not find vbl in sparse matrix.");
 
             afill[ja] += wt * h3 * det_J * phi_i * phi_j;
           }
@@ -1409,7 +1409,7 @@ void surf_based_initialization(double *x, double *delta_x, double *xdot,
     struct LS_Surf_NS_Data *s = (struct LS_Surf_NS_Data *)list->start->data;
 
     if (list->start->next)
-      EH(GOMA_ERROR, "Current implementation is limited to a single NS surface");
+      GOMA_EH(GOMA_ERROR, "Current implementation is limited to a single NS surface");
 
     initialize_sign(s->PosEB_id, x, exo);
   }
@@ -1901,7 +1901,7 @@ void find_surf_closest_point(struct LS_Surf *surf, double *x, Exo_DB *exo,
       }
       cp->distance = distance;
     } else {
-      EH(GOMA_ERROR, "Facet based surfaces not yet implemented in 3-D");
+      GOMA_EH(GOMA_ERROR, "Facet based surfaces not yet implemented in 3-D");
     }
 
   } break;
@@ -1961,7 +1961,7 @@ static struct LS_Surf_List *create_surfs_from_ns(int ns_id, double *x,
 
   if (ns >= exo->num_node_sets) {
     if (Num_Proc == 1)
-      EH(GOMA_ERROR, "Error: cannot find initial level set nodeset for Huygens "
+      GOMA_EH(GOMA_ERROR, "Error: cannot find initial level set nodeset for Huygens "
              "initialization \n");
   } else {
     ns_num_nodes = exo->ns_num_nodes[ns];
@@ -2065,7 +2065,7 @@ static struct LS_Surf_List *create_surfs_from_ss(int ss_id, double *x,
         append_surf(list, surf);
 
       } else {
-        EH(GOMA_ERROR, "create_subsurfs_from_ss currently only implemented for 2-D");
+        GOMA_EH(GOMA_ERROR, "create_subsurfs_from_ss currently only implemented for 2-D");
       }
     }
   } /* for ( i=0; i<exo->ss_num_sides[iss]; i++) */
@@ -2282,7 +2282,7 @@ static struct LS_Surf_List *create_surfs_from_iso(int isovar, double isoval,
             break;
 
           default:
-            EH(GOMA_ERROR, "Unknown subsurface type for isosurface reconstruction");
+            GOMA_EH(GOMA_ERROR, "Unknown subsurface type for isosurface reconstruction");
             break;
           }
         }
@@ -2377,7 +2377,7 @@ static void initialize_sign(int PosEB_id, double *x, Exo_DB *e) {
 
   /*  if( e->num_elem_blocks != 2 && Num_Proc == 1 )
       {
-        EH(GOMA_ERROR,"Huygens Initialization only functions for two element blocks
+        GOMA_EH(GOMA_ERROR,"Huygens Initialization only functions for two element blocks
      \n");
       }
   */
@@ -2463,7 +2463,7 @@ static void ddd_add_surf(DDD pkg, struct LS_Surf *surf) {
   } break;
 
   default: {
-    EH(GOMA_ERROR, "ddd_add_surf called with unknown surface type");
+    GOMA_EH(GOMA_ERROR, "ddd_add_surf called with unknown surface type");
   } break;
   }
 }
@@ -2486,7 +2486,7 @@ void assemble_Global_surf_list(struct LS_Surf_List *list) {
 #endif
 
   if (list == NULL)
-    EH(GOMA_ERROR, "Lists must exist before calling assemble_Global_surf_list");
+    GOMA_EH(GOMA_ERROR, "Lists must exist before calling assemble_Global_surf_list");
 
 #ifdef PARALLEL
   list_size = (int *)smalloc(Num_Proc * sizeof(int));
@@ -2529,7 +2529,7 @@ void assemble_Global_surf_list(struct LS_Surf_List *list) {
           surf = next_surf_or_subsurf(list, &level);
 
           if (surf == NULL) {
-            EH(GOMA_ERROR, "That really shouldn't happen.");
+            GOMA_EH(GOMA_ERROR, "That really shouldn't happen.");
           }
 
           levels[n] = level;
@@ -2571,7 +2571,7 @@ void assemble_Global_surf_list(struct LS_Surf_List *list) {
   }
 
   if (list->size == 0 && Num_Proc == 1) {
-    EH(GOMA_ERROR, "No points found on zero level set");
+    GOMA_EH(GOMA_ERROR, "No points found on zero level set");
     /*       DPRINTF(stderr,"No points found on zero level set\n"); */
   }
 
@@ -3172,7 +3172,7 @@ static int Hrenorm_constrain(Exo_DB *exo, Comm_Ex *cx, Dpi *dpi, double x[],
   }
 
   if (k != num_ls_unkns) {
-    EH(GOMA_ERROR, "Error in Hrenorm_constrain. Level set unknowns unaccounted for.");
+    GOMA_EH(GOMA_ERROR, "Error in Hrenorm_constrain. Level set unknowns unaccounted for.");
   }
 
   M0 = find_LS_mass(exo, dpi, NULL, dC, x, num_total_unkns);
@@ -3386,7 +3386,7 @@ void print_point_list(double *x, Exo_DB *exo, char *filename, double time_value)
   {
 
     if ((ofp = fopen(filename, "w")) == NULL) {
-      EH(GOMA_ERROR, "Error opening level set output file.\n");
+      GOMA_EH(GOMA_ERROR, "Error opening level set output file.\n");
     }
   }
 
@@ -3453,7 +3453,7 @@ int generate_facet_list(double (**point0)[DIM], double (**point1)[DIM],
 
   while (surf != NULL) {
     if (surf->type != LS_SURF_FACET) {
-      EH(GOMA_ERROR, "Error traversing facet list\n");
+      GOMA_EH(GOMA_ERROR, "Error traversing facet list\n");
     }
     num_facets++;
     surf = surf->next;
@@ -3473,13 +3473,13 @@ int generate_facet_list(double (**point0)[DIM], double (**point1)[DIM],
   surf = facet_list->start;
   while (surf != NULL) {
     if (surf->type != LS_SURF_FACET) {
-      EH(GOMA_ERROR, "Error traversing facet list\n");
+      GOMA_EH(GOMA_ERROR, "Error traversing facet list\n");
     }
 
     struct LS_Surf_Facet_Data *f = (struct LS_Surf_Facet_Data *)surf->data;
 
     if (f->num_points != 2) {
-      EH(GOMA_ERROR, "Only linear facets in 2-D are supported.\n");
+      GOMA_EH(GOMA_ERROR, "Only linear facets in 2-D are supported.\n");
     }
 
     (*owning_elem)[count] = f->elem;
@@ -3487,7 +3487,7 @@ int generate_facet_list(double (**point0)[DIM], double (**point1)[DIM],
     surf_point = surf->subsurf_list->start;
 
     if (surf_point->type != LS_SURF_POINT) {
-      EH(GOMA_ERROR, "Error traversing facet point list\n");
+      GOMA_EH(GOMA_ERROR, "Error traversing facet point list\n");
     }
 
     pt = (struct LS_Surf_Point_Data *)surf_point->data;
@@ -3534,7 +3534,7 @@ print_ls_interface( double *x,
   }
 
   if (outfile == NULL) {
-    EH(GOMA_ERROR, "Output file for level set interface could not be opened");
+    GOMA_EH(GOMA_ERROR, "Output file for level set interface could not be opened");
   }
 
   list = create_surf_list();
@@ -3594,12 +3594,12 @@ print_ls_interface( double *x,
 	  }
 	else
 	  {
-	    EH(GOMA_ERROR,"Facet based surfaces not yet implemented in 3-D");
+	    GOMA_EH(GOMA_ERROR,"Facet based surfaces not yet implemented in 3-D");
 	  }
       }
       break;
     default:
-      EH(GOMA_ERROR, "Cannot print level set interfaces that are not Points or Facets");
+      GOMA_EH(GOMA_ERROR, "Cannot print level set interfaces that are not Points or Facets");
       break;
     }
 
@@ -3634,13 +3634,13 @@ void print_surf_list(struct LS_Surf_List *list, double time) {
 
   if ((f = fopen(filename1, "w")) == NULL) {
     sprintf(err_msg, "Error opening %s\n", filename1);
-    EH(GOMA_ERROR, err_msg);
+    GOMA_EH(GOMA_ERROR, err_msg);
   }
 
   if (g == NULL) {
     if ((g = fopen(filename2, "w")) == NULL) {
       sprintf(err_msg, "Error opening %s\n", filename2);
-      EH(GOMA_ERROR, err_msg);
+      GOMA_EH(GOMA_ERROR, err_msg);
     }
   }
 
@@ -3829,7 +3829,7 @@ static void find_intersections(struct LS_Surf_List *list, int isovar,
     } break;
 
     default:
-      EH(GOMA_ERROR, "Huygens renormalization not implemented for interpolation");
+      GOMA_EH(GOMA_ERROR, "Huygens renormalization not implemented for interpolation");
       break;
     }
     break;
@@ -3919,7 +3919,7 @@ static void find_intersections(struct LS_Surf_List *list, int isovar,
     } break;
 
     default:
-      EH(GOMA_ERROR, "Huygens renormalization not implemented for interpolation");
+      GOMA_EH(GOMA_ERROR, "Huygens renormalization not implemented for interpolation");
       break;
     }
     break;
@@ -3961,7 +3961,7 @@ static void find_intersections(struct LS_Surf_List *list, int isovar,
     } break;
 
     default:
-      EH(GOMA_ERROR, "Huygens renormalization not implemented for this interpolation "
+      GOMA_EH(GOMA_ERROR, "Huygens renormalization not implemented for this interpolation "
              "on TRIs");
       break;
     }
@@ -4002,14 +4002,14 @@ static void find_intersections(struct LS_Surf_List *list, int isovar,
       }
     } break;
     default:
-      EH(GOMA_ERROR, "Huygens renormalization not implemented for this interpolation "
+      GOMA_EH(GOMA_ERROR, "Huygens renormalization not implemented for this interpolation "
              "on TRIs");
       break;
     }
     break;
 
   default:
-    EH(GOMA_ERROR, "Huygens renormalization not implemented for this element shape");
+    GOMA_EH(GOMA_ERROR, "Huygens renormalization not implemented for this element shape");
     break;
   }
 }
@@ -4047,7 +4047,7 @@ void find_facets(struct LS_Surf_List *list, int isovar, double isoval,
     default:
       printf("isovar=%d, pd->i[pg->imtrx][isovar]=%d\n", isovar,
              pd->i[pg->imtrx][isovar]);
-      EH(GOMA_ERROR, "Facet based contouring not implemented for quads with this "
+      GOMA_EH(GOMA_ERROR, "Facet based contouring not implemented for quads with this "
              "interpolation type");
       break;
     }
@@ -4057,14 +4057,14 @@ void find_facets(struct LS_Surf_List *list, int isovar, double isoval,
     switch (pd->i[pg->imtrx][isovar]) {
 
     default:
-      EH(GOMA_ERROR, "Facet based contouring not implemented for hexes with this "
+      GOMA_EH(GOMA_ERROR, "Facet based contouring not implemented for hexes with this "
              "interpolation type");
       break;
     }
     break;
 
   default:
-    EH(GOMA_ERROR, "Facet based contouring not implemented for this element shape");
+    GOMA_EH(GOMA_ERROR, "Facet based contouring not implemented for this element shape");
     break;
   }
 }
@@ -4113,7 +4113,7 @@ static void find_quad_facets(struct LS_Surf_List *list, int isovar,
       find_nodal_stu(i, ei[pg->imtrx]->ielem_type, xi, xi + 1, xi + 2);
       find_nodal_stu(j, ei[pg->imtrx]->ielem_type, yi, yi + 1, yi + 2);
       if (!find_link_intersection(xi, yi, isovar, isoval, NULL)) {
-        EH(GOMA_ERROR, "Shouldn't be here.");
+        GOMA_EH(GOMA_ERROR, "Shouldn't be here.");
       }
 
       /* check if crossing is on an edge with a ca condition */
@@ -4196,7 +4196,7 @@ static void find_quad_facets(struct LS_Surf_List *list, int isovar,
 
   default: {
     printf("number of edges = %d\n", vert_count);
-    EH(GOMA_ERROR, "Silly me, I thought this couldn't happen");
+    GOMA_EH(GOMA_ERROR, "Silly me, I thought this couldn't happen");
   } break;
   }
 }
@@ -4220,10 +4220,10 @@ static int point_on_ca_boundary(int I, Exo_DB *exo)
       if (BC_Types[ibc].BC_Name == FILL_CA_BC) {
         if ((iss = in_list(BC_Types[ibc].BC_ID, 0, exo->num_side_sets,
                            exo->ss_id)) == -1) {
-          EH(GOMA_ERROR, "Cannot locate SS index in point_on_ca_boundary");
+          GOMA_EH(GOMA_ERROR, "Cannot locate SS index in point_on_ca_boundary");
         }
         if (num_ss_on_ca_boundary >= 20)
-          EH(GOMA_ERROR, "Need to increase array for ss_on_ca_boundary[] in "
+          GOMA_EH(GOMA_ERROR, "Need to increase array for ss_on_ca_boundary[] in "
                  "point_on_ca_boundary");
         iss_on_ca_boundary[num_ss_on_ca_boundary] = iss;
         num_ss_on_ca_boundary++;
@@ -4442,7 +4442,7 @@ struct LS_Surf *create_surf(int type)
     surf->data = (void *)smalloc(sizeof(struct LS_Surf_Arc_Data));
   } break;
   default: {
-    EH(GOMA_ERROR, "create_surf called with unknown surface type");
+    GOMA_EH(GOMA_ERROR, "create_surf called with unknown surface type");
   } break;
   }
 
@@ -4510,7 +4510,7 @@ int unique_surf(struct LS_Surf_List *list, struct LS_Surf *surf)
   } break;
 
   default: {
-    EH(GOMA_ERROR, "unique_surf not implemented for this surface type");
+    GOMA_EH(GOMA_ERROR, "unique_surf not implemented for this surface type");
   } break;
   }
 
@@ -4624,7 +4624,7 @@ static struct LS_Surf *create_next_surf_or_subsurf(struct LS_Surf_List *list,
   if (level > 0) {
     if (list->end->subsurf_list == NULL) {
       if (level > 1)
-        EH(GOMA_ERROR, "Didn't think this could happen");
+        GOMA_EH(GOMA_ERROR, "Didn't think this could happen");
       list->end->subsurf_list = create_surf_list();
     }
     surf =
@@ -4713,7 +4713,7 @@ void ls_var_initialization(double **u, Exo_DB *exo, Dpi *dpi, Comm_Ex **cx) {
                                      ls->Length_Scale, &(u[imtrx][ie]), NULL);
 
                 } else {
-                  EH(GOMA_ERROR, " Cannot initialized multiple degrees of freedom at a "
+                  GOMA_EH(GOMA_ERROR, " Cannot initialized multiple degrees of freedom at a "
                          "node \n");
                 }
               }
@@ -4822,7 +4822,7 @@ void iso_contour_on_side(double isoval, int dim, int ielem_type, int id_side,
                 do? */
       {
         if (nodes_per_side != 3)
-          EH(GOMA_ERROR, "Unexpected element type!");
+          GOMA_EH(GOMA_ERROR, "Unexpected element type!");
 
         if (sign_change(*esp->F[local_elem_node_id[0]] - isoval,
                         *esp->F[local_elem_node_id[2]] - isoval)) {
@@ -4831,7 +4831,7 @@ void iso_contour_on_side(double isoval, int dim, int ielem_type, int id_side,
 
           find_link_intersection(*s[0], xi_p, ls->var, isoval, NULL);
         } else {
-          EH(GOMA_ERROR, "This really shouldn't happen!");
+          GOMA_EH(GOMA_ERROR, "This really shouldn't happen!");
         }
       }
     } else {
@@ -4841,7 +4841,7 @@ void iso_contour_on_side(double isoval, int dim, int ielem_type, int id_side,
     }
   } break;
   case 3:
-    EH(GOMA_ERROR, "Third dimension remains problematic.\n");
+    GOMA_EH(GOMA_ERROR, "Third dimension remains problematic.\n");
   }
   return;
 }
@@ -5345,7 +5345,7 @@ void load_xfem_for_stu(const double xi[]) {
 
   /* make sure xfem has been set up for element */
   if (ei[pg->imtrx]->ielem != xfem->ielem) {
-    EH(GOMA_ERROR, "Must call load_xfem_for_elem before calling load_xfem_for_stu.\n");
+    GOMA_EH(GOMA_ERROR, "Must call load_xfem_for_elem before calling load_xfem_for_stu.\n");
   }
 
   if (xfem->elem_state == 1) {
@@ -5381,7 +5381,7 @@ void load_xfem_for_stu(const double xi[]) {
         xfem->grad_F_plus[2] = 0.;
         return;
       } else
-        EH(GOMA_ERROR, "Unexpected interpolation for FILL");
+        GOMA_EH(GOMA_ERROR, "Unexpected interpolation for FILL");
 
       xfem->F = 0.;
       for (i = 0; i < dof_ls; i++) {
@@ -5514,7 +5514,7 @@ void xfem_correct(int num_total_nodes, double x[], double xdot[],
       if (upd->Total_Num_Matrices == 1 && fill_matrix < 0) {
         fill_matrix = pg->imtrx;
       } else if (fill_matrix < 0) {
-        EH(GOMA_ERROR, "Could not find fill matrix");
+        GOMA_EH(GOMA_ERROR, "Could not find fill matrix");
       }
       if (is_xfem_interp(interp)) {
         double F, F_old, F_prev;
@@ -5583,7 +5583,7 @@ void xfem_correct(int num_total_nodes, double x[], double xdot[],
 #endif
             } break;
             default:
-              WH(-1, "x correction not yet implemented for this type of XFEM");
+              GOMA_WH(-1, "x correction not yet implemented for this type of XFEM");
             }
           }
         }
@@ -5668,7 +5668,7 @@ void xfem_correct(int num_total_nodes, double x[], double xdot[],
                             (2.0 * theta_arg) * xdot_old[ie_xfem];
           } break;
           default:
-            WH(-1, "xdot correction not yet implemented for this type of XFEM");
+            GOMA_WH(-1, "xdot correction not yet implemented for this type of XFEM");
           }
         } else {
           for (idof = 0; idof < vd->Ndof; idof++) {
@@ -5855,7 +5855,7 @@ void xfem_predict(int num_total_nodes, int numProcUnknowns, double delta_t,
 #endif
           } break;
           default:
-            WH(-1, "predictor not yet implemented for this type of XFEM");
+            GOMA_WH(-1, "predictor not yet implemented for this type of XFEM");
           }
         }
       }
@@ -5916,7 +5916,7 @@ void xfem_var_diff(int var, double *vdiff, double phidiff[MDE],
   case I_NOTHING:
     break;
   default:
-    EH(GOMA_ERROR, "xfem_var_diff not yet implemented for this type of XFEM");
+    GOMA_EH(GOMA_ERROR, "xfem_var_diff not yet implemented for this type of XFEM");
   }
 }
 
@@ -5928,11 +5928,11 @@ void xfem_var_diff(int var, double *vdiff, double phidiff[MDE],
 void zero_lsi(void) {
   /* Sanity checking. */
   if (lsi == NULL) {
-    EH(GOMA_ERROR, "lsi Level_Set_Interface structure is NULL.");
+    GOMA_EH(GOMA_ERROR, "lsi Level_Set_Interface structure is NULL.");
   }
 
   if (ls == NULL) {
-    EH(GOMA_ERROR, "ls Level_Set_Data structure is NULL.");
+    GOMA_EH(GOMA_ERROR, "ls Level_Set_Data structure is NULL.");
   }
 
   lsi->near = FALSE;
@@ -5951,11 +5951,11 @@ void zero_lsi(void) {
 void zero_lsi_derivs(void) {
   /* Sanity checking. */
   if (lsi == NULL) {
-    EH(GOMA_ERROR, "lsi Level_Set_Interface structure is NULL.");
+    GOMA_EH(GOMA_ERROR, "lsi Level_Set_Interface structure is NULL.");
   }
 
   if (ls == NULL) {
-    EH(GOMA_ERROR, "ls Level_Set_Data structure is NULL.");
+    GOMA_EH(GOMA_ERROR, "ls Level_Set_Data structure is NULL.");
   }
 
   lsi->dH = 0.;
@@ -6165,7 +6165,7 @@ load_lsi_old(const double width, struct Level_Set_Interface *lsi_old)
   int a;
 
   if (ls->var != FILL) {
-    EH(GOMA_ERROR, "Unknown level set variable");
+    GOMA_EH(GOMA_ERROR, "Unknown level set variable");
   }
 
   lsi_old->near  = FALSE;
@@ -6229,7 +6229,7 @@ load_lsi_old(const double width, struct Level_Set_Interface *lsi_old)
   if (pd->v[pg->imtrx][LUBP]  || pd->v[pg->imtrx][LUBP_2] || pd->v[pg->imtrx][SHELL_SAT_CLOSED] || pd->v[pg->imtrx][SHELL_PRESS_OPEN ] ||
       pd->v[pg->imtrx][SHELL_PRESS_OPEN_2] || pd->v[pg->imtrx][SHELL_SAT_GASN] )
     {
-      EH(GOMA_ERROR, "No support for LUBP/SHELL_SAT/SHELL_PRESS");
+      GOMA_EH(GOMA_ERROR, "No support for LUBP/SHELL_SAT/SHELL_PRESS");
     } /* end of if pd->v[pg->imtrx][LUBP] || ... etc */
 
 /************ End of shielding **************************/
@@ -6502,7 +6502,7 @@ int load_lsi_shell_second(const double width) {
     }
   } /* end of if upd->vp[pg->imtrx][LUBP] || ... etc */
   else {
-    EH(GOMA_ERROR, " you shouldn't be in this routine. Go check it out or contact PRS "
+    GOMA_EH(GOMA_ERROR, " you shouldn't be in this routine. Go check it out or contact PRS "
            "8/21/2012");
   }
 
@@ -6531,7 +6531,7 @@ static void copy_distance_function(double *F, double **grad_F) {
     *grad_F = fv->grad_pF[offset];
     break;
   default:
-    EH(GOMA_ERROR, " Unknown distance function variable type.\n");
+    GOMA_EH(GOMA_ERROR, " Unknown distance function variable type.\n");
     break;
   }
 }
@@ -7021,7 +7021,7 @@ void xfem_dof_state(
     *extended_dof = xfem->elem_var_state == 1 || lnn_distance(*base_dof) >= 0.;
     break;
   default:
-    EH(GOMA_ERROR, "Unrecognized extended shape function.");
+    GOMA_EH(GOMA_ERROR, "Unrecognized extended shape function.");
     break;
   }
 
@@ -7054,7 +7054,7 @@ void xfem_dof_state(
     *xfem_active = (xfem->node_var_state[*base_dof] == 1);
     break;
   default:
-    EH(GOMA_ERROR, "Unrecognized extended shape function.");
+    GOMA_EH(GOMA_ERROR, "Unrecognized extended shape function.");
     break;
   }
 
@@ -7113,7 +7113,7 @@ int is_extended_dof(const int I, const int idof,
     extended_dof = (F >= 0.);
     break;
   default:
-    EH(GOMA_ERROR, "Unrecognized extended shape function.");
+    GOMA_EH(GOMA_ERROR, "Unrecognized extended shape function.");
     break;
   }
 
@@ -7143,15 +7143,15 @@ int dof_incomplete(int node, int elem_type, int interpolation, int eshape) {
           return (!sign_change(f[0], f[1]) && !sign_change(f[1], f[2]));
         }
       }
-      EH(GOMA_ERROR, "Unexpected Error.");
+      GOMA_EH(GOMA_ERROR, "Unexpected Error.");
       break;
     default:
-      EH(GOMA_ERROR, "Not implemented yet.");
+      GOMA_EH(GOMA_ERROR, "Not implemented yet.");
       break;
     }
     break;
   default:
-    EH(GOMA_ERROR, "Invalid shape function.");
+    GOMA_EH(GOMA_ERROR, "Invalid shape function.");
     break;
   }
   return (-1);
@@ -8483,10 +8483,10 @@ int elem_overlaps_interface(int elem, double x[], const Exo_DB *exo,
       find_nodal_stu( min_node, ielem_type, xi, xi+1, xi+2 );
 
       err = load_basis_functions(xi, bfd);
-      EH( err, "problem from load_basis_functions");
+      GOMA_EH( err, "problem from load_basis_functions");
       
       err = beer_belly();
-      EH( err, "beer_belly");
+      GOMA_EH( err, "beer_belly");
 
       det = bf[ls->var]->detJ;
 
@@ -9326,7 +9326,7 @@ void subelement_mesh_output(double x[], Exo_DB *exo) {
     else if (nodes_per_elem == 6)
       nodes_per_side = 3;
     else
-      EH(GOMA_ERROR, "Subelement type not supported.");
+      GOMA_EH(GOMA_ERROR, "Subelement type not supported.");
   }
 
   while (s != NULL) {
@@ -9395,7 +9395,7 @@ void subelement_mesh_output(double x[], Exo_DB *exo) {
             if (nodes_per_side == 3)
               sconn[isconn++] = istart + 5 + 1;
           } else
-            EH(GOMA_ERROR, "Subelement type not supported.");
+            GOMA_EH(GOMA_ERROR, "Subelement type not supported.");
         }
       }
     }
@@ -9478,7 +9478,7 @@ int get_facet_integration_pts(double (**s)[DIM], double **weight, Exo_DB *exo) {
     facet_data = (struct LS_Surf_Facet_Data *)surf->data;
 
     if (facet_data->num_points != 2)
-      EH(GOMA_ERROR, "Only 2 point facets currently supported");
+      GOMA_EH(GOMA_ERROR, "Only 2 point facets currently supported");
 
     vert[0] = (struct LS_Surf_Point_Data *)surf->subsurf_list->start->data;
     vert[1] =
@@ -10083,7 +10083,7 @@ static int subelement_side_crossing(Integ_Elem *e, int iside, double tol)
                                  0.5 * sqrt(e->f[lnn[0]] * e->f[lnn[1]]))
       num_crossings = 2;
   } else {
-    EH(GOMA_ERROR, "Subelement type not supported.");
+    GOMA_EH(GOMA_ERROR, "Subelement type not supported.");
   }
 
   /* because of all the bad things that can happen when a side has two
@@ -10926,7 +10926,7 @@ void build_integ_element(Integ_Elem *e, double isoval, int ielem_type,
       }
     } break;
     default:
-      EH(GOMA_ERROR, "Unsupported element type.");
+      GOMA_EH(GOMA_ERROR, "Unsupported element type.");
       break;
     }
   } else /* if ( !is_conformal ) */
@@ -10948,7 +10948,7 @@ void build_integ_element(Integ_Elem *e, double isoval, int ielem_type,
         if (e->f[2] < 0.)
           e->sign = -1;
       } else {
-        EH(GOMA_ERROR, "This really shouldn't happen!");
+        GOMA_EH(GOMA_ERROR, "This really shouldn't happen!");
       }
 
       /* see if any sides of this element are on interface */
@@ -10958,7 +10958,7 @@ void build_integ_element(Integ_Elem *e, double isoval, int ielem_type,
       e->bc_sides[2] = (e->sign == -1 && side_ids[2] == -2);
     } break;
     default:
-      EH(GOMA_ERROR, "Unsupported element type.");
+      GOMA_EH(GOMA_ERROR, "Unsupported element type.");
       break;
     }
   }
@@ -11143,7 +11143,7 @@ double subelement_surfdet(Integ_Elem *e, double *yi, int side,
      was modified above.
    */
   if (DeformingMesh)
-    WH(-1, "Deforming mesh not handled correctly by subelement_surfdet");
+    GOMA_WH(-1, "Deforming mesh not handled correctly by subelement_surfdet");
 
   /* NOTE: One thing that I found out the hard way is that calls to
      load_basis_functions will be ineffectual while in this state of
@@ -11200,7 +11200,7 @@ int num_subelement_integration_pts(Integ_Elem *e, int gpt_type, int sign) {
       {
         num_gpts = elem_info(NQUAD, e->ielem_type);
       } else {
-        EH(GOMA_ERROR, "Incorrect type of sublelement gauss points requested.");
+        GOMA_EH(GOMA_ERROR, "Incorrect type of sublelement gauss points requested.");
       }
     }
   }
@@ -11297,7 +11297,7 @@ int gather_subelement_integration_pts(Integ_Elem *e, double (*s)[DIM],
           index++;
         }
       } else {
-        EH(GOMA_ERROR, "Incorrect type of sublelement gauss points requested.");
+        GOMA_EH(GOMA_ERROR, "Incorrect type of sublelement gauss points requested.");
       }
     }
   }
@@ -11343,7 +11343,7 @@ void compute_xfem_contribution(int N) {
 
                 if (ie < 0 || ie >= N) {
                   DPRINTF(stderr, "compute_xfem_contribution ie = %d\n", ie);
-                  EH(GOMA_ERROR, "compute_xfem_contrib, ie out of bounds\n");
+                  GOMA_EH(GOMA_ERROR, "compute_xfem_contrib, ie out of bounds\n");
                 }
 
                 xfem->active_vol[ie] += bf[eqn]->phi[i] * dV;
@@ -11354,7 +11354,7 @@ void compute_xfem_contribution(int N) {
 
               if (ie < 0 || ie >= N) {
                 DPRINTF(stderr, "compute_xfem_contribution ie = %d\n", ie);
-                EH(GOMA_ERROR, "compute_xfem_contrib, ie out of bounds\n");
+                GOMA_EH(GOMA_ERROR, "compute_xfem_contrib, ie out of bounds\n");
               }
 
               xfem->active_vol[ie] += bf[eqn]->phi[i] * dV;
@@ -11448,7 +11448,7 @@ void check_xfem_contribution(int N, struct Aztec_Linear_Solver_System *ams,
       }
     }
   } else {
-    EH(GOMA_ERROR, "Unsupported matrix format in check_xfem_contribution");
+    GOMA_EH(GOMA_ERROR, "Unsupported matrix format in check_xfem_contribution");
   }
 
   return;
@@ -11597,7 +11597,7 @@ static double determine_adc_probability(struct Boundary_Condition *ls_adc,
   }
 
   if (area < 1.e-12)
-    EH(GOMA_ERROR, "Error zero area element detected in determine_adc_probability.\n");
+    GOMA_EH(GOMA_ERROR, "Error zero area element detected in determine_adc_probability.\n");
 
   avg_cos /= area;
 
@@ -11931,7 +11931,7 @@ static double find_adc_node(int ns_id, double *x, Exo_DB *exo,
 
   if (ns >= exo->num_node_sets) {
     if (Num_Proc == 1)
-      EH(GOMA_ERROR, "In find_adc_node:  Can't locate nodeset id \n");
+      GOMA_EH(GOMA_ERROR, "In find_adc_node:  Can't locate nodeset id \n");
     else
       /* Parallel problem:  likely that this sideset isn't on this proc */
       return (-1.e33);
@@ -11962,7 +11962,7 @@ static double find_adc_node(int ns_id, double *x, Exo_DB *exo,
   }
 
   if (ie_adc == -1)
-    EH(GOMA_ERROR, " Error in find_adc_node:  Can't locate level set unknown\n");
+    GOMA_EH(GOMA_ERROR, " Error in find_adc_node:  Can't locate level set unknown\n");
 
   return (x[ie_adc]);
 }

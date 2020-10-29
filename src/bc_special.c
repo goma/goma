@@ -278,7 +278,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 	   in_list(BC_Types[bc_input_id].BC_ID, 0, exo->num_side_sets, 
 		   ss_to_blks[0])) == -1)
 	{
-	  EH(GOMA_ERROR,"Cannot match side set id with that in ss_to_blks array");
+	  GOMA_EH(GOMA_ERROR,"Cannot match side set id with that in ss_to_blks array");
 	}
 
       /* Set flag to indicate if we're in the right material (only one) to apply*/
@@ -383,13 +383,13 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 	    find_nodal_stu(id, ielem_type, &xi[0], &xi[1], &xi[2]);
 
 	    err = load_basis_functions( xi, bfd );
-	    EH( err, "problem from load_basis_functions");
+	    GOMA_EH( err, "problem from load_basis_functions");
 
 	    err = beer_belly();
-	    EH( err, "beer_belly");
+	    GOMA_EH( err, "beer_belly");
             
 	    err = load_fv();
-	    EH( err, "load_fv");
+	    GOMA_EH( err, "load_fv");
             
 	    /* may want to load material properties here */
 	    
@@ -526,7 +526,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 			    {
 			      if(jflag == -1)
 				{
-				  EH(GOMA_ERROR,"too many CA conditions - change MAX_CA\n");
+				  GOMA_EH(GOMA_ERROR,"too many CA conditions - change MAX_CA\n");
 				}
 			      else
 				{
@@ -642,7 +642,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 		      }/* endif BC_Types[bc_input_id].BC_Name == PLANE_BC || SPLINE_BC */
 		      j_bc_id = j;
 		      
-		      EH(j_bc_id, "Contact angle condition not found at this node");
+		      GOMA_EH(j_bc_id, "Contact angle condition not found at this node");
 		      /* First figure out where you are in the mesh */
 	      
 		      jflag = -1;
@@ -657,7 +657,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 			  /* check for split element condition with frontal solver */
  			  if( Linear_Solver == FRONT && (CA_fselem[jflag] != CA_sselem[jflag]))
 			    {
-			      EH(GOMA_ERROR,"Whoa!  frontal solver not equipped for split element CA conditions");
+			      GOMA_EH(GOMA_ERROR,"Whoa!  frontal solver not equipped for split element CA conditions");
 			    }
 
 	    /*   make sure we are in the free surface element, etc.  */
@@ -668,13 +668,13 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 	    find_nodal_stu(local_node_id, ielem_type, &xi[0], &xi[1], &xi[2]);
 
 	    err = load_basis_functions( xi, bfd );
-	    EH( err, "problem from load_basis_functions");
+	    GOMA_EH( err, "problem from load_basis_functions");
 
 	    err = beer_belly();
-	    EH( err, "beer_belly");
+	    GOMA_EH( err, "beer_belly");
             
 	    err = load_fv();
-	    EH( err, "load_fv");
+	    GOMA_EH( err, "load_fv");
             
 	    /* may want to load material properties here */
 	    
@@ -970,14 +970,14 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 					  }
 					break;
 				      default:
-					WH(-1,"Wall velocity bc not found\n");
+					GOMA_WH(-1,"Wall velocity bc not found\n");
 				      }  /* switch bc	*/
 				  }  	/*  if BC_Types  */
 			      }		/*  Num_BC loop  */
 			      if( !found_wall_velocity )
 				{
 				  wall_velocity = 0;
-				  WH(-1,"Wall velocity not found : setting to zero\n");
+				  GOMA_WH(-1,"Wall velocity not found : setting to zero\n");
 				}
 			      f = BC_Types[j].BC_Data_Float;
 			      if(BC_Types[j].BC_Name == VELO_THETA_SHIK_BC)
@@ -1014,7 +1014,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 						    dwall_velo_dx,
                                                     local_node_id);
 			    }	/* if VELO_THETA bc		*/
-			  else EH(GOMA_ERROR, "NO CA Condition applied ");
+			  else GOMA_EH(GOMA_ERROR, "NO CA Condition applied ");
 #if 0
 		  load_ei(ielem, exo, 0, pg->imtrx);
             /*
@@ -1023,13 +1023,13 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 	    find_nodal_stu(id, ielem_type, &xi[0], &xi[1], &xi[2]);
 
 	    err = load_basis_functions( xi, bfd );
-	    EH( err, "problem from load_basis_functions");
+	    GOMA_EH( err, "problem from load_basis_functions");
 
 	    err = beer_belly();
-	    EH( err, "beer_belly");
+	    GOMA_EH( err, "beer_belly");
             
 	    err = load_fv();
-	    EH( err, "load_fv");
+	    GOMA_EH( err, "load_fv");
             
 	    /* may want to load material properties here */
 	    
@@ -1092,7 +1092,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 		  j_bc_id = j;
 		}
 	      }
-              EH(j_bc_id, "Surface Tangent condition not found at this node");
+              GOMA_EH(j_bc_id, "Surface Tangent condition not found at this node");
 	      jflag = 0; /* Sensitivies from this BC will be applied. */
 	      if(BC_Types[j_bc_id].BC_Name == SURFTANG_BC)
 		{
@@ -1129,7 +1129,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 		  j_bc_id = j;
 		}
 	      }
-              EH(j_bc_id, "Surface Tangent condition not found at this node");
+              GOMA_EH(j_bc_id, "Surface Tangent condition not found at this node");
 	      jflag = 0; /* Sensitivies from this BC will be applied. */
 	      if (BC_Types[j_bc_id].BC_Name == SURFTANG_SCALAR_BC) {
 		apply_ST_scalar(func, d_func, (int) elem_side_bc->id_side,
@@ -1155,7 +1155,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 		    }
 
 		}
-	      EH(j_bc_id, "Surface Tangent condition not found at this node");
+	      GOMA_EH(j_bc_id, "Surface Tangent condition not found at this node");
 
 	      apply_SES(func, d_func, elem_side_bc,
 			BC_Types[bc_input_id].BC_Data_Float[0], I,
@@ -1261,7 +1261,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 					 CA_id[jflag] == j_bc_id && j_bc_id != -1)
 					{
 				          if (strcmp(Matrix_Format, "msr") != 0) {
-				            EH(GOMA_ERROR, "Unexpected matrix format in apply_bc_special, use msr");
+				            GOMA_EH(GOMA_ERROR, "Unexpected matrix format in apply_bc_special, use msr");
 				          }
 
 					  load_ei(CA_fselem[jflag], exo, 0, pg->imtrx);
@@ -1273,10 +1273,10 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 					  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 					    {
 					      je     = ei[pg->imtrx]->gun_list[var][j];
-					      EH(je, "Bad var index.");
+					      GOMA_EH(je, "Bad var index.");
 					      ja = (index_eq == je) ? index_eq :
 						in_list(je, ija[index_eq], ija[index_eq+1], ija);
-					      EH(ja, "Could not find vbl in sparse matrix.");
+					      GOMA_EH(ja, "Could not find vbl in sparse matrix.");
 					      a[ja] += weight * d_func[p][var][j];
 					    }
 					}
@@ -1300,7 +1300,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 					  CA_id[jflag] == j_bc_id && j_bc_id != -1)
 					{
                                           if (strcmp(Matrix_Format, "msr") != 0) {
-                                            EH(GOMA_ERROR,
+                                            GOMA_EH(GOMA_ERROR,
                                                 "Unexpected matrix format in apply_bc_special, use msr");
                                           }
 
@@ -1312,10 +1312,10 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 					  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 					    {
 					      je     = ei[pg->imtrx]->gun_list[var][j]; 
-					      EH(je, "Bad var index."); 
+					      GOMA_EH(je, "Bad var index."); 
 					      ja = (index_eq == je) ? index_eq :
 						in_list(je, ija[index_eq], ija[index_eq+1], ija);
-					      EH(ja, "Could not find vbl in sparse matrix.");
+					      GOMA_EH(ja, "Could not find vbl in sparse matrix.");
 					      a[ja] += weight * d_func_ss[p][var][j];
 					    }
 					}
@@ -1504,7 +1504,7 @@ apply_shell_grad_bc (double x[],           /* Solution vector for the current pr
               /* First, setup shop at the bulk surface Gauss point */
 	      /* find_stu_on_bulk(id_side, ielem_dim, s, t, xi); */
               id = bulk_side_id_and_stu(elem1, elem2, xi2, xi, exo);
-	      if (id != id_side) EH(GOMA_ERROR, "Bulk side ID mismatch!");
+	      if (id != id_side) GOMA_EH(GOMA_ERROR, "Bulk side ID mismatch!");
               setup_shop_at_point(elem1, xi, exo);
 
               /* Load surface determinant/normal data for bulk element side */
@@ -1530,7 +1530,7 @@ apply_shell_grad_bc (double x[],           /* Solution vector for the current pr
                 {
                   node = ei[pg->imtrx]->gnn_list[shell_sv][i];
                   index = in_list(node, 0, ei[pg->imtrx]->dof[shell_sv], bulk_gnn_list);
-                  EH(index, "Mapping fault!");
+                  GOMA_EH(index, "Mapping fault!");
                   gnn_map[i] = index;
 
                 }
@@ -1538,9 +1538,9 @@ apply_shell_grad_bc (double x[],           /* Solution vector for the current pr
               /* This is for error checking */
               err = 0;
               if (ei[pg->imtrx]->num_local_nodes != nodes_per_side)
-                EH(GOMA_ERROR, "Node number mismatch between elements on this side!");
+                GOMA_EH(GOMA_ERROR, "Node number mismatch between elements on this side!");
               if (ei[pg->imtrx]->num_local_nodes != ei[pg->imtrx]->dof[pd->ShapeVar])
-                EH(GOMA_ERROR, "Cannot handle current shell ShapeVar!");
+                GOMA_EH(GOMA_ERROR, "Cannot handle current shell ShapeVar!");
 
               do_LSA_mods(LSA_SURFACE);
 
@@ -1555,7 +1555,7 @@ apply_shell_grad_bc (double x[],           /* Solution vector for the current pr
                     {
                       sprintf(Err_Msg, "Could not find BC_ID %d in ss_to_blks",
 			      BC_Types[bc_input_id].BC_ID);
-                      EH(GOMA_ERROR, Err_Msg);
+                      GOMA_EH(GOMA_ERROR, Err_Msg);
                     }
 
                   /*
@@ -1831,20 +1831,20 @@ assemble_sharp_integrated_bc( double x[],           /* Solution vector for the c
   double wt;
 
   err = load_basis_functions(xi, bfd);
-  EH(err, "problem from load_basis_functions");
+  GOMA_EH(err, "problem from load_basis_functions");
 	      
   err = beer_belly();
-  EH(err, "beer_belly");
+  GOMA_EH(err, "beer_belly");
 
 
   err = load_fv();
-  EH(err, "load_fv");
+  GOMA_EH(err, "load_fv");
 
   err = load_bf_grad();
-  EH(err, "load_bf_grad");
+  GOMA_EH(err, "load_bf_grad");
 	      
   err = load_bf_mesh_derivs(); 
-  EH(err, "load_bf_mesh_derivs");
+  GOMA_EH(err, "load_bf_mesh_derivs");
 
   /* calculate the determinant of the surface jacobian and the normal to 
    * the surface all at one time */
@@ -1855,10 +1855,10 @@ assemble_sharp_integrated_bc( double x[],           /* Solution vector for the c
 				 (elem_side_bc->local_elem_node_id) );
 
   err = load_fv_grads();
-  EH( err, "load_fv_grads");
+  GOMA_EH( err, "load_fv_grads");
 	      
   err = load_fv_mesh_derivs(1);
-  EH(err, "load_fv_mesh_derivs");
+  GOMA_EH(err, "load_fv_mesh_derivs");
     
   /*
    * Load up commonly used physical properties such as density at

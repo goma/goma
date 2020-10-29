@@ -280,7 +280,7 @@ int assemble_fill(double tt,
 // if ( tran->Fill_Weight_Fcn == FILL_WEIGHT_G  ) {
       lubon = 1;
  } else {
-      WH(-1,"\n Multiphase lubrication should be run with Galerkin weighting to \n take advantage of direct velocity calculations.  \n Talk to SAR.");
+      GOMA_WH(-1,"\n Multiphase lubrication should be run with Galerkin weighting to \n take advantage of direct velocity calculations.  \n Talk to SAR.");
       lubon = 0;
     }
   }
@@ -305,7 +305,7 @@ int assemble_fill(double tt,
  }
  if ( pd->e[pg->imtrx][R_LUBP_2] ) {
 
-   EH(GOMA_ERROR," if you have a fill equation turned on in the R_LUBP_2 phase, you are in the wrong place");
+   GOMA_EH(GOMA_ERROR," if you have a fill equation turned on in the R_LUBP_2 phase, you are in the wrong place");
     /* Set up shells */
     n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
     lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
@@ -509,7 +509,7 @@ int assemble_fill(double tt,
       }
     }
   } else if (ls != NULL && ls->Semi_Implicit_Integration) {
-    EH(GOMA_ERROR, "Error Level Set Semi-Implicit Time Integration can only be used "
+    GOMA_EH(GOMA_ERROR, "Error Level Set Semi-Implicit Time Integration can only be used "
            "with SUPG_GP and SUPG_SHAKIB");
     return -1;
   }
@@ -718,7 +718,7 @@ int assemble_fill(double tt,
 
             default:
 
-	      EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
+	      GOMA_EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 	    }
 	  mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
@@ -908,7 +908,7 @@ int assemble_fill(double tt,
 
                     default:
 
-		      EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
+		      GOMA_EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 		    } /* switch(Fill_Weight_Fcn) */
                     dbl source = 0;
@@ -1021,7 +1021,7 @@ int assemble_fill(double tt,
 
                         default:
 
-			  EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
+			  GOMA_EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 			} /* switch(Fill_Weight_Fcn) */
 
@@ -1077,7 +1077,7 @@ int assemble_fill(double tt,
 
 			default:
 
-			  EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
+			  GOMA_EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 			} /* switch(Fill_Weight_Fcn) */
 
@@ -1206,7 +1206,7 @@ int assemble_fill(double tt,
 
 			default:
 
-			  EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
+			  GOMA_EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 			} /* switch(Fill_Weight_Fcn) */
 
@@ -1338,20 +1338,20 @@ int assemble_fill(double tt,
 			  advection  = phi_j * (1. + 2.*tt) * dtinv * grad_F[b]*phi_i;
 			  for(a=0; a < VIM; a++)
 			    {
-			      EH(GOMA_ERROR,"This is easy.  Need to copy essentials from TG case above");
+			      GOMA_EH(GOMA_ERROR,"This is easy.  Need to copy essentials from TG case above");
 			    }
 
 			  break;
 
 			case FILL_WEIGHT_SUPG:  /* Streamline Upwind Petrov Galerkin (SUPG) */
 
-			  EH(GOMA_ERROR,"Level set fill for Eulerian solid mech incompatible for FILL_WEIGHT_SUPG");
+			  GOMA_EH(GOMA_ERROR,"Level set fill for Eulerian solid mech incompatible for FILL_WEIGHT_SUPG");
 
 			  break;
 
 			default:
 
-			  EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
+			  GOMA_EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 			} /* switch(Fill_Weight_Fcn) */
 
@@ -1917,7 +1917,7 @@ assemble_fill_ext_v(double tt,
               
 	    default:
 
-	      EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
+	      GOMA_EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 	    }
 
@@ -2058,7 +2058,7 @@ assemble_fill_ext_v(double tt,
                       
 		    default:
 
-		      EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
+		      GOMA_EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 		    } /* switch(Fill_Weight_Fcn) */
 
@@ -2142,7 +2142,7 @@ assemble_fill_ext_v(double tt,
                        
 		    default:
 		      
-		      EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
+		      GOMA_EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 		      
 		    } /* switch(Fill_Weight_Fcn) */
 		  
@@ -2201,7 +2201,7 @@ assemble_fill_ext_v(double tt,
 
 			default:
 
-			  EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
+			  GOMA_EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 			} /* switch(Fill_Weight_Fcn) */
 		      
@@ -2464,7 +2464,7 @@ assemble_fill_gradf(double tt,
               
 	    default:
 
-	      EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
+	      GOMA_EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 	    }
 
@@ -2533,7 +2533,7 @@ assemble_fill_gradf(double tt,
                       
 		    default:
 
-		      EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
+		      GOMA_EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 		    } /* switch(Fill_Weight_Fcn) */
 
@@ -2594,7 +2594,7 @@ assemble_fill_gradf(double tt,
 
 			default:
 
-			  EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
+			  GOMA_EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 			} /* switch(Fill_Weight_Fcn) */
 		      
@@ -2944,7 +2944,7 @@ assemble_fill(double afill[],	/* Jacobian matrix for fill equation  */
 					  
 					  je = node_to_fill[J] + kj;
 					  ja     = (ie == je) ? ie : in_list(je, ijaf[ie], ijaf[ie+1], ijaf);
-					  EH(ja, "Could not find vbl in sparse matrix.");
+					  GOMA_EH(ja, "Could not find vbl in sparse matrix.");
 					  
 					  /* set diagonal to one for Dirichlet boundary conditions */
 					  if (node->DBC[pg->imtrx] && 
@@ -3331,7 +3331,7 @@ assemble_fill_ext_v(double afill[],	/* Jacobian matrix for fill equation  */
 		      
 		      je = node_to_fill[J] + kj;
 		      ja     = (ie == je) ? ie : in_list(je, ijaf[ie], ijaf[ie+1], ijaf);
-		      EH(ja, "Could not find vbl in sparse matrix.");
+		      GOMA_EH(ja, "Could not find vbl in sparse matrix.");
 		      
 		      /* set diagonal to one for Dirichlet boundary conditions */
 		      if (node->DBC[pg->imtrx] && 
@@ -3681,7 +3681,7 @@ assemble_fill_gradf(double afill[],	/* Jacobian matrix for fill equation  */
 		      
 		      je = node_to_fill[J] + kj;
 		      ja     = (ie == je) ? ie : in_list(je, ijaf[ie], ijaf[ie+1], ijaf);
-		      EH(ja, "Could not find vbl in sparse matrix.");
+		      GOMA_EH(ja, "Could not find vbl in sparse matrix.");
 		      
 		      /* set diagonal to one for Dirichlet boundary conditions */
 		      if (node->DBC[pg->imtrx] && 
@@ -4017,7 +4017,7 @@ integrate_explicit_eqn(
 			    theta, eqntype, node_to_fill, 
 			    First_Elem_Side_BC_Array, exo, dpi);
 	  a_end = ut();
-	  EH( err, "fill_matrix");
+	  GOMA_EH( err, "fill_matrix");
           
           /* Scale matrix first to get rid of problems with 
              penalty parameter. */
@@ -4140,7 +4140,7 @@ integrate_explicit_eqn(
 		}
 	      else
 		{
-		  EH(GOMA_ERROR, "Unknown factorization reuse specification.");
+		  GOMA_EH(GOMA_ERROR, "Unknown factorization reuse specification.");
 		}
 	    }
 	  
@@ -4202,13 +4202,13 @@ integrate_explicit_eqn(
 			   delta_x, rf);
 #endif /* HARWELL */
 #ifndef HARWELL
-	  EH(GOMA_ERROR, "That linear solver package is not implemented.");
+	  GOMA_EH(GOMA_ERROR, "That linear solver package is not implemented.");
 #endif /* HARWELL */
 	  strcpy(stringer, " 1 ");
 	  break;
 	  
 	default:
-	  EH(GOMA_ERROR, "That linear solver package is not implemented.");
+	  GOMA_EH(GOMA_ERROR, "That linear solver package is not implemented.");
 	  break;
 	}
       
@@ -4481,13 +4481,13 @@ fill_matrix(double afill[],	/* matrix for fill variables only      */
       else if(pd->i[pg->imtrx][FILL]==I_PQ1)
 	{
 	  if (dim == 2) ielem_type_fill = C_BILINEAR_QUAD;
-	  if (dim == 3) EH(GOMA_ERROR,"Sorry PQ1 interpolation has not been implemented in 3D yet.");
+	  if (dim == 3) GOMA_EH(GOMA_ERROR,"Sorry PQ1 interpolation has not been implemented in 3D yet.");
 	  discontinuous = 1;
 	}
       else if(pd->i[pg->imtrx][FILL]==I_PQ2)
 	{
 	  if (dim == 2) ielem_type_fill = BIQUAD_QUAD;
-	  if (dim == 3) EH(GOMA_ERROR,"Sorry PQ2 interpolation has not been implemented in 3D yet.");
+	  if (dim == 3) GOMA_EH(GOMA_ERROR,"Sorry PQ2 interpolation has not been implemented in 3D yet.");
 	  discontinuous = 1;
 	}
       else
@@ -4514,7 +4514,7 @@ fill_matrix(double afill[],	/* matrix for fill variables only      */
 	      
 	      if( k == MAX_INLET_BC )
 		{
-		  EH(GOMA_ERROR,"Maximum FILL_INLET BCs exceeded.  Adjust MAX_INLET_BC in mm_fill_fill.c");
+		  GOMA_EH(GOMA_ERROR,"Maximum FILL_INLET BCs exceeded.  Adjust MAX_INLET_BC in mm_fill_fill.c");
 		}
 	    }
 	  
@@ -4550,10 +4550,10 @@ fill_matrix(double afill[],	/* matrix for fill variables only      */
 	       */
 	      	  	      
 	      err = load_elem_dofptr(ielem, exo, x, x_old, xdot, xdot, x, 0);
-	      EH(err, "load_elem_dofptr");
+	      GOMA_EH(err, "load_elem_dofptr");
 
 	      err = bf_mp_init(pd);
-	      EH(err, "bf_mp_init");
+	      GOMA_EH(err, "bf_mp_init");
 
 
 	      ielem_type      = ei[pg->imtrx]->ielem_type;  /* element type */
@@ -4615,7 +4615,7 @@ fill_matrix(double afill[],	/* matrix for fill variables only      */
 		   */
 		  
 		  err = load_basis_functions( xi, bfd);
-		  EH( err, "problem from load_basis_functions");
+		  GOMA_EH( err, "problem from load_basis_functions");
 		  
 		  /*
 		   * This has elemental Jacobian transformation and some 
@@ -4624,13 +4624,13 @@ fill_matrix(double afill[],	/* matrix for fill variables only      */
 		   */
 		  
 		  err = beer_belly();
-		  EH( err, "beer_belly");
+		  GOMA_EH( err, "beer_belly");
 		  
 		  /*
 		   * Load up field variable values at this Gauss point.
 		   */
 		  err = load_fv();
-		  EH( err, "load_fv");
+		  GOMA_EH( err, "load_fv");
 		  
 		  /*
 		   * Here, load in the final part of the necessary basis function
@@ -4646,14 +4646,14 @@ fill_matrix(double afill[],	/* matrix for fill variables only      */
 		   * 		grad() operator depends on the coordinate system.
 		   */
 		  err = load_bf_grad();
-		  EH( err, "load_bf_grad");
+		  GOMA_EH( err, "load_bf_grad");
 		  
 		  /*
 		   * Load up physical space gradients of field variables at this
 		   * Gauss point.
 		   */
 		  err = load_fv_grads();
-		  EH( err, "load_fv_grads");	  
+		  GOMA_EH( err, "load_fv_grads");	  
 		  
 		  do_LSA_mods(LSA_VOLUME);
 		  
@@ -4667,7 +4667,7 @@ fill_matrix(double afill[],	/* matrix for fill variables only      */
 			{
 			  err = assemble_fill_ext_v(afill, ijaf, rf, delta_t, 
 						    theta, node_to_fill, hsquared);
-			  EH( err, "assemble_fill_ext_v");
+			  GOMA_EH( err, "assemble_fill_ext_v");
 			}
 		      else
 			{
@@ -4675,21 +4675,21 @@ fill_matrix(double afill[],	/* matrix for fill variables only      */
 					      theta, node_to_fill);
 			}
 
-		      EH( err, "assemble_fill");
+		      GOMA_EH( err, "assemble_fill");
 
 		      break;
 		    case CORRECT:
 		      err = assemble_level_correct ( afill, ijaf, rf, delta_t, 
                                                      theta, node_to_fill);
-		      EH( err, "assemble_level_correct");
+		      GOMA_EH( err, "assemble_level_correct");
 		      break;
 		    case PROJECT:
 		      err = assemble_level_project ( afill, ijaf, rf, delta_t,
                                                      theta, node_to_fill);
-		      EH( err, "assemble_level_project");
+		      GOMA_EH( err, "assemble_level_project");
 		      break;
 		    default:
-		      EH(GOMA_ERROR,"Unknown equation in fill_matrix.\n");
+		      GOMA_EH(GOMA_ERROR,"Unknown equation in fill_matrix.\n");
 		    }
 		}
 	      /* END  for (ip = 0; ip < ip_total; ip++)                               */
@@ -4728,7 +4728,7 @@ fill_matrix(double afill[],	/* matrix for fill variables only      */
                                              theta, node_to_fill, ielem_type, 
                                              ielem_type_fill, id_side, F_inlet,
 					     neighbor,ielem, num_local_nodes);
-		      EH( err, "assemble_surface");
+		      GOMA_EH( err, "assemble_surface");
 		    }
 		}
 
@@ -4756,7 +4756,7 @@ fill_matrix(double afill[],	/* matrix for fill variables only      */
 				        node_to_fill, ielem, ielem_type, num_local_nodes, ielem_dim,
 				        iconnect_ptr, elem_side_bc, num_total_nodes,
 				        BC_Types[bc_input_id].BC_Data_Float[0], exo);
-	                          EH( err, " apply_strong_fill_ca_bc");
+	                          GOMA_EH( err, " apply_strong_fill_ca_bc");
 				}
 			    }
 			} 
@@ -4787,7 +4787,7 @@ fill_matrix(double afill[],	/* matrix for fill variables only      */
 				{
 				  err = apply_ls_inlet_bc( afill, ijaf, x, rf, node_to_fill, 
 							   elem_side_bc, exo );
-				  EH(err,"apply_ls_inlet_bc");
+				  GOMA_EH(err,"apply_ls_inlet_bc");
 				}
 			    }
 			}
@@ -4897,14 +4897,14 @@ assemble_surface (Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
       
       /* ****************************************/
       err = load_basis_functions( xi, bfd);
-      EH( err, "problem from load_basis_functions");
+      GOMA_EH( err, "problem from load_basis_functions");
 
       err = beer_belly();
-      EH( err, "beer_belly");
+      GOMA_EH( err, "beer_belly");
             
       /* precalculate variables at  current integration pt.*/
       err = load_fv();
-      EH( err, "load_fv");
+      GOMA_EH( err, "load_fv");
 
      /* calculate the determinant of the surface jacobian and the normal to 
       * the surface all at one time 
@@ -4912,7 +4912,7 @@ assemble_surface (Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 
       err =  get_side_info(ielem_type, id_side, &nodes_per_side, local_elem_node_id);
 	  
-      EH( err, "get_side_info");
+      GOMA_EH( err, "get_side_info");
       
       surface_determinant_and_normal (ielem, ei[pg->imtrx]->iconnect_ptr, num_local_nodes, 
 				      ei[pg->imtrx]->ielem_dim - 1,  
@@ -4951,7 +4951,7 @@ assemble_surface (Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 				   num_local_nodes, nodes_per_side,
 				   local_elem_node_id, ielem_type, 
 				   ielem_type_fill, node_to_fill, x_neighbor);
-	      EH( err, "neighbor_fill");
+	      GOMA_EH( err, "neighbor_fill");
 	    }
 	  else
 	    {
@@ -4980,20 +4980,20 @@ assemble_surface (Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 	  
 	  /* ****************************************/
 	  err = load_basis_functions( xi, bfd);
-	  EH( err, "problem from load_basis_functions");
+	  GOMA_EH( err, "problem from load_basis_functions");
 
           err = beer_belly();
-          EH( err, "beer_belly");
+          GOMA_EH( err, "beer_belly");
             
 	  /* precalculate variables at  current integration pt.*/
 	  err = load_fv();
-	  EH( err, "load_fv");
+	  GOMA_EH( err, "load_fv");
 	  
 	  /* calculate the determinant of the surface jacobian and the normal to 
 	   * the surface all at one time */
 	  
 	  err =  get_side_info(ielem_type, id_side, &nodes_per_side, local_elem_node_id);
-	  EH( err, "get_side_info");
+	  GOMA_EH( err, "get_side_info");
 	  
 	  surface_determinant_and_normal (ielem, ei[pg->imtrx]->iconnect_ptr, num_local_nodes, 
 					  ei[pg->imtrx]->ielem_dim - 1,  
@@ -5096,7 +5096,7 @@ assemble_surface (Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 				  
 				  je = node_to_fill[J] + kj;
 				  ja     = (ie == je) ? ie : in_list(je, ijaf[ie], ijaf[ie+1], ijaf);
-				  EH(ja, "Could not find vbl in sparse matrix.");
+				  GOMA_EH(ja, "Could not find vbl in sparse matrix.");
 				  
 				  /* set diagonal to one for Dirichlet boundary conditions */
 				  if(node->DBC[pg->imtrx] &&
@@ -5250,7 +5250,7 @@ neighbor_fill(Exo_DB *exo,
 	  for ( j=0; j<nvdof; j++)
 	    {
 	      ie = Index_Solution(gnn, FILL, ktype, j, -1, pg->imtrx);
-	      EH(ie, "Could not find vbl in sparse matrix.");
+	      GOMA_EH(ie, "Could not find vbl in sparse matrix.");
 	      	      
 	      F_neighbor[ip] += x[ie] * phi[j];
 	      status = 1;
@@ -5292,7 +5292,7 @@ get_side_info(const int ielem_type,
       local_elem_node_id[1] = 0;
       break;
     default:
-      EH(GOMA_ERROR,"Illegal side number for 2-D element");
+      GOMA_EH(GOMA_ERROR,"Illegal side number for 2-D element");
       break;
     }
     break;
@@ -5317,7 +5317,7 @@ get_side_info(const int ielem_type,
       local_elem_node_id[2] = 5;
       break;
     default:
-      EH(GOMA_ERROR,"Illegal side number for 2-D element");
+      GOMA_EH(GOMA_ERROR,"Illegal side number for 2-D element");
       break;
     }
     break;
@@ -5344,7 +5344,7 @@ get_side_info(const int ielem_type,
       local_elem_node_id[1] = 0;
       break;
     default:
-      EH(GOMA_ERROR,"Illegal side number for 2-D element");
+      GOMA_EH(GOMA_ERROR,"Illegal side number for 2-D element");
       break;
     }
     break;
@@ -5374,7 +5374,7 @@ get_side_info(const int ielem_type,
       local_elem_node_id[2] = 7;
       break;
     default:
-      EH(GOMA_ERROR,"Illegal side number for 2-D element");
+      GOMA_EH(GOMA_ERROR,"Illegal side number for 2-D element");
       break;
     }
     break;
@@ -5420,7 +5420,7 @@ get_side_info(const int ielem_type,
       local_elem_node_id[3] = 7;
       break;
     default:
-      EH(GOMA_ERROR,"Illegal side number for 2-D element");
+      GOMA_EH(GOMA_ERROR,"Illegal side number for 2-D element");
       break;
     }
     break;
@@ -5496,7 +5496,7 @@ get_side_info(const int ielem_type,
       local_elem_node_id[8] = 22;
       break;
     default:
-      EH(GOMA_ERROR,"Illegal side number for 2-D element");
+      GOMA_EH(GOMA_ERROR,"Illegal side number for 2-D element");
       break;
     }
     break;
@@ -5525,13 +5525,13 @@ get_side_info(const int ielem_type,
       local_elem_node_id[2] = 1;
       break;
     default:
-      EH(GOMA_ERROR,"Illegal side number for 3-D tetrahedral element");
+      GOMA_EH(GOMA_ERROR,"Illegal side number for 3-D tetrahedral element");
       break;
     }
     break;
 
   default:
-    EH(GOMA_ERROR, "Unknown or unimplemented element type.");
+    GOMA_EH(GOMA_ERROR, "Unknown or unimplemented element type.");
     break;
 
   }
@@ -5625,15 +5625,15 @@ assemble_surface_species (Exo_DB *exo,	/* ptr to basic exodus ii mesh informatio
       
       /* ****************************************/
       err = load_basis_functions( xi, bfd);
-      EH( err, "problem from load_basis_functions");
+      GOMA_EH( err, "problem from load_basis_functions");
 
       err = beer_belly();
-      EH( err, "beer_belly");
+      GOMA_EH( err, "beer_belly");
             
       /* precalculate variables at  current integration pt.*/
  	      
       err = load_fv();
-      EH( err, "load_fv");
+      GOMA_EH( err, "load_fv");
 
 
      /* calculate the determinant of the surface jacobian and the normal to 
@@ -5642,7 +5642,7 @@ assemble_surface_species (Exo_DB *exo,	/* ptr to basic exodus ii mesh informatio
 
       err =  get_side_info(ielem_type, id_side, &nodes_per_side, local_elem_node_id);
 	  
-      EH( err, "get_side_info");
+      GOMA_EH( err, "get_side_info");
       
       surface_determinant_and_normal (ielem, ei[pg->imtrx]->iconnect_ptr, num_local_nodes, 
 				      ei[pg->imtrx]->ielem_dim - 1,  
@@ -5669,7 +5669,7 @@ assemble_surface_species (Exo_DB *exo,	/* ptr to basic exodus ii mesh informatio
 				      num_local_nodes, nodes_per_side,
 				      local_elem_node_id, ielem_type, 
 				      ielem_type_fill,  x_neighbor);
-	      EH( err, "neighbor_species");
+	      GOMA_EH( err, "neighbor_species");
 	    }
 	  else
 	    {
@@ -5705,20 +5705,20 @@ assemble_surface_species (Exo_DB *exo,	/* ptr to basic exodus ii mesh informatio
 	  
 	  /* ****************************************/
 	  err = load_basis_functions( xi, bfd);
-	  EH( err, "problem from load_basis_functions");
+	  GOMA_EH( err, "problem from load_basis_functions");
 
           err = beer_belly();
-          EH( err, "beer_belly");
+          GOMA_EH( err, "beer_belly");
             
 	  /* precalculate variables at  current integration pt.*/
 	  err = load_fv();
-	  EH( err, "load_fv");
+	  GOMA_EH( err, "load_fv");
 
 	  /* calculate the determinant of the surface jacobian and the normal to 
 	   * the surface all at one time */
 	  
 	  err =  get_side_info(ielem_type, id_side, &nodes_per_side, local_elem_node_id);
-	  EH( err, "get_side_info");
+	  GOMA_EH( err, "get_side_info");
 	  
 	  surface_determinant_and_normal (ielem, ei[pg->imtrx]->iconnect_ptr, num_local_nodes, 
 					  ei[pg->imtrx]->ielem_dim - 1,  
@@ -6006,7 +6006,7 @@ neighbor_species(Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 	      for (j = 0; j < nvdof; j++)
 		{
 		  ie = Index_Solution(gnn, v, w, 0, -2, pg->imtrx) + j;
-		  EH(ie, "Could not find vbl in sparse matrix.");
+		  GOMA_EH(ie, "Could not find vbl in sparse matrix.");
 		  conc_neighbor[ip][w] += x[ie] * phi[j];
 		}
 	    }
@@ -6330,7 +6330,7 @@ assemble_phase_function ( double time_value,
    // if ( tran->Fill_Weight_Fcn == FILL_WEIGHT_G ) {
       lubon = 1;
     } else {
-      WH(-1,"\n Multiphase lubrication should be run with Galerkin weighting to \n take advantage of direct velocity calculations.  \n Talk to SAR.");
+      GOMA_WH(-1,"\n Multiphase lubrication should be run with Galerkin weighting to \n take advantage of direct velocity calculations.  \n Talk to SAR.");
       lubon = 0;
     }
   }
@@ -6586,7 +6586,7 @@ assemble_phase_function ( double time_value,
 		      break;
 
 		    default:
-		      EH(GOMA_ERROR, "That Fill Weight Function type not currently supported for phase function\n");
+		      GOMA_EH(GOMA_ERROR, "That Fill Weight Function type not currently supported for phase function\n");
 		      break;
 		    }
 
@@ -6691,7 +6691,7 @@ assemble_phase_function ( double time_value,
 				break;
 
 			    default:
-			      EH(GOMA_ERROR, "That Fill Weight Function type not currently supported for phase function\n");
+			      GOMA_EH(GOMA_ERROR, "That Fill Weight Function type not currently supported for phase function\n");
 			      break;
 				}
 
@@ -6722,7 +6722,7 @@ assemble_phase_function ( double time_value,
 			     // tmp *= wt*h3*det_J;
 			     // break;
 			    default:
-			      EH(GOMA_ERROR, "That Fill Weight Function type not currently supported for phase function\n");
+			      GOMA_EH(GOMA_ERROR, "That Fill Weight Function type not currently supported for phase function\n");
 			      break;
 			     }
 
@@ -7026,23 +7026,23 @@ void assemble_ls_mass_lumped_penalty(
 
     fv->wt = wt;
     err = load_basis_functions(xi, bfd);
-    EH(err, "problem from load_basis_functions");
+    GOMA_EH(err, "problem from load_basis_functions");
 
     err = beer_belly();
-    EH(err, "beer_belly");
+    GOMA_EH(err, "beer_belly");
     if (neg_elem_volume)
       return;
     if (zero_detJ)
       return;
 
     err = load_fv();
-    EH(err, "load_fv");
+    GOMA_EH(err, "load_fv");
 
     err = load_bf_grad();
-    EH(err, "load_bf_grad");
+    GOMA_EH(err, "load_bf_grad");
 
     err = load_fv_grads();
-    EH(err, "load_fv_grads");
+    GOMA_EH(err, "load_fv_grads");
 
     int eqn = R_FILL;
     int dim = pd->Num_Dim;

@@ -138,11 +138,11 @@ rd_image_to_mesh(int N_ext, Exo_DB *exo)
   /* Scalar floats */
 
   /* Stop if parallel run */
-  if(Num_Proc > 1) EH(GOMA_ERROR, "pixel mapping is not yet available in parallel. Run serial then use the mapped exoII file");
+  if(Num_Proc > 1) GOMA_EH(GOMA_ERROR, "pixel mapping is not yet available in parallel. Run serial then use the mapped exoII file");
 
   /* Stop if more than one pixel file read. This will be fixed soon (PRS 8/10/2011 */
 
-  if(N_ext > 0) EH(GOMA_ERROR,"Sorry, you have to read and convert one pixel file at a time right now.");
+  if(N_ext > 0) GOMA_EH(GOMA_ERROR,"Sorry, you have to read and convert one pixel file at a time right now.");
 
   /* Turn matID into blockId --Not necessarly the same */
 
@@ -156,13 +156,13 @@ rd_image_to_mesh(int N_ext, Exo_DB *exo)
 	}
     }
 
-  if(!ifound) EH(GOMA_ERROR,"Trouble in rd_pixel_image: cannot find blkid");
+  if(!ifound) GOMA_EH(GOMA_ERROR,"Trouble in rd_pixel_image: cannot find blkid");
 
   /* Sort out interpolations */
   if (( si = in_list(efv->i[N_ext], 0, Num_Interpolations, 
 		     Unique_Interpolations)) == -1)
     {
-      EH(GOMA_ERROR,"Seems to be a problem finding IntegrationMap interpolation for pixels.");
+      GOMA_EH(GOMA_ERROR,"Seems to be a problem finding IntegrationMap interpolation for pixels.");
     }
 
   /*** Open exodus files and initialize *************************/
@@ -183,7 +183,7 @@ rd_image_to_mesh(int N_ext, Exo_DB *exo)
   /* Now open it again and write to it.  */
 
   exoin = ex_open(outfile, EX_WRITE, &CPU_word_size, &IO_word_size, &exoversion);
-  EH(exoin, "ex_open in rd_pixel_image.c");
+  GOMA_EH(exoin, "ex_open in rd_pixel_image.c");
 
   /* find element centers- sum node coordinates/numnodes, essentially a center of mass
     * this data is stored in an array, "elmctrs", so it does not need to be recalculated for each data point
@@ -346,7 +346,7 @@ rd_image_to_mesh(int N_ext, Exo_DB *exo)
     {
      ielem = ElemID_data[i] - 1;
      err = load_ei(ielem, exo, 0, pg->imtrx);
-      EH(err, "load_ei");
+      GOMA_EH(err, "load_ei");
 
      ei[pg->imtrx]->ielem_type = Elem_Type(exo, ielem);
      ielem_shape     = type2shape(ei[pg->imtrx]->ielem_type);
@@ -545,10 +545,10 @@ extern int find_xi( int elem_id,                /*known element id number*/
   while( (!converged) && (inewton<50) )
    {
      error = load_basis_functions(xi, bfd);
-     EH( error, "load_basis_functions");
+     GOMA_EH( error, "load_basis_functions");
 
      error = beer_belly(); 
-     EH( error, "beer_belly");
+     GOMA_EH( error, "beer_belly");
 
 
     for (i=0; i<ei[pg->imtrx]->ielem_dim; i++)

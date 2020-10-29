@@ -95,7 +95,7 @@ int wr_dpi(Dpi *d, char *filename) {
   int exoid = ex_open(filename, EX_WRITE, &comp_wordsize, &io_wordsize, &version);
   CHECK_EX_ERROR(exoid, "ex_open");
 
-  EH(one_dpi(d), "one_dpi");
+  GOMA_EH(one_dpi(d), "one_dpi");
   int ex_error;
 
   ex_error =
@@ -153,7 +153,7 @@ int wr_dpi(Dpi *d, char *filename) {
   ex_error = ex_close(exoid);
   CHECK_EX_ERROR(ex_error, "ex_close");
 
-  EH(zero_dpi(d), "one_dpi");
+  GOMA_EH(zero_dpi(d), "one_dpi");
   return 0;
 }
 

@@ -226,7 +226,7 @@ viscosity(struct Generalized_Newtonian *gn_local,
             err = level_set_property(mu0, mu1, width, &mu, d_mu->F);
           else
             err = level_set_property(mu0, mu1, width, &mu, NULL);
-	  EH(err, "level_set_property() failed for viscosity.");
+	  GOMA_EH(err, "level_set_property() failed for viscosity.");
 	}
       else if (mp->ViscosityModel == LS_QUADRATIC )
 	{
@@ -345,14 +345,14 @@ viscosity(struct Generalized_Newtonian *gn_local,
 		            }
 		      break;
 		    default:
-		      EH(GOMA_ERROR, "Variable function not yet implemented in material property table");
+		      GOMA_EH(GOMA_ERROR, "Variable function not yet implemented in material property table");
 		    }
 	        }
             }
 	}
        else
 	{
-	  EH(GOMA_ERROR,"Unrecognized viscosity model for Newtonian fluid");
+	  GOMA_EH(GOMA_ERROR,"Unrecognized viscosity model for Newtonian fluid");
 	}
 
     } /* end Newtonian section */
@@ -371,7 +371,7 @@ viscosity(struct Generalized_Newtonian *gn_local,
         {
 	  err = suspension_viscosity(gn_local->sus_species_no, gn_local->mu0,
 				     gn_local->maxpack, gn_local->nexp, fv->sh_pc);
-	  EH(err, "suspension_viscosity");
+	  GOMA_EH(err, "suspension_viscosity");
 	  mu = mp->viscosity;
         }
       else
@@ -379,7 +379,7 @@ viscosity(struct Generalized_Newtonian *gn_local,
 	  err = suspension_viscosity(gn_local->sus_species_no, gn_local->mu0,
 				     gn_local->maxpack, gn_local->nexp, fv->c[gn_local->sus_species_no]);
 	
-	  EH(err, "suspension_viscosity");
+	  GOMA_EH(err, "suspension_viscosity");
 	  mu = mp->viscosity;
 	}
       
@@ -397,7 +397,7 @@ viscosity(struct Generalized_Newtonian *gn_local,
     {
       err = cure_viscosity(gn_local->cure_species_no, gn_local->mu0,
 			   gn_local->gelpoint, gn_local->cureaexp, gn_local->curebexp);
-      EH(err, "cure_viscosity");
+      GOMA_EH(err, "cure_viscosity");
       
       mu = mp->viscosity;
       
@@ -445,7 +445,7 @@ viscosity(struct Generalized_Newtonian *gn_local,
 	}
 	    
       err = thermal_viscosity(mu0, atexp);
-      EH(err, "thermal_viscosity");
+      GOMA_EH(err, "thermal_viscosity");
       
       mu = mp->viscosity;
       
@@ -466,7 +466,7 @@ viscosity(struct Generalized_Newtonian *gn_local,
   else if (gn_local->ConstitutiveEquation == BOND_SH)
     {
       err = bond_viscosity_sh(gn_local->sus_species_no,gn_local->mu0, gn_local->muinf, gn_local->aexp);
-      EH(err, "bond_viscosity_sh");
+      GOMA_EH(err, "bond_viscosity_sh");
       
       mu = mp->viscosity;
       
@@ -496,7 +496,7 @@ viscosity(struct Generalized_Newtonian *gn_local,
       err = epoxy_viscosity(gn_local->cure_species_no, gn_local->mu0,
 			    gn_local->gelpoint, gn_local->cureaexp, 
 			    gn_local->curebexp, gn_local->atexp);
-      EH(err, "epoxy_viscosity");
+      GOMA_EH(err, "epoxy_viscosity");
       
       mu = mp->viscosity;
       
@@ -525,7 +525,7 @@ viscosity(struct Generalized_Newtonian *gn_local,
       err = foam_pmdi10_viscosity(gn_local->cure_species_no, gn_local->mu0,
                             gn_local->gelpoint, gn_local->cureaexp,
                             gn_local->curebexp, gn_local->atexp);
-      EH(err, "foam_pmdi10_viscosity");
+      GOMA_EH(err, "foam_pmdi10_viscosity");
 
       mu = mp->viscosity;
 
@@ -554,7 +554,7 @@ viscosity(struct Generalized_Newtonian *gn_local,
       err = sylgard_viscosity(gn_local->cure_species_no, gn_local->mu0,
 			      gn_local->gelpoint, gn_local->cureaexp, 
 			      gn_local->atexp);
-      EH(err, "sylgard_viscosity");
+      GOMA_EH(err, "sylgard_viscosity");
       
       mu = mp->viscosity;
       
@@ -688,11 +688,11 @@ viscosity(struct Generalized_Newtonian *gn_local,
         err = level_set_property(neg_mup, pos_mup, width, &mu, d_mu->F);
       else
         err = level_set_property(neg_mup, pos_mup, width, &mu, NULL);
-      EH(err, "level_set_property() failed for polymer viscosity.");
+      GOMA_EH(err, "level_set_property() failed for polymer viscosity.");
     }
   else
     {
-      EH(GOMA_ERROR,"Unrecognized viscosity model for non-Newtonian fluid");
+      GOMA_EH(GOMA_ERROR,"Unrecognized viscosity model for non-Newtonian fluid");
     }
   
   if (ls != NULL && gn_local->ConstitutiveEquation != VE_LEVEL_SET &&
@@ -718,7 +718,7 @@ viscosity(struct Generalized_Newtonian *gn_local,
 				 (double) mp->mp2nd->viscositymask[0],
                                  (double) mp->mp2nd->viscositymask[1],
                                  d_mu, mp->mp2nd->ViscosityModel );
-      EH(err, "ls_modulate_viscosity");
+      GOMA_EH(err, "ls_modulate_viscosity");
     }
   if(DOUBLE_NONZERO(gn_local->thixo_factor))
     { 
@@ -1254,7 +1254,7 @@ bingham_viscosity(struct Generalized_Newtonian *gn_local,
  	}
    else
  	{
- 	EH(GOMA_ERROR,"Invalid Yield Stress Model");
+ 	GOMA_EH(GOMA_ERROR,"Invalid Yield Stress Model");
  	}
   fexp = gn_local->fexp;
 
@@ -1504,7 +1504,7 @@ bingham_wlf_viscosity(struct Generalized_Newtonian *gn_local,
     }
   else
     {
-      EH(GOMA_ERROR,"Invalid Yield Stress Model");
+      GOMA_EH(GOMA_ERROR,"Invalid Yield Stress Model");
     }
   fexp = gn_local->fexp;
   
@@ -1939,7 +1939,7 @@ fill_viscosity(dbl *param)	/* ptr to the user-defined parameter list    */
  /**********************************************************/
   if ( ls != NULL )
     {
-      EH(GOMA_ERROR, "Use LEVEL_SET instead of FILL viscosity model.");
+      GOMA_EH(GOMA_ERROR, "Use LEVEL_SET instead of FILL viscosity model.");
       return(0);
     }
 
@@ -3362,7 +3362,7 @@ bond_viscosity(struct Generalized_Newtonian *gn_local,
     }
   else
     {
-      EH(-1,"Invalid Yield Stress Model");
+      GOMA_EH(-1,"Invalid Yield Stress Model");
     }
   fexp = gn_local->fexp;
 
@@ -3646,14 +3646,14 @@ carreau_wlf_conc_viscosity(struct Generalized_Newtonian *gn_local,
  			nonvol_conc /= mp->u_density[0];
  			break;
  		default:
- 			EH(GOMA_ERROR,"That species type not completed yet.");
+ 			GOMA_EH(GOMA_ERROR,"That species type not completed yet.");
  			break;
  		}
    if( nonvol_conc < 0)
  	{
 	fprintf(stderr,"nonvolatile conc %g %g \n",nonvol_conc,fv->c[0]);
  	if(const_eqn == CARREAU_WLF_CONC_PL) nonvol_conc = 0.;
-  	WH(-1,"negative nonvolatile concentration");
+  	GOMA_WH(-1,"negative nonvolatile concentration");
  	}
    if(const_eqn == CARREAU_WLF_CONC_PL)
 	{
@@ -3665,7 +3665,7 @@ carreau_wlf_conc_viscosity(struct Generalized_Newtonian *gn_local,
 	}
    else
 	{
-  	EH(GOMA_ERROR,"invalid constitutive model for WLF_CONC");
+  	GOMA_EH(GOMA_ERROR,"invalid constitutive model for WLF_CONC");
 	}
    
    if(gammadot != 0.)
@@ -3744,7 +3744,7 @@ carreau_wlf_conc_viscosity(struct Generalized_Newtonian *gn_local,
 		}
    	else
 		{
-  		EH(GOMA_ERROR,"invalid constitutive model for WLF_CONC");
+  		GOMA_EH(GOMA_ERROR,"invalid constitutive model for WLF_CONC");
 		}
        
        for(w=0 ; w<pd->Num_Species_Eqn ; w++)
@@ -3946,7 +3946,7 @@ flowing_liquid_viscosity(VISCOSITY_DEPENDENCE_STRUCT *d_flow_vis)
      zeroStructures(d_flow_vis, 1);
     }
   if (mp->PorousMediaType != POROUS_BRINKMAN)
-        WH(-1, "Set Porous term multiplier in continuous medium");
+        GOMA_WH(-1, "Set Porous term multiplier in continuous medium");
 
 
   /***** Evaluate FlowingLiquid Viscosity based on the specified model ****/
@@ -4024,7 +4024,7 @@ flowing_liquid_viscosity(VISCOSITY_DEPENDENCE_STRUCT *d_flow_vis)
 
   else
      {
-      EH(GOMA_ERROR,"Don't recognize your FlowingLiquidViscosity model");
+      GOMA_EH(GOMA_ERROR,"Don't recognize your FlowingLiquidViscosity model");
      }
 
 
@@ -4037,7 +4037,7 @@ flowing_liquid_viscosity(VISCOSITY_DEPENDENCE_STRUCT *d_flow_vis)
                                  (double) mp->mp2nd->FlowingLiquid_viscositymask[0],
                                  (double) mp->mp2nd->FlowingLiquid_viscositymask[1],
                                  d_flow_vis, mp->mp2nd->FlowingLiquidViscosityModel );
-      EH(err, "ls_modulate_viscosity");
+      GOMA_EH(err, "ls_modulate_viscosity");
     }
 
 

@@ -124,7 +124,7 @@ void user_aug_cond_residuals(int iAC,
   /*             {                                                              */
   /*               k = Proc_NS_List[Proc_NS_Pointers[nsp]+j];                   */
   /*               i = Index_Solution (k, MESH_DISPLACEMENT2, 0, 0, -1, pg->imtrx);        */
-  /*               EH(i, "Could not resolve Index_Solution.");                  */
+  /*               GOMA_EH(i, "Could not resolve Index_Solution.");                  */
   /*               radius             = Coor[1][k] + x[i];                      */
   /*             }                                                              */
   /*                                                                            */
@@ -195,7 +195,7 @@ void user_aug_cond_residuals(int iAC,
   /*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*/
 
   /* Comment-out next line if 1 or more ACs is implemented; uncomment if no ACs  */
-  /*EH(GOMA_ERROR,"You have provided no augmenting condition in user_ac.c"); */
+  /*GOMA_EH(GOMA_ERROR,"You have provided no augmenting condition in user_ac.c"); */
 
      /* NB, the volume constraint residual is based on an integrated quantity
         of either volume, overall mass, or component mass; hence, it is not

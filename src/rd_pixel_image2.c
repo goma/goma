@@ -246,7 +246,7 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
   my_N_ext = N_ext;
 
   /* Stop if parallel run */
-  if(Num_Proc > 1) EH(GOMA_ERROR, "pixel mapping is not yet available in parallel. Run serial then use the mapped exoII file(s)");
+  if(Num_Proc > 1) GOMA_EH(GOMA_ERROR, "pixel mapping is not yet available in parallel. Run serial then use the mapped exoII file(s)");
 
   /* Turn matID into blockId --Not necessarly the same */
   int ifound = 0;
@@ -257,7 +257,7 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
     }
   }
 
-  if(!ifound) EH(GOMA_ERROR,"Trouble in rd_pixel_image: cannot find blkid");
+  if(!ifound) GOMA_EH(GOMA_ERROR,"Trouble in rd_pixel_image: cannot find blkid");
 
   curr_eb_nodes = exo->eb_num_elems[ipix_blkid]*exo->eb_num_nodes_per_elem[ipix_blkid];
   my_ignodes = (int *) malloc(curr_eb_nodes * sizeof(int));
@@ -265,7 +265,7 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
   /* Sort out interpolations */
   if (( si = in_list(efv->i[N_ext], 0, Num_Interpolations, 
 		     Unique_Interpolations)) == -1) {
-    EH(GOMA_ERROR,"Seems to be a problem finding IntegrationMap interpolation for pixels.");
+    GOMA_EH(GOMA_ERROR,"Seems to be a problem finding IntegrationMap interpolation for pixels.");
   }
 
 
@@ -283,7 +283,7 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
     zero_base(exo);
     
     exoout = ex_open(exooutfilename, EX_WRITE, &CPU_word_size, &IO_word_size, &exoversion);
-    EH(exoout, "ex_open in rd_pixel_image2.c");
+    GOMA_EH(exoout, "ex_open in rd_pixel_image2.c");
 
     num_nod_vars = 0;
     for (i = 0; i < efv->Num_external_field; i++){
@@ -313,7 +313,7 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
   }
   else{
     exoout = ex_open(exooutfilename, EX_WRITE, &CPU_word_size, &IO_word_size, &exoversion);
-    EH(exoout, "ex_open in rd_pixel_image2.c");
+    GOMA_EH(exoout, "ex_open in rd_pixel_image2.c");
     //Loop through all fields, check for same variable being mapped from another field
     for (i = N_ext-1; i >= 0; i--){
       if (!strcmp(efv->name[i],efv->name[N_ext])){
@@ -330,7 +330,7 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
   sprintf(voxfilename,"%s",efv->file_nm[N_ext]);
   pixfid = fopen(voxfilename, "r"); 
   if (pixfid == NULL) {
-    EH(GOMA_ERROR,"Could not open voxel file!");
+    GOMA_EH(GOMA_ERROR,"Could not open voxel file!");
   }
   err = fscanf(pixfid,"%d", &pixdim);
 
@@ -342,39 +342,39 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
   if (pixdim == 2) {
     err = fscanf(pixfid,"%d %d",&(pixsize[0]),&(pixsize[1]));
     if (err != 2) {
-      EH(GOMA_ERROR, "Error reading pixel file expected two ints");
+      GOMA_EH(GOMA_ERROR, "Error reading pixel file expected two ints");
       return -1;
     }
     err = fscanf(pixfid,"%lf %lf",&resx, &resy);
     if (err != 2) {
-      EH(GOMA_ERROR, "Error reading pixel file expected two floats");
+      GOMA_EH(GOMA_ERROR, "Error reading pixel file expected two floats");
       return -1;
     }
     err = fscanf(pixfid,"%lf %lf",&x0, &y0);
     if (err != 2) {
-      EH(GOMA_ERROR, "Error reading pixel file expected two floats");
+      GOMA_EH(GOMA_ERROR, "Error reading pixel file expected two floats");
       return -1;
     }
   }
   else if (pixdim == 3){
     err = fscanf(pixfid,"%d %d %d",&(pixsize[0]),&(pixsize[1]),&(pixsize[2]));
     if (err != 3) {
-      EH(GOMA_ERROR, "Error reading pixel file expected three ints");
+      GOMA_EH(GOMA_ERROR, "Error reading pixel file expected three ints");
       return -1;
     }
     err = fscanf(pixfid,"%lf %lf %lf",&resx, &resy, &resz);
     if (err != 3) {
-      EH(GOMA_ERROR, "Error reading pixel file expected three floats");
+      GOMA_EH(GOMA_ERROR, "Error reading pixel file expected three floats");
       return -1;
     }
     err = fscanf(pixfid,"%lf %lf %lf",&x0, &y0, &z0);
     if (err != 3) {
-      EH(GOMA_ERROR, "Error reading pixel file expected three floats");
+      GOMA_EH(GOMA_ERROR, "Error reading pixel file expected three floats");
       return -1;
     }
   }
   else {
-    EH(GOMA_ERROR,"Problem reading pixel/voxel input file; first entry should be dimensionality (2 or 3)");
+    GOMA_EH(GOMA_ERROR,"Problem reading pixel/voxel input file; first entry should be dimensionality (2 or 3)");
     return -1;
   }
 
@@ -409,7 +409,7 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
       for (k = 0; k < pixsize[2]; k++)
 	{
 	  err = fscanf( pixfid, "%lf ", &(pixdata[i][j][k]));
-	  EH(err,"Problem reading file!\n");
+	  GOMA_EH(err,"Problem reading file!\n");
 	}
 
   fclose(pixfid);
@@ -461,17 +461,17 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
       ei[pg->imtrx]->ielem_type = Elem_Type(exo, ielem);
 
       err = bf_mp_init(pd);
-      EH(err, "bf_mp_init");
+      GOMA_EH(err, "bf_mp_init");
       
       ngp = elem_info(NQUAD, ei[pg->imtrx]->ielem_type); //Number of Gauss points (GP) in element
       
       for (igp = 0; igp < ngp; igp++) //Loop over GP's
 	{ 	  
 	  err = load_basis_functions(xi, bfd);
-	  EH( err, "problem from load_basis_functions");
+	  GOMA_EH( err, "problem from load_basis_functions");
 	  
 	  err = beer_belly();
-	  EH( err, "beer_belly");
+	  GOMA_EH( err, "beer_belly");
 	  
 	  find_stu(igp, ei[pg->imtrx]->ielem_type, &(xi[0]), &(xi[1]), &(xi[2]));
 	  
@@ -528,15 +528,15 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
       ei[pg->imtrx]->ielem_type = Elem_Type(exo, ielem);
 
       err = bf_mp_init(pd);
-      EH(err, "bf_mp_init");
+      GOMA_EH(err, "bf_mp_init");
 
       for (igp = 0; igp < elem_info(NQUAD, ei[pg->imtrx]->ielem_type); igp++)
 	{
 	  err = load_basis_functions( xi, bfd);
-	  EH( err, "problem from load_basis_functions");
+	  GOMA_EH( err, "problem from load_basis_functions");
 
 	  err = beer_belly();
-	  EH( err, "beer_belly");
+	  GOMA_EH( err, "beer_belly");
 	  
 	  det_J = bfex[N_ext]->detJ;
 	  wt = Gq_weight(igp, ei[pg->imtrx]->ielem_type);

@@ -167,19 +167,19 @@ apply_point_colloc_bc (
       find_nodal_stu(id, ielem_type, &xi[0], &xi[1], &xi[2]);
 
       err = load_basis_functions( xi, bfd );
-      EH( err, "problem from load_basis_functions");
+      GOMA_EH( err, "problem from load_basis_functions");
 
       err = beer_belly();
-      EH( err, "beer_belly");
+      GOMA_EH( err, "beer_belly");
 
       err = load_fv();
-      EH( err, "load_fv");
+      GOMA_EH( err, "load_fv");
 
       err = load_bf_grad();
-      EH( err, "load_bf_grad");
+      GOMA_EH( err, "load_bf_grad");
 
       err = load_bf_mesh_derivs(); 
-      EH( err, "load_bf_mesh_derivs");
+      GOMA_EH( err, "load_bf_mesh_derivs");
       
       /* calculate the shape functions and their gradients */
 
@@ -204,7 +204,7 @@ apply_point_colloc_bc (
 	  mp->PorousMediaType == POROUS_TWO_PHASE   || 
 	  mp->PorousMediaType == POROUS_SATURATED) {
 	err = load_porous_properties(); 
-	EH(err, "load_porous_properties"); 
+	GOMA_EH(err, "load_porous_properties"); 
       }
 
       if (TimeIntegration != STEADY) {
@@ -402,7 +402,7 @@ apply_point_colloc_bc (
 		       BC_Types[bc_input_id].u_BC,BC_Types[bc_input_id].len_u_BC,
 		       BC_Types[bc_input_id].BC_Data_Int[0],time_intermediate);
 #else
-		EH(-1, "FEATURE_ROLLON_PLEASE define needed and feature_rollon.h - talk to RBS");
+		GOMA_EH(-1, "FEATURE_ROLLON_PLEASE define needed and feature_rollon.h - talk to RBS");
 #endif
 		break;
 
@@ -425,7 +425,7 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 			BC_Types[bc_input_id].BC_Data_Float[5]*t*t +
 			BC_Types[bc_input_id].BC_Data_Float[6]*t*t*t);
 	      if (af->Assemble_LSA_Mass_Matrix)
-		  EH(GOMA_ERROR, "LSA is not currently compatible with MOVING_PLANE_BC");
+		  GOMA_EH(GOMA_ERROR, "LSA is not currently compatible with MOVING_PLANE_BC");
 	    }
 	    break;
 
@@ -522,14 +522,14 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 	    case GD_TABLE_BC:
 		err = fgeneralized_dirichlet(&func, d_func, BC_Types[bc_input_id].BC_Name, 
 					     bc_input_id, theta, delta_t);
-		EH(err, "Illegal entry in Generalized Dirichlet Condition ");
+		GOMA_EH(err, "Illegal entry in Generalized Dirichlet Condition ");
 		break;
 
 	    case GD_TIME_BC:
 		err = evaluate_time_func(time_intermediate, &f_time, bc_input_id);
-		EH(err, "Problems in evaluating time function");
+		GOMA_EH(err, "Problems in evaluating time function");
 		if (af->Assemble_LSA_Mass_Matrix)
-		    EH(GOMA_ERROR, "LSA is not currently compatible with GD_TIME_BC");
+		    GOMA_EH(GOMA_ERROR, "LSA is not currently compatible with GD_TIME_BC");
 		break;
                  
 	    case POROUS_PRESSURE_BC:
@@ -575,7 +575,7 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 		break;
 
 	    case FLUID_SOLID_RS_BC:
-		EH(GOMA_ERROR,"FLUID_SOLID_RS bc not implemented yet");
+		GOMA_EH(GOMA_ERROR,"FLUID_SOLID_RS bc not implemented yet");
 		break;
 
 	    case SH_FLUID_STRESS_BC:
@@ -611,7 +611,7 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 	      break;
 
 	    case VELO_TANG1_COLLOC_BC:
-              EH(GOMA_ERROR, "VELO_TANG1_COLLOC_BC not implemented");
+              GOMA_EH(GOMA_ERROR, "VELO_TANG1_COLLOC_BC not implemented");
               //fzero_velo_tangent_3d(kfunc, d_kfunc, elem_side_bc->id_side, I);
               doFullJac = 1;
               func = kfunc[1];
@@ -622,7 +622,7 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
               }
               break;
 	    case VELO_TANG2_COLLOC_BC:
-              EH(GOMA_ERROR, "VELO_TANG2_COLLOC_BC not implemented");
+              GOMA_EH(GOMA_ERROR, "VELO_TANG2_COLLOC_BC not implemented");
               //fzero_velo_tangent_3d(kfunc, d_kfunc, elem_side_bc->id_side, I);
               doFullJac = 1;
 	      func = kfunc[2];
@@ -675,7 +675,7 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 	      el1 = ei[pg->imtrx]->ielem;
 	      nf = num_elem_friends[el1];
 	      if (nf == 0) {
-		EH(GOMA_ERROR, "no friends");
+		GOMA_EH(GOMA_ERROR, "no friends");
 	      }; 
 	      el2 = elem_friends[el1][0];
 	      err = load_neighbor_var_data(el1, el2, n_dof, dof_map, n_dofptr, -1, xi, exo); 
@@ -691,7 +691,7 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 	      el1 = ei[pg->imtrx]->ielem;
 	      nf = num_elem_friends[el1];
 	      if (nf == 0) {
-		EH(GOMA_ERROR, "no friends");
+		GOMA_EH(GOMA_ERROR, "no friends");
 	      }; 	 
 	      el2 = elem_friends[el1][0];
 	      err = load_neighbor_var_data(el1, el2, n_dof, dof_map, n_dofptr, -1, xi, exo); 
@@ -733,11 +733,11 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
               if (goma_automatic_rotations.automatic_rotations &&
                  (BC_Types[bc_input_id].desc->rotate != NO_ROT)) {
                 int offset = offset_from_rotated_equation(BC_Types[bc_input_id].desc->equation);
-                EH(offset, "Error translating rotated equation to offset");
+                GOMA_EH(offset, "Error translating rotated equation to offset");
                 ieqn = equation_index_auto_rotate(elem_side_bc, I, BC_Types[bc_input_id].desc->rotate,
                     offset,
                     ldof_eqn, &(BC_Types[bc_input_id]));
-                EH(ieqn, "Could not find index from auto rotate eqn");
+                GOMA_EH(ieqn, "Could not find index from auto rotate eqn");
               }
             }
 
@@ -900,7 +900,7 @@ f_fillet (const int ielem_dim,
     return;
 
   if(num_const <= 5) {
-    EH(GOMA_ERROR,"Need at least 5 parameters for 2D fillet geometry bc!\n");
+    GOMA_EH(GOMA_ERROR,"Need at least 5 parameters for 2D fillet geometry bc!\n");
   }
 
   pt[0]=p[0];
@@ -918,7 +918,7 @@ f_fillet (const int ielem_dim,
   if(num_const >= 9)
 	{ cham_ang = p[8]; }
   if(ielem_dim > dim)
-       WH(-1,"FILLET_BC: Only z-invariant geometry available for now.\n");
+       GOMA_WH(-1,"FILLET_BC: Only z-invariant geometry available for now.\n");
 
   /**  find center of die face  **/
 
@@ -1034,7 +1034,7 @@ f_double_rad (const int ielem_dim,
     return;
 
   if(num_const < 8)
-       EH(GOMA_ERROR,"Need at least 8 parameters for Double Rad lip geometry bc!\n");
+       GOMA_EH(GOMA_ERROR,"Need at least 8 parameters for Double Rad lip geometry bc!\n");
 
   xpt1=p[0];
   ypt1=p[1];
@@ -1189,7 +1189,7 @@ f_roll_fluid (int ielem_dim,
     return;
 
   if(num_const < 7)
-       EH(GOMA_ERROR,"Need at least 7 parameters for Roll geometry bc!\n");
+       GOMA_EH(GOMA_ERROR,"Need at least 7 parameters for Roll geometry bc!\n");
 
 
   roll_rad=p[0];
@@ -1235,7 +1235,7 @@ f_roll_fluid (int ielem_dim,
 
 
     if(num_const < 10)
-       WH(-1,"ROLL_FLUID: Less than 10 parameters - reverting to roll surface!\n");
+       GOMA_WH(-1,"ROLL_FLUID: Less than 10 parameters - reverting to roll surface!\n");
   
     omega=p[7];
 /* compute velocity direction as perpendicular to both axis and radial
@@ -1290,7 +1290,7 @@ f_roll_fluid (int ielem_dim,
    /* sometimes the tangent/normals flip causing havoc....*/
      if(v_solid < 0)
         {
-         WH(-1,"fvelo_slip: normals and tangents have flipped! - try CONTACT_LINE model\n");
+         GOMA_WH(-1,"fvelo_slip: normals and tangents have flipped! - try CONTACT_LINE model\n");
          velo_avg *= tang_sgn;
          v_solid *= tang_sgn;
          pgrad *= tang_sgn;
@@ -1461,12 +1461,12 @@ int i;
                   }
                break;
           default:
-              EH(GOMA_ERROR,"Velo parabola not ready for that Coordinate System yet!\n");
+              GOMA_EH(GOMA_ERROR,"Velo parabola not ready for that Coordinate System yet!\n");
           }
 
   if(ielem_dim > 2)
      {
-      EH(GOMA_ERROR,"Velo parabola not ready for 3D yet!\n");
+      GOMA_EH(GOMA_ERROR,"Velo parabola not ready for 3D yet!\n");
       return;
      }
   for(i=0;i<ielem_dim;i++)
@@ -1608,7 +1608,7 @@ int i;
                                           (-expon*pow(fv->x[1],expon-1.));
                                }
                           }  else  {
-                              EH(GOMA_ERROR,"Power-law annulus not done yet!\n");
+                              GOMA_EH(GOMA_ERROR,"Power-law annulus not done yet!\n");
                           }
                       break;
                   case V_PARABOLA_BC:
@@ -1675,7 +1675,7 @@ double gamma[DIM][DIM];
 int i, mode=0, strs=0;
 
    if ( ! pd->v[pg->imtrx][POLYMER_STRESS11] )
-	{ EH(-1,"Polymer Stress needed for VE Stress PARABOLA BC."); }
+	{ GOMA_EH(-1,"Polymer Stress needed for VE Stress PARABOLA BC."); }
 
    if (var_flag >= POLYMER_STRESS11_7)
         {  mode = 7; strs = var_flag-POLYMER_STRESS11_7;}
@@ -1694,7 +1694,7 @@ int i, mode=0, strs=0;
    else if (var_flag >= POLYMER_STRESS11)
         {  mode = 0; strs = var_flag-POLYMER_STRESS11;}
    else
-	{ EH(-1,"Polymer Stress mode not found - VE Stress PARABOLA BC."); }
+	{ GOMA_EH(-1,"Polymer Stress mode not found - VE Stress PARABOLA BC."); }
 
    if ( pd->gv[TEMPERATURE] )
        {temp = fv->T;}
@@ -1747,12 +1747,12 @@ int i, mode=0, strs=0;
                   }
                break;
           default:
-              EH(-1,"Stress parabola not ready for that Coordinate System yet!\n");
+              GOMA_EH(-1,"Stress parabola not ready for that Coordinate System yet!\n");
           }
 
   if(ielem_dim > 2)
      {
-      EH(-1,"Stress parabola not ready for 3D yet!\n");
+      GOMA_EH(-1,"Stress parabola not ready for 3D yet!\n");
       return;
      }
   for(i=0;i<ielem_dim;i++)
@@ -1888,7 +1888,7 @@ int i, mode=0, strs=0;
                                           (-expon*(expon-1.)*pow(fv->x[1],expon-2.));
                                }
                           }  else  {
-                              EH(-1,"Power-law annulus not done yet!\n");
+                              GOMA_EH(-1,"Power-law annulus not done yet!\n");
                           }
                       break;
                   case V_PARABOLA_BC:
@@ -2305,7 +2305,7 @@ fmesh_constraint(double *func,
 		 double d_func[],
 		 const int bc_input_id)
 {
-  EH(GOMA_ERROR, "CGM not supported, MESH_CONSTRAINT_BC");
+  GOMA_EH(GOMA_ERROR, "CGM not supported, MESH_CONSTRAINT_BC");
 /*#endif  */
 
 } /* END of routine fmesh_constraint                                   */
@@ -2342,7 +2342,7 @@ load_variable (double *x_var,        /* variable value */
   memset(d_vect_var, 0, DIM*sizeof(double) );
 
   if (jvar >= D_VEL1_DT && jvar <= D_P_DT) {
-    if ( pd->TimeIntegration == STEADY ) EH(GOMA_ERROR, "Unsteady GD for Steady problem");
+    if ( pd->TimeIntegration == STEADY ) GOMA_EH(GOMA_ERROR, "Unsteady GD for Steady problem");
   }
 
   /* ---- Find variable value, sensitivities, and species number */
@@ -2746,7 +2746,7 @@ load_variable (double *x_var,        /* variable value */
       *d_x_var = 1.;
       break;
     case SURFACE:
-      EH(GOMA_ERROR,"SURFACE variables not defined yet");
+      GOMA_EH(GOMA_ERROR,"SURFACE variables not defined yet");
       break;
     case PRESSURE:
       *x_var = fv->P;
@@ -3275,7 +3275,7 @@ load_variable (double *x_var,        /* variable value */
       *d_x_var = (1. + 2. * tt) / dt;
       break;
     case D_S_DT:
-      EH(GOMA_ERROR,"SURFACE variables not defined yet");
+      GOMA_EH(GOMA_ERROR,"SURFACE variables not defined yet");
       break;
     case D_P_DT:
       *x_var = fv_dot->P;
@@ -3283,11 +3283,11 @@ load_variable (double *x_var,        /* variable value */
       *d_x_var = (1. + 2. * tt) / dt;
       break;
     default:
-      EH(GOMA_ERROR, "Illegal option in load_variable");
+      GOMA_EH(GOMA_ERROR, "Illegal option in load_variable");
     } /* end of switch on jvar */
 
   if (wspec != 0 && var != MASS_FRACTION && var != POR_GAS_PRES) {
-    EH(GOMA_ERROR, "Non-zero species number for wrong variable");
+    GOMA_EH(GOMA_ERROR, "Non-zero species number for wrong variable");
   }
   if (var == MASS_FRACTION) var = MAX_VARIABLE_TYPES + wspec;
 
@@ -3443,7 +3443,7 @@ bc_eqn_index(int id,               /* local node number                 */
               i_calc = 0;
             }
           } else {
-            EH(GOMA_ERROR, "Automatic rotations only for normal conditions");
+            GOMA_EH(GOMA_ERROR, "Automatic rotations only for normal conditions");
           }
         } else {
           /*
@@ -3491,7 +3491,7 @@ bc_eqn_index(int id,               /* local node number                 */
               i_calc = 0;
             }
           } else {
-            EH(GOMA_ERROR, "Automatic rotations only for normal conditions");
+            GOMA_EH(GOMA_ERROR, "Automatic rotations only for normal conditions");
           }
         } else {
           for (jeqn = R_MOMENTUM1; jeqn <= R_MOMENTUM3; jeqn++) {
@@ -3523,7 +3523,7 @@ bc_eqn_index(int id,               /* local node number                 */
           }
         }
       } else {
-        EH(GOMA_ERROR,"Equation not in list ");
+        GOMA_EH(GOMA_ERROR,"Equation not in list ");
       }
 
       /*
@@ -3662,7 +3662,7 @@ bc_eqn_index_stress(int id,               /* local node number                 *
    */
   ieqn = bc_desc->equation;
   /* Sanity check */
-  if (ieqn != R_STRESS11) EH(GOMA_ERROR,"You can't be here");
+  if (ieqn != R_STRESS11) GOMA_EH(GOMA_ERROR,"You can't be here");
 
   matID = curr_matID;
 
@@ -3702,7 +3702,7 @@ bc_eqn_index_stress(int id,               /* local node number                 *
       break;
 
     default:
-      EH(GOMA_ERROR,"Maximum 8 modes allowed here!");
+      GOMA_EH(GOMA_ERROR,"Maximum 8 modes allowed here!");
       break;
   }
 
@@ -3754,7 +3754,7 @@ bc_eqn_index_stress(int id,               /* local node number                 *
       i_calc = search_bc_dup_list(bc_input_id,
 				  BC_dup_list[pg->imtrx][bc_node][node_offset]);
     } else {
-      EH(GOMA_ERROR,"Equation not in list ");
+      GOMA_EH(GOMA_ERROR,"Equation not in list ");
     }
 
     /*
@@ -4172,7 +4172,7 @@ apply_table_bc( double *func,
       break;
 
     default:
-      EH(GOMA_ERROR,"Variable not yet implemented in TABLE_BC");
+      GOMA_EH(GOMA_ERROR,"Variable not yet implemented in TABLE_BC");
       break;
       
     }

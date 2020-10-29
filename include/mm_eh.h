@@ -82,10 +82,10 @@ EXTERN void smooth_stop_with_msg(const char *msg);
  *		EH(return_code, "I am informative.");
  */
 
-#define EH(IERR, FORMAT, ...) goma_eh(IERR, __FILE__, __LINE__, FORMAT, ##__VA_ARGS__)
+#define GOMA_EH(IERR, FORMAT, ...) goma_eh(IERR, __FILE__, __LINE__, FORMAT, ##__VA_ARGS__)
 // We wrap in a do while with a static variable to only print warnings once
 // at a location
-#define WH(IERR, FORMAT, ...)                         \
+#define GOMA_WH(IERR, FORMAT, ...)                         \
   do {                                            \
     static bool print = true;                     \
     if (print) {                                  \
@@ -94,7 +94,7 @@ EXTERN void smooth_stop_with_msg(const char *msg);
     }                                             \
   } while (0)
 
-#define WH_MANY(IERR, FORMAT, ...) goma_wh(IERR, __FILE__, __LINE__, FORMAT, ##__VA_ARGS__)
+#define GOMA_WH_MANY(IERR, FORMAT, ...) goma_wh(IERR, __FILE__, __LINE__, FORMAT, ##__VA_ARGS__)
 
 #define TIME_STRING_SIZE (256)
 

@@ -84,16 +84,16 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
   ex_error = ex_get_init_info(exoid, &d->num_proc, &d->num_proc_in_file, &d->ftype);
   CHECK_EX_ERROR(ex_error, "ex_get_init_info");
   if (d->num_proc != Num_Proc) {
-    EH(GOMA_ERROR, "Nemesis mesh error num_proc != number of mpi processes");
+    GOMA_EH(GOMA_ERROR, "Nemesis mesh error num_proc != number of mpi processes");
   }
   if (d->num_proc_in_file != 1) {
-    EH(GOMA_ERROR, "Nemesis mesh error expected num_proc_in_file == 1");
+    GOMA_EH(GOMA_ERROR, "Nemesis mesh error expected num_proc_in_file == 1");
   }
   if (d->num_proc != Num_Proc) {
-    EH(GOMA_ERROR, "Nemesis mesh error num_proc != number of mpi processes");
+    GOMA_EH(GOMA_ERROR, "Nemesis mesh error num_proc != number of mpi processes");
   }
   if (d->ftype != 'p') {
-    EH(GOMA_ERROR, "Nemesis mesh error ftype expected 'p'");
+    GOMA_EH(GOMA_ERROR, "Nemesis mesh error ftype expected 'p'");
   }
   // global indices
   d->node_index_global = alloc_int_1(exo->num_nodes, 0);
@@ -215,7 +215,7 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
         int elem = exo->ss_elem_list[elem_index];
         int block = find_elemblock_index(elem, exo);
         if (block == -1) {
-          EH(GOMA_ERROR, "Element block not found ss_block_list");
+          GOMA_EH(GOMA_ERROR, "Element block not found ss_block_list");
         }
         for (int j = 0; j < d->num_elem_blocks_global; j++) {
           if (d->eb_id_global[j] == exo->eb_id[block]) {
@@ -293,7 +293,7 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
   int min_external;
   MPI_Allreduce(&d->num_external_nodes, &min_external, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
   if (min_external == 0) {
-    EH(-1, "Found 0 external nodes, use nodal decomposition");
+    GOMA_EH(-1, "Found 0 external nodes, use nodal decomposition");
   }
 
   zero_dpi(d);
@@ -308,10 +308,10 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
     int neighbor = d->node_map_proc_ids[i][0];
     for (int j = 0; j < d->node_cmap_node_counts[i]; j++) {
       if (neighbor != d->node_map_proc_ids[i][j]) {
-        EH(GOMA_ERROR, "Unexpected proc id in node map proc ids");
+        GOMA_EH(GOMA_ERROR, "Unexpected proc id in node map proc ids");
       }
       if (d->node_owner[d->node_map_node_ids[i][j]] != ProcID) {
-        EH(GOMA_ERROR, "External node found multiple procs");
+        GOMA_EH(GOMA_ERROR, "External node found multiple procs");
       }
       d->node_owner[d->node_map_node_ids[i][j]] = neighbor;
       d->num_node_recv[i]++;
@@ -389,7 +389,7 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
       int exists = in_list(global_send_nodes[i][j], d->num_internal_nodes,
                            d->num_internal_nodes + d->num_boundary_nodes, d->node_index_global);
       if (exists == -1) {
-        EH(GOMA_ERROR, "Required node to communicate doesn't exist in border nodes");
+        GOMA_EH(GOMA_ERROR, "Required node to communicate doesn't exist in border nodes");
       }
     }
   }
@@ -415,7 +415,7 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
 
   for (int i = 0; i < d->num_nodes_global; i++) {
     if (all_global_owners_min[i] != all_global_owners_max[i]) {
-      EH(GOMA_ERROR, "Inconsistent node owners");
+      GOMA_EH(GOMA_ERROR, "Inconsistent node owners");
     }
   }
   free(global_owners_min);
@@ -443,7 +443,7 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
     }
   }
   if (new_index != d->num_external_nodes) {
-    EH(GOMA_ERROR, "incorrect new ordering");
+    GOMA_EH(GOMA_ERROR, "incorrect new ordering");
   }
 
   // node index global
@@ -786,7 +786,7 @@ void free_dpi_uni(Dpi *d) {
 
 void init_dpi_struct(Dpi *d) {
   if (d == NULL) {
-    EH(GOMA_ERROR, "Empty structure to initialize?");
+    GOMA_EH(GOMA_ERROR, "Empty structure to initialize?");
   }
   memset((void *)d, 0, sizeof(Dpi));
   return;

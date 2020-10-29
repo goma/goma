@@ -178,7 +178,7 @@ assemble_qtensor(dbl *el_length) /* 2 x approximate element length scales */
      delta_xi[i] = 0.0;
   }
 
-/*   if(pd->e[pg->imtrx][R_MESH1]) EH(GOMA_ERROR, "assemble_qtensor is not deformable mesh friendly."); */
+/*   if(pd->e[pg->imtrx][R_MESH1]) GOMA_EH(GOMA_ERROR, "assemble_qtensor is not deformable mesh friendly."); */
 
   ielem_type = ei[pg->imtrx]->ielem_type;	/* element type */
   ip_total = elem_info(NQUAD, ielem_type); /* number of quadrature points */
@@ -529,12 +529,12 @@ assemble_new_qtensor(dbl *el_length) /* 2 x approximate element length scales */
 
 
   /* Catch cases which are not available */
-  if(pd->e[pg->imtrx][R_MESH1]) EH(GOMA_ERROR, "assemble_qtensor is not deformable mesh friendly.");
-  if (pd->Num_Dim == 3) EH(GOMA_ERROR, "qtensor not ready for 3D problems yet!");
+  if(pd->e[pg->imtrx][R_MESH1]) GOMA_EH(GOMA_ERROR, "assemble_qtensor is not deformable mesh friendly.");
+  if (pd->Num_Dim == 3) GOMA_EH(GOMA_ERROR, "qtensor not ready for 3D problems yet!");
   if (pd->CoordinateSystem != CARTESIAN
    && pd->CoordinateSystem != PROJECTED_CARTESIAN
    && pd->CoordinateSystem != CARTESIAN_2pt5D)
-    EH(GOMA_ERROR, "Qtensor requires CARTESIAN coordinates for now!");
+    GOMA_EH(GOMA_ERROR, "Qtensor requires CARTESIAN coordinates for now!");
 
   /* Do some initializations */
   memset(qtensor, 0, MDE*DIM*DIM*sizeof(double));
@@ -548,19 +548,19 @@ assemble_new_qtensor(dbl *el_length) /* 2 x approximate element length scales */
       /* Perform usual assembly sequence as if at a Gauss point */
       find_stu(ip, ielem_type, &xi[0], &xi[1], &xi[2]);
       err = load_basis_functions(xi, bfd);
-      EH(err, "Problem from load_basis_functions!");
+      GOMA_EH(err, "Problem from load_basis_functions!");
       err = beer_belly();
-      EH(err, "Problem from beer_belly!");
+      GOMA_EH(err, "Problem from beer_belly!");
       err = load_fv();
-      EH(err, "Problem from load_fv!");
+      GOMA_EH(err, "Problem from load_fv!");
       err = load_bf_grad();
-      EH(err, "Problem from load_bf_grad!");
+      GOMA_EH(err, "Problem from load_bf_grad!");
       err = load_fv_grads();
-      EH(err, "Problem from load_fv_grads!");
+      GOMA_EH(err, "Problem from load_fv_grads!");
 
       /* Calculate Q-tensor at this Gauss point */
       err = get_local_qtensor(local_q);
-      EH(err, "Problem getting local qtensor!");
+      GOMA_EH(err, "Problem getting local qtensor!");
 
       /* Fill these values into local array */
       for (i = 0; i < DIM; i++)
@@ -585,26 +585,26 @@ assemble_new_qtensor(dbl *el_length) /* 2 x approximate element length scales */
 
               /* Perform assembly sequence up to load_fv_grads at this point */
               err = load_basis_functions(xi, bfd);
-              EH(err, "Problem from load_basis_functions!");
+              GOMA_EH(err, "Problem from load_basis_functions!");
               err = beer_belly();
-              EH(err, "Problem from beer_belly!");
+              GOMA_EH(err, "Problem from beer_belly!");
               err = load_fv();
-              EH(err, "Problem from load_fv!");
+              GOMA_EH(err, "Problem from load_fv!");
               err = load_bf_grad();
-              EH(err, "Problem from load_bf_grad!");
+              GOMA_EH(err, "Problem from load_bf_grad!");
               err = load_fv_grads();
-              EH(err, "Problem from load_fv_grads!");
+              GOMA_EH(err, "Problem from load_fv_grads!");
 
               /* Evaluate qtensor at perturbed location */
               if (k1 == 0)
                 {
                   err = get_local_qtensor(local_q);
-                  EH(err, "Problem getting local qtensor!");
+                  GOMA_EH(err, "Problem getting local qtensor!");
                 }
               else
                 {
                   err = get_local_qtensor(local_q2);
-                  EH(err, "Problem getting local qtensor!");
+                  GOMA_EH(err, "Problem getting local qtensor!");
                 }
             }
 
@@ -1309,7 +1309,7 @@ hydro_qtensor_flux (struct Species_Conservation_Terms *st,
 
   if(!pd->e[pg->imtrx][VORT_DIR3] && 0)
     {
-      EH(GOMA_ERROR, "Cannot use QTENSOR without the VORT_DIR{1,2,3} equations/variables active!");
+      GOMA_EH(GOMA_ERROR, "Cannot use QTENSOR without the VORT_DIR{1,2,3} equations/variables active!");
       exit(-1);
     }
 
@@ -1385,7 +1385,7 @@ hydro_qtensor_flux (struct Species_Conservation_Terms *st,
       else if (mp->GamDiffType[w] == LEVEL_SET ) 
 	{
 	  double width;
-	  if ( ls == NULL ) EH(GOMA_ERROR,"Need to activate to Level Set Interface Tracking to use this model.\n");
+	  if ( ls == NULL ) GOMA_EH(GOMA_ERROR,"Need to activate to Level Set Interface Tracking to use this model.\n");
 
 	  width = ( mp->u_gadiffusivity[w][2] == 0.0) ? ls->Length_Scale : mp->u_gadiffusivity[w][2];
 
@@ -1408,7 +1408,7 @@ hydro_qtensor_flux (struct Species_Conservation_Terms *st,
       else if (mp->MuDiffType[w] == LEVEL_SET ) 
 	{
 	  double width;
-	  if ( ls == NULL ) EH(GOMA_ERROR,"Need to activate to Level Set Interface Tracking to use this model.\n");
+	  if ( ls == NULL ) GOMA_EH(GOMA_ERROR,"Need to activate to Level Set Interface Tracking to use this model.\n");
 
 	  width = ( mp->u_mdiffusivity[w][2] == 0.0) ? ls->Length_Scale : mp->u_mdiffusivity[w][2];
 
@@ -1438,7 +1438,7 @@ hydro_qtensor_flux (struct Species_Conservation_Terms *st,
       else if (mp->GravDiffType[w] == LEVEL_SET ) 
 	{
 	  double width;
-	  if ( ls == NULL ) EH(GOMA_ERROR,"Need to activate to Level Set Interface Tracking to use this model.\n");
+	  if ( ls == NULL ) GOMA_EH(GOMA_ERROR,"Need to activate to Level Set Interface Tracking to use this model.\n");
 
 	  width = ( mp->u_gdiffusivity[w][2] == 0.0) ? ls->Length_Scale : mp->u_gdiffusivity[w][2];
 
@@ -1678,7 +1678,7 @@ hydro_qtensor_flux_new (struct Species_Conservation_Terms *st,
 
   if(!vort_dir_on)
     {
-      EH(GOMA_ERROR, "Cannot use this QTENSOR model without the VORT_DIR{1,2,3} equations/variables active!");
+      GOMA_EH(GOMA_ERROR, "Cannot use this QTENSOR model without the VORT_DIR{1,2,3} equations/variables active!");
       exit(-1);
     }
 
@@ -1746,7 +1746,7 @@ hydro_qtensor_flux_new (struct Species_Conservation_Terms *st,
       else if (mp->GamDiffType[w] == LEVEL_SET ) 
 	{
 	  double width;
-	  if ( ls == NULL ) EH(GOMA_ERROR,"Need to activate to Level Set Interface Tracking to use this model.\n");
+	  if ( ls == NULL ) GOMA_EH(GOMA_ERROR,"Need to activate to Level Set Interface Tracking to use this model.\n");
 
 	  width = ( mp->u_gadiffusivity[w][2] == 0.0) ? ls->Length_Scale : mp->u_gadiffusivity[w][2];
 
@@ -1769,7 +1769,7 @@ hydro_qtensor_flux_new (struct Species_Conservation_Terms *st,
       else if (mp->MuDiffType[w] == LEVEL_SET ) 
 	{
 	  double width;
-	  if ( ls == NULL ) EH(GOMA_ERROR,"Need to activate to Level Set Interface Tracking to use this model.\n");
+	  if ( ls == NULL ) GOMA_EH(GOMA_ERROR,"Need to activate to Level Set Interface Tracking to use this model.\n");
 
 	  width = ( mp->u_mdiffusivity[w][2] == 0.0) ? ls->Length_Scale : mp->u_mdiffusivity[w][2];
 
@@ -1799,7 +1799,7 @@ hydro_qtensor_flux_new (struct Species_Conservation_Terms *st,
       else if (mp->GravDiffType[w] == LEVEL_SET ) 
 	{
 	  double width;
-	  if ( ls == NULL ) EH(GOMA_ERROR,"Need to activate to Level Set Interface Tracking to use this model.\n");
+	  if ( ls == NULL ) GOMA_EH(GOMA_ERROR,"Need to activate to Level Set Interface Tracking to use this model.\n");
 
 	  width = ( mp->u_gdiffusivity[w][2] == 0.0) ? ls->Length_Scale : mp->u_gdiffusivity[w][2];
 

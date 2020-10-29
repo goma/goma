@@ -250,7 +250,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
       file = fopen(Soln_OutFile, "w");
       if (file == NULL)  {
         DPRINTF(stdout, "%s:  opening soln file for writing\n", yo);
-        EH(GOMA_ERROR, "\t");
+        GOMA_EH(GOMA_ERROR, "\t");
       }
     }
 #ifdef PARALLEL
@@ -271,7 +271,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   if ( tnv < 0 )
     {
       DPRINTF(stderr, "%s:\tbad tnv.\n", yo);
-      EH(GOMA_ERROR, "\t");
+      GOMA_EH(GOMA_ERROR, "\t");
     }
 
   if ( tev < 0 )
@@ -284,7 +284,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
     smalloc(sizeof(struct Results_Description));
 
   if (rd == NULL)
-    { EH(GOMA_ERROR, "Could not grab Results Description."); }
+    { GOMA_EH(GOMA_ERROR, "Could not grab Results Description."); }
   (void) memset((void *) rd, 0, sizeof(struct Results_Description));
 
   rd->nev = 0;			/* number element variables in results */
@@ -322,7 +322,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   if (error !=0)
     {
       DPRINTF(stderr, "%s:  problem with load_nodal_tkn()\n", yo);
-      EH(GOMA_ERROR,"\t");
+      GOMA_EH(GOMA_ERROR,"\t");
     }
 
   /* load elem types, names */
@@ -334,7 +334,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   if ( error !=0 )
     {
       DPRINTF(stderr, "%s:  problem with load_elem_tkn()\n", yo);
-      EH(GOMA_ERROR,"\t");
+      GOMA_EH(GOMA_ERROR,"\t");
     }
 
   /*
@@ -547,7 +547,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   /* Call prefront (or mf_setup) if necessary */
   if (Linear_Solver == FRONT)
   {
-    if (Num_Proc > 1) EH(GOMA_ERROR, "Whoa.  No front allowed with nproc>1");
+    if (Num_Proc > 1) GOMA_EH(GOMA_ERROR, "Whoa.  No front allowed with nproc>1");
 
 #ifdef HAVE_FRONT
     /* Also got to define these because it wants pointers to these numbers */
@@ -578,10 +578,10 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 		   fss->constraint,
 		   front_scratch_directory,
 		   &fss->ntra);
-    EH(err,"problems in frontal setup ");
+    GOMA_EH(err,"problems in frontal setup ");
 
 #else
-    EH(GOMA_ERROR,"Don't have frontal solver compiled and linked in");
+    GOMA_EH(GOMA_ERROR,"Don't have frontal solver compiled and linked in");
 #endif
   }
 
@@ -695,7 +695,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
     }
   else
   {
-    EH(GOMA_ERROR,"Attempted to allocate unknown sparse matrix format");
+    GOMA_EH(GOMA_ERROR,"Attempted to allocate unknown sparse matrix format");
   }
 
   init_vec(x, cx, exo, dpi, x_AC, nAC, &timeValueRead);
@@ -936,7 +936,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
       inewton = err;
       if (converged)
       {
-	EH(error, "error writing ASCII soln file."); /* srs need to check */
+	GOMA_EH(error, "error writing ASCII soln file."); /* srs need to check */
 
 	if (Write_Intermediate_Solutions == 0) {
           exo_time = aldALC[0]*path1[0];
@@ -1500,7 +1500,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 
   if (Anneal_Mesh) {
     err = anneal_mesh(x, tev, tev_post, NULL, rd, path1[0], exo, dpi);
-    EH(err, "anneal_mesh() bad return.");
+    GOMA_EH(err, "anneal_mesh() bad return.");
   }
 
   /*

@@ -54,7 +54,7 @@ squash ( int N,
 
   if ( tol < 0 )
     {
-      EH(GOMA_ERROR, "Zero threshhold must be >= 0.");
+      GOMA_EH(GOMA_ERROR, "Zero threshhold must be >= 0.");
     }
 
   a_new   = (dbl *)calloc(M, sizeof(dbl));
@@ -62,7 +62,7 @@ squash ( int N,
 
   if ( a_new == NULL || ija_new == NULL )
     {
-      EH(GOMA_ERROR, "Problem allocating atmp.");
+      GOMA_EH(GOMA_ERROR, "Problem allocating atmp.");
     }
 
   /*
@@ -111,7 +111,7 @@ squash ( int N,
 	  if ( ija_new[r] == ija_new[r+1] )
 	    {	  
 	      fprintf(stderr, "row = %d\n", r );
-	      EH(GOMA_ERROR, "Zero diagonal has no nonzero off-diagonals");
+	      GOMA_EH(GOMA_ERROR, "Zero diagonal has no nonzero off-diagonals");
 	    }
 	}
     }

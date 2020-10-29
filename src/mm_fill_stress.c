@@ -844,7 +844,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				      
 				      if ( w > 1 )
 					{
-					  EH(GOMA_ERROR, "Need more arrays for each species.");
+					  GOMA_EH(GOMA_ERROR, "Need more arrays for each species.");
 					}
 				      
 				      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
@@ -1702,9 +1702,9 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 	double neg_alpha = ve[mode]->alpha;
 	double width     = ls->Length_Scale;
 	err = level_set_property(neg_alpha, pos_alpha, width, &alpha, d_alpha_dF);
-	EH(err, "level_set_property() failed for mobility parameter.");
+	GOMA_EH(err, "level_set_property() failed for mobility parameter.");
       } else {
-	EH(GOMA_ERROR, "Unknown mobility parameter model");
+	GOMA_EH(GOMA_ERROR, "Unknown mobility parameter model");
       }
       
       /* get time constant */
@@ -1717,7 +1717,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 	double neg_lambda = ve[mode]->time_const;
 	double width     = ls->Length_Scale;
 	err = level_set_property(neg_lambda, pos_lambda, width, &lambda, d_lambda_dF);
-	EH(err, "level_set_property() failed for polymer time constant.");
+	GOMA_EH(err, "level_set_property() failed for polymer time constant.");
       }
 
       xi = 0;
@@ -1728,9 +1728,9 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 	double neg_xi = ve[mode]->xi;
 	double width     = ls->Length_Scale;
 	err = level_set_property(neg_xi, pos_xi, width, &xi, d_xi_dF);
-	EH(err, "level_set_property() failed for ptt xi parameter.");
+	GOMA_EH(err, "level_set_property() failed for ptt xi parameter.");
       } else {
-	EH(GOMA_ERROR, "Unknown PTT Xi parameter model");
+	GOMA_EH(GOMA_ERROR, "Unknown PTT Xi parameter model");
       }
       
       ucwt = 1.0 - xi / 2.0 ;
@@ -1743,9 +1743,9 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 	double neg_eps = ve[mode]->eps;
 	double width     = ls->Length_Scale;
 	err = level_set_property(neg_eps, pos_eps, width, &eps, d_eps_dF);
-	EH(err, "level_set_property() failed for ptt epsilon parameter.");
+	GOMA_EH(err, "level_set_property() failed for ptt epsilon parameter.");
       } else {
-	EH(GOMA_ERROR, "Unknown PTT Epsilon parameter model");
+	GOMA_EH(GOMA_ERROR, "Unknown PTT Epsilon parameter model");
       }
 
       if (lambda == 0) {
@@ -2194,7 +2194,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				      
 				      if ( w > 1 )
 					{
-					  EH(GOMA_ERROR, "Need more arrays for each species.");
+					  GOMA_EH(GOMA_ERROR, "Need more arrays for each species.");
 					}
 				      
 				      lec->J[LEC_J_INDEX(peqn,MAX_PROB_VAR + w,i,j)] +=
@@ -2896,7 +2896,7 @@ assemble_stress_log_conf(dbl tt,
          conformation tensor, not the log-conformation tensor. */
       if(eig_values[0] < 0. || eig_values[1] < 0. || (VIM > 2 && eig_values[2] < 0.))
 	{
-	  WH(-1, "Error: Negative eigenvalue for conformation tensor");
+	  GOMA_WH(-1, "Error: Negative eigenvalue for conformation tensor");
 	  return -1;
 	}
       
@@ -3659,7 +3659,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 				      
 				      if ( w > 1 )
 					{
-					  EH(GOMA_ERROR, "Need more arrays for each species.");
+					  GOMA_EH(GOMA_ERROR, "Need more arrays for each species.");
 					}
 				      
 				      lec->J[LEC_J_INDEX(peqn,MAX_PROB_VAR + w,i,j)] +=
@@ -4744,15 +4744,15 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
       
       /* ****************************************/
       err = load_basis_functions( xi, bfd);
-      EH( err, "problem from load_basis_functions");
+      GOMA_EH( err, "problem from load_basis_functions");
 
       err = beer_belly();
-      EH( err, "beer_belly");
+      GOMA_EH( err, "beer_belly");
             
       /* precalculate variables at  current integration pt.*/
  	      
       err = load_fv();
-      EH( err, "load_fv");
+      GOMA_EH( err, "load_fv");
 
 
      /* calculate the determinant of the surface jacobian and the normal to 
@@ -4760,7 +4760,7 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
       */
 
       err =  get_side_info(ielem_type, id_side, &nodes_per_side, local_elem_node_id);
-      EH( err, "get_side_info");
+      GOMA_EH( err, "get_side_info");
       
       surface_determinant_and_normal (ielem, ei[pg->imtrx]->iconnect_ptr, num_local_nodes, 
 				      ei[pg->imtrx]->ielem_dim - 1,  
@@ -4787,7 +4787,7 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 				     num_local_nodes, nodes_per_side,
 				     local_elem_node_id, ielem_type, 
 				     ielem_type_fill,  x_neighbor, S_map);
-	      EH( err, "neighbor_stress");
+	      GOMA_EH( err, "neighbor_stress");
 	    }
  	  else if((neighbor==-1)&&(num_zeros==0))
 	    {
@@ -4798,7 +4798,7 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 				     num_local_nodes, nodes_per_side,
 				     local_elem_node_id, ielem_type, 
 				     ielem_type_fill,  x_neighbor, S_map, table_ibc);
-	      EH( err, "neighbor_stress_table");
+	      GOMA_EH( err, "neighbor_stress_table");
 	    }
  	  else
 	    {
@@ -4843,20 +4843,20 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 	  
 	  /* ****************************************/
 	  err = load_basis_functions( xi, bfd);
-	  EH( err, "problem from load_basis_functions");
+	  GOMA_EH( err, "problem from load_basis_functions");
 
           err = beer_belly();
-          EH( err, "beer_belly");
+          GOMA_EH( err, "beer_belly");
             
 	  /* precalculate variables at  current integration pt.*/
 	  err = load_fv();
-	  EH( err, "load_fv");
+	  GOMA_EH( err, "load_fv");
 
 	  /* calculate the determinant of the surface jacobian and the normal to 
 	   * the surface all at one time */
 	  
 	  err =  get_side_info(ielem_type, id_side, &nodes_per_side, local_elem_node_id);
-	  EH( err, "get_side_info");
+	  GOMA_EH( err, "get_side_info");
 	  
 	  surface_determinant_and_normal (ielem, ei[pg->imtrx]->iconnect_ptr, num_local_nodes, 
 					  ei[pg->imtrx]->ielem_dim - 1,  
@@ -5252,7 +5252,7 @@ neighbor_stress(Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 		    ledof = ei[pg->imtrx]->lvdof_to_ledof[v][j];
 		    ie = Index_Solution(gnn, v, 0, j,
 					ei[pg->imtrx]->matID_ledof[ledof], pg->imtrx);
-		    EH(ie, "Could not find vbl in sparse matrix.");
+		    GOMA_EH(ie, "Could not find vbl in sparse matrix.");
 		    if ( vn->dg_J_model == EXPLICIT_DG ||
 			 vn->dg_J_model == SEGREGATED) {
 		      arg_j =  x[ie] -  vn->dg_J_model_wt[0] * x_update[ie];
@@ -5517,7 +5517,7 @@ load_neighbor_pointers( Exo_DB *exo,
 	nv = Nodes[gnn]->Nodal_Vars_Info[pg->imtrx];
 	nunks = get_nv_ndofs_modMF(nv, v);
 	dof[v] += nunks;
-	EH(nunks, "problem with nun for this var.");
+	GOMA_EH(nunks, "problem with nun for this var.");
 	      
 	for (i = 0; i < nunks; i++ ) {
 	  dof_list[v][ldof] = ln;
@@ -5538,7 +5538,7 @@ load_neighbor_pointers( Exo_DB *exo,
 	  if (pd->e[pg->imtrx][eqn]) {
 	    for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
 	      ie = ei[pg->imtrx]->gun_list[eqn][i];
-	      EH(ie, "Bad eqn index.");
+	      GOMA_EH(ie, "Bad eqn index.");
 	      mvar1 = meqn1;
 	      mvar2 = meqn2;
 	      if (mvar1 <= mvar2)  {
@@ -5546,10 +5546,10 @@ load_neighbor_pointers( Exo_DB *exo,
 		if (pd->v[pg->imtrx][var]) {
 		  for (j = 0; j < dof[var]; j++ ) {
 		    je = gun_list[var][j];
-		    EH(je, "Bad var index.");
+		    GOMA_EH(je, "Bad var index.");
 		    ja = (ie == je) ? ie :
 			in_list(je, ija[ie], ija[ie+1], ija);
-		    EH(ja, "Could not find vbl in sparse matrix.");
+		    GOMA_EH(ja, "Could not find vbl in sparse matrix.");
 		    J_S_S[meqn1][meqn2][i] [mvar1][mvar2][j] =
 			a + ja;
 		  }
@@ -5576,7 +5576,7 @@ load_neighbor_pointers( Exo_DB *exo,
 	      I  = ei[pg->imtrx]->gnn_list[eqn][i];
 	      row_dofs = rpntr[I+1] - rpntr[I];
 	      blk_row = Local_Offset[pg->imtrx][I][eqn];
-	      EH(ie, "Bad eqn index.");
+	      GOMA_EH(ie, "Bad eqn index.");
 	      mvar1 = meqn1;
 	      mvar2 = meqn2;
 	      if (mvar1 <= mvar2) {
@@ -5598,7 +5598,7 @@ load_neighbor_pointers( Exo_DB *exo,
       }
     }
   } else if (strcmp( Matrix_Format, "epetra") == 0) {
-    EH(GOMA_ERROR, "load_neighbor_pointers unsupported by epetra");
+    GOMA_EH(GOMA_ERROR, "load_neighbor_pointers unsupported by epetra");
   }
 }
 /***************************************************************************/

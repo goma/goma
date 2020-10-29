@@ -155,7 +155,7 @@ extern "C" {
 int stratimikos_solve(struct Aztec_Linear_Solver_System *ams, double *x_,
     double *b_, int *iterations, char *stratimikos_file)
 {
-  EH(GOMA_ERROR, "Not built with stratimikos support!");
+  GOMA_EH(GOMA_ERROR, "Not built with stratimikos support!");
   return -1;
 }
 

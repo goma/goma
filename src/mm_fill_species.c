@@ -381,7 +381,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
        * ---------------------------------------------------------------------
        */
       err = get_continuous_species_terms(&s_terms, time, tt, dt, pg_data->hsquared);
-      EH(err,"problem in getting the species terms");
+      GOMA_EH(err,"problem in getting the species terms");
       
 /*    } */   /* end of if CONTINUOUS */
 
@@ -464,7 +464,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 	         }
 	      else
 	         {
-	          EH(GOMA_ERROR, "invalid porosity model");
+	          GOMA_EH(GOMA_ERROR, "invalid porosity model");
 	         }
 	      /*  rho = density(d_rho); /\*  RSL 6/22/02  *\/ */ /* not sure why we are calling density again, so I commented this out -RRR*/
 	      small_c = rho/sumxm;
@@ -716,7 +716,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 	         }
 	      else
 	         {  
-	          EH(GOMA_ERROR, "invalid porosity model");
+	          GOMA_EH(GOMA_ERROR, "invalid porosity model");
 	         }
        /*        rho = density(d_rho); /\*  RSL 6/22/02  *\/ */
               small_c = rho/sumxm;
@@ -2003,7 +2003,7 @@ assemble_mass_transport_path_dependence
        * ---------------------------------------------------------------------
        */
       err = get_continuous_species_terms(&s_terms, time, tt, dt, h);
-      EH(err,"problem in getting the species terms");
+      GOMA_EH(err,"problem in getting the species terms");
       
       /*    } */   /* end of if CONTINUOUS */
 
@@ -2056,7 +2056,7 @@ assemble_mass_transport_path_dependence
 	         }
 	      else
 	         {
-	          EH(GOMA_ERROR, "invalid porosity model");
+	          GOMA_EH(GOMA_ERROR, "invalid porosity model");
 	         }
               /* rho = density(d_rho); /\*  RSL 6/22/02  *\/ */
 	      small_c = rho/sumxm;
@@ -2953,7 +2953,7 @@ mass_flux_surf_NI (dbl mass_flux[MAX_CONC],
   DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
 
   if (MAX_CONC < 5) {
-    EH(GOMA_ERROR, "mass_flux_surf_NI expects MAX_CONC >= 5");
+    GOMA_EH(GOMA_ERROR, "mass_flux_surf_NI expects MAX_CONC >= 5");
     return;
   }
 
@@ -3317,7 +3317,7 @@ raoults_law(double func[],
 		      }
 		    else
 		      {
-			EH(GOMA_ERROR,"For the Raoult's law model we only allow 1 or 2 species");
+			GOMA_EH(GOMA_ERROR,"For the Raoult's law model we only allow 1 or 2 species");
 		      }
 		  }
 	      }
@@ -3375,7 +3375,7 @@ if(pd->Num_Species_Eqn == 1)
       }
     else
       {
-	EH(GOMA_ERROR,"Something screwy in your material block specs on the VL_EQUIL card");
+	GOMA_EH(GOMA_ERROR,"Something screwy in your material block specs on the VL_EQUIL card");
       }
   }
 else if (pd->Num_Species_Eqn == 2)
@@ -3405,7 +3405,7 @@ else if (pd->Num_Species_Eqn == 2)
   }
 else
   {
-    EH(GOMA_ERROR,"For the Raoult's law model we only allow 1 or 2 species");
+    GOMA_EH(GOMA_ERROR,"For the Raoult's law model we only allow 1 or 2 species");
   }
   return;
 } /* END of routine raoults_law   */
@@ -3652,7 +3652,7 @@ flory_huggins(double func[],
 	     {
 	       if(mp->specific_volume[i] < 0.)
 		 {
-		   EH(GOMA_ERROR, "Specific volume not specified in the material file.");
+		   GOMA_EH(GOMA_ERROR, "Specific volume not specified in the material file.");
 		 }
 	       else
 		 {
@@ -3706,7 +3706,7 @@ flory_huggins(double func[],
 	 {
 	   if(mp->molar_volume[i] < 0.)
 	     {
-	       EH(GOMA_ERROR, "Molar volume not specified in the material file.");
+	       GOMA_EH(GOMA_ERROR, "Molar volume not specified in the material file.");
 	     }
 	   else
 	     {
@@ -3716,7 +3716,7 @@ flory_huggins(double func[],
 	     {
 	     if(mp->flory_param[i][k] < 0.)
 	       {
-		 EH(GOMA_ERROR, "Flory-Huggins binary parameters not specified in the material file.");
+		 GOMA_EH(GOMA_ERROR, "Flory-Huggins binary parameters not specified in the material file.");
 	       }
 	     else
 	       {
@@ -3871,7 +3871,7 @@ flory_huggins(double func[],
 	 {
 	   if(mp->molecular_weight[i] < 0.)
 	   {
-	     EH(GOMA_ERROR, "Molecular weight of the species not specified in the material file");
+	     GOMA_EH(GOMA_ERROR, "Molecular weight of the species not specified in the material file");
 	   }
 	 else
 	   {
@@ -3881,7 +3881,7 @@ flory_huggins(double func[],
 
        if(mp->molecular_weight[pd->Num_Species_Eqn] < 0.)
 	 {
-	 EH(GOMA_ERROR, "M.W. of a non-condensable species not specified in the material file");
+	 GOMA_EH(GOMA_ERROR, "M.W. of a non-condensable species not specified in the material file");
 	 }
        else
 	 {
@@ -3950,7 +3950,7 @@ flory_huggins(double func[],
 
   else
     {
-     EH(GOMA_ERROR,"Material file id for gas and liquid in VL_POLY card must be specified.");
+     GOMA_EH(GOMA_ERROR,"Material file id for gas and liquid in VL_POLY card must be specified.");
      return;
     }
 
@@ -4056,7 +4056,7 @@ kinematic_species_bc(double func[DIM],
          mass_dc = mp->density;
 	}*/
   else
-	{ EH(GOMA_ERROR,"That species formulation not done in kinematic_species\n"); }
+	{ GOMA_EH(GOMA_ERROR,"That species formulation not done in kinematic_species\n"); }
 
   if (af->Assemble_LSA_Mass_Matrix) {
     for (kdir = 0; kdir < pd->Num_Dim; kdir++) {
@@ -4177,14 +4177,14 @@ mass_flux_surf_bc(double func[],
   if ((pd->MeshMotion == LAGRANGIAN ||
        pd->MeshMotion == DYNAMIC_LAGRANGIAN) && pd->MeshInertia == 1) {
       err = belly_flop(elc->lame_mu);
-      EH(err, "error in belly flop");
+      GOMA_EH(err, "error in belly flop");
       if( neg_elem_volume ) return;
     }
 
 /*  if (mp->PorousMediaType == CONTINUOUS) */
 
     err = get_convection_velocity(vconv, vconv_old, d_vconv, dt, tt);
-  EH(err, "Error in calculating effective convection velocity");
+  GOMA_EH(err, "Error in calculating effective convection velocity");
 
   /*
    *  Calculate the Residual contribution for this boundary condition
@@ -4390,14 +4390,14 @@ yflux_disc_rxn_bc(double func[],
   if ((pd->MeshMotion == LAGRANGIAN ||
        pd->MeshMotion == DYNAMIC_LAGRANGIAN) && pd->MeshInertia == 1) {
       err = belly_flop(elc->lame_mu);
-      EH(err, "error in belly flop");
+      GOMA_EH(err, "error in belly flop");
       if( neg_elem_volume ) return;
     }
 
 /*  if (mp->PorousMediaType == CONTINUOUS) */
 
     err = get_convection_velocity(vconv, vconv_old, d_vconv, dt, tt);
-  EH(err, "Error in calculating effective convection velocity");
+  GOMA_EH(err, "Error in calculating effective convection velocity");
 
   /*
    *  Calculate the Residual contribution for this boundary condition
@@ -4678,7 +4678,7 @@ mass_flux_surf_etch(double func[DIM],
    */
   zero_structure(&s_terms, sizeof(struct Species_Conservation_Terms), 1);
   err = get_continuous_species_terms(&s_terms, time, tt, dt, h);
-  EH(err, "get_continuous_species_terms");
+  GOMA_EH(err, "get_continuous_species_terms");
 
  /* Right now it only handles KOH wet etching on plane 100 of crystalline silicon*/
   if (etch_plane == 100)
@@ -4913,7 +4913,7 @@ mass_flux_BV_surf_bc(
     }
   else 
     {
-      EH(GOMA_ERROR, "Solution-temperature model not yet implemented");
+      GOMA_EH(GOMA_ERROR, "Solution-temperature model not yet implemented");
     }
   if(pd->e[pg->imtrx][R_ENERGY]) /* if energy equation is active, re-set electrolyte temperature */
     {
@@ -4942,13 +4942,13 @@ mass_flux_BV_surf_bc(
        pd->MeshMotion == DYNAMIC_LAGRANGIAN) && pd->MeshInertia == 1)
     {
       err = belly_flop(elc->lame_mu);
-      EH(err, "error in belly flop");
+      GOMA_EH(err, "error in belly flop");
       if( neg_elem_volume ) return;
     }
   if (mp->PorousMediaType == CONTINUOUS) {
     err = get_convection_velocity(vconv, vconv_old, d_vconv, dt, tt);
   }
-  EH(err, "Error in calculating effective convection velocity");
+  GOMA_EH(err, "Error in calculating effective convection velocity");
 
   if (af->Assemble_Residual )
     {
@@ -5588,12 +5588,12 @@ mass_flux_SULFIDATION_surf_bc(
        pd->MeshMotion == DYNAMIC_LAGRANGIAN) && pd->MeshInertia == 1)
     {
       err = belly_flop(elc->lame_mu);
-      EH(err, "error in belly flop");
+      GOMA_EH(err, "error in belly flop");
       if( neg_elem_volume ) return;
     }
   if (mp->PorousMediaType == CONTINUOUS) {
     err = get_convection_velocity(vconv, vconv_old, d_vconv, dt, tt);
-    EH(err, "Error in calculating effective convection velocity");
+    GOMA_EH(err, "Error in calculating effective convection velocity");
   }
 
   if (af->Assemble_Residual ) 
@@ -5792,7 +5792,7 @@ mass_flux_BV2_surf_bc(double func[],
 
   if (pd->MeshMotion == LAGRANGIAN && pd->MeshInertia == 1) {
     err = belly_flop(elc->lame_mu);
-    EH(err, "error in belly flop");
+    GOMA_EH(err, "error in belly flop");
     if( neg_elem_volume ) return;
   }
 
@@ -5800,7 +5800,7 @@ mass_flux_BV2_surf_bc(double func[],
      lagrangian meshes) */
 
   err = get_convection_velocity(vconv, vconv_old, d_vconv, dt, tt);
-  EH(err, "Error in calculating effective convection velocity");
+  GOMA_EH(err, "Error in calculating effective convection velocity");
 
   if (af->Assemble_Residual) {
     *func -= mp->mass_flux[wspec];
@@ -5966,7 +5966,7 @@ mass_flux_NI_surf_bc(double func[],
 
   if (pd->MeshMotion == LAGRANGIAN && pd->MeshInertia == 1) {
     err = belly_flop(elc->lame_mu);
-    EH(err, "error in belly flop");
+    GOMA_EH(err, "error in belly flop");
     if( neg_elem_volume ) return;
   }
 
@@ -5974,7 +5974,7 @@ mass_flux_NI_surf_bc(double func[],
      lagrangian meshes) */
 
   err = get_convection_velocity(vconv, vconv_old, d_vconv, dt, tt);
-  EH(err, "Error in calculating effective convection velocity");
+  GOMA_EH(err, "Error in calculating effective convection velocity");
 
   if (af->Assemble_Residual) {
     *func -= mp->mass_flux[wspec];
@@ -6344,7 +6344,7 @@ const_mass_flux_surf_bc(
 
   if (pd->MeshMotion == LAGRANGIAN && pd->MeshInertia == 1) {
     err = belly_flop(elc->lame_mu);
-    EH(err, "error in belly flop");
+    GOMA_EH(err, "error in belly flop");
     if( neg_elem_volume ) return;
   }
 
@@ -6352,7 +6352,7 @@ const_mass_flux_surf_bc(
      lagrangian meshes) */
 
   err = get_convection_velocity(vconv, vconv_old, d_vconv, dt, tt);
-  EH(err, "Error in calculating effective convection velocity");
+  GOMA_EH(err, "Error in calculating effective convection velocity");
 
   if (af->Assemble_Residual) {
     *func -= mp->mass_flux[wspec];
@@ -6487,7 +6487,7 @@ mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
      double mw_last=0; /* Molecular weight of non-condensable and conversion factor */
      
      if (MAX_CONC < 3) {
-       EH(GOMA_ERROR, "mass_flux_equil_mtc expects MAX_CONC >= 3");
+       GOMA_EH(GOMA_ERROR, "mass_flux_equil_mtc expects MAX_CONC >= 3");
        return;
      }
      memset(prod, 0, sizeof(double)*MAX_CONC);
@@ -6523,7 +6523,7 @@ mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
 	{
 	  if(mp->molecular_weight[i] < 0.)
 	    {
-	      EH(GOMA_ERROR, "Molecular weight of the species not specified in the material file");
+	      GOMA_EH(GOMA_ERROR, "Molecular weight of the species not specified in the material file");
 	    }
 	  else
 	    {
@@ -6533,7 +6533,7 @@ mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
 
       if(mp->molecular_weight[pd->Num_Species_Eqn] < 0.)
 	{
-	  EH(GOMA_ERROR, "M.W. of a non-condensable species not specified in the material file");
+	  GOMA_EH(GOMA_ERROR, "M.W. of a non-condensable species not specified in the material file");
 	}
       else
 	{
@@ -6597,7 +6597,7 @@ mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
 	 {
 	   if(mp->specific_volume[i] < 0.)
 	     {
-	       EH(GOMA_ERROR, "Specific volume not specified in the material file.");
+	       GOMA_EH(GOMA_ERROR, "Specific volume not specified in the material file.");
 	     }
 	   else
 	     {
@@ -6605,7 +6605,7 @@ mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
 	     }
 	   if(mp->molar_volume[i] < 0.)
 	     {
-	       EH(GOMA_ERROR, "Molar volume not specified in the material file");
+	       GOMA_EH(GOMA_ERROR, "Molar volume not specified in the material file");
 	     }
 	   else
 	     {
@@ -6615,7 +6615,7 @@ mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
 	     {
 	     if(mp->flory_param[i][k] < 0.)
 	       {
-		 EH(GOMA_ERROR, "Flory-Huggins binary parameters not specified in the material file");
+		 GOMA_EH(GOMA_ERROR, "Flory-Huggins binary parameters not specified in the material file");
 	       }
 	     else
 	       {
@@ -6693,7 +6693,7 @@ mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
 		   }
 		}
 	else
-		{ EH(GOMA_ERROR,"That species formulation not done in mtc_flory\n"); }
+		{ GOMA_EH(GOMA_ERROR,"That species formulation not done in mtc_flory\n"); }
 	   
        
        for(k=0;k<pd->Num_Species_Eqn; k++)
@@ -6995,7 +6995,7 @@ act_coeff(dbl lngamma[MAX_CONC], dbl dlngamma_dC[MAX_CONC][MAX_CONC],
 	{
 	  if(mp->molecular_weight[i] < 0.)
 	    {
-	      EH(GOMA_ERROR, "Molecular weight of the species not specified in the material file");
+	      GOMA_EH(GOMA_ERROR, "Molecular weight of the species not specified in the material file");
 	    }
 	  else
 	    {
@@ -7005,7 +7005,7 @@ act_coeff(dbl lngamma[MAX_CONC], dbl dlngamma_dC[MAX_CONC][MAX_CONC],
 
       if(mp->molecular_weight[pd->Num_Species_Eqn] < 0.)
 	{
-	  EH(GOMA_ERROR, "M.W. of a non-condensable species not specified in the material file");
+	  GOMA_EH(GOMA_ERROR, "M.W. of a non-condensable species not specified in the material file");
 	}
       else
 	{
@@ -7064,19 +7064,19 @@ act_coeff(dbl lngamma[MAX_CONC], dbl dlngamma_dC[MAX_CONC][MAX_CONC],
        for (i = 0; i<Num_S1; i++) 
 	 {
 	   if(mp->specific_volume[i] < 0.)
-	     { EH(GOMA_ERROR, "Specific volume not specified in the material file."); }
+	     { GOMA_EH(GOMA_ERROR, "Specific volume not specified in the material file."); }
 	   else
 	     { sv[i] = mp->specific_volume[i]; }
 
 	   if(mp->molar_volume[i] < 0.)
-	     { EH(GOMA_ERROR, "Molar volume not specified in the material file"); }
+	     { GOMA_EH(GOMA_ERROR, "Molar volume not specified in the material file"); }
 	   else
 	     { vol[i] = mp->molar_volume[i]; }
 
 	   for(k=0;k<Num_S1;k++)
 	     {
 	     if(mp->flory_param[i][k] < 0.)
-	       { EH(GOMA_ERROR, "Flory-Huggins binary parameters not specified in the material file"); }
+	       { GOMA_EH(GOMA_ERROR, "Flory-Huggins binary parameters not specified in the material file"); }
 	     else
 	       { chi[i][k] = mp->flory_param[i][k]; }
 	     }
@@ -7154,7 +7154,7 @@ act_coeff(dbl lngamma[MAX_CONC], dbl dlngamma_dC[MAX_CONC][MAX_CONC],
 		   }
 		}
 	else
-		{ EH(GOMA_ERROR,"That species formulation not done in mtc_flory\n"); }
+		{ GOMA_EH(GOMA_ERROR,"That species formulation not done in mtc_flory\n"); }
        for(k=0;k<pd->Num_Species_Eqn; k++)
 	 {
 	   flory1[wspec] += vol[wspec]*(delta(k,wspec)-C[k])/vol[k]
@@ -7349,13 +7349,13 @@ get_equil_surf_bc(double func[],
        pd->MeshMotion == DYNAMIC_LAGRANGIAN) && pd->MeshInertia == 1)
     {
       err = belly_flop(elc->lame_mu);
-      EH(err, "error in belly flop");
+      GOMA_EH(err, "error in belly flop");
       if( neg_elem_volume ) return;
     }
 
 /*  if (mp->PorousMediaType == CONTINUOUS) */
   err = get_convection_velocity(vconv, vconv_old, d_vconv, dt, tt);
-  EH(err, "Error in calculating effective convection velocity");
+  GOMA_EH(err, "Error in calculating effective convection velocity");
 
 
   /*
@@ -7519,7 +7519,7 @@ sus_mass_flux_surf_bc (double func[],
     { 
       if(sus_species != (int) mp->u_density[0])
 	{
-	  EH( -1, "YFLUX_SUS_BC and density model species # must be consistent");
+	  GOMA_EH( -1, "YFLUX_SUS_BC and density model species # must be consistent");
 	}
 
       /*** Density ***/
@@ -7711,7 +7711,7 @@ compute_leak_velocity(double *vnorm,
           break;
     case SPECIES_MOLE_FRACTION:
     case SPECIES_VOL_FRACTION:
-          EH(GOMA_ERROR, "Volume conversion not done for that Species Formulation");
+          GOMA_EH(GOMA_ERROR, "Volume conversion not done for that Species Formulation");
           break;
     case SPECIES_CONCENTRATION:
          for (i=0; i < MAX_CONC; i++) 
@@ -7740,7 +7740,7 @@ compute_leak_velocity(double *vnorm,
            break;
         case SPECIES_MOLE_FRACTION:
         case SPECIES_VOL_FRACTION:
-           EH(GOMA_ERROR, "BC mass fraction conversion not done for that Species Formulation");
+           GOMA_EH(GOMA_ERROR, "BC mass fraction conversion not done for that Species Formulation");
            break;
         case SPECIES_CONCENTRATION:
            for (w=0; w<pd->Num_Species_Eqn; w++) 
@@ -7898,7 +7898,7 @@ compute_leak_velocity(double *vnorm,
 		} 
 	      else 
 		{
-		  EH(GOMA_ERROR, "Solution-temperature model not yet implemented");
+		  GOMA_EH(GOMA_ERROR, "Solution-temperature model not yet implemented");
 		}
 	      if(pd->e[pg->imtrx][R_ENERGY]) /* if energy equation is active, re-set electrolyte temperature */
 		{
@@ -8254,7 +8254,7 @@ compute_leak_velocity(double *vnorm,
 	  if (pd->v[pg->imtrx][MASS_FRACTION])
 	    {
 	      wspec           = fluxbc->BC_Data_Int[0];
-	      EH(GOMA_ERROR, "KIN_LEAK: no yflux_alloy implemented. See source.");
+	      GOMA_EH(GOMA_ERROR, "KIN_LEAK: no yflux_alloy implemented. See source.");
 	      
 	      /*If you want yflux_alloy to participate in kin_leak 
 	       *mass loss, you need to shore up mass_flux_alloy_surf
@@ -8311,7 +8311,7 @@ compute_leak_velocity(double *vnorm,
 	     cr->MassFluxModel == STEFAN_MAXWELL_CHARGED  ||
 	     cr->MassFluxModel == STEFAN_MAXWELL_VOLUME ) 
 	{
-	  if ( Diffusivity() )  EH( -1, "Error in Diffusivity.");
+	  if ( Diffusivity() )  GOMA_EH( -1, "Error in Diffusivity.");
 	  for (w=0; w<pd->Num_Species_Eqn; w++)
 	  {
 	    vnormal -= fv->snormal[p]*mp->diffusivity[w]*fv->grad_c[w][p]*StoiCoef[w];
@@ -8319,7 +8319,7 @@ compute_leak_velocity(double *vnorm,
 	}
 	else if ( cr->MassFluxModel == GENERALIZED_FICKIAN)
 	{
-	  if ( Generalized_Diffusivity() )  EH( -1, "Error in Diffusivity.");
+	  if ( Generalized_Diffusivity() )  GOMA_EH( -1, "Error in Diffusivity.");
 	  for (w=0; w<pd->Num_Species_Eqn; w++)
 	  {
 	    for (w1=0; w1<pd->Num_Species_Eqn; w1++)
@@ -8334,7 +8334,7 @@ compute_leak_velocity(double *vnorm,
 	}
 	else
 	{
-	  EH( -1, "Unimplemented mass flux constitutive relation.");
+	  GOMA_EH( -1, "Unimplemented mass flux constitutive relation.");
 	}
       }
       if ( af->Assemble_Jacobian && d_vnorm != NULL )
@@ -8350,7 +8350,7 @@ compute_leak_velocity(double *vnorm,
 	      {
 		if ( cr->MassFluxModel == FICKIAN )
 		{
-		  if ( Diffusivity() )  EH( -1, "Error in Diffusivity.");
+		  if ( Diffusivity() )  GOMA_EH( -1, "Error in Diffusivity.");
 				      
 		  for (w=0; w<pd->Num_Species_Eqn; w++)
 		  {
@@ -8362,7 +8362,7 @@ compute_leak_velocity(double *vnorm,
 		}
 	        else if ( cr->MassFluxModel == GENERALIZED_FICKIAN)
 	        {
-	          if ( Generalized_Diffusivity() )  EH( -1, "Error in Diffusivity.");
+	          if ( Generalized_Diffusivity() )  GOMA_EH( -1, "Error in Diffusivity.");
 	          for (w=0; w<pd->Num_Species_Eqn; w++)
 	          {
 	           for (w1=0; w1<pd->Num_Species_Eqn; w1++)
@@ -8388,7 +8388,7 @@ compute_leak_velocity(double *vnorm,
 		 cr->MassFluxModel == STEFAN_MAXWELL_CHARGED ||
 		 cr->MassFluxModel == STEFAN_MAXWELL_VOLUME )
 	    {
-	      if ( Diffusivity() )  EH( -1, "Error in Diffusivity.");
+	      if ( Diffusivity() )  GOMA_EH( -1, "Error in Diffusivity.");
 
 	      for (w=0; w<pd->Num_Species_Eqn; w++)
 	      {
@@ -8407,7 +8407,7 @@ compute_leak_velocity(double *vnorm,
 	    }
 	    else if ( 0 && cr->MassFluxModel == GENERALIZED_FICKIAN)
 	    {
-	     if ( Generalized_Diffusivity() )  EH( -1, "Error in Diffusivity.");
+	     if ( Generalized_Diffusivity() )  GOMA_EH( -1, "Error in Diffusivity.");
 	     for (w=0; w<pd->Num_Species_Eqn; w++)
 	     {
 	      for (w1=0; w1<pd->Num_Species_Eqn; w1++)
@@ -8909,11 +8909,11 @@ kin_bc_leak(double func[],
        pd->MeshMotion == DYNAMIC_LAGRANGIAN) && pd->MeshInertia == 1)
     {
       err = belly_flop(elc->lame_mu);
-      EH(err, "error in belly flop");
+      GOMA_EH(err, "error in belly flop");
       if( neg_elem_volume ) return;
     }
   err =   get_convection_velocity(vconv, vconv_old, d_vconv, dt, tt);
-  EH(err, "Error in calculating effective convection velocity");
+  GOMA_EH(err, "Error in calculating effective convection velocity");
 
   if (af->Assemble_Jacobian) {
     
@@ -9312,7 +9312,7 @@ vnorm_bc_electrodeposition (double func[],
   DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
 
   if (MAX_CONC < 7) {
-    EH(GOMA_ERROR, "vnorm_bc_electrodeposition expects MAX_CONC >= 7");
+    GOMA_EH(GOMA_ERROR, "vnorm_bc_electrodeposition expects MAX_CONC >= 7");
     return;
   }
 
@@ -9428,7 +9428,7 @@ vnorm_bc_electrodeposition (double func[],
   /* get the convection velocity and its derivatives */
 
   err = get_convection_velocity(vconv, vconv_old, d_vconv, dt, tt);
-  EH(err, "Error in calculating effective convection velocity");
+  GOMA_EH(err, "Error in calculating effective convection velocity");
 
   /* get the fluid density and its derivatives */
 
@@ -9715,11 +9715,11 @@ lat_heat_internal_bc(double func[],
 	 pd->MeshMotion == DYNAMIC_LAGRANGIAN) && pd->MeshInertia == 1)
     {
       err = belly_flop(elc->lame_mu);
-      EH(err, "error in belly flop");
+      GOMA_EH(err, "error in belly flop");
       if( neg_elem_volume ) return;
     }
     err = get_convection_velocity(vconv, vconv_old, d_vconv, dt, tt);
-   EH(err, "Error in calculating effective convection velocity");
+   GOMA_EH(err, "Error in calculating effective convection velocity");
 
 
 /* Residual calculation, note no contribution from species at ALL. */
@@ -9933,7 +9933,7 @@ get_convection_velocity(double vconv[DIM], /*Calculated convection velocity */
               fprintf(stderr,"spec %d %g %g %g\n",w,fv->c[w],
                                 mp->specific_volume[w],volso);
              }
-        WH(-1,"negative nonvolatile volume fraction");
+        GOMA_WH(-1,"negative nonvolatile volume fraction");
         }
 
       for (p = 0; p < VIM; p++) {
@@ -9944,7 +9944,7 @@ get_convection_velocity(double vconv[DIM], /*Calculated convection velocity */
 	     cr->MassFluxModel == STEFAN_MAXWELL_CHARGED  ||
 	     cr->MassFluxModel == STEFAN_MAXWELL_VOLUME ) /* Last modified; KSC: 9/98  and  RSL 6/29/00  */
 	{
-	  if ( Diffusivity() )  EH( -1, "Error in Diffusivity.");
+	  if ( Diffusivity() )  GOMA_EH( -1, "Error in Diffusivity.");
 	  /* Get diffusivity and derivatives */
 
 	  for (w=0; w<pd->Num_Species_Eqn; w++)
@@ -9957,7 +9957,7 @@ get_convection_velocity(double vconv[DIM], /*Calculated convection velocity */
 	else if ( cr->MassFluxModel == GENERALIZED_FICKIAN)
 	{
 	  /* diffusion induced convection */
-	  if ( Generalized_Diffusivity() )  EH( -1, "Error in Diffusivity.");
+	  if ( Generalized_Diffusivity() )  GOMA_EH( -1, "Error in Diffusivity.");
 	  for (w=0; w<pd->Num_Species_Eqn; w++)
 	  {
 	    for (w1=0; w1<pd->Num_Species_Eqn; w1++)
@@ -9979,7 +9979,7 @@ get_convection_velocity(double vconv[DIM], /*Calculated convection velocity */
 	}
 	else
 	{
-	  EH( -1, "Unimplemented mass flux constitutive relation.");
+	  GOMA_EH( -1, "Unimplemented mass flux constitutive relation.");
 	}
       }
 	   
@@ -10002,7 +10002,7 @@ get_convection_velocity(double vconv[DIM], /*Calculated convection velocity */
 	      {
 		if ( cr->MassFluxModel == FICKIAN )
 		{
-		  if ( Diffusivity() )  EH( -1, "Error in Diffusivity.");
+		  if ( Diffusivity() )  GOMA_EH( -1, "Error in Diffusivity.");
 				      
 		  for (w=0; w<pd->Num_Species_Eqn; w++)
 		  {
@@ -10022,7 +10022,7 @@ get_convection_velocity(double vconv[DIM], /*Calculated convection velocity */
 		 cr->MassFluxModel == STEFAN_MAXWELL_CHARGED ||
 		 cr->MassFluxModel == STEFAN_MAXWELL_VOLUME )
 	    {
-	      if ( Diffusivity() )  EH( -1, "Error in Diffusivity.");
+	      if ( Diffusivity() )  GOMA_EH( -1, "Error in Diffusivity.");
 
 	      for (w=0; w<pd->Num_Species_Eqn; w++)
 	      {
@@ -10070,7 +10070,7 @@ get_convection_velocity(double vconv[DIM], /*Calculated convection velocity */
        if ( pd->MeshInertia == 1)
 	 {
 	   if ( pd->TimeIntegration != STEADY )
-	     WH(-1, "Can't have Unsteady Mesh Inertia. Maybe you don't want Convective Lagrangian Velocity? ");
+	     GOMA_WH(-1, "Can't have Unsteady Mesh Inertia. Maybe you don't want Convective Lagrangian Velocity? ");
 	   /*
 	    * Velocity of solid in lab coordinates is the velocity of the stress free state
 	    * dotted into the deformation gradient tensor
@@ -10231,7 +10231,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
    */      
   if ( cr->MassFluxModel == FICKIAN )
     {
-      if ( Diffusivity() )  EH( -1, "Error in Diffusivity.");
+      if ( Diffusivity() )  GOMA_EH( -1, "Error in Diffusivity.");
 	  
       for ( w=0; w<pd->Num_Species_Eqn; w++)
 	{
@@ -10248,7 +10248,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
     }
   else if ( cr->MassFluxModel == FICKIAN_CHARGED)     /* Fickian diffusion of charged species, KSC: 9/2000 */ 
     {
-      if ( Diffusivity() )  EH( -1, "Error in Diffusivity.");
+      if ( Diffusivity() )  GOMA_EH( -1, "Error in Diffusivity.");
 	  
       for ( w=0; w<pd->Num_Species_Eqn; w++)
 	{
@@ -10269,7 +10269,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	    || cr->MassFluxModel == HYDRODYNAMIC_QTENSOR 
 	    || cr->MassFluxModel == HYDRODYNAMIC_QTENSOR_OLD)
     {
-      if ( Diffusivity() )  EH( -1, "Error in Diffusivity.");
+      if ( Diffusivity() )  GOMA_EH( -1, "Error in Diffusivity.");
       
       for ( w=0; w<pd->Num_Species_Eqn; w++)
 	{
@@ -10286,7 +10286,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	      break;
 	 
 	    default:
-	      EH( -1, "Unknown Diffusivity Model.");
+	      GOMA_EH( -1, "Unknown Diffusivity Model.");
 	      break;
 
 	    } /* end of switch(DiffusivityModel) */
@@ -10295,7 +10295,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
     }
   else if ( cr->MassFluxModel ==  DM_SUSPENSION_BALANCE )
     {
-      if ( Diffusivity() )  EH( -1, "Error in Diffusivity.");
+      if ( Diffusivity() )  GOMA_EH( -1, "Error in Diffusivity.");
       
       for ( w=0; w<pd->Num_Species_Eqn; w++)
 	{
@@ -10306,7 +10306,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	      break;
 
 	    default:
-	      EH( -1, "Unknown Diffusivity Model for Suspension Balance.");
+	      GOMA_EH( -1, "Unknown Diffusivity Model for Suspension Balance.");
 	      break;
 
 	    } /* end of switch(DiffusivityModel) */
@@ -10315,7 +10315,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
     }
   else
     {
-      EH( -1, "Unimplemented mass flux constitutive relation in continuous media.");
+      GOMA_EH( -1, "Unimplemented mass flux constitutive relation in continuous media.");
     }
 
   /* 
@@ -10327,11 +10327,11 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
        pd->MeshMotion == DYNAMIC_LAGRANGIAN) && pd->MeshInertia == 1)
     {
       err = belly_flop(elc->lame_mu);
-      EH(err, "error in belly flop");
+      GOMA_EH(err, "error in belly flop");
       if( neg_elem_volume ) return(err);
     }
   err = get_convection_velocity(vconv, vconv_old, d_vconv, dt, tt);
-  EH(err, "Error in calculating effective convection velocity");
+  GOMA_EH(err, "Error in calculating effective convection velocity");
 
   /* MMH
    * If we are doing a SUSPENSION_PM model, get all the same information
@@ -10340,7 +10340,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
   if(mp->DensityModel == SUSPENSION_PM)
     {
       err = get_particle_convection_velocity(pvconv, pvconv_old, d_pvconv, dt, tt);
-      EH(err, "Error in calculating effective convection velocity for particle phase");
+      GOMA_EH(err, "Error in calculating effective convection velocity for particle phase");
     }
       
   for ( w=0; w<pd->Num_Species_Eqn; w++)
@@ -10513,7 +10513,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	  }
 	}
       } else {
-        EH(GOMA_ERROR,"SPECIES_MASS_FRACTION only implementation so far");
+        GOMA_EH(GOMA_ERROR,"SPECIES_MASS_FRACTION only implementation so far");
       }
 
     } else {
@@ -10693,7 +10693,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
                      (SQUARE(fv->apr)+SQUARE(fv->api));
          } 
        else
-        { WH(-1,"No Intensity field found in PHOTO_CURING\n"); }
+        { GOMA_WH(-1,"No Intensity field found in PHOTO_CURING\n"); }
 
       /* insure concentrations are positive  */
 	for ( w1=0; w1<pd->Num_Species_Eqn; w1++)
@@ -10769,7 +10769,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
                     }
                 break;
            default:
-                EH(GOMA_ERROR,"invalid Species Type for PHOTO_CURING\n");
+                GOMA_EH(GOMA_ERROR,"invalid Species Type for PHOTO_CURING\n");
            }
        Xconv *= mp->specific_volume[pd->Num_Species_Eqn];
        Xconv_init *= mp->specific_volume[pd->Num_Species_Eqn];
@@ -11399,16 +11399,16 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
        *               SSM_CHEMKIN_CPC  -> Condensed phase package call
        */
       else if (mp->SpeciesSourceModel[w] == SSM_CHEMKIN_GAS) {
-	EH(GOMA_ERROR,"Chemkin Gas source model is implemented for some species and not others");
+	GOMA_EH(GOMA_ERROR,"Chemkin Gas source model is implemented for some species and not others");
       }
       else if (mp->SpeciesSourceModel[w] == SSM_CHEMKIN_LIQ) {
-	EH(GOMA_ERROR,"Chem Liq source model is implemented for some species and not others");
+	GOMA_EH(GOMA_ERROR,"Chem Liq source model is implemented for some species and not others");
       }
       else if (mp->SpeciesSourceModel[w] == SSM_CHEMKIN_CPC) {
-	EH(GOMA_ERROR,"CPC source model is implemented for some species and not others");
+	GOMA_EH(GOMA_ERROR,"CPC source model is implemented for some species and not others");
       } else {
 	printf("species source model = %d\n", mp->SpeciesSourceModel[w]);
-	EH(GOMA_ERROR,"Unrecognized species source model");
+	GOMA_EH(GOMA_ERROR,"Unrecognized species source model");
       }
 
       if( ls != NULL ) ls_modulate_speciessource ( w,  st );
@@ -11781,7 +11781,7 @@ Stefan_Maxwell_diff_flux( struct Species_Conservation_Terms *st,
   dbl T0, EE, alpha;  /* KSC on 9/24/04 */
 
   if (MAX_CONC < 3) {
-    EH(GOMA_ERROR, "Stefan_Maxwell_Diff_flux expects MAX_CONC >= 3");
+    GOMA_EH(GOMA_ERROR, "Stefan_Maxwell_Diff_flux expects MAX_CONC >= 3");
     return -1;
   }
 
@@ -11818,7 +11818,7 @@ Stefan_Maxwell_diff_flux( struct Species_Conservation_Terms *st,
   if (mp->Species_Var_Type == SPECIES_MASS_FRACTION ||
       mp->Species_Var_Type == SPECIES_MOLE_FRACTION ||
       mp->Species_Var_Type == SPECIES_VOL_FRACTION) {
-    EH(GOMA_ERROR,"Possible Conflict: Stefan Flux Expression hasn't been checked out for this species var type");
+    GOMA_EH(GOMA_ERROR,"Possible Conflict: Stefan Flux Expression hasn't been checked out for this species var type");
   }
 
   volume_flag = (pd_glob[mn]->MassFluxModel == STEFAN_MAXWELL_VOLUME); /* RSL 8/24/00 */
@@ -11839,7 +11839,7 @@ Stefan_Maxwell_diff_flux( struct Species_Conservation_Terms *st,
             }
           else
             {
-              EH(GOMA_ERROR, "Solution-temperature model other than THERMAL_BATTERY awaits future implementation");
+              GOMA_EH(GOMA_ERROR, "Solution-temperature model other than THERMAL_BATTERY awaits future implementation");
             }
         }
       if(T == 0.0) T = 298.0;  /* set the solution temperature to the 298 K if it is zero - safety feature */
@@ -11855,7 +11855,7 @@ Stefan_Maxwell_diff_flux( struct Species_Conservation_Terms *st,
             }
           else
             {
-              EH(GOMA_ERROR, "User needs to define non-CONSTANT solution temperature model in GOMA");
+              GOMA_EH(GOMA_ERROR, "User needs to define non-CONSTANT solution temperature model in GOMA");
             }
         }
       else if(pd_glob[mn]->MassFluxModel == STEFAN_MAXWELL_CHARGED || volume_flag)  /*  RSL 8/24/00  */
@@ -11871,7 +11871,7 @@ Stefan_Maxwell_diff_flux( struct Species_Conservation_Terms *st,
             }
           else
             {
-              EH(GOMA_ERROR, "Solution-temperature model other than THERMAL_BATTERY awaits future implementation"); 
+              GOMA_EH(GOMA_ERROR, "Solution-temperature model other than THERMAL_BATTERY awaits future implementation"); 
             } 
         }
       if(T == 0.0) T = 298.0;  /* set the solution temperature to the 298 K if it is zero - safety feature */  
@@ -11891,7 +11891,7 @@ Stefan_Maxwell_diff_flux( struct Species_Conservation_Terms *st,
       else
         {
 	 /* need to implement non-constant porosity model */ 
-         EH(GOMA_ERROR, "other non-CONSTANT porosity model to be implemented");
+         GOMA_EH(GOMA_ERROR, "other non-CONSTANT porosity model to be implemented");
         }
     }
 
@@ -12820,7 +12820,7 @@ fickian_charged_flux (struct Species_Conservation_Terms *st, int w)
   if (mp->SolutionTemperatureModel == CONSTANT)  {
     T = mp->solution_temperature;
   } else {
-    EH(GOMA_ERROR, "Solution-temperature model other than CONSTANT awaits future implementation");
+    GOMA_EH(GOMA_ERROR, "Solution-temperature model other than CONSTANT awaits future implementation");
   }
   /* set solution temperature to 298 K if it is zero - safety feature */
   if (T == 0.0) T = 298.0;
@@ -12935,7 +12935,7 @@ fickian_charged_flux_x (struct Species_Conservation_Terms *st, double time,
          }
       else
          {
-          EH(GOMA_ERROR, "Invalid solution temperature model");
+          GOMA_EH(GOMA_ERROR, "Invalid solution temperature model");
          }
      }
 
@@ -13120,7 +13120,7 @@ fickian_flux (struct Species_Conservation_Terms *st, int w)
   /*
    *  Get diffusivity and Jacobian dependence on the diffusivity
    */
-  if (Diffusivity()) EH(GOMA_ERROR, "Error in Diffusivity.");
+  if (Diffusivity()) GOMA_EH(GOMA_ERROR, "Error in Diffusivity.");
 
   /*
    *  Add in rho or C depending upon species variable type
@@ -13228,7 +13228,7 @@ generalized_fickian_flux (struct Species_Conservation_Terms *st, int w)
   /*
    * Get diffusivity and derivatives 
    */
-  if (Generalized_Diffusivity())  EH(GOMA_ERROR, "Error in Diffusivity.");
+  if (Generalized_Diffusivity())  GOMA_EH(GOMA_ERROR, "Error in Diffusivity.");
 
   /*
    *  Add in rho or C depending upon species variable type
@@ -13869,7 +13869,7 @@ get_particle_convection_velocity(double pvconv[DIM],
 	       pvconv_old[p] = 0.;
 	       if ( cr->MassFluxModel == FICKIAN )
 		 {
-		   if ( Diffusivity() )  EH( -1, "Error in Diffusivity.");
+		   if ( Diffusivity() )  GOMA_EH( -1, "Error in Diffusivity.");
 		     /* Get diffusivity and derivatives */
 
 /* MMH I don't think this matters for particle phase, there is no diffusion.
@@ -13887,7 +13887,7 @@ get_particle_convection_velocity(double pvconv[DIM],
 		 }
 	       else
 		 {
-		   EH( -1, "Unimplemented mass flux constitutive relation.");
+		   GOMA_EH( -1, "Unimplemented mass flux constitutive relation.");
 		 }
 	     }
 	   
@@ -13910,7 +13910,7 @@ get_particle_convection_velocity(double pvconv[DIM],
 			     {
 			       if ( cr->MassFluxModel == FICKIAN )
 				 {
-				   if ( Diffusivity() )  EH( -1, "Error in Diffusivity.");
+				   if ( Diffusivity() )  GOMA_EH( -1, "Error in Diffusivity.");
 				      
 				   for (w=0; w<pd->Num_Species_Eqn; w++)
 				     {
@@ -13931,7 +13931,7 @@ get_particle_convection_velocity(double pvconv[DIM],
 			 {
 			   if ( cr->MassFluxModel == FICKIAN )
 			     {
-			       if ( Diffusivity() )  EH( -1, "Error in Diffusivity.");
+			       if ( Diffusivity() )  GOMA_EH( -1, "Error in Diffusivity.");
 			       for (w=0; w<pd->Num_Species_Eqn; w++)
 				 {
 				   d_pvconv->T[p][i] -= mp->d_diffusivity[w][var][0] * bf[var]->phi[i] *
@@ -13947,7 +13947,7 @@ get_particle_convection_velocity(double pvconv[DIM],
 		     {
 		       if ( cr->MassFluxModel == FICKIAN )
 			 {
-			   if ( Diffusivity() )  EH( -1, "Error in Diffusivity.");
+			   if ( Diffusivity() )  GOMA_EH( -1, "Error in Diffusivity.");
 
 			   for (w=0; w<pd->Num_Species_Eqn; w++)
 			     {
@@ -14024,7 +14024,7 @@ get_particle_convection_velocity(double pvconv[DIM],
 
        if ( pd->MeshInertia == 1)
 	 {
-	   if ( pd->TimeIntegration != STEADY ) EH(GOMA_ERROR, "Can't have Unsteady Mesh Inertia ");
+	   if ( pd->TimeIntegration != STEADY ) GOMA_EH(GOMA_ERROR, "Can't have Unsteady Mesh Inertia ");
 	   /*
 	    * Velocity of solid in lab coordinates is the velocity of the stress free state
 	    * dotted into the deformation gradient tensor

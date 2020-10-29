@@ -134,7 +134,7 @@ sl_init(unsigned int option_mask,		/* option flag */
 
   if ( Num_Calls >= upd->Total_Num_Matrices )
     {
-      EH(GOMA_ERROR, "Calls should match the number of matrices");
+      GOMA_EH(GOMA_ERROR, "Calls should match the number of matrices");
     }
   else
     {
@@ -660,7 +660,7 @@ set_aztec_options_params ( int options[],
     {
       fprintf(stderr, 
 	      "Valid solvers: cg, gmres, cgs, tfqmr, bicgstab, y12m, lu, umf, umff\n");
-      EH(GOMA_ERROR, "Unknown linear solver specification.");
+      GOMA_EH(GOMA_ERROR, "Unknown linear solver specification.");
     }
 
   /*
@@ -696,7 +696,7 @@ set_aztec_options_params ( int options[],
     {
       fprintf(stderr, 
 	      "Valid scalings are: none, Jacobi, BJacobi, row_sum, sym_diag, sym_row_sum\n");
-      EH(GOMA_ERROR, "Unknown matrix scaling specification.");
+      GOMA_EH(GOMA_ERROR, "Unknown matrix scaling specification.");
     }
 
   /*
@@ -793,7 +793,7 @@ set_aztec_options_params ( int options[],
 
   else if ( strcmp(Matrix_Preconditioner, "bilu") == 0 )
     {
-      if (strcmp(Matrix_Format, "vbr")) EH (-1, "BILU requires VBR matrix format!");
+      if (strcmp(Matrix_Format, "vbr")) GOMA_EH(-1, "BILU requires VBR matrix format!");
       options[AZ_precond] = AZ_dom_decomp;
 	  if(Debug_Flag > 1 ) {
 		  DPRINTF(stderr, 
@@ -850,7 +850,7 @@ set_aztec_options_params ( int options[],
     {
       fprintf(stderr, 
 	      "\nValid Preconditioners:  none, Jacobi, Neumann, ls, sym_GS, dom_decomp (Aztec 2.1)\n");
-      EH(GOMA_ERROR, "Unknown Aztec preconditioner specification.");
+      GOMA_EH(GOMA_ERROR, "Unknown Aztec preconditioner specification.");
     }
   
   if ( options[AZ_precond] == AZ_dom_decomp )
@@ -873,7 +873,7 @@ set_aztec_options_params ( int options[],
 	}
       else if ( strcmp(Matrix_Subdomain_Solver, "bilu") == 0 )
 	{
-          if (strcmp(Matrix_Format, "vbr")) EH (-1, "BILU requires VBR matrix format!");
+          if (strcmp(Matrix_Format, "vbr")) GOMA_EH(-1, "BILU requires VBR matrix format!");
 /* NOTE: Trilinos does not support the AZ_bilu_ifp option at this time! */
 #if 0
           options[AZ_subdomain_solve] = AZ_bilu_ifp;
@@ -888,7 +888,7 @@ set_aztec_options_params ( int options[],
 	{
 	  fprintf(stderr, "Matrix subdomain solver = %s ?!?\n", 
 		  Matrix_Subdomain_Solver);
-	  EH(GOMA_ERROR, "Unknown specification. Valid Matrix subdomain solver = lu, ilu, ilut, rilu, bilu, icc");
+	  GOMA_EH(GOMA_ERROR, "Unknown specification. Valid Matrix subdomain solver = lu, ilu, ilut, rilu, bilu, icc");
 	}
     }
 
@@ -920,13 +920,13 @@ set_aztec_options_params ( int options[],
   else if ( strcmp(Matrix_Residual_Norm_Type, "weighted") == 0 )
     {
       options[AZ_conv] = AZ_weighted;
-      EH(GOMA_ERROR, "Weighted norm unavailable; allocate bigger params[].");
+      GOMA_EH(GOMA_ERROR, "Weighted norm unavailable; allocate bigger params[].");
     }
   else
     {
       fprintf(stderr,
 	      "Valid norms are: r0, rhs, Anorm, sol, (weighted)\n");
-      EH(GOMA_ERROR, "Unknown matrix residual norm type.");
+      GOMA_EH(GOMA_ERROR, "Unknown matrix residual norm type.");
     }
 
   /*
@@ -957,7 +957,7 @@ set_aztec_options_params ( int options[],
     {
       if ( i < 0 ) 
 	{
-	  EH(GOMA_ERROR, "Matrix output type must specify a *positive* integer.");
+	  GOMA_EH(GOMA_ERROR, "Matrix output type must specify a *positive* integer.");
 	}
       options[AZ_output] = i;
     }
@@ -965,7 +965,7 @@ set_aztec_options_params ( int options[],
     {
       fprintf(stderr,
 	      "Valid outputs are: all, none, warnings(2.x) last, <integer>\n");
-      EH(GOMA_ERROR, "Unknown matrix output type.");
+      GOMA_EH(GOMA_ERROR, "Unknown matrix output type.");
     }
 
   /* 
@@ -998,7 +998,7 @@ set_aztec_options_params ( int options[],
     {
       fprintf(stderr,
 	      "Valid factorization reuses are: calc, recalc, reuse\n");
-      EH(GOMA_ERROR, "Unknown factorization reuse.");
+      GOMA_EH(GOMA_ERROR, "Unknown factorization reuse.");
     }
 
   /*
@@ -1010,7 +1010,7 @@ set_aztec_options_params ( int options[],
     {
       if ( i < 0 )
 	{
-	  EH(GOMA_ERROR, "Matrix graph fillin should be positive.");
+	  GOMA_EH(GOMA_ERROR, "Matrix graph fillin should be positive.");
 	}
       options[AZ_graph_fill] = i;
     }
@@ -1019,7 +1019,7 @@ set_aztec_options_params ( int options[],
       fprintf(stderr, "\nYou said \"%s\"\n", Matrix_Graph_Fillin);
       fprintf(stderr, "Found %d args\n", iread);
       fprintf(stderr, "Valid argument is a single nonnegative integer.\n");
-      EH(GOMA_ERROR, "Undecipherable Matrix graph fillin argument.");
+      GOMA_EH(GOMA_ERROR, "Undecipherable Matrix graph fillin argument.");
     }
 
   /*
@@ -1039,7 +1039,7 @@ set_aztec_options_params ( int options[],
       fprintf(stderr, "\nYou said \"%s\"\n", Matrix_Maximum_Iterations);
       fprintf(stderr, "Found %d args\n", iread);
       fprintf(stderr, "Valid argument is a single positive integer.\n");
-      EH(GOMA_ERROR, "Undecipherable maximum linear solve iteration argument.");
+      GOMA_EH(GOMA_ERROR, "Undecipherable maximum linear solve iteration argument.");
     }
 
   /*
@@ -1064,7 +1064,7 @@ set_aztec_options_params ( int options[],
     {
       if ( i < 0 )
 	{
-	  EH(GOMA_ERROR, "Matrix factorization overlap must be nonnegative.");
+	  GOMA_EH(GOMA_ERROR, "Matrix factorization overlap must be nonnegative.");
 	}
       options[AZ_overlap] = i;
     }
@@ -1072,7 +1072,7 @@ set_aztec_options_params ( int options[],
     {
       fprintf(stderr, 
 	      "Valid Aztec 2.1 factor overlaps: none(1), diag, k(2).\n");
-      EH(GOMA_ERROR, "Unknown factor overlap specification.");
+      GOMA_EH(GOMA_ERROR, "Unknown factor overlap specification.");
     }
 
   /*
@@ -1090,7 +1090,7 @@ set_aztec_options_params ( int options[],
   else
     {
       fprintf(stderr, "Valid Matrix overlap types: standard, symmetric.\n");
-      EH(GOMA_ERROR, "Unknown Matrix overlap type specification.");
+      GOMA_EH(GOMA_ERROR, "Unknown Matrix overlap type specification.");
     }
 
   /*
@@ -1118,7 +1118,7 @@ set_aztec_options_params ( int options[],
   else
     {
       fprintf(stderr, "\nValid Aztec orthogonalizations: classic, modified.\n");
-      EH(GOMA_ERROR, "Unknown orthogonalization specification.");
+      GOMA_EH(GOMA_ERROR, "Unknown orthogonalization specification.");
     }
 
   /* 
@@ -1136,7 +1136,7 @@ set_aztec_options_params ( int options[],
   else
     {
       fprintf(stderr, "Valid auxiliary vectors: resid, rand.\n");
-      EH(GOMA_ERROR, "Unknown auxiliary vector specification.");
+      GOMA_EH(GOMA_ERROR, "Unknown auxiliary vector specification.");
     }
 
   /* 
@@ -1147,14 +1147,14 @@ set_aztec_options_params ( int options[],
     {
       if ( i < 0 || i > 1 )
 	{
-	  EH(GOMA_ERROR, "Matrix factorization save must be 0 or 1.");
+	  GOMA_EH(GOMA_ERROR, "Matrix factorization save must be 0 or 1.");
 	}
       options[AZ_keep_info] = i;
     }
   else
     {
       fprintf(stderr, "Valid Matrix factorization save: 0, 1\n");
-      EH(GOMA_ERROR, "Unknown Matrix factorization save specification.");
+      GOMA_EH(GOMA_ERROR, "Unknown Matrix factorization save specification.");
     }
 
   /*
@@ -1175,7 +1175,7 @@ set_aztec_options_params ( int options[],
   else
     {
       fprintf(stderr, "Valid Matrix reorder options: none, rcm.\n");
-      EH(GOMA_ERROR, "Unknown Matrix reorder specification.");
+      GOMA_EH(GOMA_ERROR, "Unknown Matrix reorder specification.");
     }
 
   if ( sscanf(Matrix_Convergence_Tolerance, "%lf", &f) == 1 )
@@ -1185,7 +1185,7 @@ set_aztec_options_params ( int options[],
   else
     {
       fprintf(stderr, "Valid Residual Ratio Tolerance is 1 float.\n");
-      EH(GOMA_ERROR, "Unknown Residual Ratio Tolerance.");
+      GOMA_EH(GOMA_ERROR, "Unknown Residual Ratio Tolerance.");
     }
 
   if ( sscanf(Matrix_Drop_Tolerance, "%lf", &f) == 1 )
@@ -1195,7 +1195,7 @@ set_aztec_options_params ( int options[],
   else
     {
       fprintf(stderr, "Valid matrix drop tolerance is 1 float.\n");
-      EH(GOMA_ERROR, "Unknown matrix drop tolerance.");
+      GOMA_EH(GOMA_ERROR, "Unknown matrix drop tolerance.");
     }
 
 
@@ -1206,7 +1206,7 @@ set_aztec_options_params ( int options[],
   else
     {
       fprintf(stderr, "Valid Matrix ILUT fill factor is 1 float.\n");
-      EH(GOMA_ERROR, "Unknown Matrix ILUT fill factor specification.");
+      GOMA_EH(GOMA_ERROR, "Unknown Matrix ILUT fill factor specification.");
     }
 
 
@@ -1217,7 +1217,7 @@ set_aztec_options_params ( int options[],
   else
     {
       fprintf(stderr, "Valid Matrix RILU relax factor is 1 float.\n");
-      EH(GOMA_ERROR, "Unknown Matrix RILU relax factor specification.");
+      GOMA_EH(GOMA_ERROR, "Unknown Matrix RILU relax factor specification.");
     }
 
 #ifdef TRILINOS
@@ -1229,7 +1229,7 @@ set_aztec_options_params ( int options[],
   else
     {
       fprintf(stderr, "Valid Matrix BILU Threshold is 1 float.\n");
-      EH(GOMA_ERROR, "Unknown Matrix BILU Threshold specification.");
+      GOMA_EH(GOMA_ERROR, "Unknown Matrix BILU Threshold specification.");
     }
 
   if ( sscanf(Matrix_Relative_Threshold, "%lf", &f) == 1 )
@@ -1239,7 +1239,7 @@ set_aztec_options_params ( int options[],
   else
     {
       fprintf(stderr, "Valid Matrix Relative Threshold is 1 float.\n");
-      EH(GOMA_ERROR, "Unknown Matrix Relative Threshold specification.");
+      GOMA_EH(GOMA_ERROR, "Unknown Matrix Relative Threshold specification.");
     }
 
   if ( sscanf(Matrix_Absolute_Threshold, "%lf", &f) == 1 )
@@ -1249,7 +1249,7 @@ set_aztec_options_params ( int options[],
   else
     {
       fprintf(stderr, "Valid Matrix Absolute Threshold is 1 float.\n");
-      EH(GOMA_ERROR, "Unknown Matrix Absolute Threshold specification.");
+      GOMA_EH(GOMA_ERROR, "Unknown Matrix Absolute Threshold specification.");
     }
 #endif
 
@@ -1265,13 +1265,13 @@ set_aztec_options_params ( int options[],
      { 
       if( strcmp(Matrix_Format, "vbr") != 0 )
          {
-           EH( -1, 
+           GOMA_EH( -1, 
         "bilu Matrix subdomain solver requires the vbr Matrix storage format.");
          }
 #ifdef TRILINOS
       if( params[AZ_rthresh] < 0 )
          {
-           EH( -1, 
+           GOMA_EH( -1, 
           "Matrix BILU Threshold must be a positive floating point number.");
          }
 #endif
@@ -1400,27 +1400,27 @@ void hide_external
 
   if ( n < 0 )
     {
-      EH(GOMA_ERROR, "Original system is too small.");
+      GOMA_EH(GOMA_ERROR, "Original system is too small.");
     }
 
   if ( m < 0 )
     {
-      EH(GOMA_ERROR, "Truncated system is too small.");
+      GOMA_EH(GOMA_ERROR, "Truncated system is too small.");
     }
 
   if ( m > n )
     {
-      EH(GOMA_ERROR, "Attempt to truncate to a LARGER system?!?");
+      GOMA_EH(GOMA_ERROR, "Attempt to truncate to a LARGER system?!?");
     }
 
   if ( ija == NULL || a == NULL )
     {
-      EH(GOMA_ERROR, "Either ija[] or a[] is empty.");
+      GOMA_EH(GOMA_ERROR, "Either ija[] or a[] is empty.");
     }
 
   if ( ija[0] != (n+1) )
     {
-      EH(GOMA_ERROR, "Order n is inconsistent with ija[0] notion.");
+      GOMA_EH(GOMA_ERROR, "Order n is inconsistent with ija[0] notion.");
     }
 
   if ( m == n ) return;
@@ -1548,27 +1548,27 @@ show_external(int n,		/* order of the original system      (in) */
 
   if ( n < 0 )
     {
-      EH(GOMA_ERROR, "Original system is too small.");
+      GOMA_EH(GOMA_ERROR, "Original system is too small.");
     }
 
   if ( m < 0 )
     {
-      EH(GOMA_ERROR, "Truncated system is too small.");
+      GOMA_EH(GOMA_ERROR, "Truncated system is too small.");
     }
 
   if ( m > n )
     {
-      EH(GOMA_ERROR, "Attempt to truncate to a LARGER system?!?");
+      GOMA_EH(GOMA_ERROR, "Attempt to truncate to a LARGER system?!?");
     }
 
   if ( ija == NULL || a == NULL )
     {
-      EH(GOMA_ERROR, "Either ija[] or a[] is empty.");
+      GOMA_EH(GOMA_ERROR, "Either ija[] or a[] is empty.");
     }
 
   if ( ija[0] != (m+1) )
     {
-      EH(GOMA_ERROR, "Order m is inconsistent with ija[0] notion.");
+      GOMA_EH(GOMA_ERROR, "Order m is inconsistent with ija[0] notion.");
     }
 
   if ( m == n ) return;
@@ -1716,7 +1716,7 @@ solve_NxN_system(dbl *A,
     {
       fprintf(stderr, "You requested a dense matrix of size %d x %d.\n",
 	      rank, rank);
-      EH(GOMA_ERROR, "Increase MAX_NXN_RANK in sl_util.h.");
+      GOMA_EH(GOMA_ERROR, "Increase MAX_NXN_RANK in sl_util.h.");
     }
 
   for(i = 0; i < rank; i++)
@@ -1731,7 +1731,7 @@ solve_NxN_system(dbl *A,
 	scale += fabs(A[index++]);
       scale += fabs(b[i]);
       if(scale < 1.0e-14)
-	EH(GOMA_ERROR, "row sum < 1.0e-14.");
+	GOMA_EH(GOMA_ERROR, "row sum < 1.0e-14.");
       index = i * row_size;
       for(j = 0; j < rank; j++)
 	A[index++] /= scale;
@@ -1787,7 +1787,7 @@ solve_NxN_system(dbl *A,
       for(j = rank - 1; j > i; j--)
 	b[p[i]] -= A[index--] * x[j];
       if(fabs(A[index]) < 1.0e-14)
-	EH(GOMA_ERROR, "A[index] < 1.0e-14.");
+	GOMA_EH(GOMA_ERROR, "A[index] < 1.0e-14.");
       x[i] = b[p[i]] / A[index];
     }
 }

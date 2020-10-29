@@ -159,7 +159,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 			*esp_old->d[q][i] * bf[v]->d_phi[i][p];
 		      
 		    }
-		} else EH(GOMA_ERROR,"Cant get deformation gradient without mesh!");
+		} else GOMA_EH(GOMA_ERROR,"Cant get deformation gradient without mesh!");
 	    }
 	}
 
@@ -610,9 +610,9 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 	  /* PLANE STRESS CASES */
 	  else if (cr->MeshFluxModel == INCOMP_PSTRESS)
 	    {
-	      EH(GOMA_ERROR, "need to fix Plane Stress cases");
-/* 	      if ((fv->P / mu) >= 1.) EH(GOMA_ERROR, "Zero or Negative Denominator in PLANE STRESS"); */
-/* 	      if ( cr->MeshMotion == ARBITRARY ) EH(GOMA_ERROR,"Can't have ARBITRARY mesh with PLANE_STRESS"); */
+	      GOMA_EH(GOMA_ERROR, "need to fix Plane Stress cases");
+/* 	      if ((fv->P / mu) >= 1.) GOMA_EH(GOMA_ERROR, "Zero or Negative Denominator in PLANE STRESS"); */
+/* 	      if ( cr->MeshMotion == ARBITRARY ) GOMA_EH(GOMA_ERROR,"Can't have ARBITRARY mesh with PLANE_STRESS"); */
 /* 	      fv->volume_change    =  */
 /* 	        pow(det2d, 3./2.) */
 /* 		  / pow((1. - fv->P / mu ), 3./4.); */
@@ -737,7 +737,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 	    }
 	  break;
 	default:
-	  EH( -1, "Bad dim.");
+	  GOMA_EH( -1, "Bad dim.");
 	}      
     } /* end of Non-Linear volume change */
 
@@ -854,7 +854,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
       } 
       /* end of INCOMPRESSIBLE MODELS */
     } else if (cr->MeshFluxModel == INCOMP_PSTRESS || cr->MeshFluxModel == HOOKEAN_PSTRESS) {
-      EH(GOMA_ERROR,"Need to fix PSTRESS implementation");
+      GOMA_EH(GOMA_ERROR,"Need to fix PSTRESS implementation");
 /* 	    factor = 0.5; */
 /* 	    for (p=0; p<dim; p++) */
 /* 	      { */
@@ -897,7 +897,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 /* 		  } */
 /* 	      } */
 /* 	  }  end of PLANE STRESS  */
-    } else EH(GOMA_ERROR,"Illegal Mesh Constitutive Equation");
+    } else GOMA_EH(GOMA_ERROR,"Illegal Mesh Constitutive Equation");
 
   return(status);
 }     
@@ -1067,7 +1067,7 @@ invert_tensor(double A[DIM][DIM], /* tensor to be inverted */
      break;
       
     default:
-      EH(GOMA_ERROR,"can't invert a tensor with more than 3 dimensions");
+      GOMA_EH(GOMA_ERROR,"can't invert a tensor with more than 3 dimensions");
       break;
     }
   return;
@@ -1222,7 +1222,7 @@ if(sic_flag)
 if(pd->e[pg->imtrx][R_MESH1] && cr->MeshMotion != ARBITRARY)
   {
   err = belly_flop(elc->lame_mu);
-  EH(err, "error in belly flop");
+  GOMA_EH(err, "error in belly flop");
 
   err = mesh_stress_tensor(TT, dTT_dx, dTT_dp, dTT_dc, dTT_dp_liq,
                            dTT_dp_gas, dTT_dporosity, dTT_dsink_mass, dTT_dT, dTT_dmax_strain, dTT_dcur_strain,
@@ -1285,7 +1285,7 @@ if(pd->e[pg->imtrx][R_SOLID1] && cr->MeshMotion != ARBITRARY)
   {
    eqn = R_SOLID1;
    err = belly_flop_rs(elc_rs->lame_mu);
-   EH(err, "error in belly flop");
+   GOMA_EH(err, "error in belly flop");
 
    err = solid_stress_tensor(TT, dTT_dx, dTT_drs, dTT_dp,
                              dTT_dc,  dTT_dp_liq, dTT_dp_gas, dTT_dporosity,
@@ -1422,7 +1422,7 @@ force_n_dot_f_spring_bc(double func[DIM],
     double actual_zpos1;
   
     node_1 = psid2nn(ns_id1);                       
-    EH(node_1, "Could not find the nsid needed for calculation");
+    GOMA_EH(node_1, "Could not find the nsid needed for calculation");
     initial_xpos1 = Coor[0][node_1];
     initial_ypos1 = Coor[1][node_1];
     initial_zpos1 = Coor[2][node_1];
@@ -1504,7 +1504,7 @@ rep_force_n_dot_f_bc(double func[DIM],
 /* calculate distance from free surface to solid surface for repulsion calculations */
 #if 0
 /* first find coordinates of point on plane closest to current gauss point */
-  if (cp != 0) EH(GOMA_ERROR, "Can't do repulsion in 3D yet");
+  if (cp != 0) GOMA_EH(GOMA_ERROR, "Can't do repulsion in 3D yet");
 
 /* the following setup is for a plane in 2D (e.g. a line) */
   d_dist[0] = 0;
@@ -1570,7 +1570,7 @@ rep_force_n_dot_f_bc(double func[DIM],
            d_force = pr*dist_sign*repexp*pow(dist, repexp-1);
         break;
         default:
-           EH(GOMA_ERROR, "Invalid BC id in force_repulsion");
+           GOMA_EH(GOMA_ERROR, "Invalid BC id in force_repulsion");
         break;
          }
 #endif
@@ -1706,7 +1706,7 @@ rep_force_roll_n_dot_f_bc(double func[DIM],
            d_force = pr*repexp/pow(dist, repexp+1);
         break;
         default:
-           EH(GOMA_ERROR, "Invalid BC id in force_repulsion roll");
+           GOMA_EH(GOMA_ERROR, "Invalid BC id in force_repulsion roll");
         break;
          }
 
@@ -1914,7 +1914,7 @@ friction_n_dot_f_bc(double func[DIM],
 if(pd->e[pg->imtrx][R_MESH1] && cr->MeshMotion != ARBITRARY)
   {
   err = belly_flop(elc->lame_mu);
-  EH(err, "error in belly flop");
+  GOMA_EH(err, "error in belly flop");
 
   err = mesh_stress_tensor(TT, dTT_dx, dTT_dp, dTT_dc, dTT_dp_liq,
                            dTT_dp_gas, dTT_dporosity, dTT_dsink_mass, dTT_dT, dTT_dmax_strain, dTT_dcur_strain,
@@ -1977,7 +1977,7 @@ if(pd->e[pg->imtrx][R_SOLID1] && cr->MeshMotion != ARBITRARY)
   {
    eqn = R_SOLID1;
    err = belly_flop_rs(elc_rs->lame_mu);
-   EH(err, "error in belly flop");
+   GOMA_EH(err, "error in belly flop");
 
    err = solid_stress_tensor(TT, dTT_dx, dTT_drs, dTT_dp,
                              dTT_dc,  dTT_dp_liq, dTT_dp_gas, dTT_dporosity,
@@ -2062,7 +2062,7 @@ if(pd->e[pg->imtrx][R_SOLID1] && cr->MeshMotion != ARBITRARY)
      }
   velo_mag = sqrt(velo_mag);
   if( DOUBLE_ZERO(velo_mag))
-       { EH(GOMA_ERROR,"Trouble with sliding friction bc - zero relative velocity.");}
+       { GOMA_EH(GOMA_ERROR,"Trouble with sliding friction bc - zero relative velocity.");}
 
   frict_acous = 1.0;
   if( bc_type == FRICTION_ACOUSTIC_BC)
@@ -2197,7 +2197,7 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
     if (Current_EB_ptr->Elem_Blk_Id != i_mat_fluid)
       { 
 	if (Current_EB_ptr->Elem_Blk_Id != i_mat_solid) {
-	  EH(GOMA_ERROR, "Improper solid-fluid block ids");
+	  GOMA_EH(GOMA_ERROR, "Improper solid-fluid block ids");
 	}
 	/* note, this may not account for all situations - we may not want
 	   to quit here, but we'll do it for now */
@@ -2528,7 +2528,7 @@ put_liquid_stress_in_solid_ALE(int id, /* local element node number for the
     if (!pd->e[pg->imtrx][R_MOMENTUM1]) return;
     if (Current_EB_ptr->Elem_Blk_Id != i_mat_fluid)
       { 
-	if (Current_EB_ptr->Elem_Blk_Id != i_mat_solid) EH(GOMA_ERROR, "Improper solid-fluid block ids");
+	if (Current_EB_ptr->Elem_Blk_Id != i_mat_solid) GOMA_EH(GOMA_ERROR, "Improper solid-fluid block ids");
 	/* note, this may not account for all situations - we may not want
 	   to quit here, but we'll do it for now */
 	return;
@@ -2766,7 +2766,7 @@ penetration(double func[],
 	  pd->MeshMotion == DYNAMIC_LAGRANGIAN)
 	{
 	  err = belly_flop(elc->lame_mu);
-	  EH(err, "error in belly flop");
+	  GOMA_EH(err, "error in belly flop");
 	}
 	  err = get_convection_velocity(vconv, vconv_old, d_vconv, dt, tt);
       if ( mp->PorousMediaType == CONTINUOUS )
@@ -2845,9 +2845,9 @@ penetration(double func[],
 	}
       else if (mp->PorousMediaType == POROUS_UNSATURATED || mp->PorousMediaType == POROUS_SATURATED)
 	{
-	  EH(GOMA_ERROR,"Not ready for porous penetration");
+	  GOMA_EH(GOMA_ERROR,"Not ready for porous penetration");
 	}
-      else  EH(GOMA_ERROR,"bad media type in penetration");
+      else  GOMA_EH(GOMA_ERROR,"bad media type in penetration");
       
     }
 
@@ -2900,7 +2900,7 @@ penetration(double func[],
       }
 
     }
-  else EH(GOMA_ERROR,"Penetration called with incorrect block id");
+  else GOMA_EH(GOMA_ERROR,"Penetration called with incorrect block id");
   /* note, we may not want to quit at this point */
   return;
 }
@@ -2956,7 +2956,7 @@ no_slip(double func[],
 	    if ( pd->MeshMotion != LAGRANGIAN &&
 		 pd->MeshMotion != DYNAMIC_LAGRANGIAN &&
 	         pd->MeshMotion != TOTAL_ALE)
-	      EH(GOMA_ERROR, "Shouldn't be in this section of no-slip with an arbitrary solid");
+	      GOMA_EH(GOMA_ERROR, "Shouldn't be in this section of no-slip with an arbitrary solid");
 	    if ( mp->PorousMediaType == CONTINUOUS )
 	      for (jvar = 0; jvar < dim; jvar++)
 		{
@@ -2966,7 +2966,7 @@ no_slip(double func[],
 		  else if (pd->MeshMotion == TOTAL_ALE)
 		    var = SOLID_DISPLACEMENT1 + jvar;
 		  else
-		    EH(GOMA_ERROR, "Bad pd->MeshMotion");
+		    GOMA_EH(GOMA_ERROR, "Bad pd->MeshMotion");
 		  if (pd->v[pg->imtrx][var])
 		    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		      {
@@ -2993,7 +2993,7 @@ no_slip(double func[],
 	{
 	  for(a=0; a<DIM; a++) v_solid_mesh[a]=x_dot[a];
 	  err = belly_flop(elc->lame_mu);
-	  EH(err, "error in belly flop");
+	  GOMA_EH(err, "error in belly flop");
 	  err = get_convection_velocity(vconv, vconv_old, d_vconv, dt, tt);
 
 	}
@@ -3001,13 +3001,13 @@ no_slip(double func[],
 	{
 	  for(a=0; a<DIM; a++) v_solid_mesh[a]=x_rs_dot[a];
 	  err = belly_flop_rs(elc_rs->lame_mu);
-	  EH(err, "error in belly flop");
+	  GOMA_EH(err, "error in belly flop");
 	  err = get_convection_velocity_rs(vconv, vconv_old, d_vconv, dt, tt);
 
 	}
       else
 	{
-	  EH(GOMA_ERROR,"Shouldn't be in this section of no-slip with an arbitrary solid");
+	  GOMA_EH(GOMA_ERROR,"Shouldn't be in this section of no-slip with an arbitrary solid");
 	}
 
 
@@ -3130,9 +3130,9 @@ no_slip(double func[],
 	}
       else if (mp->PorousMediaType == POROUS_UNSATURATED || mp->PorousMediaType == POROUS_SATURATED)
 	{
-	  EH(GOMA_ERROR,"Not ready for porous penetration");
+	  GOMA_EH(GOMA_ERROR,"Not ready for porous penetration");
 	}
-      else  EH(GOMA_ERROR,"bad media type in penetration");
+      else  GOMA_EH(GOMA_ERROR,"bad media type in penetration");
 
     }
 
@@ -3169,7 +3169,7 @@ no_slip(double func[],
 	  }
       }
     }
-  else EH(GOMA_ERROR,"No Slip called with incorrect block id");
+  else GOMA_EH(GOMA_ERROR,"No Slip called with incorrect block id");
   /* note, we may not want to quit at this point */
   return;
 }
@@ -3231,7 +3231,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
  */
 
   err = load_elastic_properties(elc, &mu, &lambda, &thermexp, speciesexp, d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx);
-  EH(err," Problem in loading up elastic constants");
+  GOMA_EH(err," Problem in loading up elastic constants");
 
 
   /* Here we will simple use our cadre of Elastic models if no Viscoplastic
@@ -3539,7 +3539,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
     }
   else
     {
-      EH(GOMA_ERROR,"Unrecognizable Plastic Constitutive Equation specification");
+      GOMA_EH(GOMA_ERROR,"Unrecognizable Plastic Constitutive Equation specification");
     }
 
   if (cr->MeshMotion == LAGRANGIAN ||
@@ -3579,11 +3579,11 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 	       }
 	     else if (mp->CapStress == COMPRESSIBLE && mp->PorousMediaType != POROUS_SATURATED) 
 	       {
-		 EH(GOMA_ERROR,"Need to reconcile the COMPRESSIBLE model pressures.  Not ready yet");
+		 GOMA_EH(GOMA_ERROR,"Need to reconcile the COMPRESSIBLE model pressures.  Not ready yet");
 		 /* Compressible model of effective stress law with
 		  *  partially saturated media from Zienkeivicz and Garg and Nur */
 		 if (elc->lame_lambda_model != POWER_LAW) 
-		   EH(GOMA_ERROR,"Effective stress law may be missing constant");
+		   GOMA_EH(GOMA_ERROR,"Effective stress law may be missing constant");
 
 		 TT[a][a] -=  (1 - (1 - mp->porosity) * elc->lame_lambda / elc->u_lambda[0]) * 
 		   mp->saturation * fv->p_liq; 
@@ -3607,7 +3607,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 	       {
 		 /* If liquid is wetting, so that all surfaces are covered
 		    by a thin layer of liquid */
-		 EH(GOMA_ERROR,"Need to reconcile the WETTING model pressures.  Not ready yet");
+		 GOMA_EH(GOMA_ERROR,"Need to reconcile the WETTING model pressures.  Not ready yet");
 		 TT[a][a] -= (1 - mp->porosity * (1. - mp->saturation)) * fv->p_liq;  
 		 if (pd->v[pg->imtrx][POR_GAS_PRES]) TT[a][a] -= mp->porosity * (1. - mp->saturation) * fv->p_gas;  
 	       }
@@ -3618,7 +3618,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 	       }
 	     else 
 	       {
-		 WH(-1,"No way to put liquid stress into porous matrix because you have const porosity and/or no pore eqn");
+		 GOMA_WH(-1,"No way to put liquid stress into porous matrix because you have const porosity and/or no pore eqn");
 	       }
 
 	     if(pd->e[pg->imtrx][R_POR_SINK_MASS])
@@ -3926,7 +3926,7 @@ get_evp_stress_tensor(double TT[DIM][DIM],
  double d_speciesexp_dx[MAX_CONC][MAX_VARIABLE_TYPES+MAX_CONC];
 
  dim = ei[pg->imtrx]->ielem_dim;
- if(dim > 2) EH(GOMA_ERROR,"EVP models only implemented for plane strain case just now");
+ if(dim > 2) GOMA_EH(GOMA_ERROR,"EVP models only implemented for plane strain case just now");
 
  /******************************************************/
  /* Update glossary */
@@ -4096,13 +4096,13 @@ information */
  */
 
   err = load_elastic_properties(elc, &mu, &lambda, &thermexp, speciesexp, d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx);
-  EH(err," Problem in loading up elastic constants");
+  GOMA_EH(err," Problem in loading up elastic constants");
 
   /* will not need plastic_mu nor yield from the routine;
      otherwise, UMR results */
 
   err = load_plastic_properties(d_plastic_mu_dc, d_yield_dc);
-  EH(err," Problem in loading up plastic constants");
+  GOMA_EH(err," Problem in loading up plastic constants");
 
 	 
 /* Update TT, and F_vp */
@@ -5074,7 +5074,7 @@ load_elastic_properties(struct Elastic_Constitutive *elcp,
   if(elc_ptr->lame_mu_model == USER )
     {
       err = usr_lame_mu(elc_ptr, elc_ptr->u_mu);
-      EH(err,"bad user mu model");
+      GOMA_EH(err,"bad user mu model");
       *mu = elc_ptr->lame_mu;
     }
   else if (elc_ptr->lame_mu_model == CONSTANT )
@@ -5105,14 +5105,14 @@ load_elastic_properties(struct Elastic_Constitutive *elcp,
       if( nnn == -1 ) 
        {
          if( Num_Proc == 1 )
-             EH(GOMA_ERROR,"Cannot find NS number on Lame MU CONTACT_LINE model");
+             GOMA_EH(GOMA_ERROR,"Cannot find NS number on Lame MU CONTACT_LINE model");
        }
       else
        {
          if( Proc_NS_Count[ nnn] != 1 ) 
           {
             if( Num_Proc == 1 ) 
-                  EH(GOMA_ERROR,"Illegal NS number on Lame MU CONTACT_LINE model");
+                  GOMA_EH(GOMA_ERROR,"Illegal NS number on Lame MU CONTACT_LINE model");
           }
          else
           {
@@ -5143,7 +5143,7 @@ load_elastic_properties(struct Elastic_Constitutive *elcp,
     }
   else if (elc_ptr->lame_mu_model == SHEAR_HARDEN )
     {
-      if(pd->MeshMotion == TOTAL_ALE) EH(GOMA_ERROR,"No TALE Real-solid jacobian entries for SHEAR_HARDEN");
+      if(pd->MeshMotion == TOTAL_ALE) GOMA_EH(GOMA_ERROR,"No TALE Real-solid jacobian entries for SHEAR_HARDEN");
       /* Shear modulus increases when the second invariant of the strain is non-zero
        *  u_mu[0]  is lame_mu (shear modulus) at zero shear
        *  u_mu[1]  is the coefficient of variation
@@ -5197,7 +5197,7 @@ load_elastic_properties(struct Elastic_Constitutive *elcp,
     }
   else if (elc_ptr->lame_mu_model == DENSE_POWER_LAW )
     {
-      if(pd->MeshMotion == TOTAL_ALE) EH(GOMA_ERROR,"No TALE Real-solid jacobian entries for DENSE_POWER_LAW");
+      if(pd->MeshMotion == TOTAL_ALE) GOMA_EH(GOMA_ERROR,"No TALE Real-solid jacobian entries for DENSE_POWER_LAW");
       /* Shear modulus follows a power law 
        *  u_mu[0]  is ultimate lame_mu (shear modulus) when the film is dried
        *  u_mu[1]  is the power law exponent
@@ -5262,7 +5262,7 @@ load_elastic_properties(struct Elastic_Constitutive *elcp,
 
 	// Check for Poisson ratio
 	if ( elc_ptr->lame_lambda_model != POISSON_RATIO ) {
-	  EH(GOMA_ERROR, "Must specify POISSON_RATIO for Lame Lambda in order to use FAUX_PLASTIC");
+	  GOMA_EH(GOMA_ERROR, "Must specify POISSON_RATIO for Lame Lambda in order to use FAUX_PLASTIC");
 	}
         
         // If Emin is not specified, don't use the new behavior
@@ -5272,14 +5272,14 @@ load_elastic_properties(struct Elastic_Constitutive *elcp,
 	// Check that the max strain equation is active
 	var = MAX_STRAIN;
 	if ( !pd->v[pg->imtrx][var] ) {
-	  EH(GOMA_ERROR, "The max_strain equation must be activated to use FAUX_PLASTIC");	  
+	  GOMA_EH(GOMA_ERROR, "The max_strain equation must be activated to use FAUX_PLASTIC");	  
 	}
         
         // If using the new behavior, then the cur_strain equation must be on.
 	var = CUR_STRAIN;
         if ( use_new_behavior ) {
           if ( !pd->v[pg->imtrx][var] ) {
-            EH(GOMA_ERROR, "The cur_strain equation must be activated to use 'new' FAUX_PLASTIC");	  
+            GOMA_EH(GOMA_ERROR, "The cur_strain equation must be activated to use 'new' FAUX_PLASTIC");	  
           }
         }
 	
@@ -5410,7 +5410,7 @@ load_elastic_properties(struct Elastic_Constitutive *elcp,
     }
   else
     {
-      EH(GOMA_ERROR,"Unrecognized mu model");
+      GOMA_EH(GOMA_ERROR,"Unrecognized mu model");
     }
 
   /*If needed, hit lame_me with temperature shift */
@@ -5461,7 +5461,7 @@ load_elastic_properties(struct Elastic_Constitutive *elcp,
   if(elc_ptr->lame_lambda_model == USER )
     {
       err = usr_lame_lambda(elc_ptr, elc_ptr->u_lambda);
-      EH(err,"bad user lambda model");
+      GOMA_EH(err,"bad user lambda model");
       *lambda = elc_ptr->lame_lambda;
     }
   else if (elc_ptr->lame_lambda_model == CONSTANT )
@@ -5525,7 +5525,7 @@ load_elastic_properties(struct Elastic_Constitutive *elcp,
     }
   else
     {
-      EH(GOMA_ERROR,"Unrecognized lambda model");
+      GOMA_EH(GOMA_ERROR,"Unrecognized lambda model");
     }
 
 /*  thermal expansion	*/
@@ -5543,13 +5543,13 @@ load_elastic_properties(struct Elastic_Constitutive *elcp,
      }
    else if(elc_ptr->thermal_expansion_model == USER )
      {
-      if(pd->MeshMotion == TOTAL_ALE) EH(GOMA_ERROR,"No TALE Real-solid jacobian entries for USER");
+      if(pd->MeshMotion == TOTAL_ALE) GOMA_EH(GOMA_ERROR,"No TALE Real-solid jacobian entries for USER");
       err = usr_expansion(elc_ptr->u_thermal_expansion, &value, d_thermexp_dx);
 	*thermexp = value;
      }
    else
      {
-       EH(GOMA_ERROR,"Unrecognized thermal expansion model");
+       GOMA_EH(GOMA_ERROR,"Unrecognized thermal expansion model");
      }
 
 /*  species expansion	*/
@@ -5565,7 +5565,7 @@ load_elastic_properties(struct Elastic_Constitutive *elcp,
      		}
    	    else
      		{
-       		EH(GOMA_ERROR,"Unrecognized species expansion model");
+       		GOMA_EH(GOMA_ERROR,"Unrecognized species expansion model");
      		}
 	   }
    }
@@ -5597,7 +5597,7 @@ load_plastic_properties(double d_plastic_mu_dc[MAX_CONC][MDE],
     {
 /*  Take care of this later
       err = usr_plastic_mu(evpl->u_plastic_mu); */
-      EH(err,"bad user plastic_mu model");
+      GOMA_EH(err,"bad user plastic_mu model");
     }
   else if (evpl->plastic_mu_model == LINEAR )
     {
@@ -5631,14 +5631,14 @@ load_plastic_properties(double d_plastic_mu_dc[MAX_CONC][MDE],
     }
   else
     {
-      EH(GOMA_ERROR,"Unrecognized plastic_mu model");
+      GOMA_EH(GOMA_ERROR,"Unrecognized plastic_mu model");
     }
 
   if(evpl->yield_model == USER )
     {
 /*   take care of this later 
       err = usr_plastic_mu(evpl->u_yield); */
-      EH(err,"bad user yield model");
+      GOMA_EH(err,"bad user yield model");
     }
   else if (evpl->yield_model == LINEAR )
     {
@@ -5672,7 +5672,7 @@ load_plastic_properties(double d_plastic_mu_dc[MAX_CONC][MDE],
     }
   else
     {
-      EH(GOMA_ERROR,"Unrecognized yield model");
+      GOMA_EH(GOMA_ERROR,"Unrecognized yield model");
     }
 
   return(1);
@@ -5703,7 +5703,7 @@ int check_for_neg_elem_volume( int eb,
     {
       if (exo->eb_id[ib] == eb) break;
     }
-  if ( exo->eb_id[ib] != eb ) EH(GOMA_ERROR,"Couldn't locate element block.");
+  if ( exo->eb_id[ib] != eb ) GOMA_EH(GOMA_ERROR,"Couldn't locate element block.");
     
   e_start = exo->eb_ptr[ib];
   e_end   = exo->eb_ptr[ib+1];
@@ -5724,28 +5724,28 @@ int check_for_neg_elem_volume( int eb,
           fv->wt = Gq_weight (ip, ei[pg->imtrx]->ielem_type); /* find quadrature weights for */
 
           err = load_basis_functions(xi, bfd);
-          EH( err, "problem from load_basis_functions");
+          GOMA_EH( err, "problem from load_basis_functions");
 
           err = beer_belly();
-          EH( err, "beer_belly");
+          GOMA_EH( err, "beer_belly");
 
           err = load_fv();
-          EH( err, "load_fv");
+          GOMA_EH( err, "load_fv");
 
           err = load_bf_grad();
-          EH( err, "load_bf_grad");
+          GOMA_EH( err, "load_bf_grad");
 
           err = load_bf_mesh_derivs();
-          EH( err, "load_bf_mesh_derivs");
+          GOMA_EH( err, "load_bf_mesh_derivs");
 
           err = load_fv_grads();
-          EH( err, "load_fv_grads");
+          GOMA_EH( err, "load_fv_grads");
 
           err = load_fv_mesh_derivs(1);
-          EH( err, "load_fv_mesh_derivs");
+          GOMA_EH( err, "load_fv_mesh_derivs");
     
           err = belly_flop(elc->lame_mu);
-          EH(err, "error in belly flop");
+          GOMA_EH(err, "error in belly flop");
           
           if (neg_elem_volume) break;
         }

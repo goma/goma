@@ -121,7 +121,7 @@ void EpetraCreateGomaProblemGraph(struct Aztec_Linear_Solver_System *ams, Exo_DB
      * node stored in the global array
      */
     if (row_num_unknowns != nv->Num_Unknowns) {
-      EH(GOMA_ERROR, "Inconsistency counting unknowns.");
+      GOMA_EH(GOMA_ERROR, "Inconsistency counting unknowns.");
     }
 
     /*
@@ -153,7 +153,7 @@ void EpetraCreateGomaProblemGraph(struct Aztec_Linear_Solver_System *ams, Exo_DB
         col_num_unknowns = fill_variable_vector(inter_node, inter_node_varType,
             inter_node_matID);
         if (col_num_unknowns != nvCol->Num_Unknowns) {
-          EH(GOMA_ERROR, "Inconsistency counting unknowns.");
+          GOMA_EH(GOMA_ERROR, "Inconsistency counting unknowns.");
         }
 
         /*
@@ -314,7 +314,7 @@ void EpetraLoadLec(int ielem, struct Aztec_Linear_Solver_System *ams,
                           col_index = Index_Solution(ei_ptr->gnn_list[v][j], v,
                               kv, ei_ptr->Baby_Dolphin[v][j],
 						     ei_ptr->matID_ledof[ledof],pg->imtrx);
-                          EH(col_index, "Bad var index.");
+                          GOMA_EH(col_index, "Bad var index.");
                           Indices.push_back(ams->GlobalIDs[col_index]);
                           Values.push_back(lec->J[LEC_J_INDEX(pe,pv,i,j)]);
                         }
@@ -332,9 +332,9 @@ void EpetraLoadLec(int ielem, struct Aztec_Linear_Solver_System *ams,
                           fprintf(stderr,
                               "Oh fiddlesticks: je = %d, je_new = %d\n",
                               col_index, je_new);
-                          EH(GOMA_ERROR, "LEC Indexing error");
+                          GOMA_EH(GOMA_ERROR, "LEC Indexing error");
                         }
-                        EH(col_index, "Bad var index.");
+                        GOMA_EH(col_index, "Bad var index.");
                         Indices.push_back(ams->GlobalIDs[col_index]);
                         Values.push_back(lec->J[LEC_J_INDEX(pe,pv,i,j)]);
                       }
@@ -375,7 +375,7 @@ void EpetraLoadLec(int ielem, struct Aztec_Linear_Solver_System *ams,
                       if (ei[pg->imtrx]->owningElementForColVar[v] != -1) {
                         ei_ptr = ei[pg->imtrx]->owningElement_ei_ptr[v];
                         if (ei_ptr == 0) {
-                          EH(GOMA_ERROR, "ei_ptr == 0\n");
+                          GOMA_EH(GOMA_ERROR, "ei_ptr == 0\n");
                           exit(-1);
                         }
                       }
@@ -399,7 +399,7 @@ void EpetraLoadLec(int ielem, struct Aztec_Linear_Solver_System *ams,
                           if (Nodes[ei[pg->imtrx]->gnn_list[v][j]]->Mat_List.Length < 2) {
                           }
                         }
-                        EH(col_index, "Bad var index.");
+                        GOMA_EH(col_index, "Bad var index.");
                         Indices.push_back(ams->GlobalIDs[col_index]);
                         Values.push_back(lec->J[LEC_J_INDEX(pe,pv,i,j)]);
                       }
@@ -412,7 +412,7 @@ void EpetraLoadLec(int ielem, struct Aztec_Linear_Solver_System *ams,
                       if (ei[pg->imtrx]->owningElementForColVar[v] != -1) {
                         ei_ptr = ei[pg->imtrx]->owningElement_ei_ptr[v];
                         if (ei_ptr == 0) {
-                          EH(GOMA_ERROR, "ei slave pointer is null");
+                          GOMA_EH(GOMA_ERROR, "ei slave pointer is null");
                           exit(-1);
                         }
                       }
@@ -427,9 +427,9 @@ void EpetraLoadLec(int ielem, struct Aztec_Linear_Solver_System *ams,
                         fprintf(stderr,
                             "Oh fiddlesticks: je = %d, je_new = %d\n",
                             col_index, je_new);
-                        EH(GOMA_ERROR, "LEC Indexing error");
+                        GOMA_EH(GOMA_ERROR, "LEC Indexing error");
                       }
-                      EH(col_index, "Bad var index.");
+                      GOMA_EH(col_index, "Bad var index.");
                       Indices.push_back(ams->GlobalIDs[col_index]);
                       Values.push_back(lec->J[LEC_J_INDEX(pe,pv,i,j)]);
                     }

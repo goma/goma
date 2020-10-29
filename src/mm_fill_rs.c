@@ -231,7 +231,7 @@ assemble_real_solid(double time_value,
      }
    else
      {
-       EH(GOMA_ERROR, "Unrecognized RealSolidSourceModel");
+       GOMA_EH(GOMA_ERROR, "Unrecognized RealSolidSourceModel");
      }
 
   /*
@@ -239,7 +239,7 @@ assemble_real_solid(double time_value,
    */
   
   err = belly_flop_rs(mu);
-  EH(err, "error in belly flop");
+  GOMA_EH(err, "error in belly flop");
   if (err == 2) return(err);
   
   /*
@@ -429,7 +429,7 @@ assemble_real_solid(double time_value,
 	      advection = 0.;
 	      if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 		{
-		  WH(-1,"Warning: Real_SOLID advection untested.\n");
+		  GOMA_WH(-1,"Warning: Real_SOLID advection untested.\n");
 		  for ( p=0; p<dim; p++)
 		    {
 		      for ( q=0; q<dim; q++)
@@ -1012,7 +1012,7 @@ solid_stress_tensor(dbl TT[DIM][DIM],
   memset(speciesexp,0,sizeof(double)*MAX_CONC);
 
   err = load_elastic_properties(elc_rs, &mu, &lambda, &thermexp, speciesexp, d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx);
-  EH(err," Problem in loading up real-solid elastic constants");
+  GOMA_EH(err," Problem in loading up real-solid elastic constants");
 
  
   for ( p=0; p<dim; p++)
@@ -1151,11 +1151,11 @@ solid_stress_tensor(dbl TT[DIM][DIM],
       for ( a=0; a<dim; a++)
 	{
 	  if (mp->CapStress == COMPRESSIBLE) {
-	    EH(GOMA_ERROR,"Need to reconcile the COMPRESSIBLE model pressures.  Not ready yet");
+	    GOMA_EH(GOMA_ERROR,"Need to reconcile the COMPRESSIBLE model pressures.  Not ready yet");
 	    /* Compressible model of effective stress law with
 	     *  partially saturated media from Zienkeivicz and Garg and Nur */
 	    if (elc_rs->lame_lambda_model != POWER_LAW) 
-	      WH(-1,"Effective stress law may be missing constant");
+	      GOMA_WH(-1,"Effective stress law may be missing constant");
 	    TT[a][a] -=  (1 - (1 - mp->porosity) * elc_rs->lame_lambda / elc_rs->u_lambda[0]) * 
 	      mp->saturation * fv->p_liq; 
 	    if (pd->v[pg->imtrx][POR_GAS_PRES]) 
@@ -1166,12 +1166,12 @@ solid_stress_tensor(dbl TT[DIM][DIM],
 	      }
 	    
 	  } else if (mp->CapStress == PARTIALLY_WETTING) {
-	    EH(GOMA_ERROR,"See Lagragian case, this effective stress may not be correct!.  Not ready yet");
+	    GOMA_EH(GOMA_ERROR,"See Lagragian case, this effective stress may not be correct!.  Not ready yet");
 	    TT[a][a] -= mp->saturation * fv->p_liq; 
 	    if (pd->v[pg->imtrx][POR_GAS_PRES])  TT[a][a] -= (1. - mp->saturation) * fv->p_gas; 
 	    
 	  } else if (mp->CapStress == WETTING) {
-	    EH(GOMA_ERROR,"Need to reconcile the WETTING model pressures.  Not ready yet");
+	    GOMA_EH(GOMA_ERROR,"Need to reconcile the WETTING model pressures.  Not ready yet");
 	    /* If liquid is wetting, so that all surfaces are covered
 	       by a thin layer of liquid */
 	    TT[a][a] -= (1 - mp->porosity * (1. - mp->saturation)) * fv->p_liq;  
@@ -1179,7 +1179,7 @@ solid_stress_tensor(dbl TT[DIM][DIM],
 	  } else if (mp->PorousMediaType == POROUS_SATURATED) { 
 	    TT[a][a] -= fv->p_liq; 
 	    
-	  } else EH(GOMA_ERROR,"no way to put liquid stress into porous matrix");
+	  } else GOMA_EH(GOMA_ERROR,"no way to put liquid stress into porous matrix");
 	}
     }
   
@@ -1847,7 +1847,7 @@ if (cr->RealSolidFluxModel == LINEAR)
 	  /* PLANE STRESS CASES */
 	  else if (cr->RealSolidFluxModel == INCOMP_PSTRESS)
 	    {
-	      EH(GOMA_ERROR, "need to fix Plane Stress cases");
+	      GOMA_EH(GOMA_ERROR, "need to fix Plane Stress cases");
 	    }
 	  break;
 	case 3:
@@ -1941,7 +1941,7 @@ if (cr->RealSolidFluxModel == LINEAR)
 	    }
 	  break;
 	default:
-	  EH( -1, "Bad dim.");
+	  GOMA_EH( -1, "Bad dim.");
 	}    
     } /* end of Non-Linear volume change */
 
@@ -2017,9 +2017,9 @@ if (cr->RealSolidFluxModel == LINEAR)
       }
       /* end of INCOMPRESSIBLE MODELS */
     } else if (cr->RealSolidFluxModel == INCOMP_PSTRESS || cr->RealSolidFluxModel == HOOKEAN_PSTRESS) {
-      EH(GOMA_ERROR,"Need to fix PSTRESS implementation");
+      GOMA_EH(GOMA_ERROR,"Need to fix PSTRESS implementation");
 
-    } else EH(GOMA_ERROR,"Illegal Mesh Constitutive Equation");
+    } else GOMA_EH(GOMA_ERROR,"Illegal Mesh Constitutive Equation");
 
   return(status);
   }   
@@ -2116,7 +2116,7 @@ get_convection_velocity_rs(double vconv[DIM], /*Calculated convection velocity *
    
    if ( pd->MeshInertia == 1)
      {
-       if ( pd->TimeIntegration != STEADY ) EH(GOMA_ERROR, "Can't have Unsteady Mesh Inertia ");
+       if ( pd->TimeIntegration != STEADY ) GOMA_EH(GOMA_ERROR, "Can't have Unsteady Mesh Inertia ");
        /*
 	* Velocity of solid in lab coordinates is the velocity of the stress free state
 	* dotted into the deformation gradient tensor for the material
@@ -2231,17 +2231,17 @@ f_kinematic_displacement_bc(double func[DIM],
 	if(elc_rs_glob[mn]->v_mesh_sfs_model == ROTATIONAL ||
 	   elc_rs_glob[mn]->v_mesh_sfs_model == ROTATIONAL_3D)
              {
-        if(len_u < 1)  EH(GOMA_ERROR,"need roll radius parameter on KIN_DISPLACEMENT");
+        if(len_u < 1)  GOMA_EH(GOMA_ERROR,"need roll radius parameter on KIN_DISPLACEMENT");
         roll_rad = u_pars[0];
              }
 	else if(elc_rs_glob[mn]->v_mesh_sfs_model == CONSTANT ||
 	   elc_rs_glob[mn]->v_mesh_sfs_model == 0)
              {
-        if(len_u < 4)  WH(-1,"Warning: No plane parameters on KIN_DISPLACEMENT");
+        if(len_u < 4)  GOMA_WH(-1,"Warning: No plane parameters on KIN_DISPLACEMENT");
              }
         else
           {
-           EH(GOMA_ERROR,"Unknown Conv. Lag. Velocity Model for KIN_DISPL.\n");
+           GOMA_EH(GOMA_ERROR,"Unknown Conv. Lag. Velocity Model for KIN_DISPL.\n");
           }
 	if(elc_rs_glob[mn]->v_mesh_sfs_model == ROTATIONAL)
           {
@@ -2290,7 +2290,7 @@ f_kinematic_displacement_bc(double func[DIM],
              }
         else
           {
-           WH(-1,"Reverting to old base_displacement version.\n");
+           GOMA_WH(-1,"Reverting to old base_displacement version.\n");
            base_displ_model = FALSE;
           }
 

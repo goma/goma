@@ -373,7 +373,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
   if ( pd->e[pg->imtrx][eqn] & T_POROUS_BRINK )
     {
       if (mp->PorousMediaType != POROUS_BRINKMAN) 
-	WH(-1, "Set Porous term multiplier in continuous medium");
+	GOMA_WH(-1, "Set Porous term multiplier in continuous medium");
       /* Short-hand notation for the four parameters in the Brinkman Equation. */ 
       por = mp->porosity;
       per = mp->permeability;
@@ -713,7 +713,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
     }
   else
     {
-      EH( -1, "Unimplemented momentum constitutive relation.");
+      GOMA_EH( -1, "Unimplemented momentum constitutive relation.");
     }
   
   /*
@@ -1174,7 +1174,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 			      
 			      if ( w > 1 )
 				{
-				  EH(GOMA_ERROR, "Need more arrays for each species.");
+				  GOMA_EH(GOMA_ERROR, "Need more arrays for each species.");
 				}
 			      
                               lec->J[LEC_J_INDEX(peqn,MAX_PROB_VAR + w,ii,j)] +=
@@ -1783,14 +1783,14 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 	cr->MeshMotion == DYNAMIC_LAGRANGIAN) && pd->e[pg->imtrx][R_MESH1])
    {
       err = belly_flop(elc->lame_mu);
-      EH(err, "error in belly flop");
+      GOMA_EH(err, "error in belly flop");
       if (err == 2) return(err);
    }
 
    if (cr->MeshMotion == TOTAL_ALE && pd->e[pg->imtrx][R_SOLID1])
    {
       err = belly_flop_rs(elc_rs->lame_mu);
-      EH(err, "error in belly flop for real solid");
+      GOMA_EH(err, "error in belly flop for real solid");
       if (err == 2) return(err);
    }
 
@@ -1926,7 +1926,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
       if (pd->e[pg->imtrx][R_MOMENTUM1] & T_POROUS_BRINK)
 	{
 	  if (mp->PorousMediaType != POROUS_BRINKMAN) 
-	    WH(-1, "Set Porous term multiplier in continuous medium");
+	    GOMA_WH(-1, "Set Porous term multiplier in continuous medium");
 	  /* Short-hand notation for the four parameters in the Brinkman Equation. */ 
 	  por = mp->porosity;
 	  por2 = por * por;
@@ -2921,11 +2921,11 @@ pmomentum_source_term(
 
       err = suspension_pm_particle_momentum_source(f, dfdT, dfdX, dfdC, dfdv);
 
-      EH(err,"Problems in suspension_pm_particle_momentum_source");
+      GOMA_EH(err,"Problems in suspension_pm_particle_momentum_source");
     }
   else
     {
-      EH(GOMA_ERROR,"No such Navier-Stokes Model");
+      GOMA_EH(GOMA_ERROR,"No such Navier-Stokes Model");
     }
   return(status);
 } /* end of function pmomentum_source_term */

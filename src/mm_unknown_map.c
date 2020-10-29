@@ -895,7 +895,7 @@ set_unknown_map(Exo_DB *exo, Dpi *dpi)
               fprintf(stderr, "P_%d: at node %d, Num_Unknowns_Node = %d, count = %d\n",
 	              ProcID, i, nv->Num_Unknowns, count);
               fprintf(stderr, "nv->Num_Unknowns lost count.\n");
-              EH( -1, "Num_Unknowns_Node incompatibility");
+              GOMA_EH( -1, "Num_Unknowns_Node incompatibility");
              }
          }
      }
@@ -912,7 +912,7 @@ set_unknown_map(Exo_DB *exo, Dpi *dpi)
             {
              fprintf(stderr, "P_%d: local node index (%d) at matrix %d lost track.\n",
 	             ProcID, i+1, imtrx+1);
-             EH( -1, "Num_Unknowns_Node incompatibility");     
+             GOMA_EH( -1, "Num_Unknowns_Node incompatibility");     
             }
          }
      }
@@ -1228,7 +1228,7 @@ set_unknown_map(Exo_DB *exo, Dpi *dpi)
 	             "P_%d: at node %d, Num_Unknowns_Node = %d, count = %d\n",
 	             ProcID, i, nv->Num_Unknowns, count);
              fprintf(stderr, "nv->Num_Unknowns lost count.");
-              EH( -1, "Sorry, Charlie.");
+              GOMA_EH( -1, "Sorry, Charlie.");
             }
          }
      }
@@ -4157,7 +4157,7 @@ Index_Solution (const int nodeNum, const int varType, const int subvarIndex,
     if (subvarIndex >= upd->Max_Num_Species_Eqn) {
 	printf("ERROR Index_Solution: subvarIndex is bad: %d\n", 
 	       subvarIndex);
-	EH(GOMA_ERROR,"ERROR Index_Solution: subvarIndex is bad");
+	GOMA_EH(GOMA_ERROR,"ERROR Index_Solution: subvarIndex is bad");
     }
     index = nv->Num_Var_Desc_Per_Type[varType] / upd->Max_Num_Species_Eqn;
     for (i = 0; i < nv->Num_Var_Desc; i++) {
@@ -4464,7 +4464,7 @@ Index_Solution_Inv(const int gindex, int *inode, int *i_Var_Desc,
     }
     bottom += vd->Ndof;
   }
-  EH(GOMA_ERROR, "Index_Solution_Inv ERROR");
+  GOMA_EH(GOMA_ERROR, "Index_Solution_Inv ERROR");
   return NULL;
 }
 /*****************************************************************************/

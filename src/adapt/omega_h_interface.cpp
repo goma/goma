@@ -341,7 +341,7 @@ void convert_to_omega_h_mesh_parallel(Exo_DB *exo, Dpi *dpi, double **x, Mesh *m
             if (exo_to_global.find(i) != exo_to_global.end()) {
               auto gnode = exo_to_global[i];
               int ja = Index_Solution(i, j, mf, 0, -2, imtrx);
-              EH(ja, "could not find solution");
+              GOMA_EH(ja, "could not find solution");
               var_values[gnode] = x[imtrx][ja];
             }
           }
@@ -354,7 +354,7 @@ void convert_to_omega_h_mesh_parallel(Exo_DB *exo, Dpi *dpi, double **x, Mesh *m
           if (exo_to_global.find(i) != exo_to_global.end()) {
             auto gnode = exo_to_global[i];
             int ja = Index_Solution(i, j, 0, 0, -2, imtrx);
-            EH(ja, "could not find solution");
+            GOMA_EH(ja, "could not find solution");
             var_values[gnode] = x[imtrx][ja];
             if (tran->ale_adapt && (j >= R_MESH1 && j <= R_MESH3)) {
               var_values[gnode] = 0;
@@ -1608,7 +1608,7 @@ static int exo_side_to_osh(int side, int dim) {
   case 3:
     return (side + 1) % 4;
   default:
-    EH(GOMA_ERROR, "Unknown dim exo_side_to_osh");
+    GOMA_EH(GOMA_ERROR, "Unknown dim exo_side_to_osh");
     return -1;
   }
 }
@@ -1697,7 +1697,7 @@ void copy_solution(Dpi *dpi, double **x, Omega_h::Mesh &mesh) {
 
           for (int i = 0; i < dpi->num_universe_nodes; i++) {
             int ja = Index_Solution(i, j, mf, 0, -2, imtrx);
-            EH(ja, "could not find solution");
+            GOMA_EH(ja, "could not find solution");
             int index = i;
             if (dpi->exodus_to_omega_h_node != NULL) {
               index = dpi->exodus_to_omega_h_node[i];
@@ -1710,7 +1710,7 @@ void copy_solution(Dpi *dpi, double **x, Omega_h::Mesh &mesh) {
 
         for (int i = 0; i < dpi->num_universe_nodes; i++) {
           int ja = Index_Solution(i, j, 0, 0, -2, imtrx);
-          EH(ja, "could not find solution");
+          GOMA_EH(ja, "could not find solution");
           int index = i;
           if (dpi->exodus_to_omega_h_node != NULL) {
             index = dpi->exodus_to_omega_h_node[i];
@@ -1781,7 +1781,7 @@ void adapt_mesh_omega_h(struct Aztec_Linear_Solver_System **ams,
   //      for (int i = 0; i < dpi->num_internal_nodes + dpi->num_boundary_nodes +
   //      dpi->num_external_nodes; i++) {
   //        int ja = Index_Solution(i, j, 0, 0, -2, imtrx);
-  //        EH(ja, "could not find solution");
+  //        GOMA_EH(ja, "could not find solution");
   //        var_values[gnode[i]] = x[imtrx][ja];
   //      }
   //      mesh.add_tag(Omega_h::VERT, Exo_Var_Names[j].name2, 1, Omega_h::Reals(var_values));

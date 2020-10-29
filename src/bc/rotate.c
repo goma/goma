@@ -163,7 +163,7 @@ apply_rotated_bc (
                */
 	      if ((ss_index = 
 		   in_list(ss_rot, 0, Proc_Num_Side_Sets, ss_to_blks[0])) == -1) {
-		EH(GOMA_ERROR,"Cannot match side set id with that in ss_to_blks array");
+		GOMA_EH(GOMA_ERROR,"Cannot match side set id with that in ss_to_blks array");
 	      } else {
 		for (j = 0; j < MAX_MAT_PER_SS; j++) {
 		  dup_blks_list[j] = ss_to_blks[j+1][ss_index];
@@ -172,7 +172,7 @@ apply_rotated_bc (
 	      if ((blk_index = in_list(Current_EB_ptr->Elem_Blk_Id, 0,
 				       MAX_MAT_PER_SS+1,
 				       dup_blks_list)) == -1) {
-		EH(GOMA_ERROR,"Cannot match current element block with that in ss_to_blks array");
+		GOMA_EH(GOMA_ERROR,"Cannot match current element block with that in ss_to_blks array");
 	      }
 	      blk_index++;
 	      if (SS_Internal_Boundary[ss_index] != -1 && ((blk_index % 2) == 1)) {
@@ -199,7 +199,7 @@ apply_rotated_bc (
 		   in_list(ss_rot, 0, exo->num_side_sets, ss_to_blks[0])) == -1) {
 		sprintf(err_msg, "Could not find SS %d in ss_to_blks",
 			ss_rot);
-		EH(GOMA_ERROR, err_msg);
+		GOMA_EH(GOMA_ERROR, err_msg);
 	      } else {
 		for (j=0; j<MAX_MAT_PER_SS; j++) {
 		  dup_blks_list[j] = ss_to_blks[j+1][ss_index];
@@ -209,7 +209,7 @@ apply_rotated_bc (
 				       MAX_MAT_PER_SS+1, dup_blks_list)) == -1) {
 		sprintf(err_msg, "Could not find EB %d in dup_blks_list",
 			Current_EB_ptr->Elem_Blk_Id);
-		EH(GOMA_ERROR, err_msg);
+		GOMA_EH(GOMA_ERROR, err_msg);
 	      }
 	      blk_index++;
 	      if( SS_Internal_Boundary[ss_index] != -1 && ((blk_index % 2) == 1) ) {
@@ -234,13 +234,13 @@ apply_rotated_bc (
       /* find the quadrature point locations for current ip */
       find_surf_center_st (ielem_type, elem_side_bc->id_side, pd->Num_Dim, xi, &s, &t);
       err = load_basis_functions(xi, bfd);
-      EH( err, "problem from load_basis_functions");
+      GOMA_EH( err, "problem from load_basis_functions");
       
       err = beer_belly();
-      EH( err, "beer_belly");
+      GOMA_EH( err, "beer_belly");
 	  
 /*	  err = load_coordinate_scales(pd->CoordinateSystem, fv);
-	  EH(err, "load_coordinate_scales(fv)");
+	  GOMA_EH(err, "load_coordinate_scales(fv)");
 */      
       /* calculate the surface determinant of the surface jacobian */
       surface_determinant_and_normal(ielem, iconnect_ptr, num_local_nodes, 
@@ -257,7 +257,7 @@ apply_rotated_bc (
 			  (int) elem_side_bc->num_nodes_on_side,
 			  (elem_side_bc->local_elem_node_id));      
       } else {
-	EH(GOMA_ERROR,"Illegal dimension in old rotation scheme");
+	GOMA_EH(GOMA_ERROR,"Illegal dimension in old rotation scheme");
       }
 	
       do_LSA_mods(LSA_SURFACE);
@@ -746,7 +746,7 @@ rotate_mesh_eqn (
       sprintf(Err_Msg,
 	      "rotate_mesh_eqn: Limited to 1 mesh dof: found %d dofs\n",
 	      ndof);
-      EH(GOMA_ERROR, Err_Msg);
+      GOMA_EH(GOMA_ERROR, Err_Msg);
     }
     peqn_mesh[ldir] = upd->ep[pg->imtrx][R_MESH1 + ldir];
   }
@@ -793,7 +793,7 @@ rotate_mesh_eqn (
 	     * Find the global equation number
 	     */
 	    if ((index_eqn = Index_Solution(I, eqn, 0, 0, -2, pg->imtrx)) == -1) { 
-	      EH(GOMA_ERROR, "Cant find eqn index");
+	      GOMA_EH(GOMA_ERROR, "Cant find eqn index");
 	    }
 	    /*
 	     * Loop over the nodes that determine the value of the
@@ -851,7 +851,7 @@ rotate_mesh_eqn (
              * Find the global equation number
              */
             if ((index_eqn = Index_Solution(I, eqn, 0, 0, -2, pg->imtrx)) == -1) {
-              EH(GOMA_ERROR, "Cant find eqn index");
+              GOMA_EH(GOMA_ERROR, "Cant find eqn index");
             }
             /*
              * Loop over the nodes that determine the value of the
@@ -1154,10 +1154,10 @@ rotate_momentum_eqn (
 		    ktype = 0;
 		    ndof = 0;
 		    if ((index_eqn =  Index_Solution(I, eqn, ktype, ndof, -2, pg->imtrx)) == -1 ) { 
-		      EH(GOMA_ERROR, "Cant find eqn index");
+		      GOMA_EH(GOMA_ERROR, "Cant find eqn index");
 		    }
 		    if ((index_var =  Index_Solution(J, var, ktype, ndof, -2, pg->imtrx)) == -1 ) { 
-		      EH(GOMA_ERROR, "Cant find var index");
+		      GOMA_EH(GOMA_ERROR, "Cant find var index");
 		    }
 		      
 		    index = (index_eqn == index_var) ? index_eqn :
@@ -1229,11 +1229,11 @@ rotate_momentum_eqn (
                     ndof = 0;
                     if ((index_eqn = Index_Solution(I, eqn, ktype, ndof, -2, pg->imtrx))
                         == -1) {
-                      EH(GOMA_ERROR, "Cant find eqn index");
+                      GOMA_EH(GOMA_ERROR, "Cant find eqn index");
                     }
                     if ((index_var = Index_Solution(J, var, ktype, ndof, -2, pg->imtrx))
                         == -1) {
-                      EH(GOMA_ERROR, "Cant find var index");
+                      GOMA_EH(GOMA_ERROR, "Cant find var index");
                     }
 
                     /* !!!!!!!!!!!!!!!!! Warning !!!!!!!!!!!!!!!!! */
@@ -2309,15 +2309,15 @@ calculate_all_rotation_vectors (Exo_DB *exo,		/* the mesh */
 	      if (num_rots_finished < dim) {
 		find_nodal_stu(id, ielem_type, &xi[0], &xi[1], &xi[2]);
 		err = load_basis_functions( xi, bfd);
-		EH( err, "problem from load_basis_functions");
+		GOMA_EH( err, "problem from load_basis_functions");
 		err = beer_belly();
-		EH( err, "beer_belly");
+		GOMA_EH( err, "beer_belly");
 		err = load_fv();
-		EH( err, "load_fv");
+		GOMA_EH( err, "load_fv");
 		err = load_bf_grad();
-		EH( err, "load_bf_grad");
+		GOMA_EH( err, "load_bf_grad");
 		err = load_bf_mesh_derivs(); 
-		EH( err, "load_bf_mesh_derivs");
+		GOMA_EH( err, "load_bf_mesh_derivs");
 
 		/* put NORMAL vector into array */
 		if (normal != NULL) {
@@ -2343,7 +2343,7 @@ calculate_all_rotation_vectors (Exo_DB *exo,		/* the mesh */
 		      }
 		    }
 		  }
-		} else EH(GOMA_ERROR, "can't calculate normal vector");
+		} else GOMA_EH(GOMA_ERROR, "can't calculate normal vector");
 
 		do_LSA_mods(LSA_SURFACE);
 
@@ -2358,7 +2358,7 @@ calculate_all_rotation_vectors (Exo_DB *exo,		/* the mesh */
 		  /* determine which direction holds tangent1 */
 		  kdir = -1;
 		  for (p=0; p<dim; p++) if (ROT_Types[irc].BC_Type[p] == ROT_T1) kdir = p;
-		  EH(kdir,"cant find tangent1");
+		  GOMA_EH(kdir,"cant find tangent1");
 
 		  /* check to see if tangent1 has already been calculated */
 		  if (rotation[I][eq][kdir]->ok) {
@@ -2445,7 +2445,7 @@ calculate_all_rotation_vectors (Exo_DB *exo,		/* the mesh */
 				== -1) {
 			      if (rotation[I][eq][p]->d_vector_n >= MNROT) {
 				/* illegal number of sensitivities */
-				EH(GOMA_ERROR, "Increase the number of available rotation sensitivities (MNROT)");
+				GOMA_EH(GOMA_ERROR, "Increase the number of available rotation sensitivities (MNROT)");
 			      }
 			      j_new = rotation[I][eq][p]->d_vector_n++;
 			      rotation[I][eq][p]->d_vector_J[j_new] = 
@@ -2595,7 +2595,7 @@ calculate_2D_rotation_vectors (Exo_DB *exo,		/* the mesh */
 			
 	  if( ( ssid = local_ROT_list[inode][jvar] ) != -1 )
 	    {
-	      if (  ( iss = in_list( ssid, 0, exo->num_side_sets, exo->ss_id ) ) == -1 ) EH( -1,"Error trap out");
+	      if (  ( iss = in_list( ssid, 0, exo->num_side_sets, exo->ss_id ) ) == -1 ) GOMA_EH( -1,"Error trap out");
 				
 	      for( i=0; i< exo->ss_num_sides[iss]; i++)
 		{					
@@ -2626,7 +2626,7 @@ calculate_2D_rotation_vectors (Exo_DB *exo,		/* the mesh */
 							
 			  while( ss_to_blks[index+1][iss] != curr_eb && index <(MAX_MAT_PER_SS+1)) index++;
 							
-			  if( index == (MAX_MAT_PER_SS+1) ) EH(GOMA_ERROR," WTH.  \n");
+			  if( index == (MAX_MAT_PER_SS+1) ) GOMA_EH(GOMA_ERROR," WTH.  \n");
 							
 			  if ( (index % 2) != 0 ) add_vectors = FALSE;
 						
@@ -2653,13 +2653,13 @@ calculate_2D_rotation_vectors (Exo_DB *exo,		/* the mesh */
 			  find_nodal_stu( lnn, Elem_Type(exo, elem), xi, xi+1, xi+2 );
 							
 			  err = load_basis_functions(xi, bfd);
-			  EH(err, "problem from load_basis_functions");
+			  GOMA_EH(err, "problem from load_basis_functions");
 							
 			  err = beer_belly();
-			  EH(err, "beer_belly");
+			  GOMA_EH(err, "beer_belly");
 							
 			  err = load_coordinate_scales(pd->CoordinateSystem, fv);
-			  EH(err, "load_coordinate_scales(fv)");
+			  GOMA_EH(err, "load_coordinate_scales(fv)");
 							
 			  surface_determinant_and_normal( elem, iconnect_ptr, num_local_nodes, ei[pg->imtrx]->ielem_dim - 1, id_side, 
 							  num_nodes_on_side, local_node_side_list );
@@ -3336,7 +3336,7 @@ set_pointers_to_vectors (
     *binormal  = dum_vect + 2;
     *normal2 = NULL; *normal3 = NULL; *tangent1 = NULL; *tangent2 = NULL;
 
-  } else EH(GOMA_ERROR,"Illegal topology type");
+  } else GOMA_EH(GOMA_ERROR,"Illegal topology type");
   
   for (p=0; p<dim; p++) {
     dum_vect[p].ok = 0;
@@ -3378,18 +3378,18 @@ set_pointers_to_vectors (
 	
       case ROT_N2:
 	*normal2 = vector + p;
-	EH(GOMA_ERROR,"Second Normal Rotation not enabled yet");
+	GOMA_EH(GOMA_ERROR,"Second Normal Rotation not enabled yet");
 	break;
 	
       case ROT_N3:
 	*normal3 = vector + p;
-	EH(GOMA_ERROR,"Third Normal Rotation not enabled yet");
+	GOMA_EH(GOMA_ERROR,"Third Normal Rotation not enabled yet");
 	break;
 	
       case ROT_T:
 	*line_tangent = vector + p;
 	if (ROT_Types[irc].type == FACE) 
-	       EH(GOMA_ERROR,"Need to specify T1 or T2 on Surfaces");
+	       GOMA_EH(GOMA_ERROR,"Need to specify T1 or T2 on Surfaces");
 	break;
 	
       case ROT_T1:
@@ -3403,7 +3403,7 @@ set_pointers_to_vectors (
       case ROT_B:
 	*binormal = vector + p;
 	if (ROT_Types[irc].type == FACE) 
-	       EH(GOMA_ERROR,"Need to specify T1 or T2 on Surfaces");
+	       GOMA_EH(GOMA_ERROR,"Need to specify T1 or T2 on Surfaces");
 	break;
 	
       case ROT_S:
@@ -3439,7 +3439,7 @@ set_pointers_to_vectors (
 	break;
 	
       default:
-	EH(GOMA_ERROR,"illegal rotation vector");
+	GOMA_EH(GOMA_ERROR,"illegal rotation vector");
       } /* end of switch */
     }
   }	    

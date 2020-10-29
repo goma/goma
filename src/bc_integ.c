@@ -233,25 +233,25 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
       } 
     
     err = load_basis_functions(xi, bfd);
-    EH(err, "problem from load_basis_functions");
+    GOMA_EH(err, "problem from load_basis_functions");
     
     err = beer_belly();
-    EH(err, "beer_belly");
+    GOMA_EH(err, "beer_belly");
     
     /*
      *  precalculate variables at current integration pt.
      *  for the current material comprising the current element
      */
     err = load_fv();
-    EH(err, "load_fv");
+    GOMA_EH(err, "load_fv");
 
     /* What's going on here */
 
     err = load_bf_grad();
-    EH(err, "load_bf_grad");
+    GOMA_EH(err, "load_bf_grad");
 
     err = load_bf_mesh_derivs(); 
-    EH(err, "load_bf_mesh_derivs");
+    GOMA_EH(err, "load_bf_mesh_derivs");
 
     /* calculate the determinant of the surface jacobian and the normal to 
      * the surface all at one time */
@@ -272,10 +272,10 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
      * Gauss point.
      */
     err = load_fv_grads();
-    EH( err, "load_fv_grads");
+    GOMA_EH( err, "load_fv_grads");
     
     err = load_fv_mesh_derivs(1);
-    EH(err, "load_fv_mesh_derivs");
+    GOMA_EH(err, "load_fv_mesh_derivs");
     
     /*
      * Load up commonly used physical properties such as density at
@@ -308,7 +308,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	mp->PorousMediaType == POROUS_SATURATED || 
 	mp->PorousMediaType == POROUS_TWO_PHASE) {
       err = load_porous_properties(); 
-      EH( err, "load_porous_properties"); 
+      GOMA_EH( err, "load_porous_properties"); 
     }
 
     if (mp->SurfaceTensionModel != CONSTANT) {
@@ -364,7 +364,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
       if (ss_index == -1 && is_ns != 0) {
 	sprintf(Err_Msg, "Could not find BC_ID %d in ss_to_blks",
 	        BC_Types[bc_input_id].BC_ID);
-	EH(GOMA_ERROR, Err_Msg);
+	GOMA_EH(GOMA_ERROR, Err_Msg);
       }
 
       /*
@@ -684,7 +684,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	  if (neg_elem_volume) return (status);
 	  break;
         case ZERO_VELO_TANGENT_3D_BC:
-          EH(GOMA_ERROR, "ZERO_VELO_TANGENT_3D_BC not implemented");
+          GOMA_EH(GOMA_ERROR, "ZERO_VELO_TANGENT_3D_BC not implemented");
           //fzero_velo_tangent_3d(func, d_func, elem_side_bc->id_side, 0);
           break;
 
@@ -1016,7 +1016,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	    if ( ielem_dim == DIM)
 		{
 		 pb[DIM-1] = 0.0;
-		 /*WH(-1,"3rd Direction bulk stress not connected to CAPILLARY BC yet...\n");*/
+		 /*GOMA_WH(-1,"3rd Direction bulk stress not connected to CAPILLARY BC yet...\n");*/
 		}
 	    if (BC_Types[bc_input_id].BC_Name == CAPILLARY_TABLE_BC)
                {
@@ -1342,7 +1342,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 
 
 	case HYDROSTATIC_SYMM_BC:
-	  EH(GOMA_ERROR, "HYDROSTATIC_SYMM is no longer supported.");
+	  GOMA_EH(GOMA_ERROR, "HYDROSTATIC_SYMM is no longer supported.");
 	  /* 	    hydrostatic_n_dot_T(func, d_func); */
 	  break;
 
@@ -1905,13 +1905,13 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	   * sure your heats of reaction are deployed based on the flux 
 	   * (and hence reaction) rates, either through YFLUX_BV, or 
 	   * YFLUX_USER, etc. */
-	  EH(GOMA_ERROR, "HEAT_OF_RXN_BC: not yet implemented.");
+	  GOMA_EH(GOMA_ERROR, "HEAT_OF_RXN_BC: not yet implemented.");
 	  break;
 	      
 	case PSPG_BC:
 	  /* MMH: LSA LSA LSA Stopped here.  ALMOST done with bc_integ.c LSA LSA LSA */
 	  if (!PSPG) {
-	    EH(GOMA_ERROR,
+	    GOMA_EH(GOMA_ERROR,
 	       "You don't have PSPG turned on and you trying to apply a PSPG boundary condition");
 	  }
 	  PSPG_consistency_bc(func, d_func,  x_dot, time_value, delta_t,
@@ -2005,7 +2005,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			wall_velo[2] = velo_vary_fnc(WVARY_BC, fv->x[0], fv->x[1], fv->x[2] , BC_Types[i1].u_BC, time_value);
 			break;
 		      default:
-			if( Debug_Flag > 1 )WH(-1,"Wall velocity bc not found\n");
+			if( Debug_Flag > 1 )GOMA_WH(-1,"Wall velocity bc not found\n");
                       }  /* switch bc */
                     }       /*  if BC_Types  */
                   }               /*  Num_BC loop  */
@@ -2148,7 +2148,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 
 	default:
 	  sprintf(Err_Msg, "Integrated BC %s not found", bc_desc->name1);
-	  EH(GOMA_ERROR, Err_Msg);
+	  GOMA_EH(GOMA_ERROR, Err_Msg);
 	  break;
 
 
@@ -2397,7 +2397,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
   		      bc->BC_Name == VELO_NORMAL_LS_PETROV_BC ||
   		      bc->BC_Name == KIN_DISPLACEMENT_PETROV_BC) {
 		    if (pd->Num_Dim != 2) {
- 		      EH(GOMA_ERROR,"KINEMATIC_PETROV or KIN_DISPLACEMENT_PETROV not available in 3D yet");
+ 		      GOMA_EH(GOMA_ERROR,"KINEMATIC_PETROV or KIN_DISPLACEMENT_PETROV not available in 3D yet");
 		    }
 		    id_side = elem_side_bc->id_side;
 		    i_basis = 1 - id_side%2;
@@ -2425,7 +2425,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			 eb_in_matrl(BC_Types[bc_input_id].BC_Data_Int[1], mn)))
 		      {
 			//type = pd_glob[mn]->w[eqn];
-			//if (bfi[type] == NULL) EH(GOMA_ERROR,"Illegal cross basis func");
+			//if (bfi[type] == NULL) GOMA_EH(GOMA_ERROR,"Illegal cross basis func");
 			
 			/* note that here, we don't have the ln_to_dof
 			   array for the adjacent 
@@ -2450,7 +2450,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 		      }
 		  }
 		} else {
-		  EH(GOMA_ERROR,"Illegal bc phase definition");
+		  GOMA_EH(GOMA_ERROR,"Illegal bc phase definition");
 		}
 	      }
 
@@ -2678,7 +2678,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
                            weight *= phi_i;
                         }
                         else {
-                           EH(GOMA_ERROR,"Only SINGLE_PHASE is handled in stress BC implementation");
+                           GOMA_EH(GOMA_ERROR,"Only SINGLE_PHASE is handled in stress BC implementation");
                         }
 
                        /*
@@ -2780,14 +2780,14 @@ int equation_index_auto_rotate(const ELEM_SIDE_BC_STRUCT *elem_side_bc,
                                const BOUNDARY_CONDITION_STRUCT *bc) {
   int ieqn;
   if (!goma_automatic_rotations.automatic_rotations) {
-    EH(GOMA_ERROR, "equation_index_auto_rotate requires 3D automatic rotations");
+    GOMA_EH(GOMA_ERROR, "equation_index_auto_rotate requires 3D automatic rotations");
     return -1;
   }
   if (p != 0) {
-    EH(GOMA_ERROR, "tangent rotated conditions not setup for 3D");
+    GOMA_EH(GOMA_ERROR, "tangent rotated conditions not setup for 3D");
   }
   eqn = first_equation_from_vector_equation(eqn);
-  EH(eqn, "Incorrect equation from vector equation");
+  GOMA_EH(eqn, "Incorrect equation from vector equation");
   int eq_idx[DIM];
 
   int rot_dir = 0;

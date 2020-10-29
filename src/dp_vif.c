@@ -3352,7 +3352,7 @@ noahs_dove(void)
 	printf("P_%d: ERROR: NULL address but nonzero length, %s line %d!\n",
 	       ProcID,  __FILE__, __LINE__);
 	fflush(stdout);
-	EH(GOMA_ERROR,"noahs_dove fatal error");
+	GOMA_EH(GOMA_ERROR,"noahs_dove fatal error");
       }
       ddd_add_member(n, m->Matrl_Elem_Blk_Ids,
 		     m->Num_Matrl_Elem_Blk, MPI_INT);

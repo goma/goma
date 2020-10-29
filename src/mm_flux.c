@@ -368,10 +368,10 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 				  xdot,
 				  xdot,
 				  0);
-	  EH(err, "load_elem_dofptr");
+	  GOMA_EH(err, "load_elem_dofptr");
 
 	  err = bf_mp_init(pd);
-	  EH(err, "bf_mp_init");
+	  GOMA_EH(err, "bf_mp_init");
   
 	      iconnect_ptr        = ei[pg->imtrx]->iconnect_ptr;
 	      ielem_type          = ei[pg->imtrx]->ielem_type;
@@ -393,7 +393,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 				quantity == DELTA || quantity == LS_DCA ))
 		  {
                     if ( ls->var != LS )
-			WH(-1,"Level-set variable is not LS!");
+			GOMA_WH(-1,"Level-set variable is not LS!");
 			  switch (id_side)
 			  {
 				  case 1:
@@ -516,20 +516,20 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 			  
 			  /* ****************************************/
 			  err = load_basis_functions( xi, bfd);
-			  EH( err, "problem from load_basis_functions");
+			  GOMA_EH( err, "problem from load_basis_functions");
 			  
 			  err = beer_belly();
-			  EH( err, "beer_belly");
+			  GOMA_EH( err, "beer_belly");
 			  
 			  /* precalculate variables at  current integration pt.*/
 			  err = load_fv();
-			  EH( err, "load_fv");
+			  GOMA_EH( err, "load_fv");
 
 			  err = load_bf_grad();
-			  EH( err, "load_bf_grad");
+			  GOMA_EH( err, "load_bf_grad");
 			  
 			  err = load_bf_mesh_derivs();
-			  EH( err, "load_bf_mesh_derivs");
+			  GOMA_EH( err, "load_bf_mesh_derivs");
 			  
 			  surface_determinant_and_normal (ei[pg->imtrx]->ielem, 
 				iconnect_ptr, num_local_nodes, ielem_dim-1,  
@@ -540,10 +540,10 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 			   * Gauss point.
 			   */
 			  err = load_fv_grads();
-			  EH( err, "load_fv_grads");
+			  GOMA_EH( err, "load_fv_grads");
 
 			  err = load_fv_mesh_derivs(1);
-			  EH( err, "load_fv_mesh_derivs");
+			  GOMA_EH( err, "load_fv_mesh_derivs");
 			  
 			  if (TimeIntegration != STEADY && pd->e[pg->imtrx][MESH_DISPLACEMENT1]) {
 				  for (j = 0; j < VIM; j++) {
@@ -585,7 +585,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 		  if(pd->e[pg->imtrx][R_MESH1] && cr->MeshMotion != ARBITRARY)
 		    {
 		      err = belly_flop(elc->lame_mu);
-		      EH(err, "error in belly flop");
+		      GOMA_EH(err, "error in belly flop");
 		      if (err == 2) exit(-1);
 		/*
 		 * Total mesh stress tensor...
@@ -659,7 +659,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 		    {
 		      mu = elc_rs->lame_mu;
 		      err = belly_flop_rs(mu);
-		      EH(err, "error in belly flop");
+		      GOMA_EH(err, "error in belly flop");
 		      if (err == 2) return(err);
 		  /*
 		   * Total mesh stress tensor...
@@ -883,12 +883,12 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 		    {
 		       if (mp->PorousMediaType == POROUS_SATURATED) { 
  			err = get_porous_fully_sat_terms(&pm_terms, tt, dt); 
- 			EH(err,"problem in getting the species terms"); 
+ 			GOMA_EH(err,"problem in getting the species terms"); 
  			if (neg_elem_volume) return(err);
  		      } else if (mp->PorousMediaType == POROUS_UNSATURATED || 
  				 mp->PorousMediaType == POROUS_TWO_PHASE) { 
  			err = get_porous_part_sat_terms(&pm_terms, tt, dt); 
- 			EH(err,"problem in getting the species terms"); 
+ 			GOMA_EH(err,"problem in getting the species terms"); 
  			if (neg_elem_volume) return(err); 
  		      } 
 		    }*/
@@ -1059,7 +1059,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 			  else if (pd->v[pg->imtrx][MESH_DISPLACEMENT1])
 			    local_q +=  fv->snormal[a]*( fv->d[a] ) ;
 			  else
-			    EH(GOMA_ERROR,"Inconsistency in volume-flux specification. Contact Developers");
+			    GOMA_EH(GOMA_ERROR,"Inconsistency in volume-flux specification. Contact Developers");
                         }
                           local_flux += weight*det* local_q ;
 		      break;
@@ -1141,14 +1141,14 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 	                     cr->MassFluxModel == STEFAN_MAXWELL_CHARGED  ||
 	                     cr->MassFluxModel == STEFAN_MAXWELL_VOLUME )
 	                    {
-	                     if ( Diffusivity() )  EH( -1, "Error in Diffusivity.");
+	                     if ( Diffusivity() )  GOMA_EH( -1, "Error in Diffusivity.");
 
 	                     local_q += fv->snormal[a] * 
                                (-mp->diffusivity[species_id]*fv->grad_c[species_id][a]);
 	                    }
 	                else if ( cr->MassFluxModel == GENERALIZED_FICKIAN)
 	                    {
-	                     if ( Generalized_Diffusivity() )  EH( -1, "Error in Diffusivity.");
+	                     if ( Generalized_Diffusivity() )  GOMA_EH( -1, "Error in Diffusivity.");
 	                     for (w=0; w<pd->Num_Species_Eqn; w++)
 	                       {
 	                        local_q +=  fv->snormal[a] * 
@@ -1162,7 +1162,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 			  {
 			    struct Species_Conservation_Terms st;
 			    zero_structure(&st, sizeof(struct Species_Conservation_Terms), 1);
-			    if ( Diffusivity() ) EH( -1, "Error in Diffusivity.");
+			    if ( Diffusivity() ) GOMA_EH( -1, "Error in Diffusivity.");
 			    for ( w=0; w < pd->Num_Species_Eqn; w++)
 			      {
 				suspension_balance(&st, w);
@@ -1170,7 +1170,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 			      }
 			  }
 	                else
-	                    { EH( -1, "Unimplemented mass flux constitutive relation."); }
+	                    { GOMA_EH( -1, "Unimplemented mass flux constitutive relation."); }
                           local_qconv += (fv->snormal[a]*(fv->v[a]-x_dot[a])
                                          *fv->c[species_id] );
                         }
@@ -1205,7 +1205,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
                         } 
                       else 
                         {
-                          EH(GOMA_ERROR, "Solution-temperature model not yet implemented");
+                          GOMA_EH(GOMA_ERROR, "Solution-temperature model not yet implemented");
                         }
                       /* set solution temperature to 298 K if it is zero - safety feature */
                       if (T == 0.0)
@@ -1250,7 +1250,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
                         } 
                       else 
                         {
-                          EH(GOMA_ERROR, "Solution-temperature model not yet implemented");
+                          GOMA_EH(GOMA_ERROR, "Solution-temperature model not yet implemented");
                         }
                       /* set solution temperature to 298 K if it is zero - safety feature */
                       if (T == 0.0)
@@ -1333,7 +1333,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
  			   }
  			  else
  			   {
- 			      EH(GOMA_ERROR, "Illegal flux type");
+ 			      GOMA_EH(GOMA_ERROR, "Illegal flux type");
  			   }
                                    local_flux += weight * det * local_q;
  		      break;
@@ -1361,7 +1361,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
  			  }
  			  else
  			   {
- 			      EH(GOMA_ERROR, "Illegal flux type");
+ 			      GOMA_EH(GOMA_ERROR, "Illegal flux type");
  			   }
                                    local_flux += weight * det * local_q;
  		      break;
@@ -1376,7 +1376,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 		    case TORQUE:
 		      if(pd->CoordinateSystem == PROJECTED_CARTESIAN ||
 		         pd->CoordinateSystem == CARTESIAN_2pt5D)
-			EH(GOMA_ERROR, "TORQUE has not been updated for the PROJECTED_CARTESIAN coordinate system.");
+			GOMA_EH(GOMA_ERROR, "TORQUE has not been updated for the PROJECTED_CARTESIAN coordinate system.");
 
 		      if(pd->CoordinateSystem == SWIRLING || 
 			 pd->CoordinateSystem == CYLINDRICAL)
@@ -1430,14 +1430,14 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 			}
 		      else
 			{
-			  EH(GOMA_ERROR,"Torque cannot be calculated in this case.");
+			  GOMA_EH(GOMA_ERROR,"Torque cannot be calculated in this case.");
 			}
 		      break;
 		  
 		    case PORE_LIQ_FLUX:
 				
 				err = load_porous_properties();
-				EH( err, "load_porous_properties");
+				GOMA_EH( err, "load_porous_properties");
 
 		      if(mp->PorousMediaType == POROUS_SATURATED)
 			{
@@ -1462,7 +1462,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 			}
 		      else
 			{
-			  EH(GOMA_ERROR,"unrecognized porous media type in mm_flux.c");
+			  GOMA_EH(GOMA_ERROR,"unrecognized porous media type in mm_flux.c");
 			}
 		      break;
 
@@ -1549,7 +1549,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 			    }
 			  else
 			    {
-			      EH(GOMA_ERROR, "Illegal flux type");
+			      GOMA_EH(GOMA_ERROR, "Illegal flux type");
 			    }
 			}
 		      else
@@ -1724,7 +1724,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 			    }
 			  else
 			    {
-			      EH(GOMA_ERROR, "Illegal flux type");
+			      GOMA_EH(GOMA_ERROR, "Illegal flux type");
 			    }
 			}
 		      else
@@ -1757,7 +1757,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 			    }
 			  else
 			    {
-			      EH(GOMA_ERROR, "Illegal flux type");
+			      GOMA_EH(GOMA_ERROR, "Illegal flux type");
 			    }
 			}
 		      else
@@ -1791,7 +1791,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 			    }
 			  else
 			    {
-			      EH(GOMA_ERROR, "Illegal flux type");
+			      GOMA_EH(GOMA_ERROR, "Illegal flux type");
 			    }
 			}
 		      else
@@ -1899,7 +1899,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
                                {
                k = Proc_NS_List[Proc_NS_Pointers[nsp]+b];
                i1 = Index_Solution (k, MESH_DISPLACEMENT1, 0, 0, -1, pg->imtrx);
-               EH(i1, "Could not resolve index_solution.");
+               GOMA_EH(i1, "Could not resolve index_solution.");
                                 for(i2=0 ; i2<pd->Num_Dim ; i2++)
                                   {
                                    point[i2] = Coor[i2][k] + x[i1+i2];
@@ -1946,7 +1946,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
                                  {local_Torque[b] = fv->x[b]*kernel;}
                             }
                          else 
-                            {EH(GOMA_ERROR,"Repulsive force not found\n");} 
+                            {GOMA_EH(GOMA_ERROR,"Repulsive force not found\n");} 
                          }
 
 			      local_flux += weight * det * local_q;
@@ -1988,12 +1988,12 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
                       memset( E_imag,0, sizeof(double)*DIM);
 		      if(pd->CoordinateSystem == PROJECTED_CARTESIAN ||
 		         pd->CoordinateSystem == CARTESIAN_2pt5D)
-			EH(GOMA_ERROR, "POYNTING has not been updated for the PROJECTED_CARTESIAN coordinate system.");
+			GOMA_EH(GOMA_ERROR, "POYNTING has not been updated for the PROJECTED_CARTESIAN coordinate system.");
 
 		      if(pd->CoordinateSystem == SWIRLING || 
 			 pd->CoordinateSystem == CYLINDRICAL)
 			{
-			EH(GOMA_ERROR, "POYNTING has not been checked for CYLINDRICAL yet.");
+			GOMA_EH(GOMA_ERROR, "POYNTING has not been checked for CYLINDRICAL yet.");
 			  for ( a=0; a<VIM; a++)
 			    {
 			      for ( b=0; b<VIM; b++)
@@ -2035,7 +2035,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 			}
 		      else
 			{
-			  EH(GOMA_ERROR,"Torque cannot be calculated in this case.");
+			  GOMA_EH(GOMA_ERROR,"Torque cannot be calculated in this case.");
 			}
 		      break;
 		  
@@ -2092,19 +2092,19 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 				 	xi[2] = 0;
        
 			err = load_basis_functions( xi, bfd );
- 			EH( err, "problem from load_basis_functions");
+ 			GOMA_EH( err, "problem from load_basis_functions");
  
  			err = beer_belly();
- 			EH( err, "beer_belly");
+ 			GOMA_EH( err, "beer_belly");
  	      
  			err = load_fv();
- 			EH( err, "load_fv");
+ 			GOMA_EH( err, "load_fv");
 
 			err = load_bf_grad();
-			EH( err, "load_bf_grad");
+			GOMA_EH( err, "load_bf_grad");
 		  
 			err = load_bf_mesh_derivs();
-			EH( err, "load_bf_mesh_derivs");
+			GOMA_EH( err, "load_bf_mesh_derivs");
 			  
 		surface_determinant_and_normal (ei[pg->imtrx]->ielem, iconnect_ptr, 
 		num_local_nodes, ielem_dim - 1,  id_side, num_nodes_on_side, 
@@ -2115,10 +2115,10 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 	  * Gauss point.
 	  */
 	 		err = load_fv_grads();
-	 		EH( err, "load_fv_grads");
+	 		GOMA_EH( err, "load_fv_grads");
 
 	 		err = load_fv_mesh_derivs(1);
-	 		EH( err, "load_fv_mesh_derivs");
+	 		GOMA_EH( err, "load_fv_mesh_derivs");
 
 			if (TimeIntegration != STEADY && 
 					pd->e[pg->imtrx][MESH_DISPLACEMENT1]) {
@@ -2188,7 +2188,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 
 		    default:
 		      
-		      EH(GOMA_ERROR, "Illegal flux type");
+		      GOMA_EH(GOMA_ERROR, "Illegal flux type");
 		      break;
 		    }  /*  end of switch */
 	    
@@ -2262,7 +2262,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 				( quantity == FORCE_Y_NEG ? 1 : 
 			        ( quantity == FORCE_Z_NEG ? 2 : -1))))))))) ;  /* Can't do this with FORTRAN */
 
-			  EH(dir, "PANIC in evaluate_flux sensitivity section");
+			  GOMA_EH(dir, "PANIC in evaluate_flux sensitivity section");
 
 		      if(cr->MeshMotion == ARBITRARY)
 			{
@@ -3850,7 +3850,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
  				( quantity == ELEC_FORCE_Y ? 1 : 
  			        ( quantity == ELEC_FORCE_Z ? 2 : -1) ) ) ;  /* Can't do this with FORTRAN */
  
- 			  EH(dir, "PANIC in evaluate_flux sensitivity section");
+ 			  GOMA_EH(dir, "PANIC in evaluate_flux sensitivity section");
  
  			  var = VOLTAGE;
  			  
@@ -3980,7 +3980,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
  			  break;
 
 			default:
-			  EH(GOMA_ERROR,"Constraint sensitivities haven't been implemented for that flux type.");
+			  GOMA_EH(GOMA_ERROR,"Constraint sensitivities haven't been implemented for that flux type.");
 			  break;
 			}
 		    }
@@ -4011,7 +4011,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
       		num_dist_fact_in_set = exo->ns_num_distfacts[nset_id];
       		elem_list = &exo->ns_node_list[exo->ns_node_index[nset_id]];
 		if (num_node_in_set != 1) 
-		   EH(GOMA_ERROR,"more than one node, this is for 2D only");
+		   GOMA_EH(GOMA_ERROR,"more than one node, this is for 2D only");
 		gnn = elem_list[0];
 		sign = (species_id < 0 ) ? -1. : 1.;
 		kine_sset = abs(species_id);
@@ -4046,10 +4046,10 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 				  xdot,
 				  xdot,
 				  0);
-	  	   EH(err, "load_elem_dofptr");
+	  	   GOMA_EH(err, "load_elem_dofptr");
 
 	  	   err = bf_mp_init(pd);
-	  	   EH(err, "bf_mp_init");
+	  	   GOMA_EH(err, "bf_mp_init");
   
 	           iconnect_ptr        = ei[pg->imtrx]->iconnect_ptr;
 	           ielem_type          = ei[pg->imtrx]->ielem_type;
@@ -4066,19 +4066,19 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
             	   find_nodal_stu(local_node, ei[pg->imtrx]->ielem_type, xi, xi+1, xi+2);
 
             	   err = load_basis_functions( xi, bfd);
-            	   EH( err, "problem from load_basis_functions");
+            	   GOMA_EH( err, "problem from load_basis_functions");
 
             	   err = beer_belly();
-            	   EH( err, "beer_belly");
+            	   GOMA_EH( err, "beer_belly");
 
             	   err = load_fv();
-            	   EH( err, "load_fv");
+            	   GOMA_EH( err, "load_fv");
 
             	   err = load_bf_grad();
-            	   EH( err, "load_bf_grad");
+            	   GOMA_EH( err, "load_bf_grad");
 
             	   err = load_bf_mesh_derivs();
-            	   EH(err, "load_bf_mesh_derivs");
+            	   GOMA_EH(err, "load_bf_mesh_derivs");
 
             	   surface_determinant_and_normal(corner_elem,
                                            exo->elem_node_pntr[corner_elem],
@@ -4088,10 +4088,10 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
                                            num_nodes_on_side,
                                            id_local_elem_coord);
 	 	   err = load_fv_grads();
-	 	   EH( err, "load_fv_grads");
+	 	   GOMA_EH( err, "load_fv_grads");
 
 	 	   err = load_fv_mesh_derivs(1);
-	 	   EH( err, "load_fv_mesh_derivs");
+	 	   GOMA_EH( err, "load_fv_mesh_derivs");
 
 	    	   if (ielem_dim !=3)
 	      		{
@@ -4228,12 +4228,12 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 			}
 			else
 			    {
-			EH(GOMA_ERROR, "Point force has not been updated for the PROJECTED_CARTESIAN coordinate system.");
+			GOMA_EH(GOMA_ERROR, "Point force has not been updated for the PROJECTED_CARTESIAN coordinate system.");
 			    }
 			}
 		      break;
 		    default:
-		      EH(GOMA_ERROR, "Illegal flux type");
+		      GOMA_EH(GOMA_ERROR, "Illegal flux type");
 		      break;
 		    }  /*  end of switch */
 #ifdef PARALLEL
@@ -4303,7 +4303,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 				( quantity == FORCE_Y_NEG ? 1 : 
 				( quantity == FORCE_Z_NEG ? 2 : -1)))))))));  
 
-			  EH(dir, "PANIC in evaluate_flux sensitivity section");
+			  GOMA_EH(dir, "PANIC in evaluate_flux sensitivity section");
 
 		      if(cr->MeshMotion == ARBITRARY)
 			{
@@ -4326,14 +4326,14 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 			}
 			  break;
 			default:
-			  EH(GOMA_ERROR,"Constraint sensitivities haven't been implemented for that flux type.");
+			  GOMA_EH(GOMA_ERROR,"Constraint sensitivities haven't been implemented for that flux type.");
 			  break;
 			}
 		      }  /*  J_AC  */
 					}	/*  blk_id  */
 				}
 		       }  /* ss_sides loop	*/
-		   if(corner_elem == -1) EH(GOMA_ERROR,"corner element not found");
+		   if(corner_elem == -1) GOMA_EH(GOMA_ERROR,"corner element not found");
 
 		  }	/* if sset_id	*/
     		}	/* if nset_id	*/
@@ -4341,7 +4341,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
     		{
 #ifndef PARALLEL
       (void) sprintf(Err_Msg, "%s could not locate SSID %d.", yo, side_set_id);
-      EH(GOMA_ERROR, Err_Msg);
+      GOMA_EH(GOMA_ERROR, Err_Msg);
 #endif      
     		}
 
@@ -4589,10 +4589,10 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
           err = load_elem_dofptr(elem, exo,
 			         x, x, xdot,
                                  xdot, 0);
-          EH(err, "load_elem_dofptr");
+          GOMA_EH(err, "load_elem_dofptr");
 
 	  err = bf_mp_init(pd);
-	  EH(err, "bf_mp_init");
+	  GOMA_EH(err, "bf_mp_init");
 
           ip_total = elem_info(NQUAD, ei[pg->imtrx]->ielem_type);
 
@@ -4671,7 +4671,7 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
 		quantity == I_SURF_TEMP )
 	  {
  	   if(Num_Proc > 1)
- 		EH(GOMA_ERROR,"SURFACE_SPECIES not recommended in parallel\n");
+ 		GOMA_EH(GOMA_ERROR,"SURFACE_SPECIES not recommended in parallel\n");
 	   if( quantity == I_SURF_SPECIES)
 	     {
 	   	for(i=0;i<ei[pg->imtrx]->num_local_nodes;i++)	
@@ -4692,7 +4692,7 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
  		   }
 	     }
 	   else
-	     EH(GOMA_ERROR,"That SURF quantity not available.");
+	     GOMA_EH(GOMA_ERROR,"That SURF quantity not available.");
 
 	  if(pd->Num_Dim == 3)
 		{
@@ -4701,7 +4701,7 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
  		    ierr = interface_crossing_3DL( ls_F, xf3D, side_id, ecrd);
 		   }
 		else
-	     	    EH(GOMA_ERROR,"Only SURF 3D element is TRILINEAR_HEX.");
+	     	    GOMA_EH(GOMA_ERROR,"Only SURF 3D element is TRILINEAR_HEX.");
 		}
 	  else
 		{
@@ -4710,7 +4710,7 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
  		    ierr = interface_crossing_2DQ( ls_F, xf2D, side_id, nint2D, ecrd);
 		   }
 		else
-	     	    EH(GOMA_ERROR,"Only SURF 2D element is BIQUAD_QUAD.");
+	     	    GOMA_EH(GOMA_ERROR,"Only SURF 2D element is BIQUAD_QUAD.");
 		}
 	if(ierr)
   	  {
@@ -4725,13 +4725,13 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
  		xi[2] = ecrd[i][2];
        
  	     	err = load_basis_functions( xi, bfd );
- 	     	EH( err, "problem from load_basis_functions");
+ 	     	GOMA_EH( err, "problem from load_basis_functions");
  
  	     	err = beer_belly();
- 	     	EH( err, "beer_belly");
+ 	     	GOMA_EH( err, "beer_belly");
  	      
  	     	err = load_fv();
- 	     	EH( err, "load_fv");
+ 	     	GOMA_EH( err, "load_fv");
  
  		fprintf(jfp,"%d %d %g %g %g\n",elem,i,fv->x[0],fv->x[1],fv->x[2]);
  		}
@@ -4772,35 +4772,35 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
 	      */
       
 	     err = load_basis_functions( xi, bfd );
-	     EH( err, "problem from load_basis_functions");
+	     GOMA_EH( err, "problem from load_basis_functions");
 	  
 	     err = beer_belly();
-	     EH( err, "beer_belly");
+	     GOMA_EH( err, "beer_belly");
 	      
 	     err = load_fv();
-	     EH( err, "load_fv");
+	     GOMA_EH( err, "load_fv");
 
 	     err = load_bf_grad();
-	     EH( err, "load_bf_grad");
+	     GOMA_EH( err, "load_bf_grad");
 
 	     if ( pd->e[pg->imtrx][R_MESH1] )
 	      {
 	       err = load_bf_mesh_derivs(); 
-	       EH( err, "load_bf_mesh_derivs");
+	       GOMA_EH( err, "load_bf_mesh_derivs");
 	      }
 
 	     err = load_fv_grads();
-	     EH( err, "load_fv_grads");	  
+	     GOMA_EH( err, "load_fv_grads");	  
       
 	     if ( pd->e[pg->imtrx][R_MESH1] )
 	      {
 	       err = load_fv_mesh_derivs(1);
-	       EH( err, "load_fv_mesh_derivs");
+	       GOMA_EH( err, "load_fv_mesh_derivs");
 	      }
 	      
 	     if (mp->PorousMediaType != CONTINUOUS){
 	       err = load_porous_properties();
-	       EH( err, "load_porous_properties");
+	       GOMA_EH( err, "load_porous_properties");
 	     }
 	     do_LSA_mods(LSA_VOLUME);
 
@@ -4909,7 +4909,7 @@ compute_volume_integrand(const int quantity, const int elem,
   int dof_map[MDE];
 
   if(upd->CoordinateSystem == PROJECTED_CARTESIAN)
-    WH(-1, "compute_volume_integrand has not been updated for the PROJECTED_CARTESIAN coordinate system.");
+    GOMA_WH(-1, "compute_volume_integrand has not been updated for the PROJECTED_CARTESIAN coordinate system.");
 
   if(upd->CoordinateSystem == CYLINDRICAL ||
      upd->CoordinateSystem == SWIRLING   )
@@ -4953,7 +4953,7 @@ compute_volume_integrand(const int quantity, const int elem,
        double dist=0;
        if(num_params < 4)
          {
-           WH(-1,"not enough plane parameters for VOL_PLANE\n");
+           GOMA_WH(-1,"not enough plane parameters for VOL_PLANE\n");
          }
        dist = params[0]*fv->x[0]+params[1]*fv->x[1]
                                 +params[2]*fv->x[2]+params[3];
@@ -5174,7 +5174,7 @@ compute_volume_integrand(const int quantity, const int elem,
 	  }
 	if ( J_AC != NULL)
 	  {
-	    EH(GOMA_ERROR,"Appropriate Jacobian entries for the DISSIP volume integral are not available.\n");
+	    GOMA_EH(GOMA_ERROR,"Appropriate Jacobian entries for the DISSIP volume integral are not available.\n");
 	  }
 
     }
@@ -5207,7 +5207,7 @@ compute_volume_integrand(const int quantity, const int elem,
 
 	if ( J_AC != NULL)
 	  {
-	    EH(GOMA_ERROR,"Appropriate Jacobian entries for the I_JOULE volume integral are not available.\n");
+	    GOMA_EH(GOMA_ERROR,"Appropriate Jacobian entries for the I_JOULE volume integral are not available.\n");
 	  }
 
       }
@@ -5245,7 +5245,7 @@ compute_volume_integrand(const int quantity, const int elem,
 
 	if ( J_AC != NULL )
 	  {
-	    EH(GOMA_ERROR,"Jacobian entries for II_GAMMA_DOT Volume integral not implemented.");
+	    GOMA_EH(GOMA_ERROR,"Jacobian entries for II_GAMMA_DOT Volume integral not implemented.");
 	  }
       }
       break;
@@ -5520,7 +5520,7 @@ compute_volume_integrand(const int quantity, const int elem,
 	      ( quantity == I_MOMY ? 1 : 
 	      ( quantity == I_MOMZ ? 2 : -1) ) ) ;
 
-	EH(dir, "PANIC in compute_volume_integrand \n");
+	GOMA_EH(dir, "PANIC in compute_volume_integrand \n");
 
 	rho = density( NULL, time );
 
@@ -5528,7 +5528,7 @@ compute_volume_integrand(const int quantity, const int elem,
 
 	if ( J_AC != NULL)
 	  {
-	    EH(GOMA_ERROR,"Appropriate Jacobian entries for the MOM volume integral are not available.\n");
+	    GOMA_EH(GOMA_ERROR,"Appropriate Jacobian entries for the MOM volume integral are not available.\n");
 	  }
 
       }
@@ -5570,7 +5570,7 @@ compute_volume_integrand(const int quantity, const int elem,
                   }
               }
       }
-/*      EH(GOMA_ERROR,"This volumetric integral not yet implemented \n");  */
+/*      GOMA_EH(GOMA_ERROR,"This volumetric integral not yet implemented \n");  */
       }
       break;
 
@@ -5608,7 +5608,7 @@ compute_volume_integrand(const int quantity, const int elem,
                   }
               }
       }
-/*      EH(GOMA_ERROR,"This volumetric integral not yet implemented \n");  */
+/*      GOMA_EH(GOMA_ERROR,"This volumetric integral not yet implemented \n");  */
       }
       break;
 
@@ -5625,7 +5625,7 @@ compute_volume_integrand(const int quantity, const int elem,
 
 	if( vn->ConstitutiveEquation != NOPOLYMER )
 	  {
-	    EH(GOMA_ERROR,"Computation of stress integral for POLYMER models currently no supported.\n");
+	    GOMA_EH(GOMA_ERROR,"Computation of stress integral for POLYMER models currently no supported.\n");
 	  }
 			       
 
@@ -5763,7 +5763,7 @@ compute_volume_integrand(const int quantity, const int elem,
         double dist=0;
        if(num_params < 5)
          {
-           WH(-1,"not enough plane parameters for POS-NEG_PLANE_FILL\n");
+           GOMA_WH(-1,"not enough plane parameters for POS-NEG_PLANE_FILL\n");
          }
        dist = params[1]*fv->x[0]+params[2]*fv->x[1]
                                 +params[3]*fv->x[2]+params[4];
@@ -5903,7 +5903,7 @@ compute_volume_integrand(const int quantity, const int elem,
 	  }
 
 	if ( dir == -1 )
-	  EH(GOMA_ERROR, "compute_volume_integrand(): ACK! I'm confused!\n");
+	  GOMA_EH(GOMA_ERROR, "compute_volume_integrand(): ACK! I'm confused!\n");
 	  
 	alpha = params == NULL ? ls->Length_Scale : 2.0*params[0];
 	
@@ -5969,7 +5969,7 @@ compute_volume_integrand(const int quantity, const int elem,
 	  }
 
 	if ( dir == -1 )
-	  EH(GOMA_ERROR, "compute_volume_integrand(): ACK! I'm confused!\n");
+	  GOMA_EH(GOMA_ERROR, "compute_volume_integrand(): ACK! I'm confused!\n");
 	  
 	alpha = params == NULL ? ls->Length_Scale : 2.0*params[0];
 	
@@ -6034,7 +6034,7 @@ compute_volume_integrand(const int quantity, const int elem,
 
 	if ( J_AC != NULL)
 	  {
-	    EH(GOMA_ERROR,"Appropriate Jacobian entries for the Porous Liquid INV volume integral are not available.\n");
+	    GOMA_EH(GOMA_ERROR,"Appropriate Jacobian entries for the Porous Liquid INV volume integral are not available.\n");
 	  }
 
       }
@@ -6064,7 +6064,7 @@ compute_volume_integrand(const int quantity, const int elem,
            *sum += factor*weight*det*(-fv->grad_V[dir]);
 		}		
 	else
-	  EH(GOMA_ERROR,"You need to include the potential and/or electric field variables to compute this integrated quantity\n/");
+	  GOMA_EH(GOMA_ERROR,"You need to include the potential and/or electric field variables to compute this integrated quantity\n/");
 
       }
 
@@ -6162,7 +6162,7 @@ evaluate_global_flux (const Exo_DB *exo,
 	      err = load_elem_dofptr(elem, exo,
 				     x, x, x,
                                      x, 0);
-	      EH(err, "load_elem_dofptr");
+	      GOMA_EH(err, "load_elem_dofptr");
 	      
 	      elem_type = ei[pg->imtrx]->ielem_type;
 	      ip_total = elem_info( NQUAD_SURF, ei[pg->imtrx]->ielem_type );
@@ -6182,17 +6182,17 @@ evaluate_global_flux (const Exo_DB *exo,
 		      fv->wt = Gq_surf_weight (ip, elem_type);    
 		  
 		      err = load_basis_functions( xi, bfd);
-		      EH( err, "problem from load_basis_functions");
+		      GOMA_EH( err, "problem from load_basis_functions");
 	    
 		      err = beer_belly();
-		      EH( err, "beer_belly");
+		      GOMA_EH( err, "beer_belly");
 	    
 		      /* precalculate variables at  current integration pt.*/
 		      err = load_fv();
-		      EH( err, "load_fv");
+		      GOMA_EH( err, "load_fv");
 		  
 		      err = load_bf_grad();
-		      EH( err, "load_bf_grad");
+		      GOMA_EH( err, "load_bf_grad");
 
 		      surface_determinant_and_normal (elem, ei[pg->imtrx]->iconnect_ptr, 
 						      ei[pg->imtrx]->num_local_nodes, 
@@ -6208,7 +6208,7 @@ evaluate_global_flux (const Exo_DB *exo,
 		       */
 
 		      err = load_fv_grads();
-		      EH( err, "load_fv_grads");
+		      GOMA_EH( err, "load_fv_grads");
 
 		      compute_surface_integrand( quantity, elem, species_id, 
 						params, &sum, J_AC );
@@ -6276,7 +6276,7 @@ compute_surface_integrand (const int quantity,
       
       if ( J_AC != NULL )
 	{
-	  EH(GOMA_ERROR, "Global surface sentivities are on my to-do list.") ;
+	  GOMA_EH(GOMA_ERROR, "Global surface sentivities are on my to-do list.") ;
 	}
       break;
     case NEG_LS_FLUX:
@@ -6298,7 +6298,7 @@ compute_surface_integrand (const int quantity,
 
 	if ( J_AC != NULL )
 	  {
-	    EH(GOMA_ERROR, "Global surface sentivities are on my to-do list.") ;
+	    GOMA_EH(GOMA_ERROR, "Global surface sentivities are on my to-do list.") ;
 	  }
       }
       break;
@@ -6569,10 +6569,10 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 	  err = load_elem_dofptr(elem_list[i], exo,
 				 x, x_sens_p[vector_id],
                                  xdot, xdot, 0);
-	  EH(err, "load_elem_dofptr");
+	  GOMA_EH(err, "load_elem_dofptr");
 
 	  err = bf_mp_init(pd);
-	  EH(err, "bf_mp_init");
+	  GOMA_EH(err, "bf_mp_init");
   
 	  iconnect_ptr        = ei[pg->imtrx]->iconnect_ptr;
 	  ielem_type          = ei[pg->imtrx]->ielem_type;
@@ -6595,7 +6595,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 				quantity == DELTA || quantity == LS_DCA ))
 		  {
                     if ( ls->var != LS )
-			WH(-1,"Level-set variable is not LS!");
+			GOMA_WH(-1,"Level-set variable is not LS!");
 			  switch (id_side)
 			  {
 				  case 1:
@@ -6719,20 +6719,20 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 			  
 	      /* ****************************************/
 	      err = load_basis_functions( xi, bfd);
-	      EH( err, "problem from load_basis_functions");
+	      GOMA_EH( err, "problem from load_basis_functions");
 	    
 	      err = beer_belly();
-	      EH( err, "beer_belly");
+	      GOMA_EH( err, "beer_belly");
 	    
 	      /* precalculate variables at  current integration pt.*/
 	      err = load_fv();
-	      EH( err, "load_fv");
+	      GOMA_EH( err, "load_fv");
 
 	      err = load_fv_sens();
-	      EH( err, "load_fv_sens");
+	      GOMA_EH( err, "load_fv_sens");
 	    
 	      err = load_bf_grad();
-	      EH( err, "load_bf_grad");
+	      GOMA_EH( err, "load_bf_grad");
 
 	      surface_determinant_and_normal (ei[pg->imtrx]->ielem, iconnect_ptr, num_local_nodes, 
 					      ielem_dim - 1,  
@@ -6745,13 +6745,13 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 	     * Gauss point.
 	     */
 	    err = load_fv_grads();
-	    EH( err, "load_fv_grads");
+	    GOMA_EH( err, "load_fv_grads");
 
 	    err = load_fv_grads_sens();
-	    EH( err, "load_fv_grads_sens");
+	    GOMA_EH( err, "load_fv_grads_sens");
 
 	    err = load_fv_mesh_derivs(1);
-	    EH( err, "load_fv_mesh_derivs");
+	    GOMA_EH( err, "load_fv_mesh_derivs");
 
             if(TimeIntegration != STEADY && pd->e[pg->imtrx][MESH_DISPLACEMENT1])
       		{
@@ -6781,7 +6781,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 	    det = fv->sdet*fv->h3;
 
 	    if(pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN)
-	      EH(GOMA_ERROR, "evalute_flux_sens has not been updated for the PROJECTED_CARTESIAN coordinate system.");
+	      GOMA_EH(GOMA_ERROR, "evalute_flux_sens has not been updated for the PROJECTED_CARTESIAN coordinate system.");
 
 	    if(pd_glob[0] ->CoordinateSystem == CYLINDRICAL ||
                pd_glob[0] ->CoordinateSystem == SWIRLING   )
@@ -6827,7 +6827,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
  if(pd->e[pg->imtrx][R_MESH1] && cr->MeshMotion != ARBITRARY)
     {
       err = belly_flop(elc->lame_mu);
-      EH(err, "error in belly flop");
+      GOMA_EH(err, "error in belly flop");
       if (err == 2) exit(-1);
       /*
        * Total mesh stress tensor...
@@ -6871,7 +6871,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
     {
       mu = elc_rs->lame_mu;
       err = belly_flop_rs(mu);
-      EH(err, "error in belly flop");
+      GOMA_EH(err, "error in belly flop");
       if (err == 2) return(err);
       /*
        * Total mesh stress tensor...
@@ -7107,7 +7107,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		}
 		  else
 		{
-		EH(GOMA_ERROR,"Unrecognized heat capacity model");
+		GOMA_EH(GOMA_ERROR,"Unrecognized heat capacity model");
 		}
 
                 if ( cr->HeatFluxModel == CR_HF_FOURIER_0 )
@@ -7169,7 +7169,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
                     local_q += fv->snormal[j]*fv_sens->d[j]
                                + normal_sens[j]*fv->d[j];
 			  else
-			    EH(GOMA_ERROR,"Inconsistency in volume-flux specification. Contact Developers");
+			    GOMA_EH(GOMA_ERROR,"Inconsistency in volume-flux specification. Contact Developers");
 
                   }
                     local_flux += weight*det*local_q;
@@ -7222,7 +7222,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 	      case TORQUE:
 		if(pd->CoordinateSystem == PROJECTED_CARTESIAN ||
 		   pd->CoordinateSystem == CARTESIAN_2pt5D)
-		  EH(GOMA_ERROR, "TORQUE has not been updated for the PROJECTED_CARTESIAN coordinate system.");
+		  GOMA_EH(GOMA_ERROR, "TORQUE has not been updated for the PROJECTED_CARTESIAN coordinate system.");
 
 		if(pd->CoordinateSystem == SWIRLING || 
 		   pd->CoordinateSystem == CYLINDRICAL)
@@ -7289,7 +7289,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		  }
 		else
 		  {
-		    EH(GOMA_ERROR,"Torque cannot be calculated in this case.");
+		    GOMA_EH(GOMA_ERROR,"Torque cannot be calculated in this case.");
 		  }
 
 		break;
@@ -7317,7 +7317,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
                 }
 		else
 		{
-	EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
+	GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
                 for ( a=0; a<VIM; a++)
                   {
                     for ( b=0; b<VIM; b++)
@@ -7351,7 +7351,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		}
 		else
 		{
-	EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available"); 
+	GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available"); 
 		for ( a=0; a<VIM; a++)
 		  {
 		    for ( b=0; b<VIM; b++)
@@ -7384,12 +7384,12 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
                 }
 			else
 			{
-			EH(GOMA_ERROR, "Illegal flux type");
+			GOMA_EH(GOMA_ERROR, "Illegal flux type");
 			}
 		}
 		else
 		{
-	EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available"); 
+	GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available"); 
                 for ( a=0; a<VIM; a++)
                   {
                     for ( b=0; b<VIM; b++)
@@ -7418,7 +7418,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		}
 		else
 		{
-	EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
+	GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
 		for ( a=0; a<VIM; a++)
 		  {
                         local_q += (TT_sens[0][a]*fv->snormal[a]
@@ -7445,7 +7445,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		}
 		else
 		{
-	EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
+	GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
 		for ( a=0; a<VIM; a++)
 		  {
                         local_q += (TT_sens[0][a]*fv->snormal[a]);
@@ -7472,7 +7472,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		}
 		else
 		{
-	EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
+	GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
 		for ( a=0; a<VIM; a++)
 		  {
                         local_q += (TT_sens[0][a]*fv->snormal[a]);
@@ -7498,7 +7498,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		}
 		else
 		{
-	EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
+	GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
 		for ( a=0; a<VIM; a++)
 		  {
                         local_q += ( TT_sens[1][a]*fv->snormal[a]);
@@ -7524,7 +7524,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		}
 		else
 		{
-	EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
+	GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
 		for ( a=0; a<VIM; a++)
 		  {
                         local_q += ( TT_sens[1][a]*fv->snormal[a]);
@@ -7551,7 +7551,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		}
 		else
 		{
-	EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
+	GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
 		for ( a=0; a<VIM; a++)
 		  {
                         local_q += ( TT_sens[1][a]*fv->snormal[a]);
@@ -7579,12 +7579,12 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 			}
 			else
 			{
-			EH(GOMA_ERROR, "Illegal flux type");
+			GOMA_EH(GOMA_ERROR, "Illegal flux type");
 			}
 		}
 		else
 		{
-	EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available"); 
+	GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available"); 
 		for ( a=0; a<VIM; a++)
 		  {
                        local_q += (TT_sens[2][a]*fv->snormal[a]);
@@ -7612,12 +7612,12 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 			}
 			else
 			{
-			EH(GOMA_ERROR, "Illegal flux type");
+			GOMA_EH(GOMA_ERROR, "Illegal flux type");
 			}
 		}
 		else
 		{
-	EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available"); 
+	GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available"); 
 		for ( a=0; a<VIM; a++)
 		  {
                        local_q += (TT_sens[2][a]*fv->snormal[a]);
@@ -7646,12 +7646,12 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 			}
 			else
 			{
-			EH(GOMA_ERROR, "Illegal flux type");
+			GOMA_EH(GOMA_ERROR, "Illegal flux type");
 			}
 		}
 		else
 		{
-	EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available"); 
+	GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available"); 
 		for ( a=0; a<VIM; a++)
 		  {
                        local_q += (TT_sens[2][a]*fv->snormal[a]);
@@ -7663,7 +7663,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 
 	      default:
 
-		EH(GOMA_ERROR, "Illegal flux type");
+		GOMA_EH(GOMA_ERROR, "Illegal flux type");
 		break;
 	      }  /*  end of switch */
 	    
@@ -7719,7 +7719,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
       		num_dist_fact_in_set = exo->ns_num_distfacts[nset_id];
       		elem_list = &exo->ns_node_list[exo->ns_node_index[nset_id]];
 		if (num_node_in_set != 1) 
-		   EH(GOMA_ERROR,"more than one node, this is for 2D only");
+		   GOMA_EH(GOMA_ERROR,"more than one node, this is for 2D only");
 		gnn = elem_list[0];
 		sign = (species_id < 0 ) ? -1. : 1.;
 		kine_sset = abs(species_id);
@@ -7754,10 +7754,10 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 				  xdot,
 				  xdot,
 				  0);
-	  	   EH(err, "load_elem_dofptr");
+	  	   GOMA_EH(err, "load_elem_dofptr");
 
 	  	   err = bf_mp_init(pd);
-	  	   EH(err, "bf_mp_init");
+	  	   GOMA_EH(err, "bf_mp_init");
   
 	           iconnect_ptr        = ei[pg->imtrx]->iconnect_ptr;
 	           ielem_type          = ei[pg->imtrx]->ielem_type;
@@ -7774,22 +7774,22 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
             	   find_nodal_stu(local_node, ei[pg->imtrx]->ielem_type, xi, xi+1, xi+2);
 
             	   err = load_basis_functions( xi, bfd);
-            	   EH( err, "problem from load_basis_functions");
+            	   GOMA_EH( err, "problem from load_basis_functions");
 
             	   err = beer_belly();
-            	   EH( err, "beer_belly");
+            	   GOMA_EH( err, "beer_belly");
 
             	   err = load_fv();
-            	   EH( err, "load_fv");
+            	   GOMA_EH( err, "load_fv");
 
                    err = load_fv_sens();
-                   EH( err, "load_fv_sens");
+                   GOMA_EH( err, "load_fv_sens");
 
             	   err = load_bf_grad();
-            	   EH( err, "load_bf_grad");
+            	   GOMA_EH( err, "load_bf_grad");
 
             	   err = load_bf_mesh_derivs();
-            	   EH(err, "load_bf_mesh_derivs");
+            	   GOMA_EH(err, "load_bf_mesh_derivs");
 
             	   surface_determinant_and_normal(corner_elem,
                                            exo->elem_node_pntr[corner_elem],
@@ -7799,13 +7799,13 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
                                            num_nodes_on_side,
                                            id_local_elem_coord);
 	 	   err = load_fv_grads();
-	 	   EH( err, "load_fv_grads");
+	 	   GOMA_EH( err, "load_fv_grads");
 			  
                    err = load_fv_grads_sens();
-                   EH( err, "load_fv_grads_sens");
+                   GOMA_EH( err, "load_fv_grads_sens");
 
 	 	   err = load_fv_mesh_derivs(1);
-	 	   EH( err, "load_fv_mesh_derivs");
+	 	   GOMA_EH( err, "load_fv_mesh_derivs");
 
 	    	   if (ielem_dim !=3)
 	      		{
@@ -7898,12 +7898,12 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 			}
 			else
 			    {
-			EH(GOMA_ERROR, "Point force has not been updated for the PROJECTED_CARTESIAN coordinate system.");
+			GOMA_EH(GOMA_ERROR, "Point force has not been updated for the PROJECTED_CARTESIAN coordinate system.");
 			    }
 			}
 		      break;
 		    default:
-		      EH(GOMA_ERROR, "Illegal flux type");
+		      GOMA_EH(GOMA_ERROR, "Illegal flux type");
 		      break;
 		    }  /*  end of switch */
 #ifdef PARALLEL
@@ -7925,14 +7925,14 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
                  }     /*  mat_id  */
               }        
            }           /*  ss_sides loop  */
-	if(corner_elem == -1) EH(GOMA_ERROR,"corner element not found");
+	if(corner_elem == -1) GOMA_EH(GOMA_ERROR,"corner element not found");
          }             /*  if sset_id     */
       }                /*  if nset_id     */
   		else
     		{
 #ifndef PARALLEL
       (void) sprintf(Err_Msg, "%s could not locate SSID %d.", yo, side_set_id);
-      EH(GOMA_ERROR, Err_Msg);
+      GOMA_EH(GOMA_ERROR, Err_Msg);
 #endif      
     		}
     }
@@ -8617,7 +8617,7 @@ load_fv_sens(void)
     }
 
   status = load_coordinate_scales(pd->CoordinateSystem, fv);
-  EH(status, "load_coordinate_scales(fv)");
+  GOMA_EH(status, "load_coordinate_scales(fv)");
 
   /*
    * Velocity (vector)...
@@ -9695,7 +9695,7 @@ double int_angle[8], xloc;
 
  
 if( elem_type != BIQUAD_QUAD)
- 	{EH(GOMA_ERROR,"adaptive integration for 2D quads only!");}
+ 	{GOMA_EH(GOMA_ERROR,"adaptive integration for 2D quads only!");}
 
 #ifndef NO_CHEBYSHEV_PLEASE 
 chev_order = ls->Adaptive_Order;
@@ -10059,7 +10059,7 @@ for(i=0 ; i<is2D/2 ; i++)
 		chev_order , m_int[i].coeff , m_int[i].endpts,
 		 &m_int[i].sense, nint2D);
 #else	
-	 EH(GOMA_ERROR,"Turn off NO_CHEBYSHEV_PLEASE please.\n");
+	 GOMA_EH(GOMA_ERROR,"Turn off NO_CHEBYSHEV_PLEASE please.\n");
 #endif
 	  }
 
@@ -10108,7 +10108,7 @@ switch (wt_type)
 				m_int[i].sense, m_int[i].bf_mom , 
 				m_int[i].coeff, chev_order, m_int[i].endpts );
 #else
-			EH(GOMA_ERROR,"Turn off NO_CHEBYSHEV_PLEASE please\n");
+			GOMA_EH(GOMA_ERROR,"Turn off NO_CHEBYSHEV_PLEASE please\n");
 #endif				
 			for(j=0 ; j<9 ; j++)	
 				{bf_mom[j] += m_int[i].hfactor*m_int[i].bf_mom[j];}
@@ -10127,7 +10127,7 @@ switch (wt_type)
 				m_int[i].bf_mom , m_int[i].coeff, 
 				m_int[i].sdet_c , chev_order, m_int[i].endpts);
 #else
-			EH(GOMA_ERROR,"Turn off NO_CHEBYSHEV_PLEASE please at compile time.\n");
+			GOMA_EH(GOMA_ERROR,"Turn off NO_CHEBYSHEV_PLEASE please at compile time.\n");
 #endif				
 			for(j=0 ; j<9 ; j++)	
 				{bf_mom[j] += m_int[i].bf_mom[j];}
@@ -10290,7 +10290,7 @@ switch (interface_type)
  		ca = 1;	cb = 1;
 		break;
  	default:
- 		EH(GOMA_ERROR,"shouldn't get here - F_type switch \n");
+ 		GOMA_EH(GOMA_ERROR,"shouldn't get here - F_type switch \n");
  		break;
  	} /* end of F_type switch */
 
@@ -10326,7 +10326,7 @@ for (i=0 ; i<n_chev ; i++)
  	switch (j)
 		{
 		case 0:
-			EH(GOMA_ERROR," no interior intersections found\n"); break;
+			GOMA_EH(GOMA_ERROR," no interior intersections found\n"); break;
 		case 1:
 			fval[i]=xint[0]; break;
 		case 2:
@@ -10732,10 +10732,10 @@ for (i=0 ; i<n_chev ; i++)
 		}
 
 	err = load_basis_functions(xi, bfd);
-	EH( err, "problem from load_basis_functions");
+	GOMA_EH( err, "problem from load_basis_functions");
       
 	err = beer_belly();
-	EH( err, "beer_belly");
+	GOMA_EH( err, "beer_belly");
 
 
 	dxdc = bfd[fill_interp]->J[0][0];
@@ -15701,7 +15701,7 @@ switch (interface_type)
 	}  /* end F-type switch */
 	break;
 default:
-	EH(GOMA_ERROR,"unknown Chebyshev polynomial order");
+	GOMA_EH(GOMA_ERROR,"unknown Chebyshev polynomial order");
 	break;
 }
 
@@ -20065,7 +20065,7 @@ switch (interface_type)
 	}  /* end F-type switch */
 	break;
 default:
-	EH(GOMA_ERROR,"unknown Chebyshev polynomial order");
+	GOMA_EH(GOMA_ERROR,"unknown Chebyshev polynomial order");
 	break;
 }
 

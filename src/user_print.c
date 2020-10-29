@@ -58,7 +58,7 @@ usr_print ( double *t,	            /* time value */
    * Safety catch line -- comment out the line below if you can verify this
    * routine does what you want.
    */
-  /* EH(GOMA_ERROR, "No usr_print defined."); */
+  /* GOMA_EH(GOMA_ERROR, "No usr_print defined."); */
 
   /*
   if ( first_call )
@@ -70,7 +70,7 @@ usr_print ( double *t,	            /* time value */
 	}
       else
 	{
-	  EH(GOMA_ERROR, "Could not open user output file.");
+	  GOMA_EH(GOMA_ERROR, "Could not open user output file.");
 	}
     }
     */
@@ -83,10 +83,10 @@ usr_print ( double *t,	            /* time value */
    *
    *  ns_id          = 2004;
    *  node           = psid2nn(ns_id);
-   *  EH(node, "Could not find that nsid.");
+   *  GOMA_EH(node, "Could not find that nsid.");
    *  initial_pos    = Coor[1][node];
    *  idx            = Index_Solution (node, MESH_DISPLACEMENT2, 0, 0, -1, pg->imtrx);
-   *  EH(idx, "Could not resolve Index_Solution.");
+   *  GOMA_EH(idx, "Could not resolve Index_Solution.");
    *  delta_pos      = x[idx];
    *  actual_pos     = initial_pos + delta_pos;
    *
@@ -124,10 +124,10 @@ usr_print ( double *t,	            /* time value */
       node_o         = Proc_NS_List[Proc_NS_Pointers[nsp] + j - 1];
       idx            = Index_Solution (node, MESH_DISPLACEMENT1, 0, 0, -1, pg->imtrx);
       idx_o          = Index_Solution (node_o, MESH_DISPLACEMENT1, 0, 0, -1, pg->imtrx);
-      EH(idx, "Could not resolve Index_Solution.");
+      GOMA_EH(idx, "Could not resolve Index_Solution.");
       idy            = Index_Solution (node, MESH_DISPLACEMENT2, 0, 0, -1, pg->imtrx);
       idy_o          = Index_Solution (node_o, MESH_DISPLACEMENT2, 0, 0, -1, pg->imtrx);
-      EH(idy, "Could not resolve Index_Solution.");
+      GOMA_EH(idy, "Could not resolve Index_Solution.");
       delta_pos =  sqrt(SQUARE(Coor[0][node]+x[idx]-Coor[0][node_o]-x[idx_o]) 
 		      + SQUARE(Coor[1][node]+x[idy]-Coor[1][node_o]-x[idy_o]));
       actual_pos     = initial_pos + delta_pos;

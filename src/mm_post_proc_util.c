@@ -84,7 +84,7 @@ if(!mode)
 	/*Compute coordinates of "element center of mass" */
 	/* TOO EXPENSIVE TO load_ei
 	err = load_ei( i_elem, exo);
-	EH( err,"load_ei" );
+	GOMA_EH( err,"load_ei" );
         */
         ebn = find_elemblock_index(i_elem, exo);
         mn = Matilda[ebn];
@@ -126,12 +126,12 @@ if(!mode)
   }
 else if (mode) /*do a local search using exo->node_elem */
   {
-    EH(GOMA_ERROR, " Local node-elem list search not available for find_id_elem");
+    GOMA_EH(GOMA_ERROR, " Local node-elem list search not available for find_id_elem");
   }
  
 else
   {
-    EH(GOMA_ERROR,"problem in find_elem_id: need current element number");
+    GOMA_EH(GOMA_ERROR,"problem in find_elem_id: need current element number");
   }
   return(element_no);		/* failsafe default? */
 }
@@ -193,7 +193,7 @@ invert_isoparametric_map(  int *current_ielem,  /* initial element of search */
   while ( ( !converged ) && ( inewton < 50 ) )
     {
       err = load_basis_functions( xi, bfd );
-      EH( err, "problem from load_basis_functions");
+      GOMA_EH( err, "problem from load_basis_functions");
 
       /*
        * This has elemental Jacobian transformation and some 
@@ -206,7 +206,7 @@ invert_isoparametric_map(  int *current_ielem,  /* initial element of search */
        */
       
       err = beer_belly();
-      EH( err, "beer_belly");
+      GOMA_EH( err, "beer_belly");
       if( neg_elem_volume ) return -1;
 
       /* form residual equations */
@@ -291,10 +291,10 @@ invert_isoparametric_map(  int *current_ielem,  /* initial element of search */
 			xi_tmp[2]=1.; break;
 		}
       err = load_basis_functions( xi_tmp, bfd );
-      EH( err, "problem from load_basis_functions");
+      GOMA_EH( err, "problem from load_basis_functions");
 
       err = beer_belly();
-      EH( err, "beer_belly");
+      GOMA_EH( err, "beer_belly");
       
 	for(a=0;a<dim;a++)
 		{
@@ -364,10 +364,10 @@ invert_isoparametric_map(  int *current_ielem,  /* initial element of search */
 		}
 
       err = load_basis_functions( xi_tmp, bfd );
-      EH( err, "problem from load_basis_functions");
+      GOMA_EH( err, "problem from load_basis_functions");
 
       err = beer_belly();
-      EH( err, "beer_belly");
+      GOMA_EH( err, "beer_belly");
 
 /*   transform xi to new element orientation plus offset  */
 

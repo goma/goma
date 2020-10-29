@@ -193,20 +193,20 @@ apply_contact_bc (
       }
 
     err = load_basis_functions(xi, bfd);
-    EH(err, "problem from load_basis_functions");
+    GOMA_EH(err, "problem from load_basis_functions");
     
     err = beer_belly();
-    EH( err, "beer_belly");
+    GOMA_EH( err, "beer_belly");
     
     /* precalculate variables at  current integration pt.*/
     err = load_fv();   /*PRS: not sure I need this for getting fluid stresses*/
-    EH( err, "load_fv");
+    GOMA_EH( err, "load_fv");
 
     err = load_bf_grad();  /*PRS: DITTO */
-    EH( err, "load_bf_grad");
+    GOMA_EH( err, "load_bf_grad");
 
     err = load_bf_mesh_derivs(); 
-    EH( err, "load_bf_mesh_derivs");
+    GOMA_EH( err, "load_bf_mesh_derivs");
       
     /* calculate the determinant of the surface jacobian and the normal to 
      * the surface all at one time */
@@ -229,10 +229,10 @@ apply_contact_bc (
     err = load_fv_grads();  /*PRS: DITTO, NOT SURE I NEED THESE HERE 
 			      REMEMBER I  DON'T EVEN HAVE FLUID VELOCITIES
 			      AT THIS NODE*/
-    EH( err, "load_fv_grads");
+    GOMA_EH( err, "load_fv_grads");
     
     err = load_fv_mesh_derivs(1);
-    EH( err, "load_fv_mesh_derivs");
+    GOMA_EH( err, "load_fv_mesh_derivs");
 
     do_LSA_mods(LSA_SURFACE);
     
@@ -243,7 +243,7 @@ apply_contact_bc (
 	mp->PorousMediaType == POROUS_SATURATED || 
 	mp->PorousMediaType == POROUS_TWO_PHASE){
       err = load_porous_properties(); 
-      EH( err, "load_porous_properties"); 
+      GOMA_EH( err, "load_porous_properties"); 
     }
 
     if (TimeIntegration != STEADY && pd->e[pg->imtrx][MESH_DISPLACEMENT1]) {
@@ -448,7 +448,7 @@ apply_contact_bc (
             {
                printf("For LAGRANGE_NO_SLIP_BC, AC Lagrange Multiplier must be on solid elements.\n");
                printf("Possibly, you want LS_NO_SLIP.\n");
-               EH(GOMA_ERROR,"LAGRANGE_NO_SLIP_BC error.");
+               GOMA_EH(GOMA_ERROR,"LAGRANGE_NO_SLIP_BC error.");
             }
             
           if (pass == 1) ioffset = first_overlap_ac(ielem, elem_side_bc->id_side);
@@ -541,7 +541,7 @@ apply_contact_bc (
                    * without apply a force at all in this area
                    */
                   /*
-                  if (ioffset == -1) EH(GOMA_ERROR,"Bad AC index");
+                  if (ioffset == -1) GOMA_EH(GOMA_ERROR,"Bad AC index");
                    */
                   setup_shop_at_point(ielem, xi, exo);
                   if (ioffset == -1)
@@ -677,7 +677,7 @@ apply_contact_bc (
 	      
 	      else
 		{
-		  EH(GOMA_ERROR,"Illegal bc method definition");
+		  GOMA_EH(GOMA_ERROR,"Illegal bc method definition");
 		}
 
 	      /*
@@ -783,7 +783,7 @@ apply_contact_bc (
                          (cross-mesh term) */
                       jac = d_func[p][var][0] * weight * fv->sdet;
                       nu = index_eq;
-                      if ( nu < 0 ) EH(GOMA_ERROR,"Bad variable index");
+                      if ( nu < 0 ) GOMA_EH(GOMA_ERROR,"Bad variable index");
                       bAC[iAC][nu] += jac;
 
                       /* Sensitivities to solid displacement not affected */
@@ -799,7 +799,7 @@ apply_contact_bc (
                           /* Sensitivities to solid Lagrangeo multiplier */
                           jac = d_func[p][var][0] * weight * fv->sdet;
                           nu = index_eq;
-                          if ( nu < 0 ) EH(GOMA_ERROR,"Bad variable index");
+                          if ( nu < 0 ) GOMA_EH(GOMA_ERROR,"Bad variable index");
                           bAC[iAC][nu] += jac; 
                         }
 
@@ -947,7 +947,7 @@ jump_down_to_fluid ( const Exo_DB *exo, /* Ptr to Exodus database */
   
 /* make sure this element has velocity defined */
   if ( pd_glob[ei[pg->imtrx]->mn]->i[pg->imtrx][VELOCITY1] <= 0 ) {
-    EH( -1, "Element block specified in contact bc does not contain velocity!.");
+    GOMA_EH( -1, "Element block specified in contact bc does not contain velocity!.");
   }
     
 /* Find basis functions associated with velocity variables */
@@ -1045,7 +1045,7 @@ contact_fn_dot_T(double func[DIM],
     } /* if velocity variable is defined.   */
   else 
     {
-      EH(GOMA_ERROR,"Must have a deforming mesh region for this bc");
+      GOMA_EH(GOMA_ERROR,"Must have a deforming mesh region for this bc");
     }
 } /* END of routine contact_fn_dot_T */
 
@@ -1145,7 +1145,7 @@ Lagrange_mult_equation(double func[DIM],
     } /* if velocity variable is defined.   */
   else 
     {
-      EH(GOMA_ERROR,"Must have a deforming mesh region for this bc");
+      GOMA_EH(GOMA_ERROR,"Must have a deforming mesh region for this bc");
     }
 } /* END of routine Lagrange_mult_equation */
 
@@ -1402,7 +1402,7 @@ apply_embedded_bc (
       for(i=0;i<ei[pg->imtrx]->num_local_nodes;i++)	{ls_F[i]=*esp->F[i];}
       i = adaptive_weight( ad_wt, Subgrid_Int.ip_total, ei[pg->imtrx]->ielem_dim, ls_F, 
                            ls->Length_Scale, 3, ei[pg->imtrx]->ielem_type);
-      WH(i, "problem with adaptive weight routine");
+      GOMA_WH(i, "problem with adaptive weight routine");
     }
   else
     {
@@ -1474,14 +1474,14 @@ apply_embedded_bc (
 		  if( pd->e[pg->imtrx][R_MOMENTUM1] && !ls->AdaptIntegration )
 		    {
 		      err = assemble_momentum_path_dependence(time_value, theta, dt, pg_data);
-		      EH( err, "assemble_momentum_path_dependence");
+		      GOMA_EH( err, "assemble_momentum_path_dependence");
 		    }
 		  if( pd->e[pg->imtrx][R_PRESSURE] && !ls->AdaptIntegration )
 		    {
 		      err = assemble_continuity_path_dependence(
 			                     time_value, theta, dt,
 					     pg_data);
-		      EH( err, "assemble_continuity_path_dependence");
+		      GOMA_EH( err, "assemble_continuity_path_dependence");
 		    }
 		  if( pd->e[pg->imtrx][R_ENERGY] && !ls->AdaptIntegration )
 		    {
@@ -1575,7 +1575,7 @@ assemble_embedded_bc (
       mp->PorousMediaType == POROUS_SATURATED || 
       mp->PorousMediaType == POROUS_TWO_PHASE) {
     err = load_porous_properties(); 
-    EH( err, "load_porous_properties"); 
+    GOMA_EH( err, "load_porous_properties"); 
   }
 
   if (mp->SurfaceTensionModel != CONSTANT) {
@@ -1715,14 +1715,14 @@ assemble_embedded_bc (
                     ss_surf = closest_surf( ls->init_surf_list, x, exo, fv->x );
                     cp = ss_surf->closest_point;
                     if ( cp->elem == -1 )
-                      EH(GOMA_ERROR,"Invalid element at closest_point");
+                      GOMA_EH(GOMA_ERROR,"Invalid element at closest_point");
 
                     /* Associate correct AC number with this point */
                     iconn_sptr = exo->elem_ptr[cp->elem];
                     id_side = cp->elem_side;
                     ioffset = first_overlap_ac(cp->elem, id_side);
                     if (ioffset == -1)
-                      EH(GOMA_ERROR,"Bad AC index");
+                      GOMA_EH(GOMA_ERROR,"Bad AC index");
 
                     for (a=0; a<pd->Num_Dim; a++)
                       {
@@ -1731,7 +1731,7 @@ assemble_embedded_bc (
                   }
                 else
                   {
-                    EH(GOMA_ERROR, "Level set must be slave SS for this BC!");
+                    GOMA_EH(GOMA_ERROR, "Level set must be slave SS for this BC!");
                   }
               }
             else
@@ -1796,7 +1796,7 @@ assemble_embedded_bc (
               {
                 printf("For LS_LAGRANGE_NO_SLIP, AC Lagrange Multiplier must be on fluid elements.\n");
                 printf("Possibly, you want LAGRANGE_NO_SLIP.\n");
-                EH(GOMA_ERROR,"LS_LAGRANGE_NO_SLIP error.");
+                GOMA_EH(GOMA_ERROR,"LS_LAGRANGE_NO_SLIP error.");
               }
             /* get x_dot:
              * this may come from the motion of a mesh (slave to SS)
@@ -1814,7 +1814,7 @@ assemble_embedded_bc (
                 
                 /* use kitchen sink approach for now at solids location */
                 if ( cp->elem == -1 )
-                  EH(GOMA_ERROR,"Invalid element at closest_point");
+                  GOMA_EH(GOMA_ERROR,"Invalid element at closest_point");
                 iconn_sptr = exo->elem_ptr[cp->elem];
                 
                 setup_shop_at_point(cp->elem, cp->xi, exo);
@@ -1862,7 +1862,7 @@ assemble_embedded_bc (
                 else if (pass == 2)
                   ioffset = oAC;
                 if (ioffset == -1)
-                  EH(GOMA_ERROR,"Bad AC index");
+                  GOMA_EH(GOMA_ERROR,"Bad AC index");
               }
             
             for ( a=0; a<ei[pg->imtrx]->ielem_dim; a++)
@@ -1959,19 +1959,19 @@ assemble_embedded_bc (
                     
                     /* use kitchen sink approach for now at solids location */
                     if ( cp->elem == -1 )
-                      EH(GOMA_ERROR,"Invalid element at closest_point");
+                      GOMA_EH(GOMA_ERROR,"Invalid element at closest_point");
                     
                     /* Associate the correct AC number with this point */
                     id_side = cp->elem_side;
                     ioffset = first_overlap_ac(cp->elem, id_side);
                     if (ioffset == -1)
-                      EH(GOMA_ERROR,"Bad AC index");
+                      GOMA_EH(GOMA_ERROR,"Bad AC index");
                   }
                 else if ( ac_lm == 2)
                   {
                     ioffset = first_overlap_ac(ielem, -1);
                     if (ioffset == -1)
-                      EH(GOMA_ERROR,"Bad AC index");
+                      GOMA_EH(GOMA_ERROR,"Bad AC index");
                   }
                 
                 for (a=0; a<ei[pg->imtrx]->ielem_dim; a++)
@@ -2109,7 +2109,7 @@ apply_embedded_colloc_bc ( int ielem,      /* element number */
               }
             else
               {
-                EH(GOMA_ERROR,"LS_UVW expects XFEM interpolation Q1_XV, Q2_XV, Q1_XG, Q2_XG, Q1_G, or Q2_G\n");
+                GOMA_EH(GOMA_ERROR,"LS_UVW expects XFEM interpolation Q1_XV, Q2_XV, Q1_XG, Q2_XG, Q1_G, or Q2_G\n");
               }
             
             for ( i = 0; i < ei[pg->imtrx]->dof[eqn]; i+=2 )
@@ -2164,7 +2164,7 @@ apply_embedded_colloc_bc ( int ielem,      /* element number */
               }
             else
               {
-                EH(GOMA_ERROR,"LS_CONT_FLUX expects XFEM interpolation P0_G, P1_G, Q1_G, or Q2_G\n");
+                GOMA_EH(GOMA_ERROR,"LS_CONT_FLUX expects XFEM interpolation P0_G, P1_G, Q1_G, or Q2_G\n");
               }
             
             for ( i = 0; i < ei[pg->imtrx]->dof[eqn]; i+=2 )
@@ -2224,7 +2224,7 @@ apply_embedded_colloc_bc ( int ielem,      /* element number */
                   }
                 else
                   {
-                    EH(GOMA_ERROR,"LS_CONT_TRACTION_BC expects XFEM interpolation P0_G, P1_G, Q1_G, or Q2_G\n");
+                    GOMA_EH(GOMA_ERROR,"LS_CONT_TRACTION_BC expects XFEM interpolation P0_G, P1_G, Q1_G, or Q2_G\n");
                   }
 
                 for ( i = 0; i < ei[pg->imtrx]->dof[eqn]; i+=2 )
@@ -2286,7 +2286,7 @@ apply_embedded_colloc_bc ( int ielem,      /* element number */
                   }
                 else
                   {
-                    EH(GOMA_ERROR,"LS_CONT_TRACTION_BC expects XFEM interpolation P0_G, P1_G, Q1_G, or Q2_G\n");
+                    GOMA_EH(GOMA_ERROR,"LS_CONT_TRACTION_BC expects XFEM interpolation P0_G, P1_G, Q1_G, or Q2_G\n");
                   }
 
                 for ( i = 0; i < ei[pg->imtrx]->dof[eqn]; i+=2 )
@@ -2372,7 +2372,7 @@ find_subsurf_st_wt( const int ip, const int ip_total,
 
   case SHELL:
   case TRISHELL:
-    EH(GOMA_ERROR,"subsurf integration for overset grids and ls subelement integration not supported for SHELLS");
+    GOMA_EH(GOMA_ERROR,"subsurf integration for overset grids and ls subelement integration not supported for SHELLS");
     break;
 
   case LINE_SEGMENT:
@@ -2381,7 +2381,7 @@ find_subsurf_st_wt( const int ip, const int ip_total,
     break;
 
   default:
-    EH(GOMA_ERROR, "Unsupported element shape.");
+    GOMA_EH(GOMA_ERROR, "Unsupported element shape.");
     break;
   }
 
@@ -2405,7 +2405,7 @@ find_subsurf_st_wt( const int ip, const int ip_total,
       int nodes[3];
 
       /* this is currently hacked in for 2-D only */
-      if ( num_dim != 2 ) EH(GOMA_ERROR, "Cross Mesh sub-integration only supported in 2-D\n");
+      if ( num_dim != 2 ) GOMA_EH(GOMA_ERROR, "Cross Mesh sub-integration only supported in 2-D\n");
 
       switch( shape )
       {
@@ -2418,7 +2418,7 @@ find_subsurf_st_wt( const int ip, const int ip_total,
         break;
 
       default:
-        EH(GOMA_ERROR, "Unsupported element shape.");
+        GOMA_EH(GOMA_ERROR, "Unsupported element shape.");
         break;
       }
 
@@ -2485,13 +2485,13 @@ double dof_distance ( int var_type,
        pd->i[pg->imtrx][var_type] != I_P0_XV && pd->i[pg->imtrx][var_type] != I_P1_XV &&
        pd->i[pg->imtrx][var_type] != I_P0_G && pd->i[pg->imtrx][var_type] != I_P1_G )
     {
-      EH(GOMA_ERROR, "This combination of LS and var interpolations is not supported!");
+      GOMA_EH(GOMA_ERROR, "This combination of LS and var interpolations is not supported!");
     }
       
   /* define element var distance to be distance to node 0 */
   F_dof = ei[pd->mi[ls->var]]->ln_to_dof[ls->var][0];
   if ( F_dof < 0 ) {
-    EH(GOMA_ERROR,"dof_distance expect LS var to be define at local node 0");
+    GOMA_EH(GOMA_ERROR,"dof_distance expect LS var to be define at local node 0");
   }
   if (ls->var == LS)
     return *esp->F[F_dof];
@@ -2512,7 +2512,7 @@ double lnn_distance ( int ln )
   /* define element var distance to be distance to node 0 */
   F_dof = ei[pd->mi[ls->var]]->ln_to_dof[ls->var][0];
   if ( F_dof < 0 ) {
-    EH(GOMA_ERROR,"dof_distance expect LS var to be define at local node 0");
+    GOMA_EH(GOMA_ERROR,"dof_distance expect LS var to be define at local node 0");
   }
   if (ls->var == LS)
     return *esp->F[F_dof];
@@ -2547,7 +2547,7 @@ gnn_distance( const int I,
       
       if ( elem == -1 || ie == -1 )
         {
-	  EH(GOMA_ERROR,"Combination of variable and LS interpolation types not supported.");
+	  GOMA_EH(GOMA_ERROR,"Combination of variable and LS interpolation types not supported.");
         }
     }
 
@@ -2654,7 +2654,7 @@ lookup_active_dof(int var,
   */
   nu = ei[pg->imtrx]->gun_list[var][j];
 
-  EH(nu, "Bad unknown index!");
+  GOMA_EH(nu, "Bad unknown index!");
 
   /*
    * If there is an active Dirichlet on this var at this node,
@@ -2725,10 +2725,10 @@ setup_shop_at_point(int ielem,
     {
       err = load_elem_dofptr(ielem, exo, x_static, x_old_static,
                              xdot_static, xdot_old_static, 0);
-      EH(err, "load_elem_dofptr");
+      GOMA_EH(err, "load_elem_dofptr");
       
       err = bf_mp_init(pd);
-      EH(err, "bf_mp_init");
+      GOMA_EH(err, "bf_mp_init");
     }
 
   /*
@@ -2738,16 +2738,16 @@ setup_shop_at_point(int ielem,
   fv->wt = 1.e30;
 
   err = load_basis_functions(xi, bfd);
-  EH( err, "problem from load_basis_functions");
+  GOMA_EH( err, "problem from load_basis_functions");
       
   err = beer_belly();
-  EH( err, "beer_belly");
+  GOMA_EH( err, "beer_belly");
   
   err = load_fv();
-  EH( err, "load_fv");
+  GOMA_EH( err, "load_fv");
   
   err = load_bf_grad();
-  EH( err, "load_bf_grad");
+  GOMA_EH( err, "load_bf_grad");
   
   /*
    *  Just as in the main element assembly, we ensure that the current element
@@ -2760,19 +2760,19 @@ setup_shop_at_point(int ielem,
      // printf(" We are here\n");
       }
       err = load_bf_mesh_derivs(); 
-      EH( err, "load_bf_mesh_derivs");
+      GOMA_EH( err, "load_bf_mesh_derivs");
     }
     //if (ei[pg->imtrx]->deforming_mesh && pd->e[pg->imtrx][R_MESH1])
     // {
     // err = load_bf_mesh_derivs(); 
-    // EH( err, "load_bf_mesh_derivs");
+    // GOMA_EH( err, "load_bf_mesh_derivs");
     //}
   /*
    * HKM -> This has to be checked out for shell equations. Does it overwrite
    *        anything that shouldn't have been overwritten. 
    */
   err = load_fv_grads();
-  EH( err, "load_fv_grads");
+  GOMA_EH( err, "load_fv_grads");
       
    /*
    *  Just as in the main element assembly, we ensure that the current element
@@ -2785,18 +2785,18 @@ setup_shop_at_point(int ielem,
      //	printf(" We are here2\n");
       }
       err = load_fv_mesh_derivs(0);
-      EH( err, "load_fv_mesh_derivs");
+      GOMA_EH( err, "load_fv_mesh_derivs");
     }
     //if (ei[pg->imtrx]->deforming_mesh && pd->e[pg->imtrx][R_MESH1])
     // {
     //  err = load_fv_mesh_derivs(0);
-    //  EH( err, "load_fv_mesh_derivs");
+    //  GOMA_EH( err, "load_fv_mesh_derivs");
     // }
 
   if (mp->PorousMediaType != CONTINUOUS)
     {
       err = load_porous_properties();
-      EH( err, "load_porous_properties");
+      GOMA_EH( err, "load_porous_properties");
     }
 
   do_LSA_mods(LSA_VOLUME);

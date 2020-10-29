@@ -78,7 +78,7 @@ static void goma_normal_assign_best_direction(goma_normal *normal,
   //  }
   //}
   if (n_max == -1 || t_max == -1 || b_max == -1) {
-    EH(GOMA_ERROR, "could not associate normals to coord");
+    GOMA_EH(GOMA_ERROR, "could not associate normals to coord");
   }
 
   // set best directions

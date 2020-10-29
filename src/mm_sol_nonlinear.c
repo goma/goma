@@ -742,7 +742,7 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
                 }
               else
                 {
-                  EH(GOMA_ERROR, "Insufficient number of AC's set aside for overlap");
+                  GOMA_EH(GOMA_ERROR, "Insufficient number of AC's set aside for overlap");
                 }
             }
           for (iAC=0; iAC<nAC; iAC++) augc[iAC].lm_resid = 0.0;
@@ -890,7 +890,7 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 		  a_end = ut();
 		}
 	
-	      if (Num_Proc > 1) EH(GOMA_ERROR, "Whoa.  No front allowed with nproc>1");  
+	      if (Num_Proc > 1) GOMA_EH(GOMA_ERROR, "Whoa.  No front allowed with nproc>1");  
 #ifdef HAVE_FRONT
 		  err = mf_solve_lineqn(&mf_resolve,
 								resid_vector,
@@ -940,7 +940,7 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 	        for(i=0; i< NumUnknowns[pg->imtrx]; i++) resid_vector[i] /= scale[i]; 
 
 #else /* HAVE_FRONT */
-EH(GOMA_ERROR,"version not compiled with frontal solver");
+GOMA_EH(GOMA_ERROR,"version not compiled with frontal solver");
 #endif /* HAVE_FRONT */
 	      
 	      a_end = ut();
@@ -1175,7 +1175,7 @@ EH(GOMA_ERROR,"version not compiled with frontal solver");
                 break;
 				
 	      default:
-		EH(GOMA_ERROR,"Unknown augmenting condition type");
+		GOMA_EH(GOMA_ERROR,"Unknown augmenting condition type");
 		break;
 	      }
 	  }
@@ -1292,7 +1292,7 @@ EH(GOMA_ERROR,"version not compiled with frontal solver");
         matrix_dump_vbr(ams, exo, dpi, x);
       } else if (strcmp(Matrix_Format, "front") == 0){
 	if (ams->Number_Jac_Dump != 0) {
-	  WH(-1, "Matrix dump requested, but not supported for frontal solver");
+	  GOMA_WH(-1, "Matrix dump requested, but not supported for frontal solver");
 	}
       }
 #endif /* MATRIX_DUMP */
@@ -1310,7 +1310,7 @@ EH(GOMA_ERROR,"version not compiled with frontal solver");
       case UMFPACK2:
       case UMFPACK2F:
 	  if (strcmp(Matrix_Format, "msr"))
-	      EH(GOMA_ERROR,"ERROR: umfpack solver needs msr matrix format");
+	      GOMA_EH(GOMA_ERROR,"ERROR: umfpack solver needs msr matrix format");
 
           if(!Norm_below_tolerance || !Rate_above_tolerance)
 	      Factor_Flag = 1;
@@ -1349,7 +1349,7 @@ EH(GOMA_ERROR,"version not compiled with frontal solver");
 
       case SPARSE13a:
 	  if (strcmp(Matrix_Format, "msr")) {
-	    EH(GOMA_ERROR,"ERROR: lu solver needs msr matrix format");
+	    GOMA_EH(GOMA_ERROR,"ERROR: lu solver needs msr matrix format");
 	  }
 	  dcopy1(NumUnknowns[pg->imtrx], resid_vector, delta_x);
 	  if (!Norm_below_tolerance || !Rate_above_tolerance) {
@@ -1400,7 +1400,7 @@ EH(GOMA_ERROR,"version not compiled with frontal solver");
 	    }
 	    else
 	    {
-	      EH(GOMA_ERROR, "Unknown factorization reuse specification.");
+	      GOMA_EH(GOMA_ERROR, "Unknown factorization reuse specification.");
 	    }
 	  }
 
@@ -1466,7 +1466,7 @@ EH(GOMA_ERROR,"version not compiled with frontal solver");
         } else if ( strcmp( Matrix_Format,"epetra" ) == 0 ) {
           amesos_solve_epetra(Amesos_Package, ams, delta_x, resid_vector, pg->imtrx);
         } else {
-          EH(GOMA_ERROR," Sorry, only MSR and Epetra matrix formats are currently supported with the Amesos solver suite\n");
+          GOMA_EH(GOMA_ERROR," Sorry, only MSR and Epetra matrix formats are currently supported with the Amesos solver suite\n");
         }
         strcpy(stringer, " 1 ");
         break;
@@ -1478,7 +1478,7 @@ EH(GOMA_ERROR,"version not compiled with frontal solver");
           aztec_stringer(why, ams->status[AZ_its], &stringer[0]);
           matrix_solved = (ams->status[AZ_why] == AZ_normal);
         } else {
-          EH(GOMA_ERROR, "Sorry, only Epetra matrix formats are currently supported with the AztecOO solver suite\n");
+          GOMA_EH(GOMA_ERROR, "Sorry, only Epetra matrix formats are currently supported with the AztecOO solver suite\n");
         }
         break;
 
@@ -1488,12 +1488,12 @@ EH(GOMA_ERROR,"version not compiled with frontal solver");
           int err = stratimikos_solve(ams, delta_x, resid_vector, &iterations, Stratimikos_File, pg->imtrx);
           if (err)
           {
-          EH(err, "Error in stratimikos solve");
+          GOMA_EH(err, "Error in stratimikos solve");
           check_parallel_error("Error in solve - stratimikos");
           }
           aztec_stringer(AZ_normal, iterations, &stringer[0]);
         } else {
-          EH(GOMA_ERROR, "Sorry, only Epetra matrix formats are currently supported with the Stratimikos interface\n");
+          GOMA_EH(GOMA_ERROR, "Sorry, only Epetra matrix formats are currently supported with the Stratimikos interface\n");
         }
         break;
 
@@ -1506,7 +1506,7 @@ EH(GOMA_ERROR,"version not compiled with frontal solver");
 	  err = cmsr_ma28(NumUnknowns[pg->imtrx], NZeros, a, ija, 
 			  delta_x, resid_vector);
 #else /* HARWELL */
-	  EH(GOMA_ERROR, "That linear solver package is not implemented.");
+	  GOMA_EH(GOMA_ERROR, "That linear solver package is not implemented.");
 #endif /* HARWELL */
 	  strcpy(stringer, " 1 ");
 	  break;
@@ -1516,7 +1516,7 @@ EH(GOMA_ERROR,"version not compiled with frontal solver");
 	  break;
 
       default:
-	  EH(GOMA_ERROR, "That linear solver package is not implemented.");
+	  GOMA_EH(GOMA_ERROR, "That linear solver package is not implemented.");
 	  break;
       }
       s_end = ut();
@@ -1554,7 +1554,7 @@ EH(GOMA_ERROR,"version not compiled with frontal solver");
 		  Factor_Flag = 3;
 
 	      if(first_linear_solver_call)
-		  EH(GOMA_ERROR, "Solving for AC's BEFORE a regular solve");
+		  GOMA_EH(GOMA_ERROR, "Solving for AC's BEFORE a regular solve");
 
 #ifdef DEBUG_SL_UMF
 	      printf("%s: entering SL_UMF for augmenting conditions solve\n", yo); 
@@ -1589,7 +1589,7 @@ EH(GOMA_ERROR,"version not compiled with frontal solver");
             } else if ( strcmp( Matrix_Format,"epetra" ) == 0 ) {
               amesos_solve_epetra(Amesos_Package, ams, &wAC[iAC][0], &bAC[iAC][0], pg->imtrx);
             } else {
-              EH(GOMA_ERROR," Sorry, only MSR and Epetra matrix formats are currently supported with the Amesos solver suite\n");
+              GOMA_EH(GOMA_ERROR," Sorry, only MSR and Epetra matrix formats are currently supported with the Amesos solver suite\n");
             }
             strcpy(stringer_AC, " 1 ");
 	    break;
@@ -1652,7 +1652,7 @@ EH(GOMA_ERROR,"version not compiled with frontal solver");
 	      err = cmsr_ma28 (NumUnknowns[pg->imtrx], NZeros, a, ija, 
 			       &wAC[iAC][0], &bAC[iAC][0]);
 #else /* HARWELL */
-	      EH(GOMA_ERROR, "That linear solver package is not implemented.");
+	      GOMA_EH(GOMA_ERROR, "That linear solver package is not implemented.");
 #endif /* HARWELL */
 	      strcpy(stringer_AC, " 1 ");
 	      break;
@@ -1663,12 +1663,12 @@ EH(GOMA_ERROR,"version not compiled with frontal solver");
               aztec_stringer(why, ams->status[AZ_its], &stringer_AC[0]);
               matrix_solved = (ams->status[AZ_why] == AZ_normal);
             } else {
-              EH(GOMA_ERROR, "Sorry, only Epetra matrix formats are currently supported with the AztecOO solver suite\n");
+              GOMA_EH(GOMA_ERROR, "Sorry, only Epetra matrix formats are currently supported with the AztecOO solver suite\n");
             }
             break;
           case FRONT:
 	  default:
-	      EH(GOMA_ERROR, "That linear solver package is not implemented.");
+	      GOMA_EH(GOMA_ERROR, "That linear solver package is not implemented.");
 	      break;
 	  }
 	} /* END AC LOOP */
@@ -1927,7 +1927,7 @@ EH(GOMA_ERROR,"version not compiled with frontal solver");
       if ( Write_Intermediate_Solutions && Unlimited_Output )
 	{
 	  error = wr_soln_vec(x, resid_vector, NumUnknowns[pg->imtrx], inewton);
-	  EH (error, "problem from wr_soln_vec");
+	  GOMA_EH(error, "problem from wr_soln_vec");
 	}
 
       if((damp_factor1 <= 1. && damp_factor1 >= 0.) &&
@@ -3223,7 +3223,7 @@ print_array(const void *array,
       break;
       
     default:
-      EH(GOMA_ERROR, "Cannot handle that datatype.");
+      GOMA_EH(GOMA_ERROR, "Cannot handle that datatype.");
       break;
     }
 
@@ -3540,7 +3540,7 @@ soln_sens ( double lambda,  /*  parameter */
 	Factor_Flag = 0;
 
       if(first_linear_solver_call)
-	EH(GOMA_ERROR, "Solving for AC's BEFORE a regular solve");
+	GOMA_EH(GOMA_ERROR, "Solving for AC's BEFORE a regular solve");
 
       /* MMH: I believe that this system will always be the same
        * structure/system as the one used for the regular solve.  This
@@ -3586,7 +3586,7 @@ soln_sens ( double lambda,  /*  parameter */
       } else if ( strcmp( Matrix_Format,"epetra" ) == 0 ) {
         amesos_solve_epetra(Amesos_Package, ams, x_sens, resid_vector_sens, pg->imtrx);
       } else {
-        EH(GOMA_ERROR," Sorry, only MSR and Epetra matrix formats are currently supported with the Amesos solver suite\n");
+        GOMA_EH(GOMA_ERROR," Sorry, only MSR and Epetra matrix formats are currently supported with the Amesos solver suite\n");
       }
       strcpy(stringer, " 1 ");
       break;
@@ -3643,7 +3643,7 @@ soln_sens ( double lambda,  /*  parameter */
         aztec_stringer((int) ams->status[AZ_why], ams->status[AZ_its], &stringer[0]);
         matrix_solved = (ams->status[AZ_why] == AZ_normal);
       } else {
-        EH(GOMA_ERROR, "Sorry, only Epetra matrix formats are currently supported with the AztecOO solver suite\n");
+        GOMA_EH(GOMA_ERROR, "Sorry, only Epetra matrix formats are currently supported with the AztecOO solver suite\n");
       }
       break;
 
@@ -3651,14 +3651,14 @@ soln_sens ( double lambda,  /*  parameter */
       if ( strcmp( Matrix_Format,"epetra" ) == 0 ) {
         int iterations;
         int err = stratimikos_solve(ams,  x_sens, resid_vector_sens, &iterations, Stratimikos_File, pg->imtrx);
-        EH(err, "Error in stratimikos solve");
+        GOMA_EH(err, "Error in stratimikos solve");
 	if (iterations == -1) {
 	  strcpy(stringer, "err");
 	} else {
 	  aztec_stringer(AZ_normal, iterations, &stringer[0]);
 	}
       } else {
-        EH(GOMA_ERROR, "Sorry, only Epetra matrix formats are currently supported with the Stratimikos interface\n");
+        GOMA_EH(GOMA_ERROR, "Sorry, only Epetra matrix formats are currently supported with the Stratimikos interface\n");
       }
       break;
     case MA28:
@@ -3671,7 +3671,7 @@ soln_sens ( double lambda,  /*  parameter */
 		       x_sens, resid_vector_sens);
 #endif
 #ifndef HARWELL
-      EH(GOMA_ERROR, "That linear solver package is not implemented.");
+      GOMA_EH(GOMA_ERROR, "That linear solver package is not implemented.");
 #endif
       strcpy(stringer, " 1 ");
       break;
@@ -3680,7 +3680,7 @@ soln_sens ( double lambda,  /*  parameter */
 	      *mf_resolve =1;
               *scaling_max = 1.;
 
-	      if (Num_Proc > 1) EH(GOMA_ERROR, "Whoa.  No front allowed with nproc>1");
+	      if (Num_Proc > 1) GOMA_EH(GOMA_ERROR, "Whoa.  No front allowed with nproc>1");
 #ifdef HAVE_FRONT  
               err = mf_solve_lineqn(mf_resolve, /* re_solve                 */
                                     &resid_vector_sens[0], /* rhs            */
@@ -3724,7 +3724,7 @@ soln_sens ( double lambda,  /*  parameter */
 #endif
 	  break;
     default:
-      EH(GOMA_ERROR, "That linear solver package is not implemented.");
+      GOMA_EH(GOMA_ERROR, "That linear solver package is not implemented.");
       break;
     }
 
