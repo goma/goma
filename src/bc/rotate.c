@@ -847,38 +847,41 @@ rotate_mesh_eqn (
 	      }
 	    }  
 	  } else if (strcmp(Matrix_Format, "epetra") == 0) {
-            /*
+            if (I < (DPI_ptr->num_internal_nodes + DPI_ptr->num_boundary_nodes)) {
+              /*
              * Find the global equation number
-             */
-            if ((index_eqn = Index_Solution(I, eqn, 0, 0, -2, pg->imtrx)) == -1) {
-              GOMA_EH(GOMA_ERROR, "Cant find eqn index");
-            }
-            /*
+               */
+              if ((index_eqn = Index_Solution(I, eqn, 0, 0, -2, pg->imtrx)) == -1) {
+                GOMA_EH(GOMA_ERROR, "Cant find eqn index");
+              }
+              /*
              * Loop over the nodes that determine the value of the
              * current rotation vector, J is the global node number
-             */
-            for (j = 0; j < rot->d_vector_n; j++ )  {
-              double sum_val;
-              int global_row;
-              int global_col;
+               */
+              for (j = 0; j < rot->d_vector_n; j++) {
+                double sum_val;
+                int global_row;
+                int global_col;
 
-              J = rot->d_vector_J[j];
-              if (Dolphin[pg->imtrx][I][MESH_DISPLACEMENT1] > 0  &&
-                  Dolphin[pg->imtrx][J][MESH_DISPLACEMENT1] > 0 ) {
-                /*
+                J = rot->d_vector_J[j];
+                if (Dolphin[pg->imtrx][I][MESH_DISPLACEMENT1] > 0 &&
+                    Dolphin[pg->imtrx][J][MESH_DISPLACEMENT1] > 0) {
+                  /*
                  * find entry in global matrix - note that the sensitivities of the
                  * rotation vector may be in a different element than the current
                  * element
-                 */
-                if ((index_var = Index_Solution(J, var, 0, 0, -2, pg->imtrx)) != -1) {
-                  sum_val = 0;
-                  for (ldir = 0; ldir < dim; ldir++) {
-                    sum_val +=
-                        rot->d_vector_dx[ldir][b][j] * lec->R[LEC_R_INDEX(peqn_mesh[ldir],id)];
+                   */
+                  if ((index_var = Index_Solution(J, var, 0, 0, -2, pg->imtrx)) != -1) {
+                    sum_val = 0;
+                    for (ldir = 0; ldir < dim; ldir++) {
+                      sum_val +=
+                          rot->d_vector_dx[ldir][b][j] * lec->R[LEC_R_INDEX(peqn_mesh[ldir], id)];
+                    }
+                    global_row = ams->GlobalIDs[index_eqn];
+                    global_col = ams->GlobalIDs[index_var];
+                    EpetraSumIntoGlobalRowMatrix(ams->RowMatrix, global_row, 1, &sum_val,
+                                                 &global_col);
                   }
-                  global_row = ams->GlobalIDs[index_eqn];
-                  global_col = ams->GlobalIDs[index_var];
-                  EpetraSumIntoGlobalRowMatrix(ams->RowMatrix, global_row, 1, &sum_val, &global_col);
                 }
               }
             }
