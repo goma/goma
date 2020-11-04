@@ -295,9 +295,10 @@ goma_error exchange_neighbor_ss_edges(Exo_DB *exo, Dpi *dpi) {
     qsort(ss_edge_info[i].global_node_ids, ss_edge_info[i].total_nodes, sizeof(int), int_compare);
   }
 
-  int_pair **ss_elem_sides_local = calloc(sizeof(int_pair *), dpi->num_side_sets_global);
-  int *ss_elem_sides_count_local = calloc(sizeof(int), dpi->num_side_sets_global);
+  int_pair **ss_elem_sides_local = malloc(sizeof(int_pair *) * dpi->num_side_sets_global);
+  int *ss_elem_sides_count_local = malloc(sizeof(int) * dpi->num_side_sets_global);
   for (int i = 0; i < dpi->num_side_sets_global; i++) {
+    ss_elem_sides_count_local[i] = 0;
     if (ss_global_nodes[i] > 0) {
       ss_elem_sides_local[i] = calloc(sizeof(int_pair), ss_global_nodes[i]);
     } else {
