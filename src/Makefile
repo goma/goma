@@ -103,19 +103,20 @@ RANLIB ?= touch
 #                      Linux       -Dlinux
 #                      (if 64bit compiler)     -DCOMPILER_64BIT
 
-DEFINES += -DMAX_PROB_VAR=16 \
-          -DMAX_EXTERNAL_FIELD=6 \
-          -DMAX_CONC=8 \
-          -DPHASE_COUPLED_FILL \
-          -DNEW_HOFFMAN_FCN_PLEASE \
-          -DALE_DCA_INFO_PLEASE \
-          -DRELAX_ON_TRANSIENT_PLEASE \
-          -DRESET_TRANSIENT_RELAXATION_PLEASE  \
-          -DALLOW_NEGATIVE_TIMES_PLEASE  \
-          -DDM_COORD_SCALE_PLEASE \
-          -DVAR_UPDATE_UNITY_SCALE \
-          -DFEATURE_ROLLON_PLEASE \
-          -DREACTION_PRODUCT_EFV 
+DEFINES ?= -Dlinux \
+           -DCOMPILER_64BIT \
+           -DENABLE_AMESOS \
+           -DTRILINOS \
+           -DCHECK_FINITE\
+           -DNO_CHEBYSHEV_PLEASE \
+           -DMDE=27 \
+           -DMAX_PROB_VAR=15 \
+           -DMAX_EXTERNAL_FIELD=4 \
+           -DMAX_CONC=4 \
+           -DCOUPLED_FILL \
+           -DPARALLEL \
+           -DHAVE_STRATIMIKOS \
+           -DEIGEN_SERIAL
 
 # Other defines:
 #          -DCHECKFINITE
