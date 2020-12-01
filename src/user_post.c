@@ -86,19 +86,24 @@ user_post(dbl *param)		/* ptr to the user-defined parameter list */
 {
   /* Local Variables */
   double post_value;
+  int model_id = ((int)param[0]);
+  struct Species_Conservation_Terms st;
+ 
+/* model_id = 0 :	light intensity from external table  
+ 	      1 :						 */
 
-  /* int a;
-     int i; */
+  int a;
 
-  /* dbl X[DIM], T, C[MAX_CONC], V[DIM], P; */ /* Convenient local variables */
+  dbl X[DIM], T=0, C[MAX_CONC], V[DIM], P=0; /* Convenient local variables */
 
+  int i, dim;
 
   static int warning = 0;
 
   /* Begin Execution */
  /**********************************************************/
 
- /* Comment out our remove this line if using this routine */
+ /* Comment out our remove this line if using this routine 
   if (warning == 0)
     {
       fprintf(stderr,"\n\n#############\n"
@@ -106,6 +111,7 @@ user_post(dbl *param)		/* ptr to the user-defined parameter list */
 	      "\n#############\n");
       warning = 1;
     }
+*/
 
  /************Initialize everything for saftey**************/
   post_value = 0;                           /*Do not touch */
@@ -114,11 +120,11 @@ user_post(dbl *param)		/* ptr to the user-defined parameter list */
  /***********Load up convenient local variables*************/
  /*NB This ought to be done once for all fields at gauss pt*/
 
-  /* T = fv->T; */                                    /*Do not touch */
-  /*  P = fv->P;  */                                   /*Do not touch */
-  /*  for(a=0; a<DIM; a++) X[a] = fv->x[a]; */		 /*Do not touch */
-  /*  for(a=0; a<DIM; a++) V[a] = fv->v[a]; */		 /*Do not touch */
-  /*  for(i=0; i<pd->Num_Species; i++) C[i] = fv->c[i]; */ /*Do not touch */
+  T = fv->T;                                     /*Do not touch */
+  P = fv->P;                                     /*Do not touch */
+  for(a=0; a<DIM; a++) X[a] = fv->x[a];		 /*Do not touch */
+  for(a=0; a<DIM; a++) V[a] = fv->v[a];		 /*Do not touch */
+  for(i=0; i<pd->Num_Species; i++) C[i] = fv->c[i]; /*Do not touch */
 
 /* All gradients of field variables are accesable through fv->?_grad[][]
  * and material properties are accesable through mp->?
@@ -135,6 +141,45 @@ user_post(dbl *param)		/* ptr to the user-defined parameter list */
 /* E.G. pore radius  */
 /*  if (mp->PorousMediaType == POROUS_UNSATURATED) */
 /*       post_value = pmv->r_pore; */
+
+dim   = pd->Num_Dim;
+ 
+/*    table external fields  */
+
+if( model_id == 0)
+	{
+   	if( efv->Num_external_field > 1) post_value = fv->external_field[1];
+        post_value *= (tran->time_value - tran->init_time);
+        post_value += fv->external_field[0];
+	}
+else if( model_id == 1)
+	{
+        post_value = SQUARE(fv->apr)+SQUARE(fv->api);
+        post_value *= param[1];
+	}
+else if( model_id == 2)
+	{
+        post_value = fv->poynt[0]+fv->poynt[1];
+        post_value *= param[1];
+	}
+else if( model_id == 3)
+	{
+        post_value = st.MassSource[((int)param[1])];
+	}
+else if( model_id == 4)
+	{
+	post_value = 0.0;
+        for(a=0; a<dim; a++) post_value += SQUARE(fv->v[a]);
+        post_value = sqrt(post_value);
+	}
+else if( model_id == -1)
+	{
+        post_value = 0.0;
+	}
+else
+	{
+	EH(-1,"invalid model_id in user_post");
+	}
 
   return post_value;
 } /* End of routine usr_post                                                 */
@@ -188,25 +233,96 @@ int usr_ptracking (FILE *  jfp,         /*  filename for output */
                    const double time_step)      /*  time step           */
 
 {
+/**  variables defined for Hencky strain calculation  **/
+/*static double int_shear, Q, R, integrand[3],time[3];
+double u,v,r,q;
+double bzz,brz,brr,hencky;
+*/
+double Dsh[DIM][DIM], Dnn;
+int a, b, dim=pd_glob[0]->Num_Dim;
+ 
+	for (a = 0; a < dim; a++) 
+		{
+		for (b = 0; b < dim; b++) 
+		   {
+		   Dsh[a][b] = 0.5 * (fv->grad_v[a][b] + fv->grad_v[b][a]);
+      		   }
+    		}
+    /* find second invariant of strain-rate */
+	Dnn = 0.0;
+	for (a = 0; a < dim; a++) 
+		{
+		for (b = 0; b < dim; b++) 
+		  {
+             Dnn += 0.5 * (Dsh[a][b] * Dsh[a][b] - Dsh[a][a] * Dsh[b][b]);
+      		  }
+    		}
+    	Dnn = 4. * pow(fabs(Dnn), 0.5);
+
+
         if(heading)
         {
+/* 	time[0] = time_value;
+ 	R = r = part_x[1];
+ 	u = part_v[0];
+ 	v = part_v[1];
+ 	Q = q = sqrt(u*u+v*v);
+ 	integrand[0] = (2.*u*v*(fv->grad_v[1][1]-fv->grad_v[0][0])
+ 			+ (u*u-v*v)*(fv->grad_v[0][1]+fv->grad_v[1][0]))
+ 			/(r*q*q*q*q);
+ 	int_shear=0.;
+ 	bzz = SQUARE(u/Q)+SQUARE(R*Q/(r*q))*SQUARE(r*q*u*int_shear-v/q);
+ 	brz = u*v/SQUARE(Q)+SQUARE(R*Q/(r*q))*(r*q*u*int_shear-v/q)
+ 					*(r*q*v*int_shear+u/q);
+ 	brr = SQUARE(v/Q)+SQUARE(R*Q/(r*q))*SQUARE(r*q*v*int_shear+u/q);
+ 	hencky = 0.5*log(bzz);
+*/ 
+
+
         /*  write file headings and initial values */
 
         fprintf(jfp," Particle Path %d\n",part_id);
-        fprintf(jfp," time   x   y    vx   vy  dv11  dv12\n");
-        fprintf(jfp," %g %g %g %g %g %g %g\n", time_value,
+        fprintf(jfp," time   x1   x2    v1   v2  P  shear \n");
+        fprintf(jfp," %g %g %g %g %g %g  %g \n", time_value,
+                part_x[0],part_x[1],part_v[0],part_v[1],fv->P,Dnn );
+/*        fprintf(jfp," time   z   r    vz   vr  dv11  dv12  dv21 dv22  integ i_shear bzz brz brr hencky\n");
+        fprintf(jfp," %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n", time_value,
                 part_x[0],part_x[1],part_v[0],part_v[1],
-                fv->grad_v[0][0],fv->grad_v[0][1]);
+                fv->grad_v[0][0],fv->grad_v[0][1],fv->grad_v[1][0],fv->grad_v[1][1],
+ 		integrand[0], int_shear,bzz,brz,brr,hencky);
+*/
         }
         else
         {
         /*   write data to file */
 
-        fprintf(jfp," %g %g %g %g %g %g %g\n", time_value,
+/* 	time[0] = time_value;
+ 	r = part_x[1];
+ 	u = part_v[0];
+ 	v = part_v[1];
+ 	q = sqrt(u*u+v*v);
+ 	integrand[0] = (2.*u*v*(fv->grad_v[1][1]-fv->grad_v[0][0])
+ 			+ (u*u-v*v)*(fv->grad_v[0][1]+fv->grad_v[1][0]))
+ 			/(r*q*q*q*q);
+ 	int_shear += 0.5*(time[0]-time[1])*(integrand[0]+integrand[1]);
+ 	bzz = SQUARE(u/Q)+SQUARE(R*Q/(r*q))*SQUARE(r*q*u*int_shear-v/q);
+ 	brz = u*v/SQUARE(Q)+SQUARE(R*Q/(r*q))*(r*q*u*int_shear-v/q)
+ 					*(r*q*v*int_shear+u/q);
+ 	brr = SQUARE(v/Q)+SQUARE(R*Q/(r*q))*SQUARE(r*q*v*int_shear+u/q);
+ 	hencky = 0.5*log(bzz);
+        fprintf(jfp," %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n", time_value,
                 part_x[0],part_x[1],part_v[0],part_v[1],
-                fv->grad_v[0][0],fv->grad_v[0][1]);
+                fv->grad_v[0][0],fv->grad_v[0][1],fv->grad_v[1][0],fv->grad_v[1][1],
+ 		integrand[0], int_shear,bzz,brz,brr,hencky);
+*/
+        fprintf(jfp," %g %g %g %g %g %g  %g \n", time_value,
+                part_x[0],part_x[1],part_v[0],part_v[1],fv->P,Dnn );
         }
+/** store past step values  **/
+/* 	time[1] = time[0];
+ 	integrand[1] = integrand[0];
 
+*/
 return (1);
 } /* End of routine usr_ptracking                                            */
 /*****************************************************************************/

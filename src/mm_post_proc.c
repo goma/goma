@@ -687,7 +687,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
                      }
                  }
 #ifdef ANALEIG_PLEASE
-              analytical_exp_s(log_c, exp_s, eig_values, R1);
+              analytical_exp_s(log_c, exp_s, eig_values, R1, NULL);
 #else
               compute_exp_s(log_c, exp_s, eig_values, R1);
 #endif
@@ -782,7 +782,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
                      }
                  }
 #ifdef ANALEIG_PLEASE
-              analytical_exp_s(log_c, exp_s, eig_values, R1);
+              analytical_exp_s(log_c, exp_s, eig_values, R1, NULL);
 #else
               compute_exp_s(log_c, exp_s, eig_values, R1);
 #endif
@@ -895,7 +895,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
                      }
                  }
 #ifdef ANALEIG_PLEASE
-              analytical_exp_s(log_c, exp_s, eig_values, R1);
+              analytical_exp_s(log_c, exp_s, eig_values, R1, NULL);
 #else
               compute_exp_s(log_c, exp_s, eig_values, R1);
 #endif
@@ -2936,7 +2936,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     dbl exp_s[DIM][DIM];
     for (mode = 0; mode < vn->modes; mode++) {
 #ifdef ANALEIG_PLEASE
-      analytical_exp_s(fv->S[mode], exp_s, eig_values, R1);
+      analytical_exp_s(fv->S[mode], exp_s, eig_values, R1, NULL);
 #else
       compute_exp_s(fv->S[mode], exp_s, eig_values, R1);
 #endif

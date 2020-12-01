@@ -4654,7 +4654,7 @@ matrix_fill_stress(
 	/*
 	 * BOUNDARY CONDITIONS which don't really fit in with the above types
 	 */
-	if (call_int || call_col) 
+	if (0 && (call_int || call_col)) 
 	  {
 	    /* add call to Gibb's inequality condition is evaluated
 	     * within apply_special_bc, and potentially contact lines
