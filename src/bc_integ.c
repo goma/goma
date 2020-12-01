@@ -658,6 +658,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			      bc->BC_Data_Float[0], 
 			      bc->BC_Data_Float[1], 
 			      bc->BC_Data_Float[2], 
+			      bc->BC_Data_Float[3], 
 			      xsurf, x_dot, theta, delta_t, (int) bc->BC_Name,
 			      elem_side_bc->id_side, xi, exo,
 			      time_intermediate, bc->u_BC, bc->len_u_BC);

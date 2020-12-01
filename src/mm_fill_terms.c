@@ -29855,7 +29855,7 @@ fluid_stress_conf( double Pi[DIM][DIM],
 
   for (mode = 0; mode < vn->modes; mode++) {
 #ifdef ANALEIG_PLEASE
-    analytical_exp_s(fv->S[mode], exp_s[mode], eig_values, R1);
+    analytical_exp_s(fv->S[mode], exp_s[mode], eig_values, R1, d_exp_s_ds[mode]);
 #else
     compute_exp_s(fv->S[mode], exp_s[mode], eig_values, R1);
 #endif
@@ -30215,11 +30215,13 @@ fluid_stress_conf( double Pi[DIM][DIM],
     }
 
 
+#ifndef ANALEIG_PLEASE
   // Calculate d_exp_s_ds for LOG_CONF case
   for (mode = 0; mode < vn->modes; mode++)
     {
       compute_d_exp_s_ds(fv->S[mode], exp_s[mode], d_exp_s_ds[mode]);
     }
+#endif
 
   if ( d_Pi != NULL && pd->v[POLYMER_STRESS11] )
     {
