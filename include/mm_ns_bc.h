@@ -146,6 +146,7 @@ PROTO((double [],		/* func                                      */
        const double ,		/* alpha - coefficient that scales the 
 				 * exponent  of the position dependent 
 				 * slip velocity (1/length, from input deck) */
+       const double ,		/* vtang_dot - surface acceleration          */
        const double [MAX_PDIM],	/* xsurf - coordinates of surface Gauss point,
 				 * i.e. current position                     */
        const double [MAX_PDIM],	/* x_dot - mesh velocity vector              */

@@ -2764,7 +2764,7 @@ assemble_stress_log_conf(dbl tt,
 	}
 
 #ifdef ANALEIG_PLEASE
-      analytical_exp_s(s, exp_s, eig_values, R1);
+      analytical_exp_s(s, exp_s, eig_values, R1, NULL);
 #else
       compute_exp_s(s, exp_s, eig_values, R1);
 #endif
@@ -5779,18 +5779,14 @@ compute_exp_s(double s[DIM][DIM],
   int N = VIM;
   int LDA = N;
   int i,j,k;
-  double tmp;
 
   int INFO;
   int LWORK = 20;
   double WORK[LWORK];
 
   double A[VIM*VIM];
-  double D[DIM][DIM];
   double EIGEN_MAX = sqrt(sqrt(DBL_MAX));
-  double eig_S[DIM] = {0.0};
-  memset(A, 0.0, sizeof(double)*VIM*VIM);
-  memset(D, 0.0, sizeof(double)*DIM*DIM);
+  double eig_S[DIM];
   memset(eig_values, 0.0, sizeof(double)*DIM);
   memset(WORK, 0, sizeof(double)*LWORK);
 
@@ -5804,6 +5800,8 @@ compute_exp_s(double s[DIM][DIM],
 
   // eig solver
   dsyev_("V", "U", &N, A, &LDA, eig_S, WORK, &LWORK, &INFO, 1, 1);
+  if( INFO > 0) fprintf(stderr,"eigsolver not converged %d\n",INFO);
+  if( INFO < 0) fprintf(stderr,"eigsolver illegal entry %d\n",INFO);
 
 
   // transpose (revert to row major)
@@ -5818,46 +5816,36 @@ compute_exp_s(double s[DIM][DIM],
 	eig_values[i] = MIN(exp(eig_S[i]),EIGEN_MAX); 
         }
 
-  /* matrix multiplication, the slow way */
+  memset(exp_s,    0, sizeof(double)*DIM*DIM);
   for (i = 0; i < VIM; i++) {
     for (j = 0; j < VIM; j++) {
-      exp_s[i][j] = R[i][j] * eig_values[j];
+      for (k = 0; k < VIM; k++) {
+        exp_s[i][j] += R[i][k] * eig_values[k] * R[j][k];
+        }
       }
     }
   
-  // multiply by transpose
-  for (i = 0; i < VIM; i++) {
-    for (j = 0; j < VIM; j++) {
-      tmp = 0.;
-      for (k = 0; k < VIM; k++) {
-	tmp += exp_s[i][k] * R[j][k];
-        }
-      D[i][j] = tmp;
-      }
-    }
-
-  for (i = 0; i < VIM; i++) {
-    for (j = 0; j < VIM; j++) {
-	exp_s[i][j] = D[i][j];
-        }
-      }
 } // End compute_exp_s
 
 void
 analytical_exp_s(double s[DIM][DIM],
 	      double exp_s[DIM][DIM],
               double eig_values[DIM],
-              double R[DIM][DIM])
+              double R[DIM][DIM],
+	      double d_exp_s_ds[DIM][DIM][DIM][DIM])
 {
 
   double I_S, II_S, disc, off_diag, q, p2, r, p, phi;
-  int i,j,k;
-  double tmp;
+  int i,j,k,l,m;
+  double tmp, tmp1, tmp2;
+  double  d_eig_dS[DIM][DIM][DIM], d_R_dS[DIM][DIM][DIM][DIM];
 
-
-  double B[DIM][DIM], D[DIM][DIM],Q1[DIM][DIM],Q2[DIM][DIM];
-  double eig_S[DIM] = {0.0};
-  memset(D, 0.0, sizeof(double)*DIM*DIM);
+  double B[DIM][DIM],Q1[DIM][DIM],Q2[DIM][DIM];
+  double eig_S[DIM];
+  double EIGEN_MAX = sqrt(sqrt(DBL_MAX));
+  memset(d_eig_dS, 0, sizeof(double)*DIM*DIM*DIM);
+  memset(d_R_dS, 0, sizeof(double)*DIM*DIM*DIM*DIM);
+  if( d_exp_s_ds != NULL) memset(d_exp_s_ds, 0, sizeof(double)*DIM*DIM*DIM*DIM);
 
   /* Use Eigenvalue algorithm from Wikipedia - https://en.wikipedia.org/wiki/
      Eigenvalue_algorithm#Normal%2C_Hermitian%2C_and_real-symmetric_matrices */
@@ -5868,36 +5856,70 @@ analytical_exp_s(double s[DIM][DIM],
   if ((VIM==2 || pd->CoordinateSystem == CYLINDRICAL))
     {
       eig_S[2] = s[2][2];
-      R[2][2] = 1.0;
+      d_eig_dS[2][2][2] = 1.0;
       I_S = s[0][0]+s[1][1];
       II_S = s[0][0]*s[1][1] - SQUARE(s[0][1]);
-      disc = SQUARE(I_S) - 4*II_S;
-      eig_S[0] = 0.5*(I_S + sqrt(disc));
-      eig_S[1] = 0.5*(I_S - sqrt(disc));
-      if( DOUBLE_NONZERO(disc))	{
-         for (j = 0; j < pd->Num_Dim; j++) {
-            for (i = 0; i < pd->Num_Dim; i++) {
-               R[i][j] = s[i][j] - eig_S[1-j]*delta(i,j);
-               }
-            }
-      /*  Normalize eigenvectors   */
-         for (j = 0; j < pd->Num_Dim; j++) {
-            tmp = sqrt(SQUARE(R[0][j]) + SQUARE(R[1][j]));
-            if( DOUBLE_NONZERO(tmp))	{
-               for (i = 0; i < pd->Num_Dim; i++) {
-                  R[i][j] /= tmp;
-                  }
-               }
-            }
-         }
-      else
-         {
-          for (j = 0; j < pd->Num_Dim; j++) {
-             for (k = 0; k < pd->Num_Dim; k++) {
-                R[j][k] = delta(j,k);
-                }
+      disc = sqrt(SQUARE(I_S) - 4*II_S);
+      eig_S[1] = 0.5*(I_S + disc);
+      eig_S[0] = 0.5*(I_S - disc);
+
+      if( d_exp_s_ds != NULL)
+        {
+         d_eig_dS[1][0][0] = 0.5 + 0.5*(s[0][0]-s[1][1])/disc;
+         d_eig_dS[1][1][1] = 0.5 - 0.5*(s[0][0]-s[1][1])/disc;
+         d_eig_dS[1][0][1] = d_eig_dS[1][1][0] =  4.*s[0][1]/disc;
+         d_eig_dS[0][0][0] = 0.5 - 0.5*(s[0][0]-s[1][1])/disc;
+         d_eig_dS[0][1][1] = 0.5 + 0.5*(s[0][0]-s[1][1])/disc;
+         d_eig_dS[0][0][1] = d_eig_dS[0][1][0] =  -4.*s[0][1]/disc;
+        }
+     for (i = 0; i < VIM; i++) {
+         for (j = 0; j < VIM; j++) {
+             R[i][j] = delta(i,j);
              }
          }
+     if( DOUBLE_NONZERO(II_S))	{
+      for (i = 0; i < 2; i++) {
+        tmp1 = sqrt(SQUARE(s[0][1])+SQUARE(s[0][0]-eig_S[i]));
+        tmp2 = sqrt(SQUARE(s[0][1])+SQUARE(s[1][1]-eig_S[i]));
+        if( DOUBLE_NONZERO(tmp1))	{
+            R[i][0] = s[0][1]/tmp1;
+            R[i][1] = (eig_S[i]-s[0][0])/tmp1;
+            if( d_exp_s_ds != NULL)
+              {
+               d_R_dS[i][0][0][0] = -s[0][1]*(s[0][0]-eig_S[i])*(1.-d_eig_dS[i][0][0])/CUBE(tmp1);
+               d_R_dS[i][0][0][1] = d_R_dS[i][0][1][0] = 
+		(SQUARE(s[0][0]-eig_S[i])+s[0][1]*(s[0][0]-eig_S[i])*d_eig_dS[i][0][1])/CUBE(tmp1);
+               d_R_dS[i][0][1][1] = s[0][1]*(s[0][0]-eig_S[i])*d_eig_dS[i][1][1]/CUBE(tmp1);
+               d_R_dS[i][1][0][0] = -SQUARE(s[0][1])*(1.-d_eig_dS[i][0][0])/CUBE(tmp1);
+               d_R_dS[i][1][0][1] = d_R_dS[i][1][1][0] = 
+		(s[0][1]*(s[0][0]-eig_S[i])+SQUARE(s[0][1])*d_eig_dS[i][0][1])/CUBE(tmp1);
+               d_R_dS[i][1][1][1] = SQUARE(s[0][1])*d_eig_dS[i][1][1]/CUBE(tmp1);
+              }
+            }
+        else if( DOUBLE_NONZERO(tmp2))	{
+            R[i][0] = (eig_S[i]-s[1][1])/tmp2;
+            R[i][1] = s[0][1]/tmp2;
+            if( d_exp_s_ds != NULL)
+              {
+               d_R_dS[i][0][1][1] = SQUARE(s[0][1])*(1.-d_eig_dS[i][1][1])/CUBE(tmp2);
+               d_R_dS[i][0][0][1] = d_R_dS[i][0][1][0] = 
+		-(s[0][1]*(s[1][1]-eig_S[i])+SQUARE(s[0][1])*d_eig_dS[i][0][1])/CUBE(tmp2);
+               d_R_dS[i][0][0][0] = -SQUARE(s[0][1])*d_eig_dS[i][0][0]/CUBE(tmp2);
+               d_R_dS[i][1][1][1] = s[0][1]*(s[1][1]-eig_S[i])*(1.-d_eig_dS[i][1][1])/CUBE(tmp2);
+               d_R_dS[i][1][0][1] = d_R_dS[i][1][1][0] = 
+		-(SQUARE(s[1][1]-eig_S[i])+s[0][1]*(s[1][1]-eig_S[i])*d_eig_dS[i][0][1])/CUBE(tmp2);
+               d_R_dS[i][1][0][0] = -s[0][1]*(s[1][1]-eig_S[i])*d_eig_dS[i][0][0]/CUBE(tmp2);
+              }
+            }
+        else {
+            R[i][i] = 1.0;
+            }
+        }
+      }	else	{
+        for (i = 0; i < VIM; i++) {
+             R[i][i] = 1.0;
+             }
+      }
     }
   else
     {
@@ -5933,6 +5955,23 @@ analytical_exp_s(double s[DIM][DIM],
         for(i = 0 ; i < DIM ; i++)	{eig_S[i] = s[i][i];}
         }
 
+/*   c
+c       solve 3x3 linear system
+c
+        deter=xj(1,1)*(xj(2,2)*xj(3,3)-xj(3,2)*xj(2,3))
+     1          -xj(2,1)*(xj(1,2)*xj(3,3)-xj(3,2)*xj(1,3))
+     2          +xj(3,1)*(xj(2,3)*xj(1,2)-xj(2,2)*xj(1,3))
+        detinv=1./deter
+        u(1)=detinv*((-r(1))*(xj(3,3)*xj(2,2)-xj(3,2)*xj(2,3))
+     1          +(-r(2))*(xj(3,2)*xj(1,3)-xj(3,3)*xj(1,2))
+     2          +(-r(3))*(xj(2,3)*xj(1,2)-xj(2,2)*xj(1,3)))
+        u(2)=detinv*((-r(1))*(xj(3,1)*xj(2,3)-xj(3,3)*xj(2,1))
+     1          +(-r(2))*(xj(3,3)*xj(1,1)-xj(3,1)*xj(1,3))
+     2          +(-r(3))*(xj(2,1)*xj(1,3)-xj(2,3)*xj(1,1)))
+        u(3)=detinv*((-r(1))*(xj(3,2)*xj(2,1)-xj(3,1)*xj(2,2))
+     1          +(-r(2))*(xj(3,1)*xj(1,2)-xj(3,2)*xj(1,1))
+     2          +(-r(3))*(xj(2,2)*xj(1,1)-xj(2,1)*xj(1,2)))
+*/
      if( DOUBLE_NONZERO(I_S) || DOUBLE_NONZERO(II_S))	{
         for (i = 0; i < VIM; i++) {
           for (j = 0; j < VIM; j++) {
@@ -5970,30 +6009,52 @@ analytical_exp_s(double s[DIM][DIM],
 
   // exponentiate diagonal
   for (i = 0; i < DIM; i++) {
-      eig_values[i] = exp(eig_S[i]);
+      eig_values[i] = MIN(exp(eig_S[i]),EIGEN_MAX); 
       }
 
-  /* matrix multiplication, the slow way */
+  memset(exp_s,    0, sizeof(double)*DIM*DIM);
   for (i = 0; i < VIM; i++) {
-     for (j = 0; j < VIM; j++) {
-         exp_s[i][j] = R[i][j] * eig_values[j];
-         }
-     }
-  
-  // multiply by transpose
-  for (i = 0; i < VIM; i++) {
-     for (j = 0; j < VIM; j++) {
-         tmp = 0.;
-         for (k = 0; k < VIM; k++) {
-             tmp += exp_s[i][k] * R[j][k];
-             }
-         D[i][j] = tmp;
-         }
-     }
-  for (i = 0; i < VIM; i++) {
-     for (j = 0; j < VIM; j++) {
-         exp_s[i][j] = D[i][j];
-         }
+    for (j = 0; j < VIM; j++) {
+      for (k = 0; k < VIM; k++) {
+        exp_s[i][j] += R[i][k] * eig_values[k] *R[j][k];
+        }
+      }
+    }
+  if( d_exp_s_ds != NULL)
+    {
+    for (i = 0; i < VIM; i++) {
+      for (j = 0; j < VIM; j++) {
+        for (k = 0; k < VIM; k++) {
+          for (l = 0; l < VIM; l++) {
+            for (m = 0; m < VIM; m++) {
+              d_exp_s_ds[i][j][l][m] += R[i][k] * eig_values[k] * d_R_dS[j][k][l][m];
+              }
+            }
+          }
+        }
+      }
+    for (i = 0; i < VIM; i++) {
+      for (j = 0; j < VIM; j++) {
+        for (k = 0; k < VIM; k++) {
+          for (l = 0; l < VIM; l++) {
+            for (m = 0; m < VIM; m++) {
+              d_exp_s_ds[i][j][l][m] += d_R_dS[i][k][l][m] * eig_values[k] * R[j][k];
+              }
+            }
+          }
+        }
+      }
+    for (i = 0; i < VIM; i++) {
+      for (j = 0; j < VIM; j++) {
+        for (k = 0; k < VIM; k++) {
+          for (l = 0; l < VIM; l++) {
+            for (m = 0; m < VIM; m++) {
+              d_exp_s_ds[i][j][l][m] += R[i][k] * eig_values[k]*d_eig_dS[k][l][m] * R[j][k];
+              }
+            }
+          }
+        }
+      }
     }
   
 } // End analytical_exp_s
@@ -6010,17 +6071,13 @@ compute_d_exp_s_ds(dbl s[DIM][DIM],                   //s - stress
   int i,j,p,q;
   double ds, ds_den, fd = FD_FACTOR;
 
-
   memset(d_exp_s_ds, 0, sizeof(double)*DIM*DIM*DIM*DIM);
  
-#if 1
   for (i = 0; i < VIM; i++) {
     for (j = 0; j < VIM; j++) {
-       s_p[i][j] = s[i][j];
-       s_n[i][j] = s[i][j];
-       }
+      s_p[i][j] = s_n[i][j] = s[i][j];
     }
-
+  }
 
   for (i = 0; i < VIM; i++) {
     for (j = i; j < VIM; j++) {
@@ -6033,101 +6090,27 @@ compute_d_exp_s_ds(dbl s[DIM][DIM],                   //s - stress
       if( i != j) {
         s_p[j][i] = s_p[i][j];
         s_n[j][i] = s_n[i][j];
-      }
+        }  
+
       ds_den = 0.5/ds;
 
       // find exp_s at perturbed value
-#ifdef ANALEIG_PLEASE
-      analytical_exp_s(s_p, exp_s_p, eig_values, R1);
-#else
       compute_exp_s(s_p, exp_s_p, eig_values, R1);
-#endif
-#ifdef ANALEIG_PLEASE
-      analytical_exp_s(s_n, exp_s_n, eig_values, R1);
-#else
       compute_exp_s(s_n, exp_s_n, eig_values, R1);
-#endif
 
       // approximate derivative
       for (p = 0; p < VIM; p++) {
 	for (q = 0; q < VIM; q++) {
 	  d_exp_s_ds[p][q][i][j] = ds_den*(exp_s_p[p][q] - exp_s_n[p][q]);
 	  if(i != j)d_exp_s_ds[p][q][j][i] = d_exp_s_ds[p][q][i][j];
-	}
-      }
-      s_p[i][j] = s[i][j];
-      s_n[i][j] = s[i][j];
+	  }
+        }  
+      s_p[i][j] = s_n[i][j] = s[i][j];
       if( i != j) {
-        s_p[j][i] = s[j][i];
-        s_n[j][i] = s[j][i];
-        } 
+         s_p[j][i] = s_n[j][i] = s[j][i];
+         } 
     }
   }
-#else
-#ifdef ANALEIG_PLEASE
-      analytical_exp_s(s, exp_s, eig_values, R1);
-#else
-      compute_exp_s(s, exp_s, eig_values, R1);
-#endif
-  memset(d_I_dS,    0, sizeof(double)*DIM*DIM);
-  memset(d_II_dS,    0, sizeof(double)*DIM*DIM);
-  memset(d_III_dS,    0, sizeof(double)*DIM*DIM);
-  memset(d_eig_ds,    0, sizeof(double)*DIM*DIM*DIM);
-
-  I_S = s[0][0] + s[1][1] + s[2][2];
-  II_S = s[0][0]*s[1][1]+s[0][0]*s[2][2]+s[1][1]*s[2][2]
-              -(SQUARE(s[0][1])+SQUARE(s[0][2])+SQUARE(s[1][2]));
-  III_S = s[0][0]*s[1][1]*s[2][2] + 2.*(s[0][1]*s[1][2]*s[0][2])
-              -s[0][0]*SQUARE(s[1][2])-s[1][1]*SQUARE(s[0][2])-s[2][2]*SQUARE(s[0][1]);
-  for (i = 0; i < DIM; i++) {
-      d_I_dS[i][i] = 1.;
-      }
-  d_II_S[0][0] = s[1][1] + s[2][2];
-  d_II_S[1][1] = s[0][0] + s[2][2];
-  d_II_S[2][2] = s[0][0] + s[1][1];
-  d_II_S[0][1] = d_II_S[1][0] = -2.*s[0][1];
-  d_II_S[0][2] = d_II_S[2][0] = -2.*s[0][2];
-  d_II_S[1][2] = d_II_S[2][1] = -2.*s[1][2];
-  d_III_S[0][0] = s[1][1]*s[2][2]-SQUARE(s[1][2]);
-  d_III_S[1][1] = s[0][0]*s[2][2]-SQUARE(s[0][2]);
-  d_III_S[2][2] = s[1][1]*s[0][0]-SQUARE(s[0][1]);
-  d_III_S[0][1] = d_III_S[1][0] = 2.*s[1][2]*s[0][2] - 2*s[2][2]*s[0][1];
-  d_III_S[0][2] = d_III_S[2][0] = 2.*s[0][1]*s[1][2] - 2*s[1][1]*s[0][2];
-  d_III_S[1][2] = d_III_S[2][1] = 2.*s[0][1]*s[1][2] - 2*s[1][1]*s[0][2];
-
-  for (i = 0; i < DIM; i++) {
-     eig_S[i] = log(eig_values[i]);
-     denom = 3*SQUARE(eig_S[i]) -2*eig_S[i]*I_S + II_S; 
-     if(DOUBLE_NONZERO(denom))  {
-        for (p = 0; p < DIM; p++) {
-           for (q = 0; q < DIM; p++) {
-              d_eig_ds[i][p][q] = denom_inv*
-                     (SQUARE(eig_S[i])*d_I_S[p][q]-eig_S[i]*d_II_S[p][q] + d_III_S[p][q]);
-              }
-           }
-        }
-  /* matrix multiplication, the slow way */
-  for (p = 0; i < VIM; i++) {
-     for (q = 0; j < VIM; j++) {
-        for (i = 0; i < DIM; i++) {
-           for (j = 0; j < DIM; j++) {
-              d_exp_s_ds[p][q][i][j] = eig_values[p]*d_eig_ds[p][i][j]*R1[q][p];
-              }
-           }
-        for (i = 0; i < VIM; i++) {
-           for (j = 0; j < VIM; j++) {
-              for (k = 0; k < VIM; k++) {
-                 d_exp_s_ds[p][q][i][j] += D[i][k] * R1[j][k];
-             }
-         }
-        }
-      }
-    }
-
-  
- 
-   }
-#endif
 
 }
 

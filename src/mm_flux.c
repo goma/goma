@@ -716,7 +716,7 @@ evaluate_flux(
 			                  }
 				      }
 #ifdef ANALEIG_PLEASE
-                                    analytical_exp_s(log_c, exp_s, eig_values, R1);
+                                    analytical_exp_s(log_c, exp_s, eig_values, R1, NULL);
 #else
 				    compute_exp_s(log_c, exp_s, eig_values, R1);
 #endif
@@ -5438,6 +5438,8 @@ compute_volume_integrand(const int quantity, const int elem,
       rho = density( NULL, time );
       Cp = heat_capacity( NULL, time );
 
+      if(species_no == -9)
+	{ rho=1.0;  Cp=1.0;}
       *sum += rho*Cp*fv->T*weight*det;
 
       if( J_AC != NULL )

@@ -2666,6 +2666,9 @@ noahs_ark()
           ddd_add_member(n, &(pp_data[i]->mat_num), 1, MPI_INT);
           ddd_add_member(n, &(pp_data[i]->elem_blk_id), 1, MPI_INT);
           ddd_add_member(n,   pp_data[i]->data_filenm, MAX_FNL, MPI_CHAR);
+          ddd_add_member(n,   pp_data[i]->format_flag, 8, MPI_CHAR);
+          ddd_add_member(n, &(pp_data[i]->first_time), 1, MPI_INT);
+
         }
     }
   
