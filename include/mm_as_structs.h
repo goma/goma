@@ -2921,6 +2921,8 @@ struct heat_source_dependence
   double APR[MDE];	   /* acoustic pressure dependence  */
   double API[MDE];	   /* acoustic pressure dependence  */
   double INT[MDE];	   /* acoustic pressure dependence  */
+  double EM_ER[DIM][MDE];  /* time-harmonic electromagnetic dependence */
+  double EM_EI[DIM][MDE];  /* time-harmonic electromagnetic dependence */
 };
 typedef struct heat_source_dependence HEAT_SOURCE_DEPENDENCE_STRUCT;
 

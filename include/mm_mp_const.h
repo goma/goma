@@ -69,7 +69,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define GRAV_VIBRATIONAL 19   /* momentum source for gravity + vibration */
 #define MELT             20  /* Lubrication source term model*/
 #define EM_DISS         21   /* heat generation by EM waves */
-
+#define EM_VECTOR_DISS  22   /* heat generation by EM vector waves */
 
 /* MMH */
 /* #define  SUSPENSION_PM xxx Defiend below. */

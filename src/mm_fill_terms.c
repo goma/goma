@@ -9858,7 +9858,7 @@ load_fv_grads(void)
 	}
     }
 
-    if (pd->v[EM_E1_REAL]) {
+    if (pd->v[EM_E1_REAL] && pd->v[EM_E2_REAL]) {
       v = EM_E1_REAL;
       dofs = ei->dof[v];
       bfn = bf[v];
@@ -9872,7 +9872,7 @@ load_fv_grads(void)
         }
       }
     }
-    if (pd->v[EM_E1_IMAG]) {
+    if (pd->v[EM_E1_IMAG] && pd->v[EM_E2_IMAG]) {
       v = EM_E1_REAL;
       dofs = ei->dof[v];
       bfn = bf[v];
@@ -10911,7 +10911,7 @@ load_fv_grads(void)
   /*
    * EM Wave Vector Gradients
    */
-  if (pd->v[EM_E1_REAL] || pd->v[EM_E2_REAL] || pd->v[EM_E3_REAL]) 
+  if (pd->v[EM_E1_REAL] && pd->v[EM_E2_REAL] && pd->v[EM_E3_REAL])
     {
       dofs = ei->dof[EM_E1_REAL];
       v = EM_E1_REAL;
@@ -10943,7 +10943,7 @@ load_fv_grads(void)
 	}
 
     }
-  if (pd->v[EM_E1_IMAG] || pd->v[EM_E2_IMAG] || pd->v[EM_E3_IMAG]) 
+  if (pd->v[EM_E1_IMAG] && pd->v[EM_E2_IMAG] && pd->v[EM_E3_IMAG])
     {
       dofs = ei->dof[EM_E1_IMAG];
       v = EM_E1_IMAG;
@@ -30975,6 +30975,9 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
     {
       h = em_diss_heat_source(d_h, mp->u_heat_source, mp->len_u_heat_source);
     }
+  else if (mp->HeatSourceModel == EM_VECTOR_DISS) {
+    h = em_diss_e_curlcurl_source(d_h, mp->u_heat_source, mp->len_u_heat_source);
+  }
   else if (mp->HeatSourceModel == EPOXY )
     {
       h = epoxy_heat_source(d_h, tt, dt);
@@ -34476,6 +34479,97 @@ if(af->Assemble_Jacobian)
 
   return(h);
 }
+/*  _______________________________________________________________________  */
+/*
+ * double em_diss_e_curlcurl_source (dh, param)
+ *
+ * ------------------------------------------------------------------------------
+ * This routine is responsible for filling up the following forces and sensitivities
+ * at the current gauss point:
+ *     intput:
+ *
+ *     output:  h             - heat source
+ *              d_h->T[j]    - derivative wrt temperature at node j.
+ *              d_h->V[j]    - derivative wrt voltage at node j.
+ *              d_h->C[i][j] - derivative wrt mass frac species i at node j
+ *              d_h->v[i][j] - derivative wrt velocity component i at node j
+ *              d_h->X[0][j] - derivative wrt mesh displacement components i at node j
+ *              d_h->S[m][i][j][k] - derivative wrt stress mode m of component ij at node k
+ *
+ *   NB: The user need only supply f, dfdT, dfdC, etc....mp struct is loaded up for you
+ * ---------------------------------------------------------------------------
+ */
+
+double
+em_diss_e_curlcurl_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
+                      dbl *param, int num_const) /* General multipliers */
+{
+  /* Local Variables */
+  int Rvar, Ivar;
+
+  int j;
+  double h;
+
+  double time = tran->time_value;
+
+  /* Begin Execution */
+
+  /**********************************************************/
+  /* Source = 1/2 * Re(E cross[conj{curl[E]}])
+            = 1/2 * omega*epsilon_0*epsilon_c'' * (mag(E))^2 */
+
+  double omega, epsilon_0, epsilon_cpp, h_factor, mag_E_sq;
+
+  dbl n;				/* Refractive index. */
+  CONDUCTIVITY_DEPENDENCE_STRUCT d_n_struct;
+  CONDUCTIVITY_DEPENDENCE_STRUCT *d_n = &d_n_struct;
+
+  dbl k;				/* Extinction coefficient */
+  CONDUCTIVITY_DEPENDENCE_STRUCT d_k_struct;
+  CONDUCTIVITY_DEPENDENCE_STRUCT *d_k = &d_k_struct;
+
+  omega = upd->Acoustic_Frequency;
+
+  epsilon_0 = mp->permittivity;
+
+  n = refractive_index( d_n, time );
+  k = extinction_index( d_k, time );
+
+  epsilon_cpp = 2*n*k;
+  h_factor = omega*epsilon_0*epsilon_cpp/2.;
+
+  mag_E_sq = 0;
+  for (int p=0; p<pd->Num_Dim; p++) {
+    mag_E_sq += SQUARE(fv->em_er[p]) + SQUARE(fv->em_ei[p]);
+  }
+
+  h = h_factor*mag_E_sq;
+  h *= param[0];
+
+  /* Now sensitivies */
+  if (af->Assemble_Jacobian) {
+
+    for (int p=0; p<pd->Num_Dim; p++) {
+      Rvar = EM_E1_REAL + p;
+      Ivar = EM_E1_IMAG + p;
+
+      if (d_h != NULL && pd->v[Rvar]) {
+        for (j=0; j<ei->dof[Rvar]; j++) {
+          d_h->EM_ER[p][j] += param[0]*h_factor*2.0*fv->em_er[p]*bf[Rvar]->phi[j];
+        }
+      }
+
+      if (d_h != NULL && pd->v[Ivar]) {
+        for (j=0; j<ei->dof[Ivar]; j++) {
+          d_h->EM_EI[p][j] += param[0]*h_factor*2.0*fv->em_ei[p]*bf[Ivar]->phi[j];
+        }
+      }
+    }
+
+  }  /* end of if Assemble Jacobian  */
+
+  return(h);
+} // end of em_diss_e_curlcurl_source
 /*  _______________________________________________________________________  */
 
 /* assemble_poynting -- assemble terms (Residual &| Jacobian) for Beer's law 
