@@ -1428,7 +1428,7 @@ void solve_problem_segregated(
                */
             }
 #ifdef HAVE_OMEGA_H
-            if ((tran->ale_adapt || (ls !=NULL && ls->adapt)) && pg->imtrx == 0 && (nt == 0 || ((ls !=NULL && nt % ls->adapt_freq == 0) || (tran->ale_adapt && nt % 25 == 0)))) {
+            if ((tran->ale_adapt || (ls !=NULL && ls->adapt)) && pg->imtrx == 0 && (nt == 0 || ((ls !=NULL && nt % ls->adapt_freq == 0) || (tran->ale_adapt && nt % 50 == 0)))) {
               adapt_mesh_omega_h(ams, exo, dpi, x, x_old, x_older, xdot, xdot_old, x_oldest,
                                  resid_vector, x_update, scale, adapt_step);
               adapt_step++;
@@ -1683,6 +1683,7 @@ void solve_problem_segregated(
                     pd_glob[0]->v[pg->imtrx][MOMENT3]) {
                   /*     Floor values to 0 */
                   int floored_values = 0;
+		  int moment_floored[4] = {0,0,0,0};
                   for (int var = MOMENT0; var <= MOMENT3; var++) {
                     for (i = 0; i < num_total_nodes; i++) {
                       if (pd_glob[0]->v[pg->imtrx][var]) {
@@ -1691,10 +1692,16 @@ void solve_problem_segregated(
                         if (j != -1 && x[pg->imtrx][j] < 0) {
                           pg->sub_step_solutions[pg->imtrx].x[j] = 0.0;
                           floored_values++;
+			  moment_floored[var-MOMENT0] = 1;
                         }
                       }
                     }
                   }
+	          for (int i = 0; i < 4; i++) {
+	            if (moment_floored[i]) {
+	              printf("moment %d floored", i+1);
+	            }
+	          }
 
                   int global_floored = 0;
                   MPI_Allreduce(&floored_values, &global_floored, 1, MPI_INT,
@@ -1953,6 +1960,7 @@ void solve_problem_segregated(
                 pd_glob[0]->v[pg->imtrx][MOMENT3]) {
               /*     Floor values to 0 */
               int floored_values = 0;
+	      int moment_floored[4] = {0,0,0,0};
               for (int var = MOMENT0; var <= MOMENT3; var++) {
                 for (i = 0; i < num_total_nodes; i++) {
                   if (pd_glob[0]->v[pg->imtrx][var]) {
@@ -1961,6 +1969,7 @@ void solve_problem_segregated(
                     if (j != -1 && x[pg->imtrx][j] < 0) {
                       x[pg->imtrx][j] = 0.0;
                       floored_values++;
+		      moment_floored[var-MOMENT0] = 1;
                     }
                   }
                 }
@@ -1969,6 +1978,12 @@ void solve_problem_segregated(
               int global_floored = 0;
               MPI_Allreduce(&floored_values, &global_floored, 1, MPI_INT,
                             MPI_SUM, MPI_COMM_WORLD);
+
+	      for (int i = 0; i < 4; i++) {
+	        if (moment_floored[i]) {
+	          printf("moment %d floored", i+1);
+	        }
+	      }
 
               P0PRINTF("Floored %d moment values\n", global_floored);
             }

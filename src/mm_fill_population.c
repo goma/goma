@@ -1330,8 +1330,8 @@ int get_moment_growth_rate_term(struct moment_growth_rate *MGR) {
     return -1;
   }
 
-  double eabs = 1e-8;
-  double rmin[3] = {1e-5, 0, 1e-3};
+  double eabs = 1e-3;
+  double rmin[3] = {1e-15, 1e-5, 1e-3};
 
   /* Get quad weights and nodes */
   int nnodes_out;
@@ -2522,7 +2522,7 @@ int assemble_moments(double time, /* present time value */
             diffusion += bf[eqn]->grad_phi[i][p] * fv->grad_moment[mom][p];
           }
 
-          diffusion *= det_J * wt;
+          diffusion *= -det_J * wt;
           diffusion *= h3;
           diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
         }
@@ -2652,7 +2652,7 @@ int assemble_moments(double time, /* present time value */
                     diffusion += bf[eqn]->grad_phi[i][p] * grad_phi_j[p];
                   }
 
-                  diffusion *= det_J * wt;
+                  diffusion *= -det_J * wt;
                   diffusion *= h3;
                   diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
                 }

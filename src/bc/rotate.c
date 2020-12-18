@@ -1216,6 +1216,7 @@ rotate_momentum_eqn (
 			  
 		}
 	      else if (strcmp(Matrix_Format, "epetra") == 0) {
+               if (I < (DPI_ptr->num_internal_nodes + DPI_ptr->num_boundary_nodes)) {
 	        // Direct translation from MSR
                 for (j = 0; j < rotation[I][eq][kdir]->d_vector_n; j++) {
                   double sum_val;
@@ -1252,6 +1253,7 @@ rotate_momentum_eqn (
                     EpetraSumIntoGlobalRowMatrix(ams->RowMatrix, global_row, 1, &sum_val, &global_col);
                   } /* end of Baby_dolphin */
                 }
+               }
 	      }
 	      else
 		{
