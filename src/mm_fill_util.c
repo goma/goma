@@ -2109,7 +2109,7 @@ load_bf_grad(void)
 	 * variable.  I had one, but it is not presently being used.
 	 */
 
- 	if (CURL_V != -1)
+ 	if (pd->v[EM_E1_REAL]  ||  CURL_V != -1)
 	  {
 	    siz = DIM * DIM * MDE * sizeof(double);
 	    memset(&(bfv->curl_phi_e[0][0][0]), 0, siz);
@@ -3752,7 +3752,7 @@ fill_variable_vector(int inode, int ivec_varType[], int ivec_matID[])
 /*****************************************************************************/
 
 void
-zero_lec_row(double local_J[MAX_PROB_VAR + MAX_CONC][MAX_PROB_VAR + MAX_CONC] [MDE][MDE],
+zero_lec_row(double *local_J,
 	     int eqn_type,	/* Eqn Type of row to be zeroed     */
 	     int ldof)		/* Local dof of that equation type  */
 
@@ -3773,7 +3773,7 @@ zero_lec_row(double local_J[MAX_PROB_VAR + MAX_CONC][MAX_PROB_VAR + MAX_CONC] [M
   
   for(i_var = 0; i_var < MAX_PROB_EQN+MAX_CONC; i_var++)
     {
-      memset(local_J[eqn_type][i_var][ldof], 0, sizeof(double)*MDE);
+     memset(&(local_J[LEC_J_INDEX(eqn_type,i_var,ldof,0)]), 0, sizeof(double)*lec->max_dof);
     }
 
   
@@ -3789,7 +3789,7 @@ zero_lec_row(double local_J[MAX_PROB_VAR + MAX_CONC][MAX_PROB_VAR + MAX_CONC] [M
  * Author: Matt Hopkins, 12/7/00
  */
 void
-zero_lec_column(double local_J[MAX_PROB_VAR + MAX_CONC][MAX_PROB_VAR + MAX_CONC] [MDE][MDE],
+zero_lec_column(double *local_J,
 		int var_type,	/* Variable type of column to be zeroed */
 		int ldof)		/* Local dof of that variable type */
 {
@@ -3797,7 +3797,7 @@ zero_lec_column(double local_J[MAX_PROB_VAR + MAX_CONC][MAX_PROB_VAR + MAX_CONC]
 
   for(eqn = 0; eqn < MAX_PROB_EQN+MAX_CONC; eqn++)
     for(dof = 0; dof < MDE; dof++)
-      local_J[eqn][var_type][dof][ldof] = 0.0;
+      local_J[LEC_J_INDEX(eqn,var_type,dof,ldof)] = 0.0;
 }
 /*****************************************************************************/
 /*****************************************************************************/
@@ -5199,13 +5199,13 @@ set_solid_inertia()
   tran->solid_inertia = FALSE;
   for(mn = 0; mn < upd->Num_Mat; mn++)
     {
-      if(pd->TimeIntegration != STEADY &&
+      if(pd_glob[mn]->TimeIntegration != STEADY &&
          pd_glob[mn]->etm[R_MESH1][(LOG2_MASS)] && 
          pd_glob[mn]->MeshMotion == DYNAMIC_LAGRANGIAN)
         {
           tran->solid_inertia = TRUE;
         } 
-      else if (pd->TimeIntegration != STEADY &&
+      else if (pd_glob[mn]->TimeIntegration != STEADY &&
                pd_glob[mn]->etm[R_SOLID1][(LOG2_MASS)] &&
                pd_glob[mn]->MeshMotion == TOTAL_ALE)
         {
@@ -5377,7 +5377,7 @@ void get_supg_tau(struct SUPG_terms *supg_terms,
   double eta = Pek;
   double eta_dX[DIM][MDE];
   double eta_dV[DIM][MDE];
-  if (Pek > 1) {
+  if (Pek > 1 || vnorm <= 0.) {
     eta = 1;
     for (int i = 0; i < DIM; i++)
     {
@@ -5409,27 +5409,27 @@ void get_supg_tau(struct SUPG_terms *supg_terms,
     }
   }
 
-  if (vnorm > 0) {
-    supg_terms->supg_tau = 0.5 * hk * eta / vnorm;
+  if (vnorm > 0.) 
+    {
+      supg_terms->supg_tau = 0.5 * hk * eta / vnorm;
 
-    for (int a = 0; a < VIM; a++)
-      {
-        int var = VELOCITY1 + a;
-        for (int j = 0; j < ei->dof[var]; j++)
-          {
-            supg_terms->d_supg_tau_dv[a][j] = 0.5*hk*eta*fv->v[a]*bf[var]->phi[j] /
+      for (int a = 0; a < VIM; a++)
+	{
+	  int var = VELOCITY1 + a;
+	  for (int j = 0; j < ei->dof[var]; j++)
+	    {
+	      supg_terms->d_supg_tau_dv[a][j] = 0.5*hk*eta*fv->v[a]*bf[var]->phi[j] /
                 (- vnorm*vnorm*vnorm) + 0.5 * hk * eta_dV[a][j] / vnorm;
-          }
+	    }
 
-        var = MESH_DISPLACEMENT1 + a;
-        for (int j = 0; j < ei->dof[var]; j++)
-          {
-            supg_terms->d_supg_tau_dX[a][j] = 0.5 * hk_dX[a][j] * eta / vnorm + 0.5 * hk * eta_dX[a][j] / vnorm;
-          }
-      }
-
-
-  } else {
+	  var = MESH_DISPLACEMENT1 + a;
+	  for (int j = 0; j < ei->dof[var]; j++)
+	    {
+	      supg_terms->d_supg_tau_dX[a][j] = 0.5 * hk_dX[a][j] * eta / vnorm + 0.5 * hk * eta_dX[a][j] / vnorm;
+	    }
+	}
+    } 
+  else {
     supg_terms->supg_tau = 0;
     for (int i = 0; i < DIM; i++)
       {

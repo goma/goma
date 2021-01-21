@@ -146,6 +146,7 @@ PROTO((double [],		/* func                                      */
        const double ,		/* alpha - coefficient that scales the 
 				 * exponent  of the position dependent 
 				 * slip velocity (1/length, from input deck) */
+       const double ,		/* vtang_dot - surface acceleration          */
        const double [MAX_PDIM],	/* xsurf - coordinates of surface Gauss point,
 				 * i.e. current position                     */
        const double [MAX_PDIM],	/* x_dot - mesh velocity vector              */
@@ -294,7 +295,7 @@ PROTO((double [MDE][DIM],	/* cfunc                                     */
        double [MDE][DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_cfunc     */
        const int ,		/* id_side - ID of the side of the element   */
        const double ,		/* sigma - surface tension                   */
-       const double ,		/* pb - applied pressure                     */
+       const double[DIM] ,		/* pb - applied pressure                     */
        struct elem_side_bc_struct *, /* elem_side_bc                         */
        const int ,		/* iconnect_ptr                              */
        double [DIM][MDE]));	/* dsigma_dx                               */

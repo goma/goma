@@ -297,7 +297,8 @@ chemkin_mat_prop_init(MATRL_PROP_STRUCT *mat_ptr, int mn,
    *  Assign the species variable default and the units for the
    *  species equation. This may change in the future!
    */
-  assign_species_var_type( mn, SPECIES_MASS_FRACTION, FALSE);
+
+  assign_species_var_type( mn, SPECIES_MASS_FRACTION, FALSE); 
 
    /*
     *  Change the defaults on some thermo models from the GOMA

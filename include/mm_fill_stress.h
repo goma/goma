@@ -195,11 +195,18 @@ void
 analytical_exp_s(double [DIM][DIM],
 	      double [DIM][DIM],
               double [DIM],
-	      double [DIM][DIM]);
+	      double [DIM][DIM],
+              double [DIM][DIM][DIM][DIM]);        // d_exp_s_ds
 
 void
 compute_d_exp_s_ds(dbl [DIM][DIM],                   //s - stress
                    dbl [DIM][DIM],                   // exp_s
                    dbl [DIM][DIM][DIM][DIM]);        // d_exp_s_ds
+
+dbl
+compute_saramito_model_terms(dbl [DIM][DIM],  // stress
+                             dbl,             // yield stress
+                             dbl,             // yield stress exponent
+                             SARAMITO_DEPENDENCE_STRUCT* ); // struct for sCoeff sensitvities
 
 #endif /* _MM_FILL_STRESS_H */

@@ -62,18 +62,18 @@ static char rcsid[] =
  * have a mm_mp_structs and mm_mp.h to declare what these are.
  */
 
-int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwrite  *
+extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwrite  *
 					 * with material-specific            *
 					 * initialization                    */
 
-struct Variable_Initialization	Var_init[MAX_VARIABLE_TYPES + MAX_CONC];
+extern struct Variable_Initialization	Var_init[MAX_VARIABLE_TYPES + MAX_CONC];
 
-struct Variable_Initialization	Var_init_mat[MAX_NUMBER_MATLS]
+extern struct Variable_Initialization	Var_init_mat[MAX_NUMBER_MATLS]
 						[MAX_VARIABLE_TYPES + MAX_CONC];
 
-struct Boundary_Condition *BC_Types;
+extern struct Boundary_Condition *BC_Types;
 
-struct Rotation_Specs *ROT_Types;
+extern struct Rotation_Specs *ROT_Types;
 
 static Spfrtn sr;
 
@@ -87,8 +87,6 @@ static Spfrtn sr;
 //static char default_string[MAX_CHAR_IN_INPUT] = "Defaulting";
 
 //static char specify_string[MAX_CHAR_IN_INPUT] = "          ";
-
-Strcpy_rtn strcpy_rtn;		/* Data type def'd in std.h */
 
 //static char current_mat_file_name[MAX_FNL];
 
@@ -459,6 +457,12 @@ rd_bc_specs(FILE *ifp,
 	case SHELL_TFMP_GRAD_S_BC:
 	case SHELL_TFMP_FREE_GAS_BC:
         case SHELL_LUBRICATION_OUTFLOW_BC:
+        case EM_ER_FREE_BC:
+        case EM_EI_FREE_BC:
+        case EM_HR_FREE_BC:
+        case EM_HI_FREE_BC:
+        case E_ER_2D_BC:
+        case E_EI_2D_BC:
 
 	  break;
 
@@ -549,6 +553,7 @@ rd_bc_specs(FILE *ifp,
 			   yo, BC_Types[ibc].desc->name1);
 	      EH(-1, err_msg);
 	    }
+          BC_Types[ibc].max_DFlt = 1;
 
 	  SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].BC_Data_Float[0]);
 	  if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[0]) != 1) {
@@ -590,6 +595,7 @@ rd_bc_specs(FILE *ifp,
 			     yo, BC_Types[ibc].desc->name1);
 		EH(-1, err_msg);
 	      }
+            BC_Types[ibc].max_DFlt = 4;
 	    SPF(endofstring(echo_string), " %.4g %.4g %.4g",BC_Types[ibc].BC_Data_Float[1], BC_Types[ibc].BC_Data_Float[2],BC_Types[ibc].BC_Data_Float[3]); 
 	  }
 	  break;
@@ -748,6 +754,8 @@ rd_bc_specs(FILE *ifp,
 	case EM_H2I_BC:
 	case EM_H3R_BC:
 	case EM_H3I_BC:
+        case EM_CONT_REAL_BC:
+        case EM_CONT_IMAG_BC:
 	case SHELL_TFMP_SAT_BC:
   
 	    if (fscanf(ifp, "%lf", &BC_Types[ibc].BC_Data_Float[0]) != 1) {
@@ -1562,6 +1570,13 @@ rd_bc_specs(FILE *ifp,
 	case BLAKE_DIRICH_ROLL_BC:
 	case HOFFMAN_DIRICH_ROLL_BC:
 	case COX_DIRICH_ROLL_BC:
+        case EM_ER_FARFIELD_DIRECT_BC:
+        case EM_EI_FARFIELD_DIRECT_BC:
+        case EM_HR_FARFIELD_DIRECT_BC:
+        case EM_HI_FARFIELD_DIRECT_BC:
+        case E_ER_FARFIELD_BC:
+        case E_EI_FARFIELD_BC:
+
 	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf %lf %lf %lf", 
 		      &BC_Types[ibc].BC_Data_Float[0],   
 		      &BC_Types[ibc].BC_Data_Float[1],   
@@ -1645,6 +1660,10 @@ rd_bc_specs(FILE *ifp,
         case SHIK_DIRICHLET_BC:
 		case SHIK_DIRICH_ROLL_BC:
 		case HYSTERESIS_WETTING_BC: 
+        case EM_ER_SOMMERFELD_BC:
+        case EM_EI_SOMMERFELD_BC:
+        case EM_HR_SOMMERFELD_BC:
+        case EM_HI_SOMMERFELD_BC:
 	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf", 
 		      &BC_Types[ibc].BC_Data_Float[0],   
 		      &BC_Types[ibc].BC_Data_Float[1],   
@@ -1731,6 +1750,40 @@ rd_bc_specs(FILE *ifp,
 		SPF(endofstring(echo_string)," %d", BC_Types[ibc].BC_Data_Int[2]);
 
 	  break;
+          /*
+           * Fall through for all cases which require twelve floating point
+           * values as data input
+           */
+        case E_ER_PLANEWAVE_BC:
+        case E_EI_PLANEWAVE_BC:
+          if ( fscanf(ifp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf",
+                      &BC_Types[ibc].BC_Data_Float[0],
+                      &BC_Types[ibc].BC_Data_Float[1],
+                      &BC_Types[ibc].BC_Data_Float[2],
+                      &BC_Types[ibc].BC_Data_Float[3],
+                      &BC_Types[ibc].BC_Data_Float[4],
+                      &BC_Types[ibc].BC_Data_Float[5],
+                      &BC_Types[ibc].BC_Data_Float[6],
+                      &BC_Types[ibc].BC_Data_Float[7],
+                      &BC_Types[ibc].BC_Data_Float[8],
+                      &BC_Types[ibc].BC_Data_Float[9],
+                      &BC_Types[ibc].BC_Data_Float[10],
+                      &BC_Types[ibc].BC_Data_Float[11]) != 12)
+            {
+              sr = sprintf(err_msg, "%s: Expected 12(!) flts for %s.",
+                           yo, BC_Types[ibc].desc->name1);
+              EH(-1, err_msg);
+            }
+          for(i=0;i<12;i++) SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].BC_Data_Float[i]);
+
+          if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[2]) != 1)
+                {
+                 BC_Types[ibc].BC_Data_Int[2] = -1;
+                }
+          else
+                SPF(endofstring(echo_string)," %d", BC_Types[ibc].BC_Data_Int[2]);
+
+          break;
 
 	case CAP_REPULSE_USER_BC:
 
@@ -1942,6 +1995,7 @@ rd_bc_specs(FILE *ifp,
 	      EH(-1, err_msg);
 	    }			   
 	  BC_Types[ibc].len_u_BC = num_const;	  
+	  BC_Types[ibc].max_DFlt = num_const+1;
 
 	  for(i=0;i<num_const;i++) SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].u_BC[i]);
 
@@ -1975,6 +2029,7 @@ rd_bc_specs(FILE *ifp,
 	      EH(-1, err_msg);
 	    }			   
 	  BC_Types[ibc].len_u_BC = num_const;	  
+	  BC_Types[ibc].max_DFlt = num_const+3;
 
 	  for(i=0;i<num_const;i++) SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].u_BC[i]);
 
@@ -1987,6 +2042,7 @@ rd_bc_specs(FILE *ifp,
         case YFLUX_USER_BC:
         case YUSER_BC:
 	case YFLUX_ALLOY_BC:
+        case FEATURE_ROLLON_BC:
 	  if ( fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[0]) != 1)
 	    {
 	      sr = sprintf(err_msg, "Expected 1 int for %s on %sID=%d\n",
@@ -2006,6 +2062,7 @@ rd_bc_specs(FILE *ifp,
 	      EH(-1, err_msg);
 	    }			   
 	  BC_Types[ibc].len_u_BC = num_const;	  
+	  BC_Types[ibc].max_DFlt = num_const;
 
 	  SPF(endofstring(echo_string)," %d", BC_Types[ibc].BC_Data_Int[0]);
 	  for(i=0;i<num_const;i++) SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].u_BC[i]);
@@ -2048,6 +2105,7 @@ rd_bc_specs(FILE *ifp,
 	      EH(-1, err_msg);
 	    }			   
 	  BC_Types[ibc].len_u_BC = num_const;	  
+	  BC_Types[ibc].max_DFlt = num_const;
 
 	  SPF(endofstring(echo_string)," %s", input);
 	  for(i=0;i<num_const;i++) SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].u_BC[i]);
@@ -2687,6 +2745,14 @@ rd_bc_specs(FILE *ifp,
           BC_Types[ibc].max_DFlt = 3;
 	  SPF(endofstring(echo_string)," %d", BC_Types[ibc].BC_Data_Int[0]); 
 	  for(i=0;i<3;i++) SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].BC_Data_Float[i]);
+
+          if ( fscanf(ifp, "%lf", &BC_Types[ibc].BC_Data_Float[3]) != 1)
+             {
+              BC_Types[ibc].BC_Data_Float[3] = 0.0;
+              BC_Types[ibc].max_DFlt = 4;
+             }
+          else
+            SPF(endofstring(echo_string)," %lf", BC_Types[ibc].BC_Data_Float[11]);
 
           break;
 

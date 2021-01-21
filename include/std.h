@@ -61,7 +61,7 @@
     #define STRINGCON(x) STRINGCON_(x)
     #define GOMA_VERSION STRINGCON(GIT_VERSION)
   #else
-    #define GOMA_VERSION "6.0.0"
+    #define GOMA_VERSION "6.2.0"
   #endif
 #endif
 
@@ -555,7 +555,7 @@ extern int zero_detJ_global;
     #define STRINGCON(x) STRINGCON_(x)
     #define GOMA_VERSION STRINGCON(GIT_VERSION)
   #else
-    #define GOMA_VERSION "6.0.0"
+    #define GOMA_VERSION "6.2.0"
   #endif
 #endif
 

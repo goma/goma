@@ -716,7 +716,7 @@ evaluate_flux(
 			                  }
 				      }
 #ifdef ANALEIG_PLEASE
-                                    analytical_exp_s(log_c, exp_s, eig_values, R1);
+                                    analytical_exp_s(log_c, exp_s, eig_values, R1, NULL);
 #else
 				    compute_exp_s(log_c, exp_s, eig_values, R1);
 #endif
@@ -5109,6 +5109,10 @@ compute_volume_integrand(const int quantity, const int elem,
     {
       *sum += weight*det*em_diss_heat_source(NULL, mp->u_heat_source, mp->len_u_heat_source);
     }
+  if (mp->HeatSourceModel == EM_VECTOR_DISS )
+    {
+      *sum += weight*det*em_diss_e_curlcurl_source(NULL, mp->u_heat_source, mp->len_u_heat_source);
+    }
   else
     {
 	for( p=0; p<WIM; p++)
@@ -5434,6 +5438,8 @@ compute_volume_integrand(const int quantity, const int elem,
       rho = density( NULL, time );
       Cp = heat_capacity( NULL, time );
 
+      if(species_no == -9)
+	{ rho=1.0;  Cp=1.0;}
       *sum += rho*Cp*fv->T*weight*det;
 
       if( J_AC != NULL )

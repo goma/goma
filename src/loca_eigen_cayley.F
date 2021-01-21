@@ -10,6 +10,10 @@
 * This software is distributed under the GNU General Public License.	  *
 \************************************************************************/
 
+#ifndef ARSCND_NAME
+#define ARSCND_NAME second
+#endif
+
 C loca_eigen_cayley.F,v
 
 C====================================================================
@@ -183,7 +187,7 @@ c     dneigh  ARPACK compute Ritz values and error bounds routine.
 c     dngets  ARPACK reorder Ritz values and error bounds routine.
 c     dsortc  ARPACK sorting routine.
 c     ivout   ARPACK utility routine that prints integers.
-c     second  ARPACK utility routine for timing.
+c     ARSCND_NAME  ARPACK utility routine for timing.
 c     dmout   ARPACK utility routine that prints matrices
 c     dvout   ARPACK utility routine that prints vectors.
 c     dlamch  LAPACK routine that determines machine constants.
@@ -313,7 +317,7 @@ c     | External Subroutines |
 c     %----------------------%
 c
       external   dcopy, dgetv0, dnaitr, dnconv, dneigh, dngets, dnapps,
-     &           dvout, ivout, second
+     &           dvout, ivout, ARSCND_NAME
 c
 c     %--------------------%
 c     | External Functions |
@@ -336,7 +340,7 @@ c
       lastis = .false.
       if (ido .eq. 0) then
 c 
-         call second (t0)
+         call ARSCND_NAME (t0)
 c 
          msglvl = mnaup2
 c 
@@ -471,7 +475,7 @@ c
          iter = iter + 1
 c
          if (msglvl .gt. 0) then
-            call ivout (logfil, 1, iter, ndigit, 
+            call ivout (logfil, 1, [iter], ndigit, 
      &           '_naup2: **** Start of major iteration number ****')
          end if
 c 
@@ -484,9 +488,9 @@ c
          np  = kplusp - nev
 c
          if (msglvl .gt. 1) then
-            call ivout (logfil, 1, nev, ndigit, 
+            call ivout (logfil, 1, [nev], ndigit, 
      &     '_naup2: The length of the current Arnoldi factorization')
-            call ivout (logfil, 1, np, ndigit, 
+            call ivout (logfil, 1, [np], ndigit, 
      &           '_naup2: Extend the Arnoldi factorization by')
          end if
 c
@@ -517,7 +521,7 @@ c
          update = .false.
 c
          if (msglvl .gt. 1) then
-            call dvout (logfil, 1, rnorm, ndigit, 
+            call dvout (logfil, 1, [rnorm], ndigit, 
      &           '_naup2: Corresponding B-norm of the residual')
          end if
 c 
@@ -777,7 +781,7 @@ c
          end if              
 c     
          if (msglvl .gt. 0) then
-            call ivout (logfil, 1, nconv, ndigit, 
+            call ivout (logfil, 1, [nconv], ndigit, 
      &           '_naup2: no. of "converged" Ritz values at this iter.')
             if (msglvl .gt. 1) then
                kp(1) = nev
@@ -843,7 +847,7 @@ c
          end if
 c
          if (msglvl .gt. 2) then 
-            call ivout (logfil, 1, np, ndigit, 
+            call ivout (logfil, 1, [np], ndigit, 
      &                  '_naup2: The number of shifts to apply ')
             call dvout (logfil, np, ritzr, ndigit,
      &                  '_naup2: Real part of the shifts')
@@ -877,7 +881,7 @@ c        | the first step of the next call to dnaitr.  |
 c        %---------------------------------------------%
 c
          cnorm = .true.
-         call second (t2)
+         call ARSCND_NAME (t2)
          if (bmat .eq. 'G') then
             nbx = nbx + 1
             call dcopy (n, resid, 1, workd(n+1), 1)
@@ -902,7 +906,7 @@ c        | WORKD(1:N) := B*RESID            |
 c        %----------------------------------%
 c
          if (bmat .eq. 'G') then
-            call second (t3)
+            call ARSCND_NAME (t3)
             tmvbx = tmvbx + (t3 - t2)
          end if
 c 
@@ -915,7 +919,7 @@ c
          cnorm = .false.
 c
          if (msglvl .gt. 2) then
-            call dvout (logfil, 1, rnorm, ndigit, 
+            call dvout (logfil, 1, [rnorm], ndigit, 
      &      '_naup2: B-norm of residual for compressed factorization')
             call dmout (logfil, nev, nev, h, ldh, ndigit,
      &        '_naup2: Compressed upper Hessenberg matrix H')
@@ -941,7 +945,7 @@ c     %------------%
 c     | Error Exit |
 c     %------------%
 c
-      call second (t1)
+      call ARSCND_NAME (t1)
       tnaup2 = t1 - t0
 c     
  9000 continue
@@ -1367,7 +1371,7 @@ c\Routines called:
 c     dnaup2  ARPACK routine that implements the Implicitly Restarted
 c             Arnoldi Iteration.
 c     ivout   ARPACK utility routine that prints integers.
-c     second  ARPACK utility routine for timing.
+c     ARSCND_NAME  ARPACK utility routine for timing.
 c     dvout   ARPACK utility routine that prints vectors.
 c     dlamch  LAPACK routine that determines machine constants.
 c
@@ -1480,7 +1484,7 @@ c     %----------------------%
 c     | External Subroutines |
 c     %----------------------%
 c
-      external   dnaup2, dvout, ivout, second, dstatn
+      external   dnaup2, dvout, ivout, ARSCND_NAME, dstatn
 c
 c     %--------------------%
 c     | External Functions |
@@ -1502,7 +1506,7 @@ c        | & message level for debugging |
 c        %-------------------------------%
 c
          call dstatn
-         call second (t0)
+         call ARSCND_NAME (t0)
          msglvl = mnaupd
 c
 c        %----------------%
@@ -1678,9 +1682,9 @@ c
       if (info .eq. 2) info = 3
 c
       if (msglvl .gt. 0) then
-         call ivout (logfil, 1, mxiter, ndigit,
+         call ivout (logfil, 1, [mxiter], ndigit,
      &               '_naupc: Number of update iterations taken')
-         call ivout (logfil, 1, np, ndigit,
+         call ivout (logfil, 1, [np], ndigit,
      &               '_naupc: Number of wanted "converged" Ritz values')
          call dvout (logfil, np, workl(ritzr), ndigit, 
      &               '_naupc: Real part of the final Ritz values')
@@ -1690,7 +1694,7 @@ c
      &               '_naupc: Associated Ritz estimates')
       end if
 c
-      call second (t1)
+      call ARSCND_NAME (t1)
       tnaupd = t1 - t0
 c
       if (msglvl .gt. 0) then
@@ -2340,7 +2344,7 @@ c
          end if
 c
          if (msglvl .gt. 2) then
-            call dvout(logfil, 1, thres, ndigit,
+            call dvout(logfil, 1, [thres], ndigit,
      &           '_neupc: Threshold eigenvalue used for re-ordering')
          end if
 c
@@ -2421,9 +2425,9 @@ c
  25      continue
 c
          if (msglvl .gt. 2) then
-             call ivout(logfil, 1, ktrord, ndigit,
+             call ivout(logfil, 1, [ktrord], ndigit,
      &            '_neupc: Number of specified eigenvalues')
-             call ivout(logfil, 1, nconv, ndigit,
+             call ivout(logfil, 1, [nconv], ndigit,
      &            '_neupc: Number of "converged" eigenvalues')
          end if
 c
@@ -3048,7 +3052,7 @@ c     pdneigh  Parallel ARPACK compute Ritz values and error bounds routine.
 c     pdngets  Parallel ARPACK reorder Ritz values and error bounds routine.
 c     dsortc   ARPACK sorting routine.
 c     pivout   Parallel ARPACK utility routine that prints integers.
-c     second   ARPACK utility routine for timing.
+c     ARSCND_NAME   ARPACK utility routine for timing.
 c     pdmout   Parallel ARPACK utility routine that prints matrices
 c     pdvout   ARPACK utility routine that prints vectors.
 c     pdlamch  ScaLAPACK routine that determines machine constants.
@@ -3193,7 +3197,7 @@ c     %----------------------%
 c
       external   dcopy, pdgetv0, pdnaitr, dnconv, 
      &           pdneigh, pdngets, pdnapps,
-     &           pdvout, pivout, second
+     &           pdvout, pivout, ARSCND_NAME
 c
 c     %--------------------%
 c     | External Functions |
@@ -3215,7 +3219,7 @@ c     %-----------------------%
 c
       if (ido .eq. 0) then
 c 
-         call second (t0)
+         call ARSCND_NAME (t0)
 c 
          msglvl = mnaup2
 c 
@@ -3759,7 +3763,7 @@ c        | the first step of the next call to pdnaitr. |
 c        %---------------------------------------------%
 c
          cnorm = .true.
-         call second (t2)
+         call ARSCND_NAME (t2)
          if (bmat .eq. 'G') then
             nbx = nbx + 1
             call dcopy (n, resid, 1, workd(n+1), 1)
@@ -3784,7 +3788,7 @@ c        | WORKD(1:N) := B*RESID            |
 c        %----------------------------------%
 c
          if (bmat .eq. 'G') then
-            call second (t3)
+            call ARSCND_NAME (t3)
             tmvbx = tmvbx + (t3 - t2)
          endif
 c
@@ -3825,7 +3829,7 @@ c     %------------%
 c     | Error Exit |
 c     %------------%
 c
-      call second (t1)
+      call ARSCND_NAME (t1)
       tnaup2 = t1 - t0
 c     
  9000 continue
@@ -4253,7 +4257,7 @@ c\Routines called:
 c     pdnaup2  Parallel ARPACK routine that implements the implicitly 
 c              restarted Arnoldi Iteration.
 c     pivout   Parallel ARPACK utility routine that prints integers.
-c     second   ARPACK utility routine for timing.
+c     ARSCND_NAME   ARPACK utility routine for timing.
 c     pdvout   Parallel ARPACK utility routine that prints vectors.
 c     pdlamch  ScaLAPACK routine that determines machine constants.
 c
@@ -4374,7 +4378,7 @@ c     %----------------------%
 c     | External Subroutines |
 c     %----------------------%
 c
-      external   pdnaup2, pdvout, pivout, second, dstatn
+      external   pdnaup2, pdvout, pivout, ARSCND_NAME, dstatn
 c
 c     %--------------------%
 c     | External Functions |
@@ -4396,7 +4400,7 @@ c        | & message level for debugging |
 c        %-------------------------------%
 c
          call dstatn
-         call second (t0)
+         call ARSCND_NAME (t0)
          msglvl = mnaupd
 c
 c        %----------------%
@@ -4585,7 +4589,7 @@ c
      &               '_naupd: Associated Ritz estimates')
       end if
 c
-      call second (t1)
+      call ARSCND_NAME (t1)
       tnaupd = t1 - t0
 c
       if (msglvl .gt. 0) then

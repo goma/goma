@@ -3798,6 +3798,7 @@ set_interaction_masks(Exo_DB *exo)
 	  v = MESH_DISPLACEMENT2;
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 	  v = MESH_DISPLACEMENT3;	 
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           v = POR_LIQ_PRES;
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           v = POR_GAS_PRES;
@@ -3811,112 +3812,63 @@ set_interaction_masks(Exo_DB *exo)
 	  break;
  
         case R_EM_E1_REAL:
-          v=EM_H2_REAL;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          v=EM_H3_REAL;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          v=EM_E1_REAL;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          v=EM_E1_IMAG;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          break;
         case R_EM_E2_REAL:
-          v=EM_H1_REAL;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          v=EM_H3_REAL;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          v=EM_E2_REAL;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          v=EM_E2_IMAG;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          break;
         case R_EM_E3_REAL:
-          v=EM_H1_REAL;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          v=EM_H2_REAL;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          v=EM_E3_REAL;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          v=EM_E3_IMAG;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          break;
         case R_EM_E1_IMAG:
-          v=EM_H2_IMAG;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          v=EM_H3_IMAG;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+        case R_EM_E2_IMAG:
+        case R_EM_E3_IMAG:
+        case R_EM_H1_REAL:
+        case R_EM_H2_REAL:
+        case R_EM_H3_REAL:
+        case R_EM_H1_IMAG:
+        case R_EM_H2_IMAG:
+        case R_EM_H3_IMAG:
           v=EM_E1_REAL;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_E2_REAL;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_E3_REAL;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           v=EM_E1_IMAG;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          break;
-        case R_EM_E2_IMAG:
-          v=EM_H1_IMAG;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          v=EM_H3_IMAG;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          v=EM_E2_REAL;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          v=EM_E2_IMAG;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          break;
-        case R_EM_E3_IMAG:
-          v=EM_H1_IMAG;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          v=EM_H2_IMAG;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          v=EM_E3_REAL;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          v=EM_E3_IMAG;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          break;
-
-        case R_EM_H1_REAL:
-          v=EM_E2_REAL;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          v=EM_E3_REAL;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          v=EM_H1_IMAG;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          break;
-        case R_EM_H2_REAL:
-          v=EM_E1_REAL;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          v=EM_E3_REAL;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          v=EM_H2_IMAG;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          break;
-        case R_EM_H3_REAL:
-          v=EM_E1_REAL;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          v=EM_E2_REAL;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          v=EM_H3_IMAG;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          break;
-        case R_EM_H1_IMAG:
           v=EM_E2_IMAG;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           v=EM_E3_IMAG;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           v=EM_H1_REAL;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          break;
-        case R_EM_H2_IMAG:
-          v=EM_E1_IMAG;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          v=EM_E3_IMAG;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           v=EM_H2_REAL;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          break;
-        case R_EM_H3_IMAG:
-          v=EM_E1_IMAG;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          v=EM_E2_IMAG;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           v=EM_H3_REAL;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_H1_IMAG;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_H2_IMAG;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_H3_IMAG;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_CONT_REAL;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_CONT_IMAG;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          break;
+        case R_EM_CONT_REAL:
+        case R_EM_CONT_IMAG:
+          v=EM_E1_REAL;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_E2_REAL;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_E3_REAL;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_E1_IMAG;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_E2_IMAG;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_E3_IMAG;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_CONT_REAL;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_CONT_IMAG;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           break;
 	}
@@ -3979,55 +3931,54 @@ set_interaction_masks(Exo_DB *exo)
 /**************************************************************************/
 /**************************************************************************/
 
-int
-Index_Solution (const int nodeNum, const int varType, const int subvarIndex,
-	        const int iNdof, const int matID)
+int Index_Solution(
+    const int nodeNum, const int varType, const int subvarIndex, const int iNdof, const int matID)
 
-    /********************************************************************
-     *
-     * Index_Solution():
-     *
-     * Routine to return the index in the solution vector for the 
-     * iNunk'th variable of type iVarType at the node iGlobNum
-     * corresponding to the material, matID.
-     * Return -1 if undefined.
-     *
-     * Input
-     * --------
-     *  nodeNum     = processor Node Number 
-     *  varType     = Variable Type
-     *  subvarIndex = Subvariable index -> only for MASS_FRACTION
-     *                variable types is this active. Will go
-     *                away.
-     *  iNdof       = Local nodal degree of freedom. This is  
-     *                equal to zero, except for centroid  
-     *                pressures, and hermite cubic interpolated 
-     *                variables.
-     *                    (HKM -> see backwards compatibility section
-     *                            below)
-     *  matID       = material id -> or -1 if the specification
-     *                of the material doesn't matter in this  
-     *                instance. It would matter if the soln  
-     *                number at this node varied depending on 
-     *                the material id.  That is, if this variable has 
-     *                potentially more than one value at a given node.
-     *              = -2: For this special input value, a match
-     *                    will be returned for the first variable
-     *                    description structure found that
-     *                    matches the varType, subvartype pair.
-     *
-     * Output
-     * --------
-     * This function returns the processor index into the solution
-     * vector for this degree of freedom.
-     * If this degree of freedom doesn't exist, this function returns
-     * a value of -1.
-     *
-     * NOTES:
-     *   This function should execute as fast as possible, because
-     *   it is unfortunately called during low levels of the jacobian
-     *   and residual fills.
-     **********************************************************************/
+/********************************************************************
+ *
+ * Index_Solution():
+ *
+ * Routine to return the index in the solution vector for the
+ * iNunk'th variable of type iVarType at the node iGlobNum
+ * corresponding to the material, matID.
+ * Return -1 if undefined.
+ *
+ * Input
+ * --------
+ *  nodeNum     = processor Node Number
+ *  varType     = Variable Type
+ *  subvarIndex = Subvariable index -> only for MASS_FRACTION
+ *                variable types is this active. Will go
+ *                away.
+ *  iNdof       = Local nodal degree of freedom. This is
+ *                equal to zero, except for centroid
+ *                pressures, and hermite cubic interpolated
+ *                variables.
+ *                    (HKM -> see backwards compatibility section
+ *                            below)
+ *  matID       = material id -> or -1 if the specification
+ *                of the material doesn't matter in this
+ *                instance. It would matter if the soln
+ *                number at this node varied depending on
+ *                the material id.  That is, if this variable has
+ *                potentially more than one value at a given node.
+ *              = -2: For this special input value, a match
+ *                    will be returned for the first variable
+ *                    description structure found that
+ *                    matches the varType, subvartype pair.
+ *
+ * Output
+ * --------
+ * This function returns the processor index into the solution
+ * vector for this degree of freedom.
+ * If this degree of freedom doesn't exist, this function returns
+ * a value of -1.
+ *
+ * NOTES:
+ *   This function should execute as fast as possible, because
+ *   it is unfortunately called during low levels of the jacobian
+ *   and residual fills.
+ **********************************************************************/
 {
   int dofp, index, i_match = -1, i, ifound;
   /*

@@ -1,4 +1,4 @@
-/************************************************************************ *
+﻿/************************************************************************ *
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
@@ -81,11 +81,11 @@ struct Boundary_Condition *BC_Types;
 
 struct Rotation_Specs *ROT_Types;
 
-struct AC_Information *augc;
+extern struct AC_Information *augc;
 
 struct HC_Information *hunt;
 
-struct Eigensolver_Info *eigen;
+extern struct Eigensolver_Info *eigen;
 
 struct Continuation_Conditions *cpcc;
 
@@ -98,6 +98,8 @@ struct User_Continuation_Info *tpuc;
 struct Level_Set_Data *ls;
 struct Level_Set_Interface *lsi;
 struct Phase_Function_Data *pfd;
+
+static char aprepro_command[1024];
 
 static Spfrtn sr;
 
@@ -119,7 +121,7 @@ static char default_string[MAX_CHAR_IN_INPUT] = "(default)";
 //static char specify_string[MAX_CHAR_IN_INPUT] = "          ";
 
 
-Strcpy_rtn strcpy_rtn;		/* Data type def'd in std.h */
+static Strcpy_rtn strcpy_rtn;		/* Data type def'd in std.h */
 
 int	run_aprepro=0;
 
@@ -8073,6 +8075,10 @@ rd_eq_specs(FILE *ifp,
       ce = set_eqn(R_MASS_SURF, pd_ptr);
     } else if (!strcasecmp(ts, "continuity")) {
       ce = set_eqn(R_PRESSURE, pd_ptr);
+    } else if (!strcasecmp(ts, "continuity_em_real")) {
+      ce = set_eqn(R_EM_CONT_REAL, pd_ptr);
+    } else if (!strcasecmp(ts, "continuity_em_imag")) {
+      ce = set_eqn(R_EM_CONT_IMAG, pd_ptr);
     } else if (!strcasecmp(ts, "fill")) {
       ce = set_eqn(R_FILL, pd_ptr);
 #ifndef COUPLED_FILL
@@ -8255,26 +8261,26 @@ rd_eq_specs(FILE *ifp,
       ce = set_eqn(R_RESTIME, pd_ptr);  
     } else if (!strcasecmp(ts, "em_e1_real")) {
       ce = set_eqn(R_EM_E1_REAL, pd_ptr);  
-    } else if (!strcasecmp(ts, "em_e1_imag")) {
-      ce = set_eqn(R_EM_E1_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "em_e2_real")) {
       ce = set_eqn(R_EM_E2_REAL, pd_ptr);  
-    } else if (!strcasecmp(ts, "em_e2_imag")) {
-      ce = set_eqn(R_EM_E2_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "em_e3_real")) {
       ce = set_eqn(R_EM_E3_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "em_e1_imag")) {
+      ce = set_eqn(R_EM_E1_IMAG, pd_ptr);
+    } else if (!strcasecmp(ts, "em_e2_imag")) {
+      ce = set_eqn(R_EM_E2_IMAG, pd_ptr);
     } else if (!strcasecmp(ts, "em_e3_imag")) {
       ce = set_eqn(R_EM_E3_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "em_h1_real")) {
       ce = set_eqn(R_EM_H1_REAL, pd_ptr);  
-    } else if (!strcasecmp(ts, "em_h1_imag")) {
-      ce = set_eqn(R_EM_H1_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "em_h2_real")) {
       ce = set_eqn(R_EM_H2_REAL, pd_ptr);  
-    } else if (!strcasecmp(ts, "em_h2_imag")) {
-      ce = set_eqn(R_EM_H2_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "em_h3_real")) {
       ce = set_eqn(R_EM_H3_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "em_h1_imag")) {
+      ce = set_eqn(R_EM_H1_IMAG, pd_ptr);
+    } else if (!strcasecmp(ts, "em_h2_imag")) {
+      ce = set_eqn(R_EM_H2_IMAG, pd_ptr);
     } else if (!strcasecmp(ts, "em_h3_imag")) {
       ce = set_eqn(R_EM_H3_IMAG, pd_ptr);  
 
@@ -8790,6 +8796,10 @@ rd_eq_specs(FILE *ifp,
       cv = set_var(ACOUS_PIMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "ARS")) {
       cv = set_var(ACOUS_REYN_STRESS, pd_ptr);  
+    } else if (!strcasecmp(ts, "EPR")) {
+      cv = set_var(EM_CONT_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "EPI")) {
+      cv = set_var(EM_CONT_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "SH_BV")) {
       cv = set_var(SHELL_BDYVELO, pd_ptr);  
     } else if (!strcasecmp(ts, "SH_P")) {
@@ -8879,26 +8889,26 @@ rd_eq_specs(FILE *ifp,
       cv = set_var(RESTIME, pd_ptr);  
     } else if (!strcasecmp(ts, "EM_E1_REAL")) {
       cv = set_var(EM_E1_REAL, pd_ptr);  
-    } else if (!strcasecmp(ts, "EM_E1_IMAG")) {
-      cv = set_var(EM_E1_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "EM_E2_REAL")) {
       cv = set_var(EM_E2_REAL, pd_ptr);  
-    } else if (!strcasecmp(ts, "EM_E2_IMAG")) {
-      cv = set_var(EM_E2_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "EM_E3_REAL")) {
       cv = set_var(EM_E3_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "EM_E1_IMAG")) {
+      cv = set_var(EM_E1_IMAG, pd_ptr);
+    } else if (!strcasecmp(ts, "EM_E2_IMAG")) {
+      cv = set_var(EM_E2_IMAG, pd_ptr);
     } else if (!strcasecmp(ts, "EM_E3_IMAG")) {
       cv = set_var(EM_E3_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "EM_H1_REAL")) {
       cv = set_var(EM_H1_REAL, pd_ptr);  
-    } else if (!strcasecmp(ts, "EM_H1_IMAG")) {
-      cv = set_var(EM_H1_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "EM_H2_REAL")) {
       cv = set_var(EM_H2_REAL, pd_ptr);  
-    } else if (!strcasecmp(ts, "EM_H2_IMAG")) {
-      cv = set_var(EM_H2_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "EM_H3_REAL")) {
       cv = set_var(EM_H3_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "EM_H1_IMAG")) {
+      cv = set_var(EM_H1_IMAG, pd_ptr);
+    } else if (!strcasecmp(ts, "EM_H2_IMAG")) {
+      cv = set_var(EM_H2_IMAG, pd_ptr);
     } else if (!strcasecmp(ts, "EM_H3_IMAG")) {
       cv = set_var(EM_H3_IMAG, pd_ptr);  
 
@@ -9223,6 +9233,9 @@ rd_eq_specs(FILE *ifp,
        * Two terms.... 
        */
     case R_PRESSURE:
+    case R_EM_CONT_REAL:
+    case R_EM_CONT_IMAG:
+
 	if ( fscanf(ifp, "%lf %lf", 
 		    &(pd_ptr->etm[ce][(LOG2_ADVECTION)]),
 		    &(pd_ptr->etm[ce][(LOG2_SOURCE)]))
@@ -9564,16 +9577,16 @@ rd_eq_specs(FILE *ifp,
     case R_LIGHT_INTD:
     case R_RESTIME:  
     case R_EM_E1_REAL:
-    case R_EM_E1_IMAG:
     case R_EM_E2_REAL:
-    case R_EM_E2_IMAG:
     case R_EM_E3_REAL:
+    case R_EM_E1_IMAG:
+    case R_EM_E2_IMAG:
     case R_EM_E3_IMAG:
     case R_EM_H1_REAL:
-    case R_EM_H1_IMAG:
     case R_EM_H2_REAL:
-    case R_EM_H2_IMAG:
     case R_EM_H3_REAL:
+    case R_EM_H1_IMAG:
+    case R_EM_H2_IMAG:
     case R_EM_H3_IMAG:
 
 	if ( fscanf(ifp, "%lf %lf %lf %lf %lf", 
@@ -12608,12 +12621,12 @@ setup_table_BC(FILE *ifp,
   
      /* Read scaling factor */
  
-  if ( fscanf(ifp, "%lf", &BC_Type->BC_Data_Float[0]) != 1)
+  if ( fscanf(ifp, "%lf", &BC_Type->table->yscale) != 1)
     {
-      BC_Type->BC_Data_Float[0] = 1.0;
+      BC_Type->table->yscale = 1.0;
     }
 
-  SPF(endofstring(es)," %.4g", BC_Type->BC_Data_Float[0]); 
+  SPF(endofstring(es)," %.4g", BC_Type->table->yscale); 
 
   /* read interpolation order */
 

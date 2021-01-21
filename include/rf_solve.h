@@ -63,6 +63,7 @@ PROTO(( double [],		/* x - solution vector */
 EXTERN int anneal_mesh_with_external_field   /* rf_solve.c */
 PROTO((const Exo_DB * ));                    /* *exo  */
 
+
 #ifdef LIBRARY_MODE
 EXTERN int load_export_vars     /* rf_solve.c */
 PROTO((const int,               /* num_nodes */

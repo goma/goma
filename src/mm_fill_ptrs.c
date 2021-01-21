@@ -1831,6 +1831,14 @@ load_elem_dofptr(const int ielem,
   if (upd->ep[eqn] >= 0) {
     load_varType_Interpolation_ptrs(eqn, esp->ars, esp_old->ars, esp_dot->ars);
   }
+  eqn = R_EM_CONT_REAL;
+  if (upd->ep[eqn] >= 0) {
+    load_varType_Interpolation_ptrs(eqn, esp->epr, esp_old->epr, esp_dot->epr);
+  }
+  eqn = R_EM_CONT_IMAG;
+  if (upd->ep[eqn] >= 0) {
+    load_varType_Interpolation_ptrs(eqn, esp->epi, esp_old->epi, esp_dot->epi);
+  }
   eqn = R_SHELL_BDYVELO;
   if (upd->ep[eqn] >= 0) {
     load_varType_Interpolation_ptrs(eqn, esp->sh_bv, esp_old->sh_bv, esp_dot->sh_bv);
@@ -1915,25 +1923,25 @@ load_elem_dofptr(const int ielem,
     load_varType_Interpolation_ptrs(eqn, esp->em_er[0], esp_old->em_er[0],
 				    esp_dot->em_er[0]);
   }
-  eqn = R_EM_E1_IMAG;
-  if (upd->ep[eqn] >= 0) {
-    load_varType_Interpolation_ptrs(eqn, esp->em_ei[0], esp_old->em_ei[0],
-				    esp_dot->em_ei[0]);
-  }
   eqn = R_EM_E2_REAL;
   if (upd->ep[eqn] >= 0) {
     load_varType_Interpolation_ptrs(eqn, esp->em_er[1], esp_old->em_er[1],
 				    esp_dot->em_er[1]);
   }
-  eqn = R_EM_E2_IMAG;
-  if (upd->ep[eqn] >= 0) {
-    load_varType_Interpolation_ptrs(eqn, esp->em_ei[1], esp_old->em_ei[1],
-				    esp_dot->em_ei[1]);
-  }
   eqn = R_EM_E3_REAL;
   if (upd->ep[eqn] >= 0) {
     load_varType_Interpolation_ptrs(eqn, esp->em_er[2], esp_old->em_er[2],
 				    esp_dot->em_er[2]);
+  }
+  eqn = R_EM_E1_IMAG;
+  if (upd->ep[eqn] >= 0) {
+    load_varType_Interpolation_ptrs(eqn, esp->em_ei[0], esp_old->em_ei[0],
+                                    esp_dot->em_ei[0]);
+  }
+  eqn = R_EM_E2_IMAG;
+  if (upd->ep[eqn] >= 0) {
+    load_varType_Interpolation_ptrs(eqn, esp->em_ei[1], esp_old->em_ei[1],
+                                    esp_dot->em_ei[1]);
   }
   eqn = R_EM_E3_IMAG;
   if (upd->ep[eqn] >= 0) {
@@ -1945,25 +1953,25 @@ load_elem_dofptr(const int ielem,
     load_varType_Interpolation_ptrs(eqn, esp->em_hr[0], esp_old->em_hr[0],
 				    esp_dot->em_hr[0]);
   }
-  eqn = R_EM_H1_IMAG;
-  if (upd->ep[eqn] >= 0) {
-    load_varType_Interpolation_ptrs(eqn, esp->em_hi[0], esp_old->em_hi[0],
-				    esp_dot->em_hi[0]);
-  }
   eqn = R_EM_H2_REAL;
   if (upd->ep[eqn] >= 0) {
     load_varType_Interpolation_ptrs(eqn, esp->em_hr[1], esp_old->em_hr[1],
 				    esp_dot->em_hr[1]);
   }
-  eqn = R_EM_H2_IMAG;
-  if (upd->ep[eqn] >= 0) {
-    load_varType_Interpolation_ptrs(eqn, esp->em_hi[1], esp_old->em_hi[1],
-				    esp_dot->em_hi[1]);
-  }
   eqn = R_EM_H3_REAL;
   if (upd->ep[eqn] >= 0) {
     load_varType_Interpolation_ptrs(eqn, esp->em_hr[2], esp_old->em_hr[2],
 				    esp_dot->em_hr[2]);
+  }
+  eqn = R_EM_H1_IMAG;
+  if (upd->ep[eqn] >= 0) {
+    load_varType_Interpolation_ptrs(eqn, esp->em_hi[0], esp_old->em_hi[0],
+                                    esp_dot->em_hi[0]);
+  }
+  eqn = R_EM_H2_IMAG;
+  if (upd->ep[eqn] >= 0) {
+    load_varType_Interpolation_ptrs(eqn, esp->em_hi[1], esp_old->em_hi[1],
+                                    esp_dot->em_hi[1]);
   }
   eqn = R_EM_H3_IMAG;
   if (upd->ep[eqn] >= 0) {

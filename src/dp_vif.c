@@ -1563,6 +1563,7 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->density, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->electrical_conductivity, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->permittivity, 1, MPI_DOUBLE);
+      ddd_add_member(n, &mp_glob[i]->magnetic_permeability,1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->VoltageFormulation, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->heat_capacity, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->heat_source, 1, MPI_DOUBLE);
@@ -1705,6 +1706,7 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->Acoustic_ImpedanceModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->Acoustic_AbsorptionModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->Refractive_IndexModel, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->Extinction_IndexModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->Light_AbsorptionModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->Shell_User_ParModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->PermittivityModel, 1, MPI_INT);
@@ -2616,6 +2618,8 @@ noahs_ark()
   ddd_add_member(n, &LAMB_VECTOR, 1, MPI_INT);
   ddd_add_member(n, &Q_FCN, 1, MPI_INT);
   ddd_add_member(n, &POYNTING_VECTORS, 1, MPI_INT);
+  ddd_add_member(n, &SARAMITO_YIELD, 1, MPI_INT);
+  ddd_add_member(n, &STRESS_NORM, 1, MPI_INT);
   ddd_add_member(n, &len_u_post_proc, 1, MPI_INT);
 
   if ( nn_post_fluxes > 0 )
@@ -2662,6 +2666,9 @@ noahs_ark()
           ddd_add_member(n, &(pp_data[i]->mat_num), 1, MPI_INT);
           ddd_add_member(n, &(pp_data[i]->elem_blk_id), 1, MPI_INT);
           ddd_add_member(n,   pp_data[i]->data_filenm, MAX_FNL, MPI_CHAR);
+          ddd_add_member(n,   pp_data[i]->format_flag, 8, MPI_CHAR);
+          ddd_add_member(n, &(pp_data[i]->first_time), 1, MPI_INT);
+
         }
     }
   

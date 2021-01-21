@@ -463,7 +463,7 @@ assemble_real_solid(double time_value,
 	      /* porous term removed for SOLID equation - the additional effects due
 		 to porosity are entered into the consitutive equation for stress */
 
-	      lec->R[peqn][i] += diffusion + source + advection;
+              lec->R[LEC_R_INDEX(peqn,i)] += diffusion + source + advection;
 	    }
 	}
     }  
@@ -627,7 +627,7 @@ assemble_real_solid(double time_value,
 			      source *= pd->etm[eqn][LOG2_SOURCE];
 			    }
 			  
-			  lec->J[peqn][pvar][i][j] += mass + diffusion + source 
+                          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + diffusion + source
 			    + advection;
 			}
 		    }
@@ -727,7 +727,7 @@ assemble_real_solid(double time_value,
 			      source *= pd->etm[eqn][LOG2_SOURCE];
 			    }
 			  
-			  lec->J[peqn][pvar][i][j] += mass + diffusion + source 
+                          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + diffusion + source
 			    + advection;
 			}
 		    }
@@ -758,7 +758,7 @@ assemble_real_solid(double time_value,
 			  diffusion *= - det_J * wt * h3;
 			  diffusion *= pd->etm[eqn][LOG2_DIFFUSION];
 
-			  lec->J[peqn][pvar][i][j] += diffusion;
+                          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
 			}
 		    }
 
@@ -801,7 +801,7 @@ assemble_real_solid(double time_value,
 			      diffusion *= pd->etm[eqn][LOG2_DIFFUSION];
 			    }
 
-			  lec->J[peqn][MAX_PROB_VAR + w][i][j] += advection + diffusion;
+                          lec->J[LEC_J_INDEX(peqn,MAX_PROB_VAR + w,i,j)] += advection + diffusion;
 			}
 		    }
 		}
@@ -843,7 +843,7 @@ assemble_real_solid(double time_value,
 			  diffusion *= pd->etm[eqn][LOG2_DIFFUSION];
 			}
 
-		      lec->J[peqn][pvar][i][j] += advection + diffusion;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection + diffusion;
 		    }
 		}
 
@@ -884,7 +884,7 @@ assemble_real_solid(double time_value,
 			  diffusion *= pd->etm[eqn][LOG2_DIFFUSION];
 			}
 
-		      lec->J[peqn][pvar][i][j] += advection + diffusion;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection + diffusion;
 		    }
 		}
 
@@ -925,7 +925,7 @@ assemble_real_solid(double time_value,
 			  diffusion *= pd->etm[eqn][LOG2_DIFFUSION];
 			}
 
-		      lec->J[peqn][pvar][i][j] += advection + diffusion;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection + diffusion;
 		    }
 		}
 	
@@ -952,7 +952,7 @@ assemble_real_solid(double time_value,
                              }
                            diffusion *= - det_J * wt * h3;
                            diffusion *= pd->etm[eqn][LOG2_DIFFUSION];
-                           lec->J[peqn][pvar][i][j] += advection + diffusion;
+                           lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection + diffusion;
                          }
                      }
                  }

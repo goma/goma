@@ -168,6 +168,8 @@ setup_pd()
 	     (ce == R_NORMAL3)    ||
              (ce == R_SHELL_SHEAR_TOP) ||
              (ce == R_SHELL_SHEAR_BOT) ||
+             (ce == R_EM_CONT_REAL) ||
+             (ce == R_EM_CONT_IMAG) ||
              (ce == R_SHELL_CROSS_SHEAR))  
 	    {
 	      if ( pd_glob[mn]->etm[ce][(LOG2_ADVECTION)] != 0. )

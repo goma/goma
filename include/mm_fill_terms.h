@@ -155,17 +155,6 @@ PROTO((	double ,		/* time - present time value         */
 	const int ,		/*  Light intensity eqn id and var id		     */
 	const int ));	
 
-EXTERN int assemble_emwave	/* mm_fill_terms.c                           */
-PROTO((	double ,		/* time - present time value         */
-	double ,		/* tt - parameter to vary time integration
-			        	* from explicit (tt = 1) to 
-					* implicit (tt = 0)                   */
-	double ,		/* dt - current time step size               */
-	const PG_DATA *,	/* dvc_dnode                                 */
-	const int ,		/*  Light intensity eqn id and var id		     */
-	const int ,		/*  Light intensity eqn id and var id		     */
-	const int ));	
-
 EXTERN int assemble_acoustic_reynolds_stress	/* mm_fill_terms.c */
 PROTO(( double,					/* time */
         double,					/* tt */
@@ -551,6 +540,11 @@ PROTO((HEAT_SOURCE_DEPENDENCE_STRUCT *,
        int));			/* number of parameters   */
 
 EXTERN double em_diss_heat_source 
+PROTO((HEAT_SOURCE_DEPENDENCE_STRUCT *,
+       dbl *,			/* param - General multipliers   */
+       int));			/* number of parameters   */
+
+EXTERN double em_diss_e_curlcurl_source
 PROTO((HEAT_SOURCE_DEPENDENCE_STRUCT *,
        dbl *,			/* param - General multipliers   */
        int));			/* number of parameters   */

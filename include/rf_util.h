@@ -70,6 +70,18 @@ PROTO(( double *,
         int ,                  /* 1-based */
         int ));                /* this is zero or the species number */
 
+int rd_exoII_ev(double *u,
+                int varType,
+                int mn,
+                MATRL_PROP_STRUCT *matrl,
+                char **elem_var_names,
+                int num_elems_block,
+                int num_elem_vars,
+                int exoII_id,
+                int time_step,
+                int spec,
+                const Exo_DB *exo);
+
 extern double time_step_control	/* rf_util.c                                 */
 PROTO((const double ,		/* delta_t_old                               */
        const double ,		/* delta_t_older                             */
@@ -184,7 +196,26 @@ PROTO((double [],		/* u - solution vector                       */
 				 * The default value is INT_MAX, which       *
 				 * implies the last time plane in the        *
 				 * exodus file.                              */
-       double *timeValueRead)); /* Value of the time in the time plane read  */
+       double *timeValueRead, /* Value of the time in the time plane read  */
+       const Exo_DB *));
+
+extern int rd_vectors_from_exoII  /* rf_util.c                                */
+    PROTO((double[],              /* u - solution vector                       */
+           const char *,          /* file_nm - name of EXODUS II file	     */
+           const int,             /* action_flag -                             *
+                                         0 -- read initial guess for problem   *
+                                         1 -- read extern aux fixed variables  */
+           const int,             /* variable_no                               *
+                                   * Used only when action_flag = 1	     *
+                                   * Specifies the number of the               *
+                                   * external variable to be read              *
+                                   * (basically the card number in order)	     */
+           const int,             /* Time plane to read from                   *
+                                   * The default value is INT_MAX, which       *
+                                   * implies the last time plane in the        *
+                                   * exodus file.                              */
+           double *timeValueRead, /* Value of the time in the time plane read  */
+           const Exo_DB *));
 
 extern int rd_trans_vectors_from_exoII /* rf_util.c                          */
 PROTO((double [],		/* u - solution vector                       */
@@ -235,12 +266,6 @@ extern void read_porosity_data
 PROTO((
        const Exo_DB *exo		/* Ptr to Exodus database */
        ));
-
-/*
- * Extern statements for variables defined in rf_util.c
- */
-
-extern Strcpy_rtn strcpy_rtn;
 
 #endif
 

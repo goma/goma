@@ -587,6 +587,7 @@
 #define INTP_BC        1053
 #define INTM_BC        1054
 #define INTD_BC        1055
+
 #define EM_E1R_BC      1056
 #define EM_E2R_BC      1057
 #define EM_E3R_BC      1058
@@ -599,6 +600,32 @@
 #define EM_H1I_BC      1065
 #define EM_H2I_BC      1066
 #define EM_H3I_BC      1067
+#define EM_ER_FARFIELD_DIRECT_BC  1068
+#define EM_EI_FARFIELD_DIRECT_BC  1069
+#define EM_HR_FARFIELD_DIRECT_BC  1070
+#define EM_HI_FARFIELD_DIRECT_BC  1071
+
+#define EM_ER_FREE_BC  1072
+#define EM_EI_FREE_BC  1073
+#define EM_HR_FREE_BC  1074
+#define EM_HI_FREE_BC  1075
+
+#define EM_ER_SOMMERFELD_BC 1084
+#define EM_EI_SOMMERFELD_BC 1085
+#define EM_HR_SOMMERFELD_BC 1086
+#define EM_HI_SOMMERFELD_BC 1087
+
+#define E_ER_PLANEWAVE_BC 1200
+#define E_EI_PLANEWAVE_BC 1201
+
+#define EM_CONT_REAL_BC 1202
+#define EM_CONT_IMAG_BC 1203
+
+#define E_ER_2D_BC 1204
+#define E_EI_2D_BC 1205
+
+#define E_ER_FARFIELD_BC 1210
+#define E_EI_FARFIELD_BC 1211
 
 
 /* pressure */
@@ -758,6 +785,7 @@
 #define PLANE_BC  961000000
 #define FILLET_BC  961123400
 #define DOUBLE_RAD_BC  961123500
+#define FEATURE_ROLLON_BC  961223400
 #define ROLL_FLUID_BC  961124500
 #define TENSION_SHEET_BC 96210200
 #define MOVING_PLANE_BC  96110000

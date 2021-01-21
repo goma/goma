@@ -499,7 +499,21 @@ variable_string_to_int(const char *input, const char *err_string)
   else if (!strcmp(input, "LIGHT_INTD"))                  var = LIGHT_INTD;
   else if (!strcmp(input, "TFMP_PRES"))                   var = TFMP_PRES;
   else if (!strcmp(input, "TFMP_SAT"))                    var = TFMP_SAT;
-  else if (!strcmp(input, "RESTIME"))                     var = RESTIME;  
+  else if (!strcmp(input, "RESTIME"))                     var = RESTIME;
+  else if (!strcmp(input, "EM_E1_REAL"))                  var = EM_E1_REAL;
+  else if (!strcmp(input, "EM_E2_REAL"))                  var = EM_E2_REAL;
+  else if (!strcmp(input, "EM_E3_REAL"))                  var = EM_E3_REAL;
+  else if (!strcmp(input, "EM_E1_IMAG"))                  var = EM_E1_IMAG;
+  else if (!strcmp(input, "EM_E2_IMAG"))                  var = EM_E2_IMAG;
+  else if (!strcmp(input, "EM_E3_IMAG"))                  var = EM_E3_IMAG;
+  else if (!strcmp(input, "EM_H1_REAL"))                  var = EM_H1_REAL;
+  else if (!strcmp(input, "EM_H2_REAL"))                  var = EM_H2_REAL;
+  else if (!strcmp(input, "EM_H3_REAL"))                  var = EM_H3_REAL;
+  else if (!strcmp(input, "EM_H1_IMAG"))                  var = EM_H1_IMAG;
+  else if (!strcmp(input, "EM_H2_IMAG"))                  var = EM_H2_IMAG;
+  else if (!strcmp(input, "EM_H3_IMAG"))                  var = EM_H3_IMAG;
+  else if (!strcmp(input, "EM_CONT_REAL"))                var = EM_CONT_REAL;
+  else if (!strcmp(input, "EM_CONT_IMAG"))                var = EM_CONT_IMAG;
   /*
    * Kluge to break up large if block. Problems with HP compiler!
    */  
