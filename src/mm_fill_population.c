@@ -1331,7 +1331,7 @@ int get_moment_growth_rate_term(struct moment_growth_rate *MGR) {
   }
 
   double eabs = 1e-3;
-  double rmin[3] = {1e-15, 1e-5, 1e-3};
+  double rmin[3] = {0, 1e-4, 1e-3};
 
   /* Get quad weights and nodes */
   int nnodes_out;
