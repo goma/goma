@@ -3653,6 +3653,12 @@ void eigenvector_output_conwrap(int j, int num_soln_flag, double *xr, double evr
                  passdown.exo,
                  passdown.dpi);
 
+   if (displacement_somewhere )
+     {
+      undo_add_displacement_LSA(xr, passdown.exo, saved_displacement);
+     }
+
+
   /* Write the imag vector using the imag eigenvalue part as the time stamp */
   if (num_soln_flag == 2)
     {
@@ -3694,6 +3700,12 @@ void eigenvector_output_conwrap(int j, int num_soln_flag, double *xr, double evr
                  	 NULL,
                          passdown.exo,
                          passdown.dpi);
+
+         if (displacement_somewhere )
+           {
+            undo_add_displacement_LSA(xi, passdown.exo, saved_displacement);
+           }
+
         }
     }
 
