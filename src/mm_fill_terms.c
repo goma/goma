@@ -15436,7 +15436,6 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
   }
   else
     {
-fprintf(stderr,"model %d\n",mp->DensityModel);
       EH(-1,"Unrecognized density model");
     }
 
