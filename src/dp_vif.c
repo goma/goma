@@ -1593,6 +1593,8 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->thermal_conductivity, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->Ewt_func, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->Rst_func, 1, MPI_DOUBLE);
+      ddd_add_member(n, &mp_glob[i]->Rst_diffusion, 1, MPI_DOUBLE);
+      ddd_add_member(n, &mp_glob[i]->Rst_func_supg, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->Mwt_func, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->viscosity, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->dilationalViscosity, 1, MPI_DOUBLE);

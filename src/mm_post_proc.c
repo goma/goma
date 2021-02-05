@@ -290,6 +290,7 @@ int Q_FCN = -1;
 int POYNTING_VECTORS = -1;   	/* conduction flux vectors*/
 int SARAMITO_YIELD = -1;
 int STRESS_NORM = -1;
+int SPECIES_SOURCES = -1;   	/* continuous species sources*/
 
 int len_u_post_proc = 0;	/* size of dynamically allocated u_post_proc
 				 * actually is */
@@ -2194,6 +2195,17 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
      }
   }
   
+  /* calculate species sources  */
+  if(SPECIES_SOURCES != -1)
+  {
+    err = get_continuous_species_terms(&s_terms, time, theta, delta_t, hs);
+    for ( w=0; w<pd->Num_Species_Eqn; w++)
+	{
+	  local_post[SPECIES_SOURCES + w] = s_terms.MassSource[w];
+	  local_lumped[SPECIES_SOURCES + w] = 1.;
+	}
+  }
+
   if(STRESS_NORM != -1)
   {  
     for (int mode = 0; mode < vn->modes; mode++) {
@@ -7198,6 +7210,7 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Poynting Vectors", &POYNTING_VECTORS);
   iread = look_for_post_proc(ifp, "Saramito Yield Coeff", &SARAMITO_YIELD);
   iread = look_for_post_proc(ifp, "VE Stress Norm", &STRESS_NORM);
+  iread = look_for_post_proc(ifp, "Species Sources", &SPECIES_SOURCES);
 
   /*
    * Initialize for surety before communication to other processors.
@@ -9675,6 +9688,28 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
   else
     {
       POYNTING_VECTORS = -1;
+    }
+
+  if (SPECIES_SOURCES != -1 &&  Num_Var_In_Type[R_MASS])
+    {
+      if (SPECIES_SOURCES == 2)
+        {
+          EH(-1, "Post-processing species source vectors cannot be exported yet!");
+        }
+     SPECIES_SOURCES = index_post;
+     if (upd->Max_Num_Species_Eqn == 0) SPECIES_SOURCES = -1;
+     for (w = 0; w < upd->Max_Num_Species_Eqn; w++) {
+	 sprintf(species_name, "YSRC%d", w);
+	 sprintf(species_desc, "Source of %d ", w);
+	 set_nv_tkud(rd, index, 0, 0, -2, species_name,"[1]",
+		     species_desc, FALSE);
+	 index++;
+	 index_post++;
+         }
+    }
+  else
+    {
+      SPECIES_SOURCES = -1;
     }
 
   if (ELECTRIC_FIELD != -1 && Num_Var_In_Type[R_POTENTIAL])

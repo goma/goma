@@ -1020,6 +1020,7 @@ look_for_species_prop(FILE *imp,  const char *search_string,
       material_property[species_ID] =  arg_list[0];
       fill_user_constant = FALSE;
       if (!strcmp(model_name, "PHOTO_CURING")) materialModel[species_ID] = PHOTO_CURING;
+      if (!strcmp(model_name, "DROP_EVAP")) materialModel[species_ID] = DROP_EVAP;
     }
     
   /*

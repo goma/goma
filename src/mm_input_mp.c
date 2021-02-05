@@ -529,6 +529,16 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   else if (model_read == -1 && !strcmp(model_name, "IDEAL_GAS") ) 
     {
       mat_ptr->DensityModel = DENSITY_IDEAL_GAS;       
+      num_const = read_constants(imp, &(mat_ptr->u_density), 0);
+      if ( num_const < 1) 
+	{
+	  sprintf(err_msg, 
+		  "Material %s - expected at least 1 constants for %s %s model.\n",
+		  pd_glob[mn]->MaterialName, "Density", "IDEAL_GAS");
+	  EH(-1, err_msg);
+	}
+      mat_ptr->len_u_density = num_const;
+      SPF_DBL_VEC( endofstring(es),  num_const, mat_ptr->u_density); 
     }
   else if (model_read == -1 && !strcmp(model_name, "LEVEL_SET") )
     {
@@ -3539,30 +3549,39 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       if ( !strcmp(model_name, "LINEAR_TIMETEMP") )
 	{
 	  mat_ptr->Rst_funcModel = LINEAR_TIMETEMP;
-	  mat_ptr->Rst_func = 1.;
 	} 
       else if ( !strcmp(model_name, "EXPONENTIAL_TIMETEMP") )
 	{
-	  int err;
 	  mat_ptr->Rst_funcModel = EXPONENTIAL_TIMETEMP;
-	  err = fscanf(imp, "%lg",&(mat_ptr->Rst_func));
-	  if (err != 1) {
-	    EH(-1, "Expected to read one double for Residence Time Weight Function");
-	  }
-	  SPF(endofstring(es)," %.4g", mat_ptr->Rst_func );
+	} 
+      else if ( !strcmp(model_name, "DROP_EVAP") )
+	{
+	  mat_ptr->Rst_funcModel = DROP_EVAP;
 	} 
       else  
 	{
           mat_ptr->Rst_funcModel = CONSTANT;
           mat_ptr->Rst_func = 1.;
+          mat_ptr->Rst_func_supg = 0.;
           fprintf(stderr,"MAT %d Residence Time Weight Fcn = 1\n",mat_ptr->MatID);
 	  WH(model_read, "Defaulting Residence Fcn to Constant");
 	}
+      if (fscanf(imp, "%lg %lg %lg", &mat_ptr->Rst_func, &mat_ptr->Rst_diffusion, &mat_ptr->Rst_func_supg) != 3)
+        { 
+  	 WH(model_read, "Defaulting Residence Fcn Parameters");
+	 mat_ptr->Rst_func = 1.; 
+	 mat_ptr->Rst_diffusion = 1./LITTLE_PENALTY; 
+	 mat_ptr->Rst_func_supg = 0.; 
+	}
+
+      SPF(endofstring(es)," %.4g %.4g %.4g", mat_ptr->Rst_func, mat_ptr->Rst_diffusion, mat_ptr->Rst_func_supg);
     }
   else
     {
       mat_ptr->Rst_funcModel = CONSTANT;
       mat_ptr->Rst_func = 1.;
+      mat_ptr->Rst_diffusion = 1./LITTLE_PENALTY; 
+      mat_ptr->Rst_func_supg = 0.; 
       SPF(es, "\t(%s = %s)",search_string,"CONSTANT");
     }
   ECHO(es, echo_file);
@@ -7670,7 +7689,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
    */
   rewind(imp);
 
-  if (read_bc_mp !=-1)
+  if (1 || read_bc_mp !=-1)
        {	
 	 iread = look_for_optional(imp, "Non-condensable Molecular Weight", input, '=');
 	 if (iread != -1)
@@ -8201,6 +8220,16 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       mat_ptr->len_u_heat_source = num_const;
       SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heat_source);
     }
+  else if ( !strcmp(model_name, "DROP_EVAP") )
+    {
+      HeatSourceModel = DROP_EVAP;
+      model_read = 1;
+      mat_ptr->HeatSourceModel = HeatSourceModel;
+      num_const = read_constants(imp, &(mat_ptr->u_heat_source), 
+				     NO_SPECIES);
+      mat_ptr->len_u_heat_source = num_const;
+      SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heat_source);
+    }
   else if ( !strcmp(model_name, "EPOXY") )
     {
       HeatSourceModel = EPOXY;
@@ -8582,7 +8611,6 @@ ECHO("\n----Acoustic Properties\n", echo_file);
           SPF_DBL_VEC(endofstring(es), 6,  mat_ptr->u_species_source[species_no]);
         }
 
-
       else if ( !strcmp(model_name, "ELECTROOSMOTIC") )
         {
           SpeciesSourceModel = ELECTROOSMOTIC;
@@ -8627,6 +8655,29 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  mat_ptr->SpeciesSourceModel[species_no] = ION_REACTIONS;
 	}
 
+      else if ( !strcmp(model_name, "DROP_EVAP") )
+        {
+          SpeciesSourceModel = DROP_EVAP;
+          model_read = 1;
+          mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
+          if ( fscanf(imp, "%lf %lf %lf %lf ",
+                            &a0, &a1, &a2, &a3) != 4)
+            {
+                  sr = sprintf(err_msg,
+                               "Matl %s needs 4 floats for %s %s model.\n",
+                               pd_glob[mn]->MaterialName,
+                               "Species Source", "DROP_EVAP");
+                  EH(-1, err_msg);
+            }
+          mat_ptr->u_species_source[species_no] = (dbl *) array_alloc(1,4,sizeof(dbl));
+          mat_ptr->len_u_species_source[species_no] = 4;
+          mat_ptr->u_species_source[species_no][0] = a0;  /* liquid droplet concentration*/
+          mat_ptr->u_species_source[species_no][1] = a1;  /* ambient pressure */
+          mat_ptr->u_species_source[species_no][2] = a2;  /* droplet radius*/
+          mat_ptr->u_species_source[species_no][3] = a3;  /* droplet number concentration */
+
+          SPF_DBL_VEC(endofstring(es), 4,  mat_ptr->u_species_source[species_no]);
+        }
       else if(model_read == -1)
 	  {
 	    EH(model_read,

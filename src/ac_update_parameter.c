@@ -1048,6 +1048,14 @@ update_MT_parameter(double lambda, /* Parameter value */
       mp_glob[mn]->u_lubsource_function_constants[2] = lambda;
       break;
 
+    case TAGC_RST_FUNC_0:
+      mp_glob[mn]->Rst_func = lambda;
+      break;
+
+    case TAGC_RST_FUNC_1:
+      mp_glob[mn]->Rst_diffusion = lambda;
+      break;
+
     case TAGC_HEAT_SOURCE_0:
       mp_glob[mn]->u_heat_source[0] = lambda;
       break;
@@ -1952,6 +1960,14 @@ retrieve_MT_parameter(double *lambda, /* Parameter value */
 
     case TAGC_LUB_SOURCE_2:
       *lambda = mp_glob[mn]->u_lubsource_function_constants[2];
+      break;
+
+    case TAGC_RST_FUNC_0:
+      *lambda = mp_glob[mn]->Rst_func;
+      break;
+
+    case TAGC_RST_FUNC_1:
+      *lambda = mp_glob[mn]->Rst_diffusion;
       break;
 
     case TAGC_HEAT_SOURCE_0:
