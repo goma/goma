@@ -7689,7 +7689,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
    */
   rewind(imp);
 
-  if (1 || read_bc_mp !=-1)
+  if (read_bc_mp !=-1)
        {	
 	 iread = look_for_optional(imp, "Non-condensable Molecular Weight", input, '=');
 	 if (iread != -1)
@@ -8659,6 +8659,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
         {
           SpeciesSourceModel = DROP_EVAP;
           model_read = 1;
+	  if(read_bc_mp == -1) read_bc_mp = DROP_EVAP;
           mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
           if ( fscanf(imp, "%lf %lf %lf %lf ",
                             &a0, &a1, &a2, &a3) != 4)
@@ -8794,6 +8795,95 @@ ECHO("\n----Acoustic Properties\n", echo_file);
     }
 
   ECHO(es,echo_file);
+
+  /*
+   * Before we go on let's check to see if a Source term needed extra material Properties
+   *    i.e., Non-condensable for DROP_EVAP models
+   */
+  rewind(imp);
+
+  if (read_bc_mp == DROP_EVAP)
+       {	
+	 iread = look_for_optional(imp, "Non-condensable Molecular Weight", input, '=');
+	 if (iread != -1)
+	   {
+	     if (fscanf(imp, "%s %d %lf", model_name, &ii, &mw) !=3)
+	       {
+		 EH(-1, "Error reading non-condensable MW: e.g. CONSTANT species_no  MW");
+	       }
+	     else
+	       {
+		 mat_ptr->molecular_weight[mat_ptr->Num_Species_Eqn] = mw;
+		 SPF(es,"%s = %s %d %.4g","Non-condensable Molecular Weight", model_name, ii, mw ); 
+	       } 
+	     ECHO(es,echo_file);
+	   }
+
+	      
+	 iread = look_for_optional(imp, "Non-volatile Molar Volume", input, '='); 
+	 if (iread != -1)
+	   {
+	     if (fscanf(imp, "%s %d %lf", model_name, &ii, &mv) !=3)
+	       {
+		 EH(-1, "Error reading non-volatile Molar Volume: e.g. CONSTANT  species_id  MV");
+	       }
+	     else
+	       {
+		 mat_ptr->molar_volume[pd_glob[mn]->Num_Species_Eqn] = mv;
+		 SPF(es,"%s = %s %d %.4g", "Non-volatile Molar Volume", model_name, ii, mw ); 
+	       } 
+	     ECHO(es,echo_file);
+	   }
+	 
+	 iread = look_for_optional(imp, "Non-volatile Specific Volume", input, '='); 
+	 if (iread != -1)
+	   {
+	     if (fscanf(imp, "%s %d %lf", model_name, &ii, &mv) !=3)
+	       {
+		 EH(-1, "Error reading non-volatile Specific Volume: e.g. CONSTANT  species_id  MV");
+	       }
+	     else
+	       {
+		 mat_ptr->specific_volume[pd_glob[mn]->Num_Species_Eqn] = mv;
+		 SPF(es,"%s = %s %d %.4g", "Non-volatile Specific Volume", model_name, ii, mw ); 
+	       } 
+	     ECHO(es,echo_file);
+	   }
+	 
+	 iread = look_for_optional(imp, "Flory-Huggins parameters", input, '=');
+	 if (iread != -1)
+	   {
+	     n_species = pd_glob[mn]->Num_Species_Eqn + 1;
+	     /*number of independent interaction parameters */
+	     n_ij = (n_species*n_species - n_species)/2; 
+	     
+	     if (fscanf(imp, "%s", model_name) !=1) 	  
+	       {
+		 EH(-1, "Error reading F-H parameter model name: e.g. CONSTANT");  
+	       }
+	     else
+	       {
+		 for (i = 0; i < n_ij; i++) /* reading the chi parameters */ 
+		   {
+		     if (fscanf(imp, "%d %d %lf", &ii, &jj, &chi_ij) != 3) 
+		       {
+			 EH(-1, "Error:must have three entries, i, j, and chi(i,j)");  
+		       }
+		     mat_ptr->flory_param[ii][jj] = chi_ij; 
+		     mat_ptr->flory_param[jj][ii] = chi_ij
+		       *mat_ptr->molar_volume[jj]
+		       /mat_ptr->molar_volume[ii]; 
+		   }
+		 for (k = 0; k<n_species; k++)
+		   {
+		     mat_ptr->flory_param[k][k] = 0.;
+		   }
+		 SPF(es,"%s = %s %d %d %.4g", "Flory-Huggins parameters", model_name, ii, jj, chi_ij);
+	       }
+	     ECHO(es,echo_file);
+	   }
+       }
+/* End of material property re-read  */
 
   ECHO("\n---Initialization\n",echo_file);
 

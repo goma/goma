@@ -30910,6 +30910,7 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
      zero_structure(&s_terms, sizeof(struct Species_Conservation_Terms), 1);
 
      err = get_continuous_species_terms(&s_terms, time, tt, dt, NULL);
+     EH(err,"problem in getting the species terms");
 
      for(w=0; w<pd->Num_Species_Eqn; w++)
        {
@@ -34834,6 +34835,7 @@ assemble_poynting(double time,	/* present time value */
                {
 		double init_radius=0.010, num_density=10., denom=1;
 		err = get_continuous_species_terms(&s_terms, time, tt, dt, hsquared);
+     		EH(err,"problem in getting the species terms");
 
       		for(w=0; w<pd->Num_Species_Eqn; w++)
         	  {
