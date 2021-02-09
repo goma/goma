@@ -632,6 +632,7 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
   } 
   else if (matrl->DensityModel == DENSITY_IDEAL_GAS) 
     {
+     double mw_last, c_total;
     /*
      * Specify the thermodynamic pressure here
      *   -> For the moment we ignore any coupling between
@@ -641,9 +642,9 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
     pressureThermo = upd->Pressure_Datum;
 
     /*
-     * Specify the gas constant according to CRC IUPAC conventions
+     * Specify the gas constant according to user's choice
      */
-    RGAS_CONST = 8.314510E7;        /*    g cm^2/(sec^2 g-mole K)  */
+    RGAS_CONST = matrl->u_density[0];  /*(cgs:cm^3-atm/g-mole K)  (si_mm: mm^3-kPa/kg-mole-degK) */
   
     /*
      *  Base density calculation depends on species var type
@@ -663,9 +664,21 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
 	break;
     case SPECIES_CONCENTRATION:
         rho = 0.0;
-	for (w = 0; w < num_species; w++) {
-          rho += stateVector[SPECIES_UNK_0 + w] * mw[w];
-	}
+	if(matrl->molecular_weight[pd->Num_Species_Eqn] < 0)
+         {
+	  for (w = 0; w < num_species; w++) {
+             rho += stateVector[SPECIES_UNK_0 + w] * mw[w];
+	     }
+         }
+       else
+         {
+          mw_last = mp -> molecular_weight[pd->Num_Species_Eqn];
+	  c_total = pressureThermo/(RGAS_CONST * stateVector[TEMPERATURE]);
+	  for (w = 0; w < num_species; w++) {
+             rho += stateVector[SPECIES_UNK_0 + w] * (mw[w]-mw_last);
+	     }
+	  rho += c_total*mw_last;
+         }
 	break;
     case SPECIES_DENSITY:
         rho = 0.0;

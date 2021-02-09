@@ -1593,6 +1593,8 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->thermal_conductivity, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->Ewt_func, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->Rst_func, 1, MPI_DOUBLE);
+      ddd_add_member(n, &mp_glob[i]->Rst_diffusion, 1, MPI_DOUBLE);
+      ddd_add_member(n, &mp_glob[i]->Rst_func_supg, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->Mwt_func, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->viscosity, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->dilationalViscosity, 1, MPI_DOUBLE);
@@ -2620,6 +2622,7 @@ noahs_ark()
   ddd_add_member(n, &POYNTING_VECTORS, 1, MPI_INT);
   ddd_add_member(n, &SARAMITO_YIELD, 1, MPI_INT);
   ddd_add_member(n, &STRESS_NORM, 1, MPI_INT);
+  ddd_add_member(n, &SPECIES_SOURCES, 1, MPI_INT);
   ddd_add_member(n, &len_u_post_proc, 1, MPI_INT);
 
   if ( nn_post_fluxes > 0 )

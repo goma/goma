@@ -752,6 +752,18 @@ load_extra_unknownsAC(int iAC,    /* ID NUMBER OF AC'S */
         xa[iAC] = mp_glob[mn]->u_lubsource_function_constants[2];
         break;
 
+      case TAGC_RST_FUNC_0:
+        xa[iAC] = mp_glob[mn]->Rst_func;
+        break;
+
+      case TAGC_RST_FUNC_1:
+        xa[iAC] = mp_glob[mn]->Rst_diffusion;
+        break;
+
+      case TAGC_RST_FUNC_2:
+        xa[iAC] = mp_glob[mn]->Rst_func_supg;
+        break;
+
       case TAGC_HEAT_SOURCE_0:
         xa[iAC] = mp_glob[mn]->u_heat_source[0];
         break;
@@ -1526,6 +1538,18 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
 
       case TAGC_LUB_SOURCE_2:
         mp_glob[mn]->u_lubsource_function_constants[2] = lambda;
+        break;
+
+      case TAGC_RST_FUNC_0:
+        mp_glob[mn]->Rst_func = lambda;
+        break;
+
+      case TAGC_RST_FUNC_1:
+        mp_glob[mn]->Rst_diffusion = lambda;
+        break;
+
+      case TAGC_RST_FUNC_2:
+        mp_glob[mn]->Rst_func_supg = lambda;
         break;
 
       case TAGC_HEAT_SOURCE_0:

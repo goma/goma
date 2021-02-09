@@ -753,6 +753,9 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define TAGC_LUB_SOURCE_2                  7048
 
 #define TAGC_HEAT_SOURCE_0                 7050
+#define TAGC_RST_FUNC_0                    7060
+#define TAGC_RST_FUNC_1                    7061
+#define TAGC_RST_FUNC_2                    7062
 
 /*  Problem Description Parameters   */
 
