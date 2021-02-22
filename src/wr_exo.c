@@ -1532,7 +1532,7 @@ void wr_resetup_exo(Exo_DB *exo, char *filename, int verbosity) {
   return;
 }
 
-void wr_result_exo(Exo_DB *exo, char *filename, int verbosity) {
+void wr_result_exo(Exo_DB *exo, char *filename, int verbosity, int write_node_vars, int write_elem_vars) {
   int i;
   int index;
   int j;
@@ -1564,7 +1564,7 @@ void wr_result_exo(Exo_DB *exo, char *filename, int verbosity) {
    * Element variable truth table and values at ONE TIME ONLY.
    */
 
-  if (exo->num_elem_vars > 0) {
+  if (exo->num_elem_vars > 0 && write_elem_vars) {
 
 #ifdef DEBUG
     fprintf(stderr, "\t\tneb         = %d\n", exo->num_elem_blocks);
@@ -1614,7 +1614,7 @@ void wr_result_exo(Exo_DB *exo, char *filename, int verbosity) {
    * Put nodal variable values at last time step...
    */
 
-  if (exo->num_node_vars > 0) {
+  if (exo->num_node_vars > 0 && write_node_vars) {
     for (i = 0; i < exo->num_nv_time_indeces; i++) {
       time_index = exo->nv_time_indeces[i];
 
