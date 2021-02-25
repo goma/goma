@@ -115,9 +115,10 @@ void write_solution(char output_file[],             /* name EXODUS II file */
   for (i = 0; i < tev; i++) {
     bool is_P1 = FALSE;
     int dof = 0;
-    for (int mn = 0; mn < upd->Num_Mat; mn++) {
+    for (int eb_index = 0; eb_index < exo->num_elem_blocks; eb_index++) {
+      int mn = Matilda[eb_index];
       if (pd_glob[mn]->i[rd->evtype[i]] == I_P1) {
-        dof = MAX(getdofs(type2shape(exo->eb_elem_itype[mn]), I_P1), dof);
+        dof = MAX(getdofs(type2shape(exo->eb_elem_itype[eb_index]), I_P1), dof);
         is_P1 = TRUE;
       }
     }
