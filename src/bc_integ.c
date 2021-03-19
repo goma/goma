@@ -1744,6 +1744,10 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	  qnobc_surf (func, d_func, time_intermediate);
 	  break;
 
+	case RESTIME_NOBC_BC:
+	  restime_nobc_surf (func, d_func, time_intermediate);
+	  break;
+
 	case T_CONTACT_RESIS_BC:
 	  qside_contact_resis(func, d_func,
 			    bc->BC_Data_Int[0],

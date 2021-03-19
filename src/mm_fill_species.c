@@ -10957,46 +10957,73 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	double liq_C[MAX_CONC], radius, num_density, gas_conc, tmp;
 	double psat[MAX_CONC], dpsatdt[MAX_CONC], A, amb_pres, rad_ratio;
         double y_mole[MAX_CONC], dy_dC[MAX_CONC][MAX_CONC], x_mole[MAX_CONC];
-	double C[MAX_CONC], activity[MAX_CONC];
+	double C[MAX_CONC], activity[MAX_CONC], solvent_volfrac=0, conc_nv, dact_dr;
+	double pres_conv, dy_dP=0, dy_dT=0, dsdP=0, pres, near_unity=0.999999, rad_zero=0.000001;
 	int mode=RAOULT;
-	double sum_C=0, R_gas=82050;
+	double sum_C=0, R_gas=82050, Rgas_cgs=83.137E+06;
 
 	param = mp->u_species_source[w];
 	for (i = 0; i<pd->Num_Species_Eqn; i++)
-	    {  liq_C[i] = mp->u_species_source[i][0];  }
-	amb_pres = param[1];
+	    {
+	     liq_C[i] = mp->u_species_source[i][0];  
+	     solvent_volfrac += liq_C[i]*mp->molar_volume[w];
+	    }
+	amb_pres = upd->Pressure_Datum;
 	radius = param[2];
 	num_density = param[3];
+	conc_nv = (1.-solvent_volfrac)/mp->molar_volume[pd->Num_Species_Eqn];
+	pres_conv = mp->u_vapor_pressure[w][0];
+	if(pd->v[RESTIME])
+	   { rad_ratio = MAX(fv->restime,rad_zero);}
+	else
+	   { rad_ratio=1.;}
+
 	s = 0;       dsdT = 0;  
 	for(a=0; a<MAX_CONC; a++) dsdC[a]=0.;  
   /*  Concentration field is the far-field gas  */
 	for (i = 0; i<pd->Num_Species_Eqn; i++)
 	      { C[i] = MAX(DBL_SMALL,fv->c[i]);}
 
-	gas_conc = amb_pres/(R_gas*fv->T);
-	y_mole[w] = MIN(C[w]/(gas_conc),0.999); 
+	if(pd->v[PRESSURE] && fv->P > 0.9*pres_conv)
+	  { gas_conc = fv->P/(pres_conv*R_gas*fv->T); pres = fv->P;}
+	else
+	  { gas_conc = amb_pres/(1000*Rgas_cgs*fv->T); pres = pres_conv;}
 
-	for(j=0;j<pd->Num_Species_Eqn;j++)
-	   { dy_dC[w][j] = delta(w,j)/gas_conc; }
-
-  /* Convert liquid droplet concentration to mole fraction, if needed  */
         if(mp->Species_Var_Type == SPECIES_MOLE_FRACTION)
           {
-	   x_mole[w] = liq_C[w]; 
-          }
-        else if(mp->Species_Var_Type == SPECIES_DENSITY)
-          {
-	  sum_C = 0;
-          for ( i=0; i<pd->Num_Species_Eqn; i++) { sum_C += liq_C[i]; }
-	  x_mole[w] = liq_C[w]/sum_C; 
+	   y_mole[w] = MIN(C[w],near_unity); 
+	   dy_dP = 0;  dy_dT = 0;
+	   for(j=0;j<pd->Num_Species_Eqn;j++)
+	      { dy_dC[w][j] = delta(w,j); }
           }
         else if(mp->Species_Var_Type == SPECIES_CONCENTRATION)
+          {
+	   y_mole[w] = MIN(C[w]/gas_conc,near_unity); 
+	   dy_dP = -y_mole[w]/pres;
+	   dy_dT = y_mole[w]/fv->T;
+	   for(j=0;j<pd->Num_Species_Eqn;j++)
+	      { dy_dC[w][j] = delta(w,j)/gas_conc; }
+          }
+        else
+	  { EH(-1,"That species formulation not done in DROP_EVAP\n"); }
+
+
+  /* Convert liquid droplet concentration to mole fraction, if needed  */
+        if(mp->Species_Var_Type == SPECIES_MOLE_FRACTION ||
+	    mp->Species_Var_Type == SPECIES_CONCENTRATION)
+          {
+	   sum_C = conc_nv/CUBE(rad_ratio);
+           for ( i=0; i<pd->Num_Species_Eqn; i++) { sum_C += liq_C[i]; }
+	   x_mole[w] = liq_C[w]/sum_C; 
+          }
+        else if(mp->Species_Var_Type == SPECIES_DENSITY)
           {
           for ( i=0; i<pd->Num_Species_Eqn; i++) { sum_C += liq_C[i]; }
 	  x_mole[w] = liq_C[w]/sum_C; 
           }
         else
 	  { EH(-1,"That species formulation not done in DROP_EVAP\n"); }
+	x_mole[w] = MIN(x_mole[w], near_unity); 
 
 
   /* Nonideal VP Calculations based on either ANTOINE or RIEDEL models */
@@ -11009,18 +11036,22 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	  {
 	   riedel_psat(w, mp->u_vapor_pressure[w], &psat[w], &dpsatdt[w]);
 	  }
+        else
+	  { EH(-1,"Vapor Pressure should be ANTOINE or RIEDEL for DROP_EVAP\n"); }
 	mp-> vapor_pressure[w] = psat[w];
 
-	A = mp->vapor_pressure[w]/amb_pres;
+	A = mp->vapor_pressure[w]/pres;
+
   /**  Using Raoult activity model  **/
 	if(mode==RAOULT)
 	  {
-	   activity[w] = A*x_mole[w];
+	   activity[w] = MIN(A*x_mole[w], near_unity);
+	   dact_dr = activity[w]*3.*conc_nv/pow(rad_ratio,4);
 	  }
 
 	tmp = gas_conc*4*M_PIE*radius*mp->diffusivity[w]*num_density;
 	if(pd->v[RESTIME])
-	  { rad_ratio = MAX(fv->restime,DBL_SMALL);}
+	  { rad_ratio = MAX(fv->restime,rad_zero);}
 	else
 	  {rad_ratio=1.;}
 	s = tmp*log((1-y_mole[w])/(1-activity[w]))*rad_ratio;
@@ -11029,9 +11060,27 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	   dsdC[j] = -dy_dC[w][j]/(1.-y_mole[w])*tmp*rad_ratio;
 	  }
 	   
-	dsdT = s*(-1./fv->T) + dpsatdt[w]/amb_pres*x_mole[w]/(1-activity[w])*tmp*rad_ratio;
-	dsdrst = tmp*log((1-y_mole[w])/(1-activity[w]));
+	if(pd->v[PRESSURE] && fv->P > 0.9*pres_conv)
+	   {
+	    dsdP = s/pres + tmp*rad_ratio*
+		(-activity[w]/pres/(1-activity[w]) - dy_dP/(1-y_mole[w]));
+	    dsdT = s*(-1./fv->T) + tmp*rad_ratio *
+		(dpsatdt[w]/pres*x_mole[w]/(1-activity[w])-dy_dT/(1-y_mole[w]));
+	   }
+	else
+	   { dsdT = s*(-1./fv->T) + tmp*rad_ratio *
+		(dpsatdt[w]/pres_conv*x_mole[w]/(1-activity[w])
+		-dy_dT/(1-y_mole[w]));
+	   }
+	dsdrst = tmp*log((1-y_mole[w])/(1-activity[w])) + tmp*rad_ratio*dact_dr/(1.-activity[w]);
 
+#if 1
+if(isnan(s))fprintf(stderr,"dropnan %g %g %g %g %g %g\n",s,tmp,y_mole[w],activity[w],A,x_mole[w]);
+if(isnan(dsdT))fprintf(stderr,"dsdTnan %g %g %g %g %g %g\n",dsdT,tmp,gas_conc, radius, num_density,mp->diffusivity[0]);
+if(isnan(dsdP))fprintf(stderr,"dsdPnan %g %g %g %g %g %g\n",dsdP,tmp,y_mole[w],activity[w],A,x_mole[w]);
+if(isnan(dsdC[0]))fprintf(stderr,"dsdCnan %g %g %g %g %g %g\n",dsdC[0],tmp,y_mole[w],activity[w],A,x_mole[w]);
+if(isnan(dsdrst))fprintf(stderr,"dsdrstnan %g %g %g %g %g %g\n",dsdrst,tmp,y_mole[w],activity[w],rad_ratio, dact_dr);
+#endif
 	st->MassSource[w]= s;
 
 	if ( af->Assemble_Jacobian )
@@ -11050,7 +11099,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	  {
 	    for ( j=0; j<ei->dof[var]; j++)
 	    {
-	      st->d_MassSource_dc[w][w][j]=dsdC[j]*bf[var]->phi[j];
+	      st->d_MassSource_dc[w][w][j]=dsdC[w]*bf[var]->phi[j];
 	    }
 	  }
 
@@ -11060,6 +11109,14 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	    for ( j=0; j<ei->dof[var]; j++)
 	    {
 	      st->d_MassSource_drst[w][j]= dsdrst*bf[var]->phi[j];
+	    }
+	  }
+	  var = PRESSURE;
+	  if(pd->v[var])
+	  {
+	    for ( j=0; j<ei->dof[var]; j++)
+	    {
+	      st->d_MassSource_dP[w][j]= dsdP*bf[var]->phi[j];
 	    }
 	  }
 	}

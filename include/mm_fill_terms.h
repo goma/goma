@@ -155,6 +155,11 @@ PROTO((	double ,		/* time - present time value         */
 	const int ,		/*  Light intensity eqn id and var id		     */
 	const int ));	
 
+EXTERN void restime_nobc_surf		/* mm_fill_terms.c                           */
+PROTO((double [DIM],		/* func                                      */
+       double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
+       const double));          /* Time                                      */
+ 
 EXTERN int assemble_acoustic_reynolds_stress	/* mm_fill_terms.c */
 PROTO(( double,					/* time */
         double,					/* tt */

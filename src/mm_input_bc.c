@@ -463,6 +463,7 @@ rd_bc_specs(FILE *ifp,
         case EM_HI_FREE_BC:
         case E_ER_2D_BC:
         case E_EI_2D_BC:
+	case RESTIME_NOBC_BC:
 
 	  break;
 
@@ -3571,7 +3572,7 @@ fprintf(stderr," HC %d BC %d of %d\n",i,hunt[i].DFID,BC_Types[ibc].max_DFlt);
     if (fscanf(ifp, "%d %lf ", &pressure_datum_element, &pressure_datum_value ) != 2 ) {
       		SPF(echo_string,"\t(%s)", "PRESSURE DATUM =  missing data");
      		} else	{
-				SPF(echo_string,"%s = %d %.4g", "PRESSURE DATUM" , pressure_datum_element, pressure_datum_value );
+		SPF(echo_string,"%s = %d %.4g", "PRESSURE DATUM" , pressure_datum_element, pressure_datum_value );
 
  		}
 	ECHO(echo_string,echo_file);

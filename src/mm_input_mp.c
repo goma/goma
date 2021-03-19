@@ -530,10 +530,10 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     {
       mat_ptr->DensityModel = DENSITY_IDEAL_GAS;       
       num_const = read_constants(imp, &(mat_ptr->u_density), 0);
-      if ( num_const < 1) 
+      if ( num_const < 2) 
 	{
 	  sprintf(err_msg, 
-		  "Material %s - expected at least 1 constants for %s %s model.\n",
+		  "Material %s - expected at least 2 constants for %s %s model.\n",
 		  pd_glob[mn]->MaterialName, "Density", "IDEAL_GAS");
 	  EH(-1, err_msg);
 	}
@@ -7279,6 +7279,11 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	     else if (!strcmp(model_name, "CONST_LS") ) 
 	       {
 		 mat_ptr->DiffusivityModel[species_no] = LEVEL_SET;
+		 num_const = mat_ptr->len_u_diffusivity[species_no];
+	       }
+	     else if (!strcmp(model_name, "CHAPMAN_GAS") ) 
+	       {
+		 mat_ptr->DiffusivityModel[species_no] = CHAPMAN_GAS;
 		 num_const = mat_ptr->len_u_diffusivity[species_no];
 	       }
 	     else

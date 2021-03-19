@@ -2434,6 +2434,7 @@ Diffusivity (void)
   for (w = 0; w < pd->Num_Species; w++) {
     switch (mp->DiffusivityModel[w]) {
 
+  char err_msg[MAX_CHAR_IN_INPUT];
     case CONSTANT:
       /* do nothing...mp->diffusivity set in rd_mp_specs
 	 ...mp->d_diffusivity zeroed in set_mp_to_unity
@@ -2492,6 +2493,18 @@ Diffusivity (void)
 				  mp->u_diffusivity[w][2], 
 				  &mp->diffusivity[w],
 				  &mp->d_diffusivity[w][FILL] );
+      break;
+    case CHAPMAN_GAS:
+	mp->diffusivity[w] = mp->u_diffusivity[w][0]*
+		sqrt(1./mp->molecular_weight[w]+1./mp->u_diffusivity[w][1])
+			*pow(fv->T,1.5)/fv->P;
+	mp->d_diffusivity[w][TEMPERATURE] = 1.5*mp->diffusivity[w]/fv->T;
+	mp->d_diffusivity[w][PRESSURE] = mp->diffusivity[w]*fv->P*log(fv->P);
+	mp->d_diffusivity[w][MAX_VARIABLE_TYPES+w] = 0.0;
+    sprintf(err_msg, 
+	    "Chapman diffusivity model %g %g %g \n",
+	    mp->diffusivity[w],mp->u_diffusivity[w][0],mp->u_diffusivity[w][1]);
+    WH(-1,err_msg);
       break;
     default:
       break;

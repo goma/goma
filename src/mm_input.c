@@ -14304,6 +14304,8 @@ parse_press_datum_input(const char *input)
       units = 1;
     } else if (!strncasecmp(tok.tok_ptr[1], "cgs", 3)) {
       units = 2;
+    } else if (!strncasecmp(tok.tok_ptr[1], "kPa", 3)) {
+      units = 3;
     } else {
       goto L_ERROR;
     }
@@ -14315,6 +14317,8 @@ parse_press_datum_input(const char *input)
     value *= 1.01325E6 / 760;
   } else if (units == 2) {
     value *= 1.0;
+  } else if (units == 3) {
+    value *= 10000.0;
   }
   return value;
   /*

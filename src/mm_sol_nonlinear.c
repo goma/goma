@@ -311,8 +311,10 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
                                         /*   [1][0] == AC correction, L_oo norm */
                                         /*   [1][1] == AC correction, L_1  norm */
                                         /*   [1][2] == AC correction, L_2  norm */
-  double        Norm_new;                /* Place holder for latest norm */
-  double        Norm_old;                /* Place holder for last norm   */
+  double        Resid_Norm_stack[3];    /* Place holder for last residual norms   */
+  double        Soln_Norm_stack[3];      /* Place holder for last update norms   */
+  double        Conv_order=0, Soln_order=0;   /* Order of convergence  */
+  double	Conv_rate=0, Soln_rate=0;  /* Convergence rates, i.e. neg. semilog slope*/
   int           Norm_below_tolerance;    /* Boolean for modified newton test*/
   int           Rate_above_tolerance;    /* Boolean for modified newton test*/
   int           step_reform;             /* counter for Jacobian reformation */
@@ -625,8 +627,8 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
       Rate_above_tolerance = FALSE;
     }
 
-  Norm_old             = 1.e+30;
-  Norm_new             = 1.e+30;
+  Resid_Norm_stack[2] = Resid_Norm_stack[1] = Resid_Norm_stack[0] = 0.1;
+  Soln_Norm_stack[2] = Soln_Norm_stack[1] = Soln_Norm_stack[0] = 0.1;
   step_reform          = Newt_Jacobian_Reformation_stride;
   
   /*
@@ -657,9 +659,9 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
     }
 
   DPRINTF(stderr, 
-"\n  ToD    itn   L_oo    L_1     L_2     L_oo    L_1     L_2   lis  asm/slv (sec)\n");
+"\n  ToD    itn   L_oo    L_1     L_2     L_oo    L_1     L_2   lis  asm/slv (sec)  L2_Order/Rates\n");
   DPRINTF(stderr, 
-"-------- --- ------- ------- ------- ------- ------- ------- --- ---------------\n");
+"-------- --- ------- ------- ------- ------- ------- ------- --- --------------- -------------\n");
 
   /*********************************************************************************
    *
@@ -693,7 +695,7 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
       else if ( inewton < 100 )
 	{
 	  DPRINTF(stderr,"%s %d] ", ctod, inewton );
-	}
+	} 
       else
 	{
 	  DPRINTF(stderr,"%s %d ", ctod, inewton );	  
@@ -1231,12 +1233,9 @@ EH(-1,"version not compiled with frontal solver");
 
       DPRINTF(stderr, "%7.1e %7.1e %7.1e ",  Norm[0][0], Norm[0][1], Norm[0][2]);
 		  
-	  if( inewton > 0 && Norm[0][2] < Epsilon[0] && Norm[2][2] < Epsilon[0] )
-	  {
-#ifdef SKIP_LAST_SOLVE
-		*converged = Epsilon[2] > 1.0 ? TRUE : FALSE ;
-#endif
-	   }
+	if( (inewton > 0) && (Norm[0][2] < Epsilon[0]) && (Norm[0][0] < Epsilon[0]) &&
+		(Norm[2][2] < Epsilon[0]) && (Norm[2][0] < Epsilon[0]))
+	  { *converged = (Epsilon[2] > 1.0) ? TRUE : FALSE ;  }
       
 #ifdef DEBUG_NORM
       if (fabs(resid_vector[num_unk_r]) == fabs(Norm[0][0])) {
@@ -1291,7 +1290,53 @@ EH(-1,"version not compiled with frontal solver");
        *************************************************************************/
       s_start = ut(); s_end = s_start;
 	   
-	  if( Linear_Solver != FRONT && *converged ) goto skip_solve;
+      if( Linear_Solver != FRONT && *converged ) 
+        {
+/*  If we're going to skip the Solve step, compute and save some useful 
+    information first...*/
+
+         Resid_Norm_stack[0] = Resid_Norm_stack[1];
+         Resid_Norm_stack[1] = Resid_Norm_stack[2];
+         Resid_Norm_stack[2] = Norm[0][2]/BIG_PENALTY;
+	   
+         if(inewton && (Resid_Norm_stack[2] > 0) && (Resid_Norm_stack[2] != 1) ) 
+	    {
+#if 1
+	 if(inewton <= 1)
+	    {
+	     Conv_order = log10(Resid_Norm_stack[2])/log10(Resid_Norm_stack[1]);
+	     Conv_rate = log10(Resid_Norm_stack[1])-log10(Resid_Norm_stack[2]);
+	    }
+	 else
+	    {
+	     Conv_order = log10(Resid_Norm_stack[2]/Resid_Norm_stack[1])
+				/log10(Resid_Norm_stack[1]/Resid_Norm_stack[0]);
+	     Conv_rate = -0.5*log10(Resid_Norm_stack[0])+2*log10(Resid_Norm_stack[1])
+				-1.5*log10(Resid_Norm_stack[2]);
+	    }
+#else
+	     Conv_order = log10(Resid_Norm_stack[2])/log10(Resid_Norm_stack[1]); 
+	     Conv_rate = log10(Resid_Norm_stack[1]) - log10(Resid_Norm_stack[2]);
+#endif
+	    }
+	 if ( glob_var_vals != NULL )
+	   {
+	    glob_var_vals[0] = (double) *converged;
+	    glob_var_vals[1] = (double) inewton;
+	    glob_var_vals[2] = (double) Max_Newton_Steps;
+	    glob_var_vals[3] = Conv_order;
+	    total_mesh_volume = 0;
+
+	    for(i=0;nAC > 0 && i<nAC;i++) 
+	      {
+	       total_mesh_volume += augc[i].evol;
+	       glob_var_vals[5 + i ] = x_AC[i];
+	      }
+
+	    glob_var_vals[4] = (double) total_mesh_volume;
+	   }
+	 goto skip_solve;
+         }
 	   
       switch (Linear_Solver)
       {
@@ -1928,8 +1973,52 @@ EH(-1,"version not compiled with frontal solver");
 
       /* Save some norm info for modified Newton stuff */
       
-      Norm_old = Norm_new;
-      Norm_new = Norm[0][1];
+      Resid_Norm_stack[0] = Resid_Norm_stack[1];
+      Resid_Norm_stack[1] = Resid_Norm_stack[2];
+      Resid_Norm_stack[2] = Norm[0][2]/BIG_PENALTY;
+      Soln_Norm_stack[0] = Soln_Norm_stack[1];
+      Soln_Norm_stack[1] = Soln_Norm_stack[2];
+      Soln_Norm_stack[2] = Norm_r[0][2]/BIG_PENALTY;
+      /* Compute rate_of_convergence.  Really what we want
+	             here is dln(norm)/dnorm   FIGURE IT OUT! */
+	/* Asymptotically we should have Norm_(i+1) ~ lambda * Norm_i ^ alpha
+	   or log[Norm_(i+1)] = log(lambda) + alpha*log(Norm_i),
+	   where alpha defines the convergence order.
+	   For <= 2 iterations, assume lambda=1 ==> alpha = log[Norm_(i+1)]/log[Norm_i]
+	   Otherwise, eliminate lambda using 3 iteration results to get:
+		alpha = log[Norm_(i+1)/Norm_i]/log[Norm_i/Norm_(i-1)].
+	*/
+	   
+      if(inewton && (Resid_Norm_stack[2] > 0) && (Soln_Norm_stack[2] > 0)  &&
+		(Resid_Norm_stack[2] != 1) && (Soln_Norm_stack[2] != 1)) 
+	{
+#if 1
+	 if(inewton <= 1)
+	    {
+	     Conv_order = log10(Resid_Norm_stack[2])/log10(Resid_Norm_stack[1]);
+	     Soln_order = log10(Soln_Norm_stack[2])/log10(Soln_Norm_stack[1]);
+	     Conv_rate = log10(Resid_Norm_stack[1])-log10(Resid_Norm_stack[2]);
+	     Soln_rate = log10(Soln_Norm_stack[1])-log10(Soln_Norm_stack[2]);
+	    }
+	 else
+	    {
+	     Conv_order = log10(Resid_Norm_stack[2]/Resid_Norm_stack[1])
+				/log10(Resid_Norm_stack[1]/Resid_Norm_stack[0]);
+	     Soln_order = log10(Soln_Norm_stack[2]/Soln_Norm_stack[1])
+				/log10(Soln_Norm_stack[1]/Soln_Norm_stack[0]);
+	     Conv_rate = -0.5*log10(Resid_Norm_stack[0])+2*log10(Resid_Norm_stack[1])
+				-1.5*log10(Resid_Norm_stack[2]);
+	     Soln_rate = -0.5*log10(Soln_Norm_stack[0])+2*log10(Soln_Norm_stack[1])
+				-1.5*log10(Soln_Norm_stack[2]);
+	    }
+#else
+	 Conv_order = log10(Resid_Norm_stack[2])/log10(Resid_Norm_stack[1]);
+	 Soln_order = log10(Soln_Norm_stack[2])/log10(Soln_Norm_stack[1]);
+	 Conv_rate = log10(Resid_Norm_stack[1])-log10(Resid_Norm_stack[2]);
+	 Soln_rate = log10(Soln_Norm_stack[1])-log10(Soln_Norm_stack[2]);
+#endif
+	}
+	    
 
       /* fail if we didn't get a finite solution */
       if (!isfinite(Norm[1][0]) || !isfinite(Norm[1][1]) || !isfinite(Norm[1][2]) ||
@@ -1943,13 +2032,9 @@ EH(-1,"version not compiled with frontal solver");
 	  convergence_rate_tolerance != 0.) {
 	
 	/* Compute convergence level and compare with tolerance */
-	Norm_below_tolerance = (Norm_new < modified_newt_norm_tol);
+	Norm_below_tolerance = (Resid_Norm_stack[2] < modified_newt_norm_tol);
 	
-	/* Compute rate_of_convergence.  Really what we want
-	   here is dln(norm)/dnorm   FIGURE IT OUT! */
-	/* Rate_above_tolerance = (pow(Norm_old, 1.8) > Norm_new); */
-	Rate_above_tolerance = ((log10(Norm_new)/log10(Norm_old)) >
-				convergence_rate_tolerance);
+	Rate_above_tolerance = (Conv_rate > convergence_rate_tolerance);
       }
       
       if (Newt_Jacobian_Reformation_stride > 1)
@@ -2269,6 +2354,17 @@ EH(-1,"version not compiled with frontal solver");
 	  } 
 	}
       }
+      /********************************************************************
+       *  CHECK IF CONVERGED
+       *   (EDW: Modified to check bordering algorithm convergence
+       *         as required by LOCA)
+       ********************************************************************/
+      
+      *converged = ((Norm[0][2] < Epsilon[0]) && (Norm[2][2] < Epsilon[0]) &&
+		    (Norm[0][0] < Epsilon[0]) && (Norm[0][2] < Epsilon[0] ) &&
+		    (Norm_r[0][2] < Epsilon[2]) && (Norm_r[1][2] < Epsilon[2]) &&
+		    (Norm_r[0][0] < Epsilon[2]) && (Norm_r[1][0] < Epsilon[2]) &&
+		    (continuation_converged));
 
       /*******************************************************************
        *
@@ -2282,11 +2378,7 @@ EH(-1,"version not compiled with frontal solver");
 	   glob_var_vals[0] = (double) *converged;
 	   glob_var_vals[1] = (double) inewton;
 	   glob_var_vals[2] = (double) Max_Newton_Steps;
-	   if (Norm_new > 0.0 ) {
-	     glob_var_vals[3] = (double) (log10(Norm_new)/log10(Norm_old));
-	   } else {
-	     glob_var_vals[3] = 0.;
-	   }
+	   glob_var_vals[3] = Conv_order;
 	   total_mesh_volume = 0;
 
 	   for(i=0;nAC > 0 && i<nAC;i++) 
@@ -2297,16 +2389,6 @@ EH(-1,"version not compiled with frontal solver");
 
 	   glob_var_vals[4] = (double) total_mesh_volume;
 	 }
-
-      /********************************************************************
-       *  CHECK IF CONVERGED
-       *   (EDW: Modified to check bordering algorithm convergence
-       *         as required by LOCA)
-       ********************************************************************/
-      
-      *converged = ((Norm[0][2] < Epsilon[0] && Norm[2][2] < Epsilon[0]) &&
-		    ((Norm_r[0][2] + Norm_r[1][2]) < Epsilon[2]) &&
-		    (continuation_converged));
 
       /********************************************************************
        *
@@ -2382,85 +2464,71 @@ EH(-1,"version not compiled with frontal solver");
        */
       if (Num_Proc > 1 && strcmp( Matrix_Format, "msr" ) == 0) 
         {
-	  if (*converged && 
-	      ((Continuation != ALC_NONE)      ||
-	       (nn_post_fluxes_sens > 0) ||
-	       (nn_post_data_sens   > 0)    )) break;
+	  if ((!*converged) && 
+	      ((Continuation != ALC_NONE) || (nn_post_fluxes_sens > 0) ||
+	       (nn_post_data_sens   > 0)    )) 
+		{ 
+/*DPRINTF(stderr, "\n"); break;  }  */
           show_external(num_universe_dofs, 
 		      (num_universe_dofs-num_external_dofs), 
 		      ija, ija_save, a);
 	  dofs_hidden = FALSE;
+		}
 	}
 	
 skip_solve:
 
-   if(Epsilon[2] > 1)
-   {
-     if ( !(*converged) || (  Linear_Solver == FRONT ) || inewton == 0 ) {
-	   DPRINTF(stderr, "%7.1e %7.1e %7.1e %s ",
+	if(Epsilon[2] > 1)
+	   {
+	    DPRINTF(stderr, "%7.1e %7.1e %7.1e %s ",
 			   Norm[1][0], Norm[1][1], Norm[1][2], stringer);
-     }
-     else {
-#ifdef SKIP_LAST_SOLVE
-	   DPRINTF(stderr, "%23c %s ",' ', " ns");			
-#else
-	   DPRINTF(stderr, "%7.1e %7.1e %7.1e %s ",
-			   Norm[1][0], Norm[1][1], Norm[1][2], stringer);
-#endif
-     }
-   }
-   else
-   {
-	   DPRINTF(stderr, "%7.1e %7.1e %7.1e %s ",
+	   }
+	else
+	   {
+	    DPRINTF(stderr, "%7.1e %7.1e %7.1e %s ",
 			   Norm_r[0][0], Norm_r[0][1], Norm_r[0][2], stringer);
-   }
+	   }
 	
 	
 	if ( Linear_Solver != FRONT )
-	{
-	  DPRINTF(stderr, "%7.1e/%7.1e\n", (a_end-a_start), (s_end-s_start));
-	}
-      else
-	{
-	  asmslv_time = ( asmslv_end - asmslv_start );
-	  slv_time    = ( asmslv_time - mm_fill_total );
-	  DPRINTF(stderr, "%7.1e/%7.1e\n", mm_fill_total, slv_time);
-	}
+	   {
+	    DPRINTF(stderr, "%7.1e/%7.1e %.2f/%.2f %.2f/%.2f\n",
+			 (a_end-a_start), (s_end-s_start), Conv_order,Conv_rate,Soln_order,Soln_rate);
+	   }
+	else
+	   {
+	    asmslv_time = ( asmslv_end - asmslv_start );
+	    slv_time    = ( asmslv_time - mm_fill_total );
+	    DPRINTF(stderr, "%7.1e/%7.1e\n", mm_fill_total, slv_time);
+	   }
 	
-	if( Write_Intermediate_Solutions || (Iout == 1 ) ) {
-		if (dofname_r[0] != '\0') {
-         fprintf(stderr, "L_oo cause: R->(%s)", dofname_r);
-	}
-	if (dofname_x[0] != '\0') {
-         fprintf(stderr, "DelX->(%s)\n", dofname_x);
-	}
-}
+	if( Write_Intermediate_Solutions || (Iout == 1 ) ) 
+	   {
+	    if (dofname_r[0] != '\0') 
+		{ fprintf(stderr, "L_oo cause: R->(%s)", dofname_r); }
+	    if (dofname_x[0] != '\0') 
+		{ fprintf(stderr, "DelX->(%s)\n", dofname_x); }
+	   }
 
         /* print damping factor and/or viscosity sens message here */
         if (print_damp_factor) DPRINTF(stderr, " Invoking damping factor %f\n", damp_factor);
         if (print_visc_sens) DPRINTF(stderr, " Invoking Viscosity Sensitivities\n");
 
-	if (nAC > 0) {
-	DPRINTF(stderr, "          AC ");
-	DPRINTF(stderr, "%7.1e %7.1e %7.1e ", Norm[2][0],
-			Norm[2][1], Norm[2][2]);
-	if(Epsilon[2] > 1) {
-	  if ( !(*converged)  || (  Linear_Solver == FRONT ) || inewton == 0	) {
-		DPRINTF(stderr, "%7.1e %7.1e %7.1e     ", Norm[3][0], Norm[3][1], Norm[3][2]);
-	  }
-	else {
-#ifdef SKIP_LAST_SOLVE
-		DPRINTF(stderr, "%23c %s ",' ', " 0 ");	
-#else
-		DPRINTF(stderr, "%7.1e %7.1e %7.1e     ", Norm[3][0], Norm[3][1], Norm[3][2]);
-#endif
-	}	
-	} else {
-		DPRINTF(stderr, "%7.1e %7.1e %7.1e     ", Norm_r[1][0], 
-				Norm_r[1][1], Norm_r[1][2]);
-	}
-	DPRINTF(stderr, "%7.1e/%7.1e\n", (ac_end-ac_start), (sc_end-sc_start)); 
-      }
+	if (nAC > 0) 
+	   {
+	    DPRINTF(stderr, "          AC ");
+	    DPRINTF(stderr, "%7.1e %7.1e %7.1e ", Norm[2][0], Norm[2][1], Norm[2][2]);
+	    if(Epsilon[2] > 1) 
+		{
+		if ( !(*converged)  || (  Linear_Solver == FRONT ) || inewton == 0	) 
+		   { DPRINTF(stderr, "%7.1e %7.1e %7.1e     ", Norm[3][0], Norm[3][1], Norm[3][2]); }
+		else 
+		   { DPRINTF(stderr, "%7.1e %7.1e %7.1e     ", Norm[3][0], Norm[3][1], Norm[3][2]); }	
+		} 
+	    else 
+	        {DPRINTF(stderr, "%7.1e %7.1e %7.1e     ", Norm_r[1][0], Norm_r[1][1], Norm_r[1][2]);}
+	    DPRINTF(stderr, "%7.1e/%7.1e\n", (ac_end-ac_start), (sc_end-sc_start)); 
+	   }
 
       inewton++;
       af->Sat_hyst_reevaluate = FALSE; /*only want this true
@@ -2494,8 +2562,7 @@ skip_solve:
     }
   } else {
     if (Debug_Flag) {
-      DPRINTF(stderr,
-	      "\n%s:  Newton iteration CONVERGED.\n", yo);
+      DPRINTF(stderr, "\n%s:  Newton iteration CONVERGED.\n", yo);
     }
   }
 
@@ -2506,7 +2573,9 @@ skip_solve:
       Norm[4][1] = L1_norm (x, NumUnknowns)/((double)NumUnknowns);
       Norm[4][2] = L2_norm (x, NumUnknowns)/sqrt((double)NumUnknowns);
 
-      DPRINTF(stderr, "scaled solution norms  %13.6e %13.6e %13.6e \n", 
+  DPRINTF(stderr, 
+"-------- --- ------- ------- ------- ------- ------- ------- --- --------------- -------------\n");
+      DPRINTF(stderr, "scaled solution norms  %10.3e %10.3e %10.3e \n", 
 	      Norm[4][0], Norm[4][1], Norm[4][2]);
 
   /*
