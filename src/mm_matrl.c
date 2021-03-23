@@ -674,7 +674,7 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
          }
        else
          {
-          mw_last = mp -> molecular_weight[num_species_eqn];
+          mw_last = mp -> molecular_weight[pd->Num_Species_Eqn];
 	  c_total = pressureThermo/(RGAS_CONST * stateVector[TEMPERATURE]);
 	  for (w = 0; w < num_species_eqn; w++) {
              rho += stateVector[SPECIES_UNK_0 + w] * (mw[w]-mw_last);

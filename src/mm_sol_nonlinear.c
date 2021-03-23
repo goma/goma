@@ -477,6 +477,11 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
   VARIABLE_DESCRIPTION_STRUCT *vd_eqn, *vd_var;
 #endif /* DEBUG_MMH */
 
+#ifdef ENABLE_SKIP_SOLVE
+  int enable_skip_solve = TRUE;
+#else
+  int enable_skip_solve = FALSE;
+#endif
   /*
    * Begin executable statements...
    */
@@ -1290,7 +1295,7 @@ EH(-1,"version not compiled with frontal solver");
        *************************************************************************/
       s_start = ut(); s_end = s_start;
 	   
-      if( Linear_Solver != FRONT && *converged ) 
+      if( (Linear_Solver != FRONT) && *converged && enable_skip_solve) 
         {
 /*  If we're going to skip the Solve step, compute and save some useful 
     information first...*/

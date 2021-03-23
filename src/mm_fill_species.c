@@ -11074,13 +11074,6 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	   }
 	dsdrst = tmp*log((1-y_mole[w])/(1-activity[w])) + tmp*rad_ratio*dact_dr/(1.-activity[w]);
 
-#if 1
-if(isnan(s))fprintf(stderr,"dropnan %g %g %g %g %g %g\n",s,tmp,y_mole[w],activity[w],A,x_mole[w]);
-if(isnan(dsdT))fprintf(stderr,"dsdTnan %g %g %g %g %g %g\n",dsdT,tmp,gas_conc, radius, num_density,mp->diffusivity[0]);
-if(isnan(dsdP))fprintf(stderr,"dsdPnan %g %g %g %g %g %g\n",dsdP,tmp,y_mole[w],activity[w],A,x_mole[w]);
-if(isnan(dsdC[0]))fprintf(stderr,"dsdCnan %g %g %g %g %g %g\n",dsdC[0],tmp,y_mole[w],activity[w],A,x_mole[w]);
-if(isnan(dsdrst))fprintf(stderr,"dsdrstnan %g %g %g %g %g %g\n",dsdrst,tmp,y_mole[w],activity[w],rad_ratio, dact_dr);
-#endif
 	st->MassSource[w]= s;
 
 	if ( af->Assemble_Jacobian )
