@@ -6435,6 +6435,30 @@ rd_solver_specs(FILE *ifp,
       Epsilon[2]=1.0e+10;
     }
 
+/**  Bit-wise code to request columns of solver output:
+	=>  summation of 2^(column_number) from column 0 to 11
+	Max value: 4095 (2^12 - 1)
+**/
+
+  Solver_Output_Format = 1023;
+  iread = look_for_optional(ifp, "Solver Output Format Bitmap", input, '=');
+  if (iread == 1) { 
+     int no_chars=80;
+     if (fscanf(ifp, "%d", &Solver_Output_Format) != 1)
+        {
+         EH( -1, "error reading Solver Format");
+        }
+     SPF(echo_string,"%s = %d", "Solver Output Format Bitmap", Solver_Output_Format);
+     no_chars = (Solver_Output_Format & 1)*9 + (Solver_Output_Format & 2)*2 +
+		(Solver_Output_Format & 4)*2 + (Solver_Output_Format & 8)*1 +
+		(Solver_Output_Format & 16)/2 + (Solver_Output_Format & 32)/4 +
+		(Solver_Output_Format & 64)/8 + (Solver_Output_Format & 128)/16 +
+		(Solver_Output_Format & 256)/64 + (Solver_Output_Format & 512)/32 +
+		(Solver_Output_Format & 1024)/128 + (Solver_Output_Format & 2048)/256;
+     fprintf(stderr,"outputchars %d\n",no_chars);
+     if (no_chars > 80) WH( -1, "Solver Output greater than 80 characters...\n");
+     }
+
   iread = look_for_optional(ifp, "Residual Ratio Tolerance", input, '=');
   if ( iread == 1 )
     {

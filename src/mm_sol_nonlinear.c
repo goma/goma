@@ -315,6 +315,10 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
   double        Soln_Norm_stack[3];      /* Place holder for last update norms   */
   double        Conv_order=0, Soln_order=0;   /* Order of convergence  */
   double	Conv_rate=0, Soln_rate=0;  /* Convergence rates, i.e. neg. semilog slope*/
+  double        AConv_order=0, ASoln_order=0;   /* AC counterparts  */
+  double	AConv_rate=0, ASoln_rate=0;  
+  double        AC_Resid_Norm_stack[3];    /* Place holder for last residual norms   */
+  double        AC_Soln_Norm_stack[3];      /* Place holder for last update norms   */
   int           Norm_below_tolerance;    /* Boolean for modified newton test*/
   int           Rate_above_tolerance;    /* Boolean for modified newton test*/
   int           step_reform;             /* counter for Jacobian reformation */
@@ -634,6 +638,8 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 
   Resid_Norm_stack[2] = Resid_Norm_stack[1] = Resid_Norm_stack[0] = 0.1;
   Soln_Norm_stack[2] = Soln_Norm_stack[1] = Soln_Norm_stack[0] = 0.1;
+  AC_Resid_Norm_stack[2] = AC_Resid_Norm_stack[1] = AC_Resid_Norm_stack[0] = 0.1;
+  AC_Soln_Norm_stack[2] = AC_Soln_Norm_stack[1] = AC_Soln_Norm_stack[0] = 0.1;
   step_reform          = Newt_Jacobian_Reformation_stride;
   
   /*
@@ -653,8 +659,10 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
     {
 
       DPRINTF(stderr, "\n\n");
+      if(Solver_Output_Format & 1)DPRINTF(stderr, "         ");
+      if(Solver_Output_Format & 2)DPRINTF(stderr, "    ");
       DPRINTF(stderr, 
-	      "               R e s i d u a l         C o r r e c t i o n\n");
+	      "  R e s i d u a l         C o r r e c t i o n\n");
     }
   else
     {
@@ -663,10 +671,33 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 "\n    N e w t o n  C o n v e r g e n c e  - I m p l i c i t   T i m e   S t e p\n");
     }
 
-  DPRINTF(stderr, 
-"\n  ToD    itn   L_oo    L_1     L_2     L_oo    L_1     L_2   lis  asm/slv (sec)  L2_Order/Rates\n");
-  DPRINTF(stderr, 
-"-------- --- ------- ------- ------- ------- ------- ------- --- --------------- -------------\n");
+  DPRINTF(stderr, "\n");
+  if(Solver_Output_Format & 1)DPRINTF(stderr, "   ToD   ");
+  if(Solver_Output_Format & 2)DPRINTF(stderr, "itn ");
+  if(Solver_Output_Format & 4)DPRINTF(stderr, "  L_oo  ");
+  if(Solver_Output_Format & 8)DPRINTF(stderr, "  L_1   ");
+  if(Solver_Output_Format & 16)DPRINTF(stderr, "  L_2   ");
+  if(Solver_Output_Format & 32)DPRINTF(stderr, "  L_oo  ");
+  if(Solver_Output_Format & 64)DPRINTF(stderr, "  L_1   ");
+  if(Solver_Output_Format & 128)DPRINTF(stderr, "  L_2   ");
+  if(Solver_Output_Format & 256)DPRINTF(stderr, "lis ");
+  if(Solver_Output_Format & 512)DPRINTF(stderr, " asm/slv (sec)  ");
+  if(Solver_Output_Format & 1024)DPRINTF(stderr, "ROrd/Rt ");
+  if(Solver_Output_Format & 2048)DPRINTF(stderr, "UOrd/Rt ");
+  DPRINTF(stderr, "\n");
+  if(Solver_Output_Format & 1)DPRINTF(stderr, "-------- ");
+  if(Solver_Output_Format & 2)DPRINTF(stderr, "--- ");
+  if(Solver_Output_Format & 4)DPRINTF(stderr, "------- ");
+  if(Solver_Output_Format & 8)DPRINTF(stderr, "------- ");
+  if(Solver_Output_Format & 16)DPRINTF(stderr, "------- ");
+  if(Solver_Output_Format & 32)DPRINTF(stderr, "------- ");
+  if(Solver_Output_Format & 64)DPRINTF(stderr, "------- ");
+  if(Solver_Output_Format & 128)DPRINTF(stderr, "------- ");
+  if(Solver_Output_Format & 256)DPRINTF(stderr, "--- ");
+  if(Solver_Output_Format & 512)DPRINTF(stderr, "--------------- ");
+  if(Solver_Output_Format & 1024)DPRINTF(stderr, "------- ");
+  if(Solver_Output_Format & 2048)DPRINTF(stderr, "-------");
+  DPRINTF(stderr, "\n");
 
   /*********************************************************************************
    *
@@ -693,17 +724,18 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 
       log_msg("%s: Newton iteration %d", yo, inewton);
 
+      if(Solver_Output_Format & 1)DPRINTF(stderr, "%s ", ctod);
       if ( inewton < 10 )
 	{
-	  DPRINTF(stderr,"%s [%d] ", ctod, inewton );
+          if(Solver_Output_Format & 2)DPRINTF(stderr, "[%d] ", inewton );
 	}
       else if ( inewton < 100 )
 	{
-	  DPRINTF(stderr,"%s %d] ", ctod, inewton );
+          if(Solver_Output_Format & 2)DPRINTF(stderr, "%d] ", inewton );
 	} 
       else
 	{
-	  DPRINTF(stderr,"%s %d ", ctod, inewton );	  
+          if(Solver_Output_Format & 2)DPRINTF(stderr, "%d ", inewton );
 	}
       
       /*
@@ -1236,7 +1268,9 @@ EH(-1,"version not compiled with frontal solver");
       log_msg("%-38s = %23.16e", "residual norm (L_1)", Norm[0][1]);
       log_msg("%-38s = %23.16e", "residual norm (L_2)", Norm[0][2]);
 
-      DPRINTF(stderr, "%7.1e %7.1e %7.1e ",  Norm[0][0], Norm[0][1], Norm[0][2]);
+      if(Solver_Output_Format & 4)DPRINTF(stderr, "%7.1e ", Norm[0][0]);
+      if(Solver_Output_Format & 8)DPRINTF(stderr, "%7.1e ", Norm[0][1]);
+      if(Solver_Output_Format & 16)DPRINTF(stderr, "%7.1e ", Norm[0][2]);
 		  
 	if( (inewton > 0) && (Norm[0][2] < Epsilon[0]) && (Norm[0][0] < Epsilon[0]) &&
 		(Norm[2][2] < Epsilon[0]) && (Norm[2][0] < Epsilon[0]))
@@ -1303,25 +1337,52 @@ EH(-1,"version not compiled with frontal solver");
          Resid_Norm_stack[0] = Resid_Norm_stack[1];
          Resid_Norm_stack[1] = Resid_Norm_stack[2];
          Resid_Norm_stack[2] = Norm[0][2]/BIG_PENALTY;
+	 if(nAC)
+	   {
+            AC_Resid_Norm_stack[0] = AC_Resid_Norm_stack[1];
+            AC_Resid_Norm_stack[1] = AC_Resid_Norm_stack[2];
+            AC_Resid_Norm_stack[2] = Norm[2][2]/BIG_PENALTY;
+	   }
 	   
          if(inewton && (Resid_Norm_stack[2] > 0) && (Resid_Norm_stack[2] != 1) ) 
 	    {
 #if 1
-	 if(inewton <= 1)
-	    {
-	     Conv_order = log10(Resid_Norm_stack[2])/log10(Resid_Norm_stack[1]);
-	     Conv_rate = log10(Resid_Norm_stack[1])-log10(Resid_Norm_stack[2]);
-	    }
-	 else
-	    {
-	     Conv_order = log10(Resid_Norm_stack[2]/Resid_Norm_stack[1])
+	    if(inewton <= 1)
+	       {
+	        Conv_order = log10(Resid_Norm_stack[2])/log10(Resid_Norm_stack[1]);
+	        Conv_rate = log10(Resid_Norm_stack[1])-log10(Resid_Norm_stack[2]);
+	       }
+	    else
+	       {
+	        Conv_order = log10(Resid_Norm_stack[2]/Resid_Norm_stack[1])
 				/log10(Resid_Norm_stack[1]/Resid_Norm_stack[0]);
-	     Conv_rate = -0.5*log10(Resid_Norm_stack[0])+2*log10(Resid_Norm_stack[1])
+	        Conv_rate = -0.5*log10(Resid_Norm_stack[0])+2*log10(Resid_Norm_stack[1])
 				-1.5*log10(Resid_Norm_stack[2]);
-	    }
+	       }
 #else
 	     Conv_order = log10(Resid_Norm_stack[2])/log10(Resid_Norm_stack[1]); 
 	     Conv_rate = log10(Resid_Norm_stack[1]) - log10(Resid_Norm_stack[2]);
+#endif
+	    }
+
+         if(nAC && inewton && (AC_Resid_Norm_stack[2] > 0) && (AC_Resid_Norm_stack[2] != 1) ) 
+	    {
+#if 1
+	     if(inewton <= 1)
+	       {
+	        AConv_order = log10(AC_Resid_Norm_stack[2])/log10(AC_Resid_Norm_stack[1]);
+	        AConv_rate = log10(AC_Resid_Norm_stack[1])-log10(AC_Resid_Norm_stack[2]);
+	       }
+	     else
+	       {
+	        AConv_order = log10(AC_Resid_Norm_stack[2]/AC_Resid_Norm_stack[1])
+				/log10(AC_Resid_Norm_stack[1]/AC_Resid_Norm_stack[0]);
+	        AConv_rate = -0.5*log10(AC_Resid_Norm_stack[0])+2*log10(AC_Resid_Norm_stack[1])
+				-1.5*log10(AC_Resid_Norm_stack[2]);
+	       }
+#else
+	     AConv_order = log10(AC_Resid_Norm_stack[2])/log10(AC_Resid_Norm_stack[1]); 
+	     AConv_rate = log10(AC_Resid_Norm_stack[1]) - log10(AC_Resid_Norm_stack[2]);
 #endif
 	    }
 	 if ( glob_var_vals != NULL )
@@ -1974,6 +2035,12 @@ EH(-1,"version not compiled with frontal solver");
         Norm_r[1][0] = Loo_norm_r_1p(yAC, x_AC, nAC, &num_unk_y, dofname_ry);
         Norm_r[1][1] = L1_norm_r_1p (yAC, x_AC, nAC);
         Norm_r[1][2] = L2_norm_r_1p (yAC, x_AC, nAC);
+	AC_Resid_Norm_stack[0] = AC_Resid_Norm_stack[1];
+	AC_Resid_Norm_stack[1] = AC_Resid_Norm_stack[2];
+	AC_Resid_Norm_stack[2] = Norm[2][2]/BIG_PENALTY;
+	AC_Soln_Norm_stack[0] = AC_Soln_Norm_stack[1];
+	AC_Soln_Norm_stack[1] = AC_Soln_Norm_stack[2];
+	AC_Soln_Norm_stack[2] = Norm_r[1][2]/BIG_PENALTY;
       }
 
       /* Save some norm info for modified Newton stuff */
@@ -2021,6 +2088,35 @@ EH(-1,"version not compiled with frontal solver");
 	 Soln_order = log10(Soln_Norm_stack[2])/log10(Soln_Norm_stack[1]);
 	 Conv_rate = log10(Resid_Norm_stack[1])-log10(Resid_Norm_stack[2]);
 	 Soln_rate = log10(Soln_Norm_stack[1])-log10(Soln_Norm_stack[2]);
+#endif
+	}
+      if(nAC && inewton && (AC_Resid_Norm_stack[2] > 0) && (AC_Soln_Norm_stack[2] > 0)  &&
+		(AC_Resid_Norm_stack[2] != 1) && (AC_Soln_Norm_stack[2] != 1)) 
+	{
+#if 1
+	 if(inewton <= 1)
+	    {
+	     AConv_order = log10(AC_Resid_Norm_stack[2])/log10(AC_Resid_Norm_stack[1]);
+	     ASoln_order = log10(AC_Soln_Norm_stack[2])/log10(AC_Soln_Norm_stack[1]);
+	     AConv_rate = log10(AC_Resid_Norm_stack[1])-log10(AC_Resid_Norm_stack[2]);
+	     ASoln_rate = log10(AC_Soln_Norm_stack[1])-log10(AC_Soln_Norm_stack[2]);
+	    }
+	 else
+	    {
+	     Conv_order = log10(AC_Resid_Norm_stack[2]/AC_Resid_Norm_stack[1])
+				/log10(AC_Resid_Norm_stack[1]/AC_Resid_Norm_stack[0]);
+	     Soln_order = log10(AC_Soln_Norm_stack[2]/AC_Soln_Norm_stack[1])
+				/log10(AC_Soln_Norm_stack[1]/AC_Soln_Norm_stack[0]);
+	     Conv_rate = -0.5*log10(AC_Resid_Norm_stack[0])+2*log10(AC_Resid_Norm_stack[1])
+				-1.5*log10(AC_Resid_Norm_stack[2]);
+	     Soln_rate = -0.5*log10(AC_Soln_Norm_stack[0])+2*log10(AC_Soln_Norm_stack[1])
+				-1.5*log10(AC_Soln_Norm_stack[2]);
+	    }
+#else
+	 AConv_order = log10(AC_Resid_Norm_stack[2])/log10(AC_Resid_Norm_stack[1]);
+	 ASoln_order = log10(AC_Soln_Norm_stack[2])/log10(AC_Soln_Norm_stack[1]);
+	 AConv_rate = log10(AC_Resid_Norm_stack[1])-log10(AC_Resid_Norm_stack[2]);
+	 ASoln_rate = log10(AC_Soln_Norm_stack[1])-log10(AC_Soln_Norm_stack[2]);
 #endif
 	}
 	    
@@ -2473,7 +2569,6 @@ EH(-1,"version not compiled with frontal solver");
 	      ((Continuation != ALC_NONE) || (nn_post_fluxes_sens > 0) ||
 	       (nn_post_data_sens   > 0)    )) 
 		{ 
-/*DPRINTF(stderr, "\n"); break;  }  */
           show_external(num_universe_dofs, 
 		      (num_universe_dofs-num_external_dofs), 
 		      ija, ija_save, a);
@@ -2485,26 +2580,37 @@ skip_solve:
 
 	if(Epsilon[2] > 1)
 	   {
-	    DPRINTF(stderr, "%7.1e %7.1e %7.1e %s ",
-			   Norm[1][0], Norm[1][1], Norm[1][2], stringer);
+            if(Solver_Output_Format & 32)DPRINTF(stderr, "%7.1e ", Norm[1][0]);
+            if(Solver_Output_Format & 64)DPRINTF(stderr, "%7.1e ", Norm[1][1]);
+            if(Solver_Output_Format & 128)DPRINTF(stderr, "%7.1e ", Norm[1][2]);
+            if(Solver_Output_Format & 256)DPRINTF(stderr, "%s ", stringer);
 	   }
 	else
 	   {
-	    DPRINTF(stderr, "%7.1e %7.1e %7.1e %s ",
-			   Norm_r[0][0], Norm_r[0][1], Norm_r[0][2], stringer);
+            if(Solver_Output_Format & 32)DPRINTF(stderr, "%7.1e ", Norm_r[0][0]);
+            if(Solver_Output_Format & 64)DPRINTF(stderr, "%7.1e ", Norm_r[0][1]);
+            if(Solver_Output_Format & 128)DPRINTF(stderr, "%7.1e ", Norm_r[0][2]);
+            if(Solver_Output_Format & 256)DPRINTF(stderr, "%s ", stringer);
 	   }
 	
 	
 	if ( Linear_Solver != FRONT )
 	   {
-	    DPRINTF(stderr, "%7.1e/%7.1e %.2f/%.2f %.2f/%.2f\n",
-			 (a_end-a_start), (s_end-s_start), Conv_order,Conv_rate,Soln_order,Soln_rate);
+	    asmslv_time = ( a_end - a_start );
+	    slv_time    = ( s_end - s_start );
+            if(Solver_Output_Format & 512)DPRINTF(stderr, "%7.1e/%7.1e ", asmslv_time, slv_time);
+            if(Solver_Output_Format & 1024)DPRINTF(stderr, "%.1f/%.1f ", Conv_order,Conv_rate);
+            if(Solver_Output_Format & 2048)DPRINTF(stderr, "%.1f/%.1f ", Soln_order,Soln_rate);
+	    DPRINTF(stderr, "\n");
 	   }
 	else
 	   {
 	    asmslv_time = ( asmslv_end - asmslv_start );
 	    slv_time    = ( asmslv_time - mm_fill_total );
-	    DPRINTF(stderr, "%7.1e/%7.1e\n", mm_fill_total, slv_time);
+            if(Solver_Output_Format & 512)DPRINTF(stderr, "%7.1e/%7.1e ", mm_fill_total, slv_time);
+            if(Solver_Output_Format & 1024)DPRINTF(stderr, "%.1f/%.1f ", Conv_order,Conv_rate);
+            if(Solver_Output_Format & 2048)DPRINTF(stderr, "%.1f/%.1f ", Soln_order,Soln_rate);
+	    DPRINTF(stderr, "\n");
 	   }
 	
 	if( Write_Intermediate_Solutions || (Iout == 1 ) ) 
@@ -2521,18 +2627,30 @@ skip_solve:
 
 	if (nAC > 0) 
 	   {
-	    DPRINTF(stderr, "          AC ");
-	    DPRINTF(stderr, "%7.1e %7.1e %7.1e ", Norm[2][0], Norm[2][1], Norm[2][2]);
+	    if(Solver_Output_Format & 1)DPRINTF(stderr, "         ");
+	    if(Solver_Output_Format & 2)DPRINTF(stderr, " AC ");
+	    if(Solver_Output_Format & 4)DPRINTF(stderr, "%7.1e ", Norm[2][0]);
+	    if(Solver_Output_Format & 8)DPRINTF(stderr, "%7.1e ", Norm[2][1]);
+	    if(Solver_Output_Format & 16)DPRINTF(stderr, "%7.1e ", Norm[2][2]);
 	    if(Epsilon[2] > 1) 
 		{
-		if ( !(*converged)  || (  Linear_Solver == FRONT ) || inewton == 0	) 
-		   { DPRINTF(stderr, "%7.1e %7.1e %7.1e     ", Norm[3][0], Norm[3][1], Norm[3][2]); }
-		else 
-		   { DPRINTF(stderr, "%7.1e %7.1e %7.1e     ", Norm[3][0], Norm[3][1], Norm[3][2]); }	
+		if(Solver_Output_Format & 32)DPRINTF(stderr, "%7.1e ", Norm[3][0]);
+		if(Solver_Output_Format & 64)DPRINTF(stderr, "%7.1e ", Norm[3][1]);
+		if(Solver_Output_Format & 128)DPRINTF(stderr, "%7.1e ", Norm[3][2]);
 		} 
 	    else 
-	        {DPRINTF(stderr, "%7.1e %7.1e %7.1e     ", Norm_r[1][0], Norm_r[1][1], Norm_r[1][2]);}
-	    DPRINTF(stderr, "%7.1e/%7.1e\n", (ac_end-ac_start), (sc_end-sc_start)); 
+		{
+		if(Solver_Output_Format & 32)DPRINTF(stderr, "%7.1e ", Norm_r[1][0]);
+		if(Solver_Output_Format & 64)DPRINTF(stderr, "%7.1e ", Norm_r[1][1]);
+		if(Solver_Output_Format & 128)DPRINTF(stderr, "%7.1e ", Norm_r[1][2]);
+		}
+            if(Solver_Output_Format & 256)DPRINTF(stderr, "%s ", stringer_AC);
+	    asmslv_time = ( ac_end - ac_start );
+	    slv_time    = ( sc_end - sc_start );
+	    if(Solver_Output_Format & 512)DPRINTF(stderr, "%7.1e/%7.1e ", asmslv_time, slv_time); 
+            if(Solver_Output_Format & 1024)DPRINTF(stderr, "%.1f/%.1f ", AConv_order,AConv_rate);
+            if(Solver_Output_Format & 2048)DPRINTF(stderr, "%.1f/%.1f ", ASoln_order,ASoln_rate);
+	    DPRINTF(stderr, "\n");
 	   }
 
       inewton++;
@@ -2578,8 +2696,19 @@ skip_solve:
       Norm[4][1] = L1_norm (x, NumUnknowns)/((double)NumUnknowns);
       Norm[4][2] = L2_norm (x, NumUnknowns)/sqrt((double)NumUnknowns);
 
-  DPRINTF(stderr, 
-"-------- --- ------- ------- ------- ------- ------- ------- --- --------------- -------------\n");
+  if(Solver_Output_Format & 1)DPRINTF(stderr, "-------- ");
+  if(Solver_Output_Format & 2)DPRINTF(stderr, "--- ");
+  if(Solver_Output_Format & 4)DPRINTF(stderr, "------- ");
+  if(Solver_Output_Format & 8)DPRINTF(stderr, "------- ");
+  if(Solver_Output_Format & 16)DPRINTF(stderr, "------- ");
+  if(Solver_Output_Format & 32)DPRINTF(stderr, "------- ");
+  if(Solver_Output_Format & 64)DPRINTF(stderr, "------- ");
+  if(Solver_Output_Format & 128)DPRINTF(stderr, "------- ");
+  if(Solver_Output_Format & 256)DPRINTF(stderr, "--- ");
+  if(Solver_Output_Format & 512)DPRINTF(stderr, "--------------- ");
+  if(Solver_Output_Format & 1024)DPRINTF(stderr, "------- ");
+  if(Solver_Output_Format & 2048)DPRINTF(stderr, "-------");
+  DPRINTF(stderr, "\n");
       DPRINTF(stderr, "scaled solution norms  %10.3e %10.3e %10.3e \n", 
 	      Norm[4][0], Norm[4][1], Norm[4][2]);
 

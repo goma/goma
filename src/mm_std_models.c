@@ -2431,6 +2431,7 @@ Diffusivity (void)
       ********************************************************************/
 {
   int i, j, w, var, err= 0;
+  double T=298.0, P=101.325;;
   for (w = 0; w < pd->Num_Species; w++) {
     switch (mp->DiffusivityModel[w]) {
 
@@ -2495,16 +2496,25 @@ Diffusivity (void)
 				  &mp->d_diffusivity[w][FILL] );
       break;
     case CHAPMAN_GAS:
+	if ( pd->e[TEMPERATURE] )
+	   {T = fv->T;}
+	else
+	   {T = upd->Process_Temperature;}
+
+	if(pd->e[PRESSURE] && fv->P > 0)
+	  { P = fv->P;}
+	else
+	  { P = upd->Pressure_Datum/10000.0;}
+
 	mp->diffusivity[w] = mp->u_diffusivity[w][0]*
 		sqrt(1./mp->molecular_weight[w]+1./mp->u_diffusivity[w][1])
-			*pow(fv->T,1.5)/fv->P;
-	mp->d_diffusivity[w][TEMPERATURE] = 1.5*mp->diffusivity[w]/fv->T;
-	mp->d_diffusivity[w][PRESSURE] = mp->diffusivity[w]*fv->P*log(fv->P);
+			*pow(T,1.5)/P;
+	if ( pd->e[TEMPERATURE] )
+	   { mp->d_diffusivity[w][TEMPERATURE] = 1.5*mp->diffusivity[w]/T;}
+	if(pd->e[PRESSURE] )
+	  { mp->d_diffusivity[w][PRESSURE] = mp->diffusivity[w]*P*log(P);}
+
 	mp->d_diffusivity[w][MAX_VARIABLE_TYPES+w] = 0.0;
-    sprintf(err_msg, 
-	    "Chapman diffusivity model %g %g %g \n",
-	    mp->diffusivity[w],mp->u_diffusivity[w][0],mp->u_diffusivity[w][1]);
-    WH(-1,err_msg);
       break;
     default:
       break;
