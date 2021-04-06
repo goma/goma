@@ -9534,6 +9534,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
      ENORMSQ_FIELD_NORM = -1;
 
    if (DIFFUSION_VECTORS != -1) {
+     char dir_ch[] = "XYZ";
      if (DIFFUSION_VECTORS == 2)
        {
          EH(-1, "Post-processing vectors cannot be exported yet!");
@@ -9542,8 +9543,8 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
      if (upd->Max_Num_Species_Eqn == 0) DIFFUSION_VECTORS = -1;
      for (w = 0; w < upd->Max_Num_Species_Eqn; w++) {
        for (i = 0; i < Num_Dim; i++) {
-	 sprintf(species_name, "Y%dDIF%d", w, i);
-	 sprintf(species_desc, "Diffusion of %d in %d direction", w, i);
+	 sprintf(species_name, "Y%dDIF%c", w, dir_ch[i]);
+	 sprintf(species_desc, "Diffusion of %d in %c direction", w, dir_ch[i]);
 	 set_nv_tkud(rd, index, 0, 0, -2, species_name,"[1]",
 		     species_desc, FALSE);
 	 index++;

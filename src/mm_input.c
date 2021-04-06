@@ -6455,7 +6455,6 @@ rd_solver_specs(FILE *ifp,
 		(Solver_Output_Format & 64)/8 + (Solver_Output_Format & 128)/16 +
 		(Solver_Output_Format & 256)/64 + (Solver_Output_Format & 512)/32 +
 		(Solver_Output_Format & 1024)/128 + (Solver_Output_Format & 2048)/256;
-     fprintf(stderr,"outputchars %d\n",no_chars);
      if (no_chars > 80) WH( -1, "Solver Output greater than 80 characters...\n");
      }
 

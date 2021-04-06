@@ -661,8 +661,14 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
       DPRINTF(stderr, "\n\n");
       if(Solver_Output_Format & 1)DPRINTF(stderr, "         ");
       if(Solver_Output_Format & 2)DPRINTF(stderr, "    ");
-      DPRINTF(stderr, 
-	      "  R e s i d u a l         C o r r e c t i o n\n");
+      if( (Solver_Output_Format & 4) && (Solver_Output_Format & 8) && (Solver_Output_Format & 16))
+         { DPRINTF(stderr, "  R e s i d u a l        "); }
+      else
+         { DPRINTF(stderr, "  Residual       "); }
+      if( (Solver_Output_Format & 32) && (Solver_Output_Format & 64) && (Solver_Output_Format & 128))
+         { DPRINTF(stderr, " C o r r e c t i o n\n"); }
+      else
+         { DPRINTF(stderr, " Correction\n"); }
     }
   else
     {

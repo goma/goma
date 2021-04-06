@@ -1744,6 +1744,8 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	  qnobc_surf (func, d_func, time_intermediate);
 	  break;
 
+	case RESTIME_GRADSIC_BC:
+	  func[0] = -bc->BC_Data_Float[0];
 	case RESTIME_NOBC_BC:
 	  restime_nobc_surf (func, d_func, time_intermediate);
 	  break;

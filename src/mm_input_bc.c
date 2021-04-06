@@ -547,6 +547,7 @@ rd_bc_specs(FILE *ifp,
         case SHELL_GRAD_PC_BC:
         case SH_SDET_BC:
         case SH_MESH2_WEAK_BC:
+	case RESTIME_GRADSIC_BC:
   
 	  if ( fscanf(ifp, "%lf", &BC_Types[ibc].BC_Data_Float[0]) != 1)
 	    {
