@@ -891,20 +891,11 @@ void create_truth_table(struct Results_Description *rd, Exo_DB *exo, double ***g
         if (pd_glob[mat_num]->i[j] == I_P1) {
           if (exo->truth_table_existance_key[j - V_FIRST] == 0) {
             /* We just found a candidate for an element variable */
-            tev += getdofs(type2shape(exo->eb_elem_itype[eb_indx]), I_P1);
-            ;
-            exo->truth_table_existance_key[j - V_FIRST] = 1;
+            int dofs = getdofs(type2shape(exo->eb_elem_itype[eb_indx]), I_P1);
+            tev += dofs;
+            exo->truth_table_existance_key[j - V_FIRST] = dofs;
           }
         }
-        if ( pd_glob[mat_num]->i[j] == I_P1 )
-          {
-           if ( exo->truth_table_existance_key[j - V_FIRST] == 0 )
-             {
-              /* We just found a candidate for an element variable */
-              tev += getdofs(type2shape(exo->eb_elem_itype[eb_indx]),I_P1);;
-              exo->truth_table_existance_key[j - V_FIRST] = 1;
-             }
-          }
       }
     }
 
@@ -1022,9 +1013,11 @@ void create_truth_table(struct Results_Description *rd, Exo_DB *exo, double ***g
           }
         }
       }
-      if (found_match == FALSE && exo->truth_table_existance_key[j - V_FIRST] == 1) {
-        exo->elem_var_tab[i++] = 0;
-        ev_indx++;
+      if (found_match == FALSE && exo->truth_table_existance_key[j - V_FIRST] >= 1) {
+        for (int k = 0; k < exo->truth_table_existance_key[j - V_FIRST]; k++) {
+          exo->elem_var_tab[i++] = 0;
+          ev_indx++;
+        }
       }
     }
 
