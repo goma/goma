@@ -1094,7 +1094,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	case FLOW_STRESSNOBC_BC:
 	  flow_n_dot_T_nobc(func, d_func,
 			    bc->BC_Data_Float[0],
-			    bc->BC_Data_Int[0]);
+			    bc->BC_Data_Int[0], time_value);
 	  break;
 
 	case FLOW_GRADV_BC:

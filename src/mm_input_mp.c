@@ -8677,9 +8677,9 @@ ECHO("\n----Acoustic Properties\n", echo_file);
           mat_ptr->u_species_source[species_no] = (dbl *) array_alloc(1,4,sizeof(dbl));
           mat_ptr->len_u_species_source[species_no] = 4;
           mat_ptr->u_species_source[species_no][0] = a0;  /* liquid droplet concentration*/
-          mat_ptr->u_species_source[species_no][1] = a1;  /* ambient pressure */
-          mat_ptr->u_species_source[species_no][2] = a2;  /* droplet radius*/
-          mat_ptr->u_species_source[species_no][3] = a3;  /* droplet number concentration */
+          mat_ptr->u_species_source[species_no][1] = a1;  /* droplet radius*/
+          mat_ptr->u_species_source[species_no][2] = a2;  /* droplet number concentration */
+          mat_ptr->u_species_source[species_no][3] = a3;  /* fraction solvent evaporation */
 
           SPF_DBL_VEC(endofstring(es), 4,  mat_ptr->u_species_source[species_no]);
         }

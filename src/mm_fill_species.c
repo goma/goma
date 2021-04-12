@@ -10958,7 +10958,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	double psat[MAX_CONC], dpsatdt[MAX_CONC], A, amb_pres, rad_ratio;
         double y_mole[MAX_CONC], dy_dC[MAX_CONC][MAX_CONC], x_mole[MAX_CONC], sum_invmv=0;
 	double C[MAX_CONC], activity[MAX_CONC], solvent_volfrac=0, conc_nv, dact_dr[MAX_CONC];
-	double pres_conv, dy_dP=0, dy_dT=0, dsdP=0, pres, near_unity=0.999999, rad_zero=0.000001;
+	double pres_conv, dy_dP=0, dy_dT=0, dsdP=0, pres, near_unity=0.999999,evap_frac[MAX_CONC];
 	int mode=RAOULT;
 	double sum_C=0, R_gas=82050, Rgas_cgs=83.137E+06;
 
@@ -10968,15 +10968,16 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	     liq_C[i] = mp->u_species_source[i][0];  
 	     solvent_volfrac += liq_C[i]*mp->molar_volume[i];
 	     sum_invmv += 1./mp->molar_volume[i];
+	     evap_frac[i] = mp->u_species_source[i][3];
 	    }
 	amb_pres = upd->Pressure_Datum;
-	radius = param[2];
-	num_density = param[3];
+	radius = param[1];
+	num_density = param[2];
 	  /* moles of non-volatile per mm^3 of droplet volume */
 	conc_nv = (1.-solvent_volfrac)/mp->molar_volume[pd->Num_Species_Eqn];
 	pres_conv = mp->u_vapor_pressure[w][0];
 	if(pd->v[RESTIME])
-	   { rad_ratio = MAX(fv->restime,rad_zero);}
+	   { rad_ratio = MAX(fv->restime,DBL_SMALL);}
 	else
 	   { rad_ratio=1.;}
 
@@ -11014,17 +11015,16 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
         if(mp->Species_Var_Type == SPECIES_MOLE_FRACTION ||
 	    mp->Species_Var_Type == SPECIES_CONCENTRATION)
           {
-	   double frac = 1.;
 	   sum_C = conc_nv;
            for ( i=0; i<pd->Num_Species_Eqn; i++) 
 		{ 
-		  liq_C[i] += frac*(CUBE(rad_ratio)-1.)/mp->molar_volume[i];
+		  liq_C[i] += evap_frac[i]*(CUBE(rad_ratio)-1.)/mp->molar_volume[i]; 
 		  sum_C += liq_C[i]; 
 		}
 	   x_mole[w] = liq_C[w]/sum_C; 
            for ( i=0; i<pd->Num_Species_Eqn; i++) 
 		{ 
-		dact_dr[i] = 3*SQUARE(rad_ratio)*frac*
+		dact_dr[i] = 3*SQUARE(rad_ratio)*evap_frac[i]*
 			(sum_C/mp->molar_volume[i]-liq_C[i]*sum_invmv)/SQUARE(sum_C);
 		}
           }
@@ -11071,10 +11071,6 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	  }
 
 	tmp = gas_conc*4*M_PIE*radius*mp->diffusivity[w]*num_density;
-	if(pd->v[RESTIME])
-	  { rad_ratio = MAX(fv->restime,rad_zero);}
-	else
-	  {rad_ratio=1.;}
 	s = tmp*log((1-y_mole[w])/(1-activity[w]))*rad_ratio;
 	for(j=0;j<pd->Num_Species_Eqn;j++)
 	  {

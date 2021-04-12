@@ -2435,7 +2435,6 @@ Diffusivity (void)
   for (w = 0; w < pd->Num_Species; w++) {
     switch (mp->DiffusivityModel[w]) {
 
-  char err_msg[MAX_CHAR_IN_INPUT];
     case CONSTANT:
       /* do nothing...mp->diffusivity set in rd_mp_specs
 	 ...mp->d_diffusivity zeroed in set_mp_to_unity

@@ -34839,7 +34839,6 @@ assemble_poynting(double time,	/* present time value */
                  }
             break;
         case DROP_EVAP:
-	    P = MAX(fv->restime,1.0E-6);
             if(pd->e[R_MASS] )
                {
 		double init_radius=0.010, num_density=10., denom=1;
@@ -34851,22 +34850,28 @@ assemble_poynting(double time,	/* present time value */
         	  {
 		  if(mp->SpeciesSourceModel[w] == DROP_EVAP)
 		     {
-		      init_radius = mp->u_species_source[w][2];
-		      num_density = mp->u_species_source[w][3];  
+		      init_radius = mp->u_species_source[w][1];
+		      num_density = mp->u_species_source[w][2];  
+		      P = MAX(DBL_SMALL, fv->restime);
 		      denom = MAX(DBL_SMALL,num_density*4*M_PIE*CUBE(init_radius)*SQUARE(P));
 		     }
                   time_source -= mp->molar_volume[w]*s_terms.MassSource[w]/denom; 
-                  d_drop_source[w] = -mp->Rst_func*mp->molar_volume[w]/denom; 
+		  if(P > DBL_SMALL)
+                     {d_time_source += mp->molar_volume[w]*s_terms.MassSource[w]/denom*2./P; }
+                  d_drop_source[w] = mp->Rst_func*mp->molar_volume[w]/denom; 
                   }
 		time_source *= mp->Rst_func;
+		d_time_source *= mp->Rst_func;
 
 		settling = 2*SQUARE(init_radius)/(3.*mp->viscosity)*
 				(2*mp->viscosity+3*mu_liq)/(mp->viscosity+mu_liq);
+#if 0
 		for(i=0 ; i<dim ; i++)
 		    {
-		     mig_velo[i] = mp->momentum_source[i]*(dens_ratio-1.)*settling; 
+		     mig_velo[i] = mp->Rst_func*mp->momentum_source[i]*(dens_ratio-1.)*settling; 
 		     vconv[i] += mig_velo[i]*SQUARE(P); 
 		    }
+#endif
                 }
 	    explicit_deriv=1;
             break;
@@ -34999,7 +35004,7 @@ assemble_poynting(double time,	/* present time value */
 			{
       		         for(w=0; w<pd->Num_Species_Eqn; w++)
         	            { advection += wt_func*d_drop_source[w]*s_terms.d_MassSource_drst[w][j];}
-			 advection += wt_func*time_source*(2./P)*phi_j; 
+			 advection -= wt_func*d_time_source*phi_j;   
 			}
 
 	             advection *= det_J * wt;
