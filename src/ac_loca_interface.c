@@ -1271,7 +1271,6 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
     {
       safer_free((void **) &(ams[i]));
     }
-  safer_free( (void **) &rd);
   safer_free( (void **) &gvec);
   safer_free( (void **) &cpcc);
   if (tpcc != NULL) safer_free( (void **) &tpcc);
@@ -1291,6 +1290,8 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
         }
       safer_free((void **) &(gvec_elem [eb_indx]));
     }
+
+  safer_free( (void **) &rd);
 
   for(i = 0; i < MAX_NUMBER_MATLS; i++) {
     for(n = 0; n < MAX_MODES; n++) {
