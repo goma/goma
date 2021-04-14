@@ -1467,11 +1467,6 @@ free_exo(Exo_DB *x)		/* pointer to EXODUS II FE db structure */
       free(x->time_vals);
     }
 
-  if ( x->num_elem_vars > 0 )
-    {
-      free(x->elem_var_tab);
-    }
-
 #if 0
   /*
    * This is now done in free_exo_nv().
