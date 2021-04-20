@@ -727,11 +727,7 @@ wr_dpi(Dpi *d,
 	       -1, 	-1, 
 	       si.ns_node_len_global, &(d->ns_node_len_global));
 
-  put_variable(u, NC_INT, 1, 
-	       d->num_node_sets_global,	-1, 
-	       si.ns_id_global,		d->ns_id_global);
-
-  put_variable(u, NC_INT, 1, 
+  put_variable(u, NC_INT, 1,
 	       d->num_node_sets,	-1, 
 	       si.ns_index_global,	d->ns_index_global);
 
@@ -740,28 +736,34 @@ wr_dpi(Dpi *d,
 	       si.ns_distfact_list_index_global, 
 	       d->ns_distfact_list_index_global);
 
-  put_variable(u, NC_INT, 1, 
-	       d->num_node_sets_global,		-1, 
-	       si.ns_distfact_index_global,	d->ns_distfact_index_global);
-
-  put_variable(u, NC_INT, 1, 
-	       d->num_node_sets_global,		-1, 
-	       si.ns_node_index_global,	d->ns_node_index_global);
 
   put_variable(u, NC_INT, 1, 
 	       d->len_ns_node_list,	-1, 
 	       si.ns_node_list_index_global, 
 	       d->ns_node_list_index_global);
 
+  if (d->num_node_sets_global > 0)
+    {
+      put_variable(u, NC_INT, 1,
+		   d->num_node_sets_global,	-1,
+		   si.ns_id_global,		d->ns_id_global);
 
+      put_variable(u, NC_INT, 1,
+		   d->num_node_sets_global,		-1,
+		   si.ns_distfact_index_global,	d->ns_distfact_index_global);
 
-  put_variable(u, NC_INT, 1, 
-	       d->num_node_sets_global,		-1, 
-	       si.ns_num_distfacts_global,	d->ns_num_distfacts_global);
+      put_variable(u, NC_INT, 1,
+		   d->num_node_sets_global,		-1,
+		   si.ns_node_index_global,	d->ns_node_index_global);
 
-  put_variable(u, NC_INT, 1, 
-	       d->num_node_sets_global,	-1, 
-	       si.ns_num_nodes_global,	d->ns_num_nodes_global);
+      put_variable(u, NC_INT, 1,
+		   d->num_node_sets_global,		-1,
+		   si.ns_num_distfacts_global,	d->ns_num_distfacts_global);
+
+      put_variable(u, NC_INT, 1,
+		   d->num_node_sets_global,	-1,
+		   si.ns_num_nodes_global,	d->ns_num_nodes_global);
+    }
 
   if ( d->num_props_ns > 1 )
     {
@@ -802,8 +804,6 @@ wr_dpi(Dpi *d,
 	       d->len_set_membership,	-1, 
 	       si.set_membership,	d->set_membership);
 
-  put_variable(u, NC_INT, 1, d->num_side_sets_global, -1, 
-	       si.ss_distfact_index_global, d->ss_distfact_index_global);
 
   put_variable(u, NC_INT, 0, -1, -1, 
 	       si.ss_distfact_len_global, &(d->ss_distfact_len_global));
@@ -815,8 +815,6 @@ wr_dpi(Dpi *d,
 		   d->ss_distfact_list_index_global);
     }
 
-  put_variable(u, NC_INT, 1, d->num_side_sets_global, -1, 
-	       si.ss_elem_index_global, d->ss_elem_index_global);
 
   put_variable(u, NC_INT, 0, -1, -1, 
 	       si.ss_elem_len_global, &(d->ss_elem_len_global));
@@ -827,9 +825,6 @@ wr_dpi(Dpi *d,
 		   si.ss_elem_list_index_global, d->ss_elem_list_index_global);
     }
 
-  put_variable(u, NC_INT, 1, 
-	       d->num_side_sets_global,	-1, 
-	       si.ss_id_global,		d->ss_id_global);
 
   if ( d->num_side_sets > 0 )
     {
@@ -838,13 +833,26 @@ wr_dpi(Dpi *d,
 		   si.ss_index_global,	d->ss_index_global);
     }
 
-  put_variable(u, NC_INT, 1, 
-	       d->num_side_sets_global,		-1, 
-	       si.ss_num_distfacts_global,	d->ss_num_distfacts_global);
+  if (d->num_side_sets_global > 0)
+    {
+      put_variable(u, NC_INT, 1, d->num_side_sets_global, -1,
+		   si.ss_distfact_index_global, d->ss_distfact_index_global);
 
-  put_variable(u, NC_INT, 1, 
-	       d->num_side_sets_global,		-1, 
-	       si.ss_num_sides_global,		d->ss_num_sides_global);
+      put_variable(u, NC_INT, 1, d->num_side_sets_global, -1,
+		   si.ss_elem_index_global, d->ss_elem_index_global);
+
+      put_variable(u, NC_INT, 1,
+		   d->num_side_sets_global,	-1,
+		   si.ss_id_global,		d->ss_id_global);
+
+      put_variable(u, NC_INT, 1,
+		   d->num_side_sets_global,		-1,
+		   si.ss_num_distfacts_global,	d->ss_num_distfacts_global);
+
+      put_variable(u, NC_INT, 1,
+		   d->num_side_sets_global,		-1,
+		   si.ss_num_sides_global,		d->ss_num_sides_global);
+    }
 
   if ( d->num_props_ss > 1 )
     {

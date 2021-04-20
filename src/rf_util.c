@@ -2318,37 +2318,35 @@ rd_vectors_from_exoII(double u[], const char *file_nm, const int action_flag,
 		{
 		  for (mn = -1; mn < upd->Num_Mat; mn++) 
 		    {
-		      if (mn == -1) 
-			{
-	                  for (i = upd->Num_Mat - 1; i >= 0; i--) 
-			    {
-		              if (pd_glob[i]->i[pg->imtrx][var]) 
-                                {
-				  matrl = mp_glob[i];
-		                }
-			    }
-			} 
-		      else 
-			{
-	                  matrl = mp_glob[mn];
+			if (mn == -1) {
+				for (i = upd->Num_Mat - 1; i >= 0; i--) {
+					if (pd_glob[i]->i[pg->imtrx][var]) {
+					matrl = mp_glob[i];
+					}
+				}
+			} else {
+				matrl = mp_glob[mn];
 			}
-                      if(mn!=-1 && (pd_glob[mn]->i[pg->imtrx][var] == I_P0))
-                      {
-                        error = rd_exoII_ev(u, var, mn, matrl, elem_var_names, exo->eb_num_elems[mn],
-                                            num_elem_vars, exoid, time_step, 0, exo);
-                      }
-                      else if(mn!=-1 && (pd_glob[mn]->i[pg->imtrx][var] == I_P1)){
-                        int dof = getdofs(type2shape(exo->eb_elem_itype[mn]),I_P1);
-                        for(int i=0;i<dof;i++){
-                        error = rd_exoII_ev(u, var, mn, matrl, elem_var_names, exo->eb_num_elems[mn],
-                                            num_elem_vars, exoid, time_step, i, exo);
-                        }
-                      }
-                      else{
-		      error = rd_exoII_nv(u, var, mn, matrl, var_names, num_nodes,
-					  num_vars, exoid, time_step, 0);
-                      }
-		      if (!error) icount++;
+			if (mn != -1 && (pd_glob[mn]->i[pg->imtrx][var] == I_P0)) {
+			int eb_index = in_list(mn, 0, exo->num_elem_blocks, Matilda);
+			if (eb_index != -1) {
+				error = rd_exoII_ev(u, var, mn, matrl, elem_var_names, exo->eb_num_elems[eb_index],
+						num_elem_vars, exoid, time_step, 0, exo);
+			}
+			} else if (mn != -1 && (pd_glob[mn]->i[pg->imtrx][var] == I_P1)) {
+			int eb_index = in_list(mn, 0, exo->num_elem_blocks, Matilda);
+			if (eb_index != -1) {
+				int dof = getdofs(type2shape(exo->eb_elem_itype[eb_index]), I_P1);
+				for (int i = 0; i < dof; i++) {
+				error = rd_exoII_ev(u, var, mn, matrl, elem_var_names, exo->eb_num_elems[eb_index],
+						num_elem_vars, exoid, time_step, i, exo);
+				}
+			}
+			} else {
+				error = rd_exoII_nv(u, var, mn, matrl, var_names, num_nodes, num_vars, exoid,
+						    time_step, 0);
+			}
+		      	if (!error) icount++;
 		    }
 		}
 	    }
@@ -2971,8 +2969,10 @@ inject_elem_vec(double sol_vec[], const int varType, const int k,
   int e_start, e_end, ielem, ielem_type, num_local_nodes;
   int iconnect_ptr, i, I, index;
   int found_quantity;
-  e_start = exo->eb_ptr[matID];
-  e_end   = exo->eb_ptr[matID+1];
+  int eb_index = in_list(matID, 0, exo->num_elem_blocks, Matilda);
+  EH(eb_index, "Trying to read unknown material element block index inject_elem_vec");
+  e_start = exo->eb_ptr[eb_index];
+  e_end = exo->eb_ptr[eb_index + 1];
   for (ielem = e_start; ielem < e_end; ielem++) {
 
     ielem_type      = Elem_Type(exo, ielem); /* func defd in el_geom.h */

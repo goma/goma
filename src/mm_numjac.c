@@ -358,7 +358,7 @@ numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
 {
   int i, j, nnonzero;
   int idx, color;
-  int zeroCA = -1;
+  int zeroCA = 1;
   double *resid_vector_1, *x_1;
   double dx;
   int *irow, *jcolumn, *nelem;
@@ -571,6 +571,7 @@ numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
 			   &time_value, exo, dpi,
 			   &ielem, &num_total_nodes,
 			   h_elem_avg, U_norm, NULL, zeroCA);
+	zeroCA = -1;  
 
       }
 
@@ -784,7 +785,7 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
 ******************************************************************************/
 {
   int i, j, k, l, m, ii, nn, kount, nnonzero, index;
-  int zeroCA;
+  int zeroCA = 1;
   double *a = ams->val;
   int *ija = ams->bindx;
   double *aj_diag, *aj_off_diag, *scale;
@@ -1142,8 +1143,6 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
         clear_xfem_contribution( ams->npu );
 
       for (i = 0; i < num_elems; i++) {
-	zeroCA = -1;
-	if (i == 0) zeroCA = 1;
 	load_ei(elem_list[i], exo, 0, pg->imtrx);
 	matrix_fill(ams, x_1, resid_vector_1,
 		    x_old, x_older,  xdot, xdot_old, x_update,
@@ -1152,6 +1151,7 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
 		    &time_value, exo, dpi,
 		    &elem_list[i], &num_total_nodes,
 		    h_elem_avg, U_norm, NULL, zeroCA);
+	zeroCA = 0;
 	if( neg_elem_volume ) break;
 	if( neg_lub_height ) break;
 	if( zero_detJ ) break;

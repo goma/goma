@@ -72,4 +72,10 @@ EXTERN void add_displacement_LSA /* ac_stabililty_util.c */
         Exo_DB *,               /* exo - entire mesh desc. */
         double **);            /* Saved displacement fields */
 
+
+EXTERN void undo_add_displacement_LSA /* ac_stabililty_util.c */
+( double [],              /* x - eigenvector */
+        Exo_DB *,               /* exo - entire mesh desc. */
+        double **);            /* Saved displacement fields */
+
 #endif /* GOMA_AC_STABILITY_UTIL_H */

@@ -133,8 +133,9 @@
 #define FSI_SHELL_ONLY_UNDEF     9
 
 /* Residence time kernel functions */
-#define LINEAR_TIMETEMP        111
-#define EXPONENTIAL_TIMETEMP   112
+#define LINEAR_TIMETEMP        1110
+#define EXPONENTIAL_TIMETEMP   1120
+#define DROP_EVAP              1130
 
 /****************************************************************************/
 /****************************************************************************/

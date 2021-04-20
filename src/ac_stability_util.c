@@ -1306,3 +1306,51 @@ add_displacement_LSA(double x[], Exo_DB *exo, double **saved_displacement)
 } /* END of routine add_displacement_LSA */
 /*****************************************************************************/
 /*****************************************************************************/
+
+void
+undo_add_displacement_LSA(double x[], Exo_DB *exo, double **saved_displacement)
+
+    /* undo_add_displacement_LSA -- Substract the added mesh displacement from steady state solution
+     *                              so that it does not mess up the  computed residual
+     *
+     * Created by: 2021 Kristianto Tjiptowidjojo
+     */
+
+{
+  int gnn;
+  int idx, idy, idz;
+  int dim = exo->num_dim;
+  int num_nodes = exo->num_nodes;
+
+
+  /* Subtract the displacement field in solution vector*/
+  for (gnn = 0; gnn < num_nodes; gnn++)
+    {
+      idx = Index_Solution (gnn, MESH_DISPLACEMENT1, 0, 0, -1, pg->imtrx);
+      if (idx > -1)
+        {
+         x[idx] -= saved_displacement[0][gnn];
+        }
+
+      if( dim > 1 )
+        {
+         idy = Index_Solution (gnn, MESH_DISPLACEMENT2, 0, 0, -1, pg->imtrx);
+         if (idy > -1)
+           {
+            x[idy] -= saved_displacement[1][gnn];
+           }
+         }
+      if( dim > 2 )
+        {
+         idz = Index_Solution (gnn, MESH_DISPLACEMENT3, 0, 0, -1, pg->imtrx);
+         if (idz > -1)
+           {
+            x[idz] -= saved_displacement[2][gnn];
+           }
+        }
+    }
+
+  return;
+} /* END of routine undo_add_displacement_LSA */
+/*****************************************************************************/
+/*****************************************************************************/
