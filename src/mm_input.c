@@ -62,6 +62,8 @@ static char rcsid[] =
 #include "mm_input.h"
 #include "goma.h"
 
+static char aprepro_command[1024];
+
 static int 
 look_forward_optional_until(FILE *ifp, const char *string, char *untilstring, char input[],
 			    const char ch_term);
@@ -78,9 +80,6 @@ struct Variable_Initialization	Var_init[MAX_VARIABLE_TYPES + MAX_CONC];
 
 struct Variable_Initialization	Var_init_mat[MAX_NUMBER_MATLS]
 						[MAX_VARIABLE_TYPES + MAX_CONC];
-
-struct Boundary_Condition *BC_Types;
-
 struct Rotation_Specs *ROT_Types;
 
 extern struct AC_Information *augc;
@@ -15290,7 +15289,7 @@ read_surface_objects ( FILE* ifp,
 
 {
   int iread;
-  char name[30];
+  char name[32];
   struct LS_Surf *surf;
   char echo_string[MAX_CHAR_ECHO_INPUT]="\0";
   char *echo_file = Echo_Input_File;

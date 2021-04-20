@@ -522,22 +522,3 @@ extern int zero_detJ_global;
 /*                       std.h end                                         */
 /***************************************************************************/
 #endif
-
-#if ( defined (linux) && defined (COMPILER_64BIT) )
-/* This ifndef was extracted from GOMA_RF_GOMA_H ifndef because of goma failures
- * when compiled with 64-bit gnu compilers 4.1+. (It may be a trilinos 9
- * versus 6 issue.)  This is not needed if goma is compiled with autoconf.
- * (Eric Benner 8/6/09)
- */ 
-
-#ifndef GOMA_VERSION                      /* 1) VERSION must be a keyword, won't work with it */
-  #ifdef GIT_VERSION                      /* 2) needed all of this to convet GIT_VERSION to the proper string */
-    #define STRINGCON_(x) #x
-    #define STRINGCON(x) STRINGCON_(x)
-    #define GOMA_VERSION STRINGCON(GIT_VERSION)
-  #else
-    #define GOMA_VERSION "6.2.0"
-  #endif
-#endif
-
-#endif

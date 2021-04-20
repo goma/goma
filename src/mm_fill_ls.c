@@ -68,6 +68,10 @@
 #include "sl_epetra_interface.h"
 #include "sl_epetra_util.h"
 
+struct Extended_Shape_Fcn_Basics * xfem;       /* This is a global structure for the basic pieces needed for XFEM */
+NTREE *Subgrid_Tree;                          /* This is a global pointer to the subgrid integration shape function tree */
+NTREE_INT Subgrid_Int;                        /* This is a global structure for the subgrid integration points and weights specific to element */
+
 /*
 static int interface_on_side
 ( double isoval,

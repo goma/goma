@@ -88,10 +88,10 @@ extern String_line AztecOO_Solver;
 extern String_line Stratimikos_File[MAX_NUM_MATRICES];
 
 /*
- * A new Aztec 2.0 option. There are more and difft options and our
- * previous options probably ought to be revised to reflect the newer
- * Aztec 2.0 capability specifications.
- */
+extern  * A new Aztec 2.0 option. There are more and difft options and our
+extern  * previous options probably ought to be revised to reflect the newer
+extern  * Aztec 2.0 capability specifications.
+extern  */
 
 extern String_line Matrix_Reorder;
 
@@ -119,7 +119,7 @@ extern double var_damp[MAX_VARIABLE_TYPES];  /* variable specific damp factors *
 
 extern int Newt_Jacobian_Reformation_stride;/*Stride for reformation of jacobian for
                                   modified newton scheme               */
-extern int Time_Jacobian_Reformation_stride; 
+extern int Time_Jacobian_Reformation_stride;
 extern int modified_newton;            /*boolean flag for modified Newton */
 extern int save_old_A;                 /*boolean flag for saving old A matrix
 				 for resolve reasons with AZTEC.   There

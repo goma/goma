@@ -1932,7 +1932,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 			  
 				  if ( pd->TimeIntegration != STEADY )
 				    {
-			      	       if ( pd->e[pg->imtrx][eqn] & T_MASS )
+			      	      if ( pd->e[pg->imtrx][eqn] & T_MASS )
 					{
 				  	  mass = s_dot[a][b];
 				  	  mass *= wt_func * d_at_dT[j] * lambda * det_J * wt;
@@ -1952,7 +1952,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					  if( lcwt != 0.) advection += lcwt*(s_dot_gt[a][b] + g_dot_s[a][b]);
 
 					  advection *= wt_func * d_at_dT[j] * lambda *det_J * wt * h3;
-				  	advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+					  advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 					}     
 				    }
 			  
@@ -2638,9 +2638,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 						}
 					      
 					      source  = source_a + source_b;
-					      
 					      source *= phi_j * det_J * h3 * wt_func * wt * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
-					      
 					    }
 					  
 					  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
@@ -6346,3 +6344,7 @@ compute_saramito_model_terms(dbl stress[DIM][DIM],
   */
   return sCoeff;
 }
+
+/*****************************************************************************/
+/* END OF FILE mm_fill_stress.c */
+/*****************************************************************************/

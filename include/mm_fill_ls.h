@@ -310,7 +310,7 @@ struct Extended_Shape_Fcn_Basics {
    double *tot_vol;
 };
 
-EXTERN struct Extended_Shape_Fcn_Basics * xfem;       /* This is a global structure for the basic pieces needed for XFEM */
+extern struct Extended_Shape_Fcn_Basics * xfem;       /* This is a global structure for the basic pieces needed for XFEM */
 
 EXTERN void load_xfem_for_elem
 ( double [],
@@ -482,8 +482,8 @@ EXTERN int assemble_extension_velocity
 
 
 
-EXTERN NTREE *Subgrid_Tree;                          /* This is a global pointer to the subgrid integration shape function tree */
-EXTERN NTREE_INT Subgrid_Int;                        /* This is a global structure for the subgrid integration points and weights specific to element */
+extern NTREE *Subgrid_Tree;                          /* This is a global pointer to the subgrid integration shape function tree */
+extern NTREE_INT Subgrid_Int;                        /* This is a global structure for the subgrid integration points and weights specific to element */
 
 SGRID *create_search_grid
 ( NTREE *  );

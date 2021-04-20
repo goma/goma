@@ -475,7 +475,7 @@ viscosity(struct Generalized_Newtonian *gn_local,
       
       mu = mp->viscosity;
       
-       var = MASS_FRACTION;
+      var = MASS_FRACTION;
       if ( d_mu != NULL && pd->v[pg->imtrx][var] )
 	{
 	  w = gn_local->sus_species_no;
@@ -486,7 +486,7 @@ viscosity(struct Generalized_Newtonian *gn_local,
 	    }
 	}
   
-     var = BOND_EVOLUTION;
+      var = BOND_EVOLUTION;
       if ( d_mu != NULL && pd->v[pg->imtrx][var] )
 	
 	{
@@ -2140,8 +2140,6 @@ carreau_suspension_viscosity(struct Generalized_Newtonian *gn_local,
      gammadot = .0001 ;
     }
  
- 
-  
   if ( pd->e[pg->imtrx][R_MESH1] )
     {
       mdofs = ei[pg->imtrx]->dof[R_MESH1];

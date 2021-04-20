@@ -5592,14 +5592,14 @@ void get_supg_tau(SUPG_terms *supg_terms,
       for (int a = 0; a < VIM; a++)
 	{
 	  int var = VELOCITY1 + a;
-        for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++)
+	  for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      supg_terms->d_supg_tau_dv[a][j] = 0.5*hk*eta*fv->v[a]*bf[var]->phi[j] /
                 (- vnorm*vnorm*vnorm) + 0.5 * hk * eta_dV[a][j] / vnorm;
 	    }
 
 	  var = MESH_DISPLACEMENT1 + a;
-        for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++)
+	  for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      supg_terms->d_supg_tau_dX[a][j] = 0.5 * hk_dX[a][j] * eta / vnorm + 0.5 * hk * eta_dX[a][j] / vnorm;
 	    }

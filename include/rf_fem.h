@@ -63,7 +63,6 @@ extern int  ProblemType,	/* Select type of problem to be solved		    */
      StateEq,	        /* Select equation of state                         */
      Multicomponent;	/* Select fomulation for multicomponent transport   */
 
-
 /* global variable to account for extra terms in axisymmetric or swirling
    flow problems: define in setup_pd */
 extern int VIM;

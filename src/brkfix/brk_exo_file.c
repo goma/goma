@@ -188,8 +188,6 @@ static int total_internal_dofweight = 0;
 static int total_boundary_dofweight = 0;
 static int total_external_dofweight = 0;
 
-const char program_description[] = "GOMA distributed problem decomposition tool";
-
 const char copyright[]="Copyright (c) 1999-2000 Sandia National Laboratories. All rights reserved.";
 
 #define LAST_LEGAL_STRING "Last Legal String"

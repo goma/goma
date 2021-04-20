@@ -11,15 +11,16 @@
 #ifdef EXTERN
 #undef EXTERN
 #endif
-
+#ifdef GOMA_SHELL_TFMP_UTIL_C
 #define EXTERN extern
-
+#else
+#define EXTERN
+#endif
 
 //Still Experimental
 enum clipping_kind{none, continuity, restorative, constant_sat, var_swap};
 
-// Make global variables (really? - eesh!)
-EXTERN enum clipping_kind my_clipping_kind;
+extern enum clipping_kind my_clipping_kind;
 
 // load_viscosity_model(&mu_l, &mu_g)
 // OUTPUTS:

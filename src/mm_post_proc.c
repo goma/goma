@@ -96,6 +96,7 @@ int nn_volume;                  /* number of pp_volume_int structures */
 int ppvi_type;             /* Maybe there's a better way to do this, Seems like globals abound! AMC*/
 int nn_global;             /* Hopefully these post processing thin get refactored into non-globals at some point */
 int nn_average;
+static int *listel;                  /* Pointer to element order map from exoII  */
 
 struct Post_Processing_Data        **pp_data;
 struct Post_Processing_Data_Sens   **pp_data_sens;

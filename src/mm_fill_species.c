@@ -352,7 +352,6 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
    */
   rho  = density(d_rho, time);
 
-
   SUPG_terms supg_terms;
   zero_structure(&supg_terms, sizeof(SUPG_terms), 1);
 

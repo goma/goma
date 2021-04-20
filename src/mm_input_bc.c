@@ -65,12 +65,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 					 * with material-specific            *
 					 * initialization                    */
 
-extern struct Variable_Initialization	Var_init[MAX_VARIABLE_TYPES + MAX_CONC];
-
-extern struct Variable_Initialization	Var_init_mat[MAX_NUMBER_MATLS]
-						[MAX_VARIABLE_TYPES + MAX_CONC];
-
-extern struct Boundary_Condition *BC_Types;
+struct Boundary_Condition *BC_Types;
 
 extern struct Rotation_Specs *ROT_Types;
 
@@ -79,19 +74,6 @@ static Spfrtn sr;
 /*
  * What to look for each time...
  */
-
-//static char search_string[MAX_CHAR_IN_INPUT];
-
-//static char default_string[MAX_CHAR_IN_INPUT] = "Defaulting";
-
-//static char specify_string[MAX_CHAR_IN_INPUT] = "          ";
-
-//static char current_mat_file_name[MAX_FNL];
-
-//  #define NO_USER  NULL
-//  #define NO_INPUT 0
-//  #define SCALAR_INPUT 1
-//  #define VECTOR_INPUT 3
 
 /*************** R O U T I N E S   I N   T H E   F I L E ***********************
  *

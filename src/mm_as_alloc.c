@@ -1766,10 +1766,9 @@ bf_mp_init(struct Problem_Description *pd)
                 fprintf(stderr, "bfd[0] is at %p\n", bfd[0]);
                 fprintf(stderr, "checking t = %d\n", t);
 #endif
-               if ((pd->i[imtrx][v] == bfd[t]->interpolation)
-                   && (ishape == bfd[t]->element_shape))
 
-                
+                if ((pd->i[imtrx][v] == bfd[t]->interpolation)
+                    && (ishape == bfd[t]->element_shape))
                   {
                     bf[v] = bfd[t];
                   }
