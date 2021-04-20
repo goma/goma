@@ -11032,7 +11032,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	  }
 
 	tmp = gas_conc*4*M_PIE*radius*mp->diffusivity[w]*num_density;
-	if(pd->v[RESTIME])
+	if(pd->gv[RESTIME])
 	  { rad_ratio = MAX(fv->restime,DBL_SMALL);}
 	else
 	  {rad_ratio=1.;}
@@ -11050,7 +11050,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	if ( af->Assemble_Jacobian )
 	{
 	  var = TEMPERATURE;
-	  if(pd->v[var])
+	  if(pd->v[pg->imtrx][var])
 	  {
 	    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
@@ -11059,7 +11059,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	  }
 
 	  var = MASS_FRACTION;
-	  if (pd->v[MASS_FRACTION] )
+	  if (pd->v[pg->imtrx][MASS_FRACTION] )
 	  {
 	    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
@@ -11068,7 +11068,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	  }
 
 	  var = RESTIME;
-	  if(pd->v[var])
+	  if(pd->v[pg->imtrx][var])
 	  {
 	    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
