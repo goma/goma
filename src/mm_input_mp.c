@@ -9672,7 +9672,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	    }
 
 	  SPF(es,"%s = %s", search_string, model_name);
-	  
+
 	  if ( !strcmp(model_name, "CONSTANT"))
 	    {
 	      mat_ptr->LubSourceModel = CONSTANT;
@@ -9713,6 +9713,25 @@ ECHO("\n----Acoustic Properties\n", echo_file);
               SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_lubsource_function_constants);
             }
 
+       else if ( !strcmp(model_name, "CONTINUUM_FLUID"))
+            {
+              mp_glob[mn]->LubSourceModel = CONTINUUM_FLUID;
+              num_const = read_constants(imp, &(mat_ptr->u_lubsource_function_constants),
+                                                                                   NO_SPECIES);
+
+              if ( num_const < 3)
+                {
+                  sr = sprintf(err_msg,
+                               "Matl %s needs 3 constants for %s %s model.\n",
+                               pd_glob[mn]->MaterialName,
+                               "Lubrication source", "CONTINUUM_FLUID");
+                  EH(-1, err_msg);
+                }
+
+              mat_ptr->len_lubsource = num_const;
+              SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_lubsource_function_constants);
+            }
+
 	  else
 	    {
 	      EH(-1,"Unrecognized lubrication fluid source model");
@@ -9732,7 +9751,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	    }
 
 	  SPF(es,"%s = %s", search_string, model_name);
-	  
+
 	  if ( !strcmp(model_name, "CONSTANT"))
 	    {
 	      mp_glob[mn]->LubMomSourceModel = CONSTANT;
@@ -9742,7 +9761,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			&(mat_ptr->lubmomsource[2])) != 3)
 
 		{
-		
+
 		  EH(-1,"Lubrication momentum source constant model expects 3 flts");
 		}
 	      num_const = mp_glob[mn]->len_lubmomsource = 3;
@@ -9754,9 +9773,9 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	    {
 	      EH(-1,"Unrecognized lubrication momentum source  model");
 	    }
-	}	    
+	}
 
-  
+
     } /* End of shell lub_p cards */
 
   /* Shell Energy Cards - heat sources, sinks, etc. */

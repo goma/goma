@@ -78,6 +78,7 @@ static char rcsid[] =
 *       NAME			TYPE			CALLED BY
 *  -----------------------------------------------------------------
 *  fvelo_normal_bc                      void
+*  fvelo_normal_lub_bc                  void
 *  fmesh_etch_bc                        void
 *  sdc_stefan_flow                      void
 *  sdc_stefan_volume_flow               void
@@ -619,6 +620,151 @@ if(lsi->near && 0) fprintf(stderr,"vn_ls %g %g %g %g\n",fv->x[0],penalty,factor,
 /*****************************************************************************/
 /*****************************************************************************/
 /****************************************************************************/
+
+void
+fvelo_normal_lub_bc(double func[DIM],
+		    double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                    const int id_side,            /* Side ID */
+                    const double x_dot[MAX_PDIM], /* Bad name, says Phil!
+                                                   * -mesh velocity vector */
+                    const double tt,              /* parameter to vary time integration from
+                                                     explicit (tt = 1) to implicit (tt = 0) */
+                    const double dt,              /* current value of the time step */
+                    double xi[DIM],               /* Local stu coordinates */
+                    const Exo_DB *exo,            /* ExodusII database struct pointer */
+                    const double param[])         /* Flux parameters  */
+     /***********************************************************************
+      *
+      * fvelo_normal_lub_bc():
+      *
+      *  Function which evaluates the expression specifying the
+      *  boundary normal motion  at a quadrature point on a side
+      *  of an element due to flux to/from shell lubrication layer.
+      *
+      *         func  =   - n . (lubflux) + n . (v - xdot)
+      *
+      *  The boundary conditions VELO_NORMAM_LUB_BC
+      *  employ this function. vnormal is typically dictated by current surface
+      *  orientation as well as surface chemistry.
+      *
+      *  Note: this function initially is cloned from fvelo_normal_bc
+      *
+      * Input:
+      *
+      *  param[] = specified on the bc card as the first integer
+      *
+      *
+      * Output:
+      *
+      *  func[0] = value of the function mentioned above
+      *  d_func[0][varType][lvardof] =
+      *              Derivate of func[0] wrt
+      *              the variable type, varType, and the local variable
+      *              degree of freedom, lvardof, corresponding to that
+      *              variable type.
+      *
+      *   Author: Kristianto Tjiptowidjojo    (03/11/2021)
+      ********************************************************************/
+
+
+{
+  int j, kdir, var, p;
+  int *n_dof = NULL;
+  int dof_map[MDE];
+  int n_dofptr[MAX_VARIABLE_TYPES][MDE];
+  double phi_j;
+
+  /***** LOAD NEIGHBORING SHELL ELEMENTS ********************/
+
+  /* Find friends */
+  int el1 = ei->ielem;
+  int nf  = num_elem_friends[el1];
+  int el2 = elem_friends[el1][0];
+
+  n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
+
+  load_neighbor_var_data(el1, el2, n_dof, dof_map, n_dofptr, id_side, xi, exo);
+
+
+  /***** CALCULATE LUBRICATION FLUX ********************/
+
+  double kappa = param[0];
+  double mu    = param[1];
+  double L     = param[2];
+
+  double lubflux = (kappa/mu/L) * (fv->P - fv->lubp);
+
+  double dlubflux_dp    =  (kappa/mu/L);
+  double dlubflux_dlubp = -(kappa/mu/L);
+
+  /***** CALCULATE RESIDUAL CONTRIBUTION ********************/
+  func[0] = -lubflux;
+  for (kdir = 0; kdir < pd->Num_Dim; kdir++)
+    {
+      func[0] += (fv->v[kdir] - x_dot[kdir]) * fv->snormal[kdir];
+    }
+
+
+  /***** CALCULATE JACOBIAN CONTRIBUTION ********************/
+  if (af->Assemble_Jacobian)
+    {
+
+    for (kdir=0; kdir<pd->Num_Dim; kdir++)
+       {
+
+        for (p=0; p<pd->Num_Dim; p++)
+           {
+	    var = MESH_DISPLACEMENT1 + p;
+	    if (pd->v[var])
+              {
+	       for ( j=0; j<ei->dof[var]; j++)
+                  {
+	           phi_j = bf[var]->phi[j];
+	           d_func[0][var][j] += (fv->v[kdir] - x_dot[kdir]) * fv->dsnormal_dx[kdir][p][j];
+	           if (TimeIntegration != 0 && p == kdir)
+                     {
+	              d_func[0][var][j] += ( -(1.+2.*tt)* phi_j/dt) * fv->snormal[kdir] * delta(p, kdir);
+	             }
+	          }
+	      }
+           }
+
+        var = VELOCITY1 + kdir;
+        if (pd->v[var])
+          {
+	   for ( j=0; j<ei->dof[var]; j++)
+              {
+	       phi_j = bf[var]->phi[j];
+	       d_func[0][var][j] += phi_j * fv->snormal[kdir];
+	      }
+          }
+       } /* for: kdir */
+
+     var = PRESSURE;
+     for ( j=0; j<ei->dof[var]; j++)
+        {
+	 phi_j = bf[var]->phi[j];
+	 d_func[0][var][j] += - dlubflux_dp * phi_j;
+	}
+
+
+     var = LUBP;
+     for ( j=0; j<ei->dof[var]; j++)
+        {
+	 phi_j = bf[var]->phi[j];
+	 d_func[0][var][j] += - dlubflux_dlubp * phi_j;
+	}
+
+    } /* end of if Assemble_Jacobian */
+
+
+  safe_free((void *) n_dof);
+
+} /* END of routine fvelo_normal_lub_bc  */
+/*****************************************************************************/
+/*****************************************************************************/
+/****************************************************************************/
+
 
 void
 fmesh_etch_bc(double *func,
