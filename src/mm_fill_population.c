@@ -1330,8 +1330,8 @@ int get_moment_growth_rate_term(struct moment_growth_rate *MGR) {
     return -1;
   }
 
-  double eabs = 1e-3;
-  double rmin[3] = {0, 1e-4, 1e-3};
+  double eabs = 1e-4;
+  double rmin[3] = {0, 1e-6, 1e-3};
 
   /* Get quad weights and nodes */
   int nnodes_out;
@@ -1441,7 +1441,9 @@ int get_moment_growth_rate_term(struct moment_growth_rate *MGR) {
     growth_rate_model(wCO2Liq, nodes, weights, nnodes_out, 2 * nnodes,
                       growth_rate, MGR);
 
-    coalescence_kernel_model(nodes, weights, nnodes_out, 2 * nnodes, MGR);
+    if (nnodes_out > 1) {
+      coalescence_kernel_model(nodes, weights, nnodes_out, 2 * nnodes, MGR);
+    }
     return 0;
   }
   case MOMENT_CONSTANT_GROWTH:

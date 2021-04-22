@@ -30,7 +30,7 @@
 #include "stdbool.h"
 
 #ifndef GOMA_MAX_NORMALS_PER_NODE
-#define GOMA_MAX_NORMALS_PER_NODE 20
+#define GOMA_MAX_NORMALS_PER_NODE 50
 #endif
 
 goma_rotation_s goma_automatic_rotations = {false, NULL};
