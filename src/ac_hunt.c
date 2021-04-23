@@ -319,9 +319,9 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   fprintf(stderr, "wr_result_prelim() starts...\n", tnv);
 #endif
 
-  gvec_elem = (double ***) smalloc ( (exo->num_elem_blocks)*sizeof(double **));
+  gvec_elem = (double ***) calloc (exo->num_elem_blocks, sizeof(double **));
   for (i = 0; i < exo->num_elem_blocks; i++) {
-    gvec_elem[i] = (double **) smalloc ( (tev + tev_post)*sizeof(double *));
+    gvec_elem[i] = (double **) calloc(tev + tev_post, sizeof(double *));
   }
 
   wr_result_prelim_exo( rd,
