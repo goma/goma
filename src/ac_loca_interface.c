@@ -387,9 +387,10 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
   DPRINTF(stderr, "wr_result_prelim() starts...\n", tnv);
 #endif
 
-  gvec_elem = (double ***) smalloc ( (exo->num_elem_blocks)*sizeof(double **));
-  for (i = 0; i < exo->num_elem_blocks; i++)
-    gvec_elem[i] = (double **) smalloc ( (tev + tev_post)*sizeof(double *));
+  gvec_elem = (double ***) calloc (exo->num_elem_blocks, sizeof(double **));
+  for (i = 0; i < exo->num_elem_blocks; i++) {
+    gvec_elem[i] = (double **) calloc (tev + tev_post, sizeof(double *));
+  }
 
   wr_result_prelim_exo(rd, exo, ExoFileOut, gvec_elem);
 
@@ -1271,7 +1272,6 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
     {
       safer_free((void **) &(ams[i]));
     }
-  safer_free( (void **) &rd);
   safer_free( (void **) &gvec);
   safer_free( (void **) &cpcc);
   if (tpcc != NULL) safer_free( (void **) &tpcc);
@@ -1291,6 +1291,8 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
         }
       safer_free((void **) &(gvec_elem [eb_indx]));
     }
+
+  safer_free( (void **) &rd);
 
   for(i = 0; i < MAX_NUMBER_MATLS; i++) {
     for(n = 0; n < MAX_MODES; n++) {
