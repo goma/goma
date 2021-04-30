@@ -104,7 +104,7 @@
 /* #define MAX_NUM_SS_DUPLICATIONS 2000 */
 
 #ifndef MAX_SS_PER_NODE
-#define MAX_SS_PER_NODE 20
+#define MAX_SS_PER_NODE 10
 #endif
 
 #ifndef MAX_MAT_PER_SS

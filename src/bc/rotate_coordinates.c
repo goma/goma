@@ -162,6 +162,7 @@ goma_error exchange_neighbor_ss_edges(Exo_DB *exo, Dpi *dpi) {
   }
 
   ss_edge_share *ss_edge_info = calloc(dpi->num_side_sets_global, sizeof(ss_edge_share));
+  int max_nodes_on_side = 0;
   for (int i = 0; i < num_rotated_side_sets; i++) {
     int ss_index = rotated_side_sets[i];
     ss_edge_info[i].ss = exo->ss_id[ss_index];
@@ -178,6 +179,9 @@ goma_error exchange_neighbor_ss_edges(Exo_DB *exo, Dpi *dpi) {
 
       int id_side = exo->ss_side_list[exo->ss_elem_index[ss_index] + e];
       get_side_info(ielem_type, id_side, &num_nodes_on_side, local_side_node_list);
+      if (num_nodes_on_side > max_nodes_on_side) {
+        max_nodes_on_side = num_nodes_on_side;
+      }
       ss_edge_info[i].node_per_side[e] = num_nodes_on_side;
       total_nodes += num_nodes_on_side;
     }
@@ -211,7 +215,30 @@ goma_error exchange_neighbor_ss_edges(Exo_DB *exo, Dpi *dpi) {
     assert(offset == ss_edge_info[i].total_nodes);
   }
 
-  MPI_Request *requests = malloc(sizeof(MPI_Request) * 2 * dpi->num_neighbors);
+  //char *format = "gid%d.csv";
+  //char fname[80];
+  //snprintf(fname, 79, format, ProcID);
+  //FILE *f = fopen(fname, "w");
+  //fprintf(f,"x,y,z,gid,ss\n");
+  //for (int k = 0; k < exo->num_side_sets; k++) {
+  //  for (int i = 0; i < ss_edge_info[k].total_nodes; i++) {
+  //    int ln = in_list(ss_edge_info[k].global_node_ids[i], 0, exo->num_nodes, dpi->node_index_global);
+  //    fprintf(f, "%g,%g,%g,%d,%d\n", 
+  //        exo->x_coord[ln],
+  //        exo->y_coord[ln],
+  //        exo->z_coord[ln],
+  //        ss_edge_info[k].global_node_ids[i],
+  //        ss_edge_info[k].ss);
+  //  }
+  //}
+  //fclose(f);
+  //MPI_Barrier(MPI_COMM_WORLD);
+  //MPI_Finalize();
+  //exit(0);
+
+  // get num nodes
+
+  MPI_Request *requests = malloc(sizeof(MPI_Request) * 2 * dpi->num_neighbors * dpi->num_side_sets_global);
 
   int *recv_nodes = calloc(dpi->num_neighbors * dpi->num_side_sets_global, sizeof(int));
   for (int i = 0; i < dpi->num_neighbors; i++) {
@@ -229,38 +256,89 @@ goma_error exchange_neighbor_ss_edges(Exo_DB *exo, Dpi *dpi) {
   }
   MPI_Waitall(2 * dpi->num_neighbors, requests, MPI_STATUSES_IGNORE);
 
-  int **global_nodes = calloc(dpi->num_side_sets_global, sizeof(int *));
-  int *ss_global_nodes = calloc(dpi->num_side_sets_global, sizeof(int));
+  // get nodes
+
+  int **global_nodes = calloc(dpi->num_neighbors * dpi->num_side_sets_global, sizeof(int *));
   for (int i = 0; i < dpi->num_side_sets_global; i++) {
-    int all_nodes = 0;
     for (int j = 0; j < dpi->num_neighbors; j++) {
-      all_nodes += recv_nodes[j * dpi->num_side_sets_global + i];
+      int all_nodes = recv_nodes[j * dpi->num_side_sets_global + i];
+      global_nodes[j * dpi->num_side_sets_global + i] = calloc(all_nodes, sizeof(int));
     }
-    global_nodes[i] = calloc(all_nodes, sizeof(int));
-    ss_global_nodes[i] = all_nodes;
   }
 
   int *offsets = calloc(dpi->num_side_sets_global, sizeof(int));
+  int req_count = 0;
   for (int i = 0; i < dpi->num_neighbors; i++) {
     for (int j = 0; j < dpi->num_side_sets_global; j++) {
       int count = recv_nodes[i * dpi->num_side_sets_global + j];
-      printf("SS %d, %d recv %d from %d\n", j, ProcID, count, dpi->neighbor[i]);
-      MPI_Irecv(&global_nodes[j][offsets[j]], count, MPI_INT, dpi->neighbor[i],
-                103 + j + dpi->neighbor[i], MPI_COMM_WORLD, &(requests[i]));
+      if (count > 0) {
+        MPI_Irecv(global_nodes[i * dpi->num_side_sets_global + j], count, MPI_INT, dpi->neighbor[i],
+                  103 + j + dpi->neighbor[i], MPI_COMM_WORLD, &(requests[req_count++]));
+      }
       offsets[j] += count;
     }
   }
 
   for (int i = 0; i < dpi->num_neighbors; i++) {
     for (int j = 0; j < dpi->num_side_sets_global; j++) {
-      printf("SS %d, %d send %d to %d\n", j, ProcID, ss_edge_info[j].total_nodes, dpi->neighbor[i]);
-      MPI_Isend(ss_edge_info[j].global_node_ids, ss_edge_info[j].total_nodes, MPI_INT,
-                dpi->neighbor[i], 103 + j + ProcID, MPI_COMM_WORLD,
-                &(requests[dpi->num_neighbors + i]));
+      if (ss_edge_info[j].total_nodes > 0) {
+        MPI_Isend(ss_edge_info[j].global_node_ids, ss_edge_info[j].total_nodes, MPI_INT,
+                  dpi->neighbor[i], 103 + j + ProcID, MPI_COMM_WORLD,
+                  &(requests[req_count++]));
+      }
     }
   }
 
   MPI_Waitall(2 * dpi->num_neighbors, requests, MPI_STATUSES_IGNORE);
+
+
+  // get num sides
+  int *recv_sides = calloc(dpi->num_neighbors * dpi->num_side_sets_global, sizeof(int));
+  int *send_sides = calloc(dpi->num_side_sets_global, sizeof(int));
+  for (int i = 0; i < dpi->num_side_sets_global; i++) {
+    send_sides[i] = ss_edge_info[i].num_sides;
+  }
+
+  for (int i = 0; i < dpi->num_neighbors; i++) {
+    MPI_Irecv(&(recv_sides[i*dpi->num_side_sets_global]), dpi->num_side_sets_global, MPI_INT, dpi->neighbor[i],
+              104 + dpi->neighbor[i], MPI_COMM_WORLD, &(requests[i]));
+  }
+
+  for (int i = 0; i < dpi->num_neighbors; i++) {
+    MPI_Isend(send_sides, dpi->num_side_sets_global, MPI_INT,
+              dpi->neighbor[i], 104 + ProcID, MPI_COMM_WORLD,
+              &(requests[dpi->num_neighbors + i]));
+  }
+  MPI_Waitall(2 * dpi->num_neighbors, requests, MPI_STATUSES_IGNORE);
+
+  int **recv_nodes_per_side = calloc(dpi->num_neighbors * dpi->num_side_sets_global, sizeof(int*));
+  for (int i = 0; i < dpi->num_neighbors * dpi->num_side_sets_global; i++) {
+    if (recv_sides[i] > 0) {
+      recv_nodes_per_side[i] = calloc(recv_sides[i], sizeof(int));
+    } else {
+      recv_nodes_per_side[i] = NULL;
+    }
+  }
+  for (int i = 0; i < dpi->num_neighbors; i++) {
+    for (int j = 0; j < dpi->num_side_sets_global; j++) {
+      int n_sides = recv_sides[i*dpi->num_side_sets_global + j];
+      if ( n_sides > 0) {
+        MPI_Irecv(recv_nodes_per_side[i*dpi->num_side_sets_global + j], n_sides, MPI_INT, dpi->neighbor[i],
+                  104 + j + dpi->neighbor[i], MPI_COMM_WORLD, &(requests[i]));
+      }
+    }
+  }
+
+  for (int i = 0; i < dpi->num_neighbors; i++) {
+    for (int j = 0; j < dpi->num_side_sets_global; j++) {
+      MPI_Isend(ss_edge_info[j].node_per_side, send_sides[j], MPI_INT,
+                dpi->neighbor[i], 104 + j + ProcID, MPI_COMM_WORLD,
+                &(requests[dpi->num_neighbors + i]));
+    }
+  }
+  MPI_Waitall(2 * dpi->num_neighbors, requests, MPI_STATUSES_IGNORE);
+
+
 
   int_pair *global_to_local = calloc(exo->num_nodes, sizeof(int_pair));
   for (int i = 0; i < exo->num_nodes; i++) {
@@ -271,14 +349,16 @@ goma_error exchange_neighbor_ss_edges(Exo_DB *exo, Dpi *dpi) {
 
   // convert all to local
   for (int i = 0; i < dpi->num_side_sets_global; i++) {
-    for (int j = 0; j < ss_global_nodes[i]; j++) {
-      int_pair global_node = {global_nodes[i][j], -1};
-      int_pair *match = (int_pair *)bsearch(&global_node, global_to_local, exo->num_nodes,
-                                            sizeof(int_pair), int_pair_compare_first);
-      if (match != NULL) {
-        global_nodes[i][j] = match->second;
-      } else {
-        global_nodes[i][j] = -1;
+    for (int k = 0; k < dpi->num_neighbors; k++) {
+      for (int j = 0; j < recv_nodes[i + k*dpi->num_side_sets_global]; j++) {
+        int_pair global_node = {global_nodes[i + k*dpi->num_side_sets_global][j], -1};
+        int_pair *match = (int_pair *)bsearch(&global_node, global_to_local, exo->num_nodes,
+                                              sizeof(int_pair), int_pair_compare_first);
+        if (match != NULL) {
+          global_nodes[i + k*dpi->num_side_sets_global][j] = match->second;
+        } else {
+          global_nodes[i + k*dpi->num_side_sets_global][j] = -1;
+        }
       }
     }
     for (int j = 0; j < ss_edge_info[i].total_nodes; j++) {
@@ -291,12 +371,21 @@ goma_error exchange_neighbor_ss_edges(Exo_DB *exo, Dpi *dpi) {
         GOMA_EH(GOMA_ERROR, "no mapping to local node for local ss node");
       }
     }
-    qsort(global_nodes[i], ss_global_nodes[i], sizeof(int), int_compare);
-    qsort(ss_edge_info[i].global_node_ids, ss_edge_info[i].total_nodes, sizeof(int), int_compare);
   }
 
   int_pair **ss_elem_sides_local = malloc(sizeof(int_pair *) * dpi->num_side_sets_global);
   int *ss_elem_sides_count_local = malloc(sizeof(int) * dpi->num_side_sets_global);
+
+  // suppress warning I'm unsure about
+  GOMA_ASSERT_ALWAYS((((size_t) dpi->num_side_sets_global) * sizeof(int)) < PTRDIFF_MAX);
+  // end suppress
+  int *ss_global_nodes = calloc(dpi->num_side_sets_global, sizeof(int));
+  for (int i = 0; i < dpi->num_neighbors; i++) {
+    for (int j = 0; j < dpi->num_side_sets_global; j++) {
+      ss_global_nodes[j] += recv_nodes[i*dpi->num_side_sets_global + j];
+    }
+  }
+
   for (int i = 0; i < dpi->num_side_sets_global; i++) {
     ss_elem_sides_count_local[i] = 0;
     if (ss_global_nodes[i] > 0) {
@@ -306,10 +395,42 @@ goma_error exchange_neighbor_ss_edges(Exo_DB *exo, Dpi *dpi) {
     }
   }
 
-  for (int i = 0; i < dpi->num_side_sets_global; i++) {
-    for (int j = 0; j < ss_global_nodes[i]; j++) {
-      int node = global_nodes[i][j];
-      if (node != -1) {
+  int_pair **known_ss_elem_sides_local = malloc(sizeof(int_pair *) * dpi->num_side_sets_global);
+  int *known_ss_elem_sides_count = malloc(sizeof(int) * dpi->num_side_sets_global);
+  for (int i = 0; i < exo->num_side_sets; i++) {
+    known_ss_elem_sides_local[i] = calloc(exo->ss_num_sides[i], sizeof(int_pair));
+    known_ss_elem_sides_count[i] = 0;
+    for (int j = 0; j < exo->ss_num_sides[i]; j++) {
+      int_pair pair = {exo->ss_elem_list[exo->ss_elem_index[i] + j], exo->ss_side_list[exo->ss_elem_index[i] + j]};
+      known_ss_elem_sides_local[i][j] = pair;
+      known_ss_elem_sides_count[i] += 1;
+    }
+    qsort(known_ss_elem_sides_local[i], known_ss_elem_sides_count[i], sizeof(int_pair),
+          int_pair_compare);
+  }
+
+  // loop over all sides and see if we find a matching side (start slow way)
+  int other_side_nodes[MAX_NODES_PER_SIDE];
+  for (int k = 0; k < dpi->num_neighbors; k++) {
+    for (int i = 0; i < dpi->num_side_sets_global; i++) {
+      int offset = 0;
+      for (int side = 0; side < recv_sides[k * dpi->num_side_sets_global + i]; side++) {
+        int n_nodes_other = recv_nodes_per_side[k*dpi->num_side_sets_global + i][side];
+        // setup other side nodes
+        bool skip = false;
+        for (int n = 0; n < n_nodes_other; n++) {
+          other_side_nodes[n] = global_nodes[k*dpi->num_side_sets_global + i][offset + n];
+          if (other_side_nodes[n] == -1) {
+            skip = true;
+          }
+        }
+        offset += n_nodes_other;
+        if (skip) {
+          continue;
+        }
+
+        // find matching elem side
+        int node = other_side_nodes[0];
         for (int idx = exo->node_elem_pntr[node]; idx < exo->node_elem_pntr[node + 1]; idx++) {
           int elem = exo->node_elem_list[idx];
           int ielem_type = exo->eb_elem_itype[exo->elem_eb[elem]];
@@ -337,27 +458,37 @@ goma_error exchange_neighbor_ss_edges(Exo_DB *exo, Dpi *dpi) {
 
             if (found) {
               bool found_all = true;
-              bool all_known = true;
+              bool all_known = false;
+              if (num_nodes_on_side != n_nodes_other) {
+                found_all = false;
+              }
               for (int k = 0; k < num_nodes_on_side; k++) {
                 int sn = side_nodes[k];
-                int *p =
-                    bsearch(&sn, global_nodes[i], ss_global_nodes[i], sizeof(int), int_compare);
-                int *q = bsearch(&sn, ss_edge_info[i].global_node_ids, ss_edge_info[i].total_nodes,
-                                 sizeof(int), int_compare);
-                if (q == NULL) {
-                  all_known = false;
+                int found_ln = false;
+                for (int n = 0; n < n_nodes_other; n++) {
+                  if (sn == other_side_nodes[n]) {
+                    found_ln = true;
+                  }
                 }
-                if (p == NULL && q == NULL) {
+                if (!found_ln) {
                   found_all = false;
                 }
               }
-
+              int_pair elem_side = {elem, side};
+              if (found_all) {
+                int_pair *exists =
+                  bsearch(&elem_side, known_ss_elem_sides_local[i], known_ss_elem_sides_count[i],
+                    sizeof(int_pair), int_pair_compare);
+                if (exists != NULL) {
+                  all_known = true;
+                }
+              }
+              
               if (found_all && !all_known) {
                 if (ss_elem_sides_count_local[i] > 1) {
                   qsort(ss_elem_sides_local[i], ss_elem_sides_count_local[i], sizeof(int_pair),
                         int_pair_compare);
                 }
-                int_pair elem_side = {elem, side};
                 int_pair *exists =
                     bsearch(&elem_side, ss_elem_sides_local[i], ss_elem_sides_count_local[i],
                             sizeof(int_pair), int_pair_compare);
@@ -370,6 +501,7 @@ goma_error exchange_neighbor_ss_edges(Exo_DB *exo, Dpi *dpi) {
           }
         }
       }
+      assert(offset == recv_nodes[k * dpi->num_side_sets_global + i ]);
     }
   }
 
@@ -484,6 +616,44 @@ goma_error exchange_neighbor_ss_edges(Exo_DB *exo, Dpi *dpi) {
           (exo->ss_node_side_index[i][j] + exo->ss_node_cnt_list[i][j]);
     }
   }
+  //char *format = "sgid%d.csv";
+  //char fname[80];
+  //snprintf(fname, 79, format, ProcID);
+  //FILE *f = fopen(fname, "w");
+  //fprintf(f,"x,y,z,gid,ss\n");
+  ////for (int k = 0; k < exo->num_side_sets; k++) {
+  ////  for (int i = 0; i < ss_edge_info[k].total_nodes; i++) {
+  ////    int ln = in_list(ss_edge_info[k].global_node_ids[i], 0, exo->num_nodes, dpi->node_index_global);
+  ////  }
+  ////}
+  //for (int i = 0; i < exo->num_side_sets; i++) {
+  //  int offset = 0;
+  //  for (int e = 0; e < exo->ss_num_sides[i]; e++) {
+  //    int ielem = exo->ss_elem_list[exo->ss_elem_index[i] + e];
+  //    int ielem_type = Elem_Type(exo, ielem);
+  //    int local_side_node_list[MAX_NODES_PER_SIDE];
+
+  //    /* find SIDE info for primary side */
+  //    int num_nodes_on_side = 0;
+
+  //    int id_side = exo->ss_side_list[exo->ss_elem_index[i] + e];
+  //    get_side_info(ielem_type, id_side, &num_nodes_on_side, local_side_node_list);
+  //    for (int j = 0; j < num_nodes_on_side; j++) {
+  //      int ln = exo->ss_node_list[i][j + offset];
+  //      fprintf(f, "%g,%g,%g,%d,%d\n", 
+  //          exo->x_coord[ln],
+  //          exo->y_coord[ln],
+  //          exo->z_coord[ln],
+  //          dpi->node_index_global[ln],
+  //          exo->ss_id[i]);
+  //    }
+  //    offset += num_nodes_on_side;
+  //  }
+  //}
+  //fclose(f);
+  //MPI_Barrier(MPI_COMM_WORLD);
+  //MPI_Finalize();
+  //exit(0);
 
   free(requests);
   free(rotated_side_sets);
@@ -495,7 +665,20 @@ goma_error exchange_neighbor_ss_edges(Exo_DB *exo, Dpi *dpi) {
   free(recv_nodes);
   free(send_nodes);
 
-  for (int i = 0; i < dpi->num_side_sets_global; i++) {
+  for (int i = 0; i < dpi->num_neighbors * dpi->num_side_sets_global; i++) {
+    if (recv_sides[i] > 0) {
+      free(recv_nodes_per_side[i]);
+    }
+  }
+  free(recv_nodes_per_side);
+  free(recv_sides);
+  free(send_sides);
+  free(known_ss_elem_sides_count);
+  for (int i = 0; i < exo->num_side_sets; i++) {
+    free(known_ss_elem_sides_local[i]);
+  }
+  free(known_ss_elem_sides_local);
+  for (int i = 0; i < dpi->num_neighbors*dpi->num_side_sets_global; i++) {
     free(global_nodes[i]);
   }
   free(global_nodes);
@@ -654,6 +837,34 @@ goma_error setup_rotated_bc_nodes(
     if (rotations[i].is_rotated) {
       goma_best_coordinate_system_3D(node_normals[i].normals, node_normals[i].n_normals,
                                      rotations[i].rotated_coord);
+    }
+  }
+
+  char fname[80] = "normals.csv";
+  multiname(fname, ProcID, Num_Proc);
+
+  FILE *file = fopen(fname, "w");
+  fprintf(file, "x,y,z,nx,ny,nz,normal_id,c1x,c1y,c1z,c2x,c2y,c2z,c3x,c3y,c3z,ProcID\n");
+  for (int i = 0; i < exo->num_nodes; i++) {
+    for (int j = 0; j < node_normals[i].n_normals; j++) {
+    fprintf(file, "%g,%g,%g,%g,%g,%g,%d,%g,%g,%g,%g,%g,%g,%g,%g,%g,%d\n",
+        exo->x_coord[i],
+        exo->y_coord[i],
+        exo->z_coord[i],
+        node_normals[i].normals[j]->normal->data[0],
+        node_normals[i].normals[j]->normal->data[1],
+        node_normals[i].normals[j]->normal->data[2],
+        i,
+        rotations[i].rotated_coord[0]->normal->data[0],
+        rotations[i].rotated_coord[0]->normal->data[1],
+        rotations[i].rotated_coord[0]->normal->data[2],
+        rotations[i].rotated_coord[1]->normal->data[0],
+        rotations[i].rotated_coord[1]->normal->data[1],
+        rotations[i].rotated_coord[1]->normal->data[2],
+        rotations[i].rotated_coord[2]->normal->data[0],
+        rotations[i].rotated_coord[2]->normal->data[1],
+        rotations[i].rotated_coord[2]->normal->data[2],
+        ProcID);
     }
   }
 

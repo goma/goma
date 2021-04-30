@@ -11,7 +11,7 @@
 struct Boundary_Condition;
 
 #ifndef GOMA_ROTATION_CRITICAL_ANGLE
-#define GOMA_ROTATION_CRITICAL_ANGLE 45
+#define GOMA_ROTATION_CRITICAL_ANGLE M_PI_4
 #endif
 
 typedef struct {
