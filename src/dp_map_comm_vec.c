@@ -266,7 +266,7 @@ exchange_neighbor_proc_info(int num_neighbors, COMM_NP_STRUCT *np_ptr)
      *  However, so will aztec, so this is no loss in current generality.
      ****************************************************************************/
 {
-  static int mtype = 115;
+  static int mtype = 500;
   char *yo = "exchange_neighbor_proc_info ERROR: ";
 #ifdef PARALLEL
   int p, retn;
@@ -279,6 +279,7 @@ exchange_neighbor_proc_info(int num_neighbors, COMM_NP_STRUCT *np_ptr)
     retn = MPI_Irecv((np_ptr->recv_message_buf), np_ptr->recv_message_length,
 	             MPI_BYTE, np_ptr->neighbor_ProcID, mtype,
 		     MPI_COMM_WORLD, &(np_ptr->recv_request));
+    printf("Proc %d recv %d bytes fr: Proc %d\n", ProcID,np_ptr->recv_message_length, np_ptr->neighbor_ProcID); 
     if (retn != MPI_SUCCESS) {
       fprintf(stderr,"%s Proc %d: Irecv to %d failed post: %d\n", yo, ProcID,
 	      np_ptr->neighbor_ProcID, retn);
@@ -295,6 +296,7 @@ exchange_neighbor_proc_info(int num_neighbors, COMM_NP_STRUCT *np_ptr)
     retn = MPI_Isend(np_ptr->send_message_buf, np_ptr->send_message_length,
 	             MPI_BYTE, np_ptr->neighbor_ProcID, mtype,
 		     MPI_COMM_WORLD, &(np_ptr->send_request));
+    printf("Proc %d send %d bytes to: Proc %d\n", ProcID,np_ptr->send_message_length, np_ptr->neighbor_ProcID); 
     if (retn != MPI_SUCCESS) {
       fprintf(stderr,"%s Proc %d: Isend to %d failed post: %d\n", yo, ProcID,
 	      np_ptr->neighbor_ProcID, retn);
@@ -330,7 +332,7 @@ exchange_neighbor_proc_info(int num_neighbors, COMM_NP_STRUCT *np_ptr)
   }
 #endif
   mtype++;
-  if (mtype > 199) mtype = 115;
+  if (mtype > 700) mtype = 115;
 }
 /*********************************************************************************/
 /*********************************************************************************/

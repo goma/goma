@@ -289,7 +289,7 @@ goma_error exchange_neighbor_ss_edges(Exo_DB *exo, Dpi *dpi) {
     }
   }
 
-  MPI_Waitall(2 * dpi->num_neighbors, requests, MPI_STATUSES_IGNORE);
+  MPI_Waitall(req_count, requests, MPI_STATUSES_IGNORE);
 
 
   // get num sides
@@ -319,12 +319,14 @@ goma_error exchange_neighbor_ss_edges(Exo_DB *exo, Dpi *dpi) {
       recv_nodes_per_side[i] = NULL;
     }
   }
+
+  req_count = 0;
   for (int i = 0; i < dpi->num_neighbors; i++) {
     for (int j = 0; j < dpi->num_side_sets_global; j++) {
       int n_sides = recv_sides[i*dpi->num_side_sets_global + j];
       if ( n_sides > 0) {
         MPI_Irecv(recv_nodes_per_side[i*dpi->num_side_sets_global + j], n_sides, MPI_INT, dpi->neighbor[i],
-                  104 + j + dpi->neighbor[i], MPI_COMM_WORLD, &(requests[i]));
+                  104 + j + dpi->neighbor[i], MPI_COMM_WORLD, &(requests[req_count++]));
       }
     }
   }
@@ -333,10 +335,10 @@ goma_error exchange_neighbor_ss_edges(Exo_DB *exo, Dpi *dpi) {
     for (int j = 0; j < dpi->num_side_sets_global; j++) {
       MPI_Isend(ss_edge_info[j].node_per_side, send_sides[j], MPI_INT,
                 dpi->neighbor[i], 104 + j + ProcID, MPI_COMM_WORLD,
-                &(requests[dpi->num_neighbors + i]));
+                &(requests[req_count++]));
     }
   }
-  MPI_Waitall(2 * dpi->num_neighbors, requests, MPI_STATUSES_IGNORE);
+  MPI_Waitall(req_count, requests, MPI_STATUSES_IGNORE);
 
 
 
@@ -425,7 +427,7 @@ goma_error exchange_neighbor_ss_edges(Exo_DB *exo, Dpi *dpi) {
           }
         }
         offset += n_nodes_other;
-        if (skip) {
+        if (skip || n_nodes_other == 0) {
           continue;
         }
 
@@ -690,6 +692,8 @@ goma_error exchange_neighbor_ss_edges(Exo_DB *exo, Dpi *dpi) {
   }
   free(ss_elem_sides_count_local);
   free(ss_elem_sides_local);
+
+  MPI_Barrier(MPI_COMM_WORLD);
 
   return GOMA_SUCCESS;
 }
