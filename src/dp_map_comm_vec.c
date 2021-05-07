@@ -30,6 +30,7 @@
  */
 
 
+#include <mpi.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -125,18 +126,16 @@ setup_nodal_comm_map(Exo_DB *exo, Dpi *dpi, Comm_Ex **cx)
    *    p is the index of the neighboring processor, 
    *    neighbor[p] is its processor number
    */
-  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
-    for (p = 0; p < dpi->num_neighbors; p++) {
-      /*
-       *  Processor number of the neighboring processor
-       *  (0 to Nproc-1)
-       */
-      cx[imtrx][p].neighbor_name      = dpi->neighbor[p];
-      /*
-       * num_nodes_recv: The number of nodes to receive from this processor
-       */
-      cx[imtrx][p].num_nodes_recv     = (ptr_node_recv[p+1] - ptr_node_recv[p]);
-    }
+  for (p = 0; p < dpi->num_neighbors; p++) {
+    /*
+     *  Processor number of the neighboring processor
+     *  (0 to Nproc-1)
+     */
+    cx[0][p].neighbor_name      = dpi->neighbor[p];
+    /*
+     * num_nodes_recv: The number of nodes to receive from this processor
+     */
+    cx[0][p].num_nodes_recv     = (ptr_node_recv[p+1] - ptr_node_recv[p]);
   }
 
   /*
@@ -149,7 +148,6 @@ setup_nodal_comm_map(Exo_DB *exo, Dpi *dpi, Comm_Ex **cx)
   }
 #endif
 
-  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
   /*
    * Tell each of my neighbors how many nodes that I want from them.
    * Receive from my neighbors how many of my owned nodes I have
@@ -158,14 +156,21 @@ setup_nodal_comm_map(Exo_DB *exo, Dpi *dpi, Comm_Ex **cx)
     np_ptr = np_base;
     for (p = 0; p < dpi->num_neighbors; p++) {
       np_ptr->neighbor_ProcID = cx[0][p].neighbor_name;
-      np_ptr->send_message_buf = (void *) &(cx[imtrx][p].num_nodes_recv);
+      np_ptr->send_message_buf = (void *) &(cx[0][p].num_nodes_recv);
       np_ptr->send_message_length = sizeof(int);
-      np_ptr->recv_message_buf = (void *) &(cx[imtrx][p].num_nodes_send);
+      np_ptr->recv_message_buf = (void *) &(cx[0][p].num_nodes_send);
       np_ptr->recv_message_length = sizeof(int);
       np_ptr++;
     }
     exchange_neighbor_proc_info(dpi->num_neighbors, np_base);
-  }
+
+    for (p = 0; p < dpi->num_neighbors; p++) {
+      for (int imtrx = 1; imtrx < upd->Total_Num_Matrices; imtrx++) {
+        cx[imtrx][p].neighbor_name = cx[0][p].neighbor_name;
+        cx[imtrx][p].num_nodes_recv = cx[0][p].num_nodes_recv;
+        cx[imtrx][p].num_nodes_send = cx[0][p].num_nodes_send;
+      }
+    }
   /*
    *  Create space for storage of the node numbers that I must
    *  send to other processors, int list_node_send[].
@@ -266,7 +271,7 @@ exchange_neighbor_proc_info(int num_neighbors, COMM_NP_STRUCT *np_ptr)
      *  However, so will aztec, so this is no loss in current generality.
      ****************************************************************************/
 {
-  static int mtype = 500;
+  static int mtype = 115;
   char *yo = "exchange_neighbor_proc_info ERROR: ";
 #ifdef PARALLEL
   int p, retn;
@@ -279,7 +284,6 @@ exchange_neighbor_proc_info(int num_neighbors, COMM_NP_STRUCT *np_ptr)
     retn = MPI_Irecv((np_ptr->recv_message_buf), np_ptr->recv_message_length,
 	             MPI_BYTE, np_ptr->neighbor_ProcID, mtype,
 		     MPI_COMM_WORLD, &(np_ptr->recv_request));
-    printf("Proc %d recv %d bytes fr: Proc %d\n", ProcID,np_ptr->recv_message_length, np_ptr->neighbor_ProcID); 
     if (retn != MPI_SUCCESS) {
       fprintf(stderr,"%s Proc %d: Irecv to %d failed post: %d\n", yo, ProcID,
 	      np_ptr->neighbor_ProcID, retn);
@@ -296,7 +300,6 @@ exchange_neighbor_proc_info(int num_neighbors, COMM_NP_STRUCT *np_ptr)
     retn = MPI_Isend(np_ptr->send_message_buf, np_ptr->send_message_length,
 	             MPI_BYTE, np_ptr->neighbor_ProcID, mtype,
 		     MPI_COMM_WORLD, &(np_ptr->send_request));
-    printf("Proc %d send %d bytes to: Proc %d\n", ProcID,np_ptr->send_message_length, np_ptr->neighbor_ProcID); 
     if (retn != MPI_SUCCESS) {
       fprintf(stderr,"%s Proc %d: Isend to %d failed post: %d\n", yo, ProcID,
 	      np_ptr->neighbor_ProcID, retn);
@@ -332,7 +335,7 @@ exchange_neighbor_proc_info(int num_neighbors, COMM_NP_STRUCT *np_ptr)
   }
 #endif
   mtype++;
-  if (mtype > 700) mtype = 115;
+  if (mtype > 200) mtype = 115;
 }
 /*********************************************************************************/
 /*********************************************************************************/

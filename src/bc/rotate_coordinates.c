@@ -242,8 +242,8 @@ goma_error exchange_neighbor_ss_edges(Exo_DB *exo, Dpi *dpi) {
 
   int *recv_nodes = calloc(dpi->num_neighbors * dpi->num_side_sets_global, sizeof(int));
   for (int i = 0; i < dpi->num_neighbors; i++) {
-    MPI_Irecv(&recv_nodes[i * dpi->num_side_sets_global], dpi->num_side_sets_global, MPI_INT,
-              dpi->neighbor[i], 102 + dpi->neighbor[i], MPI_COMM_WORLD, &(requests[i]));
+    GOMA_CHECK_MPI_ERROR(MPI_Irecv(&recv_nodes[i * dpi->num_side_sets_global], dpi->num_side_sets_global, MPI_INT,
+              dpi->neighbor[i], 102 + dpi->neighbor[i], MPI_COMM_WORLD, &(requests[i])));
   }
 
   int *send_nodes = calloc(dpi->num_side_sets_global, sizeof(int));
@@ -251,10 +251,10 @@ goma_error exchange_neighbor_ss_edges(Exo_DB *exo, Dpi *dpi) {
     send_nodes[j] = ss_edge_info[j].total_nodes;
   }
   for (int i = 0; i < dpi->num_neighbors; i++) {
-    MPI_Isend(send_nodes, dpi->num_side_sets_global, MPI_INT, dpi->neighbor[i], 102 + ProcID,
-              MPI_COMM_WORLD, &(requests[dpi->num_neighbors + i]));
+    GOMA_CHECK_MPI_ERROR(MPI_Send(send_nodes, dpi->num_side_sets_global, MPI_INT, dpi->neighbor[i], 102 + ProcID,
+              MPI_COMM_WORLD));
   }
-  MPI_Waitall(2 * dpi->num_neighbors, requests, MPI_STATUSES_IGNORE);
+  GOMA_CHECK_MPI_ERROR(MPI_Waitall(dpi->num_neighbors, requests, MPI_STATUSES_IGNORE));
 
   // get nodes
 
@@ -272,8 +272,8 @@ goma_error exchange_neighbor_ss_edges(Exo_DB *exo, Dpi *dpi) {
     for (int j = 0; j < dpi->num_side_sets_global; j++) {
       int count = recv_nodes[i * dpi->num_side_sets_global + j];
       if (count > 0) {
-        MPI_Irecv(global_nodes[i * dpi->num_side_sets_global + j], count, MPI_INT, dpi->neighbor[i],
-                  103 + j + dpi->neighbor[i], MPI_COMM_WORLD, &(requests[req_count++]));
+        GOMA_CHECK_MPI_ERROR(MPI_Irecv(global_nodes[i * dpi->num_side_sets_global + j], count, MPI_INT, dpi->neighbor[i],
+                  103 + j + dpi->neighbor[i], MPI_COMM_WORLD, &(requests[req_count++])));
       }
       offsets[j] += count;
     }
@@ -282,14 +282,13 @@ goma_error exchange_neighbor_ss_edges(Exo_DB *exo, Dpi *dpi) {
   for (int i = 0; i < dpi->num_neighbors; i++) {
     for (int j = 0; j < dpi->num_side_sets_global; j++) {
       if (ss_edge_info[j].total_nodes > 0) {
-        MPI_Isend(ss_edge_info[j].global_node_ids, ss_edge_info[j].total_nodes, MPI_INT,
-                  dpi->neighbor[i], 103 + j + ProcID, MPI_COMM_WORLD,
-                  &(requests[req_count++]));
+        GOMA_CHECK_MPI_ERROR(MPI_Send(ss_edge_info[j].global_node_ids, ss_edge_info[j].total_nodes, MPI_INT,
+                  dpi->neighbor[i], 103 + j + ProcID, MPI_COMM_WORLD));
       }
     }
   }
 
-  MPI_Waitall(req_count, requests, MPI_STATUSES_IGNORE);
+  GOMA_CHECK_MPI_ERROR(MPI_Waitall(req_count, requests, MPI_STATUSES_IGNORE));
 
 
   // get num sides
@@ -300,16 +299,19 @@ goma_error exchange_neighbor_ss_edges(Exo_DB *exo, Dpi *dpi) {
   }
 
   for (int i = 0; i < dpi->num_neighbors; i++) {
-    MPI_Irecv(&(recv_sides[i*dpi->num_side_sets_global]), dpi->num_side_sets_global, MPI_INT, dpi->neighbor[i],
-              104 + dpi->neighbor[i], MPI_COMM_WORLD, &(requests[i]));
+    GOMA_CHECK_MPI_ERROR(MPI_Irecv(&(recv_sides[i*dpi->num_side_sets_global]), dpi->num_side_sets_global, MPI_INT, dpi->neighbor[i],
+              104 + dpi->neighbor[i], MPI_COMM_WORLD, &(requests[i])));
+    //printf("-1 Proc %d IRECV %d fr %d size %d\n", ProcID, 104+ProcID, dpi->neighbor[i], dpi->num_side_sets_global); 
   }
 
   for (int i = 0; i < dpi->num_neighbors; i++) {
-    MPI_Isend(send_sides, dpi->num_side_sets_global, MPI_INT,
-              dpi->neighbor[i], 104 + ProcID, MPI_COMM_WORLD,
-              &(requests[dpi->num_neighbors + i]));
+    GOMA_CHECK_MPI_ERROR(MPI_Send(send_sides, dpi->num_side_sets_global, MPI_INT,
+              dpi->neighbor[i], 104 + ProcID, MPI_COMM_WORLD));
+    //printf("-1 Proc %d ISEND %d to %d size %d\n", ProcID, 104+ProcID, dpi->neighbor[i], dpi->num_side_sets_global); 
   }
-  MPI_Waitall(2 * dpi->num_neighbors, requests, MPI_STATUSES_IGNORE);
+  GOMA_CHECK_MPI_ERROR(MPI_Waitall(dpi->num_neighbors, requests, MPI_STATUSES_IGNORE));
+
+  MPI_Barrier(MPI_COMM_WORLD);
 
   int **recv_nodes_per_side = calloc(dpi->num_neighbors * dpi->num_side_sets_global, sizeof(int*));
   for (int i = 0; i < dpi->num_neighbors * dpi->num_side_sets_global; i++) {
@@ -325,22 +327,23 @@ goma_error exchange_neighbor_ss_edges(Exo_DB *exo, Dpi *dpi) {
     for (int j = 0; j < dpi->num_side_sets_global; j++) {
       int n_sides = recv_sides[i*dpi->num_side_sets_global + j];
       if ( n_sides > 0) {
-        MPI_Irecv(recv_nodes_per_side[i*dpi->num_side_sets_global + j], n_sides, MPI_INT, dpi->neighbor[i],
-                  104 + j + dpi->neighbor[i], MPI_COMM_WORLD, &(requests[req_count++]));
+        GOMA_CHECK_MPI_ERROR(MPI_Irecv(recv_nodes_per_side[i*dpi->num_side_sets_global + j], n_sides, MPI_INT, dpi->neighbor[i],
+                  104 + j + dpi->neighbor[i], MPI_COMM_WORLD, &(requests[req_count++])));
+    //printf("-2 Proc %d IRECV %d fr %d size %d\n", ProcID, 204 + j + dpi->neighbor[i], dpi->neighbor[i], dpi->num_side_sets_global); 
       }
     }
   }
 
   for (int i = 0; i < dpi->num_neighbors; i++) {
     for (int j = 0; j < dpi->num_side_sets_global; j++) {
-      MPI_Isend(ss_edge_info[j].node_per_side, send_sides[j], MPI_INT,
-                dpi->neighbor[i], 104 + j + ProcID, MPI_COMM_WORLD,
-                &(requests[req_count++]));
+      if (send_sides[j] > 0) {
+      GOMA_CHECK_MPI_ERROR(MPI_Send(ss_edge_info[j].node_per_side, send_sides[j], MPI_INT,
+                dpi->neighbor[i], 104 + j + ProcID, MPI_COMM_WORLD));
+      }
+    //printf("-2 Proc %d ISEND %d to %d size %d\n", ProcID, 204 + j + ProcID, dpi->neighbor[i], dpi->num_side_sets_global); 
     }
   }
-  MPI_Waitall(req_count, requests, MPI_STATUSES_IGNORE);
-
-
+  GOMA_CHECK_MPI_ERROR(MPI_Waitall(req_count, requests, MPI_STATUSES_IGNORE));
 
   int_pair *global_to_local = calloc(exo->num_nodes, sizeof(int_pair));
   for (int i = 0; i < exo->num_nodes; i++) {
@@ -653,7 +656,6 @@ goma_error exchange_neighbor_ss_edges(Exo_DB *exo, Dpi *dpi) {
   //  }
   //}
   //fclose(f);
-  //MPI_Barrier(MPI_COMM_WORLD);
   //MPI_Finalize();
   //exit(0);
 
@@ -692,8 +694,6 @@ goma_error exchange_neighbor_ss_edges(Exo_DB *exo, Dpi *dpi) {
   }
   free(ss_elem_sides_count_local);
   free(ss_elem_sides_local);
-
-  MPI_Barrier(MPI_COMM_WORLD);
 
   return GOMA_SUCCESS;
 }
@@ -844,33 +844,33 @@ goma_error setup_rotated_bc_nodes(
     }
   }
 
-  char fname[80] = "normals.csv";
-  multiname(fname, ProcID, Num_Proc);
+  //char fname[80] = "normals.csv";
+  //multiname(fname, ProcID, Num_Proc);
 
-  FILE *file = fopen(fname, "w");
-  fprintf(file, "x,y,z,nx,ny,nz,normal_id,c1x,c1y,c1z,c2x,c2y,c2z,c3x,c3y,c3z,ProcID\n");
-  for (int i = 0; i < exo->num_nodes; i++) {
-    for (int j = 0; j < node_normals[i].n_normals; j++) {
-    fprintf(file, "%g,%g,%g,%g,%g,%g,%d,%g,%g,%g,%g,%g,%g,%g,%g,%g,%d\n",
-        exo->x_coord[i],
-        exo->y_coord[i],
-        exo->z_coord[i],
-        node_normals[i].normals[j]->normal->data[0],
-        node_normals[i].normals[j]->normal->data[1],
-        node_normals[i].normals[j]->normal->data[2],
-        i,
-        rotations[i].rotated_coord[0]->normal->data[0],
-        rotations[i].rotated_coord[0]->normal->data[1],
-        rotations[i].rotated_coord[0]->normal->data[2],
-        rotations[i].rotated_coord[1]->normal->data[0],
-        rotations[i].rotated_coord[1]->normal->data[1],
-        rotations[i].rotated_coord[1]->normal->data[2],
-        rotations[i].rotated_coord[2]->normal->data[0],
-        rotations[i].rotated_coord[2]->normal->data[1],
-        rotations[i].rotated_coord[2]->normal->data[2],
-        ProcID);
-    }
-  }
+  //FILE *file = fopen(fname, "w");
+  //fprintf(file, "x,y,z,nx,ny,nz,normal_id,c1x,c1y,c1z,c2x,c2y,c2z,c3x,c3y,c3z,ProcID\n");
+  //for (int i = 0; i < exo->num_nodes; i++) {
+  //  for (int j = 0; j < node_normals[i].n_normals; j++) {
+  //  fprintf(file, "%g,%g,%g,%g,%g,%g,%d,%g,%g,%g,%g,%g,%g,%g,%g,%g,%d\n",
+  //      exo->x_coord[i],
+  //      exo->y_coord[i],
+  //      exo->z_coord[i],
+  //      node_normals[i].normals[j]->normal->data[0],
+  //      node_normals[i].normals[j]->normal->data[1],
+  //      node_normals[i].normals[j]->normal->data[2],
+  //      i,
+  //      rotations[i].rotated_coord[0]->normal->data[0],
+  //      rotations[i].rotated_coord[0]->normal->data[1],
+  //      rotations[i].rotated_coord[0]->normal->data[2],
+  //      rotations[i].rotated_coord[1]->normal->data[0],
+  //      rotations[i].rotated_coord[1]->normal->data[1],
+  //      rotations[i].rotated_coord[1]->normal->data[2],
+  //      rotations[i].rotated_coord[2]->normal->data[0],
+  //      rotations[i].rotated_coord[2]->normal->data[1],
+  //      rotations[i].rotated_coord[2]->normal->data[2],
+  //      ProcID);
+  //  }
+  //}
 
   goma_automatic_rotations.automatic_rotations = true;
   goma_automatic_rotations.rotation_nodes = rotations;

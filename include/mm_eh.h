@@ -34,6 +34,7 @@ typedef int goma_error;
 #define GOMA_SUCCESS 0
 #define GOMA_DEBUG   1
 
+
 #include <stdarg.h> /* for var args... */
 #include <stdbool.h>
 
@@ -158,5 +159,15 @@ extern int current_severity;   /* global error signal (-1=die,0=prnt,1=dbg) */
 #ifndef DEFAULT_GOMA_LOG_FILENAME
 #define DEFAULT_GOMA_LOG_FILENAME ".log"
 #endif
+
+#define GOMA_CHECK_MPI_ERROR(ierr) \
+do { \
+  if (ierr != MPI_SUCCESS) { \
+    char mpi_error_string[MPI_MAX_ERROR_STRING]; \
+    int error_string_length; \
+    MPI_Error_string(ierr , mpi_error_string, &error_string_length); \
+    GOMA_EH(GOMA_ERROR,"MPI error %d %s", ierr, mpi_error_string); \
+  } \
+} while (0)
 
 #endif

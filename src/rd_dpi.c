@@ -415,10 +415,8 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
   MPI_Allreduce(global_owners_max, all_global_owners_max, d->num_nodes_global, MPI_INT, MPI_MAX,
                 MPI_COMM_WORLD);
 
-  for (int i = 0; i < d->num_nodes_global; i++) {
-    if (all_global_owners_min[i] != all_global_owners_max[i]) {
-      GOMA_EH(GOMA_ERROR, "Inconsistent node owners");
-    }
+  if (all_global_owners_min[0] != all_global_owners_max[0]) {
+    GOMA_EH(GOMA_ERROR, "Inconsistent node owners");
   }
   free(global_owners_min);
   free(global_owners_max);
