@@ -724,11 +724,11 @@ goma_error setup_rotated_bc_nodes(
 
   struct node_normal *node_normals = malloc(sizeof(struct node_normal) * exo->num_nodes);
   for (int i = 0; i < exo->num_nodes; i++) {
-    node_normals[i].normals = malloc(sizeof(goma_normal *) * GOMA_MAX_NORMALS_PER_NODE);
+    node_normals[i].normals = NULL; //malloc(sizeof(goma_normal *) * GOMA_MAX_NORMALS_PER_NODE);
     node_normals[i].n_normals = 0;
-    for (int j = 0; j < GOMA_MAX_NORMALS_PER_NODE; j++) {
-      node_normals[i].normals[j] = goma_normal_alloc(3);
-    }
+    //for (int j = 0; j < GOMA_MAX_NORMALS_PER_NODE; j++) {
+    //  node_normals[i].normals[j] = goma_normal_alloc(3);
+    //}
   }
 
   int old_assemble_jacobian_setting = af->Assemble_Jacobian;
@@ -800,6 +800,12 @@ goma_error setup_rotated_bc_nodes(
 
             int n_index = node_normals[I].n_normals;
             node_normals[I].n_normals++;
+	    if (n_index == 0) {
+              node_normals[I].normals = malloc(sizeof(goma_normal *) * GOMA_MAX_NORMALS_PER_NODE);
+              for (int j = 0; j < GOMA_MAX_NORMALS_PER_NODE; j++) {
+                node_normals[I].normals[j] = goma_normal_alloc(3);
+              }
+	    }
             if (node_normals[I].n_normals > GOMA_MAX_NORMALS_PER_NODE) {
               GOMA_EH(GOMA_ERROR, "GOMA_MAX_NORMALS_PER_NODE too small, currently %d",
                       GOMA_MAX_NORMALS_PER_NODE);
@@ -875,10 +881,12 @@ goma_error setup_rotated_bc_nodes(
   goma_automatic_rotations.automatic_rotations = true;
   goma_automatic_rotations.rotation_nodes = rotations;
   for (int i = 0; i < exo->num_nodes; i++) {
-    for (int j = 0; j < GOMA_MAX_NORMALS_PER_NODE; j++) {
-      goma_normal_free(node_normals[i].normals[j]);
+    if (node_normals[i].normals != NULL) {
+      for (int j = 0; j < GOMA_MAX_NORMALS_PER_NODE; j++) {
+        goma_normal_free(node_normals[i].normals[j]);
+      }
+      free(node_normals[i].normals);
     }
-    free(node_normals[i].normals);
   }
   free(node_normals);
   free(bc_is_rotated);
