@@ -1788,40 +1788,6 @@ rd_bc_specs(FILE *ifp,
           break;
 
 	case CAP_REPULSE_USER_BC:
-
-	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", 
-		      &BC_Types[ibc].BC_Data_Float[0],
-		      &BC_Types[ibc].BC_Data_Float[1],
-		      &BC_Types[ibc].BC_Data_Float[2],
-		      &BC_Types[ibc].BC_Data_Float[3],
-		      &BC_Types[ibc].BC_Data_Float[4],
-		      &BC_Types[ibc].BC_Data_Float[5],
-		      &BC_Types[ibc].BC_Data_Float[6],
-		      &BC_Types[ibc].BC_Data_Float[7],
-		      &BC_Types[ibc].BC_Data_Float[8],
-		      &BC_Types[ibc].BC_Data_Float[9],
-		      &BC_Types[ibc].BC_Data_Float[10],
-		      &BC_Types[ibc].BC_Data_Float[11],
-		      &BC_Types[ibc].BC_Data_Float[12],
-		      &BC_Types[ibc].BC_Data_Float[13]) != 14)
-	    {
-	      sr = sprintf(err_msg, "%s: Expected 14 flts for %s.",
-			   yo, BC_Types[ibc].desc->name1);
-	      EH(-1, err_msg);
-	    }
-
-	   for(i=0;i<14;i++) SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].BC_Data_Float[i]);
-
-	  /* Try reading the optional integer. */
-	  if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[2]) != 1)
-	    {
-	      BC_Types[ibc].BC_Data_Int[2] = -1;
-	    }
-	  else
-	    SPF(endofstring(echo_string)," %d",BC_Types[ibc].BC_Data_Int[2]); 
-
-	  break;
-	case CAP_REPULSE_ROLL_BC:
 	case QRAD_REPULSE_ROLL_BC:
 
 	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", 
@@ -1847,6 +1813,60 @@ rd_bc_specs(FILE *ifp,
 	    }
 
 	   for(i=0;i<15;i++) SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].BC_Data_Float[i]);
+
+	  /* Try reading the optional integer. */
+	  if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[2]) != 1)
+	    {
+	      BC_Types[ibc].BC_Data_Int[2] = -1;
+	    }
+	  else
+	    SPF(endofstring(echo_string)," %d",BC_Types[ibc].BC_Data_Int[2]); 
+
+	  break;
+	case CAP_REPULSE_ROLL_BC:
+
+	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf",
+		      &BC_Types[ibc].BC_Data_Float[0],
+		      &BC_Types[ibc].BC_Data_Float[1],
+		      &BC_Types[ibc].BC_Data_Float[2],
+		      &BC_Types[ibc].BC_Data_Float[3],
+		      &BC_Types[ibc].BC_Data_Float[4],
+		      &BC_Types[ibc].BC_Data_Float[5],
+		      &BC_Types[ibc].BC_Data_Float[6],
+		      &BC_Types[ibc].BC_Data_Float[7],
+		      &BC_Types[ibc].BC_Data_Float[8],
+		      &BC_Types[ibc].BC_Data_Float[9],
+		      &BC_Types[ibc].BC_Data_Float[10],
+		      &BC_Types[ibc].BC_Data_Float[11]) != 12)
+	    {
+	      sr = sprintf(err_msg, "%s: Expected 12 required flts for %s.",
+			   yo, BC_Types[ibc].desc->name1);
+	      EH(-1, err_msg);
+	    }
+
+	   for(i=0;i<12;i++) SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].BC_Data_Float[i]);
+	  /* Try reading the optional integer. */
+          if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[0]) != 1)
+            {
+              BC_Types[ibc].BC_Data_Int[0] = -1;
+            }
+          else
+            SPF(endofstring(echo_string)," %d",BC_Types[ibc].BC_Data_Int[0]);
+
+	  if ( fscanf(ifp, "%lf %lf %lf %lf", 
+		      &BC_Types[ibc].BC_Data_Float[12],
+		      &BC_Types[ibc].BC_Data_Float[13],
+		      &BC_Types[ibc].BC_Data_Float[14],
+		      &BC_Types[ibc].BC_Data_Float[15]) != 4)
+	    {
+	      sr = sprintf(err_msg, "%s: Expected 12 required flts for %s.",
+			   yo, BC_Types[ibc].desc->name1);
+	      EH(-1, err_msg);
+              BC_Types[ibc].BC_Data_Float[12] = 1.;
+              BC_Types[ibc].BC_Data_Float[13] = 2.;
+              BC_Types[ibc].BC_Data_Float[14] = 0.;
+              BC_Types[ibc].BC_Data_Float[15] = 1.;
+	    }
 
 	  /* Try reading the optional integer. */
 	  if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[2]) != 1)

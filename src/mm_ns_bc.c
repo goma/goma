@@ -5671,9 +5671,9 @@ apply_repulsion_roll (double cfunc[MDE][DIM],
 	         const double origin[3],	/* roll axis origin (x,y,z) */
 	         const double dir_angle[3],	/* axis direction angles */
 		 const double omega, /* roll rotation rate  */
+	         const double P_rep,	/* repulsion coefficient */
 		 const double hscale, /* repulsion length scale */
 	         const double repexp,	/* repulsive force exponent */
-	         const double P_rep,	/* repulsion coefficient */
 		 const double gas_visc, /* inverse slip coefficient  */
                  const double exp_scale,      /* DCL exculsion zone scale   */
                  const int dcl_node,            /* DCL NS id  */
@@ -5788,10 +5788,13 @@ apply_repulsion_roll (double cfunc[MDE][DIM],
                           +SQUARE(coord[2]-point[2]));
            }  else      {
            dcl_dist = 0.;
-           WH(-1,"No DCL node for CAP_REPULSE_TABLE....\n");
+           WH(-1,"No DCL node for CAP_REPULSE_ROLL....\n");
            }
 /*  modifying function for DCL  */
-           mod_factor = 1. - exp(-dcl_dist/exp_scale);
+      if(dcl_node != -1)
+          { mod_factor = 1. - exp(-dcl_dist/exp_scale);  }
+      else
+	  { mod_factor = 1.;}
 
 /*  repulsion function  */
            force = -P_rep*mod_factor/pow(dist/hscale, repexp); 

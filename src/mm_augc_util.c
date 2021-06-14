@@ -808,6 +808,14 @@ load_extra_unknownsAC(int iAC,    /* ID NUMBER OF AC'S */
         xa[iAC] = mp_glob[mn]->u_species_source[1][3];
         break;
 
+      case TAGC_LATENT_HEAT_0:
+        xa[iAC] = mp_glob[mn]->latent_heat_vap[0];
+        break;
+
+      case TAGC_LATENT_HEAT_1:
+        xa[iAC] = mp_glob[mn]->latent_heat_vap[1];
+        break;
+
       default: 
 	printf("\n\t Error: Invalid Material Property Tag %d\n", augc[iAC].MPID);
 	exit(0);
@@ -1634,6 +1642,14 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
 
       case TAGC_SPECIES_SOURCE_1_P3:
         mp_glob[mn]->u_species_source[1][3] = lambda;
+        break;
+
+      case TAGC_LATENT_HEAT_0:
+        mp_glob[mn]->latent_heat_vap[0] = lambda;
+        break;
+
+      case TAGC_LATENT_HEAT_1:
+        mp_glob[mn]->latent_heat_vap[1] = lambda;
         break;
 
       default: 

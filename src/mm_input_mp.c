@@ -8665,23 +8665,24 @@ ECHO("\n----Acoustic Properties\n", echo_file);
           model_read = 1;
 	  if(read_bc_mp == -1) read_bc_mp = DROP_EVAP;
           mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
-          if ( fscanf(imp, "%lf %lf %lf %lf ",
-                            &a0, &a1, &a2, &a3) != 4)
+          if ( fscanf(imp, "%lf %lf %lf %lf %lf",
+                            &a0, &a1, &a2, &a3, &a4) != 5)
             {
                   sr = sprintf(err_msg,
-                               "Matl %s needs 4 floats for %s %s model.\n",
+                               "Matl %s needs 5 floats for %s %s model.\n",
                                pd_glob[mn]->MaterialName,
                                "Species Source", "DROP_EVAP");
                   EH(-1, err_msg);
             }
-          mat_ptr->u_species_source[species_no] = (dbl *) array_alloc(1,4,sizeof(dbl));
-          mat_ptr->len_u_species_source[species_no] = 4;
+          mat_ptr->u_species_source[species_no] = (dbl *) array_alloc(1,5,sizeof(dbl));
+          mat_ptr->len_u_species_source[species_no] = 5;
           mat_ptr->u_species_source[species_no][0] = a0;  /* liquid droplet concentration*/
           mat_ptr->u_species_source[species_no][1] = a1;  /* droplet radius*/
           mat_ptr->u_species_source[species_no][2] = a2;  /* droplet number concentration */
           mat_ptr->u_species_source[species_no][3] = a3;  /* fraction solvent evaporation */
+          mat_ptr->u_species_source[species_no][4] = a4;  /* Ideal Gas constant */
 
-          SPF_DBL_VEC(endofstring(es), 4,  mat_ptr->u_species_source[species_no]);
+          SPF_DBL_VEC(endofstring(es), 5,  mat_ptr->u_species_source[species_no]);
         }
       else if(model_read == -1)
 	  {

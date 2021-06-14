@@ -34843,6 +34843,7 @@ assemble_poynting(double time,	/* present time value */
                {
 		double init_radius=0.010, num_density=10., denom=1;
 		double settling, mu_liq=0.0000062, dens_ratio=864./1.2;
+		double boltz=1.38E-17;
 		err = get_continuous_species_terms(&s_terms, time, tt, dt, hsquared);
      		EH(err,"problem in getting the species terms");
 
@@ -34854,6 +34855,7 @@ assemble_poynting(double time,	/* present time value */
 		      num_density = mp->u_species_source[w][2];  
 		      P = MAX(DBL_SMALL, fv->restime);
 		      denom = MAX(DBL_SMALL,num_density*4*M_PIE*CUBE(init_radius)*SQUARE(P));
+	/*	      diff_const = boltz*fv->T/(6.*M_PIE*mp->viscosity*init_radius*P);  */
 		     }
                   time_source -= mp->molar_volume[w]*s_terms.MassSource[w]/denom; 
 		  if(P > DBL_SMALL)
@@ -34999,6 +35001,7 @@ assemble_poynting(double time,	/* present time value */
 		        {
 		         advection += wt_func*(vconv[p]*grad_phi_j[p]+v_grad[p]*mig_velo[p]*2*P*phi_j);
 	                 advection += diff_const*grad_phi_i[p]*grad_phi_j[p];
+/*			 advection += (-diff_const/P)*grad_phi_i[p]*v_grad[p];  */
 		        }
 		     if(explicit_deriv )
 			{
@@ -35046,14 +35049,14 @@ assemble_poynting(double time,	/* present time value */
 		  advection = diffusion = 0;
 	          if ((pd->e[eqn] & T_ADVECTION) && !Beers_Law )
                     {
+/*	             advection += (diff_const/fv->T)*grad_phi_i[p]*v_grad[p];  */
 		     if(explicit_deriv)
 			{
-	              advection = 0;
       		      for(w=0; w<pd->Num_Species_Eqn; w++)
         	         { advection += wt_func*d_drop_source[w]*s_terms.d_MassSource_dT[w][j];}
 			}
 		     else
-			{ advection = -wt_func*d_time_source*phi_j; }
+			{ advection += -wt_func*d_time_source*phi_j; }
 
 	              advection *= det_J * wt;
 	              advection *= h3;
@@ -35285,6 +35288,7 @@ restime_nobc_surf(double func[DIM],
   int var, dim;
 
   double v_grad[DIM], diff_const;
+  double init_radius=0.010, boltz=1.38E-17;
   
 /***************************** EXECUTION BEGINS *******************************/
   
@@ -35294,6 +35298,8 @@ restime_nobc_surf(double func[DIM],
   dim   = pd->Num_Dim;
 
   diff_const = mp->Rst_diffusion;
+
+/*  diff_const = boltz*fv->T/(6.*M_PIE*mp->viscosity*init_radius*fv->restime);  */
   for(j=0 ; j<dim ; j++)
      { v_grad[j] = fv->grad_restime[j]; }
 
@@ -35307,6 +35313,7 @@ restime_nobc_surf(double func[DIM],
 	      for (p=0; p<dim; p++)
 		{
 		  d_func[0][var][j] += fv->snormal[p]*diff_const*bf[var]->grad_phi[j][p];
+/*		  d_func[0][var][j] += fv->snormal[p]*diff_const*(-1./fv->restime)*v_grad[p];  */
 		}
 	    }
 	}

@@ -2504,7 +2504,7 @@ Diffusivity (void)
 	  { P = fv->P;}
 	else
 	  { P = upd->Pressure_Datum/10000.0;}
-
+/* First coefficient is A/sigma12/omega (0.001859 atm-cm^2-(g/mol)^1/2/(K^1.5-s))  */
 	mp->diffusivity[w] = mp->u_diffusivity[w][0]*
 		sqrt(1./mp->molecular_weight[w]+1./mp->u_diffusivity[w][1])
 			*pow(T,1.5)/P;

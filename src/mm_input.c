@@ -1467,8 +1467,8 @@ rd_timeint_specs(FILE *ifp,
     tran->eps = eps;
 
     /* initialize norm indicators */
-    for (i = 0; i < 9; i++) tran->use_var_norm[i] = 0;
-    tran->use_var_norm[9] = 1; /* for backwards Compatibility */
+    for (i = 0; i <= 9; i++) tran->use_var_norm[i] = 1;
+    /*tran->use_var_norm[9] = 1;  for backwards Compatibility */
     read_line(ifp, input, FALSE);
 
     if ( sscanf(input,"%d %d %d %d %d %d %d %d %d %d", 
@@ -1476,9 +1476,10 @@ rd_timeint_specs(FILE *ifp,
 		&tran->use_var_norm[2], &tran->use_var_norm[3], 
 		&tran->use_var_norm[4], &tran->use_var_norm[5],        
 		&tran->use_var_norm[6], &tran->use_var_norm[7], 
-		&tran->use_var_norm[8], &tran->use_var_norm[9]) < 8)   
+		&tran->use_var_norm[8], &tran->use_var_norm[9]) < 10)   
       {
-	fprintf(stdout, "Warning: Time step error prefers 1 flt 10 ints\n");
+	fprintf(stderr, "Defaulting on Time step error norm indicators\n");
+/*	fprintf(stdout, "Warning: Time step error prefers 1 flt 10 ints\n");
 	fprintf(stdout, 
 		"%s   d=%1d, v=%1d, T=%1d, y=%1d, P=%1d, S=%1d, V=%1d, sd=%1d, ls=%1d, ac=%1d\n", 
 		"Best guess:", 
@@ -1486,7 +1487,7 @@ rd_timeint_specs(FILE *ifp,
 		tran->use_var_norm[2], tran->use_var_norm[3],
 		tran->use_var_norm[4], tran->use_var_norm[5],
 		tran->use_var_norm[6], tran->use_var_norm[7],
-		tran->use_var_norm[8], tran->use_var_norm[9]);
+		tran->use_var_norm[8], tran->use_var_norm[9]);   */
       }
 
     SPF(echo_string,"%s = %.4g %d %d %d %d %d %d %d %d %d %d", "Time step error", tran->eps, 

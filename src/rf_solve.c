@@ -3113,7 +3113,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
                           DPRINTF(stderr,"  damping factor %g  \n",damp_factor1);
                        }
                    }   else {
-fprintf(stderr,"should be not successful %d %d %d \n",inewton,converged,success_dt);
+	DPRINTF(stderr,"should be not successful, Iter: %d Converged: %d Success_dt: %d \n",inewton,converged,success_dt);
 	DPRINTF(stderr,"\n\tlast time step failed, dt *= %g for next try!\n",
 		tran->time_step_decelerator);
 	      

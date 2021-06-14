@@ -90,7 +90,7 @@
 #endif
 
 #ifndef MAX_BC_FLOAT_DATA
-#define MAX_BC_FLOAT_DATA     15
+#define MAX_BC_FLOAT_DATA     16
 #endif
 
 #ifndef MAX_NODES_PER_SIDE

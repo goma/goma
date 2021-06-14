@@ -1100,6 +1100,14 @@ update_MT_parameter(double lambda, /* Parameter value */
       mp_glob[mn]->u_species_source[1][3] = lambda;
       break;
 
+    case TAGC_LATENT_HEAT_0:
+      mp_glob[mn]->latent_heat_vap[0] = lambda;
+      break;
+
+    case TAGC_LATENT_HEAT_1:
+      mp_glob[mn]->latent_heat_vap[1] = lambda;
+      break;
+
     case TAGC_ACOUSTIC_FREQ:
       upd->Acoustic_Frequency = lambda;
       break;
@@ -2052,6 +2060,14 @@ retrieve_MT_parameter(double *lambda, /* Parameter value */
 
     case TAGC_SPECIES_SOURCE_1_P3:
       *lambda = mp_glob[mn]->u_species_source[1][3];
+      break;
+
+    case TAGC_LATENT_HEAT_0:
+      *lambda = mp_glob[mn]->latent_heat_vap[0];
+      break;
+
+    case TAGC_LATENT_HEAT_1:
+      *lambda = mp_glob[mn]->latent_heat_vap[1];
       break;
 
     case TAGC_ACOUSTIC_FREQ:
