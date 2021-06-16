@@ -142,8 +142,8 @@ set(${PROJECT_NAME}_Sparse_INCLUDE_DIR "${${PROJECT_NAME}_Trilinos_DIR}/../spars
 
 ### Once again back to following standards. Also done so that some flags can be placed on the libraries.
 ### People aren't going to be seeing these variable names anyway.
-set(${PROJECT_NAME}_SPARSE_LIB "-L${${PROJECT_NAME}_Sparse_DIR}/lib -lsparse")
-set(${PROJECT_NAME}_ARPACK_LIB "-L${${PROJECT_NAME}_Arpack_DIR}/lib -larpack")
+set(${PROJECT_NAME}_SPARSE_LIB "-L${${PROJECT_NAME}_Sparse_DIR}/lib -lsparse" CACHE STRING "sparse library link command")
+set(${PROJECT_NAME}_ARPACK_LIB "-L${${PROJECT_NAME}_Arpack_DIR}/lib -larpack" CACHE STRING "arpack library link command")
 set(${PROJECT_NAME}_LIB_DIR ${${PROJECT_NAME}_LIBS})
 set(${PROJECT_NAME}_MPI_LIB "-L${${PROJECT_NAME}_MPI_TOP}/lib -lmpi -lmpi_mpifh" CACHE STRING "Specify the MPI libraries to link against. Both an MPI fortran and an MPI library are required.")
 set(${PROJECT_NAME}_FORTRAN_LIB "-lc -lgcc -lstdc++ -lgfortran" CACHE STRING "Specify the fortran and c compiler specific libraries")

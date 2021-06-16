@@ -696,12 +696,18 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	    {
 	      x->ss_node_cnt_list[i] = (int *) smalloc(x->ss_num_sides[i] * si);
 
-	      x->ss_node_list[i] = (int *) smalloc(x->ss_num_distfacts[i] * si);
+              int ss_node_list_len = 0;
+              int status = ex_get_side_set_node_list_len(x->exoid, x->ss_id[i], &ss_node_list_len);
+
+              EH(status, "ex_get_side_set_node_list_len");
+
+	      x->ss_node_list[i] = (int *) smalloc(ss_node_list_len * si);
 
 	      status = ex_get_side_set_node_list(x->exoid,
 						 x->ss_id[i],
 						 x->ss_node_cnt_list[i],
 						 x->ss_node_list[i]);
+              EH(status, "ex_get_side_set_node_list");
 #ifdef DEBUG
 	      fprintf(stderr,"P_%d, SSID=%d has %d dfs/nds on -> %d <- sides.\n", 
                       ProcID,
