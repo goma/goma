@@ -2423,7 +2423,10 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     }
 
   /* calculate poynting vectors for EM calculations here !!  */
-  if(POYNTING_VECTORS != -1)
+  if(POYNTING_VECTORS != -1 &&
+     ((Num_Var_In_Type[pg->imtrx][R_ACOUS_PREAL] || Num_Var_In_Type[pg->imtrx][R_ACOUS_PIMAG])
+       || (Num_Var_In_Type[pg->imtrx][R_EM_E1_REAL] || Num_Var_In_Type[pg->imtrx][R_EM_E2_REAL]
+       || Num_Var_In_Type[pg->imtrx][R_EM_E3_REAL])))
   {
     double poynt[DIM];
     int c;
@@ -2464,7 +2467,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   }
   
   /* calculate species sources  */
-  if(SPECIES_SOURCES != -1)
+  if (SPECIES_SOURCES != -1 && pd->e[pg->imtrx][R_MASS]) 
   {
     err = get_continuous_species_terms(&s_terms, time, theta, delta_t, hs);
     for ( w=0; w<pd->Num_Species_Eqn; w++)
@@ -2474,7 +2477,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 	}
   }
 
-  if(STRESS_NORM != -1)
+  if (STRESS_NORM != -1 && pd->e[pg->imtrx][POLYMER_STRESS11])
   {  
     for (int mode = 0; mode < vn->modes; mode++) {
 
@@ -2500,8 +2503,9 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       local_lumped[STRESS_NORM + mode] = 1.;
     }
   }
+  
 
-  if(SARAMITO_YIELD != -1)
+  if(SARAMITO_YIELD != -1 && pd->e[pg->imtrx][POLYMER_STRESS11]) 
   {  
     for (int mode = 0; mode < vn->modes; mode++) {
       dbl coeff = compute_saramito_model_terms(fv->S[mode], ve[mode]->gn->tau_y, ve[mode]->gn->fexp, NULL);
