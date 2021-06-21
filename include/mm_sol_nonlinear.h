@@ -11,24 +11,24 @@
 \************************************************************************/
  
 
-#ifndef _MM_SOL_NONLINEAR_H
-#define _MM_SOL_NONLINEAR_H
+#ifndef GOMA_MM_SOL_NONLINEAR_H
+#define GOMA_MM_SOL_NONLINEAR_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_SOL_NONLINEAR_C
+#ifdef GOMA_MM_SOL_NONLINEAR_C
 #define EXTERN
 #
 #endif
 
-#ifndef _MM_SOL_NONLINEAR_C
+#ifndef GOMA_MM_SOL_NONLINEAR_C
 #define EXTERN extern
 #endif
 
 EXTERN int solve_nonlinear_problem
-PROTO((struct Aztec_Linear_Solver_System *, /* ams - ptrs to Aztec linear    *
+(struct Aztec_Linear_Solver_System *, /* ams - ptrs to Aztec linear    *
 					     * systems                       */
        double [],		/* x - soln vector on this proc              */
        double ,			/* delta_t - time step size                  */
@@ -69,87 +69,86 @@ PROTO((struct Aztec_Linear_Solver_System *, /* ams - ptrs to Aztec linear    *
        double *,		/* resid_vector_sens                         */
        double *,		/* x_sens                                    */
        double **,  		/*  x_sens_p - solution sensitivities        */
-       void *                   /* con_ptr pointer                           */
-       ));
+     void *);                   /* con_ptr pointer                           */
 
 EXTERN double L2_norm		/* mm_sol_nonlinear.c */
-PROTO((double *,		/* vector */
-       int ));			/* nloc */
+(double *,		/* vector */
+       int );			/* nloc */
 
 EXTERN double L2_norm_diff	/* mm_sol_nonlinear.c */
-PROTO((double *,		/* vector 1 */
+(double *,		/* vector 1 */
        double *,		/* vector 2 */
-       int ));			/* nloc */
+       int );			/* nloc */
 
 EXTERN double L2_norm_r         /* mm_sol_nonlinear.c */
-PROTO((double *,                /* vector */
+(double *,                /* vector */
        double *,                /* vector scale */
-       int ));                  /* nloc */
+       int );                  /* nloc */
 
 EXTERN double L1_norm		/* mm_sol_nonlinear.c */
-PROTO((double *,		/* vector */
-       int ));			/* nloc */
+(double *,		/* vector */
+       int );			/* nloc */
 
 EXTERN double L1_norm_r         /* mm_sol_nonlinear.c */
-PROTO((double *,                /* vector */
+(double *,                /* vector */
        double *,                /* vector scale */
-       int ));                  /* nloc */
+       int );                  /* nloc */
 
 EXTERN double Loo_norm		/* mm_sol_nonlinear.c */
-PROTO((double *,		/* vector */
+(double *,		/* vector */
        int ,			/* nloc */
        int *,  			/* num_unk - save the index! */
-       char *));		/* dofname_x - dof name for num_unk  */
+       char *);		/* dofname_x - dof name for num_unk  */
 
 EXTERN double Loo_norm_r	/* mm_sol_nonlinear.c */
-PROTO((double *,                /* vector */
+(double *,                /* vector */
        double *,                /* vector scale */
        int ,                    /* nloc */
        int *,                   /* num_unk - save the index! */
-       char *));		/* dofname_r - dof name for num_unk  */
+       char *);		/* dofname_r - dof name for num_unk  */
 
 EXTERN double L2_norm_1p        /* mm_sol_nonlinear.c */
-PROTO((double *,                /* vector */
-       int ));                  /* nloc */
+(double *,                /* vector */
+       int );                  /* nloc */
 
 EXTERN double L2_norm_diff_1p   /* mm_sol_nonlinear.c */
-PROTO((double *,                /* vector 1 */
+(double *,                /* vector 1 */
        double *,                /* vector 2 */
-       int ));                  /* nloc */
+       int );                  /* nloc */
 
 EXTERN double L2_norm_r_1p      /* mm_sol_nonlinear.c */
-PROTO((double *,                /* vector */
+(double *,                /* vector */
        double *,                /* vector scale */
-       int ));                  /* nloc */
+       int );                  /* nloc */
 
 EXTERN double L1_norm_1p        /* mm_sol_nonlinear.c */
-PROTO((double *,                /* vector */
-       int ));                  /* nloc */
+(double *,                /* vector */
+       int );                  /* nloc */
 
 EXTERN double L1_norm_r_1p      /* mm_sol_nonlinear.c */
-PROTO((double *,                /* vector */
+(double *,                /* vector */
        double *,                /* vector scale */
-       int ));                  /* nloc */
+       int );                  /* nloc */
 
 EXTERN double Loo_norm_1p       /* mm_sol_nonlinear.c */
-PROTO((double *,                /* vector */
+(double *,                /* vector */
        int ,                    /* nloc */
        int *,                   /* num_unk - save the index! */
-       char *));                /* dofname_x - dof name for num_unk  */
+       char *);                /* dofname_x - dof name for num_unk  */
 
 EXTERN double Loo_norm_r_1p     /* mm_sol_nonlinear.c */
-PROTO((double *,                /* vector */
+(double *,                /* vector */
        double *,                /* vector scale */
        int ,                    /* nloc */
        int *,                   /* num_unk - save the index! */
-       char *));                /* dofname_r - dof name for num_unk  */
+       char *);                /* dofname_r - dof name for num_unk  */
 
 EXTERN void print_array		/* mm_sol_nonlinear.c */
-PROTO((const void *,		/* array - generic pointer */
+(const void *,		/* array - generic pointer */
        const int ,		/* length - of the array */
        const char *,		/* name - used to print name[23] = value */
        const Edt ,		/* datatype - std.h, type_int or type_double */
-       const int));		/* procid  */
+       const int);		/* procid  */
 
 /*
  * EDW: Moved here from mm_sol_nonlinear.c ---
@@ -162,7 +161,7 @@ PROTO((const void *,		/* array - generic pointer */
 
 #ifdef HAVE_FRONT
 extern int mf_solve_lineqn
-PROTO((int *,                   /* re_solve */
+(int *,                   /* re_solve */
        double *,                /* rhs */
        int ,                    /* nrhs */
        int *,                   /* nsetbc */
@@ -211,7 +210,7 @@ PROTO((int *,                   /* re_solve */
        int *,               /* &num_total_nodes */
        dbl *,               /* &h_elem_avg */
        dbl *                /* &U_norm */
-       ));
+       );
 #endif
 
-#endif /* _MM_SOL_NONLINEAR_H */
+#endif /* GOMA_MM_SOL_NONLINEAR_H */

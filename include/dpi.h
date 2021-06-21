@@ -57,8 +57,8 @@
  *$Id: dpi.h,v 5.1 2007-09-18 18:53:41 prschun Exp $
  */
 
-#ifndef _DPI_H
-#define _DPI_H
+#ifndef GOMA_DPI_H
+#define GOMA_DPI_H
 
 #include "rf_fem_const.h" // MAX_PROB_VAR
 

@@ -15,8 +15,8 @@
  *$Id: rf_io_const.h,v 5.4 2010-04-07 17:48:19 sarober Exp $
  */
 
-#ifndef _RF_IO_CONST_H
-#define _RF_IO_CONST_H
+#ifndef GOMA_RF_IO_CONST_H
+#define GOMA_RF_IO_CONST_H
 
 #ifndef MAX_NNV
 #define	MAX_NNV		100	/* maximum number of nodal variables */
@@ -86,6 +86,12 @@
 #define MAX_COMMAND_LINE_LENGTH	(1024) /* maximum number of characters in */
 				       /* a command line sent to system() */
 #endif
+
+#ifndef MAX_SYSTEM_COMMAND_LENGTH
+#define MAX_SYSTEM_COMMAND_LENGTH	(1280) /* maximum number of characters in */
+/* a system command for aprepro */
+#endif
+
 
 #ifndef MAX_SYSTEM_COMMAND_LENGTH
 #define MAX_SYSTEM_COMMAND_LENGTH	(1280) /* maximum number of characters in */

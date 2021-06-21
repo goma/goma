@@ -77,7 +77,7 @@ extern void cpdneupc_(MPI_Comm* comm, int* ivec, char* howmny, int* celect,
                        int* select);
 extern void cpdmout_  (MPI_Comm* comm, int* lout, int* m, int* n, double *A,
                       int* lda, int* idigit);
-extern double second_();
+extern double second_(void);
 
 
 #include <math.h>
@@ -92,8 +92,6 @@ extern double second_();
 #define MAX_ITRS 2
 #define MODE     6
 
-#define ORD_SYM  0  /* meaningless for this driver */
-#define GEN_SYM  1  /* meaningless for this driver */
 #define SHIFTI   3  /* Shift and Invert */
 #define CAYLEY   4  /* mode 4 in dnaupc, used for Cayley transform */
 

@@ -14,15 +14,15 @@
  *$Id: rf_node.h,v 5.1 2007-09-18 18:53:47 prschun Exp $
  */
 
-#ifndef _RF_NODE_H
-#define _RF_NODE_H
+#ifndef GOMA_RF_NODE_H
+#define GOMA_RF_NODE_H
 
 #include "rf_node_const.h"
 
 /*
  *  Global Pointer to the Vector of Pointers to Node Structures
  *  for all of the nodes on the current processor
- *  Index of the array is the processor (local) node number.
+ *  Index of the array is the matrix number and processor (local) node number.
  *
  */
 NODE_INFO_STRUCT **Nodes = NULL;

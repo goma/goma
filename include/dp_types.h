@@ -28,8 +28,8 @@
  *$Id: dp_types.h,v 5.1 2007-09-18 18:53:41 prschun Exp $
  */
 
-#ifndef _DP_TYPES_H
-#define _DP_TYPES_H
+#ifndef GOMA_DP_TYPES_H
+#define GOMA_DP_TYPES_H
 
 /*
  * Used during the initial allocation of the data description structure.
@@ -90,7 +90,7 @@ struct Derived_Datatype_Description
   MPI_Aint lb;
   /*  int count;                        count of new derived data type */
   int size;                     /* size of new derived data type */
-};    
+};
 
 typedef struct Derived_Datatype_Description *DDD;
 
@@ -171,4 +171,4 @@ struct Comm_Neighbor_Proc {
 typedef struct Comm_Neighbor_Proc COMM_NP_STRUCT;
 
 
-#endif /* _DP_TYPES_H */
+#endif /* GOMA_DP_TYPES_H */

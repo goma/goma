@@ -46,7 +46,7 @@ static char rcsid[] = "$Id: user_post.c,v 5.1 2007-09-18 18:53:49 prschun Exp $"
 
 #include "mm_eh.h"
 #include "az_aztec.h"
-#define _USER_POST_C
+#define GOMA_USER_POST_C
 #include "goma.h"
 
 /*********** R O U T I N E S   I N   T H I S   F I L E ************************
@@ -128,7 +128,7 @@ user_post(dbl *param)		/* ptr to the user-defined parameter list */
 
 /* Now, calculate post-process variable and put it in post_value */
 /* E.G. if you want the product of temperature and concentration */
-/*    if (pd->v[VELOCITY1]) */
+/*    if (pd->v[pg->imtrx][VELOCITY1]) */
 /*        post_value = V[0] - 1.; */
 /*        post_value = V[0] - log(X[1] / 10)/ log(0.9); */
 

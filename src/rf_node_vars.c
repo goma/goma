@@ -41,7 +41,8 @@
 int
 dof_lnode_var_type(const int n, const int Element_Type,
 		   const int proc_node_num, const int var_type,
-		   PROBLEM_DESCRIPTION_STRUCT *pd_ptr)
+		   PROBLEM_DESCRIPTION_STRUCT *pd_ptr,
+                   const int imtrx)
 
     /**********************************************************************
      *
@@ -72,7 +73,7 @@ dof_lnode_var_type(const int n, const int Element_Type,
   /*
    * Store the interpolation type for the input variable
    */
-  interp_type =  pd_ptr->i[var_type];
+  interp_type =  pd_ptr->i[imtrx][var_type];
 
   /*
    * Store whether this node is on an edge of the grid or not
@@ -107,7 +108,7 @@ num_varType_at_node(const int inode, const int varType)
      *******************************************************************/
 {
   NODE_INFO_STRUCT *node = Nodes[inode];
-  int num = get_nv_ndofs(node->Nodal_Vars_Info, varType);
+  int num = get_nv_ndofs(node->Nodal_Vars_Info[pg->imtrx], varType);
   return num;
 }
 /************************************************************************/
@@ -797,7 +798,7 @@ pack_nv (struct nv_packed *nvp, NODAL_VARS_STRUCT *nv)
 /*****************************************************************************/
 
 NODAL_VARS_STRUCT *
-unpack_nv (struct nv_packed *nvp)
+unpack_nv (struct nv_packed *nvp, const int imtrx)
     
     /*************************************************************************
      *
@@ -819,7 +820,7 @@ unpack_nv (struct nv_packed *nvp)
      * Find a variable structure that matches this one 
      */ 
     var_ptr = find_or_create_vd((int) vdp->Variable_Type, (int) vdp->Ndof,
-				(int) vdp->MatID, (int) vdp->Subvar_Index);
+				(int) vdp->MatID, (int) vdp->Subvar_Index, imtrx);
     
     /*
      * Add the variable definition structure into the nodal variable

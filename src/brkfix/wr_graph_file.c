@@ -27,7 +27,7 @@
  * Revised:
  */
 
-#define _WR_GRAPH_FILE_C
+#define GOMA_WR_GRAPH_FILE_C
 
 #include <stdio.h>
 #include <stdlib.h>

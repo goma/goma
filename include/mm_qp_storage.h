@@ -11,8 +11,8 @@
 \************************************************************************/
  
 
-#ifndef _MM_QP_STORAGE_H
-#define _MM_QP_STORAGE_H
+#ifndef GOMA_MM_QP_STORAGE_H
+#define GOMA_MM_QP_STORAGE_H
 /*
  *$Id: mm_qp_storage.h,v 5.1 2007-09-18 18:53:46 prschun Exp $
  */

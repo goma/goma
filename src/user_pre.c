@@ -48,7 +48,7 @@ static char rcsid[] = "$Id: user_pre.c,v 5.1 2007-09-18 18:53:49 prschun Exp $";
 
 #include "mm_eh.h"
 
-#define _USER_PRE_C
+#define GOMA_USER_PRE_C
 #include "goma.h"
 
 /*********** R O U T I N E S   I N   T H I S   F I L E ************************

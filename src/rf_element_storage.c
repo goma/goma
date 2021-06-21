@@ -61,6 +61,7 @@ setup_element_storage(void)
 {
   int eb_index, do_malloc, mn;
   ELEM_BLK_STRUCT *eb_ptr; 
+  pg->imtrx = 0; // TODO: UCK
   for (eb_index = 0; eb_index < EXO_ptr->num_elem_blocks; eb_index++) {
     do_malloc = FALSE;
     mn = Matilda[eb_index];
@@ -69,17 +70,17 @@ setup_element_storage(void)
     }
     pd = pd_glob[mn];
     eb_ptr = Element_Blocks + eb_index;
-    if (pd->e[R_POR_LIQ_PRES]) {
+    if (pd->e[pg->imtrx][R_POR_LIQ_PRES]) {
       if (pd->TimeIntegration == TRANSIENT) {
 	do_malloc = TRUE;
       }
     }
-    if (pd->e[R_SHELL_SAT_OPEN] || pd->e[R_SHELL_SAT_OPEN_2]) {
+    if (pd->e[pg->imtrx][R_SHELL_SAT_OPEN] || pd->e[pg->imtrx][R_SHELL_SAT_OPEN_2]) {
       if (pd->TimeIntegration == TRANSIENT) {
 	do_malloc = TRUE;
       }
     }
-    if(pd->e[R_MESH1] && pd->MeshMotion == LAGRANGIAN) {
+    if(pd->e[pg->imtrx][R_MESH1] && pd->MeshMotion == LAGRANGIAN) {
       if (pd->TimeIntegration == TRANSIENT) {
 	do_malloc = TRUE;
       }
@@ -119,6 +120,11 @@ init_element_storage(ELEM_BLK_STRUCT *eb_ptr)
   ELEMENT_STORAGE_STRUCT *s_ptr;
   double *d_ptr;
   double *base_ptr = NULL;
+
+  if (upd->Total_Num_Matrices > 1) {
+    EH(-1, "Element storage not setup to work with multiple matrices.");
+  }
+
   /*
    * Check to make sure that we haven't already allocated storage
    */
@@ -147,15 +153,15 @@ init_element_storage(ELEM_BLK_STRUCT *eb_ptr)
      * Do a large block allocation for efficiency
      * Argg. See PRS comment in rf_element_storage_struct.h 
      */
-     if (pd->e[R_POR_LIQ_PRES]) {
+     if (pd->e[pg->imtrx][R_POR_LIQ_PRES]) {
        base_ptr = alloc_dbl_1(4 * numStorage * eb_ptr->Num_Elems_In_Block, 
 			      DBL_NOINIT); 
      }
-     else if (pd->e[R_SHELL_SAT_OPEN] || pd->e[R_SHELL_SAT_OPEN_2] ) {
+     else if (pd->e[pg->imtrx][R_SHELL_SAT_OPEN] || pd->e[pg->imtrx][R_SHELL_SAT_OPEN_2] ) {
        base_ptr = alloc_dbl_1(4 * numStorage * eb_ptr->Num_Elems_In_Block, 
 			      DBL_NOINIT); 
      }
-     else if(pd->e[R_MESH1] && pd->MeshMotion == LAGRANGIAN) {
+     else if(pd->e[pg->imtrx][R_MESH1] && pd->MeshMotion == LAGRANGIAN) {
 
        /* This is for shrinkage stress model for thermexp */
        base_ptr = alloc_dbl_1( numStorage * eb_ptr->Num_Elems_In_Block, 
@@ -167,7 +173,7 @@ init_element_storage(ELEM_BLK_STRUCT *eb_ptr)
     d_ptr = base_ptr;
     eb_ptr->ElemStorage = s_ptr;
     for (i = 0; i < eb_ptr->Num_Elems_In_Block; i++, s_ptr++) {
-      if (pd->e[R_POR_LIQ_PRES] || pd->e[R_SHELL_SAT_OPEN] || pd->e[R_SHELL_SAT_OPEN_2] ) {
+      if (pd->e[pg->imtrx][R_POR_LIQ_PRES] || pd->e[pg->imtrx][R_SHELL_SAT_OPEN] || pd->e[pg->imtrx][R_SHELL_SAT_OPEN_2] ) {
       s_ptr->Sat_QP_tn = d_ptr;
       d_ptr += numStorage;
       s_ptr->p_cap_QP = d_ptr;
@@ -177,7 +183,7 @@ init_element_storage(ELEM_BLK_STRUCT *eb_ptr)
       s_ptr->sat_curve_type_old = d_ptr;
       d_ptr += numStorage;
       }
-      else if (pd->e[R_MESH1] && pd->MeshMotion == LAGRANGIAN) {
+      else if (pd->e[pg->imtrx][R_MESH1] && pd->MeshMotion == LAGRANGIAN) {
         s_ptr->solidified = d_ptr;
 	d_ptr += numStorage;
       }
@@ -510,7 +516,7 @@ get_nodalSat_tnm1_FromES(int lnn)
       *        values of  Current_EB_ptr and ei being correct!
       *****************************************************************/
 {
-  int ielem = ei->ielem;
+  int ielem = ei[pg->imtrx]->ielem;
   int ip_total = Current_EB_ptr->IP_total;
   ELEMENT_STORAGE_STRUCT *es = Current_EB_ptr->ElemStorage + ielem;
   return (es->Sat_QP_tn[ip_total + lnn]);
@@ -531,7 +537,7 @@ get_Sat_tnm1_FromES(int ip)
       *
       *****************************************************************/
 {
-  int ielem = ei->ielem;
+  int ielem = ei[pg->imtrx]->ielem;
   ELEMENT_STORAGE_STRUCT *es = Current_EB_ptr->ElemStorage + ielem;
   return (es->Sat_QP_tn[ip]);
 }
@@ -551,7 +557,7 @@ put_nodalSat_tn_IntoES(int lnn, double sat)
       *
       *****************************************************************/
 {
-  int ielem = ei->ielem;
+  int ielem = ei[pg->imtrx]->ielem;
   int ip_total = Current_EB_ptr->IP_total;
   ELEMENT_STORAGE_STRUCT *es = Current_EB_ptr->ElemStorage + ielem;
   es->Sat_QP_tn[ip_total + lnn] = sat;
@@ -573,7 +579,7 @@ put_Sat_tn_IntoES(int ip, double sat)
       *
       *****************************************************************/
 {
-  int ielem = ei->ielem;
+  int ielem = ei[pg->imtrx]->ielem;
   ELEMENT_STORAGE_STRUCT *es = Current_EB_ptr->ElemStorage + ielem;
   es->Sat_QP_tn[ip] = sat;
 }

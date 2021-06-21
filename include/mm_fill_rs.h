@@ -11,28 +11,28 @@
 \************************************************************************/
  
 
-#ifndef _MM_FILL_RS_H
-#define _MM_FILL_RS_H
+#ifndef GOMA_MM_FILL_RS_H
+#define GOMA_MM_FILL_RS_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_FILL_RS_C
+#ifdef GOMA_MM_FILL_RS_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _MM_FILL_RS_C
+#ifndef GOMA_MM_FILL_RS_C
 #define EXTERN extern
 #endif
 
 EXTERN int assemble_real_solid	/* mm_fill_rs.c                              */
-PROTO((	double ,		/* time - present time value                 */
+(	double ,		/* time - present time value                 */
 	double ,		/* tt                                        */
-	double ));		/* dt                                        */
+	double );		/* dt                                        */
 
 EXTERN int solid_stress_tensor	/* mm_fill_rs.c                              */
-PROTO((dbl [DIM][DIM],		/* TT                                        */
+(dbl [DIM][DIM],		/* TT                                        */
        dbl [DIM][DIM][DIM][MDE], /* dTT_dx                                   */
        dbl [DIM][DIM][DIM][MDE], /* dTT_drs                                  */
        dbl [DIM][DIM][MDE],	/* dTT_dp                                    */
@@ -43,31 +43,31 @@ PROTO((dbl [DIM][DIM],		/* TT                                        */
        dbl [DIM][DIM][MDE],  /* dTT_dT                            */
        dbl [DIM][DIM][MDE],     /* dTT_dmax_strain                           */
        dbl ,			/* mu                                        */
-       dbl ));			/* lambda                                    */
+       dbl );			/* lambda                                    */
 
 EXTERN int belly_flop_rs
-PROTO((dbl ));			/* mu - elastic modulus (plane stress case)  */
+(dbl );			/* mu - elastic modulus (plane stress case)  */
 
 EXTERN int get_convection_velocity_rs
-PROTO((double [DIM],		/* vconv - Calculated convection velocity    */
+(double [DIM],		/* vconv - Calculated convection velocity    */
        double [DIM],		/* vconv_old - Calcd convect velo, prev time */
        CONVECTION_VELOCITY_DEPENDENCE_STRUCT *,
        double ,			/* dt                                        */
-       double ));		/* tt                                        */
+       double );		/* tt                                        */
 
 EXTERN void f_kinematic_displacement_bc
-PROTO((double [DIM],		/* func                                      */
+(double [DIM],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
        const int,   		/* i_mat                                     */
        const int,  		/* ss_id                                     */
        const double *,          /* user parameters                           */
-       const int ));		/* length of user parameters                 */
+       const int );		/* length of user parameters                 */
 
 EXTERN void f_kinematic_displacement_rs_bc
-PROTO((double [DIM],		/* func                                      */
+(double [DIM],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
        int    ,
        const int ,
        double xi[DIM],
-       const Exo_DB *exo  ));		/* i_mat                                     */
-#endif /* _MM_FILL_RS_H */
+       const Exo_DB *exo  );		/* i_mat                                     */
+#endif /* GOMA_MM_FILL_RS_H */

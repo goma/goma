@@ -37,7 +37,7 @@
  * Revised: 
  */
 
-#define _MK_DM_C
+#define GOMA_MK_DM_C
 
 #include <stdio.h>
 

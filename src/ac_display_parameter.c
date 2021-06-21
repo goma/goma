@@ -53,13 +53,13 @@
 #include "sl_util.h"		/* defines sl_init() */
 
 extern void display_parameterC
-PROTO((double, 			/* PARAMETER VALUE */
+(double, 			/* PARAMETER VALUE */
        double*, 		/* UNKNOWN VECTOR */
        double*, 		/* UNKNOWN_DOT VECTOR */
        double, 			/* STEP */
        Comm_Ex *,		/* cx  - array of communications structures */
        Exo_DB *,		/* exo - ptr to finite element mesh database */
-       Dpi *));			/* dpi - ptr to distributed processing info */
+       Dpi *);			/* dpi - ptr to distributed processing info */
 
 void
 display_parameterC(double lambda, /* PARAMETER VALUE */

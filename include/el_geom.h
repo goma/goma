@@ -14,8 +14,8 @@
  *$Id: el_geom.h,v 5.1 2007-09-18 18:53:41 prschun Exp $
  */
 
-#ifndef _EL_GEOM_H
-#define _EL_GEOM_H
+#ifndef GOMA_EL_GEOM_H
+#define GOMA_EL_GEOM_H
 
 /*------------------------------------------------------------------------------
 

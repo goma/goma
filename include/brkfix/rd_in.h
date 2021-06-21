@@ -13,30 +13,30 @@
 /* rd_in.h - prototype declarations for rd_in.c
  */
 
-#ifndef _RD_IN_H
-#define _RD_IN_H
+#ifndef GOMA_RD_IN_H
+#define GOMA_RD_IN_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _RD_IN_C
+#ifdef GOMA_RD_IN_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _RD_IN_C
+#ifndef GOMA_RD_IN_C
 #define EXTERN extern
 #endif
 
 EXTERN void rd_input
-PROTO((char *,			/* filename for input */
+(char *,			/* filename for input */
        Exo_DB *,		/* EXODUS II finite element database */
        Bevm ****,		/* basic eqnvar multiplicity */
        int ****,		/* eqnvar dependencies */
        int ****,		/* local node/dof existences */
-       int **));		/* number of basic eqnvars in ea eb */
+       int **);		/* number of basic eqnvars in ea eb */
 
-#endif /* _RD_IN_H */
+#endif /* GOMA_RD_IN_H */
 
 
 

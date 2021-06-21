@@ -5,15 +5,22 @@
 #include "mm_shell_bc.h"
 #include "shell_tfmp_struct.h"
 
-#ifndef _SHELL_TFMP_UTIL
-#define _SHELL_TFMP_UTIL
+#ifndef GOMA_SHELL_TFMP_UTIL
+#define GOMA_SHELL_TFMP_UTIL
 
+#ifdef EXTERN
+#undef EXTERN
+#endif
+#ifdef GOMA_SHELL_TFMP_UTIL_C
+#define EXTERN extern
+#else
+#define EXTERN
+#endif
 
 //Still Experimental
 enum clipping_kind{none, continuity, restorative, constant_sat, var_swap};
 
-// Make global variables (really? - eesh!)
-EXTERN enum clipping_kind my_clipping_kind;
+extern enum clipping_kind my_clipping_kind;
 
 // load_viscosity_model(&mu_l, &mu_g)
 // OUTPUTS:
@@ -31,10 +38,10 @@ EXTERN void load_tfmp_viscosity_model
 //  rho_g     = computed gas density
 //  drho_g_dP = partial wrt pressure
 EXTERN void load_gas_density_model
-PROTO((double*,
+(double*,
        double*,
        double*
-));
+);
 
 // load_molecular_diffusion_model(S, &D, &Krd, &dKrd_dS)
 // OUTPUTS:
@@ -44,11 +51,11 @@ PROTO((double*,
 // INPUTS:
 //  S       = saturation
 EXTERN void load_molecular_diffusion_model
-PROTO((double,
+(double,
        double*,
        double*,
        double*
-));
+);
 
 // load_relative_permeability_model(S, &Krl, &dKrl_dS, 
 //                                  &Krg, &dKrg_dS)
@@ -60,12 +67,12 @@ PROTO((double,
 // INPUTS:
 //  S       = saturation
 EXTERN void load_relative_permeability_model
-PROTO((double,
+(double,
        double*,
        double*,
        double*,
        double*
-));
+);
 
 // load_gas_dissolution_model(h, Patm, &J, &dJ_dP, &dJ_dS,
 //                            &dJ_dh)
@@ -78,13 +85,13 @@ PROTO((double,
 //  h     = gap thickness
 //  Patm  = atmospheric pressure
 EXTERN void load_gas_dissolution_model
-PROTO((double,
+(double,
        double,
        double*,
        double*,
        double*,
        double*
-));
+);
 
 // load_displacement_coupling_model(tt, delta_t, &h,
 //                                  &dh_dtime, gradII_h,
@@ -118,7 +125,7 @@ PROTO((double,
 //                      function gradient sensitivity
 //                      wrt to mesh displacement
 EXTERN void load_displacement_coupling_model
-PROTO((double,
+(double,
        double,
        double*,
        double*,
@@ -131,10 +138,10 @@ PROTO((double,
        double[][DIM][MDE],  // d_gradIIh_dnormal
        int*,
        int*
-));
+);
 
 EXTERN void h0_minus_ndotd
-PROTO((double,
+(double,
        double,
        double*,
        double*,
@@ -147,10 +154,10 @@ PROTO((double,
        double[][DIM][MDE],  // d_gradIIh_dnormal
        int*,
        int*
-));
+);
 
 EXTERN void rmesh_minus_rroller
-PROTO((double,
+(double,
        double,
        double*,
        double*,
@@ -163,21 +170,21 @@ PROTO((double,
        double[][DIM][MDE],  // d_gradIIh_dnormal
        int*,
        int*
-));
+);
 
 EXTERN void dpos_dcsi
-PROTO((double[], double[][DIM][MDE]));
+(double[], double[][DIM][MDE]);
 
 EXTERN double dxdcsi
-PROTO((double*, int));
+(double*, int);
 
 EXTERN void detJ_2d_bar
-PROTO((double*, double[][MDE]));
+(double*, double[][MDE]);
 
 EXTERN void load_gap_model
-PROTO((GAP_STRUCT*));
+(GAP_STRUCT*);
 
 EXTERN void load_roller_normal_into_fv
-PROTO(());
+(void);
 
-#endif // _SHELL_TFMP_UTIL
+#endif // GOMA_SHELL_TFMP_UTIL

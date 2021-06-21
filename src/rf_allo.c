@@ -650,6 +650,7 @@ alloc_int_2_FL(const int ndim1, const int ndim2, const int val,
 /*****************************************************************************/
 /*****************************************************************************/
 
+
 double *
 alloc_dbl_1_FL(const int nvalues, const double val, const char *filename,
 	       const int line)
@@ -934,7 +935,9 @@ realloc_int_1_FL(int **list_hndl, const int new_length,
     if (new_length < old_length) {
       bytenum = sizeof(int) * new_length;
     }
-    (void) memcpy((void *) array, (void *) *list_hndl, bytenum);
+    if (bytenum > 0) {
+      (void) memcpy((void *) array, (void *) *list_hndl, bytenum);
+    }
     safe_free(*list_hndl);
     *list_hndl = array;
   } else {
@@ -1052,7 +1055,9 @@ realloc_ptr_1_FL(void ***list_hndl, const int new_num_ptrs,
     if (new_num_ptrs < old_num_ptrs) {
       bytenum = sizeof(void *) * new_num_ptrs;
     }
-    (void) memcpy(array, *list_hndl, bytenum);
+    if (old_num_ptrs > 0) {
+      (void) memcpy(array, *list_hndl, bytenum);
+    }
     if (new_num_ptrs > old_num_ptrs) {
       bytenum = (new_num_ptrs - old_num_ptrs) * sizeof(void *);
       (void) memset(array + old_num_ptrs, 0, bytenum);

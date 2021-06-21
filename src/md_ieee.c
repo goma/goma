@@ -55,7 +55,7 @@ static const char cvs_ieeehp_id[] =
 #include <sunmath.h>		/* Need "-lsunmath -lm" libs too! */
 #endif
 
-void handle_ieee PROTO((void ));
+void handle_ieee (void );
 
 /*****************************************************************************/
 /*****************************************************************************/

@@ -10,8 +10,8 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
 
-#ifndef _BRKFIX_TYPES_H
-#define _BRKFIX_TYPES_H
+#ifndef GOMA_BRKFIX_TYPES_H
+#define GOMA_BRKFIX_TYPES_H
 
 /*
  * Multiplicity of each Basic equation and variable is more than one for

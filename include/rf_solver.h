@@ -15,9 +15,10 @@
  *$Id: rf_solver.h,v 5.1 2007-09-18 18:53:47 prschun Exp $
  */
 
-#ifndef _RF_SOLVER_H
-#define _RF_SOLVER_H
+#ifndef GOMA_RF_SOLVER_H
+#define GOMA_RF_SOLVER_H
 
+#include "rf_fem_const.h" /* MAX_NUM_MATRICES */
 #include "rf_io_const.h"	/* for definition of MAX_CHAR_IN_INPUT */
 #include "rf_solver_const.h"	/* for kinds of direct solvers */
 
@@ -84,13 +85,13 @@ extern String_line Amesos_Package;
 
 extern String_line AztecOO_Solver;
 
-extern String_line Stratimikos_File;
+extern String_line Stratimikos_File[MAX_NUM_MATRICES];
 
 /*
- * A new Aztec 2.0 option. There are more and difft options and our
- * previous options probably ought to be revised to reflect the newer
- * Aztec 2.0 capability specifications.
- */
+extern  * A new Aztec 2.0 option. There are more and difft options and our
+extern  * previous options probably ought to be revised to reflect the newer
+extern  * Aztec 2.0 capability specifications.
+extern  */
 
 extern String_line Matrix_Reorder;
 
@@ -118,7 +119,7 @@ extern double var_damp[MAX_VARIABLE_TYPES];  /* variable specific damp factors *
 
 extern int Newt_Jacobian_Reformation_stride;/*Stride for reformation of jacobian for
                                   modified newton scheme               */
-extern int Time_Jacobian_Reformation_stride; 
+extern int Time_Jacobian_Reformation_stride;
 extern int modified_newton;            /*boolean flag for modified Newton */
 extern int save_old_A;                 /*boolean flag for saving old A matrix
 				 for resolve reasons with AZTEC.   There
@@ -129,7 +130,7 @@ extern double convergence_rate_tolerance; /* tolerance for jacobian reformation
 extern double modified_newt_norm_tol; /* tolerance for jacobian reformation 
                                        based on residual norm */
 
-extern double Epsilon[3];	/* Used for determining stopping criteria.     */
+extern double Epsilon[MAX_NUM_MATRICES][3];	/* Used for determining stopping criteria.     */
 
 extern int NZeros;             /* Number of nonzeros in this procs matrix     */
 

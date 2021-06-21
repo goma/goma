@@ -171,8 +171,8 @@
  *
  */
 
-#ifndef _RF_FILL_CONST_H
-#define _RF_FILL_CONST_H
+#ifndef GOMA_RF_FILL_CONST_H
+#define GOMA_RF_FILL_CONST_H
 
 #ifndef EXTERN
 #define EXTERN extern
@@ -180,17 +180,17 @@
 
 double
 calc_surf_det
-   PROTO (( int,                      /* ielem  */
+   ( int,                      /* ielem  */
             int,                      /* iconnect_ptr */
             int,                      /* nodes_per_elem  */
             int,                      /* ielem_surf_dim  */
             int,                      /* id_side  */
             int,                      /* num_nodes_on_side */
-            int [] ));                /* local_elem_node_id [] */
+            int [] );                /* local_elem_node_id [] */
 
 void
 fill_surf_shape
-   PROTO (( int,      /* num_local_nodes, number of nodes in this element   */
+   ( int,      /* num_local_nodes, number of nodes in this element   */
             int,      /* ielem_surf_dim, physical dimension of element surface */
             int,       /* ielem_type, type-code for this element              */
             double [], /* phi[], vector of shape functions for this element   */
@@ -206,13 +206,13 @@ fill_surf_shape
 			                   beta  is used only for 3D	      */
             int,              /* id_side,  identity of element side           */
             int,              /* num_nodes_on_side, number of nodes on element side */
-            int [] ));        /* local_elem_node_id[], vector containing id's
+            int [] );        /* local_elem_node_id[], vector containing id's
                                    of local element nodes on the current side */
 
 #if 0
 void
 alloc_sparse_arrays
-   PROTO (( int **,           /* **ija, column pointer array                  */
+   ( int **,           /* **ija, column pointer array                  */
             double **,        /* **a, nonzero array                           */
             double **,        /* **a_old, nonzero array                           */
             int,              /* Fill, flag to allocate space for either the
@@ -220,15 +220,15 @@ alloc_sparse_arrays
             int [],		/* node_to_fill[]                             */
 	    Exo_DB *,		/* exo - ptr to whole mesh data */
 
-	    Dpi *));		/* dpi - distr proc info */
+	    Dpi *);		/* dpi - distr proc info */
 #endif
 #if 0
 void
 set_diag_to_one
-   PROTO (( int,              /* I, Global node number                        */
+   ( int,              /* I, Global node number                        */
             int,              /* var_type, identity of equation on the global node  */
             int,              /* var_type_subindex, subindex of variable type var_type */
-            struct Aztec_Linear_Solver_System * ));     /* a[],  nonzero array                          */
+            struct Aztec_Linear_Solver_System * );     /* a[],  nonzero array                          */
 #endif
 
 /*************** PROTOTYPE FUNCTIONS FOR  rf_fill_terms.c ********************/
@@ -236,15 +236,15 @@ set_diag_to_one
 
 double
 Ysurf_quad
-   PROTO (( double [],                      /* x[]  */
+   ( double [],                      /* x[]  */
             double [],                      /* phi[MDE]  */
             struct elem_side_bc_struct *,   /* *elem_side_bc  */
-            int   ));                       /* w  */
+            int   );                       /* w  */
 
 #if 0 /* old */
 void 
 fvelo_tangential_bc
-   PROTO (( double *,         /* *func,   */
+   ( double *,         /* *func,   */
             double [][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
                               /*  d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE] */
             double [],        /* x[]  */
@@ -255,7 +255,7 @@ fvelo_tangential_bc
             double *,         /* *xsurf  */
             double *,         /* *x_dot  */
             double,           /* tt  */
-            double  ));       /* dt  */
+            double  );       /* dt  */
 #endif
 
 #endif

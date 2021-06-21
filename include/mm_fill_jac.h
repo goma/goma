@@ -14,8 +14,8 @@
  *$Id: mm_fill_jac.h,v 5.1 2007-09-18 18:53:43 prschun Exp $
  */
 
-#ifndef _MM_FILL_JAC_H_
-#define _MM_FILL_JAC_H_
+#ifndef GOMA_MM_FILL_JAC_H_
+#define GOMA_MM_FILL_JAC_H_
 
 /*
  *  Jacobian_Var_Desc:

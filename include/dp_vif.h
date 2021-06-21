@@ -10,35 +10,35 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _DP_VIF_H
-#define _DP_VIF_H
+#ifndef GOMA_DP_VIF_H
+#define GOMA_DP_VIF_H
 
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _DP_VIF_C
+#ifdef GOMA_DP_VIF_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _DP_VIF_C
+#ifndef GOMA_DP_VIF_C
 #define EXTERN extern
 #endif
 
 EXTERN void noahs_raven			/* dp_vif.c */
-PROTO((void ));
+(void );
 
 EXTERN void noahs_ark			/* dp_vif.c */
-PROTO((void ));
+(void );
 
 EXTERN void noahs_dove			/* dp_vif.c */
-PROTO((void ));
+(void );
 
 EXTERN void raven_landing		/* dp_vif.c */
-PROTO((void ));
+(void );
 
 EXTERN void ark_landing			/* dp_vif.c */
-PROTO((void ));
+(void );
 
-#endif /* _DP_VIF_H */
+#endif /* GOMA_DP_VIF_H */

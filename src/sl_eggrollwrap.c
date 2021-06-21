@@ -339,7 +339,7 @@ void eggrollwrap(int *istuff, /* info for eigenvalue extraction */
             int dof = 0;
             for (int eb_index = 0; eb_index < exo->num_elem_blocks; eb_index++) {
               int mn = Matilda[eb_index];
-              if (pd_glob[mn]->i[rd->evtype[iev]] == I_P1) {
+              if (pd_glob[mn]->i[upd->matrix_index[rd->evtype[iev]]][rd->evtype[iev]] == I_P1) {
                 dof = MAX(getdofs(type2shape(exo->eb_elem_itype[eb_index]), I_P1), dof);
                 is_P1 = TRUE;
               }
@@ -364,7 +364,7 @@ void eggrollwrap(int *istuff, /* info for eigenvalue extraction */
           if (tnv_post > 0) {
 	    post_process_nodal(&evect[i][0], NULL, x_old, xdot, xdot_old,
 			       resid_vector, 1, &time_value, delta_t, 0.0,
-                               NULL, exo, dpi, rd, ExoFileOut);
+                               NULL, exo, dpi, rd, ExoFileOut, 0);
 	  }
 	  printf(" recorded.\n");
 	}

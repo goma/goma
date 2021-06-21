@@ -15,8 +15,8 @@
  *$Id: rf_io_structs.h,v 5.1 2007-09-18 18:53:46 prschun Exp $
  */
 
-#ifndef _RF_IO_STRUCTS_H
-#define _RF_IO_STRUCTS_H
+#ifndef GOMA_RF_IO_STRUCTS_H
+#define GOMA_RF_IO_STRUCTS_H
 
 #include "std.h"		/* define proto if not already done so. */
 

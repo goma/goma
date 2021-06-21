@@ -31,7 +31,7 @@ static char rcsid[] = "$Id: sl_front_setup.c";
 #include "goma.h"
 #include "sl_rcm.h"
 
-extern void setup_front PROTO((Exo_DB *));
+extern void setup_front (Exo_DB *);
 
 void
 setup_front(Exo_DB *exo)
@@ -57,15 +57,15 @@ setup_front(Exo_DB *exo)
 
   /*Allocate memory */
 
-  fss->bc    = (double *) array_alloc(1,NumUnknowns,sizeof(double));
-  fss->ncod  = (int *) array_alloc(1,NumUnknowns,sizeof(int));
+  fss->bc    = (double *) array_alloc(1,NumUnknowns[pg->imtrx],sizeof(double));
+  fss->ncod  = (int *) array_alloc(1,NumUnknowns[pg->imtrx],sizeof(int));
   fss->ncn   = (int *) array_alloc(1,exo->num_elems,sizeof(int));
   fss->ncn_base = (int *) array_alloc(1,exo->num_elems,sizeof(int));
   fss->mdf = (int *) array_alloc(1,exo->num_nodes,sizeof(int));
   fss->nopp = (int *) array_alloc(1,exo->num_nodes,sizeof(int));
   fss->el_proc_assign = (int *) array_alloc(1,(exo->num_elems + 1),sizeof(int));
-  fss->constraint = (int *) array_alloc(1,NumUnknowns,sizeof(int));
-  fss->level = (int *) array_alloc(1,NumUnknowns,sizeof(int));
+  fss->constraint = (int *) array_alloc(1,NumUnknowns[pg->imtrx],sizeof(int));
+  fss->level = (int *) array_alloc(1,NumUnknowns[pg->imtrx],sizeof(int));
   fss->perm    = (int *) array_alloc(1, exo->num_elems,sizeof(int));   
   fss->iperm   = (int *) array_alloc(1, exo->num_elems,sizeof(int));   
   fss->mask    = (int *) array_alloc(1, exo->num_elems,sizeof(int));
@@ -124,7 +124,7 @@ setup_front(Exo_DB *exo)
     }
   /*Load up and initialize Obvious quantities first */
 
-  for (i=0; i<NumUnknowns; i++)
+  for (i=0; i<NumUnknowns[pg->imtrx]; i++)
     {
       fss->bc[i] = 0.;
       fss->ncod[i] = 0.;
@@ -132,12 +132,12 @@ setup_front(Exo_DB *exo)
     }
 
   for (i = 0; i < exo->num_nodes; i++) {
-    nv = Nodes[i]->Nodal_Vars_Info;
+    nv = Nodes[i]->Nodal_Vars_Info[pg->imtrx];
     fss->mdf[i]=nv->Num_Unknowns;
   }
 
   for(i=0; i<exo->num_elems; i++) fss->el_proc_assign[i] = 0;
-  for(i=0; i<NumUnknowns; i++) fss->constraint[i] = 0;
+  for(i=0; i<NumUnknowns[pg->imtrx]; i++) fss->constraint[i] = 0;
 
   fss->nopp[0] = 0;
   for (i=1; i<exo->num_nodes; i++) fss->nopp[i] = fss->nopp[i-1] + fss->mdf[i-1];
@@ -190,14 +190,14 @@ setup_front(Exo_DB *exo)
 		  {
 		    if(v == MASS_FRACTION)
 		      {
-			idf = Dolphin[m][v]*upd->Max_Num_Species_Eqn;
+			idf = Dolphin[pg->imtrx][m][v]*upd->Max_Num_Species_Eqn;
 		      }
 		    else
 		      {
-			idf = Dolphin[m][v];
+			idf = Dolphin[pg->imtrx][m][v];
 		      }
 		    if(idf > 0) /*has to be at the node only */
-		      /* if(idf > 0 && pd_glob[mn]->v[v]) */ /*has to be at the node AND in the block*/
+		      /* if(idf > 0 && pd_glob[mn]->v[pg->imtrx][v]) */ /*has to be at the node AND in the block*/
 		      {
 			for (l=0; l< idf; l++)
 			  {
@@ -230,9 +230,9 @@ setup_front(Exo_DB *exo)
 	  {
 	    kc = 0;
 	    nbn = elem_info(NNODES,Elem_Type(exo,i));
-	    ei->ielem_type = Elem_Type(exo, i);
-	    ei->ielem_shape  = type2shape(ei->ielem_type);
-	    ei->num_sides    = shape2sides(ei->ielem_shape);
+	    ei[pg->imtrx]->ielem_type = Elem_Type(exo, i);
+	    ei[pg->imtrx]->ielem_shape  = type2shape(ei[pg->imtrx]->ielem_type);
+	    ei[pg->imtrx]->num_sides    = shape2sides(ei[pg->imtrx]->ielem_shape);
 	    iconnect_ptr = exo->elem_ptr[i];
 	    
 	    /*unlike above, we deal with the centroid in each element only */
@@ -242,7 +242,7 @@ setup_front(Exo_DB *exo)
 	    k = fss->nopp[m];
 
 
-	    for (face = 0; face < ei->num_sides; face ++)
+	    for (face = 0; face < ei[pg->imtrx]->num_sides; face ++)
 	      {
 		/*load the neighbor pointer */
 		index = exo->elem_elem_pntr[i] + face;
@@ -262,7 +262,7 @@ setup_front(Exo_DB *exo)
 		    k_neighbor=fss->nopp[m_neighbor];
 		    for(v = V_FIRST; v < V_LAST; v++)
 		      {
-			idf = Dolphin[m_neighbor][v];
+			idf = Dolphin[pg->imtrx][m_neighbor][v];
 			if(idf > 0) 
 			  {
 			    if((v >= POLYMER_STRESS11 && v <= POLYMER_STRESS33) ||

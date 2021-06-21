@@ -47,7 +47,7 @@ static char rcsid[] = "$Id: dp_utils.c,v 5.1 2007-09-18 18:53:41 prschun Exp $";
 #include "rf_mp.h"
 #include "rf_io_const.h"
 
-#define _DP_UTILS_C
+#define GOMA_DP_UTILS_C
 #include "goma.h"
 
 static char mpistringbuffer[80];
@@ -322,7 +322,7 @@ ddd_set_commit(DDD p)
 {
 #ifdef PARALLEL
   MPI_Type_create_struct(p->num_members, p->block_count, p->address,
-		  p->data_type, &p->new_type);
+                         p->data_type, &p->new_type);
   MPI_Type_commit(&p->new_type);
   MPI_Type_get_extent(p->new_type, &p->lb, &p->extent);
   MPI_Type_size(p->new_type, &p->size);
@@ -416,7 +416,6 @@ check_parallel_error_FL(char *errstring, char *file_name, int lineno)
      *   this routine posts an error message and terminates GOMA.
      ********************************************************************/
 {
-  extern int parallel_err, parallel_err_global;
 #ifdef PARALLEL
 
   MPI_Allreduce(&parallel_err, &parallel_err_global, 1,
@@ -581,7 +580,7 @@ gminloc_int(const int value, const int local_loc, int *global_minloc)
 /************************************************************************/
 
 int
-gmin_int(const int value)
+gmin_int(int value)
     
     /********************************************************************
      *
@@ -613,7 +612,7 @@ gmin_int(const int value)
 /************************************************************************/
 
 int
-gmax_int(const int value)
+gmax_int(int value)
     
     /********************************************************************
      *
@@ -645,7 +644,7 @@ gmax_int(const int value)
 /************************************************************************/
 
 int
-gsum_Int(const int value)
+gsum_Int(int value)
     
     /********************************************************************
      *
@@ -677,7 +676,7 @@ gsum_Int(const int value)
 /************************************************************************/
 
 double
-gavg_double(const double value)
+gavg_double(double value)
 
     /********************************************************************
      *

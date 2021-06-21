@@ -63,7 +63,7 @@ static char rcsid[] = "$Id: rd_mesh.c,v 5.5 2009-04-24 23:42:33 hkmoffa Exp $";
 #include "mm_as.h"
 #include "mm_eh.h"
 
-#define _RD_MESH_C
+#define GOMA_RD_MESH_C
 #include "goma.h"
 
 /*
@@ -126,9 +126,9 @@ int *SS_Internal_Boundary = NULL;
 
 #ifdef HAVE_BRK
 extern int _brk_
-PROTO (( int,
+( int,
 		 char **,
-		 char ** ));
+		 char ** );
 #endif
 
 /**************************************************************************/
@@ -209,8 +209,7 @@ read_mesh_exoII(Exo_DB *exo,
 
   // SS_Internal_Boundary uses the dpi values
   SS_Internal_Boundary = alloc_int_1(exo->num_side_sets, INT_NOINIT);
-  int ss_index;
-  for (ss_index = 0; ss_index < exo->num_side_sets; ss_index++)
+  for (int ss_index = 0; ss_index < exo->num_side_sets; ss_index++)
     {
       int global_ss_index = dpi->ss_index_global[ss_index];
       SS_Internal_Boundary[ss_index] = dpi->ss_internal_global[global_ss_index];
@@ -293,83 +292,74 @@ read_mesh_exoII(Exo_DB *exo,
  *	    the code, you'll need to break those hybrids into pieces.
  */
 
-int *find_ss_internal_boundary(Exo_DB *e)
+int * find_ss_internal_boundary(Exo_DB *e)
 {
   char err_msg[MAX_CHAR_ERR_MSG];
   int *ss_is_internal = alloc_int_1(e->num_side_sets, -1);
   int *first_side_node_list = alloc_int_1(MAX_NODES_PER_SIDE, -1);
   int *other_side_node_list = alloc_int_1(MAX_NODES_PER_SIDE, -1);
 
-  int ss_index;
-  for (ss_index = 0; ss_index < e->num_side_sets; ss_index++)
+  for (int ss_index = 0; ss_index < e->num_side_sets; ss_index++)
     {
       /*
-       * It suffices to check the first element/side pair. The nodes here
-       * are cross-checked with the nodes in subsequent element/side pairs
-       * in this same sideset.
-       */
-      int side = 0;
-      int start = e->ss_node_side_index[ss_index][side];
-      int end = e->ss_node_side_index[ss_index][side + 1];
-      int i;
-      for (i = 0; i < (end - start); i++)
+         * It suffices to check the first element/side pair. The nodes here
+         * are cross-checked with the nodes in subsequent element/side pairs
+         * in this same sideset.
+         */
+      int side  = 0;
+      int start    = e->ss_node_side_index[ss_index][side];
+      int end    = e->ss_node_side_index[ss_index][side+1];
+      for (int i = 0; i < (end-start); i++)
         {
-          first_side_node_list[i] = e->ss_node_list[ss_index][start + i];
+          first_side_node_list[i] = e->ss_node_list[ss_index][start+i];
         }
 
       /*
-       * Sort the node numbers into ascending order.
-       */
-      if ((end - start) < 1)
+         * Sort the node numbers into ascending order.
+         */
+      if ((end-start) < 1)
         {
           EH(-1, "Bad side node index listing!");
         }
-      integer_sort((end - start), first_side_node_list);
+      integer_sort((end-start), first_side_node_list);
 
       /*
-       * Now look at the 2nd through last elem/sides nodegroups for any match,
-       * but only if there are at least 2 sides in this sideset.
-       *
-       *	"Just one side?"
-       *
-       *	"You're external, buddy!
-       */
+         * Now look at the 2nd through last elem/sides nodegroups for any match,
+         * but only if there are at least 2 sides in this sideset.
+         *
+         *	"Just one side?"
+         *
+         *	"You're external, buddy!
+         */
 
-      int num_sides = e->ss_num_sides[ss_index];
+      int num_sides   = e->ss_num_sides[ss_index];
       if (num_sides > 1)
         {
-          side = 1;
+          side        = 1;
           int match_found = FALSE;
           do
             {
-              int start = e->ss_node_side_index[ss_index][side];
-              int end = e->ss_node_side_index[ss_index][side + 1];
-	      int i;
-              for (i = 0; i < (end - start); i++)
-                {
-                  other_side_node_list[i] =
-                      e->ss_node_list[ss_index][start + i];
+              int start    = e->ss_node_side_index[ss_index][side];
+              int end    = e->ss_node_side_index[ss_index][side+1];
+              for (int i = 0; i < (end-start); i++) {
+                  other_side_node_list[i] = e->ss_node_list[ss_index][start+i];
                 }
-              if ((end - start) < 1)
-                {
+              if ((end-start) < 1) {
                   sprintf(err_msg,
-                          "SS ID %d (%d sides), side_index[%d]=%d, "
-                          "side_index[%d]=%d",
-                          e->ss_id[ss_index], e->ss_num_sides[ss_index], side,
-                          start, side + 1, end);
+                          "SS ID %d (%d sides), side_index[%d]=%d, side_index[%d]=%d",
+                          e->ss_id[ss_index], e->ss_num_sides[ss_index],
+                          side, start, side+1, end);
                   EH(-1, err_msg);
                 }
-              integer_sort((end - start), other_side_node_list);
+              integer_sort((end-start), other_side_node_list);
               int equal_vectors = TRUE;
-              for (i = 0; i < (end - start); i++)
+              for (int i = 0; i < (end-start); i++)
                 {
-                  equal_vectors &=
-                      (other_side_node_list[i] == first_side_node_list[i]);
+                  equal_vectors &= (other_side_node_list[i] == first_side_node_list[i]);
                 }
               match_found = equal_vectors;
               side++;
-            }
-          while (side < num_sides && !match_found);
+            } while (side<num_sides && !match_found);
 
           if (match_found)
             {
@@ -751,8 +741,7 @@ setup_old_exo(Exo_DB *e, Dpi *dpi, int num_proc)
         int global_ss_index = dpi->ss_index_global[ss_index];
         int start = dpi->ss_block_index_global[global_ss_index];
         int end = dpi->ss_block_index_global[global_ss_index +1];
-        int bidx;
-        for (bidx = start; bidx < end; bidx++) {
+        for (int bidx = start; bidx < end; bidx++) {
           // expects 1-indexed blocks
           ss_to_blks[bidx - start + 1][ss_index] = dpi->ss_block_list_global[bidx] + 1;
         }
@@ -1993,9 +1982,8 @@ Elem_Type(const Exo_DB *exo,
 static int
 integer_compare(const void *arg1, const void *arg2)
 {
-  int *a, *b;
-  a = (int *)(arg1);
-  b = (int *)(arg2);
+  const int *a = (const int *)(arg1);
+  const int *b = (const int *)(arg2);
   if (*a > *b) return  1;
   if (*a < *b) return -1;
   return(0);

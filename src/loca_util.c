@@ -31,8 +31,6 @@ static char *cvs_util_id =
 #include "loca_const.h"
 #include "loca_util_const.h"
 
-extern double gsum_double_conwrap(double sum);
-
 int    N_o = -1;  /* Length of vector that is acted on (owned unknowns)  */
 int    N_t = -1;  /* Length of vector that is allcoated (total unknowns) */
 double N_g = -1;  /* Total number of unknowns on all procs, cast to a
@@ -89,7 +87,7 @@ void vec_init(double *u)
 /*****************************************************************************/
 /*****************************************************************************/
 
-double *alloc_vec()
+double *alloc_vec(void)
 
 /* Allocate a vector of length N_t */
 

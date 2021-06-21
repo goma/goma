@@ -20,8 +20,6 @@
  * $Id: mm_input_particles.c,v 5.1 2007-09-18 18:53:45 prschun Exp $
  */
 
-#define MM_INPUT_PARTICLES_C
-
 /* Standard include files */
 #include <stdlib.h>
 #include <string.h>

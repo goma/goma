@@ -54,12 +54,20 @@
 
 #include "brkfix/fix.h"
 
+extern int *ep;			/* element pointers into node list */
+extern int *np;			/* node pointers into element list */
+
+extern int *nl;			/* node list */
+extern int *el;			/* element list */
+
+extern int *ebl;			/* element block list */
+
 /*
  * Prototypes of functions defined in this file.
  */
 
 static void setup_exo_res_desc	/* fix.c */
-PROTO((Exo_DB *));		/* exo - ptr to database */
+(Exo_DB *);		/* exo - ptr to database */
 
 
 int

@@ -384,7 +384,7 @@ void h0_minus_ndotd (
       for (l=0; l<pd->Num_Dim; l++) { // derivative direction l
         grad_normal[k][l] = fv->grad_n[k][l];
         for (m=0; m<pd->Num_Dim; m++){
-          for (i=0; i<ei->dof[SHELL_NORMAL1]; i++) {
+          for (i=0; i<ei[pg->imtrx]->dof[SHELL_NORMAL1]; i++) {
             d_grad_n_dmesh[k][l][m][i] = fv->d_grad_n_dmesh[k][l][m][i];
           }
         }
@@ -401,7 +401,7 @@ void h0_minus_ndotd (
 
       memset(dn_dcsi, 0.0, sizeof(double)*DIM);
 
-      for (int i=0; i<ei->dof[SHELL_NORMAL1]; i++){
+      for (int i=0; i<ei[pg->imtrx]->dof[SHELL_NORMAL1]; i++){
           dn_dcsi[0] += *esp->n[0][i]*bf[SHELL_NORMAL1]->dphidxi[i][0];
           dn_dcsi[1] += *esp->n[1][i]*bf[SHELL_NORMAL2]->dphidxi[i][0];
       }
@@ -410,7 +410,7 @@ void h0_minus_ndotd (
         normal[k] = fv->n[k];
         grad_normal[k][0] = dn_dcsi[k]/det_J;
         for (int m=0; m<DIM; m++) {
-          for (int j=0; j<ei->dof[MESH_DISPLACEMENT1]; j++) {
+          for (int j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; j++) {
             d_grad_n_dmesh[k][0][m][j] = dn_dcsi[k]*(-1.0f)/det_J/det_J*d_det_J_dmeshkj[m][j];
           }
         }
@@ -424,7 +424,7 @@ void h0_minus_ndotd (
       for (l=0; l<pd->Num_Dim; l++) {
         grad_normal[k][l] = 0.0;
         for (m=0; m<pd->Num_Dim; m++) {
-          for (i=0; i<ei->dof[MESH_DISPLACEMENT1]; i++) {
+          for (i=0; i<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; i++) {
             d_grad_n_dmesh[k][l][m][i] = 0.0;
           }
         }
@@ -446,14 +446,14 @@ void h0_minus_ndotd (
       double csigrad[DIM];
       memset(csigrad, 0.0, sizeof(double)*DIM);
 
-      for (int i=0; i<ei->dof[MESH_DISPLACEMENT1]; i++){ // elemental variable degree of freedom i
+      for (int i=0; i<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; i++){ // elemental variable degree of freedom i
           csigrad[0] += *esp->d[0][i]*bf[MESH_DISPLACEMENT1]->dphidxi[i][0];
           csigrad[1] += *esp->d[1][i]*bf[MESH_DISPLACEMENT2]->dphidxi[i][0];
       }
       for (int k=0; k<DIM; k++) { // displacement index k
         grad_disp[k][0] = csigrad[k]/det_J;
         for (int m=0; m<DIM; m++) {
-          for(int j=0; j<ei->dof[MESH_DISPLACEMENT1]; j++){ // sensitivity to displacement k degree of freedom j
+          for(int j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; j++){ // sensitivity to displacement k degree of freedom j
                          //   gradient direction 'csi'
                          //   |  sensitivity to this displacement
                          //   |  |
@@ -468,7 +468,7 @@ void h0_minus_ndotd (
           for (int l = 0; l<DIM; l++) { // derivative direction l
             gradII_n[l][k] = grad_normal[k][l];
             gradII_disp[l][k] = grad_disp[k][l];
-            for (int i=0; i<ei->dof[MESH_DISPLACEMENT1]; i++) { // element degree of freedom i
+            for (int i=0; i<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; i++) { // element degree of freedom i
               for (int m=0; m<DIM; m++) { // sensitivity to mesh displacement m
                 dgradII_n_dmesh[m][k][l][i]    = d_grad_n_dmesh[k][l][m][i];
                 dgradII_disp_dmesh[m][k][l][i] = d_grad_d_dmesh[k][l][m][i];
@@ -483,7 +483,7 @@ void h0_minus_ndotd (
         for (l = 0; l<DIM; l++) { // derivative direction l
           grad_n[l][k] = grad_normal[k][l];
           grad_disp[l][k] = fv->grad_d[k][l];
-          for (i=0; i<ei->dof[MESH_DISPLACEMENT1]; i++) { // element degree of freedom i
+          for (i=0; i<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; i++) { // element degree of freedom i
             for (m=0; m<DIM; m++) { // sensitivity to mesh displacement m
               dgrad_n_dmesh[m][k][l][i] = fv->d_grad_n_dmesh[k][l][m][i];
               dgrad_disp_dmesh[m][k][l][i] = fv->d_grad_d_dmesh[k][l][m][i];
@@ -548,7 +548,7 @@ void h0_minus_ndotd (
           *(dh_dtime) -= h_sign*(fv->n[k] * fv_dot->d[k] + fv_dot->n[k] * fv->d[k]);
 
           for (l = 0; l<DIM; l++) { // gradient direction l
-            for (i = 0; i<ei->dof[MESH_DISPLACEMENT1]; i++) {
+            for (i = 0; i<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; i++) {
               d2h_dtime_dmesh[k][i] -= h_sign*fv->n[l]*delta(l,k)*bf[MESH_DISPLACEMENT1]->phi[i]*(1.0f+2.0f*tt)/delta_t;
               d2h_dtime_dmesh[k][i] -= h_sign*fv_dot->n[l]*delta(k,l)*bf[MESH_DISPLACEMENT1]->phi[i];
 
@@ -556,22 +556,22 @@ void h0_minus_ndotd (
             }
           }
 
-          if (pd->e[R_SHELL_NORMAL1]) {
-            for (i = 0; i<ei->dof[MESH_DISPLACEMENT1]; i++) {
+          if (pd->e[pg->imtrx][R_SHELL_NORMAL1]) {
+            for (i = 0; i<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; i++) {
               d2h_dtime_dnormal[k][i] -= h_sign*fv_dot->d[k]*bf[SHELL_NORMAL1]->phi[i];
               d2h_dtime_dnormal[k][i] -= h_sign*fv->d[k]*bf[SHELL_NORMAL1]->phi[i]*(1.0+2.0*tt)/delta_t;
             }
           }
         }
-        for(i = 0; i<ei->dof[MESH_DISPLACEMENT1]; i++) {
+        for(i = 0; i<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; i++) {
           dh_dmesh[k][i] -= h_sign*normal[k]*bf[MESH_DISPLACEMENT1]->phi[i];
-          if (pd->v[SHELL_NORMAL1 + k]) {
+          if (pd->v[pg->imtrx][SHELL_NORMAL1 + k]) {
             dh_dnormal[k][i] -= h_sign*fv->d[k]*bf[SHELL_NORMAL1]->phi[i];
           }
         }
 
         for (l = 0; l<DIM; l++){ // gradient direction l
-          for (i = 0; i<ei->dof[MESH_DISPLACEMENT1]; i++){ // element degree of freedom i
+          for (i = 0; i<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; i++){ // element degree of freedom i
             for (int m = 0; m<DIM; m++) { // sensitivity to displacement m
 
               d_gradIIh_dmesh[l][m][i] -= h_sign*d_grad_n_dmesh[k][l][m][i]*fv->d[k]
@@ -680,17 +680,17 @@ void rmesh_minus_rroller (
            "Check your material file or implement new features.");
   }
   // set dh_dmesh
-  for (int i=0; i<ei->dof[MESH_DISPLACEMENT1]; i++){
+  for (int i=0; i<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; i++){
     dh_dmesh[0][i] = (x[0] - xrc)/rmesh*bf[MESH_DISPLACEMENT1]->phi[i];
   }
-  for (int i=0; i<ei->dof[MESH_DISPLACEMENT2]; i++){
+  for (int i=0; i<ei[pg->imtrx]->dof[MESH_DISPLACEMENT2]; i++){
     dh_dmesh[1][i] = (x[1] - yrc)/rmesh*bf[MESH_DISPLACEMENT2]->phi[i];
   }
 
   // set d2h_dtime_dmesh
   if( pd->TimeIntegration == TRANSIENT) {
     for (int k=0; k<DIM-1; k++) {
-      for (int j=0; j<ei->dof[MESH_DISPLACEMENT1]; j++){
+      for (int j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; j++){
         d2h_dtime_dmesh[k][j] = bf[MESH_DISPLACEMENT1+k]->phi[j]/rmesh
                                 *((x[k]-xc[k])*(1.0 + 2.0*tt)/delta_t + fv_dot->x[k])
             -1.0/rmesh/rmesh*(*dh_dtime)*(x[k] - xc[k])
@@ -700,7 +700,7 @@ void rmesh_minus_rroller (
   }
   // set d_gradIIh_dmesh
   for (int m=0; m<DIM-1; m++) {
-    for (int j=0; j<ei->dof[MESH_DISPLACEMENT1+m]; j++) {
+    for (int j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1+m]; j++) {
       double d_dh_dcsi_dmesh[DIM][MDE];
       d_dh_dcsi_dmesh[m][j] =
           (
@@ -736,7 +736,7 @@ void dpos_dcsi(double dxw_dcsi[], double d_dxw_dcsi_dmesh[][DIM][MDE]) {
 
       eqn = R_MESH1;
       var = MESH_DISPLACEMENT1;
-      for (int i = 0; i < ei->dof[eqn]; i++) {
+      for (int i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
         displacement[0][i] += *esp->d[0][i];
         displacement[1][i] += *esp->d[1][i];
       }
@@ -750,14 +750,14 @@ void dpos_dcsi(double dxw_dcsi[], double d_dxw_dcsi_dmesh[][DIM][MDE]) {
       var = TFMP_PRES;
     break;
   }
-  for (int i = 0; i < ei->dof[eqn]; i++) {
+  for (int i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
     d_phi_dxi[i] = bf[eqn]->dphidxi[i][0];
   }
 
   d_sh_x_dxi = d_sh_y_dxi = 0.;
-  for (int i = 0; i < ei->dof[eqn]; i++) {
-    node = ei->dof_list[eqn][i];
-    index = Proc_Elem_Connect[ei->iconnect_ptr +node];
+  for (int i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+    node = ei[pg->imtrx]->dof_list[eqn][i];
+    index = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr +node];
 
     d_sh_x_dxi +=    (Coor[0][index] + displacement[0][i]) * d_phi_dxi[i];
     d_sh_y_dxi +=    (Coor[1][index] + displacement[1][i]) * d_phi_dxi[i];
@@ -768,7 +768,7 @@ void dpos_dcsi(double dxw_dcsi[], double d_dxw_dcsi_dmesh[][DIM][MDE]) {
 
   for(int k=0; k<DIM-1; k++) {
     for (int m=0; m<DIM-1; m++){
-      for (int j=0; j<ei->dof[var]; j++) {
+      for (int j=0; j<ei[pg->imtrx]->dof[var]; j++) {
         d_dxw_dcsi_dmesh[k][m][j] = delta(m,k)*bf[var]->dphidxi[j][0];
       }
     }
@@ -778,7 +778,7 @@ void dpos_dcsi(double dxw_dcsi[], double d_dxw_dcsi_dmesh[][DIM][MDE]) {
 
 double dxdcsi(double *x_node, int x_var) {
   double dxdcsi = 0.0;
-  int dof = ei->dof[x_var];
+  int dof = ei[pg->imtrx]->dof[x_var];
   for(int i=0;i<dof;i++){
     dxdcsi += x_node[i]*bf[x_var]->dphidxi[i][0];
   }
@@ -805,7 +805,7 @@ void detJ_2d_bar(
 
       eqn = R_MESH1;
       var = MESH_DISPLACEMENT1;
-      for (i = 0; i < ei->dof[eqn]; i++) {
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
         displacement[0][i] += *esp->d[0][i];
         displacement[1][i] += *esp->d[1][i];
       }
@@ -816,14 +816,14 @@ void detJ_2d_bar(
       var = TFMP_PRES;
     break;
   }
-  for (i = 0; i < ei->dof[eqn]; i++) {
+  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
     d_phi_dxi[i] = bf[eqn]->dphidxi[i][0];
   }
 
   d_sh_x_dxi = d_sh_y_dxi = 0.;
-  for (i = 0; i < ei->dof[eqn]; i++) {
-    node = ei->dof_list[eqn][i];
-    index = Proc_Elem_Connect[ei->iconnect_ptr +node];
+  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+    node = ei[pg->imtrx]->dof_list[eqn][i];
+    index = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr +node];
 
     d_sh_x_dxi +=    (Coor[0][index] + displacement[0][i]) * d_phi_dxi[i];
     d_sh_y_dxi +=    (Coor[1][index] + displacement[1][i]) * d_phi_dxi[i];
@@ -831,7 +831,7 @@ void detJ_2d_bar(
 
   *det_J = sqrt(d_sh_x_dxi*d_sh_x_dxi + d_sh_y_dxi*d_sh_y_dxi);
   if (mp->FSIModel == FSI_SHELL_ONLY_MESH) {
-    for (int j = 0; j<ei->dof[var]; j++) {
+    for (int j = 0; j<ei[pg->imtrx]->dof[var]; j++) {
       d_det_J_dmesh[0][j] = d_sh_x_dxi*d_phi_dxi[j]/(*det_J);
       d_det_J_dmesh[1][j] = d_sh_y_dxi*d_phi_dxi[j]/(*det_J);
     }
@@ -852,7 +852,7 @@ void ShellBF_2d_bar(
   detJ_2d_bar(&det_J, d_det_J_dmesh);
 
   gradII_phi_i[0] = bf[eq_var]->dphidxi[ii][0]/det_J;
-  for (int j=0; j<ei->dof[eq_var]; j++) {
+  for (int j=0; j<ei[pg->imtrx]->dof[eq_var]; j++) {
     d_gradII_phi_i_dx[0][0][j] = bf[eq_var]->dphidxi[ii][0]*(-1.0)/det_J/det_J*d_det_J_dmesh[0][j];
     d_gradII_phi_i_dx[0][1][j] = bf[eq_var]->dphidxi[ii][0]*(-1.0)/det_J/det_J*d_det_J_dmesh[1][j];
   }
@@ -881,21 +881,21 @@ void load_gap_model(GAP_STRUCT *gap) {
     detJ_2d_bar(&det_J, d_det_J_dmeshkj);
     double* grad;
 
-    if (pd->Num_Dim == 2 && ei->ielem_type == LINEAR_BAR) {
+    if (pd->Num_Dim == 2 && ei[pg->imtrx]->ielem_type == LINEAR_BAR) {
       var = MESH_DISPLACEMENT1;
       grad = gradII_x;
       memset(grad, 0.0, sizeof(double)*DIM);
       memset (csigrad, 0.0, sizeof(double)*DIM);
       memset (dgradII_x_dmesh, 0.0, sizeof(double)*DIM*DIM*MDE);
-      for (int i=0; i<ei->dof[var]; i++) {
-        int node = ei->dof_list[R_MESH1][i];
-        int index = Proc_Elem_Connect[Proc_Connect_Ptr[ei->ielem] +node];
+      for (int i=0; i<ei[pg->imtrx]->dof[var]; i++) {
+        int node = ei[pg->imtrx]->dof_list[R_MESH1][i];
+        int index = Proc_Elem_Connect[Proc_Connect_Ptr[ei[pg->imtrx]->ielem] +node];
         csigrad[0] += (Coor[0][index] + *esp->d[0][i])*bf[var]->dphidxi[i][0];
       }
 
       grad[0] = csigrad[0]/det_J;
 
-      for (int i=0; i<ei->dof[var]; i++) {
+      for (int i=0; i<ei[pg->imtrx]->dof[var]; i++) {
         for (int k=0; k<DIM; k++) {
           dgradII_x_dmesh[0][k][i] = csigrad[0]*(-1.0)/det_J/det_J*d_det_J_dmeshkj[k][i]
                                     + delta(0,k)*bf[var]->dphidxi[i][0]/det_J;
@@ -917,7 +917,7 @@ void load_gap_model(GAP_STRUCT *gap) {
   }
 
   for (int l=0; l<DIM; l++)  {
-    for (int j=0; j<ei->dof[MESH_DISPLACEMENT1]; j++){
+    for (int j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; j++){
       gap->dh_dmesh[l][j] += dH_U_dX[l]*bf[MESH_DISPLACEMENT1]->phi[j];
     }
   }
@@ -935,7 +935,7 @@ void load_gap_model(GAP_STRUCT *gap) {
       double xc = mp->u_heightU_function_constants[2];
       double x = fv->x[0];
 
-      for (int j=0; j<ei->dof[MESH_DISPLACEMENT1]; j++){
+      for (int j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; j++){
         gap->d_gradIIh_dmesh[0][0][j] += 1.0/sqrt(CUBE(SQUARE(r) - SQUARE(x - xc)))
                                     *(x - xc)
                                     *bf[MESH_DISPLACEMENT1]->phi[j]
@@ -978,7 +978,7 @@ void load_gap_model(GAP_STRUCT *gap) {
 
 }
 
-void load_roller_normal_into_fv() {
+void load_roller_normal_into_fv(void) {
   // I think this function relies on shell_determinant_and_normal
   // to init fv->snormal
 
@@ -993,7 +993,7 @@ void load_roller_normal_into_fv() {
   fv->snormal[0] = unnormalized_n[0]/mag_unnormalized_n;
   fv->snormal[1] = unnormalized_n[1]/mag_unnormalized_n;
 
-  for (int j=0; j<ei->dof[MESH_DISPLACEMENT1]; j++) {
+  for (int j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; j++) {
     fv->dsnormal_dx[0][0][j] = 1./mag_unnormalized_n
                                *bf[MESH_DISPLACEMENT1]->phi[j];
     fv->dsnormal_dx[1][0][j] = -unnormalized_n[0]

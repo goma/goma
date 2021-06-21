@@ -9,11 +9,11 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
-#include "goma.h"
-#include "rf_fem.h"
-#include "rf_solver.h"
 
 /* File containing the many of Goma's global variables, moved for -fno-common */
+
+#include "rf_fem.h"
+#include "rf_solver.h"
 
 int  CoordinateSystem;  /* Indicates type of coordinate system (see fem_const.h)*/
 
@@ -209,7 +209,7 @@ String_line Amesos_Package;
 
 String_line AztecOO_Solver;
 
-String_line Stratimikos_File;
+String_line Stratimikos_File[MAX_NUM_MATRICES];
 
 /*
  * A new Aztec 2.0 option. There are more and difft options and our
@@ -254,7 +254,7 @@ double convergence_rate_tolerance; /* tolerance for jacobian reformation
 double modified_newt_norm_tol; /* tolerance for jacobian reformation
                                        based on residual norm */
 
-double Epsilon[3];	/* Used for determining stopping criteria.     */
+double Epsilon[MAX_NUM_MATRICES][3];	/* Used for determining stopping criteria.     */
 
 int NZeros;             /* Number of nonzeros in this procs matrix     */
 

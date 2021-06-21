@@ -48,7 +48,7 @@ static const char rcsid[] = "$Id: user_continuation.c,v 5.3 2008-03-22 00:55:51 
 
 #include "mm_flux.h"
 
-#define _USER_AC_C
+#define GOMA_USER_AC_C
 #include "goma.h"
 #include "user_continuation.h"
 

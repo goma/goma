@@ -10,25 +10,25 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _AC_CONTI_H
-#define _AC_CONTI_H
+#ifndef GOMA_AC_CONTI_H
+#define GOMA_AC_CONTI_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _AC_CONTI_C
+#ifdef GOMA_AC_CONTI_C
 #define EXTERN
 #
 #endif
 
-#ifndef _AC_CONTI_C
+#ifndef GOMA_AC_CONTI_C
 #define EXTERN extern
 #endif
 
 EXTERN void continue_problem
-PROTO((Comm_Ex *,		/* array of communications structures */
+(Comm_Ex *,		/* array of communications structures */
        Exo_DB  *,		/* ptr to the finite element mesh database */
-       Dpi     *));		/* distributed processing information */
+       Dpi     *);		/* distributed processing information */
 
-#endif /* _AC_CONTI_H */
+#endif /* GOMA_AC_CONTI_H */

@@ -25,8 +25,6 @@
 #include "AztecOO.h"
 
 #ifdef EPETRA_MPI
-#define AZ_MPI
-#define AZTEC_MPI
 #include "Epetra_MpiComm.h"
 #include "mpi.h"
 #else 

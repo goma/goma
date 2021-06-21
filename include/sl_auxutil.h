@@ -26,19 +26,19 @@
 	IDG SEPT 28 1997
 */
 
-#ifndef _SL_AUXUTIL_H
-#define _SL_AUXUTIL_H
+#ifndef GOMA_SL_AUXUTIL_H
+#define GOMA_SL_AUXUTIL_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _SL_AUXUTIL_C
+#ifdef GOMA_SL_AUXUTIL_C
 #define EXTERN
 #
 #endif
 
-#ifndef _SL_AUXUTIL_C
+#ifndef GOMA_SL_AUXUTIL_C
 #define EXTERN extern
 #endif
 
@@ -60,40 +60,40 @@
 #endif
 
 EXTERN double **Dmatrix_birth
-PROTO((const int ,              /* n */
-       const int ));            /* m */
+(const int ,              /* n */
+       const int );            /* m */
 
 EXTERN int **Imatrix_birth
-PROTO((const int ,              /* n */
-       const int ));            /* m */
+(const int ,              /* n */
+       const int );            /* m */
 
 EXTERN double *Dvector_birth
-PROTO(( const int  ));          /* n */
+( const int  );          /* n */
 
 EXTERN int *Ivector_birth
-PROTO(( const int  ));          /* n */
+( const int  );          /* n */
 
 /*
  * ... the life of these is short, a tenuous span twixt birth & death ...
  */
 
 EXTERN void Dmatrix_death
-PROTO(( double **,              /* a */
+( double **,              /* a */
         const int ,             /* n */
-        const int ));           /* m */
+        const int );           /* m */
 
 EXTERN void Imatrix_death
-PROTO(( int **,                 /* a */
+( int **,                 /* a */
         const int ,             /* n */
-        const int ));           /* m */
+        const int );           /* m */
 
 EXTERN void Dvector_death
-PROTO(( double *,               /* a */
-        const int ));           /* n */
+( double *,               /* a */
+        const int );           /* n */
 
 EXTERN void Ivector_death
-PROTO(( int *,                  /* a */
-        const int ));           /* n */
+( int *,                  /* a */
+        const int );           /* n */
 
 /*
  
@@ -101,44 +101,44 @@ PROTO(( int *,                  /* a */
  
 */
 
-extern double nnorm PROTO((int, double*));
+extern double nnorm (int, double*);
 
-extern double dot_product PROTO((int, double*, double*));
+extern double dot_product (int, double*, double*);
 
-extern void vcopy PROTO((int, double*, double, double*));
+extern void vcopy (int, double*, double, double*);
 
-extern void vzero PROTO((int, double*));
+extern void vzero (int, double*);
 
-extern void vinit PROTO((int, double*, double));
+extern void vinit (int, double*, double);
 
-extern void v2sum PROTO((int, double*, double, double*, double, double*));
+extern void v2sum (int, double*, double, double*, double, double*);
 
 extern void v3sum 
-PROTO((int, double*, double, double*, double, double*, double, double*));
+(int, double*, double, double*, double, double*, double, double*);
 
-extern void v1add PROTO((int, double*, double, double*));
+extern void v1add (int, double*, double, double*);
 
-extern void v2add PROTO((int, double*, double, double*, double, double*));
+extern void v2add (int, double*, double, double*, double, double*);
 
 extern void v3add 
-PROTO((int, double*, double, double*, double, double*, double, double*));
+(int, double*, double, double*, double, double*, double, double*);
 
-extern void vchange_sign PROTO((int, double*));
+extern void vchange_sign (int, double*);
 
-extern void v2product PROTO((int, double*, double, double*));
+extern void v2product (int, double*, double, double*);
 
-extern void vc_product PROTO((int, double*, double*, double*));
+extern void vc_product (int, double*, double*, double*);
 
-extern void vc_quotient PROTO((int, double*, double*, double*));
+extern void vc_quotient (int, double*, double*, double*);
 
-extern double vc_max PROTO((int, double*));
+extern double vc_max (int, double*);
 
-extern double vc_min PROTO((int, double*));
+extern double vc_min (int, double*);
 
-extern void vsproduct PROTO((int, double*, double));
+extern void vsproduct (int, double*, double);
 
-extern void MV_CSR PROTO((int*, int*, int*, double*, double*, double*));
+extern void MV_CSR (int*, int*, int*, double*, double*, double*);
 
-extern void MV_MSR PROTO((int*, int*, double*, double*, double*));
+extern void MV_MSR (int*, int*, double*, double*, double*);
 
 #endif

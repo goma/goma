@@ -15,8 +15,8 @@
  *$Id: rf_masks.h,v 5.1 2007-09-18 18:53:46 prschun Exp $
  */
 
-#ifndef _RF_MASKS_H
-#define _RF_MASKS_H
+#ifndef GOMA_RF_MASKS_H
+#define GOMA_RF_MASKS_H
 
 #ifndef MAX_TOTAL_BCS_POWER
 #define MAX_TOTAL_BCS_POWER  8
@@ -75,7 +75,7 @@
  * Inter_Mask is Defined in mm_unknown_map.c
  */
 
-extern int Inter_Mask[MAX_VARIABLE_TYPES][MAX_VARIABLE_TYPES];
-extern int Ignore_Deps[MAX_VARIABLE_TYPES][MAX_VARIABLE_TYPES];
+extern int Inter_Mask[MAX_NUM_MATRICES][MAX_VARIABLE_TYPES][MAX_VARIABLE_TYPES];
+extern int Ignore_Deps[MAX_NUM_MATRICES][MAX_VARIABLE_TYPES][MAX_VARIABLE_TYPES];
 
 #endif

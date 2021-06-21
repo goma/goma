@@ -18,9 +18,9 @@
  * Revised: 1997/04/10 13:26 MDT pasacki@sandia.gov
  */
 
+#define GOMA_UTILS_C
 #define _XOPEN_SOURCE 500 /* POSIX mkstemp */
 
-#define _UTILS_C
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,7 +38,7 @@
  * Function declarations of static functions defined here.
  */
 
-static int proc_ident PROTO((const void *, const void *));
+static int proc_ident (const void *, const void *);
 
 /*
  * Count up the total number of node-node interactions in a mesh. Include
@@ -421,14 +421,11 @@ static int
 proc_ident(const void *arg1, 
 	   const void *arg2)
 {
-  int *a;
-  int *b;
-  
+  const int *a = (const int *)arg1;
+  const int *b = (const int *)arg2;
   short proc_a;
   short proc_b;
 
-  a = (int *)arg1;
-  b = (int *)arg2;
 
   if ( *a > keep_len_assignment-1 )
     {
@@ -541,7 +538,6 @@ get_filename_num_procs(const char *basename)
   sprintf(string_system_command, "/bin/rm -f %s", fixXXXXXX );
   err = system(string_system_command);
   EH(err, "Error running /bin/rm -f ");
-
 
   return val;
 }

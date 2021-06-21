@@ -30,7 +30,7 @@ static const char rcs_id[] = "$Id";
 #include <math.h>
 
 #include "std.h"
-#define _SL_AUXUTIL_C
+#define GOMA_SL_AUXUTIL_C
 #include "sl_auxutil.h"
 
 #ifdef aix

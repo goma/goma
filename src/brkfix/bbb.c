@@ -30,7 +30,7 @@
  * Revised: 1998/08/11 06:49 MDT pasacki@sandia.gov
  */
 
-#define _BBB_C
+#define GOMA_BBB_C
 
 #include <stdio.h>
 

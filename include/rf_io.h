@@ -22,8 +22,8 @@
  *       the definitions are defeind in rf_io_structs.h"
  */
 
-#ifndef _RF_IO_H
-#define _RF_IO_H
+#ifndef GOMA_RF_IO_H
+#define GOMA_RF_IO_H
 
 #include "rf_io_const.h"	 /* just in case it has not been done yet.
 				  * -> We need this include dor this file */

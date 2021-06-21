@@ -10,26 +10,26 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _EL_QUALITY_H
-#define _EL_QUALITY_H
+#ifndef GOMA_EL_QUALITY_H
+#define GOMA_EL_QUALITY_H
 
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _EL_QUALITY_C
+#ifdef GOMA_EL_QUALITY_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _EL_QUALITY_C
+#ifndef GOMA_EL_QUALITY_C
 #define EXTERN extern
 #endif
 
 EXTERN int element_quality
-PROTO(( Exo_DB *,  		/* Exodus database structure */
+( Exo_DB *,  		/* Exodus database structure */
         double *,		/* Solution vector */
-        int *));		/* proc_config array */
+        int *);		/* proc_config array */
 
 
-#endif /* _EL_QUALITY_H */
+#endif /* GOMA_EL_QUALITY_H */

@@ -69,22 +69,22 @@
 #include "md_timer.h"
 #include "rd_pixel_image.h"
 
-#define _MM_FILL_C
+#define GOMA_MM_FILL_C
 #include "goma.h"
 #include "mm_fill_fill.h" //Last 3 just for get_side_info()
 int first_time_fopen2 = TRUE;
 
 static double bi_interp
-PROTO ((double xg, double yg, 
+(double xg, double yg, 
 	double resolution[],
 	double ***pixdata,
-	int pixsize[]));
+	int pixsize[]);
 
 static double tri_interp
-PROTO ((double xg, double yg, double zg, 
+(double xg, double yg, double zg, 
 	double resolution[],
 	double ***pixdata,
-	int pixsize[]));
+	int pixsize[]);
 
 /*** Begin program *************************************************************/
 int
@@ -253,7 +253,7 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
   pixsize[2] = 1;
   resz = 1;
   z0 = 0;
-  if (pixdim == 2) { 
+  if (pixdim == 2) {
     err = fscanf(pixfid,"%d %d",&(pixsize[0]),&(pixsize[1]));
     if (err != 2) {
       EH(-1, "Error reading pixel file expected two ints");
@@ -267,7 +267,7 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
       EH(-1, "Error reading pixel file expected two floats");
     }
   }
-  else if (pixdim == 3){ 
+  else if (pixdim == 3){
     err = fscanf(pixfid,"%d %d %d",&(pixsize[0]),&(pixsize[1]),&(pixsize[2]));
     if (err != 3) {
       EH(-1, "Error reading pixel file expected three ints");
@@ -339,11 +339,11 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
   j = 0;
   //Loop over elements; count GQ points, store list of global node ids
   for (ielem = e_start; ielem < e_end; ielem++){
-    load_ei(ielem, exo, 0); 
-    ei->ielem_type = Elem_Type(exo, ielem);
-    gptot += elem_info(NQUAD, ei->ielem_type);
-    for (ilnode = 0; ilnode < ei->num_local_nodes; ilnode++) {                                           
-      ignode = Proc_Elem_Connect[ei->iconnect_ptr + ilnode];
+    load_ei(ielem, exo, 0, pg->imtrx); 
+    ei[pg->imtrx]->ielem_type = Elem_Type(exo, ielem);
+    gptot += elem_info(NQUAD, ei[pg->imtrx]->ielem_type);
+    for (ilnode = 0; ilnode < ei[pg->imtrx]->num_local_nodes; ilnode++) {                                           
+      ignode = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + ilnode];
       my_ignodes[j++] = ignode;
     }
   }
@@ -362,13 +362,13 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
   //Loop over elements to assign pixel values to Gauss points
   for (ielem = e_start; ielem < e_end; ielem++) 
     {
-      load_ei(ielem, exo, 0);
-      ei->ielem_type = Elem_Type(exo, ielem);
+      load_ei(ielem, exo, 0, pg->imtrx);
+      ei[pg->imtrx]->ielem_type = Elem_Type(exo, ielem);
 
       err = bf_mp_init(pd);
       EH(err, "bf_mp_init");
       
-      ngp = elem_info(NQUAD, ei->ielem_type); //Number of Gauss points (GP) in element
+      ngp = elem_info(NQUAD, ei[pg->imtrx]->ielem_type); //Number of Gauss points (GP) in element
       
       for (igp = 0; igp < ngp; igp++) //Loop over GP's
 	{ 	  
@@ -378,12 +378,12 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
 	  err = beer_belly();
 	  EH( err, "beer_belly");
 	  
-	  find_stu(igp, ei->ielem_type, &(xi[0]), &(xi[1]), &(xi[2]));
+	  find_stu(igp, ei[pg->imtrx]->ielem_type, &(xi[0]), &(xi[1]), &(xi[2]));
 	  
 	  xg = yg = zg = 0.0;
-	  for (ilnode = 0; ilnode < ei->num_local_nodes; ilnode++) {
-	    ignode = Proc_Elem_Connect[ei->iconnect_ptr + ilnode]; 
-	    phi_i = newshape(xi, ei->ielem_type, PSI, ilnode, ei->ielem_shape, efv->i[N_ext], ilnode);
+	  for (ilnode = 0; ilnode < ei[pg->imtrx]->num_local_nodes; ilnode++) {
+	    ignode = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + ilnode]; 
+	    phi_i = newshape(xi, ei[pg->imtrx]->ielem_type, PSI, ilnode, ei[pg->imtrx]->ielem_shape, efv->i[N_ext], ilnode);
 	    xg += Coor[0][ignode]*phi_i;
 	    yg += Coor[1][ignode]*phi_i;
 	    if (pixdim == 3) zg += Coor[2][ignode]*phi_i;
@@ -429,13 +429,13 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
 
   for (ielem = e_start; ielem < e_end; ielem++) //Loop over elements
     {
-      load_ei(ielem, exo, 0);
-      ei->ielem_type = Elem_Type(exo, ielem);
+      load_ei(ielem, exo, 0, pg->imtrx);
+      ei[pg->imtrx]->ielem_type = Elem_Type(exo, ielem);
 
       err = bf_mp_init(pd);
       EH(err, "bf_mp_init");
 
-      for (igp = 0; igp < elem_info(NQUAD, ei->ielem_type); igp++)
+      for (igp = 0; igp < elem_info(NQUAD, ei[pg->imtrx]->ielem_type); igp++)
 	{
 	  err = load_basis_functions( xi, bfd);
 	  EH( err, "problem from load_basis_functions");
@@ -444,16 +444,16 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
 	  EH( err, "beer_belly");
 	  
 	  det_J = bfex[N_ext]->detJ;
-	  wt = Gq_weight(igp, ei->ielem_type);
+	  wt = Gq_weight(igp, ei[pg->imtrx]->ielem_type);
        	  
 	  val = save_gp[gp_global++];
 
-	  for (ilnode = 0; ilnode < ei->num_local_nodes; ilnode++) 
+	  for (ilnode = 0; ilnode < ei[pg->imtrx]->num_local_nodes; ilnode++) 
 	    {
-	      ignode = Proc_Elem_Connect[ei->iconnect_ptr + ilnode];
+	      ignode = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + ilnode];
 	      phi_i = bfex[N_ext]->phi[ilnode];
 	      bvec[ignode] += phi_i * val * wt * det_J;
-	      for (jlnode = 0; jlnode < ei->num_local_nodes; jlnode++)
+	      for (jlnode = 0; jlnode < ei[pg->imtrx]->num_local_nodes; jlnode++)
 		{
 		  phi_j = bfex[N_ext]->phi[jlnode];
 		  lumped_mass[ignode] += phi_i*phi_j*wt*det_J;
@@ -493,7 +493,6 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
   }
 
   err = ex_put_var(exoout, time_step, EX_NODAL, k, 1, exo->num_nodes, nodal_var_vals);
-  //err = ex_close(exoout);
 
 
 
@@ -610,14 +609,14 @@ extern double calc_error(double ***pixdata,
     if (e_end - e_start > max_error_points){
       ielem += (e_end - e_start)/max_error_points;
     }
-    load_ei(ielem, exo, 0);
-    ei->ielem_type = Elem_Type(exo, ielem);
+    load_ei(ielem, exo, 0, pg->imtrx);
+    ei[pg->imtrx]->ielem_type = Elem_Type(exo, ielem);
     //Get bounding box  
     xmin = ymin = zmin = 1e20;
     xmax = ymax = zmax = -1e20;
     	  
-    for (ilnode = 0; ilnode < ei->num_local_nodes; ilnode++) {
-      ignode = Proc_Elem_Connect[ei->iconnect_ptr + ilnode];
+    for (ilnode = 0; ilnode < ei[pg->imtrx]->num_local_nodes; ilnode++) {
+      ignode = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + ilnode];
       if (Coor[0][ignode] < xmin) xmin = Coor[0][ignode];
       if (Coor[0][ignode] > xmax) xmax = Coor[0][ignode];
       if (Coor[1][ignode] < ymin) ymin = Coor[1][ignode];
@@ -656,14 +655,14 @@ extern double calc_error(double ***pixdata,
 	  else{
 	  // Ray collision test:
 	    ncoll = 0;
-	    for (iside = 0; iside < ei->num_sides; iside++){	 
-	      get_side_info(ei->ielem_type, iside+1, &nodes_per_side, local_elem_node_id);
+	    for (iside = 0; iside < ei[pg->imtrx]->num_sides; iside++){	 
+	      get_side_info(ei[pg->imtrx]->ielem_type, iside+1, &nodes_per_side, local_elem_node_id);
 	      
-	      n1x = Coor[0][Proc_Elem_Connect[ei->iconnect_ptr + local_elem_node_id[0]]];
-	      n1y = Coor[1][Proc_Elem_Connect[ei->iconnect_ptr + local_elem_node_id[0]]];
+	      n1x = Coor[0][Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + local_elem_node_id[0]]];
+	      n1y = Coor[1][Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + local_elem_node_id[0]]];
 	      
-	      n2x = Coor[0][Proc_Elem_Connect[ei->iconnect_ptr + local_elem_node_id[1]]];
-	      n2y = Coor[1][Proc_Elem_Connect[ei->iconnect_ptr + local_elem_node_id[1]]];
+	      n2x = Coor[0][Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + local_elem_node_id[1]]];
+	      n2y = Coor[1][Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + local_elem_node_id[1]]];
 
 	      ux = n2x - n1x;
 	      uy = n2y - n1y;
@@ -695,12 +694,12 @@ extern double calc_error(double ***pixdata,
 	  
 	  //printf("pixcoords are %g %g %g\n",pixcoords[0],pixcoords[1],pixcoords[2]);
 
-	  find_xi(ielem, pixcoords, xi_data, ei->ielem_type, nodecoor, si, N_ext);
+	  find_xi(ielem, pixcoords, xi_data, ei[pg->imtrx]->ielem_type, nodecoor, si, N_ext);
 	  
 	  pix_interp = 0;
-	  for (ilnode = 0; ilnode < ei->num_local_nodes; ilnode++) {
-	    ignode = Proc_Elem_Connect[ei->iconnect_ptr + ilnode];
-	    phi_i = newshape(xi_data, ei->ielem_type, PSI, ilnode, ei->ielem_shape, efv->i[N_ext], ilnode);
+	  for (ilnode = 0; ilnode < ei[pg->imtrx]->num_local_nodes; ilnode++) {
+	    ignode = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + ilnode];
+	    phi_i = newshape(xi_data, ei[pg->imtrx]->ielem_type, PSI, ilnode, ei[pg->imtrx]->ielem_shape, efv->i[N_ext], ilnode);
 	    pix_interp += phi_i*nodal_var_vals[ignode];
 	  }
 	  

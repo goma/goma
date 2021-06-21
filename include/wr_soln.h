@@ -11,8 +11,8 @@
 \************************************************************************/
  
 
-#ifndef _WR_SOLN_H
-#define _WR_SOLN_H
+#ifndef GOMA_WR_SOLN_H
+#define GOMA_WR_SOLN_H
 
 #include "std.h"
 #include "rf_io_structs.h"
@@ -20,30 +20,17 @@
 #include "dpi.h"
 
 extern void
-write_solution 
-       (char   [],                 /* name EXODUS II file */
-	double [],		   /* Residual vector */
-	double [],		   /* soln vector */
-	double **,
-	double [],		   /* soln vector at previous time step */
-	double [],		   /* dx/dt */
-        double [],                 /* dx/dt at previous time step */
-	int      ,                 /* total elem vars */
-	int	 ,		   /* total elem vars (additional
-				      post processing */
-	double [], 
-	struct Results_Description *, /* post proc vars (rf_io_structs.h) */
-	int	*,		   /* gindex */
-	int	*,		   /* gsize */
-	dbl	*,		   /* gvec */
-	dbl   ***,		   /* gvec_elem */
-	int	*,		   /* nprint - counter for time step number */
-	dbl	 ,		   /* delta_t - time step size */
-	dbl	 ,	           /* time integration parameter */
-	dbl	 ,	           /* time_value */
-        dbl *,			   /* x_pp - post proc vars to export */
-	Exo_DB * , 		    /* ptr to mesh */
-	Dpi    * );		    /* ptr to mesh */
+write_solution
+        (char output_file[], double resid_vector[], double x[], double **x_sens_p, double x_old[], double xdot[],
+         double xdot_old[], int tev, int tev_post, double *gv, struct Results_Description *rd, double *gvec,
+         double ***gvec_elem, int *nprint, dbl delta_t, dbl theta, dbl time_value, dbl *x_pp, Exo_DB *exo,
+         Dpi *dpi);		    /* ptr to mesh */
+
+extern void
+write_solution_segregated(char output_file[], double **resid_vector, double **x, double **x_old, double **xdot,
+                          double **xdot_old, int *tev_post, double *gv, struct Results_Description **rd,
+                          double **gvec, int *nprint, dbl delta_t, dbl theta, dbl time_value, dbl *x_pp,
+                          Exo_DB *exo, Dpi *dpi);
 
 #endif
 /*******************************************************************************/

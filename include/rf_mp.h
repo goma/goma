@@ -19,8 +19,8 @@
  * Rename to avoid Aztec name conflicts.
  */
 
-#ifndef _RF_MP_H
-#define _RF_MP_H
+#ifndef GOMA_RF_MP_H
+#define GOMA_RF_MP_H
 
 /*
  * Parameters describing the characteristics of the Parallel Machine
@@ -43,4 +43,4 @@ extern MPI_Status *Status;
 
 extern int Num_Requests;
 
-#endif /* end of _RF_MP_H */
+#endif /* end of GOMA_RF_MP_H */

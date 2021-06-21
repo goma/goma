@@ -155,7 +155,7 @@ usr_out_hkm(int status, double time, double dt, double *soln)
   if (Debug_Flag <= 2) return;
 
   /* Number of unknowns owned by this processor -- rf_fem.h */
-  num_owned_unknowns  = NumUnknowns;
+  num_owned_unknowns  = NumUnknowns[pg->imtrx];
   
 #ifdef PARALLEL
   (void) MPI_Barrier(MPI_COMM_WORLD);
@@ -178,7 +178,7 @@ usr_out_hkm(int status, double time, double dt, double *soln)
       
     /************** Fluid Mechanics Printouts  *****************************/
     var = VELOCITY1;
-    if (pd_local->v[var]) {
+    if (pd_local->v[0][var]) {
       SOLN_VALUES(var, 0, soln, &Tmax, &g_Tmax, &iTmax, &Tmin,
 		  &g_Tmin, &iTmin, &Tavg, mn);
 
@@ -186,7 +186,7 @@ usr_out_hkm(int status, double time, double dt, double *soln)
 		     Tavg);
     }
     var = VELOCITY2;
-    if (pd_local->v[var]) {
+    if (pd_local->v[0][var]) {
       SOLN_VALUES(var, 0, soln, &Tmax, &g_Tmax, &iTmax, &Tmin,
 		  &g_Tmin, &iTmin, &Tavg, mn);
 
@@ -194,7 +194,7 @@ usr_out_hkm(int status, double time, double dt, double *soln)
 		     Tavg);
     }
     var = VELOCITY3;
-    if (pd_local->v[var]) {
+    if (pd_local->v[0][var]) {
       SOLN_VALUES(var, 0, soln, &Tmax, &g_Tmax, &iTmax, &Tmin,
 		  &g_Tmin, &iTmin, &Tavg, mn);
 
@@ -202,7 +202,7 @@ usr_out_hkm(int status, double time, double dt, double *soln)
 		     Tavg);
     }
     var = PRESSURE;
-    if (pd_local->v[var]) {
+    if (pd_local->v[0][var]) {
       SOLN_VALUES(var, 0, soln, &Tmax, &g_Tmax, &iTmax, &Tmin,
 		  &g_Tmin, &iTmin, &Tavg, mn);
 
@@ -213,7 +213,7 @@ usr_out_hkm(int status, double time, double dt, double *soln)
     /************ Heat Transfer Printout ***********************************/
 
     var = TEMPERATURE;
-    if (pd_local->v[var]) {
+    if (pd_local->v[0][var]) {
       SOLN_VALUES(var, 0, soln, &Tmax, &g_Tmax, &iTmax, &Tmin,
 		  &g_Tmin, &iTmin, &Tavg, mn);
 
@@ -224,7 +224,7 @@ usr_out_hkm(int status, double time, double dt, double *soln)
     /*********** Mass Transfer Temporary Printouts *************************/
 
     var = MASS_FRACTION;
-    if (pd_local->v[var]) {
+    if (pd_local->v[0][var]) {
       /*
        *   Write out a SENKIN file for the first node on the 0th processor,
        *   if chemkin was used as the default database.
@@ -460,7 +460,7 @@ static void SOLN_VALUES(int var_type, int sub_index, double soln[],
               ndof = 0;
 #ifdef DEBUG_HKM
 	      if (((EXO_ptr->eb_id[ebi] + 1) % 2) != 0) {
-		if (Dolphin[i][var_type] > 1) {
+		if (Dolphin[pg->imtrx][i][var_type] > 1) {
 		  if (Nodes[i]->DISC_BNDRY) {
 		    ndof = 1;
 		  }
@@ -468,7 +468,7 @@ static void SOLN_VALUES(int var_type, int sub_index, double soln[],
 	      }
 #endif
 	      if ((i_eqn =
-		   Index_Solution(i, var_type, sub_index, ndof, mn)) >= 0) {
+		   Index_Solution(i, var_type, sub_index, ndof, mn, pg->imtrx)) >= 0) {
 		num_nodes_mn++;
 		s      = soln[i_eqn];
 		s_sum += fabs(s);
@@ -562,14 +562,14 @@ static void SOLN_TO_MOLES(double soln[], double soln_mole[],
   mn = matID_prop->MatID;
   for (node = 0; node < num_owned_nodes; node++) {
 #ifdef DEBUG_HKM
-    if (Dolphin[node][MASS_FRACTION] > 1) {
+    if (Dolphin[pg->imtrx][node][MASS_FRACTION] > 1) {
       ndof = mn;
     } else {
       ndof = 0;
     }
 #endif
     if ((i_eqn =
-	 Index_Solution(node, MASS_FRACTION, 0, ndof, mn)) >= 0) { 
+	 Index_Solution(node, MASS_FRACTION, 0, ndof, mn, pg->imtrx)) >= 0) { 
       for (k = 0, sumwt = 0.0; k < matID_prop->Num_Species_Eqn; k++) {
 	sumwt +=  soln[i_eqn + k] / matID_prop->molecular_weight[k];
       }
@@ -594,11 +594,11 @@ static void SOLN_TO_MOLES(double soln[], double soln_mole[],
    */
 
   var = TEMPERATURE;
-  if (pd_glob[mn]->v[var]) {
+  if (pd_glob[mn]->v[pg->imtrx][var]) {
     for (node = 0; node < num_owned_nodes; node++) {
       if ((i_eqn =
-	   Index_Solution(node, MASS_FRACTION, 0, ndof, mn)) >= 0) {
-        if ((j_eqn = Index_Solution(node, TEMPERATURE, 0, ndof, mn)) >= 0) {
+	   Index_Solution(node, MASS_FRACTION, 0, ndof, mn, pg->imtrx)) >= 0) {
+        if ((j_eqn = Index_Solution(node, TEMPERATURE, 0, ndof, mn, pg->imtrx)) >= 0) {
           for (k = 0, sumwt = 0.0; k < matID_prop->Num_Species_Eqn; k++) {
             sumwt += soln_mole[i_eqn + k];
           }
@@ -635,14 +635,14 @@ static void GET_SOLN_LASTSPECIES(double soln[], double soln_lastSpecies[],
   if (matID_prop->Num_Species_Eqn < matID_prop->Num_Species) {
     for (node = 0; node < num_owned_nodes; node++) {
 #ifdef DEBUG_HKM
-      if (Dolphin[node][MASS_FRACTION] > 1) {
+      if (Dolphin[pg->imtrx][node][MASS_FRACTION] > 1) {
         ndof = mn;
       } else {
         ndof = 0;
       }
 #endif
       if ((i_eqn =
-	   Index_Solution(node, MASS_FRACTION, 0, ndof, mn)) >= 0) {
+	   Index_Solution(node, MASS_FRACTION, 0, ndof, mn, pg->imtrx)) >= 0) {
 	soln_lastSpecies[i_eqn] = 1.0;
 	for (k = 0; k < matID_prop->Num_Species_Eqn; k++) {
 	  soln_lastSpecies[i_eqn] -= soln[i_eqn + k];
@@ -652,14 +652,14 @@ static void GET_SOLN_LASTSPECIES(double soln[], double soln_lastSpecies[],
   } else {
     for (node = 0; node < num_owned_nodes; node++) {
 #ifdef DEBUG_HKM
-      if (Dolphin[node][MASS_FRACTION] > 1) {
+      if (Dolphin[pg->imtrx][node][MASS_FRACTION] > 1) {
         ndof = mn;
       } else {
         ndof = 0;
       }
 #endif
       if ((i_eqn =
-	   Index_Solution(node, MASS_FRACTION, 0, ndof, mn)) >= 0) {
+	   Index_Solution(node, MASS_FRACTION, 0, ndof, mn, pg->imtrx)) >= 0) {
 	soln_lastSpecies[i_eqn] = soln[i_eqn];
       }
     }
@@ -757,15 +757,15 @@ static void WRITE_SENKIN_FILE(int    status,
 
   VOL = 1.0;
 
-  if ((indx_MF = Index_Solution(node, MASS_FRACTION, 0, ndof, mn)) < 0) {
+  if ((indx_MF = Index_Solution(node, MASS_FRACTION, 0, ndof, mn, pg->imtrx)) < 0) {
     (void) fprintf(stderr, "error indx_MF is bad\n");
     exit(-1);
   }
 
   var = TEMPERATURE;
-  if (pd_glob[0]->v[var]) {
+  if (pd_glob[0]->v[pg->imtrx][var]) {
     if ((indx_T =
-	 Index_Solution(mesh_id, node, TEMPERATURE, 0, mn)) >= 0) {
+	 Index_Solution(mesh_id, node, TEMPERATURE, 0, mn, pg->imtrx)) >= 0) {
       T = soln[indx_T];
     }
 #ifdef DEBUG

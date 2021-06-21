@@ -23,12 +23,12 @@ static char rcsid[] = "$Id: rf_pre_proc.c,v 5.1 2007-09-18 18:53:47 prschun Exp 
 #include <stdio.h>
 #include <string.h>
 
-#define _RF_PRE_PROC_C
+#define GOMA_RF_PRE_PROC_C
 
 #include "goma.h"
 
 static void build_elem_type_list
-PROTO((Exo_DB *));		/* exo */
+(Exo_DB *);		/* exo */
 
 /****************************************************************************/
 /****************************************************************************/

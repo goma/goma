@@ -10,8 +10,8 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _RF_ELEMENT_STORAGE_STRUCT_H
-#define _RF_ELEMENT_STORAGE_STRUCT_H
+#ifndef GOMA_RF_ELEMENT_STORAGE_STRUCT_H
+#define GOMA_RF_ELEMENT_STORAGE_STRUCT_H
 
 
 struct Element_Storage {

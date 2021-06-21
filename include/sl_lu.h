@@ -11,29 +11,29 @@
 \************************************************************************/
  
 
-#ifndef _SL_LU_H
-#define _SL_LU_H
+#ifndef GOMA_SL_LU_H
+#define GOMA_SL_LU_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _SL_LU_C
+#ifdef GOMA_SL_LU_C
 #define EXTERN
 #
 #endif
 
-#ifndef _SL_LU_C
+#ifndef GOMA_SL_LU_C
 #define EXTERN extern
 #endif
 
 EXTERN void lu
-PROTO((const int ,		/* N                                         */
+(const int ,		/* N                                         */
        const int ,		/* NExt                                      */
        const int ,		/* M                                         */
        double [],		/* a                                         */
        int [],			/* ija                                       */
        double [],		/* x                                         */
-       const int ));		/* factor_flag                               */
+       const int );		/* factor_flag                               */
 
-#endif /* _SL_LU_H */
+#endif /* GOMA_SL_LU_H */

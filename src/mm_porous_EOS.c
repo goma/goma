@@ -54,7 +54,6 @@ static char rcsid[] = "$Id: mm_porous_EOS.c,v 5.0 2006-07-06 16:18:51 edwilke Ex
 #include "mm_fill_porous.h"
 #include "mm_std_models.h"
 
-#define _MM_STD_MODELS_C
 #include "goma.h"
 
 /*********** R O U T I N E S   I N   T H I S   F I L E *************************
@@ -111,7 +110,7 @@ load_enthalpy(double saturation, double pressure)
    Pl = fv->p_liq;
    T = fv->T;
    Pl_old = fv_old->p_liq;
-   if (pd->e[R_POR_GAS_PRES]) Pg_old = fv_old->p_gas; else Pg_old = pressure;
+   if (pd->e[pg->imtrx][R_POR_GAS_PRES]) Pg_old = fv_old->p_gas; else Pg_old = pressure;
    T_old = fv_old->T;
 
    if ( saturation != 0.0) {

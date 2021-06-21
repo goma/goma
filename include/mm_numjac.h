@@ -14,19 +14,16 @@
  * mm_numjac.h -- prototype declarations for mm_numjac.c
  */
 
-#ifndef _MM_NUMJAC_H
-#define _MM_NUMJAC_H
+#ifndef GOMA_MM_NUMJAC_H
+#define GOMA_MM_NUMJAC_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_NUMJAC_C
+#ifdef GOMA_MM_NUMJAC_C
 #define EXTERN
-#
-#endif
-
-#ifndef _MM_NUMJAC_C
+#else
 #define EXTERN extern
 #endif
 
@@ -56,41 +53,41 @@
 						  * SCALED_RESIDUAL_TOLERANCE. */
 #define SCALED_RESIDUAL_TOLERANCE_CUTOFF (1.0e-8) /* don't report scaled error if values
 						    * are this small */
+EXTERN void
+numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
+		   double x[],	/* Solution vector for the current processor */
+		   double resid_vector[],   /* Residual vector for the current
+					     * processor */
+		   double delta_t, /* time step size */
+		   double theta, /* parameter to vary time integration from
+				    explicit (theta = 1) to
+				    implicit (theta = 0) */
+		   double x_old[], /* Value of the old solution vector */
+		   double x_older[], /* Value of the real old soln vect */
 
-EXTERN void numerical_jacobian_compute_stress  /* mm_numjac.c                               */
-PROTO((struct Aztec_Linear_Solver_System *, /* ams                           */
-       double [],               /* x - soln vector for current processor     */
-       double [],               /* resid_vector -for current processor       */
-       double ,                 /* delta_t - time step size                  */
-       double ,                 /* theta - parameter varies time integration *
-                                 * from explicit (theta = 1) to              *
-                                 * implicit (theta = 0)                      */
-       double [],               /* x_old - Value of the old solution vector  */
-       double [],               /* x_older - Value of the real old soln vect */
-       double [],               /* xdot - predicted for new solution         */
-       double [],               /* xdot_old - Value of xdot at previous time */
-       double [],               /* x_update                                  */
-       int ,                    /* num_total_nodes                           */
-       struct elem_side_bc_struct *[], /* first_elem_side_BC_array           *
-                                        * This is an array of pointers to    *
-                                        * the first surface integral defined *
-                                        * for each element.  It has a length *
-                                        * equal to the total number of       *
-                                        * elements on the current proc       */
-       int ,                    /* Debug_Flag - flag for calculating         *
-                                 * numerical jacobian:                       *
-                                 *    -1 == calc num jac w/o rescaling       *
-                                 *    -2 == calc num jac w/  rescaling       *
-                                 *    -3 == calc num jac w/ diagonal scaling */
-       double ,                 /* time_value - current time                 */
-       Exo_DB *,                /* exo - ptr to whole fe mesh                */
-       Dpi *,                   /* dpi - any distributed processing info     */
-       double *,
-       double *));
+		   double xdot[], /* Value of xdot predicted for new solution */
+		   double xdot_old[], /* Value of xdot at previous time */
+
+		   double x_update[],
+		   int num_total_nodes,
+
+		   struct elem_side_bc_struct *first_elem_side_BC_array[],
+				/* This is an array of pointers to the first
+				   surface integral defined for each element.
+				   It has a length equal to the total number
+				   of elements defined on the current proc */
+		   int Debug_Flag, /* flag for calculating numerical jacobian
+				      -1 == calc num jac w/o rescaling
+				      -2 == calc num jac w/  rescaling */
+		   double time_value, /* current value of time */
+		   Exo_DB *exo,	    /* ptr to whole fe mesh */
+		   Dpi *dpi,        /* any distributed processing info */
+		   double *h_elem_avg,
+  double *U_norm);
 
 
 EXTERN void numerical_jacobian	/* mm_numjac.c                               */
-PROTO((struct Aztec_Linear_Solver_System *, /* ams                           */
+(struct Aztec_Linear_Solver_System *, /* ams                           */
        double [],		/* x - soln vector for current processor     */
        double [],		/* resid_vector -for current processor       */
        double ,			/* delta_t - time step size                  */
@@ -118,11 +115,11 @@ PROTO((struct Aztec_Linear_Solver_System *, /* ams                           */
        Exo_DB *,		/* exo - ptr to whole fe mesh                */
        Dpi *,			/* dpi - any distributed processing info     */
        double *,
-       double *));
+       double *);
 
 #ifndef COUPLED_FILL
 EXTERN void numerical_jacobian_fill /* mm_numjac.c                           */
-PROTO((int [],			/* ijaf - column pointers into fill matrix   */
+(int [],			/* ijaf - column pointers into fill matrix   */
        double [],		/* afill - non-zero entries in fill matrix   */
        double [],		/* xf - fill Solution vector                 */
        double [],		/* rf - Residual vector for fill eqns        */
@@ -138,10 +135,10 @@ PROTO((int [],			/* ijaf - column pointers into fill matrix   */
 				 * rescaling                                 */
        int [],			/* node_to_fill - this is a map from the     */
        Exo_DB *,		/* exo - ptr to whole fe mesh                */
-       Dpi *));			/* dpi - ptr to parallel info                */
+       Dpi *);			/* dpi - ptr to parallel info                */
 #endif /* not COUPLED_FILL */
 extern double calc_numerical_delta(double);
 extern void   AF_assemble_Residual_Only(void);
 extern void   AF_restore_Jacobian_Flag(void);
 
-#endif /* _MM_NUMJAC_H */
+#endif /* GOMA_MM_NUMJAC_H */

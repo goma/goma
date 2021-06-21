@@ -12,8 +12,8 @@ extern "C" {
 
 void EpetraCreateGomaProblemGraph(struct Aztec_Linear_Solver_System *ams, Exo_DB *exo, Dpi *dpi);
 
-void EpetraLoadLec(Exo_DB *exo, int ielem, struct Aztec_Linear_Solver_System *ams,
-    double x[], double resid_vector[]);
+void EpetraLoadLec(int ielem, struct Aztec_Linear_Solver_System *ams,
+                   double resid_vector[]);
 
 void EpetraRowSumScale(struct Aztec_Linear_Solver_System *ams, double *b, double *scale);
 

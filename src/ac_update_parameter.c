@@ -56,7 +56,7 @@ static const char rcs_id[] = "$Id: ac_update_parameter.c,v 5.3 2008-12-19 22:54:
 
 #include "sl_util.h"		/* defines sl_init() */
 
-#define _RF_UPDATE_PARAMETER_C
+#define GOMA_AC_UPDATE_PARAMETER_C
 #include "user_continuation.h"
 #include "goma.h"
 
@@ -733,6 +733,7 @@ update_MT_parameter(double lambda, /* Parameter value */
     case TAGC_SHIFT_FUNC:
     case TAGC_SHIFT_FUNC1:
       vn_glob[mn]->shift[mpr-TAGC_SHIFT_FUNC] = lambda;
+      break;
 
     case TAGC_POLYMER_YIELD_STRESS:
         for(int mm=0;mm<vn_glob[mn]->modes;mm++)
@@ -1076,6 +1077,7 @@ update_MT_parameter(double lambda, /* Parameter value */
          { upd->Acoustic_Frequency = 2.*M_PIE*c_mm/lambda;}
       else
          { upd->Acoustic_Frequency = 2.*M_PIE*c_m/lambda;}
+      break;
     case TAGC_TFMP_REL_PERM_0:
       mp_glob[mn]->tfmp_rel_perm_const[0] = lambda;
       break;

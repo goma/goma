@@ -67,7 +67,7 @@
 #include <sys/times.h>
 #endif
 
-#define _MD_TIMER_C
+#define GOMA_MD_TIMER_C
 #include "std.h"
 #include "goma.h"
 

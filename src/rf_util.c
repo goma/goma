@@ -9,16 +9,6 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
-
-/*
- *$Id: rf_util.c,v 5.19 2010-05-27 21:03:25 prschun Exp $
- */
-
-#ifdef USE_RCSID
-static char rcsid[] =
-"$Id: rf_util.c,v 5.19 2010-05-27 21:03:25 prschun Exp $";
-#endif
 
 /* Needed to declare POSIX function drand48 */
 #define _XOPEN_SOURCE
@@ -58,6 +48,8 @@ static char rcsid[] =
 
 #include "exo_struct.h"
 
+#include "rd_pixel_image.h"
+
 #include "goma.h"
 
 
@@ -85,44 +77,36 @@ static char rcsid[] =
 ******************************************************************************/
 
 /******************** PROTOTYPES FOR STATIC FUNCTIONS ************************/
-int rd_image_to_mesh
-PROTO(( int ,                  /* Index of external field */
-        const Exo_DB *));      /* Exodus database */
-
-int rd_image_to_mesh2
-PROTO(( int ,                  /* Index of external field */
-        const Exo_DB *));      /* Exodus database */
-
-
 static void read_initial_guess	/* rf_util.c                                 */
-PROTO((double [],		/* u                                         */
+(double [],		/* u                                         */
        const int ,		/* np                                        */
        double [],		/* uAC                                       */
-       const int ));		/* nAC                                       */
+       const int );		/* nAC                                       */
 
 static void inject_nodal_vec
-PROTO((double [],		/* sol_vec - full dof vector for this proc   */
+(double [],		/* sol_vec - full dof vector for this proc   */
        const int ,		/* var_no - VELOCITY1, etc.                  */
        const int ,		/* k - species index                         */
        const int ,              /* idof - dof #                              */
        const int ,              /* matID - material index to scatter to      */
-       const double []));	/* nodal_vec - condensed node based vector   */
+       const double []);	/* nodal_vec - condensed node based vector   */
 
-static void inject_elem_vec(double[],          /* sol_vec - full dof vector for this proc   */
-                            const int,         /* var_no - VELOCITY1, etc.                  */
-                            const int,         /* k - species index                         */
-                            const int,         /* idof - dof #                              */
-                            const int,         /* matID - material index to scatter to      */
-                            const double[],    /* nodal_vec - condensed node based vector   */
-                            const Exo_DB *exo, /* exodus database */
-                            const int num_elems_blk); /* number of elements in the block. */
+static void inject_elem_vec
+(double [],		/* sol_vec - full dof vector for this proc   */
+       const int ,		/* var_no - VELOCITY1, etc.                  */
+       const int ,		/* k - species index                         */
+       const int ,              /* idof - dof #                              */
+       const int ,              /* matID - material index to scatter to      */
+       const double [],	        /* nodal_vec - condensed node based vector   */
+       const Exo_DB *exo,       /* exodus database */
+       const int num_elems_blk); /* number of elements in the block. */
 
 static void init_structural_shell_coord
-PROTO((double []));             /* u[] - solution vector */
+(double []);             /* u[] - solution vector */
 
 static void init_shell_normal_unknowns
-PROTO((double [] ,       	/* u[] - solution vector */
-       const Exo_DB *));        /* Exodus database */
+(double [] ,              /* u[] - solution vector */
+       const Exo_DB *);		/* Exodus database */
 
 /*****************************************************************************/
 /*****************************************************************************/
@@ -191,22 +175,6 @@ gather_double_vector(const int n,
 }
 #endif
 
-int
-ilog2i( unsigned int n )
-
-{
-/* LOCAL VARIABLES */
-	int i = 0;
-	unsigned int n1 = n;
-
-		while(n1 >>= 1) ++i;
-
-		if(1 <<i != n)
-			return(-1);
-		else
-			return(i);
-
-} /* END of routine ilog2i */
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
@@ -305,18 +273,18 @@ put_fill_vector(const int N, double x[], const double fill_vector[],
   int ki;            /* counter from 0 to the number of dofs      */
 
   for (i = 0; i < N; i++) {
-    nvdof = Dolphin[i][R_FILL]; /* Number of FILL dofs at this node. */
+    nvdof = Dolphin[pg->imtrx][i][R_FILL]; /* Number of FILL dofs at this node. */
     for (ki = 0; ki < nvdof; ki++) {
-      ie = Index_Solution(i, R_FILL, 0, ki, -1);
+      ie = Index_Solution(i, R_FILL, 0, ki, -1, pg->imtrx);
       if (ie != -1)  {
-	if (ie > NumUnknowns) {
+	if (ie > NumUnknowns[pg->imtrx]) {
 	  EH(ie, "put_fill_vector");
 	} else {
 	  x[ie] = fill_vector[node_to_fill[i] + ki];
 	}
       } else if (ie == -1) {
         mn = first_matID_at_node(i);
-	ie = Index_Solution(i, R_FILL, 0, ki, mn);
+	ie = Index_Solution(i, R_FILL, 0, ki, mn, pg->imtrx);
 	if (ie != -1) {
 	  x[ie] = fill_vector[node_to_fill[i] + ki];
 	} else {
@@ -346,15 +314,15 @@ get_fill_vector ( const int N,
 
   for (i = 0; i < N; i++)
     {
-      nvdof = Dolphin[i][R_FILL];
+      nvdof = Dolphin[pg->imtrx][i][R_FILL];
       for ( ki=0; ki<nvdof; ki++)
 	{
-	  ie = Index_Solution(i, R_FILL, ktype, ki, -1);
+	  ie = Index_Solution(i, R_FILL, ktype, ki, -1, pg->imtrx);
 	  if (ie != -1) {
 	    fill_vector[node_to_fill[i] + ki] = x[ie];
 	  } else {
 	    mn = first_matID_at_node(i);
-	    ie = Index_Solution(i, R_FILL, ktype, ki, mn);
+	    ie = Index_Solution(i, R_FILL, ktype, ki, mn, pg->imtrx);
 	    if (ie != -1) {
 	      fill_vector[node_to_fill[i] + ki] = x[ie];
 	    } 
@@ -391,7 +359,7 @@ countmap_vardofs(const int varType, const int num_nodes, int *map)
     EH(-1, "Attempt to count a bogus variable.");
   }
   for (node = 0; node < num_nodes; node++) {
-    nv = Nodes[node]->Nodal_Vars_Info;
+    nv = Nodes[node]->Nodal_Vars_Info[pg->imtrx];
     nun = get_nv_ndofs_modMF(nv, varType);
     if (nun > 0) {
       map[node] = count;
@@ -417,10 +385,10 @@ count_fill_unknowns ( int N,
   num_fill_unknowns = 0;
   for (i = 0; i < N; i++)
     {
-      if ( Dolphin[i][FILL] )
+      if ( Dolphin[pg_imtrx][i][FILL] )
 	{
 	  node_to_fill[i] = num_fill_unknowns;
-	  num_fill_unknowns += Dolphin[i][FILL];
+	  num_fill_unknowns += Dolphin[pg->imtrx][i][FILL];
 	}
     }
 } /* END of routine count_fill_unknowns */
@@ -472,11 +440,11 @@ filter_conc (const int N,	/* number of nodes */
   const double minimum_shear_rate = 0.0;
   int i, ie;
   
-  if (pd->e[R_MASS]) {
+  if (pd->e[pg->imtrx][R_MASS]) {
     for (i = 0; i < N; i++) {
-      if (Dolphin[i][R_MASS]) {
+      if (Dolphin[pg->imtrx][i][R_MASS]) {
 	ie = Index_Solution(i, R_MASS, filter_species_material_number,
-			    0, -1); 
+			    0, -1, pg->imtrx); 
 	if (ie != -1) { 
 	  x[ie] = x[ie] > cmin ? x[ie] : cmin;
 	  if (cmax != 0.0) {
@@ -486,10 +454,10 @@ filter_conc (const int N,	/* number of nodes */
       }
     }
   }
-  if (pd->e[R_SHEAR_RATE])  {
+  if (pd->e[pg->imtrx][R_SHEAR_RATE])  {
     for (i = 0; i < N; i++) {
-      if (Dolphin[i][R_SHEAR_RATE]) {
-	ie = Index_Solution(i, R_SHEAR_RATE, 0, 0, -1); 
+      if (Dolphin[pg->imtrx][i][R_SHEAR_RATE]) {
+	ie = Index_Solution(i, R_SHEAR_RATE, 0, 0, -1, pg->imtrx); 
 	if (ie != -1) {
 	  if (x[ie] < minimum_shear_rate) {
 	    x[ie] = minimum_shear_rate;
@@ -616,16 +584,16 @@ time_step_control(const double delta_t,  const double delta_t_old,
    * Collect deviations from predicted and max values
    * and ncp[eqn] => Number of unknowns in each binned variable type
    */
-  for (i = 0; i < (num_internal_dofs+num_boundary_dofs); i++) {
+  for (i = 0; i < (num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]); i++) {
   
     valid = TRUE;
 
     inode = 0;
-    vd = Index_Solution_Inv(i, &inode, NULL, NULL, &idof);
+    vd = Index_Solution_Inv(i, &inode, NULL, NULL, &idof, pg->imtrx);
     eqn = vd->Variable_Type;
 
 #ifdef DEBUG_HKM
-    if (eqn != idv[i][0]) {
+    if (eqn != idv[pg->imtrx][i][0]) {
       EH(-1,"error in  Index_Solution_Inv mapping");
     }
 #endif
@@ -637,7 +605,7 @@ time_step_control(const double delta_t,  const double delta_t_old,
         int interp;
         double F, Fold;
         if ( MatID == -1 ) MatID = 0;
-        interp = pd_glob[MatID]->i[eqn];
+        interp = pd_glob[MatID]->i[pg->imtrx][eqn];
         
         if ( is_xfem_interp( interp ) )
           {
@@ -704,7 +672,7 @@ time_step_control(const double delta_t,  const double delta_t_old,
    */
   if (eps < 0.0) {
     for (i = 0; i < MAX_VARIABLE_TYPES; i++) {
-      if (max[i] > 0.0) {
+      if (max[i] > DBL_SEMI_SMALL) {
 #ifdef VAR_UPDATE_UNITY_SCALE
 	ecp[i] =  ecp[i] / (1.0 + SQUARE(max[i]));
 #else
@@ -755,6 +723,7 @@ time_step_control(const double delta_t,  const double delta_t_old,
     num_unknowns += ncp[PVELOCITY1];
     num_unknowns += ncp[PVELOCITY2];
     num_unknowns += ncp[PVELOCITY3];
+
   }
 
   if (use_var_norm[2]) {
@@ -1015,102 +984,102 @@ time_step_control(const double delta_t,  const double delta_t_old,
   *success_dt = (Err_norm < beta * abs_eps);
     if( const_delta_t)
 	{
-        DPRINTF(stderr, "\nCONSTANT DELTA_T          [");
-        if(ncp[MESH_DISPLACEMENT1]){ DPRINTF(stderr, "%7.1e", e_d); }
-        if(ncp[VELOCITY1] || ncp[PVELOCITY1]){ DPRINTF(stderr, ", %7.1e", e_v); }
-        if(ncp[TEMPERATURE]){ DPRINTF(stderr, ", %7.1e", e_T); }
+        DPRINTF(stdout, "\nCONSTANT DELTA_T          [");
+        if(ncp[MESH_DISPLACEMENT1]){ DPRINTF(stdout, "%7.1e", e_d); }
+        if(ncp[VELOCITY1] || ncp[PVELOCITY1]){ DPRINTF(stdout, ", %7.1e", e_v); }
+        if(ncp[TEMPERATURE]){ DPRINTF(stdout, ", %7.1e", e_T); }
         if(ncp[MASS_FRACTION] || ncp[POR_LIQ_PRES] || ncp[POR_GAS_PRES] 
 		|| ncp[POR_POROSITY] || ncp[POR_SATURATION] || ncp[POR_SINK_MASS])
- 		{ DPRINTF(stderr, ", %7.1e", e_y); }
-        if(ncp[PRESSURE]){ DPRINTF(stderr, ", %7.1e", e_P); }
-        if(ncp[POLYMER_STRESS11]){ DPRINTF(stderr, ", %7.1e", e_S); }
-        if(ncp[VOLTAGE]){ DPRINTF(stderr, ", %7.1e", e_V); }
-        if(ncp[SURF_CHARGE]){ DPRINTF(stderr, ", %7.1e", e_qs); }
-        if(ncp[SHELL_CURVATURE]){ DPRINTF(stderr, ", %7.1e", e_shk); }
-        if(ncp[SHELL_TENSION]){ DPRINTF(stderr, ", %7.1e", e_sht); }
-        if(ncp[SHELL_X]){ DPRINTF(stderr, ", %7.1e", e_shd); }
-        if(ncp[SHELL_USER]){ DPRINTF(stderr, ", %7.1e", e_shu); }
-        if(ncp[FILL] || ncp[PHASE1] ){ DPRINTF(stderr, ", %7.1e", e_F); }
-        if(ncp[ACOUS_PREAL] || ncp[ACOUS_PIMAG]){ DPRINTF(stderr, ", %7.1e", e_ap); }
-        if(ncp[EXT_VELOCITY]){ DPRINTF(stderr, ", %7.1e", e_extv); }
-	if(ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]){ DPRINTF(stderr, ", %7.1e", e_int); }
-	if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] || ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]){ DPRINTF(stderr, ", %7.1e", e_sh_lub); }
-        if(nAC > 0){ DPRINTF(stderr, ", %7.1e", e_AC); }
-        DPRINTF(stderr, "]\n");
+                { DPRINTF(stdout, ", %7.1e", e_y); }
+        if(ncp[PRESSURE]){ DPRINTF(stdout, ", %7.1e", e_P); }
+        if(ncp[POLYMER_STRESS11]){ DPRINTF(stdout, ", %7.1e", e_S); }
+        if(ncp[VOLTAGE]){ DPRINTF(stdout, ", %7.1e", e_V); }
+        if(ncp[SURF_CHARGE]){ DPRINTF(stdout, ", %7.1e", e_qs); }
+        if(ncp[SHELL_CURVATURE]){ DPRINTF(stdout, ", %7.1e", e_shk); }
+        if(ncp[SHELL_TENSION]){ DPRINTF(stdout, ", %7.1e", e_sht); }
+        if(ncp[SHELL_X]){ DPRINTF(stdout, ", %7.1e", e_shd); }
+        if(ncp[SHELL_USER]){ DPRINTF(stdout, ", %7.1e", e_shu); }
+        if(ncp[FILL] || ncp[PHASE1] ){ DPRINTF(stdout, ", %7.1e", e_F); }
+        if(ncp[ACOUS_PREAL] || ncp[ACOUS_PIMAG]){ DPRINTF(stdout, ", %7.1e", e_ap); }
+        if(ncp[EXT_VELOCITY]){ DPRINTF(stdout, ", %7.1e", e_extv); }
+        if(ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]){ DPRINTF(stdout, ", %7.1e", e_int); }
+        if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] || ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]){ DPRINTF(stdout, ", %7.1e", e_sh_lub); }
+        if(nAC > 0){ DPRINTF(stdout, ", %7.1e", e_AC); }
+        DPRINTF(stdout, "]\n");
       log_msg("Constant delta_t");
 	}
     else if (*success_dt) {
-        DPRINTF(stderr, "\nOK  %7.1e < %3g %7.1e [", Err_norm, beta, abs_eps);
-        if(ncp[MESH_DISPLACEMENT1]){ DPRINTF(stderr, "%7.1e", e_d); }
-        if(ncp[VELOCITY1] || ncp[PVELOCITY1]){ DPRINTF(stderr, ", %7.1e", e_v); }
-        if(ncp[TEMPERATURE]){ DPRINTF(stderr, ", %7.1e", e_T); }
+        DPRINTF(stdout, "\nOK  %7.1e < %3g %7.1e [", Err_norm, beta, abs_eps);
+        if(ncp[MESH_DISPLACEMENT1]){ DPRINTF(stdout, "%7.1e", e_d); }
+        if(ncp[VELOCITY1] || ncp[PVELOCITY1]){ DPRINTF(stdout, ", %7.1e", e_v); }
+        if(ncp[TEMPERATURE]){ DPRINTF(stdout, ", %7.1e", e_T); }
         if(ncp[MASS_FRACTION] || ncp[POR_LIQ_PRES] || ncp[POR_GAS_PRES] 
 		|| ncp[POR_POROSITY] || ncp[POR_SATURATION] || ncp[POR_SINK_MASS])
- 		{ DPRINTF(stderr, ", %7.1e", e_y); }
-        if(ncp[PRESSURE]){ DPRINTF(stderr, ", %7.1e", e_P); }
-        if(ncp[POLYMER_STRESS11]){ DPRINTF(stderr, ", %7.1e", e_S); }
-        if(ncp[VOLTAGE]){ DPRINTF(stderr, ", %7.1e", e_V); }
-        if(ncp[SURF_CHARGE]){ DPRINTF(stderr, ", %7.1e", e_qs); }
-        if(ncp[SHELL_CURVATURE]){ DPRINTF(stderr, ", %7.1e", e_shk); }
-        if(ncp[SHELL_TENSION]){ DPRINTF(stderr, ", %7.1e", e_sht); }
-        if(ncp[SHELL_X]){ DPRINTF(stderr, ", %7.1e", e_shd); }
-        if(ncp[SHELL_USER]){ DPRINTF(stderr, ", %7.1e", e_shu); }
-        if(ncp[FILL] || ncp[PHASE1]  ){ DPRINTF(stderr, ", %7.1e", e_F); }
-        if(ncp[ACOUS_PREAL] || ncp[ACOUS_PIMAG]){ DPRINTF(stderr, ", %7.1e", e_ap); }
-        if(ncp[EXT_VELOCITY]){ DPRINTF(stderr, ", %7.1e", e_extv); }
-	if(ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]){ DPRINTF(stderr, ", %7.1e", e_int); }
-	if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] || ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]){ DPRINTF(stderr, ", %7.1e", e_sh_lub); }
-        if(nAC > 0){ DPRINTF(stderr, ", %7.1e", e_AC); }
-        DPRINTF(stderr, "]\n");
+                { DPRINTF(stdout, ", %7.1e", e_y); }
+        if(ncp[PRESSURE]){ DPRINTF(stdout, ", %7.1e", e_P); }
+        if(ncp[POLYMER_STRESS11]){ DPRINTF(stdout, ", %7.1e", e_S); }
+        if(ncp[VOLTAGE]){ DPRINTF(stdout, ", %7.1e", e_V); }
+        if(ncp[SURF_CHARGE]){ DPRINTF(stdout, ", %7.1e", e_qs); }
+        if(ncp[SHELL_CURVATURE]){ DPRINTF(stdout, ", %7.1e", e_shk); }
+        if(ncp[SHELL_TENSION]){ DPRINTF(stdout, ", %7.1e", e_sht); }
+        if(ncp[SHELL_X]){ DPRINTF(stdout, ", %7.1e", e_shd); }
+        if(ncp[SHELL_USER]){ DPRINTF(stdout, ", %7.1e", e_shu); }
+        if(ncp[FILL] || ncp[PHASE1]  ){ DPRINTF(stdout, ", %7.1e", e_F); }
+        if(ncp[ACOUS_PREAL] || ncp[ACOUS_PIMAG]){ DPRINTF(stdout, ", %7.1e", e_ap); }
+        if(ncp[EXT_VELOCITY]){ DPRINTF(stdout, ", %7.1e", e_extv); }
+        if(ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]){ DPRINTF(stdout, ", %7.1e", e_int); }
+        if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] || ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]){ DPRINTF(stdout, ", %7.1e", e_sh_lub); }
+        if(nAC > 0){ DPRINTF(stdout, ", %7.1e", e_AC); }
+        DPRINTF(stdout, "]\n");
       log_msg("Predictor was OK, %g < %g * %g", Err_norm, beta, eps);
     } else {
-        DPRINTF(stderr, "\nYUK %7.1e > %3g %7.1e [", Err_norm, beta, abs_eps);
-        if(ncp[MESH_DISPLACEMENT1]){ DPRINTF(stderr, "%7.1e", e_d); }
-        if(ncp[VELOCITY1] || ncp[PVELOCITY1]){ DPRINTF(stderr, ", %7.1e", e_v); }
-        if(ncp[TEMPERATURE]){ DPRINTF(stderr, ", %7.1e", e_T); }
+        DPRINTF(stdout, "\nYUK %7.1e > %3g %7.1e [", Err_norm, beta, abs_eps);
+        if(ncp[MESH_DISPLACEMENT1]){ DPRINTF(stdout, "%7.1e", e_d); }
+        if(ncp[VELOCITY1] || ncp[PVELOCITY1]){ DPRINTF(stdout, ", %7.1e", e_v); }
+        if(ncp[TEMPERATURE]){ DPRINTF(stdout, ", %7.1e", e_T); }
         if(ncp[MASS_FRACTION] || ncp[POR_LIQ_PRES] || ncp[POR_GAS_PRES]
  		 || ncp[POR_POROSITY] || ncp[POR_SATURATION] || ncp[POR_SINK_MASS])
- 		{ DPRINTF(stderr, ", %7.1e", e_y); }
-        if(ncp[PRESSURE]){ DPRINTF(stderr, ", %7.1e", e_P); }
-        if(ncp[POLYMER_STRESS11]){ DPRINTF(stderr, ", %7.1e", e_S); }
-        if(ncp[VOLTAGE]){ DPRINTF(stderr, ", %7.1e", e_V); }
-        if(ncp[SURF_CHARGE]){ DPRINTF(stderr, ", %7.1e", e_qs); }
-        if(ncp[SHELL_CURVATURE]){ DPRINTF(stderr, ", %7.1e", e_shk); }
-        if(ncp[SHELL_TENSION]){ DPRINTF(stderr, ", %7.1e", e_sht); }
-        if(ncp[SHELL_X]){ DPRINTF(stderr, ", %7.1e", e_shd); }
-        if(ncp[SHELL_USER]){ DPRINTF(stderr, ", %7.1e", e_shu); }
-        if(ncp[FILL] || ncp[PHASE1] ){ DPRINTF(stderr, ", %7.1e", e_F); }
-        if(ncp[ACOUS_PREAL] || ncp[ACOUS_PIMAG]){ DPRINTF(stderr, ", %7.1e", e_ap); }
-        if(ncp[EXT_VELOCITY]){ DPRINTF(stderr, ", %7.1e", e_extv); }
-	if(ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]){ DPRINTF(stderr, ", %7.1e", e_int); }
-	if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] ||  ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]){ DPRINTF(stderr, ", %7.1e", e_sh_lub); }
-        if(nAC > 0){ DPRINTF(stderr, ", %7.1e", e_AC); }
-        DPRINTF(stderr, "]\n");
+                { DPRINTF(stdout, ", %7.1e", e_y); }
+        if(ncp[PRESSURE]){ DPRINTF(stdout, ", %7.1e", e_P); }
+        if(ncp[POLYMER_STRESS11]){ DPRINTF(stdout, ", %7.1e", e_S); }
+        if(ncp[VOLTAGE]){ DPRINTF(stdout, ", %7.1e", e_V); }
+        if(ncp[SURF_CHARGE]){ DPRINTF(stdout, ", %7.1e", e_qs); }
+        if(ncp[SHELL_CURVATURE]){ DPRINTF(stdout, ", %7.1e", e_shk); }
+        if(ncp[SHELL_TENSION]){ DPRINTF(stdout, ", %7.1e", e_sht); }
+        if(ncp[SHELL_X]){ DPRINTF(stdout, ", %7.1e", e_shd); }
+        if(ncp[SHELL_USER]){ DPRINTF(stdout, ", %7.1e", e_shu); }
+        if(ncp[FILL] || ncp[PHASE1] ){ DPRINTF(stdout, ", %7.1e", e_F); }
+        if(ncp[ACOUS_PREAL] || ncp[ACOUS_PIMAG]){ DPRINTF(stdout, ", %7.1e", e_ap); }
+        if(ncp[EXT_VELOCITY]){ DPRINTF(stdout, ", %7.1e", e_extv); }
+        if(ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]){ DPRINTF(stdout, ", %7.1e", e_int); }
+        if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] ||  ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]){ DPRINTF(stdout, ", %7.1e", e_sh_lub); }
+        if(nAC > 0){ DPRINTF(stdout, ", %7.1e", e_AC); }
+        DPRINTF(stdout, "]\n");
       log_msg("Predictor was YUK, %g > %g * %g", Err_norm, beta, eps);
     }
-  DPRINTF(stderr, "Predictor-corrector norm: [");
-        if(ncp[MESH_DISPLACEMENT1]){DPRINTF(stderr,"  %1d d  ",use_var_norm[0]); }
+  DPRINTF(stdout, "Predictor-corrector norm: [");
+        if(ncp[MESH_DISPLACEMENT1]){DPRINTF(stdout,"  %1d d  ",use_var_norm[0]); }
         if(ncp[VELOCITY1] || ncp[PVELOCITY1])
- 		{ DPRINTF(stderr, ",   %1d v  ", use_var_norm[1]); }
-        if(ncp[TEMPERATURE]){ DPRINTF(stderr, ",   %1d T  ", use_var_norm[2]); }
+                { DPRINTF(stdout, ",   %1d v  ", use_var_norm[1]); }
+        if(ncp[TEMPERATURE]){ DPRINTF(stdout, ",   %1d T  ", use_var_norm[2]); }
         if(ncp[MASS_FRACTION] || ncp[POR_LIQ_PRES] || ncp[POR_GAS_PRES] ||
  	    ncp[POR_POROSITY] || ncp[POR_SATURATION] || ncp[POR_SINK_MASS] )
- 		{ DPRINTF(stderr, ",   %1d y  ", use_var_norm[3]); }
-        if(ncp[PRESSURE]){ DPRINTF(stderr, ",   %1d P  ", use_var_norm[4]); }
-        if(ncp[POLYMER_STRESS11]){DPRINTF(stderr,",   %1d S  ",use_var_norm[5]); }
-        if(ncp[VOLTAGE]){ DPRINTF(stderr, ",   %1d V  ", use_var_norm[6]); }
-        if(ncp[SURF_CHARGE]){ DPRINTF(stderr, ",   %1d Q  ", 1); }
-        if(ncp[SHELL_CURVATURE]){ DPRINTF(stderr, ",   %1d K  ", 1); }
-        if(ncp[SHELL_TENSION]){ DPRINTF(stderr, ",   %1d ST ", 1); }
-        if(ncp[SHELL_X]){ DPRINTF(stderr, ",   %1d Sd ", 1); }
-        if(ncp[SHELL_USER]){ DPRINTF(stderr, ",   %1d Su ", 1); }
-        if(ncp[FILL] || ncp[PHASE1] ){ DPRINTF(stderr, ",   %1d F  ", 1); }
-        if(ncp[ACOUS_PREAL] || ncp[ACOUS_PIMAG]){ DPRINTF(stderr, ",   %1d A  ", 1); }
-        if(ncp[EXT_VELOCITY]){ DPRINTF(stderr, ",   %1d Ev  ", 1); }
-	if(ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]){ DPRINTF(stderr, ", %1d INT", 1); }
-	if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] || ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]){ DPRINTF(stderr, ", %1d SHELL", 1); }
-        if(nAC > 0){ DPRINTF(stderr, ",   %1d AC ", use_var_norm[9]); }
-        DPRINTF(stderr, "]\n");
+                { DPRINTF(stdout, ",   %1d y  ", use_var_norm[3]); }
+        if(ncp[PRESSURE]){ DPRINTF(stdout, ",   %1d P  ", use_var_norm[4]); }
+        if(ncp[POLYMER_STRESS11]){DPRINTF(stdout,",   %1d S  ",use_var_norm[5]); }
+        if(ncp[VOLTAGE]){ DPRINTF(stdout, ",   %1d V  ", use_var_norm[6]); }
+        if(ncp[SURF_CHARGE]){ DPRINTF(stdout, ",   %1d Q  ", 1); }
+        if(ncp[SHELL_CURVATURE]){ DPRINTF(stdout, ",   %1d K  ", 1); }
+        if(ncp[SHELL_TENSION]){ DPRINTF(stdout, ",   %1d ST ", 1); }
+        if(ncp[SHELL_X]){ DPRINTF(stdout, ",   %1d Sd ", 1); }
+        if(ncp[SHELL_USER]){ DPRINTF(stdout, ",   %1d Su ", 1); }
+        if(ncp[FILL] || ncp[PHASE1] ){ DPRINTF(stdout, ",   %1d F  ", 1); }
+        if(ncp[ACOUS_PREAL] || ncp[ACOUS_PIMAG]){ DPRINTF(stdout, ",   %1d A  ", 1); }
+        if(ncp[EXT_VELOCITY]){ DPRINTF(stdout, ",   %1d Ev  ", 1); }
+        if(ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]){ DPRINTF(stdout, ", %1d INT", 1); }
+        if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] || ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]){ DPRINTF(stdout, ", %1d SHELL", 1); }
+        if(nAC > 0){ DPRINTF(stdout, ",   %1d AC ", use_var_norm[9]); }
+        DPRINTF(stdout, "]\n");
 
       
   log_msg("Predictor details:");
@@ -1388,20 +1357,20 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
   switch (Guess_Flag) {
   case 0:
     /* Initialize all of the solution vector to zero */
-    for(i = 0; i < NumUnknowns; i++) {
+    for(i = 0; i < NumUnknowns[pg->imtrx]; i++) {
       u[i] = 0.0;
     }
 
     /* Some Special Cases */
 
     /* Structural shell variables */
-    if ( upd->vp[SHELL_X] && upd->vp[SHELL_Y])
+    if ( upd->vp[pg->imtrx][SHELL_X] && upd->vp[pg->imtrx][SHELL_Y])
       {
 	init_structural_shell_coord(u);
       }
 
     /* Shell normal vector unknowns requiring initialization */
-    if ( upd->vp[SHELL_NORMAL1] > -1 && upd->vp[SHELL_NORMAL2] > -1 )
+    if ( upd->vp[pg->imtrx][SHELL_NORMAL1] > -1 && upd->vp[pg->imtrx][SHELL_NORMAL2] > -1 )
       {
         init_shell_normal_unknowns(u, exo);
       }
@@ -1412,19 +1381,19 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
      *  Initialize the solution vector to random
      *  numbers between 0 and 1
      */      
-    fill_dvec_rand(u, NumUnknowns);
+    fill_dvec_rand(u, NumUnknowns[pg->imtrx]);
     break;
 
   case 2:
     /* Initialize all of the solution vector to  the value of 1 */      
-    for(i = 0; i < NumUnknowns; i++) {
+    for(i = 0; i < NumUnknowns[pg->imtrx]; i++) {
       u[i] = 1.0;
     }
     break;
       
   case 4:
     /* Initialize a solution vector from an ascii file */
-    read_initial_guess(u, NumUnknowns, uAC, nAC);
+    read_initial_guess(u, NumUnknowns[pg->imtrx], uAC, nAC);
     break;
       
   case 5:
@@ -1435,7 +1404,7 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
     DPRINTF(stdout,
 	    "\nInitial guess read from \"%s\" ...(last soln in file)\n",
 	    ExoFile);
-    err = rd_vectors_from_exoII(u, ExoFile, 0, 0, INT_MAX, timeValueRead, exo);
+    err = rd_vectors_from_exoII(u, ExoFile, 0, 0, INT_MAX, timeValueRead,exo);
     if (err != 0) {
       DPRINTF(stderr, "%s: err fr rd_vectors_from_exoII()\n", yo);
       exit(-1);
@@ -1483,7 +1452,7 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
       DPRINTF(stdout, "\nInitial guess read from \"%s\" ...(last soln in file)\n",
 	      ExoAuxFile);
     }
-    err = rd_vectors_from_exoII(u, ExoAuxFile, 0, 0, ExoTimePlane, timeValueRead, exo);
+    err = rd_vectors_from_exoII(u, ExoAuxFile, 0, 0, ExoTimePlane, timeValueRead,exo);
     if (err != 0) {
       DPRINTF(stderr,
 	      "%s:  err fr rd_vectors_from_exoII()\n", yo);
@@ -1521,7 +1490,6 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
   default:
     DPRINTF(stderr, "%s:  unknown Guess_Flag\n", yo);
     exit(-1);
-    break;
   }
   /***********************************************************************/
   /*       PHASE 1a -> initializations of AC variables from input file   */
@@ -1552,7 +1520,7 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
     for (i = 0; i < Num_Var_Init; i++) {
       switch (Var_init[i].var) {
       case MASS_FRACTION :
-	DPRINTF(stderr,
+        DPRINTF(stdout,
 		"\tSetting %s number %d (variable [%d]) to %g\n", 
 		Var_Name[Var_init[i].var].name1, Var_init[i].ktype,
 		Var_init[i].var,  Var_init[i].init_val);
@@ -1564,7 +1532,7 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
 	retn = 1;
 	continue;
       default:
-	DPRINTF(stderr, "\tSetting %s (variable [%d]) to %g\n", 
+        DPRINTF(stdout, "\tSetting %s (variable [%d]) to %g\n",
 		Var_Name[Var_init[i].var].name1, Var_init[i].var, 
 		Var_init[i].init_val);
 	break;
@@ -1670,7 +1638,7 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
 	 */
 	for (n = 0; n < num_nodes; n++) {
 	  i = Proc_Elem_Connect[index++];
-	  nv = Nodes[i]->Nodal_Vars_Info;
+	  nv = Nodes[i]->Nodal_Vars_Info[pg->imtrx];
 	  for (j = 0; j < Num_Var_Init_Mat[mn]; j++) {
 	    int slaved = Var_init_mat[mn][j].slave_block;
 		
@@ -1685,7 +1653,7 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
 	     * a valid interpolation for that variable in the
 	     * current element block
 	     */
-	    if (nunks > 0 && pd->i[var] && !slaved) {
+	    if (nunks > 0 && pd->i[pg->imtrx][var] && !slaved) {
 	      /*
 	       * Check against ktype here to make sure we have 
 	       * an associated unknown
@@ -1696,7 +1664,7 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
 	      }
 	      if (nunks == 1) {
 		ipos = Index_Solution(i, var, 
-				      Var_init_mat[mn][j].ktype, 0, mn);
+				      Var_init_mat[mn][j].ktype, 0, mn, pg->imtrx);
 		u[ipos] = Var_init_mat[mn][j].init_val;
 	      } else {
 		/*
@@ -1706,13 +1674,13 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
 		 *  HKM -> we can't take this block out, until we
 		 *         get rid of the debugging section below.
 		 */
-		interpType = pd->i[var];
+		interpType = pd->i[pg->imtrx][var];
 		if (interpType == I_P0 || interpType == I_P1) {
 		  /*
 		   *  For P0 and P1 interpolation, only first dof is set
 		   */
 		  ipos = Index_Solution(i, var, 
-					Var_init_mat[mn][j].ktype, 0, mn);
+					Var_init_mat[mn][j].ktype, 0, mn, pg->imtrx);
 		  u[ipos] = Var_init_mat[mn][j].init_val;
 		} else if (interpType == I_PQ1 || interpType == I_PQ2) {
 		  /*
@@ -1728,7 +1696,7 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
 		  if (interpType == I_PQ2) ndof = 9;
 		  for (k = 0; k < ndof; k++) {
 		    ipos = Index_Solution(i, var, 
-					  Var_init_mat[mn][j].ktype, k, mn);
+					  Var_init_mat[mn][j].ktype, k, mn, pg->imtrx);
 		    u[ipos] = Var_init_mat[mn][j].init_val;
 		  }
 		} else {
@@ -1740,7 +1708,7 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
 		   *   scheme wrt the element block id.
 		   */
 		  ipos = Index_Solution(i, var, 
-					Var_init_mat[mn][j].ktype, 0, mn);
+					Var_init_mat[mn][j].ktype, 0, mn, pg->imtrx);
 		  u[ipos] = Var_init_mat[mn][j].init_val;
 		}
 	      }
@@ -1781,14 +1749,13 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
 	      DPRINTF(stdout,
 		      "%s:  reading fixed field \"%s\" from \"%s\" ...\n", 
 		      yo,efv->name[w], efv->file_nm[w]);
-              err =
-                  rd_vectors_from_exoII(u, efv->file_nm[w], 1, w, INT_MAX, &timeValueReadExt, exo);
-              if (err != 0) {
-                DPRINTF(stderr,
+              err = rd_vectors_from_exoII(u, efv->file_nm[w], 1, w, INT_MAX, &timeValueReadExt,exo);
+	      if ( err != 0 ) {
+		DPRINTF(stderr,
 			"%s:  err fr rd_vectors_from_exoII() while reading external fields\n",
 			yo);
-              }
-            }
+	      }
+	    }
        
 	  else if(efv->ipix[w] == 1) /*Original pixel to mesh tool */
 	    {
@@ -1856,7 +1823,7 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
   /*
    *  Exchange the degrees of freedom with neighboring processors
    */
-  exchange_dof(cx, dpi, u);
+  exchange_dof(cx, dpi, u, pg->imtrx);
    
   return;
 } /* END of routine init_vec **************************************************/
@@ -1890,13 +1857,13 @@ void init_structural_shell_coord(double u[])
 				       *never get here for 3D */
     {
       var = SHELL_X + comp;
-      if ( upd->vp[var] )
+      if ( upd->vp[pg->imtrx][var] )
 	{
 	  for (node = 0; node < Num_Node; node++ )
 	    {
-	      if (Dolphin[node][var] > 0)
+	      if (Dolphin[pg->imtrx][node][var] > 0)
 		{
-		  dof    = Index_Solution(node, var, 0, 0, -1);
+		  dof    = Index_Solution(node, var, 0, 0, -1, pg->imtrx);
 		  u[dof] = Coor[comp][node];
 		}
 	    } /* for: node(s) */
@@ -1949,9 +1916,9 @@ void init_shell_normal_unknowns(double x[], const Exo_DB *exo)
   for (ielem = e_start; ielem < e_end; ielem++)
      {
       ielem_type = Elem_Type(exo, ielem);
-      load_ei(ielem, exo, 0);
+      load_ei(ielem, exo, 0, pg->imtrx);
       err = load_elem_dofptr(ielem, exo, x, x,
-                             x, x, x, 0);
+                             x, x, 0);
       EH(err, "Can't load elem_dofptr in shell normals initialization");
 
       ielem_dim       = elem_info(NDIM, ielem_type);
@@ -1976,15 +1943,15 @@ void init_shell_normal_unknowns(double x[], const Exo_DB *exo)
           ignode = Proc_Elem_Connect[iconnect_ptr + ilnode];
 
           /* Get node number and indices into solution vector for normal dofs */
-          nxi = Index_Solution(ignode, SHELL_NORMAL1, 0, 0, -2);
-          nyi = Index_Solution(ignode, SHELL_NORMAL2, 0, 0, -2);
+          nxi = Index_Solution(ignode, SHELL_NORMAL1, 0, 0, -2, pg->imtrx);
+          nyi = Index_Solution(ignode, SHELL_NORMAL2, 0, 0, -2, pg->imtrx);
 
           x[nxi] = fv->snormal[0];
           x[nyi] = fv->snormal[1];
 
           if (pd->Num_Dim == 3)
             {
-             nzi = Index_Solution(ignode, SHELL_NORMAL3, 0, 0, -2);
+             nzi = Index_Solution(ignode, SHELL_NORMAL3, 0, 0, -2, pg->imtrx);
              x[nzi] = fv->snormal[2];
             }
          }
@@ -2112,11 +2079,11 @@ write_ascii_soln (double *u,       /* Solution vector */
   if (dofname != NULL) {
     if (resid == NULL) {
       for (i = 0; i < np; i++) {
-	fprintf(file, "%23.16e %s\n", u[i], dofname[i]);
+	fprintf(file, "%23.16e %s\n", u[i], dofname[pg->imtrx][i]);
       }
     } else {
       for (i = 0; i < np; i++) {
-	fprintf(file, "%23.16e %s %23.16e\n", u[i], dofname[i], resid[i]);
+	fprintf(file, "%23.16e %s %23.16e\n", u[i], dofname[pg->imtrx][i], resid[i]);
       }
     }
   } else {
@@ -2188,7 +2155,7 @@ wr_soln_vec ( double u[],	/* solution vector */
 
   for ( i=0; i<np; i++ )
     {
-      DPRINTF (file, fmt, u[i], dofname[i], r[i]);
+      DPRINTF (file, fmt, u[i], dofname[pg->imtrx][i], r[i]);
     }
 
   fclose(file);
@@ -2199,32 +2166,29 @@ wr_soln_vec ( double u[],	/* solution vector */
 /*******************************************************************************/
 /*******************************************************************************/
 
-int rd_vectors_from_exoII(double u[],
-                          const char *file_nm,
-                          const int action_flag,
-                          const int variable_no,
-                          const int desired_time_step,
-                          double *timeValueRead,
-                          const Exo_DB *exo)
-
-/*******************************************************************
- *
- * rd_vectors_from_exoII:
- *
- * Read initial guess from exoIIv2 file
- *
- * in:  file_nm     = String name of the exodus file
- *      action_flag = 0 read initial guess for problem
- *                  = 1 read extern auxillary fixed variables
- *                  = 2 read element variables into elem_storage_struct
- *	    variable_no =  Used only when action_flag = 1
- *                     Specifies the number of the external
- *                     variable to be read
- *                     (basically the card number in order)
- *      desired_time_step = time step number to read from
- *
- * out:	u	        initial guess to solution vector.
- *******************************************************************/
+int
+rd_vectors_from_exoII(double u[], const char *file_nm, const int action_flag,
+                      const int variable_no, const int desired_time_step,
+                      double *timeValueRead, const Exo_DB *exo)
+    
+     /*******************************************************************
+      *
+      * rd_vectors_from_exoII:
+      *
+      * Read initial guess from exoIIv2 file
+      *
+      * in:  file_nm     = String name of the exodus file
+      *      action_flag = 0 read initial guess for problem
+      *                  = 1 read extern auxillary fixed variables 
+      *                  = 2 read element variables into elem_storage_struct
+      *	    variable_no =  Used only when action_flag = 1  
+      *                     Specifies the number of the external
+      *                     variable to be read
+      *                     (basically the card number in order)
+      *      desired_time_step = time step number to read from
+      *
+      * out:	u	        initial guess to solution vector.
+      *******************************************************************/
 {
   int i, error, vdex,  num_dim, num_nodes, mn, icount;
   int num_elem, num_elem_blk, num_node_sets, num_side_sets, time_step;
@@ -2236,7 +2200,7 @@ int rd_vectors_from_exoII(double u[],
   int	num_vars;		/* number of var_type variables */
   char	**var_names = NULL;     /* array containing num_vars variable names */
   int   num_elem_vars = 0;
-  char **elem_var_names = NULL; /* array containing element variable names */
+  char	**elem_var_names = NULL;     /* array containing element variable names */
   int   w;                      /* counter for species concentration */
   int   var;
   MATRL_PROP_STRUCT *matrl = 0;
@@ -2305,11 +2269,10 @@ int rd_vectors_from_exoII(double u[],
 
   /* First extract all element variable names in exoII database */
   if (num_elem_vars > 0) {
-    elem_var_names = alloc_VecFixedStrings(num_elem_vars, (MAX_STR_LENGTH + 1));
+    elem_var_names = alloc_VecFixedStrings(num_elem_vars, (MAX_STR_LENGTH+1));
     error = ex_get_variable_names(exoid, EX_ELEM_BLOCK, num_elem_vars, elem_var_names);
     EH(error, "ex_get_variable_names element");
-    for (i = 0; i < num_elem_vars; i++)
-      strip(elem_var_names[i]);
+    for (i = 0; i < num_elem_vars; i++) strip(elem_var_names[i]);
   }
 
   /* If action_flag is 0, 
@@ -2317,65 +2280,78 @@ int rd_vectors_from_exoII(double u[],
    * and variables available 
    */
 
-  if (action_flag == 0) {
-    for (var = V_FIRST; var < V_LAST; var++) {
-      icount = 0;
-      if (Num_Var_In_Type[var]) {
-	if (var == MASS_FRACTION) {
-	  for (mn = -1; mn < upd->Num_Mat; mn++) {
-	    if (mn == -1) {
-	      for (i = upd->Num_Mat-1; i >= 0; i--) {
-		if (mp_glob[i]->Num_Species == upd->Max_Num_Species) {
-		  matrl = mp_glob[i];
+  if (action_flag == 0) 
+    {
+      for (var = V_FIRST; var < V_LAST; var++) 
+	{
+	  icount = 0;
+	  if (Num_Var_In_Type[pg->imtrx][var]) 
+	    {
+	      if (var == MASS_FRACTION) 
+		{
+		  for (mn = -1; mn < upd->Num_Mat; mn++) 
+		    {
+		      if (mn == -1) 
+			{
+	                  for (i = upd->Num_Mat-1; i >= 0; i--) 
+			    {
+		              if (mp_glob[i]->Num_Species == upd->Max_Num_Species) 
+                                {
+				  matrl = mp_glob[i];
+		                }
+			    }
+			} 
+		      else 
+			{
+	                  matrl = mp_glob[mn];
+			}
+		      for (w = 0; w < matrl->Num_Species_Eqn; w++) 
+			{
+			  error = rd_exoII_nv(u, var, mn, matrl, var_names, 
+					      num_nodes, num_vars,
+					      exoid, time_step, w);
+			  if (!error) icount++;
+			}
+		    }
+		} 
+	      else 
+		{
+		  for (mn = -1; mn < upd->Num_Mat; mn++) 
+		    {
+			if (mn == -1) {
+				for (i = upd->Num_Mat - 1; i >= 0; i--) {
+					if (pd_glob[i]->i[pg->imtrx][var]) {
+					matrl = mp_glob[i];
+					}
+				}
+			} else {
+				matrl = mp_glob[mn];
+			}
+			if (mn != -1 && (pd_glob[mn]->i[pg->imtrx][var] == I_P0)) {
+			int eb_index = in_list(mn, 0, exo->num_elem_blocks, Matilda);
+			if (eb_index != -1) {
+				error = rd_exoII_ev(u, var, mn, matrl, elem_var_names, exo->eb_num_elems[eb_index],
+						num_elem_vars, exoid, time_step, 0, exo);
+			}
+			} else if (mn != -1 && (pd_glob[mn]->i[pg->imtrx][var] == I_P1)) {
+			int eb_index = in_list(mn, 0, exo->num_elem_blocks, Matilda);
+			if (eb_index != -1) {
+				int dof = getdofs(type2shape(exo->eb_elem_itype[eb_index]), I_P1);
+				for (int i = 0; i < dof; i++) {
+				error = rd_exoII_ev(u, var, mn, matrl, elem_var_names, exo->eb_num_elems[eb_index],
+						num_elem_vars, exoid, time_step, i, exo);
+				}
+			}
+			} else {
+				error = rd_exoII_nv(u, var, mn, matrl, var_names, num_nodes, num_vars, exoid,
+						    time_step, 0);
+			}
+		      	if (!error) icount++;
+		    }
 		}
-	      }
-	    } else {
-	      matrl = mp_glob[mn];
 	    }
-	    for (w = 0; w < matrl->Num_Species_Eqn; w++) {
-	      error = rd_exoII_nv(u, var, mn, matrl, var_names, 
-				  num_nodes, num_vars,
-				  exoid, time_step, w);
-	      if (!error) icount++;
-	    }
-	  }
-	} else {
-	  for (mn = -1; mn < upd->Num_Mat; mn++) {
-	    if (mn == -1) {
-	      for (i = upd->Num_Mat - 1; i >= 0; i--) {
-		if (pd_glob[i]->i[var]) {
-		  matrl = mp_glob[i];
-		}
-	      }
-	    } else {
-	      matrl = mp_glob[mn];
-	    }
-            if (mn != -1 && (pd_glob[mn]->i[var] == I_P0)) {
-              int eb_index = in_list(mn, 0, exo->num_elem_blocks, Matilda);
-              if (eb_index != -1) {
-                error = rd_exoII_ev(u, var, mn, matrl, elem_var_names, exo->eb_num_elems[eb_index],
-                                    num_elem_vars, exoid, time_step, 0, exo);
-              }
-            } else if (mn != -1 && (pd_glob[mn]->i[var] == I_P1)) {
-              int eb_index = in_list(mn, 0, exo->num_elem_blocks, Matilda);
-              if (eb_index != -1) {
-                int dof = getdofs(type2shape(exo->eb_elem_itype[eb_index]), I_P1);
-                for (int i = 0; i < dof; i++) {
-                  error = rd_exoII_ev(u, var, mn, matrl, elem_var_names, exo->eb_num_elems[eb_index],
-                                      num_elem_vars, exoid, time_step, i, exo);
-                }
-              }
-            } else {
-              error = rd_exoII_nv(u, var, mn, matrl, var_names, num_nodes, num_vars, exoid,
-                                  time_step, 0);
-            }
-            if (!error)
-              icount++;
-          }
 	}
-      }
     }
-  }
   
   if (action_flag == 1) {
     if (efv->ev) {	    
@@ -2384,7 +2360,7 @@ int rd_vectors_from_exoII(double u[],
        */
       efv->ext_fld_ndl_val[variable_no] = alloc_dbl_1(num_nodes, 0.0); 
       printf("rd_vectors_from_exoII: Allocated field %d for %s at %p\n",
-	     variable_no, efv->name[variable_no], efv->ext_fld_ndl_val[variable_no]);
+	     variable_no, efv->name[variable_no], (void *) efv->ext_fld_ndl_val[variable_no]);
       vdex = -1;
 #ifdef REACTION_PRODUCT_EFV
       if (TimeIntegration != STEADY)	{
@@ -2409,6 +2385,7 @@ int rd_vectors_from_exoII(double u[],
   }
 
   safer_free((void **) &var_names);
+  safer_free((void **) &elem_var_names);
   error = ex_close(exoid);
   EH(error, "ex_close");  
   return 0;
@@ -2548,7 +2525,6 @@ rd_trans_vectors_from_exoII(double u[], const char *file_nm,
 	    "Warning: no nodal variables stored in exoII input file.\n");
   }
 
- 
 
     if (efv->ev) {	    
       /*
@@ -2561,7 +2537,7 @@ rd_trans_vectors_from_exoII(double u[], const char *file_nm,
       if( desired_time_step == 0)
 	{
 	  fprintf(stderr, "rd_trans_vectors_from_exoII: Into existing field %d for %s at %p\n",
-		  variable_no, efv->name[variable_no], efv->ext_fld_ndl_val[variable_no]);
+		  variable_no, efv->name[variable_no], (void *) efv->ext_fld_ndl_val[variable_no]);
 	}
       vdex = -1;
       for (i = 0; i < num_vars; i++) {
@@ -2654,18 +2630,11 @@ rd_exoII_nv(double *u, int varType, int mn, MATRL_PROP_STRUCT *matrl,
 /*****************************************************************************/
 /*****************************************************************************/
 
-int rd_exoII_ev(double *u,
-                int varType,
-                int mn,
-                MATRL_PROP_STRUCT *matrl,
-                char **elem_var_names,
-                int num_elems_block,
-                int num_elem_vars,
-                int exoII_id,
-                int time_step,
-                int spec,
-                const Exo_DB *exo)
-
+int
+rd_exoII_ev(double *u, int varType, int mn, MATRL_PROP_STRUCT *matrl, 
+            char **elem_var_names, int num_elems_block, int num_elem_vars, int exoII_id,
+            int time_step, int spec,const Exo_DB *exo)
+  
 /*************************************************************************
  *
  * rd_exoII_ev():
@@ -2681,22 +2650,22 @@ int rd_exoII_ev(double *u,
   int vdex = -1, i, error, status = 0;
   char exo_var_name[256], exo_var_desc[256];
   double *variable = NULL;
-  assign_var_name(varType, spec, matrl, exo_var_name, exo_var_desc, mn);
+  assign_var_name(varType, spec, matrl, exo_var_name,
+                  exo_var_desc, mn);
   for (i = 0; i < num_elem_vars; i++) {
     if (strcmp(elem_var_names[i], exo_var_name) == 0) {
       vdex = i + 1;
     }
   }
   if (vdex != -1) {
-    variable =
-        alloc_dbl_1(num_elems_block, 0.0); // This should be at for number of elements in a block.
+    variable = alloc_dbl_1(num_elems_block, 0.0); // This should be at for number of elements in a block.
     status = vdex;
-    DPRINTF(stdout, "Element variable %s for material %d found in exoII database - reading.\n",
-            exo_var_name, mn + 1);
-    error = ex_get_var(exoII_id, time_step, EX_ELEM_BLOCK, vdex, mn + 1, num_elems_block, variable);
+    DPRINTF(stdout,"Element variable %s for material %d found in exoII database - reading.\n",
+            exo_var_name,mn+1);
+    error = ex_get_var(exoII_id, time_step, EX_ELEM_BLOCK, vdex, mn+1, num_elems_block, variable);
     EH(error, "ex_get_var element");
-    inject_elem_vec(u, varType, 0, spec, mn, variable, exo, num_elems_block);
-    safer_free((void **)&variable);
+    inject_elem_vec(u, varType, 0, spec, mn, variable,exo,num_elems_block);
+    safer_free((void **) &variable);
   }
   return status;
 } /* END of routine rd_exoII_util */
@@ -2887,94 +2856,115 @@ inject_nodal_vec(double sol_vec[], const int varType, const int k,
   NODAL_VARS_STRUCT *nv;
   VARIABLE_DESCRIPTION_STRUCT *vd;
   for (i = 0; i < DPI_ptr->num_owned_nodes; i++) {
-    nv = Nodes[i]->Nodal_Vars_Info;
+    nv = Nodes[i]->Nodal_Vars_Info[pg->imtrx];
     if (matID == -2) {
       for (j = 0; j < (int) nv->Num_Var_Desc_Per_Type[varType]; j++) {
         vindex = nv->Var_Type_Index[varType][j];
-	vd = nv->Var_Desc_List[vindex];
+        vd = nv->Var_Desc_List[vindex];
 #ifdef DEBUG_HKM
-	if (idof < 0 || idof > vd->Ndof) {
+        if (idof < 0 || idof > vd->Ndof) {
           fprintf(stderr,"init_vec ERROR: bad idof\n");
-	  EH(-1, "init_vec bad idof");
-	}
+          EH(-1, "init_vec bad idof");
+        }
 #endif
-	if (k == (int) vd->Subvar_Index) {
-          index = (Nodes[i]->First_Unknown +
-		   nv->Nodal_Offset[vindex] + idof);
-	  sol_vec[index] = nodal_vec[i];
-	}
+        if (k == (int) vd->Subvar_Index) {
+          index = (Nodes[i]->First_Unknown[pg->imtrx] +
+                   nv->Nodal_Offset[vindex] + idof);
+          sol_vec[index] = nodal_vec[i];
+        }
       }
     } else {
-      index = Index_Solution(i, varType, k, idof, matID);
-      if (index != -1) {
-	sol_vec[index] = nodal_vec[i];
+      int ndof = 0;
+      if (pd->i[pg->imtrx][varType] == I_PQ1) {
+	ndof = 4;
+	WH(-1, "Using 4 dof injecting variable");
+      } else if (pd->i[pg->imtrx][varType] == I_PQ2) {
+	ndof = 9;
+	WH(-1, "Using 9 dof injecting variable");
+      }
+
+      if (ndof > 0) {
+	int local_dof = 0;
+	for (local_dof = 0; local_dof < ndof; local_dof++) {
+	  index = Index_Solution(i, varType, k, local_dof, matID, pg->imtrx);
+	  if (index != -1) {
+	    sol_vec[index] = nodal_vec[i];
+	  }
+	}
+      } else {
+	index = Index_Solution(i, varType, k, idof, matID, pg->imtrx);
+	if (index != -1) {
+	  sol_vec[index] = nodal_vec[i];
+	}
+
       }
     }
   }
   return;
 }
 
-static void inject_elem_vec(double sol_vec[],
-                            const int varType,
-                            const int k,
-                            const int idof,
-                            const int matID,
-                            const double elem_vec[],
-                            const Exo_DB *exo,
-                            const int num_elems_blk)
+/************************************************************************/
+/************************************************************************/
+/************************************************************************/
 
-/**********************************************************************
- *
- * inject_elem_vec:
- *
- * Routine to scatter a variable vector "k" of variable type
- * "var_no" to the solution vector "sol_vec".
- *
- *
- *     Now, for distributed processing, this routine only scatters a
- *     element variable into the full dof vector for the element blocks that this
- *     processor owns. Forget the "global" part.
- *
- * It first tries to use the generic material unknown. Then, it
- * tries to use the unknown corresponding to the first material
- * index at that node.
- *
- * Author: 	P. R. Schunk (1511, SNL)
- * Date:		10/12/94
- * Revised: 1997/08/27 10:31 MDT pasacki@sandia.gov
- *
- * Parameter List:
- *
- * elem_vec[] == 	vector containing the solution variable type
- *                    vector index by the local node number on the
- *         		current processor.
- *
- * var_no      ==  	integer variable type which defines
- *		        what variable is to be scattered into the
- *                    solution vector. Additionally, only the
- *                    generic material ID part of the solution
- *                    vector will be overwritten.
- *		        (see rf_fem_const.h - Variable Names)
- *
- *	k        == 	kth subvariable of type "var_no", k = 0 is first
- *		       variable of this type. Subvariables are only
- *                    used for MASS_FRACTION variable types.
- *  idof       ==     Degree of freedom id for this variable. Usually,
- *                    this is equal to zero. However, there are
- *                    some cases of multiple degrees of freedom
- *                    for a variable type at a node.
- * matID       ==     Material ID for the variable to scatter to.
- *                    -2: special value means to scatter to all
- *                        variables of type VariableType no matter
- *                        what material they refer to.
- *                    -1: This number refers to the
- *                        non-specific-to-a-material variable at
- *                        the node.
- *                    >=0: Variable which is specific to the
- *                         material matID.
- *
- * elem_vec   ==	Processor solution vector
- *******************************************************************/
+
+static void
+inject_elem_vec(double sol_vec[], const int varType, const int k,
+                 const int idof, const int matID,
+                 const double elem_vec[],const Exo_DB *exo, const int num_elems_blk)
+
+  /**********************************************************************
+   *
+   * inject_elem_vec:
+   *
+   * Routine to scatter a variable vector "k" of variable type
+   * "var_no" to the solution vector "sol_vec".
+   *
+   *
+   *     Now, for distributed processing, this routine only scatters a
+   *     element variable into the full dof vector for the element blocks that this
+   *     processor owns. Forget the "global" part.
+   *
+   * It first tries to use the generic material unknown. Then, it
+   * tries to use the unknown corresponding to the first material
+   * index at that node.
+   *
+   * Author: 	P. R. Schunk (1511, SNL)
+   * Date:		10/12/94
+   * Revised: 1997/08/27 10:31 MDT pasacki@sandia.gov
+   *
+   * Parameter List:
+   *
+   * elem_vec[] == 	vector containing the solution variable type
+   *                    vector index by the local node number on the
+   *         		current processor.
+   *
+   * var_no      ==  	integer variable type which defines
+   *		        what variable is to be scattered into the
+   *                    solution vector. Additionally, only the
+   *                    generic material ID part of the solution
+   *                    vector will be overwritten.
+   *		        (see rf_fem_const.h - Variable Names)
+   *
+   *	k        == 	kth subvariable of type "var_no", k = 0 is first
+   *		       variable of this type. Subvariables are only
+   *                    used for MASS_FRACTION variable types.
+   *  idof       ==     Degree of freedom id for this variable. Usually,
+   *                    this is equal to zero. However, there are
+   *                    some cases of multiple degrees of freedom
+   *                    for a variable type at a node.
+   * matID       ==     Material ID for the variable to scatter to.
+   *                    -2: special value means to scatter to all
+   *                        variables of type VariableType no matter
+   *                        what material they refer to.
+   *                    -1: This number refers to the
+   *                        non-specific-to-a-material variable at
+   *                        the node.
+   *                    >=0: Variable which is specific to the
+   *                         material matID.
+   *
+   * elem_vec   ==	Processor solution vector
+   *******************************************************************/
 {
   int e_start, e_end, ielem, ielem_type, num_local_nodes;
   int iconnect_ptr, i, I, index;
@@ -2985,9 +2975,9 @@ static void inject_elem_vec(double sol_vec[],
   e_end = exo->eb_ptr[eb_index + 1];
   for (ielem = e_start; ielem < e_end; ielem++) {
 
-    ielem_type = Elem_Type(exo, ielem); /* func defd in el_geom.h */
+    ielem_type      = Elem_Type(exo, ielem); /* func defd in el_geom.h */
     num_local_nodes = elem_info(NNODES, ielem_type);
-    iconnect_ptr = Proc_Connect_Ptr[ielem]; /* find ptr to beginning */
+    iconnect_ptr    = Proc_Connect_Ptr[ielem]; /* find ptr to beginning */
     /* of this element's */
     /* connectivity list */
 
@@ -2999,59 +2989,62 @@ static void inject_elem_vec(double sol_vec[],
     found_quantity = FALSE;
     /* Only do this for elements with a haning center node, otherwise the
        extraction of the quantity can be ambiguous for non-regular grid models */
-    if (ielem_type == BIQUAD_QUAD || ielem_type == TRIQUAD_HEX || ielem_type == C_BILINEAR_QUAD ||
-        ielem_type == C_TRILINEAR_HEX) {
+    if (ielem_type == BIQUAD_QUAD ||
+        ielem_type == TRIQUAD_HEX ||
+        ielem_type == C_BILINEAR_QUAD ||
+    ielem_type == C_TRILINEAR_HEX ) {
       for (i = 0; i < num_local_nodes; i++) {
-        I = Proc_Elem_Connect[iconnect_ptr + i];
+        I     = Proc_Elem_Connect[iconnect_ptr + i];
         /* NOTE: here, the element variables (such as PRESSURE) are being
            extracted from the solution vector coming off of the hanging
            interior nodes, or a given specified node for such a quantity.
            There should never be more than one of this quantity defined
            per element, or we have a problem treating it as an element
            variable. Hence the found_quantity check.                       */
-        index = Index_Solution(I, varType, k, idof, matID);
+        index = Index_Solution(I, varType, k, idof, matID, pg->imtrx);
         if (index != -1) {
           /* This should be the one node that has our value - set the element
              value to this */
-          sol_vec[index] = elem_vec[ielem - e_start];
-          if (found_quantity == TRUE) {
+            sol_vec[index] = elem_vec[ielem-e_start];
+        if (found_quantity == TRUE) {
             fprintf(stderr,
-                    "Warning: Too many nodes returning quantities for element variable %s (%s) - "
-                    "may not be accurate\n",
-                    Exo_Var_Names[varType].name2, Exo_Var_Names[varType].name1);
-            exit(-1);
-
-            found_quantity = TRUE;
+                    "Warning: Too many nodes returning quantities for element variable %s (%s) - may not be accurate\n",
+                    Exo_Var_Names[varType].name2,
+                    Exo_Var_Names[varType].name1 );
+            exit (-1);
           }
+          found_quantity = TRUE;
         }
       }
-    } else {
+    }
+    else{
       int i = 0;
-      I = Proc_Elem_Connect[iconnect_ptr + i];
+      I     = Proc_Elem_Connect[iconnect_ptr + i];
       /* NOTE: here, the element variables (such as PRESSURE) are being
          extracted from the solution vector coming off of the hanging
          interior nodes, or a given specified node for such a quantity.
          There should never be more than one of this quantity defined
          per element, or we have a problem treating it as an element
          variable. Hence the found_quantity check.                       */
-      index = Index_Solution(I, varType, k, idof, matID);
+      index = Index_Solution(I, varType, k, idof, matID, pg->imtrx);
       if (index != -1) {
         /* This should be the one node that has our value - set the element
            value to this */
-        sol_vec[index] = elem_vec[ielem - e_start];
+          sol_vec[index] = elem_vec[ielem-e_start];
         if (found_quantity == TRUE) {
           fprintf(stderr,
-                  "Warning: Too many nodes returning quantities for element variable %s (%s) - may "
-                  "not be accurate\n",
-                  Exo_Var_Names[varType].name2, Exo_Var_Names[varType].name1);
-          exit(-1);
+                  "Warning: Too many nodes returning quantities for element variable %s (%s) - may not be accurate\n",
+                  Exo_Var_Names[varType].name2,
+                  Exo_Var_Names[varType].name1 );
+          exit (-1);
         }
         found_quantity = TRUE;
       }
+
     }
   }
 
-  return;
+ return;
 }
 /************************************************************************/
 /************************************************************************/
@@ -3077,18 +3070,24 @@ build_node_index_var(const int varType, const int num_nodes,
 		     int *var_node_list)
 {
   int node, count;
+  int imtrx;
   NODAL_VARS_STRUCT *nv;
   if (varType < 0 || varType > MAX_VARIABLE_TYPES-1) {
       EH(-1, "Attempt to count a bogus variable.");
   }
   count = 0;
-  for (node = 0; node < num_nodes; node++) {
-    nv = Nodes[node]->Nodal_Vars_Info;
-    if (nv->Num_Var_Desc_Per_Type[varType] > 0) {
-      map[count] = node_index_global[node];
-      var_node_list[count] = node;
-      count++;
-    }
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+     {
+      for (node = 0; node < num_nodes; node++) 
+         {
+          nv = Nodes[node]->Nodal_Vars_Info[imtrx];
+          if (nv->Num_Var_Desc_Per_Type[varType] > 0) 
+            {
+             map[count] = node_index_global[node];
+             var_node_list[count] = node;
+             count++;
+            }
+         }
   }
   return count;
 }
@@ -3112,16 +3111,21 @@ int
 count_vardofs(const int varType, const int num_nodes)
 {
   int node, nun, count = 0;
+  int imtrx;
   NODAL_VARS_STRUCT *nv;
   if (varType < 0 || varType > MAX_VARIABLE_TYPES-1) {
       EH(-1, "Attempt to count a bogus variable.");
   }
   count = 0;
-  for (node = 0; node < num_nodes; node++) {
-    nv = Nodes[node]->Nodal_Vars_Info;
-    nun = get_nv_ndofs_modMF(nv, varType);
-    count += nun;
-  }
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+     {
+      for (node = 0; node < num_nodes; node++) 
+         {
+          nv = Nodes[node]->Nodal_Vars_Info[imtrx];
+          nun = get_nv_ndofs_modMF(nv, varType);
+          count += nun;
+         }
+     }
   return (count);
 }
 
@@ -3229,7 +3233,7 @@ find_first_elem_with_var ( Exo_DB *e, int var )
     {
       mn = Matilda[ eb ];
       
-      found = pd_glob[mn]->v[var];
+      found = pd_glob[mn]->v[pg->imtrx][var];
       if( found ) first_elem = e->eb_ptr[eb];
     }
 
@@ -3357,9 +3361,9 @@ interp_ev_to_nodes(const Exo_DB *exo, dbl *ev_tmp, int iev)
         {
           el = exo->node_elem_list[j];
 
-	  ei->ielem = el;
-	  ei->ielem_type = Elem_Type(exo, el);
-	  ei->num_local_nodes = elem_info(NNODES, ei->ielem_type);
+	  ei[pg->imtrx]->ielem = el;
+	  ei[pg->imtrx]->ielem_type = Elem_Type(exo, el);
+	  ei[pg->imtrx]->num_local_nodes = elem_info(NNODES, ei[pg->imtrx]->ielem_type);
 
 	  h_elem_siz ( hsquared, hh, dhh, FALSE );
 
@@ -3430,7 +3434,7 @@ advance_porosity_ev(const int time_step, const int nn,
    * boundary when the porous material has the smaller material index!
    */
       mn = first_matID_at_node(n);
-       i = Index_Solution(n, eq, 0, 0, -1);
+       i = Index_Solution(n, eq, 0, 0, -1, pg->imtrx);
                                                                                 
   /* Proceed if eq is active at node */
       if (i > -1)
@@ -3495,7 +3499,7 @@ advance_porosity_goma_first(const int time_step, const int nn,
    * boundary when the porous material has the smaller material index!
    */
       mn = first_matID_at_node(n);
-       i = Index_Solution(n, eq, 0, 0, -1);
+       i = Index_Solution(n, eq, 0, 0, -1, pg->imtrx);
                                                                                 
   /* Proceed if eq is active at node */
       if (i > -1)

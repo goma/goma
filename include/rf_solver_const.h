@@ -16,8 +16,8 @@
  */
 
 
-#ifndef _RF_SOLVER_CONST_H
-#define _RF_SOLVER_CONST_H
+#ifndef GOMA_RF_SOLVER_CONST_H
+#define GOMA_RF_SOLVER_CONST_H
 
 #ifndef solaris
 #ifdef __sun
@@ -76,4 +76,4 @@
 #endif
 #endif
 
-#endif /* _RF_SOLVER_CONST_H */
+#endif /* GOMA_RF_SOLVER_CONST_H */
