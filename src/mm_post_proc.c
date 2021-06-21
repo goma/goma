@@ -10714,10 +10714,6 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
         index_post++;
       }
     }
-  else
-    {
-      STRESS_NORM = -1;
-    }
 
   if (SARAMITO_YIELD != -1 && Num_Var_In_Type[pg->imtrx][POLYMER_STRESS11])
     {
@@ -10735,10 +10731,6 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
         index++;
         index_post++;
       }
-    }
-  else
-    {
-      SARAMITO_YIELD = -1;
     }
 
     /*if (J_FLUX != -1)
