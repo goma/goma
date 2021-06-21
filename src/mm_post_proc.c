@@ -469,10 +469,6 @@ post_process_average(double x[],	 /* Solution vector for the current processor *
  *            FOOBAR = index_post;
  *            index_post++;
  *         }
- *      else
- *         {
- *            FOOBAR = -1;
- *         }
  *
  *  [4] Make provision to send the flag to calculate FOOBAR to any other
  *      processors. For simple Boolean flags, add a line in dp_vif.c for
