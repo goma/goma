@@ -747,8 +747,16 @@ build_elem_elem(Exo_DB *exo)
 		    
 		     int shell_on_shell = 0; int flippy_flop = 0; 
 		     int nbr_ebid; int nbr_num_elem_sides;
-		     nbr_ebid = fence_post(ename, exo->eb_ptr,
-                                           exo->num_elem_blocks+1);
+		     //nbr_ebid = fence_post(ename, exo->eb_ptr,
+                     //                      exo->num_elem_blocks+1);
+                     // fence post logic broken with decomp
+                     //eb_index = fence_post(element, exo->eb_ptr, (exo->num_elem_blocks)+1);
+                     nbr_ebid = -1;
+                     for (int i = 0; i < exo->num_elem_blocks; i++) {
+                       if (ename >= exo->eb_ptr[i] && ename < exo->eb_ptr[i+1]) {
+                         nbr_ebid = i;
+                       }
+                     }
                      GOMA_EH(nbr_ebid, "Bad element block ID!");
                      nbr_num_elem_sides = get_num_faces(exo->eb_elem_type[nbr_ebid]);
 		     

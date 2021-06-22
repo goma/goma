@@ -1877,17 +1877,19 @@ int
 Elem_Type(const Exo_DB *exo,
 	  const int element)
 {
-  int eb_index;
-  int type;
-
-  type = -1;			/* default */
-
-
+  int type = -1;			/* default */
   /*
    * Which element block index is this in?
    */
 
-  eb_index = fence_post(element, exo->eb_ptr, (exo->num_elem_blocks)+1);
+  // fence post logic broken with decomp
+  //eb_index = fence_post(element, exo->eb_ptr, (exo->num_elem_blocks)+1);
+  int eb_index = -1;
+  for (int i = 0; i < exo->num_elem_blocks; i++) {
+    if (element >= exo->eb_ptr[i] && element < exo->eb_ptr[i+1]) {
+      eb_index = i;
+    }
+  }
   if (eb_index < 0)
     {
       GOMA_EH(GOMA_ERROR, "Fence post does not include this element.");

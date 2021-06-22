@@ -114,7 +114,7 @@ rd_bc_specs(FILE *ifp,
   int j;
   //  int error;
   int	ibc, var, num_const;
-  char	ts[MAX_BC_KEYWORD_LENGTH];
+  char	ts[MAX_LINE_LENGTH];
 
 
   char seed_string[80];

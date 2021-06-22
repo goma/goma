@@ -13284,11 +13284,13 @@ fickian_flux (struct Species_Conservation_Terms *st, int w)
     }
 
     var = TEMPERATURE;
-    phi_ptr =  bf[var]->phi;
-    for (a = 0; a < VIM; a++) {
-      tmp = - coeff_rho * mp->d_diffusivity[w][var] * st->grad_Y[w][a];
-      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-        st->d_diff_flux_dT[w][a][j] = tmp * phi_ptr[j];
+    if (pd->v[pg->imtrx][var]) {
+      phi_ptr =  bf[var]->phi;
+      for (a = 0; a < VIM; a++) {
+        tmp = - coeff_rho * mp->d_diffusivity[w][var] * st->grad_Y[w][a];
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          st->d_diff_flux_dT[w][a][j] = tmp * phi_ptr[j];
+        }
       }
     }
   }

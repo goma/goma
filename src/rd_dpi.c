@@ -321,6 +321,7 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
     d->neighbor[i] = neighbor;
   }
 
+  int elem_offset = 0;
   for (int i = 0; i < exo->num_elem_blocks; i++) {
     for (int j = 0; j < exo->eb_num_elems[i]; j++) {
       int min_proc = ProcID;
@@ -332,7 +333,8 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
           min_proc = proc;
         }
       }
-      d->elem_owner[i * exo->num_elem_blocks +j] = min_proc;
+      d->elem_owner[elem_offset] = min_proc;
+      elem_offset++;
     }
   }
 

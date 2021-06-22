@@ -5127,7 +5127,7 @@ double shell_saturation_pressure_curve(
   dbl S;
 
   /* Calculate various pressures */
-  dbl Pcap = Patm-Pliq;
+  dbl Pcap = Patm-Pliq+DBL_SEMI_SMALL;
   dbl dPdP = -1.0;
 
   /* Calculate capillary radius */

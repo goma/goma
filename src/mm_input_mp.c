@@ -9739,83 +9739,85 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  }
       ECHO(es,echo_file);
 
-      species_no = pd_glob[mn]->Num_Species;
-      model_read = look_for_mat_prop(imp, "Second Level Set Species Source",
-                                     mat_ptr->mp2nd->SpeciesSourceModel,
-                                     mat_ptr->mp2nd->speciessource, NO_USER, NULL, model_name, SCALAR_INPUT,
-				     &species_no,es);
-		
-      if( model_read != -1 )
-	{
-	  if( ls == NULL ) GOMA_EH(GOMA_ERROR, "Second Level Set Species Source requires activation of Level Set Tracking.\n");
+      if (ls != NULL) {
+	      species_no = pd_glob[mn]->Num_Species;
+	      model_read = look_for_mat_prop(imp, "Second Level Set Species Source",
+					     mat_ptr->mp2nd->SpeciesSourceModel,
+					     mat_ptr->mp2nd->speciessource, NO_USER, NULL, model_name, SCALAR_INPUT,
+					     &species_no,es);
 			
-          //mat_ptr->mp2nd->SpeciesSourceModel[species_no] = i0;
-          //mat_ptr->mp2nd->speciessource[species_no] = v0[species_no];
+	      if( model_read != -1 )
+		{
+		  if( ls == NULL ) GOMA_EH(GOMA_ERROR, "Second Level Set Species Source requires activation of Level Set Tracking.\n");
+				
+		  //mat_ptr->mp2nd->SpeciesSourceModel[species_no] = i0;
+		  //mat_ptr->mp2nd->speciessource[species_no] = v0[species_no];
 
-	  stringup(model_name);
-			
-	  if( !strcmp( model_name, "CONSTANT") )
-	    {
-	      if ( fscanf(imp,"%s", input ) !=  1 )
-		{
-		  GOMA_EH(GOMA_ERROR,"Expecting trailing keyword for Second Level Set Species Source.\n");
-		}
+		  stringup(model_name);
 				
-	      stringup(input);
-				
-	      if( strncmp( input,"POSITIVE", 3 ) == 0 )
-		{
-		  mat_ptr->mp2nd->speciessourcemask[0][species_no] = 0; mat_ptr->mp2nd->speciessourcemask[1][species_no] = 1;
-		}
-	      else if (  strncmp( input,"NEGATIVE", 3 ) == 0 )
-		{
-		  mat_ptr->mp2nd->speciessourcemask[0][species_no] = 1; mat_ptr->mp2nd->speciessourcemask[1][species_no] = 0;
-		}
-	      else
-		{
-		  GOMA_EH(GOMA_ERROR,"Keyword must be POSITIVE or NEGATIVE for Second Level Set Heat Source.\n");
-		}
-	      SPF(endofstring(es), " %s", input);
-	      if( pfd != NULL)
-		{
-		  for(i=0 ; i< pfd->num_phase_funcs ; i++)
+		  if( !strcmp( model_name, "CONSTANT") )
 		    {
-		      if ( fscanf(imp,"%lf",&(mat_ptr->mp2nd->speciessource_phase[i][species_no])) != 1)
-			{ GOMA_EH( -1, "error reading phase species source"); }
-		      SPF(endofstring(es)," %g", mat_ptr->mp2nd->speciessource_phase[i][species_no]);
+		      if ( fscanf(imp,"%s", input ) !=  1 )
+			{
+			  GOMA_EH(GOMA_ERROR,"Expecting trailing keyword for Second Level Set Species Source.\n");
+			}
+					
+		      stringup(input);
+					
+		      if( strncmp( input,"POSITIVE", 3 ) == 0 )
+			{
+			  mat_ptr->mp2nd->speciessourcemask[0][species_no] = 0; mat_ptr->mp2nd->speciessourcemask[1][species_no] = 1;
+			}
+		      else if (  strncmp( input,"NEGATIVE", 3 ) == 0 )
+			{
+			  mat_ptr->mp2nd->speciessourcemask[0][species_no] = 1; mat_ptr->mp2nd->speciessourcemask[1][species_no] = 0;
+			}
+		      else
+			{
+			  GOMA_EH(GOMA_ERROR,"Keyword must be POSITIVE or NEGATIVE for Second Level Set Heat Source.\n");
+			}
+		      SPF(endofstring(es), " %s", input);
+		      if( pfd != NULL)
+			{
+			  for(i=0 ; i< pfd->num_phase_funcs ; i++)
+			    {
+			      if ( fscanf(imp,"%lf",&(mat_ptr->mp2nd->speciessource_phase[i][species_no])) != 1)
+				{ GOMA_EH( -1, "error reading phase species source"); }
+			      SPF(endofstring(es)," %g", mat_ptr->mp2nd->speciessource_phase[i][species_no]);
+			    }
+			}
+		    }
+		  else
+		    {
+		      GOMA_EH(GOMA_ERROR, "Second Level Set Species Source model can only be CONSTANT.\n");
 		    }
 		}
-	    }
-	  else
-	    {
-	      GOMA_EH(GOMA_ERROR, "Second Level Set Species Source model can only be CONSTANT.\n");
-	    }
-	}
-		
-      ECHO(es,echo_file);
+			
+	      ECHO(es,echo_file);
 
-      species_no = pd_glob[mn]->Num_Species;
-      model_read = look_for_mat_prop(imp, "Level Set Species Width",
-                                     mat_ptr->mp2nd->use_species_source_width,
-                                     mat_ptr->mp2nd->species_source_width, NO_USER, NULL, model_name, SCALAR_INPUT,
-				     &species_no,es);
+	      species_no = pd_glob[mn]->Num_Species;
+	      model_read = look_for_mat_prop(imp, "Level Set Species Width",
+					     mat_ptr->mp2nd->use_species_source_width,
+					     mat_ptr->mp2nd->species_source_width, NO_USER, NULL, model_name, SCALAR_INPUT,
+					     &species_no,es);
 
-      if( model_read != -1 )
-	{
-	  if( ls == NULL ) GOMA_EH(GOMA_ERROR, "Level Set Species Width requires activation of Level Set Tracking.\n");
+	      if( model_read != -1 )
+		{
+		  if( ls == NULL ) GOMA_EH(GOMA_ERROR, "Level Set Species Width requires activation of Level Set Tracking.\n");
 
-	  mat_ptr->mp2nd->use_species_source_width[species_no] = 1;
-          //mat_ptr->mp2nd->species_source_width[species_no] = v0[species_no];
+		  mat_ptr->mp2nd->use_species_source_width[species_no] = 1;
+		  //mat_ptr->mp2nd->species_source_width[species_no] = v0[species_no];
 
-	  stringup(model_name);
+		  stringup(model_name);
 
-	  if( strcmp( model_name, "CONSTANT") )
-	    {
-	      GOMA_EH(GOMA_ERROR, "Level Set Species Width can only be CONSTANT.\n");
-	    }
-	}
+		  if( strcmp( model_name, "CONSTANT") )
+		    {
+		      GOMA_EH(GOMA_ERROR, "Level Set Species Width can only be CONSTANT.\n");
+		    }
+		}
 
-      ECHO(es,echo_file);
+	      ECHO(es,echo_file);
+      }
 
 						
     }
