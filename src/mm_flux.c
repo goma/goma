@@ -329,3677 +329,3683 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
   if ( current_id != -1 )
     {
       num_side_in_set      = exo->ss_num_sides[current_id];
-      
-      num_dist_fact_in_set = exo->ss_num_distfacts[current_id];
-      
-      num_elem_in_set      = num_side_in_set;
+      if (num_side_in_set > 0) {
+        
+        num_dist_fact_in_set = exo->ss_num_distfacts[current_id];
+        
+        num_elem_in_set      = num_side_in_set;
 
-      num_node_in_set      = num_dist_fact_in_set;
-      
-      num_nodes_on_side    = num_node_in_set/num_elem_in_set; /* Well... */
-      
-      elem_list            = &exo->ss_elem_list[exo->ss_elem_index[current_id]];
+        num_node_in_set      = num_dist_fact_in_set;
+        
+        num_nodes_on_side    = num_node_in_set/num_elem_in_set; /* Well... */
 
-      /* Now start element sweep */
+        int local_side_node_list[MAX_NODES_PER_SIDE];
+        int id_side = exo->ss_side_list[exo->ss_elem_index[current_id]];
+        get_side_info(ei[pg->imtrx]->ielem_type, id_side, &num_nodes_on_side, local_side_node_list);
+        
+        elem_list            = &exo->ss_elem_list[exo->ss_elem_index[current_id]];
 
-      for (i=0,local_flux = local_flux_conv = local_area = 0.; 
-	   i< num_elem_in_set; 
-	   i++)
-	{         
-	  ei[pg->imtrx]->ielem = elem_list[i];
+        /* Now start element sweep */
 
-	  mn = find_mat_number(ei[pg->imtrx]->ielem, exo);
+        for (i=0,local_flux = local_flux_conv = local_area = 0.; 
+             i< num_elem_in_set; 
+             i++)
+          {         
+            ei[pg->imtrx]->ielem = elem_list[i];
 
-
-	/**    only do integration if the requested material number  **/
-
-	if ( blk_id == -1 || 
-             (mn == map_mat_index(blk_id) && dpi->elem_owner[ elem_list[i] ] == ProcID)) {
-	  /*
-	   * Yes, "x" gets recycled like garbage. Fortunately, this 
-	   * routine should not write onto "x"...
-	   */
+            mn = find_mat_number(ei[pg->imtrx]->ielem, exo);
 
 
-	  err = load_elem_dofptr( elem_list[i], 
-				  exo,
-				  x,
-				  x,
-				  xdot,
-				  xdot,
-				  0);
-	  GOMA_EH(err, "load_elem_dofptr");
+          /**    only do integration if the requested material number  **/
 
-	  err = bf_mp_init(pd);
-	  GOMA_EH(err, "bf_mp_init");
-  
-	      iconnect_ptr        = ei[pg->imtrx]->iconnect_ptr;
-	      ielem_type          = ei[pg->imtrx]->ielem_type;
-	      ip_total            = elem_info(NQUAD_SURF, ielem_type);
-	      num_local_nodes     = ei[pg->imtrx]->num_local_nodes;
-	      ielem_dim           = ei[pg->imtrx]->ielem_dim;
-	      
-	 
-	      /* Calculates the ID side correctly for tets */
-	      if ( ielem_type == LINEAR_TET ) {
-                id_side = find_id_side_SS(ei[pg->imtrx]->ielem, current_id, exo);
-              } else {
-	        id_side = find_id_side (ei[pg->imtrx]->ielem, num_nodes_on_side,
-				      &exo->ss_node_list[current_id]
-				      [num_nodes_on_side*i],
-				      id_local_elem_coord, exo);
-              }
+          if ( blk_id == -1 || 
+               (mn == map_mat_index(blk_id) && dpi->elem_owner[ elem_list[i] ] == ProcID)) {
+            /*
+             * Yes, "x" gets recycled like garbage. Fortunately, this 
+             * routine should not write onto "x"...
+             */
 
 
-		  if( ls != NULL && ielem_dim == 2  &&
-			(quantity == POS_LS_FLUX || quantity == NEG_LS_FLUX ||
-				quantity == DELTA || quantity == LS_DCA ))
-		  {
-                    if ( ls->var != LS )
-			GOMA_WH(-1,"Level-set variable is not LS!");
-			  switch (id_side)
-			  {
-				  case 1:
-					  ls_F[0]=*esp_old->F[0];
-					  ls_F[1]=*esp_old->F[1];
-					  ls_F[2]=*esp_old->F[4];
-					  break;
-				  case 2:
-					  ls_F[0]=*esp_old->F[1];
-					  ls_F[1]=*esp_old->F[2];
-					  ls_F[2]=*esp_old->F[5];
-					  break;
-				  case 3:
-					  ls_F[0]=*esp_old->F[3];
-					  ls_F[1]=*esp_old->F[2];
-					  ls_F[2]=*esp_old->F[6];
-					  break;
-				  case 4:
-					  ls_F[0]=*esp_old->F[0];
-					  ls_F[1]=*esp_old->F[3];
-					  ls_F[2]=*esp_old->F[7];
-					  break;
-			  }
-			if(species_id > 0)
-			{
-			  var=species_id-1;
-			  switch (id_side)
-			  {
-				  case 1:
-					  ls_F[0]=*esp_old->pF[var][0];
-					  ls_F[1]=*esp_old->pF[var][1];
-					  ls_F[2]=*esp_old->pF[var][4];
-					  break;
-				  case 2:
-					  ls_F[0]=*esp_old->pF[var][1];
-					  ls_F[1]=*esp_old->pF[var][2];
-					  ls_F[2]=*esp_old->pF[var][5];
-					  break;
-				  case 3:
-					  ls_F[0]=*esp_old->pF[var][3];
-					  ls_F[1]=*esp_old->pF[var][2];
-					  ls_F[2]=*esp_old->pF[var][6];
-					  break;
-				  case 4:
-					  ls_F[0]=*esp_old->pF[var][0];
-					  ls_F[1]=*esp_old->pF[var][3];
-					  ls_F[2]=*esp_old->pF[var][7];
-					  break;
-			  }
-			}
-			  
-			  switch( quantity )
-			  {
-                                  case POS_LS_FLUX:
-					  wt_type = 2;
-					  break;
-				  case NEG_LS_FLUX:
-					  wt_type = 2;
-					  ls_F[0] = -ls_F[0];
-					  ls_F[1] = -ls_F[1];
-					  ls_F[2] = -ls_F[2];
-					  break;
-                                  case DELTA:
-                                  case LS_DCA:
-					  wt_type = 3;
-					  break;
-                                  default:
-                                          wt_type = 2;
-                                          break;
-			  }
-			  ierr = adaptive_weight( ad_wt, ip_total, ielem_dim-1, ls_F, 0.0,
-									  wt_type, ei[pg->imtrx]->ielem_type);
-			  if(ierr == -1)printf("adaptive wt problem %d %g %g %g\n",ierr,ls_F[0],ls_F[1],ls_F[2]);
-		  }
-		  
-		  if( ls!=NULL && ls->elem_overlap_state && ls->Integration_Depth > 0 )
-		  {
-			  Subgrid_Int.active = TRUE;
-			  
-			  get_subgrid_integration_pts ( Subgrid_Tree, &element_search_grid,
-											&Subgrid_Int.s, &Subgrid_Int.wt, ls->Length_Scale );
-			  
-			  find_surf_center_st ( ielem_type, id_side, ielem_dim, surface_centroid, &s, &t );
-			  
-			  ip_total = gather_surface_subgrid_integration_pts( element_search_grid, id_side, 
-																 surface_centroid, Subgrid_Int.s, Subgrid_Int.wt, 0 );
-			  
-		  }
-		  
+            err = load_elem_dofptr( elem_list[i], 
+                                    exo,
+                                    x,
+                                    x,
+                                    xdot,
+                                    xdot,
+                                    0);
+            GOMA_EH(err, "load_elem_dofptr");
 
- 
-	  /* Surface integration over element */
-	  
-	      for (ip = 0; ip < ip_total; ip++)
-		  {
-			  /*   zero local fluxes  */
-			  local_q = local_qconv = 0.;
-			  memset(local_Torque, 0, DIM*sizeof(double) );
-			  
-			  if( ls != NULL && ls->elem_overlap_state && ls->Integration_Depth > 0 )
-			  {
-				  ls->Elem_Sign = 0;
-				  xi[0] = Subgrid_Int.s[ip][0];
-				  xi[1] = Subgrid_Int.s[ip][1];
-				  xi[2] = Subgrid_Int.s[ip][2];
-				  
-				  s = 1.e30; 
-				  t = 1.e30;
-				  wt = Subgrid_Int.wt[ip];
-			  }
-			  else
-			  {
-				  
-				  /* find the quadrature point locations for current ip */
-				  find_surf_st (ip, ielem_type, id_side, ielem_dim, xi, &s, &t, &u);
-				  
-				  /* find the quadrature weight for current ip */
-				  wt = Gq_surf_weight (ip, ielem_type);    
-			  }
-			  
-			  /* ****************************************/
-			  err = load_basis_functions( xi, bfd);
-			  GOMA_EH( err, "problem from load_basis_functions");
-			  
-			  err = beer_belly();
-			  GOMA_EH( err, "beer_belly");
-			  
-			  /* precalculate variables at  current integration pt.*/
-			  err = load_fv();
-			  GOMA_EH( err, "load_fv");
-
-			  err = load_bf_grad();
-			  GOMA_EH( err, "load_bf_grad");
-			  
-			  err = load_bf_mesh_derivs();
-			  GOMA_EH( err, "load_bf_mesh_derivs");
-			  
-			  surface_determinant_and_normal (ei[pg->imtrx]->ielem, 
-				iconnect_ptr, num_local_nodes, ielem_dim-1,  
-				id_side, num_nodes_on_side,id_local_elem_coord);
-			  
-			  /*
-			   * Load up physical space gradients of field variables at this
-			   * Gauss point.
-			   */
-			  err = load_fv_grads();
-			  GOMA_EH( err, "load_fv_grads");
-
-			  err = load_fv_mesh_derivs(1);
-			  GOMA_EH( err, "load_fv_mesh_derivs");
-			  
-			  if (TimeIntegration != STEADY && pd->e[pg->imtrx][MESH_DISPLACEMENT1]) {
-				  for (j = 0; j < VIM; j++) {
-					  x_dot[j] = fv_dot->x[j];
-				  } 
-			  } else {
-				  for (j = 0; j < VIM; j++) {
-					  x_dot[j] = 0.;
-				  }
-			  }
-			  
-			  do_LSA_mods(LSA_SURFACE);
-
-	    if (ielem_dim !=3)
-	      {
-		calc_surf_tangent (ei[pg->imtrx]->ielem, iconnect_ptr, 
-				   num_local_nodes, ielem_dim-1,
-				   num_nodes_on_side,
-				   id_local_elem_coord);
-	      }
-
-            weight = wt;
-	    det = fv->sdet*fv->h3;
-
-	    if(upd->CoordinateSystem == CYLINDRICAL ||
-               upd->CoordinateSystem == SWIRLING   )
-	      {
-		weight = 2.*M_PIE*wt;
-		det = fv->sdet;
-	      }
-
-/*	get density  */
-
-	    rho = density( NULL, time_value );
-
-/**   get solid stresses  **/
-
-		  
-		  if(pd->e[pg->imtrx][R_MESH1] && cr->MeshMotion != ARBITRARY)
-		    {
-		      err = belly_flop(elc->lame_mu);
-		      GOMA_EH(err, "error in belly flop");
-		      if (err == 2) exit(-1);
-		/*
-		 * Total mesh stress tensor...
-		 *
-		 * Guess what the 4 new args will have to be and bloat accordingly.
-		 */
-
-		      err = mesh_stress_tensor(TT, dTT_dx, dTT_dp, dTT_dc, 
-					       dTT_dp_liq, dTT_dp_gas, dTT_dporosity, dTT_dsink_mass,   
-					       dTT_dT, dTT_dmax_strain,  dTT_dcur_strain, elc->lame_mu, elc->lame_lambda,
-					       delta_t, ei[pg->imtrx]->ielem, ip, ip_total);
+            err = bf_mp_init(pd);
+            GOMA_EH(err, "bf_mp_init");
+    
+                iconnect_ptr        = ei[pg->imtrx]->iconnect_ptr;
+                ielem_type          = ei[pg->imtrx]->ielem_type;
+                ip_total            = elem_info(NQUAD_SURF, ielem_type);
+                num_local_nodes     = ei[pg->imtrx]->num_local_nodes;
+                ielem_dim           = ei[pg->imtrx]->ielem_dim;
+                
+           
+                /* Calculates the ID side correctly for tets */
+                if ( ielem_type == LINEAR_TET ) {
+                  id_side = find_id_side_SS(ei[pg->imtrx]->ielem, current_id, exo);
+                } else {
+                  id_side = find_id_side (ei[pg->imtrx]->ielem, num_nodes_on_side,
+                                        &exo->ss_node_list[current_id]
+                                        [num_nodes_on_side*i],
+                                        id_local_elem_coord, exo);
+                }
 
 
-		/* For LINEAR ELASTICITY */
-		      if (cr->MeshFluxModel == LINEAR)
-			{
-			  if (dim == 2){
-			    TT[2][2] = 1.;
-			    TT[1][2] = 0.;
-			    TT[0][2] = 0.;
-			  }
-			}
-		/*  For Hookian Elasticity and shrinkage */
-		      else
-			{
-			  if (dim == 2)
+                    if( ls != NULL && ielem_dim == 2  &&
+                          (quantity == POS_LS_FLUX || quantity == NEG_LS_FLUX ||
+                                  quantity == DELTA || quantity == LS_DCA ))
+                    {
+                      if ( ls->var != LS )
+                          GOMA_WH(-1,"Level-set variable is not LS!");
+                            switch (id_side)
+                            {
+                                    case 1:
+                                            ls_F[0]=*esp_old->F[0];
+                                            ls_F[1]=*esp_old->F[1];
+                                            ls_F[2]=*esp_old->F[4];
+                                            break;
+                                    case 2:
+                                            ls_F[0]=*esp_old->F[1];
+                                            ls_F[1]=*esp_old->F[2];
+                                            ls_F[2]=*esp_old->F[5];
+                                            break;
+                                    case 3:
+                                            ls_F[0]=*esp_old->F[3];
+                                            ls_F[1]=*esp_old->F[2];
+                                            ls_F[2]=*esp_old->F[6];
+                                            break;
+                                    case 4:
+                                            ls_F[0]=*esp_old->F[0];
+                                            ls_F[1]=*esp_old->F[3];
+                                            ls_F[2]=*esp_old->F[7];
+                                            break;
+                            }
+                          if(species_id > 0)
                           {
-			    elast_modulus = elc->lame_mu;
-				if (cr->MeshFluxModel == NONLINEAR ||
-				    cr->MeshFluxModel == HOOKEAN_PSTRAIN ||
-				    cr->MeshFluxModel == INCOMP_PSTRAIN )
-				  TT[2][2] = (1. - pow(fv->volume_change,2./3.)) * elast_modulus - fv->P;
-			    /*              if (cr->MeshFluxModel == INCOMP_PSTRESS) */
-				else  TT[2][2] = 0.;
-			    TT[1][2] = 0.;
-			    TT[0][2] = 0.;
-			  }
-			}
-   if(profile_flag & 2)
-      {
-      /*  try for Trig solution of cubic equation     */
-      I_T = TT[0][0]+TT[1][1]+TT[2][2];
-      II_T = TT[0][0]*TT[1][1]+TT[0][0]*TT[2][2]+TT[1][1]*TT[2][2]
-              -(SQUARE(TT[0][1])+SQUARE(TT[0][2])+SQUARE(TT[1][2]));
-      III_T = TT[0][0]*TT[1][1]*TT[2][2]+2.*(TT[0][1]*TT[1][2]*TT[0][2])
-              -TT[0][0]*SQUARE(TT[1][2])-TT[1][1]*SQUARE(TT[0][2])
-              -TT[2][2]*SQUARE(TT[0][1]);
-      coeff_a = (3.*II_T - SQUARE(I_T))/3.;
-      coeff_b = (2.*(-I_T)*SQUARE(I_T)-9.*(-I_T)*II_T+27.*(-III_T))/27.;
-      if(coeff_a > 0)
-              {fprintf(stderr,"trouble with principal stress - imaginary roots %g %g\n",coeff_a,coeff_b);}
-      else
-              {m_par = 2.*sqrt(-coeff_a/3.);}
-      theta1 = acos(3.*coeff_b/(coeff_a*m_par))/3.;
-      evalue1 = m_par*cos(theta1) + I_T/3.;
-      evalue2 = m_par*cos(theta1+2.*M_PIE/3.) + I_T/3.;
-      evalue3 = m_par*cos(theta1+4.*M_PIE/3.) + I_T/3.;
-      theta1 = evalue2;
-      if(fabs(theta1) > fabs(evalue1))
-             { evalue2=evalue1; evalue1=theta1;}
-      theta1 = evalue3;
-      if(fabs(theta1) > fabs(evalue2))
-             { evalue3=evalue2; evalue2=theta1;}
-      if(fabs(theta1) > fabs(evalue1))
-             { evalue2=evalue1; evalue2=theta1;}
-      }
-		    } /* end of STRESS_TENSOR */
-
-/* calculate real-solid stress here !!*/
-		  if(pd->e[pg->imtrx][R_SOLID1] && cr->MeshMotion != ARBITRARY)
-		    {
-		      mu = elc_rs->lame_mu;
-		      err = belly_flop_rs(mu);
-		      GOMA_EH(err, "error in belly flop");
-		      if (err == 2) return(err);
-		  /*
-		   * Total mesh stress tensor...
-		   */
- 		      err = solid_stress_tensor(TT, dTT_dx, dTT_drs, dTT_dp, 
-						dTT_dc,  dTT_dp_liq, dTT_dp_gas, dTT_dporosity, 
-						dTT_dT, dTT_dmax_strain, elc_rs->lame_mu, elc_rs->lame_lambda);
-		      if (dim == 2)
-			{
-			  elast_modulus = elc_rs->lame_mu;
-			  
-			  if (cr->RealSolidFluxModel == NONLINEAR ||
-			      cr->RealSolidFluxModel == HOOKEAN_PSTRAIN ||
-			      cr->RealSolidFluxModel == INCOMP_PSTRAIN )
-			    TT[2][2] = (1. - pow(fv->volume_change,2./3.)) * elast_modulus - fv->P;
-		      /*              if (cr->MeshFluxModel == INCOMP_PSTRESS) */
-			  else  TT[2][2] = 0.;
-		      
-			  TT[1][2] = 0.;
-			  TT[0][2] = 0.;
-			}
-   if(profile_flag & 2)
-      {
-      /*  try for Trig solution of cubic equation     */
-      I_T = TT[0][0]+TT[1][1]+TT[2][2];
-      II_T = TT[0][0]*TT[1][1]+TT[0][0]*TT[2][2]+TT[1][1]*TT[2][2]
-              -(SQUARE(TT[0][1])+SQUARE(TT[0][2])+SQUARE(TT[1][2]));
-      III_T = TT[0][0]*TT[1][1]*TT[2][2]+2.*(TT[0][1]*TT[1][2]*TT[0][2])
-              -TT[0][0]*SQUARE(TT[1][2])-TT[1][1]*SQUARE(TT[0][2])
-              -TT[2][2]*SQUARE(TT[0][1]);
-      coeff_a = (3.*II_T - SQUARE(I_T))/3.;
-      coeff_b = (2.*(-I_T)*SQUARE(I_T)-9.*(-I_T)*II_T+27.*(-III_T))/27.;
-      if(coeff_a > 0)
-              {fprintf(stderr,"trouble with principal stress - imaginary roots %g %g\n",coeff_a,coeff_b);}
-      else
-              {m_par = 2.*sqrt(-coeff_a/3.);}
-      theta1 = acos(3.*coeff_b/(coeff_a*m_par))/3.;
-      evalue1 = m_par*cos(theta1) + I_T/3.;
-      evalue2 = m_par*cos(theta1+2.*M_PIE/3.) + I_T/3.;
-      evalue3 = m_par*cos(theta1+4.*M_PIE/3.) + I_T/3.;
-      theta1 = evalue2;
-      if(fabs(theta1) > fabs(evalue1))
-             { evalue2=evalue1; evalue1=theta1;}
-      theta1 = evalue3;
-      if(fabs(theta1) > fabs(evalue2))
-             { evalue3=evalue2; evalue2=theta1;}
-      if(fabs(theta1) > fabs(evalue1))
-             { evalue2=evalue1; evalue2=theta1;}
-      }
-		    } /* end of REAL_STRESS_TENSOR */
-
-		/*
-		 *  viscoelastic stress tensor
-		 */
-  			memset( ves, 0, sizeof(dbl)*DIM*DIM);
-  			if ( pd->gv[POLYMER_STRESS11] )
-    			  {
-                            dbl log_c[DIM][DIM];
-                            dbl exp_s[DIM][DIM];
-                            dbl R1[DIM][DIM];
-                            dbl eig_values[DIM];
-		            dbl mup = 0.;
- 			    dbl lambda = 0.;
-                            if(vn->evssModel==LOG_CONF || vn->evssModel == LOG_CONF_GRADV)
-                              {
-                                for ( ve_mode=0; ve_mode < vn->modes; ve_mode++)
-                                  {
-			            for (p=0; p<WIM; p++)
-			              {
-			                for (r=0; r<WIM; r++)
-				          {
-				            log_c[p][r] = fv->S[ve_mode][p][r];
-			                  }
-				      }
-#ifdef ANALEIG_PLEASE
-                                    analytical_exp_s(log_c, exp_s, eig_values, R1, NULL);
-#else
-				    compute_exp_s(log_c, exp_s, eig_values, R1);
-#endif
-		                    mup = viscosity(ve[ve_mode]->gn, gamma, NULL);
-			            if(ve[ve_mode]->time_constModel == CONSTANT)
-				      {
-				        lambda = ve[ve_mode]->time_const;
-			              }
-				    for (a=0; a<WIM; a++)
-			              {
-				        for (b=0; b<WIM; b++)
-				          {
-				            ves[a][b] += mup/lambda*(exp_s[a][b]-(double)delta(a,b));
-					  }
-			              }
-				  }
-			      }
-		            else
-		              {
-			        for ( a=0; a<WIM; a++)
-        	                  {
-			            for ( b=0; b<WIM; b++)
-            			       {
-			                 for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
-                		           {
-                  			     ves[a][b] += fv->S[ve_mode][a][b];
-                			   }
-            			       }
-        		          }
-    			       }
-			   } // if pd->gv[POLYMER_STRESS11]
-
-		/*
-		 * OK, let's simplify things by computing the viscous
-		 * stress tensor upfront.
-		 */
-  			memset( vs, 0, sizeof(dbl)*DIM*DIM);
-  			memset( gamma, 0, sizeof(dbl)*DIM*DIM);
-		      if(cr->MeshMotion == ARBITRARY)
-    			 {
-			  for ( a=0; a<WIM; a++)
-			    {
-			      for ( b=0; b<WIM; b++)
-				{
-				  gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
-				}
-			    }
-			  
-			  mu = viscosity(gn, gamma, d_mu);
-
-			  for ( a=0; a<WIM; a++)
-			    {
-			      for ( b=0; b<WIM; b++)
-				{
-				  vs[a][b] = mu*gamma[a][b]-fv->P*delta(a,b);
-				}
-			    }
-                          if(profile_flag & 1)
-                             { calc_shearrate(&gamma_dot, gamma, NULL, NULL); }
-   if(profile_flag & 2)
-      {
-  			memset( TT, 0, sizeof(dbl)*DIM*DIM);
-			  for ( a=0; a<VIM; a++)
-			    {
-			      for ( b=0; b<VIM; b++)
-				{
-				  TT[a][b] = vs[a][b]+ves[a][b];
-				}
-			    }
-      /*  Principal Stresses - try for Trig solution of cubic equation     */
-      I_T = TT[0][0]+TT[1][1]+TT[2][2];
-      II_T = TT[0][0]*TT[1][1]+TT[0][0]*TT[2][2]+TT[1][1]*TT[2][2]
-              -(SQUARE(TT[0][1])+SQUARE(TT[0][2])+SQUARE(TT[1][2]));
-      III_T = TT[0][0]*TT[1][1]*TT[2][2]+2.*(TT[0][1]*TT[1][2]*TT[0][2])
-              -TT[0][0]*SQUARE(TT[1][2])-TT[1][1]*SQUARE(TT[0][2])
-              -TT[2][2]*SQUARE(TT[0][1]);
-      coeff_a = (3.*II_T - SQUARE(I_T))/3.;
-      coeff_b = (2.*(-I_T)*SQUARE(I_T)-9.*(-I_T)*II_T+27.*(-III_T))/27.;
-      if(coeff_a > 0)
-              {fprintf(stderr,"trouble with principal stress - imaginary roots %g %g\n",coeff_a,coeff_b);}
-      else
-              {m_par = 2.*sqrt(-coeff_a/3.);}
-      theta1 = acos(3.*coeff_b/(coeff_a*m_par))/3.;
-      evalue1 = m_par*cos(theta1) + I_T/3.;
-      evalue2 = m_par*cos(theta1+2.*M_PIE/3.) + I_T/3.;
-      evalue3 = m_par*cos(theta1+4.*M_PIE/3.) + I_T/3.;
-      theta1 = evalue2;
-      if(fabs(theta1) > fabs(evalue1))
-             { evalue2=evalue1; evalue1=theta1;}
-      theta1 = evalue3;
-      if(fabs(theta1) > fabs(evalue2))
-             { evalue3=evalue2; evalue2=theta1;}
-      if(fabs(theta1) > fabs(evalue1))
-             { evalue2=evalue1; evalue2=theta1;}
-      }
-    			 }
- 		/*
- 		 * computing the electric stress tensor upfront.
- 		 */
-  			memset( es, 0, sizeof(dbl)*DIM*DIM);
-		      if(pd->e[pg->imtrx][R_POTENTIAL])
-     			 {
- 			  efield_sqr = 0.0;
- 			  for ( a=0; a<VIM; a++)
- 			    {
- 				  efield[a] = - fv->grad_V[a];
- 				  efield_sqr += efield[a]*efield[a];
- 			    }
- 
- 			  for ( a=0; a<VIM; a++)
- 			    {
- 			      for ( b=0; b<VIM; b++)
- 				{
- 				  es[a][b] = efield[a]*efield[b] - 0.5*efield_sqr*delta(a,b);
- 				}
- 			    }
- 		      perm   = mp->permittivity;
- 	              if( J_AC != NULL)
- 		        {
- 			  memset( d_p_dV,0, sizeof(double)*MDE);
- 			  memset( d_p_dT,0, sizeof(double)*MDE);
- 			  memset( d_p_dX,0, sizeof(double)*MDE*DIM);
- 			  memset( d_p_dC,0, sizeof(double)*MAX_CONC*MDE);
- 			}
-     			 }
-			  
- 		/*
- 		 * load surface tension for variable models
- 		 */
- 		      if (mp->SurfaceTensionModel == CONSTANT) {
-                            dsigmadT = 0.0;
- 			    for ( a=0; a<MAX_CONC; a++)
-                                {dsigmadC[a] = 0.0;}
+                            var=species_id-1;
+                            switch (id_side)
+                            {
+                                    case 1:
+                                            ls_F[0]=*esp_old->pF[var][0];
+                                            ls_F[1]=*esp_old->pF[var][1];
+                                            ls_F[2]=*esp_old->pF[var][4];
+                                            break;
+                                    case 2:
+                                            ls_F[0]=*esp_old->pF[var][1];
+                                            ls_F[1]=*esp_old->pF[var][2];
+                                            ls_F[2]=*esp_old->pF[var][5];
+                                            break;
+                                    case 3:
+                                            ls_F[0]=*esp_old->pF[var][3];
+                                            ls_F[1]=*esp_old->pF[var][2];
+                                            ls_F[2]=*esp_old->pF[var][6];
+                                            break;
+                                    case 4:
+                                            ls_F[0]=*esp_old->pF[var][0];
+                                            ls_F[1]=*esp_old->pF[var][3];
+                                            ls_F[2]=*esp_old->pF[var][7];
+                                            break;
                             }
- 		      if (mp->SurfaceTensionModel != CONSTANT) {
- 		            load_surface_tension(dsigma_dx);
- 		            }
- 		      if (mp->SurfaceTensionModel == USER) {
-                            dsigmadT = mp->d_surface_tension[TEMPERATURE];
- 			    for ( a=0; a<MAX_CONC; a++)
-                                {dsigmadC[a] = mp->d_surface_tension[MAX_VARIABLE_TYPES+a];}
-                            }
-
-/*		  if (pd->e[pg->imtrx][R_POR_LIQ_PRES])
-		    {
-		       if (mp->PorousMediaType == POROUS_SATURATED) { 
- 			err = get_porous_fully_sat_terms(&pm_terms, tt, dt); 
- 			GOMA_EH(err,"problem in getting the species terms"); 
- 			if (neg_elem_volume) return(err);
- 		      } else if (mp->PorousMediaType == POROUS_UNSATURATED || 
- 				 mp->PorousMediaType == POROUS_TWO_PHASE) { 
- 			err = get_porous_part_sat_terms(&pm_terms, tt, dt); 
- 			GOMA_EH(err,"problem in getting the species terms"); 
- 			if (neg_elem_volume) return(err); 
- 		      } 
-		    }*/
-
-		  switch( quantity )
-		    {
-		    case AREA:
-		      
-		      local_flux += weight*fv->sdet;
-		      local_flux_conv = 0.0;
-
-		      break;
-		      
-                    case VOL_REVOLUTION:
-
-                      local_q +=  0.5 * fv->x[1] * fabs(fv->snormal[1]) ;
-                      local_flux += weight*det* local_q ;
-		      local_flux_conv = 0.0;
-/*                      local_flux_conv += weight*det*mp->surface_tension ;*/
-
-                      break;
-
-		    case HEAT_FLUX:
-	      
-		  /* finally we can add up the outgoing flux and area */
-		  /* but first evaluate properties if variable */
-		      k = conductivity( d_k, time_value );
-		      Cp = heat_capacity( d_Cp, time_value );
-
-                      if ( cr->HeatFluxModel == CR_HF_FOURIER_0 )
-                      {
-                      for (a=0; a<VIM; a++)
-                        {
-                          local_q +=  -k * fv->snormal[a] * fv->grad_T[a] ;
-                          local_qconv +=   rho * Cp*fv->T* fv->snormal[a] * (fv->v[a]-x_dot[a]) ;
-                        }
-                      }  else if ( cr->HeatFluxModel == CR_HF_USER )
-                        {
-                        double delP=0.;
-#if defined SECOR_HEAT_FLUX
-			double *hpar, h, dh_dX[DIM], Vb[DIM],Vt[DIM];
-			double dq_dVb[DIM][DIM], dq_dVt[DIM][DIM];
-
-			hpar = &mp->u_thermal_conductivity[0];
-			h = hpar[0] + hpar[4]*fv->x[0]
-			  + (hpar[1]-hpar[5]*fv->x[0])*(hpar[3]-fv->x[1])
-			  + 0.5*hpar[2]*SQUARE(hpar[3]-fv->x[1]);
-
-			dh_dX[0] = hpar[4] - hpar[5]*(hpar[3]-fv->x[1]);
-			dh_dX[1] = hpar[5]*fv->x[0]-hpar[1] - hpar[2]*(hpar[3]-fv->x[1]);
-
-			/*     velocities of bottom and top surfaces   */
-			Vb[0] = mp->u_heat_capacity[0];
-			Vb[1] = mp->u_heat_capacity[1];
-			Vt[0] = mp->u_heat_capacity[2];
-			Vt[1] = mp->u_heat_capacity[3];
-
-			usr_heat_flux(fv->grad_T, q, dq_gradT, dq_dX, time_value, h, dh_dX, Vb, Vt
-                             ,dq_dVb, dq_dVt);
-#else
-			usr_heat_flux(fv->grad_T, q, dq_gradT, dq_dX, time_value);
-			printf("untested\n");
-			exit(-1);
-#endif
-
-			for (a=0; a<VIM; a++)
-			  {
-                                delP += fv->snormal[a] * fv->grad_T[a];
-				local_q +=  fv->snormal[a] * q[a] ;
-                                for (b=0; b<VIM; b++)
-				  {
-				    local_qconv +=  fv->snormal[a] * dq_gradT[a][b]
-				      * fv->snormal[b];
-				  }
                           }
-	       	/*                                local_qconv *= delP/fv->T;  */
-                        }
-		      local_flux +=  weight * det * local_q ;
-		      local_flux_conv +=   weight * det * local_qconv ;
-		      break;
-
-		    case ACOUSTIC_FLUX_NORMAL:
-	      
-		      R_imped = acoustic_impedance( d_R, time_value );
-		      wnum = wave_number( d_wnum, time_value );
-		      kR_inv = 1./(wnum*R_imped);
-
-                      for (a=0; a<dim; a++)
-                        {
-                          local_q +=  -kR_inv * fv->snormal[a] * fv->grad_api[a] ;
-                          local_qconv +=  kR_inv * fv->snormal[a] * fv->grad_apr[a] ;
-                        }
-                          local_flux +=  weight * det * local_q ;
-                          local_flux_conv +=   weight * det * local_qconv ;
-                      break;
-
-		    case ACOUSTIC_FLUX_TANGENT1:
-	      
-		      R_imped = acoustic_impedance( d_R, time_value );
-		      wnum = wave_number( d_wnum, time_value );
-		      kR_inv = 1./(wnum*R_imped);
-
-                      for (a=0; a<dim; a++)
-                        {
-                          local_q +=  -kR_inv * fv->stangent[0][a] * fv->grad_api[a] ;
-                          local_qconv +=  kR_inv * fv->stangent[0][a] * fv->grad_apr[a] ;
-                        }
-                          local_flux +=  weight * det * local_q ;
-                          local_flux_conv +=   weight * det * local_qconv ;
-                      break;
-
-		    case ACOUSTIC_FLUX_TANGENT2:
-	      
-		      R_imped = acoustic_impedance( d_R, time_value );
-		      wnum = wave_number( d_wnum, time_value );
-		      kR_inv = 1./(wnum*R_imped);
-
-                      for (a=0; a<dim; a++)
-                        {
-                          local_q +=  -kR_inv * fv->stangent[1][a] * fv->grad_api[a] ;
-                          local_qconv +=  kR_inv * fv->stangent[1][a] * fv->grad_apr[a] ;
-                        }
-                          local_flux +=  weight * det * local_q ;
-                          local_flux_conv +=   weight * det * local_qconv ;
-                      break;
-
-		    case ACOUSTIC_FLUX_X:
-	      
-		      R_imped = acoustic_impedance( d_R, time_value );
-		      wnum = wave_number( d_wnum, time_value );
-		      kR_inv = 1./(wnum*R_imped);
-
-                          local_q +=  -kR_inv * fv->grad_api[0] ;
-                          local_qconv +=  kR_inv * fv->grad_apr[0] ;
-                          local_flux +=  weight * det * local_q ;
-                          local_flux_conv +=   weight * det * local_qconv ;
-                      break;
-
-		    case ACOUSTIC_FLUX_Y:
-	      
-		      R_imped = acoustic_impedance( d_R, time_value );
-		      wnum = wave_number( d_wnum, time_value );
-		      kR_inv = 1./(wnum*R_imped);
-
-                          local_q +=  -kR_inv * fv->grad_api[1] ;
-                          local_qconv +=  kR_inv * fv->grad_apr[1] ;
-                          local_flux +=  weight * det * local_q ;
-                          local_flux_conv +=   weight * det * local_qconv ;
-                      break;
-
-		    case ACOUSTIC_FLUX_Z:
-	      
-		      R_imped = acoustic_impedance( d_R, time_value );
-		      wnum = wave_number( d_wnum, time_value );
-		      kR_inv = 1./(wnum*R_imped);
-
-                          local_q +=  -kR_inv * fv->grad_api[2] ;
-                          local_qconv +=  kR_inv * fv->grad_apr[2] ;
-                          local_flux +=  weight * det * local_q ;
-                          local_flux_conv +=   weight * det * local_qconv ;
-                      break;
-
-		    case VOLUME_FLUX:
-                      for(a=0; a<WIM; a++)
-                        {
-			  if (cr->MeshMotion == ARBITRARY)
-			    local_q +=  fv->snormal[a]*( fv->v[a]-x_dot[a] ) ;
-			  else if (pd->v[pg->imtrx][MESH_DISPLACEMENT1])
-			    local_q +=  fv->snormal[a]*( fv->d[a] ) ;
-			  else
-			    GOMA_EH(GOMA_ERROR,"Inconsistency in volume-flux specification. Contact Developers");
-                        }
-                          local_flux += weight*det* local_q ;
-		      break;
-
-		    case SHELL_VOLUME_FLUX:
-
-		      // shell_determinant_and_normal(ei[pg->imtrx]->ielem, ei[pg->imtrx]->iconnect_ptr, ei[pg->imtrx]->num_local_nodes,
-                      //         ei[pg->imtrx]->ielem_dim, 1);
-
-		      /* First save local normal to edge because lubrication_shell_init changes it */
-		      for(a=0; a<VIM; a++) base_normal[a]=fv->snormal[a];
-
-		      n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
-		      lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
-
-		      /* Calculate the flow rate and its sensitivties */
-
-		      calculate_lub_q_v(R_LUBP, time_value, 0, xi, exo);
-
-                      for(a=0; a<VIM; a++)
-                        {
-			    local_q +=  base_normal[a]*LubAux->q[a];
-                        }
-                          local_flux += weight*det* local_q ;
-			  /* clean-up */
-			  safe_free((void *) n_dof);
-		      break;
-
-     		    case NEG_LS_FLUX:
-     		    case POS_LS_FLUX:
- 
-       			{
- 			double H = 0.0;
- 			load_lsi(ls->Length_Scale);
- 
- 			H =  ( quantity == POS_LS_FLUX ? lsi->H : ( 1.0 - lsi->H ) ) ;
- 	
- 			for( a=0; a<dim; a++)
- 				{
- 	  		local_q += H * (fv->v[a]-x_dot[a]) * fv->snormal[a] ;
-  	  		local_qconv += (fv->v[a]-x_dot[a]) * fv->snormal[a] ;
- 				}
- 	  		local_flux += weight * det * local_q ;
-  	  		local_flux_conv += ad_wt[ip_total-ip-1]*det*local_qconv;
- 
-       			}
-       			break;
- 
-      
-		    case PVELOCITY1:
-		    case PVELOCITY2:
-		    case PVELOCITY3:
-                      for(a=0; a<WIM; a++)
-                        {
-                          local_q +=  fv->snormal[a]*fv->pv[a] ;
-                        }
-                          local_flux +=  weight*det*local_q ;
-		      break;
-		  
-		    case EXT_VELOCITY: /* This is already a normal velocity */
-		      local_q +=  fv->ext_v;
-		      local_flux +=  weight*det*local_q ;
-		      break;
-
-		    case EFIELD1:
-		    case EFIELD2:
-		    case EFIELD3:
-                      for(a=0; a<VIM; a++)
-                        {
-                          local_q +=  fv->snormal[a]*fv->E_field[a] ;
-                        }
-		      local_flux +=  weight*det*local_q ;
-		      break;
-
-		    case SPECIES_FLUX:
-                      for (a = 0; a < VIM; a++) {
-	                if ( cr->MassFluxModel == FICKIAN  ||
-	                     cr->MassFluxModel == STEFAN_MAXWELL  ||
-	                     cr->MassFluxModel == STEFAN_MAXWELL_CHARGED  ||
-	                     cr->MassFluxModel == STEFAN_MAXWELL_VOLUME )
-	                    {
-	                     if ( Diffusivity() )  GOMA_EH( -1, "Error in Diffusivity.");
-
-	                     local_q += fv->snormal[a] * 
-                               (-mp->diffusivity[species_id]*fv->grad_c[species_id][a]);
-	                    }
-	                else if ( cr->MassFluxModel == GENERALIZED_FICKIAN)
-	                    {
-	                     if ( Generalized_Diffusivity() )  GOMA_EH( -1, "Error in Diffusivity.");
-	                     for (w=0; w<pd->Num_Species_Eqn; w++)
-	                       {
-	                        local_q +=  fv->snormal[a] * 
-                                           (-mp->diffusivity_gen_fick[species_id][w]
-                                              *fv->grad_c[w][a]);
-	                       }
-	                    }
-	                else  if ( cr->MassFluxModel == DARCY )
-	                    { /* diffusion induced convection is zero */ }
-			else if ( cr->MassFluxModel == DM_SUSPENSION_BALANCE )
-			  {
-			    struct Species_Conservation_Terms st;
-			    zero_structure(&st, sizeof(struct Species_Conservation_Terms), 1);
-			    if ( Diffusivity() ) GOMA_EH( -1, "Error in Diffusivity.");
-			    for ( w=0; w < pd->Num_Species_Eqn; w++)
-			      {
-				suspension_balance(&st, w);
-				local_q += fv->snormal[a] * st.diff_flux[w][a];
-			      }
-			  }
-	                else
-	                    { GOMA_EH( -1, "Unimplemented mass flux constitutive relation."); }
-                          local_qconv += (fv->snormal[a]*(fv->v[a]-x_dot[a])
-                                         *fv->c[species_id] );
-                        }
-                          local_flux +=  weight*det*local_q;
-                          local_flux_conv += weight*det*local_qconv;
-		      break;
-
-		    case SPECIES_FLUX_REVOLUTION:
-
-		      Diffusivity();
-
-                      for(a=0; a<VIM; a++)
-                        {
-                          local_q += ( -mp->diffusivity[species_id]*
-                                  fv->snormal[a]*fv->grad_c[species_id][a] );
-                          local_qconv += ( fv->snormal[a]*(fv->v[a]-x_dot[a])*fv->c[species_id] );
-                        }
-                      local_q *=  0.5 * fv->x[1] * fabs(fv->snormal[1]) ;
-                      local_qconv *=  0.5 * fv->x[1] * fabs(fv->snormal[1]) ;
-                          local_flux +=  weight*det*local_q;
-                          local_flux_conv += weight*det*local_qconv;
-		      break;
-
-		    case CHARGED_SPECIES_FLUX:
-
-		      Diffusivity();
-
-                      z[species_id] = mp->charge_number[species_id];
-                      if (mp->SolutionTemperatureModel == CONSTANT)  
-                        {
-                          T = mp->solution_temperature;
-                        } 
-                      else 
-                        {
-                          GOMA_EH(GOMA_ERROR, "Solution-temperature model not yet implemented");
-                        }
-                      /* set solution temperature to 298 K if it is zero - safety feature */
-                      if (T == 0.0)
-                        {
-                          T = 298.0;
-                          fprintf(stderr, "Warning!: a default electrolyte temperature of 298 K is being used!");
-                        }
- 
-                      FRT=FF/R/T;
-                      kapta[species_id] = FRT*z[species_id]*mp->diffusivity[species_id]*fv->c[species_id]; 
-		      for (w = 0; w < pd->Num_Species_Eqn; w++) 
-                        {
-                          d_kapta_dc[species_id][MAX_VARIABLE_TYPES + w] = FRT*z[species_id]*
-				                                           mp->diffusivity[species_id];
-                        }
-                          d_kapta_dT[species_id] = (-FRT/T)*z[species_id]*mp->diffusivity[species_id]*
-                                                   fv->c[species_id];
-                       for(a=0; a<VIM; a++)
-                        {
-                          d_kapta_dx[species_id][a] = 0.0;
-                        }
-
-                      for(a=0; a<VIM; a++)
-                        {
-                          local_q += (-mp->diffusivity[species_id]*fv->snormal[a]*fv->grad_c[species_id][a] 
-                                      -kapta[species_id]*fv->snormal[a]*fv->grad_V[a]);
-                          local_qconv += ( fv->snormal[a]*(fv->v[a]-x_dot[a])*fv->c[species_id] );
-                        }
-                          local_flux +=  weight*det*local_q;
-                          local_flux_conv += weight*det*local_qconv;
-		      break;
-
-		    case CURRENT_FICKIAN:
-
-		      Diffusivity();
-
-                      z[species_id] = mp->charge_number[species_id]; 
-
-                      if (mp->SolutionTemperatureModel == CONSTANT)  
-                        {
-                          T = mp->solution_temperature;
-                        } 
-                      else 
-                        {
-                          GOMA_EH(GOMA_ERROR, "Solution-temperature model not yet implemented");
-                        }
-                      /* set solution temperature to 298 K if it is zero - safety feature */
-                      if (T == 0.0)
-                        {
-                          T = 298.0;
-                          fprintf(stderr, "Warning!: a default electrolyte temperature of 298 K is being used!");
-                        }
-
-                      FRT=FF/R/T;
-                      kapta[species_id] = FRT*z[species_id]*mp->diffusivity[species_id]*fv->c[species_id]; 
-		      for (w = 0; w < pd->Num_Species_Eqn; w++) 
-                        {
-                          d_kapta_dc[species_id][MAX_VARIABLE_TYPES + w] = FRT*z[species_id]*
-				                                           mp->diffusivity[species_id];
-                        }
-                          d_kapta_dT[species_id] = (-FRT/T)*z[species_id]*mp->diffusivity[species_id]*
-                                                   fv->c[species_id];
-                       for(a=0; a<VIM; a++)
-                        {
-                          d_kapta_dx[species_id][a] = 0.0;
-                        }
-
-                      for(a=0; a<VIM; a++)
-                        {
-                          local_q += (-mp->diffusivity[species_id]*fv->snormal[a]*fv->grad_c[species_id][a] 
-                                      -kapta[species_id]*fv->snormal[a]*fv->grad_V[a]);
-                          local_qconv += ( fv->snormal[a]*(fv->v[a]-x_dot[a])*fv->c[species_id] );
-                        }
-                          local_flux +=  weight*det*local_q;
-                          local_flux_conv += weight*det*local_qconv;
-		      break;
-
-		    case CURRENT:
-		      k   = mp->electrical_conductivity;
-	              if( J_AC != NULL)
-		        {
-			  memset( dkdV,0, sizeof(double)*MDE);
-			  memset( dkdT,0, sizeof(double)*MDE);
-			  memset( dkdX,0, sizeof(double)*MDE*DIM);
-			  memset( dkdC,0, sizeof(double)*MAX_CONC*MDE);
-			}
-                      for(a=0; a<VIM; a++)
-                        {
-                          local_q += - k * fv->snormal[a]*fv->grad_V[a]; 
-                        }
-                          local_flux +=  weight*det*local_q;
-                          local_flux_conv = 0.0;
-		      break;
-
- 		    case ELEC_FORCE_NORMAL:
- 			  for ( a=0; a<VIM; a++)
- 			    {
- 			      for ( b=0; b<VIM; b++)
- 				{
-                                 local_q += (fv->snormal[a]*perm*es[a][b]*fv->snormal[b]);
- 				}
- 			    }
-                                   local_flux += weight * det * local_q;
- 		      break;
- 		    case ELEC_FORCE_TANGENT1:
- 			  for ( a=0; a<VIM; a++)
- 			    {
- 			      for ( b=0; b<VIM; b++)
- 				{
-                                 local_q += (fv->stangent[0][a]*perm*es[a][b]*fv->snormal[b]);
- 				}
- 			    }
-                                   local_flux += weight * det * local_q;
- 		      break;
- 		    case ELEC_FORCE_TANGENT2:
- 			if(pd->Num_Dim == 3)
- 			  {
- 			  for ( a=0; a<VIM; a++)
- 			    {
- 			     for ( b=0; b<VIM; b++)
- 				{
-                                 local_q += (fv->stangent[1][a]*perm*es[a][b]*fv->snormal[b]);
- 				}
- 			    }
- 			   }
- 			  else
- 			   {
- 			      GOMA_EH(GOMA_ERROR, "Illegal flux type");
- 			   }
-                                   local_flux += weight * det * local_q;
- 		      break;
- 		    case ELEC_FORCE_X:
- 			  for ( a=0; a<VIM; a++)
- 			    {
-                             local_q += (perm*es[0][a]*fv->snormal[a]);
- 			    }
-                                   local_flux += weight * det * local_q;
- 		      break;
- 		    case ELEC_FORCE_Y:
- 			  for ( a=0; a<VIM; a++)
- 			    {
-                                   local_q += (perm*es[1][a]*fv->snormal[a]);
- 			    }
-                                   local_flux += weight * det * local_q;
- 		      break;
- 		    case ELEC_FORCE_Z:
- 			if(pd->Num_Dim == 3)
- 			  {
- 			  for ( a=0; a<VIM; a++)
- 			    {
-                                   local_q += (perm*es[2][a]*fv->snormal[a]);
- 			    }
- 			  }
- 			  else
- 			   {
- 			      GOMA_EH(GOMA_ERROR, "Illegal flux type");
- 			   }
-                                   local_flux += weight * det * local_q;
- 		      break;
- 		    case NET_SURF_CHARGE:
- 			  for ( a=0; a<VIM; a++)
- 			    {
-                                   local_q += (-perm * fv->snormal[a] * efield[a]);
- 			    }
-                                   local_flux += weight * det * local_q;
- 		      break;
-
-		    case TORQUE:
-		      if(pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-		         pd->CoordinateSystem == CARTESIAN_2pt5D)
-			GOMA_EH(GOMA_ERROR, "TORQUE has not been updated for the PROJECTED_CARTESIAN coordinate system.");
-
-		      if(pd->CoordinateSystem == SWIRLING || 
-			 pd->CoordinateSystem == CYLINDRICAL)
-			{
-			  for ( a=0; a<WIM; a++)
-			    {
-			      for ( b=0; b<WIM; b++)
-				{
-			      /*
-			       *  note that for CYLINDRICAL and SWIRLING coordinate systems
-			       * the h3 factor has been incorporated already into sdet
-			       * the moment arm is incorporated into sideset.
-			       */
-
-                                  local_q += ( fv->x[1] * e_theta[a]*
-					(vs[a][b]+ves[a][b])*fv->snormal[b] );
-
-				}
-			    }
-                                  local_flux += weight * det* local_q;
-			}
-		      else if( pd->CoordinateSystem == CARTESIAN ) 
-			{
-			  if( WIM == 2 ) 
-			    {
-			      fv->x[2] = 0.0;
-			      fv->snormal[2] = 0.0;
-			    }
-			  for ( a=0; a<DIM; a++)
-			    {
-			      Tract[a] = 0.0;
-			      for ( b=0; b<DIM; b++)
-				{
-				  Tract[a] += (vs[a][b]+ves[a][b]) * fv->snormal[b];
-				}
-			    }
-			  for ( a=0; a<DIM; a++)
-			    {
-			      for ( b=0; b<DIM; b++)
-				{
-				  for ( c=0; c<DIM; c++)
-				    {
-				      local_Torque[a] += ( permute(b,c,a) *
-						     fv->x[b]*Tract[c] );
-				    }
-				}
-			    }
-			  for ( a=0; a<DIM; a++)
-			    { Torque[a] += weight * det * local_Torque[a];}
-			  local_flux = Torque[2];
-			}
-		      else
-			{
-			  GOMA_EH(GOMA_ERROR,"Torque cannot be calculated in this case.");
-			}
-		      break;
-		  
-		    case PORE_LIQ_FLUX:
-				
-				err = load_porous_properties();
-				GOMA_EH( err, "load_porous_properties");
-
-		      if(mp->PorousMediaType == POROUS_SATURATED)
-			{
-
-			  for ( a=0; a<VIM; a++)
-			    {
-			      local_flux += weight*det*mp->density * 
-				pmv->liq_darcy_velocity[a]*fv->snormal[a];
-			      local_flux_conv += 0.;
-			    }
-			}
-		      else if (mp->PorousMediaType == POROUS_UNSATURATED ||
-			       mp->PorousMediaType == POROUS_TWO_PHASE)
-			{
-
-			  for ( a=0; a<VIM; a++)
-			    {
-			      local_flux += weight*det* 
-				pmv->rel_mass_flux[0][a]*fv->snormal[a];
-			      local_flux_conv += 0.;
-			    }
-			}
-		      else
-			{
-			  GOMA_EH(GOMA_ERROR,"unrecognized porous media type in mm_flux.c");
-			}
-		      break;
-
-		    case FORCE_NORMAL:
-		      if(cr->MeshMotion == ARBITRARY)
-			{
-			  for ( a=0; a<WIM; a++)
-			    {
-			      for ( b=0; b<WIM; b++)
-				{
-                                  local_q += (fv->snormal[a]*
-                        		(vs[a][b]+ves[a][b] )*fv->snormal[b]);
-
-                                  local_qconv += ( -rho*fv->snormal[a]*
-                                (fv->v[a]-x_dot[a])*fv->v[b]*fv->snormal[b]);
-				}
-			    }
-                                  local_flux += weight * det * local_q;
-                                  local_flux_conv += weight*det*local_qconv;
-			}
-		      else
-			{
-			  for ( a=0; a<VIM; a++)
-			    {
-			      for ( b=0; b<VIM; b++)
-				{
-                                  local_q += (fv->snormal[a]*TT[a][b]*fv->snormal[b]);
-				}
-			    }
-                                  local_flux += weight * det * local_q;
-			}
-		      break;
-		      
-		    case FORCE_TANGENT1:
-		      
-		      if(cr->MeshMotion == ARBITRARY)
-			{
-			  for ( a=0; a<WIM; a++)
-			    {
-			      for ( b=0; b<WIM; b++)
-				{
-                                  local_q += (fv->stangent[0][a]*
-					(vs[a][b] + ves[a][b])*fv->snormal[b]);
-                                  local_qconv += ( - rho*fv->stangent[0][a]
-                                *(fv->v[a]-x_dot[a]) *fv->v[b]*fv->snormal[b]);
-				}
-			    }
-                                  local_flux += weight * det * local_q;
-                          local_flux_conv += weight * det*local_qconv;
-			}
-		      else
-			{
-			  for ( a=0; a<VIM; a++)
-			    {
-			      for ( b=0; b<VIM; b++)
-				{
-                                  local_q += ( fv->stangent[0][a]*TT[a][b]
-							*fv->snormal[b]);
-				}
-			    }
-                                  local_flux += weight * det*local_q;
-			}
-		      break;
-		      
-		    case FORCE_TANGENT2:
-		
-		      if(cr->MeshMotion == ARBITRARY)
-			{
-			  if(pd->Num_Dim == 3 || upd->CoordinateSystem == SWIRLING   )
-			    {
-			      for ( a=0; a<WIM; a++)
-				{
-				  for ( b=0; b<WIM; b++)
-				    {
-                                      local_q += (fv->stangent[1][a]
-						*(vs[a][b] + ves[a][b])
-							*fv->snormal[b]);
-                                      local_qconv += ( - rho*fv->stangent[1][a]
-	                        *(fv->v[a]-x_dot[a]) *fv->v[b]*fv->snormal[b]);
-				    }
-				}
-                                  local_flux += weight * det * local_q;
-                                  local_flux_conv += weight * det * local_qconv;
-			    }
-			  else
-			    {
-			      GOMA_EH(GOMA_ERROR, "Illegal flux type");
-			    }
-			}
-		      else
-			{
-			  for ( a=0; a<VIM; a++)
-			    {
-			      for ( b=0; b<VIM; b++)
-				{
-                                  local_q += ( fv->stangent[1][a]*TT[a][b]
-							*fv->snormal[b]);
-				}
-			    }
-                                  local_flux += weight * det * local_q;
-			}
-		      break;
-		      
-		    case FORCE_X:
-		      if(cr->MeshMotion == ARBITRARY)
-			{
-			  for ( a=0; a<WIM; a++)
-			    {
-			      local_q += ((vs[0][a] + ves[0][a] ) *fv->snormal[a]) ;
-			      local_qconv += ( -rho*(fv->v[0]-x_dot[0])
-                                                   *fv->v[a]*fv->snormal[a]);
-			    }
-			  local_flux += weight * det * local_q;
-			  local_flux_conv += weight * det * local_qconv;
-			}
-		      else
-			{
-			  for ( a=0; a<VIM; a++)
-			    {
-                              local_q += ( TT[0][a]*fv->snormal[a]);
-			    }
-                              local_flux += weight * det * local_q;
-			}
-		      break;
-		      
-		    case FORCE_X_POS:
-		      if(cr->MeshMotion == ARBITRARY)
-			{
-			  for ( a=0; a<WIM; a++)
-			    {
-                              local_q += ((vs[0][a] + ves[0][a] ) *fv->snormal[a]) ;
-                              local_qconv += ( -rho*(fv->v[0]-x_dot[0])
-                                                   *fv->v[a]*fv->snormal[a]);
-			    }
-        	              if(local_q <0) {local_q=0;}
-                              local_flux += weight * det * local_q;
-                              local_flux_conv += weight * det * local_qconv;
-			}
-		      else
-			{
-			  for ( a=0; a<VIM; a++)
-			    {
-                              local_q += ( TT[0][a]*fv->snormal[a]);
-			    }
-        	              if(local_q <0) {local_q=0;}
-                              local_flux += weight * det * local_q;
-			}
-		      break;
-		      
-		    case FORCE_X_NEG:
-		      if(cr->MeshMotion == ARBITRARY)
-			{
-			  for ( a=0; a<WIM; a++)
-			    {
-                              local_q += ((vs[0][a] + ves[0][a] ) *fv->snormal[a]) ;
-                              local_qconv += ( -rho*(fv->v[0]-x_dot[0])
-                                                   *fv->v[a]*fv->snormal[a]);
-			    }
-        	              if(local_q >0) {local_q=0;}
-                              local_flux += weight * det * local_q;
-                              local_flux_conv += weight * det * local_qconv;
-			}
-		      else
-			{
-			  for ( a=0; a<VIM; a++)
-			    {
-                              local_q += ( TT[0][a]*fv->snormal[a]);
-			    }
-        	              if(local_q >0) {local_q=0;}
-                              local_flux += weight * det * local_q;
-			}
-		      break;
-		      
-		    case FORCE_Y:
-		      if(cr->MeshMotion == ARBITRARY)
-			{
-			  for ( a=0; a<WIM; a++)
-			    {
-                             local_q += ((vs[1][a] + ves[1][a]) *fv->snormal[a]);
-                             local_qconv += ( -rho*(fv->v[1]-x_dot[1])
-                                                   *fv->v[a]*fv->snormal[a]);
-			    }
-                              local_flux += weight * det * local_q;
-                              local_flux_conv += weight * det * local_qconv;
-			}
-		      else
-			{
-			  for ( a=0; a<VIM; a++)
-			    {
-                              local_q += ( TT[1][a]*fv->snormal[a]);
-			    }
-                              local_flux += weight * det * local_q;
-			}
-		      break;
-
-		    case FORCE_Y_POS:
-		      if(cr->MeshMotion == ARBITRARY)
-			{
-			  for ( a=0; a<WIM; a++)
-			    {
-                             local_q += ((vs[1][a] + ves[1][a]) *fv->snormal[a]);
-                             local_qconv += ( -rho*(fv->v[1]-x_dot[1])
-                                                   *fv->v[a]*fv->snormal[a]);
-			    }
-        	              if(local_q <0) {local_q=0;}
-                              local_flux += weight * det * local_q;
-                              local_flux_conv += weight * det * local_qconv;
-			}
-		      else
-			{
-			  for ( a=0; a<VIM; a++)
-			    {
-                              local_q += ( TT[1][a]*fv->snormal[a]);
-			    }
-        	              if(local_q <0) {local_q=0;}
-                              local_flux += weight * det * local_q;
-			}
-		      break;
-
-		    case FORCE_Y_NEG:
-		      if(cr->MeshMotion == ARBITRARY)
-			{
-			  for ( a=0; a<WIM; a++)
-			    {
-                             local_q += ((vs[1][a] + ves[1][a]) *fv->snormal[a]);
-                             local_qconv += ( -rho*(fv->v[1]-x_dot[1])
-                                                   *fv->v[a]*fv->snormal[a]);
-			    }
-        	              if(local_q >0) {local_q=0;}
-                              local_flux += weight * det * local_q;
-                              local_flux_conv += weight * det * local_qconv;
-			}
-		      else
-			{
-			  for ( a=0; a<VIM; a++)
-			    {
-                              local_q += ( TT[1][a]*fv->snormal[a]);
-			    }
-        	              if(local_q >0) {local_q=0;}
-                              local_flux += weight * det * local_q;
-			}
-		      break;
-
-		    case FORCE_Z:
-		      if(cr->MeshMotion == ARBITRARY)
-			{
-			  if(pd->Num_Dim == 3)
-			    {
-			      for ( a=0; a<WIM; a++)
-				{
-                                  local_q += ((vs[2][a] + ves[2][a]) *fv->snormal[a]);
-
-                                  local_qconv += ( -rho*(fv->v[2]-x_dot[2])
-                                                   *fv->v[a]*fv->snormal[a]);
-
-				}
-                                  local_flux += weight * det * local_q;
-                                  local_flux_conv += weight *det*local_qconv;
-			    }
-			  else
-			    {
-			      GOMA_EH(GOMA_ERROR, "Illegal flux type");
-			    }
-			}
-		      else
-			{
-			  for ( a=0; a<VIM; a++)
-			    {
-                              local_q += ( TT[2][a]*fv->snormal[a]);
-			    }
-                              local_flux += weight * det * local_q;
-			}
-
-		      break;
-
-		    case FORCE_Z_POS:
-		      if(cr->MeshMotion == ARBITRARY)
-			{
-			  if(pd->Num_Dim == 3)
-			    {
-			      for ( a=0; a<WIM; a++)
-				{
-                                  local_q += ((vs[2][a] + ves[2][a]) *fv->snormal[a]);
-
-                                  local_qconv += ( -rho*(fv->v[2]-x_dot[2])
-                                                   *fv->v[a]*fv->snormal[a]);
-
-				}
-        	                  if(local_q <0) {local_q=0;}
-                                  local_flux += weight * det * local_q;
-                                  local_flux_conv += weight *det*local_qconv;
-			    }
-			  else
-			    {
-			      GOMA_EH(GOMA_ERROR, "Illegal flux type");
-			    }
-			}
-		      else
-			{
-			  for ( a=0; a<VIM; a++)
-			    {
-                              local_q += ( TT[2][a]*fv->snormal[a]);
-			    }
-        	              if(local_q <0) {local_q=0;}
-                              local_flux += weight * det * local_q;
-			}
-
-		      break;
-
-		    case FORCE_Z_NEG:
-		      if(cr->MeshMotion == ARBITRARY)
-			{
-			  if(pd->Num_Dim == 3)
-			    {
-			      for ( a=0; a<WIM; a++)
-				{
-                                  local_q += ((vs[2][a] + ves[2][a]) *fv->snormal[a]);
-
-                                  local_qconv += ( -rho*(fv->v[2]-x_dot[2])
-                                                   *fv->v[a]*fv->snormal[a]);
-
-				}
-        	                  if(local_q >0) {local_q=0;}
-                                  local_flux += weight * det * local_q;
-                                  local_flux_conv += weight *det*local_qconv;
-			    }
-			  else
-			    {
-			      GOMA_EH(GOMA_ERROR, "Illegal flux type");
-			    }
-			}
-		      else
-			{
-			  for ( a=0; a<VIM; a++)
-			    {
-                              local_q += ( TT[2][a]*fv->snormal[a]);
-			    }
-        	              if(local_q >0) {local_q=0;}
-                              local_flux += weight * det * local_q;
-			}
-
-		      break;
-
-		    case AVERAGE_CONC:
-
-                      local_q += fv->c[species_id];
-                      local_flux += weight*det*local_q;
-
-		      break;
-
-		    case REPULSIVE_FORCE:
-                      for (a = 0; a < Num_BC; a++) {
-                         if( BC_Types[a].BC_ID != side_set_id ||
-                             BC_Types[a].BC_Name < CAP_REPULSE_BC ||
-                             BC_Types[a].BC_Name > CAP_REPULSE_TABLE_BC)
-                            {continue;}
-                         else if(BC_Types[a].BC_Name == CAP_REPULSE_ROLL_BC )
+                            
+                            switch( quantity )
                             {
-		              double roll_rad, origin[3],dir_angle[3];
-		              double hscale, repexp, P_rep, betainv;
-                              double factor,t,axis_pt[3],R,kernel,tangent,dist;
-                              double coord[3]={0,0,0};
-
-	                      roll_rad = BC_Types[a].BC_Data_Float[1];
-			      origin[0] =  BC_Types[a].BC_Data_Float[2];
-			      origin[1] =  BC_Types[a].BC_Data_Float[3];
-			      origin[2] =  BC_Types[a].BC_Data_Float[4];
-			      dir_angle[0] =  BC_Types[a].BC_Data_Float[5];
-			      dir_angle[1] =  BC_Types[a].BC_Data_Float[6];
-			      dir_angle[2] =  BC_Types[a].BC_Data_Float[7];
-	                      hscale = BC_Types[a].BC_Data_Float[8];
-	                      repexp = BC_Types[a].BC_Data_Float[9];
-	                      P_rep = BC_Types[a].BC_Data_Float[10];
-	                      betainv = BC_Types[a].BC_Data_Float[11];
-/*  initialize variables */
-
-			  for( b=0 ; b<pd->Num_Dim ; b++)
-			    {  coord[b] = fv->x[b];  }
-/*  find intersection of axis with normal plane - i.e., locate point on
- *          axis that intersects plane normal to axis that contains local point. */
-    factor = SQUARE(dir_angle[0]) + SQUARE(dir_angle[1]) + SQUARE(dir_angle[2]);
-    t = (dir_angle[0]*(coord[0]-origin[0]) + dir_angle[1]*(coord[1]-origin[1])
-        + dir_angle[2]*(coord[2]-origin[2]))/factor;
-    axis_pt[0] = origin[0]+dir_angle[0]*t;
-    axis_pt[1] = origin[1]+dir_angle[1]*t;
-    axis_pt[2] = origin[2]+dir_angle[2]*t;
-
-/*  compute radius and radial direction */
-
-    R = sqrt( SQUARE(coord[0]-axis_pt[0]) + SQUARE(coord[1]-axis_pt[1]) +
-                SQUARE(coord[2]-axis_pt[2]) );
-    dist = R - roll_rad;
-
-/*  repulsion function  */
-                              kernel = P_rep/pow(dist/hscale, repexp); 
-                              tangent = betainv/pow(dist/hscale, repexp); 
-                              local_q = kernel;
-                              local_qconv = tangent;
-			      for( b=0 ; b<pd->Num_Dim ; b++)
-                                 {local_Torque[b] = fv->x[b]*kernel;}
+                                    case POS_LS_FLUX:
+                                            wt_type = 2;
+                                            break;
+                                    case NEG_LS_FLUX:
+                                            wt_type = 2;
+                                            ls_F[0] = -ls_F[0];
+                                            ls_F[1] = -ls_F[1];
+                                            ls_F[2] = -ls_F[2];
+                                            break;
+                                    case DELTA:
+                                    case LS_DCA:
+                                            wt_type = 3;
+                                            break;
+                                    default:
+                                            wt_type = 2;
+                                            break;
                             }
-                         else if(BC_Types[a].BC_Name == CAP_REPULSE_TABLE_BC )
+                            ierr = adaptive_weight( ad_wt, ip_total, ielem_dim-1, ls_F, 0.0,
+                                                                            wt_type, ei[pg->imtrx]->ielem_type);
+                            if(ierr == -1)printf("adaptive wt problem %d %g %g %g\n",ierr,ls_F[0],ls_F[1],ls_F[2]);
+                    }
+                    
+                    if( ls!=NULL && ls->elem_overlap_state && ls->Integration_Depth > 0 )
+                    {
+                            Subgrid_Int.active = TRUE;
+                            
+                            get_subgrid_integration_pts ( Subgrid_Tree, &element_search_grid,
+                                                                                          &Subgrid_Int.s, &Subgrid_Int.wt, ls->Length_Scale );
+                            
+                            find_surf_center_st ( ielem_type, id_side, ielem_dim, surface_centroid, &s, &t );
+                            
+                            ip_total = gather_surface_subgrid_integration_pts( element_search_grid, id_side, 
+                                                                                                                                   surface_centroid, Subgrid_Int.s, Subgrid_Int.wt, 0 );
+                            
+                    }
+                    
+
+   
+            /* Surface integration over element */
+            
+                for (ip = 0; ip < ip_total; ip++)
+                    {
+                            /*   zero local fluxes  */
+                            local_q = local_qconv = 0.;
+                            memset(local_Torque, 0, DIM*sizeof(double) );
+                            
+                            if( ls != NULL && ls->elem_overlap_state && ls->Integration_Depth > 0 )
                             {
-		              double hscale, repexp, P_rep, betainv, exp_scale;
-                              double mod_factor,kernel,dist=0,tangent;
-                              double dcl_dist, slope, d_tfcn[3];
-                              int bc_table_id=-1,dcl_node,k,nsp,i1,i2;
-                              double point[3]={0,0,0};
-                              double coord[3]={0,0,0};
-
-	                      hscale = BC_Types[a].BC_Data_Float[0];
-	                      repexp = BC_Types[a].BC_Data_Float[1];
-	                      P_rep = BC_Types[a].BC_Data_Float[2];
-			      betainv =  BC_Types[a].BC_Data_Float[3];
-			      exp_scale =  BC_Types[a].BC_Data_Float[4];
-			      dcl_node =  BC_Types[a].BC_Data_Int[2];
-/*  initialize variables */
-
-			  for( b=0 ; b<pd->Num_Dim ; b++)
-			    {  coord[b] = fv->x[b];  }
-
-                          for (b = 0; b < Num_BC; b++) {
-                              if( BC_Types[b].BC_Name == GD_TABLE_BC )
-                                  { bc_table_id = b; }
-                              }
-                          if(bc_table_id != -1)
-      dist = table_distance_search(BC_Types[bc_table_id].table, coord, 
-                                                         &slope, d_tfcn);
-                          if(dcl_node != -1)
+                                    ls->Elem_Sign = 0;
+                                    xi[0] = Subgrid_Int.s[ip][0];
+                                    xi[1] = Subgrid_Int.s[ip][1];
+                                    xi[2] = Subgrid_Int.s[ip][2];
+                                    
+                                    s = 1.e30; 
+                                    t = 1.e30;
+                                    wt = Subgrid_Int.wt[ip];
+                            }
+                            else
                             {
-                             nsp = match_nsid(dcl_node);
-                             k = Proc_NS_List[Proc_NS_Pointers[nsp]];
-                             for (b = 0; b < Proc_NS_Count[nsp]; b++)
-                               {
-               k = Proc_NS_List[Proc_NS_Pointers[nsp]+b];
-               i1 = Index_Solution (k, MESH_DISPLACEMENT1, 0, 0, -1, pg->imtrx);
-               GOMA_EH(i1, "Could not resolve index_solution.");
-                                for(i2=0 ; i2<pd->Num_Dim ; i2++)
+                                    
+                                    /* find the quadrature point locations for current ip */
+                                    find_surf_st (ip, ielem_type, id_side, ielem_dim, xi, &s, &t, &u);
+                                    
+                                    /* find the quadrature weight for current ip */
+                                    wt = Gq_surf_weight (ip, ielem_type);    
+                            }
+                            
+                            /* ****************************************/
+                            err = load_basis_functions( xi, bfd);
+                            GOMA_EH( err, "problem from load_basis_functions");
+                            
+                            err = beer_belly();
+                            GOMA_EH( err, "beer_belly");
+                            
+                            /* precalculate variables at  current integration pt.*/
+                            err = load_fv();
+                            GOMA_EH( err, "load_fv");
+
+                            err = load_bf_grad();
+                            GOMA_EH( err, "load_bf_grad");
+                            
+                            err = load_bf_mesh_derivs();
+                            GOMA_EH( err, "load_bf_mesh_derivs");
+                            
+                            surface_determinant_and_normal (ei[pg->imtrx]->ielem, 
+                                  iconnect_ptr, num_local_nodes, ielem_dim-1,  
+                                  id_side, num_nodes_on_side,id_local_elem_coord);
+                            
+                            /*
+                             * Load up physical space gradients of field variables at this
+                             * Gauss point.
+                             */
+                            err = load_fv_grads();
+                            GOMA_EH( err, "load_fv_grads");
+
+                            err = load_fv_mesh_derivs(1);
+                            GOMA_EH( err, "load_fv_mesh_derivs");
+                            
+                            if (TimeIntegration != STEADY && pd->e[pg->imtrx][MESH_DISPLACEMENT1]) {
+                                    for (j = 0; j < VIM; j++) {
+                                            x_dot[j] = fv_dot->x[j];
+                                    } 
+                            } else {
+                                    for (j = 0; j < VIM; j++) {
+                                            x_dot[j] = 0.;
+                                    }
+                            }
+                            
+                            do_LSA_mods(LSA_SURFACE);
+
+              if (ielem_dim !=3)
+                {
+                  calc_surf_tangent (ei[pg->imtrx]->ielem, iconnect_ptr, 
+                                     num_local_nodes, ielem_dim-1,
+                                     num_nodes_on_side,
+                                     id_local_elem_coord);
+                }
+
+              weight = wt;
+              det = fv->sdet*fv->h3;
+
+              if(upd->CoordinateSystem == CYLINDRICAL ||
+                 upd->CoordinateSystem == SWIRLING   )
+                {
+                  weight = 2.*M_PIE*wt;
+                  det = fv->sdet;
+                }
+
+  /*	get density  */
+
+              rho = density( NULL, time_value );
+
+  /**   get solid stresses  **/
+
+                    
+                    if(pd->e[pg->imtrx][R_MESH1] && cr->MeshMotion != ARBITRARY)
+                      {
+                        err = belly_flop(elc->lame_mu);
+                        GOMA_EH(err, "error in belly flop");
+                        if (err == 2) exit(-1);
+                  /*
+                   * Total mesh stress tensor...
+                   *
+                   * Guess what the 4 new args will have to be and bloat accordingly.
+                   */
+
+                        err = mesh_stress_tensor(TT, dTT_dx, dTT_dp, dTT_dc, 
+                                                 dTT_dp_liq, dTT_dp_gas, dTT_dporosity, dTT_dsink_mass,   
+                                                 dTT_dT, dTT_dmax_strain,  dTT_dcur_strain, elc->lame_mu, elc->lame_lambda,
+                                                 delta_t, ei[pg->imtrx]->ielem, ip, ip_total);
+
+
+                  /* For LINEAR ELASTICITY */
+                        if (cr->MeshFluxModel == LINEAR)
+                          {
+                            if (dim == 2){
+                              TT[2][2] = 1.;
+                              TT[1][2] = 0.;
+                              TT[0][2] = 0.;
+                            }
+                          }
+                  /*  For Hookian Elasticity and shrinkage */
+                        else
+                          {
+                            if (dim == 2)
+                            {
+                              elast_modulus = elc->lame_mu;
+                                  if (cr->MeshFluxModel == NONLINEAR ||
+                                      cr->MeshFluxModel == HOOKEAN_PSTRAIN ||
+                                      cr->MeshFluxModel == INCOMP_PSTRAIN )
+                                    TT[2][2] = (1. - pow(fv->volume_change,2./3.)) * elast_modulus - fv->P;
+                              /*              if (cr->MeshFluxModel == INCOMP_PSTRESS) */
+                                  else  TT[2][2] = 0.;
+                              TT[1][2] = 0.;
+                              TT[0][2] = 0.;
+                            }
+                          }
+     if(profile_flag & 2)
+        {
+        /*  try for Trig solution of cubic equation     */
+        I_T = TT[0][0]+TT[1][1]+TT[2][2];
+        II_T = TT[0][0]*TT[1][1]+TT[0][0]*TT[2][2]+TT[1][1]*TT[2][2]
+                -(SQUARE(TT[0][1])+SQUARE(TT[0][2])+SQUARE(TT[1][2]));
+        III_T = TT[0][0]*TT[1][1]*TT[2][2]+2.*(TT[0][1]*TT[1][2]*TT[0][2])
+                -TT[0][0]*SQUARE(TT[1][2])-TT[1][1]*SQUARE(TT[0][2])
+                -TT[2][2]*SQUARE(TT[0][1]);
+        coeff_a = (3.*II_T - SQUARE(I_T))/3.;
+        coeff_b = (2.*(-I_T)*SQUARE(I_T)-9.*(-I_T)*II_T+27.*(-III_T))/27.;
+        if(coeff_a > 0)
+                {fprintf(stderr,"trouble with principal stress - imaginary roots %g %g\n",coeff_a,coeff_b);}
+        else
+                {m_par = 2.*sqrt(-coeff_a/3.);}
+        theta1 = acos(3.*coeff_b/(coeff_a*m_par))/3.;
+        evalue1 = m_par*cos(theta1) + I_T/3.;
+        evalue2 = m_par*cos(theta1+2.*M_PIE/3.) + I_T/3.;
+        evalue3 = m_par*cos(theta1+4.*M_PIE/3.) + I_T/3.;
+        theta1 = evalue2;
+        if(fabs(theta1) > fabs(evalue1))
+               { evalue2=evalue1; evalue1=theta1;}
+        theta1 = evalue3;
+        if(fabs(theta1) > fabs(evalue2))
+               { evalue3=evalue2; evalue2=theta1;}
+        if(fabs(theta1) > fabs(evalue1))
+               { evalue2=evalue1; evalue2=theta1;}
+        }
+                      } /* end of STRESS_TENSOR */
+
+  /* calculate real-solid stress here !!*/
+                    if(pd->e[pg->imtrx][R_SOLID1] && cr->MeshMotion != ARBITRARY)
+                      {
+                        mu = elc_rs->lame_mu;
+                        err = belly_flop_rs(mu);
+                        GOMA_EH(err, "error in belly flop");
+                        if (err == 2) return(err);
+                    /*
+                     * Total mesh stress tensor...
+                     */
+                        err = solid_stress_tensor(TT, dTT_dx, dTT_drs, dTT_dp, 
+                                                  dTT_dc,  dTT_dp_liq, dTT_dp_gas, dTT_dporosity, 
+                                                  dTT_dT, dTT_dmax_strain, elc_rs->lame_mu, elc_rs->lame_lambda);
+                        if (dim == 2)
+                          {
+                            elast_modulus = elc_rs->lame_mu;
+                            
+                            if (cr->RealSolidFluxModel == NONLINEAR ||
+                                cr->RealSolidFluxModel == HOOKEAN_PSTRAIN ||
+                                cr->RealSolidFluxModel == INCOMP_PSTRAIN )
+                              TT[2][2] = (1. - pow(fv->volume_change,2./3.)) * elast_modulus - fv->P;
+                        /*              if (cr->MeshFluxModel == INCOMP_PSTRESS) */
+                            else  TT[2][2] = 0.;
+                        
+                            TT[1][2] = 0.;
+                            TT[0][2] = 0.;
+                          }
+     if(profile_flag & 2)
+        {
+        /*  try for Trig solution of cubic equation     */
+        I_T = TT[0][0]+TT[1][1]+TT[2][2];
+        II_T = TT[0][0]*TT[1][1]+TT[0][0]*TT[2][2]+TT[1][1]*TT[2][2]
+                -(SQUARE(TT[0][1])+SQUARE(TT[0][2])+SQUARE(TT[1][2]));
+        III_T = TT[0][0]*TT[1][1]*TT[2][2]+2.*(TT[0][1]*TT[1][2]*TT[0][2])
+                -TT[0][0]*SQUARE(TT[1][2])-TT[1][1]*SQUARE(TT[0][2])
+                -TT[2][2]*SQUARE(TT[0][1]);
+        coeff_a = (3.*II_T - SQUARE(I_T))/3.;
+        coeff_b = (2.*(-I_T)*SQUARE(I_T)-9.*(-I_T)*II_T+27.*(-III_T))/27.;
+        if(coeff_a > 0)
+                {fprintf(stderr,"trouble with principal stress - imaginary roots %g %g\n",coeff_a,coeff_b);}
+        else
+                {m_par = 2.*sqrt(-coeff_a/3.);}
+        theta1 = acos(3.*coeff_b/(coeff_a*m_par))/3.;
+        evalue1 = m_par*cos(theta1) + I_T/3.;
+        evalue2 = m_par*cos(theta1+2.*M_PIE/3.) + I_T/3.;
+        evalue3 = m_par*cos(theta1+4.*M_PIE/3.) + I_T/3.;
+        theta1 = evalue2;
+        if(fabs(theta1) > fabs(evalue1))
+               { evalue2=evalue1; evalue1=theta1;}
+        theta1 = evalue3;
+        if(fabs(theta1) > fabs(evalue2))
+               { evalue3=evalue2; evalue2=theta1;}
+        if(fabs(theta1) > fabs(evalue1))
+               { evalue2=evalue1; evalue2=theta1;}
+        }
+                      } /* end of REAL_STRESS_TENSOR */
+
+                  /*
+                   *  viscoelastic stress tensor
+                   */
+                          memset( ves, 0, sizeof(dbl)*DIM*DIM);
+                          if ( pd->gv[POLYMER_STRESS11] )
+                            {
+                              dbl log_c[DIM][DIM];
+                              dbl exp_s[DIM][DIM];
+                              dbl R1[DIM][DIM];
+                              dbl eig_values[DIM];
+                              dbl mup = 0.;
+                              dbl lambda = 0.;
+                              if(vn->evssModel==LOG_CONF || vn->evssModel == LOG_CONF_GRADV)
+                                {
+                                  for ( ve_mode=0; ve_mode < vn->modes; ve_mode++)
+                                    {
+                                      for (p=0; p<WIM; p++)
+                                        {
+                                          for (r=0; r<WIM; r++)
+                                            {
+                                              log_c[p][r] = fv->S[ve_mode][p][r];
+                                            }
+                                        }
+#ifdef ANALEIG_PLEASE
+                                      analytical_exp_s(log_c, exp_s, eig_values, R1, NULL);
+#else
+                                      compute_exp_s(log_c, exp_s, eig_values, R1);
+#endif
+                                      mup = viscosity(ve[ve_mode]->gn, gamma, NULL);
+                                      if(ve[ve_mode]->time_constModel == CONSTANT)
+                                        {
+                                          lambda = ve[ve_mode]->time_const;
+                                        }
+                                      for (a=0; a<WIM; a++)
+                                        {
+                                          for (b=0; b<WIM; b++)
+                                            {
+                                              ves[a][b] += mup/lambda*(exp_s[a][b]-(double)delta(a,b));
+                                            }
+                                        }
+                                    }
+                                }
+                              else
+                                {
+                                  for ( a=0; a<WIM; a++)
+                                    {
+                                      for ( b=0; b<WIM; b++)
+                                         {
+                                           for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
+                                             {
+                                               ves[a][b] += fv->S[ve_mode][a][b];
+                                             }
+                                         }
+                                    }
+                                 }
+                             } // if pd->gv[POLYMER_STRESS11]
+
+                  /*
+                   * OK, let's simplify things by computing the viscous
+                   * stress tensor upfront.
+                   */
+                          memset( vs, 0, sizeof(dbl)*DIM*DIM);
+                          memset( gamma, 0, sizeof(dbl)*DIM*DIM);
+                        if(cr->MeshMotion == ARBITRARY)
+                           {
+                            for ( a=0; a<WIM; a++)
+                              {
+                                for ( b=0; b<WIM; b++)
                                   {
-                                   point[i2] = Coor[i2][k] + x[i1+i2];
+                                    gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
                                   }
-                               }
-                             dcl_dist = sqrt(SQUARE(coord[0]-point[0])
-                                        +SQUARE(coord[1]-point[1])
-                                        +SQUARE(coord[2]-point[2]));
-                             }  else	{ dcl_dist = 0.; }
-/*  modifying function for DCL  */
-                           mod_factor = 1. - exp(-dcl_dist/exp_scale);
-/*  repulsion function  */
-                           kernel = P_rep*mod_factor/pow(dist/hscale, repexp); 
-                           tangent = betainv*mod_factor/pow(dist/hscale,repexp); 
-/*  repulsion function  */
-                           local_q = kernel;
-                           local_qconv = tangent;
-			   for( b=0 ; b<pd->Num_Dim ; b++)
-                                 {local_Torque[b] = fv->x[b]*kernel;}
-                           if(pd->Num_Dim < DIM)
-                                 {local_Torque[pd->Num_Dim] = dist*kernel;}
-                            }
-                         else if(BC_Types[a].BC_Name == CAP_REPULSE_BC )
-                            {
-		              double repexp, P_rep, factor, denom;
-                              double kernel,dist=0;
-                              double ap, bp, cp, dp;
+                              }
+                            
+                            mu = viscosity(gn, gamma, d_mu);
 
-	                      repexp = 4.;
-	                      P_rep = BC_Types[a].BC_Data_Float[0];
-			      ap =  BC_Types[a].BC_Data_Float[1];
-			      bp =  BC_Types[a].BC_Data_Float[2];
-			      cp =  BC_Types[a].BC_Data_Float[3];
-			      dp =  BC_Types[a].BC_Data_Float[4];
-                              denom = sqrt(ap*ap + bp*bp + cp*cp);
-                              factor = ap*fv->x[0] + bp*fv->x[1] + cp*fv->x[2] +dp;
-                              dist = fabs(factor)/denom;
-/*  initialize variables */
-/*  repulsion function  */
-                           kernel = P_rep/pow(dist, repexp); 
-/*  repulsion function  */
-                           local_q = kernel;
-			   for( b=0 ; b<pd->Num_Dim ; b++)
-                                 {local_Torque[b] = fv->x[b]*kernel;}
+                            for ( a=0; a<WIM; a++)
+                              {
+                                for ( b=0; b<WIM; b++)
+                                  {
+                                    vs[a][b] = mu*gamma[a][b]-fv->P*delta(a,b);
+                                  }
+                              }
+                            if(profile_flag & 1)
+                               { calc_shearrate(&gamma_dot, gamma, NULL, NULL); }
+     if(profile_flag & 2)
+        {
+                          memset( TT, 0, sizeof(dbl)*DIM*DIM);
+                            for ( a=0; a<VIM; a++)
+                              {
+                                for ( b=0; b<VIM; b++)
+                                  {
+                                    TT[a][b] = vs[a][b]+ves[a][b];
+                                  }
+                              }
+        /*  Principal Stresses - try for Trig solution of cubic equation     */
+        I_T = TT[0][0]+TT[1][1]+TT[2][2];
+        II_T = TT[0][0]*TT[1][1]+TT[0][0]*TT[2][2]+TT[1][1]*TT[2][2]
+                -(SQUARE(TT[0][1])+SQUARE(TT[0][2])+SQUARE(TT[1][2]));
+        III_T = TT[0][0]*TT[1][1]*TT[2][2]+2.*(TT[0][1]*TT[1][2]*TT[0][2])
+                -TT[0][0]*SQUARE(TT[1][2])-TT[1][1]*SQUARE(TT[0][2])
+                -TT[2][2]*SQUARE(TT[0][1]);
+        coeff_a = (3.*II_T - SQUARE(I_T))/3.;
+        coeff_b = (2.*(-I_T)*SQUARE(I_T)-9.*(-I_T)*II_T+27.*(-III_T))/27.;
+        if(coeff_a > 0)
+                {fprintf(stderr,"trouble with principal stress - imaginary roots %g %g\n",coeff_a,coeff_b);}
+        else
+                {m_par = 2.*sqrt(-coeff_a/3.);}
+        theta1 = acos(3.*coeff_b/(coeff_a*m_par))/3.;
+        evalue1 = m_par*cos(theta1) + I_T/3.;
+        evalue2 = m_par*cos(theta1+2.*M_PIE/3.) + I_T/3.;
+        evalue3 = m_par*cos(theta1+4.*M_PIE/3.) + I_T/3.;
+        theta1 = evalue2;
+        if(fabs(theta1) > fabs(evalue1))
+               { evalue2=evalue1; evalue1=theta1;}
+        theta1 = evalue3;
+        if(fabs(theta1) > fabs(evalue2))
+               { evalue3=evalue2; evalue2=theta1;}
+        if(fabs(theta1) > fabs(evalue1))
+               { evalue2=evalue1; evalue2=theta1;}
+        }
+                           }
+                  /*
+                   * computing the electric stress tensor upfront.
+                   */
+                          memset( es, 0, sizeof(dbl)*DIM*DIM);
+                        if(pd->e[pg->imtrx][R_POTENTIAL])
+                           {
+                            efield_sqr = 0.0;
+                            for ( a=0; a<VIM; a++)
+                              {
+                                    efield[a] = - fv->grad_V[a];
+                                    efield_sqr += efield[a]*efield[a];
+                              }
+   
+                            for ( a=0; a<VIM; a++)
+                              {
+                                for ( b=0; b<VIM; b++)
+                                  {
+                                    es[a][b] = efield[a]*efield[b] - 0.5*efield_sqr*delta(a,b);
+                                  }
+                              }
+                        perm   = mp->permittivity;
+                        if( J_AC != NULL)
+                          {
+                            memset( d_p_dV,0, sizeof(double)*MDE);
+                            memset( d_p_dT,0, sizeof(double)*MDE);
+                            memset( d_p_dX,0, sizeof(double)*MDE*DIM);
+                            memset( d_p_dC,0, sizeof(double)*MAX_CONC*MDE);
+                          }
+                           }
+                            
+                  /*
+                   * load surface tension for variable models
+                   */
+                        if (mp->SurfaceTensionModel == CONSTANT) {
+                              dsigmadT = 0.0;
+                              for ( a=0; a<MAX_CONC; a++)
+                                  {dsigmadC[a] = 0.0;}
+                              }
+                        if (mp->SurfaceTensionModel != CONSTANT) {
+                              load_surface_tension(dsigma_dx);
+                              }
+                        if (mp->SurfaceTensionModel == USER) {
+                              dsigmadT = mp->d_surface_tension[TEMPERATURE];
+                              for ( a=0; a<MAX_CONC; a++)
+                                  {dsigmadC[a] = mp->d_surface_tension[MAX_VARIABLE_TYPES+a];}
+                              }
+
+  /*		  if (pd->e[pg->imtrx][R_POR_LIQ_PRES])
+                      {
+                         if (mp->PorousMediaType == POROUS_SATURATED) { 
+                          err = get_porous_fully_sat_terms(&pm_terms, tt, dt); 
+                          GOMA_EH(err,"problem in getting the species terms"); 
+                          if (neg_elem_volume) return(err);
+                        } else if (mp->PorousMediaType == POROUS_UNSATURATED || 
+                                   mp->PorousMediaType == POROUS_TWO_PHASE) { 
+                          err = get_porous_part_sat_terms(&pm_terms, tt, dt); 
+                          GOMA_EH(err,"problem in getting the species terms"); 
+                          if (neg_elem_volume) return(err); 
+                        } 
+                      }*/
+
+                    switch( quantity )
+                      {
+                      case AREA:
+                        
+                        local_flux += weight*fv->sdet;
+                        local_flux_conv = 0.0;
+
+                        break;
+                        
+                      case VOL_REVOLUTION:
+
+                        local_q +=  0.5 * fv->x[1] * fabs(fv->snormal[1]) ;
+                        local_flux += weight*det* local_q ;
+                        local_flux_conv = 0.0;
+  /*                      local_flux_conv += weight*det*mp->surface_tension ;*/
+
+                        break;
+
+                      case HEAT_FLUX:
+                
+                    /* finally we can add up the outgoing flux and area */
+                    /* but first evaluate properties if variable */
+                        k = conductivity( d_k, time_value );
+                        Cp = heat_capacity( d_Cp, time_value );
+
+                        if ( cr->HeatFluxModel == CR_HF_FOURIER_0 )
+                        {
+                        for (a=0; a<VIM; a++)
+                          {
+                            local_q +=  -k * fv->snormal[a] * fv->grad_T[a] ;
+                            local_qconv +=   rho * Cp*fv->T* fv->snormal[a] * (fv->v[a]-x_dot[a]) ;
+                          }
+                        }  else if ( cr->HeatFluxModel == CR_HF_USER )
+                          {
+                          double delP=0.;
+#if defined SECOR_HEAT_FLUX
+                          double *hpar, h, dh_dX[DIM], Vb[DIM],Vt[DIM];
+                          double dq_dVb[DIM][DIM], dq_dVt[DIM][DIM];
+
+                          hpar = &mp->u_thermal_conductivity[0];
+                          h = hpar[0] + hpar[4]*fv->x[0]
+                            + (hpar[1]-hpar[5]*fv->x[0])*(hpar[3]-fv->x[1])
+                            + 0.5*hpar[2]*SQUARE(hpar[3]-fv->x[1]);
+
+                          dh_dX[0] = hpar[4] - hpar[5]*(hpar[3]-fv->x[1]);
+                          dh_dX[1] = hpar[5]*fv->x[0]-hpar[1] - hpar[2]*(hpar[3]-fv->x[1]);
+
+                          /*     velocities of bottom and top surfaces   */
+                          Vb[0] = mp->u_heat_capacity[0];
+                          Vb[1] = mp->u_heat_capacity[1];
+                          Vt[0] = mp->u_heat_capacity[2];
+                          Vt[1] = mp->u_heat_capacity[3];
+
+                          usr_heat_flux(fv->grad_T, q, dq_gradT, dq_dX, time_value, h, dh_dX, Vb, Vt
+                               ,dq_dVb, dq_dVt);
+#else
+                          usr_heat_flux(fv->grad_T, q, dq_gradT, dq_dX, time_value);
+                          printf("untested\n");
+                          exit(-1);
+#endif
+
+                          for (a=0; a<VIM; a++)
+                            {
+                                  delP += fv->snormal[a] * fv->grad_T[a];
+                                  local_q +=  fv->snormal[a] * q[a] ;
+                                  for (b=0; b<VIM; b++)
+                                    {
+                                      local_qconv +=  fv->snormal[a] * dq_gradT[a][b]
+                                        * fv->snormal[b];
+                                    }
                             }
-                         else 
-                            {GOMA_EH(GOMA_ERROR,"Repulsive force not found\n");} 
+                  /*                                local_qconv *= delP/fv->T;  */
+                          }
+                        local_flux +=  weight * det * local_q ;
+                        local_flux_conv +=   weight * det * local_qconv ;
+                        break;
+
+                      case ACOUSTIC_FLUX_NORMAL:
+                
+                        R_imped = acoustic_impedance( d_R, time_value );
+                        wnum = wave_number( d_wnum, time_value );
+                        kR_inv = 1./(wnum*R_imped);
+
+                        for (a=0; a<dim; a++)
+                          {
+                            local_q +=  -kR_inv * fv->snormal[a] * fv->grad_api[a] ;
+                            local_qconv +=  kR_inv * fv->snormal[a] * fv->grad_apr[a] ;
+                          }
+                            local_flux +=  weight * det * local_q ;
+                            local_flux_conv +=   weight * det * local_qconv ;
+                        break;
+
+                      case ACOUSTIC_FLUX_TANGENT1:
+                
+                        R_imped = acoustic_impedance( d_R, time_value );
+                        wnum = wave_number( d_wnum, time_value );
+                        kR_inv = 1./(wnum*R_imped);
+
+                        for (a=0; a<dim; a++)
+                          {
+                            local_q +=  -kR_inv * fv->stangent[0][a] * fv->grad_api[a] ;
+                            local_qconv +=  kR_inv * fv->stangent[0][a] * fv->grad_apr[a] ;
+                          }
+                            local_flux +=  weight * det * local_q ;
+                            local_flux_conv +=   weight * det * local_qconv ;
+                        break;
+
+                      case ACOUSTIC_FLUX_TANGENT2:
+                
+                        R_imped = acoustic_impedance( d_R, time_value );
+                        wnum = wave_number( d_wnum, time_value );
+                        kR_inv = 1./(wnum*R_imped);
+
+                        for (a=0; a<dim; a++)
+                          {
+                            local_q +=  -kR_inv * fv->stangent[1][a] * fv->grad_api[a] ;
+                            local_qconv +=  kR_inv * fv->stangent[1][a] * fv->grad_apr[a] ;
+                          }
+                            local_flux +=  weight * det * local_q ;
+                            local_flux_conv +=   weight * det * local_qconv ;
+                        break;
+
+                      case ACOUSTIC_FLUX_X:
+                
+                        R_imped = acoustic_impedance( d_R, time_value );
+                        wnum = wave_number( d_wnum, time_value );
+                        kR_inv = 1./(wnum*R_imped);
+
+                            local_q +=  -kR_inv * fv->grad_api[0] ;
+                            local_qconv +=  kR_inv * fv->grad_apr[0] ;
+                            local_flux +=  weight * det * local_q ;
+                            local_flux_conv +=   weight * det * local_qconv ;
+                        break;
+
+                      case ACOUSTIC_FLUX_Y:
+                
+                        R_imped = acoustic_impedance( d_R, time_value );
+                        wnum = wave_number( d_wnum, time_value );
+                        kR_inv = 1./(wnum*R_imped);
+
+                            local_q +=  -kR_inv * fv->grad_api[1] ;
+                            local_qconv +=  kR_inv * fv->grad_apr[1] ;
+                            local_flux +=  weight * det * local_q ;
+                            local_flux_conv +=   weight * det * local_qconv ;
+                        break;
+
+                      case ACOUSTIC_FLUX_Z:
+                
+                        R_imped = acoustic_impedance( d_R, time_value );
+                        wnum = wave_number( d_wnum, time_value );
+                        kR_inv = 1./(wnum*R_imped);
+
+                            local_q +=  -kR_inv * fv->grad_api[2] ;
+                            local_qconv +=  kR_inv * fv->grad_apr[2] ;
+                            local_flux +=  weight * det * local_q ;
+                            local_flux_conv +=   weight * det * local_qconv ;
+                        break;
+
+                      case VOLUME_FLUX:
+                        for(a=0; a<WIM; a++)
+                          {
+                            if (cr->MeshMotion == ARBITRARY)
+                              local_q +=  fv->snormal[a]*( fv->v[a]-x_dot[a] ) ;
+                            else if (pd->v[pg->imtrx][MESH_DISPLACEMENT1])
+                              local_q +=  fv->snormal[a]*( fv->d[a] ) ;
+                            else
+                              GOMA_EH(GOMA_ERROR,"Inconsistency in volume-flux specification. Contact Developers");
+                          }
+                            local_flux += weight*det* local_q ;
+                        break;
+
+                      case SHELL_VOLUME_FLUX:
+
+                        // shell_determinant_and_normal(ei[pg->imtrx]->ielem, ei[pg->imtrx]->iconnect_ptr, ei[pg->imtrx]->num_local_nodes,
+                        //         ei[pg->imtrx]->ielem_dim, 1);
+
+                        /* First save local normal to edge because lubrication_shell_init changes it */
+                        for(a=0; a<VIM; a++) base_normal[a]=fv->snormal[a];
+
+                        n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
+                        lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+
+                        /* Calculate the flow rate and its sensitivties */
+
+                        calculate_lub_q_v(R_LUBP, time_value, 0, xi, exo);
+
+                        for(a=0; a<VIM; a++)
+                          {
+                              local_q +=  base_normal[a]*LubAux->q[a];
+                          }
+                            local_flux += weight*det* local_q ;
+                            /* clean-up */
+                            safe_free((void *) n_dof);
+                        break;
+
+                      case NEG_LS_FLUX:
+                      case POS_LS_FLUX:
+   
+                          {
+                          double H = 0.0;
+                          load_lsi(ls->Length_Scale);
+   
+                          H =  ( quantity == POS_LS_FLUX ? lsi->H : ( 1.0 - lsi->H ) ) ;
+          
+                          for( a=0; a<dim; a++)
+                                  {
+                          local_q += H * (fv->v[a]-x_dot[a]) * fv->snormal[a] ;
+                          local_qconv += (fv->v[a]-x_dot[a]) * fv->snormal[a] ;
+                                  }
+                          local_flux += weight * det * local_q ;
+                          local_flux_conv += ad_wt[ip_total-ip-1]*det*local_qconv;
+   
+                          }
+                          break;
+   
+        
+                      case PVELOCITY1:
+                      case PVELOCITY2:
+                      case PVELOCITY3:
+                        for(a=0; a<WIM; a++)
+                          {
+                            local_q +=  fv->snormal[a]*fv->pv[a] ;
+                          }
+                            local_flux +=  weight*det*local_q ;
+                        break;
+                    
+                      case EXT_VELOCITY: /* This is already a normal velocity */
+                        local_q +=  fv->ext_v;
+                        local_flux +=  weight*det*local_q ;
+                        break;
+
+                      case EFIELD1:
+                      case EFIELD2:
+                      case EFIELD3:
+                        for(a=0; a<VIM; a++)
+                          {
+                            local_q +=  fv->snormal[a]*fv->E_field[a] ;
+                          }
+                        local_flux +=  weight*det*local_q ;
+                        break;
+
+                      case SPECIES_FLUX:
+                        for (a = 0; a < VIM; a++) {
+                          if ( cr->MassFluxModel == FICKIAN  ||
+                               cr->MassFluxModel == STEFAN_MAXWELL  ||
+                               cr->MassFluxModel == STEFAN_MAXWELL_CHARGED  ||
+                               cr->MassFluxModel == STEFAN_MAXWELL_VOLUME )
+                              {
+                               if ( Diffusivity() )  GOMA_EH( -1, "Error in Diffusivity.");
+
+                               local_q += fv->snormal[a] * 
+                                 (-mp->diffusivity[species_id]*fv->grad_c[species_id][a]);
+                              }
+                          else if ( cr->MassFluxModel == GENERALIZED_FICKIAN)
+                              {
+                               if ( Generalized_Diffusivity() )  GOMA_EH( -1, "Error in Diffusivity.");
+                               for (w=0; w<pd->Num_Species_Eqn; w++)
+                                 {
+                                  local_q +=  fv->snormal[a] * 
+                                             (-mp->diffusivity_gen_fick[species_id][w]
+                                                *fv->grad_c[w][a]);
+                                 }
+                              }
+                          else  if ( cr->MassFluxModel == DARCY )
+                              { /* diffusion induced convection is zero */ }
+                          else if ( cr->MassFluxModel == DM_SUSPENSION_BALANCE )
+                            {
+                              struct Species_Conservation_Terms st;
+                              zero_structure(&st, sizeof(struct Species_Conservation_Terms), 1);
+                              if ( Diffusivity() ) GOMA_EH( -1, "Error in Diffusivity.");
+                              for ( w=0; w < pd->Num_Species_Eqn; w++)
+                                {
+                                  suspension_balance(&st, w);
+                                  local_q += fv->snormal[a] * st.diff_flux[w][a];
+                                }
+                            }
+                          else
+                              { GOMA_EH( -1, "Unimplemented mass flux constitutive relation."); }
+                            local_qconv += (fv->snormal[a]*(fv->v[a]-x_dot[a])
+                                           *fv->c[species_id] );
+                          }
+                            local_flux +=  weight*det*local_q;
+                            local_flux_conv += weight*det*local_qconv;
+                        break;
+
+                      case SPECIES_FLUX_REVOLUTION:
+
+                        Diffusivity();
+
+                        for(a=0; a<VIM; a++)
+                          {
+                            local_q += ( -mp->diffusivity[species_id]*
+                                    fv->snormal[a]*fv->grad_c[species_id][a] );
+                            local_qconv += ( fv->snormal[a]*(fv->v[a]-x_dot[a])*fv->c[species_id] );
+                          }
+                        local_q *=  0.5 * fv->x[1] * fabs(fv->snormal[1]) ;
+                        local_qconv *=  0.5 * fv->x[1] * fabs(fv->snormal[1]) ;
+                            local_flux +=  weight*det*local_q;
+                            local_flux_conv += weight*det*local_qconv;
+                        break;
+
+                      case CHARGED_SPECIES_FLUX:
+
+                        Diffusivity();
+
+                        z[species_id] = mp->charge_number[species_id];
+                        if (mp->SolutionTemperatureModel == CONSTANT)  
+                          {
+                            T = mp->solution_temperature;
+                          } 
+                        else 
+                          {
+                            GOMA_EH(GOMA_ERROR, "Solution-temperature model not yet implemented");
+                          }
+                        /* set solution temperature to 298 K if it is zero - safety feature */
+                        if (T == 0.0)
+                          {
+                            T = 298.0;
+                            fprintf(stderr, "Warning!: a default electrolyte temperature of 298 K is being used!");
+                          }
+   
+                        FRT=FF/R/T;
+                        kapta[species_id] = FRT*z[species_id]*mp->diffusivity[species_id]*fv->c[species_id]; 
+                        for (w = 0; w < pd->Num_Species_Eqn; w++) 
+                          {
+                            d_kapta_dc[species_id][MAX_VARIABLE_TYPES + w] = FRT*z[species_id]*
+                                                                             mp->diffusivity[species_id];
+                          }
+                            d_kapta_dT[species_id] = (-FRT/T)*z[species_id]*mp->diffusivity[species_id]*
+                                                     fv->c[species_id];
+                         for(a=0; a<VIM; a++)
+                          {
+                            d_kapta_dx[species_id][a] = 0.0;
+                          }
+
+                        for(a=0; a<VIM; a++)
+                          {
+                            local_q += (-mp->diffusivity[species_id]*fv->snormal[a]*fv->grad_c[species_id][a] 
+                                        -kapta[species_id]*fv->snormal[a]*fv->grad_V[a]);
+                            local_qconv += ( fv->snormal[a]*(fv->v[a]-x_dot[a])*fv->c[species_id] );
+                          }
+                            local_flux +=  weight*det*local_q;
+                            local_flux_conv += weight*det*local_qconv;
+                        break;
+
+                      case CURRENT_FICKIAN:
+
+                        Diffusivity();
+
+                        z[species_id] = mp->charge_number[species_id]; 
+
+                        if (mp->SolutionTemperatureModel == CONSTANT)  
+                          {
+                            T = mp->solution_temperature;
+                          } 
+                        else 
+                          {
+                            GOMA_EH(GOMA_ERROR, "Solution-temperature model not yet implemented");
+                          }
+                        /* set solution temperature to 298 K if it is zero - safety feature */
+                        if (T == 0.0)
+                          {
+                            T = 298.0;
+                            fprintf(stderr, "Warning!: a default electrolyte temperature of 298 K is being used!");
+                          }
+
+                        FRT=FF/R/T;
+                        kapta[species_id] = FRT*z[species_id]*mp->diffusivity[species_id]*fv->c[species_id]; 
+                        for (w = 0; w < pd->Num_Species_Eqn; w++) 
+                          {
+                            d_kapta_dc[species_id][MAX_VARIABLE_TYPES + w] = FRT*z[species_id]*
+                                                                             mp->diffusivity[species_id];
+                          }
+                            d_kapta_dT[species_id] = (-FRT/T)*z[species_id]*mp->diffusivity[species_id]*
+                                                     fv->c[species_id];
+                         for(a=0; a<VIM; a++)
+                          {
+                            d_kapta_dx[species_id][a] = 0.0;
+                          }
+
+                        for(a=0; a<VIM; a++)
+                          {
+                            local_q += (-mp->diffusivity[species_id]*fv->snormal[a]*fv->grad_c[species_id][a] 
+                                        -kapta[species_id]*fv->snormal[a]*fv->grad_V[a]);
+                            local_qconv += ( fv->snormal[a]*(fv->v[a]-x_dot[a])*fv->c[species_id] );
+                          }
+                            local_flux +=  weight*det*local_q;
+                            local_flux_conv += weight*det*local_qconv;
+                        break;
+
+                      case CURRENT:
+                        k   = mp->electrical_conductivity;
+                        if( J_AC != NULL)
+                          {
+                            memset( dkdV,0, sizeof(double)*MDE);
+                            memset( dkdT,0, sizeof(double)*MDE);
+                            memset( dkdX,0, sizeof(double)*MDE*DIM);
+                            memset( dkdC,0, sizeof(double)*MAX_CONC*MDE);
+                          }
+                        for(a=0; a<VIM; a++)
+                          {
+                            local_q += - k * fv->snormal[a]*fv->grad_V[a]; 
+                          }
+                            local_flux +=  weight*det*local_q;
+                            local_flux_conv = 0.0;
+                        break;
+
+                      case ELEC_FORCE_NORMAL:
+                            for ( a=0; a<VIM; a++)
+                              {
+                                for ( b=0; b<VIM; b++)
+                                  {
+                                   local_q += (fv->snormal[a]*perm*es[a][b]*fv->snormal[b]);
+                                  }
+                              }
+                                     local_flux += weight * det * local_q;
+                        break;
+                      case ELEC_FORCE_TANGENT1:
+                            for ( a=0; a<VIM; a++)
+                              {
+                                for ( b=0; b<VIM; b++)
+                                  {
+                                   local_q += (fv->stangent[0][a]*perm*es[a][b]*fv->snormal[b]);
+                                  }
+                              }
+                                     local_flux += weight * det * local_q;
+                        break;
+                      case ELEC_FORCE_TANGENT2:
+                          if(pd->Num_Dim == 3)
+                            {
+                            for ( a=0; a<VIM; a++)
+                              {
+                               for ( b=0; b<VIM; b++)
+                                  {
+                                   local_q += (fv->stangent[1][a]*perm*es[a][b]*fv->snormal[b]);
+                                  }
+                              }
+                             }
+                            else
+                             {
+                                GOMA_EH(GOMA_ERROR, "Illegal flux type");
+                             }
+                                     local_flux += weight * det * local_q;
+                        break;
+                      case ELEC_FORCE_X:
+                            for ( a=0; a<VIM; a++)
+                              {
+                               local_q += (perm*es[0][a]*fv->snormal[a]);
+                              }
+                                     local_flux += weight * det * local_q;
+                        break;
+                      case ELEC_FORCE_Y:
+                            for ( a=0; a<VIM; a++)
+                              {
+                                     local_q += (perm*es[1][a]*fv->snormal[a]);
+                              }
+                                     local_flux += weight * det * local_q;
+                        break;
+                      case ELEC_FORCE_Z:
+                          if(pd->Num_Dim == 3)
+                            {
+                            for ( a=0; a<VIM; a++)
+                              {
+                                     local_q += (perm*es[2][a]*fv->snormal[a]);
+                              }
+                            }
+                            else
+                             {
+                                GOMA_EH(GOMA_ERROR, "Illegal flux type");
+                             }
+                                     local_flux += weight * det * local_q;
+                        break;
+                      case NET_SURF_CHARGE:
+                            for ( a=0; a<VIM; a++)
+                              {
+                                     local_q += (-perm * fv->snormal[a] * efield[a]);
+                              }
+                                     local_flux += weight * det * local_q;
+                        break;
+
+                      case TORQUE:
+                        if(pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+                           pd->CoordinateSystem == CARTESIAN_2pt5D)
+                          GOMA_EH(GOMA_ERROR, "TORQUE has not been updated for the PROJECTED_CARTESIAN coordinate system.");
+
+                        if(pd->CoordinateSystem == SWIRLING || 
+                           pd->CoordinateSystem == CYLINDRICAL)
+                          {
+                            for ( a=0; a<WIM; a++)
+                              {
+                                for ( b=0; b<WIM; b++)
+                                  {
+                                /*
+                                 *  note that for CYLINDRICAL and SWIRLING coordinate systems
+                                 * the h3 factor has been incorporated already into sdet
+                                 * the moment arm is incorporated into sideset.
+                                 */
+
+                                    local_q += ( fv->x[1] * e_theta[a]*
+                                          (vs[a][b]+ves[a][b])*fv->snormal[b] );
+
+                                  }
+                              }
+                                    local_flux += weight * det* local_q;
+                          }
+                        else if( pd->CoordinateSystem == CARTESIAN ) 
+                          {
+                            if( WIM == 2 ) 
+                              {
+                                fv->x[2] = 0.0;
+                                fv->snormal[2] = 0.0;
+                              }
+                            for ( a=0; a<DIM; a++)
+                              {
+                                Tract[a] = 0.0;
+                                for ( b=0; b<DIM; b++)
+                                  {
+                                    Tract[a] += (vs[a][b]+ves[a][b]) * fv->snormal[b];
+                                  }
+                              }
+                            for ( a=0; a<DIM; a++)
+                              {
+                                for ( b=0; b<DIM; b++)
+                                  {
+                                    for ( c=0; c<DIM; c++)
+                                      {
+                                        local_Torque[a] += ( permute(b,c,a) *
+                                                       fv->x[b]*Tract[c] );
+                                      }
+                                  }
+                              }
+                            for ( a=0; a<DIM; a++)
+                              { Torque[a] += weight * det * local_Torque[a];}
+                            local_flux = Torque[2];
+                          }
+                        else
+                          {
+                            GOMA_EH(GOMA_ERROR,"Torque cannot be calculated in this case.");
+                          }
+                        break;
+                    
+                      case PORE_LIQ_FLUX:
+                                  
+                                  err = load_porous_properties();
+                                  GOMA_EH( err, "load_porous_properties");
+
+                        if(mp->PorousMediaType == POROUS_SATURATED)
+                          {
+
+                            for ( a=0; a<VIM; a++)
+                              {
+                                local_flux += weight*det*mp->density * 
+                                  pmv->liq_darcy_velocity[a]*fv->snormal[a];
+                                local_flux_conv += 0.;
+                              }
+                          }
+                        else if (mp->PorousMediaType == POROUS_UNSATURATED ||
+                                 mp->PorousMediaType == POROUS_TWO_PHASE)
+                          {
+
+                            for ( a=0; a<VIM; a++)
+                              {
+                                local_flux += weight*det* 
+                                  pmv->rel_mass_flux[0][a]*fv->snormal[a];
+                                local_flux_conv += 0.;
+                              }
+                          }
+                        else
+                          {
+                            GOMA_EH(GOMA_ERROR,"unrecognized porous media type in mm_flux.c");
+                          }
+                        break;
+
+                      case FORCE_NORMAL:
+                        if(cr->MeshMotion == ARBITRARY)
+                          {
+                            for ( a=0; a<WIM; a++)
+                              {
+                                for ( b=0; b<WIM; b++)
+                                  {
+                                    local_q += (fv->snormal[a]*
+                                          (vs[a][b]+ves[a][b] )*fv->snormal[b]);
+
+                                    local_qconv += ( -rho*fv->snormal[a]*
+                                  (fv->v[a]-x_dot[a])*fv->v[b]*fv->snormal[b]);
+                                  }
+                              }
+                                    local_flux += weight * det * local_q;
+                                    local_flux_conv += weight*det*local_qconv;
+                          }
+                        else
+                          {
+                            for ( a=0; a<VIM; a++)
+                              {
+                                for ( b=0; b<VIM; b++)
+                                  {
+                                    local_q += (fv->snormal[a]*TT[a][b]*fv->snormal[b]);
+                                  }
+                              }
+                                    local_flux += weight * det * local_q;
+                          }
+                        break;
+                        
+                      case FORCE_TANGENT1:
+                        
+                        if(cr->MeshMotion == ARBITRARY)
+                          {
+                            for ( a=0; a<WIM; a++)
+                              {
+                                for ( b=0; b<WIM; b++)
+                                  {
+                                    local_q += (fv->stangent[0][a]*
+                                          (vs[a][b] + ves[a][b])*fv->snormal[b]);
+                                    local_qconv += ( - rho*fv->stangent[0][a]
+                                  *(fv->v[a]-x_dot[a]) *fv->v[b]*fv->snormal[b]);
+                                  }
+                              }
+                                    local_flux += weight * det * local_q;
+                            local_flux_conv += weight * det*local_qconv;
+                          }
+                        else
+                          {
+                            for ( a=0; a<VIM; a++)
+                              {
+                                for ( b=0; b<VIM; b++)
+                                  {
+                                    local_q += ( fv->stangent[0][a]*TT[a][b]
+                                                          *fv->snormal[b]);
+                                  }
+                              }
+                                    local_flux += weight * det*local_q;
+                          }
+                        break;
+                        
+                      case FORCE_TANGENT2:
+                  
+                        if(cr->MeshMotion == ARBITRARY)
+                          {
+                            if(pd->Num_Dim == 3 || upd->CoordinateSystem == SWIRLING   )
+                              {
+                                for ( a=0; a<WIM; a++)
+                                  {
+                                    for ( b=0; b<WIM; b++)
+                                      {
+                                        local_q += (fv->stangent[1][a]
+                                                  *(vs[a][b] + ves[a][b])
+                                                          *fv->snormal[b]);
+                                        local_qconv += ( - rho*fv->stangent[1][a]
+                                  *(fv->v[a]-x_dot[a]) *fv->v[b]*fv->snormal[b]);
+                                      }
+                                  }
+                                    local_flux += weight * det * local_q;
+                                    local_flux_conv += weight * det * local_qconv;
+                              }
+                            else
+                              {
+                                GOMA_EH(GOMA_ERROR, "Illegal flux type");
+                              }
+                          }
+                        else
+                          {
+                            for ( a=0; a<VIM; a++)
+                              {
+                                for ( b=0; b<VIM; b++)
+                                  {
+                                    local_q += ( fv->stangent[1][a]*TT[a][b]
+                                                          *fv->snormal[b]);
+                                  }
+                              }
+                                    local_flux += weight * det * local_q;
+                          }
+                        break;
+                        
+                      case FORCE_X:
+                        if(cr->MeshMotion == ARBITRARY)
+                          {
+                            for ( a=0; a<WIM; a++)
+                              {
+                                local_q += ((vs[0][a] + ves[0][a] ) *fv->snormal[a]) ;
+                                local_qconv += ( -rho*(fv->v[0]-x_dot[0])
+                                                     *fv->v[a]*fv->snormal[a]);
+                              }
+                            local_flux += weight * det * local_q;
+                            local_flux_conv += weight * det * local_qconv;
+                          }
+                        else
+                          {
+                            for ( a=0; a<VIM; a++)
+                              {
+                                local_q += ( TT[0][a]*fv->snormal[a]);
+                              }
+                                local_flux += weight * det * local_q;
+                          }
+                        break;
+                        
+                      case FORCE_X_POS:
+                        if(cr->MeshMotion == ARBITRARY)
+                          {
+                            for ( a=0; a<WIM; a++)
+                              {
+                                local_q += ((vs[0][a] + ves[0][a] ) *fv->snormal[a]) ;
+                                local_qconv += ( -rho*(fv->v[0]-x_dot[0])
+                                                     *fv->v[a]*fv->snormal[a]);
+                              }
+                                if(local_q <0) {local_q=0;}
+                                local_flux += weight * det * local_q;
+                                local_flux_conv += weight * det * local_qconv;
+                          }
+                        else
+                          {
+                            for ( a=0; a<VIM; a++)
+                              {
+                                local_q += ( TT[0][a]*fv->snormal[a]);
+                              }
+                                if(local_q <0) {local_q=0;}
+                                local_flux += weight * det * local_q;
+                          }
+                        break;
+                        
+                      case FORCE_X_NEG:
+                        if(cr->MeshMotion == ARBITRARY)
+                          {
+                            for ( a=0; a<WIM; a++)
+                              {
+                                local_q += ((vs[0][a] + ves[0][a] ) *fv->snormal[a]) ;
+                                local_qconv += ( -rho*(fv->v[0]-x_dot[0])
+                                                     *fv->v[a]*fv->snormal[a]);
+                              }
+                                if(local_q >0) {local_q=0;}
+                                local_flux += weight * det * local_q;
+                                local_flux_conv += weight * det * local_qconv;
+                          }
+                        else
+                          {
+                            for ( a=0; a<VIM; a++)
+                              {
+                                local_q += ( TT[0][a]*fv->snormal[a]);
+                              }
+                                if(local_q >0) {local_q=0;}
+                                local_flux += weight * det * local_q;
+                          }
+                        break;
+                        
+                      case FORCE_Y:
+                        if(cr->MeshMotion == ARBITRARY)
+                          {
+                            for ( a=0; a<WIM; a++)
+                              {
+                               local_q += ((vs[1][a] + ves[1][a]) *fv->snormal[a]);
+                               local_qconv += ( -rho*(fv->v[1]-x_dot[1])
+                                                     *fv->v[a]*fv->snormal[a]);
+                              }
+                                local_flux += weight * det * local_q;
+                                local_flux_conv += weight * det * local_qconv;
+                          }
+                        else
+                          {
+                            for ( a=0; a<VIM; a++)
+                              {
+                                local_q += ( TT[1][a]*fv->snormal[a]);
+                              }
+                                local_flux += weight * det * local_q;
+                          }
+                        break;
+
+                      case FORCE_Y_POS:
+                        if(cr->MeshMotion == ARBITRARY)
+                          {
+                            for ( a=0; a<WIM; a++)
+                              {
+                               local_q += ((vs[1][a] + ves[1][a]) *fv->snormal[a]);
+                               local_qconv += ( -rho*(fv->v[1]-x_dot[1])
+                                                     *fv->v[a]*fv->snormal[a]);
+                              }
+                                if(local_q <0) {local_q=0;}
+                                local_flux += weight * det * local_q;
+                                local_flux_conv += weight * det * local_qconv;
+                          }
+                        else
+                          {
+                            for ( a=0; a<VIM; a++)
+                              {
+                                local_q += ( TT[1][a]*fv->snormal[a]);
+                              }
+                                if(local_q <0) {local_q=0;}
+                                local_flux += weight * det * local_q;
+                          }
+                        break;
+
+                      case FORCE_Y_NEG:
+                        if(cr->MeshMotion == ARBITRARY)
+                          {
+                            for ( a=0; a<WIM; a++)
+                              {
+                               local_q += ((vs[1][a] + ves[1][a]) *fv->snormal[a]);
+                               local_qconv += ( -rho*(fv->v[1]-x_dot[1])
+                                                     *fv->v[a]*fv->snormal[a]);
+                              }
+                                if(local_q >0) {local_q=0;}
+                                local_flux += weight * det * local_q;
+                                local_flux_conv += weight * det * local_qconv;
+                          }
+                        else
+                          {
+                            for ( a=0; a<VIM; a++)
+                              {
+                                local_q += ( TT[1][a]*fv->snormal[a]);
+                              }
+                                if(local_q >0) {local_q=0;}
+                                local_flux += weight * det * local_q;
+                          }
+                        break;
+
+                      case FORCE_Z:
+                        if(cr->MeshMotion == ARBITRARY)
+                          {
+                            if(pd->Num_Dim == 3)
+                              {
+                                for ( a=0; a<WIM; a++)
+                                  {
+                                    local_q += ((vs[2][a] + ves[2][a]) *fv->snormal[a]);
+
+                                    local_qconv += ( -rho*(fv->v[2]-x_dot[2])
+                                                     *fv->v[a]*fv->snormal[a]);
+
+                                  }
+                                    local_flux += weight * det * local_q;
+                                    local_flux_conv += weight *det*local_qconv;
+                              }
+                            else
+                              {
+                                GOMA_EH(GOMA_ERROR, "Illegal flux type");
+                              }
+                          }
+                        else
+                          {
+                            for ( a=0; a<VIM; a++)
+                              {
+                                local_q += ( TT[2][a]*fv->snormal[a]);
+                              }
+                                local_flux += weight * det * local_q;
+                          }
+
+                        break;
+
+                      case FORCE_Z_POS:
+                        if(cr->MeshMotion == ARBITRARY)
+                          {
+                            if(pd->Num_Dim == 3)
+                              {
+                                for ( a=0; a<WIM; a++)
+                                  {
+                                    local_q += ((vs[2][a] + ves[2][a]) *fv->snormal[a]);
+
+                                    local_qconv += ( -rho*(fv->v[2]-x_dot[2])
+                                                     *fv->v[a]*fv->snormal[a]);
+
+                                  }
+                                    if(local_q <0) {local_q=0;}
+                                    local_flux += weight * det * local_q;
+                                    local_flux_conv += weight *det*local_qconv;
+                              }
+                            else
+                              {
+                                GOMA_EH(GOMA_ERROR, "Illegal flux type");
+                              }
+                          }
+                        else
+                          {
+                            for ( a=0; a<VIM; a++)
+                              {
+                                local_q += ( TT[2][a]*fv->snormal[a]);
+                              }
+                                if(local_q <0) {local_q=0;}
+                                local_flux += weight * det * local_q;
+                          }
+
+                        break;
+
+                      case FORCE_Z_NEG:
+                        if(cr->MeshMotion == ARBITRARY)
+                          {
+                            if(pd->Num_Dim == 3)
+                              {
+                                for ( a=0; a<WIM; a++)
+                                  {
+                                    local_q += ((vs[2][a] + ves[2][a]) *fv->snormal[a]);
+
+                                    local_qconv += ( -rho*(fv->v[2]-x_dot[2])
+                                                     *fv->v[a]*fv->snormal[a]);
+
+                                  }
+                                    if(local_q >0) {local_q=0;}
+                                    local_flux += weight * det * local_q;
+                                    local_flux_conv += weight *det*local_qconv;
+                              }
+                            else
+                              {
+                                GOMA_EH(GOMA_ERROR, "Illegal flux type");
+                              }
+                          }
+                        else
+                          {
+                            for ( a=0; a<VIM; a++)
+                              {
+                                local_q += ( TT[2][a]*fv->snormal[a]);
+                              }
+                                if(local_q >0) {local_q=0;}
+                                local_flux += weight * det * local_q;
+                          }
+
+                        break;
+
+                      case AVERAGE_CONC:
+
+                        local_q += fv->c[species_id];
+                        local_flux += weight*det*local_q;
+
+                        break;
+
+                      case REPULSIVE_FORCE:
+                        for (a = 0; a < Num_BC; a++) {
+                           if( BC_Types[a].BC_ID != side_set_id ||
+                               BC_Types[a].BC_Name < CAP_REPULSE_BC ||
+                               BC_Types[a].BC_Name > CAP_REPULSE_TABLE_BC)
+                              {continue;}
+                           else if(BC_Types[a].BC_Name == CAP_REPULSE_ROLL_BC )
+                              {
+                                double roll_rad, origin[3],dir_angle[3];
+                                double hscale, repexp, P_rep, betainv;
+                                double factor,t,axis_pt[3],R,kernel,tangent,dist;
+                                double coord[3]={0,0,0};
+
+                                roll_rad = BC_Types[a].BC_Data_Float[1];
+                                origin[0] =  BC_Types[a].BC_Data_Float[2];
+                                origin[1] =  BC_Types[a].BC_Data_Float[3];
+                                origin[2] =  BC_Types[a].BC_Data_Float[4];
+                                dir_angle[0] =  BC_Types[a].BC_Data_Float[5];
+                                dir_angle[1] =  BC_Types[a].BC_Data_Float[6];
+                                dir_angle[2] =  BC_Types[a].BC_Data_Float[7];
+                                hscale = BC_Types[a].BC_Data_Float[8];
+                                repexp = BC_Types[a].BC_Data_Float[9];
+                                P_rep = BC_Types[a].BC_Data_Float[10];
+                                betainv = BC_Types[a].BC_Data_Float[11];
+  /*  initialize variables */
+
+                            for( b=0 ; b<pd->Num_Dim ; b++)
+                              {  coord[b] = fv->x[b];  }
+  /*  find intersection of axis with normal plane - i.e., locate point on
+   *          axis that intersects plane normal to axis that contains local point. */
+      factor = SQUARE(dir_angle[0]) + SQUARE(dir_angle[1]) + SQUARE(dir_angle[2]);
+      t = (dir_angle[0]*(coord[0]-origin[0]) + dir_angle[1]*(coord[1]-origin[1])
+          + dir_angle[2]*(coord[2]-origin[2]))/factor;
+      axis_pt[0] = origin[0]+dir_angle[0]*t;
+      axis_pt[1] = origin[1]+dir_angle[1]*t;
+      axis_pt[2] = origin[2]+dir_angle[2]*t;
+
+  /*  compute radius and radial direction */
+
+      R = sqrt( SQUARE(coord[0]-axis_pt[0]) + SQUARE(coord[1]-axis_pt[1]) +
+                  SQUARE(coord[2]-axis_pt[2]) );
+      dist = R - roll_rad;
+
+  /*  repulsion function  */
+                                kernel = P_rep/pow(dist/hscale, repexp); 
+                                tangent = betainv/pow(dist/hscale, repexp); 
+                                local_q = kernel;
+                                local_qconv = tangent;
+                                for( b=0 ; b<pd->Num_Dim ; b++)
+                                   {local_Torque[b] = fv->x[b]*kernel;}
+                              }
+                           else if(BC_Types[a].BC_Name == CAP_REPULSE_TABLE_BC )
+                              {
+                                double hscale, repexp, P_rep, betainv, exp_scale;
+                                double mod_factor,kernel,dist=0,tangent;
+                                double dcl_dist, slope, d_tfcn[3];
+                                int bc_table_id=-1,dcl_node,k,nsp,i1,i2;
+                                double point[3]={0,0,0};
+                                double coord[3]={0,0,0};
+
+                                hscale = BC_Types[a].BC_Data_Float[0];
+                                repexp = BC_Types[a].BC_Data_Float[1];
+                                P_rep = BC_Types[a].BC_Data_Float[2];
+                                betainv =  BC_Types[a].BC_Data_Float[3];
+                                exp_scale =  BC_Types[a].BC_Data_Float[4];
+                                dcl_node =  BC_Types[a].BC_Data_Int[2];
+  /*  initialize variables */
+
+                            for( b=0 ; b<pd->Num_Dim ; b++)
+                              {  coord[b] = fv->x[b];  }
+
+                            for (b = 0; b < Num_BC; b++) {
+                                if( BC_Types[b].BC_Name == GD_TABLE_BC )
+                                    { bc_table_id = b; }
+                                }
+                            if(bc_table_id != -1)
+        dist = table_distance_search(BC_Types[bc_table_id].table, coord, 
+                                                           &slope, d_tfcn);
+                            if(dcl_node != -1)
+                              {
+                               nsp = match_nsid(dcl_node);
+                               k = Proc_NS_List[Proc_NS_Pointers[nsp]];
+                               for (b = 0; b < Proc_NS_Count[nsp]; b++)
+                                 {
+                 k = Proc_NS_List[Proc_NS_Pointers[nsp]+b];
+                 i1 = Index_Solution (k, MESH_DISPLACEMENT1, 0, 0, -1, pg->imtrx);
+                 GOMA_EH(i1, "Could not resolve index_solution.");
+                                  for(i2=0 ; i2<pd->Num_Dim ; i2++)
+                                    {
+                                     point[i2] = Coor[i2][k] + x[i1+i2];
+                                    }
+                                 }
+                               dcl_dist = sqrt(SQUARE(coord[0]-point[0])
+                                          +SQUARE(coord[1]-point[1])
+                                          +SQUARE(coord[2]-point[2]));
+                               }  else	{ dcl_dist = 0.; }
+  /*  modifying function for DCL  */
+                             mod_factor = 1. - exp(-dcl_dist/exp_scale);
+  /*  repulsion function  */
+                             kernel = P_rep*mod_factor/pow(dist/hscale, repexp); 
+                             tangent = betainv*mod_factor/pow(dist/hscale,repexp); 
+  /*  repulsion function  */
+                             local_q = kernel;
+                             local_qconv = tangent;
+                             for( b=0 ; b<pd->Num_Dim ; b++)
+                                   {local_Torque[b] = fv->x[b]*kernel;}
+                             if(pd->Num_Dim < DIM)
+                                   {local_Torque[pd->Num_Dim] = dist*kernel;}
+                              }
+                           else if(BC_Types[a].BC_Name == CAP_REPULSE_BC )
+                              {
+                                double repexp, P_rep, factor, denom;
+                                double kernel,dist=0;
+                                double ap, bp, cp, dp;
+
+                                repexp = 4.;
+                                P_rep = BC_Types[a].BC_Data_Float[0];
+                                ap =  BC_Types[a].BC_Data_Float[1];
+                                bp =  BC_Types[a].BC_Data_Float[2];
+                                cp =  BC_Types[a].BC_Data_Float[3];
+                                dp =  BC_Types[a].BC_Data_Float[4];
+                                denom = sqrt(ap*ap + bp*bp + cp*cp);
+                                factor = ap*fv->x[0] + bp*fv->x[1] + cp*fv->x[2] +dp;
+                                dist = fabs(factor)/denom;
+  /*  initialize variables */
+  /*  repulsion function  */
+                             kernel = P_rep/pow(dist, repexp); 
+  /*  repulsion function  */
+                             local_q = kernel;
+                             for( b=0 ; b<pd->Num_Dim ; b++)
+                                   {local_Torque[b] = fv->x[b]*kernel;}
+                              }
+                           else 
+                              {GOMA_EH(GOMA_ERROR,"Repulsive force not found\n");} 
+                           }
+
+                                local_flux += weight * det * local_q;
+                                local_flux_conv += weight *det*local_qconv;
+                                for( b=0 ; b<DIM ; b++)
+                                   {Torque[b] += local_Torque[b]*weight*det;}
+                        break;
+
+                      case SURF_DISSIP:
+                        /* This is the energy dissipated at the surface due to surface tension 
+                         *  See Batchelor, JFM, 1970 for details 
+                         */
+                        for( a=0; a<WIM ; a++)
+                          {
+                            for( b=0 ; b<WIM ; b++)
+                              {
+                                local_q += mp->surface_tension * 
+                                         ( fv->grad_v[a][b]*( delta(a,b)
+                                           -fv->snormal[a]*fv->snormal[b] ) );
+                              }
+                          }
+
+                                local_flux += weight * det * local_q;
+                                local_flux_conv += weight *det*local_qconv;
+                        break;
+
+                      case POYNTING_X:
+                      case POYNTING_Y:
+                      case POYNTING_Z:
+                          /* For scalar e-field calculations, we will assume the e-vector 
+                           * points out of the plane, i.e. normal to the plane of 
+                           * incidence, Ez */
+                        R_imped = acoustic_impedance( d_R, time_value );
+                        wnum = wave_number( d_wnum, time_value );
+                        kR_inv = 1./(wnum*R_imped);
+                        memset( Mag_real,0, sizeof(double)*DIM);
+                        memset( Mag_imag,0, sizeof(double)*DIM);
+                        memset( E_real,0, sizeof(double)*DIM);
+                        memset( E_imag,0, sizeof(double)*DIM);
+                        if(pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+                           pd->CoordinateSystem == CARTESIAN_2pt5D)
+                          GOMA_EH(GOMA_ERROR, "POYNTING has not been updated for the PROJECTED_CARTESIAN coordinate system.");
+
+                        if(pd->CoordinateSystem == SWIRLING || 
+                           pd->CoordinateSystem == CYLINDRICAL)
+                          {
+                          GOMA_EH(GOMA_ERROR, "POYNTING has not been checked for CYLINDRICAL yet.");
+                            for ( a=0; a<VIM; a++)
+                              {
+                                for ( b=0; b<VIM; b++)
+                                  {
+                                /*
+                                 *  note that for CYLINDRICAL and SWIRLING coordinate systems
+                                 * the h3 factor has been incorporated already into sdet
+                                 * the moment arm is incorporated into sideset.
+                                 */
+
+                                    local_q += ( fv->x[1] * e_theta[a]*
+                                          (vs[a][b]+ves[a][b])*fv->snormal[b] );
+
+                                  }
+                              }
+                                    local_flux += weight * det* local_q;
+                          }
+                        else if( pd->CoordinateSystem == CARTESIAN ) 
+                          {
+                            Mag_imag[0] = kR_inv*fv->grad_apr[1];
+                            Mag_imag[1] = -kR_inv*fv->grad_apr[0];
+                            Mag_real[0] = kR_inv*fv->grad_api[1];
+                            Mag_real[1] = -kR_inv*fv->grad_api[0];
+                            E_real[2] = fv->apr;  E_imag[2] = fv->api;
+                            for ( a=0; a<DIM; a++)
+                              {
+                                for ( b=0; b<DIM; b++)
+                                  {
+                                    for ( c=0; c<DIM; c++)
+                                      {
+                                        local_Torque[a] += 0.5*( permute(b,c,a) *
+                                  (E_real[b]*Mag_real[c]-E_imag[b]*Mag_imag[c]) );
+                                      }
+                                  }
+                              }
+                            for ( a=0; a<DIM; a++)
+                              { Torque[a] += weight * det * local_Torque[a];}
+                            local_flux = Torque[quantity-POYNTING_X];
+                          }
+                        else
+                          {
+                            GOMA_EH(GOMA_ERROR,"Torque cannot be calculated in this case.");
+                          }
+                        break;
+                    
+                      case N_DOT_X:
+                        /* 
+                         * This is the position vector dotted into the local normal
+                         * and has application in determining volumes of shapes 
+                         * via surface integrals (Ask me how ! - tab )
+                         */
+
+                        for( a=0 ; a<dim; a++ )
+                          {
+                            local_q += ( fv->x[a] - param[a] ) *fv->snormal[a];
+                          }
+
+                        local_flux += weight*det*local_q/ (double) dim;
+
+                                                  
+                                  break;
+                                  
+                          case DELTA:
+                                  
+                                  load_lsi(ls->Length_Scale );
+                                  local_q = lsi->delta;
+                                  local_qconv = lsi->delta;
+                                  local_flux += weight * det * lsi->delta;
+                                  local_flux_conv += ad_wt[ip_total-ip-1]*det*lsi->delta;
+                                  break;
+
+                          case LS_DCA:
+                                  load_lsi(ls->Length_Scale );
+                                  ierr = interface_crossing_1DQ(ls_F, xf);
+                                  if(ierr  && ip == 0)
+                                          {
+                                           switch	(id_side)
+                                                  {
+                                                   case 1:
+                                                          xi[0] = xf[0];
+                                                          xi[1] = -1;
+                                                          break;
+                                                   case 2:
+                                                          xi[0] = 1;
+                                                          xi[1] = xf[0];
+                                                          break;
+                                                   case 3:
+                                                          xi[0] = xf[0];
+                                                          xi[1] = 1;
+                                                          break;
+                                                   case 4:
+                                                          xi[0] = -1;
+                                                          xi[1] = xf[0];
+                                                          break;
+                                                   }
+                                          xi[2] = 0;
+         
+                          err = load_basis_functions( xi, bfd );
+                          GOMA_EH( err, "problem from load_basis_functions");
+   
+                          err = beer_belly();
+                          GOMA_EH( err, "beer_belly");
+                
+                          err = load_fv();
+                          GOMA_EH( err, "load_fv");
+
+                          err = load_bf_grad();
+                          GOMA_EH( err, "load_bf_grad");
+                    
+                          err = load_bf_mesh_derivs();
+                          GOMA_EH( err, "load_bf_mesh_derivs");
+                            
+                  surface_determinant_and_normal (ei[pg->imtrx]->ielem, iconnect_ptr, 
+                  num_local_nodes, ielem_dim - 1,  id_side, num_nodes_on_side, 
+                  id_local_elem_coord );
+                            
+           /*
+            * Load up physical space gradients of field variables at this
+            * Gauss point.
+            */
+                          err = load_fv_grads();
+                          GOMA_EH( err, "load_fv_grads");
+
+                          err = load_fv_mesh_derivs(1);
+                          GOMA_EH( err, "load_fv_mesh_derivs");
+
+                          if (TimeIntegration != STEADY && 
+                                          pd->e[pg->imtrx][MESH_DISPLACEMENT1]) {
+                                  for (j = 0; j < VIM; j++) {
+                                          x_dot[j] = fv_dot->x[j];
+                                          } 
+                                  } else {
+                                  for (j = 0; j < VIM; j++) {
+                                          x_dot[j] = 0.;
+                                          }
+                                  }
+                            
+                          do_LSA_mods(LSA_SURFACE);
+
+                          if (ielem_dim !=3)
+                          {
+                          calc_surf_tangent (ei[pg->imtrx]->ielem, iconnect_ptr, 
+                                     num_local_nodes, ielem_dim-1,
+                                     num_nodes_on_side,
+                                     id_local_elem_coord);
+                          }
+                          load_lsi(ls->Length_Scale );
+                         if(profile_flag & 1)
+                         {
+                          calc_shearrate(&gamma_dot, gamma, NULL, NULL); 
+          if(ls->SubElemIntegration)
+                  {
+                  elem_sign_org = ls->Elem_Sign;
+                  switch (mp->mp2nd->viscositymask[1]-mp->mp2nd->viscositymask[0])
+                          {
+                          case 1:
+                                  ls->Elem_Sign = -1;
+                                  break;
+                          case -1:
+                                  ls->Elem_Sign = 1;
+                                  break;
+                          }
+                  mu = viscosity(gn, gamma, d_mu);
+                  ls->Elem_Sign = elem_sign_org;
+                  }
+                  else
+                  {
+                  mu = viscosity(gn, gamma, d_mu);
+                  switch (mp->mp2nd->viscositymask[1]-mp->mp2nd->viscositymask[0])
+                          {
+                          case 1:
+                          mu = (mu-mp->mp2nd->viscosity*lsi->H)/(1.-lsi->H);
+                                  break;
+                          case -1:
+                          mu = (mu-mp->mp2nd->viscosity*(1.-lsi->H))/lsi->H;
+                                  break;
+                          }
+                  }
                          }
 
-			      local_flux += weight * det * local_q;
-                              local_flux_conv += weight *det*local_qconv;
-			      for( b=0 ; b<DIM ; b++)
-                                 {Torque[b] += local_Torque[b]*weight*det;}
-		      break;
+                          for (a=0; a<WIM; a++)
+                                  {
+                                  local_q -= fv->snormal[a]*lsi->normal[a];
+                                  local_qconv += SQUARE(fv->v[a] - x_dot[a]);
+                                  }
+                          local_q = acos(local_q)*180/M_PIE;
+                          local_qconv = sqrt(local_qconv);
+                          local_flux = local_q;
+                          local_flux_conv = local_qconv;
+                          }
+                                  break;
 
-		    case SURF_DISSIP:
-		      /* This is the energy dissipated at the surface due to surface tension 
-		       *  See Batchelor, JFM, 1970 for details 
-		       */
-		      for( a=0; a<WIM ; a++)
-			{
-			  for( b=0 ; b<WIM ; b++)
-			    {
-			      local_q += mp->surface_tension * 
-                                       ( fv->grad_v[a][b]*( delta(a,b)
-					 -fv->snormal[a]*fv->snormal[b] ) );
-			    }
-			}
-
-			      local_flux += weight * det * local_q;
-                              local_flux_conv += weight *det*local_qconv;
-		      break;
-
-		    case POYNTING_X:
-		    case POYNTING_Y:
-		    case POYNTING_Z:
-			/* For scalar e-field calculations, we will assume the e-vector 
-                         * points out of the plane, i.e. normal to the plane of 
-                         * incidence, Ez */
-		      R_imped = acoustic_impedance( d_R, time_value );
-		      wnum = wave_number( d_wnum, time_value );
-		      kR_inv = 1./(wnum*R_imped);
-                      memset( Mag_real,0, sizeof(double)*DIM);
-                      memset( Mag_imag,0, sizeof(double)*DIM);
-                      memset( E_real,0, sizeof(double)*DIM);
-                      memset( E_imag,0, sizeof(double)*DIM);
-		      if(pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-		         pd->CoordinateSystem == CARTESIAN_2pt5D)
-			GOMA_EH(GOMA_ERROR, "POYNTING has not been updated for the PROJECTED_CARTESIAN coordinate system.");
-
-		      if(pd->CoordinateSystem == SWIRLING || 
-			 pd->CoordinateSystem == CYLINDRICAL)
-			{
-			GOMA_EH(GOMA_ERROR, "POYNTING has not been checked for CYLINDRICAL yet.");
-			  for ( a=0; a<VIM; a++)
-			    {
-			      for ( b=0; b<VIM; b++)
-				{
-			      /*
-			       *  note that for CYLINDRICAL and SWIRLING coordinate systems
-			       * the h3 factor has been incorporated already into sdet
-			       * the moment arm is incorporated into sideset.
-			       */
-
-                                  local_q += ( fv->x[1] * e_theta[a]*
-					(vs[a][b]+ves[a][b])*fv->snormal[b] );
-
-				}
-			    }
-                                  local_flux += weight * det* local_q;
-			}
-		      else if( pd->CoordinateSystem == CARTESIAN ) 
-			{
-                          Mag_imag[0] = kR_inv*fv->grad_apr[1];
-                          Mag_imag[1] = -kR_inv*fv->grad_apr[0];
-                          Mag_real[0] = kR_inv*fv->grad_api[1];
-                          Mag_real[1] = -kR_inv*fv->grad_api[0];
-                          E_real[2] = fv->apr;  E_imag[2] = fv->api;
-			  for ( a=0; a<DIM; a++)
-			    {
-			      for ( b=0; b<DIM; b++)
-				{
-				  for ( c=0; c<DIM; c++)
-				    {
-				      local_Torque[a] += 0.5*( permute(b,c,a) *
-				(E_real[b]*Mag_real[c]-E_imag[b]*Mag_imag[c]) );
-				    }
-				}
-			    }
-			  for ( a=0; a<DIM; a++)
-			    { Torque[a] += weight * det * local_Torque[a];}
-			  local_flux = Torque[quantity-POYNTING_X];
-			}
-		      else
-			{
-			  GOMA_EH(GOMA_ERROR,"Torque cannot be calculated in this case.");
-			}
-		      break;
-		  
-		    case N_DOT_X:
-		      /* 
-		       * This is the position vector dotted into the local normal
-		       * and has application in determining volumes of shapes 
-		       * via surface integrals (Ask me how ! - tab )
-		       */
-
-		      for( a=0 ; a<dim; a++ )
-			{
-			  local_q += ( fv->x[a] - param[a] ) *fv->snormal[a];
-			}
-
-		      local_flux += weight*det*local_q/ (double) dim;
-
-						
-				break;
-				
-			case DELTA:
-				
-				load_lsi(ls->Length_Scale );
-				local_q = lsi->delta;
-	 			local_qconv = lsi->delta;
-				local_flux += weight * det * lsi->delta;
-  	  			local_flux_conv += ad_wt[ip_total-ip-1]*det*lsi->delta;
-				break;
-
-			case LS_DCA:
-				load_lsi(ls->Length_Scale );
-				ierr = interface_crossing_1DQ(ls_F, xf);
-				if(ierr  && ip == 0)
-					{
-					 switch	(id_side)
-			 			{
-						 case 1:
-							xi[0] = xf[0];
-							xi[1] = -1;
-							break;
-						 case 2:
-							xi[0] = 1;
-							xi[1] = xf[0];
-							break;
-						 case 3:
-					 		xi[0] = xf[0];
-					 		xi[1] = 1;
-							break;
-						 case 4:
-					 		xi[0] = -1;
-					 		xi[1] = xf[0];
-							break;
-	  					 }
-				 	xi[2] = 0;
-       
-			err = load_basis_functions( xi, bfd );
- 			GOMA_EH( err, "problem from load_basis_functions");
- 
- 			err = beer_belly();
- 			GOMA_EH( err, "beer_belly");
- 	      
- 			err = load_fv();
- 			GOMA_EH( err, "load_fv");
-
-			err = load_bf_grad();
-			GOMA_EH( err, "load_bf_grad");
-		  
-			err = load_bf_mesh_derivs();
-			GOMA_EH( err, "load_bf_mesh_derivs");
-			  
-		surface_determinant_and_normal (ei[pg->imtrx]->ielem, iconnect_ptr, 
-		num_local_nodes, ielem_dim - 1,  id_side, num_nodes_on_side, 
-		id_local_elem_coord );
-			  
-	 /*
-	  * Load up physical space gradients of field variables at this
-	  * Gauss point.
-	  */
-	 		err = load_fv_grads();
-	 		GOMA_EH( err, "load_fv_grads");
-
-	 		err = load_fv_mesh_derivs(1);
-	 		GOMA_EH( err, "load_fv_mesh_derivs");
-
-			if (TimeIntegration != STEADY && 
-					pd->e[pg->imtrx][MESH_DISPLACEMENT1]) {
-				for (j = 0; j < VIM; j++) {
-					x_dot[j] = fv_dot->x[j];
-				  	} 
-				} else {
-				for (j = 0; j < VIM; j++) {
-					x_dot[j] = 0.;
-				  	}
-				}
-			  
-	 		do_LSA_mods(LSA_SURFACE);
-
-	 		if (ielem_dim !=3)
-	      		{
-			calc_surf_tangent (ei[pg->imtrx]->ielem, iconnect_ptr, 
-				   num_local_nodes, ielem_dim-1,
-				   num_nodes_on_side,
-				   id_local_elem_coord);
-	      		}
-			load_lsi(ls->Length_Scale );
-                       if(profile_flag & 1)
-                       {
-                        calc_shearrate(&gamma_dot, gamma, NULL, NULL); 
-        if(ls->SubElemIntegration)
-        	{
-        	elem_sign_org = ls->Elem_Sign;
-        	switch (mp->mp2nd->viscositymask[1]-mp->mp2nd->viscositymask[0])
-           		{
-            		case 1:
-                		ls->Elem_Sign = -1;
-                		break;
-            		case -1:
-                		ls->Elem_Sign = 1;
-                		break;
-           		}
-          	mu = viscosity(gn, gamma, d_mu);
-        	ls->Elem_Sign = elem_sign_org;
-        	}
-        	else
-        	{
-          	mu = viscosity(gn, gamma, d_mu);
-        	switch (mp->mp2nd->viscositymask[1]-mp->mp2nd->viscositymask[0])
-           		{
-            		case 1:
-               		mu = (mu-mp->mp2nd->viscosity*lsi->H)/(1.-lsi->H);
-                		break;
-            		case -1:
-               		mu = (mu-mp->mp2nd->viscosity*(1.-lsi->H))/lsi->H;
-                		break;
-           		}
-        	}
-                       }
-
-         		for (a=0; a<WIM; a++)
-             			{
-				local_q -= fv->snormal[a]*lsi->normal[a];
-				local_qconv += SQUARE(fv->v[a] - x_dot[a]);
-	     			}
-			local_q = acos(local_q)*180/M_PIE;
-			local_qconv = sqrt(local_qconv);
-			local_flux = local_q;
-			local_flux_conv = local_qconv;
-			}
-				break;
-
-		    default:
-		      
-		      GOMA_EH(GOMA_ERROR, "Illegal flux type");
-		      break;
-		    }  /*  end of switch */
-	    
-		  local_area += weight * det ;
+                      default:
+                        
+                        GOMA_EH(GOMA_ERROR, "Illegal flux type");
+                        break;
+                      }  /*  end of switch */
+              
+                    local_area += weight * det ;
 #ifdef PARALLEL
-        delta_flux = local_flux - local_flux0;
-        delta_flux_conv = local_flux_conv - local_flux_conv0;
-        delta_area = local_area - local_area0;
+          delta_flux = local_flux - local_flux0;
+          delta_flux_conv = local_flux_conv - local_flux_conv0;
+          delta_area = local_area - local_area0;
 
-        if( Num_Proc > 1 &&  dpi->elem_owner[ elem_list[i] ] == ProcID )
-         {
-          proc_flux += delta_flux;
-          proc_flux_conv += delta_flux_conv;
-          proc_area += delta_area;
-         }
+          if( Num_Proc > 1 &&  dpi->elem_owner[ elem_list[i] ] == ProcID )
+           {
+            proc_flux += delta_flux;
+            proc_flux_conv += delta_flux_conv;
+            proc_area += delta_area;
+           }
 
-        local_flux0 = local_flux;
-        local_flux_conv0 = local_flux_conv;
-        local_area0 = local_area;
+          local_flux0 = local_flux;
+          local_flux_conv0 = local_flux_conv;
+          local_area0 = local_area;
 #endif
 
-        if (profile_flag && print_flag && 
-		(quantity != LS_DCA || (ierr && ip == 0)) ) {
-        FILE  *jfp;
-        if( (jfp=fopen(filenm,"a")) != NULL)
-            {
-             fprintf(jfp," %g  %g  %g  %g  %g",
-                        fv->x[0],fv->x[1],fv->x[2],local_q,local_qconv);
-        if(profile_flag & 1) fprintf(jfp," %g  %g ", gamma_dot, mu);
-        if(profile_flag & 4) fprintf(jfp," %g ", mp->surface_tension);
-        if(profile_flag & 8)  fprintf(jfp," %g %g",fv->T, fv->P);
-        if(profile_flag & 2) fprintf(jfp," %g %g %g",
-                         evalue1,evalue2,evalue3);
-        if(profile_flag & 16) fprintf(jfp," %g %g %g",
-                         fv->snormal[0],fv->snormal[1],fv->snormal[2]);
-              fprintf(jfp," \n");
-              fflush(jfp);
-            }
-          fclose(jfp);
-                }
-  
-       /* Compute sensitivities if requested */
-	if ( J_AC != NULL)
-		    {
-		      int dir, sp = species_id;
-		      double d_term=0, d_term1=0, d_term2=0, d_term3=0;
-		      double (* d_diff)[MAX_VARIABLE_TYPES+MAX_CONC]  = mp->d_diffusivity;
+          if (profile_flag && print_flag && 
+                  (quantity != LS_DCA || (ierr && ip == 0)) ) {
+          FILE  *jfp;
+          if( (jfp=fopen(filenm,"a")) != NULL)
+              {
+               fprintf(jfp," %g  %g  %g  %g  %g",
+                          fv->x[0],fv->x[1],fv->x[2],local_q,local_qconv);
+          if(profile_flag & 1) fprintf(jfp," %g  %g ", gamma_dot, mu);
+          if(profile_flag & 4) fprintf(jfp," %g ", mp->surface_tension);
+          if(profile_flag & 8)  fprintf(jfp," %g %g",fv->T, fv->P);
+          if(profile_flag & 2) fprintf(jfp," %g %g %g",
+                           evalue1,evalue2,evalue3);
+          if(profile_flag & 16) fprintf(jfp," %g %g %g",
+                           fv->snormal[0],fv->snormal[1],fv->snormal[2]);
+                fprintf(jfp," \n");
+                fflush(jfp);
+              }
+            fclose(jfp);
+                  }
+    
+         /* Compute sensitivities if requested */
+          if ( J_AC != NULL)
+                      {
+                        int dir, sp = species_id;
+                        double d_term=0, d_term1=0, d_term2=0, d_term3=0;
+                        double (* d_diff)[MAX_VARIABLE_TYPES+MAX_CONC]  = mp->d_diffusivity;
 
-		      switch (quantity)
-			{
-	 /* FORCE_X, FORCE_Y, FORCE_Z */
-	 /* FORCE_X_POS, FORCE_Y_POS, FORCE_Z_POS */
-	 /* FORCE_X_NEG, FORCE_Y_NEG, FORCE_Z_NEG */
-			case FORCE_X:
-			case FORCE_Y:
-			case FORCE_Z:
-			case FORCE_X_POS:
-			case FORCE_Y_POS:
-			case FORCE_Z_POS:
-			case FORCE_X_NEG:
-			case FORCE_Y_NEG:
-			case FORCE_Z_NEG:
-			   
-			  dir = ( quantity == FORCE_X ? 0 :
-				( quantity == FORCE_Y ? 1 : 
-			        ( quantity == FORCE_Z ? 2 : 
-			        ( quantity == FORCE_X_POS ? 0 :
-				( quantity == FORCE_Y_POS ? 1 : 
-			        ( quantity == FORCE_Z_POS ? 2 : 
-			        ( quantity == FORCE_X_NEG ? 0 :
-				( quantity == FORCE_Y_NEG ? 1 : 
-			        ( quantity == FORCE_Z_NEG ? 2 : -1))))))))) ;  /* Can't do this with FORTRAN */
+                        switch (quantity)
+                          {
+           /* FORCE_X, FORCE_Y, FORCE_Z */
+           /* FORCE_X_POS, FORCE_Y_POS, FORCE_Z_POS */
+           /* FORCE_X_NEG, FORCE_Y_NEG, FORCE_Z_NEG */
+                          case FORCE_X:
+                          case FORCE_Y:
+                          case FORCE_Z:
+                          case FORCE_X_POS:
+                          case FORCE_Y_POS:
+                          case FORCE_Z_POS:
+                          case FORCE_X_NEG:
+                          case FORCE_Y_NEG:
+                          case FORCE_Z_NEG:
+                             
+                            dir = ( quantity == FORCE_X ? 0 :
+                                  ( quantity == FORCE_Y ? 1 : 
+                                  ( quantity == FORCE_Z ? 2 : 
+                                  ( quantity == FORCE_X_POS ? 0 :
+                                  ( quantity == FORCE_Y_POS ? 1 : 
+                                  ( quantity == FORCE_Z_POS ? 2 : 
+                                  ( quantity == FORCE_X_NEG ? 0 :
+                                  ( quantity == FORCE_Y_NEG ? 1 : 
+                                  ( quantity == FORCE_Z_NEG ? 2 : -1))))))))) ;  /* Can't do this with FORTRAN */
 
-			  GOMA_EH(dir, "PANIC in evaluate_flux sensitivity section");
+                            GOMA_EH(dir, "PANIC in evaluate_flux sensitivity section");
 
-		      if(cr->MeshMotion == ARBITRARY)
-			{
-			  for( b=0 ; b < dim ; b++)
-			    {
-			      var = VELOCITY1 + b ;
-                              int imtrx;
-                              for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
-                                if( pd->v[imtrx][var] )
+                        if(cr->MeshMotion == ARBITRARY)
+                          {
+                            for( b=0 ; b < dim ; b++)
+                              {
+                                var = VELOCITY1 + b ;
+                                int imtrx;
+                                for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+                                  if( pd->v[imtrx][var] )
+                                    {
+                                      for(j=0 ; j < ei[imtrx]->dof[var]; j++)
+                                        {
+                                          d_term = 0;
+
+                                          for( a=0; a < dim ; a++) 
+                                            {
+                                              d_term += weight * det * fv->snormal[a] *
+                                                ( mu * ( bf[var]->grad_phi_e[j][b][dir][a] +
+                                                         bf[var]->grad_phi_e[j][b][a][dir] ) + 
+                                                  d_mu->v[b][j] * ( gamma[dir][a] )  +
+                                                  -rho * ( bf[var]->phi[j]*delta(dir,b) * fv->v[a] +
+                                                           bf[var]->phi[j]*delta(a,b) *( fv->v[dir] - x_dot[dir] ) ) );
+                                            }
+                                          J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term;
+                                        }
+                                    }
+                                }
+                              }
+
+                            var = PRESSURE ;
+                            
+                            if( pd->v[pg->imtrx][var] )
+                              {
+                                for(j=0 ; j < ei[pg->imtrx]->dof[var]; j++)
+                                  {				  
+                                    d_term = -weight * det * fv->snormal[dir] * bf[var]->phi[j] ;
+                                    J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term;
+                                  }
+                              }
+
+
+                            for( b=0 ; b < dim ; b++)
+                              {
+                                var = MESH_DISPLACEMENT1 + b ;
+
+                                if( pd->v[pg->imtrx][var] )
                                   {
-                                    for(j=0 ; j < ei[imtrx]->dof[var]; j++)
+                                    for(j=0 ; j < ei[pg->imtrx]->dof[var]; j++)
                                       {
-                                        d_term = 0;
+                                        d_term = d_term1 = d_term2 = 0.0;
 
                                         for( a=0; a < dim ; a++) 
                                           {
-                                            d_term += weight * det * fv->snormal[a] *
-                                              ( mu * ( bf[var]->grad_phi_e[j][b][dir][a] +
-                                                       bf[var]->grad_phi_e[j][b][a][dir] ) + 
-                                                d_mu->v[b][j] * ( gamma[dir][a] )  +
-                                                -rho * ( bf[var]->phi[j]*delta(dir,b) * fv->v[a] +
-                                                         bf[var]->phi[j]*delta(a,b) *( fv->v[dir] - x_dot[dir] ) ) );
+                                            d_term1 += weight*(vs[dir][a]+ves[dir][a])*fv->snormal[a] *
+                                                       fv->dsurfdet_dx[b][j] ; 
+
+                                            d_term2 += weight*det*( vs[dir][a]+ves[a][b] ) * 
+                                                       fv->dsnormal_dx[a][b][j];
+
+                                            d_term  += weight*det*fv->snormal[a] *
+                                                       ( mu*( fv->d_grad_v_dmesh[dir][a][b][j] + fv->d_grad_v_dmesh[a][dir][b][j] ) +
+                                                         d_mu->X[b][j] * gamma[dir][a] );
                                           }
+
+                                        for( a=0 ; a < dim ; a++ )
+                                          {
+                                            d_term1 += -weight*rho*(fv->v[dir] - x_dot[dir])*fv->v[a] * fv->snormal[a] *
+                                                        fv->dsurfdet_dx[b][j];
+
+                                            d_term2 += -weight*det*rho*(fv->v[dir] - x_dot[dir])*fv->v[a] *
+                                                        fv->dsnormal_dx[a][b][j];
+                                          }
+
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term + d_term1 + d_term2;
+
+                                      }
+                                  }
+                              }
+                            
+                            var = TEMPERATURE ;
+                            
+                            if( pd->v[pg->imtrx][var] )
+                              {
+                                for(j=0 ; j < ei[pg->imtrx]->dof[var]; j++)
+                                  {			
+                                    for( d_term=0., a=0; a < dim ; a++ )
+                                      {
+                                        d_term += weight *det * fv->snormal[a] * ( d_mu->T[j] * gamma[dir][a] ) ;
+                                      }
+                                    J_AC[ei[pg->imtrx]->gun_list[var][j]] += d_term;
+                                  }
+                              }
+
+                            var = MASS_FRACTION;
+                            if (pd->v[pg->imtrx][var]) {
+                              for (w = 0; w < pd->Num_Species_Eqn; w++) {
+                                for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                                  /*
+                                   * Find the material index and gnn for the current
+                                   * local variable degree of freedom
+                                   * (can't just query gun_list for MASS_FRACTION
+                                   *  unknowns -> have to do a lookup)
+                                   */		
+                                  gnn = ei[pg->imtrx]->gnn_list[var][j];
+                                  ledof = ei[pg->imtrx]->lvdof_to_ledof[var][j];
+                                  matIndex = ei[pg->imtrx]->matID_ledof[ledof];
+                                  c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
+                                  for (d_term = 0.0, a = 0; a < dim ; a++ ) {
+                                    d_term += weight * det * fv->snormal[a] *
+                                        (d_mu->C[w][j] * gamma[dir][a]);
+                                  }
+                                  J_AC[c] += d_term;
+                                }
+                              }
+                            }
+
+                          if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
+                            {
+                              for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
+                                 {
+                                   for ( b=0; b<WIM; b++)
+                                     {
+                                        var = v_s[ve_mode][dir][b];
+                                        for(j=0 ; j < ei[pg->imtrx]->dof[var]; j++)
+                                              {
+                                        d_term = weight *det * fv->snormal[b] * ( bf[var]->phi[j] ) ;
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term;
+                                              }
+                                      }
+                                }
+                            }
+                          }
+                          else	/*  Solid Stress terms	*/
+                          {
+                            for( b=0 ; b < dim ; b++)
+                              {
+                                var = MESH_DISPLACEMENT1 + b ;
+
+                                if( pd->v[pg->imtrx][var] )
+                                  {
+                                    for(j=0 ; j < ei[pg->imtrx]->dof[var]; j++)
+                                      {
+                                        d_term = d_term1 = d_term2 = 0.0;
+
+                                        for( a=0; a < dim ; a++) 
+                                          {
+                                            d_term1 += weight*TT[dir][a]*fv->snormal[a] *
+                                                       fv->dsurfdet_dx[b][j] ; 
+
+                                            d_term2 += weight*det*TT[dir][a]* 
+                                                       fv->dsnormal_dx[a][b][j];
+
+                                            d_term  += weight*det*fv->snormal[a] *
+                                                        dTT_dx[dir][a][b][j];
+                                          }
+
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term + d_term1 + d_term2;
+
+                                      }
+                                  }
+                              }
+                           var = PRESSURE;
+                           if( pd->v[pg->imtrx][var] )
+                                  {
+                                   for(j=0 ; j < ei[pg->imtrx]->dof[var]; j++)
+                                      {
+                                        d_term = 0.0;
+
+                                        for( a=0; a < dim ; a++) 
+                                          {
+                                            d_term  += weight*det*fv->snormal[a] *
+                                                        dTT_dp[dir][a][j];
+                                          }
+
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term;
+
+                                      }
+                                  }
+                           var = TEMPERATURE;
+                           if( pd->v[pg->imtrx][var] )
+                                  {
+                                   for(j=0 ; j < ei[pg->imtrx]->dof[var]; j++)
+                                      {
+                                        d_term = 0.0;
+
+                                        for( a=0; a < dim ; a++) 
+                                          {
+                                            d_term  += weight*det*fv->snormal[a] *
+                                                        dTT_dT[dir][a][j];
+                                          }
+
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term;
+
+                                      }
+                                  }
+                            for( b=0 ; b < dim ; b++)
+                              {
+                                var = SOLID_DISPLACEMENT1 + b ;
+
+                                if( pd->v[pg->imtrx][var] )
+                                  {
+                                    for(j=0 ; j < ei[pg->imtrx]->dof[var]; j++)
+                                      {
+                                        d_term = 0.0;
+
+                                        for( a=0; a < dim ; a++) 
+                                          {
+                                            d_term  += weight*det*fv->snormal[a] *
+                                                        dTT_drs[dir][a][b][j];
+                                          }
+
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term;
+
+                                      }
+                                  }
+                              }
+                            var = MASS_FRACTION;
+                            if (pd->v[pg->imtrx][var]) {
+                              for (w = 0; w < pd->Num_Species_Eqn; w++) {
+                                for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                                  /*
+                                   * Find the material index and gnn for the current
+                                   * local variable degree of freedom
+                                   * (can't just query gun_list for MASS_FRACTION
+                                   *  unknowns -> have to do a lookup)
+                                   */		
+                                  gnn = ei[pg->imtrx]->gnn_list[var][j];
+                                  ledof = ei[pg->imtrx]->lvdof_to_ledof[var][j];
+                                  matIndex = ei[pg->imtrx]->matID_ledof[ledof];
+                                  c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
+                                  for (d_term = 0.0, a = 0; a < dim ; a++ ) {
+                                    d_term += weight * det * fv->snormal[a] *
+                                        (dTT_dc[dir][a][w][j] * gamma[dir][a]);
+                                  }
+                                  J_AC[c] += d_term;
+                                }
+                              }
+                            }
+                          }
+
+                            
+                            break;
+
+            /* FORCE_NORMAL */
+                          case FORCE_NORMAL:
+                            
+                        if(cr->MeshMotion == ARBITRARY)
+                          {
+                            for( p=0 ; p<dim; p++)
+                              {
+                                var = VELOCITY1 + p;
+                                
+                                if(pd->v[pg->imtrx][var])
+                                  {
+                                    for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
+                                      {
+                                        d_term = d_term1 = 0.0;
+
+                                        for ( a=0; a<WIM; a++)
+                                          {
+                                            for ( b=0; b<WIM; b++)
+                                              {
+                                                d_term  += weight*det *fv->snormal[a]*fv->snormal[b]*
+                                                          ( mu*( bf[var]->grad_phi_e[j][p][a][b] + bf[var]->grad_phi_e[j][p][b][a] ) +
+                                                            d_mu->v[p][j]*gamma[a][b] );
+                                                d_term1 += -weight*det* rho*fv->snormal[a]*fv->snormal[b]*
+                                                            ( fv->v[b]*bf[var]->phi[j]*delta(p,a) +
+                                                            ( fv->v[a] - x_dot[a])*bf[var]->phi[j]*delta(p,b) );
+
+                                              }
+                                          }
+
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term + d_term1;
+                                      }
+                                  }
+                              }
+
+                            var = PRESSURE;
+                                
+                            if(pd->v[pg->imtrx][var])
+                              {
+                                for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
+                                  {
+                                    d_term = 0.0;
+
+                                    for( a=0; a<dim; a++)
+                                      {
+                                        d_term += -weight*det*fv->snormal[a]*fv->snormal[a]*bf[var]->phi[j];
+                                      }
+                                    J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term + d_term1;
+                                  }
+                              }
+
+                            for( p=0; p<dim ; p++)
+                              {
+                                var = MESH_DISPLACEMENT1 + p;
+
+                                if(pd->v[pg->imtrx][var])
+                                  {
+                                    for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
+                                      {
+                                        d_term = d_term1 = d_term2 = d_term3 = 0.0;
+
+                                        for( a=0; a < WIM; a++)
+                                          {
+                                            for(b=0 ; b<WIM; b++)
+                                              {
+                                                d_term += weight * det *fv->snormal[a]*fv->snormal[b]*
+                                                          (mu* ( fv->d_grad_v_dmesh[a][b][p][j] + fv->d_grad_v_dmesh[b][a][p][j]) + 
+                                                           d_mu->X[p][j]* gamma[a][b] );
+                                                d_term1 += weight * fv->snormal[a]*(vs[a][b]+ves[a][b] )*fv->snormal[b] *
+                                                           fv->dsurfdet_dx[p][j];
+                                                d_term2 += weight*det*(vs[a][b]+ves[a][b] )*
+                                                           ( fv->snormal[a]*fv->dsnormal_dx[b][p][j] +
+                                                             fv->dsnormal_dx[a][p][j]*fv->snormal[b] );
+                                                d_term3 += -weight* rho*(fv->v[a]-x_dot[a])*fv->v[b] *
+                                                           ( fv->dsurfdet_dx[p][j]*fv->snormal[a]*fv->snormal[b] + 
+                                                             det * fv->snormal[a]*fv->dsnormal_dx[b][p][j] +
+                                                             det * fv->dsnormal_dx[a][p][j]*fv->snormal[b] );
+   
+                                              }
+                                          }
+
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term + d_term1 + d_term2 + d_term3;
+                                      }
+                                  }
+                              }
+
+                            var = TEMPERATURE;
+
+                            if(pd->v[pg->imtrx][var])
+                              {
+                                for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
+                                  {
+                                    d_term = 0.0;
+                                    
+                                    for( a=0; a < dim; a++)
+                                      {
+                                        for(b=0 ; b<dim; b++)
+                                          {
+                                            d_term += weight*det*fv->snormal[a]*fv->snormal[b] * ( d_mu->T[j] * gamma[a][b] );
+                                          }
+                                      }
+                                    J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term;
+                                  }
+                              }
+                          
+
+                            var = MASS_FRACTION;
+                            if (pd->v[pg->imtrx][var]) {
+                              for (w = 0; w < pd->Num_Species_Eqn; w++) {
+                                for (j = 0 ; j < ei[pg->imtrx]->dof[var]; j++) {
+                                  /*
+                                   * Find the material index for the current
+                                   * local variable degree of freedom
+                                   * (can't just query gun_list for MASS_FRACTION
+                                   *  unknowns -> have to do a lookup)
+                                   */		
+                                  gnn = ei[pg->imtrx]->gnn_list[var][j];
+                                  ledof = ei[pg->imtrx]->lvdof_to_ledof[var][j];
+                                  matIndex = ei[pg->imtrx]->matID_ledof[ledof];
+                                  c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
+                                  for (d_term = 0.0, a = 0; a < dim; a++) {
+                                    for (b = 0 ; b < dim; b++) {
+                                      d_term += weight * det * fv->snormal[a] *
+                                          fv->snormal[b] * (d_mu->C[w][j] * gamma[a][b]);
+                                    }
+                                  }
+                                  J_AC[c] += d_term;
+                                }
+                              }
+                            }
+
+                          if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
+                            {
+                              for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
+                                 {
+                                   for ( b=0; b<WIM; b++)
+                                     {
+                                       for( a=0; a < dim; a++)
+                                         {
+                                        var = v_s[ve_mode][a][b];
+                                        for(j=0 ; j < ei[pg->imtrx]->dof[var]; j++)
+                                              {
+                                        d_term = weight *det * fv->snormal[b] * ( bf[var]->phi[j] )* fv->snormal[a] ;
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term;
+                                              }
+                                          }
+                                      }
+                                }
+                            }
+                          }
+                          else	/*  Solid Stress terms	*/
+                          {
+                            var = PRESSURE;
+                                
+                            if(pd->v[pg->imtrx][var])
+                              {
+                                for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
+                                  {
+                                    d_term = 0.0;
+
+                                    for( a=0; a<dim; a++)
+                                      {
+                                        d_term += -weight*det*fv->snormal[a]*fv->snormal[a]*bf[var]->phi[j];
+                                      }
+                                    J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term + d_term1;
+                                  }
+                              }
+
+                            for( p=0; p<dim ; p++)
+                              {
+                                var = MESH_DISPLACEMENT1 + p;
+
+                                if(pd->v[pg->imtrx][var])
+                                  {
+                                    for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
+                                      {
+                                        d_term = d_term1 = d_term2 = 0.0;
+
+                                        for( a=0; a < VIM; a++)
+                                          {
+                                            for(b=0 ; b<VIM; b++)
+                                              {
+                                                d_term += weight*det*fv->snormal[a]
+                                                  *fv->snormal[b]*dTT_dx[a][b][p][j];
+                                                d_term1 += weight * fv->snormal[a]
+                                                  *TT[a][b]*fv->snormal[b]*fv->dsurfdet_dx[p][j];
+                                                d_term2 += weight*det*TT[a][b]*
+                                                           ( fv->snormal[a]*fv->dsnormal_dx[b][p][j] + fv->dsnormal_dx[a][p][j]*fv->snormal[b] );
+   
+                                              }
+                                          }
+
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term + d_term1 + d_term2;
+                                      }
+                                  }
+                              }
+                            for( p=0; p<dim ; p++)
+                              {
+                                var = SOLID_DISPLACEMENT1 + p;
+
+                                if(pd->v[pg->imtrx][var])
+                                  {
+                                    for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
+                                      {
+                                        d_term = 0.0;
+
+                                        for( a=0; a < VIM; a++)
+                                          {
+                                            for(b=0 ; b<VIM; b++)
+                                              {
+                                                d_term += weight*det*fv->snormal[a]
+                                          *fv->snormal[b]*dTT_drs[a][b][p][j];
+                                              }
+                                          }
+
                                         J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term;
                                       }
                                   }
                               }
-			    }
 
-			  var = PRESSURE ;
-			  
-			  if( pd->v[pg->imtrx][var] )
-			    {
-			      for(j=0 ; j < ei[pg->imtrx]->dof[var]; j++)
-				{				  
-				  d_term = -weight * det * fv->snormal[dir] * bf[var]->phi[j] ;
-				  J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term;
-				}
-			    }
-
-
-			  for( b=0 ; b < dim ; b++)
-			    {
-			      var = MESH_DISPLACEMENT1 + b ;
-
-			      if( pd->v[pg->imtrx][var] )
-				{
-				  for(j=0 ; j < ei[pg->imtrx]->dof[var]; j++)
-				    {
-				      d_term = d_term1 = d_term2 = 0.0;
-
-				      for( a=0; a < dim ; a++) 
-					{
-					  d_term1 += weight*(vs[dir][a]+ves[dir][a])*fv->snormal[a] *
-					             fv->dsurfdet_dx[b][j] ; 
-
-				          d_term2 += weight*det*( vs[dir][a]+ves[a][b] ) * 
-					             fv->dsnormal_dx[a][b][j];
-
-					  d_term  += weight*det*fv->snormal[a] *
-					             ( mu*( fv->d_grad_v_dmesh[dir][a][b][j] + fv->d_grad_v_dmesh[a][dir][b][j] ) +
-						       d_mu->X[b][j] * gamma[dir][a] );
-					}
-
-				      for( a=0 ; a < dim ; a++ )
-					{
-					  d_term1 += -weight*rho*(fv->v[dir] - x_dot[dir])*fv->v[a] * fv->snormal[a] *
-					              fv->dsurfdet_dx[b][j];
-
-					  d_term2 += -weight*det*rho*(fv->v[dir] - x_dot[dir])*fv->v[a] *
-					              fv->dsnormal_dx[a][b][j];
-					}
-
-				      J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term + d_term1 + d_term2;
-
-				    }
-				}
-			    }
-			  
-			  var = TEMPERATURE ;
-			  
-			  if( pd->v[pg->imtrx][var] )
-			    {
-			      for(j=0 ; j < ei[pg->imtrx]->dof[var]; j++)
-				{			
-				  for( d_term=0., a=0; a < dim ; a++ )
-				    {
-				      d_term += weight *det * fv->snormal[a] * ( d_mu->T[j] * gamma[dir][a] ) ;
-				    }
-				  J_AC[ei[pg->imtrx]->gun_list[var][j]] += d_term;
-				}
-			    }
-
-			  var = MASS_FRACTION;
-			  if (pd->v[pg->imtrx][var]) {
-			    for (w = 0; w < pd->Num_Species_Eqn; w++) {
-			      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-				/*
-				 * Find the material index and gnn for the current
-				 * local variable degree of freedom
-				 * (can't just query gun_list for MASS_FRACTION
-				 *  unknowns -> have to do a lookup)
-				 */		
-				gnn = ei[pg->imtrx]->gnn_list[var][j];
-				ledof = ei[pg->imtrx]->lvdof_to_ledof[var][j];
-				matIndex = ei[pg->imtrx]->matID_ledof[ledof];
-				c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
-				for (d_term = 0.0, a = 0; a < dim ; a++ ) {
-				  d_term += weight * det * fv->snormal[a] *
-				      (d_mu->C[w][j] * gamma[dir][a]);
-				}
-				J_AC[c] += d_term;
-			      }
-			    }
-			  }
-
-  			if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
-    			  {
-			    for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
-                	       {
-			         for ( b=0; b<WIM; b++)
-            			   {
-				      var = v_s[ve_mode][dir][b];
-				      for(j=0 ; j < ei[pg->imtrx]->dof[var]; j++)
-				    	    {
-				      d_term = weight *det * fv->snormal[b] * ( bf[var]->phi[j] ) ;
-				      J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term;
-					    }
-                		    }
-        		      }
-			  }
-			}
-			else	/*  Solid Stress terms	*/
-			{
-			  for( b=0 ; b < dim ; b++)
-			    {
-			      var = MESH_DISPLACEMENT1 + b ;
-
-			      if( pd->v[pg->imtrx][var] )
-				{
-				  for(j=0 ; j < ei[pg->imtrx]->dof[var]; j++)
-				    {
-				      d_term = d_term1 = d_term2 = 0.0;
-
-				      for( a=0; a < dim ; a++) 
-					{
-					  d_term1 += weight*TT[dir][a]*fv->snormal[a] *
-					             fv->dsurfdet_dx[b][j] ; 
-
-				          d_term2 += weight*det*TT[dir][a]* 
-					             fv->dsnormal_dx[a][b][j];
-
-					  d_term  += weight*det*fv->snormal[a] *
-					              dTT_dx[dir][a][b][j];
-					}
-
-				      J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term + d_term1 + d_term2;
-
-				    }
-				}
-			    }
-			 var = PRESSURE;
-			 if( pd->v[pg->imtrx][var] )
-				{
-				 for(j=0 ; j < ei[pg->imtrx]->dof[var]; j++)
-				    {
-				      d_term = 0.0;
-
-				      for( a=0; a < dim ; a++) 
-					{
-					  d_term  += weight*det*fv->snormal[a] *
-					              dTT_dp[dir][a][j];
-					}
-
-				      J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term;
-
-				    }
-				}
-			 var = TEMPERATURE;
-			 if( pd->v[pg->imtrx][var] )
-				{
-				 for(j=0 ; j < ei[pg->imtrx]->dof[var]; j++)
-				    {
-				      d_term = 0.0;
-
-				      for( a=0; a < dim ; a++) 
-					{
-					  d_term  += weight*det*fv->snormal[a] *
-					              dTT_dT[dir][a][j];
-					}
-
-				      J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term;
-
-				    }
-				}
-			  for( b=0 ; b < dim ; b++)
-			    {
-			      var = SOLID_DISPLACEMENT1 + b ;
-
-			      if( pd->v[pg->imtrx][var] )
-				{
-				  for(j=0 ; j < ei[pg->imtrx]->dof[var]; j++)
-				    {
-				      d_term = 0.0;
-
-				      for( a=0; a < dim ; a++) 
-					{
-					  d_term  += weight*det*fv->snormal[a] *
-					              dTT_drs[dir][a][b][j];
-					}
-
-				      J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term;
-
-				    }
-				}
-			    }
-			  var = MASS_FRACTION;
-			  if (pd->v[pg->imtrx][var]) {
-			    for (w = 0; w < pd->Num_Species_Eqn; w++) {
-			      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-				/*
-				 * Find the material index and gnn for the current
-				 * local variable degree of freedom
-				 * (can't just query gun_list for MASS_FRACTION
-				 *  unknowns -> have to do a lookup)
-				 */		
-				gnn = ei[pg->imtrx]->gnn_list[var][j];
-				ledof = ei[pg->imtrx]->lvdof_to_ledof[var][j];
-				matIndex = ei[pg->imtrx]->matID_ledof[ledof];
-				c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
-				for (d_term = 0.0, a = 0; a < dim ; a++ ) {
-				  d_term += weight * det * fv->snormal[a] *
-				      (dTT_dc[dir][a][w][j] * gamma[dir][a]);
-				}
-				J_AC[c] += d_term;
-			      }
-			    }
-			  }
-			}
-
-			  
-			  break;
-
-	  /* FORCE_NORMAL */
-			case FORCE_NORMAL:
-			  
-		      if(cr->MeshMotion == ARBITRARY)
-			{
-			  for( p=0 ; p<dim; p++)
-			    {
-			      var = VELOCITY1 + p;
-			      
-			      if(pd->v[pg->imtrx][var])
-				{
-				  for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
-				    {
-				      d_term = d_term1 = 0.0;
-
-				      for ( a=0; a<WIM; a++)
-					{
-					  for ( b=0; b<WIM; b++)
-					    {
-					      d_term  += weight*det *fv->snormal[a]*fv->snormal[b]*
-						        ( mu*( bf[var]->grad_phi_e[j][p][a][b] + bf[var]->grad_phi_e[j][p][b][a] ) +
-							  d_mu->v[p][j]*gamma[a][b] );
-					      d_term1 += -weight*det* rho*fv->snormal[a]*fv->snormal[b]*
-						          ( fv->v[b]*bf[var]->phi[j]*delta(p,a) +
-							  ( fv->v[a] - x_dot[a])*bf[var]->phi[j]*delta(p,b) );
-
-					    }
-					}
-
-				      J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term + d_term1;
-				    }
-				}
-			    }
-
-			  var = PRESSURE;
-			      
-			  if(pd->v[pg->imtrx][var])
-			    {
-			      for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
-				{
-				  d_term = 0.0;
-
-				  for( a=0; a<dim; a++)
-				    {
-				      d_term += -weight*det*fv->snormal[a]*fv->snormal[a]*bf[var]->phi[j];
-				    }
-				  J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term + d_term1;
-				}
-			    }
-
-			  for( p=0; p<dim ; p++)
-			    {
-			      var = MESH_DISPLACEMENT1 + p;
-
-			      if(pd->v[pg->imtrx][var])
-				{
-				  for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
-				    {
-				      d_term = d_term1 = d_term2 = d_term3 = 0.0;
-
-				      for( a=0; a < WIM; a++)
-					{
-					  for(b=0 ; b<WIM; b++)
-					    {
-					      d_term += weight * det *fv->snormal[a]*fv->snormal[b]*
-						        (mu* ( fv->d_grad_v_dmesh[a][b][p][j] + fv->d_grad_v_dmesh[b][a][p][j]) + 
-							 d_mu->X[p][j]* gamma[a][b] );
-					      d_term1 += weight * fv->snormal[a]*(vs[a][b]+ves[a][b] )*fv->snormal[b] *
-						         fv->dsurfdet_dx[p][j];
-					      d_term2 += weight*det*(vs[a][b]+ves[a][b] )*
-						         ( fv->snormal[a]*fv->dsnormal_dx[b][p][j] +
-							   fv->dsnormal_dx[a][p][j]*fv->snormal[b] );
-					      d_term3 += -weight* rho*(fv->v[a]-x_dot[a])*fv->v[b] *
-						         ( fv->dsurfdet_dx[p][j]*fv->snormal[a]*fv->snormal[b] + 
-							   det * fv->snormal[a]*fv->dsnormal_dx[b][p][j] +
-							   det * fv->dsnormal_dx[a][p][j]*fv->snormal[b] );
- 
-					    }
-					}
-
-				      J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term + d_term1 + d_term2 + d_term3;
-				    }
-				}
-			    }
-
-			  var = TEMPERATURE;
-
-			  if(pd->v[pg->imtrx][var])
-			    {
-			      for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
-				{
-				  d_term = 0.0;
-				  
-				  for( a=0; a < dim; a++)
-				    {
-				      for(b=0 ; b<dim; b++)
-					{
-					  d_term += weight*det*fv->snormal[a]*fv->snormal[b] * ( d_mu->T[j] * gamma[a][b] );
-					}
-				    }
-				  J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term;
-				}
-			    }
-			
-
-			  var = MASS_FRACTION;
-			  if (pd->v[pg->imtrx][var]) {
-			    for (w = 0; w < pd->Num_Species_Eqn; w++) {
-			      for (j = 0 ; j < ei[pg->imtrx]->dof[var]; j++) {
-				/*
-				 * Find the material index for the current
-				 * local variable degree of freedom
-				 * (can't just query gun_list for MASS_FRACTION
-				 *  unknowns -> have to do a lookup)
-				 */		
-				gnn = ei[pg->imtrx]->gnn_list[var][j];
-				ledof = ei[pg->imtrx]->lvdof_to_ledof[var][j];
-				matIndex = ei[pg->imtrx]->matID_ledof[ledof];
-				c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
-				for (d_term = 0.0, a = 0; a < dim; a++) {
-				  for (b = 0 ; b < dim; b++) {
-				    d_term += weight * det * fv->snormal[a] *
-					fv->snormal[b] * (d_mu->C[w][j] * gamma[a][b]);
-				  }
-				}
-				J_AC[c] += d_term;
-			      }
-			    }
-			  }
-
-  			if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
-    			  {
-			    for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
-                	       {
-			         for ( b=0; b<WIM; b++)
-            			   {
-				     for( a=0; a < dim; a++)
-				       {
-				      var = v_s[ve_mode][a][b];
-				      for(j=0 ; j < ei[pg->imtrx]->dof[var]; j++)
-				    	    {
-				      d_term = weight *det * fv->snormal[b] * ( bf[var]->phi[j] )* fv->snormal[a] ;
-				      J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term;
-					    }
-					}
-                		    }
-        		      }
-			  }
-			}
-			else	/*  Solid Stress terms	*/
-			{
-			  var = PRESSURE;
-			      
-			  if(pd->v[pg->imtrx][var])
-			    {
-			      for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
-				{
-				  d_term = 0.0;
-
-				  for( a=0; a<dim; a++)
-				    {
-				      d_term += -weight*det*fv->snormal[a]*fv->snormal[a]*bf[var]->phi[j];
-				    }
-				  J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term + d_term1;
-				}
-			    }
-
-			  for( p=0; p<dim ; p++)
-			    {
-			      var = MESH_DISPLACEMENT1 + p;
-
-			      if(pd->v[pg->imtrx][var])
-				{
-				  for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
-				    {
-				      d_term = d_term1 = d_term2 = 0.0;
-
-				      for( a=0; a < VIM; a++)
-					{
-					  for(b=0 ; b<VIM; b++)
-					    {
-					      d_term += weight*det*fv->snormal[a]
-						*fv->snormal[b]*dTT_dx[a][b][p][j];
-					      d_term1 += weight * fv->snormal[a]
-						*TT[a][b]*fv->snormal[b]*fv->dsurfdet_dx[p][j];
-					      d_term2 += weight*det*TT[a][b]*
-						         ( fv->snormal[a]*fv->dsnormal_dx[b][p][j] + fv->dsnormal_dx[a][p][j]*fv->snormal[b] );
- 
-					    }
-					}
-
-				      J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term + d_term1 + d_term2;
-				    }
-				}
-			    }
-			  for( p=0; p<dim ; p++)
-			    {
-			      var = SOLID_DISPLACEMENT1 + p;
-
-			      if(pd->v[pg->imtrx][var])
-				{
-				  for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
-				    {
-				      d_term = 0.0;
-
-				      for( a=0; a < VIM; a++)
-					{
-					  for(b=0 ; b<VIM; b++)
-					    {
-					      d_term += weight*det*fv->snormal[a]
-					*fv->snormal[b]*dTT_drs[a][b][p][j];
-					    }
-					}
-
-				      J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term;
-				    }
-				}
-			    }
-
-			  var = TEMPERATURE;
-
-			  if(pd->v[pg->imtrx][var])
-			    {
-			      for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
-				{
-				  d_term = 0.0;
-				  
-				  for( a=0; a < dim; a++)
-				    {
-				      for(b=0 ; b<dim; b++)
-					{
-					  d_term += weight*det*fv->snormal[a]*fv->snormal[b] * dTT_dT[a][b][j];
-					}
-				    }
-				  J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term;
-				}
-			    }
-			
-
-			  var = MASS_FRACTION;
-			  if (pd->v[pg->imtrx][var]) {
-			    for (w = 0; w < pd->Num_Species_Eqn; w++) {
-			      for (j = 0 ; j < ei[pg->imtrx]->dof[var]; j++) {
-				/*
-				 * Find the material index for the current
-				 * local variable degree of freedom
-				 * (can't just query gun_list for MASS_FRACTION
-				 *  unknowns -> have to do a lookup)
-				 */		
-				gnn = ei[pg->imtrx]->gnn_list[var][j];
-				ledof = ei[pg->imtrx]->lvdof_to_ledof[var][j];
-				matIndex = ei[pg->imtrx]->matID_ledof[ledof];
-				c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
-				for (d_term = 0.0, a = 0; a < dim; a++) {
-				  for (b = 0 ; b < dim; b++) {
-				    d_term += weight * det * fv->snormal[a] *
-					fv->snormal[b] * dTT_dc[a][b][w][j];
-				  }
-				}
-				J_AC[c] += d_term;
-			      }
-			    }
-			  }
-
-			}
-
-			  break;
-
-
-	  /* FORCE_TANGENT1, FORCE_TANGENT2  */
-
-			case FORCE_TANGENT1:
-			case FORCE_TANGENT2:
-
-			  dir = quantity == FORCE_TANGENT1 ? 0 : 1;
-
-		      if(cr->MeshMotion == ARBITRARY)
-			{
-			  for( p=0 ; p<dim; p++)
-			    {
-			      var = VELOCITY1 + p;
-			      
-			      if(pd->v[pg->imtrx][var])
-				{
-				  for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
-				    {
-				      d_term = d_term1 = 0.0;
-
-				      for ( a=0; a<WIM; a++)
-					{
-					  for ( b=0; b<WIM; b++)
-					    {
-					      d_term  += weight*det *fv->stangent[dir][a]*fv->snormal[b]*
-						        ( mu*( bf[var]->grad_phi_e[j][p][a][b] + bf[var]->grad_phi_e[j][p][b][a] ) +
-							  d_mu->v[p][j]*gamma[a][b] );
-					      d_term1 += -weight*det *rho*fv->stangent[dir][a]*fv->snormal[b]*
-						         ( fv->v[b]*bf[var]->phi[j]*delta(p,a) +
-							  (fv->v[a] - x_dot[a])*bf[var]->phi[j]*delta(p,b) );
-
-					    }
-					}
-				      J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term + d_term1;
-				    }
-				}
-			    }
-
-			  for( p=0; p<dim ; p++)
-			    {
-			      var = MESH_DISPLACEMENT1 + p;
-
-			      if(pd->v[pg->imtrx][var])
-				{
-				  for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
-				    {
-				      d_term = d_term1 = d_term2 = d_term3 = 0.0;
-
-				      for( a=0; a < dim; a++)
-					{
-					  for(b=0 ; b<dim; b++)
-					    {
-					      d_term += weight * det *fv->stangent[dir][a]*fv->snormal[b]*
-						        (mu* ( fv->d_grad_v_dmesh[a][b][p][j] + fv->d_grad_v_dmesh[b][a][p][j]) + 
-							 d_mu->X[p][j]* gamma[a][b] );
-					      d_term1 += weight * fv->stangent[dir][a]*(vs[a][b]+ves[a][b] )*fv->snormal[b] *
-						         fv->dsurfdet_dx[p][j];
-					      d_term2 += weight*det*(vs[a][b]+ves[a][b] )*
-						         ( fv->stangent[dir][a]*fv->dsnormal_dx[b][p][j] +
-							   fv->dstangent_dx[dir][a][p][j]*fv->snormal[b] );
-					      d_term3 += -weight* rho * (fv->v[a]-x_dot[a])*fv->v[b] *
-						         ( fv->dsurfdet_dx[p][j]*fv->stangent[dir][a]*fv->snormal[b] + 
-							   det * fv->stangent[dir][a]*fv->dsnormal_dx[b][p][j] +
-							   det * fv->dstangent_dx[dir][a][p][j]*fv->snormal[b] );
- 
-					    }
-					}
-
-				      J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term + d_term1 + d_term2 + d_term3;
-				    }
-				}
-			    }
-
-			  var = TEMPERATURE;
-
-			  if(pd->v[pg->imtrx][var])
-			    {
-			      for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
-				{
-				  d_term = 0.0;
-				  
-				  for( a=0; a < dim; a++)
-				    {
-				      for(b=0 ; b<dim; b++)
-					{
-					  d_term += weight*det*fv->stangent[dir][a]*fv->snormal[b] * ( d_mu->T[j] * gamma[a][b] );
-					}
-				    }
-				  J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term;
-				}
-			    }
-
-
-			  var = MASS_FRACTION;	  
-			  if (pd->v[pg->imtrx][var]) {
-			      for(w = 0; w < pd->Num_Species_Eqn; w++) {
-				for(j = 0 ; j < ei[pg->imtrx]->dof[var]; j++) {
-				  /*
-				   * Find the material index for the current
-				   * local variable degree of freedom
-				   * (can't just query gun_list for MASS_FRACTION
-				   *  unknowns -> have to do a lookup)
-				   */		
-				  gnn = ei[pg->imtrx]->gnn_list[var][j];
-				  ledof = ei[pg->imtrx]->lvdof_to_ledof[var][j];
-				  matIndex = ei[pg->imtrx]->matID_ledof[ledof];
-				  c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
-				  for (d_term = 0.0, a = 0; a < dim; a++) {
-				    for (b = 0; b < dim; b++) {
-				      d_term += weight * det * 
-					  fv->stangent[dir][a] *fv->snormal[b] * 
-					  (d_mu->C[w][j] * gamma[a][b]);
-				    }
-				  }
-				  J_AC[c] += d_term;
-				}
-			      }
-			    }
-
-  			if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
-    			  {
-			    for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
-                	       {
-			         for ( b=0; b<WIM; b++)
-            			   {
-				     for( a=0; a < dim; a++)
-				       {
-				      var = v_s[ve_mode][a][b];
-				      for(j=0 ; j < ei[pg->imtrx]->dof[var]; j++)
-				    	    {
-				      d_term = weight *det * fv->snormal[b] * ( bf[var]->phi[j] )* fv->stangent[dir][a] ;
-				      J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term;
-					    }
-					}
-                		    }
-        		      }
-			  }
-			}
-			else	/*  Solid Stress terms	*/
-			{
-			  for( p=0; p<dim ; p++)
-			    {
-			      var = MESH_DISPLACEMENT1 + p;
-
-			      if(pd->v[pg->imtrx][var])
-				{
-				  for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
-				    {
-				      d_term = 0.0;
-
-				      for( a=0; a < dim; a++)
-					{
-					  for(b=0 ; b<dim; b++)
-					    {
-					      d_term += weight*det*fv->stangent[dir][a]*fv->snormal[b]* dTT_dx[a][b][p][j];
- 
-					    }
-					}
-
-				      J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term;
-				    }
-				}
-			    }
-			  for( p=0; p<dim ; p++)
-			    {
-			      var = SOLID_DISPLACEMENT1 + p;
-
-			      if(pd->v[pg->imtrx][var])
-				{
-				  for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
-				    {
-				      d_term = 0.0;
-
-				      for( a=0; a < dim; a++)
-					{
-					  for(b=0 ; b<dim; b++)
-					    {
-					      d_term += weight*det*fv->stangent[dir][a]*fv->snormal[b]* dTT_drs[a][b][p][j];
- 
-					    }
-					}
-
-				      J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term;
-				    }
-				}
-			    }
-
-			  var = TEMPERATURE;
-
-			  if(pd->v[pg->imtrx][var])
-			    {
-			      for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
-				{
-				  d_term = 0.0;
-				  
-				  for( a=0; a < dim; a++)
-				    {
-				      for(b=0 ; b<dim; b++)
-					{
-					  d_term += weight*det*fv->stangent[dir][a]*fv->snormal[b] *dTT_dT[a][b][j];
-					}
-				    }
-				  J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term;
-				}
-			    }
-
-
-			  var = MASS_FRACTION;	  
-			  if (pd->v[pg->imtrx][var]) {
-			      for(w = 0; w < pd->Num_Species_Eqn; w++) {
-				for(j = 0 ; j < ei[pg->imtrx]->dof[var]; j++) {
-				  /*
-				   * Find the material index for the current
-				   * local variable degree of freedom
-				   * (can't just query gun_list for MASS_FRACTION
-				   *  unknowns -> have to do a lookup)
-				   */		
-				  gnn = ei[pg->imtrx]->gnn_list[var][j];
-				  ledof = ei[pg->imtrx]->lvdof_to_ledof[var][j];
-				  matIndex = ei[pg->imtrx]->matID_ledof[ledof];
-				  c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
-				  for (d_term = 0.0, a = 0; a < dim; a++) {
-				    for (b = 0; b < dim; b++) {
-				      d_term += weight * det * 
-					  fv->stangent[dir][a] *fv->snormal[b] * 
-					  dTT_dc[a][b][w][j];
-				    }
-				  }
-				  J_AC[c] += d_term;
-				}
-			      }
-			    }
-			}
-
-			  break;
-
-	 /* VOLUME_FLUX */
-
-			case VOLUME_FLUX:
-
-			  for( p=0 ; p<dim; p++)
-			    {
-			      var = VELOCITY1 + p;
-			      
-			      if(pd->v[pg->imtrx][var])
-				{
-				  for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
-				    {
-				      d_term = d_term1 = 0.0;
-
-				      for ( a=0; a<WIM; a++)
-					{
-					  d_term += weight*det*fv->snormal[a] * ( bf[var]->phi[j]*delta(p,a) ) ;
-					}
-
-				      J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term;
-				    }
-				}
-			    }
-
-
-
-			  for( p=0; p<dim ; p++)
-			    {
-			      var = MESH_DISPLACEMENT1 + p;
-
-			      if(pd->v[pg->imtrx][var])
-				{
-				  for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
-				    {
-				      d_term = d_term1 = 0.0;
-
-				      for( a=0; a < dim; a++)
-					{
-					  d_term += weight * det * fv->dsnormal_dx[a][p][j]*( fv->v[a] - x_dot[a] ) ;
-					  d_term1 += weight * fv->dsurfdet_dx[p][j]* fv->snormal[a]*( fv->v[a] - x_dot[a] ) ;
-					}
-
-				      J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term + d_term1;
-
-				    }
-				}
-			    }
-			      
-
-			  break;
-
-			case HEAT_FLUX:
-
-			  var = TEMPERATURE;
-			  
-			  for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
-			    {
-			      d_term=0;
-			      
-			      for( a=0; a<dim; a++)
-				{
-				  d_term += weight*det*fv->snormal[a]*
-				           ( -d_k->T[j]*fv->grad_T[a] - k * bf[var]->grad_phi[j][a] +
-					     rho*  ( d_Cp->T[j]*fv->T  +
-						     Cp*bf[var]->phi[j] )*(fv->v[a] - x_dot[a] ) );
-				}
-
-			      J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term;
-			    }
-
-			  for( p=0; p<dim; p++)
-			    {
-			      var = VELOCITY1 +p;
-			      
-			      if( pd->v[pg->imtrx][var])
-				{
-				  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-				    {
-				      d_term = 0.0;
-				      
-				      d_term += weight*det*rho*Cp*fv->T*fv->snormal[p]* bf[var]->phi[j];
-				      
-				      J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term;
-				    } 
-				  /* tabaer notes that d_Cp->v has not been included */
-				}
-			    }
-
-			  for( p=0; p<dim; p++)
-			    {
-			      var = MESH_DISPLACEMENT1 + p;
-
-			      if( pd->v[pg->imtrx][var] )
-				{
-				  
-				  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-				    {
-				      d_term = d_term1 = 0.0;
-
-				      for( a=0; a<dim; a++)
-					{
-					  d_term += -weight * ( fv->dsurfdet_dx[p][j] * k * fv->snormal[a] * fv->grad_T[a] +
-							       det * d_k->X[p][j] *  fv->snormal[a] * fv->grad_T[a] +
-							       det * k * fv->dsnormal_dx[a][p][j] * fv->grad_T[a] + 
-							       det * k * fv->snormal[a] * fv->d_grad_T_dmesh[a][p][j] );
-					  d_term1 += weight * rho * fv->T * (fv->v[a]-x_dot[a]) *
-					                   ( fv->dsurfdet_dx[p][j] * Cp * fv->snormal[a] +
-							     det * d_Cp->X[p][j] * fv->snormal[a] +
-							     det * Cp * fv->dsnormal_dx[a][p][j] );
-					}
-				      
-				      J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term + d_term1;
-				    }
-				}
-			    }
-
-			  var = MASS_FRACTION;
-			  if (pd->v[pg->imtrx][var]) {
-			    for (w = 0; w < pd->Num_Species_Eqn; w++) {
-			      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-				/*
-				 * Find the material index for the current
-				 * local variable degree of freedom
-				 * (can't just query gun_list for MASS_FRACTION
-				 *  unknowns -> have to do a lookup)
-				 */		
-				gnn = ei[pg->imtrx]->gnn_list[var][j];
-				ledof = ei[pg->imtrx]->lvdof_to_ledof[var][j];
-				matIndex = ei[pg->imtrx]->matID_ledof[ledof];
-				c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
-				for (d_term = 0.0, a = 0; a < dim; a++) {
-				  d_term += - weight * det * d_k->C[w][j] *
-				      fv->snormal[a] * fv->grad_T[a] +
-				      weight * det * rho * d_Cp->C[w][j] *
-				      fv->T*fv->snormal[a]* (fv->v[a] - x_dot[a]);
-				}
-				J_AC[c] += d_term;
-			      }
-			    }
-			  }
-			  break;
-
-			case SPECIES_FLUX:
-
-			    var = MASS_FRACTION;
-			    if (pd->v[pg->imtrx][var]) {
-			      for (w = 0; w < pd->Num_Species_Eqn; w++) {
-				for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-				  /*
-				   * Find the material index for the current
-				   * local variable degree of freedom
-				   * (can't just query gun_list for MASS_FRACTION
-				   *  unknowns -> have to do a lookup)
-				   */		
-				  gnn = ei[pg->imtrx]->gnn_list[var][j];
-				  ledof = ei[pg->imtrx]->lvdof_to_ledof[var][j];
-				  matIndex = ei[pg->imtrx]->matID_ledof[ledof];
-				  c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
-				  d_term = d_term1 = 0.0;
-				  for (a = 0; a < dim; a++) {
-				    d_term += - weight * det * fv->snormal[a] *
-					(d_diff[sp][MAX_VARIABLE_TYPES + w] * 
-					 bf[var]->phi[j] * fv->grad_c[species_id][a] +
-					 mp->diffusivity[species_id] *
-					 bf[var]->grad_phi[j][a] * delta(w, species_id));
-
-				    d_term1 += weight * det * fv->snormal[a] * 
-					(fv->v[a]-x_dot[a]) *
-					bf[var]->phi[j] * delta(w,species_id);
-				  }
-				  /*J_AC[c] += d_term + d_term1;*/
-				  J_AC[c] += d_term;
-				}
-			      }
-			    }
-
-			  for(p=0; p<dim; p++)
-			    {
-			      var = VELOCITY1 + p;
-
-			      if( pd->v[pg->imtrx][var] )
-				{
-				  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-				    {
-				      d_term = weight*det*fv->snormal[p]*fv->c[species_id]*bf[var]->phi[j];
-
-				      J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term;
-				    }
-				}
-			    }
-
-			  for( p=0; p<dim; p++)
-			    {
-			      var = MESH_DISPLACEMENT1 + p;
-			      
-			      if( pd->v[pg->imtrx][var] )
-				{
-				  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-				    {
-				      d_term = d_term1 = d_term2 =0.0;
-
-				      for( a=0; a<VIM; a++)
-					{
-					  d_term += -weight*(
-						      fv->dsurfdet_dx[p][j]*mp->diffusivity[sp]*fv->snormal[a]*fv->grad_c[sp][a] + 
-						      det* (d_diff[sp][var]*bf[var]->phi[j]*fv->snormal[a]*fv->grad_c[sp][a] +
-						            mp->diffusivity[sp]*(fv->dsnormal_dx[a][p][j]*fv->grad_c[species_id][a] +
-										 fv->snormal[a]*fv->d_grad_c_dmesh[a][sp][p][j]  ) ) );
-					  d_term1 += weight*(fv->v[a] - x_dot[a])*fv->c[sp] *
-					                    (  fv->dsurfdet_dx[p][j] * fv->snormal[a] +
-							       det * fv->dsnormal_dx[a][p][j] );
-					}
-				      J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term + d_term1;
-				    }
-				}
-			    }
-
-			  var = TEMPERATURE;
-
-			  if( pd->v[pg->imtrx][var])
-			    {
-			      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-				{
-				  d_term = 0;
-				  
-				  for( a=0; a<VIM; a++)
-				    {
-				      d_term += -weight*det*d_diff[sp][var]*bf[var]->phi[j]*fv->snormal[a]*fv->grad_c[sp][a] ;
-				    }
-
-				  J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term;
-				}
-			    }				  
-
-			  break;
-
-			case CHARGED_SPECIES_FLUX:
-
-			    var = MASS_FRACTION;
-			    if (pd->v[pg->imtrx][var]) {
-			      for (w = 0; w < pd->Num_Species_Eqn; w++) {
-				for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-				  /*
-				   * Find the material index for the current
-				   * local variable degree of freedom
-				   * (can't just query gun_list for MASS_FRACTION
-				   *  unknowns -> have to do a lookup)
-				   */		
-				  gnn = ei[pg->imtrx]->gnn_list[var][j];
-				  ledof = ei[pg->imtrx]->lvdof_to_ledof[var][j];
-				  matIndex = ei[pg->imtrx]->matID_ledof[ledof];
-				  c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
-				  d_term = d_term1 = 0.0;
-				  for (a = 0; a < dim; a++) {
-				    d_term += - weight * det * fv->snormal[a] *
-					(d_diff[sp][MAX_VARIABLE_TYPES + w] * 
-					 bf[var]->phi[j] * fv->grad_c[species_id][a] +
-					 mp->diffusivity[species_id] *
-					 bf[var]->grad_phi[j][a] * delta(w, species_id) 
-                                         + d_kapta_dc[species_id][MAX_VARIABLE_TYPES + w]*
-                                         bf[var]->phi[j]*fv->grad_V[a]);
-
-				    d_term1 += weight * det * fv->snormal[a] * 
-					(fv->v[a]-x_dot[a]) *
-					bf[var]->phi[j] * delta(w,species_id);
-				  }
-				  J_AC[c] += d_term + d_term1;
-				}
-			      }
-			    }
-
-			  for(p=0; p<dim; p++)
-			    {
-			      var = VELOCITY1 + p;
-
-			      if( pd->v[pg->imtrx][var] )
-				{
-				  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-				    {
-				      d_term = weight*det*fv->snormal[p]*fv->c[species_id]*bf[var]->phi[j];
-				      J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term;
-				    }
-				}
-			    }
-
-			  for( p=0; p<dim; p++)
-			    {
-			      var = MESH_DISPLACEMENT1 + p;
-			      
-			      if( pd->v[pg->imtrx][var] )
-				{
-				  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-				    {
-				      d_term = d_term1 = d_term2 =0.0;
-
-				      for( a=0; a<VIM; a++)
-					{
-					  d_term += -weight*(fv->dsurfdet_dx[p][j]*fv->snormal[a]*
-				           (mp->diffusivity[sp]*fv->grad_c[sp][a] + kapta[species_id]*fv->grad_V[a]) +  
-				           det*(d_diff[sp][var]*bf[var]->phi[j]*fv->snormal[a]*fv->grad_c[sp][a] +
-                                                d_kapta_dx[species_id][a]*bf[var]->phi[j]*fv->snormal[a]*fv->grad_V[a] +
-				                mp->diffusivity[sp]*fv->dsnormal_dx[a][p][j]*fv->grad_c[species_id][a] +
-                                                kapta[species_id]*fv->dsnormal_dx[a][p][j]*fv->grad_V[a] +
-				                mp->diffusivity[sp]*fv->snormal[a]*fv->d_grad_c_dmesh[a][sp][p][j] +
-                                                kapta[species_id]*fv->snormal[a]*fv->d_grad_V_dmesh[a][p][j]));
-
-					  d_term1 += weight*(fv->v[a] - x_dot[a])*fv->c[sp] *
-					                    (fv->dsurfdet_dx[p][j] * fv->snormal[a] +
-							     det * fv->dsnormal_dx[a][p][j] );
-					}
-				      J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term + d_term1;
-				    }
-				}
-			    }
-
-			  var = TEMPERATURE;
-
-			  if( pd->v[pg->imtrx][var])
-			    {
-			      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-				{
-				  d_term = 0;
-				  
-				  for( a=0; a<VIM; a++)
-				    {
-				      d_term += -weight*det*bf[var]->phi[j]*fv->snormal[a]*
-                                                 (d_diff[sp][var]*fv->grad_c[sp][a]+
-                                                  d_kapta_dT[species_id]*fv->grad_V[a]);
-				    }
-				  J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term;
-				}
-			    }				  
-
-			  var = VOLTAGE;
-
-			  if( pd->v[pg->imtrx][var])
-			    {
-			      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-				{
-				  d_term = 0;
-				  
-				  for( a=0; a<VIM; a++)
-				    {
-				      d_term += -weight*det*kapta[species_id]*bf[var]->grad_phi[j][a]*fv->snormal[a];
-				    }
-				  J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term;
-				}
-			    }				  
-
-			  break;
-
-			case CURRENT_FICKIAN:
-
-			    var = MASS_FRACTION;
-			    if (pd->v[pg->imtrx][var]) {
-			      for (w = 0; w < pd->Num_Species_Eqn; w++) {
-				for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-				  /*
-				   * Find the material index for the current
-				   * local variable degree of freedom
-				   * (can't just query gun_list for MASS_FRACTION
-				   *  unknowns -> have to do a lookup)
-				   */		
-				  gnn = ei[pg->imtrx]->gnn_list[var][j];
-				  ledof = ei[pg->imtrx]->lvdof_to_ledof[var][j];
-				  matIndex = ei[pg->imtrx]->matID_ledof[ledof];
-				  c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
-				  d_term = d_term1 = 0.0;
-				  for (a = 0; a < dim; a++) {
-				    d_term += - weight * det * fv->snormal[a] *
-					(d_diff[sp][MAX_VARIABLE_TYPES + w] * 
-					 bf[var]->phi[j] * fv->grad_c[species_id][a] +
-					 mp->diffusivity[species_id] *
-					 bf[var]->grad_phi[j][a] * delta(w, species_id) 
-                                         + d_kapta_dc[species_id][MAX_VARIABLE_TYPES + w]*
-                                         bf[var]->phi[j]*fv->grad_V[a]);
-
-				    d_term1 += weight * det * fv->snormal[a] * 
-					(fv->v[a]-x_dot[a]) *
-					bf[var]->phi[j] * delta(w,species_id);
-				  }
-				  J_AC[c] += d_term + d_term1;
-				}
-			      }
-			    }
-
-			  for(p=0; p<dim; p++)
-			    {
-			      var = VELOCITY1 + p;
-
-			      if( pd->v[pg->imtrx][var] )
-				{
-				  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-				    {
-				      d_term = weight*det*fv->snormal[p]*fv->c[species_id]*bf[var]->phi[j];
-				      J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term;
-				    }
-				}
-			    }
-
-			  for( p=0; p<dim; p++)
-			    {
-			      var = MESH_DISPLACEMENT1 + p;
-			      
-			      if( pd->v[pg->imtrx][var] )
-				{
-				  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-				    {
-				      d_term = d_term1 = d_term2 =0.0;
-
-				      for( a=0; a<VIM; a++)
-					{
-					  d_term += -weight*(fv->dsurfdet_dx[p][j]*fv->snormal[a]*
-				           (mp->diffusivity[sp]*fv->grad_c[sp][a] + kapta[species_id]*fv->grad_V[a]) +  
-				           det*(d_diff[sp][var]*bf[var]->phi[j]*fv->snormal[a]*fv->grad_c[sp][a] +
-                                                d_kapta_dx[species_id][a]*bf[var]->phi[j]*fv->snormal[a]*fv->grad_V[a] +
-				                mp->diffusivity[sp]*fv->dsnormal_dx[a][p][j]*fv->grad_c[species_id][a] +
-                                                kapta[species_id]*fv->dsnormal_dx[a][p][j]*fv->grad_V[a] +
-				                mp->diffusivity[sp]*fv->snormal[a]*fv->d_grad_c_dmesh[a][sp][p][j] +
-                                                kapta[species_id]*fv->snormal[a]*fv->d_grad_V_dmesh[a][p][j]));
-
-					  d_term1 += weight*(fv->v[a] - x_dot[a])*fv->c[sp] *
-					                    (fv->dsurfdet_dx[p][j] * fv->snormal[a] +
-							     det * fv->dsnormal_dx[a][p][j] );
-					}
-				      J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term + d_term1;
-				    }
-				}
-			    }
-
-			  var = TEMPERATURE;
-
-			  if( pd->v[pg->imtrx][var])
-			    {
-			      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-				{
-				  d_term = 0;
-				  
-				  for( a=0; a<VIM; a++)
-				    {
-				      d_term += -weight*det*bf[var]->phi[j]*fv->snormal[a]*
-                                                 (d_diff[sp][var]*fv->grad_c[sp][a]+
-                                                  d_kapta_dT[species_id]*fv->grad_V[a]);
-				    }
-				  J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term;
-				}
-			    }				  
-
-			  var = VOLTAGE;
-
-			  if( pd->v[pg->imtrx][var])
-			    {
-			      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-				{
-				  d_term = 0;
-				  
-				  for( a=0; a<VIM; a++)
-				    {
-				      d_term += -weight*det*kapta[species_id]*bf[var]->grad_phi[j][a]*fv->snormal[a];
-				    }
-				  J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term;
-				}
-			    }				  
-
-			  break;
-
-			case CURRENT:
-
-			  var = VOLTAGE;
-			  
-			  for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
-			    {
-			      d_term=0;
-			      
-			      for( a=0; a<dim; a++)
-				{
-				  d_term += weight*det*fv->snormal[a]*
-				           ( -dkdV[j]*fv->grad_V[a] - k * bf[var]->grad_phi[j][a]);
-				}
-
-			      /* J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term; */
-			      J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] = 1.0;
-			    }
-
-			  var = TEMPERATURE;
-			  
-			  for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
-			    {
-			      d_term=0;
-			      
-			      for( a=0; a<dim; a++)
-				{
-				  d_term += weight*det*fv->snormal[a]*
-				           ( -dkdT[j]*fv->grad_V[a]);
-				}
-
-			      /* J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term; */
-			      J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] = 1.0;
-			    }
-
-			  for( p=0; p<dim; p++)
-			    {
-			      var = VELOCITY1 +p;
-			      
-			      if( pd->v[pg->imtrx][var])
-				{
-				  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-				    {
-				      d_term = 0.0;
-				      /* J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term; */
-				      J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] = 1.0;
-				    } 
-				}
-			    }
-
-			  for( p=0; p<dim; p++)
-			    {
-			      var = MESH_DISPLACEMENT1 + p;
-
-			      if( pd->v[pg->imtrx][var] )
-				{
-				  
-				  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-				    {
-				      d_term = d_term1 = 0.0;
-
-				      for( a=0; a<dim; a++)
-					{
-					  d_term += -weight * ( fv->dsurfdet_dx[p][j] * k * fv->snormal[a] * fv->grad_V[a] +
-							       det * dkdX[p][j] *  fv->snormal[a] * fv->grad_V[a] +
-							       det * k * fv->dsnormal_dx[a][p][j] * fv->grad_V[a] + 
-							       det * k * fv->snormal[a] * fv->d_grad_V_dmesh[a][p][j] );
-					}
-				      
-				      /* J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term; */
-				      J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] = 1.0;
-				    }
-				}
-			    }
-
-			  var = MASS_FRACTION;
-			  if (pd->v[pg->imtrx][var]) {
-			    for (w = 0; w < pd->Num_Species_Eqn; w++) {
-			      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-				/*
-				 * Find the material index for the current
-				 * local variable degree of freedom
-				 * (can't just query gun_list for MASS_FRACTION
-				 *  unknowns -> have to do a lookup)
-				 */		
-				gnn = ei[pg->imtrx]->gnn_list[var][j];
-				ledof = ei[pg->imtrx]->lvdof_to_ledof[var][j];
-				matIndex = ei[pg->imtrx]->matID_ledof[ledof];
-				c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
-				for (d_term = 0.0, a = 0; a < dim; a++) {
-				  d_term += - weight * det * dkdC[w][j] * fv->snormal[a] * fv->grad_V[a];
-				}
-				/* J_AC[c] += d_term; */
-				J_AC[c] = 1.0;
-			      }
-			    }
-			  }
-			  break;
-
-			case AVERAGE_CONC:
-			  
-			  for( p=0; p<dim; p++)
-			    {
-			      var = MESH_DISPLACEMENT1 + p;
-			      
-			      if( pd->v[pg->imtrx][var] )
-				{
-				  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-				    {
-				      d_term = weight*fv->dsurfdet_dx[p][j]*fv->c[species_id];
-
-				      J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term;
-				    }
-				}
-			    }
-
-			  var = MASS_FRACTION;
-			  if (pd->v[pg->imtrx][var]) {
-			    for (j = 0 ; j < ei[pg->imtrx]->dof[var]; j++) {
-			      /*
-			       * Find the material index for the current
-			       * local variable degree of freedom
-			       * (can't just query gun_list for MASS_FRACTION
-			       *  unknowns -> have to do a lookup)
-			       */		
-			      gnn = ei[pg->imtrx]->gnn_list[var][j];
-			      ledof = ei[pg->imtrx]->lvdof_to_ledof[var][j];
-			      matIndex = ei[pg->imtrx]->matID_ledof[ledof];
-			      c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
-			      d_term = weight * det * bf[var]->phi[j];
-			      J_AC[c] += d_term;
-			    }
-			  }
-			  break;
-
-			case AREA:
-			  
-			  for(p=0; p<dim; p++ )
-			    {
-			      var = MESH_DISPLACEMENT1 + p;
-
-			      if( pd->v[pg->imtrx][var])
-				{
-				  for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
-				    {
-				      J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += weight*fv->dsurfdet_dx[p][j];
-				    }
-				}
-			    }
-			  break;
-
-                        case VOL_REVOLUTION:
-
-                          for(p=0; p<dim; p++ )
-                            {
-                              var = MESH_DISPLACEMENT1 + p;
-
-                              if( pd->v[pg->imtrx][var])
-                                {
-                                  for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
-                                    {
-                                      J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += 0.5*weight*
-                     SGN(fv->snormal[1])*(fv->x[1]*(fv->snormal[1]*fv->dsurfdet_dx[p][j]
-                                                   + det*fv->dsnormal_dx[1][p][j])
-                         + det*fv->snormal[1]*bf[var]->phi[j]*delta(p,1));
+                            var = TEMPERATURE;
+
+                            if(pd->v[pg->imtrx][var])
+                              {
+                                for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
+                                  {
+                                    d_term = 0.0;
+                                    
+                                    for( a=0; a < dim; a++)
+                                      {
+                                        for(b=0 ; b<dim; b++)
+                                          {
+                                            d_term += weight*det*fv->snormal[a]*fv->snormal[b] * dTT_dT[a][b][j];
+                                          }
+                                      }
+                                    J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term;
+                                  }
+                              }
+                          
+
+                            var = MASS_FRACTION;
+                            if (pd->v[pg->imtrx][var]) {
+                              for (w = 0; w < pd->Num_Species_Eqn; w++) {
+                                for (j = 0 ; j < ei[pg->imtrx]->dof[var]; j++) {
+                                  /*
+                                   * Find the material index for the current
+                                   * local variable degree of freedom
+                                   * (can't just query gun_list for MASS_FRACTION
+                                   *  unknowns -> have to do a lookup)
+                                   */		
+                                  gnn = ei[pg->imtrx]->gnn_list[var][j];
+                                  ledof = ei[pg->imtrx]->lvdof_to_ledof[var][j];
+                                  matIndex = ei[pg->imtrx]->matID_ledof[ledof];
+                                  c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
+                                  for (d_term = 0.0, a = 0; a < dim; a++) {
+                                    for (b = 0 ; b < dim; b++) {
+                                      d_term += weight * det * fv->snormal[a] *
+                                          fv->snormal[b] * dTT_dc[a][b][w][j];
                                     }
+                                  }
+                                  J_AC[c] += d_term;
+                                }
+                              }
+                            }
+
+                          }
+
+                            break;
+
+
+            /* FORCE_TANGENT1, FORCE_TANGENT2  */
+
+                          case FORCE_TANGENT1:
+                          case FORCE_TANGENT2:
+
+                            dir = quantity == FORCE_TANGENT1 ? 0 : 1;
+
+                        if(cr->MeshMotion == ARBITRARY)
+                          {
+                            for( p=0 ; p<dim; p++)
+                              {
+                                var = VELOCITY1 + p;
+                                
+                                if(pd->v[pg->imtrx][var])
+                                  {
+                                    for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
+                                      {
+                                        d_term = d_term1 = 0.0;
+
+                                        for ( a=0; a<WIM; a++)
+                                          {
+                                            for ( b=0; b<WIM; b++)
+                                              {
+                                                d_term  += weight*det *fv->stangent[dir][a]*fv->snormal[b]*
+                                                          ( mu*( bf[var]->grad_phi_e[j][p][a][b] + bf[var]->grad_phi_e[j][p][b][a] ) +
+                                                            d_mu->v[p][j]*gamma[a][b] );
+                                                d_term1 += -weight*det *rho*fv->stangent[dir][a]*fv->snormal[b]*
+                                                           ( fv->v[b]*bf[var]->phi[j]*delta(p,a) +
+                                                            (fv->v[a] - x_dot[a])*bf[var]->phi[j]*delta(p,b) );
+
+                                              }
+                                          }
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term + d_term1;
+                                      }
+                                  }
+                              }
+
+                            for( p=0; p<dim ; p++)
+                              {
+                                var = MESH_DISPLACEMENT1 + p;
+
+                                if(pd->v[pg->imtrx][var])
+                                  {
+                                    for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
+                                      {
+                                        d_term = d_term1 = d_term2 = d_term3 = 0.0;
+
+                                        for( a=0; a < dim; a++)
+                                          {
+                                            for(b=0 ; b<dim; b++)
+                                              {
+                                                d_term += weight * det *fv->stangent[dir][a]*fv->snormal[b]*
+                                                          (mu* ( fv->d_grad_v_dmesh[a][b][p][j] + fv->d_grad_v_dmesh[b][a][p][j]) + 
+                                                           d_mu->X[p][j]* gamma[a][b] );
+                                                d_term1 += weight * fv->stangent[dir][a]*(vs[a][b]+ves[a][b] )*fv->snormal[b] *
+                                                           fv->dsurfdet_dx[p][j];
+                                                d_term2 += weight*det*(vs[a][b]+ves[a][b] )*
+                                                           ( fv->stangent[dir][a]*fv->dsnormal_dx[b][p][j] +
+                                                             fv->dstangent_dx[dir][a][p][j]*fv->snormal[b] );
+                                                d_term3 += -weight* rho * (fv->v[a]-x_dot[a])*fv->v[b] *
+                                                           ( fv->dsurfdet_dx[p][j]*fv->stangent[dir][a]*fv->snormal[b] + 
+                                                             det * fv->stangent[dir][a]*fv->dsnormal_dx[b][p][j] +
+                                                             det * fv->dstangent_dx[dir][a][p][j]*fv->snormal[b] );
+   
+                                              }
+                                          }
+
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term + d_term1 + d_term2 + d_term3;
+                                      }
+                                  }
+                              }
+
+                            var = TEMPERATURE;
+
+                            if(pd->v[pg->imtrx][var])
+                              {
+                                for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
+                                  {
+                                    d_term = 0.0;
+                                    
+                                    for( a=0; a < dim; a++)
+                                      {
+                                        for(b=0 ; b<dim; b++)
+                                          {
+                                            d_term += weight*det*fv->stangent[dir][a]*fv->snormal[b] * ( d_mu->T[j] * gamma[a][b] );
+                                          }
+                                      }
+                                    J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term;
+                                  }
+                              }
+
+
+                            var = MASS_FRACTION;	  
+                            if (pd->v[pg->imtrx][var]) {
+                                for(w = 0; w < pd->Num_Species_Eqn; w++) {
+                                  for(j = 0 ; j < ei[pg->imtrx]->dof[var]; j++) {
+                                    /*
+                                     * Find the material index for the current
+                                     * local variable degree of freedom
+                                     * (can't just query gun_list for MASS_FRACTION
+                                     *  unknowns -> have to do a lookup)
+                                     */		
+                                    gnn = ei[pg->imtrx]->gnn_list[var][j];
+                                    ledof = ei[pg->imtrx]->lvdof_to_ledof[var][j];
+                                    matIndex = ei[pg->imtrx]->matID_ledof[ledof];
+                                    c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
+                                    for (d_term = 0.0, a = 0; a < dim; a++) {
+                                      for (b = 0; b < dim; b++) {
+                                        d_term += weight * det * 
+                                            fv->stangent[dir][a] *fv->snormal[b] * 
+                                            (d_mu->C[w][j] * gamma[a][b]);
+                                      }
+                                    }
+                                    J_AC[c] += d_term;
+                                  }
+                                }
+                              }
+
+                          if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
+                            {
+                              for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
+                                 {
+                                   for ( b=0; b<WIM; b++)
+                                     {
+                                       for( a=0; a < dim; a++)
+                                         {
+                                        var = v_s[ve_mode][a][b];
+                                        for(j=0 ; j < ei[pg->imtrx]->dof[var]; j++)
+                                              {
+                                        d_term = weight *det * fv->snormal[b] * ( bf[var]->phi[j] )* fv->stangent[dir][a] ;
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term;
+                                              }
+                                          }
+                                      }
                                 }
                             }
-                          break;
+                          }
+                          else	/*  Solid Stress terms	*/
+                          {
+                            for( p=0; p<dim ; p++)
+                              {
+                                var = MESH_DISPLACEMENT1 + p;
 
-			case N_DOT_X:
-			  
-			  for ( p=0; p<DIM; p++)
-			    {
-			      var = MESH_DISPLACEMENT1 + p;
+                                if(pd->v[pg->imtrx][var])
+                                  {
+                                    for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
+                                      {
+                                        d_term = 0.0;
 
-			      if (pd->v[pg->imtrx][var] )
-				{
-				  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-				    {
-				      double term1=0.0, term2=0.0, term3 = 0.0;
-				      
-				      term1 = fv->snormal[p]*bf[var]->phi[j] / (double) dim;
-				     
-				      for( a=0 ; a < dim ; a++)
-					{
-					  term2 += ( fv->x[a] - param[a] ) * fv->dsnormal_dx[a][p][j]/(double) dim;
-					  term3 += ( fv->x[a] - param[a] ) * fv->snormal[p]/(double) dim;
-					}
+                                        for( a=0; a < dim; a++)
+                                          {
+                                            for(b=0 ; b<dim; b++)
+                                              {
+                                                d_term += weight*det*fv->stangent[dir][a]*fv->snormal[b]* dTT_dx[a][b][p][j];
+   
+                                              }
+                                          }
 
-				      J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += weight * term1 * det +
-					                               weight * term2 * det +
-					                               weight * term3 * fv->dsurfdet_dx[p][j];
-				    }
-				}
-			    }
-				      
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term;
+                                      }
+                                  }
+                              }
+                            for( p=0; p<dim ; p++)
+                              {
+                                var = SOLID_DISPLACEMENT1 + p;
 
-			  break;
+                                if(pd->v[pg->imtrx][var])
+                                  {
+                                    for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
+                                      {
+                                        d_term = 0.0;
 
- 			case ELEC_FORCE_NORMAL:
- 
- 			  var = VOLTAGE;
- 			  
- 			  for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
- 			    {
- 			      d_term1=0;
- 			      for( a=0; a<dim; a++)
- 				{
- 				d_term1 += efield[a]*(-bf[var]->grad_phi[j][a]);
- 				}
- 			      d_term=0;
- 			      
- 			      for( a=0; a<dim; a++)
- 				{
- 			        for( b=0; b<dim; b++)
- 				  {
- 				  d_term += weight*det*fv->snormal[a]*fv->snormal[b]*
- 				      ( d_p_dV[j]* es[a][b]  + 
- 					perm*((-bf[var]->grad_phi[j][a])*efield[b] +
- 					efield[a]*(-bf[var]->grad_phi[j][b]) -
- 					delta(a,b)*d_term1));
-  				  }
- 				}
- 
- 			      J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term; 
- 			    }
- 
- 			  var = TEMPERATURE;
- 			  
- 			  for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
- 			    {
- 			      d_term=0;
- 			      
- 			      for( a=0; a<dim; a++)
- 				{
- 			        for( b=0; b<dim; b++)
- 				  {
- 				  d_term += weight*det*fv->snormal[a]*fv->snormal[b]*
- 				      ( d_p_dT[j]* es[a][b] );
- 				  }
- 				}
- 
- 			      J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term; 
- 			    }
- 
- 			  for( p=0; p<dim; p++)
- 			    {
- 			      var = MESH_DISPLACEMENT1 + p;
- 
- 			      if( pd->v[pg->imtrx][var] )
- 				{
- 				  
- 				  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
- 				    {
- 				      d_term = d_term1 = 0.0;
- 			      		for( a=0; a<dim; a++)
- 						{
- 					d_term1 += efield[a]*(-fv->d_grad_V_dmesh[a][p][j]);
- 						}
- 				      for( a=0; a<dim; a++)
- 					{
- 			        	  for( b=0; b<dim; b++)
- 				  	    {
- 					  d_term += weight * ( fv->dsurfdet_dx[p][j] * 
- 						fv->snormal[a]*perm*es[a][b]*fv->snormal[b] +
- 						det * d_p_dX[p][j] *  fv->snormal[a] * 
- 							es[a][b]*fv->snormal[b] +
- 					det * perm * fv->dsnormal_dx[a][p][j] * es[a][b]*fv->snormal[b] + 
- 					det * perm * fv->dsnormal_dx[b][p][j] * es[a][b]*fv->snormal[a] + 
- 				       det * perm * fv->snormal[a] * fv->snormal[b] *
- 		(efield[a]*(-fv->d_grad_V_dmesh[b][p][j]) + (-fv->d_grad_V_dmesh[a][p][j])*efield[b] - delta(a,b)*d_term1 ) );
- 					    }
- 					}
- 				      
- 				      J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term;
- 				    }
- 				}
- 			    }
- 
- 			  break;
- 
- 			case ELEC_FORCE_TANGENT1:
- 			case ELEC_FORCE_TANGENT2:
- 
- 			  dir = quantity == ELEC_FORCE_TANGENT1 ? 0 : 1;
- 
- 			  var = VOLTAGE;
- 			  
- 			  for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
- 			    {
- 			      d_term1=0;
- 			      for( a=0; a<dim; a++)
- 				{
- 				d_term1 += efield[a]*(-bf[var]->grad_phi[j][a]);
- 				}
- 			      d_term=0;
- 			      
- 			      for( a=0; a<dim; a++)
- 				{
- 			        for( b=0; b<dim; b++)
- 				  {
- 				  d_term += weight*det*fv->stangent[dir][a]*-fv->snormal[b]*
- 				      ( d_p_dV[j]* es[a][b]  + 
- 					perm*((-bf[var]->grad_phi[j][a])*efield[b] +
- 					efield[a]*(-bf[var]->grad_phi[j][b]) -
- 					delta(a,b)*d_term1));
-  				  }
- 				}
- 
- 			      J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term; 
- 			    }
- 
- 			  var = TEMPERATURE;
- 			  
- 			  for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
- 			    {
- 			      d_term=0;
- 			      
- 			      for( a=0; a<dim; a++)
- 				{
- 			        for( b=0; b<dim; b++)
- 				  {
-  				  d_term += weight*det*fv->stangent[dir][a]*-fv->snormal[b]*
- 				      ( d_p_dT[j]* es[a][b] );
- 				  }
- 				}
- 
- 			      J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term; 
- 			    }
- 
- 			  for( p=0; p<dim; p++)
- 			    {
- 			      var = MESH_DISPLACEMENT1 + p;
- 
- 			      if( pd->v[pg->imtrx][var] )
- 				{
- 				  
- 				  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
- 				    {
- 				      d_term = d_term1 = 0.0;
- 			      		for( a=0; a<dim; a++)
- 						{
- 					d_term1 += efield[a]*(-fv->d_grad_V_dmesh[a][p][j]);
- 						}
- 				      for( a=0; a<dim; a++)
- 					{
- 			        	  for( b=0; b<dim; b++)
- 				  	    {
- 					  d_term += weight * ( fv->dsurfdet_dx[p][j] * 
-  						fv->stangent[dir][a]*perm*es[a][b]*-fv->snormal[b] +
- 						det * d_p_dX[p][j] *  fv->stangent[dir][a] * 
-  							es[a][b]*-fv->snormal[b] +
- 					det * perm * fv->dstangent_dx[dir][a][p][j] * es[a][b]*-fv->snormal[b] + 
- 					det * perm * -fv->dsnormal_dx[b][p][j] * es[a][b]*fv->stangent[dir][a] + 
- 				       det * perm * fv->stangent[dir][a] * -fv->snormal[b] *
- 		(efield[a]*(-fv->d_grad_V_dmesh[b][p][j]) + (-fv->d_grad_V_dmesh[a][p][j])*efield[b] - delta(a,b)*d_term1 ) );
- 					    }
- 					}
- 				      
- 				      J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term;
- 				    }
- 				}
- 			    }
- 
- 			  break;
- 
- 			case ELEC_FORCE_X:
- 			case ELEC_FORCE_Y:
- 			case ELEC_FORCE_Z:
- 
- 			  dir = ( quantity == ELEC_FORCE_X ? 0 :
- 				( quantity == ELEC_FORCE_Y ? 1 : 
- 			        ( quantity == ELEC_FORCE_Z ? 2 : -1) ) ) ;  /* Can't do this with FORTRAN */
- 
- 			  GOMA_EH(dir, "PANIC in evaluate_flux sensitivity section");
- 
- 			  var = VOLTAGE;
- 			  
- 			  for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
- 			    {
- 			      d_term1=0;
- 			      for( a=0; a<dim; a++)
- 				{
- 				d_term1 += efield[a]*(-bf[var]->grad_phi[j][a]);
- 				}
- 			      d_term=0;
- 			      
- 			        for( b=0; b<dim; b++)
- 				  {
- 				  d_term += weight*det*-fv->snormal[b]*
- 				      ( d_p_dV[j]* es[dir][b]  + 
- 					perm*((-bf[var]->grad_phi[j][dir])*efield[b] +
- 					efield[dir]*(-bf[var]->grad_phi[j][b]) -
- 					delta(dir,b)*d_term1));
-  				  }
- 
- 			      J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term; 
- 			    }
- 
- 			  var = TEMPERATURE;
- 			  
- 			  for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
- 			    {
- 			      d_term=0;
- 			      
- 			        for( b=0; b<dim; b++)
- 				  {
- 				  d_term += weight*det*-fv->snormal[b]*
- 				      ( d_p_dT[j]* es[dir][b] );
- 				  }
- 
- 			      J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term; 
- 			    }
- 
- 			  for( p=0; p<dim; p++)
- 			    {
- 			      var = MESH_DISPLACEMENT1 + p;
- 
- 			      if( pd->v[pg->imtrx][var] )
- 				{
- 				  
- 				  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
- 				    {
- 				      d_term = d_term1 = 0.0;
- 			      		for( a=0; a<dim; a++)
- 						{
- 					d_term1 += efield[a]*(-fv->d_grad_V_dmesh[a][p][j]);
- 						}
- 			        	  for( b=0; b<dim; b++)
- 				  	    {
- 					  d_term += weight * ( fv->dsurfdet_dx[p][j] * 
- 						perm*es[dir][b]*-fv->snormal[b] +
- 						det * d_p_dX[p][j] * es[dir][b]*-fv->snormal[b] +
- 					det * perm * -fv->dsnormal_dx[b][p][j] * es[dir][b] + 
- 				       det * perm * -fv->snormal[b] *
- 		(efield[dir]*(-fv->d_grad_V_dmesh[b][p][j]) + (-fv->d_grad_V_dmesh[dir][p][j])*efield[b] - delta(dir,b)*d_term1 ) );
- 					    }
- 				      
- 				      J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term;
- 				    }
- 				}
- 			    }
- 
- 			  break;
- 
- 			case NET_SURF_CHARGE:
- 
- 			  var = VOLTAGE;
- 			  
- 			  for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
- 			    {
- 			      d_term=0;
- 			      
- 			      for( a=0; a<dim; a++)
- 				{
- 				  d_term += -weight*det*fv->snormal[a]*
- 				      ( d_p_dV[j]*efield[a] + perm * (-bf[var]->grad_phi[j][a]));
- 				}
- 
- 			      J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term; 
- 			    }
- 
- 			  var = TEMPERATURE;
- 			  
- 			  for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
- 			    {
- 			      d_term=0;
- 			      
- 			      for( a=0; a<dim; a++)
- 				{
- 				  d_term += -weight*det*fv->snormal[a]*
- 				           ( d_p_dT[j]*efield[a]);
- 				}
- 
- 			      J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term; 
- 			    }
- 
- 			  for( p=0; p<dim; p++)
- 			    {
- 			      var = MESH_DISPLACEMENT1 + p;
- 
- 			      if( pd->v[pg->imtrx][var] )
- 				{
- 				  
- 				  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
- 				    {
- 				      d_term = d_term1 = 0.0;
- 
- 				      for( a=0; a<dim; a++)
- 					{
- 					  d_term += -weight * ( fv->dsurfdet_dx[p][j] * fv->snormal[a]*perm*efield[a] +
- 							       det * d_p_dX[p][j] *  fv->snormal[a] * efield[a] +
- 							       det * perm * fv->dsnormal_dx[a][p][j] * efield[a] + 
- 							       det * perm * fv->snormal[a] * (-fv->d_grad_V_dmesh[a][p][j]) );
- 					}
- 				      
- 				      J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term;
- 				    }
- 				}
- 			    }
- 
- 			  break;
+                                        for( a=0; a < dim; a++)
+                                          {
+                                            for(b=0 ; b<dim; b++)
+                                              {
+                                                d_term += weight*det*fv->stangent[dir][a]*fv->snormal[b]* dTT_drs[a][b][p][j];
+   
+                                              }
+                                          }
 
-			default:
-			  GOMA_EH(GOMA_ERROR,"Constraint sensitivities haven't been implemented for that flux type.");
-			  break;
-			}
-		    }
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term;
+                                      }
+                                  }
+                              }
 
-		}   /*  surface integration over element */
+                            var = TEMPERATURE;
 
-	      if( Subgrid_Int.active )
-		{
-		  safe_free ( (void *) Subgrid_Int.s  ); Subgrid_Int.s = NULL;
-		  safe_free ( (void *) Subgrid_Int.wt ); Subgrid_Int.wt = NULL;
-		  free_search_grid ( &element_search_grid );
-		}
+                            if(pd->v[pg->imtrx][var])
+                              {
+                                for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
+                                  {
+                                    d_term = 0.0;
+                                    
+                                    for( a=0; a < dim; a++)
+                                      {
+                                        for(b=0 ; b<dim; b++)
+                                          {
+                                            d_term += weight*det*fv->stangent[dir][a]*fv->snormal[b] *dTT_dT[a][b][j];
+                                          }
+                                      }
+                                    J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term;
+                                  }
+                              }
 
 
-	    }   /*  material id conditional */
-	}    /*   element loop */
+                            var = MASS_FRACTION;	  
+                            if (pd->v[pg->imtrx][var]) {
+                                for(w = 0; w < pd->Num_Species_Eqn; w++) {
+                                  for(j = 0 ; j < ei[pg->imtrx]->dof[var]; j++) {
+                                    /*
+                                     * Find the material index for the current
+                                     * local variable degree of freedom
+                                     * (can't just query gun_list for MASS_FRACTION
+                                     *  unknowns -> have to do a lookup)
+                                     */		
+                                    gnn = ei[pg->imtrx]->gnn_list[var][j];
+                                    ledof = ei[pg->imtrx]->lvdof_to_ledof[var][j];
+                                    matIndex = ei[pg->imtrx]->matID_ledof[ledof];
+                                    c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
+                                    for (d_term = 0.0, a = 0; a < dim; a++) {
+                                      for (b = 0; b < dim; b++) {
+                                        d_term += weight * det * 
+                                            fv->stangent[dir][a] *fv->snormal[b] * 
+                                            dTT_dc[a][b][w][j];
+                                      }
+                                    }
+                                    J_AC[c] += d_term;
+                                  }
+                                }
+                              }
+                          }
+
+                            break;
+
+           /* VOLUME_FLUX */
+
+                          case VOLUME_FLUX:
+
+                            for( p=0 ; p<dim; p++)
+                              {
+                                var = VELOCITY1 + p;
+                                
+                                if(pd->v[pg->imtrx][var])
+                                  {
+                                    for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
+                                      {
+                                        d_term = d_term1 = 0.0;
+
+                                        for ( a=0; a<WIM; a++)
+                                          {
+                                            d_term += weight*det*fv->snormal[a] * ( bf[var]->phi[j]*delta(p,a) ) ;
+                                          }
+
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term;
+                                      }
+                                  }
+                              }
+
+
+
+                            for( p=0; p<dim ; p++)
+                              {
+                                var = MESH_DISPLACEMENT1 + p;
+
+                                if(pd->v[pg->imtrx][var])
+                                  {
+                                    for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
+                                      {
+                                        d_term = d_term1 = 0.0;
+
+                                        for( a=0; a < dim; a++)
+                                          {
+                                            d_term += weight * det * fv->dsnormal_dx[a][p][j]*( fv->v[a] - x_dot[a] ) ;
+                                            d_term1 += weight * fv->dsurfdet_dx[p][j]* fv->snormal[a]*( fv->v[a] - x_dot[a] ) ;
+                                          }
+
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term + d_term1;
+
+                                      }
+                                  }
+                              }
+                                
+
+                            break;
+
+                          case HEAT_FLUX:
+
+                            var = TEMPERATURE;
+                            
+                            for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                              {
+                                d_term=0;
+                                
+                                for( a=0; a<dim; a++)
+                                  {
+                                    d_term += weight*det*fv->snormal[a]*
+                                             ( -d_k->T[j]*fv->grad_T[a] - k * bf[var]->grad_phi[j][a] +
+                                               rho*  ( d_Cp->T[j]*fv->T  +
+                                                       Cp*bf[var]->phi[j] )*(fv->v[a] - x_dot[a] ) );
+                                  }
+
+                                J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term;
+                              }
+
+                            for( p=0; p<dim; p++)
+                              {
+                                var = VELOCITY1 +p;
+                                
+                                if( pd->v[pg->imtrx][var])
+                                  {
+                                    for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                                      {
+                                        d_term = 0.0;
+                                        
+                                        d_term += weight*det*rho*Cp*fv->T*fv->snormal[p]* bf[var]->phi[j];
+                                        
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term;
+                                      } 
+                                    /* tabaer notes that d_Cp->v has not been included */
+                                  }
+                              }
+
+                            for( p=0; p<dim; p++)
+                              {
+                                var = MESH_DISPLACEMENT1 + p;
+
+                                if( pd->v[pg->imtrx][var] )
+                                  {
+                                    
+                                    for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                                      {
+                                        d_term = d_term1 = 0.0;
+
+                                        for( a=0; a<dim; a++)
+                                          {
+                                            d_term += -weight * ( fv->dsurfdet_dx[p][j] * k * fv->snormal[a] * fv->grad_T[a] +
+                                                                 det * d_k->X[p][j] *  fv->snormal[a] * fv->grad_T[a] +
+                                                                 det * k * fv->dsnormal_dx[a][p][j] * fv->grad_T[a] + 
+                                                                 det * k * fv->snormal[a] * fv->d_grad_T_dmesh[a][p][j] );
+                                            d_term1 += weight * rho * fv->T * (fv->v[a]-x_dot[a]) *
+                                                             ( fv->dsurfdet_dx[p][j] * Cp * fv->snormal[a] +
+                                                               det * d_Cp->X[p][j] * fv->snormal[a] +
+                                                               det * Cp * fv->dsnormal_dx[a][p][j] );
+                                          }
+                                        
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term + d_term1;
+                                      }
+                                  }
+                              }
+
+                            var = MASS_FRACTION;
+                            if (pd->v[pg->imtrx][var]) {
+                              for (w = 0; w < pd->Num_Species_Eqn; w++) {
+                                for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                                  /*
+                                   * Find the material index for the current
+                                   * local variable degree of freedom
+                                   * (can't just query gun_list for MASS_FRACTION
+                                   *  unknowns -> have to do a lookup)
+                                   */		
+                                  gnn = ei[pg->imtrx]->gnn_list[var][j];
+                                  ledof = ei[pg->imtrx]->lvdof_to_ledof[var][j];
+                                  matIndex = ei[pg->imtrx]->matID_ledof[ledof];
+                                  c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
+                                  for (d_term = 0.0, a = 0; a < dim; a++) {
+                                    d_term += - weight * det * d_k->C[w][j] *
+                                        fv->snormal[a] * fv->grad_T[a] +
+                                        weight * det * rho * d_Cp->C[w][j] *
+                                        fv->T*fv->snormal[a]* (fv->v[a] - x_dot[a]);
+                                  }
+                                  J_AC[c] += d_term;
+                                }
+                              }
+                            }
+                            break;
+
+                          case SPECIES_FLUX:
+
+                              var = MASS_FRACTION;
+                              if (pd->v[pg->imtrx][var]) {
+                                for (w = 0; w < pd->Num_Species_Eqn; w++) {
+                                  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                                    /*
+                                     * Find the material index for the current
+                                     * local variable degree of freedom
+                                     * (can't just query gun_list for MASS_FRACTION
+                                     *  unknowns -> have to do a lookup)
+                                     */		
+                                    gnn = ei[pg->imtrx]->gnn_list[var][j];
+                                    ledof = ei[pg->imtrx]->lvdof_to_ledof[var][j];
+                                    matIndex = ei[pg->imtrx]->matID_ledof[ledof];
+                                    c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
+                                    d_term = d_term1 = 0.0;
+                                    for (a = 0; a < dim; a++) {
+                                      d_term += - weight * det * fv->snormal[a] *
+                                          (d_diff[sp][MAX_VARIABLE_TYPES + w] * 
+                                           bf[var]->phi[j] * fv->grad_c[species_id][a] +
+                                           mp->diffusivity[species_id] *
+                                           bf[var]->grad_phi[j][a] * delta(w, species_id));
+
+                                      d_term1 += weight * det * fv->snormal[a] * 
+                                          (fv->v[a]-x_dot[a]) *
+                                          bf[var]->phi[j] * delta(w,species_id);
+                                    }
+                                    /*J_AC[c] += d_term + d_term1;*/
+                                    J_AC[c] += d_term;
+                                  }
+                                }
+                              }
+
+                            for(p=0; p<dim; p++)
+                              {
+                                var = VELOCITY1 + p;
+
+                                if( pd->v[pg->imtrx][var] )
+                                  {
+                                    for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                                      {
+                                        d_term = weight*det*fv->snormal[p]*fv->c[species_id]*bf[var]->phi[j];
+
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term;
+                                      }
+                                  }
+                              }
+
+                            for( p=0; p<dim; p++)
+                              {
+                                var = MESH_DISPLACEMENT1 + p;
+                                
+                                if( pd->v[pg->imtrx][var] )
+                                  {
+                                    for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                                      {
+                                        d_term = d_term1 = d_term2 =0.0;
+
+                                        for( a=0; a<VIM; a++)
+                                          {
+                                            d_term += -weight*(
+                                                        fv->dsurfdet_dx[p][j]*mp->diffusivity[sp]*fv->snormal[a]*fv->grad_c[sp][a] + 
+                                                        det* (d_diff[sp][var]*bf[var]->phi[j]*fv->snormal[a]*fv->grad_c[sp][a] +
+                                                              mp->diffusivity[sp]*(fv->dsnormal_dx[a][p][j]*fv->grad_c[species_id][a] +
+                                                                                   fv->snormal[a]*fv->d_grad_c_dmesh[a][sp][p][j]  ) ) );
+                                            d_term1 += weight*(fv->v[a] - x_dot[a])*fv->c[sp] *
+                                                              (  fv->dsurfdet_dx[p][j] * fv->snormal[a] +
+                                                                 det * fv->dsnormal_dx[a][p][j] );
+                                          }
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term + d_term1;
+                                      }
+                                  }
+                              }
+
+                            var = TEMPERATURE;
+
+                            if( pd->v[pg->imtrx][var])
+                              {
+                                for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                                  {
+                                    d_term = 0;
+                                    
+                                    for( a=0; a<VIM; a++)
+                                      {
+                                        d_term += -weight*det*d_diff[sp][var]*bf[var]->phi[j]*fv->snormal[a]*fv->grad_c[sp][a] ;
+                                      }
+
+                                    J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term;
+                                  }
+                              }				  
+
+                            break;
+
+                          case CHARGED_SPECIES_FLUX:
+
+                              var = MASS_FRACTION;
+                              if (pd->v[pg->imtrx][var]) {
+                                for (w = 0; w < pd->Num_Species_Eqn; w++) {
+                                  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                                    /*
+                                     * Find the material index for the current
+                                     * local variable degree of freedom
+                                     * (can't just query gun_list for MASS_FRACTION
+                                     *  unknowns -> have to do a lookup)
+                                     */		
+                                    gnn = ei[pg->imtrx]->gnn_list[var][j];
+                                    ledof = ei[pg->imtrx]->lvdof_to_ledof[var][j];
+                                    matIndex = ei[pg->imtrx]->matID_ledof[ledof];
+                                    c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
+                                    d_term = d_term1 = 0.0;
+                                    for (a = 0; a < dim; a++) {
+                                      d_term += - weight * det * fv->snormal[a] *
+                                          (d_diff[sp][MAX_VARIABLE_TYPES + w] * 
+                                           bf[var]->phi[j] * fv->grad_c[species_id][a] +
+                                           mp->diffusivity[species_id] *
+                                           bf[var]->grad_phi[j][a] * delta(w, species_id) 
+                                           + d_kapta_dc[species_id][MAX_VARIABLE_TYPES + w]*
+                                           bf[var]->phi[j]*fv->grad_V[a]);
+
+                                      d_term1 += weight * det * fv->snormal[a] * 
+                                          (fv->v[a]-x_dot[a]) *
+                                          bf[var]->phi[j] * delta(w,species_id);
+                                    }
+                                    J_AC[c] += d_term + d_term1;
+                                  }
+                                }
+                              }
+
+                            for(p=0; p<dim; p++)
+                              {
+                                var = VELOCITY1 + p;
+
+                                if( pd->v[pg->imtrx][var] )
+                                  {
+                                    for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                                      {
+                                        d_term = weight*det*fv->snormal[p]*fv->c[species_id]*bf[var]->phi[j];
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term;
+                                      }
+                                  }
+                              }
+
+                            for( p=0; p<dim; p++)
+                              {
+                                var = MESH_DISPLACEMENT1 + p;
+                                
+                                if( pd->v[pg->imtrx][var] )
+                                  {
+                                    for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                                      {
+                                        d_term = d_term1 = d_term2 =0.0;
+
+                                        for( a=0; a<VIM; a++)
+                                          {
+                                            d_term += -weight*(fv->dsurfdet_dx[p][j]*fv->snormal[a]*
+                                             (mp->diffusivity[sp]*fv->grad_c[sp][a] + kapta[species_id]*fv->grad_V[a]) +  
+                                             det*(d_diff[sp][var]*bf[var]->phi[j]*fv->snormal[a]*fv->grad_c[sp][a] +
+                                                  d_kapta_dx[species_id][a]*bf[var]->phi[j]*fv->snormal[a]*fv->grad_V[a] +
+                                                  mp->diffusivity[sp]*fv->dsnormal_dx[a][p][j]*fv->grad_c[species_id][a] +
+                                                  kapta[species_id]*fv->dsnormal_dx[a][p][j]*fv->grad_V[a] +
+                                                  mp->diffusivity[sp]*fv->snormal[a]*fv->d_grad_c_dmesh[a][sp][p][j] +
+                                                  kapta[species_id]*fv->snormal[a]*fv->d_grad_V_dmesh[a][p][j]));
+
+                                            d_term1 += weight*(fv->v[a] - x_dot[a])*fv->c[sp] *
+                                                              (fv->dsurfdet_dx[p][j] * fv->snormal[a] +
+                                                               det * fv->dsnormal_dx[a][p][j] );
+                                          }
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term + d_term1;
+                                      }
+                                  }
+                              }
+
+                            var = TEMPERATURE;
+
+                            if( pd->v[pg->imtrx][var])
+                              {
+                                for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                                  {
+                                    d_term = 0;
+                                    
+                                    for( a=0; a<VIM; a++)
+                                      {
+                                        d_term += -weight*det*bf[var]->phi[j]*fv->snormal[a]*
+                                                   (d_diff[sp][var]*fv->grad_c[sp][a]+
+                                                    d_kapta_dT[species_id]*fv->grad_V[a]);
+                                      }
+                                    J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term;
+                                  }
+                              }				  
+
+                            var = VOLTAGE;
+
+                            if( pd->v[pg->imtrx][var])
+                              {
+                                for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                                  {
+                                    d_term = 0;
+                                    
+                                    for( a=0; a<VIM; a++)
+                                      {
+                                        d_term += -weight*det*kapta[species_id]*bf[var]->grad_phi[j][a]*fv->snormal[a];
+                                      }
+                                    J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term;
+                                  }
+                              }				  
+
+                            break;
+
+                          case CURRENT_FICKIAN:
+
+                              var = MASS_FRACTION;
+                              if (pd->v[pg->imtrx][var]) {
+                                for (w = 0; w < pd->Num_Species_Eqn; w++) {
+                                  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                                    /*
+                                     * Find the material index for the current
+                                     * local variable degree of freedom
+                                     * (can't just query gun_list for MASS_FRACTION
+                                     *  unknowns -> have to do a lookup)
+                                     */		
+                                    gnn = ei[pg->imtrx]->gnn_list[var][j];
+                                    ledof = ei[pg->imtrx]->lvdof_to_ledof[var][j];
+                                    matIndex = ei[pg->imtrx]->matID_ledof[ledof];
+                                    c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
+                                    d_term = d_term1 = 0.0;
+                                    for (a = 0; a < dim; a++) {
+                                      d_term += - weight * det * fv->snormal[a] *
+                                          (d_diff[sp][MAX_VARIABLE_TYPES + w] * 
+                                           bf[var]->phi[j] * fv->grad_c[species_id][a] +
+                                           mp->diffusivity[species_id] *
+                                           bf[var]->grad_phi[j][a] * delta(w, species_id) 
+                                           + d_kapta_dc[species_id][MAX_VARIABLE_TYPES + w]*
+                                           bf[var]->phi[j]*fv->grad_V[a]);
+
+                                      d_term1 += weight * det * fv->snormal[a] * 
+                                          (fv->v[a]-x_dot[a]) *
+                                          bf[var]->phi[j] * delta(w,species_id);
+                                    }
+                                    J_AC[c] += d_term + d_term1;
+                                  }
+                                }
+                              }
+
+                            for(p=0; p<dim; p++)
+                              {
+                                var = VELOCITY1 + p;
+
+                                if( pd->v[pg->imtrx][var] )
+                                  {
+                                    for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                                      {
+                                        d_term = weight*det*fv->snormal[p]*fv->c[species_id]*bf[var]->phi[j];
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term;
+                                      }
+                                  }
+                              }
+
+                            for( p=0; p<dim; p++)
+                              {
+                                var = MESH_DISPLACEMENT1 + p;
+                                
+                                if( pd->v[pg->imtrx][var] )
+                                  {
+                                    for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                                      {
+                                        d_term = d_term1 = d_term2 =0.0;
+
+                                        for( a=0; a<VIM; a++)
+                                          {
+                                            d_term += -weight*(fv->dsurfdet_dx[p][j]*fv->snormal[a]*
+                                             (mp->diffusivity[sp]*fv->grad_c[sp][a] + kapta[species_id]*fv->grad_V[a]) +  
+                                             det*(d_diff[sp][var]*bf[var]->phi[j]*fv->snormal[a]*fv->grad_c[sp][a] +
+                                                  d_kapta_dx[species_id][a]*bf[var]->phi[j]*fv->snormal[a]*fv->grad_V[a] +
+                                                  mp->diffusivity[sp]*fv->dsnormal_dx[a][p][j]*fv->grad_c[species_id][a] +
+                                                  kapta[species_id]*fv->dsnormal_dx[a][p][j]*fv->grad_V[a] +
+                                                  mp->diffusivity[sp]*fv->snormal[a]*fv->d_grad_c_dmesh[a][sp][p][j] +
+                                                  kapta[species_id]*fv->snormal[a]*fv->d_grad_V_dmesh[a][p][j]));
+
+                                            d_term1 += weight*(fv->v[a] - x_dot[a])*fv->c[sp] *
+                                                              (fv->dsurfdet_dx[p][j] * fv->snormal[a] +
+                                                               det * fv->dsnormal_dx[a][p][j] );
+                                          }
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term + d_term1;
+                                      }
+                                  }
+                              }
+
+                            var = TEMPERATURE;
+
+                            if( pd->v[pg->imtrx][var])
+                              {
+                                for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                                  {
+                                    d_term = 0;
+                                    
+                                    for( a=0; a<VIM; a++)
+                                      {
+                                        d_term += -weight*det*bf[var]->phi[j]*fv->snormal[a]*
+                                                   (d_diff[sp][var]*fv->grad_c[sp][a]+
+                                                    d_kapta_dT[species_id]*fv->grad_V[a]);
+                                      }
+                                    J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term;
+                                  }
+                              }				  
+
+                            var = VOLTAGE;
+
+                            if( pd->v[pg->imtrx][var])
+                              {
+                                for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                                  {
+                                    d_term = 0;
+                                    
+                                    for( a=0; a<VIM; a++)
+                                      {
+                                        d_term += -weight*det*kapta[species_id]*bf[var]->grad_phi[j][a]*fv->snormal[a];
+                                      }
+                                    J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term;
+                                  }
+                              }				  
+
+                            break;
+
+                          case CURRENT:
+
+                            var = VOLTAGE;
+                            
+                            for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                              {
+                                d_term=0;
+                                
+                                for( a=0; a<dim; a++)
+                                  {
+                                    d_term += weight*det*fv->snormal[a]*
+                                             ( -dkdV[j]*fv->grad_V[a] - k * bf[var]->grad_phi[j][a]);
+                                  }
+
+                                /* J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term; */
+                                J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] = 1.0;
+                              }
+
+                            var = TEMPERATURE;
+                            
+                            for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                              {
+                                d_term=0;
+                                
+                                for( a=0; a<dim; a++)
+                                  {
+                                    d_term += weight*det*fv->snormal[a]*
+                                             ( -dkdT[j]*fv->grad_V[a]);
+                                  }
+
+                                /* J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term; */
+                                J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] = 1.0;
+                              }
+
+                            for( p=0; p<dim; p++)
+                              {
+                                var = VELOCITY1 +p;
+                                
+                                if( pd->v[pg->imtrx][var])
+                                  {
+                                    for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                                      {
+                                        d_term = 0.0;
+                                        /* J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term; */
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] = 1.0;
+                                      } 
+                                  }
+                              }
+
+                            for( p=0; p<dim; p++)
+                              {
+                                var = MESH_DISPLACEMENT1 + p;
+
+                                if( pd->v[pg->imtrx][var] )
+                                  {
+                                    
+                                    for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                                      {
+                                        d_term = d_term1 = 0.0;
+
+                                        for( a=0; a<dim; a++)
+                                          {
+                                            d_term += -weight * ( fv->dsurfdet_dx[p][j] * k * fv->snormal[a] * fv->grad_V[a] +
+                                                                 det * dkdX[p][j] *  fv->snormal[a] * fv->grad_V[a] +
+                                                                 det * k * fv->dsnormal_dx[a][p][j] * fv->grad_V[a] + 
+                                                                 det * k * fv->snormal[a] * fv->d_grad_V_dmesh[a][p][j] );
+                                          }
+                                        
+                                        /* J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term; */
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] = 1.0;
+                                      }
+                                  }
+                              }
+
+                            var = MASS_FRACTION;
+                            if (pd->v[pg->imtrx][var]) {
+                              for (w = 0; w < pd->Num_Species_Eqn; w++) {
+                                for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                                  /*
+                                   * Find the material index for the current
+                                   * local variable degree of freedom
+                                   * (can't just query gun_list for MASS_FRACTION
+                                   *  unknowns -> have to do a lookup)
+                                   */		
+                                  gnn = ei[pg->imtrx]->gnn_list[var][j];
+                                  ledof = ei[pg->imtrx]->lvdof_to_ledof[var][j];
+                                  matIndex = ei[pg->imtrx]->matID_ledof[ledof];
+                                  c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
+                                  for (d_term = 0.0, a = 0; a < dim; a++) {
+                                    d_term += - weight * det * dkdC[w][j] * fv->snormal[a] * fv->grad_V[a];
+                                  }
+                                  /* J_AC[c] += d_term; */
+                                  J_AC[c] = 1.0;
+                                }
+                              }
+                            }
+                            break;
+
+                          case AVERAGE_CONC:
+                            
+                            for( p=0; p<dim; p++)
+                              {
+                                var = MESH_DISPLACEMENT1 + p;
+                                
+                                if( pd->v[pg->imtrx][var] )
+                                  {
+                                    for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                                      {
+                                        d_term = weight*fv->dsurfdet_dx[p][j]*fv->c[species_id];
+
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term;
+                                      }
+                                  }
+                              }
+
+                            var = MASS_FRACTION;
+                            if (pd->v[pg->imtrx][var]) {
+                              for (j = 0 ; j < ei[pg->imtrx]->dof[var]; j++) {
+                                /*
+                                 * Find the material index for the current
+                                 * local variable degree of freedom
+                                 * (can't just query gun_list for MASS_FRACTION
+                                 *  unknowns -> have to do a lookup)
+                                 */		
+                                gnn = ei[pg->imtrx]->gnn_list[var][j];
+                                ledof = ei[pg->imtrx]->lvdof_to_ledof[var][j];
+                                matIndex = ei[pg->imtrx]->matID_ledof[ledof];
+                                c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
+                                d_term = weight * det * bf[var]->phi[j];
+                                J_AC[c] += d_term;
+                              }
+                            }
+                            break;
+
+                          case AREA:
+                            
+                            for(p=0; p<dim; p++ )
+                              {
+                                var = MESH_DISPLACEMENT1 + p;
+
+                                if( pd->v[pg->imtrx][var])
+                                  {
+                                    for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                                      {
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += weight*fv->dsurfdet_dx[p][j];
+                                      }
+                                  }
+                              }
+                            break;
+
+                          case VOL_REVOLUTION:
+
+                            for(p=0; p<dim; p++ )
+                              {
+                                var = MESH_DISPLACEMENT1 + p;
+
+                                if( pd->v[pg->imtrx][var])
+                                  {
+                                    for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                                      {
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += 0.5*weight*
+                       SGN(fv->snormal[1])*(fv->x[1]*(fv->snormal[1]*fv->dsurfdet_dx[p][j]
+                                                     + det*fv->dsnormal_dx[1][p][j])
+                           + det*fv->snormal[1]*bf[var]->phi[j]*delta(p,1));
+                                      }
+                                  }
+                              }
+                            break;
+
+                          case N_DOT_X:
+                            
+                            for ( p=0; p<DIM; p++)
+                              {
+                                var = MESH_DISPLACEMENT1 + p;
+
+                                if (pd->v[pg->imtrx][var] )
+                                  {
+                                    for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                                      {
+                                        double term1=0.0, term2=0.0, term3 = 0.0;
+                                        
+                                        term1 = fv->snormal[p]*bf[var]->phi[j] / (double) dim;
+                                       
+                                        for( a=0 ; a < dim ; a++)
+                                          {
+                                            term2 += ( fv->x[a] - param[a] ) * fv->dsnormal_dx[a][p][j]/(double) dim;
+                                            term3 += ( fv->x[a] - param[a] ) * fv->snormal[p]/(double) dim;
+                                          }
+
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += weight * term1 * det +
+                                                                         weight * term2 * det +
+                                                                         weight * term3 * fv->dsurfdet_dx[p][j];
+                                      }
+                                  }
+                              }
+                                        
+
+                            break;
+
+                          case ELEC_FORCE_NORMAL:
+   
+                            var = VOLTAGE;
+                            
+                            for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                              {
+                                d_term1=0;
+                                for( a=0; a<dim; a++)
+                                  {
+                                  d_term1 += efield[a]*(-bf[var]->grad_phi[j][a]);
+                                  }
+                                d_term=0;
+                                
+                                for( a=0; a<dim; a++)
+                                  {
+                                  for( b=0; b<dim; b++)
+                                    {
+                                    d_term += weight*det*fv->snormal[a]*fv->snormal[b]*
+                                        ( d_p_dV[j]* es[a][b]  + 
+                                          perm*((-bf[var]->grad_phi[j][a])*efield[b] +
+                                          efield[a]*(-bf[var]->grad_phi[j][b]) -
+                                          delta(a,b)*d_term1));
+                                    }
+                                  }
+   
+                                J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term; 
+                              }
+   
+                            var = TEMPERATURE;
+                            
+                            for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                              {
+                                d_term=0;
+                                
+                                for( a=0; a<dim; a++)
+                                  {
+                                  for( b=0; b<dim; b++)
+                                    {
+                                    d_term += weight*det*fv->snormal[a]*fv->snormal[b]*
+                                        ( d_p_dT[j]* es[a][b] );
+                                    }
+                                  }
+   
+                                J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term; 
+                              }
+   
+                            for( p=0; p<dim; p++)
+                              {
+                                var = MESH_DISPLACEMENT1 + p;
+   
+                                if( pd->v[pg->imtrx][var] )
+                                  {
+                                    
+                                    for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                                      {
+                                        d_term = d_term1 = 0.0;
+                                          for( a=0; a<dim; a++)
+                                                  {
+                                          d_term1 += efield[a]*(-fv->d_grad_V_dmesh[a][p][j]);
+                                                  }
+                                        for( a=0; a<dim; a++)
+                                          {
+                                            for( b=0; b<dim; b++)
+                                              {
+                                            d_term += weight * ( fv->dsurfdet_dx[p][j] * 
+                                                  fv->snormal[a]*perm*es[a][b]*fv->snormal[b] +
+                                                  det * d_p_dX[p][j] *  fv->snormal[a] * 
+                                                          es[a][b]*fv->snormal[b] +
+                                          det * perm * fv->dsnormal_dx[a][p][j] * es[a][b]*fv->snormal[b] + 
+                                          det * perm * fv->dsnormal_dx[b][p][j] * es[a][b]*fv->snormal[a] + 
+                                         det * perm * fv->snormal[a] * fv->snormal[b] *
+                  (efield[a]*(-fv->d_grad_V_dmesh[b][p][j]) + (-fv->d_grad_V_dmesh[a][p][j])*efield[b] - delta(a,b)*d_term1 ) );
+                                              }
+                                          }
+                                        
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term;
+                                      }
+                                  }
+                              }
+   
+                            break;
+   
+                          case ELEC_FORCE_TANGENT1:
+                          case ELEC_FORCE_TANGENT2:
+   
+                            dir = quantity == ELEC_FORCE_TANGENT1 ? 0 : 1;
+   
+                            var = VOLTAGE;
+                            
+                            for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                              {
+                                d_term1=0;
+                                for( a=0; a<dim; a++)
+                                  {
+                                  d_term1 += efield[a]*(-bf[var]->grad_phi[j][a]);
+                                  }
+                                d_term=0;
+                                
+                                for( a=0; a<dim; a++)
+                                  {
+                                  for( b=0; b<dim; b++)
+                                    {
+                                    d_term += weight*det*fv->stangent[dir][a]*-fv->snormal[b]*
+                                        ( d_p_dV[j]* es[a][b]  + 
+                                          perm*((-bf[var]->grad_phi[j][a])*efield[b] +
+                                          efield[a]*(-bf[var]->grad_phi[j][b]) -
+                                          delta(a,b)*d_term1));
+                                    }
+                                  }
+   
+                                J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term; 
+                              }
+   
+                            var = TEMPERATURE;
+                            
+                            for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                              {
+                                d_term=0;
+                                
+                                for( a=0; a<dim; a++)
+                                  {
+                                  for( b=0; b<dim; b++)
+                                    {
+                                    d_term += weight*det*fv->stangent[dir][a]*-fv->snormal[b]*
+                                        ( d_p_dT[j]* es[a][b] );
+                                    }
+                                  }
+   
+                                J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term; 
+                              }
+   
+                            for( p=0; p<dim; p++)
+                              {
+                                var = MESH_DISPLACEMENT1 + p;
+   
+                                if( pd->v[pg->imtrx][var] )
+                                  {
+                                    
+                                    for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                                      {
+                                        d_term = d_term1 = 0.0;
+                                          for( a=0; a<dim; a++)
+                                                  {
+                                          d_term1 += efield[a]*(-fv->d_grad_V_dmesh[a][p][j]);
+                                                  }
+                                        for( a=0; a<dim; a++)
+                                          {
+                                            for( b=0; b<dim; b++)
+                                              {
+                                            d_term += weight * ( fv->dsurfdet_dx[p][j] * 
+                                                  fv->stangent[dir][a]*perm*es[a][b]*-fv->snormal[b] +
+                                                  det * d_p_dX[p][j] *  fv->stangent[dir][a] * 
+                                                          es[a][b]*-fv->snormal[b] +
+                                          det * perm * fv->dstangent_dx[dir][a][p][j] * es[a][b]*-fv->snormal[b] + 
+                                          det * perm * -fv->dsnormal_dx[b][p][j] * es[a][b]*fv->stangent[dir][a] + 
+                                         det * perm * fv->stangent[dir][a] * -fv->snormal[b] *
+                  (efield[a]*(-fv->d_grad_V_dmesh[b][p][j]) + (-fv->d_grad_V_dmesh[a][p][j])*efield[b] - delta(a,b)*d_term1 ) );
+                                              }
+                                          }
+                                        
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term;
+                                      }
+                                  }
+                              }
+   
+                            break;
+   
+                          case ELEC_FORCE_X:
+                          case ELEC_FORCE_Y:
+                          case ELEC_FORCE_Z:
+   
+                            dir = ( quantity == ELEC_FORCE_X ? 0 :
+                                  ( quantity == ELEC_FORCE_Y ? 1 : 
+                                  ( quantity == ELEC_FORCE_Z ? 2 : -1) ) ) ;  /* Can't do this with FORTRAN */
+   
+                            GOMA_EH(dir, "PANIC in evaluate_flux sensitivity section");
+   
+                            var = VOLTAGE;
+                            
+                            for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                              {
+                                d_term1=0;
+                                for( a=0; a<dim; a++)
+                                  {
+                                  d_term1 += efield[a]*(-bf[var]->grad_phi[j][a]);
+                                  }
+                                d_term=0;
+                                
+                                  for( b=0; b<dim; b++)
+                                    {
+                                    d_term += weight*det*-fv->snormal[b]*
+                                        ( d_p_dV[j]* es[dir][b]  + 
+                                          perm*((-bf[var]->grad_phi[j][dir])*efield[b] +
+                                          efield[dir]*(-bf[var]->grad_phi[j][b]) -
+                                          delta(dir,b)*d_term1));
+                                    }
+   
+                                J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term; 
+                              }
+   
+                            var = TEMPERATURE;
+                            
+                            for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                              {
+                                d_term=0;
+                                
+                                  for( b=0; b<dim; b++)
+                                    {
+                                    d_term += weight*det*-fv->snormal[b]*
+                                        ( d_p_dT[j]* es[dir][b] );
+                                    }
+   
+                                J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term; 
+                              }
+   
+                            for( p=0; p<dim; p++)
+                              {
+                                var = MESH_DISPLACEMENT1 + p;
+   
+                                if( pd->v[pg->imtrx][var] )
+                                  {
+                                    
+                                    for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                                      {
+                                        d_term = d_term1 = 0.0;
+                                          for( a=0; a<dim; a++)
+                                                  {
+                                          d_term1 += efield[a]*(-fv->d_grad_V_dmesh[a][p][j]);
+                                                  }
+                                            for( b=0; b<dim; b++)
+                                              {
+                                            d_term += weight * ( fv->dsurfdet_dx[p][j] * 
+                                                  perm*es[dir][b]*-fv->snormal[b] +
+                                                  det * d_p_dX[p][j] * es[dir][b]*-fv->snormal[b] +
+                                          det * perm * -fv->dsnormal_dx[b][p][j] * es[dir][b] + 
+                                         det * perm * -fv->snormal[b] *
+                  (efield[dir]*(-fv->d_grad_V_dmesh[b][p][j]) + (-fv->d_grad_V_dmesh[dir][p][j])*efield[b] - delta(dir,b)*d_term1 ) );
+                                              }
+                                        
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term;
+                                      }
+                                  }
+                              }
+   
+                            break;
+   
+                          case NET_SURF_CHARGE:
+   
+                            var = VOLTAGE;
+                            
+                            for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                              {
+                                d_term=0;
+                                
+                                for( a=0; a<dim; a++)
+                                  {
+                                    d_term += -weight*det*fv->snormal[a]*
+                                        ( d_p_dV[j]*efield[a] + perm * (-bf[var]->grad_phi[j][a]));
+                                  }
+   
+                                J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term; 
+                              }
+   
+                            var = TEMPERATURE;
+                            
+                            for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                              {
+                                d_term=0;
+                                
+                                for( a=0; a<dim; a++)
+                                  {
+                                    d_term += -weight*det*fv->snormal[a]*
+                                             ( d_p_dT[j]*efield[a]);
+                                  }
+   
+                                J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term; 
+                              }
+   
+                            for( p=0; p<dim; p++)
+                              {
+                                var = MESH_DISPLACEMENT1 + p;
+   
+                                if( pd->v[pg->imtrx][var] )
+                                  {
+                                    
+                                    for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                                      {
+                                        d_term = d_term1 = 0.0;
+   
+                                        for( a=0; a<dim; a++)
+                                          {
+                                            d_term += -weight * ( fv->dsurfdet_dx[p][j] * fv->snormal[a]*perm*efield[a] +
+                                                                 det * d_p_dX[p][j] *  fv->snormal[a] * efield[a] +
+                                                                 det * perm * fv->dsnormal_dx[a][p][j] * efield[a] + 
+                                                                 det * perm * fv->snormal[a] * (-fv->d_grad_V_dmesh[a][p][j]) );
+                                          }
+                                        
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j]  ] += d_term;
+                                      }
+                                  }
+                              }
+   
+                            break;
+
+                          default:
+                            GOMA_EH(GOMA_ERROR,"Constraint sensitivities haven't been implemented for that flux type.");
+                            break;
+                          }
+                      }
+
+                  }   /*  surface integration over element */
+
+                if( Subgrid_Int.active )
+                  {
+                    safe_free ( (void *) Subgrid_Int.s  ); Subgrid_Int.s = NULL;
+                    safe_free ( (void *) Subgrid_Int.wt ); Subgrid_Int.wt = NULL;
+                    free_search_grid ( &element_search_grid );
+                  }
+
+
+              }   /*  material id conditional */
+          }    /*   element loop */
+      } /* num_side_in_set > 0 */
     }      /*   sset id   */
   else
     {
@@ -6547,1174 +6553,1177 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
     {
       num_side_in_set      = exo->ss_num_sides[current_id];
 
-      num_dist_fact_in_set = exo->ss_num_distfacts[current_id];
+      if (num_side_in_set > 0) {
 
-      num_elem_in_set      = num_side_in_set;
+        num_dist_fact_in_set = exo->ss_num_distfacts[current_id];
 
-      num_node_in_set      = num_dist_fact_in_set;
+        num_elem_in_set      = num_side_in_set;
 
-      num_nodes_on_side    = num_node_in_set/num_elem_in_set; /* Well... */
+        num_node_in_set      = num_dist_fact_in_set;
 
-      elem_list            = &exo->ss_elem_list[exo->ss_elem_index[current_id]];
+        num_nodes_on_side    = num_node_in_set/num_elem_in_set; /* Well... */
 
-      /* Now start element sweep */
+        elem_list            = &exo->ss_elem_list[exo->ss_elem_index[current_id]];
 
-      for (i=0; i< num_elem_in_set; i++)
-	{         
-	  ei[pg->imtrx]->ielem = elem_list[i];
+        /* Now start element sweep */
 
-	  mn = find_mat_number(ei[pg->imtrx]->ielem, exo);
+        for (i=0; i< num_elem_in_set; i++)
+          {         
+            ei[pg->imtrx]->ielem = elem_list[i];
 
-
-	/**    only do integration if the requested material number  **/
-
-	if ( mat_id == -1 || 
-             (mn == map_mat_index(mat_id) && dpi->elem_owner[ elem_list[i] ] == ProcID))
-	{
-	  /*
-	   * Yes, "x" gets recycled like garbage. Fortunately, this 
-	   * routine should not write onto "x"...
-	   */
-	  err = load_elem_dofptr(elem_list[i], exo,
-				 x, x_sens_p[vector_id],
-                                 xdot, xdot, 0);
-	  GOMA_EH(err, "load_elem_dofptr");
-
-	  err = bf_mp_init(pd);
-	  GOMA_EH(err, "bf_mp_init");
-  
-	  iconnect_ptr        = ei[pg->imtrx]->iconnect_ptr;
-	  ielem_type          = ei[pg->imtrx]->ielem_type;
-	  ip_total            = elem_info(NQUAD_SURF, ielem_type);
-	  num_local_nodes     = ei[pg->imtrx]->num_local_nodes;
-	  ielem_dim           = ei[pg->imtrx]->ielem_dim;
-
-	 
-	  id_side = find_id_side (ei[pg->imtrx]->ielem, num_nodes_on_side,
-				  &exo->ss_node_list[current_id]
-				                    [num_nodes_on_side*i],
-				  id_local_elem_coord, exo);
-
-	      /* Calculates the ID side correctly for tets */
-	      if ( ielem_type == LINEAR_TET ) id_side = find_id_side_SS(ei[pg->imtrx]->ielem,
- current_id, exo);
-
-		  if( ls != NULL && ielem_dim == 2  &&
-			(quantity == POS_LS_FLUX || quantity == NEG_LS_FLUX ||
-				quantity == DELTA || quantity == LS_DCA ))
-		  {
-                    if ( ls->var != LS )
-			GOMA_WH(-1,"Level-set variable is not LS!");
-			  switch (id_side)
-			  {
-				  case 1:
-					  ls_F[0]=*esp->F[0];
-					  ls_F[1]=*esp->F[1];
-					  ls_F[2]=*esp->F[4];
-					  break;
-				  case 2:
-					  ls_F[0]=*esp->F[1];
-					  ls_F[1]=*esp->F[2];
-					  ls_F[2]=*esp->F[5];
-					  break;
-				  case 3:
-					  ls_F[0]=*esp->F[3];
-					  ls_F[1]=*esp->F[2];
-					  ls_F[2]=*esp->F[6];
-					  break;
-				  case 4:
-					  ls_F[0]=*esp->F[0];
-					  ls_F[1]=*esp->F[3];
-					  ls_F[2]=*esp->F[7];
-					  break;
-			  }
-			if(species_id > 0)
-			{
-			  var=species_id-1;
-			  switch (id_side)
-			  {
-				  case 1:
-					  ls_F[0]=*esp->pF[var][0];
-					  ls_F[1]=*esp->pF[var][1];
-					  ls_F[2]=*esp->pF[var][4];
-					  break;
-				  case 2:
-					  ls_F[0]=*esp->pF[var][1];
-					  ls_F[1]=*esp->pF[var][2];
-					  ls_F[2]=*esp->pF[var][5];
-					  break;
-				  case 3:
-					  ls_F[0]=*esp->pF[var][3];
-					  ls_F[1]=*esp->pF[var][2];
-					  ls_F[2]=*esp->pF[var][6];
-					  break;
-				  case 4:
-					  ls_F[0]=*esp->pF[var][0];
-					  ls_F[1]=*esp->pF[var][3];
-					  ls_F[2]=*esp->pF[var][7];
-					  break;
-			  }
-			}
-			  
-			  switch( quantity )
-			  {
-                                  case POS_LS_FLUX:
-					  wt_type = 2;
-					  break;
-				  case NEG_LS_FLUX:
-					  wt_type = 2;
-					  ls_F[0] = -ls_F[0];
-					  ls_F[1] = -ls_F[1];
-					  ls_F[2] = -ls_F[2];
-					  break;
-                                  case DELTA:
-                                  case LS_DCA:
-					  wt_type = 3;
-					  break;
-                                  default:
-                                          wt_type = 2;
-                                          break;
-			  }
-
-			  ierr = adaptive_weight( ad_wt, ip_total, ielem_dim-1,
-                                  ls_F, 0.0, wt_type, ei[pg->imtrx]->ielem_type);
-			  if(ierr == -1)printf("adaptive wt problem %d %g %g %g\n",ierr,ls_F[0],ls_F[1],ls_F[2]);
-		  }
-		  
-		  if( ls!=NULL && ls->elem_overlap_state && ls->Integration_Depth > 0)
-		  {
-			  Subgrid_Int.active = TRUE;
-			  
-			  get_subgrid_integration_pts ( Subgrid_Tree, &element_search_grid,
-		&Subgrid_Int.s, &Subgrid_Int.wt, ls->Length_Scale );
-			  
-			  find_surf_center_st ( ielem_type, id_side, ielem_dim, surface_centroid, &s, &t );
-			  ip_total = gather_surface_subgrid_integration_pts( element_search_grid, id_side, 
-			surface_centroid, Subgrid_Int.s, Subgrid_Int.wt, 0 );
-			  
-		  }
-		  
+            mn = find_mat_number(ei[pg->imtrx]->ielem, exo);
 
 
+          /**    only do integration if the requested material number  **/
 
-	  /* Surface integration over element */
-	  
-	  for (ip = 0; ip < ip_total; ip++)
-	    {
-                  /*   zero local fluxes  */
-                  local_q = local_qconv = 0.;
-		  memset(local_Torque, 0, DIM*sizeof(double) );
-			  
-		  if( ls != NULL && ls->elem_overlap_state && ls->Integration_Depth > 0 )
-		  {
-			  ls->Elem_Sign = 0;
-			  xi[0] = Subgrid_Int.s[ip][0];
-			  xi[1] = Subgrid_Int.s[ip][1];
-			  xi[2] = Subgrid_Int.s[ip][2];
-				  
-			  s = 1.e30; 
-			  t = 1.e30;
-			  wt = Subgrid_Int.wt[ip];
-		  }
-		  else
-		  {
+          if ( mat_id == -1 || 
+               (mn == map_mat_index(mat_id) && dpi->elem_owner[ elem_list[i] ] == ProcID))
+          {
+            /*
+             * Yes, "x" gets recycled like garbage. Fortunately, this 
+             * routine should not write onto "x"...
+             */
+            err = load_elem_dofptr(elem_list[i], exo,
+                                   x, x_sens_p[vector_id],
+                                   xdot, xdot, 0);
+            GOMA_EH(err, "load_elem_dofptr");
 
-	      /* find the quadrature point locations for current ip */
-	      find_surf_st (ip, ielem_type, id_side, ielem_dim, xi, &s, &t, &u);
-	    
-	      /* find the quadrature weight for current ip */
-	      wt = Gq_surf_weight (ip, ielem_type);    
-		  }
-			  
-	      /* ****************************************/
-	      err = load_basis_functions( xi, bfd);
-	      GOMA_EH( err, "problem from load_basis_functions");
-	    
-	      err = beer_belly();
-	      GOMA_EH( err, "beer_belly");
-	    
-	      /* precalculate variables at  current integration pt.*/
-	      err = load_fv();
-	      GOMA_EH( err, "load_fv");
+            err = bf_mp_init(pd);
+            GOMA_EH(err, "bf_mp_init");
+    
+            iconnect_ptr        = ei[pg->imtrx]->iconnect_ptr;
+            ielem_type          = ei[pg->imtrx]->ielem_type;
+            ip_total            = elem_info(NQUAD_SURF, ielem_type);
+            num_local_nodes     = ei[pg->imtrx]->num_local_nodes;
+            ielem_dim           = ei[pg->imtrx]->ielem_dim;
 
-	      err = load_fv_sens();
-	      GOMA_EH( err, "load_fv_sens");
-	    
-	      err = load_bf_grad();
-	      GOMA_EH( err, "load_bf_grad");
+           
+            id_side = find_id_side (ei[pg->imtrx]->ielem, num_nodes_on_side,
+                                    &exo->ss_node_list[current_id]
+                                                      [num_nodes_on_side*i],
+                                    id_local_elem_coord, exo);
 
-	      surface_determinant_and_normal (ei[pg->imtrx]->ielem, iconnect_ptr, num_local_nodes, 
-					      ielem_dim - 1,  
-					      id_side,
-					      num_nodes_on_side,
-					      id_local_elem_coord );
-	    
-	    /*
-	     * Load up physical space gradients of field variables at this
-	     * Gauss point.
-	     */
-	    err = load_fv_grads();
-	    GOMA_EH( err, "load_fv_grads");
+                /* Calculates the ID side correctly for tets */
+                if ( ielem_type == LINEAR_TET ) id_side = find_id_side_SS(ei[pg->imtrx]->ielem,
+   current_id, exo);
 
-	    err = load_fv_grads_sens();
-	    GOMA_EH( err, "load_fv_grads_sens");
+                    if( ls != NULL && ielem_dim == 2  &&
+                          (quantity == POS_LS_FLUX || quantity == NEG_LS_FLUX ||
+                                  quantity == DELTA || quantity == LS_DCA ))
+                    {
+                      if ( ls->var != LS )
+                          GOMA_WH(-1,"Level-set variable is not LS!");
+                            switch (id_side)
+                            {
+                                    case 1:
+                                            ls_F[0]=*esp->F[0];
+                                            ls_F[1]=*esp->F[1];
+                                            ls_F[2]=*esp->F[4];
+                                            break;
+                                    case 2:
+                                            ls_F[0]=*esp->F[1];
+                                            ls_F[1]=*esp->F[2];
+                                            ls_F[2]=*esp->F[5];
+                                            break;
+                                    case 3:
+                                            ls_F[0]=*esp->F[3];
+                                            ls_F[1]=*esp->F[2];
+                                            ls_F[2]=*esp->F[6];
+                                            break;
+                                    case 4:
+                                            ls_F[0]=*esp->F[0];
+                                            ls_F[1]=*esp->F[3];
+                                            ls_F[2]=*esp->F[7];
+                                            break;
+                            }
+                          if(species_id > 0)
+                          {
+                            var=species_id-1;
+                            switch (id_side)
+                            {
+                                    case 1:
+                                            ls_F[0]=*esp->pF[var][0];
+                                            ls_F[1]=*esp->pF[var][1];
+                                            ls_F[2]=*esp->pF[var][4];
+                                            break;
+                                    case 2:
+                                            ls_F[0]=*esp->pF[var][1];
+                                            ls_F[1]=*esp->pF[var][2];
+                                            ls_F[2]=*esp->pF[var][5];
+                                            break;
+                                    case 3:
+                                            ls_F[0]=*esp->pF[var][3];
+                                            ls_F[1]=*esp->pF[var][2];
+                                            ls_F[2]=*esp->pF[var][6];
+                                            break;
+                                    case 4:
+                                            ls_F[0]=*esp->pF[var][0];
+                                            ls_F[1]=*esp->pF[var][3];
+                                            ls_F[2]=*esp->pF[var][7];
+                                            break;
+                            }
+                          }
+                            
+                            switch( quantity )
+                            {
+                                    case POS_LS_FLUX:
+                                            wt_type = 2;
+                                            break;
+                                    case NEG_LS_FLUX:
+                                            wt_type = 2;
+                                            ls_F[0] = -ls_F[0];
+                                            ls_F[1] = -ls_F[1];
+                                            ls_F[2] = -ls_F[2];
+                                            break;
+                                    case DELTA:
+                                    case LS_DCA:
+                                            wt_type = 3;
+                                            break;
+                                    default:
+                                            wt_type = 2;
+                                            break;
+                            }
 
-	    err = load_fv_mesh_derivs(1);
-	    GOMA_EH( err, "load_fv_mesh_derivs");
+                            ierr = adaptive_weight( ad_wt, ip_total, ielem_dim-1,
+                                    ls_F, 0.0, wt_type, ei[pg->imtrx]->ielem_type);
+                            if(ierr == -1)printf("adaptive wt problem %d %g %g %g\n",ierr,ls_F[0],ls_F[1],ls_F[2]);
+                    }
+                    
+                    if( ls!=NULL && ls->elem_overlap_state && ls->Integration_Depth > 0)
+                    {
+                            Subgrid_Int.active = TRUE;
+                            
+                            get_subgrid_integration_pts ( Subgrid_Tree, &element_search_grid,
+                  &Subgrid_Int.s, &Subgrid_Int.wt, ls->Length_Scale );
+                            
+                            find_surf_center_st ( ielem_type, id_side, ielem_dim, surface_centroid, &s, &t );
+                            ip_total = gather_surface_subgrid_integration_pts( element_search_grid, id_side, 
+                          surface_centroid, Subgrid_Int.s, Subgrid_Int.wt, 0 );
+                            
+                    }
+                    
 
-            if(TimeIntegration != STEADY && pd->e[pg->imtrx][MESH_DISPLACEMENT1])
-      		{
-	        for(j=0; j<ielem_dim; j++ )
-       		   {
-            		x_dot[j] = fv_dot->x[j];
-          	   }
-      		}
-	    else
-      		{
-        	for(j=0; j<ielem_dim; j++ )
-          	     {
-            		x_dot[j] = 0.;
-          	     }
-      		}
 
-	    do_LSA_mods(LSA_SURFACE);
 
-	    if (ielem_dim !=3) {
-	      calc_surf_tangent(ei[pg->imtrx]->ielem, iconnect_ptr, 
-				num_local_nodes, ielem_dim-1,
-				num_nodes_on_side,
-				id_local_elem_coord);
-	    }
-
-            weight = wt;
-	    det = fv->sdet*fv->h3;
-
-	    if(pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN)
-	      GOMA_EH(GOMA_ERROR, "evalute_flux_sens has not been updated for the PROJECTED_CARTESIAN coordinate system.");
-
-	    if(pd_glob[0] ->CoordinateSystem == CYLINDRICAL ||
-               pd_glob[0] ->CoordinateSystem == SWIRLING   )
-	      {
-		weight = 2.*M_PIE*wt;
-		det = fv->sdet;
-	      }
-
-/*  normal and tangent vector sensitivities   */
-        memset( normal_sens, 0, sizeof(dbl)*MAX_PDIM);
-        memset( tangent_sens, 0, sizeof(dbl)*2*MAX_PDIM);
-        for( a=0 ; a < ielem_dim ; a++)
-           {
-           for( b=0 ; b < ielem_dim ; b++)
+            /* Surface integration over element */
+            
+            for (ip = 0; ip < ip_total; ip++)
               {
-               var = MESH_DISPLACEMENT1 + b ;
-               if( pd->v[pg->imtrx][var] )
+                    /*   zero local fluxes  */
+                    local_q = local_qconv = 0.;
+                    memset(local_Torque, 0, DIM*sizeof(double) );
+                            
+                    if( ls != NULL && ls->elem_overlap_state && ls->Integration_Depth > 0 )
+                    {
+                            ls->Elem_Sign = 0;
+                            xi[0] = Subgrid_Int.s[ip][0];
+                            xi[1] = Subgrid_Int.s[ip][1];
+                            xi[2] = Subgrid_Int.s[ip][2];
+                                    
+                            s = 1.e30; 
+                            t = 1.e30;
+                            wt = Subgrid_Int.wt[ip];
+                    }
+                    else
+                    {
+
+                /* find the quadrature point locations for current ip */
+                find_surf_st (ip, ielem_type, id_side, ielem_dim, xi, &s, &t, &u);
+              
+                /* find the quadrature weight for current ip */
+                wt = Gq_surf_weight (ip, ielem_type);    
+                    }
+                            
+                /* ****************************************/
+                err = load_basis_functions( xi, bfd);
+                GOMA_EH( err, "problem from load_basis_functions");
+              
+                err = beer_belly();
+                GOMA_EH( err, "beer_belly");
+              
+                /* precalculate variables at  current integration pt.*/
+                err = load_fv();
+                GOMA_EH( err, "load_fv");
+
+                err = load_fv_sens();
+                GOMA_EH( err, "load_fv_sens");
+              
+                err = load_bf_grad();
+                GOMA_EH( err, "load_bf_grad");
+
+                surface_determinant_and_normal (ei[pg->imtrx]->ielem, iconnect_ptr, num_local_nodes, 
+                                                ielem_dim - 1,  
+                                                id_side,
+                                                num_nodes_on_side,
+                                                id_local_elem_coord );
+              
+              /*
+               * Load up physical space gradients of field variables at this
+               * Gauss point.
+               */
+              err = load_fv_grads();
+              GOMA_EH( err, "load_fv_grads");
+
+              err = load_fv_grads_sens();
+              GOMA_EH( err, "load_fv_grads_sens");
+
+              err = load_fv_mesh_derivs(1);
+              GOMA_EH( err, "load_fv_mesh_derivs");
+
+              if(TimeIntegration != STEADY && pd->e[pg->imtrx][MESH_DISPLACEMENT1])
                   {
-                   for(j=0 ; j < ei[pg->imtrx]->dof[var]; j++)
-                      {
-                       normal_sens[a] += fv->dsnormal_dx[a][b][j]*bf[var]->phi[j]
-                                         *(*esp_old->d[b][j]);
-                       tangent_sens[0][a] += fv->dstangent_dx[0][a][b][j]*
-                                      bf[var]->phi[j]*(*esp_old->d[b][j]);
-                             if (ielem_dim !=3) {
-                       tangent_sens[1][a] += fv->dstangent_dx[1][a][b][j]*
-                                      bf[var]->phi[j]*(*esp_old->d[b][j]);
-                                }
-                      }
+                  for(j=0; j<ielem_dim; j++ )
+                     {
+                          x_dot[j] = fv_dot->x[j];
+                     }
                   }
-               }
+              else
+                  {
+                  for(j=0; j<ielem_dim; j++ )
+                       {
+                          x_dot[j] = 0.;
+                       }
+                  }
+
+              do_LSA_mods(LSA_SURFACE);
+
+              if (ielem_dim !=3) {
+                calc_surf_tangent(ei[pg->imtrx]->ielem, iconnect_ptr, 
+                                  num_local_nodes, ielem_dim-1,
+                                  num_nodes_on_side,
+                                  id_local_elem_coord);
+              }
+
+              weight = wt;
+              det = fv->sdet*fv->h3;
+
+              if(pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN)
+                GOMA_EH(GOMA_ERROR, "evalute_flux_sens has not been updated for the PROJECTED_CARTESIAN coordinate system.");
+
+              if(pd_glob[0] ->CoordinateSystem == CYLINDRICAL ||
+                 pd_glob[0] ->CoordinateSystem == SWIRLING   )
+                {
+                  weight = 2.*M_PIE*wt;
+                  det = fv->sdet;
+                }
+
+  /*  normal and tangent vector sensitivities   */
+          memset( normal_sens, 0, sizeof(dbl)*MAX_PDIM);
+          memset( tangent_sens, 0, sizeof(dbl)*2*MAX_PDIM);
+          for( a=0 ; a < ielem_dim ; a++)
+             {
+             for( b=0 ; b < ielem_dim ; b++)
+                {
+                 var = MESH_DISPLACEMENT1 + b ;
+                 if( pd->v[pg->imtrx][var] )
+                    {
+                     for(j=0 ; j < ei[pg->imtrx]->dof[var]; j++)
+                        {
+                         normal_sens[a] += fv->dsnormal_dx[a][b][j]*bf[var]->phi[j]
+                                           *(*esp_old->d[b][j]);
+                         tangent_sens[0][a] += fv->dstangent_dx[0][a][b][j]*
+                                        bf[var]->phi[j]*(*esp_old->d[b][j]);
+                               if (ielem_dim !=3) {
+                         tangent_sens[1][a] += fv->dstangent_dx[1][a][b][j]*
+                                        bf[var]->phi[j]*(*esp_old->d[b][j]);
+                                  }
+                        }
+                    }
+                 }
+              }
+
+  /*	get density  */
+
+              rho = density( NULL, time_value );
+
+
+  /**   get solid stresses  **/
+
+   dim   = pd_glob[0]->Num_Dim;
+
+   if(pd->e[pg->imtrx][R_MESH1] && cr->MeshMotion != ARBITRARY)
+      {
+        err = belly_flop(elc->lame_mu);
+        GOMA_EH(err, "error in belly flop");
+        if (err == 2) exit(-1);
+        /*
+         * Total mesh stress tensor...
+         *
+         * Guess what the 4 new args will have to be and bloat accordingly.
+         */
+
+        err = mesh_stress_tensor(TT, dTT_dx, dTT_dp, dTT_dc, dTT_dp_liq, 
+                                 dTT_dp_gas, dTT_dporosity, dTT_dsink_mass, dTT_dT, dTT_dmax_strain, dTT_dcur_strain,
+                                 elc->lame_mu, elc->lame_lambda,
+                                 delta_t, ielem, ip, ip_total);
+
+        /* For LINEAR ELASTICITY */
+        if (cr->MeshFluxModel == LINEAR)
+          {
+            if (dim == 2){
+              TT[2][2] = 1.;
+              TT[1][2] = 0.;
+              TT[0][2] = 0.;
             }
-
-/*	get density  */
-
-	    rho = density( NULL, time_value );
-
-
-/**   get solid stresses  **/
-
- dim   = pd_glob[0]->Num_Dim;
-
- if(pd->e[pg->imtrx][R_MESH1] && cr->MeshMotion != ARBITRARY)
-    {
-      err = belly_flop(elc->lame_mu);
-      GOMA_EH(err, "error in belly flop");
-      if (err == 2) exit(-1);
-      /*
-       * Total mesh stress tensor...
-       *
-       * Guess what the 4 new args will have to be and bloat accordingly.
-       */
-
-      err = mesh_stress_tensor(TT, dTT_dx, dTT_dp, dTT_dc, dTT_dp_liq, 
-			       dTT_dp_gas, dTT_dporosity, dTT_dsink_mass, dTT_dT, dTT_dmax_strain, dTT_dcur_strain,
-                               elc->lame_mu, elc->lame_lambda,
-			       delta_t, ielem, ip, ip_total);
-
-      /* For LINEAR ELASTICITY */
-      if (cr->MeshFluxModel == LINEAR)
-        {
-          if (dim == 2){
-            TT[2][2] = 1.;
-            TT[1][2] = 0.;
-            TT[0][2] = 0.;
           }
-        }
-      /*  For Hookian Elasticity and shrinkage */
-      else
-        {
-          if (dim == 2){
-            elast_modulus = elc->lame_mu;
-                if (cr->MeshFluxModel == NONLINEAR ||
-                    cr->MeshFluxModel == HOOKEAN_PSTRAIN ||
-                    cr->MeshFluxModel == INCOMP_PSTRAIN )
-         TT[2][2] = (1. - pow(fv->volume_change,2./3.)) * elast_modulus - fv->P;
-                /*              if (cr->MeshFluxModel == INCOMP_PSTRESS) */
-                else  TT[2][2] = 0.;
-            TT[1][2] = 0.;
-            TT[0][2] = 0.;
+        /*  For Hookian Elasticity and shrinkage */
+        else
+          {
+            if (dim == 2){
+              elast_modulus = elc->lame_mu;
+                  if (cr->MeshFluxModel == NONLINEAR ||
+                      cr->MeshFluxModel == HOOKEAN_PSTRAIN ||
+                      cr->MeshFluxModel == INCOMP_PSTRAIN )
+           TT[2][2] = (1. - pow(fv->volume_change,2./3.)) * elast_modulus - fv->P;
+                  /*              if (cr->MeshFluxModel == INCOMP_PSTRESS) */
+                  else  TT[2][2] = 0.;
+              TT[1][2] = 0.;
+              TT[0][2] = 0.;
+            }
           }
+      } /* end of STRESS_TENSOR */
+
+  /* calculate real-solid stress here !!*/
+    if(pd->e[pg->imtrx][R_SOLID1] && cr->MeshMotion != ARBITRARY)
+      {
+        mu = elc_rs->lame_mu;
+        err = belly_flop_rs(mu);
+        GOMA_EH(err, "error in belly flop");
+        if (err == 2) return(err);
+        /*
+         * Total mesh stress tensor...
+         */
+         err = solid_stress_tensor(TT, dTT_dx, dTT_drs, dTT_dp, dTT_dc,  
+                                   dTT_dp_liq, dTT_dp_gas, dTT_dporosity,
+                                   dTT_dT, dTT_dmax_strain, elc_rs->lame_mu, elc_rs->lame_lambda);
+        if (dim == 2){
+          elast_modulus = elc_rs->lame_mu;
+
+          if (cr->RealSolidFluxModel == NONLINEAR ||
+              cr->RealSolidFluxModel == HOOKEAN_PSTRAIN ||
+              cr->RealSolidFluxModel == INCOMP_PSTRAIN )
+            TT[2][2] = (1. - pow(fv->volume_change,2./3.)) * elast_modulus - fv->P
+  ;
+          /*              if (cr->MeshFluxModel == INCOMP_PSTRESS) */
+          else  TT[2][2] = 0.;
+
+          TT[1][2] = 0.;
+          TT[0][2] = 0.;
         }
-    } /* end of STRESS_TENSOR */
+      } /* end of REAL_STRESS_TENSOR */
 
-/* calculate real-solid stress here !!*/
-  if(pd->e[pg->imtrx][R_SOLID1] && cr->MeshMotion != ARBITRARY)
-    {
-      mu = elc_rs->lame_mu;
-      err = belly_flop_rs(mu);
-      GOMA_EH(err, "error in belly flop");
-      if (err == 2) return(err);
-      /*
-       * Total mesh stress tensor...
-       */
-       err = solid_stress_tensor(TT, dTT_dx, dTT_drs, dTT_dp, dTT_dc,  
-				 dTT_dp_liq, dTT_dp_gas, dTT_dporosity,
-				 dTT_dT, dTT_dmax_strain, elc_rs->lame_mu, elc_rs->lame_lambda);
-      if (dim == 2){
-        elast_modulus = elc_rs->lame_mu;
-
-        if (cr->RealSolidFluxModel == NONLINEAR ||
-            cr->RealSolidFluxModel == HOOKEAN_PSTRAIN ||
-            cr->RealSolidFluxModel == INCOMP_PSTRAIN )
-          TT[2][2] = (1. - pow(fv->volume_change,2./3.)) * elast_modulus - fv->P
-;
-        /*              if (cr->MeshFluxModel == INCOMP_PSTRESS) */
-        else  TT[2][2] = 0.;
-
-        TT[1][2] = 0.;
-        TT[0][2] = 0.;
-      }
-    } /* end of REAL_STRESS_TENSOR */
-
-		/*
-		 *  viscoelastic stress tensor
-		 *  assume only EVSS_F formulation for now
-		 */
-  			memset( ves_sens, 0, sizeof(dbl)*DIM*DIM);
-  			memset( ves, 0, sizeof(dbl)*DIM*DIM);
-  			if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
-    			  {
-			    for ( a=0; a<WIM; a++)
-        	              {
-			        for ( b=0; b<VIM; b++)
-            			   {
-			             for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
-                		       {
-                  			ves_sens[a][b] += fv_sens->S[ve_mode][a][b];
-                  			ves[a][b] += fv->S[ve_mode][a][b];
-                			}
-            			   }
-        		      }
-    			   }
-
-
-		/*
-		 * OK, let's simplify things by computing the viscous
-		 * stress tensor upfront.
-		 */
-		      if(cr->MeshMotion == ARBITRARY)
-    			 {
-			  for ( a=0; a<WIM; a++)
-			    {
-			      for ( b=0; b<VIM; b++)
-				{
-			gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
-		  	gamma_sens[a][b] = fv_sens->grad_v[a][b] + fv_sens->grad_v[b][a];
-				}
-			    }
-			  
-			  mu = viscosity(gn, gamma, d_mu);
-
-		/*  compute implicit viscosity sensitivities  */
-			mu_sens = 0.;
-  			v = TEMPERATURE;
-  			if ( pd->v[pg->imtrx][v] )
-    			   {
-      			     dofs  = ei[pg->imtrx]->dof[v];
-      			     for ( j=0; j<dofs; j++)
-				{
-	  			 mu_sens += *esp_old->T[j] * d_mu->T[j];
-				}
-    			    }
-		
-		/*  velocity  */
-
-			for ( a=0; a<WIM; a++)
-    			  {
-      			   v = VELOCITY1 + a;
-      			     if ( pd->v[pg->imtrx][v] )
-				{
-	  			 dofs     = ei[pg->imtrx]->dof[v];
-	  			   for ( j=0; j<dofs; j++)
-	    				{
-	      			mu_sens += *esp_old->v[a][j] * d_mu->v[a][j];
-	    				}
-				}
-    			  }
-
-		/* mesh */
-
-
-  			for ( a=0; a<dim; a++)
-    			   {
-      			      v = MESH_DISPLACEMENT1 + a;
-      				if ( pd->v[pg->imtrx][v] )
-				   {
-	  			     dofs     = ei[pg->imtrx]->dof[v];
-	  			     for ( j=0; j<dofs; j++)
-	    				{
-	      			mu_sens += *esp_old->d[a][j] * d_mu->X[a][j];
-	    				}
-				   }
-    			   }
-
-   		/* Pressure...  */
-
-			v = PRESSURE;
-  			if ( pd->v[pg->imtrx][v] )
-    			  {
-			      dofs  = ei[pg->imtrx]->dof[v];
-			      for ( j=0; j<dofs; j++)
-				{
-				  mu_sens += *esp_old->P[j] * d_mu->P[j];
-				}
-    			  }
-
-		/*  Concentration  */
-
-			v = MASS_FRACTION;
-  			if (pd->v[pg->imtrx][v]) {
-			    for (a = 0; a < pd->Num_Species_Eqn; a++) {
-			      dofs = ei[pg->imtrx]->dof[v];
-			      for (j = 0; j < dofs; j++) {
-				mu_sens += *esp_old->c[a][j] * d_mu->C[a][j];
-      				}
-    			     }
-			  }
-  		/* * Fill...  */
-
-			  v = FILL;
-			  if ( pd->v[pg->imtrx][v] )
-			    {
-			      dofs  = ei[pg->imtrx]->dof[v];
-			      for ( j=0; j<dofs; j++)
-				{
-				  mu_sens += *esp_old->F[j] * d_mu->F[j];
-				}
-			    }
-/***   
- *
- *      end of material property sensitivity pre-calcs
- */
-
-			  for ( a=0; a<WIM; a++)
-			    {
-			      for ( b=0; b<VIM; b++)
-				{
-				  vs_sens[a][b] = 
-					mu*gamma_sens[a][b]-fv_sens->P*delta(a,b)
-				+ gamma[a][b]*mu_sens;
-				  vs[a][b] = mu*gamma[a][b]-fv->P*delta(a,b);
-				}
-			    }
-    			 }
-
- 		/*
-   		 * computing the electric stress tensor upfront.
-   		 */
-  			memset( es, 0, sizeof(dbl)*DIM*DIM);
-  			memset( es_sens, 0, sizeof(dbl)*DIM*DIM);
-		      if(pd->e[pg->imtrx][R_POTENTIAL])
-     			 {
- 			  efield_sqr = 0.0;
- 			  efield_sqr_sens = 0.0;
- 			  for ( a=0; a<VIM; a++)
- 			    {
- 				  efield[a] = - fv->grad_V[a];
- 				  efield_sens[a] = - fv_sens->grad_V[a];
- 				  efield_sqr += efield[a]*efield[a];
- 				  efield_sqr_sens += 2.*efield[a]*efield_sens[a];
- 			    }
- 
- 			  for ( a=0; a<VIM; a++)
- 			    {
- 			      for ( b=0; b<VIM; b++)
- 				{
- 				  es[a][b] = efield[a]*efield[b] 
-                                            - 0.5*efield_sqr*delta(a,b);
- 				  es_sens[a][b] = efield[a]*efield_sens[b] 
-                                                + efield_sens[a]*efield[b] 
-                                                - 0.5*efield_sqr_sens*delta(a,b);
- 				}
- 			    }
-     			 }
- 		/*
-   		 * load surface tension for variable models
-   		 */
- 		      if (mp->SurfaceTensionModel == CONSTANT) {
-                            dsigmadT = 0.0;
- 			    for ( a=0; a<MAX_CONC; a++)
-                                {dsigmadC[a] = 0.0;}
-                            }
-                      sigma_sens = 0.0;
- 		      if (mp->SurfaceTensionModel != CONSTANT) {
- 		            load_surface_tension(dsigma_dx);
- 		            }
- 		      if (mp->SurfaceTensionModel == USER) {
-                            dsigmadT = mp->d_surface_tension[TEMPERATURE];
-                            sigma_sens = dsigmadT*fv_sens->T;
- 			    for ( a=0; a<MAX_CONC; a++)
+                  /*
+                   *  viscoelastic stress tensor
+                   *  assume only EVSS_F formulation for now
+                   */
+                          memset( ves_sens, 0, sizeof(dbl)*DIM*DIM);
+                          memset( ves, 0, sizeof(dbl)*DIM*DIM);
+                          if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
+                            {
+                              for ( a=0; a<WIM; a++)
                                 {
-                    dsigmadC[a] = mp->d_surface_tension[MAX_VARIABLE_TYPES+a];
-                    sigma_sens += dsigmadC[a]*fv_sens->c[a];
+                                  for ( b=0; b<VIM; b++)
+                                     {
+                                       for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
+                                         {
+                                          ves_sens[a][b] += fv_sens->S[ve_mode][a][b];
+                                          ves[a][b] += fv->S[ve_mode][a][b];
+                                          }
+                                     }
                                 }
+                             }
+
+
+                  /*
+                   * OK, let's simplify things by computing the viscous
+                   * stress tensor upfront.
+                   */
+                        if(cr->MeshMotion == ARBITRARY)
+                           {
+                            for ( a=0; a<WIM; a++)
+                              {
+                                for ( b=0; b<VIM; b++)
+                                  {
+                          gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+                          gamma_sens[a][b] = fv_sens->grad_v[a][b] + fv_sens->grad_v[b][a];
+                                  }
+                              }
+                            
+                            mu = viscosity(gn, gamma, d_mu);
+
+                  /*  compute implicit viscosity sensitivities  */
+                          mu_sens = 0.;
+                          v = TEMPERATURE;
+                          if ( pd->v[pg->imtrx][v] )
+                             {
+                               dofs  = ei[pg->imtrx]->dof[v];
+                               for ( j=0; j<dofs; j++)
+                                  {
+                                   mu_sens += *esp_old->T[j] * d_mu->T[j];
+                                  }
+                              }
+                  
+                  /*  velocity  */
+
+                          for ( a=0; a<WIM; a++)
+                            {
+                             v = VELOCITY1 + a;
+                               if ( pd->v[pg->imtrx][v] )
+                                  {
+                                   dofs     = ei[pg->imtrx]->dof[v];
+                                     for ( j=0; j<dofs; j++)
+                                          {
+                                  mu_sens += *esp_old->v[a][j] * d_mu->v[a][j];
+                                          }
+                                  }
                             }
 
+                  /* mesh */
 
-	    switch( quantity )
-	      {
 
-	      case HEAT_FLUX:
-	      
-		/* finally we can add up the outgoing flux and area */
-		/* but first evaluate properties if variable */
-		if (mp->ConductivityModel == USER)
-		  {
-		    err = usr_thermal_conductivity(mp->u_thermal_conductivity, time_value);
-		  }
-		/*  heat capacity  */
-		if(mp->HeatCapacityModel == USER )
-		{
-		      err = usr_heat_capacity(mp->u_heat_capacity, time_value);
-		      Cp = mp->heat_capacity;
-		}
-		else if (mp->HeatCapacityModel == CONSTANT )
-		{
-		Cp    = mp->heat_capacity;
-		}
-		else if (mp->HeatCapacityModel == ENTHALPY )
-		{
-		  Cp = enthalpy_heat_capacity_model(d_Cp);
-		}
-		  else
-		{
-		GOMA_EH(GOMA_ERROR,"Unrecognized heat capacity model");
-		}
+                          for ( a=0; a<dim; a++)
+                             {
+                                v = MESH_DISPLACEMENT1 + a;
+                                  if ( pd->v[pg->imtrx][v] )
+                                     {
+                                       dofs     = ei[pg->imtrx]->dof[v];
+                                       for ( j=0; j<dofs; j++)
+                                          {
+                                  mu_sens += *esp_old->d[a][j] * d_mu->X[a][j];
+                                          }
+                                     }
+                             }
 
-                if ( cr->HeatFluxModel == CR_HF_FOURIER_0 )
+                  /* Pressure...  */
+
+                          v = PRESSURE;
+                          if ( pd->v[pg->imtrx][v] )
+                            {
+                                dofs  = ei[pg->imtrx]->dof[v];
+                                for ( j=0; j<dofs; j++)
+                                  {
+                                    mu_sens += *esp_old->P[j] * d_mu->P[j];
+                                  }
+                            }
+
+                  /*  Concentration  */
+
+                          v = MASS_FRACTION;
+                          if (pd->v[pg->imtrx][v]) {
+                              for (a = 0; a < pd->Num_Species_Eqn; a++) {
+                                dofs = ei[pg->imtrx]->dof[v];
+                                for (j = 0; j < dofs; j++) {
+                                  mu_sens += *esp_old->c[a][j] * d_mu->C[a][j];
+                                  }
+                               }
+                            }
+                  /* * Fill...  */
+
+                            v = FILL;
+                            if ( pd->v[pg->imtrx][v] )
+                              {
+                                dofs  = ei[pg->imtrx]->dof[v];
+                                for ( j=0; j<dofs; j++)
+                                  {
+                                    mu_sens += *esp_old->F[j] * d_mu->F[j];
+                                  }
+                              }
+  /***   
+   *
+   *      end of material property sensitivity pre-calcs
+   */
+
+                            for ( a=0; a<WIM; a++)
+                              {
+                                for ( b=0; b<VIM; b++)
+                                  {
+                                    vs_sens[a][b] = 
+                                          mu*gamma_sens[a][b]-fv_sens->P*delta(a,b)
+                                  + gamma[a][b]*mu_sens;
+                                    vs[a][b] = mu*gamma[a][b]-fv->P*delta(a,b);
+                                  }
+                              }
+                           }
+
+                  /*
+                   * computing the electric stress tensor upfront.
+                   */
+                          memset( es, 0, sizeof(dbl)*DIM*DIM);
+                          memset( es_sens, 0, sizeof(dbl)*DIM*DIM);
+                        if(pd->e[pg->imtrx][R_POTENTIAL])
+                           {
+                            efield_sqr = 0.0;
+                            efield_sqr_sens = 0.0;
+                            for ( a=0; a<VIM; a++)
+                              {
+                                    efield[a] = - fv->grad_V[a];
+                                    efield_sens[a] = - fv_sens->grad_V[a];
+                                    efield_sqr += efield[a]*efield[a];
+                                    efield_sqr_sens += 2.*efield[a]*efield_sens[a];
+                              }
+   
+                            for ( a=0; a<VIM; a++)
+                              {
+                                for ( b=0; b<VIM; b++)
+                                  {
+                                    es[a][b] = efield[a]*efield[b] 
+                                              - 0.5*efield_sqr*delta(a,b);
+                                    es_sens[a][b] = efield[a]*efield_sens[b] 
+                                                  + efield_sens[a]*efield[b] 
+                                                  - 0.5*efield_sqr_sens*delta(a,b);
+                                  }
+                              }
+                           }
+                  /*
+                   * load surface tension for variable models
+                   */
+                        if (mp->SurfaceTensionModel == CONSTANT) {
+                              dsigmadT = 0.0;
+                              for ( a=0; a<MAX_CONC; a++)
+                                  {dsigmadC[a] = 0.0;}
+                              }
+                        sigma_sens = 0.0;
+                        if (mp->SurfaceTensionModel != CONSTANT) {
+                              load_surface_tension(dsigma_dx);
+                              }
+                        if (mp->SurfaceTensionModel == USER) {
+                              dsigmadT = mp->d_surface_tension[TEMPERATURE];
+                              sigma_sens = dsigmadT*fv_sens->T;
+                              for ( a=0; a<MAX_CONC; a++)
+                                  {
+                      dsigmadC[a] = mp->d_surface_tension[MAX_VARIABLE_TYPES+a];
+                      sigma_sens += dsigmadC[a]*fv_sens->c[a];
+                                  }
+                              }
+
+
+              switch( quantity )
                 {
-                for (j=0; j<VIM; j++)
+
+                case HEAT_FLUX:
+                
+                  /* finally we can add up the outgoing flux and area */
+                  /* but first evaluate properties if variable */
+                  if (mp->ConductivityModel == USER)
+                    {
+                      err = usr_thermal_conductivity(mp->u_thermal_conductivity, time_value);
+                    }
+                  /*  heat capacity  */
+                  if(mp->HeatCapacityModel == USER )
                   {
-                    local_q += (mp->thermal_conductivity *
-                                    fv->snormal[j] * fv_sens->grad_T[j] );
-                    local_qconv += ( rho * Cp*fv->T*
-                                    fv->snormal[j] * (fv_sens->v[j]-x_dot[j]));
+                        err = usr_heat_capacity(mp->u_heat_capacity, time_value);
+                        Cp = mp->heat_capacity;
                   }
-                }  else if ( cr->HeatFluxModel == CR_HF_USER )
-                {
+                  else if (mp->HeatCapacityModel == CONSTANT )
+                  {
+                  Cp    = mp->heat_capacity;
+                  }
+                  else if (mp->HeatCapacityModel == ENTHALPY )
+                  {
+                    Cp = enthalpy_heat_capacity_model(d_Cp);
+                  }
+                    else
+                  {
+                  GOMA_EH(GOMA_ERROR,"Unrecognized heat capacity model");
+                  }
+
+                  if ( cr->HeatFluxModel == CR_HF_FOURIER_0 )
+                  {
+                  for (j=0; j<VIM; j++)
+                    {
+                      local_q += (mp->thermal_conductivity *
+                                      fv->snormal[j] * fv_sens->grad_T[j] );
+                      local_qconv += ( rho * Cp*fv->T*
+                                      fv->snormal[j] * (fv_sens->v[j]-x_dot[j]));
+                    }
+                  }  else if ( cr->HeatFluxModel == CR_HF_USER )
+                  {
 
 #if defined SECOR_HEAT_FLUX
-        double *hpar, h, dh_dX[DIM], Vb[DIM],Vt[DIM];
-        double dq_dVb[DIM][DIM], dq_dVt[DIM][DIM];
+          double *hpar, h, dh_dX[DIM], Vb[DIM],Vt[DIM];
+          double dq_dVb[DIM][DIM], dq_dVt[DIM][DIM];
 
-        hpar = &mp->u_thermal_conductivity[0];
-        h = hpar[0] + hpar[4]*fv->x[0]
-                + (hpar[1]-hpar[5]*fv->x[0])*(hpar[3]-fv->x[1])
-                        + 0.5*hpar[2]*SQUARE(hpar[3]-fv->x[1]);
+          hpar = &mp->u_thermal_conductivity[0];
+          h = hpar[0] + hpar[4]*fv->x[0]
+                  + (hpar[1]-hpar[5]*fv->x[0])*(hpar[3]-fv->x[1])
+                          + 0.5*hpar[2]*SQUARE(hpar[3]-fv->x[1]);
 
-        dh_dX[0] = hpar[4] - hpar[5]*(hpar[3]-fv->x[1]);
-        dh_dX[1] = hpar[5]*fv->x[0]-hpar[1] - hpar[2]*(hpar[3]-fv->x[1]);
+          dh_dX[0] = hpar[4] - hpar[5]*(hpar[3]-fv->x[1]);
+          dh_dX[1] = hpar[5]*fv->x[0]-hpar[1] - hpar[2]*(hpar[3]-fv->x[1]);
 
-/*     velocities of bottom and top surfaces   */
-        Vb[0] = mp->u_heat_capacity[0];
-        Vb[1] = mp->u_heat_capacity[1];
-        Vt[0] = mp->u_heat_capacity[2];
-        Vt[1] = mp->u_heat_capacity[3];
+  /*     velocities of bottom and top surfaces   */
+          Vb[0] = mp->u_heat_capacity[0];
+          Vb[1] = mp->u_heat_capacity[1];
+          Vt[0] = mp->u_heat_capacity[2];
+          Vt[1] = mp->u_heat_capacity[3];
 
-      usr_heat_flux(fv->grad_T, q, dq_gradT, dq_dX, time_value, h, dh_dX, Vb,Vt,
-                             dq_dVb, dq_dVt);
+        usr_heat_flux(fv->grad_T, q, dq_gradT, dq_dX, time_value, h, dh_dX, Vb,Vt,
+                               dq_dVb, dq_dVt);
 #else
-      usr_heat_flux(fv->grad_T, q, dq_gradT, dq_dX, time_value);
-      printf("untested\n");
-      exit(-1);
+        usr_heat_flux(fv->grad_T, q, dq_gradT, dq_dX, time_value);
+        printf("untested\n");
+        exit(-1);
 #endif
-                for (j=0; j<VIM; j++)
-                  {
-                  for (a=0; a<VIM; a++)
+                  for (j=0; j<VIM; j++)
                     {
-            local_q += fv->snormal[j] * dq_gradT[j][a] * fv_sens->grad_T[a];
+                    for (a=0; a<VIM; a++)
+                      {
+              local_q += fv->snormal[j] * dq_gradT[j][a] * fv_sens->grad_T[a];
+                      }
                     }
                   }
-                }
-                    local_flux += weight * fv->sdet * fv->h3 * local_q;
-                    local_flux_conv += weight * fv->sdet * fv->h3 * local_qconv;
-                break;
+                      local_flux += weight * fv->sdet * fv->h3 * local_q;
+                      local_flux_conv += weight * fv->sdet * fv->h3 * local_qconv;
+                  break;
 
-	      case VOLUME_FLUX:
-                for(j=0; j<WIM; j++)
+                case VOLUME_FLUX:
+                  for(j=0; j<WIM; j++)
+                    {
+                            if (cr->MeshMotion == ARBITRARY)
+                      local_q += ( fv->snormal[j]*(fv_sens->v[j]-x_dot[j])
+                                   + normal_sens[j]*(fv->v[j]-x_dot[j]));
+                            else if (pd->v[pg->imtrx][MESH_DISPLACEMENT1])
+                      local_q += fv->snormal[j]*fv_sens->d[j]
+                                 + normal_sens[j]*fv->d[j];
+                            else
+                              GOMA_EH(GOMA_ERROR,"Inconsistency in volume-flux specification. Contact Developers");
+
+                    }
+                      local_flux += weight*det*local_q;
+                  break;
+
+                case PVELOCITY1:
+                case PVELOCITY2:
+                case PVELOCITY3:
+                  for(j=0; j<WIM; j++)
+                    {
+                      local_q += fv->snormal[j]*fv_sens->pv[j]
+                                 + normal_sens[j]*fv->pv[j];
+                    }
+                  local_flux += weight*det*local_q;
+                  break;
+
+                case EXT_VELOCITY:
+                  local_q += fv_sens->ext_v;
+                   
+                  local_flux += weight*det*local_q;
+                  break;
+
+                case EFIELD1:
+                case EFIELD2:
+                case EFIELD3:
+                  for(j=0; j<VIM; j++)
+                    {
+                      local_q += fv->snormal[j]*fv_sens->E_field[j]
+                                 +normal_sens[j]*fv->E_field[j];
+                    }
+                  local_flux += weight*det*local_q;
+                  break;
+
+                case SPECIES_FLUX:
+                  for(j=0; j<WIM; j++)
+                    {
+                      local_q += ( mp->diffusivity[species_id]*(
+                            fv->snormal[j]*fv_sens->grad_c[species_id][j]
+                              + normal_sens[j]*fv->grad_c[species_id][j])  );
+
+                      local_qconv += ( fv->snormal[j]*
+                                       ((fv_sens->v[j]-x_dot[j])*fv->c[species_id]
+                                        + (fv->v[j]-x_dot[j])*fv_sens->c[species_id] )
+                               +normal_sens[j]*(fv->v[j]-x_dot[j])*fv->c[species_id]);
+                    }
+                      local_flux += weight*det*local_q;
+                      local_flux_conv += weight*det*local_qconv;
+                  break;
+
+                case TORQUE:
+                  if(pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+                     pd->CoordinateSystem == CARTESIAN_2pt5D)
+                    GOMA_EH(GOMA_ERROR, "TORQUE has not been updated for the PROJECTED_CARTESIAN coordinate system.");
+
+                  if(pd->CoordinateSystem == SWIRLING || 
+                     pd->CoordinateSystem == CYLINDRICAL)
+                    {
+                      for ( a=0; a<WIM; a++)
+                        {
+                          for ( b=0; b<WIM; b++)
+                            {
+                          /*
+                           *  note that for CYLINDRICAL and SWIRLING coordinate systems
+                           * the h3 factor has been incorporated already into sdet
+                           * the moment arm is incorporated into sideset.
+                           */
+                          local_q += e_theta[a]*((fv->x[1] * 
+                                  (vs_sens[a][b]+ves_sens[a][b]) +
+                                  fv_sens->x[1]*(vs[a][b]+ves[a][b]))
+                                  *fv->snormal[b] +  
+                                    normal_sens[b]*(fv->x[1]*(vs[a][b]+ves[a][b])));
+                            }
+                        }
+                          local_flux += weight * det* local_q;
+                    }
+                  else if( pd->CoordinateSystem == CARTESIAN ) 
+                    {
+                      if( WIM == 2 ) 
+                         {
+                           fv->x[2] = 0.0;
+                           fv->snormal[2] = 0.0;
+                           normal_sens[2] = 0.0;
+                           vs[0][2] = 0.0;
+                           vs[1][2] = 0.0;
+                           vs[2][0] = 0.0;
+                           vs[2][1] = 0.0;
+                           vs[2][2] = -fv->P;
+                         }
+                      for ( a=0; a<DIM; a++)
+                        {
+                          Tract[a] = 0.0;
+                          Tract_sens[a] = 0.0;
+                          for ( b=0; b<DIM; b++)
+                            {
+                              Tract[a] += (vs[a][b] + ves[a][b]) * fv->snormal[b];
+                              Tract_sens[a] += (vs_sens[a][b] + ves_sens[a][b])
+                                        * fv->snormal[b] + normal_sens[b]*
+                                          (vs[a][b]+ves[a][b]);
+                            }
+                        }
+                  
+                      for ( a=0; a<DIM; a++)
+                        {
+                          for ( b=0; b<DIM; b++)
+                            {
+                              for ( c=0; c<DIM; c++)
+                                {
+                                 local_Torque[a] += (permute(b,c,a) * 
+                                               (  fv->x[b]*Tract_sens[c] 
+                                                 + fv_sens->x[b]*Tract[c] ) );
+                                }
+                            }
+                        }
+                      for ( a=0; a<DIM; a++)
+                        { Torque[a] +=  weight * det * local_Torque[a]; }
+                     local_flux = Torque[2];
+                    }
+                  else
+                    {
+                      GOMA_EH(GOMA_ERROR,"Torque cannot be calculated in this case.");
+                    }
+
+                  break;
+
+        case FORCE_NORMAL:
+                  if(cr->MeshMotion == ARBITRARY)
                   {
-			  if (cr->MeshMotion == ARBITRARY)
-                    local_q += ( fv->snormal[j]*(fv_sens->v[j]-x_dot[j])
-                                 + normal_sens[j]*(fv->v[j]-x_dot[j]));
-			  else if (pd->v[pg->imtrx][MESH_DISPLACEMENT1])
-                    local_q += fv->snormal[j]*fv_sens->d[j]
-                               + normal_sens[j]*fv->d[j];
-			  else
-			    GOMA_EH(GOMA_ERROR,"Inconsistency in volume-flux specification. Contact Developers");
-
+                  for ( a=0; a<WIM; a++)
+                    {
+                      for ( b=0; b<WIM; b++)
+                        {
+                  local_q += (fv->snormal[a]*
+                          (vs_sens[a][b] +ves_sens[a][b])
+                                  *fv->snormal[b]
+                             +(vs[a][b]+ves[a][b])*(fv->snormal[a]*normal_sens[b]
+                                 +normal_sens[a]*fv->snormal[b]));
+                  local_qconv += rho*(fv->snormal[a]*((fv->v[a]-x_dot[a])*fv_sens->v[b]
+                   + (fv_sens->v[a]-x_dot[a])*fv->v[b])*fv->snormal[b]
+                      + (fv->v[a]-x_dot[a])*fv->v[b]*(fv->snormal[a]*normal_sens[b]
+                           +normal_sens[a]*fv->snormal[b]));
+                        }
+                    }
+                  local_flux += weight * det * local_q;
+                  local_flux_conv += weight * det * local_qconv;
                   }
-                    local_flux += weight*det*local_q;
-		break;
-
-	      case PVELOCITY1:
-	      case PVELOCITY2:
-	      case PVELOCITY3:
-                for(j=0; j<WIM; j++)
+                  else
                   {
-                    local_q += fv->snormal[j]*fv_sens->pv[j]
-                               + normal_sens[j]*fv->pv[j];
+          GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
+                  for ( a=0; a<VIM; a++)
+                    {
+                      for ( b=0; b<VIM; b++)
+                        {
+                          local_q += ( fv->snormal[a]*TT_sens[a][b]*fv->snormal[b]
+                                  + TT[a][b]*(fv->snormal[a]*normal_sens[b]+
+                                         normal_sens[a]*fv->snormal[b]));
+                        }
+                    }
+                          local_flux += weight * det * local_q;
                   }
-		local_flux += weight*det*local_q;
-		break;
+                  break;
 
-	      case EXT_VELOCITY:
-                local_q += fv_sens->ext_v;
-                 
-		local_flux += weight*det*local_q;
-		break;
+                case FORCE_TANGENT1:
 
-	      case EFIELD1:
-	      case EFIELD2:
-	      case EFIELD3:
-                for(j=0; j<VIM; j++)
+                  if(cr->MeshMotion == ARBITRARY)
                   {
-                    local_q += fv->snormal[j]*fv_sens->E_field[j]
-                               +normal_sens[j]*fv->E_field[j];
+                  for ( a=0; a<WIM; a++)
+                    {
+                      for ( b=0; b<WIM; b++)
+                        {
+                          local_q += (fv->stangent[0][a]*(vs_sens[a][b]
+                                  +ves_sens[a][b])*fv->snormal[b]);
+                          local_qconv += ( rho*fv->stangent[0][a]*((fv->v[a]-x_dot[a])
+          *fv_sens->v[b]+(fv_sens->v[a]-x_dot[a])*fv->v[b])*fv->snormal[b]);
+
+                        }
+                    }
+                          local_flux += weight * det * local_q;
+                          local_flux_conv += weight * det* local_qconv;
                   }
-		local_flux += weight*det*local_q;
-		break;
-
-	      case SPECIES_FLUX:
-                for(j=0; j<WIM; j++)
+                  else
                   {
-                    local_q += ( mp->diffusivity[species_id]*(
-                          fv->snormal[j]*fv_sens->grad_c[species_id][j]
-                            + normal_sens[j]*fv->grad_c[species_id][j])  );
-
-                    local_qconv += ( fv->snormal[j]*
-				     ((fv_sens->v[j]-x_dot[j])*fv->c[species_id]
-				      + (fv->v[j]-x_dot[j])*fv_sens->c[species_id] )
-                             +normal_sens[j]*(fv->v[j]-x_dot[j])*fv->c[species_id]);
+          GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available"); 
+                  for ( a=0; a<VIM; a++)
+                    {
+                      for ( b=0; b<VIM; b++)
+                        {
+                  local_q += ( fv->stangent[0][a]*TT_sens[a][b]*fv->snormal[b]);
+                        }
+                    }
+                  local_flux += weight * det* local_q;
                   }
-                    local_flux += weight*det*local_q;
-                    local_flux_conv += weight*det*local_qconv;
-                break;
+                  break;
 
-	      case TORQUE:
-		if(pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-		   pd->CoordinateSystem == CARTESIAN_2pt5D)
-		  GOMA_EH(GOMA_ERROR, "TORQUE has not been updated for the PROJECTED_CARTESIAN coordinate system.");
+                case FORCE_TANGENT2:
 
-		if(pd->CoordinateSystem == SWIRLING || 
-		   pd->CoordinateSystem == CYLINDRICAL)
-		  {
-		    for ( a=0; a<WIM; a++)
-		      {
-			for ( b=0; b<WIM; b++)
-			  {
-			/*
-			 *  note that for CYLINDRICAL and SWIRLING coordinate systems
-			 * the h3 factor has been incorporated already into sdet
-			 * the moment arm is incorporated into sideset.
-			 */
-                        local_q += e_theta[a]*((fv->x[1] * 
-                        	(vs_sens[a][b]+ves_sens[a][b]) +
-				fv_sens->x[1]*(vs[a][b]+ves[a][b]))
-				*fv->snormal[b] +  
-                                  normal_sens[b]*(fv->x[1]*(vs[a][b]+ves[a][b])));
-			  }
-		      }
-                        local_flux += weight * det* local_q;
-		  }
-		else if( pd->CoordinateSystem == CARTESIAN ) 
-		  {
-                    if( WIM == 2 ) 
-                       {
-                         fv->x[2] = 0.0;
-                         fv->snormal[2] = 0.0;
-                         normal_sens[2] = 0.0;
-                         vs[0][2] = 0.0;
-                         vs[1][2] = 0.0;
-                         vs[2][0] = 0.0;
-                         vs[2][1] = 0.0;
-                         vs[2][2] = -fv->P;
-                       }
-		    for ( a=0; a<DIM; a++)
-		      {
-                        Tract[a] = 0.0;
-                        Tract_sens[a] = 0.0;
-			for ( b=0; b<DIM; b++)
-			  {
-		            Tract[a] += (vs[a][b] + ves[a][b]) * fv->snormal[b];
-			    Tract_sens[a] += (vs_sens[a][b] + ves_sens[a][b])
-                                      * fv->snormal[b] + normal_sens[b]*
-                                        (vs[a][b]+ves[a][b]);
-			  }
-		      }
-		
-		    for ( a=0; a<DIM; a++)
-		      {
-			for ( b=0; b<DIM; b++)
-			  {
-			    for ( c=0; c<DIM; c++)
-			      {
-                               local_Torque[a] += (permute(b,c,a) * 
-                                             (  fv->x[b]*Tract_sens[c] 
-                                               + fv_sens->x[b]*Tract[c] ) );
-			      }
-			  }
-		      }
-		    for ( a=0; a<DIM; a++)
-		      { Torque[a] +=  weight * det * local_Torque[a]; }
-                   local_flux = Torque[2];
-		  }
-		else
-		  {
-		    GOMA_EH(GOMA_ERROR,"Torque cannot be calculated in this case.");
-		  }
-
-		break;
-
-      case FORCE_NORMAL:
-		if(cr->MeshMotion == ARBITRARY)
-		{
-                for ( a=0; a<WIM; a++)
+                  if(cr->MeshMotion == ARBITRARY)
                   {
-                    for ( b=0; b<WIM; b++)
+                    if(pd->Num_Dim == 3 || upd->CoordinateSystem == SWIRLING   )
                       {
-                local_q += (fv->snormal[a]*
-			(vs_sens[a][b] +ves_sens[a][b])
-                                *fv->snormal[b]
-                           +(vs[a][b]+ves[a][b])*(fv->snormal[a]*normal_sens[b]
-                               +normal_sens[a]*fv->snormal[b]));
-                local_qconv += rho*(fv->snormal[a]*((fv->v[a]-x_dot[a])*fv_sens->v[b]
-                 + (fv_sens->v[a]-x_dot[a])*fv->v[b])*fv->snormal[b]
-                    + (fv->v[a]-x_dot[a])*fv->v[b]*(fv->snormal[a]*normal_sens[b]
-                         +normal_sens[a]*fv->snormal[b]));
-                      }
+                  for ( a=0; a<WIM; a++)
+                    {
+                      for ( b=0; b<WIM; b++)
+                        {
+                          local_q += ( fv->stangent[1][a]*(vs_sens[a][b]
+                                          +ves_sens[a][b])*fv->snormal[b]);
+                          local_qconv += ( rho*fv->stangent[1][a]*((fv->v[a]-x_dot[a])
+          *fv_sens->v[b]+(fv_sens->v[a]-x_dot[a])*fv->v[b])*fv->snormal[b]);
+                        }
+                    }
+                          local_flux += weight * det * local_q;
+                          local_flux_conv += weight * det* local_qconv;
                   }
-                local_flux += weight * det * local_q;
-                local_flux_conv += weight * det * local_qconv;
-                }
-		else
-		{
-	GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
-                for ( a=0; a<VIM; a++)
+                          else
+                          {
+                          GOMA_EH(GOMA_ERROR, "Illegal flux type");
+                          }
+                  }
+                  else
                   {
-                    for ( b=0; b<VIM; b++)
-                      {
-                        local_q += ( fv->snormal[a]*TT_sens[a][b]*fv->snormal[b]
-                                + TT[a][b]*(fv->snormal[a]*normal_sens[b]+
-                                       normal_sens[a]*fv->snormal[b]));
-                      }
+          GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available"); 
+                  for ( a=0; a<VIM; a++)
+                    {
+                      for ( b=0; b<VIM; b++)
+                        {
+                  local_q += ( fv->stangent[1][a]*TT_sens[a][b]*fv->snormal[b]);
+                        }
+                    }
+                  local_flux += weight * det* local_q;
                   }
-                        local_flux += weight * det * local_q;
-                }
-		break;
+                  break;
 
-	      case FORCE_TANGENT1:
-
-		if(cr->MeshMotion == ARBITRARY)
-		{
-		for ( a=0; a<WIM; a++)
-		  {
-		    for ( b=0; b<WIM; b++)
-		      {
-                        local_q += (fv->stangent[0][a]*(vs_sens[a][b]
-				+ves_sens[a][b])*fv->snormal[b]);
-                        local_qconv += ( rho*fv->stangent[0][a]*((fv->v[a]-x_dot[a])
-        *fv_sens->v[b]+(fv_sens->v[a]-x_dot[a])*fv->v[b])*fv->snormal[b]);
-
-		      }
-		  }
-                        local_flux += weight * det * local_q;
-                        local_flux_conv += weight * det* local_qconv;
-		}
-		else
-		{
-	GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available"); 
-		for ( a=0; a<VIM; a++)
-		  {
-		    for ( b=0; b<VIM; b++)
-		      {
-                local_q += ( fv->stangent[0][a]*TT_sens[a][b]*fv->snormal[b]);
-		      }
-		  }
-                local_flux += weight * det* local_q;
-		}
-		break;
-
-	      case FORCE_TANGENT2:
-
-		if(cr->MeshMotion == ARBITRARY)
-		{
-		  if(pd->Num_Dim == 3 || upd->CoordinateSystem == SWIRLING   )
-		    {
-                for ( a=0; a<WIM; a++)
+                case FORCE_X:
+                  if(cr->MeshMotion == ARBITRARY)
                   {
-                    for ( b=0; b<WIM; b++)
-                      {
-                        local_q += ( fv->stangent[1][a]*(vs_sens[a][b]
-					+ves_sens[a][b])*fv->snormal[b]);
-                        local_qconv += ( rho*fv->stangent[1][a]*((fv->v[a]-x_dot[a])
-        *fv_sens->v[b]+(fv_sens->v[a]-x_dot[a])*fv->v[b])*fv->snormal[b]);
-                      }
+                  for ( a=0; a<VIM; a++)
+                    {
+                          local_q += ((vs_sens[0][a] + ves_sens[0][a])
+                              *fv->snormal[a] +normal_sens[a]*(vs[0][a]+ves[0][a]));
+
+                          local_qconv += rho*(((fv->v[0]-x_dot[0])*fv_sens->v[a]
+                              +(fv_sens->v[0]-x_dot[0])*fv->v[a])*fv->snormal[a]
+                              +normal_sens[a]*(fv->v[0]-x_dot[0])*fv->v[a]);
+                    }
+                          local_flux += weight * det * local_q;
+                          local_flux_conv += weight * det * local_qconv;
                   }
-                        local_flux += weight * det * local_q;
-                        local_flux_conv += weight * det* local_qconv;
-                }
-			else
-			{
-			GOMA_EH(GOMA_ERROR, "Illegal flux type");
-			}
-		}
-		else
-		{
-	GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available"); 
-                for ( a=0; a<VIM; a++)
+                  else
                   {
-                    for ( b=0; b<VIM; b++)
-                      {
-                local_q += ( fv->stangent[1][a]*TT_sens[a][b]*fv->snormal[b]);
-                      }
+          GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
+                  for ( a=0; a<VIM; a++)
+                    {
+                          local_q += (TT_sens[0][a]*fv->snormal[a]
+                                      +TT[0][a]*normal_sens[a]);
+                    }
+                          local_flux += weight * det * local_q;
                   }
-                local_flux += weight * det* local_q;
-                }
-		break;
+                  break;
 
-	      case FORCE_X:
-		if(cr->MeshMotion == ARBITRARY)
-		{
-		for ( a=0; a<VIM; a++)
-		  {
-                        local_q += ((vs_sens[0][a] + ves_sens[0][a])
-		   	    *fv->snormal[a] +normal_sens[a]*(vs[0][a]+ves[0][a]));
+                case FORCE_X_POS:
+                  if(cr->MeshMotion == ARBITRARY)
+                  {
+                  for ( a=0; a<VIM; a++)
+                    {
+                          local_q += ((vs_sens[0][a] + ves_sens[0][a])
+                                  *fv->snormal[a]) ;
 
-                        local_qconv += rho*(((fv->v[0]-x_dot[0])*fv_sens->v[a]
-                            +(fv_sens->v[0]-x_dot[0])*fv->v[a])*fv->snormal[a]
-                            +normal_sens[a]*(fv->v[0]-x_dot[0])*fv->v[a]);
-		  }
-                        local_flux += weight * det * local_q;
-                        local_flux_conv += weight * det * local_qconv;
-		}
-		else
-		{
-	GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
-		for ( a=0; a<VIM; a++)
-		  {
-                        local_q += (TT_sens[0][a]*fv->snormal[a]
-                                    +TT[0][a]*normal_sens[a]);
-		  }
-                        local_flux += weight * det * local_q;
-		}
-		break;
+                          local_qconv += (rho*((fv->v[0]-x_dot[0])
+               *fv_sens->v[a]+(fv_sens->v[0]-x_dot[0])*fv->v[a])*fv->snormal[a]);
+                    }
+                          if(local_q <0) {local_q=0;}
+                          local_flux += weight * det * local_q;
+                          local_flux_conv += weight * det * local_qconv;
+                  }
+                  else
+                  {
+          GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
+                  for ( a=0; a<VIM; a++)
+                    {
+                          local_q += (TT_sens[0][a]*fv->snormal[a]);
+                    }
+                          if(local_q <0) {local_q=0;}
+                          local_flux += weight * det * local_q;
+                  }
+                  break;
 
-	      case FORCE_X_POS:
-		if(cr->MeshMotion == ARBITRARY)
-		{
-		for ( a=0; a<VIM; a++)
-		  {
-                        local_q += ((vs_sens[0][a] + ves_sens[0][a])
-				*fv->snormal[a]) ;
+                case FORCE_X_NEG:
+                  if(cr->MeshMotion == ARBITRARY)
+                  {
+                  for ( a=0; a<VIM; a++)
+                    {
+                          local_q += ((vs_sens[0][a] + ves_sens[0][a])
+                                  *fv->snormal[a]) ;
 
-                        local_qconv += (rho*((fv->v[0]-x_dot[0])
-             *fv_sens->v[a]+(fv_sens->v[0]-x_dot[0])*fv->v[a])*fv->snormal[a]);
-		  }
-        	        if(local_q <0) {local_q=0;}
-                        local_flux += weight * det * local_q;
-                        local_flux_conv += weight * det * local_qconv;
-		}
-		else
-		{
-	GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
-		for ( a=0; a<VIM; a++)
-		  {
-                        local_q += (TT_sens[0][a]*fv->snormal[a]);
-		  }
-        	        if(local_q <0) {local_q=0;}
-                        local_flux += weight * det * local_q;
-		}
-		break;
+                          local_qconv += (rho*((fv->v[0]-x_dot[0])
+               *fv_sens->v[a]+(fv_sens->v[0]-x_dot[0])*fv->v[a])*fv->snormal[a]);
+                    }
+                          if(local_q >0) {local_q=0;}
+                          local_flux += weight * det * local_q;
+                          local_flux_conv += weight * det * local_qconv;
+                  }
+                  else
+                  {
+          GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
+                  for ( a=0; a<VIM; a++)
+                    {
+                          local_q += (TT_sens[0][a]*fv->snormal[a]);
+                    }
+                          if(local_q >0) {local_q=0;}
+                          local_flux += weight * det * local_q;
+                  }
+                  break;
 
-	      case FORCE_X_NEG:
-		if(cr->MeshMotion == ARBITRARY)
-		{
-		for ( a=0; a<VIM; a++)
-		  {
-                        local_q += ((vs_sens[0][a] + ves_sens[0][a])
-				*fv->snormal[a]) ;
+                case FORCE_Y:
+                  if(cr->MeshMotion == ARBITRARY)
+                  {
+                  for ( a=0; a<VIM; a++)
+                    {
+                          local_q += ((vs_sens[1][a] + ves_sens[1][a])
+                                  *fv->snormal[a]);
 
-                        local_qconv += (rho*((fv->v[0]-x_dot[0])
-             *fv_sens->v[a]+(fv_sens->v[0]-x_dot[0])*fv->v[a])*fv->snormal[a]);
-		  }
-        	        if(local_q >0) {local_q=0;}
-                        local_flux += weight * det * local_q;
-                        local_flux_conv += weight * det * local_qconv;
-		}
-		else
-		{
-	GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
-		for ( a=0; a<VIM; a++)
-		  {
-                        local_q += (TT_sens[0][a]*fv->snormal[a]);
-		  }
-        	        if(local_q >0) {local_q=0;}
-                        local_flux += weight * det * local_q;
-		}
-		break;
+                          local_qconv += (rho*((fv->v[1]-x_dot[1])
+          *fv_sens->v[a]+(fv_sens->v[1]-x_dot[1])*fv->v[a])*fv->snormal[a]);
+                    }
+                          local_flux += weight * det * local_q;
+                          local_flux_conv += weight * det * local_qconv;
+                  }
+                  else
+                  {
+          GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
+                  for ( a=0; a<VIM; a++)
+                    {
+                          local_q += ( TT_sens[1][a]*fv->snormal[a]);
+                    }
+                          local_flux += weight * det * local_q;
+                  }
+                  break;
 
-	      case FORCE_Y:
-		if(cr->MeshMotion == ARBITRARY)
-		{
-		for ( a=0; a<VIM; a++)
-		  {
-                        local_q += ((vs_sens[1][a] + ves_sens[1][a])
-				*fv->snormal[a]);
+                case FORCE_Y_POS:
+                  if(cr->MeshMotion == ARBITRARY)
+                  {
+                  for ( a=0; a<VIM; a++)
+                    {
+                          local_q += ((vs_sens[1][a] + ves_sens[1][a])
+                                  *fv->snormal[a]);
 
-                        local_qconv += (rho*((fv->v[1]-x_dot[1])
-        *fv_sens->v[a]+(fv_sens->v[1]-x_dot[1])*fv->v[a])*fv->snormal[a]);
-		  }
-                        local_flux += weight * det * local_q;
-                        local_flux_conv += weight * det * local_qconv;
-		}
-		else
-		{
-	GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
-		for ( a=0; a<VIM; a++)
-		  {
-                        local_q += ( TT_sens[1][a]*fv->snormal[a]);
-		  }
-                        local_flux += weight * det * local_q;
-		}
-		break;
+                          local_qconv += (rho*((fv->v[1]-x_dot[1])
+          *fv_sens->v[a]+(fv_sens->v[1]-x_dot[1])*fv->v[a])*fv->snormal[a]);
+                    }
+                          if(local_q <0) {local_q=0;}
+                          local_flux += weight * det * local_q;
+                          local_flux_conv += weight * det * local_qconv;
+                  }
+                  else
+                  {
+          GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
+                  for ( a=0; a<VIM; a++)
+                    {
+                          local_q += ( TT_sens[1][a]*fv->snormal[a]);
+                    }
+                          if(local_q <0) {local_q=0;}
+                          local_flux += weight * det * local_q;
+                  }
+                  break;
 
-	      case FORCE_Y_POS:
-		if(cr->MeshMotion == ARBITRARY)
-		{
-		for ( a=0; a<VIM; a++)
-		  {
-                        local_q += ((vs_sens[1][a] + ves_sens[1][a])
-				*fv->snormal[a]);
+                case FORCE_Y_NEG:
+                  if(cr->MeshMotion == ARBITRARY)
+                  {
+                  for ( a=0; a<VIM; a++)
+                    {
+                          local_q += ((vs_sens[1][a] + ves_sens[1][a])
+                                  *fv->snormal[a]);
 
-                        local_qconv += (rho*((fv->v[1]-x_dot[1])
-        *fv_sens->v[a]+(fv_sens->v[1]-x_dot[1])*fv->v[a])*fv->snormal[a]);
-		  }
-        	        if(local_q <0) {local_q=0;}
-                        local_flux += weight * det * local_q;
-                        local_flux_conv += weight * det * local_qconv;
-		}
-		else
-		{
-	GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
-		for ( a=0; a<VIM; a++)
-		  {
-                        local_q += ( TT_sens[1][a]*fv->snormal[a]);
-		  }
-        	        if(local_q <0) {local_q=0;}
-                        local_flux += weight * det * local_q;
-		}
-		break;
+                          local_qconv += (rho*((fv->v[1]-x_dot[1])
+          *fv_sens->v[a]+(fv_sens->v[1]-x_dot[1])*fv->v[a])*fv->snormal[a]);
+                    }
+                          if(local_q >0) {local_q=0;}
+                          local_flux += weight * det * local_q;
+                          local_flux_conv += weight * det * local_qconv;
+                  }
+                  else
+                  {
+          GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
+                  for ( a=0; a<VIM; a++)
+                    {
+                          local_q += ( TT_sens[1][a]*fv->snormal[a]);
+                    }
+                          if(local_q >0) {local_q=0;}
+                          local_flux += weight * det * local_q;
+                  }
+                  break;
 
-	      case FORCE_Y_NEG:
-		if(cr->MeshMotion == ARBITRARY)
-		{
-		for ( a=0; a<VIM; a++)
-		  {
-                        local_q += ((vs_sens[1][a] + ves_sens[1][a])
-				*fv->snormal[a]);
+                case FORCE_Z:
+                  if(cr->MeshMotion == ARBITRARY)
+                  {
+                          if(pd->Num_Dim == 3)
+                          {
+                          for ( a=0; a<VIM; a++)
+                             {
+                                  local_q += ((vs_sens[2][a] + ves_sens[2][a])
+                                          *fv->snormal[a]);
 
-                        local_qconv += (rho*((fv->v[1]-x_dot[1])
-        *fv_sens->v[a]+(fv_sens->v[1]-x_dot[1])*fv->v[a])*fv->snormal[a]);
-		  }
-        	        if(local_q >0) {local_q=0;}
-                        local_flux += weight * det * local_q;
-                        local_flux_conv += weight * det * local_qconv;
-		}
-		else
-		{
-	GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available");
-		for ( a=0; a<VIM; a++)
-		  {
-                        local_q += ( TT_sens[1][a]*fv->snormal[a]);
-		  }
-        	        if(local_q >0) {local_q=0;}
-                        local_flux += weight * det * local_q;
-		}
-		break;
+                                  local_qconv += (rho*((fv->v[2]-x_dot[2])
+          *fv_sens->v[a]+(fv_sens->v[2]-x_dot[2])*fv->v[a])*fv->snormal[a]);
+                             }
+                          local_flux += weight * det * local_q;
+                          local_flux_conv += weight *det * local_qconv;
+                          }
+                          else
+                          {
+                          GOMA_EH(GOMA_ERROR, "Illegal flux type");
+                          }
+                  }
+                  else
+                  {
+          GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available"); 
+                  for ( a=0; a<VIM; a++)
+                    {
+                         local_q += (TT_sens[2][a]*fv->snormal[a]);
+                    }
+                          local_flux += weight * det * local_q;
+                  }
+                  break;
 
-	      case FORCE_Z:
-		if(cr->MeshMotion == ARBITRARY)
-		{
-			if(pd->Num_Dim == 3)
-			{
-			for ( a=0; a<VIM; a++)
-		  	   {
-                        	local_q += ((vs_sens[2][a] + ves_sens[2][a])
-					*fv->snormal[a]);
+                case FORCE_Z_POS:
+                  if(cr->MeshMotion == ARBITRARY)
+                  {
+                          if(pd->Num_Dim == 3)
+                          {
+                          for ( a=0; a<VIM; a++)
+                             {
+                                  local_q += ((vs_sens[2][a] + ves_sens[2][a])
+                                          *fv->snormal[a]);
 
-                       		local_qconv += (rho*((fv->v[2]-x_dot[2])
-        *fv_sens->v[a]+(fv_sens->v[2]-x_dot[2])*fv->v[a])*fv->snormal[a]);
-		  	   }
-                        local_flux += weight * det * local_q;
-                        local_flux_conv += weight *det * local_qconv;
-			}
-			else
-			{
-			GOMA_EH(GOMA_ERROR, "Illegal flux type");
-			}
-		}
-		else
-		{
-	GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available"); 
-		for ( a=0; a<VIM; a++)
-		  {
-                       local_q += (TT_sens[2][a]*fv->snormal[a]);
-		  }
-                        local_flux += weight * det * local_q;
-		}
-		break;
+                                  local_qconv += (rho*((fv->v[2]-x_dot[2])
+          *fv_sens->v[a]+(fv_sens->v[2]-x_dot[2])*fv->v[a])*fv->snormal[a]);
+                             }
+                          if(local_q <0) {local_q=0;}
+                          local_flux += weight * det * local_q;
+                          local_flux_conv += weight *det * local_qconv;
+                          }
+                          else
+                          {
+                          GOMA_EH(GOMA_ERROR, "Illegal flux type");
+                          }
+                  }
+                  else
+                  {
+          GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available"); 
+                  for ( a=0; a<VIM; a++)
+                    {
+                         local_q += (TT_sens[2][a]*fv->snormal[a]);
+                    }
+                          if(local_q <0) {local_q=0;}
+                          local_flux += weight * det * local_q;
+                  }
+                  break;
 
-	      case FORCE_Z_POS:
-		if(cr->MeshMotion == ARBITRARY)
-		{
-			if(pd->Num_Dim == 3)
-			{
-			for ( a=0; a<VIM; a++)
-		  	   {
-                        	local_q += ((vs_sens[2][a] + ves_sens[2][a])
-					*fv->snormal[a]);
+                case FORCE_Z_NEG:
+                  if(cr->MeshMotion == ARBITRARY)
+                  {
+                          if(pd->Num_Dim == 3)
+                          {
+                          for ( a=0; a<VIM; a++)
+                             {
+                                  local_q += ((vs_sens[2][a] + ves_sens[2][a])
+                                          *fv->snormal[a]);
 
-                       		local_qconv += (rho*((fv->v[2]-x_dot[2])
-        *fv_sens->v[a]+(fv_sens->v[2]-x_dot[2])*fv->v[a])*fv->snormal[a]);
-		  	   }
-        	        if(local_q <0) {local_q=0;}
-                        local_flux += weight * det * local_q;
-                        local_flux_conv += weight *det * local_qconv;
-			}
-			else
-			{
-			GOMA_EH(GOMA_ERROR, "Illegal flux type");
-			}
-		}
-		else
-		{
-	GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available"); 
-		for ( a=0; a<VIM; a++)
-		  {
-                       local_q += (TT_sens[2][a]*fv->snormal[a]);
-		  }
-        	        if(local_q <0) {local_q=0;}
-                        local_flux += weight * det * local_q;
-		}
-		break;
+                                  local_qconv += (rho*((fv->v[2]-x_dot[2])
+          *fv_sens->v[a]+(fv_sens->v[2]-x_dot[2])*fv->v[a])*fv->snormal[a]);
+                             }
+                          if(local_q >0) {local_q=0;}
+                          local_flux += weight * det * local_q;
+                          local_flux_conv += weight *det * local_qconv;
+                          }
+                          else
+                          {
+                          GOMA_EH(GOMA_ERROR, "Illegal flux type");
+                          }
+                  }
+                  else
+                  {
+          GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available"); 
+                  for ( a=0; a<VIM; a++)
+                    {
+                         local_q += (TT_sens[2][a]*fv->snormal[a]);
+                    }
+                          if(local_q >0) {local_q=0;}
+                          local_flux += weight * det * local_q;
+                  }
+                  break;
 
-	      case FORCE_Z_NEG:
-		if(cr->MeshMotion == ARBITRARY)
-		{
-			if(pd->Num_Dim == 3)
-			{
-			for ( a=0; a<VIM; a++)
-		  	   {
-                        	local_q += ((vs_sens[2][a] + ves_sens[2][a])
-					*fv->snormal[a]);
+                default:
 
-                       		local_qconv += (rho*((fv->v[2]-x_dot[2])
-        *fv_sens->v[a]+(fv_sens->v[2]-x_dot[2])*fv->v[a])*fv->snormal[a]);
-		  	   }
-        	        if(local_q >0) {local_q=0;}
-                        local_flux += weight * det * local_q;
-                        local_flux_conv += weight *det * local_qconv;
-			}
-			else
-			{
-			GOMA_EH(GOMA_ERROR, "Illegal flux type");
-			}
-		}
-		else
-		{
-	GOMA_EH(GOMA_ERROR,"Force Sensitivity Calculation for Solids  not Available"); 
-		for ( a=0; a<VIM; a++)
-		  {
-                       local_q += (TT_sens[2][a]*fv->snormal[a]);
-		  }
-        	        if(local_q >0) {local_q=0;}
-                        local_flux += weight * det * local_q;
-		}
-		break;
-
-	      default:
-
-		GOMA_EH(GOMA_ERROR, "Illegal flux type");
-		break;
-	      }  /*  end of switch */
-	    
-	    local_area += weight * det ;
+                  GOMA_EH(GOMA_ERROR, "Illegal flux type");
+                  break;
+                }  /*  end of switch */
+              
+              local_area += weight * det ;
 #ifdef PARALLEL
-        delta_flux = local_flux - local_flux0;
-        delta_flux_conv = local_flux_conv - local_flux_conv0;
-        delta_area = local_area - local_area0;
+          delta_flux = local_flux - local_flux0;
+          delta_flux_conv = local_flux_conv - local_flux_conv0;
+          delta_area = local_area - local_area0;
 
-        if( Num_Proc > 1 &&  dpi->elem_owner[ elem_list[i] ] == ProcID )
-         {
-          proc_flux += delta_flux;
-          proc_flux_conv += delta_flux_conv;
-          proc_area += delta_area;
-         }
+          if( Num_Proc > 1 &&  dpi->elem_owner[ elem_list[i] ] == ProcID )
+           {
+            proc_flux += delta_flux;
+            proc_flux_conv += delta_flux_conv;
+            proc_area += delta_area;
+           }
 
-        local_flux0 = local_flux;
-        local_flux_conv0 = local_flux_conv;
-        local_area0 = local_area;
+          local_flux0 = local_flux;
+          local_flux_conv0 = local_flux_conv;
+          local_area0 = local_area;
 #endif
 
-        if (profile_flag && print_flag ) {
-        FILE  *jfp = 0;
-        if(  (filenm != NULL) && ( (jfp=fopen(filenm,"a")) != NULL))
-            {
-             fprintf(jfp," %g  %g  %g  %g  %g\n",
-                        fv->x[0],fv->x[1],fv->x[2],local_q,local_qconv);
-              fflush(jfp);
-            }
-          fclose(jfp);
-                }
+          if (profile_flag && print_flag ) {
+          FILE  *jfp = 0;
+          if(  (filenm != NULL) && ( (jfp=fopen(filenm,"a")) != NULL))
+              {
+               fprintf(jfp," %g  %g  %g  %g  %g\n",
+                          fv->x[0],fv->x[1],fv->x[2],local_q,local_qconv);
+                fflush(jfp);
+              }
+            fclose(jfp);
+                  }
 
-	    }   /*  surface integration over element */
-	      if( Subgrid_Int.active )
-		{
-		  safe_free ( (void *) Subgrid_Int.s  ); Subgrid_Int.s = NULL;
-		  safe_free ( (void *) Subgrid_Int.wt ); Subgrid_Int.wt = NULL;
-		  free_search_grid ( &element_search_grid );
-		}
+              }   /*  surface integration over element */
+                if( Subgrid_Int.active )
+                  {
+                    safe_free ( (void *) Subgrid_Int.s  ); Subgrid_Int.s = NULL;
+                    safe_free ( (void *) Subgrid_Int.wt ); Subgrid_Int.wt = NULL;
+                    free_search_grid ( &element_search_grid );
+                  }
 
-	  }   /*  material id conditional */
-	}    /*   element loop */
+            }   /*  material id conditional */
+          }    /*   element loop */
+      } /* num_side_in_set > 0 */
     }      /*   sset id   */
   else
     {

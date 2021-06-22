@@ -155,6 +155,10 @@ static int int_pair_compare(const void *left, const void *right) {
 }
 
 goma_error exchange_neighbor_ss_edges(Exo_DB *exo, Dpi *dpi) {
+  if (Num_Proc == 1) {
+    // not needed for single processor 
+    return GOMA_SUCCESS;
+  }
   int *rotated_side_sets = calloc(exo->num_side_sets, sizeof(int));
   int num_rotated_side_sets = exo->num_side_sets;
   for (int i = 0; i < exo->num_side_sets; i++) {
@@ -605,6 +609,9 @@ goma_error exchange_neighbor_ss_edges(Exo_DB *exo, Dpi *dpi) {
       }
       offset += num_nodes_on_side;
     }
+    // currently distribution factors aren't actually used but are used to determine num nodes
+    // TODO should be to fix this
+    exo->ss_num_distfacts[i] = offset;
     /*
      * Set up quick pointers for nodes on each given side of a sideset
      * that can be used later to find exactly where to go in the big
@@ -621,43 +628,24 @@ goma_error exchange_neighbor_ss_edges(Exo_DB *exo, Dpi *dpi) {
           (exo->ss_node_side_index[i][j] + exo->ss_node_cnt_list[i][j]);
     }
   }
-  //char *format = "sgid%d.csv";
-  //char fname[80];
-  //snprintf(fname, 79, format, ProcID);
-  //FILE *f = fopen(fname, "w");
-  //fprintf(f,"x,y,z,gid,ss\n");
-  ////for (int k = 0; k < exo->num_side_sets; k++) {
-  ////  for (int i = 0; i < ss_edge_info[k].total_nodes; i++) {
-  ////    int ln = in_list(ss_edge_info[k].global_node_ids[i], 0, exo->num_nodes, dpi->node_index_global);
-  ////  }
-  ////}
-  //for (int i = 0; i < exo->num_side_sets; i++) {
-  //  int offset = 0;
-  //  for (int e = 0; e < exo->ss_num_sides[i]; e++) {
-  //    int ielem = exo->ss_elem_list[exo->ss_elem_index[i] + e];
-  //    int ielem_type = Elem_Type(exo, ielem);
-  //    int local_side_node_list[MAX_NODES_PER_SIDE];
 
-  //    /* find SIDE info for primary side */
-  //    int num_nodes_on_side = 0;
+  // currently distribution factors aren't actually used but are used to determine num nodes
+  // TODO should be to fix this
+  // just set all values to 1.0
+  free(exo->ss_distfact_index);
+  free(exo->ss_distfact_list);
+  exo->ss_distfact_index = malloc((exo->num_side_sets + 1)* sizeof(int));
+  int ss_distfact_len = 0;
+  exo->ss_distfact_index[0] = 0;
+  for (int i = 0; i < exo->num_side_sets; i++) {
+    ss_distfact_len += exo->ss_num_distfacts[i];
+    exo->ss_distfact_index[i+1] = exo->ss_distfact_index[i] + exo->ss_num_distfacts[i];
+  }
 
-  //    int id_side = exo->ss_side_list[exo->ss_elem_index[i] + e];
-  //    get_side_info(ielem_type, id_side, &num_nodes_on_side, local_side_node_list);
-  //    for (int j = 0; j < num_nodes_on_side; j++) {
-  //      int ln = exo->ss_node_list[i][j + offset];
-  //      fprintf(f, "%g,%g,%g,%d,%d\n", 
-  //          exo->x_coord[ln],
-  //          exo->y_coord[ln],
-  //          exo->z_coord[ln],
-  //          dpi->node_index_global[ln],
-  //          exo->ss_id[i]);
-  //    }
-  //    offset += num_nodes_on_side;
-  //  }
-  //}
-  //fclose(f);
-  //MPI_Finalize();
-  //exit(0);
+  exo->ss_distfact_list = malloc(ss_distfact_len * sizeof(double));
+  for (int i = 0; i < ss_distfact_len; i++) {
+    exo->ss_distfact_list[i] = 1.0;
+  }
 
   free(requests);
   free(rotated_side_sets);

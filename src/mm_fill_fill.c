@@ -5349,6 +5349,48 @@ get_side_info(const int ielem_type,
     }
     break;
 
+  case BILINEAR_SHELL:                   /* bilinear quadrilateral */
+    switch (id_side) {
+    case 1:
+      *nodes_per_side = 4;
+      local_elem_node_id[0] = 0;
+      local_elem_node_id[1] = 1;
+      local_elem_node_id[2] = 2;
+      local_elem_node_id[3] = 3;
+      break;
+    case 2:
+      *nodes_per_side = 4;
+      local_elem_node_id[0] = 0;
+      local_elem_node_id[1] = 3;
+      local_elem_node_id[2] = 2;
+      local_elem_node_id[3] = 1;
+      break;
+    case 3:
+      *nodes_per_side = 2;
+      local_elem_node_id[0] = 0;
+      local_elem_node_id[1] = 1;
+      break;
+    case 4:
+      *nodes_per_side = 2;
+      local_elem_node_id[0] = 1;
+      local_elem_node_id[1] = 2;
+      break;
+    case 5:
+      *nodes_per_side = 2;
+      local_elem_node_id[0] = 2;
+      local_elem_node_id[1] = 3;
+      break;
+    case 6:
+      *nodes_per_side = 2;
+      local_elem_node_id[0] = 3;
+      local_elem_node_id[1] = 0;
+      break;
+    default:
+      GOMA_EH(GOMA_ERROR,"Illegal side number for 2-D element");
+      break;
+    }
+    break;
+
   case S_BIQUAD_QUAD:                    /* biquadratic serendipity quadrilateral */
   case   BIQUAD_QUAD:                    /* biquadratic quadrilateral */
     *nodes_per_side = 3;
@@ -5369,6 +5411,63 @@ get_side_info(const int ielem_type,
       local_elem_node_id[2] = 6;
       break;
     case 4:
+      local_elem_node_id[0] = 3;
+      local_elem_node_id[1] = 0;
+      local_elem_node_id[2] = 7;
+      break;
+    default:
+      GOMA_EH(GOMA_ERROR,"Illegal side number for 2-D element");
+      break;
+    }
+    break;
+
+  case BIQUAD_SHELL:                    /* biquadratic serendipity quadrilateral */
+    GOMA_WH(GOMA_ERROR, "get_side_info for BIQUAD_SHELL needs to be checked");
+    switch (id_side) {
+    case 1:
+      *nodes_per_side = 9;
+      local_elem_node_id[0] = 0;
+      local_elem_node_id[1] = 1;
+      local_elem_node_id[2] = 2;
+      local_elem_node_id[3] = 3;
+      local_elem_node_id[4] = 4;
+      local_elem_node_id[5] = 5;
+      local_elem_node_id[6] = 6;
+      local_elem_node_id[7] = 7;
+      local_elem_node_id[8] = 8;
+      break;
+    case 2:
+      *nodes_per_side = 9;
+      local_elem_node_id[0] = 0;
+      local_elem_node_id[1] = 3;
+      local_elem_node_id[2] = 2;
+      local_elem_node_id[3] = 1;
+      local_elem_node_id[0] = 7;
+      local_elem_node_id[1] = 6;
+      local_elem_node_id[2] = 5;
+      local_elem_node_id[3] = 4;
+      local_elem_node_id[3] = 8;
+      break;
+    case 3:
+      *nodes_per_side = 3;
+      local_elem_node_id[0] = 0;
+      local_elem_node_id[1] = 1;
+      local_elem_node_id[2] = 4;
+      break;
+    case 4:
+      *nodes_per_side = 3;
+      local_elem_node_id[0] = 1;
+      local_elem_node_id[1] = 2;
+      local_elem_node_id[2] = 5;
+      break;
+    case 5:
+      *nodes_per_side = 3;
+      local_elem_node_id[0] = 2;
+      local_elem_node_id[1] = 3;
+      local_elem_node_id[2] = 6;
+      break;
+    case 6:
+      *nodes_per_side = 3;
       local_elem_node_id[0] = 3;
       local_elem_node_id[1] = 0;
       local_elem_node_id[2] = 7;

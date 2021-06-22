@@ -1607,7 +1607,7 @@ bf_init(Exo_DB *exo)
   for ( ebi=0; ebi<Proc_Num_Elem_Blk; ebi++)
     {
       m = Matilda[ebi];
-      if (m >= 0) 
+      if (m >= 0 && exo->eb_num_elems[ebi] > 0) 
         {
 	 /* These are needed to check for matching element shapes */
 	 el = exo->eb_ptr[ebi];
