@@ -80,9 +80,10 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define GRAV_VIBRATIONAL 19   /* momentum source for gravity + vibration */
 #define MELT             20  /* Lubrication source term model*/
 #define EM_DISS         21   /* heat generation by EM waves */
-#define HS_FOAM_PBE 22
-#define HS_FOAM_PMDI_10 23
-#define  VARIABLE_DENSITY_NO_GAS 24    /* Drying of Polymeric Film */
+#define EM_VECTOR_DISS  22   /* heat generation by EM vector waves */
+#define HS_FOAM_PBE 23
+#define HS_FOAM_PMDI_10 24
+#define  VARIABLE_DENSITY_NO_GAS 25    /* Drying of Polymeric Film */
 
 /* MMH */
 /* #define  SUSPENSION_PM xxx Defiend below. */
@@ -799,6 +800,9 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define TAGC_LUB_SOURCE_2                  7048
 
 #define TAGC_HEAT_SOURCE_0                 7050
+#define TAGC_RST_FUNC_0                    7060
+#define TAGC_RST_FUNC_1                    7061
+#define TAGC_RST_FUNC_2                    7062
 
 /*  Problem Description Parameters   */
 

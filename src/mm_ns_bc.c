@@ -1934,6 +1934,7 @@ fvelo_tangential_bc(double func[],
 		    const double alpha,	/* coefficient that scales the       *
 					 * exponent  of position dependent   *
 					 *  slip velocity                    */
+		    const double vtang_dot, /* surface acceleration          */
 		    const double xsurf[MAX_PDIM], /* coordinates of surface  *
 						   * Gauss point, i.e.       *
 						   * current position        */
@@ -1967,7 +1968,7 @@ fvelo_tangential_bc(double func[],
 			      contact lines                                */
   double xdcl[MAX_PDIM];   /* coordinates of dynamic contact lines         */
   dbl ead;			/* "exp( -distance_to_singularity / L_slip )" */
-  double vtang_user, vel_user[MAX_PDIM], vel_user_dx[MAX_PDIM][MAX_PDIM];
+  double vtang_user=0, vel_user[MAX_PDIM]={0,0,0}, vel_user_dx[MAX_PDIM][MAX_PDIM];
   
   /***************************** EXECUTION BEGINS *******************************/
 
@@ -2108,7 +2109,7 @@ fvelo_tangential_bc(double func[],
     /*  Velo-tangent bc	*/
     if( bc_type != VELO_TANGENT_USER_BC )
       {
-  	*func -= vtangent;
+  	*func -= vtangent*(1.0 + vtang_dot*time_value);
       }
     else
       {
@@ -4038,7 +4039,7 @@ exchange_fvelo_slip_bc_info(int ibc /* Index into BC_Types for VELO_SLIP_BC */)
 
   float_offset = BC_Types[ibc].max_DFlt+1;
   /* Skip this if calculation is not needed */
-  if (BC_Types[ibc].BC_Data_Int[0] == -1 || BC_Types[ibc].BC_Data_Int[0] == 0) {
+  if (BC_Types[ibc].BC_Data_Int[0] == -1) {
     return 0;
   }
 
@@ -8111,7 +8112,7 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
         }
 
 #ifdef ANALEIG_PLEASE
-          analytical_exp_s(s, exp_s, eig_values, R1); 
+          analytical_exp_s(s, exp_s, eig_values, R1, NULL); 
 #else
           compute_exp_s(s, exp_s, eig_values, R1);   
 #endif

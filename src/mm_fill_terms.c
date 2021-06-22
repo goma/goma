@@ -10317,7 +10317,7 @@ load_fv_grads(void)
 	}
     }
 
-    if (pd->gv[EM_E1_REAL]) {
+    if (pd->gv[EM_E1_REAL] && pd->gv[EM_E2_REAL]) {
       v = EM_E1_REAL;
       dofs = ei[upd->matrix_index[v]]->dof[v];
       bfn = bf[v];
@@ -10331,8 +10331,8 @@ load_fv_grads(void)
         }
       }
     }
-    if (pd->gv[EM_E1_IMAG]) {
-      v = EM_E1_REAL;
+    if (pd->gv[EM_E1_IMAG] && pd->gv[EM_E2_IMAG]) {
+      v = EM_E1_IMAG;
       dofs = ei[upd->matrix_index[v]]->dof[v];
       bfn = bf[v];
 
@@ -31568,7 +31568,7 @@ fluid_stress_conf( double Pi[DIM][DIM],
 
   for (mode = 0; mode < vn->modes; mode++) {
 #ifdef ANALEIG_PLEASE
-    analytical_exp_s(fv->S[mode], exp_s[mode], eig_values, R1);
+    analytical_exp_s(fv->S[mode], exp_s[mode], eig_values, R1, d_exp_s_ds[mode]);
 #else
     compute_exp_s(fv->S[mode], exp_s[mode], eig_values, R1);
 #endif
@@ -31928,11 +31928,13 @@ fluid_stress_conf( double Pi[DIM][DIM],
     }
 
 
+#ifndef ANALEIG_PLEASE
   // Calculate d_exp_s_ds for LOG_CONF case
   for (mode = 0; mode < vn->modes; mode++)
     {
       compute_d_exp_s_ds(fv->S[mode], exp_s[mode], d_exp_s_ds[mode]);
     }
+#endif
 
   if ( d_Pi != NULL && pd->v[pg->imtrx][POLYMER_STRESS11] )
     {
@@ -32614,6 +32616,51 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 	}
 
     }
+  else if (mp->HeatSourceModel == DROP_EVAP )
+    {
+     struct Species_Conservation_Terms s_terms;
+     int err,w1;
+     zero_structure(&s_terms, sizeof(struct Species_Conservation_Terms), 1);
+
+     err = get_continuous_species_terms(&s_terms, time, tt, dt, NULL);
+     GOMA_EH(err,"problem in getting the species terms");
+
+     for(w=0; w<pd->Num_Species_Eqn; w++)
+       {
+	if(mp->SpeciesSourceModel[w] == DROP_EVAP)
+	     {
+		h -= mp->latent_heat_vap[w] * s_terms.MassSource[w];
+
+      		var = TEMPERATURE;
+      		if ( d_h != NULL && pd->e[var] )
+        	   {
+          	    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+            		{
+              		d_h->T[j] -= mp->latent_heat_vap[w] * s_terms.d_MassSource_dT[w][j];
+            		}
+        	   }
+      		if ( d_h != NULL && pd->v[MASS_FRACTION] )
+		   {
+	  	    for ( w1=0; w1<pd->Num_Species_Eqn; w1++)
+	    		{
+	      		var = MASS_FRACTION;
+	      		for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+			  {
+		  	   d_h->C[w][j] -= mp->latent_heat_vap[w]*s_terms.d_MassSource_dc[w][w1][j];
+			  }
+	    	        }
+		   }
+      		var = RESTIME;
+      		if ( d_h != NULL && pd->e[var] )
+        	   {
+          	    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+            		{
+              		d_h->rst[j] -= mp->latent_heat_vap[w] * s_terms.d_MassSource_drst[w][j];
+            		}
+        	   }
+	     }
+	}
+    }
   else if (mp->HeatSourceModel == CONSTANT )
     {
       h = mp->heat_source;
@@ -32686,6 +32733,9 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
     {
       h = em_diss_heat_source(d_h, mp->u_heat_source, mp->len_u_heat_source);
     }
+  else if (mp->HeatSourceModel == EM_VECTOR_DISS) {
+    h = em_diss_e_curlcurl_source(d_h, mp->u_heat_source, mp->len_u_heat_source);
+  }
   else if (mp->HeatSourceModel == EPOXY )
     {
       h = epoxy_heat_source(d_h, tt, dt);
@@ -35186,6 +35236,97 @@ if(af->Assemble_Jacobian)
   return(h);
 }
 /*  _______________________________________________________________________  */
+/*
+ * double em_diss_e_curlcurl_source (dh, param)
+ *
+ * ------------------------------------------------------------------------------
+ * This routine is responsible for filling up the following forces and sensitivities
+ * at the current gauss point:
+ *     intput:
+ *
+ *     output:  h             - heat source
+ *              d_h->T[j]    - derivative wrt temperature at node j.
+ *              d_h->V[j]    - derivative wrt voltage at node j.
+ *              d_h->C[i][j] - derivative wrt mass frac species i at node j
+ *              d_h->v[i][j] - derivative wrt velocity component i at node j
+ *              d_h->X[0][j] - derivative wrt mesh displacement components i at node j
+ *              d_h->S[m][i][j][k] - derivative wrt stress mode m of component ij at node k
+ *
+ *   NB: The user need only supply f, dfdT, dfdC, etc....mp struct is loaded up for you
+ * ---------------------------------------------------------------------------
+ */
+
+double
+em_diss_e_curlcurl_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
+                      dbl *param, int num_const) /* General multipliers */
+{
+  /* Local Variables */
+  int Rvar, Ivar;
+
+  int j;
+  double h;
+
+  double time = tran->time_value;
+
+  /* Begin Execution */
+
+  /**********************************************************/
+  /* Source = 1/2 * Re(E cross[conj{curl[E]}])
+            = 1/2 * omega*epsilon_0*epsilon_c'' * (mag(E))^2 */
+
+  double omega, epsilon_0, epsilon_cpp, h_factor, mag_E_sq;
+
+  dbl n;				/* Refractive index. */
+  CONDUCTIVITY_DEPENDENCE_STRUCT d_n_struct;
+  CONDUCTIVITY_DEPENDENCE_STRUCT *d_n = &d_n_struct;
+
+  dbl k;				/* Extinction coefficient */
+  CONDUCTIVITY_DEPENDENCE_STRUCT d_k_struct;
+  CONDUCTIVITY_DEPENDENCE_STRUCT *d_k = &d_k_struct;
+
+  omega = upd->Acoustic_Frequency;
+
+  epsilon_0 = mp->permittivity;
+
+  n = refractive_index( d_n, time );
+  k = extinction_index( d_k, time );
+
+  epsilon_cpp = 2*n*k;
+  h_factor = omega*epsilon_0*epsilon_cpp/2.;
+
+  mag_E_sq = 0;
+  for (int p=0; p<pd->Num_Dim; p++) {
+    mag_E_sq += SQUARE(fv->em_er[p]) + SQUARE(fv->em_ei[p]);
+  }
+
+  h = h_factor*mag_E_sq;
+  h *= param[0];
+
+  /* Now sensitivies */
+  if (af->Assemble_Jacobian) {
+
+    for (int p=0; p<pd->Num_Dim; p++) {
+      Rvar = EM_E1_REAL + p;
+      Ivar = EM_E1_IMAG + p;
+
+      if (d_h != NULL && pd->v[Rvar]) {
+        for (j=0; j<ei[pg->imtrx]->dof[Rvar]; j++) {
+          d_h->EM_ER[p][j] += param[0]*h_factor*2.0*fv->em_er[p]*bf[Rvar]->phi[j];
+        }
+      }
+
+      if (d_h != NULL && pd->v[Ivar]) {
+        for (j=0; j<ei[pg->imtrx]->dof[Ivar]; j++) {
+          d_h->EM_EI[p][j] += param[0]*h_factor*2.0*fv->em_ei[p]*bf[Ivar]->phi[j];
+        }
+      }
+    }
+
+  }  /* end of if Assemble Jacobian  */
+
+  return(h);
+} // end of em_diss_e_curlcurl_source
+/*  _______________________________________________________________________  */
 
 /* assemble_poynting -- assemble terms (Residual &| Jacobian) for Beer's law 
  *            type light intensity absorption equations
@@ -35224,8 +35365,8 @@ assemble_poynting(double time,	/* present time value */
 		  const int py_eqn,	/* eqn id and var id	*/
 		  const int py_var )
 {
-  int err, eqn, var, peqn, pvar, dim, p, b, w, i, j, status, light_eqn = 0;
-  int petrov = 0, Beers_Law = 0;
+  int err, eqn, var, peqn, pvar, dim, p, b, w, w1, i, j, status, light_eqn = 0;
+  int petrov = 0, Beers_Law = 0, explicit_deriv=0;
 
   dbl P=0;		                /* Light Intensity	*/
   dbl grad_P=0, Psign = 0;		/* grad intensity */
@@ -35275,15 +35416,8 @@ assemble_poynting(double time,	/* present time value */
   double vconv_old[MAX_PDIM]; /*Calculated convection velocity at previous time*/
   CONVECTION_VELOCITY_DEPENDENCE_STRUCT d_vconv_struct;
   CONVECTION_VELOCITY_DEPENDENCE_STRUCT *d_vconv = &d_vconv_struct;
-
-
-  /*   static char yo[] = "assemble_acoustic";*/
-  status = 0;
-  /*
-   * Unpack variables from structures for local convenience...
-   */
-  dim   = pd->Num_Dim;
-  eqn   = py_eqn;
+  struct Species_Conservation_Terms s_terms;
+  double d_drop_source[MAX_CONC];
   /*
  *    Radiative transfer equation variables - connect to input file someday
  */
@@ -35292,6 +35426,17 @@ assemble_poynting(double time,	/* present time value */
   double mucos=1.0;
   double diff_const=1./LITTLE_PENALTY;
   double time_source=0., d_time_source=0.;
+
+  zero_structure(&s_terms, sizeof(struct Species_Conservation_Terms), 1);
+
+
+  /*   static char yo[] = "assemble_poynting";*/
+  status = 0;
+  /*
+   * Unpack variables from structures for local convenience...
+   */
+  dim   = pd->Num_Dim;
+  eqn   = py_eqn;
 
   /*
    * Bail out fast if there's nothing to do...
@@ -35350,7 +35495,7 @@ assemble_poynting(double time,	/* present time value */
          Psign = 0.;
          break;
     case R_RESTIME:
-         petrov = 1;
+         petrov = ( mp->Rst_func_supg > 0 ? 1 : 0);
          break;  
     default:
          GOMA_EH(GOMA_ERROR,"light intensity equation");
@@ -35371,6 +35516,7 @@ assemble_poynting(double time,	/* present time value */
    {
      Beers_Law = 0;
      P = fv->restime;
+     diff_const = mp->Rst_diffusion;
      for(i=0 ; i<dim ; i++)
         {
          v_grad[i] = fv->grad_restime[i];
@@ -35395,6 +35541,28 @@ assemble_poynting(double time,	/* present time value */
                   d_time_source=mp->Rst_func*time_source;
                  }
             break;
+        case DROP_EVAP:
+            if(pd->e[R_MASS] )
+               {
+		double init_radius=0.010, num_density=10., denom=1;
+		err = get_continuous_species_terms(&s_terms, time, tt, dt, hsquared);
+     		GOMA_EH(err,"problem in getting the species terms");
+
+      		for(w=0; w<pd->Num_Species_Eqn; w++)
+        	  {
+		  if(mp->SpeciesSourceModel[w] == DROP_EVAP)
+		     {
+		      init_radius = mp->u_species_source[w][2];
+		      num_density = mp->u_species_source[w][3];  
+		      denom = MAX(DBL_SMALL,num_density*4*M_PIE*CUBE(init_radius)*SQUARE(MAX(P,DBL_SMALL)));
+		     }
+                  time_source -= mp->molar_volume[w]*s_terms.MassSource[w]/denom; 
+                  d_drop_source[w] = -mp->Rst_func*mp->molar_volume[w]/denom; 
+                  }
+		time_source *= mp->Rst_func;
+                }
+	    explicit_deriv=1;
+            break;
         default:
             GOMA_EH(GOMA_ERROR,"Residence Time Weight Function");
             break;
@@ -35409,6 +35577,7 @@ assemble_poynting(double time,	/* present time value */
       eqn = py_eqn;
       peqn = upd->ep[pg->imtrx][eqn];
       var = py_var;
+
       for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	{
 	  
@@ -35421,14 +35590,15 @@ assemble_poynting(double time,	/* present time value */
 	      if ( extended_dof && !xfem_active ) continue;
             }
 	  phi_i = bf[eqn]->phi[i];
+	  wt_func = (1.-mp->Rst_func_supg)*phi_i;
+/* add Petrov-Galerkin terms as necessary */
           if(petrov)
             {
-             wt_func = 0.0;
-	     for(p=0; p<dim; p++)
-                 { wt_func += h_elem_inv*vconv[p]*bf[eqn]->grad_phi[i][p]; }
+              for(p=0; p<dim; p++)
+                {
+                  wt_func += mp->Rst_func_supg*h_elem_inv*vconv[p]*bf[eqn]->grad_phi[i][p];
+                }
             }
-          else
-            { wt_func = phi_i; }
 
 	  advection = 0.;
 	  if ( (pd->e[pg->imtrx][eqn] & T_ADVECTION) && !Beers_Law )
@@ -35480,14 +35650,12 @@ assemble_poynting(double time,	/* present time value */
 	      if ( extended_dof && !xfem_active ) continue;
             }
 	  phi_i = bf[eqn]->phi[i];
+	  wt_func = (1.-mp->Rst_func_supg)*phi_i;
           if(petrov)
             {
-             wt_func = 0;
 	     for(p=0; p<dim; p++)
                  { wt_func += h_elem_inv*vconv[p]*bf[eqn]->grad_phi[i][p]; }
             }
-          else
-            { wt_func = phi_i; }
 
 	  /*
 	   * Set up some preliminaries that are needed for the (a,i)
@@ -35520,6 +35688,12 @@ assemble_poynting(double time,	/* present time value */
 		         advection += wt_func*vconv[p]*grad_phi_j[p];
 	                 advection += diff_const*grad_phi_i[p]*grad_phi_j[p];
 		        }
+		     if(explicit_deriv && 1)
+			{
+      		         for(w=0; w<pd->Num_Species_Eqn; w++)
+        	            { advection += wt_func*d_drop_source[w]*s_terms.d_MassSource_drst[w][j];}
+			 advection += wt_func*time_source*(2./fv->restime)*phi_j;  
+			}
 
 	             advection *= det_J * wt;
 	             advection *= h3;
@@ -35557,9 +35731,17 @@ assemble_poynting(double time,	/* present time value */
 		      grad_phi_j[p] = bf[var]->grad_phi[j][p];
 		    }
 
+		  advection = diffusion = 0;
 	          if ((pd->e[pg->imtrx][eqn] & T_ADVECTION) && !Beers_Law )
                     {
-	              advection = -wt_func*d_time_source*phi_j;
+		     if(explicit_deriv)
+			{
+	              advection = 0;
+      		      for(w=0; w<pd->Num_Species_Eqn; w++)
+        	         { advection += wt_func*d_drop_source[w]*s_terms.d_MassSource_dT[w][j];}
+			}
+		     else
+			{ advection = -wt_func*d_time_source*phi_j; }
 
 	              advection *= det_J * wt;
 	              advection *= h3;
@@ -35593,6 +35775,8 @@ assemble_poynting(double time,	/* present time value */
 		      dh3dmesh_bj = fv->dh3dq[b] * bf[var]->phi[j];
 
 		      d_det_J_dmeshbj = bf[eqn]->d_det_J_dm[b][j];
+
+			advection = diffusion = 0;
 
 	                if ( (pd->e[pg->imtrx][eqn] & T_ADVECTION) && !Beers_Law )
 	                   {
@@ -35637,7 +35821,7 @@ assemble_poynting(double time,	/* present time value */
 			}
 
 
-                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion + advection;
 		    }
 		}
 	    }
@@ -35654,15 +35838,28 @@ assemble_poynting(double time,	/* present time value */
 		    {
 		      phi_j = bf[var]->phi[j];
 
+		      advection = diffusion = 0;
 		      if ((pd->e[pg->imtrx][eqn] & T_DIFFUSION) && Beers_Law)
 			{
 			  diffusion = phi_i*Psign*d_alpha->C[w][j]*P;
 			  diffusion *= det_J * wt;
 			  diffusion *= h3;
 			  diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+
+                          lec->J[LEC_J_INDEX(peqn,MAX_PROB_VAR + w,i,j)] += diffusion;
+			}
+		      if ((pd->e[pg->imtrx][eqn] & T_DIFFUSION) && !Beers_Law)
+			{
+	                  advection = 0;
+	                  for ( w1=0; w1<pd->Num_Species_Eqn; w1++)
+		              { advection += wt_func*d_drop_source[w]*s_terms.d_MassSource_dc[w][w1][j]; }
+
+	      		  advection *= det_J * wt;
+			  advection *= h3;
+			  advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+                          lec->J[LEC_J_INDEX(peqn,MAX_PROB_VAR + w,i,j)] += advection;
 			}
 
-                      lec->J[LEC_J_INDEX(peqn,MAX_PROB_VAR + w,i,j)] += diffusion;
 		    }
 		}
 	    }
@@ -35693,6 +35890,7 @@ assemble_poynting(double time,	/* present time value */
 
 			d_wt_func = h_elem_inv*d_vconv->v[b][b][j]*grad_phi_i[b]
 			  + h_elem_inv_deriv * vconv[b] * grad_phi_i[b];
+			d_wt_func *= mp->Rst_func_supg;
 
 			for(p=0;p<dim;p++)
 			 {

@@ -2553,6 +2553,7 @@ struct Species_Conservation_Terms {
   dbl d_MassSource_dV[MAX_CONC][MDE];
   dbl d_MassSource_dpmv[MAX_CONC][MAX_PMV][MDE];
   dbl d_MassSource_dF[MAX_CONC][MDE];
+  dbl d_MassSource_drst[MAX_CONC][MDE];
 };
 /******************************************************************************/
 /******************************************************************************/
@@ -3077,6 +3078,9 @@ struct heat_source_dependence {
   double APR[MDE];	   /* acoustic pressure dependence  */
   double API[MDE];	   /* acoustic pressure dependence  */
   double INT[MDE];	   /* acoustic pressure dependence  */
+  double EM_ER[DIM][MDE];  /* time-harmonic electromagnetic dependence */
+  double EM_EI[DIM][MDE];  /* time-harmonic electromagnetic dependence */
+  double rst[MDE];	   /* residence time field dependence  */
 };
 typedef struct heat_source_dependence HEAT_SOURCE_DEPENDENCE_STRUCT;
 

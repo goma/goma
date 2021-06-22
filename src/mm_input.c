@@ -60,6 +60,8 @@
 #define GOMA_MM_INPUT_C
 #include "mm_input.h"
 
+static char aprepro_command[1024];
+
 static int 
 look_forward_optional_until(FILE *ifp, const char *string, char *untilstring, char input[],
 			    const char ch_term);
@@ -76,7 +78,6 @@ struct Variable_Initialization	Var_init[MAX_VARIABLE_TYPES + MAX_CONC];
 
 struct Variable_Initialization	Var_init_mat[MAX_NUMBER_MATLS]
 						[MAX_VARIABLE_TYPES + MAX_CONC];
-
 extern struct AC_Information *augc;
 
 struct HC_Information *hunt;

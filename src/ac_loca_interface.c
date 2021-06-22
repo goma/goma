@@ -1295,8 +1295,6 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
                      passdown.tev_post,
 		     NULL,
                      passdown.rd,
-                     passdown.gindex,
-                     passdown.gsize,
                      passdown.gvec,
                      passdown.gvec_elem,
                      passdown.nprint, 
@@ -1324,8 +1322,6 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
                      passdown.tev_post,
 		     NULL,
                      passdown.rd,
-                     passdown.gindex,
-                     passdown.gsize,
                      passdown.gvec,
                      passdown.gvec_elem,
                      passdown.nprint, 
@@ -1372,7 +1368,6 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
     {
       safer_free((void **) &(ams[i]));
     }
-  safer_free( (void **) &rd);
   safer_free( (void **) &gvec);
   safer_free( (void **) &cpcc);
   if (tpcc != NULL) safer_free( (void **) &tpcc);
@@ -1392,6 +1387,8 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
         }
       safer_free((void **) &(gvec_elem [eb_indx]));
     }
+
+  safer_free( (void **) &rd);
 
   for(i = 0; i < MAX_NUMBER_MATLS; i++) {
     for(n = 0; n < MAX_MODES; n++) {
@@ -1601,8 +1598,8 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
 				  passdown.tev_post,
 				  NULL,
 				  passdown.rd,
-				  passdown.gindex,
-				  passdown.gsize,
+                                  passdown.gindex,
+                                  passdown.gsize,
 				  passdown.gvec, 
 				  passdown.gvec_elem, 
 				  lambda,
@@ -3738,6 +3735,12 @@ void eigenvector_output_conwrap(int j, int num_soln_flag, double *xr, double evr
                    passdown.exo,
                    passdown.dpi);
 
+   if (displacement_somewhere )
+     {
+      undo_add_displacement_LSA(xr, passdown.exo, saved_displacement);
+     }
+
+
   /* Write the imag vector using the imag eigenvalue part as the time stamp */
   if (num_soln_flag == 2)
     {
@@ -3757,26 +3760,32 @@ void eigenvector_output_conwrap(int j, int num_soln_flag, double *xr, double evr
 
           strcpy(efile, eigen->Eigen_Output_File);
           get_eigen_outfile_name(efile, j+1, LSA_current_wave_number);
-            write_solution(efile,
-                           passdown.resid_vector,
-                           xi,
-                           passdown.x_sens_p,
-                           passdown.x_old,
-                           passdown.xdot,
-                           passdown.xdot_old,
-                           passdown.tev,
-                           passdown.tev_post,
-                           NULL,
-                           passdown.rd,
-                           passdown.gvec,
-                           passdown.gvec_elem,
-                           &nprint,
-                           0.0,
-                           passdown.theta,
-                           evi,
-                           NULL,
-                           passdown.exo,
-                           passdown.dpi);
+          write_solution(efile,
+                         passdown.resid_vector,
+                         xi,
+                         passdown.x_sens_p, 
+                         passdown.x_old,
+                         passdown.xdot,
+                         passdown.xdot_old,
+                         passdown.tev,
+                         passdown.tev_post,
+		         NULL,
+                         passdown.rd,
+                         passdown.gvec,
+                         passdown.gvec_elem,
+                         &nprint, 
+                         0.0,
+                         passdown.theta,
+                         evi,
+                 	 NULL,
+                         passdown.exo,
+                         passdown.dpi);
+
+         if (displacement_somewhere )
+           {
+            undo_add_displacement_LSA(xi, passdown.exo, saved_displacement);
+           }
+
         }
     }
 

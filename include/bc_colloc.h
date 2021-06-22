@@ -28,7 +28,6 @@ struct elem_side_bc_struct;
 
 #ifdef GOMA_BC_COLLOC_C
 #define EXTERN
-#
 #endif
 
 #ifndef GOMA_BC_COLLOC_C
@@ -184,6 +183,7 @@ EXTERN int load_variable
 
 extern int bc_eqn_index(int, int, int, int, int, int *, int *,
 			VARIABLE_DESCRIPTION_STRUCT **);
+
 EXTERN int
 bc_eqn_index_stress(int id,               /* local node number                 */
 	            int I,                /* processor node number             */

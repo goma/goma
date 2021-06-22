@@ -12,6 +12,7 @@
 
 #include <limits.h>
 
+#define GOMA_SHELL_TFMP_UTIL_C
 /* Standard include files */
 #include "ac_conti.h"
 #include "ac_hunt.h"

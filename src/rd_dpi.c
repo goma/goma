@@ -456,7 +456,6 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
         old_global_indices[new_external_node_order[i]];
   }
   free(old_global_indices);
-
   double *x_old = alloc_dbl_1(d->num_external_nodes, 0);
   double *y_old = alloc_dbl_1(d->num_external_nodes, 0);
   double *z_old = alloc_dbl_1(d->num_external_nodes, 0);

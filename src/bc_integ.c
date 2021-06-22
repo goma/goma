@@ -668,6 +668,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			      bc->BC_Data_Float[0], 
 			      bc->BC_Data_Float[1], 
 			      bc->BC_Data_Float[2], 
+			      bc->BC_Data_Float[3], 
 			      xsurf, x_dot, theta, delta_t, (int) bc->BC_Name,
 			      elem_side_bc->id_side, xi, exo,
 			      time_intermediate, bc->u_BC, bc->len_u_BC);
@@ -1845,6 +1846,25 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
                  bc->BC_Data_Float
                 );
             break;
+        case E_ER_FARFIELD_BC:
+        case E_EI_FARFIELD_BC:
+            apply_ewave_curlcurl_farfield_vec
+                (func,
+                 d_func,
+                 xi,
+                 time_value,
+                 (int) bc->BC_Name,
+                 bc->BC_Data_Float
+                );
+            break;
+        case E_ER_2D_BC:
+        case E_EI_2D_BC:
+          apply_ewave_2D(func,
+                         d_func,
+                         xi,
+                         (int) bc->BC_Name
+                         );
+          break;
         case LIGHTP_TRANS_BC:
 	case LIGHTM_TRANS_BC:
 	case LIGHTD_TRANS_BC:

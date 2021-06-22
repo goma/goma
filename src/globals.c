@@ -9,10 +9,10 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
+/* File containing the many of Goma's global variables, moved for -fno-common */
+
 #include "rf_fem.h"
 #include "rf_solver.h"
-
-/* File containing the many of Goma's global variables, moved for -fno-common */
 
 int  CoordinateSystem;  /* Indicates type of coordinate system (see fem_const.h)*/
 

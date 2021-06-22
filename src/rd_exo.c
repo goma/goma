@@ -95,7 +95,7 @@ static const int spc = sizeof(char *);
 static const int spi = sizeof(int *);
 static const int spd = sizeof(dbl *);
 
-static Spfrtn sr;			/* sprintf() return type */
+extern Spfrtn sr;			/* sprintf() return type */
 int
 rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
        const char *fn,
@@ -1427,11 +1427,6 @@ free_exo(Exo_DB *x)		/* pointer to EXODUS II FE db structure */
   if ( x->num_times > 0 )
     {
       free(x->time_vals);
-    }
-
-  if ( x->num_elem_vars > 0 )
-    {
-      free(x->elem_var_tab);
     }
 
 #if 0

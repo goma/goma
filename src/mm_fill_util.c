@@ -3681,9 +3681,11 @@ zero_lec_column(double *local_J,
 {
   int eqn, dof;
 
-  for (eqn = 0; eqn < MAX_PROB_EQN + MAX_CONC; eqn++)
-    for (dof = 0; dof < MDE; dof++)
+  for(eqn = 0; eqn < MAX_PROB_EQN+MAX_CONC; eqn++) {
+    for(dof = 0; dof < lec->max_dof; dof++) {
       local_J[LEC_J_INDEX(eqn,var_type,dof,ldof)] = 0.0;
+    }
+  }
 }
 /*****************************************************************************/
 /*****************************************************************************/

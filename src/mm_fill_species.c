@@ -350,7 +350,6 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
    */
   rho  = density(d_rho, time);
 
-
   SUPG_terms supg_terms;
   zero_structure(&supg_terms, sizeof(SUPG_terms), 1);
 
@@ -3225,8 +3224,10 @@ raoults_law(double func[],
 
    if(mp->VaporPressureModel[wspec] == ANTOINE )
      {
-     antoine_psat(mp->u_vapor_pressure[wspec], &psat[wspec], &dpsatdt[wspec]);
+     antoine_psat(mp->u_vapor_pressure[wspec],
+                    &psat[wspec], &dpsatdt[wspec]);
        mp->vapor_pressure[wspec] = psat[wspec];
+
      }
 
    else if(mp->VaporPressureModel[wspec] == RIEDEL )
@@ -10961,6 +10962,120 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	  }
 
 	}
+      }
+      else if (mp->SpeciesSourceModel[w]  == DROP_EVAP )
+      {
+	double *param,s,dsdC[MAX_CONC],dsdT,dsdrst;
+	double liq_C[MAX_CONC], radius, num_density, gas_conc, tmp;
+	double psat[MAX_CONC], dpsatdt[MAX_CONC], A, amb_pres, rad_ratio;
+        double y_mole[MAX_CONC], dy_dC[MAX_CONC][MAX_CONC], x_mole[MAX_CONC];
+	double C[MAX_CONC], activity[MAX_CONC];
+	int mode=RAOULT;
+	double sum_C=0, R_gas=82050;
+
+	param = mp->u_species_source[w];
+	for (i = 0; i<pd->Num_Species_Eqn; i++)
+	    {  liq_C[i] = mp->u_species_source[i][0];  }
+	amb_pres = param[1];
+	radius = param[2];
+	num_density = param[3];
+	s = 0;       dsdT = 0;  
+	for(a=0; a<MAX_CONC; a++) dsdC[a]=0.;  
+  /*  Concentration field is the far-field gas  */
+	for (i = 0; i<pd->Num_Species_Eqn; i++)
+	      { C[i] = MAX(DBL_SMALL,fv->c[i]);}
+
+	gas_conc = amb_pres/(R_gas*fv->T);
+	y_mole[w] = MIN(C[w]/(gas_conc),0.999); 
+
+	for(j=0;j<pd->Num_Species_Eqn;j++)
+	   { dy_dC[w][j] = delta(w,j)/gas_conc; }
+
+  /* Convert liquid droplet concentration to mole fraction, if needed  */
+        if(mp->Species_Var_Type == SPECIES_MOLE_FRACTION)
+          {
+	   x_mole[w] = liq_C[w]; 
+          }
+        else if(mp->Species_Var_Type == SPECIES_DENSITY)
+          {
+	  sum_C = 0;
+          for ( i=0; i<pd->Num_Species_Eqn; i++) { sum_C += liq_C[i]; }
+	  x_mole[w] = liq_C[w]/sum_C; 
+          }
+        else if(mp->Species_Var_Type == SPECIES_CONCENTRATION)
+          {
+          for ( i=0; i<pd->Num_Species_Eqn; i++) { sum_C += liq_C[i]; }
+	  x_mole[w] = liq_C[w]/sum_C; 
+          }
+        else
+	  { GOMA_EH(-1,"That species formulation not done in DROP_EVAP\n"); }
+
+
+  /* Nonideal VP Calculations based on either ANTOINE or RIEDEL models */
+
+	if(mp->VaporPressureModel[w] == ANTOINE )
+	  {
+	    antoine_psat(mp->u_vapor_pressure[w], &psat[w], &dpsatdt[w]);
+	  }
+	else if(mp->VaporPressureModel[w] == RIEDEL )
+	  {
+	   riedel_psat(mp->u_vapor_pressure[w], &psat[w], &dpsatdt[w]);
+	  }
+	mp-> vapor_pressure[w] = psat[w];
+
+	A = mp->vapor_pressure[w]/amb_pres;
+  /**  Using Raoult activity model  **/
+	if(mode==RAOULT)
+	  {
+	   activity[w] = A*x_mole[w];
+	  }
+
+	tmp = gas_conc*4*M_PIE*radius*mp->diffusivity[w]*num_density;
+	if(pd->gv[RESTIME])
+	  { rad_ratio = MAX(fv->restime,DBL_SMALL);}
+	else
+	  {rad_ratio=1.;}
+	s = tmp*log((1-y_mole[w])/(1-activity[w]))*rad_ratio;
+	for(j=0;j<pd->Num_Species_Eqn;j++)
+	  {
+	   dsdC[j] = -dy_dC[w][j]/(1.-y_mole[w])*tmp*rad_ratio;
+	  }
+	   
+	dsdT = s*(-1./fv->T) + dpsatdt[w]/amb_pres*x_mole[w]/(1-activity[w])*tmp*rad_ratio;
+	dsdrst = tmp*log((1-y_mole[w])/(1-activity[w]));
+
+	st->MassSource[w]= s;
+
+	if ( af->Assemble_Jacobian )
+	{
+	  var = TEMPERATURE;
+	  if(pd->v[pg->imtrx][var])
+	  {
+	    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+	    {
+	      st->d_MassSource_dT[w][j]= dsdT*bf[var]->phi[j];
+	    }
+	  }
+
+	  var = MASS_FRACTION;
+	  if (pd->v[pg->imtrx][MASS_FRACTION] )
+	  {
+	    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+	    {
+	      st->d_MassSource_dc[w][w][j]=dsdC[j]*bf[var]->phi[j];
+	    }
+	  }
+
+	  var = RESTIME;
+	  if(pd->v[pg->imtrx][var])
+	  {
+	    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+	    {
+	      st->d_MassSource_drst[w][j]= dsdrst*bf[var]->phi[j];
+	    }
+	  }
+	}
+
       }
       else if (mp->SpeciesSourceModel[w]  == EPOXY )
       {

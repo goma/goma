@@ -60,7 +60,6 @@ extern int Do_Overlap;         /* Indicates that Overlap AC's will be used      
 
 extern int  ProblemType;	/* Select type of problem to be solved		    */
 
-
 /* global variable to account for extra terms in axisymmetric or swirling
    flow problems: define in setup_pd */
 extern int VIM;

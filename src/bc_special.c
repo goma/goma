@@ -859,7 +859,8 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 				      {
 				      case VELO_TANGENT_BC:
 				      case VELO_STREAMING_BC:
-					wall_velocity = BC_Types[i1].BC_Data_Float[0];
+					wall_velocity = BC_Types[i1].BC_Data_Float[0] *
+						(1.0+BC_Types[i1].BC_Data_Float[3]*time_value);
 					found_wall_velocity = 1;
 					break;
 				      case VELO_SLIP_BC:

@@ -1,6 +1,5 @@
 cmake_minimum_required (VERSION 3.13)
 cmake_policy(VERSION 3.13)
-
 project(goma)
 
 enable_language(C)
@@ -10,7 +9,6 @@ enable_language(Fortran)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_EXTENSIONS OFF)
-#set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
 
 list(APPEND CMAKE_MODULE_PATH "${goma_SOURCE_DIR}/cmake")
 
@@ -531,6 +529,16 @@ endif()
 set(GOMA_WARNINGS "-Wall -Wextra -Wno-unused-parameter" CACHE STRING "set warnings for goma C and CXX")
 set(GOMA_DEBUG_FLAGS "-O0 -ggdb3" CACHE STRING "set debug flags for goma C and CXX")
 set(GOMA_RELEASE_FLAGS "-O2 -DNDEBUG" CACHE STRING "set release flags for goma C and CXX")
+
+execute_process(COMMAND git describe --dirty --always --tags OUTPUT_VARIABLE goma_git_version RESULT_VARIABLE goma_using_git)
+if(goma_using_git EQUAL 0)
+  string(REGEX REPLACE "\n$" "" goma_git_version "${goma_git_version}")
+else()
+  unset(goma_git_version)
+endif()
+if (goma_git_version)
+  list(APPEND GOMA_COMPILE_DEFINITIONS GIT_VERSION=${goma_git_version})
+endif()
 
 # Select flags.
 SET(CMAKE_CXX_FLAGS ${GOMA_WARNINGS})
