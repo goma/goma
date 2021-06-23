@@ -2789,7 +2789,7 @@ int load_basis_functions(const double xi[], /*  [DIM]               */
 
       v = bf_ptr->Var_Type_MatID[mn];
 
-      if (!pd->v[imtrx][v])
+      if (v != -1 && !pd->v[imtrx][v])
         continue;
 
       /*

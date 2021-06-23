@@ -1446,8 +1446,8 @@ vol_flux_surface(JACOBIAN_VAR_DESC_STRUCT *func_jac,
     if (! af->Assemble_LSA_Mass_Matrix) {
       for (p = 0; p < pd->Num_Dim; p++) {
         var = MESH_DISPLACEMENT1 + p;
-        phi_ptr = bf[var]->phi;
         if (ei[pg->imtrx]->Num_Lvdesc_Per_Var_Type[var] == 1) {
+          phi_ptr = bf[var]->phi;
           lvdesc = ei[pg->imtrx]->Lvdesc_First_Var_Type[var];
           switch (pd->Num_Dim) {
           case 2:

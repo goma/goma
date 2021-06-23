@@ -991,7 +991,9 @@ realloc_dbl_1_FL(double **dvec_hndl, const int new_length,
     if (new_length < old_length) {
       bytenum = sizeof(double) * new_length;
     }
-    (void) memcpy((void *) array, (void *) *dvec_hndl, bytenum);
+    if (bytenum > 0) {
+      (void) memcpy((void *) array, (void *) *dvec_hndl, bytenum);
+    }
     safe_free(*dvec_hndl);
     *dvec_hndl = array;
   } else {

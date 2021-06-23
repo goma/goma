@@ -9715,7 +9715,7 @@ double Courant_Time_Step(double x[], double x_old[], double x_older[],
           ip_total = elem_info(NQUAD, ei[pg->imtrx]->ielem_type);
         }
 
-        if (is_xfem_interp(pd->i[pd->mi[VELOCITY1]][VELOCITY1]))
+        if (is_xfem_interp(pd->gv[VELOCITY1]))
           num_passes = 2;
         else
           num_passes = 1;
