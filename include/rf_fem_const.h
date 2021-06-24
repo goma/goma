@@ -81,10 +81,13 @@
 #define EVSS_L          3  /* Level set solid-fluid formulation */
 #define LOG_CONF        4  /* Log-conformation tensor formulation */
 #define EVSS_GRADV      5  /* Fortin's formulation using GradV instead of G */
-#define LOG_CONF_LAGGED 7
                            /* for stress constitutive equations */
 #define LOG_CONF_GRADV  6  /* Log-conformation tensor formulation using */
                            /* GradV instead of G for stress constitutive equations */
+#define LOG_CONF_TRANSIENT  7  /* Log-conformation tensor formulation using */
+                               /* lagged (explicit) terms for eigen-decomp parts */
+#define LOG_CONF_TRANSIENT_GRADV  8  /* Log-conformation tensor formulation using */
+                               /* lagged (explicit) terms for eigen-decomp parts grad(v) form*/
 /* Discontinuous Galerkin viscoelastic jacobian options */
 #define EXPLICIT_DG     1
 #define FULL_DG         2

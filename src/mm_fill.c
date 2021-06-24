@@ -1583,6 +1583,20 @@ matrix_fill(
           if (err) return -1;
 #endif
         }
+      else if(vn->evssModel==LOG_CONF_TRANSIENT || vn->evssModel == LOG_CONF_TRANSIENT_GRADV)
+        {
+          err = assemble_stress_log_conf_transient(theta, delta_t, &pg_data);
+                                                    
+
+          GOMA_EH(err, "assemble_stress_log_conf");
+	  if (err) return -1;
+          err = segregate_stress_update( x_update );
+          GOMA_EH(err, "assemble_stress_update");
+#ifdef CHECK_FINITE
+          err = CHECKFINITE("assemble_stress_log_conf");
+          if (err) return -1;
+#endif
+        }
 
 
       if (pde[R_SHEAR_RATE])
@@ -4151,6 +4165,19 @@ matrix_fill_stress(
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_stress_log_conf");
 	  if (err) return -1;
+#endif
+        }
+      else if(vn->evssModel==LOG_CONF_TRANSIENT || vn->evssModel == LOG_CONF_TRANSIENT_GRADV)
+        {
+          err = assemble_stress_log_conf_transient(theta, delta_t, &pg_data);
+
+          GOMA_EH(err, "assemble_stress_log_conf");
+	  if (err) return -1;
+          err = segregate_stress_update( x_update );
+          GOMA_EH(err, "assemble_stress_update");
+#ifdef CHECK_FINITE
+          err = CHECKFINITE("assemble_stress_log_conf");
+          if (err) return -1;
 #endif
         }
       if( pde[R_EM_E1_REAL] )

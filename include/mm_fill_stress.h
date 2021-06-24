@@ -19,6 +19,7 @@
 #include "mm_eh.h"
 #include "mm_mp_const.h"
 #include "std.h"
+#include "mm_fill_stabilization.h"
 
 struct Aztec_Linear_Solver_System;
 #ifdef EXTERN
@@ -68,6 +69,10 @@ assemble_stress_log_conf(dbl tt,
 			 dbl vcent[DIM],
 			 dbl dvc_dnode[DIM][MDE]);
 
+EXTERN int 
+assemble_stress_log_conf_transient(dbl tt,	 
+		     dbl dt,	              
+		     PG_DATA *pg_data);
 
 EXTERN int assemble_stress_level_set
 (dbl ,			/* tt - parm to vary time integration from 

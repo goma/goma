@@ -805,9 +805,11 @@ int calc_pspg(dbl pspg[DIM],
   for (p = 0; p < wim; p++)
     div_s[p] = 0.;
   if (pd->gv[POLYMER_STRESS11]) {
-    for (p = 0; p < wim; p++) {
-      for (mode = 0; mode < vn->modes; mode++) {
-        div_s[p] += fv->div_S[mode][p];
+    if (!(vn->evssModel == LOG_CONF_TRANSIENT_GRADV || vn->evssModel == LOG_CONF_TRANSIENT)) {
+      for (p = 0; p < wim; p++) {
+        for (mode = 0; mode < vn->modes; mode++) {
+          div_s[p] += fv->div_S[mode][p];
+        }
       }
     }
   }

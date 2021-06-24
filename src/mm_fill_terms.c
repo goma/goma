@@ -2883,7 +2883,8 @@ assemble_momentum(dbl time,       /* current time */
   /*
    * Calculate the momentum stress tensor at the current gauss point
    */
-  if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_GRADV)
+  if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_GRADV || vn->evssModel == LOG_CONF_TRANSIENT
+		  || vn->evssModel == LOG_CONF_TRANSIENT_GRADV)
     {
       fluid_stress_conf(Pi, d_Pi);
     }
@@ -27152,7 +27153,8 @@ assemble_p_source ( double pressure, const int bcflag )
 	{
 	 if (!af->Assemble_Jacobian) d_Pi = NULL; 
   		/* compute stress tensor and its derivatives */
-           if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_GRADV)
+          if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_GRADV || vn->evssModel == LOG_CONF_TRANSIENT
+		  || vn->evssModel == LOG_CONF_TRANSIENT_GRADV)
              {
                fluid_stress_conf(Pi, d_Pi);
              }
@@ -28537,7 +28539,8 @@ assemble_uvw_source ( int eqn, double val )
   else
     {
       /* compute stress tensor and its derivatives */
-      if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_GRADV)
+      if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_GRADV || vn->evssModel == LOG_CONF_TRANSIENT
+		  || vn->evssModel == LOG_CONF_TRANSIENT_GRADV)
         {
           fluid_stress_conf(Pi, d_Pi);
         }
@@ -29558,7 +29561,8 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
   /*
    * Stress tensor, but don't need dependencies
    */
-  if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_GRADV)
+  if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_GRADV || vn->evssModel == LOG_CONF_TRANSIENT
+		  || vn->evssModel == LOG_CONF_TRANSIENT_GRADV)
     {
       fluid_stress_conf(Pi, NULL);
     }
@@ -31567,11 +31571,19 @@ fluid_stress_conf( double Pi[DIM][DIM],
     }
 
   for (mode = 0; mode < vn->modes; mode++) {
+    if (vn->evssModel == LOG_CONF_TRANSIENT || vn->evssModel == LOG_CONF_TRANSIENT_GRADV) {
 #ifdef ANALEIG_PLEASE
-    analytical_exp_s(fv->S[mode], exp_s[mode], eig_values, R1, d_exp_s_ds[mode]);
+	    analytical_exp_s(fv->S[mode], exp_s[mode], eig_values, R1, d_exp_s_ds[mode]);
 #else
-    compute_exp_s(fv->S[mode], exp_s[mode], eig_values, R1);
+	    compute_exp_s(fv->S[mode], exp_s[mode], eig_values, R1);
 #endif
+    } else {
+#ifdef ANALEIG_PLEASE
+	    analytical_exp_s(fv_old->S[mode], exp_s[mode], eig_values, R1, d_exp_s_ds[mode]);
+#else
+	    compute_exp_s(fv_old->S[mode], exp_s[mode], eig_values, R1);
+#endif
+    }
   }
 
 
@@ -31960,11 +31972,13 @@ fluid_stress_conf( double Pi[DIM][DIM],
                               d_Pi->S[p][q][mode][b][c][j] = 0.;
                               /* Note: We use b <= c below to be consistent with the symmetry of the stress
                                  tensor and to avoid double contributions to the Jacobian in assemble_momentum */
-                              if ( b <= c )
-                                {
-                                  d_Pi->S[p][q][mode][b][c][j] =
-                                    mup/lambda*d_exp_s_ds[mode][p][q][b][c] * bf[var]->phi[j];
-                                }
+                              if (!(vn->evssModel == LOG_CONF_TRANSIENT || vn->evssModel == LOG_CONF_TRANSIENT_GRADV)) {
+                                if ( b <= c )
+                                  {
+                                    d_Pi->S[p][q][mode][b][c][j] =
+                                      mup/lambda*d_exp_s_ds[mode][p][q][b][c] * bf[var]->phi[j];
+                                  }
+			      }
                             }
                         }
                     }
