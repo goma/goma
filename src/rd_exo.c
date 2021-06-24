@@ -1873,6 +1873,10 @@ init_exo_struct(Exo_DB *x)
   x->num_times             = 0;
 
   x->time_vals             = NULL;
+  x->ss_elem_len = 0;
+  x->ss_elem_list = NULL;
+  x->ss_side_list = NULL;
+
 
   /*
    * Let this value indicate that the structure in memory is not currently

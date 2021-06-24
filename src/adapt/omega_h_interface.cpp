@@ -1840,7 +1840,11 @@ void adapt_mesh_omega_h(struct Aztec_Linear_Solver_System **ams,
 
   std::stringstream ss2;
 
-  ss2 << base_name << "-s." << step;
+  if (step == 0) {
+    ss2 << base_name;
+  } else {
+    ss2 << base_name << "-s." << step;
+  }
 
   if (Num_Proc > 1) {
     Omega_h::exodus::convert_back_to_goma_exo_parallel(ss2.str().c_str(), &mesh, exo, dpi, verbose,
