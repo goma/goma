@@ -679,6 +679,10 @@ fvelo_normal_lub_bc(double func[DIM],
   /* Find friends */
   int el1 = ei->ielem;
   int nf  = num_elem_friends[el1];
+  if (nf == 0)
+    {
+     EH(-1, "Where is my shell element neighbor?");
+    }
   int el2 = elem_friends[el1][0];
 
   n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));

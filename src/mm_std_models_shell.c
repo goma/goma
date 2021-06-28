@@ -1628,16 +1628,19 @@ lubrication_fluid_source(
       L     = mp->u_lubsource_function_constants[2];
 
       *flux = (kappa/mu/L) * (fv->P - fv->lubp);
-      for (j = 0; j < ei->dof[PRESSURE]; j++)
-         {
-          phi_j = bf[PRESSURE]->phi[j];
-          d_flux[PRESSURE][j] = phi_j;
-         }
-      for (j = 0; j < ei->dof[LUBP]; j++)
-         {
-          phi_j = bf[LUBP]->phi[j];
-          d_flux[LUBP][j] = -phi_j;
-         }
+      if (d_flux != NULL)
+        {
+         for (j = 0; j < ei->dof[PRESSURE]; j++)
+            {
+             phi_j = bf[PRESSURE]->phi[j];
+             d_flux[PRESSURE][j] = phi_j;
+            }
+         for (j = 0; j < ei->dof[LUBP]; j++)
+            {
+             phi_j = bf[LUBP]->phi[j];
+             d_flux[LUBP][j] = -phi_j;
+            }
+        }
     }
   else
     {
