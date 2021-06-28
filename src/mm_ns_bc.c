@@ -8261,6 +8261,385 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
      } /* End of loop over modes */
 }/* END of routine stress_no_v_dot_gradS_logc                                 */
 
+void
+stress_no_v_dot_gradS_logc_transient(double func[MAX_MODES][6],
+                      double d_func[MAX_MODES][6][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                      const double dt,
+                      const double tt
+                     )
+
+/****************************************************************************
+*
+*  Function which imposes fully-developed fluid stresses
+*  in the velocity direction
+*
+*  It's a clone for assemble_stress_fortin with the v dot grad S term removed
+*
+*  For more details see:
+*
+*    Xueying Xie and Matteo Pasquali J. Non-Newtonian Fluid Mech. 122 (2004) 159 - 176
+*
+*  Kristianto Tjiptowidjojo (tjiptowi@unm.edu)
+*
+*  This routine is adjusted for the log-conformation tensor
+*****************************************************************************/
+{
+
+  int i,j, eqn, a, b, mode, w, k;
+  int siz;
+  int R_s[MAX_MODES][DIM][DIM];
+  int v_s[MAX_MODES][DIM][DIM];
+  int inv_v_s [DIM][DIM];
+  int dim = pd->Num_Dim;
+  int logc_gradv = 0;
+
+  dbl grad_v[DIM][DIM];    /* Velocity gradient based on velocity - discontinuous across element */
+  dbl gamma[DIM][DIM];     /* Shear-rate tensor based on velocity */
+
+  dbl s[DIM][DIM];         /* stress tensor (log-conformation tensor) */
+  dbl exp_s[DIM][DIM];  // Exponential of log_conf
+  dbl trace = 0.0;         /* trace of the stress tensor */
+  dbl s_dot[DIM][DIM];     /* stress tensor from last time step */
+  dbl gt[DIM][DIM];        /* transpose of velocity gradient tensor */
+
+  dbl source_term1[DIM][DIM];
+  dbl advection_term1[DIM][DIM];
+
+  /* polymer viscosity and derivatives */
+  dbl mup;
+  VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
+  VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
+
+  /*  shift function */
+  dbl at = 0.0;
+  dbl wlf_denom;
+
+  // Decomposition of velocity vector
+  dbl eig_values[DIM];
+  dbl R1[DIM][DIM];
+  dbl R1_T[DIM][DIM];
+  dbl Rt_dot_gradv[DIM][DIM];
+  dbl D[DIM][DIM];
+  dbl D_dot_D[DIM][DIM];
+  dbl M1[DIM][DIM];
+
+  dbl tmp1[DIM][DIM],tmp2[DIM][DIM],tmp3[DIM][DIM];
+
+  /* constitutive equation parameters */
+  dbl alpha;     /* This is the Geisekus mobility parameter */
+  dbl lambda=0;    /* polymer relaxation constant */
+  dbl eps;	 /* This is the PTT elongation parameter */
+  dbl Z=1.0;         /* This is the factor appearing in front of the stress tensor in PTT */
+
+  /* ETMs*/
+  dbl mass, advection, source;
+
+  dbl d_lambda;
+
+  if(af->Assemble_LSA_Mass_Matrix)
+    return;
+
+ /* A bookeeping array from stress[i][j] into its position in func */
+  inv_v_s[0][0] = 0; /* S11 */
+  inv_v_s[0][1] = 1; /* S12 */
+  inv_v_s[1][1] = 2; /* S22 */
+  inv_v_s[0][2] = 3; /* S13 */
+  inv_v_s[1][2] = 4; /* S23 */
+  inv_v_s[2][2] = 5; /* S33 */
+
+  (void) stress_eqn_pointer(v_s);
+  (void) stress_eqn_pointer(R_s);
+
+  memset( exp_s, 0, sizeof(double)*DIM*DIM);
+  memset( R1, 0, sizeof(double)*DIM*DIM);
+  memset( eig_values, 0, sizeof(double)*DIM);
+
+  if(vn->evssModel == LOG_CONF_GRADV)
+    {
+      logc_gradv = 1;
+    }
+  
+  /*
+   * Load up Field variables...
+   */
+
+  /****  Velocity gradient, and shear rate ****/
+  for ( a=0; a<VIM; a++)
+     {
+      for ( b=0; b<VIM; b++)
+         {
+          grad_v[a][b] = fv->grad_v[a][b];
+         }
+     }
+  /* load up shear rate tensor based on velocity */
+  for ( a=0; a<VIM; a++)
+     {
+      for ( b=0; b<VIM; b++)
+         {
+          gamma[a][b] = grad_v[a][b] + grad_v[b][a];
+         }
+     }
+  /* Continuous velocity gradient field and its transpose */
+  for ( a=0; a<VIM; a++)
+     {
+      for ( b=0; b<VIM; b++)
+         {
+          gt[b][a] = fv->G[a][b];
+         }
+     }
+
+  /*  Time-temperature shift factor  */
+   if ( pd->e[pg->imtrx][TEMPERATURE])
+     {
+      if (vn->shiftModel == CONSTANT)
+        {
+         at = vn->shift[0];
+	}
+      else if(vn->shiftModel == MODIFIED_WLF)
+        {
+         wlf_denom = vn->shift[1] + fv->T - mp->reference[TEMPERATURE];
+         if(wlf_denom != 0.)
+           {
+            at=exp(vn->shift[0]*(mp->reference[TEMPERATURE]-fv->T)/wlf_denom);
+           }
+         else
+           {
+            at = 1.;
+           }
+	}
+     }
+   else
+     {
+      at = 1.;
+     }
+
+  /* Begin loop over modes */
+  for ( mode=0; mode<vn->modes; mode++)
+     {
+
+      /*
+       * Load polymeric stress tensor for each mode
+       */
+      for (a = 0; a < VIM; a++) {
+          for (b = 0; b < VIM; b++) {
+               s[a][b] = fv_old->S[mode][a][b];
+               if (pd->TimeIntegration != STEADY)  {
+                  s_dot[a][b] = fv_dot->S[mode][a][b];
+               } else {
+	          s_dot[a][b] = 0.;
+               }
+          }
+      }
+
+      //Polymer viscosity
+      mup = viscosity(ve[mode]->gn, gamma, d_mup);
+
+      //Giesekus mobility parameter
+      alpha = ve[mode]->alpha;
+     
+      //Polymer time constant
+      if(ve[mode]->time_constModel == CONSTANT)
+        {
+          lambda = ve[mode]->time_const;
+        }
+      else if(ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW)
+        {
+          lambda = mup/ve[mode]->time_const;
+        }
+
+#ifdef ANALEIG_PLEASE
+          analytical_exp_s(fv_old->S[mode], exp_s, eig_values, R1, NULL); 
+#else
+          compute_exp_s(fv_old->S[mode], exp_s, eig_values, R1);   
+#endif
+
+      // Decompose velocity gradient
+
+      memset(D, 0, sizeof(double)*DIM*DIM);
+      D[0][0] = eig_values[0];
+      D[1][1] = eig_values[1];
+      if (VIM > 2) { D[2][2] = eig_values[2]; }
+      (void) tensor_dot(D, D, D_dot_D, VIM);
+
+      // Decompose velocity gradient
+
+      memset(M1, 0, sizeof(double)*DIM*DIM);
+      memset(R1_T, 0, sizeof(double)*DIM*DIM);
+
+      for(i=0; i<VIM; i++)
+        {
+          for(j=0; j<VIM; j++)
+            {
+              R1_T[i][j] = R1[j][i];
+            }
+        }
+
+      for(i=0; i<VIM; i++) 
+        {    
+          for(j=0; j<VIM; j++) 
+            {
+              Rt_dot_gradv[i][j] = 0.;  
+              for(w=0; w<VIM; w++) 
+                {
+		  if(logc_gradv)
+		    {
+		      Rt_dot_gradv[i][j] += R1_T[i][w] * grad_v[j][w];
+		    }
+		  else
+		    {
+		      Rt_dot_gradv[i][j] += R1_T[i][w] * gt[w][j];
+		    }
+                }
+            }
+        }     
+
+      for(i=0; i<VIM; i++) 
+        {    
+          for(j=0; j<VIM; j++) 
+            {
+              M1[i][j] = 0.;
+              for(w=0; w<VIM; w++) 
+                {
+                  M1[i][j] += Rt_dot_gradv[i][w] * R1[w][j];
+                }
+            }
+        }  
+
+      //Predetermine advective terms
+      trace = eig_values[0]+eig_values[1]; 
+      if (VIM > 2) { trace += eig_values[2]; }
+      
+      //PTT exponent
+      eps  = ve[mode]->eps;
+
+      //Exponential term for PTT
+      Z = exp(eps*(trace - (double) dim));
+
+      siz = sizeof(double)*DIM*DIM;
+      memset(tmp1, 0, siz);
+      memset(tmp2, 0, siz);
+      memset(tmp3, 0, siz);
+      memset(advection_term1, 0, siz);
+      memset(source_term1, 0, siz);
+
+      for (a=0; a<VIM; a++)
+        {
+          for (b=0; b<VIM; b++)
+            {
+	      if ( a != b )
+ 	        {
+                  d_lambda = eig_values[b]-eig_values[a];
+                  if (fabs(d_lambda) > 1.e-8)
+                    {
+                      tmp1[a][b] += (log(eig_values[b]) - log(eig_values[a]))/d_lambda;
+                      tmp1[a][b] *= (eig_values[a]*M1[b][a] + eig_values[b]*M1[a][b]);
+                    }
+		  else
+		    {
+                      tmp1[a][b] += M1[a][b] + M1[b][a];
+	            }
+	        }
+              if ( a == b )
+                {
+                  source_term1[a][b] += Z * (1.0 - D[a][a]) /lambda;
+                  if(alpha != 0)
+                    {
+                      source_term1[a][b] += alpha*(2.0 * D[a][a] - 1.0 - D_dot_D[a][a])/lambda;
+ 	            }
+                  source_term1[a][b] /= eig_values[a];
+                  source_term1[a][b] += 2.0*M1[a][a];
+                }
+            }
+        }
+
+      (void) tensor_dot(R1, tmp1, tmp2, VIM);
+      (void) tensor_dot(tmp2, R1_T, advection_term1, VIM);
+      (void) tensor_dot(R1, source_term1, tmp3, VIM);
+      (void) tensor_dot(tmp3, R1_T, source_term1, VIM);
+
+      /**** Assemble func *****/
+
+      for ( a=0; a<VIM; a++)
+         {
+          for ( b=0; b<VIM; b++)
+             {
+
+              if (a <= b) /* since the stress tensor is symmetric, only assemble the upper half */
+                {
+                 eqn = R_s[mode][a][b];
+                 k = inv_v_s[a][b];
+
+                 /* Mass term */
+                 mass = 0.;
+                 if ( pd->TimeIntegration != STEADY )
+                   {
+                    mass = at * s_dot[a][b];
+                    mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+                   }
+
+                 /* Advection term - minus v_dot_grad_S and x_dot_del_S terms */
+                 advection = 0.;
+                 if (lambda != 0.)
+                   {
+                    advection -= advection_term1[a][b];
+                    advection *= at * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+                   }
+
+                 /* Source term */
+                 source = 0.;
+                 source -= source_term1[a][b];
+                 source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+
+                 func[mode][k] += mass + advection + source;
+                }
+             }
+         }
+    if (af->Assemble_Jacobian)
+       {
+        for ( a=0; a<VIM; a++)
+           {
+            for ( b=0; b<VIM; b++)
+               {
+                if (a <= b) /* since the stress tensor is symmetric, only assemble the upper half */
+                  {
+                   eqn = R_s[mode][a][b];
+                   k = inv_v_s[a][b];
+
+                   /* Sensitivities w.r.t. polymeric stress - J_S_S */
+                   int var = POLYMER_STRESS11;
+                   if (pd->v[pg->imtrx][var] )
+                     {
+                      for ( int p=0; p<VIM; p++)
+                         {
+                          for ( int q=0; q<VIM; q++)
+                             {
+                                 var =  v_s[mode][p][q];
+
+                                 for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                                    {
+                                     double phi_j = bf[var]->phi[j];
+
+                                     /* mass term */
+                                     mass = 0.0;
+                                     if ( pd->TimeIntegration != STEADY )
+                                       {
+                                        mass = (1.+2.*tt) * phi_j/dt * (double)delta(a,p) * (double)delta(b,q);
+                                        mass *= at;
+                                       }
+                                     mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+
+                                     /* Load them up */
+                                     d_func[mode][k][var][j] += mass;
+                                    }
+                             }
+                         }
+                     } /* End of J_S_S */
+                  } /* End of if a == b */
+               } /* End of loop over dimension "b" */
+           } /* End of loop over dimension "a" */
+       } /*  end of if Assemble_Jacobian  */
+     } /* End of loop over modes */
+}/* END of routine stress_no_v_dot_gradS_logc_transient */
 
 void
 PSPG_consistency_bc (double *func,
