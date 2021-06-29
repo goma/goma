@@ -88,4 +88,10 @@ PROTO((
        double
        ));
 
+EXTERN int lubrication_fluid_source
+PROTO((
+       double *,                        /* Flux */
+       double [MAX_VARIABLE_TYPES][MDE] /* Flux sensitivities */
+     ));
+
 #endif /* _MM_STD_MODELS_H */

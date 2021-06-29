@@ -53,7 +53,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 				 * component */
 #define  VISC_DISS      4
 #define  JOULE          5
-#define  SUSPENSION     6          
+#define  SUSPENSION     6
 #define  BOUSSINESQ	7	/* Boussinesq as rho*g*beta*(T-Tref) */
 #define  BOUSS_JXB      8
 #define  SUSPEND        9
@@ -65,11 +65,12 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define  ACOUSTIC    15      /* Acoustic energy density coupled to NS */
 #define HS_FOAM 16   /* fluorinert */
 #define VISC_ACOUSTIC 17   /* heat generation by acoustics */
-#define INGBER 18   
+#define INGBER 18
 #define GRAV_VIBRATIONAL 19   /* momentum source for gravity + vibration */
 #define MELT             20  /* Lubrication source term model*/
 #define EM_DISS         21   /* heat generation by EM waves */
 #define EM_VECTOR_DISS  22   /* heat generation by EM vector waves */
+#define CONTINUUM_FLUID 23  /* Lubrication source term model*/
 
 /* MMH */
 /* #define  SUSPENSION_PM xxx Defiend below. */

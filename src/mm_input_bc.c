@@ -795,7 +795,6 @@ rd_bc_specs(FILE *ifp,
 	case LS_LATENT_HEAT_BC:
         case LS_ACOUSTIC_SOURCE_BC:
 
-
 	  if ( fscanf(ifp, "%lf %lf", 
 		      &BC_Types[ibc].BC_Data_Float[0],
 		      &BC_Types[ibc].BC_Data_Float[1]) != 2)
@@ -862,6 +861,7 @@ rd_bc_specs(FILE *ifp,
 	case VELO_TANGENT_EDGE_INT_BC:
         case SH_S11_WEAK_BC:
         case SH_S22_WEAK_BC:
+        case VELO_NORMAL_LUB_BC:
 
 	  if (fscanf(ifp, "%lf %lf %lf", 
 		      &BC_Types[ibc].BC_Data_Float[0],
