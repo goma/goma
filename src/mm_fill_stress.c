@@ -1351,7 +1351,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 		       dbl dvc_dnode[DIM][MDE])
 {
   int dim, p, q, r, a, b, w, k;
-
+	
   int eqn, var;
   int peqn, pvar;
   int evss_gradv=0;
@@ -1419,6 +1419,9 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 
   dbl g[DIM][DIM];         /* velocity gradient tensor */
   dbl gt[DIM][DIM];        /* transpose of velocity gradient tensor */
+	dbl g_dot[DIM][DIM];     /* velocity gradient tensor time derivative */
+	dbl gt_dot[DIM][DIM];    /* transpose of velocity gradient tensor time derivative */
+
 
 
   /* dot product tensors */
@@ -1429,6 +1432,10 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
   dbl s_dot_gt[DIM][DIM];
   dbl gt_dot_s[DIM][DIM];
 
+  dbl g_dot_g[DIM][DIM];
+  dbl gt_dot_g[DIM][DIM];
+  dbl gt_dot_gt[DIM][DIM];
+
   /* polymer viscosity and derivatives */
   dbl mup;
   VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
@@ -1437,13 +1444,16 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
   SARAMITO_DEPENDENCE_STRUCT d_saramito_struct;
   SARAMITO_DEPENDENCE_STRUCT *d_saramito = &d_saramito_struct;
 
-  // todo: will want to parse necessary parameters... for now hard code
+	/* 2nd polymer viscosity -- for modified Jefreys model*/
+	dbl mupJeff;
+
+  const bool jeffreysEnabled = (vn->ConstitutiveEquation == MODIFIED_JEFFREYS);
+
   const bool saramitoEnabled = (vn->ConstitutiveEquation == SARAMITO_OLDROYDB ||
 				vn->ConstitutiveEquation == SARAMITO_PTT      ||
 				vn->ConstitutiveEquation == SARAMITO_GIESEKUS);
 
   dbl saramitoCoeff = 1.;
-
 
   dbl d_mup_dv_pj; 
   dbl d_mup_dmesh_pj; 
@@ -1455,7 +1465,9 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 
   /* constitutive equation parameters */
   dbl alpha;     /* This is the Geisekus mobility parameter */
-  dbl lambda=0;    /* polymer relaxation constant */
+	dbl lambda1=0;	  /* polymer relaxation constant */
+	dbl lambda2=0;  /* 2nd polymer relaxation constant -- for modified Jeffreys model */
+	  dbl lambda=0; /* lambda1 + lambda2 -- this is just lambda1 unless using the modified Jeffreys model*/
   dbl ucwt, lcwt; /* Upper convected derviative weight, Lower convected derivative weight */
   dbl eps;       /* This is the PTT elongation parameter */
   dbl Z=1.0;         /* This is the factor appearing in front of the stress tensor in PTT */
@@ -1464,6 +1476,13 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
   /* advective terms are precalculated */
   dbl v_dot_del_s[DIM][DIM];
   dbl x_dot_del_s[DIM][DIM];
+
+	dbl v_dot_del_g[DIM][DIM];
+  dbl v_dot_del_gt[DIM][DIM];
+
+	dbl x_dot_del_g[DIM][DIM];
+	dbl x_dot_del_gt[DIM][DIM];
+	
 
   dbl d_xdotdels_dm;
 
@@ -1650,6 +1669,37 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
       at = 1.;
     }
 
+	// if a modified Jeffreys model is being run, load time derivative of velocity gradient
+	if(jeffreysEnabled)
+	{
+		(void) tensor_dot(g, g, g_dot_g, VIM);
+		(void) tensor_dot(gt, gt, gt_dot_gt, VIM);
+		(void) tensor_dot(gt, g, gt_dot_g, VIM);
+
+	  for ( a=0; a<VIM; a++) {
+	    for ( b=0; b<VIM; b++) {
+	      v_dot_del_g[a][b]  = 0.;
+	  		v_dot_del_gt[a][b] = 0.;
+				x_dot_del_g[a][b]  = 0.;
+				x_dot_del_gt[a][b] = 0.;
+  
+	      for ( q=0; q<dim; q++) {
+	  	    v_dot_del_g[a][b]  +=  v[q] * fv->grad_G[q][a][b];
+	  	    v_dot_del_gt[a][b] +=  v[q] * fv->grad_Gt[q][a][b];
+					x_dot_del_g[a][b]  +=  x_dot[q] * fv->grad_G[q][a][b];
+					x_dot_del_g[a][b]  +=  x_dot[q] * fv->grad_G[q][a][b];
+	  	  }
+
+				if (pd->TimeIntegration != STEADY) {
+	        g_dot[a][b] = fv_dot->G[a][b];
+        } else {
+	        g_dot[a][b] = 0.;
+        }
+				gt_dot[b][a] = g_dot[a][b]; 
+	    }
+	  }
+	}
+
   /* Begin loop over modes */
   for ( mode=0; mode<vn->modes; mode++)
     {
@@ -1681,6 +1731,13 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
       
       /* get polymer viscosity */
       mup = viscosity(ve[mode]->gn, gamma, d_mup);
+			if(jeffreysEnabled){
+
+		  	mupJeff = ve[mode]->muJeffreys;
+
+		    // lambda2 = mupJeff/G, lambda = mup/G --> lambda2 = lambda*mupJeff/mup
+		    lambda2 = mupJeff/mup*lambda; 
+			}
 
       if(saramitoEnabled == TRUE)
 	{
@@ -1710,6 +1767,11 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 	{
 	  lambda = mup/ve[mode]->time_const;
 	}
+			lambda1 = lambda;
+
+			if(jeffreysEnabled){
+				lambda += lambda2;
+			}
 
       ucwt = 1.0 - ve[mode]->xi / 2.0 ;
       lcwt = ve[mode]->xi / 2.0 ;
@@ -1733,6 +1795,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 	  (void) tensor_dot(s, gt, s_dot_gt, VIM);
 	  (void) tensor_dot(g, s, g_dot_s, VIM);
 	}
+	
       /*
        * Residuals_________________________________________________________________
        */
@@ -1826,6 +1889,17 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 			      source *= wt_func * det_J * h3 * wt;
 			      
 			      source *= pd->etm[eqn][(LOG2_SOURCE)];
+
+					  if(jeffreysEnabled)
+				    {
+				     source -= lambda2 * 
+						           ( 
+												 g_dot[a][b] + gt_dot[a][b] 
+											 + v_dot_del_g[a][b]  - x_dot_del_g[a][b]  
+											 + v_dot_del_gt[a][b] - v_dot_del_gt[b][a] 
+											 - (g_dot_g[a][b] + 2*gt_dot_g[a][b] + gt_dot_gt[a][b])
+											 );
+				    }
 			    }
 			  
 			  /*
@@ -1867,6 +1941,16 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 		      if(DOUBLE_NONZERO(alpha)) R_source  +=  alpha * lambda*( s_dot_s[a][b]/mup);
 		      R_source *= saramitoCoeff;
 		      R_source += - at * mup * ( g[a][b] +  gt[a][b]);
+
+					// if(jeffreysEnabled){
+					// 	R_source -= lambda2 * 
+					// 	           ( 
+					// 							 g_dot[a][b] + gt_dot[a][b] 
+					// 						 + v_dot_del_g[a][b]  - x_dot_del_g[a][b]  
+					// 						 + v_dot_del_gt[a][b] - v_dot_del_gt[b][a] 
+					// 						 - (g_dot_g[a][b] + 2*gt_dot_g[a][b] + gt_dot_gt[a][b])
+					// 						 );
+					// }
 		      
 		      for ( i=0; i<ei->dof[eqn]; i++)
 			{
@@ -1905,6 +1989,9 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				    {
 				      if ( pd->e[eqn] & T_MASS )
 					{
+							/* For modified Jeffreys model, 
+							 *
+							*/
 				  	  mass = s_dot[a][b];
 				  	  mass *= wt_func * d_at_dT[j] * lambda * det_J * wt;
 				  	  mass *= h3;
@@ -1933,7 +2020,24 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				    {
 				      source = -(g[a][b] +  gt[a][b])
 					*(at*d_mup->T[j]+mup*d_at_dT[j]);
-				      
+
+					if(jeffreysEnabled){
+						/* d(lambda2) = d(lambda1*mupJeff/mup)
+						 *            = mupJeff/mup*d(lambda1) + lambda1/mup*d(mupJeff) - lambda1/(mup^2*mupJeff)*d(mup)
+						 *            = -lambda1/(mup^2*mupJeff)*d(mup)
+						 * 
+						 * this assumes lambda1 and mupJeff are constant, so the computation that follows will
+						 * need to be ammended if this changes
+						 */
+						const dbl d_lambda2_dT = -lambda1/(mup*mup*mupJeff)*d_mup->T[j];
+						source -= d_lambda2_dT * 
+											( 
+												 g_dot[a][b] + gt_dot[a][b] 
+											 + v_dot_del_g[a][b]  - x_dot_del_g[a][b]  
+											 + v_dot_del_gt[a][b] - v_dot_del_gt[b][a] 
+											 - (g_dot_g[a][b] + 2*gt_dot_g[a][b] + gt_dot_gt[a][b])
+											 );
+					}				      
 			              if(DOUBLE_NONZERO(alpha))
 					{
 					  source1 -= s_dot_s[a][b]/(mup*mup)*d_mup->T[j];
@@ -2078,6 +2182,18 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				      if ( pd->e[eqn] & T_SOURCE )
 					{
 					  source_c =  -at * d_mup_dv_pj * ( g[a][b] +  gt[a][b]);
+
+						if(jeffreysEnabled){
+							// this assumes lambda1 and mupJeff are constant wrt velocity
+						  const dbl d_lambda2_dv_pj = -lambda1/(mup*mup*mupJeff)*d_mup_dv_pj;
+						  source_c -= d_lambda2_dv_pj * at *
+											(
+												 g_dot[a][b] + gt_dot[a][b] 
+											 + v_dot_del_g[a][b]  - x_dot_del_g[a][b]  
+											 + v_dot_del_gt[a][b] - v_dot_del_gt[b][a] 
+											 - (g_dot_g[a][b] + 2*gt_dot_g[a][b] + gt_dot_gt[a][b])
+											 );
+						}
                                           if(evss_gradv)
                                             {
 					      if(pd->CoordinateSystem != CYLINDRICAL)
@@ -2143,6 +2259,18 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				      if ( pd->e[eqn] & T_SOURCE )
 					{
 					  source_a =   -at * d_mup->C[w][j] * ( g[a][b] +  gt[a][b]);
+
+						if(jeffreysEnabled){
+							// this assumes lambda1 and mupJeff are constant wrt velocity
+						  const dbl d_lambda2_C = -lambda1/(mup*mup*mupJeff)*d_mup->C[w][j];
+						  source_a -= d_lambda2_C * at *
+											(
+												 g_dot[a][b] + gt_dot[a][b] 
+											 + v_dot_del_g[a][b]  - x_dot_del_g[a][b]  
+											 + v_dot_del_gt[a][b] - v_dot_del_gt[b][a] 
+											 - (g_dot_g[a][b] + 2*gt_dot_g[a][b] + gt_dot_gt[a][b])
+											 );
+						}
 					  
 					  source_b = 0.;
 			                  if(DOUBLE_NONZERO(alpha))
@@ -2182,6 +2310,18 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				  if ( pd->e[eqn] & T_SOURCE )
 				    {
 				      source_a +=  -at * d_mup->P[j] * ( g[a][b] +  gt[a][b]);
+
+						if(jeffreysEnabled){
+							// this assumes lambda1 and mupJeff are constant wrt velocity
+						  const dbl d_lambda2_P = -lambda1/(mup*mup*mupJeff)*(d_mup->P[j]);
+						  source_a -= d_lambda2_P * at *
+											(
+												 g_dot[a][b] + gt_dot[a][b] 
+											 + v_dot_del_g[a][b]  - x_dot_del_g[a][b]  
+											 + v_dot_del_gt[a][b] - v_dot_del_gt[b][a] 
+											 - (g_dot_g[a][b] + 2*gt_dot_g[a][b] + gt_dot_gt[a][b])
+											 );
+						}
 
 				      source_b = 0.;
 			              if(DOUBLE_NONZERO(alpha))
@@ -2359,8 +2499,80 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 						}
 					      source_c *= R_source * det_J * h3;
 					    }
+
+						dbl source_jeff = 0;
+						if(jeffreysEnabled){
+
+
+							dbl source_ja = 0;
+							dbl source_jb = 0;
+							dbl source_jc = 0;
+							dbl source_jd = 0;
+
+						  source_ja -= lambda2 * at *
+											(
+												 g_dot[a][b] + gt_dot[a][b] 
+											 + v_dot_del_g[a][b]  - x_dot_del_g[a][b]  
+											 + v_dot_del_gt[a][b] - v_dot_del_gt[b][a] 
+											 - (g_dot_g[a][b] + 2*gt_dot_g[a][b] + gt_dot_gt[a][b])
+											 );
+
+						  source_ja *= wt_func *(  d_det_J_dmesh_pj * h3 + det_J * dh3dmesh_pj );
+
+							dbl d_vdotdelg_dm = 0.;
+							dbl d_vdotdelgt_dm = 0.;
+
+							for ( q=0; q<dim; q++){
+								d_vdotdels_dm += (v[q]-x_dot[q]) * d_grad_s_dmesh[q][a][b] [p][j];
+								d_vdotdelg_dm += (v[q]-x_dot[q]) * fv->d_grad_G_dmesh[q][a][b] [p][j];
+								d_vdotdelgt_dm += (v[q]-x_dot[q]) * fv->d_grad_G_dmesh[q][b][a] [p][j];
+						  }
+
+							const dbl d_lambda2_dmesh_pj = -lambda1/(mup*mup*mupJeff)*d_mup_dmesh_pj;
+
+							source_jb +=  (lambda2*at*(d_vdotdelg_dm + d_vdotdelgt_dm));
+							source_jb -= d_lambda2_dmesh_pj *
+											(
+												 g_dot[a][b] + gt_dot[a][b] 
+											 + v_dot_del_g[a][b]  - x_dot_del_g[a][b]  
+											 + v_dot_del_gt[a][b] - v_dot_del_gt[b][a] 
+											 - (g_dot_g[a][b] + 2*gt_dot_g[a][b] + gt_dot_gt[a][b])
+											);
+
+					    source_jb *=  wt_func *det_J * h3;
+
+
+					    if ( pd->TimeIntegration != STEADY )
+						  {
+						    const dbl d_xdotdelg_dm = (1.+2.*tt) * phi_j/dt  * fv->grad_G[p][a][b];
+						    const dbl d_xdotdelgt_dm = (1.+2.*tt) * phi_j/dt * fv->grad_G[p][b][a];
+						      
+						    source_jc -= lambda2*(d_xdotdelg_dm + d_xdotdelgt_dm);
+						      
+						    source_jc *= wt_func * h3 * det_J;  
+						  }
+              
+							if(supg!=0.){
+								for( w=0; w<dim; w++ ){
+										source_jd += supg *(h_elem*v[w]* bf[eqn]->d_grad_phi_dmesh[i][w][p][j]
+											+ h_elem_deriv * v[w]*bf[eqn]->grad_phi[i][w] );
+									}
+								
+								advection_d *= 
+									-lambda2*at*
+									det_J * h3*
+											(
+											g_dot[a][b] + gt_dot[a][b] 
+											 + v_dot_del_g[a][b]  - x_dot_del_g[a][b]  
+											 + v_dot_del_gt[a][b] - v_dot_del_gt[b][a] 
+											 - (g_dot_g[a][b] + 2*gt_dot_g[a][b] + gt_dot_gt[a][b])
+											);
+
+							}
+							source_jeff = source_ja + source_jb + source_jc + source_jb;
+						}
 					  
-					  source  = source_a + source_b + source_c;
+					  source  = source_a + source_b + source_c + source_jeff;
 					  
 					  source *=  wt * pd->etm[eqn][(LOG2_SOURCE)];
 				      

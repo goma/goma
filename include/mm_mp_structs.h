@@ -1025,6 +1025,9 @@ struct Viscoelastic_Constitutive
 
   dbl eps;                   /* This is the PTT elongational parameter */
   int epsModel;
+
+  dbl muJeffreys;           /* 2nd viscosity used in modified Jeffreys model */
+  int muJeffreysModel;
 };
 typedef struct  Viscoelastic_Constitutive VISC_CONST_STRUCT;
    

@@ -10198,11 +10198,15 @@ load_fv_grads(void)
 			  for ( r=0; r<VIM; r++)
 			  {
 				  fv->grad_G[r][p][q] = 0.0;
+					fv->grad_Gt[r][p][q] = 0.0;
 				  
 				  for ( i=0; i<dofs; i++)
 				  {
 					  fv->grad_G[r][p][q] += 
 					  *esp->G[p][q][i] * bf[v]->grad_phi[i][r];
+
+						fv->grad_Gt[r][p][q] += 
+					  *esp->G[q][p][i] * bf[v]->grad_phi[i][r];
 				  }
 			  }
 		  }
@@ -10299,6 +10303,7 @@ load_fv_grads(void)
 			  for ( r=0; r<VIM; r++)
 			  {
 				  fv->grad_G[r][p][q]=0.;
+					fv->grad_Gt[r][p][q]=0.;
 			  }
 		  }
 	  }
@@ -29465,6 +29470,14 @@ fluid_stress( double Pi[DIM][DIM],
                           + d_mu->v[b][j] * gamma[p][q]
                           - d_tau_p_dv[p][q][b][j];
                       }
+
+		// if ( pd->v[POLYMER_STRESS11] )
+		// {
+		//   for ( j=0; j<ei->dof[var]; j++)
+		//   {
+		//     d_Pi->v[p][q][b][j] -= evss_f * ( d_mup->v[b][j] )* gamma_cont[p][q];
+		//   }
+		// }
                   }
               }
 	    if (!kappaWipesMu) {
