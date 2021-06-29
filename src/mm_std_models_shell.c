@@ -1633,12 +1633,12 @@ lubrication_fluid_source(
          for (j = 0; j < ei->dof[PRESSURE]; j++)
             {
              phi_j = bf[PRESSURE]->phi[j];
-             d_flux[PRESSURE][j] = phi_j;
+             d_flux[PRESSURE][j] = (kappa/mu/L) * phi_j;
             }
          for (j = 0; j < ei->dof[LUBP]; j++)
             {
              phi_j = bf[LUBP]->phi[j];
-             d_flux[LUBP][j] = -phi_j;
+             d_flux[LUBP][j] = (kappa/mu/L) * (-phi_j);
             }
         }
     }
