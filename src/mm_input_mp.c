@@ -9661,6 +9661,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       /* Optional lubrication fluid source term */
 
       strcpy(search_string,"Lubrication Fluid Source");
+      mat_ptr->LubSourceModel = CONSTANT;
       mat_ptr->lubsource = 0.;
       memset(mp_glob[mn]->d_lubsource, 0, sizeof(dbl)*(MAX_VARIABLE_TYPES + MAX_CONC));
 
