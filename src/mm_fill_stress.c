@@ -1944,7 +1944,7 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
                                      (g_dot_g[a][b] + 2 * gt_dot_g[a][b] + gt_dot_gt[a][b]));
                         source_c -=
                             lambda2 * (phi_j * fv->grad_G[p][a][b] +
-                                       phi_j * fv->grad_G[p][b][a]); 
+                                       phi_j * fv->grad_Gt[p][a][b]); 
                       }
                       if (evss_gradv) {
                         if (pd->CoordinateSystem != CYLINDRICAL) {
@@ -1962,7 +1962,8 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
                       source_a = 0.;
                       if (DOUBLE_NONZERO(alpha)) {
                         source_a = -s_dot_s[a][b] / (mup * mup);
-                        source_a *= wt_func * saramitoCoeff * alpha * (lambda * d_mup_dv_pj + d_lambda_dv_pj * mup);
+                        source_a *= wt_func * saramitoCoeff * alpha * (lambda * d_mup_dv_pj);
+                        source_a += s_dot_s[a][b] / (mup) * wt_func * saramitoCoeff * alpha * (d_lambda2_dv_pj);
                       }
 
                       source_b = 0.;
