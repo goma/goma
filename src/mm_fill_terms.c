@@ -29470,14 +29470,6 @@ fluid_stress( double Pi[DIM][DIM],
                           + d_mu->v[b][j] * gamma[p][q]
                           - d_tau_p_dv[p][q][b][j];
                       }
-
-		// if ( pd->v[POLYMER_STRESS11] )
-		// {
-		//   for ( j=0; j<ei->dof[var]; j++)
-		//   {
-		//     d_Pi->v[p][q][b][j] -= evss_f * ( d_mup->v[b][j] )* gamma_cont[p][q];
-		//   }
-		// }
                   }
               }
 	    if (!kappaWipesMu) {
