@@ -10429,10 +10429,6 @@ rd_eq_specs(FILE *ifp,
       /* 
        * Four terms.... 
        */
-    case MOMENT0:
-    case MOMENT1:
-    case MOMENT2:
-    case MOMENT3:
     case R_BOND_EVOLUTION:
 
       if ( fscanf(ifp, "%lf %lf %lf  %lf", 
@@ -10456,7 +10452,32 @@ rd_eq_specs(FILE *ifp,
 	break;
 
 
+    case MOMENT0:
+    case MOMENT1:
+    case MOMENT2:
+    case MOMENT3:
+      if ( fscanf(ifp, "%lf %lf %lf  %lf %lf", 
+		  &(pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)]),
+		  &(pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)]),
+		  &(pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)]),
+		  &(pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)]),
+		  &(pd_ptr->etm[mtrx_index0][ce][(LOG2_DIVERGENCE)]))
+	   != 5 )
+	{
+	  sr = sprintf(err_msg, 
+		       "Provide 5 equation term multipliers (mas,adv,diff, src, div) on %s in %s",
+		       EQ_Name[ce].name1, pd_ptr->MaterialName);
+	  GOMA_EH(GOMA_ERROR, err_msg);
+	}
 
+      SPF( endofstring(echo_string),"\t %.4g %.4g %.4g %.4g %.4g", pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)],
+	                                                      pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)],
+	                                                      pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)],
+	                                                      pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)],
+	                                                      pd_ptr->etm[mtrx_index0][ce][(LOG2_DIVERGENCE)]);
+
+
+	break;
 	/* 
 	 * Five terms....  mesh-like 
 	 */

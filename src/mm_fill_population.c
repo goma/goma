@@ -2518,6 +2518,15 @@ int assemble_moments(double time, /* present time value */
           advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
         }
 
+        double divergence = 0.;
+        if (pd->e[pg->imtrx][eqn] & T_DIVERGENCE) {
+          divergence += fv->div_v * fv->moment[mom];
+
+          divergence *= -wt_func * det_J * wt;
+          divergence *= h3;
+          divergence *= pd->etm[pg->imtrx][eqn][(LOG2_DIVERGENCE)];
+        }
+
         diffusion = 0.;
         if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
           for (p = 0; p < VIM; p++) {
@@ -2543,7 +2552,7 @@ int assemble_moments(double time, /* present time value */
           source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
         }
 
-        lec->R[LEC_R_INDEX(peqn,i)] += Heaviside * (mass + advection) + source + diffusion + discontinuity_capturing;
+        lec->R[LEC_R_INDEX(peqn,i)] += Heaviside * (mass + advection) + divergence + source + diffusion + discontinuity_capturing;
       }
     }
   }
@@ -2647,6 +2656,15 @@ int assemble_moments(double time, /* present time value */
                 }
               }
 
+              double divergence = 0.;
+              if (pd->e[pg->imtrx][eqn] & T_DIVERGENCE) {
+                divergence += fv->div_v * bf[var]->phi[j];
+
+                divergence *= -wt_func * det_J * wt;
+                divergence *= h3;
+                divergence *= pd->etm[pg->imtrx][eqn][(LOG2_DIVERGENCE)];
+              }
+
               diffusion = 0.;
               if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
                 if (mom == b) {
@@ -2676,7 +2694,7 @@ int assemble_moments(double time, /* present time value */
               }
 
               lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=
-                  Heaviside * (mass + advection) + source + diffusion + discontinuity_capturing;
+                  Heaviside * (mass + advection) + divergence + source + diffusion + discontinuity_capturing;
             }
           }
         }
@@ -2726,6 +2744,29 @@ int assemble_moments(double time, /* present time value */
                   advection_b *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
                 }
                 advection = advection_a + advection_b;
+              }
+
+              double divergence = 0.;
+              if (pd->e[pg->imtrx][eqn] & T_DIVERGENCE) {
+                double div_phi_j_e_b = 0.;
+                for ( p=0; p<VIM; p++)
+                  {
+                    div_phi_j_e_b += bf[var]->grad_phi_e[j][b] [p][p];
+                  }
+                double divergence_a = div_phi_j_e_b * fv->moment[mom];
+                double divergence_b = 0.;
+                if (supg != 0.) {
+                  divergence_b = fv->div_v * fv->moment[mom];
+                  d_wt_func =
+                      supg * h_elem_inv * d_vconv->v[b][b][j] * grad_phi_i[b] +
+                      supg * h_elem_inv_deriv * vconv[b] * grad_phi_i[b];
+                  divergence_b *= -d_wt_func;
+                }
+                divergence_a *= -wt_func;
+                divergence = divergence_a + divergence_b;
+                divergence *= det_J * wt;
+                divergence *= h3;
+                divergence *= pd->etm[pg->imtrx][eqn][(LOG2_DIVERGENCE)];
               }
 
               source = 0.;

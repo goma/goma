@@ -1127,12 +1127,6 @@ struct Equation_Names EQ_Name[] = {
     { "R_TFMP_MASS", "TFMP_MASS", R_TFMP_MASS},     /*   185  */
     { "R_TFMP_BOUND", "TFMP_BOUND", R_TFMP_BOUND},     /*   186  */
     { "R_RESTIME", "RESTIME", R_RESTIME},     /*   187  */
-    { "R_MOMENT0", "MOMENT0", R_MOMENT0},     /*   183  */
-    { "R_MOMENT1", "MOMENT1", R_MOMENT1},     /*   184  */
-    { "R_MOMENT2", "MOMENT2", R_MOMENT2},     /*   185  */
-    { "R_MOMENT3", "MOMENT3", R_MOMENT3},     /*   186  */
-    { "R_DENSITY_EQN", "DENSITY_EQN", R_DENSITY_EQN},     /*   187  */
-
     { "R_EM_E1_REAL", "EM_E1_REAL", R_EM_E1_REAL},/*   188  */
     { "R_EM_E2_REAL", "EM_E2_REAL", R_EM_E2_REAL},
     { "R_EM_E3_REAL", "EM_E3_REAL", R_EM_E3_REAL},
@@ -1147,6 +1141,12 @@ struct Equation_Names EQ_Name[] = {
     { "R_EM_H3_IMAG", "EM_H3_IMAG", R_EM_H3_IMAG},/*   199  */
     { "R_EM_CONT_REAL", "EM_CONT_REAL", R_EM_CONT_REAL},/*   200  */
     { "R_EM_CONT_IMAG", "EM_CONT_IMAG", R_EM_CONT_IMAG},/*   201  */
+    { "R_MOMENT0", "MOMENT0", R_MOMENT0},     /*   183  */
+    { "R_MOMENT1", "MOMENT1", R_MOMENT1},     /*   184  */
+    { "R_MOMENT2", "MOMENT2", R_MOMENT2},     /*   185  */
+    { "R_MOMENT3", "MOMENT3", R_MOMENT3},     /*   186  */
+    { "R_DENSITY_EQN", "DENSITY_EQN", R_DENSITY_EQN},     /*   187  */
+
     /*
      *  Note -> these entries must remain until we get rid
      *          of putting the species unknowns after V_LAST
