@@ -29525,7 +29525,7 @@ fluid_stress( double Pi[DIM][DIM],
                 {
                   for ( b=0; b<wim; b++)
                     {
-                      for ( j=0; j<ei->dof[var]; j++)
+                      for ( j=0; j<ei->dof[VELOCITY1]; j++)
                         {
                           d_Pi->v[p][q][b][j] -= evss_f * ( d_mu->v[b][j] - d_mus->v[b][j] ) * gamma_cont[p][q];
                         }
