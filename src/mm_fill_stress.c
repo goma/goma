@@ -1534,6 +1534,13 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
      * Stress tensor...(Note "anti-BSL" sign convention on deviatoric stress)
      */
 
+    /* get time constant */
+    if (ve[mode]->time_constModel == CONSTANT) {
+      lambda = ve[mode]->time_const;
+    } else if (ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW) {
+      lambda = mup / ve[mode]->time_const;
+    }
+
     /* get polymer viscosity */
     mup = viscosity(ve[mode]->gn, gamma, d_mup);
     if (jeffreysEnabled) {
@@ -1561,12 +1568,6 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
     /* get Geisekus mobility parameter */
     alpha = ve[mode]->alpha;
 
-    /* get time constant */
-    if (ve[mode]->time_constModel == CONSTANT) {
-      lambda = ve[mode]->time_const;
-    } else if (ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW) {
-      lambda = mup / ve[mode]->time_const;
-    }
     lambda1 = lambda;
 
     if (jeffreysEnabled) {
@@ -1829,8 +1830,8 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
                     dbl d_lambda2_dv_pj = 0.;
                     dbl d_lambda_dv_pj = 0.;
                     if (jeffreysEnabled) {
-                      d_lambda2_dv_pj = (lambda * mupJeff) * (-d_mup_dv_pj / (mup * mup));
-                      d_lambda_dv_pj = (lambda * mupJeff) * (-d_mup_dv_pj / (mup * mup));
+                      d_lambda2_dv_pj = (lambda1 * mupJeff) * (-d_mup_dv_pj / (mup * mup));
+                      d_lambda_dv_pj = (lambda1 * mupJeff) * (-d_mup_dv_pj / (mup * mup));
                     }
 
                     mass = 0.;
@@ -1912,10 +1913,7 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
                           advection_c *= wt_func;
                         }
                        
-                        advection_d = 0;
-                        if (jeffreysEnabled) {
-                          advection_d = R_advection * at * d_lambda_dv_pj * det_J * wt * h3;
-                        }
+                        advection_d = R_advection * d_lambda_dv_pj * wt_func;
 
                         advection = (advection_a + advection_b + advection_c) * lambda + advection_d;
                         advection *= at * det_J * wt * h3;
