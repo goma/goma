@@ -25,6 +25,8 @@
 #include <strings.h>
 
 /* GOMA include files */
+#define _MM_FILL_STRESS_C
+#include "goma.h"
 #include "el_elm.h"
 #include "el_geom.h"
 #include "mm_as.h"
@@ -51,8 +53,6 @@
 #include "mm_mp.h"
 #include "mm_mp_structs.h"
 
-#define _MM_FILL_STRESS_C
-#include "goma.h"
 
 extern struct Boundary_Condition *inlet_BC[MAX_VARIABLE_TYPES + MAX_CONC];
 
@@ -1675,15 +1675,14 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
                   source += source1;
                 }
 
-                source *= wt_func * det_J * h3 * wt;
-
-                source *= pd->etm[eqn][(LOG2_SOURCE)];
-
                 if (jeffreysEnabled) {
                   source -= lambda2 * (g_dot[a][b] + gt_dot[a][b] + v_dot_del_g[a][b] -
                                        x_dot_del_g[a][b] + v_dot_del_gt[a][b] - v_dot_del_gt[b][a] -
                                        (g_dot_g[a][b] + 2 * gt_dot_g[a][b] + gt_dot_gt[a][b]));
                 }
+
+                source *= wt_func * det_J * h3 * wt;
+                source *= pd->etm[eqn][(LOG2_SOURCE)];
               }
 
               /*
@@ -1725,16 +1724,11 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
             R_source *= saramitoCoeff;
             R_source += -at * mup * (g[a][b] + gt[a][b]);
 
-            // if(jeffreysEnabled){
-            // 	R_source -= lambda2 *
-            // 	           (
-            // 							 g_dot[a][b] + gt_dot[a][b]
-            // 						 + v_dot_del_g[a][b]  - x_dot_del_g[a][b]
-            // 						 + v_dot_del_gt[a][b] - v_dot_del_gt[b][a]
-            // 						 - (g_dot_g[a][b] + 2*gt_dot_g[a][b] +
-            // gt_dot_gt[a][b])
-            // 						 );
-            // }
+            if (jeffreysEnabled) {
+              R_source -= lambda2 * (g_dot[a][b] + gt_dot[a][b] + v_dot_del_g[a][b] -
+                                   x_dot_del_g[a][b] + v_dot_del_gt[a][b] - v_dot_del_gt[b][a] -
+                                   (g_dot_g[a][b] + 2 * gt_dot_g[a][b] + gt_dot_gt[a][b]));
+            }
 
             for (i = 0; i < ei->dof[eqn]; i++) {
 
@@ -1832,6 +1826,12 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
                   for (j = 0; j < ei->dof[var]; j++) {
                     phi_j = bf[var]->phi[j];
                     d_mup_dv_pj = d_mup->v[p][j];
+                    dbl d_lambda2_dv_pj = 0.;
+                    dbl d_lambda_dv_pj = 0.;
+                    if (jeffreysEnabled) {
+                      d_lambda2_dv_pj = (lambda * mupJeff) * (-d_mup_dv_pj / (mup * mup));
+                      d_lambda_dv_pj = (lambda * mupJeff) * (-d_mup_dv_pj / (mup * mup));
+                    }
 
                     mass = 0.;
 
@@ -1849,6 +1849,9 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
                         }
 
                         mass *= pd->etm[eqn][(LOG2_MASS)] * at * lambda * det_J * wt * h3;
+                        if (jeffreysEnabled) {
+                          mass += s_dot[a][b] * wt_func * pd->etm[eqn][(LOG2_MASS)] * at * d_lambda2_dv_pj * det_J * wt * h3;
+                        }
                       }
                     }
 
@@ -1908,9 +1911,14 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
                           }
                           advection_c *= wt_func;
                         }
+                       
+                        advection_d = 0;
+                        if (jeffreysEnabled) {
+                          advection_d = R_advection * at * d_lambda_dv_pj * det_J * wt * h3;
+                        }
 
-                        advection = advection_a + advection_b + advection_c;
-                        advection *= at * lambda * det_J * wt * h3;
+                        advection = (advection_a + advection_b + advection_c) * lambda + advection_d;
+                        advection *= at * det_J * wt * h3;
                         advection *= pd->etm[eqn][(LOG2_ADVECTION)];
                       }
                     }
@@ -1930,11 +1938,13 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
 
                       if (jeffreysEnabled) {
                         // this assumes lambda1 and mupJeff are constant wrt velocity
-                        const dbl d_lambda2_dv_pj = -lambda1 / (mup * mup * mupJeff) * d_mup_dv_pj;
                         source_c -= d_lambda2_dv_pj * at *
                                     (g_dot[a][b] + gt_dot[a][b] + v_dot_del_g[a][b] -
                                      x_dot_del_g[a][b] + v_dot_del_gt[a][b] - v_dot_del_gt[b][a] -
                                      (g_dot_g[a][b] + 2 * gt_dot_g[a][b] + gt_dot_gt[a][b]));
+                        source_c -=
+                            lambda2 * (phi_j * fv->grad_G[p][a][b] +
+                                       phi_j * fv->grad_G[p][b][a]); 
                       }
                       if (evss_gradv) {
                         if (pd->CoordinateSystem != CYLINDRICAL) {
@@ -1952,7 +1962,7 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
                       source_a = 0.;
                       if (DOUBLE_NONZERO(alpha)) {
                         source_a = -s_dot_s[a][b] / (mup * mup);
-                        source_a *= wt_func * saramitoCoeff * alpha * lambda * d_mup_dv_pj;
+                        source_a *= wt_func * saramitoCoeff * alpha * (lambda * d_mup_dv_pj + d_lambda_dv_pj * mup);
                       }
 
                       source_b = 0.;
