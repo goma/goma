@@ -1553,6 +1553,13 @@ assemble_energy(double time,	/* present time value */
 	      diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 	    }
 
+	  dbl divergence = 0;
+	  if (mp->Energy_Div_Term) {
+	    divergence = fv->div_v * fv->T;
+	    divergence *= - wt_func * rho * Cp * det_J * wt;
+	    divergence *= h3;
+	  }
+
 	  source = 0.;
 	  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 	    {
@@ -1562,7 +1569,7 @@ assemble_energy(double time,	/* present time value */
 	    }
 
           lec->R[LEC_R_INDEX(peqn,i)] +=
-	    mass + advection +  diffusion + source;
+	    mass + advection +  diffusion + source + divergence;
 
 	}
     }
@@ -1671,7 +1678,16 @@ assemble_energy(double time,	/* present time value */
 		      diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 		    }
 
-		  source = 0.;
+		  dbl divergence = 0;
+                  if (mp->Energy_Div_Term) {
+                    divergence += rho * d_Cp->T[j] * fv->div_v * fv->T +
+                                  d_rho->T[j] * Cp * fv->div_v * fv->T +
+                                  rho * Cp * fv->div_v * phi_j;
+                    divergence *= -wt_func * det_J * wt;
+                    divergence *= h3;
+                  }
+
+                  source = 0.;
 		  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 		    {
 		      source += phi_i * d_h->T[j] * det_J * wt;
@@ -1679,7 +1695,7 @@ assemble_energy(double time,	/* present time value */
 		      source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 		    }
 
-                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + advection + diffusion + source;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + advection + diffusion + source + divergence;
 		}
 	    }
 	  /*
@@ -1897,8 +1913,18 @@ assemble_energy(double time,	/* present time value */
 			    }
 			  advection = advection_a + advection_b;
 			}
+		      dbl divergence = 0;
+                      if (mp->Energy_Div_Term) {
+                        dbl div_phi_j_e_b = 0.;
+                        for (p = 0; p < VIM; p++) {
+                          div_phi_j_e_b += bf[var]->grad_phi_e[j][b][p][p];
+                        }
+                        divergence += rho * Cp * fv->T * div_phi_j_e_b;
+                        divergence *= -wt_func * det_J * wt;
+                        divergence *= h3;
+                      }
 
-		      diffusion = 0.;
+                      diffusion = 0.;
                       source = 0.;
 
 		      if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
@@ -1908,7 +1934,7 @@ assemble_energy(double time,	/* present time value */
 			  source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 			}
 
-                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + advection + diffusion + source;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + advection + diffusion + source + divergence;
 
 		    }
 		}

@@ -162,6 +162,7 @@ struct Material_Properties
   int ConductivityModel;
   int thermal_conductivity_tableid;
   int Ewt_funcModel;
+  int Energy_Div_Term;
   dbl Ewt_func;
   int Rst_funcModel;
   dbl Rst_func;

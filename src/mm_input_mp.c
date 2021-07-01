@@ -3818,6 +3818,34 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   ECHO(es, echo_file);
 
+  strcpy(search_string,"Energy Divergence Term");
+  model_read = look_for_mat_prop(imp, search_string, 
+				 &(mat_ptr->Ewt_funcModel), 
+				 &(mat_ptr->Ewt_func), NO_USER, NULL,
+				 model_name, SCALAR_INPUT, &NO_SPECIES,es);
+  if(strncmp(model_name," ",1) != 0 )
+    {      
+      if ( !strcmp(model_name, "yes") || !strcmp(model_name, "on") )
+	{
+	  mat_ptr->Energy_Div_Term = 1;
+	} 
+      else if ( !strcmp(model_name, "no") || !strcmp(model_name, "off"))
+	{
+	  mat_ptr->Energy_Div_Term = 0;
+	} 
+      else  
+	{
+	  SPF(err_msg,"Syntax error or invalid model for %s\n", search_string);
+	  GOMA_EH(GOMA_ERROR,err_msg);
+	}
+    }
+  else
+    {
+      mat_ptr->Energy_Div_Term = 0;
+      SPF(es, "\t(%s = %s)",search_string,"off");
+    }
+
+  ECHO(es, echo_file);
   strcpy(search_string,"Residence Time Weight Function");
   model_read = look_for_mat_prop(imp, search_string, 
 				 &(mat_ptr->Rst_funcModel), 

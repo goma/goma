@@ -1644,6 +1644,7 @@ noahs_ark(void)
       ddd_add_member(n, &mp_glob[i]->CapStress, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->ConductivityModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->Ewt_funcModel, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->Energy_Div_Term, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->Rst_funcModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->Mwt_funcModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->CurrentSourceModel, 1, MPI_INT);
