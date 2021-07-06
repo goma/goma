@@ -845,38 +845,44 @@ goma_error setup_rotated_bc_nodes(
 
   for (int i = 0; i < exo->num_nodes; i++) {
     if (rotations[i].is_rotated) {
-      goma_best_coordinate_system_3D(node_normals[i].normals, node_normals[i].n_normals,
-                                     rotations[i].rotated_coord);
+      goma_error err = goma_best_coordinate_system_3D(node_normals[i].normals, node_normals[i].n_normals,
+                                     rotations[i].rotated_coord, &rotations[i].type);
+      GOMA_EH(err, "find best coordinate error");
     }
   }
 
-  //char fname[80] = "normals.csv";
+  char fname[80] = "normals.csv";
   //multiname(fname, ProcID, Num_Proc);
+  sprintf(fname, "normals-%d-%d.csv", ProcID, Num_Proc);
 
-  //FILE *file = fopen(fname, "w");
-  //fprintf(file, "x,y,z,nx,ny,nz,normal_id,c1x,c1y,c1z,c2x,c2y,c2z,c3x,c3y,c3z,ProcID\n");
-  //for (int i = 0; i < exo->num_nodes; i++) {
-  //  for (int j = 0; j < node_normals[i].n_normals; j++) {
-  //  fprintf(file, "%g,%g,%g,%g,%g,%g,%d,%g,%g,%g,%g,%g,%g,%g,%g,%g,%d\n",
-  //      exo->x_coord[i],
-  //      exo->y_coord[i],
-  //      exo->z_coord[i],
-  //      node_normals[i].normals[j]->normal->data[0],
-  //      node_normals[i].normals[j]->normal->data[1],
-  //      node_normals[i].normals[j]->normal->data[2],
-  //      i,
-  //      rotations[i].rotated_coord[0]->normal->data[0],
-  //      rotations[i].rotated_coord[0]->normal->data[1],
-  //      rotations[i].rotated_coord[0]->normal->data[2],
-  //      rotations[i].rotated_coord[1]->normal->data[0],
-  //      rotations[i].rotated_coord[1]->normal->data[1],
-  //      rotations[i].rotated_coord[1]->normal->data[2],
-  //      rotations[i].rotated_coord[2]->normal->data[0],
-  //      rotations[i].rotated_coord[2]->normal->data[1],
-  //      rotations[i].rotated_coord[2]->normal->data[2],
-  //      ProcID);
-  //  }
-  //}
+  FILE *file = fopen(fname, "w");
+  fprintf(file, "x,y,z,nx,ny,nz,normal_id,c1x,c1y,c1z,c2x,c2y,c2z,c3x,c3y,c3z,ProcID,type\n");
+  for (int i = 0; i < exo->num_nodes; i++) {
+    for (int j = 0; j < node_normals[i].n_normals; j++) {
+    fprintf(file, "%g,%g,%g,%g,%g,%g,%d,%g,%g,%g,%g,%g,%g,%g,%g,%g,%d,%d\n",
+        exo->x_coord[i],
+        exo->y_coord[i],
+        exo->z_coord[i],
+        node_normals[i].normals[j]->normal->data[0],
+        node_normals[i].normals[j]->normal->data[1],
+        node_normals[i].normals[j]->normal->data[2],
+        i,
+        rotations[i].rotated_coord[0]->normal->data[0],
+        rotations[i].rotated_coord[0]->normal->data[1],
+        rotations[i].rotated_coord[0]->normal->data[2],
+        rotations[i].rotated_coord[1]->normal->data[0],
+        rotations[i].rotated_coord[1]->normal->data[1],
+        rotations[i].rotated_coord[1]->normal->data[2],
+        rotations[i].rotated_coord[2]->normal->data[0],
+        rotations[i].rotated_coord[2]->normal->data[1],
+        rotations[i].rotated_coord[2]->normal->data[2],
+        ProcID, rotations[i].type);
+    }
+  }
+  fprintf(file, "\n");
+  fclose(file);
+  MPI_Barrier(MPI_COMM_WORLD);
+  exit(0);
 
   goma_automatic_rotations.automatic_rotations = true;
   goma_automatic_rotations.rotation_nodes = rotations;

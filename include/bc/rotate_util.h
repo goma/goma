@@ -28,7 +28,7 @@ bool goma_check_corner_rotation_case(goma_normal **normals, int n_normals);
 bool goma_check_edge_rotation_case(goma_normal **normals, int n_normals);
 
 goma_error
-goma_best_coordinate_system_3D(goma_normal **normals, int n_normals, goma_normal *coord[3]);
+goma_best_coordinate_system_3D(goma_normal **normals, int n_normals, goma_normal *coord[3], int *type);
 
 #ifdef __cplusplus
 } // extern C

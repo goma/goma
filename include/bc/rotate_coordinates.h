@@ -18,6 +18,7 @@ typedef struct {
   goma_normal *rotated_coord[DIM];
   bool is_rotated;
   bool eqn_is_rotated[NUM_VECTOR_EQUATIONS];
+  int type;
 } goma_rotation_node_s;
 
 typedef struct {
