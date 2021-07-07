@@ -260,6 +260,7 @@ int LUB_VELO_UPPER = -1;
 int LUB_VELO_LOWER = -1;
 int LUB_VELO_FIELD = -1;
 int LUB_VELO_FIELD_2 = -1;
+int LUB_FLUID_SOURCE = -1;
 int DISJ_PRESS = -1;
 int SH_SAT_OPEN = -1;
 int SH_SAT_OPEN_2 = -1;
@@ -2712,6 +2713,27 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     safe_free((void *) n_dof);
 
   } /* end of LUB_VELO_FIELD_2 */
+
+  if ( (LUB_FLUID_SOURCE != -1) && (pd->e[R_LUBP] ) ) {
+    /* Setup lubrication */
+    int *n_dof = NULL;
+    int dof_map[MDE];
+    dbl wt = fv->wt;
+    n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
+    lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+
+    /* Post values */
+    double LubSourceFlux = 0.0;
+    lubrication_fluid_source(&LubSourceFlux, NULL);
+
+    local_post[LUB_FLUID_SOURCE]   = LubSourceFlux;
+    local_lumped[LUB_FLUID_SOURCE] = 1.0;
+
+    /* Cleanup */
+    fv->wt = wt;
+    safe_free((void *) n_dof);
+
+  } /* end of LUB_FLUID_SOURCE */
 
   if ( (PP_LAME_MU != -1) && (pd->e[R_MESH1]) ) {
 
@@ -7253,6 +7275,7 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Lubrication Lower Velocity", &LUB_VELO_LOWER);
   iread = look_for_post_proc(ifp, "Lubrication Velocity Field", &LUB_VELO_FIELD);
   iread = look_for_post_proc(ifp, "Lubrication Velocity Field 2", &LUB_VELO_FIELD_2);
+  iread = look_for_post_proc(ifp, "Lubrication Fluid Source", &LUB_FLUID_SOURCE);
   iread = look_for_post_proc(ifp, "Disjoining Pressure", &DISJ_PRESS);
   iread = look_for_post_proc(ifp, "Porous Shell Open Saturation", &SH_SAT_OPEN);
   iread = look_for_post_proc(ifp, "Porous Shell Open Saturation 2", &SH_SAT_OPEN_2);
@@ -11064,6 +11087,25 @@ index_post, index_post_export);
     {
       LUB_VELO_FIELD_2 = -1;
     }
+
+  if (LUB_FLUID_SOURCE != -1  &&  Num_Var_In_Type[R_LUBP] )
+    {
+      if (LUB_FLUID_SOURCE == 2)
+        {
+          EH(-1, "Post-processing vectors cannot be exported yet!");
+        }
+      LUB_FLUID_SOURCE = index_post;
+      sprintf(nm, "LUB_SOURCE");
+      sprintf(ds, "Lubrication Source");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+    }
+  else
+    {
+      LUB_FLUID_SOURCE = -1;
+    }
+
 
   if (DISJ_PRESS != -1  && Num_Var_In_Type[R_SHELL_FILMP])
     {

@@ -482,13 +482,13 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	 */
 
 	switch (bc->BC_Name) {
-	    
+
 	case KINEMATIC_PETROV_BC:
 	case KINEMATIC_BC:
 	case VELO_NORMAL_BC:
 	case VELO_NORMAL_LS_BC:
 	case VELO_NORMAL_LS_PETROV_BC:
-		
+
 	  contact_flag = (ls != NULL);
 
 	  /*  first all external boundaries with velocity
@@ -508,8 +508,14 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	    }
 	  break;
 
+        case VELO_NORMAL_LUB_BC:
+
+	      fvelo_normal_lub_bc(func, d_func, elem_side_bc->id_side, x_dot, theta, delta_t,
+                                  xi, exo, bc->BC_Data_Float);
+
+	  break;
 	case VELO_TANGENT_LS_BC:
-		
+
 	  /*  first all external boundaries with velocity
 	      second - internal boundaries with an explicit block id
 	      third  - internal boundaries with implicit iapply logic
@@ -540,7 +546,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			  x_dot, theta, delta_t, (int) bc->BC_Name,0,0,135.0);
 	  ls_attach_bc( func, d_func, bc->BC_Data_Float[0] );
 	  break;
-		
+
 
  	case KIN_DISPLACEMENT_PETROV_BC:
 	case KIN_DISPLACEMENT_BC:
