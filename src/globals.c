@@ -255,6 +255,7 @@ double modified_newt_norm_tol; /* tolerance for jacobian reformation
                                        based on residual norm */
 
 double Epsilon[3];	/* Used for determining stopping criteria.     */
+int Solver_Output_Format; 	/* Bitmap for Solver Output Format     */
 
 int NZeros;             /* Number of nonzeros in this procs matrix     */
 

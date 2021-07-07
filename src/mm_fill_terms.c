@@ -30945,6 +30945,14 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
               		d_h->rst[j] -= mp->latent_heat_vap[w] * s_terms.d_MassSource_drst[w][j];
             		}
         	   }
+      		var = PRESSURE;
+      		if ( d_h != NULL && pd->e[var] )
+        	   {
+          	    for ( j=0; j<ei->dof[var]; j++)
+            		{
+              		d_h->P[j] -= mp->latent_heat_vap[w] * s_terms.d_MassSource_dP[w][j];
+            		}
+        	   }
 	     }
 	}
     }
@@ -34841,14 +34849,25 @@ assemble_poynting(double time,	/* present time value */
         	  {
 		  if(mp->SpeciesSourceModel[w] == DROP_EVAP)
 		     {
-		      init_radius = mp->u_species_source[w][2];
-		      num_density = mp->u_species_source[w][3];  
-		      denom = MAX(DBL_SMALL,num_density*4*M_PIE*CUBE(init_radius)*SQUARE(MAX(P,DBL_SMALL)));
+		      init_radius = mp->u_species_source[w][1];
+		      num_density = mp->u_species_source[w][2];  
+		      P = MAX(DBL_SMALL, fv->restime);
+/**  Droplet radius or volume formulation **/
+#if 1
+		      denom = MAX(DBL_SMALL,num_density*4*M_PIE*CUBE(init_radius)*SQUARE(P));
+#else
+		      denom = MAX(DBL_SMALL,num_density*(4./3.)*M_PIE*CUBE(init_radius));
+#endif
 		     }
                   time_source -= mp->molar_volume[w]*s_terms.MassSource[w]/denom; 
-                  d_drop_source[w] = -mp->Rst_func*mp->molar_volume[w]/denom; 
+#if 1
+		  if(P > DBL_SMALL)
+                     {d_time_source += mp->molar_volume[w]*s_terms.MassSource[w]/denom*2./P; }
+#endif
+                  d_drop_source[w] = mp->Rst_func*mp->molar_volume[w]/denom; 
                   }
 		time_source *= mp->Rst_func;
+		d_time_source *= mp->Rst_func;
                 }
 	    explicit_deriv=1;
             break;
@@ -34977,11 +34996,11 @@ assemble_poynting(double time,	/* present time value */
 		         advection += wt_func*vconv[p]*grad_phi_j[p];
 	                 advection += diff_const*grad_phi_i[p]*grad_phi_j[p];
 		        }
-		     if(explicit_deriv && 1)
+		     if(explicit_deriv )
 			{
       		         for(w=0; w<pd->Num_Species_Eqn; w++)
         	            { advection += wt_func*d_drop_source[w]*s_terms.d_MassSource_drst[w][j];}
-			 advection += wt_func*time_source*(2./fv->restime)*phi_j;  
+			 advection -= wt_func*d_time_source*phi_j;   
 			}
 
 	             advection *= det_J * wt;
@@ -35023,11 +35042,55 @@ assemble_poynting(double time,	/* present time value */
 		  advection = diffusion = 0;
 	          if ((pd->e[eqn] & T_ADVECTION) && !Beers_Law )
                     {
+/*	             advection += (diff_const/fv->T)*grad_phi_i[p]*v_grad[p];  */
+		     if(explicit_deriv)
+			{
+      		      for(w=0; w<pd->Num_Species_Eqn; w++)
+        	         { advection += wt_func*d_drop_source[w]*s_terms.d_MassSource_dT[w][j];}
+			}
+		     else
+			{ advection += -wt_func*d_time_source*phi_j; }
+
+	              advection *= det_J * wt;
+	              advection *= h3;
+	              advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+                    }
+	          if ((pd->e[eqn] & T_DIFFUSION) && Beers_Law)
+		    {
+		      diffusion = phi_i*d_alpha->T[j]*P;
+		      diffusion *= det_J * wt;
+		      diffusion *= h3;
+		      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+		    }
+
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion + advection;
+		}
+	    }
+
+	  /*
+	   * J_e_Pressure
+	   */
+	  var = PRESSURE;
+	  if ( pd->v[var] )
+	    {
+	      pvar = upd->vp[var];
+	      for ( j=0; j<ei->dof[var]; j++)
+		{
+		  phi_j = bf[var]->phi[j];
+
+		  for ( p=0; p<VIM; p++)
+		    {
+		      grad_phi_j[p] = bf[var]->grad_phi[j][p];
+		    }
+
+		  advection = diffusion = 0;
+	          if ((pd->e[eqn] & T_ADVECTION) && !Beers_Law )
+                    {
 		     if(explicit_deriv)
 			{
 	              advection = 0;
       		      for(w=0; w<pd->Num_Species_Eqn; w++)
-        	         { advection += wt_func*d_drop_source[w]*s_terms.d_MassSource_dT[w][j];}
+        	         { advection += wt_func*d_drop_source[w]*s_terms.d_MassSource_dP[w][j];}
 			}
 		     else
 			{ advection = -wt_func*d_time_source*phi_j; }
@@ -35047,7 +35110,6 @@ assemble_poynting(double time,	/* present time value */
                   lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion + advection;
 		}
 	    }
-
 	  /*
 	   * J_e_d
 	   */
@@ -35200,3 +35262,76 @@ assemble_poynting(double time,	/* present time value */
 
   return(status);
 } /* end of assemble_poynting */
+
+void 
+restime_nobc_surf(double func[DIM],
+	  double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+	  double time) 
+
+/******************************************************************************
+*
+*  Function which calculates the surface integral for the "no bc" restime boundary condition
+*
+******************************************************************************/     
+{
+  
+/* Local variables */
+  
+  int j,b,p;
+  int var, dim;
+
+  double v_grad[DIM], diff_const;
+  
+/***************************** EXECUTION BEGINS *******************************/
+  
+  if(af->Assemble_LSA_Mass_Matrix)
+    return;
+
+  dim   = pd->Num_Dim;
+
+  diff_const = mp->Rst_diffusion;
+
+  for(j=0 ; j<dim ; j++)
+     { v_grad[j] = fv->grad_restime[j]; }
+
+  if (af->Assemble_Jacobian)
+    {
+      var = RESTIME;
+      if ( pd->v[var] )
+	{
+	  for( j=0; j<ei->dof[var]; j++)
+	    {
+	      for (p=0; p<dim; p++)
+		{
+		  d_func[0][var][j] += fv->snormal[p]*diff_const*bf[var]->grad_phi[j][p];
+/*		  d_func[0][var][j] += fv->snormal[p]*diff_const*(-1./fv->restime)*v_grad[p];  */
+		}
+	    }
+	}
+
+      if (pd->v[MESH_DISPLACEMENT1] )
+	{
+	  for ( b=0; b<dim; b++)
+	    {
+	      var = MESH_DISPLACEMENT1+b;
+	      for (j=0; j<ei->dof[var]; j++)
+		{
+		  for (p=0; p<dim; p++)
+		    {
+		     d_func[0][var][j] += diff_const*(fv->snormal[p]*fv->d_grad_restime_dmesh[p][b][j]
+		 			+ v_grad[p] * fv->dsnormal_dx[p][b][j]);
+		    }
+		}
+	    }
+	}
+    }
+
+  /* Calculate the residual contribution	     			     */
+    for ( p=0 ; p<dim ; p++)
+      {
+        *func += fv->snormal[p] * diff_const*v_grad[p];
+      }
+
+  return;
+} /* END of routine restime_nobc_surf                                               */
+/*****************************************************************************/

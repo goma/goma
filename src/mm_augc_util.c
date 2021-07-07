@@ -328,6 +328,14 @@ load_extra_unknownsAC(int iAC,    /* ID NUMBER OF AC'S */
 	xa[iAC] = mp_glob[mn]->FlowingLiquid_viscosity;
 	break;
       
+      case TAGC_DIFFUSIVITY_0: 
+	xa[iAC] = mp_glob[mn]->diffusivity[0];
+	break;
+      
+      case TAGC_DIFFUSIVITY_1: 
+	xa[iAC] = mp_glob[mn]->diffusivity[1];
+	break;
+      
 	/* 
 	 * Generalized Newtonian Models: 
 	 * Newtonian, Power Law, Carreau or Bingham(1,2,3)
@@ -768,6 +776,46 @@ load_extra_unknownsAC(int iAC,    /* ID NUMBER OF AC'S */
         xa[iAC] = mp_glob[mn]->u_heat_source[0];
         break;
 
+      case TAGC_SPECIES_SOURCE_0_P0:
+        xa[iAC] = mp_glob[mn]->u_species_source[0][0];
+        break;
+
+      case TAGC_SPECIES_SOURCE_0_P1:
+        xa[iAC] = mp_glob[mn]->u_species_source[0][1];
+        break;
+
+      case TAGC_SPECIES_SOURCE_0_P2:
+        xa[iAC] = mp_glob[mn]->u_species_source[0][2];
+        break;
+
+      case TAGC_SPECIES_SOURCE_0_P3:
+        xa[iAC] = mp_glob[mn]->u_species_source[0][3];
+        break;
+
+      case TAGC_SPECIES_SOURCE_1_P0:
+        xa[iAC] = mp_glob[mn]->u_species_source[1][0];
+        break;
+
+      case TAGC_SPECIES_SOURCE_1_P1:
+        xa[iAC] = mp_glob[mn]->u_species_source[1][1];
+        break;
+
+      case TAGC_SPECIES_SOURCE_1_P2:
+        xa[iAC] = mp_glob[mn]->u_species_source[1][2];
+        break;
+
+      case TAGC_SPECIES_SOURCE_1_P3:
+        xa[iAC] = mp_glob[mn]->u_species_source[1][3];
+        break;
+
+      case TAGC_LATENT_HEAT_0:
+        xa[iAC] = mp_glob[mn]->latent_heat_vap[0];
+        break;
+
+      case TAGC_LATENT_HEAT_1:
+        xa[iAC] = mp_glob[mn]->latent_heat_vap[1];
+        break;
+
       default: 
 	printf("\n\t Error: Invalid Material Property Tag %d\n", augc[iAC].MPID);
 	exit(0);
@@ -1122,6 +1170,14 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
       
       case TAGC_FLOWINGLIQUID_VISCOSITY: 
 	mp_glob[mn]->FlowingLiquid_viscosity = lambda;
+	break;
+      
+      case TAGC_DIFFUSIVITY_0: 
+	mp_glob[mn]->diffusivity[0] = lambda;
+	break;
+      
+      case TAGC_DIFFUSIVITY_1: 
+	mp_glob[mn]->diffusivity[1] = lambda;
 	break;
       
 	/* 
@@ -1554,6 +1610,46 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
 
       case TAGC_HEAT_SOURCE_0:
         mp_glob[mn]->u_heat_source[0] = lambda;
+        break;
+
+      case TAGC_SPECIES_SOURCE_0_P0:
+        mp_glob[mn]->u_species_source[0][0] = lambda;
+        break;
+
+      case TAGC_SPECIES_SOURCE_0_P1:
+        mp_glob[mn]->u_species_source[0][1] = lambda;
+        break;
+
+      case TAGC_SPECIES_SOURCE_0_P2:
+        mp_glob[mn]->u_species_source[0][2] = lambda;
+        break;
+
+      case TAGC_SPECIES_SOURCE_0_P3:
+        mp_glob[mn]->u_species_source[0][3] = lambda;
+        break;
+
+      case TAGC_SPECIES_SOURCE_1_P0:
+        mp_glob[mn]->u_species_source[1][0] = lambda;
+        break;
+
+      case TAGC_SPECIES_SOURCE_1_P1:
+        mp_glob[mn]->u_species_source[1][1] = lambda;
+        break;
+
+      case TAGC_SPECIES_SOURCE_1_P2:
+        mp_glob[mn]->u_species_source[1][2] = lambda;
+        break;
+
+      case TAGC_SPECIES_SOURCE_1_P3:
+        mp_glob[mn]->u_species_source[1][3] = lambda;
+        break;
+
+      case TAGC_LATENT_HEAT_0:
+        mp_glob[mn]->latent_heat_vap[0] = lambda;
+        break;
+
+      case TAGC_LATENT_HEAT_1:
+        mp_glob[mn]->latent_heat_vap[1] = lambda;
         break;
 
       default: 

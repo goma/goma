@@ -1584,6 +1584,19 @@ int i;
           d_func[MESH_DISPLACEMENT1+i] *= (1.0 + time_factor);
          }
      }
+/*  Add initial time ramp   */
+  else if(num_const == 5)
+     {
+      if(p[4] <= 0 || time >= p[4])
+	{ time_factor = 1.;}
+      else
+	{ time_factor = time/p[4];}
+      *func *= time_factor;
+      for(i=0;i<ielem_dim;i++)
+         {
+          d_func[MESH_DISPLACEMENT1+i] *= time_factor;
+         }
+     }
 
   *func -= fv->v[var_flag-VELOCITY1];
   

@@ -5821,9 +5821,9 @@ apply_repulsion_roll (double cfunc[MDE][DIM],
 	         const double origin[3],	/* roll axis origin (x,y,z) */
 	         const double dir_angle[3],	/* axis direction angles */
 		 const double omega, /* roll rotation rate  */
+	         const double P_rep,	/* repulsion coefficient */
 		 const double hscale, /* repulsion length scale */
 	         const double repexp,	/* repulsive force exponent */
-	         const double P_rep,	/* repulsion coefficient */
 		 const double gas_visc, /* inverse slip coefficient  */
                  const double exp_scale,      /* DCL exculsion zone scale   */
                  const int dcl_node,            /* DCL NS id  */
@@ -5938,14 +5938,22 @@ apply_repulsion_roll (double cfunc[MDE][DIM],
                           +SQUARE(coord[2]-point[2]));
            }  else      {
            dcl_dist = 0.;
-           WH(-1,"No DCL node for CAP_REPULSE_TABLE....\n");
+           WH(-1,"No DCL node for CAP_REPULSE_ROLL....\n");
            }
 /*  modifying function for DCL  */
-           mod_factor = 1. - exp(-dcl_dist/exp_scale);
+      if(dcl_node != -1)
+          { mod_factor = 1. - exp(-dcl_dist/exp_scale);  }
+      else
+	  { mod_factor = 1.;}
 
 /*  repulsion function  */
+#if 0
            force = -P_rep*mod_factor/pow(dist/hscale, repexp); 
            d_force = P_rep*mod_factor*repexp/pow(dist/hscale, repexp+1)/hscale;
+#else
+           force = -P_rep*mod_factor*(pow(hscale/dist,repexp) - pow(hscale/dist,repexp/2)); 
+           d_force = P_rep*mod_factor*(repexp/dist)*(pow(hscale/dist,repexp) - 0.5*pow(hscale/dist,repexp/2)); 
+#endif
 /*  slip velocity function function  */
            inv_slip = -gas_visc*mod_factor/pow(dist/hscale, repexp); 
            d_inv_slip = gas_visc*mod_factor*repexp/pow(dist/hscale, repexp+1)/hscale;
@@ -6788,7 +6796,7 @@ void
 flow_n_dot_T_var_density(double func[DIM],
 		   double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
 		   const double a,      /* 1 param describing reference pressure*/
-		       double time)     /* Time is required for density and momentum_source_term*/
+		   const double time)     /* Time is required for density and momentum_source_term*/
     
     /************************************************************************
      *
@@ -6936,7 +6944,8 @@ void
 flow_n_dot_T_nobc(double func[DIM],
                   double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
                   const double pdatum, /* pressure datum from input card */
-                  const int iflag)	/* -1 to use pdatum, otherwise use P */
+                  const int iflag,	/* -1 to use pdatum, otherwise use P */
+		  const double time)	/* time value if needed	*/
 
 /****************************************************************************
 *
@@ -6982,6 +6991,17 @@ flow_n_dot_T_nobc(double func[DIM],
    */
   if(iflag == -1) fv->P = pdatum;
 
+/* hydrostatic part for int == -2  ; func[] is set to n.p_hydrostatic in 
+	flow_n_dot_T_var_density. "var_density" is a misnomer - density would need
+	to be spatially invariate since pressure is relative to p(origin). Even
+	density(T) or density(P) would imply T or P is spatially invariate
+*/
+  if(iflag == -2)
+	{
+	flow_n_dot_T_var_density(func, d_func, pdatum, time);
+	fv->P = 0;
+	}
+
   /* compute stress tensor and its derivatives */
   if(vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV)
     {
@@ -6994,7 +7014,8 @@ flow_n_dot_T_nobc(double func[DIM],
 
   /* now is the time to clean up, so, if using the datum for pressure, fix fv->P
    */
-  if(iflag == -1) fv->P = P;
+/* Ahh...no.  This seems like a bad idea.  
+  if(iflag == -1) fv->P = P;*/
 
   if (af->Assemble_Jacobian)
     {
@@ -7205,12 +7226,14 @@ flow_n_dot_T_nobc(double func[DIM],
 
   for (p=0; p<pd->Num_Dim; p++)
     {
-      func[p] = 0.;
-      for (q=0; q<pd->Num_Dim; q++)
+     if(iflag != -2)
+	{ func[p] = 0.; }
+     for (q=0; q<pd->Num_Dim; q++)
         {
           func[p] += fv->snormal[q] * Pi[p][q];
         }
     }
+  if(iflag == -1 || iflag == -2) fv->P = P;
 
 } /* END of routine flow_n_dot_T_nobc                                       */
 /*****************************************************************************/

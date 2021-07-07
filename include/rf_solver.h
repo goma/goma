@@ -130,6 +130,7 @@ extern double modified_newt_norm_tol; /* tolerance for jacobian reformation
                                        based on residual norm */
 
 extern double Epsilon[3];	/* Used for determining stopping criteria.     */
+extern int Solver_Output_Format; 	/* Bitmap for Solver output columns    */
 
 extern int NZeros;             /* Number of nonzeros in this procs matrix     */
 

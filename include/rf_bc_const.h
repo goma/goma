@@ -90,7 +90,7 @@
 #endif
 
 #ifndef MAX_BC_FLOAT_DATA
-#define MAX_BC_FLOAT_DATA     15
+#define MAX_BC_FLOAT_DATA     16
 #endif
 
 #ifndef MAX_NODES_PER_SIDE
@@ -1102,7 +1102,9 @@
 #define SHELL_TFMP_AVG_PLATE_VELO_BC  777000043
 #define SHELL_TFMP_FREE_GAS_BC        777000044
 
-#define RESTIME_BC        788000030
+#define RESTIME_BC		788000030
+#define RESTIME_NOBC_BC		788000031
+#define RESTIME_GRADSIC_BC	788000032
 #define SHELL_LUBRICATION_OUTFLOW_BC  777000050
 
 /* Vectors used for rotations */
