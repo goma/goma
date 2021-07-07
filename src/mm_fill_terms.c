@@ -34714,7 +34714,7 @@ assemble_poynting(double time,	/* present time value */
   CONVECTION_VELOCITY_DEPENDENCE_STRUCT d_vconv_struct;
   CONVECTION_VELOCITY_DEPENDENCE_STRUCT *d_vconv = &d_vconv_struct;
   struct Species_Conservation_Terms s_terms;
-  double d_drop_source[MAX_CONC],mig_velo[VIM];
+  double d_drop_source[MAX_CONC];
   /*
  *    Radiative transfer equation variables - connect to input file someday
  */
@@ -34842,8 +34842,6 @@ assemble_poynting(double time,	/* present time value */
             if(pd->e[R_MASS] )
                {
 		double init_radius=0.010, num_density=10., denom=1;
-		double settling, mu_liq=0.0000062, dens_ratio=864./1.2;
-		double boltz=1.38E-17;
 		err = get_continuous_species_terms(&s_terms, time, tt, dt, hsquared);
      		EH(err,"problem in getting the species terms");
 
@@ -34854,26 +34852,22 @@ assemble_poynting(double time,	/* present time value */
 		      init_radius = mp->u_species_source[w][1];
 		      num_density = mp->u_species_source[w][2];  
 		      P = MAX(DBL_SMALL, fv->restime);
+/**  Droplet radius or volume formulation **/
+#if 1
 		      denom = MAX(DBL_SMALL,num_density*4*M_PIE*CUBE(init_radius)*SQUARE(P));
-	/*	      diff_const = boltz*fv->T/(6.*M_PIE*mp->viscosity*init_radius*P);  */
+#else
+		      denom = MAX(DBL_SMALL,num_density*(4./3.)*M_PIE*CUBE(init_radius));
+#endif
 		     }
                   time_source -= mp->molar_volume[w]*s_terms.MassSource[w]/denom; 
+#if 1
 		  if(P > DBL_SMALL)
                      {d_time_source += mp->molar_volume[w]*s_terms.MassSource[w]/denom*2./P; }
+#endif
                   d_drop_source[w] = mp->Rst_func*mp->molar_volume[w]/denom; 
                   }
 		time_source *= mp->Rst_func;
 		d_time_source *= mp->Rst_func;
-
-		settling = 2*SQUARE(init_radius)/(3.*mp->viscosity)*
-				(2*mp->viscosity+3*mu_liq)/(mp->viscosity+mu_liq);
-#if 0
-		for(i=0 ; i<dim ; i++)
-		    {
-		     mig_velo[i] = mp->Rst_func*mp->momentum_source[i]*(dens_ratio-1.)*settling; 
-		     vconv[i] += mig_velo[i]*SQUARE(P); 
-		    }
-#endif
                 }
 	    explicit_deriv=1;
             break;
@@ -34999,9 +34993,8 @@ assemble_poynting(double time,	/* present time value */
 	            {
 	             for ( p=0; p<dim; p++)
 		        {
-		         advection += wt_func*(vconv[p]*grad_phi_j[p]+v_grad[p]*mig_velo[p]*2*P*phi_j);
+		         advection += wt_func*vconv[p]*grad_phi_j[p];
 	                 advection += diff_const*grad_phi_i[p]*grad_phi_j[p];
-/*			 advection += (-diff_const/P)*grad_phi_i[p]*v_grad[p];  */
 		        }
 		     if(explicit_deriv )
 			{
@@ -35288,7 +35281,6 @@ restime_nobc_surf(double func[DIM],
   int var, dim;
 
   double v_grad[DIM], diff_const;
-  double init_radius=0.010, boltz=1.38E-17;
   
 /***************************** EXECUTION BEGINS *******************************/
   
@@ -35299,7 +35291,6 @@ restime_nobc_surf(double func[DIM],
 
   diff_const = mp->Rst_diffusion;
 
-/*  diff_const = boltz*fv->T/(6.*M_PIE*mp->viscosity*init_radius*fv->restime);  */
   for(j=0 ; j<dim ; j++)
      { v_grad[j] = fv->grad_restime[j]; }
 

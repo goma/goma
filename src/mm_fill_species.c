@@ -10955,7 +10955,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
       {
 	double *param,s,dsdC[MAX_CONC],dsdT,dsdrst;
 	double liq_C[MAX_CONC], liq_C0[MAX_CONC], radius, num_density, gas_conc, tmp;
-	double psat[MAX_CONC], dpsatdt[MAX_CONC], A, amb_pres, rad_ratio;
+	double psat[MAX_CONC], dpsatdt[MAX_CONC], A, amb_pres, rad_ratio=1., d_ratio=0.;
         double y_mole[MAX_CONC], dy_dC[MAX_CONC][MAX_CONC], x_mole[MAX_CONC], sum_invmv=0;
 	double C[MAX_CONC], activity[MAX_CONC], solvent_volfrac=0, conc_nv, dact_dr[MAX_CONC];
 	double pres_conv, dy_dP=0, dy_dT=0, dsdP=0, pres, near_unity=0.999999,evap_frac[MAX_CONC];
@@ -10980,10 +10980,19 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	conc_nv = (1.-solvent_volfrac)/mp->molar_volume[pd->Num_Species_Eqn];
 	sum_C0 += conc_nv;
 	pres_conv = mp->u_vapor_pressure[w][0];
+#if 1
 	if(pd->v[RESTIME])
-	   { rad_ratio = MAX(fv->restime,DBL_SMALL);}
-	else
-	   { rad_ratio=1.;}
+	   {
+	    if( fv->restime > DBL_SMALL)
+		{ rad_ratio = fv->restime;  d_ratio = 1.;}
+	   }
+#else
+	if(pd->v[RESTIME])
+	   { 
+	    if( fv->restime > DBL_SMALL)
+		{ rad_ratio = cbrt(fv->restime);  d_ratio = rad_ratio/(3.*fv->restime);}
+	   }
+#endif
 
 	s = 0;       dsdT = 0;  
 	for(a=0; a<MAX_CONC; a++) dsdC[a]=0.;  
@@ -11026,11 +11035,8 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 		  sum_C += liq_C[i]; 
 		}
 	   x_mole[w] = liq_C[w]/sum_C; 
-           for ( i=0; i<pd->Num_Species_Eqn; i++) 
-		{ 
-		dact_dr[i] = 3*SQUARE(rad_ratio)/SQUARE(sum_C)*
-			(sum_C0*evap_frac[i]/mp->molar_volume[i]-liq_C0[i]*sum_invmv);
-		}
+	   dact_dr[w] = 3*SQUARE(rad_ratio)*d_ratio/SQUARE(sum_C)*
+			(sum_C0*evap_frac[w]/mp->molar_volume[w]-liq_C0[w]*sum_invmv);
           }
         else if(mp->Species_Var_Type == SPECIES_DENSITY)
           {
@@ -11081,12 +11087,9 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	     }
 	   else
 	     {
-              for ( i=0; i<pd->Num_Species_Eqn; i++) 
-		{ 
-		dact_dr[i] *= A;
-		if( i == w) dact_dr[i] += x_mole[w]*psat[w]/pres*d_kelvin*(-1./rad_ratio);
-		dact_dr[i] /= (1.-activity[w]);
-		}
+	      dact_dr[w] *= A;
+	      dact_dr[i] += x_mole[w]*psat[w]/pres*d_kelvin*(-1./rad_ratio)*d_ratio;
+	      dact_dr[i] /= (1.-activity[w]);
 	     }
 	  }
 
@@ -11109,7 +11112,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 		(dpsatdt[w]/pres_conv*x_mole[w]/(1-activity[w])
 		-dy_dT/(1-y_mole[w]));
 	   }
-	dsdrst = tmp*log((1-y_mole[w])/(1-activity[w])) + tmp*rad_ratio*dact_dr[w];  
+	dsdrst = tmp*log((1-y_mole[w])/(1-activity[w]))*d_ratio + tmp*rad_ratio*dact_dr[w];  
 
 	st->MassSource[w]= s;
 

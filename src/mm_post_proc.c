@@ -4658,6 +4658,14 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
         while ( !p_done )
             {
 
+/*  Adjust particle size for droplets  */
+	if( pd->v[RESTIME] && mp->SpeciesSourceModel[0] == DROP_EVAP)
+		{
+		p_lambda = pp_particles[i]->mass*pp_particles[i]->mobility*SQUARE(fv->restime);
+ 	p_force[0] = pp_particles[i]->mobility*pp_particles[i]->force[0]*SQUARE(fv->restime);
+ 	p_force[1] = pp_particles[i]->mobility*pp_particles[i]->force[1]*SQUARE(fv->restime);
+ 	p_force[2] = pp_particles[i]->mobility*pp_particles[i]->force[2]*SQUARE(fv->restime);
+		}
 /*   make Euler predictor step  */
 
         for ( j=0 ; j < p_dim ; j++)

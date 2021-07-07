@@ -5947,8 +5947,13 @@ apply_repulsion_roll (double cfunc[MDE][DIM],
 	  { mod_factor = 1.;}
 
 /*  repulsion function  */
+#if 0
            force = -P_rep*mod_factor/pow(dist/hscale, repexp); 
            d_force = P_rep*mod_factor*repexp/pow(dist/hscale, repexp+1)/hscale;
+#else
+           force = -P_rep*mod_factor*(pow(hscale/dist,repexp) - pow(hscale/dist,repexp/2)); 
+           d_force = P_rep*mod_factor*(repexp/dist)*(pow(hscale/dist,repexp) - 0.5*pow(hscale/dist,repexp/2)); 
+#endif
 /*  slip velocity function function  */
            inv_slip = -gas_visc*mod_factor/pow(dist/hscale, repexp); 
            d_inv_slip = gas_visc*mod_factor*repexp/pow(dist/hscale, repexp+1)/hscale;

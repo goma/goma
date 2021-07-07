@@ -9391,8 +9391,14 @@ rd_eq_specs(FILE *ifp,
 		    &(pd_ptr->etm[ce][(LOG2_SOURCE)]))
 	     != 3 )
 	{
+	  pd_ptr->etm[ce][(LOG2_MASS)] = 1.0;
+          pd_ptr->etm[ce][(LOG2_ADVECTION)] = 1.0;
+	  pd_ptr->etm[ce][(LOG2_SOURCE)] = 1.0;
 	  sr = sprintf(err_msg, 
-		       "Provide 3 equation term multipliers (mas,adv,src) on %s in %s",
+		       "Using default equation term multipliers (mass,adv,src) on %s in %s",
+		       EQ_Name[ce].name1, pd_ptr->MaterialName);
+	  sr = sprintf(err_msg, 
+		       "Provide 3 equation term multipliers (mass,adv,src) on %s in %s",
 		       EQ_Name[ce].name1, pd_ptr->MaterialName);
 	  EH(-1, err_msg);
 	}
