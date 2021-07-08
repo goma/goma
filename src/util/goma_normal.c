@@ -185,35 +185,49 @@ void goma_normal_scale(goma_normal *normal, const goma_normal_val *val) {
 void goma_normal_rotate_around_vector(goma_normal *rotated, goma_normal *vec_to_rotate,
                                       goma_normal *axis, goma_normal_val angle_radians) {
 
-  size_t size = 3;
-  goma_normal *cross = goma_normal_alloc(size);
-  goma_normal *temp1 = goma_normal_alloc(size);
-  goma_normal *temp2 = goma_normal_alloc(size);
-  goma_normal_cross(axis, vec_to_rotate, cross);
+  // Rodrigues rotation formula
+  //
+  dbl Rotation[3][3];
+  goma_normal_val sin_angle = sin_goma_normal_val(&angle_radians);
+  goma_normal_val angle_half = scale_goma_normal_val(&angle_radians, 0.5);
+  goma_normal_val sin_angle_half = sin_goma_normal_val(&angle_half);
+  goma_normal_val sq_sin_angle_half = mul_goma_normal_val(&sin_angle_half, &sin_angle_half);
+  goma_normal_val sq_sin_angle_half_mul2 = scale_goma_normal_val(&sq_sin_angle_half, 2.0);
 
-  goma_normal_copy(temp1, vec_to_rotate);
-  goma_normal_val cos_val = cos_goma_normal_val(&angle_radians);
-  goma_normal_val sin_val = sin_goma_normal_val(&angle_radians);
-  goma_normal_scale(temp1, &cos_val);
+  Rotation[0][0] = 1.0;
+  Rotation[1][1] = 1.0;
+  Rotation[2][2] = 1.0;
 
-  goma_normal_scale(cross, &sin_val);
-  goma_normal_val dot = goma_normal_dot(vec_to_rotate, axis);
-
-  // dot * (1 - cos(angle_radians))
-  goma_normal_copy(temp2, axis);
-  goma_normal_val tmp = scale_goma_normal_val(&cos_val, -1.0);
-  goma_normal_val tmp2 = add_goma_normal_val(&tmp, 1.0);
-  tmp = mul_goma_normal_val(&dot, &tmp2);
-  goma_normal_scale(temp2, &tmp);
-
-  goma_normal_zero(rotated);
-  goma_normal_add(rotated, temp1);
-  goma_normal_add(rotated, cross);
-  goma_normal_add(rotated, temp2);
-
-  goma_normal_free(cross);
-  goma_normal_free(temp1);
-  goma_normal_free(temp2);
+  dbl W[3][3] = {{0, -axis->normal->data[2], axis->normal->data[1]},
+    {axis->normal->data[2], 0, -axis->normal->data[0]},
+    {-axis->normal->data[1], axis->normal->data[0], 0}};
+  dbl Wsq[3][3];
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+      double tmp = 0;
+      for (int k = 0; k < 3; k++) {
+        tmp += W[i][k] * W[k][j];
+      }
+      Wsq[i][j] = tmp;
+    }
+  }
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+      if (i == j) {
+        Rotation[i][j] = 1.0;
+      } else {
+        Rotation[i][j] = 0.0;
+      }
+      Rotation[i][j] += sin_angle.val * W[i][j] + sq_sin_angle_half_mul2.val * Wsq[i][j];
+    }
+  }
+  for (int i = 0; i < 3; i++) {
+    dbl tmp = 0;
+    for (int j = 0; j < 3; j++) {
+      tmp += Rotation[i][j] * vec_to_rotate->normal->data[j];
+    }
+    rotated->normal->data[i] = tmp;
+  }
 }
 
 goma_normal_val cos_goma_normal_val(const goma_normal_val *val) {

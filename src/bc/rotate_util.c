@@ -11,9 +11,9 @@ static bool within_critical_angle(double a_dot_b, double angle) {
 }
 
 static void goma_normal_assign_best_direction(goma_normal *normal,
-    goma_normal *tangent,
-    goma_normal *binormal,
-    goma_normal *coord[3]) {
+                                              goma_normal *tangent,
+                                              goma_normal *binormal,
+                                              goma_normal *coord[3]) {
   double max_val = 0;
   int n_max = -1;
   int t_max = -1;
@@ -25,54 +25,49 @@ static void goma_normal_assign_best_direction(goma_normal *normal,
     n_max = 0;
     t_max = 1;
     b_max = 2;
-  } 
+  }
 
-  if ((val = (fabs(gds_vector_get(normal->normal, 2)) +
-                     fabs(gds_vector_get(tangent->normal, 1)) +
-                     fabs(gds_vector_get(binormal->normal, 0)))) > max_val) {
+  if ((val = (fabs(gds_vector_get(normal->normal, 2)) + fabs(gds_vector_get(tangent->normal, 1)) +
+              fabs(gds_vector_get(binormal->normal, 0)))) > max_val) {
     max_val = val;
     n_max = 2;
     t_max = 1;
     b_max = 0;
-  } 
+  }
 
-  if ((val = (fabs(gds_vector_get(normal->normal, 2)) +
-                     fabs(gds_vector_get(tangent->normal, 0)) +
-                     fabs(gds_vector_get(binormal->normal, 1)))) > max_val) {
+  if ((val = (fabs(gds_vector_get(normal->normal, 2)) + fabs(gds_vector_get(tangent->normal, 0)) +
+              fabs(gds_vector_get(binormal->normal, 1)))) > max_val) {
     max_val = val;
     n_max = 2;
     t_max = 0;
     b_max = 1;
-  } 
+  }
 
-  if ((val = (fabs(gds_vector_get(normal->normal, 0)) +
-                     fabs(gds_vector_get(tangent->normal, 2)) +
-                     fabs(gds_vector_get(binormal->normal, 1)))) > max_val) {
+  if ((val = (fabs(gds_vector_get(normal->normal, 0)) + fabs(gds_vector_get(tangent->normal, 2)) +
+              fabs(gds_vector_get(binormal->normal, 1)))) > max_val) {
     max_val = val;
     n_max = 0;
     t_max = 2;
     b_max = 1;
-  } 
+  }
 
-  if ((val = (fabs(gds_vector_get(normal->normal, 1)) +
-                     fabs(gds_vector_get(tangent->normal, 0)) +
-                     fabs(gds_vector_get(binormal->normal, 2)))) > max_val) {
+  if ((val = (fabs(gds_vector_get(normal->normal, 1)) + fabs(gds_vector_get(tangent->normal, 0)) +
+              fabs(gds_vector_get(binormal->normal, 2)))) > max_val) {
     max_val = val;
     n_max = 1;
     t_max = 0;
     b_max = 2;
-  } 
+  }
 
-  if ((val = (fabs(gds_vector_get(normal->normal, 1)) +
-                     fabs(gds_vector_get(tangent->normal, 2)) +
-                     fabs(gds_vector_get(binormal->normal, 0)))) > max_val) {
+  if ((val = (fabs(gds_vector_get(normal->normal, 1)) + fabs(gds_vector_get(tangent->normal, 2)) +
+              fabs(gds_vector_get(binormal->normal, 0)))) > max_val) {
     max_val = val;
     n_max = 1;
     t_max = 2;
     b_max = 0;
   }
   // Find best coordinate direction
-  //for (int p = 0; p < 3; p++) {
+  // for (int p = 0; p < 3; p++) {
   //  double val = fabs(gds_vector_get(normal->normal, (0 + p) % 3)) +
   //               fabs(gds_vector_get(tangent->normal, (1 + p) % 3)) +
   //               fabs(gds_vector_get(binormal->normal, (2 + p) % 3));
@@ -89,7 +84,7 @@ static void goma_normal_assign_best_direction(goma_normal *normal,
   goma_normal_copy(coord[n_max], normal);
   goma_normal_copy(coord[t_max], tangent);
   goma_normal_copy(coord[b_max], binormal);
-  
+
   // recompute binormal component to ensure righthanded
   // this lets us keep normal directions for surface and corners
   if (b_max == 0) {
@@ -196,9 +191,11 @@ static goma_error get_average_edge_normals(goma_normal **normals,
       continue;
     }
 
-    if (within_critical_angle(gds_vector_dot(normals[i]->normal, n1[0]->normal), GOMA_ROTATION_CRITICAL_ANGLE)) {
+    if (within_critical_angle(gds_vector_dot(normals[i]->normal, n1[0]->normal),
+                              GOMA_ROTATION_CRITICAL_ANGLE)) {
       n1[n_n1++] = normals[i];
-    } else if (within_critical_angle(gds_vector_dot(normals[i]->normal, n2[0]->normal), GOMA_ROTATION_CRITICAL_ANGLE)) {
+    } else if (within_critical_angle(gds_vector_dot(normals[i]->normal, n2[0]->normal),
+                                     GOMA_ROTATION_CRITICAL_ANGLE)) {
       n2[n_n2++] = normals[i];
     } else {
       free(n1);
@@ -329,7 +326,7 @@ corner_coord_critical_found : {
   if (third_crit == -1) {
     return GOMA_ERROR;
   }
-  
+
   goma_normal *first = goma_normal_alloc(3);
   goma_normal *second = goma_normal_alloc(3);
   goma_normal *third = goma_normal_alloc(3);
@@ -350,16 +347,24 @@ corner_coord_critical_found : {
   goma_normal *mid_n1_n2 = goma_normal_alloc(3);
   goma_normal_zero(cross);
   goma_normal_val angle = acos_goma_normal_val(&dot);
-  scale_goma_normal_val(&angle, 0);
-  add_goma_normal_val(&angle, ninety);
+  angle = scale_goma_normal_val(&angle, 0);
+  angle = add_goma_normal_val(&angle, ninety);
   const double half = 0.5;
   goma_normal_val shift = scale_goma_normal_val(&angle, half);
   goma_normal_val minus_shift = scale_goma_normal_val(&angle, -half);
   goma_normal_cross(first, second, cross);
   goma_normal_copy(mid_n1_n2, first);
   goma_normal_add(mid_n1_n2, second);
+  goma_normal_normalize(mid_n1_n2);
+  goma_normal_normalize(cross);
   goma_normal_rotate_around_vector(new_n1, mid_n1_n2, cross, shift);
   goma_normal_rotate_around_vector(new_n2, mid_n1_n2, cross, minus_shift);
+
+#ifndef NDEBUG
+  goma_normal_val dt1 = goma_normal_dot(new_n1, new_n2);
+  GOMA_ASSERT(fabs(dt1.val) < 1e-14);
+#endif
+
   goma_normal_normalize(new_n1);
   goma_normal_normalize(new_n2);
 
@@ -370,22 +375,37 @@ corner_coord_critical_found : {
   goma_normal_add(mid_n1_n2, new_n2);
   goma_normal_normalize(mid_n1_n2);
   goma_normal_zero(cross);
-  dot = goma_normal_dot(mid_n1_n2, third);
+
+  goma_normal_cross(new_n1, new_n2, cross);
+  goma_normal_normalize(cross);
+  dot = goma_normal_dot(cross, third);
+  if (dot.val < 0) {
+    goma_normal_val val = {0};
+    val.val = -1;
+    goma_normal_scale(third, &val);
+  }
+
+  dot = goma_normal_dot(cross, third);
+  // use mid_n1_n2 as cross X third
+  goma_normal_cross(cross, third, mid_n1_n2);
+  goma_normal_normalize(mid_n1_n2);
   angle = acos_goma_normal_val(&dot);
-  goma_normal_val subval = sub_goma_normal_val(&angle, ninety);
-  shift = scale_goma_normal_val(&subval, half);
-  minus_shift = scale_goma_normal_val(&subval, -half);
-  goma_normal_cross(mid_n1_n2, third, cross);
-  //goma_normal_copy(final_n1, new_n1);
-  goma_normal_rotate_around_vector(final_n1, new_n1, cross, shift);
-  //goma_normal_copy(final_n2, new_n2);
-  goma_normal_rotate_around_vector(final_n2, new_n2, cross, shift);
-  goma_normal_cross(final_n1, final_n2, final_n3);
-  //goma_normal_rotate_around_vector(final_n3, third, cross, minus_shift);
+  shift = scale_goma_normal_val(&angle, half);
+  goma_normal_rotate_around_vector(final_n1, new_n1, mid_n1_n2, shift);
+  goma_normal_rotate_around_vector(final_n2, new_n2, mid_n1_n2, shift);
+  goma_normal_rotate_around_vector(final_n3, cross, mid_n1_n2, shift);
   goma_normal_normalize(final_n1);
   goma_normal_normalize(final_n2);
   goma_normal_normalize(final_n3);
 
+#ifndef NDEBUG
+  goma_normal_val dt2 = goma_normal_dot(final_n1, final_n2);
+  GOMA_ASSERT(fabs(dt2.val) < 1e-14);
+  goma_normal_val dt3 = goma_normal_dot(final_n1, final_n3);
+  GOMA_ASSERT(fabs(dt3.val) < 1e-14);
+  goma_normal_val dt4 = goma_normal_dot(final_n2, final_n3);
+  GOMA_ASSERT(fabs(dt4.val) < 1e-14);
+#endif
   goma_normal_assign_best_direction(final_n1, final_n2, final_n3, coord);
 
   goma_normal_free(first);
@@ -469,9 +489,12 @@ bool goma_check_edge_rotation_case(goma_normal **normals, int n_normals) {
 
   // make sure all angles are near one of the critical angles
   for (int u_index = 0; u_index < n_normals; u_index++) {
-    bool match_one =
-        within_critical_angle(gds_vector_dot(normals[u_index]->normal, normals[crit_normal[0]]->normal), GOMA_ROTATION_CRITICAL_ANGLE) ||
-        within_critical_angle(gds_vector_dot(normals[u_index]->normal, normals[crit_normal[1]]->normal), GOMA_ROTATION_CRITICAL_ANGLE);
+    bool match_one = within_critical_angle(
+                         gds_vector_dot(normals[u_index]->normal, normals[crit_normal[0]]->normal),
+                         GOMA_ROTATION_CRITICAL_ANGLE) ||
+                     within_critical_angle(
+                         gds_vector_dot(normals[u_index]->normal, normals[crit_normal[1]]->normal),
+                         GOMA_ROTATION_CRITICAL_ANGLE);
     if (!match_one) {
       return false;
     }
@@ -480,8 +503,10 @@ bool goma_check_edge_rotation_case(goma_normal **normals, int n_normals) {
   return true;
 }
 
-goma_error
-goma_best_coordinate_system_3D(goma_normal **normals, int n_normals, goma_normal *coord[3], int *type) {
+goma_error goma_best_coordinate_system_3D(goma_normal **normals,
+                                          int n_normals,
+                                          goma_normal *coord[3],
+                                          int *type) {
 
   // normalize just to be sure
   for (int i = 0; i < n_normals; i++) {
