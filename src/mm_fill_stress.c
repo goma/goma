@@ -1496,7 +1496,7 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
           v_dot_del_g[a][b] += v[q] * fv->grad_G[q][a][b];
           v_dot_del_gt[a][b] += v[q] * fv->grad_Gt[q][a][b];
           x_dot_del_g[a][b] += x_dot[q] * fv->grad_G[q][a][b];
-          x_dot_del_g[a][b] += x_dot[q] * fv->grad_G[q][a][b];
+          x_dot_del_gt[a][b] += x_dot[q] * fv->grad_G[q][b][a];
         }
 
         if (pd->TimeIntegration != STEADY) {
@@ -1678,7 +1678,7 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
 
                 if (jeffreysEnabled) {
                   source -= lambda2 * (g_dot[a][b] + gt_dot[a][b] + v_dot_del_g[a][b] -
-                                       x_dot_del_g[a][b] + v_dot_del_gt[a][b] - v_dot_del_gt[b][a] -
+                                       x_dot_del_g[a][b] + v_dot_del_gt[a][b] - x_dot_del_gt[a][b] -
                                        (g_dot_g[a][b] + 2 * gt_dot_g[a][b] + gt_dot_gt[a][b]));
                 }
 
@@ -1727,7 +1727,7 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
 
             if (jeffreysEnabled) {
               R_source -= lambda2 * (g_dot[a][b] + gt_dot[a][b] + v_dot_del_g[a][b] -
-                                   x_dot_del_g[a][b] + v_dot_del_gt[a][b] - v_dot_del_gt[b][a] -
+                                   x_dot_del_g[a][b] + v_dot_del_gt[a][b] - x_dot_del_gt[b][a] -
                                    (g_dot_g[a][b] + 2 * gt_dot_g[a][b] + gt_dot_gt[a][b]));
             }
 
@@ -2327,6 +2327,36 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
                           source = -at * mup * phi_j *
                                    ((double)delta(a, p) * (double)delta(b, q) +
                                     (double)delta(b, p) * (double)delta(a, q));
+                          if (jeffreysEnabled) {
+                            dbl source_jeffrey = 0;
+                            // g_dot
+                            source_jeffrey += (1. + 2. * tt) * phi_j / dt * (double)delta(a, p) * (double)delta(b, q);
+                            // gt_dot
+                            source_jeffrey += (1. + 2. * tt) * phi_j / dt * (double)delta(a, q) * (double)delta(b, p);
+                            // v_dot_del_g
+                            if ((a == p) && (b == q)) {
+                              for (r = 0; r < dim; r++) {
+                                source_jeffrey += (v[r] - x_dot[r]) * bf[var]->grad_phi[j][r];
+                              }
+                            }
+                            // v_dot_del_gt
+                            if ((a == q) && (b == p)) {
+                              for (r = 0; r < dim; r++) {
+                                source_jeffrey += (v[r] - x_dot[r]) * bf[var]->grad_phi[j][r];
+                              }
+                            }
+                            // g_dot_g
+                            source_jeffrey -= (delta(a,p) + delta(b,q))*fv->G[a][b] * bf[var]->phi[j];
+                            // g_dot_gt
+                            source_jeffrey -=  (g[a][p] * (double)delta(b, q) + gt[q][b] * (double)delta(a, p)) *bf[var]->phi[j];
+                            // 2*gt_dot_g
+                            source_jeffrey -= 2.*(gt[a][p] * (double)delta(b, q) + g[q][b] * (double)delta(a, p)) * bf[var]->phi[j];
+                            // gt_dot_gt
+                            source_jeffrey -=  (gt[a][p] * (double)delta(b, q) + g[q][b] * (double)delta(a, p)) * bf[var]->phi[j];
+
+                            source_jeffrey *= -lambda2;
+                            source += source_jeffrey;
+                          }
                           source *= det_J * h3 * wt_func * wt * pd->etm[eqn][(LOG2_SOURCE)];
                         }
 
