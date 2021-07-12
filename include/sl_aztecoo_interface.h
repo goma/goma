@@ -13,7 +13,7 @@
 #endif
 
 void
-aztecoo_solve_epetra(struct Aztec_Linear_Solver_System *ams, double *x_, double *b_);
+aztecoo_solve_epetra(struct GomaLinearSolverData *ams, double *x_, double *b_);
 
 #ifdef __cplusplus
   } /* End extern "C" */

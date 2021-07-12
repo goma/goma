@@ -62,7 +62,7 @@
 #endif /* COUPLED_FILL */
 
 struct Matrix_Data {
-  struct Aztec_Linear_Solver_System *ams;
+  struct GomaLinearSolverData *ams;
   double *x;                 /* Solution vector */
   double *x_old;             /* Solution vector , previous last time step */
   double *x_older;           /* Solution vector , previous prev time step */
@@ -75,7 +75,7 @@ struct Matrix_Data {
   double *scale;
 };
 
-struct Aztec_Linear_Solver_System
+struct GomaLinearSolverData
 {
   int proc_config[AZ_PROC_SIZE];
   
@@ -135,38 +135,8 @@ struct Aztec_Linear_Solver_System
 
   C_Epetra_RowMatrix_t *RowMatrix; /* This is a Epetra_RowMatrix object */
   int *GlobalIDs;                  /* Pointer to global ids of DOFs (only available with epetra) */
+
+  void *PetscMatrixData;
 };
-
-/* See paper by Hood (1976, J. Numer. Meth Engr.) for details of this
- * struct
- */
-struct Frontal_Solver_System  
-{
-  double *bc;              /* for each nodal dof this is assigned zero
-		            * unless a boundary condition is applied, in
-			    * which case it gets the bc value. */
-  int    *ncn;             /* The total number of dofs in each element */
-  int    *ncn_base;        /* The total number of dofs in each element */
-  int    *ncod;            /* The entries are coded zero for a nodal dof with
-			    * no applied bc, and unity for an applied bc */
-  int   *nop;              /* The traditional nodal connectivity array,
-		            * NE X NBN */
-  int   *nopdof;           /* The unknown connectivity array, NE X NCN */
-  int   *nopp;             /* Coded value of first dof at each node */
-  int   *mdf;              /* Number of dofs at each node */
-  int   ntra;              /* 1 on first entry into front, zero on
-			    * subsequent entries */
-  int   *el_proc_assign;   /* processor assignment of element i.  */
-  int   *constraint;       /* true of false array for constraint equations */
-  int   *level;            /* dissection level for elimination (see
-			    * mpfront doc  */
-  int   *perm;             /* rcm aztec reordering list */
-  int   *iperm;            /* rcm aztec reordering list, inverse */
-  int   *mask;             /* something needed for rcm-aztec */
-};
-
-extern struct Frontal_Solver_System *fss;
-
-
 
 #endif

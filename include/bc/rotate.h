@@ -18,7 +18,7 @@
 #include "exo_struct.h"
 #include "mm_as_structs.h"
 
-struct Aztec_Linear_Solver_System;
+struct GomaLinearSolverData;
 struct elem_side_bc_struct;
 #ifdef EXTERN
 #undef EXTERN
@@ -57,7 +57,7 @@ EXTERN void rotate_mesh_eqn
        const int ,		/* iconnect_ptr - Pointer to beginning of 
 				 * connectivity list for the current element */
        const int ,		/* dim - physical dim of problem             */
-       struct Aztec_Linear_Solver_System *);
+       struct GomaLinearSolverData *);
 
 EXTERN void rotate_res_jac_mesh
 (int ,			/* irow_index - Elemental stiffness matrix   *
@@ -111,7 +111,7 @@ EXTERN void rotate_momentum_eqn
        const int ,		/* iconnect_ptr - Pointer to beginning of 
 				 * connectivity list for the current element */
        const int ,		/* dim - physical dim of problem             */
-       struct Aztec_Linear_Solver_System *);	
+       struct GomaLinearSolverData *);	
 
 EXTERN void calculate_all_rotation_vectors
 (Exo_DB *,		/* exo - ptr to the whole FE mesh */
@@ -160,7 +160,7 @@ EXTERN void rotate_eqns_at_node_2D
 ( int ,
 		int ,
 		int ,
-		struct Aztec_Linear_Solver_System *);
+		struct GomaLinearSolverData *);
 
 #ifdef STATIC
 
@@ -230,13 +230,13 @@ rotate_momentum_auto (
     int id,                             /* Elemental stiffness matrix row index */
     int I,                              /* Global node number                   */
     int dim,                            /* physical dim of problem              */
-    struct Aztec_Linear_Solver_System *ams );
+    struct GomaLinearSolverData *ams );
 
 void
 rotate_mesh_auto (
     int id,                             /* Elemental stiffness matrix row index */
     int I,                              /* Global node number                   */
     int dim,                            /* physical dim of problem              */
-    struct Aztec_Linear_Solver_System *ams );
+    struct GomaLinearSolverData *ams );
 
 #endif /* GOMA_BC_ROTATE_H */

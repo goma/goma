@@ -27,7 +27,7 @@
 #include "rf_vars_const.h"
 #include "std.h"
 
-struct Aztec_Linear_Solver_System;
+struct GomaLinearSolverData;
 struct Boundary_Condition;
 struct elem_side_bc_struct;
 #ifdef EXTERN
@@ -734,7 +734,7 @@ EXTERN void compute_xfem_contribution
 
 EXTERN void check_xfem_contribution
 ( int,
-        struct Aztec_Linear_Solver_System *,
+        struct GomaLinearSolverData *,
         double [],
         double [],
 	Exo_DB * );

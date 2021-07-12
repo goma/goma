@@ -2563,7 +2563,7 @@ struct Species_Conservation_Terms {
  * This structure is populated at the top of solve_nonlinear_problem()
  */
 struct Matrix_Fill_Arguments {
-  struct Aztec_Linear_Solver_System *ams;
+  struct GomaLinearSolverData *ams;
   double *x;
   double *resid;
   double *x_old;

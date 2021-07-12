@@ -86,7 +86,7 @@ typedef struct {
   int nnz;
 } Coloring;
 
-static Coloring* find_coloring(struct Aztec_Linear_Solver_System *ams,
+static Coloring* find_coloring(struct GomaLinearSolverData *ams,
 			int num_unknowns,
 			int num_total_nodes,
 			Exo_DB *exo,
@@ -147,7 +147,7 @@ static void free_int_linked_list(IntLinkedList *list)
    with the same color share no rows containing
    nonzeros in that column
 */
-static Coloring* find_coloring(struct Aztec_Linear_Solver_System *ams,
+static Coloring* find_coloring(struct GomaLinearSolverData *ams,
 			int num_unknowns,
 			int num_total_nodes,
 			Exo_DB *exo,
@@ -305,7 +305,7 @@ static void free_coloring(Coloring *coloring) {
 }
 
 void
-numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
+numerical_jacobian_compute_stress(struct GomaLinearSolverData *ams,
 		   double x[],	/* Solution vector for the current processor */
 		   double resid_vector[],   /* Residual vector for the current
 					     * processor */
@@ -732,7 +732,7 @@ numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
 /*****************************************************************************/
 
 void
-numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
+numerical_jacobian(struct GomaLinearSolverData *ams,
 		   double x[],	/* Solution vector for the current processor */
 		   double resid_vector[],   /* Residual vector for the current
 					     * processor */

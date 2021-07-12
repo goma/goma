@@ -172,15 +172,11 @@ char ***resname = NULL;		/* Names of residual equations. */
  */
 int Inter_Mask[MAX_NUM_MATRICES][MAX_VARIABLE_TYPES][MAX_VARIABLE_TYPES] = { { {0} } };
 int Ignore_Deps[MAX_NUM_MATRICES][MAX_VARIABLE_TYPES][MAX_VARIABLE_TYPES];
-struct Frontal_Solver_System *fss = NULL;
 
 /*
  * Prototypes declarations of static functions defined in this file.
  */
 static void set_interaction_masks 
-(Exo_DB *);
-
-extern void setup_front
 (Exo_DB *);
 
 /*****************************************************************************/
@@ -1246,12 +1242,6 @@ set_unknown_map(Exo_DB *exo, Dpi *dpi)
    * While you are at it, run prefront and also load up the element sweep map
    * regardless of solver.  
    */
-  if (Linear_Solver == FRONT) {    
-    fss = (struct Frontal_Solver_System *) 
-	array_alloc(1, 1, sizeof(struct Frontal_Solver_System));
-    setup_front(exo);
-  }
-
   return;
 }
 /*****************************************************************************/

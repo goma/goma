@@ -82,6 +82,7 @@
 #include "sl_auxutil.h"
 #include "sl_matrix_util.h"
 #include "sl_util.h"
+#include "sl_petsc.h"
 #include "sl_util_structs.h"
 #include "wr_dpi.h"
 #include "wr_exo.h"
@@ -366,7 +367,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
   /* sparse variables for fill equation subcycling */
 
 #ifdef COUPLED_FILL
-  static struct Aztec_Linear_Solver_System *ams[NUM_ALSS]={NULL}; 
+  static struct GomaLinearSolverData *ams[NUM_ALSS]={NULL}; 
 #else
   int    *ijaf = NULL;           /* column pointer array for fill equation   */
   double *afill = NULL;	         /* nonzero array  for fill equation         */
@@ -721,7 +722,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     {
       for (i = 0; i < NUM_ALSS; i++)
         {
-           ams[i] = alloc_struct_1(struct Aztec_Linear_Solver_System, 1);
+           ams[i] = alloc_struct_1(struct GomaLinearSolverData, 1);
         }				
     }				
 #ifdef MPI
@@ -793,6 +794,14 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     check_parallel_error("Matrix format / Solver incompatibility");
     ams[JAC]->RowMatrix = EpetraCreateRowMatrix(num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]);
     EpetraCreateGomaProblemGraph(ams[JAC], exo, dpi);
+  }else if (strcmp(Matrix_Format, "petsc") == 0) {
+      err = check_compatible_solver();
+      GOMA_EH(err,
+         "Incompatible matrix solver for petsc, solver must be petsc");
+      check_parallel_error("Matrix format / Solver incompatibility");
+      pg->imtrx = 0;
+      goma_error err = goma_setup_petsc_matrix(ams[pg->imtrx], exo, dpi, num_internal_dofs[pg->imtrx], num_boundary_dofs[pg->imtrx], num_external_dofs[pg->imtrx], pg->imtrx);
+      GOMA_EH(err, "goma_setup_petsc_matrix");
   } else if (strcmp(Matrix_Format, "msr") == 0) {
     log_msg("alloc_MSR_sparse_arrays...");
     alloc_MSR_sparse_arrays(&ija, &a, &a_old, 0, node_to_fill, exo, dpi);
@@ -992,50 +1001,6 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     check_parallel_error("Solver initialization problems");
 #endif /* PARALLEL */
 
-
-    /* Call prefront (or mf_setup) if necessary */
-    if (Linear_Solver == FRONT) {
-#ifdef HAVE_FRONT  
-
-      /* Also got to define these because it wants pointers to these numbers */
-      max_unk_elem = (MAX_PROB_VAR + MAX_CONC) * MDE;
-      one = 1;
-      three = 3;
-
-      /* NOTE: We need a overall flag in the vn_glob struct that tells
-       * whether FULL_D is on anywhere in domain. 
-       * This assumes only one material.  See sl_front_setup for test.
-       * that test needs to be in the input parser. 
-       */
-      if (vn_glob[0]->dg_J_model == FULL_DG) {
-	max_unk_elem = (MAX_PROB_VAR + MAX_CONC)*MDE + 4*vn_glob[0]->modes*4*MDE;
-	three = 0; 
-      }
-	    
-#ifdef PARALLEL
-      if (Num_Proc > 1) GOMA_EH(GOMA_ERROR, "Whoa.  No front allowed with nproc>1");
-      check_parallel_error("Front solver not allowed with nprocs>1");
-#endif /* PARALLEL */
-	  
-      err = mf_setup(&exo->num_elems, &NumUnknowns[pg->imtrx], 
-		     &max_unk_elem, 
-		     &three,
-		     &one,
-		     exo->elem_order_map,
-		     fss->el_proc_assign,
-		     fss->level,
-		     fss->nopdof,
-		     fss->ncn,
-		     fss->constraint,
-		     front_scratch_directory,
-		     &fss->ntra);
-	  
-      GOMA_EH(err,"problems in frontal setup ");
-
-#else /* HAVE_FRONT */
-      GOMA_EH(GOMA_ERROR,"Don't have frontal solver compiled and linked in");
-#endif /* HAVE_FRONT */
-    }
       
     if (nEQM > 0)
       {
@@ -1469,38 +1434,6 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 #endif /* not COUPLED_FILL */
       
     /* Call prefront (or mf_setup) if necessary */
-    if (Linear_Solver == FRONT) {
-#ifdef HAVE_FRONT 	  
-
-      /* Also have to define these because it wants pointers to these numbers */
-          
-      max_unk_elem = (MAX_PROB_VAR + MAX_CONC)*MDE;
-      one	   = 1;
-      three	   = 3;
-      /* NOTE: We need a overall flag in the vn_glob struct that tells whether FULL_DG
-	 is on anywhere in domain.  This assumes only one material.  See sl_front_setup for test.
-	 That test needs to be in the input parser.  */
-      if(vn_glob[0]->dg_J_model == FULL_DG) 
-	  max_unk_elem = (MAX_PROB_VAR + MAX_CONC)*MDE + 4*vn_glob[0]->modes*4*MDE;
-	
-      err = mf_setup(&exo->num_elems, 
-		     &NumUnknowns[pg->imtrx], 
-		     &max_unk_elem, 
-		     &three,
-		     &one,
-		     exo->elem_order_map,
-		     fss->el_proc_assign,
-		     fss->level,
-		     fss->nopdof,
-		     fss->ncn,
-		     fss->constraint,
-		     front_scratch_directory,
-		     &fss->ntra);
-      GOMA_EH(err,"problems in frontal setup ");
-#else /* HAVE_FRONT */
-      GOMA_EH(GOMA_ERROR,"Don't have frontal solver compiled and linked in");
-#endif /* HAVE_FRONT */
-    }
 
     /*
      * Now, just pass pointer to ams structure with all Aztec stuff
@@ -3331,21 +3264,6 @@ fprintf(stderr,"should be not successful %d %d %d \n",inewton,converged,success_
       free(tran->xdbl_dot_old);
     }
   safer_free((void **) &x_update); 
-
-  if (Linear_Solver == FRONT) {
-    free(fss->bc);
-    free(fss->ncod);
-    free(fss->ncn);
-    free(fss->ncn_base);
-    free(fss->mdf);
-    free(fss->nopp);
-    free(fss->el_proc_assign);
-    free(fss->constraint);
-    free(fss->level);
-    free(fss->perm);
-    free(fss->iperm);
-    free(fss->mask);
-  }
 
   Dmatrix_death(Spec_source_inventory,upd->Num_Mat,upd->Max_Num_Species_Eqn+1);
   safer_free( (void **) &Spec_source_lumped_mass);

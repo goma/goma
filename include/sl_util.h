@@ -37,7 +37,7 @@
 #include "exo_struct.h"
 #include "std.h"
 
-struct Aztec_Linear_Solver_System;
+struct GomaLinearSolverData;
 /*
  *  Definitions of Constants for use in mm_fill_fill routines
  */
@@ -82,7 +82,7 @@ struct Aztec_Linear_Solver_System;
 
 extern void sl_init 
 (unsigned int,		/* option flag */
-	struct Aztec_Linear_Solver_System *[],
+	struct GomaLinearSolverData *[],
 	Exo_DB *,		/* all the mesh information */
 	Dpi *,			/* all the distributed processing information */
 	Comm_Ex []);		/* after initialization, on a per proc basis */
@@ -90,10 +90,10 @@ extern void sl_init
 
 extern void sl_free
 (unsigned int ,		/* option_mask                               */
-       struct Aztec_Linear_Solver_System *[]);	/* ams                       */
+       struct GomaLinearSolverData *[]);	/* ams                       */
 
 extern void free_ams
-(struct Aztec_Linear_Solver_System *); /* ptr to ONE such system */
+(struct GomaLinearSolverData *); /* ptr to ONE such system */
 
 extern void set_aztec_options_params 
 ( int [],			/* options */

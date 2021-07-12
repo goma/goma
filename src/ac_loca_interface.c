@@ -223,22 +223,6 @@
 /*****************************************************************************/
 /*****************************************************************************/
 
-#ifdef HAVE_FRONT
-extern int mf_setup
-      (int *,                   /* nelem_glob */
-       int *,                   /* neqn_glob */
-       int *,                   /* mxdofel */
-       int *,                   /* nfullsum */
-       int *,                   /* symflag */
-       int *,                   /* nell_order */
-       int *,                   /* el_proc_assign */
-       int *,                   /* level */
-       int *,                   /* nopdof */
-       int *,                   /* loc_dof */
-       int *,                   /* constraint */
-       const char *,            /* cname */
-       int *);                 /* allocated */
-#endif
 
 /* Define passdown structure: this structure is global to this file, and
  * provides a way to pass variables from the top solve_continuation routine
@@ -263,7 +247,7 @@ struct passdown_struct {
 
   struct Action_Flags *af;	/* GOMA action flags */
   struct elem_side_bc_struct **First_Elem_Side_BC_Array;
-  struct Aztec_Linear_Solver_System *ams; /* ptrs to Aztec linear systems */
+  struct GomaLinearSolverData *ams; /* ptrs to Aztec linear systems */
   double *x;     /* soln vector on this proc */
   double delta_t; /* time step size */
   double theta;   /* parameter to vary time integration from 
@@ -370,7 +354,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
   /* Define continuation problem structures */
   RESULTS_DESCRIPTION_STRUCT *rd=NULL;
 #ifdef COUPLED_FILL
-  struct Aztec_Linear_Solver_System *ams[NUM_ALSS]={NULL}; 
+  struct GomaLinearSolverData *ams[NUM_ALSS]={NULL}; 
 #else /* COUPLED_FILL */
   struct Aztec_Linear_Solver_System *ams[NUM_ALSS]={NULL, NULL}; 
 #endif /* COUPLED_FILL */
@@ -396,10 +380,6 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
   int *p_gsize;
   int tev, tev_post;
   int tnv, tnv_post;
-#ifdef HAVE_FRONT
-  int max_unk_elem, one, three; /* used only for HAVE_FRONT */
-                                /* but must be declared anyway */
-#endif
   unsigned int matrix_systems_mask;
   double *con_par_ptr;
   double lambda, delta_s;
@@ -515,8 +495,8 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
   /* Allocate Aztec system structure(s) */
   for (i = 0; i < NUM_ALSS; i++) 
     {
-      ams[i] = (struct Aztec_Linear_Solver_System *)
-        array_alloc(1, 1, sizeof(struct Aztec_Linear_Solver_System )); 
+      ams[i] = (struct GomaLinearSolverData *)
+        array_alloc(1, 1, sizeof(struct GomaLinearSolverData )); 
     }
 
   /* Set Aztec proc_config array (for many different cases) */
@@ -596,48 +576,6 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
 #ifdef PARALLEL
   check_parallel_error("Continuation setup error");
 #endif
-
-  /* Call prefront (or mf_setup) if necessary */
-  if (Linear_Solver == FRONT)
-    {
-
-#ifdef PARALLEL
-  if (Num_Proc > 1) GOMA_EH(GOMA_ERROR, "Whoa.  No front allowed with nproc>1");  
-  check_parallel_error("Front solver not allowed with nprocs>1");
-#endif
-          
-#ifdef HAVE_FRONT  
-      /* Also got to define these because it wants pointers to these numbers */
-      max_unk_elem = (MAX_PROB_VAR + MAX_CONC)*MDE;
-
-      one = 1;
-      three = 3;
-
-      /* NOTE: We need a overall flag in the vn_glob struct that tells whether FULL_DG
-         is on anywhere in domain.  This assumes only one material.  See sl_front_setup for test.
-         that test needs to be in the input parser.  */
-      if(vn_glob[0]->dg_J_model == FULL_DG) 
-        max_unk_elem = (MAX_PROB_VAR + MAX_CONC)*MDE + 4*vn_glob[0]->modes*4*MDE;
-
-       err = mf_setup(&exo->num_elems, 
-                     &NumUnknowns[pg->imtrx], 
-                     &max_unk_elem, 
-                     &three,
-                     &one,
-                     exo->elem_order_map,
-                     fss->el_proc_assign,
-                     fss->level,
-                     fss->nopdof,
-                     fss->ncn,
-                     fss->constraint,
-                     front_scratch_directory,
-                     &fss->ntra); 
-      GOMA_EH(err,"problems in frontal setup ");
-
-#else
-      GOMA_EH(GOMA_ERROR,"Don't have frontal solver compiled and linked in");
-#endif
-    }
 
 
   /*
@@ -757,21 +695,6 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
       a = ams[JAC]->val;
       if( !save_old_A ) a_old = ams[JAC]->val_old = NULL;
     }
-
-  /* Allocate sparse matrix (FRONT/ESTIFM format) */
-  else if ( strcmp( Matrix_Format, "front") == 0 )
-    {
-      /* Don't allocate any sparse matrix space when using front */
-      ams[JAC]->bindx   = NULL;
-      ams[JAC]->val     = NULL;
-      ams[JAC]->belfry  = NULL;
-      ams[JAC]->val_old = NULL;
-      ams[JAC]->indx  = NULL;
-      ams[JAC]->bpntr = NULL;
-      ams[JAC]->rpntr = NULL;
-      ams[JAC]->cpntr = NULL;
-
-    }
   else
     GOMA_EH(GOMA_ERROR,"Attempted to allocate unknown sparse matrix format");
 
@@ -833,8 +756,6 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
   /* Initialize mass matrix and shifted matrix as needed */
   if(loca_in->Cont_Alg == HP_CONTINUATION || Linear_Stability)
     {
-      if(Linear_Solver == FRONT)
-        GOMA_EH(GOMA_ERROR, "Cannot have mass matrix with frontal solver!");
       passdown.mass_matrix = (double *) array_alloc(1, NZeros+5, sizeof(double));
       init_vec_value(passdown.mass_matrix, 0.0, NZeros+5);
 
@@ -1440,7 +1361,7 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
  *
  */
 {
-  struct Aztec_Linear_Solver_System *ams = &(passdown.ams[JAC]);
+  struct GomaLinearSolverData *ams = &(passdown.ams[JAC]);
   int  err;
   int converged;
   int nits=0; /* num_modnewt_its=0;  */
@@ -1809,7 +1730,7 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
  *    Negative value means linear solver didn't converge.
  */
 {
-  struct Aztec_Linear_Solver_System *ams = &(passdown.ams[JAC]);
+  struct GomaLinearSolverData *ams = &(passdown.ams[JAC]);
   static int first_linear_solver_call=FALSE;
   double *a   = ams->val;       /* nonzero values of a CMSR matrix */
   int    *ija = ams->bindx;     /* column pointer array into matrix "a" */
@@ -1827,16 +1748,6 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
   int   matrix_solved;          /* boolean */
 
 /* Additional values for frontal solver */
-#ifdef HAVE_FRONT
-  int mf_resolve;
-  dbl smallpiv;
-  dbl singpiv;
-  int iautopiv;
-  int iscale;   /* you will have to turn this off for resolves */
-  dbl scaling_max;
-  dbl h_elem_avg;                        /* global average element size for PSPG */
-  dbl U_norm    ;                        /* global average velocity for PSPG */
-#endif
 
   int numUnks      = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
   double *xr=NULL;
@@ -1848,10 +1759,7 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
 
 /* Rescale RHS for scaled Jacobian */
 
-  if (Linear_Solver != FRONT)
-    {
-      row_sum_scaling_scale(ams, xr, passdown.scale);
-    }
+ row_sum_scaling_scale(ams, xr, passdown.scale);
 
 /* Call chosen linear solver */
 
@@ -2008,72 +1916,6 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
           GOMA_EH(GOMA_ERROR, "That linear solver package is not implemented.");
 #endif
           strcpy(stringer, " 1 ");
-          break;
-
-        case FRONT:
-
-          if (Num_Proc > 1) GOMA_EH(GOMA_ERROR, "Whoa.  No front allowed with nproc>1");
-#ifdef HAVE_FRONT  
-
-/* Initialize frontal solver arguments */
-
-          mf_resolve = 1;
-          smallpiv = 1.e-5;
-          singpiv = 1.e-14;
-          iautopiv = 1;
-          iscale = 1;   /* This routine handles resolves only! */
-          scaling_max = 1.0;
-
-          /* get global element size and velocity norm if needed for PSPG or Cont_GLS */
-          if((PSPG && Num_Var_In_Type[pg->imtrx][PRESSURE]) || (Cont_GLS && Num_Var_In_Type[pg->imtrx][VELOCITY1]))
-            {
-              h_elem_avg = global_h_elem_siz(x,
-					     passdown.x_old,
-					     passdown.xdot,
-					     passdown.resid_vector,
-					     passdown.exo,
-					     passdown.dpi);
-              U_norm     = global_velocity_norm(x,
-						passdown.exo,
-						passdown.dpi);
-            }
-          else
-            {
-              h_elem_avg = 0.;
-              U_norm     = 0.;
-            }
-
-            error = mf_solve_lineqn(&mf_resolve, /* re_solve                 */
-                                    xr, /* rhs                               */
-                                    1, /* nrhs                               */
-                                    fss->ncod, /* nsetbc                      */
-                                    fss->bc, /* bcvalue                       */
-                                    &smallpiv, /* smallpiv                   */
-                                    &singpiv, /* singpiv                     */
-                                    &iautopiv, /* iautopiv                   */
-                                    &iscale, /* iscale                       */
-                                    matrix_fill, /* element matrix fill fnc  */
-                                    x, /* lhs                                */
-        /* This list of args */     &scaling_max, /* scaling max             */
-        /* below matrix_fill */     passdown.scale,
-        /* pointer is the arg*/     passdown.ams,
-        /* list for matrix_fill */  x,
-        /* If you change that*/     passdown.resid_vector,
-        /* arglist, you must */     passdown.x_old,
-        /* change the frontal */    passdown.x_older,
-        /* solver.            */    passdown.xdot,
-                                    passdown.xdot_old,
-                                    passdown.x_update,
-                                    &(passdown.delta_t),
-                                    &(passdown.theta),
-                                    First_Elem_Side_BC_Array,
-                                    &(passdown.time_value),
-                                    passdown.exo,
-                                    passdown.dpi,
-                                    &(passdown.dpi->num_universe_nodes),
-                                    &h_elem_avg,
-                                    &U_norm);
-#endif
           break;
 
         default:
@@ -2277,7 +2119,7 @@ void matrix_residual_fill_conwrap(double *x, double *rhs, int matflag)
 {
 
 /* Get first and last elements on this processor */
-  struct Aztec_Linear_Solver_System *ams = &(passdown.ams[JAC]);
+  struct GomaLinearSolverData *ams = &(passdown.ams[JAC]);
   int save_flag = FALSE;
   double h_elem_avg, U_norm;
 
@@ -2291,13 +2133,6 @@ void matrix_residual_fill_conwrap(double *x, double *rhs, int matflag)
     {
       if (passdown.method != ARC_LENGTH_CONTINUATION) save_flag = TRUE;
       matflag = RHS_MATRIX;
-    }
-
-/* If using frontal solver:  just use old matrix */
-  if (Linear_Solver == FRONT)
-    {
-       matflag = RHS_ONLY;
-       save_flag = FALSE;
     }
 
 /* Get global element size and velocity norm if needed for PSPG or Cont_GLS */
@@ -2391,7 +2226,7 @@ void mass_matrix_fill_conwrap(double *x, double *rhs)
  * Return Value:
  */
 {
-  struct Aztec_Linear_Solver_System *ams = &(passdown.ams[JAC]);
+  struct GomaLinearSolverData *ams = &(passdown.ams[JAC]);
   int i, j, mn, nnodes;
   int passes;
   int *ija = ams->bindx;
@@ -2649,7 +2484,7 @@ void matvec_mult_conwrap(double *x, double *y)
  */
 
 {
-  struct Aztec_Linear_Solver_System *ams = &(passdown.ams[JAC]);
+  struct GomaLinearSolverData *ams = &(passdown.ams[JAC]);
   register int j, k, irow, bindx_row;
   int          N, nzeros;
 
@@ -2717,7 +2552,7 @@ void mass_matvec_mult_conwrap(double *x, double *y)
  *       doing continuation with LOCA - EDW.
  */
 {
-  struct Aztec_Linear_Solver_System *ams = &(passdown.ams[JAC]);
+  struct GomaLinearSolverData *ams = &(passdown.ams[JAC]);
   double *m = passdown.mass_matrix;
   register int j, k, irow, bindx_row;
   int          N,  nzeros;
@@ -2791,7 +2626,7 @@ void shifted_matrix_fill_conwrap(double sigma)
  */
 {
 #ifdef HAVE_ARPACK
-  struct Aztec_Linear_Solver_System *ams = &(passdown.ams[JAC]);
+  struct GomaLinearSolverData *ams = &(passdown.ams[JAC]);
   int i;
 
   for(i=0; i<NZeros+1; i++)
@@ -2807,7 +2642,7 @@ void shifted_linear_solver_conwrap(double *x, double *y,
                                    int jac_flag, double tol)
 {
 #ifdef HAVE_ARPACK
-  struct Aztec_Linear_Solver_System *ams = &(passdown.ams[JAC]);
+  struct GomaLinearSolverData *ams = &(passdown.ams[JAC]);
   static int first_linear_solver_call=TRUE;
   static int stab_umf_id = -1;
   double *a;                    /* nonzero values of a CMSR matrix */
@@ -3022,11 +2857,6 @@ void shifted_linear_solver_conwrap(double *x, double *y,
       GOMA_EH(GOMA_ERROR, "That linear solver package is not implemented.");
 #endif
       strcpy(stringer, " 1 ");
-      break;
-
-    case FRONT:
-      /* Frontal solver cannot be used for eigensolves! */
-      GOMA_EH(GOMA_ERROR, "Frontal solver cannot be used for eigensolves!");
       break;
 
     default:
@@ -3372,7 +3202,7 @@ double gsum_double_conwrap(double sum)
  *    The global sum is returned on all processors.
  */
 {
-  struct Aztec_Linear_Solver_System *ams = &(passdown.ams[JAC]);
+  struct GomaLinearSolverData *ams = &(passdown.ams[JAC]);
 
   if (Num_Proc > 1) return AZ_gsum_double(sum, ams->proc_config);
   else return sum;
@@ -3412,7 +3242,7 @@ void random_vector_conwrap(double *x, int numOwnedUnks)
  */
 {
 #ifdef HAVE_ARPACK
-  struct Aztec_Linear_Solver_System *ams = &(passdown.ams[JAC]);
+  struct GomaLinearSolverData *ams = &(passdown.ams[JAC]);
 
   AZ_random_vector(x, ams->data_org, passdown.proc_config);
 #endif

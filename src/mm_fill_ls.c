@@ -11367,7 +11367,7 @@ void compute_xfem_contribution(int N) {
   }
 }
 
-void check_xfem_contribution(int N, struct Aztec_Linear_Solver_System *ams,
+void check_xfem_contribution(int N, struct GomaLinearSolverData *ams,
                              double resid[], double x[], Exo_DB *exo) {
   int irow;
   double eps_standard = 1.e-4;

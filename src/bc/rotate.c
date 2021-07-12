@@ -676,7 +676,7 @@ rotate_mesh_eqn (
     int iconnect_ptr,  		        /* Pointer to beginning of connectivity
 					   list for the current element	        */
     const int dim,		        /* physical dim of problem              */
-    struct Aztec_Linear_Solver_System *ams)
+    struct GomaLinearSolverData *ams)
 
     /****************************************************************************
      *
@@ -1045,7 +1045,7 @@ rotate_momentum_eqn (
     int iconnect_ptr,  		        /* Pointer to beginning of connectivity list
 				           for the current element	         */
     int dim,                            /* physical dim of problem              */
-    struct Aztec_Linear_Solver_System *ams )  
+    struct GomaLinearSolverData *ams )  
 
 /* 
  * Function which corrects the global residual vector "resid_vect" and
@@ -3457,7 +3457,7 @@ void
 rotate_eqns_at_node_2D( int iconn,
 			int dim,
 			int num_local_nodes,
-			struct Aztec_Linear_Solver_System *ams )  
+			struct GomaLinearSolverData *ams )  
 {
   int i, id_mesh, id_mom,  I;
 	
@@ -3485,7 +3485,7 @@ rotate_eqns_at_node_2D( int iconn,
 void rotate_momentum_auto(int id,  /* Elemental stiffness matrix row index */
                           int I,   /* Global node number                   */
                           int dim, /* physical dim of problem              */
-                          struct Aztec_Linear_Solver_System *ams)
+                          struct GomaLinearSolverData *ams)
 
 /*
  * Function which corrects the global residual vector "resid_vect" and
@@ -3578,7 +3578,7 @@ void rotate_momentum_auto(int id,  /* Elemental stiffness matrix row index */
 void rotate_mesh_auto(int id,  /* Elemental stiffness matrix row index */
                           int I,   /* Global node number                   */
                           int dim, /* physical dim of problem              */
-                          struct Aztec_Linear_Solver_System *ams)
+                          struct GomaLinearSolverData *ams)
 
 /*
  * Function which corrects the global residual vector "resid_vect" and

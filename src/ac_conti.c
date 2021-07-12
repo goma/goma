@@ -137,7 +137,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
   int num_pvector=0;		/*  number of solution sensitivity vectors   */
 
 #ifdef COUPLED_FILL
-  struct Aztec_Linear_Solver_System *ams[NUM_ALSS]={NULL};
+  struct GomaLinearSolverData *ams[NUM_ALSS]={NULL};
 #else /* COUPLED_FILL */
   struct Aztec_Linear_Solver_System *ams[NUM_ALSS]={NULL, NULL};
 #endif /* COUPLED_FILL */
@@ -366,7 +366,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 
   for (i = 0; i < NUM_ALSS; i++)
     {
-      ams[i] = alloc_struct_1(struct Aztec_Linear_Solver_System, 1);
+      ams[i] = alloc_struct_1(struct GomaLinearSolverData, 1);
     }
 
 #ifdef MPI
@@ -644,19 +644,6 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 
       a = ams[JAC]->val;
       if( !save_old_A ) a_old = ams[JAC]->val_old = NULL;
-    }
-  else if ( strcmp( Matrix_Format, "front") == 0 )
-    {
-      /* Don't allocate any sparse matrix space when using front */
-      ams[JAC]->bindx   = NULL;
-      ams[JAC]->val     = NULL;
-      ams[JAC]->belfry  = NULL;
-      ams[JAC]->val_old = NULL;
-      ams[JAC]->indx  = NULL;
-      ams[JAC]->bpntr = NULL;
-      ams[JAC]->rpntr = NULL;
-      ams[JAC]->cpntr = NULL;
-
     }
   else
     GOMA_EH(GOMA_ERROR,"Attempted to allocate unknown sparse matrix format");

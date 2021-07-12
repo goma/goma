@@ -58,6 +58,7 @@
 #include "sl_matrix_util.h"
 #include "sl_util.h"
 #include "sl_util_structs.h"
+#include "sl_petsc.h"
 #include "wr_exo.h"
 #include "wr_soln.h"
 #include "dpi.h"
@@ -215,7 +216,7 @@ void solve_problem_segregated(
 
   int *node_to_fill = NULL;
 
-  static struct Aztec_Linear_Solver_System **ams;
+  static struct GomaLinearSolverData **ams;
   /*
    * Variables for time integration
    */
@@ -460,10 +461,10 @@ void solve_problem_segregated(
    * Allocate Aztec structures and initialize all elements to zero
    */
   if (callnum == 1) {
-    ams = (struct Aztec_Linear_Solver_System **)alloc_ptr_1(
+    ams = (struct GomaLinearSolverData **)alloc_ptr_1(
         upd->Total_Num_Matrices);
     for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
-      ams[pg->imtrx] = alloc_struct_1(struct Aztec_Linear_Solver_System, 1);
+      ams[pg->imtrx] = alloc_struct_1(struct GomaLinearSolverData, 1);
     }
   }
 
@@ -583,6 +584,15 @@ void solve_problem_segregated(
         ams[pg->imtrx]->RowMatrix = EpetraCreateRowMatrix(
             num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]);
         EpetraCreateGomaProblemGraph(ams[pg->imtrx], exo, dpi);
+      }
+    } else if (strcmp(Matrix_Format, "petsc") == 0) {
+      err = check_compatible_solver();
+      GOMA_EH(err,
+         "Incompatible matrix solver for petsc, solver must be petsc");
+      check_parallel_error("Matrix format / Solver incompatibility");
+      for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+        goma_error err = goma_setup_petsc_matrix(ams[pg->imtrx], exo, dpi, num_internal_dofs[pg->imtrx], num_boundary_dofs[pg->imtrx], num_external_dofs[pg->imtrx], pg->imtrx);
+        GOMA_EH(err, "goma_setup_petsc_matrix");
       }
     } else if (strcmp(Matrix_Format, "msr") == 0) {
 

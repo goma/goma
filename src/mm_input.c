@@ -6512,6 +6512,9 @@ rd_solver_specs(FILE *ifp,
   } else if (strcmp(Matrix_Solver, "stratimikos") == 0) {
     Linear_Solver = STRATIMIKOS;
     is_Solver_Serial = FALSE;
+  } else if (strcmp(Matrix_Solver, "petsc") == 0) {
+    Linear_Solver = PETSC_SOLVER;
+    is_Solver_Serial = FALSE;
   } else {
     Linear_Solver = AZTEC;
     is_Solver_Serial = FALSE;
@@ -12643,10 +12646,19 @@ translate_command_line( int argc,
 		}	
 		else if( strcmp( argv[istr],"-brk") == 0 )
 		{
-                  Brk_Flag = 1;
+		  GOMA_EH(GOMA_ERROR, "Brk is no longer supported");
+		}
+		else if( strcmp( argv[istr],"-petsc") == 0 || strcmp( argv[istr],"-petsc_opts") == 0)
+		{
                   (*nclc)++;
                   istr++;
+		  int petsc_arg_length = strlen(argv[istr]) + 1;
+		  GomaPetscOptions = malloc(sizeof(char) * petsc_arg_length);
+		  GomaPetscOptionsStrLen = petsc_arg_length;
+		  strncpy(GomaPetscOptions, argv[istr], petsc_arg_length);
+		  istr++;
                   clc[*nclc]->type = NOECHO;
+		  ECHO("NOECHO", NULL) ;
 		}
 /*
  * Unknown '-' option: print an error and abort

@@ -31,7 +31,7 @@
 #include "rf_fem_const.h"
 #include "std.h"
 
-struct Aztec_Linear_Solver_System;
+struct GomaLinearSolverData;
 struct elem_side_bc_struct;
 #ifdef EXTERN
 #undef EXTERN
@@ -53,7 +53,7 @@ struct LS_Mass_Lumped_Penalty {
 };
 
 EXTERN int integrate_explicit_eqn
-(struct Aztec_Linear_Solver_System *, /* ams - cf "sl_util_structs.h"  */
+(struct GomaLinearSolverData *, /* ams - cf "sl_util_structs.h"  */
        double [],		/* rf - residual for fill equation only      */
        double [],		/* xf - vector with fill at nodes only       */
        double [],		/* xf_old - vector with fill at nodes only   */

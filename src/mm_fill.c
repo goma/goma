@@ -89,6 +89,7 @@
 #include "rf_node_const.h"
 #include "sl_util.h"
 #include "sl_util_structs.h"
+#include "sl_petsc.h"
 #include "stdbool.h"
 #include "wr_side_data.h"
 
@@ -110,7 +111,7 @@ extern int PRS_mat_ielem;
 static void load_lec 
 ( Exo_DB*,                 /* Exodus database pointer */
 	int ,                    /* element number we are working on */
-	struct Aztec_Linear_Solver_System *,
+	struct GomaLinearSolverData *,
 	double [],		/* Solution vector */
 	double [],		/* Residual vector */
 	double *);              /* element stiffness Matrix for frontal solver*/
@@ -137,7 +138,7 @@ static void zero_lec(void);
  *   0 : Successful completion.
  *************************************************************************/
 
-int matrix_fill_full(struct Aztec_Linear_Solver_System *ams,
+int matrix_fill_full(struct GomaLinearSolverData *ams,
 		     double x[],
 		     double resid_vector[],
 		     double x_old[],
@@ -302,7 +303,7 @@ int matrix_fill_full(struct Aztec_Linear_Solver_System *ams,
 
 int
 matrix_fill(
-	    struct Aztec_Linear_Solver_System *ams,
+	    struct GomaLinearSolverData *ams,
 	    double x[],			/* Solution vector */
 	    double resid_vector[],		/* Residual vector */
 	    double x_old[],		/* Solution vector , previous last time step */
@@ -3583,7 +3584,7 @@ matrix_fill(
  */
 int
 matrix_fill_stress(
-	    struct Aztec_Linear_Solver_System *ams,
+	    struct GomaLinearSolverData *ams,
 	    double x[],			/* Solution vector */
 	    double resid_vector[],		/* Residual vector */
 	    double x_old[],		/* Solution vector , previous last time step */
@@ -5006,7 +5007,7 @@ matrix_fill_stress(
 static void
 load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 	 int ielem,            /* Element number we are working on */
-	 struct Aztec_Linear_Solver_System *ams,		
+	 struct GomaLinearSolverData *ams,		
 	 double x[],		/* Solution vector */
 	 double resid_vector[],/* Residual vector */
 	 dbl *estifm)          /* element stiffness Matrix for frontal solver*/
@@ -5023,14 +5024,12 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
       * Revised: 
       *************************************************************************/
 {
-  int e, v, i, j, k, l, pe, pv;
-  int ivar, ieqn, kt, kt1, w, w1;
-  int peqn, pvar, iunks = -1, idof, ldof, dofs;
-  int I, J, K, m, n, nunks = -1;
+  int e, v, i, j, pe, pv;
+  int dofs;
+  int I, J, K; 
   int gnn, ie, ke, kv, nvdof;
-  int je, ja, face, index, neighbor, ledof;
+  int je, ja, ledof;
   int je_new;
-  NODAL_VARS_STRUCT *nv;
   struct Element_Indices *ei_ptr;
 #ifdef DEBUG_LEC
   char lec_name[256], ler_name[256];
@@ -5054,200 +5053,10 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 
   if (strcmp(Matrix_Format, "epetra") == 0) {
     EpetraLoadLec(ielem, ams, resid_vector);
-  } else if (Linear_Solver == FRONT) {   /* Load up estifm in case a frontal solver is being used */
-    if (af->Assemble_Jacobian) {
-      memset(estifm, 0, sizeof(double)*fss->ncn[ielem]*fss->ncn[ielem]);
-      ivar = 0; 
-      ieqn = 0; 
-      for (i = 0; i < ei[pg->imtrx]->num_local_nodes; i++) { 
-	for (j = 0; j < (MAX_VARIABLE_TYPES);  j++) { 
-	  kt = 1;
-	  /*
-	   *  HKM -> this was Max_Num_Spec in the pd struct
-	   *         However, I think it is more appropriate to
-	   *         change it to this
-	   */
-	  if (j == MASS_FRACTION) {
-	    kt = upd->Max_Num_Species_Eqn;
-	  }
-	  for (w = 0 ; w < kt; w++) {
-	    peqn = upd->ep[pg->imtrx][j];		      
-	    if (peqn != -1) {
-	      if (j == MASS_FRACTION) peqn = MAX_PROB_VAR + w;
-	      idof = ei[pg->imtrx]->ln_to_first_dof[j][i];
-	      I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
-              if (Dolphin[pg->imtrx][I][j] > 0) {
-		I = ei[pg->imtrx]->gnn_list[j][idof];
-		nv = Nodes[I]->Nodal_Vars_Info[pg->imtrx];
-		iunks = get_nv_ndofs_modMF(nv, j);
-	      }
-	      if (idof != -1) {
-		for (n = 0; n < iunks; n++) { 
-		  ivar = 0; 
-		  for (l = 0; l < ei[pg->imtrx]->num_local_nodes; l++) { 
-		    for (k = 0; k < (MAX_VARIABLE_TYPES) ; k++) { 	  
-		      kt1 = 1;
-		      if (k == MASS_FRACTION) kt1 = upd->Max_Num_Species_Eqn;
-		      for (w1 = 0 ; w1 < kt1; w1++) {
-			pvar = upd->vp[pg->imtrx][k]; 
-			if (k == MASS_FRACTION) pvar = MAX_PROB_VAR + w1;
-			if (pvar != -1) {
-
-			  if (ei[pg->imtrx]->owningElementForColVar[k] != ielem) {
-			    if (ei[pg->imtrx]->owningElementForColVar[k] != -1) {
-			      GOMA_EH(GOMA_ERROR, "Frontal solver can't handle Shell element jacobians\n");
-			    }
-			  }
-			  ldof = ei[pg->imtrx]->ln_to_first_dof[k][l];
-			  J = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + l];
-			  if (Dolphin[pg->imtrx][J][k] > 0) {
-			    J = ei[pg->imtrx]->gnn_list[k][ldof];
-			    nv = Nodes[J]->Nodal_Vars_Info[pg->imtrx];
-			    nunks = get_nv_ndofs_modMF(nv, k);
-			  }
-			  if (ldof != -1) {	      
-			    for (m = 0; m < nunks; m++ ) { 
-			      estifm[ivar*fss->ncn[ielem] + ieqn]
-                                = lec->J[LEC_J_INDEX(peqn,pvar,idof,ldof)];
-			      ldof++; 
-			      ivar++; 
-			    } 
-			  } 
-			}
-		      }
-		    }
-		  } 
-		  ieqn++; 
-		  idof++; 
-		} 
-	      }
-	    } 
-	  } 
-	}
-      }
-      /*
-       * Now add on off-element pieces for the REAL specia
-       * FULL_DG case
-       */
-      if (vn->dg_J_model == FULL_DG) {
-	ivar = 0; 
-	ieqn = 0;
-	for (i = 0; i < ei[pg->imtrx]->num_local_nodes; i++) { 
-	  for (j = 0; j < MAX_VARIABLE_TYPES;  j++) { 
-	    kt = 1;
-	    if (j == MASS_FRACTION) kt = upd->Max_Num_Species_Eqn;
-	    for (w = 0 ; w < kt; w++) {
-	      peqn = upd->ep[pg->imtrx][j];
-	      if (peqn != -1) {
-		if (j == MASS_FRACTION) peqn = MAX_PROB_VAR + w;
-		idof = ei[pg->imtrx]->ln_to_first_dof[j][i];
-		I =  Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
-		if (idof != -1) {
-		  I = ei[pg->imtrx]->gnn_list[j][idof];
-		}
-	        nv = Nodes[I]->Nodal_Vars_Info[pg->imtrx];
-		iunks = get_nv_ndofs_modMF(nv, j);
-		if (idof != -1) { 
-		  for (n = 0; n < iunks; n++) { 
-		    if ((j >= POLYMER_STRESS11 && j <= POLYMER_STRESS33) ||
-		        (j >= POLYMER_STRESS11_1 && j <= POLYMER_STRESS33_7))
-		      {
-			ivar = fss->ncn_base[ielem]; 
-			for (face = 0; face < ei[pg->imtrx]->num_sides; face ++) {
-			  /* load the neighbor pointer */
-			  index = exo->elem_elem_pntr[ielem] + face;		      
-			  /* load the neighbor element number */
-			  neighbor = exo->elem_elem_list[index];
-			  if (neighbor != -1) {  
-			    /* find the local node number of neighbor corresp. to centroid */
-			    l = centroid_node(Elem_Type(exo, neighbor));  
-			    /* find the global node number of this neighbor centroid */
-			    J =  exo->elem_node_list[exo->elem_node_pntr[neighbor] + l];	  
-			    for (k = 0; k < MAX_VARIABLE_TYPES; k++) {		      
-			      kt1 = 1;
-			      if (k == MASS_FRACTION) {
-				kt1 = upd->Max_Num_Species_Eqn;
-			      }    
-			      for (w1 = 0 ; w1 < kt1; w1++) {
-				pvar = upd->vp[pg->imtrx][k]; 
-				if (k == MASS_FRACTION) pvar = MAX_PROB_VAR + w1;
-				if (pvar != -1) {
-				  if (ei[pg->imtrx]->owningElementForColVar[k] != ielem) {
-				    if (ei[pg->imtrx]->owningElementForColVar[k] != -1) {
-				      GOMA_EH(GOMA_ERROR, "Frontal solver can't handle Shell element jacobians\n");
-				    }
-				  }
-				  ldof = ei[pg->imtrx]->ln_to_first_dof[k][l];
-				  nv = Nodes[J]->Nodal_Vars_Info[pg->imtrx];
-				  nunks = get_nv_ndofs_modMF(nv, k);
-				  if (ldof != -1) {
-				    for (m = 0; m < nunks; m++ )  { 
-				      if ((k >= POLYMER_STRESS11 && k <= POLYMER_STRESS33) ||
-					  (k >= POLYMER_STRESS11_1 && k <= POLYMER_STRESS33_7)) 
-					{
-					  if (k == j) {
-					    estifm[ivar*fss->ncn[ielem] + ieqn] = 
-                                              lec->J_stress_neighbor[LEC_J_STRESS_INDEX(face,idof,peqn,ldof)];
-					  }
-					  ldof++; 
-					  ivar++; 
-					}
-				    }
-				  }
-				} 
-			      }
-			    }
-			  }
-			}
-		      }
-		    idof++; 
-		    ieqn++; 
-		  }
-		}
-	      }
-	    } 
-	  } 
-	}
-      }
-    }
-      
-    /* now load up the Residual vector
-     * since Randy says it is needed for frontal solver
-     */
-    for (e = V_FIRST; e < V_LAST; e++) {
-      pe = upd->ep[pg->imtrx][e];
-      if (pe != -1) {
-	if (e == R_MASS) {
-	  for (ke = 0; ke < upd->Max_Num_Species_Eqn; ke++) {
-	    dofs = ei[pg->imtrx]->dof[e];
-	    for (i = 0; i < dofs; i++) {
-	      ledof = ei[pg->imtrx]->lvdof_to_ledof[e][i];
-	      je_new = ei[pg->imtrx]->ieqn_ledof[ledof] + ke;
-	      gnn   = ei[pg->imtrx]->gnn_list[e][i];
-	      nvdof = ei[pg->imtrx]->Baby_Dolphin[e][i];
-	      ie = Index_Solution(gnn, e, ke, nvdof,
-				  ei[pg->imtrx]->matID_ledof[ledof], pg->imtrx);
-	      if (je_new != ie) {
-		if (ie != je_new) {
-		  fprintf(stderr, "Oh fiddlesticks: ie = %d, je_new = %d\n",
-			  ie, je_new);
-		  GOMA_EH(GOMA_ERROR, "LEC indexing error");
-		}
-	      }
-              resid_vector[ie] += lec->R[LEC_R_INDEX(MAX_PROB_VAR + ke,i)];
-	    }
-	  }
-	} else {
-	  dofs = ei[pg->imtrx]->dof[e];
-	  for (i = 0; i < dofs; i++) {
-	    ledof = ei[pg->imtrx]->lvdof_to_ledof[e][i];
-	    ie = ei[pg->imtrx]->ieqn_ledof[ledof];
-            resid_vector[ie] += lec->R[LEC_R_INDEX(pe,i)];
-	  }
-	}
-      }
-    }     
-  } /* Linear_Solver == FRONT */
+  } 
+  else if (strcmp(Matrix_Format, "petsc") == 0) {
+    petsc_load_lec(ielem, ams, resid_vector);
+  } 
   else {
     /* load up matrix in MSR format */
     if (strcmp(Matrix_Format, "msr") == 0) {

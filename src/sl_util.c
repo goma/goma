@@ -108,7 +108,7 @@ static int Num_Calls = 0;
 
 void 
 sl_init(unsigned int option_mask,		/* option flag */
-	struct Aztec_Linear_Solver_System *ams[],
+	struct GomaLinearSolverData *ams[],
 	Exo_DB *exo,
 	Dpi *dpi,
 	Comm_Ex cx[])
@@ -122,7 +122,7 @@ sl_init(unsigned int option_mask,		/* option flag */
 #ifndef COUPLED_FILL
   int Do_Explicit_Fill;
 #endif /* not COUPLED_FILL */
-  struct Aztec_Linear_Solver_System *A;
+  struct GomaLinearSolverData *A;
   int imtrx = pg->imtrx;
 
 
@@ -494,7 +494,7 @@ sl_init(unsigned int option_mask,		/* option flag */
 
 void 
 sl_free ( unsigned int option_mask,
-          struct Aztec_Linear_Solver_System *ams[] )
+          struct GomaLinearSolverData *ams[] )
 {
   if ( option_mask & 1 )
     {
@@ -521,7 +521,7 @@ sl_free ( unsigned int option_mask,
  */
 
 void
-free_ams(struct Aztec_Linear_Solver_System *a)
+free_ams(struct GomaLinearSolverData *a)
 {
   safer_free((void **) &(a->data_org));
   safer_free((void **) &(a->val));
@@ -637,6 +637,11 @@ set_aztec_options_params ( int options[],
   else if ( strcmp(Matrix_Solver, "stratimikos") == 0 )
   {
       Linear_Solver = STRATIMIKOS;
+      options[AZ_solver] = -1;
+  }
+  else if ( strcmp(Matrix_Solver, "petsc") == 0 )
+  {
+      Linear_Solver = PETSC_SOLVER;
       options[AZ_solver] = -1;
   }
   else if ( strcmp(Matrix_Solver, "aztecoo") == 0 )

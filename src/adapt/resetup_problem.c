@@ -181,7 +181,7 @@ int resetup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
   return 0;
 }
 
-int resetup_matrix(struct Aztec_Linear_Solver_System **ams, Exo_DB *exo, Dpi* dpi) {
+int resetup_matrix(struct GomaLinearSolverData **ams, Exo_DB *exo, Dpi* dpi) {
   if (strcmp(Matrix_Format, "epetra") == 0) {
   for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
     EpetraDeleteRowMatrix(ams[pg->imtrx]->RowMatrix);

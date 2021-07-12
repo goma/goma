@@ -32,7 +32,7 @@
 #include "mm_fill.h"
 #include "std.h"
 
-struct Aztec_Linear_Solver_System;
+struct GomaLinearSolverData;
 
 EXTERN int beer_belly(void);
 
@@ -146,7 +146,7 @@ EXTERN void alloc_MSR_sparse_arrays /* mm_fill_util.c */
      Exo_DB *,                      /* exo - ptr to the whole mesh */
      Dpi *);                        /* dpi - distributed processing info */
 
-EXTERN void alloc_VBR_sparse_arrays(struct Aztec_Linear_Solver_System *,
+EXTERN void alloc_VBR_sparse_arrays(struct GomaLinearSolverData *,
                                     Exo_DB *, /* ptr to the whole mesh */
                                     Dpi *);   /* distributed processing info */
 
@@ -162,7 +162,7 @@ EXTERN void zero_lec_column                       /* mm_fill_util.c */
 
 EXTERN int find_VBR_index(const int, /* Block row index */
                           const int, /* Block column index */
-                          struct Aztec_Linear_Solver_System *);
+                          struct GomaLinearSolverData *);
 
 EXTERN double newshape(const double[], /* xi - local element coordinates */
                        const int,      /* Ielem_type - element type      */

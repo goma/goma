@@ -187,6 +187,9 @@ char	Echo_Input_File[MAX_FNL]="\0";	/* echo of problem def file  */
 
 int Brk_Flag = 0;
 
+char *GomaPetscOptions = NULL;
+int GomaPetscOptionsStrLen = 0;
+
 char    DomainMappingFile[MAX_FNL]="\0"; /* Domain Mapping file. Maps the materials
 				       and names of material boundaries
 				       specified in this file into this file
@@ -1068,7 +1071,8 @@ void
 echo_command_line( int argc, char *argv[], char *echo_file)
 {
 	int istr=0;
-	char echo_string[MAX_CHAR_IN_INPUT]="\0";
+	char *echo_string= malloc(sizeof(char) * 65536);
+        echo_string[0] = '\0';
 	time_t start_time;
 	char *time_string;
 	
@@ -1090,7 +1094,7 @@ echo_command_line( int argc, char *argv[], char *echo_file)
 	SPF(endofstring(echo_string),"Version : %s", GOMA_VERSION);
 	
 	ECHO(echo_string,echo_file);
-	
+        free(echo_string);
 }
 
 /***********************************************************************/

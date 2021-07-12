@@ -12,14 +12,14 @@
 extern "C" {
 #endif
 
-void EpetraCreateGomaProblemGraph(struct Aztec_Linear_Solver_System *ams, Exo_DB *exo, Dpi *dpi);
+void EpetraCreateGomaProblemGraph(struct GomaLinearSolverData *ams, Exo_DB *exo, Dpi *dpi);
 
-void EpetraLoadLec(int ielem, struct Aztec_Linear_Solver_System *ams,
+void EpetraLoadLec(int ielem, struct GomaLinearSolverData *ams,
                    double resid_vector[]);
 
-void EpetraRowSumScale(struct Aztec_Linear_Solver_System *ams, double *b, double *scale);
+void EpetraRowSumScale(struct GomaLinearSolverData *ams, double *b, double *scale);
 
-void EpetraSetDiagonalOnly(struct Aztec_Linear_Solver_System *ams, int GlobalRow);
+void EpetraSetDiagonalOnly(struct GomaLinearSolverData *ams, int GlobalRow);
 
 #ifdef __cplusplus
 } // end of extern "C"

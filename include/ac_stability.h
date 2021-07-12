@@ -28,7 +28,7 @@
 #include "dpi.h"
 #include "ac_update_parameter.h"
 
-struct Aztec_Linear_Solver_System;
+struct GomaLinearSolverData;
 struct Results_Description;
 
 /* Settings for Linear_Stability flag */
@@ -56,7 +56,7 @@ EXTERN int LSA_number_wave_numbers; /* length of LSA_wave_numbers */
 EXTERN int LSA_current_wave_number; /* index of current LSA_wave_number */
 
 EXTERN int solve_stability_problem /* ac_solve.c */
-(struct Aztec_Linear_Solver_System *,           
+(struct GomaLinearSolverData *,           
            double[],                     /* x - Value of the solution vector */
            double,                       /* delta_t - time step size */
            double,                       /* theta - parm to vary time integration
@@ -84,7 +84,7 @@ EXTERN int solve_stability_problem /* ac_solve.c */
        Dpi *);                 /* distributed processing information */
 
 EXTERN int solve_full_stability_problem /* ac_solve.c */
-(struct Aztec_Linear_Solver_System *,           
+(struct GomaLinearSolverData *,           
            double[],                     /* x - Value of the solution vector */
            double,                       /* delta_t - time step size */
            double,                       /* theta - parm to vary time integration
@@ -112,7 +112,7 @@ EXTERN int solve_full_stability_problem /* ac_solve.c */
        Dpi *);                 /* distributed processing information */
 
 EXTERN int solve_3D_of_2D_stability_problem /* ac_solve.c */
-(struct Aztec_Linear_Solver_System *,           
+(struct GomaLinearSolverData *,           
            double[],                     /* x - Value of the solution vector */
            double,                       /* delta_t - time step size */
            double,                       /* theta - parm to vary time integration

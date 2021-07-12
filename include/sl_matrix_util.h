@@ -22,7 +22,7 @@
 #include "exo_struct.h"
 #include "sl_lu.h"
 
-struct Aztec_Linear_Solver_System;
+struct GomaLinearSolverData;
 #ifdef EXTERN
 #undef EXTERN
 #endif
@@ -57,13 +57,13 @@ EXTERN void print_msr_matrix	/* sl_matrix_util.c                          */
        double *);		/* x - solution vector                       */
 
 EXTERN void print_vbr_matrix	/* sl_matrix_util.c                          */
-( struct Aztec_Linear_Solver_System *, /* matrix info                  */
+( struct GomaLinearSolverData *, /* matrix info                  */
         Exo_DB *,		/* ptr to the whole mesh                     */
         Dpi    *,		/* distributed processing info               */
         int [] );		/* number of unknowns per node               */
 
 EXTERN void row_sum_scaling_scale /* sl_matrix_util.c                        */
-( struct Aztec_Linear_Solver_System *,
+( struct GomaLinearSolverData *,
 	double [],		/* scaling matrix                            */
 	double []);		/* b - rhs                                   */
 
@@ -92,16 +92,16 @@ EXTERN void row_sum_scale_VBR
 	double *);
 
 void
-row_sum_scale_epetra(struct Aztec_Linear_Solver_System *ams, double *b, double *scale);
+row_sum_scale_epetra(struct GomaLinearSolverData *ams, double *b, double *scale);
 
 EXTERN void matrix_scaling 
-( struct Aztec_Linear_Solver_System *,
+( struct GomaLinearSolverData *,
         double *,
         double ,
         double *);
 
 EXTERN void row_sum_scaling
-( struct Aztec_Linear_Solver_System *,
+( struct GomaLinearSolverData *,
 	double []);
 
 EXTERN void vector_scaling

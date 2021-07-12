@@ -23,7 +23,7 @@
 #include "mm_bc.h"
 #include "std.h"
 
-struct Aztec_Linear_Solver_System;
+struct GomaLinearSolverData;
 struct elem_side_bc_struct;
 #ifdef EXTERN
 #undef EXTERN
@@ -38,7 +38,7 @@ struct elem_side_bc_struct;
 #endif
 
 extern int matrix_fill_full
-(struct Aztec_Linear_Solver_System *,
+(struct GomaLinearSolverData *,
        double [],   /* x - Solution vector                       */	
        double [],   /* resid_vector - Residual vector            */
        double [],   /* x_old -  previous last time step          */	
@@ -59,7 +59,7 @@ extern int matrix_fill_full
 
 
 EXTERN int matrix_fill
-(struct Aztec_Linear_Solver_System *,	
+(struct GomaLinearSolverData *,	
        double [],		/* x - Solution vector                       */
        double [],		/* resid_vector - Residual vector            */
        double [],		/* x_old -  previous last time step          */
@@ -92,7 +92,7 @@ EXTERN int matrix_fill
        int );
 
 EXTERN int matrix_fill_stress
-(struct Aztec_Linear_Solver_System *,    
+(struct GomaLinearSolverData *,    
        double [],               /* x - Solution vector                       */
        double [],               /* resid_vector - Residual vector            */
        double [],               /* x_old -  previous last time step          */

@@ -22,7 +22,7 @@
 #include "exo_struct.h"
 #include "mm_more_utils.h"
 
-struct Aztec_Linear_Solver_System;
+struct GomaLinearSolverData;
 struct elem_side_bc_struct;
 #ifdef EXTERN
 #undef EXTERN
@@ -61,7 +61,7 @@ struct elem_side_bc_struct;
 #define SCALED_RESIDUAL_TOLERANCE_CUTOFF (1.0e-8) /* don't report scaled error if values
 						    * are this small */
 EXTERN void
-numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
+numerical_jacobian_compute_stress(struct GomaLinearSolverData *ams,
 		   double x[],	/* Solution vector for the current processor */
 		   double resid_vector[],   /* Residual vector for the current
 					     * processor */
@@ -94,7 +94,7 @@ numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
 
 
 EXTERN void numerical_jacobian	/* mm_numjac.c                               */
-(struct Aztec_Linear_Solver_System *, /* ams                           */
+(struct GomaLinearSolverData *, /* ams                           */
        double [],		/* x - soln vector for current processor     */
        double [],		/* resid_vector -for current processor       */
        double ,			/* delta_t - time step size                  */

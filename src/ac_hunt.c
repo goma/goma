@@ -63,23 +63,6 @@
 #include "wr_exo.h"
 #include "wr_soln.h"
 
-#ifdef HAVE_FRONT
-extern int mf_setup
-(int *,			/* nelem_glob */
-       int *,			/* neqn_glob */
-       int *,			/* mxdofel */
-       int *,			/* nfullsum */
-       int *,			/* symflag */
-       int *,			/* nell_order */
-       int *,			/* el_proc_assign */
-       int *,			/* level */
-       int *,			/* nopdof */
-       int *,			/* loc_dof */
-       int *,			/* constraint */
-       const char *,		/* cname */
-       int *);			/* allocated */
-#endif
-
 #include "sl_util.h"		/* defines sl_init() */
 #include "el_quality.h"
 
@@ -132,7 +115,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   double **x_sens_p=NULL;     /* solution sensitivity for parameters */
   int num_pvector=0;          /*  number of solution sensitivity vectors */
 #ifdef COUPLED_FILL
-  struct Aztec_Linear_Solver_System *ams[NUM_ALSS]={NULL};
+  struct GomaLinearSolverData *ams[NUM_ALSS]={NULL};
 #else /* COUPLED_FILL */
   struct Aztec_Linear_Solver_System *ams[NUM_ALSS]={NULL, NULL};
 #endif /* COUPLED_FILL */
@@ -204,10 +187,6 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   int		tev_post;	/* total number of elem variables and kinds
 					   for post processing */
   double        *gv;
-
-#ifdef HAVE_FRONT
-  int max_unk_elem, one, three; /* variables used as mf_setup arguments*/
-#endif
 
   unsigned int
   matrix_systems_mask;
@@ -386,8 +365,8 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 
   for (i=0;i<NUM_ALSS;i++)
     {
-      ams[i] = (struct Aztec_Linear_Solver_System *)
-	array_alloc(1, 1, sizeof(struct Aztec_Linear_Solver_System ));
+      ams[i] = (struct GomaLinearSolverData *)
+	array_alloc(1, 1, sizeof(struct GomaLinearSolverData ));
     }
 
 #ifdef MPI
@@ -543,48 +522,6 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   dhunt_par = dhunt_par_old = dhunt_par_0;
     if (dhunt_par_0 > dhunt_par_max)
     { dhunt_par_0 = dhunt_par_max; }
-
-  /* Call prefront (or mf_setup) if necessary */
-  if (Linear_Solver == FRONT)
-  {
-    if (Num_Proc > 1) GOMA_EH(GOMA_ERROR, "Whoa.  No front allowed with nproc>1");
-
-#ifdef HAVE_FRONT
-    /* Also got to define these because it wants pointers to these numbers */
-
-    max_unk_elem = (MAX_PROB_VAR + MAX_CONC)*MDE;
-    one = 1;
-    three = 3;
-
-    /* NOTE: We need a overall flag in the vn_glob struct that tells whether FULL_DG
-       is on anywhere in domain.  This assumes only one material.  See sl_front_setup for test.
-       that test needs to be in the input parser.  */
-
-    if(vn_glob[0]->dg_J_model == FULL_DG)
-    {
-      max_unk_elem = (MAX_PROB_VAR + MAX_CONC)*MDE + 4*vn_glob[0]->modes*4*MDE;
-    }
-
-    err = mf_setup(&exo->num_elems,
-		   &NumUnknowns[pg->imtrx], 
-		   &max_unk_elem,
-		   &three,
-		   &one,
-		   exo->elem_order_map,
-		   fss->el_proc_assign,
-		   fss->level,
-		   fss->nopdof,
-		   fss->ncn,
-		   fss->constraint,
-		   front_scratch_directory,
-		   &fss->ntra);
-    GOMA_EH(err,"problems in frontal setup ");
-
-#else
-    GOMA_EH(GOMA_ERROR,"Don't have frontal solver compiled and linked in");
-#endif
-  }
-
 
   /*
          *  if compute parameter sensitivities, allocate space for solution

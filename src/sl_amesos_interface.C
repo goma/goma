@@ -53,12 +53,12 @@
 #include "Amesos_ConfigDefs.h"
 #include "sl_util_structs.h"
 
-static void GomaMsr2EpetraCsr ( struct Aztec_Linear_Solver_System *,
+static void GomaMsr2EpetraCsr ( struct GomaLinearSolverData *,
 				Epetra_CrsMatrix *);
 
 void
 amesos_solve_msr( char *choice,
-		  struct Aztec_Linear_Solver_System *ams,
+		  struct GomaLinearSolverData *ams,
 		  double *x_, 
 		  double *b_,
 		  int NewMatrix,
@@ -174,7 +174,7 @@ amesos_solve_msr( char *choice,
  * @return 0 on success
  */
 int amesos_solve_epetra( char *choice,
-			 struct Aztec_Linear_Solver_System *ams,
+			 struct GomaLinearSolverData *ams,
 			 double *x_,
 			 double *resid_vector,
 			 int imtrx ) {
@@ -274,7 +274,7 @@ int amesos_solve_epetra( char *choice,
 }
 
 
-static void GomaMsr2EpetraCsr ( struct Aztec_Linear_Solver_System *ams,
+static void GomaMsr2EpetraCsr ( struct GomaLinearSolverData *ams,
 				Epetra_CrsMatrix *A )
 
 {
@@ -353,7 +353,7 @@ static void GomaMsr2EpetraCsr ( struct Aztec_Linear_Solver_System *ams,
 
 }
 
-void * construct_Epetra_CrsMatrix(  struct Aztec_Linear_Solver_System *ams )
+void * construct_Epetra_CrsMatrix(  struct GomaLinearSolverData *ams )
 {
 #ifdef EPETRA_MPI
   Epetra_MpiComm comm(MPI_COMM_WORLD);

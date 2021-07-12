@@ -197,7 +197,7 @@ print_msr_matrix(int n, int *ija, double *a, double *x)
 /*******************************************************************************/
 
 void
-print_vbr_matrix( struct Aztec_Linear_Solver_System *ams, /* matrix info */
+print_vbr_matrix( struct GomaLinearSolverData *ams, /* matrix info */
                   Exo_DB *exo,           /* ptr to the whole mesh */
                   Dpi *dpi,              /* distributed processing info */
                   int unknowns_per_node[] )
@@ -465,7 +465,7 @@ gmax_double
 */
 
 void 
-row_sum_scaling_scale ( struct Aztec_Linear_Solver_System *ams,
+row_sum_scaling_scale ( struct GomaLinearSolverData *ams,
 			double b[],
 			double scale[])
 {
@@ -487,6 +487,8 @@ row_sum_scaling_scale ( struct Aztec_Linear_Solver_System *ams,
                       scale);
   } else if (strcmp(Matrix_Format, "epetra") == 0) {
     row_sum_scale_epetra(ams, b, scale);
+  } else if (strcmp(Matrix_Format, "petsc") == 0) {
+    //skip
   } else {
     GOMA_EH(GOMA_ERROR, "Unknown sparse matrix format");
   }
@@ -711,7 +713,7 @@ row_sum_scale_VBR ( int     N,
 } /* END of routine row_sum_scale_VBR */
 
 void
-row_sum_scale_epetra(struct Aztec_Linear_Solver_System *ams, double *b, double *scale)
+row_sum_scale_epetra(struct GomaLinearSolverData *ams, double *b, double *scale)
 {
   EpetraRowSumScale(ams, b, scale);
 }
@@ -725,7 +727,7 @@ row_sum_scale_epetra(struct Aztec_Linear_Solver_System *ams, double *b, double *
  */
 
 void
-matrix_scaling( struct Aztec_Linear_Solver_System *ams,
+matrix_scaling( struct GomaLinearSolverData *ams,
                 double *a,
                 double factor,
                 double *scale)
@@ -841,7 +843,7 @@ row_scaling ( const int N,
  */
 
 void 
-row_sum_scaling( struct Aztec_Linear_Solver_System *ams,
+row_sum_scaling( struct GomaLinearSolverData *ams,
 		 double b[])
 {
   double *scale;
@@ -908,13 +910,24 @@ check_compatible_solver(void)
     case AZTECOO:
     case AMESOS:
     case STRATIMIKOS:
-      return 0;
+      return GOMA_SUCCESS;
     default:
-      return -1;
+      return GOMA_ERROR;
     }
   }
 
-  return -1;
+#ifdef HAVE_PETSC
+  if (strcmp(Matrix_Format, "petsc") == 0) {
+    switch (Linear_Solver) {
+    case PETSC_SOLVER:
+      return GOMA_SUCCESS;
+    default:
+      return GOMA_ERROR;
+    }
+  }
+#endif
+
+  return GOMA_ERROR;
 }
 
 

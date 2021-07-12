@@ -1733,7 +1733,7 @@ void copy_solution(Dpi *dpi, double **x, Omega_h::Mesh &mesh) {
 }
 
 // start with just level set field
-void adapt_mesh_omega_h(struct Aztec_Linear_Solver_System **ams,
+void adapt_mesh_omega_h(struct GomaLinearSolverData **ams,
                         Exo_DB *exo,
                         Dpi *dpi,
                         double **x,

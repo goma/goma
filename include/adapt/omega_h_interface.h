@@ -8,7 +8,7 @@ extern "C" {
 typedef struct Exodus_Database Exo_DB;
 typedef struct Distributed_Processing_Information Dpi;
 
-void adapt_mesh_omega_h(struct Aztec_Linear_Solver_System **ams,
+void adapt_mesh_omega_h(struct GomaLinearSolverData **ams,
                         Exo_DB *exo,
                         Dpi *dpi,
                         double **x,

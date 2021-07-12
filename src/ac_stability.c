@@ -88,7 +88,7 @@ int LSA_current_wave_number = 0;
  * the (single) function into multiple parts because it was getting
  * too fat...
  */
-int solve_stability_problem(struct Aztec_Linear_Solver_System *ams,
+int solve_stability_problem(struct GomaLinearSolverData *ams,
                             double x[],     /* Value of the solution vector */
                             double delta_t, /* Time step size */
                             double theta,   /* Variable time integration parameter
@@ -148,7 +148,7 @@ int solve_stability_problem(struct Aztec_Linear_Solver_System *ams,
 /* This routine will perform all of the eigenvalue handling for
  * "regular" systems.  That means it is NOT for 3D stability of a 2D
  * flow. */
-int solve_full_stability_problem(struct Aztec_Linear_Solver_System *ams,
+int solve_full_stability_problem(struct GomaLinearSolverData *ams,
                                  double x[],     /* Value of the solution vector */
                                  double delta_t, /* Time step size */
                                  double theta,   /* Variable time integration parameter
@@ -405,7 +405,7 @@ int solve_full_stability_problem(struct Aztec_Linear_Solver_System *ams,
 /* This routine will perform all of the eigenvalue handling for
  * calculations of 3D stability of a 2D flow.
  */
-int solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
+int solve_3D_of_2D_stability_problem(struct GomaLinearSolverData *ams,
                                      double x[],     /* Value of the solution vector */
                                      double delta_t, /* Time step size */
                                      double theta,   /* Variable time integration parameter

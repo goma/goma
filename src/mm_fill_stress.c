@@ -4438,7 +4438,7 @@ load_modal_pointers(int ve_mode, /* mode number */
 int
 assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 			 double x[],
-			 struct Aztec_Linear_Solver_System *ams,
+			 struct GomaLinearSolverData *ams,
 			 dbl x_update[],    /* last update for x vector */
 			 double delta_t, /* current time step size */
 			 double t_,	/* parameter to vary time integration from
@@ -5449,7 +5449,7 @@ neighbor_stress_table(Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 
 void
 load_neighbor_pointers( Exo_DB *exo,
-			struct Aztec_Linear_Solver_System *ams,
+			struct GomaLinearSolverData *ams,
 		        int ielem, /* neighbor element */
 			int etype, /* element type */
 			int mode,  /* stress mode */

@@ -3114,7 +3114,7 @@ Revised:	   1997/10/28 16:48 MST pasacki@sandia.gov
 /*************************************************************************/
 /*************************************************************************/
 
-void alloc_VBR_sparse_arrays(struct Aztec_Linear_Solver_System *ams,
+void alloc_VBR_sparse_arrays(struct GomaLinearSolverData *ams,
                              Exo_DB *exo, Dpi *dpi)
 /*
  *
@@ -3696,7 +3696,7 @@ zero_lec_column(double *local_J,
 
 int find_VBR_index(const int I, /* Block row index */
                    const int J, /* Block column index */
-                   struct Aztec_Linear_Solver_System *ams) {
+                   struct GomaLinearSolverData *ams) {
   int K = in_list(J, ams->bpntr[I], ams->bpntr[I + 1], ams->bindx);
 
   return (ams->indx[K]);

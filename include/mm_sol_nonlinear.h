@@ -21,7 +21,7 @@
 #include "rf_io_structs.h"
 #include "std.h"
 
-struct Aztec_Linear_Solver_System;
+struct GomaLinearSolverData;
 #ifdef EXTERN
 #undef EXTERN
 #endif
@@ -36,7 +36,7 @@ struct Aztec_Linear_Solver_System;
 #endif
 
 EXTERN int solve_nonlinear_problem
-(struct Aztec_Linear_Solver_System *, /* ams - ptrs to Aztec linear    *
+(struct GomaLinearSolverData *, /* ams - ptrs to Aztec linear    *
 					     * systems                       */
        double [],		/* x - soln vector on this proc              */
        double ,			/* delta_t - time step size                  */

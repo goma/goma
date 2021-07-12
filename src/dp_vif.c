@@ -157,6 +157,7 @@ noahs_raven(void)
   ddd_add_member(n, &TFMP_LIQ_VELO, 1, MPI_INT);
   ddd_add_member(n, &TFMP_INV_PECLET, 1, MPI_INT);
   ddd_add_member(n, &TFMP_KRG, 1, MPI_INT);
+  ddd_add_member(n, &GomaPetscOptionsStrLen, 1, MPI_INT);
 
   ddd_set_commit(n);
  
@@ -225,6 +226,10 @@ raven_landing(void)
     {
       LSA_wave_numbers = NULL;
     }
+
+  if (GomaPetscOptionsStrLen > 0) {
+    GomaPetscOptions = calloc(GomaPetscOptionsStrLen, sizeof(char));
+  }
 
   /*
    * Create landing pads.
@@ -612,6 +617,9 @@ noahs_ark(void)
   ddd_add_member(n, &Write_Intermediate_Solutions, 1, MPI_INT);
   ddd_add_member(n, &Write_Initial_Solution, 1, MPI_INT);
   
+  if (GomaPetscOptionsStrLen > 0) {
+    ddd_add_member(n, GomaPetscOptions, GomaPetscOptionsStrLen, MPI_CHAR);
+  }
   /*
    * rd_genl_specs()
    */

@@ -31,7 +31,7 @@
 #endif
 
 EXTERN int apply_special_bc
-(struct Aztec_Linear_Solver_System *,
+(struct GomaLinearSolverData *,
        double [],		/* x - soln vector                           */
        double [],		/* resid_vector - RHS                        */
        double [],		/* x_old - soln vector previous timestep     */

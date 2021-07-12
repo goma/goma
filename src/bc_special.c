@@ -157,7 +157,7 @@
  */
 /*ARGSUSED*/
 int
-apply_special_bc (struct Aztec_Linear_Solver_System *ams,   
+apply_special_bc (struct GomaLinearSolverData *ams,   
 		  double x[],           /* Solution vector for the current processor      */
 		  double resid_vector[],   /* Residual vector for the current processor   */
 		  double x_old[],       /* Solution vector at last time step (previous x) */

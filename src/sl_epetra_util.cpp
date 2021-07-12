@@ -57,7 +57,7 @@ extern "C" {
  * @param ams ams structure containing appropriate RowMatrix
  * @param exo exodus file for this processor
  */
-void EpetraCreateGomaProblemGraph(struct Aztec_Linear_Solver_System *ams, Exo_DB *exo, Dpi *dpi) {
+void EpetraCreateGomaProblemGraph(struct GomaLinearSolverData *ams, Exo_DB *exo, Dpi *dpi) {
   int j, inode, i1, i2, eb1;
   int iunknown, inter_unknown, inter_node, row_num_unknowns, col_num_unknowns;
   int irow_index = 0;
@@ -256,7 +256,7 @@ void EpetraCreateGomaProblemGraph(struct Aztec_Linear_Solver_System *ams, Exo_DB
  * @param x Solution vector
  * @param resid_vector residual vector
  */
-void EpetraLoadLec(int ielem, struct Aztec_Linear_Solver_System *ams,
+void EpetraLoadLec(int ielem, struct GomaLinearSolverData *ams,
                    double resid_vector[])
 {
   int e, v, i, j, pe, pv;
@@ -454,7 +454,7 @@ void EpetraLoadLec(int ielem, struct Aztec_Linear_Solver_System *ams,
  * @param b b from Ax = b
  * @param scale array for scale values to be placed for further usage (b[i] will equal old b[i] / scale[i])
  */
-void EpetraRowSumScale(struct Aztec_Linear_Solver_System *ams, double *b, double *scale)
+void EpetraRowSumScale(struct GomaLinearSolverData *ams, double *b, double *scale)
 {
   Epetra_Vector vector_scale(ams->RowMatrix->RowMatrixRowMap(), false);
   ams->RowMatrix->InvRowSums(vector_scale);
@@ -473,7 +473,7 @@ void EpetraRowSumScale(struct Aztec_Linear_Solver_System *ams, double *b, double
  * @param ams Aztec_Linear_Solver_System matrix struct containing epetra matrix
  * @param GlobalRow global row to set to diagonal only
  */
-void EpetraSetDiagonalOnly(struct Aztec_Linear_Solver_System *ams, int GlobalRow)
+void EpetraSetDiagonalOnly(struct GomaLinearSolverData *ams, int GlobalRow)
 {
   Epetra_CrsMatrix* CrsMatrix = dynamic_cast<Epetra_CrsMatrix*>(ams->RowMatrix);
   int size = CrsMatrix->NumGlobalEntries(GlobalRow);

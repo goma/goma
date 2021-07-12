@@ -46,7 +46,7 @@
 
 extern "C" {
 
-int stratimikos_solve(struct Aztec_Linear_Solver_System *ams, double *x_,
+int stratimikos_solve(struct GomaLinearSolverData *ams, double *x_,
     double *b_, int *iterations, char stratimikos_file[MAX_NUM_MATRICES][MAX_CHAR_IN_INPUT], int imtrx)
 {
   using Teuchos::RCP;

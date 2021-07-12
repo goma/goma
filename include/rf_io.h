@@ -46,6 +46,9 @@ extern char Echo_Input_File[MAX_FNL];	 /* echo of problem def file  */
 
 extern int Brk_Flag;
 
+extern char *GomaPetscOptions;
+extern int GomaPetscOptionsStrLen;
+
 extern char DomainMappingFile[MAX_FNL]; /* Domain Mapping file. Maps the materials
 				       and names of material boundaries 
 				       specified in this file into this file

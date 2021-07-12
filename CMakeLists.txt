@@ -91,6 +91,34 @@ MESSAGE(STATUS "SEACASExodus_DIR = ${SEACASExodus_DIR}")
 find_package(SEACASChaco REQUIRED HINTS ${Trilinos_DIR}/../SEACASChaco)
 MESSAGE(STATUS "SEACASChaco_DIR = ${SEACASChaco_DIR}")
 
+# PETSC search
+# set root of location to find PETSc configuration
+set(PETSC_PATH $ENV{PETSC_DIR}/$ENV{PETSC_ARCH})
+set(ENV{PKG_CONFIG_PATH} ${PETSC_PATH}/lib/pkgconfig $ENV{PKG_CONFIG_PATH})
+
+# Determine PETSc compilers
+execute_process ( COMMAND pkg-config PETSc --variable=ccompiler COMMAND tr -d '\n' OUTPUT_VARIABLE PETSC_C_COMPILER)
+execute_process ( COMMAND pkg-config PETSc --variable=cxxcompiler COMMAND tr -d '\n' OUTPUT_VARIABLE PETSC_CXX_COMPILER)
+execute_process ( COMMAND pkg-config PETSc --variable=fcompiler COMMAND tr -d '\n' OUTPUT_VARIABLE PETSC_FORTRAN_COMPILER)
+if (NOT (Trilinos_Fortran_COMPILER STREQUAL PETSC_FORTRAN_COMPILER))
+  message(WARNING "Trilinos and Petsc compiled with different Fortran compilers")
+  message(WARNING "Trilinos Fortran: ${Trilinos_Fortran_COMPILER}")
+  message(WARNING "PETSc Fortran: $PETSC_FORTRAN_COMPILER")
+endif()
+if (NOT (Trilinos_C_COMPILER STREQUAL PETSC_C_COMPILER))
+  message(WARNING "Trilinos and Petsc compiled with different C compilers")
+  message(WARNING "Trilinos C: ${Trilinos_C_COMPILER}")
+  message(WARNING "PETSc C: ${PETSC_C_COMPILER}")
+endif()
+if (NOT (Trilinos_CXX_COMPILER STREQUAL PETSC_CXX_COMPILER))
+  message(WARNING "Trilinos and Petsc compiled with different CXX compilers")
+  message(WARNING "Trilinos CXX: ${Trilinos_C_COMPILER}")
+  message(WARNING "PETSc CXX: ${PETSC_C_COMPILER}")
+endif()
+
+find_package(PkgConfig REQUIRED)
+pkg_search_module(PETSC IMPORTED_TARGET PETSc)
+
 message("")
 
 set(GOMA_TPL_LIBRARIES "")
@@ -124,6 +152,12 @@ if (Omega_h_FOUND)
   set(GOMA_TPL_LIBRARIES ${GOMA_TPL_LIBRARIES} Omega_h::omega_h)
   list(APPEND GOMA_COMPILE_DEFINITIONS HAVE_OMEGA_H)
 endif()
+
+if (PETSC_FOUND)
+  set(GOMA_TPL_LIBRARIES ${GOMA_TPL_LIBRARIES} PkgConfig::PETSC)
+  list(APPEND GOMA_COMPILE_DEFINITIONS HAVE_PETSC)
+endif()
+
 # UMFPACK in trilinos
 LIST(FIND Trilinos_TPL_LIST UMFPACK trilinos_package_index)
 if(${trilinos_package_index} LESS 0)
@@ -323,6 +357,7 @@ set(GOMA_INCLUDES
         include/sl_epetra_interface.h
         include/sl_epetra_util.h
         include/sl_lu.h
+        include/sl_petsc.h
         include/sl_matrix_util.h
         include/sl_stratimikos_interface.h
         include/sl_umf.h
@@ -458,10 +493,10 @@ set(GOMA_SOURCES
         src/sl_leastsquares.C
         src/sl_lu.c
         src/sl_lu_fill.c
-        src/sl_front_setup.c
         src/sl_lustat.c
         src/sl_ma28.c
         src/sl_matrix_dump.c
+        src/sl_petsc.c
         src/sl_matrix_util.c
         src/sl_squash.c
         src/sl_stratimikos_interface.cpp

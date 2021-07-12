@@ -47,7 +47,7 @@ extern "C" {
  * @param b_ residual vector
  */
 void
-aztecoo_solve_epetra(struct Aztec_Linear_Solver_System *ams,
+aztecoo_solve_epetra(struct GomaLinearSolverData *ams,
 		  double *x_, 
 		  double *b_) {
 

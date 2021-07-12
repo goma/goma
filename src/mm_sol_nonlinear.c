@@ -66,6 +66,7 @@
 #include "sl_epetra_interface.h"
 #include "sl_lu.h"
 #include "sl_umf.h"
+#include "sl_petsc.h"
 #include "wr_exo.h"
 #include "wr_side_data.h"
 #include "mm_input.h"
@@ -134,7 +135,7 @@ static int soln_sens		/* mm_sol_nonlinear.c                        */
        double [],		/* x_sens                                    */
        double **,		/* x_sens_p                                  */
        double [],		/* scale                                     */
-       struct Aztec_Linear_Solver_System *, /* ams - ptrs to Aztec linear    *
+       struct GomaLinearSolverData *, /* ams - ptrs to Aztec linear    *
 					     * systems                       */
        int ,			/* first_linear_solver_call                  */
        int ,			/* Norm_below_tolerance                      */
@@ -224,7 +225,7 @@ int zero_detJ_global = FALSE;
 
 */
 
-int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
+int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
                                             /* ptrs to Aztec linear systems */
 			    double x[],     /* soln vector on this proc */
 			    double delta_t, /* time step size */
@@ -594,10 +595,6 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
   inewton    = 0;
   if(Max_Newton_Steps <= 0) *converged = TRUE;
 
-  if (Linear_Solver == FRONT) {
-    init_vec_value(scale, 1.0, numProcUnknowns);
-  }
-
   /*
    * EDW: LOCA, when used, controls UMF_system_id as it calls the solver
    * in other places as well.
@@ -856,98 +853,6 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
              is properly communicated */
           exchange_dof(cx,dpi, x, pg->imtrx);
 
-	  if (Linear_Solver == FRONT)
-	    {
-	      zero	  = 0;
-	      mf_resolve  = 0;
-	      smallpiv	  = 1.e-3;
-	      singpiv	  = 1.e-14;
-	      iautopiv	  = 1;
-	      iscale	  = 1;   /* you will have to turn this off for resolves */
-              scaling_max = 1.;
-
-	      if (!Norm_below_tolerance || !Rate_above_tolerance)
-		{
-		  mf_resolve = zero;
-		  init_vec_value(scale, 1.0, numProcUnknowns);
-		}
-	      else 
-		{
-		  /*
-		   * NB: Needs to be changed to 1 as soon as Bob provides
-		   *     scale vector.  Change to one.  Works now
-		   *     but cannot be done with row-sum-scalling.
-		   */
-		  mf_resolve = 1;
-		  /* 
-		   *  now just get the residuals.  af-> params set above
-		   */
-		  err = matrix_fill_full(ams, x, resid_vector, 
-					 x_old, x_older, xdot, xdot_old, x_update,
-					 &delta_t, &theta, First_Elem_Side_BC_Array[pg->imtrx], 
-					 &time_value, exo, dpi, &num_total_nodes,
-                                         &h_elem_avg, &U_norm, NULL);
-		  a_end = ut();
-		}
-	
-	      if (Num_Proc > 1) GOMA_EH(GOMA_ERROR, "Whoa.  No front allowed with nproc>1");  
-#ifdef HAVE_FRONT
-		  err = mf_solve_lineqn(&mf_resolve,
-								resid_vector,
-								1,
-								fss->ncod,
-								fss->bc,
-								&smallpiv,
-								&singpiv,
-								&iautopiv,
-								&iscale, 
-								matrix_fill,
-								delta_x,
-	/* This list of args */     &scaling_max,
-	/* below matrix_fill */     scale,
-	/* pointer is the arg*/     ams,
-	/* list for matrix_fill */  x,
-	/* If you change that*/     resid_vector,
-	/* arglist, you must */     x_old,
-	/* change the frontal */    x_older,
-	/* solver.            */    xdot,
-								xdot_old,
-								x_update,
-								&delta_t,
-								&theta,
-								First_Elem_Side_BC_Array[pg->imtrx],
-								&time_value,
-								exo,
-								dpi,
-								&num_total_nodes,
-								&h_elem_avg,
-								&U_norm);
-	      /*
-	       * Free memory allocated above
-	       */
-	      global_qp_storage_destroy();
-
-	      if (neg_elem_volume) err = -1;
-	      if (err == -1) {
-                return_value = -1;
-                goto free_and_clear;
-              }
-
-
-	      /* Our friend Bob B. doesn't leaves resid vector untouched,
-		 so we have to scale it with his scaling that he now
-		 graciously supplies. */
-	        for(i=0; i< NumUnknowns[pg->imtrx]; i++) resid_vector[i] /= scale[i]; 
-
-#else /* HAVE_FRONT */
-GOMA_EH(GOMA_ERROR,"version not compiled with frontal solver");
-#endif /* HAVE_FRONT */
-	      
-	      a_end = ut();
-	    }
-	  else
-	    {
-
 	      err = matrix_fill_full(ams, x, resid_vector, 
 				     x_old, x_older, xdot, xdot_old, x_update,
 				     &delta_t, &theta, 
@@ -1043,7 +948,6 @@ GOMA_EH(GOMA_ERROR,"version not compiled with frontal solver");
             return_value = -1;
             goto free_and_clear;
           }
-	}
 
 
       /*
@@ -1204,15 +1108,11 @@ GOMA_EH(GOMA_ERROR,"version not compiled with frontal solver");
 	      }
           }
 
-	if (Linear_Solver != FRONT)   /*Must do this UNTIL REB provides scale vector 
-					on return from frontal solver */
-	  {
 	    for (iAC=0;iAC<nAC;iAC++) {
 	      for (j=0;j<NumUnknowns[pg->imtrx];j++) { 
 		bAC[iAC][j] /= scale[j]; 
 	      }
 	    }
-	  }
 
 	ac_end = ut(); 
 
@@ -1303,7 +1203,7 @@ GOMA_EH(GOMA_ERROR,"version not compiled with frontal solver");
        *************************************************************************/
       s_start = ut(); s_end = s_start;
 	   
-	  if( Linear_Solver != FRONT && *converged ) goto skip_solve;
+	  if( *converged ) goto skip_solve;
 	   
       switch (Linear_Solver)
       {
@@ -1481,6 +1381,19 @@ GOMA_EH(GOMA_ERROR,"version not compiled with frontal solver");
           GOMA_EH(GOMA_ERROR, "Sorry, only Epetra matrix formats are currently supported with the AztecOO solver suite\n");
         }
         break;
+      case PETSC_SOLVER:
+        if ( strcmp( Matrix_Format,"petsc" ) == 0 ) {
+          int its;
+          petsc_solve(ams, delta_x, resid_vector, &its);
+          matrix_solved = 1;
+          char itsstring[10];
+          itsstring[9] = '\0';
+          snprintf(itsstring, 9, "%d", its);
+          strcpy(stringer, itsstring);
+        } else {
+          GOMA_EH(GOMA_ERROR, "Sorry, only petsc matrix formats are currently supported with the petsc solver\n");
+        }
+        break;
 
       case STRATIMIKOS:
         if ( strcmp( Matrix_Format,"epetra" ) == 0 ) {
@@ -1509,10 +1422,6 @@ GOMA_EH(GOMA_ERROR,"version not compiled with frontal solver");
 	  GOMA_EH(GOMA_ERROR, "That linear solver package is not implemented.");
 #endif /* HARWELL */
 	  strcpy(stringer, " 1 ");
-	  break;
-
-      case FRONT:
-	  strcpy(stringer, " fs");
 	  break;
 
       default:
@@ -1666,7 +1575,6 @@ GOMA_EH(GOMA_ERROR,"version not compiled with frontal solver");
               GOMA_EH(GOMA_ERROR, "Sorry, only Epetra matrix formats are currently supported with the AztecOO solver suite\n");
             }
             break;
-          case FRONT:
 	  default:
 	      GOMA_EH(GOMA_ERROR, "That linear solver package is not implemented.");
 	      break;
@@ -2321,7 +2229,7 @@ skip_solve:
 
    if(Epsilon[pg->imtrx][2] > 1)
    {
-     if ( !(*converged) || (  Linear_Solver == FRONT ) || inewton == 0 ) {
+     if ( !(*converged) || inewton == 0 ) {
            DPRINTF(stdout, "%7.1e %7.1e %7.1e %s ",
 			   Norm[1][0], Norm[1][1], Norm[1][2], stringer);
      }
@@ -2341,16 +2249,7 @@ skip_solve:
    }
 	
 	
-	if ( Linear_Solver != FRONT )
-	{
           DPRINTF(stdout, "%7.1e/%7.1e\n", (a_end-a_start), (s_end-s_start));
-	}
-      else
-	{
-	  asmslv_time = ( asmslv_end - asmslv_start );
-	  slv_time    = ( asmslv_time - mm_fill_total );
-          DPRINTF(stdout, "%7.1e/%7.1e\n", mm_fill_total, slv_time);
-	}
 	
 	if( Write_Intermediate_Solutions || (Iout == 1 ) ) {
 		if (dofname_r[0] != '\0') {
@@ -2370,7 +2269,7 @@ skip_solve:
         DPRINTF(stdout, "%7.1e %7.1e %7.1e ", Norm[2][0],
 			Norm[2][1], Norm[2][2]);
 	if(Epsilon[pg->imtrx][2] > 1) {
-	  if ( !(*converged)  || (  Linear_Solver == FRONT ) || inewton == 0	) {
+	  if ( !(*converged)  || inewton == 0	) {
                 DPRINTF(stdout, "%7.1e %7.1e %7.1e     ", Norm[3][0], Norm[3][1], Norm[3][2]);
 	  }
 	else {
@@ -2445,10 +2344,6 @@ skip_solve:
    *   FLUX SENSITIVITIES
    *
    */
-  if(Linear_Solver == FRONT) {
-    ncod = fss->ncod;
-    bc   = fss->bc;
-  } else {
     mf_resolve = 0;
     ncod = NULL; 
     bc   = NULL;
@@ -2457,7 +2352,6 @@ skip_solve:
     iautopiv = 0;
     iscale = 0;
     scaling_max = 0.;
-  }
 
   for (i=0;i<nn_post_fluxes_sens;i++) {
     if (pp_fluxes_sens[i]->vector_id > sens_vec_ct) {
@@ -3277,7 +3171,7 @@ soln_sens ( double lambda,  /*  parameter */
 	    double x_sens[],
 	    double **x_sens_p,
 	    double scale[],
-	    struct Aztec_Linear_Solver_System *ams, /* ptrs to
+	    struct GomaLinearSolverData *ams, /* ptrs to
 						     * Aztec 
 						     * linear
 						     * systems
@@ -3515,10 +3409,7 @@ soln_sens ( double lambda,  /*  parameter */
       }
 #endif
 
-  if (Linear_Solver != FRONT) 	
-    {
       vector_scaling(NumUnknowns[pg->imtrx], resid_vector_sens, scale);
-    }
 
   switch (Linear_Solver)
     {
@@ -3675,54 +3566,6 @@ soln_sens ( double lambda,  /*  parameter */
 #endif
       strcpy(stringer, " 1 ");
       break;
-	case FRONT:
-
-	      *mf_resolve =1;
-              *scaling_max = 1.;
-
-	      if (Num_Proc > 1) GOMA_EH(GOMA_ERROR, "Whoa.  No front allowed with nproc>1");
-#ifdef HAVE_FRONT  
-              err = mf_solve_lineqn(mf_resolve, /* re_solve                 */
-                                    &resid_vector_sens[0], /* rhs            */
-                                    1, /* nrhs                               */
-                                    fsncod, /* nsetbc                      */
-                                    fsbc, /* bcvalue                       */
-                                    smallpiv, /* smallpiv                   */
-                                    singpiv, /* singpiv                     */
-                                    iautopiv, /* iautopiv                   */
-				    iscale, /* iscale                       */
-                                    matrix_fill, /* element matrix fill fnc  */
-				    &x_sens[0], /* lhs                              */
-        /* This list of args */     scaling_max, /* scaling max             */
-        /* below matrix_fill */     scale,
-        /* pointer is the arg*/     ams,
-        /* list for matrix_fill */  x,
-        /* If you change that*/     &resid_vector_sens[0],
-        /* arglist, you must */     x_old,
-        /* change the frontal */    x_older,
-        /* solver.            */    xdot,
-                                    xdot_old,
-                                    x_update,
-                                    &delta_t,
-                                    &theta,
-                                    First_Elem_Side_BC_Array[pg->imtrx],
-                                    &time_value,
-                                    exo,
-                                    dpi,
-                                    &num_total_nodes,
-                                    &h_elem_avg,
-                                    &U_norm);
-	      /*
-	       * Free memory allocated above
-	       */
-	      global_qp_storage_destroy();
-
-	      if( neg_elem_volume ) err = -1;
-	      if (err == -1) return(err);
-
-	  strcpy(stringer, "1");
-#endif
-	  break;
     default:
       GOMA_EH(GOMA_ERROR, "That linear solver package is not implemented.");
       break;

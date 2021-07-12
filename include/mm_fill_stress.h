@@ -20,7 +20,7 @@
 #include "mm_mp_const.h"
 #include "std.h"
 
-struct Aztec_Linear_Solver_System;
+struct GomaLinearSolverData;
 #ifdef EXTERN
 #undef EXTERN
 #endif
@@ -115,7 +115,7 @@ EXTERN int modal_esp_alloc
 EXTERN int assemble_surface_stress
 (Exo_DB *,		/* exo - ptr to basic exodus ii mesh info    */
        double [],		/* x                                         */
-       struct Aztec_Linear_Solver_System *,
+       struct GomaLinearSolverData *,
        dbl [],			/* x_update - last update for x vector       */
        double ,			/* delta_t - current time step size          */
        double ,			/* t_ - parameter to vary time integration 
@@ -167,7 +167,7 @@ EXTERN int neighbor_stress_table     /* mm_fill_stress.c                     */
 
 EXTERN void load_neighbor_pointers /* mm_fill_stress.c                       */
 (Exo_DB *,		/* exo                                       */
-       struct Aztec_Linear_Solver_System *,  /* pointer to matrix data */
+       struct GomaLinearSolverData *,  /* pointer to matrix data */
        int ,			/* ielem - neighbor element                  */
        int ,			/* etype - element type                      */
        int ,			/* mode - stress mode                        */
