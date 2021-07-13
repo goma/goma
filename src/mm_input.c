@@ -6521,7 +6521,19 @@ rd_solver_specs(FILE *ifp,
   }
   
 
-  if ( strcmp(Matrix_Solver, "front") != 0 )
+  if ( strcmp(Matrix_Solver, "aztecoo") == 0 )
+    {
+      strcpy(Matrix_Format, "epetra"); /* save string for aztec use */
+      strcpy(search_string, "Matrix storage format");
+      SPF(echo_string,eoformat, search_string, Matrix_Format );
+    }
+  else if ( strcmp(Matrix_Solver, "petsc") == 0 )
+    {
+      strcpy(Matrix_Format, "petsc"); /* save string for aztec use */
+      strcpy(search_string, "Matrix storage format");
+      SPF(echo_string,eoformat, search_string, Matrix_Format );
+    }
+  else if ( strcmp(Matrix_Solver, "front") != 0 )
     {
       /*  Read in Matrix Format only if we are going to assemble one */
       

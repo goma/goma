@@ -483,6 +483,30 @@ elem_info(const int info,
       break;
     }
     break;    
+
+  case QUADRATIC_TET:                /* linear tetrahedron */
+    switch( info ){               /* select type of information required */
+    case NNODES:                  /* number of nodes */
+      answer = 10;
+      break;
+    case NQUAD:                   /* number of quadrature points */
+      answer = 5;
+      break;
+    case NDIM:                    /* number of physical dimensions */
+      answer = 3;
+      break;
+    case NQUAD_SURF:            /* number of surface quad points */
+      answer = 4;
+      break;
+    case NQUAD_EDGE:            /* number of edge quad points */
+      answer = 2;
+      break;
+    default:
+      fprintf(stderr, "Unknown quantity\n");
+      answer = -1;
+      break;
+    }
+    break;    
     /*
      * For 1D elements "surface" and "edge" are odd terms. Perhaps DIM-1 and DIM-2
      * is the way to think of them where, for BAR elements, DIM = 1.  Hence,
@@ -1176,6 +1200,9 @@ type2shape(const int element_type)
   case LINEAR_TET:
     shape = TETRAHEDRON;
     break;
+  case QUADRATIC_TET:
+    shape = TETRAHEDRON;
+    break;
   default:
     fprintf(stderr,"type2shape ERROR: unknown element type: %d\b",
             element_type);
@@ -1839,6 +1866,7 @@ find_stu(const int   iquad,     /* current GQ index  */
     break;
 
   case LINEAR_TET:
+  case QUADRATIC_TET:
     //*s = *t = *u = 0.25;
   {
 //  { static const double alpha = 0.585410196624969;
@@ -2203,6 +2231,7 @@ find_surf_st(const int iquad,           /* current GQ index */
     break;
 
   case LINEAR_TET:
+  case QUADRATIC_TET:
     
     /* 
      * I'm not sure where the original code came from, especially with
@@ -2546,6 +2575,7 @@ find_surf_center_st (
 	case QUAD_TRI:   
 	case QUAD6_TRI:
         case LINEAR_TET:
+        case QUADRATIC_TET:
         case BILINEAR_TRISHELL:
 	switch (dim)
 	  {
@@ -2618,6 +2648,7 @@ find_surf_center_st (
   case QUAD_TRI:   
   case QUAD6_TRI:
   case LINEAR_TET:
+  case QUADRATIC_TET:
   case BILINEAR_TRISHELL:
 	break;
   default:
@@ -2847,6 +2878,53 @@ find_nodal_stu (const int inode,           /* current node index */
     case 3:
       *u = 1.;
       *s = *t = 0.;
+      break;
+    }
+    break;
+  case QUADRATIC_TET:  /* trilinear tetrahedron */
+    switch ( inode ) {
+    case 0:
+      *s = *t = *u = 0.;
+      break;
+    case 1:
+      *s = 1.;
+      *t = *u = 0.;
+      break;
+    case 2:
+      *t = 1.;
+      *s = *u = 0.;
+      break;
+    case 3:
+      *u = 1.;
+      *s = *t = 0.;
+      break;
+    case 4:
+      *s = 0.5;
+      *t = *u = 0.;
+      break;
+    case 5:
+      *s = 0.5;
+      *t = 0.5;
+      *u = 0;
+      break;
+    case 6:
+      *s = *u = 0.;
+      *t = 0.5;
+      break;
+    case 7:
+      *s = 0.0;
+      *t = 0.0;
+      *u = 0.5;
+      break;
+    case 8:
+      *s = 0.5;
+      *t = 0.0;
+      *u = 0.5;
+      break;
+    case 9:
+      *s = 0.0;
+      *t = 0.5;
+      *u = 0.5;
       break;
     }
     break;
@@ -3193,6 +3271,7 @@ Gq_weight(const int iquad,               /* current GQ index */
     break;
 
   case LINEAR_TET:
+  case QUADRATIC_TET:
   {
      const double wltet_1 = -2.0 / 15.0;
      const double wltet_2 = 0.075;
@@ -3553,6 +3632,9 @@ get_type(char string[],         /* EXODUS name of parent element  */
       switch (nodes){              /* select number of nodes in this element */
       case 4:                      /* bilinear quadralateral */
         answer = LINEAR_TET;
+	break;
+      case 10:                      /* bilinear quadralateral */
+        answer = QUADRATIC_TET;
 	break;
       default:
 	sprintf(err_msg,"TET element with %d nodes not implemented.\n", nodes);

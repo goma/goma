@@ -2601,11 +2601,11 @@ find_id_side_BC(const int ielem,		/* element index number */
   ielem_type = Elem_Type(exo, ielem);
 
   /* If we're working with tetrahedral elements, re-work the side id */
-  if ( ielem_type == LINEAR_TET ) {
+  if ( ielem_type == LINEAR_TET || ielem_type == QUADRATIC_TET ) {
     bool nodes[4] = {false,false,false,false};
     for (int i = 0; i < 4; i++) {
       int node_id = exo->elem_node_list[exo->elem_node_pntr[ielem]+i];
-      for (int j = 0; j < num_nodes_on_side; j++) {
+      for (int j = 0; j < 3; j++) {
         if (node_id == local_ss_node_list[j]) {
           nodes[i] = true;
         }

@@ -535,6 +535,116 @@ shape (const double s,		/* quadrature point coordinates */
     break;  /*Case LINEAR_TET */
 
 
+  case QUADRATIC_TET:
+    switch (Iquant) {     /* select quantity */
+    case PSI:           /* shape function */
+      switch( Inode ) { /* select specific shape function */
+      case 0:
+	value = (-1. + s + t + u)*(-1. + 2.*s + 2.*t +2.*u); break;
+      case 1:
+	value = s*(-1. + 2.*s);               break;
+      case 2:
+	value = t*(-1. + 2.*t);               break;
+      case 3:
+	value = u*(-1. + 2.*u);               break;
+      case 4:
+	value = -4.*s*(-1. + s + t + u);               break;
+      case 5:
+	value = 4*s*t;               break;
+      case 6:
+	value = -4.*t*(-1. + s + t + u);               break;
+      case 7:
+	value = -4.*u*(-1. + s + t + u);               break;
+      case 8:
+	value = 4*s*u;               break;
+      case 9:
+	value = 4*t*u;               break;
+      }
+      break;
+
+    case DPSI_S:        /* partial of shape fn w.r.t. s */
+      switch( Inode ) { /* select specific shape function */
+      case 0:
+	value = 4.*s + 4.*t + 4.*u - 3.; break;
+      case 1:
+	value = 4.*s -1.; break;
+      case 2:
+	value =  0.0; break;
+      case 3:
+	value =  0.0; break;
+      case 4:
+	value =  -4.*(-1. + 2.*s + t + u); break;
+      case 5:
+	value = 4.*t; break;
+      case 6:
+	value = -4.*t; break;
+      case 7:
+	value = -4.*u; break;
+      case 8:
+	value = 4.*u; break;
+      case 9:
+	value = 0.0; break;
+      }
+      break;
+
+    case DPSI_T:        /* partial of shape fn w.r.t. t */
+      switch( Inode ) { /* select specific shape function */
+      case 0:
+	value = 4.*s + 4.*t + 4.*u - 3.; break;
+      case 1:
+	value =  0.0; break;
+      case 2:
+	value =  4.*t - 1.; break;
+      case 3:
+	value =  0.0; break;
+      case 4:
+	value =  -4.*s; break;
+      case 5:
+	value =  4.*s; break;
+      case 6:
+	value =  -4.*(-1. + s + 2.*t + u); break;
+      case 7:
+	value = -4.*u; break;
+      case 8:
+	value = 0.0; break;
+      case 9:
+	value = 4.*u; break;
+      }
+      break;
+
+    case DPSI_U:        /* partial of shape fn w.r.t. u */
+      switch( Inode ) { /* select specific shape function */
+      case 0:
+	value = 4.*s + 4.*t + 4.*u - 3.; break;
+      case 1:
+	value =  0.0; break;
+      case 2:
+	value =  0.0; break;
+      case 3:
+	value =  4.*u - 1.; break;
+      case 4:
+	value =  -4.*s; break;
+      case 5:
+	value =  0.0; break;
+      case 6:
+	value =  -4.*t; break;
+      case 7:
+	value = -4.*(-1. + s + t + 2.*u); break;
+      case 8:
+	value = 4. * s; break;
+      case 9:
+	value = 4. * t; break;
+      }
+      break;
+
+    default:
+      fprintf(stderr, "ERROR: incorrect quantity %d.\n", Iquant);
+      exit(-1);
+      break;
+
+    }
+    
+    break;  /*Case QUADRATIC_TET */
   
   case TRILINEAR_HEX:   /* trilinear shape functions */
   case C_TRILINEAR_HEX:

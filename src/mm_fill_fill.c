@@ -5629,6 +5629,48 @@ get_side_info(const int ielem_type,
     }
     break;
 
+  case QUADRATIC_TET:                   /* tri-linear tetrahedron */
+    *nodes_per_side = 6;
+    switch (id_side) {
+    case 1:
+      local_elem_node_id[0] = 0;
+      local_elem_node_id[1] = 1;
+      local_elem_node_id[2] = 3;
+      local_elem_node_id[3] = 4;
+      local_elem_node_id[4] = 8;
+      local_elem_node_id[5] = 7;
+      break;
+    case 2:
+      local_elem_node_id[0] = 1;
+      local_elem_node_id[1] = 2;
+      local_elem_node_id[2] = 3;
+      local_elem_node_id[3] = 5;
+      local_elem_node_id[4] = 9;
+      local_elem_node_id[5] = 8;
+      break;
+    case 3:
+      local_elem_node_id[0] = 0;
+      local_elem_node_id[1] = 3;
+      local_elem_node_id[2] = 2;
+      local_elem_node_id[3] = 7;
+      local_elem_node_id[4] = 9;
+      local_elem_node_id[5] = 6;
+      break;
+    case 4:
+      local_elem_node_id[0] = 0;
+      local_elem_node_id[1] = 2;
+      local_elem_node_id[2] = 1;
+      local_elem_node_id[3] = 6;
+      local_elem_node_id[4] = 5;
+      local_elem_node_id[5] = 4;
+      break;
+    default:
+      GOMA_EH(GOMA_ERROR,"Illegal side number for 3-D tetrahedral element");
+      break;
+    }
+    break;
+
+
   default:
     GOMA_EH(GOMA_ERROR, "Unknown or unimplemented element type.");
     break;

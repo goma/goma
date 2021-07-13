@@ -290,6 +290,7 @@ cr_alloc(void)
   for(mn = 0; mn < MAX_NUMBER_MATLS; mn++)
     {
       cr_glob[mn] = (struct Constitutive_Relations *) array_alloc(1, 1, sz);
+      memset(cr_glob[mn], 0, sz);
     }
 
   if ( Debug_Flag )
@@ -445,6 +446,7 @@ elc_alloc(void)
   for(mn = 0; mn < MAX_NUMBER_MATLS; mn++)
     {
       elc_glob[mn] = (struct Elastic_Constitutive *) smalloc(sz);
+      memset(elc_glob[mn], 0, sz);
       init_Elastic_Constitutive(elc_glob[mn]);
     }
 
@@ -1829,7 +1831,10 @@ init_Viscoelastic_Constitutive(struct Viscoelastic_Constitutive *v)
   v->xiModel         = 0;
   v->eps             = (double)0;
   v->epsModel        = 0;
-
+  v->pos_ls.alpha  = 0.0;
+  v->pos_ls.eps  = 0.0;
+  v->pos_ls.xi  = 0.0;
+  v->pos_ls.time_const  = 0.0;
   return;
 }
 

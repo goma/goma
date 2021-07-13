@@ -44,6 +44,7 @@ enum type_elem {BILINEAR_QUAD = 0,
                 QUAD6_TRI,      /* quadratic triangle with 6th order quadrature */
 
 		LINEAR_TET,   /* 3D linear tetrahedral element type */
+		QUADRATIC_TET,   /* 3D quadratic tetrahedral element type */
 
 		BILINEAR_SHELL,  /* 2D, linear elements for 3D shells */
 		BIQUAD_SHELL,    /* 2D, quadratic elements for 3D shells */
