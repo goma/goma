@@ -109,8 +109,9 @@ goma_eh(const int error_flag, const char *file,
   if (error_flag == -1) { 
      log_msg("GOMA ends with an error condition.");
 #ifdef PRINT_STACK_TRACE_ON_EH
+    fprintf(stderr,"--------------------------------------------------------------------------------\n");
     print_stacktrace();
-    fprintf(stderr,"========================================\n");
+    fprintf(stderr,"--------------------------------------------------------------------------------\n");
 #endif
 #ifndef PARALLEL
     fprintf(stderr,"ERROR EXIT: %s:%d: %s\n", file, line, message); 
@@ -128,9 +129,9 @@ goma_eh(const int error_flag, const char *file,
     vsnprintf(message, MAX_CHAR_ERR_MSG, format, args);
     va_end(args);
     if (print_color) {
-      fprintf(stderr, "\033[0;31mP_%d ERROR EXIT: %s \033[0m(%s:%d)\n", ProcID, message, file, line);
+      fprintf(stderr, "\033[0;31mP_%d Goma Error: %s \033[0m(@ %s:%d)\n", ProcID, message, file, line);
     } else {
-      fprintf(stderr, "P_%d ERROR EXIT: %s (%s:%d)\n", ProcID, message, file, line);
+      fprintf(stderr, "P_%d Goma Error: %s (@ %s:%d)\n", ProcID, message, file, line);
     }
     if (Num_Proc == 1) {
       MPI_Finalize();

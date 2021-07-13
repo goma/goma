@@ -3,6 +3,7 @@
 #include <petscsys.h>
 #include <petscvec.h>
 
+#include "dpi.h"
 #include "mm_as.h"
 #include "dp_comm.h"
 #include "el_geom.h"
@@ -489,6 +490,40 @@ void petsc_load_lec(int ielem, struct GomaLinearSolverData *ams,
   }
 }
 
+goma_error petsc_scale_matrix(struct GomaLinearSolverData *ams,
+		  double *b_,
+                  double *scale)  {
+  PetscMatrixData *matrix_data = (PetscMatrixData *)ams->PetscMatrixData;
+  Vec row_sums;
+
+  MatAssemblyBegin(matrix_data->mat,MAT_FINAL_ASSEMBLY);
+  MatAssemblyEnd(matrix_data->mat,MAT_FINAL_ASSEMBLY);
+
+  CHKERRQ(MatCreateVecs(matrix_data->mat, &row_sums, NULL)); 
+  VecZeroEntries(row_sums);
+  for (int i = 0; i < num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]; i++) {
+    PetscInt ncols;
+    const PetscScalar *vals;
+    MatGetRow(matrix_data->mat, matrix_data->local_to_global[i], &ncols, NULL, &vals);
+    dbl sum = 0.0;
+    for (PetscInt c = 0; c < ncols; c++)  {
+      sum += PetscAbsScalar(vals[c]);
+    }
+    MatRestoreRow(matrix_data->mat, matrix_data->local_to_global[i], &ncols, NULL, &vals);
+    scale[i] = 1.0 / sum;
+  }
+  VecSetValues(row_sums, num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx], matrix_data->local_to_global, scale, INSERT_VALUES);
+  MatDiagonalScale(matrix_data->mat, row_sums, NULL);
+  for (int i = 0; i < num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]; i++) {
+    b_[i] *= scale[i];
+    scale[i] = 1.0 / scale[i];
+  }
+  exchange_dof(cx[pg->imtrx], DPI_ptr, b_, pg->imtrx);
+  exchange_dof(cx[pg->imtrx], DPI_ptr, scale, pg->imtrx);
+  CHKERRQ(VecDestroy(&row_sums));
+  return GOMA_SUCCESS;
+}
+
 // vim: expandtab sw=2 ts=8
 void
 petsc_solve(struct GomaLinearSolverData *ams,
@@ -496,9 +531,9 @@ petsc_solve(struct GomaLinearSolverData *ams,
 		  double *b_,
                   int *its) {
   PetscMatrixData *matrix_data = (PetscMatrixData *)ams->PetscMatrixData;
+  matrix_data->matrix_setup = PETSC_TRUE;
   MatAssemblyBegin(matrix_data->mat,MAT_FINAL_ASSEMBLY);
   MatAssemblyEnd(matrix_data->mat,MAT_FINAL_ASSEMBLY);
-  matrix_data->matrix_setup = PETSC_TRUE;
   for (PetscInt i = 0; i < num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]; i++) {
     VecSetValue(matrix_data->residual, matrix_data->local_to_global[i], b_[i], INSERT_VALUES);
     VecSetValue(matrix_data->update, matrix_data->local_to_global[i], x_[i], INSERT_VALUES);

@@ -21,4 +21,8 @@ petsc_solve(struct GomaLinearSolverData *ams,
 		  double *x_, 
 		  double *b_,
                   int *its);
+
+goma_error petsc_scale_matrix(struct GomaLinearSolverData *ams,
+		  double *b_,
+                  double *scale);
 #endif // GOMA_SL_PETSC_H

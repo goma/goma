@@ -40,6 +40,7 @@
 #include "rf_vars_const.h"
 #include "sl_matrix_util.h"
 #include "sl_util.h"
+#include "sl_petsc.h"
 
 #define GOMA_SL_MATRIX_UTIL_C
 
@@ -488,7 +489,7 @@ row_sum_scaling_scale ( struct GomaLinearSolverData *ams,
   } else if (strcmp(Matrix_Format, "epetra") == 0) {
     row_sum_scale_epetra(ams, b, scale);
   } else if (strcmp(Matrix_Format, "petsc") == 0) {
-    //skip
+    petsc_scale_matrix(ams, b, scale);
   } else {
     GOMA_EH(GOMA_ERROR, "Unknown sparse matrix format");
   }
