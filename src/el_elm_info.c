@@ -3421,6 +3421,7 @@ Gq_surf_weight(const int iquad,               /* current GQ index  */
     break;
 
   case LINEAR_TET:
+  case QUADRATIC_TET:
     switch ( iquad ) {
     case 0: weight = -0.281250000000000; break;
     case 1: weight =  0.260416666666667; break;
