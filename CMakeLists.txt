@@ -94,7 +94,7 @@ MESSAGE(STATUS "SEACASChaco_DIR = ${SEACASChaco_DIR}")
 # PETSC search
 # set root of location to find PETSc configuration
 set(PETSC_PATH $ENV{PETSC_DIR}/$ENV{PETSC_ARCH})
-set(ENV{PKG_CONFIG_PATH} ${PETSC_PATH}/lib/pkgconfig $ENV{PKG_CONFIG_PATH})
+set(ENV{PKG_CONFIG_PATH} ${PETSC_PATH}/lib/pkgconfig)
 
 # Determine PETSc compilers
 execute_process ( COMMAND pkg-config PETSc --variable=ccompiler COMMAND tr -d '\n' OUTPUT_VARIABLE PETSC_C_COMPILER)
