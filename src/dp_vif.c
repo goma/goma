@@ -1078,7 +1078,6 @@ noahs_ark(void)
   ddd_add_member(n, &upd->Total_Num_EQ, MAX_NUM_MATRICES, MPI_INT);
   ddd_add_member(n, &upd->Total_Num_Var, MAX_NUM_MATRICES, MPI_INT);
   ddd_add_member(n, &upd->CoordinateSystem, 1, MPI_INT);
-  ddd_add_member(n, &upd->Num_Dim, 1, MPI_INT);
   ddd_add_member(n, upd->vp, MAX_NUM_MATRICES * (MAX_VARIABLE_TYPES+MAX_CONC), MPI_INT);
   ddd_add_member(n, upd->ep, MAX_NUM_MATRICES * (MAX_VARIABLE_TYPES+MAX_CONC), MPI_INT);
   ddd_add_member(n, &upd->Max_Num_Species, 1, MPI_INT);

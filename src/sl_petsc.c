@@ -242,7 +242,13 @@ goma_error goma_setup_petsc_matrix(struct GomaLinearSolverData *ams,
     CHKERRQ(err);
   }
 
-  CHKERRQ(PetscOptionsView(matrix_data->options,PETSC_VIEWER_STDOUT_WORLD));
+  PetscInt stokes_matrix;
+  PetscBool stokes_matrix_set;
+  PetscOptionsGetInt(NULL,NULL,"-stokes_matrix",&stokes_matrix, &stokes_matrix_set);
+
+  if (imtrx == 0) {
+    CHKERRQ(PetscOptionsView(NULL,PETSC_VIEWER_STDOUT_WORLD));
+  }
 
   err = MatCreate(MPI_COMM_WORLD, &matrix_data->mat);
     CHKERRQ(err);
@@ -255,22 +261,22 @@ goma_error goma_setup_petsc_matrix(struct GomaLinearSolverData *ams,
 
   char ksp_prefix[25];
   if (upd->Total_Num_Matrices > 1) {
-    snprintf(ksp_prefix, 24, "sys%d", imtrx);
+    snprintf(ksp_prefix, 24, "sys%d_", imtrx);
     err = MatSetOptionsPrefix(matrix_data->mat, ksp_prefix);
     CHKERRQ(err);
     err = KSPSetOptionsPrefix(matrix_data->ksp, ksp_prefix);
     CHKERRQ(err);
-    snprintf(ksp_prefix, 24, "res%d", imtrx);
+    snprintf(ksp_prefix, 24, "res%d_", imtrx);
     err = VecSetOptionsPrefix(matrix_data->residual, ksp_prefix);
     CHKERRQ(err);
-    snprintf(ksp_prefix, 24, "upd%d", pg->imtrx);
+    snprintf(ksp_prefix, 24, "upd%d_", pg->imtrx);
     err = VecSetOptionsPrefix(matrix_data->update, ksp_prefix);
     CHKERRQ(err);
   } else {
-    snprintf(ksp_prefix, 24, "res");
+    snprintf(ksp_prefix, 24, "res_");
     err = VecSetOptionsPrefix(matrix_data->residual, ksp_prefix);
     CHKERRQ(err);
-    snprintf(ksp_prefix, 24, "upd");
+    snprintf(ksp_prefix, 24, "upd_");
     err = VecSetOptionsPrefix(matrix_data->update, ksp_prefix);
     CHKERRQ(err);
   }
@@ -298,6 +304,26 @@ goma_error goma_setup_petsc_matrix(struct GomaLinearSolverData *ams,
   CHKERRQ(err);
   err = KSPSetFromOptions(matrix_data->ksp);
   CHKERRQ(err);
+
+  if (stokes_matrix_set && stokes_matrix == imtrx) {
+    GOMA_WH(GOMA_ERROR, "stokes matrix set to %ld, assuming equal order interpolation and dim %d", stokes_matrix, pd_glob[0]->Num_Dim);
+    if (pd_glob[0]->Num_Dim == 3) {
+      PC             pc;
+      const PetscInt ufields[] = {0,1,2},pfields[] = {3};
+      KSPGetPC(matrix_data->ksp, &pc);
+      PCFieldSplitSetBlockSize(pc,4);
+      PCFieldSplitSetFields(pc,"u",3,ufields,ufields);
+      PCFieldSplitSetFields(pc,"p",1,pfields,pfields);
+    } else if (pd_glob[0]->Num_Dim == 2) {
+      PC             pc;
+      const PetscInt ufields[] = {0,1},pfields[] = {3};
+      KSPGetPC(matrix_data->ksp, &pc);
+      PCFieldSplitSetBlockSize(pc,3);
+      PCFieldSplitSetFields(pc,"u",2,ufields,ufields);
+      PCFieldSplitSetFields(pc,"p",1,pfields,pfields);
+    }
+  }
+
   matrix_data->matrix_setup = PETSC_FALSE;
   return GOMA_SUCCESS;
 }

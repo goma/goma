@@ -107,12 +107,12 @@ dbl velo_vary_fnc(const int velo_condition,
     double y = x2, z = x3;
 
     //origin of circle
-    double z0 = (2.162810-1.21031)*0.5 + 1.21031;
+    double z0 = 0.0; //(2.162810-1.21031)*0.5 + 1.21031;
     double y0 = 0.0;
 
-    double R = 0.469015; // Radius of tube
+    double R = 0.1; // Radius of tube
 
-    double v_max = -4.52418;
+    double v_max = 1e-3;
 
     double coeff = v_max*(1/(R*R));
 
@@ -124,12 +124,27 @@ dbl velo_vary_fnc(const int velo_condition,
     }
   else if ( velo_condition == VVARY_BC )
     {
-      
       f =0;
     }
-  
+  else if ( velo_condition == WVARY_BC )
+    {
+      
+      double y = x2, x = x1;
 
+      //origin of circle
+      double x0 = -0.461101; //(2.162810-1.21031)*0.5 + 1.21031;
+      double y0 = -0.127;
 
+      double R = 0.17; // Radius of tube
+
+      double v_max = 1e-1;
+
+      double coeff = v_max*(1/(R*R)) * tanh(time);
+
+      double r = sqrt((y-y0)*(y-y0) + (x-x0)*(x-x0));
+
+      f = coeff * (R*R - r*r);
+    }
   return(f);
 
 /*  return((dbl)0);	*/	/* Here's a good default behavior! */

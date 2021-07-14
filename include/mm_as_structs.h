@@ -817,7 +817,6 @@ struct Uniform_Problem_Description {
                                         * vp[][] array.
                                         */
   int CoordinateSystem;
-  int Num_Dim;
   int vp[MAX_NUM_MATRICES]
         [MAX_VARIABLE_TYPES +
          MAX_CONC]; /* Mapping from the actual variable type index
