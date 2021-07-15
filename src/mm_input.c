@@ -6513,8 +6513,12 @@ rd_solver_specs(FILE *ifp,
     Linear_Solver = STRATIMIKOS;
     is_Solver_Serial = FALSE;
   } else if (strcmp(Matrix_Solver, "petsc") == 0) {
+#ifdef HAVE_PETSC
     Linear_Solver = PETSC_SOLVER;
     is_Solver_Serial = FALSE;
+#else 
+    GOMA_EH(GOMA_ERROR, "Goma not compiled with PETSc support");
+#endif
   } else {
     Linear_Solver = AZTEC;
     is_Solver_Serial = FALSE;

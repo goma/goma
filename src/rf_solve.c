@@ -794,14 +794,16 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     check_parallel_error("Matrix format / Solver incompatibility");
     ams[JAC]->RowMatrix = EpetraCreateRowMatrix(num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]);
     EpetraCreateGomaProblemGraph(ams[JAC], exo, dpi);
-  }else if (strcmp(Matrix_Format, "petsc") == 0) {
+#ifdef HAVE_PETSC
+  } else if (strcmp(Matrix_Format, "petsc") == 0) {
       err = check_compatible_solver();
       GOMA_EH(err,
          "Incompatible matrix solver for petsc, solver must be petsc");
       check_parallel_error("Matrix format / Solver incompatibility");
       pg->imtrx = 0;
-      goma_error err = goma_setup_petsc_matrix(ams[pg->imtrx], exo, dpi, num_internal_dofs[pg->imtrx], num_boundary_dofs[pg->imtrx], num_external_dofs[pg->imtrx], pg->imtrx);
+      goma_error err = goma_setup_petsc_matrix(ams[JAC], exo, dpi, num_internal_dofs[pg->imtrx], num_boundary_dofs[pg->imtrx], num_external_dofs[pg->imtrx], pg->imtrx);
       GOMA_EH(err, "goma_setup_petsc_matrix");
+#endif
   } else if (strcmp(Matrix_Format, "msr") == 0) {
     log_msg("alloc_MSR_sparse_arrays...");
     alloc_MSR_sparse_arrays(&ija, &a, &a_old, 0, node_to_fill, exo, dpi);
@@ -852,18 +854,8 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     a = ams[JAC]->val;
     if (!save_old_A)
       a_old = ams[JAC]->val_old = NULL;
-  } else if (strcmp(Matrix_Format, "front") == 0) {
-    /* Don't allocate any sparse matrix space when using front */
-    ams[JAC]->bindx   = NULL;
-    ams[JAC]->val     = NULL;
-    ams[JAC]->belfry  = NULL;
-    ams[JAC]->val_old = NULL;
-    ams[JAC]->indx  = NULL;
-    ams[JAC]->bpntr = NULL;
-    ams[JAC]->rpntr = NULL;
-    ams[JAC]->cpntr = NULL;
   } else {
-    GOMA_EH(GOMA_ERROR, "Attempted to allocate unknown sparse matrix format");
+    GOMA_EH(GOMA_ERROR, "Attempted to allocate unknown sparse matrix format: %s", Matrix_Format);
   }
 	  
   /* 
@@ -3314,6 +3306,13 @@ fprintf(stderr,"should be not successful %d %d %d \n",inewton,converged,success_
         free(ams[JAC]->GlobalIDs);
       }
     }
+#ifdef HAVE_PETSC
+    else if (strcmp(Matrix_Format, "petsc") == 0)
+    {
+      err = goma_petsc_free_matrix(ams[JAC]);
+      GOMA_EH(err, "free petsc matrix");
+    }
+#endif
 
     sl_free(matrix_systems_mask, ams);
 

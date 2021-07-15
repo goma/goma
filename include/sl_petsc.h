@@ -1,6 +1,7 @@
 #ifndef GOMA_SL_PETSC_H
 #define GOMA_SL_PETSC_H
 
+#ifdef HAVE_PETSC
 #include "dpi.h"
 #include "exo_struct.h"
 #include "mm_as_structs.h"
@@ -25,4 +26,7 @@ petsc_solve(struct GomaLinearSolverData *ams,
 goma_error petsc_scale_matrix(struct GomaLinearSolverData *ams,
 		  double *b_,
                   double *scale);
+
+goma_error goma_petsc_free_matrix(struct GomaLinearSolverData *ams);
+#endif
 #endif // GOMA_SL_PETSC_H

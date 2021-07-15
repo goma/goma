@@ -585,6 +585,7 @@ void solve_problem_segregated(
             num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]);
         EpetraCreateGomaProblemGraph(ams[pg->imtrx], exo, dpi);
       }
+#ifdef HAVE_PETSC
     } else if (strcmp(Matrix_Format, "petsc") == 0) {
       err = check_compatible_solver();
       GOMA_EH(err,
@@ -594,6 +595,7 @@ void solve_problem_segregated(
         goma_error err = goma_setup_petsc_matrix(ams[pg->imtrx], exo, dpi, num_internal_dofs[pg->imtrx], num_boundary_dofs[pg->imtrx], num_external_dofs[pg->imtrx], pg->imtrx);
         GOMA_EH(err, "goma_setup_petsc_matrix");
       }
+#endif
     } else if (strcmp(Matrix_Format, "msr") == 0) {
 
       log_msg("alloc_MSR_sparse_arrays...");
@@ -645,7 +647,7 @@ void solve_problem_segregated(
         ams[pg->imtrx]->nnz_plus = ija[pg->imtrx][num_universe_dofs[pg->imtrx]];
       }
     } else {
-      GOMA_EH(GOMA_ERROR, "Attempted to allocate unknown sparse matrix format");
+      GOMA_EH(GOMA_ERROR, "Attempted to allocate unknown sparse matrix format: %s", Matrix_Format);
     }
 
     double *global_x_AC = NULL;

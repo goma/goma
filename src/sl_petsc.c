@@ -82,13 +82,13 @@ static goma_error initialize_petsc_matrix(struct GomaLinearSolverData *ams,
       GOMA_EH(GOMA_ERROR, "Inconsistency counting unknowns.");
     }
 
-    PetscInt row_nnz = 0;
-    PetscInt off_nnz = 0;
 
     /*
      * Loop over the unknowns defined at this row node
      */
     for (int iunknown = 0; iunknown < row_num_unknowns; iunknown++) {
+      PetscInt row_nnz = 0;
+      PetscInt off_nnz = 0;
       /*
        * Retrieve the var type of the current unknown
        */
@@ -235,8 +235,6 @@ goma_error goma_setup_petsc_matrix(struct GomaLinearSolverData *ams,
 
   ams->PetscMatrixData = (void *)matrix_data;
 
-  err = PetscOptionsCreate(&matrix_data->options);
-    CHKERRQ(err);
   if (GomaPetscOptions != NULL) {
     err = PetscOptionsInsertString(NULL, GomaPetscOptions);
     CHKERRQ(err);
@@ -547,6 +545,22 @@ goma_error petsc_scale_matrix(struct GomaLinearSolverData *ams,
   exchange_dof(cx[pg->imtrx], DPI_ptr, b_, pg->imtrx);
   exchange_dof(cx[pg->imtrx], DPI_ptr, scale, pg->imtrx);
   CHKERRQ(VecDestroy(&row_sums));
+  return GOMA_SUCCESS;
+}
+
+goma_error goma_petsc_free_matrix(struct GomaLinearSolverData *ams) {
+  PetscMatrixData *matrix_data = (PetscMatrixData *) ams->PetscMatrixData;
+  PetscErrorCode err;
+
+  err = MatDestroy(&matrix_data->mat);
+    CHKERRQ(err);
+  err = VecDestroy(&matrix_data->residual);
+    CHKERRQ(err);
+  err = VecDestroy(&matrix_data->update);
+    CHKERRQ(err);
+  err = KSPDestroy(&matrix_data->ksp);
+    CHKERRQ(err);
+
   return GOMA_SUCCESS;
 }
 

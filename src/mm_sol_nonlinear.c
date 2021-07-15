@@ -1381,6 +1381,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
           GOMA_EH(GOMA_ERROR, "Sorry, only Epetra matrix formats are currently supported with the AztecOO solver suite\n");
         }
         break;
+#ifdef HAVE_PETSC
       case PETSC_SOLVER:
         if ( strcmp( Matrix_Format,"petsc" ) == 0 ) {
           int its;
@@ -1394,6 +1395,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
           GOMA_EH(GOMA_ERROR, "Sorry, only petsc matrix formats are currently supported with the petsc solver\n");
         }
         break;
+#endif
 
       case STRATIMIKOS:
         if ( strcmp( Matrix_Format,"epetra" ) == 0 ) {
