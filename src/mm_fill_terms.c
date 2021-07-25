@@ -18102,7 +18102,6 @@ continuous_surface_tension(double st, double csf[DIM][DIM],
   int    a, b, c, j;
   int    status = 0;
   int    do_deriv;
-  int dim = pd->Num_Dim;
   
   int var;
   
@@ -20522,7 +20521,6 @@ assemble_csf_tensor ( void )
 {
 	int i,j,a,b,p,q, ii, ledof;
 	int eqn, peqn, var, pvar;
-  	int dim = pd->Num_Dim;
 	
 	struct Basis_Functions *bfm;
 	dbl (* grad_phi_i_e_a ) [DIM] = NULL;
@@ -30352,7 +30350,7 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
   double h = 0.;
   double h_acous = 0.;
   int j, w, a, var_offset;
-  int var, dim;
+  int var;
 
   const double F = 96487.0;          /* Faraday's constant in units of C/euiv.; KSC: 2/17/99 */
   const double R = 8.314;            /* Universal gas constant in units of J/mole K */
@@ -30370,8 +30368,6 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
   /*
    * Unpack variables from structures for local convenience...
    */
-
-  dim   = pd->Num_Dim;
 
   /* initialize Heat Source sensitivities */
   if ( d_h != NULL )
@@ -33582,8 +33578,6 @@ acoustic_flux( double q[DIM],
 
   int b, j, p, w;
   int var;
-
-  int dim = pd->Num_Dim;
 
   if ( d_q == NULL ) {d_R = NULL;   d_k = NULL;}
   
