@@ -107,7 +107,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				 * routine "element_velocity."               */
 		dbl dvc_dnode[DIM][MDE])
 {
-  int dim, wim, p, q, r, a, b, w = -1;
+  int dim, p, q, r, a, b, w = -1;
   
   int mode; /*counter for viscoelastic modes */
   
@@ -242,11 +242,6 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
    */
 
   dim   = pd->Num_Dim;
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
 
   wt = fv->wt;
 
@@ -270,7 +265,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
    * Field variables...
    */
   
-  for ( a=0; a<wim; a++)
+  for ( a=0; a<WIM; a++)
     {
       v[a] = fv->v[a];
 
@@ -383,7 +378,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 	      x_dot_del_g[a][b] = 0.;
 	      v_dot_del_s[a][b] = 0.;
 	      x_dot_del_s[a][b] = 0.; 
-	      for ( q=0; q<wim; q++)
+	      for ( q=0; q<WIM; q++)
 		{
 		  v_dot_del_g[a][b] +=  v[q] * fv->grad_G[q][a][b];
 		  x_dot_del_g[a][b] +=  x_dot[q] * fv->grad_G[q][a][b];
@@ -643,7 +638,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 			  /*
 			   * J_S_v
 			   */
-			  for ( p=0; p<wim; p++)
+			  for ( p=0; p<WIM; p++)
 			    {
 			      var = VELOCITY1+p;
 			      if ( pd->v[var] )
@@ -1007,7 +1002,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					      d_vdotdelg_dm = 0.;
 					      d_vdotdelgt_dm = 0.;
 					      d_vdotdels_dm = 0.;
-					      for ( q=0; q<wim; q++)
+					      for ( q=0; q<WIM; q++)
 						{
 						  d_vdotdels_dm += (v[q]-x_dot[q]) * d_grad_s_dmesh[q][a][b] [p][j];
 						  d_vdotdelg_dm += (v[q]-x_dot[q]) * fv->d_grad_G_dmesh[q][a][b] [p][j];
@@ -1167,7 +1162,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					      if(DOUBLE_NONZERO(lambda))
 						{
 						  
-						  for( r=0; r<wim; r++)
+						  for( r=0; r<WIM; r++)
 						    {
 						      advection_a +=  mup * (v[r]-x_dot[r])* bf[var]->grad_phi[j][r];
 						    }
@@ -1267,7 +1262,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 						{
 						  if((a == p) && (b == q))
 						    {
-						      for( r=0; r<wim; r++)
+						      for( r=0; r<WIM; r++)
 							{
 							  advection +=  (v[r]-x_dot[r])*  bf[var]->grad_phi[j][r];
 							}
@@ -1355,7 +1350,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					* "element_velocity." */
 		       dbl dvc_dnode[DIM][MDE])
 {
-  int dim, wim, p, q, r, a, b, w, k;
+  int dim, p, q, r, a, b, w, k;
 
   int eqn, var;
   int peqn, pvar;
@@ -1503,11 +1498,6 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
    */
 
   dim   = pd->Num_Dim;
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
 
   wt = fv->wt;
 
@@ -1534,7 +1524,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
    * Field variables...
    */
   
-  for ( a=0; a<wim; a++)
+  for ( a=0; a<WIM; a++)
     {
       v[a] = fv->v[a];
 
@@ -1677,7 +1667,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 	    {
 	      v_dot_del_s[a][b] = 0.;
 	      x_dot_del_s[a][b] = 0.; 
-	      for ( q=0; q<wim; q++)
+	      for ( q=0; q<WIM; q++)
 		{
 		  v_dot_del_s[a][b] +=  v[q] * grad_s[q][a][b];
 		  x_dot_del_s[a][b] +=  x_dot[q] * grad_s[q][a][b];
@@ -1962,7 +1952,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 			  /*
 			   * J_S_v
 			   */
-			  for ( p=0; p<wim; p++)
+			  for ( p=0; p<WIM; p++)
 			    {
 			      var = VELOCITY1+p;
 			      if ( pd->v[var] )
@@ -2287,7 +2277,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					      advection_a *= wt_func *(  d_det_J_dmesh_pj * h3 + det_J * dh3dmesh_pj );
 					      
 					      d_vdotdels_dm = 0.;
-					      for ( q=0; q<wim; q++)
+					      for ( q=0; q<WIM; q++)
 						{
 						  d_vdotdels_dm += (v[q]-x_dot[q]) * d_grad_s_dmesh[q][a][b] [p][j];
 						}
@@ -2481,7 +2471,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 						{
 						  if((a == p) && (b == q))
 						    {
-						      for( r=0; r<wim; r++)
+						      for( r=0; r<WIM; r++)
 							{
 							  advection +=  (v[r]-x_dot[r])*  bf[var]->grad_phi[j][r];
 							}
@@ -2567,7 +2557,7 @@ assemble_stress_log_conf(dbl tt,
 		     dbl vcent[DIM], 
 		     dbl dvc_dnode[DIM][MDE])
 {
-  int dim, wim, p, q, a, b, w;
+  int dim, p, q, a, b, w;
   int eqn, siz;
 
   int i, j, status, mode;
@@ -2649,11 +2639,6 @@ assemble_stress_log_conf(dbl tt,
     }
 
   dim   = pd->Num_Dim;
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
   wt = fv->wt;
   det_J = bf[eqn]->detJ;
   h3 = fv->h3;		      
@@ -2667,7 +2652,7 @@ assemble_stress_log_conf(dbl tt,
   memset( exp_s, 0, sizeof(double)*DIM*DIM);
   
   //Load up field variables
-  for(a=0; a<wim; a++)
+  for(a=0; a<WIM; a++)
     {
       //Velocity
       v[a] = fv->v[a];
@@ -3002,7 +2987,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 					* "element_velocity." */
 			  dbl dvc_dnode[DIM][MDE])
 {
-  int dim, wim, p, q, r, a, b, w;
+  int dim, p, q, r, a, b, w;
 
   int eqn, var;
   int peqn, pvar;
@@ -3117,11 +3102,6 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
    */
 
   dim   = pd->Num_Dim;
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
 
   wt = fv->wt;
 
@@ -3148,7 +3128,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
    * Field variables...
    */
   
-  for ( a=0; a<wim; a++)
+  for ( a=0; a<WIM; a++)
     {
       v[a] = fv->v[a];
 
@@ -3445,7 +3425,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 			  /*
 			   * J_S_v
 			   */
-			  for ( p=0; p<wim; p++)
+			  for ( p=0; p<WIM; p++)
 			    {
 			      var = VELOCITY1+p;
 			      if ( pd->v[var] )
@@ -3827,7 +3807,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 					    {
 					      if((a == p) && (b == q))
 						{
-						  for( r=0; r<wim; r++)
+						  for( r=0; r<WIM; r++)
 						    {
 						      advection +=  (v[r]-x_dot[r])*  bf[var]->grad_phi[j][r];
 						    }
@@ -3875,7 +3855,7 @@ assemble_gradient(dbl tt,	/* parameter to vary time integration from
 				 * explicit (tt = 1) to implicit (tt = 0) */
 		  dbl dt)	/* current time step size */
 {
-  int dim, wim;
+  int dim;
   int p, q, a, b;
   
   int eqn, var;
@@ -3946,11 +3926,6 @@ assemble_gradient(dbl tt,	/* parameter to vary time integration from
    */
   
   dim   = pd->Num_Dim;
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
   
   eqn   = R_GRADIENT11;			
   
@@ -4097,7 +4072,7 @@ assemble_gradient(dbl tt,	/* parameter to vary time integration from
 		  /*
 		   * J_G_v
 		   */
-		  for ( p=0; p<wim; p++)
+		  for ( p=0; p<WIM; p++)
 		    {
 		      var = VELOCITY1+p;
 		      if ( pd->v[var] )
@@ -4367,7 +4342,7 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 /*    TAB certifies that this function conforms to the exo/patran side numbering convention 11/9/98. */
 
 /* LOCAL VARIABLES */
-  int ip, ip1, i, j, dim, wim;     /* counters */
+  int ip, ip1, i, j, dim;     /* counters */
   int a, b, p, q;    /* more counters */
   int nodes_per_side;
   int local_elem_node_id[MAX_NODES_PER_SIDE];
@@ -4437,12 +4412,6 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
   ip_total = elem_info(NQUAD_SURF, ielem_type);
   
   dim =  pd->Num_Dim;
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
-
 
   /* allocate space for x_neighbor */
 
@@ -4688,7 +4657,7 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 
       vdotn_avg = 0.;
       vdotn_norm = 0.;
-      for( a=0; a< wim; a++)
+      for( a=0; a< WIM; a++)
 	{
 	  vdotn_avg += fv->v[a] * fv->snormal[a];
 	  vdotn_norm += fv->v[a]* fv->v[a];
@@ -4813,7 +4782,7 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 	    }
 
 	  vdotn = 0.;
-	  for( a=0; a< wim; a++)
+	  for( a=0; a< WIM; a++)
 	    {
 	      vdotn += fv->v[a]* fv->snormal[a];
 	    }

@@ -49,6 +49,7 @@ Multicomponent;	/* Select fomulation for multicomponent transport   */
 /* global variable to account for extra terms in axisymmetric or swirling
    flow problems: define in setup_pd */
 int VIM;
+int WIM;
 
 /* Boundary Condition information */
 

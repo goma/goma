@@ -993,8 +993,8 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 /*  BC_Data_Float[1]&[2] are now used for external pressure and shear stress  */
 	    if (BC_Types[bc_input_id].BC_Name == CAPILLARY_TABLE_BC)
                {
-	  apply_table_wic_bc(func, d_func, &BC_Types[bc_input_id], time_value);
-              pb[0] += func[0];
+	        apply_table_wic_bc(func, d_func, &BC_Types[bc_input_id], time_value);
+                pb[0] += func[0];
                }
 
 	    fn_dot_T(cfunc, d_cfunc, elem_side_bc->id_side,

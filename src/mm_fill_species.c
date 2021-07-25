@@ -10166,11 +10166,6 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
   int explicit[MAX_CONC]; /* move to input deck asap */
 
   int species;			/* Species number for the particle phase. */
-  int wim   = pd->Num_Dim;    /* wim is the number of velocity unknowns */
-  if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-     pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
 
   if (mp->DensityModel == SUSPENSION_PM)
     species = (int) mp->u_density[0];
@@ -11616,7 +11611,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 		}
 	    }
 
-	  for (a = 0; a < wim; a++)
+	  for (a = 0; a < WIM; a++)
 	    {
 	      var = VELOCITY1 + a;
 	      if ( pd->v[var] )

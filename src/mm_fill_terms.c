@@ -2363,8 +2363,6 @@ assemble_momentum(dbl time,       /* current time */
 #endif
 
   int dim;
-  //! wim is the length of the velocity vector
-  int wim;
   int i, j, jk, p, q, a, b, c;
 
   int ledof, eqn, var, ii, peqn, pvar, w;
@@ -2546,11 +2544,6 @@ assemble_momentum(dbl time,       /* current time */
     }
 
   dim   = pd->Num_Dim;
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
 
   wt = fv->wt;
 
@@ -2726,7 +2719,7 @@ assemble_momentum(dbl time,       /* current time */
   /* for porous media stuff */
 #ifdef DO_NO_UNROLL
   speed = 0.0;
-  for ( a=0; a<wim; a++)
+  for ( a=0; a<WIM; a++)
     {
       speed += v[a]*v[a];
     }
@@ -2736,7 +2729,7 @@ assemble_momentum(dbl time,       /* current time */
 #else
   speed = 0.0;
   speed += v[0]*v[0] + v[1]*v[1] ;
-  if( wim == 3 ) speed += v[2]*v[2];
+  if( WIM == 3 ) speed += v[2]*v[2];
 
   speed = sqrt(speed);
 
@@ -2780,7 +2773,7 @@ assemble_momentum(dbl time,       /* current time */
       /*
        * Assemble each component "a" of the momentum equation...
        */
-      for ( a=0; a<wim; a++)
+      for ( a=0; a<WIM; a++)
 	{
 	  eqn  = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -2872,14 +2865,14 @@ assemble_momentum(dbl time,       /* current time */
 	      if (advection_on)
 		{
 #ifdef DO_NO_UNROLL
-		  for ( p=0; p<wim; p++)
+		  for ( p=0; p<WIM; p++)
 		    {
 		      advection += (v[p] - x_dot[p]) * grad_v[p][a];
 		    }
 #else
 		  advection += (v[0] - x_dot[0]) * grad_v[0][a];
 		  advection += (v[1] - x_dot[1]) * grad_v[1][a];
-		  if (wim == 3) advection += (v[2] - x_dot[2]) * grad_v[2][a];
+		  if (WIM == 3) advection += (v[2] - x_dot[2]) * grad_v[2][a];
 #endif
 		  advection *= rho;
 		  advection *= - wt_func*d_area;
@@ -3001,7 +2994,7 @@ assemble_momentum(dbl time,       /* current time */
 
   if (af->Assemble_Jacobian)
     {
-      for (a = 0; a < wim; a++)
+      for (a = 0; a < WIM; a++)
 	{
 	  eqn  = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -3110,14 +3103,14 @@ assemble_momentum(dbl time,       /* current time */
 		      if ( advection_on )
 			{
 #ifdef DO_NO_UNROLL
-			  for ( p=0; p<wim; p++)
+			  for ( p=0; p<WIM; p++)
 			    {
 			      advection += (v[p] - x_dot[p]) * grad_v[p][a];
 			    }
 #else
 			  advection += (v[0] - x_dot[0]) * grad_v[0][a];
 			  advection += (v[1] - x_dot[1]) * grad_v[1][a];
-			  if(wim==3) advection += (v[2] - x_dot[2]) * grad_v[2][a];
+			  if(WIM==3) advection += (v[2] - x_dot[2]) * grad_v[2][a];
 #endif
 
 			  advection *= - wt_func * d_rho->T[j] * d_area;
@@ -3309,14 +3302,14 @@ assemble_momentum(dbl time,       /* current time */
 		      if ( advection_on )
 			{
 #ifdef DO_NO_UNROLL
-			  for ( p=0; p<wim; p++)
+			  for ( p=0; p<WIM; p++)
 			    {
 			      advection += (v[p] - x_dot[p]) * grad_v[p][a];
 			    }
 #else
 			  advection += (v[0] - x_dot[0]) * grad_v[0][a];
 			  advection += (v[1] - x_dot[1]) * grad_v[1][a];
-			  if(wim==3) advection += (v[2] - x_dot[2]) * grad_v[2][a];
+			  if(WIM==3) advection += (v[2] - x_dot[2]) * grad_v[2][a];
 #endif
 			  advection *= - wt_func * d_rho->F[j] * d_area;
 			  advection *= advection_etm;
@@ -3412,7 +3405,7 @@ assemble_momentum(dbl time,       /* current time */
 	      /*
 	       * J_m_v
 	       */
-	      for ( b=0; b<wim; b++)
+	      for ( b=0; b<WIM; b++)
 		{
 		  var = VELOCITY1+b;
 		  if ( pdv[var] )
@@ -3489,14 +3482,14 @@ assemble_momentum(dbl time,       /* current time */
 			      advection_a += phi_j * grad_v[b][a];
 
 #ifdef DO_NO_UNROLL
-			      for ( p=0; p<wim; p++)
+			      for ( p=0; p<WIM; p++)
 				{
 				  advection_a += (v[p] - x_dot[p]) * bf[var]->grad_phi_e[j][b][p][a];
 				}
 #else 
 			      advection_a += (v[0] - x_dot[0]) * bf[var]->grad_phi_e[j][b][0][a];
 			      advection_a += (v[1] - x_dot[1]) * bf[var]->grad_phi_e[j][b][1][a];
-			      if(wim==3) advection_a += (v[2] - x_dot[2]) * bf[var]->grad_phi_e[j][b][2][a];
+			      if(WIM==3) advection_a += (v[2] - x_dot[2]) * bf[var]->grad_phi_e[j][b][2][a];
 #endif
 
 
@@ -3640,7 +3633,7 @@ assemble_momentum(dbl time,       /* current time */
 	       * J_m_E (E_field from EHD source)
 	       */
 	      if ( pdv[EFIELD1] ) {
-		for ( b=0; b<wim; b++)
+		for ( b=0; b<WIM; b++)
 		  {
 		    var = EFIELD1+b;
 		    if ( pdv[var] )
@@ -3886,7 +3879,7 @@ assemble_momentum(dbl time,       /* current time */
 			  advection = 0.;
 			  if ( pd->e[eqn] & T_ADVECTION )
 			    {
-			      for ( p=0; p<wim; p++)
+			      for ( p=0; p<WIM; p++)
 				{
 				  advection += (v[p] - x_dot[p]) *
 				    grad_v[p][a];
@@ -4200,7 +4193,7 @@ assemble_momentum(dbl time,       /* current time */
 				 */
 #ifdef DO_NO_UNROLL
 				advection_a = 0.;
-				for ( p=0; p<wim; p++)
+				for ( p=0; p<WIM; p++)
 				  {
 				    advection_a +=
 				      (v[p]-x_dot[p])
@@ -4209,22 +4202,22 @@ assemble_momentum(dbl time,       /* current time */
 				advection_a *= -wt_func * rho * d_area;
 
 				advection_b = 0.;
-				for ( p=0; p<wim; p++)
+				for ( p=0; p<WIM; p++)
 				  {
-				    advection_b += (v[p]    -x_dot[p]) * grad_v[p][a];
+				    advection_b += (v[p] - x_dot[p]) * grad_v[p][a];
 				  }
 #else
 				advection_a = 0.;
 				advection_a += (v[0]-x_dot[0]) * fv->d_grad_v_dmesh[0][a] [b][j];
 				advection_a += (v[1]-x_dot[1]) * fv->d_grad_v_dmesh[1][a] [b][j];
-				if( wim == 3 ) advection_a += (v[2]-x_dot[2]) * fv->d_grad_v_dmesh[2][a] [b][j];
+				if( WIM == 3 ) advection_a += (v[2]-x_dot[2]) * fv->d_grad_v_dmesh[2][a] [b][j];
 
 				advection_a *= -wt_func * rho * d_area;
 
 				advection_b = 0.;
 				advection_b += (v[0]    -x_dot[0]) * grad_v[0][a];
 				advection_b += (v[1]    -x_dot[1]) * grad_v[1][a];
-				if ( wim == 3 ) advection_b += (v[2]    -x_dot[2]) * grad_v[2][a];
+				if ( WIM == 3 ) advection_b += (v[2]    -x_dot[2]) * grad_v[2][a];
 #endif
 				advection_b *=
 				  -wt_func * rho * wt *
@@ -4237,7 +4230,7 @@ assemble_momentum(dbl time,       /* current time */
 				    if ( mass_on)
 				      {
 #ifdef DO_NO_UNROLL
-					for ( p=0; p<wim; p++)
+					for ( p=0; p<WIM; p++)
 					  {
 					    advection_c +=   (-(1.+2.*tt) * phi_j/dt * (double)delta(p,b))
 					      * grad_v[p][a];
@@ -4245,7 +4238,7 @@ assemble_momentum(dbl time,       /* current time */
 #else
 					advection_c +=   (-(1.+2.*tt) * phi_j/dt * (double)delta(0,b)) * grad_v[0][a];
 					advection_c +=   (-(1.+2.*tt) * phi_j/dt * (double)delta(1,b)) * grad_v[1][a];
-					if( wim == 3 ) advection_c +=   (-(1.+2.*tt) * phi_j/dt * (double)delta(2,b)) * grad_v[2][a];
+					if( WIM == 3 ) advection_c +=   (-(1.+2.*tt) * phi_j/dt * (double)delta(2,b)) * grad_v[2][a];
 #endif
 					advection_c *= -wt_func * rho * d_area;
 				      }
@@ -4446,7 +4439,7 @@ assemble_continuity(dbl time_value,   /* current time */
 		    dbl dt,	/* current time step size                    */
 		    const PG_DATA *pg_data )
 {
-  int dim, wim;
+  int dim;
   int p, q, a, b;
 
   int eqn, var;
@@ -4564,11 +4557,6 @@ assemble_continuity(dbl time_value,   /* current time */
     }
 
   dim   = pd->Num_Dim;
-  wim   = dim;
-  if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-     pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
   
   if (pd->v[POLYMER_STRESS11])
     {
@@ -4900,7 +4888,7 @@ assemble_continuity(dbl time_value,   /* current time */
 		  if (particle_momentum_on)
 		    {
 		      source = 0.0;
- 		      for(a = 0; a < wim; a++ )
+ 		      for(a = 0; a < WIM; a++ )
 			{
 			  /* Cannot use s_terms.conv_flux[a] here because that
 			   * is defined in terms of the particle phase
@@ -4946,7 +4934,7 @@ assemble_continuity(dbl time_value,   /* current time */
 	  pressure_stabilization = 0.0;
 	  if (PSPG)
 	    {
-	      for ( a=0; a<wim; a++)
+	      for ( a=0; a<WIM; a++)
 		{
 		  meqn = R_MOMENTUM1+a;
 		  if( pd->e[meqn])
@@ -5011,7 +4999,7 @@ assemble_continuity(dbl time_value,   /* current time */
 	  /* 
 	   * J_c_v NOTE that this is applied whenever velocity is a variable
 	   */
-	  for ( b=0; b<wim; b++)
+	  for ( b=0; b<WIM; b++)
 	    {
 	      var = VELOCITY1+b;
 	      if ( pdv[var] )
@@ -5102,7 +5090,7 @@ assemble_continuity(dbl time_value,   /* current time */
 		      pressure_stabilization = 0.;  
 		      if (PSPG)
 			{
-			  for ( a=0; a<wim; a++)
+			  for ( a=0; a<WIM; a++)
 			    {
 			      meqn = R_MOMENTUM1+a;
 			      if( pd->e[meqn])
@@ -5144,7 +5132,7 @@ assemble_continuity(dbl time_value,   /* current time */
 		   */
 		  pressure_stabilization = 0.;  
 
-		  for ( a=0; a<wim; a++)
+		  for ( a=0; a<WIM; a++)
 		    {
 		      meqn = R_MOMENTUM1+a;
 		      if( pd->e[meqn])
@@ -5259,7 +5247,7 @@ assemble_continuity(dbl time_value,   /* current time */
 		  pressure_stabilization = 0.;
 		  if(PSPG)
 		    {
-		      for ( a=0; a<wim; a++)
+		      for ( a=0; a<WIM; a++)
 			{
 			  meqn = R_MOMENTUM1 + a;
 			  if ( pd->e[meqn] & T_DIFFUSION )
@@ -5299,7 +5287,7 @@ assemble_continuity(dbl time_value,   /* current time */
 				{
 				  pressure_stabilization = 0.;
 				  
-				  for ( a=0; a<wim; a++)
+				  for ( a=0; a<WIM; a++)
 				    {
 				      meqn = R_MOMENTUM1+a;
 				      if( pd->e[meqn])
@@ -5336,7 +5324,7 @@ assemble_continuity(dbl time_value,   /* current time */
 			    {
 			      pressure_stabilization = 0.;
 				  
-			      for ( a=0; a<wim; a++)
+			      for ( a=0; a<WIM; a++)
 				{
 				  meqn = R_MOMENTUM1+a;
 				  if( pd->e[meqn])
@@ -5542,7 +5530,7 @@ assemble_continuity(dbl time_value,   /* current time */
 		      pressure_stabilization = 0.0;  
 		      if (PSPG)
 			{
-			  for ( a=0; a<wim; a++)
+			  for ( a=0; a<WIM; a++)
 			    {
 			      meqn = R_MOMENTUM1+a;
 			      if( pd->e[meqn])
@@ -5642,7 +5630,7 @@ assemble_continuity(dbl time_value,   /* current time */
 		      pressure_stabilization = 0.;
 		      if(PSPG)
 			{
-			  for ( a=0; a<wim; a++)
+			  for ( a=0; a<WIM; a++)
 			    {
 			      meqn = R_MOMENTUM1 + a;
 			      if ( pd->e[meqn] & T_DIFFUSION )
@@ -5672,7 +5660,7 @@ assemble_continuity(dbl time_value,   /* current time */
 			  if( pd->e[eqn] & T_SOURCE )
 			    {
 			      source_a = 0.0;
-			      for( a=0; a<wim; a++)
+			      for( a=0; a<WIM; a++)
 				source_a -= grad_phi[j][a]*v[a];
 			      source_a *= phi_i * det_J * h3 * wt;
 			      
@@ -6973,7 +6961,7 @@ assemble_ls_momentum_source(void)
   int peqn, pvar;
   int var;
 
-  int dim,wim;
+  int dim;
   int eqn;
   int status=0;
   struct Basis_Functions *bfm;
@@ -6992,11 +6980,6 @@ assemble_ls_momentum_source(void)
 
 
   dim   = pd->Num_Dim;
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
     
   /*
    * Bail out fast if there's nothing to do...
@@ -7184,7 +7167,6 @@ apply_ls_momentum_source(void)
 {
   int i,j,a, ii, ledof;
   int eqn, peqn, var, pvar;
-  int dim, wim;
 
   struct Basis_Functions *bfm;
 
@@ -7209,21 +7191,13 @@ apply_ls_momentum_source(void)
       det_J = bf[eqn]->detJ;
     }
 
-  dim   = pd->Num_Dim;
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
-
-
 #ifdef COUPLED_FILL
   /* finite difference calculation of path dependencies for
      subelement integration
    */
   if ( ls->CalcSurfDependencies )
     {
-      for( a=0; a<wim; a++ )
+      for( a=0; a<WIM; a++ )
 	{
 	  eqn = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -7269,7 +7243,7 @@ apply_ls_momentum_source(void)
   if ( af->Assemble_Residual ) 
     {
       
-      for( a=0; a<wim; a++ )
+      for( a=0; a<WIM; a++ )
 	{
 	  eqn = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -7304,7 +7278,7 @@ apply_ls_momentum_source(void)
 
   if( af->Assemble_Jacobian )
     {
-      for( a=0; a<wim; a++ )
+      for( a=0; a<WIM; a++ )
 	{
 	  eqn = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -7523,9 +7497,6 @@ load_fv(void)
   int i;			/* index */
   int p, q;			/* dimension indeces */
   int dim;
-  int velodim;			/* Someday...we might have more velocity */
-				/* components than we have spatial dimensions */
-				/* these are the 2.5 dimensional problems.*/
   int dofs;			/* degrees of freedom for a var in the elem */
   int w;			/* concentration species and porous media vars counter */
   int node, index;
@@ -8407,19 +8378,10 @@ load_fv(void)
    * Velocity (vector)...
    */
   
-  velodim = dim;		/* Later, this might include v_theta... */
-
-  /* Change here in case the 3rd velocity component is non-zero
-   * (non LSA situation). */
-  if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-     pd->CoordinateSystem == CARTESIAN_2pt5D)
-    velodim = dim + 1; /* Later is Now!  Woo!!! */
-
   /*
    * Default: all velocities are zero...
    */
-  for ( p=0; p<velodim; p++)
+  for ( p=0; p<WIM; p++)
     {
       v = VELOCITY1 + p;
       if ( pdv[v] )
@@ -8448,7 +8410,7 @@ load_fv(void)
   /*
    * Default: all velocities are zero...
    */
-  /*  for ( p=velodim; p<DIM; p++)
+  /*  for ( p=WIM; p<DIM; p++)
       {
       v = PVELOCITY1 + p;
       if ( pd->v[v] || (upd->vp[v] == -1) )
@@ -8459,7 +8421,7 @@ load_fv(void)
       }
       } */
 
-  for ( p=0; pdv[PVELOCITY1] && p<velodim; p++)
+  for ( p=0; pdv[PVELOCITY1] && p<WIM; p++)
     {
       v = PVELOCITY1 + p;
       if ( pdv[v] )
@@ -8495,7 +8457,7 @@ load_fv(void)
   /*
    * Default: all velocities are zero...
    */
-  for ( p=0; pdv[EFIELD1] && p<velodim; p++)
+  for ( p=0; pdv[EFIELD1] && p<WIM; p++)
     {
       v =  EFIELD1 + p;
       
@@ -9200,12 +9162,6 @@ load_fv_grads(void)
   int transient_run =  (pd->TimeIntegration != STEADY) ;
   BASIS_FUNCTIONS_STRUCT *bfn;
 
-  int wim = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D) {
-    wim = wim+1;
-  }
 
   /* Use a static flag so unused grads are zero on first call, but are not zero subsequently
   *  This is for efficieny
@@ -9585,7 +9541,7 @@ load_fv_grads(void)
 	    {
 	      fv->grad_v[p][q] = 0.0;
 	      fv_old->grad_v[p][q] = 0.0;
-	      for (r = 0; r < wim; r++)
+	      for (r = 0; r < WIM; r++)
 		{
 		  for (i = 0; i < dofs; i++)
 		    {
@@ -9623,7 +9579,7 @@ load_fv_grads(void)
 	{
 	  for ( q=0; q<VIM; q++)
 	    {
-	      for (r = 0; r < wim; r++)
+	      for (r = 0; r < WIM; r++)
 		{
 		  for ( i=0; i<dofs; i++)
 		    {
@@ -9781,7 +9737,7 @@ load_fv_grads(void)
 	  for (q = 0; q < VIM; q++)
 	    {
 	      fv->grad_E_field[p][q] = 0.0;
-	      for (r = 0; r < wim; r++)
+	      for (r = 0; r < WIM; r++)
 		{
 		  for (i = 0; i < dofs; i++)
 		    {
@@ -10985,7 +10941,7 @@ load_fv_grads(void)
           for (q = 0; q < VIM; q++) {
               fv->grad_em_hr[p][q] = 0.0;
               fv_old->grad_em_hr[p][q] = 0.0;
-              for (r = 0; r < wim; r++) {
+              for (r = 0; r < WIM; r++) {
                   for (i = 0; i < dofs; i++) {
                       fv->grad_em_hr[p][q] += (*esp->em_hr[r][i]) * bf[v]->grad_phi_e[i][r] [p][q];
                       if ( pd->TimeIntegration != STEADY ) {
@@ -11017,7 +10973,7 @@ load_fv_grads(void)
           for (q = 0; q < VIM; q++) {
               fv->grad_em_hi[p][q] = 0.0;
               fv_old->grad_em_hi[p][q] = 0.0;
-              for (r = 0; r < wim; r++) {
+              for (r = 0; r < WIM; r++) {
                   for (i = 0; i < dofs; i++) {
                       fv->grad_em_hi[p][q] += (*esp->em_hi[r][i]) * bf[v]->grad_phi_e[i][r] [p][q];
                       if ( pd->TimeIntegration != STEADY ) {
@@ -11185,7 +11141,6 @@ load_fv_mesh_derivs(int okToZero)
   int mdofs;			/* degrees of freedom for mesh in the elem */
   int w;			/* concentration species */
   int status;
-  int wim;                      /* Number of components in the velocity vector */
   int dimNonSym;                /* # of dimensions that don't have symmetry */
   int dim;                      /* # dimensions in the physical mesh */
   int siz;
@@ -11225,22 +11180,6 @@ load_fv_mesh_derivs(int okToZero)
 
   dim       =  pd->Num_Dim;
   dimNonSym =  pd->Num_Dim;
-  if( (pd->CoordinateSystem == CARTESIAN) ||
-      (pd->CoordinateSystem == CYLINDRICAL) )
-    {
-      wim = pd->Num_Dim;
-    }
-  else if ( (pd->CoordinateSystem == SWIRLING) ||
-	    (pd->CoordinateSystem == PROJECTED_CARTESIAN) ||
-	    (pd->CoordinateSystem == CARTESIAN_2pt5D) )
-    {
-      wim = 3;
-    }
-  else
-    {
-      wim = VIM;
-    }
-
 
   mdofs = ei->dof[R_MESH1];
 
@@ -13340,7 +13279,7 @@ if ( pd->v[SHELL_LUB_CURV_2] )
       siz = sizeof(double)*DIM*VIM*DIM*MDE;
       memset(fv->d_grad_v_dmesh,0, siz);
 	  
-      for (r = 0; r < wim; r++)
+      for (r = 0; r < WIM; r++)
 	{
 	  for (i = 0; i < vdofs; i++)
 	    {  
@@ -13384,7 +13323,7 @@ if ( pd->v[SHELL_LUB_CURV_2] )
 	    }
 	}
       
-      for (r = 0; r < wim; r++)
+      for (r = 0; r < WIM; r++)
 	{
 	  for (i = 0; i < vdofs; i++)
 	    {
@@ -13451,7 +13390,7 @@ if ( pd->v[SHELL_LUB_CURV_2] )
       siz = sizeof(double)*DIM*DIM*DIM*MDE;
       memset(fv->d_grad_pv_dmesh, 0, siz);	  
 	  
-      for (r = 0; r < wim; r++)
+      for (r = 0; r < WIM; r++)
 	{
 	  for (i = 0; i < vdofs; i++)
 	    {
@@ -13593,7 +13532,7 @@ if ( pd->v[SHELL_LUB_CURV_2] )
       siz = sizeof(double)*DIM*DIM*DIM*MDE;
       memset(fv->d_grad_E_field_dmesh,0, siz);
 	  
-      for (r = 0; r < wim; r++)
+      for (r = 0; r < WIM; r++)
 	{
 	  for (i = 0; i < vdofs; i++)
 	    {
@@ -13633,7 +13572,7 @@ if ( pd->v[SHELL_LUB_CURV_2] )
       siz = sizeof(double)*DIM*VIM*DIM*MDE;
       memset(fv->d_grad_em_er_dmesh,0, siz);
 	  
-      for (r = 0; r < wim; r++)
+      for (r = 0; r < WIM; r++)
 	{
 	  for (i = 0; i < vdofs; i++)
 	    {  
@@ -13677,7 +13616,7 @@ if ( pd->v[SHELL_LUB_CURV_2] )
 	    }
 	}
       
-      for (r = 0; r < wim; r++)
+      for (r = 0; r < WIM; r++)
 	{
 	  for (i = 0; i < vdofs; i++)
 	    {
@@ -13726,7 +13665,7 @@ if ( pd->v[SHELL_LUB_CURV_2] )
       siz = sizeof(double)*DIM*VIM*DIM*MDE;
       memset(fv->d_grad_em_ei_dmesh,0, siz);
 	  
-      for (r = 0; r < wim; r++)
+      for (r = 0; r < WIM; r++)
 	{
 	  for (i = 0; i < vdofs; i++)
 	    {  
@@ -13770,7 +13709,7 @@ if ( pd->v[SHELL_LUB_CURV_2] )
 	    }
 	}
       
-      for (r = 0; r < wim; r++)
+      for (r = 0; r < WIM; r++)
 	{
 	  for (i = 0; i < vdofs; i++)
 	    {
@@ -13819,7 +13758,7 @@ if ( pd->v[SHELL_LUB_CURV_2] )
       siz = sizeof(double)*DIM*VIM*DIM*MDE;
       memset(fv->d_grad_em_hr_dmesh,0, siz);
 	  
-      for (r = 0; r < wim; r++)
+      for (r = 0; r < WIM; r++)
 	{
 	  for (i = 0; i < vdofs; i++)
 	    {  
@@ -13863,7 +13802,7 @@ if ( pd->v[SHELL_LUB_CURV_2] )
 	    }
 	}
       
-      for (r = 0; r < wim; r++)
+      for (r = 0; r < WIM; r++)
 	{
 	  for (i = 0; i < vdofs; i++)
 	    {
@@ -13912,7 +13851,7 @@ if ( pd->v[SHELL_LUB_CURV_2] )
       siz = sizeof(double)*DIM*VIM*DIM*MDE;
       memset(fv->d_grad_em_hi_dmesh,0, siz);
 	  
-      for (r = 0; r < wim; r++)
+      for (r = 0; r < WIM; r++)
 	{
 	  for (i = 0; i < vdofs; i++)
 	    {  
@@ -13956,7 +13895,7 @@ if ( pd->v[SHELL_LUB_CURV_2] )
 	    }
 	}
       
-      for (r = 0; r < wim; r++)
+      for (r = 0; r < WIM; r++)
 	{
 	  for (i = 0; i < vdofs; i++)
 	    {
@@ -18163,6 +18102,7 @@ continuous_surface_tension(double st, double csf[DIM][DIM],
   int    a, b, c, j;
   int    status = 0;
   int    do_deriv;
+  int dim = pd->Num_Dim;
   
   int var;
   
@@ -20422,7 +20362,6 @@ assemble_pf_capillary (double *pf_surf_tens )
 {
   int i,j,a,p,q, ii, ledof;
   int eqn, peqn, var, pvar;
-  int dim, wim;
   
   int pf;
 
@@ -20456,15 +20395,6 @@ assemble_pf_capillary (double *pf_surf_tens )
       det_J = bf[eqn]->detJ;
     }
 
-  dim   = pd->Num_Dim;
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
-
-
-
   for( pf=0; pf<pfd->num_phase_funcs; pf++)
   {
 	memset( csf,          0, sizeof(double)*DIM*DIM);
@@ -20482,7 +20412,7 @@ assemble_pf_capillary (double *pf_surf_tens )
   if ( af->Assemble_Residual ) 
     {
       
-      for( a=0; a<wim; a++ )
+      for( a=0; a<WIM; a++ )
 	{
 	  eqn = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -20528,7 +20458,7 @@ assemble_pf_capillary (double *pf_surf_tens )
 
   if( af->Assemble_Jacobian )
     {
-      for( a=0; a<wim; a++ )
+      for( a=0; a<WIM; a++ )
 	{
 	  eqn = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -20592,7 +20522,7 @@ assemble_csf_tensor ( void )
 {
 	int i,j,a,b,p,q, ii, ledof;
 	int eqn, peqn, var, pvar;
-	int dim, wim;
+  	int dim = pd->Num_Dim;
 	
 	struct Basis_Functions *bfm;
 	dbl (* grad_phi_i_e_a ) [DIM] = NULL;
@@ -20624,13 +20554,6 @@ assemble_csf_tensor ( void )
 	
 	d_area = wt * det_J*h3;
 	
-	dim   = pd->Num_Dim;
-	wim   = dim;
-	if (pd->CoordinateSystem == SWIRLING ||
-		pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-		pd->CoordinateSystem == CARTESIAN_2pt5D)
-		wim = wim+1;
-	
 	memset( csf,          0, sizeof(double)*DIM*DIM);
 	memset( d_csf_dF,     0, sizeof(double)*DIM*DIM*MDE);
 	memset( d_csf_dX,     0, sizeof(double)*DIM*DIM*DIM*MDE);
@@ -20643,7 +20566,7 @@ assemble_csf_tensor ( void )
 		*/
 	if ( ls->CalcSurfDependencies )
     {
-		for( a=0; a<wim; a++ )
+		for( a=0; a<WIM; a++ )
 		{
 			eqn = R_MOMENTUM1 + a;
 			peqn = upd->ep[eqn];
@@ -20698,7 +20621,7 @@ assemble_csf_tensor ( void )
 	if ( af->Assemble_Residual ) 
     {
 		
-		for( a=0; a<wim; a++ )
+		for( a=0; a<WIM; a++ )
 		{
 			eqn = R_MOMENTUM1 + a;
 			peqn = upd->ep[eqn];
@@ -20760,7 +20683,7 @@ assemble_csf_tensor ( void )
 	
 	if( af->Assemble_Jacobian )
     {
-		for( a=0; a<wim; a++ )
+		for( a=0; a<WIM; a++ )
 		{
 			eqn = R_MOMENTUM1 + a;
 			peqn = upd->ep[eqn];
@@ -20889,7 +20812,7 @@ assemble_div_n_source ( )
 {
   int i, j, a, b, p, ii, ledof;
   int eqn, peqn, var, pvar;
-  int dim, wim;
+  int dim;
 
   struct Basis_Functions *bfm;
 
@@ -20916,11 +20839,6 @@ assemble_div_n_source ( )
     }
   
   dim   = pd->Num_Dim;
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;	
 
 #ifdef COUPLED_FILL
   /* finite difference calculation of path dependencies for
@@ -20928,7 +20846,7 @@ assemble_div_n_source ( )
   */
   if (ls->CalcSurfDependencies)
     {
-      for (a = 0; a < wim; a++ )
+      for (a = 0; a < WIM; a++ )
 	{
 	  eqn = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -20974,7 +20892,7 @@ assemble_div_n_source ( )
 
   if ( af->Assemble_Residual ) 
     {
-      for( a=0; a<wim; a++ )
+      for( a=0; a<WIM; a++ )
 	{
 	  eqn = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -21012,7 +20930,7 @@ assemble_div_n_source ( )
 
   if (af->Assemble_Jacobian)
     {
-      for( a=0; a<wim; a++ )
+      for( a=0; a<WIM; a++ )
 	{
 	  eqn = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -21128,7 +21046,7 @@ assemble_div_s_n_source ( )
 {
   int i,j,a,b,p,q, ii, ledof;
   int eqn, peqn, var, pvar;
-  int dim, wim;
+  int dim;
 
   struct Basis_Functions *bfm;
 
@@ -21151,11 +21069,6 @@ assemble_div_s_n_source ( )
     	{det_J = bf[eqn]->detJ; }
 
   dim   = pd->Num_Dim;
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;	
 
 #ifdef COUPLED_FILL
   /* finite difference calculation of path dependencies for
@@ -21163,7 +21076,7 @@ assemble_div_s_n_source ( )
    */
   if ( ls->CalcSurfDependencies )
     {
-      for( a=0; a<wim; a++ )
+      for( a=0; a<WIM; a++ )
 	{
 	  eqn = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -21209,7 +21122,7 @@ assemble_div_s_n_source ( )
 
   if ( af->Assemble_Residual ) 
     {
-      for( a=0; a<wim; a++ )
+      for( a=0; a<WIM; a++ )
 	{
 	  eqn = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -21247,7 +21160,7 @@ assemble_div_s_n_source ( )
 
   if( af->Assemble_Jacobian )
     {
-      for( a=0; a<wim; a++ )
+      for( a=0; a<WIM; a++ )
 	{
 	  eqn = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -21342,7 +21255,6 @@ assemble_cap_hysing(double dt, double scale)
 {
   int i,j,a,b,p,q, k,ii, ledof;
   int eqn, peqn, var, pvar;
-  int dim, wim;
 
   struct Level_Set_Interface lsi_old_struct;
   struct Level_Set_Interface *lsi_old = &lsi_old_struct;
@@ -21378,13 +21290,6 @@ assemble_cap_hysing(double dt, double scale)
       det_J = bf[eqn]->detJ;
     }
 
-  dim   = pd->Num_Dim;
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
-
   memset( csf,          0, sizeof(double)*DIM*DIM);
 
   continuous_surface_tension_old(mp->surface_tension, csf, lsi_old);
@@ -21416,7 +21321,7 @@ assemble_cap_hysing(double dt, double scale)
   if ( af->Assemble_Residual )
     {
 
-      for( a=0; a<wim; a++ )
+      for( a=0; a<WIM; a++ )
 	{
 	  eqn = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -21474,7 +21379,7 @@ assemble_cap_hysing(double dt, double scale)
 
   if( af->Assemble_Jacobian )
     {
-      for( a=0; a<wim; a++ )
+      for( a=0; a<WIM; a++ )
 	{
 	  eqn = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -21546,7 +21451,6 @@ assemble_cap_denner_diffusion(double dt, double scale)
 {
   int i,j,a,b,p,q, k,ii, ledof;
   int eqn, peqn, var, pvar;
-  int dim, wim;
 
   double wt, det_J, h3;
 
@@ -21579,13 +21483,6 @@ assemble_cap_denner_diffusion(double dt, double scale)
       det_J = bf[eqn]->detJ;
     }
 
-  dim   = pd->Num_Dim;
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
-
   memset( csf,          0, sizeof(double)*DIM*DIM);
 
   for ( p=0; p<VIM; p++) {
@@ -21615,7 +21512,7 @@ assemble_cap_denner_diffusion(double dt, double scale)
   if ( af->Assemble_Residual )
     {
 
-      for( a=0; a<wim; a++ )
+      for( a=0; a<WIM; a++ )
 	{
 	  eqn = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -21653,7 +21550,7 @@ assemble_cap_denner_diffusion(double dt, double scale)
 
   if( af->Assemble_Jacobian )
     {
-      for( a=0; a<wim; a++ )
+      for( a=0; a<WIM; a++ )
 	{
 	  eqn = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -21755,7 +21652,6 @@ assemble_cap_denner_diffusion_n(double dt, double scale)
 {
   int i,j,a,b,p,q, k,ii, ledof;
   int eqn, peqn, var, pvar;
-  int dim, wim;
 
   double wt, det_J, h3;
 
@@ -21788,13 +21684,6 @@ assemble_cap_denner_diffusion_n(double dt, double scale)
       det_J = bf[eqn]->detJ;
     }
 
-  dim   = pd->Num_Dim;
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
-
   memset( csf,          0, sizeof(double)*DIM*DIM);
 
   for ( p=0; p<VIM; p++) {
@@ -21824,7 +21713,7 @@ assemble_cap_denner_diffusion_n(double dt, double scale)
   if ( af->Assemble_Residual )
     {
 
-      for( a=0; a<wim; a++ )
+      for( a=0; a<WIM; a++ )
 	{
 	  eqn = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -21862,7 +21751,7 @@ assemble_cap_denner_diffusion_n(double dt, double scale)
 
   if( af->Assemble_Jacobian )
     {
-      for( a=0; a<wim; a++ )
+      for( a=0; a<WIM; a++ )
 	{
 	  eqn = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -21903,7 +21792,7 @@ assemble_cap_denner_diffusion_n(double dt, double scale)
 		  var = VELOCITY1;
 		  if(pd->v[var])
 		    {
-		      for( b=0; b<wim; b++)
+		      for( b=0; b<WIM; b++)
 			{
 			  var = VELOCITY1 + b;
 			  pvar = upd->vp[var];
@@ -21911,10 +21800,10 @@ assemble_cap_denner_diffusion_n(double dt, double scale)
 			  for( j=0; j<ei->dof[var]; j++)
 			    {
 
-			      for (p = 0; p < wim; p++) {
-				for (q = 0; q < wim; q++) {
+			      for (p = 0; p < WIM; p++) {
+				for (q = 0; q < WIM; q++) {
 				  d_grad_s_v_dv[p][q] = bf[var]->grad_phi_e[j][b][p][q];
-				  for (k = 0; k < wim; k++) {
+				  for (k = 0; k < WIM; k++) {
 				    d_grad_s_v_dv[p][q] -= fv->n[p] * fv->n[k] * bf[var]->grad_phi_e[j][b][k][q];
 				  }
 				}
@@ -21922,8 +21811,8 @@ assemble_cap_denner_diffusion_n(double dt, double scale)
 
 			      diffusion = 0;
 
-			      for ( p=0; p<wim; p++) {
-				for ( q=0; q<wim; q++) {
+			      for ( p=0; p<WIM; p++) {
+				for ( q=0; q<WIM; q++) {
 				  diffusion += bf[eqn]->grad_phi_e[i][a][p][q] * d_grad_s_v_dv[p][q];
 				}
 			      }
@@ -21987,7 +21876,7 @@ assemble_curvature_with_normals_source ( )
 {
   int i, j, a, b, ii, ledof;
   int eqn, peqn, var, pvar;
-  int dim, wim;
+  int dim;
 
   struct Basis_Functions *bfm;
 
@@ -22018,11 +21907,6 @@ assemble_curvature_with_normals_source ( )
     	{det_J = bf[eqn]->detJ; }
 
   dim   = pd->Num_Dim;
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;	
 
   /*
    * Wesiduals ________________________________________________________________________________
@@ -22030,7 +21914,7 @@ assemble_curvature_with_normals_source ( )
 
   if ( af->Assemble_Residual ) 
     {
-      for( a=0; a<wim; a++ )
+      for( a=0; a<WIM; a++ )
 	{
 	  eqn = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -22067,7 +21951,7 @@ assemble_curvature_with_normals_source ( )
 
   if( af->Assemble_Jacobian )
     {
-      for( a=0; a<wim; a++ )
+      for( a=0; a<WIM; a++ )
 	{
 	  eqn = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -22187,7 +22071,7 @@ assemble_curvature_source ( )
 {
   int i, j, a, b, ii, ledof;
   int eqn, peqn, var, pvar;
-  int dim, wim;
+  int dim;
 
   struct Basis_Functions *bfm;
 
@@ -22219,11 +22103,6 @@ assemble_curvature_source ( )
     {det_J = bf[eqn]->detJ; }
 
   dim   = pd->Num_Dim;
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
 
   memset( dfdH, 0, DIM*MDE*sizeof(double) );
   memset( dfdX, 0, DIM*DIM*MDE*sizeof(double) );
@@ -22238,7 +22117,7 @@ assemble_curvature_source ( )
   */
   if (ls->CalcSurfDependencies)
     {
-      for (a = 0; a < wim; a++ )
+      for (a = 0; a < WIM; a++ )
 	{
 	  eqn = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -22287,7 +22166,7 @@ assemble_curvature_source ( )
   if ( af->Assemble_Residual ) 
     {
       
-      for( a=0; a<wim; a++ )
+      for( a=0; a<WIM; a++ )
 	{
 	  eqn = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -22326,7 +22205,7 @@ assemble_curvature_source ( )
 
   if( af->Assemble_Jacobian )
     {
-      for( a=0; a<wim; a++ )
+      for( a=0; a<WIM; a++ )
 	{
 	  eqn = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -23634,7 +23513,6 @@ assemble_ls_yflux_source ( int wspec,	/* species number of this boundary conditi
 {
   int i,j, ii,ledof;
   int eqn, peqn, var, pvar, b, w;
-  int dim, wim;
 
   struct Basis_Functions *bfm;
   double wt, det_J, h3, phi_i, phi_j,flux;
@@ -23661,13 +23539,6 @@ assemble_ls_yflux_source ( int wspec,	/* species number of this boundary conditi
   else              /* diffuse interface */
     { det_J = bf[eqn]->detJ; }
     
-  dim   = pd->Num_Dim;
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
-   
   Y_w = fv->c[wspec];
   /*if ( Y_w > 1. ) Y_w = 1.;*/
   mass_flux_surf_mtc(mp->mass_flux, mp->d_mass_flux, fv->T,
@@ -23858,7 +23729,7 @@ assemble_ls_yflux_source ( int wspec,	/* species number of this boundary conditi
               /*
 	       * J_W_v
 	       */
-              for( b=0; b<wim; b++)
+              for( b=0; b<WIM; b++)
                 {
                   var = VELOCITY1 + b;
 	          if ( pd->v[var] )
@@ -23917,7 +23788,7 @@ int
 assemble_cont_vel_source ( double *xi, Exo_DB *exo )
 {
   int a, i,j, ii,ledof;
-  int dim, wim, p;
+  int p;
   int eqn, peqn, var, pvar;
   double source;
 
@@ -23954,13 +23825,6 @@ assemble_cont_vel_source ( double *xi, Exo_DB *exo )
   else              /* diffuse interface */
     	{det_J = bf[eqn]->detJ; }
 
-  dim   = pd->Num_Dim;
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
-
   /*
    * non-xfem dofs do not need a bc and xfem
    * dofs will receive SIC
@@ -23976,7 +23840,7 @@ assemble_cont_vel_source ( double *xi, Exo_DB *exo )
   if ( pd->i[eqn] == I_Q1_G || pd->i[eqn] == I_Q2_G )
     EH(-1,"LS_CONT_VEL_BC not yet implemented for _G type enrichment.");
 
-   for ( a=0; a < wim; a++ )
+   for ( a=0; a < WIM; a++ )
     {
       var = VELOCITY1 + a;
 
@@ -23999,7 +23863,7 @@ assemble_cont_vel_source ( double *xi, Exo_DB *exo )
   /*
    * Wesiduals ________________________________________________________________________________
    */
-  for ( a=0; a < wim; a++ )
+  for ( a=0; a < WIM; a++ )
     {
       eqn = R_MOMENTUM1 + a;
 
@@ -24152,7 +24016,7 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
 {
   int a, i,j, ii,ledof, w ;
   int eqn, peqn, var, pvar;
-  int dim, wim;
+  int dim;
 
   struct Basis_Functions *bfm;
   double wt, det_J, h3, phi_i, phi_j;
@@ -24176,11 +24040,6 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
     }
     
   dim   = pd->Num_Dim;
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
 
   wt = fv->wt;
   h3 = fv->h3;
@@ -24245,7 +24104,7 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
           for( j=0; j<ei->dof[var]; j++)
             {
 	      d_vnorm->F[j] = 0.;
-              for ( a=0; a < wim; a++ ) 
+              for ( a=0; a < WIM; a++ ) 
                 {
                   d_vnorm->F[j] += fv->v[a] * lsi->d_normal_dF[a][j];
                 }
@@ -24296,7 +24155,7 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
               for( j=0; j<ei->dof[var]; j++)
                 {
                   d_vnorm->F[j] = 0.;
-                  for ( a=0; a < wim; a++ ) 
+                  for ( a=0; a < WIM; a++ ) 
                     {
                       d_vnorm->F[j] += sign * fv->v[a] * lsi->d_normal_dF[a][j];
                     }
@@ -24381,7 +24240,7 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
               for( j=0; j<ei->dof[var]; j++)
                 {
                   d_vnorm->F[j] = 0.;
-                  for ( a=0; a < wim; a++ ) 
+                  for ( a=0; a < WIM; a++ ) 
                     {
                       d_vnorm->F[j] += fv->v[a] * lsi->d_normal_dF[a][j];
                     }
@@ -24883,7 +24742,6 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
 {
   int a,  i, j, ii, ledof, w;
   int eqn, peqn, var, pvar;
-  int dim, wim;
 
   struct Basis_Functions *bfm;
   double wt, det_J, h3, phi_i, phi_j;
@@ -24905,13 +24763,6 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
     {
       return(0);
     }
-
-  dim   = pd->Num_Dim;
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
 
   wt = fv->wt;
   h3 = fv->h3;
@@ -24961,7 +24812,7 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
       memset(d_vnorm->V, 0, sizeof(dbl)*MDE);
   
 #if 0
-      for ( a=0; a < wim; a++ )
+      for ( a=0; a < WIM; a++ )
         {
           var = VELOCITY1 + a;
           if ( pd->v[var] )
@@ -24979,7 +24830,7 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
           for( j=0; j<ei->dof[var]; j++)
             {
 	      d_vnorm->F[j] = 0.;
-              for ( a=0; a < wim; a++ ) 
+              for ( a=0; a < WIM; a++ ) 
                 {
                   d_vnorm->F[j] += fv->v[a] * lsi->d_normal_dF[a][j];
                 }
@@ -24994,7 +24845,7 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
           for( j=0; j<ei->dof[var]; j++)
             {
 	      d_vnorm->F[j] = 0.;
-              for ( a=0; a < wim; a++ ) 
+              for ( a=0; a < WIM; a++ ) 
                 {
                   d_vnorm->F[j] += fv_old->v[a] * lsi->d_normal_dF[a][j];
                 }
@@ -25046,7 +24897,7 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
               for( j=0; j<ei->dof[var]; j++)
                 {
                   d_vnorm->F[j] = 0.;
-                  for ( a=0; a < wim; a++ ) 
+                  for ( a=0; a < WIM; a++ ) 
                     {
                       d_vnorm->F[j] += sign * fv->v[a] * lsi->d_normal_dF[a][j];
                     }
@@ -25375,7 +25226,7 @@ assemble_p_source ( double pressure, const int bcflag )
 {
   int i,j, a, b, p, q, ii,ledof, w;
   int eqn, peqn, var, pvar;
-  int dim, wim;
+  int dim;
   int err, elem_sign;
 
   struct Basis_Functions *bfm;
@@ -25425,18 +25276,13 @@ assemble_p_source ( double pressure, const int bcflag )
         }
 
   dim   = pd->Num_Dim;
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
 
   memset( force, 0, MAX_PDIM*sizeof(double));
   memset( d_force, 0, MAX_PDIM*(MAX_VARIABLE_TYPES+MAX_CONC)*MDE*sizeof(double));
 
   if ( bcflag == -1)		/**   add constant, isotropic stress  **/
 	{
-         for( a=0; a<wim; a++ )
+         for( a=0; a<WIM; a++ )
 		{ force[a] = -pressure*lsi->normal[a];}
   	 if ( af->Assemble_Jacobian )
     		{
@@ -25446,7 +25292,7 @@ assemble_p_source ( double pressure, const int bcflag )
                       pvar = upd->vp[var];
                       for( j=0; j<ei->dof[var]; j++)
                         {
-      			    for( a=0; a<wim; a++ )
+      			    for( a=0; a<WIM; a++ )
 				{
 			  d_force[a][var][j] -= pressure*lsi->d_normal_dF[a][j];
 				}
@@ -25468,9 +25314,9 @@ assemble_p_source ( double pressure, const int bcflag )
                fluid_stress( Pi, d_Pi );
              }
 
-         for( a=0; a<wim; a++ )
+         for( a=0; a<WIM; a++ )
 	     {
-              for( i=0; i<wim; i++ )
+              for( i=0; i<WIM; i++ )
 		{ force[a] = -pressure * Pi[a][i]*lsi->normal[i];}
 	     }
 
@@ -25682,9 +25528,9 @@ assemble_p_source ( double pressure, const int bcflag )
                           TT[0][2] = 0.;
                          }
               }
-         for( a=0; a<wim; a++ )
+         for( a=0; a<WIM; a++ )
 	     {
-              for( i=0; i<wim; i++ )
+              for( i=0; i<WIM; i++ )
 		{ force[a] = -pressure*TT[a][i]*lsi->normal[i];}
 	     }
 
@@ -25880,7 +25726,7 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
    */
   if ( ls->CalcSurfDependencies )
     {
-      for( a=0; a<wim; a++ )
+      for( a=0; a<WIM; a++ )
 	{
 	  eqn = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -25925,7 +25771,7 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
    */
   if (af->Assemble_Residual )
     {
-      for (a = 0; a < wim; a++ )
+      for (a = 0; a < WIM; a++ )
 	{
 	  eqn = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -25949,7 +25795,7 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
 
   if (af->Assemble_Jacobian)
     {
-      for (a = 0; a < wim; a++)
+      for (a = 0; a < WIM; a++)
 	{
 	  eqn = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -26229,7 +26075,6 @@ assemble_precoil_source (const double p[])
 {
   int i, j, a, ii, ledof;
   int eqn, peqn, var, pvar;
-  int dim, wim;
 
   struct Basis_Functions *bfm;
   double wt, det_J, h3, phi_i, phi_j;
@@ -26253,13 +26098,6 @@ assemble_precoil_source (const double p[])
 	{det_J = fv->sdet;}
   else              /* diffuse interface */
     	{det_J = bf[eqn]->detJ; }
-
-  dim   = pd->Num_Dim;
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
 
   /* Mike Kanouff's curve-fit for ablation pressure in Pascals               */
   /*                                              assume iron if T_boil>2000 */
@@ -26323,7 +26161,7 @@ assemble_precoil_source (const double p[])
    */
   if ( ls->CalcSurfDependencies )
     {
-      for( a=0; a<wim; a++ )
+      for( a=0; a<WIM; a++ )
 	{
 	  eqn = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -26368,7 +26206,7 @@ assemble_precoil_source (const double p[])
    */
   if ( af->Assemble_Residual )
     {
-      for( a=0; a<wim; a++ )
+      for( a=0; a<WIM; a++ )
 	{
 	  eqn = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -26399,7 +26237,7 @@ assemble_precoil_source (const double p[])
 
   if ( af->Assemble_Jacobian )
     {
-      for( a=0; a<wim; a++ )
+      for( a=0; a<WIM; a++ )
 	{
 	  eqn = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -26475,7 +26313,7 @@ assemble_uvw_source ( int eqn, double val )
 {
   int i,j, a, ii,ledof;
   int peqn, var, pvar;
-  int dim, wim, b, p;
+  int b, p;
 
   struct Basis_Functions *bfm;
   double wt, det_J, h3, phi_i, phi_j;
@@ -26522,13 +26360,6 @@ assemble_uvw_source ( int eqn, double val )
 	{det_J = fv->sdet;}
   else              /* diffuse interface */
     	{det_J = bf[eqn]->detJ; }
-
-  dim   = pd->Num_Dim;
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
 
   /*
    * non-xfem dofs will receive nobc and xfem
@@ -26610,7 +26441,7 @@ assemble_uvw_source ( int eqn, double val )
                   /*
                    * J_m_m
                    */
-                  for ( b=0; b<wim; b++)
+                  for ( b=0; b<WIM; b++)
                     {
                       var = VELOCITY1 + b;
 
@@ -26768,7 +26599,7 @@ assemble_uvw_source ( int eqn, double val )
 {
   int i,j, a, ii,ledof;
   int peqn, var, pvar;
-  int dim, wim, b, p;
+  int b, p;
   int xfem_active, extended_dof, base_interp, base_dof;
   int incomplete, other_side;
   int apply_NOBC[MDE], apply_SIC[MDE];
@@ -26818,13 +26649,6 @@ assemble_uvw_source ( int eqn, double val )
 	{det_J = fv->sdet;}
   else              /* diffuse interface */
     	{det_J = bf[eqn]->detJ; }
-
-  dim   = pd->Num_Dim;
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
 
   /*
    * non-xfem dofs will receive nobc and xfem
@@ -27025,7 +26849,7 @@ assemble_uvw_source ( int eqn, double val )
                   /*
                    * J_m_v
                    */
-                  for ( b=0; b<wim; b++)
+                  for ( b=0; b<WIM; b++)
                     {
                       var = VELOCITY1 + b;
 
@@ -27176,7 +27000,7 @@ assemble_extension_velocity_path_dependence(void)
 {
   int a, i, j, ii, ledof;
   int eqn, peqn, var, pvar;
-  int dim, wim;
+  int dim;
 
   struct Basis_Functions *bfm;
   double wt, det_J, h3, phi_i;
@@ -27192,11 +27016,6 @@ assemble_extension_velocity_path_dependence(void)
     }
 
   dim   = pd->Num_Dim;
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
 
   wt = fv->wt;
   h3 = fv->h3;
@@ -27280,7 +27099,6 @@ assemble_fill_path_dependence ( void )
 {
   int i, j, ii, ledof;
   int eqn, peqn, var, pvar;
-  int dim, wim;
 
   struct Basis_Functions *bfm;
   double wt, det_J, h3, phi_i;
@@ -27293,13 +27111,6 @@ assemble_fill_path_dependence ( void )
     {
       return(0);
     }
-
-  dim   = pd->Num_Dim;
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
 
   wt = fv->wt;
   h3 = fv->h3;
@@ -27617,7 +27428,6 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
 				  dbl dt,	  /* current time step size */
 				  const PG_DATA *pg_data)
 {
-  int dim, wim;
   int i, j, a, p;
   int ledof, eqn, var, ii, peqn, pvar;
   int status;
@@ -27737,12 +27547,6 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
 	
 	
   sign = ls->Elem_Sign;
-  dim   = pd->Num_Dim;
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
 
   wt = fv->wt;
   h3 = fv->h3;
@@ -27852,7 +27656,7 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
 
   /* for porous media stuff */
   speed = 0.0;
-  for ( a=0; a<wim; a++)
+  for ( a=0; a<WIM; a++)
     {
       speed += v[a]*v[a];
     }
@@ -27885,7 +27689,7 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
       /*
        * Assemble each component "a" of the momentum equation...
        */
-      for ( a=0; a<wim; a++)
+      for ( a=0; a<WIM; a++)
 	  {
 		  eqn  = R_MOMENTUM1 + a;
 		  peqn = upd->ep[eqn];
@@ -27948,7 +27752,7 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
 				  if (advection_on  )
 				  {
 #ifdef DO_NO_UNROLL
-					  for ( p=0; p<wim; p++)
+					  for ( p=0; p<WIM; p++)
 					  {
 						  advection += (v[p] - x_dot[p]) * grad_v[p][a];
 					  }
@@ -27956,7 +27760,7 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
 #else
 					  advection += (v[0] - x_dot[0]) * grad_v[0][a];
 					  advection += (v[1] - x_dot[1]) * grad_v[1][a];
-					  if( wim == 3 ) advection += (v[2] - x_dot[2]) * grad_v[2][a];
+					  if( WIM == 3 ) advection += (v[2] - x_dot[2]) * grad_v[2][a];
 
 #endif
 					  advection *= rho;
@@ -28074,7 +27878,7 @@ assemble_continuity_path_dependence (dbl time_value,
 				     dbl dt,	/* current time step size                    */
 				     const PG_DATA *pg_data)
 {
-	int dim, wim;
+	int dim;
 	int p, a;
 	int dofs;
 	
@@ -28173,11 +27977,6 @@ assemble_continuity_path_dependence (dbl time_value,
 	sign = ls->Elem_Sign;
 
 	dim   = pd->Num_Dim;
-	wim   = dim;
-	if(pd->CoordinateSystem == SWIRLING ||
-	   pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-	   pd->CoordinateSystem == CARTESIAN_2pt5D)
-		wim = wim+1;
 	
 	wt = fv->wt;
 	h3 = fv->h3;			/* Differential volume element (scales). */
@@ -28476,7 +28275,7 @@ assemble_continuity_path_dependence (dbl time_value,
 				  if( particle_momentum_on )
 				    {
 				      source = 0.0;
-				      for( a=0; a<wim; a++ )
+				      for( a=0; a<WIM; a++ )
 					{
 					  /* Cannot use s_terms.conv_flux[a] here because that
 					   * is defined in terms of the particle phase
@@ -28524,7 +28323,7 @@ assemble_continuity_path_dependence (dbl time_value,
 
 			if(PSPG)
 			{
-				for ( a=0; a<wim; a++)
+				for ( a=0; a<WIM; a++)
 				{
 					meqn = R_MOMENTUM1+a;
 					if( pd->e[meqn])
@@ -28593,7 +28392,6 @@ assemble_LM_source ( double *xi,
 {
   int i, j, a, ii, ledof, v;
   int eqn, peqn;
-  int dim, wim;
   int pass;
   int ac_lm = Do_Overlap;
   int id_side, nu, iAC=0, ioffset = 0;
@@ -28625,13 +28423,6 @@ assemble_LM_source ( double *xi,
 	{det_J = fv->sdet;}
   else              /* diffuse interface */
     	{det_J = bf[eqn]->detJ; }
-
-  dim   = pd->Num_Dim;
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
 
   pass = ( (Do_Overlap && oAC >= 0) ? 2 : 1);
   
@@ -28695,7 +28486,7 @@ assemble_LM_source ( double *xi,
   /*
    * Wesiduals ________________________________________________________________________________
    */
-      for( a=0; a<wim; a++ )
+      for( a=0; a<WIM; a++ )
 	{
 	  eqn = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -28826,7 +28617,7 @@ fluid_stress( double Pi[DIM][DIM],
 
   //! Flag for doing dilational viscosity contributions.
   int do_dilational_visc = 0;
-  int dim, wim;
+  int dim;
 
   int a, b, p, q, j, w, c, var;
 
@@ -28840,11 +28631,6 @@ fluid_stress( double Pi[DIM][DIM],
       {temp = upd->Process_Temperature;}
  
   dim   = pd->Num_Dim;
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
 
   if( pd->v[POLYMER_STRESS11] )
     {
@@ -28990,7 +28776,7 @@ fluid_stress( double Pi[DIM][DIM],
       var = VELOCITY1;
       if ( d_Pi != NULL && pd->v[var] )
 	{
-	  for ( a=0; a<wim; a++)
+	  for ( a=0; a<WIM; a++)
 	    {
 	      for ( j=0; j<ei->dof[var]; j++)
 		{
@@ -29119,7 +28905,7 @@ fluid_stress( double Pi[DIM][DIM],
           var = VELOCITY1;
           if ( d_Pi != NULL && pd->v[var] )
             {
-              for ( a=0; a<wim; a++)
+              for ( a=0; a<WIM; a++)
                 {
                   for ( j=0; j<ei->dof[var]; j++)
                     {
@@ -29451,7 +29237,7 @@ fluid_stress( double Pi[DIM][DIM],
           {
             for ( q=0; q<VIM; q++)
               {
-                for ( b=0; b<wim; b++)
+                for ( b=0; b<WIM; b++)
                   {
                     for ( j=0; j<ei->dof[VELOCITY1]; j++)
                       {
@@ -29468,7 +29254,7 @@ fluid_stress( double Pi[DIM][DIM],
                   }
               }
 	    if (!kappaWipesMu) {
-	      for (b = 0; b < wim; b++) {
+	      for (b = 0; b < WIM; b++) {
 		for (j = 0; j < ei->dof[VELOCITY1]; j++) {
 		  d_Pi->v[p][p][b][j] -=
 		    ((2.0 * mu / 3.0 - kappa) * (bf[VELOCITY1+p]->grad_phi_e[j][b][p][p]) +
@@ -29489,7 +29275,7 @@ fluid_stress( double Pi[DIM][DIM],
 	for ( p=0; p<VIM; p++) {
 	  for ( q=0; q<VIM; q++)
 	    {
-	      for ( b=0; b<wim; b++)
+	      for ( b=0; b<WIM; b++)
 		{
 		  for ( j=0; j<ei->dof[VELOCITY1]; j++)
 		    {
@@ -29501,7 +29287,7 @@ fluid_stress( double Pi[DIM][DIM],
 		}
 	    }
 	  if (!kappaWipesMu) {
-	    for (b = 0; b < wim; b++) {
+	    for (b = 0; b < WIM; b++) {
 	      for (j = 0; j < ei->dof[VELOCITY1]; j++) {
 		d_Pi->v[p][p][b][j] -=
 		  ((2.0 * mu / 3.0 - kappa) * (grad_phi_e[j][b][p][p]) +
@@ -29518,7 +29304,7 @@ fluid_stress( double Pi[DIM][DIM],
             {
               for ( q=0; q<VIM; q++)
                 {
-                  for ( b=0; b<wim; b++)
+                  for ( b=0; b<WIM; b++)
                     {
                       for ( j=0; j<ei->dof[var]; j++)
                         {
@@ -29777,17 +29563,10 @@ fluid_stress_conf( double Pi[DIM][DIM],
 
   // Flag for doing dilational viscosity contributions
 
-  int dim, wim;
+  int dim;
   int a, b, p, q, j, w, c, var;
 
   dim   = pd->Num_Dim;
-  wim   = dim;
-  if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-     pd->CoordinateSystem == CARTESIAN_2pt5D)
-    {
-      wim = wim+1;
-    }
 
   // Load up G and S pointers for non-Newtonian fluids
   if( pd->v[POLYMER_STRESS11] )
@@ -30106,7 +29885,7 @@ fluid_stress_conf( double Pi[DIM][DIM],
         {
           for(q=0; q<VIM; q++)
             {
-	      for(b=0; b<wim; b++)
+	      for(b=0; b<WIM; b++)
 		{
 		  for(j=0; j<ei->dof[var]; j++)
                     {
@@ -30381,14 +30160,6 @@ heat_flux( double q[DIM],
   int b, j = -1, p, a, w;
   int var;
 
-  int dim = pd->Num_Dim;
-  int wim;
-
-  wim = dim;
-  if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-     pd->CoordinateSystem == CARTESIAN_2pt5D) wim = wim+1;
-
   if ( d_q == NULL ) d_k = NULL;
   
   k = conductivity( d_k, time );
@@ -30450,7 +30221,7 @@ heat_flux( double q[DIM],
         {
           for (p=0; p<VIM; p++)
 	    {
-	      for (b=0; b<wim; b++)
+	      for (b=0; b<WIM; b++)
                 {
                   var = MESH_DISPLACEMENT1+b;
                   for (j = 0; j < ei->dof[var]; j++)
@@ -30550,7 +30321,7 @@ heat_flux( double q[DIM],
                 }
             }
         }
-      for ( b=0; b<wim; b++)
+      for ( b=0; b<WIM; b++)
         {
           var = MESH_DISPLACEMENT1+b;
           if ( d_q != NULL && pd->v[var] )
@@ -30581,7 +30352,7 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
   double h = 0.;
   double h_acous = 0.;
   int j, w, a, var_offset;
-  int var, dim, wim;
+  int var, dim;
 
   const double F = 96487.0;          /* Faraday's constant in units of C/euiv.; KSC: 2/17/99 */
   const double R = 8.314;            /* Universal gas constant in units of J/mole K */
@@ -30601,10 +30372,6 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
    */
 
   dim   = pd->Num_Dim;
-  wim = dim;
-  if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-     pd->CoordinateSystem == CARTESIAN_2pt5D) wim = wim+1;
 
   /* initialize Heat Source sensitivities */
   if ( d_h != NULL )
@@ -30646,7 +30413,7 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 
       if( d_h != NULL && pd->v[VELOCITY1])
 	{
-	  for ( a=0; a<wim; a++)
+	  for ( a=0; a<WIM; a++)
 	    {
 	      var = VELOCITY1 + a;
 	      for ( j=0; j<ei->dof[var]; j++)
@@ -30658,7 +30425,7 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 
       if( d_h != NULL && pd->v[MESH_DISPLACEMENT1] )
 	{
-	  for ( a=0; a<wim; a++)
+	  for ( a=0; a<WIM; a++)
 	    {
 	      var = MESH_DISPLACEMENT1 + a;
 	      for ( j=0; j<ei->dof[var]; j++)
@@ -31204,7 +30971,7 @@ calc_pspg( dbl pspg[DIM],
   const dbl rho_avg = pg_data->rho_avg;                 /* element density for PSPG calculations   */
   const dbl *v_avg = pg_data->v_avg;                    /* element velocity for PSPG calculations   */
 
-  int dim, wim;
+  int dim;
   int p, a, b, c;
   int var;
   int w, j;
@@ -31290,10 +31057,6 @@ calc_pspg( dbl pspg[DIM],
   static int is_initialized=FALSE;
 
   dim   = pd->Num_Dim;
-  wim   = dim;
-  if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-     pd->CoordinateSystem == CARTESIAN_2pt5D) wim = wim+1;
 
   /* initialize */
   for ( a=0; a<DIM; a++ ) pspg[a] = 0.;
@@ -31413,7 +31176,7 @@ calc_pspg( dbl pspg[DIM],
 
       // Average value of v**2 in the element 
       vv_speed = 0.0;
-      for ( a=0; a<wim; a++)
+      for ( a=0; a<WIM; a++)
 	{
 	  vv_speed += v_avg[a]*v_avg[a];
 	}
@@ -31483,7 +31246,7 @@ calc_pspg( dbl pspg[DIM],
 
   /* get variables we will need for momentum residual */
 
-  for ( a=0; a<wim; a++)
+  for ( a=0; a<WIM; a++)
     {
       if (  pd->TimeIntegration != STEADY &&  pd->v[MESH_DISPLACEMENT1+a] )
 	{
@@ -31504,10 +31267,10 @@ calc_pspg( dbl pspg[DIM],
 	}
     }
 
-  for ( p=0; p<wim; p++) div_s[p] = 0.;
+  for ( p=0; p<WIM; p++) div_s[p] = 0.;
   if ( pd->v[POLYMER_STRESS11] )
     {
-      for ( p=0; p<wim; p++)
+      for ( p=0; p<WIM; p++)
 	{
 	  for ( mode=0; mode<vn->modes; mode++)
 	    {
@@ -31533,14 +31296,14 @@ calc_pspg( dbl pspg[DIM],
 
   if ( pd->v[VELOCITY_GRADIENT11] &&  pd->v[POLYMER_STRESS11])
     {
-      for ( p=0; p<wim; p++)
+      for ( p=0; p<WIM; p++)
 	{
 	  div_G[p] = fv->div_G[p];
 	}
     }
   else
     {
-      for ( p=0; p<wim; p++)
+      for ( p=0; p<WIM; p++)
 	{
 	  div_G[p] = 0.;
 	}
@@ -31589,7 +31352,7 @@ calc_pspg( dbl pspg[DIM],
 
   /* for porous media stuff */
   speed = 0.0;
-  for ( a=0; a<wim; a++)
+  for ( a=0; a<WIM; a++)
     {
       speed += v[a]*v[a];
     }
@@ -31609,7 +31372,7 @@ calc_pspg( dbl pspg[DIM],
       meqn1 = R_MOMENTUM1;
     }
 
-  for ( a=0; a<wim; a++)
+  for ( a=0; a<WIM; a++)
   {
       meqn = meqn1 + a;
 	  
@@ -31623,7 +31386,7 @@ calc_pspg( dbl pspg[DIM],
       advection = 0.;
       if ( pd->e[meqn] & T_ADVECTION )
 	  {
-		  for ( p=0; p<wim; p++)
+		  for ( p=0; p<WIM; p++)
 		  {
 			  advection += rho_t * (v[p]- x_dot[p]) * grad_v[p][a] / por2;
 		  }
@@ -31659,7 +31422,7 @@ calc_pspg( dbl pspg[DIM],
 	  
       if ( d_pspg != NULL && pd->v[VELOCITY1] )
 	  {
-		  for ( b=0; b<wim; b++ )
+		  for ( b=0; b<WIM; b++ )
 		  {
               var = VELOCITY1 + b;
 			  for ( j=0; j<ei->dof[var]; j++ )
@@ -31677,7 +31440,7 @@ calc_pspg( dbl pspg[DIM],
 				  if ( pd->e[meqn] & T_ADVECTION )
 				  {
 					  advection = phi_j * grad_v[b][a];
-					  for ( p=0; p<wim; p++)
+					  for ( p=0; p<WIM; p++)
 					  {
 						  advection += (v[p]- x_dot[p]) * bf[var]->grad_phi_e[j][b][p][a];
 					  }
@@ -31703,7 +31466,7 @@ calc_pspg( dbl pspg[DIM],
 				  if ( pd->e[meqn] & T_POROUS_BRINK )
 				  {
 					  porous = (rho_t*sc*speed/sqrt(per) + vis/per) * phi_j;
-					  for ( p=0; p<wim; p++)
+					  for ( p=0; p<WIM; p++)
 					  {
 						  porous += rho_t*sc/sqrt(per) *  2.*v[p] * v[a];
 					  }
@@ -31718,7 +31481,7 @@ calc_pspg( dbl pspg[DIM],
 	  
       if ( d_pspg != NULL && pd->v[MESH_DISPLACEMENT1] )
 	  {
-		  for ( b=0; b<wim; b++ )
+		  for ( b=0; b<WIM; b++ )
 		  {
 			  var = MESH_DISPLACEMENT1 + b;
 			  for ( j=0; j<ei->dof[var]; j++ )
@@ -31729,7 +31492,7 @@ calc_pspg( dbl pspg[DIM],
 				  if  ( ( pd->e[meqn] & T_ADVECTION ) && ( pd->TimeIntegration != STEADY ) )
 				  {
 					  advection = -(1.+2.*tt) * phi_j/dt * grad_v[b][a];
-					  for ( p=0; p<wim; p++)
+					  for ( p=0; p<WIM; p++)
 					  {
 						  advection += (v[p]- x_dot[p]) * fv->d_grad_v_dmesh[p][a] [b][j];
 					  }
@@ -31786,7 +31549,7 @@ calc_pspg( dbl pspg[DIM],
 			  if ( pd->e[meqn] & T_ADVECTION )
 			  {
 				  advection = 0.;
-				  for ( p=0; p<wim; p++)
+				  for ( p=0; p<WIM; p++)
 				  {
 					  advection += (v[p]- x_dot[p]) * grad_v[p][a];
 				  }
@@ -31863,7 +31626,7 @@ calc_pspg( dbl pspg[DIM],
 				  if ( pd->e[meqn] & T_ADVECTION )
 				  {
 					  advection = 0.;
-					  for ( p=0; p<wim; p++)
+					  for ( p=0; p<WIM; p++)
 					  {
 						  advection += (v[p]- x_dot[p]) * grad_v[p][a];
 					  }
@@ -31922,7 +31685,7 @@ calc_pspg( dbl pspg[DIM],
 								  {
 									  diffusion -= (double)delta(a,c) * phi_j * fv->grad_e[b][r][c];
 								  }
-								  for ( r=0; r<wim; r++)
+								  for ( r=0; r<WIM; r++)
 								  {
 									  diffusion -= (double)delta(a,r) * phi_j * fv->grad_e[c][b][r];
 								  }
@@ -31962,7 +31725,7 @@ calc_pspg( dbl pspg[DIM],
 							  {
 								  diffusion -= (double)delta(a,c) * phi_j * fv->grad_e[b][r][c];
 							  }
-							  for ( r=0; r<wim; r++)
+							  for ( r=0; r<WIM; r++)
 							  {
 								  diffusion -= (double)delta(a,r) * phi_j * fv->grad_e[c][b][r];
 							  }
@@ -31994,7 +31757,7 @@ calc_cont_gls( dbl *cont_gls,
   dbl tau_cont, d_tau_dmesh[DIM][MDE], d_tau_dv[DIM][MDE];
   dbl advection_etm, advection, Re, div_phi_j_e_b, div_v_dmesh;
   int eqn; 
-  int var, dim, wim, b, j, p;
+  int var, dim, b, j, p;
   int advection_on=0;
   static int is_initialized = FALSE;
 
@@ -32013,11 +31776,6 @@ calc_cont_gls( dbl *cont_gls,
   
   //Initialize and Define
   dim = pd->Num_Dim;
-  wim=dim;
-  if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-     pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
 
   tau_cont = 0;
   *cont_gls = 0.0;
@@ -32146,7 +31904,7 @@ calc_cont_gls( dbl *cont_gls,
   //Determine Jacobian terms
 
   //J_v
-  for (b=0; b<wim; b++)
+  for (b=0; b<WIM; b++)
     {
       var = VELOCITY1+b;
       if (pd->v[var] && d_cont_gls!=NULL)
@@ -32209,7 +31967,6 @@ assemble_ls_latent_heat_source ( double iso_therm,
 {
   int i,j, ii,ledof;
   int eqn, peqn, var, pvar, b, w;
-  int dim, wim;
 
   struct Basis_Functions *bfm;
   double wt, det_J, h3, phi_i, phi_j,flux;
@@ -32236,13 +31993,6 @@ assemble_ls_latent_heat_source ( double iso_therm,
   else              /* diffuse interface */
     { det_J = bf[eqn]->detJ; }
     
-  dim   = pd->Num_Dim;
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
-
   /*
   fluxbc = BC_Types + bc_input_id;
   compute_leak_velocity_heat(&vnorm, d_vnorm, tt, dt, NULL, fluxbc);  */
@@ -32429,7 +32179,7 @@ assemble_ls_latent_heat_source ( double iso_therm,
               /*
 	       * J_W_v
 	       */
-              for( b=0; b<wim; b++)
+              for( b=0; b<WIM; b++)
                 {
                   var = VELOCITY1 + b;
 	          if ( pd->v[var] )
@@ -33834,12 +33584,6 @@ acoustic_flux( double q[DIM],
   int var;
 
   int dim = pd->Num_Dim;
-  int wim;
-
-  wim = dim;
-  if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-     pd->CoordinateSystem == CARTESIAN_2pt5D) wim = wim+1;
 
   if ( d_q == NULL ) {d_R = NULL;   d_k = NULL;}
   
@@ -33946,7 +33690,7 @@ acoustic_flux( double q[DIM],
         {
           for ( p=0; p<VIM; p++)
 	    {
-	      for ( b=0; b<wim; b++)
+	      for ( b=0; b<WIM; b++)
                 {
                   var = MESH_DISPLACEMENT1+b;
                   for ( j=0; j<ei->dof[var]; j++)
@@ -33973,7 +33717,7 @@ assemble_ars_source ( double ars_jump, double grad_jump )
 {
   int i,j, a, p, ii,ledof;
   int eqn, peqn, var, pvar;
-  int dim, wim;
+  int dim;
 
   struct Basis_Functions *bfm;
   double wt, det_J, h3, phi_i, phi_j;
@@ -34006,11 +33750,6 @@ assemble_ars_source ( double ars_jump, double grad_jump )
     	{det_J = bf[eqn]->detJ; }
 
   dim   = pd->Num_Dim;
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
 /* local force caused by Acoustic Reynolds Stress jump at interface	*/
 
   omega = upd->Acoustic_Frequency;
@@ -34036,7 +33775,7 @@ assemble_ars_source ( double ars_jump, double grad_jump )
    */
   if ( ls->CalcSurfDependencies )
     {
-      for( a=0; a<wim; a++ )
+      for( a=0; a<WIM; a++ )
 	{
 	  eqn = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -34081,7 +33820,7 @@ assemble_ars_source ( double ars_jump, double grad_jump )
    */
   if ( af->Assemble_Residual )
     {
-      for( a=0; a<wim; a++ )
+      for( a=0; a<WIM; a++ )
 	{
 	  eqn = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
@@ -34112,7 +33851,7 @@ assemble_ars_source ( double ars_jump, double grad_jump )
 
   if ( af->Assemble_Jacobian )
     {
-      for( a=0; a<wim; a++ )
+      for( a=0; a<WIM; a++ )
 	{
 	  eqn = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];

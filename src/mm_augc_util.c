@@ -489,15 +489,15 @@ load_extra_unknownsAC(int iAC,    /* ID NUMBER OF AC'S */
 	break;
 
       case TAGC_CONV_LAG_VELX:
-	xa[iAC] = elc_glob[mn]->v_mesh_sfs[0];
+	xa[iAC] = *(elc_glob[mn]->v_mesh_sfs);
 	break;
 
       case TAGC_CONV_LAG_VELY:
-	xa[iAC] = elc_glob[mn]->v_mesh_sfs[1];
+	xa[iAC] = *(elc_glob[mn]->v_mesh_sfs+1);
 	break;
 
       case TAGC_CONV_LAG_VELZ:
-	xa[iAC] = elc_glob[mn]->v_mesh_sfs[2];
+	xa[iAC] = *(elc_glob[mn]->v_mesh_sfs+2);
 	break;
 
       case TAGC_CONV_LAG_ROTRATE:
@@ -525,15 +525,15 @@ load_extra_unknownsAC(int iAC,    /* ID NUMBER OF AC'S */
 	break;
 
       case TAGC_RS_CONV_LAG_VELX:
-	xa[iAC] = elc_rs_glob[mn]->v_mesh_sfs[0];
+	xa[iAC] = *(elc_rs_glob[mn]->v_mesh_sfs);
 	break;
 
       case TAGC_RS_CONV_LAG_VELY:
-	xa[iAC] = elc_rs_glob[mn]->v_mesh_sfs[1];
+	xa[iAC] = *(elc_rs_glob[mn]->v_mesh_sfs+1);
 	break;
 
       case TAGC_RS_CONV_LAG_VELZ:
-	xa[iAC] = elc_rs_glob[mn]->v_mesh_sfs[2];
+	xa[iAC] = *(elc_rs_glob[mn]->v_mesh_sfs+2);
 	break;
 
       case TAGC_RS_CONV_LAG_ROTRATE:
@@ -1325,15 +1325,15 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
 	break;
 
       case TAGC_CONV_LAG_VELX:
-	elc_glob[mn]->v_mesh_sfs[0] = lambda;
+	*(elc_glob[mn]->v_mesh_sfs) = lambda;
 	break;
 
       case TAGC_CONV_LAG_VELY:
-	elc_glob[mn]->v_mesh_sfs[1] = lambda;
+	*(elc_glob[mn]->v_mesh_sfs+1) = lambda;
 	break;
 
       case TAGC_CONV_LAG_VELZ:
-	elc_glob[mn]->v_mesh_sfs[2] = lambda;
+	*(elc_glob[mn]->v_mesh_sfs+2) = lambda;
 	break;
 
       case TAGC_CONV_LAG_ROTRATE:
@@ -1361,15 +1361,15 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
 	break;
 
       case TAGC_RS_CONV_LAG_VELX:
-	elc_rs_glob[mn]->v_mesh_sfs[0] = lambda;
+	*(elc_rs_glob[mn]->v_mesh_sfs) = lambda;
 	break;
 
       case TAGC_RS_CONV_LAG_VELY:
-	elc_rs_glob[mn]->v_mesh_sfs[1] = lambda;
+	*(elc_rs_glob[mn]->v_mesh_sfs+1) = lambda;
 	break;
 
       case TAGC_RS_CONV_LAG_VELZ:
-	elc_rs_glob[mn]->v_mesh_sfs[2] = lambda;
+	*(elc_rs_glob[mn]->v_mesh_sfs+2) = lambda;
 	break;
 
       case TAGC_RS_CONV_LAG_ROTRATE:

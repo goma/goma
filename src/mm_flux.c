@@ -118,7 +118,7 @@ evaluate_flux(
   int err;			/* temp variable to hold diagnostic flags. */
   int ielem=-1;                 /* element number */
   int ip_total, ielem_type, gnn, ledof, matIndex;
-  int num_local_nodes, iconnect_ptr, dim, ielem_dim, current_id, WIM;
+  int num_local_nodes, iconnect_ptr, dim, ielem_dim, current_id;
   int nset_id, sset_id;
   double Tract[DIM], Torque[DIM], local_Torque[DIM];
   double Mag_real[DIM], Mag_imag[DIM], E_real[DIM], E_imag[DIM];
@@ -263,11 +263,6 @@ evaluate_flux(
   memset( Torque, 0, sizeof(double)*DIM );
 
   dim   = pd_glob[0]->Num_Dim;
-  WIM = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    WIM = WIM+1;
 
   /* load eqn and variable number in tensor form */
   err = stress_eqn_pointer(v_s);
@@ -4886,7 +4881,7 @@ compute_volume_integrand(const int quantity, const int elem,
   double det = bf[pd->ShapeVar]->detJ * fv->h3;
   double det_J = bf[pd->ShapeVar]->detJ;
   double h3 = fv->h3;
-  int a, b, p, q, var,j, dim=pd->Num_Dim, gnn, matIndex, ledof, c, WIM;
+  int a, b, p, q, var,j, dim=pd->Num_Dim, gnn, matIndex, ledof, c;
   int *n_dof=NULL;
   int dof_map[MDE];
 
@@ -4898,12 +4893,6 @@ compute_volume_integrand(const int quantity, const int elem,
     {
       weight *= 2.*M_PIE;
     }
-
-  WIM = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    WIM = WIM+1;
 
   switch ( quantity )
     {
@@ -6315,7 +6304,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
   double dTT_dcur_strain[MAX_PDIM][MAX_PDIM][MDE];
   double TT_sens[MAX_PDIM][MAX_PDIM];
   double elast_modulus;
-  int dim, WIM;
+  int dim;
 
   double es[MAX_PDIM][MAX_PDIM], efield[MAX_PDIM];	/* electric stress */
   double efield_sqr;				/* efield magnitude squared  */
@@ -6380,11 +6369,6 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
   memset(TT_sens, 0, sizeof(double) * MAX_PDIM * MAX_PDIM);
 
   dim   = pd_glob[0]->Num_Dim;
-  WIM = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    WIM = WIM+1;
   /* load eqn and variable number in tensor form */
   err = stress_eqn_pointer(v_s);
   af->Assemble_Jacobian = TRUE;
@@ -8914,15 +8898,10 @@ load_fv_grads_sens(void)
   int dofs;			/* degrees of freedom for a var in the elem */
   int w;			/* concentration species counter */
   const int dim = pd->Num_Dim;
-  int status, WIM;
+  int status;
   int mode;
 
   status = 0;
-  WIM = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    WIM = WIM+1;
 
   /*
    * grad(T)

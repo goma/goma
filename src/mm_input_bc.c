@@ -1519,10 +1519,42 @@ rd_bc_specs(FILE *ifp,
 
 
 	  /*
+	   * Fall through for all cases which require eight floating point (used to be 7)
+	   * values as data input and one optional integer (BC_Data_int[0]).
+	   */
+	case CAP_REPULSE_BC:
+
+	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf %lf %lf %lf", 
+		      &BC_Types[ibc].BC_Data_Float[0],
+		      &BC_Types[ibc].BC_Data_Float[1],
+		      &BC_Types[ibc].BC_Data_Float[2],
+		      &BC_Types[ibc].BC_Data_Float[3],
+		      &BC_Types[ibc].BC_Data_Float[4],
+		      &BC_Types[ibc].BC_Data_Float[5],
+		      &BC_Types[ibc].BC_Data_Float[6],
+		      &BC_Types[ibc].BC_Data_Float[7]) != 8)
+	    {
+	      sr = sprintf(err_msg, "%s: Expected 8 flts for %s.",
+			   yo, BC_Types[ibc].desc->name1);
+	      EH(-1, err_msg);
+	    }
+
+	   for(i=0;i<8;i++) SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].BC_Data_Float[i]);
+
+	  /* Try reading the optional integer. */
+	  if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[0]) != 1)
+	    {
+	      BC_Types[ibc].BC_Data_Int[0] = -1;
+	    }
+	  else
+	    SPF(endofstring(echo_string)," %d",BC_Types[ibc].BC_Data_Int[0]); 
+
+	  break;
+
+	  /*
 	   * Fall through for all cases which require seven floating point
 	   * values as data input and one optional integer.
 	   */
-	case CAP_REPULSE_BC:
 	case LS_RECOIL_PRESSURE_BC:
 	case CAP_RECOIL_PRESS_BC:
 
@@ -1551,6 +1583,7 @@ rd_bc_specs(FILE *ifp,
 	    SPF(endofstring(echo_string)," %d",BC_Types[ibc].BC_Data_Int[0]); 
 
 	  break;
+
 
 	  /*
 	   * Fall through for all cases which require eight floating point

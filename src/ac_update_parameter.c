@@ -785,15 +785,15 @@ update_MT_parameter(double lambda, /* Parameter value */
       break;
 
     case TAGC_CONV_LAG_VELX:
-      elc_glob[mn]->v_mesh_sfs[0] = lambda;
+      *(elc_glob[mn]->v_mesh_sfs) = lambda;
       break;
 
     case TAGC_CONV_LAG_VELY:
-      elc_glob[mn]->v_mesh_sfs[1] = lambda;
+      *(elc_glob[mn]->v_mesh_sfs+1) = lambda;
       break;
 
     case TAGC_CONV_LAG_VELZ:
-      elc_glob[mn]->v_mesh_sfs[2] = lambda;
+      *(elc_glob[mn]->v_mesh_sfs+2) = lambda;
       break;
 
     case TAGC_CONV_LAG_ROTRATE:
@@ -821,15 +821,15 @@ update_MT_parameter(double lambda, /* Parameter value */
       break;
 
     case TAGC_RS_CONV_LAG_VELX:
-      elc_rs_glob[mn]->v_mesh_sfs[0] = lambda;
+      *(elc_rs_glob[mn]->v_mesh_sfs) = lambda;
       break;
 
     case TAGC_RS_CONV_LAG_VELY:
-      elc_rs_glob[mn]->v_mesh_sfs[1] = lambda;
+      *(elc_rs_glob[mn]->v_mesh_sfs+1) = lambda;
       break;
 
     case TAGC_RS_CONV_LAG_VELZ:
-      elc_rs_glob[mn]->v_mesh_sfs[2] = lambda;
+      *(elc_rs_glob[mn]->v_mesh_sfs+2) = lambda;
       break;
 
     case TAGC_RS_CONV_LAG_ROTRATE:
@@ -1747,15 +1747,15 @@ retrieve_MT_parameter(double *lambda, /* Parameter value */
       break;
 
     case TAGC_CONV_LAG_VELX:
-      *lambda = elc_glob[mn]->v_mesh_sfs[0];
+      *lambda = *(elc_glob[mn]->v_mesh_sfs);
       break;
 
     case TAGC_CONV_LAG_VELY:
-      *lambda = elc_glob[mn]->v_mesh_sfs[1];
+      *lambda = *(elc_glob[mn]->v_mesh_sfs+1);
       break;
 
     case TAGC_CONV_LAG_VELZ:
-      *lambda = elc_glob[mn]->v_mesh_sfs[2];
+      *lambda = *(elc_glob[mn]->v_mesh_sfs+2);
       break;
 
     case TAGC_CONV_LAG_ROTRATE:
@@ -1783,15 +1783,15 @@ retrieve_MT_parameter(double *lambda, /* Parameter value */
       break;
 
     case TAGC_RS_CONV_LAG_VELX:
-      *lambda = elc_rs_glob[mn]->v_mesh_sfs[0];
+      *lambda = *(elc_rs_glob[mn]->v_mesh_sfs);
       break;
 
     case TAGC_RS_CONV_LAG_VELY:
-      *lambda = elc_rs_glob[mn]->v_mesh_sfs[1];
+      *lambda = *(elc_rs_glob[mn]->v_mesh_sfs+1);
       break;
 
     case TAGC_RS_CONV_LAG_VELZ:
-      *lambda = elc_rs_glob[mn]->v_mesh_sfs[2];
+      *lambda = *(elc_rs_glob[mn]->v_mesh_sfs+2);
       break;
 
     case TAGC_RS_CONV_LAG_ROTRATE:

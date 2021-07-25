@@ -5739,7 +5739,7 @@ apply_repulsion (double cfunc[MDE][DIM],
 
   double d_dist[DIM];		/* distance from surface to wall             */
   double dist=0;		/* squared distance from surface to wall     */
-  double repexp = 4.;		/* exponent of disance in repulsion term     */
+  double repexp = 2.;		/* exponent of disance in repulsion term     */
   double denom,factor;
 /***************************** EXECUTION BEGINS ******************************/
 /* if pr is 0. => we don't want free surface/wall repulsion and just
@@ -5771,14 +5771,14 @@ apply_repulsion (double cfunc[MDE][DIM],
 	  /* 
 	   *  Evaluate sensitivity to displacements d()/dx 
 	   */
-	  for (jvar=0; jvar<ei->ielem_dim; jvar++)
+	  for (jvar=0; jvar<VIM; jvar++)
 	    {
 	      var = MESH_DISPLACEMENT1 + jvar;
 	      if (pd->v[var]) 
 		{
 		  for ( j=0; j<ei->dof[var]; j++)
 		    {
-		      for (a=0; a<ei->ielem_dim; a++)
+		      for (a=0; a<VIM; a++)
 			{
 			  
 			  d_cfunc[ldof][a][var][j] -= (pr/pow(dist,repexp) * fv->dsnormal_dx[a][jvar][j] 
@@ -5794,6 +5794,7 @@ apply_repulsion (double cfunc[MDE][DIM],
 	}
       }
     }
+/*fprintf(stderr,"repulse %g %g %g %g %g\n",dist,pr,pr/pow(dist,repexp),fv->snormal[0],fv->snormal[1]);  */
   
   eqn = VELOCITY1;
   for (i = 0; i < (int) elem_side_bc->num_nodes_on_side; i++)  {
@@ -5802,7 +5803,7 @@ apply_repulsion (double cfunc[MDE][DIM],
     ldof  = ei->ln_to_dof[eqn][id];
     if (Dolphin[I][VELOCITY1] > 0 ) {
       
-      for (a=0; a<ei->ielem_dim; a++)
+      for (a=0; a<VIM; a++)
 	{  
 	  cfunc[ldof][a] -= pr/pow(dist, repexp) * fv->snormal[a] * bf[eqn]->phi[ldof]; 
 	}
@@ -8449,7 +8450,7 @@ PSPG_consistency_bc (double *func,
    */
 
   const int dim = pd->Num_Dim;
-  int wim, mode;
+  int mode;
   int meqn;
   int var1;
   int r, s, t;
@@ -8506,13 +8507,6 @@ PSPG_consistency_bc (double *func,
   double h_elem_avg = pg_data->h_elem_avg;
   double mu_avg = pg_data->mu_avg;
   double U_norm = pg_data->U_norm;
-  
-  wim   = dim;
-
-  if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-     pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
 
     /* This is the flag for the standard global PSPG */
   if(PSPG == 1)
@@ -8582,7 +8576,7 @@ PSPG_consistency_bc (double *func,
 
       // Average value of v**2 in the element
       double vv_speed = 0.0;
-      for ( a=0; a<wim; a++)
+      for ( a=0; a<WIM; a++)
 	{
 	  vv_speed += pg_data->v_avg[a]*pg_data->v_avg[a];
 	}
@@ -8655,14 +8649,14 @@ PSPG_consistency_bc (double *func,
     }
   }
   
-  for ( p=0; p<wim; p++)
+  for ( p=0; p<WIM; p++)
     {
       div_s[p] = 0.;
     }
   
   if ( pd->v[POLYMER_STRESS11] )
     {
-      for ( p=0; p<wim; p++)
+      for ( p=0; p<WIM; p++)
 	{
 	  for ( mode=0; mode<vn->modes; mode++)
 	    {
@@ -10178,7 +10172,7 @@ void fapply_moving_CA_sinh(
 
 #ifdef ALE_DCA_INFO_PLEASE
 if ( af->Assemble_Jacobian ) 
-fprintf(stderr,"v_wetting: %g v_mesh: %g dvmdt: %g DCA: %g\n",v,v_mesh, v_mesh_dt,acos(costheta)*180/M_PIE);
+fprintf(stderr,"         ALE_DCA INFO - v_wetting: %g v_mesh: %g dvmdt: %g DCA: %g\n",v,v_mesh, v_mesh_dt,acos(costheta)*180/M_PIE);
 #endif
 #if 0
 fprintf(stderr,"fs_normal: %g %g ss_normal: %g %g\n",fsnormal[0],fsnormal[1],ssnormal[0],ssnormal[1]);

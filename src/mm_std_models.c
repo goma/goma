@@ -469,7 +469,7 @@ EHD_POLARIZATION_source(dbl f[DIM], /* Body force. */
 		        MOMENTUM_SOURCE_DEPENDENCE_STRUCT *df )
 {
   int eqn, var;
-  int dim, wim;
+  int dim;
   int a, b, p;
   dbl phi_j;
   dbl advection_a;
@@ -477,7 +477,6 @@ EHD_POLARIZATION_source(dbl f[DIM], /* Body force. */
   dbl g[DIM];
   int j;
   dim   = pd->Num_Dim;
-  wim   = dim; 
 
   /**********************************************************/
   
@@ -507,7 +506,7 @@ EHD_POLARIZATION_source(dbl f[DIM], /* Body force. */
   var = EFIELD1;
   if (pd->v[var] )
     {
-      for(a = 0; a<wim; a++)
+      for(a = 0; a<dim; a++)
 	{
 	  eqn   = R_MOMENTUM1+a;
 	  for(b = 0; b<dim; b++)
@@ -520,7 +519,7 @@ EHD_POLARIZATION_source(dbl f[DIM], /* Body force. */
 		      phi_j = bf[var]->phi[j];
 		      df->E[a][b][j] += g[0] * phi_j * fv->grad_E_field[b][a];
 
-		      for (p=0; p<wim; p++)
+		      for (p=0; p<dim; p++)
 			{
 			   df->E[a][b][j] +=  g[0] *
 			     Efield[p] * bf[var]->grad_phi_e[j][b][p][a]; 
@@ -546,7 +545,7 @@ EHD_POLARIZATION_source(dbl f[DIM], /* Body force. */
 		  for (j=0; j<ei->dof[var]; j++)
 		    {
 		      advection_a = 0.;
-		      for ( p=0; p<wim; p++)
+		      for ( p=0; p<dim; p++)
 			{
 			  advection_a += Efield[p]
 			    * fv->d_grad_E_field_dmesh[p][a] [b][j];
@@ -2285,7 +2284,7 @@ enthalpy_heat_capacity_model( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp )
  */
 
 int
-V_mesh_sfs_model(dbl *param,	/* Body force. */
+V_mesh_sfs_model(dbl *param,	/* User parameters (u_v_mesh_sfs) */
 		 dbl *v_mesh_sfs, /* The three rotational component*/
 		 const int model,	/* rotational model	*/
 		 int gnn)	/* -1 for gauss point, global node number 
@@ -2386,8 +2385,6 @@ v_dir[2] = dir_angle[0]*rad_dir[1]-dir_angle[1]*rad_dir[0];
 v_mesh_sfs[0] =  param[0]*R*v_dir[0];
 v_mesh_sfs[1] =  param[0]*R*v_dir[1];
 v_mesh_sfs[2] =  param[0]*R*v_dir[2];
-/*printf("%g %g %g\n",X[0],X[1],X[2]);
-printf("velo %g %g %g\n",v_mesh_sfs[0],v_mesh_sfs[1],v_mesh_sfs[2]);*/
 }
 else
 {
@@ -4579,7 +4576,7 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
   /*local variables */
   int a, j, p, b, var;
   int status=1;
-  int dim, wim, dofs;
+  int dim, dofs;
   
   dbl gammadot, *grad_gd, gamma_dot[DIM][DIM];
   dbl mu0;
@@ -4618,8 +4615,6 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
     }
   
   dim = pd->Num_Dim;
-  wim   = dim;
-  if(pd->CoordinateSystem == SWIRLING) wim = wim+1;
 
   /* Compute gammadot, grad(gammadot), gamma_dot[][], d_gd_dG, and d_grad_gd_dG */
   
@@ -4749,9 +4744,9 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
   
   memset(div_tau_p, 0, DIM*sizeof(dbl));
   
-  for ( a=0; a<wim; a++)
+  for ( a=0; a<WIM; a++)
     {
-      for ( b=0; b<wim; b++)
+      for ( b=0; b<WIM; b++)
 	{
 	  div_tau_p[a] += mu0*qtensor[a][b]*(pp*grad_gd[b]+(gammadot+gamma_nl)*d_pp_dy*grad_Y[w][b]);
 	}
@@ -4769,11 +4764,11 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
       if(pd->v[var])
 	{
 	  dofs = ei->dof[var];
-	  for ( a=0; a<wim; a++)
+	  for ( a=0; a<WIM; a++)
 	    {
 	      for( j=0; j<dofs;j++)
 		{ 
-		  for ( b=0; b<wim; b++)
+		  for ( b=0; b<WIM; b++)
 		    {
 		      d_div_tau_p_dy[a][w][j] += mu0*qtensor[a][b]*(d_pp_dy*bf[var]->phi[j]*grad_gd[b] 
 								    +(gammadot+gamma_nl)*d_pp2_dy2*bf[var]->phi[j]*grad_Y[w][b]
@@ -4787,11 +4782,11 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
       if(pd->v[var])
 	{
 	  dofs = ei->dof[var];
-	  for ( a=0; a<wim; a++)
+	  for ( a=0; a<WIM; a++)
 	    {
 	      for( j=0; j<dofs;j++)
 		{
-		  for ( b=0; b<wim; b++)
+		  for ( b=0; b<WIM; b++)
 		    {
 		      d_div_tau_p_dgd[a][j] += mu0*qtensor[a][b]*(pp*bf[var]->grad_phi[j][b]+bf[var]->phi[j]*d_pp_dy*grad_Y[w][b]);
 		    }
@@ -4808,9 +4803,9 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
 	    {
 	      for( j=0; j<dofs;j++)
 		{
-		  for ( a=0; a<wim; a++)
+		  for ( a=0; a<WIM; a++)
 		    {
-		      for ( b=0; b<wim; b++)
+		      for ( b=0; b<WIM; b++)
 			{
 			  d_div_tau_p_dmesh[a][p][j] += mu0*qtensor[a][b]*(pp*fv->d_grad_SH_dmesh[b][p][j]
 									   +(gammadot+gamma_nl)*d_pp_dy*fv->d_grad_c_dmesh[b][w][p][j]);

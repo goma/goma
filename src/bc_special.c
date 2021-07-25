@@ -865,19 +865,31 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 					    found_wall_velocity = 1;
 					    break;
 					  case TOTAL_ALE:
-					    velo[0] = sqrt(SQUARE(fv->x[0]-elc_rs_glob[mn]->u_v_mesh_sfs[1]) +
-							   SQUARE(fv->x[1]-elc_rs_glob[mn]->u_v_mesh_sfs[2]));
-					    wall_velocity = elc_rs_glob[mn]->u_v_mesh_sfs[0]*velo[0];
+					    if(elc_rs_glob[mn]->v_mesh_sfs_model == CONSTANT)
+					      {
+			      			for (i2=0;i2<MAX_PDIM;i2++)
+						  {
+						   velo[i2] = elc_rs_glob[mn]->v_mesh_sfs[i2];
+						   wall_velocity += SQUARE(velo[i2]);
+						  }
+						wall_velocity = sqrt(wall_velocity);
+					      }
+					    else
+					      {
+					    velo[0] = sqrt(SQUARE(fv->x[0]-elc_rs_glob[mn]->v_mesh_sfs[1]) +
+							   SQUARE(fv->x[1]-elc_rs_glob[mn]->v_mesh_sfs[2]));
+					    wall_velocity = elc_rs_glob[mn]->v_mesh_sfs[0]*velo[0];
 					    for (i3=0;i3<ei->dof[MESH_DISPLACEMENT1];i3++)
 					      {
 						dwall_velo_dx[0][i3] += 
-						  elc_rs_glob[mn]->u_v_mesh_sfs[0]*
-						  (fv->x[0]-elc_rs_glob[mn]->u_v_mesh_sfs[1])*
+						  elc_rs_glob[mn]->v_mesh_sfs[0]*
+						  (fv->x[0]-elc_rs_glob[mn]->v_mesh_sfs[1])*
 						  bf[MESH_DISPLACEMENT1]->phi[i3]/velo[0];
 						dwall_velo_dx[1][i3] += 
-						  elc_rs_glob[mn]->u_v_mesh_sfs[0]*
-						  (fv->x[1]-elc_rs_glob[mn]->u_v_mesh_sfs[2])*
+						  elc_rs_glob[mn]->v_mesh_sfs[0]*
+						  (fv->x[1]-elc_rs_glob[mn]->v_mesh_sfs[2])*
 						  bf[MESH_DISPLACEMENT1]->phi[i3]/velo[0];
+					      }
 					      }
 					    found_wall_velocity = 1;
 					    break;

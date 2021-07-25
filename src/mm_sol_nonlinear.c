@@ -730,6 +730,7 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 
       log_msg("%s: Newton iteration %d", yo, inewton);
 
+#ifndef ALE_DCA_INFO_PLEASE
       if(Solver_Output_Format & 1)DPRINTF(stderr, "%s ", ctod);
       if ( inewton < 10 )
 	{
@@ -743,6 +744,7 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 	{
           if(Solver_Output_Format & 2)DPRINTF(stderr, "%d ", inewton );
 	}
+#endif
       
       /*
        * If doing continuation in parallel, restore external matrix rows here.
@@ -1273,6 +1275,21 @@ EH(-1,"version not compiled with frontal solver");
       log_msg("%-38s = %23.16e", "residual norm (L_oo)", Norm[0][0]);
       log_msg("%-38s = %23.16e", "residual norm (L_1)", Norm[0][1]);
       log_msg("%-38s = %23.16e", "residual norm (L_2)", Norm[0][2]);
+#ifdef ALE_DCA_INFO_PLEASE
+      if(Solver_Output_Format & 1)DPRINTF(stderr, "%s ", ctod);
+      if ( inewton < 10 )
+	{
+          if(Solver_Output_Format & 2)DPRINTF(stderr, "[%d] ", inewton );
+	}
+      else if ( inewton < 100 )
+	{
+          if(Solver_Output_Format & 2)DPRINTF(stderr, "%d] ", inewton );
+	} 
+      else
+	{
+          if(Solver_Output_Format & 2)DPRINTF(stderr, "%d ", inewton );
+	}
+#endif
 
       if(Solver_Output_Format & 4)DPRINTF(stderr, "%7.1e ", Norm[0][0]);
       if(Solver_Output_Format & 8)DPRINTF(stderr, "%7.1e ", Norm[0][1]);

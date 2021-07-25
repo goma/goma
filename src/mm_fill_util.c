@@ -2212,8 +2212,6 @@ load_bf_mesh_derivs(void)
 {
   int a, b, p, q, i, j, bix, v, siz;
   int dim;			/* number of spatial dimensions */
-  int wim;                      /* looping variable useful for elliptical polar
-				   coordinates, equal to the number velocity unknowns */
   int dimNonSym;                /* Number of dimensions of the curvilinear coordinate
 				 * system which has nonzero gradients. Coordinates such
 				 * as the theta component in the cylindrical coordinates
@@ -2251,17 +2249,6 @@ load_bf_mesh_derivs(void)
 
   dim   = pd->Num_Dim;
   dimNonSym = dim;
-  if (pd->CoordinateSystem == CARTESIAN   || 
-      pd->CoordinateSystem == CYLINDRICAL ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN) {
-    wim = dim;
-  } else if (pd->CoordinateSystem == SWIRLING ||
-             pd->CoordinateSystem == CARTESIAN_2pt5D) {
-    wim = 3;
-  } else {
-    /* MMH: What makes it here??? */
-    wim = VIM;
-  }
 
   /*
    * Preload the number of degrees of freedom in the mesh
@@ -2652,7 +2639,7 @@ load_bf_mesh_derivs(void)
        */
 #ifdef DO_NO_UNROLL
       for ( i=0; i<vdofs; i++) {
-	for ( a=0; a<wim; a++) {
+	for ( a=0; a<WIM; a++) {
 	  for ( p=0; p<dim; p++) {
 	    for ( b=0; b<dim; b++)  {
 	      for ( j=0; j<mdofs; j++) {
@@ -2686,7 +2673,7 @@ load_bf_mesh_derivs(void)
 	  bfl->d_grad_phi_e_dmesh[i][0] [1][0] [0][j] = bfl->d_grad_phi_dmesh[i][1] [0][j];
 	  bfl->d_grad_phi_e_dmesh[i][1] [1][1] [0][j] = bfl->d_grad_phi_dmesh[i][1] [0][j];
 			  			  
-	  if (wim == 3) {
+	  if (WIM == 3) {
 	    /*  bfl->d_grad_phi_e_dmesh[i][2] [p][2] [b][j] = bfl->d_grad_phi_dmesh[i][p] [b][j];*/
 	    /* (p,b) = (0,0) */
 	    bfl->d_grad_phi_e_dmesh[i][2] [0][2] [0][j] = bfl->d_grad_phi_dmesh[i][0] [0][j];
@@ -2747,7 +2734,7 @@ load_bf_mesh_derivs(void)
 		
 	  for ( i=0; i<vdofs; i++)
 	    {
-	      for ( a=0; a<wim; a++)
+	      for ( a=0; a<WIM; a++)
 		{
 		  for ( p=0; p<VIM; p++)
 		    {
