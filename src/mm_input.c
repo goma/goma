@@ -7378,6 +7378,30 @@ rd_solver_specs(FILE *ifp,
 
   Visc_Sens_Copy = Include_Visc_Sens;
   
+  iread = look_for_optional(ifp, "PETSc solve post proc", input, '=');
+  if (iread == 1)
+    {
+    (void) read_string(ifp, input, '\n');
+    strip(input);
+    if ( strncmp(input,"no",2) == 0 )
+      {
+        upd->petsc_solve_post_proc = false;
+      }
+    else if ( strncmp(input,"yes",3) == 0 )
+      {
+	upd->petsc_solve_post_proc = true;
+      }
+    else
+      {
+        GOMA_EH( -1, "invalid choice for PETSc solve post proc : must be yes or no");
+      }
+      SPF(echo_string,eoformat,"PETSc solve post proc", input); ECHO(echo_string,echo_file);
+    }
+  else
+    {
+	upd->petsc_solve_post_proc = false;
+    }
+
   /* look for optional flags specifying dependencies to ignore */
   {
     int err;

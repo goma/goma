@@ -426,7 +426,8 @@ enum AverageExtraTypes
 {
   AVG_DENSITY,
   AVG_HEAVISIDE,
-  AVG_VISCOSITY
+  AVG_VISCOSITY,
+  AVG_SHEAR
 };
 
 

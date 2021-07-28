@@ -877,6 +877,7 @@ struct Uniform_Problem_Description {
   int SegregatedSubcycles;
   int PSPG_advection_correction;
   int matrix_index[MAX_VARIABLE_TYPES];
+  int petsc_solve_post_proc;
 };
 typedef struct Uniform_Problem_Description UPD_STRUCT;
 /*____________________________________________________________________________*/

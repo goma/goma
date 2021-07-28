@@ -3670,7 +3670,7 @@ sum_average_nodal(double **avg_count, double ** avg_sum, int global_node, double
               }
               break;
             default:
-              GOMA_EH(GOMA_ERROR, "Unknown nodal average type");
+              GOMA_EH(GOMA_ERROR, "Unknown nodal average type %d %s", pp_average[i]->type, pp_average[i]->type_name);
               break;
             }
         }
@@ -3705,6 +3705,27 @@ sum_average_nodal(double **avg_count, double ** avg_sum, int global_node, double
 
                 double mu = viscosity(gn, gamma, NULL);
                 avg_sum[i][global_node] += mu;
+              }
+              break;
+            case AVG_SHEAR:
+              {
+                double gamma[DIM][DIM];
+                int a;
+                int b;
+                for (a = 0; a < VIM; a++)
+                  {
+                    for (b = 0; b < VIM; b++)
+                      {
+                        gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+                      }
+                  }
+		dbl gammadot = 0;
+               calc_shearrate(&gammadot,	/* strain rate invariant */
+	       gamma, /* strain rate tensor */
+	       NULL,
+	       NULL);
+
+                avg_sum[i][global_node] += gammadot;
               }
               break;
             default:
@@ -9200,6 +9221,12 @@ rd_post_process_specs(FILE *ifp,
 		    strcpy(pp_average[i]->type_name, "VISCOSITY_AVG");
 		    pp_average[i]->non_variable_type = 1;
 		    pp_average[i]->type = AVG_VISCOSITY;
+		  }
+		else if (!strncasecmp(variable_name, "SHEARRATE", strlen(variable_name)))
+		  {
+		    strcpy(pp_average[i]->type_name, "SHEARRATE_AVG");
+		    pp_average[i]->non_variable_type = 1;
+		    pp_average[i]->type = AVG_SHEAR;
 		  }
 		else
 		  {
