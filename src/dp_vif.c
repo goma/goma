@@ -2672,6 +2672,9 @@ noahs_ark(void)
   ddd_add_member(n, &SARAMITO_YIELD, 1, MPI_INT);
   ddd_add_member(n, &STRESS_NORM, 1, MPI_INT);
   ddd_add_member(n, &SPECIES_SOURCES, 1, MPI_INT);
+  ddd_add_member(n, &VISCOUS_STRESS, 1, MPI_INT);
+  ddd_add_member(n, &VISCOUS_STRESS_NORM, 1, MPI_INT);
+  ddd_add_member(n, &VISCOUS_VON_MISES_STRESS, 1, MPI_INT);
   ddd_add_member(n, &len_u_post_proc, 1, MPI_INT);
   ddd_add_member(n, &PSPG_PP, 1, MPI_INT);
 

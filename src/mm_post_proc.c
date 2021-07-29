@@ -312,6 +312,9 @@ int PSPG_PP = -1;
 int SARAMITO_YIELD = -1;
 int STRESS_NORM = -1;
 int SPECIES_SOURCES = -1;   	/* continuous species sources*/
+int VISCOUS_STRESS = -1;
+int VISCOUS_STRESS_NORM = -1;
+int VISCOUS_VON_MISES_STRESS = -1;
 
 int len_u_post_proc = 0;	/* size of dynamically allocated u_post_proc
 				 * actually is */
@@ -2495,15 +2498,101 @@ static int calc_standard_fields(double **post_proc_vect,
       local_lumped[STRESS_NORM + mode] = 1.;
     }
   }
-  
 
-  if(SARAMITO_YIELD != -1 && pd->e[pg->imtrx][POLYMER_STRESS11]) 
-  {  
+  if (SARAMITO_YIELD != -1 && pd->e[pg->imtrx][POLYMER_STRESS11]) {
     for (int mode = 0; mode < vn->modes; mode++) {
-      dbl coeff = compute_saramito_model_terms(fv->S[mode], ve[mode]->gn->tau_y, ve[mode]->gn->fexp, NULL);
+      dbl coeff =
+          compute_saramito_model_terms(fv->S[mode], ve[mode]->gn->tau_y, ve[mode]->gn->fexp, NULL);
       local_post[SARAMITO_YIELD + mode] = coeff;
       local_lumped[SARAMITO_YIELD + mode] = 1.;
     }
+  }
+
+  if (VISCOUS_STRESS != -1 && pd->e[pg->imtrx][R_MOMENTUM1]) {
+    for (a = 0; a < VIM; a++) {
+      for (b = 0; b < VIM; b++) {
+        gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+      }
+    }
+
+    mu = viscosity(gn, gamma, NULL);
+    // printf("%lf", mu);
+    for (a = 0; a < VIM; a++) {
+      for (b = 0; b < VIM; b++) {
+        local_post[VISCOUS_STRESS + a * VIM + b] = mu * gamma[a][b];
+        local_lumped[VISCOUS_STRESS + a * VIM + b] = 1.;
+      }
+    }
+  }
+
+  if (VISCOUS_STRESS_NORM != -1 && pd->e[pg->imtrx][R_MOMENTUM1]) {
+    for (a = 0; a < VIM; a++) {
+      for (b = 0; b < VIM; b++) {
+        gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+      }
+    }
+
+    mu = viscosity(gn, gamma, NULL);
+
+    dbl traceOverVim = 0;
+    for (int i = 0; i < VIM; i++) {
+      traceOverVim += mu * (fv->grad_v[i][i] + fv->grad_v[i][i]);
+    }
+
+    traceOverVim /= VIM;
+
+    // square of the deviatoric sress norm
+    dbl normOfStressDSqr = 0;
+    for (int i = 0; i < VIM; i++) {
+      normOfStressDSqr += pow(mu * (fv->grad_v[i][i] + fv->grad_v[i][i]) - traceOverVim, 2) / 2.;
+
+      for (int j = i + 1; j < VIM; j++) {
+        normOfStressDSqr += pow(mu * (fv->grad_v[i][j] + fv->grad_v[j][i]), 2);
+      }
+    }
+
+    dbl normOfStressD = sqrt(normOfStressDSqr);
+    local_post[VISCOUS_STRESS_NORM] = normOfStressD;
+    local_lumped[VISCOUS_STRESS_NORM] = 1.;
+  }
+
+  if (VISCOUS_VON_MISES_STRESS != -1 && pd->e[pg->imtrx][R_MOMENTUM1]) {
+    for (a = 0; a < VIM; a++) {
+      for (b = 0; b < VIM; b++) {
+        gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+      }
+    }
+
+    mu = viscosity(gn, gamma, NULL);
+
+    dbl viscousVonMisesStress = 0.0;
+
+    if (Num_Dim < 3) {
+      dbl stress_xx = mu * (fv->grad_v[0][0] + fv->grad_v[0][0]);
+      dbl stress_xy = mu * (fv->grad_v[0][1] + fv->grad_v[1][0]);
+      dbl stress_yy = mu * (fv->grad_v[1][1] + fv->grad_v[1][1]);
+
+      viscousVonMisesStress = sqrt(pow(stress_xx, 2) + pow(stress_yy, 2) + 3 * pow(stress_xy, 2) -
+                                   stress_xx * stress_yy);
+
+    } else if (Num_Dim > 2) {
+      dbl stress_xx = mu * (fv->grad_v[0][0] + fv->grad_v[0][0]);
+      dbl stress_yy = mu * (fv->grad_v[1][1] + fv->grad_v[1][1]);
+      dbl stress_zz = mu * (fv->grad_v[2][2] + fv->grad_v[2][2]);
+
+      dbl stress_xy = mu * (fv->grad_v[0][1] + fv->grad_v[1][0]);
+      dbl stress_xz = mu * (fv->grad_v[0][2] + fv->grad_v[2][0]);
+      dbl stress_yz = mu * (fv->grad_v[1][2] + fv->grad_v[2][1]);
+
+      viscousVonMisesStress =
+          sqrt(0.5 * (pow((stress_xx - stress_yy), 2) + pow((stress_yy - stress_zz), 2) +
+                      pow((stress_zz - stress_xx), 2) +
+                      6 * (pow(stress_xy, 2) + pow(stress_yz, 2) + pow(stress_xz, 2))));
+    }
+
+    // dbl viscousVonMisesStress1 = viscousVonMisesStress;
+    local_post[VISCOUS_VON_MISES_STRESS] = viscousVonMisesStress;
+    local_lumped[VISCOUS_VON_MISES_STRESS] = 1.;
   }
 
   /* calculate real-solid stress here !!  */
@@ -7692,6 +7781,9 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Saramito Yield Coeff", &SARAMITO_YIELD);
   iread = look_for_post_proc(ifp, "VE Stress Norm", &STRESS_NORM);
   iread = look_for_post_proc(ifp, "Species Sources", &SPECIES_SOURCES);
+  iread = look_for_post_proc(ifp, "Viscous Stress", &VISCOUS_STRESS);
+  iread = look_for_post_proc(ifp, "Viscous Stress Norm", &VISCOUS_STRESS_NORM);
+  iread = look_for_post_proc(ifp, "Viscous Von Mises Stress", &VISCOUS_VON_MISES_STRESS);
 
   /*
    * Initialize for surety before communication to other processors.
@@ -10711,8 +10803,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
       }
     }
 
-  if (SARAMITO_YIELD != -1 && Num_Var_In_Type[pg->imtrx][POLYMER_STRESS11])
-    {
+    if (SARAMITO_YIELD != -1 && Num_Var_In_Type[pg->imtrx][POLYMER_STRESS11]) {
       SARAMITO_YIELD = index_post;
       int num_modes = 0;
       for (int i = 0; i < MAX_MODES; i++) {
@@ -10720,13 +10811,90 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
           num_modes++;
         }
       }
-      for (int mode = 0; mode<num_modes; mode++) {
+      for (int mode = 0; mode < num_modes; mode++) {
         sprintf(species_name, "SARAMITO_COEFF_%d", mode);
         sprintf(species_desc, "saramito coeff mode_%d", mode);
         set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]", species_desc, FALSE);
         index++;
         index_post++;
       }
+    }
+
+    if (VISCOUS_STRESS != -1 && Num_Var_In_Type[pg->imtrx][R_MOMENTUM1]) {
+      if (Num_Dim > 2) {
+        VISCOUS_STRESS = index_post;
+        set_nv_tkud(rd, index, 0, 0, -2, "VS11", "[1]", "Viscous stress xx", FALSE);
+        index++;
+        index_post++;
+        set_nv_tkud(rd, index, 0, 0, -2, "VS12", "[1]", "Viscous stress xy", FALSE);
+
+        index++;
+        index_post++;
+
+        set_nv_tkud(rd, index, 0, 0, -2, "VS13", "[1]", "Viscous stress xz", FALSE);
+        index++;
+        index_post++;
+
+        set_nv_tkud(rd, index, 0, 0, -2, "VS21", "[1]", "Viscous stress yx", FALSE);
+
+        index++;
+        index_post++;
+
+        set_nv_tkud(rd, index, 0, 0, -2, "VS22", "[1]", "Viscous stress yy", FALSE);
+        index++;
+        index_post++;
+
+        set_nv_tkud(rd, index, 0, 0, -2, "VS23", "[1]", "Viscous stress yz", FALSE);
+        index++;
+        index_post++;
+
+        set_nv_tkud(rd, index, 0, 0, -2, "VS31", "[1]", "Viscous stress zx", FALSE);
+
+        index++;
+        index_post++;
+
+        set_nv_tkud(rd, index, 0, 0, -2, "VS32", "[1]", "Viscous stress zy", FALSE);
+        index++;
+        index_post++;
+
+        set_nv_tkud(rd, index, 0, 0, -2, "VS33", "[1]", "Viscous stress zz", FALSE);
+        index++;
+        index_post++;
+
+      } else {
+        VISCOUS_STRESS = index_post;
+        set_nv_tkud(rd, index, 0, 0, -2, "VS11", "[1]", "Viscous stress xx", FALSE);
+        index++;
+        index_post++;
+        set_nv_tkud(rd, index, 0, 0, -2, "VS12", "[1]", "Viscous stress xy", FALSE);
+
+        index++;
+        index_post++;
+
+        set_nv_tkud(rd, index, 0, 0, -2, "VS21", "[1]", "Viscous stress yx", FALSE);
+
+        index++;
+        index_post++;
+
+        set_nv_tkud(rd, index, 0, 0, -2, "VS22", "[1]", "Viscous stress yy", FALSE);
+        index++;
+        index_post++;
+      }
+    }
+
+    if (VISCOUS_STRESS_NORM != -1 && Num_Var_In_Type[pg->imtrx][R_MOMENTUM1]) {
+      SARAMITO_YIELD = -1;
+      VISCOUS_STRESS_NORM = index_post;
+      set_nv_tkud(rd, index, 0, 0, -2, "VSNORM", "[1]", "Viscous stress norm", FALSE);
+      index++;
+      index_post++;
+    }
+
+    if (VISCOUS_VON_MISES_STRESS != -1 && Num_Var_In_Type[pg->imtrx][R_MOMENTUM1]) {
+      VISCOUS_VON_MISES_STRESS = index_post;
+      set_nv_tkud(rd, index, 0, 0, -2, "VVMISSTRESS", "[1]", "Viscous Von Mises stress", FALSE);
+      index++;
+      index_post++;
     }
 
     /*if (J_FLUX != -1)
