@@ -10412,7 +10412,6 @@ Courant_Time_Step( double x[], double x_old[], double x_older[],
   double h_elem;
   double *xi, xi_array[3];
   double sum, sumv;
-  int dim;
   int ip_total, ip;
   double wt, vnorm;
   int a;
@@ -10430,8 +10429,6 @@ Courant_Time_Step( double x[], double x_old[], double x_older[],
       e_start = exo->eb_ptr[ebi];
       e_end   = exo->eb_ptr[ebi+1];
       
-      dim = pd->Num_Dim;
-
       if ( pd->v[ls->var] )
 	{
 	  for( ielem = e_start ; ielem < e_end ; ielem++)

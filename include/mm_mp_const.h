@@ -450,6 +450,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 /*Convective langrangian velocity models */
 #define ROTATIONAL  2
 #define ROTATIONAL_3D  25
+#define OSC_LINEAR  252
 
 /*Various thermophysical property models */
 #define ENTHALPY 4
