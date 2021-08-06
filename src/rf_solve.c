@@ -857,6 +857,11 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
   } else {
     GOMA_EH(GOMA_ERROR, "Attempted to allocate unknown sparse matrix format: %s", Matrix_Format);
   }
+#ifdef HAVE_PETSC
+  if (upd->petsc_solve_post_proc && rd->TotalNVPostOutput) {
+    goma_setup_petsc_post_proc_matrix(exo, dpi, x, x_old, xdot, xdot_old);
+  }
+#endif
 	  
   /* 
    * allocate memory for Volume Constraint Jacobian. ACS 2/99 

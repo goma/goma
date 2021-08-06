@@ -15,6 +15,18 @@ goma_error goma_setup_petsc_matrix(struct GomaLinearSolverData *ams,
                                    int external_dof,
                                    int imtrx);
 
+goma_error goma_setup_petsc_post_proc_matrix(
+                                   Exo_DB *exo,
+                                   Dpi *dpi,
+                                                    dbl *x,
+                                                    dbl *x_old,
+                                                    dbl *xdot,
+                                                    dbl *xdot_old);
+void petsc_solve_post_proc(
+  double **post_proc_vect,
+  RESULTS_DESCRIPTION_STRUCT *rd,
+  Dpi *dpi);
+
 void petsc_load_lec(int ielem, struct GomaLinearSolverData *ams,
                    double resid_vector[]);
 void

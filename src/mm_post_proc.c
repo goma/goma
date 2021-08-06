@@ -4660,7 +4660,11 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 /******************************************************************************/
 /*                      SMOOTHING                                             */
 /******************************************************************************/
-
+#ifdef HAVE_PETSC
+   if (upd->petsc_solve_post_proc) {
+     petsc_solve_post_proc(post_proc_vect, rd, dpi);
+   } else {
+#endif
    for (ii = 0; ii< rd->TotalNVPostOutput; ii++) {
      for (I = 0; I < num_universe_nodes; I++) {
        if (fabs(lumped_mass[ii][I]) > DBL_SMALL) {
@@ -4670,6 +4674,9 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
        }
      }
    }
+#ifdef HAVE_PETSC
+   }
+#endif
 /******************************************************************************/
 /*                                BLOCK 3                                     */
 /*                CALCULATE STREAM OR FLUX FUNCTIONS                          */
