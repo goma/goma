@@ -90,7 +90,7 @@
 #include "user_mp.h"
 #include "user_post.h"
 #include "wr_exo.h"
-
+#include "sl_petsc.h"
 /*
  * Global variable definitions.
  * This is the 1 place these variables are defined. If you need them

@@ -5,6 +5,7 @@
 #include "dpi.h"
 #include "exo_struct.h"
 #include "mm_as_structs.h"
+#include "rf_io_structs.h"
 #include "mm_eh.h"
 
 goma_error goma_setup_petsc_matrix(struct GomaLinearSolverData *ams,
