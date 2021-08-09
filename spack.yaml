@@ -1,10 +1,22 @@
-# This is a Spack Environment file.
-#
-# It describes a set of packages to be installed, along with
-# configuration settings.
 spack:
   # add package specs to the `specs` list
-  specs: [catch2, cmake, openmpi, arpack-ng, sparse, trilinos+amesos+amesos2+aztec+belos+boost+chaco+epetra+epetraext+exodus+explicit_template_instantiation+fortran+hdf5+hypre+ifpack+ifpack2+kokkos+matio+metis+ml+mpi+muelu+mumps+netcdf+pnetcdf+shared+stratimikos+suite-sparse+superlu-dist+teko+teuchos+tpetra+x11+zlib+zoltan+zoltan2
-      build_type=Release gotype=long_long ^superlu-dist@5.4.0, omega-h@develop ^trilinos+amesos+amesos2+aztec+belos+boost+chaco+epetra+epetraext+exodus+explicit_template_instantiation+fortran+hdf5+hypre+ifpack+ifpack2+kokkos+matio+metis+ml+mpi+muelu+mumps+netcdf+pnetcdf+shared+stratimikos+suite-sparse+superlu-dist+teko+teuchos+tpetra+x11+zlib+zoltan+zoltan2
-      build_type=Release gotype=long_long ^superlu-dist@5.4.0]
-  view: true
+  specs:
+  - cmake
+  - sparse
+  - openmpi
+  - arpack-ng ^intel-mkl
+  - metis+int64 ^intel-mkl
+  - parmetis+int64 ^intel-mkl
+  - hypre+int64 ^intel-mkl
+  - netcdf-c+parallel-netcdf
+  - mumps@5.3.5~openmp+metis+parmetis ^intel-mkl
+  - trilinos+amesos+amesos2+aztec+belos+boost+chaco+epetra+epetraext+exodus+explicit_template_instantiation+fortran+hdf5~hypre+ifpack+ifpack2+kokkos+matio+ml+mpi+muelu+mumps+netcdf+pnetcdf+shared+stratimikos+suite-sparse+superlu-dist+teko+tpetra+zlib+zoltan+zoltan2
+    build_type=Release gotype=long_long ^intel-mkl
+  - omega-h@9.33.3 build_type=Release
+  - petsc~X~batch~cgns~complex~cuda~debug+double~exodusii~fftw~giflib+hdf5~hwloc+hypre+int64~jpeg~knl~libpng~libyaml~memkind+metis~mkl-pardiso~moab~mpfr+mpi+mumps~openmp+p4est+ptscotch~random123~rocm~saws+shared+suite-sparse~superlu-dist
+    ^intel-mkl
+  view:
+    default:
+      root: .spack-env/view
+      exclude: [python]
+  concretization: together
