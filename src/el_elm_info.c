@@ -490,7 +490,7 @@ elem_info(const int info,
       answer = 10;
       break;
     case NQUAD:                   /* number of quadrature points */
-      answer = 5;
+      answer = 14;
       break;
     case NDIM:                    /* number of physical dimensions */
       answer = 3;
@@ -1866,43 +1866,118 @@ find_stu(const int   iquad,     /* current GQ index  */
     break;
 
   case LINEAR_TET:
-  case QUADRATIC_TET:
+
     //*s = *t = *u = 0.25;
   {
-//  { static const double alpha = 0.585410196624969;
-//    static const double beta = .138196601125011;
-//    switch (iquad) {
-//    case 0:
-//      *s = alpha;
-//      *t = *u = beta;
-//      break;
-//    case 1:
-//      *s = *u = beta;
-//      *t = alpha;
-//      break;
-//    case 2:
-//      *s = *t = beta;
-//      *u = alpha;
-//      break;
-//    case 3:
-//      *s = *t = *u = beta;
-//      break;
-//    }
-//  }
+ { static const double alpha = 0.585410196624969;
+   static const double beta = .138196601125011;
+   switch (iquad) {
+   case 0:
+     *s = alpha;
+     *t = *u = beta;
+     break;
+   case 1:
+     *s = *u = beta;
+     *t = alpha;
+     break;
+   case 2:
+     *s = *t = beta;
+     *u = alpha;
+     break;
+   case 3:
+     *s = *t = *u = beta;
+     break;
+   }
+ }
 
-    const double one_sixth = 1/6.0;
-    const double one_half = 0.5;
-    switch (iquad )
-      {
-      case 0: *s = *t = *u = 0.25; break;
-      case 1: *s = one_sixth; *t = one_sixth; *u = one_sixth; break;
-      case 2: *s = one_sixth; *t = one_sixth; *u = one_half ; break;
-      case 3: *s = one_sixth; *t = one_half ; *u = one_sixth; break;
-      case 4: *s = one_half ; *t = one_sixth; *u = one_sixth; break;
-      }
+    // const double one_sixth = 1/6.0;
+    // const double one_half = 0.5;
+    // switch (iquad )
+    //   {
+    //   case 0: *s = *t = *u = 0.25; break;
+    //   case 1: *s = one_sixth; *t = one_sixth; *u = one_sixth; break;
+    //   case 2: *s = one_sixth; *t = one_sixth; *u = one_half ; break;
+    //   case 3: *s = one_sixth; *t = one_half ; *u = one_sixth; break;
+    //   case 4: *s = one_half ; *t = one_sixth; *u = one_sixth; break;
+    //   }
   }
     break;
-      
+  case QUADRATIC_TET:
+  {
+    switch (iquad) {
+    case 0:
+      *s = 0.3108859192633006141;
+      *t = 0.3108859192633006141;
+      *u = 0.3108859192633006141;
+      break;
+    case 1:
+      *s = 0.3108859192633006141;
+      *t = 0.06734224221009821321;
+      *u = 0.3108859192633006141;
+      break;
+    case 2:
+      *s = 0.06734224221009821321;
+      *t = 0.3108859192633006141;
+      *u = 0.3108859192633006141;
+      break;
+    case 3:
+      *s = 0.3108859192633006141;
+      *t = 0.3108859192633006141;
+      *u = 0.06734224221009821321;
+      break;
+    case 4:
+      *s = 0.09273525031089122073;
+      *t = 0.09273525031089122073;
+      *u = 0.09273525031089122073;
+      break;
+    case 5:
+      *s = 0.09273525031089122073;
+      *t = 0.7217942490673263656;
+      *u = 0.09273525031089122073;
+      break;
+    case 6:
+      *s = 0.7217942490673263656;
+      *t = 0.09273525031089122073;
+      *u = 0.09273525031089122073;
+      break;
+    case 7:
+      *s = 0.09273525031089122073;
+      *t = 0.09273525031089122073;
+      *u = 0.7217942490673263656;
+      break;
+    case 8:
+      *s = 0.4544962958743503645;
+      *t = 0.4544962958743503645;
+      *u = 0.04550370412564964939;
+      break;
+    case 9:
+      *s = 0.4544962958743503645;
+      *t = 0.04550370412564964939;
+      *u = 0.04550370412564964939;
+      break;
+    case 10:
+      *s = 0.04550370412564964939;
+      *t = 0.04550370412564964939;
+      *u = 0.4544962958743503645;
+      break;
+    case 11:
+      *s = 0.04550370412564964939;
+      *t = 0.4544962958743503645;
+      *u = 0.04550370412564964939;
+      break;
+    case 12:
+      *s = 0.4544962958743503645;
+      *t = 0.04550370412564964939;
+      *u = 0.4544962958743503645;
+      break;
+    case 13:
+      *s = 0.04550370412564964939;
+      *t = 0.4544962958743503645;
+      *u = 0.4544962958743503645;
+      break;
+    }
+  }
+  break;
   default:
     GOMA_EH(GOMA_ERROR, "Unknown or unimplemented element type.\n");
     break;
@@ -3271,20 +3346,58 @@ Gq_weight(const int iquad,               /* current GQ index */
     break;
 
   case LINEAR_TET:
-  case QUADRATIC_TET:
   {
-     const double wltet_1 = -2.0 / 15.0;
-     const double wltet_2 = 0.075;
-    //weight = 1.0/6.0;
-//    weight = 1.0/24.0;
-
-    if (iquad == 0)
-      weight = wltet_1;
-    else 
-      weight = wltet_2;
+    weight = 1.0/24.0;
   }
     break;
-
+  case QUADRATIC_TET:
+  {
+    switch (iquad) {
+    case 0: 
+      weight = 0.01878132095300264273;
+      break;
+    case 1: 
+      weight = 0.01878132095300264273;
+      break;
+    case 2: 
+      weight = 0.01878132095300264273;
+      break;
+    case 3: 
+      weight = 0.01878132095300264273;
+      break;
+    case 4: 
+      weight = 0.01224884051939365871;
+      break;
+    case 5: 
+      weight = 0.01224884051939365871;
+      break;
+    case 6: 
+      weight = 0.01224884051939365871;
+      break;
+    case 7: 
+      weight = 0.01224884051939365871;
+      break;
+    case 8: 
+      weight = 0.007091003462846911208;
+      break;
+    case 9: 
+      weight = 0.007091003462846911208;
+      break;
+    case 10: 
+      weight = 0.007091003462846911208;
+      break;
+    case 11: 
+      weight = 0.007091003462846911208;
+      break;
+    case 12: 
+      weight = 0.007091003462846911208;
+      break;
+    case 13: 
+      weight = 0.007091003462846911208;
+      break;
+    }
+  }
+  break;
 
   case TRILINEAR_HEX:                   /* trilinear hexahedron */
   case P1_HEX:                          /* linear discontinuous on hexahedron */

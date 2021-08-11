@@ -540,21 +540,21 @@ shape (const double s,		/* quadrature point coordinates */
     case PSI:           /* shape function */
       switch( Inode ) { /* select specific shape function */
       case 0:
-	value = (-1. + s + t + u)*(-1. + 2.*s + 2.*t +2.*u); break;
+	value = (1.- s - t - u)*(2.*(1-s -t -u) - 1.); break;
       case 1:
-	value = s*(-1. + 2.*s);               break;
+	value = s*(2.*s - 1.);               break;
       case 2:
-	value = t*(-1. + 2.*t);               break;
+	value = t*(2.*t - 1);               break;
       case 3:
-	value = u*(-1. + 2.*u);               break;
+	value = u*(2.*u - 1);               break;
       case 4:
-	value = -4.*s*(-1. + s + t + u);               break;
+	value = 4.*s*(1-s-t-u);               break;
       case 5:
 	value = 4*s*t;               break;
       case 6:
-	value = -4.*t*(-1. + s + t + u);               break;
+	value = 4.*t*(1-s-t-u);               break;
       case 7:
-	value = -4.*u*(-1. + s + t + u);               break;
+	value = 4.*u*(1-s-t-u);               break;
       case 8:
 	value = 4*s*u;               break;
       case 9:
@@ -573,7 +573,7 @@ shape (const double s,		/* quadrature point coordinates */
       case 3:
 	value =  0.0; break;
       case 4:
-	value =  -4.*(-1. + 2.*s + t + u); break;
+	value =  -4.*(2.*s + t + u-1.); break;
       case 5:
 	value = 4.*t; break;
       case 6:
