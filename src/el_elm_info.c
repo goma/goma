@@ -472,7 +472,7 @@ elem_info(const int info,
       answer = 3;
       break;
     case NQUAD_SURF:            /* number of surface quad points */
-      answer = 4;
+      answer = 3;
       break;
     case NQUAD_EDGE:            /* number of edge quad points */
       answer = 2;
@@ -2306,8 +2306,7 @@ find_surf_st(const int iquad,           /* current GQ index */
     break;
 
   case LINEAR_TET:
-  case QUADRATIC_TET:
-    
+    { 
     /* 
      * I'm not sure where the original code came from, especially with
      * the "A" values.  But it doesn't seem to work the way I expect.  But
@@ -2315,23 +2314,60 @@ find_surf_st(const int iquad,           /* current GQ index */
      * a four-point integration rule for triangles here.
      * Scott A Roberts, 1514 - 2011-11-04
      */
-    switch ( iquad ) {
-    case 0: *s = one_third; *t = one_third; break;
-    case 1: *s = 0.2; *t = 0.2; break;
-    case 2: *s = 0.2; *t = 0.6; break;
-    case 3: *s = 0.6; *t = 0.2; break;
+      switch ( iquad ) {
+      case 0:
+        *s = 2.0/3.0;
+        *t = 1.0/6.0;
+        break;
+      case 1:
+        *s = 1.0/6.0;
+        *t = 2.0/3.0;
+        break;
+      case 2:
+        *s = 1.0/6.0;
+        *t = 1.0/6.0;
+        break;
+      }
+      double r = 1.0 - *s - *t;
+      
+      switch ( iside ) {
+      case 1: xi[0] = *s; xi[1] = 0.; xi[2] = *t; break;
+      case 2: xi[0] =  r; xi[1] = *s; xi[2] = *t; break;
+      case 3: xi[0] = 0.; xi[1] = *t; xi[2] = *s; break;
+      case 4: xi[0] = *t; xi[1] = *s; xi[2] = 0.; break;
+      }
     }
-    double r = 1.0 - *s - *t;
-    
-    switch ( iside ) {
-    case 1: xi[0] = *s; xi[1] = 0.; xi[2] = *t; break;
-    case 2: xi[0] =  r; xi[1] = *s; xi[2] = *t; break;
-    case 3: xi[0] = 0.; xi[1] = *t; xi[2] = *s; break;
-    case 4: xi[0] = *t; xi[1] = *s; xi[2] = 0.; break;
-    }
-
     break;
-
+  case QUADRATIC_TET:
+    {
+      switch ( iquad ) {
+      case 0:
+        *s = 1.5505102572168219018027159252941e-1;
+        *t = 1.7855872826361642311703513337422e-1;
+        break;
+      case 1:
+        *s = 6.4494897427831780981972840747059e-1;
+        *t = 7.5031110222608118177475598324603e-2;
+        break;
+      case 2:
+        *s = 1.5505102572168219018027159252941e-1;
+        *t = 6.6639024601470138670269327409637e-1;
+        break;
+      case 3:
+        *s = 6.4494897427831780981972840747059e-1;
+        *t = 2.8001991549907407200279599420481e-1;
+        break;
+      }
+      double r = 1.0 - *s - *t;
+      
+      switch ( iside ) {
+      case 1: xi[0] = *s; xi[1] = 0.; xi[2] = *t; break;
+      case 2: xi[0] =  r; xi[1] = *s; xi[2] = *t; break;
+      case 3: xi[0] = 0.; xi[1] = *t; xi[2] = *s; break;
+      case 4: xi[0] = *t; xi[1] = *s; xi[2] = 0.; break;
+      }
+    }
+    break;
   default:
     GOMA_EH(GOMA_ERROR,"Unknown or unimplemented element type.\n");
     break;
@@ -3534,12 +3570,15 @@ Gq_surf_weight(const int iquad,               /* current GQ index  */
     break;
 
   case LINEAR_TET:
+    weight = 1.0/6.0;
+    break;
+
   case QUADRATIC_TET:
     switch ( iquad ) {
-    case 0: weight = -0.281250000000000; break;
-    case 1: weight =  0.260416666666667; break;
-    case 2: weight =  0.260416666666667; break;
-    case 3: weight =  0.260416666666667; break;
+    case 0: weight = 1.5902069087198858469718450103758e-1; break;
+    case 1: weight = 9.0979309128011415302815498962418e-2; break;
+    case 2: weight = 1.5902069087198858469718450103758e-1; break;
+    case 3: weight = 9.0979309128011415302815498962418e-2; break;
     }
     break;
     
