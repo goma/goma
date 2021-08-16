@@ -837,6 +837,27 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
 	      SPF_DBL_VEC( endofstring(es), num_const, elc_glob[mn]->u_v_mesh_sfs );
 	    }
+	  if(!strcmp(model_name, "OSC_LINEAR") )
+	    {
+              pd_glob[mn]->MeshInertia = 1;
+	      elc_glob[mn]->v_mesh_sfs_model = OSC_LINEAR;
+	      
+	      num_const = read_constants(imp, &(elc_glob[mn]->u_v_mesh_sfs), 
+					 NO_SPECIES);
+
+	      if ( num_const < 5 )
+		{
+		  sr = sprintf(err_msg, 
+	          "Matl %s expected at least 5 constants for %s %s model.\n",
+			       pd_glob[mn]->MaterialName, 
+			       "Convective Lagrangian Velocity", 
+			       "OSC_LINEAR");
+		  EH(-1, err_msg);
+		}
+	      elc_glob[mn]->len_u_v_mesh_sfs = num_const;
+
+	      SPF_DBL_VEC( endofstring(es), num_const, elc_glob[mn]->u_v_mesh_sfs );
+	    }
           if(!strcmp(model_name, "NONE"))
             {
               pd_glob[mn]->MeshInertia = 0;

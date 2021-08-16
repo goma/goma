@@ -10046,12 +10046,7 @@ get_convection_velocity(double vconv[DIM], /*Calculated convection velocity */
 
        /* First test to see what type of prescribed kinematics model */
 
-    if (elc->v_mesh_sfs_model == CONSTANT)
-    {
-      /*do nothing??*/
-    }
-    else if (elc->v_mesh_sfs_model == ROTATIONAL ||
-		elc->v_mesh_sfs_model == ROTATIONAL_3D )
+    if (elc->v_mesh_sfs_model > CONSTANT)
     {
       (void) V_mesh_sfs_model(elc->u_v_mesh_sfs, elc->v_mesh_sfs, 
 				elc->v_mesh_sfs_model, -1);
@@ -14028,12 +14023,7 @@ get_particle_convection_velocity(double pvconv[DIM],
 
        /* First test to see what type of prescribed kinematics model */
 
-       if (elc->v_mesh_sfs_model == CONSTANT)
-	 {
-           /*do nothing??*/
-	 }
-       else if (elc->v_mesh_sfs_model == ROTATIONAL ||
-		elc->v_mesh_sfs_model == ROTATIONAL_3D )
+       if (elc->v_mesh_sfs_model > CONSTANT)
 	 {
            (void) V_mesh_sfs_model(elc->u_v_mesh_sfs, elc->v_mesh_sfs, 
 				elc->v_mesh_sfs_model, -1);

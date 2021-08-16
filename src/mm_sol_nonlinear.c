@@ -1359,12 +1359,12 @@ EH(-1,"version not compiled with frontal solver");
 
          Resid_Norm_stack[0] = Resid_Norm_stack[1];
          Resid_Norm_stack[1] = Resid_Norm_stack[2];
-         Resid_Norm_stack[2] = Norm[0][2]/BIG_PENALTY;
+         Resid_Norm_stack[2] = Norm[0][2]/BIG_PENALTY + DBL_SMALL;
 	 if(nAC)
 	   {
             AC_Resid_Norm_stack[0] = AC_Resid_Norm_stack[1];
             AC_Resid_Norm_stack[1] = AC_Resid_Norm_stack[2];
-            AC_Resid_Norm_stack[2] = Norm[2][2]/BIG_PENALTY;
+            AC_Resid_Norm_stack[2] = Norm[2][2]/BIG_PENALTY + DBL_SMALL;
 	   }
 	   
          if(inewton && (Resid_Norm_stack[2] > 0) && (Resid_Norm_stack[2] != 1) ) 
@@ -1414,15 +1414,16 @@ EH(-1,"version not compiled with frontal solver");
 	    glob_var_vals[1] = (double) inewton;
 	    glob_var_vals[2] = (double) Max_Newton_Steps;
 	    glob_var_vals[3] = Conv_order;
+	    glob_var_vals[4] = Conv_rate;
 	    total_mesh_volume = 0;
 
 	    for(i=0;nAC > 0 && i<nAC;i++) 
 	      {
 	       total_mesh_volume += augc[i].evol;
-	       glob_var_vals[5 + i ] = x_AC[i];
+	       glob_var_vals[6 + i ] = x_AC[i];
 	      }
 
-	    glob_var_vals[4] = (double) total_mesh_volume;
+	    glob_var_vals[5] = (double) total_mesh_volume;
 	   }
 	 goto skip_solve;
          }
@@ -2060,20 +2061,20 @@ EH(-1,"version not compiled with frontal solver");
         Norm_r[1][2] = L2_norm_r_1p (yAC, x_AC, nAC);
 	AC_Resid_Norm_stack[0] = AC_Resid_Norm_stack[1];
 	AC_Resid_Norm_stack[1] = AC_Resid_Norm_stack[2];
-	AC_Resid_Norm_stack[2] = Norm[2][2]/BIG_PENALTY;
+	AC_Resid_Norm_stack[2] = Norm[2][2]/BIG_PENALTY + DBL_SMALL;
 	AC_Soln_Norm_stack[0] = AC_Soln_Norm_stack[1];
 	AC_Soln_Norm_stack[1] = AC_Soln_Norm_stack[2];
-	AC_Soln_Norm_stack[2] = Norm_r[1][2]/BIG_PENALTY;
+	AC_Soln_Norm_stack[2] = Norm_r[1][2]/BIG_PENALTY + DBL_SMALL;
       }
 
       /* Save some norm info for modified Newton stuff */
       
       Resid_Norm_stack[0] = Resid_Norm_stack[1];
       Resid_Norm_stack[1] = Resid_Norm_stack[2];
-      Resid_Norm_stack[2] = Norm[0][2]/BIG_PENALTY;
+      Resid_Norm_stack[2] = Norm[0][2]/BIG_PENALTY + DBL_SMALL;
       Soln_Norm_stack[0] = Soln_Norm_stack[1];
       Soln_Norm_stack[1] = Soln_Norm_stack[2];
-      Soln_Norm_stack[2] = Norm_r[0][2]/BIG_PENALTY;
+      Soln_Norm_stack[2] = Norm_r[0][2]/BIG_PENALTY + DBL_SMALL;
       /* Compute rate_of_convergence.  Really what we want
 	             here is dln(norm)/dnorm   FIGURE IT OUT! */
 	/* Asymptotically we should have Norm_(i+1) ~ lambda * Norm_i ^ alpha
@@ -2503,15 +2504,16 @@ EH(-1,"version not compiled with frontal solver");
 	   glob_var_vals[1] = (double) inewton;
 	   glob_var_vals[2] = (double) Max_Newton_Steps;
 	   glob_var_vals[3] = Conv_order;
+	   glob_var_vals[4] = Conv_rate;
 	   total_mesh_volume = 0;
 
 	   for(i=0;nAC > 0 && i<nAC;i++) 
 	     {
 	       total_mesh_volume += augc[i].evol;
-	       glob_var_vals[5 + i ] = x_AC[i];
+	       glob_var_vals[6 + i ] = x_AC[i];
 	     }
 
-	   glob_var_vals[4] = (double) total_mesh_volume;
+	   glob_var_vals[5] = (double) total_mesh_volume;
 	 }
 
       /********************************************************************
@@ -2572,7 +2574,7 @@ EH(-1,"version not compiled with frontal solver");
 	}
 
 	/* and global variables.  The case glob_var_vals == NULL is caught in the function */
-	wr_global_result_exo( exo, ExoFileOut, *nprint + 1, 5 + nAC, glob_var_vals );
+	wr_global_result_exo( exo, ExoFileOut, *nprint + 1, 6 + nAC, glob_var_vals );
 
 	*nprint=*nprint+1;
 

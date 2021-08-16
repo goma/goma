@@ -2363,7 +2363,6 @@ t = (dir_angle[0]*(X[0]-origin[0]) + dir_angle[1]*(X[1]-origin[1])
 axis_pt[0] = origin[0]+dir_angle[0]*t;
 axis_pt[1] = origin[1]+dir_angle[1]*t;
 axis_pt[2] = origin[2]+dir_angle[2]*t;
-/*printf("axis_pt %g %g %g\n",axis_pt[0],axis_pt[1],axis_pt[2]); */
 
 /*  compute radius and radial direction	*/
 
@@ -2372,7 +2371,6 @@ R = sqrt( SQUARE(X[0]-axis_pt[0]) + SQUARE(X[1]-axis_pt[1]) +
 rad_dir[0] = (X[0]-axis_pt[0])/R;
 rad_dir[1] = (X[1]-axis_pt[1])/R;
 rad_dir[2] = (X[2]-axis_pt[2])/R;
-/*printf("rad_dir %g %g %g\n",rad_dir[0],rad_dir[1],rad_dir[2]);*/
 
 /* compute velocity direction as perpendicular to both axis and radial 
 	direction.  Positive direction is determined by right hand rule */
@@ -2380,12 +2378,45 @@ rad_dir[2] = (X[2]-axis_pt[2])/R;
 v_dir[0] = dir_angle[1]*rad_dir[2]-dir_angle[2]*rad_dir[1];
 v_dir[1] = dir_angle[2]*rad_dir[0]-dir_angle[0]*rad_dir[2];
 v_dir[2] = dir_angle[0]*rad_dir[1]-dir_angle[1]*rad_dir[0];
-/*printf("v_dir %g %g %g\n",v_dir[0],v_dir[1],v_dir[2]);*/
 
 v_mesh_sfs[0] =  param[0]*R*v_dir[0];
 v_mesh_sfs[1] =  param[0]*R*v_dir[1];
 v_mesh_sfs[2] =  param[0]*R*v_dir[2];
 }
+else if (model == OSC_LINEAR )
+     {
+	double v_magn=0, stroke = elc_rs->u_v_mesh_sfs[3];
+	double end_stroke = elc_rs->u_v_mesh_sfs[4], end_dt, time_pd, time_red;
+	double interval;
+	for (a=0; a < DIM; a++)
+	  { v_magn += SQUARE(elc_rs->u_v_mesh_sfs[a]); }
+	v_magn = sqrt(v_magn);
+	time_pd = stroke/v_magn;
+	end_dt = end_stroke/v_magn;
+	time_red = modf(tran->time_value/(4*time_pd), &interval);
+	if(time_red > (time_pd-end_dt) && time_red <= (time_pd+end_dt))
+	   {
+	    for (a=0; a < DIM; a++)
+	       { elc_rs->v_mesh_sfs[a] = -sin((time_red-time_pd)*2/M_PIE)*elc_rs->u_v_mesh_sfs[a]; }
+	   }
+	else if(time_red > (time_pd+end_dt) && time_red <= (3*time_pd-end_dt))
+	   {
+	    for (a=0; a < DIM; a++)
+	       { elc_rs->v_mesh_sfs[a] = -elc_rs->u_v_mesh_sfs[a]; }
+	   }
+	else if(time_red > (3*time_pd-end_dt) && time_red <= (3*time_pd+end_dt))
+	   {
+	    for (a=0; a < DIM; a++)
+	       { elc_rs->v_mesh_sfs[a] = sin((time_red-time_pd)*2/M_PIE)*elc_rs->u_v_mesh_sfs[a]; }
+	   }
+	else 
+	   {
+	    for (a=0; a < DIM; a++)
+	       { elc_rs->v_mesh_sfs[a] = elc_rs->u_v_mesh_sfs[a]; }
+	   }
+	
+
+     }
 else
 {
 EH(-1,"Invalid Rotational V_mesh_sfs_model.");

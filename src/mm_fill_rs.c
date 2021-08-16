@@ -2106,12 +2106,7 @@ get_convection_velocity_rs(double vconv[DIM], /*Calculated convection velocity *
    
    /* First test to see what type of prescribed kinematics model */
    
-   if (elc_rs->v_mesh_sfs_model == CONSTANT)
-     {
-       /*do nothing??*/
-     }
-   else if (elc_rs->v_mesh_sfs_model == ROTATIONAL ||
-		elc_rs->v_mesh_sfs_model == ROTATIONAL_3D )
+   if (elc_rs->v_mesh_sfs_model > CONSTANT)
      {
        V_mesh_sfs_model(elc_rs->u_v_mesh_sfs, elc_rs->v_mesh_sfs, 
 				elc_rs->v_mesh_sfs_model, -1);
