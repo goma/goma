@@ -7572,8 +7572,8 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
                 source *= phi_i;
                }
              source *= wt * h3 * pd->etm[eqn][(LOG2_SOURCE)];
+             lec->J[LEC_J_INDEX(peqn,pvar,i,jk)] += source;
             }
-         lec->J[LEC_J_INDEX(peqn,pvar,i,jk)] += source;
         } // End of J_lubp_pressure
 
 

@@ -232,32 +232,32 @@ fi
 echo "Start Goma Build" >> $BUILD_LOG
 echo "Start Goma Compile" >> $COMPILE_LOG
 
-HDF5_VERSION="1.10.6"
-HDF5_MD5="03095102a6118c32a75a9b9b40be66f2"
+HDF5_VERSION="1.12.1"
+HDF5_MD5="442469fbf43626006346e679c22cf10a"
 
-NETCDF_VERSION="c-4.7.4"
-NETCDF_MD5="3e0a97e6abb9a989f8a8a2e395473597"
+NETCDF_VERSION="c-4.8.0"
+NETCDF_MD5="a1e31625e2f270aa8044578d7320962c"
 
 TRILINOS_VERSION="13.0.0"
 TRILINOS_VERSION_DASH="13-0-0"
 TRILINOS_MD5="f0e9d7de4eb55598c5338b56bdc80df9"
 
-MUMPS_VERSION="5.3.3"
-MUMPS_MD5="789d2647dce4277863fb5942d385fe89"
+MUMPS_VERSION="5.4.1"
+MUMPS_MD5="93be789bf9c6c341a78c16038da3241b"
 
-OPENMPI_VERSION="4.0.3"
-OPENMPI_MD5="851553085013939f24cdceb1af06b828"
-OPENMPI_ARCHIVE_URL="https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-$OPENMPI_VERSION.tar.bz2"
+OPENMPI_VERSION="4.1.1"
+OPENMPI_MD5="9aa7cb64a8b1a773cac719e700d5bb2a"
+OPENMPI_ARCHIVE_URL="https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-$OPENMPI_VERSION.tar.bz2"
 OPENMPI_EXTRA_CONFIGURE_FLAGS=""
 
-CMAKE_VERSION="3.18.2"
-CMAKE_MD5="09a831bdcc6b05b89b51e5d7191de969"
+CMAKE_VERSION="3.21.1"
+CMAKE_MD5="1d8d33628f1c56b0c3cda67abddbea91"
 
-SUITESPARSE_VERSION="4.5.6"
-SUITESPARSE_MD5="eeb87a842a9b3b0425cf08d97fb3c5ec"
+SUITESPARSE_VERSION="5.10.1"
+SUITESPARSE_MD5="68bb912f3cf3d2b01f30ebafef690302"
 
-MATIO_VERSION="1.5.17"
-MATIO_MD5="170075cce5c144e19f610af9b64cb63b"
+MATIO_VERSION="1.5.21"
+MATIO_MD5="afeb5d21b234699fd5b9dc4564afe1ca"
 
 SCALAPACK_VERSION="2.1.0"
 SCALAPACK_MD5="3b239ef80353c67354a0a62d54946fa8"
@@ -293,7 +293,7 @@ $MUMPS_MD5 \
 
 ARCHIVE_URLS=("http://www.caam.rice.edu/software/ARPACK/SRC/arpack96.tar.gz" \
 "http://www.caam.rice.edu/software/ARPACK/SRC/patch.tar.gz" \
-"https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-${HDF5_VERSION}/src/hdf5-${HDF5_VERSION}.tar.bz2" \
+"https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.12/hdf5-${HDF5_VERSION}/src/hdf5-${HDF5_VERSION}.tar.bz2" \
 "https://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-${NETCDF_VERSION}.tar.gz" \
 "http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz" \
 "http://downloads.sourceforge.net/project/sparse/sparse/sparse1.4b/sparse1.4b.tar.gz" \
@@ -301,7 +301,7 @@ ARCHIVE_URLS=("http://www.caam.rice.edu/software/ARPACK/SRC/arpack96.tar.gz" \
 "http://www.netlib.org/cgi-bin/netlibfiles.tgz?format=tgz\\&filename=y12m%2Fy12m.f" \
 "https://github.com/trilinos/Trilinos/archive/trilinos-release-$TRILINOS_VERSION_DASH.tar.gz" \
 "http://mumps.enseeiht.fr/MUMPS_$MUMPS_VERSION.tar.gz" \
-"http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-$SUITESPARSE_VERSION.tar.gz" \
+"https://github.com/DrTimothyAldenDavis/SuiteSparse/archive/refs/tags/v$SUITESPARSE_VERSION.tar.gz" \
 "https://github.com/tbeu/matio/releases/download/v$MATIO_VERSION/matio-$MATIO_VERSION.tar.gz")
 
 # You can't call the ARPACK patch ARPACK or it will think it is already extracted
@@ -316,7 +316,7 @@ ARCHIVE_DIR_NAMES=("ARPACK" \
 "y12m" \
 "Trilinos-trilinos-release-$TRILINOS_VERSION_DASH" \
 "MUMPS_$MUMPS_VERSION" \
-"SuiteSparse" \
+"SuiteSparse-$SUITESPARSE_VERSION" \
 "matio-$MATIO_VERSION")
 
 ARCHIVE_HOMEPAGES=("http://www.caam.rice.edu/software/ARPACK/" \
@@ -340,7 +340,7 @@ ARCHIVE_REAL_NAMES=("ARPACK96" \
 "y12m" \
 "Trilinos" \
 "MUMPS" \
-"SuiteSparse" \
+"SuiteSparse-$SUITESPARSE_VERSION" \
 "MATIO")
 
 if [[ "$MPI_BASE_DIR" == "BUILD" ]]; then
@@ -365,7 +365,7 @@ fi
 
 if command -v cmake; then
     cmake_vers=$(cmake --version |grep "version" | awk '{print $NF}')
-    if [[ "$cmake_vers" = $(echo -e "$cmake_vers\n3.10.0\n" | sort -V |tail -n1) ]]; then
+    if [[ "$cmake_vers" = $(echo -e "$cmake_vers\n3.17.1\n" | sort -V |tail -n1) ]]; then
 	build_cmake="false"
     else
 	build_cmake="true"
@@ -380,7 +380,7 @@ else
     ARCHIVE_NAMES+=("cmake-$CMAKE_VERSION-Linux-x86_64.tar.gz")
     ARCHIVE_MD5SUMS+=("$CMAKE_MD5")
     ARCHIVE_URLS+=("https://github.com/Kitware/CMake/releases/download/v$CMAKE_VERSION/cmake-$CMAKE_VERSION-Linux-x86_64.tar.gz")
-    ARCHIVE_DIR_NAMES+=("cmake-$CMAKE_VERSION-Linux-x86_64")
+    ARCHIVE_DIR_NAMES+=("cmake-$CMAKE_VERSION-linux-x86_64")
     ARCHIVE_HOMEPAGES+=("https://cmake.org/")
     ARCHIVE_REAL_NAMES+=("CMake")
     log_echo "Cmake not found, will download."
@@ -808,7 +808,7 @@ for i in ${ARCHIVE_NAMES[@]}; do
     log_echo "Check for $i at ${ARCHIVE_URLS[count]}"
     if ! [ -f $i ]
     then
-        wget "${ARCHIVE_URLS[count]}" -O $i
+        wget --no-check-certificate "${ARCHIVE_URLS[count]}" -O $i
         mychecksum $i $count
     else
         mychecksum $i $count
@@ -832,7 +832,7 @@ export CXX=${SYSTEM_CXX}
 if [ "$build_cmake" == "false" ] ; then
     log_echo "Native cmake found of sufficient version, skipping build"
 else
-    cd $GOMA_LIB/cmake-$CMAKE_VERSION-Linux-x86_64
+    cd $GOMA_LIB/cmake-$CMAKE_VERSION-linux-x86_64
     if [ -f bin/cmake ]
     then
         log_echo "cmake is already built"
@@ -840,7 +840,7 @@ else
         log_echo "Downloaded cmake does not include cmake in bin"
         exit 1
     fi
-    export PATH=$GOMA_LIB/cmake-$CMAKE_VERSION-Linux-x86_64/bin:$PATH
+    export PATH=$GOMA_LIB/cmake-$CMAKE_VERSION-linux-x86_64/bin:$PATH
 fi
 
 
@@ -882,7 +882,7 @@ else
     fi
 
     cd hdf5-${HDF5_VERSION}/src
-    CC="$MPI_C_COMPILER" CPP="$MPI_C_COMPILER -E" AR=${ARCHIVER} ./configure --enable-shared=off --prefix=$GOMA_LIB/hdf5-${HDF5_VERSION} --enable-parallel 2>&1 | tee -a $COMPILE_LOG
+    CC="$MPI_C_COMPILER" CPP="$MPI_C_COMPILER -E" AR=${ARCHIVER} ./configure --enable-shared=off --prefix=$GOMA_LIB/hdf5-${HDF5_VERSION} --enable-parallel --with-default-api-version=v18 2>&1 | tee -a $COMPILE_LOG
     make -j$MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
     make install 2>&1 | tee -a $COMPILE_LOG
     if [ -e $GOMA_LIB/hdf5-${HDF5_VERSION}/lib/libhdf5.a ]
@@ -1174,46 +1174,40 @@ else
 fi
 
 #make SuiteSparse
-cd $GOMA_LIB/SuiteSparse
+cd $GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION
 if [ -e UMFPACK/Lib/libumfpack.a ]
 then
     log_echo "SuiteSparse is already built"
 else
-    cd SuiteSparse_config
     log_echo "compiler flag MPI is ${COMPILER_FLAG_MPI}"
 
-    cat > SuiteSparse_config.patch << EOF
-148c150
-<     LAPACK ?= -llapack
----
->     LAPACK = $SUITESPARSE_NON_INTEL_LAPACK_LINK
-164c166
-<             BLAS = -lopenblas
----
->             BLAS = $NON_INTEL_BLAS_LINK
-250c252
-<     UMFPACK_CONFIG ?=
----
->     UMFPACK_CONFIG = -DNCHOLMOD
-EOF
-
-
-    patch SuiteSparse_config.mk < SuiteSparse_config.patch
-    cd ..
     log_echo ${MPI_C_COMPILER}
     if [ -z "${BLAS_FLAGS}" ]; then
-        make static AUTOCC="no" CC="${MPI_C_COMPILER}" \
+        make config AUTOCC="no" CC="${MPI_C_COMPILER}" \
              CXX="${MPI_CXX_COMPILER}" \
+             BLAS="$NON_INTEL_BLAS_LINK" \
+             LAPACK="$SUITESPARSE_NON_INTEL_LAPACK_LINK" \
+             AR="${ARCHIVER}" 2>&1 | tee -a $COMPILE_LOG
+        make AUTOCC="no" CC="${MPI_C_COMPILER}" \
+             CXX="${MPI_CXX_COMPILER}" \
+             BLAS="$NON_INTEL_BLAS_LINK" \
+             LAPACK="$SUITESPARSE_NON_INTEL_LAPACK_LINK" \
+             JOBS="$MAKE_JOBS" \
              AR="${ARCHIVER}" 2>&1 | tee -a $COMPILE_LOG
     else
-        make static AUTOCC="no" CC="${MPI_C_COMPILER} ${COMPILER_FLAG_MPI}" \
+        make config AUTOCC="no" CC="${MPI_C_COMPILER} ${COMPILER_FLAG_MPI}" \
              CXX="${MPI_CXX_COMPILER} ${COMPILER_FLAG_MPI}" \
+             JOBS="$MAKE_JOBS" \
+             AR="${ARCHIVER}" BLAS_FLAGS="${BLAS_FLAGS}" 2>&1 | tee -a $COMPILE_LOG
+        make AUTOCC="no" CC="${MPI_C_COMPILER} ${COMPILER_FLAG_MPI}" \
+             CXX="${MPI_CXX_COMPILER} ${COMPILER_FLAG_MPI}" \
+             JOBS="$MAKE_JOBS" \
              AR="${ARCHIVER}" BLAS_FLAGS="${BLAS_FLAGS}" 2>&1 | tee -a $COMPILE_LOG
     fi
-    cd ${GOMA_LIB}/SuiteSparse/UMFPACK/Include
+    cd ${GOMA_LIB}/SuiteSparse-$SUITESPARSE_VERSION/UMFPACK/Include
     ln -s ../../SuiteSparse_config/SuiteSparse_config.h UFconfig.h
     ln -s ../../SuiteSparse_config/SuiteSparse_config.h SuiteSparse_config.h
-    if [ -e $GOMA_LIB/SuiteSparse/UMFPACK/Lib/libumfpack.a ]
+    if [ -e $GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/UMFPACK/Lib/libumfpack.a ]
     then
         log_echo "Built SuiteSparse $SUITESPARSE_VERSION"
     else
@@ -1222,7 +1216,7 @@ EOF
     fi
 fi
 # Otherwise Goma dynamically links to UMFPACK when intel is sourced and disabled
-export LD_LIBRARY_PATH="${GOMA_LIB}/SuiteSparse/UMFPACK/Lib:$LD_LIBRARY_PATH"
+export LD_LIBRARY_PATH="${GOMA_LIB}/SuiteSparse-$SUITESPARSE_VERSION/UMFPACK/Lib:$LD_LIBRARY_PATH"
 
 #make y12m
 cd $GOMA_LIB/y12m
@@ -1451,13 +1445,13 @@ else
 -D CMAKE_INSTALL_PREFIX:PATH=$TRILINOS_INSTALL \
 -D Trilinos_EXTRA_LINK_FLAGS:STRING="$HDF5_LIBS $MPI_LIBS $LAPACK_LIBRARY_NAME_ARG $BLAS_LIBRARY_NAME_ARG $FORTRAN_LIBS -lrt -lm" \
 -D TPL_ENABLE_UMFPACK:BOOL=ON \
-  -D UMFPACK_LIBRARY_NAMES:STRING="umfpack;amd;suitesparseconfig" \
-  -D UMFPACK_LIBRARY_DIRS:PATH="$GOMA_LIB/SuiteSparse/UMFPACK/Lib;$GOMA_LIB/SuiteSparse/AMD/Lib;$GOMA_LIB/SuiteSparse/SuiteSparse_config" \
-  -D UMFPACK_INCLUDE_DIRS:PATH="$GOMA_LIB/SuiteSparse/UMFPACK/Include;$GOMA_LIB/SuiteSparse/AMD/Include;$GOMA_LIB/SuiteSparse/SuiteSparse_config" \
+  -D UMFPACK_LIBRARY_NAMES:STRING="umfpack;amd;suitesparseconfig;cholmod;colamd;ccolamd;camd" \
+  -D UMFPACK_LIBRARY_DIRS:PATH="$GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/UMFPACK/Lib;$GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/CHOLMOD/Lib;$GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/AMD/Lib;$GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/SuiteSparse_config;$GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/CAMD/Lib;$GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/COLAMD/Lib;$GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/CCOLAMD/Lib" \
+  -D UMFPACK_INCLUDE_DIRS:PATH="$GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/include" \
 -D TPL_ENABLE_AMD:BOOL=ON \
   -D AMD_LIBRARY_NAMES:STRING="amd;suitesparseconfig" \
-  -D AMD_LIBRARY_DIRS:PATH="$GOMA_LIB/SuiteSparse/AMD/Lib;$GOMA_LIB/SuiteSparse/SuiteSparse_config" \
-  -D AMD_INCLUDE_DIRS:PATH="$GOMA_LIB/SuiteSparse/AMD/Include;$GOMA_LIB/SuiteSparse/SuiteSparse_config" \
+  -D AMD_LIBRARY_DIRS:PATH="$GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/AMD/Lib;$GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/SuiteSparse_config" \
+  -D AMD_INCLUDE_DIRS:PATH="$GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/AMD/Include;$GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/SuiteSparse_config" \
 -D TPL_ENABLE_SuperLUDist:BOOL=ON \
   -D SuperLUDist_LIBRARY_NAMES:STRING="superludist" \
   -D SuperLUDist_LIBRARY_DIRS:PATH=$GOMA_LIB/superlu_dist-5.1.3/lib \
