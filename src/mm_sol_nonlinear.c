@@ -1359,12 +1359,12 @@ EH(-1,"version not compiled with frontal solver");
 
          Resid_Norm_stack[0] = Resid_Norm_stack[1];
          Resid_Norm_stack[1] = Resid_Norm_stack[2];
-         Resid_Norm_stack[2] = Norm[0][2]/BIG_PENALTY + DBL_SMALL;
+         Resid_Norm_stack[2] = Norm[0][2]/BIG_PENALTY;
 	 if(nAC)
 	   {
             AC_Resid_Norm_stack[0] = AC_Resid_Norm_stack[1];
             AC_Resid_Norm_stack[1] = AC_Resid_Norm_stack[2];
-            AC_Resid_Norm_stack[2] = Norm[2][2]/BIG_PENALTY + DBL_SMALL;
+            AC_Resid_Norm_stack[2] = Norm[2][2]/BIG_PENALTY;
 	   }
 	   
          if(inewton && (Resid_Norm_stack[2] > 0) && (Resid_Norm_stack[2] != 1) ) 
@@ -2061,20 +2061,20 @@ EH(-1,"version not compiled with frontal solver");
         Norm_r[1][2] = L2_norm_r_1p (yAC, x_AC, nAC);
 	AC_Resid_Norm_stack[0] = AC_Resid_Norm_stack[1];
 	AC_Resid_Norm_stack[1] = AC_Resid_Norm_stack[2];
-	AC_Resid_Norm_stack[2] = Norm[2][2]/BIG_PENALTY + DBL_SMALL;
+	AC_Resid_Norm_stack[2] = Norm[2][2]/BIG_PENALTY;
 	AC_Soln_Norm_stack[0] = AC_Soln_Norm_stack[1];
 	AC_Soln_Norm_stack[1] = AC_Soln_Norm_stack[2];
-	AC_Soln_Norm_stack[2] = Norm_r[1][2]/BIG_PENALTY + DBL_SMALL;
+	AC_Soln_Norm_stack[2] = Norm_r[1][2]/BIG_PENALTY;
       }
 
       /* Save some norm info for modified Newton stuff */
       
       Resid_Norm_stack[0] = Resid_Norm_stack[1];
       Resid_Norm_stack[1] = Resid_Norm_stack[2];
-      Resid_Norm_stack[2] = Norm[0][2]/BIG_PENALTY + DBL_SMALL;
+      Resid_Norm_stack[2] = Norm[0][2]/BIG_PENALTY;
       Soln_Norm_stack[0] = Soln_Norm_stack[1];
       Soln_Norm_stack[1] = Soln_Norm_stack[2];
-      Soln_Norm_stack[2] = Norm_r[0][2]/BIG_PENALTY + DBL_SMALL;
+      Soln_Norm_stack[2] = Norm_r[0][2]/BIG_PENALTY;
       /* Compute rate_of_convergence.  Really what we want
 	             here is dln(norm)/dnorm   FIGURE IT OUT! */
 	/* Asymptotically we should have Norm_(i+1) ~ lambda * Norm_i ^ alpha
@@ -2127,13 +2127,13 @@ EH(-1,"version not compiled with frontal solver");
 	    }
 	 else
 	    {
-	     Conv_order = log10(AC_Resid_Norm_stack[2]/AC_Resid_Norm_stack[1])
+	     AConv_order = log10(AC_Resid_Norm_stack[2]/AC_Resid_Norm_stack[1])
 				/log10(AC_Resid_Norm_stack[1]/AC_Resid_Norm_stack[0]);
-	     Soln_order = log10(AC_Soln_Norm_stack[2]/AC_Soln_Norm_stack[1])
+	     ASoln_order = log10(AC_Soln_Norm_stack[2]/AC_Soln_Norm_stack[1])
 				/log10(AC_Soln_Norm_stack[1]/AC_Soln_Norm_stack[0]);
-	     Conv_rate = -0.5*log10(AC_Resid_Norm_stack[0])+2*log10(AC_Resid_Norm_stack[1])
+	     AConv_rate = -0.5*log10(AC_Resid_Norm_stack[0])+2*log10(AC_Resid_Norm_stack[1])
 				-1.5*log10(AC_Resid_Norm_stack[2]);
-	     Soln_rate = -0.5*log10(AC_Soln_Norm_stack[0])+2*log10(AC_Soln_Norm_stack[1])
+	     ASoln_rate = -0.5*log10(AC_Soln_Norm_stack[0])+2*log10(AC_Soln_Norm_stack[1])
 				-1.5*log10(AC_Soln_Norm_stack[2]);
 	    }
 #else
