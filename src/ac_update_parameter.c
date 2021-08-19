@@ -618,6 +618,14 @@ update_MT_parameter(double lambda, /* Parameter value */
       mp_glob[mn]->FlowingLiquid_viscosity = lambda;
       break;
       
+    case TAGC_DIFFUSIVITY_0: 
+      mp_glob[mn]->diffusivity[0] = lambda;
+      break;
+      
+    case TAGC_DIFFUSIVITY_1: 
+      mp_glob[mn]->diffusivity[1] = lambda;
+      break;
+      
       /* 
        * Generalized Newtonian Models: 
        * Newtonian, Power Law, Carreau or Bingham(1,2,3)
@@ -777,15 +785,15 @@ update_MT_parameter(double lambda, /* Parameter value */
       break;
 
     case TAGC_CONV_LAG_VELX:
-      elc_glob[mn]->v_mesh_sfs[0] = lambda;
+      *(elc_glob[mn]->v_mesh_sfs) = lambda;
       break;
 
     case TAGC_CONV_LAG_VELY:
-      elc_glob[mn]->v_mesh_sfs[1] = lambda;
+      *(elc_glob[mn]->v_mesh_sfs+1) = lambda;
       break;
 
     case TAGC_CONV_LAG_VELZ:
-      elc_glob[mn]->v_mesh_sfs[2] = lambda;
+      *(elc_glob[mn]->v_mesh_sfs+2) = lambda;
       break;
 
     case TAGC_CONV_LAG_ROTRATE:
@@ -813,15 +821,15 @@ update_MT_parameter(double lambda, /* Parameter value */
       break;
 
     case TAGC_RS_CONV_LAG_VELX:
-      elc_rs_glob[mn]->v_mesh_sfs[0] = lambda;
+      *(elc_rs_glob[mn]->v_mesh_sfs) = lambda;
       break;
 
     case TAGC_RS_CONV_LAG_VELY:
-      elc_rs_glob[mn]->v_mesh_sfs[1] = lambda;
+      *(elc_rs_glob[mn]->v_mesh_sfs+1) = lambda;
       break;
 
     case TAGC_RS_CONV_LAG_VELZ:
-      elc_rs_glob[mn]->v_mesh_sfs[2] = lambda;
+      *(elc_rs_glob[mn]->v_mesh_sfs+2) = lambda;
       break;
 
     case TAGC_RS_CONV_LAG_ROTRATE:
@@ -1058,6 +1066,46 @@ update_MT_parameter(double lambda, /* Parameter value */
 
     case TAGC_HEAT_SOURCE_0:
       mp_glob[mn]->u_heat_source[0] = lambda;
+      break;
+
+    case TAGC_SPECIES_SOURCE_0_P0:
+      mp_glob[mn]->u_species_source[0][0] = lambda;
+      break;
+
+    case TAGC_SPECIES_SOURCE_0_P1:
+      mp_glob[mn]->u_species_source[0][1] = lambda;
+      break;
+
+    case TAGC_SPECIES_SOURCE_0_P2:
+      mp_glob[mn]->u_species_source[0][2] = lambda;
+      break;
+
+    case TAGC_SPECIES_SOURCE_0_P3:
+      mp_glob[mn]->u_species_source[0][3] = lambda;
+      break;
+
+    case TAGC_SPECIES_SOURCE_1_P0:
+      mp_glob[mn]->u_species_source[1][0] = lambda;
+      break;
+
+    case TAGC_SPECIES_SOURCE_1_P1:
+      mp_glob[mn]->u_species_source[1][1] = lambda;
+      break;
+
+    case TAGC_SPECIES_SOURCE_1_P2:
+      mp_glob[mn]->u_species_source[1][2] = lambda;
+      break;
+
+    case TAGC_SPECIES_SOURCE_1_P3:
+      mp_glob[mn]->u_species_source[1][3] = lambda;
+      break;
+
+    case TAGC_LATENT_HEAT_0:
+      mp_glob[mn]->latent_heat_vap[0] = lambda;
+      break;
+
+    case TAGC_LATENT_HEAT_1:
+      mp_glob[mn]->latent_heat_vap[1] = lambda;
       break;
 
     case TAGC_ACOUSTIC_FREQ:
@@ -1541,6 +1589,14 @@ retrieve_MT_parameter(double *lambda, /* Parameter value */
       *lambda = mp_glob[mn]->FlowingLiquid_viscosity;
       break;
       
+    case TAGC_DIFFUSIVITY_0: 
+      *lambda = mp_glob[mn]->diffusivity[0];
+      break;
+      
+    case TAGC_DIFFUSIVITY_1: 
+      *lambda = mp_glob[mn]->diffusivity[1];
+      break;
+      
       /* 
        * Generalized Newtonian Models: 
        * Newtonian, Power Law, Carreau or Bingham(1,2,3)
@@ -1691,15 +1747,15 @@ retrieve_MT_parameter(double *lambda, /* Parameter value */
       break;
 
     case TAGC_CONV_LAG_VELX:
-      *lambda = elc_glob[mn]->v_mesh_sfs[0];
+      *lambda = *(elc_glob[mn]->v_mesh_sfs);
       break;
 
     case TAGC_CONV_LAG_VELY:
-      *lambda = elc_glob[mn]->v_mesh_sfs[1];
+      *lambda = *(elc_glob[mn]->v_mesh_sfs+1);
       break;
 
     case TAGC_CONV_LAG_VELZ:
-      *lambda = elc_glob[mn]->v_mesh_sfs[2];
+      *lambda = *(elc_glob[mn]->v_mesh_sfs+2);
       break;
 
     case TAGC_CONV_LAG_ROTRATE:
@@ -1727,15 +1783,15 @@ retrieve_MT_parameter(double *lambda, /* Parameter value */
       break;
 
     case TAGC_RS_CONV_LAG_VELX:
-      *lambda = elc_rs_glob[mn]->v_mesh_sfs[0];
+      *lambda = *(elc_rs_glob[mn]->v_mesh_sfs);
       break;
 
     case TAGC_RS_CONV_LAG_VELY:
-      *lambda = elc_rs_glob[mn]->v_mesh_sfs[1];
+      *lambda = *(elc_rs_glob[mn]->v_mesh_sfs+1);
       break;
 
     case TAGC_RS_CONV_LAG_VELZ:
-      *lambda = elc_rs_glob[mn]->v_mesh_sfs[2];
+      *lambda = *(elc_rs_glob[mn]->v_mesh_sfs+2);
       break;
 
     case TAGC_RS_CONV_LAG_ROTRATE:
@@ -1972,6 +2028,46 @@ retrieve_MT_parameter(double *lambda, /* Parameter value */
 
     case TAGC_HEAT_SOURCE_0:
       *lambda = mp_glob[mn]->u_heat_source[0];
+      break;
+
+    case TAGC_SPECIES_SOURCE_0_P0:
+      *lambda = mp_glob[mn]->u_species_source[0][0];
+      break;
+
+    case TAGC_SPECIES_SOURCE_0_P1:
+      *lambda = mp_glob[mn]->u_species_source[0][1];
+      break;
+
+    case TAGC_SPECIES_SOURCE_0_P2:
+      *lambda = mp_glob[mn]->u_species_source[0][2];
+      break;
+
+    case TAGC_SPECIES_SOURCE_0_P3:
+      *lambda = mp_glob[mn]->u_species_source[0][3];
+      break;
+
+    case TAGC_SPECIES_SOURCE_1_P0:
+      *lambda = mp_glob[mn]->u_species_source[1][0];
+      break;
+
+    case TAGC_SPECIES_SOURCE_1_P1:
+      *lambda = mp_glob[mn]->u_species_source[1][1];
+      break;
+
+    case TAGC_SPECIES_SOURCE_1_P2:
+      *lambda = mp_glob[mn]->u_species_source[1][2];
+      break;
+
+    case TAGC_SPECIES_SOURCE_1_P3:
+      *lambda = mp_glob[mn]->u_species_source[1][3];
+      break;
+
+    case TAGC_LATENT_HEAT_0:
+      *lambda = mp_glob[mn]->latent_heat_vap[0];
+      break;
+
+    case TAGC_LATENT_HEAT_1:
+      *lambda = mp_glob[mn]->latent_heat_vap[1];
       break;
 
     case TAGC_ACOUSTIC_FREQ:

@@ -2106,12 +2106,7 @@ get_convection_velocity_rs(double vconv[DIM], /*Calculated convection velocity *
    
    /* First test to see what type of prescribed kinematics model */
    
-   if (elc_rs->v_mesh_sfs_model == CONSTANT)
-     {
-       /*do nothing??*/
-     }
-   else if (elc_rs->v_mesh_sfs_model == ROTATIONAL ||
-		elc_rs->v_mesh_sfs_model == ROTATIONAL_3D )
+   if (elc_rs->v_mesh_sfs_model > CONSTANT)
      {
        V_mesh_sfs_model(elc_rs->u_v_mesh_sfs, elc_rs->v_mesh_sfs, 
 				elc_rs->v_mesh_sfs_model, -1);
@@ -2342,9 +2337,6 @@ if(base_displ_model)
   
       /* Calculate the residual contribution	*/
 
-#if 0
-fprintf(stderr,"%g %g %g %g %g %g\n",dns[idir],dns[1-idir],sqrt(SQUARE(dns[idir])+SQUARE(dns[1-idir]))-110.998,fv->x[0]-fv->d[0],fv->x[1]-fv->d[1],sqrt(SQUARE(fv->x[0]-fv->d[0])+SQUARE(fv->x[1]-fv->d[1]))-110.998);
-#endif
       for (kdir=0; kdir<pd->Num_Dim; kdir++)
 	{
 	  *func += ((fv->d[kdir] - base_displacement[kdir]) - 

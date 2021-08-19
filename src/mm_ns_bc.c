@@ -5739,7 +5739,7 @@ apply_repulsion (double cfunc[MDE][DIM],
 
   double d_dist[DIM];		/* distance from surface to wall             */
   double dist=0;		/* squared distance from surface to wall     */
-  double repexp = 4.;		/* exponent of disance in repulsion term     */
+  double repexp = 2.;		/* exponent of disance in repulsion term     */
   double denom,factor;
 /***************************** EXECUTION BEGINS ******************************/
 /* if pr is 0. => we don't want free surface/wall repulsion and just
@@ -5771,14 +5771,14 @@ apply_repulsion (double cfunc[MDE][DIM],
 	  /* 
 	   *  Evaluate sensitivity to displacements d()/dx 
 	   */
-	  for (jvar=0; jvar<ei->ielem_dim; jvar++)
+	  for (jvar=0; jvar<VIM; jvar++)
 	    {
 	      var = MESH_DISPLACEMENT1 + jvar;
 	      if (pd->v[var]) 
 		{
 		  for ( j=0; j<ei->dof[var]; j++)
 		    {
-		      for (a=0; a<ei->ielem_dim; a++)
+		      for (a=0; a<VIM; a++)
 			{
 			  
 			  d_cfunc[ldof][a][var][j] -= (pr/pow(dist,repexp) * fv->dsnormal_dx[a][jvar][j] 
@@ -5794,6 +5794,7 @@ apply_repulsion (double cfunc[MDE][DIM],
 	}
       }
     }
+/*fprintf(stderr,"repulse %g %g %g %g %g\n",dist,pr,pr/pow(dist,repexp),fv->snormal[0],fv->snormal[1]);  */
   
   eqn = VELOCITY1;
   for (i = 0; i < (int) elem_side_bc->num_nodes_on_side; i++)  {
@@ -5802,7 +5803,7 @@ apply_repulsion (double cfunc[MDE][DIM],
     ldof  = ei->ln_to_dof[eqn][id];
     if (Dolphin[I][VELOCITY1] > 0 ) {
       
-      for (a=0; a<ei->ielem_dim; a++)
+      for (a=0; a<VIM; a++)
 	{  
 	  cfunc[ldof][a] -= pr/pow(dist, repexp) * fv->snormal[a] * bf[eqn]->phi[ldof]; 
 	}
@@ -5821,9 +5822,9 @@ apply_repulsion_roll (double cfunc[MDE][DIM],
 	         const double origin[3],	/* roll axis origin (x,y,z) */
 	         const double dir_angle[3],	/* axis direction angles */
 		 const double omega, /* roll rotation rate  */
+	         const double P_rep,	/* repulsion coefficient */
 		 const double hscale, /* repulsion length scale */
 	         const double repexp,	/* repulsive force exponent */
-	         const double P_rep,	/* repulsion coefficient */
 		 const double gas_visc, /* inverse slip coefficient  */
                  const double exp_scale,      /* DCL exculsion zone scale   */
                  const int dcl_node,            /* DCL NS id  */
@@ -5938,14 +5939,22 @@ apply_repulsion_roll (double cfunc[MDE][DIM],
                           +SQUARE(coord[2]-point[2]));
            }  else      {
            dcl_dist = 0.;
-           WH(-1,"No DCL node for CAP_REPULSE_TABLE....\n");
+           WH(-1,"No DCL node for CAP_REPULSE_ROLL....\n");
            }
 /*  modifying function for DCL  */
-           mod_factor = 1. - exp(-dcl_dist/exp_scale);
+      if(dcl_node != -1)
+          { mod_factor = 1. - exp(-dcl_dist/exp_scale);  }
+      else
+	  { mod_factor = 1.;}
 
 /*  repulsion function  */
+#if 0
            force = -P_rep*mod_factor/pow(dist/hscale, repexp); 
            d_force = P_rep*mod_factor*repexp/pow(dist/hscale, repexp+1)/hscale;
+#else
+           force = -P_rep*mod_factor*(pow(hscale/dist,repexp) - pow(hscale/dist,repexp/2)); 
+           d_force = P_rep*mod_factor*(repexp/dist)*(pow(hscale/dist,repexp) - 0.5*pow(hscale/dist,repexp/2)); 
+#endif
 /*  slip velocity function function  */
            inv_slip = -gas_visc*mod_factor/pow(dist/hscale, repexp); 
            d_inv_slip = gas_visc*mod_factor*repexp/pow(dist/hscale, repexp+1)/hscale;
@@ -6788,7 +6797,7 @@ void
 flow_n_dot_T_var_density(double func[DIM],
 		   double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
 		   const double a,      /* 1 param describing reference pressure*/
-		       double time)     /* Time is required for density and momentum_source_term*/
+		   const double time)     /* Time is required for density and momentum_source_term*/
     
     /************************************************************************
      *
@@ -6936,7 +6945,8 @@ void
 flow_n_dot_T_nobc(double func[DIM],
                   double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
                   const double pdatum, /* pressure datum from input card */
-                  const int iflag)	/* -1 to use pdatum, otherwise use P */
+                  const int iflag,	/* -1 to use pdatum, otherwise use P */
+		  const double time)	/* time value if needed	*/
 
 /****************************************************************************
 *
@@ -6982,6 +6992,17 @@ flow_n_dot_T_nobc(double func[DIM],
    */
   if(iflag == -1) fv->P = pdatum;
 
+/* hydrostatic part for int == -2  ; func[] is set to n.p_hydrostatic in 
+	flow_n_dot_T_var_density. "var_density" is a misnomer - density would need
+	to be spatially invariate since pressure is relative to p(origin). Even
+	density(T) or density(P) would imply T or P is spatially invariate
+*/
+  if(iflag == -2)
+	{
+	flow_n_dot_T_var_density(func, d_func, pdatum, time);
+	fv->P = 0;
+	}
+
   /* compute stress tensor and its derivatives */
   if(vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV)
     {
@@ -6994,7 +7015,8 @@ flow_n_dot_T_nobc(double func[DIM],
 
   /* now is the time to clean up, so, if using the datum for pressure, fix fv->P
    */
-  if(iflag == -1) fv->P = P;
+/* Ahh...no.  This seems like a bad idea.  
+  if(iflag == -1) fv->P = P;*/
 
   if (af->Assemble_Jacobian)
     {
@@ -7205,12 +7227,14 @@ flow_n_dot_T_nobc(double func[DIM],
 
   for (p=0; p<pd->Num_Dim; p++)
     {
-      func[p] = 0.;
-      for (q=0; q<pd->Num_Dim; q++)
+     if(iflag != -2)
+	{ func[p] = 0.; }
+     for (q=0; q<pd->Num_Dim; q++)
         {
           func[p] += fv->snormal[q] * Pi[p][q];
         }
     }
+  if(iflag == -1 || iflag == -2) fv->P = P;
 
 } /* END of routine flow_n_dot_T_nobc                                       */
 /*****************************************************************************/
@@ -8426,7 +8450,7 @@ PSPG_consistency_bc (double *func,
    */
 
   const int dim = pd->Num_Dim;
-  int wim, mode;
+  int mode;
   int meqn;
   int var1;
   int r, s, t;
@@ -8483,13 +8507,6 @@ PSPG_consistency_bc (double *func,
   double h_elem_avg = pg_data->h_elem_avg;
   double mu_avg = pg_data->mu_avg;
   double U_norm = pg_data->U_norm;
-  
-  wim   = dim;
-
-  if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-     pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
 
     /* This is the flag for the standard global PSPG */
   if(PSPG == 1)
@@ -8559,7 +8576,7 @@ PSPG_consistency_bc (double *func,
 
       // Average value of v**2 in the element
       double vv_speed = 0.0;
-      for ( a=0; a<wim; a++)
+      for ( a=0; a<WIM; a++)
 	{
 	  vv_speed += pg_data->v_avg[a]*pg_data->v_avg[a];
 	}
@@ -8632,14 +8649,14 @@ PSPG_consistency_bc (double *func,
     }
   }
   
-  for ( p=0; p<wim; p++)
+  for ( p=0; p<WIM; p++)
     {
       div_s[p] = 0.;
     }
   
   if ( pd->v[POLYMER_STRESS11] )
     {
-      for ( p=0; p<wim; p++)
+      for ( p=0; p<WIM; p++)
 	{
 	  for ( mode=0; mode<vn->modes; mode++)
 	    {
@@ -10155,7 +10172,7 @@ void fapply_moving_CA_sinh(
 
 #ifdef ALE_DCA_INFO_PLEASE
 if ( af->Assemble_Jacobian ) 
-fprintf(stderr,"v_wetting: %g v_mesh: %g dvmdt: %g DCA: %g\n",v,v_mesh, v_mesh_dt,acos(costheta)*180/M_PIE);
+fprintf(stderr,"         ALE_DCA INFO - v_wetting: %g v_mesh: %g dvmdt: %g DCA: %g\n",v,v_mesh, v_mesh_dt,acos(costheta)*180/M_PIE);
 #endif
 #if 0
 fprintf(stderr,"fs_normal: %g %g ss_normal: %g %g\n",fsnormal[0],fsnormal[1],ssnormal[0],ssnormal[1]);

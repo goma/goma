@@ -3460,14 +3460,6 @@ apply_surface_viscosity(double cfunc[MDE][DIM],
       }
     }
   }
-  // Calculate the number of velocity dimensions
-  int wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING || 
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D) 
-    {
-      wim = 3;
-    }
   /***************************** EXECUTION BEGINS ******************************/
 
   /* See if there is a friend for this element */
@@ -3653,7 +3645,7 @@ apply_surface_viscosity(double cfunc[MDE][DIM],
     {
       for (b = 0; b < VIM; b++)
 	{ 
-	  for (r = 0; r < wim; r++)
+	  for (r = 0; r < WIM; r++)
 	    {
 	      var = VELOCITY1 + r;
 	      for (j = 0; j < ei->dof[var]; j++)
@@ -4868,8 +4860,6 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
   int i, j, k, l, m, nn, r, jk;
   int peqn = -1;
   int dofs;
-  //! Number of velocities dimensions
-  int wim;
   int var, pvar;
   int p, b, a;
   double phi_i, phi_j;
@@ -4929,15 +4919,6 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
     EH(-1,"ERROR: inconsistency: need to set Vorticity Vector = yes in Post processing section");
   }
 
-  // Calculate the number of velocity dimensions
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING || 
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D) 
-    {
-      wim = 3;
-    }
-  
   /* See if there is a friend for this element */
   nf = num_elem_friends[el1];
   if (nf == 0) return(err); 
@@ -5029,7 +5010,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 	    }
 
 	  // Form the velocity dependencies 
-	  for (b = 0; b < wim; b++)
+	  for (b = 0; b < WIM; b++)
 	    {
 	      for (k = 0; k < n_dof[VELOCITY1]; k++)
 		{
@@ -5146,7 +5127,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 			     + fv->snormal[j]*fv->snormal[nn]* fv->snormal[i] * fv->d_grad_v_dmesh[nn][k][l][m]);
 			}
 		    }
-		  for (l = 0; l < wim; l++)
+		  for (l = 0; l < WIM; l++)
 		    { 
 		      for (m = 0; m < n_dof[VELOCITY1]; m++)
 			{
@@ -5180,7 +5161,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 		}
 	    }
 	}
-      for (b = 0; b < wim; b++)
+      for (b = 0; b < WIM; b++)
 	{
 	  for (j = 0; j < n_dof[VELOCITY1]; j++)
 	    {
@@ -5218,7 +5199,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 	  d_n_dot_curl_s_v_dx[b][j] = d_n_dot_curl_v_dx[b][j] - d_nn_dot_curl_v_dx[b][j];
 	}
     }
-  for (b = 0; b < wim; b++)
+  for (b = 0; b < WIM; b++)
     {
       for (j = 0; j < n_dof[VELOCITY1]; j++)
 	{
@@ -5245,7 +5226,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 		  d_grad_v_dot_n_dx[i][b][k] += fv->d_grad_v_dmesh[i][j][b][k] * fv->snormal[j] + fv->grad_v[i][j] * fv->dsnormal_dx[j][b][k];
 		}
 	    }
-	  for (b = 0; b < wim; b++)
+	  for (b = 0; b < WIM; b++)
 	    {
 	      var = VELOCITY1 + b;
 	      for (k = 0; k < n_dof[var]; k++)
@@ -5265,7 +5246,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 	{
 	  grad_s_v_dot_n[i] -= fv->snormal[i] * fv->snormal[j] * grad_v_dot_n[j];
 	  
-	  for (b = 0; b < wim; b++)
+	  for (b = 0; b < WIM; b++)
 	    {
 	      var = VELOCITY1 + b;
 	      for (k = 0; k < n_dof[var]; k++)

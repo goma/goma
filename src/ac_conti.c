@@ -242,16 +242,18 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
   (void) memset((void *) rd, 0, sizeof(struct Results_Description));
 
   rd->nev = 0;			/* number element variables in results */
-  rd->ngv = 0;			/* number global variables in results */
   rd->nhv = 0;			/* number history variables in results */
-
-  rd->ngv = 5 + nAC;			/* number global variables in results
+  rd->ngv = 6 + nAC;		/* number global variables in results
 				   see load_global_var_info for names*/
   error = load_global_var_info(rd, 0, "CONV");
   error = load_global_var_info(rd, 1, "NEWT_IT");
   error = load_global_var_info(rd, 2, "MAX_IT");
-  error = load_global_var_info(rd, 3, "CONVRATE");
-  error = load_global_var_info(rd, 4, "MESH_VOLUME");
+  error = load_global_var_info(rd, 3, "CONVORDER");
+  error = load_global_var_info(rd, 4, "CONVRATE");
+  error = load_global_var_info(rd, 5, "MESH_VOLUME");
+
+  if ( rd->ngv > MAX_NGV )
+      EH(-1, "Augmenting condition values overflowing MAX_NGV.  Change and rerun .");
 
   if ( nAC > 0   )
     {
@@ -260,7 +262,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
       for( i = 0 ; i < nAC ; i++ )
 	{
 	  sprintf(name, "AUGC_%d",i+1);
-	  error = load_global_var_info(rd, 5 + i, name);
+	  error = load_global_var_info(rd, 6 + i, name);
 	}
     }
 

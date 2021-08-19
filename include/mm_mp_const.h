@@ -344,6 +344,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define ARRHENIUS  14 /* for temperature-dependent S-M diffusivities, KSC */
 #define SHOCK   15
 #define PIECEWISE 16
+#define CHAPMAN_GAS 17
 
 /* Types of vapor or gas pressure relations */
 #define  KELVIN        3
@@ -449,6 +450,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 /*Convective langrangian velocity models */
 #define ROTATIONAL  2
 #define ROTATIONAL_3D  25
+#define OSC_LINEAR  252
 
 /*Various thermophysical property models */
 #define ENTHALPY 4
@@ -557,6 +559,8 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define TAGC_MELTING_POINT_LIQUIDUS        2500  
 #define TAGC_MELTING_POINT_SOLIDUS         2600
 #define TAGC_FLOWINGLIQUID_VISCOSITY       2700
+#define TAGC_DIFFUSIVITY_0                 2800
+#define TAGC_DIFFUSIVITY_1                 2801
 
  /*
   *  Acoustic Model Constants
@@ -754,9 +758,19 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define TAGC_LUB_SOURCE_2                  7048
 
 #define TAGC_HEAT_SOURCE_0                 7050
+#define TAGC_SPECIES_SOURCE_0_P0           70520
+#define TAGC_SPECIES_SOURCE_0_P1           70521
+#define TAGC_SPECIES_SOURCE_0_P2           70522
+#define TAGC_SPECIES_SOURCE_0_P3           70523
+#define TAGC_SPECIES_SOURCE_1_P0           70530
+#define TAGC_SPECIES_SOURCE_1_P1           70531
+#define TAGC_SPECIES_SOURCE_1_P2           70532
+#define TAGC_SPECIES_SOURCE_1_P3           70533
 #define TAGC_RST_FUNC_0                    7060
 #define TAGC_RST_FUNC_1                    7061
 #define TAGC_RST_FUNC_2                    7062
+#define TAGC_LATENT_HEAT_0                 7070
+#define TAGC_LATENT_HEAT_1                 7071
 
 /*  Problem Description Parameters   */
 

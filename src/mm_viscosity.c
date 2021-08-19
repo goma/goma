@@ -419,8 +419,8 @@ viscosity(struct Generalized_Newtonian *gn_local,
     }
   else if (gn_local->ConstitutiveEquation == THERMAL)
     {
-      double mu0, atexp;
-      mu0=gn_local->mu0; atexp= gn_local->atexp;
+      double mu0 = gn_local->mu0;
+      double atexp = gn_local->atexp;
       if(gn_local->mu0Model == LEVEL_SET)
 	{
 	  if(d_mu != NULL)

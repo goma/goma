@@ -410,7 +410,8 @@ EXTERN void flow_n_dot_T_nobc
 PROTO((double [DIM],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
        const double ,		/* pdatum - pressure datum from input card   */
-       const int ));		/* iflag - 1 to use pdatum, otherwise use P  */
+       const int ,		/* iflag - 1 to use pdatum, otherwise use P  */
+       const double));          /* time - current time                       */
 
 EXTERN void flow_n_dot_T_gradv
 PROTO((double [DIM],		/* func                                      */
