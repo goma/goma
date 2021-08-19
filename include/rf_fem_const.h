@@ -484,6 +484,10 @@
 #define MOMENT2               204
 #define MOMENT3               205
 #define DENSITY_EQN           206
+#define PSTAR                 207
+#define USTAR                 208
+#define VSTAR                 209
+#define WSTAR                 210
 /*
  * define a variable to hold an external field which will be 
  * held fixed in the problem but parametered by the basis functions
@@ -864,7 +868,11 @@
 #define R_MOMENT2               204
 #define R_MOMENT3               205
 #define R_DENSITY_EQN           206
-#define V_LAST		        207
+#define R_PSTAR                 207
+#define R_USTAR                 208
+#define R_VSTAR                 209
+#define R_WSTAR                 210
+#define V_LAST		            211
 
 /* MMH
  * This is used for those parts of the code that want to ensure

@@ -1146,6 +1146,10 @@ struct Equation_Names EQ_Name[] = {
     { "R_MOMENT2", "MOMENT2", R_MOMENT2},     /*   185  */
     { "R_MOMENT3", "MOMENT3", R_MOMENT3},     /*   186  */
     { "R_DENSITY_EQN", "DENSITY_EQN", R_DENSITY_EQN},     /*   187  */
+    { "PSTAR", "PSTAR", R_PSTAR},
+    { "USTAR", "USTAR", R_USTAR},
+    { "VSTAR", "VSTAR", R_VSTAR},
+    { "WSTAR", "WSTAR", R_WSTAR},
 
     /*
      *  Note -> these entries must remain until we get rid
@@ -1440,6 +1444,11 @@ struct Equation_Names Var_Name[] =  {
     { "MOMENT2", "MOM2", MOMENT2},
     { "MOMENT3", "MOM3", MOMENT3},
     { "DENSITY_EQN", "RHO_EQN", DENSITY_EQN},
+    { "PSTAR", "PSTAR", PSTAR},
+    { "USTAR", "USTAR", USTAR},
+    { "VSTAR", "VSTAR", VSTAR},
+    { "WSTAR", "WSTAR", WSTAR},
+
 
     { "MESH_POSITION1", "X",  MESH_POSITION1 } ,
     { "MESH_POSITION2", "Y",  MESH_POSITION2 } ,	/* 201 */
@@ -1704,6 +1713,10 @@ struct Equation_Names Exo_Var_Names[] =
   { "Moment 2", "MOM2", MOMENT2 },
   { "Moment 3", "MOM3", MOMENT3 },
   { "Density equation", "RHO_EQN", DENSITY_EQN },
+  { "Pressure Int.", "PSTAR", PSTAR},
+  { "U Int.", "USTAR", USTAR},
+  { "V Int.", "VSTAR", VSTAR},
+  { "W Int.", "WSTAR", WSTAR},
 };
 
 int Num_Exo_Var_Names = sizeof(Exo_Var_Names) / sizeof(struct Equation_Names);  
@@ -2000,6 +2013,10 @@ struct Equation_Names Var_Units[] =
   { "Moment 2", "[1]", MOMENT2},
   { "Moment 3", "[1]", MOMENT3},
   { "Density equation", "[1]", DENSITY_EQN},
+  { "PSTAR", "[1]", PSTAR},
+  { "USTAR", "[1]", USTAR},
+  { "VSTAR", "[1]", VSTAR},
+  { "WSTAR", "[1]", WSTAR},
 };
 
 int Num_Var_Units = sizeof(Var_Units) / sizeof(struct Equation_Names);  
