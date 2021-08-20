@@ -481,6 +481,7 @@ struct Element_Variable_Pointers {
                                                for real solid and pseudo solid
                                                for annealing */
   dbl *P[MDE];                              /* pressure */
+  dbl *P_star[MDE];					/* pressure */
   dbl *S[MAX_MODES][DIM][DIM][MDE]; /* polymeric stress tensor, for each mode */
   dbl *G[DIM][DIM][MDE];            /* velocity gradient tensor */
   dbl *F[MDE];                      /* Fill */

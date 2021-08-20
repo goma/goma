@@ -550,6 +550,11 @@ variable_string_to_int(const char *input, const char *err_string)
   else if (!strcmp(input, "EM_H3_IMAG"))                  var = EM_H3_IMAG;
   else if (!strcmp(input, "EM_CONT_REAL"))                var = EM_CONT_REAL;
   else if (!strcmp(input, "EM_CONT_IMAG"))                var = EM_CONT_IMAG;
+  else if (!strcmp(input, "USTAR"))                       var = USTAR;
+  else if (!strcmp(input, "VSTAR"))                       var = VSTAR;
+  else if (!strcmp(input, "WSTAR"))                       var = WSTAR;
+
+
   /*
    * Kluge to break up large if block. Problems with HP compiler!
    */  

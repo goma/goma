@@ -1022,6 +1022,11 @@ assembly_alloc(Exo_DB *exo)
     esp->v = (dbl ***) alloc_ptr_2(vim, MDE);
   }
 
+  
+  if (Num_Var_In_Type[imtrx][USTAR]) {
+    esp->v_star = (dbl ***) alloc_ptr_2(vim, MDE);
+  }
+
 
   /* MMH
    * Some of these are just leftovers from copying the velocity stuff.  I left
@@ -1051,6 +1056,11 @@ assembly_alloc(Exo_DB *exo)
   if (Num_Var_In_Type[imtrx][PRESSURE]) {
     esp->P = (dbl **) alloc_ptr_1(MDE);
   }
+
+  if (Num_Var_In_Type[imtrx][PSTAR]) {
+    esp->P_star = (dbl **) alloc_ptr_1(MDE);
+  }
+
 
   /* POLYMER STRESS for all modes */
   if(Num_Var_In_Type[imtrx][POLYMER_STRESS11]) {
