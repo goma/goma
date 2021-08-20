@@ -394,9 +394,9 @@
 
 #define PV_BC     60
 
-#define U_STAR_BC     989991
-#define V_STAR_BC     989992
-#define W_STAR_BC     989993
+#define USTAR_BC     989991
+#define VSTAR_BC     989992
+#define WSTAR_BC     989993
 
 #define W_BC     100
 
@@ -637,7 +637,7 @@
 
 #define P_BC 100000
 #define PSPG_BC 100001
-#define P_STAR_BC 989994
+#define PSTAR_BC 989994
 
 /* thermal constants */
 

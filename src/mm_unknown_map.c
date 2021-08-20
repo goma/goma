@@ -1601,7 +1601,21 @@ set_interaction_masks(Exo_DB *exo)
 	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
 	  v = DENSITY_EQN;
 	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
-          break;
+          break;	
+	case R_USTAR:
+	case R_VSTAR:
+	case R_WSTAR:
+	  v = USTAR;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  v = VSTAR;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  v = WSTAR;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  break;
+	case R_PSTAR:
+	  v = PSTAR;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  break;
 	case R_PMOMENTUM1:
 	case R_PMOMENTUM2:
 	case R_PMOMENTUM3:

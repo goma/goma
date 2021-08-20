@@ -354,7 +354,7 @@ int assemble_pstar(dbl time_value, /* current time */
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
           mass = 0;
           for (a = 0; a < wim; a++) {
-            mass += bf[var]->grad_phi[j][a] / rho * bf[eqn]->grad_phi[i][a];
+            mass += (bf[var]->grad_phi[j][a] / rho) * bf[eqn]->grad_phi[i][a];
           }
 
           mass *= -d_area;

@@ -10482,7 +10482,6 @@ load_fv_grads(void)
   if (pd->gv[USTAR])
     {
       fv->div_v_star = 0.0;
-      if (VIM == 3  && pd->CoordinateSystem != CARTESIAN_2pt5D)
       for(a=0; a<VIM; a++) {
         fv->div_v_star += fv->grad_v_star[a][a];
 	}

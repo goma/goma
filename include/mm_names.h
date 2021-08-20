@@ -152,6 +152,7 @@ struct BC_descriptions  BC_Desc[] =
   { "FEATURE_ROLLON",  "FEATURE_ROLLON_BC",    COLLOCATE_SURF, FEATURE_ROLLON_BC, R_MESH_NORMAL, SCALAR, R_MESH1, {0, 0, 0, 0, 0, 1, 1, 1, 0, 0}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "ROLL_FLUID",  "ROLL_FLUID_BC",    COLLOCATE_SURF, ROLL_FLUID_BC, R_MESH_NORMAL, SCALAR, R_MESH1, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "P", "P_BC", DIRICHLET, P_BC, R_PRESSURE, SCALAR, NO_ROT, {0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
+  { "PSTAR", "PSTAR_BC", DIRICHLET, PSTAR_BC, R_PSTAR, SCALAR, NO_ROT, {0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
 
   { "PSPG", "PSPG_BC", WEAK_INT_SURF, PSPG_BC, R_PRESSURE, SCALAR, NO_ROT, {1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "FILL_INLET", "FILL_INLET_BC", SPECIAL, FILL_INLET_BC, R_FILL, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
@@ -489,7 +490,9 @@ SINGLE_PHASE, DVI_SINGLE_PHASE_DB},
   { "U", "U_BC", DIRICHLET, U_BC, R_MOMENTUM1, SCALAR, NO_ROT, {1, 0, 0, 0, 0, 0, 0, 0, 0, 0}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "V", "V_BC", DIRICHLET, V_BC, R_MOMENTUM2, SCALAR, NO_ROT, {0, 1, 0, 0, 0, 0, 0, 0, 0, 0}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "W", "W_BC", DIRICHLET, W_BC, R_MOMENTUM3, SCALAR, NO_ROT, {0, 0, 1, 0, 0, 0, 0, 0, 0, 0}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
-
+  { "USTAR", "USTAR_BC", DIRICHLET, USTAR_BC, R_USTAR, SCALAR, NO_ROT, {1, 0, 0, 0, 0, 0, 0, 0, 0, 0}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
+  { "VSTAR", "VSTAR_BC", DIRICHLET, VSTAR_BC, R_VSTAR, SCALAR, NO_ROT, {0, 1, 0, 0, 0, 0, 0, 0, 0, 0}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
+  { "WSTAR", "WSTAR_BC", DIRICHLET, WSTAR_BC, R_WSTAR, SCALAR, NO_ROT, {0, 0, 1, 0, 0, 0, 0, 0, 0, 0}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "EXT_V", "EXT_V_BC", DIRICHLET, EXT_V_BC, R_EXT_VELOCITY, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0, 0, 1}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "LM1", "LM1_BC", DIRICHLET, LM1_BC, R_LAGR_MULT1, SCALAR, NO_ROT, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "LM2", "LM2_BC", DIRICHLET, LM2_BC, R_LAGR_MULT2, SCALAR, NO_ROT, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
@@ -1146,10 +1149,10 @@ struct Equation_Names EQ_Name[] = {
     { "R_MOMENT2", "MOMENT2", R_MOMENT2},     /*   185  */
     { "R_MOMENT3", "MOMENT3", R_MOMENT3},     /*   186  */
     { "R_DENSITY_EQN", "DENSITY_EQN", R_DENSITY_EQN},     /*   187  */
-    { "PSTAR", "PSTAR", R_PSTAR},
-    { "USTAR", "USTAR", R_USTAR},
-    { "VSTAR", "VSTAR", R_VSTAR},
-    { "WSTAR", "WSTAR", R_WSTAR},
+    { "R_PSTAR", "PSTAR", R_PSTAR},
+    { "R_USTAR", "USTAR", R_USTAR},
+    { "R_VSTAR", "VSTAR", R_VSTAR},
+    { "R_WSTAR", "WSTAR", R_WSTAR},
 
     /*
      *  Note -> these entries must remain until we get rid
@@ -1445,9 +1448,9 @@ struct Equation_Names Var_Name[] =  {
     { "MOMENT3", "MOM3", MOMENT3},
     { "DENSITY_EQN", "RHO_EQN", DENSITY_EQN},
     { "PSTAR", "PSTAR", PSTAR},
-    { "USTAR", "USTAR", USTAR},
-    { "VSTAR", "VSTAR", VSTAR},
-    { "WSTAR", "WSTAR", WSTAR},
+    { "USTAR", "USX", USTAR},
+    { "VSTAR", "USY", VSTAR},
+    { "WSTAR", "USZ", WSTAR},
 
 
     { "MESH_POSITION1", "X",  MESH_POSITION1 } ,
@@ -1714,9 +1717,9 @@ struct Equation_Names Exo_Var_Names[] =
   { "Moment 3", "MOM3", MOMENT3 },
   { "Density equation", "RHO_EQN", DENSITY_EQN },
   { "Pressure Int.", "PSTAR", PSTAR},
-  { "U Int.", "USTAR", USTAR},
-  { "V Int.", "VSTAR", VSTAR},
-  { "W Int.", "WSTAR", WSTAR},
+  { "U Int.", "USX", USTAR},
+  { "V Int.", "USY", VSTAR},
+  { "W Int.", "USZ", WSTAR},
 };
 
 int Num_Exo_Var_Names = sizeof(Exo_Var_Names) / sizeof(struct Equation_Names);  

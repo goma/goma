@@ -1631,6 +1631,13 @@ load_elem_dofptr(const int ielem,
     }
   }
 
+  eqn = PSTAR;
+  if (upd->ep[pg->imtrx][eqn] >= 0) {
+    load_varType_Interpolation_ptrs(eqn, esp->P_star, esp_old->P_star,
+                                    esp_dot->P_star);
+  }
+
+
 
   eqn = R_EXT_VELOCITY;
   if (upd->ep[pg->imtrx][eqn] >= 0) {
@@ -2600,6 +2607,13 @@ load_elem_dofptr_all(const int ielem,
         esp_old->v_star[2][i]   = p0;
         esp_dot->v_star[2][i]   = p0;
       }
+    }
+
+    
+    eqn = PSTAR;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->P_star, esp_old->P_star,
+                                      esp_dot->P_star);
     }
 
     eqn = R_EXT_VELOCITY;

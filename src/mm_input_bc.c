@@ -589,14 +589,14 @@ rd_bc_specs(FILE *ifp,
 	case DY_NOTHING_BC: 
 	case DZ_NOTHING_BC: 
 	case P_BC:
-	case P_STAR_BC:
+	case PSTAR_BC:
 	case T_BC: 
 	case U_BC: 
 	case V_BC: 
 	case W_BC:
-	case U_STAR_BC:
-	case V_STAR_BC:
-	case W_STAR_BC:
+	case USTAR_BC:
+	case VSTAR_BC:
+	case WSTAR_BC:
 	case PU_BC:
 	case PV_BC:
 	case PW_BC:
