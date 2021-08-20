@@ -8611,6 +8611,14 @@ load_fv(void)
       scalar_fv_fill(esp->P, esp_dot->P, esp_old->P, bf[v]->phi, ei[upd->matrix_index[v]]->dof[v],
 		     &(fv->P), &(fv_dot->P), &(fv_old->P));
       stateVector[v] = fv->P + upd->Pressure_Datum;
+    }
+
+  if (pdgv[PSTAR]) 
+    {
+      v = PSTAR;
+      scalar_fv_fill(esp->P_star, esp_dot->P_star, esp_old->P_star, bf[v]->phi, ei[upd->matrix_index[v]]->dof[v],
+		     &(fv->P_star), &(fv_dot->P_star), &(fv_old->P_star));
+      stateVector[v] = fv->P_star + upd->Pressure_Datum;
     } 
 
   if (pdgv[EM_CONT_REAL]) 
@@ -8857,6 +8865,28 @@ load_fv(void)
 	    }
 	}
       stateVector[VELOCITY1+p] = fv->v[p];
+    }
+
+  for ( p=0; p<velodim; p++)
+    {
+      v = USTAR + p;
+      if ( pdgv[v] )
+	{
+          dofs     = ei[upd->matrix_index[v]]->dof[v];
+          fv->v_star[p]     = 0.;
+          fv_old->v_star[p] = 0.;
+          fv_dot->v_star[p] = 0.;
+	  for ( i=0; i<dofs; i++)
+	    {
+	      fv->v_star[p] += *esp->v_star[p][i] * bf[v]->phi[i];
+	      if ( pd->TimeIntegration != STEADY )
+		{
+		  fv_old->v_star[p] += *esp_old->v_star[p][i] * bf[v]->phi[i];
+		  fv_dot->v_star[p] += *esp_dot->v_star[p][i] * bf[v]->phi[i];
+		}
+	    }
+	}
+      stateVector[VELOCITY1+p] = fv->v_star[p];
     }
 
 
@@ -9751,6 +9781,41 @@ load_fv_grads(void)
 	    }
 	}
     }
+
+  if ( pd->gv[PSTAR] )
+    {
+      v = PSTAR;
+      dofs  = ei[upd->matrix_index[v]]->dof[v];
+#ifdef DO_NO_UNROLL
+      for ( p=0; p<VIM; p++)
+	{
+	  fv->grad_P[p] = 0.0;
+		  
+	  for ( i=0; i<dofs; i++)
+	    {
+	      fv->grad_P[p] += *esp->P[i] * bf[v]->grad_phi[i] [p];
+	    }
+	}
+#else
+      grad_scalar_fv_fill( esp->P_star, bf[v]->grad_phi, dofs, fv->grad_P_star);
+      //if(transient_run && segregated)
+      if(transient_run)
+	{
+	  grad_scalar_fv_fill ( esp_old->P_star,  bf[v]->grad_phi, dofs, fv_old->grad_P_star);
+	}
+#endif
+	  
+    } else if ( zero_unused_grads &&  upd->vp[pg->imtrx][PSTAR] == -1 ) {
+      for (p=0; p<VIM; p++)
+	{ 
+	  fv->grad_P[p] = 0.0;
+	  //if(transient_run && segregated)
+	  if(transient_run)
+	    {
+	      fv_old->grad_P[p] = 0.0;
+	    }
+	}
+    }
   
 
   /*
@@ -10108,6 +10173,27 @@ load_fv_grads(void)
 	}
     }
 
+  if (pd->gv[USTAR]) {
+    v = USTAR;
+    dofs = ei[upd->matrix_index[v]]->dof[v];
+
+    for (p = 0; p < VIM; p++) {
+      for (q = 0; q < VIM; q++) {
+        fv->grad_v_star[p][q] = 0.0;
+        for (r = 0; r < wim; r++) {
+          for (i = 0; i < dofs; i++) {
+            fv->grad_v_star[p][q] += (*esp->v_star[r][i]) * bf[v]->grad_phi_e[i][r][p][q];
+          }
+        }
+      }
+    }
+  } else if (zero_unused_grads && upd->vp[pg->imtrx][USTAR] == -1) {
+    for (p = 0; p < VIM; p++) {
+      for (q = 0; q < VIM; q++) {
+        fv->grad_v_star[p][q] = 0.0;
+      }
+    }
+  }
 
   /*
    * grad(pv), particle velocity gradients.
@@ -10391,6 +10477,19 @@ load_fv_grads(void)
     {
       fv->div_v = 0.0;
       fv_old->div_v = 0.0;
+    }
+
+  if (pd->gv[USTAR])
+    {
+      fv->div_v_star = 0.0;
+      if (VIM == 3  && pd->CoordinateSystem != CARTESIAN_2pt5D)
+      for(a=0; a<VIM; a++) {
+        fv->div_v_star += fv->grad_v_star[a][a];
+	}
+    } 
+  else if (zero_unused_grads && upd->vp[pg->imtrx][USTAR] == -1)
+    {
+      fv->div_v_star = 0.0;
     }
   
   /*

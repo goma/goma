@@ -92,6 +92,7 @@
 #include "sl_petsc.h"
 #include "stdbool.h"
 #include "wr_side_data.h"
+#include "mm_fill_split.h"
 
 #define GOMA_MM_FILL_C
 

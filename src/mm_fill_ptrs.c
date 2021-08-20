@@ -1613,7 +1613,7 @@ load_elem_dofptr(const int ielem,
   }
 
   if (*p0 != 0.) {
-      EH(-1, "Hey, this zero is not zero!");
+      GOMA_EH(-1, "Hey, this zero is not zero!");
   }
 
   eqn = WSTAR;
@@ -2584,7 +2584,7 @@ load_elem_dofptr_all(const int ielem,
     }
 
     if (*p0 != 0.) {
-      EH(-1, "Hey, this zero is not zero!");
+      GOMA_EH(-1, "Hey, this zero is not zero!");
     }
 
     eqn = R_WSTAR;

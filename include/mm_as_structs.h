@@ -2004,11 +2004,13 @@ struct Diet_Field_Variables {
   dbl x[DIM];                 /* Position in physical space. */
   dbl T;                      /* Temperature. */
   dbl v[DIM];                 /* Velocity. */
+  dbl v_star[DIM];
   dbl pv[DIM];                /* Particle velocity. */
   dbl d[DIM];                 /* Mesh displacement. */
   dbl d_rs[DIM];              /* SOLID displacement. */
   dbl c[MAX_CONC];            /* Concentration(s). */
   dbl P;                      /* Pressure. */
+  dbl P_star;
   dbl F;                      /* Fill. */
   dbl V;                      /* Potential; added by KSC: 2/4/99 */
   dbl qs;                     /* Surface charge density (shell element) */
@@ -2093,6 +2095,7 @@ struct Diet_Field_Variables {
   dbl div_v;                 // Divergence of velocity
   dbl grad_v[DIM][DIM];      // Gradient of velocity
   dbl grad_P[DIM];           // Gradient of pressure
+  dbl grad_P_star[DIM];
   dbl grad_p_liq[DIM];    /* Gradient of porous liq-phase pressure variable. */
   dbl grad_p_gas[DIM];    /* Gradient of porous gas-phase pressure variable. */
   dbl grad_porosity[DIM]; /* Gradient of porous  porosity variable. */

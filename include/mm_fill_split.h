@@ -11,6 +11,10 @@
 #define EXTERN extern
 #endif
 
+#include "std.h"
+#include "exo_struct.h"
+#include "mm_as_structs.h"
+
 EXTERN int assemble_ustar(dbl time_value, /* current time */
                           dbl tt,         /* parameter to vary time integration from
                                              explicit (tt = 1) to implicit (tt = 0)    */
