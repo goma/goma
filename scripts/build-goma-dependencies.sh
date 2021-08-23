@@ -553,7 +553,7 @@ function setMathVars {
         #Add packages that otherwise come preinstalled in intel compiler.
         ARCHIVE_NAMES+=("lapack-$LAPACK_VERSION.tar.gz" \
         "scalapack-$SCALAPACK_VERSION.tgz")
-        ARCHIVE_MD5SUMS+=("$LAPACK_VERSION" \
+        ARCHIVE_MD5SUMS+=("$LAPACK_MD5" \
         "$SCALAPACK_MD5" )
         ARCHIVE_URLS+=("https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v$LAPACK_VERSION.tar.gz" \
         "http://www.netlib.org/scalapack/scalapack-$SCALAPACK_VERSION.tgz" )
