@@ -899,7 +899,6 @@ assembly_alloc(Exo_DB *exo)
   int interp;			/* index for interpolation order */
   int si;			/* index for element shape */
   int mn;
-  int dim;                 /* problem dimension */
   int num_species_eqn;                 /* active number of species eqn */
 
   /*
@@ -973,13 +972,6 @@ assembly_alloc(Exo_DB *exo)
       P0PRINTF("%s: Element_Stiffness_Pointers @ %p has %d bytes", 
 	       yo, esp, sz);
     }
-
-  /*
-   * Dynamically allocate space for only the pointers needed for a 
-   * given problem.
-   */
-
-  dim   = pd_glob[0]->Num_Dim;
 
   /*
    *  num_species_eqn is equal to the maximum number of species equations
