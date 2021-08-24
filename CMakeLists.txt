@@ -148,6 +148,13 @@ endif()
 find_package(Omega_h 9)
 if (Omega_h_FOUND)
   # prevent -Werror
+  option(HAVE_OMEGA_H "HAVE_OMEGA_H" ON)
+endif()
+
+if (HAVE_OMEGA_H)
+  if (NOT Omega_h_FOUND)
+    message(FATAL_ERROR "Cannot use HAVE_OMEGA_H without Omega_h Library")
+  endif()
   set_target_properties(Omega_h::omega_h PROPERTIES INTERFACE_COMPILE_OPTIONS "")
   set(GOMA_TPL_LIBRARIES ${GOMA_TPL_LIBRARIES} Omega_h::omega_h)
   list(APPEND GOMA_COMPILE_DEFINITIONS HAVE_OMEGA_H)
