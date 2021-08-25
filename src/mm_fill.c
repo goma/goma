@@ -2404,7 +2404,7 @@ matrix_fill(
 	{
 	  if (upd->SegregatedSolve)
 	    {
-	      err = assemble_momentum_segregated(time_value, theta, delta_t, h_elem_avg, &pg_data, xi, exo);
+	      err = assemble_momentum_segregated(time_value, theta, delta_t, &pg_data);
 	      GOMA_EH( err, "assemble_momentum");
 #ifdef CHECK_FINITE
 	      CHECKFINITE("assemble_momentum");

@@ -37,9 +37,6 @@ EXTERN int assemble_momentum_segregated(dbl time,       /* current time */
                                         dbl tt,         /* parameter to vary time integration from
                                                            explicit (tt = 1) to implicit (tt = 0) */
                                         dbl dt,         /* current time step size */
-                                        dbl h_elem_avg, /* average global element size for PSPG*/
-                                        const PG_DATA *pg_data,
-                                        double xi[DIM], /* Local stu coordinates */
-                                        const Exo_DB *exo);
+                                        const PG_DATA *pg_data);
 
 #endif

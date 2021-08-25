@@ -33,9 +33,25 @@ list(REVERSE Trilinos_TPL_LIBRARIES)
 list(REMOVE_DUPLICATES Trilinos_TPL_LIBRARIES)
 list(REVERSE Trilinos_TPL_LIBRARIES)
 
+if (NOT GOMA_COMPILER_OVERRIDE)
 set(CMAKE_CXX_COMPILER ${Trilinos_CXX_COMPILER} )
 set(CMAKE_C_COMPILER ${Trilinos_C_COMPILER} )
 set(CMAKE_Fortran_COMPILER ${Trilinos_Fortran_COMPILER} )
+else()
+  if (NOT (${CMAKE_C_COMPILER} STREQUAL ${Trilinos_C_COMPILER}))
+    message(WARNING "CMAKE_C_COMPILER ${CMAKE_C_COMPILER} different from Trilinos_C_COMPILER ${Trilinos_C_COMPILER}")
+    message(WARNING "force setting compiler with GOMA_COMPILER_OVERRIDE=OFF")
+    endif()
+  if (NOT (${CMAKE_CXX_COMPILER} STREQUAL ${Trilinos_CXX_COMPILER}))
+    message(WARNING "CMAKE_CXX_COMPILER ${CMAKE_CXX_COMPILER} different from Trilinos_CXX_COMPILER ${Trilinos_CXX_COMPILER}")
+    message(WARNING "force setting compiler with GOMA_COMPILER_OVERRIDE=OFF")
+  endif()
+  if (NOT (${CMAKE_Fortran_COMPILER} STREQUAL ${Trilinos_Fortran_COMPILER}))
+    message(WARNING "CMAKE_Fortran_COMPILER ${CMAKE_Fortran_COMPILER} different from Trilinos_Fortran_COMPILER ${Trilinos_Fortran_COMPILER}")
+    message(WARNING "force setting compiler with GOMA_COMPILER_OVERRIDE=OFF")
+  endif()
+endif()
+
 
 option(ENABLE_CCACHE OFF)
 if (ENABLE_CCACHE)
@@ -47,6 +63,8 @@ if (ENABLE_CCACHE)
         set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
     endif(CCACHE_FOUND)
 endif()
+
+set(GOMA_COMPILER_OVERRIDE OFF CACHE BOOL "allow goma to compile with different compilers than TPLs, use with caution")
 
 # Trilinos required packages
 foreach(package Amesos AztecOO Epetra)
@@ -96,28 +114,58 @@ MESSAGE(STATUS "SEACASChaco_DIR = ${SEACASChaco_DIR}")
 set(PETSC_PATH $ENV{PETSC_DIR}/$ENV{PETSC_ARCH})
 set(ENV{PKG_CONFIG_PATH} ${PETSC_PATH}/lib/pkgconfig)
 
-# Determine PETSc compilers
-execute_process ( COMMAND pkg-config PETSc --variable=ccompiler COMMAND tr -d '\n' OUTPUT_VARIABLE PETSC_C_COMPILER)
-execute_process ( COMMAND pkg-config PETSc --variable=cxxcompiler COMMAND tr -d '\n' OUTPUT_VARIABLE PETSC_CXX_COMPILER)
-execute_process ( COMMAND pkg-config PETSc --variable=fcompiler COMMAND tr -d '\n' OUTPUT_VARIABLE PETSC_FORTRAN_COMPILER)
-if (NOT (Trilinos_Fortran_COMPILER STREQUAL PETSC_FORTRAN_COMPILER))
-  message(WARNING "Trilinos and Petsc compiled with different Fortran compilers")
-  message(WARNING "Trilinos Fortran: ${Trilinos_Fortran_COMPILER}")
-  message(WARNING "PETSc Fortran: $PETSC_FORTRAN_COMPILER")
-endif()
-if (NOT (Trilinos_C_COMPILER STREQUAL PETSC_C_COMPILER))
-  message(WARNING "Trilinos and Petsc compiled with different C compilers")
-  message(WARNING "Trilinos C: ${Trilinos_C_COMPILER}")
-  message(WARNING "PETSc C: ${PETSC_C_COMPILER}")
-endif()
-if (NOT (Trilinos_CXX_COMPILER STREQUAL PETSC_CXX_COMPILER))
-  message(WARNING "Trilinos and Petsc compiled with different CXX compilers")
-  message(WARNING "Trilinos CXX: ${Trilinos_C_COMPILER}")
-  message(WARNING "PETSc CXX: ${PETSC_C_COMPILER}")
-endif()
-
 find_package(PkgConfig REQUIRED)
 pkg_search_module(PETSC IMPORTED_TARGET PETSc)
+
+# Determine PETSc compilers
+if (PETSC_FOUND)
+  execute_process ( COMMAND pkg-config PETSc --variable=ccompiler COMMAND tr -d '\n' OUTPUT_VARIABLE PETSC_C_COMPILER)
+  execute_process ( COMMAND pkg-config PETSc --variable=cxxcompiler COMMAND tr -d '\n' OUTPUT_VARIABLE PETSC_CXX_COMPILER)
+  execute_process ( COMMAND pkg-config PETSc --variable=fcompiler COMMAND tr -d '\n' OUTPUT_VARIABLE PETSC_FORTRAN_COMPILER)
+  if (NOT (Trilinos_C_COMPILER STREQUAL PETSC_C_COMPILER))
+    if (GOMA_COMPILER_OVERRIDE)
+      message(WARNING
+              "Trilinos and Petsc compiled with different C compilers\n"
+              "Trilinos C: ${Trilinos_C_COMPILER}\n"
+              "PETSc C: ${PETSC_C_COMPILER}")
+    else()
+      message(FATAL_ERROR
+              "Trilinos and Petsc compiled with different C compilers\n"
+              "Trilinos C: ${Trilinos_C_COMPILER}\n"
+              "PETSc C: ${PETSC_C_COMPILER}"
+              "Disable error by GOMA_COMPILER_OVERRIDE=ON if you know what you are doing")
+    endif()
+  endif()
+  if (NOT (Trilinos_Fortran_COMPILER STREQUAL PETSC_FORTRAN_COMPILER))
+    if (GOMA_COMPILER_OVERRIDE)
+      message(WARNING
+              "Trilinos and Petsc compiled with different Fortran compilers\n"
+              "Trilinos Fortran: ${Trilinos_Fortran_COMPILER}\n"
+              "PETSc Fortran: ${PETSC_FORTRAN_COMPILER}")
+    else()
+      message(FATAL_ERROR
+              "Trilinos and Petsc compiled with different Fortran compilers\n"
+              "Trilinos Fortran: ${Trilinos_Fortran_COMPILER}\n"
+              "PETSc Fortran: ${PETSC_FORTRAN_COMPILER}"
+              "Disable error by GOMA_COMPILER_OVERRIDE=ON if you know what you are doing")
+    endif()
+  endif()
+  if (NOT (Trilinos_CXX_COMPILER STREQUAL PETSC_CXX_COMPILER))
+    if (GOMA_COMPILER_OVERRIDE)
+      message(WARNING
+              "Trilinos and Petsc compiled with different CXX compilers\n"
+              "Trilinos CXX: ${Trilinos_CXX_COMPILER}\n"
+              "PETSc CXX: ${PETSC_CXX_COMPILER}")
+    else()
+      message(FATAL_ERROR
+              "Trilinos and Petsc compiled with different CXX compilers\n"
+              "Trilinos CXX: ${Trilinos_CXX_COMPILER}\n"
+              "PETSc CXX: ${PETSC_CXX_COMPILER}"
+              "Disable error by GOMA_COMPILER_OVERRIDE=ON if you know what you are doing")
+      endif()
+  endif()
+endif()
+
 
 message("")
 
@@ -585,6 +633,18 @@ SET(CMAKE_CXX_FLAGS_DEBUG  "${GOMA_DEBUG_FLAGS}")
 SET(CMAKE_C_FLAGS ${GOMA_WARNINGS})
 SET(CMAKE_C_FLAGS_RELEASE "${GOMA_RELEASE_FLAGS}")
 SET(CMAKE_C_FLAGS_DEBUG  "${GOMA_DEBUG_FLAGS}")
+
+message(STATUS "CMAKE_C_COMPILER=${CMAKE_C_COMPILER}")
+message(STATUS "CMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}")
+message(STATUS "CMAKE_Fortran_COMPILER=${CMAKE_Fortran_COMPILER}")
+message(STATUS "Trilinos_C_COMPILER=${Trilinos_C_COMPILER}")
+message(STATUS "Trilinos_CXX_COMPILER=${Trilinos_CXX_COMPILER}")
+message(STATUS "Trilinos_Fortran_COMPILER=${Trilinos_Fortran_COMPILER}")
+if (PETSC_FOUND)
+  message(STATUS "PETSC_C_COMPILER=${PETSC_C_COMPILER}")
+  message(STATUS "PETSC_CXX_COMPILER=${PETSC_CXX_COMPILER}")
+  message(STATUS "PETSC_FORTRAN_COMPILER=${PETSC_FORTRAN_COMPILER}")
+endif()
 
 message(STATUS "CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
 message(STATUS "CMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}")
