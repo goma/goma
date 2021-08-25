@@ -61,7 +61,7 @@ int assemble_momentum_segregated(dbl time_value, /* current time */
 
   for (a = 0; a < VIM; a++) {
     for (b = 0; b < VIM; b++) {
-      gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+      gamma[a][b] = fv->grad_v_star[a][b] + fv->grad_v_star[b][a];
     }
   }
 
@@ -100,7 +100,7 @@ int assemble_momentum_segregated(dbl time_value, /* current time */
             adv += rho * fv_old->v[p] * fv->grad_v[p][a];
           }
 
-          // adv += 0.5 * fv->div_v * fv->v[a];
+//           adv += 0.5 * fv->div_v * fv->v[a];
 
           adv *= -bf[eqn]->phi[i] * d_area;
 
@@ -118,7 +118,7 @@ int assemble_momentum_segregated(dbl time_value, /* current time */
 
           double source = 0;
 
-          source += f[a] * bf[eqn]->phi[i] * d_area;
+//          source += f[a] * bf[eqn]->phi[i] * d_area;
 
           lec->R[LEC_R_INDEX(peqn, ii)] += resid + adv + pres + diff + source;
         } /*end if (active_dofs) */
@@ -136,7 +136,6 @@ int assemble_momentum_segregated(dbl time_value, /* current time */
       peqn = upd->ep[pg->imtrx][eqn];
 
       for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
-        ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
         ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
         if (ei[pg->imtrx]->active_interp_ledof[ledof]) {
@@ -172,7 +171,7 @@ int assemble_momentum_segregated(dbl time_value, /* current time */
                 double diff = 0;
                 for (int p = 0; p < VIM; p++) {
                   for (int q = 0; q < VIM; q++) {
-                    diff += mu * (bf[VELOCITY1 + q]->grad_phi_e[j][b][p][q]) *
+                    diff += mu * (bf[var]->grad_phi_e[j][b][p][q]) *
                             bf[eqn]->grad_phi_e[i][a][p][q];
                   }
                 }
@@ -181,7 +180,7 @@ int assemble_momentum_segregated(dbl time_value, /* current time */
 
                 double source = 0;
 
-                source += df->v[a][b][j] * bf[eqn]->phi[i] * -d_area;
+//                source += df->v[a][b][j] * bf[eqn]->phi[i] * -d_area;
 
                 lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += resid + adv + diff + source;
               }

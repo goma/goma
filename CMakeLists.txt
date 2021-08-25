@@ -119,6 +119,7 @@ pkg_search_module(PETSC IMPORTED_TARGET PETSc)
 
 # Determine PETSc compilers
 if (PETSC_FOUND)
+  option(HAVE_PETSC "HAVE_PETSC" ON)
   execute_process ( COMMAND pkg-config PETSc --variable=ccompiler COMMAND tr -d '\n' OUTPUT_VARIABLE PETSC_C_COMPILER)
   execute_process ( COMMAND pkg-config PETSc --variable=cxxcompiler COMMAND tr -d '\n' OUTPUT_VARIABLE PETSC_CXX_COMPILER)
   execute_process ( COMMAND pkg-config PETSc --variable=fcompiler COMMAND tr -d '\n' OUTPUT_VARIABLE PETSC_FORTRAN_COMPILER)
@@ -208,7 +209,7 @@ if (HAVE_OMEGA_H)
   list(APPEND GOMA_COMPILE_DEFINITIONS HAVE_OMEGA_H)
 endif()
 
-if (PETSC_FOUND)
+if (HAVE_PETSC)
   set(GOMA_TPL_LIBRARIES ${GOMA_TPL_LIBRARIES} PkgConfig::PETSC)
   list(APPEND GOMA_COMPILE_DEFINITIONS HAVE_PETSC)
 endif()
