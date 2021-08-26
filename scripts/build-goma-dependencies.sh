@@ -262,6 +262,9 @@ MATIO_MD5="afeb5d21b234699fd5b9dc4564afe1ca"
 SCALAPACK_VERSION="2.1.0"
 SCALAPACK_MD5="3b239ef80353c67354a0a62d54946fa8"
 
+LAPACK_VERSION="3.10.0"
+LAPACK_MD5="d70fc27a8bdebe00481c97c728184f09"
+
 ARCHIVE_NAMES=("arpack96.tar.gz" \
 "patch.tar.gz" \
 "hdf5-${HDF5_VERSION}.tar.bz2" \
@@ -548,32 +551,27 @@ function setMathVars {
     elif [[ "$MATH_LIBRARIES" == "netlib blas" ]]; then
         USING_MKLS="OFF"
         #Add packages that otherwise come preinstalled in intel compiler.
-        ARCHIVE_NAMES+=("blas-3.7.1.tgz" \
-        "lapack-3.8.0.tar.gz" \
+        ARCHIVE_NAMES+=("lapack-$LAPACK_VERSION.tar.gz" \
         "scalapack-$SCALAPACK_VERSION.tgz")
-        ARCHIVE_MD5SUMS+=("cd132aea6f7055a49aa48ca0a61e7cd5" \
-        "96591affdbf58c450d45c1daa540dbd2" \
+        ARCHIVE_MD5SUMS+=("$LAPACK_MD5" \
         "$SCALAPACK_MD5" )
-        ARCHIVE_URLS+=("http://www.netlib.org/blas/blas-3.7.1.tgz" \
-        "http://www.netlib.org/lapack/lapack-3.8.0.tar.gz" \
+        ARCHIVE_URLS+=("https://github.com/Reference-LAPACK/lapack/archive/refs/tags/v$LAPACK_VERSION.tar.gz" \
         "http://www.netlib.org/scalapack/scalapack-$SCALAPACK_VERSION.tgz" )
-        ARCHIVE_DIR_NAMES+=("BLAS-3.7.1" \
-        "lapack-3.8.0" \
+        ARCHIVE_DIR_NAMES+=("lapack-$LAPACK_VERSION" \
         "scalapack-$SCALAPACK_VERSION" )
-        ARCHIVE_HOMEPAGES+=("http://www.netlib.org/blas/" \
-        "http://www.netlib.org/lapack/" \
+        ARCHIVE_HOMEPAGES+=("http://www.netlib.org/lapack/" \
         "http://www.netlib.org/scalapack/")
-        ARCHIVE_REAL_NAMES+=("BLAS" \
-        "LAPACK" \
+        ARCHIVE_REAL_NAMES+=("LAPACK" \
         "ScaLAPACK")
 
-        BLAS_LIBRARY_DIR="${GOMA_LIB}/BLAS-3.7.1"
+        LAPACK_DIR="${GOMA_LIB}/lapack-$LAPACK_VERSION"
+        LAPACK_LIBRARY_DIR="$LAPACK_DIR/lib"
+        LAPACK_LIBRARY_NAME_ARG="-L${LAPACK_LIBRARY_DIR} -llapack"
+        LAPACK_LIBRARY_NAME="lapack"
+        BLAS_LIBRARY_DIR="${LAPACK_LIBRARY_DIR}"
         BLAS_LIBRARY_NAME_ARG="-L${BLAS_LIBRARY_DIR} -lblas"
         BLAS_LIBRARY_NAME="blas"
         BLACS_LIBRARY_NAME="scalapack"
-        LAPACK_LIBRARY_DIR="${GOMA_LIB}/lapack-3.8.0"
-        LAPACK_LIBRARY_NAME_ARG="-L${LAPACK_LIBRARY_DIR} -llapack"
-        LAPACK_LIBRARY_NAME="liblapack.a"
         SCALAPACK_LIBRARY_DIR="${GOMA_LIB}/scalapack-$SCALAPACK_VERSION/lib"
         SCALAPACK_LIBRARY_NAME="scalapack"
         SCALAPACK_LIBRARY_NAME_ARG="-L${SCALAPACK_LIBRARY_DIR} -lscalapack"
@@ -582,7 +580,6 @@ function setMathVars {
         NON_INTEL_BLAS_LIBRARY="${BLAS_LIBRARY_DIR}/libblas.a"
         NON_INTEL_BLAS_LINK="-L${BLAS_LIBRARY_DIR} -l${BLAS_LIBRARY_NAME} ${FORTRAN_LIBS}"
         SUITESPARSE_NON_INTEL_LAPACK_LINK="${LAPACK_LIBRARY_NAME_ARG} ${FORTRAN_LIBS}"
-
 
     elif [[ "$MATH_LIBRARIES" == "atlas" ]]; then
         USING_MKLS="OFF"
@@ -960,30 +957,6 @@ else
     cd ../..
 fi
 
- #make BLAS
-if [[ "$MATH_LIBRARIES" == "netlib blas" ]]; then
-    cd $GOMA_LIB/BLAS-3.7.1
-    if [ -f libblas.a ]
-    then
-        log_echo "BLAS already built"
-    else
-        log_echo $("$BLAS_PATCH") > makepatch.inc
-        patch -f make.inc < makepatch.inc
-        make -j$MAKE_JOBS cc=${MPI_C_COMPILER} ccflags=${COMPILER_FLAG_MPI} cxx=${MPI_CXX_COMPILER} cxxflags=${COMPILER_FLAG_MPI} 2>&1 | tee -a $COMPILE_LOG
-        cp blas_LINUX.a libblas.a
-    fi
-    if [ -f $GOMA_LIB/BLAS-3.7.1/libblas.a ]
-    then
-        log_echo "Built BLAS 3.7.1"
-    else
-        log_echo "Failed to build BLAS 3.7.1"
-        exit 1
-    fi
-    # For some reason this junk apple file is included with BLAS 3.7.1 from netlib.
-    rm -f "$GOMA_LIB/._BLAS-3.7.1"
-    export LD_LIBRARY_PATH="${GOMA_LIB}/BLAS-3.7.1:$LD_LIBRARY_PATH"
-fi
-
 #parmetis patch
 read -d '' PARMETIS_PATCH << "EOF"
 55c55,58
@@ -1130,17 +1103,21 @@ EOF
 fi
 
 if [[ "$MATH_LIBRARIES" == "netlib blas" ]]; then
-    #make lapack
-    cd $LAPACK_LIBRARY_DIR
-    if [ -e liblapack.a ]
+    #make lapack/blas
+    if [ -e $LAPACK_LIBRARY_DIR/liblapack.a ]
     then
         log_echo "LAPACK already built"
     else
-        mv make.inc.example make.inc
-        log_echo $("$LAPACK_PATCH") > make.patch
-        patch make.inc < make.patch
-        make lapacklib -j$MAKE_JOBS cc=${MPI_C_COMPILER} ccflags=${COMPILER_FLAG_MPI} cxx=${MPI_CXX_COMPILER} cxxflags=${COMPILER_FLAG_MPI} 2>&1 | tee -a $COMPILE_LOG
-#        cp lapack_LINUX.a liblapack.a
+        tempdir=$(mktemp -u -p $GOMA_LIB)
+        mv $LAPACK_DIR $tempdir
+	mkdir $LAPACK_DIR
+	mv $tempdir $LAPACK_DIR/src
+	mkdir $LAPACK_DIR/src/build
+        cd $LAPACK_DIR/src/build
+        cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_INSTALL_PREFIX=$LAPACK_DIR $LAPACK_DIR/src 2>&1 | tee -a $COMPILE_LOG
+	make -j$MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
+	make install 2>&1 | tee -a $COMPILE_LOG
+	cd $GOMA_LIB
         if [ -e $LAPACK_LIBRARY_DIR/liblapack.a ]
         then
             log_echo "Built LAPACK"
