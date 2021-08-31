@@ -10,28 +10,71 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
 
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 /* GOMA include files */
 #define GOMA_MM_FILL_SPLIT_C
 #include "mm_fill_split.h"
 
+#include "ac_particles.h"
+#include "az_aztec.h"
+#include "bc_colloc.h"
+#include "bc_contact.h"
 #include "el_elm.h"
+#include "el_elm_info.h"
+#include "el_geom.h"
+#include "exo_struct.h"
 #include "mm_as.h"
+#include "mm_as_const.h"
 #include "mm_as_structs.h"
+#include "mm_dil_viscosity.h"
+#include "mm_eh.h"
+#include "mm_fill_aux.h"
+#include "mm_fill_common.h"
+#include "mm_fill_fill.h"
 #include "mm_fill_ls.h"
+#include "mm_fill_population.h"
+#include "mm_fill_ptrs.h"
+#include "mm_fill_rs.h"
+#include "mm_fill_shell.h"
+#include "mm_fill_solid.h"
+#include "mm_fill_species.h"
+#include "mm_fill_stabilization.h"
+#include "mm_fill_stress.h"
+#include "mm_fill_util.h"
 #include "mm_flux.h"
 #include "mm_mp.h"
+#include "mm_mp_const.h"
+#include "mm_mp_structs.h"
+#include "mm_ns_bc.h"
+#include "mm_post_def.h"
+#include "mm_qtensor_model.h"
+#include "mm_shell_util.h"
+#include "mm_species.h"
+#include "mm_unknown_map.h"
 #include "mm_viscosity.h"
+#include "rf_allo.h"
+#include "rf_bc.h"
+#include "rf_bc_const.h"
 #include "rf_fem.h"
 #include "rf_fem_const.h"
+#include "rf_solver.h"
+#include "rf_vars_const.h"
+#include "sl_util.h"
+#include "sl_util_structs.h"
 #include "std.h"
+#include "stdbool.h"
+#include "user_mp.h"
+#include "user_mp_gen.h"
 
-int assemble_momentum_segregated(dbl time_value, /* current time */
-                                 dbl tt,         /* parameter to vary time integration from
-                                                    explicit (tt = 1) to implicit (tt = 0)    */
-                                 dbl dt,         /* current time step size                    */
-                                 const PG_DATA *pg_data) {
+int assemble_ustar(dbl time_value, /* current time */
+                   dbl tt,         /* parameter to vary time integration from
+                                      explicit (tt = 1) to implicit (tt = 0)    */
+                   dbl dt,         /* current time step size                    */
+                   const PG_DATA *pg_data) {
 #ifdef DEBUG_MOMENTUM_JAC
   int adx;
 #endif
@@ -43,7 +86,7 @@ int assemble_momentum_segregated(dbl time_value, /* current time */
 
   int status = 0;
 
-  eqn = R_MOMENTUM1;
+  eqn = USTAR;
   double d_area = fv->wt * bf[eqn]->detJ * fv->h3;
   double gamma[DIM][DIM];
 
@@ -61,7 +104,7 @@ int assemble_momentum_segregated(dbl time_value, /* current time */
 
   for (a = 0; a < VIM; a++) {
     for (b = 0; b < VIM; b++) {
-      gamma[a][b] = fv->grad_v_star[a][b] + fv->grad_v_star[b][a];
+      gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
     }
   }
 
@@ -79,7 +122,7 @@ int assemble_momentum_segregated(dbl time_value, /* current time */
      * Assemble each component "a" of the momentum equation...
      */
     for (a = 0; a < wim; a++) {
-      eqn = R_MOMENTUM1 + a;
+      eqn = USTAR + a;
       peqn = upd->ep[pg->imtrx][eqn];
 
       for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
@@ -92,25 +135,25 @@ int assemble_momentum_segregated(dbl time_value, /* current time */
            *  ldof pertaining to the same variable type.
            */
           ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
-          double resid = rho * (fv->v[a] - fv->v_star[a]) / dt;
+          double resid = rho * (fv->v_star[a] - fv->v[a]) / dt;
           resid *= -bf[eqn]->phi[i] * d_area;
 
           double adv = 0;
           for (int p = 0; p < VIM; p++) {
-            adv += rho * fv_old->v[p] * fv->grad_v[p][a];
+            adv += rho * fv_old->v_star[p] * fv->grad_v_star[p][a];
           }
 
-//           adv += 0.5 * fv->div_v * fv->v[a];
+          // adv += 0.5 * fv->div_v * fv->v[a];
 
           adv *= -bf[eqn]->phi[i] * d_area;
 
-          double pres = fv->grad_P[a] * bf[eqn]->phi[i];
+          double pres = fv->grad_P_star[a] * bf[eqn]->phi[i];
           pres *= -d_area;
 
           double diff = 0;
           for (int p = 0; p < VIM; p++) {
             for (int q = 0; q < VIM; q++) {
-              diff += mu * (fv->grad_v[p][q]) * bf[eqn]->grad_phi_e[i][a][p][q];
+              diff += mu * (fv->grad_v_star[p][q]) * bf[eqn]->grad_phi_e[i][a][p][q];
             }
           }
 
@@ -118,9 +161,9 @@ int assemble_momentum_segregated(dbl time_value, /* current time */
 
           double source = 0;
 
-//          source += f[a] * bf[eqn]->phi[i] * d_area;
+          source += f[a] * bf[eqn]->phi[i] * d_area;
 
-          lec->R[LEC_R_INDEX(peqn, ii)] += resid + adv + pres + diff + source;
+          lec->R[LEC_R_INDEX(peqn,ii)] += resid + adv + pres + diff + source;
         } /*end if (active_dofs) */
       }   /* end of for (i=0,ei[pg->imtrx]->dofs...) */
     }
@@ -132,10 +175,11 @@ int assemble_momentum_segregated(dbl time_value, /* current time */
 
   if (af->Assemble_Jacobian) {
     for (a = 0; a < wim; a++) {
-      eqn = R_MOMENTUM1 + a;
+      eqn = USTAR + a;
       peqn = upd->ep[pg->imtrx][eqn];
 
       for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+        ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
         ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
         if (ei[pg->imtrx]->active_interp_ledof[ledof]) {
@@ -148,7 +192,7 @@ int assemble_momentum_segregated(dbl time_value, /* current time */
           ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
           for (b = 0; b < wim; b++) {
-            var = VELOCITY1 + b;
+            var = USTAR + b;
             if (pdv[var]) {
               pvar = upd->vp[pg->imtrx][var];
               for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
@@ -157,7 +201,7 @@ int assemble_momentum_segregated(dbl time_value, /* current time */
 
                 double adv = 0; // bf[var]->phi[j] * fv->grad_v[b][a];
                 for (int p = 0; p < VIM; p++) {
-                  adv += rho * fv_old->v[p] * bf[var]->grad_phi_e[j][b][p][a];
+                  adv += rho * fv_old->v_star[p] * bf[var]->grad_phi_e[j][b][p][a];
                 }
                 // double div_phi_j_e_b = 0.;
                 // for (int p = 0; p < VIM; p++) {
@@ -171,7 +215,7 @@ int assemble_momentum_segregated(dbl time_value, /* current time */
                 double diff = 0;
                 for (int p = 0; p < VIM; p++) {
                   for (int q = 0; q < VIM; q++) {
-                    diff += mu * (bf[var]->grad_phi_e[j][b][p][q]) *
+                    diff += mu * (bf[VELOCITY1 + q]->grad_phi_e[j][b][p][q]) *
                             bf[eqn]->grad_phi_e[i][a][p][q];
                   }
                 }
@@ -180,9 +224,9 @@ int assemble_momentum_segregated(dbl time_value, /* current time */
 
                 double source = 0;
 
-//                source += df->v[a][b][j] * bf[eqn]->phi[i] * -d_area;
+                source += df->v[a][b][j] * bf[eqn]->phi[i] * -d_area;
 
-                lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += resid + adv + diff + source;
+                lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += resid + adv + diff + source;
               }
             }
           }
@@ -193,12 +237,18 @@ int assemble_momentum_segregated(dbl time_value, /* current time */
   return (status);
 }
 
-int assemble_continuity_segregated(dbl time_value, /* current time */
-                                   dbl tt,         /* parameter to vary time integration from
-                                                      explicit (tt = 1) to implicit (tt = 0)    */
-                                   dbl dt,         /* current time step size                    */
-                                   const PG_DATA *pg_data) {
+int assemble_pstar(dbl time_value, /* current time */
+                   dbl tt,         /* parameter to vary time integration from
+                                      explicit (tt = 1) to implicit (tt = 0)    */
+                   dbl dt,         /* current time step size                    */
+                   const PG_DATA *pg_data) {
   int dim, wim;
+  int a;
+
+  int eqn, var;
+  int peqn, pvar;
+
+  int i, j;
   int status;
 
   dbl det_J;
@@ -213,6 +263,9 @@ int assemble_continuity_segregated(dbl time_value, /* current time */
   /*
    * Variables for Pressure Stabilization Petrov-Galerkin...
    */
+
+  int *pdv = pd->v[pg->imtrx];
+
   dbl mass;
 
   dbl rho = 0;
@@ -225,8 +278,8 @@ int assemble_continuity_segregated(dbl time_value, /* current time */
    * Unpack variables from structures for local convenience...
    */
 
-  int eqn = R_PRESSURE;
-  int peqn = upd->ep[pg->imtrx][eqn];
+  eqn = R_PSTAR;
+  peqn = upd->ep[pg->imtrx][eqn];
 
   /*
    * Bail out fast if there's nothing to do...
@@ -253,7 +306,7 @@ int assemble_continuity_segregated(dbl time_value, /* current time */
   rho = density(d_rho, time_value);
 
   if (af->Assemble_Residual) {
-    for (int i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+    for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
 
 #if 1
       /* this is an optimization for xfem */
@@ -273,12 +326,12 @@ int assemble_continuity_segregated(dbl time_value, /* current time */
        *  Mass Terms: drhodt terms (usually though problem dependent)
        */
       mass = 0;
-      for (int a = 0; a < wim; a++) {
-        mass += (fv->grad_P[a] - fv_old->grad_P[a]) / rho * bf[eqn]->grad_phi[i][a];
+      for (a = 0; a < wim; a++) {
+        mass += (fv->grad_P_star[a] - fv_old->grad_P_star[a]) / rho * bf[eqn]->grad_phi[i][a];
       }
 
       double tmp = 0;
-      tmp += (1 / dt) * (fv->div_v * bf[eqn]->phi[i]);
+      tmp += (1 / dt) * (fv->div_v_star * bf[eqn]->phi[i]);
 
       mass += tmp;
       mass *= -d_area;
@@ -287,26 +340,26 @@ int assemble_continuity_segregated(dbl time_value, /* current time */
        *  Add up the individual contributions and sum them into the local element
        *  contribution for the total continuity equation for the ith local unknown
        */
-      lec->R[LEC_R_INDEX(peqn, i)] += mass;
+      lec->R[LEC_R_INDEX(peqn,i)] += mass;
     }
   }
 
   if (af->Assemble_Jacobian) {
-    for (int i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+    for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
 
-      int var = PRESSURE;
-      if (pd->v[pg->imtrx][var]) {
-        int pvar = upd->vp[pg->imtrx][var];
+      var = PSTAR;
+      if (pdv[var]) {
+        pvar = upd->vp[pg->imtrx][var];
 
-        for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
           mass = 0;
-          for (int a = 0; a < wim; a++) {
+          for (a = 0; a < wim; a++) {
             mass += (bf[var]->grad_phi[j][a] / rho) * bf[eqn]->grad_phi[i][a];
           }
 
           mass *= -d_area;
 
-          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += mass;
+           lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass;
         }
       }
     }
@@ -315,7 +368,7 @@ int assemble_continuity_segregated(dbl time_value, /* current time */
   return (status);
 }
 
-int assemble_pstar(dbl time_value, /* current time */
+int assemble_continuity_segregated(dbl time_value, /* current time */
                                    dbl tt,         /* parameter to vary time integration from
                                                       explicit (tt = 1) to implicit (tt = 0)    */
                                    dbl dt,         /* current time step size                    */
@@ -354,7 +407,7 @@ int assemble_pstar(dbl time_value, /* current time */
         double resid = fv->P - fv->P_star - fv_old->P; // + 0.1 * fv->div_v;
         resid *= -bf[eqn]->phi[i] * d_area;
         /*lec->R[peqn][ii] += mass + advection + porous + diffusion + source;*/
-        lec->R[LEC_R_INDEX(peqn, ii)] += resid;
+        lec->R[LEC_R_INDEX(peqn,ii)] += resid;
 
 #ifdef DEBUG_MOMENTUM_RES
         printf("R_m[%d][%d] += %10f %10f %10f %10f %10f\n", a, i, mass, advection, porous,
@@ -394,7 +447,7 @@ int assemble_pstar(dbl time_value, /* current time */
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             double resid = bf[var]->phi[j] * bf[eqn]->phi[i];
             resid *= -d_area;
-            lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += resid;
+            lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += resid;
           }
         }
       }
@@ -403,11 +456,11 @@ int assemble_pstar(dbl time_value, /* current time */
   return (status);
 }
 
-int assemble_ustar(dbl time, /* current time */
-                   dbl tt,   /* parameter to vary time integration from
-                                explicit (tt = 1) to implicit (tt = 0) */
-                   dbl dt,   /* current time step size */
-                   const PG_DATA *pg_data) {
+int assemble_momentum_segregated(dbl time,       /* current time */
+                                 dbl tt,         /* parameter to vary time integration from
+                                                    explicit (tt = 1) to implicit (tt = 0) */
+                                 dbl dt,         /* current time step size */
+                                 const PG_DATA *pg_data) {
 #ifdef DEBUG_MOMENTUM_JAC
   int adx;
 #endif
@@ -437,7 +490,7 @@ int assemble_ustar(dbl time, /* current time */
      * Assemble each component "a" of the momentum equation...
      */
     for (a = 0; a < wim; a++) {
-      eqn = R_USTAR + a;
+      eqn = R_MOMENTUM1 + a;
       peqn = upd->ep[pg->imtrx][eqn];
 
       for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
@@ -451,11 +504,12 @@ int assemble_ustar(dbl time, /* current time */
            */
           ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
-          double resid = fv->v_star[a] - fv->v[a] + dt * (fv->grad_P[a] - fv_old->grad_P[a]) / rho;
+          double resid =
+              fv->v[a] - fv->v_star[a] + dt * (fv->grad_P_star[a] - fv_old->grad_P_star[a]) / rho;
           resid *= -bf[eqn]->phi[i] * d_area;
 
           /*lec->R[peqn][ii] += mass + advection + porous + diffusion + source;*/
-          lec->R[LEC_R_INDEX(peqn, ii)] += resid;
+          lec->R[LEC_R_INDEX(peqn,ii)] += resid;
 
 #ifdef DEBUG_MOMENTUM_RES
           printf("R_m[%d][%d] += %10f %10f %10f %10f %10f\n", a, i, mass, advection, porous,
@@ -473,7 +527,7 @@ int assemble_ustar(dbl time, /* current time */
 
   if (af->Assemble_Jacobian) {
     for (a = 0; a < wim; a++) {
-      eqn = R_USTAR + a;
+      eqn = R_MOMENTUM1 + a;
       peqn = upd->ep[pg->imtrx][eqn];
       for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
         ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
@@ -489,7 +543,7 @@ int assemble_ustar(dbl time, /* current time */
           ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
           for (b = 0; b < wim; b++) {
-            var = USTAR + b;
+            var = VELOCITY1 + b;
             if (pdv[var]) {
               pvar = upd->vp[pg->imtrx][var];
 
@@ -498,7 +552,7 @@ int assemble_ustar(dbl time, /* current time */
                 double resid = bf[var]->phi[j];
                 resid *= -delta(a, b) * bf[eqn]->phi[i] * d_area;
 
-                lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += resid;
+                lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += resid;
               }
             }
           }

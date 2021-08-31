@@ -89,7 +89,9 @@
 #include "rf_node_const.h"
 #include "sl_util.h"
 #include "sl_util_structs.h"
+#ifdef HAVE_PETSC
 #include "sl_petsc.h"
+#endif
 #include "stdbool.h"
 #include "wr_side_data.h"
 #include "mm_fill_split.h"
@@ -5114,9 +5116,11 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
   if (strcmp(Matrix_Format, "epetra") == 0) {
     EpetraLoadLec(ielem, ams, resid_vector);
   } 
+#ifdef HAVE_PETSC
   else if (strcmp(Matrix_Format, "petsc") == 0) {
     petsc_load_lec(ielem, ams, resid_vector);
   } 
+#endif
   else {
     /* load up matrix in MSR format */
     if (strcmp(Matrix_Format, "msr") == 0) {

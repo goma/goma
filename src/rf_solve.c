@@ -801,7 +801,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
          "Incompatible matrix solver for petsc, solver must be petsc");
       check_parallel_error("Matrix format / Solver incompatibility");
       pg->imtrx = 0;
-      goma_error err = goma_setup_petsc_matrix(ams[JAC], exo, dpi, num_internal_dofs[pg->imtrx], num_boundary_dofs[pg->imtrx], num_external_dofs[pg->imtrx], pg->imtrx);
+      goma_error err = goma_setup_petsc_matrix(ams[JAC], exo, dpi, x, x_old, xdot, xdot_old, num_internal_dofs[pg->imtrx], num_boundary_dofs[pg->imtrx], num_external_dofs[pg->imtrx], pg->imtrx);
       GOMA_EH(err, "goma_setup_petsc_matrix");
 #endif
   } else if (strcmp(Matrix_Format, "msr") == 0) {

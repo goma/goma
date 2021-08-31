@@ -135,7 +135,8 @@ dbl velo_vary_fnc(const int velo_condition,
       double x0 = -0.461101; //(2.162810-1.21031)*0.5 + 1.21031;
       double y0 = -0.127;
 
-      double R = 0.17; // Radius of tube
+      //double R = 0.17; // Radius of tube
+      double R = 5; // Radius of tube
 
       double v_max = 1e-1;
 
