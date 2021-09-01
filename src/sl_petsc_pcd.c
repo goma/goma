@@ -95,10 +95,12 @@ static goma_error initialize_PCD_matrices(PetscMatrixData *matrix_data,
 
   if (Num_Proc == 1) {
     MatSeqAIJSetPreallocation(matrix_data->pcd_data->Mp, 0, d_nnz);
+    MatSeqAIJSetPreallocation(matrix_data->pcd_data->Mp_mu, 0, d_nnz);
     MatSeqAIJSetPreallocation(matrix_data->pcd_data->Fp, 0, d_nnz);
     MatSeqAIJSetPreallocation(matrix_data->pcd_data->Ap, 0, d_nnz);
   } else {
     MatMPIAIJSetPreallocation(matrix_data->pcd_data->Mp, 0, d_nnz, 0, o_nnz);
+    MatMPIAIJSetPreallocation(matrix_data->pcd_data->Mp_mu, 0, d_nnz, 0, o_nnz);
     MatMPIAIJSetPreallocation(matrix_data->pcd_data->Fp, 0, d_nnz, 0, o_nnz);
     MatMPIAIJSetPreallocation(matrix_data->pcd_data->Ap, 0, d_nnz, 0, o_nnz);
   }
@@ -111,9 +113,12 @@ static goma_error initialize_PCD_matrices(PetscMatrixData *matrix_data,
 PetscErrorCode PCDShellPCApply(PC pc, Vec x, Vec y) {
   PetscPCDData *pcd_data;
   PCShellGetContext(pc, (void **)&pcd_data);
-  Vec a, b;
+  Vec a, b, x_tmp, my;
   VecDuplicate(x, &a);
   VecDuplicate(x, &b);
+  VecDuplicate(x, &x_tmp);
+  VecCopy(x, x_tmp);
+  VecDuplicate(x, &my);
   if (pcd_data->pcd_inverse_diag) {
     Vec diag;
     VecDuplicate(x, &diag);
@@ -126,8 +131,12 @@ PetscErrorCode PCDShellPCApply(PC pc, Vec x, Vec y) {
   }
   MatMult(pcd_data->Fp, a, b);
   KSPSolve(pcd_data->ksp_Ap, b, y);
+  KSPSolve(pcd_data->ksp_Mp_mu, x_tmp, my);
+  VecAXPY(y, 1.0, my);
   VecDestroy(&a);
   VecDestroy(&b);
+  VecDestroy(&x_tmp);
+  VecDestroy(&my);
   return 0;
 }
 
@@ -154,10 +163,15 @@ PetscErrorCode petsc_PCD_setup(PC pc,
   CHKERRQ(err);
   err = MatCreate(PETSC_COMM_WORLD, &data->Mp);
   CHKERRQ(err);
+  err = MatCreate(PETSC_COMM_WORLD, &data->Mp_mu);
+  CHKERRQ(err);
   err = MatCreate(PETSC_COMM_WORLD, &data->Ap);
   CHKERRQ(err);
   err =
       MatSetSizes(matrix_data->pcd_data->Mp, local_nodes, local_nodes, global_nodes, global_nodes);
+  CHKERRQ(err);
+  err =
+      MatSetSizes(matrix_data->pcd_data->Mp_mu, local_nodes, local_nodes, global_nodes, global_nodes);
   CHKERRQ(err);
   err =
       MatSetSizes(matrix_data->pcd_data->Ap, local_nodes, local_nodes, global_nodes, global_nodes);
@@ -168,6 +182,8 @@ PetscErrorCode petsc_PCD_setup(PC pc,
 
   err = KSPCreate(MPI_COMM_WORLD, &data->ksp_Mp);
   CHKERRQ(err);
+  err = KSPCreate(MPI_COMM_WORLD, &data->ksp_Mp_mu);
+  CHKERRQ(err);
   err = KSPCreate(MPI_COMM_WORLD, &data->ksp_Ap);
   CHKERRQ(err);
   err = MatSetOptionsPrefix(data->Mp, "pcdMp_");
@@ -176,11 +192,17 @@ PetscErrorCode petsc_PCD_setup(PC pc,
   CHKERRQ(err);
   err = MatSetOptionsPrefix(data->Fp, "pcdFp_");
   CHKERRQ(err);
+  err = MatSetOptionsPrefix(data->Fp, "pcdMp_mu_");
+  CHKERRQ(err);
   err = KSPSetOptionsPrefix(data->ksp_Ap, "innerAp_");
   CHKERRQ(err);
   err = KSPSetOptionsPrefix(data->ksp_Mp, "innerMp_");
   CHKERRQ(err);
+  err = KSPSetOptionsPrefix(data->ksp_Mp_mu, "innerMp_mu_");
+  CHKERRQ(err);
   err = MatSetFromOptions(data->Mp);
+  CHKERRQ(err);
+  err = MatSetFromOptions(data->Mp_mu);
   CHKERRQ(err);
   err = MatSetFromOptions(data->Fp);
   CHKERRQ(err);
@@ -196,6 +218,10 @@ PetscErrorCode petsc_PCD_setup(PC pc,
   CHKERRQ(err);
   err = KSPSetOperators(data->ksp_Mp, data->Mp, data->Mp);
   CHKERRQ(err);
+  err = KSPSetOperators(data->ksp_Mp_mu, data->Mp_mu, data->Mp_mu);
+  CHKERRQ(err);
+  err = KSPSetFromOptions(data->ksp_Mp_mu);
+  CHKERRQ(err);
   err = KSPSetFromOptions(data->ksp_Mp);
   CHKERRQ(err);
   err = KSPSetFromOptions(data->ksp_Ap);
@@ -207,7 +233,7 @@ PetscErrorCode petsc_PCD_setup(PC pc,
   err = PCFieldSplitSchurGetSubKSP(pc, &n_splits, &subksp);
   CHKERRQ(err);
   PC spc;
-  GOMA_ASSERT(n_splits > 1);
+  GOMA_ASSERT_ALWAYS(n_splits > 1);
   err = KSPGetPC(subksp[1], &spc);
   CHKERRQ(err);
   PCSetType(spc, PCSHELL);

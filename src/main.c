@@ -158,6 +158,9 @@ extern void handle_ieee(void );
 #include "wr_soln.h"
 
 
+#ifdef HAVE_PETSC
+#include <petscsys.h>
+#endif
 
 /*
  * Global variables defined here.
@@ -1039,6 +1042,14 @@ main(int argc, char **argv)
 #ifdef PARALLEL
   total_time = ( MPI_Wtime() - time_start )/ 60. ;
   DPRINTF(stdout, "\nProc 0 runtime: %10.2f Minutes.\n\n",total_time);
+#ifdef HAVE_PETSC
+  PetscBool petsc_initialized = PETSC_FALSE;
+  PetscErrorCode err;
+  PetscInitialized(&petsc_initialized);
+  if (petsc_initialized) {
+    PetscFinalize();
+  }
+#endif
   MPI_Finalize();
 #endif  
 #ifndef PARALLEL

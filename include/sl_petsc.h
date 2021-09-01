@@ -17,9 +17,11 @@ typedef struct PetscPCDData {
   Mat SchurS;
   Mat Ap;
   Mat Mp;
+  Mat Mp_mu;
   Mat Fp;
   KSP ksp_Ap;
   KSP ksp_Mp;
+  KSP ksp_Mp_mu;
   PetscInt *schur_s_local_to_global;
   PetscBool pcd_inverse_diag;
 } PetscPCDData;
@@ -38,7 +40,11 @@ typedef struct PetscMatrixData {
   PetscBool user_pcd;
   PetscBool user_pcd_inverse_diag;
   PetscPCDData *pcd_data;
-} PetscMatrixData; 
+  PetscInt pcd_ss_remove_n;
+  PetscInt *pcd_ss_remove;
+  PetscInt pcd_ns_remove_n;
+  PetscInt *pcd_ns_remove;
+} PetscMatrixData;
 
 PetscErrorCode petsc_PCD_setup(PC ppc,
                                PetscMatrixData *matrix_data,

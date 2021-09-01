@@ -15,6 +15,7 @@
 #include "mm_mp.h"
 #include "mm_unknown_map.h"
 #include "mm_viscosity.h"
+#include "rf_bc.h"
 #include "rf_fem.h"
 #include "rf_fem_const.h"
 #include "rf_io.h"
@@ -27,29 +28,28 @@
 static bool GomaPetscOptionsInserted = false;
 static bool GomaPetscOptionsPrinted = false;
 
-static int pint_compare(const void *a, const void *b)
-{
-    const PetscInt *ia = (const PetscInt *)a;
-    const PetscInt *ib = (const PetscInt *)b;
-    return *ia  - *ib;
+static int pint_compare(const void *a, const void *b) {
+  const PetscInt *ia = (const PetscInt *)a;
+  const PetscInt *ib = (const PetscInt *)b;
+  return *ia - *ib;
 }
 
 static goma_error get_pressure_velocity_is(PetscMatrixData *matrix_data,
-                                    Exo_DB *exo,
-                                    Dpi *dpi,
-                                    dbl *x,
-                                    dbl *x_old,
-                                    dbl *xdot,
-                                    dbl *xdot_old,
-                                    PetscInt *vel_n,
-                                    PetscInt **vel_is,
-                                    PetscInt *pres_n,
-                                    PetscInt **pres_is) {
+                                           Exo_DB *exo,
+                                           Dpi *dpi,
+                                           dbl *x,
+                                           dbl *x_old,
+                                           dbl *xdot,
+                                           dbl *xdot_old,
+                                           PetscInt *vel_n,
+                                           PetscInt **vel_is,
+                                           PetscInt *pres_n,
+                                           PetscInt **pres_is) {
 
   PetscInt num_cols = dpi->num_internal_nodes + dpi->num_boundary_nodes + dpi->num_external_nodes;
 
   PetscInt *nzp = (PetscInt *)calloc(num_cols, sizeof(PetscInt));
-  PetscInt *nzv[3]; 
+  PetscInt *nzv[3];
   nzv[0] = (PetscInt *)calloc(num_cols, sizeof(PetscInt));
   nzv[1] = (PetscInt *)calloc(num_cols, sizeof(PetscInt));
   nzv[2] = (PetscInt *)calloc(num_cols, sizeof(PetscInt));
@@ -103,21 +103,22 @@ static goma_error get_pressure_velocity_is(PetscMatrixData *matrix_data,
       }
       eqn = VELOCITY1;
       for (int var = eqn; var <= VELOCITY3; var++) {
-        for (int i = 0; i < ei[pg->imtrx]->num_local_nodes; i++) {
-          int gnn_i = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
-          int ldof_i = ei[upd->matrix_index[var]]->ln_to_dof[var][i];
-          if (ldof_i >= 0 &&
-              ((gnn_i < dpi->num_internal_nodes + dpi->num_boundary_nodes) || Num_Proc == 1)) {
-            if (nzv[var-VELOCITY1][gnn_i] == -1) {
-              nzv[var-VELOCITY1][gnn_i] = index_vel;
-              index_vel++;
+        if (upd->vp[pg->imtrx][var] >= 0) {
+          for (int i = 0; i < ei[pg->imtrx]->num_local_nodes; i++) {
+            int gnn_i = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
+            int ldof_i = ei[upd->matrix_index[var]]->ln_to_dof[var][i];
+            if (ldof_i >= 0 &&
+                ((gnn_i < dpi->num_internal_nodes + dpi->num_boundary_nodes) || Num_Proc == 1)) {
+              if (nzv[var - VELOCITY1][gnn_i] == -1) {
+                nzv[var - VELOCITY1][gnn_i] = index_vel;
+                index_vel++;
+              }
             }
           }
         }
       }
     } /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
   }   /* END for (ieb loop) */
-
 
   *vel_n = index_vel;
   *pres_n = index_pres;
@@ -162,14 +163,13 @@ static goma_error get_pressure_velocity_is(PetscMatrixData *matrix_data,
       for (int j = 0; j < ei[pg->imtrx]->dof[v]; j++) {
         int ledof = ei[pg->imtrx]->lvdof_to_ledof[v][j];
         int kv = 0;
-        int row_index = Index_Solution(ei[pg->imtrx]->gnn_list[v][j], v, kv,
-                                   ei[pg->imtrx]->Baby_Dolphin[v][j],
-                                   ei[pg->imtrx]->matID_ledof[ledof], pg->imtrx);
+        int row_index =
+            Index_Solution(ei[pg->imtrx]->gnn_list[v][j], v, kv, ei[pg->imtrx]->Baby_Dolphin[v][j],
+                           ei[pg->imtrx]->matID_ledof[ledof], pg->imtrx);
         GOMA_EH(row_index, "Bad var index.");
         PetscInt global_row = matrix_data->local_to_global[row_index];
         int gnn_i = ei[pg->imtrx]->gnn_list[v][j];
-        if (
-            (gnn_i < dpi->num_internal_nodes + dpi->num_boundary_nodes) || Num_Proc == 1) {
+        if ((gnn_i < dpi->num_internal_nodes + dpi->num_boundary_nodes) || Num_Proc == 1) {
           if (nzp[gnn_i] == -1) {
             nzp[gnn_i] = 0;
             (*pres_is)[index_pres] = global_row;
@@ -187,14 +187,13 @@ static goma_error get_pressure_velocity_is(PetscMatrixData *matrix_data,
           GOMA_EH(row_index, "Bad var index.");
           PetscInt global_row = matrix_data->local_to_global[row_index];
           int gnn_i = ei[pg->imtrx]->gnn_list[v][j];
-          if (
-              (gnn_i < dpi->num_internal_nodes + dpi->num_boundary_nodes) || Num_Proc == 1) {
-            if (nzv[v-VELOCITY1][gnn_i] == -1) {
-              nzv[v-VELOCITY1][gnn_i] = 0;
+          if ((gnn_i < dpi->num_internal_nodes + dpi->num_boundary_nodes) || Num_Proc == 1) {
+            if (nzv[v - VELOCITY1][gnn_i] == -1) {
+              nzv[v - VELOCITY1][gnn_i] = 0;
               (*vel_is)[index_vel] = global_row;
               index_vel++;
-              }
             }
+          }
         }
       }
     } /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
@@ -480,10 +479,16 @@ static goma_error set_pcd_matrices(PetscMatrixData *matrix_data,
               GOMA_EH(global_row, "Row not found");
               GOMA_EH(global_col, "Col not found");
               // Mp
-              dbl mp_contrib = 0.5 * invmu * bf[eqn]->phi[ldof_i] * bf[eqn]->phi[ldof_j] * fv->wt *
-                               bf[eqn]->detJ;
+              dbl mp_contrib = bf[eqn]->phi[ldof_i] * bf[eqn]->phi[ldof_j] * fv->wt * bf[eqn]->detJ;
               PetscErrorCode err = MatSetValue(matrix_data->pcd_data->Mp, global_row, global_col,
                                                mp_contrib, ADD_VALUES);
+              CHKERRQ(err);
+
+              // Mp_mu
+              dbl mu_contrib = 0.5 * invmu * bf[eqn]->phi[ldof_i] * bf[eqn]->phi[ldof_j] * fv->wt *
+                               bf[eqn]->detJ;
+              err = MatSetValue(matrix_data->pcd_data->Mp_mu, global_row, global_col, mu_contrib,
+                                ADD_VALUES);
               CHKERRQ(err);
 
               // Ap
@@ -503,10 +508,10 @@ static goma_error set_pcd_matrices(PetscMatrixData *matrix_data,
                               fv->wt * bf[eqn]->detJ;
               }
               if (pd->TimeIntegration != STEADY) {
-                fp_contrib += (pd->etm[pg->imtrx][VELOCITY1][LOG2_MASS] / tran->delta_t) * rho * bf[eqn]->phi[ldof_i] *
-                              bf[eqn]->phi[ldof_j] * fv->wt * bf[eqn]->detJ;
+                fp_contrib += (pd->etm[pg->imtrx][VELOCITY1][LOG2_MASS] / tran->delta_t) * rho *
+                              bf[eqn]->phi[ldof_i] * bf[eqn]->phi[ldof_j] * fv->wt * bf[eqn]->detJ;
               }
-              err = MatSetValue(matrix_data->pcd_data->Fp, global_row, global_col, ap_contrib,
+              err = MatSetValue(matrix_data->pcd_data->Fp, global_row, global_col, fp_contrib,
                                 ADD_VALUES);
               CHKERRQ(err);
             }
@@ -516,6 +521,131 @@ static goma_error set_pcd_matrices(PetscMatrixData *matrix_data,
     }   /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
   }     /* END for (ieb loop) */
 
+  PetscInt n_ss_rows = 0;
+  for (int ss_idx = 0; ss_idx < matrix_data->pcd_ss_remove_n; ss_idx++) {
+    int set_index = -1;
+    for (int i = 0; i < exo->num_side_sets; i++) {
+      if (exo->ss_id[i] == matrix_data->pcd_ss_remove[ss_idx]) {
+        set_index = i;
+        break;
+      }
+    }
+    if (set_index == -1) {
+      GOMA_WH(GOMA_ERROR, "SS not found for PCD removal %d", matrix_data->pcd_ss_remove[ss_idx]);
+      continue;
+    }
+    int elem_start = exo->ss_elem_index[set_index];
+    for (int q = 0; q < exo->ss_num_sides[set_index]; q++) {
+      int ielem = exo->ss_elem_list[elem_start + q];
+      int iside = exo->ss_side_list[elem_start + q];
+      int snl[MAX_NODES_PER_SIDE];
+      int num_nodes = build_side_node_list(ielem, iside - 1, exo, snl);
+      // Dirichlet nodes on side
+      for (int n = 0; n < num_nodes; n++) {
+        int gnn = snl[n];
+        if (gnn < dpi->num_internal_nodes + dpi->num_boundary_nodes) {
+          PetscInt global_row = matrix_data->schur_s_local_to_global[gnn];
+          if (global_row != -1) {
+            n_ss_rows++;
+          }
+        }
+      }
+    }
+  }
+  PetscInt *ss_rows;
+  ss_rows = malloc(sizeof(PetscInt) * n_ss_rows);
+  PetscInt index = 0;
+  for (int ss_idx = 0; ss_idx < matrix_data->pcd_ss_remove_n; ss_idx++) {
+    int set_index = -1;
+    for (int i = 0; i < exo->num_side_sets; i++) {
+      if (exo->ss_id[i] == matrix_data->pcd_ss_remove[ss_idx]) {
+        set_index = i;
+        break;
+      }
+    }
+    if (set_index == -1) {
+      continue;
+    }
+    int elem_start = exo->ss_elem_index[set_index];
+    for (int q = 0; q < exo->ss_num_sides[set_index]; q++) {
+      int ielem = exo->ss_elem_list[elem_start + q];
+      int iside = exo->ss_side_list[elem_start + q];
+      int snl[MAX_NODES_PER_SIDE];
+      int num_nodes = build_side_node_list(ielem, iside - 1, exo, snl);
+      // Dirichlet nodes on side
+      for (int n = 0; n < num_nodes; n++) {
+        int gnn = snl[n];
+        if (gnn < dpi->num_internal_nodes + dpi->num_boundary_nodes) {
+          PetscInt global_row = matrix_data->schur_s_local_to_global[gnn];
+          if (global_row != -1) {
+            ss_rows[index] = global_row;
+            index++;
+          }
+        }
+      }
+    }
+  }
+  PetscInt n_ns_rows = 0;
+  for (int ns_idx = 0; ns_idx < matrix_data->pcd_ns_remove_n; ns_idx++) {
+    int set_index = -1;
+    for (int i = 0; i < exo->num_node_sets; i++) {
+      if (exo->ns_id[i] == matrix_data->pcd_ns_remove[ns_idx]) {
+        set_index = i;
+        break;
+      }
+    }
+    if (set_index == -1) {
+      GOMA_WH(GOMA_ERROR, "NS not found for PCD removal %d", matrix_data->pcd_ns_remove[ns_idx]);
+      continue;
+    }
+    for (int i = 0; i < exo->ns_num_nodes[set_index]; i++) {
+      int gnn = exo->ns_node_list[exo->ns_node_index[set_index] + i];
+      PetscInt global_row = matrix_data->schur_s_local_to_global[gnn];
+      if (global_row != -1) {
+        n_ns_rows++;
+      }
+    }
+  }
+
+  PetscInt *ns_rows = malloc(sizeof(PetscInt) * n_ns_rows);
+  index = 0;
+  for (int ns_idx = 0; ns_idx < matrix_data->pcd_ns_remove_n; ns_idx++) {
+    int set_index = -1;
+    for (int i = 0; i < exo->num_node_sets; i++) {
+      if (exo->ns_id[i] == matrix_data->pcd_ns_remove[ns_idx]) {
+        set_index = i;
+        break;
+      }
+    }
+    if (set_index == -1) {
+      continue;
+    }
+
+    for (int i = 0; i < exo->ns_num_nodes[set_index]; i++) {
+      int gnn = exo->ns_node_list[exo->ns_node_index[set_index] + i];
+      PetscInt global_row = matrix_data->schur_s_local_to_global[gnn];
+      if (global_row != -1) {
+        ns_rows[index] = global_row;
+        index++;
+      }
+    }
+  }
+  MatAssemblyBegin(matrix_data->pcd_data->Ap, MAT_FINAL_ASSEMBLY);
+  MatAssemblyEnd(matrix_data->pcd_data->Ap, MAT_FINAL_ASSEMBLY);
+  MatAssemblyBegin(matrix_data->pcd_data->Mp, MAT_FINAL_ASSEMBLY);
+  MatAssemblyEnd(matrix_data->pcd_data->Mp, MAT_FINAL_ASSEMBLY);
+  MatAssemblyBegin(matrix_data->pcd_data->Fp, MAT_FINAL_ASSEMBLY);
+  MatAssemblyEnd(matrix_data->pcd_data->Fp, MAT_FINAL_ASSEMBLY);
+  // MatZeroRowsColumns(matrix_data->pcd_data->Fp, n_ss_rows, ss_rows, 1.0, NULL, NULL);
+  if (matrix_data->pcd_ss_remove_n > 0) {
+    MatZeroRowsColumns(matrix_data->pcd_data->Ap, n_ss_rows, ss_rows, 1.0, NULL, NULL);
+  }
+  if (matrix_data->pcd_ns_remove_n > 0) {
+    MatZeroRowsColumns(matrix_data->pcd_data->Ap, n_ns_rows, ns_rows, 1.0, NULL, NULL);
+  }
+  // MatZeroRowsColumns(matrix_data->pcd_data->Mp, n_ss_rows, ss_rows, 1e-4, NULL, NULL);
+  free(ss_rows);
+  free(ns_rows);
   return GOMA_SUCCESS;
 }
 static goma_error set_petsc_pressure_matrix(PetscMatrixData *matrix_data,
@@ -1105,10 +1235,46 @@ goma_error goma_setup_petsc_matrix(struct GomaLinearSolverData *ams,
     GomaPetscOptionsInserted = true;
   }
 
+  PetscBool enable_log;
+  PetscBool enable_log_set;
+  PetscOptionsGetBool(NULL, NULL, "-enable_log", &enable_log, &enable_log_set);
+  if (enable_log_set && enable_log) {
+    PetscLogDefaultBegin();
+  }
   PetscInt stokes_matrix;
   PetscBool stokes_matrix_set;
   PetscOptionsGetInt(NULL, NULL, "-stokes_matrix", &stokes_matrix, &stokes_matrix_set);
 
+  PetscInt pcd_ns_remove_n = 0;
+  PetscBool pcd_ns_remove_n_set;
+  PetscOptionsGetInt(NULL, NULL, "-pcd_ns_remove_n", &pcd_ns_remove_n, &pcd_ns_remove_n_set);
+
+  PetscInt pcd_ss_remove_n = 0;
+  PetscBool pcd_ss_remove_n_set;
+  PetscOptionsGetInt(NULL, NULL, "-pcd_ss_remove_n", &pcd_ss_remove_n, &pcd_ss_remove_n_set);
+
+  PetscBool pcd_ns_remove_set;
+  PetscInt *pcd_ns_remove = NULL;
+  PetscInt pcd_ns_found = pcd_ns_remove_n;
+  if (pcd_ns_remove_n_set) {
+    PetscMalloc1(pcd_ns_remove_n, &pcd_ns_remove);
+    PetscOptionsGetIntArray(NULL, NULL, "-pcd_ns_remove", pcd_ns_remove, &pcd_ns_found,
+                            &pcd_ns_remove_set);
+  }
+
+  PetscBool pcd_ss_remove_set;
+  PetscInt *pcd_ss_remove = NULL;
+  PetscInt pcd_ss_found = pcd_ss_remove_n;
+  if (pcd_ss_remove_n_set) {
+    PetscMalloc1(pcd_ss_remove_n, &pcd_ss_remove);
+    PetscOptionsGetIntArray(NULL, NULL, "-pcd_ss_remove", pcd_ss_remove, &pcd_ss_found,
+                            &pcd_ss_remove_set);
+  }
+
+  matrix_data->pcd_ss_remove_n = pcd_ss_remove_n;
+  matrix_data->pcd_ss_remove = pcd_ss_remove;
+  matrix_data->pcd_ns_remove_n = pcd_ns_remove_n;
+  matrix_data->pcd_ns_remove = pcd_ns_remove;
   PetscBool user_schur;
   PetscBool user_schur_set;
   PetscOptionsGetBool(NULL, NULL, "-user_schur", &user_schur, &user_schur_set);
@@ -1119,7 +1285,8 @@ goma_error goma_setup_petsc_matrix(struct GomaLinearSolverData *ams,
 
   PetscBool user_pcd_inverse_diag;
   PetscBool user_pcd_inverse_diag_set;
-  PetscOptionsGetBool(NULL, NULL, "-user_pcd_inverse_diag", &user_pcd_inverse_diag, &user_pcd_inverse_diag_set);
+  PetscOptionsGetBool(NULL, NULL, "-user_pcd_inverse_diag", &user_pcd_inverse_diag,
+                      &user_pcd_inverse_diag_set);
 
   if (imtrx == 0 && !GomaPetscOptionsPrinted) {
     CHKERRQ(PetscOptionsView(NULL, PETSC_VIEWER_STDOUT_WORLD));
@@ -1183,14 +1350,14 @@ goma_error goma_setup_petsc_matrix(struct GomaLinearSolverData *ams,
   CHKERRQ(err);
 
   if (stokes_matrix_set && stokes_matrix == imtrx) {
-    GOMA_WH(GOMA_ERROR, "stokes matrix set to %ld",
-            stokes_matrix, pd_glob[0]->Num_Dim);
+    GOMA_WH(GOMA_ERROR, "stokes matrix set to %ld", stokes_matrix, pd_glob[0]->Num_Dim);
     IS ufields;
     IS pfields;
 
     PetscInt vel_n, pres_n;
     PetscInt *vel_is, *pres_is;
-    get_pressure_velocity_is(matrix_data,exo, dpi,x,x_old,xdot,xdot_old,&vel_n,&vel_is,&pres_n, &pres_is);
+    get_pressure_velocity_is(matrix_data, exo, dpi, x, x_old, xdot, xdot_old, &vel_n, &vel_is,
+                             &pres_n, &pres_is);
 
     ISCreateGeneral(PETSC_COMM_WORLD, vel_n, vel_is, PETSC_OWN_POINTER, &ufields);
     ISCreateGeneral(PETSC_COMM_WORLD, pres_n, pres_is, PETSC_OWN_POINTER, &pfields);
@@ -1199,21 +1366,21 @@ goma_error goma_setup_petsc_matrix(struct GomaLinearSolverData *ams,
     PCFieldSplitSetIS(pc, "u", ufields);
     PCFieldSplitSetIS(pc, "p", pfields);
 
-    //if (pd_glob[0]->Num_Dim == 3) {
-    //  PC pc;
-    //  const PetscInt ufields[] = {0, 1, 2}, pfields[] = {3};
-    //  KSPGetPC(matrix_data->ksp, &pc);
-    //  PCFieldSplitSetBlockSize(pc, 4);
-    //  PCFieldSplitSetFields(pc, "u", 3, ufields, ufields);
-    //  PCFieldSplitSetFields(pc, "p", 1, pfields, pfields);
-    //} else if (pd_glob[0]->Num_Dim == 2) {
-    //  PC pc;
-    //  const PetscInt ufields[] = {0, 1}, pfields[] = {3};
-    //  KSPGetPC(matrix_data->ksp, &pc);
-    //  PCFieldSplitSetBlockSize(pc, 3);
-    //  PCFieldSplitSetFields(pc, "u", 2, ufields, ufields);
-    //  PCFieldSplitSetFields(pc, "p", 1, pfields, pfields);
-    //}
+    // if (pd_glob[0]->Num_Dim == 3) {
+    //   PC pc;
+    //   const PetscInt ufields[] = {0, 1, 2}, pfields[] = {3};
+    //   KSPGetPC(matrix_data->ksp, &pc);
+    //   PCFieldSplitSetBlockSize(pc, 4);
+    //   PCFieldSplitSetFields(pc, "u", 3, ufields, ufields);
+    //   PCFieldSplitSetFields(pc, "p", 1, pfields, pfields);
+    // } else if (pd_glob[0]->Num_Dim == 2) {
+    //   PC pc;
+    //   const PetscInt ufields[] = {0, 1}, pfields[] = {3};
+    //   KSPGetPC(matrix_data->ksp, &pc);
+    //   PCFieldSplitSetBlockSize(pc, 3);
+    //   PCFieldSplitSetFields(pc, "u", 2, ufields, ufields);
+    //   PCFieldSplitSetFields(pc, "p", 1, pfields, pfields);
+    // }
   }
 
   PetscInt local_pressure_nodes = 0, global_pressure_nodes = 0;
@@ -1244,10 +1411,10 @@ goma_error goma_setup_petsc_matrix(struct GomaLinearSolverData *ams,
     if (user_pcd_inverse_diag_set) {
       matrix_data->user_pcd_inverse_diag = user_pcd_inverse_diag;
     }
-    //PC pc;
-    //err = KSPGetPC(matrix_data->ksp, &pc);
-    //CHKERRQ(err);
-    //petsc_PCD_setup(pc, matrix_data, exo, dpi, x, x_old, xdot, xdot_old);
+    // PC pc;
+    // err = KSPGetPC(matrix_data->ksp, &pc);
+    // CHKERRQ(err);
+    // petsc_PCD_setup(pc, matrix_data, exo, dpi, x, x_old, xdot, xdot_old);
   }
 
   matrix_data->matrix_setup = PETSC_FALSE;
@@ -1510,11 +1677,12 @@ int petsc_solve(struct GomaLinearSolverData *ams, double *x_, double *b_, int *i
       int err = KSPGetPC(matrix_data->ksp, &pc);
       CHKERRQ(err);
       petsc_PCD_setup(pc, matrix_data, EXO_ptr, DPI_ptr, pg->matrices[pg->imtrx].x,
-                                pg->matrices[pg->imtrx].x_old, pg->matrices[pg->imtrx].xdot,
-                                pg->matrices[pg->imtrx].xdot_old);
+                      pg->matrices[pg->imtrx].x_old, pg->matrices[pg->imtrx].xdot,
+                      pg->matrices[pg->imtrx].xdot_old);
     }
     MatZeroEntries(matrix_data->pcd_data->Fp);
     MatZeroEntries(matrix_data->pcd_data->Mp);
+    MatZeroEntries(matrix_data->pcd_data->Mp_mu);
     MatZeroEntries(matrix_data->pcd_data->Ap);
     set_pcd_matrices(matrix_data, EXO_ptr, DPI_ptr, pg->matrices[pg->imtrx].x,
                      pg->matrices[pg->imtrx].x_old, pg->matrices[pg->imtrx].xdot,
@@ -1523,6 +1691,8 @@ int petsc_solve(struct GomaLinearSolverData *ams, double *x_, double *b_, int *i
     MatAssemblyEnd(matrix_data->pcd_data->Fp, MAT_FINAL_ASSEMBLY);
     MatAssemblyBegin(matrix_data->pcd_data->Mp, MAT_FINAL_ASSEMBLY);
     MatAssemblyEnd(matrix_data->pcd_data->Mp, MAT_FINAL_ASSEMBLY);
+    MatAssemblyBegin(matrix_data->pcd_data->Mp_mu, MAT_FINAL_ASSEMBLY);
+    MatAssemblyEnd(matrix_data->pcd_data->Mp_mu, MAT_FINAL_ASSEMBLY);
     MatAssemblyBegin(matrix_data->pcd_data->Ap, MAT_FINAL_ASSEMBLY);
     MatAssemblyEnd(matrix_data->pcd_data->Ap, MAT_FINAL_ASSEMBLY);
   }
