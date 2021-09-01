@@ -1417,6 +1417,9 @@ goma_error goma_setup_petsc_matrix(struct GomaLinearSolverData *ams,
     }
 
     matrix_data->matrix_setup = PETSC_FALSE;
+  } else {
+    matrix_data->user_schur = PETSC_FALSE;
+    matrix_data->user_pcd = PETSC_FALSE;
   }
   return GOMA_SUCCESS;
 }
