@@ -1381,43 +1381,43 @@ goma_error goma_setup_petsc_matrix(struct GomaLinearSolverData *ams,
     //   PCFieldSplitSetFields(pc, "u", 2, ufields, ufields);
     //   PCFieldSplitSetFields(pc, "p", 1, pfields, pfields);
     // }
-  }
 
-  PetscInt local_pressure_nodes = 0, global_pressure_nodes = 0;
-  if ((user_schur_set && user_schur) || (user_pcd_set && user_pcd)) {
-    count_pressure_nodes(matrix_data, exo, dpi, x, x_old, xdot, xdot_old, &local_pressure_nodes,
-                         &global_pressure_nodes);
-  }
-  matrix_data->user_schur = PETSC_FALSE;
-  if (user_schur_set && user_schur) {
-    matrix_data->user_schur = user_schur;
-    MatCreate(MPI_COMM_WORLD, &matrix_data->SchurS);
-    MatSetOptionsPrefix(matrix_data->SchurS, "schur_s_");
-    MatSetFromOptions(matrix_data->SchurS);
-    err = MatSetSizes(matrix_data->SchurS, local_pressure_nodes, local_pressure_nodes,
-                      global_pressure_nodes, global_pressure_nodes);
-    CHKERRQ(err);
-    PC pc;
-    KSPGetPC(matrix_data->ksp, &pc);
-    initialize_petsc_pressure_matrix(matrix_data, exo, dpi, x, x_old, xdot, xdot_old,
-                                     local_pressure_nodes, global_pressure_nodes);
-    PCFieldSplitSetSchurPre(pc, PC_FIELDSPLIT_SCHUR_PRE_USER, matrix_data->SchurS);
-  }
-
-  matrix_data->user_pcd = PETSC_FALSE;
-  if (user_pcd_set && user_pcd) {
-    matrix_data->user_pcd = user_pcd;
-    matrix_data->user_pcd_inverse_diag = PETSC_FALSE;
-    if (user_pcd_inverse_diag_set) {
-      matrix_data->user_pcd_inverse_diag = user_pcd_inverse_diag;
+    PetscInt local_pressure_nodes = 0, global_pressure_nodes = 0;
+    if ((user_schur_set && user_schur) || (user_pcd_set && user_pcd)) {
+      count_pressure_nodes(matrix_data, exo, dpi, x, x_old, xdot, xdot_old, &local_pressure_nodes,
+                           &global_pressure_nodes);
     }
-    // PC pc;
-    // err = KSPGetPC(matrix_data->ksp, &pc);
-    // CHKERRQ(err);
-    // petsc_PCD_setup(pc, matrix_data, exo, dpi, x, x_old, xdot, xdot_old);
-  }
+    matrix_data->user_schur = PETSC_FALSE;
+    if (user_schur_set && user_schur) {
+      matrix_data->user_schur = user_schur;
+      MatCreate(MPI_COMM_WORLD, &matrix_data->SchurS);
+      MatSetOptionsPrefix(matrix_data->SchurS, "schur_s_");
+      MatSetFromOptions(matrix_data->SchurS);
+      err = MatSetSizes(matrix_data->SchurS, local_pressure_nodes, local_pressure_nodes,
+                        global_pressure_nodes, global_pressure_nodes);
+      CHKERRQ(err);
+      PC pc;
+      KSPGetPC(matrix_data->ksp, &pc);
+      initialize_petsc_pressure_matrix(matrix_data, exo, dpi, x, x_old, xdot, xdot_old,
+                                       local_pressure_nodes, global_pressure_nodes);
+      PCFieldSplitSetSchurPre(pc, PC_FIELDSPLIT_SCHUR_PRE_USER, matrix_data->SchurS);
+    }
 
-  matrix_data->matrix_setup = PETSC_FALSE;
+    matrix_data->user_pcd = PETSC_FALSE;
+    if (user_pcd_set && user_pcd) {
+      matrix_data->user_pcd = user_pcd;
+      matrix_data->user_pcd_inverse_diag = PETSC_FALSE;
+      if (user_pcd_inverse_diag_set) {
+        matrix_data->user_pcd_inverse_diag = user_pcd_inverse_diag;
+      }
+      // PC pc;
+      // err = KSPGetPC(matrix_data->ksp, &pc);
+      // CHKERRQ(err);
+      // petsc_PCD_setup(pc, matrix_data, exo, dpi, x, x_old, xdot, xdot_old);
+    }
+
+    matrix_data->matrix_setup = PETSC_FALSE;
+  }
   return GOMA_SUCCESS;
 }
 
