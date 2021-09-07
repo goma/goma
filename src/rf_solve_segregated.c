@@ -592,7 +592,7 @@ void solve_problem_segregated(
          "Incompatible matrix solver for petsc, solver must be petsc");
       check_parallel_error("Matrix format / Solver incompatibility");
       for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
-        goma_error err = goma_setup_petsc_matrix(ams[JAC], exo, dpi, x[pg->imtrx], x_old[pg->imtrx], xdot[pg->imtrx], xdot_old[pg->imtrx], num_internal_dofs[pg->imtrx], num_boundary_dofs[pg->imtrx], num_external_dofs[pg->imtrx], pg->imtrx);
+        goma_error err = goma_setup_petsc_matrix(ams[pg->imtrx], exo, dpi, x[pg->imtrx], x_old[pg->imtrx], xdot[pg->imtrx], xdot_old[pg->imtrx], num_internal_dofs[pg->imtrx], num_boundary_dofs[pg->imtrx], num_external_dofs[pg->imtrx], pg->imtrx);
         GOMA_EH(err, "goma_setup_petsc_matrix");
       }
 #endif
@@ -649,6 +649,23 @@ void solve_problem_segregated(
     } else {
       GOMA_EH(GOMA_ERROR, "Attempted to allocate unknown sparse matrix format: %s", Matrix_Format);
     }
+#ifdef HAVE_PETSC
+  if (upd->petsc_solve_post_proc) {
+    int pp_set = 0;
+    for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+      if (rd[pg->imtrx]->TotalNVPostOutput) pp_set = 1;
+    }
+    
+    if (pp_set) {
+      for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+        if (upd->matrix_index[pd_glob[0]->ShapeVar] == pg->imtrx) {
+          goma_setup_petsc_post_proc_matrix(exo, dpi, x[pg->imtrx], x_old[pg->imtrx], xdot[pg->imtrx], xdot_old[pg->imtrx]);
+          break;
+        }
+      }
+    }
+  }
+#endif
 
     double *global_x_AC = NULL;
 
