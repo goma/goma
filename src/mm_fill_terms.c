@@ -33052,7 +33052,7 @@ calc_pspg( dbl pspg[DIM],
       || cr->MassFluxModel == HYDRODYNAMIC_QTENSOR)
     particle_stress(tau_p,d_tau_p_dv,d_tau_p_dvd,d_tau_p_dy,d_tau_p_dmesh,d_tau_p_dp, w0);
 
-  if ( pd->v[pg->imtrx][VELOCITY_GRADIENT11] &&  pd->v[pg->imtrx][POLYMER_STRESS11])
+  if ( pd->gv[VELOCITY_GRADIENT11] &&  pd->gv[POLYMER_STRESS11])
   {
     for ( p=0; p<wim; p++)
     {
