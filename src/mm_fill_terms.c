@@ -33026,7 +33026,7 @@ calc_pspg( dbl pspg[DIM],
   }
 
   for ( p=0; p<wim; p++) div_s[p] = 0.;
-  if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
+  if ( pd->gv[POLYMER_STRESS11] )
   {
     for ( p=0; p<wim; p++)
     {
