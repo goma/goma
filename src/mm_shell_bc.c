@@ -1327,7 +1327,7 @@ apply_shell_traction_bc(double func[DIM],
 
 
 void 
- match_lubrication_film_pressure(double func[],
+ match_lubrication_film_pressure(double func[DIM],
 				 double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
 				 int eb_mat_lubp,
 				 int eb_mat_filmp)

@@ -490,6 +490,7 @@ SL_UMF ( int system_id,
          double *x  )
 {
   GOMA_EH(GOMA_ERROR, "Goma not compiled with UMFPACK support");
+  return -1;
 }
 
 #endif

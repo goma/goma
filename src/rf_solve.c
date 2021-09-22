@@ -157,7 +157,7 @@ extern FSUB_TYPE dsyev_(char *JOBZ, char *UPLO, int *N, double *A, int *LDA,
 			int len_jobz, int len_uplo);
 
 // C = A X B
-void slow_square_dgemm(int transpose_b, int N, double A[N][N], double B[N][N], double C[N][N]) {
+void slow_square_dgemm(int transpose_b, int N, double A[DIM][DIM], double B[DIM][DIM], double C[DIM][DIM]) {
   int i,j,k;
   double tmp;
   if (transpose_b) {
@@ -188,8 +188,8 @@ initial_guess_stress_to_log_conf(double *x, int num_total_nodes)
 {
   int a,b;
 
-  double s[VIM][VIM];
-  double log_s[VIM][VIM];
+  double s[DIM][DIM];
+  double log_s[DIM][DIM];
   int s_idx[2][2];
   int N = VIM;
   int LDA = N;
@@ -198,7 +198,7 @@ initial_guess_stress_to_log_conf(double *x, int num_total_nodes)
   int INFO;
   int LWORK = 20;
   double WORK[LWORK];
-  double A[VIM*VIM];
+  double A[DIM*DIM];
   dbl gamma_dot[DIM][DIM];
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;
   VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mu_struct;
@@ -218,7 +218,7 @@ initial_guess_stress_to_log_conf(double *x, int num_total_nodes)
 
     for (node = 0; node < num_total_nodes; node++) {
       memset(WORK, 0, sizeof(double)*LWORK);
-      memset(A, 0.0, sizeof(double)*VIM*VIM);
+      memset(A, 0.0, sizeof(double)*DIM*DIM);
 
       for (a=0; a < 2; a++) {
         for (b=0; b < 2; b++) {
@@ -252,8 +252,8 @@ initial_guess_stress_to_log_conf(double *x, int num_total_nodes)
       s[1][1] = x[s_idx[1][1]];
 
       // Convert stress to c
-      for (i = 0; i < VIM; i++) {
-        for (j = 0; j < VIM; j++) {
+      for (i = 0; i < DIM; i++) {
+        for (j = 0; j < DIM; j++) {
 	  s[i][j] = (lambda/mup) * s[i][j] + (double)delta(i,j);
         }
       }
@@ -265,12 +265,12 @@ initial_guess_stress_to_log_conf(double *x, int num_total_nodes)
         }
       }
 
-      double W[VIM];
+      double W[DIM];
 
       // eig solver
       dsyev_("V", "U", &N, A, &LDA, W, WORK, &LWORK, &INFO, 1, 1);
 
-      double U[VIM][VIM];
+      double U[DIM][DIM];
 
       // transpose (revert to row major)
       for (i = 0; i < VIM; i++) {
@@ -280,7 +280,7 @@ initial_guess_stress_to_log_conf(double *x, int num_total_nodes)
       }
 
       // Take log of diagonal
-      double D[VIM][VIM];
+      double D[DIM][DIM];
       for (i = 0; i < VIM; i++) {
         for (j = 0; j < VIM; j++) {
 	  if (i == j) {

@@ -114,7 +114,6 @@ setup_nodal_comm_map(Exo_DB *exo, Dpi *dpi, Comm_Ex **cx)
   int *list_gnode_recv = NULL;
   static char yo[] = "setup_nodal_comm_map ERROR:";
   COMM_NP_STRUCT *np_base=NULL, *np_ptr;
-  int imtrx;
   /*
    * Fill in the global vectors ptr_node_recv[] and
    * list_node_recv[]

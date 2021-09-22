@@ -100,8 +100,8 @@ EXTERN double  usr_heat_flux
 EXTERN double  usr_heat_flux
 ( const double [],        /*   temperature gradient       */
         double [],                      /*   heat flux vector       */
-        double [][DIM],                 /*   flux sens wrt gradT    */
-        double [][DIM],              /*   flow sens  wrt coordinates */
+        double [DIM][DIM],                 /*   flux sens wrt gradT    */
+        double [DIM][DIM],              /*   flow sens  wrt coordinates */
         const double                   /* time */
      );
 #endif

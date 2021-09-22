@@ -133,21 +133,17 @@ int assemble_fill(double tt,
                   double time,
                   struct LS_Mass_Lumped_Penalty *mass_lumped_penalty);
 
-EXTERN int assemble_fill_ext_v
-(double ,			/* tt - parameter varies time integration from 
-				 *      explicit (tt = 1) to 
-				 *      implicit (tt = 0)                    */
-       double,                  /* dt - current time step size               */
-       double [],               /* hsquared[DIM]           next three parameters */
-       double [][DIM],          /* hh[DIM][DIM]            are element size  */
-       double [][MDE]);        /* dh_dxnode[DIM][MDE]     info for GLS */
+EXTERN int assemble_fill_ext_v(double tt,
+                    double dt,
+                    dbl hsquared[DIM],
+                    dbl hh[DIM][DIM],
+                    dbl dh_dxnode[DIM][MDE] );
 
-EXTERN int assemble_fill_gradf
-(double ,                      /* tt                   */
-       double ,                      /* dt                   */
-       double [],                    /* hsquared[DIM]        */
-       double [][DIM],               /* hh[DIM][DIM]         */
-       double [][MDE]);             /* dh_dxnode[DIM][MDE]  */
+EXTERN int assemble_fill_gradf(double tt,
+                    double dt,
+                    dbl hsquared[DIM],
+                    dbl hh[DIM][DIM],
+                    dbl dh_dxnode[DIM][MDE] );
 
 #endif /* COUPLED_FILL */
 

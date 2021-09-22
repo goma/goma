@@ -421,14 +421,6 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
    * in matrix_fill().
    */
 
-  extern double mm_fill_total;
-
-  double asmslv_start;
-  double asmslv_end;
-
-  double asmslv_time;
-  double slv_time;
-
   int           iAC, jAC;
   int           num_unk_g, num_unk_y;
   dbl           *res_p, *res_m;
@@ -442,7 +434,6 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
 
 
   /* frontal solver parameters */
-  int zero;
   int mf_resolve;
   dbl smallpiv;
   dbl singpiv;
@@ -691,8 +682,6 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
        * Mark the CPU time for combined assembly and solve purposes...
        */
 
-      asmslv_start = ut(); asmslv_end = asmslv_start;
-
       log_msg("%s: Newton iteration %d", yo, inewton);
 
       if ( inewton < 10 )
@@ -888,60 +877,6 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
 	      } else {
 		vector_scaling(NumUnknowns[pg->imtrx], resid_vector, scale);
 	      }
-#ifdef DEBUG_MMHX    
-              {
-                VARIABLE_DESCRIPTION_STRUCT *vd_eqn, *vd_var;
-                int inode, i_Var_Desc, i_offset, idof_eqn, idof_var;
-	      /* This chunk of code will print out every entry of the
-	       * Jacobian matrix. */ 
-	      for (i = 0; i < NumUnknowns[pg->imtrx]; i++) {
-		vd_eqn = Index_Solution_Inv(i, &inode, &i_Var_Desc,
-					    &i_offset, &idof_eqn, pg->imtrx);
-		vd_var = vd_eqn;
-		fprintf(stderr, "Eq=%d/%s,Node=%d Var=%d/%s,Node=%d Sens=%g Resid=%g\n",
-			i, vd_eqn->Var_Name[idof_eqn], idv[pg->imtrx][i][2],
-                        i, vd_var->Var_Name[idof_eqn], idv[pg->imtrx][i][2],
-                        a[i], resid_vector[i]);
-		for (j = ija[i]; j < ija[i+1]; j++) {
-		  vd_eqn = Index_Solution_Inv(i, &inode, &i_Var_Desc,
-					      &i_offset, &idof_eqn, pg->imtrx);
-		  vd_var = Index_Solution_Inv(ija[j], &inode, &i_Var_Desc,
-					      &i_offset, &idof_var, pg->imtrx);
-		  /*if (a[j] != 0.0) {*/
-                  if (fabs(a[j]) > 1.e-12) {
-		    fprintf(stderr, "Eq=%d/%s,Node=%d Var=%d/%s,Node=%d Sens=%g\n",
-                            i, vd_eqn->Var_Name[idof_eqn], idv[pg->imtrx][i][2],
-                            ija[j], vd_var->Var_Name[idof_var], idv[pg->imtrx][ija[j]][2],
-                            a[j]);
-		  }
-		}
-	      }
-              }
-#endif /* DEBUG_MMHX */
-
-#ifdef DEBUG_MMH
-
-	      /* This chunk of code will print out equation dofs that
-	       * have a zero row sum. 
-	       */
-	      k = 0;
-	      for (i = 0; i < NumUnknowns[pg->imtrx]; i++) {
-		row_sum = a[i];
-		abs_row_sum = fabs(a[i]);
-		vd_eqn = Index_Solution_Inv(i, &inode, &i_Var_Desc, 
-					    &i_offset, &idof_eqn, pg->imtrx);
-		for (j = ija[i]; j < ija[i+1]; j++) {
-		  row_sum += a[j];
-		  abs_row_sum += fabs(a[j]);
-		}
-		if (row_sum == 0.0 || abs_row_sum == 0.0) {
-		    fprintf(stderr, 
-			    "ZERO ROW SUM: Eq = %d/%s, inode = %d, i_offset = %d, idof_eqn = %d, row_sum = %g, abs_row_sum = %g\n",
-			    i, vd_eqn->Var_Name[idof_eqn], inode, i_offset,
-			    idof_eqn, row_sum, abs_row_sum);
-		}
-	      }
-#endif /* DEBUG_MMH */
 	    }
 	 
 	  if (err == -1) {
@@ -1804,8 +1739,6 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
       log_msg("%-38s = %23.16e", "correction norm (L_oo)", Norm[1][0]);
       log_msg("%-38s = %23.16e", "correction norm (L_1)", Norm[1][1]);
       log_msg("%-38s = %23.16e", "correction norm (L_2)", Norm[1][2]);
-
-      asmslv_end = ut();
 
       if (Write_Intermediate_Solutions || (Iout == 1)) {
       

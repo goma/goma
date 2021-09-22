@@ -2016,7 +2016,7 @@ find_surf_st(const int iquad,           /* current GQ index */
   int i_t = -1;                 /* index of second local coord */
                            /*  1.0 / sqrt (3.0)  */
 
-  static double one_third = 3.333333333333333e-01;
+  // static double one_third = 3.333333333333333e-01;
   // static double one_sixth = 1.666666666666667e-01;
 
   static const double Ftemp1 =  0.57735026918962584208;

@@ -727,7 +727,7 @@ rd_file_specs(FILE *ifp,
   strip(input);
   (void) strcpy(ExoFile,input);
 
-  SPF(echo_string, eoformat, "FEM file", ExoFile); ECHO(echo_string, echo_file);
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "FEM file", ExoFile); ECHO(echo_string, echo_file);
   
   /*
    * Here's a new feature:  use a different file for the EXODUS II output
@@ -740,7 +740,7 @@ rd_file_specs(FILE *ifp,
   strip(input);
   strcpy(ExoFileOut,input);
   strcpy(ExoFileOutMono, input);
-  SPF(echo_string,eoformat, "Output EXODUS II file", ExoFileOut); ECHO(echo_string, echo_file);
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, "Output EXODUS II file", ExoFileOut); ECHO(echo_string, echo_file);
   
   look_for(ifp,"GUESS file",input,'=');
   (void) read_string(ifp,input,'\n');
@@ -751,7 +751,7 @@ rd_file_specs(FILE *ifp,
     Init_GuessFile[0] = '\0';
   }
 
-  SPF(echo_string, eoformat,"GUESS file" , Init_GuessFile); ECHO(echo_string, echo_file);
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat,"GUESS file" , Init_GuessFile); ECHO(echo_string, echo_file);
   
   look_for(ifp,"SOLN file",input,'=');
   (void) read_string(ifp,input,'\n');
@@ -762,7 +762,7 @@ rd_file_specs(FILE *ifp,
     Soln_OutFile[0] = '\0';
   }
 
-  SPF(echo_string,eoformat, "SOLN file", Soln_OutFile); ECHO(echo_string, echo_file);
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, "SOLN file", Soln_OutFile); ECHO(echo_string, echo_file);
 
   /* Find BRK file */
 
@@ -778,7 +778,7 @@ rd_file_specs(FILE *ifp,
     } else {
       GOMA_EH(GOMA_ERROR, "Unexpected input for Brk_Flag: %s, expected (YES/NO) or (ON/OFF)", input);
     }
-    SPF(echo_string, eoformat, "Brk file", input); ECHO(echo_string, echo_file);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "Brk file", input); ECHO(echo_string, echo_file);
   }
 
   /*
@@ -789,7 +789,7 @@ rd_file_specs(FILE *ifp,
   foundMappingFile = look_for_optional_string(ifp, "Domain Mapping File", 
 					      DomainMappingFile, MAX_FNL);
   if ( foundMappingFile == 1 )
-    { SPF(echo_string,eoformat, "Domain Mapping File", DomainMappingFile ); ECHO(echo_string, echo_file); }
+    { snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, "Domain Mapping File", DomainMappingFile ); ECHO(echo_string, echo_file); }
   
   /*
    * New feature: write out solution at each Newton iteration.
@@ -890,7 +890,7 @@ rd_genl_specs(FILE *ifp,
     Iout = 0;
   }
 
-  SPF(echo_string,"%s = %d", "Output Level",Iout ); ECHO(echo_string, echo_file);   
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d", "Output Level",Iout ); ECHO(echo_string, echo_file);
  
   iread = look_for_optional(ifp,"Debug",input,'=');
   if (iread == 1) {
@@ -903,14 +903,14 @@ rd_genl_specs(FILE *ifp,
     Debug_Flag = 0;
   }
 
-  SPF(echo_string,"%s = %d","Debug", Debug_Flag); ECHO(echo_string, echo_file);
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d","Debug", Debug_Flag); ECHO(echo_string, echo_file);
   
 #ifdef MATRIX_DUMP
   (void) look_for_optional_int(ifp, "Number of Jacobian File Dumps",
 			       &Number_Jac_Dump, 0
 );
 
-  SPF(echo_string,"%s = %d","Number of Jacobian File Dumps", Number_Jac_Dump); ECHO(echo_string, echo_file);
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d","Number of Jacobian File Dumps", Number_Jac_Dump); ECHO(echo_string, echo_file);
 #endif
 
   iread = look_for_optional(ifp,"Initial Guess",input,'=');
@@ -954,7 +954,7 @@ rd_genl_specs(FILE *ifp,
 	      GOMA_EH(GOMA_ERROR, "Read from *what* exoII file?");
 	    }
 
-	  SPF(echo_string,eoformat,"Initial Guess", first_string); ECHO(echo_string, echo_file);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat,"Initial Guess", first_string); ECHO(echo_string, echo_file);
 
 	}
       else if ( nargs == 2 )
@@ -969,7 +969,7 @@ rd_genl_specs(FILE *ifp,
 	      GOMA_EH(GOMA_ERROR, "Undecipherable 2 options for Initial guess.");
 	    }
 
-	  SPF(echo_string,"%s = %s %s","Initial Guess", first_string, second_string); ECHO(echo_string, echo_file);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %s %s","Initial Guess", first_string, second_string); ECHO(echo_string, echo_file);
 
 	}
       else if ( nargs == 3 )
@@ -987,7 +987,7 @@ rd_genl_specs(FILE *ifp,
 	      GOMA_EH(GOMA_ERROR, "Undecipherable first 2 options for Initial guess.");
 	    }
 
-	  SPF(echo_string,"%s = %s %s %d","Initial Guess", first_string, second_string, ExoTimePlane);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %s %s %d","Initial Guess", first_string, second_string, ExoTimePlane);
 	  ECHO(echo_string, echo_file);
 	    
 	}
@@ -1022,7 +1022,7 @@ rd_genl_specs(FILE *ifp,
               Conformation_Flag = 1;
             }
 
-          SPF(echo_string,eoformat,"Conformation Map", first_string); ECHO(echo_string, echo_file);
+          snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat,"Conformation Map", first_string); ECHO(echo_string, echo_file);
 
         }
       else  
@@ -1060,7 +1060,7 @@ rd_genl_specs(FILE *ifp,
       GOMA_EH(GOMA_ERROR,"Error reading initialization data");
     }
 
-    SPF(echo_string,"%s = %s %d %f","Initialize",input, Var_init[Num_Var_Init].ktype, Var_init[Num_Var_Init].init_val); ECHO(echo_string, echo_file);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %s %d %f","Initialize",input, Var_init[Num_Var_Init].ktype, Var_init[Num_Var_Init].init_val); ECHO(echo_string, echo_file);
 
     Num_Var_Init++;
   }
@@ -1308,7 +1308,7 @@ rd_genl_specs(FILE *ifp,
     Export_XS_ID[Num_Export_XS] = ex_id;
     Num_Export_XS++;
     
-    SPF(echo_string,"%s = %d","Export Field",ex_id); ECHO(echo_string, echo_file);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d","Export Field",ex_id); ECHO(echo_string, echo_file);
 
     }
 #ifndef LIBRARY_MODE
@@ -1343,7 +1343,7 @@ rd_genl_specs(FILE *ifp,
 
     upd->Pressure_Datum = parse_press_datum_input(input);
 
-    SPF(echo_string,"%s = %g","Pressure Datum", upd->Pressure_Datum); ECHO(echo_string, echo_file);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %g","Pressure Datum", upd->Pressure_Datum); ECHO(echo_string, echo_file);
 
   }
 
@@ -1354,7 +1354,7 @@ rd_genl_specs(FILE *ifp,
  	{
  	  GOMA_EH( -1, "error reading Acoustic Frequency");
   	}
-    SPF(echo_string,"%s = %g","Acoustic Frequency", upd->Acoustic_Frequency); ECHO(echo_string, echo_file);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %g","Acoustic Frequency", upd->Acoustic_Frequency); ECHO(echo_string, echo_file);
    }
  
   upd->Process_Temperature =  25.0;
@@ -1364,7 +1364,7 @@ rd_genl_specs(FILE *ifp,
  	{
  	  GOMA_EH( -1, "error reading Process Temperature");
   	}
-    SPF(echo_string,"%s = %g","Process Temperature", upd->Process_Temperature); ECHO(echo_string, echo_file);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %g","Process Temperature", upd->Process_Temperature); ECHO(echo_string, echo_file);
    }
  
   upd->Light_Cosmu =  1.0;
@@ -1374,7 +1374,7 @@ rd_genl_specs(FILE *ifp,
  	{
  	  GOMA_EH( -1, "error reading Light Incident Cos(Angle)");
   	}
-    SPF(echo_string,"%s = %g","Light Cosmu", upd->Light_Cosmu); ECHO(echo_string, echo_file);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %g","Light Cosmu", upd->Light_Cosmu); ECHO(echo_string, echo_file);
    }
  
   /*
@@ -1400,7 +1400,7 @@ rd_genl_specs(FILE *ifp,
       GOMA_EH( -1, "Bad specification for annealing mesh");
       }
 
-    SPF(echo_string,eoformat, "Anneal Mesh On Output", input ); ECHO(echo_string, echo_file);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, "Anneal Mesh On Output", input ); ECHO(echo_string, echo_file);
   }
 }
 /* rd_genl_specs -- read input file for general specifications */
@@ -1456,7 +1456,7 @@ rd_timeint_specs(FILE *ifp,
       GOMA_EH( -1, "unknown time integration option");
     }
 
-  SPF(echo_string,eoformat, "Time integration", input); ECHO(echo_string, echo_file);
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, "Time integration", input); ECHO(echo_string, echo_file);
 
   for (mn=0; mn<MAX_NUMBER_MATLS; mn++) {
     pd_glob[mn]->TimeIntegration =  TimeIntegration;
@@ -1484,7 +1484,7 @@ rd_timeint_specs(FILE *ifp,
       }
     tran->Delta_t0 = delta_t0;
 
-    SPF(echo_string,"%s = %.4g","delta_t",tran->Delta_t0); ECHO(echo_string, echo_file);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %.4g","delta_t",tran->Delta_t0); ECHO(echo_string, echo_file);
     
     look_for(ifp,"Maximum number of time steps",input,'=');
     if (fscanf (ifp,"%d",&max_time_steps) != 1)
@@ -1493,7 +1493,7 @@ rd_timeint_specs(FILE *ifp,
       }
     tran->MaxTimeSteps = max_time_steps;
 
-    SPF(echo_string,"%s = %d", "Maximum number of time steps", tran->MaxTimeSteps); ECHO(echo_string, echo_file);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d", "Maximum number of time steps", tran->MaxTimeSteps); ECHO(echo_string, echo_file);
   
     look_for(ifp,"Maximum time",input,'=');
     if ( fscanf(ifp,"%le",&time_max) != 1)
@@ -1502,7 +1502,7 @@ rd_timeint_specs(FILE *ifp,
       }
     tran->TimeMax = time_max;
 
-    SPF(echo_string,"%s = %.4g","Maximum time",tran->TimeMax); ECHO(echo_string, echo_file);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %.4g","Maximum time",tran->TimeMax); ECHO(echo_string, echo_file);
 
     look_for(ifp,"Minimum time step",input,'=');
     if ( fscanf(ifp,"%le",&delta_t_min) != 1)
@@ -1511,7 +1511,7 @@ rd_timeint_specs(FILE *ifp,
       }
     tran->Delta_t_min = delta_t_min;
 
-    SPF(echo_string,"%s = %.4g","Minimum time step",tran->Delta_t_min); ECHO(echo_string, echo_file);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %.4g","Minimum time step",tran->Delta_t_min); ECHO(echo_string, echo_file);
 
     delta_t_max = 1.e12;
     iread = look_for_optional(ifp,"Maximum time step",input,'=');
@@ -1521,7 +1521,7 @@ rd_timeint_specs(FILE *ifp,
 	  GOMA_EH( -1, "error reading Maximum time step");
 	}
       
-      SPF(echo_string,"%s = %.4g","Maximum time step", delta_t_max); ECHO(echo_string, echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %.4g","Maximum time step", delta_t_max); ECHO(echo_string, echo_file);
 
     }
 	
@@ -1533,7 +1533,7 @@ rd_timeint_specs(FILE *ifp,
       GOMA_EH( -1, "error reading time step parameter");
     }
 
-    SPF(echo_string,"%s = %.4g", "Time step parameter",tran->theta); ECHO(echo_string, echo_file);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %.4g", "Time step parameter",tran->theta); ECHO(echo_string, echo_file);
 
     look_for(ifp,"Time step error",input,'=');
     if(fscanf(ifp, "%le", &eps) != 1 )
@@ -1565,7 +1565,7 @@ rd_timeint_specs(FILE *ifp,
 		tran->use_var_norm[8], tran->use_var_norm[9]);
       }
 
-    SPF(echo_string,"%s = %.4g %d %d %d %d %d %d %d %d %d %d", "Time step error", tran->eps, 
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %.4g %d %d %d %d %d %d %d %d %d %d", "Time step error", tran->eps,
 	tran->use_var_norm[0], tran->use_var_norm[1],
 	tran->use_var_norm[2], tran->use_var_norm[3],
 	tran->use_var_norm[4], tran->use_var_norm[5],
@@ -1583,7 +1583,7 @@ rd_timeint_specs(FILE *ifp,
 	}
       tran->print_delt = print_delt;
 
-      SPF(echo_string,"%s = %d %.4g","Printing Frequency",print_freq,print_delt ); ECHO(echo_string, echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d %.4g","Printing Frequency",print_freq,print_delt ); ECHO(echo_string, echo_file);
 
       print_delt2 = -print_delt;
       print_delt2_time = time_max;
@@ -1595,7 +1595,7 @@ rd_timeint_specs(FILE *ifp,
 			  GOMA_EH( -1, "error reading second frequency time");
 		  }
 		  
-		  SPF(echo_string,"%s = %.4g %.4g","Second frequency time",print_delt2_time, print_delt2 );ECHO(echo_string, echo_file);
+		  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %.4g %.4g","Second frequency time",print_delt2_time, print_delt2 );ECHO(echo_string, echo_file);
 	  }
 	  tran->print_delt2 = print_delt2;
 	  tran->print_delt2_time = print_delt2_time;
@@ -1603,7 +1603,7 @@ rd_timeint_specs(FILE *ifp,
       }
     else
       {
-		SPF(echo_string,"%s = %d","Printing Frequency",tran->print_freq); ECHO(echo_string, echo_file);
+		snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d","Printing Frequency",tran->print_freq); ECHO(echo_string, echo_file);
       }
 
     /* Look for fix frequency */
@@ -1616,7 +1616,7 @@ rd_timeint_specs(FILE *ifp,
         if (tran->fix_freq < 0) {
           GOMA_EH(GOMA_ERROR, "Expected Fix Frequency > 0");
         }
-        SPF(echo_string, "%s = %d", "Fix Frequency", tran->fix_freq); ECHO(echo_string, echo_file);
+        snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", "Fix Frequency", tran->fix_freq); ECHO(echo_string, echo_file);
       }
     }
 
@@ -1628,7 +1628,7 @@ rd_timeint_specs(FILE *ifp,
 	{
 	  GOMA_EH( -1, "error reading Minimum Resolved Time Step");
 	}
-      SPF(echo_string,"%s = %.4g","Minimum Resolved Time Step",tran->resolved_delta_t_min); ECHO(echo_string, echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %.4g","Minimum Resolved Time Step",tran->resolved_delta_t_min); ECHO(echo_string, echo_file);
     }
     
     tran->Courant_Limit = 0.;
@@ -1638,7 +1638,7 @@ rd_timeint_specs(FILE *ifp,
 	{
 	  GOMA_EH( -1, "error reading Courant Number Limit");
 	}
-      SPF(echo_string,"%s = %.4g","Courant Number Limit",tran->Courant_Limit); ECHO(echo_string, echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %.4g","Courant Number Limit",tran->Courant_Limit); ECHO(echo_string, echo_file);
     }
     
     tran->Restart_Time_Integ_After_Renorm = TRUE;
@@ -1666,7 +1666,7 @@ rd_timeint_specs(FILE *ifp,
         {
           GOMA_EH(GOMA_ERROR,"Invalid setting for Restart Time Integration After Renormalization.");
         }
-      SPF(echo_string,"%s = %d","Restart Time Integration After Renormalization",tran->Restart_Time_Integ_After_Renorm); ECHO(echo_string, echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d","Restart Time Integration After Renormalization",tran->Restart_Time_Integ_After_Renorm); ECHO(echo_string, echo_file);
     }
 
     tran->init_time = 0.0;
@@ -1676,7 +1676,7 @@ rd_timeint_specs(FILE *ifp,
 	{
 	  GOMA_EH( -1, "error reading Initial Time");
 	}
-      SPF(echo_string,"%s = %.4g","Initial Time",tran->init_time); ECHO(echo_string, echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %.4g","Initial Time",tran->init_time); ECHO(echo_string, echo_file);
       if( (time_max - tran->init_time) <= 0.0 ) {
       	GOMA_EH( -1, "Your maximum time is less than or equal to your initial time!"); // a condition which may result in NAN's in the esp_dot struct
       }
@@ -1689,7 +1689,7 @@ rd_timeint_specs(FILE *ifp,
 	{
 	  GOMA_EH( -1, "error reading Steps of constant delta_t after failure");
 	}
-      SPF(echo_string,"%s = %d","Steps of constant delta_t after failure", tran->const_dt_after_failure); ECHO(echo_string, echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d","Steps of constant delta_t after failure", tran->const_dt_after_failure); ECHO(echo_string, echo_file);
     }
     
     /*
@@ -1704,7 +1704,7 @@ rd_timeint_specs(FILE *ifp,
 	  GOMA_EH( -1, "error reading Time step decelerator");
 	}
 
-      SPF(echo_string,"%s = %.4g", "Time step decelerator",tran->time_step_decelerator);ECHO(echo_string, echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %.4g", "Time step decelerator",tran->time_step_decelerator);ECHO(echo_string, echo_file);
     }
 
 #ifndef COUPLED_FILL
@@ -1715,7 +1715,7 @@ rd_timeint_specs(FILE *ifp,
 	{
 	  GOMA_EH( -1, "error reading Fill Subcycle");
 	}
-      SPF(echo_string,"%s = %d","Fill Subcycle", tran->exp_subcycle); ECHO(echo_string, echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d","Fill Subcycle", tran->exp_subcycle); ECHO(echo_string, echo_file);
     }
 #endif /* not COUPLED_FILL */
 
@@ -1767,7 +1767,7 @@ rd_timeint_specs(FILE *ifp,
 	  {
 	    GOMA_EH(GOMA_ERROR, "Fill Weight Function not known.\n");
 	  }
-	SPF(echo_string,eoformat,"Fill Weight Function",input);ECHO(echo_string, echo_file);
+	snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat,"Fill Weight Function",input);ECHO(echo_string, echo_file);
       }
 
     tran->Fill_Equation = FILL_EQN_ADVECT; 
@@ -1800,7 +1800,7 @@ rd_timeint_specs(FILE *ifp,
 	    GOMA_EH(GOMA_ERROR, "Fill Equation not known.\n");
 	  }
 
-	SPF(echo_string,eoformat,"Fill Equation",input);ECHO(echo_string, echo_file);
+	snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat,"Fill Equation",input);ECHO(echo_string, echo_file);
       }
   } /*   if(pd_glob[0]->TimeIntegration != STEADY) */
 
@@ -1822,7 +1822,7 @@ rd_timeint_specs(FILE *ifp,
       GOMA_EH( -1, "Bad specification for March to Steady State");
     }
 
-    SPF(echo_string, "%s = %s", "March to Steady State", input); ECHO(echo_string, echo_file);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", "March to Steady State", input); ECHO(echo_string, echo_file);
   }
 
   iread = look_for_optional(ifp,"Steady State Tolerance",input,'=');
@@ -1832,7 +1832,7 @@ rd_timeint_specs(FILE *ifp,
     if (tran->steady_state_tolerance < 0) {
       GOMA_EH(GOMA_ERROR, "Expected Steady State Tolerance >= 0");
     }
-    SPF(echo_string, "%s = %g", "Steady State Tolerance", tran->steady_state_tolerance); ECHO(echo_string, echo_file);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %g", "Steady State Tolerance", tran->steady_state_tolerance); ECHO(echo_string, echo_file);
   }
 
   tran->MaxSteadyStateSteps = 2;
@@ -1844,7 +1844,7 @@ rd_timeint_specs(FILE *ifp,
     if (tran->MaxSteadyStateSteps < 2) {
       GOMA_EH( -1, "error reading max steady state steps expected value > 1");
     }
-    SPF(echo_string,"%s = %d", "Maximum steady state steps", tran->MaxSteadyStateSteps); ECHO(echo_string, echo_file);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d", "Maximum steady state steps", tran->MaxSteadyStateSteps); ECHO(echo_string, echo_file);
   }
 
   tran->ale_adapt = 0;
@@ -1862,7 +1862,7 @@ rd_timeint_specs(FILE *ifp,
     } else {
       GOMA_EH(GOMA_ERROR, "Expected either yes or no for ALE Adapt");
     }
-    SPF(echo_string,"%s = %s", "ALE Adapt", input); ECHO(echo_string, echo_file);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %s", "ALE Adapt", input); ECHO(echo_string, echo_file);
   }
 
   iread = look_for_optional(ifp,"ALE Adapt ISO Size",input,'=');
@@ -1871,7 +1871,7 @@ rd_timeint_specs(FILE *ifp,
     if (tran->ale_adapt_iso_size < 0) {
       GOMA_EH(GOMA_ERROR, "Expected ALE Adapt ISO Size >= 0");
     }
-    SPF(echo_string, "%s = %g", "ALE Adapt ISO Size", tran->ale_adapt_iso_size); ECHO(echo_string, echo_file);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %g", "ALE Adapt ISO Size", tran->ale_adapt_iso_size); ECHO(echo_string, echo_file);
   }
 
 
@@ -1938,7 +1938,7 @@ rd_levelset_specs(FILE *ifp,
         }
 
       ECHO("\n***Level Set Interface Tracking***\n", echo_file);
-      SPF(echo_string,eoformat,"Level Set Interface Tracking",input); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat,"Level Set Interface Tracking",input); ECHO(echo_string,echo_file);
 
     }
 
@@ -1978,7 +1978,7 @@ rd_levelset_specs(FILE *ifp,
               GOMA_EH(GOMA_ERROR,"Need one int and two floats on LS initialization card \n");
             }
 
-	  SPF(echo_string,"%s = %s %d %.4g %.4g","Level Set Initialize",input,
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %s %d %.4g %.4g","Level Set Initialize",input,
 	      Var_init[index].ktype,Var_init[index].init_val_minus,Var_init[index].init_val_plus ); ECHO(echo_string,echo_file);
 
           ls->Num_Var_Init++;
@@ -1996,9 +1996,9 @@ rd_levelset_specs(FILE *ifp,
             }
           if( fabs( ls->Length_Scale ) == 0.0 ) GOMA_WH(-1,"Possible Syntax error.  Level set length scale is zero.");
 
-          SPF(echo_string, "%s = %.4g", input, ls->Length_Scale);
+          snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, ls->Length_Scale);
       } else {
-        SPF(echo_string, " (%s = %f) %s", "Level Set Length Scale", ls->Length_Scale,
+        snprintf(echo_string, MAX_CHAR_ECHO_INPUT, " (%s = %f) %s", "Level Set Length Scale", ls->Length_Scale,
             default_string);
       }
 
@@ -2019,7 +2019,7 @@ rd_levelset_specs(FILE *ifp,
         }
 
         ECHO("\n***Level Set Adaptive Mesh***\n", echo_file);
-        SPF(echo_string, eoformat, "Level Set Adaptive Mesh", input);
+        snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "Level Set Adaptive Mesh", input);
         ECHO(echo_string, echo_file);
       }
 
@@ -2034,9 +2034,9 @@ rd_levelset_specs(FILE *ifp,
           if (fabs(ls->adapt_width) <= 0.0)
             GOMA_WH(-1, "Possible Syntax error.  Level set adapt width <= 0");
 
-          SPF(echo_string, "%s = %.4g", input, ls->adapt_width);
+          snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, ls->adapt_width);
         } else {
-          SPF(echo_string, " (%s = %f) %s", "Level Set Adapt Width", ls->adapt_width,
+          snprintf(echo_string, MAX_CHAR_ECHO_INPUT, " (%s = %f) %s", "Level Set Adapt Width", ls->adapt_width,
               default_string);
         }
 
@@ -2050,9 +2050,9 @@ rd_levelset_specs(FILE *ifp,
           if (fabs(ls->adapt_inner_size) <= 0.0)
             GOMA_WH(-1, "Possible Syntax error.  Level set adapt inner size <= 0");
 
-          SPF(echo_string, "%s = %.4g", input, ls->adapt_inner_size);
+          snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, ls->adapt_inner_size);
         } else {
-          SPF(echo_string, " (%s = %f) %s", "Level Set Adapt Inner Size", ls->adapt_inner_size,
+          snprintf(echo_string, MAX_CHAR_ECHO_INPUT, " (%s = %f) %s", "Level Set Adapt Inner Size", ls->adapt_inner_size,
               default_string);
         }
 
@@ -2065,9 +2065,9 @@ rd_levelset_specs(FILE *ifp,
             GOMA_EH(-1, "error reading Level Set Adapt Outer Size");
           }
 
-          SPF(echo_string, "%s = %.4g", input, ls->adapt_outer_size);
+          snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, ls->adapt_outer_size);
         } else {
-          SPF(echo_string, " (%s = %f) %s", "Level Set Adapt Outer Size", ls->adapt_outer_size,
+          snprintf(echo_string, MAX_CHAR_ECHO_INPUT, " (%s = %f) %s", "Level Set Adapt Outer Size", ls->adapt_outer_size,
               default_string);
         }
         if (fabs(ls->adapt_outer_size) <= 0.0)
@@ -2083,9 +2083,9 @@ rd_levelset_specs(FILE *ifp,
           if (ls->adapt_freq <= 0)
             GOMA_EH(-1, "Syntax error.  Level set adapt freq <= 0");
 
-          SPF(echo_string, "%s = %d", input, ls->adapt_freq);
+          snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", input, ls->adapt_freq);
         } else {
-          SPF(echo_string, " (%s = %d) %s", "Level Set Adapt Outer Size", ls->adapt_freq,
+          snprintf(echo_string, MAX_CHAR_ECHO_INPUT, " (%s = %d) %s", "Level Set Adapt Outer Size", ls->adapt_freq,
               default_string);
         }
 
@@ -2115,7 +2115,7 @@ rd_levelset_specs(FILE *ifp,
               struct LS_Surf_NS_Data *s;
               ls->Init_Method = SURFACES;
 
-	      SPF(echo_string,eoformat, "Level Set Initialization Method", input);
+	      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, "Level Set Initialization Method", input);
 
               ls->init_surf_list = create_surf_list();
               surf = create_surf( LS_SURF_NS );
@@ -2141,7 +2141,7 @@ rd_levelset_specs(FILE *ifp,
                   GOMA_EH(GOMA_ERROR,"Surfaces initialization method needs number of surfaces specified.");
                 }
 
-	      SPF(echo_string,"Level Set Initialization Method = Surfaces %d",num_surf); ECHO(echo_string,echo_file);
+	      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"Level Set Initialization Method = Surfaces %d",num_surf); ECHO(echo_string,echo_file);
 
               ls->init_surf_list = create_surf_list();
               read_surface_objects ( ifp, input, ls->init_surf_list, num_surf); 
@@ -2168,7 +2168,7 @@ rd_levelset_specs(FILE *ifp,
             }
 	  ls->Periodic_Planes = TRUE;
 
-	  SPF(echo_string,"Level Set Periodic Planes = %.4g %.4g %.4g %.4g %.4g %.4g",
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"Level Set Periodic Planes = %.4g %.4g %.4g %.4g %.4g %.4g",
 	      ls->Periodic_Plane_Loc[0], ls->Periodic_Plane_Loc[1], 
 	      ls->Periodic_Plane_Loc[2], ls->Periodic_Plane_Loc[2], 
 	      ls->Periodic_Plane_Loc[3], ls->Periodic_Plane_Loc[3]); ECHO(echo_string,echo_file); 
@@ -2187,11 +2187,11 @@ rd_levelset_specs(FILE *ifp,
 
           if ( ls->Control_Width > 10.0 ) GOMA_WH(-1,"That's an awfully large Level Set Control Width.\n");
 	  
-	  SPF(echo_string,"%s = %.4g",input, ls->Control_Width); ECHO(echo_string,echo_file);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %.4g",input, ls->Control_Width); ECHO(echo_string,echo_file);
 
         }
       else
-	SPF(echo_string," (%s = %f) %s", "Level Set Control Width",ls->Control_Width, default_string); 
+	snprintf(echo_string, MAX_CHAR_ECHO_INPUT," (%s = %f) %s", "Level Set Control Width",ls->Control_Width, default_string);
 
       ECHO(echo_string,echo_file);
 	  
@@ -2208,7 +2208,7 @@ rd_levelset_specs(FILE *ifp,
 	    stringup(input);
 	    if ( !strcmp(input,"YES") || !strcmp(input,"ON") ) tran->use_var_norm[8] = 1;
 
-	    SPF(echo_string,eoformat,"Level Set Timestep Control",input); ECHO(echo_string,echo_file);
+	    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat,"Level Set Timestep Control",input); ECHO(echo_string,echo_file);
 	  }
     
       ls->Renorm_Tolerance = 0.5;
@@ -2223,10 +2223,10 @@ rd_levelset_specs(FILE *ifp,
             }
           if ( ls->Renorm_Tolerance > 1.0 ) GOMA_WH(-1,"That's an awfully large Level Set Renormalization Tolerance.\n");
 
-	  SPF(echo_string,"%s = %.4g","Level Set Renormalization Tolerance", ls->Renorm_Tolerance);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %.4g","Level Set Renormalization Tolerance", ls->Renorm_Tolerance);
         }
       else
-	SPF(echo_string," (%s = %f) ", "Level Set Renormalization Tolerance",ls->Renorm_Tolerance ); 
+	snprintf(echo_string, MAX_CHAR_ECHO_INPUT," (%s = %f) ", "Level Set Renormalization Tolerance",ls->Renorm_Tolerance );
 
       ECHO(echo_string,echo_file);
 
@@ -2241,7 +2241,7 @@ rd_levelset_specs(FILE *ifp,
               GOMA_EH( -1, "error reading Level Set Renormalization string");
             }
 
-	  SPF(echo_string,"%s = ","Level Set Renormalization Method");
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = ","Level Set Renormalization Method");
 
           if ( strcmp( input,"Correction") == 0 )
             {
@@ -2520,7 +2520,7 @@ rd_levelset_specs(FILE *ifp,
 #endif
               ls->Ignore_F_deps = TRUE;
             }
-	  SPF(echo_string,eoformat, "Ignore Level Set Dependencies", input); ECHO(echo_string,echo_file);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, "Ignore Level Set Dependencies", input); ECHO(echo_string,echo_file);
         }
 
       ls->Interface_Output = FALSE;
@@ -2541,7 +2541,7 @@ rd_levelset_specs(FILE *ifp,
 
           ls->Interface_Output = TRUE;
 
-	  SPF(echo_string,eoformat,"Level Set Output Filename", input); ECHO(echo_string,echo_file);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat,"Level Set Output Filename", input); ECHO(echo_string,echo_file);
         }
 
       ls->Renorm_Freq = ls->Renorm_Countdown = -1;  /* Default is never to renormalize */
@@ -2556,7 +2556,7 @@ rd_levelset_specs(FILE *ifp,
             }
           ls->Renorm_Countdown = ls->Renorm_Freq;
 
-	  SPF(echo_string,"%s = %d","Level Set Renormalization Frequency", ls->Renorm_Freq); ECHO(echo_string,echo_file);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d","Level Set Renormalization Frequency", ls->Renorm_Freq); ECHO(echo_string,echo_file);
         }
 
       ls->SubcyclesAfterRenorm = 1;
@@ -2570,7 +2570,7 @@ rd_levelset_specs(FILE *ifp,
               GOMA_EH(GOMA_ERROR,"Error reading renormalization subcycles.\n");
             }
 
-          SPF(echo_string,"%s = %d","Level Set Renormalization Subcycles", ls->SubcyclesAfterRenorm); ECHO(echo_string,echo_file);
+          snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d","Level Set Renormalization Subcycles", ls->SubcyclesAfterRenorm); ECHO(echo_string,echo_file);
         }
 
       ls->Force_Initial_Renorm = FALSE;
@@ -2588,7 +2588,7 @@ rd_levelset_specs(FILE *ifp,
               ls->Force_Initial_Renorm = TRUE;
             }
 
-	  SPF(echo_string,eoformat,"Force Initial Level Set Renormalization", input); ECHO(echo_string,echo_file);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat,"Force Initial Level Set Renormalization", input); ECHO(echo_string,echo_file);
         }
 	
       ls->Initial_LS_Displacement = 0.;
@@ -2600,7 +2600,7 @@ rd_levelset_specs(FILE *ifp,
               GOMA_EH( -1, "error reading Initial Level Set Displacement");
             }
 
-	  SPF(echo_string,"%s = %.4g","Initial Level Set Displacement", ls->Initial_LS_Displacement); ECHO(echo_string,echo_file);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %.4g","Initial Level Set Displacement", ls->Initial_LS_Displacement); ECHO(echo_string,echo_file);
         }
         
       ls->Isosurface_Subsurf_Type = LS_SURF_POINT;
@@ -2625,7 +2625,7 @@ rd_levelset_specs(FILE *ifp,
             {
               GOMA_EH(GOMA_ERROR,"Level Set Reconstruction Method not known.\n");
             }
-	  SPF(echo_string,eoformat, "Level Set Reconstruction Method", input); ECHO(echo_string,echo_file);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, "Level Set Reconstruction Method", input); ECHO(echo_string,echo_file);
         }
 
       ls->Contact_Inflection = FALSE;
@@ -2643,7 +2643,7 @@ rd_levelset_specs(FILE *ifp,
               ls->Contact_Inflection = TRUE;
             }
 
-	  SPF(echo_string,eoformat, "Level Set Contact Extension", input); ECHO(echo_string,echo_file);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, "Level Set Contact Extension", input); ECHO(echo_string,echo_file);
         }
 
       /* set default evolution scheme based on compiler flag */
@@ -2670,7 +2670,7 @@ rd_levelset_specs(FILE *ifp,
                 GOMA_EH(GOMA_ERROR,"Must define Level Set Initialization method to be SURFACES or NODESET for slave surfaces");
             }
 
-	  SPF(echo_string,eoformat,"Level Set Slave Surface", input); ECHO(echo_string,echo_file);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat,"Level Set Slave Surface", input); ECHO(echo_string,echo_file);
         }
 
       ls->Contact_Tolerance = 0.5;
@@ -2700,7 +2700,7 @@ rd_levelset_specs(FILE *ifp,
               GOMA_EH(GOMA_ERROR,"Invalid setting for Level Set Fluid Solid.");
             }
 
-	  SPF(echo_string,eoformat,"Level Set Fluid Solid", input); ECHO(echo_string,echo_file);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat,"Level Set Fluid Solid", input); ECHO(echo_string,echo_file);
         }
 
       /*
@@ -2723,7 +2723,7 @@ rd_levelset_specs(FILE *ifp,
 
           ls->Fluid_Sign = -ls->Solid_Sign;
 
-	  SPF(echo_string,"%s = %d","Level Set Solid Sign", ls->Solid_Sign); ECHO(echo_string,echo_file);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d","Level Set Solid Sign", ls->Solid_Sign); ECHO(echo_string,echo_file);
         }
 
       iread = look_for_optional(ifp,"Level Set Semi_Lagrange",input,'=');
@@ -2746,7 +2746,7 @@ rd_levelset_specs(FILE *ifp,
               tran->exp_subcycle = 1.0;
 #endif
             }
-	  SPF(echo_string,eoformat,"Level Set Semi_Lagrange", input); ECHO(echo_string,echo_file);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat,"Level Set Semi_Lagrange", input); ECHO(echo_string,echo_file);
         }
 
       ls->Search_Option = SEGMENT_SEARCH;
@@ -2761,7 +2761,7 @@ rd_levelset_specs(FILE *ifp,
 
       strip(input); stringup(input);
 
-      SPF(echo_string,"%s = %s","Level Set Search Option", input);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %s","Level Set Search Option", input);
 
       if( strcmp(input, "GRID_SEARCH") == 0 )
         {
@@ -2797,7 +2797,7 @@ rd_levelset_specs(FILE *ifp,
           {
             GOMA_EH(GOMA_ERROR, "Subgrid Integration Depth for Level Set needs a single positive integer parameter.");
           }
-	SPF(echo_string,"%s = %d", "Level Set Subgrid Integration Depth", ls->Integration_Depth); ECHO(echo_string,echo_file);
+	snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d", "Level Set Subgrid Integration Depth", ls->Integration_Depth); ECHO(echo_string,echo_file);
       }
 
       ls->SubElemIntegration = FALSE;
@@ -2819,7 +2819,7 @@ rd_levelset_specs(FILE *ifp,
                 GOMA_EH(GOMA_ERROR,"I don't think it makes sense to have subelement integration and non-zero length scale.");
             }
 
-	  SPF(echo_string,eoformat,"Level Set Subelement Integration", input); ECHO(echo_string,echo_file);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat,"Level Set Subelement Integration", input); ECHO(echo_string,echo_file);
         }
 
       ls->AdaptIntegration = FALSE;
@@ -2842,7 +2842,7 @@ rd_levelset_specs(FILE *ifp,
               if (ls->SubElemIntegration)
                 GOMA_EH(GOMA_ERROR,"Combination of Subelement and Adaptive integration is not supported.");
             }
-	  SPF(echo_string,eoformat,"Level Set Adaptive Integration", input); ECHO(echo_string,echo_file);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat,"Level Set Adaptive Integration", input); ECHO(echo_string,echo_file);
         }
 
       ls->Adaptive_Order = 3;
@@ -2854,7 +2854,7 @@ rd_levelset_specs(FILE *ifp,
           {
             GOMA_EH(GOMA_ERROR, "Adaptive Integration Order for Level Set needs a single positive integer parameter.");
           }
-	SPF(echo_string,"%s = %d", "Level Set Adaptive Order", ls->Adaptive_Order); ECHO(echo_string,echo_file);
+	snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d", "Level Set Adaptive Order", ls->Adaptive_Order); ECHO(echo_string,echo_file);
       }
 
         
@@ -2865,7 +2865,7 @@ rd_levelset_specs(FILE *ifp,
           {
             GOMA_EH(GOMA_ERROR, "Overlap Quadrature Points needs a single positive integer parameter.");
           }
-	SPF(echo_string,"%s = %d","Overlap Quadrature Points" ,ls->CrossMeshQuadPoints ); ECHO(echo_string,echo_file);
+	snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d","Overlap Quadrature Points" ,ls->CrossMeshQuadPoints ); ECHO(echo_string,echo_file);
       }
 	  
 	  /*
@@ -2888,10 +2888,10 @@ rd_levelset_specs(FILE *ifp,
 		if ((strcmp(input,"ON") == 0) || (strcmp(input,"YES") == 0 ))
 		{
                         ls->PSPP_filter = TRUE;
-                        SPF(echo_string,"%s = %s", "Level Set PSPP filtering", "yes"); ECHO(echo_string,echo_file);
+                        snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %s", "Level Set PSPP filtering", "yes"); ECHO(echo_string,echo_file);
 
                 } else {
-                  SPF(echo_string,"%s = %s", "Level Set PSPP filtering", "no"); ECHO(echo_string,echo_file);
+                  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %s", "Level Set PSPP filtering", "no"); ECHO(echo_string,echo_file);
 
                 }
 	}
@@ -2926,7 +2926,7 @@ rd_levelset_specs(FILE *ifp,
                 GOMA_EH(GOMA_ERROR, "Unknown value for Level Set Ghost Stress");
               }
 
-            SPF(echo_string,"%s = %s", "Level Set Ghost Stress", input);
+            snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %s", "Level Set Ghost Stress", input);
             ECHO(echo_string,echo_file);
 
           }
@@ -2956,7 +2956,7 @@ rd_levelset_specs(FILE *ifp,
           {
             GOMA_EH(GOMA_ERROR, "Error unknown value for Level Set Toure Penalty");
           }
-          SPF(echo_string,"%s = %s", "Level Set Toure Penalty", input);
+          snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %s", "Level Set Toure Penalty", input);
           ECHO(echo_string,echo_file);
         }
 
@@ -2984,7 +2984,7 @@ rd_levelset_specs(FILE *ifp,
           {
             GOMA_EH(GOMA_ERROR, "Error unknown value for Huygens Freeze Nodes");
           }
-          SPF(echo_string,"%s = %s", "Huygens Freeze Nodes", input);
+          snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %s", "Huygens Freeze Nodes", input);
           ECHO(echo_string,echo_file);
         }
 
@@ -3012,7 +3012,7 @@ rd_levelset_specs(FILE *ifp,
           {
             GOMA_EH(GOMA_ERROR, "Error unknown value for Level Set Enable Div Term");
           }
-          SPF(echo_string,"%s = %s", "Level Set Enable Div Term", input);
+          snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %s", "Level Set Enable Div Term", input);
           ECHO(echo_string,echo_file);
         }
 
@@ -3040,7 +3040,7 @@ rd_levelset_specs(FILE *ifp,
           {
             GOMA_EH(GOMA_ERROR, "Error unknown value for Level Set Semi-Implicit Time Integration");
           }
-          SPF(echo_string,"%s = %s", "Level Set Semi-Implicit Time Integration", input);
+          snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %s", "Level Set Semi-Implicit Time Integration", input);
           ECHO(echo_string,echo_file);
         }
 
@@ -3076,7 +3076,7 @@ rd_levelset_specs(FILE *ifp,
             GOMA_EH(GOMA_ERROR, "Error unknown value for Level Set Toure Penalty");
           }
           ls->YZbeta_scale = scale;
-          SPF(echo_string,"%s = %s %g", "Level Set YZbeta", input, scale);
+          snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %s %g", "Level Set YZbeta", input, scale);
           ECHO(echo_string,echo_file);
         }
 
@@ -3172,12 +3172,12 @@ rd_levelset_specs(FILE *ifp,
                     lsi = alloc_struct_1(struct Level_Set_Interface, 1);
 
 		  ECHO("\n***Phase Function Section***\n", echo_file);
-		  SPF(echo_string,"%s = %d","Number of phase functions", pfd->num_phase_funcs); ECHO(echo_string,echo_file);
+		  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d","Number of phase functions", pfd->num_phase_funcs); ECHO(echo_string,echo_file);
         }
 	  else
 	  {
 		  ECHO("\n***Phase Function Section***\n", echo_file);
-		  SPF(echo_string,"%s = %d","Number of phase functions", i); ECHO(echo_string,echo_file);
+		  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d","Number of phase functions", i); ECHO(echo_string,echo_file);
 	  }		  
 	}
 
@@ -3204,7 +3204,7 @@ if( pfd != NULL ) {
 				pfd->ls[i]->Renorm_Method = FALSE;
 			}
 		} 
-		SPF(echo_string,eoformat,"Phase Function Slave Surface", input); ECHO(echo_string,echo_file);
+		snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat,"Phase Function Slave Surface", input); ECHO(echo_string,echo_file);
     }
 	
 	if(pfd != NULL)
@@ -3246,7 +3246,7 @@ if( pfd != NULL ) {
 				struct LS_Surf_NS_Data *s;
 				pfd->ls[i]->Init_Method = SURFACES;
 				
-				SPF(echo_string, eoformat, "Phase Function Initialization Method", input);
+				snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "Phase Function Initialization Method", input);
 				
 				pfd->ls[i]->init_surf_list = create_surf_list();
 				surf = create_surf( LS_SURF_NS );
@@ -3272,7 +3272,7 @@ if( pfd != NULL ) {
 					GOMA_EH(GOMA_ERROR,"Surfaces initialization method for phase function needs number of surfaces specified.");
 				}
 				
-				SPF(echo_string,"%s = %s %d", "Phase Function Initialization Method", input, num_surf);ECHO(echo_string,echo_file);
+				snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %s %d", "Phase Function Initialization Method", input, num_surf);ECHO(echo_string,echo_file);
 				
 				pfd->ls[i]->init_surf_list = create_surf_list();
 				read_surface_objects ( ifp, input, pfd->ls[i]->init_surf_list, num_surf); 
@@ -3294,7 +3294,7 @@ if( pfd != NULL ) {
 		for(i=0; i<pfd->num_phase_funcs; i++)
 			pfd->ls[i]->Length_Scale = length_scale;
 		
-		SPF(echo_string,"%s = %.4g", "Phase Function Length Scale", length_scale); ECHO(echo_string,echo_file);
+		snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %.4g", "Phase Function Length Scale", length_scale); ECHO(echo_string,echo_file);
     }
 	
 	iread = look_for_optional(ifp,"Phase Function Renormalization Tolerance",input,'=');
@@ -3311,7 +3311,7 @@ if( pfd != NULL ) {
 		for(i=0; i<pfd->num_phase_funcs; i++) 
 			pfd->ls[i]->Renorm_Tolerance = tolerance;
 		
-		SPF(echo_string,"%s = %.4g", "Phase Function Renormalization Tolerance", tolerance); ECHO(echo_string,echo_file);
+		snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %.4g", "Phase Function Renormalization Tolerance", tolerance); ECHO(echo_string,echo_file);
     }
 	
 	iread = look_for_optional(ifp,"Phase Function Renormalization Method",input,'=');
@@ -3353,7 +3353,7 @@ if( pfd != NULL ) {
 			pfd->ls[i]->Mass_Value = Mass_Value;
 			pfd->ls[i]->Mass_Sign = Mass_Sign;
 		}
-		SPF(echo_string,eoformat,"Phase Function Renormalization Method", input); ECHO(echo_string,echo_file);
+		snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat,"Phase Function Renormalization Method", input); ECHO(echo_string,echo_file);
 	}
 }
 
@@ -3368,7 +3368,7 @@ if( pfd != NULL ) {
       }          
     stringup(input);
 
-    SPF(echo_string,eoformat, "Phase Function Constraint Method", input);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, "Phase Function Constraint Method", input);
     
     if( ( strcmp(input,"NO" ) == 0 ) || ( strcmp(input,"NONE") == 0 ) )
       {
@@ -3424,7 +3424,7 @@ if (iread == 1)
 
 	for(i=0; i<pfd->num_phase_funcs; i++ ) pfd->shift[i] = tmp[i]; 
 
-	SPF(echo_string,"%s = ","Phase Function Initial Shift"); 
+	snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = ","Phase Function Initial Shift");
 
 	for(i=0; i<pfd->num_phase_funcs; i++)
 	  {
@@ -3631,7 +3631,7 @@ rd_track_specs(FILE *ifp,
   iread = look_for_optional(ifp,"Continuation Specifications",input,'=');
   
   if( iread == 1 ) {
-	  SPF(echo_string,"%s =",input); ECHO(echo_string,echo_file);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s =",input); ECHO(echo_string,echo_file);
   }
 
   Continuation = ALC_NONE;
@@ -3648,1403 +3648,1179 @@ rd_track_specs(FILE *ifp,
 
   iread=look_for_optional(ifp,"Continuation",input,'=');
 
-  if(iread == 1)
-    {
-	  SPF(echo_string,"%s = ", input);
-	  
-      (void) read_string(ifp,input,'\n');
-      strip(input);
-      if ( strcmp(input,"none") == 0 )
-	{
-	  if ( Debug_Flag && ProcID == 0 )
-	    {
-	      printf("%s:\tno continuation\n", yo);
-	    }
-	  Continuation = ALC_NONE;
-	}
-      else
-	if ( strcmp(input,"zero") == 0 )
-	  {
-	    if ( Debug_Flag && ProcID == 0 )
-	      {
-		printf("%s:\tzero order continuation\n", yo);
-	      }
-	    Continuation = ALC_ZEROTH;
-	  }
-	else
-	  if ( strcmp(input,"hzero") == 0 )
-	    {
-	      if ( Debug_Flag && ProcID == 0 )
-		{
-		  printf("%s:\tzero order hunting continuation\n", yo);
-		}
-	      Continuation = HUN_ZEROTH;
-	    }
-	  else
-	    if ( strcmp(input,"first") == 0 )
-	      {
-		if ( Debug_Flag && ProcID == 0 )
-		  {
-		    printf("%s:\tfirst order continuation\n", yo);
-		  }
-		Continuation = ALC_FIRST;
-	      }
-	    else
-	      if ( strcmp(input,"hfirst") == 0 )
-		{
-		  if ( Debug_Flag && ProcID == 0 )
-		    {
-		      printf("%s:\tfirst order hunting continuation\n", yo);
-		    }
-		  Continuation = HUN_FIRST;
-		}
-	      else
-		if ( strcmp(input,"second") == 0 )
-		  {
-		    if ( Debug_Flag && ProcID == 0 )
-		      {
-			printf("%s:\tsecond order continuation\n", yo);
-		      }
-		    Continuation = ALC_SECOND;
-		  } else
-                  if ( strcmp(input,"loca") == 0 )
-                    {
-                      if ( Debug_Flag && ProcID == 0 )
-                        {
-                          printf("%s:\tLOCA continuation library\n", yo);
-                        }
-                      Continuation = LOCA;
-                    }
-                  else
-                    {
-                      GOMA_EH( -1, "unknown Continuation option");
-                    }
-	  SPF(endofstring(echo_string)," %s", input); ECHO(echo_string,echo_file);
-      
-      ContType = cont->upType = -1;
-      look_for(ifp,"Continuation Type",input,'=');
-	  
-	  SPF(echo_string,"%s = ",input);
-	  
-      (void) read_string(ifp,input,'\n');
-      strip(input);
-      if ( strcmp(input,"none") == 0 )
-	{
-	  if ( Debug_Flag && ProcID == 0 )
-	    {
-	      printf("%s:\tno continuation\n", yo);
-	    }
-	  Continuation = ALC_NONE;
-	}
-      else
-	if ( strcmp(input,"BC") == 0 )
-	  {
-	    if ( Debug_Flag && ProcID == 0 )
-	      {
-		printf("%s:\tBC continuation\n", yo);
-	      }
-	    ContType = 1;
-	  }
-	else
-	  if ( strcmp(input,"MT") == 0 )
-	    {
-	      if ( Debug_Flag && ProcID == 0 )
-		{
-		  printf("%s:\tMATPROP continuation\n", yo);
-		}
-	      ContType = 2;
-	    }
-       else
-	if ( strcmp(input,"AC") == 0 )
- 	  {
- 	    if ( Debug_Flag && ProcID == 0 )
- 	      {
- 		printf("%s:\tAC continuation\n", yo);
- 	      }
- 	    ContType = 3;
- 	  }
-	else
-	  if ( strcmp(input,"UM") == 0 )
-	    {
-	      if ( Debug_Flag && ProcID == 0 )
-		{
-		  printf("%s:\tUser model continuation\n", yo);
-		}
-	      ContType = 4;
-	    }
-	else
-	  if ( strcmp(input,"UF") == 0 )
-	    {
-	      if ( Debug_Flag && ProcID == 0 )
-		{
-		  printf("%s:\tUser-defined function continuation\n", yo);
-		}
-	      ContType = 5;
-	    }
-	else
-	  if ( strcmp(input,"AN") == 0 )
-	    {
-	      if ( Debug_Flag && ProcID == 0 )
-		{
-		  printf("%s:\tAngular parameter continuation\n", yo);
-		}
-	      ContType = 6;
-	    }
-	  else
-	    {
-	      GOMA_EH( -1, "Unknown ContType option (one of BC, MT, AC, UM, AN or UF)");
-		}
-	  
-	  SPF(endofstring(echo_string)," %s", input); ECHO(echo_string,echo_file);
-	  
-      cont->upType = ContType;
-      
-      for (mn=0; mn<MAX_NUMBER_MATLS; mn++) {
-	pd_glob[mn]->Continuation =  Continuation;
+  if (iread == 1) {
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = ", input);
+
+    (void)read_string(ifp, input, '\n');
+    strip(input);
+    if (strcmp(input, "none") == 0) {
+      if (Debug_Flag && ProcID == 0) {
+        printf("%s:\tno continuation\n", yo);
+      }
+      Continuation = ALC_NONE;
+    } else if (strcmp(input, "zero") == 0) {
+      if (Debug_Flag && ProcID == 0) {
+        printf("%s:\tzero order continuation\n", yo);
+      }
+      Continuation = ALC_ZEROTH;
+    } else if (strcmp(input, "hzero") == 0) {
+      if (Debug_Flag && ProcID == 0) {
+        printf("%s:\tzero order hunting continuation\n", yo);
+      }
+      Continuation = HUN_ZEROTH;
+    } else if (strcmp(input, "first") == 0) {
+      if (Debug_Flag && ProcID == 0) {
+        printf("%s:\tfirst order continuation\n", yo);
+      }
+      Continuation = ALC_FIRST;
+    } else if (strcmp(input, "hfirst") == 0) {
+      if (Debug_Flag && ProcID == 0) {
+        printf("%s:\tfirst order hunting continuation\n", yo);
+      }
+      Continuation = HUN_FIRST;
+    } else if (strcmp(input, "second") == 0) {
+      if (Debug_Flag && ProcID == 0) {
+        printf("%s:\tsecond order continuation\n", yo);
+      }
+      Continuation = ALC_SECOND;
+    } else if (strcmp(input, "loca") == 0) {
+      if (Debug_Flag && ProcID == 0) {
+        printf("%s:\tLOCA continuation library\n", yo);
+      }
+      Continuation = LOCA;
+    } else {
+      GOMA_EH(-1, "unknown Continuation option");
+    }
+    SPF(endofstring(echo_string), " %s", input);
+    ECHO(echo_string, echo_file);
+
+    ContType = cont->upType = -1;
+    look_for(ifp, "Continuation Type", input, '=');
+
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = ", input);
+
+    (void)read_string(ifp, input, '\n');
+    strip(input);
+    if (strcmp(input, "none") == 0) {
+      if (Debug_Flag && ProcID == 0) {
+        printf("%s:\tno continuation\n", yo);
+      }
+      Continuation = ALC_NONE;
+    } else if (strcmp(input, "BC") == 0) {
+      if (Debug_Flag && ProcID == 0) {
+        printf("%s:\tBC continuation\n", yo);
+      }
+      ContType = 1;
+    } else if (strcmp(input, "MT") == 0) {
+      if (Debug_Flag && ProcID == 0) {
+        printf("%s:\tMATPROP continuation\n", yo);
+      }
+      ContType = 2;
+    } else if (strcmp(input, "AC") == 0) {
+      if (Debug_Flag && ProcID == 0) {
+        printf("%s:\tAC continuation\n", yo);
+      }
+      ContType = 3;
+    } else if (strcmp(input, "UM") == 0) {
+      if (Debug_Flag && ProcID == 0) {
+        printf("%s:\tUser model continuation\n", yo);
+      }
+      ContType = 4;
+    } else if (strcmp(input, "UF") == 0) {
+      if (Debug_Flag && ProcID == 0) {
+        printf("%s:\tUser-defined function continuation\n", yo);
+      }
+      ContType = 5;
+    } else if (strcmp(input, "AN") == 0) {
+      if (Debug_Flag && ProcID == 0) {
+        printf("%s:\tAngular parameter continuation\n", yo);
+      }
+      ContType = 6;
+    } else {
+      GOMA_EH(-1, "Unknown ContType option (one of BC, MT, AC, UM, AN or UF)");
+    }
+
+    SPF(endofstring(echo_string), " %s", input);
+    ECHO(echo_string, echo_file);
+
+    cont->upType = ContType;
+
+    for (mn = 0; mn < MAX_NUMBER_MATLS; mn++) {
+      pd_glob[mn]->Continuation = Continuation;
+    }
+
+    /* Get number of user-defined continuation condition functions */
+    nUC = 0;
+    if (ContType == 5) {
+      look_for(ifp, "Number of user continuation functions", input, '=');
+      if (fscanf(ifp, "%d", &nUC) != 1) {
+        GOMA_EH(GOMA_ERROR, "error reading Number of user continuation functions");
       }
 
-/* Get number of user-defined continuation condition functions */
-      nUC = 0;
-      if (ContType == 5)
-        {
-          look_for(ifp, "Number of user continuation functions",input,'=');
-          if (fscanf(ifp,"%d",&nUC) != 1)
-            {
-              GOMA_EH(GOMA_ERROR, "error reading Number of user continuation functions");
-            }
-		  
-		  SPF(echo_string,"%s = %d",input, nUC); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", input, nUC);
+      ECHO(echo_string, echo_file);
 
-/* Allocate the structure cpuc for each function */
-          cpuc = (struct User_Continuation_Info *)
-                  array_alloc(1, nUC, sizeof(struct User_Continuation_Info));
+      /* Allocate the structure cpuc for each function */
+      cpuc = (struct User_Continuation_Info *)array_alloc(1, nUC,
+                                                          sizeof(struct User_Continuation_Info));
+    }
+
+    cont->upBCID = -1;
+    iread = look_for_optional(ifp, "Boundary condition ID", input, '=');
+    if (iread == 1) {
+      if (fscanf(ifp, "%d", &BdyCondID) != 1) {
+        GOMA_EH(-1, "error reading Boundary condition ID");
+      }
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", input, BdyCondID);
+      ECHO(echo_string, echo_file);
+    }
+    cont->upBCID = BdyCondID;
+
+    look_for(ifp, "Boundary condition data float tag", input, '=');
+    if (fscanf(ifp, "%d", &DataFltID) != 1) {
+      GOMA_EH(-1, "error reading Boundary condition data float tag id");
+    }
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", input, DataFltID);
+    ECHO(echo_string, echo_file);
+
+    cont->upDFID = DataFltID;
+
+    look_for(ifp, "Material id", input, '=');
+    if (fscanf(ifp, "%d", &MatID) != 1) {
+      GOMA_EH(-1, "error reading Material id");
+    }
+
+    cont->upMTID = MatID - 1;
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", input, MatID);
+    ECHO(echo_string, echo_file);
+
+    look_for(ifp, "Material property tag", input, '=');
+    if (fscanf(ifp, "%d", &MatPropID) != 1) {
+      GOMA_EH(-1, "error reading Material property tag id");
+    }
+    cont->upMPID = MatPropID;
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", input, MatPropID);
+    ECHO(echo_string, echo_file);
+
+    look_for(ifp, "Material property tag subindex", input, '=');
+    if (fscanf(ifp, "%d", &MatPropSIID) != 1) {
+      GOMA_EH(-1, "error reading Material property tag subindex id");
+    }
+    cont->upMDID = MatPropSIID;
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", input, MatPropSIID);
+    ECHO(echo_string, echo_file);
+
+    BegParameterValue = 0.0;
+    look_for(ifp, "Initial parameter value", input, '=');
+    if (fscanf(ifp, "%le", &BegParameterValue) != 1) {
+      GOMA_EH(-1, "error reading BegParameterValue");
+    }
+    cont->BegParameterValue = BegParameterValue;
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, BegParameterValue);
+    ECHO(echo_string, echo_file);
+
+    EndParameterValue = 1.0;
+    look_for(ifp, "Final parameter value", input, '=');
+    if (fscanf(ifp, "%le", &EndParameterValue) != 1) {
+      GOMA_EH(-1, "error reading EndParameterValue");
+    }
+    cont->EndParameterValue = EndParameterValue;
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, EndParameterValue);
+    ECHO(echo_string, echo_file);
+
+    look_for(ifp, "delta_s", input, '=');
+    if (fscanf(ifp, "%le", &Delta_s0) != 1) {
+      GOMA_EH(-1, "error reading delta_s");
+    }
+    cont->Delta_s0 = Delta_s0;
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, Delta_s0);
+    ECHO(echo_string, echo_file);
+
+    look_for(ifp, "Maximum number of path steps", input, '=');
+    if (fscanf(ifp, "%d", &MaxPathSteps) != 1) {
+      GOMA_EH(-1, "error reading maximum number of path steps");
+    }
+    cont->MaxPathSteps = MaxPathSteps;
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", input, MaxPathSteps);
+    ECHO(echo_string, echo_file);
+
+    look_for(ifp, "Minimum path step", input, '=');
+    if (fscanf(ifp, "%le", &Delta_s_min) != 1) {
+      GOMA_EH(-1, "error reading minimum path step");
+    }
+    cont->Delta_s_min = Delta_s_min;
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, Delta_s_min);
+    ECHO(echo_string, echo_file);
+
+    Delta_s_max = 1.e+12;
+    look_for(ifp, "Maximum path step", input, '=');
+    if (fscanf(ifp, "%le", &Delta_s_max) != 1) {
+      GOMA_EH(-1, "error reading Maximum path step");
+    }
+    cont->Delta_s_max = Delta_s_max;
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, Delta_s_max);
+    ECHO(echo_string, echo_file);
+
+    look_for(ifp, "Continuation Printing Frequency", input, '=');
+    if (fscanf(ifp, "%d", &print_freq) != 1) {
+      GOMA_EH(-1, "error reading Continuation Printing Frequency");
+    }
+    cont->print_freq = print_freq;
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", input, print_freq);
+    ECHO(echo_string, echo_file);
+
+    cont->fix_freq = 0;
+    if (Num_Proc > 1) {
+      iread = look_for_optional(ifp, "Continuation Fix Frequency", input, '=');
+      if (iread == 1) {
+        cont->fix_freq = read_int(ifp, "Continuation Fix Frequency");
+        if (cont->fix_freq < 0) {
+          GOMA_EH(GOMA_ERROR, "Expected Fix Frequency > 0");
         }
-      
-      cont->upBCID = -1;
-      iread = look_for_optional(ifp,"Boundary condition ID",input,'=');
-      if (iread == 1)
-	  {   
-		  if ( fscanf(ifp,"%d",&BdyCondID) != 1)
-		  {
-			  GOMA_EH( -1, "error reading Boundary condition ID");
-		  }
-		  SPF(echo_string,"%s = %d", input,BdyCondID); ECHO(echo_string,echo_file);
-	  }
-      cont->upBCID = BdyCondID;
-      
-      look_for(ifp,"Boundary condition data float tag",input,'=');
-      if (fscanf (ifp,"%d",&DataFltID) != 1)
-	{
-	  GOMA_EH( -1, "error reading Boundary condition data float tag id");
-	}
-	  SPF(echo_string,"%s = %d", input, DataFltID); ECHO(echo_string,echo_file);
-	  
-      cont->upDFID = DataFltID;
-      
-      look_for(ifp,"Material id",input,'=');
-      if (fscanf (ifp,"%d",&MatID) != 1)
-	{
-	  GOMA_EH( -1, "error reading Material id");
-	}
+        snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", "Continuation Fix Frequency", cont->fix_freq);
+        ECHO(echo_string, echo_file);
+      }
+    }
 
-      cont->upMTID = MatID-1;
-	  SPF(echo_string,"%s = %d", input, MatID); ECHO(echo_string,echo_file);
-      
-      look_for(ifp,"Material property tag",input,'=');
-      if (fscanf (ifp,"%d",&MatPropID) != 1)
-	{
-	  GOMA_EH( -1, "error reading Material property tag id");
-	}
-      cont->upMPID = MatPropID;
-	  SPF(echo_string,"%s = %d", input, MatPropID); ECHO(echo_string,echo_file);
-      
-      look_for(ifp,"Material property tag subindex",input,'=');
-      if (fscanf (ifp,"%d",&MatPropSIID) != 1)
-	{
-	  GOMA_EH( -1, "error reading Material property tag subindex id");
-	}
-      cont->upMDID = MatPropSIID;
-	  SPF(echo_string,"%s = %d", input, MatPropSIID); ECHO(echo_string,echo_file);
-      
-      BegParameterValue = 0.0;
-      look_for(ifp,"Initial parameter value",input,'=');
-      if ( fscanf(ifp,"%le",&BegParameterValue) != 1)
-	{
-	  GOMA_EH( -1, "error reading BegParameterValue");
-	}
-      cont->BegParameterValue = BegParameterValue;
-	  SPF(echo_string,"%s = %.4g", input, BegParameterValue); ECHO(echo_string,echo_file);
-      
-      EndParameterValue = 1.0;
-      look_for(ifp,"Final parameter value",input,'=');
-      if ( fscanf(ifp,"%le",&EndParameterValue) != 1)
-	{
-	  GOMA_EH( -1, "error reading EndParameterValue");
-	}
-      cont->EndParameterValue = EndParameterValue;
-	  SPF(echo_string,"%s = %.4g", input, EndParameterValue); ECHO(echo_string,echo_file);
-      
-      look_for(ifp,"delta_s",input,'=');
-      if (fscanf (ifp,"%le",&Delta_s0) != 1)
-	{
-	  GOMA_EH( -1, "error reading delta_s");
-	}
-      cont->Delta_s0 = Delta_s0;
-	  SPF(echo_string,"%s = %.4g", input, Delta_s0); ECHO(echo_string,echo_file);
-      
-      look_for(ifp,"Maximum number of path steps",input,'=');
-      if (fscanf (ifp,"%d",&MaxPathSteps) != 1)
-	{
-	  GOMA_EH( -1, "error reading maximum number of path steps");
-	}
-      cont->MaxPathSteps = MaxPathSteps;
-	  SPF(echo_string,"%s = %d", input, MaxPathSteps); ECHO(echo_string,echo_file);
-      
-      look_for(ifp,"Minimum path step",input,'=');
-      if ( fscanf(ifp,"%le",&Delta_s_min) != 1)
-	{
-	  GOMA_EH( -1, "error reading minimum path step");
-	}
-      cont->Delta_s_min = Delta_s_min;
-	  SPF(echo_string,"%s = %.4g", input, Delta_s_min); ECHO(echo_string,echo_file);
-      
-      Delta_s_max = 1.e+12;
-      look_for(ifp,"Maximum path step",input,'=');
-      if ( fscanf(ifp,"%le",&Delta_s_max) != 1)
-	{
-	  GOMA_EH( -1, "error reading Maximum path step");
-	}
-      cont->Delta_s_max = Delta_s_max;
-	  SPF(echo_string,"%s = %.4g", input, Delta_s_max); ECHO(echo_string,echo_file);
-      
-      look_for(ifp,"Continuation Printing Frequency",input,'=');
-      if ( fscanf(ifp,"%d",&print_freq) != 1)
-	{
-	  GOMA_EH( -1, "error reading Continuation Printing Frequency");
-	}
-      cont->print_freq = print_freq;
-	  SPF(echo_string,"%s = %d", input, print_freq); ECHO(echo_string,echo_file);
+    if (Continuation == LOCA) {
 
-      cont->fix_freq = 0;
-      if (Num_Proc > 1) {
-        iread = look_for_optional(ifp,"Continuation Fix Frequency",input,'=');
-        if (iread == 1) {
-          cont->fix_freq = read_int(ifp, "Continuation Fix Frequency");
-          if (cont->fix_freq < 0) {
-            GOMA_EH(GOMA_ERROR, "Expected Fix Frequency > 0");
+      loca_in->Cont_Alg = CONTINUATION;
+      iread = look_for_optional(ifp, "LOCA method", input, '=');
+      if (iread == 1) {
+        snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s =", input);
+
+        (void)read_string(ifp, input, '\n');
+        strip(input);
+
+        if (strcmp(input, "ss") == 0) {
+          if (Debug_Flag && ProcID == 0) {
+            printf("%s:\tsteady state continuation\n", yo);
           }
-          SPF(echo_string, "%s = %d", "Continuation Fix Frequency", cont->fix_freq); ECHO(echo_string, echo_file);
+
+          SPF(endofstring(echo_string), " %s", input);
+
+          loca_in->Cont_Alg = CONTINUATION;
+          iread = look_for_optional(ifp, "Continuation order", input, '=');
+          if (iread == 1) {
+            if (fscanf(ifp, "%d", &(loca_in->Cont_Order)) != 1) {
+              GOMA_EH(-1, "error reading continuation order");
+            }
+            SPF(endofstring(echo_string), "/n%s = %d", input, loca_in->Cont_Order);
+          }
+        }
+
+        else if (strcmp(input, "zero") == 0) {
+          if (Debug_Flag && ProcID == 0) {
+            printf("%s:\tzero order continuation\n", yo);
+          }
+          SPF(endofstring(echo_string), " %s", input);
+        }
+
+        else if (strcmp(input, "first") == 0) {
+          if (Debug_Flag && ProcID == 0) {
+            printf("%s:\tzero order continuation\n", yo);
+          }
+          loca_in->Cont_Order = 1;
+          SPF(endofstring(echo_string), " %s", input);
+        }
+
+        else if (strcmp(input, "alc") == 0) {
+          if (Debug_Flag && ProcID == 0) {
+            printf("%s:\tarc length continuation\n", yo);
+          }
+          loca_in->Cont_Order = 2;
+          SPF(endofstring(echo_string), " %s", input);
+        }
+
+        else if (strcmp(input, "tp") == 0) {
+          if (Debug_Flag && ProcID == 0) {
+            printf("%s:\tturning point continuation\n", yo);
+          }
+          loca_in->Cont_Alg = TP_CONTINUATION;
+          SPF(endofstring(echo_string), " %s", input);
+        }
+
+        else if (strcmp(input, "pf") == 0) {
+          if (Debug_Flag && ProcID == 0) {
+            printf("%s:\tpitchfork continuation\n", yo);
+          }
+          loca_in->Cont_Alg = PF_CONTINUATION;
+          SPF(endofstring(echo_string), " %s", input);
+        }
+
+        else if (strcmp(input, "hp") == 0) {
+          if (Debug_Flag && ProcID == 0) {
+            printf("%s:\tHopf continuation\n", yo);
+          }
+          loca_in->Cont_Alg = HP_CONTINUATION;
+          SPF(endofstring(echo_string), " %s", input);
+        }
+
+        else {
+          GOMA_EH(-1, "Invalid LOCA method!");
         }
       }
 
+      ECHO(echo_string, echo_file);
 
-      if (Continuation == LOCA)
-        {
-        
-          loca_in->Cont_Alg = CONTINUATION;
-          iread=look_for_optional(ifp,"LOCA method",input,'=');
-          if (iread == 1)
-		  {
-			  SPF(echo_string,"%s =",input);
-			  
-              (void) read_string(ifp,input,'\n');
-              strip(input);
-			  
-              if ( strcmp(input,"ss") == 0 )
-			  {
-                  if ( Debug_Flag && ProcID == 0 )
-				  {
-                      printf("%s:\tsteady state continuation\n", yo);
-				  }
-				  
-				  SPF(endofstring(echo_string)," %s",input);
-				  
-                  loca_in->Cont_Alg = CONTINUATION;
-                  iread = look_for_optional(ifp,"Continuation order",input,'=');
-                  if (iread == 1)
-				  {
-                      if ( fscanf(ifp,"%d",&(loca_in->Cont_Order)) != 1)
-					  {
-                          GOMA_EH( -1, "error reading continuation order");
-					  }
-					  SPF(endofstring(echo_string),"/n%s = %d",input, loca_in->Cont_Order);
-				  }
-			  }
-			  
-              else
-				  if ( strcmp(input,"zero") == 0 )
-                  {
-					  if ( Debug_Flag && ProcID == 0 )
-                      {
-						  printf("%s:\tzero order continuation\n", yo);
-                      }
-					  SPF(endofstring(echo_string)," %s",input);
-                  }
-			  
-			  else
-                  if ( strcmp(input,"first") == 0 )
-				  {
-                      if ( Debug_Flag && ProcID == 0 )
-					  {
-                          printf("%s:\tzero order continuation\n", yo);
-					  }
-                      loca_in->Cont_Order = 1;
-					  SPF(endofstring(echo_string)," %s",input);
-				  }
-			  
-			  else
-				  if ( strcmp(input,"alc") == 0 )
-				  {
-					  if ( Debug_Flag && ProcID == 0 )
-					  {
-						  printf("%s:\tarc length continuation\n", yo);
-					  }
-					  loca_in->Cont_Order = 2;
-					  SPF(endofstring(echo_string)," %s",input);
-				  }
-			  
-			  else
-				  if ( strcmp(input,"tp") == 0 )
-				  {
-					  if ( Debug_Flag && ProcID == 0 )
-					  {
-						  printf("%s:\tturning point continuation\n", yo);
-					  }
-					  loca_in->Cont_Alg = TP_CONTINUATION;
-					  SPF(endofstring(echo_string)," %s",input);
-				  }
-			  
-			  else
-				  if ( strcmp(input,"pf") == 0 )
-				  {
-					  if ( Debug_Flag && ProcID == 0 )
-					  {
-						  printf("%s:\tpitchfork continuation\n", yo);
-					  }
-					  loca_in->Cont_Alg = PF_CONTINUATION;
-					  SPF(endofstring(echo_string)," %s",input);
-				  }
-			  
-			  else
-				  if ( strcmp(input,"hp") == 0 )
-				  {
-					  if ( Debug_Flag && ProcID == 0 )
-					  {
-						  printf("%s:\tHopf continuation\n", yo);
-					  }
-					  loca_in->Cont_Alg = HP_CONTINUATION;
-					  SPF(endofstring(echo_string)," %s",input);
-				  }
-			  
-			  else
-			  {
-				  GOMA_EH( -1, "Invalid LOCA method!");
-			  }
-		  }
-		  
-		  ECHO(echo_string,echo_file);
+      loca_in->StepAggr = 0.0;
+      iread = look_for_optional(ifp, "Step control aggressiveness", input, '=');
+      if (iread == 1) {
+        if (fscanf(ifp, "%lf", &(loca_in->StepAggr)) != 1) {
+          GOMA_EH(-1, "error reading step control aggressiveness");
+        }
+        snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, loca_in->StepAggr);
+        ECHO(echo_string, echo_file);
+      }
 
-      
-          loca_in->StepAggr = 0.0;
-          iread = look_for_optional(ifp,"Step control aggressiveness",input,'=');
-          if (iread == 1)
-            {   
-              if ( fscanf(ifp,"%lf",&(loca_in->StepAggr)) != 1)
-                {
-                  GOMA_EH( -1, "error reading step control aggressiveness");
-                }
-			  SPF(echo_string,"%s = %.4g", input, loca_in->StepAggr); ECHO(echo_string,echo_file);
-            }
+      /* Use negative input for constant step size = range / (MaxSteps-1) */
+      if (loca_in->StepAggr < -1.0e-6) {
+        loca_in->StepAggr = 0.0;
+        if (loca_in->Cont_Order != 2)
+          cont->Delta_s0 = (cont->EndParameterValue - cont->BegParameterValue) /
+                           ((double)(cont->MaxPathSteps - 1));
+      }
 
- /* Use negative input for constant step size = range / (MaxSteps-1) */
-          if (loca_in->StepAggr < -1.0e-6)
-            {
-              loca_in->StepAggr = 0.0;
-              if (loca_in->Cont_Order != 2) cont->Delta_s0 = 
-                (cont->EndParameterValue - cont->BegParameterValue)
-                / ((double)(cont->MaxPathSteps - 1));
-            }
+      loca_in->perturb = 1.0e-9;
+      iread = look_for_optional(ifp, "Perturbation magnitude", input, '=');
+      if (iread == 1) {
+        if (fscanf(ifp, "%lf", &(loca_in->perturb)) != 1) {
+          GOMA_EH(-1, "error reading Perturbation magnitude");
+        }
+        snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, loca_in->perturb);
+        ECHO(echo_string, echo_file);
+      }
 
-          loca_in->perturb = 1.0e-9;
-          iread = look_for_optional(ifp,"Perturbation magnitude",input,'=');
-          if (iread == 1)
-            {   
-              if ( fscanf(ifp,"%lf",&(loca_in->perturb)) != 1)
-                {
-                  GOMA_EH( -1, "error reading Perturbation magnitude");
-                }
-			  SPF(echo_string,"%s = %.4g", input, loca_in->perturb); ECHO(echo_string,echo_file);
-            }
+      loca_in->debug = 5;
+      iread = look_for_optional(ifp, "LOCA print level", input, '=');
+      if (iread == 1) {
+        if (fscanf(ifp, "%d", &(loca_in->debug)) != 1) {
+          GOMA_EH(-1, "error reading LOCA print level");
+        }
+        snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", input, loca_in->debug);
+        ECHO(echo_string, echo_file);
+      }
 
-          loca_in->debug = 5;
-          iread = look_for_optional (ifp,"LOCA print level",input,'=');
-          if (iread == 1)
-            {   
-              if ( fscanf(ifp,"%d",&(loca_in->debug)) != 1)
-                {
-                  GOMA_EH( -1, "error reading LOCA print level");
-                }
-			  SPF(echo_string,"%s = %d", input, loca_in->debug); ECHO(echo_string,echo_file);
-            }
-      
-          loca_in->DpDs2 = 0.5;
-          iread = look_for_optional (ifp,"ALC Desired solution fraction",input,'=');
-          if (iread == 1)
-            {   
-              if ( fscanf(ifp,"%lf",&(loca_in->DpDs2)) != 1)
-                {
-                  GOMA_EH( -1, "error reading ALC Desired solution fraction");
-                }
-			  SPF(echo_string,"%s = %.4g", input, loca_in->DpDs2); ECHO(echo_string,echo_file);
-            }
-      
-          loca_in->DpDsHi = 1.0;
-          iread = look_for_optional (ifp,"ALC Max. parameter sensitivity",input,'=');
-          if (iread == 1)
-            {   
-              if ( fscanf(ifp,"%lf",&(loca_in->DpDsHi)) != 1)
-                {
-                  GOMA_EH( -1, "error reading ALC Max. parameter sensitivity");
-                }
-			  SPF(echo_string,"%s = %.4g", input, loca_in->DpDsHi); ECHO(echo_string,echo_file);
-            }
-      
-          loca_in->Texp = 0.0;
-          iread = look_for_optional (ifp,"ALC Tangent factor exponent",input,'=');
-          if (iread == 1)
-            {   
-              if ( fscanf(ifp,"%lf",&(loca_in->Texp)) != 1)
-                {
-                  GOMA_EH( -1, "error reading ALC Tangent factor exponent");
-                }
-			  SPF(echo_string,"%s = %.4g", input, loca_in->Texp); ECHO(echo_string,echo_file);
-            }
+      loca_in->DpDs2 = 0.5;
+      iread = look_for_optional(ifp, "ALC Desired solution fraction", input, '=');
+      if (iread == 1) {
+        if (fscanf(ifp, "%lf", &(loca_in->DpDs2)) != 1) {
+          GOMA_EH(-1, "error reading ALC Desired solution fraction");
+        }
+        snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, loca_in->DpDs2);
+        ECHO(echo_string, echo_file);
+      }
 
-          loca_in->MaxTS = 0.0;
-          iread = look_for_optional(ifp,"ALC Tangent factor step limit",input,'=');
-          if (iread == 1)
-            {   
-              if ( fscanf(ifp,"%lf",&(loca_in->MaxTS)) != 1)
-                {
-                  GOMA_EH( -1, "error reading ALC Tangent factor step limit");
-                }
-			  SPF(echo_string,"%s = %.4g", input, loca_in->MaxTS); ECHO(echo_string,echo_file);			  
-			}
+      loca_in->DpDsHi = 1.0;
+      iread = look_for_optional(ifp, "ALC Max. parameter sensitivity", input, '=');
+      if (iread == 1) {
+        if (fscanf(ifp, "%lf", &(loca_in->DpDsHi)) != 1) {
+          GOMA_EH(-1, "error reading ALC Max. parameter sensitivity");
+        }
+        snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, loca_in->DpDsHi);
+        ECHO(echo_string, echo_file);
+      }
 
-  /* Bypass CC card section if LOCA is to use existing Hunting cards
-     - this is for backward compatibility - EDW */
+      loca_in->Texp = 0.0;
+      iread = look_for_optional(ifp, "ALC Tangent factor exponent", input, '=');
+      if (iread == 1) {
+        if (fscanf(ifp, "%lf", &(loca_in->Texp)) != 1) {
+          GOMA_EH(-1, "error reading ALC Tangent factor exponent");
+        }
+        snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, loca_in->Texp);
+        ECHO(echo_string, echo_file);
+      }
+
+      loca_in->MaxTS = 0.0;
+      iread = look_for_optional(ifp, "ALC Tangent factor step limit", input, '=');
+      if (iread == 1) {
+        if (fscanf(ifp, "%lf", &(loca_in->MaxTS)) != 1) {
+          GOMA_EH(-1, "error reading ALC Tangent factor step limit");
+        }
+        snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, loca_in->MaxTS);
+        ECHO(echo_string, echo_file);
+      }
+
+      /* Bypass CC card section if LOCA is to use existing Hunting cards
+         - this is for backward compatibility - EDW */
+      nCC = 1;
+      iread = look_for_optional(ifp, "Number of continuation conditions", input, '=');
+      if (iread == 1) {
+        if (fscanf(ifp, "%d", &nCC) != 1) {
+          GOMA_EH(-1, "error reading Number of continuation conditions");
+        }
+
+        if (nCC == -1) {
+          nCC = count_list(ifp, "CC", input, '=', "END OF CC") + 1;
+        }
+
+        if (nCC < 1 && nCC != -2) {
+          Continuation = ALC_NONE;
+          snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t(%s)", "No continuation conditions specified");
+          return;
+        } else
+          snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", input, nCC);
+
+        ECHO(echo_string, echo_file);
+      }
+
+      /*
+       *  For angular continuation, ensure at least one angular CC is specified
+       */
+      if (cont->upType == 6 && nCC < 2) {
+        GOMA_EH(GOMA_ERROR, "Angular continuation requires at least one CC card!");
+      }
+
+      /*
+       *  Allocate space for the vector cpcc
+       */
+      if (nCC != -2) {
+
+        cpcc =
+            (struct Continuation_Conditions *)calloc(nCC, sizeof(struct Continuation_Conditions));
+
+        if (Debug_Flag && ProcID == 0) {
+          printf("%s:\tallocated %d copies of the %lu sized\n", yo, nCC,
+                 (long unsigned int)sizeof(struct Continuation_Conditions));
+          printf("%s:\tCC structure.\n", yo);
+        }
+
+        /*
+         *  Load up cpcc[0] with inputs from above
+         *  For angular continuation, also get angle range in radians
+         */
+        cpcc[0].nCC = nCC;
+        cpcc[0].ratio = 1.0;
+        cpcc[0].Type = cont->upType;
+        cpcc[0].BCID = cont->upBCID;
+        cpcc[0].DFID = cont->upDFID;
+        cpcc[0].MTID = cont->upMTID;
+        cpcc[0].MPID = cont->upMPID;
+        cpcc[0].MDID = cont->upMDID;
+        cpcc[0].Beg_CC_Value = cont->BegParameterValue;
+        cpcc[0].End_CC_Value = cont->EndParameterValue;
+        range = cpcc[0].End_CC_Value - cpcc[0].Beg_CC_Value;
+        if (cont->upType == 6) {
+          beg_angle = BegParameterValue * M_PIE / 180.0;
+          end_angle = EndParameterValue * M_PIE / 180.0;
+        }
+        cpcc[0].fn_flag = 0;
+        cpcc[0].old_value = cpcc[0].Beg_CC_Value;
+        cpcc[0].value = cpcc[0].Beg_CC_Value;
+
+        /*
+         *  Read in continuation parameter conditions and load up cpcc
+         */
+
+        /* First check for UF/CC conflict (UF has priority) */
+        if (nCC > 1 && cont->upType == 5) {
+          snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t(%s)", "UF continuation overrides CC cards!");
+          ECHO(echo_string, echo_file);
           nCC = 1;
-          iread = look_for_optional(ifp,"Number of continuation conditions",input,'=');
-          if (iread == 1)
-            {
-              if (fscanf(ifp,"%d",&nCC) != 1)
-                {
-                  GOMA_EH( -1, "error reading Number of continuation conditions");
-                }
+        }
 
-              if (nCC == -1)
-                {
-                  nCC = count_list(ifp,"CC",input,'=',"END OF CC") + 1;
-                }
-			  
+        if (nCC > 1) {
+          for (iCC = 1; iCC < nCC; iCC++) {
 
-              if (nCC < 1 && nCC != -2)
-                {
-                  Continuation = ALC_NONE;
-				  SPF(echo_string,"\t(%s)","No continuation conditions specified");
-                  return;
-                }
-			  else
-				  SPF(echo_string,"%s = %d", input, nCC);
-			  
-			   ECHO(echo_string,echo_file);
+            look_for(ifp, "CC", input, '=');
+
+            snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = ", input);
+
+            if (fscanf(ifp, "%80s", input) != 1) {
+              fprintf(stderr, "%s:\tError reading CC[iCC].Set_Type ", yo);
+              fprintf(stderr, "(one of BC, MT, UM, or AC)\n");
+              exit(-1);
             }
-
-  /*
-   *  For angular continuation, ensure at least one angular CC is specified
-   */
-          if (cont->upType == 6 && nCC < 2)
-            {
-              GOMA_EH(GOMA_ERROR, "Angular continuation requires at least one CC card!");
+            if (!strcmp(input, "BC")) {
+              cpcc[iCC].Type = 1;
+            } else if (!strcmp(input, "MT")) {
+              cpcc[iCC].Type = 2;
+            } else if (!strcmp(input, "AC")) {
+              cpcc[iCC].Type = 3;
+            } else if (!strcmp(input, "UM")) {
+              cpcc[iCC].Type = 4;
+            } else {
+              fprintf(stderr, "%s:\tImproper CC set type - %s\n", yo, input);
+              if (!strcmp(input, "UF"))
+                fprintf(stderr, "\tUM is not a valid option for CC cards!");
+              if (!strcmp(input, "AN"))
+                fprintf(stderr, "\tAN is not a valid option for CC cards!");
+              exit(-1);
             }
+            SPF(endofstring(echo_string), " %s", input);
 
-  /*
-   *  Allocate space for the vector cpcc
-   */
-          if (nCC != -2)
-            {
+            cpcc[iCC].nCC = nCC;
+            /*
+             *  Read in three required integers (four if type is UM)
+             */
 
-              cpcc = (struct Continuation_Conditions *)
-                calloc(nCC, sizeof(struct Continuation_Conditions));
-
-              if ( Debug_Flag && ProcID == 0 )
-                {
-                  printf("%s:\tallocated %d copies of the %lu sized\n", 
-                         yo, nCC, (long unsigned int)sizeof(struct Continuation_Conditions));
-                  printf("%s:\tCC structure.\n", yo);
-                }
-
-  /*
-   *  Load up cpcc[0] with inputs from above
-   *  For angular continuation, also get angle range in radians
-   */
-              cpcc[0].nCC = nCC;
-              cpcc[0].ratio = 1.0;
-              cpcc[0].Type = cont->upType;
-              cpcc[0].BCID = cont->upBCID;
-              cpcc[0].DFID = cont->upDFID;
-              cpcc[0].MTID = cont->upMTID;
-              cpcc[0].MPID = cont->upMPID;
-              cpcc[0].MDID = cont->upMDID;
-              cpcc[0].Beg_CC_Value = cont->BegParameterValue;
-              cpcc[0].End_CC_Value = cont->EndParameterValue;
-              range = cpcc[0].End_CC_Value - cpcc[0].Beg_CC_Value;
-              if (cont->upType == 6)
-                {
-                  beg_angle = BegParameterValue * M_PIE / 180.0;
-                  end_angle = EndParameterValue * M_PIE / 180.0;
-                }
-              cpcc[0].fn_flag = 0;
-              cpcc[0].old_value = cpcc[0].Beg_CC_Value;
-              cpcc[0].value = cpcc[0].Beg_CC_Value;
-
-  /*
-   *  Read in continuation parameter conditions and load up cpcc
-   */
-
-/* First check for UF/CC conflict (UF has priority) */
-	      if (nCC > 1 && cont->upType == 5)
-                {
-			  SPF(echo_string,"\t(%s)","UF continuation overrides CC cards!");	ECHO(echo_string,echo_file);
-                  nCC = 1;
-                }
-
-              if (nCC > 1)
-                {
-                  for (iCC=1; iCC<nCC; iCC++)
-                    {
-
-                  look_for(ifp, "CC", input, '=');
-					  
-					  SPF(echo_string,"%s = ", input);
-					  
-                  if (fscanf(ifp, "%80s", input) != 1)
-                    {
-                      fprintf (stderr, "%s:\tError reading CC[iCC].Set_Type ",yo);
-                      fprintf (stderr, "(one of BC, MT, UM, or AC)\n");
-                      exit (-1);
-                    }
-                  if (!strcmp(input,"BC"))
-                    {
-                      cpcc[iCC].Type = 1;
-                    }
-                  else if (!strcmp(input,"MT"))
-                    {
-                      cpcc[iCC].Type = 2;
-                    }
-                  else if (!strcmp(input,"AC"))
-                    {
-                      cpcc[iCC].Type = 3;
-                    }
-                  else if (!strcmp(input,"UM"))
-                    {
-                      cpcc[iCC].Type = 4;
-                    }
-                  else
-                    {
-                      fprintf(stderr, "%s:\tImproper CC set type - %s\n", yo, input);
-                      if (!strcmp(input,"UF")) fprintf(stderr, "\tUM is not a valid option for CC cards!");
-                      if (!strcmp(input,"AN")) fprintf(stderr, "\tAN is not a valid option for CC cards!");
-                      exit (-1);
-                    }
-				  SPF(endofstring(echo_string)," %s",input);
-
-                  cpcc[iCC].nCC = nCC;
-  /*
-   *  Read in three required integers (four if type is UM)
-   */
-
-                  if (cpcc[iCC].Type == 4)
-                    {
-                      if (fscanf(ifp, "%d %d %d %d", &id1, &id2, &id3, &iflag) != 4)
-                        {
-                          fprintf(stderr, "%s:\tError reading integer inputs, ",yo);
-                          fprintf(stderr, "for CC[%d]\n",iCC+1);
-                          fprintf(stderr, "\tFormat: CC = UM MTID MPID MDID FLAG ...\n");
-                          exit(-1);
-                        }
-					  SPF(endofstring(echo_string)," %d %d %d %d", id1, id2, id3, iflag);
-
-                    }
-                  else 
-				  {
-					  if (fscanf(ifp, "%d %d %d", &id1, &id2, &iflag) != 3)
-					  {
-						  fprintf(stderr, "%s:\tError reading integer inputs ",yo);
-						  fprintf(stderr, "for CC[%d]\n",iCC+1);
-						  if (cpcc[iCC].Type == 1)
-						  {
-							  fprintf(stderr,"\tFormat: CC = BC BCID DFID FLAG ...\n");
-						  }
-						  if (cpcc[iCC].Type == 2)
-						  {
-							  fprintf(stderr,"\tFormat: CC = MT MTID MPID FLAG ...\n");
-						  }
-						  if (cpcc[iCC].Type == 3)
-						  {
-							  fprintf(stderr,"\tFormat: CC = AC ACID DFID FLAG ...\n");
-						  }
-						  exit (-1);
-					  }
-					  SPF(endofstring(echo_string)," %d %d %d", id1, id2, iflag);
-                    }
-				  /*
-				   *  For continuation types other than "AN":
-				   *  Third int input FLAG indicates meaning of second float input "vfloat":
-				   *  0 - Value is same as continuation parameter, no floats needed
-				   *  1 - vfloat is End_CC_Value[iCC]; use to find range ratio d(val[iCC])/d(val[0])
-				   *  2 - vfloat is range ratio; use to find End_CC_Value[iCC]
-				   *  SPECIAL CASE:
-				   *  3 - Value is constructed from three floats:
-				   *        value = coeff_0 + coeff_1 * lambda^coeff_2
-				   */
-				  
-				  if (cont->upType != 6 && iflag == 0)
-				  {
-					  cpcc[iCC].ratio = 1.0;
-					  cpcc[iCC].Beg_CC_Value = cpcc[0].Beg_CC_Value;
-					  cpcc[iCC].End_CC_Value = cpcc[0].End_CC_Value;
-				  }
-				  else if (iflag == 3)  /* Three floats required */
-				  {
-					  if (fscanf(ifp, "%lf %lf %lf",
-								 &cpcc[iCC].coeff_0, &cpcc[iCC].coeff_1, &cpcc[iCC].coeff_2) != 3)
-					  {
-						  fprintf(stderr, "%s:\tError reading CC[%d] floats\n",
-								  yo, iCC+1);
-						  fprintf(stderr, "\tThree floats are required!\n");
-						  exit (-1);
-					  }
-					  SPF(endofstring(echo_string)," %.4g %.4g %.4g", cpcc[iCC].coeff_0, cpcc[iCC].coeff_1, cpcc[iCC].coeff_2);
-				  }
-				  else  /* Two floats are required */
-				  {
-					  if (fscanf(ifp, "%lf %lf",
-								 &cpcc[iCC].coeff_0, &cpcc[iCC].coeff_1) != 2)
-					  {
-						  fprintf(stderr, "%s:\tError reading CC[%d] floats\n",
-								  yo, iCC+1);
-						  fprintf(stderr, "\tFormat: ...start end/range\n");
-						  exit (-1);
-					  }
-					  SPF(endofstring(echo_string), " %.4g %.4g", cpcc[iCC].coeff_0, cpcc[iCC].coeff_1);
-				  }
-				  
-				  ECHO(echo_string,echo_file);
-				  
-                  switch (cpcc[iCC].Type) {
-
-                  case 1: /* BC */
-                    cpcc[iCC].BCID = id1;
-                    cpcc[iCC].DFID = id2;
-                    SPF(echo_string, "\t( %3d. BC: BCID=%3d DFID=%5d)",iCC+1,
-                            cpcc[iCC].BCID, cpcc[iCC].DFID);
-                    break;
-
-                  case 2: /* MT */
-                    cpcc[iCC].MTID = id1;
-                    cpcc[iCC].MPID = id2;
-                    SPF(echo_string, "\t( %3d. MT: MTID=%3d MPID=%5d)",iCC+1,
-                            cpcc[iCC].MTID, cpcc[iCC].MPID);
-                    cpcc[iCC].MTID--;
-                    break;
-
-                  case 3: /* AC */
-                    cpcc[iCC].BCID = id1;
-                    cpcc[iCC].DFID = id2;
-                    SPF(echo_string, "\t( %3d. AC: ACID=%3d DFID=%5d)",iCC+1,
-                            cpcc[iCC].BCID, cpcc[iCC].DFID);
-                    break;
-
-                  case 4: /* UM */
-                    cpcc[iCC].MTID = id1;
-                    cpcc[iCC].MPID = id2;
-                    cpcc[iCC].MDID = id3;
-                    SPF(echo_string, "\t( %3d. UM: MTID=%3d MPID=%5d MDID=%3d)",
-                            iCC+1,cpcc[iCC].MTID, cpcc[iCC].MPID, cpcc[iCC].MDID);
-                    cpcc[iCC].MTID--;
-                    break;
-                  }
-				  
-				  ECHO(echo_string,echo_file);
-
-				  
-				  /*
-   * The floats have different purposes in angular continuation,
-   * so they will be stored in members coeff_0, coeff_1, and coeff_2.
-   * Parameter value is then given by coeff_0 + coeff_1 * f(theta), where:
-   *    fn_flag = 0:   f(theta) = sin(theta)
-   *    fn_flag = 1:   f(theta) = cos(theta)
-   *    fn_flag = 2:   f(theta) = tan(theta)
-   * SPECIAL CASE:
-   *    fn_flag = 3:   value = coeff_0 + coeff_1 * sin(theta) + coeff_2 * cos(theta)
-   */
-                      cpcc[iCC].fn_flag = iflag;
-
-                      if (cont->upType == 6)
-                        {
-                          cpcc[iCC].ratio = -1.0;
-
-                          switch (iflag) {
-                          case 0:
-                            cpcc[iCC].Beg_CC_Value = cpcc[iCC].coeff_0
-                              + cpcc[iCC].coeff_1 * sin(beg_angle);
-                            cpcc[iCC].End_CC_Value = cpcc[iCC].coeff_0
-                              + cpcc[iCC].coeff_1 * sin(end_angle);
-                            break;
-                          case 1:
-                            cpcc[iCC].Beg_CC_Value = cpcc[iCC].coeff_0
-                              + cpcc[iCC].coeff_1 * cos(beg_angle);
-                            cpcc[iCC].End_CC_Value = cpcc[iCC].coeff_0
-                              + cpcc[iCC].coeff_1 * cos(end_angle);
-                            break;
-                          case 2:
-                            cpcc[iCC].Beg_CC_Value = cpcc[iCC].coeff_0
-                              + cpcc[iCC].coeff_1 * tan(beg_angle);
-                            cpcc[iCC].End_CC_Value = cpcc[iCC].coeff_0
-                              + cpcc[iCC].coeff_1 * tan(end_angle);
-                            break;
-                          case 3:
-                            cpcc[iCC].Beg_CC_Value = cpcc[iCC].coeff_0
-                              + cpcc[iCC].coeff_1 * sin(beg_angle)
-                              + cpcc[iCC].coeff_2 * cos(beg_angle);
-                            cpcc[iCC].End_CC_Value = cpcc[iCC].coeff_0
-                              + cpcc[iCC].coeff_1 * sin(end_angle)
-                              + cpcc[iCC].coeff_2 * cos(end_angle);
-                            break;
-                          default:
-                            fprintf(stderr, "%s:\tCC[%d] flag must be 0-3\n",
-                                    yo, iCC+1);
-                            exit (-1);
-                            break;
-                          }
-                        }
-
-  /* Other cases are handled here: */
-                      else
-                        {
-                          switch (iflag) {
-                          case 0:
-                            cpcc[iCC].Beg_CC_Value = cpcc[iCC].coeff_0;
-                            cpcc[iCC].End_CC_Value = cpcc[iCC].coeff_1;
-                            break;
-                          case 1:
-                            cpcc[iCC].Beg_CC_Value = cpcc[iCC].coeff_0;
-                            cpcc[iCC].End_CC_Value = cpcc[iCC].coeff_1;
-                            cpcc[iCC].ratio =
-                              (cpcc[iCC].coeff_1 - cpcc[iCC].coeff_0) / range;
-                            break;
-                          case 2:
-                            cpcc[iCC].Beg_CC_Value = cpcc[iCC].coeff_0;
-                            cpcc[iCC].ratio = cpcc[iCC].coeff_1;
-                            cpcc[iCC].End_CC_Value = cpcc[iCC].Beg_CC_Value
-                                                     + cpcc[iCC].ratio * range;
-                            break;
-                          case 3:
-                            cpcc[iCC].ratio = -1.0;
-                            cpcc[iCC].Beg_CC_Value = cpcc[iCC].coeff_0
-                              + cpcc[iCC].coeff_1
-                              * pow(BegParameterValue, cpcc[iCC].coeff_2);
-                            cpcc[iCC].End_CC_Value = cpcc[iCC].coeff_0
-                              + cpcc[iCC].coeff_1
-                              * pow(EndParameterValue, cpcc[iCC].coeff_2);
-                            /* fall through */
-                          default:
-                            fprintf(stderr, "%s:\tCC[%d] flag must be 0, 1, or 2\n",
-                                    yo, iCC+1);
-                            exit (-1);
-                            break;
-                          }
-
-                        }  /* End of else block (cont->upType == 6) */
-                   
-                      cpcc[iCC].old_value = cpcc[iCC].Beg_CC_Value;
-                      cpcc[iCC].value = cpcc[iCC].Beg_CC_Value;
-                    }  /* End of iCC loop */
-
-                }  /* End of continuation condition if block */
-
-            }  /* End of nCC!=2 if block (temporary) */
-
-        }  /* End of continuation=LOCA if block */
-
-      if ( Continuation == LOCA &&
-           ( loca_in->Cont_Alg == TP_CONTINUATION ||
-             loca_in->Cont_Alg == PF_CONTINUATION ||
-             loca_in->Cont_Alg == HP_CONTINUATION ) )
-        {
-
-          look_for(ifp,"TP Continuation Type",input,'=');
-		  
-		  SPF(echo_string,"%s =", input); 
-		  
-          (void) read_string(ifp,input,'\n');
-          strip(input);
-          if ( strcmp(input,"none") == 0 )
-		  {
-              GOMA_EH(GOMA_ERROR, "TP parameter type is required!");
-		  }
-          else
-			  if ( strcmp(input,"BC") == 0 )
-              {
-				  if ( Debug_Flag && ProcID == 0 )
-                  {
-					  printf("%s:\tTP BC continuation\n", yo);
-                  }
-				  TPContType = 1;
+            if (cpcc[iCC].Type == 4) {
+              if (fscanf(ifp, "%d %d %d %d", &id1, &id2, &id3, &iflag) != 4) {
+                fprintf(stderr, "%s:\tError reading integer inputs, ", yo);
+                fprintf(stderr, "for CC[%d]\n", iCC + 1);
+                fprintf(stderr, "\tFormat: CC = UM MTID MPID MDID FLAG ...\n");
+                exit(-1);
               }
-		  else
-              if ( strcmp(input,"MT") == 0 )
-			  {
-                  if ( Debug_Flag && ProcID == 0 )
-				  {
-                      printf("%s:\tTP MATPROP continuation\n", yo);
-				  }
-                  TPContType = 2;
-			  }
-		  else
-			  if ( strcmp(input,"AC") == 0 )
-			  {
-				  if ( Debug_Flag && ProcID == 0 )
-				  {
-					  printf("%s:\tTP AC continuation\n", yo);
-				  }
-				  TPContType = 3;
-			  }
-		  else
-			  if ( strcmp(input,"UM") == 0 )
-			  {
-				  if ( Debug_Flag && ProcID == 0 )
-				  {
-					  printf("%s:\tTP User model continuation\n", yo);
-				  }
-				  TPContType = 4;
-			  }
-		  else
-			  if ( strcmp(input,"UF") == 0 )
-			  {
-				  if ( Debug_Flag && ProcID == 0 )
-				  {
-					  printf("%s:\tTP User-defined function continuation\n", yo);
-				  }
-				  TPContType = 5;
-			  }
-		  else
-			  if ( strcmp(input,"AN") == 0 )
-			  {
-				  if ( Debug_Flag && ProcID == 0 )
-				  {
-					  printf("%s:\tAngular parameter continuation\n", yo);
-				  }
-				  TPContType = 6;
-			  }
-		  else
-		  {
-			  GOMA_EH( -1, "unknown TP ContType option (one of BC, MT, AC, UM, AN, or UF)");
-		  }
-		  
-          loca_in->TPupType = TPContType;
+              SPF(endofstring(echo_string), " %d %d %d %d", id1, id2, id3, iflag);
 
-		  SPF(endofstring(echo_string)," %s",input); ECHO(echo_string,echo_file);
-		  
-/* Get number of user-defined TP continuation condition functions */
-          nUTC = 0;
-          if (TPContType == 5)
-            {
-              look_for(ifp, "Number of user TP continuation functions",input,'=');
-              if (fscanf(ifp,"%d",&nUTC) != 1)
-                {
-                  GOMA_EH(GOMA_ERROR, "error reading Number of user TP continuation functions");
+            } else {
+              if (fscanf(ifp, "%d %d %d", &id1, &id2, &iflag) != 3) {
+                fprintf(stderr, "%s:\tError reading integer inputs ", yo);
+                fprintf(stderr, "for CC[%d]\n", iCC + 1);
+                if (cpcc[iCC].Type == 1) {
+                  fprintf(stderr, "\tFormat: CC = BC BCID DFID FLAG ...\n");
                 }
-
-/* Allocate the structure tpuc for each function */
-              tpuc = (struct User_Continuation_Info *)
-                      array_alloc(1, nUTC, sizeof(struct User_Continuation_Info));
-			  
-			  SPF(echo_string,"%s = %d", input,nUTC); ECHO(echo_string,echo_file);
-            }
-      
-          loca_in->TPupBCID = -1;
-          iread = look_for_optional(ifp,"TP Boundary condition ID",input,'=');
-          if (iread == 1)
-            {   
-              if ( fscanf(ifp,"%d",&TPBdyCondID) != 1)
-                {
-                  GOMA_EH( -1, "error reading TP Boundary condition ID");
-                }    
-			  SPF(echo_string,"%s = %d", input,TPBdyCondID); ECHO(echo_string,echo_file);
-            }
-          loca_in->TPupBCID = TPBdyCondID;
-      
-          look_for(ifp,"TP BC data float tag",input,'=');
-          if (fscanf (ifp,"%d",&TPDataFltID) != 1)
-            {
-              GOMA_EH( -1, "error reading TP BC data float tag id");
-            }
-          loca_in->TPupDFID = TPDataFltID;
-		  SPF(echo_string,"%s = %d", input,TPDataFltID); ECHO(echo_string,echo_file);
- 
-          look_for(ifp,"TP parameter material id",input,'=');
-          if (fscanf (ifp,"%d",&TPMatID) != 1)
-            {
-              GOMA_EH( -1, "error reading TP parameter material id");
-            }
-          loca_in->TPupMTID = TPMatID-1;
-		  SPF(echo_string,"%s = %d", input,TPMatID); ECHO(echo_string,echo_file);
- 
-          look_for(ifp,"TP parameter material property tag",input,'=');
-          if (fscanf (ifp,"%d",&TPMatPropID) != 1)
-            {
-              GOMA_EH( -1, "error reading TP parameter material property tag id");
-            }
-          loca_in->TPupMPID = TPMatPropID;
-		  SPF(echo_string,"%s = %d", input,TPMatPropID); ECHO(echo_string,echo_file);
- 
-          look_for(ifp,"TP Material property tag subindex",input,'=');
-          if (fscanf (ifp,"%d",&TPMatPropSIID) != 1)
-            {
-              GOMA_EH( -1, "error reading TP Material property tag subindex id");
-            }
-          loca_in->TPupMDID = TPMatPropSIID;
-		  SPF(echo_string,"%s = %d", input,TPMatPropSIID); ECHO(echo_string,echo_file);
- 
-          loca_in->TPGuess = 0.0;
-          iread = look_for_optional(ifp,"Initial guess of TP parameter",input,'=');
-          if (iread == 1)
-            {   
-              if ( fscanf(ifp,"%lf",&(loca_in->TPGuess)) != 1)
-                {
-                  GOMA_EH( -1, "error reading initial guess of TP parameter");
+                if (cpcc[iCC].Type == 2) {
+                  fprintf(stderr, "\tFormat: CC = MT MTID MPID FLAG ...\n");
                 }
-            }
-		  SPF(echo_string,"%s = %.4g", input,loca_in->TPGuess); ECHO(echo_string,echo_file);
- 
-          loca_in->TPFinal = 1.0;
-          iread = look_for_optional(ifp,"TP parameter final value",input,'=');
-          if (iread == 1)
-            {   
-              if ( fscanf(ifp,"%lf",&(loca_in->TPFinal)) != 1)
-                {
-                  GOMA_EH( -1, "error reading TP parameter final value");
+                if (cpcc[iCC].Type == 3) {
+                  fprintf(stderr, "\tFormat: CC = AC ACID DFID FLAG ...\n");
                 }
+                exit(-1);
+              }
+              SPF(endofstring(echo_string), " %d %d %d", id1, id2, iflag);
             }
-		  SPF(echo_string,"%s = %.4g", input,loca_in->TPFinal); ECHO(echo_string,echo_file);
+            /*
+             *  For continuation types other than "AN":
+             *  Third int input FLAG indicates meaning of second float input "vfloat":
+             *  0 - Value is same as continuation parameter, no floats needed
+             *  1 - vfloat is End_CC_Value[iCC]; use to find range ratio d(val[iCC])/d(val[0])
+             *  2 - vfloat is range ratio; use to find End_CC_Value[iCC]
+             *  SPECIAL CASE:
+             *  3 - Value is constructed from three floats:
+             *        value = coeff_0 + coeff_1 * lambda^coeff_2
+             */
 
-          loca_in->NVRestart = FALSE;
-          iread = look_for_optional(ifp, "Null vector restart file", input, '=');
-          if (iread == 1)
+            if (cont->upType != 6 && iflag == 0) {
+              cpcc[iCC].ratio = 1.0;
+              cpcc[iCC].Beg_CC_Value = cpcc[0].Beg_CC_Value;
+              cpcc[iCC].End_CC_Value = cpcc[0].End_CC_Value;
+            } else if (iflag == 3) /* Three floats required */
             {
-			  SPF(echo_string,"%s =",input);
-              (void) read_string(ifp, input, '\n');
-              strip(input);
-              (void) strcpy(loca_in->NV_exoII_infile, input);
-
-              loca_in->NVRestart = TRUE;
-			  SPF(endofstring(echo_string)," %s", loca_in->NV_exoII_infile); ECHO(echo_string,echo_file);
-            }
-          else
+              if (fscanf(ifp, "%lf %lf %lf", &cpcc[iCC].coeff_0, &cpcc[iCC].coeff_1,
+                         &cpcc[iCC].coeff_2) != 3) {
+                fprintf(stderr, "%s:\tError reading CC[%d] floats\n", yo, iCC + 1);
+                fprintf(stderr, "\tThree floats are required!\n");
+                exit(-1);
+              }
+              SPF(endofstring(echo_string), " %.4g %.4g %.4g", cpcc[iCC].coeff_0, cpcc[iCC].coeff_1,
+                  cpcc[iCC].coeff_2);
+            } else /* Two floats are required */
             {
-              if (loca_in->Cont_Alg == PF_CONTINUATION)
-                {
-                  GOMA_EH(GOMA_ERROR, "Pitchfork algorithm requires null vector input!");
-                }
-              if (loca_in->Cont_Alg == HP_CONTINUATION)
-                {
-                  GOMA_EH(GOMA_ERROR, "Hopf algorithm requires null vector input!");
-                }
-            }
-
-  /* These two cards pertain only to Hopf continuation */
-          if (loca_in->Cont_Alg == HP_CONTINUATION)
-            {
-              look_for(ifp, "Null vector imaginary restart file", input, '='); SPF(echo_string,"%s =",input);
-		
-              (void) read_string(ifp, input, '\n');
-              strip(input);
-              (void) strcpy(loca_in->NV_imag_infile, input);
-			  
-			  SPF(endofstring(echo_string)," %s", loca_in->NV_imag_infile); ECHO(echo_string,echo_file); 
-
-              look_for(ifp, "Initial Hopf frequency", input, '=');
-              if (fscanf(ifp, "%le", &loca_in->omega) != 1)
-                {
-                  GOMA_EH(GOMA_ERROR, "error reading initial Hopf frequency");
-                }
-			  SPF(echo_string,"%s = %.4g", input, loca_in->omega);  ECHO(echo_string,echo_file); 
+              if (fscanf(ifp, "%lf %lf", &cpcc[iCC].coeff_0, &cpcc[iCC].coeff_1) != 2) {
+                fprintf(stderr, "%s:\tError reading CC[%d] floats\n", yo, iCC + 1);
+                fprintf(stderr, "\tFormat: ...start end/range\n");
+                exit(-1);
+              }
+              SPF(endofstring(echo_string), " %.4g %.4g", cpcc[iCC].coeff_0, cpcc[iCC].coeff_1);
             }
 
-          iread = look_for_optional(ifp, "Null vector save file", input, '=');
-          if (iread == 1)
-            {
-			  SPF(echo_string,"%s =", input);
-              (void) read_string(ifp, input, '\n');
-              strip(input);
-              (void) strcpy(loca_in->NV_exoII_outfile, input);
-			  SPF(endofstring(echo_string)," %s", loca_in->NV_exoII_outfile); ECHO(echo_string,echo_file);
-              loca_in->NVSave = TRUE;
+            ECHO(echo_string, echo_file);
+
+            switch (cpcc[iCC].Type) {
+
+            case 1: /* BC */
+              cpcc[iCC].BCID = id1;
+              cpcc[iCC].DFID = id2;
+              snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t( %3d. BC: BCID=%3d DFID=%5d)", iCC + 1, cpcc[iCC].BCID,
+                  cpcc[iCC].DFID);
+              break;
+
+            case 2: /* MT */
+              cpcc[iCC].MTID = id1;
+              cpcc[iCC].MPID = id2;
+              snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t( %3d. MT: MTID=%3d MPID=%5d)", iCC + 1, cpcc[iCC].MTID,
+                  cpcc[iCC].MPID);
+              cpcc[iCC].MTID--;
+              break;
+
+            case 3: /* AC */
+              cpcc[iCC].BCID = id1;
+              cpcc[iCC].DFID = id2;
+              snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t( %3d. AC: ACID=%3d DFID=%5d)", iCC + 1, cpcc[iCC].BCID,
+                  cpcc[iCC].DFID);
+              break;
+
+            case 4: /* UM */
+              cpcc[iCC].MTID = id1;
+              cpcc[iCC].MPID = id2;
+              cpcc[iCC].MDID = id3;
+              snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t( %3d. UM: MTID=%3d MPID=%5d MDID=%3d)", iCC + 1, cpcc[iCC].MTID,
+                  cpcc[iCC].MPID, cpcc[iCC].MDID);
+              cpcc[iCC].MTID--;
+              break;
             }
 
-          if (loca_in->Cont_Alg == HP_CONTINUATION && loca_in->NVSave)
-            {
-              iread = look_for_optional(ifp, "Null vector imaginary save file", input, '=');
-              if (iread == 1)
-                {
-				  SPF(echo_string,"%s =", input);
-                  (void) read_string(ifp, input, '\n');
-                  strip(input);
-                  (void) strcpy(loca_in->NV_imag_outfile, input);
-                  SPF(endofstring(echo_string)," %s", loca_in->NV_imag_outfile); ECHO(echo_string,echo_file);
-                }
-            }
-          nTC = 1;
-          iread = look_for_optional(ifp,"Number of TP continuation conditions",input,'=');
-          if (iread == 1)
-            {
-              if (fscanf(ifp,"%d",&nTC) != 1)
-                {
-                  GOMA_EH( -1, "error reading Number of TP continuation conditions");
-                }
+            ECHO(echo_string, echo_file);
 
-              if (nTC == -1)
-                {
-                  nTC = count_list(ifp,"TC",input,'=',"END OF TC") + 1;
-                }
-			  
-              SPF(echo_string,"%s = %d", input, nTC); ECHO(echo_string,echo_file);
+            /*
+             * The floats have different purposes in angular continuation,
+             * so they will be stored in members coeff_0, coeff_1, and coeff_2.
+             * Parameter value is then given by coeff_0 + coeff_1 * f(theta), where:
+             *    fn_flag = 0:   f(theta) = sin(theta)
+             *    fn_flag = 1:   f(theta) = cos(theta)
+             *    fn_flag = 2:   f(theta) = tan(theta)
+             * SPECIAL CASE:
+             *    fn_flag = 3:   value = coeff_0 + coeff_1 * sin(theta) + coeff_2 * cos(theta)
+             */
+            cpcc[iCC].fn_flag = iflag;
 
-              if (nTC < 1)
-                {
-                  Continuation = ALC_NONE;
-                  SPF(echo_string,"\t(%s)", "No TP continuation conditions specified"); ECHO(echo_string,echo_file);
-                  return;
-                }
+            if (cont->upType == 6) {
+              cpcc[iCC].ratio = -1.0;
 
-            }
-
-  /*
-   *  For angular continuation, ensure at least one angular TC is specified
-   */
-          if (TPContType == 6 && nTC < 2)
-            {
-              GOMA_EH(GOMA_ERROR, "Angular TP continuation requires at least one TC card!");
+              switch (iflag) {
+              case 0:
+                cpcc[iCC].Beg_CC_Value = cpcc[iCC].coeff_0 + cpcc[iCC].coeff_1 * sin(beg_angle);
+                cpcc[iCC].End_CC_Value = cpcc[iCC].coeff_0 + cpcc[iCC].coeff_1 * sin(end_angle);
+                break;
+              case 1:
+                cpcc[iCC].Beg_CC_Value = cpcc[iCC].coeff_0 + cpcc[iCC].coeff_1 * cos(beg_angle);
+                cpcc[iCC].End_CC_Value = cpcc[iCC].coeff_0 + cpcc[iCC].coeff_1 * cos(end_angle);
+                break;
+              case 2:
+                cpcc[iCC].Beg_CC_Value = cpcc[iCC].coeff_0 + cpcc[iCC].coeff_1 * tan(beg_angle);
+                cpcc[iCC].End_CC_Value = cpcc[iCC].coeff_0 + cpcc[iCC].coeff_1 * tan(end_angle);
+                break;
+              case 3:
+                cpcc[iCC].Beg_CC_Value = cpcc[iCC].coeff_0 + cpcc[iCC].coeff_1 * sin(beg_angle) +
+                                         cpcc[iCC].coeff_2 * cos(beg_angle);
+                cpcc[iCC].End_CC_Value = cpcc[iCC].coeff_0 + cpcc[iCC].coeff_1 * sin(end_angle) +
+                                         cpcc[iCC].coeff_2 * cos(end_angle);
+                break;
+              default:
+                fprintf(stderr, "%s:\tCC[%d] flag must be 0-3\n", yo, iCC + 1);
+                exit(-1);
+                break;
+              }
             }
 
-  /*
-   *  Allocate space for the vector tpcc
-   */
+            /* Other cases are handled here: */
+            else {
+              switch (iflag) {
+              case 0:
+                cpcc[iCC].Beg_CC_Value = cpcc[iCC].coeff_0;
+                cpcc[iCC].End_CC_Value = cpcc[iCC].coeff_1;
+                break;
+              case 1:
+                cpcc[iCC].Beg_CC_Value = cpcc[iCC].coeff_0;
+                cpcc[iCC].End_CC_Value = cpcc[iCC].coeff_1;
+                cpcc[iCC].ratio = (cpcc[iCC].coeff_1 - cpcc[iCC].coeff_0) / range;
+                break;
+              case 2:
+                cpcc[iCC].Beg_CC_Value = cpcc[iCC].coeff_0;
+                cpcc[iCC].ratio = cpcc[iCC].coeff_1;
+                cpcc[iCC].End_CC_Value = cpcc[iCC].Beg_CC_Value + cpcc[iCC].ratio * range;
+                break;
+              case 3:
+                cpcc[iCC].ratio = -1.0;
+                cpcc[iCC].Beg_CC_Value =
+                    cpcc[iCC].coeff_0 +
+                    cpcc[iCC].coeff_1 * pow(BegParameterValue, cpcc[iCC].coeff_2);
+                cpcc[iCC].End_CC_Value =
+                    cpcc[iCC].coeff_0 +
+                    cpcc[iCC].coeff_1 * pow(EndParameterValue, cpcc[iCC].coeff_2);
+                /* fall through */
+              default:
+                fprintf(stderr, "%s:\tCC[%d] flag must be 0, 1, or 2\n", yo, iCC + 1);
+                exit(-1);
+                break;
+              }
 
-          tpcc = (struct Continuation_Conditions *)
-                  array_alloc(1, nTC, sizeof(struct Continuation_Conditions));
+            } /* End of else block (cont->upType == 6) */
 
-          if ( Debug_Flag && ProcID == 0 )
-            {
-              printf("%s:\tallocated %d copies of the %lu sized\n", 
-                     yo, nTC, (long unsigned int)sizeof(struct Continuation_Conditions));
-              printf("%s:\tTC structure.\n", yo);
+            cpcc[iCC].old_value = cpcc[iCC].Beg_CC_Value;
+            cpcc[iCC].value = cpcc[iCC].Beg_CC_Value;
+          } /* End of iCC loop */
+
+        } /* End of continuation condition if block */
+
+      } /* End of nCC!=2 if block (temporary) */
+
+    } /* End of continuation=LOCA if block */
+
+    if (Continuation == LOCA &&
+        (loca_in->Cont_Alg == TP_CONTINUATION || loca_in->Cont_Alg == PF_CONTINUATION ||
+         loca_in->Cont_Alg == HP_CONTINUATION)) {
+
+      look_for(ifp, "TP Continuation Type", input, '=');
+
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s =", input);
+
+      (void)read_string(ifp, input, '\n');
+      strip(input);
+      if (strcmp(input, "none") == 0) {
+        GOMA_EH(GOMA_ERROR, "TP parameter type is required!");
+      } else if (strcmp(input, "BC") == 0) {
+        if (Debug_Flag && ProcID == 0) {
+          printf("%s:\tTP BC continuation\n", yo);
+        }
+        TPContType = 1;
+      } else if (strcmp(input, "MT") == 0) {
+        if (Debug_Flag && ProcID == 0) {
+          printf("%s:\tTP MATPROP continuation\n", yo);
+        }
+        TPContType = 2;
+      } else if (strcmp(input, "AC") == 0) {
+        if (Debug_Flag && ProcID == 0) {
+          printf("%s:\tTP AC continuation\n", yo);
+        }
+        TPContType = 3;
+      } else if (strcmp(input, "UM") == 0) {
+        if (Debug_Flag && ProcID == 0) {
+          printf("%s:\tTP User model continuation\n", yo);
+        }
+        TPContType = 4;
+      } else if (strcmp(input, "UF") == 0) {
+        if (Debug_Flag && ProcID == 0) {
+          printf("%s:\tTP User-defined function continuation\n", yo);
+        }
+        TPContType = 5;
+      } else if (strcmp(input, "AN") == 0) {
+        if (Debug_Flag && ProcID == 0) {
+          printf("%s:\tAngular parameter continuation\n", yo);
+        }
+        TPContType = 6;
+      } else {
+        GOMA_EH(-1, "unknown TP ContType option (one of BC, MT, AC, UM, AN, or UF)");
+      }
+
+      loca_in->TPupType = TPContType;
+
+      SPF(endofstring(echo_string), " %s", input);
+      ECHO(echo_string, echo_file);
+
+      /* Get number of user-defined TP continuation condition functions */
+      nUTC = 0;
+      if (TPContType == 5) {
+        look_for(ifp, "Number of user TP continuation functions", input, '=');
+        if (fscanf(ifp, "%d", &nUTC) != 1) {
+          GOMA_EH(GOMA_ERROR, "error reading Number of user TP continuation functions");
+        }
+
+        /* Allocate the structure tpuc for each function */
+        tpuc = (struct User_Continuation_Info *)array_alloc(1, nUTC,
+                                                            sizeof(struct User_Continuation_Info));
+
+        snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", input, nUTC);
+        ECHO(echo_string, echo_file);
+      }
+
+      loca_in->TPupBCID = -1;
+      iread = look_for_optional(ifp, "TP Boundary condition ID", input, '=');
+      if (iread == 1) {
+        if (fscanf(ifp, "%d", &TPBdyCondID) != 1) {
+          GOMA_EH(-1, "error reading TP Boundary condition ID");
+        }
+        snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", input, TPBdyCondID);
+        ECHO(echo_string, echo_file);
+      }
+      loca_in->TPupBCID = TPBdyCondID;
+
+      look_for(ifp, "TP BC data float tag", input, '=');
+      if (fscanf(ifp, "%d", &TPDataFltID) != 1) {
+        GOMA_EH(-1, "error reading TP BC data float tag id");
+      }
+      loca_in->TPupDFID = TPDataFltID;
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", input, TPDataFltID);
+      ECHO(echo_string, echo_file);
+
+      look_for(ifp, "TP parameter material id", input, '=');
+      if (fscanf(ifp, "%d", &TPMatID) != 1) {
+        GOMA_EH(-1, "error reading TP parameter material id");
+      }
+      loca_in->TPupMTID = TPMatID - 1;
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", input, TPMatID);
+      ECHO(echo_string, echo_file);
+
+      look_for(ifp, "TP parameter material property tag", input, '=');
+      if (fscanf(ifp, "%d", &TPMatPropID) != 1) {
+        GOMA_EH(-1, "error reading TP parameter material property tag id");
+      }
+      loca_in->TPupMPID = TPMatPropID;
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", input, TPMatPropID);
+      ECHO(echo_string, echo_file);
+
+      look_for(ifp, "TP Material property tag subindex", input, '=');
+      if (fscanf(ifp, "%d", &TPMatPropSIID) != 1) {
+        GOMA_EH(-1, "error reading TP Material property tag subindex id");
+      }
+      loca_in->TPupMDID = TPMatPropSIID;
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", input, TPMatPropSIID);
+      ECHO(echo_string, echo_file);
+
+      loca_in->TPGuess = 0.0;
+      iread = look_for_optional(ifp, "Initial guess of TP parameter", input, '=');
+      if (iread == 1) {
+        if (fscanf(ifp, "%lf", &(loca_in->TPGuess)) != 1) {
+          GOMA_EH(-1, "error reading initial guess of TP parameter");
+        }
+      }
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, loca_in->TPGuess);
+      ECHO(echo_string, echo_file);
+
+      loca_in->TPFinal = 1.0;
+      iread = look_for_optional(ifp, "TP parameter final value", input, '=');
+      if (iread == 1) {
+        if (fscanf(ifp, "%lf", &(loca_in->TPFinal)) != 1) {
+          GOMA_EH(-1, "error reading TP parameter final value");
+        }
+      }
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, loca_in->TPFinal);
+      ECHO(echo_string, echo_file);
+
+      loca_in->NVRestart = FALSE;
+      iread = look_for_optional(ifp, "Null vector restart file", input, '=');
+      if (iread == 1) {
+        snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s =", input);
+        (void)read_string(ifp, input, '\n');
+        strip(input);
+        (void)strcpy(loca_in->NV_exoII_infile, input);
+
+        loca_in->NVRestart = TRUE;
+        SPF(endofstring(echo_string), " %s", loca_in->NV_exoII_infile);
+        ECHO(echo_string, echo_file);
+      } else {
+        if (loca_in->Cont_Alg == PF_CONTINUATION) {
+          GOMA_EH(GOMA_ERROR, "Pitchfork algorithm requires null vector input!");
+        }
+        if (loca_in->Cont_Alg == HP_CONTINUATION) {
+          GOMA_EH(GOMA_ERROR, "Hopf algorithm requires null vector input!");
+        }
+      }
+
+      /* These two cards pertain only to Hopf continuation */
+      if (loca_in->Cont_Alg == HP_CONTINUATION) {
+        look_for(ifp, "Null vector imaginary restart file", input, '=');
+        snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s =", input);
+
+        (void)read_string(ifp, input, '\n');
+        strip(input);
+        (void)strcpy(loca_in->NV_imag_infile, input);
+
+        SPF(endofstring(echo_string), " %s", loca_in->NV_imag_infile);
+        ECHO(echo_string, echo_file);
+
+        look_for(ifp, "Initial Hopf frequency", input, '=');
+        if (fscanf(ifp, "%le", &loca_in->omega) != 1) {
+          GOMA_EH(GOMA_ERROR, "error reading initial Hopf frequency");
+        }
+        snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, loca_in->omega);
+        ECHO(echo_string, echo_file);
+      }
+
+      iread = look_for_optional(ifp, "Null vector save file", input, '=');
+      if (iread == 1) {
+        snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s =", input);
+        (void)read_string(ifp, input, '\n');
+        strip(input);
+        (void)strcpy(loca_in->NV_exoII_outfile, input);
+        SPF(endofstring(echo_string), " %s", loca_in->NV_exoII_outfile);
+        ECHO(echo_string, echo_file);
+        loca_in->NVSave = TRUE;
+      }
+
+      if (loca_in->Cont_Alg == HP_CONTINUATION && loca_in->NVSave) {
+        iread = look_for_optional(ifp, "Null vector imaginary save file", input, '=');
+        if (iread == 1) {
+          snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s =", input);
+          (void)read_string(ifp, input, '\n');
+          strip(input);
+          (void)strcpy(loca_in->NV_imag_outfile, input);
+          SPF(endofstring(echo_string), " %s", loca_in->NV_imag_outfile);
+          ECHO(echo_string, echo_file);
+        }
+      }
+      nTC = 1;
+      iread = look_for_optional(ifp, "Number of TP continuation conditions", input, '=');
+      if (iread == 1) {
+        if (fscanf(ifp, "%d", &nTC) != 1) {
+          GOMA_EH(-1, "error reading Number of TP continuation conditions");
+        }
+
+        if (nTC == -1) {
+          nTC = count_list(ifp, "TC", input, '=', "END OF TC") + 1;
+        }
+
+        snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", input, nTC);
+        ECHO(echo_string, echo_file);
+
+        if (nTC < 1) {
+          Continuation = ALC_NONE;
+          snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t(%s)", "No TP continuation conditions specified");
+          ECHO(echo_string, echo_file);
+          return;
+        }
+      }
+
+      /*
+       *  For angular continuation, ensure at least one angular TC is specified
+       */
+      if (TPContType == 6 && nTC < 2) {
+        GOMA_EH(GOMA_ERROR, "Angular TP continuation requires at least one TC card!");
+      }
+
+      /*
+       *  Allocate space for the vector tpcc
+       */
+
+      tpcc = (struct Continuation_Conditions *)array_alloc(1, nTC,
+                                                           sizeof(struct Continuation_Conditions));
+
+      if (Debug_Flag && ProcID == 0) {
+        printf("%s:\tallocated %d copies of the %lu sized\n", yo, nTC,
+               (long unsigned int)sizeof(struct Continuation_Conditions));
+        printf("%s:\tTC structure.\n", yo);
+      }
+
+      /*
+       *  Load up tpcc[0] with inputs from above
+       *  For angular continuation, also get angle range in radians
+       */
+      tpcc[0].nCC = nTC;
+      tpcc[0].ratio = 1.0;
+      tpcc[0].Type = loca_in->TPupType;
+      tpcc[0].BCID = loca_in->TPupBCID;
+      tpcc[0].DFID = loca_in->TPupDFID;
+      tpcc[0].MTID = loca_in->TPupMTID;
+      tpcc[0].MPID = loca_in->TPupMPID;
+      tpcc[0].MDID = loca_in->TPupMDID;
+      tpcc[0].Beg_CC_Value = loca_in->TPGuess;
+      tpcc[0].End_CC_Value = loca_in->TPFinal;
+      range = tpcc[0].End_CC_Value - tpcc[0].Beg_CC_Value;
+      if (TPContType == 6) {
+        beg_angle = tpcc[0].Beg_CC_Value * M_PIE / 180.0;
+        end_angle = tpcc[0].End_CC_Value * M_PIE / 180.0;
+      }
+      tpcc[0].fn_flag = 0;
+      tpcc[0].old_value = tpcc[0].Beg_CC_Value;
+      tpcc[0].value = tpcc[0].Beg_CC_Value;
+
+      /*
+       *  Read in TP parameter conditions and load up rest of tpcc
+       */
+
+      /* First check for UF/TC conflict (UF has priority) */
+      if (nTC > 1 && loca_in->TPupType == 5) {
+        snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t(%s)", "UF continuation overrides TC cards!");
+        ECHO(echo_string, echo_file);
+        nTC = 1;
+      }
+
+      if (nTC > 1) {
+
+        for (iTC = 1; iTC < nTC; iTC++) {
+
+          tpcc[iTC].nCC = nTC;
+
+          look_for(ifp, "TC", input, '=');
+          snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s =", input);
+          if (fscanf(ifp, "%80s", input) != 1) {
+            fprintf(stderr, "%s:\tError reading TC[iTC].Set_Type ", yo);
+            fprintf(stderr, "(one of BC, MT, UM, or AC)\n");
+            exit(-1);
+          }
+          if (!strcmp(input, "BC")) {
+            tpcc[iTC].Type = 1;
+          } else if (!strcmp(input, "MT")) {
+            tpcc[iTC].Type = 2;
+          } else if (!strcmp(input, "AC")) {
+            tpcc[iTC].Type = 3;
+          } else if (!strcmp(input, "UM")) {
+            tpcc[iTC].Type = 4;
+          } else {
+            fprintf(stderr, "%s:\tImproper TC set type - %s\n", yo, input);
+            if (!strcmp(input, "UF"))
+              fprintf(stderr, "\tUM is not a valid option for TC cards!");
+            if (!strcmp(input, "AN"))
+              fprintf(stderr, "\tAN is not a valid option for TC cards!");
+            exit(-1);
+          }
+
+          /*
+           *  Read in three required integers (four if type is UM)
+           */
+
+          if (tpcc[iTC].Type == 4) {
+            if (fscanf(ifp, "%d %d %d %d", &id1, &id2, &id3, &iflag) != 4) {
+              fprintf(stderr, "%s:\tError reading integer inputs, ", yo);
+              fprintf(stderr, "for TC[%d]\n", iTC + 1);
+              fprintf(stderr, "\tFormat: TC = UM MTID MPID MDID FLAG ...\n");
+              exit(-1);
+            }
+            SPF(endofstring(echo_string), " %s %d %d %d %d", input, id1, id2, id3, iflag);
+
+          } else {
+            if (fscanf(ifp, "%d %d %d", &id1, &id2, &iflag) != 3) {
+              fprintf(stderr, "%s:\tError reading integer inputs ", yo);
+              fprintf(stderr, "for TC[%d]\n", iTC + 1);
+              if (tpcc[iTC].Type == 1) {
+                fprintf(stderr, "\tFormat: TC = BC BCID DFID FLAG ...\n");
+              }
+              if (tpcc[iTC].Type == 2) {
+                fprintf(stderr, "\tFormat: TC = MT MTID MPID FLAG ...\n");
+              }
+              if (tpcc[iTC].Type == 3) {
+                fprintf(stderr, "\tFormat: TC = AC ACID DFID FLAG ...\n");
+              }
+
+              exit(-1);
+            }
+            SPF(endofstring(echo_string), " %s %d %d %d", input, id1, id2, iflag);
+          }
+
+          /*
+           *  For TP continuation types other than "AN":
+           *  Third int input FLAG indicates meaning of second float input "vfloat":
+           *  0 - Value is same as turning point parameter, no floats needed
+           *  1 - vfloat is End_CC_Value[iTC]; use to find range ratio d(val[iTC])/d(val[0])
+           *  2 - vfloat is range ratio; use to find End_CC_Value[iTC]
+           *  SPECIAL CASE:
+           *  3 - Value is constructed from three floats:
+           *        value = coeff_0 + coeff_1 * lambda^coeff_2
+           */
+
+          if (TPContType != 6 && iflag == 0) {
+            tpcc[iTC].ratio = 1.0;
+            tpcc[iTC].Beg_CC_Value = tpcc[0].Beg_CC_Value;
+            tpcc[iTC].End_CC_Value = tpcc[0].End_CC_Value;
+          } else if (iflag == 3) /* Three floats required */
+          {
+            if (fscanf(ifp, "%lf %lf %lf", &tpcc[iTC].coeff_0, &tpcc[iTC].coeff_1,
+                       &tpcc[iTC].coeff_2) != 3) {
+              fprintf(stderr, "%s:\tError reading TC[%d] floats\n", yo, iTC + 1);
+              fprintf(stderr, "\tThree floats are required!\n");
+              exit(-1);
+            }
+            SPF(endofstring(echo_string), " %.4g %.4g %.4g", tpcc[iTC].coeff_0, tpcc[iTC].coeff_1,
+                tpcc[iTC].coeff_2);
+          } else /* Two floats are required */
+          {
+            if (fscanf(ifp, "%lf %lf", &tpcc[iTC].coeff_0, &tpcc[iTC].coeff_1) != 2) {
+              fprintf(stderr, "%s:\tError reading TC[%d] floats\n", yo, iTC + 1);
+              fprintf(stderr, "\tFormat: ...start end/range\n");
+              exit(-1);
+            }
+            SPF(endofstring(echo_string), " %.4g %.4g", tpcc[iTC].coeff_0, tpcc[iTC].coeff_1);
+          }
+
+          ECHO(echo_string, echo_file);
+
+          switch (tpcc[iTC].Type) {
+
+          case 1:
+            /* BC */
+            tpcc[iTC].BCID = id1;
+            tpcc[iTC].DFID = id2;
+            snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t( %3d. BC: BCID=%3d DFID=%5d)", iTC + 1, tpcc[iTC].BCID,
+                tpcc[iTC].DFID);
+            break;
+
+          case 2:
+            /* MT */
+            tpcc[iTC].MTID = id1;
+            tpcc[iTC].MPID = id2;
+            snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t( %3d. MT: MTID=%3d MPID=%5d)", iTC + 1, tpcc[iTC].MTID,
+                tpcc[iTC].MPID);
+            tpcc[iTC].MTID--;
+            break;
+
+          case 3:
+            /* AC */
+            tpcc[iTC].BCID = id1;
+            tpcc[iTC].DFID = id2;
+            snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t( %3d. AC: ACID=%3d DFID=%5d)", iTC + 1, tpcc[iTC].BCID,
+                tpcc[iTC].DFID);
+            break;
+
+          case 4:
+            /* UM */
+            tpcc[iTC].MTID = id1;
+            tpcc[iTC].MPID = id2;
+            tpcc[iTC].MDID = id3;
+            snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t( %3d. MT: MTID=%3d MPID=%5d MDID=%3d)", iTC + 1, tpcc[iTC].MTID,
+                tpcc[iTC].MPID, tpcc[iTC].MDID);
+            tpcc[iTC].MTID--;
+            break;
+          }
+
+          ECHO(echo_string, echo_file);
+
+          /*
+           * The two floats have different purposes in angular continuation,
+           * see comments above for CC cards.
+           */
+          tpcc[iTC].fn_flag = iflag;
+
+          if (TPContType == 6) {
+            tpcc[iTC].ratio = -1.0;
+
+            switch (iflag) {
+            case 0:
+              tpcc[iTC].Beg_CC_Value = tpcc[iTC].coeff_0 + tpcc[iTC].coeff_1 * sin(beg_angle);
+              tpcc[iTC].End_CC_Value = tpcc[iTC].coeff_0 + tpcc[iTC].coeff_1 * sin(end_angle);
+              break;
+            case 1:
+              tpcc[iTC].Beg_CC_Value = tpcc[iTC].coeff_0 + tpcc[iTC].coeff_1 * cos(beg_angle);
+              tpcc[iTC].End_CC_Value = tpcc[iTC].coeff_0 + tpcc[iTC].coeff_1 * cos(end_angle);
+              break;
+            case 2:
+              tpcc[iTC].Beg_CC_Value = tpcc[iTC].coeff_0 + tpcc[iTC].coeff_1 * tan(beg_angle);
+              tpcc[iTC].End_CC_Value = tpcc[iTC].coeff_0 + tpcc[iTC].coeff_1 * tan(end_angle);
+              break;
+            case 3:
+              tpcc[iTC].Beg_CC_Value = tpcc[iTC].coeff_0 + tpcc[iTC].coeff_1 * sin(beg_angle) +
+                                       tpcc[iTC].coeff_2 * cos(beg_angle);
+              tpcc[iTC].End_CC_Value = tpcc[iTC].coeff_0 + tpcc[iTC].coeff_1 * sin(end_angle) +
+                                       tpcc[iTC].coeff_2 * cos(beg_angle);
+              break;
+            default:
+              fprintf(stderr, "%s:\tCC[%d] flag must be 0, 1, or 2\n", yo, iTC + 1);
+              exit(-1);
+              break;
+            }
+          }
+
+          /* Other cases are handled here: */
+          else {
+            switch (iflag) {
+            case 0:
+              tpcc[iTC].Beg_CC_Value = tpcc[iTC].coeff_0;
+              tpcc[iTC].End_CC_Value = tpcc[iTC].coeff_1;
+              break;
+            case 1:
+              tpcc[iTC].Beg_CC_Value = tpcc[iTC].coeff_0;
+              tpcc[iTC].End_CC_Value = tpcc[iTC].coeff_1;
+              tpcc[iTC].ratio = (tpcc[iTC].coeff_1 - tpcc[iTC].coeff_0) / range;
+              break;
+            case 2:
+              tpcc[iTC].Beg_CC_Value = tpcc[iTC].coeff_0;
+              tpcc[iTC].ratio = tpcc[iTC].coeff_1;
+              tpcc[iTC].End_CC_Value = tpcc[iTC].Beg_CC_Value + tpcc[iTC].ratio * range;
+              break;
+            case 3:
+              tpcc[iTC].ratio = -1.0;
+              tpcc[iTC].Beg_CC_Value =
+                  tpcc[iTC].coeff_0 + tpcc[iTC].coeff_1 * pow(BegParameterValue, tpcc[iTC].coeff_2);
+              tpcc[iTC].End_CC_Value =
+                  tpcc[iTC].coeff_0 + tpcc[iTC].coeff_1 * pow(EndParameterValue, tpcc[iTC].coeff_2);
+              break;
+            default:
+              fprintf(stderr, "%s:\tTC[%d] flag must be 0-3\n", yo, iTC + 1);
+              exit(-1);
+              break;
             }
 
-  /*
-   *  Load up tpcc[0] with inputs from above
-   *  For angular continuation, also get angle range in radians
-   */
-          tpcc[0].nCC = nTC;
-          tpcc[0].ratio = 1.0;
-          tpcc[0].Type = loca_in->TPupType;
-          tpcc[0].BCID = loca_in->TPupBCID;
-          tpcc[0].DFID = loca_in->TPupDFID;
-          tpcc[0].MTID = loca_in->TPupMTID;
-          tpcc[0].MPID = loca_in->TPupMPID;
-          tpcc[0].MDID = loca_in->TPupMDID;
-          tpcc[0].Beg_CC_Value = loca_in->TPGuess;
-          tpcc[0].End_CC_Value = loca_in->TPFinal;
-          range = tpcc[0].End_CC_Value - tpcc[0].Beg_CC_Value;
-          if (TPContType == 6)
-            {
-              beg_angle = tpcc[0].Beg_CC_Value * M_PIE / 180.0;
-              end_angle = tpcc[0].End_CC_Value * M_PIE / 180.0;
-            }
-          tpcc[0].fn_flag = 0;
-          tpcc[0].old_value = tpcc[0].Beg_CC_Value;
-          tpcc[0].value = tpcc[0].Beg_CC_Value;
+          } /* End of else block (TPContType == 6) */
 
-  /*
-   *  Read in TP parameter conditions and load up rest of tpcc
-   */
+          tpcc[iTC].old_value = tpcc[iTC].Beg_CC_Value;
+          tpcc[iTC].value = tpcc[iTC].Beg_CC_Value;
+        } /* End of iTC loop */
 
-/* First check for UF/TC conflict (UF has priority) */
-	      if (nTC > 1 && loca_in->TPupType == 5)
-                {
-			  SPF(echo_string,"\t(%s)", "UF continuation overrides TC cards!"); ECHO(echo_string,echo_file);
-                  nTC = 1;
-                }
+      } /* End of TP continuation condition if block */
 
-          if (nTC > 1)
-            {
+    } /* End of TP/PF/HP_CONTINUATION if block */
 
-              for (iTC=1; iTC<nTC; iTC++)
-                {
-
-                  tpcc[iTC].nCC = nTC;
-
-                  look_for(ifp, "TC", input, '='); SPF(echo_string,"%s =", input);
-                  if (fscanf(ifp, "%80s", input) != 1)
-                    {
-                      fprintf (stderr, "%s:\tError reading TC[iTC].Set_Type ",yo);
-                      fprintf (stderr, "(one of BC, MT, UM, or AC)\n");
-                      exit (-1);
-                    }
-                  if (!strcmp(input,"BC"))
-                    {
-                      tpcc[iTC].Type = 1;
-                    }
-                  else if (!strcmp(input,"MT"))
-                    {
-                      tpcc[iTC].Type = 2;
-                    }
-                  else if (!strcmp(input,"AC"))
-                    {
-                      tpcc[iTC].Type = 3;
-                    }
-                  else if (!strcmp(input,"UM"))
-                    {
-                      tpcc[iTC].Type = 4;
-                    }
-                  else
-                    {
-                      fprintf(stderr, "%s:\tImproper TC set type - %s\n", yo, input);
-                      if (!strcmp(input,"UF")) fprintf(stderr, "\tUM is not a valid option for TC cards!");
-                      if (!strcmp(input,"AN")) fprintf(stderr, "\tAN is not a valid option for TC cards!");
-                      exit (-1);
-                    }
-				  
-
-  /*
-   *  Read in three required integers (four if type is UM)
-   */
-
-                  if (tpcc[iTC].Type == 4)
-                    {
-                      if (fscanf(ifp, "%d %d %d %d", &id1, &id2, &id3, &iflag) != 4)
-                        {
-                          fprintf(stderr, "%s:\tError reading integer inputs, ",yo);
-                          fprintf(stderr, "for TC[%d]\n",iTC+1);
-                          fprintf(stderr, "\tFormat: TC = UM MTID MPID MDID FLAG ...\n");
-                          exit(-1);
-                        }
-					  SPF(endofstring(echo_string)," %s %d %d %d %d", input, id1, id2, id3, iflag);
-
-                    }
-                  else 
-                    {
-					  if (fscanf(ifp, "%d %d %d", &id1, &id2, &iflag) != 3)
-					  {
-						  fprintf(stderr, "%s:\tError reading integer inputs ",yo);
-						  fprintf(stderr, "for TC[%d]\n",iTC+1);
-						  if (tpcc[iTC].Type == 1)
-						  {
-							  fprintf(stderr,"\tFormat: TC = BC BCID DFID FLAG ...\n");
-						  }
-						  if (tpcc[iTC].Type == 2)
-						  {
-							  fprintf(stderr,"\tFormat: TC = MT MTID MPID FLAG ...\n");
-						  }
-						  if (tpcc[iTC].Type == 3)
-						  {
-							  fprintf(stderr,"\tFormat: TC = AC ACID DFID FLAG ...\n");
-						  }
-
-						  exit (-1);
-					  }
-					  SPF(endofstring(echo_string)," %s %d %d %d", input, id1, id2, iflag);
-					}
-
-  /*
-   *  For TP continuation types other than "AN":
-   *  Third int input FLAG indicates meaning of second float input "vfloat":
-   *  0 - Value is same as turning point parameter, no floats needed
-   *  1 - vfloat is End_CC_Value[iTC]; use to find range ratio d(val[iTC])/d(val[0])
-   *  2 - vfloat is range ratio; use to find End_CC_Value[iTC]
-   *  SPECIAL CASE:
-   *  3 - Value is constructed from three floats:
-   *        value = coeff_0 + coeff_1 * lambda^coeff_2
-   */
-
-                  if (TPContType != 6 && iflag == 0)
-                    {
-                      tpcc[iTC].ratio = 1.0;
-                      tpcc[iTC].Beg_CC_Value = tpcc[0].Beg_CC_Value;
-                      tpcc[iTC].End_CC_Value = tpcc[0].End_CC_Value;
-                    }
-                  else if (iflag == 3)  /* Three floats required */
-                    {
-                      if (fscanf(ifp, "%lf %lf %lf",
-                          &tpcc[iTC].coeff_0, &tpcc[iTC].coeff_1, &tpcc[iTC].coeff_2) != 3)
-                        {
-                          fprintf(stderr, "%s:\tError reading TC[%d] floats\n",
-                                  yo, iTC+1);
-                          fprintf(stderr, "\tThree floats are required!\n");
-                          exit (-1);
-                        }
-					  SPF(endofstring(echo_string)," %.4g %.4g %.4g",tpcc[iTC].coeff_0, tpcc[iTC].coeff_1, tpcc[iTC].coeff_2);
-                    }
-                  else  /* Two floats are required */
-                    {
-                      if (fscanf(ifp, "%lf %lf",
-                          &tpcc[iTC].coeff_0, &tpcc[iTC].coeff_1) != 2)
-                        {
-                          fprintf(stderr, "%s:\tError reading TC[%d] floats\n",
-                                  yo, iTC+1);
-                          fprintf(stderr, "\tFormat: ...start end/range\n");
-                          exit (-1);
-                        }
-					  SPF(endofstring(echo_string)," %.4g %.4g",tpcc[iTC].coeff_0, tpcc[iTC].coeff_1);
-                    }
-				  
-				  ECHO(echo_string,echo_file);
-				  
-				  switch (tpcc[iTC].Type)
-				  {
-					  
-					  case 1: 
-						  /* BC */
-						  tpcc[iTC].BCID = id1;
-						  tpcc[iTC].DFID = id2;
-						  SPF(echo_string, "\t( %3d. BC: BCID=%3d DFID=%5d)",iTC+1,tpcc[iTC].BCID, tpcc[iTC].DFID);
-						  break;
-						  
-					  case 2: 
-						  /* MT */
-						  tpcc[iTC].MTID = id1;
-						  tpcc[iTC].MPID = id2;
-						  SPF(echo_string, "\t( %3d. MT: MTID=%3d MPID=%5d)",iTC+1,
-							  tpcc[iTC].MTID, tpcc[iTC].MPID);
-						  tpcc[iTC].MTID--;
-						  break;
-						  
-					  case 3: 
-						  /* AC */
-						  tpcc[iTC].BCID = id1;
-						  tpcc[iTC].DFID = id2;
-						  SPF(echo_string, "\t( %3d. AC: ACID=%3d DFID=%5d)",iTC+1,
-							  tpcc[iTC].BCID, tpcc[iTC].DFID);
-						  break;
-						  
-					  case 4: 
-						  /* UM */
-						  tpcc[iTC].MTID = id1;
-						  tpcc[iTC].MPID = id2;
-						  tpcc[iTC].MDID = id3;
-						  SPF(echo_string, "\t( %3d. MT: MTID=%3d MPID=%5d MDID=%3d)",
-								  iTC+1,tpcc[iTC].MTID,tpcc[iTC].MPID,tpcc[iTC].MDID);
-						  tpcc[iTC].MTID--;
-						  break;
-                  }
-				  
-				  ECHO(echo_string,echo_file);
-
-  /*
-   * The two floats have different purposes in angular continuation,
-   * see comments above for CC cards.
-   */
-                  tpcc[iTC].fn_flag = iflag;
-
-                  if (TPContType == 6)
-                    {
-                      tpcc[iTC].ratio = -1.0;
-                                                                                
-                      switch (iflag) {
-                      case 0:
-                        tpcc[iTC].Beg_CC_Value = tpcc[iTC].coeff_0
-                          + tpcc[iTC].coeff_1 * sin(beg_angle);
-                        tpcc[iTC].End_CC_Value = tpcc[iTC].coeff_0
-                          + tpcc[iTC].coeff_1 * sin(end_angle);
-                        break;
-                      case 1:
-                        tpcc[iTC].Beg_CC_Value = tpcc[iTC].coeff_0
-                          + tpcc[iTC].coeff_1 * cos(beg_angle);
-                        tpcc[iTC].End_CC_Value = tpcc[iTC].coeff_0
-                          + tpcc[iTC].coeff_1 * cos(end_angle);
-                        break;
-                      case 2:
-                        tpcc[iTC].Beg_CC_Value = tpcc[iTC].coeff_0
-                          + tpcc[iTC].coeff_1 * tan(beg_angle);
-                        tpcc[iTC].End_CC_Value = tpcc[iTC].coeff_0
-                          + tpcc[iTC].coeff_1 * tan(end_angle);
-                        break;
-                      case 3:
-                        tpcc[iTC].Beg_CC_Value = tpcc[iTC].coeff_0
-                          + tpcc[iTC].coeff_1 * sin(beg_angle)
-                          + tpcc[iTC].coeff_2 * cos(beg_angle);
-                        tpcc[iTC].End_CC_Value = tpcc[iTC].coeff_0
-                          + tpcc[iTC].coeff_1 * sin(end_angle)
-                          + tpcc[iTC].coeff_2 * cos(beg_angle);
-                        break;
-                      default:
-                        fprintf(stderr, "%s:\tCC[%d] flag must be 0, 1, or 2\n",
-                                yo, iTC+1);
-                        exit (-1);
-                        break;
-                      }
-                    }
-
-  /* Other cases are handled here: */
-                  else
-                    {
-                      switch (iflag) {
-                      case 0:
-                        tpcc[iTC].Beg_CC_Value = tpcc[iTC].coeff_0;
-                        tpcc[iTC].End_CC_Value = tpcc[iTC].coeff_1;
-                        break;
-                      case 1:
-                        tpcc[iTC].Beg_CC_Value = tpcc[iTC].coeff_0;
-                        tpcc[iTC].End_CC_Value = tpcc[iTC].coeff_1;
-                        tpcc[iTC].ratio =
-                          (tpcc[iTC].coeff_1 - tpcc[iTC].coeff_0) / range;
-                        break;
-                      case 2:
-                        tpcc[iTC].Beg_CC_Value = tpcc[iTC].coeff_0;
-                        tpcc[iTC].ratio = tpcc[iTC].coeff_1;
-                        tpcc[iTC].End_CC_Value = tpcc[iTC].Beg_CC_Value
-                                               + tpcc[iTC].ratio * range;
-                        break;
-                      case 3:
-                        tpcc[iTC].ratio = -1.0;
-                        tpcc[iTC].Beg_CC_Value = tpcc[iTC].coeff_0
-                          + tpcc[iTC].coeff_1
-                          * pow(BegParameterValue, tpcc[iTC].coeff_2);
-                        tpcc[iTC].End_CC_Value = tpcc[iTC].coeff_0
-                          + tpcc[iTC].coeff_1
-                          * pow(EndParameterValue, tpcc[iTC].coeff_2);
-                        break;
-                      default:
-                        fprintf(stderr, "%s:\tTC[%d] flag must be 0-3\n",
-                                yo, iTC+1);
-                        exit (-1);
-                        break;
-                      }
-
-                    }  /* End of else block (TPContType == 6) */ 
-                   
-                  tpcc[iTC].old_value = tpcc[iTC].Beg_CC_Value;
-                  tpcc[iTC].value = tpcc[iTC].Beg_CC_Value;
-                }  /* End of iTC loop */
-
-            }  /* End of TP continuation condition if block */
-
-        }  /* End of TP/PF/HP_CONTINUATION if block */
-
-    }  /* End of continuation if block (iread = 1) */
-  
+  } /* End of continuation if block (iread = 1) */
 }
 /* rd_track_specs -- read input file for continuation specifications */
 /*****************************************************************************/
@@ -5090,7 +4866,7 @@ rd_hunt_specs(FILE *ifp,
     nHC = 0;
     return; }
   else {
-	  SPF(echo_string,"%s =", input); ECHO(echo_string,echo_file);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s =", input); ECHO(echo_string,echo_file);
   }
 
   look_for(ifp,"Number of hunting conditions",input,'=');
@@ -5108,7 +4884,7 @@ rd_hunt_specs(FILE *ifp,
       nHC = count_list(ifp, "HC", input, '=', "END OF HC");
     }
   
-  SPF(echo_string,"%s = %d",  input, nHC); ECHO(echo_string,echo_file);
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d",  input, nHC); ECHO(echo_string,echo_file);
 
   /*
    *  Allocate space for the vector hunt
@@ -5117,7 +4893,7 @@ rd_hunt_specs(FILE *ifp,
   if (nHC == 0) 
     {
 	  Continuation = -1;
-	  SPF(echo_string,"\t(%s)", "No hunting - reverting to no continuation");ECHO(echo_string, echo_file);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t(%s)", "No hunting - reverting to no continuation");ECHO(echo_string, echo_file);
       return; 
     }
 
@@ -5139,7 +4915,7 @@ rd_hunt_specs(FILE *ifp,
 	  
       look_for(ifp, "HC", input, '=');
 	  
-	  SPF(echo_string,"%s =", input);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s =", input);
 	  
       if (fscanf(ifp, "%80s", input) != 1)
 	  {
@@ -5408,7 +5184,7 @@ rd_ac_specs(FILE *ifp,
       nAC++;
     }
 
-  SPF(echo_string,"%s = %d", "Number of augmenting conditions", nAC); ECHO(echo_string,echo_file);
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d", "Number of augmenting conditions", nAC); ECHO(echo_string,echo_file);
 
   /*
    *  Allocate space for the vector augc
@@ -5448,7 +5224,7 @@ rd_ac_specs(FILE *ifp,
           fprintf(stderr,"%s:\tread or initialize  - not %s\n", yo, string);
       }
 
-    SPF(echo_string,eoformat, "Augmenting Conditions Initial Guess", input); ECHO(echo_string,echo_file);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, "Augmenting Conditions Initial Guess", input); ECHO(echo_string,echo_file);
     }
 
 
@@ -5542,7 +5318,7 @@ rd_ac_specs(FILE *ifp,
 	  exit (-1);
 	}
 
-      SPF(echo_string,eoformat, "AC", input);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, "AC", input);
 
       augc[iAC].len_AC = 0;
       augc[iAC].LewisNum = 0.0;
@@ -6407,7 +6183,7 @@ rd_solver_specs(FILE *ifp,
        {
         GOMA_EH(GOMA_ERROR, "Total Number of Matrices should be greater or equal to 1");
        }
-     SPF(echo_string, "%s = %d", "Number of Matrices", upd->Total_Num_Matrices); ECHO(echo_string, echo_file);
+     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", "Number of Matrices", upd->Total_Num_Matrices); ECHO(echo_string, echo_file);
     }
   else 
     {
@@ -6438,11 +6214,11 @@ rd_solver_specs(FILE *ifp,
       read_string(ifp,input,'\n');
       strip(input);
       strcpy(Matrix_Solver, input); /* save string for aztec use */
-      SPF(echo_string, eoformat, search_string, Matrix_Solver);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, search_string, Matrix_Solver);
     }  
   else
     {    
-      SPF(echo_string, eoformat, search_string, Matrix_Solver);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, search_string, Matrix_Solver);
       strcat(echo_string, default_string);
     }
 
@@ -6529,13 +6305,13 @@ rd_solver_specs(FILE *ifp,
     {
       strcpy(Matrix_Format, "epetra"); /* save string for aztec use */
       strcpy(search_string, "Matrix storage format");
-      SPF(echo_string,eoformat, search_string, Matrix_Format );
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, search_string, Matrix_Format );
     }
   else if ( strcmp(Matrix_Solver, "petsc") == 0 )
     {
       strcpy(Matrix_Format, "petsc"); /* save string for aztec use */
       strcpy(search_string, "Matrix storage format");
-      SPF(echo_string,eoformat, search_string, Matrix_Format );
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, search_string, Matrix_Format );
     }
   else if ( strcmp(Matrix_Solver, "front") != 0 )
     {
@@ -6548,11 +6324,11 @@ rd_solver_specs(FILE *ifp,
 	  read_string(ifp,input,'\n');
 	  strip(input);
 	  strcpy(Matrix_Format, input); /* save string for aztec use */
-	  SPF(echo_string,eoformat, search_string, Matrix_Format );
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, search_string, Matrix_Format );
 	}      
       else
 	{
-	  SPF(echo_string,def_form, search_string, Matrix_Format, default_string );
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,def_form, search_string, Matrix_Format, default_string );
 	}
       ECHO(echo_string,echo_file);
     }
@@ -6572,18 +6348,16 @@ rd_solver_specs(FILE *ifp,
       
   strcpy(search_string, "UMF IDIM");
   iread = look_for_optional(ifp, search_string, input, '=');
-  if (iread == 1) 
-    { 
-      if (fscanf(ifp, "%d", &UMFPACK_IDIM) != 1)
-	{
-	  iread = -1; 
-	  SPF(echo_string," (%s = %d) %s", search_string, UMFPACK_IDIM, default_string); ECHO(echo_string,echo_file);
-	}
-      else
-	SPF(echo_string,"%s = %d", search_string, UMFPACK_IDIM); ECHO(echo_string,echo_file);
+  if (iread == 1) {
+    if (fscanf(ifp, "%d", &UMFPACK_IDIM) != 1) {
+      iread = -1;
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, " (%s = %d) %s", search_string, UMFPACK_IDIM, default_string);
+      ECHO(echo_string, echo_file);
+    } else {
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", search_string, UMFPACK_IDIM);
+      ECHO(echo_string, echo_file);
     }
-
-
+  }
 
   /*
 
@@ -6594,16 +6368,15 @@ rd_solver_specs(FILE *ifp,
   UMFPACK_XDIM = -1;
 
   iread = look_for_optional(ifp, "UMF XDIM", input, '=');
-  if (iread == 1) 
-    { 
-      if (fscanf(ifp, "%d", &UMFPACK_XDIM) != 1)
-	{ 
-	  iread = -1; 
-	  SPF(echo_string," (%s = %d) %s","UMF_XDIM",UMFPACK_XDIM, default_string ); ECHO(echo_string,echo_file);
-	}
-      else
-	SPF(echo_string,"%s = %d","UMF_XDIM",UMFPACK_XDIM ); ECHO(echo_string,echo_file);
-    }
+  if (iread == 1) {
+    if (fscanf(ifp, "%d", &UMFPACK_XDIM) != 1) {
+      iread = -1;
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, " (%s = %d) %s", "UMF_XDIM", UMFPACK_XDIM, default_string);
+      ECHO(echo_string, echo_file);
+    } else
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", "UMF_XDIM", UMFPACK_XDIM);
+    ECHO(echo_string, echo_file);
+  }
 
   strcpy(search_string, "AztecOO Solver");
   iread = look_for_optional(ifp, search_string, input, '=');
@@ -6612,11 +6385,11 @@ rd_solver_specs(FILE *ifp,
     strip(input);
     stringup(input);
     strcpy(AztecOO_Solver, input);
-    SPF(echo_string, eoformat, search_string, input);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, search_string, input);
     ECHO(echo_string, echo_file);
   } else {
     // Set gmres as the default AztecOO Solver
-    SPF(echo_string, def_form, search_string, "gmres", default_string);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, def_form, search_string, "gmres", default_string);
     strcpy(AztecOO_Solver, "gmres");
     ECHO(echo_string, echo_file);
   }
@@ -6627,11 +6400,11 @@ rd_solver_specs(FILE *ifp,
     read_string(ifp, input, '\n');
     strip(input);
     strcpy(Stratimikos_File[0], input);
-    SPF(echo_string, eoformat, search_string, input);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, search_string, input);
     ECHO(echo_string, echo_file);
   } else {
     // Set stratimikos.xml as defualt stratimikos file
-    SPF(echo_string, def_form, search_string, "stratimikos.xml", default_string);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, def_form, search_string, "stratimikos.xml", default_string);
     strcpy(Stratimikos_File[0], "stratimikos.xml");
     ECHO(echo_string, echo_file);
   }
@@ -6646,11 +6419,11 @@ rd_solver_specs(FILE *ifp,
       strip(input);
       strcpy(Matrix_Preconditioner, input); /* save string for aztec use */
 
-      SPF(echo_string,eoformat, search_string, Matrix_Preconditioner); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, search_string, Matrix_Preconditioner); ECHO(echo_string,echo_file);
     }
   else
     {
-      SPF(echo_string, def_form,search_string, Matrix_Preconditioner, default_string); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, def_form,search_string, Matrix_Preconditioner, default_string); ECHO(echo_string,echo_file);
     }
 
   strcpy(search_string, "Matrix subdomain solver");
@@ -6660,11 +6433,11 @@ rd_solver_specs(FILE *ifp,
       read_string(ifp,input,'\n');
       strip(input);
       strcpy(Matrix_Subdomain_Solver, input); /* save string for aztec use */
-      SPF(echo_string,eoformat, search_string, input); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, search_string, input); ECHO(echo_string,echo_file);
     }
   else
     {
-      SPF(echo_string, def_form,search_string, Matrix_Subdomain_Solver , default_string); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, def_form,search_string, Matrix_Subdomain_Solver , default_string); ECHO(echo_string,echo_file);
     }
 
   strcpy(search_string, "Matrix Scaling");
@@ -6674,11 +6447,11 @@ rd_solver_specs(FILE *ifp,
       read_string(ifp,input,'\n');
       strip(input);
       strcpy(Matrix_Scaling, input);
-      SPF(echo_string,eoformat, search_string, input); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, search_string, input); ECHO(echo_string,echo_file);
     }
   else
     {
-      SPF(echo_string, def_form,search_string, Matrix_Scaling , default_string); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, def_form,search_string, Matrix_Scaling , default_string); ECHO(echo_string,echo_file);
     }
 
   strcpy(search_string, "Matrix residual norm type");
@@ -6688,11 +6461,11 @@ rd_solver_specs(FILE *ifp,
       read_string(ifp,input,'\n');
       strip(input);
       strcpy(Matrix_Residual_Norm_Type, input);
-      SPF(echo_string,eoformat, search_string, input); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, search_string, input); ECHO(echo_string,echo_file);
     }
   else
     {
-      SPF(echo_string, def_form,search_string, Matrix_Residual_Norm_Type, default_string); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, def_form,search_string, Matrix_Residual_Norm_Type, default_string); ECHO(echo_string,echo_file);
     }
 
   strcpy(search_string, "Matrix output type");
@@ -6702,11 +6475,11 @@ rd_solver_specs(FILE *ifp,
       read_string(ifp,input,'\n');
       strip(input);
       strcpy(Matrix_Output_Type, input);
-      SPF(echo_string,eoformat, search_string, input); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, search_string, input); ECHO(echo_string,echo_file);
     }
   else
     {
-      SPF(echo_string, def_form,search_string, Matrix_Output_Type , default_string); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, def_form,search_string, Matrix_Output_Type , default_string); ECHO(echo_string,echo_file);
      }
 
   strcpy(search_string, "Matrix factorization reuse");
@@ -6716,11 +6489,11 @@ rd_solver_specs(FILE *ifp,
       read_string(ifp,input,'\n');
       strip(input);
       strcpy(Matrix_Factorization_Reuse, input);
-      SPF(echo_string,eoformat, search_string, input); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, search_string, input); ECHO(echo_string,echo_file);
     }
   else
     {
-      SPF(echo_string, def_form,search_string, Matrix_Factorization_Reuse , default_string); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, def_form,search_string, Matrix_Factorization_Reuse , default_string); ECHO(echo_string,echo_file);
     }
   
   strcpy(search_string, "Matrix graph fillin");
@@ -6730,11 +6503,11 @@ rd_solver_specs(FILE *ifp,
       read_string(ifp,input,'\n');
       strip(input);
       strcpy(Matrix_Graph_Fillin, input);
-      SPF(echo_string,eoformat, search_string, input); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, search_string, input); ECHO(echo_string,echo_file);
     }
   else
     {
-      SPF(echo_string, def_form,search_string, Matrix_Graph_Fillin, default_string); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, def_form,search_string, Matrix_Graph_Fillin, default_string); ECHO(echo_string,echo_file);
     }
 
   strcpy(search_string, "Matrix factorization overlap");
@@ -6744,11 +6517,11 @@ rd_solver_specs(FILE *ifp,
       read_string(ifp,input,'\n');
       strip(input);
       strcpy(Matrix_Factor_Overlap, input);
-      SPF(echo_string,eoformat, search_string, input); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, search_string, input); ECHO(echo_string,echo_file);
     }
   else
     {
-      SPF(echo_string, def_form,search_string, Matrix_Factor_Overlap, default_string); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, def_form,search_string, Matrix_Factor_Overlap, default_string); ECHO(echo_string,echo_file);
     }
 	
   strcpy(search_string, "Matrix overlap type");
@@ -6758,11 +6531,11 @@ rd_solver_specs(FILE *ifp,
       read_string(ifp,input,'\n');
       strip(input);
       strcpy(Matrix_Overlap_Type, input);
-      SPF(echo_string,eoformat, search_string, input); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, search_string, input); ECHO(echo_string,echo_file);
     }
   else
     {
-      SPF(echo_string, def_form,search_string, Matrix_Overlap_Type, default_string); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, def_form,search_string, Matrix_Overlap_Type, default_string); ECHO(echo_string,echo_file);
     }
 	
   strcpy(search_string, "Matrix auxiliary vector");
@@ -6772,11 +6545,11 @@ rd_solver_specs(FILE *ifp,
       read_string(ifp,input,'\n');
       strip(input);
       strcpy(Matrix_Auxiliary_Vector, input);
-      SPF(echo_string,eoformat, search_string, input); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, search_string, input); ECHO(echo_string,echo_file);
     }
   else
     {
-      SPF(echo_string, def_form,search_string, Matrix_Auxiliary_Vector, default_string); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, def_form,search_string, Matrix_Auxiliary_Vector, default_string); ECHO(echo_string,echo_file);
     }
 	
   strcpy(search_string, "Matrix drop tolerance");
@@ -6786,11 +6559,11 @@ rd_solver_specs(FILE *ifp,
       read_string(ifp,input,'\n');
       strip(input);
       strcpy(Matrix_Drop_Tolerance, input);
-      SPF(echo_string,eoformat, search_string, input); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, search_string, input); ECHO(echo_string,echo_file);
     }
   else
     {
-      SPF(echo_string, def_form,search_string, Matrix_Drop_Tolerance, default_string); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, def_form,search_string, Matrix_Drop_Tolerance, default_string); ECHO(echo_string,echo_file);
     }
 
   strcpy(search_string, "Matrix polynomial order");
@@ -6800,11 +6573,11 @@ rd_solver_specs(FILE *ifp,
       read_string(ifp,input,'\n');
       strip(input);
       strcpy(Matrix_Polynomial_Order, input);
-      SPF(echo_string,eoformat, search_string, input); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, search_string, input); ECHO(echo_string,echo_file);
     }
   else
     {
-      SPF(echo_string, def_form,search_string, Matrix_Polynomial_Order, default_string); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, def_form,search_string, Matrix_Polynomial_Order, default_string); ECHO(echo_string,echo_file);
     }
 
   /*
@@ -6821,11 +6594,11 @@ rd_solver_specs(FILE *ifp,
       read_string(ifp,input,'\n');
       strip(input);
       strcpy(Matrix_Reorder, input);
-      SPF(echo_string,eoformat, search_string, input); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, search_string, input); ECHO(echo_string,echo_file);
     }
   else
     {
-      SPF(echo_string, def_form,search_string, Matrix_Reorder, default_string); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, def_form,search_string, Matrix_Reorder, default_string); ECHO(echo_string,echo_file);
     }
 
   /*
@@ -6839,11 +6612,11 @@ rd_solver_specs(FILE *ifp,
       read_string(ifp,input,'\n');
       strip(input);
       strcpy(Matrix_Factorization_Save, input);
-      SPF(echo_string,eoformat, search_string, input); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, search_string, input); ECHO(echo_string,echo_file);
     }
   else
     {
-      SPF(echo_string, def_form,search_string, Matrix_Factorization_Save, default_string); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, def_form,search_string, Matrix_Factorization_Save, default_string); ECHO(echo_string,echo_file);
     }
 
   /*
@@ -6857,11 +6630,11 @@ rd_solver_specs(FILE *ifp,
       read_string(ifp,input,'\n');
       strip(input);
       strcpy(Matrix_ILUT_Fill_Factor, input);
-      SPF(echo_string,eoformat, search_string, input); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, search_string, input); ECHO(echo_string,echo_file);
     }
   else
     {
-      SPF(echo_string, def_form,search_string, Matrix_ILUT_Fill_Factor, default_string); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, def_form,search_string, Matrix_ILUT_Fill_Factor, default_string); ECHO(echo_string,echo_file);
     }
 
   /*
@@ -6875,11 +6648,11 @@ rd_solver_specs(FILE *ifp,
       read_string(ifp,input,'\n');
       strip(input);
       strcpy(Matrix_RILU_Relax_Factor, input);
-      SPF(echo_string,eoformat, search_string, input); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, search_string, input); ECHO(echo_string,echo_file);
     }
   else
     {
-      SPF(echo_string, def_form,search_string, Matrix_RILU_Relax_Factor, default_string); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, def_form,search_string, Matrix_RILU_Relax_Factor, default_string); ECHO(echo_string,echo_file);
     }
 
   strcpy(search_string, "Matrix BILU Threshold");
@@ -6889,11 +6662,11 @@ rd_solver_specs(FILE *ifp,
       read_string(ifp,input,'\n');
       strip(input);
       strcpy(Matrix_BILU_Threshold, input);
-      SPF(echo_string,eoformat, search_string, input); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, search_string, input); ECHO(echo_string,echo_file);
     }
   else
     {
-      SPF(echo_string, def_form,search_string, Matrix_BILU_Threshold, default_string); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, def_form,search_string, Matrix_BILU_Threshold, default_string); ECHO(echo_string,echo_file);
     }
 
 #ifdef TRILINOS
@@ -6904,11 +6677,11 @@ rd_solver_specs(FILE *ifp,
       read_string(ifp,input,'\n');
       strip(input);
       strcpy(Matrix_Relative_Threshold, input);
-      SPF(echo_string,eoformat, search_string, input); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, search_string, input); ECHO(echo_string,echo_file);
     }
   else
     {
-      SPF(echo_string, def_form,search_string, Matrix_Relative_Threshold, default_string); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, def_form,search_string, Matrix_Relative_Threshold, default_string); ECHO(echo_string,echo_file);
     }
 
   strcpy(search_string, "Matrix Absolute Threshold");
@@ -6918,11 +6691,11 @@ rd_solver_specs(FILE *ifp,
       read_string(ifp,input,'\n');
       strip(input);
       strcpy(Matrix_Absolute_Threshold, input);
-      SPF(echo_string,eoformat, search_string, input); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, search_string, input); ECHO(echo_string,echo_file);
     }
   else
     {
-      SPF(echo_string, def_form,search_string, Matrix_Absolute_Threshold, default_string); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, def_form,search_string, Matrix_Absolute_Threshold, default_string); ECHO(echo_string,echo_file);
     }
 #endif
 
@@ -6933,11 +6706,11 @@ rd_solver_specs(FILE *ifp,
       read_string(ifp,input,'\n');
       strip(input);
       strcpy(Matrix_Krylov_Subspace, input);
-      SPF(echo_string,eoformat, search_string, input); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, search_string, input); ECHO(echo_string,echo_file);
     }
   else
     {
-      SPF(echo_string, def_form,search_string, Matrix_Krylov_Subspace, default_string); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, def_form,search_string, Matrix_Krylov_Subspace, default_string); ECHO(echo_string,echo_file);
     }
 
   strcpy(search_string, "Orthogonalization");
@@ -6947,11 +6720,11 @@ rd_solver_specs(FILE *ifp,
       read_string(ifp,input,'\n');
       strip(input);
       strcpy(Matrix_Orthogonalization, input); /* save for aztec */
-      SPF(echo_string,eoformat, search_string, input); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, search_string, input); ECHO(echo_string,echo_file);
     }
   else
     {
-      SPF(echo_string, def_form,search_string, Matrix_Orthogonalization, default_string); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, def_form,search_string, Matrix_Orthogonalization, default_string); ECHO(echo_string,echo_file);
     }
 
   strcpy(search_string, "Maximum Linear Solve Iterations");
@@ -6961,11 +6734,11 @@ rd_solver_specs(FILE *ifp,
       read_string(ifp,input,'\n');
       strip(input);
       strcpy(Matrix_Maximum_Iterations, input); /* save for aztec */
-      SPF(echo_string,eoformat, search_string, input); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, search_string, input); ECHO(echo_string,echo_file);
     }
   else
     {
-      SPF(echo_string, def_form,search_string, Matrix_Maximum_Iterations, default_string); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, def_form,search_string, Matrix_Maximum_Iterations, default_string); ECHO(echo_string,echo_file);
     }
 		 
 	strcpy(search_string, "Amesos Solver Package");
@@ -6975,11 +6748,11 @@ rd_solver_specs(FILE *ifp,
 		read_string(ifp,input,'\n');
 		strip(input); stringup(input);
 		strcpy( Amesos_Package, input);
-		SPF(echo_string,eoformat, search_string, input); ECHO(echo_string,echo_file);
+		snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, search_string, input); ECHO(echo_string,echo_file);
 	}
 	else
 	{
-		SPF(echo_string, def_form,search_string, "KLU", default_string); ECHO(echo_string,echo_file);
+		snprintf(echo_string, MAX_CHAR_ECHO_INPUT, def_form,search_string, "KLU", default_string); ECHO(echo_string,echo_file);
 	}
 		 
 		 
@@ -6992,7 +6765,7 @@ rd_solver_specs(FILE *ifp,
     {
       GOMA_EH( -1, "error reading Number of Newton Iterations");
     }
-  SPF(echo_string,"%s = %d", "Number of Newton Iterations", Max_Newton_Steps);
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d", "Number of Newton Iterations", Max_Newton_Steps);
 
   if (fscanf(ifp, "%d", &Newt_Jacobian_Reformation_stride) == 1)
     {
@@ -7019,7 +6792,7 @@ rd_solver_specs(FILE *ifp,
 	  {
 	    modified_newton=TRUE;
 	  }
-	SPF(echo_string,"%s = %.4g %.4g", "Modified Newton Tolerance",convergence_rate_tolerance , modified_newt_norm_tol ); 
+	snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %.4g %.4g", "Modified Newton Tolerance",convergence_rate_tolerance , modified_newt_norm_tol );
 	ECHO(echo_string,echo_file);
       }
   }
@@ -7038,7 +6811,7 @@ rd_solver_specs(FILE *ifp,
     else
       {
 	if(Time_Jacobian_Reformation_stride > 1) modified_newton = TRUE;
-	SPF(echo_string, "%s = %d", "Jacobian Reform Time Stride", Time_Jacobian_Reformation_stride);
+	snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", "Jacobian Reform Time Stride", Time_Jacobian_Reformation_stride);
 	ECHO(echo_string,echo_file);
       }
   } 
@@ -7055,7 +6828,7 @@ rd_solver_specs(FILE *ifp,
       GOMA_EH( -1, "error reading Newton correction factor, expected at least one float");
     }
 
-  SPF(echo_string,"%s = %.4g", "Newton correction factor", damp_factor1 );
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %.4g", "Newton correction factor", damp_factor1 );
 
   if (fscanf(ifp, "%le %le %le %le %le", &custom_tol1, &damp_factor2, 
                   &custom_tol2, &damp_factor3, &custom_tol3) != 5 )
@@ -7114,7 +6887,7 @@ rd_solver_specs(FILE *ifp,
         {
           GOMA_EH( -1, "error reading value of variable type Newton correction factor");
         }
-      SPF(echo_string,"%s = %s %.4g","Variable Type Newton correction factor" , Var_Name[k].name1, var_damp[var]);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %s %.4g","Variable Type Newton correction factor" , Var_Name[k].name1, var_damp[var]);
       ECHO(echo_string,echo_file);
     }
 
@@ -7127,7 +6900,7 @@ rd_solver_specs(FILE *ifp,
   for (imtrx = 1; imtrx < upd->Total_Num_Matrices; imtrx++) {
     Epsilon[imtrx][0] = Epsilon[0][0];
   }
-  SPF(echo_string,"%s = %.4g", "Normalized Residual Tolerance", Epsilon[0][0]); ECHO(echo_string,echo_file);
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %.4g", "Normalized Residual Tolerance", Epsilon[0][0]); ECHO(echo_string,echo_file);
 
   iread = look_for_optional(ifp, "Normalized Correction Tolerance", input, '=');
   if (iread == 1)
@@ -7136,7 +6909,7 @@ rd_solver_specs(FILE *ifp,
         {
 	  GOMA_EH( -1, "error reading Normalized (Newton) Correction Tolerance");
         }
-      SPF(echo_string,"%s = %.4g", "Normalized Correction Tolerance", Epsilon[0][2] ); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %.4g", "Normalized Correction Tolerance", Epsilon[0][2] ); ECHO(echo_string,echo_file);
     }
     else
     {
@@ -7161,7 +6934,7 @@ rd_solver_specs(FILE *ifp,
 	{
 	  GOMA_EH( -1, "Bad residual ratio (matrix convergence) tolerance.");
 	}
-      SPF(echo_string,"%s = %.4g", "Residual Ratio Tolerance", Epsilon[0][1] ); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %.4g", "Residual Ratio Tolerance", Epsilon[0][1] ); ECHO(echo_string,echo_file);
 
       for (imtrx = 1; imtrx < upd->Total_Num_Matrices; imtrx++) {
 	Epsilon[imtrx][1] = Epsilon[0][1];
@@ -7213,7 +6986,7 @@ rd_solver_specs(FILE *ifp,
       {
 	GOMA_EH( -1, "invalid choice: %s, expected Pressure Stabilization yes, no, global or local, or pspp", input);
       }
-    SPF(echo_string,eoformat, "Pressure Stabilization", input ); ECHO(echo_string,echo_file);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, "Pressure Stabilization", input ); ECHO(echo_string,echo_file);
   }
   else
     {
@@ -7228,7 +7001,7 @@ rd_solver_specs(FILE *ifp,
       {
 	GOMA_EH( -1, "error reading Pressure Stabilization Scaling");
       }
-    SPF(echo_string,"%s = %.4g", "Pressure Stabilization Scaling", PS_scaling ); ECHO(echo_string,echo_file);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %.4g", "Pressure Stabilization Scaling", PS_scaling ); ECHO(echo_string,echo_file);
   }
   else
     {
@@ -7253,7 +7026,7 @@ rd_solver_specs(FILE *ifp,
 	{
 	  GOMA_EH( -1, "invalid choice: PSPG Advection Correction, yes (true) or no (false)");
 	}
-      SPF(echo_string, eoformat, "PSPG Advection Correction", input); ECHO(echo_string,echo_file);	  
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "PSPG Advection Correction", input); ECHO(echo_string,echo_file);
     }
   else
     {
@@ -7284,7 +7057,7 @@ rd_solver_specs(FILE *ifp,
 	{
 	  GOMA_EH( -1, "invalid choice: Continuity Stabilization yes, local, or no");
 	}
-      SPF(echo_string, eoformat, "Continuity Stabilization", input); ECHO(echo_string,echo_file);	  
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "Continuity Stabilization", input); ECHO(echo_string,echo_file);
 	
     }
   else
@@ -7299,7 +7072,7 @@ rd_solver_specs(FILE *ifp,
     if (upd->SegregatedSubcycles < 1) {
       GOMA_EH(GOMA_ERROR, "Number of Segregated Subcycles should be greater or equal to 1");
     }
-    SPF(echo_string,"%s = %d", "Number of Segregated Subcycles", upd->SegregatedSubcycles ); ECHO(echo_string,echo_file);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d", "Number of Segregated Subcycles", upd->SegregatedSubcycles ); ECHO(echo_string,echo_file);
   }
   else
     {
@@ -7327,7 +7100,7 @@ rd_solver_specs(FILE *ifp,
       else
 	GOMA_EH( -1, "Invalid choice: Linear Stability must be yes, no, file, 3D, or 3Dfile");
 
-      SPF(echo_string,eoformat, "Linear Stability", input); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat, "Linear Stability", input); ECHO(echo_string,echo_file);
 
     }
   else
@@ -7341,7 +7114,7 @@ rd_solver_specs(FILE *ifp,
 	{
 	  GOMA_EH( -1, "error reading Filter Concentration");
 	}
-      SPF(echo_string,"%s = %d %.4g %.4g","Filter Concentration", filter_species_material_number, c_min, c_max );
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d %.4g %.4g","Filter Concentration", filter_species_material_number, c_min, c_max );
       ECHO(echo_string,echo_file); 
     }
   else
@@ -7369,7 +7142,7 @@ rd_solver_specs(FILE *ifp,
       {
         GOMA_EH( -1, "invalid choice for Disable Viscosity Sensitivities:must be yes or no");
       }
-      SPF(echo_string,eoformat,"Disable Viscosity Sensitivities", input); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat,"Disable Viscosity Sensitivities", input); ECHO(echo_string,echo_file);
     }
   else
     {
@@ -7395,7 +7168,7 @@ rd_solver_specs(FILE *ifp,
       {
         GOMA_EH( -1, "invalid choice for PETSc solve post proc : must be yes or no");
       }
-      SPF(echo_string,eoformat,"PETSc solve post proc", input); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,eoformat,"PETSc solve post proc", input); ECHO(echo_string,echo_file);
     }
   else
     {
@@ -7548,7 +7321,7 @@ rd_eigen_specs(FILE *ifp,
   iread = look_for_optional(ifp,"Eigensolver Specifications",input,'=');
   
   if( iread == 1) {
-	  SPF(echo_string,"%s =", input);ECHO(echo_string,echo_file);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s =", input);ECHO(echo_string,echo_file);
   }
 
 /* SELECT ARPACK METHOD */
@@ -7556,7 +7329,7 @@ rd_eigen_specs(FILE *ifp,
   iread = look_for_optional(ifp,"Eigen Algorithm",input,'=');
   if (iread == 1)
     {
-	  SPF(echo_string,"%s =",input);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s =",input);
       (void) read_string(ifp, input, '\n');
       strip(input);
 
@@ -7645,11 +7418,11 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
   if (iread != 1)
     {
       eigen->Eigen_NEV_WANT = 10;
-      SPF(echo_string, "\t(%s = %d)", "Eigen Number of modes",eigen->Eigen_NEV_WANT);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t(%s = %d)", "Eigen Number of modes",eigen->Eigen_NEV_WANT);
     }
   else
   {
-	  SPF(echo_string,"%s = %d", input, eigen->Eigen_NEV_WANT);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d", input, eigen->Eigen_NEV_WANT);
   }
   
   ECHO(echo_string,echo_file);
@@ -7664,11 +7437,11 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
   if (iread != 1)
     {
       eigen->Eigen_Record_Modes = 0;
-      SPF(echo_string, "\t(%s = %d)", "Eigen Record modes",eigen->Eigen_Record_Modes);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t(%s = %d)", "Eigen Record modes",eigen->Eigen_Record_Modes);
     }
   else 
   {
-	  SPF(echo_string,"%s = %d", input, eigen->Eigen_Record_Modes);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d", input, eigen->Eigen_Record_Modes);
   }
   
   ECHO(echo_string,echo_file);
@@ -7683,11 +7456,11 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
   if (iread != 1)
     {
       eigen->Eigen_Krylov_Subspace = 30;
-      SPF(echo_string, "\t(%s = %d)", "Eigen Size of Krylov subspace",eigen->Eigen_Krylov_Subspace);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t(%s = %d)", "Eigen Size of Krylov subspace",eigen->Eigen_Krylov_Subspace);
     }
   else
   {
-	  SPF(echo_string,"%s = %d", input, eigen->Eigen_Krylov_Subspace);	  
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d", input, eigen->Eigen_Krylov_Subspace);
   }
   
   ECHO(echo_string,echo_file);
@@ -7702,11 +7475,11 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
   if (iread != 1)
     {
       eigen->Eigen_Maximum_Iterations = 100;
-      SPF(echo_string, "\t(%s = %d)", "Eigen Maximum Iterations",eigen->Eigen_Maximum_Iterations);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t(%s = %d)", "Eigen Maximum Iterations",eigen->Eigen_Maximum_Iterations);
     }
   else
   {
-	  SPF(echo_string,"%s = %d", input, eigen->Eigen_Maximum_Iterations)	;  	  
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d", input, eigen->Eigen_Maximum_Iterations)	;
   }
 
   ECHO(echo_string,echo_file);
@@ -7721,11 +7494,11 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
   if (iread != 1)
     {
       eigen->Eigen_Filter = 2;
-      SPF(echo_string, "\t(%s = %d)", "Eigen Number of Filter Steps",eigen->Eigen_Filter);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t(%s = %d)", "Eigen Number of Filter Steps",eigen->Eigen_Filter);
     }
   else
   {
-	  SPF(echo_string,"%s = %d", input, eigen->Eigen_Filter)	;  	  	  
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d", input, eigen->Eigen_Filter)	;
   }
   
   ECHO(echo_string,echo_file);
@@ -7735,7 +7508,7 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
   iread = look_for_optional(ifp, "Eigen Recycle", input, '=');
   if (iread == 1)
     { 
-	  SPF(echo_string,"%s =", input);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s =", input);
       (void) read_string(ifp, input, '\n');
       strip(input);
       if ( strcmp(input,"no") == 0 )
@@ -7755,7 +7528,7 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
   else
     {
       eigen->Eigen_Recycle = 0;
-      SPF(echo_string, "\t(%s = %s)", "Eigen Recycle","no");
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t(%s = %s)", "Eigen Recycle","no");
     }
 
   ECHO(echo_string,echo_file);
@@ -7766,12 +7539,12 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
   if (iread == 1)
     {
       eigen->Eigen_Tolerance = read_dbl(ifp, "Eigen Tolerance");
-	  SPF(echo_string,"%s = %.4g", input, eigen->Eigen_Tolerance)	;  	  	  
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %.4g", input, eigen->Eigen_Tolerance)	;
     }
   else
     {
       eigen->Eigen_Tolerance = 1.0e-06;
-      SPF(echo_string, "\t(%s = %.4g)", "Eigen Tolerance",eigen->Eigen_Tolerance);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t(%s = %.4g)", "Eigen Tolerance",eigen->Eigen_Tolerance);
     }
   
   ECHO(echo_string,echo_file);
@@ -7781,7 +7554,7 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
   iread = look_for_optional(ifp, "Eigen Matrix Output", input, '=');
   if (iread == 1)
     {
-	  SPF(echo_string,"%s =", input);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s =", input);
       (void) read_string(ifp, input, '\n');
       strip(input);
       if ( strcmp(input, "yes") == 0)
@@ -7797,7 +7570,7 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
   else
     {
       eigen->Eigen_Matrix_Output = 0;
-      SPF(echo_string, "\t(%s = %s)","Eigen Matrix Output","no");
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t(%s = %s)","Eigen Matrix Output","no");
     }
   
   ECHO(echo_string,echo_file);
@@ -7811,12 +7584,12 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
         {
 	  GOMA_EH( -1, "error reading Eigen Initial Vector Weight");
         }
-	  SPF(echo_string,"%s = %.4g", input, eigen->Eigen_IV_Wt)	;  	  	  
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %.4g", input, eigen->Eigen_IV_Wt)	;
     }
   else
     {
       eigen->Eigen_IV_Wt = 0.5;
-      SPF(echo_string, "\t(%s = %.4g)", "Eigen Tolerance",eigen->Eigen_IV_Wt);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t(%s = %.4g)", "Eigen Tolerance",eigen->Eigen_IV_Wt);
     }
   
   ECHO(echo_string,echo_file);
@@ -7838,12 +7611,12 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
         {
           GOMA_EH(GOMA_ERROR,"Four float values required for Eigen Initial Shifts\n");
         }
-	  SPF(echo_string,"%s =",input);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s =",input);
 	  SPF_DBL_VEC(endofstring(echo_string), 4, eigen->Eigen_Shifts);
     }
   else
 	 {
-		SPF(echo_string,"\t(%s = ","Eigen Initial Shifts");
+		snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t(%s = ","Eigen Initial Shifts");
 		SPF_DBL_VEC(endofstring(echo_string), 4, eigen->Eigen_Shifts);
 		SPF(endofstring(echo_string),")");
 	 }
@@ -7867,11 +7640,11 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
 	  {
           GOMA_EH(GOMA_ERROR, "Error reading Eigen Cayley Sigma");
 	  }
-	  SPF(echo_string,"%s = %.4g", input, eigen->Eigen_Cayley_Sigma)	;  	  	  
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %.4g", input, eigen->Eigen_Cayley_Sigma)	;
   }
   else
   {
-	  SPF(echo_string, "\t(%s = %.4g)", "Eigen Cayley Sigma",eigen->Eigen_Cayley_Sigma);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t(%s = %.4g)", "Eigen Cayley Sigma",eigen->Eigen_Cayley_Sigma);
   }
   
   ECHO(echo_string,echo_file);
@@ -7884,11 +7657,11 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
         {
           GOMA_EH(GOMA_ERROR, "Error reading Eigen Cayley Mu");
         }
-	  SPF(echo_string,"%s = %.4g", input, eigen->Eigen_Cayley_Mu)	;  	  	  
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %.4g", input, eigen->Eigen_Cayley_Mu)	;
     }
   else
   {
-	  SPF(echo_string, "\t(%s = %.4g)", "Eigen Cayley Mu",eigen->Eigen_Cayley_Mu);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t(%s = %.4g)", "Eigen Cayley Mu",eigen->Eigen_Cayley_Mu);
   }
   
   ECHO(echo_string,echo_file);
@@ -7901,14 +7674,14 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
       if (fscanf(ifp, "%d", &eigen->Eigen_Maximum_Outer_Iterations) != 1) 
 		  iread = -1;
 	  else
-		  SPF(echo_string,"%s = %d", input, eigen->Eigen_Maximum_Outer_Iterations)	;  	  	  
+		  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d", input, eigen->Eigen_Maximum_Outer_Iterations)	;
 		  
     }
   
   if (iread != 1)
     {
       eigen->Eigen_Maximum_Outer_Iterations = 1;
-	  SPF(echo_string, "\t(%s = %d)", "Eigen Maximum Outer Iterations",eigen->Eigen_Maximum_Outer_Iterations);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t(%s = %d)", "Eigen Maximum Outer Iterations",eigen->Eigen_Maximum_Outer_Iterations);
     }
 
   ECHO(echo_string,echo_file);
@@ -7924,10 +7697,10 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
         {
           GOMA_EH(GOMA_ERROR, "Error reading Eigen SI tolerance parameter");
         }
-	  SPF(echo_string,"%s = %.4g", input, eigen->Eigen_SI_Tol_Param)	;  	  	  
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %.4g", input, eigen->Eigen_SI_Tol_Param)	;
     }
   else
-	  SPF(echo_string, "\t(%s = %.4g)", "Eigen SI tolerance parameter",eigen->Eigen_SI_Tol_Param);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t(%s = %.4g)", "Eigen SI tolerance parameter",eigen->Eigen_SI_Tol_Param);
 
   ECHO(echo_string,echo_file);
 
@@ -7941,10 +7714,10 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
         {
           GOMA_EH(GOMA_ERROR, "Error reading Eigen Relative tolerance");
         }
-	  SPF(echo_string,"%s = %.4g", input, eigen->Eigen_Relative_Tol)	;  	  	  
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %.4g", input, eigen->Eigen_Relative_Tol)	;
     }
   else
-	  SPF(echo_string, "\t(%s = %.4g)", "Eigen Relative tolerance",eigen->Eigen_Relative_Tol);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t(%s = %.4g)", "Eigen Relative tolerance",eigen->Eigen_Relative_Tol);
   
   ECHO(echo_string,echo_file);
   
@@ -7959,10 +7732,10 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
         {
           GOMA_EH(GOMA_ERROR, "Error reading Eigen Linear Solver tolerance");
         }
-	  SPF(echo_string,"%s = %.4g", input, eigen->Eigen_Linear_Tol)	;  	  	  
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %.4g", input, eigen->Eigen_Linear_Tol)	;
     }
   else
-	  SPF(echo_string, "\t(%s = %.4g)", "Eigen Linear Solver tolerance",eigen->Eigen_Linear_Tol);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t(%s = %.4g)", "Eigen Linear Solver tolerance",eigen->Eigen_Linear_Tol);
   
   ECHO(echo_string,echo_file);
   
@@ -7976,10 +7749,10 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
         {
           GOMA_EH(GOMA_ERROR, "Error reading Eigenvalue output frequency");
         }
-	  SPF(echo_string,"%s = %d", input, eigen->Eigen_Solve_Freq)	;  	  	  
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d", input, eigen->Eigen_Solve_Freq)	;
     }
   else
-	  SPF(echo_string, "\t(%s = %d)", "Eigenvalue output frequency",eigen->Eigen_Solve_Freq);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t(%s = %d)", "Eigenvalue output frequency",eigen->Eigen_Solve_Freq);
   
   ECHO(echo_string,echo_file);
 
@@ -7993,10 +7766,10 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
         {
           GOMA_EH(GOMA_ERROR, "Error reading Eigenvector output frequency");
         }
-	  SPF(echo_string,"%s = %d", input, eigen->Eigen_Write_Freq)	;  	  	  
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d", input, eigen->Eigen_Write_Freq)	;
     }
   else
-	  SPF(echo_string, "\t(%s = %d)", "Eigenvector output frequency",eigen->Eigen_Write_Freq);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t(%s = %d)", "Eigenvector output frequency",eigen->Eigen_Write_Freq);
   
   ECHO(echo_string,echo_file);
   
@@ -8006,7 +7779,7 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
   iread = look_for_optional(ifp, "Eigenvector output file", input, '=');
   if (iread == 1)
     {
-	  SPF(echo_string,"%s =",input);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s =",input);
       (void) read_string(ifp, input, '\n');
       strip(input);
       strcpy(eigen->Eigen_Output_File, input);
@@ -8015,7 +7788,7 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
   else
     {
       strcpy(eigen->Eigen_Output_File, "LSA.exoII");	  
-	  SPF(echo_string, "\t(%s = %s)", "Eigenvector output file",eigen->Eigen_Output_File);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t(%s = %s)", "Eigenvector output file",eigen->Eigen_Output_File);
     }
   
   ECHO(echo_string,echo_file);
@@ -8025,7 +7798,7 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
   iread = look_for_optional(ifp, "Eigen Wave Numbers", input, '=');
   if(iread == 1)
   {
-	  SPF(echo_string,"%s =",input);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s =",input);
       (void) read_string(ifp, input, '\n');
       strip(input);
       strncpy(copy_of_input, input, MAX_CHAR_IN_INPUT - 1); /* leave room for trailing \0 */
@@ -8128,7 +7901,7 @@ rd_matl_blk_specs(FILE *ifp,
     GOMA_EH( -1, err_msg);
   }
 
-  SPF(echo_string,"%s = %d","Number of Materials",  upd->Num_Mat); ECHO(echo_string,echo_input_file);
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d","Number of Materials",  upd->Num_Mat); ECHO(echo_string,echo_input_file);
        
   upd->Max_Num_Species_Eqn = -123456789; /* initialize */
   upd->Max_Num_Species     = -123456789; /* initialize */
@@ -8498,7 +8271,7 @@ rd_eq_specs(FILE *ifp,
   pd_ptr->CoordinateSystem = CoordinateSystem;
   upd->CoordinateSystem = CoordinateSystem;
 
-  SPF(echo_string,"%s = %s","Coordinate System", tscs); ECHO(echo_string,echo_file);
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %s","Coordinate System", tscs); ECHO(echo_string,echo_file);
 
   /*
    *  Element Mapping line
@@ -8554,7 +8327,7 @@ rd_eq_specs(FILE *ifp,
     {
       GOMA_EH( -1, "invalid element mapping");
     }
-  SPF(echo_string,"%s = %s", "Element Mapping", input); ECHO(echo_string, echo_file);
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %s", "Element Mapping", input); ECHO(echo_string, echo_file);
 
   /*
    *  Mesh Motion Line
@@ -8587,7 +8360,7 @@ rd_eq_specs(FILE *ifp,
     exit(-1);
   }
 
-  SPF(echo_string,"%s = %s","Mesh Motion", tscs); ECHO(echo_string,echo_file);
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %s","Mesh Motion", tscs); ECHO(echo_string,echo_file);
 
   pd_ptr->MeshMotion = MeshMotion;
   cr_glob[mn]->MeshMotion = pd_ptr->MeshMotion;
@@ -8606,7 +8379,7 @@ rd_eq_specs(FILE *ifp,
   pd_ptr->Num_Species     = numBulkSpec;
   pd_ptr->Num_Porous_Eqn  = 0;
 
-  SPF(echo_string,"%s = %d", "Number of bulk species", numBulkSpec); ECHO(echo_string, echo_file);
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d", "Number of bulk species", numBulkSpec); ECHO(echo_string, echo_file);
 
   /*
    * Backwards compatibility Line
@@ -8662,7 +8435,7 @@ rd_eq_specs(FILE *ifp,
 	fprintf(stderr,"Confusing input: number of bulk species equations is illdefined\n");
 	GOMA_EH( -1, "\tNumber of bulk species equations is inconsistent with non-dilute assumption\n");
       }
-      SPF(echo_string,"%s = %d","Number of bulk species equations", numBulkSpecEqn);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d","Number of bulk species equations", numBulkSpecEqn);
     }
     pd_ptr->Num_Species_Eqn =  numBulkSpecEqn;
   }
@@ -8685,9 +8458,9 @@ rd_eq_specs(FILE *ifp,
    *  Write the resulting number of species equations out to the output file
    */
   if (pd_ptr->Num_Species_Eqn > 0)  {
-    SPF(echo_string,"\t(Number of bulk C/D equations  = %d)", pd_ptr->Num_Species_Eqn); ECHO(echo_string,echo_file);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t(Number of bulk C/D equations  = %d)", pd_ptr->Num_Species_Eqn); ECHO(echo_string,echo_file);
     if (pd_ptr->Num_Species_Eqn != pd_ptr->Num_Species) {
-      SPF(echo_string, "\t(Nondilute approximation: # species is not equal to number of species equations)\n");
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t(Nondilute approximation: # species is not equal to number of species equations)\n");
       SPF(endofstring(echo_string),"\t(Number of Species = %d)", pd_ptr->Num_Species); 
       ECHO(echo_string,echo_file);
    }
@@ -8717,7 +8490,7 @@ rd_eq_specs(FILE *ifp,
     strip(input);
     pd_ptr->Species_Var_Type = species_type_str_to_int(input);
     if (upd->Species_Var_Type == 0) upd->Species_Var_Type = pd_ptr->Species_Var_Type;
-    SPF(echo_string,"%s = %s", "Default Material Species Type", input); ECHO(echo_string,echo_file);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %s", "Default Material Species Type", input); ECHO(echo_string,echo_file);
   }
   
   /*
@@ -8728,7 +8501,7 @@ rd_eq_specs(FILE *ifp,
   if (err == -1)
   {
 	  vn_glob[mn]->modes = 0;
-	  SPF(echo_string,"%s = %d", "Number of viscoelastic modes", vn_glob[mn]->modes); ECHO(echo_string,echo_file);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d", "Number of viscoelastic modes", vn_glob[mn]->modes); ECHO(echo_string,echo_file);
   }
   else
   {
@@ -8737,7 +8510,7 @@ rd_eq_specs(FILE *ifp,
       GOMA_EH( -1, "Expected to read 1 int for \"Number of viscoelastic modes\"");
     }
 
-    SPF(echo_string,"%s = %d", "Number of viscoelastic modes", vn_glob[mn]->modes); ECHO(echo_string,echo_file);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d", "Number of viscoelastic modes", vn_glob[mn]->modes); ECHO(echo_string,echo_file);
   }
 
   /* 
@@ -8759,7 +8532,7 @@ rd_eq_specs(FILE *ifp,
   {
           numMtrxLines = 1;
 	  pd_ptr->Num_Matrices = 1;
-	  SPF(echo_string,"%s = %d", "Number of Matrices", pd_ptr->Num_Matrices); ECHO(echo_string,echo_file);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d", "Number of Matrices", pd_ptr->Num_Matrices); ECHO(echo_string,echo_file);
   }
   else
   {
@@ -8780,7 +8553,7 @@ rd_eq_specs(FILE *ifp,
     }
   pd_ptr->Num_Matrices = numMtrxLines;
   
-  SPF(echo_string,"%s = %d", "Number of Matrices", pd_ptr->Num_Matrices); ECHO(echo_string,echo_file);
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d", "Number of Matrices", pd_ptr->Num_Matrices); ECHO(echo_string,echo_file);
 
 
   /* Loop over all matrices and read equation specifications within the matrices */
@@ -8803,7 +8576,7 @@ rd_eq_specs(FILE *ifp,
 
        mtrx_index0 = mtrx_index1 - 1;
        
-       SPF(echo_string,"MATRIX = %d", mtrx_index1); ECHO(echo_string,echo_file);
+       snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"MATRIX = %d", mtrx_index1); ECHO(echo_string,echo_file);
        
        if ( look_forward_optional_until( ifp, "Disable time step control", "MATRIX", input, '=') == 1)
          {
@@ -8811,7 +8584,7 @@ rd_eq_specs(FILE *ifp,
            strip(input);
            if (strcmp(input, "yes") == 0) {
              pg->time_step_control_disabled[mtrx_index0] = TRUE;
-	     SPF(echo_string,"Time step control disabled for matrix %d", mtrx_index1); ECHO(echo_string,echo_file);
+	     snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"Time step control disabled for matrix %d", mtrx_index1); ECHO(echo_string,echo_file);
            }
          }
       }
@@ -8822,7 +8595,7 @@ rd_eq_specs(FILE *ifp,
       read_string(ifp, input, '\n');
       strip(input);
       strcpy(Stratimikos_File[imtrx], input);
-      SPF(echo_string,"Stratimikos file = %s for matrix %d", Stratimikos_File[imtrx], mtrx_index1); ECHO(echo_string,echo_file);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"Stratimikos file = %s for matrix %d", Stratimikos_File[imtrx], mtrx_index1); ECHO(echo_string,echo_file);
     } else {
       // Set stratimikos.xml as defualt stratimikos file
       strcpy(Stratimikos_File[imtrx], "stratimikos.xml");
@@ -8834,7 +8607,7 @@ rd_eq_specs(FILE *ifp,
       if (fscanf(ifp, "%le", &Epsilon[imtrx][0]) != 1) {
         GOMA_EH(GOMA_ERROR, "error reading Normalized (Newton) Correction Tolerance");
       }
-      SPF(echo_string, "%s = %.4g matrix %d", "Normalized Residual Tolerance",
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g matrix %d", "Normalized Residual Tolerance",
           Epsilon[imtrx][0], mtrx_index1);
       ECHO(echo_string, echo_file);
     }
@@ -8850,7 +8623,7 @@ rd_eq_specs(FILE *ifp,
         GOMA_EH(GOMA_ERROR, "Expected Matrix Subcycle Count to be > 0");
       }
 
-      SPF(echo_string, "%s = %d", "Matrix Subcycle Count",
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", "Matrix Subcycle Count",
           pg->matrix_subcycle_count[imtrx]);
       ECHO(echo_string, echo_file);
     } else {
@@ -8864,7 +8637,7 @@ rd_eq_specs(FILE *ifp,
 	  {
 	    GOMA_EH( -1, "error reading Normalized (Newton) Correction Tolerance");
 	  }
-	SPF(echo_string,"%s = %.4g matrix %d", "Normalized Correction Tolerance", Epsilon[imtrx][2], mtrx_index1); ECHO(echo_string,echo_file);
+	snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %.4g matrix %d", "Normalized Correction Tolerance", Epsilon[imtrx][2], mtrx_index1); ECHO(echo_string,echo_file);
       }
 
     iread = look_forward_optional_until(ifp, "Residual Ratio Tolerance", "MATRIX",  input, '=');
@@ -8874,7 +8647,7 @@ rd_eq_specs(FILE *ifp,
 	  {
 	    GOMA_EH( -1, "Bad residual ratio (matrix convergence) tolerance.");
 	  }
-	SPF(echo_string,"%s = %.4g matrix %d", "Residual Ratio Tolerance", Epsilon[imtrx][1], mtrx_index1); ECHO(echo_string,echo_file);
+	snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %.4g matrix %d", "Residual Ratio Tolerance", Epsilon[imtrx][1], mtrx_index1); ECHO(echo_string,echo_file);
       }
 
 
@@ -8901,7 +8674,7 @@ rd_eq_specs(FILE *ifp,
     numEqnLines = count_list(ifp, "EQ", input, '=', "END OF EQ");
   }
 
-  SPF(echo_string,"%s = %d", "Number of EQ", numEqnLines); ECHO(echo_string,echo_file);
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %d", "Number of EQ", numEqnLines); ECHO(echo_string,echo_file);
 
   if ( (numEqnLines < 1 || numEqnLines > 25)) {
     GOMA_EH( -1, "rd_eq_spec ERROR: Too many (>25) or too few eqn. lines");
@@ -9377,7 +9150,7 @@ rd_eq_specs(FILE *ifp,
     }
 
 
-    SPF(echo_string,"\t\t%s = %s","EQ", ts);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t\t%s = %s","EQ", ts);
 
    upd->Max_Num_Porous_Eqn = MAX(upd->Max_Num_Porous_Eqn, pd_ptr->Num_Porous_Eqn);
 
@@ -11154,7 +10927,7 @@ look_for_mat_prop(FILE *imp,			/* ptr to input stream (in)*/
 	GOMA_EH(GOMA_ERROR, err_msg);
       }
 
-    SPF(echo_string,"%s = %s",search_string, model_name );
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %s",search_string, model_name );
 
     /*
      *   Read the species index, if requested to from the argument list
@@ -11434,7 +11207,7 @@ look_for_mat_proptable(FILE *imp,			/* ptr to input stream (in)*/
 	GOMA_EH(GOMA_ERROR, err_msg);
       }
 
-    SPF(echo_string,"%s = %s", search_string,model_name);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %s", search_string,model_name);
 
     if (*read_species >= 0)
       {
@@ -11681,7 +11454,7 @@ look_for_modal_prop(FILE *imp,	/* ptr to input stream (in)*/
 	GOMA_EH(GOMA_ERROR, err_msg);
       }
 
-    SPF(echo_string, "%s = %s", search_string, model_name );
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", search_string, model_name );
 
     if ( !strcmp(model_name, "CONSTANT") )
       {
@@ -14637,7 +14410,7 @@ rd_table_data(FILE *ifp, char *input, struct Data_Table *table , char *endlist)
 				  }
 				  else
 					  k++;
-				  SPF(echo_string,"\t(%.4g %.4g)", table->t+(k-1), table->f+(k-1) ); 
+				  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t(%.4g %.4g)", table->t+(k-1), table->f+(k-1) );
 			  }
 			  else if(table->columns ==3 && table_dim == 2 )
 			  {
@@ -14650,7 +14423,7 @@ rd_table_data(FILE *ifp, char *input, struct Data_Table *table , char *endlist)
 				  else
 					  k++;
 				  
-				  SPF(echo_string,"\t(%.4g %.4g %.4g)", table->t+(k-1), table->t2+(k-1), table->f+(k-1) ); 
+				  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t(%.4g %.4g %.4g)", table->t+(k-1), table->t2+(k-1), table->f+(k-1) );
 			  }
 			  else if(table->columns ==3 && 
 					  (table_dim != 2 && strcmp(table->f_name, "Saturation") != 0) )
@@ -14663,7 +14436,7 @@ rd_table_data(FILE *ifp, char *input, struct Data_Table *table , char *endlist)
 				  }
 				  else
 					  k++;
-				  SPF(echo_string,"\t(%.4g %.4g %.4g)", table->t+(k-1), table->f+(k-1), table->f+Num_Pnts+(k-1) ); 
+				  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t(%.4g %.4g %.4g)", table->t+(k-1), table->f+(k-1), table->f+Num_Pnts+(k-1) );
 			  }
 			  else if(table->columns ==3 && table_dim == 1
 					  && strcmp(table->f_name, "Saturation") == 0)
@@ -14676,7 +14449,7 @@ rd_table_data(FILE *ifp, char *input, struct Data_Table *table , char *endlist)
 				  }
 				  else
 					  k++;
-				  SPF(echo_string,"\t(%.4g %.4g %.4g)", table->t+(k-1), table->f+Num_Pnts+(k-1), table->f+(k-1) ); 
+				  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t(%.4g %.4g %.4g)", table->t+(k-1), table->f+Num_Pnts+(k-1), table->f+(k-1) );
 			  }
 			  else if(table->columns ==4 && table_dim == 2 
 					  && strcmp(table->f_name, "Saturation") == 0)
@@ -14689,7 +14462,7 @@ rd_table_data(FILE *ifp, char *input, struct Data_Table *table , char *endlist)
 				  }
 				  else
 					  k++;
-				  SPF(echo_string,"\t(%.4g %.4g %.4g %.4g)", table->t+(k-1), table->t2+(k-1), 
+				  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t(%.4g %.4g %.4g %.4g)", table->t+(k-1), table->t2+(k-1),
 					  table->f+Num_Pnts+(k-1), table->f+(k-1) ); 
 			  }
 			  else if(table->columns ==4 && table_dim == 3 )
@@ -14702,7 +14475,7 @@ rd_table_data(FILE *ifp, char *input, struct Data_Table *table , char *endlist)
 				  }
 				  else
 					  k++;
-				  SPF(echo_string,"\t(%.4g %.4g %.4g %.4g)", table->t+(k-1), table->t2+(k-1), table->t3+(k-1), 
+				  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t(%.4g %.4g %.4g %.4g)", table->t+(k-1), table->t2+(k-1), table->t3+(k-1),
 					  table->f+(k-1) ); 
 			  }
 			  else if(table->columns ==5 && table_dim == 2 )
@@ -14717,7 +14490,7 @@ rd_table_data(FILE *ifp, char *input, struct Data_Table *table , char *endlist)
 				  }
 				  else
 					  k++;
-				  SPF(echo_string,"\t(%.4g %.4g %.4g %.4g %.4g)", table->t+(k-1), table->t2+(k-1), 
+				  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t(%.4g %.4g %.4g %.4g %.4g)", table->t+(k-1), table->t2+(k-1),
 					  table->f+(k-1), table->f+Num_Pnts+(k-1), table->f+2*Num_Pnts+(k-1)); 
 			  }
 			  else
@@ -14786,7 +14559,7 @@ rd_table_data(FILE *ifp, char *input, struct Data_Table *table , char *endlist)
 				  }
 				  else
 					  k++;
-				  SPF(echo_string,"\t(%.4g %.4g)", table->t+(k-1), table->f+(k-1) ); 
+				  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t(%.4g %.4g)", table->t+(k-1), table->f+(k-1) );
 			  }
 			  else if(table->columns ==3 && table_dim == 2 )
 			  {
@@ -14798,7 +14571,7 @@ rd_table_data(FILE *ifp, char *input, struct Data_Table *table , char *endlist)
 				  }
                   else
 					  k++;
-				  SPF(echo_string,"\t(%.4g %.4g %.4g)", table->t+(k-1), table->t2+(k-1), table->f+(k-1) ); 
+				  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t(%.4g %.4g %.4g)", table->t+(k-1), table->t2+(k-1), table->f+(k-1) );
 			  }
 			  else if(table->columns ==3 && table_dim != 2 
 					  && strcmp(table->f_name, "Saturation") != 0 )
@@ -14823,7 +14596,7 @@ rd_table_data(FILE *ifp, char *input, struct Data_Table *table , char *endlist)
 				  }
                   else
 					  k++;
-				  SPF(echo_string,"\t(%.4g %.4g %.4g)", table->t+(k-1), table->f+(k-1), table->f+Num_Pnts+(k-1) ); 
+				  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t(%.4g %.4g %.4g)", table->t+(k-1), table->f+(k-1), table->f+Num_Pnts+(k-1) );
 			  }
 			  else if(table->columns ==4 && table_dim == 2 
 					  && strcmp(table->f_name, "Saturation") == 0)
@@ -14836,7 +14609,7 @@ rd_table_data(FILE *ifp, char *input, struct Data_Table *table , char *endlist)
 				  }
                   else
 					  k++;
-				  SPF(echo_string,"\t(%.4g %.4g %.4g %.4g)", table->t+(k-1), table->t2+(k-1), 
+				  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t(%.4g %.4g %.4g %.4g)", table->t+(k-1), table->t2+(k-1),
 					  table->f+Num_Pnts+(k-1), table->f+(k-1) ); 
 			  }
 			  else if(table->columns ==4 && table_dim == 3 )
@@ -14849,7 +14622,7 @@ rd_table_data(FILE *ifp, char *input, struct Data_Table *table , char *endlist)
 				  }
                   else
 					  k++;
-				  SPF(echo_string,"\t(%.4g %.4g %.4g %.4g)", table->t+(k-1), table->t2+(k-1), table->t3+(k-1), 
+				  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t(%.4g %.4g %.4g %.4g)", table->t+(k-1), table->t2+(k-1), table->t3+(k-1),
 					  table->f+(k-1) ); 
 			  }
 			  else if(table->columns ==5 && table_dim ==2 )
@@ -14865,7 +14638,7 @@ rd_table_data(FILE *ifp, char *input, struct Data_Table *table , char *endlist)
 				  }
                   else
 					  k++;
-				  SPF(echo_string,"\t(%.4g %.4g %.4g %.4g %.4g)", table->t+(k-1), table->t2+(k-1), 
+				  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t(%.4g %.4g %.4g %.4g %.4g)", table->t+(k-1), table->t2+(k-1),
 					  table->f+(k-1), table->f+Num_Pnts+(k-1), table->f+2*Num_Pnts+(k-1)); 
 			  }
 			  else
@@ -14877,7 +14650,7 @@ rd_table_data(FILE *ifp, char *input, struct Data_Table *table , char *endlist)
 	  }
   }
 
-  SPF(echo_string,"\t(Found %d data points in Table : %s)",k,table->f_name); ECHO(echo_string,echo_file);
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t(Found %d data points in Table : %s)",k,table->f_name); ECHO(echo_string,echo_file);
 
 
   /* 
@@ -15066,7 +14839,7 @@ scan_table_columns( int k,
 			err_stat = 1;
 		}
 		else	
-			SPF(echo_string,"\t(%.4g %.4g)", table->t[k], table->f[k] ); 
+			snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t(%.4g %.4g)", table->t[k], table->f[k] );
 	}
 	else if(table->columns ==3 && table_dim == 2 )
 	{
@@ -15077,7 +14850,7 @@ scan_table_columns( int k,
 			err_stat = 1;
 		}
 		else
-			SPF(echo_string,"\t(%.4g %.4g %.4g)", table->t[k], table->t2[k], table->f[k] ); 
+			snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t(%.4g %.4g %.4g)", table->t[k], table->t2[k], table->f[k] );
 	}
 	else if(table->columns ==3 && 
 			(table_dim != 2 && strcmp(table->f_name, "Saturation") != 0) )
@@ -15089,7 +14862,7 @@ scan_table_columns( int k,
 			err_stat = 1;
 		}
 		else
-			SPF(echo_string,"\t(%.4g %.4g %.4g)", table->t[k], table->f[k], table->f[Num_Pnts+k] ); 
+			snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t(%.4g %.4g %.4g)", table->t[k], table->f[k], table->f[Num_Pnts+k] );
 	}
 	else if(table->columns ==3 && table_dim == 1
 			&& strcmp(table->f_name, "Saturation") == 0)
@@ -15101,7 +14874,7 @@ scan_table_columns( int k,
 			err_stat = 1;
 		}
 		else
-			SPF(echo_string,"\t(%.4g %.4g %.4g)", table->t[k], table->f[Num_Pnts+k], table->f[k] ); 
+			snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t(%.4g %.4g %.4g)", table->t[k], table->f[Num_Pnts+k], table->f[k] );
 	}
 	else if(table->columns ==4 && table_dim == 2 
 			&& strcmp(table->f_name, "Saturation") == 0)
@@ -15113,7 +14886,7 @@ scan_table_columns( int k,
 			err_stat = 1;
 		}
 		else
-			SPF(echo_string,"\t(%.4g %.4g %.4g %.4g)", *(table->t+(k-1)), *(table->t2+(k-1)), 
+			snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t(%.4g %.4g %.4g %.4g)", *(table->t+(k-1)), *(table->t2+(k-1)),
 			    *(table->f+Num_Pnts+(k-1)), *(table->f+(k-1)) ); 
 	}
 	else if(table->columns ==4 && table_dim == 3 )
@@ -15125,7 +14898,7 @@ scan_table_columns( int k,
 			err_stat = 1;
 		}
 		else
-			SPF(echo_string,"\t(%.4g %.4g %.4g %.4g)", table->t[k], table->t2[k], table->t3[k], 
+			snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t(%.4g %.4g %.4g %.4g)", table->t[k], table->t2[k], table->t3[k],
 			table->f[k] ); 
 	}
 	else if(table->columns ==5 && table_dim == 2 )
@@ -15139,7 +14912,7 @@ scan_table_columns( int k,
 			err_stat = 1;
 		}
 		else
-			SPF(echo_string,"\t(%.4g %.4g %.4g %.4g %.4g)", *(table->t+(k-1)), *(table->t2+(k-1)), 
+			snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t(%.4g %.4g %.4g %.4g %.4g)", *(table->t+(k-1)), *(table->t2+(k-1)),
 			    table->f[k], table->f[Num_Pnts+k], table->f[2*Num_Pnts+k]); 
 	}
 	else
@@ -15425,7 +15198,7 @@ static void read_MAT_line(FILE *ifp, int mn, char *input)
       goto L_ERROR;
   strcpy(mp_glob[mn]->Material_Name, pd_glob[mn]->MaterialName);
 
-  SPF(echo_string,"%s = %s","MAT",pd_glob[mn]->MaterialName);
+  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %s","MAT",pd_glob[mn]->MaterialName);
 
   /*
    * Store the number of element blocks having this material type
@@ -15506,7 +15279,7 @@ read_surface_objects ( FILE* ifp,
 	      GOMA_EH(GOMA_ERROR,"PLANE Level Set initialization objects requires 4 float constants.");
 	    }
 
-	  SPF(echo_string,"\t\t%s = %s %.4g %.4g %.4g %.4g","SURF","PLANE",s->n[0],s->n[1],s->n[2],s->d);ECHO(echo_string,echo_file);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t\t%s = %s %.4g %.4g %.4g %.4g","SURF","PLANE",s->n[0],s->n[1],s->n[2],s->d);ECHO(echo_string,echo_file);
 
 	}
       else if (  strcmp( name, "CIRCLE") == 0 )
@@ -15525,7 +15298,7 @@ read_surface_objects ( FILE* ifp,
 	    {
 	      GOMA_EH(GOMA_ERROR,"CIRCLE Level Set initialization objects requires 3 float constants.");
 	    }
-	  SPF(echo_string,"\t\t%s = %s %.4g %.4g %.4g","SURF","CIRCLE",s->center[0],s->center[1],s->r ); ECHO(echo_string,echo_file);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t\t%s = %s %.4g %.4g %.4g","SURF","CIRCLE",s->center[0],s->center[1],s->r ); ECHO(echo_string,echo_file);
 	}
       else if (  strcmp( name, "SPHERE") == 0 )
 	{
@@ -15543,7 +15316,7 @@ read_surface_objects ( FILE* ifp,
 	      GOMA_EH(GOMA_ERROR,"SPHERE Level Set initialization objects requires 4 float constants.");
 	    }
 
-	  SPF(echo_string,"\t\t%s = %s %.4g %.4g %.4g %.4g","SURF","SPHERE",s->center[0],s->center[1],s->center[2],s->r); 
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t\t%s = %s %.4g %.4g %.4g %.4g","SURF","SPHERE",s->center[0],s->center[1],s->center[2],s->r);
 	  ECHO(echo_string,echo_file);
 	}
       else if (  strcmp( name, "FACET_LIST") == 0 )
@@ -15560,7 +15333,7 @@ read_surface_objects ( FILE* ifp,
           if ( (sfp=fopen(input,"r")) == NULL) 
             GOMA_EH( -1, "Could not open facet list file\n");
 
-	  SPF(echo_string,"\t\t%s = %s %s","SURF","FACET_LIST",input);ECHO(echo_string,echo_file);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t\t%s = %s %s","SURF","FACET_LIST",input);ECHO(echo_string,echo_file);
 
           while( look_forward_optional(sfp, "FACET", input, '=') == 1 )
             {
@@ -15610,7 +15383,7 @@ read_surface_objects ( FILE* ifp,
 	      GOMA_EH(GOMA_ERROR,"SS Level Set initialization objects requires 1 int constant.");
 	    }
 
-	  SPF(echo_string,"\t\t%s = %s %d","SURF","SS",s->ss_id);ECHO(echo_string,echo_file);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t\t%s = %s %d","SURF","SS",s->ss_id);ECHO(echo_string,echo_file);
 	}
       else if (  strcmp( name, "ISOSURFACE") == 0 )
 	{
@@ -15648,7 +15421,7 @@ read_surface_objects ( FILE* ifp,
 	      GOMA_EH(GOMA_ERROR,"ISOSURFACE Level Set initialization objects requires varname and 1 float constant.");
 	    }
 
-	  SPF(echo_string,"\t\t%s = %s %s %.4g","SURF","ISOSURFACE",input,s->isoval);ECHO(echo_string,echo_file);
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t\t%s = %s %s %.4g","SURF","ISOSURFACE",input,s->isoval);ECHO(echo_string,echo_file);
 
 	}
       else if ( strcmp( name, "ARC" ) == 0 )
@@ -15666,7 +15439,7 @@ read_surface_objects ( FILE* ifp,
 	      GOMA_EH(GOMA_ERROR," ARC initialization surface requires six floats,\n");
 	    }  
 
-	  SPF(echo_string,"\t\t%s = %s %.4g %.4g %.4g %.4g %.4g %.4g ","SURF","ARC",
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t\t%s = %s %.4g %.4g %.4g %.4g %.4g %.4g ","SURF","ARC",
 	      s->center[0],s->center[1], s->r, s->n[0],s->n[1], s->d ); 
 
 	 s->sign = 1.0;
@@ -15709,7 +15482,7 @@ read_surface_objects ( FILE* ifp,
 	  while ( I-- != 0 ) s->Real_Data[I] = a[I];
 
 	  safe_free(a);
-	  SPF(echo_string,"\t\t%s = %s","SURF","USER");
+	  snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t\t%s = %s","SURF","USER");
 
 	  I = 0;
 
@@ -15749,27 +15522,27 @@ echo_surface_objects( struct LS_Surf_List *list )
 	case LS_SURF_PLANE:
 	  {
 	    struct LS_Surf_Plane_Data *s = (struct LS_Surf_Plane_Data *) surf->data;
-	    SPF(echo_string,"\t\t%s  %f %f %f %f","PLANE", s->n[0],s->n[1],s->n[2], s->d ); ECHO(echo_sting);
+	    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t\t%s  %f %f %f %f","PLANE", s->n[0],s->n[1],s->n[2], s->d ); ECHO(echo_sting);
 	  }
 	  break;
 	case LS_SURF_CIRCLE:
 	  {
 	    struct LS_Surf_Sphere_Data *s = (struct LS_Surf_Sphere_Data *) surf->data;
 
-	    SPF(echo_string,"\t\t%s  %f %f %f","CIRCLE",s->center[0], s->center[1], s->r ); ECHO(echo_string,echo_file)
+	    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t\t%s  %f %f %f","CIRCLE",s->center[0], s->center[1], s->r ); ECHO(echo_string,echo_file)
 	  }
 	    break;
 	case LS_SURF_SPHERE:
 	  {
 	    struct LS_Surf_Sphere_Data *s = (struct LS_Surf_Sphere_Data *) surf->data;
-	    SPF(echo_string,"\t\t%s %f %f %f %f","SPHERE", s->center[0], s->center[1], s->center[2], s->r ); ECHO(echo_string,echo_file);
+	    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t\t%s %f %f %f %f","SPHERE", s->center[0], s->center[1], s->center[2], s->r ); ECHO(echo_string,echo_file);
 	  }
 	  break;
 
 	case LS_SURF_ARC:
 	  {
 	    struct LS_Surf_Arc_Data *s = (struct LS_Surf_Arc_Data *) surf->data;
-	    SPF(echo_string,"\t\t%s %f %f %f %f %f %f", "ARC", s->center[0], s->center[1],  s->r, s->n[0], s->n[1], s->d ); ECHO(echo_string,echo_file);
+	    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t\t%s %f %f %f %f %f %f", "ARC", s->center[0], s->center[1],  s->r, s->n[0], s->n[1], s->d ); ECHO(echo_string,echo_file);
 	  }
 	  break;
 
@@ -15777,7 +15550,7 @@ echo_surface_objects( struct LS_Surf_List *list )
 	  {
 	    struct LS_Surf_Point_Data *s = (struct LS_Surf_Point_Data *) surf->data;
 
-	    SPF(echo_string,"\t\t%s %f %f %f ","POINT", s->x[0], s->x[1], s->x[2] ); ECHO(echo_string,echo_file);
+	    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t\t%s %f %f %f ","POINT", s->x[0], s->x[1], s->x[2] ); ECHO(echo_string,echo_file);
 	  }
 
 	  break;
@@ -15789,7 +15562,7 @@ echo_surface_objects( struct LS_Surf_List *list )
 	case LS_SURF_SS:
 	  {
 	    struct LS_Surf_SS_Data *s = (struct LS_Surf_SS_Data *) surf->data;
-	    SPF(echo_string,"\t\t%s  %d","SS", s->ss_id ); ECHO(echo_string,echo_file);
+	    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t\t%s  %d","SS", s->ss_id ); ECHO(echo_string,echo_file);
 	  }
 	  break;
 
@@ -15800,7 +15573,7 @@ echo_surface_objects( struct LS_Surf_List *list )
 
 	    while( s->isovar != Var_Name[k].Index && k<MAX_VARIABLE_TYPES ) k++;
 	    
-	    SPF(echo_string,"\t\t%s %s %.4g","ISOSURFACE", Var_Name[k].name1, s->isoval ); ECHO(echo_string,echo_file)  ;
+	    snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"\t\t%s %s %.4g","ISOSURFACE", Var_Name[k].name1, s->isoval ); ECHO(echo_string,echo_file)  ;
 	  }
 	  break;
 	case LS_SURF_NS:

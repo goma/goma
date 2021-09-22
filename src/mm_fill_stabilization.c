@@ -32,7 +32,7 @@ yzbeta2(dbl scale, dbl Y, dbl Z, dbl d_Z[MDE], dbl deriv[MDE], dbl h_elem, int i
 
 static const dbl DIFFUSION_EPSILON = 1e-8;
 
-void get_metric_tensor(const dbl B[DIM][DIM], int dim, int element_type, dbl G[DIM][DIM]) {
+void get_metric_tensor(dbl B[DIM][DIM], int dim, int element_type, dbl G[DIM][DIM]) {
   dbl adjustment[DIM][DIM] = {{0}};
   const dbl invroot3 = 0.577350269189626;
   const dbl tetscale = 0.629960524947437; // 0.5 * cubroot(2)

@@ -1822,7 +1822,6 @@ void wr_result_exo(
   int k;
   int status;
   int time_index;
-  char err_msg[MAX_CHAR_IN_INPUT];
 
   /*
    * This file should already exist.

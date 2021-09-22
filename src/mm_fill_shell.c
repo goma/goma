@@ -6604,7 +6604,8 @@ surface_user_shell_bc(double R[MAX_PROB_VAR+MAX_CONC][MAX_NODES_PER_SIDE],
   int i, j, q, dofs, err;
   int eqn, peqn, var, pvar;
   double boundary, em, det_J, phi_i, phi_j;
-  double vconv[MAX_PDIM], vconv_old[MAX_PDIM];/*Calculated convection velocity*/
+  double vconv[MAX_PDIM] = {0.};
+  double vconv_old[MAX_PDIM];/*Calculated convection velocity*/
   CONVECTION_VELOCITY_DEPENDENCE_STRUCT d_vconv_struct;
   CONVECTION_VELOCITY_DEPENDENCE_STRUCT *d_vconv = &d_vconv_struct;
 

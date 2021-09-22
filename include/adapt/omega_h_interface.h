@@ -3,10 +3,13 @@
 
 #if defined(c_plusplus) || defined(__cplusplus)
 extern "C" {
-#endif
-
 typedef struct Exodus_Database Exo_DB;
 typedef struct Distributed_Processing_Information Dpi;
+#else
+#include "exo_struct.h"
+#include "dpi.h"
+#endif
+
 
 void adapt_mesh_omega_h(struct GomaLinearSolverData **ams,
                         Exo_DB *exo,

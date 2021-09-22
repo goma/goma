@@ -54,7 +54,7 @@ dbl yzbeta_model(int model,
                  int interp_eqn,
                  dbl deriv[MDE]);
 
-void get_metric_tensor(const dbl B[DIM][DIM], int dim, int element_type, dbl G[DIM][DIM]);
+void get_metric_tensor(dbl B[DIM][DIM], int dim, int element_type, dbl G[DIM][DIM]);
 
 int calc_pspg(dbl pspg[DIM],
               PSPG_DEPENDENCE_STRUCT *d_pspg,

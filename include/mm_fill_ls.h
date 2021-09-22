@@ -125,7 +125,7 @@ EXTERN struct LS_Surf * closest_surf
 ( struct LS_Surf_List *,
          double *,
          Exo_DB  *,
-         double * );
+         double [DIM] );
 
 EXTERN void find_surf_closest_point 
 ( struct LS_Surf *,

@@ -123,22 +123,19 @@ EXTERN void edge_determinant_and_vectors
        const int );		/* param_dir - local coordinate which 
 				 * parameterizes edge                        */
 
-EXTERN void calc_CL_normal
-( double [],
-	double [][DIM][MDE],
-	double [],
-	double [][DIM][MDE],
-	double [],
-	double [][DIM][MDE],
-
-	int,
-	int [],
-	int,
-	int,
-	
-	double [],
-	double [][DIM][MDE],
-
-	const Exo_DB *);
+EXTERN void
+calc_CL_normal ( double snormal[DIM],
+                 double dsnormal_dx[DIM][DIM][MDE],
+                 double fsnormal[DIM],
+                 double dfsnormal_dx[DIM][DIM][MDE],
+                 double tangent[DIM],
+                 double dtangent_dx[DIM][DIM][MDE],
+                 int elem,
+                 int edge_elem_node_id[],
+                 int elem_dim,
+                 int num_edge_nodes,
+               double clnormal[DIM],
+               double dclnormal_dx[DIM][DIM][MDE],
+               const Exo_DB *exo);
 
 #endif /* GOMA_MM_FILL_AUX_H */

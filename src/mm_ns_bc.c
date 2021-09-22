@@ -3252,8 +3252,8 @@ fvelo_slip_bc(double func[MAX_PDIM],
   double d_betainv_dF[MDE];
   double sign;
   int tang_slip_only;
-  double *phi_j_vector;
-  double mass;
+  //double *phi_j_vector;
+  //double mass;
 #define PRESSURE_DEPENDENT_SLIP 0
 #if PRESSURE_DEPENDENT_SLIP
   double vslip_mag;

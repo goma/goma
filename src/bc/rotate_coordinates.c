@@ -113,16 +113,6 @@ typedef struct {
   int second;
 } int_pair;
 
-static int int_compare(const void *left, const void *right) {
-  int left_val = *((int *)left);
-  int right_val = *((int *)right);
-  if (left_val > right_val)
-    return 1;
-  else if (left_val < right_val)
-    return -1;
-  else
-    return 0;
-}
 
 static int int_pair_compare_first(const void *left, const void *right) {
   int_pair *left_val = ((int_pair *)left);

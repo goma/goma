@@ -20,6 +20,7 @@
 #include "exo_struct.h"
 #include "mm_input.h"
 #include "std.h"
+#include "el_elm.h"
 
 struct Results_Description;
 #ifdef EXTERN
@@ -114,7 +115,7 @@ EXTERN void anneal_map		/* mm_more_utils.c                           */
        double []);		/* X_new                                     */
 
 EXTERN int get_new_coord 
-(  double *[],
+(  double *[DIM],
 	  double *,
 	  const Exo_DB * );
 

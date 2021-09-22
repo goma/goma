@@ -481,7 +481,7 @@ EXTERN void sus_mass_flux_surf_bc /* mm_fill_species.c                       */
        const dbl ,		/* dt - current value of the time step       */
        const dbl ,		/* tt - parameter to vary time integration 
 				 * from BE(0) to CN(1/2) to FE(1)            */
-       const dbl []);          /* element size                              */
+       const dbl [DIM]);          /* element size                              */
 
 EXTERN void kin_bc_leak		/* mm_fill_species.c                         */
 (double [],		/* func                                      */

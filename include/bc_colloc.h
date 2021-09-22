@@ -220,6 +220,6 @@ EXTERN double table_distance_search
 
 EXTERN double interpolate_table_sat
 (struct Data_Table *,	/* table                                     */
-       double [3]);	      	/* slope                                     */
+       double []);	      	/* slope                                     */
 
 #endif /* GOMA_BC_COLLOC_H */

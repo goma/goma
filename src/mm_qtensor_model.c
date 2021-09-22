@@ -80,7 +80,7 @@
 //static int bias_eigenvector_to(dbl *, dbl *);
 
 static int get_local_qtensor
-(double [][DIM]);
+(double [DIM][DIM]);
 
 #define MAX_GAUSS_POINTS 12
 

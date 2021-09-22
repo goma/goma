@@ -118,12 +118,12 @@ EXTERN void delta_chev_moments_2DQ(const int, double *, const double *, const do
 
 EXTERN int interface_crossing_1DQ(const double *, double[2]);
 
-EXTERN int interface_crossing_2DQ(const double *, double[][2], int *, int *, double[][MAX_PDIM]);
+EXTERN int interface_crossing_2DQ(const double *, double[6][2], int *, int *, double[12][MAX_PDIM]);
 
 EXTERN void interface_inclination_2DQ(const double *, const int, double *, const int *,
-                                      double[][2]);
+                                      double[6][2]);
 
-EXTERN int interface_crossing_3DL(const double *, double[][2], int *, double[][MAX_PDIM]);
+EXTERN int interface_crossing_3DL(const double *, double[12][2], int *, double[12][MAX_PDIM]);
 
 /*  Chebyshev Polynomial data structure  */
 

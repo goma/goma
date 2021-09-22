@@ -2134,10 +2134,10 @@ calculate_all_rotation_vectors (Exo_DB *exo,		/* the mesh */
   int id, j_id, num_rots_finished, j_new;
   double xi[DIM];               /* Local element coordinates of Gauss point. */
   int num_nodes_on_edge=-1;
-  int local_edge_node_list[MAX_NODES_PER_SIDE];
-  int edge_elem_node_id[MAX_NODES_PER_SIDE];
-  int local_side_node_list[MAX_NODES_PER_SIDE];
-  int side_elem_node_id[MAX_NODES_PER_SIDE];
+  int local_edge_node_list[MDE];
+  int edge_elem_node_id[MDE];
+  int local_side_node_list[MDE];
+  int side_elem_node_id[MDE];
   int param_dir, id_edge=-1, v_id, reseed, kdir;
   double seed[DIM];
 

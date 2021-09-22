@@ -893,37 +893,31 @@ rd_bc_specs(FILE *ifp,
           BC_Types[ibc].max_DFlt = 3;
 
 	  /* Try reading the optional integer. */
-	  if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[0]) != 1)
-	    {
-	      BC_Types[ibc].BC_Data_Int[0] = -1;
-	    }
-	  else
-	    SPF(endofstring(echo_string)," %d", BC_Types[ibc].BC_Data_Int[0]);
-	  
-	    if (BC_Types[ibc].BC_Name == CAPILLARY_TABLE_BC)
-               {
-	  new_BC_Desc = ((struct BC_descriptions  **)
-			 realloc(new_BC_Desc,  
-				 (num_new_BC_Desc+1) * 
-				 sizeof(struct BC_descriptions *)));
+          if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[0]) != 1) {
+            BC_Types[ibc].BC_Data_Int[0] = -1;
+          } else {
+            SPF(endofstring(echo_string), " %d", BC_Types[ibc].BC_Data_Int[0]);
+          }
 
-	  new_BC_Desc[num_new_BC_Desc] = alloc_BC_description(BC_Types[ibc].desc);
-	  
-	  BC_Types[ibc].desc           = new_BC_Desc[num_new_BC_Desc];
+          if (BC_Types[ibc].BC_Name == CAPILLARY_TABLE_BC) {
+              new_BC_Desc = ((struct BC_descriptions **)realloc(
+                  new_BC_Desc, (num_new_BC_Desc + 1) * sizeof(struct BC_descriptions *)));
 
-	  BC_Types[ibc].index_dad      = num_new_BC_Desc++;  /* This is important to Phil */
+              new_BC_Desc[num_new_BC_Desc] = alloc_BC_description(BC_Types[ibc].desc);
 
+              BC_Types[ibc].desc = new_BC_Desc[num_new_BC_Desc];
 
-	  if( num_BC_Tables == MAX_BC_TABLES )
-	    {
-	      GOMA_EH(GOMA_ERROR, "Maximum TABLE_BCs exceeded .");
-	    }
+              BC_Types[ibc].index_dad = num_new_BC_Desc++; /* This is important to Phil */
 
-	  BC_Tables[num_BC_Tables] = setup_table_BC( ifp, input, &BC_Types[ibc], echo_string );
+              if (num_BC_Tables == MAX_BC_TABLES) {
+                GOMA_EH(GOMA_ERROR, "Maximum TABLE_BCs exceeded .");
+              }
 
-	  BC_Types[ibc].table_index = num_BC_Tables++;
-               }
-	  break;
+              BC_Tables[num_BC_Tables] = setup_table_BC(ifp, input, &BC_Types[ibc], echo_string);
+
+              BC_Types[ibc].table_index = num_BC_Tables++;
+            }
+            break;
 
 	  /*
 	   * Fall through for all cases which require four floating point

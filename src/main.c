@@ -1044,7 +1044,6 @@ main(int argc, char **argv)
   DPRINTF(stdout, "\nProc 0 runtime: %10.2f Minutes.\n\n",total_time);
 #ifdef HAVE_PETSC
   PetscBool petsc_initialized = PETSC_FALSE;
-  PetscErrorCode err;
   PetscInitialized(&petsc_initialized);
   if (petsc_initialized) {
     PetscFinalize();

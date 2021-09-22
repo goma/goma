@@ -2510,7 +2510,7 @@ matrix_fill(
   #ifdef CHECK_FINITE
               CHECKFINITE("assemble_continuity");
   #endif
-              if( neg_elem_volume ) return;
+              if( neg_elem_volume ) return -1;
             }
           else
             {
@@ -2519,7 +2519,7 @@ matrix_fill(
   #ifdef CHECK_FINITE
               CHECKFINITE("assemble_continuity");
   #endif
-              if( neg_elem_volume ) return;
+              if( neg_elem_volume ) return -1;
             }
 	}
 
@@ -2533,7 +2533,7 @@ matrix_fill(
   #ifdef CHECK_FINITE
               CHECKFINITE("assemble_pstar");
   #endif
-              if( neg_elem_volume ) return;
+              if( neg_elem_volume ) return -1;
             }
           else
             {
@@ -2551,7 +2551,7 @@ matrix_fill(
   #ifdef CHECK_FINITE
               CHECKFINITE("assemble_ustar");
   #endif
-              if( neg_elem_volume ) return;
+              if( neg_elem_volume ) return -1;
             }
           else
             {

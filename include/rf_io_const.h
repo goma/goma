@@ -46,11 +46,11 @@
 #endif
 
 #ifndef MAX_CHAR_IN_INPUT
-#define MAX_CHAR_IN_INPUT	256 /* How many characters in input line? */
+#define MAX_CHAR_IN_INPUT	1024 /* How many characters in input line? */
 #endif
 
 #ifndef MAX_CHAR_ECHO_INPUT
-#define MAX_CHAR_ECHO_INPUT	1024 /* specifier for echo_string needs to be at least */
+#define MAX_CHAR_ECHO_INPUT	4096 /* specifier for echo_string needs to be at least */
 #endif                               /* 3*MAX_CHAR_IN_INPUT + 4 to account for "%s = %s %s" format */
 
 
