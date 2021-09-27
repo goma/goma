@@ -48,6 +48,7 @@ Multicomponent;	/* Select fomulation for multicomponent transport   */
 /* global variable to account for extra terms in axisymmetric or swirling
    flow problems: define in setup_pd */
 int VIM;
+int WIM;
 
 /* Boundary Condition information */
 
@@ -254,6 +255,7 @@ double modified_newt_norm_tol; /* tolerance for jacobian reformation
                                        based on residual norm */
 
 double Epsilon[MAX_NUM_MATRICES][3];	/* Used for determining stopping criteria.     */
+int Solver_Output_Format; 	/* Bitmap for Solver Output Format     */
 
 int NZeros;             /* Number of nonzeros in this procs matrix     */
 

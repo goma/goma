@@ -483,7 +483,7 @@ int calc_pspg(dbl pspg[DIM],
   const dbl rho_avg = pg_data->rho_avg;    /* element density for PSPG calculations   */
   const dbl *v_avg = pg_data->v_avg;       /* element velocity for PSPG calculations   */
 
-  int dim, wim;
+  int dim;
   int p, a, b, c;
   int var;
   int w, j;
@@ -569,10 +569,6 @@ int calc_pspg(dbl pspg[DIM],
   static int is_initialized = FALSE;
 
   dim = pd->Num_Dim;
-  wim = dim;
-  if (pd->CoordinateSystem == SWIRLING || pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim + 1;
 
   /* initialize */
   for (a = 0; a < DIM; a++)
@@ -674,7 +670,7 @@ int calc_pspg(dbl pspg[DIM],
 
     // Average value of v**2 in the element
     vv_speed = 0.0;
-    for (a = 0; a < wim; a++) {
+    for (a = 0; a < WIM; a++) {
       vv_speed += v_avg[a] * v_avg[a];
     }
 
@@ -788,7 +784,7 @@ int calc_pspg(dbl pspg[DIM],
 
   /* get variables we will need for momentum residual */
 
-  for (a = 0; a < wim; a++) {
+  for (a = 0; a < WIM; a++) {
     if (pd->TimeIntegration != STEADY && pd->v[pg->imtrx][MESH_DISPLACEMENT1 + a]) {
       x_dot[a] = fv_dot->x[a];
     } else {
@@ -802,10 +798,10 @@ int calc_pspg(dbl pspg[DIM],
     }
   }
 
-  for (p = 0; p < wim; p++)
+  for (p = 0; p < WIM; p++)
     div_s[p] = 0.;
   if (pd->gv[POLYMER_STRESS11]) {
-    for (p = 0; p < wim; p++) {
+    for (p = 0; p < WIM; p++) {
       for (mode = 0; mode < vn->modes; mode++) {
         div_s[p] += fv->div_S[mode][p];
       }
@@ -826,11 +822,11 @@ int calc_pspg(dbl pspg[DIM],
     particle_stress(tau_p, d_tau_p_dv, d_tau_p_dvd, d_tau_p_dy, d_tau_p_dmesh, d_tau_p_dp, w0);
 
   if (pd->gv[VELOCITY_GRADIENT11] && pd->gv[POLYMER_STRESS11]) {
-    for (p = 0; p < wim; p++) {
+    for (p = 0; p < WIM; p++) {
       div_G[p] = fv->div_G[p];
     }
   } else {
-    for (p = 0; p < wim; p++) {
+    for (p = 0; p < WIM; p++) {
       div_G[p] = 0.;
     }
   }
@@ -868,7 +864,7 @@ int calc_pspg(dbl pspg[DIM],
 
   /* for porous media stuff */
   speed = 0.0;
-  for (a = 0; a < wim; a++) {
+  for (a = 0; a < WIM; a++) {
     speed += v[a] * v[a];
   }
   speed = sqrt(speed);
@@ -884,7 +880,7 @@ int calc_pspg(dbl pspg[DIM],
     meqn1 = R_MOMENTUM1;
   }
 
-  for (a = 0; a < wim; a++) {
+  for (a = 0; a < WIM; a++) {
     meqn = meqn1 + a;
 
     mass = 0.;
@@ -895,7 +891,7 @@ int calc_pspg(dbl pspg[DIM],
 
     advection = 0.;
     if (pd->e[upd->matrix_index[meqn]][meqn] & T_ADVECTION) {
-      for (p = 0; p < wim; p++) {
+      for (p = 0; p < WIM; p++) {
         advection += rho_t * (v[p] - x_dot[p]) * grad_v[p][a] / por2;
       }
       advection *= pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_ADVECTION)];
@@ -925,7 +921,7 @@ int calc_pspg(dbl pspg[DIM],
     pspg[a] = tau_pspg * momentum[a];
 
     if (d_pspg != NULL && pd->v[pg->imtrx][VELOCITY1]) {
-      for (b = 0; b < wim; b++) {
+      for (b = 0; b < WIM; b++) {
         var = VELOCITY1 + b;
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
           phi_j = bf[var]->phi[j];
@@ -939,7 +935,7 @@ int calc_pspg(dbl pspg[DIM],
           advection = 0.;
           if (pd->e[upd->matrix_index[meqn]][meqn] & T_ADVECTION) {
             advection = phi_j * grad_v[b][a];
-            for (p = 0; p < wim; p++) {
+            for (p = 0; p < WIM; p++) {
               advection += (v[p] - x_dot[p]) * bf[var]->grad_phi_e[j][b][p][a];
             }
             advection *= rho_t / por2;
@@ -961,7 +957,7 @@ int calc_pspg(dbl pspg[DIM],
           porous = 0.;
           if (pd->e[upd->matrix_index[meqn]][meqn] & T_POROUS_BRINK) {
             porous = (rho_t * sc * speed / sqrt(per) + vis / per) * phi_j;
-            for (p = 0; p < wim; p++) {
+            for (p = 0; p < WIM; p++) {
               porous += rho_t * sc / sqrt(per) * 2. * v[p] * v[a];
             }
             porous *= pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_POROUS_BRINK)];
@@ -973,7 +969,7 @@ int calc_pspg(dbl pspg[DIM],
     }
 
     if (d_pspg != NULL && pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
-      for (b = 0; b < wim; b++) {
+      for (b = 0; b < WIM; b++) {
         var = MESH_DISPLACEMENT1 + b;
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
           phi_j = bf[var]->phi[j];
@@ -981,7 +977,7 @@ int calc_pspg(dbl pspg[DIM],
           advection = 0.;
           if ((pd->e[upd->matrix_index[meqn]][meqn] & T_ADVECTION) && (pd->TimeIntegration != STEADY)) {
             advection = -(1. + 2. * tt) * phi_j / dt * grad_v[b][a];
-            for (p = 0; p < wim; p++) {
+            for (p = 0; p < WIM; p++) {
               advection += (v[p] - x_dot[p]) * fv->d_grad_v_dmesh[p][a][b][j];
             }
             advection *= rho_t / por2;
@@ -1028,7 +1024,7 @@ int calc_pspg(dbl pspg[DIM],
         advection = 0.;
         if (pd->e[upd->matrix_index[meqn]][meqn] & T_ADVECTION) {
           advection = 0.;
-          for (p = 0; p < wim; p++) {
+          for (p = 0; p < WIM; p++) {
             advection += (v[p] - x_dot[p]) * grad_v[p][a];
           }
           advection *= d_rho_t_dT / por2;
@@ -1089,7 +1085,7 @@ int calc_pspg(dbl pspg[DIM],
           advection = 0.;
           if (pd->e[upd->matrix_index[meqn]][meqn] & T_ADVECTION) {
             advection = 0.;
-            for (p = 0; p < wim; p++) {
+            for (p = 0; p < WIM; p++) {
               advection += (v[p] - x_dot[p]) * grad_v[p][a];
             }
             advection *= d_rho_t_dC / por2;
@@ -1135,7 +1131,7 @@ int calc_pspg(dbl pspg[DIM],
                   for (r = 0; r < VIM; r++) {
                     diffusion -= (dbl)delta(a, c) * phi_j * fv->grad_e[b][r][c];
                   }
-                  for (r = 0; r < wim; r++) {
+                  for (r = 0; r < WIM; r++) {
                     diffusion -= (dbl)delta(a, r) * phi_j * fv->grad_e[c][b][r];
                   }
                 }
@@ -1166,7 +1162,7 @@ int calc_pspg(dbl pspg[DIM],
                 for (r = 0; r < VIM; r++) {
                   diffusion -= (dbl)delta(a, c) * phi_j * fv->grad_e[b][r][c];
                 }
-                for (r = 0; r < wim; r++) {
+                for (r = 0; r < WIM; r++) {
                   diffusion -= (dbl)delta(a, r) * phi_j * fv->grad_e[c][b][r];
                 }
               }
@@ -1194,7 +1190,7 @@ int calc_cont_gls(dbl *cont_gls,
   dbl tau_cont, d_tau_dmesh[DIM][MDE], d_tau_dv[DIM][MDE];
   dbl advection_etm, advection, Re, div_phi_j_e_b, div_v_dmesh;
   int eqn;
-  int var, dim, wim, b, j, p;
+  int var, dim, b, j, p;
   int advection_on = 0;
   static int is_initialized = FALSE;
 
@@ -1213,10 +1209,6 @@ int calc_cont_gls(dbl *cont_gls,
 
   // Initialize and Define
   dim = pd->Num_Dim;
-  wim = dim;
-  if (pd->CoordinateSystem == SWIRLING || pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim + 1;
 
   tau_cont = 0;
   *cont_gls = 0.0;
@@ -1318,7 +1310,7 @@ int calc_cont_gls(dbl *cont_gls,
   // Determine Jacobian terms
 
   // J_v
-  for (b = 0; b < wim; b++) {
+  for (b = 0; b < WIM; b++) {
     var = VELOCITY1 + b;
     if (pd->v[pg->imtrx][var] && d_cont_gls != NULL) {
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {

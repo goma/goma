@@ -528,10 +528,10 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     {
       mat_ptr->DensityModel = DENSITY_IDEAL_GAS;       
       num_const = read_constants(imp, &(mat_ptr->u_density), 0);
-      if ( num_const < 1) 
+      if ( num_const < 2) 
 	{
 	  sprintf(err_msg, 
-		  "Material %s - expected at least 1 constants for %s %s model.\n",
+		  "Material %s - expected at least 2 constants for %s %s model.\n",
 		  pd_glob[mn]->MaterialName, "Density", "IDEAL_GAS");
 	  GOMA_EH(-1, err_msg);
 	}
@@ -885,6 +885,27 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			       pd_glob[mn]->MaterialName, 
 			       "Convective Lagrangian Velocity", 
 			       "ROTATIONAL_3D");
+		  GOMA_EH(GOMA_ERROR, err_msg);
+		}
+	      elc_glob[mn]->len_u_v_mesh_sfs = num_const;
+
+	      SPF_DBL_VEC( endofstring(es), num_const, elc_glob[mn]->u_v_mesh_sfs );
+	    }
+	  if(!strcmp(model_name, "OSC_LINEAR") )
+	    {
+              pd_glob[mn]->MeshInertia = 1;
+	      elc_glob[mn]->v_mesh_sfs_model = OSC_LINEAR;
+	      
+	      num_const = read_constants(imp, &(elc_glob[mn]->u_v_mesh_sfs), 
+					 NO_SPECIES);
+
+	      if ( num_const < 5 )
+		{
+		  sr = sprintf(err_msg, 
+	          "Matl %s expected at least 5 constants for %s %s model.\n",
+			       pd_glob[mn]->MaterialName, 
+			       "Convective Lagrangian Velocity", 
+			       "OSC_LINEAR");
 		  GOMA_EH(GOMA_ERROR, err_msg);
 		}
 	      elc_glob[mn]->len_u_v_mesh_sfs = num_const;
@@ -3875,7 +3896,6 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
           mat_ptr->Rst_funcModel = CONSTANT;
           mat_ptr->Rst_func = 1.;
           mat_ptr->Rst_func_supg = 0.;
-          fprintf(stderr,"MAT %d Residence Time Weight Fcn = 1\n",mat_ptr->MatID);
 	  GOMA_WH(model_read, "Defaulting Residence Fcn to Constant");
 	}
       if (fscanf(imp, "%lg %lg %lg", &mat_ptr->Rst_func, &mat_ptr->Rst_diffusion, &mat_ptr->Rst_func_supg) != 3)
@@ -7748,6 +7768,11 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 		 mat_ptr->DiffusivityModel[species_no] = LEVEL_SET;
 		 num_const = mat_ptr->len_u_diffusivity[species_no];
 	       }
+	     else if (!strcmp(model_name, "CHAPMAN_GAS") ) 
+	       {
+		 mat_ptr->DiffusivityModel[species_no] = CHAPMAN_GAS;
+		 num_const = mat_ptr->len_u_diffusivity[species_no];
+	       }
 	     else
 	       {
 		 sprintf(err_msg, "Diffusivity. Unrecognized Diffusivity Model: %s",
@@ -9742,23 +9767,24 @@ ECHO("\n----Acoustic Properties\n", echo_file);
           model_read = 1;
 	  if(read_bc_mp == -1) read_bc_mp = DROP_EVAP;
           mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
-          if ( fscanf(imp, "%lf %lf %lf %lf ",
-                            &a0, &a1, &a2, &a3) != 4)
+          if ( fscanf(imp, "%lf %lf %lf %lf %lf",
+                            &a0, &a1, &a2, &a3, &a4) != 5)
             {
                   sr = sprintf(err_msg,
-                               "Matl %s needs 4 floats for %s %s model.\n",
+                               "Matl %s needs 5 floats for %s %s model.\n",
                                pd_glob[mn]->MaterialName,
                                "Species Source", "DROP_EVAP");
                   GOMA_EH(-1, err_msg);
             }
-          mat_ptr->u_species_source[species_no] = (dbl *) array_alloc(1,4,sizeof(dbl));
-          mat_ptr->len_u_species_source[species_no] = 4;
+          mat_ptr->u_species_source[species_no] = (dbl *) array_alloc(1,5,sizeof(dbl));
+          mat_ptr->len_u_species_source[species_no] = 5;
           mat_ptr->u_species_source[species_no][0] = a0;  /* liquid droplet concentration*/
-          mat_ptr->u_species_source[species_no][1] = a1;  /* ambient pressure */
-          mat_ptr->u_species_source[species_no][2] = a2;  /* droplet radius*/
-          mat_ptr->u_species_source[species_no][3] = a3;  /* droplet number concentration */
+          mat_ptr->u_species_source[species_no][1] = a1;  /* droplet radius*/
+          mat_ptr->u_species_source[species_no][2] = a2;  /* droplet number concentration */
+          mat_ptr->u_species_source[species_no][3] = a3;  /* fraction solvent evaporation */
+          mat_ptr->u_species_source[species_no][4] = a4;  /* Ideal Gas constant */
 
-          SPF_DBL_VEC(endofstring(es), 4,  mat_ptr->u_species_source[species_no]);
+          SPF_DBL_VEC(endofstring(es), 5,  mat_ptr->u_species_source[species_no]);
         }
       else if(model_read == -1)
 	  {
@@ -10826,6 +10852,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       /* Optional lubrication fluid source term */
 
       strcpy(search_string,"Lubrication Fluid Source");
+      mat_ptr->LubSourceModel = CONSTANT;
       mat_ptr->lubsource = 0.;
       memset(mp_glob[mn]->d_lubsource, 0, sizeof(dbl)*(MAX_VARIABLE_TYPES + MAX_CONC));
 
@@ -10837,7 +10864,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	    }
 
 	  SPF(es,"%s = %s", search_string, model_name);
-	  
+
 	  if ( !strcmp(model_name, "CONSTANT"))
 	    {
 	      mat_ptr->LubSourceModel = CONSTANT;
@@ -10878,6 +10905,25 @@ ECHO("\n----Acoustic Properties\n", echo_file);
               SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_lubsource_function_constants);
             }
 
+       else if ( !strcmp(model_name, "CONTINUUM_FLUID"))
+            {
+              mp_glob[mn]->LubSourceModel = CONTINUUM_FLUID;
+              num_const = read_constants(imp, &(mat_ptr->u_lubsource_function_constants),
+                                                                                   NO_SPECIES);
+
+              if ( num_const < 3)
+                {
+                  sr = sprintf(err_msg,
+                               "Matl %s needs 3 constants for %s %s model.\n",
+                               pd_glob[mn]->MaterialName,
+                               "Lubrication source", "CONTINUUM_FLUID");
+                  GOMA_EH(-1, err_msg);
+                }
+
+              mat_ptr->len_lubsource = num_const;
+              SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_lubsource_function_constants);
+            }
+
 	  else
 	    {
 	      GOMA_EH(GOMA_ERROR,"Unrecognized lubrication fluid source model");
@@ -10897,7 +10943,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	    }
 
 	  SPF(es,"%s = %s", search_string, model_name);
-	  
+
 	  if ( !strcmp(model_name, "CONSTANT"))
 	    {
 	      mp_glob[mn]->LubMomSourceModel = CONSTANT;
@@ -10907,7 +10953,6 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			&(mat_ptr->lubmomsource[2])) != 3)
 
 		{
-		
 		  GOMA_EH(GOMA_ERROR,"Lubrication momentum source constant model expects 3 flts");
 		}
 	      num_const = mp_glob[mn]->len_lubmomsource = 3;
@@ -10919,9 +10964,9 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	    {
 	      GOMA_EH(GOMA_ERROR,"Unrecognized lubrication momentum source  model");
 	    }
-	}	    
+	}
 
-  
+
     } /* End of shell lub_p cards */
 
   /* Shell Energy Cards - heat sources, sinks, etc. */

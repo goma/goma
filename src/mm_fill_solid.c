@@ -2156,7 +2156,7 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 						      * boundaries)          */
 			   double scale) /* Scale factor, nondimension       */
 {
-    int j_id, dim, wim, var, pvar,  p, q, p2, w, id_dofmom, id_dofmesh, offset, mode;
+    int j_id, dim, var, pvar,  p, q, p2, w, id_dofmom, id_dofmesh, offset, mode;
     int peqn_mom, peqn_solid;
     int ieqn_mom, ieqn_solid;
     int xfixed[DIM];
@@ -2168,8 +2168,6 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
     NODAL_VARS_STRUCT *nv = node->Nodal_Vars_Info[pg->imtrx];
 
     dim = pd->Num_Dim;
-    wim   = dim;
-    if(pd->CoordinateSystem == SWIRLING) wim = wim+1;
 
     if (node->DBC[pg->imtrx]) {
      
@@ -2228,7 +2226,7 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
      * decrementing the psuedo-solid momentum
      */
     if (af->Assemble_Residual) {
-      for (p = 0; p < wim; p++) {
+      for (p = 0; p < WIM; p++) {
 	/* don't do this if the displacement is fixed for this node */
 	if (! xfixed[p]) {
 	  ieqn_mom = R_MOMENTUM1 + p;
@@ -2247,7 +2245,7 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
      */
     if (af->Assemble_Jacobian)
       {
-	for (p = 0; p < wim; p++) {
+	for (p = 0; p < WIM; p++) {
 	    /* 
 	     * don't do this if the mesh is fixed for this node 
 	     *  HKM -> I assume this is the mesh since xfixed[] is used
@@ -2383,7 +2381,7 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 		/*
 		 * local J_m_v -> J_d_v  
 		 */
-		for ( q=0; q<wim; q++)
+		for ( q=0; q<WIM; q++)
 		  {
 		    var = VELOCITY1+q;
 		    if ( pd->v[pg->imtrx][var] )

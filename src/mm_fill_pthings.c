@@ -154,7 +154,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 						 explicit (tt = 1) to implicit (tt = 0) */
 			dbl dt)               /* current time step size */
 {
-  int dim, wim, p, q, a, b, eqn, var, ii, peqn, pvar, w, ledof;
+  int dim, p, q, a, b, eqn, var, ii, peqn, pvar, w, ledof;
   int i, j, m, status;
   struct Basis_Functions *bfm;
 
@@ -304,11 +304,6 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
     }
 
   dim   = pd->Num_Dim;
-  wim   = dim;
-  if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-     pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
 
 /* MMH
  * I don't need any of this, but might want to put in something analogous
@@ -396,7 +391,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
   /*
    * Field variables...
    */
-  for (a = 0; a < wim; a++) {
+  for (a = 0; a < WIM; a++) {
     pv[a] = fv->pv[a];
     if (pd->TimeIntegration != STEADY &&
         pd->v[pg->imtrx][MESH_DISPLACEMENT1+a]) {
@@ -413,7 +408,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 
   /* for porous media stuff */
   speed = 0.0;
-  for ( a=0; a<wim; a++)
+  for ( a=0; a<WIM; a++)
     {
       speed += pv[a]*pv[a];
     } 
@@ -478,7 +473,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
               var = PVELOCITY1;
 	      if (pd->v[pg->imtrx][var] )
 	        {
-	          for ( a=0; a<wim; a++)
+	          for ( a=0; a<WIM; a++)
 	    	    {
 		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		        {
@@ -623,8 +618,8 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
        */
       for( p=0; p<VIM; p++)
 	for( q=0; q<VIM; q++)
-	  for( b=0; b<wim; b++)
-	    for( j=0; j<ei[pg->imtrx]->dof[PVELOCITY1]; j++)
+	  for( b=0; b<WIM; b++)
+            for( j=0; j<ei[pg->imtrx]->dof[PVELOCITY1]; j++)
 	      d_gamma_dvbj[p][q][b][j] =
 		grad_phi_e[j][b][p][q] +
 		grad_phi_e[j][b][q][p];
@@ -633,8 +628,8 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 	for( q=0; q<VIM; q++)
 	  hold2 += gamma[p][q]*d_gamma_dvbj[q][p][b][j] +
 	    d_gamma_dvbj[p][q][b][j]*gamma[q][p];
-      for( b=0; b<wim; b++)
-	for( j=0; j<ei[pg->imtrx]->dof[PVELOCITY1]; j++)
+      for( b=0; b<WIM; b++)
+        for( j=0; j<ei[pg->imtrx]->dof[PVELOCITY1]; j++)
 	  {
 	    d_gamma_doubledot_dvbj[b][j] = 0.0;
 	    for( p=0; p<VIM; p++ )
@@ -648,7 +643,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 	{ 
 	  for ( q=0; q<VIM; q++)
 	    {
-	      for ( b=0; b<wim; b++)
+	      for ( b=0; b<WIM; b++)
 		{
 		  for ( j=0; j<ei[pg->imtrx]->dof[PVELOCITY1]; j++ )
 		    {
@@ -725,7 +720,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
       /*
        * Assemble each component "a" of the momentum equation...
        */
-      for ( a=0; a<wim; a++)
+      for ( a=0; a<WIM; a++)
 	{
 	  eqn = R_PMOMENTUM1 + a;
 	  peqn = upd->ep[pg->imtrx][eqn];
@@ -775,7 +770,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 		  advection = 0.0;
 		  if (pd->e[pg->imtrx][eqn] & T_ADVECTION)
 		    {
-		      for ( p=0; p<wim; p++)
+		      for ( p=0; p<WIM; p++)
 			{
 			  advection += (pv[p] - x_dot[p]) * grad_pv[p][a];
 			}
@@ -854,7 +849,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
   
   if ( af->Assemble_Jacobian )
     {
-      for ( a=0; a<wim; a++)
+      for ( a=0; a<WIM; a++)
 	{
 	  eqn = R_PMOMENTUM1+a;
 	  peqn = upd->ep[pg->imtrx][eqn];
@@ -915,7 +910,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 			  advection = 0.;
 			  if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 			    {
-			      for ( p=0; p<wim; p++)
+			      for ( p=0; p<WIM; p++)
 				{
 				  advection +=  (pv[p] - x_dot[p]) * grad_pv[p][a];
 				}
@@ -977,7 +972,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 		  /*
 		   * J_pm_pv
 		   */
-		  for ( b=0; b<wim; b++)
+		  for ( b=0; b<WIM; b++)
 		    {
 		      var = PVELOCITY1+b;
 		      if ( pd->v[pg->imtrx][var] )
@@ -1025,7 +1020,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 			      if (pd->e[pg->imtrx][eqn] & T_ADVECTION)
 				{
 				  advection += phi_j * grad_pv[b][a];
-				  for ( p=0; p<wim; p++)
+				  for ( p=0; p<WIM; p++)
 				    {
 				      advection += (pv[p] - x_dot[p]) *
 					grad_phi_e[j][b][p][a];
@@ -1118,7 +1113,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 			      advection = 0.0;
 			      if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 				{
-				  for ( p=0; p<wim; p++)
+				  for ( p=0; p<WIM; p++)
 				    {
 				      advection += (pv[p] - x_dot[p]) * 
 					grad_pv[p][a];
@@ -1383,7 +1378,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 			      porous = 0.;
 			      if ( pd->e[pg->imtrx][eqn] & T_POROUS_BRINK )
 				{
-				  for ( p=0; p<wim; p++)
+				  for ( p=0; p<WIM; p++)
 				    {
 				      porous += pv[p]*(rho*sc*speed/sqrt(per)+vis/per)*(double)delta(p,a);
 				      porous *= 
@@ -1417,7 +1412,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 				   */
 				  
 				  advection_a = 0.;
-				  for ( p=0; p<wim; p++)
+				  for ( p=0; p<WIM; p++)
 				    {
 				      advection_a += 
 					(pv[p]-x_dot[p]) 
@@ -1426,7 +1421,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 				  advection_a *= -phi_i * rho * h3 * det_J * wt;
 				  
 				  advection_b = 0.;		      
-				  for ( p=0; p<wim; p++)
+				  for ( p=0; p<WIM; p++)
 				    {
 				      advection_b +=
 					(pv[p]    -x_dot[p]) * 
@@ -1444,7 +1439,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 				      if ( pd->e[pg->imtrx][eqn] & T_MASS )
 					{
 					  
-					  for ( p=0; p<wim; p++)
+					  for ( p=0; p<WIM; p++)
 					    {
 					      advection_c +=   (-(1.+2.*tt) * phi_j/dt * (double)delta(p,b)) 
 						* grad_pv[p][a];
@@ -1591,7 +1586,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 			  double mu_avg )          /* element viscosity for PSPG calculations */
 
 {
-  int dim, wim;
+  int dim;
   int p, q, a, b;
 
   int eqn, var;
@@ -1734,12 +1729,6 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
     }
 
   dim   = pd->Num_Dim;
-  wim   = dim;
-  if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-     pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
-
 
   pv_s[0][0] = POLYMER_STRESS11;
   pv_s[0][1] = POLYMER_STRESS12;
@@ -1869,7 +1858,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
       
       /* get variables we will need for assembly */
       
-      for (a = 0; a < wim; a++) {
+      for (a = 0; a < WIM; a++) {
 	v[a] = fv->v[a];
 	grad_P[a] = fv->grad_P[a];
 	if (pd->TimeIntegration != STEADY && 
@@ -1896,14 +1885,14 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
       
       if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
 	{
-	  for ( p=0; p<wim; p++)
+	  for ( p=0; p<WIM; p++)
 	    {
 	      div_s[p] = fv->div_S[0][p];
 	    }
 	}
       else
 	{
-	  for ( p=0; p<wim; p++)
+	  for ( p=0; p<WIM; p++)
 	    {
 	      div_s[p] = 0.;
 	    }
@@ -1911,14 +1900,14 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 
       if ( pd->v[pg->imtrx][VELOCITY_GRADIENT11] )
 	{
-	  for ( p=0; p<wim; p++)
+	  for ( p=0; p<WIM; p++)
 	    {
 	      div_G[p] = fv->div_G[p];
 	    }
 	}
       else
 	{
-	  for ( p=0; p<wim; p++)
+	  for ( p=0; p<WIM; p++)
 	    {
 	      div_G[p] = 0.;
 	    }
@@ -1945,7 +1934,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
  
       /* for porous media stuff */
       speed = 0.0;
-      for ( a=0; a<wim; a++)
+      for ( a=0; a<WIM; a++)
 	{
 	  speed += v[a]*v[a];
 	} 
@@ -1954,7 +1943,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
       /* get momentum source term */
       err = pmomentum_source_term(f, dfdT, dfdX, dfdC, dfdv);
       
-      for ( a=0; a<wim; a++)
+      for ( a=0; a<WIM; a++)
 	{
 	  meqn = R_PMOMENTUM1 + a;
 	  momentum_residual[a] = rho*pv_dot[a]/por * pd->etm[pg->imtrx][meqn][(LOG2_MASS)]
@@ -1963,7 +1952,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 		- mu * div_G[a]  * pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)]
 		  - f[a] * pd->etm[pg->imtrx][meqn][(LOG2_SOURCE)]
 	            + v[a]*(rho*sc*speed/sqrt(per)+vis/per) * pd->etm[pg->imtrx][meqn][(LOG2_POROUS_BRINK)] ;
-	  for ( b=0; b<wim; b++)
+	  for ( b=0; b<WIM; b++)
 	    {
 	      momentum_residual[a] += rho * (v[b]- x_dot[b]) * grad_pv[b][a]/ por2
 		* pd->etm[pg->imtrx][meqn][(LOG2_ADVECTION)];
@@ -2087,7 +2076,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 	  pressure_stabilization = 0.;
 	  if(PSPG && 0)
 	    {
-	      for ( a=0; a<wim; a++)
+	      for ( a=0; a<WIM; a++)
 		{
 		  meqn = R_PMOMENTUM1+a;
 		  if( pd->e[pg->imtrx][meqn])
@@ -2136,7 +2125,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 	  /* 
 	   * J_c_v NOTE that this is applied whenever velocity is a variable
 	   */
-	  for ( b=0; b<wim; b++)
+	  for ( b=0; b<WIM; b++)
 	    {
 	      var = PVELOCITY1+b;
 	      if ( pd->v[pg->imtrx][var] )
@@ -2182,7 +2171,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 		      pressure_stabilization = 0.;  
 		      if(PSPG && 0)
 			{
-			  for ( a=0; a<wim; a++)
+			  for ( a=0; a<WIM; a++)
 			    {
 			      meqn = R_PMOMENTUM1+a;
 
@@ -2208,7 +2197,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 			      if ( pd->e[pg->imtrx][meqn] & T_ADVECTION )
 				{
 				  advection_a +=  phi_j * grad_pv[b][a];
-				  for ( p=0; p<wim; p++)
+				  for ( p=0; p<WIM; p++)
 				    {
 				      advection_a += (v[p] - x_dot[p]) * bf[var]->grad_phi_e[j][b][p][a];
 				    }
@@ -2224,7 +2213,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 			      porous = 0.;
 			      if ( pd->e[pg->imtrx][meqn] & T_POROUS_BRINK )
 				{
-				  for ( p=0; p<wim; p++)
+				  for ( p=0; p<WIM; p++)
 				    {
 				      porous   += (rho*sc/sqrt(per)*(2.*v[p])*v[a] +
 						   (rho*sc*speed/sqrt(per) + vis/per)*(double)delta(a,p)*phi_i) *
@@ -2271,7 +2260,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 		  mass = 0.;
 		  advection = 0.;
 
-		  for ( a=0; a<wim; a++)
+		  for ( a=0; a<WIM; a++)
 		    {
 		      meqn = R_PMOMENTUM1 + a;
 
@@ -2287,7 +2276,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 		      if ( pd->e[pg->imtrx][meqn] & T_ADVECTION )
 			{
 			  advection = 0.;
-			  for ( p=0; p<wim; p++)
+			  for ( p=0; p<WIM; p++)
 			    {
 			      advection +=  (v[p] - x_dot[p]) * grad_pv[p][a];	
 			    }
@@ -2387,7 +2376,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 		  pressure_stabilization = 0.;
 		  if(PSPG)
 		    {
-		      for ( a=0; a<wim; a++)
+		      for ( a=0; a<WIM; a++)
 			{
 			  meqn = R_PMOMENTUM1 + a;
 			  if ( pd->e[pg->imtrx][meqn] & T_DIFFUSION )
@@ -2439,7 +2428,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 					grad_phi[i][q] * phi_j  *  fv->grad_e[p][r][q] 
 					  * pd->etm[pg->imtrx][R_PMOMENTUM1 + a][(LOG2_DIFFUSION)];
 				    }
-				  for ( a=0; a<wim; a++)
+				  for ( a=0; a<WIM; a++)
 				    {
 				      pressure_stabilization -= grad_phi[i][a] * 
 					phi_j *  fv->grad_e[q][p][a]
@@ -2490,7 +2479,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 					grad_phi[i][q] * phi_j  *  fv->grad_e[p][r][q] 
 					  * pd->etm[pg->imtrx][R_PMOMENTUM1 + a][(LOG2_DIFFUSION)];
 				    }
-				  for ( a=0; a<wim; a++)
+				  for ( a=0; a<WIM; a++)
 				    {
 				      pressure_stabilization -= grad_phi[i][a] * 
 					phi_j *  fv->grad_e[q][p][a]
@@ -2637,7 +2626,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 		      pressure_stabilization = 0.;  
 		      if(PSPG)
 			{
-			  for ( a=0; a<wim; a++)
+			  for ( a=0; a<WIM; a++)
 			    {
 			      meqn = R_PMOMENTUM1+a;
 			      if( pd->e[pg->imtrx][meqn])
@@ -2654,7 +2643,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 						pd->etm[pg->imtrx][meqn][(LOG2_ADVECTION)];
 					}
 
-				      for ( p=0; p<wim; p++)
+				      for ( p=0; p<WIM; p++)
 					{
 					  advection_a += 
 					    rho/por2 * (v[p]-x_dot[p])
@@ -2806,7 +2795,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 			  porous = 0.;
 			  source_a = 0.;
 			  diffusion = 0.;
-			  for ( a=0; a<wim; a++)
+			  for ( a=0; a<WIM; a++)
 			    {
 			      meqn = R_PMOMENTUM1+a;
 			      
@@ -2822,7 +2811,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 			      if ( pd->e[pg->imtrx][meqn] & T_ADVECTION )
 				{
 				  advection = 0.;
-				  for ( p=0; p<wim; p++)
+				  for ( p=0; p<WIM; p++)
 				    {
 				      advection +=  (v[p] - x_dot[p]) * grad_pv[p][a];
 				    }

@@ -2553,6 +2553,7 @@ struct Species_Conservation_Terms {
   dbl d_MassSource_dv[MAX_CONC][DIM][MDE];
   dbl d_MassSource_dpv[MAX_CONC][DIM][MDE];
   dbl d_MassSource_dT[MAX_CONC][MDE];
+  dbl d_MassSource_dP[MAX_CONC][MDE];
   dbl d_MassSource_dsh[MAX_CONC][MDE];
   dbl d_MassSource_dI[MAX_CONC][MDE];
   dbl d_MassSource_dV[MAX_CONC][MDE];

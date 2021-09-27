@@ -277,6 +277,7 @@ int LUB_VELO_UPPER = -1;
 int LUB_VELO_LOWER = -1;
 int LUB_VELO_FIELD = -1;
 int LUB_VELO_FIELD_2 = -1;
+int LUB_FLUID_SOURCE = -1;
 int DISJ_PRESS = -1;
 int SH_SAT_OPEN = -1;
 int SH_SAT_OPEN_2 = -1;
@@ -3066,6 +3067,27 @@ static int calc_standard_fields(double **post_proc_vect,
 
   } /* end of LUB_VELO_FIELD_2 */
 
+  if ( (LUB_FLUID_SOURCE != -1) && (pd->e[pg->imtrx][R_LUBP] ) ) {
+    /* Setup lubrication */
+    int *n_dof = NULL;
+    int dof_map[MDE];
+    dbl wt = fv->wt;
+    n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
+    lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+
+    /* Post values */
+    double LubSourceFlux = 0.0;
+    lubrication_fluid_source(&LubSourceFlux, NULL);
+
+    local_post[LUB_FLUID_SOURCE]   = LubSourceFlux;
+    local_lumped[LUB_FLUID_SOURCE] = 1.0;
+
+    /* Cleanup */
+    fv->wt = wt;
+    safe_free((void *) n_dof);
+
+  } /* end of LUB_FLUID_SOURCE */
+
   if ( (PP_LAME_MU != -1) && (pd->e[pg->imtrx][R_MESH1]) ) {
 
     /* Define parameters */
@@ -5240,6 +5262,14 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
         while ( !p_done )
             {
 
+/*  Adjust particle size for droplets  */
+	if( pd->v[RESTIME] && mp->SpeciesSourceModel[0] == DROP_EVAP)
+		{
+		p_lambda = pp_particles[i]->mass*pp_particles[i]->mobility*SQUARE(fv->restime);
+ 	p_force[0] = pp_particles[i]->mobility*pp_particles[i]->force[0]*SQUARE(fv->restime);
+ 	p_force[1] = pp_particles[i]->mobility*pp_particles[i]->force[1]*SQUARE(fv->restime);
+ 	p_force[2] = pp_particles[i]->mobility*pp_particles[i]->force[2]*SQUARE(fv->restime);
+		}
 /*   make Euler predictor step  */
 
         for ( j=0 ; j < p_dim ; j++)
@@ -7833,6 +7863,7 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Lubrication Lower Velocity", &LUB_VELO_LOWER);
   iread = look_for_post_proc(ifp, "Lubrication Velocity Field", &LUB_VELO_FIELD);
   iread = look_for_post_proc(ifp, "Lubrication Velocity Field 2", &LUB_VELO_FIELD_2);
+  iread = look_for_post_proc(ifp, "Lubrication Fluid Source", &LUB_FLUID_SOURCE);
   iread = look_for_post_proc(ifp, "Disjoining Pressure", &DISJ_PRESS);
   iread = look_for_post_proc(ifp, "Porous Shell Open Saturation", &SH_SAT_OPEN);
   iread = look_for_post_proc(ifp, "Porous Shell Open Saturation 2", &SH_SAT_OPEN_2);
@@ -10209,6 +10240,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
      }
 
    if (DIFFUSION_VECTORS != -1) {
+     char dir_ch[] = "XYZ";
      if (DIFFUSION_VECTORS == 2)
        {
          GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
@@ -10217,8 +10249,8 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
      if (upd->Max_Num_Species_Eqn == 0) DIFFUSION_VECTORS = -1;
      for (w = 0; w < upd->Max_Num_Species_Eqn; w++) {
        for (i = 0; i < Num_Dim; i++) {
-	 sprintf(species_name, "Y%dDIF%d", w, i);
-	 sprintf(species_desc, "Diffusion of %d in %d direction", w, i);
+	 sprintf(species_name, "Y%dDIF%c", w, dir_ch[i]);
+	 sprintf(species_desc, "Diffusion of %d in %c direction", w, dir_ch[i]);
 	 set_nv_tkud(rd, index, 0, 0, -2, species_name,"[1]",
 		     species_desc, FALSE);
 	 index++;
@@ -11712,6 +11744,20 @@ index_post, index_post_export);
       index_post++;
       sprintf(nm, "LUB_VELO_2_Z");
       sprintf(ds, "Lubrication Velocity z-component");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+    }
+
+  if (LUB_FLUID_SOURCE != -1  &&  Num_Var_In_Type[pg->imtrx][R_LUBP] )
+    {
+      if (LUB_FLUID_SOURCE == 2)
+        {
+          GOMA_EH(-1, "Post-processing vectors cannot be exported yet!");
+        }
+      LUB_FLUID_SOURCE = index_post;
+      sprintf(nm, "LUB_SOURCE");
+      sprintf(ds, "Lubrication Source");
       set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
       index++;
       index_post++;

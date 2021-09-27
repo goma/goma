@@ -78,8 +78,7 @@ int assemble_ustar(dbl time_value, /* current time */
 #ifdef DEBUG_MOMENTUM_JAC
   int adx;
 #endif
-  //! wim is the length of the velocity vector
-  int wim = VIM;
+  //! WIM is the length of the velocity vector
   int i, j, a, b;
   int ledof, eqn, var, ii, peqn, pvar;
   int *pdv = pd->v[pg->imtrx];
@@ -121,7 +120,7 @@ int assemble_ustar(dbl time_value, /* current time */
     /*
      * Assemble each component "a" of the momentum equation...
      */
-    for (a = 0; a < wim; a++) {
+    for (a = 0; a < WIM; a++) {
       eqn = USTAR + a;
       peqn = upd->ep[pg->imtrx][eqn];
 
@@ -174,7 +173,7 @@ int assemble_ustar(dbl time_value, /* current time */
    */
 
   if (af->Assemble_Jacobian) {
-    for (a = 0; a < wim; a++) {
+    for (a = 0; a < WIM; a++) {
       eqn = USTAR + a;
       peqn = upd->ep[pg->imtrx][eqn];
 
@@ -191,7 +190,7 @@ int assemble_ustar(dbl time_value, /* current time */
            */
           ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
-          for (b = 0; b < wim; b++) {
+          for (b = 0; b < WIM; b++) {
             var = USTAR + b;
             if (pdv[var]) {
               pvar = upd->vp[pg->imtrx][var];
@@ -242,7 +241,6 @@ int assemble_pstar(dbl time_value, /* current time */
                                       explicit (tt = 1) to implicit (tt = 0)    */
                    dbl dt,         /* current time step size                    */
                    const PG_DATA *pg_data) {
-  int dim, wim;
   int a;
 
   int eqn, var;
@@ -289,11 +287,6 @@ int assemble_pstar(dbl time_value, /* current time */
     return (status);
   }
 
-  dim = pd->Num_Dim;
-  wim = dim;
-  if (pd->CoordinateSystem == SWIRLING || pd->CoordinateSystem == PROJECTED_CARTESIAN)
-    wim = wim + 1;
-
   wt = fv->wt;
   det_J = bf[eqn]->detJ; /* Really, ought to be mesh eqn. */
   h3 = fv->h3;           /* Differential volume element (scales). */
@@ -326,7 +319,7 @@ int assemble_pstar(dbl time_value, /* current time */
        *  Mass Terms: drhodt terms (usually though problem dependent)
        */
       mass = 0;
-      for (a = 0; a < wim; a++) {
+      for (a = 0; a < WIM; a++) {
         mass += (fv->grad_P_star[a] - fv_old->grad_P_star[a]) / rho * bf[eqn]->grad_phi[i][a];
       }
 
@@ -353,7 +346,7 @@ int assemble_pstar(dbl time_value, /* current time */
 
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
           mass = 0;
-          for (a = 0; a < wim; a++) {
+          for (a = 0; a < WIM; a++) {
             mass += (bf[var]->grad_phi[j][a] / rho) * bf[eqn]->grad_phi[i][a];
           }
 
@@ -464,8 +457,7 @@ int assemble_momentum_segregated(dbl time,       /* current time */
 #ifdef DEBUG_MOMENTUM_JAC
   int adx;
 #endif
-  //! wim is the length of the velocity vector
-  int wim = VIM;
+  //! WIM is the length of the velocity vector
   int i, j, a, b;
   int ledof, eqn, var, ii, peqn, pvar;
   int *pdv = pd->v[pg->imtrx];
@@ -489,7 +481,7 @@ int assemble_momentum_segregated(dbl time,       /* current time */
     /*
      * Assemble each component "a" of the momentum equation...
      */
-    for (a = 0; a < wim; a++) {
+    for (a = 0; a < WIM; a++) {
       eqn = R_MOMENTUM1 + a;
       peqn = upd->ep[pg->imtrx][eqn];
 
@@ -526,7 +518,7 @@ int assemble_momentum_segregated(dbl time,       /* current time */
    */
 
   if (af->Assemble_Jacobian) {
-    for (a = 0; a < wim; a++) {
+    for (a = 0; a < WIM; a++) {
       eqn = R_MOMENTUM1 + a;
       peqn = upd->ep[pg->imtrx][eqn];
       for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
@@ -542,7 +534,7 @@ int assemble_momentum_segregated(dbl time,       /* current time */
            */
           ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
-          for (b = 0; b < wim; b++) {
+          for (b = 0; b < WIM; b++) {
             var = VELOCITY1 + b;
             if (pdv[var]) {
               pvar = upd->vp[pg->imtrx][var];

@@ -6418,7 +6418,7 @@ assemble_phase_function ( double time_value,
   int i, j;
   int a, b, p;
   int eqn, var, peqn, pvar, ledof;
-  int dim, wim;
+  int dim;
   int status = -1;
   int Fill_Wt_Fcn = tran->Fill_Weight_Fcn;
 
@@ -6477,12 +6477,6 @@ assemble_phase_function ( double time_value,
   }
 
   dim = pd->Num_Dim;
-  wim = dim;
-
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
 
   wt = fv->wt;
 
@@ -6665,7 +6659,7 @@ assemble_phase_function ( double time_value,
       load_lsi( 0.0 );
       load_lsi_derivs();
 
-      for( p=0, v_dot_grad_pf = 0.0;  p<wim; p++)
+      for( p=0, v_dot_grad_pf = 0.0;  p<WIM; p++)
 	{
           if (lubon)
             {

@@ -88,28 +88,29 @@ setup_pd(void)
 	GOMA_EH(GOMA_ERROR, "Not all materials have the same coordinate system!");
     }
 
-  if(CoordinateSystem == CYLINDRICAL || CoordinateSystem == SWIRLING)
+
+  if(CoordinateSystem == CYLINDRICAL)
     {
-      if (pd_glob[0]->Num_Dim == 3)
-         GOMA_EH(GOMA_ERROR,"Whoa, Whoa.  3D mesh but CYLINDRICAL COORDINATE SYSTEM???");
       VIM = 3;
+      WIM = Num_Dim;
     }
-  else if(CoordinateSystem == PROJECTED_CARTESIAN)
+  else if(CoordinateSystem == SWIRLING || CoordinateSystem == PROJECTED_CARTESIAN
+		|| CoordinateSystem == CARTESIAN_2pt5D)
     {
-      if(pd_glob[0]->Num_Dim == 3)
-	GOMA_EH(GOMA_ERROR, "Achtung!  You cannot combine the PROJECTED_CARTESIAN coordinate system with a 3D mesh.");
       VIM = 3;
-    }
-  else if(CoordinateSystem == CARTESIAN_2pt5D)
-    {
-      if(pd_glob[0]->Num_Dim == 3)
-	GOMA_EH(GOMA_ERROR, "Whoa!  3D mesh for 2-1/2D Calculation.");
-      VIM = 3;
+      WIM = 3;
     }
   else
     {
       VIM = Num_Dim;
+      WIM = Num_Dim;
     }
+  if (pd_glob[0]->Num_Dim == 3 && 
+	(CoordinateSystem == CYLINDRICAL || 
+	 CoordinateSystem == SWIRLING || 
+	 CoordinateSystem == CARTESIAN_2pt5D) ) {
+    GOMA_EH(GOMA_ERROR, "Whoa, Whoa.  3D mesh but 2D-plus COORDINATE SYSTEM???");
+  }
 
 
    /*

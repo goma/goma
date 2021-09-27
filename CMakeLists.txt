@@ -623,7 +623,7 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     "Debug" "Release" "RelWithDebInfo")
 endif()
 
-set(GOMA_WARNINGS "-Wall -Wextra -Wno-unused-parameter" CACHE STRING "set warnings for goma C and CXX")
+set(GOMA_WARNINGS "-Wall -Wextra -Wno-unused-parameter -Wimplicit-fallthrough=2" CACHE STRING "set warnings for goma C and CXX")
 set(GOMA_DEBUG_FLAGS "-O0 -ggdb3" CACHE STRING "set debug flags for goma C and CXX")
 set(GOMA_RELEASE_FLAGS "-O2 -DNDEBUG" CACHE STRING "set release flags for goma C and CXX")
 

@@ -9561,7 +9561,7 @@ Courant_Time_Step( double x[], double x_old[], double x_older[],
   double hhv[DIM][DIM];
   double dhv_dxnode[DIM][MDE];
   double h_elem;
-  int dim, wim;
+  int dim;
   int a, i;
   
   for ( ebi=0; ebi<exo->num_elem_blocks; ebi++)
@@ -9574,12 +9574,6 @@ Courant_Time_Step( double x[], double x_old[], double x_older[],
       e_end   = exo->eb_ptr[ebi+1];
       
       dim = pd->Num_Dim;
-      wim = dim;
-
-      if (pd->CoordinateSystem == SWIRLING ||
-          pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-          pd->CoordinateSystem == CARTESIAN_2pt5D)
-        wim = wim+1;
 
       if (ls->var != NULL)
 	{
@@ -9622,7 +9616,7 @@ Courant_Time_Step( double x[], double x_old[], double x_older[],
 			      if ( extended_dof ) continue;
 			    }
 			  v_mag2 = 0.;
-			  for ( a=0; a<wim; a++ )
+			  for ( a=0; a<WIM; a++ )
 			    {
 			      v_mag2 += *esp->v[a][i] * *esp->v[a][i];
 			    }
@@ -9652,7 +9646,6 @@ double Courant_Time_Step(double x[], double x_old[], double x_older[],
   double h_elem;
   double *xi, xi_array[3];
   double sum, sumv;
-  int dim, wim;
   int ip_total, ip;
   double wt, vnorm;
   int a;
@@ -9662,20 +9655,11 @@ double Courant_Time_Step(double x[], double x_old[], double x_older[],
   int pass, num_passes;
 
   for (ebi = 0; ebi < exo->num_elem_blocks; ebi++) {
-
     pd = pd_glob[Matilda[ebi]];
     mp = mp_glob[Matilda[ebi]];
 
     e_start = exo->eb_ptr[ebi];
     e_end = exo->eb_ptr[ebi + 1];
-
-    dim = pd->Num_Dim;
-    wim = dim;
-
-    if (pd->CoordinateSystem == SWIRLING ||
-          pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-          pd->CoordinateSystem == CARTESIAN_2pt5D)
-      wim = wim + 1;
 
     if (pd->v[pg->imtrx][ls->var]) {
       for (ielem = e_start; ielem < e_end; ielem++) {
@@ -9758,7 +9742,7 @@ double Courant_Time_Step(double x[], double x_old[], double x_older[],
             }
             if (pd->gv[VELOCITY1] &&
                 tran->Fill_Equation != FILL_EQN_EXT_V) {
-              for (a = 0; a < VIM; a++) {
+              for (a = 0; a < WIM; a++) {
                 vnorm += (2.5 * fv->v[a] - 1.5 * fv_old->v[a]) * lsi->normal[a];
               }
             }

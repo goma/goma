@@ -1006,8 +1006,6 @@ bulk_side_id_and_stu(const int bulk_elem, const int shell_elem,
   double sign, Hsign = 0.0, Lsign = 0.0, r;
   int bulk_dim, shell_dim, nbulk = 0, nshell = 0, nmatch;
   int iH = -1, iL = -1, s_first = 0, bulk_n1, bulk_n2;
-  int bulk_nodes[8], shell_nodes[4], matches[8];
-  int bulk_node_order[4] = {0};
   int bulk_type = Elem_Type(exo, bulk_elem);
   int bulk_eptr = Proc_Connect_Ptr[bulk_elem];
   int shell_type = Elem_Type(exo, shell_elem);
@@ -1032,6 +1030,10 @@ bulk_side_id_and_stu(const int bulk_elem, const int shell_elem,
 	nbulk = 4;
 	nshell = 3;
 	break;
+      case BIQUAD_SHELL:
+	nbulk = 27;
+	nshell = 9;
+	break;
       default:
 	GOMA_EH(GOMA_ERROR,"Shell element type not supported.");
 	break;
@@ -1039,10 +1041,25 @@ bulk_side_id_and_stu(const int bulk_elem, const int shell_elem,
     }
   else if (bulk_dim == 2 && shell_dim == 1)
     {
-      nbulk = 4;
-      nshell = 2;
+      switch (shell_type){
+      case LINEAR_BAR:
+	nbulk = 4;
+	nshell = 2;
+	break;
+      case QUAD_BAR:
+	nbulk = 9;
+	nshell = 3;
+	break;
+      default:
+	GOMA_EH(-1,"Shell element type not supported.");
+	break;
+      }
     }
   else GOMA_EH(GOMA_ERROR, "Only 2D bulk / 1D shell and 3D bulk / 2D shell are allowed!");
+
+  int bulk_nodes[nbulk], shell_nodes[nshell], matches[nbulk];
+  int bulk_node_order[nshell];
+
 
   /* Create node lists */
   for (i = 0; i < nbulk; i++)
@@ -1103,61 +1120,123 @@ bulk_side_id_and_stu(const int bulk_elem, const int shell_elem,
    */
   if (bulk_dim == 2 && shell_dim == 1)
     {
-      if (n1 == 0 && n2 == 1)
+      if (shell_type == LINEAR_BAR)
         {
-          id = 1;
-          if (matches[0] == 1 && matches[1] == 0)
-            {
-              sign = -1.0;
-            }
-          else
-            {
-              sign = 1.0;
-            }
-          xi2[0] = sign * xi[0];
-          xi2[1] = -1.0;
+         if (n1 == 0 && n2 == 1)
+           {
+            id = 1;
+            if (matches[0] == 1 && matches[1] == 0)
+              {
+               sign = -1.0;
+              }
+            else
+              {
+               sign = 1.0;
+              }
+            xi2[0] = sign * xi[0];
+            xi2[1] = -1.0;
+           }
+         else if (n1 == 1 && n2 == 2)
+           {
+            id = 2;
+            if (matches[0] == 2 && matches[1] == 1)
+              {
+               sign = -1.0;
+              }
+            else
+              {
+               sign = 1.0;
+              }
+            xi2[0] = 1.0;
+            xi2[1] = sign * xi[0];
+           }
+         else if (n1 == 2 && n2 == 3)
+           {
+            id = 3;
+            if (matches[0] == 2 && matches[1] == 3)
+              {
+               sign = -1.0;
+              }
+            else
+              {
+               sign = 1.0;
+              }
+            xi2[0] = sign * xi[0];
+            xi2[1] = 1.0;
+           }
+         else if (n1 == 0 && n2 == 3)
+           {
+            id = 4;
+            if (matches[0] == 3 && matches[1] == 0)
+              {
+               sign = -1.0;
+              }
+            else
+              {
+               sign = 1.0;
+              }
+            xi2[0] = -1.0;
+            xi2[1] = sign * xi[0];
+           }
         }
-      else if (n1 == 1 && n2 == 2)
+      else if (shell_type == QUAD_BAR)
         {
-          id = 2;
-          if (matches[0] == 2 && matches[1] == 1)
-            {
-              sign = -1.0;
-            }
-          else
-            {
-              sign = 1.0;
-            }
-          xi2[0] = 1.0;
-          xi2[1] = sign * xi[0];
-        }
-      else if (n1 == 2 && n2 == 3)
-        {
-          id = 3;
-          if (matches[0] == 2 && matches[1] == 3)
-            {
-              sign = -1.0;
-            }
-          else
-            {
-              sign = 1.0;
-            }
-          xi2[0] = sign * xi[0];
-          xi2[1] = 1.0;
-        }
-      else if (n1 == 0 && n2 == 3)
-        {
-          id = 4;
-          if (matches[0] == 3 && matches[1] == 0)
-            {
-              sign = -1.0;
-            }
-          else
-            {
-              sign = 1.0;
-            }
-          xi2[0] = -1.0;
-          xi2[1] = sign * xi[0];
+         if (n1 == 0 && n2 == 4)
+           {
+            id = 1;
+            if (matches[0] == 1 && matches[1] == 0)
+              {
+               sign = -1.0;
+              }
+            else
+              {
+               sign = 1.0;
+              }
+            xi2[0] = sign * xi[0];
+            xi2[1] = -1.0;
+           }
+         else if (n1 == 1 && n2 == 5)
+           {
+            id = 2;
+            if (matches[0] == 2 && matches[1] == 1)
+              {
+               sign = -1.0;
+              }
+            else
+              {
+               sign = 1.0;
+              }
+            xi2[0] = 1.0;
+            xi2[1] = sign * xi[0];
+           }
+         else if (n1 == 2 && n2 == 6)
+           {
+            id = 3;
+            if (matches[0] == 2 && matches[1] == 3)
+              {
+               sign = -1.0;
+              }
+            else
+              {
+               sign = 1.0;
+              }
+            xi2[0] = sign * xi[0];
+            xi2[1] = 1.0;
+           }
+         else if (n1 == 0 && n2 == 7)
+           {
+            id = 4;
+            if (matches[0] == 3 && matches[1] == 0)
+              {
+               sign = -1.0;
+              }
+            else
+              {
+               sign = 1.0;
+              }
+            xi2[0] = -1.0;
+            xi2[1] = sign * xi[0];
+           }
         }
     }
 
@@ -1181,38 +1260,79 @@ bulk_side_id_and_stu(const int bulk_elem, const int shell_elem,
    * two elements - this is an attempt to handle all of them as concisely
    * as possible.
    */
-  else if ((bulk_dim == 3) && (shell_dim == 2) && (shell_type == BILINEAR_SHELL))
+  else if ((bulk_dim == 3) && (shell_dim == 2) &&
+           ((shell_type == BILINEAR_SHELL) || (shell_type == BIQUAD_SHELL) )
+          )
     {
 
       /* Quickly determine the side ID from n1 and n2 */
-      if (n1 == 0 && n2 == 5)
+
+      if (shell_type == BILINEAR_SHELL)
         {
-          id = 1;
+         if (n1 == 0 && n2 == 5)
+           {
+            id = 1;
+           }
+         else if (n1 == 1 && n2 == 6)
+           {
+            id = 2;
+           }
+         else if (n1 == 2 && n2 == 7)
+           {
+            id = 3;
+           }
+         else if (n1 == 0 && n2 == 7)
+           {
+            id = 4;
+           }
+         else if (n1 == 0 && n2 == 3)
+           {
+            id = 5;
+           }
+         else if (n1 == 4 && n2 == 7)
+           {
+            id = 6;
+           }
+         else
+           {
+            GOMA_EH(-1, "Couldn't determine 3D element side ID for HEX8!");
+           }
         }
-      else if (n1 == 1 && n2 == 6)
+
+      else if (shell_type == BIQUAD_SHELL)
         {
-          id = 2;
+         if (n1 == 0 && n2 == 25)
+           {
+            id = 1;
+           }
+         else if (n1 == 1 && n2 == 24)
+           {
+            id = 2;
+           }
+         else if (n1 == 2 && n2 == 26)
+           {
+            id = 3;
+           }
+         else if (n1 == 0 && n2 == 23)
+           {
+            id = 4;
+           }
+         else if (n1 == 0 && n2 == 21)
+           {
+            id = 5;
+           }
+         else if (n1 == 4 && n2 == 22)
+           {
+            id = 6;
+           }
+         else
+           {
+            GOMA_EH(GOMA_ERROR, "Couldn't determine 3D element side ID for HEX27!");
+           }
         }
-      else if (n1 == 2 && n2 == 7)
-        {
-          id = 3;
-        }
-      else if (n1 == 0 && n2 == 7)
-        {
-          id = 4;
-        }
-      else if (n1 == 0 && n2 == 3)
-        {
-          id = 5;
-        }
-      else if (n1 == 4 && n2 == 7)
-        {
-          id = 6;
-        }
-      else
-        {
-          GOMA_EH(GOMA_ERROR, "Couldn't determine 3D element side ID for HEX8!");
-        }
+
+      /* Quickly determine the side ID from n1 and n2 */
+
 
       /* Set parameters according to side ID */
       switch(id)
@@ -1220,7 +1340,7 @@ bulk_side_id_and_stu(const int bulk_elem, const int shell_elem,
 	case 1:
 	  xi2[1] = -1.0;
 	  iH = 0;
-	  iL = 2; 
+	  iL = 2;
 	  bulk_node_order[0] = 0;
 	  bulk_node_order[1] = 1;
 	  bulk_node_order[2] = 4;
@@ -1229,7 +1349,7 @@ bulk_side_id_and_stu(const int bulk_elem, const int shell_elem,
 	case 2:
 	  xi2[0] =  1.0;
 	  iH = 1;
-	  iL = 2; 
+	  iL = 2;
 	  bulk_node_order[0] = 1;
 	  bulk_node_order[1] = 2;
 	  bulk_node_order[2] = 5;
@@ -1238,7 +1358,7 @@ bulk_side_id_and_stu(const int bulk_elem, const int shell_elem,
 	case 3:
 	  xi2[1] =  1.0;
 	  iH = 0;
-	  iL = 2; 
+	  iL = 2;
 	  bulk_node_order[0] = 3;
 	  bulk_node_order[1] = 2;
 	  bulk_node_order[2] = 7;
@@ -1247,7 +1367,7 @@ bulk_side_id_and_stu(const int bulk_elem, const int shell_elem,
 	case 4:
 	  xi2[0] = -1.0;
 	  iH = 1;
-	  iL = 2; 
+	  iL = 2;
 	  bulk_node_order[0] = 0;
 	  bulk_node_order[1] = 3;
 	  bulk_node_order[2] = 4;
@@ -1256,7 +1376,7 @@ bulk_side_id_and_stu(const int bulk_elem, const int shell_elem,
 	case 5:
 	  xi2[2] = -1.0;
 	  iH = 0;
-	  iL = 1; 
+	  iL = 1;
 	  bulk_node_order[0] = 0;
 	  bulk_node_order[1] = 1;
 	  bulk_node_order[2] = 3;
@@ -1360,6 +1480,7 @@ bulk_side_id_and_stu(const int bulk_elem, const int shell_elem,
           xi2[iL] = Lsign * xi[0];
         }
     }
+
 
   /* This is the case for triangular shell / tetrahedral bulk elements */
   else if (shell_type == BILINEAR_TRISHELL) {

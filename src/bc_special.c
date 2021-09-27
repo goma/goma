@@ -1,4 +1,4 @@
-/************************************************************************ *
+/**************************************************************************
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
@@ -204,10 +204,6 @@ apply_special_bc (struct GomaLinearSolverData *ams,
   double *a = ams->val;
   int    *ija = ams->bindx;
   int w, i, I, ibc, k, j, id, icount, ss_index,i1,i2,i3;     /* counters */
-  double wall_velocity = 0.0, velo[MAX_PDIM], theta_max = 180.0, dewet = 1.0;
-  double dcl_shearrate = -1.0;
-  double dwall_velo_dx[MAX_PDIM][MDE],dvelo_dx[MAX_PDIM][MAX_PDIM];
-  int found_wall_velocity;
   /* HKM - worried that jflag shouldn't be initialized all the way up here */
   int jcnt, jflag=-1, local_node_id=-1, matID_apply;
   int GD_count; 
@@ -821,7 +817,15 @@ apply_special_bc (struct GomaLinearSolverData *ams,
 				   BC_Types[j_bc_id].BC_Name == VELO_THETA_COX_BC || 
 				   BC_Types[j_bc_id].BC_Name == VELO_THETA_SHIK_BC) 
 			    {			  
-			      for (i1=0;i1<MAX_PDIM;i1++)
+  			     double wall_velocity=0, velo[MAX_PDIM]; 
+			     double dwall_velo_dx[DIM][MDE],dvelo_dx[DIM][DIM];
+			     double lag_pars[2*DIM+1], t, axis_pt[DIM], R,rad_dir[DIM], v_dir[DIM];
+			     int found_wall_velocity=0, sfs_model=0;
+			     double theta_max = 180.0, dewet = 1.0, dcl_shearrate = -1.;
+
+			     memset( dwall_velo_dx,0, DIM*MDE*sizeof(double) );
+
+			     for (i1=0;i1<MAX_PDIM;i1++)
 				{
  				  fsnrml[i1]=fsnormal[jflag][i1];
  				  ssnrml[i1]=ssnormal[jflag][i1];
@@ -835,9 +839,6 @@ apply_special_bc (struct GomaLinearSolverData *ams,
 				    }
 				}
 			      /* try to find a VELO_TANGENT or similiar for wall velocity  */
-			      found_wall_velocity = 0;
-			      memset( dwall_velo_dx,0,
-				      MAX_PDIM*MDE*sizeof(double) );
 			      for (i1 = 0; i1 < Num_BC; i1++) {
 
 				if( (BC_Types[i1].BC_Data_Int[0] == I &&
@@ -935,40 +936,102 @@ apply_special_bc (struct GomaLinearSolverData *ams,
 					switch(pd_glob[mn]->MeshMotion)
 					  {
 					  case LAGRANGIAN:
-					    velo[0] = sqrt(SQUARE(fv->x[0]-elc_glob[mn]->u_v_mesh_sfs[1]) +
-							   SQUARE(fv->x[1]-elc_glob[mn]->u_v_mesh_sfs[2]));
-					    wall_velocity = elc_glob[mn]->u_v_mesh_sfs[0]*velo[0];
-					    for (i3=0;i3<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];i3++)
+					    if(elc_glob[mn]->v_mesh_sfs_model == CONSTANT)
 					      {
-						dwall_velo_dx[0][i3] += 
-						  elc_glob[mn]->u_v_mesh_sfs[0]*
-						  (fv->x[0]-elc_glob[mn]->u_v_mesh_sfs[1])*
-						  bf[MESH_DISPLACEMENT1]->phi[i3]/velo[0];
-						dwall_velo_dx[1][i3] += 
-						  elc_glob[mn]->u_v_mesh_sfs[0]*
-						  (fv->x[1]-elc_glob[mn]->u_v_mesh_sfs[2])*
-						  bf[MESH_DISPLACEMENT1]->phi[i3]/velo[0];
+						sfs_model = CONSTANT;
+			      			for (i2=0;i2<DIM;i2++)
+						  { lag_pars[i2] = elc_glob[mn]->v_mesh_sfs[i2]; }
 					      }
-					    found_wall_velocity = 1;
+					    else
+					    if(elc_glob[mn]->v_mesh_sfs_model == ROTATIONAL)
+					      {
+						sfs_model = ROTATIONAL;
+					        for (i3=0;i3<=DIM;i3++)
+						    { lag_pars[i3] = elc_glob[mn]->u_v_mesh_sfs[i3];  }
+					      }
+					    else
+					    if(elc_glob[mn]->v_mesh_sfs_model == ROTATIONAL_3D)
+					      {
+						sfs_model = ROTATIONAL_3D;
+					        for (i3=0;i3<=2*DIM;i3++)
+						    { lag_pars[i3] = elc_glob[mn]->u_v_mesh_sfs[i3];  }
+					      }
+					    else
+					      {GOMA_EH(-1,"shouldn't be here\n"); }
 					    break;
 					  case TOTAL_ALE:
-					    velo[0] = sqrt(SQUARE(fv->x[0]-elc_rs_glob[mn]->u_v_mesh_sfs[1]) +
-							   SQUARE(fv->x[1]-elc_rs_glob[mn]->u_v_mesh_sfs[2]));
-					    wall_velocity = elc_rs_glob[mn]->u_v_mesh_sfs[0]*velo[0];
-					    for (i3=0;i3<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];i3++)
+					    if(elc_rs_glob[mn]->v_mesh_sfs_model == CONSTANT)
 					      {
-						dwall_velo_dx[0][i3] += 
-						  elc_rs_glob[mn]->u_v_mesh_sfs[0]*
-						  (fv->x[0]-elc_rs_glob[mn]->u_v_mesh_sfs[1])*
-						  bf[MESH_DISPLACEMENT1]->phi[i3]/velo[0];
-						dwall_velo_dx[1][i3] += 
-						  elc_rs_glob[mn]->u_v_mesh_sfs[0]*
-						  (fv->x[1]-elc_rs_glob[mn]->u_v_mesh_sfs[2])*
-						  bf[MESH_DISPLACEMENT1]->phi[i3]/velo[0];
+						sfs_model = CONSTANT;
+			      			for (i2=0;i2<DIM;i2++)
+						  { lag_pars[i2] = elc_rs_glob[mn]->v_mesh_sfs[i2];  }
 					      }
-					    found_wall_velocity = 1;
+					    else
+					    if(elc_rs_glob[mn]->v_mesh_sfs_model == ROTATIONAL)
+					      {
+						sfs_model = ROTATIONAL;
+					        for (i3=0;i3<=DIM;i3++)
+						    { lag_pars[i3] = elc_rs_glob[mn]->u_v_mesh_sfs[i3];  }
+					      }
+					    else
+					    if(elc_rs_glob[mn]->v_mesh_sfs_model == ROTATIONAL_3D)
+					      {
+						sfs_model = ROTATIONAL_3D;
+					        for (i3=0;i3<=2*DIM;i3++)
+						    { lag_pars[i3] = elc_rs_glob[mn]->u_v_mesh_sfs[i3];  }
+					      }
 					    break;
+					}
+					switch(sfs_model)
+					  {
+					  case CONSTANT:
+			      			for (i2=0;i2<MAX_PDIM;i2++)
+						  { wall_velocity += SQUARE(lag_pars[i2]); }
+						wall_velocity = sqrt(wall_velocity);
+					    break;
+					  case ROTATIONAL:
+			      			for (i3=0;i3<DIM;i3++)
+						  { wall_velocity += SQUARE(fv->x[i3]-lag_pars[i3+1]); }
+						wall_velocity = sqrt(wall_velocity)*lag_pars[0];
+
+					    	for (i3=0;i3<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];i3++)
+						    {
+						     dwall_velo_dx[0][i3] += 
+					 		SQUARE(lag_pars[0])* (fv->x[0]-lag_pars[1])*
+							bf[MESH_DISPLACEMENT1]->phi[i3]/wall_velocity;
+						     dwall_velo_dx[1][i3] += 
+							SQUARE(lag_pars[0])* (fv->x[1]-lag_pars[2])*
+							bf[MESH_DISPLACEMENT1]->phi[i3]/wall_velocity;
+						    }
+					    break;
+					  case ROTATIONAL_3D:
+						t = (lag_pars[4]*(fv->x0[0]-lag_pars[1]) + 
+							lag_pars[5]*(fv->x0[1]-lag_pars[2])
+        						+ lag_pars[6]*(fv->x0[2]-lag_pars[3]))
+					                /(SQUARE(lag_pars[4])+SQUARE(lag_pars[5])+SQUARE(lag_pars[6]));
+						axis_pt[0] = lag_pars[1]+lag_pars[4]*t;
+						axis_pt[1] = lag_pars[2]+lag_pars[5]*t;
+						axis_pt[2] = lag_pars[3]+lag_pars[6]*t;
+						R = sqrt( SQUARE(fv->x0[0]-axis_pt[0]) 
+							+ SQUARE(fv->x0[1]-axis_pt[1]) +
+                					SQUARE(fv->x0[2]-axis_pt[2]) );
+						rad_dir[0] = (fv->x0[0]-axis_pt[0])/R;
+						rad_dir[1] = (fv->x0[1]-axis_pt[1])/R;
+						rad_dir[2] = (fv->x0[2]-axis_pt[2])/R;
+						v_dir[0] = lag_pars[5]*rad_dir[2]-lag_pars[6]*rad_dir[1];
+						v_dir[1] = lag_pars[6]*rad_dir[0]-lag_pars[4]*rad_dir[2];
+						v_dir[2] = lag_pars[4]*rad_dir[1]-lag_pars[5]*rad_dir[0];
+						velo[0] =  lag_pars[0]*R*v_dir[0];
+						velo[1] =  lag_pars[0]*R*v_dir[1];
+						velo[2] =  lag_pars[0]*R*v_dir[2];
+			      			for (i2=0;i2<DIM;i2++)
+						  { wall_velocity += SQUARE(velo[i2]); }
+						wall_velocity = sqrt(wall_velocity);
+					    break;
+					  default:
+					      wall_velocity=0;
 					  }
+					  found_wall_velocity = 1;
 					break;
 				      default:
 					GOMA_WH(-1,"Wall velocity bc not found\n");

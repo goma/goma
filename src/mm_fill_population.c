@@ -1891,7 +1891,6 @@ double PBEVolumeSource(double time, double dt, double tt,
   int a, b, j, dim = pd->Num_Dim, var;
   double source = 0.;
   double phi_j;
-  int wim;
   int err;
 
   double vconv[MAX_PDIM]; /*Calculated convection velocity */
@@ -1920,16 +1919,6 @@ double PBEVolumeSource(double time, double dt, double tt,
   memset(d_grad_rho_dT, 0, sizeof(double) * DIM);
   memset(d_grad_rho_dMOM1, 0, sizeof(double) * DIM * MDE);
   memset(d_grad_rho_dC, 0, sizeof(double) * MAX_CONC * DIM);
-
-  if ((pd->CoordinateSystem == CARTESIAN) ||
-      (pd->CoordinateSystem == CYLINDRICAL)) {
-    wim = pd->Num_Dim;
-  } else if ((pd->CoordinateSystem == SWIRLING) ||
-             (pd->CoordinateSystem == PROJECTED_CARTESIAN)) {
-    wim = 3;
-  } else {
-    wim = VIM;
-  }
 
   memset(dFVS_dv, 0, sizeof(double) * DIM * MDE);
   memset(dFVS_dT, 0, sizeof(double) * MDE);
@@ -1973,7 +1962,7 @@ double PBEVolumeSource(double time, double dt, double tt,
   rho = rho_bubble * (fv->moment[1] * inv_mom_frac) + rho_foam * inv_mom_frac;
   d_rho_dt = (rho_bubble - rho_foam) *
              (fv_dot->moment[1] * inv_mom_frac * inv_mom_frac);
-  for (a = 0; a < wim; a++) {
+  for (a = 0; a < WIM; a++) {
     grad_rho[a] = (rho_bubble - rho_foam) *
                   (fv->grad_moment[1][a] * inv_mom_frac * inv_mom_frac);
   }
@@ -1982,7 +1971,7 @@ double PBEVolumeSource(double time, double dt, double tt,
   if (pd->v[pg->imtrx][var]) {
     d_rho_dt_dT = (-rho_bubble) / fv->T *
                   (fv_dot->moment[1] * inv_mom_frac * inv_mom_frac);
-    for (a = 0; a < wim; a++) {
+    for (a = 0; a < WIM; a++) {
       d_grad_rho_dT[a] = (-rho_bubble) / fv->T *
                          (fv->grad_moment[1][a] * inv_mom_frac * inv_mom_frac);
     }
@@ -1995,7 +1984,7 @@ double PBEVolumeSource(double time, double dt, double tt,
         ((1 + fv->moment[1]) * ((1 + 2. * tt) / dt) - 2 * fv_dot->moment[1]) *
         inv_mom_frac * inv_mom_frac * inv_mom_frac;
     for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-      for (a = 0; a < wim; a++) {
+      for (a = 0; a < WIM; a++) {
         d_grad_rho_dMOM1[a][j] =
             (rho_bubble - rho_foam) *
             ((1 + fv->moment[1]) * (bf[var]->grad_phi[j][a]) -
@@ -2023,7 +2012,7 @@ double PBEVolumeSource(double time, double dt, double tt,
           ((fv->c[species_CO2_g] + fv->c[species_BA_g]) *
            (fv->c[species_CO2_g] + fv->c[species_BA_g]));
 
-      for (a = 0; a < wim; a++) {
+      for (a = 0; a < WIM; a++) {
         d_grad_rho_dC[species_BA_g][a] =
             (fv->grad_moment[1][a] * inv_mom_frac * inv_mom_frac) *
             (ref_press / (Rgas_const * fv->T)) *
@@ -2041,7 +2030,7 @@ double PBEVolumeSource(double time, double dt, double tt,
     } else {
       d_rho_dt_dC[species_BA_g] = 0;
       d_rho_dt_dC[species_CO2_g] = 0;
-      for (a = 0; a < wim; a++) {
+      for (a = 0; a < WIM; a++) {
         d_grad_rho_dC[species_BA_g][a] = 0;
 
         d_grad_rho_dC[species_CO2_g][a] = 0;
@@ -2050,7 +2039,7 @@ double PBEVolumeSource(double time, double dt, double tt,
   }
 
   source = 0;
-  for (a = 0; a < wim; a++) {
+  for (a = 0; a < WIM; a++) {
     source += vconv[a] * grad_rho[a];
   }
 
@@ -2058,12 +2047,12 @@ double PBEVolumeSource(double time, double dt, double tt,
   source *= (1 / rho);
 
   if (af->Assemble_Jacobian) {
-    for (b = 0; b < wim; b++) {
+    for (b = 0; b < WIM; b++) {
       var = VELOCITY1 + b;
 
       for (j = 0; pd->v[pg->imtrx][var] && j < ei[pg->imtrx]->dof[var]; j++) {
         dFVS_dv[b][j] = 0.0;
-        for (a = 0; a < wim; a++) {
+        for (a = 0; a < WIM; a++) {
           dFVS_dv[b][j] += d_vconv->v[a][b][j] * grad_rho[a];
         }
 
@@ -2077,7 +2066,7 @@ double PBEVolumeSource(double time, double dt, double tt,
       dFVS_dT[j] = 0.;
       phi_j = bf[var]->phi[j];
 
-      for (a = 0; a < wim; a++) {
+      for (a = 0; a < WIM; a++) {
         dFVS_dT[j] += d_vconv->T[a][j] * grad_rho[a] +
                       vconv[a] * d_grad_rho_dT[a] * phi_j;
       }
@@ -2093,7 +2082,7 @@ double PBEVolumeSource(double time, double dt, double tt,
 
       for (j = 0; pd->v[pg->imtrx][var] && j < ei[pg->imtrx]->dof[var]; j++) {
         dFVS_dx[b][j] = 0.0;
-        for (a = 0; a < wim; a++) {
+        for (a = 0; a < WIM; a++) {
           dFVS_dx[b][j] +=
               d_vconv->X[a][b][j] * grad_rho[a] +
               (rho_bubble - rho_foam) * (fv->d_grad_moment_dmesh[1][a][b][j] *
@@ -2110,7 +2099,7 @@ double PBEVolumeSource(double time, double dt, double tt,
       dFVS_dMOM[1][j] = 0.0;
       phi_j = bf[var]->phi[j];
 
-      for (a = 0; a < wim; a++) {
+      for (a = 0; a < WIM; a++) {
         dFVS_dMOM[1][j] += vconv[a] * d_grad_rho_dMOM1[a][j];
       }
 
@@ -2127,7 +2116,7 @@ double PBEVolumeSource(double time, double dt, double tt,
       dFVS_dC[species_BA_g][j] = 0.0;
       dFVS_dC[species_CO2_g][j] = 0.0;
       phi_j = bf[var]->phi[j];
-      for (a = 0; a < wim; a++) {
+      for (a = 0; a < WIM; a++) {
         dFVS_dC[species_BA_g][j] +=
             d_vconv->C[a][species_BA_g][j] * grad_rho[a] +
             vconv[a] * d_grad_rho_dC[species_BA_g][a] * phi_j;
@@ -2156,7 +2145,6 @@ double PBEVolumeSource_rhoeqn(double time, double dt, double tt,
   int a, j, var;
   double source = 0.;
   double phi_j;
-  int wim;
   int err;
 
   double vconv[MAX_PDIM]; /*Calculated convection velocity */
@@ -2164,16 +2152,6 @@ double PBEVolumeSource_rhoeqn(double time, double dt, double tt,
       vconv_old[MAX_PDIM]; /*Calculated convection velocity at previous time*/
   CONVECTION_VELOCITY_DEPENDENCE_STRUCT d_vconv_struct;
   CONVECTION_VELOCITY_DEPENDENCE_STRUCT *d_vconv = &d_vconv_struct;
-
-  if ((pd->CoordinateSystem == CARTESIAN) ||
-      (pd->CoordinateSystem == CYLINDRICAL)) {
-    wim = pd->Num_Dim;
-  } else if ((pd->CoordinateSystem == SWIRLING) ||
-             (pd->CoordinateSystem == PROJECTED_CARTESIAN)) {
-    wim = 3;
-  } else {
-    wim = VIM;
-  }
 
   memset(dFVS_drho, 0, sizeof(double) * MDE);
 
@@ -2189,7 +2167,7 @@ double PBEVolumeSource_rhoeqn(double time, double dt, double tt,
   source = 0;
 
   if (fv->rho > 0) {
-    for (a = 0; a < wim; a++) {
+    for (a = 0; a < WIM; a++) {
       source += vconv[a] * fv->grad_rho[a];
     }
 
@@ -2207,7 +2185,7 @@ double PBEVolumeSource_rhoeqn(double time, double dt, double tt,
       dFVS_drho[j] = 0.0;
       phi_j = bf[var]->phi[j];
 
-      for (a = 0; a < wim; a++) {
+      for (a = 0; a < WIM; a++) {
         dFVS_drho[j] += vconv[a] * bf[var]->grad_phi[j][a];
       }
 
