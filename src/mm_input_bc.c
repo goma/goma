@@ -3999,7 +3999,7 @@ fprintf(stderr," HC %d BC %d of %d\n",i,hunt[i].DFID,BC_Types[ibc].max_DFlt);
 			   rot->BC_SS[p]);
 	    }
 
-	  sr = sprintf(component_string[p], "R_%s%s=%s", rot_eq_string, 
+	  sr = snprintf(component_string[p], 80,"R_%s%s=%s", rot_eq_string,
 		       coordinate_string[p], condition_string[p]);
 	  
 	}

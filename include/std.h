@@ -248,7 +248,7 @@
  */
 
 #ifndef MAX_CHAR_ERR_MSG
-#  define MAX_CHAR_ERR_MSG	1024
+#  define MAX_CHAR_ERR_MSG	2048
 #endif
 
 /*

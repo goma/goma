@@ -3273,7 +3273,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  
 	  if ( num_const < 2) 
 	    {
-	      sr = sprintf(err_msg, 
+	      sr = snprintf(err_msg,  MAX_CHAR_ERR_MSG,
 			   "Matl %s expected at least 2 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName, 
 			   search_string, 
@@ -3294,7 +3294,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  
 	  if ( num_const < 3) 
 	    {
-	      sr = sprintf(err_msg, 
+	      sr = snprintf(err_msg, MAX_CHAR_ERR_MSG,
 			   "Matl %s expected at least 3 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName, 
 			   search_string, 
