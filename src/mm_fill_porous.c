@@ -136,7 +136,6 @@ int assemble_porous_transport(double time, /* present time valuel; KSC          
 {
   int var, ii, peqn, pvar, eqn, ledof;
   const int dim = pd->Num_Dim;
-  int  wim;
   int w, w1, p, b, i, j, status = 0;
   const int i_pl = 0;/* counters for porous equation numbers */
   struct Porous_Media_Terms pm_terms;
@@ -180,13 +179,6 @@ int assemble_porous_transport(double time, /* present time valuel; KSC          
   if (! pd->e[pg->imtrx][R_POR_LIQ_PRES]) {
     return (status);
   }
-
-  wim = dim;
-  if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-     pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
-
 
   wt = fv->wt;				/* Gauss point weight. */
   h3 = fv->h3;			        /* Differential volume element. */

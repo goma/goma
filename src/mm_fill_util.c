@@ -2153,25 +2153,22 @@ int load_bf_grad(void)
  */
 int load_bf_mesh_derivs(void) {
   int a, b, p, q, i, j, bix, v, siz;
-  int dim;       /* number of spatial dimensions */
-  int wim;       /* looping variable useful for elliptical polar
-                    coordinates, equal to the number velocity unknowns */
-  int dimNonSym; /* Number of dimensions of the curvilinear coordinate
-                  * system which has nonzero gradients. Coordinates such
-                  * as the theta component in the cylindrical coordinates
-                  * which have assumed symmetry don't count. Therefore
-                  * dimNonSym = 2 for cylindrical and swirling */
-  int vdofs;     /* degrees of freedom for variable that is */
-  /* interpolated using bfl */
-  int mdofs; /* degrees of freedom for mesh displacement */
-  /* unknowns interpolated using bfm */
+  int dim;			/* number of spatial dimensions */
+  int dimNonSym;                /* Number of dimensions of the curvilinear coordinate
+				 * system which has nonzero gradients. Coordinates such
+				 * as the theta component in the cylindrical coordinates
+				 * which have assumed symmetry don't count. Therefore
+				 * dimNonSym = 2 for cylindrical and swirling */
+  int vdofs;			/* degrees of freedom for variable that is */
+				/* interpolated using bfl */
+  int mdofs;			/* degrees of freedom for mesh displacement */
+				/* unknowns interpolated using bfm */
   int mn = ei[pg->imtrx]->mn;
-  dbl f, g[DIM] = {0};      /* Temporary variables for convenience. */
-  dbl g2[DIM] = {0};
-  dbl phi_m[MDE], phi_l[MDE]; /* load shapefunctions into local variables */
+  dbl f, g[DIM], g2[DIM];	/* Temporary variables for convenience. */
+  dbl phi_m[MDE], phi_l[MDE];   /* load shapefunctions into local variables */
 
-  BASIS_FUNCTIONS_STRUCT *bfl; /* Basis function of current interest */
-  BASIS_FUNCTIONS_STRUCT *bfm; /* Basis function for mesh displacement */
+  BASIS_FUNCTIONS_STRUCT *bfl;	/* Basis function of current interest */
+  BASIS_FUNCTIONS_STRUCT *bfm;	/* Basis function for mesh displacement */
   BASIS_FUNCTIONS_STRUCT *bf_ptr;
   int imtrx;
 
@@ -2184,19 +2181,22 @@ int load_bf_mesh_derivs(void) {
       continue;
     }
 
-    dim = pd->Num_Dim;
-    dimNonSym = dim;
-    if (pd->CoordinateSystem == CARTESIAN ||
-        pd->CoordinateSystem == CYLINDRICAL ||
-        pd->CoordinateSystem == PROJECTED_CARTESIAN) {
-      wim = dim;
-    } else if (pd->CoordinateSystem == SWIRLING ||
-             pd->CoordinateSystem == CARTESIAN_2pt5D) {
-      wim = 3;
-    } else {
-      /* MMH: What makes it here??? */
-      wim = VIM;
-    }
+  dim   = pd->Num_Dim;
+  dimNonSym = dim;
+
+  /*
+   * Preload the number of degrees of freedom in the mesh
+   * for the current element, mdofs, and the pointer to the
+   * basis function structure, bfm
+   */
+  mdofs = ei[imtrx]->dof[R_MESH1];
+  bfm   = bf[MESH_DISPLACEMENT1];
+  /*
+   * preload mesh shape functions
+   */
+  for (j = 0; j < mdofs; j++) {
+    phi_m[j] = bfm->phi[j];
+  }
 
     /*
      * Preload the number of degrees of freedom in the mesh
@@ -2603,156 +2603,130 @@ int load_bf_mesh_derivs(void) {
          * memset above)
          */
 #ifdef DO_NO_UNROLL
-        for (i = 0; i < vdofs; i++) {
-          for (a = 0; a < wim; a++) {
-            for (p = 0; p < dim; p++) {
-              for (b = 0; b < dim; b++) {
-                for (j = 0; j < mdofs; j++) {
-                  bfl->d_grad_phi_e_dmesh[i][a][p][a][b][j] =
-                      bfl->d_grad_phi_dmesh[i][p][b][j];
-                }
-              }
-            }
-          }
-        }
+      for ( i=0; i<vdofs; i++) {
+	for ( a=0; a<WIM; a++) {
+	  for ( p=0; p<dim; p++) {
+	    for ( b=0; b<dim; b++)  {
+	      for ( j=0; j<mdofs; j++) {
+		bfl->d_grad_phi_e_dmesh[i][a] [p][a] [b][j]
+		  = bfl->d_grad_phi_dmesh[i][p] [b][j];
+	      }
+	    }
+					  
+	  }
+	}
+      }
 #else
-        for (i = 0; i < vdofs; i++) {
-          for (j = 0; j < mdofs; j++) {
-            /*	  bfl->d_grad_phi_e_dmesh[i][0] [p][0] [b][j] =
-               bfl->d_grad_phi_dmesh[i][p] [b][j];
-                  bfl->d_grad_phi_e_dmesh[i][1] [p][1] [b][j] =
-               bfl->d_grad_phi_dmesh[i][p] [b][j];*/
+      for (i = 0; i < vdofs; i++) {
+	for (j = 0; j< mdofs; j++) {
+	  /*	  bfl->d_grad_phi_e_dmesh[i][0] [p][0] [b][j] = bfl->d_grad_phi_dmesh[i][p] [b][j];
+		  bfl->d_grad_phi_e_dmesh[i][1] [p][1] [b][j] = bfl->d_grad_phi_dmesh[i][p] [b][j];*/
 
-            /* (p,b) = (0,0) */
-            bfl->d_grad_phi_e_dmesh[i][0][0][0][0][j] =
-                bfl->d_grad_phi_dmesh[i][0][0][j];
-            bfl->d_grad_phi_e_dmesh[i][1][0][1][0][j] =
-                bfl->d_grad_phi_dmesh[i][0][0][j];
+	  /* (p,b) = (0,0) */
+	  bfl->d_grad_phi_e_dmesh[i][0] [0][0] [0][j] = bfl->d_grad_phi_dmesh[i][0] [0][j];
+	  bfl->d_grad_phi_e_dmesh[i][1] [0][1] [0][j] = bfl->d_grad_phi_dmesh[i][0] [0][j];
+			  
+	  /* (p,b) = (1,1)*/
+	  bfl->d_grad_phi_e_dmesh[i][0] [1][0] [1][j] = bfl->d_grad_phi_dmesh[i][1] [1][j];
+	  bfl->d_grad_phi_e_dmesh[i][1] [1][1] [1][j] = bfl->d_grad_phi_dmesh[i][1] [1][j];
+			  
+	  /* (p,b) = (0,1)*/
+	  bfl->d_grad_phi_e_dmesh[i][0] [0][0] [1][j] = bfl->d_grad_phi_dmesh[i][0] [1][j];
+	  bfl->d_grad_phi_e_dmesh[i][1] [0][1] [1][j] = bfl->d_grad_phi_dmesh[i][0] [1][j];
+			  
+	  /* (p,b) = (1,0)*/
+	  bfl->d_grad_phi_e_dmesh[i][0] [1][0] [0][j] = bfl->d_grad_phi_dmesh[i][1] [0][j];
+	  bfl->d_grad_phi_e_dmesh[i][1] [1][1] [0][j] = bfl->d_grad_phi_dmesh[i][1] [0][j];
+			  			  
+	  if (WIM == 3) {
+	    /*  bfl->d_grad_phi_e_dmesh[i][2] [p][2] [b][j] = bfl->d_grad_phi_dmesh[i][p] [b][j];*/
+	    /* (p,b) = (0,0) */
+	    bfl->d_grad_phi_e_dmesh[i][2] [0][2] [0][j] = bfl->d_grad_phi_dmesh[i][0] [0][j];
+	    /* (p,b) = (1,1)*/
+	    bfl->d_grad_phi_e_dmesh[i][2] [1][2] [1][j] = bfl->d_grad_phi_dmesh[i][1] [1][j];
+	    /* (p,b) = (0,1)*/
+	    bfl->d_grad_phi_e_dmesh[i][2] [0][2] [1][j] = bfl->d_grad_phi_dmesh[i][0] [1][j];
+	    /* (p,b) = (1,0)*/
+	    bfl->d_grad_phi_e_dmesh[i][2] [1][2] [0][j] = bfl->d_grad_phi_dmesh[i][1] [0][j];
 
-            /* (p,b) = (1,1)*/
-            bfl->d_grad_phi_e_dmesh[i][0][1][0][1][j] =
-                bfl->d_grad_phi_dmesh[i][1][1][j];
-            bfl->d_grad_phi_e_dmesh[i][1][1][1][1][j] =
-                bfl->d_grad_phi_dmesh[i][1][1][j];
-
-            /* (p,b) = (0,1)*/
-            bfl->d_grad_phi_e_dmesh[i][0][0][0][1][j] =
-                bfl->d_grad_phi_dmesh[i][0][1][j];
-            bfl->d_grad_phi_e_dmesh[i][1][0][1][1][j] =
-                bfl->d_grad_phi_dmesh[i][0][1][j];
-
-            /* (p,b) = (1,0)*/
-            bfl->d_grad_phi_e_dmesh[i][0][1][0][0][j] =
-                bfl->d_grad_phi_dmesh[i][1][0][j];
-            bfl->d_grad_phi_e_dmesh[i][1][1][1][0][j] =
-                bfl->d_grad_phi_dmesh[i][1][0][j];
-
-            if (wim == 3) {
-              /*  bfl->d_grad_phi_e_dmesh[i][2] [p][2] [b][j] =
-               * bfl->d_grad_phi_dmesh[i][p] [b][j];*/
-              /* (p,b) = (0,0) */
-              bfl->d_grad_phi_e_dmesh[i][2][0][2][0][j] =
-                  bfl->d_grad_phi_dmesh[i][0][0][j];
-              /* (p,b) = (1,1)*/
-              bfl->d_grad_phi_e_dmesh[i][2][1][2][1][j] =
-                  bfl->d_grad_phi_dmesh[i][1][1][j];
-              /* (p,b) = (0,1)*/
-              bfl->d_grad_phi_e_dmesh[i][2][0][2][1][j] =
-                  bfl->d_grad_phi_dmesh[i][0][1][j];
-              /* (p,b) = (1,0)*/
-              bfl->d_grad_phi_e_dmesh[i][2][1][2][0][j] =
-                  bfl->d_grad_phi_dmesh[i][1][0][j];
-
-              if (dimNonSym == 3) {
-                /* (p,b) = (2,2)*/
-                bfl->d_grad_phi_e_dmesh[i][0][2][0][2][j] =
-                    bfl->d_grad_phi_dmesh[i][2][2][j];
-                bfl->d_grad_phi_e_dmesh[i][1][2][1][2][j] =
-                    bfl->d_grad_phi_dmesh[i][2][2][j];
-                bfl->d_grad_phi_e_dmesh[i][2][2][2][2][j] =
-                    bfl->d_grad_phi_dmesh[i][2][2][j];
-                /* (p,b) = (2,0)*/
-                bfl->d_grad_phi_e_dmesh[i][0][2][0][0][j] =
-                    bfl->d_grad_phi_dmesh[i][2][0][j];
-                bfl->d_grad_phi_e_dmesh[i][1][2][1][0][j] =
-                    bfl->d_grad_phi_dmesh[i][2][0][j];
-                bfl->d_grad_phi_e_dmesh[i][2][2][2][0][j] =
-                    bfl->d_grad_phi_dmesh[i][2][0][j];
-                /* (p,b) = (2,1)*/
-                bfl->d_grad_phi_e_dmesh[i][0][2][0][1][j] =
-                    bfl->d_grad_phi_dmesh[i][2][1][j];
-                bfl->d_grad_phi_e_dmesh[i][1][2][1][1][j] =
-                    bfl->d_grad_phi_dmesh[i][2][1][j];
-                bfl->d_grad_phi_e_dmesh[i][2][2][2][1][j] =
-                    bfl->d_grad_phi_dmesh[i][2][1][j];
-                /* (p,b) = (1,2)*/
-                bfl->d_grad_phi_e_dmesh[i][0][1][0][2][j] =
-                    bfl->d_grad_phi_dmesh[i][1][2][j];
-                bfl->d_grad_phi_e_dmesh[i][1][1][1][2][j] =
-                    bfl->d_grad_phi_dmesh[i][1][2][j];
-                bfl->d_grad_phi_e_dmesh[i][2][1][2][2][j] =
-                    bfl->d_grad_phi_dmesh[i][1][2][j];
-                /* (p,b) = (0,2)*/
-                bfl->d_grad_phi_e_dmesh[i][0][0][0][2][j] =
-                    bfl->d_grad_phi_dmesh[i][0][2][j];
-                bfl->d_grad_phi_e_dmesh[i][1][0][1][2][j] =
-                    bfl->d_grad_phi_dmesh[i][0][2][j];
-                bfl->d_grad_phi_e_dmesh[i][2][0][2][2][j] =
-                    bfl->d_grad_phi_dmesh[i][0][2][j];
-              }
-            }
-          }
-        }
-
+	    if (dimNonSym == 3) {
+	      /* (p,b) = (2,2)*/
+	      bfl->d_grad_phi_e_dmesh[i][0] [2][0] [2][j] = bfl->d_grad_phi_dmesh[i][2] [2][j];
+	      bfl->d_grad_phi_e_dmesh[i][1] [2][1] [2][j] = bfl->d_grad_phi_dmesh[i][2] [2][j];
+	      bfl->d_grad_phi_e_dmesh[i][2] [2][2] [2][j] = bfl->d_grad_phi_dmesh[i][2] [2][j];
+	      /* (p,b) = (2,0)*/
+	      bfl->d_grad_phi_e_dmesh[i][0] [2][0] [0][j] = bfl->d_grad_phi_dmesh[i][2] [0][j];
+	      bfl->d_grad_phi_e_dmesh[i][1] [2][1] [0][j] = bfl->d_grad_phi_dmesh[i][2] [0][j];
+	      bfl->d_grad_phi_e_dmesh[i][2] [2][2] [0][j] = bfl->d_grad_phi_dmesh[i][2] [0][j];
+	      /* (p,b) = (2,1)*/			  
+	      bfl->d_grad_phi_e_dmesh[i][0] [2][0] [1][j] = bfl->d_grad_phi_dmesh[i][2] [1][j];
+	      bfl->d_grad_phi_e_dmesh[i][1] [2][1] [1][j] = bfl->d_grad_phi_dmesh[i][2] [1][j];
+	      bfl->d_grad_phi_e_dmesh[i][2] [2][2] [1][j] = bfl->d_grad_phi_dmesh[i][2] [1][j];
+	      /* (p,b) = (1,2)*/			  
+	      bfl->d_grad_phi_e_dmesh[i][0] [1][0] [2][j] = bfl->d_grad_phi_dmesh[i][1] [2][j];
+	      bfl->d_grad_phi_e_dmesh[i][1] [1][1] [2][j] = bfl->d_grad_phi_dmesh[i][1] [2][j];
+	      bfl->d_grad_phi_e_dmesh[i][2] [1][2] [2][j] = bfl->d_grad_phi_dmesh[i][1] [2][j];
+	      /* (p,b) = (0,2)*/
+	      bfl->d_grad_phi_e_dmesh[i][0] [0][0] [2][j] = bfl->d_grad_phi_dmesh[i][0] [2][j];
+	      bfl->d_grad_phi_e_dmesh[i][1] [0][1] [2][j] = bfl->d_grad_phi_dmesh[i][0] [2][j];
+	      bfl->d_grad_phi_e_dmesh[i][2] [0][2] [2][j] = bfl->d_grad_phi_dmesh[i][0] [2][j];
+	    }
+	  }	  
+	}
+      }
 #endif
 
-        /* add more involved pieces as necessary */
-        if (pd->CoordinateSystem != CARTESIAN) {
 
-          /*  for ( i=0; i<vdofs; i++) {
-              for ( a=0; a<dim; a++) {
-              for ( p=0; p<dim; p++) {
-              for ( b=0; b<dim; b++)  {
-              for ( j=0; j<mdofs; j++) {
-              bfl->d_grad_phi_e_dmesh[i][a] [p][a] [b][j]
-              = bfl->d_grad_phi_dmesh[i][p] [b][j];
-              }
-              }
-              }
-              }
-              } */
+	  /*  for ( i=0; i<vdofs; i++) {
+	      for ( a=0; a<dim; a++) {
+	      for ( p=0; p<dim; p++) {
+	      for ( b=0; b<dim; b++)  {
+	      for ( j=0; j<mdofs; j++) {								  
+	      bfl->d_grad_phi_e_dmesh[i][a] [p][a] [b][j]
+	      = bfl->d_grad_phi_dmesh[i][p] [b][j];
+	      }
+	      }
+	      }				  
+	      }
+	      } */
+		
+		
+	  for ( i=0; i<vdofs; i++)
+	    {
+	      for ( a=0; a<WIM; a++)
+		{
+		  for ( p=0; p<VIM; p++)
+		    {
+		      for ( q=0; q<VIM; q++)
+			{
+			  for ( b=0; b<dim; b++)
+			    {
+			      for ( j=0; j<mdofs; j++)
+				{
+				  if ( q != a ) {
+				    if (bfl->d_grad_phi_e_dmesh[i][a] [p][q] [b][j] != 0.0) {
+				      printf("we shouldn't be here\n");
+				      exit(-1);
+				    }
+				    bfl->d_grad_phi_e_dmesh[i][a] [p][q] [b][j] = 0.0;
+				  }			  
+				  if( dim < VIM && ( p == VIM || q == VIM ) ) {
+				    if (bfl->d_grad_phi_e_dmesh[i][a] [p][q] [b][j] != 0.0) {
+				      printf("we shouldn't be here\n");
+				      exit(-1);
+				    }
+				    bfl->d_grad_phi_e_dmesh[i][a] [p][q] [b][j] = 0.0;
+				  }
 
-          for (i = 0; i < vdofs; i++) {
-            for (a = 0; a < wim; a++) {
-              for (p = 0; p < VIM; p++) {
-                for (q = 0; q < VIM; q++) {
-                  for (b = 0; b < dim; b++) {
-                    for (j = 0; j < mdofs; j++) {
-                      if (q != a) {
-                        if (bfl->d_grad_phi_e_dmesh[i][a][p][q][b][j] != 0.0) {
-                          printf("we shouldn't be here\n");
-                          exit(-1);
-                        }
-                        bfl->d_grad_phi_e_dmesh[i][a][p][q][b][j] = 0.0;
-                      }
-                      if (dim < VIM && (p == VIM || q == VIM)) {
-                        if (bfl->d_grad_phi_e_dmesh[i][a][p][q][b][j] != 0.0) {
-                          printf("we shouldn't be here\n");
-                          exit(-1);
-                        }
-                        bfl->d_grad_phi_e_dmesh[i][a][p][q][b][j] = 0.0;
-                      }
-
-                      bfl->d_grad_phi_e_dmesh[i][a][p][q][b][j] +=
-                          phi_l[i] * fv->d_grad_e_dq[a][p][q][b] * phi_m[j];
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+				  bfl->d_grad_phi_e_dmesh[i][a] [p][q] [b][j]
+				    += phi_l[i] * fv->d_grad_e_dq[a][p][q][b] * phi_m[j];
+				}
+			    }
+			}
+		    }
+		}
+	    }
+	}
     }
   }
   return 0;

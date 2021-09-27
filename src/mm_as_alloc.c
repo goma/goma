@@ -913,7 +913,6 @@ assembly_alloc(Exo_DB *exo)
   int interp;			/* index for interpolation order */
   int si;			/* index for element shape */
   int mn;
-  int vim, dim, wim;                 /* problem dimension */
   int num_species_eqn;                 /* active number of species eqn */
   int imtrx;
 
@@ -994,31 +993,13 @@ assembly_alloc(Exo_DB *exo)
     }
 
   /*
-   * Dynamically allocate space for only the pointers needed for a 
-   * given problem.
-   */
-
-  dim   = pd_glob[0]->Num_Dim;
-  vim = dim;
-  wim = dim;
-  if(pd_glob[0]->CoordinateSystem == CYLINDRICAL ||
-     pd_glob[0]->CoordinateSystem == SWIRLING ||
-     pd_glob[0]->CoordinateSystem == CARTESIAN_2pt5D ||
-     pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN)
-    vim = vim + 1;
-  if(pd_glob[0]->CoordinateSystem == SWIRLING ||
-     pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN ||
-     pd_glob[0]->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim + 1;
-
-  /*
    *  num_species_eqn is equal to the maximum number of species equations
    *  in any one domain
    */
   num_species_eqn = upd->Max_Num_Species_Eqn;
 
 #ifdef DEBUG
-  fprintf(stderr, "%s allocating esp with dim=%d, vim=%d\n", yo, dim, vim);
+  fprintf(stderr, "%s allocating esp with dim=%d, VIM=%d\n", yo, dim, VIM);
 #endif
   sz = MDE;
 
@@ -1036,7 +1017,7 @@ assembly_alloc(Exo_DB *exo)
 
   /* MOMENTUM  */
   if (Num_Var_In_Type[imtrx][VELOCITY1]) {
-    esp->v = (dbl ***) alloc_ptr_2(vim, MDE);
+    esp->v = (dbl ***) alloc_ptr_2(VIM, MDE);
   }
 
 
@@ -1046,17 +1027,17 @@ assembly_alloc(Exo_DB *exo)
    */
   /* PARTICLE MOMENTUM */
   if (Num_Var_In_Type[imtrx][PVELOCITY1]) {
-    esp->pv = (dbl ***) alloc_ptr_2(vim, MDE);
+    esp->pv = (dbl ***) alloc_ptr_2(VIM, MDE);
   }
 
   /* MESH_DISPLACEMENT  */
   if(Num_Var_In_Type[imtrx][MESH_DISPLACEMENT1]) {
-    esp->d = (dbl ***) alloc_ptr_2(vim, MDE);
+    esp->d = (dbl ***) alloc_ptr_2(VIM, MDE);
   }
 
   /* SOLID_DISPLACEMENT  */
   if (Num_Var_In_Type[imtrx][SOLID_DISPLACEMENT1]) {
-    esp->d_rs = (dbl ***) alloc_ptr_2(vim, MDE);
+    esp->d_rs = (dbl ***) alloc_ptr_2(VIM, MDE);
   }
 
   /* SPECIES CONTINUITY */
@@ -1071,14 +1052,14 @@ assembly_alloc(Exo_DB *exo)
 
   /* POLYMER STRESS for all modes */
   if(Num_Var_In_Type[imtrx][POLYMER_STRESS11]) {
-    esp->S = (dbl *****) array_alloc(4, MAX_MODES, vim, vim, MDE, sizeof(dbl *));
-    (void) memset(esp->S[0][0][0], 0, MAX_MODES*vim*vim*MDE*sizeof(dbl *));
+    esp->S = (dbl *****) array_alloc(4, MAX_MODES, VIM, VIM, MDE, sizeof(dbl *));
+    (void) memset(esp->S[0][0][0], 0, MAX_MODES*VIM*VIM*MDE*sizeof(dbl *));
   }
 
   /* VELOCITY_GRADIENT */
   if (Num_Var_In_Type[imtrx][VELOCITY_GRADIENT11]) {
-    esp->G = (dbl ****) array_alloc(3, vim, vim, MDE, sizeof(dbl *));
-    (void) memset(esp->G[0][0], 0, vim*vim*MDE*sizeof(dbl *)); 
+    esp->G = (dbl ****) array_alloc(3, VIM, VIM, MDE, sizeof(dbl *));
+    (void) memset(esp->G[0][0], 0, VIM*VIM*MDE*sizeof(dbl *));
   }
 
   /* POTENTIAL */
@@ -1113,7 +1094,7 @@ assembly_alloc(Exo_DB *exo)
 
   /* LEVEL SET NORMAL VECTOR */
   if( Num_Var_In_Type[imtrx][NORMAL1]) {
-    esp->n = (dbl ***) alloc_ptr_2(vim, MDE);
+    esp->n = (dbl ***) alloc_ptr_2(VIM, MDE);
   }
 
   /* POROUS MEDIA VARS */
@@ -1141,7 +1122,7 @@ assembly_alloc(Exo_DB *exo)
   
   /* Lagrange Multipliers */
   if (Num_Var_In_Type[imtrx][LAGR_MULT1]) {
-    esp->lm = (dbl ***) alloc_ptr_2(vim, MDE);
+    esp->lm = (dbl ***) alloc_ptr_2(VIM, MDE);
   }
 
   /* Structural Shell equations */
@@ -1223,7 +1204,7 @@ assembly_alloc(Exo_DB *exo)
 
  /* Electric Field */
   if (Num_Var_In_Type[imtrx][EFIELD1]) {
-    esp->E_field = (dbl ***) alloc_ptr_2(vim, MDE);
+    esp->E_field = (dbl ***) alloc_ptr_2(VIM, MDE);
   }
 
   /* Phase function */
@@ -1296,20 +1277,20 @@ assembly_alloc(Exo_DB *exo)
   }
   /* Poynting Vector  */
   if (Num_Var_In_Type[imtrx][LIGHT_INTP] || Num_Var_In_Type[imtrx][LIGHT_INTM] || Num_Var_In_Type[imtrx][LIGHT_INTD]) {
-    esp->poynt = (dbl ***) alloc_ptr_2(vim, MDE);
+    esp->poynt = (dbl ***) alloc_ptr_2(VIM, MDE);
   }
   /* EM_wave components  */
   if (Num_Var_In_Type[imtrx][EM_E1_REAL] || Num_Var_In_Type[imtrx][EM_E2_REAL] || Num_Var_In_Type[imtrx][EM_E3_REAL]) {
-    esp->em_er = (dbl ***) alloc_ptr_2(vim, MDE);
+    esp->em_er = (dbl ***) alloc_ptr_2(VIM, MDE);
   }
   if (Num_Var_In_Type[imtrx][EM_E1_IMAG] || Num_Var_In_Type[imtrx][EM_E2_IMAG] || Num_Var_In_Type[imtrx][EM_E3_IMAG]) {
-    esp->em_ei = (dbl ***) alloc_ptr_2(vim, MDE);
+    esp->em_ei = (dbl ***) alloc_ptr_2(VIM, MDE);
   }
   if (Num_Var_In_Type[imtrx][EM_H1_REAL] || Num_Var_In_Type[imtrx][EM_H2_REAL] || Num_Var_In_Type[imtrx][EM_H3_REAL]) {
-    esp->em_hr = (dbl ***) alloc_ptr_2(vim, MDE);
+    esp->em_hr = (dbl ***) alloc_ptr_2(VIM, MDE);
   }
   if (Num_Var_In_Type[imtrx][EM_H1_IMAG] || Num_Var_In_Type[imtrx][EM_H2_IMAG] || Num_Var_In_Type[imtrx][EM_H3_IMAG]) {
-    esp->em_hi = (dbl ***) alloc_ptr_2(vim, MDE);
+    esp->em_hi = (dbl ***) alloc_ptr_2(VIM, MDE);
   }
 
   if(Num_Var_In_Type[imtrx][TFMP_PRES]) {

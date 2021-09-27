@@ -1552,8 +1552,8 @@ rd_timeint_specs(FILE *ifp,
     tran->eps = eps;
 
     /* initialize norm indicators */
-    for (i = 0; i < 9; i++) tran->use_var_norm[i] = 0;
-    tran->use_var_norm[9] = 1; /* for backwards Compatibility */
+    for (i = 0; i <= 9; i++) tran->use_var_norm[i] = 1;
+    /*tran->use_var_norm[9] = 1;  for backwards Compatibility */
     read_line(ifp, input, FALSE);
 
     if ( sscanf(input,"%d %d %d %d %d %d %d %d %d %d", 
@@ -1561,9 +1561,10 @@ rd_timeint_specs(FILE *ifp,
 		&tran->use_var_norm[2], &tran->use_var_norm[3], 
 		&tran->use_var_norm[4], &tran->use_var_norm[5],        
 		&tran->use_var_norm[6], &tran->use_var_norm[7], 
-		&tran->use_var_norm[8], &tran->use_var_norm[9]) < 8)   
+		&tran->use_var_norm[8], &tran->use_var_norm[9]) < 10)   
       {
-	fprintf(stdout, "Warning: Time step error prefers 1 flt 10 ints\n");
+	fprintf(stderr, "Defaulting on Time step error norm indicators\n");
+/*	fprintf(stdout, "Warning: Time step error prefers 1 flt 10 ints\n");
 	fprintf(stdout, 
 		"%s   d=%1d, v=%1d, T=%1d, y=%1d, P=%1d, S=%1d, V=%1d, sd=%1d, ls=%1d, ac=%1d\n", 
 		"Best guess:", 
@@ -1571,7 +1572,7 @@ rd_timeint_specs(FILE *ifp,
 		tran->use_var_norm[2], tran->use_var_norm[3],
 		tran->use_var_norm[4], tran->use_var_norm[5],
 		tran->use_var_norm[6], tran->use_var_norm[7],
-		tran->use_var_norm[8], tran->use_var_norm[9]);
+		tran->use_var_norm[8], tran->use_var_norm[9]);   */
       }
 
     SPF(echo_string,"%s = %.4g %d %d %d %d %d %d %d %d %d %d", "Time step error", tran->eps, 
@@ -7030,6 +7031,29 @@ rd_solver_specs(FILE *ifp,
     Epsilon[imtrx][1] = 0.;
   }
 
+/**  Bit-wise code to request columns of solver output:
+	=>  summation of 2^(column_number) from column 0 to 11
+	Max value: 4095 (2^12 - 1)
+**/
+
+  Solver_Output_Format = 1023;
+  iread = look_for_optional(ifp, "Solver Output Format Bitmap", input, '=');
+  if (iread == 1) { 
+     int no_chars=80;
+     if (fscanf(ifp, "%d", &Solver_Output_Format) != 1)
+        {
+         EH( -1, "error reading Solver Format");
+        }
+     SPF(echo_string,"%s = %d", "Solver Output Format Bitmap", Solver_Output_Format);
+     no_chars = (Solver_Output_Format & 1)*9 + (Solver_Output_Format & 2)*2 +
+		(Solver_Output_Format & 4)*2 + (Solver_Output_Format & 8)*1 +
+		(Solver_Output_Format & 16)/2 + (Solver_Output_Format & 32)/4 +
+		(Solver_Output_Format & 64)/8 + (Solver_Output_Format & 128)/16 +
+		(Solver_Output_Format & 256)/64 + (Solver_Output_Format & 512)/32 +
+		(Solver_Output_Format & 1024)/128 + (Solver_Output_Format & 2048)/256;
+     if (no_chars > 80) WH( -1, "Solver Output greater than 80 characters...\n");
+     }
+
   iread = look_for_optional(ifp, "Residual Ratio Tolerance", input, '=');
   if ( iread == 1 )
     {
@@ -10188,8 +10212,14 @@ rd_eq_specs(FILE *ifp,
 		    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)]))
 	     != 3 )
 	{
+	  pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)] = 1.0;
+          pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)] = 1.0;
+	  pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)] = 1.0;
 	  sr = sprintf(err_msg, 
-		       "Provide 3 equation term multipliers (mas,adv,src) on %s in %s",
+		       "Using default equation term multipliers (mass,adv,src) on %s in %s",
+		       EQ_Name[ce].name1, pd_ptr->MaterialName);
+	  sr = sprintf(err_msg, 
+		       "Provide 3 equation term multipliers (mass,adv,src) on %s in %s",
 		       EQ_Name[ce].name1, pd_ptr->MaterialName);
 	  EH(-1, err_msg);
 	}
@@ -15134,6 +15164,8 @@ parse_press_datum_input(const char *input)
       units = 1;
     } else if (!strncasecmp(tok.tok_ptr[1], "cgs", 3)) {
       units = 2;
+    } else if (!strncasecmp(tok.tok_ptr[1], "kPa", 3)) {
+      units = 3;
     } else {
       goto L_ERROR;
     }
@@ -15145,6 +15177,8 @@ parse_press_datum_input(const char *input)
     value *= 1.01325E6 / 760;
   } else if (units == 2) {
     value *= 1.0;
+  } else if (units == 3) {
+    value *= 10000.0;
   }
   return value;
   /*

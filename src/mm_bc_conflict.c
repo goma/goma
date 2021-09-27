@@ -786,31 +786,56 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
  		  	BC_Types[ibc2].BC_Name == VELO_TANGENT_USER_BC ||
  		  	BC_Types[ibc2].BC_Name == VELO_SLIP_FLUID_BC ||
  		  	BC_Types[ibc2].BC_Name == VELO_SLIP_ROT_FLUID_BC ||
- 			BC_Types[ibc2].BC_Name == VELO_STREAMING_BC ) {
-                      /* Hmm, we got a hit.  Now make sure they are not coming from the same
-                         side set, which is something that is common */
-                      if (BC_Types[ibc2].BC_ID != BC_Types[ibc1].BC_ID) {
-                        /* Now you have established a KINEMATIC and velo_tangent
-                         *  makes the dup_list, lets get rid of the velo_tangent, 
-                         *  unless we have a rolling motion condition at a dynamic
-                         *  contact line.  In that case
-                         *  we would like to retain the velo_tangent and the kinematic
-                         *  as they are not redundant.  The user signifies this case
-                         *  with a -1 in the Data_int[0] slot
-                         */
-		      if (BC_Types[ibc2].BC_Data_Int[0] > -1)  /*this is a last defense
-                                                                    to retain velo_tangent*/
-                          {
-                            delete_bc_entry(BC_Unk_List[inode][offset_mom2], j);
-                          }
-                      }
-                    }
-                  }
-                }
-              }
-            }  /* End of if (eqn == R_MOMENTUM1) */
-            /*****************************************************************************/
-	  
+ 			BC_Types[ibc2].BC_Name == VELO_STREAMING_BC ||
+ 			BC_Types[ibc2].BC_Name == VELO_TANGENT_SOLID_BC ||
+ 			BC_Types[ibc2].BC_Name == VELO_SLIP_SOLID_BC) {
+		    /* Hmm, we got a hit.  Now make sure they are not coming from the same
+		       side set, which is something that is common */
+		    if (BC_Types[ibc2].BC_ID != BC_Types[ibc1].BC_ID) {
+		      /* Now you have established a KINEMATIC and velo_tangent
+		       *  makes the dup_list, lets get rid of the velo_tangent, 
+		       *  unless we have a rolling motion condition at a dynamic
+		       *  contact line.  In that case
+		       *  we would like to retain the velo_tangent and the kinematic
+		       *  as they are not redundant.  The user signifies this case
+		       *  with a -1 in the Data_int[0] slot
+		       */
+ 		      if (BC_Types[ibc2].BC_Name == VELO_TANGENT_SOLID_BC ||
+ 		          BC_Types[ibc2].BC_Name == VELO_SLIP_SOLID_BC )
+		          { 
+		      	    if (BC_Types[ibc2].BC_Data_Int[2] > -1)  
+				{ 
+			    	fprintf(stderr, "  REMOVING BC %s at %s %d/%d because of %s \n", 
+				    BC_Types[ibc2].desc->name1, BC_Types[ibc2].Set_Type,
+					BC_Types[ibc2].BC_ID, BC_Types[ibc1].BC_ID,
+						BC_Types[ibc1].desc->name1);
+				  delete_bc_entry(BC_Unk_List[inode][offset_mom2], j); }
+			     else	
+				{ /* move VELO to the top... */
+			    	  fprintf(stderr, "  MOVING BC %s to the top on %s %d/%d \n", 
+				    	BC_Types[ibc2].desc->name1, BC_Types[ibc2].Set_Type,
+					BC_Types[ibc2].BC_ID, BC_Types[ibc1].BC_ID);
+				  for (k=0 ; k<j ; k++)	
+					{ delete_bc_entry(BC_Unk_List[inode][offset_mom2], k); }
+				}
+			  }
+		      else if (BC_Types[ibc2].BC_Data_Int[0] > -1)  /*this is a last defense
+								  to retain velo_tangent*/
+		          { 
+			    fprintf(stderr, "  REMOVING BC %s at %s %d/%d because of %s \n", 
+				    BC_Types[ibc2].desc->name1, BC_Types[ibc2].Set_Type,
+					BC_Types[ibc2].BC_ID, BC_Types[ibc1].BC_ID,
+						 BC_Types[ibc1].desc->name1);
+				delete_bc_entry(BC_Unk_List[inode][offset_mom2], j); 
+			  }
+		    }
+		  }
+		}
+	      }
+	    }
+	  }  /* End of if (eqn == R_MOMENTUM1) */
+	  /*****************************************************************************/
+
             /* first give all DIRICHLET Conditions Precedence 
              * - they swamp out all other boundary conditions and shift rotated
              *   conditions to another coordinate direction
@@ -1507,8 +1532,18 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
 			    det += fabs( (double) BC_Types[ibc1].BC_Data_Int[0] + 
 					 (double) BC_Types[ibc2].BC_Data_Int[0] );
 			    break;
-                          case VELO_SLIP_BC:
-                          case VELO_SLIP_ROT_BC:
+			case VELO_TANGENT_SOLID_BC:
+			case VELO_SLIP_SOLID_BC:
+			    a1 = BC_Types[ibc1].BC_Data_Float[0] ;
+			    b1 = BC_Types[ibc2].BC_Data_Float[0] ;		
+			    a2 = BC_Types[ibc1].BC_Data_Float[1] ;
+			    b2 = BC_Types[ibc2].BC_Data_Float[1] ;
+			    det = fabs(a1 - b1) +  fabs(a2 - b2);
+			    det += fabs( (double) BC_Types[ibc1].BC_Data_Int[2] + 
+					 (double) BC_Types[ibc2].BC_Data_Int[2] );
+			    break;
+			case VELO_SLIP_BC:
+			case VELO_SLIP_ROT_BC:
 			case VELO_SLIP_FLUID_BC:
 			case VELO_SLIP_ROT_FLUID_BC:
 			case AIR_FILM_BC:

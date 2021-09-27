@@ -852,8 +852,7 @@ element_velocity(dbl v_avg[DIM], dbl dv_dnode[DIM][MDE],
 	      if ((cr->MeshMotion == LAGRANGIAN ||
 		   cr->MeshMotion == DYNAMIC_LAGRANGIAN))
 		{
-		  if (elc->v_mesh_sfs_model == ROTATIONAL ||
-			elc->v_mesh_sfs_model == ROTATIONAL_3D)
+		  if (elc->v_mesh_sfs_model > CONSTANT)
 		    {
 		      (void) V_mesh_sfs_model(elc->u_v_mesh_sfs, 
 						elc->v_mesh_sfs, 
@@ -862,8 +861,7 @@ element_velocity(dbl v_avg[DIM], dbl dv_dnode[DIM][MDE],
 		} 
 	      else if (cr->MeshMotion == TOTAL_ALE)
 		{
-		  if (elc_rs->v_mesh_sfs_model == ROTATIONAL ||
-			elc_rs->v_mesh_sfs_model == ROTATIONAL_3D)
+		  if (elc->v_mesh_sfs_model > CONSTANT)
 		  {
 		    (void) V_mesh_sfs_model(elc_rs->u_v_mesh_sfs,
 					    elc_rs->v_mesh_sfs, 
@@ -902,8 +900,7 @@ element_velocity(dbl v_avg[DIM], dbl dv_dnode[DIM][MDE],
 	  if ((cr->MeshMotion == LAGRANGIAN ||
 	       cr->MeshMotion == DYNAMIC_LAGRANGIAN))
 	    {
-	      if (elc->v_mesh_sfs_model == ROTATIONAL ||
-			elc->v_mesh_sfs_model == ROTATIONAL_3D)
+	      if (elc->v_mesh_sfs_model > CONSTANT)
 	      {
 		(void) V_mesh_sfs_model(elc->u_v_mesh_sfs, 
 					elc->v_mesh_sfs, 
@@ -912,8 +909,7 @@ element_velocity(dbl v_avg[DIM], dbl dv_dnode[DIM][MDE],
 	    } 
 	  else if (cr->MeshMotion == TOTAL_ALE)
 	    {
-	      if (elc_rs->v_mesh_sfs_model == ROTATIONAL ||
-			elc_rs->v_mesh_sfs_model == ROTATIONAL_3D)
+	      if (elc_rs->v_mesh_sfs_model > CONSTANT)
 	      {
 		(void) V_mesh_sfs_model(elc_rs->u_v_mesh_sfs,
 	 				    elc_rs->v_mesh_sfs, 
