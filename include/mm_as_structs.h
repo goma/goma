@@ -1136,6 +1136,7 @@ struct Transient_Information {
   double time_value_old;
 
   int ale_adapt;
+  int ale_adapt_freq;
   double ale_adapt_iso_size;
 };
 

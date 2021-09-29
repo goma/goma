@@ -1857,6 +1857,15 @@ rd_timeint_specs(FILE *ifp,
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT,"%s = %s", "ALE Adapt", input); ECHO(echo_string, echo_file);
   }
 
+  iread = look_for_optional(ifp,"ALE Adapt Frequency",input,'=');
+  if (iread == 1) {
+    tran->ale_adapt_freq = read_int(ifp, "ALE Adapt Frequency");
+    if (tran->ale_adapt_freq <= 0) {
+      GOMA_EH(GOMA_ERROR, "Expected ALE Frequency > 0");
+    }
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", "ALE Adapt Frequency", tran->ale_adapt_freq); ECHO(echo_string, echo_file);
+  }
+
   iread = look_for_optional(ifp,"ALE Adapt ISO Size",input,'=');
   if (iread == 1) {
     tran->ale_adapt_iso_size = read_dbl(ifp, "ALE Adapt ISO Size");

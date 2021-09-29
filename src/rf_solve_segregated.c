@@ -1458,7 +1458,7 @@ void solve_problem_segregated(
                */
             }
 #ifdef HAVE_OMEGA_H
-            if (subcycle == 0 && (tran->ale_adapt || (ls !=NULL && ls->adapt)) && pg->imtrx == 0 && (nt == 0 || ((ls !=NULL && nt % ls->adapt_freq == 0) || (tran->ale_adapt && nt % 40 == 0)))) {
+            if (subcycle == 0 && (tran->ale_adapt || (ls !=NULL && ls->adapt)) && pg->imtrx == 0 && (nt == 0 || ((ls !=NULL && nt % ls->adapt_freq == 0) || (tran->ale_adapt && nt % tran->ale_adapt_freq == 0)))) {
               adapt_mesh_omega_h(ams, exo, dpi, x, x_old, x_older, xdot, xdot_old, x_oldest,
                                  resid_vector, x_update, scale, adapt_step);
               adapt_step++;
