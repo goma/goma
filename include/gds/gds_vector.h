@@ -15,6 +15,8 @@ typedef struct {
   double data[1];
 } gds_vector;
 
+void gds_print_vector(const gds_vector *v);
+
 /**
  * @brief gds_vector_alloc
  * @param size

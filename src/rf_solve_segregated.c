@@ -355,15 +355,16 @@ void solve_problem_segregated(
     rd[pg->imtrx]->ngv = 0; /* number global variables in results  */
     rd[pg->imtrx]->nhv = 0; /* number history variables in results */
 
-    rd[pg->imtrx]->ngv = 5 + nAC; /* number global variables in results
+    rd[pg->imtrx]->ngv = 6 + nAC; /* number global variables in results
                                    * see load_global_var_info for names
                                    */
 
     error = load_global_var_info(rd[pg->imtrx], 0, "CONV");
     error = load_global_var_info(rd[pg->imtrx], 1, "NEWT_IT");
     error = load_global_var_info(rd[pg->imtrx], 2, "MAX_IT");
-    error = load_global_var_info(rd[pg->imtrx], 3, "CONVRATE");
-    error = load_global_var_info(rd[pg->imtrx], 4, "MESH_VOLUME");
+    error = load_global_var_info(rd[pg->imtrx], 3, "CONVORDER");
+    error = load_global_var_info(rd[pg->imtrx], 4, "CONVRATE");
+    error = load_global_var_info(rd[pg->imtrx], 5, "MESH_VOLUME");
 
     if (rd[pg->imtrx]->ngv > MAX_NGV)
       GOMA_EH(GOMA_ERROR, "Augmenting condition values overflowing MAX_NGV.  Change and "

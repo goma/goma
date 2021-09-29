@@ -4,9 +4,22 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 static const size_t gds_vector_size = sizeof(gds_vector);
 static const size_t double_size = sizeof(double);
+
+void gds_print_vector(const gds_vector *v) {
+  printf("[");
+  for (int i = 0; i < v->size; i++) {
+    printf("%g", v->data[i]);
+    if (i == (v->size -1)) {
+      printf("]\n");
+    } else {
+      printf(" ");
+    }
+  }
+}
 
 gds_vector *gds_vector_alloc(size_t size) {
   gds_vector *v = calloc(1, gds_vector_size + double_size * size);

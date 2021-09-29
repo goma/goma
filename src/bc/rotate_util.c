@@ -5,6 +5,7 @@
 #include "std.h"
 #include "util/goma_normal.h"
 #include <assert.h>
+#include <stdio.h>
 
 static bool within_critical_angle(double a_dot_b, double angle) {
   return a_dot_b <= (1 + 1e-14) && a_dot_b >= cos(angle);
@@ -77,7 +78,17 @@ static void goma_normal_assign_best_direction(goma_normal *normal,
   //  }
   //}
   if (n_max == -1 || t_max == -1 || b_max == -1) {
-    GOMA_EH(GOMA_ERROR, "could not associate normals to coord");
+    GOMA_EH(GOMA_ERROR, "could not associate normals to coord [%g,%g,%g], [%g,%g,%g], [%g,%g,%g]",
+            normal->normal->data[0],
+            normal->normal->data[1],
+            normal->normal->data[2],
+            tangent->normal->data[0],
+            tangent->normal->data[1],
+            tangent->normal->data[2],
+            binormal->normal->data[0],
+            binormal->normal->data[1],
+            binormal->normal->data[2]
+            );
   }
 
   // set best directions
@@ -307,7 +318,7 @@ corner_coord_critical_found : {
   max_dot = 0;
   for (int i = 0; i < 3; i++) {
     double dot = fabs(gds_vector_get(normals[critical_angle[i]]->normal, 1));
-    if (dot > max_dot) {
+    if (dot > max_dot && i != first_crit) {
       second_crit = i;
       max_dot = dot;
     }
@@ -353,12 +364,15 @@ corner_coord_critical_found : {
   goma_normal_val shift = scale_goma_normal_val(&angle, half);
   goma_normal_val minus_shift = scale_goma_normal_val(&angle, -half);
   goma_normal_cross(first, second, cross);
+
   goma_normal_copy(mid_n1_n2, first);
   goma_normal_add(mid_n1_n2, second);
   goma_normal_normalize(mid_n1_n2);
   goma_normal_normalize(cross);
   goma_normal_rotate_around_vector(new_n1, mid_n1_n2, cross, shift);
   goma_normal_rotate_around_vector(new_n2, mid_n1_n2, cross, minus_shift);
+
+
 
 #ifndef NDEBUG
   goma_normal_val dt1 = goma_normal_dot(new_n1, new_n2);
@@ -512,19 +526,27 @@ goma_error goma_best_coordinate_system_3D(goma_normal **normals,
   for (int i = 0; i < n_normals; i++) {
     goma_normal_normalize(normals[i]);
   }
-
+  int err = GOMA_SUCCESS;
   // check if all are within a critical angle
   // then we have a surface case
   if (goma_check_normals_within_critical_angle(normals, n_normals)) {
     *type = 0;
-    return goma_surface_coordinate_system(normals, n_normals, coord);
+    err = goma_surface_coordinate_system(normals, n_normals, coord);
+    if (err == GOMA_ERROR) {
+      fprintf(stderr, "best rot surface failure");
+    }
   } else if (goma_check_corner_rotation_case(normals, n_normals)) {
     *type = 1;
-    return goma_corner_coordinate_system(normals, n_normals, coord);
+    err = goma_corner_coordinate_system(normals, n_normals, coord);
+    if (err == GOMA_ERROR) {
+      fprintf(stderr, "best rot corner failure");
+    }
   } else if (goma_check_edge_rotation_case(normals, n_normals)) {
     *type = 2;
-    return goma_edge_coordinate_system(normals, n_normals, coord);
+    err = goma_edge_coordinate_system(normals, n_normals, coord);
+    if (err == GOMA_ERROR) {
+      fprintf(stderr, "best rot edge failure");
+    }
   }
-
-  return GOMA_ERROR;
+  return err;
 }

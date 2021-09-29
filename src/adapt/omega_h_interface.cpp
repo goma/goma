@@ -1302,16 +1302,22 @@ void convert_back_to_goma_exo_parallel(
       for (std::size_t i = 0; i < set_names.size(); ++i) {
         if (set_names[i].empty()) {
           std::stringstream ss;
-          ss << "surface_" << i;
+          ss << "ss_" << i;
           set_names[i] = ss.str();
         }
         set_name_ptrs[i] = const_cast<char *>(set_names[i].c_str());
       }
-      if (classify_with & exodus::NODE_SETS) {
-        CALL(ex_put_names(exoid, EX_NODE_SET, set_name_ptrs.data()));
-      }
       if (classify_with & exodus::SIDE_SETS) {
         CALL(ex_put_names(exoid, EX_SIDE_SET, set_name_ptrs.data()));
+      }
+      for (std::size_t i = 0; i < set_names.size(); ++i) {
+        std::stringstream ss;
+        ss << "ns_" << i;
+        set_names[i] = ss.str();
+        set_name_ptrs[i] = const_cast<char *>(set_names[i].c_str());
+      }
+      if (classify_with & exodus::NODE_SETS) {
+        CALL(ex_put_names(exoid, EX_NODE_SET, set_name_ptrs.data()));
       }
     }
   }
@@ -1749,7 +1755,10 @@ void adapt_mesh_omega_h(struct GomaLinearSolverData **ams,
 
   static std::string base_name;
   static bool first_call = true;
-  auto lib = Omega_h::Library();
+  int argc=0;
+  char argv[1][8];
+  char **argvptr = (char **) argv;
+  auto lib = Omega_h::Library(&argc, &argvptr);
   auto classify_with = Omega_h::exodus::NODE_SETS | Omega_h::exodus::SIDE_SETS;
   auto verbose = false;
 #ifdef DEBUG_OMEGA_H

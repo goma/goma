@@ -837,7 +837,7 @@ goma_error setup_rotated_bc_nodes(
     if (rotations[i].is_rotated) {
       goma_error err = goma_best_coordinate_system_3D(node_normals[i].normals, node_normals[i].n_normals,
                                      rotations[i].rotated_coord, &rotations[i].type);
-      GOMA_EH(err, "find best coordinate error");
+      GOMA_EH(err, "find best coordinate error for node %d, %g %g %g", i, exo->x_coord[i], exo->y_coord[i], exo->z_coord[i]);
     }
   }
 
