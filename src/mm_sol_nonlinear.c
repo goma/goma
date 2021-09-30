@@ -1490,13 +1490,13 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
 	  err = cmsr_ma28(NumUnknowns[pg->imtrx], NZeros, a, ija, 
 			  delta_x, resid_vector);
 #else /* HARWELL */
-	  GOMA_EH(GOMA_ERROR, "That linear solver package is not implemented.");
+	  GOMA_EH(GOMA_ERROR, "That linear solver package is not implemented. Package %d", Linear_Solver);
 #endif /* HARWELL */
 	  strcpy(stringer, " 1 ");
 	  break;
 
       default:
-	  GOMA_EH(GOMA_ERROR, "That linear solver package is not implemented.");
+	  GOMA_EH(GOMA_ERROR, "That linear solver package is not implemented. Package %d", Linear_Solver);
 	  break;
       }
       s_end = ut();
@@ -1644,6 +1644,20 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
               matrix_solved = (ams->status[AZ_why] == AZ_normal);
             } else {
               GOMA_EH(GOMA_ERROR, "Sorry, only Epetra matrix formats are currently supported with the AztecOO solver suite\n");
+            }
+            break;
+          case STRATIMIKOS:
+            if ( strcmp( Matrix_Format,"epetra" ) == 0 ) {
+              int iterations;
+              int err = stratimikos_solve(ams,  &wAC[iAC][0], &bAC[iAC][0], &iterations, Stratimikos_File, pg->imtrx);
+              GOMA_EH(err, "Error in stratimikos solve");
+              if (iterations == -1) {
+                strcpy(stringer, "err");
+              } else {
+                aztec_stringer(AZ_normal, iterations, &stringer_AC[0]);
+              }
+            } else {
+              GOMA_EH(GOMA_ERROR, "Sorry, only Epetra matrix formats are currently supported with the Stratimikos interface\n");
             }
             break;
 	  default:
