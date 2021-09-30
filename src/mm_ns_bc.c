@@ -21,10 +21,11 @@
 
 #include "mm_ns_bc.h"
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include <math.h>
+#include <mm_fill_stabilization.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 /* GOMA include files */
 #include "el_elm.h"
@@ -8489,6 +8490,7 @@ PSPG_consistency_bc (double *func,
   dbl rho;
   int pspg_local = 0;
   int pspg_global = 0;
+  int pspg_shakib = 0;
   dbl tau_pspg = 0;
   dbl d_tau_pspg_dv[DIM][MDE];
   dbl d_tau_pspg_dX[DIM][MDE];
@@ -8531,6 +8533,12 @@ PSPG_consistency_bc (double *func,
       pspg_global = FALSE;
       pspg_local = TRUE;
     }
+  else if(PSPG == 3)
+  {
+    pspg_global = FALSE;
+    pspg_local = FALSE;
+    pspg_shakib = TRUE;
+  }
   else
     {
       return;
@@ -8638,9 +8646,76 @@ PSPG_consistency_bc (double *func,
 		}
 	    }
 	}
+    } else if (pspg_shakib) {
+
+      for (a = 0; a < VIM; a++) {
+        for (b = 0; b < VIM; b++) {
+          gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+        }
+      }
+
+      mu = viscosity(gn, gamma, d_mu);
+
+      dbl mup[MAX_MODES];
+      VISCOSITY_DEPENDENCE_STRUCT d_mup[MAX_MODES]; /* viscosity dependence */
+      if (pd->gv[POLYMER_STRESS11]) {
+        for (int mode = 0; mode < vn->modes; mode++) {
+          mup[mode] = viscosity(ve[mode]->gn, gamma, &d_mup[mode]);
+        }
+      }
+
+      dbl G[DIM][DIM];
+      get_metric_tensor(bf[pd->ShapeVar]->B, pd->Num_Dim, ei[pg->imtrx]->ielem_type, G);
+
+      dbl tau_time = 0;
+      // time term
+      if (pd->TimeIntegration != STEADY) {
+        tau_time += 4 * rho * rho / (dt * dt);
+      }
+
+      // advection
+      dbl tau_adv = 0;
+      for (int i = 0; i < dim; i++) {
+        for (int j = 0; j < dim; j++) {
+          tau_adv += rho * rho * fv->v[i] * G[i][j] * fv->v[j];
+        }
+      }
+
+      // diffusion
+      dbl tau_diff = 0;
+      dbl mu_total = mu;
+      for (int mode = 0; mode < vn->modes; mode++) {
+        mu_total += mup[mode];
+      }
+      dbl coeff = 12 * (mu_total * mu_total);
+      for (int i = 0; i < dim; i++) {
+        for (int j = 0; j < dim; j++) {
+          tau_diff += coeff * G[i][j] * G[i][j];
+        }
+      }
+
+      tau_pspg = PS_scaling / sqrt(tau_time + tau_adv + tau_diff);
+
+      // d/dx 1/sqrt(f(x)) => - f'(x) / (2 * f(x)^(3/2))
+      if (pd->v[pg->imtrx][VELOCITY1]) {
+        for (b = 0; b < dim; b++) {
+          var = VELOCITY1 + b;
+          if (pd->v[pg->imtrx][var]) {
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              dbl tau_adv_dv = 0;
+              for (int a = 0; a < dim; a++) {
+                tau_adv_dv += rho * rho * bf[var]->phi[j] * G[b][a] * fv->v[a];
+                tau_adv_dv += rho * rho * bf[var]->phi[j] * G[a][b] * fv->v[a];
+              }
+
+              d_tau_pspg_dv[b][j] = -rho * tau_pspg * tau_pspg * tau_pspg * tau_adv_dv;
+            }
+          }
+        }
+      }
     }
-  
-  /* load up shearrate tensor based on velocity */
+
+    /* load up shearrate tensor based on velocity */
   for ( a=0; a<VIM; a++)
     {
       for ( b=0; b<VIM; b++)
@@ -8648,7 +8723,7 @@ PSPG_consistency_bc (double *func,
 	  gamma[a][b] = fv->grad_v[a][b] +fv->grad_v[b][a];
 	}
     }
-  
+
   /* get viscosity for velocity second derivative/diffusion term in PSPG stuff */
   mu = viscosity(gn, gamma, d_mu);
 
@@ -8665,7 +8740,7 @@ PSPG_consistency_bc (double *func,
       div_s[p] = 0.;
     }
   
-  if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
+  if ( pd->gv[POLYMER_STRESS11] )
     {
       for ( p=0; p<WIM; p++)
 	{
@@ -8677,7 +8752,7 @@ PSPG_consistency_bc (double *func,
     }
 
 
-  if ( pd->v[pg->imtrx][VELOCITY_GRADIENT11] )
+  if ( pd->gv[VELOCITY_GRADIENT11] )
     {
       for ( p=0; p<dim; p++)
 	{

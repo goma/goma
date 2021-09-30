@@ -606,7 +606,7 @@ int calc_pspg(dbl pspg[DIM],
     return 0;
   }
 
-  if (pd->v[pg->imtrx][POLYMER_STRESS11]) {
+  if (pd->gv[POLYMER_STRESS11]) {
     stress_eqn_pointer(v_s);
 
     v_g[0][0] = VELOCITY_GRADIENT11;
@@ -719,6 +719,14 @@ int calc_pspg(dbl pspg[DIM],
 
     mu = viscosity(gn, gamma, d_mu);
 
+    dbl mup[MAX_MODES];
+    VISCOSITY_DEPENDENCE_STRUCT d_mup[MAX_MODES];  /* viscosity dependence */
+    if (pd->gv[POLYMER_STRESS11]) {
+      for (int mode = 0; mode < vn->modes; mode++) {
+        mup[mode] = viscosity(ve[mode]->gn, gamma, &d_mup[mode]);
+      }
+    }
+
     dbl G[DIM][DIM];
     get_metric_tensor(bf[pd->ShapeVar]->B, pd->Num_Dim, ei[pg->imtrx]->ielem_type, G);
 
@@ -738,7 +746,11 @@ int calc_pspg(dbl pspg[DIM],
 
     // diffusion
     dbl tau_diff = 0;
-    dbl coeff = 12 * (mu * mu);
+    dbl mu_total = mu;
+    for (int mode = 0; mode < vn->modes; mode++) {
+      mu_total += mup[mode];
+    }
+    dbl coeff = 12 * (mu_total * mu_total);
     for (int i = 0; i < dim; i++) {
       for (int j = 0; j < dim; j++) {
         tau_diff += coeff * G[i][j] * G[i][j];
