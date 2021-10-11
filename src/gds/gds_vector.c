@@ -11,7 +11,7 @@ static const size_t double_size = sizeof(double);
 
 void gds_print_vector(const gds_vector *v) {
   printf("[");
-  for (int i = 0; i < v->size; i++) {
+  for (size_t i = 0; i < v->size; i++) {
     printf("%g", v->data[i]);
     if (i == (v->size -1)) {
       printf("]\n");

@@ -2719,8 +2719,8 @@ void shifted_linear_solver_conwrap(double *x, double *y,
       if (strcmp(Matrix_Format, "msr"))
 	GOMA_EH(GOMA_ERROR,"ERROR: lu solver needs msr matrix format");
 
-        dcopy1(NumUnknowns[pg->imtrx], x, y);
-        lu(NumUnknowns[pg->imtrx], NumExtUnknowns[pg->imtrx], NZeros, a, ija, y, 2);
+      dcopy1(NumUnknowns[pg->imtrx], x, y);
+      lu(NumUnknowns[pg->imtrx], NumExtUnknowns[pg->imtrx], NZeros, a, ija, y, 2);
       first_linear_solver_call = FALSE;
       /* 
        * Note that sl_lu has static variables to keep track of

@@ -466,7 +466,7 @@ elem_info(const int info,
       answer = 4;
       break;
     case NQUAD:                   /* number of quadrature points */
-      answer = 5;
+      answer = 4;
       break;
     case NDIM:                    /* number of physical dimensions */
       answer = 3;
