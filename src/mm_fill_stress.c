@@ -3236,6 +3236,11 @@ assemble_stress_log_conf_transient(dbl tt,
       supg = vn->wt_func;
     }
 
+  const bool saramitoEnabled = (vn->ConstitutiveEquation == SARAMITO_OLDROYDB ||
+                                vn->ConstitutiveEquation == SARAMITO_PTT      ||
+                                vn->ConstitutiveEquation == SARAMITO_GIESEKUS);
+
+  dbl saramitoCoeff = 1.;
 
   SUPG_terms supg_terms;
   if(supg!=0.0)
@@ -3296,6 +3301,21 @@ assemble_stress_log_conf_transient(dbl tt,
 #else
       compute_exp_s(fv_old->S[mode], exp_s, eig_values, R1);
 #endif
+
+    dbl tau[DIM][DIM] = {{0.0}};
+    if(saramitoEnabled == TRUE)
+      {
+        for (int i = 0; i < VIM; i++) {
+          for (int j = 0; j < VIM; j++) {
+            tau[i][j] = mup/lambda * (exp_s[i][j] - delta(i,j));
+          }
+        }
+        saramitoCoeff = compute_saramito_model_terms(tau, ve[mode]->gn->tau_y, ve[mode]->gn->fexp, NULL);
+      }
+      else
+      {
+        saramitoCoeff = 1.;
+      }
 
       /* Check to make sure eigenvalues are positive (negative eigenvalues will not
          work for log-conformation formulation). These eigenvalues are for the
@@ -3411,7 +3431,7 @@ assemble_stress_log_conf_transient(dbl tt,
 	        }
               if ( a == b )
                 {
-                  source_term1[a][b] += Z * (1.0 - D[a][a]) /lambda;
+                  source_term1[a][b] += saramitoCoeff * Z * (1.0 - D[a][a]) /lambda;
 		  if(DOUBLE_NONZERO(alpha))
                     {
                       source_term1[a][b] += alpha*(2.0 * D[a][a] - 1.0 - D_dot_D[a][a])/lambda;
