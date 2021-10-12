@@ -880,6 +880,7 @@ struct Uniform_Problem_Description {
   int matrix_index[MAX_VARIABLE_TYPES];
   int petsc_solve_post_proc;
   void *petsc_post_proc_data;
+  int devss_traceless_gradient;
 };
 typedef struct Uniform_Problem_Description UPD_STRUCT;
 /*____________________________________________________________________________*/

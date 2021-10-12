@@ -4642,13 +4642,20 @@ assemble_gradient(dbl tt,	/* parameter to vary time integration from
 		  wt_func = bf[eqn]->phi[i];   /* add Petrov-Galerkin terms as necessary */
 		  
 		  advection = 0.;
-		  
-		  if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
-		    {
-		      advection -= grad_v[a][b];
-		      advection *= wt_func * det_J * wt * h3;
-		      advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
-		    }
+
+                  if (upd->devss_traceless_gradient) {
+                    if ( pd->e[pg->imtrx][eqn] & T_ADVECTION) {
+                      advection -= grad_v[a][b] - fv->div_v*delta(a,b)/((dbl) VIM);
+                      advection *= wt_func * det_J * wt * h3;
+                      advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+                    }
+                  } else {
+                    if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
+                      advection -= grad_v[a][b];
+                      advection *= wt_func * det_J * wt * h3;
+                      advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+                    }
+                  }
 		  
 		  /*
 		   * Source term...

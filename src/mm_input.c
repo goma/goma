@@ -7058,6 +7058,31 @@ rd_solver_specs(FILE *ifp,
       ECHO("(PSPG Advection Correction = no) (default)", echo_file);
     }
 
+  iread = look_for_optional(ifp, "DEVSS Traceless Gradient", input, '=');
+  if (iread == 1)
+  {
+    (void) read_string(ifp, input, '\n');
+    strip(input);
+    if (strcmp(input,"no") == 0 || strcmp(input,"false") == 0)
+    {
+      upd->devss_traceless_gradient = false;
+    }
+    else if(strcmp(input,"yes") == 0 || strcmp(input,"true") == 0)
+    {
+      upd->devss_traceless_gradient = true;
+    }
+    else
+    {
+      GOMA_EH( -1, "invalid choice: DEVSS Traceless Gradient, yes (true) or no (false)");
+    }
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "DEVSS Traceless Gradient", input); ECHO(echo_string,echo_file);
+  }
+  else
+  {
+    upd->devss_traceless_gradient = false;
+    ECHO("(DEVSS Traceless Gradient = no) (default)", echo_file);
+  }
+
   iread = look_for_optional(ifp, "Continuity Stabilization", input, '=');
   if (iread == 1)
     {
