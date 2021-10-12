@@ -4708,15 +4708,28 @@ assemble_gradient(dbl tt,	/* parameter to vary time integration from
 			      phi_j = bf[var]->phi[j];
 			      
 			      advection = 0.;
-			      
-			      if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
-				{
-				  advection -= bf[var]->grad_phi_e[j][p][a][b];
-				  advection *= wt_func * det_J * wt *h3;
-				  advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
-				  
-				}
-			      
+
+                              if (upd->devss_traceless_gradient) {
+                                dbl div_phi_j_e_p = 0.;
+                                for ( int b=0; b<VIM; b++)
+                                {
+                                  div_phi_j_e_p += bf[var]->grad_phi_e[j][p] [b][b];
+                                }
+                                if ( pd->e[pg->imtrx][eqn] & T_ADVECTION) {
+                                  advection -= bf[var]->grad_phi_e[j][p][a][b] - div_phi_j_e_p*delta(a,b)/((dbl) VIM);
+                                  advection *= wt_func * det_J * wt * h3;
+                                  advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+                                }
+                              } else {
+                                if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
+                                {
+                                  advection -= bf[var]->grad_phi_e[j][p][a][b];
+                                  advection *= wt_func * det_J * wt *h3;
+                                  advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+
+                                }
+                              }
+
 			      source    = 0.;
 			      
 			      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=

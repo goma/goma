@@ -833,13 +833,21 @@ int calc_pspg(dbl pspg[DIM],
               (vn->evssModel == LOG_CONF_TRANSIENT_GRADV || vn->evssModel == LOG_CONF_TRANSIENT)) {
             for (int i = 0; i < VIM; i++) {
               for (int j = 0; j < VIM; j++) {
-                s[k][i][j] = *esp_old->S[mode][i][j][k];
+                if (j >= i) {
+                  s[k][i][j] = *esp_old->S[mode][i][j][k];
+                } else {
+                  s[k][i][j] = *esp_old->S[mode][j][i][k];
+                }
               }
             }
           } else {
             for (int i = 0; i < VIM; i++) {
               for (int j = 0; j < VIM; j++) {
-                s[k][i][j] = *esp->S[mode][i][j][k];
+                if (j >= i) {
+                  s[k][i][j] = *esp->S[mode][i][j][k];
+                } else {
+                  s[k][i][j] = *esp->S[mode][j][i][k];
+                }
               }
             }
           }
