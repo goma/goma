@@ -3312,7 +3312,8 @@ static int calc_standard_fields(double **post_proc_vect,
   }
 
   if (LOG_CONF_MAP != -1 && pd->v[pg->imtrx][POLYMER_STRESS11] &&
-      (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV)) {
+      (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV ||
+       vn->evssModel == LOG_CONF_TRANSIENT || vn->evssModel == LOG_CONF_TRANSIENT_GRADV)) {
     index = 0;
     VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
     VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
@@ -10773,10 +10774,6 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
 	}
     }
 
-  if (LOG_CONF_MAP != -1 && Num_Var_In_Type[pg->imtrx][POLYMER_STRESS11])
-    {
-    }
-   
     if (LOG_CONF_MAP != -1 && Num_Var_In_Type[pg->imtrx][POLYMER_STRESS11])
     {
       LOG_CONF_MAP = index_post;

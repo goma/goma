@@ -812,10 +812,70 @@ int calc_pspg(dbl pspg[DIM],
 
   for (p = 0; p < WIM; p++)
     div_s[p] = 0.;
+
   if (pd->gv[POLYMER_STRESS11]) {
-    for (p = 0; p < WIM; p++) {
+    if (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV ||
+        vn->evssModel == LOG_CONF_TRANSIENT || vn->evssModel == LOG_CONF_TRANSIENT_GRADV) {
       for (mode = 0; mode < vn->modes; mode++) {
-        div_s[p] += fv->div_S[mode][p];
+        dbl lambda = 0.0;
+        if (ve[mode]->time_constModel == CONSTANT) {
+          lambda = ve[mode]->time_const;
+        }
+        dbl mup = viscosity(ve[mode]->gn, gamma, NULL);
+        int dofs = ei[upd->matrix_index[v_s[mode][0][0]]];
+        dbl grad_S[DIM][DIM][DIM] = {{{0.0}}};
+        dbl s[MDE][DIM][DIM];
+        dbl exp_s[MDE][DIM][DIM] = {{{0.0}}};
+        dbl eig_values[DIM];
+        dbl R[DIM][DIM];
+        for (int k = 0; k < dofs; k++) {
+          if (pg->imtrx == upd->matrix_index[POLYMER_STRESS11] &&
+              (vn->evssModel == LOG_CONF_TRANSIENT_GRADV || vn->evssModel == LOG_CONF_TRANSIENT)) {
+            for (int i = 0; i < VIM; i++) {
+              for (int j = 0; j < VIM; j++) {
+                s[k][i][j] = *esp_old->S[mode][i][j][k];
+              }
+            }
+          } else {
+            for (int i = 0; i < VIM; i++) {
+              for (int j = 0; j < VIM; j++) {
+                s[k][i][j] = *esp->S[mode][i][j][k];
+              }
+            }
+          }
+          compute_exp_s(s[k], exp_s[k], eig_values, R);
+        }
+        for (int p = 0; p < VIM; p++) {
+          for (int q = 0; q < VIM; q++) {
+            for (int r = 0; r < VIM; r++) {
+              grad_S[r][p][q] = 0.;
+              for (int i = 0; i < dofs; i++) {
+                if (p <= q) {
+                  grad_S[r][p][q] += exp_s[i][p][q] * bf[POLYMER_STRESS11]->grad_phi[i][r];
+                } else {
+                  grad_S[r][p][q] += exp_s[i][q][p] * bf[POLYMER_STRESS11]->grad_phi[i][r];
+                }
+              }
+            }
+          }
+        }
+        dbl div_exp_s[DIM];
+        for (int r = 0; r < dim; r++) {
+          div_exp_s[r] = 0.0;
+
+          for (int q = 0; q < dim; q++) {
+            div_exp_s[r] += grad_S[q][q][r];
+          }
+        }
+        for (p = 0; p < WIM; p++) {
+          div_s[p] += (mup / lambda) * div_exp_s[p];
+        }
+      }
+    } else {
+      for (p = 0; p < WIM; p++) {
+        for (mode = 0; mode < vn->modes; mode++) {
+          div_s[p] += fv->div_S[mode][p];
+        }
       }
     }
   }
@@ -833,7 +893,7 @@ int calc_pspg(dbl pspg[DIM],
       cr->MassFluxModel == HYDRODYNAMIC_QTENSOR)
     particle_stress(tau_p, d_tau_p_dv, d_tau_p_dvd, d_tau_p_dy, d_tau_p_dmesh, d_tau_p_dp, w0);
 
-  if (pd->gv[VELOCITY_GRADIENT11] && pd->gv[POLYMER_STRESS11]) {
+  if (pd->gv[VELOCITY_GRADIENT11]) {
     for (p = 0; p < WIM; p++) {
       div_G[p] = fv->div_G[p];
     }

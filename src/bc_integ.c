@@ -1156,6 +1156,10 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
             {
               stress_no_v_dot_gradS_logc(func_stress, d_func_stress, delta_t, theta);
             }
+          else if (vn->evssModel == LOG_CONF_TRANSIENT || vn->evssModel == LOG_CONF_TRANSIENT_GRADV)
+            {
+              stress_no_v_dot_gradS_logc_transient(func_stress, d_func_stress, delta_t, theta);
+            }
           else
             {
               stress_no_v_dot_gradS(func_stress, d_func_stress, delta_t, theta);

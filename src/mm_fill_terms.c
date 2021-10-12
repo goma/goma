@@ -2902,7 +2902,8 @@ assemble_momentum(dbl time,       /* current time */
   /*
    * Calculate the momentum stress tensor at the current gauss point
    */
-  if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_GRADV)
+  if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_GRADV || vn->evssModel == LOG_CONF_TRANSIENT
+		  || vn->evssModel == LOG_CONF_TRANSIENT_GRADV)
     {
       fluid_stress_conf(Pi, d_Pi);
     }
@@ -27114,7 +27115,8 @@ assemble_p_source ( double pressure, const int bcflag )
 	{
 	 if (!af->Assemble_Jacobian) d_Pi = NULL; 
   		/* compute stress tensor and its derivatives */
-           if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_GRADV)
+          if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_GRADV || vn->evssModel == LOG_CONF_TRANSIENT
+		  || vn->evssModel == LOG_CONF_TRANSIENT_GRADV)
              {
                fluid_stress_conf(Pi, d_Pi);
              }
@@ -28476,7 +28478,8 @@ assemble_uvw_source ( int eqn, double val )
   else
     {
       /* compute stress tensor and its derivatives */
-      if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_GRADV)
+      if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_GRADV || vn->evssModel == LOG_CONF_TRANSIENT
+		  || vn->evssModel == LOG_CONF_TRANSIENT_GRADV)
         {
           fluid_stress_conf(Pi, d_Pi);
         }
@@ -29477,7 +29480,8 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
   /*
    * Stress tensor, but don't need dependencies
    */
-  if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_GRADV)
+  if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_GRADV || vn->evssModel == LOG_CONF_TRANSIENT
+		  || vn->evssModel == LOG_CONF_TRANSIENT_GRADV)
     {
       fluid_stress_conf(Pi, NULL);
     }
@@ -31429,6 +31433,26 @@ fluid_stress_conf( double Pi[DIM][DIM],
    *                                   -----
    *                                   d x_a
    */
+  double Heaviside = 1;
+  if (ls != NULL && ls->ghost_stress)
+    {
+      load_lsi(ls->Length_Scale);
+      switch(ls->ghost_stress)
+        {
+        case LS_OFF:
+          Heaviside = 1;
+          break;
+        case LS_POSITIVE:
+          Heaviside = lsi->H;
+          break;
+        case LS_NEGATIVE:
+          Heaviside = 1 - lsi->H;
+          break;
+        default:
+          GOMA_EH(GOMA_ERROR, "Unknown Level Set Ghost Stress value");
+          break;
+        }
+    }
 
   for(a=0; a<VIM; a++)
     {
@@ -31461,11 +31485,23 @@ fluid_stress_conf( double Pi[DIM][DIM],
     }
 
   for (mode = 0; mode < vn->modes; mode++) {
+    if (vn->evssModel == LOG_CONF_TRANSIENT || vn->evssModel == LOG_CONF_TRANSIENT_GRADV) {
 #ifdef ANALEIG_PLEASE
-    analytical_exp_s(fv->S[mode], exp_s[mode], eig_values, R1, d_exp_s_ds[mode]);
+	    analytical_exp_s(fv->S[mode], exp_s[mode], eig_values, R1, d_exp_s_ds[mode]);
 #else
-    compute_exp_s(fv->S[mode], exp_s[mode], eig_values, R1);
+      if (pg->imtrx == upd->matrix_index[POLYMER_STRESS11]) {
+        compute_exp_s(fv_old->S[mode], exp_s[mode], eig_values, R1);
+      } else {
+        compute_exp_s(fv->S[mode], exp_s[mode], eig_values, R1);
+      }
 #endif
+    } else {
+#ifdef ANALEIG_PLEASE
+	    analytical_exp_s(fv_old->S[mode], exp_s[mode], eig_values, R1, d_exp_s_ds[mode]);
+#else
+      compute_exp_s(fv->S[mode], exp_s[mode], eig_values, R1);
+#endif
+    }
   }
 
 
@@ -31509,7 +31545,7 @@ fluid_stress_conf( double Pi[DIM][DIM],
         {
           Pi[a][b] = -P*(double)delta(a,b) + mus*gamma[a][b] - tau_p[a][b];
 	  
-	  if(pd->v[pg->imtrx][POLYMER_STRESS11])
+	  if(pd->gv[POLYMER_STRESS11])
 	    {
 	      for(mode=0; mode<vn->modes; mode++)
 		{
@@ -31522,10 +31558,10 @@ fluid_stress_conf( double Pi[DIM][DIM],
 		      lambda = ve[mode]->time_const;
 		    }
 
-		  Pi[a][b] += mup*(gamma[a][b]-gamma_cont[a][b]);
+		  Pi[a][b] += Heaviside * mup*(gamma[a][b]-gamma_cont[a][b]);
 
 		  // PolymerStress contribution
-		  Pi[a][b] += mup/lambda*(exp_s[mode][a][b]-(double)delta(a,b));
+		  Pi[a][b] += Heaviside * mup/lambda*(exp_s[mode][a][b]-(double)delta(a,b));
 		}
             }
         }
@@ -31555,9 +31591,9 @@ fluid_stress_conf( double Pi[DIM][DIM],
 			    {
 			      lambda = ve[mode]->time_const;
 			    }
-			  d_Pi->T[p][q][j] += d_mup->T[j]*(gamma[p][q]-gamma_cont[p][q]);
+			  d_Pi->T[p][q][j] += Heaviside * d_mup->T[j]*(gamma[p][q]-gamma_cont[p][q]);
 			  // Log-conformation tensor stress
-			  d_Pi->T[p][q][j] += d_mup->T[j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
+			  d_Pi->T[p][q][j] += Heaviside * d_mup->T[j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
 			}		      
 		    }
 		}
@@ -31730,7 +31766,7 @@ fluid_stress_conf( double Pi[DIM][DIM],
                       d_Pi->v[p][q][b][j] += mus*p_grad_phi_e_j_b_q_p;
 		      d_Pi->v[p][q][b][j] += d_mus->v[b][j]*gamma[p][q];
 		      d_Pi->v[p][q][b][j] -= d_tau_p_dv[p][q][b][j];
-		      if(pd->v[pg->imtrx][POLYMER_STRESS11])
+		      if(pd->gv[POLYMER_STRESS11])
 			{
 			  for(mode=0; mode<vn->modes; mode++)
 			    {
@@ -31743,15 +31779,15 @@ fluid_stress_conf( double Pi[DIM][DIM],
 				  lambda = ve[mode]->time_const;
 				}
                       if(pd->CoordinateSystem != CYLINDRICAL) {
-			      d_Pi->v[p][q][b][j] += mup*bf[var+q]->grad_phi_e[j][b][p][q];
-			      d_Pi->v[p][q][b][j] += mup*bf[var+p]->grad_phi_e[j][b][q][p];
+			      d_Pi->v[p][q][b][j] += Heaviside * mup*bf[var+q]->grad_phi_e[j][b][p][q];
+			      d_Pi->v[p][q][b][j] += Heaviside * mup*bf[var+p]->grad_phi_e[j][b][q][p];
                       } else {
-			      d_Pi->v[p][q][b][j] += mup*bf[var]->grad_phi_e[j][b][p][q];
-			      d_Pi->v[p][q][b][j] += mup*bf[var]->grad_phi_e[j][b][q][p];
+			      d_Pi->v[p][q][b][j] += Heaviside * mup*bf[var]->grad_phi_e[j][b][p][q];
+			      d_Pi->v[p][q][b][j] += Heaviside * mup*bf[var]->grad_phi_e[j][b][q][p];
                       }
-			      d_Pi->v[p][q][b][j] += d_mup->v[b][j]*(gamma[p][q]-gamma_cont[p][q]);
+			      d_Pi->v[p][q][b][j] += Heaviside * d_mup->v[b][j]*(gamma[p][q]-gamma_cont[p][q]);
 			      // Log-conformation tensor stress
-			      d_Pi->v[p][q][b][j] += d_mup->v[b][j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
+			      d_Pi->v[p][q][b][j] += Heaviside * d_mup->v[b][j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
 			    }		      
 			}
 		    }
@@ -31854,11 +31890,13 @@ fluid_stress_conf( double Pi[DIM][DIM],
                               d_Pi->S[p][q][mode][b][c][j] = 0.;
                               /* Note: We use b <= c below to be consistent with the symmetry of the stress
                                  tensor and to avoid double contributions to the Jacobian in assemble_momentum */
-                              if ( b <= c )
-                                {
-                                  d_Pi->S[p][q][mode][b][c][j] =
-                                    mup/lambda*d_exp_s_ds[mode][p][q][b][c] * bf[var]->phi[j];
-                                }
+                              if (!(vn->evssModel == LOG_CONF_TRANSIENT || vn->evssModel == LOG_CONF_TRANSIENT_GRADV)) {
+                                if ( b <= c )
+                                  {
+                                    d_Pi->S[p][q][mode][b][c][j] =
+                                      mup/lambda*d_exp_s_ds[mode][p][q][b][c] * bf[var]->phi[j];
+                                  }
+			      }
                             }
                         }
                     }
