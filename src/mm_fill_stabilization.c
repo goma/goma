@@ -822,7 +822,7 @@ int calc_pspg(dbl pspg[DIM],
           lambda = ve[mode]->time_const;
         }
         dbl mup = viscosity(ve[mode]->gn, gamma, NULL);
-        int dofs = ei[upd->matrix_index[v_s[mode][0][0]]];
+        int dofs = ei[upd->matrix_index[v_s[mode][0][0]]]->dof[v_s[mode][0][0]];
         dbl grad_S[DIM][DIM][DIM] = {{{0.0}}};
         dbl s[MDE][DIM][DIM];
         dbl exp_s[MDE][DIM][DIM] = {{{0.0}}};

@@ -3156,7 +3156,6 @@ assemble_stress_log_conf_transient(dbl tt,
   dbl trace=0.0; 
 
   //SUPG terms
-  dbl h_elem=0;
   dbl supg=0;
 
   status = 0;

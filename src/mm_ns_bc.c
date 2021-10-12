@@ -8471,7 +8471,6 @@ stress_no_v_dot_gradS_logc_transient(double func[MAX_MODES][6],
   dbl grad_v[DIM][DIM];    /* Velocity gradient based on velocity - discontinuous across element */
   dbl gamma[DIM][DIM];     /* Shear-rate tensor based on velocity */
 
-  dbl s[DIM][DIM];         /* stress tensor (log-conformation tensor) */
   dbl exp_s[DIM][DIM];  // Exponential of log_conf
   dbl trace = 0.0;         /* trace of the stress tensor */
   dbl s_dot[DIM][DIM];     /* stress tensor from last time step */
@@ -8597,7 +8596,6 @@ stress_no_v_dot_gradS_logc_transient(double func[MAX_MODES][6],
        */
       for (a = 0; a < VIM; a++) {
           for (b = 0; b < VIM; b++) {
-               s[a][b] = fv_old->S[mode][a][b];
                if (pd->TimeIntegration != STEADY)  {
                   s_dot[a][b] = fv_dot->S[mode][a][b];
                } else {
