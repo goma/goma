@@ -2766,7 +2766,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       else 
 	{
 	  vn_glob[mn]->wt_func =0.;
-	  SPF(es,"\t(%s = %s %g)", search_string, "CONSTANT", vn_glob[mn]->wt_func);
+          SPF(es,"\t(%s = %s %g)", search_string, "CONSTANT", vn_glob[mn]->wt_func);
 	}
 
       strcpy(search_string,"Polymer Shift Function");

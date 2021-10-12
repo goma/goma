@@ -8619,6 +8619,12 @@ stress_no_v_dot_gradS_logc_transient(double func[MAX_MODES][6],
         {
           lambda = mup/ve[mode]->time_const;
         }
+       const bool saramitoEnabled = (vn->ConstitutiveEquation == SARAMITO_OLDROYDB ||
+                                     vn->ConstitutiveEquation == SARAMITO_PTT      ||
+                                     vn->ConstitutiveEquation == SARAMITO_GIESEKUS);
+
+       dbl saramitoCoeff = 1.;
+
 
 #ifdef ANALEIG_PLEASE
           analytical_exp_s(fv_old->S[mode], exp_s, eig_values, R1, NULL); 
@@ -8676,7 +8682,22 @@ stress_no_v_dot_gradS_logc_transient(double func[MAX_MODES][6],
                   M1[i][j] += Rt_dot_gradv[i][w] * R1[w][j];
                 }
             }
-        }  
+        }
+
+    dbl tau[DIM][DIM] = {{0.0}};
+    if(saramitoEnabled == TRUE)
+    {
+      for (int i = 0; i < VIM; i++) {
+        for (int j = 0; j < VIM; j++) {
+          tau[i][j] = mup/lambda * (exp_s[i][j] - delta(i,j));
+        }
+      }
+      saramitoCoeff = compute_saramito_model_terms(tau, ve[mode]->gn->tau_y, ve[mode]->gn->fexp, NULL);
+    }
+    else
+    {
+      saramitoCoeff = 1.;
+        }
 
       //Predetermine advective terms
       trace = eig_values[0]+eig_values[1]; 
@@ -8714,7 +8735,7 @@ stress_no_v_dot_gradS_logc_transient(double func[MAX_MODES][6],
 	        }
               if ( a == b )
                 {
-                  source_term1[a][b] += Z * (1.0 - D[a][a]) /lambda;
+                  source_term1[a][b] += saramitoCoeff * Z * (1.0 - D[a][a]) /lambda;
                   if(alpha != 0)
                     {
                       source_term1[a][b] += alpha*(2.0 * D[a][a] - 1.0 - D_dot_D[a][a])/lambda;
