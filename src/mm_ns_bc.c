@@ -3234,8 +3234,6 @@ fvelo_slip_bc(double func[MAX_PDIM],
   double d_betainv_dF[MDE];
   double sign;
   int tang_slip_only;
-  double *phi_j_vector;
-  double mass;
 #define PRESSURE_DEPENDENT_SLIP 0
 #if PRESSURE_DEPENDENT_SLIP
   double vslip_mag;
@@ -3256,14 +3254,6 @@ fvelo_slip_bc(double func[MAX_PDIM],
   vs[0] = vsx;
   vs[1] = vsy;
   vs[2] = vsz;
-
-  if( TimeIntegration == TRANSIENT && pd->e[pg->imtrx][R_MESH1] )
-    {
-      /* Add the mesh motion to the substrate velocity */
-      vs[0] += fv_dot->x[0];
-      vs[1] += fv_dot->x[1];
-      vs[2] += fv_dot->x[2];
-    }
 
   /* dependence of slip coefficient on pressure and magnitude of slip */
   d_betainv_dvslip_mag = 0.;
@@ -3332,13 +3322,6 @@ fvelo_slip_bc(double func[MAX_PDIM],
       vs[0] = factor*omega * ( fv->x[1] - X_0[1] );
       vs[1] = - factor*omega * ( fv->x[0] - X_0[0] );
       vs[2] = 0.;
-      if( TimeIntegration == TRANSIENT && pd->e[pg->imtrx][R_MESH1] )
-          {
-            /* Add the mesh motion to the substrate velocity */
-            vs[0] += fv_dot->x[0];
-            vs[1] += fv_dot->x[1];
-            vs[2] += fv_dot->x[2];
-          }
     } /* if: VELO_SLIP_ROT_BC */
   
   memset(vrel, 0, sizeof(double)*MAX_PDIM);
@@ -3663,28 +3646,7 @@ fprintf(stderr,"more %g %g %g %g\n",res,jac,betainv, dthick_dV);
 	  }
      }
 
-    if (TimeIntegration == TRANSIENT && pd->e[pg->imtrx][R_MESH1]) {
-      // Time derivative gets taken out for these two types, so we 
-      // must eliminate jac terms in these two cases
-      if (type != VELO_SLIP_ROT_BC  &&  type != VELO_SLIP_ROT_FILL_BC ) {
-	// Dependence on the mesh time derivatives
-	// Loop over the mesh vector
-	mass = (1.+2.*tt) / dt;
-	for (jvar = 0; jvar < ei[pg->imtrx]->ielem_dim; jvar++) {
-	  var = MESH_DISPLACEMENT1 + jvar;
-	  if (pd->v[pg->imtrx][var]) {
-	    // Get a pointer for the basis functions for mesh displacements
-	    phi_j_vector = bf[var]->phi;
-	    // Loop over the mesh unknowns
-	    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-	      phi_j = phi_j_vector[j];
-	      d_func[jvar][var][j] += betainv * mass * phi_j;
-	    }
-	  }
-	}
-      }
-    }
-  
+
     for (jvar=0; jvar<pd->Num_Dim; jvar++)
       {
 	var = PVELOCITY1 + jvar;
