@@ -106,8 +106,8 @@ endif()
 # Exodus
 find_package(SEACASExodus REQUIRED HINTS ${Trilinos_DIR}/../SEACASExodus)
 MESSAGE(STATUS "SEACASExodus_DIR = ${SEACASExodus_DIR}")
-find_package(SEACASChaco REQUIRED HINTS ${Trilinos_DIR}/../SEACASChaco)
-MESSAGE(STATUS "SEACASChaco_DIR = ${SEACASChaco_DIR}")
+#find_package(SEACASChaco REQUIRED HINTS ${Trilinos_DIR}/../SEACASChaco)
+#MESSAGE(STATUS "SEACASChaco_DIR = ${SEACASChaco_DIR}")
 
 # PETSC search
 # set root of location to find PETSc configuration
