@@ -3082,7 +3082,8 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  /* Should yield stress be a modal property? Let's assume not for now */
 	  dbl tau_y_val;
 	  dbl fexp_val;
-
+	  dbl nexp_val;
+	  
 	  strcpy(search_string, "Polymer Yield Stress");
 	  model_read = look_for_mat_prop(imp, search_string, 
 					 &(ConstitutiveEquation), 
@@ -3112,11 +3113,27 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	      fprintf(stderr,"%s\n",err_msg);
 	      exit(-1);
 	    }
+
+	  strcpy(search_string, "Saramito Power Law Exponent");
+	  model_read = look_for_mat_prop(imp, search_string, 
+					 &(ConstitutiveEquation), 
+					 &nexp_val,
+					 NO_USER, NULL,
+					 model_name, SCALAR_INPUT, &NO_SPECIES,es);
+
+	  if( model_read < 1 )
+	    {
+	      if( model_read == -1) SPF(err_msg,"%s card is missing.",search_string);
+	      if( model_read == -2) SPF(err_msg,"Only CONSTANT %s mode model supported.", search_string);
+	      fprintf(stderr,"%s\n",err_msg);
+	      exit(-1);
+	    }
 			       
 	  for(mm=0;mm<vn_glob[mn]->modes;mm++)
 	    {
 	      ve_glob[mn][mm]->gn->tau_y = tau_y_val;
 		  ve_glob[mn][mm]->gn->fexp = fexp_val;
+		  ve_glob[mn][mm]->gn->nexp = nexp_val;
 	    }
 	  ECHO(es,echo_file);
 	}

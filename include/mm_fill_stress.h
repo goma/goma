@@ -199,10 +199,12 @@ compute_d_exp_s_ds(dbl [DIM][DIM],                   //s - stress
                    dbl [DIM][DIM],                   // exp_s
                    dbl [DIM][DIM][DIM][DIM]);        // d_exp_s_ds
 
-dbl
-compute_saramito_model_terms(dbl [DIM][DIM],  // stress
-                             dbl,             // yield stress
-                             dbl,             // yield stress exponent
-                             SARAMITO_DEPENDENCE_STRUCT* ); // struct for sCoeff sensitvities
+void
+compute_saramito_model_terms(dbl*,                        // Saramito coefficient -- multiplies stress tensor
+                             SARAMITO_DEPENDENCE_STRUCT*, // struct for sCoeff sensitvities
+                             dbl*,                        // viscosity computed from nexp and deviatoric stress norm
+                             dbl [DIM][DIM],              // visosity sensitvities to stress tensor components
+                             const dbl [DIM][DIM],        // stress
+                             struct Generalized_Newtonian *gn_local );
 
 #endif /* GOMA_MM_FILL_STRESS_H */

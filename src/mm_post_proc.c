@@ -2508,7 +2508,8 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   if(SARAMITO_YIELD != -1 && pd->e[pg->imtrx][POLYMER_STRESS11]) 
   {  
     for (int mode = 0; mode < vn->modes; mode++) {
-      dbl coeff = compute_saramito_model_terms(fv->S[mode], ve[mode]->gn->tau_y, ve[mode]->gn->fexp, NULL);
+      dbl coeff;
+      compute_saramito_model_terms(&(coeff), NULL, &(mup), NULL, fv->S[mode], ve[mode]->gn);
       local_post[SARAMITO_YIELD + mode] = coeff;
       local_lumped[SARAMITO_YIELD + mode] = 1.;
     }
