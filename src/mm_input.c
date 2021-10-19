@@ -7880,7 +7880,8 @@ rd_eq_specs(FILE *ifp,
     retn = read_string(ifp, input, '\n');
     strip(input);
     pd_ptr->Species_Var_Type = species_type_str_to_int(input);
-    if (upd->Species_Var_Type == 0) upd->Species_Var_Type = pd_ptr->Species_Var_Type;
+//    if (upd->Species_Var_Type == 0) upd->Species_Var_Type = pd_ptr->Species_Var_Type;
+    upd->Species_Var_Type = pd_ptr->Species_Var_Type;
     SPF(echo_string,"%s = %s", "Default Material Species Type", input); ECHO(echo_string,echo_file);
   }
   

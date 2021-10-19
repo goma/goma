@@ -1954,18 +1954,19 @@ noahs_ark()
       ddd_add_member(n, mp_glob[i]->SBM_Lengths, MAX_CONC, MPI_DOUBLE);
       ddd_add_member(n, mp_glob[i]->NSCoeff, MAX_CONC, MPI_DOUBLE);
       ddd_add_member(n, mp_glob[i]->cur_diffusivity, MAX_CONC, MPI_DOUBLE);
+      ddd_add_member(n, mp_glob[i]->SettlingSpeed, MAX_CONC, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->q_diffusivity[0][0], MAX_CONC * DIM,
 		     MPI_DOUBLE);
 
       ddd_add_member(n, mp_glob[i]->latent_heat_fusion, MAX_CONC, MPI_DOUBLE);
       ddd_add_member(n, mp_glob[i]->latent_heat_vap, MAX_CONC, MPI_DOUBLE);
       ddd_add_member(n, mp_glob[i]->mass_flux, MAX_CONC, MPI_DOUBLE);
-      ddd_add_member(n, mp_glob[i]->mass_transfer_coefficient, MAX_CONC, 
+      ddd_add_member(n, mp_glob[i]->mass_transfer_coefficient, MAX_CONC,
 		     MPI_DOUBLE);
       ddd_add_member(n, mp_glob[i]->reference_concn, MAX_CONC, MPI_DOUBLE);
       ddd_add_member(n, mp_glob[i]->species_activity, MAX_CONC, MPI_DOUBLE);
       ddd_add_member(n, mp_glob[i]->species_source, MAX_CONC, MPI_DOUBLE);
-      ddd_add_member(n, mp_glob[i]->species_vol_expansion, MAX_CONC, 
+      ddd_add_member(n, mp_glob[i]->species_vol_expansion, MAX_CONC,
 		     MPI_DOUBLE);
       ddd_add_member(n, mp_glob[i]->vapor_pressure, MAX_CONC, MPI_DOUBLE);
       ddd_add_member(n, mp_glob[i]->AdvectiveScaling, MAX_CONC, MPI_DOUBLE);
@@ -1977,8 +1978,9 @@ noahs_ark()
       ddd_add_member(n, mp_ptr->PhaseID,                   MAX_CONC, MPI_INT);
       ddd_add_member(n, &mp_ptr->Species_Var_Type, 1, MPI_INT);
       ddd_add_member(n, mp_ptr->Volumetric_Dirichlet_Cond, MAX_CONC, MPI_INT);
- 
+
       ddd_add_member(n, mp_glob[i]->DiffusivityModel, MAX_CONC, MPI_INT);
+      ddd_add_member(n, mp_glob[i]->SettlingModel, MAX_CONC, MPI_INT);
       ddd_add_member(n, mp_glob[i]->LatentHeatFusionModel, MAX_CONC, MPI_INT);
       ddd_add_member(n, mp_glob[i]->LatentHeatVapModel, MAX_CONC, MPI_INT);
       ddd_add_member(n, mp_glob[i]->RefConcnModel,MAX_CONC, MPI_INT);
@@ -2021,8 +2023,8 @@ noahs_ark()
       ddd_add_member(n, mp_glob[i]->PorousLatentHeatVapModel,MAX_PMV, MPI_INT);
       ddd_add_member(n, mp_glob[i]->PorousLatentHeatFusionModel,MAX_PMV,MPI_INT);
       ddd_add_member(n, mp_glob[i]->PorousVaporPressureModel,MAX_PMV,MPI_INT);
-      ddd_add_member(n, &mp_glob[i]->PorousGasConstantsModel, 1 , MPI_INT); 
-      ddd_add_member(n, &mp_glob[i]->PorousSinkConstantsModel, 1 , MPI_INT); 
+      ddd_add_member(n, &mp_glob[i]->PorousGasConstantsModel, 1 , MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->PorousSinkConstantsModel, 1 , MPI_INT);
       ddd_add_member(n, mp_glob[i]->PorVolExpModel,MAX_PMV,MPI_INT);
       ddd_add_member(n, mp_glob[i]->PorousMolecularWeightModel,MAX_PMV,MPI_INT);
       /*
@@ -2043,8 +2045,9 @@ noahs_ark()
       ddd_add_member(n, mp_glob[i]->len_SBM_Lengths2, MAX_CONC, MPI_INT);
       ddd_add_member(n, mp_glob[i]->len_u_nscoeff, MAX_CONC, MPI_INT);
       ddd_add_member(n, mp_glob[i]->len_u_qdiffusivity, MAX_CONC, MPI_INT);
+      ddd_add_member(n, mp_glob[i]->len_u_settling, MAX_CONC, MPI_INT);
       ddd_add_member(n, mp_glob[i]->len_u_species_source, MAX_CONC, MPI_INT);
-      ddd_add_member(n, mp_glob[i]->len_u_species_vol_expansion, MAX_CONC, 
+      ddd_add_member(n, mp_glob[i]->len_u_species_vol_expansion, MAX_CONC,
 		     MPI_INT);
       ddd_add_member(n, mp_glob[i]->len_u_vapor_pressure, MAX_CONC, MPI_INT);
       ddd_add_member(n, mp_glob[i]->len_u_reference_concn, MAX_CONC, MPI_INT);
@@ -2054,42 +2057,42 @@ noahs_ark()
        */
 
       ddd_add_member(n, mp_glob[i]->len_u_porous_diffusivity,MAX_PMV, MPI_INT);
-      ddd_add_member(n, mp_glob[i]->len_u_porous_vapor_pressure,MAX_PMV,MPI_INT); 
-      ddd_add_member(n, &mp_glob[i]->len_u_porous_gas_constants, 1 , MPI_INT); 
+      ddd_add_member(n, mp_glob[i]->len_u_porous_vapor_pressure,MAX_PMV,MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->len_u_porous_gas_constants, 1 , MPI_INT);
 
-      ddd_add_member(n, &mp_glob[i]->len_u_porous_sink_constants, 1 , MPI_INT); 
+      ddd_add_member(n, &mp_glob[i]->len_u_porous_sink_constants, 1 , MPI_INT);
 
       ddd_add_member(n, mp_glob[i]->len_u_porous_vol_expansion,MAX_PMV,MPI_INT);
 
 
       /* Special material properties that are for the lubrication equation */
-      ddd_add_member(n, &mp_glob[i]->len_u_heightU_function_constants, 1 , MPI_INT);  
-      ddd_add_member(n, &mp_glob[i]->len_u_heightL_function_constants, 1 , MPI_INT); 
-      ddd_add_member(n, &mp_glob[i]->heightL_function_constants_tableid, 1, MPI_INT); 
-      ddd_add_member(n, &mp_glob[i]->len_u_veloU_function_constants, 1 , MPI_INT);  
-      ddd_add_member(n, &mp_glob[i]->len_u_veloL_function_constants, 1 , MPI_INT);  
-      ddd_add_member(n, &mp_glob[i]->len_u_dcaU_function_constants, 1 , MPI_INT);  
-      ddd_add_member(n, &mp_glob[i]->len_u_dcaL_function_constants, 1 , MPI_INT);  
-      ddd_add_member(n, &mp_glob[i]->len_lubsource, 1 , MPI_INT);  
-      ddd_add_member(n, &mp_glob[i]->len_lubmomsource, 1 , MPI_INT);  
+      ddd_add_member(n, &mp_glob[i]->len_u_heightU_function_constants, 1 , MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->len_u_heightL_function_constants, 1 , MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->heightL_function_constants_tableid, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->len_u_veloU_function_constants, 1 , MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->len_u_veloL_function_constants, 1 , MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->len_u_dcaU_function_constants, 1 , MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->len_u_dcaL_function_constants, 1 , MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->len_lubsource, 1 , MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->len_lubmomsource, 1 , MPI_INT);
 
-      /* Porous shell */ 
-      ddd_add_member(n, &mp_glob[i]->len_u_PorousShellClosedPorosity_function_constants, 1 , MPI_INT); 
-      ddd_add_member(n, &mp_glob[i]->len_u_PorousShellClosedRadius_function_constants, 1 , MPI_INT); 
-      ddd_add_member(n, &mp_glob[i]->len_u_PorousShellClosedHeight_function_constants, 1 , MPI_INT); 
-      ddd_add_member(n, &mp_glob[i]->len_u_PorousShellClosedP0_function_constants, 1 , MPI_INT); 
-      ddd_add_member(n, &mp_glob[i]->len_u_PorousShellPatm_function_constants, 1 , MPI_INT); 
-      ddd_add_member(n, &mp_glob[i]->len_u_PorousShellPref_function_constants, 1 , MPI_INT); 
-      ddd_add_member(n, &mp_glob[i]->len_u_PorousShellCrossKappa_function_constants, 1 , MPI_INT); 
-      ddd_add_member(n, &mp_glob[i]->len_u_PorousShellInitPorePres_function_constants, 1 , MPI_INT); 
-      ddd_add_member(n, &mp_glob[i]->len_u_PorousShellDiffusivity_function_constants, 1 , MPI_INT); 
-      ddd_add_member(n, &mp_glob[i]->len_u_PorousShellRT_function_constants, 1 , MPI_INT); 
-      ddd_add_member(n, &mp_glob[i]->len_u_PorousShellHenry_function_constants, 1 , MPI_INT); 
+      /* Porous shell */
+      ddd_add_member(n, &mp_glob[i]->len_u_PorousShellClosedPorosity_function_constants, 1 , MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->len_u_PorousShellClosedRadius_function_constants, 1 , MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->len_u_PorousShellClosedHeight_function_constants, 1 , MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->len_u_PorousShellClosedP0_function_constants, 1 , MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->len_u_PorousShellPatm_function_constants, 1 , MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->len_u_PorousShellPref_function_constants, 1 , MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->len_u_PorousShellCrossKappa_function_constants, 1 , MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->len_u_PorousShellInitPorePres_function_constants, 1 , MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->len_u_PorousShellDiffusivity_function_constants, 1 , MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->len_u_PorousShellRT_function_constants, 1 , MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->len_u_PorousShellHenry_function_constants, 1 , MPI_INT);
 
-      /* Thin film */ 
-      ddd_add_member(n, &mp_glob[i]->len_u_FilmEvap_function_constants, 1 , MPI_INT); 
-      ddd_add_member(n, &mp_glob[i]->len_u_DisjPress_function_constants, 1 , MPI_INT); 
-      ddd_add_member(n, &mp_glob[i]->len_u_DiffCoeff_function_constants, 1 , MPI_INT); 
+      /* Thin film */
+      ddd_add_member(n, &mp_glob[i]->len_u_FilmEvap_function_constants, 1 , MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->len_u_DisjPress_function_constants, 1 , MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->len_u_DiffCoeff_function_constants, 1 , MPI_INT);
 
 
       /*
@@ -2098,19 +2101,23 @@ noahs_ark()
        * variables.
        */
 
-      ddd_add_member(n, &mp_glob[i]->d_diffusivity[0][0], 
+      ddd_add_member(n, &mp_glob[i]->d_diffusivity[0][0],
 		     (MAX_CONC)*(MAX_VARIABLE_TYPES + MAX_CONC),
 		     MPI_DOUBLE);
 
-      ddd_add_member(n, &mp_glob[i]->d_latent_heat_fusion[0][0], 
+      ddd_add_member(n, &mp_glob[i]->d_settling[0][0],
 		     (MAX_CONC)*(MAX_VARIABLE_TYPES + MAX_CONC),
 		     MPI_DOUBLE);
 
-      ddd_add_member(n, &mp_glob[i]->d_latent_heat_vap[0][0], 
+      ddd_add_member(n, &mp_glob[i]->d_latent_heat_fusion[0][0],
 		     (MAX_CONC)*(MAX_VARIABLE_TYPES + MAX_CONC),
 		     MPI_DOUBLE);
 
-      ddd_add_member(n, &mp_glob[i]->d_mass_flux[0][0], 
+      ddd_add_member(n, &mp_glob[i]->d_latent_heat_vap[0][0],
+		     (MAX_CONC)*(MAX_VARIABLE_TYPES + MAX_CONC),
+		     MPI_DOUBLE);
+
+      ddd_add_member(n, &mp_glob[i]->d_mass_flux[0][0],
 		     (MAX_CONC)*(MAX_VARIABLE_TYPES + MAX_CONC),
 		     MPI_DOUBLE);
 
@@ -3087,9 +3094,9 @@ ark_landing()
           printf("P_%d: ark_landing assigning %d doubles for u_diff: species %4d: %x\n",
 		 ProcID, m->len_u_diffusivity[j], j,  m->u_diffusivity[j]);
 	  fflush(stdout);
-#endif	  
+#endif
 
-	  dalloc( m->len_u_gadiffusivity[j],  
+	  dalloc( m->len_u_gadiffusivity[j],
                   m->    u_gadiffusivity[j]);
 
 	  dalloc( m->len_u_cdiffusivity[j],
@@ -3099,19 +3106,22 @@ ark_landing()
 		  m->    u_mdiffusivity[j]);
 
 	  dalloc( m->len_u_fdiffusivity[j],
-		  m->    u_fdiffusivity[j]); 
+		  m->    u_fdiffusivity[j]);
 
 	  dalloc( m->len_u_gdiffusivity[j],
-		  m->    u_gdiffusivity[j]); 
+		  m->    u_gdiffusivity[j]);
 
 	  dalloc( m->len_SBM_Lengths2[j],
-		  m->    SBM_Lengths2[j]); 
-	  
+		  m->    SBM_Lengths2[j]);
+
 	  dalloc( m->len_u_nscoeff[j],
-		  m->    u_nscoeff[j]); 
-	  
+		  m->    u_nscoeff[j]);
+
 	  dalloc( m->len_u_qdiffusivity[j],
-		  m->    u_qdiffusivity[j]); 
+		  m->    u_qdiffusivity[j]);
+
+	  dalloc( m->len_u_settling[j],
+		  m->    u_settling[j]);
 
 	  dalloc( m->len_u_species_source[j],
 		  m->    u_species_source[j]);

@@ -121,7 +121,7 @@
 #define I_LAMB_MAG      43
 #define I_HELICITY      44
 #define I_Q_FCN         45
-
+#define I_TOTAL_MASS    46
 
 #ifdef _MM_POST_PROC_C
 struct Post_Processing_Flux_Names
@@ -208,6 +208,7 @@ VOL_NAME_STRUCT pp_vol_names[] =
   { "DISSIPATION",     I_DISSIP },
   { "JOULE",           I_JOULE },
   { "SPECIES_MASS",    I_SPECIES_MASS},
+  { "TOTAL_MASS",      I_TOTAL_MASS},
   { "HEAT_ENERGY",     I_HEAT_ENERGY },
   { "MOMENTUMX",       I_MOMX },
   { "MOMENTUMY",       I_MOMY },

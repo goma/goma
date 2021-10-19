@@ -92,12 +92,29 @@ PROTO((dbl *,			/* param - Body force.                       */
        int ));			/* gnn - -1 for gauss point, global node     *
 				 * number for node point                     */
 EXTERN int Diffusivity		/* mm_std_models.c                           */
-PROTO((void ));		
-      
+PROTO((void ));
+
 EXTERN int Free_Vol_Theory_Diffusivity /* mm_std_models.c                    */
 PROTO((int ,			/* species_no - current species number       */
        double *));		/* param - free volume params from mat file  */
-   
+
+EXTERN int sediment_compress_diffusivity /* mm_std_models.c                    */
+PROTO((int ,			/* species_no - current species number       */
+       double *));		/* param - sediment params from mat file  */
+
+EXTERN int Bruggemann_diffusivity /* mm_std_models.c                    */
+PROTO((int ,			/* species_no - current species number       */
+       double *));		/* param - params from mat file  */
+
+EXTERN int Bruggemann_free_volume_diffusivity /* mm_std_models.c                    */
+PROTO((int ,			/* species_no - current species number       */
+       double *));		/* param - params from mat file  */
+
+EXTERN int hydro_sediment_flux		/* mm_std_models.c                           */
+PROTO((struct Species_Conservation_Terms *, /* st                            */
+       int  ));			/* w - species number                        */
+
+
 EXTERN int hydro_flux		/* mm_std_models.c                           */
 PROTO((struct Species_Conservation_Terms *, /* st                            */
        int ,			/* w - species number                        */
