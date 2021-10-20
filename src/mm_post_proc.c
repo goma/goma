@@ -2509,7 +2509,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   {  
     for (int mode = 0; mode < vn->modes; mode++) {
       dbl coeff;
-      compute_saramito_model_terms(&(coeff), NULL, &(mup), NULL, fv->S[mode], ve[mode]->gn);
+      compute_saramito_model_terms(&coeff, NULL, fv->S[mode], ve[mode]->gn, TRUE);
       local_post[SARAMITO_YIELD + mode] = coeff;
       local_lumped[SARAMITO_YIELD + mode] = 1.;
     }
