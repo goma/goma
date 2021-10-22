@@ -7355,8 +7355,6 @@ stress_no_v_dot_gradS(double func[MAX_MODES][6],
   VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
   dbl d_mup_dv_pj;
 
-  dbl d_mup_d_s[DIM][DIM];
-
   dbl saramitoCoeff;
   SARAMITO_DEPENDENCE_STRUCT d_saramito_struct;
   SARAMITO_DEPENDENCE_STRUCT *d_saramito = &d_saramito_struct;
@@ -7519,7 +7517,6 @@ stress_no_v_dot_gradS(double func[MAX_MODES][6],
 	  for(int i=0; i<VIM; ++i){
 	    for(int j=0; j<VIM; ++j){
 	      d_saramito->s[i][j] = 0;
-        d_mup_d_s[i][j] = 0;
 	    }
 	  }
 	}
