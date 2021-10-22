@@ -1,0 +1,364 @@
+diff --git a/include/mm_fill_stress.h b/include/mm_fill_stress.h
+index 3229c57..d9241c4 100644
+--- a/include/mm_fill_stress.h
++++ b/include/mm_fill_stress.h
+@@ -199,12 +199,10 @@ compute_d_exp_s_ds(dbl [DIM][DIM],                   //s - stress
+                    dbl [DIM][DIM],                   // exp_s
+                    dbl [DIM][DIM][DIM][DIM]);        // d_exp_s_ds
+ 
+-void
+-compute_saramito_model_terms(dbl*,                        // Saramito coefficient -- multiplies stress tensor
+-                             SARAMITO_DEPENDENCE_STRUCT*, // struct for sCoeff sensitvities
+-                             dbl*,                        // viscosity computed from nexp and deviatoric stress norm
+-                             dbl [DIM][DIM],              // visosity sensitvities to stress tensor components
+-                             const dbl [DIM][DIM],        // stress
+-                             struct Generalized_Newtonian *gn_local );
++dbl
++compute_saramito_model_terms(dbl [DIM][DIM],  // stress
++                             dbl,             // yield stress
++                             dbl,             // yield stress exponent
++                             SARAMITO_DEPENDENCE_STRUCT* ); // struct for sCoeff sensitvities
+ 
+ #endif /* GOMA_MM_FILL_STRESS_H */
+diff --git a/src/mm_fill_stress.c b/src/mm_fill_stress.c
+index bfb7e19..1640744 100644
+--- a/src/mm_fill_stress.c
++++ b/src/mm_fill_stress.c
+@@ -1380,7 +1380,6 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
+   int err;
+   dbl alpha = 0;     /* This is the Geisekus mobility parameter */
+   dbl lambda=0;    /* polymer relaxation constant */
+-  dbl lambda0=0;   /* polymer relaxation constant value when mup = mup0 */
+   dbl d_lambda_dF[MDE];
+   double xi;
+   double d_xi_dF[MDE];
+@@ -1441,12 +1440,9 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
+ 
+   /* polymer viscosity and derivatives */
+   dbl mup;
+-  dbl mup0;
+   VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
+   VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
+ 
+-  dbl d_mup_d_s[DIM][DIM];
+-
+   SARAMITO_DEPENDENCE_STRUCT d_saramito_struct;
+   SARAMITO_DEPENDENCE_STRUCT *d_saramito = &d_saramito_struct;
+ 
+@@ -1673,13 +1669,10 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
+       
+       /* get polymer viscosity */
+       mup = viscosity(ve[mode]->gn, gamma, d_mup);
+-	  mup0 = ve[mode]->gn->mu0;
+ 
+       if(saramitoEnabled == TRUE)
+ 	{
+-    // This routine sets viscosity and its sensivity to stress in the case that nexp is nonzero.
+-    // The 'viscosity' routine must always be called so that all other sensitivities are set.
+-      compute_saramito_model_terms(&(saramitoCoeff), d_saramito, &(mup), d_mup_d_s, s, ve[mode]->gn);
++	  saramitoCoeff = compute_saramito_model_terms(s, ve[mode]->gn->tau_y, ve[mode]->gn->fexp, d_saramito);
+ 	}
+       else
+ 	{
+@@ -1689,7 +1682,6 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
+ 	  for(int i=0; i<VIM; ++i){
+ 	    for(int j=0; j<VIM; ++j){
+ 	      d_saramito->s[i][j] = 0;
+-          d_mup_d_s[i][j] = 0;
+ 	    }
+ 	  }
+ 	}
+@@ -1710,8 +1702,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
+       
+       /* get time constant */
+       if (ve[mode]->time_constModel == CONSTANT) {
+-	lambda0 = ve[mode]->time_const;
+-	lambda = lambda0*mup/mup0;
++	lambda = ve[mode]->time_const;
+       } else if (ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW) {
+ 	lambda = mup/ve[mode]->time_const;
+       } else if (ls != NULL && ve[mode]->time_constModel == VE_LEVEL_SET) {
+@@ -2575,16 +2566,13 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
+ 				      pvar = upd->vp[pg->imtrx][var];
+ 				      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+ 					{
+-					  const dbl d_lambda_d_s = lambda0/mup0*d_mup_d_s[p][q];
+-
+ 					  phi_j = bf[var]->phi[j];
+ 					  mass = 0.;
+ 					  if ( pd->TimeIntegration != STEADY )
+ 					    {
+ 					      if ( pd->e[pg->imtrx][eqn] & T_MASS )
+ 						{
+-						  mass = (1.+2.*tt) * phi_j/dt * (double)delta(a,p) * (double)delta(b,q)
+-						       + d_lambda_d_s*s_dot[a][b]; 
++						  mass = (1.+2.*tt) * phi_j/dt * (double)delta(a,p) * (double)delta(b,q); 
+ 						  mass *= h3 * det_J;
+ 						  mass *= wt_func * at * lambda * wt * pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+ 						}
+@@ -2609,15 +2597,6 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
+ 						  advection *=  h3 * det_J ;
+ 						  
+ 						  advection *= wt_func * wt * at * lambda * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+-
+-						  // compute lambda sensitivity term
+-						  if(DOUBLE_NONZERO(d_lambda_d_s))
+-						    {
+-							  advection += ( lcwt*(s_dot_gt[a][b] + g_dot_s[a][b]) - ucwt*(gt_dot_s[a][b] + s_dot_g[a][b]) )
+-							             * d_lambda_d_s * wt_func * at * det_J * wt * h3 
+-										 * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+-							                
+-							}
+ 						}
+ 					    }
+ 					  
+@@ -2645,7 +2624,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
+ 					      source_a *= saramitoCoeff;
+ 					      // sensitivities for saramito model:
+                                               if (p <= q) {
+-                                                source_a +=  d_saramito->s[p][q] * s[a][b] * Z - at * d_mup_d_s[p][q] * ( g[a][b] +  gt[a][b]);
++                                                source_a +=  d_saramito->s[p][q] * s[a][b] * Z;
+                                               }
+ 		      			
+ 					      source_b  =0.;
+@@ -2654,8 +2633,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
+ 						  source_b  = alpha * lambda * saramitoCoeff * 
+ 						    (s[q][b] * (double)delta(a,p) + s[a][p] * (double)delta(b,q))/mup; 
+                                                   if (p <= q) {
+-						    source_b += d_saramito->s[p][q] * alpha * lambda*( s_dot_s[a][b]/mup) 
+-							         + saramitoCoeff * alpha * d_lambda_d_s *( s_dot_s[a][b]/mup); 
++						    source_b += d_saramito->s[p][q] * alpha * lambda*( s_dot_s[a][b]/mup);
+                                                   }
+ 						}
+ 					      
+@@ -6242,13 +6220,11 @@ compute_d_exp_s_ds(dbl s[DIM][DIM],                   //s - stress
+ 
+ }
+ /*****************************************************************************/
+-void
+-compute_saramito_model_terms(dbl *sCoeff,
+-                             SARAMITO_DEPENDENCE_STRUCT *d_sCoeff,
+-                             dbl* mu,
+-                             dbl d_mu_d_s[DIM][Dim],
+-                             const dbl stress[DIM][DIM],
+-                             struct Generalized_Newtonian *gn_local) {
++dbl
++compute_saramito_model_terms(dbl stress[DIM][DIM],
++                                 dbl yieldStress,
++                                 dbl yieldExpon,
++                                 SARAMITO_DEPENDENCE_STRUCT *d_sCoeff) {
+   /* start by computing the norm of sigma_d (the deviatoric stress) which is written as
+    * sqrt( trace(sigma_d*sigma_d)/2 )
+    *
+@@ -6256,13 +6232,6 @@ compute_saramito_model_terms(dbl *sCoeff,
+    * https://en.wikipedia.org/wiki/Cauchy_stress_tensor#Invariants_of_the_stress_deviator_tensor
+    */
+ 
+-  const dbl yieldStress = gn_local->tau_y;
+-  const dbl yieldExpon  = gn_local->fexp;
+-  const dbl nInv        = 1./gn_local->nexp;
+-  const dbl mu0         = gn_local->mu0;
+-
+-  const dbl epsilon = 1e-5;
+-
+   dbl traceOverVIM = 0;
+   for (int i = 0; i < VIM; i++) {
+     traceOverVIM += stress[i][i];
+@@ -6282,55 +6251,46 @@ compute_saramito_model_terms(dbl *sCoeff,
+ 
+   const dbl normOfStressD = sqrt(normOfStressDSqr);
+ 
+-  *mu = nInv == 1 ? mu0 : mu0 * pow(normOfStressD + epsilon, 1.-nInv);
+-
+   const dbl sc = 1. - yieldStress / normOfStressD;
+ 
+-  //  phi  = Saramito coefficient with nexp = 1.
+-  // This is useful for computing sensitivities 
+-  dbl phi;
++  dbl sCoeff;
+   dbl expYSC = 1;
+   if (yieldExpon > 0) {
+     expYSC = exp(sc / yieldExpon);
+-    phi = log(1. + expYSC) * yieldExpon;
++    sCoeff = log(1. + expYSC) * yieldExpon;
+   } else {
+-    phi = fmax(0, sc);
++    sCoeff = fmax(0, sc);
+   }
+ 
+-  *sCoeff = nInv == 1 ? phi : pow(phi, nInv);
+-
+   // take care of indeterminate behavior for normOfStressD == 0
+   if (normOfStressD == 0) {
+     if (yieldStress <= 0) {
+-      *sCoeff = 1;
++      sCoeff = 1;
+     } else {
+-      *sCoeff = 0;
++      sCoeff = 0;
+     }
+   }
+ 
+   if (d_sCoeff != NULL) {
+     // if normStress_d < yieldStress, set sensitivities to zero and return
+-    if ((*sCoeff) == 0 || yieldStress <= 0) {
++    if ((sCoeff) == 0 || yieldStress <= 0) {
+       for (int i = 0; i < VIM; i++) {
+         for (int j = 0; j < VIM; j++) {
+           d_sCoeff->s[i][j] = 0.;
+-          d_mu_d_s[i][j] = 0.;
+         }
+       }
+ 
+       d_sCoeff->tau_y = 0.;
+     } else {
+-      const dbl d_sCoeff_d_phi = nInv == 1 ? 1 : nInv * pow(phi, nInv-1);
+       // otherwise, sensitivities need to be calculated
+-      d_sCoeff->tau_y = -d_sCoeff_d_phi / (normOfStressD);
+-      dbl d_sCoeff_d_normOfStressD = d_sCoeff_d_phi * yieldStress / (normOfStressDSqr);
++      d_sCoeff->tau_y = -1. / (normOfStressD);
++      dbl d_sCoeff_d_normOfStressD = yieldStress / (normOfStressDSqr);
+       if (yieldExpon > 0) {
+         const dbl expYSCDerivativeTerm = expYSC / (1 + expYSC);
+         d_sCoeff->tau_y *= expYSCDerivativeTerm;
+         d_sCoeff_d_normOfStressD *= expYSCDerivativeTerm;
+       }
+ 
+-      // fill d_sCoeff->s[i][j] with d(normOfStressDSqr)/d(stress[i][j])
+       for (int i = 0; i < VIM; i++) {
+         d_sCoeff->s[i][i] = -traceOverVIM;
+ 
+@@ -6351,28 +6311,7 @@ compute_saramito_model_terms(dbl *sCoeff,
+        *                      =   d(sCoeff)/d(normOfStressD)
+        *                        * 0.5/normOfStressD
+        *                        * d(normOfStressDSqr)/d(stress)
+-       * 
+-       * A similar procedure is used to compute viscosity sensitivities to stress
+        */
+-      if (nInv == 1){
+-        for (int i = 0; i < VIM; i++) {
+-          for (int j = i; j < VIM; j++) {
+-            d_mu_d_s[i][j] = 0.;
+-          }
+-        }
+-      } else {
+-        for (int i = 0; i < VIM; i++) {
+-          for (int j = i; j < VIM; j++) {
+-            /* d(mu)/d(stress) =   d(mu)/d(normOfStressD)
+-                                 * d(normOfStressD)/d(normOfStressDSqr)
+-                                 * d(normOfStressDSqr)/d(stress)
+-            */
+-            d_mu_d_s[i][j] = mu0 * (1.-nInv) * pow(normOfStressD + epsilon, -nInv) 
+-                           * 0.5 / normOfStressD 
+-                           * d_sCoeff->s[i][j];
+-          }
+-        }
+-      }
+ 
+       dbl d_normOfStressD_d_Stress = 0.5 / normOfStressD * d_sCoeff_d_normOfStressD;
+ 
+@@ -6403,6 +6342,7 @@ compute_saramito_model_terms(dbl *sCoeff,
+     printf("|stress_d|**2 = %E", normOfStressDSqr);
+     printf("\n-------------------------------------------------------------");
+   */
++  return sCoeff;
+ }
+ 
+ /*****************************************************************************/
+diff --git a/src/mm_input_mp.c b/src/mm_input_mp.c
+index fe1a273..042d294 100644
+--- a/src/mm_input_mp.c
++++ b/src/mm_input_mp.c
+@@ -3082,8 +3082,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
+ 	  /* Should yield stress be a modal property? Let's assume not for now */
+ 	  dbl tau_y_val;
+ 	  dbl fexp_val;
+-	  dbl nexp_val;
+-	  
++
+ 	  strcpy(search_string, "Polymer Yield Stress");
+ 	  model_read = look_for_mat_prop(imp, search_string, 
+ 					 &(ConstitutiveEquation), 
+@@ -3113,27 +3112,11 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
+ 	      fprintf(stderr,"%s\n",err_msg);
+ 	      exit(-1);
+ 	    }
+-
+-	  strcpy(search_string, "Saramito Power Law Exponent");
+-	  model_read = look_for_mat_prop(imp, search_string, 
+-					 &(ConstitutiveEquation), 
+-					 &nexp_val,
+-					 NO_USER, NULL,
+-					 model_name, SCALAR_INPUT, &NO_SPECIES,es);
+-
+-	  if( model_read < 1 )
+-	    {
+-	      if( model_read == -1) SPF(err_msg,"%s card is missing.",search_string);
+-	      if( model_read == -2) SPF(err_msg,"Only CONSTANT %s mode model supported.", search_string);
+-	      fprintf(stderr,"%s\n",err_msg);
+-	      exit(-1);
+-	    }
+ 			       
+ 	  for(mm=0;mm<vn_glob[mn]->modes;mm++)
+ 	    {
+ 	      ve_glob[mn][mm]->gn->tau_y = tau_y_val;
+ 		  ve_glob[mn][mm]->gn->fexp = fexp_val;
+-		  ve_glob[mn][mm]->gn->nexp = nexp_val;
+ 	    }
+ 	  ECHO(es,echo_file);
+ 	}
+diff --git a/src/mm_ns_bc.c b/src/mm_ns_bc.c
+index 73aedb3..6e08e6f 100644
+--- a/src/mm_ns_bc.c
++++ b/src/mm_ns_bc.c
+@@ -7393,8 +7393,6 @@ stress_no_v_dot_gradS(double func[MAX_MODES][6],
+   VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
+   dbl d_mup_dv_pj;
+ 
+-  dbl d_mup_d_s[DIM][DIM];
+-
+   dbl saramitoCoeff;
+   SARAMITO_DEPENDENCE_STRUCT d_saramito_struct;
+   SARAMITO_DEPENDENCE_STRUCT *d_saramito = &d_saramito_struct;
+@@ -7545,9 +7543,7 @@ stress_no_v_dot_gradS(double func[MAX_MODES][6],
+ 
+       if(saramitoEnabled == TRUE)
+ 	{
+-    // This routine sets viscosity and its sensivity to stress in the case that nexp is nonzero.
+-    // The 'viscosity' routine must always be called so that all other sensitivities are set.
+-    compute_saramito_model_terms(&(saramitoCoeff), d_saramito, &(mup), d_mup_d_s, s, ve[mode]->gn);
++	  saramitoCoeff = compute_saramito_model_terms(s, ve[mode]->gn->tau_y, ve[mode]->gn->fexp, d_saramito);
+ 	}
+       else
+ 	{
+@@ -7557,7 +7553,6 @@ stress_no_v_dot_gradS(double func[MAX_MODES][6],
+ 	  for(int i=0; i<VIM; ++i){
+ 	    for(int j=0; j<VIM; ++j){
+ 	      d_saramito->s[i][j] = 0;
+-        d_mup_d_s[i][j] = 0;
+ 	    }
+ 	  }
+ 	}
+@@ -7892,7 +7887,7 @@ stress_no_v_dot_gradS(double func[MAX_MODES][6],
+                                      source = saramitoCoeff * Z * phi_j * (double)delta(a,p) * (double)delta(b,q);
+                                      if( p == q)  source +=  s[a][b] * dZ_dtrace * phi_j;
+                                      if (p <= q) {
+-                                       source += phi_j * (d_saramito->s[p][q] * Z * s[a][b]- at * d_mup_d_s[p][q] * ( g[a][b] +  gt[a][b]));
++                                       source += phi_j * d_saramito->s[p][q] * Z * s[a][b];
+                                      }
+ 
+                                      if (alpha != 0.)
+diff --git a/src/mm_post_proc.c b/src/mm_post_proc.c
+index cd53770..1d5f98b 100644
+--- a/src/mm_post_proc.c
++++ b/src/mm_post_proc.c
+@@ -2508,8 +2508,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
+   if(SARAMITO_YIELD != -1 && pd->e[pg->imtrx][POLYMER_STRESS11]) 
+   {  
+     for (int mode = 0; mode < vn->modes; mode++) {
+-      dbl coeff;
+-      compute_saramito_model_terms(&(coeff), NULL, &(mup), NULL, fv->S[mode], ve[mode]->gn);
++      dbl coeff = compute_saramito_model_terms(fv->S[mode], ve[mode]->gn->tau_y, ve[mode]->gn->fexp, NULL);
+       local_post[SARAMITO_YIELD + mode] = coeff;
+       local_lumped[SARAMITO_YIELD + mode] = 1.;
+     }

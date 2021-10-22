@@ -6237,6 +6237,12 @@ compute_saramito_model_terms(dbl *sCoeff,
   const dbl yieldExpon  = gn_local->fexp;
   const dbl m           = 1./gn_local->nexp;
 
+   // this is equal to (consitency index)**(1/nexp) and will divide the time contant
+//   *kPowInvNexp = m == 1 
+//                ? gn_local->mu0 
+// 			   : pow(gn_local->mu0, m);
+
+
   dbl traceOverVIM = 0;
   for (int i = 0; i < VIM; i++) {
     traceOverVIM += stress[i][i];
@@ -6273,7 +6279,7 @@ compute_saramito_model_terms(dbl *sCoeff,
 				 : pow(normOfStressD, m-1);
 
   *sCoeff = m == 1 
-                 ? phi 
+                 ? beta * phi 
 				 : beta * pow(phi, m);
 
   // take care of indeterminate behavior for normOfStressD == 0
@@ -6302,19 +6308,16 @@ compute_saramito_model_terms(dbl *sCoeff,
 
 	// otherwise, sensitivities need to be calculated
     } else {
-	  
-      const dbl d_sCoeff_d_phi = m == 1 
-	                           ? 1 
-							   : m * beta * pow(phi, m-1);
-
-	  const dbl d_beta_d_normOfStressD = m == 1 
-	                                   ? 0 
-									   : (m-1) * pow(normOfStressD, m-2);
-
       
-      d_sCoeff->tau_y = -beta * d_sCoeff_d_phi / (normOfStressD);
-      dbl d_sCoeff_d_normOfStressD = beta * d_sCoeff_d_phi * yieldStress / (normOfStressDSqr)
-	                               + d_beta_d_normOfStressD * pow(phi, m);
+	  d_sCoeff->tau_y = m == 1 
+	                  ? -1./normOfStressD
+					  : -m*pow(normOfStressD-yieldStress,m-1)/normOfStressD;
+
+	dbl d_sCoeff_d_normOfStressD = m == 1
+	                             ? yieldStress/normOfStressDSqr
+								 : pow(normOfStressD-yieldStress,m-1)
+								   * ((m-1)*normOfStressD + yieldStress)
+								   / normOfStressDSqr ;
       if (yieldExpon > 0) {
         const dbl expYSCDerivativeTerm = expYSC / (1 + expYSC);
         d_sCoeff->tau_y *= expYSCDerivativeTerm;
