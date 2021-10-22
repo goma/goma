@@ -27,3 +27,4 @@ cmake-debug
 /*.includes
 *.orig
 /.cache/
+*.code-workspace
