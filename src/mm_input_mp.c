@@ -3135,8 +3135,8 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 		  ve_glob[mn][mm]->gn->fexp = fexp_val;
 		  ve_glob[mn][mm]->gn->nexp = nexp_val;
 
-		  // set polymer viscosity to (consistency index)^(1/nexp) when nexp = 1
-		  if( nexp_val == 1 ) ve_glob[mn][mm]->gn->mu0 = pow(ve_glob[mn][mm]->gn->mu0, 1./nexp_val);
+		  // set polymer viscosity to (consistency index)^(1/nexp) when nexp != 1
+		  if( nexp_val != 1 ) ve_glob[mn][mm]->gn->mu0 = pow(ve_glob[mn][mm]->gn->mu0, 1./nexp_val);
 	    }
 	  ECHO(es,echo_file);
 	}

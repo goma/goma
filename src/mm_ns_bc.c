@@ -7505,9 +7505,7 @@ stress_no_v_dot_gradS(double func[MAX_MODES][6],
 
       if(saramitoEnabled == TRUE)
 	{
-    // This routine sets viscosity and its sensivity to stress in the case that nexp is nonzero.
-    // The 'viscosity' routine must always be called so that all other sensitivities are set.
-    compute_saramito_model_terms(&saramitoCoeff, d_saramito, s, ve[mode]->gn, FALSE);
+	  compute_saramito_model_terms(&saramitoCoeff, d_saramito, s, ve[mode]->gn, FALSE);
 	}
       else
 	{
@@ -7851,7 +7849,7 @@ stress_no_v_dot_gradS(double func[MAX_MODES][6],
                                      source = saramitoCoeff * Z * phi_j * (double)delta(a,p) * (double)delta(b,q);
                                      if( p == q)  source +=  s[a][b] * dZ_dtrace * phi_j;
                                      if (p <= q) {
-                                       source += phi_j * (d_saramito->s[p][q] * Z * s[a][b]- at * d_mup_d_s[p][q] * ( g[a][b] +  gt[a][b]));
+                                       source += phi_j * d_saramito->s[p][q] * Z * s[a][b];
                                      }
 
                                      if (alpha != 0.)
