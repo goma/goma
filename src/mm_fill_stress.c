@@ -6237,12 +6237,6 @@ compute_saramito_model_terms(dbl *sCoeff,
   const dbl yieldExpon  = gn_local->fexp;
   const dbl m           = 1./gn_local->nexp;
 
-   // this is equal to (consitency index)**(1/nexp) and will divide the time contant
-//   *kPowInvNexp = m == 1 
-//                ? gn_local->mu0 
-// 			   : pow(gn_local->mu0, m);
-
-
   dbl traceOverVIM = 0;
   for (int i = 0; i < VIM; i++) {
     traceOverVIM += stress[i][i];

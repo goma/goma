@@ -3123,7 +3123,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
 	  if( model_read < 1 )
 	    {
-	      if( model_read == -1) SPF(err_msg,"%s card is missing.",search_string);
+	      if( model_read == -1) nexp_val = 1;
 	      if( model_read == -2) SPF(err_msg,"Only CONSTANT %s mode model supported.", search_string);
 	      fprintf(stderr,"%s\n",err_msg);
 	      exit(-1);
@@ -3134,6 +3134,9 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	      ve_glob[mn][mm]->gn->tau_y = tau_y_val;
 		  ve_glob[mn][mm]->gn->fexp = fexp_val;
 		  ve_glob[mn][mm]->gn->nexp = nexp_val;
+
+		  // set polymer viscosity to (consistency index)^(1/nexp) when nexp = 1
+		  if( nexp_val == 1 ) ve_glob[mn][mm]->gn->mu0 = pow(ve_glob[mn][mm]->gn->mu0, 1./nexp_val);
 	    }
 	  ECHO(es,echo_file);
 	}
