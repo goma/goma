@@ -151,29 +151,30 @@ int cnt_elem_vars(const Exo_DB *exo) {
   }
 
   /* Put counter here for array cycling over nodal vars and testing for P0 */
-  for (i = 0; i < upd->Num_Mat; i++) {
-    for ( j = V_FIRST; j < V_LAST; j++) {
-      if ( pd_glob[i]->v[pg->imtrx][j] != V_NOTHING ) {
-	if (pd_glob[i]->i[pg->imtrx][j] == I_P0) {
-	  if (Num_Var_In_Type[pg->imtrx][j] > 1) {
-            fprintf(stderr,
-		    "%s: Too many components in variable type for element variable %s (%s)\n",
-		    yo,
-		    Exo_Var_Names[j].name2,
-		    Exo_Var_Names[j].name1 );
-	    exit (-1);
+  for (i = 0; i < exo->num_elem_blocks; i++) {
+    if (exo->eb_num_elems[i] > 0) {
+      int mat_id = Matilda[i];
+      for (j = V_FIRST; j < V_LAST; j++) {
+        if (pd_glob[mat_id]->v[pg->imtrx][j] != V_NOTHING) {
+          if (pd_glob[mat_id]->i[pg->imtrx][j] == I_P0) {
+            if (Num_Var_In_Type[pg->imtrx][j] > 1) {
+              fprintf(stderr,
+                      "%s: Too many components in variable type for element variable %s (%s)\n", yo,
+                      Exo_Var_Names[j].name2, Exo_Var_Names[j].name1);
+              exit(-1);
+            }
+            if (ev_var_mask[j - V_FIRST] == 0) {
+              /* We just found a candidate for an element variable */
+              tev += Num_Var_In_Type[pg->imtrx][j];
+              ev_var_mask[j - V_FIRST] = 1; /* Only count this variable once */
+            }
           }
-          if (ev_var_mask[j - V_FIRST] == 0) {
-	    /* We just found a candidate for an element variable */
-	    tev += Num_Var_In_Type[pg->imtrx][j];
-	    ev_var_mask[j - V_FIRST] = 1; /* Only count this variable once */
-	  }
-        }
-	if (pd_glob[i]->i[pg->imtrx][j] == I_P1 ) {	 
-          if (ev_var_mask[j - V_FIRST] == 0) {
-            /* We just found a candidate for an element variable */
-            tev += getdofs(type2shape(exo->eb_elem_itype[i]), I_P1);
-            ev_var_mask[j - V_FIRST] = 1; /* Only count this variable once */
+          if (pd_glob[mat_id]->i[pg->imtrx][j] == I_P1) {
+            if (ev_var_mask[j - V_FIRST] == 0) {
+              /* We just found a candidate for an element variable */
+              tev += getdofs(type2shape(exo->eb_elem_itype[i]), I_P1);
+              ev_var_mask[j - V_FIRST] = 1; /* Only count this variable once */
+            }
           }
         }
       }

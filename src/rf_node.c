@@ -341,51 +341,53 @@ make_node_to_elem_matrl_map(Exo_DB *exo)
   /*
    *  Loop over the element blocks
    */
-  for (eb_index = 0; eb_index < exo->num_elem_blocks; eb_index++)  {
+  for (eb_index = 0; eb_index < exo->num_elem_blocks; eb_index++) {
 
-    /*
+    if (exo->eb_num_elems[eb_index] > 0) {
+      /*
      *  Identify the materials index with the element block
-     */
-    mn = Matilda[eb_index];
-    if (mn < 0) {
-      continue;
-    }
+       */
+      mn = Matilda[eb_index];
+      if (mn < 0) {
+        continue;
+      }
 
-    /* 
+      /*
      * Find the beginning and end element number for the elements
      *  in this element block. Note, they are all numbered consequatively
      *  on each processor (right ???!)
-     */
-    e_start = exo->eb_ptr[eb_index];
-    e_end   = exo->eb_ptr[eb_index+1];
-
-    /*
-     *  Look up the element type for the element block
-     */
-    ielem_type = exo->eb_elem_itype[eb_index];
-    
-    /*
-     *  based on the element type, get the number of quad points,
-     *  number of local nodes, and the element dimension
-     */
-    num_local_nodes = elem_info(NNODES, ielem_type); 
-    
-    /*
-     *  Loop over all elements in the element block
-     */
-    for (ielem = e_start; ielem < e_end; ielem++) {
+       */
+      e_start = exo->eb_ptr[eb_index];
+      e_end = exo->eb_ptr[eb_index + 1];
 
       /*
-       *  find ptr to the beginning of this element's connectivity list
+     *  Look up the element type for the element block
        */
-      iconnect_ptr    = Proc_Connect_Ptr[ielem];
+      ielem_type = exo->eb_elem_itype[eb_index];
 
-      for ( i = 0; i < num_local_nodes; i++) {
-	I = Proc_Elem_Connect[iconnect_ptr + i];
-        add_to_umi_int_list(&(Nodes[I]->Mat_List), mn);
-	/*
-	  add_to_umi_int_list(&(Nodes[I]->Element_List), ielem);
-	*/
+      /*
+     *  based on the element type, get the number of quad points,
+     *  number of local nodes, and the element dimension
+       */
+      num_local_nodes = elem_info(NNODES, ielem_type);
+
+      /*
+     *  Loop over all elements in the element block
+       */
+      for (ielem = e_start; ielem < e_end; ielem++) {
+
+        /*
+       *  find ptr to the beginning of this element's connectivity list
+         */
+        iconnect_ptr = Proc_Connect_Ptr[ielem];
+
+        for (i = 0; i < num_local_nodes; i++) {
+          I = Proc_Elem_Connect[iconnect_ptr + i];
+          add_to_umi_int_list(&(Nodes[I]->Mat_List), mn);
+          /*
+            add_to_umi_int_list(&(Nodes[I]->Element_List), ielem);
+          */
+        }
       }
     }
   }

@@ -12307,41 +12307,42 @@ load_elem_tkn (struct Results_Description *rd,
   /* First cycle through all the primary variables that are nodal looking
      for element variable candidates (currently must be interpolated with I_P0 */
   for (i = 0; i < upd->Num_Mat; i++) {
-    for ( j = V_FIRST; j < V_LAST; j++) {
-      if ( pd_glob[i]->v[pg->imtrx][j] != V_NOTHING ) {
-	if (pd_glob[i]->i[pg->imtrx][j] == I_P0 ) {
-	  if ( Num_Var_In_Type[pg->imtrx][j] > 1 ) {
-            fprintf(stderr,
-		    "%s: Too many components in variable type (%s - %s) for element variable\n",
-		    yo,
-		    Exo_Var_Names[j].name2,
-		    Exo_Var_Names[j].name1 );
-	    exit (-1);
-          }
-          if (ev_var_mask[j - V_FIRST] == 0) {
-	    /* We just found a candidate for an element variable */
-	    /* Append a suffix onto the var name to differentiate from its
-	     nodal counterpart */
-            sprintf(appended_name, "%s_E", Exo_Var_Names[j].name2);
-            set_ev_tkud(rd, index, j, appended_name, Var_Units[j].name2, Exo_Var_Names[j].name1,
-                        FALSE);
-            index++;
-            ev_var_mask[j - V_FIRST] = 1; /* Only count this variable once */
-	  }
-        }
-        if (pd_glob[i]->i[pg->imtrx][j] == I_P1) {
-          int dof = getdofs(type2shape(exo->eb_elem_itype[i]), I_P1);
-          if (ev_var_mask[j - V_FIRST] == 0) {
-            /* We just found a candidate for an element variable */
-            /* Append a suffix onto the var name to differentiate from its
-             nodal counterpart */
-            for (i = 1; i <= dof; i++) {
-              sprintf(appended_name, "%s_E%d", Exo_Var_Names[j].name2, i);
+    int eb = in_list(i, 0, exo->num_elem_blocks, Matilda);
+    if (exo->eb_num_elems[eb] > 0) {
+      for (j = V_FIRST; j < V_LAST; j++) {
+        if (pd_glob[i]->v[pg->imtrx][j] != V_NOTHING) {
+          if (pd_glob[i]->i[pg->imtrx][j] == I_P0) {
+            if (Num_Var_In_Type[pg->imtrx][j] > 1) {
+              fprintf(stderr,
+                      "%s: Too many components in variable type (%s - %s) for element variable\n",
+                      yo, Exo_Var_Names[j].name2, Exo_Var_Names[j].name1);
+              exit(-1);
+            }
+            if (ev_var_mask[j - V_FIRST] == 0) {
+              /* We just found a candidate for an element variable */
+              /* Append a suffix onto the var name to differentiate from its
+               nodal counterpart */
+              sprintf(appended_name, "%s_E", Exo_Var_Names[j].name2);
               set_ev_tkud(rd, index, j, appended_name, Var_Units[j].name2, Exo_Var_Names[j].name1,
                           FALSE);
               index++;
+              ev_var_mask[j - V_FIRST] = 1; /* Only count this variable once */
             }
-            ev_var_mask[j - V_FIRST] = 1; /* Only count this variable once */
+          }
+          if (pd_glob[i]->i[pg->imtrx][j] == I_P1) {
+            int dof = getdofs(type2shape(exo->eb_elem_itype[i]), I_P1);
+            if (ev_var_mask[j - V_FIRST] == 0) {
+              /* We just found a candidate for an element variable */
+              /* Append a suffix onto the var name to differentiate from its
+               nodal counterpart */
+              for (i = 1; i <= dof; i++) {
+                sprintf(appended_name, "%s_E%d", Exo_Var_Names[j].name2, i);
+                set_ev_tkud(rd, index, j, appended_name, Var_Units[j].name2, Exo_Var_Names[j].name1,
+                            FALSE);
+                index++;
+              }
+              ev_var_mask[j - V_FIRST] = 1; /* Only count this variable once */
+            }
           }
         }
       }
@@ -12456,52 +12457,51 @@ load_elem_tkn (struct Results_Description *rd,
    */
   ipost = FALSE;
   for (eb_index = 0; eb_index < exo->num_elem_blocks; eb_index++) {
-    mn = Matilda[eb_index];
-    if (mn < 0) {
-      continue;
-    }
-    mp = mp_glob[mn];
-    eb_ptr = Element_Blocks + eb_index;
-    ip_total = elem_info(NQUAD, eb_ptr->Elem_Type);
-    if((mp->PorousMediaType == POROUS_UNSATURATED ||
-	mp->PorousMediaType == POROUS_SHELL_UNSATURATED ||
-	mp->PorousMediaType == POROUS_TWO_PHASE) &&
-        mp->SaturationModel == TANH_HYST &&
-       !ipost)
-      {
-	ipost = TRUE;
-
-	SAT_CURVE_TYPE = index_post;
-	for ( j = 0; j < ip_total; j++) {
-	    /* We just found more element variables */
-	    /* Append a index suffix onto the var name to differentiate 
-	       between gauss point values*/
-	    sprintf(appended_name,  "sat_curve_type%d", j );
-	    set_ev_tkud(rd, index, 0, appended_name,
-			"[1]", "Saturation hysteresis curve type", FALSE);
-	    index++;
-	    index_post++;
-	}
-
-	SAT_QP_SWITCH = index_post;
-	for ( j = 0; j < ip_total; j++) {
-	    sprintf(appended_name,  "sat_switch%d", j );
-	    set_ev_tkud(rd, index, 0, appended_name,
-			"[1]", "Value of saturation at hysteresis switch", FALSE);
-	    index++;
-	    index_post++;
-	}
-
-	CAP_PRESS_SWITCH = index_post;
-	for ( j = 0; j < ip_total; j++) {
-	    sprintf(appended_name,  "pc_switch%d", j );
-	    set_ev_tkud(rd, index, 0, appended_name,
-			"[1]", "Value of cap press at hysteresis switch", FALSE);
-	    index++;
-	    index_post++;
-	}
-	
+    if (exo->eb_num_elems[eb_index] > 0) {
+      mn = Matilda[eb_index];
+      if (mn < 0) {
+        continue;
       }
+      mp = mp_glob[mn];
+      eb_ptr = Element_Blocks + eb_index;
+      ip_total = elem_info(NQUAD, eb_ptr->Elem_Type);
+      if ((mp->PorousMediaType == POROUS_UNSATURATED ||
+           mp->PorousMediaType == POROUS_SHELL_UNSATURATED ||
+           mp->PorousMediaType == POROUS_TWO_PHASE) &&
+          mp->SaturationModel == TANH_HYST && !ipost) {
+        ipost = TRUE;
+
+        SAT_CURVE_TYPE = index_post;
+        for (j = 0; j < ip_total; j++) {
+          /* We just found more element variables */
+          /* Append a index suffix onto the var name to differentiate
+             between gauss point values*/
+          sprintf(appended_name, "sat_curve_type%d", j);
+          set_ev_tkud(rd, index, 0, appended_name, "[1]", "Saturation hysteresis curve type",
+                      FALSE);
+          index++;
+          index_post++;
+        }
+
+        SAT_QP_SWITCH = index_post;
+        for (j = 0; j < ip_total; j++) {
+          sprintf(appended_name, "sat_switch%d", j);
+          set_ev_tkud(rd, index, 0, appended_name, "[1]",
+                      "Value of saturation at hysteresis switch", FALSE);
+          index++;
+          index_post++;
+        }
+
+        CAP_PRESS_SWITCH = index_post;
+        for (j = 0; j < ip_total; j++) {
+          sprintf(appended_name, "pc_switch%d", j);
+          set_ev_tkud(rd, index, 0, appended_name, "[1]", "Value of cap press at hysteresis switch",
+                      FALSE);
+          index++;
+          index_post++;
+        }
+      }
+    }
   }
 
   /* Finally put index into the results description structure */
