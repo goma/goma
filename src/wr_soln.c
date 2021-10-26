@@ -111,9 +111,11 @@ void write_solution(char output_file[],             /* name EXODUS II file */
     int dof = 0;
     for (int eb_index = 0; eb_index < exo->num_elem_blocks; eb_index++) {
       int mn = Matilda[eb_index];
-      if (pd_glob[mn]->i[upd->matrix_index[rd->evtype[i]]][rd->evtype[i]] == I_P1) {
-        dof = MAX(getdofs(type2shape(exo->eb_elem_itype[eb_index]), I_P1), dof);
-        is_P1 = TRUE;
+      if (exo->eb_num_elems[eb_index] > 0) {
+        if (pd_glob[mn]->i[upd->matrix_index[rd->evtype[i]]][rd->evtype[i]] == I_P1) {
+          dof = MAX(getdofs(type2shape(exo->eb_elem_itype[eb_index]), I_P1), dof);
+          is_P1 = TRUE;
+        }
       }
     }
     if (is_P1) {

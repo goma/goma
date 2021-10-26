@@ -1263,7 +1263,9 @@ free_exo(Exo_DB *x)		/* pointer to EXODUS II FE db structure */
       for ( i=0; i<x->num_elem_blocks; i++)
 	{
 	  free(x->eb_elem_type[i]);
-	  free(x->eb_conn[i]);
+          if (x->eb_num_elems[i] > 0 ) {
+            free(x->eb_conn[i]);
+          }
 	  if ( (x->eb_num_elems[i]*x->eb_num_attr[i]) > 0 )
 	    {
 	      free(x->eb_attr[i]);
