@@ -1423,14 +1423,14 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
 	/* 	  DPRINTF(stdout, */
 	/* 		  "%s:  reading augmenting conditions initial guess from \"%s\" ...\n",yo, ExoFile); */
 
-	ngv = rd_globals_from_exoII(uAC, ExoFile, 5, nAC);
+	ngv = rd_globals_from_exoII(uAC, ExoFile, 6, nAC);
 	if ( ngv < 0 )
 	  DPRINTF(stderr, "%s: error trying to read augmenting conditions\n",yo);	
 	  
 	/* Update parameters prior to solution with these values */
 
 
-	for (iAC=0 ; iAC + 5 < ngv ; iAC++){
+	for (iAC=0 ; iAC + 6 < ngv ; iAC++){
 	  DPRINTF(stdout,"AUGC[%d] initial guess :%6.3g found in exoII database - reading\n",iAC, uAC[iAC] );
 	  update_parameterAC(iAC, NULL, NULL, uAC, cx, exo, dpi);
 	}
@@ -1472,14 +1472,14 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
 		"%s:  reading augmenting conditions initial guess from \"%s\" ...\n",
 		yo, ExoAuxFile);
 
-	ngv = rd_globals_from_exoII( uAC, ExoAuxFile, 5, nAC );
+	ngv = rd_globals_from_exoII( uAC, ExoAuxFile, 6, nAC );
 	if ( ngv < 0 )
 	  DPRINTF(stderr, "%s: error trying to read augmenting conditions\n",yo);
 
 	/* Update parameters prior to solution with these values
 	 * Update only those parameters values that were actually found */
 
-	for (iAC=0 ; iAC + 5 < ngv ; iAC++) {
+	for (iAC=0 ; iAC + 6 < ngv ; iAC++) {
 	  DPRINTF(stdout,"AUGC[%d] initial guess :%6.3g found in exoII database - reading\n",iAC, uAC[iAC] );
 	  update_parameterAC(iAC, NULL, NULL, uAC, cx, exo, dpi);
 	}
