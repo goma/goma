@@ -441,6 +441,7 @@ rd_bc_specs(FILE *ifp,
         case EM_HI_FREE_BC:
         case E_ER_2D_BC:
         case E_EI_2D_BC:
+	case RESTIME_NOBC_BC:
 
 	  break;
 
@@ -525,6 +526,7 @@ rd_bc_specs(FILE *ifp,
         case LS_WALL_ANGLE_BC:
         case SH_SDET_BC:
         case SH_MESH2_WEAK_BC:
+	case RESTIME_GRADSIC_BC:
   
 	  if ( fscanf(ifp, "%lf", &BC_Types[ibc].BC_Data_Float[0]) != 1)
 	    {
@@ -778,7 +780,6 @@ rd_bc_specs(FILE *ifp,
 	case LS_LATENT_HEAT_BC:
         case LS_ACOUSTIC_SOURCE_BC:
 
-
 	  if ( fscanf(ifp, "%lf %lf", 
 		      &BC_Types[ibc].BC_Data_Float[0],
 		      &BC_Types[ibc].BC_Data_Float[1]) != 2)
@@ -845,6 +846,7 @@ rd_bc_specs(FILE *ifp,
 	case VELO_TANGENT_EDGE_INT_BC:
         case SH_S11_WEAK_BC:
         case SH_S22_WEAK_BC:
+        case VELO_NORMAL_LUB_BC:
 
 	  if (fscanf(ifp, "%lf %lf %lf", 
 		      &BC_Types[ibc].BC_Data_Float[0],
@@ -1516,10 +1518,42 @@ rd_bc_specs(FILE *ifp,
 
 
 	  /*
+	   * Fall through for all cases which require eight floating point (used to be 7)
+	   * values as data input and one optional integer (BC_Data_int[0]).
+	   */
+	case CAP_REPULSE_BC:
+
+	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf %lf %lf %lf", 
+		      &BC_Types[ibc].BC_Data_Float[0],
+		      &BC_Types[ibc].BC_Data_Float[1],
+		      &BC_Types[ibc].BC_Data_Float[2],
+		      &BC_Types[ibc].BC_Data_Float[3],
+		      &BC_Types[ibc].BC_Data_Float[4],
+		      &BC_Types[ibc].BC_Data_Float[5],
+		      &BC_Types[ibc].BC_Data_Float[6],
+		      &BC_Types[ibc].BC_Data_Float[7]) != 8)
+	    {
+	      sr = sprintf(err_msg, "%s: Expected 8 flts for %s.",
+			   yo, BC_Types[ibc].desc->name1);
+	      EH(-1, err_msg);
+	    }
+
+	   for(i=0;i<8;i++) SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].BC_Data_Float[i]);
+
+	  /* Try reading the optional integer. */
+	  if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[0]) != 1)
+	    {
+	      BC_Types[ibc].BC_Data_Int[0] = -1;
+	    }
+	  else
+	    SPF(endofstring(echo_string)," %d",BC_Types[ibc].BC_Data_Int[0]); 
+
+	  break;
+
+	  /*
 	   * Fall through for all cases which require seven floating point
 	   * values as data input and one optional integer.
 	   */
-	case CAP_REPULSE_BC:
 	case LS_RECOIL_PRESSURE_BC:
 	case CAP_RECOIL_PRESS_BC:
 
@@ -1548,6 +1582,7 @@ rd_bc_specs(FILE *ifp,
 	    SPF(endofstring(echo_string)," %d",BC_Types[ibc].BC_Data_Int[0]); 
 
 	  break;
+
 
 	  /*
 	   * Fall through for all cases which require eight floating point
@@ -1785,40 +1820,6 @@ rd_bc_specs(FILE *ifp,
           break;
 
 	case CAP_REPULSE_USER_BC:
-
-	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", 
-		      &BC_Types[ibc].BC_Data_Float[0],
-		      &BC_Types[ibc].BC_Data_Float[1],
-		      &BC_Types[ibc].BC_Data_Float[2],
-		      &BC_Types[ibc].BC_Data_Float[3],
-		      &BC_Types[ibc].BC_Data_Float[4],
-		      &BC_Types[ibc].BC_Data_Float[5],
-		      &BC_Types[ibc].BC_Data_Float[6],
-		      &BC_Types[ibc].BC_Data_Float[7],
-		      &BC_Types[ibc].BC_Data_Float[8],
-		      &BC_Types[ibc].BC_Data_Float[9],
-		      &BC_Types[ibc].BC_Data_Float[10],
-		      &BC_Types[ibc].BC_Data_Float[11],
-		      &BC_Types[ibc].BC_Data_Float[12],
-		      &BC_Types[ibc].BC_Data_Float[13]) != 14)
-	    {
-	      sr = sprintf(err_msg, "%s: Expected 14 flts for %s.",
-			   yo, BC_Types[ibc].desc->name1);
-	      EH(-1, err_msg);
-	    }
-
-	   for(i=0;i<14;i++) SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].BC_Data_Float[i]);
-
-	  /* Try reading the optional integer. */
-	  if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[2]) != 1)
-	    {
-	      BC_Types[ibc].BC_Data_Int[2] = -1;
-	    }
-	  else
-	    SPF(endofstring(echo_string)," %d",BC_Types[ibc].BC_Data_Int[2]); 
-
-	  break;
-	case CAP_REPULSE_ROLL_BC:
 	case QRAD_REPULSE_ROLL_BC:
 
 	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", 
@@ -1844,6 +1845,60 @@ rd_bc_specs(FILE *ifp,
 	    }
 
 	   for(i=0;i<15;i++) SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].BC_Data_Float[i]);
+
+	  /* Try reading the optional integer. */
+	  if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[2]) != 1)
+	    {
+	      BC_Types[ibc].BC_Data_Int[2] = -1;
+	    }
+	  else
+	    SPF(endofstring(echo_string)," %d",BC_Types[ibc].BC_Data_Int[2]); 
+
+	  break;
+	case CAP_REPULSE_ROLL_BC:
+
+	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf",
+		      &BC_Types[ibc].BC_Data_Float[0],
+		      &BC_Types[ibc].BC_Data_Float[1],
+		      &BC_Types[ibc].BC_Data_Float[2],
+		      &BC_Types[ibc].BC_Data_Float[3],
+		      &BC_Types[ibc].BC_Data_Float[4],
+		      &BC_Types[ibc].BC_Data_Float[5],
+		      &BC_Types[ibc].BC_Data_Float[6],
+		      &BC_Types[ibc].BC_Data_Float[7],
+		      &BC_Types[ibc].BC_Data_Float[8],
+		      &BC_Types[ibc].BC_Data_Float[9],
+		      &BC_Types[ibc].BC_Data_Float[10],
+		      &BC_Types[ibc].BC_Data_Float[11]) != 12)
+	    {
+	      sr = sprintf(err_msg, "%s: Expected 12 required flts for %s.",
+			   yo, BC_Types[ibc].desc->name1);
+	      EH(-1, err_msg);
+	    }
+
+	   for(i=0;i<12;i++) SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].BC_Data_Float[i]);
+	  /* Try reading the optional integer. */
+          if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[0]) != 1)
+            {
+              BC_Types[ibc].BC_Data_Int[0] = -1;
+            }
+          else
+            SPF(endofstring(echo_string)," %d",BC_Types[ibc].BC_Data_Int[0]);
+
+	  if ( fscanf(ifp, "%lf %lf %lf %lf", 
+		      &BC_Types[ibc].BC_Data_Float[12],
+		      &BC_Types[ibc].BC_Data_Float[13],
+		      &BC_Types[ibc].BC_Data_Float[14],
+		      &BC_Types[ibc].BC_Data_Float[15]) != 4)
+	    {
+	      sr = sprintf(err_msg, "%s: Expected 12 required flts for %s.",
+			   yo, BC_Types[ibc].desc->name1);
+	      EH(-1, err_msg);
+              BC_Types[ibc].BC_Data_Float[12] = 1.;
+              BC_Types[ibc].BC_Data_Float[13] = 2.;
+              BC_Types[ibc].BC_Data_Float[14] = 0.;
+              BC_Types[ibc].BC_Data_Float[15] = 1.;
+	    }
 
 	  /* Try reading the optional integer. */
 	  if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[2]) != 1)
@@ -3572,7 +3627,7 @@ fprintf(stderr," HC %d BC %d of %d\n",i,hunt[i].DFID,BC_Types[ibc].max_DFlt);
     if (fscanf(ifp, "%d %lf ", &pressure_datum_element, &pressure_datum_value ) != 2 ) {
       		SPF(echo_string,"\t(%s)", "PRESSURE DATUM =  missing data");
      		} else	{
-				SPF(echo_string,"%s = %d %.4g", "PRESSURE DATUM" , pressure_datum_element, pressure_datum_value );
+		SPF(echo_string,"%s = %d %.4g", "PRESSURE DATUM" , pressure_datum_element, pressure_datum_value );
 
  		}
 	ECHO(echo_string,echo_file);

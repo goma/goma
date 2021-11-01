@@ -34,7 +34,7 @@ EXTERN int apply_contact_bc
                                  * explicit (theta = 1) --
 				 * implicit (theta = 0) */
        const double,            /* global average element size */
-       const double [],  	/* average element size */
+       const double [DIM],  	/* average element size */
        const double,	        /* average element viscosity */
        const double,	        /* global velocity norm */
        struct elem_side_bc_struct *[],

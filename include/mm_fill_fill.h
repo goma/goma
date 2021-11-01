@@ -130,9 +130,9 @@ EXTERN int assemble_fill_ext_v
 				 *      explicit (tt = 1) to 
 				 *      implicit (tt = 0)                    */
        double,                  /* dt - current time step size               */
-       double [],               /* hsquared[DIM]           next three parameters */
-       double [][DIM],          /* hh[DIM][DIM]            are element size  */
-       double [][MDE]);        /* dh_dxnode[DIM][MDE]     info for GLS */
+       double [DIM],               /* hsquared[DIM]           next three parameters */
+       double [DIM][DIM],          /* hh[DIM][DIM]            are element size  */
+       double [DIM][MDE]);        /* dh_dxnode[DIM][MDE]     info for GLS */
 
 EXTERN int assemble_fill_gradf
 (double ,                      /* tt                   */

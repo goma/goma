@@ -482,13 +482,13 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	 */
 
 	switch (bc->BC_Name) {
-	    
+
 	case KINEMATIC_PETROV_BC:
 	case KINEMATIC_BC:
 	case VELO_NORMAL_BC:
 	case VELO_NORMAL_LS_BC:
 	case VELO_NORMAL_LS_PETROV_BC:
-		
+
 	  contact_flag = (ls != NULL);
 
 	  /*  first all external boundaries with velocity
@@ -508,8 +508,14 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	    }
 	  break;
 
+        case VELO_NORMAL_LUB_BC:
+
+	      fvelo_normal_lub_bc(func, d_func, elem_side_bc->id_side, x_dot, theta, delta_t,
+                                  xi, exo, bc->BC_Data_Float);
+
+	  break;
 	case VELO_TANGENT_LS_BC:
-		
+
 	  /*  first all external boundaries with velocity
 	      second - internal boundaries with an explicit block id
 	      third  - internal boundaries with implicit iapply logic
@@ -540,7 +546,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			  x_dot, theta, delta_t, (int) bc->BC_Name,0,0,135.0);
 	  ls_attach_bc( func, d_func, bc->BC_Data_Float[0] );
 	  break;
-		
+
         case LS_WALL_ANGLE_BC:
           ls_wall_angle_bc(func, d_func, bc->BC_Data_Float[0]);
           break;
@@ -997,10 +1003,11 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 		 pb[DIM-1] = 0.0;
 		 /*WH(-1,"3rd Direction bulk stress not connected to CAPILLARY BC yet...\n");*/
 		}
+/*  BC_Data_Float[1]&[2] are now used for external pressure and shear stress  */
 	    if (BC_Types[bc_input_id].BC_Name == CAPILLARY_TABLE_BC)
                {
-	  apply_table_wic_bc(func, d_func, &BC_Types[bc_input_id], time_value);
-              pb[0] += func[0];
+	        apply_table_wic_bc(func, d_func, &BC_Types[bc_input_id], time_value);
+                pb[0] += func[0];
                }
 
 	    fn_dot_T(cfunc, d_cfunc, elem_side_bc->id_side,
@@ -1008,56 +1015,56 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 		     elem_side_bc, iconnect_ptr, dsigma_dx);
 
 	    if (bc->BC_Name == CAP_REPULSE_BC) {
-	      apply_repulsion(cfunc, d_cfunc, bc->BC_Data_Float[2],
-			      bc->BC_Data_Float[3], bc->BC_Data_Float[4],
-			      bc->BC_Data_Float[5], bc->BC_Data_Float[6],
+	      apply_repulsion(cfunc, d_cfunc, bc->BC_Data_Float[3],
+			      bc->BC_Data_Float[4], bc->BC_Data_Float[5],
+			      bc->BC_Data_Float[6], bc->BC_Data_Float[7],
 			      elem_side_bc, iconnect_ptr);
 	    }
 
 	    if (bc->BC_Name == CAP_REPULSE_ROLL_BC) {
 	      apply_repulsion_roll(cfunc, d_cfunc, x, 
-                               bc->BC_Data_Float[2], 
-			       &(bc->BC_Data_Float[3]),
-			       &(bc->BC_Data_Float[6]),
-                               bc->BC_Data_Float[9], 
+                               bc->BC_Data_Float[3], 
+			       &(bc->BC_Data_Float[4]),
+			       &(bc->BC_Data_Float[7]),
                                bc->BC_Data_Float[10], 
                                bc->BC_Data_Float[11], 
                                bc->BC_Data_Float[12], 
                                bc->BC_Data_Float[13], 
                                bc->BC_Data_Float[14], 
+                               bc->BC_Data_Float[15], 
                                bc->BC_Data_Int[2],
 			      elem_side_bc, iconnect_ptr);
 	    }
 	    if (bc->BC_Name == CAP_REPULSE_USER_BC) {
 	      apply_repulsion_user(cfunc, d_cfunc, 
-                               bc->BC_Data_Float[2], 
-			       &(bc->BC_Data_Float[3]),
-			       &(bc->BC_Data_Float[6]),
-                               bc->BC_Data_Float[9], 
+                               bc->BC_Data_Float[3], 
+			       &(bc->BC_Data_Float[4]),
+			       &(bc->BC_Data_Float[7]),
                                bc->BC_Data_Float[10], 
                                bc->BC_Data_Float[11], 
                                bc->BC_Data_Float[12], 
                                bc->BC_Data_Float[13], 
+                               bc->BC_Data_Float[14], 
 			      elem_side_bc, iconnect_ptr);
 	    }
 	    if (bc->BC_Name == CAP_REPULSE_TABLE_BC) {
-	      apply_repulsion_table(cfunc, d_cfunc, x, bc->BC_Data_Float[2], 
-                               bc->BC_Data_Float[3], 
+	      apply_repulsion_table(cfunc, d_cfunc, x, bc->BC_Data_Float[3], 
                                bc->BC_Data_Float[4], 
                                bc->BC_Data_Float[5], 
                                bc->BC_Data_Float[6], 
-			       &(bc->BC_Data_Float[7]),
+                               bc->BC_Data_Float[7], 
+			       &(bc->BC_Data_Float[8]),
                                bc->BC_Data_Int[2],
 			      elem_side_bc, iconnect_ptr);
 	    }
 	    if (BC_Types[bc_input_id].BC_Name == CAP_RECOIL_PRESS_BC)
 	      {
 		apply_vapor_recoil(cfunc, d_cfunc, 
-				   BC_Types[bc_input_id].BC_Data_Float[2],
 				   BC_Types[bc_input_id].BC_Data_Float[3],
 				   BC_Types[bc_input_id].BC_Data_Float[4],
 				   BC_Types[bc_input_id].BC_Data_Float[5],
 				   BC_Types[bc_input_id].BC_Data_Float[6],
+				   BC_Types[bc_input_id].BC_Data_Float[7],
 				   elem_side_bc, iconnect_ptr);
 	      }
 	    if (BC_Types[bc_input_id].BC_Name == CAPILLARY_SHEAR_VISC_BC)
@@ -1107,7 +1114,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	case FLOW_STRESSNOBC_BC:
 	  flow_n_dot_T_nobc(func, d_func,
 			    bc->BC_Data_Float[0],
-			    bc->BC_Data_Int[0]);
+			    bc->BC_Data_Int[0], time_value);
 	  break;
 
 	case FLOW_GRADV_BC:
@@ -1755,6 +1762,13 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 
 	case QNOBC_BC:
 	  qnobc_surf (func, d_func, time_intermediate);
+	  break;
+
+	case RESTIME_GRADSIC_BC:
+	  func[0] = -bc->BC_Data_Float[0];
+          /* fall through to add in normal gradient term */
+	case RESTIME_NOBC_BC:
+	  restime_nobc_surf (func, d_func, time_intermediate);
 	  break;
 
 	case T_CONTACT_RESIS_BC:

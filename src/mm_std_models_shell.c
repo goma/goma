@@ -1009,7 +1009,6 @@ film_evaporation_model (double C,             /* Suspension concentration */
                         double *dEvapRate_dC, /* Sensitivity of evap rate w.r.t. concentration */
                         double H,             /* Film thickness */
                         double *dEvapRate_dH )/* Sensitivity of evap rate w.r.t. film thickness */
-		       
 /******************************************************************************
 *
 *  A function which computes the rate of evaporation of solvent inside thin film
@@ -1295,7 +1294,7 @@ disjoining_pressure_model (double H,                              /* Film thickn
                                       + B * d2f_dH2 * grad_II_H[i] ;
         }
     }
-   
+
 
  return(DisjPress);
 
@@ -1305,10 +1304,10 @@ disjoining_pressure_model (double H,                              /* Film thickn
 
 
 double
-diffusion_coefficient_model (double mu,              /* Viscosity of the liquid medium */ 
-                             double *dDiffCoeff_dmu )/* diffusion coefficient's sensitivity 
+diffusion_coefficient_model (double mu,              /* Viscosity of the liquid medium */
+                             double *dDiffCoeff_dmu )/* diffusion coefficient's sensitivity
                                                          w.r.t. viscosity */ 
-		       
+
 /******************************************************************************
 *
 *  A function which computes particles diffusion of coefficient inside thin film
@@ -1452,7 +1451,7 @@ porous_shell_cross_perm_model(void) {
 *  either a constant value or an external field.  Used with the function
 *  assemble_porous_shell_open and assemble_porous_shell_open_2.
 *
-*  Kristianto Tjiptowidjojo (tjiptowi@sandia.gov) - April 2017
+*  Kristianto Tjiptowidjojo (tjiptowi@unm.edu) - April 2017
 *
 ******************************************************************************/
   dbl kappa = 0.0;
@@ -1479,10 +1478,10 @@ porous_shell_cross_perm_model(void) {
   return(kappa);
 }
 /* END of porous_shell_height_model */
-   
+
 /*****************************************************************************/
 
-   
+
 
 
 /******************************************************************************/
@@ -1597,3 +1596,59 @@ void dynamic_contact_angle_model(
   return;
 }
 /*** END OF dynamic_contact_angle_model ***/
+
+int
+lubrication_fluid_source(
+                         double *flux,                         /* Fluid flux */
+                         double d_flux[MAX_VARIABLE_TYPES][MDE] /* Fluid flux sensitivities */
+                        )
+{
+/******************************************************************************
+*
+*  This function computes fluid flux into or out from lubrication shell.
+*  Right now it only supports for flux between continuum and lubrication layers
+*  Used with the function assemble_lubrication.
+*
+*  Kristianto Tjiptowidjojo (tjiptowi@unm.edu) - February 2021
+*
+******************************************************************************/
+  double kappa = 0.0;
+  double mu = 0.0;
+  double L = 0.0;
+  int j = 0;
+  double phi_j;
+
+  if (mp->LubSourceModel == CONSTANT)
+    {
+     *flux = mp->lubsource;
+    }
+  else if (mp->LubSourceModel == CONTINUUM_FLUID)
+    {
+      kappa = mp->u_lubsource_function_constants[0];
+      mu    = mp->u_lubsource_function_constants[1];
+      L     = mp->u_lubsource_function_constants[2];
+
+      *flux = (kappa/mu/L) * (fv->P - fv->lubp);
+      if (d_flux != NULL)
+        {
+         for (j = 0; j < ei[pg->imtrx]->dof[PRESSURE]; j++)
+            {
+             phi_j = bf[PRESSURE]->phi[j];
+             d_flux[PRESSURE][j] = (kappa/mu/L) * phi_j;
+            }
+         for (j = 0; j < ei[pg->imtrx]->dof[LUBP]; j++)
+            {
+             phi_j = bf[LUBP]->phi[j];
+             d_flux[LUBP][j] = (kappa/mu/L) * (-phi_j);
+            }
+        }
+    }
+  else
+    {
+      EH(-1,"Unsupported Lubrication Fluid Source Model");
+    }
+
+  return(1);
+}
+/* END of lubrication_fluid_source */
+/*****************************************************************************/

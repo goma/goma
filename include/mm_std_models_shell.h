@@ -88,4 +88,10 @@ EXTERN double rolling_pressure
        double
        );
 
+EXTERN int lubrication_fluid_source
+(
+       double *,                        /* Flux */
+       double [MAX_VARIABLE_TYPES][MDE] /* Flux sensitivities */
+);
+
 #endif /* GOMA_MM_STD_MODELS_H */
