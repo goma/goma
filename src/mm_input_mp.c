@@ -3116,8 +3116,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	    {
 	      if( model_read == -1) SPF(err_msg,"%s card is missing.",search_string);
 	      if( model_read == -2) SPF(err_msg,"Only CONSTANT %s mode model supported.", search_string);
-	      fprintf(stderr,"%s\n",err_msg);
-	      exit(-1);
+	      EH(-1, err_msg);
 	    }
 
 	  strcpy(search_string, "Yield Exponent");
@@ -3131,8 +3130,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	    {
 	      if( model_read == -1) SPF(err_msg,"%s card is missing.",search_string);
 	      if( model_read == -2) SPF(err_msg,"Only CONSTANT %s mode model supported.", search_string);
-	      fprintf(stderr,"%s\n",err_msg);
-	      exit(-1);
+	      EH(-1, err_msg);
 	    }
 
 	  strcpy(search_string, "Saramito Power Law Exponent");
@@ -3144,10 +3142,12 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
 	  if( model_read < 1 )
 	    {
-	      if( model_read == -1) nexp_val = 1;
-	      if( model_read == -2) SPF(err_msg,"Only CONSTANT %s mode model supported.", search_string);
-	      fprintf(stderr,"%s\n",err_msg);
-	      exit(-1);
+	      if( model_read == -1) {
+		nexp_val = 1;
+	      } else if( model_read == -2) {
+		SPF(err_msg,"Only CONSTANT %s mode model supported.", search_string);
+	        EH(-1, err_msg);
+	      }
 	    }
 			       
 	  for(mm=0;mm<vn_glob[mn]->modes;mm++)
