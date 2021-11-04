@@ -10777,22 +10777,8 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
     if (LOG_CONF_MAP != -1 && Num_Var_In_Type[pg->imtrx][POLYMER_STRESS11])
     {
       LOG_CONF_MAP = index_post;
-      set_nv_tkud(rd, index, 0, 0, -2, "MS11","[1]",
-                  "log conf stress xx", FALSE);
-      index++;
-      index_post++;
-      set_nv_tkud(rd, index, 0, 0, -2, "MS12","[1]",
-                  "log conf stress xy", FALSE);
-
-      index++;
-      index_post++;
-      set_nv_tkud(rd, index, 0, 0, -2, "MS22","[1]",
-                  "log conf stress yy", FALSE);
-      index++;
-      index_post++;
-
       // Loop over any additional viscoelastic modes
-      for (mode = 1; mode<MAX_MODES; mode++)
+      for (mode = 0; mode<MAX_MODES; mode++)
         {
           for (a=0; a<VIM; a++)
             {
