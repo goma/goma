@@ -27,17 +27,17 @@
  */
 
 #ifdef HAVE_SUNMATH_H
-#include <sunmath.h>		/* Need "-lsunmath -lm" libs too! */
+#include <sunmath.h> /* Need "-lsunmath -lm" libs too! */
 #endif
 
-void handle_ieee (void );
+void handle_ieee(void);
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
 
 #ifdef hpux
-void handle_ieee (void)
+void handle_ieee(void)
 
 /***********************************************************************
  *    This function changes the default ieee floating point exceptions
@@ -69,7 +69,7 @@ void handle_ieee (void)
  *         default optimization is turned on, then spurious SIGFPE 8
  *         signals may occur, causing your program to prematurely
  *         terminate.
- *         There are two solutions to this (note already called HP on 
+ *         There are two solutions to this (note already called HP on
  *         this and was told that this is a undocumented "feature" not
  *         (gasp) a bug):
  *           1) Change the compile line options to include +Onomoveflops
@@ -79,18 +79,16 @@ void handle_ieee (void)
  *         compiler define.
  ***********************************************************************/
 {
-   (void) fpsetfastmode(1);
-   (void) printf("ieee: fp exceptions are ignored\n");
-   (void) printf("ieee: Fast underflow mode is enabled\n");
+  (void)fpsetfastmode(1);
+  (void)printf("ieee: fp exceptions are ignored\n");
+  (void)printf("ieee: Fast underflow mode is enabled\n");
 }
 /*****************************************************************************/
 
 #endif
 
 #ifdef solaris
-void 
-handle_ieee(void )
-{
+void handle_ieee(void) {
   static int err;
   static const char yo[] = "handle_ieee";
 
@@ -100,32 +98,31 @@ handle_ieee(void )
    * Clear any previous existing settings...
    */
 
-  err = ieee_handler ("clear", "all", SIGFPE_DEFAULT);
+  err = ieee_handler("clear", "all", SIGFPE_DEFAULT);
 
   /*
    * Call these harmless exceptions...
    */
 
-  err = ieee_handler ("set", "inexact",   SIGFPE_IGNORE);
-  err = ieee_handler ("set", "underflow", SIGFPE_IGNORE);
+  err = ieee_handler("set", "inexact", SIGFPE_IGNORE);
+  err = ieee_handler("set", "underflow", SIGFPE_IGNORE);
 
   /*
    * Call these exceptions worthy of halting right away...
    */
 
-  err = ieee_handler ("set", "division",  SIGFPE_ABORT);
-  err = ieee_handler ("set", "overflow",  SIGFPE_ABORT);
-  err = ieee_handler ("set", "invalid",   SIGFPE_ABORT);
+  err = ieee_handler("set", "division", SIGFPE_ABORT);
+  err = ieee_handler("set", "overflow", SIGFPE_ABORT);
+  err = ieee_handler("set", "invalid", SIGFPE_ABORT);
 
   /*
    * Insure none of these set attempts was thwarted...
    */
 
-  if ( err != 0 )
-    {
-      log_msg("Trouble initializing ANSI/IEEE Std 754-1985");
-      log_err("arithmetic handler on solaris");
-    }
+  if (err != 0) {
+    log_msg("Trouble initializing ANSI/IEEE Std 754-1985");
+    log_err("arithmetic handler on solaris");
+  }
 
   return;
 }
@@ -160,8 +157,5 @@ matherr(struct exception *e)
  * Default for this: do nothing.
  */
 
-void 
-handle_ieee (void)
-{
-}
+void handle_ieee(void) {}
 #endif

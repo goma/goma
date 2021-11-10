@@ -56,15 +56,15 @@ PetscErrorCode petsc_PCD_setup(PC ppc,
                                dbl *xdot_old);
 
 goma_error count_pressure_nodes(PetscMatrixData *matrix_data,
-                                       Exo_DB *exo,
-                                       Dpi *dpi,
-                                       dbl *x,
-                                       dbl *x_old,
-                                       dbl *xdot,
-                                       dbl *xdot_old,
-                                       PetscInt *local_nodes,
-                                       PetscInt *global_nodes);
-  
+                                Exo_DB *exo,
+                                Dpi *dpi,
+                                dbl *x,
+                                dbl *x_old,
+                                dbl *xdot,
+                                dbl *xdot_old,
+                                PetscInt *local_nodes,
+                                PetscInt *global_nodes);
+
 goma_error goma_setup_petsc_matrix(struct GomaLinearSolverData *ams,
                                    Exo_DB *exo,
                                    Dpi *dpi,

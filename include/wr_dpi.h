@@ -9,7 +9,6 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
 
 #ifndef GOMA_WR_DPI_H
 #define GOMA_WR_DPI_H
@@ -29,6 +28,6 @@
 #define EXTERN extern
 #endif
 
-EXTERN int wr_dpi(Dpi *d, char *filename);			/* verbosity - how much to talk */
+EXTERN int wr_dpi(Dpi *d, char *filename); /* verbosity - how much to talk */
 
 #endif /* GOMA_WR_DPI_H */

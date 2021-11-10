@@ -9,7 +9,7 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
+
 #ifndef GOMA_BC_SURFACEDOMAIN_H
 #define GOMA_BC_SURFACEDOMAIN_H
 
@@ -29,14 +29,13 @@
 #define EXTERN extern
 #endif
 
-EXTERN void mass_flux_sd_bc
-(double [],		/* func                                      */
-       double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
-       int ,			/* wspec - species number this BC            */
-       double ,			/* mass_tran_coeff - (cgs?? MKS units)       */
-       double ,			/* Y_c - bath concentration 	             */
-       double ,			/* dt - current value of the time step       */
-       double );		/* tt - parameter varies time integration    *
-				 * from explicit to implicit                 */
+EXTERN void mass_flux_sd_bc(double[], /* func                                      */
+                            double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
+                            int,     /* wspec - species number this BC            */
+                            double,  /* mass_tran_coeff - (cgs?? MKS units)       */
+                            double,  /* Y_c - bath concentration 	             */
+                            double,  /* dt - current value of the time step       */
+                            double); /* tt - parameter varies time integration    *
+                                      * from explicit to implicit                 */
 
 #endif /* GOMA_BC_SURFACEDOMAIN_H */

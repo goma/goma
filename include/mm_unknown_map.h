@@ -9,7 +9,7 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
+
 /*
  * mm_unknown_map.h -- prototype declarations for mm_unknown_map.c
  */
@@ -26,23 +26,19 @@
 #include "exo_struct.h"
 #include "rf_vars_const.h"
 
-extern void setup_local_nodal_vars
-(Exo_DB *,		/* exo - ptr to FE EXODUS II database        */
-       Dpi *);			/* dpi - ptr to parallel info                */
+extern void setup_local_nodal_vars(Exo_DB *, /* exo - ptr to FE EXODUS II database        */
+                                   Dpi *);   /* dpi - ptr to parallel info                */
 
-extern void setup_external_nodal_vars
-(Exo_DB *,		/* exo - ptr to FE EXODUS II database        */
-       Dpi *,                   /* dpi - ptr to parallel info                */
-       Comm_Ex **);
+extern void setup_external_nodal_vars(Exo_DB *, /* exo - ptr to FE EXODUS II database        */
+                                      Dpi *,    /* dpi - ptr to parallel info                */
+                                      Comm_Ex **);
 
-extern int find_MaxUnknownNode
-(void);
+extern int find_MaxUnknownNode(void);
 
 extern void print_vars_at_nodes(void);
 
-extern void set_unknown_map
-(Exo_DB *,		/* exo - ptr to FE EXODUS II database        */
-       Dpi *);			/* dpi - ptr to parallel info                */
+extern void set_unknown_map(Exo_DB *, /* exo - ptr to FE EXODUS II database        */
+                            Dpi *);   /* dpi - ptr to parallel info                */
 
 extern int Index_Solution(const int nodeNum,     /* Global Node Number                        */
                           const int varType,     /* Variable Type                             */
@@ -61,8 +57,7 @@ extern int Index_Solution(const int nodeNum,     /* Global Node Number          
 
 extern int variable_type_nodalInterp(int);
 
-extern VARIABLE_DESCRIPTION_STRUCT *
-Index_Solution_Inv(const int, int *, int *, int *, int *, int);
+extern VARIABLE_DESCRIPTION_STRUCT *Index_Solution_Inv(const int, int *, int *, int *, int *, int);
 
 extern void dofname40(const int, char *);
 

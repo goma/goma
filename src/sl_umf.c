@@ -9,51 +9,51 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
+
 /*
-	UMFPACK CALLING ROUTINE
+        UMFPACK CALLING ROUTINE
 
-	ARGUMENTS:
+        ARGUMENTS:
 
-	first  = +1   : FIRST CALL
-	first !=  0   : NOT FIRST CALL
-	first  = -1   : LAST CALL
+        first  = +1   : FIRST CALL
+        first !=  0   : NOT FIRST CALL
+        first  = -1   : LAST CALL
 
-	fact_optn =-2 : LOAD MATRIX AND ANALYSIS/DECOMPOSITION ONLY
-			NO BACK SUBSTITUTION
-	fact_optn =-1 : LOAD MATRIX AND DECOMPOSITION USING PAST ANALYSIS 
-			NO BACK SUBSTITUTION
-	fact_optn = 0 : LOAD MATRIX AND ANALYSIS/DECOMPOSITION 
-			WITH BACK SUBSTITUTION
-	fact_optn = 1 : LOAD MATRIX AND DECOMPOSITION USING PAST ANALYSIS
-			WITH BACK SUBSTITUTION
-	fact_optn > 2 : BACK SUBSTITUTION ONLY
+        fact_optn =-2 : LOAD MATRIX AND ANALYSIS/DECOMPOSITION ONLY
+                        NO BACK SUBSTITUTION
+        fact_optn =-1 : LOAD MATRIX AND DECOMPOSITION USING PAST ANALYSIS
+                        NO BACK SUBSTITUTION
+        fact_optn = 0 : LOAD MATRIX AND ANALYSIS/DECOMPOSITION
+                        WITH BACK SUBSTITUTION
+        fact_optn = 1 : LOAD MATRIX AND DECOMPOSITION USING PAST ANALYSIS
+                        WITH BACK SUBSTITUTION
+        fact_optn > 2 : BACK SUBSTITUTION ONLY
 
-	matr_form = 0 : INPUT MATRIX IN COORDINATE FORMAT
-	matr_form = 1 : INPUT MATRIX IN MSR FORMAT
-	matr_form = 2 : INPUT MATRIX IN CSR FORMAT
+        matr_form = 0 : INPUT MATRIX IN COORDINATE FORMAT
+        matr_form = 1 : INPUT MATRIX IN MSR FORMAT
+        matr_form = 2 : INPUT MATRIX IN CSR FORMAT
 
-	n             : DIMENSION OF SYSTEM
-	nnz           : NUMBER OF NON-ZEROES IN MATRIX (LENGTH OF a[])
-	row           : ROW DATA (IF matr_form = 0,2)
-	col           : COL DATA (OR ija IF matr_form = 1)
-	a             : VALUES IN MATRIX
-	b             : RHS
-	x             : SOLUTION VECTOR
-	
-	BY IAN GATES AUG 8 1997
+        n             : DIMENSION OF SYSTEM
+        nnz           : NUMBER OF NON-ZEROES IN MATRIX (LENGTH OF a[])
+        row           : ROW DATA (IF matr_form = 0,2)
+        col           : COL DATA (OR ija IF matr_form = 1)
+        a             : VALUES IN MATRIX
+        b             : RHS
+        x             : SOLUTION VECTOR
 
-	MODIFIED:
+        BY IAN GATES AUG 8 1997
 
-	IDG SEPT 28 1997  
-	PUT IN FACTORIZE ONLY FLAG
+        MODIFIED:
 
-	IDG OCT 18 1997
-	LOAD MATRIX IN FORTRAN WRAPPER INTO IMEM/XMEM RATHER THAN HERE
-	NEEDED FOR FAILED FACTORIZATION BASED ON OLD ANALYSIS
+        IDG SEPT 28 1997
+        PUT IN FACTORIZE ONLY FLAG
 
-	IDG OCT 19 1997
-	RE-ALLOCATE MEMORY AS NEEDED WITH CALL BACK TO FACTORIZER
+        IDG OCT 18 1997
+        LOAD MATRIX IN FORTRAN WRAPPER INTO IMEM/XMEM RATHER THAN HERE
+        NEEDED FOR FAILED FACTORIZATION BASED ON OLD ANALYSIS
+
+        IDG OCT 19 1997
+        RE-ALLOCATE MEMORY AS NEEDED WITH CALL BACK TO FACTORIZER
 
         DRN AUG 26 2003
         NO MORE STATIC MEMORY ALLOCATION, WOOHOO!
@@ -61,9 +61,9 @@
 
 */
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 
 #ifdef HAVE_UMFPACK
 #include <umfpack.h>
@@ -76,12 +76,12 @@
 #include "ac_stability.h"
 #include "ac_stability_util.h"
 #include "ac_update_parameter.h"
+#include "bc/rotate.h"
 #include "bc_colloc.h"
 #include "bc_contact.h"
 #include "bc_curve.h"
 #include "bc_dirich.h"
 #include "bc_integ.h"
-#include "bc/rotate.h"
 #include "bc_special.h"
 #include "bc_surfacedomain.h"
 #include "dp_comm.h"
@@ -187,10 +187,9 @@
 #include "wr_side_data.h"
 #include "wr_soln.h"
 
-
 /* how many different linear systems might UMF be used for? */
 #ifndef UMF_MAX_SYSTEMS
-#define UMF_MAX_SYSTEMS   20
+#define UMF_MAX_SYSTEMS 20
 #endif
 
 #ifdef HAVE_UMFPACK
@@ -208,27 +207,25 @@
  * Note that we don't do this very intelligently.  We simply use
  * indices sequentially.  There is no mechanism to allow re-use.
  */
-int
-SL_UMF ( int system_id,
-	 int *first,
-	 int *fact_optn,
-	 int *matr_form,
-	 int *nj,
-	 int *nnz_j,
-	 int *row,
-	 int *col,
-	 double *a,
-	 double *b,
-	 double *x  )
-{
+int SL_UMF(int system_id,
+           int *first,
+           int *fact_optn,
+           int *matr_form,
+           int *nj,
+           int *nnz_j,
+           int *row,
+           int *col,
+           double *a,
+           double *b,
+           double *x) {
   /* Static struct holds all linear systems also keep track of number
    * of systems we have set up */
   static struct UMF_Linear_Solver_System ums_a[UMF_MAX_SYSTEMS];
   static int number_systems = 0;
-  
+
   double Control[UMFPACK_CONTROL], Info[UMFPACK_INFO];
-        
-  struct UMF_Linear_Solver_System *ums = 0;  /* pointer to current system */
+
+  struct UMF_Linear_Solver_System *ums = 0; /* pointer to current system */
 
   int i, j, k, umf_option = 0;
   int hit_diag, err;
@@ -240,10 +237,10 @@ SL_UMF ( int system_id,
   for (i = 0; i < UMFPACK_INFO; i++) {
     Info[i] = 0;
   }
-          
+
 #ifdef DEBUG_SL_UMF
-  fprintf(stderr, "SL_UMF: system_id = %d, *first = %d, *fact_optn = %d\n",
-	  system_id, *first, *fact_optn);
+  fprintf(stderr, "SL_UMF: system_id = %d, *first = %d, *fact_optn = %d\n", system_id, *first,
+          *fact_optn);
 #endif
 
   /* MEMORY */
@@ -252,10 +249,10 @@ SL_UMF ( int system_id,
     /* If *first == 1, then we're creating a new matrix. */
 
     /* If system_id isn't -1, then we're probably making some sort of mistake... */
-    if(system_id != -1)
+    if (system_id != -1)
       GOMA_EH(GOMA_ERROR, "Entered SL_UMF with *first == 1, but system_id != -1");
     /* If we've already gone through all of our slots, get out. */
-    if(number_systems == UMF_MAX_SYSTEMS)
+    if (number_systems == UMF_MAX_SYSTEMS)
       GOMA_EH(GOMA_ERROR, "Already created UMF_MAX_SYSTEMS systems");
 
     system_id = number_systems;
@@ -272,22 +269,22 @@ SL_UMF ( int system_id,
     ums->atp = NULL;
     ums->ati = NULL;
     ums->atx = NULL;
-    if ( *matr_form == 1 ) {
+    if (*matr_form == 1) {
       ums->atp = Ivector_birth(ums->n + 1);
       ums->ati = Ivector_birth(ums->nnz);
       ums->atx = Dvector_birth(ums->nnz);
-    } 
-    
+    }
+
     break;
-                         
+
   case 0:
-    /* If *first == 0, then we want to just reuse a previously created 
+    /* If *first == 0, then we want to just reuse a previously created
      * system. */
 
     /* system_id should have the appropriate identifier. */
-    if(system_id == -1)
+    if (system_id == -1)
       GOMA_EH(GOMA_ERROR, "Conflicting orders: system_id == -1 and *first != 1");
-    if(system_id < 0 || system_id >= UMF_MAX_SYSTEMS)
+    if (system_id < 0 || system_id >= UMF_MAX_SYSTEMS)
       GOMA_EH(GOMA_ERROR, "Index out of range: system_id");
 
     /* Grab the hopeful system. */
@@ -295,7 +292,7 @@ SL_UMF ( int system_id,
 
     /* Run through some sanity checks to help ensure we're dealing
      * with the correct system. */
-    if(ums->n != *nj || ums->nnz != *nnz_j)
+    if (ums->n != *nj || ums->nnz != *nnz_j)
       GOMA_EH(GOMA_ERROR, "Tried to access a bad system");
     break;
 
@@ -303,30 +300,30 @@ SL_UMF ( int system_id,
     /* If *first == -1, then we want to free space. */
 
     /* system_id should have the appropriate identifier. */
-    if(system_id == -1)
+    if (system_id == -1)
       GOMA_EH(GOMA_ERROR, "Conflicting orders: system_id == -1 and *first != 1");
-    if(system_id < 0 || system_id >= UMF_MAX_SYSTEMS)
+    if (system_id < 0 || system_id >= UMF_MAX_SYSTEMS)
       GOMA_EH(GOMA_ERROR, "Index out of range: system_id");
 
     ums = &ums_a[system_id];
     /* Run through some sanity checks to help ensure we're dealing
      * with the correct system. */
-    if(ums->n != *nj || ums->nnz != *nnz_j)
+    if (ums->n != *nj || ums->nnz != *nnz_j)
       GOMA_EH(GOMA_ERROR, "Tried to free a bad system");
 
     umfpack_di_free_symbolic(&ums->symbolic);
-    ums->symbolic = NULL;  
+    ums->symbolic = NULL;
     umfpack_di_free_numeric(&ums->numeric);
-    ums->numeric = NULL;                
+    ums->numeric = NULL;
     Ivector_death(ums->ap, ums->n + 1);
     Ivector_death(ums->ai, ums->nnz);
     Dvector_death(ums->ax, ums->nnz);
 
-    if ( ums->atp != NULL ) {
+    if (ums->atp != NULL) {
       Ivector_death(ums->atp, ums->n + 1);
       Ivector_death(ums->ati, ums->nnz);
       Dvector_death(ums->atx, ums->nnz);
-    } 
+    }
 
     /* MMH: The fix that changed the world... */
     ums->n = 0;
@@ -340,13 +337,11 @@ SL_UMF ( int system_id,
   }
 
   /* CONVERT MSR FORMAT TO MATLAB FORMAT IF NEEDED */
-  if (abs(*fact_optn) < 3) { 
+  if (abs(*fact_optn) < 3) {
     switch (*matr_form) {
     case 0: /* COORDINATE FORMAT */
-      umfpack_di_triplet_to_col( ums->n, ums->n, ums->nnz,
-                                 row, col, a,
-                                 ums->ap, ums->ai, ums->ax,
-                                 NULL );
+      umfpack_di_triplet_to_col(ums->n, ums->n, ums->nnz, row, col, a, ums->ap, ums->ai, ums->ax,
+                                NULL);
       break;
     case 1: /* MSR FORMAT */
       /* Note: MSR is row-oriented and UMF wants column-oriented data.
@@ -360,12 +355,12 @@ SL_UMF ( int system_id,
          back into the rows.
       */
       k = 0;
-      for (i=0;i<ums->n;i++) {  /* loop over rows */
+      for (i = 0; i < ums->n; i++) { /* loop over rows */
         ums->atp[i] = k;
         hit_diag = FALSE;
-	for (j=col[i];j<col[i+1];j++) {  /* loop over colums within row */
+        for (j = col[i]; j < col[i + 1]; j++) { /* loop over colums within row */
           /* if we get to the spot where the diagonal term belongs, merge it in */
-          if (!hit_diag && col[j] > i ) {
+          if (!hit_diag && col[j] > i) {
             ums->ati[k] = i;
             ums->atx[k] = a[i];
             k++;
@@ -384,20 +379,19 @@ SL_UMF ( int system_id,
         }
       }
       ums->atp[ums->n] = ums->nnz;
-      
+
       if (ums->nnz != k) {
-	DPRINTF(stderr, "E: NNZ=%12d CT=%12d\n", ums->nnz, k);
-	exit(0);
+        DPRINTF(stderr, "E: NNZ=%12d CT=%12d\n", ums->nnz, k);
+        exit(0);
       }
-      
+
       /* transpose matrix */
-      err = umfpack_di_transpose (ums->n, ums->n, ums->atp, ums->ati, ums->atx,
-	(int *) NULL, (int *) NULL, ums->ap, ums->ai, ums->ax);
-      if ( err != UMFPACK_OK )
-        {
-	  fprintf(stderr,"UMFPACK error = %d\n",err);
-	  GOMA_EH(GOMA_ERROR,"Error computing matrix transpose using umfpack_di_transpose\n");
-	}
+      err = umfpack_di_transpose(ums->n, ums->n, ums->atp, ums->ati, ums->atx, (int *)NULL,
+                                 (int *)NULL, ums->ap, ums->ai, ums->ax);
+      if (err != UMFPACK_OK) {
+        fprintf(stderr, "UMFPACK error = %d\n", err);
+        GOMA_EH(GOMA_ERROR, "Error computing matrix transpose using umfpack_di_transpose\n");
+      }
 
       break;
     case 2: /* CSR FORMAT - NOT DONE YET */
@@ -413,10 +407,10 @@ SL_UMF ( int system_id,
     case -1: /* FACTORIZATION WITH PAST ANALYSIS */
       umf_option = 0;
       break;
-    case  0: /* FULL ANALYSIS AND FACTORIZATION */
+    case 0: /* FULL ANALYSIS AND FACTORIZATION */
       umf_option = 1;
       break;
-    case  1: /* FACTORIZATION WITH PAST ANALYSIS */
+    case 1: /* FACTORIZATION WITH PAST ANALYSIS */
       umf_option = 0;
       break;
     case 3:
@@ -427,42 +421,38 @@ SL_UMF ( int system_id,
     }
 
     /* load default control parameters for UMF */
-    umfpack_di_defaults( Control );
+    umfpack_di_defaults(Control);
     /* optionally can ask for feedback from routines by uncommenting below */
     /*Control[UMFPACK_PRL] = 2.;*/
     /* optionally force solution strategy */
     Control[UMFPACK_STRATEGY] = UMFPACK_STRATEGY_UNSYMMETRIC;
-    
-    if ( umf_option == 1 ) {
+
+    if (umf_option == 1) {
       /* analysis */
-      if ( ums->symbolic != NULL ) {
+      if (ums->symbolic != NULL) {
         umfpack_di_free_symbolic(&ums->symbolic);
         ums->symbolic = NULL;
       }
-      err = umfpack_di_symbolic( ums->n, ums->n,
-                                 ums->ap, ums->ai, ums->ax,
-                                 &ums->symbolic, Control, Info );
+      err = umfpack_di_symbolic(ums->n, ums->n, ums->ap, ums->ai, ums->ax, &ums->symbolic, Control,
+                                Info);
       umfpack_di_report_status(Control, err);
       umfpack_di_report_info(Control, Info);
     }
 
     /* factorization */
-    if ( ums->numeric != NULL ) {
+    if (ums->numeric != NULL) {
       umfpack_di_free_numeric(&ums->numeric);
       ums->numeric = NULL;
     }
-    err = umfpack_di_numeric( ums->ap, ums->ai, ums->ax,
-                              ums->symbolic, &ums->numeric, Control, Info );
+    err =
+        umfpack_di_numeric(ums->ap, ums->ai, ums->ax, ums->symbolic, &ums->numeric, Control, Info);
     umfpack_di_report_status(Control, err);
     umfpack_di_report_info(Control, Info);
-
   }
 
   /* solve */
-  if ( *fact_optn >= 0 ) {
-    err = umfpack_di_solve( UMFPACK_A, ums->ap, ums->ai, ums->ax,
-                            x, b,
-                            ums->numeric, Control, Info );
+  if (*fact_optn >= 0) {
+    err = umfpack_di_solve(UMFPACK_A, ums->ap, ums->ai, ums->ax, x, b, ums->numeric, Control, Info);
     umfpack_di_report_status(Control, err);
     umfpack_di_report_info(Control, Info);
   }
@@ -476,19 +466,17 @@ SL_UMF ( int system_id,
 
 #else
 
-int
-SL_UMF ( int system_id,
-         int *first,
-         int *fact_optn,
-         int *matr_form,
-         int *nj,
-         int *nnz_j,
-         int *row,
-         int *col,
-         double *a,
-         double *b,
-         double *x  )
-{
+int SL_UMF(int system_id,
+           int *first,
+           int *fact_optn,
+           int *matr_form,
+           int *nj,
+           int *nnz_j,
+           int *row,
+           int *col,
+           double *a,
+           double *b,
+           double *x) {
   GOMA_EH(GOMA_ERROR, "Goma not compiled with UMFPACK support");
   return -1;
 }

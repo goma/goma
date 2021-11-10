@@ -623,7 +623,7 @@ TEST_CASE("goma_best_coordinate_system_3D varying normals surface", "[bc][automa
 
   REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
   REQUIRE(helper_one_coordinate_matches_normal(rotated_coord, normals[0]));
-  
+
   // Set 3
   for (int i = 0; i < n_normals; i++) {
     helper_set_normal_from_vector(normals[i], zn);
@@ -659,7 +659,6 @@ TEST_CASE("goma_best_coordinate_system_3D varying normals surface", "[bc][automa
   for (int i = 0; i < n_normals; i++) {
     REQUIRE(helper_one_coordinate_near_normal(rotated_coord, normals[i]));
   }
-
 
   // Set 5
   for (int i = 0; i < n_normals; i++) {
@@ -707,7 +706,7 @@ TEST_CASE("goma_best_coordinate_system_3D varying normals surface", "[bc][automa
   }
   // Set 7
 
-  double m13[3] = {0.30151134,  0.30151134, -0.90453403};
+  double m13[3] = {0.30151134, 0.30151134, -0.90453403};
   double m14[3] = {0.34815531, 0.34815531, -0.87038828};
   double m15[3] = {0, 0, -1.0};
   helper_set_normal_from_vector(normals[0], m13);
@@ -722,7 +721,6 @@ TEST_CASE("goma_best_coordinate_system_3D varying normals surface", "[bc][automa
   for (int i = 0; i < 3; i++) {
     REQUIRE(helper_one_coordinate_near_normal(rotated_coord, normals[i]));
   }
-
 
   // cleanup
 
@@ -803,7 +801,7 @@ TEST_CASE("goma_best_coordinate_system_3D varying normals edge", "[bc][automatic
   for (int i = 0; i < n_normals; i++) {
     REQUIRE(helper_one_coordinate_matches_normal(rotated_coord, normals[i]));
   }
-  
+
   // Varying edges, not all same direction
   // Set 3
   //
@@ -815,10 +813,10 @@ TEST_CASE("goma_best_coordinate_system_3D varying normals edge", "[bc][automatic
   for (int i = 4; i < n_normals; i++) {
     helper_set_normal_from_vector(normals[i], zn);
   }
-  double m1[3] = {0.0, INV_SQRT_2+0.3, INV_SQRT_2};
-  double m2[3] = {0.0, INV_SQRT_2, INV_SQRT_2+0.3};
-  double m3[3] = {0.0, INV_SQRT_2+0.2, INV_SQRT_2};
-  double m4[3] = {0.0, INV_SQRT_2, INV_SQRT_2+0.2};
+  double m1[3] = {0.0, INV_SQRT_2 + 0.3, INV_SQRT_2};
+  double m2[3] = {0.0, INV_SQRT_2, INV_SQRT_2 + 0.3};
+  double m3[3] = {0.0, INV_SQRT_2 + 0.2, INV_SQRT_2};
+  double m4[3] = {0.0, INV_SQRT_2, INV_SQRT_2 + 0.2};
   helper_set_normal_from_vector(normals[0], m1);
   helper_set_normal_from_vector(normals[1], m2);
   helper_set_normal_from_vector(normals[4], m3);
@@ -844,7 +842,7 @@ TEST_CASE("goma_best_coordinate_system_3D varying normals edge", "[bc][automatic
   for (int i = 0; i < 5; i++) {
     REQUIRE(helper_one_coordinate_near_normal(rotated_coord, normals[i]));
   }
-  
+
   // Set 5
   // 3 normals
 
@@ -855,9 +853,9 @@ TEST_CASE("goma_best_coordinate_system_3D varying normals edge", "[bc][automatic
   for (int i = 4; i < n_normals; i++) {
     helper_set_normal_from_vector(normals[i], zn);
   }
-  double m5[3] = {3,1,1};
-  double m6[3] = {3.5,1,1};
-  double m7[3] = {0,3.5,0.5};
+  double m5[3] = {3, 1, 1};
+  double m6[3] = {3.5, 1, 1};
+  double m7[3] = {0, 3.5, 0.5};
   helper_set_normal_from_vector(normals[0], m5);
   helper_set_normal_from_vector(normals[1], m6);
   helper_set_normal_from_vector(normals[2], m7);
@@ -881,7 +879,7 @@ TEST_CASE("goma_best_coordinate_system_3D varying normals edge", "[bc][automatic
   for (int i = 4; i < n_normals; i++) {
     helper_set_normal_from_vector(normals[i], zn);
   }
-  double m8[3] = {0,3,0.5};
+  double m8[3] = {0, 3, 0.5};
   helper_set_normal_from_vector(normals[3], m8);
 
   error = goma_best_coordinate_system_3D(normals, 4, rotated_coord);
@@ -892,7 +890,6 @@ TEST_CASE("goma_best_coordinate_system_3D varying normals edge", "[bc][automatic
   for (int i = 0; i < 4; i++) {
     REQUIRE(helper_one_coordinate_near_normal(rotated_coord, normals[i]));
   }
-
 
   // cleanup
   helper_free_normals(&normals, n_normals);
@@ -993,7 +990,7 @@ TEST_CASE("goma_best_coordinate_system_3D varying normals corner", "[bc][automat
   for (int i = 0; i < 3; i++) {
     REQUIRE(helper_one_coordinate_near_normal(rotated_coord, normals[i]));
   }
-  
+
   // Set 6
   helper_set_normal_from_vector(normals[0], m1);
   helper_set_normal_from_vector(normals[1], m2);
@@ -1009,7 +1006,6 @@ TEST_CASE("goma_best_coordinate_system_3D varying normals corner", "[bc][automat
   for (int i = 0; i < 5; i++) {
     REQUIRE(helper_one_coordinate_near_normal(rotated_coord, normals[i]));
   }
-
 
   helper_free_normals(&normals, n_normals);
   for (int j = 0; j < 3; j++) {

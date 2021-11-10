@@ -9,7 +9,7 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
+
 #ifndef DP_COMM_H
 #define DP_COMM_H
 
@@ -28,16 +28,13 @@
 #define EXTERN extern
 #endif
 
-EXTERN void exchange_dof
-(Comm_Ex *,		/* cx - ptr to communications exchange info */
-       Dpi *,			/* dpi - distributed processing info */
-       double *,/* x - local processor dof-based vector */
-       int);		
+EXTERN void exchange_dof(Comm_Ex *, /* cx - ptr to communications exchange info */
+                         Dpi *,     /* dpi - distributed processing info */
+                         double *,  /* x - local processor dof-based vector */
+                         int);
 
-
-EXTERN void exchange_node
-(Comm_Ex *cx,		/* cx - ptr to communications exchange info */
-       Dpi *d,			/* dpi - distributed processing info */
-       double *a);		/* x - local processor node-based vector */
+EXTERN void exchange_node(Comm_Ex *cx, /* cx - ptr to communications exchange info */
+                          Dpi *d,      /* dpi - distributed processing info */
+                          double *a);  /* x - local processor node-based vector */
 
 #endif /* GOMA_DP_COMM_H */

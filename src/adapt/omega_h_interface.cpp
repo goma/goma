@@ -1,8 +1,8 @@
 #ifdef HAVE_OMEGA_H
 #include "adapt/omega_h_interface.h"
 
-#include <iostream>
 #include <algorithm>
+#include <iostream>
 #include <sstream>
 
 #include "Omega_h_align.hpp"
@@ -1452,12 +1452,12 @@ void convert_back_to_goma_exo_parallel(
 
   if (goma_automatic_rotations.rotation_nodes != NULL) {
     for (int i = 0; i < exo->num_nodes; i++) {
-      //for (int j = 0; j < GOMA_MAX_NORMALS_PER_NODE; j++) {
-      //  gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].normals[j]);
-      //  gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].average_normals[j]);
-      //  gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].tangent1s[j]);
-      //  gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].tangent2s[j]);
-      //}
+      // for (int j = 0; j < GOMA_MAX_NORMALS_PER_NODE; j++) {
+      //   gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].normals[j]);
+      //   gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].average_normals[j]);
+      //   gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].tangent1s[j]);
+      //   gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].tangent2s[j]);
+      // }
       for (int j = 0; j < DIM; j++) {
         goma_normal_free((goma_automatic_rotations.rotation_nodes)[i].rotated_coord[j]);
       }
@@ -1513,7 +1513,7 @@ void convert_back_to_goma_exo(
     const char *path, Mesh *mesh, Exo_DB *exo, Dpi *dpi, int classify_with) {
 
   //  Omega_h::exodus::write(std::to_string(ProcID) + "tmp.e", mesh, true, classify_with);
-  //Omega_h::exodus::write("tmp.e", mesh, true, classify_with);
+  // Omega_h::exodus::write("tmp.e", mesh, true, classify_with);
   //  Omega_h::binary::write("tmp.osh", mesh);
 
   for (int imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
@@ -1547,12 +1547,12 @@ void convert_back_to_goma_exo(
 
   if (goma_automatic_rotations.rotation_nodes != NULL) {
     for (int i = 0; i < exo->num_nodes; i++) {
-      //for (int j = 0; j < GOMA_MAX_NORMALS_PER_NODE; j++) {
-      //  gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].normals[j]);
-      //  gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].average_normals[j]);
-      //  gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].tangent1s[j]);
-      //  gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].tangent2s[j]);
-      //}
+      // for (int j = 0; j < GOMA_MAX_NORMALS_PER_NODE; j++) {
+      //   gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].normals[j]);
+      //   gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].average_normals[j]);
+      //   gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].tangent1s[j]);
+      //   gds_vector_free((goma_automatic_rotations.rotation_nodes)[i].tangent2s[j]);
+      // }
       for (int j = 0; j < DIM; j++) {
         goma_normal_free((goma_automatic_rotations.rotation_nodes)[i].rotated_coord[j]);
       }
@@ -1755,9 +1755,9 @@ void adapt_mesh_omega_h(struct GomaLinearSolverData **ams,
 
   static std::string base_name;
   static bool first_call = true;
-  int argc=0;
+  int argc = 0;
   char argv[1][8];
-  char **argvptr = (char **) argv;
+  char **argvptr = (char **)argv;
   auto lib = Omega_h::Library(&argc, &argvptr);
   auto classify_with = Omega_h::exodus::NODE_SETS | Omega_h::exodus::SIDE_SETS;
   auto verbose = false;
@@ -1774,10 +1774,10 @@ void adapt_mesh_omega_h(struct GomaLinearSolverData **ams,
   //  mesh.set_parting(OMEGA_H_ELEM_BASED);
   //  Omega_h::exodus::write(std::to_string(ProcID) + "convert.e", &mesh, true, classify_with);
   //  mesh.set_parting(OMEGA_H_GHOSTED);
-  //auto writer_c = Omega_h::vtk::Writer("convert.vtk", &mesh);
+  // auto writer_c = Omega_h::vtk::Writer("convert.vtk", &mesh);
 
-  //writer_c.write(step);
-  //  std::vector<int> gnode(mesh.nverts());
+  // writer_c.write(step);
+  //   std::vector<int> gnode(mesh.nverts());
   ////  for (int node = 0; node < mesh.globals(0).size(); node++) {
   ////    int exo_index = in_list(mesh.globals(0)[node], 0, exo->num_nodes, dpi->node_index_global);
   ////    gnode[exo_index] = node;
@@ -1830,8 +1830,8 @@ void adapt_mesh_omega_h(struct GomaLinearSolverData **ams,
   //      mesh.add_tag(Omega_h::VERT, efv->name[w], 1, Omega_h::Reals(var_values));
   //  }
 
-  //auto writer = Omega_h::vtk::Writer("transfer.vtk", &mesh);
-  //writer.write(step);
+  // auto writer = Omega_h::vtk::Writer("transfer.vtk", &mesh);
+  // writer.write(step);
   adapt_mesh(mesh);
 
   std::string filename;
@@ -1839,8 +1839,8 @@ void adapt_mesh_omega_h(struct GomaLinearSolverData **ams,
 
   ss << "adapt." << step << ".vtk";
 
-  //auto writer_adapt = Omega_h::vtk::Writer(ss.str(), &mesh);
-  //writer_adapt.write(step);
+  // auto writer_adapt = Omega_h::vtk::Writer(ss.str(), &mesh);
+  // writer_adapt.write(step);
 
   if (first_call) {
     base_name = std::string(ExoFileOutMono);

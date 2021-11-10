@@ -19,23 +19,23 @@
 #include <rf_pre_proc.h>
 #include <rf_solve.h>
 
-int resetup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
-                  Dpi *dpi)	/* distributed processing information */
+int resetup_problem(Exo_DB *exo, /* ptr to the finite element mesh database */
+                    Dpi *dpi)    /* distributed processing information */
 
-    /********************************************************************
-     *
-     * setup_problem():
-     *
-     *      Setup_problem() determines the degrees of freedom at each
-     * node and formulates the solution vector. It then determines the
-     * communications pattern for exchanging that solution vector between
-     * processors.
-     *     Lastly, it sets up structures that help to carry out the
-     * boundary condition integrals on side sets.
-     *
-     * NOTE:
-     *   This function was formed by taking common parts out of
-     **********************************************************************/
+/********************************************************************
+ *
+ * setup_problem():
+ *
+ *      Setup_problem() determines the degrees of freedom at each
+ * node and formulates the solution vector. It then determines the
+ * communications pattern for exchanging that solution vector between
+ * processors.
+ *     Lastly, it sets up structures that help to carry out the
+ * boundary condition integrals on side sets.
+ *
+ * NOTE:
+ *   This function was formed by taking common parts out of
+ **********************************************************************/
 {
 
   pre_process(exo);
@@ -85,22 +85,22 @@ int resetup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
    * exchange the solution vector in as efficient a manner as
    * possible
    */
-  //log_msg("setup_dof_comm_map...");
+  // log_msg("setup_dof_comm_map...");
   setup_dof_comm_map(exo, dpi, cx);
 
   /*
    * Output some statistics concerning the communications pattern
    */
-  if (Num_Proc > 1) output_comm_stats(dpi, cx);
+  if (Num_Proc > 1)
+    output_comm_stats(dpi, cx);
 
   /*
    * I extracted this from setup_fill_comm_map because some of the
    * renormalization routines make use of them.
    */
-  num_fill_unknowns      = count_vardofs(FILL, dpi->num_universe_nodes);
+  num_fill_unknowns = count_vardofs(FILL, dpi->num_universe_nodes);
   internal_fill_unknowns = count_vardofs(FILL, dpi->num_internal_nodes);
-  owned_fill_unknowns    = count_vardofs(FILL,
-                           (dpi->num_internal_nodes + dpi->num_boundary_nodes));
+  owned_fill_unknowns = count_vardofs(FILL, (dpi->num_internal_nodes + dpi->num_boundary_nodes));
   boundary_fill_unknowns = owned_fill_unknowns - internal_fill_unknowns;
   external_fill_unknowns = num_fill_unknowns - owned_fill_unknowns;
 
@@ -122,76 +122,75 @@ int resetup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
    *  Set up the structures necessary to carry out
    *  surface integrals
    */
-//  log_msg("set_up_Surf_BC...");
+  //  log_msg("set_up_Surf_BC...");
   set_up_Surf_BC(First_Elem_Side_BC_Array, exo, dpi);
 
   /*
    *  Set up the Edge boundary condition structures
    */
-//  log_msg("set_up_Edge_BC...");
+  //  log_msg("set_up_Edge_BC...");
   set_up_Edge_BC(First_Elem_Edge_BC_Array, exo, dpi);
 
   /*
    * Set up "boundary" conditions on level set surfaces
    */
-//  set_up_Embedded_BC();
+  //  set_up_Embedded_BC();
 
   /* Special 1D
    * Set up surface integral boundary conditions
    * that apply at single nodes.
    */
 
-//  setup_Point_BC(First_Elem_Side_BC_Array, exo, dpi);
+  //  setup_Point_BC(First_Elem_Side_BC_Array, exo, dpi);
 
   /*
    *  Print out the edge boudary condition structures
    *  if necessary
    */
-//  if (Debug_Flag) {
-//    for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
-//      print_setup_Surf_BC(First_Elem_Side_BC_Array[pg->imtrx]);
-//    }
-//  }
+  //  if (Debug_Flag) {
+  //    for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+  //      print_setup_Surf_BC(First_Elem_Side_BC_Array[pg->imtrx]);
+  //    }
+  //  }
 
   /*
    *  Malloc structures of size Num_Var_Info_Records
    */
-//  for (int imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
-//    ei[pg->imtrx]->VDindex_to_Lvdesc = alloc_int_1(Num_Var_Info_Records, -1);
-//  }
-//  for (int i = 0; i < MAX_ELEMENT_INDICES_RELATED; i++) {
-//    eiRelated[i]->VDindex_to_Lvdesc = alloc_int_1(Num_Var_Info_Records, -1);
-//  }
+  //  for (int imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+  //    ei[pg->imtrx]->VDindex_to_Lvdesc = alloc_int_1(Num_Var_Info_Records, -1);
+  //  }
+  //  for (int i = 0; i < MAX_ELEMENT_INDICES_RELATED; i++) {
+  //    eiRelated[i]->VDindex_to_Lvdesc = alloc_int_1(Num_Var_Info_Records, -1);
+  //  }
 
   /*
    * Setup the storage for temporary quantities of interest that
    * are storred on a "per processor element" basis. These include
    * temporary storage of volumetric quadrature information
    */
-//  setup_element_storage();
+  //  setup_element_storage();
 
   /*
    * Setup some structures for solving problems with shell elements.
    */
-//  init_shell_element_blocks(exo);
+  //  init_shell_element_blocks(exo);
 
   /* Communicate non-shared but needed BC information */
-//  exchange_bc_info();
+  //  exchange_bc_info();
 
   return 0;
 }
 
-int resetup_matrix(struct GomaLinearSolverData **ams, Exo_DB *exo, Dpi* dpi) {
+int resetup_matrix(struct GomaLinearSolverData **ams, Exo_DB *exo, Dpi *dpi) {
   if (strcmp(Matrix_Format, "epetra") == 0) {
-  for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
-    EpetraDeleteRowMatrix(ams[pg->imtrx]->RowMatrix);
-    ams[pg->imtrx]->RowMatrix = EpetraCreateRowMatrix(
-            num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]);
-        EpetraCreateGomaProblemGraph(ams[pg->imtrx], exo, dpi);
-  }
-  pg->imtrx = 0;
-  }
-  else {
+    for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+      EpetraDeleteRowMatrix(ams[pg->imtrx]->RowMatrix);
+      ams[pg->imtrx]->RowMatrix =
+          EpetraCreateRowMatrix(num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]);
+      EpetraCreateGomaProblemGraph(ams[pg->imtrx], exo, dpi);
+    }
+    pg->imtrx = 0;
+  } else {
     GOMA_EH(-1, "Unsupported matrix storage format use epetra");
   }
   return 0;

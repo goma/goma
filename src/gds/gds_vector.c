@@ -2,9 +2,9 @@
 
 #include <assert.h>
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 static const size_t gds_vector_size = sizeof(gds_vector);
 static const size_t double_size = sizeof(double);
@@ -13,7 +13,7 @@ void gds_print_vector(const gds_vector *v) {
   printf("[");
   for (size_t i = 0; i < v->size; i++) {
     printf("%g", v->data[i]);
-    if (i == (v->size -1)) {
+    if (i == (v->size - 1)) {
       printf("]\n");
     } else {
       printf(" ");
@@ -114,7 +114,7 @@ void gds_vector_cross(const gds_vector *v, const gds_vector *u, gds_vector *cros
   assert(u->size == 3);
   assert(v->size == 3);
   assert(cross->size == 3);
-  gds_vector * cross_tmp = gds_vector_alloc(3);
+  gds_vector *cross_tmp = gds_vector_alloc(3);
   cross_tmp->data[0] = (v->data[1] * u->data[2] - v->data[2] * u->data[1]);
   cross_tmp->data[1] = (v->data[2] * u->data[0] - v->data[0] * u->data[2]);
   cross_tmp->data[2] = (v->data[0] * u->data[1] - v->data[1] * u->data[0]);
@@ -131,8 +131,10 @@ double gds_vector_dot(const gds_vector *v, const gds_vector *u) {
   return dot;
 }
 
-void gds_vector_rotate_around_vector(gds_vector *rotated, const gds_vector *vec_to_rotate,
-                                     const gds_vector *axis, double angle_radians) {
+void gds_vector_rotate_around_vector(gds_vector *rotated,
+                                     const gds_vector *vec_to_rotate,
+                                     const gds_vector *axis,
+                                     double angle_radians) {
   assert(rotated->size == 3);
   assert(rotated->size == vec_to_rotate->size);
   assert(rotated->size == axis->size);
@@ -162,6 +164,4 @@ void gds_vector_rotate_around_vector(gds_vector *rotated, const gds_vector *vec_
   gds_vector_free(temp2);
 }
 
-void gds_vector_free(gds_vector *v) {
-  free(v);
-}
+void gds_vector_free(gds_vector *v) { free(v); }

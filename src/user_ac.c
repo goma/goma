@@ -9,26 +9,24 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
 
 /* $Id: user_ac.c,v 5.4 2010-07-21 16:39:27 hkmoffa Exp $ */
 
 /* GOMA include files */
 
-
-#include "std.h"
-#include "rf_fem_const.h"
-#include "rf_fem.h"
-#include "rf_mp.h"
-#include "rf_bc_const.h"
-#include "mm_as_structs.h"
-#include "mm_as.h"
+#include "user_ac.h"
 #include "dp_types.h"
 #include "dpi.h"
 #include "exo_struct.h"
+#include "mm_as.h"
+#include "mm_as_structs.h"
 #include "mpi.h"
 #include "rf_bc.h"
-#include "user_ac.h"
+#include "rf_bc_const.h"
+#include "rf_fem.h"
+#include "rf_fem_const.h"
+#include "rf_mp.h"
+#include "std.h"
 
 #define GOMA_USER_AC_C
 
@@ -42,35 +40,37 @@
 
 */
 
-void user_aug_cond_residuals(int iAC, 
-			     double *x, 
+void user_aug_cond_residuals(int iAC,
+                             double *x,
                              double *xdot,
                              double delta_t,
                              double time_value,
                              double **x_sens_p,
-			     double *AC, 
-			     int *have_bAC, int *have_cAC, int *have_dAC,
-			     double **bAC, double **cAC, double **dAC,
-			     Exo_DB *exo,
-			     Dpi *dpi,
-			     Comm_Ex *cx)
-{
+                             double *AC,
+                             int *have_bAC,
+                             int *have_cAC,
+                             int *have_dAC,
+                             double **bAC,
+                             double **cAC,
+                             double **dAC,
+                             Exo_DB *exo,
+                             Dpi *dpi,
+                             Comm_Ex *cx) {
   /*  dbl inventory, target; */
 
-  
-  /* Goma Users and Developers: 
+  /* Goma Users and Developers:
 
 
       Add your ACs in the section below the double $$$$$$$ line.
 
 
      ==========================
-     Miscellaneous information: 
+     Miscellaneous information:
         How to extract values of solution variables from database
-	  ndof = 0;
-	  i = Index_Solution(100, MESH_DISPLACEMENT1, 0, ndof, -1, matrix ID);
-	          or for a specific material id:
-          i = Index_Solution(100, MESH_DISPLACEMENT1, 0, ndof, mat_id, matrix ID);  
+          ndof = 0;
+          i = Index_Solution(100, MESH_DISPLACEMENT1, 0, ndof, -1, matrix ID);
+                  or for a specific material id:
+          i = Index_Solution(100, MESH_DISPLACEMENT1, 0, ndof, mat_id, matrix ID);
      ==========================
 
       Please read the following 2 notes and 1 example first!!                   */
@@ -172,9 +172,8 @@ void user_aug_cond_residuals(int iAC,
   /*                                                                            */
   /*   }  End of Loop on ACs                                                    */
   /******************************************************************************/
-  /* End of Example */ 
+  /* End of Example */
   /******************************************************************************/
-
 
   /* Note 2 */
   /* The BC Augmenting Condition implemented below is used by three (3) of the
@@ -185,9 +184,8 @@ void user_aug_cond_residuals(int iAC,
   /* unless you have added some necessary infrastructure changes. */
 
   /******************************************************************************/
-  /* End of Notes; Source Code follows. */ 
+  /* End of Notes; Source Code follows. */
   /******************************************************************************/
-
 
   /* User ACs should be added in the section below the next 2 lines of $$$$$$   */
 
@@ -197,54 +195,52 @@ void user_aug_cond_residuals(int iAC,
   /* Comment-out next line if 1 or more ACs is implemented; uncomment if no ACs  */
   /*GOMA_EH(GOMA_ERROR,"You have provided no augmenting condition in user_ac.c"); */
 
-     /* NB, the volume constraint residual is based on an integrated quantity
-        of either volume, overall mass, or component mass; hence, it is not
-        associated with the x[] vector explicitly and has to be constructed
-        via the AC_Information struct. ACSun Feb, 1999. Example:             */
-
+  /* NB, the volume constraint residual is based on an integrated quantity
+     of either volume, overall mass, or component mass; hence, it is not
+     associated with the x[] vector explicitly and has to be constructed
+     via the AC_Information struct. ACSun Feb, 1999. Example:             */
 
   /**  loop over all AC conditions **/
 
-  if (augc[iAC].Type == AC_USERBC )           /* BC augmenting condition */
-    {
-      AC[iAC] = BC_Types[4].BC_Data_Float[0]-2.0;  /* Goma Test Suite */
-    }
-  else if (augc[iAC].Type == AC_USERMAT )      /* MT augmenting condition */
-    {
-    }
+  if (augc[iAC].Type == AC_USERBC) /* BC augmenting condition */
+  {
+    AC[iAC] = BC_Types[4].BC_Data_Float[0] - 2.0; /* Goma Test Suite */
+  } else if (augc[iAC].Type == AC_USERMAT)        /* MT augmenting condition */
+  {
+  }
 
- /* VC augmenting condition */
+  /* VC augmenting condition */
 
-  /*  else if (augc[iAC].Type == AC_VOLUME )     
+  /*  else if (augc[iAC].Type == AC_VOLUME )
     {
       inventory = augc[iAC].evol;
-      target = augc[iAC].CONST; 
-      AC[iAC] =  -target + inventory; 
+      target = augc[iAC].CONST;
+      AC[iAC] =  -target + inventory;
       } */
   /*
-  else if (augc[iAC].Type == AC_FLUX )      
+  else if (augc[iAC].Type == AC_FLUX )
     {
       int mn = map_mat_id( augc[iAC].MTID );
 
       nAC = 1;
 
       inventory = evaluate_flux( exo,
-                                 dpi, 
-				 augc[iAC].SSID,
-				 augc[iAC].MFID,
-				 NULL,
-				 mn,
-				 augc[iAC].COMPID,
-				 NULL,
-				 x,
-				 xdot,
-				 (*have_cAC == TRUE ? NULL : cAC[iAC]),
-				 delta_t,
-				 time_value,
-				 0);
-	  
-      target = augc[iAC].CONST; 
-      AC[iAC] =  -target + inventory; 
+                                 dpi,
+                                 augc[iAC].SSID,
+                                 augc[iAC].MFID,
+                                 NULL,
+                                 mn,
+                                 augc[iAC].COMPID,
+                                 NULL,
+                                 x,
+                                 xdot,
+                                 (*have_cAC == TRUE ? NULL : cAC[iAC]),
+                                 delta_t,
+                                 time_value,
+                                 0);
+
+      target = augc[iAC].CONST;
+      AC[iAC] =  -target + inventory;
 
       if( (iAC + 1) == nAC )     *have_cAC = TRUE;
 
@@ -259,12 +255,12 @@ void user_aug_cond_residuals(int iAC,
  *
  *    This routine implements an expansion of the Volume Constraint
  *    augmented condition.  Using this routine, you can implement any
- *    function that employs the total volume of a material calculated 
+ *    function that employs the total volume of a material calculated
  *    using the VC condition.
  *
  *    To access this implementation you need to specify a Volume
  *    Constraint type of 11, 12, or 13, instead of the types 1, 2, or 3.
- * 
+ *
  *    see pg. 25 of Advanced" Capabilities in Goma 5.0 - Augmenting
  *            Conditions, automatic Continuation and Linear Stability Analysis,"
  *            SAND 2--6-7304
@@ -281,37 +277,36 @@ void user_aug_cond_residuals(int iAC,
  *        x[]      Raw solution vector
  *        xdot[]   Raw solution time derivative vector
  *        deltat   delta t
- *        time_value  Time 
+ *        time_value  Time
  *        numProcUnknowns  Number of unknowns in the soln vector
  *                       on this processor
  *        exo            Exodus file
  *        dpi            helper struct
  *        cx             helper struct
- *       
+ *
  * Output:
  *        AC[iAC]        Value of the residual
  *        cAC[iAC][i]    Jacobian entries for the dependence of aug residual, iAC
  *                       on the solution unknown, i
  *        dAC[iAC][jAC]  Jacobian entries for the dependence of aug residual, iAC
- *                       on the aug unknown, jAC 
+ *                       on the aug unknown, jAC
  *
  *  The default implementation in this routine just duplicates the
  *  volume type 1, 2, and 3 VC conditions.
  */
-void user_aug_cond_volume_residuals(const int iAC, 
-				    const double * const x, 
-				    const double * const xdot,
-				    const double delta_t,
-				    const double time_value,
-				    const double * const x_AC, 
-				    double * const AC,
-				    double ** const cAC,
-				    double **const dAC,
-				    const int numProcUnknowns,
-				    const Exo_DB * const exo,
-				    const Dpi * const dpi,
-				    const Comm_Ex * const cx)
-{
+void user_aug_cond_volume_residuals(const int iAC,
+                                    const double *const x,
+                                    const double *const xdot,
+                                    const double delta_t,
+                                    const double time_value,
+                                    const double *const x_AC,
+                                    double *const AC,
+                                    double **const cAC,
+                                    double **const dAC,
+                                    const int numProcUnknowns,
+                                    const Exo_DB *const exo,
+                                    const Dpi *const dpi,
+                                    const Comm_Ex *const cx) {
   /*********************************************************************/
   int i, jAC;
   double inventory, target;
@@ -320,24 +315,20 @@ void user_aug_cond_volume_residuals(const int iAC,
 #endif
   inventory = augc[iAC].evol;
 #ifdef PARALLEL
-  if (Num_Proc > 1) 
-    {
-      MPI_Allreduce(&inventory, &global_inventory, 1, MPI_DOUBLE, MPI_SUM,
-		    MPI_COMM_WORLD);
-      inventory = global_inventory;
-    }
+  if (Num_Proc > 1) {
+    MPI_Allreduce(&inventory, &global_inventory, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    inventory = global_inventory;
+  }
 #endif
-  for (i = 0; i < numProcUnknowns; i++)
-    {
-      cAC[iAC][i] = augc[iAC].d_evol_dx[i];
-    }
-  
-  for (jAC = 0; jAC < nAC; jAC++)
-    {
-      dAC[iAC][jAC] = 0.0;
-    }
-      
-  target = augc[iAC].CONSTV; 
-  AC[iAC] =  -target + inventory; 
+  for (i = 0; i < numProcUnknowns; i++) {
+    cAC[iAC][i] = augc[iAC].d_evol_dx[i];
+  }
+
+  for (jAC = 0; jAC < nAC; jAC++) {
+    dAC[iAC][jAC] = 0.0;
+  }
+
+  target = augc[iAC].CONSTV;
+  AC[iAC] = -target + inventory;
 }
 /****************************************************************************/

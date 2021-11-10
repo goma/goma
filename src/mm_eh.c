@@ -9,22 +9,21 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdarg.h>
 #ifndef DISABLE_COLOR_ERROR_PRINT
 #include <unistd.h>
 #endif
 
 #define GOMA_MM_EH_C
-#include "std.h"
-#include "rf_mp.h"
+#include "mm_eh.h"
 #include "mpi.h"
 #include "rf_io_const.h"
-#include "mm_eh.h"
+#include "rf_mp.h"
+#include "std.h"
 
 #ifdef PRINT_STACK_TRACE_ON_EH
 #include <execinfo.h>
@@ -32,9 +31,7 @@
 /* Obtain a backtrace and print it to stdout. */
 /* https://www.gnu.org/software/libc/manual/html_node/Backtraces.html */
 /* compile with -rdynamic */
-static void
-print_stacktrace(void)
-{
+static void print_stacktrace(void) {
   void *bt_array[20];
   size_t size;
   char **stack_strings;
@@ -49,9 +46,9 @@ print_stacktrace(void)
   }
 #endif
   if (print_color) {
-    fprintf(stderr,"\033[0;33mP_%d_STACKTRACE: Obtained %zd stack frames\033[0m\n", ProcID, size);
+    fprintf(stderr, "\033[0;33mP_%d_STACKTRACE: Obtained %zd stack frames\033[0m\n", ProcID, size);
   } else {
-    fprintf(stderr,"P_%d_STACKTRACE: Obtained %zd stack frames.\n", ProcID, size);
+    fprintf(stderr, "P_%d_STACKTRACE: Obtained %zd stack frames.\n", ProcID, size);
   }
   for (size_t i = 0; i < size; i++) {
     if (print_color) {
@@ -60,7 +57,7 @@ print_stacktrace(void)
       fprintf(stderr, "P_%d_STACKTRACE: %s\n", ProcID, stack_strings[i]);
     }
   }
-  free (stack_strings);
+  free(stack_strings);
 }
 #endif
 
@@ -71,9 +68,9 @@ print_stacktrace(void)
  */
 
 char current_routine[MAX_FNL] = "?";
-char current_file[MAX_FNL]    = "?";
-int  current_line             = -1; 
-int  current_severity         = 0;
+char current_file[MAX_FNL] = "?";
+int current_line = -1;
+int current_severity = 0;
 
 /*
  *  This variable is included as a utility to writing informative
@@ -89,10 +86,9 @@ char Err_Msg[MAX_CHAR_ERR_MSG];
  *       is used.
  */
 #ifdef ENABLE_LOGGING
-static FILE *log_strm=NULL;
+static FILE *log_strm = NULL;
 static char log_filename[MAX_FNL] = DEFAULT_GOMA_LOG_FILENAME;
 #endif
-
 
 /*
  * Global variable helps to put the brakes on a parallel train wreck, but
@@ -101,20 +97,19 @@ static char log_filename[MAX_FNL] = DEFAULT_GOMA_LOG_FILENAME;
 /****************************************************************************/
 /****************************************************************************/
 /****************************************************************************/
-void 
-goma_eh(const int error_flag, const char *file,
-   const int line, const char *format, ...)
-{
+void goma_eh(const int error_flag, const char *file, const int line, const char *format, ...) {
   static char yo[] = "goma_eh";
-  if (error_flag == -1) { 
-     log_msg("GOMA ends with an error condition.");
+  if (error_flag == -1) {
+    log_msg("GOMA ends with an error condition.");
 #ifdef PRINT_STACK_TRACE_ON_EH
-    fprintf(stderr,"--------------------------------------------------------------------------------\n");
+    fprintf(stderr,
+            "--------------------------------------------------------------------------------\n");
     print_stacktrace();
-    fprintf(stderr,"--------------------------------------------------------------------------------\n");
+    fprintf(stderr,
+            "--------------------------------------------------------------------------------\n");
 #endif
 #ifndef PARALLEL
-    fprintf(stderr,"ERROR EXIT: %s:%d: %s\n", file, line, message); 
+    fprintf(stderr, "ERROR EXIT: %s:%d: %s\n", file, line, message);
     exit(-1);
 #else
     bool print_color = false;
@@ -129,7 +124,8 @@ goma_eh(const int error_flag, const char *file,
     vsnprintf(message, MAX_CHAR_ERR_MSG, format, args);
     va_end(args);
     if (print_color) {
-      fprintf(stderr, "\033[0;31mP_%d Goma Error: %s \033[0m(@ %s:%d)\n", ProcID, message, file, line);
+      fprintf(stderr, "\033[0;31mP_%d Goma Error: %s \033[0m(@ %s:%d)\n", ProcID, message, file,
+              line);
     } else {
       fprintf(stderr, "P_%d Goma Error: %s (@ %s:%d)\n", ProcID, message, file, line);
     }
@@ -147,10 +143,8 @@ goma_eh(const int error_flag, const char *file,
 /****************************************************************************/
 /****************************************************************************/
 
-void 
-goma_wh(const int error_flag, const char * const file, const int line,
-   const char * format, ...)
-{
+void goma_wh(
+    const int error_flag, const char *const file, const int line, const char *format, ...) {
   if (error_flag == -1) {
     bool print_color = false;
 #ifndef DISABLE_COLOR_ERROR_PRINT
@@ -184,32 +178,27 @@ goma_wh(const int error_flag, const char * const file, const int line,
  *
  * Revised:
  */
-void
-save_place(const int severity,
-	   const char * const routine_name, 
-           const char * const file_name, 
-           const int line_number)
-{
+void save_place(const int severity,
+                const char *const routine_name,
+                const char *const file_name,
+                const int line_number) {
   strcpy(current_routine, routine_name);
   strcpy(current_file, file_name);
-  current_line     = line_number;
+  current_line = line_number;
   current_severity = severity;
   return;
 }
 
-void 
-logprintf(const char *format, ... )
-{
+void logprintf(const char *format, ...) {
 #ifndef ENABLE_LOGGING
-  if ( current_severity < 0 )
-    {
-      va_list va;
-      va_start(va, format);
-      vfprintf(stderr, format, va);
-      va_end(va);
-      DPRINTF(stderr, "\nAbnormal termination in logprintf\n");
-      exit(current_severity);
-    }
+  if (current_severity < 0) {
+    va_list va;
+    va_start(va, format);
+    vfprintf(stderr, format, va);
+    va_end(va);
+    DPRINTF(stderr, "\nAbnormal termination in logprintf\n");
+    exit(current_severity);
+  }
   return;
 #else
   time_t now;
@@ -219,13 +208,14 @@ logprintf(const char *format, ... )
 
   static char new_format[1024];
 
-  static char old_buffer[1024];	/* For legacy help... */
+  static char old_buffer[1024]; /* For legacy help... */
 
   va_list va;
 
   /* Proceed only if there are no print limits set */
 
-  if( !Unlimited_Output ) return;
+  if (!Unlimited_Output)
+    return;
 
   /*
    * For now direct all log entries to one file. In parallel you may want
@@ -233,31 +223,26 @@ logprintf(const char *format, ... )
    * want to separate heavy debugging messages.
    */
 
-
   /*
    * Check for an open file output stream, open one if there isn't one yet...
    */
 
-  if ( log_strm == NULL )
-    {
-      if ( Num_Proc > 1 )
-	{
-	  multiname(log_filename, ProcID, Num_Proc);
-	}
-
-      log_strm = fopen(log_filename, "a");
-      
-      if ( log_strm == NULL )
-	{
-	  current_severity=-1;
-	  exit(current_severity);
-	}
+  if (log_strm == NULL) {
+    if (Num_Proc > 1) {
+      multiname(log_filename, ProcID, Num_Proc);
     }
+
+    log_strm = fopen(log_filename, "a");
+
+    if (log_strm == NULL) {
+      current_severity = -1;
+      exit(current_severity);
+    }
+  }
 
   time(&now);
 
-  (void) strftime(time_result, TIME_STRING_SIZE, 
-                  time_format, localtime(&now));
+  (void)strftime(time_result, TIME_STRING_SIZE, time_format, localtime(&now));
 
   /*
    * Some niceties: if the user appended a carriage return, fine. If not,
@@ -266,63 +251,52 @@ logprintf(const char *format, ... )
 
   n = strlen(format);
 
-  if ( n > 1024 )
-    {
-      exit(0);
-    }
+  if (n > 1024) {
+    exit(0);
+  }
 
   strcpy(new_format, format);
 
-  if ( format[n] != '\n' )
-    {
-      strcat(new_format, "\n");
-    }
+  if (format[n] != '\n') {
+    strcat(new_format, "\n");
+  }
 
   fprintf(log_strm, "%s ", time_result);
 
-  if ( current_severity < 0 )
-    {
-      if ( Num_Proc > 1 )
-	{
-	  fprintf(log_strm, "P_%d ", ProcID);
-	}
-      fprintf(log_strm, "error at %s:%d %s() \n", current_file, current_line, 
-	      current_routine);
-
-      fprintf(log_strm, "%s ", time_result);
+  if (current_severity < 0) {
+    if (Num_Proc > 1) {
+      fprintf(log_strm, "P_%d ", ProcID);
     }
+    fprintf(log_strm, "error at %s:%d %s() \n", current_file, current_line, current_routine);
 
-  if ( Num_Proc > 1 )
-    {
-      if ( current_severity == 0 )
-	{
-	  fprintf(log_strm, "P_%d ", ProcID);
-	}
-    }
+    fprintf(log_strm, "%s ", time_result);
+  }
 
-  if ( current_severity > 0 )
-    {
-      fprintf(log_strm, "%s:%d %s() ", current_file, current_line, 
-	      current_routine);
-      if ( Num_Proc > 1 )
-	{
-	  fprintf(log_strm, "P_%d ", ProcID);
-	}
+  if (Num_Proc > 1) {
+    if (current_severity == 0) {
+      fprintf(log_strm, "P_%d ", ProcID);
     }
+  }
+
+  if (current_severity > 0) {
+    fprintf(log_strm, "%s:%d %s() ", current_file, current_line, current_routine);
+    if (Num_Proc > 1) {
+      fprintf(log_strm, "P_%d ", ProcID);
+    }
+  }
 
   va_start(va, format);
   vfprintf(log_strm, new_format, va);
-  va_end(va); 
+  va_end(va);
 
   /*
    * This flushing is great for precise error determination, but could
    * cause big time performance loss on many processors, for example.
    */
 
-  if ( Num_Proc < 16 )
-    {
-      fflush(log_strm);
-    }
+  if (Num_Proc < 16) {
+    fflush(log_strm);
+  }
 
   /*
    * Need to pipe out to stderr for legacy usage...delete this once
@@ -333,46 +307,35 @@ logprintf(const char *format, ... )
   vsprintf(old_buffer, new_format, va);
   va_end(va);
 
-
-
-  if ( current_severity < 0 )
-    {
-      fprintf(log_strm, "%s ", time_result);
-      fprintf(log_strm, "GOMA terminates abnormally.\n");
-
+  if (current_severity < 0) {
+    fprintf(log_strm, "%s ", time_result);
+    fprintf(log_strm, "GOMA terminates abnormally.\n");
 
 #ifdef PARALLEL
-      DPRINTF(stderr, "\nAbnormal termination -- see log file for details.\n");
+    DPRINTF(stderr, "\nAbnormal termination -- see log file for details.\n");
 #endif
-      exit(current_severity);
-    }
+    exit(current_severity);
+  }
 
   return;
 #endif
 }
 
-
-void
-smooth_stop_with_msg( const char *msg )
-{
+void smooth_stop_with_msg(const char *msg) {
 
 #ifndef PARALLEL
-	fprintf(stderr, "\n\t -- Goma stops smoothly-- \n");
-	fprintf(stderr, msg );
-	exit(-1);
+  fprintf(stderr, "\n\t -- Goma stops smoothly-- \n");
+  fprintf(stderr, msg);
+  exit(-1);
 #else
-	if( Num_Proc == 1 )
-	{
-		fprintf(stderr, "\n\t -- Goma stops smoothly--\n");
-		fputs(msg, stderr);
-	}
-	else
-	{
-		fprintf(stderr,"\n\n Proc %d -- Goma stops smoothly --\n", ProcID);
-		DFPUTS(msg, stderr);
-	}	
-	MPI_Finalize();
-	exit(-1);
+  if (Num_Proc == 1) {
+    fprintf(stderr, "\n\t -- Goma stops smoothly--\n");
+    fputs(msg, stderr);
+  } else {
+    fprintf(stderr, "\n\n Proc %d -- Goma stops smoothly --\n", ProcID);
+    DFPUTS(msg, stderr);
+  }
+  MPI_Finalize();
+  exit(-1);
 #endif
 }
-	

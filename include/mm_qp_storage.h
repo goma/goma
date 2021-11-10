@@ -9,7 +9,6 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
 
 #ifndef GOMA_MM_QP_STORAGE_H
 #define GOMA_MM_QP_STORAGE_H
@@ -31,27 +30,27 @@
  *  side.  The storage is identified primary via an integer number,
  *  StorageType, usually associated with the boundary condition integer
  *  id. The storage consists of a pointer to void, which the boundary
- *  condition can use to store the pointer to its own malloced data.  
+ *  condition can use to store the pointer to its own malloced data.
  *  Note that it must supply a routine in the function
  *  qp_storage_list_destroy() to destroy that data at the end of a
  *  fill operation.
  */
 
 struct QP_Storage {
-/*
- * The following are unused fields, that will be added in later
- * when we try to link qp's together from different elements.
- *
-    double Real_x;
-    double Real_y;
-    double Real_z;
-    int    ElemNum;
-    int    LocalSideNum;
-*/
-    int    LocalQPNum;
-    int    StorageType;
-    void  *Storage;
-    struct QP_Storage *next;
+  /*
+   * The following are unused fields, that will be added in later
+   * when we try to link qp's together from different elements.
+   *
+      double Real_x;
+      double Real_y;
+      double Real_z;
+      int    ElemNum;
+      int    LocalSideNum;
+  */
+  int LocalQPNum;
+  int StorageType;
+  void *Storage;
+  struct QP_Storage *next;
 };
 typedef struct QP_Storage QP_STORAGE_STRUCT;
 
@@ -60,10 +59,8 @@ typedef struct QP_Storage QP_STORAGE_STRUCT;
  */
 EXTERN void elem_qp_storage_free(ELEM_SIDE_BC_STRUCT *);
 extern void qp_storage_list_destroy(QP_STORAGE_STRUCT **);
-extern void **side_qp_storage_findalloc(const int, const int,
-					ELEM_SIDE_BC_STRUCT *);
-extern void **qp_storage_findalloc(const int, const int, 
-				   QP_STORAGE_STRUCT **);
+extern void **side_qp_storage_findalloc(const int, const int, ELEM_SIDE_BC_STRUCT *);
+extern void **qp_storage_findalloc(const int, const int, QP_STORAGE_STRUCT **);
 extern void global_qp_storage_destroy(void);
 
 #endif

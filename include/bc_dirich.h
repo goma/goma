@@ -9,10 +9,9 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
+
 #ifndef GOMA_BC_DIRICH_H
 #define GOMA_BC_DIRICH_H
-
 
 #include "bc_curve.h"
 #ifdef EXTERN
@@ -27,9 +26,7 @@
 #define EXTERN extern
 #endif
 
-EXTERN int put_dirichlet_in_matrix
-(double [],		/* x - Solution vector                       */
-       const int);		/* num_total_nodes */
-
+EXTERN int put_dirichlet_in_matrix(double[],   /* x - Solution vector                       */
+                                   const int); /* num_total_nodes */
 
 #endif /* GOMA_BC_DIRICH_H */

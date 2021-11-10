@@ -1,7 +1,7 @@
+#include "util/goma_normal.h"
 #include "mm_eh.h"
 #include "std.h"
 #include <assert.h>
-#include "util/goma_normal.h"
 
 goma_normal *goma_normal_alloc(int size) {
   goma_normal *normal = malloc(sizeof(goma_normal));
@@ -14,7 +14,7 @@ goma_normal *goma_normal_alloc(int size) {
   return normal;
 }
 
-goma_normal * goma_get_average_normal(goma_normal **normals, int n_normals) {
+goma_normal *goma_get_average_normal(goma_normal **normals, int n_normals) {
 
   goma_normal *average = goma_normal_alloc(3);
   goma_normal_zero(average);
@@ -26,9 +26,7 @@ goma_normal * goma_get_average_normal(goma_normal **normals, int n_normals) {
   goma_normal_normalize(average);
 
   return average;
-
 }
-
 
 void goma_normal_zero(goma_normal *normal) {
 
@@ -68,7 +66,7 @@ goma_normal_val goma_normal_val_inverse(goma_normal_val *val) {
 
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < MDE; j++) {
-      inv.d_val[i][j] = - val->d_val[i][j] * inv.val * inv.val;
+      inv.d_val[i][j] = -val->d_val[i][j] * inv.val * inv.val;
     }
   }
 
@@ -182,8 +180,10 @@ void goma_normal_scale(goma_normal *normal, const goma_normal_val *val) {
   gds_vector_free(tmp1);
 }
 
-void goma_normal_rotate_around_vector(goma_normal *rotated, goma_normal *vec_to_rotate,
-                                      goma_normal *axis, goma_normal_val angle_radians) {
+void goma_normal_rotate_around_vector(goma_normal *rotated,
+                                      goma_normal *vec_to_rotate,
+                                      goma_normal *axis,
+                                      goma_normal_val angle_radians) {
 
   // Rodrigues rotation formula
   //
@@ -199,8 +199,8 @@ void goma_normal_rotate_around_vector(goma_normal *rotated, goma_normal *vec_to_
   Rotation[2][2] = 1.0;
 
   dbl W[3][3] = {{0, -axis->normal->data[2], axis->normal->data[1]},
-    {axis->normal->data[2], 0, -axis->normal->data[0]},
-    {-axis->normal->data[1], axis->normal->data[0], 0}};
+                 {axis->normal->data[2], 0, -axis->normal->data[0]},
+                 {-axis->normal->data[1], axis->normal->data[0], 0}};
   dbl Wsq[3][3];
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
@@ -303,7 +303,6 @@ goma_normal_val add_goma_normal_val(const goma_normal_val *val, double value) {
   return retval;
 }
 
-
 goma_normal_val scale_goma_normal_val(const goma_normal_val *val, double value) {
 
   goma_normal_val retval;
@@ -346,4 +345,3 @@ goma_normal_val sqrt_goma_normal_val(const goma_normal_val *val) {
   }
   return retval;
 }
-

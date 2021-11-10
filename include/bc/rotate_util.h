@@ -19,7 +19,8 @@ goma_surface_coordinate_system(goma_normal **normals, int n_normals, goma_normal
 
 goma_error goma_edge_coordinate_system(goma_normal **normals, int n_normals, goma_normal *coord[3]);
 
-goma_error goma_corner_coordinate_system(goma_normal **normals, int n_normals, goma_normal *coord[3]);
+goma_error
+goma_corner_coordinate_system(goma_normal **normals, int n_normals, goma_normal *coord[3]);
 
 bool goma_check_normals_within_critical_angle(goma_normal **normals, int n_normals);
 
@@ -27,8 +28,10 @@ bool goma_check_corner_rotation_case(goma_normal **normals, int n_normals);
 
 bool goma_check_edge_rotation_case(goma_normal **normals, int n_normals);
 
-goma_error
-goma_best_coordinate_system_3D(goma_normal **normals, int n_normals, goma_normal *coord[3], int *type);
+goma_error goma_best_coordinate_system_3D(goma_normal **normals,
+                                          int n_normals,
+                                          goma_normal *coord[3],
+                                          int *type);
 
 #ifdef __cplusplus
 } // extern C

@@ -9,7 +9,6 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
 
 #ifndef GOMA_MM_FILL_COMMON_H
 #define GOMA_MM_FILL_COMMON_H
@@ -28,11 +27,7 @@
 #define EXTERN extern
 #endif
 
-
-EXTERN void computeCommonMaterialProps_gp
-(
-       const dbl time  //Current time (sec)
+EXTERN void computeCommonMaterialProps_gp(const dbl time // Current time (sec)
 );
 
-
-#endif 
+#endif

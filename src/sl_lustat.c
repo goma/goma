@@ -10,7 +10,7 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
 
-/*   provide a variety of interesting statistics and output 
+/*   provide a variety of interesting statistics and output
  *   about the matrix that sparse gets...
  */
 
@@ -74,7 +74,8 @@
  *   threshhold criteria are exceeded (too many nodesets, sidesets or BCs).
  *
  * Revision 2.2  1997/09/10 19:16:55  dalabre
- * This check-in corrects some problems with umfpack from my last check-in and completes the prototyping for the sl_*.* files.
+ * This check-in corrects some problems with umfpack from my last check-in and completes the
+ * prototyping for the sl_*.* files.
  *
  * Revision 2.1  1997/03/12 17:06:36  pasacki
  * Bugfixes, mainly to cure memory cancer arising from sloppy Aztec initialization.
@@ -92,53 +93,38 @@
  *
  */
 
-
-
-
 #ifdef HAVE_SPARSE
 #endif
 
-
 #ifdef MATRIX_STATISTICS
 
-
-FILE *mfp;			/* for matrix file statistics; each iter */
-FILE *mhp;			/* for matrix histogram plots; 2nd iter */
-FILE *mpp;			/* for matrix profile plots; 2nd iter */
+FILE *mfp; /* for matrix file statistics; each iter */
+FILE *mhp; /* for matrix histogram plots; 2nd iter */
+FILE *mpp; /* for matrix profile plots; 2nd iter */
 
 static int mhp_open = FALSE;
 static int mpp_open = FALSE;
 
 static int mpp_written = FALSE;
 
-static void plot_a
-  ( int,                     /* n  */
-	   int,                     /* nnz  */
-	   double [],               /* a[]  */
-	   int []  );              /* ija[] */
+static void plot_a(int,      /* n  */
+                   int,      /* nnz  */
+                   double[], /* a[]  */
+                   int[]);   /* ija[] */
 
-static void histogram
-  ( int,                     /* n  */
-	   int,                     /* nnz  */
-	   double [],               /* a[]  */
-	   int [],                  /* ija[] */
-	   int,                     /* lo  */
-	   int,                     /* hi  */
-	   int *  );               /* *d   */
+static void histogram(int,      /* n  */
+                      int,      /* nnz  */
+                      double[], /* a[]  */
+                      int[],    /* ija[] */
+                      int,      /* lo  */
+                      int,      /* hi  */
+                      int *);   /* *d   */
 
 /* static int call=0; */
 
 #ifdef HAVE_SPARSE
-void
-lustat ( int n,
-         int nnz,
-         double a[],
-         int ija[],
-         double x[],
-         spREAL norm,
-         char *matrix  )
-{
-/* LOCAL VARIABLES */
+void lustat(int n, int nnz, double a[], int ija[], double x[], spREAL norm, char *matrix) {
+  /* LOCAL VARIABLES */
   /*
   int error;
   int i;
@@ -146,43 +132,41 @@ lustat ( int n,
   int nf;
   int first_time = TRUE;
   int decades;
-  int lo, hi;			 For decade histogram... 
+  int lo, hi;			 For decade histogram...
   int distribution[100];
   */
 
-/*  char  *fsf; */
-/*  char  *label; */
+  /*  char  *fsf; */
+  /*  char  *label; */
 
   spREAL cn;
 
-  int    det_exp;
+  int det_exp;
   double det_man;
-
 
   call++;
 
-  fsf   = "lu1";
+  fsf = "lu1";
   label = "from goma";
 
-  if ( ! mfp_open )
-    {
-      mfp = fopen("lu2","w");
-      mfp_open = TRUE;
-    }
+  if (!mfp_open) {
+    mfp = fopen("lu2", "w");
+    mfp_open = TRUE;
+  }
 
-  ne = spElementCount(matrix); 
+  ne = spElementCount(matrix);
   nf = spFillinCount(matrix);
-  cn = spCondition(matrix, norm, &error); 
+  cn = spCondition(matrix, norm, &error);
 
   spDeterminant(matrix, &det_exp, &det_man);
-  
+
 #ifndef _AIX
   spFileStats(matrix, fsf, label);
 #endif
 
   lo = -25;
-  hi =  8;
-  decades = hi-lo+2;
+  hi = 8;
+  decades = hi - lo + 2;
 
   histogram(n, nnz, a, ija, lo, hi, distribution);
 
@@ -190,13 +174,11 @@ lustat ( int n,
   fprintf(mfp, "\tOrder of system, n = %d\n", n);
   fprintf(mfp, "\tNum elements, spmatrix (factored) = %d\n", ne);
   fprintf(mfp, "\tNum nonzeroes, a (nominal) = %d\n", nnz);
-  fprintf(mfp, "\tNum nonzeroes, a (actual) = %d\n", 
-	  nnz-distribution[0]);
-  fprintf(mfp, "\tFillin count = %d\n", nf);      
-  fprintf(mfp, "\tNorm of matrix = %g\n", norm);       
-  fprintf(mfp, "\tCondition number estimate = %g\n", cn);      
-  fprintf(mfp, "\tDeterminant of matrix = %g x 10^%d\n", 
-	  det_man, det_exp);
+  fprintf(mfp, "\tNum nonzeroes, a (actual) = %d\n", nnz - distribution[0]);
+  fprintf(mfp, "\tFillin count = %d\n", nf);
+  fprintf(mfp, "\tNorm of matrix = %g\n", norm);
+  fprintf(mfp, "\tCondition number estimate = %g\n", cn);
+  fprintf(mfp, "\tDeterminant of matrix = %g x 10^%d\n", det_man, det_exp);
 
   plot_a(n, nnz, a, ija);
 
@@ -204,12 +186,7 @@ lustat ( int n,
 #endif
 /*****************************************************************************/
 
-static void
-plot_a ( int n,
-         int nnz,
-         double a[],
-         int ija[]  )
-{
+static void plot_a(int n, int nnz, double a[], int ija[]) {
   int rt, ct, et;
   int ij_is_zero;
   int ji_is_zero;
@@ -218,188 +195,146 @@ plot_a ( int n,
   int sym;
   int i;
 
-  if ( ! mpp_open )
-    {
-      mpp = fopen("ij.xy", "w");
-      mpp_open = TRUE;
+  if (!mpp_open) {
+    mpp = fopen("ij.xy", "w");
+    mpp_open = TRUE;
+  }
+
+  if (!mpp_written) {
+    /*
+     * Diagonal entries...
+     */
+
+    for (i = 0; i < n; i++) {
+      row = i + 1;
+      col = i + 1;
+      if (a[i] != 0) {
+        fprintf(mpp, "1e32 150.\n%d. %d.\n", col, -row);
+      }
+      if (a[i] == 0) {
+        fprintf(mpp, "1e32 1190.\n%d. %d.\n", col, -row);
+      }
     }
 
-  if ( ! mpp_written )
-    {
-      /*
-       * Diagonal entries...
-       */
+    /*
+     * Off-diagonal entries...
+     */
 
-      for ( i=0; i<n; i++)
-	{
-	  row = i+1;
-	  col = i+1;
-	  if ( a[i] != 0 )
-	    {
-	      fprintf(mpp, "1e32 150.\n%d. %d.\n", col, -row);
-	    }
-	  if ( a[i] == 0 )
-	    {
-	      fprintf(mpp, "1e32 1190.\n%d. %d.\n", col, -row);
-	    }
-      	}
+    for (r = 0; r < n; r++) {
+      for (e = ija[r]; e < ija[r + 1]; e++) {
+        row = r + 1;
+        col = ija[e] + 1;
 
-      /*
-       * Off-diagonal entries...
-       */
+        ij_is_zero = TRUE;
 
-      for (r=0; r<n; r++)
-	{
-	  for ( e=ija[r]; e<ija[r+1]; e++ )
-	    {
-	      row = r+1;
-	      col = ija[e]+1;
+        if (a[e] != 0) {
+          ij_is_zero = FALSE;
+        }
 
-	      ij_is_zero = TRUE;
+        /*
+         * Find out what a_ji is doing ...
+         */
 
-	      if ( a[e] != 0 )
-		{
-		  ij_is_zero = FALSE;
-		}
-	      
-	      /*
-	       * Find out what a_ji is doing ...
-	       */
+        ji_is_zero = TRUE;
 
-	      ji_is_zero = TRUE;
+        rt = ija[e]; /* row of transpose */
+        ct = r;      /* col of transpose */
+        et = in_list(ct, ija[rt], ija[rt + 1], ija);
 
-	      rt = ija[e];	/* row of transpose */
-	      ct = r;		/* col of transpose */
-	      et = in_list(ct, ija[rt], ija[rt+1], ija);
+        if (et != -1) {
+          if (a[et] != 0) {
+            ji_is_zero = FALSE;
+          }
+        }
 
-	      if ( et != -1 )
-		{
-		  if ( a[et] != 0 )
-		    {
-		      ji_is_zero = FALSE;
-		    }
-		}
-	      
-	      /*
-	       * Color asymmetric sparseness blue...
-	       */
-	      if ( ! ij_is_zero && ji_is_zero )
-		{
-		  fprintf(mpp, "1e32 21150.\n%d. %d.\n", col, -row);
-		}
-	      /*
-	       * Color symmetric sparseness green...
-	       */
-	      if ( ! ij_is_zero && ! ji_is_zero )
-		{
-		  fprintf(mpp, "1e32 11150.\n%d. %d.\n", col, -row);
-		}
-	      
-	    }
-	}
-
-      /*
-       * Now, write out the inverse dof map info so that we can find out
-       * who is what...do all 4 sides of the matrix...
-       */
-      for ( i=0; i<n; i++)
-	{
-	  if ( idv[pg->imtrx][i][0] == PRESSURE )
-	    {
-	      sym = 26101;
-	    }
-	  else
-	    {
-	      sym = 76101;
-	    }
-	  fprintf(mpp, "1e32 %d.\n%d. %d.\n%d. %d.\n", 
-		  sym, -15, -i, -5, -i); /* left */
-	  fprintf(mpp, "1e32 %d.\n%d. %d.\n%d. %d.\n", 
-		  sym, n+5, -i, n+15, -i); /* right */
-	  fprintf(mpp, "1e32 %d.\n%d. %d.\n%d. %d.\n", 
-		  sym, i, 5, i, 15); /* top */
-	  fprintf(mpp, "1e32 %d.\n%d. %d.\n%d. %d.\n", 
-		  sym, i, -(n+5), i, -(n+15)); /* bot */
-	}
-
-      mpp_written = TRUE;
+        /*
+         * Color asymmetric sparseness blue...
+         */
+        if (!ij_is_zero && ji_is_zero) {
+          fprintf(mpp, "1e32 21150.\n%d. %d.\n", col, -row);
+        }
+        /*
+         * Color symmetric sparseness green...
+         */
+        if (!ij_is_zero && !ji_is_zero) {
+          fprintf(mpp, "1e32 11150.\n%d. %d.\n", col, -row);
+        }
+      }
     }
+
+    /*
+     * Now, write out the inverse dof map info so that we can find out
+     * who is what...do all 4 sides of the matrix...
+     */
+    for (i = 0; i < n; i++) {
+      if (idv[pg->imtrx][i][0] == PRESSURE) {
+        sym = 26101;
+      } else {
+        sym = 76101;
+      }
+      fprintf(mpp, "1e32 %d.\n%d. %d.\n%d. %d.\n", sym, -15, -i, -5, -i);           /* left */
+      fprintf(mpp, "1e32 %d.\n%d. %d.\n%d. %d.\n", sym, n + 5, -i, n + 15, -i);     /* right */
+      fprintf(mpp, "1e32 %d.\n%d. %d.\n%d. %d.\n", sym, i, 5, i, 15);               /* top */
+      fprintf(mpp, "1e32 %d.\n%d. %d.\n%d. %d.\n", sym, i, -(n + 5), i, -(n + 15)); /* bot */
+    }
+
+    mpp_written = TRUE;
+  }
   fclose(mpp);
 
 } /* END of routine plot_a */
 /*****************************************************************************/
 
-static void
-histogram ( int n,
-            int nnz,
-            double a[],
-            int ija[],
-            int lo,
-            int hi,
-            int *d )
-{
+static void histogram(int n, int nnz, double a[], int ija[], int lo, int hi, int *d) {
   int i;
   int l;
   int index;
   double val;
 
+  if (!mhp_open) {
+    mhp = fopen("mh.d", "w");
+    mhp_open = TRUE;
+  }
 
-  if ( ! mhp_open )
-    {
-      mhp = fopen("mh.d", "w");
-      mhp_open = TRUE;
-    }
-
-  l = hi-lo+2;
+  l = hi - lo + 2;
 
   /*
    * Initialize before counting elements...
    */
 
-  for ( i=0; i<l; i++)
-    {
-      d[i] = 0;
-    }
+  for (i = 0; i < l; i++) {
+    d[i] = 0;
+  }
 
-  for ( i=0; i<nnz; i++)
-    {
-      if ( a[i] == 0 )
-	{
-	  d[0]++;
-	}
-      else
-	{
-	  val = log10(ABS(a[i]));
-	  index = (int)(val-(dbl)lo) + 1;
-	  if ( index < 1 )
-	    {
-	      index = 1;
-	    }
-	  if ( index > l )
-	    {
-	      index = hi;
-	    }
-	  d[index]++;
-	}
+  for (i = 0; i < nnz; i++) {
+    if (a[i] == 0) {
+      d[0]++;
+    } else {
+      val = log10(ABS(a[i]));
+      index = (int)(val - (dbl)lo) + 1;
+      if (index < 1) {
+        index = 1;
+      }
+      if (index > l) {
+        index = hi;
+      }
+      d[index]++;
     }
+  }
 
   /*
    * Histogram: [0] -- has number of elements that are zero
    *	    [1] -- has number of elements that are between
    *		   1 x 10**lo and 10 x 10**lo
    */
-  
-  for ( i=0; i<l; i++)
-    {
-      if ( i == 0 )
-	{
-	  fprintf(mhp, "%d %d\n", lo-2, d[0]);
-	}
-      else
-	{
-	  fprintf(mhp, "%d %d\n", lo+i-1, d[i]);
-	}
+
+  for (i = 0; i < l; i++) {
+    if (i == 0) {
+      fprintf(mhp, "%d %d\n", lo - 2, d[0]);
+    } else {
+      fprintf(mhp, "%d %d\n", lo + i - 1, d[i]);
     }
+  }
 
   /* fclose(mhp);*/
 

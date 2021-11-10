@@ -9,7 +9,6 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
 
 /*
  *$Id: rf_mp.h,v 5.1 2007-09-18 18:53:47 prschun Exp $
@@ -33,11 +32,11 @@
  * are defined in main.c, where the arrays are also allocated and freed.
  */
 
-extern int Num_Proc;		/* Total number of processors */
+extern int Num_Proc; /* Total number of processors */
 
-extern int ProcID;		/* This processor's number */
+extern int ProcID; /* This processor's number */
 
-extern int Dim;			/* Dimension of logical hypercube */
+extern int Dim; /* Dimension of logical hypercube */
 
 extern MPI_Request *Request;
 

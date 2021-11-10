@@ -9,7 +9,6 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
 
 #ifndef GOMA_RF_SHAPE_H
 #define GOMA_RF_SHAPE_H
@@ -28,12 +27,12 @@
 #define EXTERN extern
 #endif
 
-EXTERN double shape		/* rf_shape.c                                */
-(const double ,		/* s - quadrature point coordinates          */
-       const double ,		/* t                                         */
-       const double ,		/* u                                         */
-       const int ,		/* Ielem_type - element type                 */
-       const int ,		/* Iquant - desired quantity (phi, phi_s, ...*/
-       const int );		/* Inode - current element node              */
+EXTERN double shape /* rf_shape.c                                */
+    (const double,  /* s - quadrature point coordinates          */
+     const double,  /* t                                         */
+     const double,  /* u                                         */
+     const int,     /* Ielem_type - element type                 */
+     const int,     /* Iquant - desired quantity (phi, phi_s, ...*/
+     const int);    /* Inode - current element node              */
 
 #endif /* GOMA_RF_SHAPE_H */

@@ -9,7 +9,6 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
 
 #ifndef GOMA_USER_OUTHKM_H
 #define GOMA_USER_OUTHKM_H

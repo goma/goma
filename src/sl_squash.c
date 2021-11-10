@@ -10,11 +10,10 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
 
-/* 
+/*
  * sl_squash -- auxiliary routine squashes out zeroes in the sparse matrix...
  *		the a[] and ija[] vectors are trimmed down to size
  */
-
 
 /* static int first_time; */
 

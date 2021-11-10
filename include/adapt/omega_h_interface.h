@@ -6,10 +6,9 @@ extern "C" {
 typedef struct Exodus_Database Exo_DB;
 typedef struct Distributed_Processing_Information Dpi;
 #else
-#include "exo_struct.h"
 #include "dpi.h"
+#include "exo_struct.h"
 #endif
-
 
 void adapt_mesh_omega_h(struct GomaLinearSolverData **ams,
                         Exo_DB *exo,

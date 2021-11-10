@@ -14,8 +14,7 @@ extern "C" {
 
 void EpetraCreateGomaProblemGraph(struct GomaLinearSolverData *ams, Exo_DB *exo, Dpi *dpi);
 
-void EpetraLoadLec(int ielem, struct GomaLinearSolverData *ams,
-                   double resid_vector[]);
+void EpetraLoadLec(int ielem, struct GomaLinearSolverData *ams, double resid_vector[]);
 
 void EpetraRowSumScale(struct GomaLinearSolverData *ams, double *b, double *scale);
 

@@ -9,7 +9,7 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
+
 /*
  * mm_prob_def.h -- prototype declarations for mm_prob_def.c
  */
@@ -31,7 +31,7 @@
 #define EXTERN extern
 #endif
 
-EXTERN int setup_pd		/* mm_prob_def.c */
-(void );			/* nada. */
+EXTERN int setup_pd /* mm_prob_def.c */
+    (void);         /* nada. */
 
 #endif /* GOMA_MM_PROB_DEF_H */

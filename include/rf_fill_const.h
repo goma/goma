@@ -9,7 +9,6 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
 
 /*
  *$Id: rf_fill_const.h,v 5.1 2007-09-18 18:53:46 prschun Exp $
@@ -178,36 +177,32 @@
 #define EXTERN extern
 #endif
 
-double
-calc_surf_det
-   ( int,                      /* ielem  */
-            int,                      /* iconnect_ptr */
-            int,                      /* nodes_per_elem  */
-            int,                      /* ielem_surf_dim  */
-            int,                      /* id_side  */
-            int,                      /* num_nodes_on_side */
-            int [] );                /* local_elem_node_id [] */
+double calc_surf_det(int,    /* ielem  */
+                     int,    /* iconnect_ptr */
+                     int,    /* nodes_per_elem  */
+                     int,    /* ielem_surf_dim  */
+                     int,    /* id_side  */
+                     int,    /* num_nodes_on_side */
+                     int[]); /* local_elem_node_id [] */
 
-void
-fill_surf_shape
-   ( int,      /* num_local_nodes, number of nodes in this element   */
-            int,      /* ielem_surf_dim, physical dimension of element surface */
-            int,       /* ielem_type, type-code for this element              */
-            double [], /* phi[], vector of shape functions for this element   */
-            double [][MAX_PDIM],  /* grad_phi_L[MDE][MAX_PDIM],
-                                   Gradients of shape functions for this element.
-				   Note, this function refers to coordinates 
-				   alpha and beta (if 3D), i.e., the
-				   coordinates of the surface parameterization
-				   and NOT the local element coordinates.     */
-            double,           /* alpha   current integration point            */
-            double,           /* beta    coordinates of the surface
-			                   alpha is used for 2D and 3D
-			                   beta  is used only for 3D	      */
-            int,              /* id_side,  identity of element side           */
-            int,              /* num_nodes_on_side, number of nodes on element side */
-            int [] );        /* local_elem_node_id[], vector containing id's
-                                   of local element nodes on the current side */
+void fill_surf_shape(int,                /* num_local_nodes, number of nodes in this element   */
+                     int,                /* ielem_surf_dim, physical dimension of element surface */
+                     int,                /* ielem_type, type-code for this element              */
+                     double[],           /* phi[], vector of shape functions for this element   */
+                     double[][MAX_PDIM], /* grad_phi_L[MDE][MAX_PDIM],
+                                          Gradients of shape functions for this element.
+                                          Note, this function refers to coordinates
+                                          alpha and beta (if 3D), i.e., the
+                                          coordinates of the surface parameterization
+                                          and NOT the local element coordinates.     */
+                     double,             /* alpha   current integration point            */
+                     double,             /* beta    coordinates of the surface
+                                                      alpha is used for 2D and 3D
+                                                      beta  is used only for 3D	      */
+                     int,                /* id_side,  identity of element side           */
+                     int,                /* num_nodes_on_side, number of nodes on element side */
+                     int[]);             /* local_elem_node_id[], vector containing id's
+                                               of local element nodes on the current side */
 
 #if 0
 void
@@ -233,13 +228,10 @@ set_diag_to_one
 
 /*************** PROTOTYPE FUNCTIONS FOR  rf_fill_terms.c ********************/
 
-
-double
-Ysurf_quad
-   ( double [],                      /* x[]  */
-            double [],                      /* phi[MDE]  */
-            struct elem_side_bc_struct *,   /* *elem_side_bc  */
-            int   );                       /* w  */
+double Ysurf_quad(double[],                     /* x[]  */
+                  double[],                     /* phi[MDE]  */
+                  struct elem_side_bc_struct *, /* *elem_side_bc  */
+                  int);                         /* w  */
 
 #if 0 /* old */
 void 

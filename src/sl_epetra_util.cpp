@@ -6,15 +6,15 @@
 #define EPETRA_MPI
 #endif
 
+#include <algorithm>
 #include <stdio.h>
 #include <stdlib.h>
-#include <algorithm>
 #include <vector>
 
-#include "Epetra_Map.h"
-#include "Epetra_CrsMatrix.h"
-#include "Epetra_Vector.h"
 #include "Epetra_ConfigDefs.h"
+#include "Epetra_CrsMatrix.h"
+#include "Epetra_Map.h"
+#include "Epetra_Vector.h"
 #include "dpi.h"
 #include "exo_struct.h"
 
@@ -24,26 +24,26 @@
 #endif
 
 extern "C" {
-#include "std.h"
-#include "rf_fem_const.h"
-#include "rf_fem.h"
-#include "rf_masks.h"
-#include "rf_io.h"
-#include "el_geom.h"
-#include "rf_vars_const.h"
-#include "mm_as_const.h"
-#include "mm_as_structs.h"
-#include "mm_as.h"
-#include "rf_node_const.h"
-#include "mm_eh.h"
-#include "mm_mp_structs.h"
-#include "mm_mp.h"
 #include "dp_comm.h"
 #include "dp_types.h"
-#include "mm_unknown_map.h"
-#include "rf_solve.h"
-#include "sl_util_structs.h"
+#include "el_geom.h"
+#include "mm_as.h"
+#include "mm_as_const.h"
+#include "mm_as_structs.h"
+#include "mm_eh.h"
 #include "mm_fill_util.h"
+#include "mm_mp.h"
+#include "mm_mp_structs.h"
+#include "mm_unknown_map.h"
+#include "rf_fem.h"
+#include "rf_fem_const.h"
+#include "rf_io.h"
+#include "rf_masks.h"
+#include "rf_node_const.h"
+#include "rf_solve.h"
+#include "rf_vars_const.h"
+#include "sl_util_structs.h"
+#include "std.h"
 }
 
 #include "sl_epetra_util.h"
@@ -91,19 +91,20 @@ void EpetraCreateGomaProblemGraph(struct GomaLinearSolverData *ams, Exo_DB *exo,
   Epetra_Map RowMap = ams->RowMatrix->RowMatrixRowMap();
 
   // get the global elements for this processor
-  int *MyGlobalElements = RowMap.MyGlobalElements ();
+  int *MyGlobalElements = RowMap.MyGlobalElements();
 
   double *dblColGIDs = new double[NumMyCols];
-  ams->GlobalIDs = (int *) malloc(sizeof(int)*NumMyCols);
+  ams->GlobalIDs = (int *)malloc(sizeof(int) * NumMyCols);
 
   // copy global id's and convert to double for boundary exchange
-  for( int i=0; i<NumMyRows; i++) dblColGIDs[i] = (double) MyGlobalElements[i];
+  for (int i = 0; i < NumMyRows; i++)
+    dblColGIDs[i] = (double)MyGlobalElements[i];
 
   exchange_dof(cx[pg->imtrx], dpi, dblColGIDs, pg->imtrx);
 
   // convert back to int with known global id's from all processors
   for (int j = 0; j < NumMyCols; j++) {
-    ams->GlobalIDs[j] = (int) dblColGIDs[j];
+    ams->GlobalIDs[j] = (int)dblColGIDs[j];
   }
 
   /*
@@ -140,8 +141,7 @@ void EpetraCreateGomaProblemGraph(struct GomaLinearSolverData *ams, Exo_DB *exo,
        * Loop over the nodes which are determined to have an interaction
        * with the current row node
        */
-      for (j = exo->node_node_pntr[inode]; j < exo->node_node_pntr[inode + 1];
-          j++) {
+      for (j = exo->node_node_pntr[inode]; j < exo->node_node_pntr[inode + 1]; j++) {
         inter_node = exo->node_node_list[j];
         nodeCol = Nodes[inter_node];
         nvCol = nodeCol->Nodal_Vars_Info[pg->imtrx];
@@ -150,8 +150,7 @@ void EpetraCreateGomaProblemGraph(struct GomaLinearSolverData *ams, Exo_DB *exo,
          * fill the vector list which points to the unknowns
          * defined at this interaction node
          */
-        col_num_unknowns = fill_variable_vector(inter_node, inter_node_varType,
-            inter_node_matID);
+        col_num_unknowns = fill_variable_vector(inter_node, inter_node_varType, inter_node_matID);
         if (col_num_unknowns != nvCol->Num_Unknowns) {
           GOMA_EH(GOMA_ERROR, "Inconsistency counting unknowns.");
         }
@@ -161,8 +160,7 @@ void EpetraCreateGomaProblemGraph(struct GomaLinearSolverData *ams, Exo_DB *exo,
          * interacting node and see if there should be an interaction.
          */
 
-        for (inter_unknown = 0; inter_unknown < col_num_unknowns;
-            inter_unknown++) {
+        for (inter_unknown = 0; inter_unknown < col_num_unknowns; inter_unknown++) {
 
           /*
            * HKM ->
@@ -183,20 +181,19 @@ void EpetraCreateGomaProblemGraph(struct GomaLinearSolverData *ams, Exo_DB *exo,
           /* The following code should be activated when solving DG viscoelastic problems
            * with full Jacobian treatment of upwind element stress terms
            */
-          if (exo->centroid_list[inode] != -1 && inode != inter_node
-              && exo->centroid_list[inter_node] != -1) {
+          if (exo->centroid_list[inode] != -1 && inode != inter_node &&
+              exo->centroid_list[inter_node] != -1) {
             eb1 = exo->elem_eb[exo->centroid_list[inode]];
 
             if (vn_glob[Matilda[eb1]]->dg_J_model == FULL_DG) {
               i1 = pd_glob[Matilda[eb1]]->i[pg->imtrx][rowVarType];
               i2 = pd_glob[Matilda[eb1]]->i[pg->imtrx][colVarType];
 
-              if ((rowVarType == colVarType)
-                  && (i1 == I_P0 || i1 == I_P1 || i1 == I_PQ1 || i1 == I_PQ2)
-                  && (i2 == I_P0 || i2 == I_P1 || i2 == I_PQ1 || i2 == I_PQ2)
-                  && (rowVarType != PRESSURE)
-                  && (rowVarType > VELOCITY_GRADIENT33
-                      || rowVarType < VELOCITY_GRADIENT11)) {
+              if ((rowVarType == colVarType) &&
+                  (i1 == I_P0 || i1 == I_P1 || i1 == I_PQ1 || i1 == I_PQ2) &&
+                  (i2 == I_P0 || i2 == I_P1 || i2 == I_PQ1 || i2 == I_PQ2) &&
+                  (rowVarType != PRESSURE) &&
+                  (rowVarType > VELOCITY_GRADIENT33 || rowVarType < VELOCITY_GRADIENT11)) {
                 add_var = Inter_Mask[pg->imtrx][rowVarType][colVarType];
               } else {
                 add_var = 0;
@@ -217,8 +214,8 @@ void EpetraCreateGomaProblemGraph(struct GomaLinearSolverData *ams, Exo_DB *exo,
           }
         }
       }
-      EpetraInsertGlobalRowMatrix(ams->RowMatrix, ams->GlobalIDs[irow_index], Indices.size(), &Values[0],
-          &Indices[0]);
+      EpetraInsertGlobalRowMatrix(ams->RowMatrix, ams->GlobalIDs[irow_index], Indices.size(),
+                                  &Values[0], &Indices[0]);
       nnz += Indices.size();
       irow_index++;
     }
@@ -233,7 +230,8 @@ void EpetraCreateGomaProblemGraph(struct GomaLinearSolverData *ams, Exo_DB *exo,
   ams->nnz = nnz;
   ams->nnz_plus = nnz;
 
-  ams->npn = dpi->num_internal_nodes + dpi->num_boundary_nodes;;
+  ams->npn = dpi->num_internal_nodes + dpi->num_boundary_nodes;
+  ;
   ams->npn_plus = dpi->num_universe_nodes;
 
   ams->npu = num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx];
@@ -256,9 +254,7 @@ void EpetraCreateGomaProblemGraph(struct GomaLinearSolverData *ams, Exo_DB *exo,
  * @param x Solution vector
  * @param resid_vector residual vector
  */
-void EpetraLoadLec(int ielem, struct GomaLinearSolverData *ams,
-                   double resid_vector[])
-{
+void EpetraLoadLec(int ielem, struct GomaLinearSolverData *ams, double resid_vector[]) {
   int e, v, i, j, pe, pv;
   int dofs;
   int gnn, row_index, ke, kv, nvdof;
@@ -287,9 +283,9 @@ void EpetraLoadLec(int ielem, struct GomaLinearSolverData *ams,
               gnn = ei[pg->imtrx]->gnn_list[e][i];
               nvdof = ei[pg->imtrx]->Baby_Dolphin[e][i];
               je_new = ei[pg->imtrx]->ieqn_ledof[ledof] + ke;
-              row_index = Index_Solution(gnn, e, ke, nvdof,
-					 ei[pg->imtrx]->matID_ledof[ledof], pg->imtrx);
-              resid_vector[row_index] += lec->R[LEC_R_INDEX(MAX_PROB_VAR + ke,i)];
+              row_index =
+                  Index_Solution(gnn, e, ke, nvdof, ei[pg->imtrx]->matID_ledof[ledof], pg->imtrx);
+              resid_vector[row_index] += lec->R[LEC_R_INDEX(MAX_PROB_VAR + ke, i)];
 
               if (af->Assemble_Jacobian) {
                 for (v = V_FIRST; v < V_LAST; v++) {
@@ -311,12 +307,12 @@ void EpetraLoadLec(int ielem, struct GomaLinearSolverData *ams,
                         for (j = 0; j < ei_ptr->dof[v]; j++) {
                           ledof = ei_ptr->lvdof_to_ledof[v][j];
                           je_new = ei_ptr->ieqn_ledof[ledof] + kv;
-                          col_index = Index_Solution(ei_ptr->gnn_list[v][j], v,
-                              kv, ei_ptr->Baby_Dolphin[v][j],
-						     ei_ptr->matID_ledof[ledof],pg->imtrx);
+                          col_index = Index_Solution(ei_ptr->gnn_list[v][j], v, kv,
+                                                     ei_ptr->Baby_Dolphin[v][j],
+                                                     ei_ptr->matID_ledof[ledof], pg->imtrx);
                           GOMA_EH(col_index, "Bad var index.");
                           Indices.push_back(ams->GlobalIDs[col_index]);
-                          Values.push_back(lec->J[LEC_J_INDEX(pe,pv,i,j)]);
+                          Values.push_back(lec->J[LEC_J_INDEX(pe, pv, i, j)]);
                         }
                       }
                     } else {
@@ -325,24 +321,23 @@ void EpetraLoadLec(int ielem, struct GomaLinearSolverData *ams,
                       for (j = 0; j < ei_ptr->dof[v]; j++) {
                         ledof = ei_ptr->lvdof_to_ledof[v][j];
                         je_new = ei_ptr->ieqn_ledof[ledof];
-                        col_index = Index_Solution(ei_ptr->gnn_list[v][j], v,
-                            kv, ei_ptr->Baby_Dolphin[v][j],
-						   ei_ptr->matID_ledof[ledof],pg->imtrx);
+                        col_index = Index_Solution(ei_ptr->gnn_list[v][j], v, kv,
+                                                   ei_ptr->Baby_Dolphin[v][j],
+                                                   ei_ptr->matID_ledof[ledof], pg->imtrx);
                         if (col_index != je_new) {
-                          fprintf(stderr,
-                              "Oh fiddlesticks: je = %d, je_new = %d\n",
-                              col_index, je_new);
+                          fprintf(stderr, "Oh fiddlesticks: je = %d, je_new = %d\n", col_index,
+                                  je_new);
                           GOMA_EH(GOMA_ERROR, "LEC Indexing error");
                         }
                         GOMA_EH(col_index, "Bad var index.");
                         Indices.push_back(ams->GlobalIDs[col_index]);
-                        Values.push_back(lec->J[LEC_J_INDEX(pe,pv,i,j)]);
+                        Values.push_back(lec->J[LEC_J_INDEX(pe, pv, i, j)]);
                       }
                     }
                   }
                 }
                 EpetraSumIntoGlobalRowMatrix(ams->RowMatrix, ams->GlobalIDs[row_index],
-                    Indices.size(), &Values[0], &Indices[0]);
+                                             Indices.size(), &Values[0], &Indices[0]);
                 Indices.clear();
                 Values.clear();
               }
@@ -362,7 +357,7 @@ void EpetraLoadLec(int ielem, struct GomaLinearSolverData *ams,
           ledof = ei[pg->imtrx]->lvdof_to_ledof[e][i];
           if (ei[pg->imtrx]->owned_ledof[ledof]) {
             row_index = ei[pg->imtrx]->gun_list[e][i];
-            resid_vector[row_index] += lec->R[LEC_R_INDEX(pe,i)];
+            resid_vector[row_index] += lec->R[LEC_R_INDEX(pe, i)];
 
             if (af->Assemble_Jacobian) {
               for (v = V_FIRST; v < V_LAST; v++) {
@@ -379,16 +374,15 @@ void EpetraLoadLec(int ielem, struct GomaLinearSolverData *ams,
                           exit(-1);
                         }
                       }
-
                     }
                     for (kv = 0; kv < upd->Max_Num_Species_Eqn; kv++) {
                       pv = MAX_PROB_VAR + kv;
                       for (j = 0; j < ei_ptr->dof[v]; j++) {
                         ledof = ei_ptr->lvdof_to_ledof[v][j];
                         je_new = ei_ptr->ieqn_ledof[ledof] + kv;
-                        col_index = Index_Solution(ei_ptr->gnn_list[v][j], v,
-                            kv, ei_ptr->Baby_Dolphin[v][j],
-						   ei_ptr->matID_ledof[ledof],pg->imtrx);
+                        col_index = Index_Solution(ei_ptr->gnn_list[v][j], v, kv,
+                                                   ei_ptr->Baby_Dolphin[v][j],
+                                                   ei_ptr->matID_ledof[ledof], pg->imtrx);
                         if (col_index != je_new) {
                           /*
                            * HKM -> another special case. Until we delineate
@@ -401,7 +395,7 @@ void EpetraLoadLec(int ielem, struct GomaLinearSolverData *ams,
                         }
                         GOMA_EH(col_index, "Bad var index.");
                         Indices.push_back(ams->GlobalIDs[col_index]);
-                        Values.push_back(lec->J[LEC_J_INDEX(pe,pv,i,j)]);
+                        Values.push_back(lec->J[LEC_J_INDEX(pe, pv, i, j)]);
                       }
                     }
                   } else {
@@ -420,24 +414,23 @@ void EpetraLoadLec(int ielem, struct GomaLinearSolverData *ams,
                     for (j = 0; j < ei_ptr->dof[v]; j++) {
                       ledof = ei_ptr->lvdof_to_ledof[v][j];
                       je_new = ei_ptr->ieqn_ledof[ledof];
-                      col_index = Index_Solution(ei_ptr->gnn_list[v][j], v, kv,
-                          ei_ptr->Baby_Dolphin[v][j],
-						 ei_ptr->matID_ledof[ledof],pg->imtrx);
+                      col_index =
+                          Index_Solution(ei_ptr->gnn_list[v][j], v, kv, ei_ptr->Baby_Dolphin[v][j],
+                                         ei_ptr->matID_ledof[ledof], pg->imtrx);
                       if (col_index != je_new) {
-                        fprintf(stderr,
-                            "Oh fiddlesticks: je = %d, je_new = %d\n",
-                            col_index, je_new);
+                        fprintf(stderr, "Oh fiddlesticks: je = %d, je_new = %d\n", col_index,
+                                je_new);
                         GOMA_EH(GOMA_ERROR, "LEC Indexing error");
                       }
                       GOMA_EH(col_index, "Bad var index.");
                       Indices.push_back(ams->GlobalIDs[col_index]);
-                      Values.push_back(lec->J[LEC_J_INDEX(pe,pv,i,j)]);
+                      Values.push_back(lec->J[LEC_J_INDEX(pe, pv, i, j)]);
                     }
                   }
                 }
               }
-              EpetraSumIntoGlobalRowMatrix(ams->RowMatrix, ams->GlobalIDs[row_index], Indices.size(),
-                  &Values[0], &Indices[0]);
+              EpetraSumIntoGlobalRowMatrix(ams->RowMatrix, ams->GlobalIDs[row_index],
+                                           Indices.size(), &Values[0], &Indices[0]);
               Indices.clear();
               Values.clear();
             }
@@ -452,10 +445,10 @@ void EpetraLoadLec(int ielem, struct GomaLinearSolverData *ams,
  * Inverse row sum scale, used by goma for scaling matrix and residual
  * @param ams Aztec structure containing RowMatrix
  * @param b b from Ax = b
- * @param scale array for scale values to be placed for further usage (b[i] will equal old b[i] / scale[i])
+ * @param scale array for scale values to be placed for further usage (b[i] will equal old b[i] /
+ * scale[i])
  */
-void EpetraRowSumScale(struct GomaLinearSolverData *ams, double *b, double *scale)
-{
+void EpetraRowSumScale(struct GomaLinearSolverData *ams, double *b, double *scale) {
   Epetra_Vector vector_scale(ams->RowMatrix->RowMatrixRowMap(), false);
   ams->RowMatrix->InvRowSums(vector_scale);
   ams->RowMatrix->LeftScale(vector_scale);
@@ -473,9 +466,8 @@ void EpetraRowSumScale(struct GomaLinearSolverData *ams, double *b, double *scal
  * @param ams Aztec_Linear_Solver_System matrix struct containing epetra matrix
  * @param GlobalRow global row to set to diagonal only
  */
-void EpetraSetDiagonalOnly(struct GomaLinearSolverData *ams, int GlobalRow)
-{
-  Epetra_CrsMatrix* CrsMatrix = dynamic_cast<Epetra_CrsMatrix*>(ams->RowMatrix);
+void EpetraSetDiagonalOnly(struct GomaLinearSolverData *ams, int GlobalRow) {
+  Epetra_CrsMatrix *CrsMatrix = dynamic_cast<Epetra_CrsMatrix *>(ams->RowMatrix);
   int size = CrsMatrix->NumGlobalEntries(GlobalRow);
   double *values = new double[size];
   int *indices = new int[size];
@@ -489,9 +481,8 @@ void EpetraSetDiagonalOnly(struct GomaLinearSolverData *ams, int GlobalRow)
     }
   }
   CrsMatrix->ReplaceGlobalValues(GlobalRow, NumEntries, values, indices);
-  delete [] indices;
-  delete [] values;
+  delete[] indices;
+  delete[] values;
 }
-
 }
 /* End extern "C" */

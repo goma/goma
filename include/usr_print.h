@@ -10,7 +10,7 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
 
-/* 
+/*
  *  user_print.h -- prototype declarations for user_print.c
  */
 

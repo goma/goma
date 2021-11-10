@@ -9,7 +9,6 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
 
 /*
  * $Id: user_continuation.h,v 5.1 2007-09-18 18:53:48 prschun Exp $
@@ -35,37 +34,34 @@
 #define EXTERN extern
 #endif
 
-EXTERN void update_user_parameter
-(double,			/* PARAMETER VALUE */
-       double*,                 /* UNKNOWN VECTOR */
-       double*,                 /* UNKNOWN_DOT VECTOR */
-       double*,                 /* x_AC VECTOR */
-       Comm_Ex *,		/* cx  - array of communications structures */
-       Exo_DB *,		/* exo - ptr to finite element mesh database */
-       Dpi *);			/* dpi - ptr to distributed processing info */
+EXTERN void update_user_parameter(double,    /* PARAMETER VALUE */
+                                  double *,  /* UNKNOWN VECTOR */
+                                  double *,  /* UNKNOWN_DOT VECTOR */
+                                  double *,  /* x_AC VECTOR */
+                                  Comm_Ex *, /* cx  - array of communications structures */
+                                  Exo_DB *,  /* exo - ptr to finite element mesh database */
+                                  Dpi *);    /* dpi - ptr to distributed processing info */
 
-EXTERN void update_user_TP_parameter
-(double,			/* PARAMETER VALUE */
-       double*,                 /* UNKNOWN VECTOR */
-       double*,                 /* UNKNOWN_DOT VECTOR */
-       double*,                 /* x_AC VECTOR */
-       Comm_Ex *,		/* cx  - array of communications structures */
-       Exo_DB *,		/* exo - ptr to finite element mesh database */
-       Dpi *);			/* dpi - ptr to distributed processing info */
+EXTERN void update_user_TP_parameter(double,    /* PARAMETER VALUE */
+                                     double *,  /* UNKNOWN VECTOR */
+                                     double *,  /* UNKNOWN_DOT VECTOR */
+                                     double *,  /* x_AC VECTOR */
+                                     Comm_Ex *, /* cx  - array of communications structures */
+                                     Exo_DB *,  /* exo - ptr to finite element mesh database */
+                                     Dpi *);    /* dpi - ptr to distributed processing info */
 
-EXTERN int do_user_update
-(int,			/* Ptr to function number */
-       int,			/* First update call (first param) */
-       int,			/* First update call (second param) */
-       int,			/* Type */
-       int,			/* BCID */
-       int,			/* DFID */
-       int,			/* MTID */
-       int,			/* MPID */
-       int,			/* MDID */
-       double,			/* Value */
-       Comm_Ex *,		/* cx  - array of communications structures */
-       Exo_DB *,		/* exo - ptr to finite element mesh database */
-       Dpi *);			/* dpi - ptr to distributed processing info */
+EXTERN int do_user_update(int,       /* Ptr to function number */
+                          int,       /* First update call (first param) */
+                          int,       /* First update call (second param) */
+                          int,       /* Type */
+                          int,       /* BCID */
+                          int,       /* DFID */
+                          int,       /* MTID */
+                          int,       /* MPID */
+                          int,       /* MDID */
+                          double,    /* Value */
+                          Comm_Ex *, /* cx  - array of communications structures */
+                          Exo_DB *,  /* exo - ptr to finite element mesh database */
+                          Dpi *);    /* dpi - ptr to distributed processing info */
 
 #endif /* GOMA_USER_CONTINUATION_H */

@@ -9,7 +9,7 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
+
 /*
  * Created: 1997/06/17 07:07 MDT pasacki@sandia.gov
  *
@@ -37,42 +37,34 @@
 #define EXTERN extern
 #endif
 
-EXTERN DDD ddd_alloc
-(void);
+EXTERN DDD ddd_alloc(void);
 
-EXTERN void ddd_add_member
-(DDD,			/* which collection? */
-       void *,			/* ptr new datachunk */
-       int,			/* how many of type? */
-       MPI_Datatype);		/* what type? */
+EXTERN void ddd_add_member(DDD,           /* which collection? */
+                           void *,        /* ptr new datachunk */
+                           int,           /* how many of type? */
+                           MPI_Datatype); /* what type? */
 
-EXTERN void ddd_add_member2
-(void *,			/* address */
-       int ,			/* blockcount */
-       size_t );		/* byte_size*/
+EXTERN void ddd_add_member2(void *,  /* address */
+                            int,     /* blockcount */
+                            size_t); /* byte_size*/
 
-EXTERN void ddd_set_commit2
-(void);		
+EXTERN void ddd_set_commit2(void);
 
-EXTERN void ddd_set_commit 
-(DDD);
+EXTERN void ddd_set_commit(DDD);
 
-EXTERN void ddd_free 
-(DDD);
+EXTERN void ddd_free(DDD);
 
-EXTERN char *type2string
-(MPI_Datatype );		/* type - MPI data type MPI_INT, etc */
+EXTERN char *type2string(MPI_Datatype); /* type - MPI data type MPI_INT, etc */
 
 extern int ProcWithMaxInt(const int, int *);
-#define check_parallel_error(arg1) \
-	check_parallel_error_FL((arg1), __FILE__, __LINE__)
+#define check_parallel_error(arg1) check_parallel_error_FL((arg1), __FILE__, __LINE__)
 extern void check_parallel_error_FL(char *, char *, int);
 extern void ReduceBcast_BOR(int *, int);
-extern int  gmaxloc_int(const int, const int, int *);
-extern int  gminloc_int(const int, const int, int *);
-extern int  gmax_int(int);
-extern int  gmin_int(int);
-extern int  gsum_Int(int);
+extern int gmaxloc_int(const int, const int, int *);
+extern int gminloc_int(const int, const int, int *);
+extern int gmax_int(int);
+extern int gmin_int(int);
+extern int gsum_Int(int);
 extern double gavg_double(double);
 extern void print_sync_start(int);
 extern void print_sync_end(int);

@@ -170,8 +170,8 @@ PetscErrorCode petsc_PCD_setup(PC pc,
   err =
       MatSetSizes(matrix_data->pcd_data->Mp, local_nodes, local_nodes, global_nodes, global_nodes);
   CHKERRQ(err);
-  err =
-      MatSetSizes(matrix_data->pcd_data->Mp_mu, local_nodes, local_nodes, global_nodes, global_nodes);
+  err = MatSetSizes(matrix_data->pcd_data->Mp_mu, local_nodes, local_nodes, global_nodes,
+                    global_nodes);
   CHKERRQ(err);
   err =
       MatSetSizes(matrix_data->pcd_data->Ap, local_nodes, local_nodes, global_nodes, global_nodes);
@@ -239,7 +239,7 @@ PetscErrorCode petsc_PCD_setup(PC pc,
   PCSetType(spc, PCSHELL);
   PCShellSetApply(spc, PCDShellPCApply);
   PCShellSetName(spc, "GomaPCD");
-  PCShellSetContext(spc, (void *) data);
+  PCShellSetContext(spc, (void *)data);
 
   return 0;
 }

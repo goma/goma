@@ -9,7 +9,6 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
 
 #ifndef GOMA_SL_LU_H
 #define GOMA_SL_LU_H
@@ -28,13 +27,12 @@
 #define EXTERN extern
 #endif
 
-EXTERN void lu
-(const int ,		/* N                                         */
-       const int ,		/* NExt                                      */
-       const int ,		/* M                                         */
-       double [],		/* a                                         */
-       int [],			/* ija                                       */
-       double [],		/* x                                         */
-       const int );		/* factor_flag                               */
+EXTERN void lu(const int,  /* N                                         */
+               const int,  /* NExt                                      */
+               const int,  /* M                                         */
+               double[],   /* a                                         */
+               int[],      /* ija                                       */
+               double[],   /* x                                         */
+               const int); /* factor_flag                               */
 
 #endif /* GOMA_SL_LU_H */

@@ -1,19 +1,22 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "decomp_interface.h"
-#include "mm_eh.h"
 #include "mm_as.h"
+#include "mm_eh.h"
 #include "rf_io.h"
 
 #define MAX_DECOMP_COMMAND 2048
 
 void call_decomp(char *exodus_file) {
-  char decomp_command[MAX_DECOMP_COMMAND+1];
+  char decomp_command[MAX_DECOMP_COMMAND + 1];
 
-//  int snerr = snprintf(decomp_command, MAX_DECOMP_COMMAND, "bash -c decomp -p %d %s", Num_Proc, exodus_file);
-  int snerr = snprintf(decomp_command, MAX_DECOMP_COMMAND, "nem_slice -e -S  -l inertial -c -o initial.exoII.nem -m mesh=2 %s", exodus_file);
+  //  int snerr = snprintf(decomp_command, MAX_DECOMP_COMMAND, "bash -c decomp -p %d %s", Num_Proc,
+  //  exodus_file);
+  int snerr =
+      snprintf(decomp_command, MAX_DECOMP_COMMAND,
+               "nem_slice -e -S  -l inertial -c -o initial.exoII.nem -m mesh=2 %s", exodus_file);
   if (Debug_Flag) {
     DPRINTF(stdout, "decomp command: %s\n", decomp_command);
   }
@@ -26,8 +29,7 @@ void call_decomp(char *exodus_file) {
     GOMA_EH(GOMA_ERROR, "System call failed for decomp command.");
   }
 
-  if (WEXITSTATUS(syserr) == 127)
-  {
+  if (WEXITSTATUS(syserr) == 127) {
     GOMA_EH(GOMA_ERROR, "System call failed, decomp not found, add SEACAS utils to PATH");
   }
 }

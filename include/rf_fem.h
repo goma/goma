@@ -9,7 +9,7 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
+
 /*
  *$Id: rf_fem.h,v 5.2 2009-03-12 00:00:56 hkmoffa Exp $
  *
@@ -17,48 +17,46 @@
  * rf_fem.h:
  *
  *	Include file for globally occuring parameters and flags
- *	specific to the FEM problem. 
+ *	specific to the FEM problem.
  *
  */
 
 #ifndef GOMA_H_RF_FEM
 #define GOMA_H_RF_FEM
 
-#include "rf_fem_const.h"	/* In case you have not already done so. */
+#include "rf_fem_const.h" /* In case you have not already done so. */
 /*   max number of Interface Sources */
 #ifndef MAX_INTERFACE
-#define MAX_INTERFACE  5
+#define MAX_INTERFACE 5
 #endif
 
+/* Geometric Parameters  */
 
-/* Geometric Parameters  */ 
-
-extern int  CoordinateSystem;  /* Indicates type of coordinate system (see fem_const.h)*/
-
+extern int CoordinateSystem; /* Indicates type of coordinate system (see fem_const.h)*/
 
 /* FEM Interpolation Parameters (see fem_const.h) */
 
-extern int  VelocityPressure;  /* Indicates which element type is used             */
-	                /* for velocity and pressure interpolation.         */
-extern int  Velocity;		/* Indicates which type of interpolation is used    */
-			/* for velocity. (set by value of VelocityPressure) */
-extern int  Pressure;		/* Indicates which type of interpolation is used    */
-			/* for pressure. (set by value of VelocityPressure) */
-extern int  Temperature;       /* Indicates which type of interpolation is used    */
-			/* for temperature.                                 */
-extern int  MeshDisplacement;  /* Indicates which element type is used             */
-                        /* for mesh displacement interpolation.             */
-extern int  MassFraction;      /* Indicates which type of interpolation is used    */
-                        /* for mass fraction and density.                   */
-extern int  nEQM;		/* Indicates one or more element quality metrics    */
-			/* are to be performed.				    */
-extern int  Use_DG;		/* Indicates when Discontinuous Galerkin	    */
-                        /* inpterpolation is in use.			    */
-extern int Do_Overlap;         /* Indicates that Overlap AC's will be used         */
+extern int VelocityPressure; /* Indicates which element type is used             */
+                             /* for velocity and pressure interpolation.         */
+extern int Velocity;         /* Indicates which type of interpolation is used    */
+                             /* for velocity. (set by value of VelocityPressure) */
+extern int Pressure;         /* Indicates which type of interpolation is used    */
+                             /* for pressure. (set by value of VelocityPressure) */
+extern int Temperature;      /* Indicates which type of interpolation is used    */
+                             /* for temperature.                                 */
+extern int MeshDisplacement; /* Indicates which element type is used             */
+                             /* for mesh displacement interpolation.             */
+extern int MassFraction;     /* Indicates which type of interpolation is used    */
+                             /* for mass fraction and density.                   */
+extern int nEQM;             /* Indicates one or more element quality metrics    */
+                             /* are to be performed.				    */
+extern int Use_DG;           /* Indicates when Discontinuous Galerkin	    */
+                             /* inpterpolation is in use.			    */
+extern int Do_Overlap;       /* Indicates that Overlap AC's will be used         */
 
 /* Parameters to select Problem type (see fem_const.h)*/
 
-extern int  ProblemType;	/* Select type of problem to be solved		    */
+extern int ProblemType; /* Select type of problem to be solved		    */
 
 /* global variable to account for extra terms in axisymmetric or swirling
    flow problems: define in setup_pd */
@@ -67,21 +65,20 @@ extern int WIM;
 
 /* Boundary Condition information */
 
-extern int Num_BC;		/* number of boundary conditions which are defined  */
+extern int Num_BC; /* number of boundary conditions which are defined  */
 
-extern int Num_Interface_Srcs;	/* number *_D interfaces*/
+extern int Num_Interface_Srcs; /* number *_D interfaces*/
 extern int IntSrc_BCID[MAX_INTERFACE];
 /* Rotation information */
-extern int Num_ROT;		/* number of rotations which are defined  */
+extern int Num_ROT; /* number of rotations which are defined  */
 
 /* Import & Export field counts (used in coupled mode only) */
-extern int Num_Import_NV;	/* number of nodal vars to import */
-extern int Num_Import_EV;	/* number of nodal vars to import */
-extern int Num_Export_XS;	/* number of solution vars to export */
-extern int Num_Export_XP;	/* number of post-proc vars to export */
+extern int Num_Import_NV;                    /* number of nodal vars to import */
+extern int Num_Import_EV;                    /* number of nodal vars to import */
+extern int Num_Export_XS;                    /* number of solution vars to export */
+extern int Num_Export_XP;                    /* number of post-proc vars to export */
 extern int Export_XS_ID[MAX_EXTERNAL_FIELD]; /* ID's of solution vars to export */
 extern int Export_XP_ID[MAX_EXTERNAL_FIELD]; /* ID's of post proc vars to export */
-
 
 /*
  * How many unique kinds of basis functions do we need to set up?
@@ -103,89 +100,87 @@ extern int Export_XP_ID[MAX_EXTERNAL_FIELD]; /* ID's of post proc vars to export
  * Total: 2 unique_kinds of basis_functions
  */
 
-extern int	Num_Basis_Functions;
-extern int	Unique_Basis_Functions[MAX_BASIS_FUNCTIONS];
+extern int Num_Basis_Functions;
+extern int Unique_Basis_Functions[MAX_BASIS_FUNCTIONS];
 
 /*
  * Count up unique element types read in from the EXODUS II database, where
  * each element block has an element type associated with it.
  */
 
-extern int	Num_Element_Types;
-extern int	Unique_Element_Types[MAX_ELEMENT_TYPES];
-
+extern int Num_Element_Types;
+extern int Unique_Element_Types[MAX_ELEMENT_TYPES];
 
 /*
  * This is all very confusing...but...there really are basis function shapes
  * and interpolations. Together, they form a distinct basis function type.
  *
- * 
+ *
  */
 
-extern int	Num_Interpolations;
-extern int	Unique_Interpolations[MAX_INTERPOLATIONS];
-extern int	Highest_Interpolation;
+extern int Num_Interpolations;
+extern int Unique_Interpolations[MAX_INTERPOLATIONS];
+extern int Highest_Interpolation;
 
-extern int	Num_Shapes;
-extern int	Unique_Shapes[MAX_ELEMENT_SHAPES];
-
+extern int Num_Shapes;
+extern int Unique_Shapes[MAX_ELEMENT_SHAPES];
 
 /* Parameters to select time integration technique                           */
-extern int  TimeIntegration;   /* Select time integration method                    */
+extern int TimeIntegration; /* Select time integration method                    */
 #ifndef COUPLED_FILL
-extern int  Explicit_Fill;     /* Select time integration method                    */
-extern int  exp_subcycle;      /* Subcycling frequency for Fill equation            */
-#endif /* not COUPLED_FILL */
-extern int  Use_Level_Set;     /* Global switch to turn on level set computations   */
-extern int  Use_Phase_Field;   /* Global switch to turn on phase-field computations   */
-		
-/* double  theta;  */   /* Time step parameter: theta = 0. => Backward Euler
-			                        theta = 1. => Forward  Euler */
+extern int Explicit_Fill;   /* Select time integration method                    */
+extern int exp_subcycle;    /* Subcycling frequency for Fill equation            */
+#endif                      /* not COUPLED_FILL */
+extern int Use_Level_Set;   /* Global switch to turn on level set computations   */
+extern int Use_Phase_Field; /* Global switch to turn on phase-field computations   */
 
-extern double  eps;            /* Time step error                                   */
-extern int  print_freq;
+/* double  theta;  */ /* Time step parameter: theta = 0. => Backward Euler
+                                              theta = 1. => Forward  Euler */
+
+extern double eps; /* Time step error                                   */
+extern int print_freq;
 extern double print_delt;
 extern double print_delt2_time, print_delt2;
 
 /* Parameters for continuation */
-extern int     Continuation;
-extern int     ContType;
-extern int     BdyCondID;
-extern int     DataFltID;
-extern int     MatID;
-extern int     MatPropID;
-extern int     MatPropSIID;
-extern int     MaxPathSteps;
-extern double  Delta_s0;
-extern double  Delta_s_min;
-extern double  Delta_s_max;
-extern double  PathMax;
+extern int Continuation;
+extern int ContType;
+extern int BdyCondID;
+extern int DataFltID;
+extern int MatID;
+extern int MatPropID;
+extern int MatPropSIID;
+extern int MaxPathSteps;
+extern double Delta_s0;
+extern double Delta_s_min;
+extern double Delta_s_max;
+extern double PathMax;
 
-extern double  print_delt2_path;
-extern double  BegParameterValue;
-extern double  EndParameterValue;
+extern double print_delt2_path;
+extern double BegParameterValue;
+extern double EndParameterValue;
 
 /* Parameters for augmenting conditions */
-extern int     nAC;
+extern int nAC;
 
 /* Parameters for multiple continuation conditions */
-extern int     nCC, nTC, nUC, nUTC;
+extern int nCC, nTC, nUC, nUTC;
 
 /* Parameters for hunting conditions */
-extern int     nHC;
+extern int nHC;
 
 /*
  * New quick reference to find the material index from an element block
  * index. This is more desirable for the distributed processing case, since
- * the old loops over the global number of materials will fail. Instead, 
+ * the old loops over the global number of materials will fail. Instead,
  * use loops over the local number of element blocks that this processor
  * sees, then find the corresponding material via this integer array.
  *
  * Old:	   for ( mn=0; mn<pd_glob[0]->Num_Mat; mn ++)
  *            {
- *		.            
- *		.            
- *		.            
+ *		.
+ *		.
+ *		.
  * New:
  *	   for ( ebi=0; ebi<exo->num_elem_blocks; ebi++)
  *            {
@@ -196,28 +191,27 @@ extern int     nHC;
  *
  */
 
-extern int *Matilda;		/* defined and filled in rd_mesh.c */
+extern int *Matilda; /* defined and filled in rd_mesh.c */
 
 /* Information on the number of unknowns (variables) which are define       */
 
+extern int *num_internal_dofs; /* I own, nobody wants. */
 
-extern int *num_internal_dofs;	/* I own, nobody wants. */
+extern int *num_boundary_dofs; /* I own, other procs want. */
 
-extern int *num_boundary_dofs;	/* I own, other procs want. */
+extern int *num_external_dofs; /* They own, I want. */
 
-extern int *num_external_dofs;	/* They own, I want. */
-
-extern int *num_universe_dofs;	/* All the dofs this processor is aware of. 
-				 * This is NOT the same as the number of
-				 * degrees of freedom in the global problem.
-				 * That number is considerably larger. */
+extern int *num_universe_dofs; /* All the dofs this processor is aware of.
+                                * This is NOT the same as the number of
+                                * degrees of freedom in the global problem.
+                                * That number is considerably larger. */
 
 /*
- * For convenience in assembling all internal and boundary nodal based 
+ * For convenience in assembling all internal and boundary nodal based
  * equations, this processor traverses some of the same elements that other
  * processors traverse. However, for many purposes a unique element assignment
- * is needed. This is the number of elements on this processor that are 
- * assigned to this processor. It will never exceed exo->num_elems, for 
+ * is needed. This is the number of elements on this processor that are
+ * assigned to this processor. It will never exceed exo->num_elems, for
  * example.
  */
 
@@ -230,18 +224,18 @@ extern int num_personal_elems;
  *   list of external nodes for this processor.
  *   Remember that the list of external nodes in the global
  *   list of nodes may not be ordered
- *   by the ownership of that external node. We seek here to 
+ *   by the ownership of that external node. We seek here to
  *   create an ordered list with ptr_node_recv[] and
  *   list_node_recv[]. The ordering will be wrt the list of
  *   neighboring processors given by dpi->neighbor[].
  *
  *   ptr_node_recv[0] = 0
- *   ptr_node_recv[1] = a : a is the offset into the list of 
- *                          external nodes for the 
+ *   ptr_node_recv[1] = a : a is the offset into the list of
+ *                          external nodes for the
  *                          first node owned by this
  *                          processor's second neighbor,
  *                          dpi->neighbor[1].
- *   
+ *
  *   ptr_node_recv[dpi->num_neighbors] = dpi->num_external_nodes
  *
  */
@@ -259,19 +253,18 @@ extern int *list_node_send;
 extern int *ptr_fill_node_send;
 extern int *list_fill_node_send;
 
-
-extern int *NumUnknowns; /* Number of unknown variables updated by this   */
-			/* processor                                     */
-extern int *NumExtUnknowns;/* Number of external variables which are      */
-			/* copied and stored on the local processor      */
-extern int MaxVarPerNode;/* Global Maximum number of unknowns at any     */
-			/* node on any processor                         */
+extern int *NumUnknowns;    /* Number of unknown variables updated by this   */
+                            /* processor                                     */
+extern int *NumExtUnknowns; /* Number of external variables which are      */
+                            /* copied and stored on the local processor      */
+extern int MaxVarPerNode;   /* Global Maximum number of unknowns at any     */
+                            /* node on any processor                         */
 extern int Num_Var_In_Type[MAX_NUM_MATRICES][MAX_VARIABLE_TYPES];
-                       /* The number of variables of this type  in the   */
-                       /* current problem. For species variables types,  */
-                       /* there are either  zero or Max_Num_Species_Eqn  */
-                       /* species variables. For other variables, there  */
-                       /* are either zero or one, usually.               */
+/* The number of variables of this type  in the   */
+/* current problem. For species variables types,  */
+/* there are either  zero or Max_Num_Species_Eqn  */
+/* species variables. For other variables, there  */
+/* are either zero or one, usually.               */
 
 /*
  *   FILL variable type variables for each processor
@@ -285,21 +278,21 @@ extern int external_fill_unknowns; /*  Number of external FILL unknowns  */
 /*
  * Local_Offset:
  *
- *	This array of pointers gets set to lists of integers that, for every 
+ *	This array of pointers gets set to lists of integers that, for every
  *	node, indicates how much offset from the first unknown of the node
  *	you need to get to the variable of interest...
  *
  *	For example, if we're solving just the energy equation and temperature
- *	is interpolated at every node, then 
+ *	is interpolated at every node, then
  *
  *		Local_Offset[matrix][node][TEMPERATURE] = 0; (the first unknown is T)
  *	and
  *		Local_Offset[matrix][node][VELOCITY1] = -1; (undefined offset)
- *	
+ *
  *	Yes, this does duplicate some functionality of First_Y, First_MeshD,
  *	etc. Also, Index_P, will not really be needed anymore, since pressure
  *	is getting lumped together with other unknowns at a node.
- *	
+ *
  */
 extern int ***Local_Offset;
 
@@ -330,10 +323,10 @@ extern int ***Local_Offset;
  *			 Note that variables with multiple k types must all
  *			 have the same representation in terms of dof/node.
  *			 Thus, the number of degrees of freedom for each
- *			 species concentrations must be multiplied by the 
+ *			 species concentrations must be multiplied by the
  * 			 total number of concentrations that are active, too!
  */
-extern int 	***Dolphin;	
+extern int ***Dolphin;
 
 /*
  * dofname -- holds strings telling the name of the variable (u1, T, P, etc)
@@ -345,9 +338,8 @@ extern int 	***Dolphin;
  *      idv[matrix][dof][1] = local nodal dof (0, except pressure& conc., for example)
  *	idv[matrix][dof][2] = associated global node number (0-based)
  */
-extern int  ***idv;    	    /* Integer variable name, nodal dof, node. */
-extern char ***dofname;	    /* Names of variables. */
-extern char ***resname;	    /* Names of residual equations. */
-
+extern int ***idv;      /* Integer variable name, nodal dof, node. */
+extern char ***dofname; /* Names of variables. */
+extern char ***resname; /* Names of residual equations. */
 
 #endif

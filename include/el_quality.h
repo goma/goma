@@ -9,10 +9,9 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
+
 #ifndef GOMA_EL_QUALITY_H
 #define GOMA_EL_QUALITY_H
-
 
 #include "el_elm_info.h"
 #include "exo_struct.h"
@@ -28,10 +27,8 @@
 #define EXTERN extern
 #endif
 
-EXTERN int element_quality
-( Exo_DB *,  		/* Exodus database structure */
-        double *,		/* Solution vector */
-        int *);		/* proc_config array */
-
+EXTERN int element_quality(Exo_DB *, /* Exodus database structure */
+                           double *, /* Solution vector */
+                           int *);   /* proc_config array */
 
 #endif /* GOMA_EL_QUALITY_H */

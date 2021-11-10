@@ -10,8 +10,8 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
 
-/* 
- * 
+/*
+ *
  * A data structure is used to contain information about what is to be sent
  * and received from a given neighboring processor. This includes both nodal
  * data (eg, fill equation) and the full degree of freedom (dof) information.
@@ -54,51 +54,54 @@
  *
  */
 
-#define dalloc(size, ptr) if (size > 0) ptr= alloc_dbl_1(size, 0.0)
+#define dalloc(size, ptr) \
+  if (size > 0)           \
+  ptr = alloc_dbl_1(size, 0.0)
 
 /*
- * crdv() -- C preprocessor macro conditionally register double vector 
+ * crdv() -- C preprocessor macro conditionally register double vector
  *
  *	     This registration is done prior to MPI transport if size > 0.
  *
  * Presumably, any nontrivial length vectors of user defined data were
  * allocated receiving space on other processors.
  *
- * Assume: 
+ * Assume:
  *		(1) "n" refers to some "DDD"
  *
  *		(2) Data type is MPI_DOUBLE.
  */
 
-#define crdv(len, addr) if((len)>0 && (addr) != NULL) ddd_add_member(n, (addr), (len), MPI_DOUBLE); if ( (len)>0 && (addr) == NULL ) { printf("P_%d: crdv ERROR: member %d NULL address but nonzero length=%d %s line %d!\n", ProcID, n->num_members, (len), __FILE__, __LINE__); fflush(stdout); }
-
-
-
+#define crdv(len, addr)                                                                            \
+  if ((len) > 0 && (addr) != NULL)                                                                 \
+    ddd_add_member(n, (addr), (len), MPI_DOUBLE);                                                  \
+  if ((len) > 0 && (addr) == NULL) {                                                               \
+    printf("P_%d: crdv ERROR: member %d NULL address but nonzero length=%d %s line %d!\n", ProcID, \
+           n->num_members, (len), __FILE__, __LINE__);                                             \
+    fflush(stdout);                                                                                \
+  }
 
 /*
  * All of the necessary pieces to define an MPI derived datatype.
  */
 
-struct Derived_Datatype_Description
-{
+struct Derived_Datatype_Description {
   int num_members;
   int max_members;
   int *block_count;
   MPI_Datatype *data_type;
-  MPI_Aint     *address;
-  MPI_Datatype  new_type;
+  MPI_Aint *address;
+  MPI_Datatype new_type;
 
-  MPI_Aint extent;              /* extent of new derived data type */
+  MPI_Aint extent; /* extent of new derived data type */
   MPI_Aint lb;
   /*  int count;                        count of new derived data type */
-  int size;                     /* size of new derived data type */
+  int size; /* size of new derived data type */
 };
 
 typedef struct Derived_Datatype_Description *DDD;
 
-
-struct Communication_Exchange
-{
+struct Communication_Exchange {
   int neighbor_name;
 
   int num_nodes_recv;
@@ -111,23 +114,23 @@ struct Communication_Exchange
    * versions are used to verify global node names between processors. The
    * dbl versions are used to communcate actual data.
    */
-/*
-  MPI_Datatype mpidt_i_node_send;
-  MPI_Datatype mpidt_d_node_send;
-  MPI_Datatype mpidt_i_node_recv;
-  MPI_Datatype mpidt_d_node_recv;
-*/
+  /*
+    MPI_Datatype mpidt_i_node_send;
+    MPI_Datatype mpidt_d_node_send;
+    MPI_Datatype mpidt_i_node_recv;
+    MPI_Datatype mpidt_d_node_recv;
+  */
   /* likewise for fill_nodes */
 
   int num_fill_nodes_recv;
   int num_fill_nodes_send;
   int *local_fill_nodeces_send;
-/*
-  MPI_Datatype mpidt_i_fill_node_send;
-  MPI_Datatype mpidt_d_fill_node_send;
-  MPI_Datatype mpidt_i_fill_node_recv;
-  MPI_Datatype mpidt_d_fill_node_recv;
-*/
+  /*
+    MPI_Datatype mpidt_i_fill_node_send;
+    MPI_Datatype mpidt_d_fill_node_send;
+    MPI_Datatype mpidt_i_fill_node_recv;
+    MPI_Datatype mpidt_d_fill_node_recv;
+  */
   /* yet again for dofs */
 
   int num_dofs_recv;
@@ -141,12 +144,12 @@ struct Communication_Exchange
    * being sent and received. The dbl types are used to communicate the actual
    * values.
    */
-/*
-  MPI_Datatype mpidt_i_dof_send;
-  MPI_Datatype mpidt_d_dof_send;
-  MPI_Datatype mpidt_i_dof_recv;
-  MPI_Datatype mpidt_d_dof_recv;
-*/  
+  /*
+    MPI_Datatype mpidt_i_dof_send;
+    MPI_Datatype mpidt_d_dof_send;
+    MPI_Datatype mpidt_i_dof_recv;
+    MPI_Datatype mpidt_d_dof_recv;
+  */
 };
 
 typedef struct Communication_Exchange Comm_Ex;
@@ -157,20 +160,19 @@ typedef struct Communication_Exchange Comm_Ex;
  */
 
 struct Comm_Neighbor_Proc {
-    int neighbor_ProcID;         /* Integer containing the ProcID of the neighbor
-				    with which to communicate */
-    void *send_message_buf;      /* send message buffer (contiguous in space) -
-				    This is sent to neighbor_ProcID */
-    int send_message_length;     /* Length of the send message buffer in bytes */
-    void *recv_message_buf;      /* receive message buffer (contiguous in space)
-				    This is received from neighbor_ProcID */
-    int recv_message_length;     /* Length of the receive message buffer */
-    MPI_Request send_request;      /* Request object for send */
-    MPI_Request recv_request;    /* request object for receive */
-    MPI_Status  send_status;     /* status object for send operation */
-    MPI_Status  recv_status;     /* status object for receive operation */
+  int neighbor_ProcID;      /* Integer containing the ProcID of the neighbor
+                               with which to communicate */
+  void *send_message_buf;   /* send message buffer (contiguous in space) -
+                               This is sent to neighbor_ProcID */
+  int send_message_length;  /* Length of the send message buffer in bytes */
+  void *recv_message_buf;   /* receive message buffer (contiguous in space)
+                               This is received from neighbor_ProcID */
+  int recv_message_length;  /* Length of the receive message buffer */
+  MPI_Request send_request; /* Request object for send */
+  MPI_Request recv_request; /* request object for receive */
+  MPI_Status send_status;   /* status object for send operation */
+  MPI_Status recv_status;   /* status object for receive operation */
 };
 typedef struct Comm_Neighbor_Proc COMM_NP_STRUCT;
-
 
 #endif /* GOMA_DP_TYPES_H */

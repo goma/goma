@@ -10,10 +10,9 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
 
-/* 
+/*
  *$Id: user_pre.c,v 5.1 2007-09-18 18:53:49 prschun Exp $
  */
-
 
 #include <stdio.h>
 
@@ -25,14 +24,12 @@
 #define GOMA_USER_PRE_C
 
 /*********** R O U T I N E S   I N   T H I S   F I L E ************************
-*
-*       NAME            TYPE            CALLED_BY
-*    user_init_object                    object_distance
-*    ------------             ---------               --------------
-*************************/
-double 
-user_surf_object (int *int_params, dbl *param, dbl *r )	
-{
+ *
+ *       NAME            TYPE            CALLED_BY
+ *    user_init_object                    object_distance
+ *    ------------             ---------               --------------
+ *************************/
+double user_surf_object(int *int_params, dbl *param, dbl *r) {
   double distance = 0;
   static int warning = 0;
 
@@ -42,17 +39,15 @@ user_surf_object (int *int_params, dbl *param, dbl *r )
   num_params = int_params[0];
   */
 
- /**********************************************************/
+  /**********************************************************/
 
- /* Comment out our remove this line if using this routine */
-  if (warning == 0)
-    {
-      fprintf(stderr,"\n\n#############\n"
-	    "# WARNING!! #  No user_defined post processing model implemented"
-	      "\n#############\n");
-      warning = 1;
-    }
-
+  /* Comment out our remove this line if using this routine */
+  if (warning == 0) {
+    fprintf(stderr, "\n\n#############\n"
+                    "# WARNING!! #  No user_defined post processing model implemented"
+                    "\n#############\n");
+    warning = 1;
+  }
 
   return distance;
 } /* End of routine user_init_object */

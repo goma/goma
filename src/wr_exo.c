@@ -954,7 +954,7 @@ void create_truth_table(struct Results_Description *rd, Exo_DB *exo, double ***g
         }
       }
       /* Finally pick up all of the element-level-storage continuation
-     * variables, e.g. for saturation hysteresis function
+       * variables, e.g. for saturation hysteresis function
        */
       mat_num = Matilda[eb_indx];
       mp = mp_glob[mat_num];
@@ -1151,7 +1151,7 @@ void create_truth_table(struct Results_Description *rd, Exo_DB *exo, double ***g
         ip_total = elem_info(NQUAD, eb_ptr->Elem_Type);
         for (j = 0; j < ip_total; j++) {
           /*Note that we will set these for all 3 var types because you
-         *will never see them individually.
+           *will never see them individually.
            */
           exo->elem_var_tab[i++] = 1;
           ev_indx++;

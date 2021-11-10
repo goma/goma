@@ -10,7 +10,7 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
 
-/* 
+/*
  * $Id: mm_dil_viscosity.h,v 5.3 2008-03-13 01:12:31 hkmoffa Exp $
  */
 
@@ -30,16 +30,17 @@
 #define EXTERN extern
 #endif
 
+EXTERN double dil_viscosity /* mm_dil_viscosity.c                */
+    (GEN_NEWT_STRUCT *gn_local,
+     const dbl muValue,
+     const VISCOSITY_DEPENDENCE_STRUCT *d_mu,
+     DILVISCOSITY_DEPENDENCE_STRUCT *d_dilMu); /* d_dilMu - dil_viscosity dependence */
 
-EXTERN double dil_viscosity                        /* mm_dil_viscosity.c                */
-    (GEN_NEWT_STRUCT *gn_local, const dbl muValue, const VISCOSITY_DEPENDENCE_STRUCT *d_mu, DILVISCOSITY_DEPENDENCE_STRUCT *d_dilMu);/* d_dilMu - dil_viscosity dependence */
-
-int
-ls_modulate_dilviscosity ( double *kappa1,
-                           double  kappa2,
-                           double width,
-                           double pm_minus,
-                           double pm_plus,
-                           DILVISCOSITY_DEPENDENCE_STRUCT *d_dilMu);
+int ls_modulate_dilviscosity(double *kappa1,
+                             double kappa2,
+                             double width,
+                             double pm_minus,
+                             double pm_plus,
+                             DILVISCOSITY_DEPENDENCE_STRUCT *d_dilMu);
 
 #endif /* GOMA_MM_DIL_VISCOSITY_H */

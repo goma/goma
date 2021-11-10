@@ -9,7 +9,6 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
 
 #ifndef GOMA_RF_PRE_PROC_H
 #define GOMA_RF_PRE_PROC_H
@@ -29,7 +28,7 @@
 #define EXTERN extern
 #endif
 
-EXTERN void pre_process		/* rf_pre_proc.c */
-(Exo_DB *exo);
+EXTERN void pre_process /* rf_pre_proc.c */
+    (Exo_DB *exo);
 
 #endif /* GOMA_RF_PRE_PROC_H */

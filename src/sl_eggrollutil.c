@@ -9,14 +9,13 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
+
 /*
  * $Id: sl_eggrollutil.c,v 5.1 2007-09-18 18:53:47 prschun Exp $
  */
 
-
-#include "std.h"
 #include "sl_eggroll.h"
+#include "std.h"
 
 /* Utility routines for sl_eggroll*.c.
  *
@@ -27,13 +26,9 @@
 
 /* Complex division
  */
-void
-cdiv(dbl ar, dbl ai,
-     dbl br, dbl bi,
-     dbl *cr, dbl *ci)
-{
+void cdiv(dbl ar, dbl ai, dbl br, dbl bi, dbl *cr, dbl *ci) {
   dbl s;
-  s = SQUARE(br)+SQUARE(bi);
-  (*cr) = (ar*br+ai*bi)/s;
-  (*ci) = (ai*br-ar*bi)/s;
+  s = SQUARE(br) + SQUARE(bi);
+  (*cr) = (ar * br + ai * bi) / s;
+  (*ci) = (ai * br - ar * bi) / s;
 }

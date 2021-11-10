@@ -9,10 +9,9 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
+
 #ifndef GOMA_RF_ELEMENT_STORAGE_CONST_H
 #define GOMA_RF_ELEMENT_STORAGE_CONST_H
-
 
 /*
  * prototypes for functions in rf_element_storage.c
@@ -29,4 +28,3 @@ extern void put_nodalSat_tn_IntoES(int, double);
 extern void put_Sat_tn_IntoES(int, double);
 
 #endif
-

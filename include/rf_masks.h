@@ -9,7 +9,6 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
 
 /*
  *$Id: rf_masks.h,v 5.1 2007-09-18 18:53:46 prschun Exp $
@@ -19,7 +18,7 @@
 #define GOMA_RF_MASKS_H
 
 #ifndef MAX_TOTAL_BCS_POWER
-#define MAX_TOTAL_BCS_POWER  8
+#define MAX_TOTAL_BCS_POWER 8
 #endif
 
 /*
@@ -53,22 +52,22 @@
    P  |  1  |   1   |   0   |   1  |    1  |  1  |   1   |   0    |   0   |   1  |
       |-----|-------|-------|------|-------|-----|-------|--------|-------|------|
 
-	 1 - Implies this type of variable (row) interacts with this type of
-	     variable (column)
-	 0 - Implies no interaction
-	 
-	 Note: A row with all zeros implies that this equation(s) is not being
-	       solved.
+         1 - Implies this type of variable (row) interacts with this type of
+             variable (column)
+         0 - Implies no interaction
+
+         Note: A row with all zeros implies that this equation(s) is not being
+               solved.
 
 
-	Variable Types:
-		U1, U2, U3           - Three components of velocity
-		T                    - Temperature
-		Y                    - Mass fractions   (there can be more than one)
-		D1, D2, D3           - Three components of mesh displacement
-		D1_RS, D2_RS, D3_RS  - Three components of mesh displacement
-		S                    - Surface unknowns (there can be more than one)
-		P                    - Pressure
+        Variable Types:
+                U1, U2, U3           - Three components of velocity
+                T                    - Temperature
+                Y                    - Mass fractions   (there can be more than one)
+                D1, D2, D3           - Three components of mesh displacement
+                D1_RS, D2_RS, D3_RS  - Three components of mesh displacement
+                S                    - Surface unknowns (there can be more than one)
+                P                    - Pressure
       */
 
 /*

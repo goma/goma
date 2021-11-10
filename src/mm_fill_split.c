@@ -162,7 +162,7 @@ int assemble_ustar(dbl time_value, /* current time */
 
           source += f[a] * bf[eqn]->phi[i] * d_area;
 
-          lec->R[LEC_R_INDEX(peqn,ii)] += resid + adv + pres + diff + source;
+          lec->R[LEC_R_INDEX(peqn, ii)] += resid + adv + pres + diff + source;
         } /*end if (active_dofs) */
       }   /* end of for (i=0,ei[pg->imtrx]->dofs...) */
     }
@@ -225,7 +225,7 @@ int assemble_ustar(dbl time_value, /* current time */
 
                 source += df->v[a][b][j] * bf[eqn]->phi[i] * -d_area;
 
-                lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += resid + adv + diff + source;
+                lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += resid + adv + diff + source;
               }
             }
           }
@@ -333,7 +333,7 @@ int assemble_pstar(dbl time_value, /* current time */
        *  Add up the individual contributions and sum them into the local element
        *  contribution for the total continuity equation for the ith local unknown
        */
-      lec->R[LEC_R_INDEX(peqn,i)] += mass;
+      lec->R[LEC_R_INDEX(peqn, i)] += mass;
     }
   }
 
@@ -352,7 +352,7 @@ int assemble_pstar(dbl time_value, /* current time */
 
           mass *= -d_area;
 
-           lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass;
+          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += mass;
         }
       }
     }
@@ -400,7 +400,7 @@ int assemble_continuity_segregated(dbl time_value, /* current time */
         double resid = fv->P - fv->P_star - fv_old->P; // + 0.1 * fv->div_v;
         resid *= -bf[eqn]->phi[i] * d_area;
         /*lec->R[peqn][ii] += mass + advection + porous + diffusion + source;*/
-        lec->R[LEC_R_INDEX(peqn,ii)] += resid;
+        lec->R[LEC_R_INDEX(peqn, ii)] += resid;
 
 #ifdef DEBUG_MOMENTUM_RES
         printf("R_m[%d][%d] += %10f %10f %10f %10f %10f\n", a, i, mass, advection, porous,
@@ -440,7 +440,7 @@ int assemble_continuity_segregated(dbl time_value, /* current time */
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             double resid = bf[var]->phi[j] * bf[eqn]->phi[i];
             resid *= -d_area;
-            lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += resid;
+            lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += resid;
           }
         }
       }
@@ -449,10 +449,10 @@ int assemble_continuity_segregated(dbl time_value, /* current time */
   return (status);
 }
 
-int assemble_momentum_segregated(dbl time,       /* current time */
-                                 dbl tt,         /* parameter to vary time integration from
-                                                    explicit (tt = 1) to implicit (tt = 0) */
-                                 dbl dt,         /* current time step size */
+int assemble_momentum_segregated(dbl time, /* current time */
+                                 dbl tt,   /* parameter to vary time integration from
+                                              explicit (tt = 1) to implicit (tt = 0) */
+                                 dbl dt,   /* current time step size */
                                  const PG_DATA *pg_data) {
 #ifdef DEBUG_MOMENTUM_JAC
   int adx;
@@ -501,7 +501,7 @@ int assemble_momentum_segregated(dbl time,       /* current time */
           resid *= -bf[eqn]->phi[i] * d_area;
 
           /*lec->R[peqn][ii] += mass + advection + porous + diffusion + source;*/
-          lec->R[LEC_R_INDEX(peqn,ii)] += resid;
+          lec->R[LEC_R_INDEX(peqn, ii)] += resid;
 
 #ifdef DEBUG_MOMENTUM_RES
           printf("R_m[%d][%d] += %10f %10f %10f %10f %10f\n", a, i, mass, advection, porous,
@@ -544,7 +544,7 @@ int assemble_momentum_segregated(dbl time,       /* current time */
                 double resid = bf[var]->phi[j];
                 resid *= -delta(a, b) * bf[eqn]->phi[i] * d_area;
 
-                lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += resid;
+                lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += resid;
               }
             }
           }

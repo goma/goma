@@ -9,7 +9,6 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
 
 /*
  *$Id: std.h,v 5.3 2010-07-01 17:29:33 ebenner Exp $
@@ -19,8 +18,8 @@
 #define GOMA_RF_GOMA_H
 
 #include <ctype.h>
-#include <stdlib.h> /* WEXITSTATUS */
 #include <math.h>
+#include <stdlib.h> /* WEXITSTATUS */
 
 #include "rf_mp.h"
 
@@ -38,18 +37,18 @@
 #endif /* EIGEN_SERIAL */
 
 #ifdef EIGEN_PARALLEL
-#define HAVE_ARPACK 1
+#define HAVE_ARPACK  1
 #define HAVE_PARPACK 1
 #endif /* EIGEN_PARALLEL */
 
-#ifndef GOMA_VERSION                      /* 1) VERSION must be a keyword, won't work with it */
-  #ifdef GIT_VERSION                      /* 2) needed all of this to convet GIT_VERSION to the proper string */
-    #define STRINGCON_(x) #x
-    #define STRINGCON(x) STRINGCON_(x)
-    #define GOMA_VERSION STRINGCON(GIT_VERSION)
-  #else
-    #define GOMA_VERSION "7.0.0 alpha"
-  #endif
+#ifndef GOMA_VERSION /* 1) VERSION must be a keyword, won't work with it */
+#ifdef GIT_VERSION   /* 2) needed all of this to convet GIT_VERSION to the proper string */
+#define STRINGCON_(x) #x
+#define STRINGCON(x)  STRINGCON_(x)
+#define GOMA_VERSION  STRINGCON(GIT_VERSION)
+#else
+#define GOMA_VERSION "7.0.0 alpha"
+#endif
 #endif
 
 /***********************************************************************************/
@@ -92,7 +91,7 @@
 #endif
 #endif
 
-#if defined (hpux) || defined (ASCI_RED)
+#if defined(hpux) || defined(ASCI_RED)
 #ifdef solaris
 #undef solaris
 #endif
@@ -126,18 +125,18 @@
 #endif
 
 #ifndef MAX
-#define MAX(x,y)     (( (x) > (y) ) ? (x) : (y))
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #endif
 #ifndef MIN
-#define MIN(x,y)     (( (x) < (y) ) ? (x) : (y))
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
 #endif
 
 #ifndef SGN
-#define SGN(x)               (( (x) < 0 ) ? -1 : 1 )
+#define SGN(x) (((x) < 0) ? -1 : 1)
 #endif
 
 #ifndef ABS
-#define ABS(x)               (( (x) < 0 ) ? -(x) : (x) )
+#define ABS(x) (((x) < 0) ? -(x) : (x))
 #endif
 
 #ifndef TRUE
@@ -148,13 +147,13 @@
  * This one lets sign(0) = -1...
  */
 
-#define sign_of(x)	((x) <=  0. ?  -1 : 1 )
+#define sign_of(x) ((x) <= 0. ? -1 : 1)
 
 #ifndef SQUARE
-#define SQUARE(x)	( (x) * (x) )
+#define SQUARE(x) ((x) * (x))
 #endif
 #ifndef CUBE
-#define CUBE(x)	( (x) * (x) * (x) )
+#define CUBE(x) ((x) * (x) * (x))
 #endif
 
 /*
@@ -164,24 +163,23 @@
 #define HAVE_CBRT
 
 #ifndef HAVE_CBRT
-#define cbrt(arg)	( arg == 0 ? 0 : ( arg < 0. ? -pow(-arg,1./3.) : pow(arg, 1./3.) ))
+#define cbrt(arg) (arg == 0 ? 0 : (arg < 0. ? -pow(-arg, 1. / 3.) : pow(arg, 1. / 3.)))
 #endif
 
 /*
  * Some handy large integers...
  */
 
-#define KILO_2                          1024
-#define MEGA_2                          1048576
-#define GIGA_2                          1073741824
-#define TERA_2                          1099511627776
-#define PETA_2                          1125899906842624
-#define EXA_2                           1152921504606846976
+#define KILO_2 1024
+#define MEGA_2 1048576
+#define GIGA_2 1073741824
+#define TERA_2 1099511627776
+#define PETA_2 1125899906842624
+#define EXA_2  1152921504606846976
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
-
 
 #ifndef M_PIE
 #define M_PIE M_PI
@@ -191,11 +189,22 @@
 #define PI M_PI
 #endif
 
-#define delta(m,n)	((m) == (n) ? 1 : 0 ) /* Kroenecker delta */
-#define permute(i,j,k) ( ((i)-(j))*((j)-(k))*((k)-(i))/2 ) /* Permutation symbol (epsilon) */
-#define stringup(a) do { char *p; for( p=a; *p != '\0'; *p= (char) toupper(*p), p++); } while (0)
-#define stringlow(a) do { char *p; for( p=a; *p != '\0'; *p=tolower(*p), p++); } while (0)
-#define endofstring(a) strchr(a,'\0')
+#define delta(m, n) ((m) == (n) ? 1 : 0) /* Kroenecker delta */
+#define permute(i, j, k) \
+  (((i) - (j)) * ((j) - (k)) * ((k) - (i)) / 2) /* Permutation symbol (epsilon) */
+#define stringup(a)                                      \
+  do {                                                   \
+    char *p;                                             \
+    for (p = a; *p != '\0'; *p = (char)toupper(*p), p++) \
+      ;                                                  \
+  } while (0)
+#define stringlow(a)                               \
+  do {                                             \
+    char *p;                                       \
+    for (p = a; *p != '\0'; *p = tolower(*p), p++) \
+      ;                                            \
+  } while (0)
+#define endofstring(a) strchr(a, '\0')
 /*
  * Comparisons against zero should be done using this double value
  * in order to avoid machine dependent issues involving how
@@ -229,10 +238,10 @@
  * nonzero, non-zero underflow, and false otherwise
  */
 #ifndef DOUBLE_NONZERO
-#define DOUBLE_NONZERO(value)  ((fabs((value)) > DBL_SMALL))
+#define DOUBLE_NONZERO(value) ((fabs((value)) > DBL_SMALL))
 #endif
 #ifndef DOUBLE_ZERO
-#define DOUBLE_ZERO(value)  ((fabs((value)) < DBL_SMALL))
+#define DOUBLE_ZERO(value) ((fabs((value)) < DBL_SMALL))
 #endif
 
 /*************************************************************************/
@@ -248,7 +257,7 @@
  */
 
 #ifndef MAX_CHAR_ERR_MSG
-#  define MAX_CHAR_ERR_MSG	2048
+#define MAX_CHAR_ERR_MSG 2048
 #endif
 
 /*
@@ -256,7 +265,7 @@
  */
 
 #ifndef LIST_CHUNK_SIZE
-#define LIST_CHUNK_SIZE		100
+#define LIST_CHUNK_SIZE 100
 #endif
 
 /*************************************************************************/
@@ -273,7 +282,6 @@
 #ifndef HAVE_AZTEC
 #define HAVE_AZTEC
 #endif
-
 
 /*************************************************************************/
 /*            MPI IMPLEMENTATION SECTION
@@ -320,9 +328,9 @@ typedef int MPI_Datatype;
 typedef int MPI_Request;
 typedef int MPI_Status;
 typedef int MPI_Aint;
-#define MPI_CHAR 1
-#define MPI_INT 2
-#define MPI_FLOAT 3
+#define MPI_CHAR   1
+#define MPI_INT    2
+#define MPI_FLOAT  3
 #define MPI_DOUBLE 4
 #endif
 
@@ -333,7 +341,7 @@ typedef int MPI_Aint;
  *
  *     Use this section to specify debugging parameters.
  */
- /*
+/*
  * Use this to conditionally compile code. The idea is that you can compile
  * with more V&V that might slow and bloat your code, but can be toggled on
  * and off with, ultimately, parameters like Debug_Level as the first
@@ -346,23 +354,36 @@ typedef int MPI_Aint;
 #define DEBUG_LEVEL 0
 #endif
 
-
 /*
  * For parallel processing, restrict most diagnostic output to a single
  * processor.
  */
 
 #ifdef PARALLEL
-#  define DPRINTF(...) do {if ( ProcID == 0 ) { fprintf(__VA_ARGS__); } } while(0)
-#  define P0PRINTF(...) do {if (ProcID == 0) { printf(__VA_ARGS__); } } while(0)
-#  define DFPUTS(...) do {if (ProcID == 0) { fputs(__VA_ARGS__); } } while(0)
+#define DPRINTF(...)        \
+  do {                      \
+    if (ProcID == 0) {      \
+      fprintf(__VA_ARGS__); \
+    }                       \
+  } while (0)
+#define P0PRINTF(...)      \
+  do {                     \
+    if (ProcID == 0) {     \
+      printf(__VA_ARGS__); \
+    }                      \
+  } while (0)
+#define DFPUTS(...)       \
+  do {                    \
+    if (ProcID == 0) {    \
+      fputs(__VA_ARGS__); \
+    }                     \
+  } while (0)
 #else
-#  define DPRINTF fprintf
-#  define DFPUTS fputs
-#  define P0PRINTF printf
-#  define DFPUTS fputs
+#define DPRINTF  fprintf
+#define DFPUTS   fputs
+#define P0PRINTF printf
+#define DFPUTS   fputs
 #endif
-
 
 /****************************************************************************/
 /*
@@ -377,9 +398,8 @@ typedef int MPI_Aint;
 #ifdef BSD
 typedef char *Spfrtn;
 #else
-typedef int Spfrtn;		/* most System V systems... */
+typedef int Spfrtn; /* most System V systems... */
 #endif
-
 
 /*
  * HKM -> I'm not sure why the following is in there
@@ -391,7 +411,7 @@ typedef char *Strcpy_rtn;
 #endif
 
 #ifdef STRCPY_RTN_IS_INT
-typedef int  Strcpy_rtn;
+typedef int Strcpy_rtn;
 #endif
 
 /****************************************************************************/
@@ -418,9 +438,10 @@ typedef int  Strcpy_rtn;
 
 #ifndef tflop
 #ifndef dec_osf1
-#if !defined(_H_TYPES) && !defined(_SYS_TYPES_INCLUDED) && !defined(_SYS_TYPES_H) && !defined(__sys_types_h) && !defined(_SYS_TYPES_H_)
-typedef unsigned       int		u_int;
-typedef unsigned long  int		u_long;
+#if !defined(_H_TYPES) && !defined(_SYS_TYPES_INCLUDED) && !defined(_SYS_TYPES_H) && \
+    !defined(__sys_types_h) && !defined(_SYS_TYPES_H_)
+typedef unsigned int u_int;
+typedef unsigned long int u_long;
 #endif
 #endif
 #endif
@@ -432,7 +453,7 @@ typedef unsigned long  int		u_long;
  * a dream.
  */
 
-typedef	double	dbl;
+typedef double dbl;
 
 /*
  * A boolean type named bool
@@ -441,18 +462,17 @@ typedef	double	dbl;
 #include <stdbool.h>
 #endif
 
-enum datatype 
-{
-  type_void, 
-  type_char, 
+enum datatype {
+  type_void,
+  type_char,
   type_unsigned_char,
-  type_short_int, 
-  type_int, 
+  type_short_int,
+  type_int,
   type_unsigned_int,
-  type_long_int, 
-  type_float, 
-  type_double, 
-  type_long_long, 
+  type_long_int,
+  type_float,
+  type_double,
+  type_long_long,
   type_long_double
 };
 
@@ -494,7 +514,6 @@ extern int parallel_err_global;
 extern int neg_elem_volume;
 extern int neg_elem_volume_global;
 
-
 /*
  * This particular error is triggered by moving mesh problems in shell that get
  * too enthusiastic and require spending the night in the drunk tank -
@@ -505,7 +524,6 @@ extern int neg_lub_height;
 extern int neg_lub_height_global;
 extern int zero_detJ;
 extern int zero_detJ_global;
-
 
 /***************************************************************************/
 /*                       std.h end                                         */

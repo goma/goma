@@ -10,7 +10,7 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
 
-/* 
+/*
  * exo_struct.h -- defines structure to hold an EXODUS II FE database
  */
 
@@ -19,32 +19,33 @@
  */
 
 #ifndef GOMA_EXO_STRUCT_H
-#define	GOMA_EXO_STRUCT_H 1
+#define GOMA_EXO_STRUCT_H 1
 
-#include "std.h"
-#include "netcdf.h"
 #include "exodusII.h"
+#include "netcdf.h"
+#include "std.h"
 
 #ifndef GOMA_FLT_TYPEDEF
 #define GOMA_FLT_TYPEDEF
 typedef float flt;
 #endif
 
-typedef char  *(QA_Record[4]);
-typedef char  *INFO_Record;
+typedef char *(QA_Record[4]);
+typedef char *INFO_Record;
 
 #ifndef MAX_INFO
-#define MAX_INFO	(200)	/* Hopefully irrelevant... */
+#define MAX_INFO (200) /* Hopefully irrelevant... */
 #endif
 
 #ifndef MAX_QA
-#define MAX_QA		(100)	/* Hopefully irrelevant... */
+#define MAX_QA (100) /* Hopefully irrelevant... */
 #endif
 
 #ifndef MAX_SLENGTH
-#define MAX_SLENGTH	(1024)/* Do NOT use this to override EXODUSII's
-			       * preference of MAX_STR_LENGTH or face
-			       * severe pain. Remember, you were warned! */
+#define MAX_SLENGTH                                \
+  (1024) /* Do NOT use this to override EXODUSII's \
+          * preference of MAX_STR_LENGTH or face   \
+          * severe pain. Remember, you were warned! */
 #endif
 
 /*
@@ -57,18 +58,18 @@ typedef char  *INFO_Record;
  */
 
 #ifndef LEN_QA_RECORD
-#define LEN_QA_RECORD	(MAX_STR_LENGTH+1)
+#define LEN_QA_RECORD (MAX_STR_LENGTH + 1)
 #endif
 
-#ifndef FILENAME_MAX_ACK	/* Avert name clash with HP's stdio.h ... */
-#define FILENAME_MAX_ACK	(1024)
+#ifndef FILENAME_MAX_ACK /* Avert name clash with HP's stdio.h ... */
+#define FILENAME_MAX_ACK (1024)
 #endif
 
 #define EXODUS_FILE_SUFFIX (".exoII")
 
 /*
  * States of the Exo_DB database in memory - where's it at?
- * 
+ *
  * State must be unique. Some states are exclusive of other states, some
  * states do not care about other states...
  *
@@ -77,19 +78,19 @@ typedef char  *INFO_Record;
  */
 
 #ifndef EXODB_STATE_GRND
-#define EXODB_STATE_GRND	(1L<<0)	/* It just exists, nothing's done. */
-#define EXODB_STATE_INIT	(1L<<1)	/* initialization info exists. */
-#define EXODB_STATE_MESH	(1L<<2)	/* also the mesh info. */
-#define EXODB_STATE_RES0	(1L<<3)	/* Preliminary result information. */
-#define EXODB_STATE_NDVA	(1L<<4) /* Nodal results var space allocated.*/
-#define EXODB_STATE_NDVR	(1L<<5) /* Nontrivial nodal results data read*/
-#define EXODB_STATE_ELVA	(1L<<6) /* Elem results var space allocated.*/
-#define EXODB_STATE_ELVR	(1L<<7) /* Nontrivial elem results data read*/
-#define EXODB_STATE_GBVA	(1L<<8) /* Glob results var space allocated.*/
-#define EXODB_STATE_GBVR	(1L<<9) /* Nontrivial glob results data read*/
-#define EXODB_STATE_NDIA       (1L<<10) /* Indeces allocated for node vars. */
-#define EXODB_STATE_ELIA       (1L<<11) /* Indeces allocated for elem vars. */
-#define EXODB_STATE_GBIA       (1L<<12) /* Indeces allocated for glob vars. */
+#define EXODB_STATE_GRND (1L << 0)  /* It just exists, nothing's done. */
+#define EXODB_STATE_INIT (1L << 1)  /* initialization info exists. */
+#define EXODB_STATE_MESH (1L << 2)  /* also the mesh info. */
+#define EXODB_STATE_RES0 (1L << 3)  /* Preliminary result information. */
+#define EXODB_STATE_NDVA (1L << 4)  /* Nodal results var space allocated.*/
+#define EXODB_STATE_NDVR (1L << 5)  /* Nontrivial nodal results data read*/
+#define EXODB_STATE_ELVA (1L << 6)  /* Elem results var space allocated.*/
+#define EXODB_STATE_ELVR (1L << 7)  /* Nontrivial elem results data read*/
+#define EXODB_STATE_GBVA (1L << 8)  /* Glob results var space allocated.*/
+#define EXODB_STATE_GBVR (1L << 9)  /* Nontrivial glob results data read*/
+#define EXODB_STATE_NDIA (1L << 10) /* Indeces allocated for node vars. */
+#define EXODB_STATE_ELIA (1L << 11) /* Indeces allocated for elem vars. */
+#define EXODB_STATE_GBIA (1L << 12) /* Indeces allocated for glob vars. */
 #endif
 
 /*
@@ -101,18 +102,18 @@ typedef char  *INFO_Record;
  */
 
 #ifndef EXODB_ACTION_RD_INIT
-#define EXODB_ACTION_RD_INIT	(1L<<0)	/* Read the mesh meta data. */
-#define EXODB_ACTION_RD_MESH	(1L<<1)	/* Read the mesh connectivity, etc. */
-#define EXODB_ACTION_RD_RES0	(1L<<2)	/* Read results meta data. */
-#define EXODB_ACTION_RD_RESN	(1L<<3)	/* Read results data big time (node) */
-#define EXODB_ACTION_RD_RESE	(1L<<4)	/* Read results data big time (elem) */
-#define EXODB_ACTION_RD_RESG	(1L<<5)	/* Read results data big time (glob) */
-#define EXODB_ACTION_WR_INIT	(1L<<6)
-#define EXODB_ACTION_WR_MESH	(1L<<7)
-#define EXODB_ACTION_WR_RES0	(1L<<8)
-#define EXODB_ACTION_WR_RESN	(1L<<9)
-#define EXODB_ACTION_WR_RESE	(1L<<10)
-#define EXODB_ACTION_WR_RESG	(1L<<11)
+#define EXODB_ACTION_RD_INIT (1L << 0) /* Read the mesh meta data. */
+#define EXODB_ACTION_RD_MESH (1L << 1) /* Read the mesh connectivity, etc. */
+#define EXODB_ACTION_RD_RES0 (1L << 2) /* Read results meta data. */
+#define EXODB_ACTION_RD_RESN (1L << 3) /* Read results data big time (node) */
+#define EXODB_ACTION_RD_RESE (1L << 4) /* Read results data big time (elem) */
+#define EXODB_ACTION_RD_RESG (1L << 5) /* Read results data big time (glob) */
+#define EXODB_ACTION_WR_INIT (1L << 6)
+#define EXODB_ACTION_WR_MESH (1L << 7)
+#define EXODB_ACTION_WR_RES0 (1L << 8)
+#define EXODB_ACTION_WR_RESN (1L << 9)
+#define EXODB_ACTION_WR_RESE (1L << 10)
+#define EXODB_ACTION_WR_RESG (1L << 11)
 #endif
 
 /*
@@ -120,123 +121,122 @@ typedef char  *INFO_Record;
  * we have a macro that is used extensively in copy_exo().
  */
 
-#define SRC_DST(member)		dst->member = src->member
+#define SRC_DST(member) dst->member = src->member
 
 /*
  * Note that some variable names are replicated no longer!
  */
 
-struct Exodus_Database
-{
-  long state;			/* of the database in memory */
+struct Exodus_Database {
+  long state; /* of the database in memory */
 
-  char	*path;			/* filename. Well, yes this could
-				 * change, too, for reasons beyond our
-				 * control.
-				 */
-  int	exoid;			/* netCDF open file identifier. Strictly,
-				 * this only has meaning when the file is
-				 * open and is not part of the database.
-				 * In principle, this netCDF ID can be
-				 * assigned to an arbitrary integer 
-				 * that could change from call to call. 
-				 */
+  char *path; /* filename. Well, yes this could
+               * change, too, for reasons beyond our
+               * control.
+               */
+  int exoid;  /* netCDF open file identifier. Strictly,
+               * this only has meaning when the file is
+               * open and is not part of the database.
+               * In principle, this netCDF ID can be
+               * assigned to an arbitrary integer
+               * that could change from call to call.
+               */
 
-  int	comp_wordsize;		/* native desired size for reals on machine */
-  int	io_wordsize;		/* size of reals in database (maybe difft) */
+  int comp_wordsize; /* native desired size for reals on machine */
+  int io_wordsize;   /* size of reals in database (maybe difft) */
 
   /*
    * General model information...
    */
 
-  int   cmode;
-  int	mode;
-  int	num_dim;		/* Number of spatial dimensions */
+  int cmode;
+  int mode;
+  int num_dim; /* Number of spatial dimensions */
 
-  int	num_elems;		/* Number of elements, total. */
+  int num_elems; /* Number of elements, total. */
 
-  int	num_elem_blocks;	/* Number of element blocks. */
+  int num_elem_blocks; /* Number of element blocks. */
 
-  int	num_info;		/* Number of info[] records. */
+  int num_info; /* Number of info[] records. */
 
-  int	num_node_sets;		/* Number of node sets. */
+  int num_node_sets; /* Number of node sets. */
 
-  int	num_side_sets;		/* Number of side sets. */
+  int num_side_sets; /* Number of side sets. */
 
-  int	num_nodes;		/* Number of nodes, total. */
+  int num_nodes; /* Number of nodes, total. */
 
-  int	num_qa_rec;		/* Number of quality assurance records. */
+  int num_qa_rec; /* Number of quality assurance records. */
 
-  int	num_times;		/* Number of time planes. */
+  int num_times; /* Number of time planes. */
 
-  int   node_map_exists;
-  int   elem_map_exists;
-  int   elem_order_map_exists;
-  int   ss_node_list_exists;
+  int node_map_exists;
+  int elem_map_exists;
+  int elem_order_map_exists;
+  int ss_node_list_exists;
 
-  int	*node_map;		/* returned by ex_get_node_num_map() */
-  int	*elem_map;		/* returned by ex_get_elem_num_map() */
-  int	*elem_order_map;	/* returned by ex_get_map() */
+  int *node_map;       /* returned by ex_get_node_num_map() */
+  int *elem_map;       /* returned by ex_get_elem_num_map() */
+  int *elem_order_map; /* returned by ex_get_map() */
 
-  dbl	*x_coord;
-  dbl	*y_coord;
-  dbl	*z_coord;
+  dbl *x_coord;
+  dbl *y_coord;
+  dbl *z_coord;
 
-  flt	api_version;
-  flt	db_version;
-  flt	version;
+  flt api_version;
+  flt db_version;
+  flt version;
 
   QA_Record *qa_record;
 
   /*   char	*qa_record[MAX_QA][4];  deadly poison! */
 
-  INFO_Record	*info;
+  INFO_Record *info;
 
   /*  char	**info; */
 
-  char	**coord_names;
+  char **coord_names;
 
-  char	*title;			/* Title of the database. */
+  char *title; /* Title of the database. */
 
   /*
    * Element block data...
    */
 
-  int	*eb_id;			/* Element block identifiers.
-				 * eb_id[ebi] = ID of the ebi'th element block
-				 * Length = Number of element blocks = Num_EB */
-  char	**eb_elem_type;		/* Type of element for a particular block. */
-  int	*eb_num_elems;		/* Number of elements in ea block. */
-  int	*eb_num_nodes_per_elem;	/* Number nodes/element in this block. */
-  int	*eb_num_attr;		/* Number of attributes/elem in this block. */
-  int	**eb_conn;		/* Nodal connectivity -> List of nodes comprising
-				 * each element in the current element block
-				 * eb_conn[ebi][j],
-				 *    ebi = element block index
-				 *    j = eb_num_nodes_per_elem[ebi]*ielem + i
-				 * where ielem = element number in the block
-				 *       i = node number
-				 * Length eb_conn[Num_EB][eb_num_nodes_per_elem[ebi]
-				 *                         *eb_num_elems[ebi]]
-				 */
-  dbl	**eb_attr;		/* Attributes in this eb. */
+  int *eb_id;                 /* Element block identifiers.
+                               * eb_id[ebi] = ID of the ebi'th element block
+                               * Length = Number of element blocks = Num_EB */
+  char **eb_elem_type;        /* Type of element for a particular block. */
+  int *eb_num_elems;          /* Number of elements in ea block. */
+  int *eb_num_nodes_per_elem; /* Number nodes/element in this block. */
+  int *eb_num_attr;           /* Number of attributes/elem in this block. */
+  int **eb_conn;              /* Nodal connectivity -> List of nodes comprising
+                               * each element in the current element block
+                               * eb_conn[ebi][j],
+                               *    ebi = element block index
+                               *    j = eb_num_nodes_per_elem[ebi]*ielem + i
+                               * where ielem = element number in the block
+                               *       i = node number
+                               * Length eb_conn[Num_EB][eb_num_nodes_per_elem[ebi]
+                               *                         *eb_num_elems[ebi]]
+                               */
+  dbl **eb_attr;              /* Attributes in this eb. */
 
   /*
    * These are extras that are merely a convenience.
    */
 
-  int   *eb_ptr;		/* [neb+1] - ptr sums up eb_num_elems[ieb] */
-  int   *eb_elem_itype;		/* an integer instead of a character string */
+  int *eb_ptr;        /* [neb+1] - ptr sums up eb_num_elems[ieb] */
+  int *eb_elem_itype; /* an integer instead of a character string */
 
-  int   *elem_ptr;		/* [num_elems+1] - pt into node list */
-  int   *node_list;		/* concatenated eb_conn for all elemblocks */
+  int *elem_ptr;  /* [num_elems+1] - pt into node list */
+  int *node_list; /* concatenated eb_conn for all elemblocks */
 
-  int   *elem_eb;               /* Mapping from the element number to the element
-				 * block index (candidate for removal because of
-				 * its large length - function
-				 * could do it just as easily)
-				 * Length = Total number of elements.
-				 */
+  int *elem_eb; /* Mapping from the element number to the element
+                 * block index (candidate for removal because of
+                 * its large length - function
+                 * could do it just as easily)
+                 * Length = Total number of elements.
+                 */
 
   /*
    * Additional element -> node connectivity information. Boolean indicates
@@ -246,21 +246,21 @@ struct Exodus_Database
    * and node_list arrays above. The more descriptive name might help.
    */
 
-  int    elem_node_conn_exists;
-  int   *elem_node_pntr;
-  int   *elem_node_list;
+  int elem_node_conn_exists;
+  int *elem_node_pntr;
+  int *elem_node_list;
 
   /*
    * Additional node -> element connectivity information. Boolean indicates
    * arrays allocated and filled with meaningful data.
    */
 
-  int    node_elem_conn_exists;
-  int   *node_elem_pntr;
-  int   *node_elem_list;
+  int node_elem_conn_exists;
+  int *node_elem_pntr;
+  int *node_elem_list;
 
   /*
-   * Additional node -> node connectivity information. 
+   * Additional node -> node connectivity information.
    *
    * Boolean indicates arrays allocated and filled with meaningful data.
    *
@@ -276,10 +276,10 @@ struct Exodus_Database
    * check the other names.
    */
 
-  int    node_node_conn_exists;
-  int   *node_node_pntr;
-  int   *node_node_list;
-  int   *centroid_list;
+  int node_node_conn_exists;
+  int *node_node_pntr;
+  int *node_node_list;
+  int *centroid_list;
 
   /*
    * Additional element -> element connectivity information. Boolean indicates
@@ -291,44 +291,44 @@ struct Exodus_Database
    * list.
    */
 
-  int    elem_elem_conn_exists;
-  int   *elem_elem_pntr;
-  int   *elem_elem_list;	/* -2 means another proc - Look in dpi... */
-  int   *elem_elem_xadj;        /* CSR format for elem_elem_pntr for METIS */
-  int   *elem_elem_adjncy;	/* CSR format for elem_elem_list for METIS */
-  int   *elem_elem_twst;	/* How many twists? (Mainly for 3D elems.)*/
-  int   *elem_elem_face;	/* Name of neighbor's face I am connected to.*/
+  int elem_elem_conn_exists;
+  int *elem_elem_pntr;
+  int *elem_elem_list;   /* -2 means another proc - Look in dpi... */
+  int *elem_elem_xadj;   /* CSR format for elem_elem_pntr for METIS */
+  int *elem_elem_adjncy; /* CSR format for elem_elem_list for METIS */
+  int *elem_elem_twst;   /* How many twists? (Mainly for 3D elems.)*/
+  int *elem_elem_face;   /* Name of neighbor's face I am connected to.*/
   /*
    * Node set information...
    */
 
-  int	ns_node_len;		/* Length of nodelist forall NS. */
-  int	ns_distfact_len;	/* Length of df list forall NS. */
-  int	*ns_id;			/* Node set IDs. */
-  int   *ns_num_nodes;		/* Number of nodes in each ns. */
-  int	*ns_num_distfacts;	/* Number of dfs in each ns.  */
-  int	*ns_node_index;		/* Index in big list of nodes for ea ns.  */
-  int	*ns_distfact_index;	/* Index in big list of dfs for ea ns. */
-  int	*ns_node_list;		/* Big list of nds for all ns. */
-  dbl	*ns_distfact_list;	/* Big list of dfs for all ns. */
+  int ns_node_len;        /* Length of nodelist forall NS. */
+  int ns_distfact_len;    /* Length of df list forall NS. */
+  int *ns_id;             /* Node set IDs. */
+  int *ns_num_nodes;      /* Number of nodes in each ns. */
+  int *ns_num_distfacts;  /* Number of dfs in each ns.  */
+  int *ns_node_index;     /* Index in big list of nodes for ea ns.  */
+  int *ns_distfact_index; /* Index in big list of dfs for ea ns. */
+  int *ns_node_list;      /* Big list of nds for all ns. */
+  dbl *ns_distfact_list;  /* Big list of dfs for all ns. */
 
   /*
    * Side set information...
    */
 
-  int	ss_elem_len;		/* Length of ss element/side lists. */
-  int	ss_distfact_len;	/* Length of ss df list */
-  int	ss_node_len;		/* Length of ss node list. */
+  int ss_elem_len;     /* Length of ss element/side lists. */
+  int ss_distfact_len; /* Length of ss df list */
+  int ss_node_len;     /* Length of ss node list. */
 
-  int	*ss_id;			/* SS identifiers for ea side set. */
-  int	*ss_num_sides;		/* SS num sides per set. */
-  int	*ss_num_distfacts;	/* SS num of dfs per set. */
-  int	*ss_elem_index;		/* SS index into element list. */
-  int	*ss_distfact_index;	/* SS index into df list. */
-  int	*ss_elem_list;		/* SS element list. */
-  int	*ss_side_list;		/* SS side list. */
+  int *ss_id;             /* SS identifiers for ea side set. */
+  int *ss_num_sides;      /* SS num sides per set. */
+  int *ss_num_distfacts;  /* SS num of dfs per set. */
+  int *ss_elem_index;     /* SS index into element list. */
+  int *ss_distfact_index; /* SS index into df list. */
+  int *ss_elem_list;      /* SS element list. */
+  int *ss_side_list;      /* SS side list. */
 
-  dbl	*ss_distfact_list;	/* SS df list. */
+  dbl *ss_distfact_list; /* SS df list. */
 
   /*
    * These weird beasts help to reference node names and the correct
@@ -341,66 +341,65 @@ struct Exodus_Database
    * the element/side counter within each sideset.
    */
 
-  int   **ss_node_cnt_list;
+  int **ss_node_cnt_list;
 
-  int   **ss_node_list;
+  int **ss_node_list;
 
-  int   **ss_node_side_index;	/* For my own convenience... */
-
+  int **ss_node_side_index; /* For my own convenience... */
 
   /*
    * Properties...
    */
-  
-  int	ns_num_props;		/* Number of nodes set properites. */
-  int	ss_num_props;		/* Number of side set properties. */
-  int	eb_num_props;		/* Number of element block properties. */
 
-  char	**ns_prop_name;		/* Names of node set properties. */
-  char	**ss_prop_name;		/* Names of side set properties. */
-  char	**eb_prop_name;		/* Names of element block properties. */
+  int ns_num_props; /* Number of nodes set properites. */
+  int ss_num_props; /* Number of side set properties. */
+  int eb_num_props; /* Number of element block properties. */
 
-  int	**ns_prop;		/* Values of node set properties. */
-  int	**ss_prop;		/* Values of side set properties. */
-  int	**eb_prop;		/* Values of element block properties. */
+  char **ns_prop_name; /* Names of node set properties. */
+  char **ss_prop_name; /* Names of side set properties. */
+  char **eb_prop_name; /* Names of element block properties. */
+
+  int **ns_prop; /* Values of node set properties. */
+  int **ss_prop; /* Values of side set properties. */
+  int **eb_prop; /* Values of element block properties. */
 
   /*
    * Preliminary results data (meta-data) or about the results.
    */
 
-  int	num_glob_vars;
-  int	num_node_vars;
-  int	num_elem_vars;
+  int num_glob_vars;
+  int num_node_vars;
+  int num_elem_vars;
 
-  char	**glob_var_names;
-  char	**elem_var_names;
-  char	**node_var_names;
+  char **glob_var_names;
+  char **elem_var_names;
+  char **node_var_names;
 
-  dbl	*time_vals;
+  dbl *time_vals;
 
-  int	*elem_var_tab;		/* [neb*nev], [blk_index*nev+ev_index] */
-  int   elem_var_tab_exists;
-  int   *truth_table_existance_key; /* programurz cant rite or spel */
+  int *elem_var_tab; /* [neb*nev], [blk_index*nev+ev_index] */
+  int elem_var_tab_exists;
+  int *truth_table_existance_key; /* programurz cant rite or spel */
 
   /*
    * Nodal variables are chosen by index, by timeplane and by which node
    * we're at.
    */
 
-  int	num_nv_time_indeces;
-  int	*nv_time_indeces;
-  int	num_nv_indeces;
-  int	*nv_indeces;
+  int num_nv_time_indeces;
+  int *nv_time_indeces;
+  int num_nv_indeces;
+  int *nv_indeces;
 
-  dbl	***nv;			/* nv[time_index][nv_index][node] */
+  dbl ***nv; /* nv[time_index][nv_index][node] */
 
   /*
    * Element variables are chosen by index, by timeplane and by element block
    * ID as well as which element we're in.
    */
 
-  int	num_ev_time_indeces;
-  int	*ev_time_indeces;
+  int num_ev_time_indeces;
+  int *ev_time_indeces;
 
   /*
    * Use the element variable truth table to select which element variables
@@ -415,17 +414,17 @@ struct Exodus_Database
 
   /*  dbl   ****ev;		  ev[time_index][ev_index][blk_index][elem] */
 
-  dbl ***ev;			/* ev[time_index][blk_index*ev_index][elem] */
+  dbl ***ev; /* ev[time_index][blk_index*ev_index][elem] */
 
   /*
    * Global variables are chosen by the timeplane - you get *all* of them -
    * no cherry picking of global variables.
    */
 
-  int	num_gv_time_indeces;
-  int	*gv_time_indeces;
+  int num_gv_time_indeces;
+  int *gv_time_indeces;
 
-  dbl	**gv;			/* gv[time_index][gv_index] */
+  dbl **gv; /* gv[time_index][gv_index] */
 
   /*
    * Historical compatibility - these become arrays of pointers into
@@ -450,9 +449,9 @@ struct Exodus_Database
    * results.
    */
 
-  dbl	**node_var_vals;	/* node_var_vals[nv_index][node] */
-  dbl   *glob_var_vals;		/* glob_var_vals[gv_index] */
-  dbl   **elem_var_vals;	/* elem_var_vals[blk_ev_index][elem]*/
+  dbl **node_var_vals; /* node_var_vals[nv_index][node] */
+  dbl *glob_var_vals;  /* glob_var_vals[gv_index] */
+  dbl **elem_var_vals; /* elem_var_vals[blk_ev_index][elem]*/
 };
 
 typedef struct Exodus_Database Exo_DB;

@@ -26,6 +26,7 @@
 #include <el_elm_info.h>
 #include <string.h>
 
+#include "bc/rotate_coordinates.h"
 #include "dpi.h"
 #include "exo_struct.h"
 #include "exodusII.h"
@@ -35,7 +36,6 @@
 #include "rf_allo.h"
 #include "rf_mp.h"
 #include "std.h"
-#include "bc/rotate_coordinates.h"
 
 // Helper for exodus return values
 #define CHECK_EX_ERROR(err, format, ...)                              \
@@ -249,11 +249,11 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
 
     d->elem_owner = alloc_int_1(exo->num_elems, ProcID);
 
-//    for (int ecmap = 0; ecmap < d->num_elem_cmaps; ecmap++) {
-//      for (int j = 0; j < d->elem_cmap_elem_counts[ecmap]; j++) {
-//        d->elem_owner[d->elem_cmap_elem_ids[ecmap][j] - 1] = d->elem_cmap_proc_ids[ecmap][j];
-//      }
-//    }
+    //    for (int ecmap = 0; ecmap < d->num_elem_cmaps; ecmap++) {
+    //      for (int j = 0; j < d->elem_cmap_elem_counts[ecmap]; j++) {
+    //        d->elem_owner[d->elem_cmap_elem_ids[ecmap][j] - 1] = d->elem_cmap_proc_ids[ecmap][j];
+    //      }
+    //    }
 
     //        // check if block is in array for ss already
     //        int known = 0;
@@ -272,7 +272,6 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
     //      d->ss_block_index_global[ss_id] = ss_start;
     //      d->ss_block_index_global[ss_id+1] = ss_block_index;
     //    }
-
   }
 
   const int num_mpi_async = 2;
@@ -327,7 +326,7 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
       int min_proc = ProcID;
       int nnode_per_elem = exo->eb_num_nodes_per_elem[i];
       for (int k = 0; k < nnode_per_elem; k++) {
-        int local_node = exo->eb_conn[i][j*nnode_per_elem + k];
+        int local_node = exo->eb_conn[i][j * nnode_per_elem + k];
         int proc = d->node_owner[local_node];
         if (proc < min_proc) {
           min_proc = proc;
@@ -348,7 +347,7 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
   for (int i = 0; i < d->num_neighbors; i++) {
     MPI_Irecv(&num_send_nodes[i], 1, MPI_INT, d->neighbor[i], 206, MPI_COMM_WORLD,
               &requests[d->num_neighbors + i]);
-    //printf("Proc %d recv from Proc %d tag %d", d->neighbor[i], ProcID, 206);
+    // printf("Proc %d recv from Proc %d tag %d", d->neighbor[i], ProcID, 206);
   }
   for (int i = 0; i < d->num_neighbors; i++) {
     num_recv_nodes[i] = 0;
@@ -358,7 +357,7 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
       }
     }
     MPI_Isend(&num_recv_nodes[i], 1, MPI_INT, d->neighbor[i], 206, MPI_COMM_WORLD, &requests[i]);
-    //printf("Proc %d sending to Proc %d tag %d", ProcID, d->neighbor[i], 206);
+    // printf("Proc %d sending to Proc %d tag %d", ProcID, d->neighbor[i], 206);
   }
 
   MPI_Waitall(d->num_neighbors * 2, requests, MPI_STATUSES_IGNORE);
@@ -367,7 +366,7 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
     global_send_nodes[i] = malloc(sizeof(int) * num_send_nodes[i]);
     MPI_Irecv(global_send_nodes[i], num_send_nodes[i], MPI_INT, d->neighbor[i], 207, MPI_COMM_WORLD,
               &requests[d->num_neighbors + i]);
-    //printf("Proc %d recv from Proc %d tag %d", d->neighbor[i], ProcID, 207);
+    // printf("Proc %d recv from Proc %d tag %d", d->neighbor[i], ProcID, 207);
   }
 
   for (int i = 0; i < d->num_neighbors; i++) {
@@ -381,7 +380,7 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
     }
     MPI_Isend(global_recv_nodes[i], num_recv_nodes[i], MPI_INT, d->neighbor[i], 207, MPI_COMM_WORLD,
               &requests[i]);
-    //printf("Proc %d sending to Proc %d tag %d", ProcID, d->neighbor[i], 207);
+    // printf("Proc %d sending to Proc %d tag %d", ProcID, d->neighbor[i], 207);
   }
 
   MPI_Waitall(d->num_neighbors * 2, requests, MPI_STATUSES_IGNORE);

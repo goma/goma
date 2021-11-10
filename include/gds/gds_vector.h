@@ -7,7 +7,6 @@
 extern "C" {
 #endif
 
-
 typedef struct {
   size_t size;
   size_t struct_size;
@@ -138,8 +137,10 @@ void gds_vector_cross(const gds_vector *v, const gds_vector *u, gds_vector *cros
  * @param axis axis to rotate around
  * @param angle_radians angle to rotate
  */
-void gds_vector_rotate_around_vector(gds_vector *rotated, const gds_vector *vec_to_rotate,
-                                     const gds_vector *axis, double angle_radians);
+void gds_vector_rotate_around_vector(gds_vector *rotated,
+                                     const gds_vector *vec_to_rotate,
+                                     const gds_vector *axis,
+                                     double angle_radians);
 
 /**
  * @brief gds_vector_dot

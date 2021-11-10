@@ -31,8 +31,8 @@
 
 #define GOMA_WR_DPI_C
 
-#include <stdio.h>
 #include "rd_dpi.h"
+#include <stdio.h>
 
 #ifdef STDC_HEADERS
 #include <stdlib.h>

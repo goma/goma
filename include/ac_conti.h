@@ -9,7 +9,7 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
+
 #ifndef GOMA_AC_CONTI_H
 #define GOMA_AC_CONTI_H
 
@@ -30,9 +30,8 @@
 #define EXTERN extern
 #endif
 
-EXTERN void continue_problem
-(Comm_Ex *,		/* array of communications structures */
-       Exo_DB  *,		/* ptr to the finite element mesh database */
-       Dpi     *);		/* distributed processing information */
+EXTERN void continue_problem(Comm_Ex *, /* array of communications structures */
+                             Exo_DB *,  /* ptr to the finite element mesh database */
+                             Dpi *);    /* distributed processing information */
 
 #endif /* GOMA_AC_CONTI_H */

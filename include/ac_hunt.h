@@ -9,7 +9,7 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
+
 #ifndef GOMA_AC_HUNT_H
 #define GOMA_AC_HUNT_H
 
@@ -26,14 +26,13 @@
 #define EXTERN extern
 #endif
 
-#include "dp_types.h"
-#include "exo_struct.h"
-#include "dpi.h"
 #include "ac_conti.h"
+#include "dp_types.h"
+#include "dpi.h"
+#include "exo_struct.h"
 
-EXTERN void hunt_problem
-(Comm_Ex *,		/* array of communications structures */
-       Exo_DB *,		/* ptr to the finite element mesh database */
-       Dpi *);			/* distributed processing information */
+EXTERN void hunt_problem(Comm_Ex *, /* array of communications structures */
+                         Exo_DB *,  /* ptr to the finite element mesh database */
+                         Dpi *);    /* distributed processing information */
 
 #endif /* GOMA_AC_HUNT_H */

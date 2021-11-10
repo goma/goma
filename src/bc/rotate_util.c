@@ -79,16 +79,9 @@ static void goma_normal_assign_best_direction(goma_normal *normal,
   //}
   if (n_max == -1 || t_max == -1 || b_max == -1) {
     GOMA_EH(GOMA_ERROR, "could not associate normals to coord [%g,%g,%g], [%g,%g,%g], [%g,%g,%g]",
-            normal->normal->data[0],
-            normal->normal->data[1],
-            normal->normal->data[2],
-            tangent->normal->data[0],
-            tangent->normal->data[1],
-            tangent->normal->data[2],
-            binormal->normal->data[0],
-            binormal->normal->data[1],
-            binormal->normal->data[2]
-            );
+            normal->normal->data[0], normal->normal->data[1], normal->normal->data[2],
+            tangent->normal->data[0], tangent->normal->data[1], tangent->normal->data[2],
+            binormal->normal->data[0], binormal->normal->data[1], binormal->normal->data[2]);
   }
 
   // set best directions
@@ -371,8 +364,6 @@ corner_coord_critical_found : {
   goma_normal_normalize(cross);
   goma_normal_rotate_around_vector(new_n1, mid_n1_n2, cross, shift);
   goma_normal_rotate_around_vector(new_n2, mid_n1_n2, cross, minus_shift);
-
-
 
 #ifndef NDEBUG
   goma_normal_val dt1 = goma_normal_dot(new_n1, new_n2);

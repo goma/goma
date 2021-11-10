@@ -47,32 +47,37 @@ EXTERN double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii me
                             const dbl time_value,  /* current time */
                             const int print_flag); /*  flag for printing results,1=print*/
 
-EXTERN double evaluate_global_flux(const Exo_DB *exo, const Dpi *dpi, const int quantity,
-                                   const int blk_id, const int species_id, const double *params,
-                                   double *J_AC, double x[], const dbl time_value,
+EXTERN double evaluate_global_flux(const Exo_DB *exo,
+                                   const Dpi *dpi,
+                                   const int quantity,
+                                   const int blk_id,
+                                   const int species_id,
+                                   const double *params,
+                                   double *J_AC,
+                                   double x[],
+                                   const dbl time_value,
                                    const int print_flag);
 
-EXTERN double
-evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information */
-                   const Dpi *dpi, /* distributed processing info */
-                   const int side_set_id, /* on which SSID to evaluate flux */
-                   const int quantity, /* to pick HEAT_FLUX, FORCE_NORMAL, etc. */
-                   const char *qtity_str, /* quantity string */
-                   const int mat_id,	/* material identification */
-                   const int species_id, /* species identification */
-                   const int sens_type,  /*  sensitivity type */
-                   const int sens_id,  /* sensitivity id */
-                   const int sens_flt,	/*  sensitivity float number */
-                   const int sens_flt2,	/*  sensitivity float number for UM */
-                   const int vector_id, /* sensitivity id */
-                   const char *filenm, /* File name pointer */
-                   const int profile_flag,  /*  flux sens print flag  */
-                   double x[],	/* solution vector */
-                   double xdot[],	/* solution vector */
-                   double **x_sens_p,	/* sensitivity vector */
-                   const double delta_t, /* time-step size */
-                   const double time_value, /* current time */
-                   const int print_flag );   /*  printing control flag */
+EXTERN double evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information */
+                                 const Dpi *dpi,    /* distributed processing info */
+                                 const int side_set_id,  /* on which SSID to evaluate flux */
+                                 const int quantity,     /* to pick HEAT_FLUX, FORCE_NORMAL, etc. */
+                                 const char *qtity_str,  /* quantity string */
+                                 const int mat_id,       /* material identification */
+                                 const int species_id,   /* species identification */
+                                 const int sens_type,    /*  sensitivity type */
+                                 const int sens_id,      /* sensitivity id */
+                                 const int sens_flt,     /*  sensitivity float number */
+                                 const int sens_flt2,    /*  sensitivity float number for UM */
+                                 const int vector_id,    /* sensitivity id */
+                                 const char *filenm,     /* File name pointer */
+                                 const int profile_flag, /*  flux sens print flag  */
+                                 double x[],             /* solution vector */
+                                 double xdot[],          /* solution vector */
+                                 double **x_sens_p,      /* sensitivity vector */
+                                 const double delta_t,   /* time-step size */
+                                 const double time_value, /* current time */
+                                 const int print_flag);   /*  printing control flag */
 
 EXTERN double
 evaluate_volume_integral(const Exo_DB *exo,        /* ptr to basic exodus ii mesh information */
@@ -82,7 +87,8 @@ evaluate_volume_integral(const Exo_DB *exo,        /* ptr to basic exodus ii mes
                          const int blk_id,         /* material identification */
                          const int species_id,     /* species identification */
                          const char *filenm,       /* File name pointer */
-                         const double *params, const int num_params,
+                         const double *params,
+                         const int num_params,
                          double *J_AC,         /* Pointer to AC sensitivity vector, may be NULL */
                          double x[],           /* solution vector */
                          double xdot[],        /* dx/dt vector */
@@ -90,29 +96,38 @@ evaluate_volume_integral(const Exo_DB *exo,        /* ptr to basic exodus ii mes
                          const double time_value, /* current time */
                          const int print_flag);   /*  flag for printing results,1=print*/
 
-EXTERN int compute_volume_integrand(const int, const int, const int, const double *, const int,
-                                    double *, double *, const int, const double, const double,
-                                    double[], const Exo_DB *);
+EXTERN int compute_volume_integrand(const int,
+                                    const int,
+                                    const int,
+                                    const double *,
+                                    const int,
+                                    double *,
+                                    double *,
+                                    const int,
+                                    const double,
+                                    const double,
+                                    double[],
+                                    const Exo_DB *);
 
-EXTERN void compute_surface_integrand(const int, int, const int, const double *, double *,
-                                      double[]);
+EXTERN void
+compute_surface_integrand(const int, int, const int, const double *, double *, double[]);
 
-EXTERN int adaptive_weight(double *, const int, const int, const double *, const double, const int,
-                           const int);
+EXTERN int
+adaptive_weight(double *, const int, const int, const double *, const double, const int, const int);
 
 EXTERN int solve_quadratic(const double, const double, const double, double *);
 
 #ifndef NO_CHEBYSHEV_PLEASE
-EXTERN int chebyshev_coeff_2DQ(const int, const double *, double[][2], int, double *, double *,
-                               int *, const int *);
+EXTERN int chebyshev_coeff_2DQ(
+    const int, const double *, double[][2], int, double *, double *, int *, const int *);
 
-EXTERN void heaviside_chev_moments_2DQ(const int, const int, double *, const double *, const int,
-                                       const double *);
-EXTERN void surfdet_chev_coeff_2DQ(const int, const double *, const double *, double *, const int,
-                                   const int, const double *);
+EXTERN void heaviside_chev_moments_2DQ(
+    const int, const int, double *, const double *, const int, const double *);
+EXTERN void surfdet_chev_coeff_2DQ(
+    const int, const double *, const double *, double *, const int, const int, const double *);
 
-EXTERN void delta_chev_moments_2DQ(const int, double *, const double *, const double *, const int,
-                                   const double *);
+EXTERN void delta_chev_moments_2DQ(
+    const int, double *, const double *, const double *, const int, const double *);
 
 #endif
 
@@ -120,8 +135,8 @@ EXTERN int interface_crossing_1DQ(const double *, double[2]);
 
 EXTERN int interface_crossing_2DQ(const double *, double[6][2], int *, int *, double[12][MAX_PDIM]);
 
-EXTERN void interface_inclination_2DQ(const double *, const int, double *, const int *,
-                                      double[6][2]);
+EXTERN void
+interface_inclination_2DQ(const double *, const int, double *, const int *, double[6][2]);
 
 EXTERN int interface_crossing_3DL(const double *, double[12][2], int *, double[12][MAX_PDIM]);
 

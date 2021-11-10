@@ -14,7 +14,6 @@
  *$Id: mm_fill_util.c,v 5.24 2010-02-26 21:40:14 prschun Exp $
  */
 
-
 /*
  * Added load_elem_dofptr stuff to setup elemental level indeces pointing
  * to each dof for ea variable, also pre loaded pointers
@@ -26,36 +25,36 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "bc_contact.h"
+#include "dp_utils.h"
+#include "dpi.h"
 #include "el_elm.h"
+#include "el_elm_info.h"
 #include "el_geom.h"
+#include "exo_struct.h"
 #include "mm_as.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
+#include "mm_eh.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_util.h"
+#include "mm_mp.h"
 #include "mm_mp_const.h"
+#include "mm_mp_structs.h"
+#include "mm_post_def.h"
+#include "rd_mesh.h"
 #include "rf_allo.h"
 #include "rf_fem.h"
 #include "rf_fem_const.h"
 #include "rf_io.h"
 #include "rf_masks.h"
 #include "rf_mp.h"
-#include "rf_solver.h"
-#include "rf_vars_const.h"
-#include "std.h"
-#include "mm_eh.h"
-#include "mm_mp.h"
-#include "mm_mp_structs.h"
-#include "bc_contact.h"
-#include "dp_utils.h"
-#include "dpi.h"
-#include "el_elm_info.h"
-#include "exo_struct.h"
-#include "mm_fill_ls.h"
-#include "mm_fill_util.h"
-#include "mm_post_def.h"
-#include "rd_mesh.h"
 #include "rf_node_const.h"
 #include "rf_shape.h"
+#include "rf_solver.h"
+#include "rf_vars_const.h"
 #include "sl_util_structs.h"
+#include "std.h"
 
 #define GOMA_MM_FILL_UTIL_C
 
@@ -84,26 +83,22 @@
  * Prototypes declarations of static functions in defined in this file.
  */
 
-static int
-find_MSR_problem_graph(int *[], /* ija - column pointer array                */
-                       int,     /* itotal_nodes - number of nodes this
-                                 * processor is resposible for               */
-                       Exo_DB *); /* exo - ptr to FE EXODUS II database */
+static int find_MSR_problem_graph(int *[],   /* ija - column pointer array                */
+                                  int,       /* itotal_nodes - number of nodes this
+                                              * processor is resposible for               */
+                                  Exo_DB *); /* exo - ptr to FE EXODUS II database */
 
-static int
-find_problem_graph_fill(int *[], /* ija - column pointer array                */
-                        int,     /* itotal_nodes - number of nodes this
-                                  * processor is resposible for               */
-                        int,     /* max_neigh_elem - maximum number of elements
-                                  * containing a given node                   */
-                        int[],   /* node_to_fill                              */
-                        Exo_DB *); /* exo - ptr to FE EXODUS II database */
+static int find_problem_graph_fill(int *[],   /* ija - column pointer array                */
+                                   int,       /* itotal_nodes - number of nodes this
+                                               * processor is resposible for               */
+                                   int,       /* max_neigh_elem - maximum number of elements
+                                               * containing a given node                   */
+                                   int[],     /* node_to_fill                              */
+                                   Exo_DB *); /* exo - ptr to FE EXODUS II database */
 
-static int find_VBR_problem_graph(int *[], int *[], int *[], int *[], int *[],
-                                  int, int, Exo_DB *);
+static int find_VBR_problem_graph(int *[], int *[], int *[], int *[], int *[], int, int, Exo_DB *);
 
-static int var_if_interp_type_enabled(PROBLEM_DESCRIPTION_STRUCT *pd_ptr,
-                               int interp_type); 
+static int var_if_interp_type_enabled(PROBLEM_DESCRIPTION_STRUCT *pd_ptr, int interp_type);
 
 /*****************************************************************************/
 /*****************************************************************************/
@@ -169,8 +164,7 @@ int beer_belly(void) {
     DeformingMesh = ei[imtrx]->deforming_mesh;
   }
 
-  if ((si = in_list(pd->IntegrationMap, 0, Num_Interpolations,
-                    Unique_Interpolations)) == -1) {
+  if ((si = in_list(pd->IntegrationMap, 0, Num_Interpolations, Unique_Interpolations)) == -1) {
     GOMA_EH(GOMA_ERROR, "Seems to be a problem finding the IntegrationMap interpolation.");
   }
   MapBf = bfd[si];
@@ -229,13 +223,11 @@ int beer_belly(void) {
       for (k = 0; k < ei[upd->matrix_index[R_MESH1]]->dof[R_MESH1]; k++) {
         node = ei[upd->matrix_index[R_MESH1]]->dof_list[R_MESH1][k];
 
-        index = Proc_Elem_Connect[Proc_Connect_Ptr[ei[upd->matrix_index[R_MESH1]]->ielem] +
-                                  node];
+        index = Proc_Elem_Connect[Proc_Connect_Ptr[ei[upd->matrix_index[R_MESH1]]->ielem] + node];
 
         fv->x[i] += (Coor[i][index] + *esp->d[i][k]) * bf[R_MESH1]->phi[k];
 
-        fv_old->x[i] +=
-            (Coor[i][index] + *esp_old->d[i][k]) * bf[R_MESH1]->phi[k];
+        fv_old->x[i] += (Coor[i][index] + *esp_old->d[i][k]) * bf[R_MESH1]->phi[k];
       }
     } else {
       for (k = 0; k < mdof; k++) {
@@ -261,12 +253,9 @@ int beer_belly(void) {
         for (k = 0; k < ei[upd->matrix_index[R_MESH1]]->dof[R_MESH1]; k++) {
           node = ei[upd->matrix_index[R_MESH1]]->dof_list[R_MESH1][k];
 
-          index =
-              Proc_Elem_Connect[Proc_Connect_Ptr[ei[upd->matrix_index[R_MESH1]]->ielem] +
-                                node];
+          index = Proc_Elem_Connect[Proc_Connect_Ptr[ei[upd->matrix_index[R_MESH1]]->ielem] + node];
 
-          MapBf->J[i][j] +=
-              (Coor[j][index] + *esp->d[j][k]) * bf[R_MESH1]->dphidxi[k][i];
+          MapBf->J[i][j] += (Coor[j][index] + *esp->d[j][k]) * bf[R_MESH1]->dphidxi[k][i];
         }
       } else {
         for (k = 0; k < mdof; k++) {
@@ -302,46 +291,38 @@ int beer_belly(void) {
    */
 
   /* But first we pull a fast one.  If this is a 3D shell element, we up dim to dim+1 so
-   *  that the 3D case is executed, but only after we populate the 3rd column of J with 
+   *  that the 3D case is executed, but only after we populate the 3rd column of J with
    * arbitrary nonzero constants so as to keep J full rank
-   
+
    * AMC - This might work for the gradients once they are in the plane of the element,
    * but the gradients with respect to global coordinate system do indeed depend on
-   * the values assigned to the right most column of the 
+   * the values assigned to the right most column of the
    * Jacobian of the mapping (MapBf->J).
-   * 
+   *
    * There are problems that depend on the rightmost column being the values
    * computed above, so use this block with caution.
    */
-  if(elem_shape == SHELL
-     || elem_shape == TRISHELL
-     || (mp->ehl_integration_kind == SIK_S))
-    {
-      dim++;
-      for (t = 0; t < Num_Basis_Functions; t++)
-	{ 
-	  for (j = 0; j < pdim; j++)
-	    {
-	      bfd[t]->J[pd->Num_Dim-1][j] = MapBf->J[pd->Num_Dim-1][j] = (j+1)*1.0;
-	    }
-	}
+  if (elem_shape == SHELL || elem_shape == TRISHELL || (mp->ehl_integration_kind == SIK_S)) {
+    dim++;
+    for (t = 0; t < Num_Basis_Functions; t++) {
+      for (j = 0; j < pdim; j++) {
+        bfd[t]->J[pd->Num_Dim - 1][j] = MapBf->J[pd->Num_Dim - 1][j] = (j + 1) * 1.0;
+      }
+    }
 
     /*Real Quick check on Jacobian to make sure this arbitrary assignment
      *didn't screw things up. Note that the detJ in the shell case can be
      *negative, but it is important to point out that we are not using it for
      *for integration, but only as a crutch for inversion of J */
-      if (pd->Num_Dim == 3) {
-      MapBf->detJ = MapBf->J[0][0] * ( MapBf->J[1][1] * MapBf->J[2][2]
-				       -MapBf->J[1][2] * MapBf->J[2][1])
-	- MapBf->J[0][1] * ( MapBf->J[1][0] * MapBf->J[2][2]
-			     -MapBf->J[2][0] * MapBf->J[1][2])
-	+ MapBf->J[0][2] * ( MapBf->J[1][0] * MapBf->J[2][1]
-			     -MapBf->J[2][0] * MapBf->J[1][1]);
-      }
-      if (pd->Num_Dim == 2) {
-        MapBf->detJ = MapBf->J[0][0] * MapBf->J[1][1]
-	- MapBf->J[0][1] * MapBf->J[1][0];
-      }
+    if (pd->Num_Dim == 3) {
+      MapBf->detJ =
+          MapBf->J[0][0] * (MapBf->J[1][1] * MapBf->J[2][2] - MapBf->J[1][2] * MapBf->J[2][1]) -
+          MapBf->J[0][1] * (MapBf->J[1][0] * MapBf->J[2][2] - MapBf->J[2][0] * MapBf->J[1][2]) +
+          MapBf->J[0][2] * (MapBf->J[1][0] * MapBf->J[2][1] - MapBf->J[2][0] * MapBf->J[1][1]);
+    }
+    if (pd->Num_Dim == 2) {
+      MapBf->detJ = MapBf->J[0][0] * MapBf->J[1][1] - MapBf->J[0][1] * MapBf->J[1][0];
+    }
 
     if (fabs(MapBf->detJ) < 1.e-10) {
       zero_detJ = TRUE;
@@ -381,11 +362,9 @@ int beer_belly(void) {
       for (j = 0; j < pdim; j++) {
         for (k = 0; k < ei[upd->matrix_index[R_MESH1]]->dof[R_MESH1]; k++) {
           MapBf->dJ[0][j][j][k] = bf[R_MESH1]->dphidxi[k][0];
-          MapBf->d_det_J_dm[j][k] =
-              bf[R_MESH1]->dphidxi[k][0] * MapBf->J[0][j] / MapBf->detJ;
+          MapBf->d_det_J_dm[j][k] = bf[R_MESH1]->dphidxi[k][0] * MapBf->J[0][j] / MapBf->detJ;
           if (fabs(MapBf->J[0][j]) > DBL_SMALL) {
-            MapBf->dB[j][0][j][k] =
-                -bf[R_MESH1]->dphidxi[k][0] / (MapBf->J[0][j] * MapBf->J[0][j]);
+            MapBf->dB[j][0][j][k] = -bf[R_MESH1]->dphidxi[k][0] / (MapBf->J[0][j] * MapBf->J[0][j]);
             // MapBf->dB[0][j] [j][k] = -bf[R_MESH1]->dphidxi[k][0]
             //	/ (MapBf->J[0][j] * MapBf->J[0][j]);
           }
@@ -394,10 +373,9 @@ int beer_belly(void) {
     }
     break;
 
-    case 2:
-      dim = ei[pg->imtrx]->ielem_dim;
-      MapBf->detJ    =  MapBf->J[0][0] * MapBf->J[1][1]
-	- MapBf->J[0][1] * MapBf->J[1][0];
+  case 2:
+    dim = ei[pg->imtrx]->ielem_dim;
+    MapBf->detJ = MapBf->J[0][0] * MapBf->J[1][1] - MapBf->J[0][1] * MapBf->J[1][0];
 
     MapBf->B[0][0] = MapBf->J[1][1] / MapBf->detJ;
     MapBf->B[0][1] = -MapBf->J[0][1] / MapBf->detJ;
@@ -426,10 +404,9 @@ int beer_belly(void) {
 
       for (k = 0; k < pdim; k++) {
         for (n = 0; n < ei[upd->matrix_index[R_MESH1]]->dof[R_MESH1]; n++) {
-          MapBf->d_det_J_dm[k][n] = MapBf->dJ[0][0][k][n] * MapBf->J[1][1] +
-                                    MapBf->J[0][0] * MapBf->dJ[1][1][k][n] -
-                                    MapBf->dJ[0][1][k][n] * MapBf->J[1][0] -
-                                    MapBf->J[0][1] * MapBf->dJ[1][0][k][n];
+          MapBf->d_det_J_dm[k][n] =
+              MapBf->dJ[0][0][k][n] * MapBf->J[1][1] + MapBf->J[0][0] * MapBf->dJ[1][1][k][n] -
+              MapBf->dJ[0][1][k][n] * MapBf->J[1][0] - MapBf->J[0][1] * MapBf->dJ[1][0][k][n];
         }
       }
 
@@ -444,17 +421,13 @@ int beer_belly(void) {
       for (k = 0; k < pdim; k++) {
         for (n = 0; n < ei[upd->matrix_index[R_MESH1]]->dof[R_MESH1]; n++) {
           g = -(f * f) * MapBf->d_det_J_dm[k][n];
-          MapBf->dB[0][0][k][n] =
-              MapBf->dJ[1][1][k][n] * f + MapBf->J[1][1] * g;
+          MapBf->dB[0][0][k][n] = MapBf->dJ[1][1][k][n] * f + MapBf->J[1][1] * g;
 
-          MapBf->dB[0][1][k][n] =
-              -MapBf->dJ[0][1][k][n] * f - MapBf->J[0][1] * g;
+          MapBf->dB[0][1][k][n] = -MapBf->dJ[0][1][k][n] * f - MapBf->J[0][1] * g;
 
-          MapBf->dB[1][0][k][n] =
-              -MapBf->dJ[1][0][k][n] * f - MapBf->J[1][0] * g;
+          MapBf->dB[1][0][k][n] = -MapBf->dJ[1][0][k][n] * f - MapBf->J[1][0] * g;
 
-          MapBf->dB[1][1][k][n] =
-              MapBf->dJ[0][0][k][n] * f + MapBf->J[0][0] * g;
+          MapBf->dB[1][1][k][n] = MapBf->dJ[0][0][k][n] * f + MapBf->J[0][0] * g;
         }
       }
     }
@@ -466,48 +439,37 @@ int beer_belly(void) {
     /* Now that we are here, reset dim for the shell case */
     dim = ei[imtrx]->ielem_dim;
 
-    MapBf->detJ = MapBf->J[0][0] * (MapBf->J[1][1] * MapBf->J[2][2] -
-                                    MapBf->J[1][2] * MapBf->J[2][1]) -
-                  MapBf->J[0][1] * (MapBf->J[1][0] * MapBf->J[2][2] -
-                                    MapBf->J[2][0] * MapBf->J[1][2]) +
-                  MapBf->J[0][2] * (MapBf->J[1][0] * MapBf->J[2][1] -
-                                    MapBf->J[2][0] * MapBf->J[1][1]);
+    MapBf->detJ =
+        MapBf->J[0][0] * (MapBf->J[1][1] * MapBf->J[2][2] - MapBf->J[1][2] * MapBf->J[2][1]) -
+        MapBf->J[0][1] * (MapBf->J[1][0] * MapBf->J[2][2] - MapBf->J[2][0] * MapBf->J[1][2]) +
+        MapBf->J[0][2] * (MapBf->J[1][0] * MapBf->J[2][1] - MapBf->J[2][0] * MapBf->J[1][1]);
 
     MapBf->B[0][0] =
-        (MapBf->J[1][1] * MapBf->J[2][2] - MapBf->J[2][1] * MapBf->J[1][2]) /
-        (MapBf->detJ);
+        (MapBf->J[1][1] * MapBf->J[2][2] - MapBf->J[2][1] * MapBf->J[1][2]) / (MapBf->detJ);
 
     MapBf->B[0][1] =
-        -(MapBf->J[0][1] * MapBf->J[2][2] - MapBf->J[2][1] * MapBf->J[0][2]) /
-        (MapBf->detJ);
+        -(MapBf->J[0][1] * MapBf->J[2][2] - MapBf->J[2][1] * MapBf->J[0][2]) / (MapBf->detJ);
 
     MapBf->B[0][2] =
-        (MapBf->J[0][1] * MapBf->J[1][2] - MapBf->J[1][1] * MapBf->J[0][2]) /
-        (MapBf->detJ);
+        (MapBf->J[0][1] * MapBf->J[1][2] - MapBf->J[1][1] * MapBf->J[0][2]) / (MapBf->detJ);
 
     MapBf->B[1][0] =
-        -(MapBf->J[1][0] * MapBf->J[2][2] - MapBf->J[2][0] * MapBf->J[1][2]) /
-        (MapBf->detJ);
+        -(MapBf->J[1][0] * MapBf->J[2][2] - MapBf->J[2][0] * MapBf->J[1][2]) / (MapBf->detJ);
 
     MapBf->B[1][1] =
-        (MapBf->J[0][0] * MapBf->J[2][2] - MapBf->J[2][0] * MapBf->J[0][2]) /
-        (MapBf->detJ);
+        (MapBf->J[0][0] * MapBf->J[2][2] - MapBf->J[2][0] * MapBf->J[0][2]) / (MapBf->detJ);
 
     MapBf->B[1][2] =
-        -(MapBf->J[0][0] * MapBf->J[1][2] - MapBf->J[1][0] * MapBf->J[0][2]) /
-        (MapBf->detJ);
+        -(MapBf->J[0][0] * MapBf->J[1][2] - MapBf->J[1][0] * MapBf->J[0][2]) / (MapBf->detJ);
 
     MapBf->B[2][0] =
-        (MapBf->J[1][0] * MapBf->J[2][1] - MapBf->J[1][1] * MapBf->J[2][0]) /
-        (MapBf->detJ);
+        (MapBf->J[1][0] * MapBf->J[2][1] - MapBf->J[1][1] * MapBf->J[2][0]) / (MapBf->detJ);
 
     MapBf->B[2][1] =
-        -(MapBf->J[0][0] * MapBf->J[2][1] - MapBf->J[2][0] * MapBf->J[0][1]) /
-        (MapBf->detJ);
+        -(MapBf->J[0][0] * MapBf->J[2][1] - MapBf->J[2][0] * MapBf->J[0][1]) / (MapBf->detJ);
 
     MapBf->B[2][2] =
-        (MapBf->J[0][0] * MapBf->J[1][1] - MapBf->J[1][0] * MapBf->J[0][1]) /
-        (MapBf->detJ);
+        (MapBf->J[0][0] * MapBf->J[1][1] - MapBf->J[1][0] * MapBf->J[0][1]) / (MapBf->detJ);
 
     if (DeformingMesh) {
       /*
@@ -531,29 +493,29 @@ int beer_belly(void) {
       for (k = 0; k < pdim; k++) {
         for (n = 0; n < mdof; n++) {
           MapBf->d_det_J_dm[k][n] =
-              MapBf->dJ[0][0][k][n] * (MapBf->J[1][1] * MapBf->J[2][2] -
-                                       MapBf->J[1][2] * MapBf->J[2][1])
+              MapBf->dJ[0][0][k][n] *
+                  (MapBf->J[1][1] * MapBf->J[2][2] - MapBf->J[1][2] * MapBf->J[2][1])
 
-              + MapBf->J[0][0] * (MapBf->dJ[1][1][k][n] * MapBf->J[2][2] +
-                                  MapBf->J[1][1] * MapBf->dJ[2][2][k][n] -
-                                  MapBf->dJ[1][2][k][n] * MapBf->J[2][1] -
-                                  MapBf->J[1][2] * MapBf->dJ[2][1][k][n])
+              +
+              MapBf->J[0][0] *
+                  (MapBf->dJ[1][1][k][n] * MapBf->J[2][2] + MapBf->J[1][1] * MapBf->dJ[2][2][k][n] -
+                   MapBf->dJ[1][2][k][n] * MapBf->J[2][1] - MapBf->J[1][2] * MapBf->dJ[2][1][k][n])
 
-              - MapBf->dJ[0][1][k][n] * (MapBf->J[1][0] * MapBf->J[2][2] -
-                                         MapBf->J[2][0] * MapBf->J[1][2])
+              - MapBf->dJ[0][1][k][n] *
+                    (MapBf->J[1][0] * MapBf->J[2][2] - MapBf->J[2][0] * MapBf->J[1][2])
 
-              - MapBf->J[0][1] * (MapBf->dJ[1][0][k][n] * MapBf->J[2][2] +
-                                  MapBf->J[1][0] * MapBf->dJ[2][2][k][n] -
-                                  MapBf->dJ[2][0][k][n] * MapBf->J[1][2] -
-                                  MapBf->J[2][0] * MapBf->dJ[1][2][k][n])
+              -
+              MapBf->J[0][1] *
+                  (MapBf->dJ[1][0][k][n] * MapBf->J[2][2] + MapBf->J[1][0] * MapBf->dJ[2][2][k][n] -
+                   MapBf->dJ[2][0][k][n] * MapBf->J[1][2] - MapBf->J[2][0] * MapBf->dJ[1][2][k][n])
 
-              + MapBf->dJ[0][2][k][n] * (MapBf->J[1][0] * MapBf->J[2][1] -
-                                         MapBf->J[2][0] * MapBf->J[1][1])
+              + MapBf->dJ[0][2][k][n] *
+                    (MapBf->J[1][0] * MapBf->J[2][1] - MapBf->J[2][0] * MapBf->J[1][1])
 
-              + MapBf->J[0][2] * (MapBf->dJ[1][0][k][n] * MapBf->J[2][1] +
-                                  MapBf->J[1][0] * MapBf->dJ[2][1][k][n] -
-                                  MapBf->dJ[2][0][k][n] * MapBf->J[1][1] -
-                                  MapBf->J[2][0] * MapBf->dJ[1][1][k][n]);
+              +
+              MapBf->J[0][2] *
+                  (MapBf->dJ[1][0][k][n] * MapBf->J[2][1] + MapBf->J[1][0] * MapBf->dJ[2][1][k][n] -
+                   MapBf->dJ[2][0][k][n] * MapBf->J[1][1] - MapBf->J[2][0] * MapBf->dJ[1][1][k][n]);
         }
       }
 
@@ -569,86 +531,59 @@ int beer_belly(void) {
         for (n = 0; n < ei[upd->matrix_index[R_MESH1]]->dof[R_MESH1]; n++) {
           g = -(f * f) * MapBf->d_det_J_dm[k][n];
 
-          MapBf->dB[0][0][k][n] = (MapBf->dJ[1][1][k][n] * MapBf->J[2][2] +
-                                   MapBf->J[1][1] * MapBf->dJ[2][2][k][n] -
-                                   MapBf->dJ[2][1][k][n] * MapBf->J[1][2] -
-                                   MapBf->J[2][1] * MapBf->dJ[1][2][k][n]) *
-                                      f +
-                                  (MapBf->J[1][1] * MapBf->J[2][2] -
-                                   MapBf->J[2][1] * MapBf->J[1][2]) *
-                                      g;
+          MapBf->dB[0][0][k][n] =
+              (MapBf->dJ[1][1][k][n] * MapBf->J[2][2] + MapBf->J[1][1] * MapBf->dJ[2][2][k][n] -
+               MapBf->dJ[2][1][k][n] * MapBf->J[1][2] - MapBf->J[2][1] * MapBf->dJ[1][2][k][n]) *
+                  f +
+              (MapBf->J[1][1] * MapBf->J[2][2] - MapBf->J[2][1] * MapBf->J[1][2]) * g;
 
-          MapBf->dB[0][1][k][n] = -(MapBf->dJ[0][1][k][n] * MapBf->J[2][2] +
-                                    MapBf->J[0][1] * MapBf->dJ[2][2][k][n] -
-                                    MapBf->dJ[2][1][k][n] * MapBf->J[0][2] -
-                                    MapBf->J[2][1] * MapBf->dJ[0][2][k][n]) *
-                                      f -
-                                  (MapBf->J[0][1] * MapBf->J[2][2] -
-                                   MapBf->J[2][1] * MapBf->J[0][2]) *
-                                      g;
+          MapBf->dB[0][1][k][n] =
+              -(MapBf->dJ[0][1][k][n] * MapBf->J[2][2] + MapBf->J[0][1] * MapBf->dJ[2][2][k][n] -
+                MapBf->dJ[2][1][k][n] * MapBf->J[0][2] - MapBf->J[2][1] * MapBf->dJ[0][2][k][n]) *
+                  f -
+              (MapBf->J[0][1] * MapBf->J[2][2] - MapBf->J[2][1] * MapBf->J[0][2]) * g;
 
-          MapBf->dB[0][2][k][n] = (MapBf->dJ[0][1][k][n] * MapBf->J[1][2] +
-                                   MapBf->J[0][1] * MapBf->dJ[1][2][k][n] -
-                                   MapBf->dJ[1][1][k][n] * MapBf->J[0][2] -
-                                   MapBf->J[1][1] * MapBf->dJ[0][2][k][n]) *
-                                      f +
-                                  (MapBf->J[0][1] * MapBf->J[1][2] -
-                                   MapBf->J[1][1] * MapBf->J[0][2]) *
-                                      g;
+          MapBf->dB[0][2][k][n] =
+              (MapBf->dJ[0][1][k][n] * MapBf->J[1][2] + MapBf->J[0][1] * MapBf->dJ[1][2][k][n] -
+               MapBf->dJ[1][1][k][n] * MapBf->J[0][2] - MapBf->J[1][1] * MapBf->dJ[0][2][k][n]) *
+                  f +
+              (MapBf->J[0][1] * MapBf->J[1][2] - MapBf->J[1][1] * MapBf->J[0][2]) * g;
 
-          MapBf->dB[1][0][k][n] = -(MapBf->dJ[1][0][k][n] * MapBf->J[2][2] +
-                                    MapBf->J[1][0] * MapBf->dJ[2][2][k][n] -
-                                    MapBf->dJ[2][0][k][n] * MapBf->J[1][2] -
-                                    MapBf->J[2][0] * MapBf->dJ[1][2][k][n]) *
-                                      f -
-                                  (MapBf->J[1][0] * MapBf->J[2][2] -
-                                   MapBf->J[2][0] * MapBf->J[1][2]) *
-                                      g;
+          MapBf->dB[1][0][k][n] =
+              -(MapBf->dJ[1][0][k][n] * MapBf->J[2][2] + MapBf->J[1][0] * MapBf->dJ[2][2][k][n] -
+                MapBf->dJ[2][0][k][n] * MapBf->J[1][2] - MapBf->J[2][0] * MapBf->dJ[1][2][k][n]) *
+                  f -
+              (MapBf->J[1][0] * MapBf->J[2][2] - MapBf->J[2][0] * MapBf->J[1][2]) * g;
 
-          MapBf->dB[1][1][k][n] = (MapBf->dJ[0][0][k][n] * MapBf->J[2][2] +
-                                   MapBf->J[0][0] * MapBf->dJ[2][2][k][n] -
-                                   MapBf->dJ[2][0][k][n] * MapBf->J[0][2] -
-                                   MapBf->J[2][0] * MapBf->dJ[0][2][k][n]) *
-                                      f +
-                                  (MapBf->J[0][0] * MapBf->J[2][2] -
-                                   MapBf->J[2][0] * MapBf->J[0][2]) *
-                                      g;
+          MapBf->dB[1][1][k][n] =
+              (MapBf->dJ[0][0][k][n] * MapBf->J[2][2] + MapBf->J[0][0] * MapBf->dJ[2][2][k][n] -
+               MapBf->dJ[2][0][k][n] * MapBf->J[0][2] - MapBf->J[2][0] * MapBf->dJ[0][2][k][n]) *
+                  f +
+              (MapBf->J[0][0] * MapBf->J[2][2] - MapBf->J[2][0] * MapBf->J[0][2]) * g;
 
-          MapBf->dB[1][2][k][n] = -(MapBf->dJ[0][0][k][n] * MapBf->J[1][2] +
-                                    MapBf->J[0][0] * MapBf->dJ[1][2][k][n] -
-                                    MapBf->dJ[1][0][k][n] * MapBf->J[0][2] -
-                                    MapBf->J[1][0] * MapBf->dJ[0][2][k][n]) *
-                                      f -
-                                  (MapBf->J[0][0] * MapBf->J[1][2] -
-                                   MapBf->J[1][0] * MapBf->J[0][2]) *
-                                      g;
+          MapBf->dB[1][2][k][n] =
+              -(MapBf->dJ[0][0][k][n] * MapBf->J[1][2] + MapBf->J[0][0] * MapBf->dJ[1][2][k][n] -
+                MapBf->dJ[1][0][k][n] * MapBf->J[0][2] - MapBf->J[1][0] * MapBf->dJ[0][2][k][n]) *
+                  f -
+              (MapBf->J[0][0] * MapBf->J[1][2] - MapBf->J[1][0] * MapBf->J[0][2]) * g;
 
-          MapBf->dB[2][0][k][n] = (MapBf->dJ[1][0][k][n] * MapBf->J[2][1] +
-                                   MapBf->J[1][0] * MapBf->dJ[2][1][k][n] -
-                                   MapBf->dJ[1][1][k][n] * MapBf->J[2][0] -
-                                   MapBf->J[1][1] * MapBf->dJ[2][0][k][n]) *
-                                      f +
-                                  (MapBf->J[1][0] * MapBf->J[2][1] -
-                                   MapBf->J[1][1] * MapBf->J[2][0]) *
-                                      g;
+          MapBf->dB[2][0][k][n] =
+              (MapBf->dJ[1][0][k][n] * MapBf->J[2][1] + MapBf->J[1][0] * MapBf->dJ[2][1][k][n] -
+               MapBf->dJ[1][1][k][n] * MapBf->J[2][0] - MapBf->J[1][1] * MapBf->dJ[2][0][k][n]) *
+                  f +
+              (MapBf->J[1][0] * MapBf->J[2][1] - MapBf->J[1][1] * MapBf->J[2][0]) * g;
 
-          MapBf->dB[2][1][k][n] = -(MapBf->dJ[0][0][k][n] * MapBf->J[2][1] +
-                                    MapBf->J[0][0] * MapBf->dJ[2][1][k][n] -
-                                    MapBf->dJ[2][0][k][n] * MapBf->J[0][1] -
-                                    MapBf->J[2][0] * MapBf->dJ[0][1][k][n]) *
-                                      f -
-                                  (MapBf->J[0][0] * MapBf->J[2][1] -
-                                   MapBf->J[2][0] * MapBf->J[0][1]) *
-                                      g;
+          MapBf->dB[2][1][k][n] =
+              -(MapBf->dJ[0][0][k][n] * MapBf->J[2][1] + MapBf->J[0][0] * MapBf->dJ[2][1][k][n] -
+                MapBf->dJ[2][0][k][n] * MapBf->J[0][1] - MapBf->J[2][0] * MapBf->dJ[0][1][k][n]) *
+                  f -
+              (MapBf->J[0][0] * MapBf->J[2][1] - MapBf->J[2][0] * MapBf->J[0][1]) * g;
 
-          MapBf->dB[2][2][k][n] = (MapBf->dJ[0][0][k][n] * MapBf->J[1][1] +
-                                   MapBf->J[0][0] * MapBf->dJ[1][1][k][n] -
-                                   MapBf->dJ[1][0][k][n] * MapBf->J[0][1] -
-                                   MapBf->J[1][0] * MapBf->dJ[0][1][k][n]) *
-                                      f +
-                                  (MapBf->J[0][0] * MapBf->J[1][1] -
-                                   MapBf->J[1][0] * MapBf->J[0][1]) *
-                                      g;
+          MapBf->dB[2][2][k][n] =
+              (MapBf->dJ[0][0][k][n] * MapBf->J[1][1] + MapBf->J[0][0] * MapBf->dJ[1][1][k][n] -
+               MapBf->dJ[1][0][k][n] * MapBf->J[0][1] - MapBf->J[1][0] * MapBf->dJ[0][1][k][n]) *
+                  f +
+              (MapBf->J[0][0] * MapBf->J[1][1] - MapBf->J[1][0] * MapBf->J[0][1]) * g;
         }
       }
     }
@@ -689,16 +624,15 @@ int beer_belly(void) {
 /*****************************************************************************/
 /*****************************************************************************/
 
-void calc_surf_tangent(
-    const int ielem,                /* current element number               */
-    const int iconnect_ptr,         /* Ptr to beginning of connectivity
-                                       list for current element      */
-    const int nodes_per_elem,       /* num nodes in the element    */
-    const int ielem_surf_dim,       /* physical dimension of element
-                                     * surface (0, 1, 2)           */
-    const int num_nodes_on_side,    /* num nodes side of elem   */
-    const int local_elem_node_id[]) /* local element node
-                                     * numbers on elem side */
+void calc_surf_tangent(const int ielem,                /* current element number               */
+                       const int iconnect_ptr,         /* Ptr to beginning of connectivity
+                                                          list for current element      */
+                       const int nodes_per_elem,       /* num nodes in the element    */
+                       const int ielem_surf_dim,       /* physical dimension of element
+                                                        * surface (0, 1, 2)           */
+                       const int num_nodes_on_side,    /* num nodes side of elem   */
+                       const int local_elem_node_id[]) /* local element node
+                                                        * numbers on elem side */
 
 /*
  * Function which calculates the components of unit surface tangent
@@ -750,13 +684,13 @@ void calc_surf_tangent(
      *  In 2D n x t = k, these vectors satisfy the rh rule.
      */
     fv->stangent[0][0] = -fv->snormal[1];
-    fv->stangent[0][1] =  fv->snormal[0];
-    fv->stangent[1][2] =  1.0;
-    for (j=0 ; j < nodes_per_elem; j++) {
-      fv->dstangent_dx[0][0][0][j]=0.;
-      fv->dstangent_dx[0][0][1][j]=0.;
-      fv->dstangent_dx[0][1][0][j]=0.;
-      fv->dstangent_dx[0][1][1][j]=0.;
+    fv->stangent[0][1] = fv->snormal[0];
+    fv->stangent[1][2] = 1.0;
+    for (j = 0; j < nodes_per_elem; j++) {
+      fv->dstangent_dx[0][0][0][j] = 0.;
+      fv->dstangent_dx[0][0][1][j] = 0.;
+      fv->dstangent_dx[0][1][0][j] = 0.;
+      fv->dstangent_dx[0][1][1][j] = 0.;
     }
     for (i = 0; i < num_nodes_on_side; i++) {
       id = (int)local_elem_node_id[i];
@@ -777,8 +711,7 @@ void calc_surf_tangent(
     /* First tangent defined as
      *    t1 = [(n X i) + (n X j)] / norm[n X (i+j)]
      */
-    alpha = sqrt(2. * fv->snormal[2] * fv->snormal[2] +
-                 SQUARE(fv->snormal[0] - fv->snormal[1]));
+    alpha = sqrt(2. * fv->snormal[2] * fv->snormal[2] + SQUARE(fv->snormal[0] - fv->snormal[1]));
     fv->stangent[0][0] = -fv->snormal[2] / alpha;
     fv->stangent[0][1] = fv->snormal[2] / alpha;
     fv->stangent[0][2] = (fv->snormal[0] - fv->snormal[1]) / alpha;
@@ -800,12 +733,12 @@ void calc_surf_tangent(
     /* Second tangent defined as t2 = n X t1 automatically normalized because t1
      * and n are unit vectors */
 
-    fv->stangent[1][0] = (fv->snormal[1] * fv->stangent[0][2] -
-                          fv->snormal[2] * fv->stangent[0][1]);
-    fv->stangent[1][1] = (fv->snormal[2] * fv->stangent[0][0] -
-                          fv->snormal[0] * fv->stangent[0][2]);
-    fv->stangent[1][2] = (fv->snormal[0] * fv->stangent[0][1] -
-                          fv->snormal[1] * fv->stangent[0][0]);
+    fv->stangent[1][0] =
+        (fv->snormal[1] * fv->stangent[0][2] - fv->snormal[2] * fv->stangent[0][1]);
+    fv->stangent[1][1] =
+        (fv->snormal[2] * fv->stangent[0][0] - fv->snormal[0] * fv->stangent[0][2]);
+    fv->stangent[1][2] =
+        (fv->snormal[0] * fv->stangent[0][1] - fv->snormal[1] * fv->stangent[0][0]);
 
     for (j = 0; j < nodes_per_elem; j++) {
       for (k = 0; k < ielem_surf_dim + 1; k++) {
@@ -823,44 +756,36 @@ void calc_surf_tangent(
         for (j = 0; j < ielem_surf_dim + 1; j++) {
           dalpha_dx[j] = (2. * fv->snormal[2] * fv->dsnormal_dx[2][j][ldof] +
                           (fv->snormal[0] - fv->snormal[1]) *
-                              (fv->dsnormal_dx[0][j][ldof] -
-                               fv->dsnormal_dx[1][j][ldof])) /
+                              (fv->dsnormal_dx[0][j][ldof] - fv->dsnormal_dx[1][j][ldof])) /
                          alpha;
 
           fv->dstangent_dx[0][0][j][ldof] =
-              (-alpha * fv->dsnormal_dx[2][j][ldof] +
-               fv->snormal[2] * dalpha_dx[j]) /
+              (-alpha * fv->dsnormal_dx[2][j][ldof] + fv->snormal[2] * dalpha_dx[j]) /
               SQUARE(alpha);
 
           fv->dstangent_dx[0][1][j][ldof] =
-              (alpha * fv->dsnormal_dx[2][j][ldof] -
-               fv->snormal[2] * dalpha_dx[j]) /
-              SQUARE(alpha);
+              (alpha * fv->dsnormal_dx[2][j][ldof] - fv->snormal[2] * dalpha_dx[j]) / SQUARE(alpha);
 
           fv->dstangent_dx[0][2][j][ldof] =
-              (alpha *
-                   (fv->dsnormal_dx[0][j][ldof] - fv->dsnormal_dx[1][j][ldof]) -
+              (alpha * (fv->dsnormal_dx[0][j][ldof] - fv->dsnormal_dx[1][j][ldof]) -
                (fv->snormal[0] - fv->snormal[1]) * dalpha_dx[j]) /
               SQUARE(alpha);
 
           /* derivatives of nXt1 */
-          fv->dstangent_dx[1][0][j][ldof] =
-              (fv->dsnormal_dx[1][j][ldof] * fv->stangent[0][2] -
-               fv->dsnormal_dx[2][j][ldof] * fv->stangent[0][1] +
-               fv->snormal[1] * fv->dstangent_dx[0][2][j][ldof] -
-               fv->snormal[2] * fv->dstangent_dx[0][1][j][ldof]);
+          fv->dstangent_dx[1][0][j][ldof] = (fv->dsnormal_dx[1][j][ldof] * fv->stangent[0][2] -
+                                             fv->dsnormal_dx[2][j][ldof] * fv->stangent[0][1] +
+                                             fv->snormal[1] * fv->dstangent_dx[0][2][j][ldof] -
+                                             fv->snormal[2] * fv->dstangent_dx[0][1][j][ldof]);
 
-          fv->dstangent_dx[1][1][j][ldof] =
-              (fv->dsnormal_dx[2][j][ldof] * fv->stangent[0][0] -
-               fv->dsnormal_dx[0][j][ldof] * fv->stangent[0][2] +
-               fv->snormal[2] * fv->dstangent_dx[0][0][j][ldof] -
-               fv->snormal[0] * fv->dstangent_dx[0][2][j][ldof]);
+          fv->dstangent_dx[1][1][j][ldof] = (fv->dsnormal_dx[2][j][ldof] * fv->stangent[0][0] -
+                                             fv->dsnormal_dx[0][j][ldof] * fv->stangent[0][2] +
+                                             fv->snormal[2] * fv->dstangent_dx[0][0][j][ldof] -
+                                             fv->snormal[0] * fv->dstangent_dx[0][2][j][ldof]);
 
-          fv->dstangent_dx[1][2][j][ldof] =
-              (fv->dsnormal_dx[0][j][ldof] * fv->stangent[0][1] -
-               fv->dsnormal_dx[1][j][ldof] * fv->stangent[0][0] +
-               fv->snormal[0] * fv->dstangent_dx[0][1][j][ldof] -
-               fv->snormal[1] * fv->dstangent_dx[0][0][j][ldof]);
+          fv->dstangent_dx[1][2][j][ldof] = (fv->dsnormal_dx[0][j][ldof] * fv->stangent[0][1] -
+                                             fv->dsnormal_dx[1][j][ldof] * fv->stangent[0][0] +
+                                             fv->snormal[0] * fv->dstangent_dx[0][1][j][ldof] -
+                                             fv->snormal[1] * fv->dstangent_dx[0][0][j][ldof]);
         }
       }
     }
@@ -873,7 +798,8 @@ void calc_surf_tangent(
 
 void calc_tangent_from_seed(struct Rotation_Vectors *tangent,
                             struct Rotation_Vectors *normal,
-                            const double seed[DIM], const int dim)
+                            const double seed[DIM],
+                            const int dim)
 /*
  * Function which calculates the components of unit surface tangent vector
  * in the current element. NB! This routine rests on having already computed
@@ -928,8 +854,10 @@ void calc_tangent_from_seed(struct Rotation_Vectors *tangent,
 /*********************************************************************** */
 /*ARGSUSED*/
 void calc_tangent_along_basis(struct Rotation_Vectors *tangent,
-                              struct Rotation_Vectors *normal, const int dim,
-                              const int id_side, const int num_nodes_on_side,
+                              struct Rotation_Vectors *normal,
+                              const int dim,
+                              const int id_side,
+                              const int num_nodes_on_side,
                               const int local_elem_node_id[MAX_NODES_PER_SIDE])
 /*
  * Function which calculates the components of unit surface tangent vector
@@ -989,14 +917,13 @@ void calc_tangent_along_basis(struct Rotation_Vectors *tangent,
     if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
       if (num_varType_at_node(inode, MESH_DISPLACEMENT1)) {
         for (p = 0; p < dim; p++) {
-          tangent->vector[p] += bf[ShapeVar]->dphidxi[ldof][i_basis] *
-                                (Coor[p][inode] + *esp->d[p][ldof]);
+          tangent->vector[p] +=
+              bf[ShapeVar]->dphidxi[ldof][i_basis] * (Coor[p][inode] + *esp->d[p][ldof]);
         }
       }
     } else {
       for (p = 0; p < dim; p++) {
-        tangent->vector[p] +=
-            bf[ShapeVar]->dphidxi[ldof][i_basis] * Coor[p][inode];
+        tangent->vector[p] += bf[ShapeVar]->dphidxi[ldof][i_basis] * Coor[p][inode];
       }
     }
   }
@@ -1009,8 +936,7 @@ void calc_tangent_along_basis(struct Rotation_Vectors *tangent,
       if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
         if (num_varType_at_node(inode, MESH_DISPLACEMENT1)) {
           for (p = 0; p < dim; p++) {
-            tangent->d_vector_dx[p][p][i] +=
-                bf[ShapeVar]->dphidxi[ldof][i_basis];
+            tangent->d_vector_dx[p][p][i] += bf[ShapeVar]->dphidxi[ldof][i_basis];
           }
         }
       }
@@ -1028,7 +954,8 @@ void calc_tangent_along_basis(struct Rotation_Vectors *tangent,
 
 void cross_vectors(struct Rotation_Vectors *tangent2,
                    struct Rotation_Vectors *tangent1,
-                   struct Rotation_Vectors *normal, const int dim)
+                   struct Rotation_Vectors *normal,
+                   const int dim)
 /*
  * Function which calculates the cross product of two vectors
  *
@@ -1046,13 +973,13 @@ void cross_vectors(struct Rotation_Vectors *tangent2,
   tangent2->ok = 1;
 
   /* Second Tangent T2 = N X T1 */
-  tangent2->vector[0] = -(normal->vector[1] * tangent1->vector[2] -
-                          normal->vector[2] * tangent1->vector[1]);
-  tangent2->vector[1] = -(normal->vector[2] * tangent1->vector[0] -
-                          normal->vector[0] * tangent1->vector[2]);
+  tangent2->vector[0] =
+      -(normal->vector[1] * tangent1->vector[2] - normal->vector[2] * tangent1->vector[1]);
+  tangent2->vector[1] =
+      -(normal->vector[2] * tangent1->vector[0] - normal->vector[0] * tangent1->vector[2]);
   if (dim == 3) {
-    tangent2->vector[2] = -(normal->vector[0] * tangent1->vector[1] -
-                            normal->vector[1] * tangent1->vector[0]);
+    tangent2->vector[2] =
+        -(normal->vector[0] * tangent1->vector[1] - normal->vector[1] * tangent1->vector[0]);
   }
 
   if (af->Assemble_Jacobian && pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
@@ -1063,22 +990,19 @@ void cross_vectors(struct Rotation_Vectors *tangent2,
       for (b = 0; b < dim; b++) {
 
         /* Second Tangent T2 = N X T1 */
-        tangent2->d_vector_dx[0][b][j] =
-            -(normal->d_vector_dx[1][b][j] * tangent1->vector[2] -
-              normal->d_vector_dx[2][b][j] * tangent1->vector[1]) -
-            (normal->vector[1] * tangent1->d_vector_dx[2][b][j] -
-             normal->vector[2] * tangent1->d_vector_dx[1][b][j]);
-        tangent2->d_vector_dx[1][b][j] =
-            -(normal->d_vector_dx[2][b][j] * tangent1->vector[0] -
-              normal->d_vector_dx[0][b][j] * tangent1->vector[2]) -
-            (normal->vector[2] * tangent1->d_vector_dx[0][b][j] -
-             normal->vector[0] * tangent1->d_vector_dx[2][b][j]);
+        tangent2->d_vector_dx[0][b][j] = -(normal->d_vector_dx[1][b][j] * tangent1->vector[2] -
+                                           normal->d_vector_dx[2][b][j] * tangent1->vector[1]) -
+                                         (normal->vector[1] * tangent1->d_vector_dx[2][b][j] -
+                                          normal->vector[2] * tangent1->d_vector_dx[1][b][j]);
+        tangent2->d_vector_dx[1][b][j] = -(normal->d_vector_dx[2][b][j] * tangent1->vector[0] -
+                                           normal->d_vector_dx[0][b][j] * tangent1->vector[2]) -
+                                         (normal->vector[2] * tangent1->d_vector_dx[0][b][j] -
+                                          normal->vector[0] * tangent1->d_vector_dx[2][b][j]);
         if (dim == 3) {
-          tangent2->d_vector_dx[2][b][j] =
-              -(normal->d_vector_dx[0][b][j] * tangent1->vector[1] -
-                normal->d_vector_dx[1][b][j] * tangent1->vector[0]) -
-              (normal->vector[0] * tangent1->d_vector_dx[1][b][j] -
-               normal->vector[1] * tangent1->d_vector_dx[0][b][j]);
+          tangent2->d_vector_dx[2][b][j] = -(normal->d_vector_dx[0][b][j] * tangent1->vector[1] -
+                                             normal->d_vector_dx[1][b][j] * tangent1->vector[0]) -
+                                           (normal->vector[0] * tangent1->d_vector_dx[1][b][j] -
+                                            normal->vector[1] * tangent1->d_vector_dx[0][b][j]);
         }
       }
     }
@@ -1088,45 +1012,43 @@ void cross_vectors(struct Rotation_Vectors *tangent2,
     sum += tangent1->vector[p] * tangent2->vector[p];
   }
   if (fabs(sum) > 1e-8) {
-    printf(
-        "2nd Tangent not perpendicular to 1st tangent (%g) vector %g,%g,%g\n",
-        sum, tangent1->vector[0], tangent1->vector[1], tangent1->vector[2]);
+    printf("2nd Tangent not perpendicular to 1st tangent (%g) vector %g,%g,%g\n", sum,
+           tangent1->vector[0], tangent1->vector[1], tangent1->vector[2]);
   }
   for (p = 0, sum = 0.; p < dim; p++) {
     sum += normal->vector[p] * tangent2->vector[p];
   }
   if (fabs(sum) > 1e-8) {
-    printf("2nd Tangent not perpendicular to normal (%g) vector %g,%g,%g\n",
-           sum, tangent1->vector[0], tangent1->vector[1], tangent1->vector[2]);
+    printf("2nd Tangent not perpendicular to normal (%g) vector %g,%g,%g\n", sum,
+           tangent1->vector[0], tangent1->vector[1], tangent1->vector[2]);
   }
   return;
 } /* cross_vectors */
 /********************************************************************** */
 /********************************************************************** */
 
-void calc_unseeded_edge_tangents(
-    struct Rotation_Vectors *tangent,
-    const int iconnect_ptr,        /* Ptr to beginning of
-                                    * connectivity list for
-                                    * current element */
-    const int dim,                 /* physical dimension of the
-                                    * surface of the element
-                                    * i.e., (0, 1, 2) */
-    const int id_side,             /* ID of the side of the
-                                    * element*/
-    const int id_edge,             /* ID of the edge of the
-                                    * element*/
-    const int num_nodes_on_edge,   /* number of nodes
-                                    * on the edge of
-                                    * the element */
-    const int edge_elem_node_id[], /* vector of the
-                                    * local element
-                                    * node numbers
-                                    * on the edge of
-                                    * the element */
-    const int param_dir)           /* parametric direction of
-                                    * the edge in local
-                                    * coordinates */
+void calc_unseeded_edge_tangents(struct Rotation_Vectors *tangent,
+                                 const int iconnect_ptr,        /* Ptr to beginning of
+                                                                 * connectivity list for
+                                                                 * current element */
+                                 const int dim,                 /* physical dimension of the
+                                                                 * surface of the element
+                                                                 * i.e., (0, 1, 2) */
+                                 const int id_side,             /* ID of the side of the
+                                                                 * element*/
+                                 const int id_edge,             /* ID of the edge of the
+                                                                 * element*/
+                                 const int num_nodes_on_edge,   /* number of nodes
+                                                                 * on the edge of
+                                                                 * the element */
+                                 const int edge_elem_node_id[], /* vector of the
+                                                                 * local element
+                                                                 * node numbers
+                                                                 * on the edge of
+                                                                 * the element */
+                                 const int param_dir)           /* parametric direction of
+                                                                 * the edge in local
+                                                                 * coordinates */
 
 /*
  * Function which calculates the components of unit surface tangent vector
@@ -1340,14 +1262,13 @@ void calc_unseeded_edge_tangents(
     if (DeformingMesh) {
       if (num_varType_at_node(inode, MESH_DISPLACEMENT1)) {
         for (p = 0; p < dim; p++) {
-          tangent->vector[p] += sign * bf[ShapeVar]->dphidxi[ldof][param_dir] *
-                                (Coor[p][inode] + *esp->d[p][ldof]);
+          tangent->vector[p] +=
+              sign * bf[ShapeVar]->dphidxi[ldof][param_dir] * (Coor[p][inode] + *esp->d[p][ldof]);
         }
       }
     } else {
       for (p = 0; p < dim; p++) {
-        tangent->vector[p] +=
-            sign * bf[ShapeVar]->dphidxi[ldof][param_dir] * Coor[p][inode];
+        tangent->vector[p] += sign * bf[ShapeVar]->dphidxi[ldof][param_dir] * Coor[p][inode];
       }
     }
   }
@@ -1361,8 +1282,7 @@ void calc_unseeded_edge_tangents(
       ldof = ei[pg->imtrx]->ln_to_dof[ShapeVar][j_id];
       if (num_varType_at_node(inode, MESH_DISPLACEMENT1)) {
         for (p = 0; p < dim; p++) {
-          tangent->d_vector_dx[p][p][j] +=
-              sign * bf[ShapeVar]->dphidxi[ldof][param_dir];
+          tangent->d_vector_dx[p][p][j] += sign * bf[ShapeVar]->dphidxi[ldof][param_dir];
         }
       }
     }
@@ -1375,29 +1295,28 @@ void calc_unseeded_edge_tangents(
 /*****************************************************************************/
 /********************************************************************** */
 
-void calc_unseeded_edge_tangents_TET(
-    struct Rotation_Vectors *tangent,
-    const int iconnect_ptr,        /* Ptr to beginning of
-                                    * connectivity list for
-                                    * current element */
-    const int dim,                 /* physical dimension of the
-                                    * surface of the element
-                                    * i.e., (0, 1, 2) */
-    const int id_side,             /* ID of the side of the
-                                    * element*/
-    const int id_edge,             /* ID of the edge of the
-                                    * element*/
-    const int num_nodes_on_edge,   /* number of nodes
-                                    * on the edge of
-                                    * the element */
-    const int edge_elem_node_id[], /* vector of the
-                                    * local element
-                                    * node numbers
-                                    * on the edge of
-                                    * the element */
-    const int param_dir)           /* parametric direction of
-                                    * the edge in local
-                                    * coordinates */
+void calc_unseeded_edge_tangents_TET(struct Rotation_Vectors *tangent,
+                                     const int iconnect_ptr,        /* Ptr to beginning of
+                                                                     * connectivity list for
+                                                                     * current element */
+                                     const int dim,                 /* physical dimension of the
+                                                                     * surface of the element
+                                                                     * i.e., (0, 1, 2) */
+                                     const int id_side,             /* ID of the side of the
+                                                                     * element*/
+                                     const int id_edge,             /* ID of the edge of the
+                                                                     * element*/
+                                     const int num_nodes_on_edge,   /* number of nodes
+                                                                     * on the edge of
+                                                                     * the element */
+                                     const int edge_elem_node_id[], /* vector of the
+                                                                     * local element
+                                                                     * node numbers
+                                                                     * on the edge of
+                                                                     * the element */
+                                     const int param_dir)           /* parametric direction of
+                                                                     * the edge in local
+                                                                     * coordinates */
 
 /*
  * Function which calculates the edge tangent for tet elements using information
@@ -1526,15 +1445,13 @@ void calc_unseeded_edge_tangents_TET(
       if (DeformingMesh) {
         if (num_varType_at_node(inode, MESH_DISPLACEMENT1)) {
           for (p = 0; p < dim; p++) {
-            tangent->vector[p] += sign *
-                                  bf[ShapeVar]->dphidxi[ldof][param_dir] *
-                                  (Coor[p][inode] + *esp->d[p][ldof]);
+            tangent->vector[p] +=
+                sign * bf[ShapeVar]->dphidxi[ldof][param_dir] * (Coor[p][inode] + *esp->d[p][ldof]);
           }
         }
       } else {
         for (p = 0; p < dim; p++) {
-          tangent->vector[p] +=
-              sign * bf[ShapeVar]->dphidxi[ldof][param_dir] * Coor[p][inode];
+          tangent->vector[p] += sign * bf[ShapeVar]->dphidxi[ldof][param_dir] * Coor[p][inode];
         }
       }
     } else if (id_edge == 2) {
@@ -1549,16 +1466,13 @@ void calc_unseeded_edge_tangents_TET(
         if (num_varType_at_node(inode, MESH_DISPLACEMENT1)) {
 
           for (p = 0; p < dim; p++) {
-            tangent->vector[p] += sign *
-                                  bf[ShapeVar]->dphidxi[ldof][param_dir_tet] *
+            tangent->vector[p] += sign * bf[ShapeVar]->dphidxi[ldof][param_dir_tet] *
                                   (Coor[p][inode] + *esp->d[p][ldof]);
           }
         }
       } else {
         for (p = 0; p < dim; p++) {
-          tangent->vector[p] += sign *
-                                bf[ShapeVar]->dphidxi[ldof][param_dir_tet] *
-                                Coor[p][inode];
+          tangent->vector[p] += sign * bf[ShapeVar]->dphidxi[ldof][param_dir_tet] * Coor[p][inode];
         }
       }
     } else if (id_edge == 6) {
@@ -1573,16 +1487,13 @@ void calc_unseeded_edge_tangents_TET(
         if (num_varType_at_node(inode, MESH_DISPLACEMENT1)) {
 
           for (p = 0; p < dim; p++) {
-            tangent->vector[p] += sign *
-                                  bf[ShapeVar]->dphidxi[ldof][param_dir_tet] *
+            tangent->vector[p] += sign * bf[ShapeVar]->dphidxi[ldof][param_dir_tet] *
                                   (Coor[p][inode] + *esp->d[p][ldof]);
           }
         }
       } else {
         for (p = 0; p < dim; p++) {
-          tangent->vector[p] += sign *
-                                bf[ShapeVar]->dphidxi[ldof][param_dir_tet] *
-                                Coor[p][inode];
+          tangent->vector[p] += sign * bf[ShapeVar]->dphidxi[ldof][param_dir_tet] * Coor[p][inode];
         }
       }
     } else if (id_edge == 5) {
@@ -1597,16 +1508,13 @@ void calc_unseeded_edge_tangents_TET(
         if (num_varType_at_node(inode, MESH_DISPLACEMENT1)) {
 
           for (p = 0; p < dim; p++) {
-            tangent->vector[p] += sign *
-                                  bf[ShapeVar]->dphidxi[ldof][param_dir_tet] *
+            tangent->vector[p] += sign * bf[ShapeVar]->dphidxi[ldof][param_dir_tet] *
                                   (Coor[p][inode] + *esp->d[p][ldof]);
           }
         }
       } else {
         for (p = 0; p < dim; p++) {
-          tangent->vector[p] += sign *
-                                bf[ShapeVar]->dphidxi[ldof][param_dir_tet] *
-                                Coor[p][inode];
+          tangent->vector[p] += sign * bf[ShapeVar]->dphidxi[ldof][param_dir_tet] * Coor[p][inode];
         }
       }
     } else {
@@ -1624,8 +1532,7 @@ void calc_unseeded_edge_tangents_TET(
       if (num_varType_at_node(inode, MESH_DISPLACEMENT1)) {
         if (id_edge == 1 || id_edge == 3 || id_edge == 4) {
           for (p = 0; p < dim; p++) {
-            tangent->d_vector_dx[p][p][j] +=
-                sign * bf[ShapeVar]->dphidxi[ldof][param_dir];
+            tangent->d_vector_dx[p][p][j] += sign * bf[ShapeVar]->dphidxi[ldof][param_dir];
           }
         } else if (id_edge == 2) {
           if (j_id == 1) {
@@ -1636,8 +1543,7 @@ void calc_unseeded_edge_tangents_TET(
             sign *= -1;
           }
           for (p = 0; p < dim; p++) {
-            tangent->d_vector_dx[p][p][j] +=
-                sign * bf[ShapeVar]->dphidxi[ldof][param_dir_tet];
+            tangent->d_vector_dx[p][p][j] += sign * bf[ShapeVar]->dphidxi[ldof][param_dir_tet];
           }
         } else if (id_edge == 6) {
           if (j_id == 2) {
@@ -1648,8 +1554,7 @@ void calc_unseeded_edge_tangents_TET(
             sign *= -1;
           }
           for (p = 0; p < dim; p++) {
-            tangent->d_vector_dx[p][p][j] +=
-                sign * bf[ShapeVar]->dphidxi[ldof][param_dir_tet];
+            tangent->d_vector_dx[p][p][j] += sign * bf[ShapeVar]->dphidxi[ldof][param_dir_tet];
           }
         } else if (id_edge == 5) {
           if (j_id == 1) {
@@ -1660,8 +1565,7 @@ void calc_unseeded_edge_tangents_TET(
             sign *= -1;
           }
           for (p = 0; p < dim; p++) {
-            tangent->d_vector_dx[p][p][j] +=
-                sign * bf[ShapeVar]->dphidxi[ldof][param_dir_tet];
+            tangent->d_vector_dx[p][p][j] += sign * bf[ShapeVar]->dphidxi[ldof][param_dir_tet];
           }
         }
       }
@@ -1699,8 +1603,7 @@ void simple_normalize_vector(struct Rotation_Vectors *vector, const int dim) {
       for (q = 0; q < dim; q++) {
         for (p = 0; p < dim; p++) {
           vector->d_vector_dx[q][p][j] /= sqsum;
-          vector->d_vector_dx[q][p][j] -=
-              0.5 * vector->vector[q] * d_sum[p][j] / sum / sqsum;
+          vector->d_vector_dx[q][p][j] -= 0.5 * vector->vector[q] * d_sum[p][j] / sum / sqsum;
         }
       }
     }
@@ -1783,8 +1686,7 @@ int load_bf_grad(void)
 #ifdef DO_NOT_UNROLL
   int WIM;
 
-  if ((pd->CoordinateSystem == CARTESIAN) ||
-      (pd->CoordinateSystem == CYLINDRICAL)) {
+  if ((pd->CoordinateSystem == CARTESIAN) || (pd->CoordinateSystem == CYLINDRICAL)) {
     WIM = pd->Num_Dim;
   } else {
     WIM = VIM;
@@ -1833,32 +1735,32 @@ int load_bf_grad(void)
         switch (pd->Num_Dim) {
         case 1:
           for (i = 0; i < dofs; i++) {
-            bfv->d_phi[i][0] = (bfv->B[0][0] * bfv->dphidxi[i][0] +
-                                bfv->B[0][1] * bfv->dphidxi[i][1]);
+            bfv->d_phi[i][0] =
+                (bfv->B[0][0] * bfv->dphidxi[i][0] + bfv->B[0][1] * bfv->dphidxi[i][1]);
             bfv->d_phi[i][1] = 0.0;
             bfv->d_phi[i][2] = 0.0;
           }
           break;
         case 2:
           for (i = 0; i < dofs; i++) {
-            bfv->d_phi[i][0] = (bfv->B[0][0] * bfv->dphidxi[i][0] +
-                                bfv->B[0][1] * bfv->dphidxi[i][1]);
-            bfv->d_phi[i][1] = (bfv->B[1][0] * bfv->dphidxi[i][0] +
-                                bfv->B[1][1] * bfv->dphidxi[i][1]);
+            bfv->d_phi[i][0] =
+                (bfv->B[0][0] * bfv->dphidxi[i][0] + bfv->B[0][1] * bfv->dphidxi[i][1]);
+            bfv->d_phi[i][1] =
+                (bfv->B[1][0] * bfv->dphidxi[i][0] + bfv->B[1][1] * bfv->dphidxi[i][1]);
             bfv->d_phi[i][2] = 0.0;
           }
           break;
         case 3:
           for (i = 0; i < dofs; i++) {
-            bfv->d_phi[i][0] = (bfv->B[0][0] * bfv->dphidxi[i][0] +
-                                bfv->B[0][1] * bfv->dphidxi[i][1] +
-                                bfv->B[0][2] * bfv->dphidxi[i][2]);
-            bfv->d_phi[i][1] = (bfv->B[1][0] * bfv->dphidxi[i][0] +
-                                bfv->B[1][1] * bfv->dphidxi[i][1] +
-                                bfv->B[1][2] * bfv->dphidxi[i][2]);
-            bfv->d_phi[i][2] = (bfv->B[2][0] * bfv->dphidxi[i][0] +
-                                bfv->B[2][1] * bfv->dphidxi[i][1] +
-                                bfv->B[2][2] * bfv->dphidxi[i][2]);
+            bfv->d_phi[i][0] =
+                (bfv->B[0][0] * bfv->dphidxi[i][0] + bfv->B[0][1] * bfv->dphidxi[i][1] +
+                 bfv->B[0][2] * bfv->dphidxi[i][2]);
+            bfv->d_phi[i][1] =
+                (bfv->B[1][0] * bfv->dphidxi[i][0] + bfv->B[1][1] * bfv->dphidxi[i][1] +
+                 bfv->B[1][2] * bfv->dphidxi[i][2]);
+            bfv->d_phi[i][2] =
+                (bfv->B[2][0] * bfv->dphidxi[i][0] + bfv->B[2][1] * bfv->dphidxi[i][1] +
+                 bfv->B[2][2] * bfv->dphidxi[i][2]);
           }
           break;
         default:
@@ -1969,8 +1871,7 @@ int load_bf_grad(void)
             for (a = 0; a < WIM; a++) {
               for (p = 0; p < VIM; p++) {
                 for (q = 0; q < VIM; q++) {
-                  bfv->grad_phi_e[i][a][p][q] +=
-                      bfv->phi[i] * fv->grad_e[a][p][q];
+                  bfv->grad_phi_e[i][a][p][q] += bfv->phi[i] * fv->grad_e[a][p][q];
                 }
               }
             }
@@ -2051,7 +1952,7 @@ int load_bf_grad(void)
          * variable.  I had one, but it is not presently being used.
          */
 
- 	if (pd->gv[EM_E1_REAL]  ||  CURL_V != -1) {
+        if (pd->gv[EM_E1_REAL] || CURL_V != -1) {
           siz = DIM * DIM * MDE * sizeof(double);
           memset(&(bfv->curl_phi_e[0][0][0]), 0, siz);
 
@@ -2063,8 +1964,7 @@ int load_bf_grad(void)
             for (a = 0; a < DIM; a++) {
               for (p = 0; p < DIM; p++) {
                 for (k = 0; k < DIM; k++) { /* VIM */
-                  bfv->curl_phi_e[i][a][p] +=
-                      permute(p, k, a) * bfv->grad_phi[i][k];
+                  bfv->curl_phi_e[i][a][p] += permute(p, k, a) * bfv->grad_phi[i][k];
                 }
                 bfv->curl_phi_e[i][a][p] += bfv->phi[i] * fv->curl_e[a][p];
               }
@@ -2145,22 +2045,22 @@ int load_bf_grad(void)
  */
 int load_bf_mesh_derivs(void) {
   int a, b, p, q, i, j, bix, v, siz;
-  int dim;			/* number of spatial dimensions */
-  int dimNonSym;                /* Number of dimensions of the curvilinear coordinate
-				 * system which has nonzero gradients. Coordinates such
-				 * as the theta component in the cylindrical coordinates
-				 * which have assumed symmetry don't count. Therefore
-				 * dimNonSym = 2 for cylindrical and swirling */
-  int vdofs;			/* degrees of freedom for variable that is */
-				/* interpolated using bfl */
-  int mdofs;			/* degrees of freedom for mesh displacement */
-				/* unknowns interpolated using bfm */
+  int dim;       /* number of spatial dimensions */
+  int dimNonSym; /* Number of dimensions of the curvilinear coordinate
+                  * system which has nonzero gradients. Coordinates such
+                  * as the theta component in the cylindrical coordinates
+                  * which have assumed symmetry don't count. Therefore
+                  * dimNonSym = 2 for cylindrical and swirling */
+  int vdofs;     /* degrees of freedom for variable that is */
+  /* interpolated using bfl */
+  int mdofs; /* degrees of freedom for mesh displacement */
+  /* unknowns interpolated using bfm */
   int mn = ei[pg->imtrx]->mn;
-  dbl f, g[DIM], g2[DIM];	/* Temporary variables for convenience. */
-  dbl phi_m[MDE], phi_l[MDE];   /* load shapefunctions into local variables */
+  dbl f, g[DIM], g2[DIM];     /* Temporary variables for convenience. */
+  dbl phi_m[MDE], phi_l[MDE]; /* load shapefunctions into local variables */
 
-  BASIS_FUNCTIONS_STRUCT *bfl;	/* Basis function of current interest */
-  BASIS_FUNCTIONS_STRUCT *bfm;	/* Basis function for mesh displacement */
+  BASIS_FUNCTIONS_STRUCT *bfl; /* Basis function of current interest */
+  BASIS_FUNCTIONS_STRUCT *bfm; /* Basis function for mesh displacement */
   BASIS_FUNCTIONS_STRUCT *bf_ptr;
   int imtrx;
 
@@ -2173,22 +2073,22 @@ int load_bf_mesh_derivs(void) {
       continue;
     }
 
-  dim   = pd->Num_Dim;
-  dimNonSym = dim;
+    dim = pd->Num_Dim;
+    dimNonSym = dim;
 
-  /*
-   * Preload the number of degrees of freedom in the mesh
-   * for the current element, mdofs, and the pointer to the
-   * basis function structure, bfm
-   */
-  mdofs = ei[imtrx]->dof[R_MESH1];
-  bfm   = bf[MESH_DISPLACEMENT1];
-  /*
-   * preload mesh shape functions
-   */
-  for (j = 0; j < mdofs; j++) {
-    phi_m[j] = bfm->phi[j];
-  }
+    /*
+     * Preload the number of degrees of freedom in the mesh
+     * for the current element, mdofs, and the pointer to the
+     * basis function structure, bfm
+     */
+    mdofs = ei[imtrx]->dof[R_MESH1];
+    bfm = bf[MESH_DISPLACEMENT1];
+    /*
+     * preload mesh shape functions
+     */
+    for (j = 0; j < mdofs; j++) {
+      phi_m[j] = bfm->phi[j];
+    }
 
     /*
      * Preload the number of degrees of freedom in the mesh
@@ -2262,17 +2162,13 @@ int load_bf_mesh_derivs(void) {
 #ifdef DO_NOT_UNROLL
           for (i = 0; i < vdofs; i++) {
             for (p = 0; p < dim; p++) {
-              memset(&(bfl->d_d_phi_dmesh[i][p][0][0]), 0,
-                     mdofs * sizeof(double));
-              memset(&(bfl->d_d_phi_dmesh[i][p][1][0]), 0,
-                     mdofs * sizeof(double));
+              memset(&(bfl->d_d_phi_dmesh[i][p][0][0]), 0, mdofs * sizeof(double));
+              memset(&(bfl->d_d_phi_dmesh[i][p][1][0]), 0, mdofs * sizeof(double));
               for (j = 0; j < mdofs; j++) {
-                bfl->d_d_phi_dmesh[i][p][0][j] +=
-                    (bfl->dB[p][0][0][j] * bfl->dphidxi[i][0] +
-                     bfl->dB[p][1][0][j] * bfl->dphidxi[i][1]);
-                bfl->d_d_phi_dmesh[i][p][1][j] +=
-                    (bfl->dB[p][0][1][j] * bfl->dphidxi[i][0] +
-                     bfl->dB[p][1][1][j] * bfl->dphidxi[i][1]);
+                bfl->d_d_phi_dmesh[i][p][0][j] += (bfl->dB[p][0][0][j] * bfl->dphidxi[i][0] +
+                                                   bfl->dB[p][1][0][j] * bfl->dphidxi[i][1]);
+                bfl->d_d_phi_dmesh[i][p][1][j] += (bfl->dB[p][0][1][j] * bfl->dphidxi[i][0] +
+                                                   bfl->dB[p][1][1][j] * bfl->dphidxi[i][1]);
               }
             }
           }
@@ -2280,20 +2176,16 @@ int load_bf_mesh_derivs(void) {
           for (i = 0; i < vdofs; i++) {
             for (j = 0; j < mdofs; j++) {
 
-              bfl->d_d_phi_dmesh[i][0][0][j] =
-                  (bfl->dB[0][0][0][j] * bfl->dphidxi[i][0] +
-                   bfl->dB[0][1][0][j] * bfl->dphidxi[i][1]);
+              bfl->d_d_phi_dmesh[i][0][0][j] = (bfl->dB[0][0][0][j] * bfl->dphidxi[i][0] +
+                                                bfl->dB[0][1][0][j] * bfl->dphidxi[i][1]);
 
-              bfl->d_d_phi_dmesh[i][1][0][j] =
-                  (bfl->dB[1][0][0][j] * bfl->dphidxi[i][0] +
-                   bfl->dB[1][1][0][j] * bfl->dphidxi[i][1]);
+              bfl->d_d_phi_dmesh[i][1][0][j] = (bfl->dB[1][0][0][j] * bfl->dphidxi[i][0] +
+                                                bfl->dB[1][1][0][j] * bfl->dphidxi[i][1]);
 
-              bfl->d_d_phi_dmesh[i][0][1][j] =
-                  (bfl->dB[0][0][1][j] * bfl->dphidxi[i][0] +
-                   bfl->dB[0][1][1][j] * bfl->dphidxi[i][1]);
-              bfl->d_d_phi_dmesh[i][1][1][j] =
-                  (bfl->dB[1][0][1][j] * bfl->dphidxi[i][0] +
-                   bfl->dB[1][1][1][j] * bfl->dphidxi[i][1]);
+              bfl->d_d_phi_dmesh[i][0][1][j] = (bfl->dB[0][0][1][j] * bfl->dphidxi[i][0] +
+                                                bfl->dB[0][1][1][j] * bfl->dphidxi[i][1]);
+              bfl->d_d_phi_dmesh[i][1][1][j] = (bfl->dB[1][0][1][j] * bfl->dphidxi[i][0] +
+                                                bfl->dB[1][1][1][j] * bfl->dphidxi[i][1]);
             }
           }
 #endif
@@ -2303,26 +2195,20 @@ int load_bf_mesh_derivs(void) {
 #ifdef DO_NOT_UNROLL
           for (i = 0; i < vdofs; i++) {
             for (p = 0; p < dim; p++) {
-              memset(&(bfl->d_d_phi_dmesh[i][p][0][0]), 0,
-                     mdofs * sizeof(double));
-              memset(&(bfl->d_d_phi_dmesh[i][p][1][0]), 0,
-                     mdofs * sizeof(double));
-              memset(&(bfl->d_d_phi_dmesh[i][p][2][0]), 0,
-                     mdofs * sizeof(double));
+              memset(&(bfl->d_d_phi_dmesh[i][p][0][0]), 0, mdofs * sizeof(double));
+              memset(&(bfl->d_d_phi_dmesh[i][p][1][0]), 0, mdofs * sizeof(double));
+              memset(&(bfl->d_d_phi_dmesh[i][p][2][0]), 0, mdofs * sizeof(double));
 
               for (j = 0; j < mdofs; j++) {
-                bfl->d_d_phi_dmesh[i][p][0][j] +=
-                    (bfl->dB[p][0][0][j] * bfl->dphidxi[i][0] +
-                     bfl->dB[p][1][0][j] * bfl->dphidxi[i][1] +
-                     bfl->dB[p][2][0][j] * bfl->dphidxi[i][2]);
-                bfl->d_d_phi_dmesh[i][p][1][j] +=
-                    (bfl->dB[p][0][1][j] * bfl->dphidxi[i][0] +
-                     bfl->dB[p][1][1][j] * bfl->dphidxi[i][1] +
-                     bfl->dB[p][2][1][j] * bfl->dphidxi[i][2]);
-                bfl->d_d_phi_dmesh[i][p][2][j] +=
-                    (bfl->dB[p][0][2][j] * bfl->dphidxi[i][0] +
-                     bfl->dB[p][1][2][j] * bfl->dphidxi[i][1] +
-                     bfl->dB[p][2][2][j] * bfl->dphidxi[i][2]);
+                bfl->d_d_phi_dmesh[i][p][0][j] += (bfl->dB[p][0][0][j] * bfl->dphidxi[i][0] +
+                                                   bfl->dB[p][1][0][j] * bfl->dphidxi[i][1] +
+                                                   bfl->dB[p][2][0][j] * bfl->dphidxi[i][2]);
+                bfl->d_d_phi_dmesh[i][p][1][j] += (bfl->dB[p][0][1][j] * bfl->dphidxi[i][0] +
+                                                   bfl->dB[p][1][1][j] * bfl->dphidxi[i][1] +
+                                                   bfl->dB[p][2][1][j] * bfl->dphidxi[i][2]);
+                bfl->d_d_phi_dmesh[i][p][2][j] += (bfl->dB[p][0][2][j] * bfl->dphidxi[i][0] +
+                                                   bfl->dB[p][1][2][j] * bfl->dphidxi[i][1] +
+                                                   bfl->dB[p][2][2][j] * bfl->dphidxi[i][2]);
               }
             }
           }
@@ -2330,44 +2216,35 @@ int load_bf_mesh_derivs(void) {
           for (i = 0; i < vdofs; i++) {
             for (j = 0; j < mdofs; j++) {
 
-              bfl->d_d_phi_dmesh[i][0][0][j] =
-                  (bfl->dB[0][0][0][j] * bfl->dphidxi[i][0] +
-                   bfl->dB[0][1][0][j] * bfl->dphidxi[i][1] +
-                   bfl->dB[0][2][0][j] * bfl->dphidxi[i][2]);
-              bfl->d_d_phi_dmesh[i][1][0][j] =
-                  (bfl->dB[1][0][0][j] * bfl->dphidxi[i][0] +
-                   bfl->dB[1][1][0][j] * bfl->dphidxi[i][1] +
-                   bfl->dB[1][2][0][j] * bfl->dphidxi[i][2]);
-              bfl->d_d_phi_dmesh[i][2][0][j] =
-                  (bfl->dB[2][0][0][j] * bfl->dphidxi[i][0] +
-                   bfl->dB[2][1][0][j] * bfl->dphidxi[i][1] +
-                   bfl->dB[2][2][0][j] * bfl->dphidxi[i][2]);
+              bfl->d_d_phi_dmesh[i][0][0][j] = (bfl->dB[0][0][0][j] * bfl->dphidxi[i][0] +
+                                                bfl->dB[0][1][0][j] * bfl->dphidxi[i][1] +
+                                                bfl->dB[0][2][0][j] * bfl->dphidxi[i][2]);
+              bfl->d_d_phi_dmesh[i][1][0][j] = (bfl->dB[1][0][0][j] * bfl->dphidxi[i][0] +
+                                                bfl->dB[1][1][0][j] * bfl->dphidxi[i][1] +
+                                                bfl->dB[1][2][0][j] * bfl->dphidxi[i][2]);
+              bfl->d_d_phi_dmesh[i][2][0][j] = (bfl->dB[2][0][0][j] * bfl->dphidxi[i][0] +
+                                                bfl->dB[2][1][0][j] * bfl->dphidxi[i][1] +
+                                                bfl->dB[2][2][0][j] * bfl->dphidxi[i][2]);
 
-              bfl->d_d_phi_dmesh[i][0][1][j] =
-                  (bfl->dB[0][0][1][j] * bfl->dphidxi[i][0] +
-                   bfl->dB[0][1][1][j] * bfl->dphidxi[i][1] +
-                   bfl->dB[0][2][1][j] * bfl->dphidxi[i][2]);
-              bfl->d_d_phi_dmesh[i][1][1][j] =
-                  (bfl->dB[1][0][1][j] * bfl->dphidxi[i][0] +
-                   bfl->dB[1][1][1][j] * bfl->dphidxi[i][1] +
-                   bfl->dB[1][2][1][j] * bfl->dphidxi[i][2]);
-              bfl->d_d_phi_dmesh[i][2][1][j] =
-                  (bfl->dB[2][0][1][j] * bfl->dphidxi[i][0] +
-                   bfl->dB[2][1][1][j] * bfl->dphidxi[i][1] +
-                   bfl->dB[2][2][1][j] * bfl->dphidxi[i][2]);
+              bfl->d_d_phi_dmesh[i][0][1][j] = (bfl->dB[0][0][1][j] * bfl->dphidxi[i][0] +
+                                                bfl->dB[0][1][1][j] * bfl->dphidxi[i][1] +
+                                                bfl->dB[0][2][1][j] * bfl->dphidxi[i][2]);
+              bfl->d_d_phi_dmesh[i][1][1][j] = (bfl->dB[1][0][1][j] * bfl->dphidxi[i][0] +
+                                                bfl->dB[1][1][1][j] * bfl->dphidxi[i][1] +
+                                                bfl->dB[1][2][1][j] * bfl->dphidxi[i][2]);
+              bfl->d_d_phi_dmesh[i][2][1][j] = (bfl->dB[2][0][1][j] * bfl->dphidxi[i][0] +
+                                                bfl->dB[2][1][1][j] * bfl->dphidxi[i][1] +
+                                                bfl->dB[2][2][1][j] * bfl->dphidxi[i][2]);
 
-              bfl->d_d_phi_dmesh[i][0][2][j] =
-                  (bfl->dB[0][0][2][j] * bfl->dphidxi[i][0] +
-                   bfl->dB[0][1][2][j] * bfl->dphidxi[i][1] +
-                   bfl->dB[0][2][2][j] * bfl->dphidxi[i][2]);
-              bfl->d_d_phi_dmesh[i][1][2][j] =
-                  (bfl->dB[1][0][2][j] * bfl->dphidxi[i][0] +
-                   bfl->dB[1][1][2][j] * bfl->dphidxi[i][1] +
-                   bfl->dB[1][2][2][j] * bfl->dphidxi[i][2]);
-              bfl->d_d_phi_dmesh[i][2][2][j] =
-                  (bfl->dB[2][0][2][j] * bfl->dphidxi[i][0] +
-                   bfl->dB[2][1][2][j] * bfl->dphidxi[i][1] +
-                   bfl->dB[2][2][2][j] * bfl->dphidxi[i][2]);
+              bfl->d_d_phi_dmesh[i][0][2][j] = (bfl->dB[0][0][2][j] * bfl->dphidxi[i][0] +
+                                                bfl->dB[0][1][2][j] * bfl->dphidxi[i][1] +
+                                                bfl->dB[0][2][2][j] * bfl->dphidxi[i][2]);
+              bfl->d_d_phi_dmesh[i][1][2][j] = (bfl->dB[1][0][2][j] * bfl->dphidxi[i][0] +
+                                                bfl->dB[1][1][2][j] * bfl->dphidxi[i][1] +
+                                                bfl->dB[1][2][2][j] * bfl->dphidxi[i][2]);
+              bfl->d_d_phi_dmesh[i][2][2][j] = (bfl->dB[2][0][2][j] * bfl->dphidxi[i][0] +
+                                                bfl->dB[2][1][2][j] * bfl->dphidxi[i][1] +
+                                                bfl->dB[2][2][2][j] * bfl->dphidxi[i][2]);
             }
           }
 
@@ -2400,14 +2277,12 @@ int load_bf_mesh_derivs(void) {
         for (i = 0; i < vdofs; i++) {
           for (p = 0; p < dimNonSym; p++) {
             for (b = 0; b < dimNonSym; b++) {
-              memset(&(bfl->d_grad_phi_dmesh[i][p][b][0]), 0,
-                     mdofs * sizeof(double));
+              memset(&(bfl->d_grad_phi_dmesh[i][p][b][0]), 0, mdofs * sizeof(double));
               f = -g2[p] * (fv->hq[p][b]);
               for (j = 0; j < mdofs; j++) {
                 for (q = 0; q < dimNonSym; q++) {
                   bfl->d_grad_phi_dmesh[i][p][b][j] +=
-                      (f * phi_m[j] * bfl->B[p][q] +
-                       g[p] * bfl->dB[p][q][b][j]) *
+                      (f * phi_m[j] * bfl->B[p][q] + g[p] * bfl->dB[p][q][b][j]) *
                       (bfl->dphidxi[i][q]);
                 }
               }
@@ -2442,132 +2317,105 @@ int load_bf_mesh_derivs(void) {
             f = -g2[0] * (fv->hq[0][0]);
 
             bfl->d_grad_phi_dmesh[i][0][0][j] =
-                (f * phi_m[j] * bfl->B[0][0] + g[0] * bfl->dB[0][0][0][j]) *
-                (bfl->dphidxi[i][0]);
+                (f * phi_m[j] * bfl->B[0][0] + g[0] * bfl->dB[0][0][0][j]) * (bfl->dphidxi[i][0]);
 
             bfl->d_grad_phi_dmesh[i][0][0][j] +=
-                (f * phi_m[j] * bfl->B[0][1] + g[0] * bfl->dB[0][1][0][j]) *
-                (bfl->dphidxi[i][1]);
+                (f * phi_m[j] * bfl->B[0][1] + g[0] * bfl->dB[0][1][0][j]) * (bfl->dphidxi[i][1]);
 
             /* (p,b) = (0,1) */
             f = -g2[0] * (fv->hq[0][1]);
 
             bfl->d_grad_phi_dmesh[i][0][1][j] =
-                (f * phi_m[j] * bfl->B[0][0] + g[0] * bfl->dB[0][0][1][j]) *
-                (bfl->dphidxi[i][0]);
+                (f * phi_m[j] * bfl->B[0][0] + g[0] * bfl->dB[0][0][1][j]) * (bfl->dphidxi[i][0]);
 
             bfl->d_grad_phi_dmesh[i][0][1][j] +=
-                (f * phi_m[j] * bfl->B[0][1] + g[0] * bfl->dB[0][1][1][j]) *
-                (bfl->dphidxi[i][1]);
+                (f * phi_m[j] * bfl->B[0][1] + g[0] * bfl->dB[0][1][1][j]) * (bfl->dphidxi[i][1]);
 
             /* (p,b) = (1,0) */
             f = -g2[1] * (fv->hq[1][0]);
 
             bfl->d_grad_phi_dmesh[i][1][0][j] =
-                (f * phi_m[j] * bfl->B[1][0] + g[1] * bfl->dB[1][0][0][j]) *
-                (bfl->dphidxi[i][0]);
+                (f * phi_m[j] * bfl->B[1][0] + g[1] * bfl->dB[1][0][0][j]) * (bfl->dphidxi[i][0]);
 
             bfl->d_grad_phi_dmesh[i][1][0][j] +=
-                (f * phi_m[j] * bfl->B[1][1] + g[1] * bfl->dB[1][1][0][j]) *
-                (bfl->dphidxi[i][1]);
+                (f * phi_m[j] * bfl->B[1][1] + g[1] * bfl->dB[1][1][0][j]) * (bfl->dphidxi[i][1]);
 
             /* (p,b) = (1,1) */
 
             f = -g2[1] * (fv->hq[1][1]);
             bfl->d_grad_phi_dmesh[i][1][1][j] =
-                (f * phi_m[j] * bfl->B[1][0] + g[1] * bfl->dB[1][0][1][j]) *
-                (bfl->dphidxi[i][0]);
+                (f * phi_m[j] * bfl->B[1][0] + g[1] * bfl->dB[1][0][1][j]) * (bfl->dphidxi[i][0]);
 
             bfl->d_grad_phi_dmesh[i][1][1][j] +=
-                (f * phi_m[j] * bfl->B[1][1] + g[1] * bfl->dB[1][1][1][j]) *
-                (bfl->dphidxi[i][1]);
+                (f * phi_m[j] * bfl->B[1][1] + g[1] * bfl->dB[1][1][1][j]) * (bfl->dphidxi[i][1]);
 
             if (dimNonSym == 3) {
               /* (p,b) = (0,0) */
               bfl->d_grad_phi_dmesh[i][0][0][j] +=
-                  (f * phi_m[j] * bfl->B[0][2] + g[0] * bfl->dB[0][2][0][j]) *
-                  (bfl->dphidxi[i][2]);
+                  (f * phi_m[j] * bfl->B[0][2] + g[0] * bfl->dB[0][2][0][j]) * (bfl->dphidxi[i][2]);
               /* (p,b) = (0,1) */
               bfl->d_grad_phi_dmesh[i][0][1][j] +=
-                  (f * phi_m[j] * bfl->B[0][2] + g[0] * bfl->dB[0][2][1][j]) *
-                  (bfl->dphidxi[i][2]);
+                  (f * phi_m[j] * bfl->B[0][2] + g[0] * bfl->dB[0][2][1][j]) * (bfl->dphidxi[i][2]);
               /* (p,b) = (1,0) */
               bfl->d_grad_phi_dmesh[i][1][0][j] +=
-                  (f * phi_m[j] * bfl->B[1][2] + g[1] * bfl->dB[1][2][0][j]) *
-                  (bfl->dphidxi[i][2]);
+                  (f * phi_m[j] * bfl->B[1][2] + g[1] * bfl->dB[1][2][0][j]) * (bfl->dphidxi[i][2]);
               /* (p,b) = (1,1) */
               bfl->d_grad_phi_dmesh[i][1][1][j] +=
-                  (f * phi_m[j] * bfl->B[1][2] + g[1] * bfl->dB[1][2][1][j]) *
-                  (bfl->dphidxi[i][2]);
+                  (f * phi_m[j] * bfl->B[1][2] + g[1] * bfl->dB[1][2][1][j]) * (bfl->dphidxi[i][2]);
 
               /* (p,b) = (2,2) */
               f = -g2[2] * (fv->hq[2][2]);
               bfl->d_grad_phi_dmesh[i][2][2][j] =
-                  (f * phi_m[j] * bfl->B[2][0] + g[2] * bfl->dB[2][0][2][j]) *
-                  (bfl->dphidxi[i][0]);
+                  (f * phi_m[j] * bfl->B[2][0] + g[2] * bfl->dB[2][0][2][j]) * (bfl->dphidxi[i][0]);
 
               bfl->d_grad_phi_dmesh[i][2][2][j] +=
-                  (f * phi_m[j] * bfl->B[2][1] + g[2] * bfl->dB[2][1][2][j]) *
-                  (bfl->dphidxi[i][1]);
+                  (f * phi_m[j] * bfl->B[2][1] + g[2] * bfl->dB[2][1][2][j]) * (bfl->dphidxi[i][1]);
 
               bfl->d_grad_phi_dmesh[i][2][2][j] +=
-                  (f * phi_m[j] * bfl->B[2][2] + g[2] * bfl->dB[2][2][2][j]) *
-                  (bfl->dphidxi[i][2]);
+                  (f * phi_m[j] * bfl->B[2][2] + g[2] * bfl->dB[2][2][2][j]) * (bfl->dphidxi[i][2]);
 
               /* (p,b) = (2,1) */
               f = -g2[2] * (fv->hq[2][1]);
               bfl->d_grad_phi_dmesh[i][2][1][j] =
-                  (f * phi_m[j] * bfl->B[2][0] + g[2] * bfl->dB[2][0][1][j]) *
-                  (bfl->dphidxi[i][0]);
+                  (f * phi_m[j] * bfl->B[2][0] + g[2] * bfl->dB[2][0][1][j]) * (bfl->dphidxi[i][0]);
 
               bfl->d_grad_phi_dmesh[i][2][1][j] +=
-                  (f * phi_m[j] * bfl->B[2][1] + g[2] * bfl->dB[2][1][1][j]) *
-                  (bfl->dphidxi[i][1]);
+                  (f * phi_m[j] * bfl->B[2][1] + g[2] * bfl->dB[2][1][1][j]) * (bfl->dphidxi[i][1]);
 
               bfl->d_grad_phi_dmesh[i][2][1][j] +=
-                  (f * phi_m[j] * bfl->B[2][2] + g[2] * bfl->dB[2][2][1][j]) *
-                  (bfl->dphidxi[i][2]);
+                  (f * phi_m[j] * bfl->B[2][2] + g[2] * bfl->dB[2][2][1][j]) * (bfl->dphidxi[i][2]);
               /* (p,b) = (2,0) */
               f = -g2[2] * (fv->hq[2][0]);
               bfl->d_grad_phi_dmesh[i][2][0][j] =
-                  (f * phi_m[j] * bfl->B[2][0] + g[2] * bfl->dB[2][0][0][j]) *
-                  (bfl->dphidxi[i][0]);
+                  (f * phi_m[j] * bfl->B[2][0] + g[2] * bfl->dB[2][0][0][j]) * (bfl->dphidxi[i][0]);
 
               bfl->d_grad_phi_dmesh[i][2][0][j] +=
-                  (f * phi_m[j] * bfl->B[2][1] + g[2] * bfl->dB[2][1][0][j]) *
-                  (bfl->dphidxi[i][1]);
+                  (f * phi_m[j] * bfl->B[2][1] + g[2] * bfl->dB[2][1][0][j]) * (bfl->dphidxi[i][1]);
 
               bfl->d_grad_phi_dmesh[i][2][0][j] +=
-                  (f * phi_m[j] * bfl->B[2][2] + g[2] * bfl->dB[2][2][0][j]) *
-                  (bfl->dphidxi[i][2]);
+                  (f * phi_m[j] * bfl->B[2][2] + g[2] * bfl->dB[2][2][0][j]) * (bfl->dphidxi[i][2]);
 
               /* (p,b) = (1,2) */
               f = -g2[1] * (fv->hq[1][2]);
               bfl->d_grad_phi_dmesh[i][1][2][j] =
-                  (f * phi_m[j] * bfl->B[1][0] + g[1] * bfl->dB[1][0][2][j]) *
-                  (bfl->dphidxi[i][0]);
+                  (f * phi_m[j] * bfl->B[1][0] + g[1] * bfl->dB[1][0][2][j]) * (bfl->dphidxi[i][0]);
 
               bfl->d_grad_phi_dmesh[i][1][2][j] +=
-                  (f * phi_m[j] * bfl->B[1][1] + g[1] * bfl->dB[1][1][2][j]) *
-                  (bfl->dphidxi[i][1]);
+                  (f * phi_m[j] * bfl->B[1][1] + g[1] * bfl->dB[1][1][2][j]) * (bfl->dphidxi[i][1]);
 
               bfl->d_grad_phi_dmesh[i][1][2][j] +=
-                  (f * phi_m[j] * bfl->B[1][2] + g[1] * bfl->dB[1][2][2][j]) *
-                  (bfl->dphidxi[i][2]);
+                  (f * phi_m[j] * bfl->B[1][2] + g[1] * bfl->dB[1][2][2][j]) * (bfl->dphidxi[i][2]);
 
               /* (p,b) = (0,2) */
               f = -g2[0] * (fv->hq[0][2]);
               bfl->d_grad_phi_dmesh[i][0][2][j] =
-                  (f * phi_m[j] * bfl->B[0][0] + g[0] * bfl->dB[0][0][2][j]) *
-                  (bfl->dphidxi[i][0]);
+                  (f * phi_m[j] * bfl->B[0][0] + g[0] * bfl->dB[0][0][2][j]) * (bfl->dphidxi[i][0]);
 
               bfl->d_grad_phi_dmesh[i][0][2][j] +=
-                  (f * phi_m[j] * bfl->B[0][1] + g[0] * bfl->dB[0][1][2][j]) *
-                  (bfl->dphidxi[i][1]);
+                  (f * phi_m[j] * bfl->B[0][1] + g[0] * bfl->dB[0][1][2][j]) * (bfl->dphidxi[i][1]);
 
               bfl->d_grad_phi_dmesh[i][0][2][j] +=
-                  (f * phi_m[j] * bfl->B[0][2] + g[0] * bfl->dB[0][2][2][j]) *
-                  (bfl->dphidxi[i][2]);
+                  (f * phi_m[j] * bfl->B[0][2] + g[0] * bfl->dB[0][2][2][j]) * (bfl->dphidxi[i][2]);
             }
           }
         }
@@ -2595,130 +2443,122 @@ int load_bf_mesh_derivs(void) {
          * memset above)
          */
 #ifdef DO_NO_UNROLL
-      for ( i=0; i<vdofs; i++) {
-	for ( a=0; a<WIM; a++) {
-	  for ( p=0; p<dim; p++) {
-	    for ( b=0; b<dim; b++)  {
-	      for ( j=0; j<mdofs; j++) {
-		bfl->d_grad_phi_e_dmesh[i][a] [p][a] [b][j]
-		  = bfl->d_grad_phi_dmesh[i][p] [b][j];
-	      }
-	    }
-					  
-	  }
-	}
-      }
+        for (i = 0; i < vdofs; i++) {
+          for (a = 0; a < WIM; a++) {
+            for (p = 0; p < dim; p++) {
+              for (b = 0; b < dim; b++) {
+                for (j = 0; j < mdofs; j++) {
+                  bfl->d_grad_phi_e_dmesh[i][a][p][a][b][j] = bfl->d_grad_phi_dmesh[i][p][b][j];
+                }
+              }
+            }
+          }
+        }
 #else
-      for (i = 0; i < vdofs; i++) {
-	for (j = 0; j< mdofs; j++) {
-	  /*	  bfl->d_grad_phi_e_dmesh[i][0] [p][0] [b][j] = bfl->d_grad_phi_dmesh[i][p] [b][j];
-		  bfl->d_grad_phi_e_dmesh[i][1] [p][1] [b][j] = bfl->d_grad_phi_dmesh[i][p] [b][j];*/
+        for (i = 0; i < vdofs; i++) {
+          for (j = 0; j < mdofs; j++) {
+            /*	  bfl->d_grad_phi_e_dmesh[i][0] [p][0] [b][j] = bfl->d_grad_phi_dmesh[i][p] [b][j];
+                    bfl->d_grad_phi_e_dmesh[i][1] [p][1] [b][j] = bfl->d_grad_phi_dmesh[i][p]
+               [b][j];*/
 
-	  /* (p,b) = (0,0) */
-	  bfl->d_grad_phi_e_dmesh[i][0] [0][0] [0][j] = bfl->d_grad_phi_dmesh[i][0] [0][j];
-	  bfl->d_grad_phi_e_dmesh[i][1] [0][1] [0][j] = bfl->d_grad_phi_dmesh[i][0] [0][j];
-			  
-	  /* (p,b) = (1,1)*/
-	  bfl->d_grad_phi_e_dmesh[i][0] [1][0] [1][j] = bfl->d_grad_phi_dmesh[i][1] [1][j];
-	  bfl->d_grad_phi_e_dmesh[i][1] [1][1] [1][j] = bfl->d_grad_phi_dmesh[i][1] [1][j];
-			  
-	  /* (p,b) = (0,1)*/
-	  bfl->d_grad_phi_e_dmesh[i][0] [0][0] [1][j] = bfl->d_grad_phi_dmesh[i][0] [1][j];
-	  bfl->d_grad_phi_e_dmesh[i][1] [0][1] [1][j] = bfl->d_grad_phi_dmesh[i][0] [1][j];
-			  
-	  /* (p,b) = (1,0)*/
-	  bfl->d_grad_phi_e_dmesh[i][0] [1][0] [0][j] = bfl->d_grad_phi_dmesh[i][1] [0][j];
-	  bfl->d_grad_phi_e_dmesh[i][1] [1][1] [0][j] = bfl->d_grad_phi_dmesh[i][1] [0][j];
-			  			  
-	  if (WIM == 3) {
-	    /*  bfl->d_grad_phi_e_dmesh[i][2] [p][2] [b][j] = bfl->d_grad_phi_dmesh[i][p] [b][j];*/
-	    /* (p,b) = (0,0) */
-	    bfl->d_grad_phi_e_dmesh[i][2] [0][2] [0][j] = bfl->d_grad_phi_dmesh[i][0] [0][j];
-	    /* (p,b) = (1,1)*/
-	    bfl->d_grad_phi_e_dmesh[i][2] [1][2] [1][j] = bfl->d_grad_phi_dmesh[i][1] [1][j];
-	    /* (p,b) = (0,1)*/
-	    bfl->d_grad_phi_e_dmesh[i][2] [0][2] [1][j] = bfl->d_grad_phi_dmesh[i][0] [1][j];
-	    /* (p,b) = (1,0)*/
-	    bfl->d_grad_phi_e_dmesh[i][2] [1][2] [0][j] = bfl->d_grad_phi_dmesh[i][1] [0][j];
+            /* (p,b) = (0,0) */
+            bfl->d_grad_phi_e_dmesh[i][0][0][0][0][j] = bfl->d_grad_phi_dmesh[i][0][0][j];
+            bfl->d_grad_phi_e_dmesh[i][1][0][1][0][j] = bfl->d_grad_phi_dmesh[i][0][0][j];
 
-	    if (dimNonSym == 3) {
-	      /* (p,b) = (2,2)*/
-	      bfl->d_grad_phi_e_dmesh[i][0] [2][0] [2][j] = bfl->d_grad_phi_dmesh[i][2] [2][j];
-	      bfl->d_grad_phi_e_dmesh[i][1] [2][1] [2][j] = bfl->d_grad_phi_dmesh[i][2] [2][j];
-	      bfl->d_grad_phi_e_dmesh[i][2] [2][2] [2][j] = bfl->d_grad_phi_dmesh[i][2] [2][j];
-	      /* (p,b) = (2,0)*/
-	      bfl->d_grad_phi_e_dmesh[i][0] [2][0] [0][j] = bfl->d_grad_phi_dmesh[i][2] [0][j];
-	      bfl->d_grad_phi_e_dmesh[i][1] [2][1] [0][j] = bfl->d_grad_phi_dmesh[i][2] [0][j];
-	      bfl->d_grad_phi_e_dmesh[i][2] [2][2] [0][j] = bfl->d_grad_phi_dmesh[i][2] [0][j];
-	      /* (p,b) = (2,1)*/			  
-	      bfl->d_grad_phi_e_dmesh[i][0] [2][0] [1][j] = bfl->d_grad_phi_dmesh[i][2] [1][j];
-	      bfl->d_grad_phi_e_dmesh[i][1] [2][1] [1][j] = bfl->d_grad_phi_dmesh[i][2] [1][j];
-	      bfl->d_grad_phi_e_dmesh[i][2] [2][2] [1][j] = bfl->d_grad_phi_dmesh[i][2] [1][j];
-	      /* (p,b) = (1,2)*/			  
-	      bfl->d_grad_phi_e_dmesh[i][0] [1][0] [2][j] = bfl->d_grad_phi_dmesh[i][1] [2][j];
-	      bfl->d_grad_phi_e_dmesh[i][1] [1][1] [2][j] = bfl->d_grad_phi_dmesh[i][1] [2][j];
-	      bfl->d_grad_phi_e_dmesh[i][2] [1][2] [2][j] = bfl->d_grad_phi_dmesh[i][1] [2][j];
-	      /* (p,b) = (0,2)*/
-	      bfl->d_grad_phi_e_dmesh[i][0] [0][0] [2][j] = bfl->d_grad_phi_dmesh[i][0] [2][j];
-	      bfl->d_grad_phi_e_dmesh[i][1] [0][1] [2][j] = bfl->d_grad_phi_dmesh[i][0] [2][j];
-	      bfl->d_grad_phi_e_dmesh[i][2] [0][2] [2][j] = bfl->d_grad_phi_dmesh[i][0] [2][j];
-	    }
-	  }	  
-	}
-      }
+            /* (p,b) = (1,1)*/
+            bfl->d_grad_phi_e_dmesh[i][0][1][0][1][j] = bfl->d_grad_phi_dmesh[i][1][1][j];
+            bfl->d_grad_phi_e_dmesh[i][1][1][1][1][j] = bfl->d_grad_phi_dmesh[i][1][1][j];
+
+            /* (p,b) = (0,1)*/
+            bfl->d_grad_phi_e_dmesh[i][0][0][0][1][j] = bfl->d_grad_phi_dmesh[i][0][1][j];
+            bfl->d_grad_phi_e_dmesh[i][1][0][1][1][j] = bfl->d_grad_phi_dmesh[i][0][1][j];
+
+            /* (p,b) = (1,0)*/
+            bfl->d_grad_phi_e_dmesh[i][0][1][0][0][j] = bfl->d_grad_phi_dmesh[i][1][0][j];
+            bfl->d_grad_phi_e_dmesh[i][1][1][1][0][j] = bfl->d_grad_phi_dmesh[i][1][0][j];
+
+            if (WIM == 3) {
+              /*  bfl->d_grad_phi_e_dmesh[i][2] [p][2] [b][j] = bfl->d_grad_phi_dmesh[i][p]
+               * [b][j];*/
+              /* (p,b) = (0,0) */
+              bfl->d_grad_phi_e_dmesh[i][2][0][2][0][j] = bfl->d_grad_phi_dmesh[i][0][0][j];
+              /* (p,b) = (1,1)*/
+              bfl->d_grad_phi_e_dmesh[i][2][1][2][1][j] = bfl->d_grad_phi_dmesh[i][1][1][j];
+              /* (p,b) = (0,1)*/
+              bfl->d_grad_phi_e_dmesh[i][2][0][2][1][j] = bfl->d_grad_phi_dmesh[i][0][1][j];
+              /* (p,b) = (1,0)*/
+              bfl->d_grad_phi_e_dmesh[i][2][1][2][0][j] = bfl->d_grad_phi_dmesh[i][1][0][j];
+
+              if (dimNonSym == 3) {
+                /* (p,b) = (2,2)*/
+                bfl->d_grad_phi_e_dmesh[i][0][2][0][2][j] = bfl->d_grad_phi_dmesh[i][2][2][j];
+                bfl->d_grad_phi_e_dmesh[i][1][2][1][2][j] = bfl->d_grad_phi_dmesh[i][2][2][j];
+                bfl->d_grad_phi_e_dmesh[i][2][2][2][2][j] = bfl->d_grad_phi_dmesh[i][2][2][j];
+                /* (p,b) = (2,0)*/
+                bfl->d_grad_phi_e_dmesh[i][0][2][0][0][j] = bfl->d_grad_phi_dmesh[i][2][0][j];
+                bfl->d_grad_phi_e_dmesh[i][1][2][1][0][j] = bfl->d_grad_phi_dmesh[i][2][0][j];
+                bfl->d_grad_phi_e_dmesh[i][2][2][2][0][j] = bfl->d_grad_phi_dmesh[i][2][0][j];
+                /* (p,b) = (2,1)*/
+                bfl->d_grad_phi_e_dmesh[i][0][2][0][1][j] = bfl->d_grad_phi_dmesh[i][2][1][j];
+                bfl->d_grad_phi_e_dmesh[i][1][2][1][1][j] = bfl->d_grad_phi_dmesh[i][2][1][j];
+                bfl->d_grad_phi_e_dmesh[i][2][2][2][1][j] = bfl->d_grad_phi_dmesh[i][2][1][j];
+                /* (p,b) = (1,2)*/
+                bfl->d_grad_phi_e_dmesh[i][0][1][0][2][j] = bfl->d_grad_phi_dmesh[i][1][2][j];
+                bfl->d_grad_phi_e_dmesh[i][1][1][1][2][j] = bfl->d_grad_phi_dmesh[i][1][2][j];
+                bfl->d_grad_phi_e_dmesh[i][2][1][2][2][j] = bfl->d_grad_phi_dmesh[i][1][2][j];
+                /* (p,b) = (0,2)*/
+                bfl->d_grad_phi_e_dmesh[i][0][0][0][2][j] = bfl->d_grad_phi_dmesh[i][0][2][j];
+                bfl->d_grad_phi_e_dmesh[i][1][0][1][2][j] = bfl->d_grad_phi_dmesh[i][0][2][j];
+                bfl->d_grad_phi_e_dmesh[i][2][0][2][2][j] = bfl->d_grad_phi_dmesh[i][0][2][j];
+              }
+            }
+          }
+        }
 #endif
 
+        /*  for ( i=0; i<vdofs; i++) {
+            for ( a=0; a<dim; a++) {
+            for ( p=0; p<dim; p++) {
+            for ( b=0; b<dim; b++)  {
+            for ( j=0; j<mdofs; j++) {
+            bfl->d_grad_phi_e_dmesh[i][a] [p][a] [b][j]
+            = bfl->d_grad_phi_dmesh[i][p] [b][j];
+            }
+            }
+            }
+            }
+            } */
 
-	  /*  for ( i=0; i<vdofs; i++) {
-	      for ( a=0; a<dim; a++) {
-	      for ( p=0; p<dim; p++) {
-	      for ( b=0; b<dim; b++)  {
-	      for ( j=0; j<mdofs; j++) {								  
-	      bfl->d_grad_phi_e_dmesh[i][a] [p][a] [b][j]
-	      = bfl->d_grad_phi_dmesh[i][p] [b][j];
-	      }
-	      }
-	      }				  
-	      }
-	      } */
-		
-		
-	  for ( i=0; i<vdofs; i++)
-	    {
-	      for ( a=0; a<WIM; a++)
-		{
-		  for ( p=0; p<VIM; p++)
-		    {
-		      for ( q=0; q<VIM; q++)
-			{
-			  for ( b=0; b<dim; b++)
-			    {
-			      for ( j=0; j<mdofs; j++)
-				{
-				  if ( q != a ) {
-				    if (bfl->d_grad_phi_e_dmesh[i][a] [p][q] [b][j] != 0.0) {
-				      printf("we shouldn't be here\n");
-				      exit(-1);
-				    }
-				    bfl->d_grad_phi_e_dmesh[i][a] [p][q] [b][j] = 0.0;
-				  }			  
-				  if( dim < VIM && ( p == VIM || q == VIM ) ) {
-				    if (bfl->d_grad_phi_e_dmesh[i][a] [p][q] [b][j] != 0.0) {
-				      printf("we shouldn't be here\n");
-				      exit(-1);
-				    }
-				    bfl->d_grad_phi_e_dmesh[i][a] [p][q] [b][j] = 0.0;
-				  }
+        for (i = 0; i < vdofs; i++) {
+          for (a = 0; a < WIM; a++) {
+            for (p = 0; p < VIM; p++) {
+              for (q = 0; q < VIM; q++) {
+                for (b = 0; b < dim; b++) {
+                  for (j = 0; j < mdofs; j++) {
+                    if (q != a) {
+                      if (bfl->d_grad_phi_e_dmesh[i][a][p][q][b][j] != 0.0) {
+                        printf("we shouldn't be here\n");
+                        exit(-1);
+                      }
+                      bfl->d_grad_phi_e_dmesh[i][a][p][q][b][j] = 0.0;
+                    }
+                    if (dim < VIM && (p == VIM || q == VIM)) {
+                      if (bfl->d_grad_phi_e_dmesh[i][a][p][q][b][j] != 0.0) {
+                        printf("we shouldn't be here\n");
+                        exit(-1);
+                      }
+                      bfl->d_grad_phi_e_dmesh[i][a][p][q][b][j] = 0.0;
+                    }
 
-				  bfl->d_grad_phi_e_dmesh[i][a] [p][q] [b][j]
-				    += phi_l[i] * fv->d_grad_e_dq[a][p][q][b] * phi_m[j];
-				}
-			    }
-			}
-		    }
-		}
-	    }
-	}
+                    bfl->d_grad_phi_e_dmesh[i][a][p][q][b][j] +=
+                        phi_l[i] * fv->d_grad_e_dq[a][p][q][b] * phi_m[j];
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
   return 0;
@@ -2728,7 +2568,7 @@ int load_bf_mesh_derivs(void) {
 /****************************************************************************/
 /****************************************************************************/
 
-int load_basis_functions(const double xi[], /*  [DIM]               */
+int load_basis_functions(const double xi[],            /*  [DIM]               */
                          struct Basis_Functions **bfa) /* ptr to basis function
                                                         * * array of interest */
 
@@ -2783,12 +2623,11 @@ int load_basis_functions(const double xi[], /*  [DIM]               */
           for (i = 0; i < ei[imtrx]->dof[v]; i++) {
             ledof = ei[imtrx]->lvdof_to_ledof[v][i];
             if (ei[imtrx]->active_interp_ledof[ledof]) {
-              bf_ptr->phi[i] = newshape(
-                  xi, ei[imtrx]->ielem_type, PSI, ei[imtrx]->dof_list[v][i],
-                  bf_ptr->element_shape, bf_ptr->interpolation, jdof);
-              bf_ptr->dphidxi[i][0] = newshape(
-                  xi, ei[imtrx]->ielem_type, DPSI_S, ei[imtrx]->dof_list[v][i],
-                  bf_ptr->element_shape, bf_ptr->interpolation, jdof);
+              bf_ptr->phi[i] = newshape(xi, ei[imtrx]->ielem_type, PSI, ei[imtrx]->dof_list[v][i],
+                                        bf_ptr->element_shape, bf_ptr->interpolation, jdof);
+              bf_ptr->dphidxi[i][0] =
+                  newshape(xi, ei[imtrx]->ielem_type, DPSI_S, ei[imtrx]->dof_list[v][i],
+                           bf_ptr->element_shape, bf_ptr->interpolation, jdof);
               jdof++;
             } else {
               bf_ptr->phi[i] = 0.0;
@@ -2801,15 +2640,14 @@ int load_basis_functions(const double xi[], /*  [DIM]               */
           for (i = 0; i < ei[imtrx]->dof[v]; i++) {
             ledof = ei[imtrx]->lvdof_to_ledof[v][i];
             if (ei[imtrx]->active_interp_ledof[ledof]) {
-              bf_ptr->phi[i] = newshape(
-                  xi, ei[imtrx]->ielem_type, PSI, ei[imtrx]->dof_list[v][i],
-                  bf_ptr->element_shape, bf_ptr->interpolation, jdof);
-              bf_ptr->dphidxi[i][0] = newshape(
-                  xi, ei[imtrx]->ielem_type, DPSI_S, ei[imtrx]->dof_list[v][i],
-                  bf_ptr->element_shape, bf_ptr->interpolation, jdof);
-              bf_ptr->dphidxi[i][1] = newshape(
-                  xi, ei[imtrx]->ielem_type, DPSI_T, ei[imtrx]->dof_list[v][i],
-                  bf_ptr->element_shape, bf_ptr->interpolation, jdof);
+              bf_ptr->phi[i] = newshape(xi, ei[imtrx]->ielem_type, PSI, ei[imtrx]->dof_list[v][i],
+                                        bf_ptr->element_shape, bf_ptr->interpolation, jdof);
+              bf_ptr->dphidxi[i][0] =
+                  newshape(xi, ei[imtrx]->ielem_type, DPSI_S, ei[imtrx]->dof_list[v][i],
+                           bf_ptr->element_shape, bf_ptr->interpolation, jdof);
+              bf_ptr->dphidxi[i][1] =
+                  newshape(xi, ei[imtrx]->ielem_type, DPSI_T, ei[imtrx]->dof_list[v][i],
+                           bf_ptr->element_shape, bf_ptr->interpolation, jdof);
               jdof++;
             } else {
               bf_ptr->phi[i] = 0.0;
@@ -2823,18 +2661,17 @@ int load_basis_functions(const double xi[], /*  [DIM]               */
           for (i = 0; i < ei[imtrx]->dof[v]; i++) {
             ledof = ei[imtrx]->lvdof_to_ledof[v][i];
             if (ei[imtrx]->active_interp_ledof[ledof]) {
-              bf_ptr->phi[i] = newshape(
-                  xi, ei[imtrx]->ielem_type, PSI, ei[imtrx]->dof_list[v][i],
-                  bf_ptr->element_shape, bf_ptr->interpolation, jdof);
-              bf_ptr->dphidxi[i][0] = newshape(
-                  xi, ei[imtrx]->ielem_type, DPSI_S, ei[imtrx]->dof_list[v][i],
-                  bf_ptr->element_shape, bf_ptr->interpolation, jdof);
-              bf_ptr->dphidxi[i][1] = newshape(
-                  xi, ei[imtrx]->ielem_type, DPSI_T, ei[imtrx]->dof_list[v][i],
-                  bf_ptr->element_shape, bf_ptr->interpolation, jdof);
-              bf_ptr->dphidxi[i][2] = newshape(
-                  xi, ei[imtrx]->ielem_type, DPSI_U, ei[imtrx]->dof_list[v][i],
-                  bf_ptr->element_shape, bf_ptr->interpolation, jdof);
+              bf_ptr->phi[i] = newshape(xi, ei[imtrx]->ielem_type, PSI, ei[imtrx]->dof_list[v][i],
+                                        bf_ptr->element_shape, bf_ptr->interpolation, jdof);
+              bf_ptr->dphidxi[i][0] =
+                  newshape(xi, ei[imtrx]->ielem_type, DPSI_S, ei[imtrx]->dof_list[v][i],
+                           bf_ptr->element_shape, bf_ptr->interpolation, jdof);
+              bf_ptr->dphidxi[i][1] =
+                  newshape(xi, ei[imtrx]->ielem_type, DPSI_T, ei[imtrx]->dof_list[v][i],
+                           bf_ptr->element_shape, bf_ptr->interpolation, jdof);
+              bf_ptr->dphidxi[i][2] =
+                  newshape(xi, ei[imtrx]->ielem_type, DPSI_U, ei[imtrx]->dof_list[v][i],
+                           bf_ptr->element_shape, bf_ptr->interpolation, jdof);
               jdof++;
             } else {
               bf_ptr->phi[i] = 0.0;
@@ -2882,9 +2719,9 @@ void asdv(double **v,  /* vector to be allocated */
 /*****************************************************************************/
 /*****************************************************************************/
 
-void alloc_extern_ija_buffer(const int n,    /* Order full system    (in) */
-                             const int m,    /* Order trim system    (in) */
-                             const int *ija, /* Orig column pointers (in) */
+void alloc_extern_ija_buffer(const int n,         /* Order full system    (in) */
+                             const int m,         /* Order trim system    (in) */
+                             const int *ija,      /* Orig column pointers (in) */
                              int **ptr_ija_attic) /* where to hide (out) */
 
 /* alloc_extern_ija_buffer() -- get space for external rows hiding from aztec
@@ -2910,16 +2747,15 @@ void alloc_extern_ija_buffer(const int n,    /* Order full system    (in) */
 /******************************************************************************/
 /******************************************************************************/
 
-void alloc_MSR_sparse_arrays(
-    int **ptr_ija,      /* column pointer array */
-    double **ptr_a,     /* values of nonzero matrix entries */
-    double **ptr_a_old, /* backup array of matrix nonzeros */
-    const int Fill,     /* flag to allocate spaces for either
-                         * the totally coupled problem or just
-                         * explicit nodal fill eqn */
-    int node_to_fill[], /* node index gives fill dof */
-    Exo_DB *exo,        /* ptr to the whole mesh */
-    Dpi *dpi)           /* distributed processing info */
+void alloc_MSR_sparse_arrays(int **ptr_ija,      /* column pointer array */
+                             double **ptr_a,     /* values of nonzero matrix entries */
+                             double **ptr_a_old, /* backup array of matrix nonzeros */
+                             const int Fill,     /* flag to allocate spaces for either
+                                                  * the totally coupled problem or just
+                                                  * explicit nodal fill eqn */
+                             int node_to_fill[], /* node index gives fill dof */
+                             Exo_DB *exo,        /* ptr to the whole mesh */
+                             Dpi *dpi)           /* distributed processing info */
 
 /******************************************************************************
 
@@ -2972,14 +2808,12 @@ Revised:	   1997/10/28 16:48 MST pasacki@sandia.gov
   }
 
   if (Fill) {
-    nnz = find_problem_graph_fill(&ija_temp, itotal_nodes, max_neigh_elem,
-                                  node_to_fill, exo);
+    nnz = find_problem_graph_fill(&ija_temp, itotal_nodes, max_neigh_elem, node_to_fill, exo);
   } else {
     nnz = find_MSR_problem_graph(&ija_temp, itotal_nodes, exo);
   }
 
-  if (Debug_Flag)
-  {
+  if (Debug_Flag) {
     printf("Processor %d nnz = %d\n", ProcID, nnz);
   }
 
@@ -3026,8 +2860,8 @@ Revised:	   1997/10/28 16:48 MST pasacki@sandia.gov
      and continuation */
 
   save_old_A = FALSE;
-  if (modified_newton || nAC > 0 || nn_post_data_sens > 0 ||
-      nn_post_fluxes_sens > 0 || Continuation > 0) {
+  if (modified_newton || nAC > 0 || nn_post_data_sens > 0 || nn_post_fluxes_sens > 0 ||
+      Continuation > 0) {
     save_old_A = TRUE;
   }
 
@@ -3044,10 +2878,8 @@ Revised:	   1997/10/28 16:48 MST pasacki@sandia.gov
    *  processor.
    */
 
-  num_total_fill_unknowns =
-      gsum_Int(internal_fill_unknowns + boundary_fill_unknowns);
-  num_total_unknowns =
-      gsum_Int(num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]);
+  num_total_fill_unknowns = gsum_Int(internal_fill_unknowns + boundary_fill_unknowns);
+  num_total_unknowns = gsum_Int(num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]);
   dpi->num_dofs_global = num_total_unknowns;
 
   /*
@@ -3056,12 +2888,11 @@ Revised:	   1997/10/28 16:48 MST pasacki@sandia.gov
    */
 
   if (Fill) {
-    local_value = (ija[internal_fill_unknowns + boundary_fill_unknowns] -
-                   external_fill_unknowns - 1);
-  } else {
     local_value =
-        (ija[num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]] -
-         num_external_dofs[pg->imtrx] - 1);
+        (ija[internal_fill_unknowns + boundary_fill_unknowns] - external_fill_unknowns - 1);
+  } else {
+    local_value = (ija[num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]] -
+                   num_external_dofs[pg->imtrx] - 1);
   }
   nnz = gsum_Int(local_value);
 #else
@@ -3070,8 +2901,7 @@ Revised:	   1997/10/28 16:48 MST pasacki@sandia.gov
 #endif
 
   if (Fill) {
-    DPRINTF(stdout, "\n%-30s= %d\n", "Number of fill unknowns",
-            num_total_fill_unknowns);
+    DPRINTF(stdout, "\n%-30s= %d\n", "Number of fill unknowns", num_total_fill_unknowns);
     DPRINTF(stdout, "\n%-30s= %d\n", "Number of filmatrix nonzeroes", nnz);
   } else {
     DPRINTF(stdout, "\n%-30s= %d\n", "Number of unknowns", num_total_unknowns);
@@ -3088,8 +2918,7 @@ Revised:	   1997/10/28 16:48 MST pasacki@sandia.gov
 /*************************************************************************/
 /*************************************************************************/
 
-void alloc_VBR_sparse_arrays(struct GomaLinearSolverData *ams,
-                             Exo_DB *exo, Dpi *dpi)
+void alloc_VBR_sparse_arrays(struct GomaLinearSolverData *ams, Exo_DB *exo, Dpi *dpi)
 /*
  *
  */
@@ -3100,9 +2929,8 @@ void alloc_VBR_sparse_arrays(struct GomaLinearSolverData *ams,
   row_nodes = dpi->num_internal_nodes + dpi->num_boundary_nodes;
   col_nodes = dpi->num_universe_nodes;
 
-  nnz = find_VBR_problem_graph(&(ams->indx), &(ams->bindx), &(ams->bpntr),
-                               &(ams->rpntr), &(ams->cpntr), row_nodes,
-                               col_nodes, exo);
+  nnz = find_VBR_problem_graph(&(ams->indx), &(ams->bindx), &(ams->bpntr), &(ams->rpntr),
+                               &(ams->cpntr), row_nodes, col_nodes, exo);
 
   if (Debug_Flag) {
     printf("Processor %d nnz = %d\n", ProcID, nnz);
@@ -3127,8 +2955,8 @@ void alloc_VBR_sparse_arrays(struct GomaLinearSolverData *ams,
      and continuation */
 
   save_old_A = FALSE;
-  if (modified_newton || nAC > 0 || nn_post_data_sens > 0 ||
-      nn_post_fluxes_sens > 0 || Continuation > 0) {
+  if (modified_newton || nAC > 0 || nn_post_data_sens > 0 || nn_post_fluxes_sens > 0 ||
+      Continuation > 0) {
     save_old_A = TRUE;
   }
 
@@ -3140,8 +2968,7 @@ void alloc_VBR_sparse_arrays(struct GomaLinearSolverData *ams,
    *   calculate the total number of degrees of freedom in the problem
    *   by summing the contributions from each processor
    */
-  dpi->num_dofs_global =
-      gsum_Int(num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]);
+  dpi->num_dofs_global = gsum_Int(num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]);
   nnz_tmp = gsum_Int(nnz);
 
   DPRINTF(stdout, "\n%-30s= %d\n", "Number of unknowns", dpi->num_dofs_global);
@@ -3152,13 +2979,13 @@ void alloc_VBR_sparse_arrays(struct GomaLinearSolverData *ams,
 /*****************************************************************************/
 /*****************************************************************************/
 
-static int
-find_problem_graph_fill(int *ija[],         /* column pointer array */
-                        int itotal_nodes,   /* number of nodes this processor
-                                               is resposible for */
-                        int max_neigh_elem, /* maximum number of elements
-                                               containing a given node */
-                        int node_to_fill[], Exo_DB *exo)
+static int find_problem_graph_fill(int *ija[],         /* column pointer array */
+                                   int itotal_nodes,   /* number of nodes this processor
+                                                          is resposible for */
+                                   int max_neigh_elem, /* maximum number of elements
+                                                          containing a given node */
+                                   int node_to_fill[],
+                                   Exo_DB *exo)
 
 /*
  *  Function which determines the graph of the sparse problem using the MSR
@@ -3236,8 +3063,7 @@ find_problem_graph_fill(int *ija[],         /* column pointer array */
        * Loop over the nodes which are determined to have an interaction
        * with the current row node
        */
-      for (j = exo->node_node_pntr[inode]; j < exo->node_node_pntr[inode + 1];
-           j++) {
+      for (j = exo->node_node_pntr[inode]; j < exo->node_node_pntr[inode + 1]; j++) {
         inter_node = exo->node_node_list[j];
 
         /*
@@ -3249,8 +3075,7 @@ find_problem_graph_fill(int *ija[],         /* column pointer array */
 
         inter_node_unknowns = num_varType_at_node(inter_node, FILL);
 
-        for (inter_unknown = 0; inter_unknown < inter_node_unknowns;
-             inter_unknown++) {
+        for (inter_unknown = 0; inter_unknown < inter_node_unknowns; inter_unknown++) {
           icol_index = node_to_fill[inter_node] + inter_unknown;
 
           if (icol_index > -1) {
@@ -3286,10 +3111,9 @@ find_problem_graph_fill(int *ija[],         /* column pointer array */
 /******************************************************************************/
 /******************************************************************************/
 
-static int
-find_MSR_problem_graph(int *ija[],       /* column pointer array            */
-                       int itotal_nodes, /* number nodes this processor     */
-                       Exo_DB *exo)      /* ptr to FE db                    */
+static int find_MSR_problem_graph(int *ija[],       /* column pointer array            */
+                                  int itotal_nodes, /* number nodes this processor     */
+                                  Exo_DB *exo)      /* ptr to FE db                    */
 
 {
   int j, itmp, inode, i1, i2, eb1;
@@ -3319,16 +3143,14 @@ find_MSR_problem_graph(int *ija[],       /* column pointer array            */
   /*
    * Estimate the average connectivity of a node
    */
-  avgNodeToNodeConn =
-      (double)exo->node_node_pntr[itotal_nodes] / (double)itotal_nodes;
+  avgNodeToNodeConn = (double)exo->node_node_pntr[itotal_nodes] / (double)itotal_nodes;
   /*
    *  Start allocating ija to a slightly larger value than
    *  needed by a good estimate.
    *  -> Check for null pointer because this is a large
    *     allocation
    */
-  nz_temp =
-      num_universe_dofs[pg->imtrx] * avgNodeToNodeConn * avgVarPerNode * 1.1;
+  nz_temp = num_universe_dofs[pg->imtrx] * avgNodeToNodeConn * avgVarPerNode * 1.1;
 
   *ija = ija_ptr = alloc_int_1(nz_temp, -1);
   if (*ija == NULL) {
@@ -3387,15 +3209,14 @@ find_MSR_problem_graph(int *ija[],       /* column pointer array            */
        */
       ija_ptr[irow_index] = nz_ptr;
 #ifdef DEBUG_GRAPH
-      fprintf(ifp, "node = %d, unk = %d, irow_index = %d, nz_ptr = %d\n", inode,
-              iunknown, irow_index, nz_ptr);
+      fprintf(ifp, "node = %d, unk = %d, irow_index = %d, nz_ptr = %d\n", inode, iunknown,
+              irow_index, nz_ptr);
 #endif
       /*
        * Loop over the nodes which are determined to have an interaction
        * with the current row node
        */
-      for (j = exo->node_node_pntr[inode]; j < exo->node_node_pntr[inode + 1];
-           j++) {
+      for (j = exo->node_node_pntr[inode]; j < exo->node_node_pntr[inode + 1]; j++) {
         inter_node = exo->node_node_list[j];
         nodeCol = Nodes[inter_node];
         nvCol = nodeCol->Nodal_Vars_Info[pg->imtrx];
@@ -3404,8 +3225,7 @@ find_MSR_problem_graph(int *ija[],       /* column pointer array            */
          * fill the vector list which points to the unknowns
          * defined at this interaction node
          */
-        col_num_unknowns = fill_variable_vector(inter_node, inter_node_varType,
-                                                inter_node_matID);
+        col_num_unknowns = fill_variable_vector(inter_node, inter_node_varType, inter_node_matID);
         if (col_num_unknowns != nvCol->Num_Unknowns) {
           GOMA_EH(GOMA_ERROR, "Inconsistency counting unknowns.");
         }
@@ -3415,8 +3235,7 @@ find_MSR_problem_graph(int *ija[],       /* column pointer array            */
          * interacting node and see if there should be an interaction.
          */
 
-        for (inter_unknown = 0; inter_unknown < col_num_unknowns;
-             inter_unknown++) {
+        for (inter_unknown = 0; inter_unknown < col_num_unknowns; inter_unknown++) {
 
           /*
            * HKM ->
@@ -3450,8 +3269,7 @@ find_MSR_problem_graph(int *ija[],       /* column pointer array            */
                   (i1 == I_P0 || i1 == I_P1 || i1 == I_PQ1 || i1 == I_PQ2) &&
                   (i2 == I_P0 || i2 == I_P1 || i2 == I_PQ1 || i2 == I_PQ2) &&
                   (rowVarType != PRESSURE) &&
-                  (rowVarType > VELOCITY_GRADIENT33 ||
-                   rowVarType < VELOCITY_GRADIENT11)) {
+                  (rowVarType > VELOCITY_GRADIENT33 || rowVarType < VELOCITY_GRADIENT11)) {
                 add_var = Inter_Mask[pg->imtrx][rowVarType][colVarType];
               } else {
                 add_var = 0;
@@ -3475,14 +3293,11 @@ find_MSR_problem_graph(int *ija[],       /* column pointer array            */
               if (nz_ptr + 1 == nz_temp) {
 
                 /* reallocate ija larger */
-                nz_temp += (int)(2.0 * (itotal_nodes - inode) *
-                                 ((double)nz_ptr / (double)inode));
+                nz_temp += (int)(2.0 * (itotal_nodes - inode) * ((double)nz_ptr / (double)inode));
 #ifdef DEBUG_GRAPH
-                printf("%s Reallocate ija size to %d from %d\n", yo, nz_temp,
-                       nz_ptr + 1);
+                printf("%s Reallocate ija size to %d from %d\n", yo, nz_temp, nz_ptr + 1);
 #endif
-                *ija = ija_ptr =
-                    (int *)realloc((void *)*ija, nz_temp * sizeof(int));
+                *ija = ija_ptr = (int *)realloc((void *)*ija, nz_temp * sizeof(int));
                 if (*ija == NULL)
                   GOMA_EH(GOMA_ERROR, "No space for ija_temp");
                 for (itmp = nz_ptr; itmp < nz_temp; ija_ptr[itmp++] = -1)
@@ -3517,9 +3332,14 @@ find_MSR_problem_graph(int *ija[],       /* column pointer array            */
 /****************************************************************************/
 /****************************************************************************/
 
-static int find_VBR_problem_graph(int *indx[], int *bindx[], int *bpntr[],
-                                  int *rpntr[], int *cpntr[], int row_nodes,
-                                  int col_nodes, Exo_DB *exo)
+static int find_VBR_problem_graph(int *indx[],
+                                  int *bindx[],
+                                  int *bpntr[],
+                                  int *rpntr[],
+                                  int *cpntr[],
+                                  int row_nodes,
+                                  int col_nodes,
+                                  Exo_DB *exo)
 
 /*
  *
@@ -3572,7 +3392,6 @@ static int find_VBR_problem_graph(int *indx[], int *bindx[], int *bpntr[],
   }
   (*cpntr)[col_nodes] = col_ptr;
 
-
   return (nnz);
 }
 /******************************************************************************/
@@ -3613,10 +3432,9 @@ int fill_variable_vector(int inode, int ivec_varType[], int ivec_matID[])
 /*****************************************************************************/
 /*****************************************************************************/
 
-void
-zero_lec_row(double *local_J,
-    int eqn_type, /* Eqn Type of row to be zeroed     */
-    int ldof)     /* Local dof of that equation type  */
+void zero_lec_row(double *local_J,
+                  int eqn_type, /* Eqn Type of row to be zeroed     */
+                  int ldof)     /* Local dof of that equation type  */
 
 /*
   Function which zero's the row of the local element stiffness matrix
@@ -3634,7 +3452,7 @@ zero_lec_row(double *local_J,
    * *******************************/
 
   for (i_var = 0; i_var < MAX_PROB_EQN + MAX_CONC; i_var++) {
-     memset(&(local_J[LEC_J_INDEX(eqn_type,i_var,ldof,0)]), 0, sizeof(double)*lec->max_dof);
+    memset(&(local_J[LEC_J_INDEX(eqn_type, i_var, ldof, 0)]), 0, sizeof(double) * lec->max_dof);
   }
 
 } /* END of routine zero_lec_row                                        */
@@ -3648,16 +3466,15 @@ zero_lec_row(double *local_J,
  *
  * Author: Matt Hopkins, 12/7/00
  */
-void
-zero_lec_column(double *local_J,
-    int var_type, /* Variable type of column to be zeroed */
-    int ldof)     /* Local dof of that variable type */
+void zero_lec_column(double *local_J,
+                     int var_type, /* Variable type of column to be zeroed */
+                     int ldof)     /* Local dof of that variable type */
 {
   int eqn, dof;
 
-  for(eqn = 0; eqn < MAX_PROB_EQN+MAX_CONC; eqn++) {
-    for(dof = 0; dof < lec->max_dof; dof++) {
-      local_J[LEC_J_INDEX(eqn,var_type,dof,ldof)] = 0.0;
+  for (eqn = 0; eqn < MAX_PROB_EQN + MAX_CONC; eqn++) {
+    for (dof = 0; dof < lec->max_dof; dof++) {
+      local_J[LEC_J_INDEX(eqn, var_type, dof, ldof)] = 0.0;
     }
   }
 }
@@ -3688,15 +3505,15 @@ int find_VBR_index(const int I, /* Block row index */
  *
  */
 
-double newshape(const double xi[],    /* local coordinates    */
-                const int Ielem_type, /* element type */
-                const int Iquant, /* desired quantity (phi, phi_s, etc.     */
-                const int Inode, /* current element node                      */
+double newshape(const double xi[],       /* local coordinates    */
+                const int Ielem_type,    /* element type */
+                const int Iquant,        /* desired quantity (phi, phi_s, etc.     */
+                const int Inode,         /* current element node                      */
                 const int eshape,        /* element shape        */
                 const int interpolation, /* interpolation */
-                const int ledof) /* Typically, this is the local node num     *
-                                  * but for pressure basis functions, this    *
-                                  * can be a dof at the centroid node         */
+                const int ledof)         /* Typically, this is the local node num     *
+                                          * but for pressure basis functions, this    *
+                                          * can be a dof at the centroid node         */
 /***************************************************************************
  *
  *  newshape():
@@ -3788,8 +3605,7 @@ double newshape(const double xi[],    /* local coordinates    */
 
   case SHELL:
     if (is_xfem_interp(interpolation)) {
-      value = extended_shape(xi, Ielem_type, Iquant, Inode, eshape,
-                             interpolation, ledof);
+      value = extended_shape(xi, Ielem_type, Iquant, Inode, eshape, interpolation, ledof);
     } else if (interpolation == I_Q1 || interpolation == I_Q1_D) {
       /* because we may want to solve with Q1 basis functions on a BIQUAD_QUAD
        * mesh */
@@ -3846,8 +3662,7 @@ double newshape(const double xi[],    /* local coordinates    */
 
   case QUADRILATERAL:
     if (is_xfem_interp(interpolation)) {
-      value = extended_shape(xi, Ielem_type, Iquant, Inode, eshape,
-                             interpolation, ledof);
+      value = extended_shape(xi, Ielem_type, Iquant, Inode, eshape, interpolation, ledof);
     } else if (interpolation == I_P0) {
       /*
        * Shape function for peicewise constant pressures
@@ -3856,7 +3671,6 @@ double newshape(const double xi[],    /* local coordinates    */
       case PSI:
         value = 1.;
         break;
-
 
       case DPSI_S:
         value = 0.;
@@ -3955,103 +3769,79 @@ double newshape(const double xi[],    /* local coordinates    */
       case PSI:          /* shape function */
         switch (Inode) { /* select specific shape function */
         case 0:
-          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]->EDGE !=
-                  1 &&
-              Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]->EDGE !=
-                  1) {
+          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]->EDGE != 1 &&
+              Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]->EDGE != 1) {
             value = 0.25 * (1. - s) * (1. - t);
           } else {
-            value = 0.25 *
-                    ((1. - s) * s * (1. - t) * t + (1 - s * s) * (1 - t * t));
-            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]
-                    ->EDGE != 1) {
+            value = 0.25 * ((1. - s) * s * (1. - t) * t + (1 - s * s) * (1 - t * t));
+            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]->EDGE != 1) {
               value += 0.25 * (1. - s * s) * (t - 1.) * t;
             }
-            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]
-                    ->EDGE != 1) {
+            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]->EDGE != 1) {
               value += 0.25 * (1. - t * t) * (s - 1.) * s;
             }
           }
           break;
         case 1:
-          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]->EDGE !=
-                  1 &&
-              Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]->EDGE !=
-                  1) {
+          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]->EDGE != 1 &&
+              Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]->EDGE != 1) {
             value = 0.25 * (1. + s) * (1. - t);
           } else {
-            value =
-                0.25 * ((1. + s) * s * (t - 1) * t + (1 - s * s) * (1 - t * t));
-            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]
-                    ->EDGE != 1) {
+            value = 0.25 * ((1. + s) * s * (t - 1) * t + (1 - s * s) * (1 - t * t));
+            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]->EDGE != 1) {
               value += 0.25 * (1. - s * s) * (t - 1.) * t;
             }
-            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]
-                    ->EDGE != 1) {
+            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]->EDGE != 1) {
               value += 0.25 * (1. - t * t) * (s + 1.) * s;
             }
           }
           break;
         case 2:
-          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]->EDGE !=
-                  1 &&
-              Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]->EDGE !=
-                  1) {
+          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]->EDGE != 1 &&
+              Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]->EDGE != 1) {
             value = 0.25 * (1. + s) * (1. + t);
           } else {
-            value =
-                0.25 * ((1. + s) * s * (t + 1) * t + (1 - s * s) * (1 - t * t));
-            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]
-                    ->EDGE != 1) {
+            value = 0.25 * ((1. + s) * s * (t + 1) * t + (1 - s * s) * (1 - t * t));
+            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]->EDGE != 1) {
               value += 0.25 * (1. - s * s) * (t + 1.) * t;
             }
-            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]
-                    ->EDGE != 1) {
+            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]->EDGE != 1) {
               value += 0.25 * (1. - t * t) * (s + 1.) * s;
             }
           }
           break;
         case 3:
-          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]->EDGE !=
-                  1 &&
-              Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]->EDGE !=
-                  1) {
+          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]->EDGE != 1 &&
+              Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]->EDGE != 1) {
             value = 0.25 * (1. - s) * (1. + t);
           } else {
-            value =
-                0.25 * ((s - 1) * s * (t + 1) * t + (1 - s * s) * (1 - t * t));
-            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]
-                    ->EDGE != 1) {
+            value = 0.25 * ((s - 1) * s * (t + 1) * t + (1 - s * s) * (1 - t * t));
+            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]->EDGE != 1) {
               value += 0.25 * (1. - s * s) * (t + 1.) * t;
             }
-            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]
-                    ->EDGE != 1) {
+            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]->EDGE != 1) {
               value += 0.25 * (1. - t * t) * (s - 1.) * s;
             }
           }
           break;
           /* can only get to these cases on external boundaries */
         case 4:
-          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]->EDGE !=
-              1)
+          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]->EDGE != 1)
             GOMA_EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = 0.5 * (1. - s * s) * (t - 1.) * t;
           break;
         case 5:
-          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]->EDGE !=
-              1)
+          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]->EDGE != 1)
             GOMA_EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = 0.5 * (1. - t * t) * (s + 1.) * s;
           break;
         case 6:
-          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]->EDGE !=
-              1)
+          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]->EDGE != 1)
             GOMA_EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = 0.5 * (1. - s * s) * (t + 1.) * t;
           break;
         case 7:
-          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]->EDGE !=
-              1)
+          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]->EDGE != 1)
             GOMA_EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = 0.5 * (1. - t * t) * (s - 1.) * s;
           break;
@@ -4061,99 +3851,79 @@ double newshape(const double xi[],    /* local coordinates    */
       case DPSI_S:       /* partial of shape fn w.r.t. s */
         switch (Inode) { /* select specific shape function */
         case 0:
-          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]->EDGE !=
-                  1 &&
-              Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]->EDGE !=
-                  1) {
+          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]->EDGE != 1 &&
+              Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]->EDGE != 1) {
             value = -0.25 * (1. - t);
           } else {
             value = 0.25 * ((1. - 2 * s) * (1. - t) * t - 2 * s * (1 - t * t));
-            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]
-                    ->EDGE != 1) {
+            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]->EDGE != 1) {
               value -= 0.5 * s * (t - 1.) * t;
             }
-            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]
-                    ->EDGE != 1) {
+            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]->EDGE != 1) {
               value += 0.25 * (1. - t * t) * (2. * s - 1.);
             }
           }
           break;
         case 1:
-          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]->EDGE !=
-                  1 &&
-              Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]->EDGE !=
-                  1) {
+          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]->EDGE != 1 &&
+              Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]->EDGE != 1) {
             value = 0.25 * (1. - t);
           } else {
             value = 0.25 * ((1. + 2 * s) * (t - 1) * t - 2 * s * (1 - t * t));
-            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]
-                    ->EDGE != 1) {
+            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]->EDGE != 1) {
               value -= 0.5 * s * (t - 1.) * t;
             }
-            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]
-                    ->EDGE != 1) {
+            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]->EDGE != 1) {
               value += 0.25 * (1. - t * t) * (2 * s + 1.);
             }
           }
           break;
         case 2:
-          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]->EDGE !=
-                  1 &&
-              Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]->EDGE !=
-                  1) {
+          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]->EDGE != 1 &&
+              Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]->EDGE != 1) {
             value = 0.25 * (1. + t);
           } else {
             value = 0.25 * ((1. + 2 * s) * (t + 1) * t - 2 * s * (1 - t * t));
-            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]
-                    ->EDGE != 1) {
+            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]->EDGE != 1) {
               value -= 0.5 * s * (t + 1.) * t;
             }
-            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]
-                    ->EDGE != 1) {
+            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]->EDGE != 1) {
               value += 0.25 * (1. - t * t) * (2 * s + 1.);
             }
           }
           break;
         case 3:
-          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]->EDGE !=
-                  1 &&
-              Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]->EDGE !=
-                  1) {
+          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]->EDGE != 1 &&
+              Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]->EDGE != 1) {
             value = -0.25 * (1. + t);
           } else {
             value = 0.25 * ((2 * s - 1) * (t + 1) * t - 2 * s * (1 - t * t));
-            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]
-                    ->EDGE != 1) {
+            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]->EDGE != 1) {
               value -= 0.5 * s * (t + 1.) * t;
             }
-            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]
-                    ->EDGE != 1) {
+            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]->EDGE != 1) {
               value += 0.25 * (1. - t * t) * (2 * s - 1.);
             }
           }
           break;
           /* can only get to these cases on external boundaries */
         case 4:
-          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]->EDGE !=
-              1)
+          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]->EDGE != 1)
             GOMA_EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = -s * (t - 1.) * t;
           break;
         case 5:
-          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]->EDGE !=
-              1)
+          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]->EDGE != 1)
             GOMA_EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = 0.5 * (1. - t * t) * (2 * s + 1.);
           break;
         case 6:
-          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]->EDGE !=
-              1)
+          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]->EDGE != 1)
             GOMA_EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = -s * (t + 1.) * t;
           break;
         case 7:
-          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]->EDGE !=
-              1)
+          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]->EDGE != 1)
             GOMA_EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = 0.5 * (1. - t * t) * (2 * s - 1.);
           break;
@@ -4163,99 +3933,79 @@ double newshape(const double xi[],    /* local coordinates    */
       case DPSI_T:       /* partial of shape fn w.r.t. t */
         switch (Inode) { /* select specific shape function */
         case 0:
-          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]->EDGE !=
-                  1 &&
-              Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]->EDGE !=
-                  1) {
+          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]->EDGE != 1 &&
+              Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]->EDGE != 1) {
             value = -0.25 * (1. - s);
           } else {
             value = 0.25 * ((1. - s) * s * (1. - 2 * t) - (1 - s * s) * 2 * t);
-            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]
-                    ->EDGE != 1) {
+            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]->EDGE != 1) {
               value += 0.25 * (1. - s * s) * (2 * t - 1.);
             }
-            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]
-                    ->EDGE != 1) {
+            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]->EDGE != 1) {
               value -= 0.5 * t * (s - 1.) * s;
             }
           }
           break;
         case 1:
-          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]->EDGE !=
-                  1 &&
-              Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]->EDGE !=
-                  1) {
+          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]->EDGE != 1 &&
+              Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]->EDGE != 1) {
             value = -0.25 * (1. + s);
           } else {
             value = 0.25 * ((1. + s) * s * (2 * t - 1) - (1 - s * s) * 2 * t);
-            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]
-                    ->EDGE != 1) {
+            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]->EDGE != 1) {
               value += 0.25 * (1. - s * s) * (2 * t - 1.);
             }
-            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]
-                    ->EDGE != 1) {
+            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]->EDGE != 1) {
               value -= 0.5 * t * (s + 1.) * s;
             }
           }
           break;
         case 2:
-          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]->EDGE !=
-                  1 &&
-              Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]->EDGE !=
-                  1) {
+          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]->EDGE != 1 &&
+              Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]->EDGE != 1) {
             value = 0.25 * (1. + s);
           } else {
             value = 0.25 * ((1. + s) * s * (2 * t + 1) - (1 - s * s) * 2 * t);
-            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]
-                    ->EDGE != 1) {
+            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]->EDGE != 1) {
               value += 0.25 * (1. - s * s) * (2 * t + 1.);
             }
-            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]
-                    ->EDGE != 1) {
+            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]->EDGE != 1) {
               value -= 0.5 * t * (s + 1.) * s;
             }
           }
           break;
         case 3:
-          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]->EDGE !=
-                  1 &&
-              Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]->EDGE !=
-                  1) {
+          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]->EDGE != 1 &&
+              Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]->EDGE != 1) {
             value = 0.25 * (1. - s);
           } else {
             value = 0.25 * ((s - 1) * s * (2 * t + 1) - (1 - s * s) * 2 * t);
-            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]
-                    ->EDGE != 1) {
+            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]->EDGE != 1) {
               value += 0.25 * (1. - s * s) * (2 * t + 1.);
             }
-            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]
-                    ->EDGE != 1) {
+            if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]->EDGE != 1) {
               value -= 0.5 * t * (s - 1.) * s;
             }
           }
           break;
           /* can only get to these cases on external boundaries */
         case 4:
-          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]->EDGE !=
-              1)
+          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]->EDGE != 1)
             GOMA_EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = 0.5 * (1. - s * s) * (2 * t - 1.);
           break;
         case 5:
-          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]->EDGE !=
-              1)
+          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]->EDGE != 1)
             GOMA_EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = -t * (s + 1.) * s;
           break;
         case 6:
-          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]->EDGE !=
-              1)
+          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]->EDGE != 1)
             GOMA_EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = 0.5 * (1. - s * s) * (2 * t + 1.);
           break;
         case 7:
-          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]->EDGE !=
-              1)
+          if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]->EDGE != 1)
             GOMA_EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = -t * (s - 1.) * s;
           break;
@@ -4311,8 +4061,7 @@ double newshape(const double xi[],    /* local coordinates    */
 
   case HEXAHEDRON:
     if (is_xfem_interp(interpolation)) {
-      value = extended_shape(xi, Ielem_type, Iquant, Inode, eshape,
-                             interpolation, ledof);
+      value = extended_shape(xi, Ielem_type, Iquant, Inode, eshape, interpolation, ledof);
     } else if (interpolation == I_P0) {
       /*
        * Shape function for peicewise constant interpolation
@@ -4434,16 +4183,15 @@ double newshape(const double xi[],    /* local coordinates    */
 /*****************************************************************************/
 /*****************************************************************************/
 /* shape function for XFEM */
-double
-extended_shape(const double xi[],    /* local coordinates    */
-               const int Ielem_type, /* element type */
-               const int Iquant, /* desired quantity (phi, phi_s, etc.        */
-               const int Inode,  /* current element node                      */
-               const int eshape, /* element shape                             */
-               const int interpolation, /* interpolation */
-               const int ledof) /* Typically, this is the local node num     *
-                                 * but for pressure basis functions, this    *
-                                 * can be a dof at the centroid node         */
+double extended_shape(const double xi[],       /* local coordinates    */
+                      const int Ielem_type,    /* element type */
+                      const int Iquant,        /* desired quantity (phi, phi_s, etc.        */
+                      const int Inode,         /* current element node                      */
+                      const int eshape,        /* element shape                             */
+                      const int interpolation, /* interpolation */
+                      const int ledof)         /* Typically, this is the local node num     *
+                                                * but for pressure basis functions, this    *
+                                                * can be a dof at the centroid node         */
 {
   int xfem_active = FALSE; /* innocent till proven guilty, how american! */
   int base_interp, base_dof, extended_dof;
@@ -4452,8 +4200,8 @@ extended_shape(const double xi[],    /* local coordinates    */
 
   load_xfem_for_stu(xi);
 
-  xfem_dof_state(ledof, interpolation, eshape, &xfem_active, &extended_dof,
-                 &base_interp, &base_dof);
+  xfem_dof_state(ledof, interpolation, eshape, &xfem_active, &extended_dof, &base_interp,
+                 &base_dof);
 
   if (xfem_active) {
     double H = xfem->H;
@@ -4474,14 +4222,11 @@ extended_shape(const double xi[],    /* local coordinates    */
     case I_Q2_G:
       /*F_i = dof_distance( Ielem_type, base_interp, Inode );*/
       F_i = lnn_distance(Inode);
-      value = newshape(xi, Ielem_type, Iquant, Inode, eshape, base_interp,
-                       base_dof);
+      value = newshape(xi, Ielem_type, Iquant, Inode, eshape, base_interp, base_dof);
       if ((!extended_dof && F_i < 0.) || (extended_dof && F_i >= 0.)) {
         value *= 1. - H;
-        if (delta != 0. &&
-            (Iquant == DPSI_S || Iquant == DPSI_T || Iquant == DPSI_U)) {
-          double psi = newshape(xi, Ielem_type, PSI, Inode, eshape, base_interp,
-                                base_dof);
+        if (delta != 0. && (Iquant == DPSI_S || Iquant == DPSI_T || Iquant == DPSI_U)) {
+          double psi = newshape(xi, Ielem_type, PSI, Inode, eshape, base_interp, base_dof);
           if (Iquant == DPSI_S)
             value += psi * delta * xfem->dF_xi[0];
           if (Iquant == DPSI_T)
@@ -4491,10 +4236,8 @@ extended_shape(const double xi[],    /* local coordinates    */
         }
       } else {
         value *= H;
-        if (delta != 0. &&
-            (Iquant == DPSI_S || Iquant == DPSI_T || Iquant == DPSI_U)) {
-          double psi = newshape(xi, Ielem_type, PSI, Inode, eshape, base_interp,
-                                base_dof);
+        if (delta != 0. && (Iquant == DPSI_S || Iquant == DPSI_T || Iquant == DPSI_U)) {
+          double psi = newshape(xi, Ielem_type, PSI, Inode, eshape, base_interp, base_dof);
           if (Iquant == DPSI_S)
             value -= psi * delta * xfem->dF_xi[0];
           if (Iquant == DPSI_T)
@@ -4508,13 +4251,10 @@ extended_shape(const double xi[],    /* local coordinates    */
     case I_P1_GP:
     case I_Q1_GP:
     case I_Q2_GP:
-      value = newshape(xi, Ielem_type, Iquant, Inode, eshape, base_interp,
-                       base_dof);
+      value = newshape(xi, Ielem_type, Iquant, Inode, eshape, base_interp, base_dof);
       value *= H;
-      if (delta != 0. &&
-          (Iquant == DPSI_S || Iquant == DPSI_T || Iquant == DPSI_U)) {
-        double psi =
-            newshape(xi, Ielem_type, PSI, Inode, eshape, base_interp, base_dof);
+      if (delta != 0. && (Iquant == DPSI_S || Iquant == DPSI_T || Iquant == DPSI_U)) {
+        double psi = newshape(xi, Ielem_type, PSI, Inode, eshape, base_interp, base_dof);
         if (Iquant == DPSI_S)
           value -= psi * delta * xfem->dF_xi[0];
         if (Iquant == DPSI_T)
@@ -4527,13 +4267,10 @@ extended_shape(const double xi[],    /* local coordinates    */
     case I_P1_GN:
     case I_Q1_GN:
     case I_Q2_GN:
-      value = newshape(xi, Ielem_type, Iquant, Inode, eshape, base_interp,
-                       base_dof);
+      value = newshape(xi, Ielem_type, Iquant, Inode, eshape, base_interp, base_dof);
       value *= 1. - H;
-      if (delta != 0. &&
-          (Iquant == DPSI_S || Iquant == DPSI_T || Iquant == DPSI_U)) {
-        double psi =
-            newshape(xi, Ielem_type, PSI, Inode, eshape, base_interp, base_dof);
+      if (delta != 0. && (Iquant == DPSI_S || Iquant == DPSI_T || Iquant == DPSI_U)) {
+        double psi = newshape(xi, Ielem_type, PSI, Inode, eshape, base_interp, base_dof);
         if (Iquant == DPSI_S)
           value -= psi * delta * xfem->dF_xi[0];
         if (Iquant == DPSI_T)
@@ -4575,27 +4312,19 @@ extended_shape(const double xi[],    /* local coordinates    */
     case I_P1_XG:
     case I_Q1_XG:
     case I_Q2_XG: {
-      value = newshape(xi, Ielem_type, Iquant, Inode, eshape, base_interp,
-                       base_dof);
+      value = newshape(xi, Ielem_type, Iquant, Inode, eshape, base_interp, base_dof);
 
       if (extended_dof) {
         value *= 2. * (xfem->F_plus - H * xfem->F);
 
         if (Iquant == DPSI_S || Iquant == DPSI_T || Iquant == DPSI_U) {
-          double psi = newshape(xi, Ielem_type, PSI, Inode, eshape, base_interp,
-                                base_dof);
+          double psi = newshape(xi, Ielem_type, PSI, Inode, eshape, base_interp, base_dof);
           if (Iquant == DPSI_S)
-            value +=
-                psi * 2. *
-                (xfem->grad_F_plus[0] - (xfem->F * delta + H) * xfem->dF_xi[0]);
+            value += psi * 2. * (xfem->grad_F_plus[0] - (xfem->F * delta + H) * xfem->dF_xi[0]);
           if (Iquant == DPSI_T)
-            value +=
-                psi * 2. *
-                (xfem->grad_F_plus[1] - (xfem->F * delta + H) * xfem->dF_xi[1]);
+            value += psi * 2. * (xfem->grad_F_plus[1] - (xfem->F * delta + H) * xfem->dF_xi[1]);
           if (Iquant == DPSI_U)
-            value +=
-                psi * 2. *
-                (xfem->grad_F_plus[2] - (xfem->F * delta + H) * xfem->dF_xi[2]);
+            value += psi * 2. * (xfem->grad_F_plus[2] - (xfem->F * delta + H) * xfem->dF_xi[2]);
         }
       }
     } break;
@@ -4613,8 +4342,7 @@ extended_shape(const double xi[],    /* local coordinates    */
         else if (Iquant == DPSI_U)
           value = delta * xfem->dF_xi[2] - xfem->grad_bf_plus[2];
       } else {
-        value = newshape(xi, Ielem_type, Iquant, Inode, eshape, base_interp,
-                         base_dof);
+        value = newshape(xi, Ielem_type, Iquant, Inode, eshape, base_interp, base_dof);
       }
     } break;
 
@@ -4630,8 +4358,7 @@ extended_shape(const double xi[],    /* local coordinates    */
         else if (Iquant == DPSI_U)
           value = (H + xfem->F * delta) * xfem->dF_xi[2] - xfem->grad_F_plus[2];
       } else {
-        value = newshape(xi, Ielem_type, Iquant, Inode, eshape, base_interp,
-                         base_dof);
+        value = newshape(xi, Ielem_type, Iquant, Inode, eshape, base_interp, base_dof);
       }
     } break;
 
@@ -4651,18 +4378,14 @@ extended_shape(const double xi[],    /* local coordinates    */
           if (Iquant == PSI)
             value = xfem->F * H - xfem->F_plus;
           else if (Iquant == DPSI_S)
-            value =
-                (H + xfem->F * delta) * xfem->dF_xi[0] - xfem->grad_F_plus[0];
+            value = (H + xfem->F * delta) * xfem->dF_xi[0] - xfem->grad_F_plus[0];
           else if (Iquant == DPSI_T)
-            value =
-                (H + xfem->F * delta) * xfem->dF_xi[1] - xfem->grad_F_plus[1];
+            value = (H + xfem->F * delta) * xfem->dF_xi[1] - xfem->grad_F_plus[1];
           else if (Iquant == DPSI_U)
-            value =
-                (H + xfem->F * delta) * xfem->dF_xi[2] - xfem->grad_F_plus[2];
+            value = (H + xfem->F * delta) * xfem->dF_xi[2] - xfem->grad_F_plus[2];
         }
       } else {
-        value = newshape(xi, Ielem_type, Iquant, Inode, eshape, base_interp,
-                         base_dof);
+        value = newshape(xi, Ielem_type, Iquant, Inode, eshape, base_interp, base_dof);
       }
     } break;
 
@@ -4670,8 +4393,7 @@ extended_shape(const double xi[],    /* local coordinates    */
     case I_P1_XV:
     case I_Q1_XV:
     case I_Q2_XV: {
-      value = newshape(xi, Ielem_type, Iquant, Inode, eshape, base_interp,
-                       base_dof);
+      value = newshape(xi, Ielem_type, Iquant, Inode, eshape, base_interp, base_dof);
 
       if (extended_dof) {
         double H_i = 0.0;
@@ -4682,10 +4404,8 @@ extended_shape(const double xi[],    /* local coordinates    */
         if (F_i >= 0.)
           H_i = 1.;
         value *= H - H_i;
-        if (delta != 0. &&
-            (Iquant == DPSI_S || Iquant == DPSI_T || Iquant == DPSI_U)) {
-          double psi = newshape(xi, Ielem_type, PSI, Inode, eshape, base_interp,
-                                base_dof);
+        if (delta != 0. && (Iquant == DPSI_S || Iquant == DPSI_T || Iquant == DPSI_U)) {
+          double psi = newshape(xi, Ielem_type, PSI, Inode, eshape, base_interp, base_dof);
           if (Iquant == DPSI_S)
             value += psi * delta * xfem->dF_xi[0];
           if (Iquant == DPSI_T)
@@ -4718,8 +4438,7 @@ extended_shape(const double xi[],    /* local coordinates    */
             }
 #endif
     } else {
-      value = newshape(xi, Ielem_type, Iquant, Inode, eshape, base_interp,
-                       base_dof);
+      value = newshape(xi, Ielem_type, Iquant, Inode, eshape, base_interp, base_dof);
     }
   }
   return value;
@@ -4727,158 +4446,122 @@ extended_shape(const double xi[],    /* local coordinates    */
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-int
-calc_shearrate(dbl *gammadot,	/* strain rate invariant */
-	       dbl gamma_dot[DIM][DIM], /* strain rate tensor */
-	       dbl d_gd_dv[DIM][MDE],
-	       dbl d_gd_dmesh[DIM][MDE])
-{
+int calc_shearrate(dbl *gammadot,           /* strain rate invariant */
+                   dbl gamma_dot[DIM][DIM], /* strain rate tensor */
+                   dbl d_gd_dv[DIM][MDE],
+                   dbl d_gd_dmesh[DIM][MDE]) {
   int mdofs = 0;
   int p, q, a, b;
   int vdofs, i, j, v;
 
-  dbl grad_phi_e_gam[MDE][DIM] [DIM][DIM]; /* transpose of grad(phi_i ea) tensor
-					      + grad(phi_i ea) tensor */
-  dbl d_gamma_dot_dmesh [DIM][DIM] [DIM][MDE]; /* d/dmesh(grad_v)T */
+  dbl grad_phi_e_gam[MDE][DIM][DIM][DIM];    /* transpose of grad(phi_i ea) tensor
+                                                + grad(phi_i ea) tensor */
+  dbl d_gamma_dot_dmesh[DIM][DIM][DIM][MDE]; /* d/dmesh(grad_v)T */
 
   int status = 1;
 
-
   /* Zero out sensitivities */
 
-  if(d_gd_dv != NULL) memset(d_gd_dv, 0, sizeof(double)*DIM*MDE);
-  if(d_gd_dmesh != NULL) memset(d_gd_dmesh, 0, sizeof(double)*DIM*MDE);
-
+  if (d_gd_dv != NULL)
+    memset(d_gd_dv, 0, sizeof(double) * DIM * MDE);
+  if (d_gd_dmesh != NULL)
+    memset(d_gd_dmesh, 0, sizeof(double) * DIM * MDE);
 
   *gammadot = 0.;
   /* get gamma_dot invariant for viscosity calculations */
-  for ( a=0; a<VIM; a++)
-    {
-      for ( b=0; b<VIM; b++)
-	{
-	  *gammadot +=  gamma_dot[a][b] * gamma_dot[b][a];
-	}
+  for (a = 0; a < VIM; a++) {
+    for (b = 0; b < VIM; b++) {
+      *gammadot += gamma_dot[a][b] * gamma_dot[b][a];
     }
-  
-  *gammadot  =  sqrt(0.5*fabs(*gammadot)); 
-  
+  }
+
+  *gammadot = sqrt(0.5 * fabs(*gammadot));
+
   /* get stuff for Jacobian entries */
   v = VELOCITY1;
   vdofs = ei[pg->imtrx]->dof[v];
-  
-  if ( d_gd_dmesh != NULL || d_gd_dv != NULL)
-  {
-  if ( pd->v[pg->imtrx][R_MESH1] )
-    {
+
+  if (d_gd_dmesh != NULL || d_gd_dv != NULL) {
+    if (pd->v[pg->imtrx][R_MESH1]) {
       mdofs = ei[pg->imtrx]->dof[R_MESH1];
     }
-  
-  for ( p=0; p<VIM; p++)
-    {
-      for ( q=0; q<VIM; q++)
-	{
-	  for ( a=0; a<VIM; a++)
-	    {
-	      for ( i=0; i<vdofs; i++)
-		{
-		  grad_phi_e_gam[i][a] [p][q] =
-		    bf[v]->grad_phi_e[i][a] [p][q]
-		    + bf[v]->grad_phi_e[i][a] [q][p]  ;
-		}
-	    }
-	}
+
+    for (p = 0; p < VIM; p++) {
+      for (q = 0; q < VIM; q++) {
+        for (a = 0; a < VIM; a++) {
+          for (i = 0; i < vdofs; i++) {
+            grad_phi_e_gam[i][a][p][q] =
+                bf[v]->grad_phi_e[i][a][p][q] + bf[v]->grad_phi_e[i][a][q][p];
+          }
+        }
+      }
     }
   }
-  
+
   /*
    * d( gamma_dot )/dmesh
    */
-  
-  if ( pd->v[pg->imtrx][R_MESH1] && d_gd_dmesh != NULL)
-    {
-      
-      for ( p=0; p<VIM; p++)
-	{
-	  for ( q=0; q<VIM; q++)
-	    {
-	      for ( b=0; b<VIM; b++)
-		{
-		  for ( j=0; j<mdofs; j++)
-		    {
-		      
-		      d_gamma_dot_dmesh[p][q] [b][j] =
-			fv->d_grad_v_dmesh[p][q] [b][j] +
-			fv->d_grad_v_dmesh[q][p] [b][j] ;
-		    }
-		}
-	    }
-	}
-      
-      /*
-       * d( gammadot )/dmesh
-       */
-      
-      if(*gammadot != 0.)
-	{
-	  for ( b=0; b<VIM; b++)
-	    {
-	      for ( j=0; j<mdofs; j++)
-		{
-		  d_gd_dmesh [b][j] = 0.;
-		  for ( p=0; p<VIM; p++)
-		    {
-		      for ( q=0; q<VIM; q++)
-			{
-			  d_gd_dmesh [b][j] +=
-			    0.5 * d_gamma_dot_dmesh[p][q] [b][j] 
-			    * gamma_dot[q][p]
-			    / *gammadot; 
-		      
-			}
-		    }
-		}
-	    }
-	}
+
+  if (pd->v[pg->imtrx][R_MESH1] && d_gd_dmesh != NULL) {
+
+    for (p = 0; p < VIM; p++) {
+      for (q = 0; q < VIM; q++) {
+        for (b = 0; b < VIM; b++) {
+          for (j = 0; j < mdofs; j++) {
+
+            d_gamma_dot_dmesh[p][q][b][j] =
+                fv->d_grad_v_dmesh[p][q][b][j] + fv->d_grad_v_dmesh[q][p][b][j];
+          }
+        }
+      }
     }
-  
+
+    /*
+     * d( gammadot )/dmesh
+     */
+
+    if (*gammadot != 0.) {
+      for (b = 0; b < VIM; b++) {
+        for (j = 0; j < mdofs; j++) {
+          d_gd_dmesh[b][j] = 0.;
+          for (p = 0; p < VIM; p++) {
+            for (q = 0; q < VIM; q++) {
+              d_gd_dmesh[b][j] += 0.5 * d_gamma_dot_dmesh[p][q][b][j] * gamma_dot[q][p] / *gammadot;
+            }
+          }
+        }
+      }
+    }
+  }
+
   /*
    * d( gammadot )/dv
    */
-  
-  if(*gammadot != 0. && d_gd_dv != NULL)
-    {
-      for ( a=0; a<VIM; a++)
-	{
-	  for ( i=0; i<vdofs; i++)
-	    {
-	      d_gd_dv[a][i] = 0.;
-	      for ( p=0; p<VIM; p++)
-		{
-		  for ( q=0; q<VIM; q++)
-		    {
-		      d_gd_dv[a][i] +=
-			0.5 * grad_phi_e_gam[i][a] [p][q] 
-			* gamma_dot[q][p]
-			/ *gammadot; 
-		    }
-		}
-	    }
-	}
+
+  if (*gammadot != 0. && d_gd_dv != NULL) {
+    for (a = 0; a < VIM; a++) {
+      for (i = 0; i < vdofs; i++) {
+        d_gd_dv[a][i] = 0.;
+        for (p = 0; p < VIM; p++) {
+          for (q = 0; q < VIM; q++) {
+            d_gd_dv[a][i] += 0.5 * grad_phi_e_gam[i][a][p][q] * gamma_dot[q][p] / *gammadot;
+          }
+        }
+      }
     }
-  return(status);
+  }
+  return (status);
 }
 
 /*************************************************************************/
 /*************************************************************************/
 /*************************************************************************/
 
-static int var_if_interp_type_enabled(PROBLEM_DESCRIPTION_STRUCT *pd_ptr,
-                               int interp_type) {
+static int var_if_interp_type_enabled(PROBLEM_DESCRIPTION_STRUCT *pd_ptr, int interp_type) {
   int imtrx;
   int var;
   for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
-    if ((var = in_list(interp_type, 0, MAX_VARIABLE_TYPES, pd_ptr->i[imtrx])) !=
-        -1) {
+    if ((var = in_list(interp_type, 0, MAX_VARIABLE_TYPES, pd_ptr->i[imtrx])) != -1) {
       return var;
     }
   }
@@ -4927,11 +4610,9 @@ void determine_ShapeVar(PROBLEM_DESCRIPTION_STRUCT *pd_ptr)
     } else {
       if ((pd_ptr->ShapeVar = var_if_interp_type_enabled(pd_ptr, I_Q2)) != -1) {
         pd_ptr->IntegrationMap = I_Q2;
-      } else if ((pd_ptr->ShapeVar =
-                      var_if_interp_type_enabled(pd_ptr, I_Q1)) != -1) {
+      } else if ((pd_ptr->ShapeVar = var_if_interp_type_enabled(pd_ptr, I_Q1)) != -1) {
         pd_ptr->IntegrationMap = I_Q1;
-      } else if ((pd_ptr->ShapeVar =
-                      var_if_interp_type_enabled(pd_ptr, I_SP)) != -1) {
+      } else if ((pd_ptr->ShapeVar = var_if_interp_type_enabled(pd_ptr, I_SP)) != -1) {
         pd_ptr->IntegrationMap = I_SP;
       } else {
         pd_ptr->ShapeVar = pd_ptr->m[pg->imtrx][0];
@@ -4943,16 +4624,13 @@ void determine_ShapeVar(PROBLEM_DESCRIPTION_STRUCT *pd_ptr)
      * This is for the case where the Q1, Q2 or SP has been specified
      * as the mapping order
      */
-    pd_ptr->ShapeVar = in_list(pd_ptr->IntegrationMap, 0, MAX_VARIABLE_TYPES,
-                               pd_ptr->i[pg->imtrx]);
+    pd_ptr->ShapeVar = in_list(pd_ptr->IntegrationMap, 0, MAX_VARIABLE_TYPES, pd_ptr->i[pg->imtrx]);
     if (pd_ptr->ShapeVar == -1) {
-      GOMA_EH(GOMA_ERROR,
-         "Error: Specified Element Mapping has no corresponding variable .");
+      GOMA_EH(GOMA_ERROR, "Error: Specified Element Mapping has no corresponding variable .");
     }
-    if (pd_ptr->e[pg->imtrx][R_MESH1] &&
-        pd_ptr->IntegrationMap != pd_ptr->i[0][R_MESH1]) {
+    if (pd_ptr->e[pg->imtrx][R_MESH1] && pd_ptr->IntegrationMap != pd_ptr->i[0][R_MESH1]) {
       GOMA_WH(-1, "Warning: Having the Element Mapping differ from the "
-             "displacement interpolation may produce unexpected results.");
+                  "displacement interpolation may produce unexpected results.");
     }
   }
 }
@@ -5013,13 +4691,11 @@ void set_solid_inertia(void)
 
   tran->solid_inertia = FALSE;
   for (mn = 0; mn < upd->Num_Mat; mn++) {
-      if(pd_glob[mn]->TimeIntegration != STEADY &&
+    if (pd_glob[mn]->TimeIntegration != STEADY &&
         pd_glob[mn]->etm[pg->imtrx][R_MESH1][(LOG2_MASS)] &&
         pd_glob[mn]->MeshMotion == DYNAMIC_LAGRANGIAN) {
       tran->solid_inertia = TRUE;
-    }
-      else if (pd_glob[mn]->TimeIntegration != STEADY &&
-               pd_glob[mn]->MeshMotion == TOTAL_ALE) {
+    } else if (pd_glob[mn]->TimeIntegration != STEADY && pd_glob[mn]->MeshMotion == TOTAL_ALE) {
       tran->solid_inertia = TRUE;
     }
   }
@@ -5036,7 +4712,7 @@ void set_solid_inertia(void)
 
 double calc_tensor_invariant(dbl T[DIM][DIM],       // Original tensor
                              dbl d_TI_dT[DIM][DIM], // Sensitivities
-                             int Ii) // Which invariant to calculate
+                             int Ii)                // Which invariant to calculate
 {
 
   // Define variables
@@ -5053,7 +4729,7 @@ double calc_tensor_invariant(dbl T[DIM][DIM],       // Original tensor
   // Error checking
   if (DIM != 3)
     GOMA_EH(GOMA_ERROR, "calc_tensor_invariants() has not been instrumented for 1 or 2 "
-           "dimensions");
+                        "dimensions");
 
   // Select invariant and calculate
   if (Ii == 1) { // First invariant

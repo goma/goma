@@ -9,7 +9,6 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
 
 #ifndef GOMA_SL_UMF_H
 #define GOMA_SL_UMF_H
@@ -26,27 +25,14 @@
 #define EXTERN extern
 #endif
 
-extern int SL_UMF
-( int,
-	 int *,
-	 int *,
-	 int *,
-	 int *,
-	 int *,
-	 int *,
-	 int *,
-	 double *,
-	 double *,
-	 double *  );
+extern int
+SL_UMF(int, int *, int *, int *, int *, int *, int *, int *, double *, double *, double *);
 
-struct UMF_Linear_Solver_System
-{
-	int n, nnz;
-        int *ap, *ai, *atp, *ati;
-	double *ax, *atx;
-        void *symbolic, *numeric;
+struct UMF_Linear_Solver_System {
+  int n, nnz;
+  int *ap, *ai, *atp, *ati;
+  double *ax, *atx;
+  void *symbolic, *numeric;
 };
 
 #endif /* GOMA_SL_UMF_H */
-
-

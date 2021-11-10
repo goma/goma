@@ -9,7 +9,7 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
+
 /*
  * $Id: sl_eggroll03.c,v 5.1 2007-09-18 18:53:47 prschun Exp $
  */
@@ -77,8 +77,6 @@
 #include "sl_umf.h"
 #include "std.h"
 
-
-
 /* Matrix-vector product for generalized eigenvalue problem
  *
  * MSR format only
@@ -88,58 +86,39 @@
  *
  * Originally written by Ian Gates
  */
-void
-gevp_transformation(int UMF_system_id,
-		    int first,
-		    int fflag,
-                    int format,
-                    int transformation, 
-	            int nj, 
-	            int nnz,
-                    int *ija,
-                    dbl *jac,
-                    dbl *mas,
-                    dbl *mat, 
-			 /*	int soln_tech,  */
-                    dbl *w,
-                    dbl *v,
-                    dbl r_sigma,
-                    dbl i_sigma)
-{
+void gevp_transformation(int UMF_system_id,
+                         int first,
+                         int fflag,
+                         int format,
+                         int transformation,
+                         int nj,
+                         int nnz,
+                         int *ija,
+                         dbl *jac,
+                         dbl *mas,
+                         dbl *mat,
+                         /*	int soln_tech,  */
+                         dbl *w,
+                         dbl *v,
+                         dbl r_sigma,
+                         dbl i_sigma) {
   dbl *z;
 
   /* Allocate work vectors
    */
 
-  z = Dvector_birth(nj+5);
+  z = Dvector_birth(nj + 5);
 
-  /* z = M v 
+  /* z = M v
    */
   MV_MSR(&nj, &ija[0], &mas[0], &v[0], &z[0]);
 
   /* Real shift matrix-vector product
    */
-  UMF_system_id = SL_UMF(UMF_system_id,
-			 &first, 
-			 &fflag, 
-			 &format, 
-			 &nj, 
-			 &nnz, 
-			 ija, 
-			 ija, 
-			 mat, 
-			 &z[0], 
-			 &w[0]);
+  UMF_system_id =
+      SL_UMF(UMF_system_id, &first, &fflag, &format, &nj, &nnz, ija, ija, mat, &z[0], &w[0]);
 
   /* De-allocate work storage
    */
-  Dvector_death(&z[0], nj+5);
+  Dvector_death(&z[0], nj + 5);
 }
-
-
-
-
-
-
-
-

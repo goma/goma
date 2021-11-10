@@ -9,7 +9,6 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
 
 /* Header file for most of the structures and #define'ed parameters
  * for the suite of sl_eggroll*.c source files.  These files constitute a
@@ -25,17 +24,16 @@
 #ifndef GOMA_SL_EGGROLL_DEF_H
 #define GOMA_SL_EGGROLL_DEF_H
 
-#define IDG_EPS    1.0e-14
-#define IDG_BIG    1.0e+14
-#define IDG_STEP   1.0e-08
+#define IDG_EPS  1.0e-14
+#define IDG_BIG  1.0e+14
+#define IDG_STEP 1.0e-08
 
 #define PARAMETER_ARRAY_LENGTH 20
 
 /* Eigenstuff structure.
  */
-typedef struct
-{ 
-  int n; 
+typedef struct {
+  int n;
   dbl *e;
   dbl *r;
   dbl *i;
@@ -45,8 +43,7 @@ typedef struct
 
 /* Postscript structure
  */
-typedef struct 
-{
+typedef struct {
   dbl unused;
   dbl xmin;
   dbl xmax;

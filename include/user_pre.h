@@ -9,7 +9,6 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
 
 /*
  *$Id: user_pre.h,v 5.1 2007-09-18 18:53:49 prschun Exp $
@@ -33,10 +32,8 @@
 #define EXTERN extern
 #endif
 
-EXTERN double user_surf_object
-(int *,
-       dbl *,    	/* param - ptr to user-defined list          */
-       dbl *);		
-
+EXTERN double user_surf_object(int *,
+                               dbl *, /* param - ptr to user-defined list          */
+                               dbl *);
 
 #endif /* GOMA_USER_PRE_H */

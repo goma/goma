@@ -76,8 +76,7 @@ void get_metric_tensor(dbl B[DIM][DIM], int dim, int element_type, dbl G[DIM][DI
   }
 }
 
-void supg_tau_shakib(
-    SUPG_terms *supg_terms, int dim, dbl dt, dbl diffusivity, int interp_eqn) {
+void supg_tau_shakib(SUPG_terms *supg_terms, int dim, dbl dt, dbl diffusivity, int interp_eqn) {
   dbl G[DIM][DIM];
 
   get_metric_tensor(bf[interp_eqn]->B, dim, ei[pg->imtrx]->ielem_type, G);
@@ -720,7 +719,7 @@ int calc_pspg(dbl pspg[DIM],
     mu = viscosity(gn, gamma, d_mu);
 
     dbl mup[MAX_MODES];
-    VISCOSITY_DEPENDENCE_STRUCT d_mup[MAX_MODES];  /* viscosity dependence */
+    VISCOSITY_DEPENDENCE_STRUCT d_mup[MAX_MODES]; /* viscosity dependence */
     if (pd->gv[POLYMER_STRESS11]) {
       for (int mode = 0; mode < vn->modes; mode++) {
         mup[mode] = viscosity(ve[mode]->gn, gamma, &d_mup[mode]);
@@ -767,8 +766,8 @@ int calc_pspg(dbl pspg[DIM],
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             dbl tau_adv_dv = 0;
             for (int a = 0; a < dim; a++) {
-              tau_adv_dv += rho*rho*bf[var]->phi[j] * G[b][a] * fv->v[a];
-              tau_adv_dv += rho*rho*bf[var]->phi[j] * G[a][b] * fv->v[a];
+              tau_adv_dv += rho * rho * bf[var]->phi[j] * G[b][a] * fv->v[a];
+              tau_adv_dv += rho * rho * bf[var]->phi[j] * G[a][b] * fv->v[a];
             }
 
             d_tau_pspg_dv[b][j] = -rho * tau_pspg * tau_pspg * tau_pspg * tau_adv_dv;
@@ -1055,7 +1054,8 @@ int calc_pspg(dbl pspg[DIM],
           phi_j = bf[var]->phi[j];
 
           advection = 0.;
-          if ((pd->e[upd->matrix_index[meqn]][meqn] & T_ADVECTION) && (pd->TimeIntegration != STEADY)) {
+          if ((pd->e[upd->matrix_index[meqn]][meqn] & T_ADVECTION) &&
+              (pd->TimeIntegration != STEADY)) {
             advection = -(1. + 2. * tt) * phi_j / dt * grad_v[b][a];
             for (p = 0; p < WIM; p++) {
               advection += (v[p] - x_dot[p]) * fv->d_grad_v_dmesh[p][a][b][j];
@@ -1428,4 +1428,3 @@ int calc_cont_gls(dbl *cont_gls,
   is_initialized = TRUE;
   return 0;
 }
-
