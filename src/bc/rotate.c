@@ -1361,7 +1361,6 @@ void rotate_momentum_eqn(int id,           /* Elemental stiffness matrix row ind
       }
 
     } /* end of if variable */
-#ifdef COUPLED_FILL
     /* momentum wrt. temperature */
     var = LS;
     if (pd->v[pg->imtrx][var]) {
@@ -1399,7 +1398,6 @@ void rotate_momentum_eqn(int id,           /* Elemental stiffness matrix row ind
       }
 
     } /* end of if variable */
-#endif
 
     /* momentum wrt. velocity */
     for (jvar = 0; jvar < dim; jvar++) {
@@ -1822,7 +1820,6 @@ void rotate_res_jac_mom(int irow_index,           /* Elemental stiffness matrix 
       } /* end of loop over nodes */
     }   /* end of if variable */
 
-#ifdef COUPLED_FILL
     /* momentum wrt. temperature */
     var = FILL;
     if (pd->v[pg->imtrx][var]) {
@@ -1846,7 +1843,6 @@ void rotate_res_jac_mom(int irow_index,           /* Elemental stiffness matrix 
         }
       } /* end of loop over nodes */
     }   /* end of if variable */
-#endif  /* COUPLED_FILL */
 
     /* momentum wrt. velocity */
     for (jvar = 0; jvar < ielem_surf_dim + 1; jvar++) {

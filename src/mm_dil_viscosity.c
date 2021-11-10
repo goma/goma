@@ -87,11 +87,9 @@ static void transferMultipleOfDerivatives(const dbl ratioVisc,
     }
   }
 
-#ifdef COUPLED_FILL
   for (j = 0; j < ei[pg->imtrx]->dof[PRESSURE]; j++) {
     d_dilMu->F[j] = ratioVisc * d_mu->F[j];
   }
-#endif
 
   if (pd->v[pg->imtrx][BOND_EVOLUTION]) {
     for (j = 0; j < ei[pg->imtrx]->dof[BOND_EVOLUTION]; j++) {

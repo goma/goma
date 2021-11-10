@@ -139,14 +139,12 @@ double viscosity(struct Generalized_Newtonian *gn_local,
         }
       }
 
-#ifdef COUPLED_FILL
       var = FILL;
       if (d_mu != NULL && pd->v[pg->imtrx][var]) {
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
           d_mu->F[j] = mp->d_viscosity[var] * bf[var]->phi[j];
         }
       }
-#endif /* COUPLED_FILL */
 
       if (d_mu != NULL && pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
         for (a = 0; a < dim; a++) {

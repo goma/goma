@@ -117,16 +117,10 @@ void sl_init(unsigned int option_mask, /* option flag */
   int length;
   int p; /* processor index */
   int Do_Jacobian;
-#ifndef COUPLED_FILL
-  int Do_Explicit_Fill;
-#endif /* not COUPLED_FILL */
   struct GomaLinearSolverData *A;
   int imtrx = pg->imtrx;
 
   Do_Jacobian = (option_mask & 1);
-#ifndef COUPLED_FILL
-  Do_Explicit_Fill = (option_mask & 2);
-#endif /* not COUPLED_FILL */
 
   if (Num_Calls >= upd->Total_Num_Matrices) {
     GOMA_EH(GOMA_ERROR, "Calls should match the number of matrices");
@@ -302,132 +296,6 @@ void sl_init(unsigned int option_mask, /* option flag */
       A->Number_Jac_Dump = Number_Jac_Dump;
 #endif /* MATRIX_DUMP */
     }
-
-#ifndef COUPLED_FILL
-    if (Do_Explicit_Fill) {
-      A = ams[FIL]; /* Whoa, mule! */
-
-      /*
-       * Manual version of AZ_processor_info().
-       */
-
-      A->proc_config[AZ_node] = ProcID;
-      A->proc_config[AZ_N_procs] = Num_Proc;
-      A->proc_config[AZ_dim] = 0;
-
-      /*
-       * Manual version of AZ_read_update().
-       */
-
-      A->N_update = internal_fill_unknowns + boundary_fill_unknowns;
-      A->update = NULL;
-
-      AZ_defaults(A->options, A->params);
-      set_aztec_options_params(A->options, A->params);
-
-      if (Num_Proc == 1) {
-        A->external = NULL;
-        A->update_index = NULL;
-        A->extern_index = NULL;
-
-        A->data_org = (int *)array_alloc(1, AZ_COMM_SIZE + 0, sizeof(int));
-
-        if (FALSE && strcmp(Matrix_Format, "vbr") == 0) {
-          /* OK, I know that some of you are going to be confused
-             by this section.  The point I'm trying to make is
-             this: VBR sparse format is currently not supported
-             by the code.  Maybe someday it will.  In that eventuallity
-             it would be nice not to have to redo all this stuff, but
-             simply flip it back on.
-          */
-
-          A->data_org[AZ_matrix_type] = AZ_VBR_MATRIX;
-          A->mat_type = AZ_VBR_MATRIX;
-          A->data_org[AZ_N_int_blk] = internal_fill_unknowns;
-          A->data_org[AZ_N_bord_blk] = boundary_fill_unknowns;
-          A->data_org[AZ_N_ext_blk] = external_fill_unknowns;
-        } else {
-          A->data_org[AZ_matrix_type] = AZ_MSR_MATRIX;
-          A->mat_type = AZ_MSR_MATRIX;
-          A->data_org[AZ_N_int_blk] = A->N_update;
-          A->data_org[AZ_N_bord_blk] = 0;
-          A->data_org[AZ_N_ext_blk] = 0;
-        }
-
-        A->data_org[AZ_N_internal] = A->N_update;
-        A->data_org[AZ_N_border] = 0;
-        A->data_org[AZ_N_external] = 0;
-        A->data_org[AZ_N_neigh] = 0;
-        A->data_org[AZ_total_send] = 0;
-        A->data_org[AZ_name] = 1 + FIL;
-        A->data_org[AZ_neighbors] = 0;
-        A->data_org[AZ_rec_length] = 0;
-        A->data_org[AZ_send_length] = 0;
-        /*	  A->data_org[AZ_send_list]   = 0; */
-
-      } else /* parallel case... */
-      {
-        length = AZ_COMM_SIZE + ptr_node_send[dpi->num_neighbors];
-
-        A->data_org = (int *)array_alloc(1, length, sizeof(int));
-
-        A->data_org[AZ_N_internal] = internal_fill_unknowns;
-        A->data_org[AZ_N_border] = boundary_fill_unknowns;
-        A->data_org[AZ_N_external] = external_fill_unknowns;
-
-        /* if ( strcmp(Matrix_Format, "vbr") == 0 ) */
-        if (FALSE) /* Fill matrix can only be MSR right now */
-        {
-          A->data_org[AZ_matrix_type] = AZ_VBR_MATRIX;
-          A->mat_type = AZ_VBR_MATRIX;
-          A->data_org[AZ_N_int_blk] = A->data_org[AZ_N_internal];
-          A->data_org[AZ_N_bord_blk] = A->data_org[AZ_N_border];
-          A->data_org[AZ_N_ext_blk] = A->data_org[AZ_N_external];
-        } else {
-          A->data_org[AZ_matrix_type] = AZ_MSR_MATRIX;
-          A->mat_type = AZ_MSR_MATRIX;
-          /*
-           * For MSR, these are the required placebos to VBR info.
-           */
-          A->data_org[AZ_N_int_blk] = A->data_org[AZ_N_internal];
-          A->data_org[AZ_N_bord_blk] = A->data_org[AZ_N_border];
-          A->data_org[AZ_N_ext_blk] = A->data_org[AZ_N_external];
-        }
-
-        A->data_org[AZ_N_neigh] = dpi->num_neighbors;
-        A->data_org[AZ_total_send] = ptr_fill_node_send[dpi->num_neighbors];
-        A->data_org[AZ_name] = 1 + FIL;
-
-        for (p = 0; p < dpi->num_neighbors; p++) {
-          A->data_org[AZ_neighbors + p] = cx[p].neighbor_name;
-          A->data_org[AZ_rec_length + p] = cx[p].num_fill_nodes_recv;
-          A->data_org[AZ_send_length + p] = cx[p].num_fill_nodes_send;
-        }
-
-        for (i = 0; i < ptr_fill_node_send[dpi->num_neighbors]; i++) {
-          A->data_org[AZ_send_list + i] = list_fill_node_send[i];
-        }
-      }
-#ifdef MATRIX_DUMP
-      A->Number_Jac_Dump = Number_Jac_Dump;
-#endif /* MATRIX_DUMP */
-      if (Debug_Flag > 0) {
-        err = AZ_check_input(A->data_org, A->options, A->params, A->proc_config);
-
-        if (err != 0)
-          AZ_print_error(err);
-
-        /* if ( strcmp(Matrix_Format, "vbr") == 0 ) */
-        if (FALSE) /* Fill matrix can only be MSR right now */
-        {
-          AZ_check_vbr(A->N_update, A->N_external, AZ_GLOBAL, A->bindx, A->bpntr, A->cpntr,
-                       A->rpntr, A->proc_config);
-        } else {
-          AZ_check_msr(A->bindx, A->N_update, A->N_external, AZ_GLOBAL, A->proc_config);
-        }
-      }
-    }
-#endif /* not COUPLED_FILL */
   }
   Num_Calls++;
 } /* END of routine sl_init */
@@ -453,12 +321,6 @@ void sl_free(unsigned int option_mask, struct GomaLinearSolverData *ams[]) {
   if (option_mask & 1) {
     free_ams(ams[JAC]);
   }
-
-#ifndef COUPLED_FILL
-  if (option_mask & 2) {
-    free_ams(ams[FIL]);
-  }
-#endif /* not COUPLED_FILL */
 
   return;
 }

@@ -1186,7 +1186,8 @@ int apply_special_bc(struct GomaLinearSolverData *ams,
                 for (var = 0; var < MAX_VARIABLE_TYPES; var++) {
                   if (ei[pg->imtrx]->dof[var] && (BC_Types[j_bc_id].desc->sens[var] || 1) &&
                       jflag != -1)
-                  /*			    if (pd->v[pg->imtrx][var] && (BC_Types[j_bc_id].desc->sens[var]
+                  /*			    if (pd->v[pg->imtrx][var] &&
+                     (BC_Types[j_bc_id].desc->sens[var]
                      || 1 ) && jflag != -1) TAB 01-08-07 */
                   {
                     if (var != MASS_FRACTION) {

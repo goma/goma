@@ -127,14 +127,6 @@ Spfrtn sr;
 static int get_num_faces /* exo_conn.c */
     (char *);            /* elem_type */
 
-#if FALSE /* ................just for demo and debugging...................*/
-static void demo_elem_node_conn(Exo_DB *); /* exo - pntr to EXODUS II FE database */
-
-extern void demo_node_elem_conn(Exo_DB *); /* exo - pntr to EXODUS II FE database */
-
-static void demo_elem_elem_conn(Exo_DB *); /* exo - pntr to EXODUS II FE database */
-#endif
-
 /*
  * The element node connectivity is already built in rd_mesh.c, so
  * here we just assign the proper pointers to existing arrays that already
@@ -916,10 +908,6 @@ void build_elem_elem(Exo_DB *exo) {
    * For your convenience - FORTRAN 1-based numbering.
    */
 
-#if FALSE
-  demo_elem_elem_conn(exo);
-#endif
-
   return;
 }
 
@@ -1200,62 +1188,6 @@ int get_exterior_faces(int elem, int *ex_faces, const Exo_DB *exo, const Dpi *dp
   return (num_ext_faces);
 }
 
-#if 0  /* ................................. unused........................ */
-static int 
-get_elem_dimension(char *elem_type)
-{
-  int val=-1;
-
-  if ( elem_type == NULL )
-    {
-      return(-1);
-    }
-
-  /*
-   * Check each possibility, the more likely ones first...
-   */
-
-  if ( strstr(elem_type, "QUAD") != NULL )
-    {
-      val = 2;
-    }
-
-  if ( strstr(elem_type, "HEX") != NULL )
-    {
-      val = 3;
-    }
-
-  if ( strstr(elem_type, "TRI") != NULL )
-    {
-      val = 2;
-    }
-
-  if ( strstr(elem_type, "TET") != NULL )
-    {
-      val = 3;
-    }
-
-  if ( strstr(elem_type, "WEDGE") != NULL )
-    {
-      val = 3;
-    }
-
-  if ( strstr(elem_type, "SHELL") != NULL ) /* in 3D */
-    {
-      val = 2;
-    }
-
-  if ( strstr(elem_type, "TRUSS") != NULL || 
-       strstr(elem_type, "BAR")   != NULL ||
-       strstr(elem_type, "BEAM")  != NULL) /* in 2D */
-    {
-      val = 2;
-    }
-
-  return(val);
-}
-#endif /* ................................. unused........................ */
-
 /* int_intersect - provide the number and the indeces of the intersections
  *                 of 2 lists
  *
@@ -1290,91 +1222,6 @@ static int int_intersect(int *a,          /* first integer list			(in) */
 
   return (num_hit);
 }
-
-#if FALSE
-static void demo_elem_node_conn(Exo_DB *exo) {
-  int e;
-  int n;
-  int node_name;
-  int start;
-  int end;
-
-  if (!exo->elem_node_conn_exists) {
-    GOMA_EH(GOMA_ERROR, "Attempt to access undeveloped elem->node connectivity.");
-  }
-
-  for (e = 0; e < exo->num_elems; e++) {
-    fprintf(stdout, "Element [%d] has nodes: ", e);
-    start = exo->elem_node_pntr[e];
-    end = exo->elem_node_pntr[e + 1];
-
-    for (n = start; n < end; n++) {
-      node_name = exo->elem_node_list[n];
-      fprintf(stdout, "%d ", node_name);
-    }
-    fprintf(stdout, "\n");
-  }
-  return;
-}
-#endif
-
-#if 0 /* Change to 1 to have a routine that shows \
-       * how connectivity works in my life. */
-void
-demo_node_elem_conn(Exo_DB *exo)
-{
-  int e;
-  int elem_name;
-  int n;
-  int start;
-  int end;
-  
-  if ( ! exo->node_elem_conn_exists )
-    {
-      GOMA_EH(GOMA_ERROR, "Attempt to access undeveloped node->elem connectivity.");
-    }
-
-  for ( n=0; n<exo->num_nodes; n++)
-    {
-      fprintf(stdout, "Node [%d] has elements: ", n+1);
-      start = exo->node_elem_pntr[n];
-      end   = exo->node_elem_pntr[n+1];
-      for ( e=start; e<end; e++)
-	{
-	  elem_name = exo->node_elem_list[e];
-	  fprintf(stdout, "%d ", elem_name+1);
-	}
-      fprintf(stdout, "\n");
-    }
-  return;
-}
-#endif
-
-#if FALSE
-static void demo_elem_elem_conn(Exo_DB *exo) {
-  int e;
-  int elem_name;
-  int en;
-  int start;
-  int end;
-
-  if (!exo->elem_elem_conn_exists) {
-    GOMA_EH(GOMA_ERROR, "Attempt to access undeveloped elem->elem connectivity.");
-  }
-
-  for (e = 0; e < exo->num_elems; e++) {
-    fprintf(stdout, "Element [%d] has elements: ", e);
-    start = exo->elem_elem_pntr[e];
-    end = exo->elem_elem_pntr[e + 1];
-    for (en = start; en < end; en++) {
-      elem_name = exo->elem_elem_list[en];
-      fprintf(stdout, "%d ", elem_name);
-    }
-    fprintf(stdout, "\n");
-  }
-  return;
-}
-#endif
 
 /*
  * Build the node -> node connectivity given the elem -> node connectivity

@@ -559,7 +559,6 @@ void fvelo_normal_bc(double func[DIM],
         }
       }
 
-#ifdef COUPLED_FILL
       if (contact) {
         var = ls->var;
         if ((type == VELO_NORMAL_LS_BC || type == VELO_NORMAL_LS_PETROV_BC ||
@@ -571,7 +570,6 @@ void fvelo_normal_bc(double func[DIM],
           }
         }
       }
-#endif /*COUPLED_FILL */
 
     } /* for: kdir */
   }   /* end of if Assemble_Jacobian */
@@ -943,7 +941,6 @@ void fvelo_tangential_ls_bc(double func[DIM],
         }
       }
 
-#ifdef COUPLED_FILL
       var = ls->var;
       if (pd->v[pg->imtrx][var]) {
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
@@ -951,7 +948,6 @@ void fvelo_tangential_ls_bc(double func[DIM],
               (fv->v[kdir] - x_dot[kdir]) * fv->stangent[0][kdir] * d_penalty_dF * bf[var]->phi[j];
         }
       }
-#endif /*COUPLED_FILL */
 
     } /* for: kdir */
   }   /* end of if Assemble_Jacobian */
@@ -3082,10 +3078,8 @@ void fvelo_slip_bc(double func[MAX_PDIM],
 
   if (ls != NULL) {
     load_lsi(ls->Length_Scale);
-#ifdef COUPLED_FILL
     if (af->Assemble_Jacobian)
       load_lsi_derivs();
-#endif /* COUPLED_FILL */
     /* dot_prod = fabs( dot_product( pd->Num_Dim, lsi->normal, fv->snormal) ); */
   }
 
@@ -3234,7 +3228,6 @@ void fvelo_slip_bc(double func[MAX_PDIM],
   } else {
     betainv *= exp(alpha * dist);
     memset(d_betainv_dF, 0, sizeof(double) * MDE);
-#ifdef COUPLED_FILL
     if ((type == VELO_SLIP_FILL_BC || type == VELO_SLIP_ROT_FILL_BC) && ls != NULL) {
       /*
        * NB, here: dist = |F| = |FILL|
@@ -3256,7 +3249,6 @@ void fvelo_slip_bc(double func[MAX_PDIM],
 		  fv->x[0], fv->x[1], fv->F, betainv, alpha*dist);
 #endif
     }
-#endif /* COUPLED_FILL */
   }
 
   /* quantities specific to FLUID bcs   */
@@ -3460,7 +3452,6 @@ fprintf(stderr,"more %g %g %g %g\n",res,jac,betainv, dthick_dV);
       }
     }
 
-#ifdef COUPLED_FILL
     var = FILL;
     if (pd->v[pg->imtrx][var]) {
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
@@ -3487,7 +3478,6 @@ fprintf(stderr,"more %g %g %g %g\n",res,jac,betainv, dthick_dV);
         }
       }
     }
-#endif /* COUPLED_FILL */
 
     /*
      * Extra terms if we are limiting slip to be tangent to surface.
@@ -4048,12 +4038,10 @@ void fvelo_slip_level(double func[MAX_PDIM],
     d_Pi = NULL;
 
   load_lsi(width);
-#ifdef COUPLED_FILL
   if (af->Assemble_Jacobian) {
     load_lsi_derivs();
     memset(d_beta_dF, 0, MDE * sizeof(double));
   }
-#endif /* COUPLED_FILL */
 
   beta = slip_coefficient(beta_inside, beta_outside, fv->F, width, d_beta_dF, gas_phase_factor,
                           contact_fraction);
@@ -4187,10 +4175,8 @@ static double slip_coefficient(const double beta0,
   }
 
   load_lsi(gas_phase_factor * width);
-#ifdef COUPLED_FILL
   if (af->Assemble_Jacobian)
     load_lsi_derivs();
-#endif /* COUPLED_FILL */
 
   if (sign_gas * F >= contact_fraction * width && lsi->near) /* and add if it is "near" */
   /* This implies complete slip if gas and it is near contact
@@ -4207,10 +4193,8 @@ static double slip_coefficient(const double beta0,
   /* restore LS variables  */
   if (gas_phase_factor != 1.) {
     load_lsi(width);
-#ifdef COUPLED_FILL
     if (af->Assemble_Jacobian)
       load_lsi_derivs();
-#endif /* COUPLED_FILL */
   }
 
   return (beta);
@@ -10003,11 +9987,9 @@ void apply_CA_FILL(double func[MAX_PDIM],
   if (!lsi->near)
     return;
 
-#ifdef COUPLED_FILL
   /* Get the derivatives if necessary. */
   if (af->Assemble_Jacobian)
     load_lsi_derivs();
-#endif /* COUPLED_FILL */
 
   /* Some shortcuts. */
   for (p = 0; p < dim; p++) {
@@ -10040,9 +10022,8 @@ void apply_CA_FILL(double func[MAX_PDIM],
     }
     if (!af->Assemble_Jacobian)
       return;
-      /* Compute the jacobian contributions. */
+    /* Compute the jacobian contributions. */
 
-#ifdef COUPLED_FILL
     /* Derivatives w.r.t FILL */
     var = FILL;
     for (p = 0; p < dim; p++) {
@@ -10059,7 +10040,6 @@ void apply_CA_FILL(double func[MAX_PDIM],
 
       } /* for: j=0,...,ei[pg->imtrx]->dof[FILL] */
     }   /* for: p=0,...,dim */
-#endif  /* COUPLED_FILL */
 
     /* Derivatives w.r.t MESH */
     if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
@@ -10134,7 +10114,6 @@ void apply_CA_FILL(double func[MAX_PDIM],
     if (!af->Assemble_Jacobian)
       return;
 
-#ifdef COUPLED_FILL
     /* Derivatives w.r.t. FILL */
     var = FILL;
     for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
@@ -10165,8 +10144,7 @@ void apply_CA_FILL(double func[MAX_PDIM],
 
       } /* for: p */
 
-    }  /* for: j */
-#endif /* COUPLED_FILL */
+    } /* for: j */
 
     /* Derivatives w.r.t. MESH_DISPLACEMENTs */
     if (!pd->v[pg->imtrx][MESH_DISPLACEMENT1])
@@ -10238,11 +10216,9 @@ void apply_sharp_ca(double func[MAX_PDIM],
 
   load_lsi(ls->Length_Scale);
 
-#ifdef COUPLED_FILL
   /* Get the derivatives if necessary. */
   if (af->Assemble_Jacobian)
     load_lsi_derivs();
-#endif /* COUPLED_FILL */
 
   cos_ca = cos(M_PIE * ca / 180.0);
   sin_ca = sin(M_PIE * ca / 180.0);
@@ -10342,10 +10318,8 @@ void apply_wetting_velocity(double func[MAX_PDIM],
 
     cos_ca_static = cos(M_PIE * (180.0 - theta_s) / 180.0);
 
-#ifdef COUPLED_FILL
     if (af->Assemble_Jacobian)
       load_lsi_derivs();
-#endif /* COUPLED_FILL */
 
     for (a = 0; a < dim; a++) {
       nw[a] = fv->snormal[a];
@@ -10379,7 +10353,6 @@ void apply_wetting_velocity(double func[MAX_PDIM],
     }
 
     betainv = 1.0 / depth;
-#ifdef COUPLED_FILL
     var = ls->var;
 
     for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
@@ -10398,7 +10371,6 @@ void apply_wetting_velocity(double func[MAX_PDIM],
         d_wet_vector_dF[a][j] = d_t_dFj[a] * wet_speed * delta + t[a] * d_dp_dFj * delta / cT +
                                 t[a] * wet_speed * d_delta_dFj;
     }
-#endif
     var = MESH_DISPLACEMENT1;
     if (pd->v[pg->imtrx][var]) {
       for (b = 0; b < dim; b++) {
@@ -10432,7 +10404,6 @@ void apply_wetting_velocity(double func[MAX_PDIM],
   }
 
   if (af->Assemble_Jacobian) {
-#ifdef COUPLED_FILL
     var = ls->var;
 
     for (a = 0; a < dim; a++) {
@@ -10442,7 +10413,6 @@ void apply_wetting_velocity(double func[MAX_PDIM],
         }
       }
     }
-#endif /*COUPLED_FILL */
     var = MESH_DISPLACEMENT1;
 
     if (pd->v[pg->imtrx][var]) {
@@ -10512,10 +10482,8 @@ void apply_linear_wetting_sic(double func[MAX_PDIM],
 
     cos_ca_static = cos(M_PIE * (180.0 - theta_s) / 180.0);
 
-#ifdef COUPLED_FILL
     if (af->Assemble_Jacobian)
       load_lsi_derivs();
-#endif /* COUPLED_FILL */
 
     for (a = 0; a < dim; a++) {
       nw[a] = fv->snormal[a];
@@ -10549,7 +10517,6 @@ void apply_linear_wetting_sic(double func[MAX_PDIM],
     }
 
     betainv = 1.0 / beta;
-#ifdef COUPLED_FILL
     var = ls->var;
 
     for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
@@ -10568,7 +10535,6 @@ void apply_linear_wetting_sic(double func[MAX_PDIM],
         d_wet_vector_dF[a][j] = d_t_dFj[a] * wet_speed * delta + t[a] * d_dp_dFj * delta / cT +
                                 t[a] * wet_speed * d_delta_dFj;
     }
-#endif
     var = MESH_DISPLACEMENT1;
     if (pd->v[pg->imtrx][var]) {
       for (b = 0; b < dim; b++) {
@@ -10602,7 +10568,6 @@ void apply_linear_wetting_sic(double func[MAX_PDIM],
   }
 
   if (af->Assemble_Jacobian) {
-#ifdef COUPLED_FILL
     var = ls->var;
 
     for (a = 0; a < dim; a++) {
@@ -10612,7 +10577,6 @@ void apply_linear_wetting_sic(double func[MAX_PDIM],
         }
       }
     }
-#endif /*COUPLED_FILL */
     var = MESH_DISPLACEMENT1;
 
     if (pd->v[pg->imtrx][var]) {
@@ -10886,7 +10850,6 @@ void apply_sharp_wetting_velocity(double func[MAX_PDIM],
   }
   betainv = 1.0 / depth;
 
-#ifdef COUPLED_FILL
   var = ls->var;
 
   for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
@@ -10930,7 +10893,6 @@ void apply_sharp_wetting_velocity(double func[MAX_PDIM],
     for (a = 0, d_wet_vector_dF[a][j] = 0.0; a < dim; a++)
       d_wet_vector_dF[a][j] = d_t_dFj[a] * wet_speed + t[a] * d_wet_speed_dFj;
   }
-#endif
 
   var = MESH_DISPLACEMENT1;
   if (pd->v[pg->imtrx][var]) {
@@ -11006,7 +10968,6 @@ void apply_sharp_wetting_velocity(double func[MAX_PDIM],
   }
 
   if (af->Assemble_Jacobian) {
-#ifdef COUPLED_FILL
     var = ls->var;
 
     for (a = 0; a < dim; a++) {
@@ -11021,7 +10982,6 @@ void apply_sharp_wetting_velocity(double func[MAX_PDIM],
         }
       }
     }
-#endif /*COUPLED_FILL */
     var = MESH_DISPLACEMENT1;
 
     if (pd->v[pg->imtrx][var]) {
@@ -11260,10 +11220,8 @@ void apply_blake_wetting_velocity(double func[MAX_PDIM],
     cos_ca_static = cos(M_PIE * (180.0 - theta_s) / 180.0);
     costhetaeq = -cos_ca_static;
 
-#ifdef COUPLED_FILL
     if (af->Assemble_Jacobian)
       load_lsi_derivs();
-#endif /* COUPLED_FILL */
     if (bc_type == WETTING_SPEED_HOFFMAN_BC || bc_type == WETTING_SPEED_COX_BC) {
       for (a = 0; a < VIM; a++) {
         for (b = 0; b < VIM; b++) {
@@ -11403,7 +11361,6 @@ void apply_blake_wetting_velocity(double func[MAX_PDIM],
     }
 
     betainv = 1.0 / depth;
-#ifdef COUPLED_FILL
     var = ls->var;
 
     for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
@@ -11451,7 +11408,6 @@ void apply_blake_wetting_velocity(double func[MAX_PDIM],
         d_wet_vector_dF[a][j] = d_t_dFj[a] * wet_speed * delta + t[a] * d_wet_speed_dFj * delta +
                                 t[a] * wet_speed * d_delta_dFj;
     }
-#endif
 
     var = MESH_DISPLACEMENT1;
     if (pd->v[pg->imtrx][var]) {
@@ -11517,7 +11473,6 @@ void apply_blake_wetting_velocity(double func[MAX_PDIM],
     }
 
     if (af->Assemble_Jacobian) {
-#ifdef COUPLED_FILL
       var = ls->var;
 
       for (a = 0; a < dim; a++) {
@@ -11527,7 +11482,6 @@ void apply_blake_wetting_velocity(double func[MAX_PDIM],
           }
         }
       }
-#endif /*COUPLED_FILL */
       var = MESH_DISPLACEMENT1;
 
       if (pd->v[pg->imtrx][var]) {
@@ -11771,12 +11725,10 @@ void apply_blake_wetting_velocity_sic(double func[MAX_PDIM],
   }
 
   load_lsi(wetting_length);
-#ifdef COUPLED_FILL
   if (af->Assemble_Jacobian) {
     load_lsi_derivs();
     memset(d_beta_dF, 0, MDE * sizeof(double));
   }
-#endif /* COUPLED_FILL */
 
   beta = slip_coefficient(beta_inside, beta_outside, fv->F, wetting_length, d_beta_dF,
                           gas_phase_factor, contact_fraction);
@@ -11976,7 +11928,6 @@ void apply_blake_wetting_velocity_sic(double func[MAX_PDIM],
       printf("Ca angle vnew %g %g %g %g\n",ca_no, acos(costheta)*180/M_PIE, wet_speed, triangle);
 #endif
 
-#ifdef COUPLED_FILL
     var = ls->var;
 
     for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
@@ -12023,7 +11974,6 @@ void apply_blake_wetting_velocity_sic(double func[MAX_PDIM],
       for (a = 0, d_wet_vector_dF[a][j] = 0.0; a < dim; a++)
         d_wet_vector_dF[a][j] = d_t_dFj[a] * wet_speed + t[a] * d_wet_speed_dFj;
     }
-#endif
 
     var = MESH_DISPLACEMENT1;
     if (pd->v[pg->imtrx][var]) {
@@ -12085,7 +12035,6 @@ void apply_blake_wetting_velocity_sic(double func[MAX_PDIM],
 
     if (af->Assemble_Jacobian) {
 
-#ifdef COUPLED_FILL
       var = ls->var;
       for (a = 0; a < dim; a++) {
         if (pd->v[pg->imtrx][var]) {
@@ -12102,7 +12051,6 @@ void apply_blake_wetting_velocity_sic(double func[MAX_PDIM],
           }
         }
       }
-#endif /*COUPLED_FILL */
       var = MESH_DISPLACEMENT1;
       if (pd->v[pg->imtrx][var]) {
         for (b = 0; b < dim; b++) {
@@ -12244,7 +12192,6 @@ void apply_blake_wetting_velocity_sic(double func[MAX_PDIM],
         }
       }
     }
-#ifdef COUPLED_FILL
     var = ls->var;
     for (a = 0; a < dim; a++) {
       if (pd->v[pg->imtrx][var]) {
@@ -12254,7 +12201,6 @@ void apply_blake_wetting_velocity_sic(double func[MAX_PDIM],
         }
       }
     }
-#endif /*COUPLED_FILL */
   }
 }
 
@@ -14856,12 +14802,10 @@ void fvelo_slip_ls_heaviside(double func[MAX_PDIM],
     return;
 
   load_lsi(width);
-#ifdef COUPLED_FILL
   if (af->Assemble_Jacobian) {
     load_lsi_derivs();
     memset(d_beta_dF, 0, MDE * sizeof(double));
   }
-#endif
 
   level_set_property(beta_negative, beta_positive, width, &beta, d_beta_dF);
   // betainv = mu/beta;
@@ -14924,12 +14868,10 @@ void fvelo_slip_ls_oriented(double func[MAX_PDIM],
     return;
 
   load_lsi(width);
-#ifdef COUPLED_FILL
   if (af->Assemble_Jacobian) {
     load_lsi_derivs();
     memset(d_beta_dF, 0, MDE * sizeof(double));
   }
-#endif /* COUPLED_FILL */
   level_set_property(beta_negative, beta_positive, width, &beta, d_beta_dF);
   level_set_property(gamma_negative, gamma_positive, width, &gamma, d_gamma_dF);
   betainv = 1 / beta;

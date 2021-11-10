@@ -351,31 +351,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 
   /* sparse variables for fill equation subcycling */
 
-#ifdef COUPLED_FILL
   static struct GomaLinearSolverData *ams[NUM_ALSS] = {NULL};
-#else
-  int *ijaf = NULL;         /* column pointer array for fill equation   */
-  double *afill = NULL;     /* nonzero array  for fill equation         */
-  double *afill_old = NULL; /* nonzero array  for fill equation         */
-  double *xf = NULL;        /* solution vector for fill equation        */
-  double *rf = NULL;        /* residual vector for fill equation        */
-  int *ijaf_attic = NULL;   /* for hiding external nodes from Aztec     */
-  static struct Aztec_Linear_Solver_System *ams[NUM_ALSS] = {NULL, NULL};
-
-  /*
-   * Variables for time integration
-   */
-
-  double *xf_old = NULL;    /* old solution vector                      */
-  double *xfdot = NULL;     /* current time derivative of soln          */
-  double *xfdot_old = NULL; /* old time derivative of soln              */
-
-  double *xf_save = NULL;
-
-  double delta_t_exp = 0.0;
-  int n_exp = 0;
-
-#endif /* COUPLED_FILL */
 
   /* "sl_util_structs.h" */
 
@@ -686,16 +662,8 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
   }
 #ifdef MPI
   AZ_set_proc_config(ams[0]->proc_config, MPI_COMM_WORLD);
-#ifndef COUPLED_FILL
-  if (Explicit_Fill)
-    AZ_set_proc_config(ams[1]->proc_config, MPI_COMM_WORLD);
-#endif /* not COUPLED_FILL */
 #else  /* MPI */
   AZ_set_proc_config(ams[0]->proc_config, 0);
-#ifndef COUPLED_FILL
-  if (Explicit_Fill)
-    AZ_set_proc_config(ams[1]->proc_config, 0);
-#endif /* not COUPLED_FILL */
 #endif /* MPI */
 
   /* Allocate solution arrays on first call only */
@@ -1180,9 +1148,6 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
     double max_time_steps = tran->MaxTimeSteps;
     double time_max = tran->TimeMax;
     eps = tran->eps;
-#ifndef COUPLED_FILL
-    exp_subcycle = tran->exp_subcycle;
-#endif /* not COUPLED_FILL */
 
     // Determine if we are using a constant time step or not
     if (delta_t0 < 0.0) {
@@ -1274,42 +1239,6 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 
     /*set some other misc. action flags */
     af->Sat_hyst_reevaluate = FALSE;
-
-#ifndef COUPLED_FILL
-    /*
-     * Initialize the level set solution vectors and
-     * associated matrix problem
-     */
-    if (Explicit_Fill) {
-      countmap_vardofs(FILL, num_total_nodes, node_to_fill);
-
-      asdv(&xf, num_fill_unknowns);
-      asdv(&xf_old, num_fill_unknowns);
-
-      asdv(&xfdot, num_fill_unknowns);
-      asdv(&xfdot_old, num_fill_unknowns);
-
-      alloc_MSR_sparse_arrays(&ijaf, &afill, &afill_old, 1, node_to_fill, exo, dpi);
-
-      alloc_extern_ija_buffer(num_fill_unknowns, owned_fill_unknowns, ijaf, &ijaf_attic);
-      asdv(&rf, num_fill_unknowns);
-      asdv(&xf_save, num_fill_unknowns);
-
-      ams[FIL]->bindx = ijaf;
-      ams[FIL]->val = afill;
-
-      ams[FIL]->belfry = ijaf_attic;
-
-      ams[FIL]->val_old = NULL;
-
-      ams[FIL]->indx = NULL;
-      ams[FIL]->bpntr = NULL;
-      ams[FIL]->rpntr = NULL;
-      ams[FIL]->cpntr = NULL;
-
-      matrix_systems_mask += 2;
-    }
-#endif /* not COUPLED_FILL */
 
     /* Call prefront (or mf_setup) if necessary */
 
@@ -1495,17 +1424,6 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 
       if (upd->ep[pg->imtrx][FILL] > -1 && nt == 0) { /*  Start of LS initialization */
 
-#ifndef COUPLED_FILL
-        /*
-         * Extract the fill unknowns into their own packed vector, xf[],
-         * at t = t_0
-         */
-        if (Explicit_Fill) {
-          get_fill_vector(num_total_nodes, x_old, xf, node_to_fill);
-          dcopy1(num_fill_unknowns, xf, xf_old);
-        }
-#endif /* not COUPLED_FILL */
-
         if (ls != NULL || pfd != NULL) {
 
           int eqntype = ls->Init_Method;
@@ -1559,14 +1477,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
           case PROJECT:
 
             DPRINTF(stdout, "\n\t Projection level set initialization \n");
-#ifdef COUPLED_FILL
             GOMA_EH(GOMA_ERROR, "Use of \"PROJECT\" is obsolete.");
-#else  /* COUPLED_FILL */
-            init_vec_value(xf, 0.0, num_fill_unknowns);
-            err = integrate_explicit_eqn(ams[FIL], rf, xf, xf_old, xfdot, xfdot_old, x, x_old,
-                                         x_oldest, step_size, theta, &time2, PROJECT, node_to_fill,
-                                         exo, dpi, cx[0]);
-#endif /* COUPLED_FILL */
 
             break;
 
@@ -1617,28 +1528,10 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 
             DPRINTF(stdout, "- done \n");
 
-#ifndef COUPLED_FILL
-            /*
-             * fill up xf and copy xf to xf_old.
-             * This is initialization so xf == xf_old is the best
-             * we can do.
-             */
-            if (Explicit_Fill) {
-              get_fill_vector(num_total_nodes, x, xf, node_to_fill);
-              dcopy1(num_fill_unknowns, xf, xf_old);
-            }
-#endif /* not COUPLED_FILL */
-
             break;
 
           case SM_OBJECT:
             GOMA_EH(GOMA_ERROR, "CGM not supported, SM_OBJECT level set initialization");
-#ifndef COUPLED_FILL
-            if (Explicit_Fill) {
-              get_fill_vector(num_total_nodes, x, xf, node_to_fill);
-              dcopy1(num_fill_unknowns, xf, xf_old);
-            }
-#endif
             break;
 
           default:
@@ -1660,11 +1553,6 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
                   huygens_renormalization(x, num_total_nodes, exo, cx[0], dpi, num_fill_unknowns,
                                           numProcUnknowns, time1, Renorm_Now);
 
-#ifndef COUPLED_FILL
-              if (did_renorm) {
-                get_fill_vector(num_total_nodes, x, xf, node_to_fill);
-              }
-#endif /* not COUPLED_FILL */
 #ifndef PHASE_COUPLED_FILL
               if (did_renorm) {
                 /*get_fill_vector(num_total_nodes,x,xf,node_to_fill);*/
@@ -1674,22 +1562,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
               break;
 
             case CORRECT:
-#ifdef COUPLED_FILL
               GOMA_EH(GOMA_ERROR, "Use of \"CORRECT\" is obsolete.");
-#else  /* COUPLED_FILL */
-            {
-              double step_size = ls->Length_Scale / 10.0;
-              int num_steps = 15;
-
-              put_fill_vector(num_total_nodes, x_old, xf, node_to_fill);
-              exchange_dof(cx[0], dpi, x_old, 0);
-              put_fill_vector(num_total_nodes, x_oldest, xf, node_to_fill);
-              exchange_dof(cx[0], dpi, x_oldest, 0);
-              correct_level_set(ams[FIL], xf, rf, x, x_old, x_oldest, node_to_fill, num_total_nodes,
-                                num_fill_unknowns, step_size, theta, num_steps, CORRECT, exo, dpi,
-                                cx[0]);
-            }
-#endif /* COUPLED_FILL */
               break;
             default:
               if (ls->Evolution == LS_EVOLVE_ADVECT_EXPLICIT ||
@@ -1719,10 +1592,6 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
               ibc++;
             }
 
-#ifndef COUPLED_FILL
-            build = build || (ls->Evolution == LS_EVOLVE_SEMILAGRANGIAN);
-#endif
-
             /* Here we create space for an isosurface list that is updated
              * every time step.
              */
@@ -1745,11 +1614,6 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 
         } /* end of ls != NULL */
 
-#ifndef COUPLED_FILL
-        if (Explicit_Fill) {
-          put_fill_vector(num_total_nodes, x, xf, node_to_fill);
-        }
-#endif                 /* not COUPLED_FILL */
         if (converged) // avoid death spiral on initial failure
         {
           dcopy1(numProcUnknowns, x, x_old);
@@ -1850,130 +1714,6 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
         create_subsurfs(ls->last_surf_list, x_old, exo);
       }
 
-#ifndef COUPLED_FILL
-      /*
-       * Subcycling of the fill vector
-       *  HKM -> Note, took out the dependence of the converged flag
-       *         and switched initializations to x_old[]. I don't know
-       *         what was done before for failed time step cases. I suspect
-       *         this point was not covered, as the solution from the
-       *         fill subcycling will obviously depend on delta_t which
-       *         will have changed if a time step truncation error failure
-       *         occurred.
-       */
-      if (Explicit_Fill && nt) {
-        double *tmp_x, *tmp_x_old, *tmp_xdot; /* temporary vector pointers */
-
-        /*
-         * Gather the fill equation unknowns at t = t_n into a vector, xf[]
-         * and save them.  Note that we start from scratch each subcycling sequence
-         * So xf_old should be equal to xf and xfdot and xfdot_old should be zero
-         * IMHO, it is unnecessary work to try to extract info from previous successul
-         * subcycling sequence, given that step sizes might have changed and the like (TAB)
-         */
-        get_fill_vector(num_total_nodes, x_old, xf, node_to_fill);
-        dcopy1(num_fill_unknowns, xf, xf_save);
-        dcopy1(num_fill_unknowns, xf, xf_old);
-        memset(xfdot, 0, sizeof(double) * num_fill_unknowns);
-        memset(xfdot_old, 0, sizeof(double) * num_fill_unknowns);
-
-        /*
-         * Calculate the delta_t that will be used in the subcycle
-         */
-        delta_t_exp = delta_t / (double)exp_subcycle;
-
-        DPRINTF(stdout, "\n\tsubcycling on Fill equation:  dt_exp = %e\n", delta_t_exp);
-        log_msg("fill subcycle step %d, time = %g", n_exp, time2);
-
-        /*
-         * Section to subcyle the fill equations
-         * -> we do this before advancing the other equations from n to n+1
-         *    We do this even before having a prediction of the other equations!
-         *    Therefore, it should be noted that x and xdot are not filled with
-         *    anything of significance at this point in the code.
-         *    -> a better algorithm may be to move the predictor ahead of this
-         *       subcycle section, in order to make use of predicted solution
-         *       in the subcycle.
-         */
-
-        /* OK.  right before we start lets allocate some temporary vectors for holding
-           the fill equation as it evolves during the subcycling steps.  */
-
-        tmp_x = alloc_dbl_1(numProcUnknowns, 0.0);
-        tmp_x_old = alloc_dbl_1(numProcUnknowns, 0.0);
-        tmp_xdot = alloc_dbl_1(numProcUnknowns, 0.0);
-
-        /* But this isn't confusing enough so let's copy x_old into tmp_x,
-           xdot_old into tmp_xdot and x_older into tmp_x_old.  Note that at this point
-           in the code x_old, x_older contain "established" solutions which
-           we need later on in the integrate_explicit_eqn routine
-        */
-
-        dcopy1(numProcUnknowns, x_old, tmp_x);
-        dcopy1(numProcUnknowns, x_older, tmp_x_old);
-        dcopy1(numProcUnknowns, xdot_old, tmp_xdot);
-
-        for (n_exp = 0; n_exp < exp_subcycle; n_exp++) {
-          /*
-           * always use BE for level set integration
-           */
-          double _theta = (ls != NULL) ? 0.0 : theta;
-          /*
-           * time2 is the current time in the subcylce. The last time
-           * of the subcycle will be equal to time1, calculated above.
-           */
-          time2 = time + delta_t_exp * (n_exp + 1);
-
-          if (ls == NULL || ls->Evolution == LS_EVOLVE_ADVECT_EXPLICIT) {
-            DPRINTF(stdout, "\n\tsubcycling time step: %d  time = %e\n", n_exp, time2);
-
-            /*
-             *  Integrate the FILL equations for one time step
-             *  HKM -> At this point, for the case where the previous time
-             *         step was successful, x[] is equal to x_old[], except
-             *         for the FILL unknowns, which are being updated due
-             *         to the subcycling.
-             */
-            err = integrate_explicit_eqn(ams[FIL], rf, xf, xf_old, xfdot, xfdot_old, tmp_x,
-                                         tmp_x_old, tmp_xdot, delta_t_exp, _theta, &time2, ADVECT,
-                                         node_to_fill, exo, dpi, cx[0]);
-
-            log_msg("fill subcycle step %d, time = %g", n_exp, time2);
-          } else if (ls->Evolution == LS_EVOLVE_SEMILAGRANGIAN) {
-            DPRINTF(stdout, "\n\tsemi_lagrange time step: %d  time = %e\n", n_exp, time2);
-
-            semi_lagrange_step(num_total_nodes, numProcUnknowns, num_fill_unknowns, x, xf, xf_old,
-                               xfdot, xfdot_old, node_to_fill, delta_t_exp, theta, exo, dpi, cx[0]);
-
-            log_msg("semi_lagrange step %d, time = %g", n_exp, time2);
-          }
-
-          /*
-           * Update the main solution vector with the new FILL values
-           * and their derivatives
-           */
-          put_fill_vector(num_total_nodes, tmp_x, xf, node_to_fill);
-          exchange_dof(cx[0], dpi, tmp_x, 0);
-          put_fill_vector(num_total_nodes, tmp_x_old, xf, node_to_fill);
-          exchange_dof(cx[0], dpi, tmp_x_old, 0);
-          put_fill_vector(num_total_nodes, tmp_xdot, xfdot, node_to_fill);
-          exchange_dof(cx[0], dpi, tmp_xdot, 0);
-
-          dcopy1(num_fill_unknowns, xf, xf_old);
-
-          dcopy1(num_fill_unknowns, xfdot, xfdot_old);
-        }
-
-        /* Now ditch the temporary vectors */
-
-        safer_free((void **)&tmp_x);
-        safer_free((void **)&tmp_x_old);
-        safer_free((void **)&tmp_xdot);
-
-      } /* End of the FILL variable subcycling in time */
-
-#endif /* not COUPLED_FILL */
-
       if (ProcID == 0) {
         if (theta == 0.0)
           strcpy(tspstring, "(BE)");
@@ -2065,22 +1805,6 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
        *  this step can change the solution vector
        */
       find_and_set_Dirichlet(x, xdot, exo, dpi);
-
-#ifndef COUPLED_FILL
-      /*
-       * Now, that we have a predicted solution for the current
-       * time, x[], exchange the degrees of freedom to update the
-       * ghost node information.
-       */
-      if (Explicit_Fill) {
-        /* The predicted fill values from the previous call are not need
-           since ( in theory ) we have updated the fill field during
-           the explicit loop.  Here we overwrite the predicted fill values;
-        */
-
-        put_fill_vector(num_total_nodes, x, xf, node_to_fill);
-      }
-#endif /* not COUPLED_FILL */
 
       /*
        *  HKM -> I don't know if this extra exchange operation
@@ -2855,24 +2579,6 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
           subelement_mesh_output(x, exo);
         }
 #endif
-
-#ifndef COUPLED_FILL
-        /*
-         *  HKM NOTE: I am not sure why the attempt below to fix up
-         *        x[] is being made. For a failed time step, x[]
-         *        will contain garbage at this point. To retry the step
-         *        we will discard the time step by restarting with
-         *        x_old[] at the top of the time step loop. Therefore,
-         *        I advocate eliminating the next block of code.
-         */
-        if (Explicit_Fill && nt) {
-          /* restore original values for failed time step */
-          put_fill_vector(num_total_nodes, x, xf_save, node_to_fill);
-          exchange_dof(cx[0], dpi, x);
-          put_fill_vector(num_total_nodes, x_old, xf_save, node_to_fill);
-          exchange_dof(cx[0], dpi, x_old);
-        }
-#endif /* not COUPLED_FILL */
       }
 
       if (delta_t <= delta_t_min) {
@@ -2988,19 +2694,6 @@ free_and_clear:
       (num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx])) {
     safer_free((void **)&ija_attic);
   }
-
-#ifndef COUPLED_FILL
-  if (Explicit_Fill) {
-    safer_free((void **)&rf);
-    safer_free((void **)&xf);
-    safer_free((void **)&xf_save);
-    safer_free((void **)&xf_old);
-    safer_free((void **)&xfdot);
-    safer_free((void **)&xfdot_old);
-    if (dpi->num_universe_nodes != (dpi->num_internal_nodes + dpi->num_boundary_nodes))
-      safer_free((void **)&ijaf_attic);
-  }
-#endif /* not COUPLED_FILL */
 
   if (last_call) {
     if (strcmp(Matrix_Format, "epetra") == 0) {

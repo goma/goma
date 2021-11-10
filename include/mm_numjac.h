@@ -126,26 +126,6 @@ EXTERN void numerical_jacobian       /* mm_numjac.c                             
      double *,
      double *);
 
-#ifndef COUPLED_FILL
-EXTERN void numerical_jacobian_fill /* mm_numjac.c                           */
-    (int[],                         /* ijaf - column pointers into fill matrix   */
-     double[],                      /* afill - non-zero entries in fill matrix   */
-     double[],                      /* xf - fill Solution vector                 */
-     double[],                      /* rf - Residual vector for fill eqns        */
-     double,                        /* delta_t - time step size                  */
-     double,                        /* theta - parameter varies time integration *
-                                     * from explicit (theta = 1) to              *
-                                     * implicit (theta = 0)                      */
-     double[],                      /* x - current big soln vector (everything)  */
-     double[],                      /* x_old  - old solution vector              */
-     double[],                      /* xdot - predicted for new solution         */
-     int,                           /* Debug_Flag - flag for calculating         *
-                                     * numerical jacobian  -4 == calc num jac w/ *
-                                     * rescaling                                 */
-     int[],                         /* node_to_fill - this is a map from the     */
-     Exo_DB *,                      /* exo - ptr to whole fe mesh                */
-     Dpi *);                        /* dpi - ptr to parallel info                */
-#endif                              /* not COUPLED_FILL */
 extern double calc_numerical_delta(double);
 extern void AF_assemble_Residual_Only(void);
 extern void AF_restore_Jacobian_Flag(void);

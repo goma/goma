@@ -226,225 +226,6 @@ static void purge_spurious_LS(double *, Exo_DB *, int);
 #define MAX_STEP              500
 #define SUBELEM_SIG_CROSS_TOL 1.e-6
 
-#ifndef COUPLED_FILL
-#define GRADIENT   TRUE
-#define STREAMWISE FALSE
-void semi_lagrange_step(const int num_total_nodes,
-                        int num_total_unknowns,
-                        int num_fill_unknowns,
-                        double x[],
-                        double F[],
-                        double F_old[],
-                        double Fdot[],
-                        double Fdot_old[],
-                        int node_to_fill[],
-                        double delta_t,
-                        double theta,
-                        Exo_DB *exo,
-                        Dpi *dpi,
-                        Comm_Ex *cx)
-
-{
-
-  int inode, i;
-  int eqn = LS;
-  int dim = pd->Num_Dim;
-
-  int global_fill_unknowns;
-
-  int *ie_to_fill, *ext_dof;
-  double *F_, *R, *b, *dC;
-
-  double M0 = 0.0, global_LS_flux, M;
-
-  double R_lamda, lamda, d_lamda, R_norm = 1.0, delta_norm = 1.0;
-
-  int max_its;
-
-#ifdef PARALLEL
-  int local_fill_unknowns = num_fill_unknowns;
-
-  double local_bTb, local_bTR, local_RTR;
-  double global_bTb = 0.0, global_bTR = 0.0, global_RTR = 0.0;
-
-  exchange_dof(cx, dpi, x, pg->imtrx);
-
-#endif
-
-  if (dim > 2)
-    GOMA_EH(GOMA_ERROR, "SEMI_LAGRANGE time stepping not implemented in 3D.");
-  if (ls->Isosurface_Subsurf_Type != LS_SURF_FACET)
-    GOMA_EH(GOMA_ERROR, "Need FACET Isosurface type .");
-
-  global_fill_unknowns = num_fill_unknowns;
-
-  ext_dof = alloc_int_1(num_fill_unknowns, FALSE);
-
-  ie_to_fill = alloc_int_1(num_fill_unknowns, 0);
-
-  dalloc(num_fill_unknowns, F_);
-  dalloc(num_fill_unknowns, R);
-  dalloc(num_fill_unknowns, b);
-  dalloc(num_total_unknowns, dC);
-
-  for (inode = 0; inode < num_total_nodes; inode++) {
-
-    double r_node[DIM];
-    double v_node[DIM];
-    double r_last[DIM];
-
-    struct LS_Surf *closest;
-
-    double distance;
-
-    if (num_varType_at_node(inode, eqn) == 1) {
-      r_node[0] = Coor[0][inode];
-      r_node[1] = Coor[1][inode];
-
-      if ((num_varType_at_node(inode, VELOCITY1) == 1) &&
-          (num_varType_at_node(inode, VELOCITY2) == 1)) {
-        v_node[0] = x[Index_Solution(inode, VELOCITY1, 0, 0, -1, pg->imtrx)];
-        v_node[1] = x[Index_Solution(inode, VELOCITY2, 0, 0, -1, pg->imtrx)];
-      } else {
-        GOMA_EH(GOMA_ERROR, "Need equal interpolation order LS and VELOCITY1, VELOCITY2 for "
-                            "SEMI_LAGRANGE.\n");
-      }
-
-      r_last[0] = r_node[0] - v_node[0] * delta_t;
-      r_last[1] = r_node[1] - v_node[1] * delta_t;
-
-      closest = closest_surf(ls->last_surf_list, x, exo, r_last);
-
-      distance = closest->closest_point->distance;
-
-      F_[node_to_fill[inode]] = distance;
-
-      ie_to_fill[node_to_fill[inode]] = Index_Solution(inode, ls->var, 0, 0, -2, pg->imtrx);
-
-#ifdef PARALLEL
-      /* Here we set up the array ext_dof which tells me whether this dof belong
-       * to me or no */
-      if (Num_Proc > 1) {
-        if (inode > (dpi->num_internal_nodes + dpi->num_boundary_nodes - 1)) {
-          ext_dof[node_to_fill[inode]] = TRUE;
-          local_fill_unknowns -= 1;
-        }
-      }
-#endif
-    }
-  }
-#ifdef PARALLEL
-  if (Num_Proc > 1) {
-
-    global_fill_unknowns = 0;
-
-    MPI_Allreduce(&local_fill_unknowns, &global_fill_unknowns, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-  }
-
-#endif
-
-  M0 = find_LS_mass(exo, dpi, NULL, dC, x, num_total_unknowns);
-
-  global_LS_flux = find_LS_global_flux(exo, dpi, NULL, NULL, x, num_total_unknowns);
-
-  M0 -= global_LS_flux * delta_t;
-
-  R_lamda = lamda = 0.0;
-
-  max_its = 10;
-
-  DPRINTF(stderr, "\n\t   L_2 in R   L_2 in dx   |dM| \n");
-  DPRINTF(stderr, "\t  ---------  ---------   --------\n");
-
-  while (delta_norm >= 1.e-5 && max_its > 0) {
-    int k;
-    double bTb, bTR, RTR;
-
-    for (k = 0, bTb = bTR = RTR = 0.0; k < num_fill_unknowns; k++) {
-      b[k] = dC[ie_to_fill[k]];
-      R[k] = 2.0 * (F[k] - F_[k]) + lamda * b[k];
-
-      if (ext_dof[k] == FALSE) {
-        bTb += b[k] * b[k];
-        bTR += b[k] * R[k];
-        RTR += R[k] * R[k];
-      }
-    }
-
-#ifdef PARALLEL
-
-    if (Num_Proc > 1) {
-
-      local_bTb = bTb;
-      local_bTR = bTR;
-      local_RTR = RTR;
-
-      MPI_Allreduce(&local_bTb, &global_bTb, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-      bTb = global_bTb;
-
-      MPI_Allreduce(&local_bTR, &global_bTR, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-      bTR = global_bTR;
-
-      MPI_Allreduce(&local_RTR, &global_RTR, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-
-      RTR = global_RTR;
-    }
-
-#endif
-
-    R_norm = sqrt(fabs(RTR)) / global_fill_unknowns + fabs(R_lamda);
-
-    DPRINTF(stderr, "\t%10.2e ", R_norm);
-
-    d_lamda = (2.0 * R_lamda - bTR) / bTb;
-
-    for (k = 0, delta_norm = 0.0; k < num_fill_unknowns; k++) {
-      F[k] += -0.5 * R[k] - 0.5 * b[k] * d_lamda;
-
-      x[ie_to_fill[k]] = F[k];
-
-      if (ext_dof[k] == FALSE)
-        delta_norm += pow(-0.5 * R[k] - 0.5 * b[k] * d_lamda, 2.0);
-    }
-
-    lamda += d_lamda;
-
-#ifdef PARALLEL
-    if (Num_Proc > 1) {
-      double global_delta_norm = 0.0, local_delta_norm;
-
-      local_delta_norm = delta_norm;
-
-      MPI_Allreduce(&local_delta_norm, &global_delta_norm, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-      delta_norm = global_delta_norm;
-    }
-
-    exchange_dof(cx, dpi, x, pg->imtrx);
-#endif
-
-    delta_norm = sqrt(delta_norm) / global_fill_unknowns + sqrt(d_lamda * d_lamda);
-
-    M = find_LS_mass(exo, dpi, NULL, dC, x, num_total_unknowns);
-
-    R_lamda = M - M0;
-
-    max_its--;
-
-    DPRINTF(stderr, "%10.2e   %10.2e \n", delta_norm, fabs(M - M0));
-  }
-
-  if (max_its == 0) {
-    for (i = 0; i < num_fill_unknowns; i++)
-      F[i] = F_[i];
-  }
-
-  for (i = 0; i < num_fill_unknowns; i++) {
-    Fdot[i] = (1.0 + 2.0 * theta) / delta_t * (F[i] - F_old[i]) - 2.0 * theta * Fdot_old[i];
-  }
-}
-
-#endif /* COUPLED_FILL */
-
 /***************************************************************************************/
 /***************************************************************************************/
 /***************************************************************************************/
@@ -804,135 +585,6 @@ huygens_renormalization ( double *x,
 
   return (status);
 }
-#ifndef COUPLED_FILL
-/***************************************************************************************/
-/***************************************************************************************/
-/***************************************************************************************/
-
-void correct_level_set(struct Aztec_Linear_Solver_System *ams,
-                       double xf[],
-                       double rf[],
-                       double x[],
-                       double x_old[],
-                       double x_oldest[],
-                       int node_to_fill[],
-                       int num_total_nodes,
-                       int num_fill_unknowns,
-                       double init_step_size,
-                       double theta,
-                       int num_steps,
-                       int eqntype,
-                       Exo_DB *exo,
-                       Dpi *dpi,
-                       Comm_Ex *cx) {
-  int step = 0, I;
-  double *xfdot, *xfdot_old, *xf_old = NULL;
-
-  double time = 0.0;
-
-  double h = ls->Length_Scale;
-
-  double ave_level_grad_err;
-
-  double width = ls->Control_Width;
-
-  double tolerance = ls->Renorm_Tolerance;
-
-  static double step_size = 0.0;
-
-  short int diverge = FALSE;
-
-  xf_old = alloc_dbl_1(num_fill_unknowns, 0.0);
-  xfdot = alloc_dbl_1(num_fill_unknowns, 0.0);
-  xfdot_old = alloc_dbl_1(num_fill_unknowns, 0.0);
-  get_fill_vector(num_total_nodes, x, xf, node_to_fill);
-  memset(rf, 0, sizeof(double) * num_fill_unknowns);
-
-  if (step_size == 0.0)
-    step_size = init_step_size;
-
-  ave_level_grad_err = gradient_norm_err(x, exo, dpi, width * h);
-
-  if (fabs(ave_level_grad_err) > tolerance) {
-
-    DPRINTF(stderr, "\n\t Correcting \n");
-    DPRINTF(stderr, "\n\t\t  step       L1           its  \n");
-    DPRINTF(stderr, "\t\t--------  ---------    --------\n");
-
-    while ((fabs(ave_level_grad_err) > tolerance) && step++ < num_steps) {
-      int its;
-
-      dcopy1(num_fill_unknowns, xf, xf_old);
-
-      time += step_size;
-
-      its = integrate_explicit_eqn(ams, rf, xf, xf_old, xfdot, xfdot_old, x, x_old, x_oldest,
-                                   step_size, theta, &time, eqntype, node_to_fill, exo, dpi, cx);
-
-      if (its > 0) {
-        int i, I, K;
-        double last_norm = ave_level_grad_err;
-
-        put_fill_vector(num_total_nodes, x, xf, node_to_fill);
-        exchange_dof(cx, dpi, x, pg->imtrx);
-        put_fill_vector(num_total_nodes, x_old, xf, node_to_fill);
-        exchange_dof(cx, dpi, x_old, pg->imtrx);
-
-        ave_level_grad_err = gradient_norm_err(x, exo, dpi, width * h);
-
-        diverge = ave_level_grad_err >= last_norm;
-
-        DPRINTF(stderr, "\t\t   [%d]     %10.3e      %d       %10.4e\n", step, ave_level_grad_err,
-                its, step_size);
-      } else if (step_size > init_step_size / 1000.0) {
-        time = 0.0;
-        step_size /= 10.0;
-        step = 0;
-        get_fill_vector(num_total_nodes, x_oldest, xf, node_to_fill);
-        put_fill_vector(num_total_nodes, x, xf, node_to_fill);
-        exchange_dof(cx, dpi, x, pg->imtrx);
-        put_fill_vector(num_total_nodes, x_old, xf, node_to_fill);
-        exchange_dof(cx, dpi, x_old, pg->imtrx);
-        memset(xf_old, 0, sizeof(double) * num_fill_unknowns);
-
-        DPRINTF(stderr, "\t\t  Resetting correcting step size to %10.3e\n", step_size);
-      } else {
-        step = num_steps; /* force the while loop to exit */
-        diverge = TRUE;
-      }
-    }
-
-    if (step >= num_steps && diverge) {
-      get_fill_vector(num_total_nodes, x_oldest, xf, node_to_fill);
-      put_fill_vector(num_total_nodes, x, xf, node_to_fill);
-      exchange_dof(cx, dpi, x, pg->imtrx);
-      put_fill_vector(num_total_nodes, x_old, xf, node_to_fill);
-      exchange_dof(cx, dpi, x_old, pg->imtrx);
-
-      DPRINTF(stderr, "\n\t\t  Correcting step fails. No correction applied "
-                      "this time step \n");
-
-      if (step_size / 2.0 > init_step_size / 1000.0) {
-        step_size /= 2.0;
-      } else {
-        step_size = init_step_size / 1000.0;
-      }
-    } else {
-      if (step_size * 2.0 < init_step_size) {
-        step_size *= 2.0;
-      } else {
-        step_size = init_step_size;
-      }
-    }
-  } else {
-    DPRINTF(stderr, "\n\t Correction of level set unnecessay: %f \n", ave_level_grad_err);
-  }
-
-  safer_free((void **)&xf_old);
-  safer_free((void **)&xfdot);
-  safer_free((void **)&xfdot_old);
-}
-#endif /* not COUPLED_FILL */
 
 #if 1
 
@@ -942,274 +594,6 @@ void correct_level_set(struct Aztec_Linear_Solver_System *ams,
  *
  *
  */
-
-#ifndef COUPLED_FILL
-
-int assemble_level_correct(double afill[], /* Jacobian matrix for fill equation  */
-                           int ijaf[],     /* pointer to nonzeros in Jacobian matrix   */
-                           double rf[],    /* rhs vector   */
-                           double dt,      /* current time step size */
-                           double tt,      /* parameter to vary time integration from
-                                            * explicit (tt = 1) to implicit (tt = 0) */
-                           int node_to_fill[]) {
-  /*
-   * Some local variables for convenience...
-   */
-
-  int eqn;
-  int dim;
-  int a, b;
-
-  int i, j;
-  int status;
-  int I, J;
-  int idof, jdof;
-
-  int ie, je, ja;
-  int ki, kj, nvdofi, nvdofj;
-
-  dbl F; /* Fill. */
-  dbl F_0;
-  dbl F_old; /* Fill at last time step. */
-  dbl F_dot; /* Fill derivative wrt time. */
-
-  dbl grad_F[DIM];      /* gradient of Fill. */
-  dbl grad_F_mag = 0.0; /* magnitude of fill gradient vector */
-
-  dbl grad_F0[DIM];
-  dbl grad_F0_mag = 0.0;
-
-  dbl vel_mag = 0.0; /* velocity magnitude */
-
-  dbl w[DIM]; /* correction velocities */
-  dbl d_w_dF[DIM][MDE];
-  dbl S = 0.0; /* sign of distance function (-1 or +1 ) */
-  dbl P1 = 0.0;
-
-  dbl xx[DIM];    /* position field. */
-  dbl x_old[DIM]; /* old position field. */
-  dbl x_dot[DIM]; /* current position field derivative wrt time. */
-
-  dbl num_diff;
-
-  /*
-   * Galerkin weighting functions for i-th energy residuals
-   * and some of their derivatives...
-   */
-
-  dbl phi_i;
-
-  /*
-   * Interpolation functions for variables and some of their derivatives.
-   */
-
-  dbl phi_j;
-  dbl h3; /* Volume element (scale factors). */
-  dbl det_J;
-  dbl wt;
-
-  double rhs;
-
-#if 0
-  extern dbl vec_dot
-  (const int n1,
-	 dbl *v1,
-	 dbl *v2);
-#endif
-
-  dbl alpha = 0.5 * ls->Length_Scale;
-  dbl upwind = 0.5;
-
-  status = 0;
-
-  /*
-   * Unpack variables from structures for local convenience...
-   */
-
-  dim = pd->Num_Dim;
-
-  eqn = R_FILL;
-
-  /*
-   * Bail out fast if there's nothing to do...
-   */
-
-  if (!pd->e[pg->imtrx][eqn]) {
-    return (status);
-  }
-
-  wt = fv->wt; /* Gauss point weight. */
-
-  h3 = fv->h3; /* Differential volume element. */
-
-  det_J = bf[eqn]->detJ; /* Really, ought to be mesh eqn. */
-
-  F = fv->F;
-  F_old = fv_old->F;
-  F_0 = fv_dot->F; /* tabaer notes that fv_dot is being misused here to store the
-                    * level set field from which the all-important sign is found */
-
-  /*  F_dot_old = sqrt( fv->x[0]*fv->x[0] + fv->x[1]*fv->x[1] ) - 1.0;  */
-
-  /*   F_dot    =  (1 + 2. * tt) * (F - F_old)/dt - 2. * tt  * F_dot_old; */
-
-  F_dot = (F - F_old) / dt;
-
-  /*   S =  F_0 / sqrt( F_0 * F_0 + alpha*alpha ); */
-
-  for (a = 0; a < dim; a++) {
-    if (!EXPLICIT) {
-      grad_F[a] = fv->grad_F[a];
-    } else {
-      grad_F[a] = fv_old->grad_F[a];
-    }
-
-    grad_F_mag += grad_F[a] * grad_F[a];
-
-    vel_mag += fv->v[a] * fv->v[a];
-
-    grad_F0[a] = fv_dot->grad_F[a];
-
-    grad_F0_mag += grad_F0[a] * grad_F0[a];
-  }
-
-  grad_F_mag = sqrt(grad_F_mag);
-  grad_F0_mag = sqrt(grad_F0_mag);
-
-  vel_mag = sqrt(vel_mag);
-
-  S = F_0 / sqrt(F_0 * F_0 + (grad_F0_mag * alpha * grad_F0_mag * alpha));
-
-  /*
-   * Gradient correction
-   */
-
-  if (GRADIENT) {
-    memset(w, 0, sizeof(double) * DIM);
-    memset(d_w_dF, 0, sizeof(double) * DIM * MDE);
-
-    for (a = 0; (grad_F_mag > 1.e-12) && a < dim; a++) {
-      w[a] = S * grad_F[a] / grad_F_mag;
-
-      for (j = 0; j < ei[pg->imtrx]->dof[eqn]; j++) {
-        P1 = vec_dot(dim, bf[eqn]->grad_phi[j], grad_F);
-
-        d_w_dF[a][j] = bf[eqn]->grad_phi[j][a] - P1 * grad_F[a] / grad_F_mag / grad_F_mag;
-
-        d_w_dF[a][j] *= S / grad_F_mag;
-      }
-    }
-  }
-
-  /*
-   * Streamwise correction
-   */
-  if (STREAMWISE) {
-    for (a = 0; a < dim; a++) {
-      w[a] = S * fv->v[a] / vel_mag;
-
-      for (j = 0; j < ei[pg->imtrx]->dof[eqn]; j++) {
-        d_w_dF[a][j] = 0.0;
-      }
-    }
-  }
-
-  /*
-   * Put local contributions into global right-hand side
-   * if it is not a right-hand side variable-it won't get added in (contribution
-   * is zero)
-   */
-  if (af->Assemble_Residual) {
-    for (i = 0; i < ei[pg->imtrx]->num_local_nodes; i++) {
-      I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
-      /* check for multiple dofs */
-      nvdofi = Dolphin[pg->imtrx][I][eqn];
-
-      for (ki = 0; ki < nvdofi; ki++) {
-
-        /* check to make sure that unknowns are defined at this node,
-           otherwise don't add anything to this node */
-        idof = ei[pg->imtrx]->ln_to_first_dof[eqn][i] + ki;
-
-        /* also convert from node number to dof number */
-        phi_i = bf[eqn]->phi[idof];
-
-        for (a = 0; a < dim; a++) {
-          double p = 0;
-          p += upwind * alpha * w[a] * bf[eqn]->grad_phi[idof][a];
-
-          phi_i += p;
-        }
-
-        rhs = F_dot * phi_i;
-        /* try implementing an explicit/implicit method */
-        /*      rhs = (F-F_old)/dt * phi_i ; */
-
-        rhs -= S * phi_i;
-
-        for (a = 0; a < dim; a++) {
-          rhs += phi_i * w[a] * grad_F[a];
-        }
-
-        rf[node_to_fill[I] + ki] += rhs * wt * det_J * h3;
-      }
-    }
-  }
-
-  if (af->Assemble_Jacobian) {
-    for (i = 0; i < ei[pg->imtrx]->num_local_nodes; i++) {
-      I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
-
-      nvdofi = Dolphin[pg->imtrx][I][eqn];
-      for (ki = 0; ki < nvdofi; ki++) {
-
-        ie = node_to_fill[I] + ki;
-        idof = ei[pg->imtrx]->ln_to_first_dof[eqn][i] + ki;
-
-        phi_i = bf[eqn]->phi[idof];
-
-        for (a = 0; a < dim; a++) {
-          double p = 0;
-          p += upwind * alpha * w[a] * bf[eqn]->grad_phi[idof][a];
-
-          phi_i += p;
-        }
-
-        rhs = F_dot - S + vec_dot(dim, w, grad_F);
-
-        /* derivatives of fill equation wrt to fill variable */
-        for (j = 0; j < ei[pg->imtrx]->num_local_nodes; j++) {
-          J = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + j];
-          nvdofj = Dolphin[pg->imtrx][J][eqn];
-          for (kj = 0; kj < nvdofj; kj++)
-
-          {
-
-            jdof = ei[pg->imtrx]->ln_to_first_dof[eqn][j] + kj;
-            phi_j = bf[eqn]->phi[jdof];
-
-            je = node_to_fill[J] + kj;
-            ja = (ie == je) ? ie : in_list(je, ijaf[ie], ijaf[ie + 1], ijaf);
-            GOMA_EH(ja, "Could not find vbl in sparse matrix.");
-
-            afill[ja] += wt * h3 * det_J * phi_i * phi_j * (1 + 2. * tt) / dt;
-
-            for (a = 0; !EXPLICIT && a < dim; a++) {
-              afill[ja] += wt * h3 * det_J * phi_i *
-                           (w[a] * bf[eqn]->grad_phi[jdof][a] + d_w_dF[a][jdof] * grad_F[a]);
-              afill[ja] += wt * h3 * det_J * rhs * upwind * alpha *
-                           (d_w_dF[a][jdof] * bf[eqn]->grad_phi[idof][a]);
-            }
-          }
-        }
-      }
-    }
-  }
-
-  return (status);
-} /* end of assemble_level_correct */
-
-#endif /*COUPLED_FILL*/
 
 int assemble_level_project(double afill[], /* Jacobian matrix for fill equation  */
                            int ijaf[],     /* pointer to nonzeros in Jacobian matrix   */
@@ -5029,7 +4413,6 @@ int level_set_property(
   if (!do_deriv || !lsi->near || ls->Elem_Sign != 0)
     return (0);
 
-#ifdef COUPLED_FILL
   load_lsi_derivs();
 
   /* Calculate the deriviatives of the material property w.r.t. FILL. */
@@ -5038,8 +4421,6 @@ int level_set_property(
     /* Calculate the Jacobian terms. */
     d_pp_dF[j] = (p1 - p0) * lsi->d_H_dF[j];
   }
-
-#endif /* COUPLED_FILL */
 
 #if 0
   /*
@@ -5093,7 +4474,6 @@ int level_set_property_offset(
   if (!do_deriv || !lsi->near || ls->Elem_Sign != 0)
     return (0);
 
-#ifdef COUPLED_FILL
   load_lsi_derivs();
 
   /* Calculate the deriviatives of the material property w.r.t. FILL. */
@@ -5102,8 +4482,6 @@ int level_set_property_offset(
     /* Calculate the Jacobian terms. */
     d_pp_dF[j] = (p1 - p0) * lsi->d_H_dF[j];
   }
-
-#endif /* COUPLED_FILL */
 
 #if 0
   /*
@@ -5185,7 +4563,6 @@ int ls_transport_property(
   if (!do_deriv || !lsi->near || ls->Elem_Sign != 0)
     return (0);
 
-#ifdef COUPLED_FILL
   load_lsi_derivs();
 
   /* Calculate the deriviatives of the material property w.r.t. FILL. */
@@ -5193,8 +4570,6 @@ int ls_transport_property(
     *d_pp_dF = (p1 - p0) * lsi->dH;
   else
     *d_pp_dF = 0.;
-
-#endif /* COUPLED_FILL */
 
   return (0);
 }
@@ -8894,7 +8269,6 @@ int assemble_extension_velocity(dbl hsquared[DIM], dbl hh[DIM][DIM], dbl dh_dxno
         }
       }
 
-#ifdef COUPLED_FILL /* Only add Jacobian entries for coupled fill problems. */
       /*
        * J_ext_v_F
        */
@@ -8939,7 +8313,6 @@ int assemble_extension_velocity(dbl hsquared[DIM], dbl hh[DIM][DIM], dbl dh_dxno
           lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += advection;
         }
       }
-#endif /* not COUPLED_FILL */
 
       /*
        * J_ext_v_dmesh THIS IS A MESS
@@ -8972,10 +8345,8 @@ int assemble_extension_velocity(dbl hsquared[DIM], dbl hh[DIM][DIM], dbl dh_dxno
 
               advection_b = 0.;
               for (a = 0; a < dim; a++) {
-#ifdef COUPLED_FILL
 
                 advection_b += fv->d_grad_F_dmesh[a][p][j] * grad_ext_v[a];
-#endif /* COUPLED_FILL */
                 advection_b += grad_F[a] * fv->d_grad_ext_v_dmesh[a][p][j];
               }
               advection_b *= det_J * h3;

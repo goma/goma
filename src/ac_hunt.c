@@ -113,12 +113,8 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
   double *x_sens = NULL;    /* solution sensitivity */
   double **x_sens_p = NULL; /* solution sensitivity for parameters */
   int num_pvector = 0;      /*  number of solution sensitivity vectors */
-#ifdef COUPLED_FILL
   struct GomaLinearSolverData *ams[NUM_ALSS] = {NULL};
-#else  /* COUPLED_FILL */
-  struct Aztec_Linear_Solver_System *ams[NUM_ALSS] = {NULL, NULL};
-#endif /* COUPLED_FILL */
-       /* sl_util_structs.h */
+  /* sl_util_structs.h */
 
   double *resid_vector = NULL;      /* residual */
   double *resid_vector_sens = NULL; /* residual sensitivity */
@@ -347,16 +343,8 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
 
 #ifdef MPI
   AZ_set_proc_config(ams[0]->proc_config, MPI_COMM_WORLD);
-#ifndef COUPLED_FILL
-  if (Explicit_Fill)
-    AZ_set_proc_config(ams[1]->proc_config, MPI_COMM_WORLD);
-#endif /* not COUPLED_FILL */
 #else  /* MPI */
   AZ_set_proc_config(ams[0]->proc_config, 0);
-#ifndef COUPLED_FILL
-  if (Explicit_Fill)
-    AZ_set_proc_config(ams[1]->proc_config, 0);
-#endif /* not COUPLED_FILL */
 #endif /* MPI */
 
   /*

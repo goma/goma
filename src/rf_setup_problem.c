@@ -310,7 +310,6 @@ int setup_problem(Exo_DB *exo, /* ptr to the finite element mesh database */
   if (Num_Proc > 1)
     output_comm_stats(dpi, cx);
 
-#ifdef COUPLED_FILL
   /*
    * I extracted this from setup_fill_comm_map because some of the
    * renormalization routines make use of them.
@@ -320,16 +319,6 @@ int setup_problem(Exo_DB *exo, /* ptr to the finite element mesh database */
   owned_fill_unknowns = count_vardofs(FILL, (dpi->num_internal_nodes + dpi->num_boundary_nodes));
   boundary_fill_unknowns = owned_fill_unknowns - internal_fill_unknowns;
   external_fill_unknowns = num_fill_unknowns - owned_fill_unknowns;
-#else  /* COUPLED_FILL */
-  /*
-   * Set up the communications pattern for doing a solution
-   * of the FILL variable type equations alone, if needed
-   */
-  if (Explicit_Fill) {
-    log_msg("setup_fill_comm_map...");
-    setup_fill_comm_map(exo, dpi, cx);
-  }
-#endif /* COUPLED_FILL */
 
   /*
    *  Possibly increase the number of variable descriptions to include

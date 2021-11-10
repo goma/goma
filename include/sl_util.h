@@ -66,12 +66,8 @@ struct GomaLinearSolverData;
 
 #define LS_EVOLVE_ADVECT_EXPLICIT 0 /* Subcycled advection equation */
 #define LS_EVOLVE_ADVECT_COUPLED  1 /* Fully coupled advection equation */
-#define LS_EVOLVE_SLAVE                   \
-  2 /* Isosurface slaved to other surface \
-       (current requires not using COUPLED_FILL  */
-#define LS_EVOLVE_SEMILAGRANGIAN            \
-  3 /* Semi-lagrangian scheme for evolution \
-       (current requires not using COUPLED_FILL  */
+#define LS_EVOLVE_SLAVE           2
+#define LS_EVOLVE_SEMILAGRANGIAN  3
 
 #define MAX_NXN_RANK 6 /* To avoid many malloc()'s in solve_NxN_system(). */
 

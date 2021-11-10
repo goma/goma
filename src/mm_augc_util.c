@@ -2784,7 +2784,8 @@ int arc_length_status(
     printf("\tVariable	 Scaled Update (<1)  Unscaled Update  New Value\n");
     printf("\t***********************************************************\n");
     printf("\tparameter	 %e	   %e	 %g\n", param_update, -delta_y, cgi->param - delta_y);
-    printf("\tarc length	 %e	   %e	 %g\n", scaled_resid, equation, cpi->arc_step + equation);
+    printf("\tarc length	 %e	   %e	 %g\n", scaled_resid, equation,
+           cpi->arc_step + equation);
     printf("\t***********************************************************\n");
   }
   cgi->param -= delta_y;

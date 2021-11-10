@@ -8723,7 +8723,7 @@ int adaptive_weight(double w[],
             return_val = -1;
             break;
           } /* end of side_diff */
-            /* second intersection   */
+          /* second intersection   */
           side_diff = abs(side_id[dupl_id] - side_id[side2]);
           switch (side_diff) {
           case 1:

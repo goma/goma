@@ -609,9 +609,6 @@ void noahs_ark(void) {
 
   ddd_add_member(n, &tran->MaxTimeSteps, 1, MPI_INT);
   ddd_add_member(n, &tran->MaxSteadyStateSteps, 1, MPI_INT);
-#ifndef COUPLED_FILL
-  ddd_add_member(n, &tran->exp_subcycle, 1, MPI_INT);
-#endif /* not COUPLED_FILL */
   ddd_add_member(n, &tran->Fill_Weight_Fcn, 1, MPI_INT);
   ddd_add_member(n, &tran->Fill_Equation, 1, MPI_INT);
   ddd_add_member(n, &tran->Delta_t0, 1, MPI_DOUBLE);
@@ -1131,9 +1128,6 @@ void noahs_ark(void) {
   if (Continuation != ALC_NONE) {
     ddd_add_member(n, &cont->MaxPathSteps, 1, MPI_INT);
     ddd_add_member(n, &cont->PathIntr, 1, MPI_INT);
-#ifndef COUPLED_FILL
-    ddd_add_member(n, &cont->exp_subcycle, 1, MPI_INT);
-#endif /* not COUPLED_FILL */
     ddd_add_member(n, &cont->Delta_s0, 1, MPI_DOUBLE);
     ddd_add_member(n, &cont->Delta_s_min, 1, MPI_DOUBLE);
     ddd_add_member(n, &cont->Delta_s_max, 1, MPI_DOUBLE);
@@ -1284,12 +1278,6 @@ void noahs_ark(void) {
     ddd_add_member(n, Unique_Interpolations, Num_Interpolations, MPI_INT);
   }
 
-#ifndef COUPLED_FILL
-  /*
-   * Fill & Level Set flags and Level Set parameters...
-   */
-  ddd_add_member(n, &Explicit_Fill, 1, MPI_INT);
-#endif /* not COUPLED_FILL */
   if (ls != NULL) {
     ddd_add_member(n, &ls->var, 1, MPI_INT);
     ddd_add_member(n, &ls->Use_Level_Set, 1, MPI_INT);

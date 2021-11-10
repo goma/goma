@@ -1098,7 +1098,6 @@ Revised:         Summer 1998, SY Tam (UNM)
 
       do_LSA_mods(LSA_VOLUME);
 
-#ifdef COUPLED_FILL
       if (ls != NULL && ls->Evolution == LS_EVOLVE_SLAVE) {
         err = assemble_fill_fake(theta, delta_t);
         GOMA_EH(err, "assemble_fill_fake");
@@ -1142,15 +1141,6 @@ Revised:         Summer 1998, SY Tam (UNM)
 #endif /* CHECK_FINITE */
         }
       }
-#else /* COUPLED_FILL */
-      err = assemble_fill_fake(theta, delta_t);
-      GOMA_EH(err, "assemble_fill_fake");
-#ifdef CHECK_FINITE
-      err = CHECKFINITE("assemble_fill_fake");
-      if (err)
-        return -1;
-#endif /* CHECK_FINITE */
-#endif /* COUPLED_FILL */
     }
     /******************************************************************************/
   }
@@ -2305,7 +2295,6 @@ Revised:         Summer 1998, SY Tam (UNM)
     }
 
     if (pde[R_FILL]) {
-#ifdef COUPLED_FILL
       if (tran->Fill_Equation == FILL_EQN_EIKONAL) {
         err = assemble_fill_gradf(theta, delta_t, pg_data.hsquared, pg_data.hh, pg_data.dh_dxnode);
         GOMA_EH(err, "assemble_fill_gradf");
@@ -2315,7 +2304,6 @@ Revised:         Summer 1998, SY Tam (UNM)
           return -1;
 #endif /* CHECK_FINITE */
       }
-#endif /* COUPLED_FILL */
     }
 
     if (pde[R_EXT_VELOCITY]) {

@@ -202,15 +202,15 @@ EXTERN void fzero_velo_tangent_3d(double func[DIM],
 EXTERN void
 fvelo_tangential_solid_bc(double[], /* func                                      */
                           double[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func      */
-                          double[],               /* solution vector x                         */
-                          double[],               /* time derivative of solution vector x      */
-                          double[],               /* time derivative of solution vector x_rs               */
-                          const int,              /* bc type */
-                          const int,              /* i_mat_solid                               */
-                          const int,              /* i_mat_fluid                               */
-                          dbl,                    /* slip coefficient                          */
-                          const int,              /* node id for DCL                           */
-                          dbl,                    /* position parameter for slip model         */
+                          double[],  /* solution vector x                         */
+                          double[],  /* time derivative of solution vector x      */
+                          double[],  /* time derivative of solution vector x_rs               */
+                          const int, /* bc type */
+                          const int, /* i_mat_solid                               */
+                          const int, /* i_mat_fluid                               */
+                          dbl,       /* slip coefficient                          */
+                          const int, /* node id for DCL                           */
+                          dbl,       /* position parameter for slip model         */
                           const double[MAX_PDIM], /* coordinates for surface gauss point       */
                           const dbl,              /* tt - parameter to vary time integration
                                                    * method from BE(0) to CN(1/2) to FE(1)     */

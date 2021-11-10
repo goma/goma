@@ -354,11 +354,12 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define VISCM_CARREAU_WLF_CONC     21
 #define VISCM_BOND                 23 /* bond evolution structure model for viscosity */
 #define VISCM_CONST_PHASE_FUNCTION 24
-#define VISCM_CARREAU_WLF_CONC_EXP                                  \
-  25                     /*  Carreau viscosity with WLF temperature \
-                      dependence and concentration shifting*/
-#define VISCM_BOND_SH 26 /* bond evolution structure model for viscosity with shear rate \
-                            variable*/
+#define VISCM_CARREAU_WLF_CONC_EXP              \
+  25 /*  Carreau viscosity with WLF temperature \
+  dependence and concentration shifting*/
+#define VISCM_BOND_SH                                                \
+  26 /* bond evolution structure model for viscosity with shear rate \
+        variable*/
 
 #define VISCM_FOAM_EPOXY     33
 #define VISCM_BINGHAM_WLF    27 /* Bingham WLF viscosity model */

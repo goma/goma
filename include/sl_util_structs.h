@@ -41,7 +41,6 @@
 #include "az_aztec.h"
 #include "sl_epetra_interface.h"
 
-#ifdef COUPLED_FILL
 /*
  * NUM_ALSS - Number of Aztec Linear Solver Systems. Here we have one.
  * Namely, JAC=0, is for the fully coupled Jacobian system.
@@ -49,17 +48,6 @@
 
 #define JAC      0
 #define NUM_ALSS 1
-#else /* COUPLED_FILL */
-/*
- * NUM_ALSS - Number of Aztec Linear Solver Systems. Here we have two.
- * First, JAC=0, is for the fully coupled Jacobian system. Second, FIL=1,
- * is for the smaller matrix resulting from a segregated VOF solution.
- */
-
-#define JAC      0
-#define FIL      1
-#define NUM_ALSS 2
-#endif /* COUPLED_FILL */
 
 struct Matrix_Data {
   struct GomaLinearSolverData *ams;

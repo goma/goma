@@ -888,7 +888,7 @@ static int calc_standard_fields(double **post_proc_vect,
         }
       }
     } // if pd->v[pg->imtrx][POLYMER_STRESS11]
-      /* Need to determine curvature to multiply here...*/
+    /* Need to determine curvature to multiply here...*/
 
     if (DOUBLE_NONZERO(velo_sqrd)) {
       Ttt = curv * stream_grad / velo_sqrd;
@@ -1364,9 +1364,12 @@ static int calc_standard_fields(double **post_proc_vect,
       dbl dc2 = fabs(strong_residual) * h_elem * h_elem * 0.25;
       //        yzbeta = 0.5*(dc1 + dc2);
 
-      local_post[YZBETA + w] = 0.5 * (dc1 + dc2); // fmin(dc1,
-                                                  // supg_terms.supg_tau);//yzbeta;//supg_terms.supg_tau;//fmin(supg_terms.supg_tau,
-                                                  // 0.5*(dc1 + dc2));
+      local_post[YZBETA + w] =
+          0.5 *
+          (dc1 +
+           dc2); // fmin(dc1,
+                 // supg_terms.supg_tau);//yzbeta;//supg_terms.supg_tau;//fmin(supg_terms.supg_tau,
+                 // 0.5*(dc1 + dc2));
       local_lumped[YZBETA + w] = 1.;
     }
   }

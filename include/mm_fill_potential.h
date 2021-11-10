@@ -98,9 +98,9 @@ EXTERN int assemble_electric_field(void); /* Least square equation of Efield = g
 
 EXTERN void apply_potential_grad_bc(double[], /* func                                      */
                                     double[][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func */
-                                    struct Boundary_Condition *,                  /* BC_Type                  */
-                                    const double,                                 /* time_value	*/
-                                    const double);                                /* time_step */
+                                    struct Boundary_Condition *, /* BC_Type                  */
+                                    const double,                /* time_value	*/
+                                    const double);               /* time_step */
 
 EXTERN double electrical_conductivity(double[MDE],           /* dkdT                         */
                                       double[MDE],           /*dkdV			*/

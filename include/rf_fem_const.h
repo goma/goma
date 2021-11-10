@@ -858,9 +858,10 @@
 #define R_SHELL_SAT_OPEN       169 /*  Structured porous shell - Open pores - SAR  */
 #define R_SHELL_ENERGY         170 /*  Shell energy equation */
 #define R_SHELL_DELTAH         171 /*  Shell gap evolution equation (e.g. melting problems) */
-#define R_SHELL_LUB_CURV       172 /*  Curvature from the level set field in a lubrication shell - SAR \
-                                    */
-#define R_SHELL_SAT_GASN 173       /*  Structured porous shell - Gas compression - SAR */
+#define R_SHELL_LUB_CURV                                                                         \
+  172                        /*  Curvature from the level set field in a lubrication shell - SAR \
+                              */
+#define R_SHELL_SAT_GASN 173 /*  Structured porous shell - Gas compression - SAR */
 #define R_SHELL_SHEAR_TOP \
   174 /*  Shear rate at top wall - lubrication shell for generalized Newtonian flow */
 #define R_SHELL_SHEAR_BOT \
@@ -871,15 +872,16 @@
 #define R_CUR_STRAIN       178 /*  Current value of the von mises strain in a solid material */
 #define R_LUBP_2           179 /*  Second lubrication_pressure for multilayer flows */
 #define R_SHELL_SAT_OPEN_2 180 /*  Second open pore shell lubrication saturation */
-#define R_SHELL_LUB_CURV_2 181 /*  Curvature from the phase field in a lubrication_2 shell - PRS \
-                                */
-#define R_LIGHT_INTP   182     /*  Light Intensity - Plus direction propagation*/
-#define R_LIGHT_INTM   183     /*  Light Intensity - Minus direction propagation*/
-#define R_LIGHT_INTD   184     /*  Light Intensity - Scattering Dispersion*/
-#define R_TFMP_MASS    185     /*  Thin-Film Multi-Phase Mass Equation */
-#define R_TFMP_BOUND   186     /*  Thin-Film Multi-Phase Boundary Motion Equation */
-#define R_RESTIME      187     /*  Resdience Time Function */
-#define R_EM_E1_REAL   188     /*  EM wave variables */
+#define R_SHELL_LUB_CURV_2                                                                   \
+  181                      /*  Curvature from the phase field in a lubrication_2 shell - PRS \
+                            */
+#define R_LIGHT_INTP   182 /*  Light Intensity - Plus direction propagation*/
+#define R_LIGHT_INTM   183 /*  Light Intensity - Minus direction propagation*/
+#define R_LIGHT_INTD   184 /*  Light Intensity - Scattering Dispersion*/
+#define R_TFMP_MASS    185 /*  Thin-Film Multi-Phase Mass Equation */
+#define R_TFMP_BOUND   186 /*  Thin-Film Multi-Phase Boundary Motion Equation */
+#define R_RESTIME      187 /*  Resdience Time Function */
+#define R_EM_E1_REAL   188 /*  EM wave variables */
 #define R_EM_E2_REAL   189
 #define R_EM_E3_REAL   190
 #define R_EM_E1_IMAG   191 /*  EM wave variables */

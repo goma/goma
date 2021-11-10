@@ -751,7 +751,8 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
     /* 			  { */
     /* 			    for (q=0; q<dim; q++) */
     /* 			      { */
-    /* 				fv->d_strain_dx[p][q] [i][k] =  -factor * (dcauchy_green_dx[p][q][i][k]
+    /* 				fv->d_strain_dx[p][q] [i][k] =  -factor *
+     * (dcauchy_green_dx[p][q][i][k]
      */
     /* 				    - cauchy_green[p][q] / det2d * ddet2d_dx[i][k]) */
     /* 				     / det2d / pow((1. - fv->P / mu), 3./4.); */
@@ -766,7 +767,8 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
     /* 			for (q=0; q<dim; q++) */
     /* 			  { */
     /* 			    fv->d_strain_dp[p][q] [k] = - factor * 3./4. * cauchy_green[p][q]  */
-    /* 				  / det2d / pow((1. - fv->P / mu), 7./4.) / mu * bf[PRESSURE]->phi[k];
+    /* 				  / det2d / pow((1. - fv->P / mu), 7./4.) / mu *
+     * bf[PRESSURE]->phi[k];
      */
     /* 			  } */
     /* 		      } */

@@ -86,23 +86,22 @@ EXTERN int apply_shell_grad_bc(double[],          /* x - Soln vector            
                                const double,    /* time_value                                */
                                const Exo_DB *); /* exo - ptr to FE database                  */
 
-EXTERN int
-apply_sharp_integrated_bc(double[],          /* Solution vector for the current processor */
-                          double[],          /* Residual vector for the current processor */
-                          const double,      /* current time */
-                          const double,      /* current time step size */
-                          const double,      /* parameter (0 to 1) to vary time integration
-                                              *  ( implicit - 0 to explicit - 1)          */
-                          const double[DIM], /* hsquared */
-                          const int,         /* element number */
-                          const int,         /* element type */
-                          const int,
-                          const int,
-                          const int,
-                          ELEM_SIDE_BC_STRUCT *,
-                          /* Pointer to an element side boundary condition * structure */
-                          const int,
-                          const Exo_DB *);
+EXTERN int apply_sharp_integrated_bc(double[],     /* Solution vector for the current processor */
+                                     double[],     /* Residual vector for the current processor */
+                                     const double, /* current time */
+                                     const double, /* current time step size */
+                                     const double, /* parameter (0 to 1) to vary time integration
+                                                    *  ( implicit - 0 to explicit - 1)          */
+                                     const double[DIM], /* hsquared */
+                                     const int,         /* element number */
+                                     const int,         /* element type */
+                                     const int,
+                                     const int,
+                                     const int,
+                                     ELEM_SIDE_BC_STRUCT *,
+                                     /* Pointer to an element side boundary condition * structure */
+                                     const int,
+                                     const Exo_DB *);
 
 EXTERN void
 assemble_sharp_integrated_bc(double[],     /* Solution vector for the current processor */

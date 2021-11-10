@@ -351,12 +351,8 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
 
   /* Define continuation problem structures */
   RESULTS_DESCRIPTION_STRUCT *rd = NULL;
-#ifdef COUPLED_FILL
   struct GomaLinearSolverData *ams[NUM_ALSS] = {NULL};
-#else  /* COUPLED_FILL */
-  struct Aztec_Linear_Solver_System *ams[NUM_ALSS] = {NULL, NULL};
-#endif /* COUPLED_FILL */
-       /* sl_util_structs.h */
+  /* sl_util_structs.h */
 
   /* Define continuation problem files */
   FILE *cl_aux = NULL; /* *file=NULL; */
@@ -506,16 +502,8 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
   /* Set Aztec proc_config array (for many different cases) */
 #ifdef MPI
   AZ_set_proc_config(ams[0]->proc_config, MPI_COMM_WORLD);
-#ifndef COUPLED_FILL
-  if (Explicit_Fill)
-    AZ_set_proc_config(ams[1]->proc_config, MPI_COMM_WORLD);
-#endif /* not COUPLED_FILL */
 #else  /* MPI */
   AZ_set_proc_config(ams[0]->proc_config, 0);
-#ifndef COUPLED_FILL
-  if (Explicit_Fill)
-    AZ_set_proc_config(ams[1]->proc_config, 0);
-#endif /* not COUPLED_FILL */
 #endif /* MPI */
 
   /* allocate space for and initialize solution arrays */

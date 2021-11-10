@@ -102,23 +102,8 @@ extern int filter_conc /* rf_util.c                                 */
      const dbl,        /* cmin - lower cutoff                       */
      const dbl);       /* cmax - upper cutoff                       */
 
-#ifndef COUPLED_FILL
-extern void get_fill_vector /* rf_util.c                                 */
-    (const int,             /* N                                         */
-     const double[],        /* x                                         */
-     double[],              /* fill_vector                               */
-     const int[]);          /* node_to_fill                              */
-#endif                      /* not COUPLED_FILL */
-extern void sort2_int_int   /* rf_util.c                                 */
+extern void sort2_int_int /* rf_util.c                                 */
     (const int, int[], int[]);
-
-#ifndef COUPLED_FILL
-extern void put_fill_vector /* rf_util.c                                 */
-    (const int,             /* N                                         */
-     double[],              /* x                                         */
-     const double[],        /* fill_vector                               */
-     const int[]);          /* node_to_fill                              */
-#endif                      /* not COUPLED_FILL */
 
 extern int wr_soln_vec(double[],   /* u - solution vector                       */
                        double[],   /* r - residual vector                       */

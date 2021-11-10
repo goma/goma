@@ -2001,8 +2001,6 @@ int assemble_energy(
         }
       }
 
-#ifdef COUPLED_FILL
-
       /*
        * J_e_F
        */
@@ -2051,7 +2049,6 @@ int assemble_energy(
           lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += advection + mass + diffusion + source;
         }
       }
-#endif /* COUPLED_FILL */
 
       /**    add ve stress terms  **/
       /*
@@ -3070,7 +3067,6 @@ int assemble_momentum(dbl time,       /* current time */
             }
           }
 
-#ifdef COUPLED_FILL
           /*
            * J_m_F
            */
@@ -3189,7 +3185,6 @@ int assemble_momentum(dbl time,       /* current time */
                * source; */
             }
           }
-#endif /* COUPLED_FILL */
 
           /*
            * J_m_v
@@ -5802,7 +5797,6 @@ int assemble_curvature(void) /*  time step size      */
             }
           }
         }
-#ifdef COUPLED_FILL
         /*
          * J_H_F
          */
@@ -5829,7 +5823,6 @@ int assemble_curvature(void) /*  time step size      */
             lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += diffusion;
           }
         }
-#endif
       }
     }
   }
@@ -6366,7 +6359,6 @@ int assemble_normals(void) {
           /*
            *  J_n_F
            */
-#ifdef COUPLED_FILL
           var = LS;
           pvar = upd->vp[pg->imtrx][var];
 
@@ -6385,7 +6377,6 @@ int assemble_normals(void) {
             }
             lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += advection;
           }
-#endif
 
           /*
            * J_n_d
@@ -6483,7 +6474,6 @@ int assemble_ls_momentum_source(void) {
     }
   }
 
-#ifdef COUPLED_FILL
   load_lsi_derivs();
 
   /* Calculate the derivatives. */
@@ -6496,7 +6486,6 @@ int assemble_ls_momentum_source(void) {
       }
     }
   }
-#endif
 
   /*
    * Residuals_________________________________________________________________
@@ -6574,7 +6563,6 @@ int assemble_ls_momentum_source(void) {
           /*
            *  J_n_F
            */
-#ifdef COUPLED_FILL
           var = LS;
           pvar = upd->vp[pg->imtrx][var];
 
@@ -6593,7 +6581,6 @@ int assemble_ls_momentum_source(void) {
             }
             lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += source;
           }
-#endif
         }
       }
     }
@@ -6627,7 +6614,6 @@ int apply_ls_momentum_source(void) {
     det_J = bf[eqn]->detJ;
   }
 
-#ifdef COUPLED_FILL
   /* finite difference calculation of path dependencies for
      subelement integration
    */
@@ -6665,7 +6651,6 @@ int apply_ls_momentum_source(void) {
     }
     return (0);
   }
-#endif
 
   /*
    * Wesiduals ________________________________________________________________________________
@@ -15449,7 +15434,6 @@ int load_fv_grads(void)
                     df->T[a][j] = mp->d_momentum_source[a][var] * phi[j];
                   }
                 }
-#ifdef COUPLED_FILL
                 if (df != NULL && pd->v[pg->imtrx][FILL]) {
                   var = FILL;
                   phi = bf[var]->phi;
@@ -15457,7 +15441,6 @@ int load_fv_grads(void)
                     df->F[a][j] = mp->d_momentum_source[a][var] * phi[j];
                   }
                 }
-#endif /* COUPLED_FILL */
                 if (df != NULL && pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
                   for (b = 0; b < dim; b++) {
                     var = MESH_DISPLACEMENT1 + b;
@@ -15636,12 +15619,10 @@ int load_fv_grads(void)
 
             for (a = 0; a < pd->Num_Dim; a++) {
               f[a] = mp->momentum_source[a] * rho;
-#ifdef COUPLED_FILL
               if (df != NULL) {
                 for (j = 0; j < ei[pg->imtrx]->dof[FILL]; j++)
                   df->F[a][j] = mp->momentum_source[a] * d_rho->F[j];
               }
-#endif /* COUPLED_FILL */
             }
           } else if (mp->MomentumSourceModel == LEVEL_SET && pd->gv[PHASE1]) {
             DENSITY_DEPENDENCE_STRUCT d_rho_struct; /* density dependence */
@@ -16378,7 +16359,6 @@ int load_fv_grads(void)
           if (!do_deriv)
             return (status);
 
-#ifdef COUPLED_FILL
           load_lsi_derivs();
 
           /* Calculate the derivatives. */
@@ -16393,59 +16373,58 @@ int load_fv_grads(void)
               }
             }
 #else
-            /*(0,0) */
-            d_csf_dF[0][0][j] =
-                st * lsi->d_delta_dF[j] * ((double)delta(0, 0) - lsi->normal[0] * lsi->normal[0]) -
-                st * lsi->delta * lsi->d_normal_dF[0][j] * lsi->normal[0] -
-                st * lsi->delta * lsi->normal[0] * lsi->d_normal_dF[0][j];
+    /*(0,0) */
+    d_csf_dF[0][0][j] =
+        st * lsi->d_delta_dF[j] * ((double)delta(0, 0) - lsi->normal[0] * lsi->normal[0]) -
+        st * lsi->delta * lsi->d_normal_dF[0][j] * lsi->normal[0] -
+        st * lsi->delta * lsi->normal[0] * lsi->d_normal_dF[0][j];
 
-            /* (1,1) */
-            d_csf_dF[1][1][j] =
-                st * lsi->d_delta_dF[j] * ((double)delta(1, 1) - lsi->normal[1] * lsi->normal[1]) -
-                st * lsi->delta * lsi->d_normal_dF[1][j] * lsi->normal[1] -
-                st * lsi->delta * lsi->normal[1] * lsi->d_normal_dF[1][j];
-            /* (0,1) */
-            d_csf_dF[0][1][j] =
-                st * lsi->d_delta_dF[j] * ((double)delta(0, 1) - lsi->normal[0] * lsi->normal[1]) -
-                st * lsi->delta * lsi->d_normal_dF[0][j] * lsi->normal[1] -
-                st * lsi->delta * lsi->normal[0] * lsi->d_normal_dF[1][j];
-            /* (1,0) */
-            d_csf_dF[1][0][j] =
-                st * lsi->d_delta_dF[j] * ((double)delta(1, 0) - lsi->normal[1] * lsi->normal[0]) -
-                st * lsi->delta * lsi->d_normal_dF[1][j] * lsi->normal[0] -
-                st * lsi->delta * lsi->normal[1] * lsi->d_normal_dF[0][j];
-            if (VIM == 3) {
-              /* (2,2) */
-              d_csf_dF[2][2][j] = st * lsi->d_delta_dF[j] *
-                                      ((double)delta(2, 2) - lsi->normal[2] * lsi->normal[2]) -
-                                  st * lsi->delta * lsi->d_normal_dF[2][j] * lsi->normal[2] -
-                                  st * lsi->delta * lsi->normal[2] * lsi->d_normal_dF[2][j];
-              /* (2,1) */
-              d_csf_dF[2][1][j] = st * lsi->d_delta_dF[j] *
-                                      ((double)delta(2, 1) - lsi->normal[2] * lsi->normal[1]) -
-                                  st * lsi->delta * lsi->d_normal_dF[2][j] * lsi->normal[1] -
-                                  st * lsi->delta * lsi->normal[2] * lsi->d_normal_dF[1][j];
-              /* (2,0) */
-              d_csf_dF[2][0][j] = st * lsi->d_delta_dF[j] *
-                                      ((double)delta(2, 0) - lsi->normal[2] * lsi->normal[0]) -
-                                  st * lsi->delta * lsi->d_normal_dF[2][j] * lsi->normal[0] -
-                                  st * lsi->delta * lsi->normal[2] * lsi->d_normal_dF[0][j];
-              /* (1,2) */
-              d_csf_dF[1][2][j] = st * lsi->d_delta_dF[j] *
-                                      ((double)delta(1, 2) - lsi->normal[1] * lsi->normal[2]) -
-                                  st * lsi->delta * lsi->d_normal_dF[1][j] * lsi->normal[2] -
-                                  st * lsi->delta * lsi->normal[1] * lsi->d_normal_dF[2][j];
-              /* (0,2)  */
-              d_csf_dF[0][2][j] = st * lsi->d_delta_dF[j] *
-                                      ((double)delta(0, 2) - lsi->normal[0] * lsi->normal[2]) -
-                                  st * lsi->delta * lsi->d_normal_dF[0][j] * lsi->normal[2] -
-                                  st * lsi->delta * lsi->normal[0] * lsi->d_normal_dF[2][j];
-            }
+    /* (1,1) */
+    d_csf_dF[1][1][j] =
+        st * lsi->d_delta_dF[j] * ((double)delta(1, 1) - lsi->normal[1] * lsi->normal[1]) -
+        st * lsi->delta * lsi->d_normal_dF[1][j] * lsi->normal[1] -
+        st * lsi->delta * lsi->normal[1] * lsi->d_normal_dF[1][j];
+    /* (0,1) */
+    d_csf_dF[0][1][j] =
+        st * lsi->d_delta_dF[j] * ((double)delta(0, 1) - lsi->normal[0] * lsi->normal[1]) -
+        st * lsi->delta * lsi->d_normal_dF[0][j] * lsi->normal[1] -
+        st * lsi->delta * lsi->normal[0] * lsi->d_normal_dF[1][j];
+    /* (1,0) */
+    d_csf_dF[1][0][j] =
+        st * lsi->d_delta_dF[j] * ((double)delta(1, 0) - lsi->normal[1] * lsi->normal[0]) -
+        st * lsi->delta * lsi->d_normal_dF[1][j] * lsi->normal[0] -
+        st * lsi->delta * lsi->normal[1] * lsi->d_normal_dF[0][j];
+    if (VIM == 3) {
+      /* (2,2) */
+      d_csf_dF[2][2][j] =
+          st * lsi->d_delta_dF[j] * ((double)delta(2, 2) - lsi->normal[2] * lsi->normal[2]) -
+          st * lsi->delta * lsi->d_normal_dF[2][j] * lsi->normal[2] -
+          st * lsi->delta * lsi->normal[2] * lsi->d_normal_dF[2][j];
+      /* (2,1) */
+      d_csf_dF[2][1][j] =
+          st * lsi->d_delta_dF[j] * ((double)delta(2, 1) - lsi->normal[2] * lsi->normal[1]) -
+          st * lsi->delta * lsi->d_normal_dF[2][j] * lsi->normal[1] -
+          st * lsi->delta * lsi->normal[2] * lsi->d_normal_dF[1][j];
+      /* (2,0) */
+      d_csf_dF[2][0][j] =
+          st * lsi->d_delta_dF[j] * ((double)delta(2, 0) - lsi->normal[2] * lsi->normal[0]) -
+          st * lsi->delta * lsi->d_normal_dF[2][j] * lsi->normal[0] -
+          st * lsi->delta * lsi->normal[2] * lsi->d_normal_dF[0][j];
+      /* (1,2) */
+      d_csf_dF[1][2][j] =
+          st * lsi->d_delta_dF[j] * ((double)delta(1, 2) - lsi->normal[1] * lsi->normal[2]) -
+          st * lsi->delta * lsi->d_normal_dF[1][j] * lsi->normal[2] -
+          st * lsi->delta * lsi->normal[1] * lsi->d_normal_dF[2][j];
+      /* (0,2)  */
+      d_csf_dF[0][2][j] =
+          st * lsi->d_delta_dF[j] * ((double)delta(0, 2) - lsi->normal[0] * lsi->normal[2]) -
+          st * lsi->delta * lsi->d_normal_dF[0][j] * lsi->normal[2] -
+          st * lsi->delta * lsi->normal[0] * lsi->d_normal_dF[2][j];
+    }
 
 #endif
           }
 
-#endif /* COUPLED_FILL */
           if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
             for (a = 0; a < VIM; a++) {
               for (b = 0; b < VIM; b++) {
@@ -18955,7 +18934,6 @@ int load_fv_grads(void)
                 bcref = bcref->next;
               }
               /* equation path dependence terms */
-#ifdef COUPLED_FILL
               if (!ls->Ignore_F_deps) {
                 if (pd->e[pg->imtrx][R_FILL] && ipass == 0) {
                   if (tran->Fill_Equation == FILL_EQN_EIKONAL) {
@@ -18976,7 +18954,6 @@ int load_fv_grads(void)
                   assemble_energy_path_dependence(time, theta, dt, pg_data);
                 }
               }
-#endif
             }
           }
 
@@ -19331,7 +19308,6 @@ int load_fv_grads(void)
 
           continuous_surface_tension(mp->surface_tension, csf, d_csf_dF, d_csf_dX);
 
-#ifdef COUPLED_FILL
           /* finite difference calculation of path dependencies for
                   subelement integration
                   */
@@ -19376,7 +19352,6 @@ int load_fv_grads(void)
             }
             return (0);
           }
-#endif
 
           /*
            * Residuals ____________________________________________________________________________
@@ -19454,7 +19429,6 @@ int load_fv_grads(void)
 
                   /* J_m_F
                    */
-#ifdef COUPLED_FILL
                   var = LS;
                   if (pd->v[pg->imtrx][var]) {
                     pvar = upd->vp[pg->imtrx][var];
@@ -19473,18 +19447,18 @@ int load_fv_grads(void)
                       }
 
 #else
-                      source += grad_phi_i_e_a[0][0] * d_csf_dF[0][0][j];
-                      source += grad_phi_i_e_a[0][1] * d_csf_dF[1][0][j];
-                      source += grad_phi_i_e_a[1][0] * d_csf_dF[0][1][j];
-                      source += grad_phi_i_e_a[1][1] * d_csf_dF[1][1][j];
+              source += grad_phi_i_e_a[0][0] * d_csf_dF[0][0][j];
+              source += grad_phi_i_e_a[0][1] * d_csf_dF[1][0][j];
+              source += grad_phi_i_e_a[1][0] * d_csf_dF[0][1][j];
+              source += grad_phi_i_e_a[1][1] * d_csf_dF[1][1][j];
 
-                      if (VIM == 3) {
-                        source += grad_phi_i_e_a[2][0] * d_csf_dF[0][2][j];
-                        source += grad_phi_i_e_a[2][1] * d_csf_dF[1][2][j];
-                        source += grad_phi_i_e_a[2][2] * d_csf_dF[2][2][j];
-                        source += grad_phi_i_e_a[0][2] * d_csf_dF[2][0][j];
-                        source += grad_phi_i_e_a[1][2] * d_csf_dF[2][1][j];
-                      }
+              if (VIM == 3) {
+                source += grad_phi_i_e_a[2][0] * d_csf_dF[0][2][j];
+                source += grad_phi_i_e_a[2][1] * d_csf_dF[1][2][j];
+                source += grad_phi_i_e_a[2][2] * d_csf_dF[2][2][j];
+                source += grad_phi_i_e_a[0][2] * d_csf_dF[2][0][j];
+                source += grad_phi_i_e_a[1][2] * d_csf_dF[2][1][j];
+              }
 #endif
 
                       source *= -d_area;
@@ -19493,7 +19467,6 @@ int load_fv_grads(void)
                       lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += source;
                     }
                   }
-#endif
                   var = MESH_DISPLACEMENT1;
                   if (pd->v[pg->imtrx][var]) {
                     for (b = 0; b < VIM; b++) {
@@ -19569,7 +19542,6 @@ int load_fv_grads(void)
 
           dim = pd->Num_Dim;
 
-#ifdef COUPLED_FILL
           /* finite difference calculation of path dependencies for
              subelement integration
           */
@@ -19608,7 +19580,6 @@ int load_fv_grads(void)
             }
             return (0);
           }
-#endif
 
           /*
            * Residuals
@@ -19693,7 +19664,6 @@ int load_fv_grads(void)
                   /*
                    * J_m_F
                    */
-#ifdef COUPLED_FILL
 
                   var = LS;
                   if (pd->v[pg->imtrx][var]) {
@@ -19710,7 +19680,6 @@ int load_fv_grads(void)
                       lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += source;
                     }
                   }
-#endif
 
                   /*
                    * J_m_d
@@ -19774,7 +19743,6 @@ int load_fv_grads(void)
 
           dim = pd->Num_Dim;
 
-#ifdef COUPLED_FILL
           /* finite difference calculation of path dependencies for
              subelement integration
            */
@@ -19813,7 +19781,6 @@ int load_fv_grads(void)
             }
             return (0);
           }
-#endif
 
           /*
            * Wesiduals
@@ -19906,7 +19873,6 @@ int load_fv_grads(void)
                       }
                     }
                   }
-#ifdef COUPLED_FILL
                   /*
                    * J_m_F
                    */
@@ -19925,7 +19891,6 @@ int load_fv_grads(void)
                       lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += source;
                     }
                   }
-#endif
                 }
               }
             }
@@ -19982,14 +19947,12 @@ int load_fv_grads(void)
             }
           }
 
-#ifdef COUPLED_FILL
           /* finite difference calculation of path dependencies for
              subelement integration
           */
           if (ls->CalcSurfDependencies) {
             GOMA_EH(GOMA_ERROR, "Calc surf dependencies not implemented");
           }
-#endif
 
           /*
            * Residuals ____________________________________________________________________________
@@ -20153,14 +20116,12 @@ int load_fv_grads(void)
             }
           }
 
-#ifdef COUPLED_FILL
           /* finite difference calculation of path dependencies for
              subelement integration
           */
           if (ls->CalcSurfDependencies) {
             GOMA_EH(GOMA_ERROR, "Calc surf dependencies not implemented");
           }
-#endif
 
           /*
            * Residuals ____________________________________________________________________________
@@ -20342,14 +20303,12 @@ int load_fv_grads(void)
             }
           }
 
-#ifdef COUPLED_FILL
           /* finite difference calculation of path dependencies for
              subelement integration
           */
           if (ls->CalcSurfDependencies) {
             GOMA_EH(GOMA_ERROR, "Calc surf dependencies not implemented");
           }
-#endif
 
           /*
            * Residuals ____________________________________________________________________________
@@ -20722,7 +20681,6 @@ int load_fv_grads(void)
 
           curvature_momentum_source(f, dfdX, dfdF, dfdH);
 
-#ifdef COUPLED_FILL
           /* finite difference calculation of path dependencies for
              subelement integration
           */
@@ -20763,7 +20721,6 @@ int load_fv_grads(void)
             }
             return (0);
           }
-#endif
 
           /*
            * Residuals
@@ -20823,7 +20780,6 @@ int load_fv_grads(void)
 
                   /* J_m_F
                    */
-#ifdef COUPLED_FILL
                   var = LS;
                   if (pd->v[pg->imtrx][var]) {
                     pvar = upd->vp[pg->imtrx][var];
@@ -20837,7 +20793,6 @@ int load_fv_grads(void)
                       lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += source;
                     }
                   }
-#endif
                   /*
                    * J_m_H
                    */
@@ -20909,7 +20864,6 @@ int load_fv_grads(void)
             det_J = bf[eqn]->detJ;
           }
 
-#ifdef COUPLED_FILL
           /* finite difference calculation of path dependencies for
              subelement integration
            */
@@ -20943,7 +20897,6 @@ int load_fv_grads(void)
             }
             return (0);
           }
-#endif
 
           /*
            * Wesiduals
@@ -20986,7 +20939,6 @@ int load_fv_grads(void)
 
                 phi_i = bfm->phi[i];
 
-#ifdef COUPLED_FILL
                 /* diffuse interface version of path dependence integral */
                 /*
                  * J_e_F
@@ -21005,7 +20957,6 @@ int load_fv_grads(void)
                     lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += source;
                   }
                 }
-#endif
               }
             }
           }
@@ -21128,7 +21079,6 @@ int load_fv_grads(void)
 }
 #endif
 
-#ifdef COUPLED_FILL
           /* finite difference calculation of path dependencies for
              subelement integration
            */
@@ -21181,7 +21131,6 @@ int load_fv_grads(void)
             }
             return (0);
           }
-#endif
 
           /*
            * Wesiduals
@@ -21261,7 +21210,6 @@ int load_fv_grads(void)
                       lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += source;
                     }
                   }
-#ifdef COUPLED_FILL
                   /*
                    * J_e_F
                    */
@@ -21286,7 +21234,6 @@ int load_fv_grads(void)
                       lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += source;
                     }
                   }
-#endif
                   /* NOTE: dependencies for X and C (and anything else that modifies q)
                      need to be added here */
                 }
@@ -21365,7 +21312,6 @@ int load_fv_grads(void)
           flux = absorp * qlaser;
           /* END CALCULATE LASER FLUX */
 
-#ifdef COUPLED_FILL
           /* finite difference calculation of path dependencies for
              subelement integration
            */
@@ -21402,7 +21348,6 @@ int load_fv_grads(void)
             }
             return (0);
           }
-#endif
 
           /*
            * Wesiduals
@@ -21464,7 +21409,6 @@ int load_fv_grads(void)
                     lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += source;
                   }
                 }
-#ifdef COUPLED_FILL
                 /*
                  * J_e_F
                  */
@@ -21482,7 +21426,6 @@ int load_fv_grads(void)
                     lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += source;
                   }
                 }
-#endif
               }
             }
           }
@@ -21521,7 +21464,6 @@ int load_fv_grads(void)
           flux = -qvaporloss;
           /* END CALCULATE Q VAPOR */
 
-#ifdef COUPLED_FILL
           /* finite difference calculation of path dependencies for
              subelement integration
            */
@@ -21558,7 +21500,6 @@ int load_fv_grads(void)
             }
             return (0);
           }
-#endif
 
           /*
            * Wesiduals
@@ -21620,7 +21561,6 @@ int load_fv_grads(void)
                     lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += source;
                   }
                 }
-#ifdef COUPLED_FILL
                 /*
                  * J_e_F
                  */
@@ -21638,7 +21578,6 @@ int load_fv_grads(void)
                     lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += source;
                   }
                 }
-#endif
               }
             }
           }
@@ -21673,7 +21612,6 @@ int load_fv_grads(void)
           flux = htc * (Tref - fv->T) + emiss * sigma * (pow(Tref, 4.0) - pow(fv->T, 4.0));
           d_qrad_dT = -htc - 4. * emiss * sigma * pow(fv->T, 3.0);
 
-#ifdef COUPLED_FILL
           /* finite difference calculation of path dependencies for
              subelement integration
            */
@@ -21710,7 +21648,6 @@ int load_fv_grads(void)
             }
             return (0);
           }
-#endif
 
           /*
            * Wesiduals
@@ -21772,7 +21709,6 @@ int load_fv_grads(void)
                     lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += source;
                   }
                 }
-#ifdef COUPLED_FILL
                 /*
                  * J_e_F
                  */
@@ -21790,7 +21726,6 @@ int load_fv_grads(void)
                     lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += source;
                   }
                 }
-#endif
               }
             }
           }
@@ -21855,7 +21790,6 @@ int load_fv_grads(void)
           var = TEMPERATURE;
           xfem_var_diff(var, &T_diff, phi_diff, grad_T_diff);
 
-#ifdef COUPLED_FILL
           /* finite difference calculation of path dependencies for
              subelement integration
            */
@@ -21863,7 +21797,6 @@ int load_fv_grads(void)
             /* this is currently handled below using the grad_T_diff */
             return (0);
           }
-#endif
           /*
            * Wesiduals
            * ________________________________________________________________________________
@@ -22045,7 +21978,6 @@ int load_fv_grads(void)
           vnorm=%g\n",flux,fv->c[wspec],-mp->mass_flux[wspec],fv->ext_v,vnorm);
           */
 
-#ifdef COUPLED_FILL
           /* finite difference calculation of path dependencies for
              subelement integration
            */
@@ -22082,7 +22014,6 @@ int load_fv_grads(void)
             }
             return (0);
           }
-#endif
 
           /*
            * Wesiduals
@@ -22220,7 +22151,6 @@ int load_fv_grads(void)
                   }
                 }
 
-#ifdef COUPLED_FILL
                 /*
                  * J_W_F
                  */
@@ -22244,7 +22174,6 @@ int load_fv_grads(void)
                     lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += source;
                   }
                 }
-#endif
               }
             }
           }
@@ -22313,7 +22242,6 @@ int load_fv_grads(void)
             xfem_var_diff(var, &(v_diff[a]), &(phi_diff[a][0]), &(grad_v_diff[a][0]));
           }
 
-#ifdef COUPLED_FILL
           /* finite difference calculation of path dependencies for
              subelement integration
            */
@@ -22321,7 +22249,6 @@ int load_fv_grads(void)
             /* this is currently handled below using the grad_v_diff */
             return (0);
           }
-#endif
 
           /*
            * Wesiduals
@@ -22678,7 +22605,6 @@ int load_fv_grads(void)
 #endif
 
 #define USE_GFMAG 1
-#ifdef COUPLED_FILL
           /* finite difference calculation of path dependencies for
              subelement integration
            */
@@ -22698,8 +22624,7 @@ int load_fv_grads(void)
                 source = 2. * lsi->delta *
                          (-coeff * (tau * fv_dot->ext_v + fv->ext_v) + vnorm * sign) * lsi->gfmag;
 #else
-                source =
-                    2. * lsi->delta * (-coeff * (tau * fv_dot->ext_v + fv->ext_v) + vnorm * sign);
+        source = 2. * lsi->delta * (-coeff * (tau * fv_dot->ext_v + fv->ext_v) + vnorm * sign);
 #endif
 
                 source *= phi_i * det_J * wt * h3;
@@ -22720,7 +22645,6 @@ int load_fv_grads(void)
             }
             return (0);
           }
-#endif
 
           /*
            * Wesiduals
@@ -23285,7 +23209,6 @@ int load_fv_grads(void)
           if (tt != 0.)
             GOMA_EH(GOMA_ERROR, "LS_EIK_KINEMATIC currently requires backward Euler");
 
-#ifdef COUPLED_FILL
           /* finite difference calculation of path dependencies for
              subelement integration
            */
@@ -23336,7 +23259,6 @@ int load_fv_grads(void)
             }
             return (0);
           }
-#endif
 
           /*
            * Wesiduals
@@ -23958,7 +23880,6 @@ int load_fv_grads(void)
 fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign, force[0],force[1]);
 #endif
 
-#ifdef COUPLED_FILL
           /* finite difference calculation of path dependencies for
              subelement integration
            */
@@ -23997,7 +23918,6 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
             }
             return (0);
           }
-#endif
 
           /*
            * Wesiduals
@@ -24036,7 +23956,6 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
                   ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
                   phi_i = bfm->phi[i];
 
-#ifdef COUPLED_FILL
                   /*
                    * J_m_F
                    */
@@ -24056,7 +23975,6 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
                       lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += source;
                     }
                   }
-#endif
                   /* extra dependencies for bcflag = 0 or 1	*/
                   if (bcflag == 0 || bcflag == 1) {
                     /*
@@ -24331,7 +24249,6 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
           }
           /* END Kanouff Curve fir for pressure */
 
-#ifdef COUPLED_FILL
           /* finite difference calculation of path dependencies for
              subelement integration
            */
@@ -24370,7 +24287,6 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
             }
             return (0);
           }
-#endif
 
           /*
            * Wesiduals
@@ -24437,7 +24353,6 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
                       lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += source;
                     }
                   }
-#ifdef COUPLED_FILL
                   /*
                    * J_m_F
                    */
@@ -24459,7 +24374,6 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
                       lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += source;
                     }
                   }
-#endif
                 }
               }
             }
@@ -24648,7 +24562,6 @@ assemble_uvw_source ( int eqn, double val )
                   /*
                    * J_m_F
                    */
-#ifdef COUPLED_FILL
                   var = FILL;
 
                   if ( pd->v[pg->imtrx][var] )
@@ -24671,7 +24584,6 @@ assemble_uvw_source ( int eqn, double val )
                           lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += source;
                         }
                     }
-#endif
                 }
 
 	      if ( extended_dof && sign_change( F_i, (double) ls->Elem_Sign ) )
@@ -24866,7 +24778,6 @@ assemble_uvw_source ( int eqn, double val )
             }
           }
 
-#ifdef COUPLED_FILL
           /* finite difference calculation of path dependencies for
              subelement integration
            */
@@ -24919,7 +24830,6 @@ assemble_uvw_source ( int eqn, double val )
             }
             return (0);
           }
-#endif
 
           /*
            * Wesiduals
@@ -25049,7 +24959,6 @@ assemble_uvw_source ( int eqn, double val )
                   /*
                    * J_m_F
                    */
-#ifdef COUPLED_FILL
                   var = FILL;
 
                   if (pd->v[pg->imtrx][var]) {
@@ -25071,7 +24980,6 @@ assemble_uvw_source ( int eqn, double val )
                       lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += source;
                     }
                   }
-#endif
                 }
 
                 if (apply_SIC[i]) {
@@ -26768,14 +26676,12 @@ assemble_uvw_source ( int eqn, double val )
               }
             }
 
-#ifdef COUPLED_FILL
             var = FILL;
             if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
               for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
                 d_mu->F[j] = mu_num * d_mus->F[j];
               }
             }
-#endif /* COUPLED_FILL */
 
             var = PRESSURE;
             if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
@@ -26865,14 +26771,12 @@ assemble_uvw_source ( int eqn, double val )
                 }
               }
 
-#ifdef COUPLED_FILL
               var = FILL;
               if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
                 for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
                   d_mu->F[j] += mu_num * at * d_mup->F[j];
                 }
               }
-#endif /* COUPLED_FILL */
 
               var = PRESSURE;
               if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
@@ -27016,7 +26920,6 @@ assemble_uvw_source ( int eqn, double val )
             }
           }
 
-#ifdef COUPLED_FILL
           var = FILL;
           if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
             for (p = 0; p < VIM; p++) {
@@ -27044,8 +26947,6 @@ assemble_uvw_source ( int eqn, double val )
               }
             }
           }
-
-#endif /* COUPLED_FILL */
 
           if (d_Pi != NULL && pd->v[pg->imtrx][PHASE1]) {
             for (p = 0; p < VIM; p++) {
@@ -27598,7 +27499,6 @@ assemble_uvw_source ( int eqn, double val )
             }
           }
 
-#ifdef COUPLED_FILL
           var = FILL;
           if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
             for (p = 0; p < VIM; p++) {
@@ -27626,7 +27526,6 @@ assemble_uvw_source ( int eqn, double val )
               }
             }
           }
-#endif
 
           var = PHASE1;
           if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
@@ -28575,7 +28474,6 @@ assemble_uvw_source ( int eqn, double val )
           vnorm=%g\n",flux,fv->c[wspec],-mp->mass_flux[wspec],fv->ext_v,vnorm);
           */
 
-#ifdef COUPLED_FILL
           /* finite difference calculation of path dependencies for
              subelement integration
            */
@@ -28612,7 +28510,6 @@ assemble_uvw_source ( int eqn, double val )
             }
             return (0);
           }
-#endif
 
           /*
            * Wesiduals
@@ -28745,7 +28642,6 @@ assemble_uvw_source ( int eqn, double val )
                   }
                 }
 
-#ifdef COUPLED_FILL
                 /*
                  * J_W_F
                  */
@@ -28769,7 +28665,6 @@ assemble_uvw_source ( int eqn, double val )
                     lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += source;
                   }
                 }
-#endif
               }
             }
           }
@@ -30184,7 +30079,6 @@ assemble_uvw_source ( int eqn, double val )
           force1 = acous_pgrad * temp1;
           force += force1;
 
-#ifdef COUPLED_FILL
           /* finite difference calculation of path dependencies for
              subelement integration
            */
@@ -30223,7 +30117,6 @@ assemble_uvw_source ( int eqn, double val )
             }
             return (0);
           }
-#endif
 
           /*
            * Wesiduals
@@ -30270,7 +30163,6 @@ assemble_uvw_source ( int eqn, double val )
 
                   phi_i = bfm->phi[i];
 
-#ifdef COUPLED_FILL
                   /*
                    * J_m_F
                    */
@@ -30292,7 +30184,6 @@ assemble_uvw_source ( int eqn, double val )
                       lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += source;
                     }
                   }
-#endif
                   /*
                    * Acoustic Pressure - Real
                    */

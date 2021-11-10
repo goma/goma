@@ -71,48 +71,11 @@ EXTERN int integrate_explicit_eqn(struct GomaLinearSolverData *, /* ams - cf "sl
                                   Dpi *,      /* dpi - distributed processing info         */
                                   Comm_Ex *); /* cx - comm structure                       */
 
-#ifndef COUPLED_FILL
-int assemble_fill(double tt,
-                  double dt,
-                  dbl hsquared[DIM],
-                  dbl hh[DIM][DIM],
-                  dbl dh_dxnode[DIM][MDE],
-                  const int applied_eqn,
-                  double xi[DIM],
-                  Exo_DB *exo,
-                  double time);
-
-EXTERN int assemble_fill_ext_v(double[],  /* afill - Jacobian matrix for fill equation */
-                               int[],     /* ijaf - pointer to nonzeros in Jacobian    */
-                               double[],  /* rf - rhs vector                           */
-                               double,    /* dt - current time step size               */
-                               double,    /* tt - parameter to vary time integration from
-                                           * explicit (tt = 1) to implicit (tt = 0) */
-                               int[],     /* node_to_fill -  */
-                               double[]); /* element size measure for GLS */
-
 EXTERN int assemble_fill_fake(double,  /* tt - parameter varies time integration from
                                         *      explicit (tt = 1) to
                                         *      implicit (tt = 0)                    */
                               double); /* dt - current time step size               */
 
-EXTERN int assemble_fill_gradf(double[],  /* afill[], Jacobian matrix for fill equation      */
-                               int[],     /* ijaf[],  pointer to nonzeros in Jacobian matrix */
-                               double[],  /* rf[],    rhs vector                             */
-                               double,    /* dt, current time step size                      */
-                               double,    /* tt, parameter to vary time integration from     *
-                                           * explicit (tt = 1) to implicit (tt = 0)          */
-                               int[],     /* node_to_fill[],                                 */
-                               double[]); /* hsquared[DIM]), element size                    */
-
-#endif /* ifndef COUPLED_FILL */
-
-EXTERN int assemble_fill_fake(double,  /* tt - parameter varies time integration from
-                                        *      explicit (tt = 1) to
-                                        *      implicit (tt = 0)                    */
-                              double); /* dt - current time step size               */
-
-#ifdef COUPLED_FILL
 int assemble_fill(double tt,
                   double dt,
                   const PG_DATA *pg_data,
@@ -127,8 +90,6 @@ EXTERN int assemble_fill_ext_v(
 
 EXTERN int assemble_fill_gradf(
     double tt, double dt, dbl hsquared[DIM], dbl hh[DIM][DIM], dbl dh_dxnode[DIM][MDE]);
-
-#endif /* COUPLED_FILL */
 
 EXTERN void map_direction(double *, double *);
 

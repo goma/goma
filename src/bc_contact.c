@@ -1218,7 +1218,6 @@ int apply_embedded_bc(int ielem,    /* element number */
 
   Subgrid_Int.active = FALSE; /* this is for the volume */
 
-#ifdef COUPLED_FILL
   /* finite difference method for forming path dependencies of source terms */
   if (ls->SubElemIntegration && !ls->Ignore_F_deps) {
     ls->CalcSurfDependencies = TRUE;
@@ -1283,7 +1282,6 @@ int apply_embedded_bc(int ielem,    /* element number */
 
     ls->CalcSurfDependencies = FALSE;
   }
-#endif
 
   /* now form the source terms themselves. Note that we want to do subelement for overset grid
      cases, which can only be using the phase-field struct */
@@ -1337,7 +1335,6 @@ int apply_embedded_bc(int ielem,    /* element number */
       assemble_embedded_bc(ielem, x, dt, theta, time_value, oAC, gAC, bAC, cAC, exo, xi);
 
       /* equation path dependence terms, but ONLY if calling from volume assembly matrix_fill*/
-#ifdef COUPLED_FILL
       if (oAC != 0) {
         if (pd->e[pg->imtrx][R_FILL] && ipass == 0) {
           if (tran->Fill_Equation == FILL_EQN_EIKONAL) {
@@ -1368,7 +1365,6 @@ int apply_embedded_bc(int ielem,    /* element number */
           }
         }
       } /* if(oAC != 0) */
-#endif
     }
 
   } /* loop over gauss points */

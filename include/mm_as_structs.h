@@ -1074,9 +1074,6 @@ struct Transient_Information {
   int step;
   int MaxSteadyStateSteps;
   int MaxTimeSteps;
-#ifndef COUPLED_FILL
-  int exp_subcycle;                     /* subcycling frequency for Fill equation */
-#endif                                  /* not COUPLED_FILL */
   int Fill_Weight_Fcn;                  /* Weight function to use on the transient fill equation
                                          */
   int Fill_Equation;                    /* Equation for fill-level set */
@@ -1165,9 +1162,6 @@ struct Continuation_Information {
    */
   int MaxPathSteps;
   int PathIntr;
-#ifndef COUPLED_FILL
-  int exp_subcycle;
-#endif /* not COUPLED_FILL */
   dbl Delta_s0;
   dbl Delta_s_min;
   dbl Delta_s_max;

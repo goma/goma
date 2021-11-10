@@ -175,10 +175,10 @@ EXTERN int segregate_stress_update /* mm_fill_stress.c                       */
 EXTERN int stress_eqn_pointer(int[MAX_MODES][DIM][DIM]); /* v_s */
 
 EXTERN
-    dbl numerical_viscosity(dbl[DIM][DIM],                 /* s - total stress */
-                            dbl[DIM][DIM],                 /* gamma_cont - continuous shear rate */
-                            dbl[MAX_MODES][DIM][DIM][MDE], /* d_mun_dS - derivative of mun wrt S*/
-                            dbl[DIM][DIM][MDE]);           /* d_mun_dG - derivative of mun wrt G */
+dbl numerical_viscosity(dbl[DIM][DIM],                 /* s - total stress */
+                        dbl[DIM][DIM],                 /* gamma_cont - continuous shear rate */
+                        dbl[MAX_MODES][DIM][DIM][MDE], /* d_mun_dS - derivative of mun wrt S*/
+                        dbl[DIM][DIM][MDE]);           /* d_mun_dG - derivative of mun wrt G */
 
 void compute_exp_s(double[DIM][DIM], double[DIM][DIM], double[DIM], double[DIM][DIM]);
 

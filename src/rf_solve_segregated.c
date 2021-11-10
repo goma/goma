@@ -1024,9 +1024,6 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
     int MaxTimeSteps = tran->MaxTimeSteps;
     double TimeMax = tran->TimeMax;
     eps = tran->eps;
-#ifndef COUPLED_FILL
-    exp_subcycle = tran->exp_subcycle;
-#endif /* not COUPLED_FILL */
 
     // Determine if we are using a constant time step or not
     if (delta_t0 < 0.0) {
@@ -1087,9 +1084,6 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
 
         Fill_Matrix = pg->imtrx;
         ls->MatrixNum = pg->imtrx;
-#ifndef COUPLED_FILL
-        GOMA_EH(GOMA_ERROR, "Segregated not setup for COUPLED_FILL undefined");
-#endif /* not COUPLED_FILL */
 
         if (ls != NULL || pfd != NULL) {
 

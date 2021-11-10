@@ -54,8 +54,8 @@ apply_integrated_bc(double x[],            /* Solution vector for the current pr
 
 EXTERN void apply_table_wic_bc(double[], /* func                                      */
                                double[][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func */
-                               struct Boundary_Condition *,                  /* BC_Type                  */
-                               double);                                      /* time_value */
+                               struct Boundary_Condition *, /* BC_Type                  */
+                               double);                     /* time_value */
 
 #ifdef STATIC
 

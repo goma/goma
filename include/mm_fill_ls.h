@@ -41,24 +41,6 @@ struct elem_side_bc_struct;
 #define EXTERN extern
 #endif
 
-#ifndef COUPLED_FILL
-EXTERN void semi_lagrange_step(int,        /* num_total_nodes */
-                               int,        /* num_total_unknowns */
-                               int,        /* num_fill_unknowns */
-                               double[],   /* x  */
-                               double[],   /* xf */
-                               double[],   /*   xf_old   */
-                               double[],   /*    xfdot   */
-                               double[],   /*   xfdot_old   */
-                               int[],      /*  node_to_fill  */
-                               double,     /*  delta_t   */
-                               double,     /*  theta     */
-                               Exo_DB *,   /*  exo       */
-                               Dpi *,      /*  dpi      */
-                               Comm_Ex *); /*  cx      */
-
-#endif /*COUPLED_FILL */
-
 EXTERN int apply_ls_inlet_bc(double[], /* afill - Jacobian matrix fill equation */
                              int[],    /* ijaf - ptr to nonzeros Jacobian matrix */
                              double[], /* x - global vector containing all unknowns */
@@ -266,27 +248,6 @@ EXTERN int load_lsi_old(const double width, struct Level_Set_Interface *lsi_old)
 EXTERN int load_lsi_adjmatr(const double); /* width */
 
 EXTERN int load_lsi_derivs(void);
-
-#ifndef COUPLED_FILL
-
-EXTERN void correct_level_set(struct Aztec_Linear_Solver_System *ams,
-                              double[],
-                              double[],
-                              double[],
-                              double[],
-                              double[],
-                              int[],
-                              int,
-                              int,
-                              double,
-                              double,
-                              int,
-                              int,
-                              Exo_DB *,
-                              Dpi *,
-                              Comm_Ex *);
-
-#endif /*COUPLED_FILL */
 
 EXTERN int assemble_level_project(double[], /* Jacobian matrix for fill equation  */
                                   int[],    /* pointer to nonzeros in Jacobian matrix   */

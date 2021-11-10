@@ -790,7 +790,7 @@ void check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
                 }
               }
             } /* End of if (eqn == R_MOMENTUM1) */
-              /*****************************************************************************/
+            /*****************************************************************************/
 
             /* first give all DIRICHLET Conditions Precedence
              * - they swamp out all other boundary conditions and shift rotated

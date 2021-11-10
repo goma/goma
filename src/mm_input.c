@@ -1581,18 +1581,6 @@ void rd_timeint_specs(FILE *ifp, char *input) {
       ECHO(echo_string, echo_file);
     }
 
-#ifndef COUPLED_FILL
-    tran->exp_subcycle = 10;
-    iread = look_for_optional(ifp, "Fill Subcycle", input, '=');
-    if (iread == 1) {
-      if (fscanf(ifp, "%d", &(tran->exp_subcycle)) != 1) {
-        GOMA_EH(-1, "error reading Fill Subcycle");
-      }
-      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", "Fill Subcycle", tran->exp_subcycle);
-      ECHO(echo_string, echo_file);
-    }
-#endif /* not COUPLED_FILL */
-
     tran->Fill_Weight_Fcn = FILL_WEIGHT_TG;
 
     iread = look_for_optional(ifp, "Fill Weight Function", input, '=');
@@ -2288,13 +2276,11 @@ void rd_levelset_specs(FILE *ifp, char *input) {
       stringup(input);
 
       if ((strcmp(input, "ON") == 0) || (strcmp(input, "YES") == 0)) {
-#ifdef COUPLED_FILL
         if (tran->Fill_Equation == FILL_EQN_ADVECT &&
             tran->Fill_Weight_Fcn != FILL_WEIGHT_EXPLICIT) {
           GOMA_EH(GOMA_ERROR, "Maybe I should let you ignore LS dependencies even with implicit "
                               "LS, but I won't!\n");
         }
-#endif
         ls->Ignore_F_deps = TRUE;
       }
       snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "Ignore Level Set Dependencies", input);
@@ -2419,11 +2405,7 @@ void rd_levelset_specs(FILE *ifp, char *input) {
     }
 
     /* set default evolution scheme based on compiler flag */
-#ifdef COUPLED_FILL
     ls->Evolution = LS_EVOLVE_ADVECT_COUPLED;
-#else
-    ls->Evolution = LS_EVOLVE_ADVECT_EXPLICIT;
-#endif
 
     iread = look_for_optional(ifp, "Level Set Slave Surface", input, '=');
     if (iread == 1) {
@@ -2502,12 +2484,7 @@ void rd_levelset_specs(FILE *ifp, char *input) {
       stringup(input);
 
       if (strcmp(input, "YES") == 0 || strcmp(input, "ON") == 0 || strcmp(input, "TRUE") == 0) {
-#ifdef COUPLED_FILL
         GOMA_EH(GOMA_ERROR, "Level set Semi_Lagrange not supported for COUPLED_FILL.");
-#else
-        ls->Evolution = LS_EVOLVE_SEMILAGRANGIAN;
-        tran->exp_subcycle = 1.0;
-#endif
       }
       snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "Level Set Semi_Lagrange", input);
       ECHO(echo_string, echo_file);
@@ -7136,13 +7113,6 @@ void rd_matl_blk_specs(FILE *ifp, char *input) {
     }
   }
 
-#ifndef COUPLED_FILL
-  /* Initialized Explicit_Fill to zero. Only set it if
-   * we have a fill equation in some material
-   */
-  Explicit_Fill = 0;
-#endif
-
   /*
    * ------------- Loop over the number of materials ----------
    */
@@ -7968,19 +7938,10 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
         ce = set_eqn(R_EM_CONT_IMAG, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "fill")) {
         ce = set_eqn(R_FILL, mtrx_index0, pd_ptr);
-#ifndef COUPLED_FILL
-        /* set explicit flag for fill equation */
-        Explicit_Fill = 1;
-#endif /* not COUPLED_FILL */
       } else if (!strcasecmp(ts, "level_set")) {
         if (ls == NULL)
           GOMA_EH(GOMA_ERROR, "Level Set Interface tracking must be turned on.");
         ce = set_eqn(R_LEVEL_SET, mtrx_index0, pd_ptr);
-#ifndef COUPLED_FILL
-        /* set explicit flag for fill equation and turn on level set switch*/
-        if (ls->Evolution == LS_EVOLVE_ADVECT_EXPLICIT || ls->Evolution == LS_EVOLVE_SEMILAGRANGIAN)
-          Explicit_Fill = 1;
-#endif /* not COUPLED_FILL */
       } else if (!strcasecmp(ts, "curvature")) {
         ce = set_eqn(R_CURVATURE, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "normal1")) {
@@ -11208,9 +11169,9 @@ void translate_command_line(int argc, char *argv[], struct Command_line_command 
         GOMA_EH(GOMA_ERROR, err_msg);
       }
     } /* end of if argv starts with '-' */
-      /*
-       * DEFAULT OPTION -input: read input info from alternate file instead of 'input'
-       */
+    /*
+     * DEFAULT OPTION -input: read input info from alternate file instead of 'input'
+     */
     else {
       if (istr == 1 && istr == argc - 1)
       /* default assumes this string is the name of the input file */
@@ -13295,11 +13256,7 @@ void echo_compiler_settings(void) {
   fprintf(echo_file, "%-30s= %s\n", "TRILINOS", "no");
 #endif
 
-#ifdef COUPLED_FILL
   fprintf(echo_file, "%-30s= %s\n", "COUPLED_FILL", "yes");
-#else
-  fprintf(echo_file, "%-30s= %s\n", "COUPLED_FILL", "no");
-#endif
 
   fprintf(echo_file, "%-30s= %s\n", "DEBUG", "no");
 

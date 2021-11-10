@@ -628,7 +628,7 @@ goma_error exchange_neighbor_ss_edges(Exo_DB *exo, Dpi *dpi) {
   ////for (int k = 0; k < exo->num_side_sets; k++) {
   ////  for (int i = 0; i < ss_edge_info[k].total_nodes; i++) {
   ////    int ln = in_list(ss_edge_info[k].global_node_ids[i], 0, exo->num_nodes,
-  ///dpi->node_index_global); /  }
+  /// dpi->node_index_global); /  }
   ////}
   // for (int i = 0; i < exo->num_side_sets; i++) {
   //   int offset = 0;

@@ -112,10 +112,6 @@ int Unique_Shapes[MAX_ELEMENT_SHAPES];
 
 /* Parameters to select time integration technique                           */
 int TimeIntegration; /* Select time integration method                    */
-#ifndef COUPLED_FILL
-int Explicit_Fill;   /* Select time integration method                    */
-int exp_subcycle;    /* Subcycling frequency for Fill equation            */
-#endif               /* not COUPLED_FILL */
 int Use_Level_Set;   /* Global switch to turn on level set computations   */
 int Use_Phase_Field; /* Global switch to turn on phase-field computations   */
 
