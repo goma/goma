@@ -31,6 +31,7 @@
 #include "loca_const.h"
 #include "md_timer.h"
 #include "mm_augc_util.h"
+#include "mm_eh.h"
 #include "mm_fill.h"
 #include "mm_fill_aux.h"
 #include "mm_fill_ls.h"
@@ -1356,6 +1357,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
       if (strcmp(Matrix_Format, "petsc") == 0) {
         int its;
         petsc_solve(ams, delta_x, resid_vector, &its);
+        exchange_dof(cx, dpi, delta_x, pg->imtrx);
         matrix_solved = 1;
         char itsstring[10];
         itsstring[9] = '\0';
@@ -1823,6 +1825,8 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     /* fail if we didn't get a finite solution */
     if (!isfinite(Norm[1][0]) || !isfinite(Norm[1][1]) || !isfinite(Norm[1][2]) ||
         !isfinite(Norm[0][0]) || !isfinite(Norm[0][1]) || !isfinite(Norm[0][2])) {
+      GOMA_WH_MANY(-1, "Non-Finite Norm found %g,%g,%g,%g,%g,%g", Norm[0][0], Norm[0][1],
+                   Norm[0][2], Norm[1][0], Norm[1][1], Norm[1][2]);
       return_value = -1;
       goto free_and_clear;
     }

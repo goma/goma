@@ -14,6 +14,7 @@
 #include "mm_fill_util.h"
 #include "mm_mp.h"
 #include "mm_unknown_map.h"
+#include "mm_fill_aux.h"
 #include "mm_viscosity.h"
 #include "rf_bc.h"
 #include "rf_fem.h"
@@ -904,6 +905,9 @@ static goma_error initialize_petsc_post_proc_matrix(Exo_DB *exo,
          */
         err = beer_belly();
         GOMA_EH(err, "beer_belly");
+
+        err = load_coordinate_scales(pd->CoordinateSystem, fv);
+        GOMA_EH(err, "load_coordinate_scales(fv)");
 
         err = load_bf_grad();
         GOMA_EH(err, "load_bf_grad");
