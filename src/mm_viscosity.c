@@ -1054,17 +1054,14 @@ double bingham_viscosity(struct Generalized_Newtonian *gn_local,
     d_shear_d_at = 0.;
   }
 
-  //if ((gammadot != 0.) && (at_shift != 0.)) {
-  //  yield = tau_y * (1. - exp(-at_shift * fexp * gammadot)) / (at_shift * gammadot);
-  //  d_yield = (-yield + tau_y * fexp * exp(-at_shift * fexp * gammadot)) / gammadot;
-  //  d_yield_d_at = d_yield * gammadot / at_shift;
-  //} else {
-  //  yield = tau_y * fexp;
-  //  d_yield = 0.;
-  //}
-  yield = tau_y * (1. - exp(-at_shift * fexp * gammadot + 1e-12)) / (at_shift * gammadot + 1e-12);
-  d_yield = (-yield + tau_y * fexp * exp(-at_shift * fexp * gammadot + 1e-12)) / (gammadot + 1e-12);
-  d_yield_d_at = d_yield * gammadot / at_shift;
+  if ((gammadot != 0.) && (at_shift != 0.)) {
+    yield = tau_y * (1. - exp(-at_shift * fexp * gammadot)) / (at_shift * gammadot);
+    d_yield = (-yield + tau_y * fexp * exp(-at_shift * fexp * gammadot)) / gammadot;
+    d_yield_d_at = d_yield * gammadot / at_shift;
+  } else {
+    yield = tau_y * fexp;
+    d_yield = 0.;
+  }
 
   visc_cy = pow(1. + shear, (nexp - 1.) / aexp);
   d_visc_cy = (nexp - 1.) / aexp * pow(1. + shear, (nexp - 1. - aexp) / aexp);
