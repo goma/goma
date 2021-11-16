@@ -298,6 +298,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define SYLGARD        28 /* Sylgard viscosity model */
 #define PRANDTL_MIXING 29 /* Shell Turbulent Viscosity Model */
 #define BOND_SH        26 /* bond evolution structure model for viscosity with shear rate variable*/
+#define BINGHAM_MIXED                30
 
 #define FOAM_PBE_WATER 34
 #define FOAM_PBE_OH    35

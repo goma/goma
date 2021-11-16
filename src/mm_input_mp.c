@@ -1336,6 +1336,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     ConstitutiveEquation = BINGHAM;
   } else if (!strcmp(model_name, "BINGHAM_WLF")) {
     ConstitutiveEquation = BINGHAM_WLF;
+  } else if (!strcmp(model_name, "BINGHAM_MIXED")) {
+    ConstitutiveEquation = BINGHAM_MIXED;
   } else if (!strcmp(model_name, "CARREAU_WLF")) {
     ConstitutiveEquation = CARREAU_WLF;
   } else if (!strcmp(model_name, "HERSCHEL_BULKLEY")) {
@@ -1522,7 +1524,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       ConstitutiveEquation == CARREAU_WLF || ConstitutiveEquation == BINGHAM ||
       ConstitutiveEquation == BINGHAM_WLF || ConstitutiveEquation == CARREAU_WLF_CONC_PL ||
       ConstitutiveEquation == CARREAU_WLF_CONC_EXP || ConstitutiveEquation == BOND_SH ||
-      ConstitutiveEquation == BOND) {
+      ConstitutiveEquation == BOND || ConstitutiveEquation == BINGHAM_MIXED) {
     model_read = look_for_mat_prop(imp, "High Rate Viscosity", &(gn_glob[mn]->muinfModel),
                                    &(gn_glob[mn]->muinf), NO_USER, NULL, model_name, SCALAR_INPUT,
                                    &NO_SPECIES, es);
@@ -1549,7 +1551,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     }
     ECHO(es, echo_file);
 
-    if (ConstitutiveEquation != BOND) {
+    if (ConstitutiveEquation != BOND
+        && ConstitutiveEquation != BINGHAM_MIXED) {
       model_read =
           look_for_mat_prop(imp, "Time Constant", &(gn_glob[mn]->lamModel), &(gn_glob[mn]->lam),
                             NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
@@ -1676,7 +1679,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   }
 
   if (ConstitutiveEquation == BINGHAM || ConstitutiveEquation == BINGHAM_WLF ||
-      ConstitutiveEquation == BOND || ConstitutiveEquation == HERSCHEL_BULKLEY) {
+      ConstitutiveEquation == BOND || ConstitutiveEquation == HERSCHEL_BULKLEY ||
+      ConstitutiveEquation == BINGHAM_MIXED) {
     model_read =
         look_for_mat_prop(imp, "Yield Stress", &(gn_glob[mn]->tau_yModel), &(gn_glob[mn]->tau_y),
                           &(gn_glob[mn]->u_tau_y), &(gn_glob[mn]->len_u_tau_y), model_name,
@@ -1694,6 +1698,13 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     ECHO(es, echo_file);
   }
 
+  if (ConstitutiveEquation == BINGHAM_MIXED) {
+    model_read =
+        look_for_mat_prop(imp, "Epsilon Regularization", &(gn_glob[mn]->epsilonModel), &(gn_glob[mn]->epsilon),
+                          NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
+    GOMA_EH(model_read, "Epsilon Regularization");
+    ECHO(es, echo_file);
+  }
   /*
    * For now, apply thixotrophy to just the shear-thinning models although
    * it should be general for all

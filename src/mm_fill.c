@@ -1485,7 +1485,11 @@ Revised:         Summer 1998, SY Tam (UNM)
     }
 
     if (pde[R_GRADIENT11]) {
-      err = assemble_gradient(theta, delta_t);
+      if (gn->ConstitutiveEquation == BINGHAM_MIXED) {
+        err = assemble_rate_of_strain(theta, delta_t);
+      } else {
+        err = assemble_gradient(theta, delta_t);
+      }
       GOMA_EH(err, "assemble_gradient");
 #ifdef CHECK_FINITE
       err = CHECKFINITE("assemble_gradient");

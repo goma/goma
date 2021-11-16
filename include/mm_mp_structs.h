@@ -1012,6 +1012,8 @@ struct Generalized_Newtonian {
   int tau_yModel;
   dbl fexp;
   int fexpModel;
+  dbl epsilon;
+  int epsilonModel;
   /* these are for SUSPENSION/FILLED_EPOXY models */
   dbl maxpack;
   int maxpackModel;

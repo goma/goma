@@ -85,6 +85,10 @@ EXTERN int assemble_gradient /* mm_fill_stress.c                          */
                               * explicit (tt = 1) to implicit (tt = 0)    */
      dbl);                   /* dt - current time step size               */
 
+int assemble_rate_of_strain(dbl tt, /* parameter to vary time integration from
+                                     * explicit (tt = 1) to implicit (tt = 0) */
+                            dbl dt); /* current time step size */
+
 EXTERN int tensor_dot /* mm_fill_stress.c                          */
     (dbl[DIM][DIM],   /* t1                                        */
      dbl[DIM][DIM],   /* t2                                        */

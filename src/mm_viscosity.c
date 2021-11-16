@@ -529,6 +529,8 @@ double viscosity(struct Generalized_Newtonian *gn_local,
     mu = bingham_viscosity(gn_local, gamma_dot, d_mu);
   } else if (gn_local->ConstitutiveEquation == BINGHAM_WLF) {
     mu = bingham_wlf_viscosity(gn_local, gamma_dot, d_mu);
+  } else if (gn_local->ConstitutiveEquation == BINGHAM_MIXED) {
+    mu = gn_local->muinf;
   } else if (gn_local->ConstitutiveEquation == CARREAU_WLF) {
     mu = carreau_wlf_viscosity(gn_local, gamma_dot, d_mu);
   } else if (gn_local->ConstitutiveEquation == CARREAU_SUSPENSION) {
@@ -1154,6 +1156,7 @@ double bingham_viscosity(struct Generalized_Newtonian *gn_local,
 
   return (mu);
 }
+
 double bingham_wlf_viscosity(struct Generalized_Newtonian *gn_local,
                              dbl gamma_dot[DIM][DIM], /* strain rate tensor */
                              VISCOSITY_DEPENDENCE_STRUCT *d_mu) {

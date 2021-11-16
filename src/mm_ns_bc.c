@@ -6368,9 +6368,9 @@ void flow_n_dot_T_nobc(double func[DIM],
       }
     }
 
-    if (pd->v[pg->imtrx][POLYMER_STRESS11] &&
+    if (gn->ConstitutiveEquation == BINGHAM_MIXED || (pd->v[pg->imtrx][POLYMER_STRESS11] &&
         (vn->evssModel == EVSS_F || vn->evssModel == LOG_CONF || vn->evssModel == EVSS_GRADV ||
-         vn->evssModel == LOG_CONF_GRADV)) {
+         vn->evssModel == LOG_CONF_GRADV))) {
       for (p = 0; p < pd->Num_Dim; p++) {
         for (q = 0; q < pd->Num_Dim; q++) {
           for (b = 0; b < VIM; b++) {

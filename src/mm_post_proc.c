@@ -964,6 +964,25 @@ static int calc_standard_fields(double **post_proc_vect,
         mu += at * mup;
       }
     }
+
+    if (gn->ConstitutiveEquation == BINGHAM_MIXED) {
+
+      dbl gamma[DIM][DIM];
+      for (a = 0; a < VIM; a++) {
+        for (b = 0; b < VIM; b++) {
+          gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+        }
+      }
+
+      dbl gammadot;
+      calc_shearrate(&gammadot, gamma, NULL, NULL);
+
+      dbl Du_eps = sqrt(gammadot + gn->epsilon * gn->epsilon);
+
+      mu += gn->tau_y / Du_eps;
+
+    }
+
     local_post[PP_Viscosity] = mu;
     local_lumped[PP_Viscosity] = 1.;
   }

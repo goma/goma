@@ -2301,7 +2301,9 @@ int assemble_momentum(dbl time,       /* current time */
 
   if (pd->gv[POLYMER_STRESS11]) {
     (void)stress_eqn_pointer(v_s);
+  }
 
+  if (pd->gv[VELOCITY_GRADIENT11]) {
     v_g[0][0] = VELOCITY_GRADIENT11;
     v_g[0][1] = VELOCITY_GRADIENT12;
     v_g[1][0] = VELOCITY_GRADIENT21;
@@ -3675,9 +3677,9 @@ int assemble_momentum(dbl time,       /* current time */
           /*
            * J_m_G
            */
-          if (pdv[POLYMER_STRESS11] &&
+          if (gn->ConstitutiveEquation == BINGHAM_MIXED || (pdv[POLYMER_STRESS11] &&
               (vn->evssModel == EVSS_F || vn->evssModel == LOG_CONF ||
-               vn->evssModel == EVSS_GRADV || vn->evssModel == LOG_CONF_GRADV)) {
+               vn->evssModel == EVSS_GRADV || vn->evssModel == LOG_CONF_GRADV))) {
             for (b = 0; b < VIM; b++) {
               for (c = 0; c < VIM; c++) {
                 var = v_g[b][c];
@@ -3699,7 +3701,7 @@ int assemble_momentum(dbl time,       /* current time */
                           diffusion += grad_phi_i_e_a[p][q] * d_Pi->g[q][p][b][c][j];
                         }
                       }
-                      diffusion *= det_J * wt * h3;
+                      diffusion *=- det_J * wt * h3;
                       diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
                     }
 
@@ -7812,16 +7814,43 @@ int load_fv(void)
    */
 
   for (p = 0; pdgv[VELOCITY_GRADIENT11] && p < VIM; p++) {
-    for (q = 0; q < VIM; q++) {
-      v = v_g[p][q];
-      if (pdgv[v]) {
-        fv->G[p][q] = fv_old->G[p][q] = fv_dot->G[p][q] = 0.0;
-        dofs = ei[upd->matrix_index[v]]->dof[v];
-        for (i = 0; i < dofs; i++) {
-          fv->G[p][q] += *esp->G[p][q][i] * bf[v]->phi[i];
-          if (pd->TimeIntegration != STEADY) {
-            fv_old->G[p][q] += *esp_old->G[p][q][i] * bf[v]->phi[i];
-            fv_dot->G[p][q] += *esp_dot->G[p][q][i] * bf[v]->phi[i];
+    if (gn->ConstitutiveEquation == BINGHAM_MIXED) {
+      for (q = 0; q < VIM; q++) {
+        if (q >= p) {
+          v = v_g[p][q];
+          if (pdgv[v]) {
+            fv->G[p][q] = fv_old->G[p][q] = fv_dot->G[p][q] = 0.0;
+            if (q > p) {
+              fv->G[q][p] = fv_old->G[q][p] = fv_dot->G[q][p] = 0.0;
+            }
+            dofs = ei[upd->matrix_index[v]]->dof[v];
+            for (i = 0; i < dofs; i++) {
+              fv->G[p][q] += *esp->G[p][q][i] * bf[v]->phi[i];
+              if (q > p) {
+                fv->G[q][p] += *esp->G[p][q][i] * bf[v]->phi[i];
+              }
+              if (pd->TimeIntegration != STEADY) {
+                fv_old->G[p][q] += *esp_old->G[p][q][i] * bf[v]->phi[i];
+                if (q > p) {
+                  fv_dot->G[q][p] += *esp_dot->G[p][q][i] * bf[v]->phi[i];
+                }
+              }
+            }
+          }
+        }
+      }
+    } else {
+      for (q = 0; q < VIM; q++) {
+        v = v_g[p][q];
+        if (pdgv[v]) {
+          fv->G[p][q] = fv_old->G[p][q] = fv_dot->G[p][q] = 0.0;
+          dofs = ei[upd->matrix_index[v]]->dof[v];
+          for (i = 0; i < dofs; i++) {
+            fv->G[p][q] += *esp->G[p][q][i] * bf[v]->phi[i];
+            if (pd->TimeIntegration != STEADY) {
+              fv_old->G[p][q] += *esp_old->G[p][q][i] * bf[v]->phi[i];
+              fv_dot->G[p][q] += *esp_dot->G[p][q][i] * bf[v]->phi[i];
+            }
           }
         }
       }
@@ -26292,7 +26321,8 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
 
   if (pd->gv[POLYMER_STRESS11]) {
     (void)stress_eqn_pointer(v_s);
-
+  }
+  if (pd->gv[VELOCITY_GRADIENT11]) {
     v_g[0][0] = VELOCITY_GRADIENT11;
     v_g[0][1] = VELOCITY_GRADIENT12;
     v_g[1][0] = VELOCITY_GRADIENT21;
@@ -26620,6 +26650,18 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
       }
     }
   }
+  if (gn->ConstitutiveEquation == BINGHAM_MIXED) {
+    dbl tau_y = gn->tau_y;
+    if (pd->gv[VELOCITY_GRADIENT11]) {
+      for (a = 0; a < VIM; a++) {
+        for (b = 0; b < VIM; b++) {
+          Pi[a][b] += tau_y * fv->G[a][b];
+        }
+      }
+    } else {
+      GOMA_EH(-1, "BINGHAM_MIXED but no VELOCITY_GRADIENT equations");
+    }
+  }
 
   /*
    * OK, FIND THE JACOBIAN
@@ -26929,6 +26971,26 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
                              (double)delta(b, p) * (double)delta(c, q)));
             }
           }
+        }
+      }
+    }
+  }
+  if (d_Pi != NULL && pd->gv[VELOCITY_GRADIENT11] && gn->ConstitutiveEquation == BINGHAM_MIXED) {
+    dbl tau_y = gn->tau_y;
+    for (p = 0; p < VIM; p++) {
+      for (q = 0; q < VIM; q++) {
+        if (p <= q) {
+        for (b = 0; b < VIM; b++) {
+          for (c = 0; c < VIM; c++) {
+            var = v_g[b][c];
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              d_Pi->g[p][q][b][c][j] = tau_y * bf[var]->phi[j] * (delta(p,b) * delta(q,c));
+              if (q > p) {
+                d_Pi->g[q][p][b][c][j] = tau_y * bf[var]->phi[j] * (delta(p,b) * delta(q,c));
+              }
+            }
+          }
+        }
         }
       }
     }
