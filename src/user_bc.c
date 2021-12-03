@@ -106,9 +106,9 @@ dbl velo_vary_fnc(const int velo_condition,
     double z0 = 0.0; //(2.162810-1.21031)*0.5 + 1.21031;
     double y0 = 0.0;
 
-    double R = 0.127; // 0.254*0.25;//0.1; // Radius of tube
+    double R = 0.1; // 0.254*0.25;//0.1; // Radius of tube
 
-    double v_max = 20 * tanh(time);
+    double v_max = 5 * tanh(time);
 
     double coeff = v_max * (1 / (R * R));
 
@@ -131,7 +131,6 @@ dbl velo_vary_fnc(const int velo_condition,
                      // double R = 5; // Radius of tube
 
     double v_max = 0.1;
-
     double coeff = v_max * (1 / (R * R)) * tanh(time * 2);
 
     double r = sqrt((y - y0) * (y - y0) + (x - x0) * (x - x0));

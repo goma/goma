@@ -367,7 +367,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
           ielem_dim = ei[pg->imtrx]->ielem_dim;
 
           /* Calculates the ID side correctly for tets */
-          if (ielem_type == LINEAR_TET) {
+          if (ielem_type == LINEAR_TET || ielem_type == QUADRATIC_TET) {
             id_side = find_id_side_SS(ei[pg->imtrx]->ielem, current_id, exo);
           } else {
             id_side = find_id_side(ei[pg->imtrx]->ielem, num_nodes_on_side,

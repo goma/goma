@@ -76,7 +76,57 @@ void get_metric_tensor(dbl B[DIM][DIM], int dim, int element_type, dbl G[DIM][DI
   }
 }
 
-void supg_tau_shakib(SUPG_terms *supg_terms, int dim, dbl dt, dbl diffusivity, int interp_eqn) {
+void get_metric_tensor_deriv(dbl B[DIM][DIM], dbl dB[DIM][DIM][DIM][MDE], int dim, int interp_base, int element_type, dbl dG[DIM][DIM][DIM][MDE]) {
+  dbl adjustment[DIM][DIM] = {{0}};
+  const dbl invroot3 = 0.577350269189626;
+  const dbl tetscale = 0.629960524947437; // 0.5 * cubroot(2)
+
+  switch (element_type) {
+  case LINEAR_TRI:
+    adjustment[0][0] = (invroot3)*2;
+    adjustment[0][1] = (invroot3) * -1;
+    adjustment[1][0] = (invroot3) * -1;
+    adjustment[1][1] = (invroot3)*2;
+    break;
+  case LINEAR_TET:
+    adjustment[0][0] = tetscale * 2;
+    adjustment[0][1] = tetscale * 1;
+    adjustment[0][2] = tetscale * 1;
+    adjustment[1][0] = tetscale * 1;
+    adjustment[1][1] = tetscale * 2;
+    adjustment[1][2] = tetscale * 1;
+    adjustment[2][0] = tetscale * 1;
+    adjustment[2][1] = tetscale * 1;
+    adjustment[2][2] = tetscale * 2;
+    break;
+  default:
+    adjustment[0][0] = 1.0;
+    adjustment[1][1] = 1.0;
+    adjustment[2][2] = 1.0;
+    break;
+  }
+
+  // G = B * adjustment * B^T where B = J^-1
+
+  for (int a = 0; a < dim; a++) {
+    for (int b = 0; b < ei[pg->imtrx]->dof[interp_base+a]; b++) {
+      for (int i = 0; i < dim; i++) {
+        for (int j = 0; j < dim; j++) {
+          dG[i][j][a][b] = 0;
+          for (int k = 0; k < dim; k++) {
+            for (int m = 0; m < dim; m++) {
+              dG[i][j][a][b] += dB[i][k][a][b] * adjustment[k][m] * B[j][m];
+              dG[i][j][a][b] += B[i][k] * adjustment[k][m] * dB[j][m][a][b];
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+void supg_tau_shakib(
+    SUPG_terms *supg_terms, int dim, dbl dt, dbl diffusivity, int interp_eqn) {
   dbl G[DIM][DIM];
 
   get_metric_tensor(bf[interp_eqn]->B, dim, ei[pg->imtrx]->ielem_type, G);
@@ -114,13 +164,32 @@ void supg_tau_shakib(SUPG_terms *supg_terms, int dim, dbl dt, dbl diffusivity, i
   for (int a = 0; a < dim; a++) {
     for (int k = 0; k < ei[pg->imtrx]->dof[VELOCITY1]; k++) {
       supg_terms->d_supg_tau_dv[a][k] =
-          -0.5 * d_v_d_gv[a][k] * (1 / (4 / (dt * dt) + v_d_gv + diff_g_g)) * supg_terms->supg_tau;
+          -0.5 * d_v_d_gv[a][k] * supg_terms->supg_tau * supg_terms->supg_tau * supg_terms->supg_tau;
     }
   }
 
-  for (int a = 0; a < dim; a++) {
-    if (pd->e[pg->imtrx][MESH_DISPLACEMENT1 + a]) {
-      GOMA_EH(GOMA_ERROR, "Mesh displacement derivatives not implemented for shakib supg_tau");
+  if (pd->e[pg->imtrx][MESH_DISPLACEMENT1]) {
+    dbl dG[DIM][DIM][DIM][MDE];
+    get_metric_tensor_deriv(bf[MESH_DISPLACEMENT1]->B, bf[MESH_DISPLACEMENT1]->dB, dim, MESH_DISPLACEMENT1, ei[pg->imtrx]->ielem_type, dG);
+    for (int a = 0; a < dim; a++) {
+      for (int k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1+a]; k++) {
+        dbl v_d_gv_dx = 0;
+        for (int i = 0; i < dim; i++) {
+          for (int j = 0; j < dim; j++) {
+            v_d_gv_dx += fv->v[i] * dG[i][j][a][k] * fv->v[j];
+          }
+        }
+
+        dbl diff_g_g_dx = 0;
+        for (int i = 0; i < dim; i++) {
+          for (int j = 0; j < dim; j++) {
+            diff_g_g_dx += 2*dG[i][j][a][k] * G[i][j];
+          }
+        }
+        diff_g_g_dx *= 9 * diffusivity * diffusivity;
+        supg_terms->d_supg_tau_dX[a][k] =
+            -0.5 * (v_d_gv_dx + diff_g_g_dx) * supg_terms->supg_tau * supg_terms->supg_tau * supg_terms->supg_tau;
+      }
     }
   }
 }
@@ -712,17 +781,17 @@ int calc_pspg(dbl pspg[DIM],
 
     for (a = 0; a < VIM; a++) {
       for (b = 0; b < VIM; b++) {
-        gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+        gamma[a][b] = fv_old->grad_v[a][b] + fv_old->grad_v[b][a];
       }
     }
 
-    mu = viscosity(gn, gamma, d_mu);
+    mu = viscosity(gn, gamma, NULL);
 
     dbl mup[MAX_MODES];
     VISCOSITY_DEPENDENCE_STRUCT d_mup[MAX_MODES]; /* viscosity dependence */
     if (pd->gv[POLYMER_STRESS11]) {
       for (int mode = 0; mode < vn->modes; mode++) {
-        mup[mode] = viscosity(ve[mode]->gn, gamma, &d_mup[mode]);
+        mup[mode] = viscosity(ve[mode]->gn, gamma, NULL);
       }
     }
 
@@ -739,7 +808,8 @@ int calc_pspg(dbl pspg[DIM],
     dbl tau_adv = 0;
     for (int i = 0; i < dim; i++) {
       for (int j = 0; j < dim; j++) {
-        tau_adv += rho * rho * fv->v[i] * G[i][j] * fv->v[j];
+        //tau_adv += rho * rho * fv->v[i] * G[i][j] * fv->v[j];
+        tau_adv += rho * rho * fv_old->v[i] * G[i][j] * fv_old->v[j];
       }
     }
 
@@ -756,7 +826,7 @@ int calc_pspg(dbl pspg[DIM],
       }
     }
 
-    tau_pspg = PS_scaling / sqrt(tau_time + tau_adv + tau_diff);
+    tau_pspg = PS_scaling * rho / sqrt(tau_time + tau_adv + tau_diff);
 
     // d/dx 1/sqrt(f(x)) => - f'(x) / (2 * f(x)^(3/2))
     if (d_pspg != NULL && pd->v[pg->imtrx][VELOCITY1]) {
@@ -768,9 +838,38 @@ int calc_pspg(dbl pspg[DIM],
             for (int a = 0; a < dim; a++) {
               tau_adv_dv += rho * rho * bf[var]->phi[j] * G[b][a] * fv->v[a];
               tau_adv_dv += rho * rho * bf[var]->phi[j] * G[a][b] * fv->v[a];
+            //dbl tau_adv_dv = 0;
+            //for (int a = 0; a < dim; a++) {
+            //  tau_adv_dv += rho*rho*bf[var]->phi[j] * G[b][a] * fv->v[a];
+            //  tau_adv_dv += rho*rho*bf[var]->phi[j] * G[a][b] * fv->v[a];
             }
 
-            d_tau_pspg_dv[b][j] = -rho * tau_pspg * tau_pspg * tau_pspg * tau_adv_dv;
+            //d_tau_pspg_dv[b][j] = -PS_scaling * rho * 0.5 * tau_pspg * tau_pspg * tau_pspg * tau_adv_dv;
+            d_tau_pspg_dv[b][j] = 0;
+          }
+        }
+      }
+    }
+    if (d_pspg != NULL && pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
+      dbl dG[DIM][DIM][DIM][MDE];
+      get_metric_tensor_deriv(bf[MESH_DISPLACEMENT1]->B, bf[MESH_DISPLACEMENT1]->dB, dim, MESH_DISPLACEMENT1, ei[pg->imtrx]->ielem_type, dG);
+      for (b = 0; b < dim; b++) {
+        var = MESH_DISPLACEMENT1 + b;
+        if (pd->v[pg->imtrx][var]) {
+          for (int k = 0; k < ei[pg->imtrx]->dof[var]; k++) {
+            dbl tau_adv_dx = 0;
+            for (int i = 0; i < dim; i++) {
+              for (int j = 0; j < dim; j++) {
+                tau_adv_dx += rho * rho * fv->v[i] * dG[i][j][b][k] * fv->v[j];
+              }
+            }
+            dbl tau_diff_dx = 0;
+            for (int i = 0; i < dim; i++) {
+              for (int j = 0; j < dim; j++) {
+                tau_diff_dx += coeff * 2 * dG[i][j][b][k] * G[i][j];
+              }
+            }
+            d_tau_pspg_dX[b][k] = -PS_scaling * rho * 0.5 * (tau_adv_dx + tau_diff_dx) * tau_pspg * tau_pspg * tau_pspg;
           }
         }
       }

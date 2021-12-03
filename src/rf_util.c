@@ -2272,8 +2272,8 @@ int rd_vectors_from_exoII(double u[],
   CPU_word_size = sizeof(double);
   IO_word_size = 0;
 
-  exoid = ex_open(file_nm, EX_READ, &CPU_word_size, &IO_word_size, &version);
-  GOMA_EH(exoid, "ex_open");
+  exoid = ex_open(file_nm, EX_READ, &CPU_word_size, &IO_word_size , &version);
+  GOMA_EH(exoid, "ex_open, %s %d", file_nm, exoid);
 
   error = ex_get_init(exoid, title, &num_dim, &num_nodes, &num_elem, &num_elem_blk, &num_node_sets,
                       &num_side_sets);

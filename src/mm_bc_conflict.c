@@ -185,7 +185,7 @@ static int find_first_opening(const int *list, const int lengthList)
   /*
    *  create an error exit here
    */
-  GOMA_EH(GOMA_ERROR, "too many duplications");
+  GOMA_EH(GOMA_ERROR, "too many duplications %d", lengthList);
   return -1;
 }
 /*****************************************************************************/

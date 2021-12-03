@@ -3522,8 +3522,26 @@ void sum_average_nodal(double **avg_count, double **avg_sum, int global_node, do
             gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
           }
         }
-
         double mu = viscosity(gn, gamma, NULL);
+
+        if (gn->ConstitutiveEquation == BINGHAM_MIXED) {
+
+          dbl gamma[DIM][DIM];
+          for (a = 0; a < VIM; a++) {
+            for (b = 0; b < VIM; b++) {
+              gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+            }
+          }
+
+          dbl gammadot;
+          calc_shearrate(&gammadot, gamma, NULL, NULL);
+
+          dbl Du_eps = sqrt(gammadot + gn->epsilon * gn->epsilon);
+
+          mu += gn->tau_y / Du_eps;
+
+        }
+
         avg_sum[i][global_node] += mu;
       } break;
       case AVG_SHEAR: {
