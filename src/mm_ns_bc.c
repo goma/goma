@@ -3035,8 +3035,6 @@ void fvelo_slip_bc(double func[MAX_PDIM],
   double d_betainv_dF[MDE];
   double sign;
   int tang_slip_only;
-  // double *phi_j_vector;
-  // double mass;
 #define PRESSURE_DEPENDENT_SLIP 0
 #if PRESSURE_DEPENDENT_SLIP
   double vslip_mag;
@@ -3057,14 +3055,6 @@ void fvelo_slip_bc(double func[MAX_PDIM],
   vs[0] = vsx;
   vs[1] = vsy;
   vs[2] = vsz;
-
-  // if( TimeIntegration == TRANSIENT && pd->e[pg->imtrx][R_MESH1] )
-  //   {
-  //     /* Add the mesh motion to the substrate velocity */
-  //     vs[0] += fv_dot->x[0];
-  //     vs[1] += fv_dot->x[1];
-  //     vs[2] += fv_dot->x[2];
-  //   }
 
   /* dependence of slip coefficient on pressure and magnitude of slip */
   d_betainv_dvslip_mag = 0.;
@@ -3108,21 +3098,22 @@ void fvelo_slip_bc(double func[MAX_PDIM],
      In 3D it spins with omega pointing in z
      direction about x0,y0  */
   /* Note: positive omega is CLOCKWISE */
-  if (type == VELO_SLIP_ROT_BC || type == VELO_SLIP_ROT_FILL_BC || type == VELO_SLIP_ROT_FLUID_BC) {
-    double factor = 1.0, current_rad, rad_input = bc_float[5];
-    omega = vsx;
-    X_0[0] = vsy;
-    X_0[1] = vsz;
-    if (rad_input > 0) {
-      current_rad = sqrt(SQUARE(fv->x[1] - X_0[1]) + SQUARE(fv->x[0] - X_0[0]));
-      factor = rad_input / current_rad;
-    } else {
-      factor = 1.0;
-    }
-    vs[0] = factor * omega * (fv->x[1] - X_0[1]);
-    vs[1] = -factor * omega * (fv->x[0] - X_0[0]);
-    vs[2] = 0.;
-  } /* if: VELO_SLIP_ROT_BC */
+  if(type == VELO_SLIP_ROT_BC  ||  type == VELO_SLIP_ROT_FILL_BC || type == VELO_SLIP_ROT_FLUID_BC )
+    {
+      double factor = 1.0,current_rad, rad_input = bc_float[5];
+      omega = vsx;
+      X_0[0] = vsy;
+      X_0[1] = vsz;
+      if( rad_input > 0)  { 
+        current_rad = sqrt(SQUARE(fv->x[1]-X_0[1])+SQUARE(fv->x[0]-X_0[0]));
+        factor = rad_input/current_rad;
+           }  else   {
+        factor = 1.0;
+              }
+      vs[0] = factor*omega * ( fv->x[1] - X_0[1] );
+      vs[1] = - factor*omega * ( fv->x[0] - X_0[0] );
+      vs[2] = 0.;
+    } /* if: VELO_SLIP_ROT_BC */
 
   memset(vrel, 0, sizeof(double) * MAX_PDIM);
   for (p = 0; p < pd->Num_Dim; p++) {
@@ -3354,79 +3345,67 @@ fprintf(stderr,"more %g %g %g %g\n",res,jac,betainv, dthick_dV);
           }
         }
       }
-    }
-    if ((type == VELO_SLIP_FLUID_BC || type == VELO_SLIP_ROT_FLUID_BC)) {
-      for (jvar = 0; jvar < pd->Num_Dim; jvar++) {
-        var = VELOCITY1 + jvar;
-        if (pd->v[pg->imtrx][var]) {
-          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-            phi_j = bf[var]->phi[j];
-            d_func[jvar][var][j] +=
-                -betainv * dthick_dV * tang_sgn * fv->stangent[0][jvar] * vslip[jvar] * phi_j;
-            /* don't think we need -- seems OK 4-12-2017 */
-            if (Pflag)
-              d_func[jvar][var][j] += 0.5 * thick * dthick_dV * tang_sgn * fv->stangent[0][jvar] *
-                                      pg_factor * fv->grad_P[jvar] * phi_j;
-          }
-        }
-      }
+  if((type == VELO_SLIP_FLUID_BC || type == VELO_SLIP_ROT_FLUID_BC) )
+    {
+    for (jvar=0; jvar<pd->Num_Dim; jvar++)
+      {
+	var = VELOCITY1 + jvar;
+	if (pd->v[pg->imtrx][var])
+	  {
+	    for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
+	      {
+		phi_j = bf[var]->phi[j];
+	        d_func[jvar][var][j] += -betainv*dthick_dV*tang_sgn*fv->stangent[0][jvar]*vslip[jvar]*phi_j;
+/* don't think we need -- seems OK 4-12-2017 */
+	        if(Pflag) d_func[jvar][var][j] += 0.5*thick*dthick_dV*
+                     tang_sgn*fv->stangent[0][jvar]*pg_factor*fv->grad_P[jvar]*phi_j;
+	      }
+	  }
+       }
 
-      /* Mesh motion Jacobian entries   */
-      for (jvar = 0; jvar < ei[pg->imtrx]->ielem_dim; jvar++) {
-        var = MESH_DISPLACEMENT1 + jvar;
-        if (pd->v[pg->imtrx][var]) {
-          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-            for (p = 0; p < pd->Num_Dim; p++) {
-              d_func[p][var][j] +=
-                  -betainv * dthick_dV * vslip[p] * tang_sgn * fv->dstangent_dx[0][p][jvar][j];
-              if (Pflag) {
-                d_func[p][var][j] += 0.5 * thick * dthick_dV * pg_factor * fv->grad_P[p] *
-                                     tang_sgn * fv->dstangent_dx[0][p][jvar][j];
-                d_func[p][var][j] += 0.5 * pg_factor * fv->grad_P[p] * dthick_dP * tang_sgn *
-                                     fv->dstangent_dx[0][p][jvar][j];
-                d_func[p][var][j] += 0.5 * pg_factor * fv->d_grad_P_dmesh[p][jvar][j] * thick;
-                d_func[p][var][j] +=
-                    vslip[p] * dthick_dP * tang_sgn * fv->dstangent_dx[0][p][jvar][j] * (-betainv);
-              }
-            }
-          }
-        }
-      }
-    }
+/* Mesh motion Jacobian entries   */
+	for (jvar=0; jvar<ei[pg->imtrx]->ielem_dim; jvar++)
+	  {
+	    var = MESH_DISPLACEMENT1 + jvar;
+	    if (pd->v[pg->imtrx][var])
+	      {
+		for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		  {
+		    for (p = 0; p < pd->Num_Dim; p++)
+		      {
+	               d_func[p][var][j] += -betainv*dthick_dV*vslip[p]
+                                *tang_sgn*fv->dstangent_dx[0][p][jvar][j];
+	                   if(Pflag) 
+                            {
+                             d_func[p][var][j] += 0.5*thick*dthick_dV*pg_factor*fv->grad_P[p]*tang_sgn*fv->dstangent_dx[0][p][jvar][j];
+		             d_func[p][var][j] += 0.5*pg_factor*fv->grad_P[p]*dthick_dP*tang_sgn*fv->dstangent_dx[0][p][jvar][j];
+		             d_func[p][var][j] += 0.5*pg_factor*fv->d_grad_P_dmesh[p][jvar][j]*thick;
+		             d_func[p][var][j] += vslip[p]*dthick_dP*tang_sgn*fv->dstangent_dx[0][p][jvar][j]*(-betainv);
+                            }
+		      }
+		  }
+	      }
+	  }
+     }
 
-    // if (TimeIntegration == TRANSIENT && pd->e[pg->imtrx][R_MESH1]) {
-    //   // Time derivative gets taken out for these two types, so we
-    //   // must eliminate jac terms in these two cases
-    //   if (type != VELO_SLIP_ROT_BC  &&  type != VELO_SLIP_ROT_FILL_BC ) {
-    //     // Dependence on the mesh time derivatives
-    //     // Loop over the mesh vector
-    //     mass = (1.+2.*tt) / dt;
-    //     for (jvar = 0; jvar < ei[pg->imtrx]->ielem_dim; jvar++) {
-    //       var = MESH_DISPLACEMENT1 + jvar;
-    //       if (pd->v[pg->imtrx][var]) {
-    //         // Get a pointer for the basis functions for mesh displacements
-    //         phi_j_vector = bf[var]->phi;
-    //         // Loop over the mesh unknowns
-    //         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-    //           phi_j = phi_j_vector[j];
-    //           d_func[jvar][var][j] += betainv * mass * phi_j;
-    //         }
-    //       }
-    //     }
-    //   }
-    // }
 
-    for (jvar = 0; jvar < pd->Num_Dim; jvar++) {
-      var = PVELOCITY1 + jvar;
-      if (pd->v[pg->imtrx][var]) {
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-          phi_j = bf[var]->phi[j];
-          d_func[jvar][var][j] += (-betainv) * phi_j;
-          /* contribution from dependence of betainv on the magnitude of slip */
-          for (p = 0; p < pd->Num_Dim; p++) {
-            d_func[p][var][j] += (-d_betainv_dvslip_mag) * phi_j * (slip_dir[jvar] * vslip[p]);
-          }
-        }
+    for (jvar=0; jvar<pd->Num_Dim; jvar++)
+      {
+	var = PVELOCITY1 + jvar;
+	if (pd->v[pg->imtrx][var])
+	  {
+	    for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
+	      {
+		phi_j = bf[var]->phi[j];
+		d_func[jvar][var][j] += (-betainv) * phi_j;
+		/* contribution from dependence of betainv on the magnitude of slip */
+		for (p=0; p<pd->Num_Dim; p++)
+		  {
+		    d_func[p][var][j] += (-d_betainv_dvslip_mag) * phi_j *
+		      (slip_dir[jvar]*vslip[p]);
+		  }
+	      }
+	  }
       }
     }
 
@@ -6797,19 +6776,21 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
     /* get polymer viscosity */
     mup = viscosity(ve[mode]->gn, gamma, d_mup);
 
-    if (saramitoEnabled == TRUE) {
-      saramitoCoeff =
-          compute_saramito_model_terms(s, ve[mode]->gn->tau_y, ve[mode]->gn->fexp, d_saramito);
-    } else {
-      saramitoCoeff = 1.;
-      d_saramito->tau_y = 0;
-
-      for (int i = 0; i < VIM; ++i) {
-        for (int j = 0; j < VIM; ++j) {
-          d_saramito->s[i][j] = 0;
-        }
-      }
-    }
+      if(saramitoEnabled == TRUE)
+	{
+	  compute_saramito_model_terms(&saramitoCoeff, d_saramito, s, ve[mode]->gn, FALSE);
+	}
+      else
+	{
+	  saramitoCoeff = 1.;
+	  d_saramito->tau_y = 0;
+			
+	  for(int i=0; i<VIM; ++i){
+	    for(int j=0; j<VIM; ++j){
+	      d_saramito->s[i][j] = 0;
+	    }
+	  }
+	}
     /* get Geisekus mobility parameter */
     alpha = ve[mode]->alpha;
 
@@ -7655,8 +7636,7 @@ void stress_no_v_dot_gradS_logc_transient(
           tau[i][j] = mup / lambda * (exp_s[i][j] - delta(i, j));
         }
       }
-      saramitoCoeff =
-          compute_saramito_model_terms(tau, ve[mode]->gn->tau_y, ve[mode]->gn->fexp, NULL);
+	    compute_saramito_model_terms(&saramitoCoeff, NULL, tau, ve[mode]->gn, FALSE);
     } else {
       saramitoCoeff = 1.;
     }

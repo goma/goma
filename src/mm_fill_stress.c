@@ -1504,8 +1504,7 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
     mup = viscosity(ve[mode]->gn, gamma, d_mup);
 
     if (saramitoEnabled == TRUE) {
-      saramitoCoeff =
-          compute_saramito_model_terms(s, ve[mode]->gn->tau_y, ve[mode]->gn->fexp, d_saramito);
+	    compute_saramito_model_terms(&saramitoCoeff, d_saramito, s, ve[mode]->gn, FALSE);
     } else {
       saramitoCoeff = 1.;
       d_saramito->tau_y = 0;
@@ -2931,8 +2930,7 @@ int assemble_stress_log_conf_transient(dbl tt, dbl dt, PG_DATA *pg_data) {
           tau[i][j] = mup / lambda * (exp_s[i][j] - delta(i, j));
         }
       }
-      saramitoCoeff =
-          compute_saramito_model_terms(tau, ve[mode]->gn->tau_y, ve[mode]->gn->fexp, NULL);
+	    compute_saramito_model_terms(&saramitoCoeff, NULL, tau, ve[mode]->gn, FALSE);
     } else {
       saramitoCoeff = 1.;
     }
@@ -6281,16 +6279,22 @@ void compute_d_exp_s_ds(dbl s[DIM][DIM], // s - stress
   }
 }
 /*****************************************************************************/
-dbl compute_saramito_model_terms(dbl stress[DIM][DIM],
-                                 dbl yieldStress,
-                                 dbl yieldExpon,
-                                 SARAMITO_DEPENDENCE_STRUCT *d_sCoeff) {
+void
+compute_saramito_model_terms(dbl *sCoeff,
+                             SARAMITO_DEPENDENCE_STRUCT *d_sCoeff,
+                             const dbl stress[DIM][DIM],
+                             const struct Generalized_Newtonian *gn_local,
+                             const int normalizeCoeff) {
   /* start by computing the norm of sigma_d (the deviatoric stress) which is written as
    * sqrt( trace(sigma_d*sigma_d)/2 )
    *
    * see the following wikipedia page for the mathematical details:
    * https://en.wikipedia.org/wiki/Cauchy_stress_tensor#Invariants_of_the_stress_deviator_tensor
    */
+
+  const dbl yieldStress = gn_local->tau_y;
+  const dbl yieldExpon  = gn_local->fexp;
+  const dbl m           = 1./gn_local->nexp;
 
   dbl traceOverVIM = 0;
   for (int i = 0; i < VIM; i++) {
@@ -6313,27 +6317,40 @@ dbl compute_saramito_model_terms(dbl stress[DIM][DIM],
 
   const dbl sc = 1. - yieldStress / normOfStressD;
 
-  dbl sCoeff;
+  //  phi  = Saramito coefficient with nexp = 1.
+  // This is useful for computing sensitivities 
+  dbl phi;
   dbl expYSC = 1;
   if (yieldExpon > 0) {
     expYSC = exp(sc / yieldExpon);
-    sCoeff = log(1. + expYSC) * yieldExpon;
+    phi = log(1. + expYSC) * yieldExpon;
   } else {
-    sCoeff = fmax(0, sc);
+    phi = fmax(0, sc);
   }
+  const dbl beta = m == 1 
+                 ? 1 
+				 : pow(normOfStressD, m-1);
+
+  *sCoeff = m == 1 
+                 ? beta * phi 
+				 : beta * pow(phi, m);
 
   // take care of indeterminate behavior for normOfStressD == 0
   if (normOfStressD == 0) {
     if (yieldStress <= 0) {
-      sCoeff = 1;
+      *sCoeff = beta;
     } else {
-      sCoeff = 0;
+      *sCoeff = 0;
     }
+  }
+
+  if(normalizeCoeff){
+      *sCoeff /= beta;
   }
 
   if (d_sCoeff != NULL) {
     // if normStress_d < yieldStress, set sensitivities to zero and return
-    if ((sCoeff) == 0 || yieldStress <= 0) {
+    if ((*sCoeff) == 0 || yieldStress <= 0) {
       for (int i = 0; i < VIM; i++) {
         for (int j = 0; j < VIM; j++) {
           d_sCoeff->s[i][j] = 0.;
@@ -6341,16 +6358,26 @@ dbl compute_saramito_model_terms(dbl stress[DIM][DIM],
       }
 
       d_sCoeff->tau_y = 0.;
+
+	// otherwise, sensitivities need to be calculated
     } else {
-      // otherwise, sensitivities need to be calculated
-      d_sCoeff->tau_y = -1. / (normOfStressD);
-      dbl d_sCoeff_d_normOfStressD = yieldStress / (normOfStressDSqr);
+      
+	  d_sCoeff->tau_y = m == 1 
+	                  ? -1./normOfStressD
+					  : -m*pow(normOfStressD-yieldStress,m-1)/normOfStressD;
+
+	dbl d_sCoeff_d_normOfStressD = m == 1
+	                             ? yieldStress/normOfStressDSqr
+								 : pow(normOfStressD-yieldStress,m-1)
+								   * ((m-1)*normOfStressD + yieldStress)
+								   / normOfStressDSqr ;
       if (yieldExpon > 0) {
         const dbl expYSCDerivativeTerm = expYSC / (1 + expYSC);
         d_sCoeff->tau_y *= expYSCDerivativeTerm;
         d_sCoeff_d_normOfStressD *= expYSCDerivativeTerm;
       }
 
+      // fill d_sCoeff->s[i][j] with d(normOfStressDSqr)/d(stress[i][j])
       for (int i = 0; i < VIM; i++) {
         d_sCoeff->s[i][i] = -traceOverVIM;
 
@@ -6371,6 +6398,7 @@ dbl compute_saramito_model_terms(dbl stress[DIM][DIM],
        *                      =   d(sCoeff)/d(normOfStressD)
        *                        * 0.5/normOfStressD
        *                        * d(normOfStressDSqr)/d(stress)
+       * 
        */
 
       dbl d_normOfStressD_d_Stress = 0.5 / normOfStressD * d_sCoeff_d_normOfStressD;
@@ -6402,7 +6430,6 @@ dbl compute_saramito_model_terms(dbl stress[DIM][DIM],
     printf("|stress_d|**2 = %E", normOfStressDSqr);
     printf("\n-------------------------------------------------------------");
   */
-  return sCoeff;
 }
 
 /*****************************************************************************/

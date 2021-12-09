@@ -2,7 +2,7 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2021 Sandia Corporation.                                  *
+* Copyright (c) 2014 Sandia Corporation.                                  *
 *                                                                         *
 * Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,  *
 * the U.S. Government retains certain rights in this software.            *
@@ -138,7 +138,6 @@
 #include "wr_exo.h"
 #include "wr_side_data.h"
 #include "wr_soln.h"
-
 /************ R O U T I N E S   I N   T H I S   F I L E  **********************
 
        NAME            		TYPE        		CALL BY
@@ -322,6 +321,92 @@ void sort2_int_int(const int n, int ra[], int rb[])
   }
 }
 
+#ifndef COUPLED_FILL
+/*****************************************************************************/
+/*****************************************************************************/
+/*****************************************************************************/
+
+void put_fill_vector(const int N, double x[], const double fill_vector[], const int node_to_fill[])
+
+/************************************************************************
+ *
+ * put_fill_vector:
+ *
+ *     Insert the value of the FILL variable type unknowns corresponding
+ *     to the non-specific material case or the first material back into
+ *     the main solution vector.
+ *
+ *  Input
+ *     N = Number of nodes (internal plus boundary and maybe external
+ *     fill_vector[] = FILL variable type solution vector
+ *     node_to_fill[] = index of the first unknown at a node into the
+ *                      FILL variable type solution vector.
+ *  Output
+ *     x[] = Main solution vector
+ *************************************************************************/
+{
+  int i;     /* i count from 0 to total number of nodes   */
+  int ie;    /* ie is the position of the variables of
+                interest in the x and xpred vectors       */
+  int mn;    /* Material number                           */
+  int nvdof; /* variables to keep Index_Solution happy    */
+  int ki;    /* counter from 0 to the number of dofs      */
+
+  for (i = 0; i < N; i++) {
+    nvdof = Dolphin[pg->imtrx][i][R_FILL]; /* Number of FILL dofs at this node. */
+    for (ki = 0; ki < nvdof; ki++) {
+      ie = Index_Solution(i, R_FILL, 0, ki, -1, pg->imtrx);
+      if (ie != -1) {
+        if (ie > NumUnknowns[pg->imtrx]) {
+          GOMA_EH(ie, "put_fill_vector");
+        } else {
+          x[ie] = fill_vector[node_to_fill[i] + ki];
+        }
+      } else if (ie == -1) {
+        mn = first_matID_at_node(i);
+        ie = Index_Solution(i, R_FILL, 0, ki, mn, pg->imtrx);
+        if (ie != -1) {
+          x[ie] = fill_vector[node_to_fill[i] + ki];
+        } else {
+          GOMA_EH(ie, "put_fill_vector");
+        }
+      }
+    }
+  }
+} /* END of routine put_fill_vector */
+/*****************************************************************************/
+/*****************************************************************************/
+/*****************************************************************************/
+
+void get_fill_vector(const int N,
+                     const double x[],
+                     double fill_vector[],
+                     const int node_to_fill[]) {
+  int i;  /* i count from 0 to total number of nodes   */
+  int ie; /* ie is the position of the variables of
+             interest in the x and xpred vectors       */
+  int mn;
+  const int ktype = 0;
+  int nvdof; /* Number of R_FILL degrees of freedom at a node */
+  int ki;    /* counter from 0 to number of dofs          */
+
+  for (i = 0; i < N; i++) {
+    nvdof = Dolphin[pg->imtrx][i][R_FILL];
+    for (ki = 0; ki < nvdof; ki++) {
+      ie = Index_Solution(i, R_FILL, ktype, ki, -1, pg->imtrx);
+      if (ie != -1) {
+        fill_vector[node_to_fill[i] + ki] = x[ie];
+      } else {
+        mn = first_matID_at_node(i);
+        ie = Index_Solution(i, R_FILL, ktype, ki, mn, pg->imtrx);
+        if (ie != -1) {
+          fill_vector[node_to_fill[i] + ki] = x[ie];
+        }
+      }
+    }
+  }
+} /* END of routine get_fill_vector */
+#endif /* not COUPLED_FILL */
 /*****************************************************************************/
 
 /* countmap_vardofs() -- fill [nodeindex]->dof map for a given var, return count
@@ -345,7 +430,7 @@ int countmap_vardofs(const int varType, const int num_nodes, int *map) {
   int node, nun, count = 0;
   NODAL_VARS_STRUCT *nv;
   if (varType < 0 || varType > MAX_VARIABLE_TYPES - 1) {
-    GOMA_EH(GOMA_ERROR, "Attempt to count a bogus variable.");
+    GOMA_EH(-1, "Attempt to count a bogus variable.");
   }
   for (node = 0; node < num_nodes; node++) {
     nv = Nodes[node]->Nodal_Vars_Info[pg->imtrx];
@@ -583,6 +668,12 @@ double time_step_control(const double delta_t,
     inode = 0;
     vd = Index_Solution_Inv(i, &inode, NULL, NULL, &idof, pg->imtrx);
     eqn = vd->Variable_Type;
+
+#ifdef DEBUG_HKM
+    if (eqn != idv[pg->imtrx][i][0]) {
+      GOMA_EH(-1, "error in  Index_Solution_Inv mapping");
+    }
+#endif
 
     /* ignore corrections caused by changing side of interface */
     if (ls != NULL && xfem != NULL && ls->Length_Scale == 0.) {
@@ -888,7 +979,7 @@ double time_step_control(const double delta_t,
     DPRINTF(stderr, "You specified (d=%d, v=%d, T=%d, y=%d, P=%d, S=%d, V=%d)\n", use_var_norm[0],
             use_var_norm[1], use_var_norm[2], use_var_norm[3], use_var_norm[4], use_var_norm[5],
             use_var_norm[6]);
-    GOMA_EH(GOMA_ERROR, "Poorly formed time step norm.");
+    GOMA_EH(-1, "Poorly formed time step norm.");
   }
 
   scaling = 1.0 / (num_unknowns * (2.0 + delta_t_old / delta_t));
@@ -1287,6 +1378,10 @@ double path_step_control(int N,
   double delta_s, beta;
   int iter_desired;
 
+#ifdef DEBUG
+  static const char yo[] = "path_step_control";
+#endif
+
   /* EXTERNAL VARIABLES */
 
   *success_ds = 0;
@@ -1531,13 +1626,13 @@ void init_vec(
       /* 		  "%s:  reading augmenting conditions initial guess from \"%s\" ...\n",yo,
        * ExoFile); */
 
-      ngv = rd_globals_from_exoII(uAC, ExoFile, 5, nAC);
+      ngv = rd_globals_from_exoII(uAC, ExoFile, 6, nAC);
       if (ngv < 0)
         DPRINTF(stderr, "%s: error trying to read augmenting conditions\n", yo);
 
       /* Update parameters prior to solution with these values */
 
-      for (iAC = 0; iAC + 5 < ngv; iAC++) {
+      for (iAC = 0; iAC + 6 < ngv; iAC++) {
         DPRINTF(stdout, "AUGC[%d] initial guess :%6.3g found in exoII database - reading\n", iAC,
                 uAC[iAC]);
         update_parameterAC(iAC, NULL, NULL, uAC, cx, exo, dpi);
@@ -1574,14 +1669,14 @@ void init_vec(
       DPRINTF(stdout, "%s:  reading augmenting conditions initial guess from \"%s\" ...\n", yo,
               ExoAuxFile);
 
-      ngv = rd_globals_from_exoII(uAC, ExoAuxFile, 5, nAC);
+      ngv = rd_globals_from_exoII(uAC, ExoAuxFile, 6, nAC);
       if (ngv < 0)
         DPRINTF(stderr, "%s: error trying to read augmenting conditions\n", yo);
 
       /* Update parameters prior to solution with these values
        * Update only those parameters values that were actually found */
 
-      for (iAC = 0; iAC + 5 < ngv; iAC++) {
+      for (iAC = 0; iAC + 6 < ngv; iAC++) {
         DPRINTF(stdout, "AUGC[%d] initial guess :%6.3g found in exoII database - reading\n", iAC,
                 uAC[iAC]);
         update_parameterAC(iAC, NULL, NULL, uAC, cx, exo, dpi);
@@ -1852,13 +1947,13 @@ void init_vec(
           DPRINTF(stderr, "\nMapping pixel image to mesh with 'fast' algorithm...");
           err = rd_image_to_mesh2(w, exo);
         } else {
-          GOMA_EH(GOMA_ERROR, "something wrong with efv->ipix");
+          GOMA_EH(-1, "something wrong with efv->ipix");
         }
       }
 #ifndef LIBRARY_MODE
       else if (strcmp(efv->file_nm[w], "IMPORT") == 0 ||
                strcmp(efv->file_nm[w], "IMPORT_EV") == 0) {
-        GOMA_EH(GOMA_ERROR, "External fields can only be imported in LIBRARY_MODE!");
+        GOMA_EH(-1, "External fields can only be imported in LIBRARY_MODE!");
       }
 #endif
     }
@@ -2073,13 +2168,13 @@ static void read_initial_guess(double u[], const int np, double uAC[], const int
       fprintf(stderr, "%s: line %d of the initial guess file %s had an error, nchar = %d\n", yo, i,
               Init_GuessFile, nchar);
       fprintf(stderr, "%s:\t line = \"%s\"", yo, input);
-      GOMA_EH(GOMA_ERROR, yo);
+      GOMA_EH(-1, yo);
     }
     if (!interpret_double(input, u + i)) {
       fprintf(stderr, "%s: line %d of the initial guess file %s had an error, %d\n", yo, i,
               Init_GuessFile, nchar);
       fprintf(stderr, "%s:\t line = \"%s\"", yo, input);
-      GOMA_EH(GOMA_ERROR, yo);
+      GOMA_EH(-1, yo);
     }
   }
 
@@ -2268,12 +2363,15 @@ int rd_vectors_from_exoII(double u[],
   int var;
   MATRL_PROP_STRUCT *matrl = 0;
   double ftimeValue;
+#ifdef DEBUG
+  static const char yo[] = "rd_vectors_from_exoII";
+#endif
 
   CPU_word_size = sizeof(double);
   IO_word_size = 0;
 
-  exoid = ex_open(file_nm, EX_READ, &CPU_word_size, &IO_word_size , &version);
-  GOMA_EH(exoid, "ex_open, %s %d", file_nm, exoid);
+  exoid = ex_open(file_nm, EX_READ, &CPU_word_size, &IO_word_size, &version);
+  GOMA_EH(exoid, "ex_open");
 
   error = ex_get_init(exoid, title, &num_dim, &num_nodes, &num_elem, &num_elem_blk, &num_node_sets,
                       &num_side_sets);
@@ -2376,13 +2474,13 @@ int rd_vectors_from_exoII(double u[],
             }
             if (mn != -1 && (pd_glob[mn]->i[pg->imtrx][var] == I_P0)) {
               int eb_index = in_list(mn, 0, exo->num_elem_blocks, Matilda);
-              if (eb_index != -1 && exo->eb_num_elems[eb_index] > 0) {
+              if (eb_index != -1) {
                 error = rd_exoII_ev(u, var, mn, matrl, elem_var_names, exo->eb_num_elems[eb_index],
                                     num_elem_vars, exoid, time_step, 0, exo);
               }
             } else if (mn != -1 && (pd_glob[mn]->i[pg->imtrx][var] == I_P1)) {
               int eb_index = in_list(mn, 0, exo->num_elem_blocks, Matilda);
-              if (eb_index != -1 && exo->eb_num_elems[eb_index] > 0) {
+              if (eb_index != -1) {
                 int dof = getdofs(type2shape(exo->eb_elem_itype[eb_index]), I_P1);
                 for (int i = 0; i < dof; i++) {
                   error =
@@ -2429,7 +2527,6 @@ int rd_vectors_from_exoII(double u[],
                            efv->ext_fld_ndl_val[variable_no]);
         GOMA_EH(error, "ex_get_var nodal");
       }
-      exchange_node(cx[0], DPI_ptr, efv->ext_fld_ndl_val[variable_no]);
     }
   }
 
@@ -2481,6 +2578,9 @@ int rd_trans_vectors_from_exoII(double u[],
   double ftimeValue, time_higher, time_lower;
   double *val_low, *val_high, slope, yint;
   int time_step_read, time_step_higher, time_step_lower, time_step_max;
+#ifdef DEBUG
+  static const char yo[] = "rd_trans_vectors_from_exoII";
+#endif
 
   CPU_word_size = sizeof(double);
   IO_word_size = 0;
@@ -2616,8 +2716,10 @@ int rd_trans_vectors_from_exoII(double u[],
 
   /*
    *  Exchange the degrees of freedom with neighboring processors
+   *  Actually, we may not need to do this as we have "broken" the external field
+   *  variable file already.   Each proc will read from that file ont he fly.
    */
-  exchange_node(cx, dpi, efv->ext_fld_ndl_val[variable_no]);
+  /// exchange_node(cx, dpi, efv->ext_fld_ndl_val[variable_no]);
 
   return 0;
 } /* end rd_trans_vectors_from_exoII*/
@@ -2786,6 +2888,9 @@ int rd_globals_from_exoII(double u[], const char *file_nm, const int start, cons
   char ret_char[3];            /* any returned character */
   int num_global_vars = -1;    /* number of global variables present */
   double *global_vars;         /* global variable values */
+#ifdef DEBUG
+  static const char yo[] = "rd_globals_from_exoII";
+#endif
 
   CPU_word_size = sizeof(double);
   IO_word_size = 0;
@@ -2905,6 +3010,12 @@ static void inject_nodal_vec(double sol_vec[],
       for (j = 0; j < (int)nv->Num_Var_Desc_Per_Type[varType]; j++) {
         vindex = nv->Var_Type_Index[varType][j];
         vd = nv->Var_Desc_List[vindex];
+#ifdef DEBUG_HKM
+        if (idof < 0 || idof > vd->Ndof) {
+          fprintf(stderr, "init_vec ERROR: bad idof\n");
+          GOMA_EH(-1, "init_vec bad idof");
+        }
+#endif
         if (k == (int)vd->Subvar_Index) {
           index = (Nodes[i]->First_Unknown[pg->imtrx] + nv->Nodal_Offset[vindex] + idof);
           sol_vec[index] = nodal_vec[i];
@@ -3108,7 +3219,7 @@ int build_node_index_var(const int varType,
   int imtrx;
   NODAL_VARS_STRUCT *nv;
   if (varType < 0 || varType > MAX_VARIABLE_TYPES - 1) {
-    GOMA_EH(GOMA_ERROR, "Attempt to count a bogus variable.");
+    GOMA_EH(-1, "Attempt to count a bogus variable.");
   }
   count = 0;
   for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
@@ -3144,7 +3255,7 @@ int count_vardofs(const int varType, const int num_nodes) {
   int imtrx;
   NODAL_VARS_STRUCT *nv;
   if (varType < 0 || varType > MAX_VARIABLE_TYPES - 1) {
-    GOMA_EH(GOMA_ERROR, "Attempt to count a bogus variable.");
+    GOMA_EH(-1, "Attempt to count a bogus variable.");
   }
   count = 0;
   for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {

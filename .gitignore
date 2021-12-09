@@ -32,3 +32,5 @@ cmake-debug
 /cmake-build*/
 .cache/
 .envrc
+/.cache/
+*.code-workspace

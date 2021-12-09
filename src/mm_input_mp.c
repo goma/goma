@@ -1551,8 +1551,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     }
     ECHO(es, echo_file);
 
-    if (ConstitutiveEquation != BOND
-        && ConstitutiveEquation != BINGHAM_MIXED) {
+    if (ConstitutiveEquation != BOND && ConstitutiveEquation != BINGHAM_MIXED) {
       model_read =
           look_for_mat_prop(imp, "Time Constant", &(gn_glob[mn]->lamModel), &(gn_glob[mn]->lam),
                             NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
@@ -1699,9 +1698,9 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   }
 
   if (ConstitutiveEquation == BINGHAM_MIXED) {
-    model_read =
-        look_for_mat_prop(imp, "Epsilon Regularization", &(gn_glob[mn]->epsilonModel), &(gn_glob[mn]->epsilon),
-                          NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
+    model_read = look_for_mat_prop(imp, "Epsilon Regularization", &(gn_glob[mn]->epsilonModel),
+                                   &(gn_glob[mn]->epsilon), NO_USER, NULL, model_name, SCALAR_INPUT,
+                                   &NO_SPECIES, es);
     GOMA_EH(model_read, "Epsilon Regularization");
     ECHO(es, echo_file);
   }
@@ -2429,6 +2428,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       /* Should yield stress be a modal property? Let's assume not for now */
       dbl tau_y_val;
       dbl fexp_val;
+      dbl nexp_val;
 
       strcpy(search_string, "Polymer Yield Stress");
       model_read = look_for_mat_prop(imp, search_string, &(ConstitutiveEquation), &tau_y_val,
@@ -2455,10 +2455,27 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         fprintf(stderr, "%s\n", err_msg);
         exit(-1);
       }
+      strcpy(search_string, "Saramito Power Law Exponent");
+      model_read = look_for_mat_prop(imp, search_string, &(ConstitutiveEquation), &nexp_val,
+                                     NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
+
+      if (model_read < 1) {
+        if (model_read == -1) {
+          nexp_val = 1;
+        } else if (model_read == -2) {
+          SPF(err_msg, "Only CONSTANT %s mode model supported.", search_string);
+          GOMA_EH(-1, err_msg);
+        }
+      }
 
       for (mm = 0; mm < vn_glob[mn]->modes; mm++) {
         ve_glob[mn][mm]->gn->tau_y = tau_y_val;
         ve_glob[mn][mm]->gn->fexp = fexp_val;
+        ve_glob[mn][mm]->gn->nexp = nexp_val;
+
+        // set polymer viscosity to (consistency index)^(1/nexp) when nexp != 1
+        if (nexp_val != 1)
+          ve_glob[mn][mm]->gn->mu0 = pow(ve_glob[mn][mm]->gn->mu0, 1. / nexp_val);
       }
       ECHO(es, echo_file);
     }

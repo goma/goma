@@ -2304,8 +2304,8 @@ static int calc_standard_fields(double **post_proc_vect,
 
   if (SARAMITO_YIELD != -1 && pd->e[pg->imtrx][POLYMER_STRESS11]) {
     for (int mode = 0; mode < vn->modes; mode++) {
-      dbl coeff =
-          compute_saramito_model_terms(fv->S[mode], ve[mode]->gn->tau_y, ve[mode]->gn->fexp, NULL);
+      dbl coeff;
+      compute_saramito_model_terms(&coeff, NULL, fv->S[mode], ve[mode]->gn, TRUE);
       local_post[SARAMITO_YIELD + mode] = coeff;
       local_lumped[SARAMITO_YIELD + mode] = 1.;
     }
@@ -10893,23 +10893,38 @@ int load_elem_tkn(struct Results_Description *rd, const Exo_DB *exo, int tev, in
   }
   /* First cycle through all the primary variables that are nodal looking
      for element variable candidates (currently must be interpolated with I_P0 */
-  for (i = 0; i < upd->Num_Mat; i++) {
-    int eb = in_list(i, 0, exo->num_elem_blocks, Matilda);
-    if (exo->eb_num_elems[eb] > 0) {
-      for (j = V_FIRST; j < V_LAST; j++) {
-        if (pd_glob[i]->v[pg->imtrx][j] != V_NOTHING) {
-          if (pd_glob[i]->i[pg->imtrx][j] == I_P0) {
-            if (Num_Var_In_Type[pg->imtrx][j] > 1) {
-              fprintf(stderr,
-                      "%s: Too many components in variable type (%s - %s) for element variable\n",
-                      yo, Exo_Var_Names[j].name2, Exo_Var_Names[j].name1);
-              exit(-1);
-            }
-            if (ev_var_mask[j - V_FIRST] == 0) {
-              /* We just found a candidate for an element variable */
-              /* Append a suffix onto the var name to differentiate from its
-               nodal counterpart */
-              sprintf(appended_name, "%s_E", Exo_Var_Names[j].name2);
+  for (i = 0; i < exo->num_elem_blocks; i++) {
+    int mat_id = Matilda[i];
+    for ( j = V_FIRST; j < V_LAST; j++) {
+      if ( pd_glob[mat_id]->v[pg->imtrx][j] != V_NOTHING ) {
+        if (pd_glob[mat_id]->i[pg->imtrx][j] == I_P0) {
+	  if ( Num_Var_In_Type[pg->imtrx][j] > 1 ) {
+            fprintf(stderr,
+		    "%s: Too many components in variable type (%s - %s) for element variable\n",
+		    yo,
+		    Exo_Var_Names[j].name2,
+		    Exo_Var_Names[j].name1 );
+	    exit (-1);
+          }
+          if (ev_var_mask[j - V_FIRST] == 0) {
+	    /* We just found a candidate for an element variable */
+	    /* Append a suffix onto the var name to differentiate from its
+	     nodal counterpart */
+            sprintf(appended_name, "%s_E", Exo_Var_Names[j].name2);
+            set_ev_tkud(rd, index, j, appended_name, Var_Units[j].name2, Exo_Var_Names[j].name1,
+                        FALSE);
+            index++;
+            ev_var_mask[j - V_FIRST] = 1; /* Only count this variable once */
+	  }
+        }
+        if (pd_glob[mat_id]->i[pg->imtrx][j] == I_P1) {
+          int dof = getdofs(type2shape(exo->eb_elem_itype[i]), I_P1);
+          if (ev_var_mask[j - V_FIRST] == 0) {
+            /* We just found a candidate for an element variable */
+            /* Append a suffix onto the var name to differentiate from its
+             nodal counterpart */
+            for (i = 1; i <= dof; i++) {
+              sprintf(appended_name, "%s_E%d", Exo_Var_Names[j].name2, i);
               set_ev_tkud(rd, index, j, appended_name, Var_Units[j].name2, Exo_Var_Names[j].name1,
                           FALSE);
               index++;

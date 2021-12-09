@@ -21,6 +21,10 @@
 #ifndef GOMA_RF_UTIL_H
 #define GOMA_RF_UTIL_H
 
+#include <stdio.h>
+#include "dp_types.h"
+#include "dpi.h"
+#include "exo_struct.h"
 #if 0
 extern void scatter_double_vector
 (const int ,

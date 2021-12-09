@@ -18,6 +18,7 @@
 #include "mm_eh.h"
 #include "mm_fill_stabilization.h"
 #include "mm_mp_const.h"
+#include "mm_mp_structs.h"
 #include "std.h"
 
 struct GomaLinearSolverData;
@@ -85,8 +86,8 @@ EXTERN int assemble_gradient /* mm_fill_stress.c                          */
                               * explicit (tt = 1) to implicit (tt = 0)    */
      dbl);                   /* dt - current time step size               */
 
-int assemble_rate_of_strain(dbl tt, /* parameter to vary time integration from
-                                     * explicit (tt = 1) to implicit (tt = 0) */
+int assemble_rate_of_strain(dbl tt,  /* parameter to vary time integration from
+                                      * explicit (tt = 1) to implicit (tt = 0) */
                             dbl dt); /* current time step size */
 
 EXTERN int tensor_dot /* mm_fill_stress.c                          */
@@ -179,10 +180,10 @@ EXTERN int segregate_stress_update /* mm_fill_stress.c                       */
 EXTERN int stress_eqn_pointer(int[MAX_MODES][DIM][DIM]); /* v_s */
 
 EXTERN
-dbl numerical_viscosity(dbl[DIM][DIM],                 /* s - total stress */
-                        dbl[DIM][DIM],                 /* gamma_cont - continuous shear rate */
-                        dbl[MAX_MODES][DIM][DIM][MDE], /* d_mun_dS - derivative of mun wrt S*/
-                        dbl[DIM][DIM][MDE]);           /* d_mun_dG - derivative of mun wrt G */
+    dbl numerical_viscosity(dbl[DIM][DIM],                 /* s - total stress */
+                            dbl[DIM][DIM],                 /* gamma_cont - continuous shear rate */
+                            dbl[MAX_MODES][DIM][DIM][MDE], /* d_mun_dS - derivative of mun wrt S*/
+                            dbl[DIM][DIM][MDE]);           /* d_mun_dG - derivative of mun wrt G */
 
 void compute_exp_s(double[DIM][DIM], double[DIM][DIM], double[DIM], double[DIM][DIM]);
 
@@ -196,9 +197,11 @@ void compute_d_exp_s_ds(dbl[DIM][DIM],            // s - stress
                         dbl[DIM][DIM],            // exp_s
                         dbl[DIM][DIM][DIM][DIM]); // d_exp_s_ds
 
-dbl compute_saramito_model_terms(dbl[DIM][DIM],                 // stress
-                                 dbl,                           // yield stress
-                                 dbl,                           // yield stress exponent
-                                 SARAMITO_DEPENDENCE_STRUCT *); // struct for sCoeff sensitvities
+void compute_saramito_model_terms(
+    dbl *,                        // Saramito coefficient (S)
+    SARAMITO_DEPENDENCE_STRUCT *, // struct for sCoeff sensitvities
+    const dbl[DIM][DIM],          // stress
+    const struct Generalized_Newtonian *,
+    const int); // bounds S to [0,1] if TRUE. Only use this for postprocessing!
 
 #endif /* GOMA_MM_FILL_STRESS_H */
