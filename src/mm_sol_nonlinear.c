@@ -754,6 +754,7 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
           show_external(num_universe_dofs,
                         (num_universe_dofs-num_external_dofs),
                         ija, ija_save, a);
+          dofs_hidden = FALSE;
 	}
 
       /* For Overlap AC algorithm, reset kinematic AC residuals here */
