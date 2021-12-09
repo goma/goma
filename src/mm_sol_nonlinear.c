@@ -34,6 +34,7 @@
 #include "ac_stability_util.h"
 #include "ac_update_parameter.h"
 #include "bc/rotate.h"
+#include "bc/rotate_coordinates.h"
 #include "bc_colloc.h"
 #include "bc_contact.h"
 #include "bc_curve.h"
@@ -127,17 +128,17 @@
 #include "rf_solver_const.h"
 #include "rf_util.h"
 #include "rf_vars_const.h"
+#include "sl_amesos_interface.h"
 #include "sl_aux.h"
 #include "sl_auxutil.h"
+#include "sl_aztecoo_interface.h"
 #include "sl_eggroll.h"
 #include "sl_lu.h"
 #include "sl_matrix_util.h"
-#include "sl_umf.h"
-#include "sl_util.h"
-#include "sl_amesos_interface.h"
-#include "sl_aztecoo_interface.h"
 #include "sl_petsc.h"
 #include "sl_stratimikos_interface.h"
+#include "sl_umf.h"
+#include "sl_util.h"
 #include "std.h"
 #include "user_ac.h"
 #include "user_bc.h"
@@ -188,52 +189,52 @@ static int first_linear_solver_call = TRUE;
 
 #include "mm_eh.h"
 
-static int soln_sens                      /* mm_sol_nonlinear.c                        */
-    (double,                              /* lambda - parameter                        */
-     double[],                            /* x - soln vector                           */
-     double[],                            /* xdot - dxdt predicted for new time step   */
-     double,                              /* delta_s - step                            */
-     Exo_DB *,                            /* exo                                       */
-     Dpi *,                               /* dpi                                       */
-     Comm_Ex *,                           /* cx                                        */
-     double[],                            /* res_p                                     */
-     int,                                 /* numProcUnknowns                           */
-     int[],                               /* ija                                       */
-     double[],                            /* a                                         */
-     double[],                            /* x_old                                     */
-     double[],                            /* x_older                                   */
-     double[],                            /* xdot_old                                  */
-     double[],                            /* x_update                                  */
-     double,                              /* delta_t                                   */
-     double,                              /* theta                                     */
-     double,                              /* time_value                                */
-     int,                                 /* num_total_nodes                           */
-     double[],                            /* res_m                                     */
-     int,                                 /* Factor_Flag                               */
-     int,                                 /* matr_form                                 */
-     double[],                            /* resid_vector_sens                         */
-     double[],                            /* x_sens                                    */
-     double **,                           /* x_sens_p                                  */
-     double[],                            /* scale                                     */
+static int soln_sens                /* mm_sol_nonlinear.c                        */
+    (double,                        /* lambda - parameter                        */
+     double[],                      /* x - soln vector                           */
+     double[],                      /* xdot - dxdt predicted for new time step   */
+     double,                        /* delta_s - step                            */
+     Exo_DB *,                      /* exo                                       */
+     Dpi *,                         /* dpi                                       */
+     Comm_Ex *,                     /* cx                                        */
+     double[],                      /* res_p                                     */
+     int,                           /* numProcUnknowns                           */
+     int[],                         /* ija                                       */
+     double[],                      /* a                                         */
+     double[],                      /* x_old                                     */
+     double[],                      /* x_older                                   */
+     double[],                      /* xdot_old                                  */
+     double[],                      /* x_update                                  */
+     double,                        /* delta_t                                   */
+     double,                        /* theta                                     */
+     double,                        /* time_value                                */
+     int,                           /* num_total_nodes                           */
+     double[],                      /* res_m                                     */
+     int,                           /* Factor_Flag                               */
+     int,                           /* matr_form                                 */
+     double[],                      /* resid_vector_sens                         */
+     double[],                      /* x_sens                                    */
+     double **,                     /* x_sens_p                                  */
+     double[],                      /* scale                                     */
      struct GomaLinearSolverData *, /* ams - ptrs to Aztec linear    *
-                                           * systems                       */
-     int,                                 /* first_linear_solver_call                  */
-     int,                                 /* Norm_below_tolerance                      */
-     int,                                 /* Rate_above_tolerance                      */
-     int,                                 /* vector_id                                 */
-     int,                                 /* sens_type                                 */
-     int,                                 /* sens_id                                   */
-     int,                                 /* sens_flt                                  */
-     int,                                 /* sens_flt2                                  */
-     int *,                               /* frontal solver variables */
-     int *,                               /*  fs->ncod  */
-     double *,                            /*  fs->bc    */
-     double *,                            /*  smallpiv  */
-     double *,                            /*  singpiv   */
-     int *,                               /*  iautopiv  */
-     int *,                               /*  iscale    */
-     double *,                            /*  scaling_max */
-     double *,                            /*  h_elem_avg  */
+                                     * systems                       */
+     int,                           /* first_linear_solver_call                  */
+     int,                           /* Norm_below_tolerance                      */
+     int,                           /* Rate_above_tolerance                      */
+     int,                           /* vector_id                                 */
+     int,                           /* sens_type                                 */
+     int,                           /* sens_id                                   */
+     int,                           /* sens_flt                                  */
+     int,                           /* sens_flt2                                  */
+     int *,                         /* frontal solver variables */
+     int *,                         /*  fs->ncod  */
+     double *,                      /*  fs->bc    */
+     double *,                      /*  smallpiv  */
+     double *,                      /*  singpiv   */
+     int *,                         /*  iautopiv  */
+     int *,                         /*  iscale    */
+     double *,                      /*  scaling_max */
+     double *,                      /*  h_elem_avg  */
      double *,
      int,     /* UMF_system_id */
      char[]); /* calling purpose */
@@ -502,11 +503,6 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
    * in matrix_fill().
    */
 
-  extern double mm_fill_total;
-
-  double asmslv_start;
-  double asmslv_end;
-
   double asmslv_time;
   double slv_time;
 
@@ -522,7 +518,6 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
   dbl bigAC, dumAC, sumAC;
 
   /* frontal solver parameters */
-  int zero;
   int mf_resolve;
   dbl smallpiv;
   dbl singpiv;
@@ -541,7 +536,6 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
   char sens_caller[40]; /* string containing caller of soln_sens */
 
   int linear_solver_blk;               /* count calls to AZ_solve() */
-  int linear_solver_itns;              /* count cumulative linearsolver iterations */
   int total_ls_its = 0;                /* linear solver iteration counter */
   int num_linear_solve_blks;           /* one pass for now */
   int matrix_solved;                   /* boolean */
@@ -556,12 +550,6 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
   UMI_LIST_STRUCT *curr_mat_list;
   NODE_INFO_STRUCT *node_ptr;
   int num_mat, imat, mat_index, b;
-
-#ifdef DEBUG_MMH
-  int inode, i_Var_Desc, i_offset, idof_eqn, idof_var;
-  dbl abs_row_sum, row_sum;
-  VARIABLE_DESCRIPTION_STRUCT *vd_eqn, *vd_var;
-#endif /* DEBUG_MMH */
 
   if (pg->imtrx != prev_matrix) {
     first_linear_solver_call = TRUE;
@@ -626,12 +614,6 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     /*
      *  matrix_stats (a, ija, NumUnknowns[pg->imtrx], &NZeros, &GNZeros, &GNumUnknowns);
      */
-#ifdef DEBUG
-    fprintf(stderr, "P_%d: lo=%d, lo+=%d, lnnz=%d, lnnz+=%d\n", ProcID, local_order,
-            local_order_plus, local_nnz, local_nnz_plus);
-    fprintf(stderr, "P_%d: go=%d, go+=%d, gnnz=%d, gnnz+=%d\n", ProcID, global_order,
-            global_order_plus, global_nnz, global_nnz_plus);
-#endif /* DEBUG */
   }
 
   asdv(&delta_x, numProcUnknowns);
@@ -676,10 +658,6 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
   inewton = 0;
   if (Max_Newton_Steps <= 0)
     *converged = TRUE;
-
-  if (Linear_Solver == FRONT) {
-    init_vec_value(scale, 1.0, numProcUnknowns);
-  }
 
   /*
    * EDW: LOCA, when used, controls UMF_system_id as it calls the solver
@@ -804,6 +782,10 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     DPRINTF(stderr, "-------");
   DPRINTF(stderr, "\n");
 
+  if (Num_ROT == 0 /*&& inewton == 0*/ && exo->num_dim == 3) {
+    setup_rotated_bc_nodes(exo, dpi, BC_Types, Num_BC, x);
+  }
+
   /*********************************************************************************
    *
    *                         Top of the Newton Iteration Loop
@@ -823,9 +805,6 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     /*
      * Mark the CPU time for combined assembly and solve purposes...
      */
-
-    asmslv_start = ut();
-    asmslv_end = asmslv_start;
 
     log_msg("%s: Newton iteration %d", yo, inewton);
 
@@ -974,117 +953,34 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
          is properly communicated */
       exchange_dof(cx, dpi, x, pg->imtrx);
 
-      if (Linear_Solver == FRONT) {
-        zero = 0;
-        mf_resolve = 0;
-        smallpiv = 1.e-3;
-        singpiv = 1.e-14;
-        iautopiv = 1;
-        iscale = 1; /* you will have to turn this off for resolves */
-        scaling_max = 1.;
+      err = matrix_fill_full(ams, x, resid_vector, x_old, x_older, xdot, xdot_old, x_update,
+                             &delta_t, &theta, First_Elem_Side_BC_Array[pg->imtrx], &time_value,
+                             exo, dpi, &num_total_nodes, &h_elem_avg, &U_norm, NULL);
 
-        if (!Norm_below_tolerance || !Rate_above_tolerance) {
-          mf_resolve = zero;
-          init_vec_value(scale, 1.0, numProcUnknowns);
-        } else {
-          /*
-           * NB: Needs to be changed to 1 as soon as Bob provides
-           *     scale vector.  Change to one.  Works now
-           *     but cannot be done with row-sum-scalling.
-           */
-          mf_resolve = 1;
-          /*
-           *  now just get the residuals.  af-> params set above
-           */
-          err = matrix_fill_full(ams, x, resid_vector, x_old, x_older, xdot, xdot_old, x_update,
-                                 &delta_t, &theta, First_Elem_Side_BC_Array[pg->imtrx], &time_value,
-                                 exo, dpi, &num_total_nodes, &h_elem_avg, &U_norm, NULL);
-          a_end = ut();
-        }
+      if (((vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV) &&
+           pd->v[pg->imtrx][POLYMER_STRESS11] && af->Assemble_Jacobian == TRUE) ||
+          ((pd->v[pg->imtrx][EM_E1_REAL] && pd->v[pg->imtrx][EM_H1_REAL]) &&
+           af->Assemble_Jacobian == TRUE)) {
+        numerical_jacobian_compute_stress(ams, x, resid_vector, delta_t, theta, x_old, x_older,
+                                          xdot, xdot_old, x_update, num_total_nodes,
+                                          First_Elem_Side_BC_Array[pg->imtrx], Debug_Flag,
+                                          time_value, exo, dpi, &h_elem_avg, &U_norm);
+      }
 
-        if (Num_Proc > 1)
-          GOMA_EH(GOMA_ERROR, "Whoa.  No front allowed with nproc>1");
-        a_end = ut();
+      a_end = ut();
+      if (err == -1) {
+        return_value = -1;
+        goto free_and_clear;
+      }
+
+      /* Scale matrix first to get rid of problems with
+       * penalty parameter. In front option this is done
+       * within the solver
+       */
+      if (!Norm_below_tolerance || !Rate_above_tolerance) {
+        row_sum_scaling_scale(ams, resid_vector, scale);
       } else {
-
-        err = matrix_fill_full(ams, x, resid_vector, x_old, x_older, xdot, xdot_old, x_update,
-                               &delta_t, &theta, First_Elem_Side_BC_Array[pg->imtrx], &time_value,
-                               exo, dpi, &num_total_nodes, &h_elem_avg, &U_norm, NULL);
-
-        if (((vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV) &&
-             pd->v[pg->imtrx][POLYMER_STRESS11] && af->Assemble_Jacobian == TRUE) ||
-            ((pd->v[pg->imtrx][EM_E1_REAL] && pd->v[pg->imtrx][EM_H1_REAL]) &&
-             af->Assemble_Jacobian == TRUE)) {
-          numerical_jacobian_compute_stress(ams, x, resid_vector, delta_t, theta, x_old, x_older,
-                                            xdot, xdot_old, x_update, num_total_nodes,
-                                            First_Elem_Side_BC_Array[pg->imtrx], Debug_Flag,
-                                            time_value, exo, dpi, &h_elem_avg, &U_norm);
-        }
-
-        a_end = ut();
-        if (err == -1) {
-          return_value = -1;
-          goto free_and_clear;
-        }
-
-        /* Scale matrix first to get rid of problems with
-         * penalty parameter. In front option this is done
-         * within the solver
-         */
-        if (!Norm_below_tolerance || !Rate_above_tolerance) {
-          row_sum_scaling_scale(ams, resid_vector, scale);
-        } else {
-          vector_scaling(NumUnknowns[pg->imtrx], resid_vector, scale);
-        }
-#ifdef DEBUG_MMHX
-        {
-          VARIABLE_DESCRIPTION_STRUCT *vd_eqn, *vd_var;
-          int inode, i_Var_Desc, i_offset, idof_eqn, idof_var;
-          /* This chunk of code will print out every entry of the
-           * Jacobian matrix. */
-          for (i = 0; i < NumUnknowns[pg->imtrx]; i++) {
-            vd_eqn = Index_Solution_Inv(i, &inode, &i_Var_Desc, &i_offset, &idof_eqn, pg->imtrx);
-            vd_var = vd_eqn;
-            fprintf(stderr, "Eq=%d/%s,Node=%d Var=%d/%s,Node=%d Sens=%g Resid=%g\n", i,
-                    vd_eqn->Var_Name[idof_eqn], idv[pg->imtrx][i][2], i, vd_var->Var_Name[idof_eqn],
-                    idv[pg->imtrx][i][2], a[i], resid_vector[i]);
-            for (j = ija[i]; j < ija[i + 1]; j++) {
-              vd_eqn = Index_Solution_Inv(i, &inode, &i_Var_Desc, &i_offset, &idof_eqn, pg->imtrx);
-              vd_var =
-                  Index_Solution_Inv(ija[j], &inode, &i_Var_Desc, &i_offset, &idof_var, pg->imtrx);
-              /*if (a[j] != 0.0) {*/
-              if (fabs(a[j]) > 1.e-12) {
-                fprintf(stderr, "Eq=%d/%s,Node=%d Var=%d/%s,Node=%d Sens=%g\n", i,
-                        vd_eqn->Var_Name[idof_eqn], idv[pg->imtrx][i][2], ija[j],
-                        vd_var->Var_Name[idof_var], idv[pg->imtrx][ija[j]][2], a[j]);
-              }
-            }
-          }
-        }
-#endif /* DEBUG_MMHX */
-
-#ifdef DEBUG_MMH
-
-        /* This chunk of code will print out equation dofs that
-         * have a zero row sum.
-         */
-        k = 0;
-        for (i = 0; i < NumUnknowns[pg->imtrx]; i++) {
-          row_sum = a[i];
-          abs_row_sum = fabs(a[i]);
-          vd_eqn = Index_Solution_Inv(i, &inode, &i_Var_Desc, &i_offset, &idof_eqn, pg->imtrx);
-          for (j = ija[i]; j < ija[i + 1]; j++) {
-            row_sum += a[j];
-            abs_row_sum += fabs(a[j]);
-          }
-          if (row_sum == 0.0 || abs_row_sum == 0.0) {
-            fprintf(stderr,
-                    "ZERO ROW SUM: Eq = %d/%s, inode = %d, i_offset = %d, idof_eqn = %d, row_sum = "
-                    "%g, abs_row_sum = %g\n",
-                    i, vd_eqn->Var_Name[idof_eqn], inode, i_offset, idof_eqn, row_sum, abs_row_sum);
-          }
-        }
-#endif /* DEBUG_MMH */
+        vector_scaling(NumUnknowns[pg->imtrx], resid_vector, scale);
       }
 
       if (err == -1) {
@@ -1189,13 +1085,9 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
         }
       }
 
-      if (Linear_Solver != FRONT) /*Must do this UNTIL REB provides scale vector
-                                    on return from frontal solver */
-      {
-        for (iAC = 0; iAC < nAC; iAC++) {
-          for (j = 0; j < NumUnknowns[pg->imtrx]; j++) {
-            bAC[iAC][j] /= scale[j];
-          }
+      for (iAC = 0; iAC < nAC; iAC++) {
+        for (j = 0; j < NumUnknowns[pg->imtrx]; j++) {
+          bAC[iAC][j] /= scale[j];
         }
       }
 
@@ -1273,9 +1165,6 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     if (Num_Proc > 1 && strcmp(Matrix_Format, "msr") == 0) {
       hide_external(num_universe_dofs[pg->imtrx], NumUnknowns[pg->imtrx], ija, ija_save, a);
       dofs_hidden = TRUE;
-#ifdef DEBUG
-      print_array(ija, ija[ija[0] - 1], "ija_diet", type_int, ProcID);
-#endif /* DEBUG */
     }
 
 #ifdef DEBUG_JACOBIAN
@@ -1308,7 +1197,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     s_start = ut();
     s_end = s_start;
 
-    if ((Linear_Solver != FRONT) && *converged) {
+    if (*converged) {
       /*  If we're going to skip the Solve step, compute and save some useful
           information first...*/
 
@@ -1461,7 +1350,6 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
 
       linear_solver_blk = 0;     /* count calls to AZ_solve() */
       num_linear_solve_blks = 1; /* upper limit to AZ_solve() calls */
-      linear_solver_itns = 0;    /* cumulative number of iterations */
       matrix_solved = FALSE;
       while ((!matrix_solved) && (linear_solver_blk < num_linear_solve_blks)) {
         /*
@@ -1474,20 +1362,6 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
          *    x -- delta_x, newton correction vector
          *    b -- resid_vector, newton residual equation vector
          */
-#ifdef DEBUG
-        /*
-          fprintf(stderr, "P_%d: AZ_solve(..data_org[] = %d...)\n",
-                  ProcID, ams->data_org[AZ_matrix_type]);
-          */
-
-        /*
-         * Dump out ija[]...
-         */
-
-        print_array(ams->bindx,
-                    ams->bindx[num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]], "ijA",
-                    type_int, ProcID);
-#endif /* DEBUG */
         if (!Norm_below_tolerance || !Rate_above_tolerance) {
           /* Save old A before Aztec rescales it */
           if (save_old_A)
@@ -1513,7 +1387,6 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
 
         matrix_solved = (ams->status[AZ_why] == AZ_normal);
         linear_solver_blk++;
-        linear_solver_itns += ams->status[AZ_its];
       }
 
       /* Necessary anymore?
@@ -1533,8 +1406,10 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
       } else if (strcmp(Matrix_Format, "epetra") == 0) {
         amesos_solve_epetra(Amesos_Package, ams, delta_x, resid_vector, pg->imtrx);
       } else {
-        GOMA_EH(GOMA_ERROR, " Sorry, only MSR and Epetra matrix formats are currently supported with the Amesos "
-               "solver suite\n");
+        GOMA_EH(
+            GOMA_ERROR,
+            " Sorry, only MSR and Epetra matrix formats are currently supported with the Amesos "
+            "solver suite\n");
       }
       strcpy(stringer, " 1 ");
       break;
@@ -1546,24 +1421,43 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
         aztec_stringer(why, ams->status[AZ_its], &stringer[0]);
         matrix_solved = (ams->status[AZ_why] == AZ_normal);
       } else {
-        GOMA_EH(GOMA_ERROR, "Sorry, only Epetra matrix formats are currently supported with the AztecOO solver "
-               "suite\n");
+        GOMA_EH(GOMA_ERROR,
+                "Sorry, only Epetra matrix formats are currently supported with the AztecOO solver "
+                "suite\n");
       }
       break;
 
+#ifdef HAVE_PETSC
+    case PETSC_SOLVER:
+      if (strcmp(Matrix_Format, "petsc") == 0) {
+        int its;
+        petsc_solve(ams, delta_x, resid_vector, &its);
+        exchange_dof(cx, dpi, delta_x, pg->imtrx);
+        matrix_solved = 1;
+        char itsstring[10];
+        itsstring[9] = '\0';
+        snprintf(itsstring, 9, "%d", its);
+        strcpy(stringer, itsstring);
+      } else {
+        GOMA_EH(GOMA_ERROR,
+                "Sorry, only petsc matrix formats are currently supported with the petsc solver\n");
+      }
+      break;
+#endif
     case STRATIMIKOS:
       if (strcmp(Matrix_Format, "epetra") == 0) {
         int iterations;
-        int err = stratimikos_solve(ams, x_sens, resid_vector_sens, &iterations,
-                                  Stratimikos_File, pg->imtrx);
+        int err = stratimikos_solve(ams, x_sens, resid_vector_sens, &iterations, Stratimikos_File,
+                                    pg->imtrx);
         if (err) {
           GOMA_EH(err, "Error in stratimikos solve");
           check_parallel_error("Error in solve - stratimikos");
         }
         aztec_stringer(AZ_normal, iterations, &stringer[0]);
       } else {
-        GOMA_EH(GOMA_ERROR, "Sorry, only Epetra matrix formats are currently supported with the Stratimikos "
-               "interface\n");
+        GOMA_EH(GOMA_ERROR,
+                "Sorry, only Epetra matrix formats are currently supported with the Stratimikos "
+                "interface\n");
       }
       break;
 
@@ -1638,8 +1532,9 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
           } else if (strcmp(Matrix_Format, "epetra") == 0) {
             amesos_solve_epetra(Amesos_Package, ams, &wAC[iAC][0], &bAC[iAC][0], pg->imtrx);
           } else {
-            GOMA_EH(GOMA_ERROR, " Sorry, only MSR and Epetra matrix formats are currently supported with the "
-                   "Amesos solver suite\n");
+            GOMA_EH(GOMA_ERROR,
+                    " Sorry, only MSR and Epetra matrix formats are currently supported with the "
+                    "Amesos solver suite\n");
           }
           strcpy(stringer_AC, " 1 ");
           break;
@@ -1654,7 +1549,6 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
 
           linear_solver_blk = 0;     /* count calls to AZ_solve() */
           num_linear_solve_blks = 1; /* upper limit to AZ_solve() calls */
-          linear_solver_itns = 0;    /* cumulative number of iterations */
           matrix_solved = FALSE;
           while ((!matrix_solved) && (linear_solver_blk < num_linear_solve_blks)) {
             /*
@@ -1667,20 +1561,6 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
              *    x -- delta_x, newton correction vector
              *    b -- resid_vector, newton residual equation vector
              */
-#ifdef DEBUG
-            /*
-              fprintf(stderr, "P_%d: AZ_solve(..data_org[] = %d...)\n",
-              ProcID, ams->data_org[AZ_matrix_type]);
-            */
-
-            /*
-             * Dump out ija[]...
-             */
-
-            print_array(ams->bindx,
-                        ams->bindx[num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]],
-                        "ijA", type_int, ProcID);
-#endif /* DEBUG */
             AZ_solve(&wAC[iAC][0], &bAC[iAC][0], ams->options, ams->params, ams->indx, ams->bindx,
                      ams->rpntr, ams->cpntr, ams->bpntr, ams->val, ams->data_org, ams->status,
                      ams->proc_config);
@@ -1694,7 +1574,6 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
 
             matrix_solved = (ams->status[AZ_why] == AZ_normal);
             linear_solver_blk++;
-            linear_solver_itns += ams->status[AZ_its];
           }
 
           /* Necessary anymore?
@@ -1707,14 +1586,6 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
            */
 
           break;
-        case MA28:
-#ifdef HARWELL
-          err = cmsr_ma28(NumUnknowns[pg->imtrx], NZeros, a, ija, &wAC[iAC][0], &bAC[iAC][0]);
-#else  /* HARWELL */
-          GOMA_EH(GOMA_ERROR, "That linear solver package is not implemented.");
-#endif /* HARWELL */
-          strcpy(stringer_AC, " 1 ");
-          break;
         case AZTECOO:
           if (strcmp(Matrix_Format, "epetra") == 0) {
             aztecoo_solve_epetra(ams, &wAC[iAC][0], &bAC[iAC][0]);
@@ -1722,11 +1593,11 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
             aztec_stringer(why, ams->status[AZ_its], &stringer_AC[0]);
             matrix_solved = (ams->status[AZ_why] == AZ_normal);
           } else {
-            GOMA_EH(GOMA_ERROR, "Sorry, only Epetra matrix formats are currently supported with the AztecOO "
-                   "solver suite\n");
+            GOMA_EH(GOMA_ERROR,
+                    "Sorry, only Epetra matrix formats are currently supported with the AztecOO "
+                    "solver suite\n");
           }
           break;
-        case FRONT:
         default:
           GOMA_EH(GOMA_ERROR, "That linear solver package is not implemented.");
           break;
@@ -2020,8 +1891,6 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     log_msg("%-38s = %23.16e", "correction norm (L_oo)", Norm[1][0]);
     log_msg("%-38s = %23.16e", "correction norm (L_1)", Norm[1][1]);
     log_msg("%-38s = %23.16e", "correction norm (L_2)", Norm[1][2]);
-
-    asmslv_end = ut();
 
     if (Write_Intermediate_Solutions || (Iout == 1)) {
 
@@ -2423,27 +2292,15 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
         DPRINTF(stderr, "%s ", stringer);
     }
 
-    if (Linear_Solver != FRONT) {
-      asmslv_time = (a_end - a_start);
-      slv_time = (s_end - s_start);
-      if (Solver_Output_Format & 512)
-        DPRINTF(stderr, "%7.1e/%7.1e ", asmslv_time, slv_time);
-      if (Solver_Output_Format & 1024)
-        DPRINTF(stderr, "%.1f/%.1f ", Conv_order, Conv_rate);
-      if (Solver_Output_Format & 2048)
-        DPRINTF(stderr, "%.1f/%.1f ", Soln_order, Soln_rate);
-      DPRINTF(stderr, "\n");
-    } else {
-      asmslv_time = (asmslv_end - asmslv_start);
-      slv_time = (asmslv_time - mm_fill_total);
-      if (Solver_Output_Format & 512)
-        DPRINTF(stderr, "%7.1e/%7.1e ", mm_fill_total, slv_time);
-      if (Solver_Output_Format & 1024)
-        DPRINTF(stderr, "%.1f/%.1f ", Conv_order, Conv_rate);
-      if (Solver_Output_Format & 2048)
-        DPRINTF(stderr, "%.1f/%.1f ", Soln_order, Soln_rate);
-      DPRINTF(stderr, "\n");
-    }
+    asmslv_time = (a_end - a_start);
+    slv_time = (s_end - s_start);
+    if (Solver_Output_Format & 512)
+      DPRINTF(stderr, "%7.1e/%7.1e ", asmslv_time, slv_time);
+    if (Solver_Output_Format & 1024)
+      DPRINTF(stderr, "%.1f/%.1f ", Conv_order, Conv_rate);
+    if (Solver_Output_Format & 2048)
+      DPRINTF(stderr, "%.1f/%.1f ", Soln_order, Soln_rate);
+    DPRINTF(stderr, "\n");
 
     if (Write_Intermediate_Solutions || (Iout == 1)) {
       if (dofname_r[0] != '\0') {
@@ -2579,14 +2436,14 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
    *   FLUX SENSITIVITIES
    *
    */
-    mf_resolve = 0;
-    ncod = NULL;
-    bc = NULL;
-    smallpiv = 0.;
-    singpiv = 0.;
-    iautopiv = 0;
-    iscale = 0;
-    scaling_max = 0.;
+  mf_resolve = 0;
+  ncod = NULL;
+  bc = NULL;
+  smallpiv = 0.;
+  singpiv = 0.;
+  iautopiv = 0;
+  iscale = 0;
+  scaling_max = 0.;
 
   for (i = 0; i < nn_post_fluxes_sens; i++) {
     if (pp_fluxes_sens[i]->vector_id > sens_vec_ct) {
@@ -3220,10 +3077,10 @@ static int soln_sens(double lambda,  /*  parameter */
                      double **x_sens_p,
                      double scale[],
                      struct GomaLinearSolverData *ams, /* ptrs to
-                                                              * Aztec
-                                                              * linear
-                                                              * systems
-                                                              */
+                                                        * Aztec
+                                                        * linear
+                                                        * systems
+                                                        */
                      int first_linear_solver_call,
                      int Norm_below_tolerance,
                      int Rate_above_tolerance,
@@ -3254,7 +3111,6 @@ static int soln_sens(double lambda,  /*  parameter */
   int err;
 
   int linear_solver_blk;     /* count calls to AZ_solve() */
-  int linear_solver_itns;    /* count cumulative linearsolver iterations */
   int num_linear_solve_blks; /* one pass for now */
   int matrix_solved;         /* boolean */
   char stringer[80];         /* holding format of num linear solve itns */
@@ -3422,9 +3278,7 @@ static int soln_sens(double lambda,  /*  parameter */
   }
 #endif
 
-  if (Linear_Solver != FRONT) {
-    vector_scaling(NumUnknowns[pg->imtrx], resid_vector_sens, scale);
-  }
+  vector_scaling(NumUnknowns[pg->imtrx], resid_vector_sens, scale);
 
   switch (Linear_Solver) {
   case UMFPACK2:
@@ -3491,8 +3345,9 @@ static int soln_sens(double lambda,  /*  parameter */
     } else if (strcmp(Matrix_Format, "epetra") == 0) {
       amesos_solve_epetra(Amesos_Package, ams, x_sens, resid_vector_sens, pg->imtrx);
     } else {
-      GOMA_EH(GOMA_ERROR, " Sorry, only MSR and Epetra matrix formats are currently supported with the Amesos "
-             "solver suite\n");
+      GOMA_EH(GOMA_ERROR,
+              " Sorry, only MSR and Epetra matrix formats are currently supported with the Amesos "
+              "solver suite\n");
     }
     strcpy(stringer, " 1 ");
     break;
@@ -3508,7 +3363,6 @@ static int soln_sens(double lambda,  /*  parameter */
 
     linear_solver_blk = 0;     /* count calls to AZ_solve() */
     num_linear_solve_blks = 1; /* upper limit to AZ_solve() calls */
-    linear_solver_itns = 0;    /* cumulative number of iterations */
     matrix_solved = FALSE;
     while ((!matrix_solved) && (linear_solver_blk < num_linear_solve_blks)) {
       /*
@@ -3521,20 +3375,6 @@ static int soln_sens(double lambda,  /*  parameter */
        *    x -- x_sens, newton correction vector
        *    b -- resid_vector_sens, newton residual equation vector
        */
-#ifdef DEBUG
-      /*
-        fprintf(stderr, "P_%d: AZ_solve(..data_org[] = %d...)\n",
-        ProcID, ams->data_org[AZ_matrix_type]);
-        */
-
-      /*
-       * Dump out ija[]...
-       */
-
-      print_array(ams->bindx,
-                  ams->bindx[num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]], "ijA",
-                  type_int, ProcID);
-#endif
       AZ_solve(x_sens, resid_vector_sens, ams->options, ams->params, ams->indx, ams->bindx,
                ams->rpntr, ams->cpntr, ams->bpntr, ams->val, ams->data_org, ams->status,
                ams->proc_config);
@@ -3547,7 +3387,6 @@ static int soln_sens(double lambda,  /*  parameter */
 
       matrix_solved = (ams->status[AZ_why] == AZ_normal);
       linear_solver_blk++;
-      linear_solver_itns += ams->status[AZ_its];
     }
 
     break;
@@ -3557,16 +3396,17 @@ static int soln_sens(double lambda,  /*  parameter */
       aztec_stringer((int)ams->status[AZ_why], ams->status[AZ_its], &stringer[0]);
       matrix_solved = (ams->status[AZ_why] == AZ_normal);
     } else {
-      GOMA_EH(GOMA_ERROR, "Sorry, only Epetra matrix formats are currently supported with the AztecOO solver "
-             "suite\n");
+      GOMA_EH(GOMA_ERROR,
+              "Sorry, only Epetra matrix formats are currently supported with the AztecOO solver "
+              "suite\n");
     }
     break;
 
   case STRATIMIKOS:
     if (strcmp(Matrix_Format, "epetra") == 0) {
       int iterations;
-      int err = stratimikos_solve(ams, x_sens, resid_vector_sens, &iterations,
-                                  Stratimikos_File, pg->imtrx);
+      int err = stratimikos_solve(ams, x_sens, resid_vector_sens, &iterations, Stratimikos_File,
+                                  pg->imtrx);
       GOMA_EH(err, "Error in stratimikos solve");
       if (iterations == -1) {
         strcpy(stringer, "err");
@@ -3574,8 +3414,9 @@ static int soln_sens(double lambda,  /*  parameter */
         aztec_stringer(AZ_normal, iterations, &stringer[0]);
       }
     } else {
-      GOMA_EH(GOMA_ERROR, "Sorry, only Epetra matrix formats are currently supported with the Stratimikos "
-             "interface\n");
+      GOMA_EH(GOMA_ERROR,
+              "Sorry, only Epetra matrix formats are currently supported with the Stratimikos "
+              "interface\n");
     }
     break;
   case MA28:
