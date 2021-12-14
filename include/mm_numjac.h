@@ -63,7 +63,7 @@ struct elem_side_bc_struct;
 #define SCALED_RESIDUAL_TOLERANCE_CUTOFF          \
   (1.0e-8) /* don't report scaled error if values \
             * are this small */
-EXTERN void
+EXTERN int
 numerical_jacobian_compute_stress(struct GomaLinearSolverData *ams,
                                   double x[], /* Solution vector for the current processor */
                                   double resid_vector[], /* Residual vector for the current

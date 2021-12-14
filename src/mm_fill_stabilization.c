@@ -134,7 +134,7 @@ void supg_tau_shakib(
   dbl v_d_gv = 0;
   for (int i = 0; i < dim; i++) {
     for (int j = 0; j < dim; j++) {
-      v_d_gv += fv->v[i] * G[i][j] * fv->v[j];
+      v_d_gv += fabs(fv->v[i] * G[i][j] * fv->v[j]);
     }
   }
 
@@ -159,7 +159,11 @@ void supg_tau_shakib(
     }
   }
 
-  supg_terms->supg_tau = 1.0 / (sqrt(4 / (dt * dt) + v_d_gv + diff_g_g));
+  if (dt > 0) {
+    supg_terms->supg_tau = 1.0 / (sqrt(4 / (dt * dt) + v_d_gv + diff_g_g));
+  } else {
+    supg_terms->supg_tau = 1.0 / (sqrt(v_d_gv + diff_g_g));
+  }
 
   for (int a = 0; a < dim; a++) {
     for (int k = 0; k < ei[pg->imtrx]->dof[VELOCITY1]; k++) {
@@ -788,7 +792,6 @@ int calc_pspg(dbl pspg[DIM],
     mu = viscosity(gn, gamma, NULL);
 
     dbl mup[MAX_MODES];
-    VISCOSITY_DEPENDENCE_STRUCT d_mup[MAX_MODES]; /* viscosity dependence */
     if (pd->gv[POLYMER_STRESS11]) {
       for (int mode = 0; mode < vn->modes; mode++) {
         mup[mode] = viscosity(ve[mode]->gn, gamma, NULL);

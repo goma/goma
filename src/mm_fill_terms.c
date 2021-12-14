@@ -3701,7 +3701,7 @@ int assemble_momentum(dbl time,       /* current time */
                           diffusion += grad_phi_i_e_a[p][q] * d_Pi->g[q][p][b][c][j];
                         }
                       }
-                      diffusion *=- det_J * wt * h3;
+                      diffusion *= det_J * wt * h3;
                       diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
                     }
 

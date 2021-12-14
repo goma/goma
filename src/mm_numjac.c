@@ -294,7 +294,7 @@ static void free_coloring(Coloring *coloring) {
   free(coloring);
 }
 
-void numerical_jacobian_compute_stress(struct GomaLinearSolverData *ams,
+int numerical_jacobian_compute_stress(struct GomaLinearSolverData *ams,
                                        double x[], /* Solution vector for the current processor */
                                        double resid_vector[], /* Residual vector for the current
                                                                * processor */
@@ -455,7 +455,8 @@ void numerical_jacobian_compute_stress(struct GomaLinearSolverData *ams,
    *  check that the perturbed residuals are consistent with range possible
    *  for range of analytical jacobian values
    */
-  for (color = 0; color < coloring->num_colors; color++) /* loop over each color */
+  int retval = 0;
+  for (color = 0; (color < coloring->num_colors && !retval); color++) /* loop over each color */
   {
 #ifdef DEBUG_FD_COLORING
     double t1, t2, t3, t4;
@@ -561,9 +562,10 @@ void numerical_jacobian_compute_stress(struct GomaLinearSolverData *ams,
       /*needed for saturation hyst. func. */
       PRS_mat_ielem = ielem - exo->eb_ptr[ebn];
 
-      matrix_fill_stress(ams, x_1, resid_vector_1, x_old, x_older, xdot, xdot_old, x_update,
+      int err = matrix_fill_stress(ams, x_1, resid_vector_1, x_old, x_older, xdot, xdot_old, x_update,
                          &delta_t, &theta, first_elem_side_BC_array, &time_value, exo, dpi, &ielem,
                          &num_total_nodes, h_elem_avg, U_norm, NULL, zeroCA);
+      if (err) retval = -1;
       zeroCA = -1;
     }
 
@@ -576,7 +578,7 @@ void numerical_jacobian_compute_stress(struct GomaLinearSolverData *ams,
      */
     global_qp_storage_destroy();
 
-    for (j = 0; j < numProcUnknowns; j++) {
+    for (j = 0; (j < numProcUnknowns) && !retval; j++) {
       if (color == coloring->column_color[j]) {
         for (idx = coloring->colptr[j]; idx < coloring->colptr[j + 1]; idx++) {
           i = coloring->rowptr[idx];
@@ -695,6 +697,8 @@ void numerical_jacobian_compute_stress(struct GomaLinearSolverData *ams,
   safe_free((void *)nelem);
   safe_free((void *)resid_vector_1);
   safe_free((void *)x_1);
+
+  return retval;
 }
 
 /*
