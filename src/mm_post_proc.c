@@ -10895,6 +10895,7 @@ int load_elem_tkn(struct Results_Description *rd, const Exo_DB *exo, int tev, in
      for element variable candidates (currently must be interpolated with I_P0 */
   for (i = 0; i < exo->num_elem_blocks; i++) {
     int mat_id = Matilda[i];
+    if (exo->eb_num_elems[i] <= 0) continue;
     for ( j = V_FIRST; j < V_LAST; j++) {
       if ( pd_glob[mat_id]->v[pg->imtrx][j] != V_NOTHING ) {
         if (pd_glob[mat_id]->i[pg->imtrx][j] == I_P0) {
@@ -10928,21 +10929,6 @@ int load_elem_tkn(struct Results_Description *rd, const Exo_DB *exo, int tev, in
               set_ev_tkud(rd, index, j, appended_name, Var_Units[j].name2, Exo_Var_Names[j].name1,
                           FALSE);
               index++;
-              ev_var_mask[j - V_FIRST] = 1; /* Only count this variable once */
-            }
-          }
-          if (pd_glob[i]->i[pg->imtrx][j] == I_P1) {
-            int dof = getdofs(type2shape(exo->eb_elem_itype[i]), I_P1);
-            if (ev_var_mask[j - V_FIRST] == 0) {
-              /* We just found a candidate for an element variable */
-              /* Append a suffix onto the var name to differentiate from its
-               nodal counterpart */
-              for (i = 1; i <= dof; i++) {
-                sprintf(appended_name, "%s_E%d", Exo_Var_Names[j].name2, i);
-                set_ev_tkud(rd, index, j, appended_name, Var_Units[j].name2, Exo_Var_Names[j].name1,
-                            FALSE);
-                index++;
-              }
               ev_var_mask[j - V_FIRST] = 1; /* Only count this variable once */
             }
           }
