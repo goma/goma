@@ -2560,7 +2560,7 @@ assemble_momentum(dbl time,       /* current time */
   else if( mp->Mwt_funcModel == SUPG)
     { supg = mp->Mwt_func; }
 
-  if (supg!=0.)
+  if (DOUBLE_NONZERO(supg))
     {
       h_elem = 0.;
       for ( p=0; p<dim; p++)
@@ -2568,7 +2568,7 @@ assemble_momentum(dbl time,       /* current time */
           h_elem += vcent[p] * vcent[p] * hsquared[p];
         }
       h_elem = sqrt(h_elem)/2.;
-      if(h_elem == 0.)
+      if(DOUBLE_ZERO(h_elem))
         {
           h_elem_inv=0.;
         }
@@ -2853,7 +2853,7 @@ assemble_momentum(dbl time,       /* current time */
 	      /* only use Petrov Galerkin on advective term - if required */
 	      wt_func = phi_i;
 	      /* add Petrov-Galerkin terms as necessary */
-	      if (supg!=0.)
+	      if (DOUBLE_NONZERO(supg))
 		{
 		  for (p=0; p<dim; p++)
 		    {
@@ -2893,7 +2893,7 @@ assemble_momentum(dbl time,       /* current time */
 	      porous = 0.;
 	      if ( porous_brinkman_on )
 		{
-		  if(vis != 0.)
+		  if(DOUBLE_NONZERO(vis))
 		    {
 		      porous = v[a]*(rho*sc*speed/sqrt(per)+vis/per);
 		      porous    *= -phi_i*d_area;
@@ -2905,7 +2905,7 @@ assemble_momentum(dbl time,       /* current time */
 		      porous *= phi_i * wt * fv->sdet * h3;
 		      porous *= porous_brinkman_etm;
 		    }
-		  else if (vis == 0. && mp->viscosity == 0.)
+		  else if (DOUBLE_ZERO(vis) && DOUBLE_ZERO(mp->viscosity))
 		    {
 		      EH(-1, "cannot have both flowing liquid viscosity and mp->viscosity equal to zero");
 		    }
@@ -3057,7 +3057,7 @@ assemble_momentum(dbl time,       /* current time */
 
 	      wt_func = phi_i;
 	      /* add Petrov-Galerkin terms as necessary */
-	      if(supg!=0.)
+	      if(DOUBLE_NONZERO(supg))
 		{porous += (v[a]) * fv->dsurfdet_dx[b][j] * h3;
 			      porous += (v[a]) * fv->sdet  * dh3dmesh_bj;
 
@@ -3126,7 +3126,7 @@ assemble_momentum(dbl time,       /* current time */
 		      porous = 0.;
 		      if (porous_brinkman_on)
 			{
-			  if (vis != 0.)
+			  if (DOUBLE_NONZERO(vis))
 			    {
 			      porous = v[a]*(d_rho->T[j] *sc*speed/sqrt(per));
 			      porous += v[a]*(d_flow_mu->T[j]/per);
@@ -3287,11 +3287,11 @@ assemble_momentum(dbl time,       /* current time */
 			  /* if porous flow is considered. KSC on 5/10/95 */
 			  if (porous_brinkman_on)
 			    {
-			      if (vis != 0.)
+			      if (DOUBLE_NONZERO(vis))
 				{
 				  mass /= por;
 				}
-			      else if (mp->viscosity == 0.0 )
+			      else if (DOUBLE_ZERO(mp->viscosity))
 				{
 				  EH(-1, "Error in Porous Brinkman specs.  See PRS ");
 				}
@@ -3318,7 +3318,7 @@ assemble_momentum(dbl time,       /* current time */
 			  if ( porous_brinkman_on)
 			    {
 
-			      if (vis != 0.)
+			      if (DOUBLE_NONZERO(vis))
 				{
 				  por2	     = por * por;
 				  advection /= por2;
@@ -3331,7 +3331,7 @@ assemble_momentum(dbl time,       /* current time */
 		      porous = 0.;
 		      if ( porous_brinkman_on )
 			{
-			  if (vis != 0)
+			  if (DOUBLE_NONZERO(vis))
 			    {
 			      porous = v[a]*(d_rho->F[j] *sc*speed/sqrt(per));
 			      porous += v[a]*(d_flow_mu->F[j]/per);
@@ -3434,11 +3434,11 @@ assemble_momentum(dbl time,       /* current time */
 
 			      if (porous_brinkman_on)
 				{
-				  if(vis != 0.)
+				  if(DOUBLE_NONZERO(vis))
 				    {
 				      mass /= por;
 				    }
-				  else if (mp->viscosity == 0)
+				  else if (DOUBLE_ZERO(mp->viscosity))
 				    {
 				      EH(-1, "incorrect viscosity settings on porous_brinkman");
 				    }
@@ -3454,14 +3454,14 @@ assemble_momentum(dbl time,       /* current time */
 			  porous = 0.0;
 			  if ( porous_brinkman_on )
 			    {
-			      if(vis != 0)
+			      if(DOUBLE_NONZERO(vis))
 				{
 				  porous =   ((rho*sc/sqrt(per))*(2.*v[b])*v[a] +
 					      (rho*sc*speed/sqrt(per) + vis/per)*(double)delta(a,b));
 				  porous *= -phi_i*phi_j*d_area;
 				  porous *= porous_brinkman_etm;
 				}
-			      else if (mp->viscosity !=0)
+			      else if (DOUBLE_NONZERO(mp->viscosity))
 				{
 				  porous = delta(a,b);
 				  porous *= phi_i*phi_j* wt * fv->sdet * h3;
@@ -3495,7 +3495,7 @@ assemble_momentum(dbl time,       /* current time */
 
 			      advection_a *= rho;
 			      advection_b = 0.;
-			      if(supg!=0.)
+			      if(DOUBLE_NONZERO(supg))
                             	{
 				  d_wt_func = supg * h_elem * phi_j*bfm->grad_phi[i][b];
 
@@ -3521,7 +3521,7 @@ assemble_momentum(dbl time,       /* current time */
 			      /* if porous flow is considered. KSC on 5/10/95 */
 			      if ( porous_brinkman_on)
 				{
-				  if(vis !=0)
+				  if(DOUBLE_NONZERO(vis))
 				    {
 				      por2 = por*por;
 				      advection /= por2;
@@ -3901,7 +3901,7 @@ assemble_momentum(dbl time,       /* current time */
 			  porous    = 0.;
 			  if ( pd->e[eqn] & T_POROUS_BRINK )
 			    {
-                              if (vis != 0.)
+                              if (DOUBLE_NONZERO(vis))
                                 {
 			          porous = v[a]*(   d_rho->C[w][j] *sc*speed/sqrt(per)
 					          - 0.5*rho*sc*speed/(per*sqrt(per))*d_per_dc[w][j]
@@ -4147,7 +4147,7 @@ assemble_momentum(dbl time,       /* current time */
 			    porous = 0.;
 			    if (porous_brinkman_on )
 			      {
-				if(vis != 0.)
+				if(DOUBLE_NONZERO(vis))
 				  {
 				    porous += v[a]*(rho*sc*speed/sqrt(per)+vis/per);
 				    porous *= -phi_i * wt * (  d_det_J_dmesh_bj * h3  + det_J * dh3dmesh_bj );
@@ -4163,7 +4163,7 @@ assemble_momentum(dbl time,       /* current time */
 				  porous *= phi_i * wt;
 				}
 
-				else if (vis == 0. && mp->viscosity == 0.)
+				else if (DOUBLE_ZERO(vis) && DOUBLE_ZERO(mp->viscosity))
 				  {
 				    EH(-1, "cannot have both flowing liquid viscosity and mp->viscosity equal to zero");
 				  }
@@ -24914,7 +24914,7 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
   DPRINTF(stderr,"kinematic extv at (%g,%g) vnorm=%g, fdot=%g\n",fv->x[0],fv->x[1],vnorm,fv_dot->F);
 #endif
     
-  if ( tt != 0. ) EH(-1,"LS_EIK_KINEMATIC currently requires backward Euler");
+  if (DOUBLE_NONZERO(tt)) EH(-1,"LS_EIK_KINEMATIC currently requires backward Euler");
   
 #ifdef COUPLED_FILL
   /* finite difference calculation of path dependencies for
@@ -27275,7 +27275,7 @@ assemble_energy_path_dependence(
       supg = mp->Ewt_func;
     }
 
-  if (supg != 0.0)
+  if (DOUBLE_NONZERO(supg))
     {
       h_elem = 0.;
       vcent = pg_data->v_avg;
@@ -27359,7 +27359,7 @@ assemble_energy_path_dependence(
 	  /* only use Petrov Galerkin on advective term - if required */
 	  wt_func = bf[eqn]->phi[i];
 	  /* add Petrov-Galerkin terms as necessary */
-	  if(supg!=0.)
+	  if(DOUBLE_NONZERO(supg))
 	    {
 	      for(p=0; p<dim; p++)
 		{
@@ -28705,13 +28705,9 @@ fluid_stress( double Pi[DIM][DIM],
     }
 
   if ( pd->v[POLYMER_STRESS11] && (vn->evssModel == EVSS_F || vn->evssModel == EVSS_GRADV) )
-    {
-      evss_f = 1.;
-    }
+    { evss_f = 1.; }
   else
-    {
-      evss_f = 0.;
-    }
+    { evss_f = 0.; }
 
   if ( evss_f )
     {
@@ -28868,7 +28864,7 @@ fluid_stress( double Pi[DIM][DIM],
 	  else if(vn->shiftModel == MODIFIED_WLF)
 	    {
 	      wlf_denom = vn->shift[1] + temp - mp->reference[TEMPERATURE];
-	      if(wlf_denom != 0.)
+	      if(DOUBLE_NONZERO(wlf_denom))
 		{
 		  at=exp(vn->shift[0]*(mp->reference[TEMPERATURE]-temp)/wlf_denom);
 		  for( j=0 ; j<ei->dof[TEMPERATURE] ; j++)

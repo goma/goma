@@ -98,6 +98,7 @@ extern int Write_Initial_Solution;
 				 * exodus output files */
 extern int Num_Var_Init ;	/* Number of variables to overwrite with
 				 * global initialization */
+extern int Num_Var_Bound ;	/* Number of variables to apply bounds */
 extern int Num_Var_LS_Init;     /* number of variables to overwirte with
 				 * level set index initialization */
 extern int Num_Var_External;	/* Number of external variables */

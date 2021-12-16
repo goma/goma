@@ -268,7 +268,6 @@ beer_belly(void)
    * from their initial nodal point coordinates...
    */
 
-
   for (i = 0; i < dim; i++)
     {
       for (j = 0; j < pdim; j++)
@@ -339,7 +338,7 @@ beer_belly(void)
    * computed above, so use this block with caution.
    */
   if(elem_shape == SHELL
-     || elem_shape == TRISHELL
+     || elem_shape == TRISHELL || elem_shape == LINE_SEGMENT 
      || (mp->ehl_integration_kind == SIK_S))
     {
       dim++;

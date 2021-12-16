@@ -4650,7 +4650,7 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
 		quantity == I_SURF_TEMP )
 	  {
  	   if(Num_Proc > 1)
- 		EH(-1,"SURFACE_SPECIES not recommended in parallel\n");
+ 		WH(-1,"SURFACE_SPECIES not recommended in parallel\n");
 	   if( quantity == I_SURF_SPECIES)
 	     {
 	   	for(i=0;i<ei->num_local_nodes;i++)	
@@ -4673,6 +4673,7 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
 	   else
 	     EH(-1,"That SURF quantity not available.");
 
+	  ierr=0;
 	  if(pd->Num_Dim == 3)
 		{
 		if( ei->ielem_type == TRILINEAR_HEX)
@@ -4680,7 +4681,7 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
  		    ierr = interface_crossing_3DL( ls_F, xf3D, side_id, ecrd);
 		   }
 		else
-	     	    EH(-1,"Only SURF 3D element is TRILINEAR_HEX.");
+	     	    WH(-1,"Only SURF 3D element is TRILINEAR_HEX.");
 		}
 	  else
 		{

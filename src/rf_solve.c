@@ -940,6 +940,11 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 
   dcopy1( nAC, x_AC, &(gv[5]) );
 
+  if( Output_Variable_Stats)	{
+     err = variable_stats ( x, timeValueRead);
+     EH(err, "Problem with variable_stats!");
+     if(ProcID == 0) fflush(stdout); 
+     }
 
   /***************************************************************************
    *            STEADY STATE SOLUTION PROCEDURE
@@ -1181,76 +1186,12 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
       /*
        * Compute global volumetric quantities
        */
-#if 1
-	/* This section is a kludge to determine minimum and maximum
- 		variable values for outputing surfaces of constant concentration
- 	*/
- 	if( nn_volume )
- 	  {
- 	  int search_minmax = FALSE;
-  	  for (i = 0; i < nn_volume; i++) {
-  		if(pp_volume[i]->volume_type == I_SURF_SPECIES &&
-				pp_volume[i]->species_no == -1 ) 
- 		search_minmax=TRUE;
- 		}
- 	  if( search_minmax && Num_Proc > 1)
- 		  WH(-1,"Species surfaces not recommended in parallel\n");
- 	  if( search_minmax && Num_Proc == 1)
-  	  {
-  		  int inode,offset,idof;
-  		  VARIABLE_DESCRIPTION_STRUCT *vd;
-  		  double specmax[MAX_CONC],specmin[MAX_CONC],specavg, fraction;
- 		  int eq_off = 0;
- 
- 		  if(pd->e[R_ENERGY] )  eq_off++;
- 		  if(pd->e[R_MOMENTUM1] )  eq_off += pd->Num_Dim;
-  		  inode = 0;
-  		  for(i=0 ; i < (num_internal_dofs+num_boundary_dofs); i++) {
-  			  vd = Index_Solution_Inv(i, &inode, NULL, &offset, &idof);
-  			  if( vd->Variable_Type == MASS_FRACTION )      {
-  				if( i >= pd->Num_Species_Eqn + eq_off ) {
-  		                  if (x[i] > specmax[offset-eq_off]) 
- 						specmax[offset-eq_off] = x[i];
-  				  if (x[i] < specmin[offset-eq_off]) 
- 						specmin[offset-eq_off] = x[i];
-  		                  } else  {
-  	                          specmin[offset-eq_off] = x[i];
-  	                          specmax[offset-eq_off] = x[i];
-  		                  }
-  		          }
-  		  }
-  		  DPRINTF(stderr,"Species concentration minmax: %d \n",ProcID);
-  	  	  for (i = 0; i < pd->Num_Species_Eqn; i++) {
-  			DPRINTF(stderr,"%d %g %g \n",i,specmin[i],specmax[i]);
-  			}
-  	  for (i = 0; i < nn_volume; i++) {
-  		if(pp_volume[i]->volume_type == I_SURF_SPECIES) 
-  			{
-          DPRINTF(stderr,"params %d %d %d\n",i,pp_volume[i]->num_params,pd->Num_Species);
-            		if(pp_volume[i]->num_params < pd->Num_Species+1)
-                 		{
-         DPRINTF(stderr,"params %d %d\n",pp_volume[i]->num_params,pd->Num_Species);
-         WH(-1,"SURF_SPECIES parameters should number Num_Species+1");
-                		}
- 			if( pp_volume[i]->species_no == -1 )
- 				{
-				fraction = pp_volume[i]->params[pd->Num_Species];
-				pp_volume[i]->params[pd->Num_Species] = 
-					pp_volume[i]->params[pd->Num_Species-1];
-				for(idof=0 ; idof<pd->Num_Species_Eqn; idof++)
-					{
-					specavg = specmin[idof] + 
-					  fraction*(specmax[idof]-specmin[idof]);
-					pp_volume[i]->params[pd->Num_Species] +=
-					  pp_volume[i]->params[idof]*specavg;
-					}
-DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]);
-				}
- 			}
- 		}	/* nn_volume loop	*/
- 	  }	/*search  */
-	}	/*  nn_volume	*/
-#endif
+  if( Output_Variable_Stats)	{
+     err = variable_stats ( x, time1);
+     EH(err, "Problem with variable_stats!");
+     if(ProcID == 0) fflush(stdout); 
+     }
+
 	for (i = 0; i < nn_volume; i++ ) {
 	  evaluate_volume_integral(exo, dpi,
 				   pp_volume[i]->volume_type,
@@ -1403,6 +1344,11 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
      */
     exchange_dof(cx, dpi, x);
 
+  if( Output_Variable_Stats)	{
+     err = variable_stats ( x, time);
+     EH(err, "Problem with variable_stats!");
+     if(ProcID == 0) fflush(stdout); 
+     }
     /*
      * Now copy the initial solution, x[], into the history solutions
      * x_old[], etc. Note, xdot[] = xdot_old[] = 0 at this point,
@@ -2925,76 +2871,13 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 				    pp_fluxes_sens[i]->profile_flag,
 				    x,xdot,x_sens_p,delta_t_old,time,1);
 	}
-#if 1
-	/* This section is a kludge to determine minimum and maximum
-		variable values for outputing surfaces of constant concentration
-	*/
-	if( nn_volume )
-	  {
-	  int search_minmax = FALSE;
- 	  for (i = 0; i < nn_volume; i++) {
- 		if(pp_volume[i]->volume_type == I_SURF_SPECIES &&
-				pp_volume[i]->species_no == -1 ) 
-		search_minmax=TRUE;
-		}
-	  if( search_minmax && Num_Proc > 1)
-		  WH(-1,"Species surfaces not recommended in parallel\n");
-	  if( search_minmax && Num_Proc == 1)
- 	  {
- 		  int inode,offset,idof;
- 		  VARIABLE_DESCRIPTION_STRUCT *vd;
- 		  double specmax[MAX_CONC],specmin[MAX_CONC],specavg, fraction;
-		  int eq_off = 0;
 
-		  if(pd->e[R_ENERGY] )  eq_off++;
-		  if(pd->e[R_MOMENTUM1] )  eq_off += pd->Num_Dim;
- 		  inode = 0;
- 		  for(i=0 ; i < (num_internal_dofs+num_boundary_dofs); i++) {
- 			  vd = Index_Solution_Inv(i, &inode, NULL, &offset, &idof);
- 			  if( vd->Variable_Type == MASS_FRACTION )      {
- 				if( i >= pd->Num_Species_Eqn + eq_off ) {
- 		                  if (x[i] > specmax[offset-eq_off]) 
-						specmax[offset-eq_off] = x[i];
- 				  if (x[i] < specmin[offset-eq_off]) 
-						specmin[offset-eq_off] = x[i];
- 		                  } else  {
- 	                          specmin[offset-eq_off] = x[i];
- 	                          specmax[offset-eq_off] = x[i];
- 		                  }
- 		          }
- 		  }
- 		  DPRINTF(stderr,"Species concentration minmax: %d \n",ProcID);
- 	  	  for (i = 0; i < pd->Num_Species_Eqn; i++) {
- 			DPRINTF(stderr,"%d %g %g \n",i,specmin[i],specmax[i]);
- 			}
- 	  for (i = 0; i < nn_volume; i++) {
- 		if(pp_volume[i]->volume_type == I_SURF_SPECIES) 
- 			{
-         DPRINTF(stderr,"params %d %d %d\n",i,pp_volume[i]->num_params,pd->Num_Species);
-           		if(pp_volume[i]->num_params < pd->Num_Species+1)
-                		{
-         DPRINTF(stderr,"params %d %d\n",pp_volume[i]->num_params,pd->Num_Species);
-         WH(-1,"SURF_SPECIES parameters should number Num_Species+1");
-                		}
- 			if( pp_volume[i]->species_no == -1 )
- 				{
-				fraction = pp_volume[i]->params[pd->Num_Species];
-				pp_volume[i]->params[pd->Num_Species] = 
-					pp_volume[i]->params[pd->Num_Species-1];
-				for(idof=0 ; idof<pd->Num_Species_Eqn; idof++)
-					{
-					specavg = specmin[idof] + 
-					  fraction*(specmax[idof]-specmin[idof]);
-					pp_volume[i]->params[pd->Num_Species] +=
-					  pp_volume[i]->params[idof]*specavg;
-					}
-				DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]);
-				}
- 			}
- 		}	/* nn_volume loop	*/
- 	  }	/*search  */
-	}	/*  nn_volume	*/
-#endif
+  if( Output_Variable_Stats)	{
+     err = variable_stats ( x, time);
+     EH(err, "Problem with variable_stats!");
+     if(ProcID == 0) fflush(stdout); 
+     }
+  
 #ifdef REACTION_PRODUCT_EFV
         for (i = 0; i < exo->num_nodes; i++) {
             if (efv->ev  && nt > 1) {
@@ -4062,5 +3945,104 @@ npost[i] = Export_XP_ID[i]; }
 #endif
 
 /*****************************************************************************/
-/*  END of file rf_solve.c  */
+
+int
+variable_stats ( double *x,
+		 const double time)
+{
+  int i, var, idv, mn;
+  double max[MAX_VARIABLE_TYPES], min[MAX_VARIABLE_TYPES];
+  double mean[MAX_VARIABLE_TYPES],sqr[MAX_VARIABLE_TYPES], std[MAX_VARIABLE_TYPES]; 
+  int ncp[MAX_VARIABLE_TYPES];	/* number of ea var contributing to norm */
+  int var_somewhere;	/* boolean */
+#ifdef PARALLEL
+  double max_buf[MAX_VARIABLE_TYPES]; /* accumulated over all procs */
+  double min_buf[MAX_VARIABLE_TYPES]; /* accumulated over all procs */
+  double mean_buf[MAX_VARIABLE_TYPES]; /* accumulated over all procs */
+  double sqr_buf[MAX_VARIABLE_TYPES]; /* accumulated over all procs */
+  int ncp_buf[MAX_VARIABLE_TYPES];	
+#endif
+
+  memset(ncp, 0, sizeof(int)*MAX_VARIABLE_TYPES);
+  init_vec_value(sqr, 0.0, MAX_VARIABLE_TYPES);
+  init_vec_value(mean, 0.0, MAX_VARIABLE_TYPES);
+  init_vec_value(min, DBL_MAX, MAX_VARIABLE_TYPES);
+  init_vec_value(max, -DBL_MAX, MAX_VARIABLE_TYPES);
+
+  if (TimeIntegration == STEADY) {
+  DPRINTF(stdout,"\nVariable Stats:  parm=%g \n",time);
+    }	else	{
+  DPRINTF(stdout,"\nVariable Stats:  time=%g \n",time);
+    }
+  DPRINTF(stdout,"\t   min        max        mean       stdev     #values\n");
+  DPRINTF(stdout,"=============================================================\n");
+  for(var=0 ; var<MAX_VARIABLE_TYPES ; var++)
+    {
+     if (upd->vp[var] > -1)
+	{
+	for(i=0 ; i < DPI_ptr->num_owned_nodes; i++) 
+	  {
+	  var_somewhere = FALSE;
+	  for(mn = 0; mn < upd->Num_Mat; mn++)
+	    {
+	    idv = Index_Solution(i, var, 0, 0, mn);
+	    if ( idv != -1 )
+		{ var_somewhere = TRUE; break;  }
+	    }
+	    if (var_somewhere)
+		{
+		if (x[idv] > max[var]) max[var] = x[idv];
+		if (x[idv] < min[var]) min[var] = x[idv];
+		mean[var] += x[idv];
+		sqr[var] += SQUARE(x[idv]);
+		ncp[var]++;
+		}
+	  }
+	}
+     }
+/*
+ * Find global quantities
+ */
+#ifdef PARALLEL
+  MPI_Allreduce( (void*)max, (void*)max_buf, MAX_VARIABLE_TYPES,
+                MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+  MPI_Allreduce( (void*)min, (void*)min_buf, MAX_VARIABLE_TYPES,
+                MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+  MPI_Allreduce( (void*)mean, (void *)mean_buf, MAX_VARIABLE_TYPES,
+                MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce( (void*)sqr, (void*)sqr_buf, MAX_VARIABLE_TYPES,
+                 MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce( (void*)ncp, (void*)ncp_buf, MAX_VARIABLE_TYPES,
+                 MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+
+  for (i = 0; i < MAX_VARIABLE_TYPES; i++) {
+    max[i] = max_buf[i];
+    min[i] = min_buf[i];
+    mean[i] = mean_buf[i];
+    sqr[i] = sqr_buf[i];
+    ncp[i] = ncp_buf[i];
+  }
+#endif
+  if (ProcID == 0) 
+    {
+     for(var=0 ; var<MAX_VARIABLE_TYPES ; var++)
+       {
+        if (upd->vp[var] > -1)
+	  {
+	   mean[var] /= ncp[var];
+	   std[var] = sqrt((sqr[var]-ncp[var]*SQUARE(mean[var]))/(ncp[var]-1.)); 
+	   DPRINTF(stdout,"%s \t%8g    %8g    %8g    %8g     %8d\n",
+		Var_Name[var].name2,min[var],max[var],mean[var],std[var],ncp[var]);
+
+	  }
+       }
+    }
+  DPRINTF(stdout,"============================================================= \n");
+  
+  return(1);
+}
+/*****************************************************************************/
+
+/*****************************************************************************/
+/*  end of file rf_solve.c  */
 /*****************************************************************************/
