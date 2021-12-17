@@ -332,7 +332,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
     }
 
 
-  if(supg!=0.)
+  if(DOUBLE_NONZERO(supg))
     {
       h_elem = 0.;
       for ( p=0; p<dim; p++)
@@ -340,7 +340,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 	  h_elem += vcent[p]*vcent[p]*h[p];
 	}
       h_elem = sqrt(h_elem)/2.;
-      if(h_elem == 0.) 
+      if(DOUBLE_ZERO(h_elem)) 
 	{
 	  h_elem_inv=1.;
 	}
@@ -448,7 +448,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 			{
 			  wt_func = bf[eqn]->phi[i];
 			  /* add Petrov-Galerkin terms as necessary */
-			  if(supg!=0.)
+			  if(DOUBLE_NONZERO(supg))
 			    {
 			      for(w=0; w<dim; w++)
 				{
@@ -555,7 +555,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 			  
 			  wt_func = bf[eqn]->phi[i];
 			  /* add Petrov-Galerkin terms as necessary */
-			  if(supg!=0.)
+			  if(DOUBLE_NONZERO(supg))
 			    {
 			      for(w=0; w<dim; w++)
 				{
@@ -657,7 +657,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					    {
 					      mass = d_mup_dv_pj *(g_dot[a][b] + gt_dot[a][b]) *wt_func;
 					      
-					      if(supg!=0.)
+					      if(DOUBLE_NONZERO(supg))
 						{
 						  mass_a = supg * h_elem*phi_j*bf[eqn]->grad_phi[i][p];
 						  
@@ -696,7 +696,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					      
 					      advection_c = 0.;
 					      /* Petrov-Galerkin term */
-					      if(supg !=0.)
+					      if(DOUBLE_NONZERO(supg) )
 						{
 						  advection_c =  supg * h_elem*phi_j*bf[eqn]->grad_phi[i][p];
 						  for( w =0; w<dim; w++ )
@@ -741,7 +741,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					    }
 					  
 					  source_b = 0.;
-					  if(supg != 0.)
+					  if(DOUBLE_NONZERO(supg))
 					    {
 					      source_b = supg * h_elem* phi_j*bf[eqn]->grad_phi[i][p];
 					      
@@ -924,7 +924,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				      d_det_J_dmesh_pj = bf[eqn]->d_det_J_dm[p][j];
 				      dh3dmesh_pj = fv->dh3dq[p] * bf[var]->phi[j];
 				      d_mup_dmesh_pj  = d_mup->X [p][j];
-				      if(supg!=0.)
+				      if(DOUBLE_NONZERO(supg))
 					{
 					  h_elem_deriv = 0.;
 					  for( q=0; q<dim; q++ )
@@ -948,7 +948,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					      mass_b *= wt_func * h3 * det_J;
 					      
 					      mass_c =0.;
-					      if(supg != 0.)
+					      if(DOUBLE_NONZERO(supg))
 						{
 						  for( w=0; w<dim; w++ )
 						    {
@@ -1035,7 +1035,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 						}
 					      
 					      advection_d = 0.;	
-					      if(supg!=0.)
+					      if(DOUBLE_NONZERO(supg))
 						{
 						  for( w=0; w<dim; w++ )
 						    {
@@ -1098,7 +1098,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					  source_b *= wt_func *det_J * h3;
 					  
 					  source_c = 0.;
-					  if(supg !=0.)
+					  if(DOUBLE_NONZERO(supg))
 					    {
 					      
 					      for( w=0;w<dim;w++)
@@ -1592,7 +1592,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
     }
 
 
-  if(supg!=0.)
+  if(DOUBLE_NONZERO(supg))
     {
       h_elem = 0.;
       for ( p=0; p<dim; p++)
@@ -1600,7 +1600,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 	  h_elem += vcent[p]*vcent[p]*h[p];
 	}
       h_elem = sqrt(h_elem)/2.;
-      if(h_elem == 0.) 
+      if(DOUBLE_ZERO(h_elem)) 
 	{
 	  h_elem_inv=1.;
 	}
@@ -1626,7 +1626,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
       else if(vn->shiftModel == MODIFIED_WLF)
 	{
 	  wlf_denom = vn->shift[1] + fv->T - mp->reference[TEMPERATURE];
-	  if(wlf_denom != 0.)
+	  if(DOUBLE_NONZERO(wlf_denom))
 	    {
 	      at=exp(vn->shift[0]*(mp->reference[TEMPERATURE]-fv->T)/wlf_denom);
 	      for( j=0 ; j<ei->dof[TEMPERATURE] ; j++)
@@ -1722,13 +1722,13 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
       
       if(DOUBLE_NONZERO(alpha)) (void) tensor_dot(s, s, s_dot_s, VIM);
 
-      if( ucwt != 0. )
+      if(DOUBLE_NONZERO(ucwt))
 	{
 	  (void) tensor_dot(s, g, s_dot_g, VIM);
 	  (void) tensor_dot(gt, s, gt_dot_s, VIM);
 	}
 
-      if( lcwt != 0.) 
+      if(DOUBLE_NONZERO(lcwt)) 
 	{
 	  (void) tensor_dot(s, gt, s_dot_gt, VIM);
 	  (void) tensor_dot(g, s, g_dot_s, VIM);
@@ -1760,7 +1760,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 			{
 			  wt_func = bf[eqn]->phi[i];
 			  /* add Petrov-Galerkin terms as necessary */
-			  if(supg!=0.)
+			  if(DOUBLE_NONZERO(supg))
 			    {
 			      for(w=0; w<dim; w++)
 				{
@@ -1788,8 +1788,8 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				{
 				  
 				  advection +=  v_dot_del_s[a][b]  -  x_dot_del_s[a][b];
-				  if( ucwt != 0.) advection -= ucwt*(gt_dot_s[a][b] + s_dot_g[a][b]);
-				  if( lcwt != 0.) advection += lcwt*(s_dot_gt[a][b] + g_dot_s[a][b]);
+				  if(DOUBLE_NONZERO(ucwt)) advection -= ucwt*(gt_dot_s[a][b] + s_dot_g[a][b]);
+				  if(DOUBLE_NONZERO(lcwt)) advection += lcwt*(s_dot_gt[a][b] + g_dot_s[a][b]);
 
 				  advection *= wt_func * at * lambda *det_J * wt * h3;
 				  advection *= pd->etm[eqn][(LOG2_ADVECTION)];
@@ -1818,7 +1818,6 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 			      if(DOUBLE_NONZERO(alpha))
 				{
 				  source1 = ( s_dot_s[a][b]/mup);
-				  
 				  source1 *= alpha * lambda * saramitoCoeff;
 				  source  += source1;
 				}
@@ -1859,8 +1858,8 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 		      peqn = upd->ep[eqn];
 
 		      R_advection =  v_dot_del_s[a][b]  -  x_dot_del_s[a][b];
-		      if( ucwt != 0.) R_advection -= ucwt*(gt_dot_s[a][b] + s_dot_g[a][b]);
-		      if( lcwt != 0.) R_advection += lcwt*(s_dot_gt[a][b] + g_dot_s[a][b]);
+		      if(DOUBLE_NONZERO(ucwt)) R_advection -= ucwt*(gt_dot_s[a][b] + s_dot_g[a][b]);
+		      if(DOUBLE_NONZERO(lcwt)) R_advection += lcwt*(s_dot_gt[a][b] + g_dot_s[a][b]);
 
 		      R_source =   Z*s[a][b];
 			      
@@ -1873,7 +1872,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 			  
 			  wt_func = bf[eqn]->phi[i];
 			  /* add Petrov-Galerkin terms as necessary */
-			  if(supg!=0.)
+			  if(DOUBLE_NONZERO(supg))
 			    {
 			      for(w=0; w<dim; w++)
 				{
@@ -1919,8 +1918,8 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					{
 				  
 					  advection +=  v_dot_del_s[a][b]  -  x_dot_del_s[a][b];
-					  if( ucwt != 0.) advection -= ucwt*(gt_dot_s[a][b] + s_dot_g[a][b]);
-					  if( lcwt != 0.) advection += lcwt*(s_dot_gt[a][b] + g_dot_s[a][b]);
+					  if(DOUBLE_NONZERO(ucwt)) advection -= ucwt*(gt_dot_s[a][b] + s_dot_g[a][b]);
+					  if(DOUBLE_NONZERO(lcwt)) advection += lcwt*(s_dot_gt[a][b] + g_dot_s[a][b]);
 
 					  advection *= wt_func * d_at_dT[j] * lambda *det_J * wt * h3;
 					  advection *= pd->etm[eqn][(LOG2_ADVECTION)];
@@ -1970,7 +1969,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					{
 					  if ( pd->e[eqn] & T_MASS )
 					    {
-					      if(supg!=0.)
+					      if(DOUBLE_NONZERO(supg))
 						{
 						  mass = supg * h_elem*phi_j*bf[eqn]->grad_phi[i][p];
 						  
@@ -1994,14 +1993,13 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					{
 					  if(DOUBLE_NONZERO(lambda))
 					    {
-					      advection_a = phi_j * 
-						(grad_s[p][a][b]);
+					      advection_a = phi_j * (grad_s[p][a][b]);
 					      
 					      advection_a *=  wt_func;
 					      
 					      advection_b = 0.;
 					      /* Petrov-Galerkin term */
-					      if(supg !=0.)
+					      if(DOUBLE_NONZERO(supg))
 						{
 						 
 						  advection_b =  supg * h_elem*phi_j*bf[eqn]->grad_phi[i][p];
@@ -2019,7 +2017,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 						{
 						  if(pd->CoordinateSystem != CYLINDRICAL)
 						    {
-						      if( ucwt != 0)
+						      if(DOUBLE_NONZERO(ucwt))
 							{
 							  for( k=0; k<VIM; k++)
 							    {
@@ -2027,7 +2025,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 										   bf[VELOCITY1+b]->grad_phi_e[j][p][k][b]*s[a][k]);
 							    }
 							}
-						      if( lcwt != 0.)
+						      if(DOUBLE_NONZERO(lcwt))
 							{
 							  for( k=0; k<VIM; k++)
 							    {
@@ -2038,7 +2036,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 						    }
 						  else
 						    {
-						      if( ucwt != 0)
+						      if(DOUBLE_NONZERO(ucwt))
 							{
 							  for( k=0; k<VIM; k++)
 							    {
@@ -2046,7 +2044,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 										   bf[VELOCITY1]->grad_phi_e[j][p][k][b]*s[a][k]);
 							    }
 							}
-						      if( lcwt != 0.)
+						      if(DOUBLE_NONZERO(lcwt))
 							{
 							  for( k=0; k<VIM; k++)
 							    {
@@ -2101,7 +2099,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					    }
 					  
 					  source_b = 0.;
-					  if(supg != 0.)
+					  if(DOUBLE_NONZERO(supg))
 					    {
 					      source_b = supg * h_elem* phi_j*bf[eqn]->grad_phi[i][p];
 					      
@@ -2214,7 +2212,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				      d_det_J_dmesh_pj = bf[eqn]->d_det_J_dm[p][j];
 				      dh3dmesh_pj = fv->dh3dq[p] * bf[var]->phi[j];
 				      d_mup_dmesh_pj  = d_mup->X [p][j];
-				      if(supg!=0.)
+				      if(DOUBLE_NONZERO(supg))
 					{
 					  h_elem_deriv = 0.;
 					  for( q=0; q<dim; q++ )
@@ -2234,7 +2232,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					      mass_a = s_dot[a][b];
 					      mass_a *= wt_func * ( d_det_J_dmesh_pj * h3 + det_J * dh3dmesh_pj );
 					      
-					      if(supg != 0.)
+					      if(DOUBLE_NONZERO(supg))
 						{
 						  for( w=0; w<dim; w++ )
 						    {
@@ -2300,7 +2298,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 						}
 					      
 					      advection_d = 0.;	
-					      if(supg!=0.)
+					      if(DOUBLE_NONZERO(supg))
 						{
 						  for( w=0; w<dim; w++ )
 						    {
@@ -2350,7 +2348,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					  source_b *= wt_func * det_J * h3 * d_mup_dmesh_pj ;
 					  
 					  source_c = 0.;
-					  if(supg !=0.)
+					  if(DOUBLE_NONZERO(supg))
 					    {
 					      for( w=0;w<dim;w++)
 						{
@@ -2704,7 +2702,7 @@ assemble_stress_log_conf(dbl tt,
     }
 
 
-  if(supg!=0.0)
+  if(DOUBLE_NONZERO(supg))
     {
       h_elem = 0.0;
       for ( p=0; p<dim; p++)
@@ -2725,7 +2723,7 @@ assemble_stress_log_conf(dbl tt,
       else if(vn->shiftModel == MODIFIED_WLF)
 	{
 	  wlf_denom = vn->shift[1] + fv->T - mp->reference[TEMPERATURE];
-	  if(wlf_denom!= 0.0)
+	  if(DOUBLE_NONZERO(wlf_denom))
 	    {
 	      at=exp(vn->shift[0]*(mp->reference[TEMPERATURE]-fv->T)/wlf_denom);
 	    }
@@ -3188,7 +3186,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
     }
 
 
-  if(supg!=0.)
+  if(DOUBLE_NONZERO(supg))
     {
       h_elem = 0.;
       for ( p=0; p<dim; p++)
@@ -3196,7 +3194,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 	  h_elem += vcent[p]*vcent[p]*h[p];
 	}
       h_elem = sqrt(h_elem)/2.;
-      if(h_elem == 0.) 
+      if(DOUBLE_ZERO(h_elem)) 
 	{
 	  h_elem_inv=1.;
 	}
@@ -3285,7 +3283,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 			{
 			  wt_func = bf[eqn]->phi[i];
 			  /* add Petrov-Galerkin terms as necessary */
-			  if(supg!=0.)
+			  if(DOUBLE_NONZERO(supg))
 			    {
 			      for(w=0; w<dim; w++)
 				{
@@ -3383,7 +3381,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 			  
 			  wt_func = bf[eqn]->phi[i];
 			  /* add Petrov-Galerkin terms as necessary */
-			  if(supg!=0.)
+			  if(DOUBLE_NONZERO(supg))
 			    {
 			      for(w=0; w<dim; w++)
 				{
@@ -3442,7 +3440,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 					{
 					  if ( pd->e[eqn] & T_MASS )
 					    {
-					      if(supg!=0.)
+					      if(DOUBLE_NONZERO(supg))
 						{
 						  mass = supg * h_elem*phi_j*bf[eqn]->grad_phi[i][p];
 						  
@@ -3471,7 +3469,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 					  
 					  advection_b = 0.;
 					  /* Petrov-Galerkin term */
-					  if(supg !=0.)
+					  if(DOUBLE_NONZERO(supg))
 					    {
 					      advection_b =  supg * h_elem*phi_j*bf[eqn]->grad_phi[i][p];
 					      for( w =0; w<dim; w++ )
@@ -3496,7 +3494,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 					  source_a *= wt_func;
 					  
 					  source_b = 0.;
-					  if(supg != 0.)
+					  if(DOUBLE_NONZERO(supg))
 					    {
 					      source_b = supg * h_elem* phi_j*bf[eqn]->grad_phi[i][p];
 					      
@@ -3593,7 +3591,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 				      d_det_J_dmesh_pj = bf[eqn]->d_det_J_dm[p][j];
 				      dh3dmesh_pj = fv->dh3dq[p] * bf[var]->phi[j];
 				      d_mup_dmesh_pj  = d_mup->X [p][j];
-				      if(supg!=0.)
+				      if(DOUBLE_NONZERO(supg))
 					{
 					  h_elem_deriv = 0.;
 					  for( q=0; q<dim; q++ )
@@ -3613,7 +3611,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 					      mass_a = s_dot[a][b]* H_ls / Gmod;
 					      mass_a *= wt_func * ( d_det_J_dmesh_pj * h3 + det_J * dh3dmesh_pj );
 					      
-					      if(supg != 0.)
+					      if(DOUBLE_NONZERO(supg))
 						{
 						  for( w=0; w<dim; w++ )
 						    {
@@ -3677,7 +3675,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 					    }
 					  
 					  advection_d = 0.;	
-					  if(supg!=0.)
+					  if(DOUBLE_NONZERO(supg))
 					    {
 					      for( w=0; w<dim; w++ )
 						{
@@ -3709,7 +3707,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 					  source_b *= wt_func * det_J * h3 * d_mup_dmesh_pj ;
 					  
 					  source_c = 0.;
-					  if(supg !=0.)
+					  if(DOUBLE_NONZERO(supg))
 					    {
 					      for( w=0;w<dim;w++)
 						{

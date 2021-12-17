@@ -1551,10 +1551,30 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 				     model_name, SCALAR_INPUT, &NO_SPECIES,es);
       if (model_read == -1)  
 	{
+         if ( !strcmp(model_name, "POISSON_RATIO") )
+           {
+            elc_glob[mn]->lame_lambda_model = POISSON_RATIO;
+            num_const = read_constants(imp, &(elc_glob[mn]->u_lambda),
+                                     NO_SPECIES);
+            if ( num_const < 1)
+               {
+                sr = sprintf(err_msg,
+                   "Matl %s expected at least 1 constant for %s %s model.\n",
+                           pd_glob[mn]->MaterialName,
+                           "Lame LAMBDA",
+                           "POISSON_RATIO");
+                EH(-1, err_msg);
+               }
+            elc_glob[mn]->len_u_lambda = num_const;
+	    SPF_DBL_VEC(endofstring(es), num_const,elc_glob[mn]->u_mu );
+	    }
+	else 
+	  {
 	  sr = sprintf(err_msg, 
 		       "Material %s - unrecognized model for %s \"%s\" ???\n",
 		       pd_glob[mn]->MaterialName, "Lame LAMBDA", model_name);
 	  EH(model_read, err_msg);
+	  }
 	}
 
       ECHO(es,echo_file);      

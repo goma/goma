@@ -153,6 +153,7 @@ int     Write_Initial_Solution = FALSE;
 				 * output files */
 int     Num_Var_Init ;		/* number of variables to overwrite with
 				 * global initialization */
+int     Num_Var_Bound ;		/* number of variables to bound  */
 int     Num_Var_LS_Init;        /* number of variables to overwirte with
 				 * level set index initialization */
 int     Num_Var_External;	/* number of total external variables (exoII or pixel)*/
