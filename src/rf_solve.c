@@ -4004,16 +4004,16 @@ variable_stats ( double *x,
  * Find global quantities
  */
 #ifdef PARALLEL
-  MPI_Allreduce( (void*)max, (void*)max_buf, MAX_VARIABLE_TYPES,
-                MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
-  MPI_Allreduce( (void*)min, (void*)min_buf, MAX_VARIABLE_TYPES,
-                MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
-  MPI_Allreduce( (void*)mean, (void *)mean_buf, MAX_VARIABLE_TYPES,
-                MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  MPI_Allreduce( (void*)sqr, (void*)sqr_buf, MAX_VARIABLE_TYPES,
-                 MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  MPI_Allreduce( (void*)ncp, (void*)ncp_buf, MAX_VARIABLE_TYPES,
-                 MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Reduce( (void*)max, (void*)max_buf, MAX_VARIABLE_TYPES,
+                MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+  MPI_Reduce( (void*)min, (void*)min_buf, MAX_VARIABLE_TYPES,
+                MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD);
+  MPI_Reduce( (void*)mean, (void *)mean_buf, MAX_VARIABLE_TYPES,
+                MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce( (void*)sqr, (void*)sqr_buf, MAX_VARIABLE_TYPES,
+                 MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  MPI_Reduce( (void*)ncp, (void*)ncp_buf, MAX_VARIABLE_TYPES,
+                 MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
   for (i = 0; i < MAX_VARIABLE_TYPES; i++) {
     max[i] = max_buf[i];
@@ -4031,7 +4031,7 @@ variable_stats ( double *x,
 	  {
 	   mean[var] /= ncp[var];
 	   std[var] = sqrt((sqr[var]-ncp[var]*SQUARE(mean[var]))/(ncp[var]-1.)); 
-	   DPRINTF(stdout,"%s \t%8g    %8g    %8g    %8g     %8d\n",
+	   DPRINTF(stdout,"%s \t%8g  %8g  %8g  %8g  %8d\n",
 		Var_Name[var].name2,min[var],max[var],mean[var],std[var],ncp[var]);
 
 	  }

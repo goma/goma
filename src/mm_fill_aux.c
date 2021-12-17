@@ -1428,9 +1428,6 @@ surface_determinant_and_normal(
           EH(-1, "Incorrect side for TRIANGLE");
         }
       break;
-    case LINE_SEGMENT:
-      T[0][0] = 1.; T[0][1] = 0.;
-      break;
     case QUADRILATERAL:
     case SHELL:
       if ( id_side == 1 )
