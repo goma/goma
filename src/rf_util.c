@@ -544,7 +544,7 @@ time_step_control(const double delta_t,  const double delta_t_old,
   double abs_eps = fabs(eps);
   double Err_norm;
   double e_d, e_v, e_T, e_y, e_P, e_S, e_V, e_AC, e_qs;
-  double e_shk, e_sht, e_shd, e_shu, e_F, e_ap, e_extv, e_sh_lub, e_int;
+  double e_shk, e_sht, e_shd, e_shu, e_F, e_ap, e_extv, e_sh_lub, e_int, e_rheo;
   double scaling;
   double ecp[MAX_VARIABLE_TYPES]; /* error in corrector-predictor for ea var */
   double *ecp_AC = NULL;
@@ -831,6 +831,15 @@ time_step_control(const double delta_t,  const double delta_t_old,
 /*    Err_norm      += ecp[EXT_VELOCITY];  */
     Err_norm      += ecp[TFMP_PRES];
     Err_norm      += ecp[TFMP_SAT];
+    Err_norm      += ecp[SHELL_SURF_DIV_V];
+    Err_norm      += ecp[SHELL_SURF_CURV];
+    Err_norm      += ecp[SHELL_NORMAL1];
+    Err_norm      += ecp[SHELL_NORMAL2];
+    Err_norm      += ecp[SHELL_NORMAL3];
+    Err_norm      += ecp[N_DOT_CURL_V];
+    Err_norm      += ecp[GRAD_S_V_DOT_N1];
+    Err_norm      += ecp[GRAD_S_V_DOT_N2];
+    Err_norm      += ecp[GRAD_S_V_DOT_N3];
  
     num_unknowns += ncp[SURF_CHARGE];
     num_unknowns += ncp[SHELL_CURVATURE];
@@ -856,6 +865,15 @@ time_step_control(const double delta_t,  const double delta_t_old,
 /*    num_unknowns += ncp[EXT_VELOCITY];  */
     num_unknowns += ncp[TFMP_PRES];
     num_unknowns += ncp[TFMP_SAT];
+    num_unknowns += ncp[SHELL_SURF_DIV_V];
+    num_unknowns += ncp[SHELL_SURF_CURV];
+    num_unknowns += ncp[SHELL_NORMAL1];
+    num_unknowns += ncp[SHELL_NORMAL2];
+    num_unknowns += ncp[SHELL_NORMAL3];
+    num_unknowns += ncp[N_DOT_CURL_V];
+    num_unknowns += ncp[GRAD_S_V_DOT_N1];
+    num_unknowns += ncp[GRAD_S_V_DOT_N2];
+    num_unknowns += ncp[GRAD_S_V_DOT_N3];
 
   if (use_var_norm[8] ) /* LS equation is set with special card in Level Set section */
   {
@@ -951,6 +969,9 @@ time_step_control(const double delta_t,  const double delta_t_old,
   e_ap = ecp[ACOUS_PREAL] + ecp[ACOUS_PIMAG] + ecp[ACOUS_REYN_STRESS];
   e_extv = ecp[EXT_VELOCITY];
   e_int = ecp[LIGHT_INTP] + ecp[LIGHT_INTM] + ecp[LIGHT_INTD] + ecp[RESTIME];
+  e_rheo = ecp[SHELL_SURF_DIV_V] + ecp[SHELL_SURF_CURV] + ecp[SHELL_NORMAL1] + ecp[SHELL_NORMAL2]
+       + ecp[SHELL_NORMAL3] + ecp[N_DOT_CURL_V] + ecp[GRAD_S_V_DOT_N1] + ecp[GRAD_S_V_DOT_N2]
+       + ecp[GRAD_S_V_DOT_N3];
 
   e_d = sqrt(e_d*scaling);
   e_v = sqrt(e_v*scaling);
@@ -970,6 +991,7 @@ time_step_control(const double delta_t,  const double delta_t_old,
   e_extv = sqrt(e_extv*scaling);
   e_sh_lub = sqrt(e_sh_lub*scaling);
   e_int = sqrt(e_int*scaling);
+  e_rheo = sqrt(e_rheo*scaling);
 
   /*
    * Print out the breakdown of contributions as well as the user specified
@@ -990,7 +1012,7 @@ time_step_control(const double delta_t,  const double delta_t_old,
         if(ncp[TEMPERATURE]){ DPRINTF(stdout, ", %7.1e", e_T); }
         if(ncp[MASS_FRACTION] || ncp[POR_LIQ_PRES] || ncp[POR_GAS_PRES] 
 		|| ncp[POR_POROSITY] || ncp[POR_SATURATION] || ncp[POR_SINK_MASS])
-                { DPRINTF(stdout, ", %7.1e", e_y); }
+ 		{ DPRINTF(stdout, ", %7.1e", e_y); }
         if(ncp[PRESSURE]){ DPRINTF(stdout, ", %7.1e", e_P); }
         if(ncp[POLYMER_STRESS11]){ DPRINTF(stdout, ", %7.1e", e_S); }
         if(ncp[VOLTAGE]){ DPRINTF(stdout, ", %7.1e", e_V); }
@@ -1002,8 +1024,10 @@ time_step_control(const double delta_t,  const double delta_t_old,
         if(ncp[FILL] || ncp[PHASE1] ){ DPRINTF(stdout, ", %7.1e", e_F); }
         if(ncp[ACOUS_PREAL] || ncp[ACOUS_PIMAG]){ DPRINTF(stdout, ", %7.1e", e_ap); }
         if(ncp[EXT_VELOCITY]){ DPRINTF(stdout, ", %7.1e", e_extv); }
-        if(ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]){ DPRINTF(stdout, ", %7.1e", e_int); }
-        if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] || ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]){ DPRINTF(stdout, ", %7.1e", e_sh_lub); }
+	if(ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]){ DPRINTF(stdout, ", %7.1e", e_int); }
+	if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] || ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]){ DPRINTF(stdout, ", %7.1e", e_sh_lub); }
+	if(ncp[SHELL_NORMAL1] || ncp[SHELL_SURF_CURV] || ncp[GRAD_S_V_DOT_N1])
+		{ DPRINTF(stdout, ", %7.1e", e_rheo); }
         if(nAC > 0){ DPRINTF(stdout, ", %7.1e", e_AC); }
         DPRINTF(stdout, "]\n");
       log_msg("Constant delta_t");
@@ -1015,7 +1039,7 @@ time_step_control(const double delta_t,  const double delta_t_old,
         if(ncp[TEMPERATURE]){ DPRINTF(stdout, ", %7.1e", e_T); }
         if(ncp[MASS_FRACTION] || ncp[POR_LIQ_PRES] || ncp[POR_GAS_PRES] 
 		|| ncp[POR_POROSITY] || ncp[POR_SATURATION] || ncp[POR_SINK_MASS])
-                { DPRINTF(stdout, ", %7.1e", e_y); }
+ 		{ DPRINTF(stdout, ", %7.1e", e_y); }
         if(ncp[PRESSURE]){ DPRINTF(stdout, ", %7.1e", e_P); }
         if(ncp[POLYMER_STRESS11]){ DPRINTF(stdout, ", %7.1e", e_S); }
         if(ncp[VOLTAGE]){ DPRINTF(stdout, ", %7.1e", e_V); }
@@ -1027,8 +1051,10 @@ time_step_control(const double delta_t,  const double delta_t_old,
         if(ncp[FILL] || ncp[PHASE1]  ){ DPRINTF(stdout, ", %7.1e", e_F); }
         if(ncp[ACOUS_PREAL] || ncp[ACOUS_PIMAG]){ DPRINTF(stdout, ", %7.1e", e_ap); }
         if(ncp[EXT_VELOCITY]){ DPRINTF(stdout, ", %7.1e", e_extv); }
-        if(ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]){ DPRINTF(stdout, ", %7.1e", e_int); }
-        if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] || ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]){ DPRINTF(stdout, ", %7.1e", e_sh_lub); }
+	if(ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]){ DPRINTF(stdout, ", %7.1e", e_int); }
+	if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] || ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]){ DPRINTF(stdout, ", %7.1e", e_sh_lub); }
+	if(ncp[SHELL_NORMAL1] || ncp[SHELL_SURF_CURV] || ncp[GRAD_S_V_DOT_N1])
+		{ DPRINTF(stdout, ", %7.1e", e_rheo); }
         if(nAC > 0){ DPRINTF(stdout, ", %7.1e", e_AC); }
         DPRINTF(stdout, "]\n");
       log_msg("Predictor was OK, %g < %g * %g", Err_norm, beta, eps);
@@ -1039,7 +1065,7 @@ time_step_control(const double delta_t,  const double delta_t_old,
         if(ncp[TEMPERATURE]){ DPRINTF(stdout, ", %7.1e", e_T); }
         if(ncp[MASS_FRACTION] || ncp[POR_LIQ_PRES] || ncp[POR_GAS_PRES]
  		 || ncp[POR_POROSITY] || ncp[POR_SATURATION] || ncp[POR_SINK_MASS])
-                { DPRINTF(stdout, ", %7.1e", e_y); }
+ 		{ DPRINTF(stdout, ", %7.1e", e_y); }
         if(ncp[PRESSURE]){ DPRINTF(stdout, ", %7.1e", e_P); }
         if(ncp[POLYMER_STRESS11]){ DPRINTF(stdout, ", %7.1e", e_S); }
         if(ncp[VOLTAGE]){ DPRINTF(stdout, ", %7.1e", e_V); }
@@ -1051,8 +1077,10 @@ time_step_control(const double delta_t,  const double delta_t_old,
         if(ncp[FILL] || ncp[PHASE1] ){ DPRINTF(stdout, ", %7.1e", e_F); }
         if(ncp[ACOUS_PREAL] || ncp[ACOUS_PIMAG]){ DPRINTF(stdout, ", %7.1e", e_ap); }
         if(ncp[EXT_VELOCITY]){ DPRINTF(stdout, ", %7.1e", e_extv); }
-        if(ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]){ DPRINTF(stdout, ", %7.1e", e_int); }
-        if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] ||  ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]){ DPRINTF(stdout, ", %7.1e", e_sh_lub); }
+	if(ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]){ DPRINTF(stdout, ", %7.1e", e_int); }
+	if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] ||  ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]){ DPRINTF(stdout, ", %7.1e", e_sh_lub); }
+	if(ncp[SHELL_NORMAL1] || ncp[SHELL_SURF_CURV] || ncp[GRAD_S_V_DOT_N1])
+		{ DPRINTF(stdout, ", %7.1e", e_rheo); }
         if(nAC > 0){ DPRINTF(stdout, ", %7.1e", e_AC); }
         DPRINTF(stdout, "]\n");
       log_msg("Predictor was YUK, %g > %g * %g", Err_norm, beta, eps);
@@ -1064,7 +1092,7 @@ time_step_control(const double delta_t,  const double delta_t_old,
         if(ncp[TEMPERATURE]){ DPRINTF(stdout, ",   %1d T  ", use_var_norm[2]); }
         if(ncp[MASS_FRACTION] || ncp[POR_LIQ_PRES] || ncp[POR_GAS_PRES] ||
  	    ncp[POR_POROSITY] || ncp[POR_SATURATION] || ncp[POR_SINK_MASS] )
-                { DPRINTF(stdout, ",   %1d y  ", use_var_norm[3]); }
+ 		{ DPRINTF(stdout, ",   %1d y  ", use_var_norm[3]); }
         if(ncp[PRESSURE]){ DPRINTF(stdout, ",   %1d P  ", use_var_norm[4]); }
         if(ncp[POLYMER_STRESS11]){DPRINTF(stdout,",   %1d S  ",use_var_norm[5]); }
         if(ncp[VOLTAGE]){ DPRINTF(stdout, ",   %1d V  ", use_var_norm[6]); }
@@ -1076,8 +1104,10 @@ time_step_control(const double delta_t,  const double delta_t_old,
         if(ncp[FILL] || ncp[PHASE1] ){ DPRINTF(stdout, ",   %1d F  ", 1); }
         if(ncp[ACOUS_PREAL] || ncp[ACOUS_PIMAG]){ DPRINTF(stdout, ",   %1d A  ", 1); }
         if(ncp[EXT_VELOCITY]){ DPRINTF(stdout, ",   %1d Ev  ", 1); }
-        if(ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]){ DPRINTF(stdout, ", %1d INT", 1); }
-        if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] || ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]){ DPRINTF(stdout, ", %1d SHELL", 1); }
+	if(ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]){ DPRINTF(stdout, ", %1d INT", 1); }
+	if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] || ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]){ DPRINTF(stdout, ", %1d SHELL", 1); }
+	if(ncp[SHELL_NORMAL1] || ncp[SHELL_SURF_CURV] || ncp[GRAD_S_V_DOT_N1])
+		{ DPRINTF(stdout, ", %1d RHEO", 1); }
         if(nAC > 0){ DPRINTF(stdout, ",   %1d AC ", use_var_norm[9]); }
         DPRINTF(stdout, "]\n");
 
@@ -1458,6 +1488,26 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
 	      "%s:  err fr rd_vectors_from_exoII()\n", yo);
     }
     DPRINTF(stdout,"\t\t Values read time plane at time = %g\n", *timeValueRead);
+  /*
+   * check for variables which have bounds applied to overide the values from exoII files
+   */
+  if (Num_Var_Bound > 0) {
+     int idv;
+     var = Var_init[0].var;
+     if(pd->v[var])
+        {
+        for(i=0 ; i < DPI_ptr->num_owned_nodes; i++)
+           {
+            idv = Index_Solution(i, var, 0, 0, -1);
+            if( idv != 1 )      {
+               if (u[idv] < Var_init[0].init_val_min) u[idv] = Var_init[0].init_val_min;
+               if (u[idv] > Var_init[0].init_val_max) u[idv] = Var_init[0].init_val_max;
+                }
+            }
+        }
+  exchange_dof(cx, dpi, u);
+    }
+
     /*
      * Initialize augmenting conditions for storred solution in exodus input file
      * As of Mar 18, 2002, brkfix doesn't support global variables, hence, this
@@ -1517,7 +1567,7 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
   if (Num_Var_Init > 0) {
     retn = 0;
     dum_var = alloc_dbl_1(DPI_ptr->num_owned_nodes, DBL_NOINIT);
-    for (i = 0; i < Num_Var_Init; i++) {
+    for (i = Num_Var_Bound; i < Num_Var_Init; i++) {
       switch (Var_init[i].var) {
       case MASS_FRACTION :
         DPRINTF(stdout,
@@ -1905,12 +1955,18 @@ void init_shell_normal_unknowns(double x[], const Exo_DB *exo)
   int ielem_type, ielem_dim, iconnect_ptr;
   int ilnode, ignode, num_local_nodes;
   int nxi, nyi, nzi;
-  int err;
+  int i, err;
   dbl s, t, u, xi[DIM];
 
 
-  e_start = exo->eb_ptr[0];
-  e_end   = exo->eb_ptr[exo->num_elem_blocks];
+  for(i = 0 ; i < exo->num_elem_blocks ; i++)
+  {
+  e_start = exo->eb_ptr[i];
+  e_end   = exo->eb_ptr[i+1];
+  ielem = exo->eb_ptr[i];
+  ielem_type = Elem_Type(exo, ielem);
+  ielem_dim       = elem_info(NDIM, ielem_type);
+  if(ielem_dim == pd->Num_Dim)  continue; 
 
   /* Loop over all elements */
   for (ielem = e_start; ielem < e_end; ielem++)
@@ -1956,6 +2012,7 @@ void init_shell_normal_unknowns(double x[], const Exo_DB *exo)
             }
          }
      }
+  }
   return;
 }
 

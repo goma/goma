@@ -122,6 +122,7 @@ noahs_raven(void)
   n = Noahs_Raven;
 
   ddd_add_member(n, &Num_Var_Init, 1, MPI_INT);  
+  ddd_add_member(n, &Num_Var_Bound, 1, MPI_INT);  
   ddd_add_member(n, &Num_Var_External, 1, MPI_INT);
   ddd_add_member(n, &TimeIntegration, 1, MPI_INT);  
   ddd_add_member(n, &Num_BC, 1, MPI_INT);
@@ -660,19 +661,21 @@ noahs_ark(void)
    * in mm_input.c
    */
 
-  if ( Num_Var_Init > 0 )
+  if ( Num_Var_Init > 0 || Num_Var_Bound > 0)
     {
-      for ( i=0; i<Num_Var_Init; i++)
+      for ( i=0; i<(Num_Var_Init + Num_Var_Bound); i++)
 	{
 	  ddd_add_member(n, &Var_init[i].var, 1, MPI_INT);
 	  ddd_add_member(n, &Var_init[i].ktype, 1, MPI_INT);
 	  ddd_add_member(n, &Var_init[i].init_val, 1, MPI_DOUBLE);
+	  ddd_add_member(n, &Var_init[i].init_val_min, 1, MPI_DOUBLE);
+	  ddd_add_member(n, &Var_init[i].init_val_max, 1, MPI_DOUBLE);
 	}
     }
 
   if( Num_Var_LS_Init > 0 )
     {
-      for( i=Num_Var_Init; i<Num_Var_Init+Num_Var_LS_Init; i++ )
+      for( i=Num_Var_Init+Num_Var_Bound; i<Num_Var_Init+Num_Var_Bound+Num_Var_LS_Init; i++ )
 	{
 	  ddd_add_member(n, &Var_init[i].var, 1, MPI_INT);
 	  ddd_add_member(n, &Var_init[i].ktype, 1, MPI_INT);
@@ -818,6 +821,7 @@ noahs_ark(void)
   ddd_add_member(n, &modified_newt_norm_tol, 1, MPI_DOUBLE);
   ddd_add_member(n, Epsilon, MAX_NUM_MATRICES*3, MPI_DOUBLE);
   ddd_add_member(n, &Solver_Output_Format, 1, MPI_INT);
+  ddd_add_member(n, &Output_Variable_Stats, 1, MPI_INT);
 
   /*
    * Eigensolver inputs.

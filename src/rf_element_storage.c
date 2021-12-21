@@ -87,7 +87,7 @@ setup_element_storage(void)
     }
 
     if (do_malloc) {
-      init_element_storage(eb_ptr);
+      init_element_storage(eb_ptr, mn);
       /*Initialize Element-level storage function */
       set_init_Element_Storage(eb_ptr, mn); 
 
@@ -99,7 +99,7 @@ setup_element_storage(void)
 /************************************************************************/
 
 void
-init_element_storage(ELEM_BLK_STRUCT *eb_ptr)
+init_element_storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
 
      /*****************************************************************
       *
@@ -161,7 +161,8 @@ init_element_storage(ELEM_BLK_STRUCT *eb_ptr)
        base_ptr = alloc_dbl_1(4 * numStorage * eb_ptr->Num_Elems_In_Block, 
 			      DBL_NOINIT); 
      }
-     else if(pd->e[pg->imtrx][R_MESH1] && pd->MeshMotion == LAGRANGIAN) {
+     else if(pd->e[pg->imtrx][R_MESH1] && pd->MeshMotion == LAGRANGIAN &&
+		elc_glob[mn]->thermal_expansion_model == SHRINKAGE) {
 
        /* This is for shrinkage stress model for thermexp */
        base_ptr = alloc_dbl_1( numStorage * eb_ptr->Num_Elems_In_Block, 
@@ -183,7 +184,8 @@ init_element_storage(ELEM_BLK_STRUCT *eb_ptr)
       s_ptr->sat_curve_type_old = d_ptr;
       d_ptr += numStorage;
       }
-      else if (pd->e[pg->imtrx][R_MESH1] && pd->MeshMotion == LAGRANGIAN) {
+     else if(pd->e[pg->imtrx][R_MESH1] && pd->MeshMotion == LAGRANGIAN &&
+		elc_glob[mn]->thermal_expansion_model == SHRINKAGE) {
         s_ptr->solidified = d_ptr;
 	d_ptr += numStorage;
       }

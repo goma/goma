@@ -730,6 +730,12 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
     DPRINTF(stdout, "\nINITIAL ELEMENT QUALITY CHECK---\n");
     good_mesh = element_quality(exo, x, ams[0]->proc_config);
 
+     if( Output_Variable_Stats)	{
+        err = variable_stats ( x, path1[0]);
+        EH(err, "Problem with variable_stats!");
+        if(ProcID == 0) fflush(stdout); 
+        }
+
   /*
        * set the number of successful path steps to zero
        */
@@ -1366,6 +1372,12 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 	nprint++;
       }
     }
+
+     if( Output_Variable_Stats)	{
+        err = variable_stats ( x, path1[0]);
+        EH(err, "Problem with variable_stats!");
+        if(ProcID == 0) fflush(stdout); 
+        }
 
       if (step_fix != 0 && nt == step_fix) {
 #ifdef PARALLEL

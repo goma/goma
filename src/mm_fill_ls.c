@@ -4681,7 +4681,7 @@ void ls_var_initialization(double **u, Exo_DB *exo, Dpi *dpi, Comm_Ex **cx) {
 
             nv = Nodes[i]->Nodal_Vars_Info[imtrx];
 
-            for (j = Num_Var_Init; j < ls->Num_Var_Init + Num_Var_Init; j++) {
+	    for( j=Num_Var_Init+Num_Var_Bound; j<ls->Num_Var_Init+Num_Var_Init+Num_Var_Bound; j++) {
 
               var = Var_init[j].var;
 
