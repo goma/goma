@@ -2945,7 +2945,7 @@ find_edge_s (const int iquad,                /* current GQ index  */
     }
     break;
 
-  case TRILINEAR_TET:                 /* trilinear tetrahedron */
+  case LINEAR_TET:                 /* trilinear tetrahedron */
     switch( iquad ){
         case 0: xi[i_s] = *s =  0.2; break;
         case 1: xi[i_s] = *s =  0.6; break;

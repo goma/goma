@@ -290,7 +290,7 @@ ns_data_print(pp_Data * p,
 	    else
 	      {WH(-1,"block id doesn't match first element");}
 	    load_ei(elem_list[0], exo, 0, pg->imtrx);
-	    for (face=0 ; face<ei->num_sides ; face++)
+	    for (face=0 ; face<ei[pg->imtrx]->num_sides ; face++)
 	      {
 		ielem = exo->elem_elem_list[exo->elem_elem_pntr[elem_list[0]]+face];
 		if (ielem != -1)
@@ -344,7 +344,7 @@ ns_data_print(pp_Data * p,
 		 * we're not interested in old time steps, time derivatives
 		 * etc.
 		 */
-	  	err = load_elem_dofptr( elem_list[ielem], exo, x, x, x, x, x, 0);
+	  	err = load_elem_dofptr( elem_list[ielem], exo, x, x, x, x, 0);
 	  	EH(err, "load_elem_dofptr");
 
           	err = bf_mp_init(pd);

@@ -1498,14 +1498,14 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
         {
         for(i=0 ; i < DPI_ptr->num_owned_nodes; i++)
            {
-            idv = Index_Solution(i, var, 0, 0, -1);
+            idv = Index_Solution(i, var, 0, 0, -1, pg->imtrx);
             if( idv != 1 )      {
                if (u[idv] < Var_init[0].init_val_min) u[idv] = Var_init[0].init_val_min;
                if (u[idv] > Var_init[0].init_val_max) u[idv] = Var_init[0].init_val_max;
                 }
             }
         }
-  exchange_dof(cx, dpi, u);
+  exchange_dof(cx, dpi, u, pg->imtrx);
     }
 
     /*
