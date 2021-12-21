@@ -36,8 +36,9 @@
  *  Gq_surf_weight ()            double          "mm_fill.c" matrix_fill
  *  in_list   ()                 int              multiple routines
  *  get_type  ()                 int
- *
- *
+ *  centroid_node()		int
+ *  load_surf_st()		int
+ *  find_edge_s ()		int
  ******************************************************************************/
 
 int elem_info(const int info, const int ielem_type)
@@ -2710,6 +2711,17 @@ int find_edge_s(const int iquad,      /* current GQ index  */
       break;
     case 2:
       xi[i_s] = *s = -Ftemp2;
+      break;
+    }
+    break;
+
+  case LINEAR_TET: /* trilinear tetrahedron */
+    switch (iquad) {
+    case 0:
+      xi[i_s] = *s = 0.2;
+      break;
+    case 1:
+      xi[i_s] = *s = 0.6;
       break;
     }
     break;

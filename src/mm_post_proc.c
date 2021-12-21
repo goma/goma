@@ -980,7 +980,6 @@ static int calc_standard_fields(double **post_proc_vect,
       dbl Du_eps = sqrt(gammadot + gn->epsilon * gn->epsilon);
 
       mu += gn->tau_y / Du_eps;
-
     }
 
     local_post[PP_Viscosity] = mu;
@@ -3539,7 +3538,6 @@ void sum_average_nodal(double **avg_count, double **avg_sum, int global_node, do
           dbl Du_eps = sqrt(gammadot + gn->epsilon * gn->epsilon);
 
           mu += gn->tau_y / Du_eps;
-
         }
 
         avg_sum[i][global_node] += mu;
@@ -10895,28 +10893,27 @@ int load_elem_tkn(struct Results_Description *rd, const Exo_DB *exo, int tev, in
      for element variable candidates (currently must be interpolated with I_P0 */
   for (i = 0; i < exo->num_elem_blocks; i++) {
     int mat_id = Matilda[i];
-    if (exo->eb_num_elems[i] <= 0) continue;
-    for ( j = V_FIRST; j < V_LAST; j++) {
-      if ( pd_glob[mat_id]->v[pg->imtrx][j] != V_NOTHING ) {
+    if (exo->eb_num_elems[i] <= 0)
+      continue;
+    for (j = V_FIRST; j < V_LAST; j++) {
+      if (pd_glob[mat_id]->v[pg->imtrx][j] != V_NOTHING) {
         if (pd_glob[mat_id]->i[pg->imtrx][j] == I_P0) {
-	  if ( Num_Var_In_Type[pg->imtrx][j] > 1 ) {
+          if (Num_Var_In_Type[pg->imtrx][j] > 1) {
             fprintf(stderr,
-		    "%s: Too many components in variable type (%s - %s) for element variable\n",
-		    yo,
-		    Exo_Var_Names[j].name2,
-		    Exo_Var_Names[j].name1 );
-	    exit (-1);
+                    "%s: Too many components in variable type (%s - %s) for element variable\n", yo,
+                    Exo_Var_Names[j].name2, Exo_Var_Names[j].name1);
+            exit(-1);
           }
           if (ev_var_mask[j - V_FIRST] == 0) {
-	    /* We just found a candidate for an element variable */
-	    /* Append a suffix onto the var name to differentiate from its
-	     nodal counterpart */
+            /* We just found a candidate for an element variable */
+            /* Append a suffix onto the var name to differentiate from its
+             nodal counterpart */
             sprintf(appended_name, "%s_E", Exo_Var_Names[j].name2);
             set_ev_tkud(rd, index, j, appended_name, Var_Units[j].name2, Exo_Var_Names[j].name1,
                         FALSE);
             index++;
             ev_var_mask[j - V_FIRST] = 1; /* Only count this variable once */
-	  }
+          }
         }
         if (pd_glob[mat_id]->i[pg->imtrx][j] == I_P1) {
           int dof = getdofs(type2shape(exo->eb_elem_itype[i]), I_P1);

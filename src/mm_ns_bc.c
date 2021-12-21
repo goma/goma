@@ -3098,22 +3098,21 @@ void fvelo_slip_bc(double func[MAX_PDIM],
      In 3D it spins with omega pointing in z
      direction about x0,y0  */
   /* Note: positive omega is CLOCKWISE */
-  if(type == VELO_SLIP_ROT_BC  ||  type == VELO_SLIP_ROT_FILL_BC || type == VELO_SLIP_ROT_FLUID_BC )
-    {
-      double factor = 1.0,current_rad, rad_input = bc_float[5];
-      omega = vsx;
-      X_0[0] = vsy;
-      X_0[1] = vsz;
-      if( rad_input > 0)  { 
-        current_rad = sqrt(SQUARE(fv->x[1]-X_0[1])+SQUARE(fv->x[0]-X_0[0]));
-        factor = rad_input/current_rad;
-           }  else   {
-        factor = 1.0;
-              }
-      vs[0] = factor*omega * ( fv->x[1] - X_0[1] );
-      vs[1] = - factor*omega * ( fv->x[0] - X_0[0] );
-      vs[2] = 0.;
-    } /* if: VELO_SLIP_ROT_BC */
+  if (type == VELO_SLIP_ROT_BC || type == VELO_SLIP_ROT_FILL_BC || type == VELO_SLIP_ROT_FLUID_BC) {
+    double factor = 1.0, current_rad, rad_input = bc_float[5];
+    omega = vsx;
+    X_0[0] = vsy;
+    X_0[1] = vsz;
+    if (rad_input > 0) {
+      current_rad = sqrt(SQUARE(fv->x[1] - X_0[1]) + SQUARE(fv->x[0] - X_0[0]));
+      factor = rad_input / current_rad;
+    } else {
+      factor = 1.0;
+    }
+    vs[0] = factor * omega * (fv->x[1] - X_0[1]);
+    vs[1] = -factor * omega * (fv->x[0] - X_0[0]);
+    vs[2] = 0.;
+  } /* if: VELO_SLIP_ROT_BC */
 
   memset(vrel, 0, sizeof(double) * MAX_PDIM);
   for (p = 0; p < pd->Num_Dim; p++) {
@@ -3345,67 +3344,57 @@ fprintf(stderr,"more %g %g %g %g\n",res,jac,betainv, dthick_dV);
           }
         }
       }
-  if((type == VELO_SLIP_FLUID_BC || type == VELO_SLIP_ROT_FLUID_BC) )
-    {
-    for (jvar=0; jvar<pd->Num_Dim; jvar++)
-      {
-	var = VELOCITY1 + jvar;
-	if (pd->v[pg->imtrx][var])
-	  {
-	    for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
-	      {
-		phi_j = bf[var]->phi[j];
-	        d_func[jvar][var][j] += -betainv*dthick_dV*tang_sgn*fv->stangent[0][jvar]*vslip[jvar]*phi_j;
-/* don't think we need -- seems OK 4-12-2017 */
-	        if(Pflag) d_func[jvar][var][j] += 0.5*thick*dthick_dV*
-                     tang_sgn*fv->stangent[0][jvar]*pg_factor*fv->grad_P[jvar]*phi_j;
-	      }
-	  }
-       }
+      if ((type == VELO_SLIP_FLUID_BC || type == VELO_SLIP_ROT_FLUID_BC)) {
+        for (jvar = 0; jvar < pd->Num_Dim; jvar++) {
+          var = VELOCITY1 + jvar;
+          if (pd->v[pg->imtrx][var]) {
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              phi_j = bf[var]->phi[j];
+              d_func[jvar][var][j] +=
+                  -betainv * dthick_dV * tang_sgn * fv->stangent[0][jvar] * vslip[jvar] * phi_j;
+              /* don't think we need -- seems OK 4-12-2017 */
+              if (Pflag)
+                d_func[jvar][var][j] += 0.5 * thick * dthick_dV * tang_sgn * fv->stangent[0][jvar] *
+                                        pg_factor * fv->grad_P[jvar] * phi_j;
+            }
+          }
+        }
 
-/* Mesh motion Jacobian entries   */
-	for (jvar=0; jvar<ei[pg->imtrx]->ielem_dim; jvar++)
-	  {
-	    var = MESH_DISPLACEMENT1 + jvar;
-	    if (pd->v[pg->imtrx][var])
-	      {
-		for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-		  {
-		    for (p = 0; p < pd->Num_Dim; p++)
-		      {
-	               d_func[p][var][j] += -betainv*dthick_dV*vslip[p]
-                                *tang_sgn*fv->dstangent_dx[0][p][jvar][j];
-	                   if(Pflag) 
-                            {
-                             d_func[p][var][j] += 0.5*thick*dthick_dV*pg_factor*fv->grad_P[p]*tang_sgn*fv->dstangent_dx[0][p][jvar][j];
-		             d_func[p][var][j] += 0.5*pg_factor*fv->grad_P[p]*dthick_dP*tang_sgn*fv->dstangent_dx[0][p][jvar][j];
-		             d_func[p][var][j] += 0.5*pg_factor*fv->d_grad_P_dmesh[p][jvar][j]*thick;
-		             d_func[p][var][j] += vslip[p]*dthick_dP*tang_sgn*fv->dstangent_dx[0][p][jvar][j]*(-betainv);
-                            }
-		      }
-		  }
-	      }
-	  }
-     }
+        /* Mesh motion Jacobian entries   */
+        for (jvar = 0; jvar < ei[pg->imtrx]->ielem_dim; jvar++) {
+          var = MESH_DISPLACEMENT1 + jvar;
+          if (pd->v[pg->imtrx][var]) {
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              for (p = 0; p < pd->Num_Dim; p++) {
+                d_func[p][var][j] +=
+                    -betainv * dthick_dV * vslip[p] * tang_sgn * fv->dstangent_dx[0][p][jvar][j];
+                if (Pflag) {
+                  d_func[p][var][j] += 0.5 * thick * dthick_dV * pg_factor * fv->grad_P[p] *
+                                       tang_sgn * fv->dstangent_dx[0][p][jvar][j];
+                  d_func[p][var][j] += 0.5 * pg_factor * fv->grad_P[p] * dthick_dP * tang_sgn *
+                                       fv->dstangent_dx[0][p][jvar][j];
+                  d_func[p][var][j] += 0.5 * pg_factor * fv->d_grad_P_dmesh[p][jvar][j] * thick;
+                  d_func[p][var][j] += vslip[p] * dthick_dP * tang_sgn *
+                                       fv->dstangent_dx[0][p][jvar][j] * (-betainv);
+                }
+              }
+            }
+          }
+        }
+      }
 
-
-    for (jvar=0; jvar<pd->Num_Dim; jvar++)
-      {
-	var = PVELOCITY1 + jvar;
-	if (pd->v[pg->imtrx][var])
-	  {
-	    for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
-	      {
-		phi_j = bf[var]->phi[j];
-		d_func[jvar][var][j] += (-betainv) * phi_j;
-		/* contribution from dependence of betainv on the magnitude of slip */
-		for (p=0; p<pd->Num_Dim; p++)
-		  {
-		    d_func[p][var][j] += (-d_betainv_dvslip_mag) * phi_j *
-		      (slip_dir[jvar]*vslip[p]);
-		  }
-	      }
-	  }
+      for (jvar = 0; jvar < pd->Num_Dim; jvar++) {
+        var = PVELOCITY1 + jvar;
+        if (pd->v[pg->imtrx][var]) {
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            phi_j = bf[var]->phi[j];
+            d_func[jvar][var][j] += (-betainv) * phi_j;
+            /* contribution from dependence of betainv on the magnitude of slip */
+            for (p = 0; p < pd->Num_Dim; p++) {
+              d_func[p][var][j] += (-d_betainv_dvslip_mag) * phi_j * (slip_dir[jvar] * vslip[p]);
+            }
+          }
+        }
       }
     }
 
@@ -6347,9 +6336,10 @@ void flow_n_dot_T_nobc(double func[DIM],
       }
     }
 
-    if (gn->ConstitutiveEquation == BINGHAM_MIXED || (pd->v[pg->imtrx][POLYMER_STRESS11] &&
-        (vn->evssModel == EVSS_F || vn->evssModel == LOG_CONF || vn->evssModel == EVSS_GRADV ||
-         vn->evssModel == LOG_CONF_GRADV))) {
+    if (gn->ConstitutiveEquation == BINGHAM_MIXED ||
+        (pd->v[pg->imtrx][POLYMER_STRESS11] &&
+         (vn->evssModel == EVSS_F || vn->evssModel == LOG_CONF || vn->evssModel == EVSS_GRADV ||
+          vn->evssModel == LOG_CONF_GRADV))) {
       for (p = 0; p < pd->Num_Dim; p++) {
         for (q = 0; q < pd->Num_Dim; q++) {
           for (b = 0; b < VIM; b++) {
@@ -6776,21 +6766,18 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
     /* get polymer viscosity */
     mup = viscosity(ve[mode]->gn, gamma, d_mup);
 
-      if(saramitoEnabled == TRUE)
-	{
-	  compute_saramito_model_terms(&saramitoCoeff, d_saramito, s, ve[mode]->gn, FALSE);
-	}
-      else
-	{
-	  saramitoCoeff = 1.;
-	  d_saramito->tau_y = 0;
-			
-	  for(int i=0; i<VIM; ++i){
-	    for(int j=0; j<VIM; ++j){
-	      d_saramito->s[i][j] = 0;
-	    }
-	  }
-	}
+    if (saramitoEnabled == TRUE) {
+      compute_saramito_model_terms(&saramitoCoeff, d_saramito, s, ve[mode]->gn, FALSE);
+    } else {
+      saramitoCoeff = 1.;
+      d_saramito->tau_y = 0;
+
+      for (int i = 0; i < VIM; ++i) {
+        for (int j = 0; j < VIM; ++j) {
+          d_saramito->s[i][j] = 0;
+        }
+      }
+    }
     /* get Geisekus mobility parameter */
     alpha = ve[mode]->alpha;
 
@@ -7636,7 +7623,7 @@ void stress_no_v_dot_gradS_logc_transient(
           tau[i][j] = mup / lambda * (exp_s[i][j] - delta(i, j));
         }
       }
-	    compute_saramito_model_terms(&saramitoCoeff, NULL, tau, ve[mode]->gn, FALSE);
+      compute_saramito_model_terms(&saramitoCoeff, NULL, tau, ve[mode]->gn, FALSE);
     } else {
       saramitoCoeff = 1.;
     }

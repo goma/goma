@@ -17,7 +17,7 @@
  * prototypes for functions in rf_element_storage.c
  */
 extern void setup_element_storage(void);
-extern void init_element_storage(ELEM_BLK_STRUCT *);
+extern void init_element_storage(ELEM_BLK_STRUCT *, int);
 extern void set_init_Element_Storage(ELEM_BLK_STRUCT *, int);
 extern void free_element_blocks(Exo_DB *exo);
 extern void free_element_storage(Exo_DB *exo);

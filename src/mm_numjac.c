@@ -295,35 +295,35 @@ static void free_coloring(Coloring *coloring) {
 }
 
 int numerical_jacobian_compute_stress(struct GomaLinearSolverData *ams,
-                                       double x[], /* Solution vector for the current processor */
-                                       double resid_vector[], /* Residual vector for the current
-                                                               * processor */
-                                       double delta_t,        /* time step size */
-                                       double theta,     /* parameter to vary time integration from
-                                                            explicit (theta = 1) to
-                                                            implicit (theta = 0) */
-                                       double x_old[],   /* Value of the old solution vector */
-                                       double x_older[], /* Value of the real old soln vect */
+                                      double x[], /* Solution vector for the current processor */
+                                      double resid_vector[], /* Residual vector for the current
+                                                              * processor */
+                                      double delta_t,        /* time step size */
+                                      double theta,     /* parameter to vary time integration from
+                                                           explicit (theta = 1) to
+                                                           implicit (theta = 0) */
+                                      double x_old[],   /* Value of the old solution vector */
+                                      double x_older[], /* Value of the real old soln vect */
 
-                                       double xdot[], /* Value of xdot predicted for new solution */
-                                       double xdot_old[], /* Value of xdot at previous time */
+                                      double xdot[], /* Value of xdot predicted for new solution */
+                                      double xdot_old[], /* Value of xdot at previous time */
 
-                                       double x_update[],
-                                       int num_total_nodes,
+                                      double x_update[],
+                                      int num_total_nodes,
 
-                                       struct elem_side_bc_struct *first_elem_side_BC_array[],
-                                       /* This is an array of pointers to the first
-                                          surface integral defined for each element.
-                                          It has a length equal to the total number
-                                          of elements defined on the current proc */
-                                       int Debug_Flag,    /* flag for calculating numerical jacobian
-                                                             -1 == calc num jac w/o rescaling
-                                                             -2 == calc num jac w/  rescaling */
-                                       double time_value, /* current value of time */
-                                       Exo_DB *exo,       /* ptr to whole fe mesh */
-                                       Dpi *dpi,          /* any distributed processing info */
-                                       double *h_elem_avg,
-                                       double *U_norm)
+                                      struct elem_side_bc_struct *first_elem_side_BC_array[],
+                                      /* This is an array of pointers to the first
+                                         surface integral defined for each element.
+                                         It has a length equal to the total number
+                                         of elements defined on the current proc */
+                                      int Debug_Flag,    /* flag for calculating numerical jacobian
+                                                            -1 == calc num jac w/o rescaling
+                                                            -2 == calc num jac w/  rescaling */
+                                      double time_value, /* current value of time */
+                                      Exo_DB *exo,       /* ptr to whole fe mesh */
+                                      Dpi *dpi,          /* any distributed processing info */
+                                      double *h_elem_avg,
+                                      double *U_norm)
 /******************************************************************************
   This function compares the analytical jacobian entries calculated in
   matrix_fill the numerical ones approximated by central difference method.
@@ -562,10 +562,12 @@ int numerical_jacobian_compute_stress(struct GomaLinearSolverData *ams,
       /*needed for saturation hyst. func. */
       PRS_mat_ielem = ielem - exo->eb_ptr[ebn];
 
-      int err = matrix_fill_stress(ams, x_1, resid_vector_1, x_old, x_older, xdot, xdot_old, x_update,
-                         &delta_t, &theta, first_elem_side_BC_array, &time_value, exo, dpi, &ielem,
-                         &num_total_nodes, h_elem_avg, U_norm, NULL, zeroCA);
-      if (err) retval = -1;
+      int err =
+          matrix_fill_stress(ams, x_1, resid_vector_1, x_old, x_older, xdot, xdot_old, x_update,
+                             &delta_t, &theta, first_elem_side_BC_array, &time_value, exo, dpi,
+                             &ielem, &num_total_nodes, h_elem_avg, U_norm, NULL, zeroCA);
+      if (err)
+        retval = -1;
       zeroCA = -1;
     }
 

@@ -1226,6 +1226,8 @@ struct Variable_Initialization {
   int var;
   int ktype;
   double init_val;
+  double init_val_min;
+  double init_val_max;
   double init_val_minus; /* Value in negative LS phase */
   double init_val_plus;  /* Value in positive LS phase */
   int slave_block;       /* this is set TRUE in order that this initialization value

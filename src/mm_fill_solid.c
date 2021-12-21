@@ -1625,8 +1625,8 @@ void friction_n_dot_f_bc(double func[DIM],
   int j_id, jvar, dim, var;
   int err, a, b, c, j;
   int eqn;
-  double normal_force, velo_mag, tang_velo[2], tang_force;
-  double d_nforce, d_tforce, phi_j;
+  double normal_force, velo_mag, tang_velo[DIM], tang_force[2];
+  double d_nforce, d_tforce[2], phi_j;
 
   double TT[MAX_PDIM][MAX_PDIM]; /**  solid stresses  **/
   double dTT_drs[DIM][DIM][DIM][MDE];
@@ -1784,24 +1784,25 @@ void friction_n_dot_f_bc(double func[DIM],
 
   /* compute normal force and velocity magnitude	*/
   normal_force = 0;
-  tang_force = 0;
-  for (a = 0; a < dim; a++) {
-    for (b = 0; b < dim; b++) {
+  tang_force[0] = tang_force[1] = 0;
+  for (a = 0; a < VIM; a++) {
+    for (b = 0; b < VIM; b++) {
       normal_force += fv->snormal[a] * TT[a][b] * fv->snormal[b];
-      tang_force += fv->snormal[a] * TT[a][b] * fv->stangent[0][b];
+      tang_force[0] += fv->snormal[a] * TT[a][b] * fv->stangent[0][b];
+      tang_force[1] += fv->snormal[a] * TT[a][b] * fv->stangent[1][b];
     }
   }
-  velo_mag = 0;
-  tang_velo[0] = 0;
-  tang_velo[1] = 0;
-  for (a = 0; a < dim; a++) {
+  velo_mag = tang_velo[0] = tang_velo[1] = 0;
+  for (a = 0; a < WIM; a++) {
     velo_mag += vconv[a] * vconv[a];
     tang_velo[0] += fv->stangent[0][a] * vconv[a];
     tang_velo[1] += fv->stangent[1][a] * vconv[a];
   }
   velo_mag = sqrt(velo_mag);
   if (DOUBLE_ZERO(velo_mag)) {
-    GOMA_EH(GOMA_ERROR, "Trouble with sliding friction bc - zero relative velocity.");
+    /* EH(-1,"Trouble with sliding friction bc - zero relative velocity.");*/
+    velo_mag = 1.0;
+    frict_coeff = 0.0;
   }
 
   frict_acous = 1.0;
@@ -1831,20 +1832,25 @@ void friction_n_dot_f_bc(double func[DIM],
         for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) {
 
           d_nforce = 0;
-          d_tforce = 0;
-          for (a = 0; a < dim; a++) {
-            for (b = 0; b < dim; b++) {
+          d_tforce[0] = d_tforce[1] = 0;
+          for (a = 0; a < VIM; a++) {
+            for (b = 0; b < VIM; b++) {
               d_nforce += fv->dsnormal_dx[a][jvar][j_id] * TT[a][b] * fv->snormal[b] +
                           fv->snormal[a] * dTT_dx[a][b][jvar][j_id] * fv->snormal[b] +
                           fv->snormal[a] * TT[a][b] * fv->dsnormal_dx[b][jvar][j_id];
-              d_tforce += fv->dsnormal_dx[a][jvar][j_id] * TT[a][b] * fv->stangent[0][b] +
-                          fv->snormal[a] * dTT_dx[a][b][jvar][j_id] * fv->stangent[0][b] +
-                          fv->snormal[a] * TT[a][b] * fv->dstangent_dx[0][b][jvar][j_id];
+              d_tforce[0] += fv->dsnormal_dx[a][jvar][j_id] * TT[a][b] * fv->stangent[0][b] +
+                             fv->snormal[a] * dTT_dx[a][b][jvar][j_id] * fv->stangent[0][b] +
+                             fv->snormal[a] * TT[a][b] * fv->dstangent_dx[0][b][jvar][j_id];
+              d_tforce[1] += fv->dsnormal_dx[a][jvar][j_id] * TT[a][b] * fv->stangent[1][b] +
+                             fv->snormal[a] * dTT_dx[a][b][jvar][j_id] * fv->stangent[1][b] +
+                             fv->snormal[a] * TT[a][b] * fv->dstangent_dx[1][b][jvar][j_id];
             }
           }
 
-          d_func[0][var][j_id] +=
-              (d_tforce - frict_coeff * frict_acous * d_nforce * tang_velo[0] / velo_mag);
+          d_func[1][var][j_id] +=
+              (d_tforce[0] - frict_coeff * frict_acous * d_nforce * tang_velo[0] / velo_mag);
+          d_func[2][var][j_id] +=
+              (d_tforce[1] - frict_coeff * frict_acous * d_nforce * tang_velo[1] / velo_mag);
         }
       }
     }
@@ -1852,7 +1858,8 @@ void friction_n_dot_f_bc(double func[DIM],
 
   /* Calculate the residual contribution  */
 
-  *func += tang_force - frict_coeff * frict_acous * normal_force * tang_velo[0] / velo_mag;
+  func[1] += tang_force[0] - frict_coeff * frict_acous * normal_force * tang_velo[0] / velo_mag;
+  func[2] += tang_force[1] - frict_coeff * frict_acous * normal_force * tang_velo[1] / velo_mag;
 }
 /* end of routine friction_n_dot_f_bc */
 /********************************************************************************/
@@ -2834,7 +2841,9 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
     /* add shrinkage stress, if called for */
     if (elc->thermal_expansion_model == SHRINKAGE) {
       if ((fv->external_field[0] >= 1.63 && fv->external_field[0] <= 1.7) ||
-          Element_Blocks[ei[pg->imtrx]->elem_blk_index].ElemStorage[mat_ielem].solidified[ip]) {
+          (int)Element_Blocks[ei[pg->imtrx]->elem_blk_index]
+              .ElemStorage[mat_ielem]
+              .solidified[ip]) {
         for (p = 0; p < VIM; p++) {
           for (q = 0; q < VIM; q++) {
             TT[p][q] -= (2. * mu + 3. * lambda) * (-0.04) * delta(p, q);

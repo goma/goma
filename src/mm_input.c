@@ -824,11 +824,13 @@ void rd_file_specs(FILE *ifp, char *input) {
  */
 
 void rd_genl_specs(FILE *ifp, char *input) {
-  int nargs;
+  int nargs, var_type;
+  double var_min, var_max;
   char err_msg[MAX_CHAR_IN_INPUT];
   char first_string[MAX_CHAR_IN_INPUT];
   char second_string[MAX_CHAR_IN_INPUT];
   char third_string[MAX_CHAR_IN_INPUT];
+  char var_string[MAX_CHAR_IN_INPUT];
   char *tmp;
   char StringToSearch[] = "Pixel"; /*used in strstr call below*/
 
@@ -849,7 +851,7 @@ void rd_genl_specs(FILE *ifp, char *input) {
   iread = look_for_optional(ifp, "Output Level", input, '=');
   if (iread == 1) {
     if (fscanf(ifp, "%d", &Iout) != 1) {
-      fprintf(stderr, "%s:\tError reading Output Level\n", yo);
+      DPRINTF(stderr, "%s:\tError reading Output Level\n", yo);
       exit(-1);
     }
   } else {
@@ -862,7 +864,7 @@ void rd_genl_specs(FILE *ifp, char *input) {
   iread = look_for_optional(ifp, "Debug", input, '=');
   if (iread == 1) {
     if (fscanf(ifp, "%d", &Debug_Flag) != 1) {
-      fprintf(stderr, "%s:\tError reading Debug Level\n", yo);
+      DPRINTF(stderr, "%s:\tError reading Debug Level\n", yo);
       exit(-1);
     }
   } else {
@@ -880,14 +882,22 @@ void rd_genl_specs(FILE *ifp, char *input) {
   ECHO(echo_string, echo_file);
 #endif
 
+  Num_Var_Bound = 0;
   iread = look_for_optional(ifp, "Initial Guess", input, '=');
   if (iread == 1) {
     (void)read_string(ifp, input, '\n');
     strip(input);
-    nargs = sscanf(input, "%s %s %s", first_string, second_string, third_string);
-    if (nargs == 0) {
+    nargs = sscanf(input, "%s %s %s %s %d %lf %lf", first_string, second_string, third_string,
+                   var_string, &var_type, &var_min, &var_max);
+    if (nargs >= 2 && strcasecmp(first_string, "read_exoII_file") != 0) {
+      GOMA_EH(GOMA_ERROR, "Undecipherable option for Initial guess.");
+    }
+
+    switch (nargs) {
+    case 0:
       GOMA_EH(GOMA_ERROR, "Found zero arguments for Initial Guess");
-    } else if (nargs == 1) {
+      break;
+    case 1:
       if (strcasecmp(first_string, "zero") == 0) {
         Guess_Flag = 0;
       } else if (strcasecmp(first_string, "random") == 0) {
@@ -903,41 +913,43 @@ void rd_genl_specs(FILE *ifp, char *input) {
       } else if (strcasecmp(first_string, "read_exoII_file") == 0) {
         GOMA_EH(GOMA_ERROR, "Read from *what* exoII file?");
       }
-
-      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "Initial Guess", first_string);
-      ECHO(echo_string, echo_file);
-
-    } else if (nargs == 2) {
-      if (strcasecmp(first_string, "read_exoII_file") == 0) {
-        Guess_Flag = 6;
-        strcpy(ExoAuxFile, second_string);
-      } else {
-        GOMA_EH(GOMA_ERROR, "Undecipherable 2 options for Initial guess.");
+      break;
+    case 7:
+      Var_init[Num_Var_Bound].var = variable_string_to_int(var_string, "Initialize Keyword Error");
+      Var_init[Num_Var_Bound].ktype = var_type;
+      Var_init[Num_Var_Bound].init_val_min = var_min;
+      Var_init[Num_Var_Bound].init_val_max = var_max;
+      Num_Var_Bound++;
+      // Fall through
+    case 3:
+      if (sscanf(third_string, "%d", &ExoTimePlane) != 1) {
+        GOMA_EH(GOMA_ERROR, "Time plane for read_exoII_file option is undecipherable");
       }
-
-      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s %s", "Initial Guess", first_string,
-               second_string);
-      ECHO(echo_string, echo_file);
-
-    } else if (nargs == 3) {
-      if (strcasecmp(first_string, "read_exoII_file") == 0) {
-        Guess_Flag = 6;
-        strcpy(ExoAuxFile, second_string);
-        if (sscanf(third_string, "%d", &ExoTimePlane) != 1) {
-          GOMA_EH(GOMA_ERROR, "Time plane for read_exoII_file option is undecipherable");
-        }
-      } else {
-        GOMA_EH(GOMA_ERROR, "Undecipherable first 2 options for Initial guess.");
-      }
-
-      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s %s %d", "Initial Guess", first_string,
-               second_string, ExoTimePlane);
-      ECHO(echo_string, echo_file);
-
-    } else {
-      fprintf(stderr, "%s:\tUnknown initial guess (%s)\n", yo, input);
+      // Fall through
+    case 2:
+      Guess_Flag = 6;
+      strcpy(ExoAuxFile, second_string);
+      break;
+    default:
+      DPRINTF(stderr, "%s:\tUnknown initial guess (%s)\n", yo, input);
       exit(-1);
     }
+    switch (nargs) {
+    case 1:
+      SPF(echo_string, eoformat, "Initial Guess", first_string);
+      break;
+    case 2:
+      SPF(echo_string, "%s = %s %s", "Initial Guess", first_string, second_string);
+      break;
+    case 3:
+      SPF(echo_string, "%s = %s %s %d", "Initial Guess", first_string, second_string, ExoTimePlane);
+      break;
+    case 7:
+      SPF(echo_string, "%s = %s %s %d %s %d %f %f", "Initial Guess", first_string, second_string,
+          ExoTimePlane, var_string, var_type, var_min, var_max);
+      break;
+    }
+    ECHO(echo_string, echo_file);
   } else {
     Guess_Flag = 0;
     ECHO("Initial Guess card not read correctly", echo_file);
@@ -961,7 +973,7 @@ void rd_genl_specs(FILE *ifp, char *input) {
       ECHO(echo_string, echo_file);
 
     } else {
-      fprintf(stderr, "%s:\tUnknown conformation map (%s)\n", yo, input);
+      DPRINTF(stderr, "%s:\tUnknown conformation map (%s)\n", yo, input);
       exit(-1);
     }
   } else {
@@ -971,7 +983,7 @@ void rd_genl_specs(FILE *ifp, char *input) {
   /*
    *             Search for commands to initialize a specific variable
    */
-  Num_Var_Init = 0;
+  Num_Var_Init = Num_Var_Bound;
   while ((iread = look_forward_optional(ifp, "Initialize", input, '=')) == 1) {
     /*
      *  Read the variable name to be fixed
@@ -6257,6 +6269,23 @@ void rd_solver_specs(FILE *ifp, char *input) {
                (Solver_Output_Format & 1024) / 128 + (Solver_Output_Format & 2048) / 256;
     if (no_chars > 80)
       GOMA_WH(-1, "Solver Output greater than 80 characters...\n");
+  }
+
+  /*  Toggle for Outputting Variable Statistics, i.e. min, max, mean,...  */
+
+  Output_Variable_Stats = 0;
+  iread = look_for_optional(ifp, "Output Variable Statistics", input, '=');
+  if (iread == 1) {
+    (void)read_string(ifp, input, '\n');
+    strip(input);
+    if (strcmp(input, "no") == 0) {
+      Output_Variable_Stats = FALSE;
+    } else if (strcmp(input, "yes") == 0) {
+      Output_Variable_Stats = TRUE;
+    } else {
+      GOMA_EH(GOMA_ERROR, "error reading Variable Stats");
+    }
+    SPF(echo_string, "%s = %d", "Output Variable Statistics", Output_Variable_Stats);
   }
 
   iread = look_for_optional(ifp, "Residual Ratio Tolerance", input, '=');

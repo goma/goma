@@ -4160,7 +4160,7 @@ double evaluate_volume_integral(const Exo_DB *exo,  /* ptr to basic exodus ii me
       /*  element crossing interrogation */
       if (quantity == I_SURF_SPECIES || quantity == I_SURF_TEMP) {
         if (Num_Proc > 1)
-          GOMA_EH(GOMA_ERROR, "SURFACE_SPECIES not recommended in parallel\n");
+          GOMA_WH(-1, "SURFACE_SPECIES not recommended in parallel\n");
         if (quantity == I_SURF_SPECIES) {
           for (i = 0; i < ei[pg->imtrx]->num_local_nodes; i++) {
             ls_F[i] = params[pd->Num_Species_Eqn] - params[pd->Num_Species_Eqn + 1];
@@ -4176,11 +4176,12 @@ double evaluate_volume_integral(const Exo_DB *exo,  /* ptr to basic exodus ii me
         } else
           GOMA_EH(GOMA_ERROR, "That SURF quantity not available.");
 
+        ierr = 0;
         if (pd->Num_Dim == 3) {
           if (ei[pg->imtrx]->ielem_type == TRILINEAR_HEX) {
             ierr = interface_crossing_3DL(ls_F, xf3D, side_id, ecrd);
           } else
-            GOMA_EH(GOMA_ERROR, "Only SURF 3D element is TRILINEAR_HEX.");
+            GOMA_WH(-1, "Only SURF 3D element is TRILINEAR_HEX.");
         } else {
           if (ei[pg->imtrx]->ielem_type == BIQUAD_QUAD) {
             ierr = interface_crossing_2DQ(ls_F, xf2D, side_id, nint2D, ecrd);

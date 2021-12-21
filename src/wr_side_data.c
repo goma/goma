@@ -98,8 +98,8 @@ int ns_data_print(pp_Data *p,
 #endif
   double abscissa = 0;
   double ordinate = 0;
-  double n1[3], n2[3];
-  double xi[3];
+  double n1[DIM], n2[DIM];
+  double xi[DIM];
 
   /*
    * Find an element block that has the desired material id.
@@ -243,6 +243,8 @@ int ns_data_print(pp_Data *p,
            * procedure could be extended to cover that case as well.
            */
 
+          elem_list[0] = elem_list[1] = elem_list[2] = elem_list[3] = -1;
+          local_node[0] = local_node[1] = local_node[2] = local_node[3] = -1;
           if (!exo->node_elem_conn_exists) {
             GOMA_EH(GOMA_ERROR, "Cannot compute angle without node_elem_conn.");
           }
@@ -265,6 +267,7 @@ int ns_data_print(pp_Data *p,
           } else {
             GOMA_WH(-1, "block id doesn't match first element");
           }
+          load_ei(elem_list[0], exo, 0, pg->imtrx);
           for (face = 0; face < ei[pg->imtrx]->num_sides; face++) {
             ielem = exo->elem_elem_list[exo->elem_elem_pntr[elem_list[0]] + face];
             if (ielem != -1) {
@@ -313,19 +316,17 @@ int ns_data_print(pp_Data *p,
              * we're not interested in old time steps, time derivatives
              * etc.
              */
-            if (x == x_static) /* be the least disruptive possible */
-            {
-              err = load_elem_dofptr(elem_list[ielem], exo, x_static, x_old_static, xdot_static,
-                                     xdot_old_static, 1);
-            } else {
-              err = load_elem_dofptr(elem_list[ielem], exo, x, x, x, x, 1);
-            }
+            err = load_elem_dofptr(elem_list[ielem], exo, x, x, x, x, 0);
+            GOMA_EH(err, "load_elem_dofptr");
+
+            err = bf_mp_init(pd);
+            GOMA_EH(err, "bf_mp_init");
 
             /*
              * What are the local coordinates of the nodes in a quadrilateral?
              */
 
-            find_nodal_stu(local_node[ielem], ei[pg->imtrx]->ielem_type, xi, xi + 1, xi + 2);
+            find_nodal_stu(local_node[ielem], ei[pg->imtrx]->ielem_type, &xi[0], &xi[1], &xi[2]);
 
             err = load_basis_functions(xi, bfd);
 
@@ -336,12 +337,6 @@ int ns_data_print(pp_Data *p,
 
             err = load_fv();
             GOMA_EH(err, "load_fv");
-
-            err = load_bf_grad();
-            GOMA_EH(err, "load_bf_grad");
-
-            err = load_bf_mesh_derivs();
-            GOMA_EH(err, "load_bf_mesh_derivs");
 
             if (doPressure) {
               ordinate = fv->P;

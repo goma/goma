@@ -621,7 +621,7 @@ double time_step_control(const double delta_t,
   double abs_eps = fabs(eps);
   double Err_norm;
   double e_d, e_v, e_T, e_y, e_P, e_S, e_V, e_AC, e_qs;
-  double e_shk, e_sht, e_shd, e_shu, e_F, e_ap, e_extv, e_sh_lub, e_int;
+  double e_shk, e_sht, e_shd, e_shu, e_F, e_ap, e_extv, e_sh_lub, e_int, e_rheo;
   double scaling;
   double ecp[MAX_VARIABLE_TYPES]; /* error in corrector-predictor for ea var */
   double *ecp_AC = NULL;
@@ -899,6 +899,15 @@ double time_step_control(const double delta_t,
   /*    Err_norm      += ecp[EXT_VELOCITY];  */
   Err_norm += ecp[TFMP_PRES];
   Err_norm += ecp[TFMP_SAT];
+  Err_norm += ecp[SHELL_SURF_DIV_V];
+  Err_norm += ecp[SHELL_SURF_CURV];
+  Err_norm += ecp[SHELL_NORMAL1];
+  Err_norm += ecp[SHELL_NORMAL2];
+  Err_norm += ecp[SHELL_NORMAL3];
+  Err_norm += ecp[N_DOT_CURL_V];
+  Err_norm += ecp[GRAD_S_V_DOT_N1];
+  Err_norm += ecp[GRAD_S_V_DOT_N2];
+  Err_norm += ecp[GRAD_S_V_DOT_N3];
 
   num_unknowns += ncp[SURF_CHARGE];
   num_unknowns += ncp[SHELL_CURVATURE];
@@ -924,6 +933,15 @@ double time_step_control(const double delta_t,
   /*    num_unknowns += ncp[EXT_VELOCITY];  */
   num_unknowns += ncp[TFMP_PRES];
   num_unknowns += ncp[TFMP_SAT];
+  num_unknowns += ncp[SHELL_SURF_DIV_V];
+  num_unknowns += ncp[SHELL_SURF_CURV];
+  num_unknowns += ncp[SHELL_NORMAL1];
+  num_unknowns += ncp[SHELL_NORMAL2];
+  num_unknowns += ncp[SHELL_NORMAL3];
+  num_unknowns += ncp[N_DOT_CURL_V];
+  num_unknowns += ncp[GRAD_S_V_DOT_N1];
+  num_unknowns += ncp[GRAD_S_V_DOT_N2];
+  num_unknowns += ncp[GRAD_S_V_DOT_N3];
 
   if (use_var_norm[8]) /* LS equation is set with special card in Level Set section */
   {
@@ -1018,6 +1036,9 @@ double time_step_control(const double delta_t,
   e_ap = ecp[ACOUS_PREAL] + ecp[ACOUS_PIMAG] + ecp[ACOUS_REYN_STRESS];
   e_extv = ecp[EXT_VELOCITY];
   e_int = ecp[LIGHT_INTP] + ecp[LIGHT_INTM] + ecp[LIGHT_INTD] + ecp[RESTIME];
+  e_rheo = ecp[SHELL_SURF_DIV_V] + ecp[SHELL_SURF_CURV] + ecp[SHELL_NORMAL1] + ecp[SHELL_NORMAL2] +
+           ecp[SHELL_NORMAL3] + ecp[N_DOT_CURL_V] + ecp[GRAD_S_V_DOT_N1] + ecp[GRAD_S_V_DOT_N2] +
+           ecp[GRAD_S_V_DOT_N3];
 
   e_d = sqrt(e_d * scaling);
   e_v = sqrt(e_v * scaling);
@@ -1037,6 +1058,7 @@ double time_step_control(const double delta_t,
   e_extv = sqrt(e_extv * scaling);
   e_sh_lub = sqrt(e_sh_lub * scaling);
   e_int = sqrt(e_int * scaling);
+  e_rheo = sqrt(e_rheo * scaling);
 
   /*
    * Print out the breakdown of contributions as well as the user specified
@@ -1105,6 +1127,9 @@ double time_step_control(const double delta_t,
         ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]) {
       DPRINTF(stdout, ", %7.1e", e_sh_lub);
     }
+    if (ncp[SHELL_NORMAL1] || ncp[SHELL_SURF_CURV] || ncp[GRAD_S_V_DOT_N1]) {
+      DPRINTF(stdout, ", %7.1e", e_rheo);
+    }
     if (nAC > 0) {
       DPRINTF(stdout, ", %7.1e", e_AC);
     }
@@ -1165,6 +1190,9 @@ double time_step_control(const double delta_t,
         ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] || ncp[SHELL_LUB_CURV_2] ||
         ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]) {
       DPRINTF(stdout, ", %7.1e", e_sh_lub);
+    }
+    if (ncp[SHELL_NORMAL1] || ncp[SHELL_SURF_CURV] || ncp[GRAD_S_V_DOT_N1]) {
+      DPRINTF(stdout, ", %7.1e", e_rheo);
     }
     if (nAC > 0) {
       DPRINTF(stdout, ", %7.1e", e_AC);
@@ -1227,6 +1255,9 @@ double time_step_control(const double delta_t,
         ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]) {
       DPRINTF(stdout, ", %7.1e", e_sh_lub);
     }
+    if (ncp[SHELL_NORMAL1] || ncp[SHELL_SURF_CURV] || ncp[GRAD_S_V_DOT_N1]) {
+      DPRINTF(stdout, ", %7.1e", e_rheo);
+    }
     if (nAC > 0) {
       DPRINTF(stdout, ", %7.1e", e_AC);
     }
@@ -1287,6 +1318,9 @@ double time_step_control(const double delta_t,
       ncp[SHELL_LUB_CURV] || ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] ||
       ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]) {
     DPRINTF(stdout, ", %1d SHELL", 1);
+  }
+  if (ncp[SHELL_NORMAL1] || ncp[SHELL_SURF_CURV] || ncp[GRAD_S_V_DOT_N1]) {
+    DPRINTF(stdout, ", %1d RHEO", 1);
   }
   if (nAC > 0) {
     DPRINTF(stdout, ",   %1d AC ", use_var_norm[9]);
@@ -1658,6 +1692,26 @@ void init_vec(
     }
     DPRINTF(stdout, "\t\t Values read time plane at time = %g\n", *timeValueRead);
     /*
+     * check for variables which have bounds applied to overide the values from exoII files
+     */
+    if (Num_Var_Bound > 0) {
+      int idv;
+      var = Var_init[0].var;
+      if (pd->v[var]) {
+        for (i = 0; i < DPI_ptr->num_owned_nodes; i++) {
+          idv = Index_Solution(i, var, 0, 0, -1, pg->imtrx);
+          if (idv != 1) {
+            if (u[idv] < Var_init[0].init_val_min)
+              u[idv] = Var_init[0].init_val_min;
+            if (u[idv] > Var_init[0].init_val_max)
+              u[idv] = Var_init[0].init_val_max;
+          }
+        }
+      }
+      exchange_dof(cx, dpi, u, pg->imtrx);
+    }
+
+    /*
      * Initialize augmenting conditions for storred solution in exodus input file
      * As of Mar 18, 2002, brkfix doesn't support global variables, hence, this
      * capability does not exist for parallel operations.
@@ -1712,7 +1766,7 @@ void init_vec(
   if (Num_Var_Init > 0) {
     retn = 0;
     dum_var = alloc_dbl_1(DPI_ptr->num_owned_nodes, DBL_NOINIT);
-    for (i = 0; i < Num_Var_Init; i++) {
+    for (i = Num_Var_Bound; i < Num_Var_Init; i++) {
       switch (Var_init[i].var) {
       case MASS_FRACTION:
         DPRINTF(stdout, "\tSetting %s number %d (variable [%d]) to %g\n",
@@ -2075,48 +2129,55 @@ void init_shell_normal_unknowns(double x[], const Exo_DB *exo)
   int ielem_type, ielem_dim, iconnect_ptr;
   int ilnode, ignode, num_local_nodes;
   int nxi, nyi, nzi;
-  int err;
+  int i, err;
   dbl s, t, u, xi[DIM];
 
-  e_start = exo->eb_ptr[0];
-  e_end = exo->eb_ptr[exo->num_elem_blocks];
-
-  /* Loop over all elements */
-  for (ielem = e_start; ielem < e_end; ielem++) {
+  for (i = 0; i < exo->num_elem_blocks; i++) {
+    e_start = exo->eb_ptr[i];
+    e_end = exo->eb_ptr[i + 1];
+    ielem = exo->eb_ptr[i];
     ielem_type = Elem_Type(exo, ielem);
-    load_ei(ielem, exo, 0, pg->imtrx);
-    err = load_elem_dofptr(ielem, exo, x, x, x, x, 0);
-    GOMA_EH(err, "Can't load elem_dofptr in shell normals initialization");
-
     ielem_dim = elem_info(NDIM, ielem_type);
-    num_local_nodes = elem_info(NNODES, ielem_type);
-    iconnect_ptr = Proc_Connect_Ptr[ielem];
+    if (ielem_dim == pd->Num_Dim)
+      continue;
 
-    /* Loop over nodes within the element */
-    for (ilnode = 0; ilnode < num_local_nodes; ilnode++) {
-      /* Find s, t, u, coordinates of each node */
-      find_nodal_stu(ilnode, ielem_type, &s, &t, &u);
-      xi[0] = s;
-      xi[1] = t;
-      xi[2] = u;
+    /* Loop over all elements */
+    for (ielem = e_start; ielem < e_end; ielem++) {
+      ielem_type = Elem_Type(exo, ielem);
+      load_ei(ielem, exo, 0, pg->imtrx);
+      err = load_elem_dofptr(ielem, exo, x, x, x, x, 0);
+      GOMA_EH(err, "Can't load elem_dofptr in shell normals initialization");
 
-      setup_shop_at_point(ielem, xi, exo);
+      ielem_dim = elem_info(NDIM, ielem_type);
+      num_local_nodes = elem_info(NNODES, ielem_type);
+      iconnect_ptr = Proc_Connect_Ptr[ielem];
 
-      shell_determinant_and_normal(ielem, iconnect_ptr, num_local_nodes, ielem_dim, 1);
+      /* Loop over nodes within the element */
+      for (ilnode = 0; ilnode < num_local_nodes; ilnode++) {
+        /* Find s, t, u, coordinates of each node */
+        find_nodal_stu(ilnode, ielem_type, &s, &t, &u);
+        xi[0] = s;
+        xi[1] = t;
+        xi[2] = u;
 
-      /* Get global node number */
-      ignode = Proc_Elem_Connect[iconnect_ptr + ilnode];
+        setup_shop_at_point(ielem, xi, exo);
 
-      /* Get node number and indices into solution vector for normal dofs */
-      nxi = Index_Solution(ignode, SHELL_NORMAL1, 0, 0, -2, pg->imtrx);
-      nyi = Index_Solution(ignode, SHELL_NORMAL2, 0, 0, -2, pg->imtrx);
+        shell_determinant_and_normal(ielem, iconnect_ptr, num_local_nodes, ielem_dim, 1);
 
-      x[nxi] = fv->snormal[0];
-      x[nyi] = fv->snormal[1];
+        /* Get global node number */
+        ignode = Proc_Elem_Connect[iconnect_ptr + ilnode];
 
-      if (pd->Num_Dim == 3) {
-        nzi = Index_Solution(ignode, SHELL_NORMAL3, 0, 0, -2, pg->imtrx);
-        x[nzi] = fv->snormal[2];
+        /* Get node number and indices into solution vector for normal dofs */
+        nxi = Index_Solution(ignode, SHELL_NORMAL1, 0, 0, -2, pg->imtrx);
+        nyi = Index_Solution(ignode, SHELL_NORMAL2, 0, 0, -2, pg->imtrx);
+
+        x[nxi] = fv->snormal[0];
+        x[nyi] = fv->snormal[1];
+
+        if (pd->Num_Dim == 3) {
+          nzi = Index_Solution(ignode, SHELL_NORMAL3, 0, 0, -2, pg->imtrx);
+          x[nzi] = fv->snormal[2];
+        }
       }
     }
   }

@@ -5,9 +5,9 @@
 extern "C" {
 #endif
 
+#include "mm_as_structs.h"
 #include "rf_fem_const.h"
 #include "rf_io_const.h"
-#include "mm_as_structs.h"
 
 int stratimikos_solve(struct GomaLinearSolverData *ams,
                       double *x_,

@@ -1070,8 +1070,10 @@ int assemble_fill(double tt,
                 advection = 0.0;
                 for (a = 0; a < dim; a++) {
                   //			    advection += LubAux->dv_avg_dx[a][b][j] * grad_F[a] *
-                  // phi_i; 			    advection -= (1+2*tt)/dt * phi_j * delta(a,b) * grad_F[a] *
-                  // phi_i; 			    advection += v_rel[a] * fv->d_grad_F_dmesh[a][b][j] * phi_i;
+                  // phi_i; 			    advection -= (1+2*tt)/dt * phi_j * delta(a,b) * grad_F[a]
+                  // *
+                  // phi_i; 			    advection += v_rel[a] * fv->d_grad_F_dmesh[a][b][j] *
+                  // phi_i;
 
                   advection += LubAux->dv_avg_dx[a][b][j] * grad_II_F[a] * phi_i;
                   advection -= (1 + 2 * tt) / dt * phi_j * delta(a, b) * grad_II_F[a] * phi_i;

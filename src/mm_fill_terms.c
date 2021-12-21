@@ -3677,9 +3677,10 @@ int assemble_momentum(dbl time,       /* current time */
           /*
            * J_m_G
            */
-          if (gn->ConstitutiveEquation == BINGHAM_MIXED || (pdv[POLYMER_STRESS11] &&
-              (vn->evssModel == EVSS_F || vn->evssModel == LOG_CONF ||
-               vn->evssModel == EVSS_GRADV || vn->evssModel == LOG_CONF_GRADV))) {
+          if (gn->ConstitutiveEquation == BINGHAM_MIXED ||
+              (pdv[POLYMER_STRESS11] &&
+               (vn->evssModel == EVSS_F || vn->evssModel == LOG_CONF ||
+                vn->evssModel == EVSS_GRADV || vn->evssModel == LOG_CONF_GRADV))) {
             for (b = 0; b < VIM; b++) {
               for (c = 0; c < VIM; c++) {
                 var = v_g[b][c];
@@ -26980,17 +26981,17 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
     for (p = 0; p < VIM; p++) {
       for (q = 0; q < VIM; q++) {
         if (p <= q) {
-        for (b = 0; b < VIM; b++) {
-          for (c = 0; c < VIM; c++) {
-            var = v_g[b][c];
-            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-              d_Pi->g[p][q][b][c][j] = tau_y * bf[var]->phi[j] * (delta(p,b) * delta(q,c));
-              if (q > p) {
-                d_Pi->g[q][p][b][c][j] = tau_y * bf[var]->phi[j] * (delta(p,b) * delta(q,c));
+          for (b = 0; b < VIM; b++) {
+            for (c = 0; c < VIM; c++) {
+              var = v_g[b][c];
+              for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                d_Pi->g[p][q][b][c][j] = tau_y * bf[var]->phi[j] * (delta(p, b) * delta(q, c));
+                if (q > p) {
+                  d_Pi->g[q][p][b][c][j] = tau_y * bf[var]->phi[j] * (delta(p, b) * delta(q, c));
+                }
               }
             }
           }
-        }
         }
       }
     }

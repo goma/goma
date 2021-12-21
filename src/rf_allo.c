@@ -128,8 +128,7 @@ main()
 double *array_alloc(int numdim, ...)
 #else
 
-double *array_alloc(va_alist)
-va_dcl
+double *array_alloc(va_alist) va_dcl
 
 #endif
 /*****************************************************************************/

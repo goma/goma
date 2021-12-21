@@ -1686,11 +1686,11 @@ void adapt_mesh(Omega_h::Mesh &mesh) {
   if (imb > 2) {
     GOMA_EH(-1, "Mesh imbalance %g exiting", imb);
   }
-  //mesh.balance();
-  //imb = mesh.imbalance();
-  //if (ProcID == 0) {
-  //  std::cout << "Mesh imbalance after balance = " << imb << "\n";
-  //}
+  // mesh.balance();
+  // imb = mesh.imbalance();
+  // if (ProcID == 0) {
+  //   std::cout << "Mesh imbalance after balance = " << imb << "\n";
+  // }
 }
 
 extern "C" {

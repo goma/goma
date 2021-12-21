@@ -1511,7 +1511,7 @@ surface_determinant_and_normal(
      * zero and giving junk for the surface normal/determinant
      * DSH 03/24/2016
      */
-    if (det_h01 == 0) {
+    if (DOUBLE_ZERO(det_h01)) {
       GOMA_EH(GOMA_ERROR,
               "The shell elements need to be aligned in the X-Y plane for this problem to work");
     }

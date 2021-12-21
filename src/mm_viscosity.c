@@ -513,7 +513,7 @@ double viscosity(struct Generalized_Newtonian *gn_local,
       if (pd->v[pg->imtrx][MASS_FRACTION]) {
         for (w = 0; w < pd->Num_Species_Eqn; w++) {
           dbl tmp = mp->d_viscosity[MAX_VARIABLE_TYPES + w];
-          if (tmp != 0.0) {
+          if (DOUBLE_NONZERO(tmp)) {
             for (j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) {
               d_mu->C[w][j] = tmp * bf[MASS_FRACTION]->phi[j];
             }
@@ -685,7 +685,7 @@ double power_law_viscosity(struct Generalized_Newtonian *gn_local,
   if (d_mu != NULL && pd->e[pg->imtrx][R_MESH1]) {
     for (b = 0; b < VIM; b++) {
       for (j = 0; j < mdofs; j++) {
-        if (gammadot != 0.0 && Include_Visc_Sens) {
+        if (DOUBLE_NONZERO(gammadot) && Include_Visc_Sens) {
 
           d_mu->X[b][j] = d_mu->gd * d_gd_dmesh[b][j];
 
@@ -703,7 +703,7 @@ double power_law_viscosity(struct Generalized_Newtonian *gn_local,
   if (d_mu != NULL && pd->e[pg->imtrx][R_MOMENTUM1]) {
     for (a = 0; a < VIM; a++) {
       for (i = 0; i < vdofs; i++) {
-        if (gammadot != 0.0 && Include_Visc_Sens) {
+        if (DOUBLE_NONZERO(gammadot) && Include_Visc_Sens) {
           d_mu->v[a][i] = d_mu->gd * d_gd_dv[a][i];
         } else {
           d_mu->v[a][i] = 0.0;
@@ -772,7 +772,7 @@ double herschel_buckley_viscosity(struct Generalized_Newtonian *gn_local,
   if (d_mu != NULL && pd->e[pg->imtrx][R_MESH1]) {
     for (b = 0; b < VIM; b++) {
       for (j = 0; j < mdofs; j++) {
-        if (gammadot != 0.0 && Include_Visc_Sens) {
+        if (DOUBLE_NONZERO(gammadot) && Include_Visc_Sens) {
 
           d_mu->X[b][j] = d_mu->gd * d_gd_dmesh[b][j];
 
@@ -793,7 +793,7 @@ double herschel_buckley_viscosity(struct Generalized_Newtonian *gn_local,
   if (d_mu != NULL && pd->e[pg->imtrx][R_MOMENTUM1]) {
     for (a = 0; a < VIM; a++) {
       for (i = 0; i < vdofs; i++) {
-        if (gammadot != 0.0 && Include_Visc_Sens) {
+        if (DOUBLE_NONZERO(gammadot) && Include_Visc_Sens) {
           d_mu->v[a][i] = d_mu->gd * d_gd_dv[a][i];
         } else {
           d_mu->v[a][i] = 0.0;
@@ -890,7 +890,7 @@ double carreau_viscosity(struct Generalized_Newtonian *gn_local,
     }
   }
 
-  if (gammadot != 0.) {
+  if (DOUBLE_NONZERO(gammadot)) {
     val2 = pow(lambda * gammadot, aexp);
   } else {
     val2 = 0.;
@@ -901,7 +901,7 @@ double carreau_viscosity(struct Generalized_Newtonian *gn_local,
   /* gammadot = 0.0; */
   /* this effectively turns off the viscosity Jac terms */
 
-  if (gammadot != 0.) {
+  if (DOUBLE_NONZERO(gammadot)) {
     val = pow(lambda * gammadot, aexp - 1.);
   } else {
     val = 0.;
@@ -917,7 +917,7 @@ double carreau_viscosity(struct Generalized_Newtonian *gn_local,
   if (d_mu != NULL && pd->e[pg->imtrx][R_MESH1]) {
     for (b = 0; b < VIM; b++) {
       for (j = 0; j < mdofs; j++) {
-        if (gammadot != 0.0 && Include_Visc_Sens) {
+        if (DOUBLE_NONZERO(gammadot) && Include_Visc_Sens) {
           d_mu->X[b][j] = d_mu->gd * d_gd_dmesh[b][j];
         } else {
           /* printf("\ngammadot is zero in viscosity function");*/
@@ -933,7 +933,7 @@ double carreau_viscosity(struct Generalized_Newtonian *gn_local,
   if (d_mu != NULL && pd->e[pg->imtrx][R_MOMENTUM1]) {
     for (a = 0; a < VIM; a++) {
       for (i = 0; i < vdofs; i++) {
-        if (gammadot != 0.0 && Include_Visc_Sens) {
+        if (DOUBLE_NONZERO(gammadot) && Include_Visc_Sens) {
           d_mu->v[a][i] = d_mu->gd * d_gd_dv[a][i];
         } else {
           d_mu->v[a][i] = 0.0;
@@ -1017,7 +1017,7 @@ double bingham_viscosity(struct Generalized_Newtonian *gn_local,
   }
 
   var = TEMPERATURE;
-  if (pd->e[pg->imtrx][var] && (temp != 0.) && (mp->reference[TEMPERATURE] != 0.)) {
+  if (pd->gv[var] && DOUBLE_NONZERO(temp) && DOUBLE_NONZERO(mp->reference[TEMPERATURE])) {
 #if MELTING_BINGHAM
     /* melting version */
     if (temp <= tmelt) {
@@ -1045,7 +1045,7 @@ double bingham_viscosity(struct Generalized_Newtonian *gn_local,
     d_at_s = 0.;
   }
 
-  if ((at_shift * lambda * gammadot) != 0.) {
+  if (DOUBLE_NONZERO(at_shift * lambda * gammadot)) {
     shear = pow(at_shift * lambda * gammadot, aexp);
     val1 = pow(at_shift * lambda * gammadot, aexp - 1.);
     d_shear = aexp * at_shift * lambda * val1;
@@ -1056,7 +1056,7 @@ double bingham_viscosity(struct Generalized_Newtonian *gn_local,
     d_shear_d_at = 0.;
   }
 
-  if ((gammadot != 0.) && (at_shift != 0.)) {
+  if (DOUBLE_NONZERO(gammadot) && DOUBLE_NONZERO(at_shift)) {
     yield = tau_y * (1. - exp(-at_shift * fexp * gammadot)) / (at_shift * gammadot);
     d_yield = (-yield + tau_y * fexp * exp(-at_shift * fexp * gammadot)) / gammadot;
     d_yield_d_at = d_yield * gammadot / at_shift;
@@ -1096,7 +1096,8 @@ double bingham_viscosity(struct Generalized_Newtonian *gn_local,
 
   var = TEMPERATURE;
   if (d_mu != NULL && pd->e[pg->imtrx][var]) {
-    if ((temp != 0.) && (mp->reference[TEMPERATURE] != 0.) && (gammadot != 0.)) {
+    if (DOUBLE_NONZERO(temp) && DOUBLE_NONZERO(mp->reference[TEMPERATURE]) &&
+        DOUBLE_NONZERO(gammadot)) {
 #if MELTING_BINGHAM
       /* melting version */
       dmudT = mu / at_shift - at_shift * tau_y * fexp * exp(-at_shift * fexp * gammadot) * visc_cy +
@@ -1129,7 +1130,7 @@ double bingham_viscosity(struct Generalized_Newtonian *gn_local,
   if (d_mu != NULL && pd->e[pg->imtrx][R_MESH1]) {
     for (b = 0; b < VIM; b++) {
       for (j = 0; j < mdofs; j++) {
-        if (gammadot != 0.0 && Include_Visc_Sens) {
+        if (DOUBLE_NONZERO(gammadot) && Include_Visc_Sens) {
           d_mu->X[b][j] = d_mu->gd * d_gd_dmesh[b][j];
         } else {
           /* printf("\ngammadot is zero in viscosity function");*/
@@ -1145,7 +1146,7 @@ double bingham_viscosity(struct Generalized_Newtonian *gn_local,
   if (d_mu != NULL && pd->e[pg->imtrx][R_MOMENTUM1]) {
     for (a = 0; a < VIM; a++) {
       for (i = 0; i < vdofs; i++) {
-        if (gammadot != 0.0 && Include_Visc_Sens) {
+        if (DOUBLE_NONZERO(gammadot) && Include_Visc_Sens) {
           d_mu->v[a][i] = d_mu->gd * d_gd_dv[a][i];
         } else {
           d_mu->v[a][i] = 0.0;
@@ -1227,7 +1228,7 @@ double bingham_wlf_viscosity(struct Generalized_Newtonian *gn_local,
   at_shift = 1.;
   Tref = mp->reference[TEMPERATURE];
   wlf_denom = wlfc2 + temp - Tref;
-  if (wlf_denom != 0.) {
+  if (DOUBLE_NONZERO(wlf_denom)) {
     at_shift = exp(atexp * (Tref - temp) / wlf_denom);
     if (!isfinite(at_shift)) {
       at_shift = DBL_MAX;
@@ -1235,7 +1236,7 @@ double bingham_wlf_viscosity(struct Generalized_Newtonian *gn_local,
     d_at_dT = at_shift * atexp / wlf_denom * (-1. - (Tref - temp) / wlf_denom);
   }
 
-  if ((at_shift * lambda * gammadot) != 0.) {
+  if (DOUBLE_NONZERO(at_shift * lambda * gammadot)) {
     shear = pow(at_shift * lambda * gammadot, aexp);
     val1 = pow(at_shift * lambda * gammadot, aexp - 1.);
     d_shear = aexp * at_shift * lambda * val1;
@@ -1246,7 +1247,7 @@ double bingham_wlf_viscosity(struct Generalized_Newtonian *gn_local,
     d_shear_d_at = 0.;
   }
 
-  if ((gammadot != 0.) && (at_shift != 0.)) {
+  if (DOUBLE_NONZERO(gammadot) && DOUBLE_NONZERO(at_shift)) {
     yield = tau_y * (1. - exp(-at_shift * fexp * gammadot)) / (at_shift * gammadot);
     d_yield = (-yield + tau_y * fexp * exp(-at_shift * fexp * gammadot)) / gammadot;
     d_yield_d_at = d_yield * gammadot / at_shift;
@@ -1270,7 +1271,8 @@ double bingham_wlf_viscosity(struct Generalized_Newtonian *gn_local,
 
   var = TEMPERATURE;
   if (d_mu != NULL && pd->e[pg->imtrx][var]) {
-    if ((temp != 0.) && (mp->reference[TEMPERATURE] != 0.) && (gammadot != 0.)) {
+    if (DOUBLE_NONZERO(temp) && DOUBLE_NONZERO(mp->reference[TEMPERATURE]) &&
+        DOUBLE_NONZERO(gammadot)) {
       dmudT = mu / at_shift + at_shift * d_yield_d_at * visc_cy +
               at_shift * (mu0 - muinf + yield) * d_visc_cy * d_shear_d_at;
       dmudT *= d_at_dT;
@@ -1292,7 +1294,7 @@ double bingham_wlf_viscosity(struct Generalized_Newtonian *gn_local,
   if (d_mu != NULL && pd->e[pg->imtrx][R_MESH1]) {
     for (b = 0; b < VIM; b++) {
       for (j = 0; j < mdofs; j++) {
-        if (gammadot != 0.0 && Include_Visc_Sens) {
+        if (DOUBLE_NONZERO(gammadot) && Include_Visc_Sens) {
           d_mu->X[b][j] = d_mu->gd * d_gd_dmesh[b][j];
         } else {
           /* printf("\ngammadot is zero in viscosity function");*/
@@ -1308,7 +1310,7 @@ double bingham_wlf_viscosity(struct Generalized_Newtonian *gn_local,
   if (d_mu != NULL && pd->e[pg->imtrx][R_MOMENTUM1]) {
     for (a = 0; a < VIM; a++) {
       for (i = 0; i < vdofs; i++) {
-        if (gammadot != 0.0 && Include_Visc_Sens) {
+        if (DOUBLE_NONZERO(gammadot) && Include_Visc_Sens) {
           d_mu->v[a][i] = d_mu->gd * d_gd_dv[a][i];
         } else {
           d_mu->v[a][i] = 0.0;
@@ -1445,14 +1447,14 @@ double carreau_wlf_viscosity(struct Generalized_Newtonian *gn_local,
 
   at_shift = 1.;
   wlf_denom = wlfc2 + temp - mp->reference[TEMPERATURE];
-  if (wlf_denom != 0.) {
+  if (DOUBLE_NONZERO(wlf_denom)) {
     at_shift = exp(atexp * (mp->reference[TEMPERATURE] - temp) / wlf_denom);
     if (!isfinite(at_shift)) {
       at_shift = DBL_MAX;
     }
   }
 
-  if (gammadot != 0.) {
+  if (DOUBLE_NONZERO(gammadot)) {
     shear = pow(at_shift * lambda * gammadot, aexp);
     val1 = pow(at_shift * lambda * gammadot, aexp - 1.);
     d_shear = aexp * at_shift * lambda * val1;
@@ -1477,7 +1479,7 @@ double carreau_wlf_viscosity(struct Generalized_Newtonian *gn_local,
 
   var = TEMPERATURE;
   if (d_mu != NULL && pd->e[pg->imtrx][var]) {
-    if (wlf_denom != 0.) {
+    if (DOUBLE_NONZERO(wlf_denom)) {
       dmudT = mu + at_shift * at_shift * (mu0 - muinf) * d_visc_cy * d_shear_d_at;
       dmudT *= -atexp * wlfc2 / (wlf_denom * wlf_denom);
       if (!isfinite(dmudT)) {
@@ -1498,7 +1500,7 @@ double carreau_wlf_viscosity(struct Generalized_Newtonian *gn_local,
   if (d_mu != NULL && pd->e[pg->imtrx][R_MESH1]) {
     for (b = 0; b < VIM; b++) {
       for (j = 0; j < mdofs; j++) {
-        if (gammadot != 0.0 && Include_Visc_Sens) {
+        if (DOUBLE_NONZERO(gammadot) && Include_Visc_Sens) {
           d_mu->X[b][j] = d_mu->gd * d_gd_dmesh[b][j];
         } else {
           /* printf("\ngammadot is zero in viscosity function");*/
@@ -1514,7 +1516,7 @@ double carreau_wlf_viscosity(struct Generalized_Newtonian *gn_local,
   if (d_mu != NULL && pd->e[pg->imtrx][R_MOMENTUM1]) {
     for (a = 0; a < VIM; a++) {
       for (i = 0; i < vdofs; i++) {
-        if (gammadot != 0.0 && Include_Visc_Sens) {
+        if (DOUBLE_NONZERO(gammadot) && Include_Visc_Sens) {
           d_mu->v[a][i] = d_mu->gd * d_gd_dv[a][i];
         } else {
           d_mu->v[a][i] = 0.0;
@@ -1765,7 +1767,7 @@ double carreau_suspension_viscosity(struct Generalized_Newtonian *gn_local,
   nexp_species = gn_local->atexp;
   species = gn_local->sus_species_no;
 
-  if (gammadot != 0.) {
+  if (DOUBLE_NONZERO(gammadot)) {
     val2 = pow(lambda * gammadot, aexp);
   } else {
     val2 = 0.;
@@ -1795,7 +1797,7 @@ double carreau_suspension_viscosity(struct Generalized_Newtonian *gn_local,
   mu = mu_car * mu_sus;
   mp->viscosity = mu;
 
-  if (gammadot != 0.) {
+  if (DOUBLE_NONZERO(gammadot)) {
     val = pow(lambda * gammadot, aexp - 1.);
   } else {
     val = 0.;
@@ -1821,7 +1823,7 @@ double carreau_suspension_viscosity(struct Generalized_Newtonian *gn_local,
   if (d_mu != NULL && pd->e[pg->imtrx][R_MESH1]) {
     for (b = 0; b < VIM; b++) {
       for (j = 0; j < mdofs; j++) {
-        if (gammadot != 0.0 && Include_Visc_Sens) {
+        if (DOUBLE_NONZERO(gammadot) && Include_Visc_Sens) {
           d_mu->X[b][j] = d_mu->gd * d_gd_dmesh[b][j];
         } else {
           /* printf("\ngammadot is zero in viscosity function");*/
@@ -1837,7 +1839,7 @@ double carreau_suspension_viscosity(struct Generalized_Newtonian *gn_local,
   if (d_mu != NULL && pd->e[pg->imtrx][R_MOMENTUM1]) {
     for (a = 0; a < VIM; a++) {
       for (i = 0; i < vdofs; i++) {
-        if (gammadot != 0.0 && Include_Visc_Sens) {
+        if (DOUBLE_NONZERO(gammadot) && Include_Visc_Sens) {
           d_mu->v[a][i] = d_mu->gd * d_gd_dv[a][i];
         } else {
           d_mu->v[a][i] = 0.0;
@@ -1964,7 +1966,7 @@ double powerlaw_suspension_viscosity(struct Generalized_Newtonian *gn_local,
   if (d_mu != NULL && pd->e[pg->imtrx][R_MESH1]) {
     for (b = 0; b < VIM; b++) {
       for (j = 0; j < mdofs; j++) {
-        if (gammadot != 0.0 && Include_Visc_Sens) {
+        if (DOUBLE_NONZERO(gammadot) && Include_Visc_Sens) {
           d_mu->X[b][j] = d_mu->gd * d_gd_dmesh[b][j];
         } else {
           /* printf("\ngammadot is zero in viscosity function");*/
@@ -1980,7 +1982,7 @@ double powerlaw_suspension_viscosity(struct Generalized_Newtonian *gn_local,
   if (d_mu != NULL && pd->e[pg->imtrx][R_MOMENTUM1]) {
     for (a = 0; a < VIM; a++) {
       for (i = 0; i < vdofs; i++) {
-        if (gammadot != 0.0 && Include_Visc_Sens) {
+        if (DOUBLE_NONZERO(gammadot) && Include_Visc_Sens) {
           d_mu->v[a][i] = d_mu->gd * d_gd_dv[a][i];
         } else {
           d_mu->v[a][i] = 0.0;
@@ -2777,10 +2779,10 @@ double bond_viscosity(struct Generalized_Newtonian *gn_local,
 
   var = TEMPERATURE;
   at_shift = 1.;
-  if ((temp != 0.) && (mp->reference[TEMPERATURE] != 0.)) {
+  if (DOUBLE_NONZERO(temp) && DOUBLE_NONZERO(mp->reference[TEMPERATURE])) {
     Tref = mp->reference[TEMPERATURE];
     wlf_denom = wlfc2 + temp - Tref;
-    if (wlf_denom != 0.) {
+    if (DOUBLE_NONZERO(wlf_denom)) {
       at_shift = exp(atexp * (Tref - temp) / wlf_denom);
       if (!isfinite(at_shift)) {
         at_shift = DBL_MAX;
@@ -2800,7 +2802,7 @@ double bond_viscosity(struct Generalized_Newtonian *gn_local,
     mp->viscosity = mu;
     mp->d_viscosity[BOND_EVOLUTION] = at_shift * (mu0 - mu_inf) * Aexp * pow(nn, Aexp - 1.);
     mp->d_viscosity[TEMPERATURE] = d_at_dT * (mu_inf + (mu0 - mu_inf) * pow(nn, Aexp));
-    if ((gammadot != 0.) && (at_shift != 0.)) {
+    if (DOUBLE_NONZERO(gammadot) && DOUBLE_NONZERO(at_shift)) {
       exp_term = exp(-at_shift * fexp * gammadot);
       yield = tau_y * (1. - exp_term) / (at_shift * gammadot);
       d_yield =
@@ -2844,7 +2846,7 @@ double bond_viscosity(struct Generalized_Newtonian *gn_local,
   if (d_mu != NULL && pd->e[pg->imtrx][R_MESH1]) {
     for (b = 0; b < VIM; b++) {
       for (j = 0; j < mdofs; j++) {
-        if (gammadot != 0.0 && Include_Visc_Sens) {
+        if (DOUBLE_NONZERO(gammadot) && Include_Visc_Sens) {
           d_mu->X[b][j] = d_mu->gd * d_gd_dmesh[b][j];
         } else {
           /* printf("\ngammadot is zero in viscosity function");*/
@@ -2860,7 +2862,7 @@ double bond_viscosity(struct Generalized_Newtonian *gn_local,
   if (d_mu != NULL && pd->e[pg->imtrx][R_MOMENTUM1]) {
     for (a = 0; a < VIM; a++) {
       for (i = 0; i < vdofs; i++) {
-        if (gammadot != 0.0 && Include_Visc_Sens) {
+        if (DOUBLE_NONZERO(gammadot) && Include_Visc_Sens) {
           d_mu->v[a][i] = d_mu->gd * d_gd_dv[a][i];
         } else {
           d_mu->v[a][i] = 0.0;
@@ -2986,7 +2988,7 @@ double carreau_wlf_conc_viscosity(struct Generalized_Newtonian *gn_local,
   }
 
   wlf_denom = wlfc2 + temp - mp->reference[TEMPERATURE];
-  if (wlf_denom != 0.) {
+  if (DOUBLE_NONZERO(wlf_denom)) {
     at_shift = exp(atexp * (mp->reference[TEMPERATURE] - temp) / wlf_denom);
     if (!isfinite(at_shift)) {
       at_shift = DBL_MAX;
@@ -3029,7 +3031,7 @@ double carreau_wlf_conc_viscosity(struct Generalized_Newtonian *gn_local,
     GOMA_EH(GOMA_ERROR, "invalid constitutive model for WLF_CONC");
   }
 
-  if (gammadot != 0.) {
+  if (DOUBLE_NONZERO(gammadot)) {
     shear = pow(at_conc * at_shift * lambda * gammadot, aexp);
     val1 = pow(at_conc * at_shift * lambda * gammadot, aexp - 1.);
     d_shear = aexp * at_conc * at_shift * lambda * val1;
@@ -3056,7 +3058,7 @@ double carreau_wlf_conc_viscosity(struct Generalized_Newtonian *gn_local,
 
   var = TEMPERATURE;
   if (d_mu != NULL && pd->e[pg->imtrx][var]) {
-    if (wlf_denom != 0.) {
+    if (DOUBLE_NONZERO(wlf_denom)) {
       dmudT =
           mu + at_conc * at_conc * at_shift * at_shift * (mu0 - muinf) * d_visc_cy * d_shear_d_at;
       dmudT *= -atexp * wlfc2 / (wlf_denom * wlf_denom);
@@ -3106,7 +3108,7 @@ double carreau_wlf_conc_viscosity(struct Generalized_Newtonian *gn_local,
   if (d_mu != NULL && pd->e[pg->imtrx][R_MESH1]) {
     for (b = 0; b < VIM; b++) {
       for (j = 0; j < mdofs; j++) {
-        if (gammadot != 0.0 && Include_Visc_Sens) {
+        if (DOUBLE_NONZERO(gammadot) && Include_Visc_Sens) {
           d_mu->X[b][j] = d_mu->gd * d_gd_dmesh[b][j];
         } else {
           /* printf("\ngammadot is zero in viscosity function");*/
@@ -3122,7 +3124,7 @@ double carreau_wlf_conc_viscosity(struct Generalized_Newtonian *gn_local,
   if (d_mu != NULL && pd->e[pg->imtrx][R_MOMENTUM1]) {
     for (a = 0; a < VIM; a++) {
       for (i = 0; i < vdofs; i++) {
-        if (gammadot != 0.0 && Include_Visc_Sens) {
+        if (DOUBLE_NONZERO(gammadot) && Include_Visc_Sens) {
           d_mu->v[a][i] = d_mu->gd * d_gd_dv[a][i];
         } else {
           d_mu->v[a][i] = 0.0;

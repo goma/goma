@@ -76,7 +76,12 @@ void get_metric_tensor(dbl B[DIM][DIM], int dim, int element_type, dbl G[DIM][DI
   }
 }
 
-void get_metric_tensor_deriv(dbl B[DIM][DIM], dbl dB[DIM][DIM][DIM][MDE], int dim, int interp_base, int element_type, dbl dG[DIM][DIM][DIM][MDE]) {
+void get_metric_tensor_deriv(dbl B[DIM][DIM],
+                             dbl dB[DIM][DIM][DIM][MDE],
+                             int dim,
+                             int interp_base,
+                             int element_type,
+                             dbl dG[DIM][DIM][DIM][MDE]) {
   dbl adjustment[DIM][DIM] = {{0}};
   const dbl invroot3 = 0.577350269189626;
   const dbl tetscale = 0.629960524947437; // 0.5 * cubroot(2)
@@ -109,7 +114,7 @@ void get_metric_tensor_deriv(dbl B[DIM][DIM], dbl dB[DIM][DIM][DIM][MDE], int di
   // G = B * adjustment * B^T where B = J^-1
 
   for (int a = 0; a < dim; a++) {
-    for (int b = 0; b < ei[pg->imtrx]->dof[interp_base+a]; b++) {
+    for (int b = 0; b < ei[pg->imtrx]->dof[interp_base + a]; b++) {
       for (int i = 0; i < dim; i++) {
         for (int j = 0; j < dim; j++) {
           dG[i][j][a][b] = 0;
@@ -125,8 +130,7 @@ void get_metric_tensor_deriv(dbl B[DIM][DIM], dbl dB[DIM][DIM][DIM][MDE], int di
   }
 }
 
-void supg_tau_shakib(
-    SUPG_terms *supg_terms, int dim, dbl dt, dbl diffusivity, int interp_eqn) {
+void supg_tau_shakib(SUPG_terms *supg_terms, int dim, dbl dt, dbl diffusivity, int interp_eqn) {
   dbl G[DIM][DIM];
 
   get_metric_tensor(bf[interp_eqn]->B, dim, ei[pg->imtrx]->ielem_type, G);
@@ -167,16 +171,17 @@ void supg_tau_shakib(
 
   for (int a = 0; a < dim; a++) {
     for (int k = 0; k < ei[pg->imtrx]->dof[VELOCITY1]; k++) {
-      supg_terms->d_supg_tau_dv[a][k] =
-          -0.5 * d_v_d_gv[a][k] * supg_terms->supg_tau * supg_terms->supg_tau * supg_terms->supg_tau;
+      supg_terms->d_supg_tau_dv[a][k] = -0.5 * d_v_d_gv[a][k] * supg_terms->supg_tau *
+                                        supg_terms->supg_tau * supg_terms->supg_tau;
     }
   }
 
   if (pd->e[pg->imtrx][MESH_DISPLACEMENT1]) {
     dbl dG[DIM][DIM][DIM][MDE];
-    get_metric_tensor_deriv(bf[MESH_DISPLACEMENT1]->B, bf[MESH_DISPLACEMENT1]->dB, dim, MESH_DISPLACEMENT1, ei[pg->imtrx]->ielem_type, dG);
+    get_metric_tensor_deriv(bf[MESH_DISPLACEMENT1]->B, bf[MESH_DISPLACEMENT1]->dB, dim,
+                            MESH_DISPLACEMENT1, ei[pg->imtrx]->ielem_type, dG);
     for (int a = 0; a < dim; a++) {
-      for (int k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1+a]; k++) {
+      for (int k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1 + a]; k++) {
         dbl v_d_gv_dx = 0;
         for (int i = 0; i < dim; i++) {
           for (int j = 0; j < dim; j++) {
@@ -187,12 +192,12 @@ void supg_tau_shakib(
         dbl diff_g_g_dx = 0;
         for (int i = 0; i < dim; i++) {
           for (int j = 0; j < dim; j++) {
-            diff_g_g_dx += 2*dG[i][j][a][k] * G[i][j];
+            diff_g_g_dx += 2 * dG[i][j][a][k] * G[i][j];
           }
         }
         diff_g_g_dx *= 9 * diffusivity * diffusivity;
-        supg_terms->d_supg_tau_dX[a][k] =
-            -0.5 * (v_d_gv_dx + diff_g_g_dx) * supg_terms->supg_tau * supg_terms->supg_tau * supg_terms->supg_tau;
+        supg_terms->d_supg_tau_dX[a][k] = -0.5 * (v_d_gv_dx + diff_g_g_dx) * supg_terms->supg_tau *
+                                          supg_terms->supg_tau * supg_terms->supg_tau;
       }
     }
   }
@@ -811,7 +816,7 @@ int calc_pspg(dbl pspg[DIM],
     dbl tau_adv = 0;
     for (int i = 0; i < dim; i++) {
       for (int j = 0; j < dim; j++) {
-        //tau_adv += rho * rho * fv->v[i] * G[i][j] * fv->v[j];
+        // tau_adv += rho * rho * fv->v[i] * G[i][j] * fv->v[j];
         tau_adv += rho * rho * fv_old->v[i] * G[i][j] * fv_old->v[j];
       }
     }
@@ -841,13 +846,14 @@ int calc_pspg(dbl pspg[DIM],
             for (int a = 0; a < dim; a++) {
               tau_adv_dv += rho * rho * bf[var]->phi[j] * G[b][a] * fv->v[a];
               tau_adv_dv += rho * rho * bf[var]->phi[j] * G[a][b] * fv->v[a];
-            //dbl tau_adv_dv = 0;
-            //for (int a = 0; a < dim; a++) {
-            //  tau_adv_dv += rho*rho*bf[var]->phi[j] * G[b][a] * fv->v[a];
-            //  tau_adv_dv += rho*rho*bf[var]->phi[j] * G[a][b] * fv->v[a];
+              // dbl tau_adv_dv = 0;
+              // for (int a = 0; a < dim; a++) {
+              //   tau_adv_dv += rho*rho*bf[var]->phi[j] * G[b][a] * fv->v[a];
+              //   tau_adv_dv += rho*rho*bf[var]->phi[j] * G[a][b] * fv->v[a];
             }
 
-            //d_tau_pspg_dv[b][j] = -PS_scaling * rho * 0.5 * tau_pspg * tau_pspg * tau_pspg * tau_adv_dv;
+            // d_tau_pspg_dv[b][j] = -PS_scaling * rho * 0.5 * tau_pspg * tau_pspg * tau_pspg *
+            // tau_adv_dv;
             d_tau_pspg_dv[b][j] = 0;
           }
         }
@@ -855,7 +861,8 @@ int calc_pspg(dbl pspg[DIM],
     }
     if (d_pspg != NULL && pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
       dbl dG[DIM][DIM][DIM][MDE];
-      get_metric_tensor_deriv(bf[MESH_DISPLACEMENT1]->B, bf[MESH_DISPLACEMENT1]->dB, dim, MESH_DISPLACEMENT1, ei[pg->imtrx]->ielem_type, dG);
+      get_metric_tensor_deriv(bf[MESH_DISPLACEMENT1]->B, bf[MESH_DISPLACEMENT1]->dB, dim,
+                              MESH_DISPLACEMENT1, ei[pg->imtrx]->ielem_type, dG);
       for (b = 0; b < dim; b++) {
         var = MESH_DISPLACEMENT1 + b;
         if (pd->v[pg->imtrx][var]) {
@@ -872,7 +879,8 @@ int calc_pspg(dbl pspg[DIM],
                 tau_diff_dx += coeff * 2 * dG[i][j][b][k] * G[i][j];
               }
             }
-            d_tau_pspg_dX[b][k] = -PS_scaling * rho * 0.5 * (tau_adv_dx + tau_diff_dx) * tau_pspg * tau_pspg * tau_pspg;
+            d_tau_pspg_dX[b][k] = -PS_scaling * rho * 0.5 * (tau_adv_dx + tau_diff_dx) * tau_pspg *
+                                  tau_pspg * tau_pspg;
           }
         }
       }

@@ -76,6 +76,10 @@ EXTERN int load_export_vars /* rf_solve.c */
      dbl *);                /* x_pp - post processing varibale vector */
 #endif
 
+EXTERN int variable_stats /* rf_solve.c */
+    (dbl[],               /* x - solution vector */
+     const dbl);          /* time value */
+
 /*
  * rf_setup_problem.c prototypes
  */

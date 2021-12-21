@@ -2953,21 +2953,22 @@ int assemble_stress_log_conf(dbl tt,
                 get_metric_tensor(bf[eqn]->B, dim, ei[pg->imtrx]->ielem_type, G);
 
                 dbl hrgn = 0.0;
-                //for (int w = 0; w < dim; w++) {
-                //  for (int z = 0; z < dim; z++) {
-                //    //tmp += fabs(r[w] * G[w][z] * r[z]);
-                //  }
-                //}
+                // for (int w = 0; w < dim; w++) {
+                //   for (int z = 0; z < dim; z++) {
+                //     //tmp += fabs(r[w] * G[w][z] * r[z]);
+                //   }
+                // }
                 tmp = 0;
                 for (int q = 0; q < ei[pg->imtrx]->dof[eqn]; q++) {
                   for (int w = 0; w < dim; w++) {
                     tmp += fabs(r[w] * bf[eqn]->grad_phi[q][w]);
                   }
                 }
-                hrgn = 1.0 / (tmp+1e-14);
+                hrgn = 1.0 / (tmp + 1e-14);
 
                 dbl tau_dcdd = (1.0 / mags) * hrgn * hrgn;
-                tau_dcdd = 1/sqrt(1.0 / (supg_terms.supg_tau * supg_terms.supg_tau) + 1.0 / (tau_dcdd * tau_dcdd));
+                tau_dcdd = 1 / sqrt(1.0 / (supg_terms.supg_tau * supg_terms.supg_tau) +
+                                    1.0 / (tau_dcdd * tau_dcdd));
                 dbl ss[DIM][DIM] = {{0.0}};
                 dbl rr[DIM][DIM] = {{0.0}};
                 dbl rdots = 0.0;
