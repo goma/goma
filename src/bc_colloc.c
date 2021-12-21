@@ -75,7 +75,10 @@ apply_point_colloc_bc (
 {
   int w, i, I, ibc, j, id, err, var, eqn, ldof_eqn, ldof_var, icount;
   int ieqn, pvar;
+  int ivar, jvar, id_side_bulk;
   int el1, el2, nf, jk;
+  int dim1, dim2, ddim;
+  int svar1, svar2, bulk_gnn[MDE], inode;
   int status = 0;
   int index_eq, matID_apply;
   int bc_input_id;
@@ -84,7 +87,7 @@ apply_point_colloc_bc (
   int n_dof[MAX_VARIABLE_TYPES];
   int n_dofptr[MAX_VARIABLE_TYPES][MDE];
   int doMeshMapping = 0;
-  double xi[DIM];             /* Gaussian-quadrature point locations         */
+  double xi[DIM], xi2[DIM];             /* Gaussian-quadrature point locations         */
   double x_dot[MAX_PDIM];
   double dsigma_dx[DIM][MDE];
   double phi_j;
@@ -558,14 +561,75 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 
 	    case SH_FLUID_STRESS_BC:
 
-	      /*Note that we send in i, with id, as this is the shell-element counterpart local num */
-	      put_fluid_stress_on_shell(id, i , I, 
-					ielem_dim, resid_vector,
-					local_node_list_fs,
-					BC_Types[bc_input_id].BC_Data_Float[0]);
-	      func = 0.; /* this boundary condition rearranges values already in res and jac,
+              el1 = ei->ielem;
+              nf = num_elem_friends[el1];
+              if (nf == 0) {
+                EH(-1, "No element friend can be found");
+              };
+              el2 = elem_friends[el1][0];
+
+              for (i=0; i<DIM; i++)
+                 {
+                  xi2[i] = 0.0;
+                 }
+
+              dim1 = elem_info(NDIM, Elem_Type(exo, el1));  /* Local element */
+              dim2 = elem_info(NDIM, Elem_Type(exo, el2));  /* Remote element */
+              ddim = dim1 - dim2;
+              if (ddim == -1 && id != -1)
+                {
+                 /* Get stu coordinates for this Gauss point from neighbor element */
+                 id_side_bulk = bulk_side_id_and_stu(el2, el1, xi, xi2, exo);
+                 if (id_side_bulk == -1) EH(-1, "Error returned from bulk_side_id_and_stu() ");
+
+                 /* This call will populate the neighbor element fv/bf structures */
+                 setup_shop_at_point(el2, xi2, exo);
+
+                 /* svar2 is the shape variable for the second (i.e., bulk) element */
+                 svar2 = pd->ShapeVar;
+
+                 /* Save active DOF counts for variables in the neighbor element */
+                 for (ivar = 0; ivar < MAX_VARIABLE_TYPES; ivar++)
+                    {
+                     n_dof[ivar] = ei->dof[ivar];
+                    }
+
+                 /* Save node list in bulk element */
+                 for (ivar = 0; ivar < MDE; ivar++) bulk_gnn[ivar] = -1;
+                 for (ivar = 0; ivar < ei->dof[svar2]; ivar++)
+                    {
+                     bulk_gnn[ivar] = ei->gnn_list[svar2][ivar];
+                    }
+
+                 /* Go back to the current element (i.e., the shell element) */
+                 setup_shop_at_point(el1, xi, exo);
+                 svar1 = pd->ShapeVar;
+
+                 /* Populate dof_map array*/
+                 for (ivar = 0; ivar < MDE; ivar++) dof_map[ivar] = -1;
+                 for (ivar = 0; ivar < ei->dof[svar1]; ivar++)
+                    {
+                     inode = ei->gnn_list[svar1][ivar];
+                     for (jvar = 0; jvar < n_dof[svar2]; jvar++)
+                        {
+                         if (inode == bulk_gnn[jvar]) dof_map[ivar] = jvar;
+                        }
+                    }
+
+	         /*Note that we send both local node numbers for bulk and shell elements */
+	         put_fluid_stress_on_shell(dof_map[id], id , I,
+					   ielem_dim, resid_vector,
+					   local_node_list_fs,
+					   BC_Types[bc_input_id].BC_Data_Float[0]);
+
+	         func = 0.; /* this boundary condition rearranges values already in res and jac,
 			    * and does not add anything into the residual */
-	      break;
+	         break;
+                }
+              else
+                {
+                 break;
+                }
 
 	    case KINEMATIC_COLLOC_BC:
 	    case VELO_NORM_COLLOC_BC:

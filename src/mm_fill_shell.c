@@ -4220,7 +4220,7 @@ apply_surface_viscosity(double cfunc[MDE][DIM],
  */
 
 void 
-put_fluid_stress_on_shell(int id, /* local element node number for the 
+put_fluid_stress_on_shell(int id, /* local bulk element node number for the
 				   * current node whose residual contribution
 				   * is being sought                        */
 			  int id_shell, /* local shell element node number corresponding to id */
@@ -4228,11 +4228,10 @@ put_fluid_stress_on_shell(int id, /* local element node number for the
 			  int ielem_dim, /* physical dimension of the elem  */
 			  double resid_vector[], /* Residual vector         */
 			  int local_node_list_fs[], /* MDE list to keep track
-						     * of nodes at which 
-						     * solid contributions 
+						     * of nodes at which
+						     * bulk contributions 
 						     * have been transfered
-						     * to liquid (fluid-solid
-						     * boundaries)          */
+						     * to shell  */
 			  double scale) /* Scale factor, nondimension       */
 {
   int j_id, dim, var, pvar, q;
@@ -4246,34 +4245,25 @@ put_fluid_stress_on_shell(int id, /* local element node number for the
   dim = pd->Num_Dim;
 
   if (node->DBC) {
-     
+
     offset = get_nodal_unknown_offset(nv, R_SHELL_CURVATURE, -2, 0, NULL);
     curvature_fixed = (offset >= 0) && (node->DBC[offset] != -1);
     offset = get_nodal_unknown_offset(nv, R_SHELL_TENSION, -2, 0, NULL);
-    tension_fixed   = (offset >= 0) && (node->DBC[offset] != -1);	
+    tension_fixed   = (offset >= 0) && (node->DBC[offset] != -1);
   } else {
     curvature_fixed = tension_fixed = 0;
   }
 
 
-  /*
-   * if you are in the shell phase, return without doing anything
-   * In the shell phase, there are no fluid momentum equations.
-   * This probably is not needed since it is impossible with CUBIT to
-   * put attach a sideset to a shell element, and hence all sidesets
-   * are one-sided. 
-   */
-  if (!pd->e[R_MOMENTUM1]) return;
-
-  /* Hmm, unlike in the FLUID_SOLID case, we've no shell equations in the 
-   * bulk so we cannot use ei struct like this 
+  /* Hmm, unlike in the FLUID_SOLID case, we've no shell equations in the
+   * bulk so we cannot use ei struct like this
    * id_dofmom = ei->ln_to_dof[R_MOMENTUM1][id];
    * id_dofshell = ei->ln_to_dof[R_SHELL_CURVATURE][i];
    *
    * So try this because it is only 2D (assumption that there is a shell
    * variable at every surface node
    */
-  id_dofmom1 = ei->ln_to_dof[R_MOMENTUM1][id];
+  id_dofmom1 = id;
   id_dofshell = id_shell;  /* This is the imperfect assumption */
 
 
@@ -4306,9 +4296,9 @@ put_fluid_stress_on_shell(int id, /* local element node number for the
       ieqn_shell = R_SHELL_CURVATURE;
       ieqn_mom1   = R_MOMENTUM1;
       ieqn_mom2   = R_MOMENTUM2;
-      id_dofmom1 = ei->ln_to_dof[ieqn_mom1][id];
-      id_dofmom2 = ei->ln_to_dof[ieqn_mom2][id];
-      id_dofshell = id_shell; 
+      id_dofmom1 = id;
+      id_dofmom2 = id;
+      id_dofshell = id_shell;
       lec->R[LEC_R_INDEX(upd->ep[ieqn_shell],id_dofshell)] +=
         scale * (fv->snormal[0] * lec->R[LEC_R_INDEX(upd->ep[ieqn_mom1],id_dofmom1)] +
                  fv->snormal[1] * lec->R[LEC_R_INDEX(upd->ep[ieqn_mom2],id_dofmom2)]);
@@ -4317,15 +4307,15 @@ put_fluid_stress_on_shell(int id, /* local element node number for the
       ieqn_shell = R_SHELL_TENSION;
       ieqn_mom1   = R_MOMENTUM1;
       ieqn_mom2   = R_MOMENTUM2;
-      id_dofmom1 = ei->ln_to_dof[ieqn_mom1][id];
-      id_dofmom2 = ei->ln_to_dof[ieqn_mom2][id];
-      id_dofshell = id_shell; 
+      id_dofmom1 = id;
+      id_dofmom2 = id;
+      id_dofshell = id_shell;
       lec->R[LEC_R_INDEX(upd->ep[ieqn_shell],id_dofshell)] +=
         scale * (fv->stangent[0][0] * lec->R[LEC_R_INDEX(upd->ep[ieqn_mom1],id_dofmom1)] +
                  fv->stangent[0][1] * lec->R[LEC_R_INDEX(upd->ep[ieqn_mom2],id_dofmom2)]);
     }
   }
-    
+
   /*
    * loop over directions and add local contribution to solid
    * momentum into local contribution for liquid momentum
@@ -4338,15 +4328,15 @@ put_fluid_stress_on_shell(int id, /* local element node number for the
 	  peqn_shell = upd->ep[ieqn_shell];
 	  ieqn_mom1   = R_MOMENTUM1;
 	  ieqn_mom2   = R_MOMENTUM2;
-	  id_dofmom1 = ei->ln_to_dof[ieqn_mom1][id];
+	  id_dofmom1 = id;
 	  peqn_mom1 = upd->ep[ieqn_mom1];
-	  id_dofmom2 = ei->ln_to_dof[ieqn_mom2][id];
+	  id_dofmom2 = id;
 	  peqn_mom2 = upd->ep[ieqn_mom2];
-	  id_dofshell = id_shell; 
+	  id_dofshell = id_shell;
 
 
 	  /* Add contributions due to all nodal sensitivities in shell element */
-	    
+
 	  /*
 	   * local J_m_d -> J_d_d
 	   */
@@ -4366,7 +4356,7 @@ put_fluid_stress_on_shell(int id, /* local element node number for the
 		    }
 		}
 	    }
-	    
+
 	  /*
 	   * local J_m_P -> J_d_P
 	   */
@@ -4375,16 +4365,16 @@ put_fluid_stress_on_shell(int id, /* local element node number for the
 	    {
 	      pvar = upd->vp[var];
 	      for ( j_id=0; j_id<ei->dof[var]; j_id++)
-		{			
+		{
                   lec->J[LEC_J_INDEX(peqn_shell,pvar,id_dofshell,j_id)] +=
                     scale*(fv->snormal[0] * lec->J[LEC_J_INDEX(peqn_mom1,pvar,id_dofmom1,j_id)] +
                            fv->snormal[1] * lec->J[LEC_J_INDEX(peqn_mom2,pvar,id_dofmom2,j_id)]);
 		}
 	    }
-	    
-	    
+
+
 	  /*
-	   * local J_m_v -> J_d_v  
+	   * local J_m_v -> J_d_v
 	   */
 	  for ( q=0; q<dim; q++)
 	    {
@@ -4400,7 +4390,7 @@ put_fluid_stress_on_shell(int id, /* local element node number for the
 		    }
 		}
 	    }
-	    
+
 	}
 
       if (! tension_fixed)
@@ -4410,15 +4400,15 @@ put_fluid_stress_on_shell(int id, /* local element node number for the
 	  peqn_shell = upd->ep[ieqn_shell];
 	  ieqn_mom1   = R_MOMENTUM1;
 	  ieqn_mom2   = R_MOMENTUM2;
-	  id_dofmom1 = ei->ln_to_dof[ieqn_mom1][id];
+	  id_dofmom1 = id;
 	  peqn_mom1 = upd->ep[ieqn_mom1];
-	  id_dofmom2 = ei->ln_to_dof[ieqn_mom2][id];
+	  id_dofmom2 = id;
 	  peqn_mom2 = upd->ep[ieqn_mom2];
-	  id_dofshell = id_shell; 
+	  id_dofshell = id_shell;
 
 
 	  /* Add contributions due to all nodal sensitivities in shell element */
-	    
+
 	  /*
 	   * local J_m_d -> J_d_d
 	   */
@@ -4438,7 +4428,7 @@ put_fluid_stress_on_shell(int id, /* local element node number for the
 		    }
 		}
 	    }
-	    
+
 	  /*
 	   * local J_m_P -> J_d_P
 	   */
@@ -4447,16 +4437,16 @@ put_fluid_stress_on_shell(int id, /* local element node number for the
 	    {
 	      pvar = upd->vp[var];
 	      for ( j_id=0; j_id<ei->dof[var]; j_id++)
-		{			
+		{
                   lec->J[LEC_J_INDEX(peqn_shell,pvar,id_dofshell,j_id)] +=
                     scale*(fv->stangent[0][0] * lec->J[LEC_J_INDEX(peqn_mom1,pvar,id_dofmom1,j_id)] +
                            fv->stangent[0][1] * lec->J[LEC_J_INDEX(peqn_mom2,pvar,id_dofmom2,j_id)]);
 		}
 	    }
-	    
-	    
+
+
 	  /*
-	   * local J_m_v -> J_d_v  
+	   * local J_m_v -> J_d_v
 	   */
 	  for ( q=0; q<dim; q++)
 	    {
@@ -4472,10 +4462,10 @@ put_fluid_stress_on_shell(int id, /* local element node number for the
 		    }
 		}
 	    }
-	    
+
 	}
     } /* end of Jacobian entries */
-    
+
 } /* end of routine put_fluid_stress_on_shell */
 
 
