@@ -626,10 +626,7 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 			    * and does not add anything into the residual */
 	         break;
                 }
-              else
-                {
-                 break;
-                }
+              break;
 
 	    case KINEMATIC_COLLOC_BC:
 	    case VELO_NORM_COLLOC_BC:
