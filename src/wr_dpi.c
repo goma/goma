@@ -128,27 +128,27 @@ int wr_dpi(Dpi *d, char *filename) {
                                   d->num_node_cmaps, d->num_elem_cmaps, ProcID);
   CHECK_EX_ERROR(ex_error, "ex_put_loadbal_param");
 
-  ex_error = ex_put_processor_elem_maps(exoid, d->proc_elem_internal, d->proc_elem_border, ProcID);
-  CHECK_EX_ERROR(ex_error, "ex_put_processor_elem_maps");
+  //ex_error = ex_put_processor_elem_maps(exoid, d->proc_elem_internal, d->proc_elem_border, ProcID);
+  //CHECK_EX_ERROR(ex_error, "ex_put_processor_elem_maps");
 
-  ex_error = ex_put_processor_node_maps(exoid, d->proc_node_internal, d->proc_node_boundary,
-                                        d->proc_node_external, ProcID);
-  CHECK_EX_ERROR(ex_error, "ex_put_processor_node_maps");
+  //ex_error = ex_put_processor_node_maps(exoid, d->proc_node_internal, d->proc_node_boundary,
+  //                                      d->proc_node_external, ProcID);
+  //CHECK_EX_ERROR(ex_error, "ex_put_processor_node_maps");
 
-  ex_error = ex_put_cmap_params(exoid, d->node_cmap_ids, d->node_cmap_node_counts, d->elem_cmap_ids,
-                                d->elem_cmap_elem_counts, ProcID);
-  CHECK_EX_ERROR(ex_error, "ex_put_cmap_params");
+  //ex_error = ex_put_cmap_params(exoid, d->node_cmap_ids, d->node_cmap_node_counts, d->elem_cmap_ids,
+  //                              d->elem_cmap_elem_counts, ProcID);
+  //CHECK_EX_ERROR(ex_error, "ex_put_cmap_params");
 
-  for (int i = 0; i < d->num_node_cmaps; i++) {
-    ex_error = ex_put_node_cmap(exoid, d->node_cmap_ids[i], d->node_map_node_ids[i],
-                                d->node_map_proc_ids[i], ProcID);
-    CHECK_EX_ERROR(ex_error, "ex_put_node_cmap cmap %d", i);
-  }
-  for (int i = 0; i < d->num_elem_cmaps; i++) {
-    ex_error = ex_put_elem_cmap(exoid, d->elem_cmap_ids[i], d->elem_cmap_elem_ids[i],
-                                d->elem_cmap_side_ids[i], d->elem_cmap_proc_ids[i], ProcID);
-    CHECK_EX_ERROR(ex_error, "ex_put_elem_cmap cmap %d", i);
-  }
+  //for (int i = 0; i < d->num_node_cmaps; i++) {
+  //  ex_error = ex_put_node_cmap(exoid, d->node_cmap_ids[i], d->node_map_node_ids[i],
+  //                              d->node_map_proc_ids[i], ProcID);
+  //  CHECK_EX_ERROR(ex_error, "ex_put_node_cmap cmap %d", i);
+  //}
+  //for (int i = 0; i < d->num_elem_cmaps; i++) {
+  //  ex_error = ex_put_elem_cmap(exoid, d->elem_cmap_ids[i], d->elem_cmap_elem_ids[i],
+  //                              d->elem_cmap_side_ids[i], d->elem_cmap_proc_ids[i], ProcID);
+  //  CHECK_EX_ERROR(ex_error, "ex_put_elem_cmap cmap %d", i);
+  //}
 
   ex_error = ex_close(exoid);
   CHECK_EX_ERROR(ex_error, "ex_close");

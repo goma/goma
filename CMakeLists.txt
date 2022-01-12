@@ -315,6 +315,7 @@ set(GOMA_INCLUDES
         include/dp_map_comm_vec.h
         include/dp_types.h
         include/dp_utils.h
+        include/dp_ghost.h
         include/dp_vif.h
         include/el_elm.h
         include/el_elm_info.h
@@ -452,6 +453,7 @@ set(GOMA_SOURCES
         src/dp_comm.c
         src/dp_map_comm_vec.c
         src/dp_utils.c
+        src/dp_ghost.cpp
         src/dp_vif.c
         src/el_elm_info.c
         src/el_quality.c

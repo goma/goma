@@ -2966,7 +2966,14 @@ int assemble_stress_log_conf(dbl tt,
                 }
                 hrgn = 1.0 / (tmp + 1e-14);
 
-                dbl tau_dcdd = (1.0 / mags) * hrgn * hrgn;
+                dbl magv = 0.0;
+                for (int q = 0; q < VIM; q++) {
+                  magv += v[q] * v[q];
+                }
+                magv = sqrt(magv);
+
+                dbl tau_dcdd = 0.5 * he * magv * magv * pow((1.0 / mags) * hrgn, 1.0);
+                //dbl tau_dcdd = (1.0 / mags) * hrgn * hrgn;
                 tau_dcdd = 1 / sqrt(1.0 / (supg_terms.supg_tau * supg_terms.supg_tau) +
                                     1.0 / (tau_dcdd * tau_dcdd));
                 dbl ss[DIM][DIM] = {{0.0}};

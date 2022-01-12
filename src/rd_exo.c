@@ -457,6 +457,9 @@ int rd_exo(Exo_DB *x, /* def'd in exo_struct.h */
       x->eb_num_nodes_per_elem = (int *)smalloc(x->num_elem_blocks * si);
       x->eb_num_attr = (int *)smalloc(x->num_elem_blocks * si);
       x->eb_conn = (int **)smalloc(x->num_elem_blocks * spi);
+      for (int i = 0; i < x->num_elem_blocks; i++) {
+        x->eb_conn[i] = NULL;
+      }
       x->eb_attr = (dbl **)smalloc(x->num_elem_blocks * spd);
 
       x->eb_ptr = (int *)smalloc((x->num_elem_blocks + 1) * si);

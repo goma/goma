@@ -36,6 +36,7 @@
 #include "rf_allo.h"
 #include "rf_mp.h"
 #include "std.h"
+#include "dp_ghost.h"
 
 // Helper for exodus return values
 #define CHECK_EX_ERROR(err, format, ...)                              \
@@ -293,8 +294,8 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
 
   int min_external;
   MPI_Allreduce(&d->num_external_nodes, &min_external, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
-  if (min_external == 0) {
-    GOMA_EH(-1, "Found 0 external nodes, use nodal decomposition");
+  if (min_external > 0) {
+    GOMA_EH(-1, "Found > 0 external nodes, use element decomposition");
   }
 
   zero_dpi(d);
@@ -314,8 +315,10 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
       if (d->node_owner[d->node_map_node_ids[i][j]] != ProcID) {
         GOMA_EH(GOMA_ERROR, "External node found multiple procs");
       }
-      d->node_owner[d->node_map_node_ids[i][j]] = neighbor;
-      d->num_node_recv[i]++;
+      if (neighbor < ProcID) {
+        d->node_owner[d->node_map_node_ids[i][j]] = neighbor;
+        d->num_node_recv[i]++;
+      }
     }
     d->neighbor[i] = neighbor;
   }
@@ -336,6 +339,9 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
       elem_offset++;
     }
   }
+
+  goma_error err = generate_ghost_elems(exo, d);
+  GOMA_EH(err, "generate_ghost_elements");
 
   int *num_send_nodes = alloc_int_1(d->num_neighbors, 0);
   int **global_send_nodes = malloc(sizeof(int *) * d->num_neighbors);
