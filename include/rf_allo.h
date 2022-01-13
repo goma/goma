@@ -23,6 +23,8 @@
 
 #include <stdlib.h>
 
+#include "mm_eh.h"
+
 #ifndef GOMA_RF_ALLO_C
 #define EXTERN extern
 #else

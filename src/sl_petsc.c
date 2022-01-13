@@ -3,6 +3,9 @@
 #include <petscmat.h>
 #include <petscsys.h>
 #include <petscvec.h>
+#ifdef I
+#undef I
+#endif
 
 #include "dp_comm.h"
 #include "dpi.h"

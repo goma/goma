@@ -18,6 +18,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <mpi.h>
 
 #ifdef STDC_HEADERS
 #include <stdlib.h>
@@ -26,7 +27,6 @@
 #include <el_elm_info.h>
 #include <string.h>
 
-#include "bc/rotate_coordinates.h"
 #include "dpi.h"
 #include "exo_struct.h"
 #include "exodusII.h"

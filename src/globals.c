@@ -12,6 +12,8 @@
 /* File containing the many of Goma's global variables, moved for -fno-common */
 
 #include "rf_fem.h"
+#include "rf_fem_const.h"
+#include "rf_node_const.h"
 #include "rf_solver.h"
 
 int CoordinateSystem; /* Indicates type of coordinate system (see fem_const.h)*/
@@ -290,3 +292,5 @@ int PRS_mat_ielem;
 
 struct Boundary_Condition *BC_Types;
 struct Rotation_Specs *ROT_Types;
+
+NODE_INFO_STRUCT **Nodes = NULL;

@@ -1,11 +1,15 @@
 #include "bc/rotate_util.h"
+
+#include <assert.h>
+#include <stdio.h>
+#include <math.h>
+#include <stdlib.h>
+
 #include "bc/rotate_coordinates.h"
 #include "gds/gds_vector.h"
 #include "mm_eh.h"
 #include "std.h"
 #include "util/goma_normal.h"
-#include <assert.h>
-#include <stdio.h>
 
 static bool within_critical_angle(double a_dot_b, double angle) {
   return a_dot_b <= (1 + 1e-14) && a_dot_b >= cos(angle);

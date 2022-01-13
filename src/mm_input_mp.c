@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h> /* for strcasecmp */
+#include <math.h>
 
 #include "el_elm.h"
 #include "mm_as.h"

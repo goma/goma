@@ -21,6 +21,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 /* GOMA include files */
 
@@ -67,6 +68,8 @@
 #include "rf_vars_const.h"
 #include "std.h"
 #include "user_bc.h"
+#include "gds/gds_vector.h"
+#include "util/goma_normal.h"
 
 #define GOMA_BC_INTEG_C
 

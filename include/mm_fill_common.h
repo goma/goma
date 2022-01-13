@@ -15,6 +15,7 @@
 
 #include "mm_std_models.h"
 #include "std.h"
+#include "mm_qtensor_model.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

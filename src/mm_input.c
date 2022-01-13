@@ -23,6 +23,7 @@
 #include <string.h>
 #include <strings.h> /* strcasecmp and strncasecmp moved here for POSIX.1 */
 #include <unistd.h>
+#include <stdbool.h>
 
 #include "ac_particles.h"
 #include "ac_stability_util.h"

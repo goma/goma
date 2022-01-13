@@ -1,96 +1,86 @@
 #ifdef HAVE_OMEGA_H
 #include "adapt/omega_h_interface.h"
 
+#include <Omega_h_adapt.hpp>
+#include <Omega_h_class.hpp>
+#include <Omega_h_library.hpp>
+#include <Omega_h_mesh.hpp>
+#include <Omega_h_metric.hpp>
+#include <Omega_h_config.h>
+#include <Omega_h_macros.h>
+#include <assert.h>
+#include <mpi.h>
+#include <string.h>
+#include <Omega_h_adj.hpp>
+#include <Omega_h_array.hpp>
+#include <Omega_h_defines.hpp>
+#include <Omega_h_fail.hpp>
+#include <Omega_h_few.hpp>
+#include <Omega_h_matrix.hpp>
+#include <Omega_h_profile.hpp>
+#include <Omega_h_remotes.hpp>
+#include <Omega_h_vector.hpp>
 #include <algorithm>
 #include <iostream>
-#include <sstream>
+#include <numeric>
+#include <vector>
+#include <cstdlib>
+#include <iterator>
+#include <map>
+#include <memory>
+#include <set>
+#include <string>
+#include <utility>
 
 #include "Omega_h_align.hpp"
 #include "Omega_h_array_ops.hpp"
 #include "Omega_h_build.hpp"
-#include "Omega_h_class.hpp"
 #include "Omega_h_element.hpp"
-#include "Omega_h_file.hpp"
 #include "Omega_h_for.hpp"
-#include "Omega_h_functors.hpp"
-#include "Omega_h_library.hpp"
 #include "Omega_h_map.hpp"
 #include "Omega_h_mark.hpp"
-#include "Omega_h_mesh.hpp"
-#include <Omega_h_adapt.hpp>
-#include <Omega_h_bbox.hpp>
-#include <Omega_h_class.hpp>
-#include <Omega_h_cmdline.hpp>
-#include <Omega_h_compare.hpp>
-#include <Omega_h_file.hpp>
-#include <Omega_h_library.hpp>
-#include <Omega_h_mesh.hpp>
-#include <Omega_h_metric.hpp>
-#include <numeric>
-#include <vector>
 
 extern "C" {
 #define DISABLE_CPP
 #ifndef MAX_PDIM
 #define MAX_PDIM 3 /* Maximum physical problem dimension    */
 #endif
+#include <mm_bc.h>
+
 #include "std.h"
-
-#include "el_geom.h"
-
 #include "rf_allo.h"
-
 #include "rf_fem_const.h"
 #include "rf_io.h"
 #include "rf_io_const.h"
-
 #include "rf_mp.h"
-
 #include "mm_as.h"
-#include "mm_as_const.h"
+#include <exodusII.h>
 #include "mm_as_structs.h"
-#include "mm_elem_block_structs.h"
-#include "mm_mp_const.h"
+#include "mm_eh.h"
 #include "rf_bc.h"
 #include "rf_bc_const.h"
-#include "rf_element_storage_struct.h"
 #include "rf_fill_const.h"
-#include "rf_masks.h"
-#include "rf_solver_const.h"
-#include "rf_vars_const.h"
-
-#include "mm_mp.h"
-#include "mm_mp_structs.h"
-
-#include "mm_species.h"
-
-#include "mm_fill_jac.h"
 #include "mm_interface.h"
-
-#include "mm_post_def.h"
-
-#include "mm_eh.h"
-
 #include "dp_types.h"
 #include "dpi.h"
 #include "exo_struct.h"
-#include <mm_bc.h>
+#include "exo_conn.h"
 #define IGNORE_CPP_DEFINE
 #include "sl_util_structs.h"
 #undef IGNORE_CPP_DEFINE
 #include "adapt/resetup_problem.h"
-#include "mm_as.h"
-#include "mm_as_structs.h"
-#include "mm_eh.h"
 #include "mm_unknown_map.h"
 #include "rd_dpi.h"
 #include "rd_exo.h"
 #include "rd_mesh.h"
-#include "rf_allo.h"
-#include "rf_bc.h"
-#include "rf_io.h"
 #include "rf_node_const.h"
 #include "wr_exo.h"
+#include "el_elm.h"
+#include "el_elm_info.h"
+#include "exo_conn.h"
+#include "util/goma_normal.h"
+#include "wr_dpi.h"
+
 extern int ***Local_Offset;
 extern int ***Dolphin;
 extern int *NumUnknowns;    /* Number of unknown variables updated by this   */
@@ -100,6 +90,7 @@ extern int **local_ROT_list;
 extern int rotation_allocated;
 extern Comm_Ex **cx;
 #include "bc/rotate_coordinates.h"
+
 #undef DISABLE_CPP
 }
 

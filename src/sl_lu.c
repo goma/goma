@@ -19,12 +19,11 @@
 #include "mm_as.h"
 #include "mm_as_structs.h"
 #include "sl_lu.h"
-#include "std.h"
+#include "rf_fem_const.h"
 
 #define GOMA_SL_LU_C
 
 #ifdef HAVE_SPARSE
-#include "spConfig.h"
 #include "spMatrix.h"
 /*
  * Uncomment the following line to write out the RHS, a, and ija vectors
@@ -34,51 +33,6 @@
 /* #define DUMP_CMSR_MATRIX */
 
 int first_time = TRUE;
-
-/*
-        C driver for direct lu factor of sparse matrix.
-
-                This routine takes a C-MSR format
-                sparse matrix and determines the lu
-                decomposition. The package sparse1.3
-                is used to factor and solve the matrix.
-                This routine is somewhat inefficient in its
-                use of memory.
-
-                J.N. Shadid SNL Div 1421
-
-           date: 2/27/93
-
-         Parameter list:
-
-       N    ==         Number of unknowns updated by this processor
-       NExt ==         Number of unknowns updated by neighboring procs
-                       for which copies are kept on this processor
-       M    ==         upper bound on the number of nonzeros in matrix A
-                        in sparse format (C-MSR).
-       a[]   ==        matrix A in sparse format (C-MSR).
-       ija[] ==        pointers to nonzeros of A (C-MSR).
-
-       x   ==          On input 'x' contains the right hand side. On output
-                        'x' contains the solution to our linear system.
-
-                factor_flag: 1, 2, 3
-
-                        = 1  Dynamically allocate memory for tmp vectors.
-                             Calculate lu factors, solve system with LU.
-
-                        = 2  Calculate lu factors, solve system with LU.
-
-                        = 3  use previus lu factors to solve system with LU.
-
-                x ==    on input is the residual(rhs) of the set of
-                        equations, on output is the result.
-
-    --------------------------------------------------------------------
-          routines called: (sparse1.3 package is used)
-    --------------------------------------------------------------------
-*/
-#include "spMatrix.h"
 
 static int call = 0;
 
@@ -205,6 +159,7 @@ void lu(const int N,
 } /* END of routine lu */
 #else // HAVE_SPARSE
 #include "mm_eh.h"
+
 void lu(const int N,
         const int NExt,
         const int M,

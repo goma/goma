@@ -22,6 +22,7 @@
 #include "exo_struct.h"
 #include "mm_fill_util.h"
 #include "std.h"
+#include "mm_fill.h"
 
 struct Element_Indices;
 struct Element_Stiffness_Pointers;

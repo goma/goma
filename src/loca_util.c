@@ -23,12 +23,12 @@ static char *cvs_util_id =
  -----------------------------------------------------------------------------
 */
 
-#include "loca_const.h"
-#include "loca_util_const.h"
-#include <limits.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "loca_const.h"
+#include "loca_util_const.h"
 
 int N_o = -1;    /* Length of vector that is acted on (owned unknowns)  */
 int N_t = -1;    /* Length of vector that is allcoated (total unknowns) */

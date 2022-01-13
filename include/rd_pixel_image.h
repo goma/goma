@@ -13,6 +13,9 @@
 #ifndef GOMA_RD_PIXEL_H
 #define GOMA_RD_PIXEL_H
 
+#include "el_elm.h"
+#include "exo_struct.h"
+#include "wr_exo.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

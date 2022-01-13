@@ -34,6 +34,7 @@
 #include "mm_unknown_map.h"
 #include "rf_node_const.h"
 #include "std.h" /* This needs to be here. */
+#include "az_aztec.h"
 
 /*
  * Set default memory usage for Aztec's call to y12m higher than

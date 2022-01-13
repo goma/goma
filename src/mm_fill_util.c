@@ -19,7 +19,6 @@
  * to each dof for ea variable, also pre loaded pointers
  */
 
-#include <float.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>

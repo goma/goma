@@ -29,7 +29,6 @@
  * Revised:
  */
 
-#include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -43,10 +42,8 @@
 #include "mm_as_structs.h"
 #include "mm_eh.h"
 #include "rf_allo.h"
-#include "rf_fem_const.h"
 #include "rf_mp.h"
 #include "rf_node_const.h"
-#include "rf_util.h"
 #include "rf_vars_const.h"
 #include "std.h"
 

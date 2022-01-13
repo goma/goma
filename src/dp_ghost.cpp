@@ -1,19 +1,33 @@
 
+#include <exodusII.h>
+#include <ext/alloc_traits.h>
+#include <mpi.h>
+#include <stdlib.h>
 #include <algorithm>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-
 #include <cstdio>
 #include <cstring>
+#include <array>
+#include <iterator>
+#include <memory>
+#include <utility>
 
 #include "dp_ghost.h"
+#include "el_elm.h"
+#include "rf_mp.h"
+#include "std.h"
+
 extern "C" {
 #define DISABLE_CPP
 #include "el_elm_info.h"
 #include "mm_elem_block_structs.h"
 #include "rd_mesh.h"
 #include "mm_mp.h"
+
+struct Material_Properties;
+
 #undef DISABLE_CPP
 }
 

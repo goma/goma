@@ -36,8 +36,7 @@ typedef int goma_error;
 
 #include <stdarg.h> /* for var args... */
 #include <stdbool.h>
-
-#include "std.h"
+#include <mpi.h>
 
 #include "std.h"
 

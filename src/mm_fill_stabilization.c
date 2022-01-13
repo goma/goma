@@ -1,6 +1,7 @@
 #include <float.h>
+#include <math.h>
+#include <string.h>
 
-#include "el_elm_info.h"
 #include "mm_as.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
@@ -12,6 +13,11 @@
 #include "rf_fem.h"
 #include "rf_solver.h"
 #include "user_mp.h"
+#include "mm_eh.h"
+#include "mm_mp_const.h"
+#include "mm_mp_structs.h"
+#include "mm_qtensor_model.h"
+#include "rf_fem_const.h"
 
 static dbl yzbeta1(dbl scale,
                    int dim,

@@ -16,6 +16,7 @@
 #include "dpi.h"
 #include "exo_struct.h"
 #include "std.h"
+#include "wr_exo.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

@@ -31,14 +31,13 @@
 
 #define GOMA_WR_DPI_C
 
+#include <exodusII.h>
+
 #include "rd_dpi.h"
-#include <stdio.h>
+#include "rf_mp.h"
 
 #ifdef STDC_HEADERS
 #include <stdlib.h>
-#endif
-
-#ifndef lint
 #endif
 
 /* #define NO_NETCDF_2		 for pure netCDF 3 -- still impure since

@@ -56,7 +56,6 @@
 #include "sl_epetra_interface.h"
 #include "sl_epetra_util.h"
 #include "sl_matrix_util.h"
-#include "sl_petsc.h"
 #include "sl_util.h"
 #include "sl_util_structs.h"
 #include "std.h"

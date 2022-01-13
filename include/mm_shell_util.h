@@ -17,6 +17,10 @@
 #ifndef GOMA_MM_SHELL_UTIL_H
 #define GOMA_MM_SHELL_UTIL_H
 
+#include "el_elm.h"
+#include "exo_struct.h"
+#include "rf_fem_const.h"
+
 extern int **elem_friends;
 extern int *num_elem_friends;
 extern int num_shell_blocks;

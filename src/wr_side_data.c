@@ -56,6 +56,7 @@
 #include "rf_mp.h"
 #include "std.h"
 #include "wr_side_data.h"
+#include "mm_augc_util.h"
 
 extern double time_goma_started; /* def'd and set in main.c */
 

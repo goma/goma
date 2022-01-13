@@ -10,65 +10,21 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
 
-#include <math.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 /* GOMA include files */
 #define GOMA_MM_FILL_SPLIT_C
 #include "mm_fill_split.h"
-
-#include "ac_particles.h"
-#include "az_aztec.h"
-#include "bc_colloc.h"
-#include "bc_contact.h"
 #include "el_elm.h"
-#include "el_elm_info.h"
-#include "el_geom.h"
-#include "exo_struct.h"
 #include "mm_as.h"
-#include "mm_as_const.h"
 #include "mm_as_structs.h"
-#include "mm_dil_viscosity.h"
-#include "mm_eh.h"
-#include "mm_fill_aux.h"
-#include "mm_fill_common.h"
-#include "mm_fill_fill.h"
 #include "mm_fill_ls.h"
-#include "mm_fill_population.h"
-#include "mm_fill_ptrs.h"
-#include "mm_fill_rs.h"
-#include "mm_fill_shell.h"
-#include "mm_fill_solid.h"
-#include "mm_fill_species.h"
-#include "mm_fill_stabilization.h"
-#include "mm_fill_stress.h"
-#include "mm_fill_util.h"
-#include "mm_flux.h"
 #include "mm_mp.h"
-#include "mm_mp_const.h"
-#include "mm_mp_structs.h"
-#include "mm_ns_bc.h"
-#include "mm_post_def.h"
-#include "mm_qtensor_model.h"
-#include "mm_shell_util.h"
-#include "mm_species.h"
-#include "mm_unknown_map.h"
 #include "mm_viscosity.h"
-#include "rf_allo.h"
-#include "rf_bc.h"
-#include "rf_bc_const.h"
 #include "rf_fem.h"
 #include "rf_fem_const.h"
-#include "rf_solver.h"
-#include "rf_vars_const.h"
-#include "sl_util.h"
-#include "sl_util_structs.h"
 #include "std.h"
-#include "stdbool.h"
-#include "user_mp.h"
-#include "user_mp_gen.h"
+#include "mm_fill_terms.h"
 
 int assemble_ustar(dbl time_value, /* current time */
                    dbl tt,         /* parameter to vary time integration from

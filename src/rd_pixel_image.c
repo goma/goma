@@ -28,39 +28,29 @@
  *
  *******************************************************************************/
 
-/* Include C libraries */
-#include "std.h"
-#include <limits.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+/* Include C libraries */
+#include "std.h"
 /* Include exodus libraries for writing out image */
 #include "exodusII.h"
-
 /* Include header files */
 #include "el_elm.h"
 #include "el_elm_info.h"
 #include "el_geom.h"
 #include "mm_as.h"
-#include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_eh.h"
 #include "mm_fill_ptrs.h"
 #include "mm_fill_util.h"
 #include "rd_mesh.h"
 #include "rf_fem.h"
-#include "rf_fem_const.h"
 #include "sl_amesos_interface.h"
-#include "sl_util_structs.h"
-
 #include "rd_exo.h"
-#include "rf_io.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
 #include "wr_exo.h"
-
 #include "md_timer.h"
 #include "rd_pixel_image.h"
 #include "rf_allo.h"

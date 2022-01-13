@@ -61,11 +61,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifndef lint
-#endif
-
 #include "rd_exo.h"
-
 #include "el_elm.h"
 #include "el_elm_info.h"
 #include "exo_struct.h"
@@ -79,8 +75,6 @@
 #include "rf_solver.h"
 #include "rf_solver_const.h"
 #include "std.h"
-
-struct Material_Properties;
 
 struct Material_Properties;
 

@@ -55,16 +55,15 @@
 #include "rf_node_const.h"
 #include "rf_solve.h"
 #include "rf_solver.h"
-#include "rf_solver_const.h"
 #include "rf_util.h"
 #include "sl_auxutil.h"
 #include "sl_util_structs.h"
 #include "std.h"
 #include "wr_exo.h"
 #include "wr_soln.h"
-
 #include "el_quality.h"
 #include "sl_util.h" /* defines sl_init() */
+#include "rf_io_const.h"
 
 /*
 

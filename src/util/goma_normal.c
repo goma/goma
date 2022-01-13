@@ -1,7 +1,9 @@
 #include "util/goma_normal.h"
-#include "mm_eh.h"
+
+#include <math.h>
+#include <stdlib.h>
+
 #include "std.h"
-#include <assert.h>
 
 goma_normal *goma_normal_alloc(int size) {
   goma_normal *normal = malloc(sizeof(goma_normal));

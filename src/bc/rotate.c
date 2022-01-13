@@ -52,6 +52,10 @@
 #include "rf_vars_const.h"
 #include "sl_util_structs.h"
 #include "std.h"
+#include "dpi.h"
+#include "mm_mp_const.h"
+#include "mm_mp_structs.h"
+#include "util/goma_normal.h"
 
 /*
  *  Variable Definitions

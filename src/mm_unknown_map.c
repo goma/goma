@@ -53,11 +53,8 @@
 #include "rf_io.h"
 #include "rf_mp.h"
 #include "rf_node_const.h"
-#include "rf_solver.h"
-#include "rf_solver_const.h"
 #include "rf_util.h"
 #include "rf_vars_const.h"
-#include "sl_util_structs.h"
 #include "std.h"
 
 #ifdef PARALLEL

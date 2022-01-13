@@ -69,7 +69,6 @@
 #include "exo_conn.h"
 #include "exo_struct.h"
 #include "mm_eh.h"
-#include "rd_exo.h"
 #include "rd_mesh.h"
 #include "rf_allo.h"
 #include "rf_fem.h"
@@ -77,6 +76,7 @@
 #include "rf_solver.h"
 #include "rf_solver_const.h"
 #include "std.h"
+#include "rf_fem_const.h"
 
 #define GOMA_EXO_CONN_C
 

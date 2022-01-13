@@ -1,12 +1,18 @@
 
 #include "adapt/resetup_problem.h"
+
+#include <mm_bc.h>
+#include <rf_bc.h>
+#include <rf_pre_proc.h>
+#include <rf_solve.h>
+#include <string.h>
+
 #include "dp_types.h"
 #include "dpi.h"
 #include "mm_as.h"
 #include "mm_as_structs.h"
 #include "mm_eh.h"
 #include "mm_unknown_map.h"
-#include "rf_allo.h"
 #include "rf_fem.h"
 #include "rf_node_const.h"
 #include "rf_solver.h"
@@ -14,10 +20,10 @@
 #include "sl_epetra_interface.h"
 #include "sl_epetra_util.h"
 #include "sl_util_structs.h"
-#include <mm_bc.h>
-#include <rf_bc.h>
-#include <rf_pre_proc.h>
-#include <rf_solve.h>
+#include "dp_map_comm_vec.h"
+#include "rf_fem_const.h"
+#include "rf_mp.h"
+#include "rf_vars_const.h"
 
 int resetup_problem(Exo_DB *exo, /* ptr to the finite element mesh database */
                     Dpi *dpi)    /* distributed processing information */

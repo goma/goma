@@ -23,7 +23,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 /*
 #ifdef __STDC__
 #include <stdarg.h>
@@ -32,15 +31,13 @@
 #endif
 */
 #include <stdarg.h>
+
 /*
  * Default behavior on out of memory is to print an error message and return
  */
 static int ALLO_errorOption = 1;
 #include "std.h"
-
-#include "mm_eh.h"
 #include "rf_io.h"
-
 #include "rf_allo.h"
 
 extern int ProcID;

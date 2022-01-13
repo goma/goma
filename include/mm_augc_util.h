@@ -37,6 +37,7 @@
 #include "loca_const.h"
 #include "mm_as_alloc.h"
 #include "mm_as_structs.h"
+#include "bc_contact.h"
 
 struct con_struct;
 

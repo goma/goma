@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <utility>
+#include <string>
 
 #include "Epetra_DataAccess.h"
 #include "Stratimikos_DefaultLinearSolverBuilder.hpp"

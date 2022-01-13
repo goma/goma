@@ -28,9 +28,6 @@
  *
  */
 
-#ifndef lint
-#endif
-
 #include <bc/rotate_coordinates.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -60,6 +57,7 @@
 #include "rf_io_const.h"
 #include "rf_mp.h"
 #include "std.h"
+#include "rf_fem_const.h"
 
 #define GOMA_RD_MESH_C
 

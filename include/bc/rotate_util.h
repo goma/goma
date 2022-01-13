@@ -9,6 +9,8 @@ extern "C" {
 #define GOMA_ROTATIONS_CRITICAL_ANGLE (M_PI_4) // pi / 4 -> 45 degrees
 #endif
 
+#include <stdbool.h>
+
 #include "mm_eh.h"
 #include "util/goma_normal.h"
 

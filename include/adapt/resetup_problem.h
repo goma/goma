@@ -5,6 +5,8 @@
 #include "exo_struct.h"
 #include "mm_as_structs.h"
 
+struct GomaLinearSolverData;
+
 int resetup_problem(Exo_DB *exo, Dpi *dpi); /* ptr to the finite element mesh database */
 int resetup_matrix(struct GomaLinearSolverData **ams, Exo_DB *exo, Dpi *dpi);
 

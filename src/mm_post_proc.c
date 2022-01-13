@@ -24,7 +24,6 @@
 
 #define GOMA_MM_POST_PROC_C
 #include "mm_post_proc.h"
-
 #include "mm_post_def.h"
 /* GOMA include files */
 #include "ac_particles.h"
@@ -61,7 +60,6 @@
 #include "mm_mp_const.h"
 #include "mm_mp_structs.h"
 #include "mm_shell_util.h"
-#include "mm_std_models.h"
 #include "mm_std_models_shell.h"
 #include "mm_unknown_map.h"
 #include "mm_viscosity.h"
@@ -83,11 +81,12 @@
 #include "shell_tfmp_struct.h"
 #include "shell_tfmp_util.h"
 #include "sl_aux.h"
-#include "sl_petsc.h"
 #include "std.h"
 #include "user_mp.h"
 #include "user_post.h"
 #include "wr_exo.h"
+#include "mm_qtensor_model.h"
+
 /*
  * Global variable definitions.
  * This is the 1 place these variables are defined. If you need them

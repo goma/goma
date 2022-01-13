@@ -62,8 +62,8 @@
 #include "std.h"
 #include "wr_exo.h"
 #include "wr_soln.h"
-
 #include "sl_util.h" /* defines sl_init() */
+#include "rf_io_const.h"
 
 #ifdef HAVE_FRONT
 extern int mf_setup(int *,        /* nelem_glob */

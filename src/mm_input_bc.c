@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <exodusII.h>
 
 #include "el_elm.h"
 #include "md_timer.h"
@@ -29,7 +30,6 @@
 #include "mm_input.h"
 #include "mm_interface.h"
 #include "mm_mp_const.h"
-#include "mm_mp_structs.h"
 #include "mm_post_def.h"
 #include "mm_species.h"
 #include "rf_allo.h"

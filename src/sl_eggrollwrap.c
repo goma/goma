@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "ac_stability.h"
 #include "dpi.h"
@@ -37,6 +38,7 @@
 #include "std.h"
 #include "wr_dpi.h"
 #include "wr_exo.h"
+#include "mm_as_structs.h"
 
 /* Routines that handle the eigensolver.
  *

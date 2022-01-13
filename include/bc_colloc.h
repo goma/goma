@@ -18,6 +18,7 @@
 #include "rf_fem_const.h"
 #include "rf_vars_const.h"
 #include "std.h"
+#include "ac_stability_util.h"
 
 struct Boundary_Condition;
 struct Data_Table;

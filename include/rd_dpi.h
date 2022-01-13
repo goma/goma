@@ -16,6 +16,7 @@
 #include "dpi.h"
 #include "exo_struct.h"
 #include "mm_eh.h"
+#include "el_elm_info.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

@@ -20,11 +20,11 @@
 
 /* Standard include files */
 
-#include "rf_fem_const.h"
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
 
+#include "rf_fem_const.h"
 #include "ac_stability.h"
 #include "ac_stability_util.h"
 #include "bc/rotate_coordinates.h"
@@ -55,12 +55,13 @@
 #include "rf_bc.h"
 #include "rf_bc_const.h"
 #include "rf_fem.h"
-#include "rf_fem_const.h"
 #include "rf_node_const.h"
 #include "rf_util.h"
 #include "rf_vars_const.h"
 #include "std.h"
 #include "user_bc.h"
+#include "gds/gds_vector.h"
+#include "util/goma_normal.h"
 
 #define GOMA_BC_COLLOC_C
 

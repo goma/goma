@@ -13,11 +13,14 @@
 #ifndef GOMA_MM_FILL_TERMS_H
 #define GOMA_MM_FILL_TERMS_H
 
+#include <stdbool.h>
+
 #include "el_elm.h"
 #include "exo_struct.h"
 #include "mm_as_structs.h"
 #include "mm_fill_common.h"
 #include "std.h"
+#include "rf_fem_const.h"
 
 struct Boundary_Condition;
 struct Data_Table;

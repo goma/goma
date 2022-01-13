@@ -44,13 +44,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 #include <sys/utsname.h>
 #include <time.h>
 #include <unistd.h> /* for getuid() */
-
-#ifndef lint
-#endif
 
 static int has_been_called = 0;
 
@@ -77,6 +73,7 @@ static int has_been_called = 0;
 #include "rf_io_structs.h" /* for Results_Description */
 #include "rf_mp.h"         /* are we serial or parallel? */
 #include "wr_exo.h"
+#include "std.h"
 
 #define GOMA_WR_EXO_C
 

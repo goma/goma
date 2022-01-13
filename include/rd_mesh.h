@@ -19,6 +19,9 @@
 #include "rd_exo.h"
 #include "rf_bc_const.h"
 
+struct Boundary_Condition;
+struct Problem_Description;
+
 #ifdef EXTERN
 #undef EXTERN
 #endif

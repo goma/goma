@@ -397,7 +397,6 @@ set(GOMA_INCLUDES
         include/rf_masks.h
         include/rf_mp.h
         include/rf_node_const.h
-        include/rf_node.h
         include/rf_pre_proc.h
         include/rf_shape.h
         include/rf_solve.h

@@ -42,6 +42,7 @@
 #include "rf_io_const.h"
 #include "std.h"
 #include "user_mp.h"
+#include "mm_qtensor_model.h"
 
 #define GOMA_MM_STD_MODELS_C
 #include "mm_std_models.h"

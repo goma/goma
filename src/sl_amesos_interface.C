@@ -11,6 +11,7 @@
 \************************************************************************/
 
 #include <stdlib.h>
+#include <Amesos_config.h>
 #include <string>
 
 #include "Amesos_BaseSolver.h"

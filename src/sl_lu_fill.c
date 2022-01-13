@@ -27,7 +27,6 @@
  */
 int first_time_fill = TRUE;
 #ifdef HAVE_SPARSE
-#include "spConfig.h"
 #include "spMatrix.h"
 
 void luf(const int N,
@@ -197,6 +196,7 @@ void luf(const int N,
 
 #else // HAVE_SPARSE
 #include "mm_eh.h"
+
 void luf(const int N,
          const int NExt,
          const int M,

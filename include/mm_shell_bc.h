@@ -17,6 +17,7 @@
 #include "exo_struct.h"
 #include "mm_eh.h"
 #include "rf_fem_const.h"
+#include "mm_fill_ls.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

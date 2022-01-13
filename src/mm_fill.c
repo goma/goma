@@ -24,7 +24,6 @@
 /* GOMA include files */
 
 #include "mm_fill.h"
-
 #include "ac_stability.h"
 #include "ac_stability_util.h"
 #include "bc/rotate.h"
@@ -83,7 +82,6 @@
 #include "rf_node_const.h"
 #include "rf_solver.h"
 #include "rf_solver_const.h"
-#include "rf_vars_const.h"
 #include "sl_epetra_util.h"
 #include "sl_util.h"
 #include "sl_util_structs.h"

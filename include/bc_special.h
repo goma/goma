@@ -17,6 +17,9 @@
 #include "exo_struct.h"
 #include "rf_bc_const.h"
 #include "sl_util_structs.h"
+#include "bc/rotate.h"
+
+struct GomaLinearSolverData;
 
 #ifdef EXTERN
 #undef EXTERN

@@ -6,6 +6,8 @@
 #include "mm_as.h"
 #include "mm_eh.h"
 #include "rf_io.h"
+#include "mm_as_structs.h"
+#include "std.h"
 
 #define MAX_DECOMP_COMMAND 2048
 

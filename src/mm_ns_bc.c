@@ -23,20 +23,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 /* GOMA include files */
 #include "ac_stability.h"
 #include "az_aztec.h"
-#include "bc/rotate_coordinates.h"
 #include "bc_colloc.h"
 #include "el_elm.h"
 #include "el_geom.h"
 #include "exo_struct.h"
-#include "gds/gds_vector.h"
 #include "mm_as.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
-#include "mm_eh.h"
 #include "mm_elem_block_structs.h"
 #include "mm_fill_jac.h"
 #include "mm_fill_ls.h"
@@ -71,6 +69,7 @@
 #include "user_bc.h"
 #include "user_mp.h"
 #include "wr_side_data.h"
+#include "mm_input.h"
 
 #define eps(i, j, k) ((i - j) * (j - k) * (k - i) / 2)
 

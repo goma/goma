@@ -20,8 +20,11 @@
 #include "mm_mp_const.h"
 #include "mm_mp_structs.h"
 #include "std.h"
+#include "mm_as_structs.h"
+#include "rf_allo.h"
 
 struct GomaLinearSolverData;
+struct Generalized_Newtonian;
 #ifdef EXTERN
 #undef EXTERN
 #endif

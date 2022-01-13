@@ -16,6 +16,7 @@
 #include "el_elm.h"
 #include "mm_std_models.h"
 #include "std.h"
+#include "mm_fill_ls.h"
 
 struct Species_Conservation_Terms;
 #ifdef EXTERN

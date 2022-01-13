@@ -28,7 +28,6 @@
 
 #define GOMA_AC_STABILITY_C
 #include "ac_stability.h"
-
 #include "dpi.h"
 #include "exo_struct.h"
 #include "mm_as.h"
@@ -51,9 +50,6 @@
 #include "sl_matrix_util.h"
 #include "sl_util_structs.h"
 #include "std.h"
-
-struct Results_Description;
-struct elem_side_bc_struct;
 
 struct Results_Description;
 struct elem_side_bc_struct;
