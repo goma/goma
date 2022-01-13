@@ -92,10 +92,4 @@ EXTERN void add_qa_stamp(Exo_DB *); /* exo                                      
 
 EXTERN void add_info_stamp(Exo_DB *); /* exo                                       */
 
-extern void wr_resetup_exo         /* wr_exo.c */
-    (Exo_DB *exo, char *filename); /* verbosity - 0 for quiet, more to talk */
-
-void wr_result_exo(
-    Exo_DB *exo, char *filename, int verbosity, int write_node_vars, int write_elem_vars);
-
 #endif /* GOMA_WR_EXO_H */

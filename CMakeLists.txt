@@ -278,7 +278,7 @@ endif()
 option(PRINT_STACK_TRACE_ON_EH "PRINT_STACK_TRACE_ON_EH" ON)
 if(PRINT_STACK_TRACE_ON_EH)
   list(APPEND GOMA_COMPILE_DEFINITIONS PRINT_STACK_TRACE_ON_EH)
-  set(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} -rdynamic)
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -rdynamic")
 endif()
 
 option_definition(DISABLE_COLOR_ERROR_PRINT OFF)
@@ -626,7 +626,7 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     "Debug" "Release" "RelWithDebInfo")
 endif()
 
-set(GOMA_WARNINGS "-Wall -Wextra -Wno-unused-parameter -Wimplicit-fallthrough=2" CACHE STRING "set warnings for goma C and CXX")
+set(GOMA_WARNINGS "-Wall -Wextra -Wno-unused-parameter -Wimplicit-fallthrough" CACHE STRING "set warnings for goma C and CXX")
 set(GOMA_DEBUG_FLAGS "-O0 -ggdb3" CACHE STRING "set debug flags for goma C and CXX")
 set(GOMA_RELEASE_FLAGS "-O2 -DNDEBUG" CACHE STRING "set release flags for goma C and CXX")
 

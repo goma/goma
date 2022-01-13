@@ -719,10 +719,14 @@ dbl element_viscosity(void)
     fv->F = 0.0;
 
   fv->T = mp->reference[TEMPERATURE];
-  for (i = 0; i < pd->Num_Species_Eqn; i++)
+  for (i = 0; i < pd->Num_Species_Eqn; i++) {
     fv->c[i] = mp->reference_concn[i];
-  for (i = 0; i < ei[pg->imtrx]->dof[MASS_FRACTION]; i++)
-    bf[MASS_FRACTION]->phi[i] = 0.0;
+  }
+
+  if (pd->gv[MASS_FRACTION]) {
+    for (i = 0; i < ei[pg->imtrx]->dof[MASS_FRACTION]; i++)
+      bf[MASS_FRACTION]->phi[i] = 0.0;
+  }
 
   /* initialize grad_phi_e for shear-thinning models */
   for (i = 0; i < ei[pg->imtrx]->dof[VELOCITY1]; i++) {

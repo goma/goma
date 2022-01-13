@@ -527,12 +527,12 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
     d->node_owner[offset + old_to_new_external_node_order[i]] = old_node_owner[i];
   }
 
-  for (int i = 0; i < d->num_node_cmaps; i++) {
-    for (int j = 0; j < d->node_cmap_node_counts[i]; j++) {
-      d->node_map_node_ids[i][j] =
-          old_to_new_external_node_order[d->node_map_node_ids[i][j] - offset];
-    }
-  }
+  //for (int i = 0; i < d->num_node_cmaps; i++) {
+  //  for (int j = 0; j < d->node_cmap_node_counts[i]; j++) {
+  //    d->node_map_node_ids[i][j] =
+  //        old_to_new_external_node_order[d->node_map_node_ids[i][j] - offset];
+  //  }
+  //}
 
   free(new_external_node_order);
   free(old_to_new_external_node_order);
