@@ -569,7 +569,7 @@ void extract_nodal_vec(double sol_vec[],
      * -> If it isn't defined, we don't need to go into the eb routine,
      *    and we will avoid some errors with cross-phase situations.
      */
-    if (pd->e[pg->imtrx][var_no]) {
+    //if (pd->e[pg->imtrx][var_no]) {
       /*
        *  Next check to see whether we are obtaining material
        *  specific values or general values of the variable
@@ -582,7 +582,7 @@ void extract_nodal_vec(double sol_vec[],
         extract_nodal_eb_vec(sol_vec, var_no, ktype, matIndex, eb_index, nodal_vec, exo,
                              timeDerivative, time);
       }
-    }
+    //}
   }
   return;
 }
@@ -787,11 +787,6 @@ void extract_nodal_eb_vec(double sol_vec[],
             iright = 0;
           Iright = Proc_Elem_Connect[iconnect_ptr + iright];
           nodal_vec[I] = 0.5 * (nodal_vec[Ileft] + nodal_vec[Iright]);
-#if 0
-          if ((pd->i[pg->imtrx][var_no] == I_Q1_HV)   ||
-              (pd->i[pg->imtrx][var_no] == I_Q1_HG)   ||
-              (pd->i[pg->imtrx][var_no] == I_Q1_HVG)) nodal_vec[I] = -1.;
-#endif
         }
       }
       /*
@@ -808,11 +803,6 @@ void extract_nodal_eb_vec(double sol_vec[],
             Ileft = Proc_Elem_Connect[iconnect_ptr + ileft];
             nodal_vec[I] += 0.25 * nodal_vec[Ileft];
           }
-#if 0
-          if ((pd->i[pg->imtrx][var_no] == I_Q1_HV)   ||
-              (pd->i[pg->imtrx][var_no] == I_Q1_HG)   ||
-              (pd->i[pg->imtrx][var_no] == I_Q1_HVG)) nodal_vec[I] = -1.;
-#endif
         }
       }
     } /* END if (midside) */
