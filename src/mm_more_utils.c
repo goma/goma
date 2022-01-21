@@ -945,12 +945,6 @@ void extract_elem_vec(const double sol_vec[],
         /* Field variable is zero where it
          * is not defined.                 */
       }
-#ifdef RRLOBER
-      if (found_quantity == FALSE) {
-        printf(" No quantity found for variable %s (%s), element %d (%d)\n",
-               Exo_Var_Names[var].name2, Exo_Var_Names[var].name1, ielem, ielem - e_start);
-      }
-#endif
     }
   }
   return;

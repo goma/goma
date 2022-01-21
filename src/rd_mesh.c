@@ -253,7 +253,7 @@ int read_mesh_exoII(Exo_DB *exo, Dpi *dpi) {
 
   build_node_node(exo);
 
-  exchange_neighbor_ss_edges(exo, dpi);
+  //exchange_neighbor_ss_edges(exo, dpi);
 
   return 0;
 }

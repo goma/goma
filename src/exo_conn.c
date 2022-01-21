@@ -91,9 +91,6 @@ static int int_intersect(int *,     /* a - first integer list	        (in) */
                          int *,     /* ia - indeces intersections, 1st list (out)*/
                          int *);    /* ib - indeces intersections, 2nd list (out)*/
 
-static int sides2nodes(const int, /* face - face number 0,1,...,num_faces-1    */
-                       const int, /* shape - one of LINE_SEGMENT, etc.         */
-                       int *);    /* local_indeces - gets filled w/ right ones */
 
 /*
  * From the PATRAN/EXODUS convention, generate a list of the GOMA id_sides
@@ -973,7 +970,7 @@ int build_side_node_list(int elem, int face, Exo_DB *exo, int *snl) {
  * Revised:
  */
 
-static int sides2nodes(const int face,     /* assume face number 0,1,...,num_faces-1 */
+int sides2nodes(const int face,     /* assume face number 0,1,...,num_faces-1 */
                        const int shape,    /* one of LINE_SEGMENT, etc. */
                        int *local_indeces) /* get filled with right ones */
 {

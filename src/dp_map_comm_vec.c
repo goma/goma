@@ -474,8 +474,8 @@ static void build_node_recv_indeces(Exo_DB *exo, Dpi *dpi)
    *   We do this check by counting the number of ownership changes as
    *  we raster through the external nodes.
    */
-  if (num_owner_changes != dpi->num_neighbors) {
-    fprintf(stderr, "Proc %d: num_owner_changes %d not equal to dpi->num_neighbors %d\n", ProcID,
+  if (num_owner_changes > dpi->num_neighbors) {
+    fprintf(stderr, "Proc %d: num_owner_changes %d > dpi->num_neighbors %d\n", ProcID,
             num_owner_changes, dpi->num_neighbors);
     GOMA_EH(GOMA_ERROR, "External node ownership inconsistency!");
   }

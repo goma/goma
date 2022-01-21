@@ -22,6 +22,9 @@ MESSAGE(STATUS "Trilinos_DIR = ${Trilinos_DIR}")
 set(MPI_C_COMPILER ${Trilinos_C_COMPILER})
 set(MPI_CXX_COMPILER ${Trilinos_CXX_COMPILER})
 set(MPI_Fortran_COMPILER ${Trilinos_Fortran_COMPILER})
+message(STATUS "MPI_C_COMPILER: ${MPI_C_COMPILER}")
+message(STATUS "MPI_CXX_COMPILER: ${MPI_CXX_COMPILER}")
+message(STATUS "MPI_Fortran_COMPILER: ${MPI_Fortran_COMPILER}")
 find_package(MPI REQUIRED)
 # Avoid linking to too many libraries by removing duplicates
 # reverse so that correct order for linking is preserved
@@ -616,14 +619,46 @@ set(GDS_SOURCES
 # CMake generators if no build type is set. 
 # https://blog.kitware.com/cmake-and-the-default-build-type/
 set(default_build_type "Release")
+get_property(isMultiConfig GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+
+if(isMultiConfig)
+  if(NOT "Asan" IN_LIST CMAKE_CONFIGURATION_TYPES)
+    list(APPEND CMAKE_CONFIGURATION_TYPES Asan)
+  endif()
+else()
+  set(allowedBuildTypes Asan Debug Release RelWithDebInfo MinSizeRel)
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "${allowedBuildTypes}")
+
+  if(CMAKE_BUILD_TYPE AND NOT CMAKE_BUILD_TYPE IN_LIST allowedBuildTypes)
+    message(FATAL_ERROR "Invalid build type: ${CMAKE_BUILD_TYPE}")
+  endif()
+endif()
+
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
   set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
       STRING "Choose the type of build." FORCE)
-  # Set the possible values of build type for cmake-gui
-  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
-    "Debug" "Release" "RelWithDebInfo")
 endif()
+
+set(CMAKE_C_FLAGS_ASAN
+        "${CMAKE_C_FLAGS_DEBUG} -fsanitize=address -fno-omit-frame-pointer" CACHE STRING
+        "Flags used by the C compiler for Asan build type or configuration." FORCE)
+
+set(CMAKE_CXX_FLAGS_ASAN
+        "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address -fno-omit-frame-pointer" CACHE STRING
+        "Flags used by the C++ compiler for Asan build type or configuration." FORCE)
+
+set(CMAKE_Fortran_FLAGS_ASAN
+        "${CMAKE_Fortran_FLAGS_DEBUG} -fsanitize=address -fno-omit-frame-pointer" CACHE STRING
+        "Flags used by the Fortran compiler for Asan build type or configuration." FORCE)
+
+set(CMAKE_EXE_LINKER_FLAGS_ASAN
+        "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} -fsanitize=address" CACHE STRING
+        "Linker flags to be used to create executables for Asan build type." FORCE)
+
+set(CMAKE_SHARED_LINKER_FLAGS_ASAN
+        "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} -fsanitize=address" CACHE STRING
+        "Linker lags to be used to create shared libraries for Asan build type." FORCE)
 
 set(GOMA_WARNINGS "-Wall -Wextra -Wno-unused-parameter -Wimplicit-fallthrough" CACHE STRING "set warnings for goma C and CXX")
 set(GOMA_DEBUG_FLAGS "-O0 -ggdb3" CACHE STRING "set debug flags for goma C and CXX")
@@ -663,12 +698,15 @@ message(STATUS "CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
 message(STATUS "CMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}")
 message(STATUS "CMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}")
 message(STATUS "CMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}")
+message(STATUS "CMAKE_CXX_FLAGS_ASAN=${CMAKE_CXX_FLAGS_ASAN}")
 message(STATUS "CMAKE_Fortran_FLAGS=${CMAKE_Fortran_FLAGS}")
 message(STATUS "CMAKE_Fortran_FLAGS_RELEASE=${CMAKE_Fortran_FLAGS_RELEASE}")
 message(STATUS "CMAKE_Fortran_FLAGS_DEBUG=${CMAKE_Fortran_FLAGS_DEBUG}")
+message(STATUS "CMAKE_Fortran_FLAGS_ASAN=${CMAKE_Fortran_FLAGS_ASAN}")
 message(STATUS "CMAKE_C_FLAGS=${CMAKE_C_FLAGS}")
 message(STATUS "CMAKE_C_FLAGS_RELEASE=${CMAKE_C_FLAGS_RELEASE}")
 message(STATUS "CMAKE_C_FLAGS_DEBUG=${CMAKE_C_FLAGS_DEBUG}")
+message(STATUS "CMAKE_C_FLAGS_ASAN=${CMAKE_C_FLAGS_ASAN}")
 message("\n")
 message(STATUS "Goma compile defines:")
 foreach(d ${GOMA_COMPILE_DEFINITIONS})

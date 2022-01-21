@@ -2292,7 +2292,7 @@ int wr_soln_vec(double u[],    /* solution vector */
   }
 
   for (i = 0; i < np; i++) {
-    DPRINTF(file, fmt, u[i], dofname[pg->imtrx][i], r[i]);
+    fprintf(file, fmt, u[i], dofname[pg->imtrx][i], r[i]);
   }
 
   fclose(file);

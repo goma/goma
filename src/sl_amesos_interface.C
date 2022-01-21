@@ -45,6 +45,11 @@
 #include "Epetra_SerialComm.h"
 #endif
 
+#if 0
+#include "EpetraExt_RowMatrixOut.h"
+#include "EpetraExt_VectorOut.h"
+#endif
+
 #include "Amesos.h"
 #include "Amesos_ConfigDefs.h"
 #include "Epetra_CrsMatrix.h"
@@ -69,7 +74,6 @@ void amesos_solve_msr(char *choice,
 #else
   Epetra_SerialComm comm;
 #endif
-
   static int prev_matrix = 0;
 
   /* Define internal variables */
@@ -99,6 +103,10 @@ void amesos_solve_msr(char *choice,
   Epetra_Vector x(Copy, map, x_);
   Epetra_Vector b(Copy, map, b_);
 
+#if 0
+  EpetraExt::RowMatrixToMatrixMarketFile("A.mtx", *A);
+  EpetraExt::VectorToMatrixMarketFile("b.mm", b);
+#endif
   /* Choose correct solver */
   if (FirstRun) {
     std::string Pkg_Choice = choice;

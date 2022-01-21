@@ -312,10 +312,7 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
       if (neighbor != d->node_map_proc_ids[i][j]) {
         GOMA_EH(GOMA_ERROR, "Unexpected proc id in node map proc ids");
       }
-      if (d->node_owner[d->node_map_node_ids[i][j]] != ProcID) {
-        GOMA_EH(GOMA_ERROR, "External node found multiple procs");
-      }
-      if (neighbor < ProcID) {
+      if (neighbor < d->node_owner[d->node_map_node_ids[i][j]]) {
         d->node_owner[d->node_map_node_ids[i][j]] = neighbor;
         d->num_node_recv[i]++;
       }
@@ -422,8 +419,10 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
   MPI_Allreduce(global_owners_max, all_global_owners_max, d->num_nodes_global, MPI_INT, MPI_MAX,
                 MPI_COMM_WORLD);
 
-  if (all_global_owners_min[0] != all_global_owners_max[0]) {
-    GOMA_EH(GOMA_ERROR, "Inconsistent node owners");
+  for (int i = 0; i < d->num_nodes_global; i++) {
+    if (all_global_owners_min[i] != all_global_owners_max[i]) {
+      GOMA_EH(GOMA_ERROR, "Inconsistent node owners");
+    }
   }
   free(global_owners_min);
   free(global_owners_max);
@@ -500,12 +499,10 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
   }
 
   // ns
-  for (int ns = 0; ns < exo->num_node_sets; ns++) {
-    for (int j = 0; j < exo->ns_node_len; j++) {
-      if (exo->ns_node_list[j] >= offset) {
-        exo->ns_node_list[j] =
-            old_to_new_external_node_order[exo->ns_node_list[j] - offset] + offset;
-      }
+  for (int j = 0; j < exo->ns_node_len; j++) {
+    if (exo->ns_node_list[j] >= offset) {
+      exo->ns_node_list[j] =
+          old_to_new_external_node_order[exo->ns_node_list[j] - offset] + offset;
     }
   }
 

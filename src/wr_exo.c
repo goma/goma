@@ -781,7 +781,7 @@ void wr_elem_result_exo(Exo_DB *exo,
   for (i = 0; i < exo->num_elem_blocks; i++) {
     if (exo->elem_var_tab_exists == TRUE) {
       /* Only write out vals if this variable exists for the block */
-      if (exo->elem_var_tab[i * rd->nev + variable_index] == 1) {
+      if (exo->elem_var_tab[i * rd->nev + variable_index] == 1 && exo->eb_num_elems[i] > 0) {
         error = ex_put_var(exo->exoid, time_step, EX_ELEM_BLOCK, variable_index + 1, exo->eb_id[i],
                            exo->eb_num_elems[i], vector[i][variable_index]);
         GOMA_EH(error, "ex_put_var elem");
@@ -1167,6 +1167,9 @@ void create_truth_table(struct Results_Description *rd, Exo_DB *exo, double ***g
           }
         }
       }
+    }
+    else {
+      i += rd->nev;
     }
   }
 

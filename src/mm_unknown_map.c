@@ -1067,11 +1067,11 @@ void set_unknown_map(Exo_DB *exo, Dpi *dpi)
               if (var_type == MASS_FRACTION) {
                 kspec = ii / Dolphin[imtrx][i][var_type];
                 dofkspec = ii - kspec * Dolphin[imtrx][i][var_type];
-                sprintf(dofname[imtrx][gcount + count + ii], "dof=%-5d %s%d_%d n=%-5d %s",
+                sprintf(dofname[imtrx][gcount + count + ii], "dof=%-5d %s%d_%d n=%05d %s",
                         gdof + count + ii, Var_Name[var_type].name2, kspec, dofkspec, i1,
                         position_label);
               } else {
-                sprintf(dofname[imtrx][gcount + count + ii], "dof=%-5d %2s_%d n=%-5d",
+                sprintf(dofname[imtrx][gcount + count + ii], "dof=%-5d %2s_%d n=%05d",
                         gdof + count + ii, Var_Name[var_type].name2, ii, i1);
               }
             }
@@ -1079,11 +1079,11 @@ void set_unknown_map(Exo_DB *exo, Dpi *dpi)
               if (var_type == MASS_FRACTION) {
                 kspec = ii / Dolphin[imtrx][i][var_type];
                 dofkspec = ii - kspec * Dolphin[imtrx][i][var_type];
-                sprintf(resname[imtrx][gcount + count + ii], "dof=%-5d %s%d_%d n=%-5d %s",
+                sprintf(resname[imtrx][gcount + count + ii], "dof=%-5d %s%d_%d n=%05d %s",
                         gcount + count + ii, EQ_Name[var_type].name2, kspec, dofkspec, i1,
                         position_label);
               } else {
-                sprintf(resname[imtrx][gcount + count + ii], "dof=%-5d %2s_%d n=%-5d",
+                sprintf(resname[imtrx][gcount + count + ii], "dof=%-5d %2s_%d n=%05d",
                         gcount + count + ii, EQ_Name[var_type].name2, ii, i1);
               }
             }
