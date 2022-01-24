@@ -75,10 +75,10 @@ apply_point_colloc_bc (
 {
   int w, i, I, ibc, j, id, err, var, eqn, ldof_eqn, ldof_var, icount;
   int ieqn, pvar;
-  int ivar, jvar, id_side_bulk;
+  int ivar, jvar, id_side_shell;
   int el1, el2, nf, jk;
   int dim1, dim2, ddim;
-  int svar1, svar2, bulk_gnn[MDE], inode;
+  int svar1, svar2, shell_gnn[MDE], inode;
   int status = 0;
   int index_eq, matID_apply;
   int bc_input_id;
@@ -568,24 +568,20 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
               };
               el2 = elem_friends[el1][0];
 
-              for (i=0; i<DIM; i++)
-                 {
-                  xi2[i] = 0.0;
-                 }
 
               dim1 = elem_info(NDIM, Elem_Type(exo, el1));  /* Local element */
               dim2 = elem_info(NDIM, Elem_Type(exo, el2));  /* Remote element */
               ddim = dim1 - dim2;
-              if (ddim == -1 && id != -1)
+              if (ddim == 1 && id != -1)
                 {
-                 /* Get stu coordinates for this Gauss point from neighbor element */
-                 id_side_bulk = bulk_side_id_and_stu(el2, el1, xi, xi2, exo);
-                 if (id_side_bulk == -1) EH(-1, "Error returned from bulk_side_id_and_stu() ");
+                 /* Get stu coordinates for this Gauss point from neighbor shell element */
+                 id_side_shell = find_stu_on_shell(el1, elem_side_bc->id_side, el2, dim1, xi[0], xi[1], xi[2], xi2, exo);
+                 if (id_side_shell == -1) EH(-1, "find_stu_on_shell");
 
                  /* This call will populate the neighbor element fv/bf structures */
                  setup_shop_at_point(el2, xi2, exo);
 
-                 /* svar2 is the shape variable for the second (i.e., bulk) element */
+                 /* svar2 is the shape variable for the second (i.e., shell) element */
                  svar2 = pd->ShapeVar;
 
                  /* Save active DOF counts for variables in the neighbor element */
@@ -594,14 +590,14 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
                      n_dof[ivar] = ei->dof[ivar];
                     }
 
-                 /* Save node list in bulk element */
-                 for (ivar = 0; ivar < MDE; ivar++) bulk_gnn[ivar] = -1;
+                 /* Save node list in shell element */
+                 for (ivar = 0; ivar < MDE; ivar++) shell_gnn[ivar] = -1;
                  for (ivar = 0; ivar < ei->dof[svar2]; ivar++)
                     {
-                     bulk_gnn[ivar] = ei->gnn_list[svar2][ivar];
+                     shell_gnn[ivar] = ei->gnn_list[svar2][ivar];
                     }
 
-                 /* Go back to the current element (i.e., the shell element) */
+                 /* Go back to the current element (i.e., the bulk element) */
                  setup_shop_at_point(el1, xi, exo);
                  svar1 = pd->ShapeVar;
 
@@ -612,12 +608,12 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
                      inode = ei->gnn_list[svar1][ivar];
                      for (jvar = 0; jvar < n_dof[svar2]; jvar++)
                         {
-                         if (inode == bulk_gnn[jvar]) dof_map[ivar] = jvar;
+                         if (inode == shell_gnn[jvar]) dof_map[ivar] = jvar;
                         }
                     }
 
 	         /*Note that we send both local node numbers for bulk and shell elements */
-	         put_fluid_stress_on_shell(dof_map[id], id , I,
+	         put_fluid_stress_on_shell(id , dof_map[id], I,
 					   ielem_dim, resid_vector,
 					   local_node_list_fs,
 					   BC_Types[bc_input_id].BC_Data_Float[0]);
