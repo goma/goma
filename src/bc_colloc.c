@@ -75,10 +75,9 @@ apply_point_colloc_bc (
 {
   int w, i, I, ibc, j, id, err, var, eqn, ldof_eqn, ldof_var, icount;
   int ieqn, pvar;
-  int ivar, jvar, id_side_shell;
+  int ivar, jvar;
   int el1, el2, nf, jk;
-  int dim1, dim2, ddim;
-  int svar1, svar2, shell_gnn[MDE], inode;
+  int inode;
   int status = 0;
   int index_eq, matID_apply;
   int bc_input_id;
@@ -87,7 +86,7 @@ apply_point_colloc_bc (
   int n_dof[MAX_VARIABLE_TYPES];
   int n_dofptr[MAX_VARIABLE_TYPES][MDE];
   int doMeshMapping = 0;
-  double xi[DIM], xi2[DIM];             /* Gaussian-quadrature point locations         */
+  double xi[DIM];
   double x_dot[MAX_PDIM];
   double dsigma_dx[DIM][MDE];
   double phi_j;
@@ -560,67 +559,32 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 		break;
 
 	    case SH_FLUID_STRESS_BC:
-
-              el1 = ei->ielem;
-              nf = num_elem_friends[el1];
-              if (nf == 0) {
-                EH(-1, "No element friend can be found");
-              };
-              el2 = elem_friends[el1][0];
-
-
-              dim1 = elem_info(NDIM, Elem_Type(exo, el1));  /* Local element */
-              dim2 = elem_info(NDIM, Elem_Type(exo, el2));  /* Remote element */
-              ddim = dim1 - dim2;
-              if (ddim == 1 && id != -1)
                 {
-                 /* Get stu coordinates for this Gauss point from neighbor shell element */
-                 id_side_shell = find_stu_on_shell(el1, elem_side_bc->id_side, el2, dim1, xi[0], xi[1], xi[2], xi2, exo);
-                 if (id_side_shell == -1) EH(-1, "find_stu_on_shell");
-
-                 /* This call will populate the neighbor element fv/bf structures */
-                 setup_shop_at_point(el2, xi2, exo);
-
-                 /* svar2 is the shape variable for the second (i.e., shell) element */
-                 svar2 = pd->ShapeVar;
-
-                 /* Save active DOF counts for variables in the neighbor element */
-                 for (ivar = 0; ivar < MAX_VARIABLE_TYPES; ivar++)
-                    {
-                     n_dof[ivar] = ei->dof[ivar];
+                  int dof_map_curv[MDE] = {-1};
+                  int dof_map_tens[MDE] = {-1};
+                  /* Populate dof_map arrays */
+                  for (ivar = 0; ivar < ei->dof[VELOCITY1]; ivar++) {
+                    inode = ei->gnn_list[VELOCITY1][ivar];
+                    for (jvar = 0; jvar < ei->dof[SHELL_CURVATURE]; jvar++) {
+                      if (inode == ei->gnn_list[SHELL_CURVATURE][jvar]) {
+                        dof_map_curv[ivar] = jvar;
+                      }
                     }
-
-                 /* Save node list in shell element */
-                 for (ivar = 0; ivar < MDE; ivar++) shell_gnn[ivar] = -1;
-                 for (ivar = 0; ivar < ei->dof[svar2]; ivar++)
-                    {
-                     shell_gnn[ivar] = ei->gnn_list[svar2][ivar];
+                    for (jvar = 0; jvar < ei->dof[SHELL_TENSION]; jvar++) {
+                      if (inode == ei->gnn_list[SHELL_TENSION][jvar]) {
+                        dof_map_tens[ivar] = jvar;
+                      }
                     }
+                  }
 
-                 /* Go back to the current element (i.e., the bulk element) */
-                 setup_shop_at_point(el1, xi, exo);
-                 svar1 = pd->ShapeVar;
+	          /*Note that we send both local node numbers for bulk and shell elements */
+	          put_fluid_stress_on_shell(id , dof_map_curv[id], dof_map_tens[id], I,
+					    ielem_dim, resid_vector,
+					    local_node_list_fs,
+					    BC_Types[bc_input_id].BC_Data_Float[0]);
 
-                 /* Populate dof_map array*/
-                 for (ivar = 0; ivar < MDE; ivar++) dof_map[ivar] = -1;
-                 for (ivar = 0; ivar < ei->dof[svar1]; ivar++)
-                    {
-                     inode = ei->gnn_list[svar1][ivar];
-                     for (jvar = 0; jvar < n_dof[svar2]; jvar++)
-                        {
-                         if (inode == shell_gnn[jvar]) dof_map[ivar] = jvar;
-                        }
-                    }
-
-	         /*Note that we send both local node numbers for bulk and shell elements */
-	         put_fluid_stress_on_shell(id , dof_map[id], I,
-					   ielem_dim, resid_vector,
-					   local_node_list_fs,
-					   BC_Types[bc_input_id].BC_Data_Float[0]);
-
-	         func = 0.; /* this boundary condition rearranges values already in res and jac,
-			    * and does not add anything into the residual */
-	         break;
+	          func = 0.; /* this boundary condition rearranges values already in res and jac,
+		  	      * and does not add anything into the residual */
                 }
               break;
 
