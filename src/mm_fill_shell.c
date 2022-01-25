@@ -4223,7 +4223,8 @@ void
 put_fluid_stress_on_shell(int id, /* local bulk element node number for the
 				   * current node whose residual contribution
 				   * is being sought                        */
-			  int id_shell, /* local shell element node number corresponding to id */
+			  int id_shell_curv, /* local shell element node number corresponding to id */
+			  int id_shell_tens, /* local shell element node number corresponding to id */
 			  int I, /* Global node number                      */
 			  int ielem_dim, /* physical dimension of the elem  */
 			  double resid_vector[], /* Residual vector         */
@@ -4264,7 +4265,6 @@ put_fluid_stress_on_shell(int id, /* local bulk element node number for the
    * variable at every surface node
    */
   id_dofmom1 = id;
-  id_dofshell = id_shell;  /* This is the imperfect assumption */
 
 
   /*
@@ -4298,7 +4298,7 @@ put_fluid_stress_on_shell(int id, /* local bulk element node number for the
       ieqn_mom2   = R_MOMENTUM2;
       id_dofmom1 = id;
       id_dofmom2 = id;
-      id_dofshell = id_shell;
+      id_dofshell = id_shell_curv;
       lec->R[LEC_R_INDEX(upd->ep[ieqn_shell],id_dofshell)] +=
         scale * (fv->snormal[0] * lec->R[LEC_R_INDEX(upd->ep[ieqn_mom1],id_dofmom1)] +
                  fv->snormal[1] * lec->R[LEC_R_INDEX(upd->ep[ieqn_mom2],id_dofmom2)]);
@@ -4309,7 +4309,7 @@ put_fluid_stress_on_shell(int id, /* local bulk element node number for the
       ieqn_mom2   = R_MOMENTUM2;
       id_dofmom1 = id;
       id_dofmom2 = id;
-      id_dofshell = id_shell;
+      id_dofshell = id_shell_tens;
       lec->R[LEC_R_INDEX(upd->ep[ieqn_shell],id_dofshell)] +=
         scale * (fv->stangent[0][0] * lec->R[LEC_R_INDEX(upd->ep[ieqn_mom1],id_dofmom1)] +
                  fv->stangent[0][1] * lec->R[LEC_R_INDEX(upd->ep[ieqn_mom2],id_dofmom2)]);
@@ -4332,7 +4332,7 @@ put_fluid_stress_on_shell(int id, /* local bulk element node number for the
 	  peqn_mom1 = upd->ep[ieqn_mom1];
 	  id_dofmom2 = id;
 	  peqn_mom2 = upd->ep[ieqn_mom2];
-	  id_dofshell = id_shell;
+	  id_dofshell = id_shell_curv;
 
 
 	  /* Add contributions due to all nodal sensitivities in shell element */
@@ -4404,7 +4404,7 @@ put_fluid_stress_on_shell(int id, /* local bulk element node number for the
 	  peqn_mom1 = upd->ep[ieqn_mom1];
 	  id_dofmom2 = id;
 	  peqn_mom2 = upd->ep[ieqn_mom2];
-	  id_dofshell = id_shell;
+	  id_dofshell = id_shell_tens;
 
 
 	  /* Add contributions due to all nodal sensitivities in shell element */
