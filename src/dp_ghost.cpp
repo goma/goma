@@ -22,11 +22,11 @@
 extern "C" {
 #define DISABLE_CPP
 #include "el_elm_info.h"
+#include "exo_conn.h"
 #include "mm_elem_block_structs.h"
+#include "mm_fill_fill.h"
 #include "mm_mp.h"
 #include "rd_mesh.h"
-#include "exo_conn.h"
-#include "mm_fill_fill.h"
 
 struct Material_Properties;
 
@@ -73,7 +73,7 @@ goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi) {
   std::fill(eb_num_nodes_per_elem.begin(), eb_num_nodes_per_elem.end(), 0);
   MPI_Allreduce(exo->eb_num_nodes_per_elem, eb_num_nodes_per_elem.data(), exo->num_elem_blocks,
                 MPI_INT, MPI_MAX, MPI_COMM_WORLD);
-  for (unsigned int i = 0; i < exo->num_elem_blocks; i++) {
+  for (int i = 0; i < exo->num_elem_blocks; i++) {
     exo->eb_num_nodes_per_elem[i] = eb_num_nodes_per_elem[i];
   }
 
@@ -81,7 +81,7 @@ goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi) {
   std::vector<int> eb_num_attr(exo->num_elem_blocks);
   MPI_Allreduce(exo->eb_num_attr, eb_num_attr.data(), exo->num_elem_blocks, MPI_INT, MPI_MAX,
                 MPI_COMM_WORLD);
-  for (unsigned int i = 0; i < exo->num_elem_blocks; i++) {
+  for (int i = 0; i < exo->num_elem_blocks; i++) {
     exo->eb_num_attr[i] = eb_num_attr[i];
   }
 
@@ -301,7 +301,8 @@ goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi) {
     }
 
     for (int i = 0; i < exo->eb_num_elems[block]; i++) {
-      elem_local_to_global.insert(std::make_pair(local_elem_offset, dpi->elem_index_global[old_elem_offset]));
+      elem_local_to_global.insert(
+          std::make_pair(local_elem_offset, dpi->elem_index_global[old_elem_offset]));
       old_elem_to_new[old_elem_offset] = local_elem_offset;
       old_elem_offset++;
       local_elem_offset++;
@@ -319,7 +320,7 @@ goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi) {
     exo->eb_conn[block] = int_ptr;
 
     // setup new connectivity
-    for (int i = 0; i < elems_new.size(); i++) {
+    for (unsigned int i = 0; i < elems_new.size(); i++) {
       auto &elem = elems_new[i];
       elem_local_to_global.insert(std::make_pair(local_elem_offset, elem.id));
       GOMA_ASSERT(elem.n_nodes == exo->eb_num_nodes_per_elem[block]);
@@ -341,16 +342,12 @@ goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi) {
   exo->num_elems = total_elems;
   int *int_ptr = (int *)realloc(dpi->elem_index_global, sizeof(int) * total_elems);
   GOMA_ASSERT(int_ptr != NULL);
-  std::unordered_map<int,int> elem_global_to_local;
+  std::unordered_map<int, int> elem_global_to_local;
   dpi->elem_index_global = int_ptr;
   for (int i = 0; i < exo->num_elems; i++) {
     dpi->elem_index_global[i] = elem_local_to_global.at(i);
     elem_global_to_local[dpi->elem_index_global[i]] = i;
   }
-  int_ptr = (int *)realloc(exo->elem_map, sizeof(int) * total_elems);
-  GOMA_ASSERT(int_ptr != NULL);
-  exo->elem_map = int_ptr;
-  memcpy(exo->elem_map, dpi->elem_index_global, sizeof(int) * total_elems);
 
   exo->num_nodes = num_nodes_new;
   int_ptr = (int *)realloc(dpi->node_index_global, sizeof(int) * num_nodes_new);
@@ -359,10 +356,6 @@ goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi) {
   for (int i = 0; i < exo->num_nodes; i++) {
     dpi->node_index_global[i] = local_to_global.at(i);
   }
-  int_ptr = (int *)realloc(exo->node_map, sizeof(int) * exo->num_nodes);
-  GOMA_ASSERT(int_ptr != NULL);
-  exo->node_map = int_ptr;
-  memcpy(exo->node_map, dpi->node_index_global, sizeof(int) * exo->num_nodes);
 
   double *double_ptr = (double *)realloc(exo->x_coord, sizeof(double) * exo->num_nodes);
   GOMA_ASSERT(double_ptr != NULL);
@@ -528,8 +521,6 @@ goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi) {
     old_to_new_map.insert(std::make_pair(i, i));
   }
 
-
-
   int *tmp_node_index_global = (int *)malloc(sizeof(int) * exo->num_nodes);
   memcpy(tmp_node_index_global, dpi->node_index_global, sizeof(int) * exo->num_nodes);
   int *tmp_node_owner = (int *)malloc(sizeof(int) * exo->num_nodes);
@@ -571,7 +562,6 @@ goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi) {
       exo->z_coord[new_id] = tmp_z[i];
     }
   }
-
 
   dpi->num_internal_nodes = internal_offset;
   dpi->num_boundary_nodes = exo->num_nodes - internal_offset - new_external_nodes.size();
@@ -633,7 +623,7 @@ goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi) {
   }
   MPI_Waitall(req_offset, ns_requests.data(), MPI_STATUSES_IGNORE);
 
-  std::unordered_map<int,int> new_global_to_local;
+  std::unordered_map<int, int> new_global_to_local;
   for (int i = 0; i < exo->num_nodes; i++) {
     new_global_to_local.insert(std::make_pair(dpi->node_index_global[i], i));
   }
@@ -659,7 +649,7 @@ goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi) {
   exo->ns_node_len = total_ns_nodes;
   exo->ns_distfact_len = total_ns_nodes;
 
-  int_ptr = (int * ) realloc(exo->ns_node_list, sizeof(int) * exo->ns_node_len);
+  int_ptr = (int *)realloc(exo->ns_node_list, sizeof(int) * exo->ns_node_len);
   GOMA_ASSERT(int_ptr != NULL);
   exo->ns_node_list = int_ptr;
 
@@ -670,14 +660,13 @@ goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi) {
     exo->ns_num_nodes[i] = ns_nodes[i].size();
     exo->ns_num_distfacts[i] = ns_nodes[i].size();
 
-    for (int j = 0; j < ns_nodes[i].size(); j++) {
+    for (unsigned int j = 0; j < ns_nodes[i].size(); j++) {
       exo->ns_node_list[index] = ns_nodes[i][j];
       index++;
     }
   }
 
-
-  dbl *dbl_ptr = (dbl * ) realloc(exo->ns_distfact_list, sizeof(dbl) * exo->ns_node_len);
+  dbl *dbl_ptr = (dbl *)realloc(exo->ns_distfact_list, sizeof(dbl) * exo->ns_node_len);
   GOMA_ASSERT(dbl_ptr != NULL);
   exo->ns_distfact_list = dbl_ptr;
 
@@ -697,7 +686,8 @@ goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi) {
   }
 
   for (int ins = 0; ins < exo->num_side_sets; ins++) {
-    for (int j = exo->ss_elem_index[ins]; j < exo->ss_elem_index[ins] + exo->ss_num_sides[ins]; j++) {
+    for (int j = exo->ss_elem_index[ins]; j < exo->ss_elem_index[ins] + exo->ss_num_sides[ins];
+         j++) {
       if (old_elem_to_new.find(exo->ss_elem_list[j]) != old_elem_to_new.end()) {
         exo->ss_elem_list[j] = old_elem_to_new[exo->ss_elem_list[j]];
       }
@@ -710,7 +700,8 @@ goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi) {
   std::vector<int> num_send_sides(exo->num_side_sets);
   std::vector<std::vector<int>> ss_sides(exo->num_side_sets);
   for (int ins = 0; ins < exo->num_side_sets; ins++) {
-    for (int j = exo->ss_elem_index[ins]; j < exo->ss_elem_index[ins] + exo->ss_num_sides[ins]; j++) {
+    for (int j = exo->ss_elem_index[ins]; j < exo->ss_elem_index[ins] + exo->ss_num_sides[ins];
+         j++) {
       ss_elems[ins].push_back(dpi->elem_index_global[exo->ss_elem_list[j]]);
       ss_sides[ins].push_back(exo->ss_side_list[j]);
     }
@@ -727,8 +718,8 @@ goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi) {
               MPI_COMM_WORLD, &ss_requests[req_offset++]);
   }
   for (int i = 0; i < dpi->num_neighbors; i++) {
-    MPI_Isend(&num_send_sides[0], exo->num_side_sets, MPI_INT, dpi->neighbor[i], 210, MPI_COMM_WORLD,
-              &ss_requests[req_offset++]);
+    MPI_Isend(&num_send_sides[0], exo->num_side_sets, MPI_INT, dpi->neighbor[i], 210,
+              MPI_COMM_WORLD, &ss_requests[req_offset++]);
   }
   MPI_Waitall(req_offset, ss_requests.data(), MPI_STATUSES_IGNORE);
 
@@ -739,8 +730,8 @@ goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi) {
     ss_neighbor_sides[i].resize(exo->num_side_sets);
     for (int ss = 0; ss < exo->num_side_sets; ss++) {
       ss_neighbor_sides[i][ss].resize(num_recv_sides[i][ss]);
-      MPI_Irecv(ss_neighbor_sides[i][ss].data(), num_recv_sides[i][ss], MPI_INT,
-                dpi->neighbor[i], 211, MPI_COMM_WORLD, &ss_requests[req_offset++]);
+      MPI_Irecv(ss_neighbor_sides[i][ss].data(), num_recv_sides[i][ss], MPI_INT, dpi->neighbor[i],
+                211, MPI_COMM_WORLD, &ss_requests[req_offset++]);
       MPI_Isend(ss_sides[ss].data(), num_send_sides[ss], MPI_INT, dpi->neighbor[i], 211,
                 MPI_COMM_WORLD, &ss_requests[req_offset++]);
     }
@@ -752,8 +743,8 @@ goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi) {
     ss_neighbor_elem[i].resize(exo->num_side_sets);
     for (int ss = 0; ss < exo->num_side_sets; ss++) {
       ss_neighbor_elem[i][ss].resize(num_recv_sides[i][ss]);
-      MPI_Irecv(ss_neighbor_elem[i][ss].data(), num_recv_sides[i][ss], MPI_INT,
-                dpi->neighbor[i], 211, MPI_COMM_WORLD, &ss_requests[req_offset++]);
+      MPI_Irecv(ss_neighbor_elem[i][ss].data(), num_recv_sides[i][ss], MPI_INT, dpi->neighbor[i],
+                211, MPI_COMM_WORLD, &ss_requests[req_offset++]);
       MPI_Isend(ss_elems[ss].data(), num_send_sides[ss], MPI_INT, dpi->neighbor[i], 211,
                 MPI_COMM_WORLD, &ss_requests[req_offset++]);
     }
@@ -765,7 +756,8 @@ goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi) {
   std::vector<std::vector<int>> my_ss_sides(exo->num_side_sets);
   int total_ss_sides = 0;
   for (int ins = 0; ins < exo->num_side_sets; ins++) {
-    for (int j = exo->ss_elem_index[ins]; j < exo->ss_elem_index[ins] + exo->ss_num_sides[ins]; j++) {
+    for (int j = exo->ss_elem_index[ins]; j < exo->ss_elem_index[ins] + exo->ss_num_sides[ins];
+         j++) {
       my_ss_elems[ins].push_back(exo->ss_elem_list[j]);
       my_ss_sides[ins].push_back(exo->ss_side_list[j]);
       total_ss_sides++;
@@ -783,11 +775,11 @@ goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi) {
   }
 
   // resetup elem_list, side_list, indices
-  int_ptr = (int * ) realloc(exo->ss_elem_list, sizeof(int) * total_ss_sides);
+  int_ptr = (int *)realloc(exo->ss_elem_list, sizeof(int) * total_ss_sides);
   GOMA_ASSERT(int_ptr != NULL);
   exo->ss_elem_list = int_ptr;
 
-  int_ptr = (int * ) realloc(exo->ss_side_list, sizeof(int) * total_ss_sides);
+  int_ptr = (int *)realloc(exo->ss_side_list, sizeof(int) * total_ss_sides);
   GOMA_ASSERT(int_ptr != NULL);
   exo->ss_side_list = int_ptr;
 
@@ -818,7 +810,8 @@ goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi) {
       int side = exo->ss_side_list[j];
       int block = exo->elem_eb[elem];
 
-      int elem_type = get_type(exo->eb_elem_type[block], exo->eb_num_nodes_per_elem[block], exo->eb_num_attr[block]);
+      int elem_type = get_type(exo->eb_elem_type[block], exo->eb_num_nodes_per_elem[block],
+                               exo->eb_num_attr[block]);
       int local_side_node_list[MAX_NODES_PER_SIDE];
 
       /* find SIDE info for primary side */
@@ -833,7 +826,7 @@ goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi) {
 
       for (int i = 0; i < num_nodes_on_side; i++) {
         int node = exo->eb_conn[block][(elem - elem_offset) * exo->eb_num_nodes_per_elem[block] +
-                            local_side_node_list[i]];
+                                       local_side_node_list[i]];
         ss_nodes[ins].push_back(node);
       }
       exo->ss_node_cnt_list[ins][j - exo->ss_elem_index[ins]] = num_nodes_on_side;
@@ -851,10 +844,10 @@ goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi) {
   int total_ss_nodes = 0;
   for (int ins = 0; ins < exo->num_side_sets; ins++) {
     if (ss_nodes[ins].size() > 0) {
-      int_ptr = (int *) realloc(exo->ss_node_list[ins], sizeof(int) * ss_nodes[ins].size());
-      GOMA_ASSERT(int_ptr !=NULL);
+      int_ptr = (int *)realloc(exo->ss_node_list[ins], sizeof(int) * ss_nodes[ins].size());
+      GOMA_ASSERT(int_ptr != NULL);
       exo->ss_node_list[ins] = int_ptr;
-      for (int j = 0; j < ss_nodes[ins].size(); j++) {
+      for (unsigned int j = 0; j < ss_nodes[ins].size(); j++) {
         exo->ss_node_list[ins][j] = ss_nodes[ins][j];
       }
     }
@@ -862,7 +855,7 @@ goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi) {
   }
 
   // setup distfacts that we use but expect to be 0
-  dbl_ptr = (dbl *) realloc(exo->ss_distfact_list, sizeof(dbl) * total_ss_nodes);
+  dbl_ptr = (dbl *)realloc(exo->ss_distfact_list, sizeof(dbl) * total_ss_nodes);
   GOMA_ASSERT(dbl_ptr != NULL);
   for (int j = 0; j < total_ss_nodes; j++) {
     dbl_ptr[j] = 0.0;
@@ -874,9 +867,6 @@ goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi) {
     exo->ss_num_distfacts[ins] = ss_nodes[ins].size();
     ss_offset += ss_nodes[ins].size();
   }
-
-
-
 
   int_ptr = (int *)realloc(dpi->elem_owner, exo->num_elems * sizeof(int));
   GOMA_ASSERT(int_ptr != NULL);
@@ -939,5 +929,47 @@ goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi) {
     }
   }
 
+  return GOMA_SUCCESS;
+}
+
+goma_error setup_ghost_to_base(Exo_DB *exo, Dpi *dpi) {
+  exo->ghost_node_to_base = (int *)malloc(sizeof(int) * exo->num_nodes);
+  std::unordered_map<int,int> old_map;
+  for (int i = 0; i < exo->base_mesh->num_nodes; i++) {
+    old_map[exo->base_mesh->node_map[i]] = i;
+  }
+  for (int i = 0; i < exo->num_nodes; i++) {
+    if (old_map.find(dpi->node_index_global[i]) != old_map.end()) {
+      exo->ghost_node_to_base[i] = old_map.at(dpi->node_index_global[i]);
+    } else {
+      exo->ghost_node_to_base[i] = -1;
+    }
+  }
+
+  exo->eb_ghost_elem_to_base = (int **)malloc(sizeof(int*) * exo->num_elem_blocks);
+  int offset_old = 0;
+  int offset_new = 0;
+  for (int i = 0; i < exo->num_elem_blocks; i++) {
+    std::unordered_map<int,int> old_elem_map;
+    for (int j = 0; j < exo->base_mesh->eb_num_elems[i]; j++) {
+      old_elem_map[exo->base_mesh->elem_map[offset_old + j]] = j;
+    }
+    offset_old += exo->base_mesh->eb_num_elems[i];
+
+    if (exo->eb_num_elems[i] > 0) {
+      exo->eb_ghost_elem_to_base[i] = (int *)malloc(sizeof(int) * exo->eb_num_elems[i]);
+    } else {
+      exo->eb_ghost_elem_to_base[i] = NULL;
+    }
+
+    for (int j = 0; j < exo->eb_num_elems[i]; j++) {
+      if (old_elem_map.find(dpi->elem_index_global[offset_new + j]) != old_elem_map.end()) {
+        exo->eb_ghost_elem_to_base[i][j] = old_elem_map.at(dpi->elem_index_global[offset_new + j]);
+      } else {
+        exo->eb_ghost_elem_to_base[i][j] = -1;
+      }
+    }
+    offset_new += exo->eb_num_elems[i];
+  }
   return GOMA_SUCCESS;
 }

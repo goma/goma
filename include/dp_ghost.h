@@ -10,6 +10,7 @@ extern "C" {
 #include "mm_eh.h"
 
 goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi);
+goma_error setup_ghost_to_base(Exo_DB *exo, Dpi *dpi);
 
 #ifdef __cplusplus
 };

@@ -84,12 +84,13 @@ static Spfrtn sr; /* sprintf() return type, whatever it is. */
 /***********************************************************************/
 /***********************************************************************/
 /***********************************************************************/
-int wr_mesh_exo(Exo_DB *x,      /* def'd in exo_struct.h */
+int wr_mesh_exo(Exo_DB *exo,      /* def'd in exo_struct.h */
                 char *filename, /* where to write */
                 int verbosity)  /* how much to tell while writing */
 {
   int i;
   int status = 0;
+  struct Exodus_Base *exo_base = exo->base_mesh;
 
   /*
    * This is a sad and pathetic little hack intended only for short term
@@ -110,53 +111,54 @@ int wr_mesh_exo(Exo_DB *x,      /* def'd in exo_struct.h */
    * all information in the file to be superseded.
    */
 
-  x->io_wordsize = 8;
+  exo->io_wordsize = 8;
 
-  x->cmode = EX_CLOBBER;
-  x->exoid = ex_create(filename, x->cmode, &x->comp_wordsize, &x->io_wordsize);
-  GOMA_EH(x->exoid, "ex_create");
+  exo->cmode = EX_CLOBBER;
+  exo->exoid = ex_create(filename, exo->cmode, &exo->comp_wordsize, &exo->io_wordsize);
+  GOMA_EH(exo->exoid, "ex_create");
 
   if (verbosity > 1) {
-    fprintf(stderr, "ex_open/create() rtn = %d\n", x->exoid);
+    fprintf(stderr, "ex_open/create() rtn = %d\n", exo->exoid);
   }
 
   if (verbosity > 2) {
-    fprintf(stderr, "\tx->path    = \"%s\"\n", x->path);
-    fprintf(stderr, "\tx->mode    = %d\n", x->mode);
-    fprintf(stderr, "\tx->comp_ws = %d\n", x->comp_wordsize);
-    fprintf(stderr, "\tx->io_ws   = %d\n", x->io_wordsize);
-    fprintf(stderr, "\tx->version = %g\n", x->version);
+    fprintf(stderr, "\texo_base->path    = \"%s\"\n", exo->path);
+    fprintf(stderr, "\texo_base->mode    = %d\n", exo->mode);
+    fprintf(stderr, "\texo_base->comp_ws = %d\n", exo->comp_wordsize);
+    fprintf(stderr, "\texo_base->io_ws   = %d\n", exo->io_wordsize);
+    fprintf(stderr, "\texo_base->version = %g\n", exo->version);
   }
 
   if (verbosity > 1) {
     fprintf(stderr, "ex_put_init() call...\n");
   }
-  status = ex_put_init(x->exoid, x->title, x->num_dim, x->num_nodes, x->num_elems,
-                       x->num_elem_blocks, x->num_node_sets, x->num_side_sets);
+  status = ex_put_init(exo->exoid, exo->title, exo_base->num_dim, exo_base->num_nodes,
+                       exo_base->num_elems, exo_base->num_elem_blocks, exo_base->num_node_sets,
+                       exo_base->num_side_sets);
 
   GOMA_EH(status, "ex_put_init");
 
   if (verbosity > 0) {
-    fprintf(stderr, "\tx->title           = \"%s\"\n", x->title);
-    fprintf(stderr, "\tx->num_nodes       = %d\n", x->num_nodes);
-    fprintf(stderr, "\tx->num_elems       = %d\n", x->num_elems);
-    fprintf(stderr, "\tx->num_elem_blocks = %d\n", x->num_elem_blocks);
-    fprintf(stderr, "\tx->num_node_sets   = %d\n", x->num_node_sets);
-    fprintf(stderr, "\tx->num_side_sets   = %d\n", x->num_side_sets);
+    fprintf(stderr, "\texo_base->title           = \"%s\"\n", exo->title);
+    fprintf(stderr, "\texo_base->num_nodes       = %d\n", exo_base->num_nodes);
+    fprintf(stderr, "\texo_base->num_elems       = %d\n", exo_base->num_elems);
+    fprintf(stderr, "\texo_base->num_elem_blocks = %d\n", exo_base->num_elem_blocks);
+    fprintf(stderr, "\texo_base->num_node_sets   = %d\n", exo_base->num_node_sets);
+    fprintf(stderr, "\texo_base->num_side_sets   = %d\n", exo_base->num_side_sets);
   }
 
   if (verbosity > 1) {
-    fprintf(stderr, "\tx->num_qa_rec      = %d\n", x->num_qa_rec);
-    fprintf(stderr, "\tx->num_info        = %d\n", x->num_info);
+    fprintf(stderr, "\texo_base->num_qa_rec      = %d\n", exo->num_qa_rec);
+    fprintf(stderr, "\texo_base->num_info        = %d\n", exo->num_info);
   }
 
-  if (x->num_qa_rec > 0) {
-    status = ex_put_qa(x->exoid, x->num_qa_rec, x->qa_record);
+  if (exo->num_qa_rec > 0) {
+    status = ex_put_qa(exo->exoid, exo->num_qa_rec, exo->qa_record);
     GOMA_EH(status, "ex_put_qa");
   }
 
-  if (x->num_info > 0) {
-    status = ex_put_info(x->exoid, x->num_info, x->info);
+  if (exo->num_info > 0) {
+    status = ex_put_info(exo->exoid, exo->num_info, exo->info);
     GOMA_EH(status, "ex_put_info");
   }
 
@@ -164,94 +166,74 @@ int wr_mesh_exo(Exo_DB *x,      /* def'd in exo_struct.h */
     fprintf(stderr, "ex_put_coord()...\n");
   }
 
-  if (x->num_dim < 3) {
-    x->z_coord = &dummy;
+  if (exo_base->num_dim < 3) {
+    exo_base->z_coord = &dummy;
   }
 
-  if (x->num_dim < 2) {
-    x->y_coord = &dummy;
+  if (exo_base->num_dim < 2) {
+    exo_base->y_coord = &dummy;
   }
 
-  if (x->num_dim < 1) {
-    x->x_coord = &dummy;
+  if (exo_base->num_dim < 1) {
+    exo_base->x_coord = &dummy;
   }
 
-  status = ex_put_coord(x->exoid, x->x_coord, x->y_coord, x->z_coord);
+  status = ex_put_coord(exo->exoid, exo_base->x_coord, exo_base->y_coord, exo_base->z_coord);
   GOMA_EH(status, "ex_put_coord");
 
-  status = ex_put_coord_names(x->exoid, x->coord_names);
+  status = ex_put_coord_names(exo->exoid, exo->coord_names);
   GOMA_EH(status, "ex_get_coord_names");
-
-  if (x->num_nodes > 0) {
-    if (verbosity > 0) {
-      fprintf(stderr, "ex_put_node_num_map()...\n");
-    }
-    if (x->node_map_exists) {
-      status = ex_put_id_map(x->exoid, EX_NODE_MAP, x->node_map);
-      GOMA_EH(status, "ex_put_id_map node");
-    }
-  }
-
-  if (x->num_elems > 0) {
-
-    if (x->elem_map_exists) {
-      status = ex_put_id_map(x->exoid, EX_ELEM_MAP, x->elem_map);
-      GOMA_EH(status, "ex_put_id_map elem");
-    }
-
-    if (x->elem_order_map_exists) {
-      status = ex_put_map(x->exoid, x->elem_order_map);
-      GOMA_EH(status, "ex_put_map");
-    }
-  }
 
   /*
    * ELEMENT BLOCKS...
    */
-
-  if (x->num_elem_blocks > 0) {
-    for (i = 0; i < x->num_elem_blocks; i++) {
+  if (exo_base->num_elem_blocks > 0) {
+    for (i = 0; i < exo_base->num_elem_blocks; i++) {
       if (verbosity > 0) {
         fprintf(stderr, "ex_put_elem_block()...\n");
       }
       status =
-          ex_put_block(x->exoid, EX_ELEM_BLOCK, x->eb_id[i], x->eb_elem_type[i], x->eb_num_elems[i],
-                       x->eb_num_nodes_per_elem[i], 0, 0, x->eb_num_attr[i]);
+          ex_put_block(exo->exoid, EX_ELEM_BLOCK, exo_base->eb_id[i],
+                            exo_base->eb_elem_type[i], exo_base->eb_num_elems[i],
+                            exo_base->eb_num_nodes_per_elem[i], 0, 0, exo_base->eb_num_attr[i]);
       GOMA_EH(status, "ex_put_blocks elem");
 
-      if ((x->eb_num_elems[i] * x->eb_num_nodes_per_elem[i]) > 0) {
-        status = ex_put_conn(x->exoid, EX_ELEM_BLOCK, x->eb_id[i], x->eb_conn[i], 0, 0);
+      if ((exo_base->eb_num_elems[i] * exo_base->eb_num_nodes_per_elem[i]) > 0) {
+        status = ex_put_conn(exo->exoid, EX_ELEM_BLOCK, exo_base->eb_id[i],
+                             exo_base->eb_conn[i], 0, 0);
         GOMA_EH(status, "ex_put_conn elem");
       }
 
-      if ((x->eb_num_elems[i] * x->eb_num_attr[i]) > 0) {
-        status = ex_put_attr(x->exoid, EX_ELEM_BLOCK, x->eb_id[i], x->eb_attr[i]);
-        GOMA_EH(status, "ex_put_attr elem");
-      }
     }
   }
+
+  status = ex_put_id_map(exo->exoid, EX_NODE_MAP, exo->base_mesh->node_map);
+  GOMA_EH(status, "ex_put_id_map EX_NODE_MAP");
+
+  status = ex_put_id_map(exo->exoid, EX_ELEM_MAP, exo->base_mesh->elem_map);
+  GOMA_EH(status, "ex_put_id_map EX_ELEM_MAP");
 
   /*
    * NODE SETS...
    */
 
-  if (x->num_node_sets > 0) {
+  if (exo_base->num_node_sets > 0) {
     if (verbosity > 0) {
       fprintf(stderr, "ex_put_concat_sets() node sets...\n");
     }
 
     ex_set_specs ns_specs;
 
-    ns_specs.sets_ids = x->ns_id;
-    ns_specs.num_entries_per_set = x->ns_num_nodes;
-    ns_specs.num_dist_per_set = x->ns_num_distfacts;
-    ns_specs.sets_entry_index = x->ns_node_index;
-    ns_specs.sets_dist_index = x->ns_distfact_index;
-    ns_specs.sets_entry_list = x->ns_node_list;
+    ns_specs.sets_ids = exo_base->ns_id;
+    ns_specs.num_entries_per_set = exo_base->ns_num_nodes;
+    ns_specs.num_dist_per_set = exo_base->ns_num_distfacts;
+    ns_specs.sets_entry_index = exo_base->ns_node_index;
+    ns_specs.sets_dist_index = exo_base->ns_distfact_index;
+    ns_specs.sets_entry_list = exo_base->ns_node_list;
     ns_specs.sets_extra_list = NULL;
-    ns_specs.sets_dist_fact = x->ns_distfact_list;
+    ns_specs.sets_dist_fact = exo_base->ns_distfact_list;
 
-    status = ex_put_concat_sets(x->exoid, EX_NODE_SET, &ns_specs);
+    status = ex_put_concat_sets(exo->exoid, EX_NODE_SET, &ns_specs);
     GOMA_EH(status, "ex_put_concat_sets node_sets");
   }
 
@@ -259,22 +241,22 @@ int wr_mesh_exo(Exo_DB *x,      /* def'd in exo_struct.h */
    * SIDE SETS...
    */
 
-  if (x->num_side_sets > 0) {
+  if (exo_base->num_side_sets > 0) {
     if (verbosity > 0) {
       fprintf(stderr, "ex_put_concat_sets() side sets...\n");
     }
 
     ex_set_specs ss_specs;
-    ss_specs.sets_ids = x->ss_id;
-    ss_specs.num_entries_per_set = x->ss_num_sides;
-    ss_specs.num_dist_per_set = x->ss_num_distfacts;
-    ss_specs.sets_entry_index = x->ss_elem_index;
-    ss_specs.sets_dist_index = x->ss_distfact_index;
-    ss_specs.sets_entry_list = x->ss_elem_list;
-    ss_specs.sets_extra_list = x->ss_side_list;
-    ss_specs.sets_dist_fact = x->ss_distfact_list;
+    ss_specs.sets_ids = exo_base->ss_id;
+    ss_specs.num_entries_per_set = exo_base->ss_num_sides;
+    ss_specs.num_dist_per_set = exo_base->ss_num_distfacts;
+    ss_specs.sets_entry_index = exo_base->ss_elem_index;
+    ss_specs.sets_dist_index = exo_base->ss_distfact_index;
+    ss_specs.sets_entry_list = exo_base->ss_elem_list;
+    ss_specs.sets_extra_list = exo_base->ss_side_list;
+    ss_specs.sets_dist_fact = exo_base->ss_distfact_list;
 
-    status = ex_put_concat_sets(x->exoid, EX_SIDE_SET, &ss_specs);
+    status = ex_put_concat_sets(exo->exoid, EX_SIDE_SET, &ss_specs);
 
     GOMA_EH(status, "ex_put_concat_sets side_sets");
   }
@@ -298,12 +280,12 @@ int wr_mesh_exo(Exo_DB *x,      /* def'd in exo_struct.h */
    * Node sets...
    */
 
-  if (x->ns_num_props > 1) {
+  if (exo_base->ns_num_props > 1) {
 
     if (verbosity > 0) {
       fprintf(stderr, "ex_put_prop_names(nodesets)...\n");
     }
-    status = ex_put_prop_names(x->exoid, EX_NODE_SET, x->ns_num_props - 1, &(x->ns_prop_name[1]));
+    status = ex_put_prop_names(exo->exoid, EX_NODE_SET, exo_base->ns_num_props - 1, &(exo_base->ns_prop_name[1]));
     GOMA_EH(status, "ex_put_prop_names(EX_NODE_SET)");
 
     /*
@@ -316,9 +298,10 @@ int wr_mesh_exo(Exo_DB *x,      /* def'd in exo_struct.h */
      * is repeatedly rewritten
      */
 
-    for (i = 1; i < x->ns_num_props; i++) {
-      if (strcmp(x->ns_prop_name[i], "ID") != 0) {
-        status = ex_put_prop_array(x->exoid, EX_NODE_SET, x->ns_prop_name[i], x->ns_prop[i]);
+    for (i = 1; i < exo_base->ns_num_props; i++) {
+      if (strcmp(exo_base->ns_prop_name[i], "ID") != 0) {
+        status = ex_put_prop_array(exo->exoid, EX_NODE_SET, exo_base->ns_prop_name[i],
+                                   exo_base->ns_prop[i]);
         GOMA_EH(status, "ex_put_prop_array(EX_NODE_SET)");
       }
     }
@@ -328,7 +311,7 @@ int wr_mesh_exo(Exo_DB *x,      /* def'd in exo_struct.h */
    * Side sets...
    */
 
-  if (x->ss_num_props > 1) {
+  if (exo_base->ss_num_props > 1) {
 
     /*
      * Only write these out if the second property is not the same ole
@@ -338,13 +321,14 @@ int wr_mesh_exo(Exo_DB *x,      /* def'd in exo_struct.h */
     if (verbosity > 0) {
       fprintf(stderr, "ex_put_prop_names(sidesets)...\n");
     }
-    status = ex_put_prop_names(x->exoid, EX_SIDE_SET, x->ss_num_props - 1, &(x->ss_prop_name[1]));
+    status = ex_put_prop_names(exo->exoid, EX_SIDE_SET, exo_base->ss_num_props - 1, &(exo_base->ss_prop_name[1]));
     GOMA_EH(status, "ex_get_prop_names(EX_SIDE_SET)");
 
-    for (i = 1; i < x->ss_num_props; i++) {
-      if (strcmp(x->ss_prop_name[i], "ID") != 0) {
+    for (i = 1; i < exo_base->ss_num_props; i++) {
+      if (strcmp(exo_base->ss_prop_name[i], "ID") != 0) {
 
-        status = ex_put_prop_array(x->exoid, EX_SIDE_SET, x->ss_prop_name[i], x->ss_prop[i]);
+        status = ex_put_prop_array(exo->exoid, EX_SIDE_SET, exo_base->ss_prop_name[i],
+                                   exo_base->ss_prop[i]);
         GOMA_EH(status, "ex_put_prop_array(EX_SIDE_SET)");
       }
     }
@@ -353,25 +337,26 @@ int wr_mesh_exo(Exo_DB *x,      /* def'd in exo_struct.h */
    * Element blocks...
    */
 
-  if (x->eb_num_props > 1) {
+  if (exo_base->eb_num_props > 1) {
 
     if (verbosity > 0) {
       fprintf(stderr, "ex_put_prop_names(elemblocks)...\n");
     }
 
-    status = ex_put_prop_names(x->exoid, EX_ELEM_BLOCK, x->eb_num_props - 1, &(x->eb_prop_name[1]));
+    status = ex_put_prop_names(exo->exoid, EX_ELEM_BLOCK, exo_base->eb_num_props - 1, &(exo_base->eb_prop_name[1]));
     GOMA_EH(status, "ex_put_prop_names(EX_ELEM_BLOCK)");
 
-    for (i = 1; i < x->eb_num_props; i++) {
-      if (strcmp(x->ss_prop_name[i], "ID") != 0) {
+    for (i = 1; i < exo_base->eb_num_props; i++) {
+      if (strcmp(exo_base->ss_prop_name[i], "ID") != 0) {
 
-        status = ex_put_prop_array(x->exoid, EX_ELEM_BLOCK, x->eb_prop_name[i], x->eb_prop[i]);
+        status = ex_put_prop_array(exo->exoid, EX_ELEM_BLOCK, exo_base->eb_prop_name[i],
+                                   exo_base->eb_prop[i]);
         GOMA_EH(status, "ex_put_prop_array(EX_ELEM_BLOCK)");
       }
     }
   }
 
-  status = ex_close(x->exoid);
+  status = ex_close(exo->exoid);
   GOMA_EH(status, "ex_close()");
 
   return (status);
@@ -742,7 +727,16 @@ void wr_nodal_result_exo(Exo_DB *exo,
   }
   error = ex_put_time(exo->exoid, time_step, &time_value);
   GOMA_EH(error, "ex_put_time");
-  error = ex_put_var(exo->exoid, time_step, EX_NODAL, variable_index, 1, exo->num_nodes, vector);
+  dbl *base_vector = malloc(sizeof(dbl) * exo->base_mesh->num_nodes);
+  // copy and transform vector to base_vector
+  for (int i = 0; i < exo->num_nodes; i++) {
+    int index = exo->ghost_node_to_base[i];
+    if (index >= 0) {
+      base_vector[index] = vector[i];
+    }
+  }
+  error = ex_put_var(exo->exoid, time_step, EX_NODAL, variable_index, 1, exo->base_mesh->num_nodes, base_vector);
+  free(base_vector);
   GOMA_EH(error, "ex_put_var nodal");
   error = ex_close(exo->exoid);
   GOMA_EH(error, "ex_close");
@@ -781,17 +775,30 @@ void wr_elem_result_exo(Exo_DB *exo,
   for (i = 0; i < exo->num_elem_blocks; i++) {
     if (exo->elem_var_tab_exists == TRUE) {
       /* Only write out vals if this variable exists for the block */
-      if (exo->elem_var_tab[i * rd->nev + variable_index] == 1 && exo->eb_num_elems[i] > 0) {
+      if (exo->elem_var_tab[i * rd->nev + variable_index] == 1 && exo->base_mesh->eb_num_elems[i] > 0) {
+        dbl * base_vector = malloc(sizeof(dbl) * exo->base_mesh->eb_num_elems[i]);
+        for (int j = 0; j < exo->eb_num_elems[i]; j++) {
+          int index = exo->eb_ghost_elem_to_base[i][j];
+          if (index >= 0) {
+            base_vector[index] = vector[i][variable_index][j];
+          }
+        }
+
         error = ex_put_var(exo->exoid, time_step, EX_ELEM_BLOCK, variable_index + 1, exo->eb_id[i],
-                           exo->eb_num_elems[i], vector[i][variable_index]);
+                           exo->base_mesh->eb_num_elems[i], base_vector);
+        free(base_vector);
         GOMA_EH(error, "ex_put_var elem");
       }
     } else {
-      /* write it anyway (not really recommended from a performance viewpoint) */
-      error = ex_put_var(exo->exoid, time_step, EX_ELEM_BLOCK, variable_index + 1, /* Convert to 1
-                                                                           based for exodus */
-                         exo->eb_id[i], exo->eb_num_elems[i], vector[i][variable_index]);
-      GOMA_EH(error, "ex_put_var elem");
+      if (exo->base_mesh->eb_num_elems[i] > 0) {
+        /* write it anyway (not really recommended from a performance viewpoint) */
+        GOMA_WH(GOMA_ERROR,
+                "Writing exodus element variable without truth table, contact developers");
+        error = ex_put_var(exo->exoid, time_step, EX_ELEM_BLOCK, variable_index + 1, /* Convert to 1
+                                                                             based for exodus */
+                           exo->eb_id[i], exo->eb_num_elems[i], vector[i][variable_index]);
+        GOMA_EH(error, "ex_put_var elem");
+      }
     }
   }
 

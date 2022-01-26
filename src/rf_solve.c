@@ -76,6 +76,7 @@
 #include "sl_epetra_interface.h"
 #include "sl_epetra_util.h"
 #include "sl_matrix_util.h"
+#include "sl_petsc.h"
 #include "sl_util.h"
 #include "sl_util_structs.h"
 #include "std.h"
@@ -91,21 +92,6 @@
 #include "adapt/omega_h_interface.h"
 #endif
 
-#ifdef HAVE_FRONT
-extern int mf_setup(int *,        /* nelem_glob */
-                    int *,        /* neqn_glob */
-                    int *,        /* mxdofel */
-                    int *,        /* nfullsum */
-                    int *,        /* symflag */
-                    int *,        /* nell_order */
-                    int *,        /* el_proc_assign */
-                    int *,        /* level */
-                    int *,        /* nopdof */
-                    int *,        /* loc_dof */
-                    int *,        /* constraint */
-                    const char *, /* cname */
-                    int *);       /* allocated */
-#endif
 
 /*
  * Global variables defined in this file.

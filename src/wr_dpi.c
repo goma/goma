@@ -116,81 +116,28 @@ int wr_dpi(Dpi *d, char *filename) {
   ex_error = ex_put_init_info(exoid, d->num_proc, d->num_proc_in_file, &d->ftype);
   CHECK_EX_ERROR(ex_error, "ex_put_init_info");
 
-  ex_error = ex_put_id_map(exoid, EX_NODE_MAP, d->node_index_global);
-  CHECK_EX_ERROR(ex_error, "ex_put_id_map EX_NODE_MAP");
-
-  ex_error = ex_put_id_map(exoid, EX_ELEM_MAP, d->elem_index_global);
-  CHECK_EX_ERROR(ex_error, "ex_put_id_map EX_ELEM_MAP");
-
-  ex_error = ex_put_loadbal_param(exoid, d->num_internal_nodes, d->num_boundary_nodes,
-                                  d->num_external_nodes, d->num_internal_elems, d->num_border_elems,
-                                  d->num_node_cmaps, d->num_elem_cmaps, ProcID);
+  ex_error = ex_put_loadbal_param(exoid, d->base_internal_nodes, d->base_boundary_nodes,
+                                  d->base_external_nodes, d->base_internal_elems, d->base_border_elems,
+                                  d->num_node_cmaps, 0, ProcID);
   CHECK_EX_ERROR(ex_error, "ex_put_loadbal_param");
 
-  //ex_error = ex_put_processor_elem_maps(exoid, d->proc_elem_internal, d->proc_elem_border, ProcID);
-  //CHECK_EX_ERROR(ex_error, "ex_put_processor_elem_maps");
+  ex_error = ex_put_cmap_params(exoid, d->node_cmap_ids, d->node_cmap_node_counts, NULL, NULL, ProcID);
+  CHECK_EX_ERROR(ex_error, "ex_put_cmap_params");
 
-  //ex_error = ex_put_processor_node_maps(exoid, d->proc_node_internal, d->proc_node_boundary,
-  //                                      d->proc_node_external, ProcID);
-  //CHECK_EX_ERROR(ex_error, "ex_put_processor_node_maps");
+  ex_error = ex_put_processor_node_maps(exoid, d->proc_node_internal, d->proc_node_boundary,
+                                        d->proc_node_external, ProcID);
+  CHECK_EX_ERROR(ex_error, "ex_put_processor_node_maps");
 
-  //ex_error = ex_put_cmap_params(exoid, d->node_cmap_ids, d->node_cmap_node_counts, d->elem_cmap_ids,
-  //                              d->elem_cmap_elem_counts, ProcID);
-  //CHECK_EX_ERROR(ex_error, "ex_put_cmap_params");
 
-  //for (int i = 0; i < d->num_node_cmaps; i++) {
-  //  ex_error = ex_put_node_cmap(exoid, d->node_cmap_ids[i], d->node_map_node_ids[i],
-  //                              d->node_map_proc_ids[i], ProcID);
-  //  CHECK_EX_ERROR(ex_error, "ex_put_node_cmap cmap %d", i);
-  //}
-  //for (int i = 0; i < d->num_elem_cmaps; i++) {
-  //  ex_error = ex_put_elem_cmap(exoid, d->elem_cmap_ids[i], d->elem_cmap_elem_ids[i],
-  //                              d->elem_cmap_side_ids[i], d->elem_cmap_proc_ids[i], ProcID);
-  //  CHECK_EX_ERROR(ex_error, "ex_put_elem_cmap cmap %d", i);
-  //}
+  for (int i = 0; i < d->num_node_cmaps; i++) {
+    ex_error = ex_put_node_cmap(exoid, d->node_cmap_ids[i], d->node_map_node_ids[i],
+                                d->node_map_proc_ids[i], ProcID);
+    CHECK_EX_ERROR(ex_error, "ex_put_node_cmap cmap %d", i);
+  }
 
   ex_error = ex_close(exoid);
   CHECK_EX_ERROR(ex_error, "ex_close");
 
-  GOMA_EH(zero_dpi(d), "one_dpi");
+  GOMA_EH(zero_dpi(d), "zero_dpi");
   return 0;
 }
-
-#ifdef YOU_NEED_IT
-static char *string_type(nc_type t) {
-  static char t_int[] = "INT";
-  static char t_dbl[] = "DOUBLE";
-  static char t_chr[] = "CHAR";
-  static char t_flt[] = "FLOAT";
-  static char t_byt[] = "BYTE";
-  static char t_unk[] = "UNKNOWN";
-
-  switch (t) {
-  case NC_INT:
-    return (t_int);
-    break;
-
-  case NC_DOUBLE:
-    return (t_dbl);
-    break;
-
-  case NC_CHAR:
-    return (t_chr);
-    break;
-
-  case NC_FLOAT:
-    return (t_flt);
-    break;
-
-  case NC_BYTE:
-    return (t_byt);
-    break;
-
-  default:
-    return (t_unk);
-    break;
-  }
-
-  return (t_unk);
-}
-#endif

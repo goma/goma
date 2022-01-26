@@ -58,6 +58,7 @@
 #include "sl_matrix_util.h"
 #include "sl_util.h"
 #include "sl_util_structs.h"
+#include "sl_petsc.h"
 #include "std.h"
 #include "wr_exo.h"
 #include "wr_soln.h"

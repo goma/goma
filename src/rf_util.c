@@ -2359,6 +2359,12 @@ int rd_vectors_from_exoII(double u[],
                       &num_side_sets);
   GOMA_EH(error, "ex_get_init for efv or init guess");
 
+  // add some checks to make sure we are probably reading the same mesh
+  GOMA_ASSERT_ALWAYS(num_dim == exo->base_mesh->num_dim);
+  GOMA_ASSERT_ALWAYS(num_nodes == exo->base_mesh->num_nodes);
+  GOMA_ASSERT_ALWAYS(num_elem == exo->base_mesh->num_elems);
+  GOMA_ASSERT_ALWAYS(num_elem_blk == exo->base_mesh->num_elem_blocks);
+
   /*
    * Obtain the number of time steps in the exodus file, time_step,
    * We will read only from the last time step
@@ -2456,17 +2462,17 @@ int rd_vectors_from_exoII(double u[],
             }
             if (mn != -1 && (pd_glob[mn]->i[pg->imtrx][var] == I_P0)) {
               int eb_index = in_list(mn, 0, exo->num_elem_blocks, Matilda);
-              if (eb_index != -1 && exo->eb_num_elems[eb_index] > 0) {
-                error = rd_exoII_ev(u, var, mn, matrl, elem_var_names, exo->eb_num_elems[eb_index],
+              if (eb_index != -1 && exo->base_mesh->eb_num_elems[eb_index] > 0) {
+                error = rd_exoII_ev(u, var, mn, matrl, elem_var_names, exo->base_mesh->eb_num_elems[eb_index],
                                     num_elem_vars, exoid, time_step, 0, exo);
               }
             } else if (mn != -1 && (pd_glob[mn]->i[pg->imtrx][var] == I_P1)) {
               int eb_index = in_list(mn, 0, exo->num_elem_blocks, Matilda);
-              if (eb_index != -1 && exo->eb_num_elems[eb_index] > 0) {
+              if (eb_index != -1 && exo->base_mesh->eb_num_elems[eb_index] > 0) {
                 int dof = getdofs(type2shape(exo->eb_elem_itype[eb_index]), I_P1);
                 for (int i = 0; i < dof; i++) {
                   error =
-                      rd_exoII_ev(u, var, mn, matrl, elem_var_names, exo->eb_num_elems[eb_index],
+                      rd_exoII_ev(u, var, mn, matrl, elem_var_names, exo->base_mesh->eb_num_elems[eb_index],
                                   num_elem_vars, exoid, time_step, i, exo);
                 }
               }
@@ -2988,6 +2994,7 @@ static void inject_nodal_vec(double sol_vec[],
   VARIABLE_DESCRIPTION_STRUCT *vd;
   for (i = 0; i < DPI_ptr->num_owned_nodes; i++) {
     nv = Nodes[i]->Nodal_Vars_Info[pg->imtrx];
+    int base_index = EXO_ptr->ghost_node_to_base[i];
     if (matID == -2) {
       for (j = 0; j < (int)nv->Num_Var_Desc_Per_Type[varType]; j++) {
         vindex = nv->Var_Type_Index[varType][j];
@@ -3000,7 +3007,7 @@ static void inject_nodal_vec(double sol_vec[],
 #endif
         if (k == (int)vd->Subvar_Index) {
           index = (Nodes[i]->First_Unknown[pg->imtrx] + nv->Nodal_Offset[vindex] + idof);
-          sol_vec[index] = nodal_vec[i];
+          sol_vec[index] = nodal_vec[base_index];
         }
       }
     } else {
@@ -3018,13 +3025,13 @@ static void inject_nodal_vec(double sol_vec[],
         for (local_dof = 0; local_dof < ndof; local_dof++) {
           index = Index_Solution(i, varType, k, local_dof, matID, pg->imtrx);
           if (index != -1) {
-            sol_vec[index] = nodal_vec[i];
+            sol_vec[index] = nodal_vec[base_index];
           }
         }
       } else {
         index = Index_Solution(i, varType, k, idof, matID, pg->imtrx);
         if (index != -1) {
-          sol_vec[index] = nodal_vec[i];
+          sol_vec[index] = nodal_vec[base_index];
         }
       }
     }
@@ -3132,10 +3139,11 @@ static void inject_elem_vec(double sol_vec[],
            per element, or we have a problem treating it as an element
            variable. Hence the found_quantity check.                       */
         index = Index_Solution(I, varType, k, idof, matID, pg->imtrx);
-        if (index != -1) {
+        int base_index = exo->eb_ghost_elem_to_base[eb_index][ielem-e_start];
+        if (index != -1 && base_index != -1) {
           /* This should be the one node that has our value - set the element
              value to this */
-          sol_vec[index] = elem_vec[ielem - e_start];
+          sol_vec[index] = elem_vec[base_index];
           if (found_quantity == TRUE) {
             fprintf(stderr,
                     "Warning: Too many nodes returning quantities for element variable %s (%s) - "
@@ -3156,7 +3164,8 @@ static void inject_elem_vec(double sol_vec[],
          per element, or we have a problem treating it as an element
          variable. Hence the found_quantity check.                       */
       index = Index_Solution(I, varType, k, idof, matID, pg->imtrx);
-      if (index != -1) {
+      int base_index = exo->eb_ghost_elem_to_base[eb_index][ielem-e_start];
+      if (index != -1 && base_index != -1) {
         /* This should be the one node that has our value - set the element
            value to this */
         sol_vec[index] = elem_vec[ielem - e_start];

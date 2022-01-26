@@ -384,6 +384,7 @@ set(GOMA_INCLUDES
         include/mm_viscosity.h
         include/rd_dpi.h
         include/rd_exo.h
+        include/base_mesh.h
         include/rd_mesh.h
         include/rd_pixel_image.h
         include/rf_allo.h
@@ -526,6 +527,7 @@ set(GOMA_SOURCES
         src/mm_viscosity.c
         src/rd_dpi.c
         src/rd_exo.c
+        src/base_mesh.c
         src/rd_mesh.c
         src/rd_pixel_image2.c
         src/rd_pixel_image.c

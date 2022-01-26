@@ -81,6 +81,7 @@
 #include "shell_tfmp_struct.h"
 #include "shell_tfmp_util.h"
 #include "sl_aux.h"
+#include "sl_petsc.h"
 #include "std.h"
 #include "user_mp.h"
 #include "user_post.h"

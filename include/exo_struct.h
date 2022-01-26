@@ -123,6 +123,97 @@ typedef char *INFO_Record;
 
 #define SRC_DST(member) dst->member = src->member
 
+struct Exodus_Base {
+  int num_dim; /* Number of spatial dimensions */
+
+  int num_elems; /* Number of elements, total. */
+
+  int num_elem_blocks; /* Number of element blocks. */
+
+  int num_node_sets; /* Number of node sets. */
+
+  int num_side_sets; /* Number of side sets. */
+
+  int num_nodes; /* Number of nodes, total. */
+
+  dbl *x_coord;
+  dbl *y_coord;
+  dbl *z_coord;
+
+  /*
+   * Element block data...
+   */
+  int *eb_id;                 /* Element block identifiers.
+                               * eb_id[ebi] = ID of the ebi'th element block
+                               * Length = Number of element blocks = Num_EB */
+  char **eb_elem_type;        /* Type of element for a particular block. */
+  int *eb_num_elems;          /* Number of elements in ea block. */
+  int *eb_num_nodes_per_elem; /* Number nodes/element in this block. */
+  int **eb_conn;              /* Nodal connectivity -> List of nodes comprising
+                               * each element in the current element block
+                               * eb_conn[ebi][j],
+                               *    ebi = element block index
+                               *    j = eb_num_nodes_per_elem[ebi]*ielem + i
+                               * where ielem = element number in the block
+                               *       i = node number
+                               * Length eb_conn[Num_EB][eb_num_nodes_per_elem[ebi]
+                               *                         *eb_num_elems[ebi]]
+                               */
+  int *eb_num_attr;
+
+  /*
+   * These are extras that are merely a convenience.
+   */
+
+
+  int *node_map;
+  int *elem_map;
+
+  int ns_node_len;
+  /*
+   * Node set information...
+   */
+  int *ns_id;             /* Node set IDs. */
+  int *ns_num_nodes;      /* Number of nodes in each ns. */
+  int *ns_num_distfacts;  /* Number of dfs in each ns.  */
+  int *ns_node_index;     /* Index in big list of nodes for ea ns.  */
+  int *ns_distfact_index;
+  dbl *ns_distfact_list;
+  int *ns_node_list;      /* Big list of nds for all ns. */
+
+  /*
+   * Side set information...
+   */
+  int ss_elem_len;     /* Length of ss element/side lists. */
+  int ss_node_len;     /* Length of ss node list. */
+
+  int *ss_id;             /* SS identifiers for ea side set. */
+  int *ss_num_sides;      /* SS num sides per set. */
+  int *ss_num_distfacts;  /* SS num of dfs per set. */
+  int *ss_elem_index;     /* SS index into element list. */
+  int *ss_distfact_index; /* SS index into df list. */
+  int *ss_elem_list;      /* SS element list. */
+  int *ss_side_list;      /* SS side list. */
+  dbl *ss_distfact_list; /* SS df list. */
+
+  /*
+   * Properties...
+   */
+  int ns_num_props; /* Number of nodes set properites. */
+  int ss_num_props; /* Number of side set properties. */
+  int eb_num_props; /* Number of element block properties. */
+
+  char **eb_prop_name;
+  char **ns_prop_name;
+  char **ss_prop_name; /* Names of side set properties. */
+
+  int **eb_prop;
+  int **ns_prop; /* Values of node set properties. */
+  int **ss_prop; /* Values of side set properties. */
+
+  int *elem_var_tab; /* [neb*nev], [blk_index*nev+ev_index] */
+};
+
 /*
  * Note that some variable names are replicated no longer!
  */
@@ -452,6 +543,15 @@ struct Exodus_Database {
   dbl **node_var_vals; /* node_var_vals[nv_index][node] */
   dbl *glob_var_vals;  /* glob_var_vals[gv_index] */
   dbl **elem_var_vals; /* elem_var_vals[blk_ev_index][elem]*/
+
+  // mapping of local node to local base node and inverse
+  int *ghost_node_to_base;
+
+  // mapping of local elem to local base elem and inverse
+  int **eb_ghost_elem_to_base;
+
+  // base mesh for writing exodus files without ghosted elements
+  struct Exodus_Base *base_mesh;
 };
 
 typedef struct Exodus_Database Exo_DB;

@@ -75,6 +75,7 @@
 #include "rf_solver.h"
 #include "rf_solver_const.h"
 #include "std.h"
+#include "base_mesh.h"
 
 struct Material_Properties;
 
@@ -88,6 +89,9 @@ static const int sd = sizeof(dbl);
 static const int spc = sizeof(char *);
 static const int spi = sizeof(int *);
 static const int spd = sizeof(dbl *);
+
+static void one_base_base_mesh(Exo_DB *exo);
+static void zero_base_base_mesh(Exo_DB *exo);
 
 extern Spfrtn sr;     /* sprintf() return type */
 int rd_exo(Exo_DB *x, /* def'd in exo_struct.h */
@@ -1287,6 +1291,12 @@ int free_exo(Exo_DB *x) /* pointer to EXODUS II FE db structure */
     free(x->elem_var_tab);
   }
 
+  free(x->ghost_node_to_base);
+  for (int i = 0; i <  x->num_elem_blocks; i++ ){
+    free(x->eb_ghost_elem_to_base[i]);
+  }
+  free(x->eb_ghost_elem_to_base);
+  free_base_mesh(x);
   return (0);
 }
 
@@ -1384,9 +1394,76 @@ void zero_base(Exo_DB *E) {
     }
   }
 
+  if (Num_Proc > 1) {
+    zero_base_base_mesh(E);
+  }
+
   return;
 }
 
+static void zero_base_base_mesh(Exo_DB *exo) {
+  int eb;
+  int i, j;
+  int l;
+  int length_conn;
+
+  struct Exodus_Base *base = exo->base_mesh;
+  if (base == NULL) return;
+
+  /*
+   * 1. Node numbers are named in the connectivity lists for each
+   *    element block. Decrement them.
+   */
+
+  for (eb = 0; eb < base->num_elem_blocks; eb++) {
+    length_conn = base->eb_num_elems[eb] * base->eb_num_nodes_per_elem[eb];
+    for (l = 0; l < length_conn; l++) {
+      (base->eb_conn[eb][l])--;
+    }
+  }
+
+  /*
+   * 2. Node numbers are named in the node lists for each node set.
+   *    Decrement them.
+   */
+
+  for (l = 0; l < base->ns_node_len; l++) {
+    (base->ns_node_list[l])--;
+  }
+
+  /*
+   * 3. Element numbers are named in the element list for the side sets.
+   *    Decrement these.
+   */
+
+  for (l = 0; l < base->ss_elem_len; l++) {
+    (base->ss_elem_list[l])--;
+  }
+
+  /*
+   * 5. If a node map exists, the names of the nodes might be too high.
+   *    Decrement them. In some cases for very general node maps this
+   *    step might be superfluous and even undesirable. Here, the idea is
+   *    that the node map probably corresponds to an inherent contiguous
+   *    node numbering scheme on a larger mesh.
+   */
+
+  for (i = 0; i < base->num_nodes; i++) {
+    (base->node_map[i])--;
+  }
+
+  /*
+   * 6. Likewise, if an element map exists, then it might well correspond to
+   *    a contiguous integer sequence on a larger mesh. Those numbers could
+   *    either be 1-base or 0-based arrays.
+   */
+
+  for (i = 0; i < base->num_elems; i++) {
+    (base->elem_map[i])--;
+  }
+
+  return;
+}
 /*
  * one_base() -- push up the element names and node names by one in an
  *               EXODUS II data base. This makes C language zero-based
@@ -1478,6 +1555,60 @@ void one_base(Exo_DB *E) {
     for (i = 0; i < E->num_elems; i++) {
       (E->elem_map[i])++;
     }
+  }
+  if (Num_Proc > 1) {
+    one_base_base_mesh(E);
+  }
+}
+
+static void one_base_base_mesh(Exo_DB *exo) {
+  int eb;
+  int i, j, l;
+  int length_conn;
+
+  struct Exodus_Base *base = exo->base_mesh;
+  /*
+   * 1. Node numbers are named in the connectivity lists for each
+   *    element block. Increment them.
+   */
+
+  for (eb = 0; eb < base->num_elem_blocks; eb++) {
+    length_conn = base->eb_num_elems[eb] * base->eb_num_nodes_per_elem[eb];
+    for (l = 0; l < length_conn; l++) {
+      (base->eb_conn[eb][l])++;
+    }
+  }
+
+  /*
+   * 2. Node numbers are named in the node lists for each node set.
+   *    Increment them.
+   */
+
+  for (l = 0; l < base->ns_node_len; l++) {
+    (base->ns_node_list[l])++;
+  }
+
+  /*
+   * 3. Element numbers are named in the element list for the side sets.
+   *    Increment these.
+   */
+
+  for (l = 0; l < base->ss_elem_len; l++) {
+    (base->ss_elem_list[l])++;
+  }
+
+  for (i = 0; i < base->num_nodes; i++) {
+    (base->node_map[i])++;
+  }
+
+  /*
+   * 6. Likewise, if an element map exists, then it might well correspond to
+   *    a contiguous integer sequence on a larger mesh. Those numbers could
+   *    either be 1-base or 0-based arrays.
+   */
+
+  for (i = 0; i < base->num_elems; i++) {
+    (base->elem_map[i])++;
   }
 }
 
@@ -1641,6 +1772,7 @@ void init_exo_struct(Exo_DB *x) {
   x->ss_elem_list = NULL;
   x->ss_side_list = NULL;
 
+  x->base_mesh = NULL;
   /*
    * Let this value indicate that the structure in memory is not currently
    * attached to any open netCDF file. Once open, this will become >-1.
@@ -1876,5 +2008,6 @@ void alloc_exo_nv(Exo_DB *x, const int num_timeplanes, const int num_nodal_vars)
   }
 
   x->state |= EXODB_STATE_NDVA;
+
   return;
 }

@@ -40,6 +40,7 @@
 #include "exo_conn.h"
 #include "exo_struct.h"
 #include "exodusII.h"
+#include "base_mesh.h"
 #include "mm_as.h"
 #include "mm_as_structs.h"
 #include "mm_eh.h"
@@ -175,6 +176,8 @@ int read_mesh_exoII(Exo_DB *exo, Dpi *dpi) {
    */
 
   zero_base(exo);
+  error = setup_base_mesh(dpi, exo);
+  GOMA_EH(error, "setup_base_mesh");
 
   if (Num_Proc == 1) {
     /*
@@ -191,6 +194,8 @@ int read_mesh_exoII(Exo_DB *exo, Dpi *dpi) {
                           */
     check_parallel_error("Error in reading Distributed Processing Information");
   }
+
+
 
   // SS_Internal_Boundary uses the dpi values
   SS_Internal_Boundary = alloc_int_1(exo->num_side_sets, INT_NOINIT);

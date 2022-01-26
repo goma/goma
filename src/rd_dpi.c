@@ -105,21 +105,33 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
   ex_error = ex_get_id_map(exoid, EX_ELEM_MAP, d->elem_index_global);
   CHECK_EX_ERROR(ex_error, "ex_get_id_map EX_ELEM_MAP");
 
+  // set base mesh  global indices
+  exo->base_mesh->node_map = alloc_int_1(exo->num_nodes, 0);
+  exo->base_mesh->elem_map = alloc_int_1(exo->num_elems, 0);
+  memcpy(exo->base_mesh->node_map, d->node_index_global, sizeof(int) * exo->num_nodes);
+  memcpy(exo->base_mesh->elem_map, d->elem_index_global, sizeof(int) * exo->num_elems);
+  // zero_base maps
+  for (int i = 0; i < exo->base_mesh->num_nodes; i++) {
+    exo->base_mesh->node_map[i]--;
+  }
+  for (int i = 0; i < exo->base_mesh->num_elems; i++) {
+    exo->base_mesh->elem_map[i]--;
+  }
+
   // Load Balance Information
   ex_error = ex_get_loadbal_param(
       exoid, &d->num_internal_nodes, &d->num_boundary_nodes, &d->num_external_nodes,
       &d->num_internal_elems, &d->num_border_elems, &d->num_node_cmaps, &d->num_elem_cmaps, ProcID);
   CHECK_EX_ERROR(ex_error, "ex_get_loadbal_param");
 
+  d->base_internal_nodes = d->num_internal_nodes;
+  d->base_boundary_nodes = d->num_boundary_nodes;
+  d->base_external_nodes = d->num_external_nodes;
+  d->base_internal_elems = d->num_internal_elems;
+  d->base_border_elems = d->num_border_elems;
+
   d->num_owned_nodes = d->num_internal_nodes + d->num_boundary_nodes;
   d->num_universe_nodes = d->num_internal_nodes + d->num_boundary_nodes + d->num_external_nodes;
-
-  d->proc_elem_internal = alloc_int_1(d->num_internal_elems, 0);
-  if (d->num_border_elems > 0) {
-    d->proc_elem_border = alloc_int_1(d->num_border_elems, 0);
-  }
-  ex_error = ex_get_processor_elem_maps(exoid, d->proc_elem_internal, d->proc_elem_border, ProcID);
-  CHECK_EX_ERROR(ex_error, "ex_get_processor_elem_maps");
 
   d->proc_node_internal = alloc_int_1(d->num_internal_nodes, 0);
   if (d->num_boundary_nodes > 0) {
@@ -250,29 +262,6 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
 
     d->elem_owner = alloc_int_1(exo->num_elems, ProcID);
 
-    //    for (int ecmap = 0; ecmap < d->num_elem_cmaps; ecmap++) {
-    //      for (int j = 0; j < d->elem_cmap_elem_counts[ecmap]; j++) {
-    //        d->elem_owner[d->elem_cmap_elem_ids[ecmap][j] - 1] = d->elem_cmap_proc_ids[ecmap][j];
-    //      }
-    //    }
-
-    //        // check if block is in array for ss already
-    //        int known = 0;
-    //        for (int i = ss_start; i < ss_block_index; i++) {
-    //          if (d->ss_block_list_global[i] == block) {
-    //            known = 1;
-    //          }
-    //        }
-    //
-    //        if (!known) {
-    //          d->ss_block_list_global[ss_block_index] = block;
-    //          ss_block_index++;
-    //        }
-    //      }
-    //
-    //      d->ss_block_index_global[ss_id] = ss_start;
-    //      d->ss_block_index_global[ss_id+1] = ss_block_index;
-    //    }
   }
 
   const int num_mpi_async = 2;
@@ -400,7 +389,7 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
     }
   }
 
-#define DEBUG_MPI
+//#define DEBUG_MPI
 #ifdef DEBUG_MPI
 
   int *global_owners_min = alloc_int_1(d->num_nodes_global, Num_Proc + 1);
@@ -524,12 +513,8 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
     d->node_owner[offset + old_to_new_external_node_order[i]] = old_node_owner[i];
   }
 
-  //for (int i = 0; i < d->num_node_cmaps; i++) {
-  //  for (int j = 0; j < d->node_cmap_node_counts[i]; j++) {
-  //    d->node_map_node_ids[i][j] =
-  //        old_to_new_external_node_order[d->node_map_node_ids[i][j] - offset];
-  //  }
-  //}
+  // setup indexing from ghosted mesh to base mesh
+  setup_ghost_to_base(exo, d);
 
   free(new_external_node_order);
   free(old_to_new_external_node_order);
@@ -641,6 +626,7 @@ void uni_dpi(Dpi *dpi, Exo_DB *exo) {
     dpi->ss_index_global[i] = i;
   }
 
+
   dpi->eb_id_global = exo->eb_id;
 
   dpi->eb_num_nodes_per_elem_global = exo->eb_num_nodes_per_elem;
@@ -652,6 +638,26 @@ void uni_dpi(Dpi *dpi, Exo_DB *exo) {
   dpi->ss_id_global = exo->ss_id;
 
   dpi->ss_internal_global = find_ss_internal_boundary(exo);
+
+  // base mesh settings that can't be setup until dpi
+  exo->base_mesh->node_map = dpi->node_index_global;
+  exo->base_mesh->elem_map = dpi->elem_index_global;
+
+  exo->ghost_node_to_base = malloc(sizeof(int) * exo->num_nodes);
+  for (int i = 0; i < exo->num_nodes; i++) {
+    exo->ghost_node_to_base[i] = i;
+  }
+  exo->eb_ghost_elem_to_base = malloc(sizeof(int*) * exo->num_elem_blocks);
+  for (int i = 0; i < exo->num_elem_blocks; i++) {
+    if (exo->eb_num_elems[i] > 0) {
+      exo->eb_ghost_elem_to_base[i] = malloc(sizeof(int) * exo->eb_num_elems[i]);
+      for (int j = 0; j < exo->eb_num_elems[i]; j++) {
+        exo->eb_ghost_elem_to_base[i][j] = j;
+      }
+    } else {
+      exo->eb_ghost_elem_to_base[i] = NULL;
+    }
+  }
 
   return;
 }

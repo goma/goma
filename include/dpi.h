@@ -135,6 +135,14 @@ struct Distributed_Processing_Information {
 
   // omega_h
   int *exodus_to_omega_h_node;
+
+  // base mesh dpi info
+  int base_internal_nodes;
+  int base_boundary_nodes;
+  int base_external_nodes;
+
+  int base_internal_elems;
+  int base_border_elems;
 };
 typedef struct Distributed_Processing_Information Dpi;
 

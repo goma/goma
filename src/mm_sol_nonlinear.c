@@ -72,6 +72,7 @@
 #include "sl_lu.h"
 #include "sl_matrix_util.h"
 #include "sl_stratimikos_interface.h"
+#include "sl_petsc.h"
 #include "sl_umf.h"
 #include "sl_util.h"
 #include "std.h"
@@ -624,21 +625,21 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
 
   if (TimeIntegration == STEADY) {
 
-    DPRINTF(stderr, "\n\n");
+    DPRINTF(stdout, "\n\n");
     if (Solver_Output_Format & 1)
-      DPRINTF(stderr, "         ");
+      DPRINTF(stdout, "         ");
     if (Solver_Output_Format & 2)
-      DPRINTF(stderr, "    ");
+      DPRINTF(stdout, "    ");
     if ((Solver_Output_Format & 4) && (Solver_Output_Format & 8) && (Solver_Output_Format & 16)) {
-      DPRINTF(stderr, "  R e s i d u a l        ");
+      DPRINTF(stdout, "  R e s i d u a l        ");
     } else {
-      DPRINTF(stderr, "  Residual       ");
+      DPRINTF(stdout, "  Residual       ");
     }
     if ((Solver_Output_Format & 32) && (Solver_Output_Format & 64) &&
         (Solver_Output_Format & 128)) {
-      DPRINTF(stderr, " C o r r e c t i o n\n");
+      DPRINTF(stdout, " C o r r e c t i o n\n");
     } else {
-      DPRINTF(stderr, " Correction\n");
+      DPRINTF(stdout, " Correction\n");
     }
   } else {
 
@@ -646,57 +647,57 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
             "\n    N e w t o n  C o n v e r g e n c e  - I m p l i c i t   T i m e   S t e p\n");
   }
 
-  DPRINTF(stderr, "\n");
+  DPRINTF(stdout, "\n");
   if (Solver_Output_Format & 1)
-    DPRINTF(stderr, "   ToD   ");
+    DPRINTF(stdout, "   ToD   ");
   if (Solver_Output_Format & 2)
-    DPRINTF(stderr, "itn ");
+    DPRINTF(stdout, "itn ");
   if (Solver_Output_Format & 4)
-    DPRINTF(stderr, "  L_oo  ");
+    DPRINTF(stdout, "  L_oo  ");
   if (Solver_Output_Format & 8)
-    DPRINTF(stderr, "  L_1   ");
+    DPRINTF(stdout, "  L_1   ");
   if (Solver_Output_Format & 16)
-    DPRINTF(stderr, "  L_2   ");
+    DPRINTF(stdout, "  L_2   ");
   if (Solver_Output_Format & 32)
-    DPRINTF(stderr, "  L_oo  ");
+    DPRINTF(stdout, "  L_oo  ");
   if (Solver_Output_Format & 64)
-    DPRINTF(stderr, "  L_1   ");
+    DPRINTF(stdout, "  L_1   ");
   if (Solver_Output_Format & 128)
-    DPRINTF(stderr, "  L_2   ");
+    DPRINTF(stdout, "  L_2   ");
   if (Solver_Output_Format & 256)
-    DPRINTF(stderr, "lis ");
+    DPRINTF(stdout, "lis ");
   if (Solver_Output_Format & 512)
-    DPRINTF(stderr, " asm/slv (sec)  ");
+    DPRINTF(stdout, " asm/slv (sec)  ");
   if (Solver_Output_Format & 1024)
-    DPRINTF(stderr, "ROrd/Rt ");
+    DPRINTF(stdout, "ROrd/Rt ");
   if (Solver_Output_Format & 2048)
-    DPRINTF(stderr, "UOrd/Rt ");
-  DPRINTF(stderr, "\n");
+    DPRINTF(stdout, "UOrd/Rt ");
+  DPRINTF(stdout, "\n");
   if (Solver_Output_Format & 1)
-    DPRINTF(stderr, "-------- ");
+    DPRINTF(stdout, "-------- ");
   if (Solver_Output_Format & 2)
-    DPRINTF(stderr, "--- ");
+    DPRINTF(stdout, "--- ");
   if (Solver_Output_Format & 4)
-    DPRINTF(stderr, "------- ");
+    DPRINTF(stdout, "------- ");
   if (Solver_Output_Format & 8)
-    DPRINTF(stderr, "------- ");
+    DPRINTF(stdout, "------- ");
   if (Solver_Output_Format & 16)
-    DPRINTF(stderr, "------- ");
+    DPRINTF(stdout, "------- ");
   if (Solver_Output_Format & 32)
-    DPRINTF(stderr, "------- ");
+    DPRINTF(stdout, "------- ");
   if (Solver_Output_Format & 64)
-    DPRINTF(stderr, "------- ");
+    DPRINTF(stdout, "------- ");
   if (Solver_Output_Format & 128)
-    DPRINTF(stderr, "------- ");
+    DPRINTF(stdout, "------- ");
   if (Solver_Output_Format & 256)
-    DPRINTF(stderr, "--- ");
+    DPRINTF(stdout, "--- ");
   if (Solver_Output_Format & 512)
-    DPRINTF(stderr, "--------------- ");
+    DPRINTF(stdout, "--------------- ");
   if (Solver_Output_Format & 1024)
-    DPRINTF(stderr, "------- ");
+    DPRINTF(stdout, "------- ");
   if (Solver_Output_Format & 2048)
-    DPRINTF(stderr, "-------");
-  DPRINTF(stderr, "\n");
+    DPRINTF(stdout, "-------");
+  DPRINTF(stdout, "\n");
 
   if (Num_ROT == 0 /*&& inewton == 0*/ && exo->num_dim == 3) {
     setup_rotated_bc_nodes(exo, dpi, BC_Types, Num_BC, x);
@@ -726,16 +727,16 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
 
 #ifndef ALE_DCA_INFO_PLEASE
     if (Solver_Output_Format & 1)
-      DPRINTF(stderr, "%s ", ctod);
+      DPRINTF(stdout, "%s ", ctod);
     if (inewton < 10) {
       if (Solver_Output_Format & 2)
-        DPRINTF(stderr, "[%d] ", inewton);
+        DPRINTF(stdout, "[%d] ", inewton);
     } else if (inewton < 100) {
       if (Solver_Output_Format & 2)
-        DPRINTF(stderr, "%d] ", inewton);
+        DPRINTF(stdout, "%d] ", inewton);
     } else {
       if (Solver_Output_Format & 2)
-        DPRINTF(stderr, "%d ", inewton);
+        DPRINTF(stdout, "%d ", inewton);
     }
 #endif
 
@@ -1041,25 +1042,25 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     log_msg("%-38s = %23.16e", "residual norm (L_2)", Norm[0][2]);
 #ifdef ALE_DCA_INFO_PLEASE
     if (Solver_Output_Format & 1)
-      DPRINTF(stderr, "%s ", ctod);
+      DPRINTF(stdout, "%s ", ctod);
     if (inewton < 10) {
       if (Solver_Output_Format & 2)
-        DPRINTF(stderr, "[%d] ", inewton);
+        DPRINTF(stdout, "[%d] ", inewton);
     } else if (inewton < 100) {
       if (Solver_Output_Format & 2)
-        DPRINTF(stderr, "%d] ", inewton);
+        DPRINTF(stdout, "%d] ", inewton);
     } else {
       if (Solver_Output_Format & 2)
-        DPRINTF(stderr, "%d ", inewton);
+        DPRINTF(stdout, "%d ", inewton);
     }
 #endif
 
     if (Solver_Output_Format & 4)
-      DPRINTF(stderr, "%7.1e ", Norm[0][0]);
+      DPRINTF(stdout, "%7.1e ", Norm[0][0]);
     if (Solver_Output_Format & 8)
-      DPRINTF(stderr, "%7.1e ", Norm[0][1]);
+      DPRINTF(stdout, "%7.1e ", Norm[0][1]);
     if (Solver_Output_Format & 16)
-      DPRINTF(stderr, "%7.1e ", Norm[0][2]);
+      DPRINTF(stdout, "%7.1e ", Norm[0][2]);
 
     if ((inewton > 0) && (Norm[0][2] < Epsilon[pg->imtrx][0]) &&
         (Norm[0][0] < Epsilon[pg->imtrx][0]) && (Norm[2][2] < Epsilon[pg->imtrx][0]) &&
@@ -2196,40 +2197,40 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
 
     if (Epsilon[pg->imtrx][2] > 1) {
       if (Solver_Output_Format & 32)
-        DPRINTF(stderr, "%7.1e ", Norm[1][0]);
+        DPRINTF(stdout, "%7.1e ", Norm[1][0]);
       if (Solver_Output_Format & 64)
-        DPRINTF(stderr, "%7.1e ", Norm[1][1]);
+        DPRINTF(stdout, "%7.1e ", Norm[1][1]);
       if (Solver_Output_Format & 128)
-        DPRINTF(stderr, "%7.1e ", Norm[1][2]);
+        DPRINTF(stdout, "%7.1e ", Norm[1][2]);
       if (Solver_Output_Format & 256)
-        DPRINTF(stderr, "%s ", stringer);
+        DPRINTF(stdout, "%s ", stringer);
     } else {
       if (Solver_Output_Format & 32)
-        DPRINTF(stderr, "%7.1e ", Norm_r[0][0]);
+        DPRINTF(stdout, "%7.1e ", Norm_r[0][0]);
       if (Solver_Output_Format & 64)
-        DPRINTF(stderr, "%7.1e ", Norm_r[0][1]);
+        DPRINTF(stdout, "%7.1e ", Norm_r[0][1]);
       if (Solver_Output_Format & 128)
-        DPRINTF(stderr, "%7.1e ", Norm_r[0][2]);
+        DPRINTF(stdout, "%7.1e ", Norm_r[0][2]);
       if (Solver_Output_Format & 256)
-        DPRINTF(stderr, "%s ", stringer);
+        DPRINTF(stdout, "%s ", stringer);
     }
 
     asmslv_time = (a_end - a_start);
     slv_time = (s_end - s_start);
     if (Solver_Output_Format & 512)
-      DPRINTF(stderr, "%7.1e/%7.1e ", asmslv_time, slv_time);
+      DPRINTF(stdout, "%7.1e/%7.1e ", asmslv_time, slv_time);
     if (Solver_Output_Format & 1024)
-      DPRINTF(stderr, "%.1f/%.1f ", Conv_order, Conv_rate);
+      DPRINTF(stdout, "%.1f/%.1f ", Conv_order, Conv_rate);
     if (Solver_Output_Format & 2048)
-      DPRINTF(stderr, "%.1f/%.1f ", Soln_order, Soln_rate);
-    DPRINTF(stderr, "\n");
+      DPRINTF(stdout, "%.1f/%.1f ", Soln_order, Soln_rate);
+    DPRINTF(stdout, "\n");
 
     if (Write_Intermediate_Solutions || (Iout == 1)) {
       if (dofname_r[0] != '\0') {
-        fprintf(stderr, "L_oo cause: R->(%s)", dofname_r);
+        fprintf(stdout, "L_oo cause: R->(%s)", dofname_r);
       }
       if (dofname_x[0] != '\0') {
-        fprintf(stderr, "DelX->(%s)\n", dofname_x);
+        fprintf(stdout, "DelX->(%s)\n", dofname_x);
       }
     }
 
@@ -2241,41 +2242,41 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
 
     if (nAC > 0) {
       if (Solver_Output_Format & 1)
-        DPRINTF(stderr, "         ");
+        DPRINTF(stdout, "         ");
       if (Solver_Output_Format & 2)
-        DPRINTF(stderr, " AC ");
+        DPRINTF(stdout, " AC ");
       if (Solver_Output_Format & 4)
-        DPRINTF(stderr, "%7.1e ", Norm[2][0]);
+        DPRINTF(stdout, "%7.1e ", Norm[2][0]);
       if (Solver_Output_Format & 8)
-        DPRINTF(stderr, "%7.1e ", Norm[2][1]);
+        DPRINTF(stdout, "%7.1e ", Norm[2][1]);
       if (Solver_Output_Format & 16)
-        DPRINTF(stderr, "%7.1e ", Norm[2][2]);
+        DPRINTF(stdout, "%7.1e ", Norm[2][2]);
       if (Epsilon[pg->imtrx][2] > 1) {
         if (Solver_Output_Format & 32)
-          DPRINTF(stderr, "%7.1e ", Norm[3][0]);
+          DPRINTF(stdout, "%7.1e ", Norm[3][0]);
         if (Solver_Output_Format & 64)
-          DPRINTF(stderr, "%7.1e ", Norm[3][1]);
+          DPRINTF(stdout, "%7.1e ", Norm[3][1]);
         if (Solver_Output_Format & 128)
-          DPRINTF(stderr, "%7.1e ", Norm[3][2]);
+          DPRINTF(stdout, "%7.1e ", Norm[3][2]);
       } else {
         if (Solver_Output_Format & 32)
-          DPRINTF(stderr, "%7.1e ", Norm_r[1][0]);
+          DPRINTF(stdout, "%7.1e ", Norm_r[1][0]);
         if (Solver_Output_Format & 64)
-          DPRINTF(stderr, "%7.1e ", Norm_r[1][1]);
+          DPRINTF(stdout, "%7.1e ", Norm_r[1][1]);
         if (Solver_Output_Format & 128)
-          DPRINTF(stderr, "%7.1e ", Norm_r[1][2]);
+          DPRINTF(stdout, "%7.1e ", Norm_r[1][2]);
       }
       if (Solver_Output_Format & 256)
-        DPRINTF(stderr, "%s ", stringer_AC);
+        DPRINTF(stdout, "%s ", stringer_AC);
       asmslv_time = (ac_end - ac_start);
       slv_time = (sc_end - sc_start);
       if (Solver_Output_Format & 512)
-        DPRINTF(stderr, "%7.1e/%7.1e ", asmslv_time, slv_time);
+        DPRINTF(stdout, "%7.1e/%7.1e ", asmslv_time, slv_time);
       if (Solver_Output_Format & 1024)
-        DPRINTF(stderr, "%.1f/%.1f ", AConv_order, AConv_rate);
+        DPRINTF(stdout, "%.1f/%.1f ", AConv_order, AConv_rate);
       if (Solver_Output_Format & 2048)
-        DPRINTF(stderr, "%.1f/%.1f ", ASoln_order, ASoln_rate);
-      DPRINTF(stderr, "\n");
+        DPRINTF(stdout, "%.1f/%.1f ", ASoln_order, ASoln_rate);
+      DPRINTF(stdout, "\n");
     }
 
     inewton++;
@@ -2320,31 +2321,31 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
   Norm[4][2] = L2_norm(x, NumUnknowns[pg->imtrx]) / sqrt((double)NumUnknowns[pg->imtrx]);
 
   if (Solver_Output_Format & 1)
-    DPRINTF(stderr, "-------- ");
+    DPRINTF(stdout, "-------- ");
   if (Solver_Output_Format & 2)
-    DPRINTF(stderr, "--- ");
+    DPRINTF(stdout, "--- ");
   if (Solver_Output_Format & 4)
-    DPRINTF(stderr, "------- ");
+    DPRINTF(stdout, "------- ");
   if (Solver_Output_Format & 8)
-    DPRINTF(stderr, "------- ");
+    DPRINTF(stdout, "------- ");
   if (Solver_Output_Format & 16)
-    DPRINTF(stderr, "------- ");
+    DPRINTF(stdout, "------- ");
   if (Solver_Output_Format & 32)
-    DPRINTF(stderr, "------- ");
+    DPRINTF(stdout, "------- ");
   if (Solver_Output_Format & 64)
-    DPRINTF(stderr, "------- ");
+    DPRINTF(stdout, "------- ");
   if (Solver_Output_Format & 128)
-    DPRINTF(stderr, "------- ");
+    DPRINTF(stdout, "------- ");
   if (Solver_Output_Format & 256)
-    DPRINTF(stderr, "--- ");
+    DPRINTF(stdout, "--- ");
   if (Solver_Output_Format & 512)
-    DPRINTF(stderr, "--------------- ");
+    DPRINTF(stdout, "--------------- ");
   if (Solver_Output_Format & 1024)
-    DPRINTF(stderr, "------- ");
+    DPRINTF(stdout, "------- ");
   if (Solver_Output_Format & 2048)
-    DPRINTF(stderr, "-------");
-  DPRINTF(stderr, "\n");
-  DPRINTF(stderr, "scaled solution norms  %10.3e %10.3e %10.3e \n", Norm[4][0], Norm[4][1],
+    DPRINTF(stdout, "-------");
+  DPRINTF(stdout, "\n");
+  DPRINTF(stdout, "scaled solution norms  %10.3e %10.3e %10.3e \n", Norm[4][0], Norm[4][1],
           Norm[4][2]);
 
   /*
