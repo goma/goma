@@ -326,6 +326,7 @@ set(GOMA_INCLUDES
         include/el_quality.h
         include/exo_conn.h
         include/exo_struct.h
+        include/ioss_interface.h
         include/loca_const.h
         include/loca_util_const.h
         include/md_timer.h
@@ -461,6 +462,7 @@ set(GOMA_SOURCES
         src/el_elm_info.c
         src/el_quality.c
         src/exo_conn.c
+        src/ioss_interface.cpp
         src/globals.c
         src/loca_bord.c
         src/loca_eigen_c2f.F
