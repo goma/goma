@@ -1396,8 +1396,20 @@ void zero_base(Exo_DB *E) {
 
   if (Num_Proc > 1) {
     zero_base_base_mesh(E);
-  }
+  } else {
+    struct Exodus_Base *base = E->base_mesh;
+    if (base == NULL) {
+      goto zero_base_end;
+    }
 
+    for (i = 0; i < base->num_nodes; i++) {
+      (base->node_map[i])--;
+    }
+    for (i = 0; i < base->num_elems; i++) {
+      (base->elem_map[i])--;
+    }
+  }
+zero_base_end:
   return;
 }
 
@@ -1558,6 +1570,14 @@ void one_base(Exo_DB *E) {
   }
   if (Num_Proc > 1) {
     one_base_base_mesh(E);
+  } else {
+    struct Exodus_Base *base = E->base_mesh;
+    for (i = 0; i < base->num_nodes; i++) {
+      (base->node_map[i])++;
+    }
+    for (i = 0; i < base->num_elems; i++) {
+      (base->elem_map[i])++;
+    }
   }
 }
 

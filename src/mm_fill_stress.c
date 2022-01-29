@@ -1439,7 +1439,7 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
   if (supg != 0.) {
     dbl vm = 0;
     for (p = 0; p < VIM; p++) {
-      vm += vcent[p];
+      vm += vcent[p]*vcent[p];
     }
     vm = sqrt(vm);
     h_elem = 0.;
@@ -1603,9 +1603,6 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
      * Residuals_________________________________________________________________
      */
 
-    dbl yzbeta = 1.0;
-    dbl yz_beta_y = 100.0;
-
     if (af->Assemble_Residual) {
       /*
        * Assemble each component "ab" of the polymer stress equation...
@@ -1659,30 +1656,6 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
 
               diffusion = 0.;
               if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
-                /* add SU term in here when appropriate */
-                dbl Z_yz = s_dot[a][b] + (v_dot_del_s[a][b] - x_dot_del_s[a][b]);
-                //  static const dbl EPSILON = 1e-10;
-                dbl Y_inv = 1.0 / yz_beta_y;
-                //  dbl resid_scale = Y_inv * Z + EPSILON;
-                dbl inner = 0;
-                for (int i = 0; i < dim; i++) {
-                  inner += grad_s[i][a][b] * grad_s[i][a][b];
-                }
-                inner = sqrt(inner);
-                dbl he = 1e-12;
-                for (int i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
-                  for (int w = 0; w < dim; w++) {
-                    he += fabs(bf[eqn]->grad_phi[i][w] * grad_s[w][a][b]);
-                  }
-                }
-                he = inner / he;
-                dbl kdc = 1 * fabs(Z_yz) * (1.0 / (Y_inv * inner + 1e-12)) * he * 0.5;
-                kdc = MIN(kdc, h_elem);
-
-                for (int w = 0; w < dim; w++) {
-                  diffusion += kdc * grad_s[w][a][b] * bf[eqn]->grad_phi[i][w];
-                }
-
                 diffusion *= det_J * wt * h3;
                 diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
               }
@@ -1832,15 +1805,14 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
                     if (supg != 0) {
                       dbl vm = 0;
                       for (int p = 0; p < VIM; p++) {
-                        vm += vcent[p];
+                        vm += vcent[p] * vcent[p];
                       }
                       vm = sqrt(vm);
-                      dbl d_vm = 0.5 * dvc_dnode[p][j] / vm;
-                      dbl h_elem_deriv = 0.;
+                      h_elem_deriv = 0.;
                       for (int p = 0; p < dim; p++) {
                         h_elem_deriv += h[p] * h[p];
                       }
-                      h_elem_deriv = 0.5 * sqrt(h_elem_deriv) * (-0.5) * d_vm / (vm * vm * vm);
+                      h_elem_deriv = sqrt(h_elem_deriv) * 0.5 * (-dvc_dnode[p][j] * vcent[p] / (vm * vm * vm));
                     }
 
                     mass = 0.;
@@ -1926,34 +1898,7 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
 
                     diffusion = 0.;
                     if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
-                      /* add SU term in here when appropriate */
-                      dbl d_Z_yz = phi_j * (grad_s[p][a][b]);
-                      dbl Z_yz = s_dot[a][b] + (v_dot_del_s[a][b] - x_dot_del_s[a][b]);
-                      //  static const dbl EPSILON = 1e-10;
-                      dbl Y_inv = 1.0 / yz_beta_y;
-                      //  dbl resid_scale = Y_inv * Z + EPSILON;
-                      dbl inner = 0;
-                      for (int i = 0; i < dim; i++) {
-                        inner += grad_s[i][a][b] * grad_s[i][a][b];
-                      }
-                      inner = sqrt(inner);
-                      dbl he = 1e-12;
-                      for (int i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
-                        for (int w = 0; w < dim; w++) {
-                          he += fabs(bf[eqn]->grad_phi[i][w] * grad_s[w][a][b]);
-                        }
-                      }
-                      he = inner / he;
-                      dbl kdc = 1 * d_Z_yz * (Z_yz / fabs(Z_yz + 1e-12)) *
-                                (1.0 / (Y_inv * inner + 1e-12)) * he * 0.5;
-
-                      for (int w = 0; w < dim; w++) {
-                        diffusion += kdc * grad_s[w][a][b] * bf[eqn]->grad_phi[i][w];
-                      }
-
                       diffusion *= det_J * wt * h3;
-                      diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
-                      diffusion *= wt_func * det_J * wt * h3;
                       diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
                     }
 
@@ -2174,82 +2119,6 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
 
                     diffusion = 0.;
                     if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
-
-                      d_vdotdels_dm = 0.;
-                      for (q = 0; q < WIM; q++) {
-                        d_vdotdels_dm += (v[q] - x_dot[q]) * d_grad_s_dmesh[q][a][b][p][j];
-                      }
-
-                      d_xdotdels_dm = 0;
-                      if (pd->TimeIntegration != STEADY) {
-                        if (pd->e[pg->imtrx][eqn] & T_MASS) {
-                          d_xdotdels_dm = (1. + 2. * tt) * phi_j / dt * grad_s[p][a][b];
-                        }
-                      }
-                      /* add SU term in here when appropriate */
-                      dbl Z_yz = s_dot[a][b] + (v_dot_del_s - x_dot_del_s);
-                      dbl d_Z_yz = d_vdotdels_dm + d_xdotdels_dm;
-                      //  static const dbl EPSILON = 1e-10;
-                      dbl Y_inv = 1.0 / yz_beta_y;
-                      //  dbl resid_scale = Y_inv * Z + EPSILON;
-                      dbl inner = 0;
-                      for (int i = 0; i < dim; i++) {
-                        inner += grad_s[i][a][b] * grad_s[i][a][b];
-                      }
-                      inner = sqrt(inner);
-                      dbl d_inner = 0;
-                      for (int i = 0; i < dim; i++) {
-                        d_inner += 2.0 * (d_grad_s_dmesh[i][a][b][p][j] * grad_s[i][a][b]);
-                      }
-                      d_inner = d_inner * 0.5 * inner * inner * inner;
-                      dbl he = 1e-12;
-                      for (int i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
-                        for (int w = 0; w < dim; w++) {
-                          he += fabs(bf[eqn]->grad_phi[i][w] * grad_s[w][a][b]);
-                        }
-                      }
-                      he = inner / he;
-                      dbl d_he = 0.0;
-                      for (int i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
-                        for (int w = 0; w < dim; w++) {
-                          dbl tmp = bf[eqn]->grad_phi[i][w] * grad_s[w][a][b];
-                          d_he += (bf[eqn]->d_grad_phi_dmesh[i][w][p][j] * grad_s[w][a][b] +
-                                   bf[eqn]->grad_phi[i][w] * d_grad_s_dmesh[w][a][b][p][j]) *
-                                  tmp / (fabs(tmp) + 1e-12);
-                        }
-                      }
-                      d_he = d_inner * he / (inner + 1e-12) - d_he * he * he / (inner + 1e-12);
-                      dbl kdc = 1 * fabs(Z_yz) * (1.0 / (Y_inv * inner + 1e-12)) * he * 0.5;
-                      dbl d_kdc = 1 * d_Z_yz * Z_yz / (fabs(Z_yz) + 1e-12) *
-                                  (1.0 / (Y_inv * inner + 1e-12)) * he * 0.5;
-                      d_kdc += 1 * fabs(Z_yz) * d_inner * (-1.0 / (Y_inv * inner * inner + 1e-12)) *
-                               he * 0.5;
-                      d_kdc +=
-                          1 * fabs(Z_yz) * (1.0 / (Y_inv * inner * inner + 1e-12)) * d_he * 0.5;
-                      d_kdc *= det_J * wt * h3;
-
-                      dbl diffusion_a = 0.0;
-                      for (int w = 0; w < dim; w++) {
-                        diffusion_a += d_kdc * grad_s[w][a][b] * bf[eqn]->grad_phi[i][w];
-                      }
-                      diffusion_a *= det_J * h3 * wt;
-
-                      dbl diffusion_b = 0.0;
-                      for (int w = 0; w < dim; w++) {
-                        diffusion_b +=
-                            kdc * d_grad_s_dmesh[w][a][b][p][j] * bf[eqn]->grad_phi[i][w];
-                        diffusion_b +=
-                            kdc * grad_s[w][a][b] * bf[eqn]->d_grad_phi_dmesh[i][w][p][j];
-                      }
-                      diffusion_b *= det_J * h3 * wt;
-
-                      dbl diffusion_c = 0.0;
-                      for (int w = 0; w < dim; w++) {
-                        diffusion_c += kdc * grad_s[w][a][b] * bf[eqn]->grad_phi[i][w];
-                      }
-                      diffusion_c *= (d_det_J_dmesh_pj + dh3dmesh_pj) * wt;
-
-                      diffusion = diffusion_a + diffusion_b + diffusion_c;
                       diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
                     }
 
@@ -2482,56 +2351,6 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
                       diffusion = 0.;
 
                       if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
-
-                        /* add SU term in here when appropriate */
-                        dbl Z_yz = s_dot[a][b] + (v_dot_del_s[a][b] - x_dot_del_s[a][b]);
-                        dbl d_Z_yz = 0.0;
-                        if (pd->TimeIntegration != STEADY) {
-                          if (pd->e[pg->imtrx][eqn] & T_MASS) {
-                            d_Z_yz += (1. + 2. * tt) * phi_j / dt * (double)delta(a, p) *
-                                      (double)delta(b, q);
-                          }
-                        }
-                        if ((a == p) && (b == q)) {
-                          for (r = 0; r < WIM; r++) {
-                            d_Z_yz += (v[r] - x_dot[r]) * bf[var]->grad_phi[j][r];
-                          }
-                        }
-                        //  static const dbl EPSILON = 1e-10;
-                        dbl Y_inv = 1.0 / yz_beta_y;
-                        //  dbl resid_scale = Y_inv * Z + EPSILON;
-                        dbl inner = 0;
-                        for (int i = 0; i < dim; i++) {
-                          inner += grad_s[i][a][b] * grad_s[i][a][b];
-                        }
-                        inner = sqrt(inner);
-                        dbl d_inner = 0;
-                        for (int i = 0; i < dim; i++) {
-                          d_inner += 2.0 * bf[var]->grad_phi[j][p] * grad_s[i][a][b];
-                        }
-                        d_inner = d_inner * 0.5 * inner * inner * inner;
-                        dbl he = 1e-12;
-                        for (int i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
-                          for (int w = 0; w < dim; w++) {
-                            he += fabs(bf[eqn]->grad_phi[i][w] * grad_s[w][a][b]);
-                          }
-                        }
-                        he = inner / he;
-                        dbl d_he = 0.0;
-                        for (int i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
-                          for (int w = 0; w < dim; w++) {
-                            dbl tmp = bf[eqn]->grad_phi[i][w] * grad_s[w][a][b];
-                            d_he += bf[eqn]->grad_phi[i][w] * bf[var]->grad_phi[j][p] * tmp /
-                                    (fabs(tmp) + 1e-12);
-                          }
-                        }
-                        d_he = d_he / (inner + 1e-12) - he * d_inner / (inner + 1e-12);
-                        dbl kdc = 1 * fabs(Z_yz) * (1.0 / (Y_inv * inner + 1e-12)) * he * 0.5;
-
-                        for (int w = 0; w < dim; w++) {
-                          diffusion += kdc * grad_s[w][a][b] * bf[eqn]->grad_phi[i][w];
-                        }
-
                         diffusion *= det_J * wt * h3;
                         diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
                       }

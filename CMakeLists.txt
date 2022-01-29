@@ -109,8 +109,6 @@ endif()
 # Exodus
 find_package(SEACASExodus REQUIRED HINTS ${Trilinos_DIR}/../SEACASExodus)
 MESSAGE(STATUS "SEACASExodus_DIR = ${SEACASExodus_DIR}")
-#find_package(SEACASChaco REQUIRED HINTS ${Trilinos_DIR}/../SEACASChaco)
-#MESSAGE(STATUS "SEACASChaco_DIR = ${SEACASChaco_DIR}")
 
 # PETSC search
 # set root of location to find PETSc configuration
@@ -326,7 +324,6 @@ set(GOMA_INCLUDES
         include/el_quality.h
         include/exo_conn.h
         include/exo_struct.h
-        include/ioss_interface.h
         include/loca_const.h
         include/loca_util_const.h
         include/md_timer.h
@@ -462,7 +459,6 @@ set(GOMA_SOURCES
         src/el_elm_info.c
         src/el_quality.c
         src/exo_conn.c
-        src/ioss_interface.cpp
         src/globals.c
         src/loca_bord.c
         src/loca_eigen_c2f.F
@@ -722,9 +718,7 @@ set(GOMA_TPL_INCLUDES
   ${GOMA_TPL_INCLUDES}
   ${Sparse_INCLUDES}
   ${SEACASExodus_INCLUDE_DIRS}
-  ${SEACASChaco_INCLUDE_DIRS}
   ${SEACASExodus_TPL_INCLUDE_DIRS}
-  ${SEACASChaco_TPL_INCLUDE_DIRS}
   ${Trilinos_INCLUDE_DIRS}
   ${Trilinos_TPL_INCLUDE_DIRS}
   ${MPI_C_INCLUDE_PATH}
@@ -733,8 +727,6 @@ set(GOMA_TPL_INCLUDES
 set(GOMA_TPL_LIBRARY_DIRS
   ${SEACASExodus_LIBRARY_DIRS}
   ${SEACASExodus_TPL_LIBRARY_DIRS}
-  ${SEACASChaco_LIBRARY_DIRS}
-  ${SEACASChaco_TPL_LIBRARY_DIRS}
   ${Trilinos_LIBRARY_DIRS}
   ${Trilinos_TPL_LIBRARY_DIRS}
 )
@@ -742,8 +734,6 @@ set(GOMA_TPL_LIBRARY_DIRS
 set(GOMA_TPL_LIBRARIES
   ${SEACASExodus_LIBRARIES}
   ${SEACASExodus_TPL_LIBRARIES}
-  ${SEACASChaco_LIBRARIES}
-  ${SEACASChaco_TPL_LIBRARIES}
   ${GOMA_TPL_LIBRARIES}
   ${Trilinos_LIBRARIES}
   ${Trilinos_TPL_LIBRARIES}

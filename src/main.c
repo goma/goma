@@ -100,7 +100,7 @@ int ExoTimePlane = INT_MAX; /* Time plane # or continuation # of soln to use as 
 
 char Echo_Input_File[MAX_FNL] = "\0"; /* echo of problem def file  */
 
-int Brk_Flag = 0;
+int Decompose_Flag = 0;
 
 char *GomaPetscOptions = NULL;
 int GomaPetscOptionsStrLen = 0;
@@ -541,9 +541,9 @@ int main(int argc, char **argv)
 #endif /* End of ifdef PARALLEL */
 
   /* Now break the exodus files */
-  if (Num_Proc > 1 && ProcID == 0 && Brk_Flag == 1) {
-    decompose_exodus_files();
-  }
+  //if (Decompose_Flag == 1 && Num_Proc > 1) {
+  //  decompose_exodus_files();
+  //}
   check_parallel_error("Error in brking exodus files");
   MPI_Barrier(MPI_COMM_WORLD);
 
@@ -840,10 +840,6 @@ int main(int argc, char **argv)
 #ifdef PARALLEL
   MPI_Barrier(MPI_COMM_WORLD);
 #endif
-
-  if (ProcID == 0 && Brk_Flag == 1 && Num_Proc > 1) {
-    join_exodus_file();
-  }
 
   /***********************************************************************/
   /***********************************************************************/

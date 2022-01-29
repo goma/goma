@@ -149,10 +149,25 @@ static goma_error setup_base_mesh_parallel(Dpi *dpi, Exo_DB *exo) {
   MALLOC_COPY(base->ss_side_list, exo->ss_side_list, sizeof(int) * exo->ss_elem_len);
   MALLOC_COPY(base->ss_elem_list, exo->ss_elem_list, sizeof(int) * exo->ss_elem_len);
   MALLOC_COPY(base->ss_distfact_list, exo->ss_distfact_list, sizeof(dbl) * exo->ss_distfact_len);
+
+  // we don't use these as far as I know so just zero them
+  base->ns_num_props = 0;
+  base->ss_num_props = 0;
+  base->eb_num_props = 0;
+
+  base->eb_prop_name = NULL;
+  base->ns_prop_name = NULL;
+  base->ss_prop_name = NULL;
+
+  base->eb_prop = NULL;
+  base->ns_prop = NULL;
+  base->ss_prop = NULL;
   return GOMA_SUCCESS;
 }
 
 static goma_error free_base_mesh_serial(Exo_DB *exo) {
+  free(exo->base_mesh->node_map);
+  free(exo->base_mesh->elem_map);
   free(exo->base_mesh);
   return GOMA_SUCCESS;
 }
@@ -197,20 +212,6 @@ static goma_error free_base_mesh_parallel(Exo_DB *exo) {
 
   free(base->node_map);
   free(base->elem_map);
-
-  // we don't use these as far as I know so just zero them
-  base->ns_num_props = 0;
-  base->ss_num_props = 0;
-  base->eb_num_props = 0;
-
-  base->eb_prop_name = NULL;
-  base->ns_prop_name = NULL;
-  base->ss_prop_name = NULL;
-
-  base->eb_prop = NULL;
-  base->ns_prop = NULL;
-  base->ss_prop = NULL;
-
   free(exo->base_mesh);
 
   return GOMA_SUCCESS;

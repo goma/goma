@@ -20,10 +20,10 @@
 
 #include <math.h>
 #include <mm_fill_stabilization.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
 
 /* GOMA include files */
 #include "ac_stability.h"
@@ -44,6 +44,7 @@
 #include "mm_fill_species.h"
 #include "mm_fill_stress.h"
 #include "mm_fill_terms.h"
+#include "mm_input.h"
 #include "mm_interface.h"
 #include "mm_mp.h"
 #include "mm_mp_const.h"
@@ -69,7 +70,6 @@
 #include "user_bc.h"
 #include "user_mp.h"
 #include "wr_side_data.h"
-#include "mm_input.h"
 
 #define eps(i, j, k) ((i - j) * (j - k) * (k - i) / 2)
 
@@ -3343,55 +3343,55 @@ fprintf(stderr,"more %g %g %g %g\n",res,jac,betainv, dthick_dV);
           }
         }
       }
-      if ((type == VELO_SLIP_FLUID_BC || type == VELO_SLIP_ROT_FLUID_BC)) {
-        for (jvar = 0; jvar < pd->Num_Dim; jvar++) {
-          var = VELOCITY1 + jvar;
-          if (pd->v[pg->imtrx][var]) {
-            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-              phi_j = bf[var]->phi[j];
-              d_func[jvar][var][j] +=
-                  -betainv * dthick_dV * tang_sgn * fv->stangent[0][jvar] * vslip[jvar] * phi_j;
-              /* don't think we need -- seems OK 4-12-2017 */
-              if (Pflag)
-                d_func[jvar][var][j] += 0.5 * thick * dthick_dV * tang_sgn * fv->stangent[0][jvar] *
-                                        pg_factor * fv->grad_P[jvar] * phi_j;
-            }
+    }
+    if ((type == VELO_SLIP_FLUID_BC || type == VELO_SLIP_ROT_FLUID_BC)) {
+      for (jvar = 0; jvar < pd->Num_Dim; jvar++) {
+        var = VELOCITY1 + jvar;
+        if (pd->v[pg->imtrx][var]) {
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            phi_j = bf[var]->phi[j];
+            d_func[jvar][var][j] +=
+                -betainv * dthick_dV * tang_sgn * fv->stangent[0][jvar] * vslip[jvar] * phi_j;
+            /* don't think we need -- seems OK 4-12-2017 */
+            if (Pflag)
+              d_func[jvar][var][j] += 0.5 * thick * dthick_dV * tang_sgn * fv->stangent[0][jvar] *
+                                      pg_factor * fv->grad_P[jvar] * phi_j;
           }
         }
+      }
 
-        /* Mesh motion Jacobian entries   */
-        for (jvar = 0; jvar < ei[pg->imtrx]->ielem_dim; jvar++) {
-          var = MESH_DISPLACEMENT1 + jvar;
-          if (pd->v[pg->imtrx][var]) {
-            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-              for (p = 0; p < pd->Num_Dim; p++) {
+      /* Mesh motion Jacobian entries   */
+      for (jvar = 0; jvar < ei[pg->imtrx]->ielem_dim; jvar++) {
+        var = MESH_DISPLACEMENT1 + jvar;
+        if (pd->v[pg->imtrx][var]) {
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            for (p = 0; p < pd->Num_Dim; p++) {
+              d_func[p][var][j] +=
+                  -betainv * dthick_dV * vslip[p] * tang_sgn * fv->dstangent_dx[0][p][jvar][j];
+              if (Pflag) {
+                d_func[p][var][j] += 0.5 * thick * dthick_dV * pg_factor * fv->grad_P[p] *
+                                     tang_sgn * fv->dstangent_dx[0][p][jvar][j];
+                d_func[p][var][j] += 0.5 * pg_factor * fv->grad_P[p] * dthick_dP * tang_sgn *
+                                     fv->dstangent_dx[0][p][jvar][j];
+                d_func[p][var][j] += 0.5 * pg_factor * fv->d_grad_P_dmesh[p][jvar][j] * thick;
                 d_func[p][var][j] +=
-                    -betainv * dthick_dV * vslip[p] * tang_sgn * fv->dstangent_dx[0][p][jvar][j];
-                if (Pflag) {
-                  d_func[p][var][j] += 0.5 * thick * dthick_dV * pg_factor * fv->grad_P[p] *
-                                       tang_sgn * fv->dstangent_dx[0][p][jvar][j];
-                  d_func[p][var][j] += 0.5 * pg_factor * fv->grad_P[p] * dthick_dP * tang_sgn *
-                                       fv->dstangent_dx[0][p][jvar][j];
-                  d_func[p][var][j] += 0.5 * pg_factor * fv->d_grad_P_dmesh[p][jvar][j] * thick;
-                  d_func[p][var][j] += vslip[p] * dthick_dP * tang_sgn *
-                                       fv->dstangent_dx[0][p][jvar][j] * (-betainv);
-                }
+                    vslip[p] * dthick_dP * tang_sgn * fv->dstangent_dx[0][p][jvar][j] * (-betainv);
               }
             }
           }
         }
       }
+    }
 
-      for (jvar = 0; jvar < pd->Num_Dim; jvar++) {
-        var = PVELOCITY1 + jvar;
-        if (pd->v[pg->imtrx][var]) {
-          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-            phi_j = bf[var]->phi[j];
-            d_func[jvar][var][j] += (-betainv) * phi_j;
-            /* contribution from dependence of betainv on the magnitude of slip */
-            for (p = 0; p < pd->Num_Dim; p++) {
-              d_func[p][var][j] += (-d_betainv_dvslip_mag) * phi_j * (slip_dir[jvar] * vslip[p]);
-            }
+    for (jvar = 0; jvar < pd->Num_Dim; jvar++) {
+      var = PVELOCITY1 + jvar;
+      if (pd->v[pg->imtrx][var]) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          phi_j = bf[var]->phi[j];
+          d_func[jvar][var][j] += (-betainv) * phi_j;
+          /* contribution from dependence of betainv on the magnitude of slip */
+          for (p = 0; p < pd->Num_Dim; p++) {
+            d_func[p][var][j] += (-d_betainv_dvslip_mag) * phi_j * (slip_dir[jvar] * vslip[p]);
           }
         }
       }

@@ -104,8 +104,10 @@ void amesos_solve_msr(char *choice,
   Epetra_Vector b(Copy, map, b_);
 
 #if 0
-  EpetraExt::RowMatrixToMatrixMarketFile("A.mtx", *A);
-  EpetraExt::VectorToMatrixMarketFile("b.mm", b);
+  EpetraExt::RowMatrixToMatrixMarketFile("Jnext.mm", *A);
+  EpetraExt::VectorToMatrixMarketFile("bnext.mm", b);
+  MPI_Finalize();
+  exit(0);
 #endif
   /* Choose correct solver */
   if (FirstRun) {

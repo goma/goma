@@ -34,7 +34,7 @@
 #endif
 
 #ifndef MAX_FNL
-#define MAX_FNL 128 /* maximum filename len (EXODUS II, Chemkin)*/
+#define MAX_FNL 1024 /* maximum filename len (EXODUS II, Chemkin)*/
 #endif
 
 #ifndef NEXO

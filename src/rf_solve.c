@@ -2095,9 +2095,6 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
              and fix always occurs on the same timestep as printing */
           MPI_Barrier(MPI_COMM_WORLD);
 #endif
-          if (ProcID == 0 && Brk_Flag == 1) {
-            join_exodus_file();
-          }
           /* Fix step is relative to print step */
           step_fix += tran->fix_freq * tran->print_freq;
         }

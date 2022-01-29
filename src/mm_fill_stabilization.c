@@ -5,19 +5,19 @@
 #include "mm_as.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
+#include "mm_eh.h"
 #include "mm_fill_stabilization.h"
 #include "mm_fill_stress.h"
 #include "mm_fill_terms.h"
 #include "mm_mp.h"
-#include "mm_viscosity.h"
-#include "rf_fem.h"
-#include "rf_solver.h"
-#include "user_mp.h"
-#include "mm_eh.h"
 #include "mm_mp_const.h"
 #include "mm_mp_structs.h"
 #include "mm_qtensor_model.h"
+#include "mm_viscosity.h"
+#include "rf_fem.h"
 #include "rf_fem_const.h"
+#include "rf_solver.h"
+#include "user_mp.h"
 
 static dbl yzbeta1(dbl scale,
                    int dim,
@@ -1170,9 +1170,10 @@ int calc_pspg(dbl pspg[DIM],
           phi_j = bf[var]->phi[j];
 
           advection = 0.;
-          if ((pd->e[upd->matrix_index[meqn]][meqn] & T_ADVECTION) &&
-              (pd->TimeIntegration != STEADY)) {
-            advection = -(1. + 2. * tt) * phi_j / dt * grad_v[b][a];
+          if ((pd->e[upd->matrix_index[meqn]][meqn] & T_ADVECTION)) {
+            if (pd->TimeIntegration != STEADY) {
+              advection = -(1. + 2. * tt) * phi_j / dt * grad_v[b][a];
+            }
             for (p = 0; p < WIM; p++) {
               advection += (v[p] - x_dot[p]) * fv->d_grad_v_dmesh[p][a][b][j];
             }
@@ -1197,7 +1198,7 @@ int calc_pspg(dbl pspg[DIM],
           }
 
           d_pspg->X[a][b][j] =
-              tau_pspg * (advection + diffusion + source) + +d_tau_pspg_dX[b][j] * momentum[a];
+              tau_pspg * (advection + diffusion + source) + d_tau_pspg_dX[b][j] * momentum[a];
         }
       }
     }

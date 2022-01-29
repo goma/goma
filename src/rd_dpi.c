@@ -640,8 +640,10 @@ void uni_dpi(Dpi *dpi, Exo_DB *exo) {
   dpi->ss_internal_global = find_ss_internal_boundary(exo);
 
   // base mesh settings that can't be setup until dpi
-  exo->base_mesh->node_map = dpi->node_index_global;
-  exo->base_mesh->elem_map = dpi->elem_index_global;
+  exo->base_mesh->node_map = malloc(sizeof(int) * exo->num_nodes);
+  exo->base_mesh->elem_map = malloc(sizeof(int) * exo->num_elems);
+  memcpy(exo->base_mesh->node_map, dpi->node_index_global, sizeof(int) * exo->num_nodes);
+  memcpy(exo->base_mesh->elem_map, dpi->elem_index_global, sizeof(int) * exo->num_elems);
 
   exo->ghost_node_to_base = malloc(sizeof(int) * exo->num_nodes);
   for (int i = 0; i < exo->num_nodes; i++) {

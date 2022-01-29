@@ -739,15 +739,15 @@ void rd_file_specs(FILE *ifp, char *input) {
 
   foundBrkFile = look_for_optional(ifp, "Brk file", input, '=');
 
-  if (foundBrkFile == 1 && Brk_Flag != 1) {
+  if (foundBrkFile == 1 && Decompose_Flag != 1) {
     (void)read_string(ifp, input, '\n');
     strip(input);
     if (strcasecmp(input, "YES") == 0 || strcasecmp(input, "ON") == 0) {
-      Brk_Flag = 1;
+      Decompose_Flag = 1;
     } else if (strcasecmp(input, "NO") || strcasecmp(input, "OFF") == 0) {
-      Brk_Flag = 0;
+      Decompose_Flag = 0;
     } else {
-      GOMA_EH(GOMA_ERROR, "Unexpected input for Brk_Flag: %s, expected (YES/NO) or (ON/OFF)",
+      GOMA_EH(GOMA_ERROR, "Unexpected input for Decompose_Flag: %s, expected (YES/NO) or (ON/OFF)",
               input);
     }
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "Brk file", input);
@@ -11179,7 +11179,16 @@ void translate_command_line(int argc, char *argv[], struct Command_line_command 
         clc[*nclc]->type = NOECHO;
         ECHO("NOECHO", NULL);
       } else if (strcmp(argv[istr], "-brk") == 0) {
-        GOMA_EH(GOMA_ERROR, "Brk is no longer supported");
+        GOMA_WH(GOMA_ERROR, "Brk is no longer supported, using Ioss Decomposition, prefer -decompose");
+        (*nclc)++;
+        istr++;
+        Decompose_Flag = 1;
+        clc[*nclc]->type = NOECHO;
+      } else if (strcmp(argv[istr], "-decompose") == 0) {
+        (*nclc)++;
+        istr++;
+        Decompose_Flag = 1;
+        clc[*nclc]->type = NOECHO;
       } else if (strcmp(argv[istr], "-petsc") == 0 || strcmp(argv[istr], "-petsc_opts") == 0) {
         (*nclc)++;
         istr++;

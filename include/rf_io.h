@@ -44,7 +44,7 @@ extern int ExoTimePlane; /* initial time plane to use */
 
 extern char Echo_Input_File[MAX_FNL]; /* echo of problem def file  */
 
-extern int Brk_Flag;
+extern int Decompose_Flag;
 
 extern char *GomaPetscOptions;
 extern int GomaPetscOptionsStrLen;
@@ -66,7 +66,7 @@ extern char Soln_OutFile[MAX_FNL];
 /* ASCII file holding solution vector, */
 /* same format as Init_GuessFile      */
 
-extern int Brk_Flag; /* Flag to check for built-in brking */
+extern int Decompose_Flag; /* Flag to check for built-in brking */
 
 extern int Debug_Flag; /* Flag to specify debug info is to be     */
                        /* printed out. The value of this flag     */

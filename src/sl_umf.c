@@ -61,6 +61,8 @@
 
 */
 
+#include <stdio.h>
+
 #ifdef HAVE_UMFPACK
 #include <umfpack.h>
 #endif
@@ -68,6 +70,7 @@
 #define GOMA_SL_UMF_C
 #include "mm_eh.h"
 #include "sl_umf.h"
+#include "sl_auxutil.h"
 
 /* how many different linear systems might UMF be used for? */
 #ifndef UMF_MAX_SYSTEMS
