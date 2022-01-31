@@ -177,9 +177,9 @@ PROTO((double [],		/* func                                      */
        const int ));                    /* number of parameters  */
 
 EXTERN void fvelo_tangent_3d
-PROTO((double [],             /* func */
+PROTO((double [MAX_PDIM],             /* func */
        double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],         /* dfunc */
-       const double [],       /* free surface velocity x_dot */
+       const double [MAX_PDIM],       /* free surface velocity x_dot */
        const double ,         /* specified tangential speed */
        const double ,         /* x-component of surface tangent */
        const double ,         /* y-component of surface tangent */
@@ -209,9 +209,9 @@ PROTO((double [],		/* func                                      */
 EXTERN void fvelo_normal_solid_bc
 PROTO((double [],		/* func                                      */
        double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func      */
-       double [],               /* solution vector x                         */
-       double [],               /* time derivative of solution vector x      */
-       double [],               /* time derivative of solution vector x_rs                         */
+       double [MAX_PDIM],               /* solution vector x                         */
+       double [DIM],               /* time derivative of solution vector x      */
+       double [DIM],               /* time derivative of solution vector x_rs                         */
        const int ,              /* bc type */
        const int ,		/* i_mat_solid                               */
        const int ,		/* i_mat_fluid                               */
@@ -280,9 +280,9 @@ PROTO(( double [MAX_PDIM],	/* func                                      */
 	double ));	/* zeta_potential    */
 
 EXTERN void fvelo_electrokinetic_3d
-PROTO((double [],             /* func */
+PROTO((double [MAX_PDIM],             /* func */
        double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],         /* dfunc */
-       const double [],       /* free surface velocity x_dot */
+       const double [MAX_PDIM],       /* free surface velocity x_dot */
        const double ,         /* permitivity       */
        const double ,	      /* zeta_potential    */
        const double ,         /* x-component of surface tangent */
@@ -482,7 +482,7 @@ PROTO((double *,		/* func                                      */
 						* normal vector derivatives
 						* ([i][j][k]) component i wrt
 						* displacement j at node k   */
-       const dbl [5],		/* BC_Data_Float - static contact angle, 
+       const dbl [8],		/* BC_Data_Float - static contact angle, 
 				 * response slope, components of web velocity
 				 * vector                                    */
        const double [MAX_PDIM],	/* xdot - Current mesh velocity vector       */

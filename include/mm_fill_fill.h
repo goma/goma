@@ -107,9 +107,9 @@ PROTO((double ,			/* tt - parameter varies time integration from
 EXTERN int assemble_fill
 PROTO((double ,                      /* tt                   */
        double ,                      /* dt                   */
-       double [],                    /* hsquared[DIM]        */
-       double [][DIM],               /* hh[DIM][DIM]         */
-       double [][MDE],               /* dh_dxnode[DIM][MDE]  */
+       double [DIM],                    /* hsquared[DIM]        */
+       double [DIM][DIM],               /* hh[DIM][DIM]         */
+       double [DIM][MDE],               /* dh_dxnode[DIM][MDE]  */
        const int,                    /* equation -  */
        double [DIM],                 /* xi - coordinates */
        Exo_DB * const,               /* Exodus database */
@@ -121,16 +121,16 @@ PROTO((double ,			/* tt - parameter varies time integration from
 				 *      explicit (tt = 1) to 
 				 *      implicit (tt = 0)                    */
        double,                  /* dt - current time step size               */
-       double [],               /* hsquared[DIM]           next three parameters */
-       double [][DIM],          /* hh[DIM][DIM]            are element size  */
-       double [][MDE]));        /* dh_dxnode[DIM][MDE]     info for GLS */
+       double [DIM],               /* hsquared[DIM]           next three parameters */
+       double [DIM][DIM],          /* hh[DIM][DIM]            are element size  */
+       double [DIM][MDE]));        /* dh_dxnode[DIM][MDE]     info for GLS */
 
 EXTERN int assemble_fill_gradf
 PROTO((double ,                      /* tt                   */
        double ,                      /* dt                   */
-       double [],                    /* hsquared[DIM]        */
-       double [][DIM],               /* hh[DIM][DIM]         */
-       double [][MDE]));             /* dh_dxnode[DIM][MDE]  */
+       double [DIM],                    /* hsquared[DIM]        */
+       double [DIM][DIM],               /* hh[DIM][DIM]         */
+       double [DIM][MDE]));             /* dh_dxnode[DIM][MDE]  */
 
 #endif /* COUPLED_FILL */
 

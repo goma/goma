@@ -84,17 +84,25 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
   dbl deform_grad[DIM][DIM];  /* deformation gradient for nonlinear elasticity 
                        is d(deformation)/d(initial mesh coord) + identity */
   dbl deform_grad_old[DIM][DIM];
+  dbl deform_grad_dot[DIM][DIM];
   dbl invdeform_grad[DIM][DIM]; 
+  dbl invdeform_dot_grad[DIM][DIM]; 
   dbl d_invdeform_grad_dx[DIM][DIM] [DIM][MDE]; 
+  dbl d_invdeform_dot_grad_dx[DIM][DIM] [DIM][MDE]; 
   dbl grad_d[DIM][DIM];  /* displacement gradient*/
   dbl d_grad_d[DIM][DIM] [DIM][MDE];  /* displacement gradient*/
   dbl grad_d_old[DIM][DIM];
+  dbl grad_d_dot[DIM][DIM];
+  dbl d_grad_d_dot[DIM][DIM] [DIM][MDE];  /* displacement gradient*/
   dbl det2d;   /* determinant of 2D deformation gradient tensor */
-  dbl det2d_old;
+  dbl det2d_old, det2d_dot;
   dbl ddet2d_dx[DIM][MDE];  /* sensitivity */
+  dbl ddet2d_dot_dx[DIM][MDE];  /* sensitivity */
   dbl cauchy_green[DIM][DIM];  /* strain tensor without division by determinant, etc. */
   dbl d_cauchy_green_dx[DIM][DIM][DIM][MDE];  /* sensitivity */
   dbl cauchy_green_old[DIM][DIM];
+  dbl cauchy_green_dot[DIM][DIM];
+  dbl d_cauchy_green_dot_dx[DIM][DIM][DIM][MDE];  /* sensitivity */
   static int is_initialized=FALSE;
   
   struct Basis_Functions  *bfv;
@@ -117,10 +125,14 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
   memset( fv->strain, 0, sizeof(double)*DIM*DIM);
   memset( fv_old->strain, 0, sizeof(double)*DIM*DIM);
   memset( fv->deform_grad, 0, sizeof(double)*DIM*DIM);
+  memset( cauchy_green_dot, 0, sizeof(double)*DIM*DIM);
+  memset( grad_d_dot, 0, sizeof(double)*DIM*DIM);
   if (af->Assemble_Jacobian) {
     memset(d_grad_d, 0, sizeof(double)*DIM*DIM*DIM*MDE);
     memset(d_cauchy_green_dx, 0, sizeof(double)*DIM*DIM*DIM*MDE);
+    memset(d_cauchy_green_dot_dx, 0, sizeof(double)*DIM*DIM*DIM*MDE);
     memset(ddet2d_dx, 0, sizeof(double)*DIM*MDE);
+    memset(d_grad_d_dot, 0, sizeof(double)*DIM*DIM*DIM*MDE);
 	
 	if( !is_initialized ) {
 		memset(fv->d_volume_change_dx, 0, sizeof(double)*DIM*MDE);
@@ -156,6 +168,8 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 			*esp->d[q][i] * bf[v]->d_phi[i][p];
 		      grad_d_old[p][q] += 
 			*esp_old->d[q][i] * bf[v]->d_phi[i][p];
+		      grad_d_dot[p][q] += 
+			*esp_dot->d[q][i] * bf[v]->d_phi[i][p];
 		      
 		    }
 		} else EH(-1,"Cant get deformation gradient without mesh!");
@@ -176,6 +190,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 		    for ( p=0; p<dim; p++)
 		      {
 			d_grad_d[p][b][b][j] += bf[v]->d_phi[j][p];
+			d_grad_d_dot[p][b][b][j] += bf[v]->d_phi[j][p];
 		      }
 		    for ( i=0; i<ei->dof[v]; i++)
 		      {
@@ -184,6 +199,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 			    for ( q=0; q<dim; q++)
 			      {
 				d_grad_d[p][q][b][j] += *esp->d[q][i] * bf[v]->d_d_phi_dmesh[i][p][b][j];
+				d_grad_d_dot[p][q][b][j] += *esp_dot->d[q][i] * bf[v]->d_d_phi_dmesh[i][p][b][j];
 			      }
 			  }
 		      }
@@ -236,6 +252,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 	    {
 	      grad_d[p][q] = fv->grad_d[p][q];
 	      grad_d_old[p][q] = fv_old->grad_d[p][q];
+	      grad_d_dot[p][q] = fv_dot->grad_d[p][q];
 	    }
 	}
       if (af->Assemble_Jacobian) {
@@ -248,6 +265,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 		    for ( j=0; j<ei->dof[MESH_DISPLACEMENT1+b]; j++)
 		      {
 			d_grad_d[p][q][b][j] = fv->d_grad_d_dmesh[p][q][b][j];			
+			d_grad_d_dot[p][q][b][j] = fv_dot->d_grad_d_dmesh[p][q][b][j];			
 		      }
 		  }
 	      }
@@ -267,6 +285,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 	{
 	  cauchy_green[p][q] = 0.5 * (grad_d[p][q] + grad_d[q][p]);
 	  cauchy_green_old[p][q] = 0.5 * (grad_d_old[p][q] + grad_d_old[q][p]);
+	  cauchy_green_dot[p][q] = 0.5 * (grad_d_dot[p][q] + grad_d_dot[q][p]);
 	}
     }
   /* add on nonlinear term to Eulerian Strain Tensor */
@@ -285,6 +304,8 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 		 */
 		cauchy_green[p][q] -= 0.5 * grad_d[p][a] * grad_d[q][a];
 		cauchy_green_old[p][q] -= 0.5 * grad_d_old[p][a] * grad_d_old[q][a];
+		cauchy_green_dot[p][q] -= 0.5*(grad_d[p][a]*grad_d_dot[q][a] 
+						+ grad_d_dot[p][a]*grad_d[q][a]);
 	      }
 	  }
       }
@@ -302,6 +323,8 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 		  {
 		    d_cauchy_green_dx[p][q][b][j] = 0.5 * 
 		      (d_grad_d[p][q][b][j] + d_grad_d[q][p][b][j]);
+		    d_cauchy_green_dot_dx[p][q][b][j] = 0.5 * 
+		      (d_grad_d_dot[p][q][b][j] + d_grad_d_dot[q][p][b][j]);
 		  }
 	      }
 	    if (cr->MeshFluxModel != LINEAR) {
@@ -320,6 +343,9 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 			  d_cauchy_green_dx[p][q][b][j] -= 0.5 * 
 			    ( d_grad_d[p][a][b][j] * grad_d[q][a] 
 			      + grad_d[p][a] * d_grad_d[q][a][b][j] ); 
+			  d_cauchy_green_dot_dx[p][q][b][j] -= 0.5 * 
+			    ( d_grad_d_dot[p][a][b][j] * grad_d_dot[q][a] 
+			      + grad_d_dot[p][a] * d_grad_d_dot[q][a][b][j] ); 
 			}
 		    }
 		}
@@ -398,6 +424,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 	      for ( q=0; q<VIM; q++)
 		{
 		  fv->deform_grad[p][q] = delta(p,q) + grad_d[p][q];
+		  fv_dot->deform_grad[p][q] = grad_d_dot[p][q];
 		}
 	    }
 
@@ -411,6 +438,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 			for ( j=0; j<ei->dof[MESH_DISPLACEMENT1+b]; j++)
 			  {
 			    fv->d_deform_grad_dx[p][q][b][j] = d_grad_d[p][q][b][j];
+			    fv_dot->d_deform_grad_dx[p][q][b][j] = d_grad_d_dot[p][q][b][j];
 			  }
 		      }
 		  }
@@ -425,6 +453,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 	      for ( q=0; q<VIM; q++)
 		{
 		  invdeform_grad[p][q] = delta(p,q) - grad_d[p][q];
+		  invdeform_dot_grad[p][q] = -grad_d_dot[p][q];
 		}
 	    }
 
@@ -438,6 +467,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 			for ( j=0; j<ei->dof[MESH_DISPLACEMENT1+b]; j++)
 			  {
 			    d_invdeform_grad_dx[p][q][b][j] = - d_grad_d[p][q][b][j];
+			    d_invdeform_dot_grad_dx[p][q][b][j] = - d_grad_d_dot[p][q][b][j];
 			  }
 		      }
 		  }
@@ -445,6 +475,9 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 	  }
 	  invert_tensor(invdeform_grad, fv->deform_grad, VIM,
 			d_invdeform_grad_dx, fv->d_deform_grad_dx, 
+			ei->dof[MESH_DISPLACEMENT1], af->Assemble_Jacobian);
+	  invert_tensor(invdeform_dot_grad, fv_dot->deform_grad, VIM,
+			d_invdeform_dot_grad_dx, fv_dot->d_deform_grad_dx, 
 			ei->dof[MESH_DISPLACEMENT1], af->Assemble_Jacobian);
 	}
     }
@@ -465,12 +498,16 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
        */
       fv->volume_change = 1.;
       fv_old->volume_change = 1.;
+      fv_dot->volume_change = 1.;
       fv->volume_strain = 0.;
+      fv_dot->volume_strain = 0.;
       for (p=0; p<VIM; p++) 
 	{
 	  fv->volume_change += cauchy_green[p][p];
 	  fv_old->volume_change += cauchy_green_old[p][p];
+	  fv_dot->volume_change += cauchy_green_dot[p][p];
 	  fv->volume_strain += cauchy_green[p][p];
+	  fv_dot->volume_strain += cauchy_green_dot[p][p];
 	}
 
       if (af->Assemble_Jacobian) {
@@ -481,13 +518,19 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 		for ( j=0; j<ei->dof[MESH_DISPLACEMENT1+b]; j++)
 		  {
 		  	fv->d_volume_change_dx[b][j] = d_cauchy_green_dx[0][0] [b][j];		    
+		  	fv_dot->d_volume_change_dx[b][j] = d_cauchy_green_dot_dx[0][0] [b][j];		    
 			fv->d_volume_strain_dx[b][j] = d_cauchy_green_dx[0][0] [b][j];		    
+			fv_dot->d_volume_strain_dx[b][j] = d_cauchy_green_dot_dx[0][0] [b][j];		    
 
 		    fv->d_volume_change_dx[b][j] += d_cauchy_green_dx[1][1] [b][j];		    
+		    fv_dot->d_volume_change_dx[b][j] += d_cauchy_green_dot_dx[1][1] [b][j];		    
 		    fv->d_volume_strain_dx[b][j] += d_cauchy_green_dx[1][1] [b][j];	
+		    fv_dot->d_volume_strain_dx[b][j] += d_cauchy_green_dot_dx[1][1] [b][j];	
 			if ( VIM == 3) {	    
 		    fv->d_volume_change_dx[b][j] += d_cauchy_green_dx[2][2] [b][j];		    
+		    fv_dot->d_volume_change_dx[b][j] += d_cauchy_green_dot_dx[2][2] [b][j];		    
 		    fv->d_volume_strain_dx[b][j] += d_cauchy_green_dx[2][2] [b][j];		    
+		    fv_dot->d_volume_strain_dx[b][j] += d_cauchy_green_dot_dx[2][2] [b][j];		    
 			}
 		  }
 		
@@ -505,6 +548,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 	for (q=0; q<VIM; q++) {
 	  deform_grad[p][q] = delta(p,q) - grad_d[p][q];
 	  deform_grad_old[p][q] = delta(p,q) - grad_d_old[p][q];
+	  deform_grad_dot[p][q] =  -grad_d_dot[p][q];
         /* fv->deform_grad[p][q] = deform_grad[p][q]; */  /*Uncomment for ST DILATATION MODEL*/
 	}
       }
@@ -513,14 +557,18 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 	{
 	case 1:
 	  fv->volume_change    = 1. / deform_grad[0][0];
+	  fv_dot->volume_change    = -deform_grad_dot[0][0]/SQUARE(deform_grad[0][0]);
 	  fv_old->volume_change= 1. / deform_grad_old[0][0];
 	  fv->volume_strain    = fv->volume_change - 1.;
+	  fv_dot->volume_strain    = fv_dot->volume_change;
 	  if ( af->Assemble_Jacobian ) {
 	    for (i=0; i<dim; i++) {
 	      for (k=0; k<mdof; k++) {
-		fv->d_volume_change_dx[i][k] = 1. / deform_grad[0][0] / deform_grad[0][0]
+		fv->d_volume_change_dx[i][k] = 1. / SQUARE(deform_grad[0][0])
 		  * d_grad_d[0][0] [i][k];
+		fv_dot->d_volume_change_dx[i][k] = -fv_dot->d_deform_grad_dx[0][0][i][k]/SQUARE(deform_grad[0][0]) + 2.*deform_grad_dot[0][0]/CUBE(deform_grad[0][0]);
 		fv->d_volume_strain_dx[i][k] = fv->d_volume_change_dx[i][k];
+		fv_dot->d_volume_strain_dx[i][k] = fv_dot->d_volume_change_dx[i][k];
 	      }
 	    }
 	  }
@@ -530,12 +578,16 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 	  /* find determinant of 2-d deformation gradient (note this is not the volume change, that
 	     is the determinant of the 3-d deformation gradient which is here approximated by plane
 	     strain or plane stress for 2-d) */
+	  /*  Ok, this is NOT det(F), but rather 1/det(F) - RBS */
 	  det2d    = 1. / (
 			   deform_grad[0][0] * deform_grad[1][1]
 			   - deform_grad[0][1] * deform_grad[1][0]);
 	  det2d_old= 1. / (
 			   deform_grad_old[0][0] * deform_grad_old[1][1]
 			   - deform_grad_old[0][1] * deform_grad_old[1][0]);
+	  det2d_dot= 1. / (
+			   deform_grad_dot[0][0] * deform_grad_dot[1][1]
+			   - deform_grad_dot[0][1] * deform_grad_dot[1][0]);
 
 	  /* escape if element has inverted */
 	  if ( (det2d <= 0.) && (Debug_Flag >= 0 ) ) 
@@ -582,17 +634,26 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 			 + d_grad_d[0][0] [i][k] * deform_grad[1][1]
 			 - d_grad_d[0][1] [i][k] * deform_grad[1][0]
 			 ) * det2d * det2d;
+		      ddet2d_dot_dx[i][k] = 
+			(
+			 deform_grad_dot[0][0] * d_grad_d_dot[1][1] [i][k]
+			 - deform_grad_dot[0][1] * d_grad_d_dot[1][0] [i][k]
+			 + d_grad_d_dot[0][0] [i][k] * deform_grad_dot[1][1]
+			 - d_grad_d_dot[0][1] [i][k] * deform_grad_dot[1][0]
+			 ) * det2d_dot * det2d_dot;
 		    }
 		}
 	    }
 
 	  /* PLANE STRAIN CASES */
 	  if (cr->MeshFluxModel == NONLINEAR || cr->MeshFluxModel == INCOMP_PSTRAIN 
-	      || cr->MeshFluxModel == HOOKEAN_PSTRAIN)
+	      || cr->MeshFluxModel == HOOKEAN_PSTRAIN || cr->MeshFluxModel == KELVIN_VOIGT)
 	    {
 	      fv->volume_change    = det2d;
 	      fv_old->volume_change= det2d_old;
+	      fv_dot->volume_change= det2d_dot;
 	      fv->volume_strain    = 3. * (pow(det2d, 1./3.) - 1.);
+	      fv_dot->volume_strain    = pow(det2d, -2./3.)*det2d_dot;
 
 	      if ( af->Assemble_Jacobian )
 		{
@@ -601,7 +662,10 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 		      for (k=0; k<mdof; k++)
 			{
 			  fv->d_volume_change_dx[i][k] = ddet2d_dx[i][k]; 
+			  fv_dot->d_volume_change_dx[i][k] = ddet2d_dot_dx[i][k]; 
 			  fv->d_volume_strain_dx[i][k] = ddet2d_dx[i][k] * pow(det2d, -2./3.) ;
+			  fv_dot->d_volume_strain_dx[i][k] = ddet2d_dot_dx[i][k] * pow(det2d, -2./3.)
+				+det2d_dot*(-2./3.)*pow(det2d,-5./3.)*ddet2d_dx[i][k] ;
 			}
 		    }
 		}
@@ -658,6 +722,16 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 				       + deform_grad_old[0][2] * 
 				       ( deform_grad_old[1][0] * deform_grad_old[2][1] 
 					 -deform_grad_old[2][0] * deform_grad_old[1][1]) );
+	  fv_dot->volume_change= 1. / (
+				       deform_grad_dot[0][0] * 
+				       ( deform_grad_dot[1][1] * deform_grad_dot[2][2] 
+					 -deform_grad_dot[1][2] * deform_grad_dot[2][1])
+				       - deform_grad_dot[0][1] * 
+				       ( deform_grad_dot[1][0] * deform_grad_dot[2][2] 
+					 -deform_grad_dot[2][0] * deform_grad_dot[1][2])
+				       + deform_grad_dot[0][2] * 
+				       ( deform_grad_dot[1][0] * deform_grad_dot[2][1] 
+					 -deform_grad_dot[2][0] * deform_grad_dot[1][1]) );
 	  /* Check to make sure element hasn't inverted */
           if ((fv->volume_change <= 0.) && (Debug_Flag >= 0 )) 
             {
@@ -692,6 +766,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
             }
 
 	  fv->volume_strain    = 3. * (pow(fv->volume_change, 1./3.) - 1.);
+	  fv_dot->volume_strain    = pow(fv->volume_change, -2./3.) * fv_dot->volume_change;
 
 	  if ( af->Assemble_Jacobian )
 	    {
@@ -745,7 +820,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
   /*******************************************************************************/
 
   if (cr->MeshFluxModel == LINEAR || cr->MeshFluxModel == NONLINEAR 
-      || cr->MeshFluxModel == HOOKEAN_PSTRAIN)
+      || cr->MeshFluxModel == HOOKEAN_PSTRAIN || cr->MeshFluxModel == KELVIN_VOIGT)
     {
 #ifdef DO_NO_UNROLL
       for (p=0; p<VIM; p++) 
@@ -1266,7 +1341,7 @@ if(pd->e[R_MESH1] && cr->MeshMotion != ARBITRARY)
                     }
                  else
                     {
-                     if (cr->MeshFluxModel == NONLINEAR ||
+                     if (cr->MeshFluxModel == NONLINEAR || cr->MeshFluxModel == KELVIN_VOIGT ||
                          cr->MeshFluxModel == HOOKEAN_PSTRAIN ||
                          cr->MeshFluxModel == INCOMP_PSTRAIN )
         			TT[2][2] = (1. - pow(fv->volume_change,2./3.))
@@ -1336,7 +1411,7 @@ if(pd->e[R_SOLID1] && cr->MeshMotion != ARBITRARY)
    if (dim == 2)
       {
        elast_modulus = elc_rs->lame_mu;
-       if (cr->RealSolidFluxModel == NONLINEAR ||
+       if (cr->RealSolidFluxModel == NONLINEAR || cr->RealSolidFluxModel == KELVIN_VOIGT ||
            cr->RealSolidFluxModel == HOOKEAN_PSTRAIN ||
            cr->RealSolidFluxModel == INCOMP_PSTRAIN )
                 TT[2][2] = (1.-pow(fv->volume_change,2./3.))*elast_modulus-fv->P;
@@ -3218,10 +3293,13 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
  extern int PRS_mat_ielem;
 
 
-  dbl thermexp;
+  dbl thermexp=0;
   dbl speciesexp[MAX_CONC];
   dbl d_thermexp_dx[MAX_VARIABLE_TYPES+MAX_CONC];
   dbl d_speciesexp_dx[MAX_CONC][MAX_VARIABLE_TYPES+MAX_CONC];
+  dbl viscos=0, dil_viscos=0;
+  dbl d_viscos_dx[MAX_VARIABLE_TYPES+MAX_CONC];
+  dbl d_dilviscos_dx[MAX_VARIABLE_TYPES+MAX_CONC];
 
   dim = ei->ielem_dim;
   mat_ielem = PRS_mat_ielem;
@@ -3231,6 +3309,8 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
   memset(d_lambda_dx,0,sizeof(double)*DIM*MDE);
   memset(d_thermexp_dx,0,sizeof(double)*(MAX_VARIABLE_TYPES+MAX_CONC));
   memset(d_speciesexp_dx,0,sizeof(double)*MAX_CONC*(MAX_VARIABLE_TYPES+MAX_CONC));
+  memset(d_viscos_dx,0,sizeof(double)*(MAX_VARIABLE_TYPES+MAX_CONC));
+  memset(d_dilviscos_dx,0,sizeof(double)*(MAX_VARIABLE_TYPES+MAX_CONC));
   memset(speciesexp,0,sizeof(double)*MAX_CONC);
   memset(TT,0,sizeof(dbl)*DIM*DIM);
 
@@ -3240,7 +3320,8 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
  * structure elements, and hence are not args. 
  */
 
-  err = load_elastic_properties(elc, &mu, &lambda, &thermexp, speciesexp, d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx);
+  err = load_elastic_properties(elc, &mu, &lambda, &thermexp, speciesexp, &viscos, &dil_viscos,
+	d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx, d_viscos_dx, d_dilviscos_dx);
   EH(err," Problem in loading up elastic constants");
 
 
@@ -3258,6 +3339,16 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 	    }
 	}
 
+      if (TimeIntegration != STEADY && cr->MeshFluxModel == KELVIN_VOIGT)
+	{
+        for ( p=0; p<VIM; p++)
+	  {
+	    for ( q=0; q<VIM; q++)
+	      {
+	      TT[p][q] += 2. * viscos * fv_dot->strain[p][q];
+	      }
+	  }
+	}
       /* add shrinkage stress, if called for */
       if(elc->thermal_expansion_model == SHRINKAGE)
 	{
@@ -3352,6 +3443,12 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 			   
 			   dTT_dx[p][q][b][j] += d_lambda_dx[b][j] * fv->volume_strain * delta(p,q) 
 			     + 2. * d_mu_dx[b][j] * fv->strain[p][q];
+			   if (TimeIntegration != STEADY && cr->MeshFluxModel == KELVIN_VOIGT)
+			     {
+			      dTT_dx[p][q][b][j] += 2.*viscos*fv_dot->d_strain_dx[p][q][b][j];
+			   
+			      dTT_dx[p][q][b][j] +=  2.*d_viscos_dx[v]*bf[v]->phi[j]*fv_dot->strain[p][q];
+			     }
 			   if( pd->e[R_ENERGY] )
 			     {
 	  			if( elc->thermal_expansion_model == CONSTANT || 
@@ -3930,10 +4027,13 @@ get_evp_stress_tensor(double TT[DIM][DIM],
  double d_plastic_mu_dc[MAX_CONC][MDE];
  double d_yield_dc[MAX_CONC][MDE];
  int a, b, i, j = -1, p, q, m, n, dim, v, v1, var, dofs, dofs1, err, F_vp_flag;
- double thermexp;
+ double thermexp=0;
  double speciesexp[MAX_CONC];
  double d_thermexp_dx[MAX_VARIABLE_TYPES+MAX_CONC];
  double d_speciesexp_dx[MAX_CONC][MAX_VARIABLE_TYPES+MAX_CONC];
+ double viscos=0, dil_viscos=0;
+ double d_viscos_dx[MAX_VARIABLE_TYPES+MAX_CONC];
+ double d_dilviscos_dx[MAX_VARIABLE_TYPES+MAX_CONC];
 
  dim = ei->ielem_dim;
  if(dim > 2) EH(-1,"EVP models only implemented for plane strain case just now");
@@ -4098,6 +4198,8 @@ information */
   memset( dF_vp_dc, 0, sizeof(double)*DIM*DIM*MAX_CONC*MDE); 
   memset(d_thermexp_dx,0,sizeof(double)*(MAX_VARIABLE_TYPES+MAX_CONC));
   memset(d_speciesexp_dx,0,sizeof(double)*MAX_CONC*(MAX_VARIABLE_TYPES+MAX_CONC));
+  memset(d_viscos_dx,0,sizeof(double)*(MAX_VARIABLE_TYPES+MAX_CONC));
+  memset(d_dilviscos_dx,0,sizeof(double)*(MAX_VARIABLE_TYPES+MAX_CONC));
   memset(speciesexp,0,sizeof(double)*MAX_CONC);
 
 /* 
@@ -4105,7 +4207,8 @@ information */
  * Probably redundant here.  Already called up in mesh_stress_tensor
  */
 
-  err = load_elastic_properties(elc, &mu, &lambda, &thermexp, speciesexp, d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx);
+  err = load_elastic_properties(elc, &mu, &lambda, &thermexp, speciesexp, &viscos, &dil_viscos,
+	d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx, d_viscos_dx, d_dilviscos_dx);
   EH(err," Problem in loading up elastic constants");
 
   /* will not need plastic_mu nor yield from the routine;
@@ -5049,10 +5152,14 @@ load_elastic_properties(struct Elastic_Constitutive *elcp,
 			double *lambda,
  			double *thermexp,
 			double speciesexp[MAX_CONC],
+			double *viscos,
+			double *dil_viscos,
 			double d_mu_dx[DIM][MDE], 
 			double d_lambda_dx[DIM][MDE],
 			double d_thermexp_dx[MAX_VARIABLE_TYPES+MAX_CONC],
-			double d_speciesexp_dx[MAX_CONC][MAX_VARIABLE_TYPES+MAX_CONC])
+			double d_speciesexp_dx[MAX_CONC][MAX_VARIABLE_TYPES+MAX_CONC],
+			double d_viscos_dx[MAX_VARIABLE_TYPES+MAX_CONC],
+			double d_dilviscos_dx[MAX_VARIABLE_TYPES+MAX_CONC])
 
 /*
  *  This function calculates the the elastic properties
@@ -5579,6 +5686,29 @@ load_elastic_properties(struct Elastic_Constitutive *elcp,
      		}
 	   }
    }
+/*  solid viscosity	*/
+   if(elc_ptr->solid_viscosity_model == CONSTANT )
+     {
+       *viscos = elc_ptr->solid_viscosity;
+     }
+   else if(elc_ptr->solid_viscosity_model == USER )
+     {
+      err = usr_solid_viscosity(elc_ptr->u_solid_viscosity, &value, d_viscos_dx);
+	*viscos = value;
+     }
+   else
+     {
+       EH(-1,"Unrecognized solid viscosity model");
+     }
+
+   if(elc_ptr->solid_dil_viscosity_model == CONSTANT )
+     {
+       *dil_viscos = elc_ptr->solid_dil_viscosity;
+     }
+   else
+     {
+       EH(-1,"Unrecognized solid dilational viscosity model");
+     }
   return(1);
 } /*End of load_elastic_properties*/
 

@@ -1999,6 +1999,14 @@ struct Diet_Field_Variables
   /* Material tensors used at old time values */
   dbl strain[DIM][DIM];         /* Strain tensor */
   dbl volume_change;            /* Volume change */
+  dbl volume_strain;
+  dbl deform_grad[DIM][DIM];
+  dbl d_deform_grad_dx[DIM][DIM] [DIM][MDE];
+  dbl d_volume_change_dx[DIM][MDE];
+  dbl d_volume_strain_dx[DIM][MDE];
+  dbl d_strain_dx[DIM][DIM] [DIM][MDE];
+  dbl d_grad_d_dmesh[DIM][DIM] [DIM][MDE];
+  dbl d_grad_d_dot_dmesh[DIM][DIM][DIM][MDE];
   dbl grad_restime[DIM];       /* Gradient of the Residence time field */
 
   dbl grad_v[DIM][DIM];         /* Velocity gradient */

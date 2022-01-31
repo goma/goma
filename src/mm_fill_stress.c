@@ -5791,6 +5791,7 @@ compute_exp_s(double s[DIM][DIM],
   double EIGEN_MAX = sqrt(sqrt(DBL_MAX));
   double eig_S[DIM];
   memset(eig_values, 0.0, sizeof(double)*DIM);
+  memset(eig_S, 0.0, sizeof(double)*DIM);
   memset(WORK, 0, sizeof(double)*LWORK);
 
   // convert to column major
@@ -5846,6 +5847,7 @@ analytical_exp_s(double s[DIM][DIM],
   double B[DIM][DIM],Q1[DIM][DIM],Q2[DIM][DIM];
   double eig_S[DIM];
   double EIGEN_MAX = sqrt(sqrt(DBL_MAX));
+  memset(eig_S, 0, sizeof(double)*DIM);
   memset(d_eig_dS, 0, sizeof(double)*DIM*DIM*DIM);
   memset(d_R_dS, 0, sizeof(double)*DIM*DIM*DIM*DIM);
   if( d_exp_s_ds != NULL) memset(d_exp_s_ds, 0, sizeof(double)*DIM*DIM*DIM*DIM);

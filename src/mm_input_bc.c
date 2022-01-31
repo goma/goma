@@ -910,7 +910,7 @@ rd_bc_specs(FILE *ifp,
 	      BC_Types[ibc].BC_Data_Int[0] = -1;
 	    }
 	  else
-	    SPF(endofstring(echo_string)," %d", BC_Types[ibc].BC_Data_Int[0]);
+	    {SPF(endofstring(echo_string)," %d", BC_Types[ibc].BC_Data_Int[0]);}
 	  
 	    if (BC_Types[ibc].BC_Name == CAPILLARY_TABLE_BC)
                {

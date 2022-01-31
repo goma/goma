@@ -121,8 +121,8 @@ PROTO((const int ,              /* ss_id - SS id of Primary Side Set         */
        const int ,              /* iconnect_ptr                              */
        const int ,              /* ielem                                     */
        const int ,              /* num_local_nodes                           */
-       int [MDE],               /* local_ss_node_list                        */
-       int [MDE]));             /* local_elem_node_id                        */
+       int [MAX_NODES_PER_SIDE],               /* local_ss_node_list                        */
+       int [MAX_NODES_PER_SIDE]));             /* local_elem_node_id                        */
 
 extern int find_id_elem		/* mm_post_proc_util.c */
 PROTO((const dbl ,		/* x_coordinate */
