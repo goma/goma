@@ -3665,7 +3665,7 @@ soln_sens ( double lambda,  /*  parameter */
 		case HUN_FIRST:
 		for (iHC=0;iHC<nHC;iHC++)
 		  {
-                   if( hunt[iHC].ramp ==2 )
+                   if( abs(hunt[iHC].ramp) ==2 )
                     {
                      hunt_val = hunt[iHC].BegParameterValue*
                                 pow(hunt[iHC].EndParameterValue/hunt[iHC].BegParameterValue,lambda_tmp);
@@ -3718,7 +3718,7 @@ soln_sens ( double lambda,  /*  parameter */
 		case HUN_FIRST:
 		for (iHC=0;iHC<nHC;iHC++)
 		  {
-                   if(hunt[iHC].ramp == 2)
+                   if(abs(hunt[iHC].ramp) == 2)
                      {
                       hunt_val = hunt[iHC].BegParameterValue*
                     pow(hunt[iHC].EndParameterValue/hunt[iHC].BegParameterValue,lambda_tmp);
@@ -3774,7 +3774,7 @@ soln_sens ( double lambda,  /*  parameter */
 		case HUN_FIRST:
 		for (iHC=0;iHC<nHC;iHC++)
 		  {
-                   if( hunt[iHC].ramp == 2 )
+                   if( abs(hunt[iHC].ramp) == 2 )
                     {
                       hunt_val = hunt[iHC].BegParameterValue*
                       pow(hunt[iHC].EndParameterValue/hunt[iHC].BegParameterValue,lambda);

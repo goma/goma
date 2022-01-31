@@ -109,7 +109,7 @@ PROTO((const int ,		/* dim                                       */
        double []));		/* X_new                                     */
 
 EXTERN int get_new_coord 
-PROTO ((  double *[],
+PROTO ((  double *[3],
 	  double *,
 	  const Exo_DB * ));
 

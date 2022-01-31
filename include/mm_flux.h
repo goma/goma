@@ -137,7 +137,7 @@ PROTO((const double,
 EXTERN int chebyshev_coeff_2DQ
 PROTO((const int ,
        const double *,
-       double [][2],
+       double [6][2],
        int ,
        double *,
        double *,
@@ -176,23 +176,23 @@ PROTO((const double *,
 
 EXTERN int interface_crossing_2DQ
 PROTO((const double *,
-       double [][2],
+       double [6][2],
        int *,
        int *,
-       double [][MAX_PDIM] ));
+       double [12][MAX_PDIM] ));
 
 EXTERN void interface_inclination_2DQ
 PROTO(( const double *,
 	const int ,
 	double *,
 	const int *,
-	double [][2] ));
+	double [6][2] ));
 
 EXTERN int interface_crossing_3DL
 PROTO (( const double *,
-	 double [][2],
+	 double [12][2],
 	 int *,
-	 double [][MAX_PDIM] ));
+	 double [12][MAX_PDIM] ));
 
 
 

@@ -91,7 +91,7 @@ static char rcsid[] = "$Id: mm_qtensor_model.c,v 5.2 2009-05-20 15:31:33 hkmoffa
 //static int bias_eigenvector_to(dbl *, dbl *);
 
 static int get_local_qtensor
-PROTO((double [][DIM]));
+PROTO((double [DIM][DIM]));
 
 #define MAX_GAUSS_POINTS 12
 

@@ -203,6 +203,6 @@ PROTO((struct Data_Table *,   /* table               */
 
 EXTERN double interpolate_table_sat
 PROTO((struct Data_Table *,	/* table                                     */
-       double [3]));	      	/* slope                                     */
+       double [DIM]));	      	/* slope                                     */
 
 #endif /* _BC_COLLOC_H */

@@ -2994,8 +2994,7 @@ rd_track_specs(FILE *ifp,
 	    }
 	  Continuation = ALC_NONE;
 	}
-      else
-	if ( strcmp(input,"zero") == 0 )
+      else if ( strcmp(input,"zero") == 0 )
 	  {
 	    if ( Debug_Flag && ProcID == 0 )
 	      {
@@ -3003,8 +3002,7 @@ rd_track_specs(FILE *ifp,
 	      }
 	    Continuation = ALC_ZEROTH;
 	  }
-	else
-	  if ( strcmp(input,"hzero") == 0 )
+	else if ( strcmp(input,"hzero") == 0 )
 	    {
 	      if ( Debug_Flag && ProcID == 0 )
 		{
@@ -3012,8 +3010,7 @@ rd_track_specs(FILE *ifp,
 		}
 	      Continuation = HUN_ZEROTH;
 	    }
-	  else
-	    if ( strcmp(input,"first") == 0 )
+	  else if ( strcmp(input,"first") == 0 )
 	      {
 		if ( Debug_Flag && ProcID == 0 )
 		  {
@@ -3021,8 +3018,7 @@ rd_track_specs(FILE *ifp,
 		  }
 		Continuation = ALC_FIRST;
 	      }
-	    else
-	      if ( strcmp(input,"hfirst") == 0 )
+	    else if ( strcmp(input,"hfirst") == 0 )
 		{
 		  if ( Debug_Flag && ProcID == 0 )
 		    {
@@ -3030,16 +3026,14 @@ rd_track_specs(FILE *ifp,
 		    }
 		  Continuation = HUN_FIRST;
 		}
-	      else
-		if ( strcmp(input,"second") == 0 )
+	      else if ( strcmp(input,"second") == 0 )
 		  {
 		    if ( Debug_Flag && ProcID == 0 )
 		      {
 			printf("%s:\tsecond order continuation\n", yo);
 		      }
 		    Continuation = ALC_SECOND;
-		  } else
-                  if ( strcmp(input,"loca") == 0 )
+		  } else if ( strcmp(input,"loca") == 0 )
                     {
                       if ( Debug_Flag && ProcID == 0 )
                         {
@@ -3068,8 +3062,7 @@ rd_track_specs(FILE *ifp,
 	    }
 	  Continuation = ALC_NONE;
 	}
-      else
-	if ( strcmp(input,"BC") == 0 )
+      else if ( strcmp(input,"BC") == 0 )
 	  {
 	    if ( Debug_Flag && ProcID == 0 )
 	      {
@@ -3077,8 +3070,7 @@ rd_track_specs(FILE *ifp,
 	      }
 	    ContType = 1;
 	  }
-	else
-	  if ( strcmp(input,"MT") == 0 )
+	else if ( strcmp(input,"MT") == 0 )
 	    {
 	      if ( Debug_Flag && ProcID == 0 )
 		{
@@ -3086,8 +3078,7 @@ rd_track_specs(FILE *ifp,
 		}
 	      ContType = 2;
 	    }
-       else
-	if ( strcmp(input,"AC") == 0 )
+       else if ( strcmp(input,"AC") == 0 )
  	  {
  	    if ( Debug_Flag && ProcID == 0 )
  	      {
@@ -3095,8 +3086,7 @@ rd_track_specs(FILE *ifp,
  	      }
  	    ContType = 3;
  	  }
-	else
-	  if ( strcmp(input,"UM") == 0 )
+	else if ( strcmp(input,"UM") == 0 )
 	    {
 	      if ( Debug_Flag && ProcID == 0 )
 		{
@@ -3104,8 +3094,7 @@ rd_track_specs(FILE *ifp,
 		}
 	      ContType = 4;
 	    }
-	else
-	  if ( strcmp(input,"UF") == 0 )
+	else if ( strcmp(input,"UF") == 0 )
 	    {
 	      if ( Debug_Flag && ProcID == 0 )
 		{
@@ -3113,8 +3102,7 @@ rd_track_specs(FILE *ifp,
 		}
 	      ContType = 5;
 	    }
-	else
-	  if ( strcmp(input,"AN") == 0 )
+	else if ( strcmp(input,"AN") == 0 )
 	    {
 	      if ( Debug_Flag && ProcID == 0 )
 		{
@@ -4572,13 +4560,19 @@ rd_hunt_specs(FILE *ifp,
       }
 	  
 	  ECHO(echo_string,echo_file);
-          if(hunt[iHC].ramp == 2 && 
-             ((hunt[iHC].BegParameterValue == hunt[iHC].EndParameterValue) ||
-             (hunt[iHC].BegParameterValue<0 || hunt[iHC].EndParameterValue<0)))
-             {
-              hunt[iHC].ramp = 0;  
-              fprintf(stderr, "%s:\tImproper Log ramp for hunting condition %d\n", yo, iHC);
-             }
+          if(hunt[iHC].ramp == 2)
+	    {
+             if((hunt[iHC].BegParameterValue == hunt[iHC].EndParameterValue) ||
+                 (hunt[iHC].BegParameterValue*hunt[iHC].EndParameterValue <= 0.0))
+                {
+                 hunt[iHC].ramp = 0;  
+                 fprintf(stderr, "%s:\tImproper Log ramp for hunting condition %d\n", yo, iHC);
+                }
+              else if(hunt[iHC].BegParameterValue < 0.0)
+                {
+                 hunt[iHC].ramp = -2;  
+                }
+	    }
   }
 
 /* This section is required for backward compatibility - EDW */
@@ -5861,7 +5855,7 @@ rd_solver_specs(FILE *ifp,
 	  SPF(echo_string," (%s = %d) %s", search_string, UMFPACK_IDIM, default_string); ECHO(echo_string,echo_file);
 	}
       else
-	SPF(echo_string,"%s = %d", search_string, UMFPACK_IDIM); ECHO(echo_string,echo_file);
+	{SPF(echo_string,"%s = %d", search_string, UMFPACK_IDIM); ECHO(echo_string,echo_file);}
     }
 
 
@@ -5883,7 +5877,7 @@ rd_solver_specs(FILE *ifp,
 	  SPF(echo_string," (%s = %d) %s","UMF_XDIM",UMFPACK_XDIM, default_string ); ECHO(echo_string,echo_file);
 	}
       else
-	SPF(echo_string,"%s = %d","UMF_XDIM",UMFPACK_XDIM ); ECHO(echo_string,echo_file);
+	{SPF(echo_string,"%s = %d","UMF_XDIM",UMFPACK_XDIM ); ECHO(echo_string,echo_file);}
     }
 
   strcpy(search_string, "AztecOO Solver");

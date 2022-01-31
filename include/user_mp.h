@@ -77,6 +77,12 @@ PROTO((int ,			/* species_no - of diffusivity etc. needed   */
 EXTERN int usr_FlowingLiquidViscosity
 PROTO((dbl *));			/* param - ptr to user-defined parm list     */
 
+EXTERN int usr_solid_viscosity
+PROTO((dbl *,			/* param - ptr to user-defined parm list     */
+	double *,
+	double [MAX_VARIABLE_TYPES+MAX_CONC]
+	));	
+
 #if defined SECOR_HEAT_FLUX 
 EXTERN double  usr_heat_flux
 PROTO(( const double [],        /*   temperature gradient       */
