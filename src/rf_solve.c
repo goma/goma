@@ -2777,7 +2777,7 @@ static void predict_solution_newmark(
   }
 } /* END of routine predict_solution_newmark  */
 
-static int discard_previous_time_step(int num_unks,
+int discard_previous_time_step(int num_unks,
                                       double *x,
                                       double *x_old,
                                       double *x_older,
