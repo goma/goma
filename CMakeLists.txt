@@ -1,5 +1,5 @@
-cmake_minimum_required (VERSION 3.13)
-cmake_policy(VERSION 3.13)
+cmake_minimum_required (VERSION 3.17)
+cmake_policy(VERSION 3.17)
 project(goma)
 
 enable_language(C)
@@ -15,8 +15,8 @@ list(APPEND CMAKE_MODULE_PATH "${goma_SOURCE_DIR}/cmake")
 set(CMAKE_PREFIX_PATH ${Trilinos_PREFIX} ${CMAKE_PREFIX_PATH})
 
 # Get Trilinos as one entity
-FIND_PACKAGE(Trilinos REQUIRED)
 MESSAGE(STATUS "Trilinos_DIR = ${Trilinos_DIR}")
+FIND_PACKAGE(Trilinos REQUIRED)
 #message(STATUS "Trilinos LD Flags = ${Trilinos_EXTRA_LD_FLAGS}")
 
 set(MPI_C_COMPILER ${Trilinos_C_COMPILER})
