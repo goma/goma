@@ -1751,7 +1751,6 @@ void petsc_solve_post_proc(double **post_proc_vect, RESULTS_DESCRIPTION_STRUCT *
     KSPGetIterationNumber(matrix_data->ksp, &pits);
     VecGetValues(matrix_data->update, dpi->num_internal_nodes + dpi->num_boundary_nodes,
                  matrix_data->local_to_global, post_proc_vect[pp]);
-    exchange_node(cx[0], dpi, post_proc_vect[pp]);
     double pp_end = MPI_Wtime();
     P0PRINTF("PP %*.*s %ld iterations %4.4e seconds\n", 10, 10,
              rd->nvname[rd->TotalNVSolnOutput + pp], pits, pp_end - pp_start);

@@ -70,7 +70,7 @@
 #include "rf_solve_segregated.h"
 
 #define ROUND_TO_ONE 0.9999999
-static int discard_previous_time_step(int num_unks,
+extern int discard_previous_time_step(int num_unks,
                                       double *x,
                                       double *x_old,
                                       double *x_older,
@@ -2532,25 +2532,4 @@ void predict_solution_u_star(int N,
     x[0][i] = x_old[2][i] + c1 * (x_old[0][i] - x_older[2][i]) / delta_t_old -
               c2 * (x_older[0][i] - x_oldest[2][i]) / delta_t_older;
   }
-}
-
-static int discard_previous_time_step(int num_unks,
-                                      double *x,
-                                      double *x_old,
-                                      double *x_older,
-                                      double *x_oldest,
-                                      double *xdot,
-                                      double *xdot_old,
-                                      double *xdot_older) {
-
-  dcopy1(num_unks, x, x_old);
-  dcopy1(num_unks, x_old, x_older);
-  dcopy1(num_unks, x_older, x_oldest);
-
-  /* also need to kill xdot(s) */
-  memset(xdot, 0, sizeof(double) * num_unks);
-  memset(xdot_old, 0, sizeof(double) * num_unks);
-  memset(xdot_older, 0, sizeof(double) * num_unks);
-
-  return (0);
 }

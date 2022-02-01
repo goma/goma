@@ -16,6 +16,7 @@
 
 /* Standard include files */
 
+#include "rf_solve.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -4325,6 +4326,7 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
 /******************************************************************************/
 /*                      SMOOTHING                                             */
 /******************************************************************************/
+
 #ifdef HAVE_PETSC
   if (upd->petsc_solve_post_proc) {
     petsc_solve_post_proc(post_proc_vect, rd, dpi);
@@ -4342,6 +4344,11 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
 #ifdef HAVE_PETSC
   }
 #endif
+
+  for (ii = 0; ii < rd->TotalNVPostOutput; ii++) {
+    exchange_node(cx[0], dpi, post_proc_vect[ii]);
+  }
+  
   /******************************************************************************/
   /*                                BLOCK 3                                     */
   /*                CALCULATE STREAM OR FLUX FUNCTIONS                          */

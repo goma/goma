@@ -3103,11 +3103,9 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       mat_ptr->Rst_funcModel = CONSTANT;
       mat_ptr->Rst_func = 1.;
       mat_ptr->Rst_func_supg = 0.;
-      GOMA_WH(model_read, "Defaulting Residence Fcn to Constant");
     }
     if (fscanf(imp, "%lg %lg %lg", &mat_ptr->Rst_func, &mat_ptr->Rst_diffusion,
                &mat_ptr->Rst_func_supg) != 3) {
-      GOMA_WH(model_read, "Defaulting Residence Fcn Parameters");
       mat_ptr->Rst_func = 1.;
       mat_ptr->Rst_diffusion = 1. / LITTLE_PENALTY;
       mat_ptr->Rst_func_supg = 0.;

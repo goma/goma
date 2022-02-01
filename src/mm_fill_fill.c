@@ -3131,16 +3131,16 @@ int get_side_info(const int ielem_type,
       local_elem_node_id[3] = 6;
       break;
     case 4:
-      local_elem_node_id[0] = 3;
-      local_elem_node_id[1] = 0;
-      local_elem_node_id[2] = 4;
-      local_elem_node_id[3] = 7;
+      local_elem_node_id[0] = 0;
+      local_elem_node_id[1] = 4;
+      local_elem_node_id[2] = 7;
+      local_elem_node_id[3] = 3;
       break;
     case 5:
-      local_elem_node_id[0] = 3;
-      local_elem_node_id[1] = 2;
-      local_elem_node_id[2] = 1;
-      local_elem_node_id[3] = 0;
+      local_elem_node_id[0] = 0;
+      local_elem_node_id[1] = 3;
+      local_elem_node_id[2] = 2;
+      local_elem_node_id[3] = 1;
       break;
     case 6:
       local_elem_node_id[0] = 4;

@@ -542,7 +542,7 @@ set(GOMA_SOURCES
         src/rf_vars.c
         src/bc/rotate_coordinates.c
         src/shell_tfmp_util.c
-        src/sl_amesos_interface.C
+        src/sl_amesos_interface.cpp
         src/sl_aux.c
         src/sl_auxutil.c
         src/sl_aztecoo_interface.cpp
@@ -555,7 +555,7 @@ set(GOMA_SOURCES
         src/sl_eggrollwrap.c
         src/sl_epetra_interface.cpp
         src/sl_epetra_util.cpp
-        src/sl_leastsquares.C
+        src/sl_leastsquares.cpp
         src/sl_lu.c
         src/sl_lu_fill.c
         src/sl_lustat.c
@@ -740,6 +740,13 @@ set(GOMA_TPL_LIBRARIES
   ${Trilinos_EXTRA_LD_FLAGS}
   ${MPI_C_LIBRARIES}
   ${MPI_Fortran_LIBRARIES}
+)
+
+# remove some C++ files from unity build as MACROS conflict with Trilinos headers
+set_source_files_properties(
+    src/dp_ghost.cpp 
+    src/sl_epetra_util.cpp
+    PROPERTIES SKIP_UNITY_BUILD_INCLUSION ON
 )
 
 add_library(goma_user ${GOMA_USER_SOURCES} ${GOMA_USER_INCLUDES})

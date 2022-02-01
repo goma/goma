@@ -17,6 +17,7 @@
 #include "rf_fem.h"
 #include "rf_fem_const.h"
 #include "rf_solver.h"
+#include "std.h"
 #include "user_mp.h"
 
 static dbl yzbeta1(dbl scale,
@@ -800,6 +801,12 @@ int calc_pspg(dbl pspg[DIM],
       }
     }
 
+    // check if rho exists, otherwise set to 1 for pspg_tau
+    dbl pspg_rho = rho;
+    if (!DOUBLE_NONZERO(rho)) {
+      pspg_rho = 1.0;
+    }
+
     mu = viscosity(gn, gamma, NULL);
 
     dbl mup[MAX_MODES];
@@ -815,7 +822,7 @@ int calc_pspg(dbl pspg[DIM],
     dbl tau_time = 0;
     // time term
     if (pd->TimeIntegration != STEADY) {
-      tau_time += 4 * rho * rho / (dt * dt);
+      tau_time += 4 * pspg_rho * pspg_rho / (dt * dt);
     }
 
     // advection
@@ -823,7 +830,7 @@ int calc_pspg(dbl pspg[DIM],
     for (int i = 0; i < dim; i++) {
       for (int j = 0; j < dim; j++) {
         // tau_adv += rho * rho * fv->v[i] * G[i][j] * fv->v[j];
-        tau_adv += rho * rho * fv_old->v[i] * G[i][j] * fv_old->v[j];
+        tau_adv += pspg_rho * pspg_rho * fv_old->v[i] * G[i][j] * fv_old->v[j];
       }
     }
 
@@ -840,7 +847,7 @@ int calc_pspg(dbl pspg[DIM],
       }
     }
 
-    tau_pspg = PS_scaling * rho / sqrt(tau_time + tau_adv + tau_diff);
+    tau_pspg = PS_scaling * pspg_rho / sqrt(tau_time + tau_adv + tau_diff);
 
     // d/dx 1/sqrt(f(x)) => - f'(x) / (2 * f(x)^(3/2))
     if (d_pspg != NULL && pd->v[pg->imtrx][VELOCITY1]) {
@@ -850,17 +857,14 @@ int calc_pspg(dbl pspg[DIM],
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             dbl tau_adv_dv = 0;
             for (int a = 0; a < dim; a++) {
-              tau_adv_dv += rho * rho * bf[var]->phi[j] * G[b][a] * fv->v[a];
-              tau_adv_dv += rho * rho * bf[var]->phi[j] * G[a][b] * fv->v[a];
-              // dbl tau_adv_dv = 0;
-              // for (int a = 0; a < dim; a++) {
-              //   tau_adv_dv += rho*rho*bf[var]->phi[j] * G[b][a] * fv->v[a];
-              //   tau_adv_dv += rho*rho*bf[var]->phi[j] * G[a][b] * fv->v[a];
+              tau_adv_dv += pspg_rho * pspg_rho * bf[var]->phi[j] * G[b][a] * fv->v[a];
+              tau_adv_dv += pspg_rho * pspg_rho * bf[var]->phi[j] * G[a][b] * fv->v[a];
             }
 
-            // d_tau_pspg_dv[b][j] = -PS_scaling * rho * 0.5 * tau_pspg * tau_pspg * tau_pspg *
+            // d_tau_pspg_dv[b][j] = -PS_scaling * pspg_rho * 0.5 * tau_pspg * tau_pspg * tau_pspg *
             // tau_adv_dv;
-            d_tau_pspg_dv[b][j] = 0;
+           d_tau_pspg_dv[b][j] = -PS_scaling * pspg_rho * 0.5 * (tau_adv_dv) * tau_pspg *
+                                  tau_pspg * tau_pspg;
           }
         }
       }
@@ -876,7 +880,7 @@ int calc_pspg(dbl pspg[DIM],
             dbl tau_adv_dx = 0;
             for (int i = 0; i < dim; i++) {
               for (int j = 0; j < dim; j++) {
-                tau_adv_dx += rho * rho * fv->v[i] * dG[i][j][b][k] * fv->v[j];
+                tau_adv_dx += pspg_rho * pspg_rho * fv->v[i] * dG[i][j][b][k] * fv->v[j];
               }
             }
             dbl tau_diff_dx = 0;
@@ -885,7 +889,7 @@ int calc_pspg(dbl pspg[DIM],
                 tau_diff_dx += coeff * 2 * dG[i][j][b][k] * G[i][j];
               }
             }
-            d_tau_pspg_dX[b][k] = -PS_scaling * rho * 0.5 * (tau_adv_dx + tau_diff_dx) * tau_pspg *
+            d_tau_pspg_dX[b][k] = -PS_scaling * pspg_rho * 0.5 * (tau_adv_dx + tau_diff_dx) * tau_pspg *
                                   tau_pspg * tau_pspg;
           }
         }

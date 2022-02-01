@@ -14,23 +14,23 @@
 #include <utility>
 #include <vector>
 
+
+// not needed except to avoid including as a C file
+#include "sl_epetra_interface.h"
+
 #include "dp_ghost.h"
-#include "el_elm.h"
-#include "rf_mp.h"
-#include "std.h"
 
 extern "C" {
-#define DISABLE_CPP
 #include "el_elm_info.h"
 #include "exo_conn.h"
 #include "mm_elem_block_structs.h"
 #include "mm_fill_fill.h"
 #include "mm_mp.h"
 #include "rd_mesh.h"
-
+#include "el_elm.h"
+#include "rf_mp.h"
+#include "std.h"
 struct Material_Properties;
-
-#undef DISABLE_CPP
 }
 
 struct shared_elem {
@@ -145,7 +145,7 @@ goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi) {
       for (auto n_index : neighbor_index) {
         int type =
             get_type(exo->eb_elem_type[i], exo->eb_num_nodes_per_elem[i], exo->eb_num_attr[i]);
-        shared_elem elem{dpi->global_elem_block_ids[i], type, dpi->elem_index_global[offset + j],
+        shared_elem elem{dpi->global_elem_block_ids[i], type, dpi->elem_index_global[elem_offset + j],
                          exo->eb_num_nodes_per_elem[i]};
         shared_elems_neighbor[n_index].emplace_back(elem);
         for (int k = 0; k < nnode_per_elem; k++) {
