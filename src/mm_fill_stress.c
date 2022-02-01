@@ -1441,7 +1441,7 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
     for (p = 0; p < VIM; p++) {
       vm += vcent[p]*vcent[p];
     }
-    vm = sqrt(vm);
+    vm = sqrt(vm) + 1e-16;
     h_elem = 0.;
     for (p = 0; p < dim; p++) {
       h_elem += h[p] * h[p];
@@ -1807,7 +1807,7 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
                       for (int p = 0; p < VIM; p++) {
                         vm += vcent[p] * vcent[p];
                       }
-                      vm = sqrt(vm);
+                      vm = sqrt(vm) + 1e-16;
                       h_elem_deriv = 0.;
                       for (int p = 0; p < dim; p++) {
                         h_elem_deriv += h[p] * h[p];
@@ -6417,7 +6417,7 @@ void compute_saramito_model_terms(dbl *sCoeff,
     }
   }
 
-  const dbl normOfStressD = sqrt(normOfStressDSqr);
+  const dbl normOfStressD = sqrt(normOfStressDSqr) +1e-16;
 
   const dbl sc = 1. - yieldStress / normOfStressD;
 
