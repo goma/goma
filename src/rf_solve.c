@@ -113,7 +113,7 @@ static void predict_solution_newmark(int,       /* N */
                                      double[],  /* xdot */
                                      double[]); /* xdot_old */
 
-static int discard_previous_time_step(
+int discard_previous_time_step(
     int, double *, double *, double *, double *, double *, double *, double *);
 
 static void shift_nodal_values(int, double, double *, int);
