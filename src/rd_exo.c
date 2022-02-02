@@ -1415,7 +1415,7 @@ zero_base_end:
 
 static void zero_base_base_mesh(Exo_DB *exo) {
   int eb;
-  int i, j;
+  int i;
   int l;
   int length_conn;
 
@@ -1583,7 +1583,7 @@ void one_base(Exo_DB *E) {
 
 static void one_base_base_mesh(Exo_DB *exo) {
   int eb;
-  int i, j, l;
+  int i, l;
   int length_conn;
 
   struct Exodus_Base *base = exo->base_mesh;

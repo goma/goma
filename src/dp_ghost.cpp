@@ -138,7 +138,7 @@ goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi) {
               n_index = k;
             }
           }
-          GOMA_ASSERT(n_index != -1);
+          GOMA_ASSERT_ALWAYS(n_index != -1);
         }
       }
 

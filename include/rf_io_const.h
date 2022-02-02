@@ -86,13 +86,8 @@
 #endif
 
 #ifndef MAX_SYSTEM_COMMAND_LENGTH
-#define MAX_SYSTEM_COMMAND_LENGTH (1280) /* maximum number of characters in */
+#define MAX_SYSTEM_COMMAND_LENGTH (3072) /* maximum number of characters in */
 /* a system command for aprepro */
-#endif
-
-#ifndef MAX_SYSTEM_COMMAND_LENGTH
-#define MAX_SYSTEM_COMMAND_LENGTH (1280) /* maximum number of characters in */
-                                         /* a system command for aprepro */
 #endif
 
 #define INPUT_FILE         1  /* command for reading from alternate input file */

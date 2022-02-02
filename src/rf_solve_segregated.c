@@ -16,7 +16,6 @@
 #include <string.h>
 
 #include "az_aztec.h"
-#include "decomp_interface.h"
 #include "dp_comm.h"
 #include "dp_types.h"
 #include "dp_utils.h"
@@ -1332,7 +1331,9 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
      *  TOP OF THE TIME STEP LOOP -> Loop over time steps whether
      *                               they be successful or not
      *******************************************************************/
+#ifdef HAVE_OMEGA_H
     int adapt_step = 0;
+#endif
     for (n = 0; n < MaxTimeSteps; n++) {
 
       tran->step = n;

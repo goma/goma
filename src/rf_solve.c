@@ -330,7 +330,9 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
   double *x_sens = NULL;    /* solution sensitivity                     */
   double **x_sens_p = NULL; /* solution sensitivity for parameters      */
   int num_pvector = 0;      /* number of solution sensitivity vectors   */
+#ifdef HAVE_OMEGA_H
   int adapt_step = 0;
+#endif
 
   /* sparse variables for fill equation subcycling */
 

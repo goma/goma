@@ -1338,7 +1338,7 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
   dbl trace = 0.0; /* trace of the stress tensor */
 
   /* SUPG variables */
-  dbl h_elem = 0, h_elem_inv = 0, h_elem_deriv = 0;
+  dbl h_elem = 0, h_elem_deriv = 0;
   dbl supg = 0;
 
   if (vn->evssModel == EVSS_GRADV) {
@@ -1447,11 +1447,6 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
       h_elem += h[p] * h[p];
     }
     h_elem = sqrt(h_elem) * 0.5 / vm;
-    if (h_elem == 0.) {
-      h_elem_inv = 1.;
-    } else {
-      h_elem_inv = 1. / h_elem;
-    }
   }
   /* end Petrov-Galerkin addition */
 
@@ -2413,7 +2408,7 @@ int assemble_stress_log_conf(dbl tt,
                              dbl dh_dxnode[DIM][MDE],
                              dbl vcent[DIM],
                              dbl dvc_dnode[DIM][MDE]) {
-  int dim, p, q, a, b, w;
+  int dim, q, a, b, w;
   int eqn, siz;
 
   int i, j, status, mode;
@@ -2478,7 +2473,6 @@ int assemble_stress_log_conf(dbl tt,
   dbl trace = 0.0;
 
   // SUPG terms
-  dbl h_elem = 0;
   dbl supg = 0;
 
   status = 0;

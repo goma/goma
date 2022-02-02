@@ -2123,6 +2123,8 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
      *
      ********************************************************************/
 
+  skip_solve:
+  
     if (Write_Intermediate_Solutions) {
       if (TimeIntegration == STEADY) {
         time_value = (double)*nprint + 1.;
@@ -2193,7 +2195,6 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
       }
     }
 
-  skip_solve:
 
     if (Epsilon[pg->imtrx][2] > 1) {
       if (Solver_Output_Format & 32)

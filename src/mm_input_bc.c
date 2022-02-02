@@ -110,7 +110,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
 
   char seed_string[80];
   char instruction_string[DIM][80];
-  char component_string[DIM][80];
+  char component_string[DIM][120];
   char condition_string[DIM][80];
   char coordinate_string[DIM][80] = {"x", "y", "z"};
   char topo_string[80];
@@ -3379,7 +3379,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
           sr = sprintf(condition_string[p], "(%s @ %d)", rot->BC_desc[p]->name1, rot->BC_SS[p]);
         }
 
-        sr = snprintf(component_string[p], 80, "R_%s%s=%s", rot_eq_string, coordinate_string[p],
+        sr = snprintf(component_string[p], 119, "R_%s%s=%s", rot_eq_string, coordinate_string[p],
                       condition_string[p]);
       }
 
