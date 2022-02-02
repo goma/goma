@@ -53,14 +53,7 @@ EXTERN int assemble_stress /* mm_fill_stress.c                          */
 EXTERN int assemble_stress_fortin(dbl,            /* tt - parm to vary time integration from
                                                    * explicit (tt = 1) to implicit (tt = 0)    */
                                   dbl,            /* dt - current time step size               */
-                                  dbl[DIM],       /* h - not scale factors methinks            */
-                                  dbl[DIM][DIM],  /* hh                                        */
-                                  dbl[DIM][MDE],  /* dh_dxnode                                 */
-                                  dbl[DIM],       /* vcent - avg element velocity, which is the
-                                                   * centroid velocity for Q2 and the average of
-                                                   * the vertices for Q1. It comes from the
-                                                   * routine "element_velocity."               */
-                                  dbl[DIM][MDE]); /* dvc_dnode                                 */
+                                  PG_DATA *); /* dvc_dnode                                 */
 
 EXTERN int assemble_stress_log_conf(dbl tt,
                                     dbl dt,
