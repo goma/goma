@@ -2024,7 +2024,7 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
                       for (p = 0; p < VIM; p++) {
                         vm += vcent[p];
                       }
-                      vm = sqrt(vm);
+                      vm = sqrt(vm) + 1e-16;
                       dbl tmp = 0;
                       h_elem_deriv = 0.;
                       for (int q = 0; q < dim; q++) {
