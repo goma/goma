@@ -656,6 +656,10 @@ update_MT_parameter(double lambda, /* Parameter value */
       gn_glob[mn]->wlfc2 = lambda;
       break;
       
+    case TAGC_REFTEMP: 
+      mp_glob[mn]->reference[TEMPERATURE] = lambda;
+      break;
+      
       /* these are for the BINGHAM yielding material model */
       
     case TAGC_TAU_Y: 
@@ -1625,6 +1629,10 @@ retrieve_MT_parameter(double *lambda, /* Parameter value */
 
     case TAGC_WLFC2:
       *lambda = gn_glob[mn]->wlfc2;
+      break;
+      
+    case TAGC_REFTEMP: 
+      *lambda = mp_glob[mn]->reference[TEMPERATURE];
       break;
       
       /* these are for the BINGHAM yielding material model */

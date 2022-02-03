@@ -463,14 +463,14 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 	{
 	lambdaLog[iHC] = log10(lambda[iHC]);
 	lambdaRatio[iHC] = lambdaEnd[iHC]/lambda[iHC];
-	lambdaDeltaLog[iHC] = fabs(lambdaLog[iHC] - log10(lambdaEnd[iHC]));
+	lambdaDeltaLog[iHC] = fabs(log10(lambdaRatio[iHC]));
 	lambdaScale[iHC] = sqrt(lambda[iHC]*lambdaEnd[iHC]);
 	}
     else if(lambda[iHC] < 0. && lambdaEnd[iHC] < 0.0)
 	{
 	lambdaLog[iHC] = log10(-lambda[iHC]);
 	lambdaRatio[iHC] = lambdaEnd[iHC]/lambda[iHC];
-	lambdaDeltaLog[iHC] = fabs(lambdaLog[iHC] - log10(-lambdaEnd[iHC]));
+	lambdaDeltaLog[iHC] = log10(lambdaRatio[iHC]);
 	lambdaScale[iHC] = sqrt(lambda[iHC]*lambdaEnd[iHC]);
 	}
     if(abs(hunt[iHC].ramp) == 2 )
@@ -498,9 +498,9 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
     }
 
     if (hDelta_s0[iHC] > hDelta_s_max[iHC])
-    {
-      hDelta_s0[iHC] = hDelta_s_max[iHC];
-    }
+       { hDelta_s0[iHC] = hDelta_s_max[iHC]; }
+    if (hDelta_s0[iHC] < hDelta_s_min[iHC])
+       { hDelta_s0[iHC] = hDelta_s_min[iHC]; }
 
     delta_s[iHC] = delta_s_old[iHC] = delta_s_older[iHC] = hDelta_s0[iHC];
 
@@ -522,19 +522,16 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
           if(hunt[iHC].ramp == 2 )
               {
 	       hunt_par = fabs(log10(path1[iHC])-lambdaLog[iHC])/lambdaDeltaLog[iHC];
-	       dhunt_par_min = log10(1.0+aldALC[iHC]*hDelta_s_min[iHC]/lambda[iHC])
-					/lambdaDeltaLog[iHC];
-	       dhunt_par_max = log10(1.0+aldALC[iHC]*hDelta_s_max[iHC]/lambda[iHC])
-					/lambdaDeltaLog[iHC];
-	       dhunt_par_0 = log10(1.0+aldALC[iHC]*hDelta_s0[iHC]/lambda[iHC])
-					/lambdaDeltaLog[iHC];
+	       dhunt_par_min = log10(1.0+hDelta_s_min[iHC]/lambdaScale[iHC])/lambdaDeltaLog[iHC];
+	       dhunt_par_max = log10(1.0+hDelta_s_max[iHC]/lambdaScale[iHC])/lambdaDeltaLog[iHC];
+	       dhunt_par_0 = log10(1.0+hDelta_s0[iHC]/lambda[iHC])/lambdaDeltaLog[iHC];  
 		}
           else if(hunt[iHC].ramp == -2 )
               {
 	       hunt_par = fabs(log10(-path1[iHC])-lambdaLog[iHC])/lambdaDeltaLog[iHC];
-	       dhunt_par_min = hDelta_s_min[iHC]/lambdaScale[iHC];
-	       dhunt_par_max = hDelta_s_max[iHC]/lambdaScale[iHC]/pow(10.,0.5*lambdaDeltaLog[iHC]);
-	       dhunt_par_0 = log10(hDelta_s0[iHC])/lambdaLog[iHC]/lambdaDeltaLog[iHC];
+	       dhunt_par_min = log10(1.0+hDelta_s_min[iHC]/lambdaScale[iHC])/lambdaDeltaLog[iHC];
+	       dhunt_par_max = log10(1.0+hDelta_s_max[iHC]/lambdaScale[iHC])/lambdaDeltaLog[iHC];
+	       dhunt_par_0 = log10(1.0+hDelta_s0[iHC]/lambda[iHC])/lambdaDeltaLog[iHC];  
               }  else   {
 	         hunt_par = (path1[iHC]-lambda[iHC])/lambdaDelta[iHC];
 	         dhunt_par_min = aldALC[iHC]*hunt[iHC].Delta_s_min/lambdaDelta[iHC];

@@ -366,6 +366,10 @@ load_extra_unknownsAC(int iAC,    /* ID NUMBER OF AC'S */
 	xa[iAC] = gn_glob[mn]->wlfc2;
 	break;
 
+      case TAGC_REFTEMP:
+	xa[iAC] = mp_glob[mn]->reference[TEMPERATURE];
+	break;
+
 	/* these are for the BINGHAM yielding material model */
       
       case TAGC_TAU_Y: 
@@ -1208,6 +1212,10 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
 
       case TAGC_WLFC2:
 	gn_glob[mn]->wlfc2 = lambda;
+	break;
+
+      case TAGC_REFTEMP:
+	mp_glob[mn]->reference[TEMPERATURE] = lambda;
 	break;
 
 	/* these are for the BINGHAM yielding material model */

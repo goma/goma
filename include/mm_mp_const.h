@@ -592,6 +592,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 /*  CARREAU_WLF  */
 
 #define TAGC_WLFC2			   4550
+#define TAGC_REFTEMP			   4560
 
 /* these are for the BINGHAM yielding material model */
 
