@@ -115,7 +115,9 @@ MESSAGE(STATUS "SEACASExodus_DIR = ${SEACASExodus_DIR}")
 set(PETSC_PATH $ENV{PETSC_DIR}/$ENV{PETSC_ARCH})
 set(ENV{PKG_CONFIG_PATH} ${PETSC_PATH}/lib/pkgconfig)
 
-find_package(PkgConfig REQUIRED)
+find_package(PkgConfig)
+
+if (PkgConfig_FOUND)
 pkg_search_module(PETSC IMPORTED_TARGET PETSc)
 
 # Determine PETSc compilers
@@ -170,6 +172,9 @@ if (PETSC_FOUND)
   endif()
 endif()
 
+else()
+  message(WARNING "pkg-config not found, not searching for PETSc")
+endif()
 
 message("")
 
