@@ -4768,8 +4768,13 @@ double shell_saturation_pressure_curve(double Pliq, double *dSdP, double *dSdP_P
   // dbl ModK    = 0.1;
   dbl ModK = 1;
   dbl ModF = (1 + tanh(ModK * (Pliq - PCut))) / 2.0;
-  dbl ModF_P = ModK * pow(cosh(ModK * (Pliq - PCut)), -2) / 2.0;
-  dbl ModF_PP = -pow(ModK, 2) * pow(cosh(ModK * (Pliq - PCut)), -2) * tanh(ModK * (Pliq - PCut));
+  dbl ModF_P = 0.;
+  dbl ModF_PP = 0.;
+  // guard floating point overflow cosh
+  if (fabs(ModK * (Pliq - PCut)) < 710.5) {
+    ModF_P = ModK * pow(cosh(ModK * (Pliq - PCut)), -2) / 2.0;
+    ModF_PP = -pow(ModK, 2) * pow(cosh(ModK * (Pliq - PCut)), -2) * tanh(ModK * (Pliq - PCut));
+  }
 
   /* Define basic saturation function */
   // dbl BS    = (pow(Rc,3)-Rmin3)/(Rmax3-Rmin3);

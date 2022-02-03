@@ -14,19 +14,18 @@
  * FLUX AND/OR DATA PARAMETER AND/OR CONTINUATION PARAMETER
  */
 
-#include "sl_util_structs.h"
 #include "sl_epetra_interface.h"
+#include "sl_util_structs.h"
 
 #define GOMA_MM_SOL_NONLINEAR_C
 /* Needed to declare POSIX function drand48 */
 #define _XOPEN_SOURCE
 #include <math.h>
+#include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <mpi.h>
 
-#include "mm_sol_nonlinear.h"
 #include "ac_stability_util.h"
 #include "bc/rotate.h"
 #include "bc/rotate_coordinates.h"
@@ -52,6 +51,7 @@
 #include "mm_numjac.h"
 #include "mm_post_def.h"
 #include "mm_post_proc.h"
+#include "mm_sol_nonlinear.h"
 #include "mm_unknown_map.h"
 #include "rf_allo.h"
 #include "rf_bc.h"
@@ -71,8 +71,8 @@
 #include "sl_aztecoo_interface.h"
 #include "sl_lu.h"
 #include "sl_matrix_util.h"
-#include "sl_stratimikos_interface.h"
 #include "sl_petsc.h"
+#include "sl_stratimikos_interface.h"
 #include "sl_umf.h"
 #include "sl_util.h"
 #include "std.h"
@@ -1133,7 +1133,9 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
         AC_Resid_Norm_stack[2] = Norm[2][2] / BIG_PENALTY;
       }
 
-      if (inewton && (Resid_Norm_stack[2] > 0) && (Resid_Norm_stack[2] != 1)) {
+      if (inewton && (Resid_Norm_stack[2] > 0) && (Resid_Norm_stack[2] != 1) &&
+          (Resid_Norm_stack[1] > 0) && (Resid_Norm_stack[1] != 1) &&
+          (inewton <= 1 || ((Resid_Norm_stack[0] > 0) && (Resid_Norm_stack[0] != 1)))) {
 #if 1
         if (inewton <= 1) {
           Conv_order = log10(Resid_Norm_stack[2]) / log10(Resid_Norm_stack[1]);
@@ -1150,7 +1152,9 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
 #endif
       }
 
-      if (nAC && inewton && (AC_Resid_Norm_stack[2] > 0) && (AC_Resid_Norm_stack[2] != 1)) {
+      if (nAC && inewton && (AC_Resid_Norm_stack[2] > 0) && (AC_Resid_Norm_stack[2] != 1) &&
+          (AC_Resid_Norm_stack[1] > 0) && (AC_Resid_Norm_stack[0] != 1) &&
+          (inewton <= 1 || ((AC_Resid_Norm_stack[0] > 0) && (AC_Resid_Norm_stack[0] != 1)))) {
 #if 1
         if (inewton <= 1) {
           AConv_order = log10(AC_Resid_Norm_stack[2]) / log10(AC_Resid_Norm_stack[1]);
@@ -1730,8 +1734,9 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
             alpha = log[Norm_(i+1)/Norm_i]/log[Norm_i/Norm_(i-1)].
     */
 
-    if (inewton && (Resid_Norm_stack[2] > 0) && (Soln_Norm_stack[2] > 0) &&
-        (Resid_Norm_stack[2] != 1) && (Soln_Norm_stack[2] != 1)) {
+    if (inewton && (Resid_Norm_stack[2] > 0) && (Resid_Norm_stack[2] != 1) &&
+        (Resid_Norm_stack[1] > 0) && (Resid_Norm_stack[1] != 1) &&
+        (inewton <= 1 || ((Resid_Norm_stack[0] > 0) && (Resid_Norm_stack[0] != 1)))) {
 #if 1
       if (inewton <= 1) {
         Conv_order = log10(Resid_Norm_stack[2]) / log10(Resid_Norm_stack[1]);
@@ -1755,8 +1760,9 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
       Soln_rate = log10(Soln_Norm_stack[1]) - log10(Soln_Norm_stack[2]);
 #endif
     }
-    if (nAC && inewton && (AC_Resid_Norm_stack[2] > 0) && (AC_Soln_Norm_stack[2] > 0) &&
-        (AC_Resid_Norm_stack[2] != 1) && (AC_Soln_Norm_stack[2] != 1)) {
+    if (nAC && inewton && (AC_Resid_Norm_stack[2] > 0) && (AC_Resid_Norm_stack[2] != 1) &&
+        (AC_Resid_Norm_stack[1] > 0) && (AC_Resid_Norm_stack[0] != 1) &&
+        (inewton <= 1 || ((AC_Resid_Norm_stack[0] > 0) && (AC_Resid_Norm_stack[0] != 1)))) {
 #if 1
       if (inewton <= 1) {
         AConv_order = log10(AC_Resid_Norm_stack[2]) / log10(AC_Resid_Norm_stack[1]);
@@ -2124,7 +2130,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
      ********************************************************************/
 
   skip_solve:
-  
+
     if (Write_Intermediate_Solutions) {
       if (TimeIntegration == STEADY) {
         time_value = (double)*nprint + 1.;
@@ -2194,7 +2200,6 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
         dofs_hidden = FALSE;
       }
     }
-
 
     if (Epsilon[pg->imtrx][2] > 1) {
       if (Solver_Output_Format & 32)
