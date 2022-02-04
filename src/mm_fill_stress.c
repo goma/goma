@@ -2499,7 +2499,7 @@ int assemble_stress_log_conf(dbl tt,
   }
 
   dbl dcdd_factor = 0.0;
-  if (vn->shockcaptureModel == DCDD_SC) {
+  if (vn->shockcaptureModel == SC_DCDD) {
     dcdd_factor = vn->shockcapture;
   }
 
