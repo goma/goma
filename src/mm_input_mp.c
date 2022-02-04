@@ -5267,7 +5267,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     mat_ptr->Spwt_func = 0.;
     SPF(es, "\t(%s = %s)", "Species Weight Function", "GALERKIN");
   }
-  ECHO(es, echo_file)
+  ECHO(es, echo_file);
 
   model_read = look_for_mat_prop(imp, "Species SSPG Function", &(mat_ptr->SpSSPG_funcModel),
                                  &(mat_ptr->SpSSPG_func), NO_USER, NULL, model_name, SCALAR_INPUT,
