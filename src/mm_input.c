@@ -2765,7 +2765,7 @@ void rd_levelset_specs(FILE *ifp, char *input) {
       ECHO(echo_string, echo_file);
     }
 
-    ls->YZbeta = YZBETA_NONE;
+    ls->YZbeta = SC_NONE;
     ls->YZbeta_scale = 0;
 
     iread = look_for_optional(ifp, "Level Set YZbeta", input, '=');

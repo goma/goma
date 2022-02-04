@@ -2498,7 +2498,12 @@ int assemble_stress_log_conf(dbl tt,
     supg_tau_shakib(&supg_terms, dim, dt, 1e-8, eqn);
   }
 
-  // Shift factor
+  dbl dcdd_factor = 0.0;
+  if (vn->shockcaptureModel == DCDD_SC) {
+    dcdd_factor = vn->shockcapture;
+  }
+
+// Shift factor
   if (pd->gv[TEMPERATURE]) {
     if (vn->shiftModel == CONSTANT) {
       at = vn->shift[0];
@@ -2691,93 +2696,95 @@ int assemble_stress_log_conf(dbl tt,
 
               dbl diffusion = 0.;
               if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
-                dbl tmp = 0.0;
-                dbl s[DIM] = {0.0};
-                dbl r[DIM] = {0.0};
-                for (int w = 0; w < dim; w++) {
-                  tmp += (v[w] - x_dot[w]) * (v[w] - x_dot[w]);
-                }
-                tmp = 1.0 / sqrt(tmp);
-                for (int w = 0; w < dim; w++) {
-                  s[w] = (v[w] - x_dot[w]) * tmp;
-                }
-                dbl mags = 0;
-                for (int w = 0; w < dim; w++) {
-                  mags += (grad_s[w][a][b] * grad_s[w][a][b]);
-                }
-                mags = 1.0 / (sqrt(mags) + 1e-14);
-                for (int w = 0; w < dim; w++) {
-                  r[w] = grad_s[w][a][b] * mags;
-                }
-
-                dbl he = 0.0;
-                for (int q = 0; q < ei[pg->imtrx]->dof[eqn]; q++) {
-                  dbl tmp = 0;
+                if (DOUBLE_NONZERO(dcdd_factor)) {
+                  dbl tmp = 0.0;
+                  dbl s[DIM] = {0.0};
+                  dbl r[DIM] = {0.0};
                   for (int w = 0; w < dim; w++) {
-                    tmp += bf[eqn]->grad_phi[q][w] * bf[eqn]->grad_phi[q][w];
+                    tmp += (v[w] - x_dot[w]) * (v[w] - x_dot[w]);
                   }
-                  he += 1.0 / sqrt(tmp);
-                }
-
-                dbl G[DIM][DIM];
-                get_metric_tensor(bf[eqn]->B, dim, ei[pg->imtrx]->ielem_type, G);
-
-                dbl hrgn = 0.0;
-                // for (int w = 0; w < dim; w++) {
-                //   for (int z = 0; z < dim; z++) {
-                //     //tmp += fabs(r[w] * G[w][z] * r[z]);
-                //   }
-                // }
-                tmp = 0;
-                for (int q = 0; q < ei[pg->imtrx]->dof[eqn]; q++) {
+                  tmp = 1.0 / sqrt(tmp);
                   for (int w = 0; w < dim; w++) {
-                    tmp += fabs(r[w] * bf[eqn]->grad_phi[q][w]);
+                    s[w] = (v[w] - x_dot[w]) * tmp;
                   }
-                }
-                hrgn = 1.0 / (tmp + 1e-14);
-
-                dbl magv = 0.0;
-                for (int q = 0; q < VIM; q++) {
-                  magv += v[q] * v[q];
-                }
-                magv = sqrt(magv);
-
-                dbl tau_dcdd = 0.5 * he * magv * magv * pow((1.0 / mags) * hrgn, 1.0);
-                //dbl tau_dcdd = (1.0 / mags) * hrgn * hrgn;
-                tau_dcdd = 1 / sqrt(1.0 / (supg_terms.supg_tau * supg_terms.supg_tau) +
-                                    1.0 / (tau_dcdd * tau_dcdd));
-                dbl ss[DIM][DIM] = {{0.0}};
-                dbl rr[DIM][DIM] = {{0.0}};
-                dbl rdots = 0.0;
-                for (int w = 0; w < dim; w++) {
-                  for (int z = 0; z < dim; z++) {
-                    ss[w][z] = s[w] * s[z];
-                    rr[w][z] = r[w] * r[z];
+                  dbl mags = 0;
+                  for (int w = 0; w < dim; w++) {
+                    mags += (grad_s[w][a][b] * grad_s[w][a][b]);
                   }
-                  rdots += r[w] * s[w];
-                }
-
-                dbl inner_tensor[DIM][DIM] = {{0.0}};
-                for (int w = 0; w < dim; w++) {
-                  for (int z = 0; z < dim; z++) {
-                    inner_tensor[w][z] = rr[w][z] - rdots * rdots * ss[w][z];
+                  mags = 1.0 / (sqrt(mags) + 1e-14);
+                  for (int w = 0; w < dim; w++) {
+                    r[w] = grad_s[w][a][b] * mags;
                   }
-                }
 
-                dbl gs_inner_dot[DIM] = {0.0};
-                for (int w = 0; w < dim; w++) {
-                  dbl tmp = 0.;
-                  for (int z = 0; z < dim; z++) {
-                    tmp += grad_s[w][a][b] * inner_tensor[w][z];
+                  dbl he = 0.0;
+                  for (int q = 0; q < ei[pg->imtrx]->dof[eqn]; q++) {
+                    dbl tmp = 0;
+                    for (int w = 0; w < dim; w++) {
+                      tmp += bf[eqn]->grad_phi[q][w] * bf[eqn]->grad_phi[q][w];
+                    }
+                    he += 1.0 / sqrt(tmp);
                   }
-                  gs_inner_dot[w] = tmp;
-                  // gs_inner_dot[w] = grad_s[w][a][b];
-                }
 
-                for (int w = 0; w < dim; w++) {
-                  diffusion += tau_dcdd * gs_inner_dot[w] * bf[eqn]->grad_phi[i][w];
+                  dbl G[DIM][DIM];
+                  get_metric_tensor(bf[eqn]->B, dim, ei[pg->imtrx]->ielem_type, G);
+
+                  dbl hrgn = 0.0;
+                  // for (int w = 0; w < dim; w++) {
+                  //   for (int z = 0; z < dim; z++) {
+                  //     //tmp += fabs(r[w] * G[w][z] * r[z]);
+                  //   }
+                  // }
+                  tmp = 0;
+                  for (int q = 0; q < ei[pg->imtrx]->dof[eqn]; q++) {
+                    for (int w = 0; w < dim; w++) {
+                      tmp += fabs(r[w] * bf[eqn]->grad_phi[q][w]);
+                    }
+                  }
+                  hrgn = 1.0 / (tmp + 1e-14);
+
+                  dbl magv = 0.0;
+                  for (int q = 0; q < VIM; q++) {
+                    magv += v[q] * v[q];
+                  }
+                  magv = sqrt(magv);
+
+                  dbl tau_dcdd = 0.5 * he * magv * magv * pow((1.0 / mags) * hrgn, 1.0);
+                  // dbl tau_dcdd = (1.0 / mags) * hrgn * hrgn;
+                  tau_dcdd = 1 / sqrt(1.0 / (supg_terms.supg_tau * supg_terms.supg_tau) +
+                                      1.0 / (tau_dcdd * tau_dcdd));
+                  dbl ss[DIM][DIM] = {{0.0}};
+                  dbl rr[DIM][DIM] = {{0.0}};
+                  dbl rdots = 0.0;
+                  for (int w = 0; w < dim; w++) {
+                    for (int z = 0; z < dim; z++) {
+                      ss[w][z] = s[w] * s[z];
+                      rr[w][z] = r[w] * r[z];
+                    }
+                    rdots += r[w] * s[w];
+                  }
+
+                  dbl inner_tensor[DIM][DIM] = {{0.0}};
+                  for (int w = 0; w < dim; w++) {
+                    for (int z = 0; z < dim; z++) {
+                      inner_tensor[w][z] = rr[w][z] - rdots * rdots * ss[w][z];
+                    }
+                  }
+
+                  dbl gs_inner_dot[DIM] = {0.0};
+                  for (int w = 0; w < dim; w++) {
+                    dbl tmp = 0.;
+                    for (int z = 0; z < dim; z++) {
+                      tmp += grad_s[w][a][b] * inner_tensor[w][z];
+                    }
+                    gs_inner_dot[w] = tmp;
+                    // gs_inner_dot[w] = grad_s[w][a][b];
+                  }
+
+                  for (int w = 0; w < dim; w++) {
+                    diffusion += tau_dcdd * gs_inner_dot[w] * bf[eqn]->grad_phi[i][w];
+                  }
+                  diffusion *= dcdd_factor * det_J * wt * h3;
                 }
-                diffusion *= det_J * wt * h3;
                 diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
               }
 

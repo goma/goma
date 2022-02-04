@@ -516,7 +516,7 @@ int assemble_fill(double tt,
 
   dbl k_dc = 0;
   // dbl d_k_dc[MDE] = {0};
-  if (ls != NULL && ls->YZbeta != YZBETA_NONE) {
+  if (ls != NULL && ls->YZbeta != SC_NONE) {
     dbl strong_residual = 0;
     strong_residual = fv_dot_old->F;
     for (int p = 0; p < VIM; p++) {

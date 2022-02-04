@@ -1090,6 +1090,8 @@ struct Viscoelastic_Nonmodal {
   int ConstitutiveEquation;
   dbl wt_func;
   int wt_funcModel;
+  dbl shockcapture;
+  int shockcaptureModel;
 
   /* This is the adaptive viscosity scaling. If if it zero
    * we get the standard formulation, if nonzero we get

@@ -23,11 +23,11 @@
  *    rd_mp_specs	       		void		read_input_file
  ******************************************************************************/
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h> /* for strcasecmp */
-#include <math.h>
 
 #include "el_elm.h"
 #include "mm_as.h"
@@ -2159,6 +2159,33 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       vn_glob[mn]->wt_func = 0.;
       SPF(es, "\t(%s = %s %g)", search_string, "CONSTANT", vn_glob[mn]->wt_func);
     }
+
+    strcpy(search_string, "Polymer Shock Capturing");
+    model_read =
+        look_for_mat_prop(imp, search_string, &(mat_ptr->Ewt_funcModel), &(mat_ptr->Ewt_func),
+                          NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
+    if (strncmp(model_name, " ", 1) != 0) {
+      if (!strcmp(model_name, "NONE")) {
+        vn_glob[mn]->shockcaptureModel = SC_NONE;
+        vn_glob[mn]->shockcapture = 0.0;
+      } else if (!strcmp(model_name, "DCDD")) {
+        int err;
+        vn_glob[mn]->shockcaptureModel = SC_DCDD;
+        err = fscanf(imp, "%lg", &(vn_glob[mn]->shockcapture));
+        if (err != 1) {
+          GOMA_EH(GOMA_ERROR, "Expected to read one double for Polymer Shock Capturing = DCDD");
+        }
+        SPF(endofstring(es), " %.4g", vn_glob[mn]->shockcapture);
+      } else {
+        GOMA_EH(GOMA_ERROR, "Syntax error or invalid model for %s\n", search_string);
+      }
+    } else {
+      vn_glob[mn]->shockcaptureModel = SC_NONE;
+      vn_glob[mn]->shockcapture = 0.0;
+      SPF(es, "\t(%s = %s)", search_string, "NONE");
+    }
+
+    ECHO(es, echo_file);
 
     strcpy(search_string, "Polymer Shift Function");
 
@@ -5240,7 +5267,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     mat_ptr->Spwt_func = 0.;
     SPF(es, "\t(%s = %s)", "Species Weight Function", "GALERKIN");
   }
-  ECHO(es, echo_file);
+  ECHO(es, echo_file)
 
   model_read = look_for_mat_prop(imp, "Species SSPG Function", &(mat_ptr->SpSSPG_funcModel),
                                  &(mat_ptr->SpSSPG_func), NO_USER, NULL, model_name, SCALAR_INPUT,
@@ -5272,9 +5299,9 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
               "Could not read Scale and beta value for Species YZbeta Function YZBETA_CUSTOM");
     }
   } else {
-    mat_ptr->SpYZbeta_funcModel = YZBETA_NONE;
+    mat_ptr->SpYZbeta_funcModel = SC_NONE;
     mat_ptr->SpYZbeta_func = 0.;
-    SPF(es, "\t(%s = %s)", "Species YZbeta Function", "YZBETA_NONE");
+    SPF(es, "\t(%s = %s)", "Species YZbeta Function", "NONE");
   }
   ECHO(es, echo_file);
 
@@ -6624,7 +6651,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       mat_ptr->MomentShock_Ref[3] = a3;
       SPF(endofstring(es), "YZBETA %.4g", mat_ptr->Mwt_func);
     } else {
-      mat_ptr->MomentShock_funcModel = YZBETA_NONE;
+      mat_ptr->MomentShock_funcModel = SC_NONE;
       mat_ptr->MomentShock_func = 0.;
       SPF(es, "\t(%s = %s)", "Moment Shock Function", "NONE");
     }

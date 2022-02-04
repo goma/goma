@@ -2313,7 +2313,7 @@ int assemble_moments(double time, /* present time value */
 
   dbl k_dc[MAX_MOMENTS] = {0};
   //  dbl d_k_dc[MAX_MOMENTS][MDE] = {{0}};
-  if (mp->MomentShock_funcModel != YZBETA_NONE) {
+  if (mp->MomentShock_funcModel != SC_NONE) {
     for (int mom = 0; mom < MAX_MOMENTS; mom++) {
       eqn = R_MOMENT0 + mom;
       peqn = upd->ep[pg->imtrx][eqn];
