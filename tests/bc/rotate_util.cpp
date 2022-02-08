@@ -165,6 +165,8 @@ TEST_CASE("goma_check_normals_within_critical_angle", "[bc][automatic_rotations]
 
   // check that when they are near x direction they are a surface
   // n1 == n3 n2 is slightly off
+  helper_set_normal_from_vector(normals[1], sq2n1);
+  sq2n1[0] += 0.1;
   helper_set_normal_from_vector(normals[2], sq2n1);
   REQUIRE(goma_check_normals_within_critical_angle(normals, n_normals));
 
@@ -221,7 +223,8 @@ TEST_CASE("goma_best_coordinate_system_3D 1 normal", "[bc][automatic_rotations]"
 
   // Check that we keep our default coordinate system
   helper_set_normal_from_vector(normals[0], n1);
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+  int type;
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
   REQUIRE(error != GOMA_ERROR);
 
   REQUIRE(gds_vector_get(rotated_coord[0]->normal, 0) == Approx(1.0));
@@ -237,7 +240,7 @@ TEST_CASE("goma_best_coordinate_system_3D 1 normal", "[bc][automatic_rotations]"
   REQUIRE(gds_vector_get(rotated_coord[2]->normal, 2) == Approx(1.0));
 
   helper_set_normal_from_vector(normals[0], n2);
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
   REQUIRE(error != GOMA_ERROR);
 
   REQUIRE(gds_vector_get(rotated_coord[0]->normal, 0) == Approx(1.0));
@@ -253,7 +256,7 @@ TEST_CASE("goma_best_coordinate_system_3D 1 normal", "[bc][automatic_rotations]"
   REQUIRE(gds_vector_get(rotated_coord[2]->normal, 2) == Approx(1.0));
 
   helper_set_normal_from_vector(normals[0], n3);
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
   REQUIRE(error != GOMA_ERROR);
 
   REQUIRE(gds_vector_get(rotated_coord[0]->normal, 0) == Approx(1.0));
@@ -272,7 +275,7 @@ TEST_CASE("goma_best_coordinate_system_3D 1 normal", "[bc][automatic_rotations]"
   double mn1[3] = {-1.0, 0.0, 0.0};
   helper_set_normal_from_vector(normals[0], mn1);
 
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
   REQUIRE(error != GOMA_ERROR);
 
   REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
@@ -281,7 +284,7 @@ TEST_CASE("goma_best_coordinate_system_3D 1 normal", "[bc][automatic_rotations]"
   double mn2[3] = {0.0, -1.0, 0.0};
   helper_set_normal_from_vector(normals[0], mn2);
 
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
   REQUIRE(error != GOMA_ERROR);
 
   REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
@@ -290,7 +293,7 @@ TEST_CASE("goma_best_coordinate_system_3D 1 normal", "[bc][automatic_rotations]"
   double mn3[3] = {0.0, 0.0, -1.0};
   helper_set_normal_from_vector(normals[0], mn3);
 
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord,&type);
   REQUIRE(error != GOMA_ERROR);
 
   REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
@@ -299,7 +302,7 @@ TEST_CASE("goma_best_coordinate_system_3D 1 normal", "[bc][automatic_rotations]"
   double noff1[3] = {INV_SQRT_2, INV_SQRT_2, 0};
   helper_set_normal_from_vector(normals[0], noff1);
 
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
   REQUIRE(error != GOMA_ERROR);
 
   REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
@@ -308,7 +311,7 @@ TEST_CASE("goma_best_coordinate_system_3D 1 normal", "[bc][automatic_rotations]"
   double noff2[3] = {INV_SQRT_2, 0, INV_SQRT_2};
   helper_set_normal_from_vector(normals[0], noff2);
 
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
   REQUIRE(error != GOMA_ERROR);
 
   REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
@@ -317,7 +320,7 @@ TEST_CASE("goma_best_coordinate_system_3D 1 normal", "[bc][automatic_rotations]"
   double noff3[3] = {0.4242640687119285, 0.565685424949238, 0.7071067811865475};
   helper_set_normal_from_vector(normals[0], noff3);
 
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
   REQUIRE(error != GOMA_ERROR);
 
   REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
@@ -326,7 +329,7 @@ TEST_CASE("goma_best_coordinate_system_3D 1 normal", "[bc][automatic_rotations]"
   double noff4[3] = {-0.565685424949238, 0.4242640687119285, 0.7071067811865475};
   helper_set_normal_from_vector(normals[0], noff4);
 
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
   REQUIRE(error != GOMA_ERROR);
 
   REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
@@ -335,7 +338,7 @@ TEST_CASE("goma_best_coordinate_system_3D 1 normal", "[bc][automatic_rotations]"
   double noff5[3] = {-0.565685424949238, 0.4242640687119285, -0.7071067811865475};
   helper_set_normal_from_vector(normals[0], noff5);
 
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
   REQUIRE(error != GOMA_ERROR);
 
   REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
@@ -344,7 +347,7 @@ TEST_CASE("goma_best_coordinate_system_3D 1 normal", "[bc][automatic_rotations]"
   double noff6[3] = {0.565685424949238, -0.4242640687119285, -0.7071067811865475};
   helper_set_normal_from_vector(normals[0], noff6);
 
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
   REQUIRE(error != GOMA_ERROR);
 
   REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
@@ -373,7 +376,8 @@ TEST_CASE("goma_best_coordinate_system_3D 2 normals surface", "[bc][automatic_ro
   helper_set_normal_from_vector(normals[1], m2);
 
   goma_error error;
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+  int type;
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
   REQUIRE(error != GOMA_ERROR);
 
   REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
@@ -381,7 +385,7 @@ TEST_CASE("goma_best_coordinate_system_3D 2 normals surface", "[bc][automatic_ro
 
   double m3[3] = {0.98058068, 0.19611614, 0.0};
   helper_set_normal_from_vector(normals[1], m3);
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
   REQUIRE(error != GOMA_ERROR);
 
   REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
@@ -390,7 +394,7 @@ TEST_CASE("goma_best_coordinate_system_3D 2 normals surface", "[bc][automatic_ro
 
   double m4[3] = {0.8660254, -0.5, 0};
   helper_set_normal_from_vector(normals[1], m4);
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
   REQUIRE(error != GOMA_ERROR);
 
   REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
@@ -399,7 +403,7 @@ TEST_CASE("goma_best_coordinate_system_3D 2 normals surface", "[bc][automatic_ro
 
   double m5[3] = {0.8660254, 0.5, 0};
   helper_set_normal_from_vector(normals[0], m5);
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
   REQUIRE(error != GOMA_ERROR);
 
   REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
@@ -436,7 +440,8 @@ TEST_CASE("goma_best_coordinate_system_3D 2 normals edge", "[bc][automatic_rotat
   helper_set_normal_from_vector(normals[1], m2);
 
   goma_error error;
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+  int type;
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
   REQUIRE(error != GOMA_ERROR);
 
   REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
@@ -452,7 +457,7 @@ TEST_CASE("goma_best_coordinate_system_3D 2 normals edge", "[bc][automatic_rotat
   double m4[3] = {-INV_SQRT_2, INV_SQRT_2, 0.0};
   helper_set_normal_from_vector(normals[1], m4);
 
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
   REQUIRE(error != GOMA_ERROR);
 
   REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
@@ -468,7 +473,7 @@ TEST_CASE("goma_best_coordinate_system_3D 2 normals edge", "[bc][automatic_rotat
   double m6[3] = {INV_SQRT_2, -INV_SQRT_2, 0.0};
   helper_set_normal_from_vector(normals[1], m6);
 
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
   REQUIRE(error != GOMA_ERROR);
 
   REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
@@ -486,7 +491,7 @@ TEST_CASE("goma_best_coordinate_system_3D 2 normals edge", "[bc][automatic_rotat
   double m8[3] = {INV_SQRT_2 + 0.2, -INV_SQRT_2, 0.0};
   helper_set_normal_from_vector(normals[1], m8);
 
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
   REQUIRE(error != GOMA_ERROR);
 
   // not perfect coordinate normals, now need to use near check
@@ -505,7 +510,7 @@ TEST_CASE("goma_best_coordinate_system_3D 2 normals edge", "[bc][automatic_rotat
   double m10[3] = {INV_SQRT_2 + 0.2, -INV_SQRT_2 - 0.3, 0.0};
   helper_set_normal_from_vector(normals[1], m10);
 
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
   REQUIRE(error != GOMA_ERROR);
 
   // not perfect coordinate normals, now need to use near check
@@ -525,7 +530,7 @@ TEST_CASE("goma_best_coordinate_system_3D 2 normals edge", "[bc][automatic_rotat
   double m12[3] = {0.0, INV_SQRT_2, -INV_SQRT_2};
   helper_set_normal_from_vector(normals[1], m12);
 
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
   REQUIRE(error != GOMA_ERROR);
 
   // not perfect coordinate normals, now need to use near check
@@ -544,7 +549,7 @@ TEST_CASE("goma_best_coordinate_system_3D 2 normals edge", "[bc][automatic_rotat
   double m14[3] = {0.0, -INV_SQRT_2 - 0.3, INV_SQRT_2};
   helper_set_normal_from_vector(normals[1], m14);
 
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
   REQUIRE(error != GOMA_ERROR);
 
   // not perfect coordinate normals, now need to use near check
@@ -563,7 +568,7 @@ TEST_CASE("goma_best_coordinate_system_3D 2 normals edge", "[bc][automatic_rotat
   double m16[3] = {-INV_SQRT_2 - 0.3, 0.0, INV_SQRT_2};
   helper_set_normal_from_vector(normals[1], m16);
 
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
   REQUIRE(error != GOMA_ERROR);
 
   // not perfect coordinate normals, now need to use near check
@@ -605,7 +610,8 @@ TEST_CASE("goma_best_coordinate_system_3D varying normals surface", "[bc][automa
   }
 
   goma_error error;
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+  int type;
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
 
   REQUIRE(error != GOMA_ERROR);
 
@@ -617,7 +623,7 @@ TEST_CASE("goma_best_coordinate_system_3D varying normals surface", "[bc][automa
     helper_set_normal_from_vector(normals[i], yn);
   }
 
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
 
   REQUIRE(error != GOMA_ERROR);
 
@@ -629,7 +635,7 @@ TEST_CASE("goma_best_coordinate_system_3D varying normals surface", "[bc][automa
     helper_set_normal_from_vector(normals[i], zn);
   }
 
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
 
   REQUIRE(error != GOMA_ERROR);
 
@@ -651,7 +657,7 @@ TEST_CASE("goma_best_coordinate_system_3D varying normals surface", "[bc][automa
   helper_set_normal_from_vector(normals[2], m3);
   helper_set_normal_from_vector(normals[3], m4);
 
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
 
   REQUIRE(error != GOMA_ERROR);
 
@@ -673,7 +679,7 @@ TEST_CASE("goma_best_coordinate_system_3D varying normals surface", "[bc][automa
   helper_set_normal_from_vector(normals[2], m7);
   helper_set_normal_from_vector(normals[3], m8);
 
-  error = goma_best_coordinate_system_3D(normals, 5, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, 5, rotated_coord, &type);
 
   REQUIRE(error != GOMA_ERROR);
 
@@ -696,7 +702,7 @@ TEST_CASE("goma_best_coordinate_system_3D varying normals surface", "[bc][automa
   helper_set_normal_from_vector(normals[2], m11);
   helper_set_normal_from_vector(normals[3], m12);
 
-  error = goma_best_coordinate_system_3D(normals, 5, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, 5, rotated_coord, &type);
 
   REQUIRE(error != GOMA_ERROR);
   REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));
@@ -713,7 +719,7 @@ TEST_CASE("goma_best_coordinate_system_3D varying normals surface", "[bc][automa
   helper_set_normal_from_vector(normals[1], m14);
   helper_set_normal_from_vector(normals[2], m15);
 
-  error = goma_best_coordinate_system_3D(normals, 3, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, 3, rotated_coord, &type);
 
   REQUIRE(error != GOMA_ERROR);
 
@@ -757,7 +763,8 @@ TEST_CASE("goma_best_coordinate_system_3D varying normals edge", "[bc][automatic
   }
 
   goma_error error;
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+  int type;
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
 
   REQUIRE(error != GOMA_ERROR);
 
@@ -775,7 +782,7 @@ TEST_CASE("goma_best_coordinate_system_3D varying normals edge", "[bc][automatic
     helper_set_normal_from_vector(normals[i], yn);
   }
 
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
 
   REQUIRE(error != GOMA_ERROR);
 
@@ -793,7 +800,7 @@ TEST_CASE("goma_best_coordinate_system_3D varying normals edge", "[bc][automatic
     helper_set_normal_from_vector(normals[i], xn);
   }
 
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
 
   REQUIRE(error != GOMA_ERROR);
 
@@ -822,7 +829,7 @@ TEST_CASE("goma_best_coordinate_system_3D varying normals edge", "[bc][automatic
   helper_set_normal_from_vector(normals[4], m3);
   helper_set_normal_from_vector(normals[5], m4);
 
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
 
   REQUIRE(error != GOMA_ERROR);
 
@@ -834,7 +841,7 @@ TEST_CASE("goma_best_coordinate_system_3D varying normals edge", "[bc][automatic
   // Set 4
   // same as 3 but only 1 is on another edge
 
-  error = goma_best_coordinate_system_3D(normals, 5, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, 5, rotated_coord, &type);
 
   REQUIRE(error != GOMA_ERROR);
 
@@ -860,7 +867,7 @@ TEST_CASE("goma_best_coordinate_system_3D varying normals edge", "[bc][automatic
   helper_set_normal_from_vector(normals[1], m6);
   helper_set_normal_from_vector(normals[2], m7);
 
-  error = goma_best_coordinate_system_3D(normals, 3, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, 3, rotated_coord, &type);
 
   REQUIRE(error != GOMA_ERROR);
 
@@ -882,7 +889,7 @@ TEST_CASE("goma_best_coordinate_system_3D varying normals edge", "[bc][automatic
   double m8[3] = {0, 3, 0.5};
   helper_set_normal_from_vector(normals[3], m8);
 
-  error = goma_best_coordinate_system_3D(normals, 4, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, 4, rotated_coord, &type);
 
   REQUIRE(error != GOMA_ERROR);
 
@@ -919,7 +926,8 @@ TEST_CASE("goma_best_coordinate_system_3D varying normals corner", "[bc][automat
   helper_set_normal_from_vector(normals[2], zn);
 
   goma_error error;
-  error = goma_best_coordinate_system_3D(normals, 3, rotated_coord);
+  int type;
+  error = goma_best_coordinate_system_3D(normals, 3, rotated_coord, &type);
 
   REQUIRE(error != GOMA_ERROR);
 
@@ -934,7 +942,7 @@ TEST_CASE("goma_best_coordinate_system_3D varying normals corner", "[bc][automat
   helper_set_normal_from_vector(normals[1], yn);
   helper_set_normal_from_vector(normals[2], xn);
 
-  error = goma_best_coordinate_system_3D(normals, 3, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, 3, rotated_coord, &type);
 
   REQUIRE(error != GOMA_ERROR);
 
@@ -949,7 +957,7 @@ TEST_CASE("goma_best_coordinate_system_3D varying normals corner", "[bc][automat
   helper_set_normal_from_vector(normals[1], zn);
   helper_set_normal_from_vector(normals[2], xn);
 
-  error = goma_best_coordinate_system_3D(normals, 3, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, 3, rotated_coord, &type);
 
   REQUIRE(error != GOMA_ERROR);
 
@@ -964,7 +972,7 @@ TEST_CASE("goma_best_coordinate_system_3D varying normals corner", "[bc][automat
   helper_set_normal_from_vector(normals[1], xn);
   helper_set_normal_from_vector(normals[2], zn);
 
-  error = goma_best_coordinate_system_3D(normals, 3, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, 3, rotated_coord, &type);
 
   REQUIRE(error != GOMA_ERROR);
 
@@ -982,7 +990,7 @@ TEST_CASE("goma_best_coordinate_system_3D varying normals corner", "[bc][automat
   helper_set_normal_from_vector(normals[1], m2);
   helper_set_normal_from_vector(normals[2], m3);
 
-  error = goma_best_coordinate_system_3D(normals, 3, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, 3, rotated_coord, &type);
 
   REQUIRE(error != GOMA_ERROR);
 
@@ -998,7 +1006,7 @@ TEST_CASE("goma_best_coordinate_system_3D varying normals corner", "[bc][automat
   helper_set_normal_from_vector(normals[3], zn);
   helper_set_normal_from_vector(normals[4], xn);
 
-  error = goma_best_coordinate_system_3D(normals, 5, rotated_coord);
+  error = goma_best_coordinate_system_3D(normals, 5, rotated_coord, &type);
 
   REQUIRE(error != GOMA_ERROR);
 
