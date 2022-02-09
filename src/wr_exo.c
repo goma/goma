@@ -72,8 +72,8 @@ static int has_been_called = 0;
 #include "rf_io_const.h"
 #include "rf_io_structs.h" /* for Results_Description */
 #include "rf_mp.h"         /* are we serial or parallel? */
-#include "wr_exo.h"
 #include "std.h"
+#include "wr_exo.h"
 
 #define GOMA_WR_EXO_C
 
@@ -84,7 +84,7 @@ static Spfrtn sr; /* sprintf() return type, whatever it is. */
 /***********************************************************************/
 /***********************************************************************/
 /***********************************************************************/
-int wr_mesh_exo(Exo_DB *exo,      /* def'd in exo_struct.h */
+int wr_mesh_exo(Exo_DB *exo,    /* def'd in exo_struct.h */
                 char *filename, /* where to write */
                 int verbosity)  /* how much to tell while writing */
 {
@@ -192,18 +192,16 @@ int wr_mesh_exo(Exo_DB *exo,      /* def'd in exo_struct.h */
       if (verbosity > 0) {
         fprintf(stderr, "ex_put_elem_block()...\n");
       }
-      status =
-          ex_put_block(exo->exoid, EX_ELEM_BLOCK, exo_base->eb_id[i],
+      status = ex_put_block(exo->exoid, EX_ELEM_BLOCK, exo_base->eb_id[i],
                             exo_base->eb_elem_type[i], exo_base->eb_num_elems[i],
                             exo_base->eb_num_nodes_per_elem[i], 0, 0, exo_base->eb_num_attr[i]);
       GOMA_EH(status, "ex_put_blocks elem");
 
       if ((exo_base->eb_num_elems[i] * exo_base->eb_num_nodes_per_elem[i]) > 0) {
-        status = ex_put_conn(exo->exoid, EX_ELEM_BLOCK, exo_base->eb_id[i],
-                             exo_base->eb_conn[i], 0, 0);
+        status =
+            ex_put_conn(exo->exoid, EX_ELEM_BLOCK, exo_base->eb_id[i], exo_base->eb_conn[i], 0, 0);
         GOMA_EH(status, "ex_put_conn elem");
       }
-
     }
   }
 
@@ -285,7 +283,8 @@ int wr_mesh_exo(Exo_DB *exo,      /* def'd in exo_struct.h */
     if (verbosity > 0) {
       fprintf(stderr, "ex_put_prop_names(nodesets)...\n");
     }
-    status = ex_put_prop_names(exo->exoid, EX_NODE_SET, exo_base->ns_num_props - 1, &(exo_base->ns_prop_name[1]));
+    status = ex_put_prop_names(exo->exoid, EX_NODE_SET, exo_base->ns_num_props - 1,
+                               &(exo_base->ns_prop_name[1]));
     GOMA_EH(status, "ex_put_prop_names(EX_NODE_SET)");
 
     /*
@@ -321,7 +320,8 @@ int wr_mesh_exo(Exo_DB *exo,      /* def'd in exo_struct.h */
     if (verbosity > 0) {
       fprintf(stderr, "ex_put_prop_names(sidesets)...\n");
     }
-    status = ex_put_prop_names(exo->exoid, EX_SIDE_SET, exo_base->ss_num_props - 1, &(exo_base->ss_prop_name[1]));
+    status = ex_put_prop_names(exo->exoid, EX_SIDE_SET, exo_base->ss_num_props - 1,
+                               &(exo_base->ss_prop_name[1]));
     GOMA_EH(status, "ex_get_prop_names(EX_SIDE_SET)");
 
     for (i = 1; i < exo_base->ss_num_props; i++) {
@@ -343,7 +343,8 @@ int wr_mesh_exo(Exo_DB *exo,      /* def'd in exo_struct.h */
       fprintf(stderr, "ex_put_prop_names(elemblocks)...\n");
     }
 
-    status = ex_put_prop_names(exo->exoid, EX_ELEM_BLOCK, exo_base->eb_num_props - 1, &(exo_base->eb_prop_name[1]));
+    status = ex_put_prop_names(exo->exoid, EX_ELEM_BLOCK, exo_base->eb_num_props - 1,
+                               &(exo_base->eb_prop_name[1]));
     GOMA_EH(status, "ex_put_prop_names(EX_ELEM_BLOCK)");
 
     for (i = 1; i < exo_base->eb_num_props; i++) {
@@ -735,7 +736,8 @@ void wr_nodal_result_exo(Exo_DB *exo,
       base_vector[index] = vector[i];
     }
   }
-  error = ex_put_var(exo->exoid, time_step, EX_NODAL, variable_index, 1, exo->base_mesh->num_nodes, base_vector);
+  error = ex_put_var(exo->exoid, time_step, EX_NODAL, variable_index, 1, exo->base_mesh->num_nodes,
+                     base_vector);
   free(base_vector);
   GOMA_EH(error, "ex_put_var nodal");
   error = ex_close(exo->exoid);
@@ -775,8 +777,9 @@ void wr_elem_result_exo(Exo_DB *exo,
   for (i = 0; i < exo->num_elem_blocks; i++) {
     if (exo->elem_var_tab_exists == TRUE) {
       /* Only write out vals if this variable exists for the block */
-      if (exo->elem_var_tab[i * rd->nev + variable_index] == 1 && exo->base_mesh->eb_num_elems[i] > 0) {
-        dbl * base_vector = malloc(sizeof(dbl) * exo->base_mesh->eb_num_elems[i]);
+      if (exo->elem_var_tab[i * rd->nev + variable_index] == 1 &&
+          exo->base_mesh->eb_num_elems[i] > 0) {
+        dbl *base_vector = malloc(sizeof(dbl) * exo->base_mesh->eb_num_elems[i]);
         for (int j = 0; j < exo->eb_num_elems[i]; j++) {
           int index = exo->eb_ghost_elem_to_base[i][j];
           if (index >= 0) {
@@ -1174,8 +1177,7 @@ void create_truth_table(struct Results_Description *rd, Exo_DB *exo, double ***g
           }
         }
       }
-    }
-    else {
+    } else {
       i += rd->nev;
     }
   }

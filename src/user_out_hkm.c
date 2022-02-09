@@ -12,8 +12,8 @@
 
 #include <float.h>
 #include <math.h>
-#include <stdio.h>
 #include <mpi.h>
+#include <stdio.h>
 
 #include "dp_utils.h"
 #include "dpi.h"

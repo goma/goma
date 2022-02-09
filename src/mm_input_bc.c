@@ -14,11 +14,11 @@
  *$Id: mm_input_bc.c,v 5.21 2010-07-21 16:39:27 hkmoffa Exp $
  */
 
+#include <exodusII.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <exodusII.h>
 
 #include "el_elm.h"
 #include "md_timer.h"

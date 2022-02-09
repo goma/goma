@@ -3,10 +3,10 @@
 #include <assert.h>
 #include <mpi.h>
 #include <rd_mesh.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdint.h>
 
 #include "bc/rotate_util.h"
 #include "el_elm.h"
@@ -25,10 +25,10 @@
 #include "mm_fill_util.h"
 #include "rf_bc_const.h"
 #include "rf_fem_const.h"
-#include "std.h"
-#include "stdbool.h"
 #include "rf_mp.h"
 #include "sl_util_structs.h"
+#include "std.h"
+#include "stdbool.h"
 
 #ifndef GOMA_MAX_NORMALS_PER_NODE
 #define GOMA_MAX_NORMALS_PER_NODE 50

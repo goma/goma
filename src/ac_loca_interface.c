@@ -87,17 +87,18 @@
  *     application code. Each has its own comments.
  */
 
+#include <az_aztec.h>
 #include <limits.h>
 #include <math.h>
+#include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <az_aztec.h>
-#include <mpi.h>
 
 /* Put include statements for your code here. */
 
 #include "ac_stability_util.h"
+#include "az_aztec.h"
 #include "dp_comm.h"
 #include "dp_types.h"
 #include "dp_utils.h"
@@ -147,12 +148,11 @@
 #include "sl_matrix_util.h"
 #include "sl_umf.h"
 #include "sl_util.h"
+#include "sl_util_structs.h"
 #include "std.h"
 #include "wr_dpi.h"
 #include "wr_exo.h"
 #include "wr_soln.h"
-#include "az_aztec.h"
-#include "sl_util_structs.h"
 
 struct elem_side_bc_struct;
 

@@ -14,10 +14,10 @@
  * $Id: sl_eggrollwrap.c,v 5.2 2007-09-18 18:53:47 prschun Exp $
  */
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
 
 #include "ac_stability.h"
 #include "dpi.h"
@@ -25,6 +25,7 @@
 #include "exo_struct.h"
 #include "mm_as.h"
 #include "mm_as_const.h"
+#include "mm_as_structs.h"
 #include "mm_eh.h"
 #include "mm_more_utils.h"
 #include "mm_post_proc.h"
@@ -38,7 +39,6 @@
 #include "std.h"
 #include "wr_dpi.h"
 #include "wr_exo.h"
-#include "mm_as_structs.h"
 
 /* Routines that handle the eigensolver.
  *

@@ -26,11 +26,11 @@
 #endif
 
 #include "ac_stability.h"
+#include "ac_update_parameter.h"
 #include "dp_types.h"
 #include "dpi.h"
 #include "exo_struct.h"
 #include "rf_io_structs.h"
-#include "ac_update_parameter.h"
 
 EXTERN void do_LSA_mods(int);
 

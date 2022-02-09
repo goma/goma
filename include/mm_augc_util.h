@@ -31,13 +31,13 @@
 #define APREPRO_AC_BCID -9
 #endif
 
+#include "bc_contact.h"
 #include "dp_types.h"
 #include "dpi.h"
 #include "exo_struct.h"
 #include "loca_const.h"
 #include "mm_as_alloc.h"
 #include "mm_as_structs.h"
-#include "bc_contact.h"
 
 struct con_struct;
 

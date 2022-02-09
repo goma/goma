@@ -569,19 +569,19 @@ void extract_nodal_vec(double sol_vec[],
      * -> If it isn't defined, we don't need to go into the eb routine,
      *    and we will avoid some errors with cross-phase situations.
      */
-    //if (pd->e[pg->imtrx][var_no]) {
+    // if (pd->e[pg->imtrx][var_no]) {
+    /*
+     *  Next check to see whether we are obtaining material
+     *  specific values or general values of the variable
+     */
+    if (matIndex < 0 || matIndex == mn) {
       /*
-       *  Next check to see whether we are obtaining material
-       *  specific values or general values of the variable
+       * Now go into the element block and get the variable at
+       * the nodes.
        */
-      if (matIndex < 0 || matIndex == mn) {
-        /*
-         * Now go into the element block and get the variable at
-         * the nodes.
-         */
-        extract_nodal_eb_vec(sol_vec, var_no, ktype, matIndex, eb_index, nodal_vec, exo,
-                             timeDerivative, time);
-      }
+      extract_nodal_eb_vec(sol_vec, var_no, ktype, matIndex, eb_index, nodal_vec, exo,
+                           timeDerivative, time);
+    }
     //}
   }
   return;

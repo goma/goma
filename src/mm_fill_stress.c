@@ -19,9 +19,9 @@
 /* Standard include files */
 
 #include <math.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdbool.h>
 
 /* GOMA include files */
 #include "ac_stability.h"
@@ -1202,9 +1202,9 @@ int assemble_stress(dbl tt, /* parameter to vary time integration from
  *equation by adding the divergence of (g + gT).
  */
 
-int assemble_stress_fortin(dbl tt,           /* parameter to vary time integration from
-                                              * explicit (tt = 1) to implicit (tt = 0) */
-                           dbl dt,           /* current time step size */
+int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
+                                    * explicit (tt = 1) to implicit (tt = 0) */
+                           dbl dt, /* current time step size */
                            PG_DATA *pg_data) {
   int dim, p, q, r, a, b, w, k;
 
@@ -1430,7 +1430,6 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
   SUPG_terms supg_terms;
   if (supg != 0.) {
     supg_tau(&supg_terms, dim, 0.0, pg_data, dt, TRUE, eqn);
-
   }
   /* end Petrov-Galerkin addition */
 
@@ -1788,7 +1787,8 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
                           mass = supg * supg_terms.supg_tau * phi_j * bf[eqn]->grad_phi[i][p];
 
                           for (w = 0; w < dim; w++) {
-                            mass += supg * supg_terms.d_supg_tau_dv[p][j] * v[w] * bf[eqn]->grad_phi[i][w];
+                            mass += supg * supg_terms.d_supg_tau_dv[p][j] * v[w] *
+                                    bf[eqn]->grad_phi[i][w];
                           }
 
                           mass *= s_dot[a][b];
@@ -1811,9 +1811,11 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
                         /* Petrov-Galerkin term */
                         if (supg != 0.) {
 
-                          advection_b = supg * supg_terms.supg_tau * phi_j * bf[eqn]->grad_phi[i][p];
+                          advection_b =
+                              supg * supg_terms.supg_tau * phi_j * bf[eqn]->grad_phi[i][p];
                           for (w = 0; w < dim; w++) {
-                            advection_b += supg * supg_terms.d_supg_tau_dv[p][j] * v[w] * bf[eqn]->grad_phi[i][w];
+                            advection_b += supg * supg_terms.d_supg_tau_dv[p][j] * v[w] *
+                                           bf[eqn]->grad_phi[i][w];
                           }
 
                           advection_b *= R_advection;
@@ -1895,7 +1897,8 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
                         source_b = supg * supg_terms.supg_tau * phi_j * bf[eqn]->grad_phi[i][p];
 
                         for (w = 0; w < dim; w++) {
-                          source_b += supg * supg_terms.d_supg_tau_dv[p][j] * v[w] * bf[eqn]->grad_phi[i][w];
+                          source_b += supg * supg_terms.d_supg_tau_dv[p][j] * v[w] *
+                                      bf[eqn]->grad_phi[i][w];
                         }
 
                         source_b *= R_source;
@@ -1995,9 +1998,10 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
 
                         if (supg != 0.) {
                           for (w = 0; w < dim; w++) {
-                            mass_b +=
-                                supg * (supg_terms.supg_tau * v[w] * bf[eqn]->d_grad_phi_dmesh[i][w][p][j] +
-                                        supg_terms.d_supg_tau_dX[p][j] * v[w] * bf[eqn]->grad_phi[i][w]);
+                            mass_b += supg * (supg_terms.supg_tau * v[w] *
+                                                  bf[eqn]->d_grad_phi_dmesh[i][w][p][j] +
+                                              supg_terms.d_supg_tau_dX[p][j] * v[w] *
+                                                  bf[eqn]->grad_phi[i][w]);
                           }
                           mass_b *= s_dot[a][b] * h3 * det_J;
                         }
@@ -2054,9 +2058,10 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
                         advection_d = 0.;
                         if (supg != 0.) {
                           for (w = 0; w < dim; w++) {
-                            advection_d +=
-                                supg * (supg_terms.supg_tau * v[w] * bf[eqn]->d_grad_phi_dmesh[i][w][p][j] +
-                                        supg_terms.d_supg_tau_dX[p][j] * v[w] * bf[eqn]->grad_phi[i][w]);
+                            advection_d += supg * (supg_terms.supg_tau * v[w] *
+                                                       bf[eqn]->d_grad_phi_dmesh[i][w][p][j] +
+                                                   supg_terms.d_supg_tau_dX[p][j] * v[w] *
+                                                       bf[eqn]->grad_phi[i][w]);
                           }
 
                           advection_d *= (R_advection)*det_J * h3;
@@ -2095,8 +2100,9 @@ int assemble_stress_fortin(dbl tt,           /* parameter to vary time integrati
                       if (supg != 0.) {
                         for (w = 0; w < dim; w++) {
                           source_c +=
-                              supg * (supg_terms.supg_tau * v[w] * bf[eqn]->d_grad_phi_dmesh[i][w][p][j] +
-                                      supg_terms.d_supg_tau_dX[p][j] * v[w] * bf[eqn]->grad_phi[i][w]);
+                              supg *
+                              (supg_terms.supg_tau * v[w] * bf[eqn]->d_grad_phi_dmesh[i][w][p][j] +
+                               supg_terms.d_supg_tau_dX[p][j] * v[w] * bf[eqn]->grad_phi[i][w]);
                         }
                         source_c *= R_source * det_J * h3;
                       }
@@ -2503,7 +2509,7 @@ int assemble_stress_log_conf(dbl tt,
     dcdd_factor = vn->shockcapture;
   }
 
-// Shift factor
+  // Shift factor
   if (pd->gv[TEMPERATURE]) {
     if (vn->shiftModel == CONSTANT) {
       at = vn->shift[0];
@@ -6374,7 +6380,7 @@ void compute_saramito_model_terms(dbl *sCoeff,
     }
   }
 
-  const dbl normOfStressD = sqrt(normOfStressDSqr) +1e-16;
+  const dbl normOfStressD = sqrt(normOfStressDSqr) + 1e-16;
 
   const dbl sc = 1. - yieldStress / normOfStressD;
 

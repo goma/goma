@@ -117,17 +117,17 @@ int wr_dpi(Dpi *d, char *filename) {
   CHECK_EX_ERROR(ex_error, "ex_put_init_info");
 
   ex_error = ex_put_loadbal_param(exoid, d->base_internal_nodes, d->base_boundary_nodes,
-                                  d->base_external_nodes, d->base_internal_elems, d->base_border_elems,
-                                  d->num_node_cmaps, 0, ProcID);
+                                  d->base_external_nodes, d->base_internal_elems,
+                                  d->base_border_elems, d->num_node_cmaps, 0, ProcID);
   CHECK_EX_ERROR(ex_error, "ex_put_loadbal_param");
 
-  ex_error = ex_put_cmap_params(exoid, d->node_cmap_ids, d->node_cmap_node_counts, NULL, NULL, ProcID);
+  ex_error =
+      ex_put_cmap_params(exoid, d->node_cmap_ids, d->node_cmap_node_counts, NULL, NULL, ProcID);
   CHECK_EX_ERROR(ex_error, "ex_put_cmap_params");
 
   ex_error = ex_put_processor_node_maps(exoid, d->proc_node_internal, d->proc_node_boundary,
                                         d->proc_node_external, ProcID);
   CHECK_EX_ERROR(ex_error, "ex_put_processor_node_maps");
-
 
   for (int i = 0; i < d->num_node_cmaps; i++) {
     ex_error = ex_put_node_cmap(exoid, d->node_cmap_ids[i], d->node_map_node_ids[i],

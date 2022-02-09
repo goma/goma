@@ -11,12 +11,12 @@
 \************************************************************************/
 
 #include <limits.h>
+#include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
-#include <mpi.h>
 
 #ifdef HAVE_SUNMATH
 #include <sunmath.h>
@@ -541,9 +541,9 @@ int main(int argc, char **argv)
 #endif /* End of ifdef PARALLEL */
 
   /* Now break the exodus files */
-  //if (Decompose_Flag == 1 && Num_Proc > 1) {
-  //  decompose_exodus_files();
-  //}
+  // if (Decompose_Flag == 1 && Num_Proc > 1) {
+  //   decompose_exodus_files();
+  // }
   check_parallel_error("Error in brking exodus files");
   MPI_Barrier(MPI_COMM_WORLD);
 

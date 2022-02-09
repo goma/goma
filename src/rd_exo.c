@@ -61,7 +61,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "rd_exo.h"
+#include "base_mesh.h"
 #include "el_elm.h"
 #include "el_elm_info.h"
 #include "exo_struct.h"
@@ -69,13 +69,13 @@
 #include "mm_eh.h"
 #include "mm_elem_block_structs.h"
 #include "mm_mp.h"
+#include "rd_exo.h"
 #include "rd_mesh.h"
 #include "rf_allo.h"
 #include "rf_mp.h"
 #include "rf_solver.h"
 #include "rf_solver_const.h"
 #include "std.h"
-#include "base_mesh.h"
 
 struct Material_Properties;
 
@@ -1292,7 +1292,7 @@ int free_exo(Exo_DB *x) /* pointer to EXODUS II FE db structure */
   }
 
   free(x->ghost_node_to_base);
-  for (int i = 0; i <  x->num_elem_blocks; i++ ){
+  for (int i = 0; i < x->num_elem_blocks; i++) {
     free(x->eb_ghost_elem_to_base[i]);
   }
   free(x->eb_ghost_elem_to_base);
@@ -1420,7 +1420,8 @@ static void zero_base_base_mesh(Exo_DB *exo) {
   int length_conn;
 
   struct Exodus_Base *base = exo->base_mesh;
-  if (base == NULL) return;
+  if (base == NULL)
+    return;
 
   /*
    * 1. Node numbers are named in the connectivity lists for each

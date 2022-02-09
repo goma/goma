@@ -13,11 +13,11 @@
 #ifndef GOMA_AC_UPDATE_PARAMETER_H
 #define GOMA_AC_UPDATE_PARAMETER_H
 
+#include "ac_conti.h"
 #include "ac_hunt.h"
 #include "dp_types.h"
 #include "dpi.h"
 #include "exo_struct.h"
-#include "ac_conti.h"
 
 #ifdef EXTERN
 #undef EXTERN

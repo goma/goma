@@ -165,7 +165,6 @@ struct Exodus_Base {
    * These are extras that are merely a convenience.
    */
 
-
   int *node_map;
   int *elem_map;
 
@@ -173,19 +172,19 @@ struct Exodus_Base {
   /*
    * Node set information...
    */
-  int *ns_id;             /* Node set IDs. */
-  int *ns_num_nodes;      /* Number of nodes in each ns. */
-  int *ns_num_distfacts;  /* Number of dfs in each ns.  */
-  int *ns_node_index;     /* Index in big list of nodes for ea ns.  */
+  int *ns_id;            /* Node set IDs. */
+  int *ns_num_nodes;     /* Number of nodes in each ns. */
+  int *ns_num_distfacts; /* Number of dfs in each ns.  */
+  int *ns_node_index;    /* Index in big list of nodes for ea ns.  */
   int *ns_distfact_index;
   dbl *ns_distfact_list;
-  int *ns_node_list;      /* Big list of nds for all ns. */
+  int *ns_node_list; /* Big list of nds for all ns. */
 
   /*
    * Side set information...
    */
-  int ss_elem_len;     /* Length of ss element/side lists. */
-  int ss_node_len;     /* Length of ss node list. */
+  int ss_elem_len; /* Length of ss element/side lists. */
+  int ss_node_len; /* Length of ss node list. */
 
   int *ss_id;             /* SS identifiers for ea side set. */
   int *ss_num_sides;      /* SS num sides per set. */
@@ -194,7 +193,7 @@ struct Exodus_Base {
   int *ss_distfact_index; /* SS index into df list. */
   int *ss_elem_list;      /* SS element list. */
   int *ss_side_list;      /* SS side list. */
-  dbl *ss_distfact_list; /* SS df list. */
+  dbl *ss_distfact_list;  /* SS df list. */
 
   /*
    * Properties...

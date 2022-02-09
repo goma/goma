@@ -35,6 +35,7 @@
 #include "mm_as.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
+#include "mm_augc_util.h"
 #include "mm_eh.h"
 #include "mm_fill_aux.h"
 #include "mm_fill_fill.h"
@@ -56,7 +57,6 @@
 #include "rf_mp.h"
 #include "std.h"
 #include "wr_side_data.h"
-#include "mm_augc_util.h"
 
 extern double time_goma_started; /* def'd and set in main.c */
 

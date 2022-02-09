@@ -47,8 +47,8 @@ EXTERN int build_side_node_list(int,      /* elem - the element number */
 
 EXTERN int get_exterior_faces(int, int *, const Exo_DB *, const Dpi *);
 
-int sides2nodes(const int face,     /* assume face number 0,1,...,num_faces-1 */
-                const int shape,    /* one of LINE_SEGMENT, etc. */
+int sides2nodes(const int face,      /* assume face number 0,1,...,num_faces-1 */
+                const int shape,     /* one of LINE_SEGMENT, etc. */
                 int *local_indeces); /* get filled with right ones */
 
 #endif /* GOMA_EXO_CONN_H */

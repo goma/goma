@@ -50,6 +50,7 @@
 #include "rf_fem.h"
 #include "rf_fem_const.h"
 #include "rf_io.h"
+#include "rf_io_const.h"
 #include "rf_io_structs.h"
 #include "rf_mp.h"
 #include "rf_node_const.h"
@@ -58,12 +59,11 @@
 #include "rf_solver_const.h"
 #include "rf_util.h"
 #include "sl_auxutil.h"
+#include "sl_util.h" /* defines sl_init() */
 #include "sl_util_structs.h"
 #include "std.h"
 #include "wr_exo.h"
 #include "wr_soln.h"
-#include "sl_util.h" /* defines sl_init() */
-#include "rf_io_const.h"
 
 #ifdef HAVE_FRONT
 extern int mf_setup(int *,        /* nelem_glob */

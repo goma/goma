@@ -1205,7 +1205,7 @@ static goma_error initialize_petsc_matrix(struct GomaLinearSolverData *ams,
   ams->npu_plus = num_universe_dofs[pg->imtrx];
 
   DPRINTF(stdout, "\n%-30s= %d\n", "Number of unknowns", num_universe_dofs[pg->imtrx]);
-  DPRINTF(stdout, "\n%-30s= %ld\n", "Number of matrix nonzeroes", (long) nnz);
+  DPRINTF(stdout, "\n%-30s= %ld\n", "Number of matrix nonzeroes", (long)nnz);
 
   free(d_nnz);
   free(o_nnz);
@@ -1753,7 +1753,7 @@ void petsc_solve_post_proc(double **post_proc_vect, RESULTS_DESCRIPTION_STRUCT *
                  matrix_data->local_to_global, post_proc_vect[pp]);
     double pp_end = MPI_Wtime();
     P0PRINTF("PP %*.*s %ld iterations %4.4e seconds\n", 10, 10,
-             rd->nvname[rd->TotalNVSolnOutput + pp], (long) pits, pp_end - pp_start);
+             rd->nvname[rd->TotalNVSolnOutput + pp], (long)pits, pp_end - pp_start);
   }
   double end = MPI_Wtime();
   P0PRINTF("Post Proc Time = %4.4e s\n\n", end - start);

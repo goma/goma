@@ -10,8 +10,8 @@
 * This software is distributed under the GNU General Public License.	  *
 \************************************************************************/
 
-#include <stdlib.h>
 #include <Amesos_config.h>
+#include <stdlib.h>
 #include <string>
 
 #include "Amesos_BaseSolver.h"

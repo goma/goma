@@ -34,9 +34,9 @@ typedef int goma_error;
 #define GOMA_SUCCESS 0
 #define GOMA_DEBUG   1
 
+#include <mpi.h>
 #include <stdarg.h> /* for var args... */
 #include <stdbool.h>
-#include <mpi.h>
 
 #include "std.h"
 

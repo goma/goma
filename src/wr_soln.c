@@ -13,8 +13,8 @@
 #define _WR_SOLN_C
 #include "wr_soln.h"
 
-#include <stdio.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 #include "dpi.h"
 #include "el_elm_info.h"

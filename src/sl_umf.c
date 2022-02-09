@@ -69,8 +69,8 @@
 
 #define GOMA_SL_UMF_C
 #include "mm_eh.h"
-#include "sl_umf.h"
 #include "sl_auxutil.h"
+#include "sl_umf.h"
 
 /* how many different linear systems might UMF be used for? */
 #ifndef UMF_MAX_SYSTEMS

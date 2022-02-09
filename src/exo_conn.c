@@ -72,11 +72,11 @@
 #include "rd_mesh.h"
 #include "rf_allo.h"
 #include "rf_fem.h"
+#include "rf_fem_const.h"
 #include "rf_mp.h"
 #include "rf_solver.h"
 #include "rf_solver_const.h"
 #include "std.h"
-#include "rf_fem_const.h"
 
 #define GOMA_EXO_CONN_C
 
@@ -90,7 +90,6 @@ static int int_intersect(int *,     /* a - first integer list	        (in) */
                          const int, /* len_b - length of 2nd  integer list  (in) */
                          int *,     /* ia - indeces intersections, 1st list (out)*/
                          int *);    /* ib - indeces intersections, 2nd list (out)*/
-
 
 /*
  * From the PATRAN/EXODUS convention, generate a list of the GOMA id_sides
@@ -971,8 +970,8 @@ int build_side_node_list(int elem, int face, Exo_DB *exo, int *snl) {
  */
 
 int sides2nodes(const int face,     /* assume face number 0,1,...,num_faces-1 */
-                       const int shape,    /* one of LINE_SEGMENT, etc. */
-                       int *local_indeces) /* get filled with right ones */
+                const int shape,    /* one of LINE_SEGMENT, etc. */
+                int *local_indeces) /* get filled with right ones */
 {
   int i;
   int nodes_this_side = -1;

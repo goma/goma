@@ -5,8 +5,8 @@
 extern "C" {
 #endif
 
-#include "exo_struct.h"
 #include "dpi.h"
+#include "exo_struct.h"
 #include "mm_eh.h"
 
 goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi);

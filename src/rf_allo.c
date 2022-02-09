@@ -36,9 +36,9 @@
  * Default behavior on out of memory is to print an error message and return
  */
 static int ALLO_errorOption = 1;
-#include "std.h"
-#include "rf_io.h"
 #include "rf_allo.h"
+#include "rf_io.h"
+#include "std.h"
 
 extern int ProcID;
 

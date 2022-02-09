@@ -19,6 +19,7 @@
 #include "ac_stability_util.h"
 #include "bc/rotate.h"
 #include "bc/rotate_coordinates.h"
+#include "dpi.h"
 #include "el_elm.h"
 #include "el_elm_info.h"
 #include "el_geom.h"
@@ -37,6 +38,8 @@
 #include "mm_fill_terms.h"
 #include "mm_fill_util.h"
 #include "mm_mp.h"
+#include "mm_mp_const.h"
+#include "mm_mp_structs.h"
 #include "mm_post_proc.h"
 #include "mm_unknown_map.h"
 #include "rd_mesh.h"
@@ -52,9 +55,6 @@
 #include "rf_vars_const.h"
 #include "sl_util_structs.h"
 #include "std.h"
-#include "dpi.h"
-#include "mm_mp_const.h"
-#include "mm_mp_structs.h"
 #include "util/goma_normal.h"
 
 /*

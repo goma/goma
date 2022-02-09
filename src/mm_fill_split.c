@@ -14,17 +14,17 @@
 
 /* GOMA include files */
 #define GOMA_MM_FILL_SPLIT_C
-#include "mm_fill_split.h"
 #include "el_elm.h"
 #include "mm_as.h"
 #include "mm_as_structs.h"
 #include "mm_fill_ls.h"
+#include "mm_fill_split.h"
+#include "mm_fill_terms.h"
 #include "mm_mp.h"
 #include "mm_viscosity.h"
 #include "rf_fem.h"
 #include "rf_fem_const.h"
 #include "std.h"
-#include "mm_fill_terms.h"
 
 int assemble_ustar(dbl time_value, /* current time */
                    dbl tt,         /* parameter to vary time integration from

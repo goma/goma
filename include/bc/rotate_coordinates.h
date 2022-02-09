@@ -1,15 +1,15 @@
 #ifndef GOMA_ROTATE_UTIL
 #define GOMA_ROTATE_UTIL
-#include <stdbool.h>
 #include <math.h>
+#include <stdbool.h>
 
+#include "dpi.h"
 #include "el_elm.h"
 #include "exo_struct.h"
 #include "mm_eh.h"
 #include "rf_bc_const.h"
-#include "util/goma_normal.h"
-#include "dpi.h"
 #include "rf_fem_const.h"
+#include "util/goma_normal.h"
 
 struct Boundary_Condition;
 

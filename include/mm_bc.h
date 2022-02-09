@@ -15,9 +15,9 @@
 
 #include "dpi.h"
 #include "exo_struct.h"
+#include "mm_as_alloc.h"
 #include "mm_augc_util.h"
 #include "rf_vars_const.h"
-#include "mm_as_alloc.h"
 
 struct BC_descriptions;
 struct Boundary_Condition;

@@ -15,13 +15,13 @@
 
 #include "el_elm.h"
 #include "exo_struct.h"
+#include "mm_as_structs.h"
 #include "mm_eh.h"
 #include "mm_fill_stabilization.h"
 #include "mm_mp_const.h"
 #include "mm_mp_structs.h"
-#include "std.h"
-#include "mm_as_structs.h"
 #include "rf_allo.h"
+#include "std.h"
 
 struct GomaLinearSolverData;
 struct Generalized_Newtonian;
@@ -50,9 +50,9 @@ EXTERN int assemble_stress /* mm_fill_stress.c                          */
                             * routine "element_velocity."               */
      dbl[DIM][MDE]);       /* dvc_dnode                                 */
 
-EXTERN int assemble_stress_fortin(dbl,            /* tt - parm to vary time integration from
-                                                   * explicit (tt = 1) to implicit (tt = 0)    */
-                                  dbl,            /* dt - current time step size               */
+EXTERN int assemble_stress_fortin(dbl,        /* tt - parm to vary time integration from
+                                               * explicit (tt = 1) to implicit (tt = 0)    */
+                                  dbl,        /* dt - current time step size               */
                                   PG_DATA *); /* dvc_dnode                                 */
 
 EXTERN int assemble_stress_log_conf(dbl tt,

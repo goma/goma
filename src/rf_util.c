@@ -15,10 +15,10 @@
 
 #include <limits.h>
 #include <math.h>
+#include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <mpi.h>
 
 #include "bc_contact.h"
 #include "dp_comm.h"
@@ -2463,17 +2463,18 @@ int rd_vectors_from_exoII(double u[],
             if (mn != -1 && (pd_glob[mn]->i[pg->imtrx][var] == I_P0)) {
               int eb_index = in_list(mn, 0, exo->num_elem_blocks, Matilda);
               if (eb_index != -1 && exo->base_mesh->eb_num_elems[eb_index] > 0) {
-                error = rd_exoII_ev(u, var, mn, matrl, elem_var_names, exo->base_mesh->eb_num_elems[eb_index],
-                                    num_elem_vars, exoid, time_step, 0, exo);
+                error = rd_exoII_ev(u, var, mn, matrl, elem_var_names,
+                                    exo->base_mesh->eb_num_elems[eb_index], num_elem_vars, exoid,
+                                    time_step, 0, exo);
               }
             } else if (mn != -1 && (pd_glob[mn]->i[pg->imtrx][var] == I_P1)) {
               int eb_index = in_list(mn, 0, exo->num_elem_blocks, Matilda);
               if (eb_index != -1 && exo->base_mesh->eb_num_elems[eb_index] > 0) {
                 int dof = getdofs(type2shape(exo->eb_elem_itype[eb_index]), I_P1);
                 for (int i = 0; i < dof; i++) {
-                  error =
-                      rd_exoII_ev(u, var, mn, matrl, elem_var_names, exo->base_mesh->eb_num_elems[eb_index],
-                                  num_elem_vars, exoid, time_step, i, exo);
+                  error = rd_exoII_ev(u, var, mn, matrl, elem_var_names,
+                                      exo->base_mesh->eb_num_elems[eb_index], num_elem_vars, exoid,
+                                      time_step, i, exo);
                 }
               }
             } else {
@@ -3139,7 +3140,7 @@ static void inject_elem_vec(double sol_vec[],
            per element, or we have a problem treating it as an element
            variable. Hence the found_quantity check.                       */
         index = Index_Solution(I, varType, k, idof, matID, pg->imtrx);
-        int base_index = exo->eb_ghost_elem_to_base[eb_index][ielem-e_start];
+        int base_index = exo->eb_ghost_elem_to_base[eb_index][ielem - e_start];
         if (index != -1 && base_index != -1) {
           /* This should be the one node that has our value - set the element
              value to this */
@@ -3164,7 +3165,7 @@ static void inject_elem_vec(double sol_vec[],
          per element, or we have a problem treating it as an element
          variable. Hence the found_quantity check.                       */
       index = Index_Solution(I, varType, k, idof, matID, pg->imtrx);
-      int base_index = exo->eb_ghost_elem_to_base[eb_index][ielem-e_start];
+      int base_index = exo->eb_ghost_elem_to_base[eb_index][ielem - e_start];
       if (index != -1 && base_index != -1) {
         /* This should be the one node that has our value - set the element
            value to this */

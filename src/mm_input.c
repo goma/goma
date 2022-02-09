@@ -9887,7 +9887,7 @@ int look_for_mat_prop(FILE *imp,              /* ptr to input stream (in)*/
      */
     if (fscanf(imp, "%s", model_name) != 1) {
       GOMA_EH(GOMA_ERROR, "Error reading model name string, mat file \"%s\", property %s",
-                   current_mat_file_name, search_string);
+              current_mat_file_name, search_string);
     }
 
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", search_string, model_name);
@@ -9898,7 +9898,7 @@ int look_for_mat_prop(FILE *imp,              /* ptr to input stream (in)*/
     if (*read_species >= 0) {
       if (fscanf(imp, "%d", &species_no) != 1) {
         GOMA_EH(GOMA_ERROR, "Error reading species number, mat file \"%s\", property %s",
-                     current_mat_file_name, search_string);
+                current_mat_file_name, search_string);
       }
       if (species_no >= *read_species || species_no < 0) {
         GOMA_EH(GOMA_ERROR, "Illegal species number (%d), mat file \"%s\", property %s", species_no,
@@ -9954,7 +9954,7 @@ int look_for_mat_prop(FILE *imp,              /* ptr to input stream (in)*/
         /* allocate space */
         if (User_constants == NULL) {
           GOMA_EH(GOMA_ERROR, "USER model for %s in mat \"%s\" requires space!", search_string,
-                       current_mat_file_name);
+                  current_mat_file_name);
         }
         User_constants[species_no] = (dbl *)array_alloc(1, num_const, sizeof(dbl));
 
@@ -9977,7 +9977,7 @@ int look_for_mat_prop(FILE *imp,              /* ptr to input stream (in)*/
 
       } else {
         GOMA_EH(GOMA_ERROR, "Error reading USER constants for property %s, mat \"%s\"",
-                     search_string, current_mat_file_name);
+                search_string, current_mat_file_name);
       }
       MaterialModel[species_no] = DumModel;
       iread = 1;
@@ -9990,8 +9990,8 @@ int look_for_mat_prop(FILE *imp,              /* ptr to input stream (in)*/
 
         /* allocate space */
         if (User_constants == NULL) {
-         GOMA_EH(GOMA_ERROR, "USER_GEN model for property %s in mat \"%s\" requires space!",
-                       search_string, current_mat_file_name);
+          GOMA_EH(GOMA_ERROR, "USER_GEN model for property %s in mat \"%s\" requires space!",
+                  search_string, current_mat_file_name);
         }
 
         User_count[species_no] = num_const;
@@ -10008,7 +10008,7 @@ int look_for_mat_prop(FILE *imp,              /* ptr to input stream (in)*/
         SPF_DBL_VEC(endofstring(echo_string), num_const, User_constants[species_no]);
       } else {
         GOMA_EH(GOMA_ERROR, "Error reading USER_GEN constants for property %s, mat \"%s\"",
-                     search_string, current_mat_file_name);
+                search_string, current_mat_file_name);
       }
       MaterialModel[species_no] = DumModel;
       iread = 1;
@@ -10103,7 +10103,7 @@ int look_for_mat_proptable(FILE *imp,              /* ptr to input stream (in)*/
   if (got_it == 1) {
     if (fscanf(imp, "%s", model_name) != 1) {
       GOMA_EH(GOMA_ERROR, "Error reading model name string, mat file \"%s\", property %s",
-                   current_mat_file_name, search_string);
+              current_mat_file_name, search_string);
     }
 
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", search_string, model_name);
@@ -10111,11 +10111,11 @@ int look_for_mat_proptable(FILE *imp,              /* ptr to input stream (in)*/
     if (*read_species >= 0) {
       if (fscanf(imp, "%d", &species_no) != 1) {
         GOMA_EH(GOMA_ERROR, "Error reading species number, mat file \"%s\", property %s",
-                     current_mat_file_name, search_string);
+                current_mat_file_name, search_string);
       }
       if (species_no >= *read_species || species_no < 0) {
-        GOMA_EH(GOMA_ERROR, "Illegal species number (%d), mat file \"%s\", property %s",
-                     species_no, current_mat_file_name, search_string);
+        GOMA_EH(GOMA_ERROR, "Illegal species number (%d), mat file \"%s\", property %s", species_no,
+                current_mat_file_name, search_string);
       }
       *read_species = species_no;
 
@@ -10137,7 +10137,7 @@ int look_for_mat_proptable(FILE *imp,              /* ptr to input stream (in)*/
       } else if (num_values == VECTOR_INPUT) {
         if (fscanf(imp, "%lf %lf %lf", &a0, &a1, &a2) != 3) {
           GOMA_EH(GOMA_ERROR, "Expected 3 flts for CONSTANT model %s, mat file \"%s\"",
-                       search_string, current_mat_file_name);
+                  search_string, current_mat_file_name);
         }
         Material_property[0] = a0;
         Material_property[1] = a1;
@@ -10176,7 +10176,7 @@ int look_for_mat_proptable(FILE *imp,              /* ptr to input stream (in)*/
         }
       } else {
         GOMA_EH(GOMA_ERROR, "Error reading USER constants for property %s, mat \"%s\"",
-                     search_string, current_mat_file_name);
+                search_string, current_mat_file_name);
       }
       MaterialModel[species_no] = DumModel;
       iread = 1;
@@ -10209,7 +10209,7 @@ int look_for_mat_proptable(FILE *imp,              /* ptr to input stream (in)*/
 
       } else {
         GOMA_EH(GOMA_ERROR, "Error reading USER_GEN constants for property %s, mat \"%s\"",
-                     search_string, current_mat_file_name);
+                search_string, current_mat_file_name);
       }
       MaterialModel[species_no] = DumModel;
       iread = 1;
@@ -10219,7 +10219,7 @@ int look_for_mat_proptable(FILE *imp,              /* ptr to input stream (in)*/
 
       if (User_constants == NULL) {
         GOMA_EH(GOMA_ERROR, "TABLE model for property %s in mat \"%s\" requires space!",
-                     search_string, current_mat_file_name);
+                search_string, current_mat_file_name);
       }
 
       /*

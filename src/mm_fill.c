@@ -23,7 +23,6 @@
 
 /* GOMA include files */
 
-#include "mm_fill.h"
 #include "ac_stability.h"
 #include "ac_stability_util.h"
 #include "bc/rotate.h"
@@ -45,6 +44,7 @@
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_eh.h"
+#include "mm_fill.h"
 #include "mm_fill_aux.h"
 #include "mm_fill_common.h"
 #include "mm_fill_em.h"

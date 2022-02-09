@@ -27,11 +27,11 @@
 
 #include "dpi.h"
 #include "el_elm.h"
+#include "el_elm_info.h"
 #include "exo_struct.h"
 #include "mm_as_structs.h"
 #include "mm_fill.h"
 #include "std.h"
-#include "el_elm_info.h"
 
 struct GomaLinearSolverData;
 

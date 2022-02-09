@@ -32,10 +32,10 @@
 #include "el_elm.h"
 #include "mm_as_structs.h"
 #include "mm_fill_population.h"
+#include "mm_fill_solid.h"
 #include "rf_bc_const.h"
 #include "rf_fem_const.h"
 #include "std.h"
-#include "mm_fill_solid.h"
 
 EXTERN int assemble_mass_transport /* mm_fill_species.c                      */
     (double time,                  /* time - present time valuel; KSC           */

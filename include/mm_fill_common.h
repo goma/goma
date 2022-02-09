@@ -13,9 +13,9 @@
 #ifndef GOMA_MM_FILL_COMMON_H
 #define GOMA_MM_FILL_COMMON_H
 
+#include "mm_qtensor_model.h"
 #include "mm_std_models.h"
 #include "std.h"
-#include "mm_qtensor_model.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

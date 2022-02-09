@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "base_mesh.h"
 #include "dp_utils.h"
 #include "dpi.h"
 #include "el_elm.h" /* Must be after exodusII.h */
@@ -40,7 +41,6 @@
 #include "exo_conn.h"
 #include "exo_struct.h"
 #include "exodusII.h"
-#include "base_mesh.h"
 #include "mm_as.h"
 #include "mm_as_structs.h"
 #include "mm_eh.h"
@@ -54,11 +54,11 @@
 #include "rf_bc.h"
 #include "rf_bc_const.h"
 #include "rf_fem.h"
+#include "rf_fem_const.h"
 #include "rf_io.h"
 #include "rf_io_const.h"
 #include "rf_mp.h"
 #include "std.h"
-#include "rf_fem_const.h"
 
 #define GOMA_RD_MESH_C
 
@@ -195,8 +195,6 @@ int read_mesh_exoII(Exo_DB *exo, Dpi *dpi) {
     check_parallel_error("Error in reading Distributed Processing Information");
   }
 
-
-
   // SS_Internal_Boundary uses the dpi values
   SS_Internal_Boundary = alloc_int_1(exo->num_side_sets, INT_NOINIT);
   for (int ss_index = 0; ss_index < exo->num_side_sets; ss_index++) {
@@ -258,7 +256,7 @@ int read_mesh_exoII(Exo_DB *exo, Dpi *dpi) {
 
   build_node_node(exo);
 
-  //exchange_neighbor_ss_edges(exo, dpi);
+  // exchange_neighbor_ss_edges(exo, dpi);
 
   return 0;
 }

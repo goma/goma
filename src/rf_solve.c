@@ -92,7 +92,6 @@
 #include "adapt/omega_h_interface.h"
 #endif
 
-
 /*
  * Global variables defined in this file.
  */
@@ -2780,13 +2779,13 @@ static void predict_solution_newmark(
 } /* END of routine predict_solution_newmark  */
 
 int discard_previous_time_step(int num_unks,
-                                      double *x,
-                                      double *x_old,
-                                      double *x_older,
-                                      double *x_oldest,
-                                      double *xdot,
-                                      double *xdot_old,
-                                      double *xdot_older) {
+                               double *x,
+                               double *x_old,
+                               double *x_older,
+                               double *x_oldest,
+                               double *xdot,
+                               double *xdot_old,
+                               double *xdot_older) {
 
   dcopy1(num_unks, x, x_old);
   dcopy1(num_unks, x_old, x_older);

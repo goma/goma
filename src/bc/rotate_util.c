@@ -1,8 +1,8 @@
 #include "bc/rotate_util.h"
 
 #include <assert.h>
-#include <stdio.h>
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "bc/rotate_coordinates.h"

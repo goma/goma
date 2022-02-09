@@ -94,7 +94,6 @@ static goma_error setup_base_mesh_serial(Dpi *dpi, Exo_DB *exo) {
   return GOMA_SUCCESS;
 }
 
-
 static goma_error setup_base_mesh_parallel(Dpi *dpi, Exo_DB *exo) {
   // we are before rd_dpi so we should not have any ghosted elements
   struct Exodus_Base *base = malloc(sizeof(struct Exodus_Base));
@@ -121,14 +120,16 @@ static goma_error setup_base_mesh_parallel(Dpi *dpi, Exo_DB *exo) {
     memcpy(base->eb_elem_type[i], exo->eb_elem_type[i], MAX_STR_LENGTH * sizeof(char));
     if (exo->eb_num_elems[i] > 0) {
       base->eb_conn[i] = malloc(sizeof(int) * exo->eb_num_elems[i] * exo->eb_num_nodes_per_elem[i]);
-      memcpy(base->eb_conn[i], exo->eb_conn[i], sizeof(int) * exo->eb_num_elems[i] * exo->eb_num_nodes_per_elem[i]);
+      memcpy(base->eb_conn[i], exo->eb_conn[i],
+             sizeof(int) * exo->eb_num_elems[i] * exo->eb_num_nodes_per_elem[i]);
     } else {
       base->eb_conn[i] = NULL;
     }
   }
   MALLOC_COPY(base->eb_id, exo->eb_id, sizeof(int) * exo->num_elem_blocks);
   MALLOC_COPY(base->eb_num_elems, exo->eb_num_elems, sizeof(int) * exo->num_elem_blocks);
-  MALLOC_COPY(base->eb_num_nodes_per_elem, exo->eb_num_nodes_per_elem, sizeof(int) * exo->num_elem_blocks);
+  MALLOC_COPY(base->eb_num_nodes_per_elem, exo->eb_num_nodes_per_elem,
+              sizeof(int) * exo->num_elem_blocks);
   MALLOC_COPY(base->eb_num_attr, exo->eb_num_attr, sizeof(int) * exo->num_elem_blocks);
 
   EXO_TO_BASE(ns_node_len);

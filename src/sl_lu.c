@@ -18,8 +18,8 @@
 
 #include "mm_as.h"
 #include "mm_as_structs.h"
-#include "sl_lu.h"
 #include "rf_fem_const.h"
+#include "sl_lu.h"
 
 #define GOMA_SL_LU_C
 

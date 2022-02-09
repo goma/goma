@@ -24,8 +24,8 @@
 #include <strings.h> /* strcasecmp and strncasecmp moved here for POSIX.1 */
 
 #define GOMA_MM_POST_PROC_C
-#include "mm_post_proc.h"
 #include "mm_post_def.h"
+#include "mm_post_proc.h"
 /* GOMA include files */
 #include "ac_particles.h"
 #include "bc/rotate.h"
@@ -60,6 +60,7 @@
 #include "mm_mp.h"
 #include "mm_mp_const.h"
 #include "mm_mp_structs.h"
+#include "mm_qtensor_model.h"
 #include "mm_shell_util.h"
 #include "mm_std_models_shell.h"
 #include "mm_unknown_map.h"
@@ -87,7 +88,6 @@
 #include "user_mp.h"
 #include "user_post.h"
 #include "wr_exo.h"
-#include "mm_qtensor_model.h"
 
 /*
  * Global variable definitions.
@@ -4323,9 +4323,9 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
     }
   }
 
-/******************************************************************************/
-/*                      SMOOTHING                                             */
-/******************************************************************************/
+  /******************************************************************************/
+  /*                      SMOOTHING                                             */
+  /******************************************************************************/
 
 #ifdef HAVE_PETSC
   if (upd->petsc_solve_post_proc) {
@@ -4348,7 +4348,7 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
   for (ii = 0; ii < rd->TotalNVPostOutput; ii++) {
     exchange_node(cx[0], dpi, post_proc_vect[ii]);
   }
-  
+
   /******************************************************************************/
   /*                                BLOCK 3                                     */
   /*                CALCULATE STREAM OR FLUX FUNCTIONS                          */

@@ -30,6 +30,7 @@
 #include "mm_mp_const.h"
 #include "mm_mp_structs.h"
 #include "mm_post_def.h"
+#include "mm_std_models.h"
 #include "mm_unknown_map.h"
 #include "mm_viscosity.h"
 #include "mpi.h"
@@ -41,7 +42,6 @@
 #include "rf_node_const.h"
 #include "rf_vars_const.h"
 #include "std.h"
-#include "mm_std_models.h"
 
 extern dbl *p0; /* Defined in mm_as_alloc.c */
 

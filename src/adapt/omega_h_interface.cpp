@@ -649,7 +649,7 @@ void convert_goma_to_omega_h(Exo_DB *exo, Dpi *dpi, double **x, Mesh *mesh, bool
   // auto side_class_ids = LOs(side_class_ids_w);
   // auto side_class_dims = Read<I8>(side_class_dims_w);
   //  mesh->add_tag(dim, "class_id", 1, elem_class_ids);
-  //mesh->set_parting(OMEGA_H_GHOSTED);
+  // mesh->set_parting(OMEGA_H_GHOSTED);
   //  auto sides_are_exposed = mark_exposed_sides(mesh);
   //  classify_sides_by_exposure(mesh, sides_are_exposed);
   // mesh->add_tag(dim - 1, "class_id", 1, side_class_ids);

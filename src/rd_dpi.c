@@ -16,9 +16,9 @@
 
 #define GOMA_RD_DPI_C
 
+#include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <mpi.h>
 
 #ifdef STDC_HEADERS
 #include <stdlib.h>
@@ -27,6 +27,7 @@
 #include <el_elm_info.h>
 #include <string.h>
 
+#include "dp_ghost.h"
 #include "dpi.h"
 #include "exo_struct.h"
 #include "exodusII.h"
@@ -36,7 +37,6 @@
 #include "rf_allo.h"
 #include "rf_mp.h"
 #include "std.h"
-#include "dp_ghost.h"
 
 // Helper for exodus return values
 #define CHECK_EX_ERROR(err, format, ...)                              \
@@ -261,7 +261,6 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
     free(ss_block_count_global);
 
     d->elem_owner = alloc_int_1(exo->num_elems, ProcID);
-
   }
 
   const int num_mpi_async = 2;
@@ -490,8 +489,7 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
   // ns
   for (int j = 0; j < exo->ns_node_len; j++) {
     if (exo->ns_node_list[j] >= offset) {
-      exo->ns_node_list[j] =
-          old_to_new_external_node_order[exo->ns_node_list[j] - offset] + offset;
+      exo->ns_node_list[j] = old_to_new_external_node_order[exo->ns_node_list[j] - offset] + offset;
     }
   }
 
@@ -626,7 +624,6 @@ void uni_dpi(Dpi *dpi, Exo_DB *exo) {
     dpi->ss_index_global[i] = i;
   }
 
-
   dpi->eb_id_global = exo->eb_id;
 
   dpi->eb_num_nodes_per_elem_global = exo->eb_num_nodes_per_elem;
@@ -649,7 +646,7 @@ void uni_dpi(Dpi *dpi, Exo_DB *exo) {
   for (int i = 0; i < exo->num_nodes; i++) {
     exo->ghost_node_to_base[i] = i;
   }
-  exo->eb_ghost_elem_to_base = malloc(sizeof(int*) * exo->num_elem_blocks);
+  exo->eb_ghost_elem_to_base = malloc(sizeof(int *) * exo->num_elem_blocks);
   for (int i = 0; i < exo->num_elem_blocks; i++) {
     if (exo->eb_num_elems[i] > 0) {
       exo->eb_ghost_elem_to_base[i] = malloc(sizeof(int) * exo->eb_num_elems[i]);

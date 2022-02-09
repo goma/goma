@@ -23,7 +23,6 @@
 
 /* GOMA include files */
 
-#include "mm_numjac.h"
 #include "dpi.h"
 #include "el_elm.h"
 #include "el_elm_info.h"
@@ -35,10 +34,13 @@
 #include "mm_fill_ls.h"
 #include "mm_fill_ptrs.h"
 #include "mm_fill_stress.h"
+#include "mm_input.h"
 #include "mm_mp.h"
 #include "mm_mp_const.h"
 #include "mm_mp_structs.h"
+#include "mm_numjac.h"
 #include "mm_qp_storage.h"
+#include "mm_qtensor_model.h"
 #include "mm_unknown_map.h"
 #include "mpi.h"
 #include "rd_mesh.h"
@@ -56,8 +58,6 @@
 #include "sl_util.h"
 #include "sl_util_structs.h"
 #include "std.h"
-#include "mm_input.h"
-#include "mm_qtensor_model.h"
 
 #define GOMA_MM_NUMJAC_C
 

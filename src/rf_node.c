@@ -29,10 +29,10 @@
 #include "rf_bc.h"
 #include "rf_bc_const.h"
 #include "rf_fem.h"
+#include "rf_fem_const.h"
 #include "rf_mp.h"
 #include "rf_node_const.h"
 #include "rf_vars_const.h"
-#include "rf_fem_const.h"
 
 /****************************************************************************/
 /****************************************************************************/

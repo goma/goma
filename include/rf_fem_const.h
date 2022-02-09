@@ -70,12 +70,12 @@
 #define SUPG_GP     3
 #define SUPG_SHAKIB 4
 
-#define SC_NONE   0
+#define SC_NONE       0
 #define YZBETA_ONE    1
 #define YZBETA_TWO    2
 #define YZBETA_MIXED  3
 #define YZBETA_CUSTOM 4
-#define SC_DCDD 5
+#define SC_DCDD       5
 
 /* Viscoelastic Constitutive equation formulation */
 #define EVSS_G     1               /* Rajagopalan's formulation */

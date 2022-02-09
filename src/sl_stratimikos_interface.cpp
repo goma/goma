@@ -1,8 +1,8 @@
 #ifdef HAVE_STRATIMIKOS
 
 #include <iostream>
-#include <utility>
 #include <string>
+#include <utility>
 
 #include "Epetra_DataAccess.h"
 #include "Stratimikos_DefaultLinearSolverBuilder.hpp"

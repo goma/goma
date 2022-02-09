@@ -863,8 +863,8 @@ int calc_pspg(dbl pspg[DIM],
 
             // d_tau_pspg_dv[b][j] = -PS_scaling * pspg_rho * 0.5 * tau_pspg * tau_pspg * tau_pspg *
             // tau_adv_dv;
-           d_tau_pspg_dv[b][j] = -PS_scaling * pspg_rho * 0.5 * (tau_adv_dv) * tau_pspg *
-                                  tau_pspg * tau_pspg;
+            d_tau_pspg_dv[b][j] =
+                -PS_scaling * pspg_rho * 0.5 * (tau_adv_dv)*tau_pspg * tau_pspg * tau_pspg;
           }
         }
       }
@@ -889,8 +889,8 @@ int calc_pspg(dbl pspg[DIM],
                 tau_diff_dx += coeff * 2 * dG[i][j][b][k] * G[i][j];
               }
             }
-            d_tau_pspg_dX[b][k] = -PS_scaling * pspg_rho * 0.5 * (tau_adv_dx + tau_diff_dx) * tau_pspg *
-                                  tau_pspg * tau_pspg;
+            d_tau_pspg_dX[b][k] = -PS_scaling * pspg_rho * 0.5 * (tau_adv_dx + tau_diff_dx) *
+                                  tau_pspg * tau_pspg * tau_pspg;
           }
         }
       }

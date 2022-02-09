@@ -37,10 +37,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "dp_vif.h"
 #include "ac_particles.h"
+#include "ac_stability_util.h"
 #include "dp_types.h"
 #include "dp_utils.h"
+#include "dp_vif.h"
 #include "el_elm.h"
 #include "mm_as.h"
 #include "mm_as_const.h"
@@ -62,7 +63,6 @@
 #include "rf_mp.h"
 #include "rf_solver.h"
 #include "std.h"
-#include "ac_stability_util.h"
 
 /* #include "mm_names.h" -- use extern defs from rf_bc_const.h for these vars */
 
