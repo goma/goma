@@ -4568,10 +4568,6 @@ rd_hunt_specs(FILE *ifp,
                  hunt[iHC].ramp = 0;  
                  fprintf(stderr, "%s:\tImproper Log ramp for hunting condition %d\n", yo, iHC);
                 }
-              else if(hunt[iHC].BegParameterValue < 0.0)
-                {
-                 hunt[iHC].ramp = -2;  
-                }
 	    }
   }
 
