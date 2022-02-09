@@ -27,6 +27,7 @@ cmake-debug
 /*.includes
 *.orig
 /.spack-env/
+/scripts/.spack-env/
 /spack.lock
 /.idea/
 /cmake-build*/

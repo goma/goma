@@ -1135,6 +1135,7 @@ int free_exo(Exo_DB *x) /* pointer to EXODUS II FE db structure */
 
     if (x->ns_distfact_len > 0) {
       free(x->ns_distfact_list);
+      x->ns_distfact_list = NULL;
     }
   }
 
@@ -1164,6 +1165,7 @@ int free_exo(Exo_DB *x) /* pointer to EXODUS II FE db structure */
 
     if (x->ss_distfact_len > 0) {
       free(x->ss_distfact_list);
+      x->ss_distfact_list = NULL;
     }
   }
 

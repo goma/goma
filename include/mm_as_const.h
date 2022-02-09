@@ -70,16 +70,16 @@
 #define LOG2_POROUS_BRINK (9) /* Porous (Brinkman) term in N-S eqns */
 
 #define T_NOTHING      (0)
-#define T_SOMETHING    (1L << LOG2_SOMETHING)
-#define T_MASS         (1L << LOG2_MASS)
-#define T_ADVECTION    (1L << LOG2_ADVECTION)
-#define T_BOUNDARY     (1L << LOG2_BOUNDARY)
-#define T_DIFFUSION    (1L << LOG2_DIFFUSION)
-#define T_SOURCE       (1L << LOG2_SOURCE)
-#define T_DIVERGENCE   (1L << LOG2_DIVERGENCE)
-#define T_DIAG_FIX     (1L << LOG2_DIAG_FIX)
-#define T_OFF_DIAG_FIX (1L << LOG2_OFF_DIAG_FIX)
-#define T_POROUS_BRINK (1L << LOG2_POROUS_BRINK)
+#define T_SOMETHING    (1 << LOG2_SOMETHING)
+#define T_MASS         (1 << LOG2_MASS)
+#define T_ADVECTION    (1 << LOG2_ADVECTION)
+#define T_BOUNDARY     (1 << LOG2_BOUNDARY)
+#define T_DIFFUSION    (1 << LOG2_DIFFUSION)
+#define T_SOURCE       (1 << LOG2_SOURCE)
+#define T_DIVERGENCE   (1 << LOG2_DIVERGENCE)
+#define T_DIAG_FIX     (1 << LOG2_DIAG_FIX)
+#define T_OFF_DIAG_FIX (1 << LOG2_OFF_DIAG_FIX)
+#define T_POROUS_BRINK (1 << LOG2_POROUS_BRINK)
 
 #define T_ANYTHING (0x11111111) /*  */
 

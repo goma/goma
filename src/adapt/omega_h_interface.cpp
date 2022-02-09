@@ -2,7 +2,6 @@
 #include "adapt/omega_h_interface.h"
 
 #include <Omega_h_adapt.hpp>
-#include <Omega_h_adj.hpp>
 #include <Omega_h_array.hpp>
 #include <Omega_h_class.hpp>
 #include <Omega_h_config.h>
@@ -15,13 +14,11 @@
 #include <Omega_h_mesh.hpp>
 #include <Omega_h_metric.hpp>
 #include <Omega_h_profile.hpp>
-#include <Omega_h_remotes.hpp>
 #include <Omega_h_vector.hpp>
 #include <algorithm>
 #include <assert.h>
 #include <cstdlib>
 #include <iostream>
-#include <iterator>
 #include <map>
 #include <memory>
 #include <mpi.h>
@@ -71,7 +68,6 @@ extern "C" {
 #include "adapt/resetup_problem.h"
 #include "el_elm.h"
 #include "el_elm_info.h"
-#include "exo_conn.h"
 #include "mm_unknown_map.h"
 #include "rd_dpi.h"
 #include "rd_exo.h"
@@ -96,8 +92,9 @@ extern Comm_Ex **cx;
 
 //#define DEBUG_OMEGA_H
 
-namespace Omega_h {
+namespace goma {
 
+  using namespace Omega_h;
 #define CALL(f)                                                                          \
   do {                                                                                   \
     auto f_err = (f);                                                                    \
@@ -152,31 +149,6 @@ static void setup_names(int nnames, std::vector<char> &storage, std::vector<char
   for (int i = 0; i < nnames; ++i) {
     ptrs[std::size_t(i)] = storage.data() + max_name_length * i;
   }
-}
-
-static OMEGA_H_INLINE int side_exo2osh(Omega_h_Family family, int dim, int side) {
-  switch (family) {
-  case OMEGA_H_SIMPLEX:
-    switch (dim) {
-    case 2:
-      return (side + 2) % 3;
-    case 3:
-      switch (side) {
-      case 1:
-        return 1;
-      case 2:
-        return 2;
-      case 3:
-        return 3;
-      case 4:
-        return 0;
-      }
-    }
-    return -1;
-  case OMEGA_H_HYPERCUBE:
-    return -1;
-  }
-  return -1;
 }
 
 void convert_goma_to_omega_h(Exo_DB *exo, Dpi *dpi, double **x, Mesh *mesh, bool verbose) {
@@ -391,72 +363,7 @@ void convert_goma_to_omega_h(Exo_DB *exo, Dpi *dpi, double **x, Mesh *mesh, bool
   Write<I8> side_class_dims_w = deep_copy(mesh->get_array<I8>(dim - 1, "class_dim"));
   auto exposed_sides2side = collect_marked(sides_are_exposed);
   map_value_into(0, exposed_sides2side, side_class_ids_w);
-#if 0
-  if (dpi->num_side_sets_global) {
-    int max_side_set_id = 0;
-    if (side_set_ids.size()) {
-      max_side_set_id = *std::max_element(side_set_ids.begin(), side_set_ids.end());
-    }
-    std::vector<int> node_set_ids(std::size_t(exo->num_node_sets));
-    //    CALL(ex_get_ids(file, EX_NODE_SET, node_set_ids.data()));
-    for (int i = 0; i < exo->num_node_sets; i++) {
-      node_set_ids[i] = exo->ns_id[i];
-    }
-    std::vector<char> names_memory;
-    std::vector<char *> name_ptrs;
-    setup_names(int(dpi->num_node_sets_global + dpi->num_side_sets_global), names_memory, name_ptrs);
-    //    CALL(ex_get_names(file, EX_NODE_SET, name_ptrs.data()));
 
-    for (size_t i = 0; i < exo->num_node_sets; ++i) {
-      int global_offset;
-      for (global_offset = 0; global_offset < dpi->num_node_sets_global; global_offset++) {
-        if (exo->ns_id[i] == dpi->ns_id_global[global_offset]) break;
-      }
-      assert(global_offset < dpi->num_node_sets_global);
-      int nentries;
-      //      CALL(ex_get_set_param(file, EX_NODE_SET, node_set_ids[i], &nentries, &ndist_factors));
-      nentries = exo->ns_num_nodes[i];
-      if (verbose) {
-        std::cout << "node set " << node_set_ids[i] << " has " << nentries << " nodes\n";
-      }
-
-      int nnodes_owned = 0;
-      for (int index = 0; index < nentries; index++) {
-        int exoindex = exo->ns_node_list[exo->ns_node_index[i] + index];
-        if (exo_to_global.find(exoindex) != exo_to_global.end()) {
-          nnodes_owned++;
-        }
-      }
-
-      HostWrite<LO> h_set_nodes2nodes(nnodes_owned);
-      int index = 0;
-      for (int idx = 0; idx < nentries; idx++) {
-        int exoindex = exo->ns_node_list[exo->ns_node_index[i] + index];
-        if (exo_to_global.find(exoindex) != exo_to_global.end()) {
-          h_set_nodes2nodes[index] = exo_to_global.at(exoindex);
-          index++;
-        }
-      }
-      //      CALL(ex_get_set(file, EX_NODE_SET, node_set_ids[i], h_set_nodes2nodes.data(),
-      //      nullptr));
-      auto set_nodes2nodes = LOs(h_set_nodes2nodes.write());
-      auto nodes_are_in_set = mark_image(set_nodes2nodes, mesh->nverts());
-      auto sides_are_in_set = mark_up_all(mesh, VERT, dim - 1, nodes_are_in_set);
-      auto set_sides2side = collect_marked(sides_are_in_set);
-      auto surface_id = dpi->ns_id_global[global_offset] + dpi->num_node_sets_global;
-      if (verbose) {
-        std::cout << "node set #" << node_set_ids[i] << " \"" << name_ptrs[i]
-                  << "\" will be surface " << surface_id << '\n';
-      }
-      map_value_into(surface_id, set_sides2side, side_class_ids_w);
-      map_value_into(I8(dim - 1), set_sides2side, side_class_dims_w);
-    }
-    for (int offset = 0; offset < dpi->num_node_sets_global; offset++) {
-      auto surface_id = dpi->ns_id_global[offset] + dpi->num_side_sets_global;
-      mesh->class_sets[name_ptrs[offset]].push_back({I8(dim - 1), surface_id});
-    }
-  }
-#endif
   if (1 && dpi->num_side_sets_global) {
     std::vector<char> names_memory;
     std::vector<char *> name_ptrs;
@@ -649,7 +556,7 @@ void convert_goma_to_omega_h(Exo_DB *exo, Dpi *dpi, double **x, Mesh *mesh, bool
   // auto side_class_ids = LOs(side_class_ids_w);
   // auto side_class_dims = Read<I8>(side_class_dims_w);
   //  mesh->add_tag(dim, "class_id", 1, elem_class_ids);
-  // mesh->set_parting(OMEGA_H_GHOSTED);
+  mesh->set_parting(OMEGA_H_GHOSTED);
   //  auto sides_are_exposed = mark_exposed_sides(mesh);
   //  classify_sides_by_exposure(mesh, sides_are_exposed);
   // mesh->add_tag(dim - 1, "class_id", 1, side_class_ids);
@@ -787,8 +694,37 @@ void convert_omega_h_to_goma(
 
   MPI_Waitall(requests.size(), requests.data(), MPI_STATUSES_IGNORE);
 
+  std::vector<int> neighbor_list;
+  for (int i = 0; i < my_neighbors; i++) {
+    int proc = neighbors[i];
+    neighbor_list.push_back(proc);
+  }
+  for (size_t i = 0; i < allneighbors.size(); i++) {
+    if (allneighbors[i] == ProcID) {
+      int proc = i / max_neighbors;
+      if (std::find(neighbor_list.begin(), neighbor_list.end(), proc) == neighbor_list.end()) {
+        neighbor_list.push_back(proc);
+      }
+    }
+  }
+  std::sort(neighbor_list.begin(), neighbor_list.end());
+
+  std::vector<int> proc_node_counts(neighbor_list.size());
+  std::vector<std::vector<int>> proc_node_list(neighbor_list.size());
+  std::vector<int> proc_node_idx(neighbor_list.size()+1);
+  std::fill(proc_node_counts.begin(), proc_node_counts.end(), 0);
   std::set<int> boundary_nodes;
-  for (auto &bound_nodes : neighbor_send) {
+
+  for (unsigned int ni = 0; ni < neighbor_send.size(); ni++) {
+    auto &bound_nodes = neighbor_send[ni];
+    int pni = -1;
+    for (unsigned int i = 0; i < neighbor_list.size(); i++) {
+      if (neighbor_send_id[ni] == neighbor_list[i]) {
+        pni = i;
+      }
+    }
+    assert(pni != -1);
+
     for (auto gnode : bound_nodes) {
 #ifndef NDEBUG
       bool found = false;
@@ -796,6 +732,8 @@ void convert_omega_h_to_goma(
       for (int k = 0; k < mesh->globals(0).size(); k++) {
         if (mesh->globals(0)[k] == gnode) {
           boundary_nodes.insert(k);
+          proc_node_counts[pni] += 1;
+          proc_node_list[pni].push_back(k);
 #ifndef NDEBUG
           found = true;
 #endif
@@ -825,30 +763,28 @@ void convert_omega_h_to_goma(
       }
     }
   }
-  std::vector<int> external_nodes;
-  std::vector<int> proc_node_counts(my_neighbors);
-  std::vector<int> proc_node_idx(my_neighbors + 1);
-  std::fill(proc_node_counts.begin(), proc_node_counts.end(), 0);
-  for (int i = 0; i < my_neighbors; i++) {
-    int proc = neighbors[i];
+  for (unsigned int i = 0; i < neighbor_list.size(); i++) {
+    int proc = neighbor_list[i];
     for (int j = 0; j < vert_owners.size(); j++) {
       if (vert_owners[j] == proc && keep_nodes[j]) {
-        external_nodes.push_back(j);
-        proc_node_counts[i] += 1;
+        boundary_nodes.insert(j);
+        if (std::find(proc_node_list[i].begin(), proc_node_list[i].end(), j) == proc_node_list[i].end()) {
+          proc_node_counts[i] += 1;
+          proc_node_list[i].push_back(j);
+        }
       }
     }
   }
   proc_node_idx[0] = 0;
   std::vector<int> node_cmap_ids;
   std::vector<int> node_cmap_to_neighbor;
-  for (int i = 0; i < my_neighbors; i++) {
+  for (unsigned int i = 0; i < neighbor_list.size(); i++) {
     proc_node_idx[i + 1] = proc_node_idx[i] + proc_node_counts[i];
     if (proc_node_counts[i] > 0) {
-      node_cmap_ids.push_back(neighbors[i]);
+      node_cmap_ids.push_back(neighbor_list[i]);
       node_cmap_to_neighbor.push_back(i);
     }
   }
-  std::vector<int> external_nodes_sorted(external_nodes.begin(), external_nodes.end());
   std::vector<int> boundary_nodes_sorted(boundary_nodes.begin(), boundary_nodes.end());
   std::sort(boundary_nodes_sorted.begin(), boundary_nodes_sorted.end());
   std::vector<int> internal_nodes;
@@ -874,15 +810,12 @@ void convert_omega_h_to_goma(
     global_elem.push_back(mesh->globals(mesh->dim())[offset]);
   }
   std::vector<int> new_nodes_v;
-  new_nodes_v.reserve(internal_nodes.size() + boundary_nodes_sorted.size() + external_nodes.size());
+  new_nodes_v.reserve(internal_nodes.size() + boundary_nodes_sorted.size());
   for (auto inn : internal_nodes) {
     new_nodes_v.push_back(inn);
   }
   for (auto bnn : boundary_nodes_sorted) {
     new_nodes_v.push_back(bnn);
-  }
-  for (auto enn : external_nodes) {
-    new_nodes_v.push_back(enn);
   }
   std::vector<int> global_node(new_nodes_v.size());
   for (size_t i = 0; i < new_nodes_v.size(); i++) {
@@ -898,6 +831,12 @@ void convert_omega_h_to_goma(
     auto new_node = old_to_new_node_map[old];
     assert(new_node != -1);
     reduced_conn[i] = new_node + 1;
+  }
+
+  for (size_t i = 0; i < neighbor_list.size(); i++) {
+    for (size_t j = 0; j < proc_node_list[i].size(); j++) {
+      proc_node_list[i][j] = old_to_new_node_map[proc_node_list[i][j]] + 1;
+    }
   }
 
   ex_put_init(exoid, title, dim, global_node.size(), global_elem.size(), nelem_blocks, nnode_sets,
@@ -1112,7 +1051,7 @@ void convert_omega_h_to_goma(
   CALL(ex_put_init_info(exoid, Num_Proc, 1, &ftype));
 
   CALL(ex_put_loadbal_param(exoid, internal_nodes.size(), boundary_nodes_sorted.size(),
-                            external_nodes.size(), global_elem.size(), 0, node_cmap_ids.size(), 0,
+                            0, global_elem.size(), 0, node_cmap_ids.size(), 0,
                             ProcID));
 
   std::vector<int> elem_internal(global_elem.size());
@@ -1123,7 +1062,7 @@ void convert_omega_h_to_goma(
   std::iota(node_mesh.begin(), node_mesh.end(), 1);
 
   CALL(ex_put_processor_node_maps(exoid, node_mesh.data(), &node_mesh[internal_nodes.size()],
-                                  &node_mesh[internal_nodes.size() + boundary_nodes_sorted.size()],
+                                  NULL,
                                   ProcID));
 
   std::vector<int> cmap_node_counts;
@@ -1135,17 +1074,13 @@ void convert_omega_h_to_goma(
   CALL(
       ex_put_cmap_params(exoid, node_cmap_ids.data(), cmap_node_counts.data(), NULL, NULL, ProcID));
 
-  std::vector<int> node_map_node_ids(external_nodes.size());
-  std::vector<int> node_map_proc_ids(external_nodes.size());
+  std::vector<int> node_map_proc_ids(boundary_nodes.size());
   for (auto nidx : node_cmap_to_neighbor) {
     std::fill(node_map_proc_ids.begin() + proc_node_idx[nidx],
-              node_map_proc_ids.begin() + proc_node_idx[nidx + 1], neighbors[nidx]);
-  }
-  for (size_t i = 0; i < external_nodes.size(); i++) {
-    node_map_node_ids[i] = old_to_new_node_map[external_nodes[i]] + 1;
+              node_map_proc_ids.begin() + proc_node_idx[nidx + 1], neighbor_list[nidx]);
   }
   for (auto nidx : node_cmap_to_neighbor) {
-    CALL(ex_put_node_cmap(exoid, neighbors[nidx], &node_map_node_ids[proc_node_idx[nidx]],
+    CALL(ex_put_node_cmap(exoid, neighbor_list[nidx], proc_node_list[nidx].data(),
                           &node_map_proc_ids[proc_node_idx[nidx]], ProcID));
   }
 
@@ -1290,7 +1225,9 @@ void adapt_mesh(Omega_h::Mesh &mesh) {
 
   for (int i = 0; i < count; i++) {
     if (Omega_h::approach_metric(&mesh, opts)) {
-      std::cout << "Adapt count " << i << "\n";
+      if (ProcID == 0) {
+        std::cout << "Omega_h approach_metric adapt count = " << i << "\n";
+      }
       Omega_h::adapt(&mesh, opts);
     } else {
       break;
@@ -1312,7 +1249,7 @@ void adapt_mesh(Omega_h::Mesh &mesh) {
 
 extern "C" {
 
-void copy_solution(Dpi *dpi, double **x, Omega_h::Mesh &mesh) {
+void copy_solution(Exo_DB *exo, Dpi *dpi, double **x, Omega_h::Mesh &mesh) {
   for (int j = V_FIRST; j < V_LAST; j++) {
     int imtrx = upd->matrix_index[j];
     if (imtrx >= 0) {
@@ -1321,12 +1258,12 @@ void copy_solution(Dpi *dpi, double **x, Omega_h::Mesh &mesh) {
           std::string species_name = Exo_Var_Names[j].name2 + std::to_string(mf);
           auto var_values = mesh.get_array<Omega_h::Real>(Omega_h::VERT, species_name);
 
-          for (int i = 0; i < dpi->num_universe_nodes; i++) {
+          for (int i = 0; i < (dpi->num_internal_nodes + dpi->num_boundary_nodes); i++) {
             int ja = Index_Solution(i, j, mf, 0, -2, imtrx);
             GOMA_EH(ja, "could not find solution");
             int index = i;
             if (dpi->exodus_to_omega_h_node != NULL) {
-              index = dpi->exodus_to_omega_h_node[i];
+              index = dpi->exodus_to_omega_h_node[exo->ghost_node_to_base[i]];
             }
             x[imtrx][ja] = var_values[index];
           }
@@ -1334,12 +1271,12 @@ void copy_solution(Dpi *dpi, double **x, Omega_h::Mesh &mesh) {
       } else {
         auto var_values = mesh.get_array<Omega_h::Real>(Omega_h::VERT, Exo_Var_Names[j].name2);
 
-        for (int i = 0; i < dpi->num_universe_nodes; i++) {
+        for (int i = 0; i < (dpi->num_internal_nodes + dpi->num_boundary_nodes); i++) {
           int ja = Index_Solution(i, j, 0, 0, -2, imtrx);
           GOMA_EH(ja, "could not find solution");
           int index = i;
           if (dpi->exodus_to_omega_h_node != NULL) {
-            index = dpi->exodus_to_omega_h_node[i];
+            index = dpi->exodus_to_omega_h_node[exo->ghost_node_to_base[i]];
           }
           x[imtrx][ja] = var_values[index];
         }
@@ -1348,10 +1285,10 @@ void copy_solution(Dpi *dpi, double **x, Omega_h::Mesh &mesh) {
   }
   for (int w = 0; w < efv->Num_external_field; w++) {
     auto var_values = mesh.get_array<Omega_h::Real>(Omega_h::VERT, efv->name[w]);
-    for (int i = 0; i < dpi->num_universe_nodes; i++) {
+    for (int i = 0; i < (dpi->num_internal_nodes + dpi->num_boundary_nodes); i++) {
       int index = i;
       if (dpi->exodus_to_omega_h_node != NULL) {
-        index = dpi->exodus_to_omega_h_node[i];
+        index = dpi->exodus_to_omega_h_node[exo->ghost_node_to_base[i]];
       }
       efv->ext_fld_ndl_val[w][i] = var_values[index];
     }
@@ -1379,13 +1316,13 @@ void adapt_mesh_omega_h(struct GomaLinearSolverData **ams,
   char argv[1][8];
   char **argvptr = (char **)argv;
   auto lib = Omega_h::Library(&argc, &argvptr);
-  auto classify_with = Omega_h::exodus::NODE_SETS | Omega_h::exodus::SIDE_SETS;
+  auto classify_with = goma::exodus::NODE_SETS | goma::exodus::SIDE_SETS;
   auto verbose = false;
 #ifdef DEBUG_OMEGA_H
   verbose = true;
 #endif
   Omega_h::Mesh mesh(&lib);
-  Omega_h::exodus::convert_goma_to_omega_h(exo, dpi, x, &mesh, verbose);
+  goma::exodus::convert_goma_to_omega_h(exo, dpi, x, &mesh, verbose);
   adapt_mesh(mesh);
 
   if (first_call) {
@@ -1401,7 +1338,7 @@ void adapt_mesh_omega_h(struct GomaLinearSolverData **ams,
     ss2 << base_name << "-s." << step;
   }
 
-  Omega_h::exodus::convert_omega_h_to_goma(ss2.str().c_str(), &mesh, exo, dpi, verbose,
+  goma::exodus::convert_omega_h_to_goma(ss2.str().c_str(), &mesh, exo, dpi, verbose,
                                            classify_with);
 
   resetup_problem(exo, dpi);
@@ -1434,7 +1371,7 @@ void adapt_mesh_omega_h(struct GomaLinearSolverData **ams,
                   dpi->num_internal_nodes + dpi->num_boundary_nodes + dpi->num_external_nodes, 0);
   }
   resetup_matrix(ams, exo, dpi);
-  copy_solution(dpi, x, mesh);
+  copy_solution(exo, dpi, x, mesh);
   step++;
 }
 

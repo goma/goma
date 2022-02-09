@@ -6692,8 +6692,6 @@ void grad_scalar_fv_fill(double **base, double (*grad_phiv)[DIM], int dofs, doub
     if (VIM == 3)
       grad_val[2] += *(base[i]) * grad_phiv[i][2];
   }
-
-  return;
 }
 
 void grad_vector_fv_fill(double ***base,
@@ -6735,7 +6733,6 @@ void grad_vector_fv_fill(double ***base,
               }*/
     }
   }
-  return;
 }
 
 /*******************************************************************************/
@@ -15349,7 +15346,6 @@ int momentum_source_term(dbl f[DIM], /* Body force. */
         if (df != NULL && pd->v[pg->imtrx][VELOCITY1]) {
           for (b = 0; b < DIM; b++) {
             var = VELOCITY1 + b;
-            ;
             phi = bf[var]->phi;
             for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
               df->v[a][b][j] = mp->d_momentum_source[a][var] * phi[j];
