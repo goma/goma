@@ -46,15 +46,15 @@ static void print_stacktrace(void) {
   }
 #endif
   if (print_color) {
-    fprintf(stderr, "\033[0;33mP_%d_STACKTRACE: Obtained %zd stack frames\033[0m\n", ProcID, size);
+    fprintf(stderr, "\033[0;33mP_%d trace: Obtained %zd stack frames\033[0m\n", ProcID, size);
   } else {
-    fprintf(stderr, "P_%d_STACKTRACE: Obtained %zd stack frames.\n", ProcID, size);
+    fprintf(stderr, "P_%d trace: Obtained %zd stack frames.\n", ProcID, size);
   }
   for (size_t i = 0; i < size; i++) {
     if (print_color) {
-      fprintf(stderr, "\033[0;33mP_%d_STACKTRACE:\033[0m %s\n", ProcID, stack_strings[i]);
+      fprintf(stderr, "\033[0;33mP_%d trace:\033[0m %s\n", ProcID, stack_strings[i]);
     } else {
-      fprintf(stderr, "P_%d_STACKTRACE: %s\n", ProcID, stack_strings[i]);
+      fprintf(stderr, "P_%d trace: %s\n", ProcID, stack_strings[i]);
     }
   }
   free(stack_strings);
@@ -101,23 +101,23 @@ void goma_eh(const int error_flag, const char *file, const int line, const char 
   static char yo[] = "goma_eh";
   if (error_flag == -1) {
     log_msg("GOMA ends with an error condition.");
-#ifdef PRINT_STACK_TRACE_ON_EH
-    fprintf(stderr,
-            "--------------------------------------------------------------------------------\n");
-    print_stacktrace();
-    fprintf(stderr,
-            "--------------------------------------------------------------------------------\n");
-#endif
-#ifndef PARALLEL
-    fprintf(stderr, "ERROR EXIT: %s:%d: %s\n", file, line, message);
-    exit(-1);
-#else
     bool print_color = false;
+    fflush(stdout);
+    fflush(stderr);
 #ifndef DISABLE_COLOR_ERROR_PRINT
     if (isatty(fileno(stderr))) {
       print_color = true;
     }
 #endif
+#ifndef PARALLEL
+    if (print_color) {
+      fprintf(stderr, "\033[0;31mP_%d Goma Error: %s \033[0m(@ %s:%d)\n", ProcID, message, file,
+              line);
+    } else {
+      fprintf(stderr, "P_%d Goma Error: %s (@ %s:%d)\n", ProcID, message, file, line);
+    }
+    exit(-1);
+#else
     va_list args;
     va_start(args, format);
     char message[MAX_CHAR_ERR_MSG];
@@ -129,6 +129,9 @@ void goma_eh(const int error_flag, const char *file, const int line, const char 
     } else {
       fprintf(stderr, "P_%d Goma Error: %s (@ %s:%d)\n", ProcID, message, file, line);
     }
+#ifdef PRINT_STACK_TRACE_ON_EH
+    print_stacktrace();
+#endif
     if (Num_Proc == 1) {
       MPI_Finalize();
       exit(-1);

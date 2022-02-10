@@ -1333,6 +1333,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
      *******************************************************************/
 #ifdef HAVE_OMEGA_H
     int adapt_step = 0;
+    int last_adapt_nt = 0;
 #endif
     for (n = 0; n < MaxTimeSteps; n++) {
 
@@ -1387,9 +1388,15 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
              */
           }
 #ifdef HAVE_OMEGA_H
+          if ((tran->ale_adapt || (ls != NULL && ls->adapt)) && tran->theta != 0) {
+            GOMA_EH(GOMA_ERROR, "Error theta time step parameter = %g only 0.0 supported", tran->theta);
+          }
           if (subcycle == 0 && (tran->ale_adapt || (ls != NULL && ls->adapt)) && pg->imtrx == 0 &&
               (nt == 0 || ((ls != NULL && nt % ls->adapt_freq == 0) ||
                            (tran->ale_adapt && nt % tran->ale_adapt_freq == 0)))) {
+            if (last_adapt_nt == nt) {
+              adapt_step--;
+            }
             adapt_mesh_omega_h(ams, exo, dpi, x, x_old, x_older, xdot, xdot_old, x_oldest,
                                resid_vector, x_update, scale, adapt_step);
             adapt_step++;
@@ -1402,6 +1409,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
               }
             }
             for (int imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+              exchange_dof(cx[imtrx], dpi, x[imtrx], imtrx);
               numProcUnknowns[imtrx] = NumUnknowns[imtrx] + NumExtUnknowns[imtrx];
               dcopy1(numProcUnknowns[imtrx], x[imtrx], x_old[imtrx]);
               dcopy1(numProcUnknowns[imtrx], x_old[imtrx], x_older[imtrx]);

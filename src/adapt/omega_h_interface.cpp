@@ -744,7 +744,7 @@ void convert_omega_h_to_goma(
     }
   }
   std::vector<bool> keep_nodes(mesh->nverts());
-  std::fill(keep_nodes.begin(), keep_nodes.end(), false);
+  std::fill(keep_nodes.begin(), keep_nodes.end(), true);
 
   std::vector<int> mesh_owned_elements;
   for (int i = 0; i < mesh->nelems(); i++) {
@@ -755,13 +755,9 @@ void convert_omega_h_to_goma(
         fully_other = false;
       }
     }
-    if (!fully_other) {
-      mesh_owned_elements.push_back(i);
-      for (int j = 0; j < deg; j++) {
-        auto local = all_conn[i * deg + j];
-        keep_nodes[local] = true;
-      }
-    }
+    //if (!fully_other) {
+    mesh_owned_elements.push_back(i);
+    //}
   }
   for (unsigned int i = 0; i < neighbor_list.size(); i++) {
     int proc = neighbor_list[i];
@@ -932,7 +928,7 @@ void convert_omega_h_to_goma(
         std::vector<int> nset_nodes_new;
         for (int i = 0; i < set_nodes2node.size(); i++) {
           int local_node = old_to_new_node_map[set_nodes2node[i]];
-          if (local_node != -1 && vert_owners[set_nodes2node[i]] == ProcID) {
+          if (local_node != -1) {
             nset_nodes_new.push_back(local_node + 1);
           }
         }
@@ -1237,14 +1233,14 @@ void adapt_mesh(Omega_h::Mesh &mesh) {
   if (ProcID == 0) {
     std::cout << "Mesh imbalance = " << imb << "\n";
   }
-  if (imb > 2) {
-    GOMA_EH(-1, "Mesh imbalance %g exiting", imb);
+  //if (imb > 2) {
+  //  GOMA_EH(-1, "Mesh imbalance %g exiting", imb);
+  //}
+  mesh.balance();
+  imb = mesh.imbalance();
+  if (ProcID == 0) {
+    std::cout << "Mesh imbalance after balance = " << imb << "\n";
   }
-  // mesh.balance();
-  // imb = mesh.imbalance();
-  // if (ProcID == 0) {
-  //   std::cout << "Mesh imbalance after balance = " << imb << "\n";
-  // }
 }
 
 extern "C" {

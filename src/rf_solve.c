@@ -331,6 +331,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
   int num_pvector = 0;      /* number of solution sensitivity vectors   */
 #ifdef HAVE_OMEGA_H
   int adapt_step = 0;
+  int last_adapt_nt = 0;
 #endif
 
   /* sparse variables for fill equation subcycling */
@@ -1793,9 +1794,15 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
       }
 #endif
 #ifdef HAVE_OMEGA_H
+      if ((tran->ale_adapt || (ls != NULL && ls->adapt)) && tran->theta != 0) {
+        GOMA_EH(GOMA_ERROR, "Error theta time step parameter = %g only 0.0 supported", tran->theta);
+      }
       if ((tran->ale_adapt || (ls != NULL && ls->adapt)) && pg->imtrx == 0 &&
           (nt == 0 || ((ls != NULL && nt % ls->adapt_freq == 0) ||
                        (tran->ale_adapt && nt % tran->ale_adapt_freq == 0)))) {
+        if (last_adapt_nt == nt) {
+          adapt_step--;
+        }
         adapt_mesh_omega_h(ams, exo, dpi, &x, &x_old, &x_older, &xdot, &xdot_old, &x_oldest,
                            &resid_vector, &x_update, &scale, adapt_step);
         adapt_step++;
@@ -1806,6 +1813,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
           if (ls->Num_Var_Init > 0)
             ls_var_initialization(&x, exo, dpi, cx);
         }
+        exchange_dof(cx[0], dpi, x, 0);
         dcopy1(numProcUnknowns, x, x_old);
         dcopy1(numProcUnknowns, x_old, x_older);
         dcopy1(numProcUnknowns, x_older, x_oldest);
