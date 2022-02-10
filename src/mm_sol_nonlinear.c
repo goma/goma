@@ -467,6 +467,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
   UMI_LIST_STRUCT *curr_mat_list;
   NODE_INFO_STRUCT *node_ptr;
   int num_mat, imat, mat_index, b;
+  bool solve_skipped = false;
 
   if (pg->imtrx != prev_matrix) {
     first_linear_solver_call = TRUE;
@@ -1185,6 +1186,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
 
         glob_var_vals[5] = (double)total_mesh_volume;
       }
+      solve_skipped = true;
       goto skip_solve;
     }
 
@@ -2201,24 +2203,35 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
       }
     }
 
-    if (Epsilon[pg->imtrx][2] > 1) {
+    if (solve_skipped) {
       if (Solver_Output_Format & 32)
-        DPRINTF(stdout, "%7.1e ", Norm[1][0]);
+        DPRINTF(stdout, "        ");
       if (Solver_Output_Format & 64)
-        DPRINTF(stdout, "%7.1e ", Norm[1][1]);
+        DPRINTF(stdout, "        ");
       if (Solver_Output_Format & 128)
-        DPRINTF(stdout, "%7.1e ", Norm[1][2]);
+        DPRINTF(stdout, "        ");
       if (Solver_Output_Format & 256)
-        DPRINTF(stdout, "%s ", stringer);
+        DPRINTF(stdout, "skp ");
     } else {
-      if (Solver_Output_Format & 32)
-        DPRINTF(stdout, "%7.1e ", Norm_r[0][0]);
-      if (Solver_Output_Format & 64)
-        DPRINTF(stdout, "%7.1e ", Norm_r[0][1]);
-      if (Solver_Output_Format & 128)
-        DPRINTF(stdout, "%7.1e ", Norm_r[0][2]);
-      if (Solver_Output_Format & 256)
-        DPRINTF(stdout, "%s ", stringer);
+      if (Epsilon[pg->imtrx][2] > 1) {
+        if (Solver_Output_Format & 32)
+          DPRINTF(stdout, "%7.1e ", Norm[1][0]);
+        if (Solver_Output_Format & 64)
+          DPRINTF(stdout, "%7.1e ", Norm[1][1]);
+        if (Solver_Output_Format & 128)
+          DPRINTF(stdout, "%7.1e ", Norm[1][2]);
+        if (Solver_Output_Format & 256)
+          DPRINTF(stdout, "%s ", stringer);
+      } else {
+        if (Solver_Output_Format & 32)
+          DPRINTF(stdout, "%7.1e ", Norm_r[0][0]);
+        if (Solver_Output_Format & 64)
+          DPRINTF(stdout, "%7.1e ", Norm_r[0][1]);
+        if (Solver_Output_Format & 128)
+          DPRINTF(stdout, "%7.1e ", Norm_r[0][2]);
+        if (Solver_Output_Format & 256)
+          DPRINTF(stdout, "%s ", stringer);
+      }
     }
 
     asmslv_time = (a_end - a_start);
