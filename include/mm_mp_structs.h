@@ -326,7 +326,7 @@ struct Material_Properties
   dbl d_rho_dT[MDE];
   dbl d_rho_dC[MAX_CONC][MDE];
 
-    
+
   int Spwt_funcModel;
   dbl Spwt_func;
 
@@ -343,38 +343,38 @@ struct Material_Properties
   dbl loadfv[MAX_CONC][15];
   dbl d_diffusivity_gf[MAX_CONC][MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC];
 
-/* Property parameters needed for the Stefan-Maxwell flux model; KSC: 7/98, 2/99, 2/02; 
-   Molecular weight is used in VL_POLY; ACS 8/98 */ 
-  dbl diffusivity_Stefan_Maxwell[MAX_CONC][MAX_CONC]; 
+/* Property parameters needed for the Stefan-Maxwell flux model; KSC: 7/98, 2/99, 2/02;
+   Molecular weight is used in VL_POLY; ACS 8/98 */
+  dbl diffusivity_Stefan_Maxwell[MAX_CONC][MAX_CONC];
   dbl u_diffusivity_Stefan_Maxwell[MAX_CONC][MAX_CONC][3]; /* KSC, 9/04 */
   dbl reaction_rate;
   int ReactionRateModel;
   int len_u_reaction_rate;                             /* Constants for user-defined reaction-rate model*/
   dbl *u_reaction_rate;                                /* Constants for user-defined reaction-rate model*/
   dbl d_reaction_rate[MAX_VARIABLE_TYPES + MAX_CONC];
-  dbl molecular_weight[MAX_CONC]; 
+  dbl molecular_weight[MAX_CONC];
   int MolecularWeightModel[MAX_CONC];
   dbl d_molecular_weight[MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC];
   dbl charge_number[MAX_CONC];
   int ChargeNumberModel[MAX_CONC];
   dbl d_charge_number[MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC];
-  dbl solution_temperature;              
+  dbl solution_temperature;
   int SolutionTemperatureModel;
   int len_u_solution_temperature;              /* Constants for user-defined solution temperature model*/
   dbl *u_solution_temperature;                 /* Constants for user-defined solution temperature model*/
   dbl d_solution_temperature[MAX_VARIABLE_TYPES + MAX_CONC];
-  dbl electrolyte_temperature;                    
-  dbl electrolyte_conductivity;                    
+  dbl electrolyte_temperature;
+  dbl electrolyte_conductivity;
   dbl electrode_potential;
   dbl thermodynamic_potential;
   int ThermodynamicPotentialModel;
-  int len_u_thermodynamic_potential;                          
-  dbl *u_thermodynamic_potential;                            
+  int len_u_thermodynamic_potential;
+  dbl *u_thermodynamic_potential;
   dbl d_thermodynamic_potential[MAX_VARIABLE_TYPES + MAX_CONC];
   dbl interfacial_area;
   int InterfacialAreaModel;
-  int len_u_interfacial_area;                          
-  dbl *u_interfacial_area;                            
+  int len_u_interfacial_area;
+  dbl *u_interfacial_area;
   dbl d_interfacial_area[MAX_VARIABLE_TYPES + MAX_CONC];
 
 /* diffusivitives for each term  of HYDRO Model */
@@ -387,19 +387,19 @@ struct Material_Properties
   int CurvDiffType[MAX_CONC]  ;
   int QTensorDiffType[MAX_CONC] ;
   int NSCoeffType[MAX_CONC] ;
-  int len_u_gadiffusivity[MAX_CONC];            /*this is currently defined for MPI*/ 
-  int len_u_mdiffusivity[MAX_CONC];             /*this is currently defined for MPI*/ 
-  int len_u_fdiffusivity[MAX_CONC];             
+  int len_u_gadiffusivity[MAX_CONC];            /*this is currently defined for MPI*/
+  int len_u_mdiffusivity[MAX_CONC];             /*this is currently defined for MPI*/
+  int len_u_fdiffusivity[MAX_CONC];
   int len_u_gdiffusivity[MAX_CONC];             /*this is currently defined for MPI*/
-  int len_SBM_Lengths2[MAX_CONC];             /*this is currently defined for MPI*/ 
-  int len_u_cdiffusivity[MAX_CONC];             /*this is currently defined for MPI*/ 
+  int len_SBM_Lengths2[MAX_CONC];             /*this is currently defined for MPI*/
+  int len_u_cdiffusivity[MAX_CONC];             /*this is currently defined for MPI*/
   int len_u_qdiffusivity[MAX_CONC];             /*this is currently defined for MPI*/
   int len_u_nscoeff[MAX_CONC] ;
 
   dbl gam_diffusivity[MAX_CONC] ;               /* Kc from shear-gradient term */
-  dbl *u_gadiffusivity[MAX_CONC] ;              
-  dbl mu_diffusivity[MAX_CONC] ;                /* Kmu from viscosity-gradient term */ 
-  dbl *u_mdiffusivity[MAX_CONC] ;               
+  dbl *u_gadiffusivity[MAX_CONC] ;
+  dbl mu_diffusivity[MAX_CONC] ;                /* Kmu from viscosity-gradient term */
+  dbl *u_mdiffusivity[MAX_CONC] ;
   dbl f_diffusivity[MAX_CONC] ;                 /* normal Fickian diffusion term */
   dbl *u_fdiffusivity[MAX_CONC] ;
   dbl g_diffusivity[MAX_CONC] ;                 /* hindered settling function */
@@ -407,17 +407,24 @@ struct Material_Properties
   dbl NSCoeff[MAX_CONC] ;
   dbl *u_nscoeff[MAX_CONC] ;
   dbl *u_gdiffusivity[MAX_CONC] ;               /*this is currently defined for MPI*/
-  dbl *SBM_Lengths2[MAX_CONC] ;               /*this is currently defined for MPI*/ 
-  dbl cur_diffusivity[MAX_CONC] ;              /* curvature induced migration term */ 
-  dbl *u_cdiffusivity[MAX_CONC] ;             
-  dbl q_diffusivity[MAX_CONC][DIM] ;	/* Q tensor diffusion components. */ 
-  dbl *u_qdiffusivity[MAX_CONC] ;             
+  dbl *SBM_Lengths2[MAX_CONC] ;               /*this is currently defined for MPI*/
+  dbl cur_diffusivity[MAX_CONC] ;              /* curvature induced migration term */
+  dbl *u_cdiffusivity[MAX_CONC] ;
+  dbl q_diffusivity[MAX_CONC][DIM] ;	/* Q tensor diffusion components. */
+  dbl *u_qdiffusivity[MAX_CONC] ;
 
   /* Parameters for Ryan's Qtensor model */
   int QtensorExtensionPModel;
   int QtensorNctModel;
   dbl Qtensor_Extension_P;
   dbl Qtensor_Nct;
+
+  /* Parameters for HYDRODYNAMIC_SEDIMENT model */
+  int SettlingModel[MAX_CONC];
+  dbl SettlingSpeed[MAX_CONC];
+  int len_u_settling[MAX_CONC];
+  dbl *u_settling[MAX_CONC];
+  dbl d_settling[MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC];
 
   /* Reference Concentration Model is defined by itself */
 
@@ -444,7 +451,7 @@ struct Material_Properties
    *         They are the same thing. And, should not have a
    *         [MAX_CONC] vector associated with the quantity.
    *         Moreover, these two fields are not used within the
-   *         code, to my knowledge. Thus, they may disappear in 
+   *         code, to my knowledge. Thus, they may disappear in
    *         the future.
    */
   int MolarVolumeModel[MAX_CONC];

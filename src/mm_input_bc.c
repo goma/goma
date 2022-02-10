@@ -891,7 +891,7 @@ rd_bc_specs(FILE *ifp,
         case LIGHTM_TRANS_BC:
         case LIGHTD_TRANS_BC:
 
-	  if (fscanf(ifp, "%lf %lf %lf", 
+	  if (fscanf(ifp, "%lf %lf %lf",
 		      &BC_Types[ibc].BC_Data_Float[0],
 		      &BC_Types[ibc].BC_Data_Float[1],
 		     &BC_Types[ibc].BC_Data_Float[2]) != 3)
@@ -915,12 +915,12 @@ rd_bc_specs(FILE *ifp,
 	    if (BC_Types[ibc].BC_Name == CAPILLARY_TABLE_BC)
                {
 	  new_BC_Desc = ((struct BC_descriptions  **)
-			 realloc(new_BC_Desc,  
-				 (num_new_BC_Desc+1) * 
+			 realloc(new_BC_Desc,
+				 (num_new_BC_Desc+1) *
 				 sizeof(struct BC_descriptions *)));
 
 	  new_BC_Desc[num_new_BC_Desc] = alloc_BC_description(BC_Types[ibc].desc);
-	  
+
 	  BC_Types[ibc].desc           = new_BC_Desc[num_new_BC_Desc];
 
 	  BC_Types[ibc].index_dad      = num_new_BC_Desc++;  /* This is important to Phil */
@@ -939,13 +939,13 @@ rd_bc_specs(FILE *ifp,
 
 	  /*
 	   * Fall through for all cases which require four floating point
-	   * values as data input 
+	   * values as data input
 	   */
 	case SURFTANG_BC:
            WH(-1,"Use CAP_ENDFORCE for consistent sign convention");
            /*FALLTHROUGH*/
-	case PLANEX_BC:  
-	case PLANEY_BC: 
+	case PLANEX_BC:
+	case PLANEY_BC:
 	case PLANEZ_BC:
 	case PLANE_BC:
 	case CA_EDGE_BC:
@@ -962,7 +962,7 @@ rd_bc_specs(FILE *ifp,
 	case DX_USER_NODE_BC:
 	case DY_USER_NODE_BC:
 	case DZ_USER_NODE_BC:
-	  if (fscanf(ifp, "%lf %lf %lf %lf", 
+	  if (fscanf(ifp, "%lf %lf %lf %lf",
 		      &BC_Types[ibc].BC_Data_Float[0],
 		      &BC_Types[ibc].BC_Data_Float[1],
 		      &BC_Types[ibc].BC_Data_Float[2],
@@ -982,7 +982,7 @@ rd_bc_specs(FILE *ifp,
  	   */
  	case CA_BC:
 	case CA_MOMENTUM_BC:
- 	  if (fscanf(ifp, "%lf %lf %lf %lf", 
+ 	  if (fscanf(ifp, "%lf %lf %lf %lf",
 		     &BC_Types[ibc].BC_Data_Float[0],
 		     &BC_Types[ibc].BC_Data_Float[1],
 		     &BC_Types[ibc].BC_Data_Float[2],
@@ -995,7 +995,7 @@ rd_bc_specs(FILE *ifp,
  	  else
  	    {
 	  SPF_DBL_VEC(endofstring(echo_string), 4,  BC_Types[ibc].BC_Data_Float);
-	      /* Scan for the optional int. If not present, put a -1 in second data position */ 
+	      /* Scan for the optional int. If not present, put a -1 in second data position */
 	      /* This is to ensure a nonzero entry in BC_Data_Int[2] for CA */
 	      /* note: optional int isn't listed in the manual. What's it for? */
    	      if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[2]) != 1)
@@ -1006,7 +1006,7 @@ rd_bc_specs(FILE *ifp,
 		SPF(endofstring(echo_string)," %d", BC_Types[ibc].BC_Data_Int[2] );
  	    }
           BC_Types[ibc].max_DFlt = 4;
-	  
+
 	  break;
 
 	  /*
@@ -1195,6 +1195,47 @@ rd_bc_specs(FILE *ifp,
 	  break;
 
 	  /*
+ 	   * Fall through for all cases which require five floating point
+ 	   * values as data input and an optional species number
+ 	   */
+ 	case KIN_ANTOINE_BC:
+ 	  if (fscanf(ifp, "%lf %lf %lf %lf %lf",
+		     &BC_Types[ibc].BC_Data_Float[0],
+		     &BC_Types[ibc].BC_Data_Float[1],
+		     &BC_Types[ibc].BC_Data_Float[2],
+		     &BC_Types[ibc].BC_Data_Float[3],
+		     &BC_Types[ibc].BC_Data_Float[4]) != 5)
+
+ 	    {
+ 	      sr = sprintf(err_msg, "%s: Expected 5 flts for %s.",
+ 			   yo, BC_Types[ibc].desc->name1);
+ 	      EH(-1, err_msg);
+ 	    }
+	  SPF_DBL_VEC(endofstring(echo_string), 5,  BC_Types[ibc].BC_Data_Float);
+          BC_Types[ibc].max_DFlt = 5;
+
+	 /* Scan for the optional ints. If not present, put a -1 in its place */
+   	  if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[0]) != 1)
+            {
+	     BC_Types[ibc].BC_Data_Int[0] = -1;
+     	    }
+	  else
+            {
+	     SPF(endofstring(echo_string)," %d", BC_Types[ibc].BC_Data_Int[0] );
+ 	    }
+
+   	  if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[1]) != 1)
+            {
+	     BC_Types[ibc].BC_Data_Int[1] = -1;
+     	    }
+	  else
+            {
+	     SPF(endofstring(echo_string)," %d", BC_Types[ibc].BC_Data_Int[1] );
+ 	    }
+
+	  break;
+
+	  /*
 	   * Fall through for all cases which require five floating point
 	   * values as data input plus optional parameters 
 	   */
@@ -1307,9 +1348,9 @@ rd_bc_specs(FILE *ifp,
 	  SPF_DBL_VEC(endofstring(echo_string), 3,  BC_Types[ibc].BC_Data_Float);
 
 
-				 
+
 /**	extra floats for Flory/Chilton-Coburn correlation	**/
- 
+
 	  if ( BC_Types[ibc].BC_Data_Int[2] == FLORY_CC )
 	    {
 	      if ( fscanf(ifp, "%lf %lf", 
@@ -1341,15 +1382,15 @@ rd_bc_specs(FILE *ifp,
 	      BC_Types[ibc].BC_Data_Float[3]=0.;
 	      BC_Types[ibc].BC_Data_Float[4]=0.;
 	    }
- 
+
            BC_Types[ibc].max_DFlt = 5;
 	   BC_Types[ibc].species_eq = BC_Types[ibc].BC_Data_Int[0];
 
 	   break;
 
 	  /*
-	   * Fall through for all cases which require 1 keyword, 1 integer 
-           *  and 10 floating point values as data input 
+	   * Fall through for all cases which require 1 keyword, 1 integer
+           *  and 10 floating point values as data input
 	   */
 
         case YFLUX_SULFIDATION_BC:
@@ -1422,16 +1463,16 @@ rd_bc_specs(FILE *ifp,
 	   SPF(endofstring(echo_string)," %s %d", input,BC_Types[ibc].BC_Data_Int[0]);
 	   SPF_DBL_VEC(endofstring(echo_string), 10,  BC_Types[ibc].BC_Data_Float);
            BC_Types[ibc].max_DFlt = 10;
-	    
-	   break; 
+
+	   break;
 
 	  /*
-	   * Fall through for all cases which require 1 keyword, 4 integers 
-           *  and 1 floating point values as data input 
+	   * Fall through for all cases which require 1 keyword, 4 integers
+           *  and 1 floating point values as data input
 	   */
 
 	case VL_POLY_BC:
- 
+
 	  if (fscanf(ifp, "%80s", input) != 1)
 	    {
 	      sr = sprintf(err_msg, "%s: Expected a keyword MASS or VOLUME for %s.",
@@ -1443,7 +1484,7 @@ rd_bc_specs(FILE *ifp,
 	      if ( !strcmp(input, "VOLUME"))
 		{
 		  BC_Types[ibc].BC_Data_Int[0] = VOLUME;
-		} 
+		}
 	      else if ( !strcmp(input, "MASS"))
 		{
 		  BC_Types[ibc].BC_Data_Int[0] = MASS;
@@ -1455,7 +1496,7 @@ rd_bc_specs(FILE *ifp,
 	    }
 
 
-	  if ( fscanf(ifp, "%d %d %d %lf", 
+	  if ( fscanf(ifp, "%d %d %d %lf",
                       &BC_Types[ibc].BC_Data_Int[1],
                       &BC_Types[ibc].BC_Data_Int[2],
                       &BC_Types[ibc].BC_Data_Int[3],
@@ -1477,7 +1518,7 @@ rd_bc_specs(FILE *ifp,
 
 	  /*
 	   * Fall through for all cases which require six floating point
-	   * values as data input 
+	   * values as data input
 	   */
 
 	case SHARP_BLAKE_VELOCITY_BC:
@@ -1497,17 +1538,17 @@ rd_bc_specs(FILE *ifp,
 	    }
 
 	   for(i=0;i<6;i++) SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].BC_Data_Float[i]);
-	   break;	 
-		
+	   break;
+
 		/*
 	   * Fall through for all cases which require seven floating point
-	   * values as data input 
+	   * values as data input
 	   */
 	case CA_OR_FIX_BC:
 	case MOVING_PLANE_BC:
 	case WETTING_SPEED_LIN_BC:
-		
-	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf %lf %lf", 
+
+	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf %lf %lf",
 		      &BC_Types[ibc].BC_Data_Float[0],
 		      &BC_Types[ibc].BC_Data_Float[1],
 		      &BC_Types[ibc].BC_Data_Float[2],
@@ -2473,7 +2514,7 @@ rd_bc_specs(FILE *ifp,
                      &BC_Types[ibc].BC_Data_Float[0],
 		     &BC_Types[ibc].BC_Data_Float[1]) != 3)
 	    {
-	      sprintf(err_msg, 
+	      sprintf(err_msg,
 	              "Expected 1 int, 2 flts for %s on %sID=%d\n",
 		      BC_Types[ibc].desc->name1, BC_Types[ibc].Set_Type,
 		      BC_Types[ibc].BC_ID);
@@ -2486,9 +2527,38 @@ rd_bc_specs(FILE *ifp,
           BC_Types[ibc].max_DFlt = 2;
 
           break;
-	  
+
+          /*
+           * Fall through for all cases which require two integers and five
+           * floating point values as data input
+           */
+	case YFLUX_ANTOINE_BC:
+
+          if ( fscanf(ifp, "%d %d %lf %lf %lf %lf %lf ",
+                      &BC_Types[ibc].BC_Data_Int[0],
+                      &BC_Types[ibc].BC_Data_Int[1],
+                      &BC_Types[ibc].BC_Data_Float[0],
+                      &BC_Types[ibc].BC_Data_Float[1],
+                      &BC_Types[ibc].BC_Data_Float[2],
+                      &BC_Types[ibc].BC_Data_Float[3],
+                      &BC_Types[ibc].BC_Data_Float[4]) != 7)
+            {
+              sr = sprintf(err_msg,
+                           "Expected 2 ints, 5 flts for %s on %sID=%d\n",
+                           BC_Types[ibc].desc->name1,
+                           BC_Types[ibc].Set_Type,
+                           BC_Types[ibc].BC_ID);
+              EH(-1, err_msg);
+            }
+          BC_Types[ibc].species_eq = BC_Types[ibc].BC_Data_Int[0];
+
+	  SPF(endofstring(echo_string)," %d", BC_Types[ibc].BC_Data_Int[0]);
+	  SPF_DBL_VEC(endofstring(echo_string),5, BC_Types[ibc].BC_Data_Float);
+          BC_Types[ibc].max_DFlt = 5;
+
+          break;
 	  /*
-	   * Fall through for all cases which require two integers as data input 
+	   * Fall through for all cases which require two integers as data input
 	   * Plus an optional float
 	   */
 	case SOLID_FLUID_BC:

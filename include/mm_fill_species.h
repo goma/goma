@@ -401,6 +401,17 @@ PROTO((double [],         /* func                                      */
        dbl ,              /* dt - current value of the time step       */
        dbl ));            /* tt - parameter to vary time integration   */
 
+EXTERN void mass_flux_surf_antoine_bc		/* mm_fill_species.c                         */
+PROTO((double [],		/* func                                      */
+       double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
+       double [DIM],		/* x_dot - mesh velocity                     */
+       dbl ,			/* tt - parameter to vary time integration
+				 * from explicit (tt = 1) to
+				 * implicit (tt = 0)                         */
+       dbl ,			/* dt - current value of the time step       */
+       int ,			/* bc_input_id                               */
+       struct Boundary_Condition *)); /* BC_Types                            */
+
 EXTERN void current_BV2_surf_bc /* mm_fill_species.c - RSL 5/28/02 */
 PROTO((double [],         /* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func     */
@@ -492,11 +503,22 @@ PROTO((double [],		/* func                                      */
        int ,			/* bc_input_id                               */
        struct Boundary_Condition *)); /* BC_Types                            */
 
+EXTERN void kin_bc_antoine		/* mm_fill_species.c                         */
+PROTO((double [],		/* func                                      */
+       double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
+       double [DIM],		/* x_dot - mesh velocity                     */
+       dbl ,			/* tt - parameter to vary time integration
+				 * from explicit (tt = 1) to
+				 * implicit (tt = 0)                         */
+       dbl ,			/* dt - current value of the time step       */
+       int ,			/* bc_input_id                               */
+       struct Boundary_Condition *)); /* BC_Types                            */
+
 EXTERN void compute_leak_velocity /* mm_fill_species.c                       */
 PROTO((double *,		/* vnorm                                     */
        NORMAL_VELOCITY_DEPENDENCE_STRUCT *,
-       dbl ,			/* tt - parameter to vary time integration 
-				 * from explicit (tt = 1) to 
+       dbl ,			/* tt - parameter to vary time integration
+				 * from explicit (tt = 1) to
 				 * implicit (tt = 0)                         */
        dbl ,			/* dt - current value of the time step       */
        struct Boundary_Condition *,   /* bc                                  */
@@ -544,8 +566,8 @@ EXTERN void lat_heat_bc		/* mm_fill_species.c                         */
 PROTO((double [],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
        double [DIM],		/* x_dot - mesh velocity                     */
-       dbl ,			/* tt - parameter to vary time integration 
-				 * from explicit (tt = 1) to 
+       dbl ,			/* tt - parameter to vary time integration
+				 * from explicit (tt = 1) to
 				 * implicit (tt = 0)                         */
        dbl ,			/* dt - current value of the time step       */
        int ,			/* bc_input_id                               */
@@ -554,8 +576,8 @@ PROTO((double [],		/* func                                      */
 EXTERN void lat_heat_internal_bc /* mm_fill_species.c                        */
 PROTO((double [],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
-       const double ,		/* tt - parameter to vary time integration 
-				 * from explicit (tt = 1) to 
+       const double ,		/* tt - parameter to vary time integration
+				 * from explicit (tt = 1) to
 				 * implicit (tt = 0)                         */
        const double ,		/* dt - current value of the time step       */
        const int ,		/* bc_input_id                               */
@@ -613,7 +635,7 @@ PROTO((struct Species_Conservation_Terms *, /* st                            */
        int ));			/* w                                         */
 
 EXTERN int assemble_invariant	/* mm_fill_species.c                         */
-PROTO((double ,			/* tt - parm to vary time integration from 
+PROTO((double ,			/* tt - parm to vary time integration from
 				 * explicit (tt = 1) to implicit (tt = 0)    */
        double ));		/* dt - time step size                       */
 
@@ -623,15 +645,15 @@ PROTO((double [DIM],		/* pvconv                                    */
        CONVECTION_VELOCITY_DEPENDENCE_STRUCT *,
        double ,			/* dt                                        */
        double ));		/* tt   */
-	   
+
 EXTERN int ls_modulate_speciessource
 PROTO(( int ,
 	    struct Species_Conservation_Terms * ));
-		
+
 EXTERN void fickian_charged_gradient_bc
 PROTO(( double [],
 	double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
 	int ,	/* species number of this boundary condition */
 	double ));/* Value for normal surface gradient component       */
-		
+
 #endif /* _MM_FILL_SPECIES_H */
