@@ -2555,10 +2555,10 @@ Diffusivity (void)
  *
  *      Free Volume Theory Diffusivity Model
  * ------------------------------------------------------------------------------
- * This routine is responsible computing the diffusivity according to 
+ * This routine is responsible computing the diffusivity according to
  * free volume theory. See Paper by Duda et al., AIChE J., Vol 28, Pg 279.
  *
- *     input:  mp->u_diffusivity = param[0-16] 
+ *     input:  mp->u_diffusivity = param[0-16]
  *                  param[0] = Specific critical hole free volume of component 0
  *                             required for a jump
  *                  param[1] = Specific critical hole free volume of component 1
@@ -2579,21 +2579,21 @@ Diffusivity (void)
  *                            divided by the Natural Gas law constant (K).
  *                  param[10]= specific volume of pure component 1
  *                  param[11]= specific volume of pure component 2
- *               
+ *
  *                  param[12] = free volume model number
  *                  param[12] = 0 = FV 0  D_11 = (Vrentas and Duda, 1977)
- *                  param[12] = 1 = FV 2  (Zelinsky and Hanley , 1999) 
- *                  param[12] = 2 = FV 3   self 
- *                  param[12] = 3 = FV 4 (Alsoy and Duda, 1999) 
- *                  param[12] = 4 = FVTO (friction-based) 
+ *                  param[12] = 1 = FV 2  (Zelinsky and Hanley , 1999)
+ *                  param[12] = 2 = FV 3   self
+ *                  param[12] = 3 = FV 4 (Alsoy and Duda, 1999)
+ *                  param[12] = 4 = FVTO (friction-based)
  *
- *                  param[13] = solvent molecular weight 
+ *                  param[13] = solvent molecular weight
  *                  param[14] = polymer molecular weight
  *                  param[15] = D_o_polymer - polymer D_o for polymer
  *						 self-diffusion coefficient
- *                  param[16] = E_div_R_polymer - E_activation/R - polymer 
+ *                  param[16] = E_div_R_polymer - E_activation/R - polymer
  *						 self-diffusion model
- *                  Note: D_o_polymer and E_div_R_polymer are used SOLELY 
+ *                  Note: D_o_polymer and E_div_R_polymer are used SOLELY
  *		  		in the friction-based model !!
  *
  *     output:  mp->diffusivity[w]
@@ -2604,11 +2604,11 @@ Diffusivity (void)
  * One can make a correction by making sure that pow((1 - vol_frac_1),2)*(1.-2.*chi*vol_frac_1)
  * does not go to zero as vol_frac_1 -> 1.  For example, use a cutoff
  *  if (vol_frac_1 > 0.7)  vol_frac_1 = 0.7;
- * 
+ *
  * NOTE: This subroutine has been modified to based fv->c on species_density,
  *       and NOT MASS_FRACTION. ACSun 5/00
- * 
- * Modified to include 4 additional free volume models and is based on 
+ *
+ * Modified to include 4 additional free volume models and is based on
  * Price et al., AIChE J., Vol 49, Pg 309.  APErvin 10/03
  * ------------------------------------------------------------------------------
  */
@@ -2619,7 +2619,7 @@ Free_Vol_Theory_Diffusivity(int species_no,  /* current species number*/
   int w, fv_model_number;
 
   double T, C[MAX_CONC], dDdT;
-  double V_1s, V_2s, K11_gamma, K12_gamma, K21mTg1, K22mTg2, 
+  double V_1s, V_2s, K11_gamma, K12_gamma, K21mTg1, K22mTg2,
          chi, x_si, D_o, E_div_R, V_10, V_20;
   double vol_frac_1, vol_frac_2;
   double d_vol_frac_1_dc[MAX_CONC], dC0dc[MAX_CONC];
@@ -2633,16 +2633,16 @@ Free_Vol_Theory_Diffusivity(int species_no,  /* current species number*/
   double MW_1 = 0.0 ; /* solvent molecular weight */
   double MW_2 = 0.0 ; /* polymer molecular weight */
   double D1  = 0.0; /* the solvent self diffusion coefficient */
-  double D_o_polymer = 0.0, E_div_R_polymer = 0.0, A_friction = 0.0, ratio_D1_D2_term = 0.0 ; 
+  double D_o_polymer = 0.0, E_div_R_polymer = 0.0, A_friction = 0.0, ratio_D1_D2_term = 0.0 ;
  				/* used solely for friction model */
   double  exponen_D2 = 0.0, D2 = 0.0; 	/* used solely for friction model */
-  double d_D1_dc[MAX_CONC] ; /* derivative of D1, the solvent 
+  double d_D1_dc[MAX_CONC] ; /* derivative of D1, the solvent
 				self diffusion coefficient wrt the solvent mf */
   double  dQ_dc[MAX_CONC];    /* derivative of Q_thermo wrt the solvent mf */
   double  dA_dT   ;            /* friction factor model derivative of A wrt T */
   double  d_D1_dT  ;                    /* dD1/dT */
-  double  d_D2_D1_dT=0   ;               /*  d(D2/D1)/dT */ 
-  double  d_D2_dc[MAX_CONC];      /*  d(D2/D1)/dw1 */ 
+  double  d_D2_D1_dT=0   ;               /*  d(D2/D1)/dT */
+  double  d_D2_dc[MAX_CONC];      /*  d(D2/D1)/dw1 */
   double  dA_dc[MAX_CONC]   ; /* friction factor model derivative of A wrt w1 */
 
   double term1,term2, term3,term4 ; /* intermediate parameters */
@@ -2675,16 +2675,16 @@ Free_Vol_Theory_Diffusivity(int species_no,  /* current species number*/
       beta = 1.0 ;
     }
   if (fv_model_number  == 4) /* friction model requires these two parameters */
-    {   
+    {
       D_o_polymer =  param[15] ;
       E_div_R_polymer = param[16];
-    }  
-	
+    }
+
   /*
    * this minor kludge is added for backward compatibility with the testsuite problems
    */
-	 
-	 
+
+
   if( pd->Num_Species_Eqn == 1 )
     {
       if( mp->specific_volume[0] == -1.0 ) mp->specific_volume[0] = V_10;
@@ -2706,10 +2706,10 @@ Free_Vol_Theory_Diffusivity(int species_no,  /* current species number*/
      case SPECIES_DENSITY:
         for(w=0 ; w<pd->Num_Species_Eqn; w++)
            {
-           if(mp->FreeVolSolvent[w]) 
-	     {  
-	      c0 += fv->c[w];  
-	      vol_frac_1 += fv->c[w]*mp->specific_volume[w];  
+           if(mp->FreeVolSolvent[w])
+	     {
+	      c0 += fv->c[w];
+	      vol_frac_1 += fv->c[w]*mp->specific_volume[w];
              }
 	   }
           C[0] =  c0/density_tot;   /* w1 - the solvent mass fraction */
@@ -2719,8 +2719,8 @@ Free_Vol_Theory_Diffusivity(int species_no,  /* current species number*/
           {
         for(w=0 ; w<pd->Num_Species_Eqn; w++)
            {
-           if(mp->FreeVolSolvent[w]) 
-	     {  
+           if(mp->FreeVolSolvent[w])
+	     {
               d_vol_frac_1_dc[w] = mp->specific_volume[w];
               dC0dc[w] = (density_tot - c0*mp->d_density[MAX_VARIABLE_TYPES+w])
                           /SQUARE(density_tot);
@@ -2739,10 +2739,10 @@ Free_Vol_Theory_Diffusivity(int species_no,  /* current species number*/
       case SPECIES_MASS_FRACTION:
         for(w=0 ; w<pd->Num_Species_Eqn; w++)
            {
-           if(mp->FreeVolSolvent[w]) 
-	     {  
-	      c0 += fv->c[w];  
-	      vol_frac_1 += fv->c[w]*mp->specific_volume[w];  
+           if(mp->FreeVolSolvent[w])
+	     {
+	      c0 += fv->c[w];
+	      vol_frac_1 += fv->c[w]*mp->specific_volume[w];
              }
 	   }
           C[0] =  c0/density_tot;   /* w1 - the solvent mass fraction */
@@ -2752,8 +2752,8 @@ Free_Vol_Theory_Diffusivity(int species_no,  /* current species number*/
           {
         for(w=0 ; w<pd->Num_Species_Eqn; w++)
            {
-           if(mp->FreeVolSolvent[w]) 
-	     {  
+           if(mp->FreeVolSolvent[w])
+	     {
               d_vol_frac_1_dc[w] = mp->specific_volume[w]*
                     (density_tot+fv->c[w]*mp->d_density[MAX_VARIABLE_TYPES+w]);
               dC0dc[w] = 1.0;
@@ -2771,10 +2771,10 @@ Free_Vol_Theory_Diffusivity(int species_no,  /* current species number*/
      case SPECIES_CONCENTRATION:
         for(w=0 ; w<pd->Num_Species_Eqn; w++)
            {
-           if(mp->FreeVolSolvent[w]) 
-	     {  
-	      c0 += fv->c[w]*mp->molecular_weight[w];  
-	      vol_frac_1 += fv->c[w]*mp->specific_volume[w]*mp->molecular_weight[w];  
+           if(mp->FreeVolSolvent[w])
+	     {
+	      c0 += fv->c[w]*mp->molecular_weight[w];
+	      vol_frac_1 += fv->c[w]*mp->specific_volume[w]*mp->molecular_weight[w];
              }
 	   }
           C[0] =  c0/density_tot;   /* w1 - the solvent mass fraction */
@@ -2784,10 +2784,10 @@ Free_Vol_Theory_Diffusivity(int species_no,  /* current species number*/
           {
         for(w=0 ; w<pd->Num_Species_Eqn; w++)
            {
-           if(mp->FreeVolSolvent[w]) 
-	     {  
+           if(mp->FreeVolSolvent[w])
+	     {
               d_vol_frac_1_dc[w] = mp->specific_volume[w]*mp->molecular_weight[w];
-              dC0dc[w] = (density_tot*mp->molecular_weight[w] - 
+              dC0dc[w] = (density_tot*mp->molecular_weight[w] -
                      c0*mp->d_density[MAX_VARIABLE_TYPES+w])/SQUARE(density_tot);
              }
              else
@@ -2812,61 +2812,62 @@ Free_Vol_Theory_Diffusivity(int species_no,  /* current species number*/
 
   if (fv_model_number  != 0)
     {
-  
+
       /* Calculate D1, the solvent self-diffusion coefficient */
- 
+
       exponen = exp(-(C[0]*V_1s + C[1]*x_si*V_2s)/V_fh_gamma);
       D1 = D_o * exponen ;
-  
-      /* Calculate Q_thermo, the thermodynamic factor as defined 
+
+      /* Calculate Q_thermo, the thermodynamic factor as defined
 	 in the Price 2003 paper*/
- 
-      Q_thermo = ( (1.0 - vol_frac_1) * (1.0 - (2.0 * vol_frac_1 * chi)) )
-	+ ( (vol_frac_1 * V_10 * MW_1 )/ (V_20 * MW_2 * beta) ) ;
+
+      /* Q_thermo = ( (1.0 - vol_frac_1) * (1.0 - (2.0 * vol_frac_1 * chi)) )
+	+ ( (vol_frac_1 * V_10 * MW_1 )/ (V_20 * MW_2 * beta) ) ; */
+      Q_thermo = 1.0;
     }
- 
+
   /* For the friction-based model  param[12] = 4 */
   /* we calculate D2 - the polymer self-diffusion coefficient */
- 
+
   if (fv_model_number  == 4)
     {
-      D_o_polymer *= exp(-E_div_R_polymer/T);  
+      D_o_polymer *= exp(-E_div_R_polymer/T);
       exponen_D2 = exp(-((C[0]* V_1s/x_si) + (C[1] * V_2s ))/V_fh_gamma);
       D2 = D_o_polymer * exponen_D2 ;
       ratio_D1_D2_term = 1.0 - ( (D2 * V_20 * MW_2)/(D1 * V_10 * MW_1));
       ratio_D1_D2_term *=  vol_frac_1  ;
-      A_friction = 1.0 - ratio_D1_D2_term ;                    
+      A_friction = 1.0 - ratio_D1_D2_term ;
     }
-  
+
   switch(fv_model_number)
     {
- 
-    case 0: 
-      mp->diffusivity[species_no] = 
+
+    case 0:
+      mp->diffusivity[species_no] =
 	D_o
 	*pow((1 - vol_frac_1),2.0)*(1.-2.*chi*vol_frac_1)*
 	exp(-(C[0]*V_1s + C[1]*x_si*V_2s)/V_fh_gamma);
       break;
-    case 1: 
+    case 1:
       mp->diffusivity[species_no] = (vol_frac_2 /C[1]) * Q_thermo * D1 ;
       break;
-                         
+
     case 2:
       mp->diffusivity[species_no] = D1 ;
       break;
-  
-    case 3: 
+
+    case 3:
       mp->diffusivity[species_no] = Q_thermo  * D1 ;
       break;
-    
-    case 4: 
+
+    case 4:
       mp->diffusivity[species_no] = A_friction * D1 * Q_thermo  ;
       break;
-  
+
     default:
       EH(-1, "Invalid Free Volume model number.");
       break;
-     
+
     } /* end of switch(fv_model_number) */
 
 
@@ -2882,7 +2883,7 @@ Free_Vol_Theory_Diffusivity(int species_no,  /* current species number*/
 		((C[0]*V_1s + C[1]*x_si*V_2s)/pow(V_fh_gamma,2.0))*
 		(K11_gamma*C[0] + K12_gamma*C[1])
 		+ mp->diffusivity[0]*(E_div_R/T/T);
-  
+
 	      mp->d_diffusivity[species_no][TEMPERATURE] = dDdT;
 	    }
 	  if (fv_model_number == 4)
@@ -2891,14 +2892,14 @@ Free_Vol_Theory_Diffusivity(int species_no,  /* current species number*/
 	      term2 = V_1s *  C[0]* ((1.0/x_si) - 1.0) ;
 	      term3 = V_2s *  C[1]* (1.0 - x_si)   ;
 	      term4 = (K11_gamma * C[0] + K12_gamma * C[1]) * (term2 + term3);
-                    
-	      d_D2_D1_dT = ( term4 / ( pow(V_fh_gamma,2)) )  + term1 ;    
-	      dA_dT = ( (vol_frac_1* MW_2 * V_20 )/(MW_1 * V_10)) * d_D2_D1_dT;
-	      d_D1_dT  = (D1 * (E_div_R/T/T)) 
+
+	      d_D2_D1_dT = ( term4 / ( pow(V_fh_gamma,2)) )  + term1 ;
+	      dA_dT = ( (vol_frac_1*D2*MW_2 * V_20 )/(D1*MW_1 * V_10)) * d_D2_D1_dT;
+	      d_D1_dT  = (D1 * (E_div_R/T/T))
 		+ (D1 * ((C[0]*V_1s + C[1]*x_si*V_2s)/pow(V_fh_gamma,2.0))*
-		   (K11_gamma*C[0] + K12_gamma*C[1])) ;                       
-	      dDdT = (dA_dT * Q_thermo * D1 )+ (A_friction * Q_thermo * d_D1_dT);  
-                      
+		   (K11_gamma*C[0] + K12_gamma*C[1])) ;
+	      dDdT = (dA_dT * Q_thermo * D1 )+ (A_friction * Q_thermo * d_D1_dT);
+
 	      mp->d_diffusivity[species_no][TEMPERATURE] = dDdT;
 	    }
         }
@@ -2909,47 +2910,48 @@ Free_Vol_Theory_Diffusivity(int species_no,  /* current species number*/
 #if 0
 	  d_vol_frac_1_dC[0] = ((C[0]*V_10 + C[1]*V_20)*V_10 - C[0]*V_10*(V_10-V_20))
 	    /pow((C[0]*V_10 + C[1]*V_20),2.0);
-       
+
 #endif
 	  exponen = exp(-(C[0]*V_1s + C[1]*x_si*V_2s)/V_fh_gamma);
-  
+
 
 	  for(w=0 ; w<pd->Num_Species_Eqn; w++)
 	    {
-			
-			
+
+
 	      d_V_fh_gamma_dc[w] = dC0dc[w]*
 		(K11_gamma*(K21mTg1 + T) - K12_gamma*(K22mTg2 + T));
-	      dexponen_dc[w] = (-(V_fh_gamma*(V_1s-x_si*V_2s)*dC0dc[w] 
-				  - (C[0]*V_1s+C[1]*V_2s*x_si)*d_V_fh_gamma_dc[w]) 
-				/pow(V_fh_gamma,2.0)); 
+	      dexponen_dc[w] = (-(V_fh_gamma*(V_1s-x_si*V_2s)*dC0dc[w]
+				  - (C[0]*V_1s+C[1]*V_2s*x_si)*d_V_fh_gamma_dc[w])
+				/pow(V_fh_gamma,2.0));
 	      if (fv_model_number  != 0)
 		{
 		  d_D1_dc[w] = D_o * exponen * dexponen_dc[w];
-		  dQ_dc[w]= d_vol_frac_1_dc[w] * ( 4.0*chi*vol_frac_1 - 2.0*chi  
-			   +(V_10*MW_1)/(V_20*MW_2*beta)- 1.0);
+		  /* dQ_dc[w]= d_vol_frac_1_dc[w] * ( 4.0*chi*vol_frac_1 - 2.0*chi
+			   +(V_10*MW_1)/(V_20*MW_2*beta)- 1.0); */
+                  dQ_dc[w] = 0.0;
 		}
-				 
+
 	      if (fv_model_number  == 4)
 		{
 		  term1 = C[0]*V_1s/x_si + C[1]*V_2s;
 		  term2 = V_1s/x_si - V_2s;
 		  d_D2_dc[w] = D_o_polymer*exponen_D2*
-		    (-(V_fh_gamma*dC0dc[w]*term2 - 
+		    (-(V_fh_gamma*dC0dc[w]*term2 -
 		       term1*d_V_fh_gamma_dc[w])/SQUARE(V_fh_gamma));
 		  term3 = V_20*MW_2/(V_10*MW_1);
 		  dA_dc[w] = vol_frac_1*term3*(D1*d_D2_dc[w]-D2*d_D1_dc[w])/SQUARE(D1)
 		    - d_vol_frac_1_dc[w]*(1.-term3*D2/D1);
 		}
 	    }
- 
+
 
 	  switch(fv_model_number)
-	    {  
-	    case 0: 
+	    {
+	    case 0:
 	      for(w = 0; w<pd->Num_Species_Eqn; w++)
 		{
-		  mp->d_diffusivity[species_no][MAX_VARIABLE_TYPES + w] = 
+		  mp->d_diffusivity[species_no][MAX_VARIABLE_TYPES + w] =
 		    2.*(1.- vol_frac_1)*d_vol_frac_1_dc[w]*
 		    (1.-2.*chi*vol_frac_1)*exponen
 		    +pow(1.-vol_frac_1,2.0)*(-2.*chi)*
@@ -2959,8 +2961,8 @@ Free_Vol_Theory_Diffusivity(int species_no,  /* current species number*/
 		  mp->d_diffusivity[species_no][MAX_VARIABLE_TYPES + w] *= D_o;
 		}
 	      break;
-  
-	    case 1: 
+
+	    case 1:
 
 	      for(w = 0; w<pd->Num_Species_Eqn; w++)
 		{
@@ -2970,30 +2972,30 @@ Free_Vol_Theory_Diffusivity(int species_no,  /* current species number*/
 		    - (vol_frac_2*Q_thermo*D1)*(-dC0dc[w])/SQUARE(C[1]);
 		}
 	      break;
-  
-	    case 2: 
+
+	    case 2:
 	      for(w = 0; w<pd->Num_Species_Eqn; w++)
 		{
-		  mp->d_diffusivity[species_no][MAX_VARIABLE_TYPES + w] = 
-		    d_D1_dc[w];           
+		  mp->d_diffusivity[species_no][MAX_VARIABLE_TYPES + w] =
+		    d_D1_dc[w];
 		}
 	      break;
-  
-	    case 3: 
+
+	    case 3:
 	      for(w = 0; w<pd->Num_Species_Eqn; w++)
 		{
-		  mp->d_diffusivity[species_no][MAX_VARIABLE_TYPES + w] = 
-		    dQ_dc[w]*D1  + Q_thermo*d_D1_dc[w];    
+		  mp->d_diffusivity[species_no][MAX_VARIABLE_TYPES + w] =
+		    dQ_dc[w]*D1  + Q_thermo*d_D1_dc[w];
 		}
 	      break;
-  
-	    case 4: 
-  
+
+	    case 4:
+
 	      for(w = 0; w<pd->Num_Species_Eqn; w++)
 		{
-		  mp->d_diffusivity[species_no][MAX_VARIABLE_TYPES + w] = 
-		    dA_dc[w]*Q_thermo*D1 + dQ_dc[w]*A_friction*D1 
-		    + A_friction*Q_thermo*d_D1_dc[w]; 
+		  mp->d_diffusivity[species_no][MAX_VARIABLE_TYPES + w] =
+		    dA_dc[w]*Q_thermo*D1 + dQ_dc[w]*A_friction*D1
+		    + A_friction*Q_thermo*d_D1_dc[w];
 		}
 	      break;
 	    }
@@ -3001,7 +3003,7 @@ Free_Vol_Theory_Diffusivity(int species_no,  /* current species number*/
     }
   propertyJac_destroy(&densityJac);
   return (0);
-  
+
 }
 /*
  * Generalized_Diffusivity() sets the GENERALIZED FICKIAN
