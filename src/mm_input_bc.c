@@ -1283,6 +1283,10 @@ rd_bc_specs(FILE *ifp,
  		{
  		  BC_Types[ibc].BC_Data_Int[2] = FLORY_CC;
  		}
+              else if ( !strcmp(input, "VLAR"))
+	        {
+		  BC_Types[ibc].BC_Data_Int[2] = VLAR;
+	        }
 	      else
 		{
 		  EH(-1,"I don't recognize your YFLUX_EQUIL Keyword!");
@@ -1318,7 +1322,19 @@ rd_bc_specs(FILE *ifp,
 		}
 
 	      SPF_DBL_VEC(endofstring(echo_string), 2,  &(BC_Types[ibc].BC_Data_Float[3]));
+	    }
+	  else if ( BC_Types[ibc].BC_Data_Int[2] == VLAR )
+	    {
+	      if ( fscanf(ifp, "%lf %lf",
+	         	 &BC_Types[ibc].BC_Data_Float[3],
+			 &BC_Types[ibc].BC_Data_Float[4]) != 2)
+	        {
+	          sr = sprintf(err_msg, "%s: Expected 2 additional flts for  %s.",
+		               yo, BC_Types[ibc].desc->name1);
+		  EH(-1, err_msg);
+		}
 
+	      SPF_DBL_VEC(endofstring(echo_string), 2,  &(BC_Types[ibc].BC_Data_Float[3]));
 	    }
  	  else
 	    {
