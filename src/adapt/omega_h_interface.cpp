@@ -92,6 +92,10 @@ extern Comm_Ex **cx;
 
 //#define DEBUG_OMEGA_H
 
+static bool power_of_two(int num) {
+  return (num & (num - 1)) == 0;
+}
+
 namespace goma {
 
   using namespace Omega_h;
@@ -567,15 +571,11 @@ void convert_goma_to_omega_h(Exo_DB *exo, Dpi *dpi, double **x, Mesh *mesh, bool
 void convert_omega_h_to_goma(
     const char *path, Mesh *mesh, Exo_DB *exo, Dpi *dpi, bool verbose, int classify_with) {
 
-  //  Omega_h::exodus::write(std::to_string(ProcID) + "tmp.e", mesh, true, classify_with);
+  //  Omega_h::exodus::write(std::to_string(ProcID) + "", mesh, true, classify_with);
   char out_par[MAX_FNL];
-  strncpy(out_par, "tmp_oh.e", MAX_FNL - 1);
+  strncpy(out_par, "tmp_omega_h_mesh.e", MAX_FNL - 1);
   multiname(out_par, ProcID, Num_Proc);
   mesh->set_parting(OMEGA_H_ELEM_BASED);
-  //  Omega_h::exodus::write(out_par, mesh, true, classify_with);
-  // mesh->set_parting(OMEGA_H_GHOSTED);
-  strncpy(out_par, "tmp.e", MAX_FNL - 1);
-  multiname(out_par, ProcID, Num_Proc);
   auto comp_ws = int(sizeof(Real));
   auto io_ws = comp_ws;
   auto exoid = ex_create(out_par, EX_CLOBBER, &comp_ws, &io_ws);
@@ -748,16 +748,7 @@ void convert_omega_h_to_goma(
 
   std::vector<int> mesh_owned_elements;
   for (int i = 0; i < mesh->nelems(); i++) {
-    bool fully_other = true;
-    for (int j = 0; j < deg; j++) {
-      auto local = all_conn[i * deg + j];
-      if (vert_owners[local] == ProcID) {
-        fully_other = false;
-      }
-    }
-    //if (!fully_other) {
     mesh_owned_elements.push_back(i);
-    //}
   }
   for (unsigned int i = 0; i < neighbor_list.size(); i++) {
     int proc = neighbor_list[i];
@@ -1131,8 +1122,8 @@ void convert_omega_h_to_goma(
     goma_automatic_rotations.rotation_nodes = NULL;
   }
 
-  //  const char * tmpfile = "tmp.e";
-  strncpy(ExoFile, "tmp.e", 127);
+  //  const char * tmpfile = "";
+  strncpy(ExoFile, "tmp_omega_h_mesh.e", 127);
   strncpy(ExoFileOutMono, path, 127);
   strncpy(ExoFileOut, path, 127);
   multiname(ExoFileOut, ProcID, Num_Proc);
@@ -1233,13 +1224,17 @@ void adapt_mesh(Omega_h::Mesh &mesh) {
   if (ProcID == 0) {
     std::cout << "Mesh imbalance = " << imb << "\n";
   }
-  //if (imb > 2) {
-  //  GOMA_EH(-1, "Mesh imbalance %g exiting", imb);
-  //}
-  mesh.balance();
-  imb = mesh.imbalance();
-  if (ProcID == 0) {
-    std::cout << "Mesh imbalance after balance = " << imb << "\n";
+  if (power_of_two(Num_Proc)) {
+    mesh.balance();
+    imb = mesh.imbalance();
+    if (ProcID == 0) {
+      std::cout << "Mesh imbalance after balance = " << imb << "\n";
+    }
+  } else {
+    GOMA_WH_MANY(GOMA_ERROR, "Omega_h requires a power of 2 number of processors to balance the mesh");
+    if (imb > 2) {
+      GOMA_EH(-1, "Mesh imbalance too large: %g exiting", imb);
+    }
   }
 }
 

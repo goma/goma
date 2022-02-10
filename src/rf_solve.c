@@ -1313,33 +1313,6 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
         }
       }
 
-      /*
-       * Get started with forward/Backward Euler predictor-corrector
-       * to damp out any bad things
-       */
-      if ((nt - last_renorm_nt) == 0) {
-        theta = 0.0;
-        const_delta_t = 1.0;
-
-      } else if ((nt - last_renorm_nt) >= 3) {
-        /* Now revert to the scheme input by the user */
-        theta = tran->theta;
-        const_delta_t = const_delta_ts;
-        /*
-         * If the previous step failed due to a convergence error
-         * or time step truncation error, then revert to a
-         * Backwards-Euler method to restart the calculation
-         * using a smaller time step.
-         * -> standard ODE solver trick (HKM -> Haven't
-         *    had time to benchmark this. Will leave it commented
-         *    out).
-         *
-         *  if (!converged || !success_dt) {
-         *    theta = 0.0;
-         *  }
-         */
-      }
-
       /* Reset the node->DBC[] arrays to -1 where set
        * so that the boundary conditions are set correctly
        * at each time step.
@@ -1803,6 +1776,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
         if (last_adapt_nt == nt) {
           adapt_step--;
         }
+        last_adapt_nt = nt;
         adapt_mesh_omega_h(ams, exo, dpi, &x, &x_old, &x_older, &xdot, &xdot_old, &x_oldest,
                            &resid_vector, &x_update, &scale, adapt_step);
         adapt_step++;
@@ -1840,6 +1814,32 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
         find_and_set_Dirichlet(x, xdot, exo, dpi);
       }
 #endif
+      /*
+       * Get started with forward/Backward Euler predictor-corrector
+       * to damp out any bad things
+       */
+      if ((nt - last_renorm_nt) == 0 || (nt - last_adapt_nt) == 0) {
+        theta = 0.0;
+        const_delta_t = 1.0;
+
+      } else if ((nt - last_renorm_nt) >= 3 || (nt - last_adapt_nt) >= 2) {
+        /* Now revert to the scheme input by the user */
+        theta = tran->theta;
+        const_delta_t = const_delta_ts;
+        /*
+         * If the previous step failed due to a convergence error
+         * or time step truncation error, then revert to a
+         * Backwards-Euler method to restart the calculation
+         * using a smaller time step.
+         * -> standard ODE solver trick (HKM -> Haven't
+         *    had time to benchmark this. Will leave it commented
+         *    out).
+         *
+         *  if (!converged || !success_dt) {
+         *    theta = 0.0;
+         *  }
+         */
+      }
 
       numProcUnknowns = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
       /*

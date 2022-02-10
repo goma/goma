@@ -1361,35 +1361,10 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
             xfem = matrix_xfem[pg->imtrx];
           }
 
-          /*
-           * Get started with forward/Backward Euler predictor-corrector
-           * to damp out any bad things
-           */
-          if ((nt - last_renorm_nt) == 0) {
-            theta = 0.0;
-            const_delta_t = 1.0;
-
-          } else if ((nt - last_renorm_nt) >= 3) {
-            /* Now revert to the scheme input by the user */
-            theta = tran->theta;
-            const_delta_t = const_delta_ts;
-            /*
-             * If the previous step failed due to a convergence error
-             * or time step truncation error, then revert to a
-             * Backwards-Euler method to restart the calculation
-             * using a smaller time step.
-             * -> standard ODE solver trick (HKM -> Haven't
-             *    had time to benchmark this. Will leave it commented
-             *    out).
-             *
-             *  if (!converged || !success_dt) {
-             *    theta = 0.0;
-             *  }
-             */
-          }
 #ifdef HAVE_OMEGA_H
           if ((tran->ale_adapt || (ls != NULL && ls->adapt)) && tran->theta != 0) {
-            GOMA_EH(GOMA_ERROR, "Error theta time step parameter = %g only 0.0 supported", tran->theta);
+            GOMA_EH(GOMA_ERROR, "Error theta time step parameter = %g only 0.0 supported",
+                    tran->theta);
           }
           if (subcycle == 0 && (tran->ale_adapt || (ls != NULL && ls->adapt)) && pg->imtrx == 0 &&
               (nt == 0 || ((ls != NULL && nt % ls->adapt_freq == 0) ||
@@ -1397,6 +1372,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
             if (last_adapt_nt == nt) {
               adapt_step--;
             }
+            last_adapt_nt = nt;
             adapt_mesh_omega_h(ams, exo, dpi, x, x_old, x_older, xdot, xdot_old, x_oldest,
                                resid_vector, x_update, scale, adapt_step);
             adapt_step++;
@@ -1439,6 +1415,32 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
           }
 #endif
 
+          /*
+           * Get started with forward/Backward Euler predictor-corrector
+           * to damp out any bad things
+           */
+          if ((nt - last_renorm_nt) == 0 || (nt - last_adapt_nt) == 0) {
+            theta = 0.0;
+            const_delta_t = 1.0;
+
+          } else if ((nt - last_renorm_nt) >= 3 || (nt - last_adapt_nt) >= 2) {
+            /* Now revert to the scheme input by the user */
+            theta = tran->theta;
+            const_delta_t = const_delta_ts;
+            /*
+             * If the previous step failed due to a convergence error
+             * or time step truncation error, then revert to a
+             * Backwards-Euler method to restart the calculation
+             * using a smaller time step.
+             * -> standard ODE solver trick (HKM -> Haven't
+             *    had time to benchmark this. Will leave it commented
+             *    out).
+             *
+             *  if (!converged || !success_dt) {
+             *    theta = 0.0;
+             *  }
+             */
+          }
           numProcUnknowns[pg->imtrx] = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
 
           if (pg->matrix_subcycle_count[pg->imtrx] > 1) {
