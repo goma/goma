@@ -614,18 +614,7 @@ void convert_omega_h_to_goma(
 
   auto all_conn = mesh->ask_elem_verts();
   auto deg = element_degree(mesh->family(), dim, VERT);
-  auto omega_h_vert_owners = mesh->ask_owners(0).ranks;
-  Write<LO> vert_owners_w(LO(omega_h_vert_owners.size()));
-  for (int i = 0; i < omega_h_vert_owners.size(); i++) {
-    if (omega_h_vert_owners[i] > ProcID) {
-      vert_owners_w[i] = ProcID;
-    } else {
-      vert_owners_w[i] = omega_h_vert_owners[i];
-    }
-  }
-  Read<LO> vert_owners(vert_owners_w);
-  mesh->sync_array(0, vert_owners, 1);
-
+  auto vert_owners = mesh->ask_owners(0).ranks;
   std::set<int> neighbors_set;
   for (int i = 0; i < vert_owners.size(); i++) {
     if (vert_owners[i] != ProcID) {
