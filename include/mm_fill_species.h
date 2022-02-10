@@ -436,7 +436,9 @@ PROTO((dbl [MAX_CONC],		/* mass_flux                                 */
        int ,			/* wspec - species no.                       */
        double ,			/* mass_tran_coeff - MASS transfer coeff     */
        double [MAX_VARIABLE_TYPES+MAX_CONC],	/* d_mtc     */
-       double ));		/* Y_c - bulk concentration 	             */
+       double,		        /* Y_c - bulk concentration 	             */
+       double,                  /* alpha from van laar act. coeff.           */
+       double ));               /* beta from van laar act. coeff.            */
 
 EXTERN void mtc_chilton_coburn	/* mm_fill_species.c                         */
 PROTO((double *,		/* mtc                                 */

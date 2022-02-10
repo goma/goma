@@ -6444,7 +6444,9 @@ mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
 		    int wspec,	/* species no.                               */
 		    double mass_tran_coeff, /* MASS transfer coeff           */
  		    double d_mtc[MAX_VARIABLE_TYPES+MAX_CONC],
-		    double Y_c)	/* bulk concentration 	                     */
+		    double Y_c, /* bulk concentration 	                     */
+                    double alpha_v, /* alpha van laar act. coeff. model      */
+                    double beta_v)  /* beta van laar act. coeff. model       */
 /*****************************************************************************/
 {
    /* Local variables */
@@ -6456,17 +6458,19 @@ mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
      double P_diff_1, P_diff_2, P_diff_log;
      double P_diff_1_dT, P_diff_log_dT, P_diff_log_dw[MAX_CONC], P_diff_1_dw;
      double P_bulk=0.;
-
+     double bottom_vlar;
+   
      int i, j, jac, k, mn;
      int Num_S1;
      double flory1,flory2,flory3,flory;
-     double df1_dc[MAX_CONC],df2_dc[MAX_CONC];
-     double df3_dc[MAX_CONC],df_dc[MAX_CONC];
+     double df1_dc[MAX_CONC],df2_dc[MAX_CONC],dacoeff_dx[MAX_CONC];
+     double df3_dc[MAX_CONC],df_dc[MAX_CONC],dact_dx[MAX_CONC];
      double truedf_dc[MAX_CONC],dv_dw[MAX_CONC][MAX_CONC];
-     double C[MAX_CONC], vol[MAX_CONC], sv[MAX_CONC];
+     double C[MAX_CONC], vol[MAX_CONC], sv[MAX_CONC], mfrac[MAX_CONC];
      double mw[MAX_CONC], prod[MAX_CONC]; 
-     double bottom, prod2, sum_C;
-     double chi[MAX_CONC][MAX_CONC]; /* chi is the binary interaction parameter*/
+     double bottom, prod2, sum_C, acoeff;
+     double chi[MAX_CONC][MAX_CONC],dmass_frac_dphi[MAX_CONC][MAX_CONC]; /* chi is the binary interaction parameter*/
+     double dact_dphi[MAX_CONC][MAX_CONC];
      double mw_last=0; /* Molecular weight of non-condensable and conversion factor */
      
      if (MAX_CONC < 3) {
@@ -6792,6 +6796,159 @@ mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
         }
     }
 
+  else if(mode==VLAR)
+
+    {
+  /* Define some convenient/repetitive chunks to make eqns more compact */
+
+      Num_S1 = pd->Num_Species_Eqn + 1;
+
+       for (i = 0; i<Num_S1; i++) 
+	 {
+	   if(mp->specific_volume[i] < 0.)
+	     {
+	       EH(-1, "Specific volume not specified in the material file.");
+	     }
+	   else
+	     {
+	       sv[i] = mp->specific_volume[i];
+	     }
+	   if(mp->molar_volume[i] < 0.)
+	     {
+	       EH(-1, "Molar volume not specified in the material file");
+	     }
+	   else
+	     {
+	       vol[i] = mp->molar_volume[i];
+	     }
+	 }
+
+       bottom = 0.;
+       sum_C = 0.;
+/*  denominators for fraction-based formulations */
+	if(mp->Species_Var_Type == SPECIES_MASS_FRACTION
+             || mp->Species_Var_Type == SPECIES_UNDEFINED_FORM)
+	{
+         for (i = 0; i<pd->Num_Species_Eqn; i++) 
+	    {	   
+	     bottom += y_mass[i]*(sv[i]-sv[pd->Num_Species_Eqn]);
+	    }
+         bottom += sv[pd->Num_Species_Eqn];
+	}
+	if(mp->Species_Var_Type == SPECIES_MOLE_FRACTION)
+	{
+         for (i = 0; i<pd->Num_Species_Eqn; i++) 
+	    {	   
+	     bottom += y_mass[i]*(vol[i]-vol[pd->Num_Species_Eqn]);
+	    }
+         bottom += vol[pd->Num_Species_Eqn];
+	}
+	   
+	if(mp->Species_Var_Type == SPECIES_DENSITY)
+		{
+                 for(i=0;i<pd->Num_Species_Eqn;i++)
+	           {
+	            C[i] = y_mass[i]*sv[i];
+	            sum_C += C[i];
+		    dv_dw[i][i]= sv[i];
+	           }
+		}
+	 else if(mp->Species_Var_Type == SPECIES_CONCENTRATION)
+		{
+                 for(i=0;i<pd->Num_Species_Eqn;i++)
+	           {
+	            C[i] = y_mass[i]*vol[i];
+	            sum_C += C[i];
+	            dv_dw[i][i]= vol[i];
+	           }
+		}
+	else if(mp->Species_Var_Type == SPECIES_MASS_FRACTION
+             || mp->Species_Var_Type == SPECIES_UNDEFINED_FORM)
+		{
+                 for(i=0;i<pd->Num_Species_Eqn;i++)
+	           {
+	            C[i] = y_mass[i]*sv[i]/bottom;
+	            sum_C += C[i];
+	            for(j=0;j<pd->Num_Species_Eqn;j++)
+	               {
+                        dv_dw[i][j] = -y_mass[i]*sv[i]
+		              *(sv[j]-sv[pd->Num_Species_Eqn])/SQUARE(bottom); 
+                       }
+		    dv_dw[i][i] += sv[i]/bottom; 
+                   }
+		}
+	else if(mp->Species_Var_Type == SPECIES_MOLE_FRACTION)
+		{
+                 for(i=0;i<pd->Num_Species_Eqn;i++)
+	           {
+	            C[i] = y_mass[i]*vol[i]/bottom;
+	            sum_C += C[i];
+	            for(j=0;j<pd->Num_Species_Eqn;j++)
+	               {
+                        dv_dw[i][j] = -y_mass[i]*vol[i]
+		              *(vol[j]-vol[pd->Num_Species_Eqn])/SQUARE(bottom); 
+                       }
+		    dv_dw[i][i] += vol[i]/bottom; 
+		   }
+		}
+	else
+		{ EH(-1,"That species formulation not done in mtc_flory\n"); }
+        bottom_vlar = 1./vol[pd->Num_Species_Eqn];
+        for(i=0;i<pd->Num_Species_Eqn;i++)
+          {
+            bottom_vlar += C[i]*(1./vol[i]-1./vol[pd->Num_Species_Eqn]);
+          }
+        
+        for(i=0;i<pd->Num_Species_Eqn;i++)
+          {
+            mfrac[i] = C[i]/vol[i]/bottom_vlar;
+          }
+        acoeff = alpha_v/(1.+alpha_v*mfrac[wspec]/beta_v/(1.-mfrac[wspec])
+                         )/(1.+alpha_v*mfrac[wspec]/beta_v/(1.-mfrac[wspec]));
+       /* check the simplest case: 1solvent, 1polymer 
+       check=(1-sum_C)+chi[0][1]*(1.-sum_C)*(1.-sum_C);
+       printf("flory = %e, check =%e\n", flory[i],check); */
+
+       activity[wspec] = mfrac[wspec]*exp(acoeff);
+
+       for(k=0;k<pd->Num_Species_Eqn;k++)
+         {
+           dacoeff_dx[k]= -2.*acoeff
+                           /(1.+alpha_v*mfrac[wspec]/beta_v/(1.-mfrac[wspec]))*
+                            ( alpha_v/beta_v/(1.-mfrac[wspec])
+                             +alpha_v*mfrac[wspec]/beta_v/(1-mfrac[wspec])/(1-mfrac[wspec]));
+           dact_dx[k] = activity[wspec]*dacoeff_dx[k] + exp(acoeff);
+	 }
+      
+       for(i=0;i<pd->Num_Species_Eqn;i++)
+	 {
+	   for(j=0;j<pd->Num_Species_Eqn;j++)
+	     {
+	       dmass_frac_dphi[i][j] = delta(i,j)/vol[i]/bottom_vlar - 
+               mfrac[i]*(1./vol[j]-1./vol[pd->Num_Species_Eqn])/bottom_vlar;
+	     }
+	 }
+
+       for(i=0;i<pd->Num_Species_Eqn;i++)
+	 {
+           dact_dphi[wspec][i] = 0.;
+	   for(j=0;j<pd->Num_Species_Eqn;j++)
+	     { 
+               dact_dphi[wspec][i] += dact_dx[j]*dmass_frac_dphi[j][i];
+	     }
+	 }
+
+
+      for (i = 0; i<pd->Num_Species_Eqn; i++)
+        { 
+          dact_dC[wspec][i] = 0.;
+          for(j=0;j<pd->Num_Species_Eqn;j++)
+            {
+	      dact_dC[wspec][i] = dact_dphi[wspec][j]*dv_dw[j][i];
+            }
+        }
+
+    }
  /* HARDWIRE a linear increase in MTC from zero to mass_tran_coeff
    along free surface boundary */
 
@@ -7288,7 +7445,7 @@ get_equil_surf_bc(double func[],
   int j, j_id, w1, dim, kdir, var, jvar;
   double phi_j;
   double Y_w; /* local concentration of current species */
-  
+  double alpha_v,beta_v;
   double activity[MAX_CONC]; /* nonideal activity of species */
   double dact_dC[MAX_CONC][MAX_CONC];
   double vconv[MAX_PDIM]; /*Calculated convection velocity */
@@ -7301,7 +7458,7 @@ get_equil_surf_bc(double func[],
   /***************************** EXECUTION BEGINS ****************************/
   
   if (af->Assemble_LSA_Mass_Matrix) return;
-
+  alpha_v = T_gas; beta_v = diff_gas_25;
   /* 
    *  call routine to calculate surface flux of this component and it's 
    *  sensitivity to all variable types 
@@ -7321,7 +7478,8 @@ get_equil_surf_bc(double func[],
  			mtc=mass_tran_coeff;
  			}
   mass_flux_equil_mtc (mp->mass_flux,mp->d_mass_flux, activity, dact_dC,
-                      fv->c, mode, amb_pres, wspec, mtc, d_mtc, Y_c);
+                      fv->c, mode, amb_pres, wspec, mtc, d_mtc, Y_c, alpha_v,
+                      beta_v);
 
   dim   = pd->Num_Dim;
   Y_w = fv->c[wspec];
@@ -7646,6 +7804,8 @@ compute_leak_velocity(double *vnorm,
   double k1, E1, kn1, En1, c_H2S, c_O2;
   double xbulk, d_xbulk_dC[MAX_CONC];
   double vnormal, phi_j;
+  double alpha_v,beta_v;
+
 
   int mode;
   double amb_pres, A, mtc, Y_inf, driving_force;
@@ -7799,6 +7959,11 @@ compute_leak_velocity(double *vnorm,
  				fluxbc->BC_Data_Float[0],
  				fluxbc->BC_Data_Float[4]);
  		}
+              else if(mode == VLAR)
+                {
+                  alpha_v = fluxbc->BC_Data_Float[3];
+                  beta_v = fluxbc->BC_Data_Float[4];
+                }
 		  
 	      /* Nonideal VP Calculations based on either ANTOINE or RIEDEL models */
 	      
@@ -7822,7 +7987,8 @@ compute_leak_velocity(double *vnorm,
     	      for (w=0; w<pd->Num_Species_Eqn; w++) 
 	          d_mtc[MAX_VARIABLE_TYPES+w] *= StoiCoef[wspec];
 	      mass_flux_equil_mtc (mp->mass_flux,mp->d_mass_flux, activity, dact_dC, 
-				   fv->c, mode, amb_pres, wspec, mtc, d_mtc, Y_inf);
+				   fv->c, mode, amb_pres, wspec, mtc, d_mtc, Y_inf,
+                                   alpha_v,beta_v);
 		  
 	      A = mp->vapor_pressure[wspec]/amb_pres;
 	      driving_force -=  A*activity[wspec];
@@ -8533,7 +8699,7 @@ compute_leak_energy(double *enorm,
   double mass_tran_coeff,Y_c;
   double xbulk, lat_heat_bulk;
   double enormal, phi_j;
-
+  double alpha_v,beta_v;
 
   int mode;
   double amb_pres, A, mtc, Y_inf, driving_force;
@@ -8623,6 +8789,12 @@ compute_leak_energy(double *enorm,
  				fluxbc->BC_Data_Float[0],
  				fluxbc->BC_Data_Float[4]);
  		}
+
+              else if(mode == VLAR)
+                {
+                  alpha_v = fluxbc->BC_Data_Float[3];
+                  beta_v = fluxbc->BC_Data_Float[4];
+                }
 	      /* Shouldn't this be here, PRS 3/19/01. cf. KIN_LEAK
 	       *
 	       * mtc = mtc*mp->specific_volume[wspec];   
@@ -8651,7 +8823,8 @@ compute_leak_energy(double *enorm,
 		  
 	      /* Calculate mole flux of other components through surface */
 	      mass_flux_equil_mtc (mp->mass_flux,mp->d_mass_flux, activity, dact_dC, 
-				   fv->c, mode, amb_pres, wspec, mtc, d_mtc, Y_inf);
+				   fv->c, mode, amb_pres, wspec, mtc, d_mtc, Y_inf,
+                                   alpha_v,beta_v);
 		  
 	      A = mp->vapor_pressure[wspec]/amb_pres;
 	      driving_force -=  A*activity[wspec];
