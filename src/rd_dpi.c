@@ -383,7 +383,7 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
       int exists = in_list(global_send_nodes[i][j], d->num_internal_nodes,
                            d->num_internal_nodes + d->num_boundary_nodes, d->node_index_global);
       if (exists == -1) {
-        GOMA_EH(GOMA_ERROR, "Required node to communicate doesn't exist in border nodes");
+        GOMA_EH(GOMA_ERROR, "Required node %d to communicate doesn't exist in border nodes", global_send_nodes[i][j]);
       }
     }
   }
