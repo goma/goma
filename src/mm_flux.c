@@ -4918,7 +4918,7 @@ compute_volume_integrand(const int quantity, const int elem,
 		}
 	    }
 	}
-	       
+
       break;
     case I_VOLUME_PLANE:
       {
@@ -4954,14 +4954,14 @@ compute_volume_integrand(const int quantity, const int elem,
 	}
       }
      }
-	       
+
       break;
     case I_LUB_LOAD:
      {
       n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
       lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
 
-      det = fv->sdet; //Different determinant since this is a shell 
+      det = fv->sdet; //Different determinant since this is a shell
 
       *sum += fv->lubp* weight * det;
 
@@ -5168,7 +5168,7 @@ compute_volume_integrand(const int quantity, const int elem,
         if(mp->Elec_ConductivityModel == USER)
 	  {
 	    usr_electrical_conductivity(mp->u_electrical_conductivity, time);
-	 
+
 	    k   = mp->electrical_conductivity;
 	  }
 	else
@@ -5195,7 +5195,7 @@ compute_volume_integrand(const int quantity, const int elem,
 
       {
 	int q;
-	
+
 	double gamma_dot[DIM][DIM], II=0.0 ;
 
 	for( p=0; p<WIM; p++)
@@ -5264,7 +5264,7 @@ compute_volume_integrand(const int quantity, const int elem,
                 untracked_spec -= fv->c[j];
                 }
         }
-        *sum += weight*det*( dens_factor*untracked_spec ) ; 
+        *sum += weight*det*( dens_factor*untracked_spec ) ;
       }
 
 	if( J_AC != NULL )
@@ -5277,7 +5277,7 @@ compute_volume_integrand(const int quantity, const int elem,
 		  {
 		    for( j=0 ; j<ei->dof[var]; j++)
 		      {
-	    
+
 			J_AC[ ei->gun_list[var][j] ] += weight*  ( h3 * bf[pd->ShapeVar]->d_det_J_dm[a][j] +
  					    fv->dh3dq[a]*bf[var]->phi[j] * det_J )*dens_factor*fv->c[species_no];
 		      }
@@ -5292,7 +5292,7 @@ compute_volume_integrand(const int quantity, const int elem,
 		 * local variable degree of freedom
 		 * (can't just query gun_list for MASS_FRACTION
 		 *  unknowns -> have to do a lookup)
-		 */		
+		 */
 		gnn = ei->gnn_list[var][j];
 		ledof = ei->lvdof_to_ledof[var][j];
 		matIndex = ei->matID_ledof[ledof];
@@ -5301,6 +5301,13 @@ compute_volume_integrand(const int quantity, const int elem,
 	      }
 	    }
 	  }
+      }
+      break;
+
+    case I_TOTAL_MASS:
+      {
+       double rho = density(NULL, time);
+       *sum += weight*det*rho;
       }
       break;
 

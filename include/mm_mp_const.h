@@ -253,15 +253,15 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define SSM_CHEMKIN_LIQ   18    /* Chemkin Liquid phase package call    */
 #define SSM_CHEMKIN_CPC   19    /* Chemkin Condensed phase package call */
 #define FOAM              20    /* REF foam kinetics source model       */
-#define CARREAU_WLF_CONC_PL   21   /*  Carreau viscosity with WLF temperature 
+#define CARREAU_WLF_CONC_PL   21   /*  Carreau viscosity with WLF temperature
 				      dependence and concentration shifting*/
 #define HERSCHEL_BULKLEY   22   /* Herschel_bulkley model - power-law + yield stress */
 
 #define BOND               23   /* bond evolution structure model for viscosity */
 #define CONST_PHASE_FUNCTION 24
-#define CARREAU_WLF_CONC_EXP  25   /*  Carreau viscosity with WLF temperature 
+#define CARREAU_WLF_CONC_EXP  25   /*  Carreau viscosity with WLF temperature
 				      dependence and concentration shifting*/
-					
+
 #define FOAM_EPOXY    33
 #define BINGHAM_WLF    27         /* Bingham WLF viscosity model */
 #define SYLGARD    28         /* Sylgard viscosity model */
@@ -305,13 +305,13 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define VISCM_CK_GASDIXONLEWIS   18    /* Chemkin Gas phase Multicomponent Dixon-Lewis  */
 #define VISCM_CK_LIQ   19    /* Chemkin Liquid phase package call    */
 #define VISCM_CK_CPC   20    /* Chemkin Condensed phase package call */
-#define VISCM_CARREAU_WLF_CONC   21 
+#define VISCM_CARREAU_WLF_CONC   21
 #define VISCM_BOND               23   /* bond evolution structure model for viscosity */
 #define VISCM_CONST_PHASE_FUNCTION 24
-#define VISCM_CARREAU_WLF_CONC_EXP  25   /*  Carreau viscosity with WLF temperature 
+#define VISCM_CARREAU_WLF_CONC_EXP  25   /*  Carreau viscosity with WLF temperature
 				      dependence and concentration shifting*/
 #define VISCM_BOND_SH               26   /* bond evolution structure model for viscosity with shear rate variable*/
-					
+
 #define VISCM_FOAM_EPOXY    33
 #define VISCM_BINGHAM_WLF    27         /* Bingham WLF viscosity model */
 #define VISCM_SYLGARD    28         /* Sylgard viscosity model */
@@ -344,7 +344,16 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define ARRHENIUS  14 /* for temperature-dependent S-M diffusivities, KSC */
 #define SHOCK   15
 #define PIECEWISE 16
+<<<<<<< HEAD
 #define CHAPMAN_GAS 17
+=======
+#define SEDIMENT 17 /* Sedimentation model to account for hydrodynamic interaction
+                       and osmotic pressure gradient */
+#define BRUGGEMANN 18 /* Bruggmeman diffusion model accounting for effective diffusion in
+                        porous media */
+#define BRUGGEMANN_FREE_VOL 19 /* Combination of Bruggmeman porous media and solvent-polymer free volume diffusion models*/
+
+>>>>>>> 6bdad705adf4846405f6b56f78b13c20ab25c1cb
 
 /* Types of vapor or gas pressure relations */
 #define  KELVIN        3
@@ -415,7 +424,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define DARCY_FICKIAN	5
 #define NON_DIFFUSING	6
 #define HYDRODYNAMIC    7
-#define STEFAN_MAXWELL	8          /* Stefan-Maxwell diffusion of neutral species, KSC 7/98 */   
+#define STEFAN_MAXWELL	8          /* Stefan-Maxwell diffusion of neutral species, KSC 7/98 */
 #define STEFAN_MAXWELL_CHARGED	9  /* Stefan-Maxwell diffusion of charged species, KSC 9/98 */
 #define DM_CK_GASMIXTUREAVG  10 /* Chemkin MixtureAveraged diffusivities */
 #define DM_CK_GASMIXTUREAVG_VC  11 /* Chemkin MixtureAveraged diffusivities
@@ -430,7 +439,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
                                      * Same as regular Stefan-Maxwell_charged, but with
 				     * coefficients coming from liquid chemkin
 				     * package
-				     */				      
+				     */
 #define GENERALIZED_FICKIAN 15 /* generalized fickian ACS 4/00 */
 #define STEFAN_MAXWELL_VOLUME 16  /* RSL 6/28/00 */
 #define FICKIAN_CHARGED	17     /* Fickian diffusion of charged species, KSC 9/2000 */
@@ -439,6 +448,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define POWERLAW_DARCY_FICKIAN	20 /*PRS for P&G */
 #define HYDRODYNAMIC_QTENSOR    21
 #define HYDRODYNAMIC_QTENSOR_OLD    22
+#define HYDRODYNAMIC_SEDIMENT    23
 
 
 /* surface tension laws */
@@ -466,7 +476,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 /*Thermal-battery property model: KSC 3/1/99 */
 #define THERMAL_BATTERY 905
 
-/* Electrolyte-conductvity and current-density models for Charge-Species Transport: KSC 9/2000 */ 
+/* Electrolyte-conductvity and current-density models for Charge-Species Transport: KSC 9/2000 */
 #define ELECTRONEUTRALITY_SM 906
 #define ELECTRONEUTRALITY_FICKIAN 907
 

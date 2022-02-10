@@ -585,11 +585,11 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 
 	case DARCY_CONTINUOUS_BC:
 	case DARCY_LUB_BC:
-	  
+
 	  if(time_intermediate >= bc->BC_Data_Float[1])
 	    {
-	      v_attach = -0.0;  /*This will eventually be replaced by 
-				 *a squeeze flow model */  
+	      v_attach = -0.0;  /*This will eventually be replaced by
+				 *a squeeze flow model */
 
 	      sat_darcy_continuous_bc(func, d_func, theta, delta_t, time_value,
 				      bc->BC_Data_Int[0], bc->BC_Data_Int[1],
@@ -598,14 +598,14 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	    }
 
 	  break;
-	    
+
 	case T_MELT_BC:
 	  if (iapply) {
-	    ftmelt_bc(func, d_func, bc->BC_Data_Float[0], 
+	    ftmelt_bc(func, d_func, bc->BC_Data_Float[0],
 		      x_dot, theta, delta_t);
 	  }
 	  break;
-		
+
 	case KIN_LEAK_BC:
 	case KIN_LEAK_HEAT_BC:
 	case VNORM_LEAK_BC:
@@ -615,6 +615,14 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			  bc_input_id, BC_Types);
 	  }
 	    break;
+
+        case KIN_ANTOINE_BC:
+	  if(iapply) {
+	      kin_bc_antoine(func, d_func, x_dot, theta, delta_t,
+			     bc_input_id, BC_Types);
+	  }
+	    break;
+
 
         case SHELL_SURFACE_CHARGE_BC:  /* Applies only to shell elements */
 	  shell_surface_charge_bc(func, d_func, x_dot, theta, delta_t,
@@ -632,15 +640,15 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 
         case SH_LUBP_SOLID_BC:
 	case SH_LUBP_SOLID_RS_BC:
-	  shell_lubr_solid_struct_bc(func, d_func, x_dot, theta, delta_t, 
-				   elem_side_bc->id_side, wt, xi, exo, 
+	  shell_lubr_solid_struct_bc(func, d_func, x_dot, theta, delta_t,
+				   elem_side_bc->id_side, wt, xi, exo,
 				   bc->BC_Data_Float[0]);
 
 	  break;
 
 	case LUBP_SH_FP_MATCH_BC:
 	  match_lubrication_film_pressure(func, d_func,
-					  bc->BC_Data_Int[0], 
+					  bc->BC_Data_Int[0],
 					  bc->BC_Data_Int[1]);
 	  break;
 
@@ -660,11 +668,18 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	case VELO_TANGENT_USER_BC:
  	case VELO_STREAMING_BC:
 	  fvelo_tangential_bc(func, d_func, x,
+<<<<<<< HEAD
 			      bc->BC_Data_Int[0], 
 			      bc->BC_Data_Float[0], 
 			      bc->BC_Data_Float[1], 
 			      bc->BC_Data_Float[2], 
 			      bc->BC_Data_Float[3], 
+=======
+			      bc->BC_Data_Int[0],
+			      bc->BC_Data_Float[0],
+			      bc->BC_Data_Float[1],
+			      bc->BC_Data_Float[2],
+>>>>>>> 6bdad705adf4846405f6b56f78b13c20ab25c1cb
 			      xsurf, x_dot, theta, delta_t, (int) bc->BC_Name,
 			      elem_side_bc->id_side, xi, exo,
 			      time_intermediate, bc->u_BC, bc->len_u_BC);
@@ -672,11 +687,11 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	  break;
 
 	case VELO_TANGENT_3D_BC:
-	  fvelo_tangent_3d(func, d_func, x_dot, 
-			   bc->BC_Data_Float[0], 
-			   bc->BC_Data_Float[1], 
-			   bc->BC_Data_Float[2], 
-			   bc->BC_Data_Float[3], 
+	  fvelo_tangent_3d(func, d_func, x_dot,
+			   bc->BC_Data_Float[0],
+			   bc->BC_Data_Float[1],
+			   bc->BC_Data_Float[2],
+			   bc->BC_Data_Float[3],
 			   theta, delta_t);
 	  if (neg_elem_volume) return (status);
 	  break;
@@ -685,8 +700,8 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	case VELO_SLIP_SOLID_BC:
 	  fvelo_tangential_solid_bc(func, d_func, x,  x_dot, x_rs_dot,
 				    (int) bc->BC_Name,
-				    bc->BC_Data_Int[0], 
-				    bc->BC_Data_Int[1], 
+				    bc->BC_Data_Int[0],
+				    bc->BC_Data_Int[1],
 				    bc->BC_Data_Float[0],
 				    bc->BC_Data_Int[2],
 				    bc->BC_Data_Float[1],
@@ -697,8 +712,8 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 
 	  fvelo_normal_solid_bc(func, d_func, x,  x_dot, x_rs_dot,
 				(int) bc->BC_Name,
-				bc->BC_Data_Int[0], 
-				bc->BC_Data_Int[1], 
+				bc->BC_Data_Int[0],
+				bc->BC_Data_Int[1],
 				theta, delta_t);
 	  break;
 
@@ -708,7 +723,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
  	case VELO_SLIP_ROT_FILL_BC:
 	case VELO_SLIP_FLUID_BC:
 	case VELO_SLIP_ROT_FLUID_BC:
-	  fvelo_slip_bc(func, d_func, x, 
+	  fvelo_slip_bc(func, d_func, x,
 			(int) bc->BC_Name,
 			(int) bc->max_DFlt,
 			bc->BC_Data_Float,
@@ -1431,6 +1446,13 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	  if (iapply) {
 	    mass_flux_surf_etch(func, d_func, bc->BC_Data_Int[0],
 			        bc->BC_Data_Int[1], time_value, delta_t, theta);
+	  }
+	  break;
+
+	case YFLUX_ANTOINE_BC:
+	  if (iapply) {
+	    mass_flux_surf_antoine_bc(func, d_func, x_dot, theta, delta_t,
+                                      bc_input_id, BC_Types);
 	  }
 	  break;
 
