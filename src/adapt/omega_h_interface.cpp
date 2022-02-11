@@ -26,6 +26,7 @@
 #include <set>
 #include <string.h>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -92,13 +93,11 @@ extern Comm_Ex **cx;
 
 //#define DEBUG_OMEGA_H
 
-static bool power_of_two(int num) {
-  return (num & (num - 1)) == 0;
-}
+static bool power_of_two(int num) { return (num & (num - 1)) == 0; }
 
 namespace goma {
 
-  using namespace Omega_h;
+using namespace Omega_h;
 #define CALL(f)                                                                          \
   do {                                                                                   \
     auto f_err = (f);                                                                    \
@@ -610,100 +609,103 @@ void convert_omega_h_to_goma(
   auto nelem_blocks = int(region_set.size());
   auto nside_sets = (classify_with & exodus::SIDE_SETS) ? int(surface_set.size()) : 0;
   auto nnode_sets = (classify_with & exodus::NODE_SETS) ? int(node_set.size()) : 0;
-  //  Omega_h::binary::write("tmp.osh", mesh);
 
   auto all_conn = mesh->ask_elem_verts();
   auto deg = element_degree(mesh->family(), dim, VERT);
   auto vert_owners = mesh->ask_owners(0).ranks;
-  std::set<int> neighbors_set;
-  for (int i = 0; i < vert_owners.size(); i++) {
+
+  // optimize later if this is slow but make a list of all nodes that we don't own and list
+  // them as needed, then use that to populate a communication setup
+
+  std::vector<int> my_global_comm_nodes;
+  std::unordered_map<int, int> global_node_to_local;
+  for (int i = 0; i < mesh->nverts(); i++) {
     if (vert_owners[i] != ProcID) {
-      neighbors_set.insert(vert_owners[i]);
+      my_global_comm_nodes.push_back(mesh->globals(0)[i]);
+    }
+    global_node_to_local.insert(std::make_pair((int)mesh->globals(0)[i], i));
+  }
+  std::sort(my_global_comm_nodes.begin(), my_global_comm_nodes.end());
+  int comm_size = my_global_comm_nodes.size();
+  int max_comm_size;
+  MPI_Allreduce(&comm_size, &max_comm_size, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+  std::vector<int> all_neighbors_comm_nodes(max_comm_size * Num_Proc);
+
+  my_global_comm_nodes.resize(max_comm_size);
+  for (int i = comm_size; i < max_comm_size; i++) {
+    my_global_comm_nodes[i] = -1;
+  }
+
+  MPI_Allgather(my_global_comm_nodes.data(), max_comm_size, MPI_INT,
+                all_neighbors_comm_nodes.data(), max_comm_size, MPI_INT, MPI_COMM_WORLD);
+
+
+  // update our comm nodes with nodes we find in the neighbors comm nodes
+  std::set<int> updated_comm_nodes_set;
+  for (auto node : all_neighbors_comm_nodes) {
+    if (global_node_to_local.find(node) != global_node_to_local.end()) {
+      updated_comm_nodes_set.insert(node);
+    }
+  }
+  std::vector<int> updated_comm_nodes(updated_comm_nodes_set.begin(), updated_comm_nodes_set.end());
+  comm_size = updated_comm_nodes.size();
+  MPI_Allreduce(&comm_size, &max_comm_size, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+  updated_comm_nodes.resize(max_comm_size);
+  for (int i = comm_size; i < max_comm_size; i++) {
+    updated_comm_nodes[i] = -1;
+  }
+  all_neighbors_comm_nodes.resize(max_comm_size * Num_Proc);
+  MPI_Allgather(updated_comm_nodes.data(), max_comm_size, MPI_INT,
+                all_neighbors_comm_nodes.data(), max_comm_size, MPI_INT, MPI_COMM_WORLD);
+
+
+  // all_nodes_set
+  std::set<int> all_comm_nodes_set;
+  for (unsigned int i = 0; i < all_neighbors_comm_nodes.size(); i++) {
+    int gnode = all_neighbors_comm_nodes[i];
+    if (gnode != -1) {
+      all_comm_nodes_set.insert(all_neighbors_comm_nodes[i]);
     }
   }
 
-  int my_neighbors = neighbors_set.size();
-  int max_neighbors;
-  MPI_Allreduce(&my_neighbors, &max_neighbors, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
-  std::vector<int> neighbors(neighbors_set.begin(), neighbors_set.end());
-  std::vector<int> neighbor_recv(max_neighbors);
-  std::fill(neighbor_recv.begin(), neighbor_recv.end(), 0);
-  std::sort(neighbors.begin(), neighbors.end());
-  for (int i = neighbors.size(); i < max_neighbors; i++) {
-    neighbors.push_back(-1);
-  }
-  for (int i = 0; i < vert_owners.size(); i++) {
-    int proc = vert_owners[i];
-    if (proc != ProcID) {
-      for (size_t j = 0; j < neighbors.size(); j++) {
-        if (neighbors[j] == proc) {
-          neighbor_recv[j] += 1;
-        }
-      }
+  std::vector<int> all_comm_nodes(all_comm_nodes_set.begin(), all_comm_nodes_set.end());
+  std::sort(all_comm_nodes.begin(), all_comm_nodes.end());
+
+  std::vector<int> all_comm_owners(all_comm_nodes.size());
+  std::fill(all_comm_owners.begin(), all_comm_owners.end(), Num_Proc);
+
+  for (unsigned int i = 0; i < all_comm_nodes.size(); i++) {
+    if (global_node_to_local.find(all_comm_nodes[i]) != global_node_to_local.end()) {
+      all_comm_owners[i] = ProcID;
     }
   }
 
-  std::vector<int> allneighbors(max_neighbors * Num_Proc);
-  std::vector<int> allneighrecv(max_neighbors * Num_Proc);
+  std::vector<int> global_comm_owners(all_comm_owners.size());
+  MPI_Allreduce(all_comm_owners.data(), global_comm_owners.data(), all_comm_owners.size(), MPI_INT,
+                MPI_MIN, MPI_COMM_WORLD);
 
-  MPI_Allgather(neighbors.data(), max_neighbors, MPI_INT, allneighbors.data(), max_neighbors,
-                MPI_INT, MPI_COMM_WORLD);
-  MPI_Allgather(neighbor_recv.data(), max_neighbors, MPI_INT, allneighrecv.data(), max_neighbors,
-                MPI_INT, MPI_COMM_WORLD);
-
-  std::vector<MPI_Request> requests;
-
-  std::vector<std::vector<int>> neighbor_needed(my_neighbors);
-  for (int i = 0; i < my_neighbors; i++) {
-    int proc = neighbors[i];
-    for (int j = 0; j < vert_owners.size(); j++) {
-      if (vert_owners[j] == proc) {
-        neighbor_needed[i].push_back(mesh->globals(0)[j]);
-      }
-    }
-    assert(neighbor_needed[i].size() == static_cast<size_t>(neighbor_recv[i]));
-    requests.emplace_back();
-    if (verbose) {
-      std::cout << "Proc " << ProcID << " send proc " << proc << " count "
-                << neighbor_needed[i].size() << " with tag " << ProcID * 100 + proc << "\n";
-    }
-    MPI_Isend(neighbor_needed[i].data(), neighbor_needed[i].size(), MPI_INT, proc,
-              ProcID * 100 + proc, MPI_COMM_WORLD, &requests[i]);
+  std::unordered_map<int, int> global_to_owner;
+  for (unsigned int i = 0; i < global_comm_owners.size(); i++) {
+    global_to_owner[all_comm_nodes[i]] = global_comm_owners[i];
   }
-  std::vector<std::vector<int>> neighbor_send;
-  std::vector<int> neighbor_send_id;
-  int nindex = 0;
-  int req_index = requests.size();
-  for (size_t i = 0; i < allneighbors.size(); i++) {
-    if (allneighbors[i] == ProcID) {
-      int proc = i / max_neighbors;
-      neighbor_send.emplace_back();
-      neighbor_send[nindex].resize(allneighrecv[i]);
-      neighbor_send_id.emplace_back(proc);
-      requests.emplace_back();
-      if (verbose) {
-        std::cout << "Proc " << ProcID << " recv proc " << proc << " count "
-                  << neighbor_send[nindex].size() << " with tag " << proc * 100 + ProcID << "\n";
-      }
-      MPI_Irecv(neighbor_send[nindex].data(), neighbor_send[nindex].size(), MPI_INT, proc,
-                proc * 100 + ProcID, MPI_COMM_WORLD, &requests[req_index]);
-      nindex++;
-      req_index++;
-    }
-  }
-
-  MPI_Waitall(requests.size(), requests.data(), MPI_STATUSES_IGNORE);
 
   std::vector<int> neighbor_list;
-  for (int i = 0; i < my_neighbors; i++) {
-    int proc = neighbors[i];
-    neighbor_list.push_back(proc);
-  }
-  for (size_t i = 0; i < allneighbors.size(); i++) {
-    if (allneighbors[i] == ProcID) {
-      int proc = i / max_neighbors;
-      if (std::find(neighbor_list.begin(), neighbor_list.end(), proc) == neighbor_list.end()) {
-        neighbor_list.push_back(proc);
+  // look for neighbors in other neighbors comm nodes
+  for (int proc = 0; proc < Num_Proc; proc++) {
+    int offset = proc * max_comm_size;
+    for (int i = 0; i < max_comm_size; i++) {
+      int gnode = all_neighbors_comm_nodes[offset + i];
+      if (gnode != -1) {
+        int owner = global_to_owner.at(gnode);
+        if (proc != ProcID && owner == ProcID &&
+            std::find(neighbor_list.begin(), neighbor_list.end(), proc) == neighbor_list.end()) {
+          neighbor_list.push_back(proc);
+        } else if ((owner != ProcID &&
+                    global_node_to_local.find(gnode) != global_node_to_local.end()) &&
+                   (std::find(neighbor_list.begin(), neighbor_list.end(), owner) ==
+                    neighbor_list.end())) {
+          neighbor_list.push_back(owner);
+        }
       }
     }
   }
@@ -711,38 +713,27 @@ void convert_omega_h_to_goma(
 
   std::vector<int> proc_node_counts(neighbor_list.size());
   std::vector<std::vector<int>> proc_node_list(neighbor_list.size());
-  std::vector<int> proc_node_idx(neighbor_list.size()+1);
+  std::vector<int> proc_node_idx(neighbor_list.size() + 1);
   std::fill(proc_node_counts.begin(), proc_node_counts.end(), 0);
   std::set<int> boundary_nodes;
-
-  for (unsigned int ni = 0; ni < neighbor_send.size(); ni++) {
-    auto &bound_nodes = neighbor_send[ni];
-    int pni = -1;
-    for (unsigned int i = 0; i < neighbor_list.size(); i++) {
-      if (neighbor_send_id[ni] == neighbor_list[i]) {
-        pni = i;
-      }
-    }
-    assert(pni != -1);
-
-    for (auto gnode : bound_nodes) {
-#ifndef NDEBUG
-      bool found = false;
-#endif
-      for (int k = 0; k < mesh->globals(0).size(); k++) {
-        if (mesh->globals(0)[k] == gnode) {
-          boundary_nodes.insert(k);
-          proc_node_counts[pni] += 1;
-          proc_node_list[pni].push_back(k);
-#ifndef NDEBUG
-          found = true;
-#endif
-          break;
+  for (int proc = 0; proc < Num_Proc; proc++) {
+    int offset = proc * max_comm_size;
+    if (proc == ProcID) continue;
+    for (int i = 0; i < max_comm_size; i++) {
+      int gnode = all_neighbors_comm_nodes[offset + i];
+      if (gnode != -1) {
+        if (global_node_to_local.find(gnode) != global_node_to_local.end()) {
+          auto it = std::find(neighbor_list.begin(), neighbor_list.end(), proc);
+          assert(it != neighbor_list.end());
+          int index = it - neighbor_list.begin();
+          proc_node_list[index].push_back(global_node_to_local[gnode]);
+          proc_node_counts[index] += 1;
+          boundary_nodes.insert(global_node_to_local[gnode]);
         }
       }
-      assert(found);
     }
   }
+
   std::vector<bool> keep_nodes(mesh->nverts());
   std::fill(keep_nodes.begin(), keep_nodes.end(), true);
 
@@ -750,18 +741,7 @@ void convert_omega_h_to_goma(
   for (int i = 0; i < mesh->nelems(); i++) {
     mesh_owned_elements.push_back(i);
   }
-  for (unsigned int i = 0; i < neighbor_list.size(); i++) {
-    int proc = neighbor_list[i];
-    for (int j = 0; j < vert_owners.size(); j++) {
-      if (vert_owners[j] == proc && keep_nodes[j]) {
-        boundary_nodes.insert(j);
-        if (std::find(proc_node_list[i].begin(), proc_node_list[i].end(), j) == proc_node_list[i].end()) {
-          proc_node_counts[i] += 1;
-          proc_node_list[i].push_back(j);
-        }
-      }
-    }
-  }
+
   proc_node_idx[0] = 0;
   std::vector<int> node_cmap_ids;
   std::vector<int> node_cmap_to_neighbor;
@@ -1037,9 +1017,8 @@ void convert_omega_h_to_goma(
   char ftype = 'p';
   CALL(ex_put_init_info(exoid, Num_Proc, 1, &ftype));
 
-  CALL(ex_put_loadbal_param(exoid, internal_nodes.size(), boundary_nodes_sorted.size(),
-                            0, global_elem.size(), 0, node_cmap_ids.size(), 0,
-                            ProcID));
+  CALL(ex_put_loadbal_param(exoid, internal_nodes.size(), boundary_nodes_sorted.size(), 0,
+                            global_elem.size(), 0, node_cmap_ids.size(), 0, ProcID));
 
   std::vector<int> elem_internal(global_elem.size());
   std::iota(elem_internal.begin(), elem_internal.end(), 1);
@@ -1048,8 +1027,7 @@ void convert_omega_h_to_goma(
   std::vector<int> node_mesh(global_node.size());
   std::iota(node_mesh.begin(), node_mesh.end(), 1);
 
-  CALL(ex_put_processor_node_maps(exoid, node_mesh.data(), &node_mesh[internal_nodes.size()],
-                                  NULL,
+  CALL(ex_put_processor_node_maps(exoid, node_mesh.data(), &node_mesh[internal_nodes.size()], NULL,
                                   ProcID));
 
   std::vector<int> cmap_node_counts;
@@ -1061,7 +1039,7 @@ void convert_omega_h_to_goma(
   CALL(
       ex_put_cmap_params(exoid, node_cmap_ids.data(), cmap_node_counts.data(), NULL, NULL, ProcID));
 
-  std::vector<int> node_map_proc_ids(boundary_nodes.size());
+  std::vector<int> node_map_proc_ids(proc_node_idx[neighbor_list.size()]);
   for (auto nidx : node_cmap_to_neighbor) {
     std::fill(node_map_proc_ids.begin() + proc_node_idx[nidx],
               node_map_proc_ids.begin() + proc_node_idx[nidx + 1], neighbor_list[nidx]);
@@ -1168,7 +1146,7 @@ void convert_omega_h_to_goma(
   end_code();
 }
 } // namespace exodus
-} // namespace Omega_h
+} // namespace goma
 
 void adapt_mesh(Omega_h::Mesh &mesh) {
   Omega_h::MetricInput genopts;
@@ -1231,7 +1209,8 @@ void adapt_mesh(Omega_h::Mesh &mesh) {
       std::cout << "Mesh imbalance after balance = " << imb << "\n";
     }
   } else {
-    GOMA_WH_MANY(GOMA_ERROR, "Omega_h requires a power of 2 number of processors to balance the mesh");
+    GOMA_WH_MANY(GOMA_ERROR,
+                 "Omega_h requires a power of 2 number of processors to balance the mesh");
     if (imb > 2) {
       GOMA_EH(-1, "Mesh imbalance too large: %g exiting", imb);
     }
@@ -1329,8 +1308,7 @@ void adapt_mesh_omega_h(struct GomaLinearSolverData **ams,
     ss2 << base_name << "-s." << step;
   }
 
-  goma::exodus::convert_omega_h_to_goma(ss2.str().c_str(), &mesh, exo, dpi, verbose,
-                                           classify_with);
+  goma::exodus::convert_omega_h_to_goma(ss2.str().c_str(), &mesh, exo, dpi, verbose, classify_with);
 
   resetup_problem(exo, dpi);
 
