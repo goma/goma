@@ -1773,7 +1773,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
       if ((tran->ale_adapt || (ls != NULL && ls->adapt)) && pg->imtrx == 0 &&
           (nt == 0 || ((ls != NULL && nt % ls->adapt_freq == 0) ||
                        (tran->ale_adapt && nt % tran->ale_adapt_freq == 0)))) {
-        if (last_adapt_nt == nt) {
+        if (last_adapt_nt == nt && adapt_step > 0) {
           adapt_step--;
         }
         last_adapt_nt = nt;

@@ -35,3 +35,4 @@ cmake-debug
 .envrc
 /.cache/
 *.code-workspace
+/docs/docs/

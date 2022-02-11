@@ -1211,7 +1211,7 @@ void adapt_mesh(Omega_h::Mesh &mesh) {
   } else {
     GOMA_WH_MANY(GOMA_ERROR,
                  "Omega_h requires a power of 2 number of processors to balance the mesh");
-    if (imb > 2) {
+    if (imb > 2.5) {
       GOMA_EH(-1, "Mesh imbalance too large: %g exiting", imb);
     }
   }
