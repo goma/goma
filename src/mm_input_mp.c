@@ -7940,7 +7940,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	     else
 	       {
 		 mat_ptr->molar_volume[pd_glob[mn]->Num_Species_Eqn] = mv;
-		 SPF(es,"%s = %s %d %.4g", "Non-volatile Molar Volume", model_name, ii, mw ); 
+		 SPF(es,"%s = %s %d %.4g", "Non-volatile Molar Volume", model_name, ii, mv ); 
 	       } 
 	     ECHO(es,echo_file);
 	   }
@@ -7955,11 +7955,26 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	     else
 	       {
 		 mat_ptr->specific_volume[pd_glob[mn]->Num_Species_Eqn] = mv;
-		 SPF(es,"%s = %s %d %.4g", "Non-volatile Specific Volume", model_name, ii, mw ); 
+		 SPF(es,"%s = %s %d %.4g", "Non-volatile Specific Volume", model_name, ii, mv ); 
 	       } 
 	     ECHO(es,echo_file);
 	   }
 	 
+	 iread = look_for_optional(imp, "Non-volatile Emissivity", input, '='); 
+	 if (iread != -1)
+	   {
+	     if (fscanf(imp, "%s %d %lf", model_name, &ii, &mv) !=3)
+	       {
+		 EH(-1, "Error reading non-volatile Molar Volume: e.g. CONSTANT  species_id  MV");
+	       }
+	     else
+	       {
+		 mat_ptr->emissivity[pd_glob[mn]->Num_Species_Eqn] = mv;
+		 SPF(es,"%s = %s %d %.4g", "Non-volatile Emissivity", model_name, ii, mv ); 
+	       } 
+	     ECHO(es,echo_file);
+	   }
+
 	 iread = look_for_optional(imp, "Flory-Huggins parameters", input, '=');
 	 if (iread != -1)
 	   {

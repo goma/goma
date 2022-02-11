@@ -15338,13 +15338,14 @@ qrad_surf(double func[DIM],
   
 /* Local variables */
   
-  int j_id,i;
+  int j_id, i, j;
   int var;
   double phi_j;
-  double omega[MAX_CONC],rho[MAX_CONC];
+  double omega[MAX_CONC],rho[MAX_CONC],depsilon_dx[MAX_CONC],deps_dc[MAX_CONC];
   double density_tot;
-  double dmfrac_dc[MAX_CONC][MAX_CONC],drho_dc[MAX_CONC][MAX_CONC];
-  
+  double dw_dc[MAX_CONC][MAX_CONC],drho_dc[MAX_CONC][MAX_CONC];
+  PROPERTYJAC_STRUCT *densityJac = NULL;
+  propertyJac_realloc(&densityJac, mp->Num_Species+1);
 /***************************** EXECUTION BEGINS *******************************/
   
   if (modeln==1)
@@ -15353,13 +15354,13 @@ qrad_surf(double func[DIM],
       memset(rho,0,sizeof(dbl)*MAX_CONC);
       memset(drho_dc,0,sizeof(dbl)*MAX_CONC*MAX_CONC);
       memset(omega,0,sizeof(dbl)*MAX_CONC);
-      memset(domega_dc,0,sizeof(dbl)*MAX_CONC*MAX_CONC);
+      memset(dw_dc,0,sizeof(dbl)*MAX_CONC*MAX_CONC);
 
       switch(mp->Species_Var_Type)   {
       case SPECIES_DENSITY:
         for(i=0 ; i<pd->Num_Species_Eqn; i++)
           {
-            rho[w] = fv->c[i];
+            rho[i] = fv->c[i];
             drho_dc[i][i] = 1.0;
           }
          break;
@@ -15388,56 +15389,81 @@ qrad_surf(double func[DIM],
          EH(-1,"Undefined Species formulation in Generalized_FV_Diffusivity\n");
          break;
       }
-      allomega = 0;
-  for (i=0; i<pd->Num_Species_Eqn; i++)
-    {
-      omega[i] =  rho[i]/density_tot;
-      allomega += omega[i];
-    }
+      
+      for (i=0; i<pd->Num_Species_Eqn; i++)
+        {
+          omega[i] =  rho[i]/density_tot;
+        }
 
-      omega[pd->Num_Species_Eqn] = 1. - allomega;
       epsilon = mp->emissivity[pd->Num_Species_Eqn];
       for (i=0; i<pd->Num_Species_Eqn; i++)
         {
           epsilon += omega[i]*(  mp->emissivity[i] 
                                - mp->emissivity[pd->Num_Species_Eqn]
                               );
+          depsilon_dx[i] = (  mp->emissivity[i] 
+                               - mp->emissivity[pd->Num_Species_Eqn]
+                              );
+
         }
     }
  
-  if(af->Assemble_LSA_Mass_Matrix)
-    return;
-
-  if (af->Assemble_Jacobian) {
- 
- /* sum the contributions to the global stiffness matrix */
-    if (modeln==0)
-      { 
-    var=TEMPERATURE;
-    for (j_id = 0; j_id < ei->dof[var]; j_id++) 
-      {      
-      phi_j = bf[var]->phi[j_id];
-      d_func[0][var][j_id] -= heat_tran_coeff * phi_j;
-      d_func[0][var][j_id] -= 4.*epsilon*sigma * pow(fv->T,3.0) * phi_j;  
-      }
-      }
-    else if (modeln==1)
-      {
-    var=TEMPERATURE;
-    for (j_id = 0; j_id < ei->dof[var]; j_id++) 
-      {      
-      phi_j = bf[var]->phi[j_id];
-      d_func[0][var][j_id] -= heat_tran_coeff * phi_j;
-      d_func[0][var][j_id] -= 4.*epsilon*sigma * pow(fv->T,3.0) * phi_j;  
-      }
-     var=MASS_FRACTION;
-      }
-  }
-
 /* Calculate the residual contribution					     */
   
   *func += heat_tran_coeff * (T_c - fv->T) + 
            epsilon*sigma * (pow(T_c,4.0) - pow(fv->T,4.0));
+ 
+  if(af->Assemble_LSA_Mass_Matrix)
+    return;
+
+  if (af->Assemble_Jacobian) 
+  {
+ /* sum the contributions to the global stiffness matrix */
+    if (modeln==1)
+    {
+    var=TEMPERATURE;
+    for (j_id = 0; j_id < ei->dof[var]; j_id++) 
+      {      
+      phi_j = bf[var]->phi[j_id];
+      d_func[0][var][j_id] -= heat_tran_coeff * phi_j;
+      d_func[0][var][j_id] -= 4.*epsilon*sigma * pow(fv->T,3.0) * phi_j;  
+      }
+    var=MASS_FRACTION;
+    for (i=0; i<pd->Num_Species_Eqn; i++)
+      {
+        for (j=0; j<pd->Num_Species_Eqn; j++)
+          {
+            dw_dc[i][j] = (drho_dc[i][j]-omega[i]*mp->d_density[MAX_VARIABLE_TYPES+j])/density_tot;
+          }
+      } 
+    for (i=0; i<pd->Num_Species_Eqn; i++)
+      { 
+        deps_dc[i] = 0.;
+        for (j=0; j<pd->Num_Species_Eqn; j++)
+          {
+            deps_dc[i] += depsilon_dx[j]*dw_dc[i][j];
+          }
+      }
+    for (j_id = 0; j_id < ei->dof[var]; j_id++)
+      {
+      phi_j = bf[var]->phi[j_id];
+      for (i=0; i<pd->Num_Species_Eqn; i++)
+        {
+          d_func[0][MAX_VARIABLE_TYPES+i][j_id] = deps_dc[i]*sigma*(pow(T_c,4.0) - pow(fv->T,4.0));
+        }   
+      }
+    }
+    else 
+    { 
+    var=TEMPERATURE;
+    for (j_id = 0; j_id < ei->dof[var]; j_id++) 
+      {      
+      phi_j = bf[var]->phi[j_id];
+      d_func[0][var][j_id] -= heat_tran_coeff * phi_j;
+      d_func[0][var][j_id] -= 4.*epsilon*sigma * pow(fv->T,3.0) * phi_j;  
+      }
+    }
+  }
 
   return;
 } /* END of routine qrad_surf                                                */
