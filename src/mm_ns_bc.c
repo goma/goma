@@ -15325,8 +15325,8 @@ qrad_surf(double func[DIM],
 	  double heat_tran_coeff, /* Heat transfer coefficient (cgs units)   */
           double T_c,             /* bath temperature (Kelvin)	             */
           double epsilon,         /* emissivity                              */
-          double sigma)           /* Boltzmann's constant                    */
-
+          double sigma,           /* Boltzmann's constant                    */
+          int modeln)             /* Optional model number                   */
 /******************************************************************************
 *
 *  Function which calculates the surface integral for radiative - convective
@@ -15338,25 +15338,100 @@ qrad_surf(double func[DIM],
   
 /* Local variables */
   
-  int j_id;
+  int j_id,i;
   int var;
   double phi_j;
+  double omega[MAX_CONC],rho[MAX_CONC];
+  double density_tot;
+  double dmfrac_dc[MAX_CONC][MAX_CONC],drho_dc[MAX_CONC][MAX_CONC];
   
 /***************************** EXECUTION BEGINS *******************************/
   
+  if (modeln==1)
+    {
+      density_tot = calc_density(mp, TRUE, densityJac, 0.0);
+      memset(rho,0,sizeof(dbl)*MAX_CONC);
+      memset(drho_dc,0,sizeof(dbl)*MAX_CONC*MAX_CONC);
+      memset(omega,0,sizeof(dbl)*MAX_CONC);
+      memset(domega_dc,0,sizeof(dbl)*MAX_CONC*MAX_CONC);
+
+      switch(mp->Species_Var_Type)   {
+      case SPECIES_DENSITY:
+        for(i=0 ; i<pd->Num_Species_Eqn; i++)
+          {
+            rho[w] = fv->c[i];
+            drho_dc[i][i] = 1.0;
+          }
+         break;
+      case SPECIES_UNDEFINED_FORM:
+      case SPECIES_MASS_FRACTION:
+        for(i=0 ; i<pd->Num_Species_Eqn; i++)
+          {
+            rho[i] = fv->c[i]*density_tot;
+            for (j=0 ; j<pd->Num_Species_Eqn; j++)
+              {
+                drho_dc[i][j] = density_tot*delta(i,j) 
+                                +fv->c[i]*mp->d_density[MAX_VARIABLE_TYPES+j];
+              }
+          }
+         break;
+      case SPECIES_CONCENTRATION:
+        for(i=0; i<pd->Num_Species_Eqn; i++)
+           {
+             rho[i] = fv->c[i]*mp->molecular_weight[i];
+             drho_dc[i][i] = mp->molecular_weight[i];
+           }
+         break;
+      case SPECIES_MOLE_FRACTION:
+      case SPECIES_VOL_FRACTION:
+      default:
+         EH(-1,"Undefined Species formulation in Generalized_FV_Diffusivity\n");
+         break;
+      }
+      allomega = 0;
+  for (i=0; i<pd->Num_Species_Eqn; i++)
+    {
+      omega[i] =  rho[i]/density_tot;
+      allomega += omega[i];
+    }
+
+      omega[pd->Num_Species_Eqn] = 1. - allomega;
+      epsilon = mp->emissivity[pd->Num_Species_Eqn];
+      for (i=0; i<pd->Num_Species_Eqn; i++)
+        {
+          epsilon += omega[i]*(  mp->emissivity[i] 
+                               - mp->emissivity[pd->Num_Species_Eqn]
+                              );
+        }
+    }
+ 
   if(af->Assemble_LSA_Mass_Matrix)
     return;
 
   if (af->Assemble_Jacobian) {
-    
+ 
  /* sum the contributions to the global stiffness matrix */
-  
+    if (modeln==0)
+      { 
     var=TEMPERATURE;
-    for (j_id = 0; j_id < ei->dof[var]; j_id++) {
+    for (j_id = 0; j_id < ei->dof[var]; j_id++) 
+      {      
       phi_j = bf[var]->phi[j_id];
       d_func[0][var][j_id] -= heat_tran_coeff * phi_j;
-      d_func[0][var][j_id] -= 4.*epsilon*sigma * pow(fv->T,3.0) * phi_j;
-    }
+      d_func[0][var][j_id] -= 4.*epsilon*sigma * pow(fv->T,3.0) * phi_j;  
+      }
+      }
+    else if (modeln==1)
+      {
+    var=TEMPERATURE;
+    for (j_id = 0; j_id < ei->dof[var]; j_id++) 
+      {      
+      phi_j = bf[var]->phi[j_id];
+      d_func[0][var][j_id] -= heat_tran_coeff * phi_j;
+      d_func[0][var][j_id] -= 4.*epsilon*sigma * pow(fv->T,3.0) * phi_j;  
+      }
+     var=MASS_FRACTION;
+      }
   }
 
 /* Calculate the residual contribution					     */

@@ -951,7 +951,6 @@ rd_bc_specs(FILE *ifp,
 	case CA_EDGE_BC:
 	case CA_EDGE_INT_BC:
 	case CAP_ENDFORCE_BC:
-	case QRAD_BC:
 	case LS_QRAD_BC:
 	case SURFTANG_EDGE_BC:
         case FLOW_HYDROSTATIC_BC:
@@ -980,7 +979,34 @@ rd_bc_specs(FILE *ifp,
  	   * Fall through for all cases which require four floating point
  	   * values as data input and an optional integer element block
  	   */
- 	case CA_BC:
+ 	case QRAD_BC:
+ 	  if (fscanf(ifp, "%lf %lf %lf %lf",
+		     &BC_Types[ibc].BC_Data_Float[0],
+		     &BC_Types[ibc].BC_Data_Float[1],
+		     &BC_Types[ibc].BC_Data_Float[2],
+		     &BC_Types[ibc].BC_Data_Float[3]) != 4)
+ 	    {
+ 	      sr = sprintf(err_msg, "%s: Expected 4 flts for %s.",
+ 			   yo, BC_Types[ibc].desc->name1);
+ 	      EH(-1, err_msg);
+ 	    }
+ 	  else
+ 	    {
+	  SPF_DBL_VEC(endofstring(echo_string), 4,  BC_Types[ibc].BC_Data_Float);
+	      /* Scan for the optional int. If not present, put a -1 in second data position */
+	      /* This is to ensure a nonzero entry in BC_Data_Int[2] for CA */
+	      /* note: optional int isn't listed in the manual. What's it for? */
+   	      if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[2]) != 1)
+     		{
+		  BC_Types[ibc].BC_Data_Int[2] = 0;
+     		}
+	      else
+		SPF(endofstring(echo_string)," %d", BC_Types[ibc].BC_Data_Int[2] );
+ 	    }
+          BC_Types[ibc].max_DFlt = 4;
+
+	  break;
+        case CA_BC:
 	case CA_MOMENTUM_BC:
  	  if (fscanf(ifp, "%lf %lf %lf %lf",
 		     &BC_Types[ibc].BC_Data_Float[0],

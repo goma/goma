@@ -858,7 +858,8 @@ PROTO((double [DIM],		/* func                                      */
        double ,			/* heat_tran_coeff - (cgs units)             */
        double ,			/* T_c - bath temperature (Kelvin)	     */
        double ,			/* emissivity                                */
-       double ));		/* Boltzmann's constant                      */
+       double ,		        /* Boltzmann's constant                      */
+       int    ));               /* Optional model number                     */
 
 EXTERN void qrad_surf_repulse		/* mm_ns_bc.c                           */
 PROTO((double [DIM],		/* func                                      */
