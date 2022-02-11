@@ -1,0 +1,93 @@
+*******
+**S12**
+*******
+
+::
+
+	BC = {bc_name} NS <bc_id> <float1> [float2]
+
+-----------------------
+**Description / Usage**
+-----------------------
+
+**(DC/STRESS12)**
+
+This Dirichlet boundary condition specification is used to set a constant xy-stress (also
+known as the shear stress) for any given mode of the stress tensor. Each such
+specification is made on a separate input card. Definitions of the input parameters are
+as follows:
+
++-----------------------------------------------------------------+------------------------------------------------------+
+|**{S12 | S12_1 | S12_2 | S12_3 | S12_4 | S12_5 | S12_6 | S12_7}**| Boundary condition name (<bc_name>) that defines     |
+|                                                                 | the xy-stress for a given mode, where:               |
++-----------------------------------------------------------------+----------+-------------------------------------------+
+|                                                                 | **S12**  | xy-component of stress tensor for mode 1  |
++-----------------------------------------------------------------+----------+-------------------------------------------+
+|                                                                 | **S12_1**| xy-component of stress tensor for mode 2  |
++-----------------------------------------------------------------+----------+-------------------------------------------+
+|                                                                 | **S12_2**| xy-component of stress tensor for mode 3  |
++-----------------------------------------------------------------+----------+-------------------------------------------+
+|                                                                 | **S12_3**| xy-component of stress tensor for mode 4  |
++-----------------------------------------------------------------+----------+-------------------------------------------+
+|                                                                 | **S12_4**| xy-component of stress tensor for mode 5  |
++-----------------------------------------------------------------+----------+-------------------------------------------+
+|                                                                 | **S12_5**| xy-component of stress tensor for mode 6  |
++-----------------------------------------------------------------+----------+-------------------------------------------+
+|                                                                 | **S12_6**| xy-component of stress tensor for mode 7  |
++-----------------------------------------------------------------+----------+-------------------------------------------+
+|                                                                 | **S12_7**| xy-component of stress tensor for mode 8  |
++-----------------------------------------------------------------+----------+-------------------------------------------+
+|**NS**                                                           | Type of boundary condition (<bc_type>), where **NS** |
+|                                                                 | denotes node set in the EXODUS II database.          |
++-----------------------------------------------------------------+------------------------------------------------------+
+|<bc_id>                                                          | The boundary flag identifier, an integer associated  |
+|                                                                 | with <bc_type> that identifies the boundary location |
+|                                                                 | (node set in EXODUS II) in the problem domain.       |
++-----------------------------------------------------------------+------------------------------------------------------+
+|<float1>                                                         | Value of xy-stress.                                  |
++-----------------------------------------------------------------+------------------------------------------------------+
+|[float2]                                                         | An optional parameter (that serves as a flag to the  |
+|                                                                 | code for a Dirichlet boundary condition). If a value |
+|                                                                 | is present, and is not -1.0, the condition is applied| 
+|                                                                 | as a residual equation. Otherwise, it is a “hard set”| 
+|                                                                 | condition and is eliminated from the matrix. The     |
+|                                                                 | residual method must be used when this Dirichlet     |
+|                                                                 | boundary condition is used as a parameter in         |
+|                                                                 | automatic continuation sequences.                    |
++-----------------------------------------------------------------+------------------------------------------------------+
+
+------------
+**Examples**
+------------
+
+Following are sample cards for applying a Dirichlet condition on the xy-stress
+component for mode 5 on node set 10:
+::
+
+   BC = S12_4 NS 10   1.25
+
+::
+
+   BC = S12_4 NS 10  1.25   1.0
+
+where the second example uses the “residual” method for applying the same Dirichlet
+condition.
+
+-------------------------
+**Technical Discussion**
+-------------------------
+
+See the technical discussion for the *UVW* velocity boundary condition for a discussion
+of the two ways of applying Dirichlet boundary conditions.
+
+For details of the stress tensor and its use for solving viscoelastic flow problems, please
+see the viscoelastic flow tutorial (Rao, 2000).
+
+
+
+--------------
+**References**
+--------------
+
+GT-014.1: Tutorial for Running Viscoelastic Flow Problems with GOMA, June 21,
+2000, R. R. Rao
