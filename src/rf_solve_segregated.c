@@ -1333,8 +1333,8 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
      *******************************************************************/
 #ifdef HAVE_OMEGA_H
     int adapt_step = 0;
-    int last_adapt_nt = 0;
 #endif
+    int last_adapt_nt = 0;
     for (n = 0; n < MaxTimeSteps; n++) {
 
       tran->step = n;

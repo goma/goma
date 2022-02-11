@@ -51,6 +51,10 @@ weak form, finite-element strong form, and many other boundary condition types.
 
 .. include:: /problem_description_file/boundary_conditions/fluid_momentum/velo_slip_solid.rst
 
+.. include:: /problem_description_file/boundary_conditions/fluid_momentum/velo_slip_power.rst
+
+.. include:: /problem_description_file/boundary_conditions/fluid_momentum/velo_slip_power_card.rst
+
 .. include:: /problem_description_file/boundary_conditions/fluid_momentum/discontinuous_velo.rst
 
 .. include:: /problem_description_file/boundary_conditions/fluid_momentum/hydrostatic_symm.rst

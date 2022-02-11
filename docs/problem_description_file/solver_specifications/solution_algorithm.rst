@@ -98,6 +98,18 @@ amesos
 							  
     Of these four options, we currently recommend **mumps**.
     All options can be run in parallel.
+stratimikos
+    Interface to Trilino's Stratimikos package
+    requires:
+
+    ::
+
+        Matrix storage format = epetra
+    
+    Allows block solvers, see also ref:`Stratimikos File`
+petsc
+    PETSc solver and preconditioner, will use `petscrc` file or `-petsc`
+    command line, see Technical Discussion for more information
 
 
 ------------
@@ -181,6 +193,33 @@ the “right” linear solver requires experience, understanding and sometimes, 
   overloaded equations like species diffusion, porous media equations, etc. are used.
   This option also performs well for three-dimensional problems of small to
   moderate size. 
+
+* **stratimikos**: mostly used for interfacing with Trilino's `Teko` but can also call
+  full solver suite that is supported in Trilinos through xml files
+
+* **petsc**: There are quite a lot of linear solvers and preconditioners available through
+  PETSc and most are configured through either command line arguments using `-petsc` or 
+  using a `petscrc` file in your goma problem directory specifying petsc options
+
+  Options are specified using the usual `ksp_type` and `pc_type` etc
+
+  ::
+    
+    -ksp_type gmres
+    -pc_type asm
+    ... etc
+
+  When in a segregated solve `ksp` and `pc` options should be prefixed with a 0-indexed `-sys#`
+  corresponding to each matrix
+
+  ::
+    
+    -sys0_ksp_type gmres
+    -sys0_pc_type asm
+    -sys1_ksp_type gmres
+    -sys1_pc_type hypre
+    ... etc
+
 
 --------------
 **References**

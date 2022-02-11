@@ -21,6 +21,10 @@ report by Schunk, et al. (2002) for an overview and further usage tips.
 
 -------------------------------------------------------------------------------
 
+.. include:: solver_specifications/stratimikos_file.rst
+
+-------------------------------------------------------------------------------
+
 .. include:: solver_specifications/preconditioner.rst
 
 -------------------------------------------------------------------------------

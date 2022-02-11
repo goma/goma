@@ -11,6 +11,10 @@ position is monitored using Level Set Interface Tracking.
 
 .. include:: /problem_description_file/boundary_conditions/level_set/ls_capillary.rst
 
+.. include:: /problem_description_file/boundary_conditions/level_set/ls_cap_denner_diff.rst
+
+.. include:: /problem_description_file/boundary_conditions/level_set/ls_cap_hysing.rst
+
 .. include:: /problem_description_file/boundary_conditions/level_set/ls_flow_pressure.rst
 
 .. include:: /problem_description_file/boundary_conditions/level_set/ls_fluid_solid_contact.rst
