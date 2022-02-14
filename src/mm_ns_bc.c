@@ -14412,9 +14412,9 @@ void light_transmission(double func[DIM],
                         double time,
                         const int bc_type,
                         const double bdy_refindex,
-                        const double bdy_absorption,
+                        UNUSED const double bdy_absorption,
                         const double bdy_incident,
-                        const int blk_id)
+                        UNUSED const int blk_id)
 /******************************************************************************
  *  Function which calculates the surface integral for the "plane transmission"
  *	acoustic wave equation
@@ -14748,16 +14748,14 @@ void qside_light_jump(double func[DIM],
   }
 }
 /****************************************************************************/
-void fvelo_slip_ls_heaviside(double func[MAX_PDIM],
-                             double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+void fvelo_slip_ls_heaviside(double func[3],
+                             double d_func[3][215][27],
                              double width,
                              double beta_negative,
                              double beta_positive,
-                             const double vsx, /* velocity components of solid  */
-                             const double vsy, /* surface on which slip condition   */
-                             const double vsz, /* is applied           */
-                             const double tt,
-                             const double dt) {
+                             const double vsx,
+                             const double vsy,
+                             const double vsz) {
   int j, var, jvar, p;
   double phi_j, vs[MAX_PDIM];
   double beta, betainv;

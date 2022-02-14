@@ -717,7 +717,7 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
         case VELO_SLIP_LS_HEAVISIDE_BC:
           fvelo_slip_ls_heaviside(func, d_func, bc->BC_Data_Float[0], bc->BC_Data_Float[1],
                                   bc->BC_Data_Float[2], bc->BC_Data_Float[3], bc->BC_Data_Float[4],
-                                  bc->BC_Data_Float[5], theta, delta_t);
+                                  bc->BC_Data_Float[5]);
           break;
 
         case VELO_SLIP_LS_ORIENTED_BC:
@@ -1465,7 +1465,7 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
           // to add in normal gradient term
           // fall through
         case RESTIME_NOBC_BC:
-          restime_nobc_surf(func, d_func, time_intermediate);
+          restime_nobc_surf(func, d_func);
           break;
 
         case T_CONTACT_RESIS_BC:

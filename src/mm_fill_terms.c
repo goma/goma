@@ -30297,6 +30297,7 @@ double em_diss_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 
   ap_square = SQUARE(fv->apr) + SQUARE(fv->api);
   h = ap_square * alpha * k / R;
+  GOMA_ASSERT_ALWAYS(num_const > 0);
   h *= param[0];
 
   /* Now do sensitivies */
@@ -30414,6 +30415,7 @@ double em_diss_e_curlcurl_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
   }
 
   h = h_factor * mag_E_sq;
+  GOMA_ASSERT_ALWAYS(num_const > 0);
   h *= param[0];
 
   /* Now sensitivies */
@@ -31022,9 +31024,7 @@ int assemble_poynting(double time, /* present time value */
   return (status);
 } /* end of assemble_poynting */
 
-void restime_nobc_surf(double func[DIM],
-                       double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
-                       double time)
+void restime_nobc_surf(double func[3], double d_func[3][215][27])
 
 /******************************************************************************
  *

@@ -1654,7 +1654,12 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-int komplex_linear_solver_conwrap(double *c, double *d, int jac_flag, double *omega, double *tmp)
+#ifndef KOMPLEX
+#define KOMPLEX_UNUSED UNUSED
+#else
+#define KOMPLEX_UNUSED
+#endif
+int komplex_linear_solver_conwrap(KOMPLEX_UNUSED double *c, KOMPLEX_UNUSED double *d, KOMPLEX_UNUSED int jac_flag, KOMPLEX_UNUSED double *omega, KOMPLEX_UNUSED double *tmp)
 /* Put the call to your komplex linear solver here. There are three options
  * about the reuse of the preconditioner. It is always safe to
  * just solve the matrix from scratch.

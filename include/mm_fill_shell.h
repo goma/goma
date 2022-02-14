@@ -282,12 +282,11 @@ EXTERN int assemble_lubrication_power_law(double,          /* Time */
                                           double[DIM],     /* Local stu coords */
                                           const Exo_DB *); /* ExodusII database struct pointer */
 
-EXTERN int assemble_shell_tfmp(double,      /* Time */
-                               double,      /* theta or tt*/
-                               double,      /* dt */
-                               double[DIM], /* Local stu coords */
-                               PG_DATA *,
-                               const Exo_DB *); /* ExodusII database struct pointer */
+EXTERN int assemble_shell_tfmp(double time,
+                               double tt,
+                               double delta_t,
+                               double xi[3],
+                               const Exo_DB *exo); /* ExodusII database struct pointer */
 
 EXTERN int assemble_shell_lubrication(double,          /* Time */
                                       double,          /* theta or tt*/

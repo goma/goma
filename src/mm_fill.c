@@ -2227,7 +2227,7 @@ Revised:         Summer 1998, SY Tam (UNM)
     }
 
     if (pde[R_TFMP_MASS] && pde[R_TFMP_BOUND]) {
-      err = assemble_shell_tfmp(time_value, theta, delta_t, xi, &pg_data, exo);
+      err = assemble_shell_tfmp(time_value, theta, delta_t, xi, exo);
       GOMA_EH(err, "assemble_shell_tfmp");
 #ifdef CHECK_FINITE
       err = CHECKFINITE("assemble_shell_tfmp");

@@ -15111,12 +15111,7 @@ int assemble_shell_mesh(double time,    /* Time */
  *               in shell_tfmp_util.c, couple to inextensible shells
  ******************************************************************************/
 
-int assemble_shell_tfmp(double time,      /* Time */
-                        double tt,        /* Time stepping parameter */
-                        double delta_t,   /* Time step size */
-                        double xi[DIM],   /* Local stu coordinates */
-                        PG_DATA *pg_data, /* Upwinding data struct */
-                        const Exo_DB *exo) {
+int assemble_shell_tfmp(double time, double tt, double delta_t, double xi[3], const Exo_DB *exo) {
   int i, j, k, l, peqn, var, pvar;
   dbl phi_i, grad_phi_i[DIM], gradII_phi_i[DIM]; // Basis funcitons (i)
   dbl d_gradII_phi_i_dmesh[DIM][DIM][MDE];
