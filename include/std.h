@@ -526,11 +526,11 @@ extern int zero_detJ;
 extern int zero_detJ_global;
 
 #ifndef UNUSED
-#  if defined(__GNUC__)
-#    define UNUSED __attribute__((unused))
-#  else
-#    define UNUSED
-#  endif
+#if defined(__GNUC__)
+#define UNUSED __attribute__((unused))
+#else
+#define UNUSED
+#endif
 #endif
 
 /***************************************************************************/

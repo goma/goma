@@ -663,7 +663,8 @@ int apply_special_bc(struct GomaLinearSolverData *ams,
                            BC_Types[j_bc_id].BC_Name == VELO_THETA_SHIK_BC) {
                   double wall_velocity = 0, velo[MAX_PDIM];
                   double dwall_velo_dx[DIM][MDE], dvelo_dx[DIM][DIM];
-                  double lag_pars[2 * DIM + 1], t, axis_pt[DIM], R, rad_dir[DIM], v_dir[DIM];
+                  double lag_pars[2 * DIM + 1] = {0.0};
+                  double t, axis_pt[DIM], R, rad_dir[DIM], v_dir[DIM];
                   int found_wall_velocity = 0, sfs_model = 0;
                   double theta_max = 180.0, dewet = 1.0, dcl_shearrate = -1.;
 

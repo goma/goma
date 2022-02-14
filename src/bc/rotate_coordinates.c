@@ -34,6 +34,10 @@
 #define GOMA_MAX_NORMALS_PER_NODE 50
 #endif
 
+#ifndef MAX_NUM_SIDESETS
+#define MAX_NUM_SIDESETS 10000
+#endif
+
 goma_rotation_s goma_automatic_rotations = {false, NULL};
 
 goma_error check_if_equation_is_rotation(int equation, bool *is_rotated) {
@@ -258,6 +262,8 @@ goma_error exchange_neighbor_ss_edges(Exo_DB *exo, Dpi *dpi) {
     }
   }
 
+  // we have an odd warning with optimization silence with:
+  GOMA_ASSERT_ALWAYS(dpi->num_side_sets_global < MAX_NUM_SIDESETS);
   int *offsets = calloc(dpi->num_side_sets_global, sizeof(int));
   int req_count = 0;
   for (int i = 0; i < dpi->num_neighbors; i++) {
