@@ -3840,19 +3840,19 @@ void apply_surface_viscosity(double cfunc[MDE][DIM],
  */
 
 void put_fluid_stress_on_shell(
-    int id,                   /* local element node number for the
+    int id,                   /* local bulk element node number for the
                                * current node whose residual contribution
                                * is being sought                        */
-    int id_shell,             /* local shell element node number corresponding to id */
+			  int id_shell_curv, /* local shell element node number corresponding to id */
+			  int id_shell_tens, /* local shell element node number corresponding to id */
     int I,                    /* Global node number                      */
     int ielem_dim,            /* physical dimension of the elem  */
     double resid_vector[],    /* Residual vector         */
     int local_node_list_fs[], /* MDE list to keep track
                                * of nodes at which
-                               * solid contributions
+						     * bulk contributions
                                * have been transfered
-                               * to liquid (fluid-solid
-                               * boundaries)          */
+						     * to shell  */
     double scale)             /* Scale factor, nondimension       */
 {
   int j_id, dim, var, pvar, q;
@@ -3875,16 +3875,6 @@ void put_fluid_stress_on_shell(
     curvature_fixed = tension_fixed = 0;
   }
 
-  /*
-   * if you are in the shell phase, return without doing anything
-   * In the shell phase, there are no fluid momentum equations.
-   * This probably is not needed since it is impossible with CUBIT to
-   * put attach a sideset to a shell element, and hence all sidesets
-   * are one-sided.
-   */
-  if (!pd->e[pg->imtrx][R_MOMENTUM1])
-    return;
-
   /* Hmm, unlike in the FLUID_SOLID case, we've no shell equations in the
    * bulk so we cannot use ei struct like this
    * id_dofmom = ei[pg->imtrx]->ln_to_dof[R_MOMENTUM1][id];
@@ -3893,8 +3883,7 @@ void put_fluid_stress_on_shell(
    * So try this because it is only 2D (assumption that there is a shell
    * variable at every surface node
    */
-  id_dofmom1 = ei[pg->imtrx]->ln_to_dof[R_MOMENTUM1][id];
-  id_dofshell = id_shell; /* This is the imperfect assumption */
+  id_dofmom1 = id;
 
   /*
    * if this nodal contribution has already been added to fluid momentum
@@ -3928,9 +3917,9 @@ void put_fluid_stress_on_shell(
       ieqn_shell = R_SHELL_CURVATURE;
       ieqn_mom1 = R_MOMENTUM1;
       ieqn_mom2 = R_MOMENTUM2;
-      id_dofmom1 = ei[pg->imtrx]->ln_to_dof[ieqn_mom1][id];
-      id_dofmom2 = ei[pg->imtrx]->ln_to_dof[ieqn_mom2][id];
-      id_dofshell = id_shell;
+      id_dofmom1 = id;
+      id_dofmom2 = id;
+      id_dofshell = id_shell_curv;
       lec->R[LEC_R_INDEX(upd->ep[pg->imtrx][ieqn_shell], id_dofshell)] +=
           scale * (fv->snormal[0] * lec->R[LEC_R_INDEX(upd->ep[pg->imtrx][ieqn_mom1], id_dofmom1)] +
                    fv->snormal[1] * lec->R[LEC_R_INDEX(upd->ep[pg->imtrx][ieqn_mom2], id_dofmom2)]);
@@ -3939,9 +3928,9 @@ void put_fluid_stress_on_shell(
       ieqn_shell = R_SHELL_TENSION;
       ieqn_mom1 = R_MOMENTUM1;
       ieqn_mom2 = R_MOMENTUM2;
-      id_dofmom1 = ei[pg->imtrx]->ln_to_dof[ieqn_mom1][id];
-      id_dofmom2 = ei[pg->imtrx]->ln_to_dof[ieqn_mom2][id];
-      id_dofshell = id_shell;
+      id_dofmom1 = id;
+      id_dofmom2 = id;
+      id_dofshell = id_shell_tens;
       lec->R[LEC_R_INDEX(upd->ep[pg->imtrx][ieqn_shell], id_dofshell)] +=
           scale *
           (fv->stangent[0][0] * lec->R[LEC_R_INDEX(upd->ep[pg->imtrx][ieqn_mom1], id_dofmom1)] +
@@ -3959,11 +3948,11 @@ void put_fluid_stress_on_shell(
       peqn_shell = upd->ep[pg->imtrx][ieqn_shell];
       ieqn_mom1 = R_MOMENTUM1;
       ieqn_mom2 = R_MOMENTUM2;
-      id_dofmom1 = ei[pg->imtrx]->ln_to_dof[ieqn_mom1][id];
+	  id_dofmom1 = id;
       peqn_mom1 = upd->ep[pg->imtrx][ieqn_mom1];
-      id_dofmom2 = ei[pg->imtrx]->ln_to_dof[ieqn_mom2][id];
+	  id_dofmom2 = id;
       peqn_mom2 = upd->ep[pg->imtrx][ieqn_mom2];
-      id_dofshell = id_shell;
+	  id_dofshell = id_shell_curv;
 
       /* Add contributions due to all nodal sensitivities in shell element */
 
@@ -4021,11 +4010,11 @@ void put_fluid_stress_on_shell(
       peqn_shell = upd->ep[pg->imtrx][ieqn_shell];
       ieqn_mom1 = R_MOMENTUM1;
       ieqn_mom2 = R_MOMENTUM2;
-      id_dofmom1 = ei[pg->imtrx]->ln_to_dof[ieqn_mom1][id];
+	  id_dofmom1 = id;
       peqn_mom1 = upd->ep[pg->imtrx][ieqn_mom1];
-      id_dofmom2 = ei[pg->imtrx]->ln_to_dof[ieqn_mom2][id];
+	  id_dofmom2 = id;
       peqn_mom2 = upd->ep[pg->imtrx][ieqn_mom2];
-      id_dofshell = id_shell;
+	  id_dofshell = id_shell_tens;
 
       /* Add contributions due to all nodal sensitivities in shell element */
 
