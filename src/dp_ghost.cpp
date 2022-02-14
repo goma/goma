@@ -421,13 +421,14 @@ goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi) {
     neighbor_list[i] = -1;
   }
 
-  MPI_Allgather(neighbor_list.data(), max_neighbors, MPI_INT, all_neighbors.data(), max_neighbors, MPI_INT,
-                MPI_COMM_WORLD);
+  MPI_Allgather(neighbor_list.data(), max_neighbors, MPI_INT, all_neighbors.data(), max_neighbors,
+                MPI_INT, MPI_COMM_WORLD);
 
   // loop over the neighbors and decide if we have another neighbor
   for (int i = 0; i < Num_Proc; i++) {
-    if (i == ProcID) continue;
-    for (int j = max_neighbors * i; j < (max_neighbors *i + max_neighbors); j++) {
+    if (i == ProcID)
+      continue;
+    for (int j = max_neighbors * i; j < (max_neighbors * i + max_neighbors); j++) {
       if (all_neighbors[j] == ProcID) {
         neighbors_set.insert(i);
       }
@@ -439,15 +440,14 @@ goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi) {
   std::sort(neighbor_list.begin(), neighbor_list.end());
 
   dpi->num_neighbors = neighbor_list.size();
-  int_ptr = (int *) realloc(dpi->neighbor, sizeof(int) * dpi->num_neighbors);
+  int_ptr = (int *)realloc(dpi->neighbor, sizeof(int) * dpi->num_neighbors);
   GOMA_ASSERT(int_ptr != NULL);
   dpi->neighbor = int_ptr;
   for (int i = 0; i < dpi->num_neighbors; i++) {
     dpi->neighbor[i] = neighbor_list[i];
   }
 
-
-  requests.resize(2*dpi->num_neighbors);
+  requests.resize(2 * dpi->num_neighbors);
   std::vector<MPI_Request> requests_sendrecv(2 * dpi->num_neighbors);
   std::vector<int> num_send_nodes(dpi->num_neighbors);
   std::vector<int> num_recv_nodes(dpi->num_neighbors);

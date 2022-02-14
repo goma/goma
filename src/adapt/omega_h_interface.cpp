@@ -639,7 +639,6 @@ void convert_omega_h_to_goma(
   MPI_Allgather(my_global_comm_nodes.data(), max_comm_size, MPI_INT,
                 all_neighbors_comm_nodes.data(), max_comm_size, MPI_INT, MPI_COMM_WORLD);
 
-
   // update our comm nodes with nodes we find in the neighbors comm nodes
   std::set<int> updated_comm_nodes_set;
   for (auto node : all_neighbors_comm_nodes) {
@@ -655,9 +654,8 @@ void convert_omega_h_to_goma(
     updated_comm_nodes[i] = -1;
   }
   all_neighbors_comm_nodes.resize(max_comm_size * Num_Proc);
-  MPI_Allgather(updated_comm_nodes.data(), max_comm_size, MPI_INT,
-                all_neighbors_comm_nodes.data(), max_comm_size, MPI_INT, MPI_COMM_WORLD);
-
+  MPI_Allgather(updated_comm_nodes.data(), max_comm_size, MPI_INT, all_neighbors_comm_nodes.data(),
+                max_comm_size, MPI_INT, MPI_COMM_WORLD);
 
   // all_nodes_set
   std::set<int> all_comm_nodes_set;
@@ -718,7 +716,8 @@ void convert_omega_h_to_goma(
   std::set<int> boundary_nodes;
   for (int proc = 0; proc < Num_Proc; proc++) {
     int offset = proc * max_comm_size;
-    if (proc == ProcID) continue;
+    if (proc == ProcID)
+      continue;
     for (int i = 0; i < max_comm_size; i++) {
       int gnode = all_neighbors_comm_nodes[offset + i];
       if (gnode != -1) {
