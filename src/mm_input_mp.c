@@ -692,7 +692,10 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     ElasticConstitutiveEquation = HOOKEAN_PSTRESS;
   } else if (!strcmp(model_name, "INCOMP_3D")) {
     ElasticConstitutiveEquation = INCOMP_3D;
-  } else /* default to nonlinear */
+  } else if ( !strcmp(model_name, "KELVIN_VOIGT") )
+    {
+      ElasticConstitutiveEquation = KELVIN_VOIGT;
+    }else /* default to nonlinear */
   {
     ElasticConstitutiveEquation = NONLINEAR;
     SPF(endofstring(es), "\t(%s)", "Solid Constitutive Equation defaulting to NONLINEAR");
@@ -934,6 +937,37 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
     ECHO(es, echo_file);
   }
+
+   model_read = look_for_mat_prop(imp, "Solid Viscosity",
+ 				 &(elc_glob[mn]->solid_viscosity_model),
+ 				 &(elc_glob[mn]->solid_viscosity),
+ 				 &(elc_glob[mn]->u_solid_viscosity),
+ 				 &(elc_glob[mn]->len_u_solid_viscosity),
+				  model_name, SCALAR_INPUT, &NO_SPECIES,es);
+
+   if( model_read == -1 )
+     {
+       elc_glob[mn]->solid_viscosity_model = CONSTANT;
+       elc_glob[mn]->solid_viscosity = 0.0;
+
+       SPF(es,"\t(%s = CONSTANT %.4g)","Solid Viscosity", 0.0);
+     }
+   ECHO(es,echo_file);
+
+   model_read = look_for_mat_prop(imp, "Solid Dilational Viscosity",
+ 				 &(elc_glob[mn]->solid_dil_viscosity_model),
+ 				 &(elc_glob[mn]->solid_dil_viscosity),
+ 				 NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES,es);
+
+   if( model_read == -1 )
+     {
+       elc_glob[mn]->solid_dil_viscosity_model = CONSTANT;
+       elc_glob[mn]->solid_dil_viscosity = 0.0;
+
+       SPF(es,"\t(%s = CONSTANT %.4g)","Solid Dilational Viscosity", 0.0);
+     }
+   ECHO(es,echo_file);
+
 
   /* Bending stiffness of structural shells */
   model_read = look_for_mat_prop(
@@ -1212,6 +1246,10 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     elc_glob[mn]->thermal_expansion_model = CONSTANT;
     elc_glob[mn]->solid_reference_temp_model = CONSTANT;
     elc_glob[mn]->solid_reference_temp = 25.;
+      elc_glob[mn]->solid_viscosity = 0.;
+      elc_glob[mn]->solid_viscosity_model = CONSTANT;
+      elc_glob[mn]->solid_dil_viscosity = 0.;
+      elc_glob[mn]->solid_dil_viscosity_model = CONSTANT;
 
     model_read =
         look_for_mat_prop(imp, "Pseudo-Solid Constitutive Equation", &(ElasticConstitutiveEquation),
@@ -1234,7 +1272,10 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       ElasticConstitutiveEquation = HOOKEAN_PSTRESS;
     } else if (!strcmp(model_name, "INCOMP_3D")) {
       ElasticConstitutiveEquation = INCOMP_3D;
-    } else if (!strcmp(model_name, "EVP_HYPER")) {
+    } else if ( !strcmp(model_name, "KELVIN_VOIGT") )
+	{
+	  ElasticConstitutiveEquation = KELVIN_VOIGT;
+	}else if (!strcmp(model_name, "EVP_HYPER")) {
       ElasticConstitutiveEquation = EVP_HYPER;
       GOMA_EH(GOMA_ERROR, "Pseudo-solid constitutive equationis elasto-viscoplastic. Hmm. Won't "
                           "continue with my better judgement");

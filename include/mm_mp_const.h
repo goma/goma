@@ -447,6 +447,9 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 /* Viscoplastic consitutive equation params */
 #define EVP_HYPER 10
 
+/* Viscoelastic consitutive equation params */
+#define KELVIN_VOIGT       41
+
 /* Modulus parameters */
 /*#define POWER_LAW    4  - defined rf_fem_const.h*/
 #define CONTACT_LINE    5

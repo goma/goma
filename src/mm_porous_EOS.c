@@ -282,8 +282,8 @@ double rho_air_EOS(double Pa,
                    double d_dPv_dT,
                    double *drhoa_dP,
                    double *drhoa_dT,
-                   double *d_drhoa_dP,
-                   double *d_drhoa_dT)
+                   double d_drhoa_dP[2],
+                   double d_drhoa_dT[2])
 
 /*************************************************************************
  *
@@ -326,8 +326,8 @@ double rho_sat_water_vap_EOS(double P_sat,
                              double T,
                              double *drho_wgsat_dP,
                              double *drho_wgsat_dT,
-                             double *d_drho_wgsat_dP,
-                             double *d_drho_wgsat_dT)
+                             double d_drho_wgsat_dP[2],
+                             double d_drho_wgsat_dT[2])
 
 /*************************************************************************
  *
@@ -649,7 +649,7 @@ double h_air_EOS(double T, double *dha_dT, double *d_dha_dT)
 /*****************************************************************************/
 
 double h_water_compressed_EOS(
-    double P, double T, double *dhl_dP, double *dhl_dT, double *d_dhl_dP, double *d_dhl_dT)
+    double P, double T, double *dhl_dP, double *dhl_dT, double d_dhl_dP[2], double d_dhl_dT[2])
 
 /*************************************************************************
  *
@@ -741,7 +741,7 @@ double h_water_compressed_EOS(
 /*****************************************************************************/
 
 double h_water_superheat_EOS(
-    double P, double T, double *dhwg_dP, double *dhwg_dT, double *d_dhwg_dP, double *d_dhwg_dT)
+    double P, double T, double *dhwg_dP, double *dhwg_dT, double d_dhwg_dP[2], double d_dhwg_dT[2])
 
 /*************************************************************************
  *

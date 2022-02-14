@@ -459,15 +459,15 @@ EXTERN void act_coeff                   /* mm_fill_species.c                    
      int);                              /* species number                           */
 
 EXTERN void sus_mass_flux_surf_bc /* mm_fill_species.c                       */
-    (double[],                    /* func                                      */
-     double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
-     const int,                                       /* sus_species - species number of this
-                                                       * boundary condition                        */
-     const dbl,       /* time - current value of the time          */
-     const dbl,       /* dt - current value of the time step       */
-     const dbl,       /* tt - parameter to vary time integration
-                       * from BE(0) to CN(1/2) to FE(1)            */
-     const dbl[DIM]); /* element size                              */
+(double [],		/* func                                      */
+       double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
+       const int ,		/* sus_species - species number of this 
+				 * boundary condition                        */
+       const dbl ,		/* time - current value of the time          */
+       const dbl ,		/* dt - current value of the time step       */
+       const dbl ,		/* tt - parameter to vary time integration 
+				 * from BE(0) to CN(1/2) to FE(1)            */
+       const dbl [DIM]);          /* element size                              */
 
 EXTERN void kin_bc_leak /* mm_fill_species.c                         */
     (double[],          /* func                                      */

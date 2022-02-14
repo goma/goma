@@ -196,6 +196,6 @@ EXTERN double table_distance_search(struct Data_Table *, /* table               
                                     double[]);           /* gradient array         */
 
 EXTERN double interpolate_table_sat(struct Data_Table *, /* table */
-                                    double[]); /* slope                                     */
+                                    double[DIM]); /* slope                                     */
 
 #endif /* GOMA_BC_COLLOC_H */

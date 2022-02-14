@@ -9732,7 +9732,7 @@ void sat_darcy_continuous_bc(double func[],
 #if 0
     mn_liq = map_mat_index ( eb_mat_fluid );
 
-    if( pd_glob[mn_liq]->v[pg->imtrx][LS] ) 
+    if( pd_glob[mn_liq]->v[pg->imtrx][LS] )
       {
 	load_lsi_adjmatr( 4.*length_scale );
 	attached = 1.0 - lsi->H;
@@ -10126,7 +10126,7 @@ void porous_liq_fill(double *func,
 /******************************************************************************/
 /******************************************************************************/
 
-double interpolate_table_sat(struct Data_Table *table, double x[])
+double interpolate_table_sat(struct Data_Table *table, double x[DIM])
 
 {
   int i, N, Np1, iinter, istartx, istarty, iad;
