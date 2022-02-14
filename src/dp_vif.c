@@ -2268,11 +2268,11 @@ void noahs_ark(void) {
 
     ddd_add_member(n, &elc_glob[i]->lame_TempShift_tableid, 1, MPI_INT);
 
-      ddd_add_member(n, &elc_glob[i]->solid_viscosity, 1, MPI_DOUBLE);
-      ddd_add_member(n, &elc_glob[i]->solid_viscosity_model, 1, MPI_INT);
-      ddd_add_member(n, &elc_glob[i]->len_u_solid_viscosity, 1, MPI_INT);
-      ddd_add_member(n, &elc_glob[i]->solid_dil_viscosity, 1, MPI_DOUBLE);
-      ddd_add_member(n, &elc_glob[i]->solid_dil_viscosity_model, 1, MPI_INT);
+    ddd_add_member(n, &elc_glob[i]->solid_viscosity, 1, MPI_DOUBLE);
+    ddd_add_member(n, &elc_glob[i]->solid_viscosity_model, 1, MPI_INT);
+    ddd_add_member(n, &elc_glob[i]->len_u_solid_viscosity, 1, MPI_INT);
+    ddd_add_member(n, &elc_glob[i]->solid_dil_viscosity, 1, MPI_DOUBLE);
+    ddd_add_member(n, &elc_glob[i]->solid_dil_viscosity_model, 1, MPI_INT);
 
     ddd_add_member(n, &elc_glob[i]->bend_stiffness, 1, MPI_DOUBLE);
     ddd_add_member(n, &elc_glob[i]->bend_stiffness_model, 1, MPI_INT);
@@ -2330,11 +2330,11 @@ void noahs_ark(void) {
     ddd_add_member(n, elc_rs_glob[i]->d_lame_TempShift, MAX_VARIABLE_TYPES + MAX_CONC, MPI_DOUBLE);
     ddd_add_member(n, &elc_rs_glob[i]->lame_TempShift_tableid, 1, MPI_INT);
 
-      ddd_add_member(n, &elc_rs_glob[i]->solid_viscosity, 1, MPI_DOUBLE);
-      ddd_add_member(n, &elc_rs_glob[i]->solid_viscosity_model, 1, MPI_INT);
-      ddd_add_member(n, &elc_rs_glob[i]->len_u_solid_viscosity, 1, MPI_INT);
-      ddd_add_member(n, &elc_rs_glob[i]->solid_dil_viscosity, 1, MPI_DOUBLE);
-      ddd_add_member(n, &elc_rs_glob[i]->solid_dil_viscosity_model, 1, MPI_INT);
+    ddd_add_member(n, &elc_rs_glob[i]->solid_viscosity, 1, MPI_DOUBLE);
+    ddd_add_member(n, &elc_rs_glob[i]->solid_viscosity_model, 1, MPI_INT);
+    ddd_add_member(n, &elc_rs_glob[i]->len_u_solid_viscosity, 1, MPI_INT);
+    ddd_add_member(n, &elc_rs_glob[i]->solid_dil_viscosity, 1, MPI_DOUBLE);
+    ddd_add_member(n, &elc_rs_glob[i]->solid_dil_viscosity_model, 1, MPI_INT);
 
     ddd_add_member(n, &elc_rs_glob[i]->poisson, 1, MPI_DOUBLE);
     ddd_add_member(n, &elc_rs_glob[i]->Strss_fr_sol_vol_frac, 1, MPI_DOUBLE);

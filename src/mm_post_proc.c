@@ -2852,26 +2852,26 @@ static int calc_standard_fields(double **post_proc_vect,
     /* Define parameters */
     double mu;
     double lambda;
-    double thermexp=0;
+    double thermexp = 0;
     double speciesexp[MAX_CONC];
-    double viscos=0, dil_viscos=0;
+    double viscos = 0, dil_viscos = 0;
     double d_mu_dx[DIM][MDE];
     double d_lambda_dx[DIM][MDE];
     double d_thermexp_dx[MAX_VARIABLE_TYPES + MAX_CONC];
     double d_speciesexp_dx[MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC];
-    double d_viscos_dx[MAX_VARIABLE_TYPES+MAX_CONC];
-    double d_dilviscos_dx[MAX_VARIABLE_TYPES+MAX_CONC];
+    double d_viscos_dx[MAX_VARIABLE_TYPES + MAX_CONC];
+    double d_dilviscos_dx[MAX_VARIABLE_TYPES + MAX_CONC];
 
     /* Calculate modulus */
 
     if (pd->MeshMotion == TOTAL_ALE) {
       load_elastic_properties(elc_rs, &mu, &lambda, &thermexp, speciesexp, &viscos, &dil_viscos,
-		d_mu_dx, d_lambda_dx,
-                              d_thermexp_dx, d_speciesexp_dx, d_viscos_dx, d_dilviscos_dx);
+                              d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx, d_viscos_dx,
+                              d_dilviscos_dx);
     } else {
       load_elastic_properties(elc, &mu, &lambda, &thermexp, speciesexp, &viscos, &dil_viscos,
-		d_mu_dx, d_lambda_dx,
-                              d_thermexp_dx, d_speciesexp_dx, d_viscos_dx, d_dilviscos_dx);
+                              d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx, d_viscos_dx,
+                              d_dilviscos_dx);
     }
 
     /* Post velocities */
@@ -2885,25 +2885,25 @@ static int calc_standard_fields(double **post_proc_vect,
     /* Define parameters */
     double mu;
     double lambda;
-    double thermexp=0;
+    double thermexp = 0;
     double speciesexp[MAX_CONC];
-    double viscos=0, dil_viscos=0;
+    double viscos = 0, dil_viscos = 0;
     double d_mu_dx[DIM][MDE];
     double d_lambda_dx[DIM][MDE];
     double d_thermexp_dx[MAX_VARIABLE_TYPES + MAX_CONC];
     double d_speciesexp_dx[MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC];
-    double d_viscos_dx[MAX_VARIABLE_TYPES+MAX_CONC];
-    double d_dilviscos_dx[MAX_VARIABLE_TYPES+MAX_CONC];
+    double d_viscos_dx[MAX_VARIABLE_TYPES + MAX_CONC];
+    double d_dilviscos_dx[MAX_VARIABLE_TYPES + MAX_CONC];
 
     /* Calculate modulus */
     if (pd->MeshMotion == TOTAL_ALE) {
       load_elastic_properties(elc_rs, &mu, &lambda, &thermexp, speciesexp, &viscos, &dil_viscos,
-		d_mu_dx, d_lambda_dx,
-                              d_thermexp_dx, d_speciesexp_dx, d_viscos_dx, d_dilviscos_dx);
+                              d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx, d_viscos_dx,
+                              d_dilviscos_dx);
     } else {
       load_elastic_properties(elc, &mu, &lambda, &thermexp, speciesexp, &viscos, &dil_viscos,
-		d_mu_dx, d_lambda_dx,
-                              d_thermexp_dx, d_speciesexp_dx, d_viscos_dx, d_dilviscos_dx);
+                              d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx, d_viscos_dx,
+                              d_dilviscos_dx);
     }
 
     /* Post velocities */
@@ -11413,8 +11413,8 @@ int count_nodes_on_SS(const int ss_id,  /* SS id of Primary Side Set */
                       const int iconnect_ptr,
                       const int ielem,
                       const int num_local_nodes,
-		  int local_ss_node_list[MAX_NODES_PER_SIDE],
-		  int local_elem_node_id[MAX_NODES_PER_SIDE])
+                      int local_ss_node_list[MAX_NODES_PER_SIDE],
+                      int local_elem_node_id[MAX_NODES_PER_SIDE])
 /*
  * This routine counts the local nodes that are located on a SS (for faces),
  * or the number of nodes which are on two SS (edges) or three SS (vertices).

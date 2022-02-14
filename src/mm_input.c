@@ -4627,18 +4627,15 @@ void rd_hunt_specs(FILE *ifp, char *input) {
     }
 
     ECHO(echo_string, echo_file);
-    if (hunt[iHC].ramp == 2 )
-        {
-             if((hunt[iHC].BegParameterValue == hunt[iHC].EndParameterValue) ||
-         (hunt[iHC].BegParameterValue * hunt[iHC].EndParameterValue <= 0.0)) {
-      hunt[iHC].ramp = 0;
-      fprintf(stderr, "%s:\tImproper Log ramp for hunting condition %d\n", yo, iHC);
+    if (hunt[iHC].ramp == 2) {
+      if ((hunt[iHC].BegParameterValue == hunt[iHC].EndParameterValue) ||
+          (hunt[iHC].BegParameterValue * hunt[iHC].EndParameterValue <= 0.0)) {
+        hunt[iHC].ramp = 0;
+        fprintf(stderr, "%s:\tImproper Log ramp for hunting condition %d\n", yo, iHC);
+      } else if (hunt[iHC].BegParameterValue < 0.0) {
+        hunt[iHC].ramp = -2;
+      }
     }
-              else if(hunt[iHC].BegParameterValue < 0.0)
-                {
-                 hunt[iHC].ramp = -2;
-                }
-	    }
   }
 
   /* This section is required for backward compatibility - EDW */

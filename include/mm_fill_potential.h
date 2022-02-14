@@ -42,19 +42,19 @@ EXTERN int assemble_potential(double,  /* time - present time value             
                                         * implicit (tt = 0)                         */
                               double); /* dt - current time step size               */
 
-EXTERN void current_BV_surf	/* mm_fill_potential.c                       */
-(double [DIM],		/* func                                      */
-       double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
-       int ,			/* wspec - species number of this BC         */
-       double ,			/* nu - stoichiometric coefficient           */
-       double ,			/* k - kinetic rate constant                 */
-       double ,			/* beta - reaction order    	             */
-       double ,			/* alphaa - anodic transfer coefficient      */
-       double ,			/* alphac - cathodic transfer coefficient    */
-       double ,			/* V - electrode potential                   */
-       double ,			/* U0 - electrolyte open-circuit potential   */
-       double ,			/* dt - current value of the time step       */
-       double );      		/* tt - parameter to vary time integration   */
+EXTERN void current_BV_surf /* mm_fill_potential.c                       */
+    (double[DIM],           /* func                                      */
+     double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
+     int,     /* wspec - species number of this BC         */
+     double,  /* nu - stoichiometric coefficient           */
+     double,  /* k - kinetic rate constant                 */
+     double,  /* beta - reaction order    	             */
+     double,  /* alphaa - anodic transfer coefficient      */
+     double,  /* alphac - cathodic transfer coefficient    */
+     double,  /* V - electrode potential                   */
+     double,  /* U0 - electrolyte open-circuit potential   */
+     double,  /* dt - current value of the time step       */
+     double); /* tt - parameter to vary time integration   */
 
 EXTERN void current_ORR_surf /* mm_fill_potential.c                       */
     (double[],               /* func                                      */

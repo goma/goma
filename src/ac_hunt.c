@@ -145,8 +145,8 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
   double delta_t;
   double theta = 0.0;
   double eps;
-  double        *lambda=NULL, *lambdaEnd=NULL, *lambdaDelta=NULL, *lambdaScale=NULL;
-  double	*lambdaLog=NULL, *lambdaRatio=NULL, *lambdaDeltaLog=NULL;
+  double *lambda = NULL, *lambdaEnd = NULL, *lambdaDelta = NULL, *lambdaScale = NULL;
+  double *lambdaLog = NULL, *lambdaRatio = NULL, *lambdaDeltaLog = NULL;
   double hunt_par, dhunt_par, hunt_par_old; /* hunting continuation parameter */
   double dhunt_par_max = 1.0, dhunt_par_min = 0., dhunt_par_0 = 0.1;
   double dhunt_par_new = 0.1, dhunt_par_old;
@@ -372,11 +372,11 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
 
   asdv(&lambda, nHC);
   asdv(&lambdaEnd, nHC);
-  asdv(&lambdaDelta,    nHC);
-  asdv(&lambdaLog,      nHC);
-  asdv(&lambdaRatio,    nHC);
+  asdv(&lambdaDelta, nHC);
+  asdv(&lambdaLog, nHC);
+  asdv(&lambdaRatio, nHC);
   asdv(&lambdaDeltaLog, nHC);
-  asdv(&lambdaScale,    nHC);
+  asdv(&lambdaScale, nHC);
   asdv(&path, nHC);
   asdv(&path1, nHC);
   asdv(&hDelta_s0, nHC);
@@ -419,23 +419,20 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
 
     lambda[iHC] = hunt[iHC].BegParameterValue;
     lambdaEnd[iHC] = hunt[iHC].EndParameterValue;
-    lambdaDelta[iHC]    = lambdaEnd[iHC] - lambda[iHC];
-    lambdaScale[iHC] = fmax(fabs(lambda[iHC]),fabs(lambdaEnd[iHC]));
-    if(lambda[iHC] > 0. && lambdaEnd[iHC] > 0.0)
-	{
-	lambdaLog[iHC] = log10(lambda[iHC]);
-	lambdaRatio[iHC] = lambdaEnd[iHC]/lambda[iHC];
-	lambdaDeltaLog[iHC] = fabs(lambdaLog[iHC] - log10(lambdaEnd[iHC]));
-	lambdaScale[iHC] = sqrt(lambda[iHC]*lambdaEnd[iHC]);
-	}
-    else if (lambda[iHC] < 0. && lambdaEnd[iHC] < 0.0)
-	{
-	lambdaLog[iHC] = log10(-lambda[iHC]);
-	lambdaRatio[iHC] = lambdaEnd[iHC]/lambda[iHC];
-	lambdaDeltaLog[iHC] = fabs(lambdaLog[iHC] - log10(-lambdaEnd[iHC]));
-	lambdaScale[iHC] = sqrt(lambda[iHC]*lambdaEnd[iHC]);
-	}
-    if(abs(hunt[iHC].ramp) == 2) {
+    lambdaDelta[iHC] = lambdaEnd[iHC] - lambda[iHC];
+    lambdaScale[iHC] = fmax(fabs(lambda[iHC]), fabs(lambdaEnd[iHC]));
+    if (lambda[iHC] > 0. && lambdaEnd[iHC] > 0.0) {
+      lambdaLog[iHC] = log10(lambda[iHC]);
+      lambdaRatio[iHC] = lambdaEnd[iHC] / lambda[iHC];
+      lambdaDeltaLog[iHC] = fabs(lambdaLog[iHC] - log10(lambdaEnd[iHC]));
+      lambdaScale[iHC] = sqrt(lambda[iHC] * lambdaEnd[iHC]);
+    } else if (lambda[iHC] < 0. && lambdaEnd[iHC] < 0.0) {
+      lambdaLog[iHC] = log10(-lambda[iHC]);
+      lambdaRatio[iHC] = lambdaEnd[iHC] / lambda[iHC];
+      lambdaDeltaLog[iHC] = fabs(lambdaLog[iHC] - log10(-lambdaEnd[iHC]));
+      lambdaScale[iHC] = sqrt(lambda[iHC] * lambdaEnd[iHC]);
+    }
+    if (abs(hunt[iHC].ramp) == 2) {
       if (log_ID == -1)
         log_ID = iHC;
     }
@@ -447,7 +444,7 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
     }
 
     if (hunt[iHC].ramp == 1) {
-      hunt[iHC].Delta_s0 = fabs(lambdaDelta[iHC])/((double)(MaxPathSteps-1));
+      hunt[iHC].Delta_s0 = fabs(lambdaDelta[iHC]) / ((double)(MaxPathSteps - 1));
       const_delta_s[iHC] = 1;
     }
 
@@ -479,31 +476,26 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
 
   iHC = MAX(0, log_ID);
   dhunt_par = 0.0;
-  if(DOUBLE_ZERO(lambdaDelta[iHC]))
- 	{	hunt_par = 1.0;	}
-  else
- 	{
-          if(hunt[iHC].ramp == 2 )
-              {
-	       hunt_par = fabs(log10(path1[iHC])-lambdaLog[iHC])/lambdaDeltaLog[iHC];
-	       dhunt_par_min = log10(1.0+aldALC[iHC]*hDelta_s_min[iHC]/lambda[iHC])
-					/lambdaDeltaLog[iHC];
-	       dhunt_par_max = log10(1.0+aldALC[iHC]*hDelta_s_max[iHC]/lambda[iHC])
-					/lambdaDeltaLog[iHC];
-	       dhunt_par_0 = log10(1.0+aldALC[iHC]*hDelta_s0[iHC]/lambda[iHC])
-					/lambdaDeltaLog[iHC];
-		}
-          else if(hunt[iHC].ramp == -2 )
-              {
-	       hunt_par = fabs(log10(-path1[iHC])-lambdaLog[iHC])/lambdaDeltaLog[iHC];
-	       dhunt_par_min = hDelta_s_min[iHC]/lambdaScale[iHC];
-	       dhunt_par_max = hDelta_s_max[iHC]/lambdaScale[iHC]/pow(10.,0.5*lambdaDeltaLog[iHC]);
-	       dhunt_par_0 = log10(hDelta_s0[iHC])/lambdaLog[iHC]/lambdaDeltaLog[iHC];
+  if (DOUBLE_ZERO(lambdaDelta[iHC])) {
+    hunt_par = 1.0;
+  } else {
+    if (hunt[iHC].ramp == 2) {
+      hunt_par = fabs(log10(path1[iHC]) - lambdaLog[iHC]) / lambdaDeltaLog[iHC];
+      dhunt_par_min =
+          log10(1.0 + aldALC[iHC] * hDelta_s_min[iHC] / lambda[iHC]) / lambdaDeltaLog[iHC];
+      dhunt_par_max =
+          log10(1.0 + aldALC[iHC] * hDelta_s_max[iHC] / lambda[iHC]) / lambdaDeltaLog[iHC];
+      dhunt_par_0 = log10(1.0 + aldALC[iHC] * hDelta_s0[iHC] / lambda[iHC]) / lambdaDeltaLog[iHC];
+    } else if (hunt[iHC].ramp == -2) {
+      hunt_par = fabs(log10(-path1[iHC]) - lambdaLog[iHC]) / lambdaDeltaLog[iHC];
+      dhunt_par_min = hDelta_s_min[iHC] / lambdaScale[iHC];
+      dhunt_par_max = hDelta_s_max[iHC] / lambdaScale[iHC] / pow(10., 0.5 * lambdaDeltaLog[iHC]);
+      dhunt_par_0 = log10(hDelta_s0[iHC]) / lambdaLog[iHC] / lambdaDeltaLog[iHC];
     } else {
-      hunt_par = (path1[iHC] - lambda[iHC])/lambdaDelta[iHC];
-      dhunt_par_min = aldALC[iHC] * hunt[iHC].Delta_s_min /lambdaDelta[iHC];
-      dhunt_par_max = aldALC[iHC] * hunt[iHC].Delta_s_max /lambdaDelta[iHC];
-      dhunt_par_0 = aldALC[iHC] * hunt[iHC].Delta_s0 /lambdaDelta[iHC];
+      hunt_par = (path1[iHC] - lambda[iHC]) / lambdaDelta[iHC];
+      dhunt_par_min = aldALC[iHC] * hunt[iHC].Delta_s_min / lambdaDelta[iHC];
+      dhunt_par_max = aldALC[iHC] * hunt[iHC].Delta_s_max / lambdaDelta[iHC];
+      dhunt_par_0 = aldALC[iHC] * hunt[iHC].Delta_s0 / lambdaDelta[iHC];
     }
     hunt_par = fabs(hunt_par);
   }
@@ -719,29 +711,26 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
       hunt_par = 1.0;
     } else {
       if (hunt[iHC].ramp == 2) {
-        hunt_par = fabs(log10(path1[iHC]) - lambdaLog[iHC])/lambdaDeltaLog[iHC];
-        if (n > 0)
-          {dhunt_par=fabs(log10(path1[iHC]) - log10(path[iHC])) /lambdaDeltaLog[iHC];}
+        hunt_par = fabs(log10(path1[iHC]) - lambdaLog[iHC]) / lambdaDeltaLog[iHC];
+        if (n > 0) {
+          dhunt_par = fabs(log10(path1[iHC]) - log10(path[iHC])) / lambdaDeltaLog[iHC];
         }
-       else if(hunt[iHC].ramp == -2 ){
-        hunt_par = (log10(-path1[iHC] )- lambdaLog[iHC])/lambdaDeltaLog[iHC];
-        if (n > 0)
-          {dhunt_par = fabs(log10(-path1[iHC] )-log10(- path[iHC]) )/lambdaDeltaLog[iHC];}
+      } else if (hunt[iHC].ramp == -2) {
+        hunt_par = (log10(-path1[iHC]) - lambdaLog[iHC]) / lambdaDeltaLog[iHC];
+        if (n > 0) {
+          dhunt_par = fabs(log10(-path1[iHC]) - log10(-path[iHC])) / lambdaDeltaLog[iHC];
         }
-		  else
-		    {
-		     hunt_par = (path1[iHC]-lambda[iHC])/lambdaDelta[iHC];
-		     if(n > 0)
-		        {dhunt_par = (path1[iHC]-path[iHC])/lambdaDelta[iHC];}
+      } else {
+        hunt_par = (path1[iHC] - lambda[iHC]) / lambdaDelta[iHC];
+        if (n > 0) {
+          dhunt_par = (path1[iHC] - path[iHC]) / lambdaDelta[iHC];
+        }
       }
     }
     for (iHC = 0; iHC < nHC; iHC++) {
       if (abs(hunt[iHC].ramp) == 2) {
-        delta_s[iHC] =
-            -lambda[iHC] *
-            pow(lambdaRatio[iHC], hunt_par - dhunt_par);
-        delta_s[iHC] += lambda[iHC] *
-                        pow(lambdaRatio[iHC], hunt_par);
+        delta_s[iHC] = -lambda[iHC] * pow(lambdaRatio[iHC], hunt_par - dhunt_par);
+        delta_s[iHC] += lambda[iHC] * pow(lambdaRatio[iHC], hunt_par);
       } else {
         delta_s[iHC] = dhunt_par * lambdaDelta[iHC];
       }
@@ -950,16 +939,14 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
           hunt_par = hunt_par_old + dhunt_par;
           for (iHC = 0; iHC < nHC; iHC++) {
             if (abs(hunt[iHC].ramp) == 2) {
-              path1[iHC] = lambda[iHC] *
-                           pow(lambdaRatio[iHC], hunt_par);
+              path1[iHC] = lambda[iHC] * pow(lambdaRatio[iHC], hunt_par);
             } else if (hunt[iHC].ramp == 1) {
               delta_s[iHC] *= 0.5;
 
-                path1[iHC] = path[iHC] - ((double)aldALC[iHC])* delta_s[iHC];
+              path1[iHC] = path[iHC] - ((double)aldALC[iHC]) * delta_s[iHC];
 
             } else {
-              path1[iHC] = lambda[iHC] +
-                           hunt_par * lambdaDelta[iHC];
+              path1[iHC] = lambda[iHC] + hunt_par * lambdaDelta[iHC];
             }
           }
 
@@ -993,14 +980,12 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
             hunt_par = 1.0;
           } else {
             if (hunt[iHC].ramp == 2) {
-              hunt_par = fabs(log10(path1[iHC] )- lambdaLog[iHC])/lambdaDeltaLog[iHC];
+              hunt_par = fabs(log10(path1[iHC]) - lambdaLog[iHC]) / lambdaDeltaLog[iHC];
+            } else if (hunt[iHC].ramp == -2) {
+              hunt_par = fabs(log10(-path1[iHC]) - lambdaLog[iHC]) / lambdaDeltaLog[iHC];
+            } else {
+              hunt_par = (path1[iHC] - lambda[iHC]) / lambdaDelta[iHC];
             }
-                 else if(hunt[iHC].ramp == -2)
-                    {
-	             hunt_par = fabs(log10(-path1[iHC])-lambdaLog[iHC])/lambdaDeltaLog[iHC];
-                    }
-		 else
-		    { hunt_par = (path1[iHC]-lambda[iHC])/lambdaDelta[iHC]; }
             dhunt_par = hunt_par - hunt_par_old;
           }
 
@@ -1037,13 +1022,12 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
             hunt_par = 1.0;
           } else {
             if (hunt[iHC].ramp == 2) {
-              hunt_par = fabs(log10(path1[iHC]) - lambdaLog[iHC])/lambdaDeltaLog[iHC];
+              hunt_par = fabs(log10(path1[iHC]) - lambdaLog[iHC]) / lambdaDeltaLog[iHC];
+            } else if (hunt[iHC].ramp == -2) {
+              hunt_par = fabs(log10(-path1[iHC]) - lambdaLog[iHC]) / lambdaDeltaLog[iHC];
+            } else {
+              hunt_par = (path1[iHC] - lambda[iHC]) / lambdaDelta[iHC];
             }
-                     else if(hunt[iHC].ramp == -2)
-                       {
-	                hunt_par =fabs(log10(-path1[iHC])-lambdaLog[iHC])/lambdaDeltaLog[iHC];
-                        }
-		     else   { hunt_par = (path1[iHC]-lambda[iHC])/lambdaDelta[iHC]; }
           }
         } else if (inewton == -1) {
           DPRINTF(stdout, "\nHmm... trouble on first step \n  Let's try some more relaxation  \n");
@@ -1232,17 +1216,11 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
     }
     for (iHC = 0; iHC < nHC; iHC++) {
       if (abs(hunt[iHC].ramp) == 2) {
-        path1[iHC] = lambda[iHC]*
-                     pow(lambdaRatio[iHC], hunt_par);
-        path[iHC] =
-            lambda[iHC]*
-            pow(lambdaRatio[iHC], hunt_par - dhunt_par);
+        path1[iHC] = lambda[iHC] * pow(lambdaRatio[iHC], hunt_par);
+        path[iHC] = lambda[iHC] * pow(lambdaRatio[iHC], hunt_par - dhunt_par);
       } else {
-        path1[iHC] = lambda[iHC] +
-                     hunt_par * lambdaDelta[iHC];
-        path[iHC] =
-            lambda[iHC] +
-            (hunt_par - dhunt_par) * lambdaDelta[iHC];
+        path1[iHC] = lambda[iHC] + hunt_par * lambdaDelta[iHC];
+        path[iHC] = lambda[iHC] + (hunt_par - dhunt_par) * lambdaDelta[iHC];
       }
     }
     /*

@@ -235,19 +235,19 @@ EXTERN int get_F_vp                /* mm_fill_solid.c                           
      dbl);                         /* delta_t                                   */
 
 EXTERN int load_elastic_properties /* mm_fill_solid.c                        */
-(struct Elastic_Constitutive *,
-       double *,	       	/* mu                                        */
-       double *,		/* lambda                                    */
-       double * ,		/* thermexp                                  */
-       double [MAX_CONC] ,	/* speciesexp                                */
-       double * ,		/* viscos                                    */
-       double * ,		/* dil_viscos                                */
-       double [DIM][MDE],	/* d_mu_dx                                   */
-       double [DIM][MDE],	/* d_lambda_dx                               */
-       double [MAX_VARIABLE_TYPES+MAX_CONC],	/* d_thermexp_dx             */
-       double [MAX_CONC][MAX_VARIABLE_TYPES+MAX_CONC],  /* d_speciesexp_dx   */
-       double [MAX_VARIABLE_TYPES+MAX_CONC],	/* d_viscos_dx               */
-       double [MAX_VARIABLE_TYPES+MAX_CONC]);	/* d_dilviscos_dx            */
+    (struct Elastic_Constitutive *,
+     double *,                              /* mu                                        */
+     double *,                              /* lambda                                    */
+     double *,                              /* thermexp                                  */
+     double[MAX_CONC],                      /* speciesexp                                */
+     double *,                              /* viscos                                    */
+     double *,                              /* dil_viscos                                */
+     double[DIM][MDE],                      /* d_mu_dx                                   */
+     double[DIM][MDE],                      /* d_lambda_dx                               */
+     double[MAX_VARIABLE_TYPES + MAX_CONC], /* d_thermexp_dx             */
+     double[MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC], /* d_speciesexp_dx   */
+     double[MAX_VARIABLE_TYPES + MAX_CONC],           /* d_viscos_dx               */
+     double[MAX_VARIABLE_TYPES + MAX_CONC]);          /* d_dilviscos_dx            */
 
 EXTERN int load_plastic_properties /* mm_fill_solid.c                        */
     (double[MAX_CONC][MDE],        /* d_plastic_mu_dc                           */

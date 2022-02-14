@@ -120,15 +120,15 @@ EXTERN int find_id_edge_TET /* mm_post_proc.c */
                              * edge curve */
      const Exo_DB *);       /* exo */
 
-EXTERN int count_nodes_on_SS    /* mm_post_proc.c                            */
-(const int ,              /* ss_id - SS id of Primary Side Set         */
-       const int ,              /* ss_id2 - SS id of 2nd Side Set for edges  */
-       const int ,              /* ss_id3 - SS id of 3rd Side Set for vtces  */
-       const int ,              /* iconnect_ptr                              */
-       const int ,              /* ielem                                     */
-       const int ,              /* num_local_nodes                           */
-       int [MAX_NODES_PER_SIDE],               /* local_ss_node_list                        */
-       int [MAX_NODES_PER_SIDE]);             /* local_elem_node_id                        */
+EXTERN int count_nodes_on_SS   /* mm_post_proc.c                            */
+    (const int,                /* ss_id - SS id of Primary Side Set         */
+     const int,                /* ss_id2 - SS id of 2nd Side Set for edges  */
+     const int,                /* ss_id3 - SS id of 3rd Side Set for vtces  */
+     const int,                /* iconnect_ptr                              */
+     const int,                /* ielem                                     */
+     const int,                /* num_local_nodes                           */
+     int[MAX_NODES_PER_SIDE],  /* local_ss_node_list                        */
+     int[MAX_NODES_PER_SIDE]); /* local_elem_node_id                        */
 
 extern int find_id_elem /* mm_post_proc_util.c */
     (const dbl,         /* x_coordinate */

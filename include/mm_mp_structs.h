@@ -1163,20 +1163,20 @@ struct Elastic_Constitutive {
   int v_mesh_sfs_model; /* Looks as if this ought to be an int - pas */
   int len_u_v_mesh_sfs;
   dbl *u_v_mesh_sfs;
-  
-   dbl thermal_expansion;	/*  thermo-elasticity properties   */
-   int thermal_expansion_model;
-   int len_u_thermal_expansion;
-   dbl *u_thermal_expansion;
-   dbl solid_reference_temp;
-   int solid_reference_temp_model;
-  
-   dbl solid_viscosity;		/*  viscoelastic solid viscosity   */
-   int solid_viscosity_model;
-   int len_u_solid_viscosity;
-   dbl *u_solid_viscosity;
-   dbl solid_dil_viscosity;		/*  viscoelastic solid dilational viscosity   */
-   int solid_dil_viscosity_model;
+
+  dbl thermal_expansion; /*  thermo-elasticity properties   */
+  int thermal_expansion_model;
+  int len_u_thermal_expansion;
+  dbl *u_thermal_expansion;
+  dbl solid_reference_temp;
+  int solid_reference_temp_model;
+
+  dbl solid_viscosity; /*  viscoelastic solid viscosity   */
+  int solid_viscosity_model;
+  int len_u_solid_viscosity;
+  dbl *u_solid_viscosity;
+  dbl solid_dil_viscosity; /*  viscoelastic solid dilational viscosity   */
+  int solid_dil_viscosity_model;
 };
 
 typedef struct Elastic_Constitutive ELASTIC_CONST_STRUCT;

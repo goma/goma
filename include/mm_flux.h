@@ -118,15 +118,8 @@ adaptive_weight(double *, const int, const int, const double *, const double, co
 EXTERN int solve_quadratic(const double, const double, const double, double *);
 
 #ifndef NO_CHEBYSHEV_PLEASE
-EXTERN int chebyshev_coeff_2DQ
-(const int ,
-       const double *,
-       double [6][2],
-       int ,
-       double *,
-       double *,
-       int *,
-       const int * );
+EXTERN int chebyshev_coeff_2DQ(
+    const int, const double *, double[6][2], int, double *, double *, int *, const int *);
 
 EXTERN void heaviside_chev_moments_2DQ(
     const int, const int, double *, const double *, const int, const double *);

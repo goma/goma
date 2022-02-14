@@ -367,15 +367,15 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
                      * 1 -- this is the first LU,
                      * 2 -- >1st LU, similar matrix structure,
                      * 3 -- new rhs, use already factored LU
-
+  
                      UMFPACK USAGE:
-
+  
                      0   : LOAD MATRIX AND ANALYSIS/DECOMPOSITION
                            AND BACK SUBSTITUTION
                      1   : LOAD MATRIX AND DECOMPOSITION USING PAST ANALYSIS
                            AND BACK SUBSTITUTION
                      > 2 : BACK SUBSTITUTION ONLY
-
+  
                      */
 
   int matr_form = 0; /* 1: MSR FORMAT MATRIX FOR UMFPACK DRIVER */

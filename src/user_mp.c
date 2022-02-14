@@ -888,10 +888,10 @@ int usr_surface_tension(dbl *param) /* ptr to user-defined parameter list       
 {
   int a;
 
-  dbl sigma, dsigmadT;   /* surface tension and its derivative wrt temperature*/
-  dbl dsigmadV[DIM]; /* surface tension derivative wrt velocity*/
+  dbl sigma, dsigmadT;    /* surface tension and its derivative wrt temperature*/
+  dbl dsigmadV[DIM];      /* surface tension derivative wrt velocity*/
   dbl dsigmadC[MAX_CONC]; /* surface tension derivative wrt concentration*/
-  dbl dsigmadX[DIM]; /* surface tension derivative wrt displacement*/
+  dbl dsigmadX[DIM];      /* surface tension derivative wrt displacement*/
 
   /* int i;
      dbl X[DIM], T, C[MAX_CONC]; */ /* Convenient local variables */
@@ -1673,15 +1673,13 @@ int usr_FlowingLiquidViscosity(dbl *param) /* ptr to user-defined parameter list
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-but-set-variable"
 
-int
-usr_solid_viscosity(dbl *param, 	 /* ptr to user-defined parameter list        */
-		double *viscos,
-		double d_viscos_dx[MAX_VARIABLE_TYPES+MAX_CONC])
-{
+int usr_solid_viscosity(dbl *param, /* ptr to user-defined parameter list        */
+                        double *viscos,
+                        double d_viscos_dx[MAX_VARIABLE_TYPES + MAX_CONC]) {
   int a, b;
   int w;
 
-  dbl f, dfdT;   /* momentum sources and its derivative wrt temperature*/
+  dbl f, dfdT;        /* momentum sources and its derivative wrt temperature*/
   dbl dfdV[DIM];      /* momentum source derivative wrt velocity*/
   dbl dfdC[MAX_CONC]; /* momentum source derivative wrt concentration*/
   dbl dfdX[DIM];      /* momentum source derivative wrt displacement*/
@@ -1692,56 +1690,59 @@ usr_solid_viscosity(dbl *param, 	 /* ptr to user-defined parameter list        *
 
   /* Begin Execution */
 
- /**********************************************************/
-
- /* Comment out our remove this line if using this routine */
-
-/*  EH(-1,"No user_expansion model implemented.");     */
-
- /**********************************************************/
-
-
- /************Initialize everything for saftey**************/
-  f = 0;                                   /*Do not touch */
-  dfdT = 0;			           /*Do not touch */
-  for(b=0; b<DIM; b++) dfdV[b]=0.;         /*Do not touch */
-  for(b=0; b<DIM; b++) dfdX[b]=0.;         /*Do not touch */
-  for(w=0; w<MAX_CONC; w++) dfdC[w]=0.;    /*Do not touch */
   /**********************************************************/
 
- /***********Load up convenient local variables*************/
- /*NB This ought to be done once for all fields at gauss pt*/
+  /* Comment out our remove this line if using this routine */
 
-  T = fv->T;                                             /*Do not touch */
-  for(a=0; a<DIM; a++)X[a] = fv->x[a];		         /*Do not touch */
-  for(i=0; i<pd->Num_Species_Eqn; i++) C[i] = fv->c[i];  /*Do not touch */
+  /*  EH(-1,"No user_expansion model implemented.");     */
 
-	f= param[0]*sin(param[1]*tran->time_value);
+  /**********************************************************/
 
- /**********************************************************/
+  /************Initialize everything for saftey**************/
+  f = 0;    /*Do not touch */
+  dfdT = 0; /*Do not touch */
+  for (b = 0; b < DIM; b++)
+    dfdV[b] = 0.; /*Do not touch */
+  for (b = 0; b < DIM; b++)
+    dfdX[b] = 0.; /*Do not touch */
+  for (w = 0; w < MAX_CONC; w++)
+    dfdC[w] = 0.; /*Do not touch */
+  /**********************************************************/
+
+  /***********Load up convenient local variables*************/
+  /*NB This ought to be done once for all fields at gauss pt*/
+
+  T = fv->T; /*Do not touch */
+  for (a = 0; a < DIM; a++)
+    X[a] = fv->x[a]; /*Do not touch */
+  for (i = 0; i < pd->Num_Species_Eqn; i++)
+    C[i] = fv->c[i]; /*Do not touch */
+
+  f = param[0] * sin(param[1] * tran->time_value);
+
+  /**********************************************************/
   f = 1.;
 
- /****************Don't touch these lines***********************/
-  for(a=0; a<DIM; a++)
-    {
-      *viscos = f;                                   /*Do not touch */
-      d_viscos_dx[TEMPERATURE] = dfdT;		      /*Do not touch */
-                                                              /*Do not touch */
-      for ( b=0; b<DIM; b++)                                  /*Do not touch */
-	{						      /*Do not touch */
-	  d_viscos_dx[VELOCITY1+b] = dfdV[b];	      /*Do not touch */
-	}                                                     /*Do not touch */
-      for ( b=0; b<DIM; b++)                                  /*Do not touch */
-	{             					      /*Do not touch */
-	  d_viscos_dx[MESH_DISPLACEMENT1+a] = dfdX[b]; /*Do not touch */
-	}						      /*Do not touch */
-      for ( w=0; w<MAX_CONC; w++)			      /*Do not touch */
-	{                                                     /*Do not touch */
-	  d_viscos_dx[MAX_VARIABLE_TYPES+w] = dfdC[w]; /*Do not touch */
-	}		                                      /*Do not touch */
-    }					                      /*Do not touch */
+  /****************Don't touch these lines***********************/
+  for (a = 0; a < DIM; a++) {
+    *viscos = f;                                     /*Do not touch */
+    d_viscos_dx[TEMPERATURE] = dfdT;                 /*Do not touch */
+                                                     /*Do not touch */
+    for (b = 0; b < DIM; b++)                        /*Do not touch */
+    {                                                /*Do not touch */
+      d_viscos_dx[VELOCITY1 + b] = dfdV[b];          /*Do not touch */
+    }                                                /*Do not touch */
+    for (b = 0; b < DIM; b++)                        /*Do not touch */
+    {                                                /*Do not touch */
+      d_viscos_dx[MESH_DISPLACEMENT1 + a] = dfdX[b]; /*Do not touch */
+    }                                                /*Do not touch */
+    for (w = 0; w < MAX_CONC; w++)                   /*Do not touch */
+    {                                                /*Do not touch */
+      d_viscos_dx[MAX_VARIABLE_TYPES + w] = dfdC[w]; /*Do not touch */
+    }                                                /*Do not touch */
+  }                                                  /*Do not touch */
 
-  return(0);
+  return (0);
 } /* End of usr_solid_viscosity */
 
 // restore warnings
