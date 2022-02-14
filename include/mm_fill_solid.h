@@ -135,20 +135,21 @@ EXTERN void put_liquid_stress_in_solid_ALE /* mm_fill_solid.c                */
      double);                              /* scale - term scaling                      */
 
 EXTERN
-void put_fluid_stress_on_shell(int id, /* local bulk element node number for the
-                                       * current node whose residual contribution
-                                       * is being sought                           */
-			  int id_shell_curv, /* local shell element node number corresponding to id */
-			  int id_shell_tens, /* local shell element node number corresponding to id */
-			  int I, /* Global node number                      */
-			  int ielem_dim, /* physical dimension of the elem  */
-			  double resid_vector[], /* Residual vector         */
-			  int local_node_list_fs[], /* MDE list to keep track
-						     * of nodes at which
-						     * bulk contributions
-						     * have been transfered
-						     * to shell  */
-			  double scale); /* Scale factor, nondimension       */
+void put_fluid_stress_on_shell(
+    int id,                   /* local bulk element node number for the
+                               * current node whose residual contribution
+                               * is being sought                           */
+    int id_shell_curv,        /* local shell element node number corresponding to id */
+    int id_shell_tens,        /* local shell element node number corresponding to id */
+    int I,                    /* Global node number                      */
+    int ielem_dim,            /* physical dimension of the elem  */
+    double resid_vector[],    /* Residual vector         */
+    int local_node_list_fs[], /* MDE list to keep track
+                               * of nodes at which
+                               * bulk contributions
+                               * have been transfered
+                               * to shell  */
+    double scale);            /* Scale factor, nondimension       */
 
 EXTERN void put_shear_stress_on_shell(int, /* local element node number for the
                                             * current node whose residual contribution

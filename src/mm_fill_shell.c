@@ -3843,16 +3843,16 @@ void put_fluid_stress_on_shell(
     int id,                   /* local bulk element node number for the
                                * current node whose residual contribution
                                * is being sought                        */
-			  int id_shell_curv, /* local shell element node number corresponding to id */
-			  int id_shell_tens, /* local shell element node number corresponding to id */
+    int id_shell_curv,        /* local shell element node number corresponding to id */
+    int id_shell_tens,        /* local shell element node number corresponding to id */
     int I,                    /* Global node number                      */
     int ielem_dim,            /* physical dimension of the elem  */
     double resid_vector[],    /* Residual vector         */
     int local_node_list_fs[], /* MDE list to keep track
                                * of nodes at which
-						     * bulk contributions
+                               * bulk contributions
                                * have been transfered
-						     * to shell  */
+                               * to shell  */
     double scale)             /* Scale factor, nondimension       */
 {
   int j_id, dim, var, pvar, q;
@@ -3948,11 +3948,11 @@ void put_fluid_stress_on_shell(
       peqn_shell = upd->ep[pg->imtrx][ieqn_shell];
       ieqn_mom1 = R_MOMENTUM1;
       ieqn_mom2 = R_MOMENTUM2;
-	  id_dofmom1 = id;
+      id_dofmom1 = id;
       peqn_mom1 = upd->ep[pg->imtrx][ieqn_mom1];
-	  id_dofmom2 = id;
+      id_dofmom2 = id;
       peqn_mom2 = upd->ep[pg->imtrx][ieqn_mom2];
-	  id_dofshell = id_shell_curv;
+      id_dofshell = id_shell_curv;
 
       /* Add contributions due to all nodal sensitivities in shell element */
 
@@ -4010,11 +4010,11 @@ void put_fluid_stress_on_shell(
       peqn_shell = upd->ep[pg->imtrx][ieqn_shell];
       ieqn_mom1 = R_MOMENTUM1;
       ieqn_mom2 = R_MOMENTUM2;
-	  id_dofmom1 = id;
+      id_dofmom1 = id;
       peqn_mom1 = upd->ep[pg->imtrx][ieqn_mom1];
-	  id_dofmom2 = id;
+      id_dofmom2 = id;
       peqn_mom2 = upd->ep[pg->imtrx][ieqn_mom2];
-	  id_dofshell = id_shell_tens;
+      id_dofshell = id_shell_tens;
 
       /* Add contributions due to all nodal sensitivities in shell element */
 

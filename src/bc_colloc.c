@@ -546,35 +546,32 @@ int apply_point_colloc_bc(double resid_vector[], /* Residual vector for the curr
               GOMA_EH(GOMA_ERROR, "FLUID_SOLID_RS bc not implemented yet");
               break;
 
-            case SH_FLUID_STRESS_BC:
-                {
-                  int dof_map_curv[MDE] = {-1};
-                  int dof_map_tens[MDE] = {-1};
-                  /* Populate dof_map arrays */
-                  for (ivar = 0; ivar < ei[pg->imtrx]->dof[VELOCITY1]; ivar++) {
-                    inode = ei[pg->imtrx]->gnn_list[VELOCITY1][ivar];
-                    for (jvar = 0; jvar < ei[pg->imtrx]->dof[SHELL_CURVATURE]; jvar++) {
-                      if (inode == ei[pg->imtrx]->gnn_list[SHELL_CURVATURE][jvar]) {
-                        dof_map_curv[ivar] = jvar;
-                      }
-                    }
-                    for (jvar = 0; jvar < ei[pg->imtrx]->dof[SHELL_TENSION]; jvar++) {
-                      if (inode == ei[pg->imtrx]->gnn_list[SHELL_TENSION][jvar]) {
-                        dof_map_tens[ivar] = jvar;
-                      }
-                    }
+            case SH_FLUID_STRESS_BC: {
+              int dof_map_curv[MDE] = {-1};
+              int dof_map_tens[MDE] = {-1};
+              /* Populate dof_map arrays */
+              for (ivar = 0; ivar < ei[pg->imtrx]->dof[VELOCITY1]; ivar++) {
+                inode = ei[pg->imtrx]->gnn_list[VELOCITY1][ivar];
+                for (jvar = 0; jvar < ei[pg->imtrx]->dof[SHELL_CURVATURE]; jvar++) {
+                  if (inode == ei[pg->imtrx]->gnn_list[SHELL_CURVATURE][jvar]) {
+                    dof_map_curv[ivar] = jvar;
                   }
+                }
+                for (jvar = 0; jvar < ei[pg->imtrx]->dof[SHELL_TENSION]; jvar++) {
+                  if (inode == ei[pg->imtrx]->gnn_list[SHELL_TENSION][jvar]) {
+                    dof_map_tens[ivar] = jvar;
+                  }
+                }
+              }
 
-	          /*Note that we send both local node numbers for bulk and shell elements */
-	          put_fluid_stress_on_shell(id , dof_map_curv[id], dof_map_tens[id], I,
-					    ielem_dim, resid_vector,
-					    local_node_list_fs,
+              /*Note that we send both local node numbers for bulk and shell elements */
+              put_fluid_stress_on_shell(id, dof_map_curv[id], dof_map_tens[id], I, ielem_dim,
+                                        resid_vector, local_node_list_fs,
                                         BC_Types[bc_input_id].BC_Data_Float[0]);
 
               func = 0.; /* this boundary condition rearranges values already in res and jac,
                           * and does not add anything into the residual */
-                }
-              break;
+            } break;
 
             case KINEMATIC_COLLOC_BC:
             case VELO_NORM_COLLOC_BC:
