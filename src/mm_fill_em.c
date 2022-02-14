@@ -20,7 +20,9 @@
 #include <stdio.h>
 #include <math.h>
 #include <complex.h>
-
+#ifdef I
+#undef I
+#endif
 /* GOMA include files */
 #define GOMA_MM_FILL_EM_C
 #include "std.h"
