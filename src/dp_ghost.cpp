@@ -399,11 +399,55 @@ goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi) {
   GOMA_ASSERT(int_ptr != NULL);
   dpi->node_owner = int_ptr;
 
+  // our neighbor list might have changed so now we have to find out which processors need our nodes
+  std::unordered_set<int> neighbors_set;
   for (int i = num_old_nodes; i < exo->num_nodes; i++) {
     int global_id = local_to_global[i];
     dpi->node_owner[i] = node_owner_new.at(global_id);
+    if (dpi->node_owner[i] != ProcID) {
+      neighbors_set.insert(dpi->node_owner[i]);
+    }
   }
 
+  std::vector<int> neighbor_list(neighbors_set.begin(), neighbors_set.end());
+
+  int my_neighbors = neighbor_list.size();
+  int max_neighbors;
+
+  MPI_Allreduce(&my_neighbors, &max_neighbors, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+  std::vector<int> all_neighbors(max_neighbors * Num_Proc);
+  neighbor_list.resize(max_neighbors);
+  for (int i = my_neighbors; i < max_neighbors; i++) {
+    neighbor_list[i] = -1;
+  }
+
+  MPI_Allgather(neighbor_list.data(), max_neighbors, MPI_INT, all_neighbors.data(), max_neighbors, MPI_INT,
+                MPI_COMM_WORLD);
+
+  // loop over the neighbors and decide if we have another neighbor
+  for (int i = 0; i < Num_Proc; i++) {
+    if (i == ProcID) continue;
+    for (int j = max_neighbors * i; j < (max_neighbors *i + max_neighbors); j++) {
+      if (all_neighbors[j] == ProcID) {
+        neighbors_set.insert(i);
+      }
+    }
+  }
+
+  neighbor_list.resize(neighbors_set.size());
+  neighbor_list.assign(neighbors_set.begin(), neighbors_set.end());
+  std::sort(neighbor_list.begin(), neighbor_list.end());
+
+  dpi->num_neighbors = neighbor_list.size();
+  int_ptr = (int *) realloc(dpi->neighbor, sizeof(int) * dpi->num_neighbors);
+  GOMA_ASSERT(int_ptr != NULL);
+  dpi->neighbor = int_ptr;
+  for (int i = 0; i < dpi->num_neighbors; i++) {
+    dpi->neighbor[i] = neighbor_list[i];
+  }
+
+
+  requests.resize(2*dpi->num_neighbors);
   std::vector<MPI_Request> requests_sendrecv(2 * dpi->num_neighbors);
   std::vector<int> num_send_nodes(dpi->num_neighbors);
   std::vector<int> num_recv_nodes(dpi->num_neighbors);

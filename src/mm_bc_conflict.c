@@ -2833,7 +2833,7 @@ void check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
                     bct1 = BC_Types[ibc1].BC_Name;
                     if (BC_Types[ibc1].desc->method == STRONG_INT_SURF) {
                       if (j_SI != -1) {
-                        ibc2 = BC_Unk_List[inode][offset][j_PC];
+                        ibc2 = BC_Unk_List[inode][offset][j_SI];
                         bct2 = BC_Types[ibc2].BC_Name;
                         /* RESOLVE CONFLICT */
                         if (Debug_Flag > 0 && Unlimited_Output) {

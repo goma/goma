@@ -388,7 +388,6 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
     }
   }
 
-//#define DEBUG_MPI
 #ifdef DEBUG_MPI
 
   int *global_owners_min = alloc_int_1(d->num_nodes_global, Num_Proc + 1);
@@ -437,7 +436,7 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
     }
   }
   if (new_index != d->num_external_nodes) {
-    GOMA_EH(GOMA_ERROR, "incorrect new ordering");
+    GOMA_EH(GOMA_ERROR, "incorrect new ordering %d != %d", new_index, d->num_external_nodes);
   }
 
   // node index global
