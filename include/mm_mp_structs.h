@@ -1122,6 +1122,13 @@ struct Elastic_Constitutive
    dbl *u_thermal_expansion;
    dbl solid_reference_temp;
    int solid_reference_temp_model;
+  
+   dbl solid_viscosity;		/*  viscoelastic solid viscosity   */
+   int solid_viscosity_model;
+   int len_u_solid_viscosity;
+   dbl *u_solid_viscosity;
+   dbl solid_dil_viscosity;		/*  viscoelastic solid dilational viscosity   */
+   int solid_dil_viscosity_model;
 };
 
 typedef struct Elastic_Constitutive ELASTIC_CONST_STRUCT;

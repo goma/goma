@@ -11080,7 +11080,7 @@ porous_liq_fill(double *func,
 /******************************************************************************/
 
 double
-interpolate_table_sat(struct Data_Table *table, double x[])
+interpolate_table_sat(struct Data_Table *table, double x[DIM])
 
 {
   int i, N,Np1, iinter, istartx, istarty, iad;

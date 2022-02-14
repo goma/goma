@@ -115,20 +115,18 @@ PROTO((const int ,		/* ielem - current element number            */
 				 * parameterizes edge                        */
 
 EXTERN void calc_CL_normal
-PROTO(( double [],
-	double [][DIM][MDE],
-	double [],
-	double [][DIM][MDE],
-	double [],
-	double [][DIM][MDE],
-
+PROTO(( double [DIM],
+	double [DIM][DIM][MDE],
+	double [DIM],
+	double [DIM][DIM][MDE],
+	double [DIM],
+	double [DIM][DIM][MDE],
 	int,
 	int [],
 	int,
 	int,
-	
-	double [],
-	double [][DIM][MDE],
+	double [DIM],
+	double [DIM][DIM][MDE],
 
 	const Exo_DB *));
 
