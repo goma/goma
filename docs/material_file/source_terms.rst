@@ -22,5 +22,7 @@ user must heed the following warning:
 
 .. include:: source_terms/current_source.rst
 
+.. include:: source_terms/moment_source.rst
+
 .. include:: source_terms/initialize.rst
 

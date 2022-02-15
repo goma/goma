@@ -134,5 +134,6 @@ case when the Default Database is set to GOMA_MAT.
    material_file/species
    material_file/source_terms
    material_file/shell_equation
+   material_file/moments
 
 
