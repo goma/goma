@@ -3850,7 +3850,7 @@ Generalized_FV_Diffusivity(int species_no)  /* current species number*/
   /* load up polymer FV parameters */
 
 
-  fv_model_number = (int) mp->u_diffusivity[0][13];
+  fv_model_number = (int) mp->u_diffusivity[0][12];
 
   vs[w2]       = mp->u_diffusivity[0][1];
   K1_gamma[w2] = mp->u_diffusivity[0][3];
@@ -3868,8 +3868,8 @@ Generalized_FV_Diffusivity(int species_no)  /* current species number*/
       mw[w]       = mp->molecular_weight[w];
      }
 
-      Do[w2]      = mp->u_diffusivity[0][11];
-      E_div_R[w2] = mp->u_diffusivity[0][12];
+      Do[w2]      = mp->u_diffusivity[0][10];
+      E_div_R[w2] = mp->u_diffusivity[0][11];
       sv[w2]      = mp->specific_volume[w2];
       mw[w2]      = mp->molecular_weight[w2];
       T = fv->T;
