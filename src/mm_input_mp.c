@@ -7331,10 +7331,10 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	       {
 		 mat_ptr->DiffusivityModel[species_no] = GENERALIZED_FREE_VOL;
 		 num_const = mat_ptr->len_u_diffusivity[species_no];
-		 if (num_const < 12)
+		 if (num_const < 13)
 		   {
 		     sr = sprintf(err_msg,
-				  "Matl %s (conc %d) needs at least 12 constants for %s %s model.\n",
+				  "Matl %s (conc %d) needs at least 13 constants for %s %s model.\n",
 				  pd_glob[mn]->MaterialName, species_no,
 				  "Diffusivity", "GENERALIZED_FREE_VOL");
 		     EH(-1, err_msg);

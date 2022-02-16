@@ -3801,6 +3801,7 @@ Generalized_Diffusivity()
 int
 Generalized_FV_Diffusivity(int species_no)  /* current species number*/
 {
+  int fv_model_number;
   int w, w1, w3, mode;
   int w2=pd->Num_Species_Eqn;
 
@@ -3847,6 +3848,9 @@ Generalized_FV_Diffusivity(int species_no)  /* current species number*/
       act_coeff(activity, dcoeff, d2coeff, fv->c, mode, w);
     }
   /* load up polymer FV parameters */
+
+
+  fv_model_number = (int) mp->u_diffusivity[0][13];
 
   vs[w2]       = mp->u_diffusivity[0][1];
   K1_gamma[w2] = mp->u_diffusivity[0][3];
@@ -3970,17 +3974,23 @@ Generalized_FV_Diffusivity(int species_no)  /* current species number*/
 
   for (w=0; w<pd->Num_Species_Eqn; w++)
     {
-      /* this only works for case Species_Density because of how dcoeff is calculated as of 01/19/22 Chance Parrish*/
-     /* mp->diffusivity_gen_fick[species_no][w] = (delta(species_no,w) + dcoeff[species_no][w]*rho[species_no])*Dp[species_no];*/
+    /* this only works for case Species_Density because of how dcoeff is calculated as of 01/19/22 Chance Parrish*/
+    /* mp->diffusivity_gen_fick[species_no][w] = (delta(species_no,w) + dcoeff[species_no][w]*rho[species_no])*Dp[species_no];*/
       mp->diffusivity_gen_fick[species_no][w] = (delta(species_no,w) +0.*dcoeff[species_no][w]*rho[species_no])*Dp[species_no];
       for (w1=0; w1<pd->Num_Species_Eqn; w1++)
         {
-          /* this only works for case Species_Density because of how dcoeff is calculated as of 01/19/22 Chance Parrish*/
-          /*mp->diffusivity_gen_fick[species_no][w] += alpha[w1]*rho[species_no]*(delta(w,w1)+rho[w1]*dcoeff[w1][w]);*/ 
+         /* this only works for case Species_Density because of how dcoeff is calculated as of 01/19/22 Chance Parrish*/
+         /*mp->diffusivity_gen_fick[species_no][w] += alpha[w1]*rho[species_no]*(delta(w,w1)+rho[w1]*dcoeff[w1][w]);*/ 
           mp->diffusivity_gen_fick[species_no][w] += -alpha[w1]*rho[species_no]*(delta(w,w1)+0.*rho[w1]*dcoeff[w1][w]);
         }
     }
-
+  if (fv_model_number == 1)
+    {
+       for (w=0; w<pd->Num_Species_Eqn; w++)
+         {
+           mp->diffusivity_gen_fick[species_no][w] = delta(species_no,w)*(mp->diffusivity_gen_fick[species_no][w]);
+         } 
+    }
   if(af->Assemble_Jacobian)
     {
       if(pd->v[TEMPERATURE] )
@@ -4007,6 +4017,13 @@ Generalized_FV_Diffusivity(int species_no)  /* current species number*/
                 }
             }
 	  mp->d_diffusivity[species_no][TEMPERATURE] = 0.;
+          if (fv_model_number == 1)
+            {  
+              for (w=0; w<pd->Num_Species_Eqn; w++)
+                {
+                  mp->d_diffusivity_gf[species_no][w][TEMPERATURE] = delta(species_no,w)*(mp->d_diffusivity_gf[species_no][w][TEMPERATURE]);
+                }
+            }
         }
 
 
@@ -4075,7 +4092,16 @@ Generalized_FV_Diffusivity(int species_no)  /* current species number*/
                      }
                  }
              } 
-	
+	   if (fv_model_number == 1)
+             {
+               for (w=0; w<pd->Num_Species_Eqn; w++)
+                 {
+                   for (w1=0; w1<pd->Num_Species_Eqn; w1++)
+                     {
+                       mp->d_diffusivity_gf[species_no][w][MAX_VARIABLE_TYPES+w1] = delta(species_no,w)*(mp->d_diffusivity_gf[species_no][w][MAX_VARIABLE_TYPES+w1]);
+                     }
+                 }
+             }
          }
      }
   mp->diffusivity[species_no] = 0.;
