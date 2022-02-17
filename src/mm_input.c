@@ -737,20 +737,35 @@ void rd_file_specs(FILE *ifp, char *input) {
 
   /* Find BRK file */
 
-  foundBrkFile = look_for_optional(ifp, "Brk file", input, '=');
-
-  if (foundBrkFile == 1 && Decompose_Flag != 1) {
+  foundBrkFile = look_for_optional(ifp, "External Decomposition", input, '=');
+  if (foundBrkFile == 1 && Decompose_Flag != 0) {
     (void)read_string(ifp, input, '\n');
     strip(input);
     if (strcasecmp(input, "YES") == 0 || strcasecmp(input, "ON") == 0) {
-      Decompose_Flag = 1;
-    } else if (strcasecmp(input, "NO") || strcasecmp(input, "OFF") == 0) {
       Decompose_Flag = 0;
+    } else if (strcasecmp(input, "NO") || strcasecmp(input, "OFF") == 0) {
+      Decompose_Flag = 1;
     } else {
-      GOMA_EH(GOMA_ERROR, "Unexpected input for Decompose_Flag: %s, expected (YES/NO) or (ON/OFF)",
+      GOMA_EH(GOMA_ERROR, "Unexpected input for External Decomposition: %s, expected (YES/NO) or (ON/OFF)",
               input);
     }
-    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "Brk file", input);
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "External Decomposition", input);
+    ECHO(echo_string, echo_file);
+  }
+
+  foundBrkFile = look_for_optional(ifp, "Decomposition Type", input, '=');
+  if (foundBrkFile == 1 && Decompose_Type < 1) {
+    (void)read_string(ifp, input, '\n');
+    strip(input);
+    if (strcasecmp(input, "kway") == 0) {
+      Decompose_Type = 2;
+    } else if (strcasecmp(input, "rcb")) {
+      Decompose_Type = 1;
+    } else {
+      GOMA_EH(GOMA_ERROR, "Unexpected input for Decomposition_Type: %s, expected kway or rcb",
+              input);
+    }
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "Decomposition Type", input);
     ECHO(echo_string, echo_file);
   }
 
@@ -10678,9 +10693,11 @@ void usage(const int exit_flag) {
   fprintf(stdout, "be readable in the current working directory.\n\n");
   fprintf(stdout, "Options:\n");
   fprintf(stdout, "\t-a [aargs], -aprepro [aargs]    Input thru APREPRO [w/ aargs].\n");
-  fprintf(stdout, "\t-brk FILE                       Read Brk file from FILE\n");
   fprintf(stdout, "\t-restart FILE, -rest FILE       Read initial guess from FILE.\n");
   fprintf(stdout, "\t-d INT,     -debug INT          Set debug flag to INT.\n");
+  fprintf(stdout, "\t-e,         -external_decomp    Use external decomposition.\n");
+  fprintf(stdout, "\t-kway,                          Use KWAY internal decomposition.\n");
+  fprintf(stdout, "\t-rcb,                           Use RCB internal decomposition.\n");
   fprintf(stdout, "\t-h,         -help               Print this message.\n");
   fprintf(stdout, "\t-i FILE,    -input FILE         Input from FILE.\n");
   fprintf(stdout, "\t-ix FILE,   -inexoII FILE       Read FEM from FILE.\n");
@@ -11156,17 +11173,20 @@ void translate_command_line(int argc, char *argv[], struct Command_line_command 
         istr++;
         clc[*nclc]->type = NOECHO;
         ECHO("NOECHO", NULL);
-      } else if (strcmp(argv[istr], "-brk") == 0) {
-        GOMA_WH(GOMA_ERROR,
-                "Brk is no longer supported, using Ioss Decomposition, prefer -decompose");
+      } else if ((strcmp(argv[istr], "-e") == 0) || (strcmp(argv[istr], "-external_decomp")) == 0) {
         (*nclc)++;
         istr++;
-        Decompose_Flag = 1;
+        Decompose_Flag = 0;
         clc[*nclc]->type = NOECHO;
-      } else if (strcmp(argv[istr], "-decompose") == 0) {
+      } else if (strcmp(argv[istr], "-kway") == 0) {
         (*nclc)++;
         istr++;
-        Decompose_Flag = 1;
+        Decompose_Type = 2;
+        clc[*nclc]->type = NOECHO;
+      } else if (strcmp(argv[istr], "-rcb") == 0) {
+        (*nclc)++;
+        istr++;
+        Decompose_Type = 1;
         clc[*nclc]->type = NOECHO;
       } else if (strcmp(argv[istr], "-petsc") == 0 || strcmp(argv[istr], "-petsc_opts") == 0) {
         (*nclc)++;

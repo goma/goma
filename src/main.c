@@ -44,6 +44,7 @@ extern void handle_ieee(void);
 #include "dp_vif.h"
 #include "dpi.h"
 #include "exo_struct.h"
+#include "metis_decomp.h"
 #include "mm_as.h"
 #include "mm_as_alloc.h"
 #include "mm_as_structs.h"
@@ -100,7 +101,8 @@ int ExoTimePlane = INT_MAX; /* Time plane # or continuation # of soln to use as 
 
 char Echo_Input_File[MAX_FNL] = "\0"; /* echo of problem def file  */
 
-int Decompose_Flag = 0;
+int Decompose_Flag = 1;
+int Decompose_Type = 0;
 
 char *GomaPetscOptions = NULL;
 int GomaPetscOptionsStrLen = 0;
@@ -541,9 +543,32 @@ int main(int argc, char **argv)
 #endif /* End of ifdef PARALLEL */
 
   /* Now break the exodus files */
-  // if (Decompose_Flag == 1 && Num_Proc > 1) {
-  //   decompose_exodus_files();
-  // }
+  if (Decompose_Flag == 1 && Num_Proc > 1 && ProcID == 0) {
+    char **filenames = malloc(sizeof(char *) * (2 + MAX_EXTERNAL_FIELD));
+    int n_files = 1;
+    filenames[0] = malloc(sizeof(char) * MAX_FNL);
+    memcpy(filenames[0], ExoFile, MAX_FNL);
+    if (strcmp(ExoAuxFile, "") != 0) {
+      filenames[n_files] = malloc(sizeof(char) * MAX_FNL);
+      memcpy(filenames[n_files], ExoAuxFile, MAX_FNL);
+      n_files++;
+    }
+
+    if (efv->Num_external_field != 0) {
+      for (i = 0; i < efv->Num_external_field; i++) {
+        filenames[n_files] = malloc(sizeof(char) * MAX_FNL);
+        memcpy(filenames[n_files], efv->file_nm[i], MAX_FNL);
+        n_files++;
+      }
+    }
+
+    goma_metis_decomposition(filenames, 1);
+
+    for (int i = 0; i < n_files; i++) {
+      free(filenames[i]);
+    }
+    free(filenames);
+  }
   check_parallel_error("Error in brking exodus files");
   MPI_Barrier(MPI_COMM_WORLD);
 

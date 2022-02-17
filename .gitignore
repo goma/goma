@@ -36,3 +36,5 @@ cmake-debug
 /.cache/
 *.code-workspace
 /docs/docs/
+/cmake-variants.yaml
+/cmake-variants.json

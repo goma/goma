@@ -90,7 +90,6 @@ extern int *Proc_SS_Ids;             /* side sets ids */
 extern int *Proc_SS_Elem_Count;      /* side sets count record for elements */
 extern int *Proc_SS_Node_Count;      /* side sets count record for nodes */
 extern int *Proc_SS_Elem_Pointers;   /* side sets pointer record for elements */
-extern int *Proc_SS_Node_Pointers;   /* side sets pointer record for nodes */
 extern int *Proc_SS_Elem_List;       /* side sets element list record */
 
 extern double *Proc_SS_Dist_Fact; /* side sets distribution factors */

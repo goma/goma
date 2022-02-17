@@ -487,14 +487,12 @@ void build_elem_elem(Exo_DB *exo) {
   int ename;
   int face;
   // int his_dim, her_dim;
-  int i, j;
+  int i;
   int index;
   int len_curr;
   int len_prev;
   int len_intr;
-  int length, length_new, num_faces;
-  int iel;
-  int ioffset;
+  int length;
   int n;
   int neighbor_name = -1;
   int node;
@@ -835,67 +833,6 @@ void build_elem_elem(Exo_DB *exo) {
   exo->elem_elem_pntr[exo->num_elems] = count; /* last fencepost */
 
   exo->elem_elem_conn_exists = TRUE;
-
-  if (Linear_Solver == FRONT) {
-    /*
-     * Now that we have elem_elem_pntr and elem_elem_list for our parallel
-     * world, we are going to use them also for optimal element bandwidth
-     * reduction ordering.    We will use METIS, but METIS requires the CSR
-     * format, which is compressed, viz. we need to remove the -1s.  Here
-     * we go
-     */
-
-    /* First check for the assumption that all blocks have same number of
-       element faces.  Stop if they don't and issue an error to the next
-       aspiring developer */
-    for (i = 0; i < exo->num_elem_blocks; i++) {
-      if (get_num_faces(exo->eb_elem_type[0]) != get_num_faces(exo->eb_elem_type[i])) {
-        GOMA_EH(GOMA_ERROR,
-                "Stop! We cannot reorder these elements with METIS with elemement type changes");
-      }
-    }
-    /* Now begin */
-    exo->elem_elem_xadj = (int *)smalloc((exo->num_elems + 1) * sizeof(int));
-    /*initialize */
-    for (e = 0; e < exo->num_elems + 1; e++) {
-      exo->elem_elem_xadj[e] = exo->elem_elem_pntr[e];
-    }
-
-    /* Recompute length of adjacency list by removing external edges */
-
-    length_new = 0;
-    for (i = 0; i < length; i++) {
-      if (exo->elem_elem_list[i] != -1)
-        length_new++;
-    }
-    exo->elem_elem_adjncy = alloc_int_1(length_new, -1);
-
-    /* Now convert */
-    ioffset = 0;
-    for (iel = 0; iel < exo->num_elems; iel++) {
-      /* Big assumption here that all blocks have the same   */
-      /* element type.  Can be furbished later since this is  */
-      /* just for the frontal solver   */
-
-      num_faces = get_num_faces(exo->eb_elem_type[0]);
-      for (i = iel * num_faces; i < (iel + 1) * num_faces; i++) {
-        j = i - ioffset;
-        if (exo->elem_elem_list[i] == -1) {
-          ioffset++;
-          for (e = iel + 1; e < exo->num_elems + 1; e++)
-            exo->elem_elem_xadj[e]--;
-        } else {
-          exo->elem_elem_adjncy[j] = exo->elem_elem_list[i];
-        }
-      }
-    }
-    /* convert to Fortran style */
-    for (e = 0; e < exo->num_elems + 1; e++)
-      exo->elem_elem_xadj[e]++;
-    for (i = 0; i < length_new; i++)
-      exo->elem_elem_adjncy[i]++;
-
-  } /* End FRONTAL_SOLVER if  */
 
   /*
    * Verification that every element/face has assigned something besides

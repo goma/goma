@@ -17,9 +17,9 @@ static goma_error setup_base_mesh_parallel(Dpi *dpi, Exo_DB *exo);
 static goma_error free_base_mesh_serial(Exo_DB *exo);
 static goma_error free_base_mesh_parallel(Exo_DB *exo);
 
-goma_error setup_base_mesh(Dpi *dpi, Exo_DB *exo) {
+goma_error setup_base_mesh(Dpi *dpi, Exo_DB *exo, int num_proc) {
   goma_error error;
-  if (Num_Proc == 1) {
+  if (num_proc == 1) {
     error = setup_base_mesh_serial(dpi, exo);
   } else {
     error = setup_base_mesh_parallel(dpi, exo);
@@ -29,7 +29,7 @@ goma_error setup_base_mesh(Dpi *dpi, Exo_DB *exo) {
 
 goma_error free_base_mesh(Exo_DB *exo) {
   goma_error error;
-  if (Num_Proc == 1) {
+  if (exo->base_mesh_is_serial) {
     error = free_base_mesh_serial(exo);
   } else {
     error = free_base_mesh_parallel(exo);
@@ -91,6 +91,7 @@ static goma_error setup_base_mesh_serial(Dpi *dpi, Exo_DB *exo) {
   EXO_TO_BASE(ss_prop);
 
   EXO_TO_BASE(elem_var_tab);
+  exo->base_mesh_is_serial = true;
   return GOMA_SUCCESS;
 }
 
@@ -163,6 +164,7 @@ static goma_error setup_base_mesh_parallel(Dpi *dpi, Exo_DB *exo) {
   base->eb_prop = NULL;
   base->ns_prop = NULL;
   base->ss_prop = NULL;
+  exo->base_mesh_is_serial = false;
   return GOMA_SUCCESS;
 }
 

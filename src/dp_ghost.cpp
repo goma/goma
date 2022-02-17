@@ -404,6 +404,8 @@ goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi) {
   for (int i = num_old_nodes; i < exo->num_nodes; i++) {
     int global_id = local_to_global[i];
     dpi->node_owner[i] = node_owner_new.at(global_id);
+  }
+  for (int i = 0; i < exo->num_nodes; i++) {
     if (dpi->node_owner[i] != ProcID) {
       neighbors_set.insert(dpi->node_owner[i]);
     }

@@ -367,6 +367,16 @@ void convert_goma_to_omega_h(Exo_DB *exo, Dpi *dpi, double **x, Mesh *mesh, bool
   auto exposed_sides2side = collect_marked(sides_are_exposed);
   map_value_into(0, exposed_sides2side, side_class_ids_w);
 
+
+  std::unordered_map<int, int> global_to_index;
+  std::unordered_map<int, int> global_to_index_sides;
+  for (int i = 0; i < mesh->nverts(); i++) {
+    global_to_index[mesh->globals(0)[i]] = i;
+  }
+  for (int i = 0; i < mesh->globals(dim-1).size(); i++) {
+    global_to_index_sides[mesh->globals(dim -1)[i]] = i;
+  }
+
   if (1 && dpi->num_side_sets_global) {
     std::vector<char> names_memory;
     std::vector<char *> name_ptrs;
@@ -458,14 +468,9 @@ void convert_goma_to_omega_h(Exo_DB *exo, Dpi *dpi, double **x, Mesh *mesh, bool
       mark_nodes.reserve(all_owned_set.size());
       for (size_t j = 0; j < all_owned_set.size(); j++) {
         if (all_owned_set[j] != -1 &&
-            std::binary_search(my_nodes_sorted.begin(), my_nodes_sorted.end(), all_owned_set[j])) {
+            global_to_index.find(all_owned_set[j]) != global_to_index.end()) {
           // TODO
-          for (int k = 0; k < mesh->nverts(); k++) {
-            if (mesh->globals(0)[k] == all_owned_set[j]) {
-              mark_nodes.push_back(k);
-              break;
-            }
-          }
+          mark_nodes.push_back(global_to_index[all_owned_set[j]]);
         }
       }
 
@@ -493,10 +498,8 @@ void convert_goma_to_omega_h(Exo_DB *exo, Dpi *dpi, double **x, Mesh *mesh, bool
       std::vector<int> sides;
 
       for (size_t j = 0; j < all_sides.size(); j++) {
-        for (int k = 0; k < mesh->globals(dim - 1).size(); k++) {
-          if (all_sides[j] == mesh->globals(dim - 1)[k]) {
-            sides.push_back(k);
-          }
+        if (global_to_index_sides.find(all_sides[j]) != global_to_index_sides.end()) {
+          sides.push_back(global_to_index_sides[all_sides[j]]);
         }
       }
       std::sort(sides.begin(), sides.end());

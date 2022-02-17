@@ -332,6 +332,7 @@ set(GOMA_INCLUDES
         include/loca_const.h
         include/loca_util_const.h
         include/md_timer.h
+        include/metis_decomp.h
         include/mm_as_alloc.h
         include/mm_as_const.h
         include/mm_as.h
@@ -473,6 +474,7 @@ set(GOMA_SOURCES
         src/loca_util.c
         src/md_ieee.c
         src/md_timer.c
+        src/metis_decomp.c
         src/mm_as_alloc.c
         src/mm_augc_util.c
         src/mm_bc.c
@@ -630,8 +632,11 @@ if(isMultiConfig)
   if(NOT "Asan" IN_LIST CMAKE_CONFIGURATION_TYPES)
     list(APPEND CMAKE_CONFIGURATION_TYPES Asan)
   endif()
+  if(NOT "Gprof" IN_LIST CMAKE_CONFIGURATION_TYPES)
+    list(APPEND CMAKE_CONFIGURATION_TYPES Gprof)
+  endif()
 else()
-  set(allowedBuildTypes Asan Debug Release RelWithDebInfo MinSizeRel)
+  set(allowedBuildTypes Asan Gprof Debug Release RelWithDebInfo MinSizeRel)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "${allowedBuildTypes}")
 
   if(CMAKE_BUILD_TYPE AND NOT CMAKE_BUILD_TYPE IN_LIST allowedBuildTypes)
@@ -664,6 +669,26 @@ set(CMAKE_EXE_LINKER_FLAGS_ASAN
 set(CMAKE_SHARED_LINKER_FLAGS_ASAN
         "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} -fsanitize=address" CACHE STRING
         "Linker lags to be used to create shared libraries for Asan build type." FORCE)
+
+set(CMAKE_C_FLAGS_GPROF
+        "${CMAKE_C_FLAGS_DEBUG} -pg" CACHE STRING
+        "Flags used by the C compiler for Gprof build type or configuration." FORCE)
+
+set(CMAKE_CXX_FLAGS_GPROF
+        "${CMAKE_CXX_FLAGS_DEBUG} -pg" CACHE STRING
+        "Flags used by the C++ compiler for Gprof build type or configuration." FORCE)
+
+set(CMAKE_Fortran_FLAGS_GPROF
+        "${CMAKE_Fortran_FLAGS_DEBUG} -pg" CACHE STRING
+        "Flags used by the Fortran compiler for Gprof build type or configuration." FORCE)
+
+set(CMAKE_EXE_LINKER_FLAGS_GPROF
+        "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} -pg" CACHE STRING
+        "Linker flags to be used to create executables for Gprof build type." FORCE)
+
+set(CMAKE_SHARED_LINKER_FLAGS_GPROF
+        "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} -pg" CACHE STRING
+        "Linker lags to be used to create shared libraries for Gprof build type." FORCE)
 
 set(GOMA_WARNINGS "-Wall -Wextra -Wno-unused-parameter -Wimplicit-fallthrough" CACHE STRING "set warnings for goma C and CXX")
 set(GOMA_DEBUG_FLAGS "-O0 -ggdb3" CACHE STRING "set debug flags for goma C and CXX")

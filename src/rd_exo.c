@@ -1118,6 +1118,7 @@ int free_exo(Exo_DB *x) /* pointer to EXODUS II FE db structure */
     free(x->eb_num_attr);
 
     free(x->eb_elem_type);
+    free(x->eb_elem_itype);
     free(x->eb_conn);
     free(x->eb_attr);
   }

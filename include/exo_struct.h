@@ -551,6 +551,7 @@ struct Exodus_Database {
 
   // base mesh for writing exodus files without ghosted elements
   struct Exodus_Base *base_mesh;
+  bool base_mesh_is_serial;
 };
 
 typedef struct Exodus_Database Exo_DB;

@@ -96,7 +96,7 @@ EXTERN void smooth_stop_with_msg(const char *msg);
 #define GOMA_ASSERT_ALWAYS(IASSERT)                                              \
   do {                                                                           \
     if (!(IASSERT)) {                                                            \
-      goma_eh(GOMA_ERROR, __FILE__, __LINE__, "Assertion %s failed.", #IASSERT); \
+      goma_eh(GOMA_ERROR, __FILE__, __LINE__, "Assertion %s failed", #IASSERT); \
     }                                                                            \
   } while (0)
 

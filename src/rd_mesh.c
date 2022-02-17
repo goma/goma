@@ -102,7 +102,6 @@ int *Proc_SS_Ids = NULL;
 int *Proc_SS_Elem_Count = NULL;
 int *Proc_SS_Node_Count = NULL;
 int *Proc_SS_Elem_Pointers = NULL;
-int *Proc_SS_Node_Pointers = NULL;
 int *Proc_SS_Elem_List = NULL;
 double *Proc_SS_Dist_Fact = NULL;
 
@@ -176,7 +175,7 @@ int read_mesh_exoII(Exo_DB *exo, Dpi *dpi) {
    */
 
   zero_base(exo);
-  error = setup_base_mesh(dpi, exo);
+  error = setup_base_mesh(dpi, exo, Num_Proc);
   GOMA_EH(error, "setup_base_mesh");
 
   if (Num_Proc == 1) {
@@ -380,8 +379,6 @@ void setup_old_exo(Exo_DB *e, Dpi *dpi, int num_proc) {
   int num_sides;
   int ss_index;
   int ss_index_max; /* index for SS touching the most EBs */
-  /* int start; */
-  int sum;
 
   int *ebl; /* element block list */
   int *ebp; /* ptrs based on element blocks */
@@ -586,24 +583,6 @@ void setup_old_exo(Exo_DB *e, Dpi *dpi, int num_proc) {
   }
 
   Proc_SS_Elem_Pointers = e->ss_elem_index;
-
-  /*
-   * Pointer into the node list, where each SS's list of nodes begins.
-   */
-
-  if (e->num_side_sets > 0) /* Thanks, Polly! */
-  {
-    Proc_SS_Node_Pointers = ((int *)smalloc(Proc_Num_Side_Sets * sizeof(int)));
-    Proc_SS_Node_Pointers[0] = 0;
-  }
-
-  for (i = 1; i < e->num_side_sets; i++) {
-    sum = 0;
-    for (j = 0; j < e->ss_num_sides[i]; j++) {
-      sum += e->ss_node_cnt_list[i][j];
-    }
-    Proc_SS_Node_Pointers[i] = Proc_SS_Node_Pointers[i - 1] + sum;
-  }
 
   Proc_SS_Elem_List = e->ss_elem_list;
   Proc_SS_Dist_Fact = e->ss_distfact_list;
