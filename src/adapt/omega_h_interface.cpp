@@ -367,14 +367,13 @@ void convert_goma_to_omega_h(Exo_DB *exo, Dpi *dpi, double **x, Mesh *mesh, bool
   auto exposed_sides2side = collect_marked(sides_are_exposed);
   map_value_into(0, exposed_sides2side, side_class_ids_w);
 
-
   std::unordered_map<int, int> global_to_index;
   std::unordered_map<int, int> global_to_index_sides;
   for (int i = 0; i < mesh->nverts(); i++) {
     global_to_index[mesh->globals(0)[i]] = i;
   }
-  for (int i = 0; i < mesh->globals(dim-1).size(); i++) {
-    global_to_index_sides[mesh->globals(dim -1)[i]] = i;
+  for (int i = 0; i < mesh->globals(dim - 1).size(); i++) {
+    global_to_index_sides[mesh->globals(dim - 1)[i]] = i;
   }
 
   if (1 && dpi->num_side_sets_global) {

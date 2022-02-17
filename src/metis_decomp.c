@@ -578,7 +578,7 @@ goma_error goma_metis_decomposition(char **filenames, int n_files) {
 
       err = ex_put_qa(exoid, 1, Q);
       CHECK_EX_ERROR(err, "ex_put_qa");
-    
+
       err = ex_close(exoid);
       CHECK_EX_ERROR(err, "ex_close");
 

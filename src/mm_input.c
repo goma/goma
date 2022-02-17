@@ -746,7 +746,8 @@ void rd_file_specs(FILE *ifp, char *input) {
     } else if (strcasecmp(input, "NO") || strcasecmp(input, "OFF") == 0) {
       Decompose_Flag = 1;
     } else {
-      GOMA_EH(GOMA_ERROR, "Unexpected input for External Decomposition: %s, expected (YES/NO) or (ON/OFF)",
+      GOMA_EH(GOMA_ERROR,
+              "Unexpected input for External Decomposition: %s, expected (YES/NO) or (ON/OFF)",
               input);
     }
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "External Decomposition", input);

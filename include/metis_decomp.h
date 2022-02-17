@@ -18,4 +18,3 @@
 goma_error goma_metis_decomposition(char *filenames[], int n_files);
 
 #endif // GOMA_METIS_DECOMP_H
-
