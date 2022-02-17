@@ -1291,9 +1291,9 @@ int free_exo(Exo_DB *x) /* pointer to EXODUS II FE db structure */
 
   if (x->elem_var_tab_exists) {
     free(x->truth_table_existance_key);
-    free(x->elem_var_tab);
   }
 
+  free(x->elem_var_tab);
   free(x->ghost_node_to_base);
   for (int i = 0; i < x->num_elem_blocks; i++) {
     free(x->eb_ghost_elem_to_base[i]);

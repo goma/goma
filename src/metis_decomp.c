@@ -359,6 +359,7 @@ static void put_loadbal(int exoid,
   free(shared_nodes_list);
   free(shared_nodes_proc);
   free(shared_nodes_offset);
+  free(shared_nodes);
   free(proc_nodes);
   free(neighbors);
   free(neighbor_counts);
@@ -473,7 +474,7 @@ goma_error goma_metis_decomposition(char **filenames, int n_files) {
 
   for (int file = 0; file < n_files; file++) {
     for (int proc = 0; proc < n_parts; proc++) {
-      char proc_name[MAX_FNL];
+      char proc_name[MAX_FNL + 1];
       strncpy(proc_name, filenames[file], MAX_FNL);
 
       // now we have partitions we just need to separate the monolith into each piece
@@ -594,10 +595,225 @@ goma_error goma_metis_decomposition(char **filenames, int n_files) {
     }
   }
 
+  // the mesh should be written now, now we transfer global, element, and nodal data
+  for (int file = 0; file < n_files; file++) {
+    int exoid = ex_open(filenames[file], EX_READ, &monolith->comp_wordsize, &monolith->io_wordsize,
+                        &monolith->version);
+    CHECK_EX_ERROR(exoid, "ex_open");
+
+    int num_time_steps = ex_inquire_int(exoid, EX_INQ_TIME);
+
+    if (num_time_steps > 0) {
+      dbl *times = calloc(sizeof(dbl), num_time_steps);
+      int err = ex_get_all_times(exoid, times);
+      CHECK_EX_ERROR(err, "ex_get_get_all_times");
+
+      int num_global_vars;
+      err = ex_get_variable_param(exoid, EX_GLOBAL, &num_global_vars);
+      CHECK_EX_ERROR(err, "ex_get_variable_param");
+
+      char **global_var_names = NULL;
+      if (num_global_vars > 0) {
+        global_var_names = malloc(sizeof(char *) * num_global_vars);
+        for (int i = 0; i < num_global_vars; i++) {
+          global_var_names[i] = calloc(MAX_STR_LENGTH + 1, sizeof(char));
+        }
+        int err = ex_get_variable_names(exoid, EX_GLOBAL, num_global_vars, global_var_names);
+        CHECK_EX_ERROR(err, "ex_get_variable_names");
+      }
+
+      int num_nodal_vars;
+      err = ex_get_variable_param(exoid, EX_NODAL, &num_nodal_vars);
+      CHECK_EX_ERROR(err, "ex_get_variable_param");
+
+      char **nodal_var_names = NULL;
+      if (num_nodal_vars > 0) {
+        nodal_var_names = malloc(sizeof(char *) * num_nodal_vars);
+        for (int i = 0; i < num_nodal_vars; i++) {
+          nodal_var_names[i] = calloc(MAX_STR_LENGTH + 1, sizeof(char));
+        }
+        int err = ex_get_variable_names(exoid, EX_NODAL, num_nodal_vars, nodal_var_names);
+        CHECK_EX_ERROR(err, "ex_get_variable_names");
+      }
+
+      int num_elem_vars;
+      err = ex_get_variable_param(exoid, EX_ELEM_BLOCK, &num_elem_vars);
+      CHECK_EX_ERROR(err, "ex_get_variable_param");
+
+      char **elem_var_names = NULL;
+      int *elem_var_tab = NULL;
+      if (num_elem_vars > 0) {
+        elem_var_tab = calloc(monolith->num_elem_blocks * num_elem_vars, sizeof(int));
+        elem_var_names = malloc(sizeof(char *) * num_elem_vars);
+        for (int i = 0; i < num_elem_vars; i++) {
+          elem_var_names[i] = calloc(MAX_STR_LENGTH + 1, sizeof(char));
+        }
+        int err = ex_get_variable_names(exoid, EX_ELEM_BLOCK, num_elem_vars, elem_var_names);
+        CHECK_EX_ERROR(err, "ex_get_variable_names");
+        err = ex_get_truth_table(exoid, EX_ELEM_BLOCK, monolith->num_elem_blocks, num_elem_vars,
+                                 elem_var_tab);
+        CHECK_EX_ERROR(err, "ex_get_truth_table");
+      }
+
+      // we should have needed data now we need to update our file partitions
+
+      for (int proc = 0; proc < n_parts; proc++) {
+        char proc_name[MAX_FNL + 1];
+        strncpy(proc_name, filenames[file], MAX_FNL);
+        multiname(proc_name, proc, n_parts);
+
+        int proc_exoid = ex_open(proc_name, EX_WRITE, &monolith->comp_wordsize,
+                                 &monolith->io_wordsize, &monolith->version);
+        CHECK_EX_ERROR(proc_exoid, "ex_open");
+
+        int err = ex_put_variable_param(proc_exoid, EX_GLOBAL, num_global_vars);
+        CHECK_EX_ERROR(err, "ex_put_variable_param");
+        err = ex_put_variable_param(proc_exoid, EX_NODAL, num_nodal_vars);
+        CHECK_EX_ERROR(err, "ex_put_variable_param");
+        err = ex_put_variable_param(proc_exoid, EX_ELEM_BLOCK, num_elem_vars);
+        CHECK_EX_ERROR(err, "ex_put_variable_param");
+        if (num_global_vars > 0) {
+          ex_put_variable_names(proc_exoid, EX_GLOBAL, num_global_vars, global_var_names);
+          CHECK_EX_ERROR(err, "ex_put_variable_names");
+        }
+        if (num_nodal_vars > 0) {
+          ex_put_variable_names(proc_exoid, EX_NODAL, num_nodal_vars, nodal_var_names);
+          CHECK_EX_ERROR(err, "ex_put_variable_names");
+        }
+        if (num_elem_vars > 0) {
+          err = ex_put_variable_names(proc_exoid, EX_ELEM_BLOCK, num_elem_vars, elem_var_names);
+          CHECK_EX_ERROR(err, "ex_put_variable_names");
+          err = ex_put_truth_table(proc_exoid, EX_ELEM_BLOCK, monolith->num_elem_blocks,
+                                   num_elem_vars, elem_var_tab);
+          CHECK_EX_ERROR(err, "ex_put_truth_table");
+        }
+
+        // create a map from global node to local node
+        int *local_to_global = calloc(num_nodes_part[proc], sizeof(int));
+        offset = 0;
+        for (int i = 0; i < monolith->num_nodes; i++) {
+          if (node_indicators[proc][i]) {
+            local_to_global[offset] = i;
+            offset++;
+          }
+        }
+
+        int **eb_local_to_global = calloc(monolith->num_elem_blocks, sizeof(int *));
+        int *eb_num_elems = calloc(monolith->num_elem_blocks, sizeof(dbl));
+        for (int i = 0; i < monolith->num_elem_blocks; i++) {
+          eb_local_to_global[i] = calloc(monolith->eb_num_elems[i], sizeof(int));
+          int offset = 0;
+          for (int j = 0; j < monolith->eb_num_elems[i]; j++) {
+            int elem = monolith->eb_ptr[i] + j;
+            if (elem_indicators[proc][elem]) {
+              eb_local_to_global[i][offset] = j;
+              offset++;
+              eb_num_elems[i]++;
+            }
+          }
+        }
+
+        dbl *global_var_vals = NULL;
+        if (num_global_vars > 0) {
+          global_var_vals = calloc(num_global_vars, sizeof(dbl));
+        }
+        dbl *monolith_node_values = NULL;
+        dbl *proc_node_values = NULL;
+        if (num_nodal_vars) {
+          monolith_node_values = calloc(monolith->num_nodes, sizeof(dbl));
+          proc_node_values = calloc(num_nodes_part[proc], sizeof(dbl));
+        }
+
+        dbl *monolith_elem_values = NULL;
+        dbl *proc_elem_values = NULL;
+        if (num_elem_vars) {
+          monolith_elem_values = calloc(monolith->num_elems, sizeof(dbl));
+          proc_elem_values = calloc(num_elems_part[proc], sizeof(dbl));
+        }
+        for (int ts = 0; ts < num_time_steps; ts++) {
+          int err = ex_put_time(proc_exoid, ts + 1, &times[ts]);
+          CHECK_EX_ERROR(err, "ex_put_time");
+
+          err = ex_get_var(exoid, ts + 1, EX_GLOBAL, 1, 1, num_global_vars, global_var_vals);
+          CHECK_EX_ERROR(err, "ex_get_var");
+
+          err = ex_put_var(proc_exoid, ts + 1, EX_GLOBAL, 1, 1, num_global_vars, global_var_vals);
+          CHECK_EX_ERROR(err, "ex_put_var");
+
+          for (int var = 0; var < num_nodal_vars; var++) {
+            err = ex_get_var(exoid, ts + 1, EX_NODAL, var + 1, 1, monolith->num_nodes,
+                             monolith_node_values);
+            CHECK_EX_ERROR(err, "ex_get_var");
+            // map into our node values
+            for (int i = 0; i < num_nodes_part[proc]; i++) {
+              proc_node_values[i] = monolith_node_values[local_to_global[i]];
+            }
+            err = ex_put_var(proc_exoid, ts + 1, EX_NODAL, var + 1, 1, num_nodes_part[proc],
+                             proc_node_values);
+            CHECK_EX_ERROR(err, "ex_get_var");
+          }
+          for (int eb = 0; eb < monolith->num_elem_blocks; eb++) {
+            if (eb_num_elems[eb] > 0) {
+              for (int var = 0; var < num_elem_vars; var++) {
+                if (elem_var_tab[eb * num_elem_vars + var]) {
+                  err = ex_get_var(exoid, ts + 1, EX_ELEM_BLOCK, var + 1, monolith->eb_id[eb],
+                                   monolith->eb_num_elems[eb], monolith_elem_values);
+                  CHECK_EX_ERROR(err, "ex_get_var");
+                  // map into our node values
+                  for (int i = 0; i < eb_num_elems[eb]; i++) {
+                    proc_elem_values[i] = monolith_elem_values[eb_local_to_global[eb][i]];
+                  }
+                  err = ex_put_var(proc_exoid, ts + 1, EX_ELEM_BLOCK, var + 1, monolith->eb_id[eb],
+                                   eb_num_elems[eb], proc_elem_values);
+                  CHECK_EX_ERROR(err, "ex_get_var");
+                }
+              }
+            }
+          }
+        }
+
+        err = ex_close(proc_exoid);
+        CHECK_EX_ERROR(err, "ex_close");
+        free(global_var_vals);
+        free(monolith_node_values);
+        free(proc_node_values);
+        free(monolith_elem_values);
+        free(proc_elem_values);
+        free(eb_num_elems);
+        for (int i = 0; i < monolith->num_elem_blocks; i++) {
+          free(eb_local_to_global[i]);
+        }
+        free(eb_local_to_global);
+      }
+
+      free(times);
+      for (int i = 0; i < num_global_vars; i++) {
+        free(global_var_names[i]);
+      }
+      free(global_var_names);
+      for (int i = 0; i < num_nodal_vars; i++) {
+        free(nodal_var_names[i]);
+      }
+      free(nodal_var_names);
+      for (int i = 0; i < num_elem_vars; i++) {
+        free(elem_var_names[i]);
+      }
+      free(elem_var_names);
+      free(elem_var_tab);
+
+    } else if (num_time_steps == 0 && file > 0) {
+      GOMA_EH(GOMA_ERROR, "No time steps found in exodus file %s", filenames[file]);
+    }
+
+    int err = ex_close(exoid);
+    CHECK_EX_ERROR(err, "ex_close");
+  }
+
   for (int proc = 0; proc < n_parts; proc++) {
     free(node_indicators[proc]);
     free(elem_indicators[proc]);
   }
+  free(partitions);
   free(num_elems_part);
   free(num_nodes_part);
   free(node_indicators);

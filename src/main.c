@@ -562,7 +562,7 @@ int main(int argc, char **argv)
       }
     }
 
-    goma_metis_decomposition(filenames, 1);
+    goma_metis_decomposition(filenames, n_files);
 
     for (int i = 0; i < n_files; i++) {
       free(filenames[i]);
