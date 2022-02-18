@@ -211,8 +211,7 @@ put_side_sets(int exoid, Exo_DB *monolith, bool *elem_indicator, int *elem_globa
     }
     if (ss > 0) {
       ss_elem_index[ss] = ss_elem_index[ss - 1] + ss_num_sides[ss - 1];
-
-      ss_distfact_index[ss] = total_distfacts;
+      ss_distfact_index[ss] = ss_distfact_index[ss - 1] + ss_num_distfacts[ss - 1];
     }
   }
 
@@ -367,6 +366,7 @@ static void put_loadbal(int exoid,
 
 goma_error goma_metis_decomposition(char **filenames, int n_files) {
 
+  ex_opts(EX_VERBOSE | EX_ABORT);
   if (sizeof(idx_t) != sizeof(int)) {
     GOMA_EH(GOMA_ERROR, "Goma expects 32bit Metis, idx_t size = %d", sizeof(idx_t));
   }
@@ -473,6 +473,15 @@ goma_error goma_metis_decomposition(char **filenames, int n_files) {
   }
 
   for (int file = 0; file < n_files; file++) {
+    // skip if we've already done it
+    bool set_skip = false;
+    for (int of = 0; of < file; of++) {
+      if (strncmp(filenames[of], filenames[file], MAX_FNL) == 0) {
+        set_skip = true;
+      }
+    }
+    if (set_skip)
+      continue;
     for (int proc = 0; proc < n_parts; proc++) {
       char proc_name[MAX_FNL + 1];
       strncpy(proc_name, filenames[file], MAX_FNL);
@@ -597,6 +606,14 @@ goma_error goma_metis_decomposition(char **filenames, int n_files) {
 
   // the mesh should be written now, now we transfer global, element, and nodal data
   for (int file = 0; file < n_files; file++) {
+    bool set_skip = false;
+    for (int of = 0; of < file; of++) {
+      if (strncmp(filenames[of], filenames[file], MAX_FNL) == 0) {
+        set_skip = true;
+      }
+    }
+    if (set_skip)
+      continue;
     int exoid = ex_open(filenames[file], EX_READ, &monolith->comp_wordsize, &monolith->io_wordsize,
                         &monolith->version);
     CHECK_EX_ERROR(exoid, "ex_open");

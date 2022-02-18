@@ -776,6 +776,7 @@ set(GOMA_TPL_LIBRARIES
 set_source_files_properties(
     src/dp_ghost.cpp 
     src/sl_epetra_util.cpp
+    src/adapt/omega_h_interface.cpp
     PROPERTIES SKIP_UNITY_BUILD_INCLUSION ON
 )
 

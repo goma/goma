@@ -891,6 +891,7 @@ void bc_matrl_index(Exo_DB *exo)
   int found = FALSE, min_node_matrl, max_node_matrl, min_matrl, max_matrl, node_matrl_1,
       node_matrl_2, node_matrl_3, node_matrl_4, matrl_first;
   int *bin_matrl, *ind_matrl, *bin_matrl_elem, *node_flag_1ss, node_count;
+  int n_flagged_nodes = 0;
   int mat_index, success, ielem;
   NODE_INFO_STRUCT *node_ptr;
   UMI_LIST_STRUCT *matrlLP;
@@ -954,6 +955,7 @@ void bc_matrl_index(Exo_DB *exo)
       bin_matrl[i] = 0;
     for (i = 0; i < exo->num_nodes; i++)
       node_flag_1ss[i] = 0;
+
     max_node_matrl = min_node_matrl = -1;
     min_matrl = 4000000;
     max_matrl = -1;
@@ -997,6 +999,7 @@ void bc_matrl_index(Exo_DB *exo)
               node_num = exo->ss_node_list[ss_index][k];
               if (!node_flag_1ss[node_num]) {
                 node_flag_1ss[node_num] = 1;
+                n_flagged_nodes++;
                 node_ptr = Nodes[node_num];
                 matrlLP = &(node_ptr->Mat_List);
                 /*
@@ -1062,6 +1065,7 @@ void bc_matrl_index(Exo_DB *exo)
             node_num = exo->ns_node_list[exo->ns_node_index[ss_index] + k];
             if (!node_flag_1ss[node_num]) {
               node_flag_1ss[node_num] = 1;
+              n_flagged_nodes++;
               node_ptr = Nodes[node_num];
               matrlLP = &(node_ptr->Mat_List);
               /*
@@ -1106,7 +1110,7 @@ void bc_matrl_index(Exo_DB *exo)
      *  let's make a decision
      */
 
-    if (found) {
+    if (found && n_flagged_nodes > 0) {
       matrl_first = find_next_max(bin_matrl, ind_matrl, upd->Num_Mat);
       success = assign_matrl_2(bc_ptr, matrl_first);
       if (success < 0) {

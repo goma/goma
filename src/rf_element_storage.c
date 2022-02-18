@@ -130,7 +130,11 @@ void init_element_storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
      * Determine the number of quadrature points
      */
     ip_total = eb_ptr->IP_total;
-    s_ptr = alloc_struct_1(ELEMENT_STORAGE_STRUCT, eb_ptr->Num_Elems_In_Block);
+    if (eb_ptr->Num_Elems_In_Block > 0) {
+      s_ptr = alloc_struct_1(ELEMENT_STORAGE_STRUCT, eb_ptr->Num_Elems_In_Block);
+    } else {
+      s_ptr = NULL;
+    }
     /*
      *  If porous mass lumping is used, we need to store values at
      *  the nodes as well as at the volumetric guass points. We will
@@ -149,15 +153,19 @@ void init_element_storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
      * Do a large block allocation for efficiency
      * Argg. See PRS comment in rf_element_storage_struct.h
      */
-    if (pd->e[pg->imtrx][R_POR_LIQ_PRES]) {
-      base_ptr = alloc_dbl_1(4 * numStorage * eb_ptr->Num_Elems_In_Block, DBL_NOINIT);
-    } else if (pd->e[pg->imtrx][R_SHELL_SAT_OPEN] || pd->e[pg->imtrx][R_SHELL_SAT_OPEN_2]) {
-      base_ptr = alloc_dbl_1(4 * numStorage * eb_ptr->Num_Elems_In_Block, DBL_NOINIT);
-    } else if (pd->e[pg->imtrx][R_MESH1] && pd->MeshMotion == LAGRANGIAN &&
-               elc_glob[mn]->thermal_expansion_model == SHRINKAGE) {
+    if (eb_ptr->Num_Elems_In_Block > 0) {
+      if (pd->e[pg->imtrx][R_POR_LIQ_PRES]) {
+        base_ptr = alloc_dbl_1(4 * numStorage * eb_ptr->Num_Elems_In_Block, DBL_NOINIT);
+      } else if (pd->e[pg->imtrx][R_SHELL_SAT_OPEN] || pd->e[pg->imtrx][R_SHELL_SAT_OPEN_2]) {
+        base_ptr = alloc_dbl_1(4 * numStorage * eb_ptr->Num_Elems_In_Block, DBL_NOINIT);
+      } else if (pd->e[pg->imtrx][R_MESH1] && pd->MeshMotion == LAGRANGIAN &&
+                 elc_glob[mn]->thermal_expansion_model == SHRINKAGE) {
 
-      /* This is for shrinkage stress model for thermexp */
-      base_ptr = alloc_dbl_1(numStorage * eb_ptr->Num_Elems_In_Block, DBL_NOINIT);
+        /* This is for shrinkage stress model for thermexp */
+        base_ptr = alloc_dbl_1(numStorage * eb_ptr->Num_Elems_In_Block, DBL_NOINIT);
+      }
+    } else {
+      base_ptr = NULL;
     }
     /*
      * Assign the pointers into the allocated memory block
