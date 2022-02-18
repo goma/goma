@@ -3992,7 +3992,7 @@ Generalized_FV_Diffusivity(int species_no)  /* current species number*/
     }
   if(af->Assemble_Jacobian)
     {
-      if(:q!pd->v[TEMPERATURE] )
+      if(pd->v[TEMPERATURE] )
         { 
           mp->d_diffusivity[species_no][TEMPERATURE] = 0.;
           /* As of 1/19/22, d_Dp_dT is assuming E_divR[i] = 0 Chance Parrish */
