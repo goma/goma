@@ -1,3 +1,4 @@
+#ifdef GOMA_HAVE_METIS
 #include <exodusII.h>
 #include <metis.h>
 #include <stdlib.h>
@@ -883,3 +884,4 @@ static void mark_elems_nodes(Exo_DB *monolith,
     }
   }
 }
+#endif

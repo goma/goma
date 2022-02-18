@@ -117,6 +117,7 @@ set(ENV{PKG_CONFIG_PATH} ${PETSC_PATH}/lib/pkgconfig)
 
 find_package(PkgConfig)
 
+
 if (PkgConfig_FOUND)
 pkg_search_module(PETSC IMPORTED_TARGET PETSc)
 
@@ -176,8 +177,7 @@ else()
   message(WARNING "pkg-config not found, not searching for PETSc")
 endif()
 
-message("")
-
+set(GOMA_TPL_LIBRARIES "")
 set(GOMA_TPL_LIBRARIES "")
 
 set(ARPACK_PREFIX "${Trilinos_DIR}/../../../../ARPACK" CACHE PATH "set ARPACK library location")
@@ -200,6 +200,16 @@ if (Sparse_FOUND)
 else()
   message(STATUS "Sparse library not found")
   set(Sparse_INCLUDES "")
+endif()
+
+set(METIS_PREFIX "" CACHE PATH "set METIS library location")
+find_package(METIS)
+if (METIS_FOUND)
+  list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_HAVE_METIS)
+  message(STATUS "Metis found: ${METIS_INCLUDES}")
+  message(STATUS "Metis found: ${METIS_LIBRARIES}")
+  set(GOMA_TPL_LIBRARIES ${GOMA_TPL_LIBRARIES} ${METIS_LIBRARIES})
+  set(GOMA_TPL_INCLUDES ${GOMA_TPL_INCLUDES} ${METIS_INCLUDES})
 endif()
 
 find_package(Omega_h 9)

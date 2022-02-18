@@ -44,7 +44,9 @@ extern void handle_ieee(void);
 #include "dp_vif.h"
 #include "dpi.h"
 #include "exo_struct.h"
+#ifdef GOMA_HAVE_METIS
 #include "metis_decomp.h"
+#endif
 #include "mm_as.h"
 #include "mm_as_alloc.h"
 #include "mm_as_structs.h"
@@ -542,6 +544,7 @@ int main(int argc, char **argv)
 
 #endif /* End of ifdef PARALLEL */
 
+#ifdef GOMA_HAVE_METIS
   /* Now break the exodus files */
   if (Decompose_Flag == 1 && Num_Proc > 1 && ProcID == 0) {
     char **filenames = malloc(sizeof(char *) * (2 + MAX_EXTERNAL_FIELD));
@@ -569,7 +572,8 @@ int main(int argc, char **argv)
     }
     free(filenames);
   }
-  check_parallel_error("Error in brking exodus files");
+  check_parallel_error("Error in decomposing exodus files");
+#endif
   MPI_Barrier(MPI_COMM_WORLD);
 
   /*
