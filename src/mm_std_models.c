@@ -3950,7 +3950,7 @@ Generalized_FV_Diffusivity(int species_no)  /* current species number*/
       V_fh_gamma += K1_gamma[w]*omega[w]*(K2mTg[w] + T);
       d_Vfh_dT   += K1_gamma[w]*omega[w];
       d_Vfh_domega[w] = K1_gamma[w]*(K2mTg[w] + T) - K1_gamma[w2]*(K2mTg[w2] + T);
-      numerator[w] = 0.;
+      numerator[w] = omega[w2]*vs[w2]*xsi[w][w2];
       numerator[w2] += omega[w]*vs[w]*xsi[w2][w];
       d_num_domega[w2][w] = vs[w]*xsi[w2][w] - vs[w2]*xsi[w2][w2];
       for (w1=0; w1<pd->Num_Species_Eqn; w1++)
@@ -3958,7 +3958,6 @@ Generalized_FV_Diffusivity(int species_no)  /* current species number*/
           numerator[w] += omega[w1]*vs[w1]*xsi[w][w1];
           d_num_domega[w][w1] = vs[w1]*xsi[w][w1]-vs[w2]*xsi[w][w2];
         }  
-      numerator[w] += omega[w2]*vs[w2]*xsi[w][w2];
     }
 
       Dp[w2] = Do[w2]*exp(-numerator[w2]/V_fh_gamma);
@@ -3993,7 +3992,7 @@ Generalized_FV_Diffusivity(int species_no)  /* current species number*/
     }
   if(af->Assemble_Jacobian)
     {
-      if(pd->v[TEMPERATURE] )
+      if(:q!pd->v[TEMPERATURE] )
         { 
           mp->d_diffusivity[species_no][TEMPERATURE] = 0.;
           /* As of 1/19/22, d_Dp_dT is assuming E_divR[i] = 0 Chance Parrish */
@@ -4075,7 +4074,7 @@ Generalized_FV_Diffusivity(int species_no)  /* current species number*/
                     d_Dp_dc[species_no][w1]*(delta(species_no,w)+rho[species_no]*dcoeff[species_no][w])
                    +Dp[species_no]*(delta(species_no,w1)*dcoeff[species_no][w]+rho[species_no]*d2coeff[species_no][w][w1]);*/
                    mp->d_diffusivity_gf[species_no][w][MAX_VARIABLE_TYPES+w1] = 
-                    d_Dp_dc[species_no][w1]*(delta(species_no,w)+0.*rho[species_no]*dcoeff[species_no][w])
+                    d_Dp_dc[species_no][w1]*(delta(species_no,w) +0.*rho[species_no]*dcoeff[species_no][w])
                    +0.*Dp[species_no]*(delta(species_no,w1)*dcoeff[species_no][w]+rho[species_no]*d2coeff[species_no][w][w1]);
                    for (w3=0; w3<pd->Num_Species_Eqn; w3++)
                      {
