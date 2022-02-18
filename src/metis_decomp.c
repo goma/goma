@@ -683,21 +683,22 @@ goma_error goma_metis_decomposition(char **filenames, int n_files) {
                                  &monolith->io_wordsize, &monolith->version);
         CHECK_EX_ERROR(proc_exoid, "ex_open");
 
-        int err = ex_put_variable_param(proc_exoid, EX_GLOBAL, num_global_vars);
-        CHECK_EX_ERROR(err, "ex_put_variable_param");
-        err = ex_put_variable_param(proc_exoid, EX_NODAL, num_nodal_vars);
-        CHECK_EX_ERROR(err, "ex_put_variable_param");
-        err = ex_put_variable_param(proc_exoid, EX_ELEM_BLOCK, num_elem_vars);
-        CHECK_EX_ERROR(err, "ex_put_variable_param");
+        int err;
         if (num_global_vars > 0) {
+          err = ex_put_variable_param(proc_exoid, EX_GLOBAL, num_global_vars);
+          CHECK_EX_ERROR(err, "ex_put_variable_param");
           ex_put_variable_names(proc_exoid, EX_GLOBAL, num_global_vars, global_var_names);
           CHECK_EX_ERROR(err, "ex_put_variable_names");
         }
         if (num_nodal_vars > 0) {
+          err = ex_put_variable_param(proc_exoid, EX_NODAL, num_nodal_vars);
+          CHECK_EX_ERROR(err, "ex_put_variable_param");
           ex_put_variable_names(proc_exoid, EX_NODAL, num_nodal_vars, nodal_var_names);
           CHECK_EX_ERROR(err, "ex_put_variable_names");
         }
         if (num_elem_vars > 0) {
+          err = ex_put_variable_param(proc_exoid, EX_ELEM_BLOCK, num_elem_vars);
+          CHECK_EX_ERROR(err, "ex_put_variable_param");
           err = ex_put_variable_names(proc_exoid, EX_ELEM_BLOCK, num_elem_vars, elem_var_names);
           CHECK_EX_ERROR(err, "ex_put_variable_names");
           err = ex_put_truth_table(proc_exoid, EX_ELEM_BLOCK, monolith->num_elem_blocks,
@@ -751,11 +752,13 @@ goma_error goma_metis_decomposition(char **filenames, int n_files) {
           int err = ex_put_time(proc_exoid, ts + 1, &times[ts]);
           CHECK_EX_ERROR(err, "ex_put_time");
 
-          err = ex_get_var(exoid, ts + 1, EX_GLOBAL, 1, 1, num_global_vars, global_var_vals);
-          CHECK_EX_ERROR(err, "ex_get_var");
+          if (num_global_vars > 0) {
+            err = ex_get_var(exoid, ts + 1, EX_GLOBAL, 1, 1, num_global_vars, global_var_vals);
+            CHECK_EX_ERROR(err, "ex_get_var");
 
-          err = ex_put_var(proc_exoid, ts + 1, EX_GLOBAL, 1, 1, num_global_vars, global_var_vals);
-          CHECK_EX_ERROR(err, "ex_put_var");
+            err = ex_put_var(proc_exoid, ts + 1, EX_GLOBAL, 1, 1, num_global_vars, global_var_vals);
+            CHECK_EX_ERROR(err, "ex_put_var");
+          }
 
           for (int var = 0; var < num_nodal_vars; var++) {
             err = ex_get_var(exoid, ts + 1, EX_NODAL, var + 1, 1, monolith->num_nodes,

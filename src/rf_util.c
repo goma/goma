@@ -2372,6 +2372,13 @@ int rd_vectors_from_exoII(double u[],
   error = ex_inquire(exoid, EX_INQ_TIME, &time_step, &ret_float, ret_char);
   GOMA_EH(error, "ex_inquire");
 
+  if (time_step == 0) {
+    // early exit
+    GOMA_WH(GOMA_ERROR, "Warning no time steps found in %s", file_nm);
+    ex_close(exoid);
+    return 0;
+  }
+
   /* Figure out what time step to select. Will select the last time
    * step unless the input variable desired_time_step is set lower.
    * The lower limit in exodus is 1.
