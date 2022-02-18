@@ -111,12 +111,12 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
   memcpy(exo->base_mesh->node_map, d->node_index_global, sizeof(int) * exo->num_nodes);
   memcpy(exo->base_mesh->elem_map, d->elem_index_global, sizeof(int) * exo->num_elems);
   // zero_base maps
-  for (int i = 0; i < exo->base_mesh->num_nodes; i++) {
-    exo->base_mesh->node_map[i]--;
-  }
-  for (int i = 0; i < exo->base_mesh->num_elems; i++) {
-    exo->base_mesh->elem_map[i]--;
-  }
+  //for (int i = 0; i < exo->base_mesh->num_nodes; i++) {
+  //  exo->base_mesh->node_map[i]--;
+  //}
+  //for (int i = 0; i < exo->base_mesh->num_elems; i++) {
+  //  exo->base_mesh->elem_map[i]--;
+  //}
 
   // Load Balance Information
   ex_error = ex_get_loadbal_param(
@@ -130,8 +130,6 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
   d->base_internal_elems = d->num_internal_elems;
   d->base_border_elems = d->num_border_elems;
 
-  d->num_owned_nodes = d->num_internal_nodes + d->num_boundary_nodes;
-  d->num_universe_nodes = d->num_internal_nodes + d->num_boundary_nodes + d->num_external_nodes;
 
   d->proc_node_internal = alloc_int_1(d->num_internal_nodes, 0);
   if (d->num_boundary_nodes > 0) {
@@ -512,6 +510,8 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
 
   // setup indexing from ghosted mesh to base mesh
   setup_ghost_to_base(exo, d);
+  d->num_owned_nodes = d->num_internal_nodes + d->num_boundary_nodes;
+  d->num_universe_nodes = d->num_internal_nodes + d->num_boundary_nodes + d->num_external_nodes;
 
   free(new_external_node_order);
   free(old_to_new_external_node_order);

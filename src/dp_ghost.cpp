@@ -983,6 +983,7 @@ goma_error setup_ghost_to_base(Exo_DB *exo, Dpi *dpi) {
   for (int i = 0; i < exo->base_mesh->num_nodes; i++) {
     old_map[exo->base_mesh->node_map[i]] = i;
   }
+
   for (int i = 0; i < exo->num_nodes; i++) {
     if (old_map.find(dpi->node_index_global[i]) != old_map.end()) {
       exo->ghost_node_to_base[i] = old_map.at(dpi->node_index_global[i]);

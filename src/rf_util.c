@@ -1686,7 +1686,7 @@ void init_vec(
    */
   if (Num_Var_Init > 0) {
     retn = 0;
-    dum_var = alloc_dbl_1(DPI_ptr->num_owned_nodes, DBL_NOINIT);
+    dum_var = alloc_dbl_1(DPI_ptr->num_universe_nodes, DBL_NOINIT);
     for (i = Num_Var_Bound; i < Num_Var_Init; i++) {
       switch (Var_init[i].var) {
       case MASS_FRACTION:
@@ -1705,7 +1705,7 @@ void init_vec(
                 Var_init[i].var, Var_init[i].init_val);
         break;
       }
-      init_vec_value(dum_var, Var_init[i].init_val, DPI_ptr->num_owned_nodes);
+      init_vec_value(dum_var, Var_init[i].init_val, DPI_ptr->num_universe_nodes);
       inject_nodal_vec(u, Var_init[i].var, Var_init[i].ktype, 0, -2, dum_var);
     }
     /*
@@ -2993,46 +2993,48 @@ static void inject_nodal_vec(double sol_vec[],
   int index, i, j, vindex;
   NODAL_VARS_STRUCT *nv;
   VARIABLE_DESCRIPTION_STRUCT *vd;
-  for (i = 0; i < DPI_ptr->num_owned_nodes; i++) {
+  for (i = 0; i < DPI_ptr->num_universe_nodes; i++) {
     nv = Nodes[i]->Nodal_Vars_Info[pg->imtrx];
     int base_index = EXO_ptr->ghost_node_to_base[i];
-    if (matID == -2) {
-      for (j = 0; j < (int)nv->Num_Var_Desc_Per_Type[varType]; j++) {
-        vindex = nv->Var_Type_Index[varType][j];
-        vd = nv->Var_Desc_List[vindex];
+    if (base_index != -1) {
+      if (matID == -2) {
+        for (j = 0; j < (int)nv->Num_Var_Desc_Per_Type[varType]; j++) {
+          vindex = nv->Var_Type_Index[varType][j];
+          vd = nv->Var_Desc_List[vindex];
 #ifdef DEBUG_HKM
-        if (idof < 0 || idof > vd->Ndof) {
-          fprintf(stderr, "init_vec ERROR: bad idof\n");
-          GOMA_EH(-1, "init_vec bad idof");
-        }
+          if (idof < 0 || idof > vd->Ndof) {
+            fprintf(stderr, "init_vec ERROR: bad idof\n");
+            GOMA_EH(-1, "init_vec bad idof");
+          }
 #endif
-        if (k == (int)vd->Subvar_Index) {
-          index = (Nodes[i]->First_Unknown[pg->imtrx] + nv->Nodal_Offset[vindex] + idof);
-          sol_vec[index] = nodal_vec[base_index];
-        }
-      }
-    } else {
-      int ndof = 0;
-      if (pd->i[pg->imtrx][varType] == I_PQ1) {
-        ndof = 4;
-        GOMA_WH(-1, "Using 4 dof injecting variable");
-      } else if (pd->i[pg->imtrx][varType] == I_PQ2) {
-        ndof = 9;
-        GOMA_WH(-1, "Using 9 dof injecting variable");
-      }
-
-      if (ndof > 0) {
-        int local_dof = 0;
-        for (local_dof = 0; local_dof < ndof; local_dof++) {
-          index = Index_Solution(i, varType, k, local_dof, matID, pg->imtrx);
-          if (index != -1) {
+          if (k == (int)vd->Subvar_Index) {
+            index = (Nodes[i]->First_Unknown[pg->imtrx] + nv->Nodal_Offset[vindex] + idof);
             sol_vec[index] = nodal_vec[base_index];
           }
         }
       } else {
-        index = Index_Solution(i, varType, k, idof, matID, pg->imtrx);
-        if (index != -1) {
-          sol_vec[index] = nodal_vec[base_index];
+        int ndof = 0;
+        if (pd->i[pg->imtrx][varType] == I_PQ1) {
+          ndof = 4;
+          GOMA_WH(-1, "Using 4 dof injecting variable");
+        } else if (pd->i[pg->imtrx][varType] == I_PQ2) {
+          ndof = 9;
+          GOMA_WH(-1, "Using 9 dof injecting variable");
+        }
+
+        if (ndof > 0) {
+          int local_dof = 0;
+          for (local_dof = 0; local_dof < ndof; local_dof++) {
+            index = Index_Solution(i, varType, k, local_dof, matID, pg->imtrx);
+            if (index != -1) {
+              sol_vec[index] = nodal_vec[base_index];
+            }
+          }
+        } else {
+          index = Index_Solution(i, varType, k, idof, matID, pg->imtrx);
+          if (index != -1) {
+            sol_vec[index] = nodal_vec[base_index];
+          }
         }
       }
     }
