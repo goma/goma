@@ -25,6 +25,7 @@ jobs:
       run: |
         cd build
         make -j 2
+        ./goma -v
     - name: test
       run: |
         export OMPI_MCA_btl_base_warn_component_unused='0'
