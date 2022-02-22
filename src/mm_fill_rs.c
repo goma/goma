@@ -463,7 +463,7 @@ assemble_real_solid(double time_value,
 	      /* porous term removed for SOLID equation - the additional effects due
 		 to porosity are entered into the consitutive equation for stress */
 
-	      lec->R[peqn][i] += diffusion + source + advection;
+              lec->R[LEC_R_INDEX(peqn,i)] += diffusion + source + advection;
 	    }
 	}
     }  
@@ -627,7 +627,7 @@ assemble_real_solid(double time_value,
 			      source *= pd->etm[eqn][LOG2_SOURCE];
 			    }
 			  
-			  lec->J[peqn][pvar][i][j] += mass + diffusion + source 
+                          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + diffusion + source
 			    + advection;
 			}
 		    }
@@ -727,7 +727,7 @@ assemble_real_solid(double time_value,
 			      source *= pd->etm[eqn][LOG2_SOURCE];
 			    }
 			  
-			  lec->J[peqn][pvar][i][j] += mass + diffusion + source 
+                          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + diffusion + source
 			    + advection;
 			}
 		    }
@@ -758,7 +758,7 @@ assemble_real_solid(double time_value,
 			  diffusion *= - det_J * wt * h3;
 			  diffusion *= pd->etm[eqn][LOG2_DIFFUSION];
 
-			  lec->J[peqn][pvar][i][j] += diffusion;
+                          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
 			}
 		    }
 
@@ -801,7 +801,7 @@ assemble_real_solid(double time_value,
 			      diffusion *= pd->etm[eqn][LOG2_DIFFUSION];
 			    }
 
-			  lec->J[peqn][MAX_PROB_VAR + w][i][j] += advection + diffusion;
+                          lec->J[LEC_J_INDEX(peqn,MAX_PROB_VAR + w,i,j)] += advection + diffusion;
 			}
 		    }
 		}
@@ -843,7 +843,7 @@ assemble_real_solid(double time_value,
 			  diffusion *= pd->etm[eqn][LOG2_DIFFUSION];
 			}
 
-		      lec->J[peqn][pvar][i][j] += advection + diffusion;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection + diffusion;
 		    }
 		}
 
@@ -884,7 +884,7 @@ assemble_real_solid(double time_value,
 			  diffusion *= pd->etm[eqn][LOG2_DIFFUSION];
 			}
 
-		      lec->J[peqn][pvar][i][j] += advection + diffusion;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection + diffusion;
 		    }
 		}
 
@@ -925,7 +925,7 @@ assemble_real_solid(double time_value,
 			  diffusion *= pd->etm[eqn][LOG2_DIFFUSION];
 			}
 
-		      lec->J[peqn][pvar][i][j] += advection + diffusion;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection + diffusion;
 		    }
 		}
 	
@@ -952,7 +952,7 @@ assemble_real_solid(double time_value,
                              }
                            diffusion *= - det_J * wt * h3;
                            diffusion *= pd->etm[eqn][LOG2_DIFFUSION];
-                           lec->J[peqn][pvar][i][j] += advection + diffusion;
+                           lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection + diffusion;
                          }
                      }
                  }
@@ -997,6 +997,9 @@ solid_stress_tensor(dbl TT[DIM][DIM],
   dbl speciesexp[MAX_CONC];
   dbl d_thermexp_dx[MAX_VARIABLE_TYPES+MAX_CONC];
   dbl d_speciesexp_dx[MAX_CONC][MAX_VARIABLE_TYPES+MAX_CONC];
+  dbl viscos=0., dil_viscos=0;
+  dbl d_viscos_dx[MAX_VARIABLE_TYPES+MAX_CONC];
+  dbl d_dilviscos_dx[MAX_VARIABLE_TYPES+MAX_CONC];
   
   dim = ei->ielem_dim;
 
@@ -1012,9 +1015,12 @@ solid_stress_tensor(dbl TT[DIM][DIM],
   memset(d_lambda_drs,0,sizeof(double)*DIM*MDE);
   memset(d_thermexp_dx,0,sizeof(double)*(MAX_VARIABLE_TYPES+MAX_CONC));
   memset(d_speciesexp_dx,0,sizeof(double)*MAX_CONC*(MAX_VARIABLE_TYPES+MAX_CONC));
+  memset(d_viscos_dx,0,sizeof(double)*(MAX_VARIABLE_TYPES+MAX_CONC));
+  memset(d_dilviscos_dx,0,sizeof(double)*(MAX_VARIABLE_TYPES+MAX_CONC));
   memset(speciesexp,0,sizeof(double)*MAX_CONC);
 
-  err = load_elastic_properties(elc_rs, &mu, &lambda, &thermexp, speciesexp, d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx);
+  err = load_elastic_properties(elc_rs, &mu, &lambda, &thermexp, speciesexp, &viscos, &dil_viscos,
+	d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx, d_viscos_dx, d_dilviscos_dx);
   EH(err," Problem in loading up real-solid elastic constants");
 
  
@@ -2106,12 +2112,7 @@ get_convection_velocity_rs(double vconv[DIM], /*Calculated convection velocity *
    
    /* First test to see what type of prescribed kinematics model */
    
-   if (elc_rs->v_mesh_sfs_model == CONSTANT)
-     {
-       /*do nothing??*/
-     }
-   else if (elc_rs->v_mesh_sfs_model == ROTATIONAL ||
-		elc_rs->v_mesh_sfs_model == ROTATIONAL_3D )
+   if (elc_rs->v_mesh_sfs_model > CONSTANT)
      {
        V_mesh_sfs_model(elc_rs->u_v_mesh_sfs, elc_rs->v_mesh_sfs, 
 				elc_rs->v_mesh_sfs_model, -1);
@@ -2342,9 +2343,6 @@ if(base_displ_model)
   
       /* Calculate the residual contribution	*/
 
-#if 0
-fprintf(stderr,"%g %g %g %g %g %g\n",dns[idir],dns[1-idir],sqrt(SQUARE(dns[idir])+SQUARE(dns[1-idir]))-110.998,fv->x[0]-fv->d[0],fv->x[1]-fv->d[1],sqrt(SQUARE(fv->x[0]-fv->d[0])+SQUARE(fv->x[1]-fv->d[1]))-110.998);
-#endif
       for (kdir=0; kdir<pd->Num_Dim; kdir++)
 	{
 	  *func += ((fv->d[kdir] - base_displacement[kdir]) - 

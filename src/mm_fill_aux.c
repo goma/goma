@@ -857,8 +857,7 @@ element_velocity(dbl v_avg[DIM], dbl dv_dnode[DIM][MDE],
 	      if ((cr->MeshMotion == LAGRANGIAN ||
 		   cr->MeshMotion == DYNAMIC_LAGRANGIAN))
 		{
-		  if (elc->v_mesh_sfs_model == ROTATIONAL ||
-			elc->v_mesh_sfs_model == ROTATIONAL_3D)
+		  if (elc->v_mesh_sfs_model > CONSTANT)
 		    {
 		      (void) V_mesh_sfs_model(elc->u_v_mesh_sfs, 
 						elc->v_mesh_sfs, 
@@ -867,8 +866,7 @@ element_velocity(dbl v_avg[DIM], dbl dv_dnode[DIM][MDE],
 		} 
 	      else if (cr->MeshMotion == TOTAL_ALE)
 		{
-		  if (elc_rs->v_mesh_sfs_model == ROTATIONAL ||
-			elc_rs->v_mesh_sfs_model == ROTATIONAL_3D)
+		  if (elc->v_mesh_sfs_model > CONSTANT)
 		  {
 		    (void) V_mesh_sfs_model(elc_rs->u_v_mesh_sfs,
 					    elc_rs->v_mesh_sfs, 
@@ -907,8 +905,7 @@ element_velocity(dbl v_avg[DIM], dbl dv_dnode[DIM][MDE],
 	  if ((cr->MeshMotion == LAGRANGIAN ||
 	       cr->MeshMotion == DYNAMIC_LAGRANGIAN))
 	    {
-	      if (elc->v_mesh_sfs_model == ROTATIONAL ||
-			elc->v_mesh_sfs_model == ROTATIONAL_3D)
+	      if (elc->v_mesh_sfs_model > CONSTANT)
 	      {
 		(void) V_mesh_sfs_model(elc->u_v_mesh_sfs, 
 					elc->v_mesh_sfs, 
@@ -917,8 +914,7 @@ element_velocity(dbl v_avg[DIM], dbl dv_dnode[DIM][MDE],
 	    } 
 	  else if (cr->MeshMotion == TOTAL_ALE)
 	    {
-	      if (elc_rs->v_mesh_sfs_model == ROTATIONAL ||
-			elc_rs->v_mesh_sfs_model == ROTATIONAL_3D)
+	      if (elc_rs->v_mesh_sfs_model > CONSTANT)
 	      {
 		(void) V_mesh_sfs_model(elc_rs->u_v_mesh_sfs,
 	 				    elc_rs->v_mesh_sfs, 
@@ -1515,7 +1511,7 @@ surface_determinant_and_normal(
       if ( id_side == 1 )
         {
           T[0][0] =  1.; T[0][1] =  0.; T[0][2] =  0.;
-          T[1][0] = -1.; T[1][1] =  0.; T[1][2] =  1.;
+          T[1][0] =  0.; T[1][1] =  0.; T[1][2] =  1.;
         }
       else if (id_side == 2)
         {
@@ -1525,12 +1521,12 @@ surface_determinant_and_normal(
       else if (id_side == 3)
         {
           T[0][0] =  0.; T[0][1] =  0.; T[0][2] =  1.;
-          T[1][0] =  0.; T[1][1] =  1.; T[1][2] = -1.;
+          T[1][0] =  0.; T[1][1] =  1.; T[1][2] =  0.;
         }
       else if (id_side == 4)
         {
           T[0][0] =  0.; T[0][1] =  1.; T[0][2] =  0.;
-          T[1][0] =  1.; T[1][1] = -1.; T[1][2] =  0.;
+          T[1][0] =  1.; T[1][1] =  0.; T[1][2] =  0.;
         }
       else
         {
@@ -1600,7 +1596,7 @@ surface_determinant_and_normal(
        * zero and giving junk for the surface normal/determinant
        * DSH 03/24/2016
        */
-      if(det_h01==0)
+      if(DOUBLE_ZERO(det_h01))
 	{
 	  EH(-1, "The shell elements need to be aligned in the X-Y plane for this problem to work");
 	}

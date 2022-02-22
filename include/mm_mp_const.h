@@ -53,7 +53,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 				 * component */
 #define  VISC_DISS      4
 #define  JOULE          5
-#define  SUSPENSION     6          
+#define  SUSPENSION     6
 #define  BOUSSINESQ	7	/* Boussinesq as rho*g*beta*(T-Tref) */
 #define  BOUSS_JXB      8
 #define  SUSPEND        9
@@ -65,11 +65,12 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define  ACOUSTIC    15      /* Acoustic energy density coupled to NS */
 #define HS_FOAM 16   /* fluorinert */
 #define VISC_ACOUSTIC 17   /* heat generation by acoustics */
-#define INGBER 18   
+#define INGBER 18
 #define GRAV_VIBRATIONAL 19   /* momentum source for gravity + vibration */
 #define MELT             20  /* Lubrication source term model*/
 #define EM_DISS         21   /* heat generation by EM waves */
-
+#define EM_VECTOR_DISS  22   /* heat generation by EM vector waves */
+#define CONTINUUM_FLUID 23  /* Lubrication source term model*/
 
 /* MMH */
 /* #define  SUSPENSION_PM xxx Defiend below. */
@@ -140,6 +141,9 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define WHITE_METZNER   7
 #define OLDROYDB 	8 
 #define PTT             9
+#define SARAMITO_OLDROYDB 10
+#define SARAMITO_GIESEKUS 11
+#define SARAMITO_PTT      12
 #define MODIFIED_WLF    39
 
 /* MMH */
@@ -233,6 +237,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define SSM_EPOXY_DEA  12
 #define CARREAU_SUSPENSION 	13
 #define SSM_CARREAU_SUSPENSION 	13
+#define SSM_BOND 	14
 
 #define SUSPENSION_PM  14	/* Particle suspension, a la Yuri Buyevich 
 				 * suspension model.  It seemed best to define
@@ -261,6 +266,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define BINGHAM_WLF    27         /* Bingham WLF viscosity model */
 #define SYLGARD    28         /* Sylgard viscosity model */
 #define PRANDTL_MIXING 29     /* Shell Turbulent Viscosity Model */
+#define BOND_SH               26   /* bond evolution structure model for viscosity with shear rate variable*/
 
 
 
@@ -300,6 +306,16 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define VISCM_CK_LIQ   19    /* Chemkin Liquid phase package call    */
 #define VISCM_CK_CPC   20    /* Chemkin Condensed phase package call */
 #define VISCM_CARREAU_WLF_CONC   21 
+#define VISCM_BOND               23   /* bond evolution structure model for viscosity */
+#define VISCM_CONST_PHASE_FUNCTION 24
+#define VISCM_CARREAU_WLF_CONC_EXP  25   /*  Carreau viscosity with WLF temperature 
+				      dependence and concentration shifting*/
+#define VISCM_BOND_SH               26   /* bond evolution structure model for viscosity with shear rate variable*/
+					
+#define VISCM_FOAM_EPOXY    33
+#define VISCM_BINGHAM_WLF    27         /* Bingham WLF viscosity model */
+#define VISCM_SYLGARD    28         /* Sylgard viscosity model */
+#define VISCM_PRANDTL_MIXING 29     /* Shell Turbulent Viscosity Model */
 /*
  * Dilational Viscosity Model
  *
@@ -328,6 +344,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define ARRHENIUS  14 /* for temperature-dependent S-M diffusivities, KSC */
 #define SHOCK   15
 #define PIECEWISE 16
+#define CHAPMAN_GAS 17
 
 /* Types of vapor or gas pressure relations */
 #define  KELVIN        3
@@ -384,6 +401,9 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 /* Viscoplastic consitutive equation params */
 #define EVP_HYPER          10
 
+/* Viscoelastic consitutive equation params */
+#define KELVIN_VOIGT       41
+
 /* Modulus parameters */
 /*#define POWER_LAW    4  - defined rf_fem_const.h*/
 #define CONTACT_LINE    5
@@ -437,6 +457,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 /*Convective langrangian velocity models */
 #define ROTATIONAL  2
 #define ROTATIONAL_3D  25
+#define OSC_LINEAR  252
 
 /*Various thermophysical property models */
 #define ENTHALPY 4
@@ -545,6 +566,8 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define TAGC_MELTING_POINT_LIQUIDUS        2500  
 #define TAGC_MELTING_POINT_SOLIDUS         2600
 #define TAGC_FLOWINGLIQUID_VISCOSITY       2700
+#define TAGC_DIFFUSIVITY_0                 2800
+#define TAGC_DIFFUSIVITY_1                 2801
 
  /*
   *  Acoustic Model Constants
@@ -634,6 +657,8 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define TAGC_PTT_EPS                       5400
 #define TAGC_SHIFT_FUNC                    5500
 #define TAGC_SHIFT_FUNC1                   5501
+#define TAGC_POLYMER_YIELD_STRESS          5600
+#define TAGC_POLYMER_YIELD_EXPONENT        5700
 
  /* 
   * Constants used in the Elasticity Constitutive Equations
@@ -740,6 +765,19 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define TAGC_LUB_SOURCE_2                  7048
 
 #define TAGC_HEAT_SOURCE_0                 7050
+#define TAGC_SPECIES_SOURCE_0_P0           70520
+#define TAGC_SPECIES_SOURCE_0_P1           70521
+#define TAGC_SPECIES_SOURCE_0_P2           70522
+#define TAGC_SPECIES_SOURCE_0_P3           70523
+#define TAGC_SPECIES_SOURCE_1_P0           70530
+#define TAGC_SPECIES_SOURCE_1_P1           70531
+#define TAGC_SPECIES_SOURCE_1_P2           70532
+#define TAGC_SPECIES_SOURCE_1_P3           70533
+#define TAGC_RST_FUNC_0                    7060
+#define TAGC_RST_FUNC_1                    7061
+#define TAGC_RST_FUNC_2                    7062
+#define TAGC_LATENT_HEAT_0                 7070
+#define TAGC_LATENT_HEAT_1                 7071
 
 /*  Problem Description Parameters   */
 

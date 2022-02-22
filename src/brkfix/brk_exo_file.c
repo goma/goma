@@ -191,8 +191,6 @@ static int total_internal_dofweight = 0;
 static int total_boundary_dofweight = 0;
 static int total_external_dofweight = 0;
 
-char *program_name;		/* name this program was run with */
-
 const char program_description[] = "GOMA distributed problem decomposition tool";
 
 const char copyright[]="Copyright (c) 1999-2000 Sandia National Laboratories. All rights reserved.";
@@ -235,13 +233,13 @@ static char *chaco_user_params_file[] =
 
 Bevm ***mult; 
 
-int *ep;			/* element pointers into node list */
-int *np;			/* node pointers into element list */
+static int *ep;			/* element pointers into node list */
+static int *np;			/* node pointers into element list */
 
-int *nl;			/* node list */
-int *el;			/* element list */
+static int *nl;			/* node list */
+static int *el;			/* element list */
 
-int *ebl;			/* element block list */
+static int *ebl;			/* element block list */
 
 /*
  * Each node can be associated with one of a handful of prototypes.
@@ -289,11 +287,6 @@ PROTO((Exo_DB *,		/* exo - ptr to full ripe EXODUS II fe db */
 
 extern void wr_resetup_exo	/* wr_exo.c */
 PROTO((Exo_DB *,		/* exo - ptr to full ripe EXODUS II fe db */
-       char *,			/* filename - where to write */
-       int ));			/* verbosity - 0 for quiet, more to talk */
-
-extern void wr_result_exo	/* wr_exo.c */
-PROTO((Exo_DB *,		/* exo */
        char *,			/* filename - where to write */
        int ));			/* verbosity - 0 for quiet, more to talk */
 
@@ -4321,189 +4314,171 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
        *       for how "nnv" and "len" are used...
        */
 
-      if ( (E->num_node_vars > 0) || (E->num_elem_vars > 0) )
+      if ( E->num_node_vars > 0 )
 	{
+	  E->state              |= EXODB_STATE_NDIA;
 
-          /***** Allocation of exo->nv and exo->ev   ********/
-          if (E->num_node_vars > 0)
-            {
+	  alloc_exo_nv(E, 1, E->num_node_vars);
 
-	     E->state              |= EXODB_STATE_NDIA;
+	  /*
+	   * This sweep through all the monolith's nodal results for each
+	   * set/proc might be inefficient. Alternatives would require 
+	   * having available the global node map for all the set/procs at the
+	   * same time.
+	   */
 
-	     alloc_exo_nv(E, 1, E->num_node_vars);
+	  if ( mono->num_node_vars < 1 )
+	    {
+	      EH(-1, "Inconsistent nodal variable count?");
+	    }
 
-	    /*
-	     * This sweep through all the monolith's nodal results for each
-	     * set/proc might be inefficient. Alternatives would require 
-	     * having available the global node map for all the set/procs at the
-	     * same time.
-	     */
-
-	     if ( mono->num_node_vars < 1 )
-	       {
-	        EH(-1, "Inconsistent nodal variable count?");
-	       }
-
-	    /*
-	     * These helper variables were set up for mono-> in the rd_exo
-	     * module. The E-> memory representation was not read in, but
-	     * synthesized from scratch, so it needs the rigmarole above...
-	     */
+	  /* 
+	   * These helper variables were set up for mono-> in the rd_exo
+	   * module. The E-> memory representation was not read in, but
+	   * synthesized from scratch, so it needs the rigmarole above...
+	   */
 
 
-	     if ( ! ( mono->state & EXODB_STATE_NDIA ) )
-               {
-	        mono->state              |= EXODB_STATE_NDIA;
-               }
+	  if ( ! ( mono->state & EXODB_STATE_NDIA ) )
+          {
+	      mono->state              |= EXODB_STATE_NDIA;
+          }
 
-	     alloc_exo_nv(mono, 1, mono->num_node_vars);
+	  alloc_exo_nv(mono, 1, mono->num_node_vars);
 
-	     for ( i=0; i<mono->num_node_vars; i++)
-	        {
-	         mono->nv_indeces[i]   = i+1;
-	         E->nv_indeces[i]      = i+1;
-	        }
-            } /* End of if num_node_vars > 0 */
-
-          if( E->num_elem_vars > 0 )
-            {
-
-	     E->num_ev_time_indeces = 1;
-
-	    /*
-	     * Even though there may be more than one time plane, we'll just
-	     * walk through one at a time.
-	     */
-
-
-	     E->state               |= EXODB_STATE_ELIA;
-
-	     alloc_exo_ev (E,1);
-
-	     if ( ! ( mono->state & EXODB_STATE_ELIA ) )
-	       {
-	        mono->num_ev_time_indeces = 1;
-	        mono->state              |= EXODB_STATE_ELIA;
-
-	       }
-
-	     alloc_exo_ev(mono,1);
-
-	     if ( mono->num_elem_vars < 1 )
-	       {
-	        EH(-1, "Inconsistent element variable count?");
-	       }
-            } /* End of if num_elem_vars > 0 */
-
-
-         /********* Time plane loop  ********/
+	  for ( i=0; i<mono->num_node_vars; i++)      
+	    {
+	      mono->nv_indeces[i]   = i+1;
+	      E->nv_indeces[i]      = i+1;
+	    }
 
 	  for ( t=0; t<E->num_times; t++ )
-	     {
+	    {
+	      /*
+	       * Grab one monolith time plane for each nodal var...
+	       */
 
+	      mono->nv_time_indeces[0]  = t+1;
+	      E->nv_time_indeces[0]     = t+1;
 
-             /*******  Update the indeces in nv and ev *******/
-              if (E->num_node_vars > 0)
-                {
-	        /*
-	         * Grab one monolith time plane for each nodal var...
-	         */
+	      rd_exo(mono, in_exodus_file_name, 0, 
+                     EXODB_ACTION_RD_RESN);
 
-	         mono->nv_time_indeces[0]  = t+1;
-	         E->nv_time_indeces[0]     = t+1;
+	      /*
+	       * Pick out pieces for this set/proc...
+	       */
 
-	         rd_exo(mono, in_exodus_file_name, 0,
-                        EXODB_ACTION_RD_RESN);
-
-	        /*
-	         * Pick out pieces for this set/proc...
-	         */
-
-	         for ( n=0; n<E->num_nodes; n++)
+	      for ( n=0; n<E->num_nodes; n++)
+		{
+		  node = proc_nodes[n];
+		  if ( node < 0 || node > mono->num_nodes-1 )
 		    {
-		     node = proc_nodes[n];
-		     if ( node < 0 || node > mono->num_nodes-1 )
-		       {
-		        EH(-1, "Bad map.");
-		       }
-		     for ( i=0; i<E->num_nv_indeces; i++)
-		        {
-		         E->nv[0][i][n] = mono->nv[0][i][node];
-		        }
+		      EH(-1, "Bad map.");
 		    }
-                } /* End of if num_node_vars > 0 */
-
-              if (E->num_elem_vars > 0)
-                {
-	        /*
-	         * Grab one monolith time plane for each element var...
-	         */
-
-	         mono->ev_time_indeces[0]  = t+1;
-	         E->ev_time_indeces[0]     = t+1;
-
-	         rd_exo(mono, in_exodus_file_name, 0, EXODB_ACTION_RD_RESE);
-
-	        /*
-	         * Pick out pieces for this set/proc...
-	         */
-
-	         for ( ieb=0; ieb<E->num_elem_blocks; ieb++)
+		  for ( i=0; i<E->num_nv_indeces; i++)
 		    {
-		     eb_index = in_list(E->eb_id[ieb], 0, mono->num_elem_blocks, mono->eb_id);
+		      E->nv[0][i][n] = mono->nv[0][i][node];
+		    }
+		}
 
-		     gbeg = ebl[eb_index];
+	      /*
+	       * Write out results.
+	       */
+	      
+	      wr_result_exo(E, E->path, 0, 1, 0);
+	    }
 
-		     begin = E->eb_ptr[ieb];
+	  free_exo_nv(E);
+	  free_exo_nv(mono);
+	}
+	
+      if ( E->num_elem_vars > 0 )  /* Save me baby Jesus ! Imma try to clone the nv section and hope for the best */
+	{
+	  E->num_ev_time_indeces = 1;
 
-		     for( e=0; e<E->eb_num_elems[ieb]; e++)
-		        {
-		         elem = proc_elems[e + begin];
+	  /*
+	   * Even though there may be more than one time plane, we'll just
+	   * walk through one at a time.
+	   */
 
-		         if ( elem < 0 || elem > mono->num_elems-1 )
-			   {
-			    EH(-1, "Bad map.");
-			   }
 
-		         ge = elem - gbeg;
+	  E->state               |= EXODB_STATE_ELIA;
 
-		         for ( i=0; i<E->num_elem_vars; i++)
+	  alloc_exo_ev (E,1);
+
+
+	  if ( ! ( mono->state & EXODB_STATE_ELIA ) )
+	    {
+	      mono->num_ev_time_indeces = 1;
+	      mono->state              |= EXODB_STATE_ELIA;
+
+	    }
+      
+	  alloc_exo_ev(mono,1);
+      
+	  if ( mono->num_elem_vars < 1 )
+	    {
+	      EH(-1, "Inconsistent element variable count?");
+	    }
+
+	  for ( t=0; t<E->num_times; t++ )
+	    {
+	      /*
+	       * Grab one monolith time plane for each element var...
+	       */
+
+	      mono->ev_time_indeces[0]  = t+1;
+	      E->ev_time_indeces[0]     = t+1;
+
+	      rd_exo(mono, in_exodus_file_name, 0, EXODB_ACTION_RD_RESE);
+
+	      /*
+	       * Pick out pieces for this set/proc...
+	       */
+
+	      for ( ieb=0; ieb<E->num_elem_blocks; ieb++)
+		{
+		  eb_index = in_list(E->eb_id[ieb], 0, mono->num_elem_blocks, mono->eb_id);
+		  
+		  gbeg = ebl[eb_index];
+
+		  begin = E->eb_ptr[ieb];
+		  
+		  for( e=0; e<E->eb_num_elems[ieb]; e++)
+		    {
+		      elem = proc_elems[e + begin];
+		  
+		      if ( elem < 0 || elem > mono->num_elems-1 )
+			{
+			  EH(-1, "Bad map.");
+			}
+
+		      ge = elem - gbeg;
+
+		      for ( i=0; i<E->num_elem_vars; i++)
+			{
+			  index = ieb*E->num_elem_vars + i;
+			  g_eb_index = eb_index*mono->num_elem_vars + i;
+
+			  if( E->elem_var_tab[index] != -1 )
 			    {
-			     index = ieb*E->num_elem_vars + i;
-			     g_eb_index = eb_index*mono->num_elem_vars + i;
-
-			     if( E->elem_var_tab[index] != -1 )
-			       {
-			        E->ev[0][index][e] = mono->ev[0][g_eb_index][ge];
-			       }
+			      E->ev[0][index][e] = mono->ev[0][g_eb_index][ge];
 			    }
-		        } /* End of loop over elements in an element block */
- 	            } /* End of loop over element blocks*/
+			}
+		    }
+		}
 
-                } /* End of if num_elem_vars > 0 */
+	      /*
+	       * Write out results.
+	       */
+	      
+	      wr_result_exo(E, E->path, 0, 0, 1);
+	    }
 
-	     /***** Write out results *******/
-	      wr_result_exo(E, E->path, 0);
-
-	     } /* End of loop over time planes */
-
-        /*
-         * Free up memory allocated for nv and ev
-         */
-
-         if (E->num_node_vars > 0)
-           {
-	    free_exo_nv(E);
-	    free_exo_nv(mono);
-           }
-
-         if (E->num_elem_vars > 0)
-           {
-	    free_exo_ev(E);
-	    free_exo_ev(mono);
-           }
-	} /* End of if num_nodal_vars > 0 or num_element_vars >0*/
-
+	  free_exo_ev(E);
+	  free_exo_ev(mono);
+	}
+	
 
       /*
        * Free up some arrays allocated during this set/proc loop...
@@ -4925,7 +4900,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
       one_base(mono);
       wr_mesh_exo(mono, out_augplot_file_name, 0);
       wr_resetup_exo(mono, out_augplot_file_name, 0);
-      wr_result_exo(mono, out_augplot_file_name, 0);
+      wr_result_exo(mono, out_augplot_file_name, 0, 1, 1);
       zero_base(mono);
 
       free_exo_ev(mono);

@@ -466,7 +466,7 @@ rotate_res_jac_mesh (
       for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 	{
 	  rotated_resid[kdir] +=
-	    svector[kdir][ldir]*lec->R[upd->ep[R_MESH1 + ldir]][irow_index] ;
+            svector[kdir][ldir]*lec->R[LEC_R_INDEX(upd->ep[R_MESH1 + ldir],irow_index)] ;
 	}
     }
   
@@ -499,7 +499,7 @@ rotate_res_jac_mesh (
 		  for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 		    {
 		      rotated_jacobian_vector[kdir][j][n]+=
-			svector[kdir][ldir] * lec->J[upd->ep[R_MESH1 + ldir]][pvar][irow_index][n];
+                        svector[kdir][ldir] * lec->J[LEC_J_INDEX(upd->ep[R_MESH1 + ldir],pvar,irow_index,n)];
 		    }
 		}
 	      
@@ -514,7 +514,7 @@ rotate_res_jac_mesh (
 			{
 			  rotated_jacobian_vector[kdir][j][ldof] +=  
 			    dsvector_dx[kdir][ldir][j][ldof]
-			       *lec->R[upd->ep[R_MESH1+ldir]][irow_index] ;
+                               *lec->R[LEC_R_INDEX(upd->ep[R_MESH1+ldir],irow_index)] ;
 			}
 		    } /* end of Baby_dolphin */
 		}	  
@@ -533,7 +533,7 @@ rotate_res_jac_mesh (
 	      for ( n=0; n< ei->dof[var]; n++ ) 
 		{
 		  
-		  lec->J[upd->ep[R_MESH1 + kdir]][pvar][irow_index][n]
+                  lec->J[LEC_J_INDEX(upd->ep[R_MESH1 + kdir],pvar,irow_index,n)]
 		    = rotated_jacobian_vector[kdir][j][n];
 		}
 	    }
@@ -557,7 +557,7 @@ rotate_res_jac_mesh (
 	      for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
 		{
 		  rotated_jacobian_scalar[kdir][n] += 
-		    svector[kdir][ldir]*lec->J[peq][pvar][irow_index][n];
+                    svector[kdir][ldir]*lec->J[LEC_J_INDEX(peq,pvar,irow_index,n)];
 		}
 	    }
 	  
@@ -565,7 +565,7 @@ rotate_res_jac_mesh (
 	  for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 	    {
 	      peq = upd->ep[R_MESH1+ldir];
-	      lec->J[peq][pvar][irow_index][n] = rotated_jacobian_scalar[ldir][n];
+              lec->J[LEC_J_INDEX(peq,pvar,irow_index,n)] = rotated_jacobian_scalar[ldir][n];
 	    }
 	} /* end of loop over nodes */
       } /* end of if variable */
@@ -586,7 +586,7 @@ rotate_res_jac_mesh (
 	      for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
 		{
 		  rotated_jacobian_scalar[kdir][n] += 
-		    svector[kdir][ldir]*lec->J[peq][pvar][irow_index][n];
+                    svector[kdir][ldir]*lec->J[LEC_J_INDEX(peq,pvar,irow_index,n)];
 		}
 	    }
 
@@ -594,7 +594,7 @@ rotate_res_jac_mesh (
 	  for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 	    {
 	      peq = upd->ep[R_MESH1+ldir];
-	      lec->J[peq][pvar][irow_index][n] = rotated_jacobian_scalar[ldir][n];
+              lec->J[LEC_J_INDEX(peq,pvar,irow_index,n)] = rotated_jacobian_scalar[ldir][n];
 	    }
 	} /* end of loop over nodes */
       } /* end of if variable */
@@ -619,14 +619,14 @@ rotate_res_jac_mesh (
 		  for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
 		    {
 		      rotated_jacobian_vector[kdir][jvar][n] += 
-			svector[kdir][ldir]*lec->J[peq][pvar][irow_index][n];
+                        svector[kdir][ldir]*lec->J[LEC_J_INDEX(peq,pvar,irow_index,n)];
 		    }
 		}
 	      /*reinject back into lec-J for global assembly */
 	      for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 		{
 		  peq = upd->ep[R_MESH1+ldir];
-		  lec->J[peq][pvar][irow_index][n] = rotated_jacobian_vector[ldir][jvar][n];
+                  lec->J[LEC_J_INDEX(peq,pvar,irow_index,n)] = rotated_jacobian_vector[ldir][jvar][n];
 		}
 	    } /* end of loop over nodes */
 	  } /* end of if variable */
@@ -655,7 +655,7 @@ rotate_res_jac_mesh (
 		    {
 		      
 		      rotated_jacobian_conc[kdir][w][n] += 
-			svector[kdir][ldir]*lec->J[peq][MAX_PROB_VAR + w][irow_index][n];
+                        svector[kdir][ldir]*lec->J[LEC_J_INDEX(peq,MAX_PROB_VAR + w,irow_index,n)];
 		    }
 		}
 	      
@@ -663,7 +663,7 @@ rotate_res_jac_mesh (
 	      for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 		{
 		  peq = upd->ep[R_MESH1+ldir];
-		  lec->J[peq][MAX_PROB_VAR + w][irow_index][n] = rotated_jacobian_conc[ldir][w][n];
+                  lec->J[LEC_J_INDEX(peq,MAX_PROB_VAR + w,irow_index,n)] = rotated_jacobian_conc[ldir][w][n];
 		}
 	    } /* end of loop over nodes */
 	  }   /* end of loop over concentration */
@@ -674,7 +674,7 @@ rotate_res_jac_mesh (
   /* Put rotated residual back into lec for scattering into global matrix */
   for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
     {
-      lec->R[ upd->ep[R_MESH1+kdir] ][irow_index] = rotated_resid[kdir];
+      lec->R[LEC_R_INDEX( upd->ep[R_MESH1+kdir] ,irow_index)] = rotated_resid[kdir];
     } 
   
 } /* END of rotate_res_jac_mesh */
@@ -772,7 +772,7 @@ rotate_mesh_eqn (
       rotated_resid[kdir] = 0.0;     
       for (ldir = 0; ldir < dim; ldir++) {
 	rotated_resid[kdir] += (rot->vector[ldir] *
-				lec->R[peqn_mesh[ldir]][id]);
+                                lec->R[LEC_R_INDEX(peqn_mesh[ldir],id)]);
       }
     }
   }
@@ -827,7 +827,7 @@ rotate_mesh_eqn (
 			  
 		  for (ldir = 0; ldir < dim; ldir++) {
 		    a[index] += 
-			rot->d_vector_dx[ldir][b][j] * lec->R[peqn_mesh[ldir]][id];
+                        rot->d_vector_dx[ldir][b][j] * lec->R[LEC_R_INDEX(peqn_mesh[ldir],id)];
 		  }
 		}
 	      }
@@ -862,7 +862,7 @@ rotate_mesh_eqn (
 		index = indx[K] + row_dofs * blk_col + blk_row; 
 		for (ldir = 0; ldir < dim; ldir++) {
 		  a[index] += (rot->d_vector_dx[ldir][b][j] *
-			       lec->R[peqn_mesh[ldir]][id]);
+                               lec->R[LEC_R_INDEX(peqn_mesh[ldir],id)]);
 		}
 	      }
 	    }  
@@ -894,7 +894,7 @@ rotate_mesh_eqn (
                   sum_val = 0;
                   for (ldir = 0; ldir < dim; ldir++) {
                     sum_val +=
-                        rot->d_vector_dx[ldir][b][j] * lec->R[peqn_mesh[ldir]][id];
+                        rot->d_vector_dx[ldir][b][j] * lec->R[LEC_R_INDEX(peqn_mesh[ldir],id)];
                   }
                   global_row = ams->GlobalIDs[index_eqn];
                   global_col = ams->GlobalIDs[index_var];
@@ -917,7 +917,7 @@ rotate_mesh_eqn (
 		for (ldir = 0; ldir < dim; ldir++) {
 		  rotated_jacobian_vector[kdir][b][w] += 
 		      (rot->d_vector_dx[ldir][b][j] *
-		       lec->R[peqn_mesh[ldir]][id]);
+                       lec->R[LEC_R_INDEX(peqn_mesh[ldir],id)]);
 		}
 	      }
 	    }
@@ -940,27 +940,27 @@ rotate_mesh_eqn (
 	    case 2:
 		for (n = 0; n < ei->dof[v]; n++) {
 		  rotated_jacobian_scalar[0][n] = 
-		      rot_n->vector[0] * lec->J[peqn_mesh[0]][pv][id][n] +
-		      rot_n->vector[1] * lec->J[peqn_mesh[1]][pv][id][n];
+                      rot_n->vector[0] * lec->J[LEC_J_INDEX(peqn_mesh[0],pv,id,n)] +
+                      rot_n->vector[1] * lec->J[LEC_J_INDEX(peqn_mesh[1],pv,id,n)];
 		  rotated_jacobian_scalar[1][n] = 
-		      rot_t1->vector[0] * lec->J[peqn_mesh[0]][pv][id][n] +
-		      rot_t1->vector[1] * lec->J[peqn_mesh[1]][pv][id][n];
+                      rot_t1->vector[0] * lec->J[LEC_J_INDEX(peqn_mesh[0],pv,id,n)] +
+                      rot_t1->vector[1] * lec->J[LEC_J_INDEX(peqn_mesh[1],pv,id,n)];
 		}	    
 		break;
 	    case 3:
 		for (n = 0; n < ei->dof[v]; n++) {
 		  rotated_jacobian_scalar[0][n] = 
-		      rot_n->vector[0] * lec->J[peqn_mesh[0]][pv][id][n] +
-		      rot_n->vector[1] * lec->J[peqn_mesh[1]][pv][id][n] +
-		      rot_n->vector[2] * lec->J[peqn_mesh[2]][pv][id][n];
+                      rot_n->vector[0] * lec->J[LEC_J_INDEX(peqn_mesh[0],pv,id,n)] +
+                      rot_n->vector[1] * lec->J[LEC_J_INDEX(peqn_mesh[1],pv,id,n)] +
+                      rot_n->vector[2] * lec->J[LEC_J_INDEX(peqn_mesh[2],pv,id,n)];
 		  rotated_jacobian_scalar[1][n] =
-		      rot_t1->vector[0] * lec->J[peqn_mesh[0]][pv][id][n] +
-		      rot_t1->vector[1] * lec->J[peqn_mesh[1]][pv][id][n] +
-		      rot_t1->vector[2] * lec->J[peqn_mesh[2]][pv][id][n];
+                      rot_t1->vector[0] * lec->J[LEC_J_INDEX(peqn_mesh[0],pv,id,n)] +
+                      rot_t1->vector[1] * lec->J[LEC_J_INDEX(peqn_mesh[1],pv,id,n)] +
+                      rot_t1->vector[2] * lec->J[LEC_J_INDEX(peqn_mesh[2],pv,id,n)];
 		  rotated_jacobian_scalar[2][n] =
-		      rot_t2->vector[0] * lec->J[peqn_mesh[0]][pv][id][n] +
-		      rot_t2->vector[1] * lec->J[peqn_mesh[1]][pv][id][n] +
-		      rot_t2->vector[2] * lec->J[peqn_mesh[2]][pv][id][n];
+                      rot_t2->vector[0] * lec->J[LEC_J_INDEX(peqn_mesh[0],pv,id,n)] +
+                      rot_t2->vector[1] * lec->J[LEC_J_INDEX(peqn_mesh[1],pv,id,n)] +
+                      rot_t2->vector[2] * lec->J[LEC_J_INDEX(peqn_mesh[2],pv,id,n)];
 		}
 		break;
 	    }
@@ -971,7 +971,7 @@ rotate_mesh_eqn (
 	      if (rotation[I][eq][kdir]->ok) {
 		peqn = peqn_mesh[kdir];
 		for (n = 0; n < ei->dof[v]; n++) {	      
-		  lec->J[peqn][pv][id][n] = rotated_jacobian_scalar[kdir][n];
+                  lec->J[LEC_J_INDEX(peqn,pv,id,n)] = rotated_jacobian_scalar[kdir][n];
 		}
 	      }
 	    }
@@ -981,27 +981,27 @@ rotate_mesh_eqn (
 	  case 2:
 	      for (n = 0; n < ei->dof[v]; n++) {
 		rotated_jacobian_scalar[0][n] = 
-		    rot_n->vector[0] * lec->J[peqn_mesh[0]][pv][id][n] +
-		    rot_n->vector[1] * lec->J[peqn_mesh[1]][pv][id][n];
+                    rot_n->vector[0] * lec->J[LEC_J_INDEX(peqn_mesh[0],pv,id,n)] +
+                    rot_n->vector[1] * lec->J[LEC_J_INDEX(peqn_mesh[1],pv,id,n)];
 		rotated_jacobian_scalar[1][n] = 
-		    rot_t1->vector[0] * lec->J[peqn_mesh[0]][pv][id][n] +
-		    rot_t1->vector[1] * lec->J[peqn_mesh[1]][pv][id][n];
+                    rot_t1->vector[0] * lec->J[LEC_J_INDEX(peqn_mesh[0],pv,id,n)] +
+                    rot_t1->vector[1] * lec->J[LEC_J_INDEX(peqn_mesh[1],pv,id,n)];
 	      }	    
 	      break;
 	  case 3:
 	      for (n = 0; n < ei->dof[v]; n++) {
 		rotated_jacobian_scalar[0][n] = 
-		    rot_n->vector[0] * lec->J[peqn_mesh[0]][pv][id][n] +
-		    rot_n->vector[1] * lec->J[peqn_mesh[1]][pv][id][n] +
-		    rot_n->vector[2] * lec->J[peqn_mesh[2]][pv][id][n];
+                    rot_n->vector[0] * lec->J[LEC_J_INDEX(peqn_mesh[0],pv,id,n)] +
+                    rot_n->vector[1] * lec->J[LEC_J_INDEX(peqn_mesh[1],pv,id,n)] +
+                    rot_n->vector[2] * lec->J[LEC_J_INDEX(peqn_mesh[2],pv,id,n)];
 		rotated_jacobian_scalar[1][n] =
-		    rot_t1->vector[0] * lec->J[peqn_mesh[0]][pv][id][n] +
-		    rot_t1->vector[1] * lec->J[peqn_mesh[1]][pv][id][n] +
-		    rot_t1->vector[2] * lec->J[peqn_mesh[2]][pv][id][n];
+                    rot_t1->vector[0] * lec->J[LEC_J_INDEX(peqn_mesh[0],pv,id,n)] +
+                    rot_t1->vector[1] * lec->J[LEC_J_INDEX(peqn_mesh[1],pv,id,n)] +
+                    rot_t1->vector[2] * lec->J[LEC_J_INDEX(peqn_mesh[2],pv,id,n)];
 		rotated_jacobian_scalar[2][n] =
-		    rot_t2->vector[0] * lec->J[peqn_mesh[0]][pv][id][n] +
-		    rot_t2->vector[1] * lec->J[peqn_mesh[1]][pv][id][n] +
-		    rot_t2->vector[2] * lec->J[peqn_mesh[2]][pv][id][n];
+                    rot_t2->vector[0] * lec->J[LEC_J_INDEX(peqn_mesh[0],pv,id,n)] +
+                    rot_t2->vector[1] * lec->J[LEC_J_INDEX(peqn_mesh[1],pv,id,n)] +
+                    rot_t2->vector[2] * lec->J[LEC_J_INDEX(peqn_mesh[2],pv,id,n)];
 	      }
 	      break;
 	  }
@@ -1012,7 +1012,7 @@ rotate_mesh_eqn (
 	    if (rotation[I][eq][kdir]->ok) {
 	      peqn = peqn_mesh[kdir];
 	      for (n = 0; n < ei->dof[v]; n++) {	      
-		lec->J[peqn][pv][id][n] = rotated_jacobian_scalar[kdir][n];
+                lec->J[LEC_J_INDEX(peqn,pv,id,n)] = rotated_jacobian_scalar[kdir][n];
 	      }
 	    }
 	  }
@@ -1033,7 +1033,7 @@ rotate_mesh_eqn (
 	    var = R_MESH1 + j;
 	    pvar = upd->vp[var];
 	    for (n = 0; n < ei->dof[var]; n++ ) {
-	      lec->J[peqn][pvar][id][n] += rotated_jacobian_vector[kdir][j][n];
+              lec->J[LEC_J_INDEX(peqn,pvar,id,n)] += rotated_jacobian_vector[kdir][j][n];
 	    }
 	  }
 	}
@@ -1047,7 +1047,7 @@ rotate_mesh_eqn (
   for (kdir = 0; kdir < dim; kdir++) {
     rot = rotation[I][eq][kdir];
     if (rot->ok) {
-      lec->R[peqn_mesh[kdir]][id] = rotated_resid[kdir];
+      lec->R[LEC_R_INDEX(peqn_mesh[kdir],id)] = rotated_resid[kdir];
     }
   }    
 } /* END of rotate_mesh_eqn */
@@ -1087,6 +1087,8 @@ rotate_momentum_eqn (
   double    rotated_jacobian_vector[MAX_PDIM][MAX_PDIM][MDE];
   double    rotated_jacobian_scalar[MAX_PDIM][MDE];
   double    rotated_jacobian_conc[MAX_PDIM][MAX_CONC][MDE];
+  int v_s[MAX_MODES][DIM][DIM];
+  int v_g[DIM][DIM];
 
 /************************ EXECUTION BEGINS **********************************/
   eq = VECT_EQ_MOM;
@@ -1096,6 +1098,20 @@ rotate_momentum_eqn (
 /*       i.e.,    Rn = nx*Rx + ny*Ry + nz*Rz                                 */
 /*                Rt1 = t1x*Rx + t1y*Ry + t1z*Rz                             */
 /*                Rt2 = t2x*Rx + t2y*Ry + t2z*Rz                             */
+  if( pd->v[POLYMER_STRESS11] )
+    {
+      (void) stress_eqn_pointer(v_s);
+
+      v_g[0][0] = VELOCITY_GRADIENT11;
+      v_g[0][1] = VELOCITY_GRADIENT12;
+      v_g[1][0] = VELOCITY_GRADIENT21;
+      v_g[1][1] = VELOCITY_GRADIENT22;
+      v_g[0][2] = VELOCITY_GRADIENT13;
+      v_g[1][2] = VELOCITY_GRADIENT23;
+      v_g[2][0] = VELOCITY_GRADIENT31;
+      v_g[2][1] = VELOCITY_GRADIENT32;
+      v_g[2][2] = VELOCITY_GRADIENT33;
+    }
 
 
   /* Now add on projection into n-t space */
@@ -1107,7 +1123,7 @@ rotate_momentum_eqn (
 	  {
 	    peq = upd->ep[R_MOMENTUM1+ldir];
 	    rotated_resid[kdir] += 
-	      rotation[I][eq][kdir]->vector[ldir]*lec->R[peq][id];
+              rotation[I][eq][kdir]->vector[ldir]*lec->R[LEC_R_INDEX(peq,id)];
 	  }
       }
     } /* end of loop over direction */
@@ -1141,7 +1157,7 @@ rotate_momentum_eqn (
 		    {
 		      rotated_jacobian_vector[kdir][b][j] += 
 			  rotation[I][eq][kdir]->vector[ldir] * 
-			  lec->J[upd->ep[R_MOMENTUM1 + ldir]][pvar][id][j];
+                          lec->J[LEC_J_INDEX(upd->ep[R_MOMENTUM1 + ldir],pvar,id,j)];
 		    }
 		}
 
@@ -1172,7 +1188,7 @@ rotate_momentum_eqn (
 		    for (ldir = 0; ldir < dim; ldir++) {
 		      a[index] +=  
 			  rotation[I][eq][kdir]->d_vector_dx[ldir][b][j]
-			  * lec->R[upd->ep[R_MESH1+ldir]][id];
+                          * lec->R[LEC_R_INDEX(upd->ep[R_MESH1+ldir],id)];
 		    }
 		  } /* end of Baby_dolphin */
 		}
@@ -1210,7 +1226,7 @@ rotate_momentum_eqn (
 			    {
 			      a[index] +=  
 				rotation[I][eq][kdir]->d_vector_dx[ldir][b][j]
-				* lec->R[upd->ep[R_MESH1+ldir]][id];
+                                * lec->R[LEC_R_INDEX(upd->ep[R_MESH1+ldir],id)];
 			    }
 			}
 		    }
@@ -1246,7 +1262,7 @@ rotate_momentum_eqn (
 
                     for (ldir = 0; ldir < dim; ldir++) {
                       sum_val += rotation[I][eq][kdir]->d_vector_dx[ldir][b][j]
-                          * lec->R[upd->ep[R_MESH1 + ldir]][id];
+                          * lec->R[LEC_R_INDEX(upd->ep[R_MESH1 + ldir],id)];
                     }
                     global_row = ams->GlobalIDs[index_eqn];
                     global_col = ams->GlobalIDs[index_var];
@@ -1271,7 +1287,7 @@ rotate_momentum_eqn (
 			  for (ldir = 0; ldir < dim; ldir++)
 			    {
 			      rotated_jacobian_vector[kdir][b][w] += 
-				rotation[I][eq][kdir]->d_vector_dx[ldir][b][j] * lec->R[upd->ep[R_MESH1+ldir]][id];
+                                rotation[I][eq][kdir]->d_vector_dx[ldir][b][j] * lec->R[LEC_R_INDEX(upd->ep[R_MESH1+ldir],id)];
 			    }
 			}
 		    }
@@ -1291,7 +1307,7 @@ rotate_momentum_eqn (
 		pvar = upd->vp[var];
 		for ( n=0; n< ei->dof[var]; n++ ) 
 		  {
-		    lec->J[upd->ep[R_MOMENTUM1 + kdir]][pvar][id][n]
+                    lec->J[LEC_J_INDEX(upd->ep[R_MOMENTUM1 + kdir],pvar,id,n)]
 		      = rotated_jacobian_vector[kdir][j][n];
 		  }
 	      }
@@ -1315,7 +1331,7 @@ rotate_momentum_eqn (
 	      for (ldir = 0; ldir < dim; ldir++)
 		{
 		  rotated_jacobian_scalar[kdir][n] += 
-		    rotation[I][eq][kdir]->vector[ldir] * lec->J[upd->ep[R_MOMENTUM1+ldir]][pvar][id][n];
+                    rotation[I][eq][kdir]->vector[ldir] * lec->J[LEC_J_INDEX(upd->ep[R_MOMENTUM1+ldir],pvar,id,n)];
 		}
 	      }
 	    }
@@ -1330,14 +1346,102 @@ rotate_momentum_eqn (
 	      for ( n=0; n< ei->dof[var]; n++ ) 
 		{
 		  
-		  lec->J[upd->ep[R_MOMENTUM1+ kdir]][pvar][id][n]
+                  lec->J[LEC_J_INDEX(upd->ep[R_MOMENTUM1+ kdir],pvar,id,n)]
 		    = rotated_jacobian_scalar[kdir][n];
 		}
 	    }
 	  }
 
       } /* end of if variable */
+
+      var = POLYMER_STRESS11;
+      if (pd->v[var]) {
+	for (int mode = 0; mode < vn->modes; mode++) {
+	  for (int p = 0; p < VIM; p++) {
+	    for (int q = 0; q < VIM; q++) {
+	      if (q >= p) {
+                var = v_s[mode][p][q];
+	        pvar = upd->vp[var];
+	        for ( n=0; n<ei->dof[var]; n++) {
+
+	          rotated_jacobian_scalar[0][n] = 0.;
+	          rotated_jacobian_scalar[1][n] = 0.;
+	          rotated_jacobian_scalar[2][n] = 0.;
+	          
+	          for (kdir = 0; kdir < dim; kdir++) {
+	            if (rotation[I][eq][kdir]->ok) {
+	              eqn=R_MOMENTUM1+kdir;
+	              for (ldir = 0; ldir < dim; ldir++)
+	        	{
+	        	  rotated_jacobian_scalar[kdir][n] += 
+                            rotation[I][eq][kdir]->vector[ldir] * lec->J[LEC_J_INDEX(upd->ep[R_MOMENTUM1+ldir],pvar,id,n)];
+	        	}
+		    }
+		  }
+
+	        } /* end of loop over nodes */
+	        
+	        /* reinject d_mesh/d_pressure back into lec-J for global assembly */
+	        for (kdir = 0; kdir < dim; kdir++)
+	          {
+	            if (rotation[I][eq][kdir]->ok) {
+	              /* loop over sensitivities */
+	              for ( n=0; n< ei->dof[var]; n++ ) 
+	        	{
+	        	  
+                          lec->J[LEC_J_INDEX(upd->ep[R_MOMENTUM1+ kdir],pvar,id,n)]
+	        	    = rotated_jacobian_scalar[kdir][n];
+	        	}
+	            }
+	          }
+	      }
+	    }
+	  }
+	}
+      } /* end of if variable */
       
+      var = VELOCITY_GRADIENT11;
+      if (pd->v[var]) {
+	for (int p = 0; p < VIM; p++) {
+	  for (int q = 0; q < VIM; q++) {
+            var = v_g[p][q];
+	    pvar = upd->vp[var];
+	    for ( n=0; n<ei->dof[var]; n++) {
+
+	      rotated_jacobian_scalar[0][n] = 0.;
+	      rotated_jacobian_scalar[1][n] = 0.;
+	      rotated_jacobian_scalar[2][n] = 0.;
+	      
+	      for (kdir = 0; kdir < dim; kdir++) {
+	        if (rotation[I][eq][kdir]->ok) {
+	          eqn=R_MOMENTUM1+kdir;
+	          for (ldir = 0; ldir < dim; ldir++)
+		    {
+		      rotated_jacobian_scalar[kdir][n] += 
+                        rotation[I][eq][kdir]->vector[ldir] * lec->J[LEC_J_INDEX(upd->ep[R_MOMENTUM1+ldir],pvar,id,n)];
+		    }
+		}
+	      }
+
+	    } /* end of loop over nodes */
+	    
+	    /* reinject d_mesh/d_pressure back into lec-J for global assembly */
+	    for (kdir = 0; kdir < dim; kdir++)
+	      {
+	        if (rotation[I][eq][kdir]->ok) {
+	          /* loop over sensitivities */
+	          for ( n=0; n< ei->dof[var]; n++ ) 
+		    {
+	    	  
+                      lec->J[LEC_J_INDEX(upd->ep[R_MOMENTUM1+ kdir],pvar,id,n)]
+			= rotated_jacobian_scalar[kdir][n];
+		    }
+	        }
+	      }
+	  }
+	}
+      } /* end of if variable */
+
       /* momentum wrt. temperature */
       var = TEMPERATURE;
       if (pd->v[var]){
@@ -1355,7 +1459,7 @@ rotate_momentum_eqn (
 		for (ldir = 0; ldir < dim; ldir++)
 		  {
 		    rotated_jacobian_scalar[kdir][n] += 
-		      rotation[I][eq][kdir]->vector[ldir]*lec->J[upd->ep[R_MOMENTUM1+ldir]][pvar][id][n];
+                      rotation[I][eq][kdir]->vector[ldir]*lec->J[LEC_J_INDEX(upd->ep[R_MOMENTUM1+ldir],pvar,id,n)];
 		    /*                                should this be a ldir or a kdir? | */
 		  }
 		}
@@ -1371,7 +1475,7 @@ rotate_momentum_eqn (
 	      for ( n=0; n< ei->dof[var]; n++ ) 
 		{
 		  
-		  lec->J[upd->ep[R_MOMENTUM1+ kdir]][pvar][id][n]
+                  lec->J[LEC_J_INDEX(upd->ep[R_MOMENTUM1+ kdir],pvar,id,n)]
 		    = rotated_jacobian_scalar[kdir][n];
 		}
 	    }
@@ -1399,7 +1503,7 @@ rotate_momentum_eqn (
 		for (ldir = 0; ldir < dim; ldir++)
 		  {
 		    rotated_jacobian_scalar[kdir][n] += 
-		      rotation[I][eq][kdir]->vector[ldir]*lec->J[upd->ep[R_MOMENTUM1+ldir]][pvar][id][n];
+                      rotation[I][eq][kdir]->vector[ldir]*lec->J[LEC_J_INDEX(upd->ep[R_MOMENTUM1+ldir],pvar,id,n)];
 		    /*                                should this be a ldir or a kdir? | */
 		  }
 		}
@@ -1415,7 +1519,7 @@ rotate_momentum_eqn (
 	      for ( n=0; n< ei->dof[var]; n++ ) 
 		{
 		  
-		  lec->J[upd->ep[R_MOMENTUM1+ kdir]][pvar][id][n]
+                  lec->J[LEC_J_INDEX(upd->ep[R_MOMENTUM1+ kdir],pvar,id,n)]
 		    = rotated_jacobian_scalar[kdir][n];
 		}
 	    }
@@ -1446,7 +1550,7 @@ rotate_momentum_eqn (
 		    for (ldir = 0; ldir < dim; ldir++)
 		      {
 			rotated_jacobian_vector[kdir][jvar][n] += 
-			  rotation[I][eq][kdir]->vector[ldir]*lec->J[upd->ep[R_MOMENTUM1+ldir]][pvar][id][n];
+                          rotation[I][eq][kdir]->vector[ldir]*lec->J[LEC_J_INDEX(upd->ep[R_MOMENTUM1+ldir],pvar,id,n)];
 		      }
 		    }
 		}
@@ -1466,7 +1570,7 @@ rotate_momentum_eqn (
 		pvar = upd->vp[var];
 		for ( n=0; n< ei->dof[var]; n++ ) 
 		  {
-		    lec->J[upd->ep[R_MOMENTUM1 + kdir]][pvar][id][n]
+                    lec->J[LEC_J_INDEX(upd->ep[R_MOMENTUM1 + kdir],pvar,id,n)]
 		      = rotated_jacobian_vector[kdir][j][n];
 		  }
 	      }
@@ -1494,7 +1598,7 @@ rotate_momentum_eqn (
 		      {
 			rotated_jacobian_conc[kdir][w][n] +=
 			  rotation[I][eq][kdir]->vector[ldir]*
-			  lec->J[upd->ep[R_MOMENTUM1+ldir]][MAX_PROB_VAR + w][id][n];
+                          lec->J[LEC_J_INDEX(upd->ep[R_MOMENTUM1+ldir],MAX_PROB_VAR + w,id,n)];
 		      }
 		  }
 		}
@@ -1515,7 +1619,7 @@ rotate_momentum_eqn (
 		  for ( n=0; n< ei->dof[var]; n++ ) 
 		    {
 		      
-		      lec->J[upd->ep[R_MOMENTUM1 + kdir]][pvar][id][n]
+                      lec->J[LEC_J_INDEX(upd->ep[R_MOMENTUM1 + kdir],pvar,id,n)]
 			= rotated_jacobian_scalar[kdir][n];
 		    }
 		}
@@ -1533,7 +1637,7 @@ rotate_momentum_eqn (
     {
       if (rotation[I][eq][kdir]->ok) {
 	peq = upd->ep[R_MOMENTUM1+kdir];
-	lec->R[peq][id] = rotated_resid[kdir];
+        lec->R[LEC_R_INDEX(peq,id)] = rotated_resid[kdir];
       }
     } 
   
@@ -1593,6 +1697,22 @@ rotate_res_jac_mom (
   /***************************** execution begins **********************************/
   
   ShapeVar = pd->ShapeVar;
+  int v_s[MAX_MODES][DIM][DIM];
+  int v_g[DIM][DIM];
+  if( pd->v[POLYMER_STRESS11] )
+    {
+      (void) stress_eqn_pointer(v_s);
+
+      v_g[0][0] = VELOCITY_GRADIENT11;
+      v_g[0][1] = VELOCITY_GRADIENT12;
+      v_g[1][0] = VELOCITY_GRADIENT21;
+      v_g[1][1] = VELOCITY_GRADIENT22;
+      v_g[0][2] = VELOCITY_GRADIENT13;
+      v_g[1][2] = VELOCITY_GRADIENT23;
+      v_g[2][0] = VELOCITY_GRADIENT31;
+      v_g[2][1] = VELOCITY_GRADIENT32;
+      v_g[2][2] = VELOCITY_GRADIENT33;
+    }
   
   
   /* Correct residual equation first at local node "irow_index" or global node "I" */
@@ -1687,7 +1807,7 @@ rotate_res_jac_mom (
       for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 	{
 	  rotated_resid[kdir] +=
-	    svector[kdir][ldir]*lec->R[upd->ep[R_MOMENTUM1 + ldir]][irow_index];
+            svector[kdir][ldir]*lec->R[LEC_R_INDEX(upd->ep[R_MOMENTUM1 + ldir],irow_index)];
 	}
       
     } /* end of loop over direction */
@@ -1717,7 +1837,7 @@ rotate_res_jac_mom (
 			{
 			  
 			  rotated_jacobian_vector[kdir][j][n]+=
-			    svector[kdir][ldir]*lec->J[upd->ep[R_MOMENTUM1 + ldir]][pvar][irow_index][n];
+                            svector[kdir][ldir]*lec->J[LEC_J_INDEX(upd->ep[R_MOMENTUM1 + ldir],pvar,irow_index,n)];
 			}
 		    }
 		  
@@ -1732,7 +1852,7 @@ rotate_res_jac_mom (
 			    {
 			      rotated_jacobian_vector[kdir][j][ldof] +=  
 				dsvector_dx[kdir][ldir][j][ldof]
-				*lec->R[upd->ep[R_MOMENTUM1+ldir]][irow_index];
+                                *lec->R[LEC_R_INDEX(upd->ep[R_MOMENTUM1+ldir],irow_index)];
 			    }
 			} /*end of Baby_dolphin */
 		    }	  
@@ -1752,7 +1872,7 @@ rotate_res_jac_mom (
 	      
 	      for ( n=0; n< ei->dof[var]; n++ ) 
 		{
-		  lec->J[upd->ep[R_MOMENTUM1 + kdir]][pvar][irow_index][n]
+                  lec->J[LEC_J_INDEX(upd->ep[R_MOMENTUM1 + kdir],pvar,irow_index,n)]
 		    = rotated_jacobian_vector[kdir][j][n];
 		}
 	      
@@ -1776,16 +1896,85 @@ rotate_res_jac_mom (
 	      for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
 		{
 		  rotated_jacobian_scalar[kdir][n] += 
-		    svector[kdir][ldir]*lec->J[peq][pvar][irow_index][n];
+                    svector[kdir][ldir]*lec->J[LEC_J_INDEX(peq,pvar,irow_index,n)];
 		}
 	    }
 	  /*reinject back into lec-J  for global assembly */
 	  for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 	    {
 	      peq = upd->ep[R_MOMENTUM1+ldir];
-	      lec->J[peq][pvar][irow_index][n] = rotated_jacobian_scalar[ldir][n];
+              lec->J[LEC_J_INDEX(peq,pvar,irow_index,n)] = rotated_jacobian_scalar[ldir][n];
 	    }
 	} /* end of loop over nodes */
+      } /* end of if variable */
+      var = POLYMER_STRESS11;
+      if (pd->v[var]) {
+	for (int mode = 0; mode < vn->modes; mode++) {
+	  for (int p = 0; p < VIM; p++) {
+	    for (int q = 0; q < VIM; q++) {
+              if (q >= p) {
+                var = v_s[mode][p][q];
+	        pvar = upd->vp[var];
+          	for ( n=0; n<ei->dof[var]; n++) {
+          	  
+          	  for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
+          	    {
+          	      rotated_jacobian_scalar[kdir][n] = 0.;
+          	    }
+          	  
+          	  for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
+          	    {
+          	      peq = upd->ep[R_MOMENTUM1+ldir];
+          	      for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
+          		{
+          		  rotated_jacobian_scalar[kdir][n] += 
+                            svector[kdir][ldir]*lec->J[LEC_J_INDEX(peq,pvar,irow_index,n)];
+          		}
+          	    }
+          	  /*reinject back into lec-J  for global assembly */
+          	  for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
+          	    {
+          	      peq = upd->ep[R_MOMENTUM1+ldir];
+                      lec->J[LEC_J_INDEX(peq,pvar,irow_index,n)] = rotated_jacobian_scalar[ldir][n];
+          	    }
+          	} /* end of loop over nodes */
+	      }
+	    }
+	  }
+	}
+      } /* end of if variable */
+
+      var = VELOCITY_GRADIENT11;
+      if (pd->v[var]) {
+	for (int p = 0; p < VIM; p++) {
+	  for (int q = 0; q < VIM; q++) {
+            var = v_g[p][q];
+	    pvar = upd->vp[var];
+	    for ( n=0; n<ei->dof[var]; n++) {
+                
+	      for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
+		{
+		  rotated_jacobian_scalar[kdir][n] = 0.;
+		}
+                
+	      for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
+		{
+		  peq = upd->ep[R_MOMENTUM1+ldir];
+		  for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
+		    {
+		      rotated_jacobian_scalar[kdir][n] += 
+                        svector[kdir][ldir]*lec->J[LEC_J_INDEX(peq,pvar,irow_index,n)];
+		    }
+		}
+	      /*reinject back into lec-J  for global assembly */
+	      for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
+		{
+		  peq = upd->ep[R_MOMENTUM1+ldir];
+                  lec->J[LEC_J_INDEX(peq,pvar,irow_index,n)] = rotated_jacobian_scalar[ldir][n];
+		}
+	    } /* end of loop over nodes */
+	  }
+	}
       } /* end of if variable */
       
       /* momentum wrt. temperature */
@@ -1804,14 +1993,14 @@ rotate_res_jac_mom (
 	      for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
 		{
 		  rotated_jacobian_scalar[kdir][n] += 
-		    svector[kdir][ldir]*lec->J[peq][pvar][irow_index][n];
+                    svector[kdir][ldir]*lec->J[LEC_J_INDEX(peq,pvar,irow_index,n)];
 		}
 	    }
 	  /*reinject back into lec-J for frontal solver */
 	  for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 	    {
 	      peq = upd->ep[R_MOMENTUM1+ldir];
-	      lec->J[peq][pvar][irow_index][n] = rotated_jacobian_scalar[ldir][n];
+              lec->J[LEC_J_INDEX(peq,pvar,irow_index,n)] = rotated_jacobian_scalar[ldir][n];
 	    }
 	} /* end of loop over nodes */
       } /* end of if variable */
@@ -1833,14 +2022,14 @@ rotate_res_jac_mom (
 	      for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
 		{
 		  rotated_jacobian_scalar[kdir][n] += 
-		    svector[kdir][ldir]*lec->J[peq][pvar][irow_index][n];
+                    svector[kdir][ldir]*lec->J[LEC_J_INDEX(peq,pvar,irow_index,n)];
 		}
 	    }
 	  /*reinject back into lec-J for frontal solver */
 	  for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 	    {
 	      peq = upd->ep[R_MOMENTUM1+ldir];
-	      lec->J[peq][pvar][irow_index][n] = rotated_jacobian_scalar[ldir][n];
+              lec->J[LEC_J_INDEX(peq,pvar,irow_index,n)] = rotated_jacobian_scalar[ldir][n];
 	    }
 	} /* end of loop over nodes */
       } /* end of if variable */
@@ -1865,14 +2054,14 @@ rotate_res_jac_mom (
 		  for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
 		    {
 		      rotated_jacobian_vector[kdir][jvar][n] +=
-			svector[kdir][ldir]*lec->J[peq][pvar][irow_index][n];
+                        svector[kdir][ldir]*lec->J[LEC_J_INDEX(peq,pvar,irow_index,n)];
 		    }
 		}
 	      /*reinject back into lec-J for global assembly */
 	      for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 		{
 		  peq = upd->ep[R_MOMENTUM1+ldir];
-		  lec->J[peq][pvar][irow_index][n] = rotated_jacobian_vector[ldir][jvar][n];
+                  lec->J[LEC_J_INDEX(peq,pvar,irow_index,n)] = rotated_jacobian_vector[ldir][jvar][n];
 		}
 	      
 	    } /* end of loop over nodes */
@@ -1898,14 +2087,14 @@ rotate_res_jac_mom (
 		    {
 		      
 		      rotated_jacobian_conc[kdir][w][n] += 
-			svector[kdir][ldir]*lec->J[peq][MAX_PROB_VAR + w][irow_index][n];
+                        svector[kdir][ldir]*lec->J[LEC_J_INDEX(peq,MAX_PROB_VAR + w,irow_index,n)];
 		    }
 		}
 	      /*reinject back into lec-J for frontal solver */
 	      for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 		{
 		  peq = upd->ep[R_MOMENTUM1+ldir];
-		  lec->J[peq][MAX_PROB_VAR + w][irow_index][n] = rotated_jacobian_conc[ldir][w][n];
+                  lec->J[LEC_J_INDEX(peq,MAX_PROB_VAR + w,irow_index,n)] = rotated_jacobian_conc[ldir][w][n];
 		}
 	    } /* end of loop over nodes */
 	  }
@@ -1916,7 +2105,7 @@ rotate_res_jac_mom (
   /* Put rotated residual back into lec for scattering into global matrix */
   for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
     {
-      lec->R[ upd->ep[R_MOMENTUM1+kdir] ][irow_index] = rotated_resid[kdir];
+      lec->R[LEC_R_INDEX( upd->ep[R_MOMENTUM1+kdir],irow_index)] = rotated_resid[kdir];
     } 
   
   

@@ -81,6 +81,7 @@ static char rcsid[] =
 #include "mm_std_models.h"
 #include "shell_tfmp_struct.h"
 #include "shell_tfmp_util.h"
+#include "mm_fill_stress.h"
 /*
  * Global variable definitions.
  * This is the 1 place these variables are defined. If you need them
@@ -263,6 +264,7 @@ int LUB_VELO_UPPER = -1;
 int LUB_VELO_LOWER = -1;
 int LUB_VELO_FIELD = -1;
 int LUB_VELO_FIELD_2 = -1;
+int LUB_FLUID_SOURCE = -1;
 int DISJ_PRESS = -1;
 int SH_SAT_OPEN = -1;
 int SH_SAT_OPEN_2 = -1;
@@ -293,6 +295,9 @@ int HELICITY = -1;
 int LAMB_VECTOR = -1;
 int Q_FCN = -1;		      
 int POYNTING_VECTORS = -1;   	/* conduction flux vectors*/
+int SARAMITO_YIELD = -1;
+int STRESS_NORM = -1;
+int SPECIES_SOURCES = -1;   	/* continuous species sources*/
 
 int len_u_post_proc = 0;	/* size of dynamically allocated u_post_proc
 				 * actually is */
@@ -318,6 +323,7 @@ double *u_post_proc = 0;       	/* user-provided values used in calculating
 /*
  *  Global Variables Defined in this file:
  */
+static int *listel;
 
 /**********************************************************************/
 /**********************************************************************/
@@ -346,7 +352,7 @@ PROTO((double **,		/* post_proc_vect - rhs vector now called
        struct Porous_Media_Terms  *,
        double,                  /* time */
        Exo_DB * const,
-       double []
+       double [DIM]
        ));
 
 static int calc_zz_error_vel	/* mm_post_proc.c                            */
@@ -689,7 +695,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
                      }
                  }
 #ifdef ANALEIG_PLEASE
-              analytical_exp_s(log_c, exp_s, eig_values, R1);
+              analytical_exp_s(log_c, exp_s, eig_values, R1, NULL);
 #else
               compute_exp_s(log_c, exp_s, eig_values, R1);
 #endif
@@ -784,7 +790,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
                      }
                  }
 #ifdef ANALEIG_PLEASE
-              analytical_exp_s(log_c, exp_s, eig_values, R1);
+              analytical_exp_s(log_c, exp_s, eig_values, R1, NULL);
 #else
               compute_exp_s(log_c, exp_s, eig_values, R1);
 #endif
@@ -897,7 +903,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
                      }
                  }
 #ifdef ANALEIG_PLEASE
-              analytical_exp_s(log_c, exp_s, eig_values, R1);
+              analytical_exp_s(log_c, exp_s, eig_values, R1, NULL);
 #else
               compute_exp_s(log_c, exp_s, eig_values, R1);
 #endif
@@ -2195,6 +2201,53 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       local_lumped[POYNTING_VECTORS + a] = 1.;
      }
   }
+  
+  /* calculate species sources  */
+  if(SPECIES_SOURCES != -1)
+  {
+    err = get_continuous_species_terms(&s_terms, time, theta, delta_t, hs);
+    for ( w=0; w<pd->Num_Species_Eqn; w++)
+	{
+	  local_post[SPECIES_SOURCES + w] = s_terms.MassSource[w];
+	  local_lumped[SPECIES_SOURCES + w] = 1.;
+	}
+  }
+
+  if(STRESS_NORM != -1)
+  {  
+    for (int mode = 0; mode < vn->modes; mode++) {
+
+      dbl traceOverVim = 0;
+      for(int i=0; i<VIM; i++){
+        traceOverVim += fv->S[mode][i][i];
+      }
+
+      traceOverVim /= VIM;
+
+      // square of the deviatoric sress norm
+      dbl normOfStressDSqr = 0;
+      for(int i=0; i<VIM; i++){
+        normOfStressDSqr += pow(fv->S[mode][i][i] - traceOverVim, 2)/2.;
+
+        for(int j=i+1; j<VIM; j++){
+          normOfStressDSqr += pow(fv->S[mode][i][j], 2);
+        }
+      }
+          
+      dbl normOfStressD = sqrt(normOfStressDSqr);
+      local_post[STRESS_NORM + mode] = normOfStressD;
+      local_lumped[STRESS_NORM + mode] = 1.;
+    }
+  }
+
+  if(SARAMITO_YIELD != -1)
+  {  
+    for (int mode = 0; mode < vn->modes; mode++) {
+      dbl coeff = compute_saramito_model_terms(fv->S[mode], ve[mode]->gn->tau_y, ve[mode]->gn->fexp, NULL);
+      local_post[SARAMITO_YIELD + mode] = coeff;
+      local_lumped[SARAMITO_YIELD + mode] = 1.;
+    }
+  }
 
   /* calculate real-solid stress here !!  */
   if(REAL_STRESS_TENSOR != -1 && pd->e[R_SOLID1])
@@ -2667,27 +2720,53 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 
   } /* end of LUB_VELO_FIELD_2 */
 
+  if ( (LUB_FLUID_SOURCE != -1) && (pd->e[R_LUBP] ) ) {
+    /* Setup lubrication */
+    int *n_dof = NULL;
+    int dof_map[MDE];
+    dbl wt = fv->wt;
+    n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
+    lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+
+    /* Post values */
+    double LubSourceFlux = 0.0;
+    lubrication_fluid_source(&LubSourceFlux, NULL);
+
+    local_post[LUB_FLUID_SOURCE]   = LubSourceFlux;
+    local_lumped[LUB_FLUID_SOURCE] = 1.0;
+
+    /* Cleanup */
+    fv->wt = wt;
+    safe_free((void *) n_dof);
+
+  } /* end of LUB_FLUID_SOURCE */
+
   if ( (PP_LAME_MU != -1) && (pd->e[R_MESH1]) ) {
 
     /* Define parameters */
     double mu;
     double lambda;
-    double thermexp;
+    double thermexp=0;
     double speciesexp[MAX_CONC];
+    double viscos=0, dil_viscos=0;
     double d_mu_dx[DIM][MDE];
     double d_lambda_dx[DIM][MDE];
     double d_thermexp_dx[MAX_VARIABLE_TYPES+MAX_CONC];
     double d_speciesexp_dx[MAX_CONC][MAX_VARIABLE_TYPES+MAX_CONC];
+    double d_viscos_dx[MAX_VARIABLE_TYPES+MAX_CONC];
+    double d_dilviscos_dx[MAX_VARIABLE_TYPES+MAX_CONC];
 
     /* Calculate modulus */
 
     if(pd->MeshMotion == TOTAL_ALE)
       {
-	load_elastic_properties(elc_rs, &mu, &lambda, &thermexp, speciesexp, d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx);
+	load_elastic_properties(elc_rs, &mu, &lambda, &thermexp, speciesexp, &viscos, &dil_viscos,
+		d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx, d_viscos_dx, d_dilviscos_dx);
       }
     else
       {
-	load_elastic_properties(elc, &mu, &lambda, &thermexp, speciesexp, d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx);
+	load_elastic_properties(elc, &mu, &lambda, &thermexp, speciesexp, &viscos, &dil_viscos,
+		d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx, d_viscos_dx, d_dilviscos_dx);
       }
 
     /* Post velocities */
@@ -2701,21 +2780,26 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     /* Define parameters */
     double mu;
     double lambda;
-    double thermexp;
+    double thermexp=0;
     double speciesexp[MAX_CONC];
+    double viscos=0, dil_viscos=0;
     double d_mu_dx[DIM][MDE];
     double d_lambda_dx[DIM][MDE];
     double d_thermexp_dx[MAX_VARIABLE_TYPES+MAX_CONC];
     double d_speciesexp_dx[MAX_CONC][MAX_VARIABLE_TYPES+MAX_CONC];
+    double d_viscos_dx[MAX_VARIABLE_TYPES+MAX_CONC];
+    double d_dilviscos_dx[MAX_VARIABLE_TYPES+MAX_CONC];
 
     /* Calculate modulus */
     if(pd->MeshMotion == TOTAL_ALE)
       {
-	load_elastic_properties(elc_rs, &mu, &lambda, &thermexp, speciesexp, d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx);
+	load_elastic_properties(elc_rs, &mu, &lambda, &thermexp, speciesexp, &viscos, &dil_viscos,
+		d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx, d_viscos_dx, d_dilviscos_dx);
       }
     else
       {
-	load_elastic_properties(elc, &mu, &lambda, &thermexp, speciesexp, d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx);
+	load_elastic_properties(elc, &mu, &lambda, &thermexp, speciesexp, &viscos, &dil_viscos, 
+		d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx, d_viscos_dx, d_dilviscos_dx);
       }
 
     /* Post velocities */
@@ -2973,7 +3057,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     dbl exp_s[DIM][DIM];
     for (mode = 0; mode < vn->modes; mode++) {
 #ifdef ANALEIG_PLEASE
-      analytical_exp_s(fv->S[mode], exp_s, eig_values, R1);
+      analytical_exp_s(fv->S[mode], exp_s, eig_values, R1, NULL);
 #else
       compute_exp_s(fv->S[mode], exp_s, eig_values, R1);
 #endif
@@ -4661,6 +4745,14 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
         while ( !p_done )
             {
 
+/*  Adjust particle size for droplets  */
+	if( pd->v[RESTIME] && mp->SpeciesSourceModel[0] == DROP_EVAP)
+		{
+		p_lambda = pp_particles[i]->mass*pp_particles[i]->mobility*SQUARE(fv->restime);
+ 	p_force[0] = pp_particles[i]->mobility*pp_particles[i]->force[0]*SQUARE(fv->restime);
+ 	p_force[1] = pp_particles[i]->mobility*pp_particles[i]->force[1]*SQUARE(fv->restime);
+ 	p_force[2] = pp_particles[i]->mobility*pp_particles[i]->force[2]*SQUARE(fv->restime);
+		}
 /*   make Euler predictor step  */
 
         for ( j=0 ; j < p_dim ; j++)
@@ -7233,6 +7325,9 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Lamb Vector", &LAMB_VECTOR);
   iread = look_for_post_proc(ifp, "Q Function", &Q_FCN);
   iread = look_for_post_proc(ifp, "Poynting Vectors", &POYNTING_VECTORS);
+  iread = look_for_post_proc(ifp, "Saramito Yield Coeff", &SARAMITO_YIELD);
+  iread = look_for_post_proc(ifp, "VE Stress Norm", &STRESS_NORM);
+  iread = look_for_post_proc(ifp, "Species Sources", &SPECIES_SOURCES);
 
   /*
    * Initialize for surety before communication to other processors.
@@ -7275,6 +7370,7 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Lubrication Lower Velocity", &LUB_VELO_LOWER);
   iread = look_for_post_proc(ifp, "Lubrication Velocity Field", &LUB_VELO_FIELD);
   iread = look_for_post_proc(ifp, "Lubrication Velocity Field 2", &LUB_VELO_FIELD_2);
+  iread = look_for_post_proc(ifp, "Lubrication Fluid Source", &LUB_FLUID_SOURCE);
   iread = look_for_post_proc(ifp, "Disjoining Pressure", &DISJ_PRESS);
   iread = look_for_post_proc(ifp, "Porous Shell Open Saturation", &SH_SAT_OPEN);
   iread = look_for_post_proc(ifp, "Porous Shell Open Saturation 2", &SH_SAT_OPEN_2);
@@ -9558,6 +9654,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
      ENORMSQ_FIELD_NORM = -1;
 
    if (DIFFUSION_VECTORS != -1) {
+     char dir_ch[] = "XYZ";
      if (DIFFUSION_VECTORS == 2)
        {
          EH(-1, "Post-processing vectors cannot be exported yet!");
@@ -9566,8 +9663,8 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
      if (upd->Max_Num_Species_Eqn == 0) DIFFUSION_VECTORS = -1;
      for (w = 0; w < upd->Max_Num_Species_Eqn; w++) {
        for (i = 0; i < Num_Dim; i++) {
-	 sprintf(species_name, "Y%dDIF%d", w, i);
-	 sprintf(species_desc, "Diffusion of %d in %d direction", w, i);
+	 sprintf(species_name, "Y%dDIF%c", w, dir_ch[i]);
+	 sprintf(species_desc, "Diffusion of %d in %c direction", w, dir_ch[i]);
 	 set_nv_tkud(rd, index, 0, 0, -2, species_name,"[1]",
 		     species_desc, FALSE);
 	 index++;
@@ -9712,6 +9809,28 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
   else
     {
       POYNTING_VECTORS = -1;
+    }
+
+  if (SPECIES_SOURCES != -1 &&  Num_Var_In_Type[R_MASS])
+    {
+      if (SPECIES_SOURCES == 2)
+        {
+          EH(-1, "Post-processing species source vectors cannot be exported yet!");
+        }
+     SPECIES_SOURCES = index_post;
+     if (upd->Max_Num_Species_Eqn == 0) SPECIES_SOURCES = -1;
+     for (w = 0; w < upd->Max_Num_Species_Eqn; w++) {
+	 sprintf(species_name, "YSRC%d", w);
+	 sprintf(species_desc, "Source of %d ", w);
+	 set_nv_tkud(rd, index, 0, 0, -2, species_name,"[1]",
+		     species_desc, FALSE);
+	 index++;
+	 index_post++;
+         }
+    }
+  else
+    {
+      SPECIES_SOURCES = -1;
     }
 
   if (ELECTRIC_FIELD != -1 && Num_Var_In_Type[R_POTENTIAL])
@@ -10171,6 +10290,50 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
   else
     {
       LOG_CONF_MAP = -1;
+    }
+
+  if (STRESS_NORM != -1 && Num_Var_In_Type[POLYMER_STRESS11])
+    {
+      STRESS_NORM = index_post;
+      int num_modes = 0;
+      for (int i = 0; i < MAX_MODES; i++) {
+        if (Num_Var_In_Type[v_s[i][0][0]]) {
+          num_modes++;
+        }
+      }
+      for (int mode = 0; mode<num_modes; mode++) {
+        sprintf(species_name, "STRESS_NORM_%d", mode);
+        sprintf(species_desc, "stress norm mode_%d", mode);
+        set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]", species_desc, FALSE);
+        index++;
+        index_post++;
+      }
+    }
+  else
+    {
+      STRESS_NORM = -1;
+    }
+
+  if (SARAMITO_YIELD != -1 && Num_Var_In_Type[POLYMER_STRESS11])
+    {
+      SARAMITO_YIELD = index_post;
+      int num_modes = 0;
+      for (int i = 0; i < MAX_MODES; i++) {
+        if (Num_Var_In_Type[v_s[i][0][0]]) {
+          num_modes++;
+        }
+      }
+      for (int mode = 0; mode<num_modes; mode++) {
+        sprintf(species_name, "SARAMITO_COEFF_%d", mode);
+        sprintf(species_desc, "saramito coeff mode_%d", mode);
+        set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]", species_desc, FALSE);
+        index++;
+        index_post++;
+      }
+    }
+  else
+    {
+      SARAMITO_YIELD = -1;
     }
 
     /*if (J_FLUX != -1)
@@ -11022,6 +11185,25 @@ index_post, index_post_export);
       LUB_VELO_FIELD_2 = -1;
     }
 
+  if (LUB_FLUID_SOURCE != -1  &&  Num_Var_In_Type[R_LUBP] )
+    {
+      if (LUB_FLUID_SOURCE == 2)
+        {
+          EH(-1, "Post-processing vectors cannot be exported yet!");
+        }
+      LUB_FLUID_SOURCE = index_post;
+      sprintf(nm, "LUB_SOURCE");
+      sprintf(ds, "Lubrication Source");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+    }
+  else
+    {
+      LUB_FLUID_SOURCE = -1;
+    }
+
+
   if (DISJ_PRESS != -1  && Num_Var_In_Type[R_SHELL_FILMP])
     {
       if (DISJ_PRESS == 2)
@@ -11649,7 +11831,7 @@ index_post, index_post_export);
   rd->nnv = index;
   *tnv_post = index - *tnv;
   
-  if ((TIME_DERIVATIVES != -1 && pd->TimeIntegration == TRANSIENT) 
+  if ((TIME_DERIVATIVES != -1 && pd_glob[0]->TimeIntegration == TRANSIENT)
       && index_post != (*tnv_post - *tnv))
     WH(-1, "Bad nodal post process variable count ");
 
@@ -11687,28 +11869,44 @@ load_elem_tkn (struct Results_Description *rd,
   }
   /* First cycle through all the primary variables that are nodal looking
      for element variable candidates (currently must be interpolated with I_P0 */
-  for (i = 0; i < upd->Num_Mat; i++) {
+  for (i = 0; i < exo->num_elem_blocks; i++) {
+    int mat_id = Matilda[i];
     for ( j = V_FIRST; j < V_LAST; j++) {
-      if ( pd_glob[i]->v[j] != V_NOTHING ) {
-	if ( FALSE && pd_glob[i]->i[j] == I_P0 ) {
-	  if ( Num_Var_In_Type[j] > 1 ) {
-	    fprintf(stderr,
+      if ( pd_glob[mat_id]->v[j] != V_NOTHING ) {
+        if (pd_glob[mat_id]->i[j] == I_P0) {
+          if (Num_Var_In_Type[j] > 1) {
+            fprintf(stderr,
 		    "%s: Too many components in variable type (%s - %s) for element variable\n",
 		    yo,
 		    Exo_Var_Names[j].name2,
 		    Exo_Var_Names[j].name1 );
 	    exit (-1);
-	  }
-	  if (ev_var_mask[j - V_FIRST] == 0) {
+          }
+          if (ev_var_mask[j - V_FIRST] == 0) {
 	    /* We just found a candidate for an element variable */
 	    /* Append a suffix onto the var name to differentiate from its
 	     nodal counterpart */
-	    sprintf(appended_name,  "%s_E", Exo_Var_Names[j].name2 );
-	    set_ev_tkud(rd, index, j, appended_name,
-			Var_Units[j].name2, Exo_Var_Names[j].name1, FALSE);
-	    index++;
-	    ev_var_mask[j - V_FIRST] = 1; /* Only count this variable once */
+            sprintf(appended_name, "%s_E", Exo_Var_Names[j].name2);
+            set_ev_tkud(rd, index, j, appended_name, Var_Units[j].name2, Exo_Var_Names[j].name1,
+                        FALSE);
+            index++;
+            ev_var_mask[j - V_FIRST] = 1; /* Only count this variable once */
 	  }
+        }
+        if (pd_glob[mat_id]->i[j] == I_P1) {
+          int dof = getdofs(type2shape(exo->eb_elem_itype[i]), I_P1);
+          if (ev_var_mask[j - V_FIRST] == 0) {
+            /* We just found a candidate for an element variable */
+            /* Append a suffix onto the var name to differentiate from its
+             nodal counterpart */
+            for (i = 1; i <= dof; i++) {
+              sprintf(appended_name, "%s_E%d", Exo_Var_Names[j].name2, i);
+              set_ev_tkud(rd, index, j, appended_name, Var_Units[j].name2, Exo_Var_Names[j].name1,
+                          FALSE);
+              index++;
+            }
+            ev_var_mask[j - V_FIRST] = 1; /* Only count this variable once */
+          }
         }
       }
     }
@@ -11874,8 +12072,7 @@ load_elem_tkn (struct Results_Description *rd,
   rd->nev = index;
   *tev_post = index - tev;
   Num_Elem_Post_Proc_Var = index_post;
-
-  if ((TIME_DERIVATIVES != -1 && pd->TimeIntegration == TRANSIENT) 
+  if ((TIME_DERIVATIVES != -1 && pd_glob[0]->TimeIntegration == TRANSIENT)
       && index_post != (*tev_post - tev))
     WH(-1, "Bad elem post process variable count ");
 
@@ -12215,8 +12412,8 @@ count_nodes_on_SS(const int ss_id,  /* SS id of Primary Side Set */
 		  const int iconnect_ptr,
 		  const int ielem, 
 		  const int num_local_nodes,
-		  int local_ss_node_list[MDE],
-		  int local_elem_node_id[MDE])
+		  int local_ss_node_list[MAX_NODES_PER_SIDE],
+		  int local_elem_node_id[MAX_NODES_PER_SIDE])
 /* 
  * This routine counts the local nodes that are located on a SS (for faces), 
  * or the number of nodes which are on two SS (edges) or three SS (vertices).

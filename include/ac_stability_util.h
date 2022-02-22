@@ -42,13 +42,34 @@ PROTO(( void ));
 EXTERN void modify_normal_vector_for_LSA_3D_of_2D
 PROTO(( void ));
 
-EXTERN int create_eigen_outfiles
-PROTO((Exo_DB *, Dpi *, RESULTS_DESCRIPTION_STRUCT *));
+EXTERN int create_eigen_outfiles PROTO((Exo_DB *, Dpi *, RESULTS_DESCRIPTION_STRUCT *, double ***));
 
 EXTERN void get_eigen_outfile_name
 PROTO((char *, int, int));
 
 EXTERN int do_loca
 PROTO((Comm_Ex *, Exo_DB *, Dpi *));
+
+EXTERN int anneal_mesh_LSA      /* ac_stability_util.c */
+PROTO(( double [],              /* x - solution vector */
+        Exo_DB *,               /* exo - entire mesh desc. */
+        double **,              /* Saved mesh coordinates */
+        double **));            /* Saved displacement fields */
+
+EXTERN int unanneal_mesh_LSA    /* ac_stabililty_util.c */
+PROTO(( double [],              /* x - solution vector */
+        Exo_DB *,               /* exo - entire mesh desc. */
+        double **,              /* Saved mesh coordinates */
+        double **));            /* Saved displacement fields */
+
+EXTERN void add_displacement_LSA /* ac_stabililty_util.c */
+PROTO(( double [],              /* x - eigenvector */
+        Exo_DB *,               /* exo - entire mesh desc. */
+        double **));            /* Saved displacement fields */
+
+EXTERN void undo_add_displacement_LSA /* ac_stabililty_util.c */
+PROTO(( double [],              /* x - eigenvector */
+        Exo_DB *,               /* exo - entire mesh desc. */
+        double **));            /* Saved displacement fields */
 
 #endif /* _AC_STABILITY_UTIL_H */

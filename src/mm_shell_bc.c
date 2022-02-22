@@ -1334,7 +1334,7 @@ apply_shell_traction_bc(double func[DIM],
 
 
 void 
- match_lubrication_film_pressure(double func[],
+ match_lubrication_film_pressure(double func[DIM],
 				 double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
 				 int eb_mat_lubp,
 				 int eb_mat_filmp)
@@ -1489,8 +1489,8 @@ put_lub_flux_in_film(int id, /* local element node number for the
 	  ieqn_filmp = R_SHELL_FILMP;
 	  id_doflubp = ei->ln_to_dof[ieqn_lubp][id];
 	  id_doffilmp = ei->ln_to_dof[ieqn_filmp][id];
-	  lec->R[upd->ep[ieqn_filmp]][id_doffilmp] =
-	       -lec->R[upd->ep[ieqn_lubp]][id_doflubp];
+          lec->R[LEC_R_INDEX(upd->ep[ieqn_filmp],id_doffilmp)] =
+               -lec->R[LEC_R_INDEX(upd->ep[ieqn_lubp],id_doflubp)];
     }
     
     /*
@@ -1519,8 +1519,8 @@ put_lub_flux_in_film(int id, /* local element node number for the
 		pvar = upd->vp[var];
 		for ( j_id=0; j_id<ei->dof[var]; j_id++)
 		  {
-		    lec->J[peqn_filmp][pvar][id_doffilmp][j_id] =
-		      -lec->J[peqn_lubp][pvar][id_doflubp][j_id];
+                    lec->J[LEC_J_INDEX(peqn_filmp,pvar,id_doffilmp,j_id)] =
+                      -lec->J[LEC_J_INDEX(peqn_lubp,pvar,id_doflubp,j_id)];
 		  }
 	      }
 	  }
@@ -1534,8 +1534,8 @@ put_lub_flux_in_film(int id, /* local element node number for the
 	    pvar = upd->vp[var];
 	    for ( j_id=0; j_id<ei->dof[var]; j_id++)
 	      {			
-		lec->J[peqn_filmp][pvar][id_doffilmp][j_id] =
-		  -lec->J[peqn_lubp][pvar][id_doflubp][j_id];
+                lec->J[LEC_J_INDEX(peqn_filmp,pvar,id_doffilmp,j_id)] =
+                  -lec->J[LEC_J_INDEX(peqn_lubp,pvar,id_doflubp,j_id)];
 	      }
 	  }
 				

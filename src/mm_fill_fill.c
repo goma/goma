@@ -585,7 +585,7 @@ assemble_fill(double tt,
 	  /* hang on to the integrand (without the "dV") for use below. */
 	  rmp[i] = mass + advection;
 
-	  lec->R[peqn][i] += (mass + advection) * wt * det_J * h3;
+          lec->R[LEC_R_INDEX(peqn,i)] += (mass + advection) * wt * det_J * h3;
 
 	}
     }
@@ -732,7 +732,7 @@ assemble_fill(double tt,
 		  mass *= pd->etm[eqn][(LOG2_MASS)];
 	          advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 
-		  lec->J[peqn][pvar][i][j] += (mass + advection) * wt * h3 * det_J;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (mass + advection) * wt * h3 * det_J;
 
 		} /* for: FILL DoFs */
 
@@ -806,7 +806,7 @@ assemble_fill(double tt,
 		      mass *= pd->etm[eqn][(LOG2_MASS)];
 	              advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 
-		      lec->J[peqn][pvar][i][j] += (mass + advection) * wt * det_J * h3;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (mass + advection) * wt * det_J * h3;
 
 		    }
 		}
@@ -862,7 +862,7 @@ assemble_fill(double tt,
 		      mass *= pd->etm[eqn][(LOG2_MASS)];
 	              advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 
-		      lec->J[peqn][pvar][i][j] += (mass + advection) * wt * det_J * h3;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (mass + advection) * wt * det_J * h3;
 
 		    }
 		}
@@ -929,8 +929,8 @@ assemble_fill(double tt,
 	                  advection *= pd->etm[eqn][(LOG2_ADVECTION)];
                           break;
                         }
-		      lec->J[peqn][pvar][i][c] += (mass + advection) * wt * h3 * fv->sdet;
-		      lec->J[peqn][pvar][i][c] += rmp[i] * wt * h3 * fv->dsurfdet_dx[b][c];
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,c)] += (mass + advection) * wt * h3 * fv->sdet;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,c)] += rmp[i] * wt * h3 * fv->dsurfdet_dx[b][c];
 		    } /* j loop */
 
 		  } else {
@@ -991,14 +991,14 @@ assemble_fill(double tt,
 		      mass *= pd->etm[eqn][(LOG2_MASS)];
 	              advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 
-		      lec->J[peqn][pvar][i][j] += (mass + advection) * wt * det_J * h3;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (mass + advection) * wt * det_J * h3;
 
 		      /* Derivatives of the dV part. */
 		      /* rmp[i] holds the integrand without the "dV" part. */
 
-		      /* lec->J[peqn][pvar][i][j] += rmp[i] * wt * det_J * fv->dh3dq[b] * bf[var]->phi[j]; */
-		      lec->J[peqn][pvar][i][j] += rmp[i] * wt * det_J * fv->dh3dq[b] * phi_j;
-		      lec->J[peqn][pvar][i][j] += rmp[i] * wt * h3    * bf[eqn]->d_det_J_dm[b][j];
+                      /* lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += rmp[i] * wt * det_J * fv->dh3dq[b] * bf[var]->phi[j]; */
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += rmp[i] * wt * det_J * fv->dh3dq[b] * phi_j;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += rmp[i] * wt * h3    * bf[eqn]->d_det_J_dm[b][j];
 
 		    } /* for 'j': MESH DoFs */
 
@@ -1030,7 +1030,7 @@ assemble_fill(double tt,
 		      }
 	              advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 
-		      lec->J[peqn][pvar][i][j] += advection * wt * h3 * fv->sdet;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection * wt * h3 * fv->sdet;
 		    } /* j loop */
 
 		  } 
@@ -1135,7 +1135,7 @@ assemble_fill(double tt,
 
 		      advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 
-		      lec->J[peqn][pvar][i][j] += advection * wt * det_J * h3;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection * wt * det_J * h3;
 
 
 		    } /* for 'j': real-solid DoFs */
@@ -1197,7 +1197,7 @@ assemble_fill(double tt,
 		  mass *= pd->etm[eqn][(LOG2_MASS)];
 	          advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 
-		  lec->J[peqn][pvar][i][j] += (mass + advection) * wt * h3 * det_J;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (mass + advection) * wt * h3 * det_J;
 
 		} /* for: LUBP DoFs */
 
@@ -1244,7 +1244,7 @@ assemble_fill(double tt,
 		  mass *= pd->etm[eqn][(LOG2_MASS)];
 	          advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 
-		  lec->J[peqn][pvar][i][j] += (mass + advection) * wt * h3 * det_J;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (mass + advection) * wt * h3 * det_J;
 
 		} /* for: SHELL_LUB_CURV DoFs */
 
@@ -1274,7 +1274,7 @@ assemble_fill(double tt,
 		  mass *= pd->etm[eqn][(LOG2_MASS)];
 	          advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 
-		  lec->J[peqn][pvar][i][j] += (mass + advection) * wt * h3 * det_J;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (mass + advection) * wt * h3 * det_J;
 
 		} /* for: SHELL_DELTAH DoFs */
 
@@ -1706,7 +1706,7 @@ assemble_fill_ext_v(double tt,
 	  /* hang on to the integrand (without the "dV") for use below. */
 	  rmp[i] = mass + advection;
 
-	  lec->R[peqn][i] += (mass + advection + source) * wt * det_J * h3;
+          lec->R[LEC_R_INDEX(peqn,i)] += (mass + advection + source) * wt * det_J * h3;
 	  
 	}
     }
@@ -1844,7 +1844,7 @@ assemble_fill_ext_v(double tt,
 	          advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 		  source *= pd->etm[eqn][(LOG2_SOURCE)];
 		  
-		  lec->J[peqn][pvar][i][j] += wt * h3 * det_J * (mass + advection + source);		  
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += wt * h3 * det_J * (mass + advection + source);
 
 		} /* for: FILL DoFs */
 
@@ -1928,7 +1928,7 @@ assemble_fill_ext_v(double tt,
 	          advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 		  source *= pd->etm[eqn][(LOG2_SOURCE)];
 		  
-		  lec->J[peqn][pvar][i][j] += wt * det_J * h3 * (mass + advection + source);
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += wt * det_J * h3 * (mass + advection + source);
 		  
 		}
 	    }
@@ -1986,14 +1986,14 @@ assemble_fill_ext_v(double tt,
 		      mass *= pd->etm[eqn][(LOG2_MASS)];
 	              advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 
-		      lec->J[peqn][pvar][i][j] += wt * det_J * h3 * (mass + advection);
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += wt * det_J * h3 * (mass + advection);
 
 		      /* Derivatives of the dV part. */
 		      /* rmp[i] holds the integrand without the "dV" part. */
 
-		      /* lec->J[peqn][pvar][i][j] += rmp[i] * wt * det_J * fv->dh3dq[b] * bf[var]->phi[j]; */
-		      lec->J[peqn][pvar][i][j] += rmp[i] * wt * det_J * fv->dh3dq[b] * phi_j;
-		      lec->J[peqn][pvar][i][j] += rmp[i] * wt * h3    * bf[eqn]->d_det_J_dm[b][j];
+                      /* lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += rmp[i] * wt * det_J * fv->dh3dq[b] * bf[var]->phi[j]; */
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += rmp[i] * wt * det_J * fv->dh3dq[b] * phi_j;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += rmp[i] * wt * h3    * bf[eqn]->d_det_J_dm[b][j];
 
 		    } /* for 'j': MESH DoFs */
 
@@ -2249,7 +2249,7 @@ assemble_fill_gradf(double tt,
 	  /* hang on to the integrand (without the "dV") for use below. */
 	  rmp[i] = rhs;
 
-	  lec->R[peqn][i] += rhs * wt * det_J * h3;
+          lec->R[LEC_R_INDEX(peqn,i)] += rhs * wt * det_J * h3;
 	  
 	}
     }
@@ -2315,7 +2315,7 @@ assemble_fill_gradf(double tt,
 
 		    } /* switch(Fill_Weight_Fcn) */
 
-		  lec->J[peqn][pvar][i][j] += wt * h3 * det_J * tmp;		  
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += wt * h3 * det_J * tmp;
 
 		} /* for: FILL DoFs */
 
@@ -2379,14 +2379,14 @@ assemble_fill_gradf(double tt,
 		      /* Add in the dV */
 		      tmp *= wt * det_J * h3;
 
-		      lec->J[peqn][pvar][i][j] += tmp;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += tmp;
 
 		      /* Derivatives of the dV part. */
 		      /* rmp[i] holds the integrand without the "dV" part. */
 
-		      /* lec->J[peqn][pvar][i][j] += rmp[i] * wt * det_J * fv->dh3dq[b] * bf[var]->phi[j]; */
-		      lec->J[peqn][pvar][i][j] += rmp[i] * wt * det_J * fv->dh3dq[b] * phi_j;
-		      lec->J[peqn][pvar][i][j] += rmp[i] * wt * h3    * bf[eqn]->d_det_J_dm[b][j];
+                      /* lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += rmp[i] * wt * det_J * fv->dh3dq[b] * bf[var]->phi[j]; */
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += rmp[i] * wt * det_J * fv->dh3dq[b] * phi_j;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += rmp[i] * wt * h3    * bf[eqn]->d_det_J_dm[b][j];
 
 		    } /* for 'j': MESH DoFs */
 
@@ -4115,11 +4115,11 @@ assemble_fill_fake( double tt, double dt)
   var  = ls->var;
   pvar = upd->vp[var];
   for (i = 0; i < ei->dof[eqn]; i++) {
-    lec->R[peqn][i] = 0.;
+    lec->R[LEC_R_INDEX(peqn,i)] = 0.;
     /*
      *    J_f_F 
      */
-    lec->J[peqn][pvar][i][i] = 1.;	
+    lec->J[LEC_J_INDEX(peqn,pvar,i,i)] = 1.;
   }
   return (0);
 } /* end of assemble_fill_fake */
@@ -5555,7 +5555,7 @@ assemble_surface_species (Exo_DB *exo,	/* ptr to basic exodus ii mesh informatio
 			  rhs = phi_i * wt * fv->sdet * 
 			    vdotn  * (fv->c[w]- c_n[w]);
 			  
-			  lec->R[MAX_PROB_VAR + w][i] += rhs;
+                          lec->R[LEC_R_INDEX(MAX_PROB_VAR + w,i)] += rhs;
 			}
 		    }
 		}
@@ -5576,7 +5576,7 @@ assemble_surface_species (Exo_DB *exo,	/* ptr to basic exodus ii mesh informatio
 			      phi_j = bf[var]->phi[j];	
 			      advection = wt * fv->sdet * vdotn  * phi_j * phi_i;
 			      
-			      lec->J[MAX_PROB_VAR + w][MAX_PROB_VAR + w][i][j] += 
+                              lec->J[LEC_J_INDEX(MAX_PROB_VAR + w,MAX_PROB_VAR + w,i,j)] +=
 				advection;
 			    }
 
@@ -5602,14 +5602,14 @@ assemble_surface_species (Exo_DB *exo,	/* ptr to basic exodus ii mesh informatio
 					phi_j * fv->snormal[b] *
 					(fv->c[w] - c_n[w]);
 				      
-				      lec->J[MAX_PROB_VAR + w][pvar][i][j] += 
+                                      lec->J[LEC_J_INDEX(MAX_PROB_VAR + w,pvar,i,j)] +=
 					advection;				
 				    }
 				}
 			    }
 
 			  /*
-			   * J_s_d  sensitivity of species equation w.r.t. mesh displacement
+                           * J_s_d  sensitivity of species equation w.r.t. mesh displacement
 			   */
 			  for ( b=0; b<dim; b++)
 			    {
@@ -5632,7 +5632,7 @@ assemble_surface_species (Exo_DB *exo,	/* ptr to basic exodus ii mesh informatio
 
 				      advection *= phi_i * wt * (fv->c[w] - c_n[w]);
 				      
-				      lec->J[MAX_PROB_VAR + w][pvar][i][j] += 
+                                      lec->J[LEC_J_INDEX(MAX_PROB_VAR + w,pvar,i,j)] +=
 					advection;
 				    }
 				}
@@ -6061,7 +6061,7 @@ assemble_phase_function ( double time_value,
   int i, j;
   int a, b, p;
   int eqn, var, peqn, pvar, ledof;
-  int dim, wim;
+  int dim;
   int status = -1;
   int Fill_Wt_Fcn = tran->Fill_Weight_Fcn;
 
@@ -6120,12 +6120,6 @@ assemble_phase_function ( double time_value,
   }
 
   dim = pd->Num_Dim;
-  wim = dim;
-
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
 
   wt = fv->wt;
 
@@ -6308,7 +6302,7 @@ assemble_phase_function ( double time_value,
       load_lsi( 0.0 );
       load_lsi_derivs();
 
-      for( p=0, v_dot_grad_pf = 0.0;  p<wim; p++)
+      for( p=0, v_dot_grad_pf = 0.0;  p<WIM; p++)
 	{
           if (lubon)
             {
@@ -6374,7 +6368,7 @@ assemble_phase_function ( double time_value,
 		      break;
 		    }
 
-		  lec->R[peqn][i] += rhs*wt*det_J*h3;
+                  lec->R[LEC_R_INDEX(peqn,i)] += rhs*wt*det_J*h3;
 
 		}
 	    }
@@ -6479,7 +6473,7 @@ assemble_phase_function ( double time_value,
 			      break;
 				}
 
-			  lec->J[peqn][pvar][i][j] += tmp;
+                          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += tmp;
 
 			} /* for ( j = 0 ... */
 		    } /* if ( pd->v[var] ) */
@@ -6510,7 +6504,7 @@ assemble_phase_function ( double time_value,
 			      break;
 			     }
 
-			  lec->J[peqn][pvar][i][j] += tmp;
+                          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += tmp;
 
 			} /* for ( j = 0 ... */
 		    } /* if ( pd->v[var] ) */
@@ -6564,7 +6558,7 @@ assemble_phase_function ( double time_value,
 				  break;
 				}
 
-			      lec->J[peqn][pvar][i][j] += tmp*wt*det_J*h3;
+                              lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += tmp*wt*det_J*h3;
 			    }
 			}
 		    }
@@ -6624,7 +6618,7 @@ assemble_phase_function ( double time_value,
 			  mass *= pd->etm[eqn][(LOG2_MASS)];
 			  advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 
-			  lec->J[peqn][pvar][i][j] += (mass + advection) * wt * h3 * det_J;
+                          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (mass + advection) * wt * h3 * det_J;
 
 			} /* for: LUBP DoFs */
 
@@ -6671,7 +6665,7 @@ assemble_phase_function ( double time_value,
 		  mass *= pd->etm[eqn][(LOG2_MASS)];
 	          advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 
-		  lec->J[peqn][pvar][i][j] += (mass + advection) * wt * h3 * det_J;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (mass + advection) * wt * h3 * det_J;
 
 		} /* for: SHELL_LUB_CURV DoFs */
 
@@ -6761,7 +6755,7 @@ assemble_pf_constraint( double delta_t,
 				d_pf_lm[i][j] = wt*phi_j*pf_lsi_old[i].dH*sum_old*h3*det_J/delta_t;
 				d_lm_pf[i][j] = wt*phi_j*pf_lsi[i].dH*sum*h3*det_J;
 				
-				lec->R[pvar][j] += lambda*d_pf_lm[i][j];
+                                lec->R[LEC_R_INDEX(pvar,j)] += lambda*d_pf_lm[i][j];
 				
 				ledof = ei->lvdof_to_ledof[var][j];
 				if( ei->owned_ledof[ledof] )

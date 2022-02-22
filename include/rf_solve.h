@@ -37,9 +37,9 @@ extern Comm_Ex *cx;
 EXTERN void slow_square_dgemm         /* Matrix multiplication C = A X B */
 PROTO(( int ,                    /* Whether multiplying by transpose */
         int ,                    /* Dimensions of matrix */
-        double [DIM][DIM] ,            /* A */
-        double [DIM][DIM] ,            /* B */
-        double [DIM][DIM]));           /* C */
+        double [][DIM] ,            /* A */
+        double [][DIM] ,            /* B */
+        double [][DIM]));           /* C */
 
 EXTERN void initial_guess_stress_to_log_conf
 PROTO((double *,                /* x array (solutions from initial guess) */
@@ -63,12 +63,17 @@ PROTO(( double [],		/* x - solution vector */
 EXTERN int anneal_mesh_with_external_field   /* rf_solve.c */
 PROTO((const Exo_DB * ));                    /* *exo  */
 
+
 #ifdef LIBRARY_MODE
 EXTERN int load_export_vars     /* rf_solve.c */
 PROTO((const int,               /* num_nodes */
        dbl [],                  /* x - solution vector */
        dbl *));                /* x_pp - post processing varibale vector */
 #endif
+
+EXTERN int variable_stats     /* rf_solve.c */
+PROTO(( dbl [],                  /* x - solution vector */
+       const dbl));                /* time value */
 
 /*
  * rf_setup_problem.c prototypes

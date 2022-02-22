@@ -78,6 +78,7 @@ static char rcsid[] =
 *       NAME			TYPE			CALLED BY
 *  -----------------------------------------------------------------
 *  fvelo_normal_bc                      void
+*  fvelo_normal_lub_bc                  void
 *  fmesh_etch_bc                        void
 *  sdc_stefan_flow                      void
 *  sdc_stefan_volume_flow               void
@@ -619,6 +620,155 @@ if(lsi->near && 0) fprintf(stderr,"vn_ls %g %g %g %g\n",fv->x[0],penalty,factor,
 /*****************************************************************************/
 /*****************************************************************************/
 /****************************************************************************/
+
+void
+fvelo_normal_lub_bc(double func[DIM],
+		    double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                    const int id_side,            /* Side ID */
+                    const double x_dot[MAX_PDIM], /* Bad name, says Phil!
+                                                   * -mesh velocity vector */
+                    const double tt,              /* parameter to vary time integration from
+                                                     explicit (tt = 1) to implicit (tt = 0) */
+                    const double dt,              /* current value of the time step */
+                    double xi[DIM],               /* Local stu coordinates */
+                    const Exo_DB *exo,            /* ExodusII database struct pointer */
+                    const double param[])         /* Flux parameters  */
+     /***********************************************************************
+      *
+      * fvelo_normal_lub_bc():
+      *
+      *  Function which evaluates the expression specifying the
+      *  boundary normal motion  at a quadrature point on a side
+      *  of an element due to flux to/from shell lubrication layer.
+      *
+      *         func  =   - n . (lubflux) + n . (v - xdot)
+      *
+      *  The boundary conditions VELO_NORMAM_LUB_BC
+      *  employ this function. vnormal is typically dictated by current surface
+      *  orientation as well as surface chemistry.
+      *
+      *  Note: this function initially is cloned from fvelo_normal_bc
+      *
+      * Input:
+      *
+      *  param[] = specified on the bc card as the first integer
+      *
+      *
+      * Output:
+      *
+      *  func[0] = value of the function mentioned above
+      *  d_func[0][varType][lvardof] =
+      *              Derivate of func[0] wrt
+      *              the variable type, varType, and the local variable
+      *              degree of freedom, lvardof, corresponding to that
+      *              variable type.
+      *
+      *   Author: Kristianto Tjiptowidjojo    (03/11/2021)
+      ********************************************************************/
+
+
+{
+  int j, kdir, var, p;
+  int *n_dof = NULL;
+  int dof_map[MDE];
+  int n_dofptr[MAX_VARIABLE_TYPES][MDE];
+  double phi_j;
+
+  /***** LOAD NEIGHBORING SHELL ELEMENTS ********************/
+
+  /* Find friends */
+  int el1 = ei->ielem;
+  int nf  = num_elem_friends[el1];
+  if (nf == 0)
+    {
+     EH(-1, "Where is my shell element neighbor?");
+    }
+  int el2 = elem_friends[el1][0];
+
+  n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
+
+  load_neighbor_var_data(el1, el2, n_dof, dof_map, n_dofptr, id_side, xi, exo);
+
+
+  /***** CALCULATE LUBRICATION FLUX ********************/
+
+  double kappa = param[0];
+  double mu    = param[1];
+  double L     = param[2];
+
+  double lubflux = (kappa/mu/L) * (fv->P - fv->lubp);
+
+  double dlubflux_dp    =  (kappa/mu/L);
+  double dlubflux_dlubp = -(kappa/mu/L);
+
+  /***** CALCULATE RESIDUAL CONTRIBUTION ********************/
+  func[0] = -lubflux;
+  for (kdir = 0; kdir < pd->Num_Dim; kdir++)
+    {
+      func[0] += (fv->v[kdir] - x_dot[kdir]) * fv->snormal[kdir];
+    }
+
+
+  /***** CALCULATE JACOBIAN CONTRIBUTION ********************/
+  if (af->Assemble_Jacobian)
+    {
+
+    for (kdir=0; kdir<pd->Num_Dim; kdir++)
+       {
+
+        for (p=0; p<pd->Num_Dim; p++)
+           {
+	    var = MESH_DISPLACEMENT1 + p;
+	    if (pd->v[var])
+              {
+	       for ( j=0; j<ei->dof[var]; j++)
+                  {
+	           phi_j = bf[var]->phi[j];
+	           d_func[0][var][j] += (fv->v[kdir] - x_dot[kdir]) * fv->dsnormal_dx[kdir][p][j];
+	           if (TimeIntegration != 0 && p == kdir)
+                     {
+	              d_func[0][var][j] += ( -(1.+2.*tt)* phi_j/dt) * fv->snormal[kdir] * delta(p, kdir);
+	             }
+	          }
+	      }
+           }
+
+        var = VELOCITY1 + kdir;
+        if (pd->v[var])
+          {
+	   for ( j=0; j<ei->dof[var]; j++)
+              {
+	       phi_j = bf[var]->phi[j];
+	       d_func[0][var][j] += phi_j * fv->snormal[kdir];
+	      }
+          }
+       } /* for: kdir */
+
+     var = PRESSURE;
+     for ( j=0; j<ei->dof[var]; j++)
+        {
+	 phi_j = bf[var]->phi[j];
+	 d_func[0][var][j] += - dlubflux_dp * phi_j;
+	}
+
+
+     var = LUBP;
+     for ( j=0; j<ei->dof[var]; j++)
+        {
+	 phi_j = bf[var]->phi[j];
+	 d_func[0][var][j] += - dlubflux_dlubp * phi_j;
+	}
+
+    } /* end of if Assemble_Jacobian */
+
+
+  safe_free((void *) n_dof);
+
+} /* END of routine fvelo_normal_lub_bc  */
+/*****************************************************************************/
+/*****************************************************************************/
+/****************************************************************************/
+
 
 void
 fmesh_etch_bc(double *func,
@@ -1916,6 +2066,7 @@ fvelo_tangential_bc(double func[],
 		    const double alpha,	/* coefficient that scales the       *
 					 * exponent  of position dependent   *
 					 *  slip velocity                    */
+		    const double vtang_dot, /* surface acceleration          */
 		    const double xsurf[MAX_PDIM], /* coordinates of surface  *
 						   * Gauss point, i.e.       *
 						   * current position        */
@@ -1949,7 +2100,7 @@ fvelo_tangential_bc(double func[],
 			      contact lines                                */
   double xdcl[MAX_PDIM];   /* coordinates of dynamic contact lines         */
   dbl ead;			/* "exp( -distance_to_singularity / L_slip )" */
-  double vtang_user, vel_user[MAX_PDIM], vel_user_dx[MAX_PDIM][MAX_PDIM];
+  double vtang_user=0, vel_user[MAX_PDIM]={0,0,0}, vel_user_dx[MAX_PDIM][MAX_PDIM];
   
   /***************************** EXECUTION BEGINS *******************************/
 
@@ -2090,16 +2241,17 @@ fvelo_tangential_bc(double func[],
     /*  Velo-tangent bc	*/
     if( bc_type != VELO_TANGENT_USER_BC )
       {
-  	*func -= vtangent;
+  	*func -= vtangent*(1.0 + vtang_dot*time_value);
       }
     else
       {
+#ifdef FEATURE_ROLLON_PLEASE
+#include "feature_rollon_velo.h"
+#else
 	vel_user[0] = velo_vary_fnc(UVARY_BC, fv->x[0], fv->x[1], fv->x[2]
 				    , u_par, time_value);
 	vel_user[1] = velo_vary_fnc(VVARY_BC, fv->x[0], fv->x[1], fv->x[2]
 				    , u_par, time_value);
-	vtang_user = fv->stangent[0][0]*vel_user[0] + fv->stangent[0][1]*vel_user[1];
-  	*func -= vtang_user;
   	if (af->Assemble_Jacobian) 
     	  {
 	    if( pd->e[R_MESH1] )
@@ -2113,6 +2265,12 @@ fvelo_tangential_bc(double func[],
 		vel_user_dx[1][1] = dvelo_vary_fnc_d2(VVARY_BC, fv->x[0], fv->x[1]
 						      , fv->x[2], u_par, time_value);
 	      }
+    	  }
+#endif
+	vtang_user = fv->stangent[0][0]*vel_user[0] + fv->stangent[0][1]*vel_user[1];
+  	*func -= vtang_user;
+  	if (af->Assemble_Jacobian) 
+    	  {
 	    for (kdir=0; kdir<pd->Num_Dim; kdir++)
 	      {
 		for (p=0; p<pd->Num_Dim; p++)
@@ -4020,7 +4178,7 @@ exchange_fvelo_slip_bc_info(int ibc /* Index into BC_Types for VELO_SLIP_BC */)
 
   float_offset = BC_Types[ibc].max_DFlt+1;
   /* Skip this if calculation is not needed */
-  if (BC_Types[ibc].BC_Data_Int[0] == -1 || BC_Types[ibc].BC_Data_Int[0] == 0) {
+  if (BC_Types[ibc].BC_Data_Int[0] == -1) {
     return 0;
   }
 
@@ -5356,7 +5514,7 @@ fn_dot_T(double cfunc[MDE][DIM],
 	 double d_cfunc[MDE][DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
 	 const int id_side,	/* ID of the side of the element             */
 	 const double sigma,	/* surface tension                           */
-	 const double pb,	/* applied pressure                          */
+	 const double pb[DIM],	/* applied pressure                          */
 	 struct elem_side_bc_struct *elem_side_bc,
 	 const int iconnect_ptr,
 	 double dsigma_dx[DIM][MDE])
@@ -5365,7 +5523,7 @@ fn_dot_T(double cfunc[MDE][DIM],
 *
 *  Function which calculates the calculates the capillary free surface stress
 *  balance:
-*        2H*sigma*n + pb + pr/(dist)**2 = n.T
+*        2H*sigma*n + pb[0]*n + pb[1]*t1 + pb[2]*t2 (not enabled yet) = n.T
 *  This vector condition is to be added on component wise to the momentum equations.
 *  pb is the applied pressure as in a vacuum or a forcing function
 *
@@ -5408,8 +5566,13 @@ fn_dot_T(double cfunc[MDE][DIM],
 		    {
 		      for (a=0; a<dim; a++)
 			{
-                          d_cfunc[ldof][a][var][j] -= (pb * fv->dsnormal_dx[a][jvar][j] )
-                                            * bf[VELOCITY1+a]->phi[ldof];  
+                          d_cfunc[ldof][a][var][j] -= (pb[0] * fv->dsnormal_dx[a][jvar][j] ) 
+							* bf[VELOCITY1+a]->phi[ldof];  
+                          d_cfunc[ldof][a][var][j] -= (pb[1] * fv->dstangent_dx[0][a][jvar][j] ) 
+							* bf[VELOCITY1+a]->phi[ldof];  
+			  if( ei->ielem_dim == DIM)
+                               d_cfunc[ldof][a][var][j] -= (pb[2] * fv->dstangent_dx[0][a][jvar][j] ) 
+							* bf[VELOCITY1+a]->phi[ldof];  
 			  for (p=0; p<VIM; p++)
 			    {
 			      
@@ -5516,7 +5679,10 @@ fn_dot_T(double cfunc[MDE][DIM],
 	      
 	      for (a=0; a<dim; a++)
 		{  
-		  cfunc[ldof][a] -= pb * fv->snormal[a] * bf[VELOCITY1+a]->phi[ldof]; 
+		  cfunc[ldof][a] -= pb[0] * fv->snormal[a] * bf[VELOCITY1+a]->phi[ldof]; 
+		  cfunc[ldof][a] -= pb[1] * fv->stangent[0][a] * bf[VELOCITY1+a]->phi[ldof]; 
+	 	  if( ei->ielem_dim == DIM)
+		      cfunc[ldof][a] -= pb[2] * fv->stangent[1][a] * bf[VELOCITY1+a]->phi[ldof]; 
 		  for (p=0; p<VIM; p++)
 		    { 
 		      cfunc[ldof][a] -= sigma * mp->surface_tension * bf[VELOCITY1+a]->grad_phi_e[ldof][a] [p][p];  
@@ -5573,7 +5739,7 @@ apply_repulsion (double cfunc[MDE][DIM],
 
   double d_dist[DIM];		/* distance from surface to wall             */
   double dist=0;		/* squared distance from surface to wall     */
-  double repexp = 4.;		/* exponent of disance in repulsion term     */
+  double repexp = 2.;		/* exponent of disance in repulsion term     */
   double denom,factor;
 /***************************** EXECUTION BEGINS ******************************/
 /* if pr is 0. => we don't want free surface/wall repulsion and just
@@ -5605,14 +5771,14 @@ apply_repulsion (double cfunc[MDE][DIM],
 	  /* 
 	   *  Evaluate sensitivity to displacements d()/dx 
 	   */
-	  for (jvar=0; jvar<ei->ielem_dim; jvar++)
+	  for (jvar=0; jvar<VIM; jvar++)
 	    {
 	      var = MESH_DISPLACEMENT1 + jvar;
 	      if (pd->v[var]) 
 		{
 		  for ( j=0; j<ei->dof[var]; j++)
 		    {
-		      for (a=0; a<ei->ielem_dim; a++)
+		      for (a=0; a<VIM; a++)
 			{
 			  
 			  d_cfunc[ldof][a][var][j] -= (pr/pow(dist,repexp) * fv->dsnormal_dx[a][jvar][j] 
@@ -5628,6 +5794,7 @@ apply_repulsion (double cfunc[MDE][DIM],
 	}
       }
     }
+/*fprintf(stderr,"repulse %g %g %g %g %g\n",dist,pr,pr/pow(dist,repexp),fv->snormal[0],fv->snormal[1]);  */
   
   eqn = VELOCITY1;
   for (i = 0; i < (int) elem_side_bc->num_nodes_on_side; i++)  {
@@ -5636,7 +5803,7 @@ apply_repulsion (double cfunc[MDE][DIM],
     ldof  = ei->ln_to_dof[eqn][id];
     if (Dolphin[I][VELOCITY1] > 0 ) {
       
-      for (a=0; a<ei->ielem_dim; a++)
+      for (a=0; a<VIM; a++)
 	{  
 	  cfunc[ldof][a] -= pr/pow(dist, repexp) * fv->snormal[a] * bf[eqn]->phi[ldof]; 
 	}
@@ -5655,9 +5822,9 @@ apply_repulsion_roll (double cfunc[MDE][DIM],
 	         const double origin[3],	/* roll axis origin (x,y,z) */
 	         const double dir_angle[3],	/* axis direction angles */
 		 const double omega, /* roll rotation rate  */
+	         const double P_rep,	/* repulsion coefficient */
 		 const double hscale, /* repulsion length scale */
 	         const double repexp,	/* repulsive force exponent */
-	         const double P_rep,	/* repulsion coefficient */
 		 const double gas_visc, /* inverse slip coefficient  */
                  const double exp_scale,      /* DCL exculsion zone scale   */
                  const int dcl_node,            /* DCL NS id  */
@@ -5772,14 +5939,22 @@ apply_repulsion_roll (double cfunc[MDE][DIM],
                           +SQUARE(coord[2]-point[2]));
            }  else      {
            dcl_dist = 0.;
-           WH(-1,"No DCL node for CAP_REPULSE_TABLE....\n");
+           WH(-1,"No DCL node for CAP_REPULSE_ROLL....\n");
            }
 /*  modifying function for DCL  */
-           mod_factor = 1. - exp(-dcl_dist/exp_scale);
+      if(dcl_node != -1)
+          { mod_factor = 1. - exp(-dcl_dist/exp_scale);  }
+      else
+	  { mod_factor = 1.;}
 
 /*  repulsion function  */
+#if 0
            force = -P_rep*mod_factor/pow(dist/hscale, repexp); 
            d_force = P_rep*mod_factor*repexp/pow(dist/hscale, repexp+1)/hscale;
+#else
+           force = -P_rep*mod_factor*(pow(hscale/dist,repexp) - pow(hscale/dist,repexp/2)); 
+           d_force = P_rep*mod_factor*(repexp/dist)*(pow(hscale/dist,repexp) - 0.5*pow(hscale/dist,repexp/2)); 
+#endif
 /*  slip velocity function function  */
            inv_slip = -gas_visc*mod_factor/pow(dist/hscale, repexp); 
            d_inv_slip = gas_visc*mod_factor*repexp/pow(dist/hscale, repexp+1)/hscale;
@@ -6622,7 +6797,7 @@ void
 flow_n_dot_T_var_density(double func[DIM],
 		   double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
 		   const double a,      /* 1 param describing reference pressure*/
-		       double time)     /* Time is required for density and momentum_source_term*/
+		   const double time)     /* Time is required for density and momentum_source_term*/
     
     /************************************************************************
      *
@@ -6770,7 +6945,8 @@ void
 flow_n_dot_T_nobc(double func[DIM],
                   double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
                   const double pdatum, /* pressure datum from input card */
-                  const int iflag)	/* -1 to use pdatum, otherwise use P */
+                  const int iflag,	/* -1 to use pdatum, otherwise use P */
+		  const double time)	/* time value if needed	*/
 
 /****************************************************************************
 *
@@ -6816,6 +6992,17 @@ flow_n_dot_T_nobc(double func[DIM],
    */
   if(iflag == -1) fv->P = pdatum;
 
+/* hydrostatic part for int == -2  ; func[] is set to n.p_hydrostatic in 
+	flow_n_dot_T_var_density. "var_density" is a misnomer - density would need
+	to be spatially invariate since pressure is relative to p(origin). Even
+	density(T) or density(P) would imply T or P is spatially invariate
+*/
+  if(iflag == -2)
+	{
+	flow_n_dot_T_var_density(func, d_func, pdatum, time);
+	fv->P = 0;
+	}
+
   /* compute stress tensor and its derivatives */
   if(vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV)
     {
@@ -6828,7 +7015,8 @@ flow_n_dot_T_nobc(double func[DIM],
 
   /* now is the time to clean up, so, if using the datum for pressure, fix fv->P
    */
-  if(iflag == -1) fv->P = P;
+/* Ahh...no.  This seems like a bad idea.  
+  if(iflag == -1) fv->P = P;*/
 
   if (af->Assemble_Jacobian)
     {
@@ -7039,12 +7227,14 @@ flow_n_dot_T_nobc(double func[DIM],
 
   for (p=0; p<pd->Num_Dim; p++)
     {
-      func[p] = 0.;
-      for (q=0; q<pd->Num_Dim; q++)
+     if(iflag != -2)
+	{ func[p] = 0.; }
+     for (q=0; q<pd->Num_Dim; q++)
         {
           func[p] += fv->snormal[q] * Pi[p][q];
         }
     }
+  if(iflag == -1 || iflag == -2) fv->P = P;
 
 } /* END of routine flow_n_dot_T_nobc                                       */
 /*****************************************************************************/
@@ -7377,6 +7567,15 @@ stress_no_v_dot_gradS(double func[MAX_MODES][6],
   VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
   dbl d_mup_dv_pj;
 
+  dbl saramitoCoeff;
+  SARAMITO_DEPENDENCE_STRUCT d_saramito_struct;
+  SARAMITO_DEPENDENCE_STRUCT *d_saramito = &d_saramito_struct;
+
+  // todo: will want to parse necessary parameters... for now hard code
+  const bool saramitoEnabled = (vn->ConstitutiveEquation == SARAMITO_OLDROYDB ||
+				vn->ConstitutiveEquation == SARAMITO_PTT      ||
+				vn->ConstitutiveEquation == SARAMITO_GIESEKUS);
+
   /*  shift function */
   dbl at = 0.0;
   dbl d_at_dT[MDE];
@@ -7516,6 +7715,21 @@ stress_no_v_dot_gradS(double func[MAX_MODES][6],
       /* get polymer viscosity */
       mup = viscosity(ve[mode]->gn, gamma, d_mup);
 
+      if(saramitoEnabled == TRUE)
+	{
+	  saramitoCoeff = compute_saramito_model_terms(s, ve[mode]->gn->tau_y, ve[mode]->gn->fexp, d_saramito);
+	}
+      else
+	{
+	  saramitoCoeff = 1.;
+	  d_saramito->tau_y = 0;
+			
+	  for(int i=0; i<VIM; ++i){
+	    for(int j=0; j<VIM; ++j){
+	      d_saramito->s[i][j] = 0;
+	    }
+	  }
+	}
       /* get Geisekus mobility parameter */
       alpha = ve[mode]->alpha;
 
@@ -7586,10 +7800,10 @@ stress_no_v_dot_gradS(double func[MAX_MODES][6],
 
                  /* Source term */
                  source = 0.;
-                 source +=  Z * s[a][b] - at * mup * ( g[a][b] +  gt[a][b]);
+                 source +=  saramitoCoeff * Z * s[a][b] - at * mup * ( g[a][b] +  gt[a][b]);
                  if (alpha != 0.)
                    {
-                    source += alpha * lambda * s_dot_s[a][b]/mup;
+                    source += saramitoCoeff * alpha * lambda * s_dot_s[a][b]/mup;
                    }
                  source *= pd->etm[eqn][(LOG2_SOURCE)];
 
@@ -7633,7 +7847,7 @@ stress_no_v_dot_gradS(double func[MAX_MODES][6],
                               source =  -at * d_mup_dv_pj * ( g[a][b] +  gt[a][b]);
                               if (alpha != 0.0)
                                 {
-                                 source -= alpha * lambda * d_mup_dv_pj * s_dot_s[a][b]/(mup*mup);
+                                 source -= saramitoCoeff * alpha * lambda * d_mup_dv_pj * s_dot_s[a][b]/(mup*mup);
                                 }
                               source *= pd->etm[eqn][(LOG2_SOURCE)];
 
@@ -7659,7 +7873,7 @@ stress_no_v_dot_gradS(double func[MAX_MODES][6],
                           source =  -at * d_mup->P[j] * ( g[a][b] +  gt[a][b]);
                           if (alpha != 0.0)
                             {
-                             source -= alpha * lambda * d_mup->P[j] * s_dot_s[a][b]/(mup*mup);
+                             source -= saramitoCoeff * alpha * lambda * d_mup->P[j] * s_dot_s[a][b]/(mup*mup);
                             }
                           source *= pd->etm[eqn][(LOG2_SOURCE)];
 
@@ -7699,7 +7913,7 @@ stress_no_v_dot_gradS(double func[MAX_MODES][6],
                                     *( at * d_mup->T[j] + mup * d_at_dT[j] );
                           if (alpha != 0.0)
                             {
-                             source -= alpha * lambda * d_mup->T[j] * s_dot_s[a][b]/(mup*mup);
+                             source -= saramitoCoeff * alpha * lambda * d_mup->T[j] * s_dot_s[a][b]/(mup*mup);
                             }
                           source *= pd->etm[eqn][(LOG2_SOURCE)];
 
@@ -7730,7 +7944,7 @@ stress_no_v_dot_gradS(double func[MAX_MODES][6],
                               source = - at * d_mup->X[p][j] * ( g[a][b] +  gt[a][b]);
                               if (alpha != 0.)
                                 {
-                                 source -= alpha * lambda * d_mup->X[p][j] * s_dot_s[a][b]/(mup*mup);
+                                 source -= saramitoCoeff * alpha * lambda * d_mup->X[p][j] * s_dot_s[a][b]/(mup*mup);
                                 }
                               source *= pd->etm[eqn][(LOG2_SOURCE)];
 
@@ -7761,7 +7975,7 @@ stress_no_v_dot_gradS(double func[MAX_MODES][6],
                               source = - at * d_mup->C[w][j] * ( g[a][b] +  gt[a][b]);
                               if (alpha != 0.)
                                 {
-                                 source -= alpha * lambda * d_mup->C[w][j] * s_dot_s[a][b]/(mup*mup);
+                                 source -= saramitoCoeff * alpha * lambda * d_mup->C[w][j] * s_dot_s[a][b]/(mup*mup);
                                 }
                               source *= pd->etm[eqn][(LOG2_SOURCE)];
 
@@ -7844,12 +8058,19 @@ stress_no_v_dot_gradS(double func[MAX_MODES][6],
                                      advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 
                                      /* source term */
-                                     source = Z * phi_j * (double)delta(a,p) * (double)delta(b,q);
+                                     source = saramitoCoeff * Z * phi_j * (double)delta(a,p) * (double)delta(b,q);
                                      if( p == q)  source +=  s[a][b] * dZ_dtrace * phi_j;
+                                     if (p <= q) {
+                                       source += phi_j * d_saramito->s[p][q] * Z * s[a][b];
+                                     }
+
                                      if (alpha != 0.)
                                        {
-                                        source +=  phi_j *  alpha * lambda *
+                                        source +=  saramitoCoeff * phi_j *  alpha * lambda *
                                                    ( s[q][b] * (double)delta(a,p) + s[a][p] * (double)delta(b,q) )/mup;
+                                         if (p <= q) {
+                                            source +=  phi_j * d_saramito->s[p][q] *  alpha * lambda * s_dot_s[a][b] / mup;
+                                         }
                                        }
                                      source *= pd->etm[eqn][(LOG2_SOURCE)];
 
@@ -8054,7 +8275,7 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
         }
 
 #ifdef ANALEIG_PLEASE
-          analytical_exp_s(s, exp_s, eig_values, R1); 
+          analytical_exp_s(s, exp_s, eig_values, R1, NULL); 
 #else
           compute_exp_s(s, exp_s, eig_values, R1);   
 #endif
@@ -8229,7 +8450,7 @@ PSPG_consistency_bc (double *func,
    */
 
   const int dim = pd->Num_Dim;
-  int wim, mode;
+  int mode;
   int meqn;
   int var1;
   int r, s, t;
@@ -8286,13 +8507,6 @@ PSPG_consistency_bc (double *func,
   double h_elem_avg = pg_data->h_elem_avg;
   double mu_avg = pg_data->mu_avg;
   double U_norm = pg_data->U_norm;
-  
-  wim   = dim;
-
-  if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-     pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
 
     /* This is the flag for the standard global PSPG */
   if(PSPG == 1)
@@ -8362,7 +8576,7 @@ PSPG_consistency_bc (double *func,
 
       // Average value of v**2 in the element
       double vv_speed = 0.0;
-      for ( a=0; a<wim; a++)
+      for ( a=0; a<WIM; a++)
 	{
 	  vv_speed += pg_data->v_avg[a]*pg_data->v_avg[a];
 	}
@@ -8435,14 +8649,14 @@ PSPG_consistency_bc (double *func,
     }
   }
   
-  for ( p=0; p<wim; p++)
+  for ( p=0; p<WIM; p++)
     {
       div_s[p] = 0.;
     }
   
   if ( pd->v[POLYMER_STRESS11] )
     {
-      for ( p=0; p<wim; p++)
+      for ( p=0; p<WIM; p++)
 	{
 	  for ( mode=0; mode<vn->modes; mode++)
 	    {
@@ -9958,7 +10172,7 @@ void fapply_moving_CA_sinh(
 
 #ifdef ALE_DCA_INFO_PLEASE
 if ( af->Assemble_Jacobian ) 
-fprintf(stderr,"v_wetting: %g v_mesh: %g dvmdt: %g DCA: %g\n",v,v_mesh, v_mesh_dt,acos(costheta)*180/M_PIE);
+fprintf(stderr,"         ALE_DCA INFO - v_wetting: %g v_mesh: %g dvmdt: %g DCA: %g\n",v,v_mesh, v_mesh_dt,acos(costheta)*180/M_PIE);
 #endif
 #if 0
 fprintf(stderr,"fs_normal: %g %g ss_normal: %g %g\n",fsnormal[0],fsnormal[1],ssnormal[0],ssnormal[1]);

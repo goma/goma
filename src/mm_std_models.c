@@ -469,7 +469,7 @@ EHD_POLARIZATION_source(dbl f[DIM], /* Body force. */
 		        MOMENTUM_SOURCE_DEPENDENCE_STRUCT *df )
 {
   int eqn, var;
-  int dim, wim;
+  int dim;
   int a, b, p;
   dbl phi_j;
   dbl advection_a;
@@ -477,7 +477,6 @@ EHD_POLARIZATION_source(dbl f[DIM], /* Body force. */
   dbl g[DIM];
   int j;
   dim   = pd->Num_Dim;
-  wim   = dim; 
 
   /**********************************************************/
   
@@ -507,7 +506,7 @@ EHD_POLARIZATION_source(dbl f[DIM], /* Body force. */
   var = EFIELD1;
   if (pd->v[var] )
     {
-      for(a = 0; a<wim; a++)
+      for(a = 0; a<dim; a++)
 	{
 	  eqn   = R_MOMENTUM1+a;
 	  for(b = 0; b<dim; b++)
@@ -520,7 +519,7 @@ EHD_POLARIZATION_source(dbl f[DIM], /* Body force. */
 		      phi_j = bf[var]->phi[j];
 		      df->E[a][b][j] += g[0] * phi_j * fv->grad_E_field[b][a];
 
-		      for (p=0; p<wim; p++)
+		      for (p=0; p<dim; p++)
 			{
 			   df->E[a][b][j] +=  g[0] *
 			     Efield[p] * bf[var]->grad_phi_e[j][b][p][a]; 
@@ -546,7 +545,7 @@ EHD_POLARIZATION_source(dbl f[DIM], /* Body force. */
 		  for (j=0; j<ei->dof[var]; j++)
 		    {
 		      advection_a = 0.;
-		      for ( p=0; p<wim; p++)
+		      for ( p=0; p<dim; p++)
 			{
 			  advection_a += Efield[p]
 			    * fv->d_grad_E_field_dmesh[p][a] [b][j];
@@ -996,6 +995,90 @@ return 0;
 }
 /*****************************************************************************/
 /* END of routine epoxy_species_source */
+/*****************************************************************************/
+
+int
+bond_species_source(int species_no,   /* Current species number */
+                     double *param )   /* pointer to user-defined parameter list */
+     
+{
+  /* Local Variables */
+  int eqn, var, var_offset;
+  /*  int p, q, a, b, c;*/
+  
+  /*  int v,w;*/
+  
+  /*  int mdofs,vdofs;*/
+  
+  /*  dbl C[MAX_CONC]; Convenient local variables */
+  dbl n0, aexp, bexp, nn;
+  dbl k1, k2;
+  dbl shear;
+  dbl gterm_a, gterm_b;
+  dbl d_gterm_a, d_gterm_b;
+  dbl offset = 0.00001;
+  
+  /* Begin Execution */
+  
+
+  /* structure factor, nn */
+  nn = fv->c[species_no];
+  shear = fv->SH;
+  k1 = param[0];
+  k2 = param[1];
+  n0 = param[2];
+  aexp = param[3];
+  bexp = param[4];
+
+  shear = fv->SH;
+  if (shear >= .0)
+    {
+      gterm_a = pow( shear + offset, aexp);
+      gterm_b = pow( shear + offset, bexp); 
+      d_gterm_a = aexp*pow( shear + offset, aexp-1.);
+      d_gterm_b = bexp*pow( shear + offset, bexp-1.);
+    }
+  else
+    {
+      gterm_a = 0.;
+      gterm_b = 0.; 
+      d_gterm_a = 0.;
+      d_gterm_b = 0.;
+    }
+
+
+ /* clip negative values */
+  if(nn < 1.e-5) nn = 1.e-5;
+
+ 
+  /**********************************************************/
+  
+  /* Species piece */
+  eqn = MASS_FRACTION;
+  if ( pd->e[eqn] & T_SOURCE )
+    {
+      mp->species_source[species_no] =  -k1*nn*gterm_a + k2*(n0-nn)*gterm_b;
+      
+      /* Jacobian entries for source term */
+      var = MASS_FRACTION;
+      if (pd->v[var] )
+	{
+	  var_offset = MAX_VARIABLE_TYPES + species_no;
+	  mp->d_species_source[var_offset] = 
+	    -k1*gterm_a - k2*gterm_b;
+	}
+
+      var =  SHEAR_RATE;
+      if (pd->v[var] )
+	{
+	  mp->d_species_source[var] = 
+	    -k1*nn*d_gterm_a + k2*(n0-nn)*d_gterm_b;
+	}
+    }
+return 0;
+}
+/*****************************************************************************/
+/* END of routine bond_species_source */
 /*****************************************************************************/
 
 /* 
@@ -2201,7 +2284,7 @@ enthalpy_heat_capacity_model( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp )
  */
 
 int
-V_mesh_sfs_model(dbl *param,	/* Body force. */
+V_mesh_sfs_model(dbl *param,	/* User parameters (u_v_mesh_sfs) */
 		 dbl *v_mesh_sfs, /* The three rotational component*/
 		 const int model,	/* rotational model	*/
 		 int gnn)	/* -1 for gauss point, global node number 
@@ -2280,7 +2363,6 @@ t = (dir_angle[0]*(X[0]-origin[0]) + dir_angle[1]*(X[1]-origin[1])
 axis_pt[0] = origin[0]+dir_angle[0]*t;
 axis_pt[1] = origin[1]+dir_angle[1]*t;
 axis_pt[2] = origin[2]+dir_angle[2]*t;
-/*printf("axis_pt %g %g %g\n",axis_pt[0],axis_pt[1],axis_pt[2]); */
 
 /*  compute radius and radial direction	*/
 
@@ -2289,7 +2371,6 @@ R = sqrt( SQUARE(X[0]-axis_pt[0]) + SQUARE(X[1]-axis_pt[1]) +
 rad_dir[0] = (X[0]-axis_pt[0])/R;
 rad_dir[1] = (X[1]-axis_pt[1])/R;
 rad_dir[2] = (X[2]-axis_pt[2])/R;
-/*printf("rad_dir %g %g %g\n",rad_dir[0],rad_dir[1],rad_dir[2]);*/
 
 /* compute velocity direction as perpendicular to both axis and radial 
 	direction.  Positive direction is determined by right hand rule */
@@ -2297,14 +2378,45 @@ rad_dir[2] = (X[2]-axis_pt[2])/R;
 v_dir[0] = dir_angle[1]*rad_dir[2]-dir_angle[2]*rad_dir[1];
 v_dir[1] = dir_angle[2]*rad_dir[0]-dir_angle[0]*rad_dir[2];
 v_dir[2] = dir_angle[0]*rad_dir[1]-dir_angle[1]*rad_dir[0];
-/*printf("v_dir %g %g %g\n",v_dir[0],v_dir[1],v_dir[2]);*/
 
 v_mesh_sfs[0] =  param[0]*R*v_dir[0];
 v_mesh_sfs[1] =  param[0]*R*v_dir[1];
 v_mesh_sfs[2] =  param[0]*R*v_dir[2];
-/*printf("%g %g %g\n",X[0],X[1],X[2]);
-printf("velo %g %g %g\n",v_mesh_sfs[0],v_mesh_sfs[1],v_mesh_sfs[2]);*/
 }
+else if (model == OSC_LINEAR )
+     {
+	double v_magn=0, stroke = elc_rs->u_v_mesh_sfs[3];
+	double end_stroke = elc_rs->u_v_mesh_sfs[4], end_dt, time_pd, time_red;
+	double interval;
+	for (a=0; a < DIM; a++)
+	  { v_magn += SQUARE(elc_rs->u_v_mesh_sfs[a]); }
+	v_magn = sqrt(v_magn);
+	time_pd = stroke/v_magn;
+	end_dt = end_stroke/v_magn;
+	time_red = modf(tran->time_value/(4*time_pd), &interval);
+	if(time_red > (time_pd-end_dt) && time_red <= (time_pd+end_dt))
+	   {
+	    for (a=0; a < DIM; a++)
+	       { elc_rs->v_mesh_sfs[a] = -sin((time_red-time_pd)*2/M_PIE)*elc_rs->u_v_mesh_sfs[a]; }
+	   }
+	else if(time_red > (time_pd+end_dt) && time_red <= (3*time_pd-end_dt))
+	   {
+	    for (a=0; a < DIM; a++)
+	       { elc_rs->v_mesh_sfs[a] = -elc_rs->u_v_mesh_sfs[a]; }
+	   }
+	else if(time_red > (3*time_pd-end_dt) && time_red <= (3*time_pd+end_dt))
+	   {
+	    for (a=0; a < DIM; a++)
+	       { elc_rs->v_mesh_sfs[a] = sin((time_red-time_pd)*2/M_PIE)*elc_rs->u_v_mesh_sfs[a]; }
+	   }
+	else 
+	   {
+	    for (a=0; a < DIM; a++)
+	       { elc_rs->v_mesh_sfs[a] = elc_rs->u_v_mesh_sfs[a]; }
+	   }
+	
+
+     }
 else
 {
 EH(-1,"Invalid Rotational V_mesh_sfs_model.");
@@ -2347,6 +2459,7 @@ Diffusivity (void)
       ********************************************************************/
 {
   int i, j, w, var, err= 0;
+  double T=298.0, P=101.325;;
   for (w = 0; w < pd->Num_Species; w++) {
     switch (mp->DiffusivityModel[w]) {
 
@@ -2408,6 +2521,27 @@ Diffusivity (void)
 				  mp->u_diffusivity[w][2], 
 				  &mp->diffusivity[w],
 				  &mp->d_diffusivity[w][FILL] );
+      break;
+    case CHAPMAN_GAS:
+	if ( pd->e[TEMPERATURE] )
+	   {T = fv->T;}
+	else
+	   {T = upd->Process_Temperature;}
+
+	if(pd->e[PRESSURE] && fv->P > 0)
+	  { P = fv->P;}
+	else
+	  { P = upd->Pressure_Datum/10000.0;}
+/* First coefficient is A/sigma12/omega (0.001859 atm-cm^2-(g/mol)^1/2/(K^1.5-s))  */
+	mp->diffusivity[w] = mp->u_diffusivity[w][0]*
+		sqrt(1./mp->molecular_weight[w]+1./mp->u_diffusivity[w][1])
+			*pow(T,1.5)/P;
+	if ( pd->e[TEMPERATURE] )
+	   { mp->d_diffusivity[w][TEMPERATURE] = 1.5*mp->diffusivity[w]/T;}
+	if(pd->e[PRESSURE] )
+	  { mp->d_diffusivity[w][PRESSURE] = mp->diffusivity[w]*P*log(P);}
+
+	mp->d_diffusivity[w][MAX_VARIABLE_TYPES+w] = 0.0;
       break;
     default:
       break;
@@ -4473,7 +4607,7 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
   /*local variables */
   int a, j, p, b, var;
   int status=1;
-  int dim, wim, dofs;
+  int dim, dofs;
   
   dbl gammadot, *grad_gd, gamma_dot[DIM][DIM];
   dbl mu0;
@@ -4512,8 +4646,6 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
     }
   
   dim = pd->Num_Dim;
-  wim   = dim;
-  if(pd->CoordinateSystem == SWIRLING) wim = wim+1;
 
   /* Compute gammadot, grad(gammadot), gamma_dot[][], d_gd_dG, and d_grad_gd_dG */
   
@@ -4643,9 +4775,9 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
   
   memset(div_tau_p, 0, DIM*sizeof(dbl));
   
-  for ( a=0; a<wim; a++)
+  for ( a=0; a<WIM; a++)
     {
-      for ( b=0; b<wim; b++)
+      for ( b=0; b<WIM; b++)
 	{
 	  div_tau_p[a] += mu0*qtensor[a][b]*(pp*grad_gd[b]+(gammadot+gamma_nl)*d_pp_dy*grad_Y[w][b]);
 	}
@@ -4663,11 +4795,11 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
       if(pd->v[var])
 	{
 	  dofs = ei->dof[var];
-	  for ( a=0; a<wim; a++)
+	  for ( a=0; a<WIM; a++)
 	    {
 	      for( j=0; j<dofs;j++)
 		{ 
-		  for ( b=0; b<wim; b++)
+		  for ( b=0; b<WIM; b++)
 		    {
 		      d_div_tau_p_dy[a][w][j] += mu0*qtensor[a][b]*(d_pp_dy*bf[var]->phi[j]*grad_gd[b] 
 								    +(gammadot+gamma_nl)*d_pp2_dy2*bf[var]->phi[j]*grad_Y[w][b]
@@ -4681,11 +4813,11 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
       if(pd->v[var])
 	{
 	  dofs = ei->dof[var];
-	  for ( a=0; a<wim; a++)
+	  for ( a=0; a<WIM; a++)
 	    {
 	      for( j=0; j<dofs;j++)
 		{
-		  for ( b=0; b<wim; b++)
+		  for ( b=0; b<WIM; b++)
 		    {
 		      d_div_tau_p_dgd[a][j] += mu0*qtensor[a][b]*(pp*bf[var]->grad_phi[j][b]+bf[var]->phi[j]*d_pp_dy*grad_Y[w][b]);
 		    }
@@ -4702,9 +4834,9 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
 	    {
 	      for( j=0; j<dofs;j++)
 		{
-		  for ( a=0; a<wim; a++)
+		  for ( a=0; a<WIM; a++)
 		    {
-		      for ( b=0; b<wim; b++)
+		      for ( b=0; b<WIM; b++)
 			{
 			  d_div_tau_p_dmesh[a][p][j] += mu0*qtensor[a][b]*(pp*fv->d_grad_SH_dmesh[b][p][j]
 									   +(gammadot+gamma_nl)*d_pp_dy*fv->d_grad_c_dmesh[b][w][p][j]);
@@ -6103,7 +6235,7 @@ assemble_bond_evolution(double time,	/* present time value */
 				   wrt velocity */ 
   dbl d_gd_dmesh[DIM][MDE];     /* derivative of strain rate invariant 
 				   wrt mesh */ 
-  dbl offset = 0.00001;
+  dbl offset = DBL_SMALL;
 
   for (i = 0; i < DIM; i++) {
     grad_phi_i[i] = 0;
@@ -6153,18 +6285,10 @@ assemble_bond_evolution(double time,	/* present time value */
       nn_dot = 0.0;
 
     }
-  /* clip negative values */
-  if(nn < 1.e-5) nn = 0.;
-
-  /* migrate to input deck ASAP */
-  /* kf = k2, kb = k1 */
-
-/*  k2 = 0.000909;
-  k1 = 0.4545454;
-
-  n0 = 1.;
-  aexp = 1.;
-  bexp =  0.;*/
+  
+  /* clip negative values 
+  if(nn < 1.e-5) nn = 0.;*/
+  nn = MAX(nn,0.);
 
   k2 = gn->k2;
   k1 = gn->k1;
@@ -6243,9 +6367,9 @@ assemble_bond_evolution(double time,	/* present time value */
 	  source = 0.;
 	  if ( pd->e[eqn] & T_SOURCE )
 	    {
-	      if(nn <=0.)
+	      if(DOUBLE_ZERO(nn))
 		{
-		  source = -k2*(n0-nn)*gterm_b;
+		  source = -k2*(n0)*gterm_b;
 		  source *= phi_i * det_J * wt * h3;
 		  source *= pd->etm[eqn][(LOG2_SOURCE)];
 		}
@@ -6257,7 +6381,7 @@ assemble_bond_evolution(double time,	/* present time value */
 		}
 	    }
 
-	  lec->R[peqn][i] += 
+	  lec->R[LEC_R_INDEX(peqn,i)] += 
 	    mass +  advection + diffusion + source;
 	}
     }
@@ -6342,7 +6466,7 @@ assemble_bond_evolution(double time,	/* present time value */
 		  source = 0.;
 		  if ( pd->e[eqn] & T_SOURCE )
 		    {
-		      if(nn <=0.)
+	              if(DOUBLE_ZERO(nn))
 			{
 			  source = k2*gterm_b*phi_j;
 			  source *= phi_i * det_J * wt * h3;
@@ -6356,7 +6480,7 @@ assemble_bond_evolution(double time,	/* present time value */
 			}
 		    }
 
-		  lec->J[peqn][pvar][i][j] += mass + advection + diffusion + source;
+		  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + advection + diffusion + source;
 		}
 	    }
 
@@ -6389,9 +6513,9 @@ assemble_bond_evolution(double time,	/* present time value */
 		      source = 0.;
 		      if ( pd->e[eqn] & T_SOURCE )
 			{
-			  if(nn <=0)
+	                  if(DOUBLE_ZERO(nn))
 			    {
-			      source2 = k2*(n0-nn)*d_gterm_b;
+			      source2 = k2*(n0)*d_gterm_b;
 			      source -= (source2)*d_gd_dv[b][j];
 			      source *= phi_i * det_J * wt * h3;
 			      source *= pd->etm[eqn][(LOG2_SOURCE)];
@@ -6406,7 +6530,7 @@ assemble_bond_evolution(double time,	/* present time value */
 			    }
 			}
 
-		      lec->J[peqn][pvar][i][j] += mass + advection + source;
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + advection + source;
 
 		    }
 		}
@@ -6579,7 +6703,7 @@ assemble_bond_evolution(double time,	/* present time value */
 			    }
 			}
 		      
-		      lec->J[peqn][pvar][i][j] += mass + advection  + diffusion + source;
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + advection  + diffusion + source;
 		    }
 		}
 	    }

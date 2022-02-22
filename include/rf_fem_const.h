@@ -124,8 +124,9 @@
 #define FSI_SHELL_ONLY_UNDEF     9
 
 /* Residence time kernel functions */
-#define LINEAR_TIMETEMP        111
-#define EXPONENTIAL_TIMETEMP   112
+#define LINEAR_TIMETEMP        1110
+#define EXPONENTIAL_TIMETEMP   1120
+#define DROP_EVAP              1130
 
 /****************************************************************************/
 /****************************************************************************/
@@ -452,22 +453,24 @@
 #define LIGHT_INTD            184 /*  Light Intensity - Scattering Dispersion-RBS*/
 #define TFMP_SAT              185 /*  Thin-Film Multi-Phase Saturation */
 #define TFMP_PRES             186 /*  Thin-Film Multi-Phase Lubrication Pressure */
-#define RESTIME               187  /*  Residence Time Function */
+#define RESTIME               187  /*  Residence Time Function */ 
 #define SHELL_SAT_1           188 /*  Porous shell layer 1 */
 #define SHELL_SAT_2           189 /*  Porous shell layer 2 */
 #define SHELL_SAT_3           190 /*  Porous shell layer 3 */
 #define EM_E1_REAL            191 /*  EM wave variables */
-#define EM_E2_REAL            192
-#define EM_E3_REAL            193
+#define EM_E2_REAL            192 
+#define EM_E3_REAL            193 
 #define EM_E1_IMAG            194 /*  EM wave variables */
 #define EM_E2_IMAG            195
-#define EM_E3_IMAG            196
+#define EM_E3_IMAG            196 
 #define EM_H1_REAL            197 /*  EM wave variables */
-#define EM_H2_REAL            198
-#define EM_H3_REAL            199
+#define EM_H2_REAL            198 
+#define EM_H3_REAL            199 
 #define EM_H1_IMAG            200 /*  EM wave variables */
 #define EM_H2_IMAG            201
 #define EM_H3_IMAG            202
+#define EM_CONT_REAL          203
+#define EM_CONT_IMAG          204
 /*
  * define a variable to hold an external field which will be 
  * held fixed in the problem but parametered by the basis functions
@@ -844,7 +847,9 @@
 #define R_EM_H1_IMAG            200 /*  EM wave variables */
 #define R_EM_H2_IMAG            201
 #define R_EM_H3_IMAG            202
-#define V_LAST		        203
+#define R_EM_CONT_REAL          203
+#define R_EM_CONT_IMAG          204
+#define V_LAST		        205
 
 
 /* MMH

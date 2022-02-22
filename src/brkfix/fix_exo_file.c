@@ -54,16 +54,6 @@
 
 #include "brkfix/fix.h"
 
-char *program_name;		/* name this program was run with */
-
-int *ep;			/* element pointers into node list */
-int *np;			/* node pointers into element list */
-
-int *nl;			/* node list */
-int *el;			/* element list */
-
-int *ebl;			/* element block list */
-
 /*
  * Prototypes of functions defined in this file.
  */
@@ -477,7 +467,7 @@ fix_exo_file(int num_procs, char* exo_mono_name)
 	      "About to wr_results at t=%d, mono->nv_time_indeces[0]=%d\n", 
 	      t, mono->nv_time_indeces[0]);
 #endif
-      wr_result_exo(mono, monolith_file_name, 0);
+      wr_result_exo(mono, monolith_file_name, 0, 1, 1);
       
       if ( mono->num_glob_vars > 0 ) {
 	int status;

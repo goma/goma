@@ -186,7 +186,7 @@ PROTO((
        double gradII_phi_i[DIM],
        double d_gradII_phi_i_dx[DIM][DIM][MDE],
        int ndof,
-       int *dof_map         // Map of DOFs
+       int dof_map[MDE]         // Map of DOFs
        ));
 
 EXTERN void ShellBF_2d_bar

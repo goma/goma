@@ -22,8 +22,6 @@
 #define _AC_CONTI_C
 #include "goma.h"
 #include "brk_utils.h"
-int w;
-
 #include "sl_util.h"		/* defines sl_init() */
 
 #ifdef HAVE_FRONT
@@ -222,7 +220,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
    * tev_post is calculated in load_elem_tkn
    */
   tnv = cnt_nodal_vars();
-  tev = cnt_elem_vars();
+  tev = cnt_elem_vars(exo);
 
 #ifdef DEBUG
   fprintf(stderr, "Found %d total primitive nodal variables to output.\n", tnv);
@@ -244,16 +242,18 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
   (void) memset((void *) rd, 0, sizeof(struct Results_Description));
 
   rd->nev = 0;			/* number element variables in results */
-  rd->ngv = 0;			/* number global variables in results */
   rd->nhv = 0;			/* number history variables in results */
-
-  rd->ngv = 5 + nAC;			/* number global variables in results
+  rd->ngv = 6 + nAC;		/* number global variables in results
 				   see load_global_var_info for names*/
   error = load_global_var_info(rd, 0, "CONV");
   error = load_global_var_info(rd, 1, "NEWT_IT");
   error = load_global_var_info(rd, 2, "MAX_IT");
-  error = load_global_var_info(rd, 3, "CONVRATE");
-  error = load_global_var_info(rd, 4, "MESH_VOLUME");
+  error = load_global_var_info(rd, 3, "CONVORDER");
+  error = load_global_var_info(rd, 4, "CONVRATE");
+  error = load_global_var_info(rd, 5, "MESH_VOLUME");
+
+  if ( rd->ngv > MAX_NGV )
+      EH(-1, "Augmenting condition values overflowing MAX_NGV.  Change and rerun .");
 
   if ( nAC > 0   )
     {
@@ -262,7 +262,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
       for( i = 0 ; i < nAC ; i++ )
 	{
 	  sprintf(name, "AUGC_%d",i+1);
-	  error = load_global_var_info(rd, 5 + i, name);
+	  error = load_global_var_info(rd, 6 + i, name);
 	}
     }
 
@@ -302,9 +302,10 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
   fprintf(stderr, "wr_result_prelim() starts...\n", tnv);
 #endif
 
-  gvec_elem = (double ***) smalloc ( (exo->num_elem_blocks)*sizeof(double **));
-  for (i = 0; i < exo->num_elem_blocks; i++)
-    gvec_elem[i] = (double **) smalloc ( (tev + tev_post)*sizeof(double *));
+  gvec_elem = (double ***) calloc (exo->num_elem_blocks, sizeof(double **));
+  for (i = 0; i < exo->num_elem_blocks; i++) {
+    gvec_elem[i] = (double **) calloc (tev + tev_post, sizeof(double *));
+  }
 
   wr_result_prelim_exo(rd,
                        exo,
@@ -678,6 +679,12 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 
   DPRINTF(stderr, "\nINITIAL ELEMENT QUALITY CHECK---\n");
   good_mesh = element_quality(exo, x, ams[0]->proc_config);
+
+  if( Output_Variable_Stats)	{
+      err = variable_stats ( x, path1);
+      EH(err, "Problem with variable_stats!");
+      if(ProcID == 0) fflush(stdout); 
+     }
 
   /*
    * set the number of successful path steps to zero
@@ -1215,6 +1222,11 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 	    nprint++;
 	  }
 	}
+        if( Output_Variable_Stats)	{
+           err = variable_stats ( x, path1);
+           EH(err, "Problem with variable_stats!");
+           if(ProcID == 0) fflush(stdout); 
+           }
 
       if (step_fix != 0 && nt == step_fix) {
 #ifdef PARALLEL

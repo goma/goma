@@ -58,7 +58,8 @@
 #include "mm_fill_util.h"
 #include "mm_fill_potential.h"
 #include "mm_qp_storage.h"
-#include "mm_shell_bc.h" 
+#include "mm_shell_bc.h"
+#include "mm_fill_em.h"
 
 
 #include "mm_eh.h"
@@ -114,7 +115,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
   double xi[DIM];             /* Local element coordinates of Gauss point. */
   double x_dot[MAX_PDIM];
   double x_rs_dot[MAX_PDIM];
-  double wt, weight, pb;
+  double wt, weight, pb[DIM];
   double xsurf[MAX_PDIM];
   double dsigma_dx[DIM][MDE];
   double func[DIM];
@@ -481,13 +482,13 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	 */
 
 	switch (bc->BC_Name) {
-	    
+
 	case KINEMATIC_PETROV_BC:
 	case KINEMATIC_BC:
 	case VELO_NORMAL_BC:
 	case VELO_NORMAL_LS_BC:
 	case VELO_NORMAL_LS_PETROV_BC:
-		
+
 	  contact_flag = (ls != NULL);
 
 	  /*  first all external boundaries with velocity
@@ -507,8 +508,14 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	    }
 	  break;
 
+        case VELO_NORMAL_LUB_BC:
+
+	      fvelo_normal_lub_bc(func, d_func, elem_side_bc->id_side, x_dot, theta, delta_t,
+                                  xi, exo, bc->BC_Data_Float);
+
+	  break;
 	case VELO_TANGENT_LS_BC:
-		
+
 	  /*  first all external boundaries with velocity
 	      second - internal boundaries with an explicit block id
 	      third  - internal boundaries with implicit iapply logic
@@ -539,7 +546,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			  x_dot, theta, delta_t, (int) bc->BC_Name,0,0,135.0);
 	  ls_attach_bc( func, d_func, bc->BC_Data_Float[0] );
 	  break;
-		
+
 
  	case KIN_DISPLACEMENT_PETROV_BC:
 	case KIN_DISPLACEMENT_BC:
@@ -657,6 +664,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			      bc->BC_Data_Float[0], 
 			      bc->BC_Data_Float[1], 
 			      bc->BC_Data_Float[2], 
+			      bc->BC_Data_Float[3], 
 			      xsurf, x_dot, theta, delta_t, (int) bc->BC_Name,
 			      elem_side_bc->id_side, xi, exo,
 			      time_intermediate, bc->u_BC, bc->len_u_BC);
@@ -970,15 +978,23 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	  if ( bc->BC_Data_Int[0] == ei->elem_blk_id ||
 	       ( bc->BC_Data_Int[0] == -1 && iapply ) ) {
 
+	    int dir;
 	    /* set up surface repulsion force and zero it if 
 	     * bc is CAP_REPULSE or CAP_RECOIL_PRESS
 	     * because then force is calculated
 	     * later */
-	    pb = BC_Types[bc_input_id].BC_Data_Float[1];
+	    for( dir=0 ; dir<ielem_dim ; dir++)
+	       { pb[dir] = BC_Types[bc_input_id].BC_Data_Float[dir+1];}
+	    if ( ielem_dim == DIM)
+		{
+		 pb[DIM-1] = 0.0;
+		 /*WH(-1,"3rd Direction bulk stress not connected to CAPILLARY BC yet...\n");*/
+		}
+/*  BC_Data_Float[1]&[2] are now used for external pressure and shear stress  */
 	    if (BC_Types[bc_input_id].BC_Name == CAPILLARY_TABLE_BC)
                {
-	  apply_table_wic_bc(func, d_func, &BC_Types[bc_input_id], time_value);
-              pb = func[0];
+	        apply_table_wic_bc(func, d_func, &BC_Types[bc_input_id], time_value);
+                pb[0] += func[0];
                }
 
 	    fn_dot_T(cfunc, d_cfunc, elem_side_bc->id_side,
@@ -986,56 +1002,56 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 		     elem_side_bc, iconnect_ptr, dsigma_dx);
 
 	    if (bc->BC_Name == CAP_REPULSE_BC) {
-	      apply_repulsion(cfunc, d_cfunc, bc->BC_Data_Float[2],
-			      bc->BC_Data_Float[3], bc->BC_Data_Float[4],
-			      bc->BC_Data_Float[5], bc->BC_Data_Float[6],
+	      apply_repulsion(cfunc, d_cfunc, bc->BC_Data_Float[3],
+			      bc->BC_Data_Float[4], bc->BC_Data_Float[5],
+			      bc->BC_Data_Float[6], bc->BC_Data_Float[7],
 			      elem_side_bc, iconnect_ptr);
 	    }
 
 	    if (bc->BC_Name == CAP_REPULSE_ROLL_BC) {
 	      apply_repulsion_roll(cfunc, d_cfunc, x, 
-                               bc->BC_Data_Float[2], 
-			       &(bc->BC_Data_Float[3]),
-			       &(bc->BC_Data_Float[6]),
-                               bc->BC_Data_Float[9], 
+                               bc->BC_Data_Float[3], 
+			       &(bc->BC_Data_Float[4]),
+			       &(bc->BC_Data_Float[7]),
                                bc->BC_Data_Float[10], 
                                bc->BC_Data_Float[11], 
                                bc->BC_Data_Float[12], 
                                bc->BC_Data_Float[13], 
                                bc->BC_Data_Float[14], 
+                               bc->BC_Data_Float[15], 
                                bc->BC_Data_Int[2],
 			      elem_side_bc, iconnect_ptr);
 	    }
 	    if (bc->BC_Name == CAP_REPULSE_USER_BC) {
 	      apply_repulsion_user(cfunc, d_cfunc, 
-                               bc->BC_Data_Float[2], 
-			       &(bc->BC_Data_Float[3]),
-			       &(bc->BC_Data_Float[6]),
-                               bc->BC_Data_Float[9], 
+                               bc->BC_Data_Float[3], 
+			       &(bc->BC_Data_Float[4]),
+			       &(bc->BC_Data_Float[7]),
                                bc->BC_Data_Float[10], 
                                bc->BC_Data_Float[11], 
                                bc->BC_Data_Float[12], 
                                bc->BC_Data_Float[13], 
+                               bc->BC_Data_Float[14], 
 			      elem_side_bc, iconnect_ptr);
 	    }
 	    if (bc->BC_Name == CAP_REPULSE_TABLE_BC) {
-	      apply_repulsion_table(cfunc, d_cfunc, x, bc->BC_Data_Float[2], 
-                               bc->BC_Data_Float[3], 
+	      apply_repulsion_table(cfunc, d_cfunc, x, bc->BC_Data_Float[3], 
                                bc->BC_Data_Float[4], 
                                bc->BC_Data_Float[5], 
                                bc->BC_Data_Float[6], 
-			       &(bc->BC_Data_Float[7]),
+                               bc->BC_Data_Float[7], 
+			       &(bc->BC_Data_Float[8]),
                                bc->BC_Data_Int[2],
 			      elem_side_bc, iconnect_ptr);
 	    }
 	    if (BC_Types[bc_input_id].BC_Name == CAP_RECOIL_PRESS_BC)
 	      {
 		apply_vapor_recoil(cfunc, d_cfunc, 
-				   BC_Types[bc_input_id].BC_Data_Float[2],
 				   BC_Types[bc_input_id].BC_Data_Float[3],
 				   BC_Types[bc_input_id].BC_Data_Float[4],
 				   BC_Types[bc_input_id].BC_Data_Float[5],
 				   BC_Types[bc_input_id].BC_Data_Float[6],
+				   BC_Types[bc_input_id].BC_Data_Float[7],
 				   elem_side_bc, iconnect_ptr);
 	      }
 	    if (BC_Types[bc_input_id].BC_Name == CAPILLARY_SHEAR_VISC_BC)
@@ -1085,7 +1101,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	case FLOW_STRESSNOBC_BC:
 	  flow_n_dot_T_nobc(func, d_func,
 			    bc->BC_Data_Float[0],
-			    bc->BC_Data_Int[0]);
+			    bc->BC_Data_Int[0], time_value);
 	  break;
 
 	case FLOW_GRADV_BC:
@@ -1735,6 +1751,14 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	  qnobc_surf (func, d_func, time_intermediate);
 	  break;
 
+	case RESTIME_GRADSIC_BC:
+	  func[0] = -bc->BC_Data_Float[0];
+	  /*  fall through to add in normal gradient term */
+
+	case RESTIME_NOBC_BC:
+	  restime_nobc_surf (func, d_func, time_intermediate);
+	  break;
+
 	case T_CONTACT_RESIS_BC:
 	  qside_contact_resis(func, d_func,
 			    bc->BC_Data_Int[0],
@@ -1757,8 +1781,71 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
                       bc->BC_Data_Float[1], bc->BC_Data_Float[2],
                       bc->BC_Data_Float[3], bc->BC_Data_Int[0]);
 	    break;
-
-	case LIGHTP_TRANS_BC:
+          case EM_ER_FARFIELD_DIRECT_BC:
+          case EM_EI_FARFIELD_DIRECT_BC:
+          case EM_HR_FARFIELD_DIRECT_BC:
+          case EM_HI_FARFIELD_DIRECT_BC:
+              apply_em_farfield_direct_vec
+                  (func,
+                   d_func,
+                   xi,
+                   (int) bc->BC_Name,
+                   bc->BC_Data_Float
+                  );
+              break;
+          case EM_ER_SOMMERFELD_BC:
+          case EM_EI_SOMMERFELD_BC:
+          case EM_HR_SOMMERFELD_BC:
+          case EM_HI_SOMMERFELD_BC:
+              apply_em_sommerfeld_vec
+                  (func,
+                   d_func,
+                   xi,
+                   (int) bc->BC_Name,
+                   bc->BC_Data_Float
+                  );
+              break;
+          case EM_ER_FREE_BC:
+          case EM_EI_FREE_BC:
+          case EM_HR_FREE_BC:
+          case EM_HI_FREE_BC:
+              apply_em_free_vec
+                  (func,
+                   d_func,
+                   xi,
+                   (int) bc->BC_Name
+                  );
+              break;
+        case E_ER_PLANEWAVE_BC:
+        case E_EI_PLANEWAVE_BC:
+            apply_ewave_planewave_vec
+                (func,
+                 d_func,
+                 xi,
+                 (int) bc->BC_Name,
+                 bc->BC_Data_Float
+                );
+            break;
+        case E_ER_FARFIELD_BC:
+        case E_EI_FARFIELD_BC:
+            apply_ewave_curlcurl_farfield_vec
+                (func,
+                 d_func,
+                 xi,
+                 time_value,
+                 (int) bc->BC_Name,
+                 bc->BC_Data_Float
+                );
+            break;
+        case E_ER_2D_BC:
+        case E_EI_2D_BC:
+          apply_ewave_2D(func,
+                         d_func,
+                         xi,
+                         (int) bc->BC_Name
+                         );
+          break;
+        case LIGHTP_TRANS_BC:
 	case LIGHTM_TRANS_BC:
 	case LIGHTD_TRANS_BC:
 	    light_transmission (func, d_func, time_intermediate, 
@@ -2189,7 +2276,6 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	      if (BC_Types[bc_input_id].BC_Name != CAPILLARY_BC  &&
 		  BC_Types[bc_input_id].BC_Name != CAPILLARY_SHEAR_VISC_BC  &&
 		  BC_Types[bc_input_id].BC_Name != ELEC_TRACTION_BC  &&
-                  BC_Types[bc_input_id].BC_Name != YFLUX_USER_BC &&
 		  BC_Types[bc_input_id].BC_Name != CAP_REPULSE_BC &&
 		  BC_Types[bc_input_id].BC_Name != CAP_REPULSE_ROLL_BC &&
 		  BC_Types[bc_input_id].BC_Name != CAP_REPULSE_USER_BC &&
@@ -2379,12 +2465,12 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	       *  residual vector
 	       */
 	      if (ldof_eqn != -1) {
-		lec->R[ieqn][ldof_eqn] += weight * fv->sdet * func[p];
+                lec->R[LEC_R_INDEX(ieqn,ldof_eqn)] += weight * fv->sdet * func[p];
 		
 #ifdef DEBUG_BC
 		if (IFPD == NULL) IFPD = fopen("darcy.txt", "a");
 		fprintf (IFPD,
-			 "ielem = %d: BC_index = %d, lec->R[%d][%d] += weight"
+                         "ielem = %d: BC_index = %d, lec->R[LEC_R_INDEX(%d,%d)] += weight"
 			 "* fv->sdet * func[p]: weight = %g, fv->sdet = %g, func[%d] = %g\n",
 			 ei->ielem, bc_input_id, ieqn, ldof_eqn,
 			 weight, fv->sdet, p, func[p]);
@@ -2430,7 +2516,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 		       *            element. We should make use of that
 		       *            feature to cut down the amount of work.
 		       */
-		      jac_ptr = lec->J[ieqn][pvar][ldof_eqn];
+                      jac_ptr = &(lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,0)]);
 		      phi_ptr = bf[var]->phi;
 		      for (jlv = 0; jlv < ei->Lvdesc_Numdof[lvdesc]; jlv++) {
 			j = ei->Lvdesc_to_lvdof[lvdesc][jlv];
@@ -2446,7 +2532,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			var = jacCol.Lvdof_var_type[w];
 			pvar = upd->vp[var];
 			j = jacCol.Lvdof_lvdof[w];
-			lec->J[ieqn][pvar][ldof_eqn][j] += 
+                        lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] +=
 			  tmp * jacCol.Jac_lvdof[w];
 		      }
 
@@ -2455,7 +2541,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			if (pd->v[var]) {
 			  pvar = upd->vp[var];
 			  for (j = 0; j < ei->dof[var]; j++) {
-			    lec->J[ieqn][pvar][ldof_eqn][j] +=
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] +=
 			      weight * func[p] * fv->dsurfdet_dx[q][j];
 			  }
 			}
@@ -2477,7 +2563,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			pvar = upd->vp[var];
 			if (pvar != -1) {
 			  for (j = 0; j < ei->dof[var]; j++) {
-			    lec->J[ieqn][pvar][ldof_eqn][j] +=
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] +=
 			      weight * func[p] * fv->dsurfdet_dx[q][j];
 			  }
 			}
@@ -2493,14 +2579,14 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			  (BC_Types[bc_input_id].desc->sens[var] ||	1)) {
 			if (var != MASS_FRACTION) {
 			  for (j = 0; j < ei->dof[var]; j++) {
-			    lec->J[ieqn][pvar] [ldof_eqn][j] +=
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] +=
 			      weight * fv->sdet * d_func[p][var][j];
 			  }
 			} else {
 			  /* variable type is MASS_FRACTION */
 			  for (w = 0; w < pd->Num_Species_Eqn; w++) {
 			    for (j = 0; j < ei->dof[var]; j++) {
-			      lec->J[ieqn][MAX_PROB_VAR + w][ldof_eqn][j] += 
+                              lec->J[LEC_J_INDEX(ieqn,MAX_PROB_VAR + w,ldof_eqn,j)] +=
 				weight * fv->sdet *
 				d_func[p][MAX_VARIABLE_TYPES + w][j];
 			    }
@@ -2575,7 +2661,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
                         *  residual vector
                         */
 
-                        lec->R[ieqn][ldof_eqn] += weight * fv->sdet * func_stress[imode][p];
+                        lec->R[LEC_R_INDEX(ieqn,ldof_eqn)] += weight * fv->sdet * func_stress[imode][p];
 
                        /*
                         *   Add sensitivities into matrix
@@ -2601,7 +2687,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
                                   pvar = upd->vp[var];
                                   if (pvar != -1) {
                                      for (j = 0; j < ei->dof[var]; j++) {
-                                         lec->J[ieqn][pvar][ldof_eqn][j] +=
+                                         lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] +=
                                          weight * func_stress[imode][p] * fv->dsurfdet_dx[q][j];
                                      }
                                  }
@@ -2619,7 +2705,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
                                   /* Case for variable type that is not MASS_FRACTION */
                                   if (var != MASS_FRACTION) {
                                      for (j = 0; j < ei->dof[var]; j++) {
-                                          lec->J[ieqn][pvar] [ldof_eqn][j] +=
+                                          lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] +=
                                           weight * fv->sdet * d_func_stress[imode][p][var][j];
                                      }
                                   }
@@ -2627,7 +2713,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
                                   else {
                                      for (w = 0; w < pd->Num_Species_Eqn; w++) {
                                          for (j = 0; j < ei->dof[var]; j++) {
-                                             lec->J[ieqn][MAX_PROB_VAR + w][ldof_eqn][j] +=
+                                             lec->J[LEC_J_INDEX(ieqn,MAX_PROB_VAR + w,ldof_eqn,j)] +=
                                              weight * fv->sdet * d_func_stress[imode][p][MAX_VARIABLE_TYPES + w][j];
                                          }
                                      }
@@ -2700,11 +2786,11 @@ apply_table_wic_bc( double func[],
    *    convenient.
    */
   if (BC_Type->BC_Name == TABLE_WICV_BC) {
-    func[0] = BC_Type->table->slope[0]*BC_Type->BC_Data_Float[0];
-    func[1] = BC_Type->table->slope[1]*BC_Type->BC_Data_Float[0];
-    func[2] = BC_Type->table->slope[2]*BC_Type->BC_Data_Float[0];
+    func[0] = BC_Type->table->slope[0]*BC_Type->table->yscale;
+    func[1] = BC_Type->table->slope[1]*BC_Type->table->yscale;
+    func[2] = BC_Type->table->slope[2]*BC_Type->table->yscale;
   } else {
-    func[0] = interp_val*BC_Type->BC_Data_Float[0];
+    func[0] = interp_val*BC_Type->table->yscale;
   }
 }
 /*******************************************************************************/

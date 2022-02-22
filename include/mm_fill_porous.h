@@ -189,8 +189,8 @@ PROTO(( double ,
         double ,
         double *,		/* drho_wg_dP                                    */
         double *,		/* drho_wg_dT                                    */
-        double *,               /* d_drhowg_dP                                  */
-        double *));		/* d_drhowg_dT                                  */
+        double [2],               /* d_drhowg_dP                                  */
+        double [2]));		/* d_drhowg_dT                                  */
 
 EXTERN double rho_air_EOS
 PROTO((   double , 
@@ -199,8 +199,8 @@ PROTO((   double ,
           double ,
           double *,
           double *,
-          double *,
-          double *));
+          double [2],
+          double [2]));
 
 EXTERN double eval_rho_poly 
 PROTO(( double *,
@@ -222,16 +222,16 @@ PROTO((double ,			/* pressure                                  */
        double ,                 /* temperature                               */
        double *,		/* dhl_dP                                    */
        double *,		/* dhl_dT                                    */
-       double *,                /* d_dhl_dP                                  */
-       double *));		/* d_dhl_dT                                  */
+       double [2],                /* d_dhl_dP                                  */
+       double [2]));		/* d_dhl_dT                                  */
 
 EXTERN double h_water_superheat_EOS
 PROTO((double ,			/* pressure                                  */
        double ,                 /* temperature                               */
        double *,		/* dhwg_dP                                    */
        double *,		/* dhwg_dT                                    */
-       double *,                /* d_dhwg_dP                                  */
-       double *));		/* d_dhwg_dT                                  */
+       double [2],                /* d_dhwg_dP                                  */
+       double [2]));		/* d_dhwg_dT                                  */
 
 EXTERN double eval_poly
 PROTO((double *,		/* coef[]                                    */

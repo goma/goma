@@ -350,7 +350,7 @@ numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
 {
   int i, j, nnonzero;
   int idx, color;
-  int zeroCA = -1;
+  int zeroCA = 1;
   double *resid_vector_1, *x_1;
   double dx;
   int *irow, *jcolumn, *nelem;
@@ -563,6 +563,7 @@ numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
 			   &time_value, exo, dpi,
 			   &ielem, &num_total_nodes,
 			   h_elem_avg, U_norm, NULL, zeroCA);
+	zeroCA = -1;  
 
       }
 
@@ -576,31 +577,71 @@ numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
       global_qp_storage_destroy();
 
       for (j = 0; j < numProcUnknowns; j++) {
-	if (color == coloring->column_color[j]) {
-	  for (idx = coloring->colptr[j]; idx < coloring->colptr[j+1]; idx++) {
-	    i = coloring->rowptr[idx];
-	    var_i = idv[i][0];
-	    var_j = idv[j][0];
+        if (color == coloring->column_color[j]) {
+          for (idx = coloring->colptr[j]; idx < coloring->colptr[j + 1];
+               idx++) {
+            i = coloring->rowptr[idx];
+            var_i = idv[i][0];
+            var_j = idv[j][0];
+            int gnode;
+            int ivd;
+            int i_offset;
+            int idof;
+            Index_Solution_Inv(i, &gnode, &ivd, &i_offset, &idof);
 
-	    for (mode=0; mode < vn->modes; mode++)
-	      {
-		/* Only for stress terms */
-		if (idv[i][0] >= v_s[mode][0][0] && idv[i][0] <= v_s[mode][2][2])
-		  {
+            if (pd->v[EM_E1_REAL]) {
+              if (Inter_Mask[var_i][var_j]) {
+                int ja = (i == j) ? j
+                                  : in_list(j, ams->bindx[i], ams->bindx[i + 1],
+                                            ams->bindx);
+                if (ja == -1) {
+                  sprintf(errstring,
+                          "Index not found (%d, %d) for interaction (%d, %d)",
+                          i, j, idv[i][0], idv[j][0]);
+                  EH(ja, errstring);
+                }
+                if (Nodes[gnode]->DBC && Nodes[gnode]->DBC[i_offset] != -1 &&
+                    i == j) {
+                  nj[ja] = 1.0;
+                } else if (Nodes[gnode]->DBC &&
+                           Nodes[gnode]->DBC[i_offset] != -1) {
+                  nj[ja] = 0.0;
+                } else {
+                  nj[ja] = (resid_vector_1[i] - resid_vector[i]) / (dx_col[j]);
+                }
+              }
+            }
 
-		    if (Inter_Mask[var_i][var_j]) {
+            for (mode = 0; mode < vn->modes; mode++) {
+              /* Only for stress terms */
+              if (idv[i][0] >= v_s[mode][0][0] &&
+                  idv[i][0] <= v_s[mode][2][2]) {
 
-		      int ja = (i == j) ? j : in_list(j, ams->bindx[i], ams->bindx[i+1], ams->bindx);
-		      if (ja == -1) {
-			sprintf(errstring, "Index not found (%d, %d) for interaction (%d, %d)", i, j, idv[i][0], idv[j][0]);
-			EH(ja, errstring);
-		      }
-		      nj[ja] = (resid_vector_1[i] - resid_vector[i]) / (dx_col[j]);
-		    }
-		  }
-	      } // Loop over modes
-	  }
-	}
+                if (Inter_Mask[var_i][var_j]) {
+
+                  int ja = (i == j) ? j
+                                    : in_list(j, ams->bindx[i],
+                                              ams->bindx[i + 1], ams->bindx);
+                  if (ja == -1) {
+                    sprintf(errstring,
+                            "Index not found (%d, %d) for interaction (%d, %d)",
+                            i, j, idv[i][0], idv[j][0]);
+                    EH(ja, errstring);
+                  }
+                  if (Nodes[gnode]->DBC && Nodes[gnode]->DBC[i_offset] != -1 &&
+                      i == j) {
+                    nj[ja] = 1.0;
+                  } else if (Nodes[gnode]->DBC &&
+                             Nodes[gnode]->DBC[i_offset] != -1) {
+                    nj[ja] = 0.0;
+                  } else {
+                    nj[ja] = (resid_vector_1[i] - resid_vector[i]) / (dx_col[j]);
+                  }
+                }
+              }
+            } // Loop over modes
+          }
+        }
       }
 
       /*
@@ -738,7 +779,7 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
 ******************************************************************************/
 {
   int i, j, k, l, m, ii, nn, kount, nnonzero, index;
-  int zeroCA;
+  int zeroCA = 1;
   double *a = ams->val;
   int *ija = ams->bindx;
   double *aj_diag, *aj_off_diag, *scale;
@@ -1096,8 +1137,6 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
         clear_xfem_contribution( ams->npu );
 
       for (i = 0; i < num_elems; i++) {
-	zeroCA = -1;
-	if (i == 0) zeroCA = 1;
 	load_ei(elem_list[i], exo, 0);
 	matrix_fill(ams, x_1, resid_vector_1,
 		    x_old, x_older,  xdot, xdot_old, x_update,
@@ -1106,6 +1145,7 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
 		    &time_value, exo, dpi,
 		    &elem_list[i], &num_total_nodes,
 		    h_elem_avg, U_norm, NULL, zeroCA);
+	zeroCA = 0;
 	if( neg_elem_volume ) break;
 	if( neg_lub_height ) break;
 	if( zero_detJ ) break;

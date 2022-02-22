@@ -728,7 +728,7 @@ setup_old_exo(Exo_DB *e, Dpi *dpi, int num_proc)
    if ( mmps > MAX_MAT_PER_SS )
      {
        sprintf(err_msg, 
-	  "SS %d hits lots of EBs. Set MAX_MAX_PER_SS to %d in rf_bc_const.h",
+	  "SS %d hits lots of EBs. Set MAX_MAT_PER_SS to >= %d in rf_bc_const.h",
 	       e->ss_id[ss_index_max], mmps);
        EH(-1, err_msg);
      }

@@ -84,17 +84,25 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
   dbl deform_grad[DIM][DIM];  /* deformation gradient for nonlinear elasticity 
                        is d(deformation)/d(initial mesh coord) + identity */
   dbl deform_grad_old[DIM][DIM];
+  dbl deform_grad_dot[DIM][DIM];
   dbl invdeform_grad[DIM][DIM]; 
+  dbl invdeform_dot_grad[DIM][DIM]; 
   dbl d_invdeform_grad_dx[DIM][DIM] [DIM][MDE]; 
+  dbl d_invdeform_dot_grad_dx[DIM][DIM] [DIM][MDE]; 
   dbl grad_d[DIM][DIM];  /* displacement gradient*/
   dbl d_grad_d[DIM][DIM] [DIM][MDE];  /* displacement gradient*/
   dbl grad_d_old[DIM][DIM];
+  dbl grad_d_dot[DIM][DIM];
+  dbl d_grad_d_dot[DIM][DIM] [DIM][MDE];  /* displacement gradient*/
   dbl det2d;   /* determinant of 2D deformation gradient tensor */
-  dbl det2d_old;
+  dbl det2d_old, det2d_dot;
   dbl ddet2d_dx[DIM][MDE];  /* sensitivity */
+  dbl ddet2d_dot_dx[DIM][MDE];  /* sensitivity */
   dbl cauchy_green[DIM][DIM];  /* strain tensor without division by determinant, etc. */
   dbl d_cauchy_green_dx[DIM][DIM][DIM][MDE];  /* sensitivity */
   dbl cauchy_green_old[DIM][DIM];
+  dbl cauchy_green_dot[DIM][DIM];
+  dbl d_cauchy_green_dot_dx[DIM][DIM][DIM][MDE];  /* sensitivity */
   static int is_initialized=FALSE;
   
   struct Basis_Functions  *bfv;
@@ -117,10 +125,14 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
   memset( fv->strain, 0, sizeof(double)*DIM*DIM);
   memset( fv_old->strain, 0, sizeof(double)*DIM*DIM);
   memset( fv->deform_grad, 0, sizeof(double)*DIM*DIM);
+  memset( cauchy_green_dot, 0, sizeof(double)*DIM*DIM);
+  memset( grad_d_dot, 0, sizeof(double)*DIM*DIM);
   if (af->Assemble_Jacobian) {
     memset(d_grad_d, 0, sizeof(double)*DIM*DIM*DIM*MDE);
     memset(d_cauchy_green_dx, 0, sizeof(double)*DIM*DIM*DIM*MDE);
+    memset(d_cauchy_green_dot_dx, 0, sizeof(double)*DIM*DIM*DIM*MDE);
     memset(ddet2d_dx, 0, sizeof(double)*DIM*MDE);
+    memset(d_grad_d_dot, 0, sizeof(double)*DIM*DIM*DIM*MDE);
 	
 	if( !is_initialized ) {
 		memset(fv->d_volume_change_dx, 0, sizeof(double)*DIM*MDE);
@@ -156,6 +168,8 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 			*esp->d[q][i] * bf[v]->d_phi[i][p];
 		      grad_d_old[p][q] += 
 			*esp_old->d[q][i] * bf[v]->d_phi[i][p];
+		      grad_d_dot[p][q] += 
+			*esp_dot->d[q][i] * bf[v]->d_phi[i][p];
 		      
 		    }
 		} else EH(-1,"Cant get deformation gradient without mesh!");
@@ -176,6 +190,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 		    for ( p=0; p<dim; p++)
 		      {
 			d_grad_d[p][b][b][j] += bf[v]->d_phi[j][p];
+			d_grad_d_dot[p][b][b][j] += bf[v]->d_phi[j][p];
 		      }
 		    for ( i=0; i<ei->dof[v]; i++)
 		      {
@@ -184,6 +199,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 			    for ( q=0; q<dim; q++)
 			      {
 				d_grad_d[p][q][b][j] += *esp->d[q][i] * bf[v]->d_d_phi_dmesh[i][p][b][j];
+				d_grad_d_dot[p][q][b][j] += *esp_dot->d[q][i] * bf[v]->d_d_phi_dmesh[i][p][b][j];
 			      }
 			  }
 		      }
@@ -236,6 +252,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 	    {
 	      grad_d[p][q] = fv->grad_d[p][q];
 	      grad_d_old[p][q] = fv_old->grad_d[p][q];
+	      grad_d_dot[p][q] = fv_dot->grad_d[p][q];
 	    }
 	}
       if (af->Assemble_Jacobian) {
@@ -248,6 +265,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 		    for ( j=0; j<ei->dof[MESH_DISPLACEMENT1+b]; j++)
 		      {
 			d_grad_d[p][q][b][j] = fv->d_grad_d_dmesh[p][q][b][j];			
+			d_grad_d_dot[p][q][b][j] = fv_dot->d_grad_d_dmesh[p][q][b][j];			
 		      }
 		  }
 	      }
@@ -267,6 +285,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 	{
 	  cauchy_green[p][q] = 0.5 * (grad_d[p][q] + grad_d[q][p]);
 	  cauchy_green_old[p][q] = 0.5 * (grad_d_old[p][q] + grad_d_old[q][p]);
+	  cauchy_green_dot[p][q] = 0.5 * (grad_d_dot[p][q] + grad_d_dot[q][p]);
 	}
     }
   /* add on nonlinear term to Eulerian Strain Tensor */
@@ -285,6 +304,8 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 		 */
 		cauchy_green[p][q] -= 0.5 * grad_d[p][a] * grad_d[q][a];
 		cauchy_green_old[p][q] -= 0.5 * grad_d_old[p][a] * grad_d_old[q][a];
+		cauchy_green_dot[p][q] -= 0.5*(grad_d[p][a]*grad_d_dot[q][a] 
+						+ grad_d_dot[p][a]*grad_d[q][a]);
 	      }
 	  }
       }
@@ -302,6 +323,8 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 		  {
 		    d_cauchy_green_dx[p][q][b][j] = 0.5 * 
 		      (d_grad_d[p][q][b][j] + d_grad_d[q][p][b][j]);
+		    d_cauchy_green_dot_dx[p][q][b][j] = 0.5 * 
+		      (d_grad_d_dot[p][q][b][j] + d_grad_d_dot[q][p][b][j]);
 		  }
 	      }
 	    if (cr->MeshFluxModel != LINEAR) {
@@ -320,6 +343,9 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 			  d_cauchy_green_dx[p][q][b][j] -= 0.5 * 
 			    ( d_grad_d[p][a][b][j] * grad_d[q][a] 
 			      + grad_d[p][a] * d_grad_d[q][a][b][j] ); 
+			  d_cauchy_green_dot_dx[p][q][b][j] -= 0.5 * 
+			    ( d_grad_d_dot[p][a][b][j] * grad_d_dot[q][a] 
+			      + grad_d_dot[p][a] * d_grad_d_dot[q][a][b][j] ); 
 			}
 		    }
 		}
@@ -398,6 +424,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 	      for ( q=0; q<VIM; q++)
 		{
 		  fv->deform_grad[p][q] = delta(p,q) + grad_d[p][q];
+		  fv_dot->deform_grad[p][q] = grad_d_dot[p][q];
 		}
 	    }
 
@@ -411,6 +438,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 			for ( j=0; j<ei->dof[MESH_DISPLACEMENT1+b]; j++)
 			  {
 			    fv->d_deform_grad_dx[p][q][b][j] = d_grad_d[p][q][b][j];
+			    fv_dot->d_deform_grad_dx[p][q][b][j] = d_grad_d_dot[p][q][b][j];
 			  }
 		      }
 		  }
@@ -425,6 +453,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 	      for ( q=0; q<VIM; q++)
 		{
 		  invdeform_grad[p][q] = delta(p,q) - grad_d[p][q];
+		  invdeform_dot_grad[p][q] = -grad_d_dot[p][q];
 		}
 	    }
 
@@ -438,6 +467,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 			for ( j=0; j<ei->dof[MESH_DISPLACEMENT1+b]; j++)
 			  {
 			    d_invdeform_grad_dx[p][q][b][j] = - d_grad_d[p][q][b][j];
+			    d_invdeform_dot_grad_dx[p][q][b][j] = - d_grad_d_dot[p][q][b][j];
 			  }
 		      }
 		  }
@@ -445,6 +475,9 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 	  }
 	  invert_tensor(invdeform_grad, fv->deform_grad, VIM,
 			d_invdeform_grad_dx, fv->d_deform_grad_dx, 
+			ei->dof[MESH_DISPLACEMENT1], af->Assemble_Jacobian);
+	  invert_tensor(invdeform_dot_grad, fv_dot->deform_grad, VIM,
+			d_invdeform_dot_grad_dx, fv_dot->d_deform_grad_dx, 
 			ei->dof[MESH_DISPLACEMENT1], af->Assemble_Jacobian);
 	}
     }
@@ -465,12 +498,16 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
        */
       fv->volume_change = 1.;
       fv_old->volume_change = 1.;
+      fv_dot->volume_change = 1.;
       fv->volume_strain = 0.;
+      fv_dot->volume_strain = 0.;
       for (p=0; p<VIM; p++) 
 	{
 	  fv->volume_change += cauchy_green[p][p];
 	  fv_old->volume_change += cauchy_green_old[p][p];
+	  fv_dot->volume_change += cauchy_green_dot[p][p];
 	  fv->volume_strain += cauchy_green[p][p];
+	  fv_dot->volume_strain += cauchy_green_dot[p][p];
 	}
 
       if (af->Assemble_Jacobian) {
@@ -481,13 +518,19 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 		for ( j=0; j<ei->dof[MESH_DISPLACEMENT1+b]; j++)
 		  {
 		  	fv->d_volume_change_dx[b][j] = d_cauchy_green_dx[0][0] [b][j];		    
+		  	fv_dot->d_volume_change_dx[b][j] = d_cauchy_green_dot_dx[0][0] [b][j];		    
 			fv->d_volume_strain_dx[b][j] = d_cauchy_green_dx[0][0] [b][j];		    
+			fv_dot->d_volume_strain_dx[b][j] = d_cauchy_green_dot_dx[0][0] [b][j];		    
 
 		    fv->d_volume_change_dx[b][j] += d_cauchy_green_dx[1][1] [b][j];		    
+		    fv_dot->d_volume_change_dx[b][j] += d_cauchy_green_dot_dx[1][1] [b][j];		    
 		    fv->d_volume_strain_dx[b][j] += d_cauchy_green_dx[1][1] [b][j];	
+		    fv_dot->d_volume_strain_dx[b][j] += d_cauchy_green_dot_dx[1][1] [b][j];	
 			if ( VIM == 3) {	    
 		    fv->d_volume_change_dx[b][j] += d_cauchy_green_dx[2][2] [b][j];		    
+		    fv_dot->d_volume_change_dx[b][j] += d_cauchy_green_dot_dx[2][2] [b][j];		    
 		    fv->d_volume_strain_dx[b][j] += d_cauchy_green_dx[2][2] [b][j];		    
+		    fv_dot->d_volume_strain_dx[b][j] += d_cauchy_green_dot_dx[2][2] [b][j];		    
 			}
 		  }
 		
@@ -505,6 +548,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 	for (q=0; q<VIM; q++) {
 	  deform_grad[p][q] = delta(p,q) - grad_d[p][q];
 	  deform_grad_old[p][q] = delta(p,q) - grad_d_old[p][q];
+	  deform_grad_dot[p][q] =  -grad_d_dot[p][q];
         /* fv->deform_grad[p][q] = deform_grad[p][q]; */  /*Uncomment for ST DILATATION MODEL*/
 	}
       }
@@ -513,14 +557,18 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 	{
 	case 1:
 	  fv->volume_change    = 1. / deform_grad[0][0];
+	  fv_dot->volume_change    = -deform_grad_dot[0][0]/SQUARE(deform_grad[0][0]);
 	  fv_old->volume_change= 1. / deform_grad_old[0][0];
 	  fv->volume_strain    = fv->volume_change - 1.;
+	  fv_dot->volume_strain    = fv_dot->volume_change;
 	  if ( af->Assemble_Jacobian ) {
 	    for (i=0; i<dim; i++) {
 	      for (k=0; k<mdof; k++) {
-		fv->d_volume_change_dx[i][k] = 1. / deform_grad[0][0] / deform_grad[0][0]
+		fv->d_volume_change_dx[i][k] = 1. / SQUARE(deform_grad[0][0])
 		  * d_grad_d[0][0] [i][k];
+		fv_dot->d_volume_change_dx[i][k] = -fv_dot->d_deform_grad_dx[0][0][i][k]/SQUARE(deform_grad[0][0]) + 2.*deform_grad_dot[0][0]/CUBE(deform_grad[0][0]);
 		fv->d_volume_strain_dx[i][k] = fv->d_volume_change_dx[i][k];
+		fv_dot->d_volume_strain_dx[i][k] = fv_dot->d_volume_change_dx[i][k];
 	      }
 	    }
 	  }
@@ -530,12 +578,16 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 	  /* find determinant of 2-d deformation gradient (note this is not the volume change, that
 	     is the determinant of the 3-d deformation gradient which is here approximated by plane
 	     strain or plane stress for 2-d) */
+	  /*  Ok, this is NOT det(F), but rather 1/det(F) - RBS */
 	  det2d    = 1. / (
 			   deform_grad[0][0] * deform_grad[1][1]
 			   - deform_grad[0][1] * deform_grad[1][0]);
 	  det2d_old= 1. / (
 			   deform_grad_old[0][0] * deform_grad_old[1][1]
 			   - deform_grad_old[0][1] * deform_grad_old[1][0]);
+	  det2d_dot= 1. / (
+			   deform_grad_dot[0][0] * deform_grad_dot[1][1]
+			   - deform_grad_dot[0][1] * deform_grad_dot[1][0]);
 
 	  /* escape if element has inverted */
 	  if ( (det2d <= 0.) && (Debug_Flag >= 0 ) ) 
@@ -582,17 +634,26 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 			 + d_grad_d[0][0] [i][k] * deform_grad[1][1]
 			 - d_grad_d[0][1] [i][k] * deform_grad[1][0]
 			 ) * det2d * det2d;
+		      ddet2d_dot_dx[i][k] = 
+			(
+			 deform_grad_dot[0][0] * d_grad_d_dot[1][1] [i][k]
+			 - deform_grad_dot[0][1] * d_grad_d_dot[1][0] [i][k]
+			 + d_grad_d_dot[0][0] [i][k] * deform_grad_dot[1][1]
+			 - d_grad_d_dot[0][1] [i][k] * deform_grad_dot[1][0]
+			 ) * det2d_dot * det2d_dot;
 		    }
 		}
 	    }
 
 	  /* PLANE STRAIN CASES */
 	  if (cr->MeshFluxModel == NONLINEAR || cr->MeshFluxModel == INCOMP_PSTRAIN 
-	      || cr->MeshFluxModel == HOOKEAN_PSTRAIN)
+	      || cr->MeshFluxModel == HOOKEAN_PSTRAIN || cr->MeshFluxModel == KELVIN_VOIGT)
 	    {
 	      fv->volume_change    = det2d;
 	      fv_old->volume_change= det2d_old;
+	      fv_dot->volume_change= det2d_dot;
 	      fv->volume_strain    = 3. * (pow(det2d, 1./3.) - 1.);
+	      fv_dot->volume_strain    = pow(det2d, -2./3.)*det2d_dot;
 
 	      if ( af->Assemble_Jacobian )
 		{
@@ -601,7 +662,10 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 		      for (k=0; k<mdof; k++)
 			{
 			  fv->d_volume_change_dx[i][k] = ddet2d_dx[i][k]; 
+			  fv_dot->d_volume_change_dx[i][k] = ddet2d_dot_dx[i][k]; 
 			  fv->d_volume_strain_dx[i][k] = ddet2d_dx[i][k] * pow(det2d, -2./3.) ;
+			  fv_dot->d_volume_strain_dx[i][k] = ddet2d_dot_dx[i][k] * pow(det2d, -2./3.)
+				+det2d_dot*(-2./3.)*pow(det2d,-5./3.)*ddet2d_dx[i][k] ;
 			}
 		    }
 		}
@@ -658,6 +722,16 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 				       + deform_grad_old[0][2] * 
 				       ( deform_grad_old[1][0] * deform_grad_old[2][1] 
 					 -deform_grad_old[2][0] * deform_grad_old[1][1]) );
+	  fv_dot->volume_change= 1. / (
+				       deform_grad_dot[0][0] * 
+				       ( deform_grad_dot[1][1] * deform_grad_dot[2][2] 
+					 -deform_grad_dot[1][2] * deform_grad_dot[2][1])
+				       - deform_grad_dot[0][1] * 
+				       ( deform_grad_dot[1][0] * deform_grad_dot[2][2] 
+					 -deform_grad_dot[2][0] * deform_grad_dot[1][2])
+				       + deform_grad_dot[0][2] * 
+				       ( deform_grad_dot[1][0] * deform_grad_dot[2][1] 
+					 -deform_grad_dot[2][0] * deform_grad_dot[1][1]) );
 	  /* Check to make sure element hasn't inverted */
           if ((fv->volume_change <= 0.) && (Debug_Flag >= 0 )) 
             {
@@ -692,6 +766,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
             }
 
 	  fv->volume_strain    = 3. * (pow(fv->volume_change, 1./3.) - 1.);
+	  fv_dot->volume_strain    = pow(fv->volume_change, -2./3.) * fv_dot->volume_change;
 
 	  if ( af->Assemble_Jacobian )
 	    {
@@ -745,7 +820,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
   /*******************************************************************************/
 
   if (cr->MeshFluxModel == LINEAR || cr->MeshFluxModel == NONLINEAR 
-      || cr->MeshFluxModel == HOOKEAN_PSTRAIN)
+      || cr->MeshFluxModel == HOOKEAN_PSTRAIN || cr->MeshFluxModel == KELVIN_VOIGT)
     {
 #ifdef DO_NO_UNROLL
       for (p=0; p<VIM; p++) 
@@ -1266,7 +1341,7 @@ if(pd->e[R_MESH1] && cr->MeshMotion != ARBITRARY)
                     }
                  else
                     {
-                     if (cr->MeshFluxModel == NONLINEAR ||
+                     if (cr->MeshFluxModel == NONLINEAR || cr->MeshFluxModel == KELVIN_VOIGT ||
                          cr->MeshFluxModel == HOOKEAN_PSTRAIN ||
                          cr->MeshFluxModel == INCOMP_PSTRAIN )
         			TT[2][2] = (1. - pow(fv->volume_change,2./3.))
@@ -1336,7 +1411,7 @@ if(pd->e[R_SOLID1] && cr->MeshMotion != ARBITRARY)
    if (dim == 2)
       {
        elast_modulus = elc_rs->lame_mu;
-       if (cr->RealSolidFluxModel == NONLINEAR ||
+       if (cr->RealSolidFluxModel == NONLINEAR || cr->RealSolidFluxModel == KELVIN_VOIGT ||
            cr->RealSolidFluxModel == HOOKEAN_PSTRAIN ||
            cr->RealSolidFluxModel == INCOMP_PSTRAIN )
                 TT[2][2] = (1.-pow(fv->volume_change,2./3.))*elast_modulus-fv->P;
@@ -1854,8 +1929,8 @@ friction_n_dot_f_bc(double func[DIM],
   int j_id, jvar, dim, var;
   int err, a, b, c, j;
   int eqn;
-  double normal_force, velo_mag, tang_velo[2], tang_force;
-  double d_nforce, d_tforce, phi_j;
+  double normal_force, velo_mag, tang_velo[DIM], tang_force[2];
+  double d_nforce, d_tforce[2], phi_j;
   
   double TT[MAX_PDIM][MAX_PDIM];   /**  solid stresses  **/
   double dTT_drs[DIM][DIM][DIM][MDE];
@@ -2041,19 +2116,18 @@ if(pd->e[R_SOLID1] && cr->MeshMotion != ARBITRARY)
                                                                                        
 /* compute normal force and velocity magnitude	*/
   normal_force = 0;
-  tang_force = 0;
-  for ( a=0; a<dim; a++)
+  tang_force[0] = tang_force[1] = 0;
+  for ( a=0; a<VIM; a++)
      {
-        for ( b=0; b<dim; b++)
+        for ( b=0; b<VIM; b++)
       	  {
 	   normal_force += fv->snormal[a]*TT[a][b]*fv->snormal[b];
-	   tang_force += fv->snormal[a]*TT[a][b]*fv->stangent[0][b];
+	   tang_force[0] += fv->snormal[a]*TT[a][b]*fv->stangent[0][b];
+	   tang_force[1] += fv->snormal[a]*TT[a][b]*fv->stangent[1][b];
 	  }
      }
-  velo_mag = 0;
-  tang_velo[0] = 0;
-  tang_velo[1] = 0;
-  for ( a=0; a<dim; a++)
+  velo_mag = tang_velo[0] = tang_velo[1] = 0;
+  for ( a=0; a<WIM; a++)
      {
 	velo_mag += vconv[a]*vconv[a];
 	tang_velo[0] += fv->stangent[0][a]*vconv[a];
@@ -2061,7 +2135,11 @@ if(pd->e[R_SOLID1] && cr->MeshMotion != ARBITRARY)
      }
   velo_mag = sqrt(velo_mag);
   if( DOUBLE_ZERO(velo_mag))
-       { EH(-1,"Trouble with sliding friction bc - zero relative velocity.");}
+       {
+	/* EH(-1,"Trouble with sliding friction bc - zero relative velocity.");*/
+	velo_mag = 1.0;
+	frict_coeff = 0.0;
+       }
 
   frict_acous = 1.0;
   if( bc_type == FRICTION_ACOUSTIC_BC)
@@ -2093,24 +2171,30 @@ if(pd->e[R_SOLID1] && cr->MeshMotion != ARBITRARY)
 		  {
 		    
 		    d_nforce = 0;
-		    d_tforce = 0;
-		    for(a=0; a<dim; a++)
+		    d_tforce[0] = d_tforce[1] = 0;
+		    for(a=0; a<VIM; a++)
 	  		{
-		    	for(b=0; b<dim; b++)
+		    	for(b=0; b<VIM; b++)
 	  		    {
 	   			d_nforce += 
 			fv->dsnormal_dx[a][jvar][j_id]*TT[a][b]*fv->snormal[b] +
 			fv->snormal[a]*dTT_dx[a][b][jvar][j_id]*fv->snormal[b] +
 			fv->snormal[a]*TT[a][b]*fv->dsnormal_dx[b][jvar][j_id];
-	   			d_tforce += 
+	   			d_tforce[0] += 
 			fv->dsnormal_dx[a][jvar][j_id]*TT[a][b]*fv->stangent[0][b] +
 			fv->snormal[a]*dTT_dx[a][b][jvar][j_id]*fv->stangent[0][b] +
 			fv->snormal[a]*TT[a][b]*fv->dstangent_dx[0][b][jvar][j_id];
+	   			d_tforce[1] += 
+			fv->dsnormal_dx[a][jvar][j_id]*TT[a][b]*fv->stangent[1][b] +
+			fv->snormal[a]*dTT_dx[a][b][jvar][j_id]*fv->stangent[1][b] +
+			fv->snormal[a]*TT[a][b]*fv->dstangent_dx[1][b][jvar][j_id];
 			    }
 			}
 
-		    d_func[0][var][j_id] += (d_tforce - frict_coeff*frict_acous
+		    d_func[1][var][j_id] += (d_tforce[0] - frict_coeff*frict_acous
 				*d_nforce*tang_velo[0]/velo_mag);
+		    d_func[2][var][j_id] += (d_tforce[1] - frict_coeff*frict_acous
+				*d_nforce*tang_velo[1]/velo_mag);
 		  }
 	      }
 	  }
@@ -2118,8 +2202,10 @@ if(pd->e[R_SOLID1] && cr->MeshMotion != ARBITRARY)
   
   /* Calculate the residual contribution  */
   
-  *func += tang_force - frict_coeff*frict_acous*normal_force
+  func[1] += tang_force[0] - frict_coeff*frict_acous*normal_force
 		*tang_velo[0]/velo_mag;
+  func[2] += tang_force[1] - frict_coeff*frict_acous*normal_force
+		*tang_velo[1]/velo_mag;
   
 }
 /* end of routine friction_n_dot_f_bc */
@@ -2155,7 +2241,7 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 						      * boundaries)          */
 			   double scale) /* Scale factor, nondimension       */
 {
-    int j_id, dim, wim, var, pvar,  p, q, p2, w, id_dofmom, id_dofmesh, offset, mode;
+    int j_id, dim, var, pvar,  p, q, p2, w, id_dofmom, id_dofmesh, offset, mode;
     int peqn_mom, peqn_solid;
     int ieqn_mom, ieqn_solid;
     int xfixed[DIM];
@@ -2167,8 +2253,6 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
     NODAL_VARS_STRUCT *nv = node->Nodal_Vars_Info;
 
     dim = pd->Num_Dim;
-    wim   = dim;
-    if(pd->CoordinateSystem == SWIRLING) wim = wim+1;
 
     if (node->DBC) {
      
@@ -2227,15 +2311,15 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
      * decrementing the psuedo-solid momentum
      */
     if (af->Assemble_Residual) {
-      for (p = 0; p < wim; p++) {
+      for (p = 0; p < WIM; p++) {
 	/* don't do this if the displacement is fixed for this node */
 	if (! xfixed[p]) {
 	  ieqn_mom = R_MOMENTUM1 + p;
 	  ieqn_solid = R_MESH1 + p;
 	  id_dofmom = ei->ln_to_dof[ieqn_mom][id];
 	  id_dofmesh = ei->ln_to_dof[ieqn_solid][id];
-	  lec->R[upd->ep[ieqn_solid]][id_dofmesh] =
-	      scale * lec->R[upd->ep[ieqn_mom]][id_dofmom];
+          lec->R[LEC_R_INDEX(upd->ep[ieqn_solid],id_dofmesh)] =
+              scale * lec->R[LEC_R_INDEX(upd->ep[ieqn_mom],id_dofmom)];
 	}
       }
     }
@@ -2246,7 +2330,7 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
      */
     if (af->Assemble_Jacobian)
       {
-	for (p = 0; p < wim; p++) {
+	for (p = 0; p < WIM; p++) {
 	    /* 
 	     * don't do this if the mesh is fixed for this node 
 	     *  HKM -> I assume this is the mesh since xfixed[] is used
@@ -2275,8 +2359,8 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 			pvar = upd->vp[var];
 			for ( j_id=0; j_id<ei->dof[var]; j_id++)
 			  {
-			    lec->J[peqn_solid][pvar][id_dofmesh][j_id] =
-				scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                            lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofmesh,j_id)] =
+                                scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 			  }
 		      }
 		  }
@@ -2290,8 +2374,8 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 		    pvar = upd->vp[var];
 		    for ( j_id=0; j_id<ei->dof[var]; j_id++)
 		      {			
-			lec->J[peqn_solid][pvar][id_dofmesh][j_id] =
-			    scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                        lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofmesh,j_id)] =
+                            scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 		      }
 		  }
 		
@@ -2305,8 +2389,8 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 		    pvar = upd->vp[var];
 		    for ( j_id=0; j_id<ei->dof[var]; j_id++)
 		      {
-			lec->J[peqn_solid][pvar][id_dofmesh][j_id] =
-			    scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                        lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofmesh,j_id)] =
+                            scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 		      }
 		  }
 		
@@ -2321,10 +2405,10 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 			pvar = MAX_PROB_VAR + w;
 			for ( j_id=0; j_id<ei->dof[var]; j_id++)
 			  {
-			    if (fabs(lec->J[peqn_solid][pvar][id_dofmesh][j_id]) > 1.e-8)
+                            if (fabs(lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofmesh,j_id)]) > 1.e-8)
 			      {
-				lec->J[peqn_solid][pvar][id_dofmesh][j_id] =
-				    scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                                lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofmesh,j_id)] =
+                                    scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 			      }
 			  }
 		      }
@@ -2339,10 +2423,10 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 		      {
 			for ( j_id=0; j_id<ei->dof[var]; j_id++)
 			  {
-			    if (fabs(lec->J[peqn_solid][pvar][id_dofmesh][j_id]) > 1.e-8)
+                            if (fabs(lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofmesh,j_id)]) > 1.e-8)
 			      {
-				lec->J[peqn_solid][pvar][id_dofmesh][j_id] =
-				    scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                                lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofmesh,j_id)] =
+                                    scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 			      }
 			  }
 		      }
@@ -2355,10 +2439,10 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 		      {
 			for ( j_id=0; j_id<ei->dof[var]; j_id++)
 			  {
-			    if (fabs(lec->J[peqn_solid][pvar][id_dofmesh][j_id]) > 1.e-8)
+                            if (fabs(lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofmesh,j_id)]) > 1.e-8)
 			      {
-				lec->J[peqn_solid][pvar][id_dofmesh][j_id] =
-				    scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                                lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofmesh,j_id)] =
+                                    scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 			      }
 			  }
 		      }
@@ -2371,10 +2455,10 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 		      {
 			for ( j_id=0; j_id<ei->dof[var]; j_id++)
 			  {
-			    if (fabs(lec->J[peqn_solid][pvar][id_dofmesh][j_id]) > 1.e-8)
+                            if (fabs(lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofmesh,j_id)]) > 1.e-8)
 			      {
-				lec->J[peqn_solid][pvar][id_dofmesh][j_id] =
-				    scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                                lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofmesh,j_id)] =
+                                    scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 			      }
 			  }
 		      }
@@ -2382,7 +2466,7 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 		/*
 		 * local J_m_v -> J_d_v  
 		 */
-		for ( q=0; q<wim; q++)
+		for ( q=0; q<WIM; q++)
 		  {
 		    var = VELOCITY1+q;
 		    if ( pd->v[var] )
@@ -2390,8 +2474,8 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 			pvar = upd->vp[var];
 			for ( j_id=0; j_id<ei->dof[var]; j_id++)
 			  {
-			    lec->J[peqn_solid][pvar][id_dofmesh][j_id] =
-				scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                            lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofmesh,j_id)] =
+                                scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 			  }
 		      }
 		  }
@@ -2415,8 +2499,8 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 				    pvar = upd->vp[var];
 				    for ( j_id=0; j_id<ei->dof[var]; j_id++)
 				      {
-					lec->J[peqn_solid][pvar][id_dofmesh][j_id] =
-					  scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                                        lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofmesh,j_id)] =
+                                          scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 				      }
 				  }
 			      }
@@ -2449,8 +2533,8 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 				pvar = upd->vp[var];
 				for ( j_id=0; j_id<ei->dof[var]; j_id++)
 				  {
-				    lec->J[peqn_solid][pvar][id_dofmesh][j_id] =
-				      scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                                    lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofmesh,j_id)] =
+                                      scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 				    
 				  }
 			      }
@@ -2559,8 +2643,8 @@ put_liquid_stress_in_solid_ALE(int id, /* local element node number for the
 	      {
 		ieqn_mom = R_MOMENTUM1 + p;
 		ieqn_solid = R_SOLID1 + p;
-		lec->R[upd->ep[ieqn_solid]][id_dofsol] += 
-		    scale*lec->R[upd->ep[ieqn_mom]][id_dofmom];
+                lec->R[LEC_R_INDEX(upd->ep[ieqn_solid],id_dofsol)] +=
+                    scale*lec->R[LEC_R_INDEX(upd->ep[ieqn_mom],id_dofmom)];
 /*fprintf(stderr,"solid_fluid %g %g %g\n",scale,fv->x[0],fv->P);*/
 	      }
 	}
@@ -2592,8 +2676,8 @@ put_liquid_stress_in_solid_ALE(int id, /* local element node number for the
 		      {
 			for ( j_id=0; j_id<ei->dof[var]; j_id++)
 			  {
-			    lec->J[peqn_solid][pvar][id_dofsol][j_id] +=
-				scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                            lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofsol,j_id)] +=
+                                scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 			  }
 		      }
 		  }
@@ -2609,8 +2693,8 @@ put_liquid_stress_in_solid_ALE(int id, /* local element node number for the
 		      {
 			for ( j_id=0; j_id<ei->dof[var]; j_id++)
 			  {
-			    lec->J[peqn_solid][pvar][id_dofsol][j_id] += 
-				scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                            lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofsol,j_id)] +=
+                                scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 			  }
 		      }
 		  }
@@ -2625,8 +2709,8 @@ put_liquid_stress_in_solid_ALE(int id, /* local element node number for the
 		  {
 		    for ( j_id=0; j_id<ei->dof[var]; j_id++)
 		      {			
-			lec->J[peqn_solid][pvar][id_dofsol][j_id] += 
-			    scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                        lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofsol,j_id)] +=
+                            scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 		      }
 		  }
 		
@@ -2640,8 +2724,8 @@ put_liquid_stress_in_solid_ALE(int id, /* local element node number for the
 		  {
 		    for ( j_id=0; j_id<ei->dof[var]; j_id++)
 		      {
-			lec->J[peqn_solid][pvar][id_dofsol][j_id] += 
-			    scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                        lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofsol,j_id)] +=
+                            scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 		      }
 		  }
 		
@@ -2656,8 +2740,8 @@ put_liquid_stress_in_solid_ALE(int id, /* local element node number for the
 		        pvar = upd->vp[var] + w;
 			for ( j_id=0; j_id<ei->dof[var]; j_id++)
 			  {
-			    lec->J[peqn_solid][pvar][id_dofsol][j_id] += 
-                                scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                            lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofsol,j_id)] +=
+                                scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 			  }
 		      }
 		  }
@@ -2675,8 +2759,8 @@ put_liquid_stress_in_solid_ALE(int id, /* local element node number for the
 		      {
 			for ( j_id=0; j_id<ei->dof[var]; j_id++)
 			  {
-			    lec->J[peqn_solid][pvar][id_dofsol][j_id] +=
-				scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                            lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofsol,j_id)] +=
+                                scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 			  }
 		      }
 		  }
@@ -2692,8 +2776,8 @@ put_liquid_stress_in_solid_ALE(int id, /* local element node number for the
 			pvar = upd->vp[var];
 			for ( j_id=0; j_id<ei->dof[var]; j_id++)
 			  {
-			    lec->J[peqn_solid][pvar][id_dofsol][j_id] += 
-				scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
+                            lec->J[LEC_J_INDEX(peqn_solid,pvar,id_dofsol,j_id)] +=
+                                scale*lec->J[LEC_J_INDEX(peqn_mom,pvar,id_dofmom,j_id)];
 			  }
 		      }
 		  }
@@ -3209,10 +3293,13 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
  extern int PRS_mat_ielem;
 
 
-  dbl thermexp;
+  dbl thermexp=0;
   dbl speciesexp[MAX_CONC];
   dbl d_thermexp_dx[MAX_VARIABLE_TYPES+MAX_CONC];
   dbl d_speciesexp_dx[MAX_CONC][MAX_VARIABLE_TYPES+MAX_CONC];
+  dbl viscos=0, dil_viscos=0;
+  dbl d_viscos_dx[MAX_VARIABLE_TYPES+MAX_CONC];
+  dbl d_dilviscos_dx[MAX_VARIABLE_TYPES+MAX_CONC];
 
   dim = ei->ielem_dim;
   mat_ielem = PRS_mat_ielem;
@@ -3222,6 +3309,8 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
   memset(d_lambda_dx,0,sizeof(double)*DIM*MDE);
   memset(d_thermexp_dx,0,sizeof(double)*(MAX_VARIABLE_TYPES+MAX_CONC));
   memset(d_speciesexp_dx,0,sizeof(double)*MAX_CONC*(MAX_VARIABLE_TYPES+MAX_CONC));
+  memset(d_viscos_dx,0,sizeof(double)*(MAX_VARIABLE_TYPES+MAX_CONC));
+  memset(d_dilviscos_dx,0,sizeof(double)*(MAX_VARIABLE_TYPES+MAX_CONC));
   memset(speciesexp,0,sizeof(double)*MAX_CONC);
   memset(TT,0,sizeof(dbl)*DIM*DIM);
 
@@ -3231,7 +3320,8 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
  * structure elements, and hence are not args. 
  */
 
-  err = load_elastic_properties(elc, &mu, &lambda, &thermexp, speciesexp, d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx);
+  err = load_elastic_properties(elc, &mu, &lambda, &thermexp, speciesexp, &viscos, &dil_viscos,
+	d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx, d_viscos_dx, d_dilviscos_dx);
   EH(err," Problem in loading up elastic constants");
 
 
@@ -3249,11 +3339,21 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 	    }
 	}
 
+      if (TimeIntegration != STEADY && cr->MeshFluxModel == KELVIN_VOIGT)
+	{
+        for ( p=0; p<VIM; p++)
+	  {
+	    for ( q=0; q<VIM; q++)
+	      {
+	      TT[p][q] += 2. * viscos * fv_dot->strain[p][q];
+	      }
+	  }
+	}
       /* add shrinkage stress, if called for */
       if(elc->thermal_expansion_model == SHRINKAGE)
 	{
 	  if((fv->external_field[0] >= 1.63 && fv->external_field[0] <= 1.7) ||
-	     Element_Blocks[ei->elem_blk_index].ElemStorage[mat_ielem].solidified[ip])
+	     (int)Element_Blocks[ei->elem_blk_index].ElemStorage[mat_ielem].solidified[ip])
 	    {
 	      for ( p=0; p<VIM; p++)
 		{
@@ -3343,6 +3443,12 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 			   
 			   dTT_dx[p][q][b][j] += d_lambda_dx[b][j] * fv->volume_strain * delta(p,q) 
 			     + 2. * d_mu_dx[b][j] * fv->strain[p][q];
+			   if (TimeIntegration != STEADY && cr->MeshFluxModel == KELVIN_VOIGT)
+			     {
+			      dTT_dx[p][q][b][j] += 2.*viscos*fv_dot->d_strain_dx[p][q][b][j];
+			   
+			      dTT_dx[p][q][b][j] +=  2.*d_viscos_dx[v]*bf[v]->phi[j]*fv_dot->strain[p][q];
+			     }
 			   if( pd->e[R_ENERGY] )
 			     {
 	  			if( elc->thermal_expansion_model == CONSTANT || 
@@ -3921,10 +4027,13 @@ get_evp_stress_tensor(double TT[DIM][DIM],
  double d_plastic_mu_dc[MAX_CONC][MDE];
  double d_yield_dc[MAX_CONC][MDE];
  int a, b, i, j = -1, p, q, m, n, dim, v, v1, var, dofs, dofs1, err, F_vp_flag;
- double thermexp;
+ double thermexp=0;
  double speciesexp[MAX_CONC];
  double d_thermexp_dx[MAX_VARIABLE_TYPES+MAX_CONC];
  double d_speciesexp_dx[MAX_CONC][MAX_VARIABLE_TYPES+MAX_CONC];
+ double viscos=0, dil_viscos=0;
+ double d_viscos_dx[MAX_VARIABLE_TYPES+MAX_CONC];
+ double d_dilviscos_dx[MAX_VARIABLE_TYPES+MAX_CONC];
 
  dim = ei->ielem_dim;
  if(dim > 2) EH(-1,"EVP models only implemented for plane strain case just now");
@@ -4089,6 +4198,8 @@ information */
   memset( dF_vp_dc, 0, sizeof(double)*DIM*DIM*MAX_CONC*MDE); 
   memset(d_thermexp_dx,0,sizeof(double)*(MAX_VARIABLE_TYPES+MAX_CONC));
   memset(d_speciesexp_dx,0,sizeof(double)*MAX_CONC*(MAX_VARIABLE_TYPES+MAX_CONC));
+  memset(d_viscos_dx,0,sizeof(double)*(MAX_VARIABLE_TYPES+MAX_CONC));
+  memset(d_dilviscos_dx,0,sizeof(double)*(MAX_VARIABLE_TYPES+MAX_CONC));
   memset(speciesexp,0,sizeof(double)*MAX_CONC);
 
 /* 
@@ -4096,7 +4207,8 @@ information */
  * Probably redundant here.  Already called up in mesh_stress_tensor
  */
 
-  err = load_elastic_properties(elc, &mu, &lambda, &thermexp, speciesexp, d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx);
+  err = load_elastic_properties(elc, &mu, &lambda, &thermexp, speciesexp, &viscos, &dil_viscos,
+	d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx, d_viscos_dx, d_dilviscos_dx);
   EH(err," Problem in loading up elastic constants");
 
   /* will not need plastic_mu nor yield from the routine;
@@ -5040,10 +5152,14 @@ load_elastic_properties(struct Elastic_Constitutive *elcp,
 			double *lambda,
  			double *thermexp,
 			double speciesexp[MAX_CONC],
+			double *viscos,
+			double *dil_viscos,
 			double d_mu_dx[DIM][MDE], 
 			double d_lambda_dx[DIM][MDE],
 			double d_thermexp_dx[MAX_VARIABLE_TYPES+MAX_CONC],
-			double d_speciesexp_dx[MAX_CONC][MAX_VARIABLE_TYPES+MAX_CONC])
+			double d_speciesexp_dx[MAX_CONC][MAX_VARIABLE_TYPES+MAX_CONC],
+			double d_viscos_dx[MAX_VARIABLE_TYPES+MAX_CONC],
+			double d_dilviscos_dx[MAX_VARIABLE_TYPES+MAX_CONC])
 
 /*
  *  This function calculates the the elastic properties
@@ -5570,6 +5686,29 @@ load_elastic_properties(struct Elastic_Constitutive *elcp,
      		}
 	   }
    }
+/*  solid viscosity	*/
+   if(elc_ptr->solid_viscosity_model == CONSTANT )
+     {
+       *viscos = elc_ptr->solid_viscosity;
+     }
+   else if(elc_ptr->solid_viscosity_model == USER )
+     {
+      err = usr_solid_viscosity(elc_ptr->u_solid_viscosity, &value, d_viscos_dx);
+	*viscos = value;
+     }
+   else
+     {
+       EH(-1,"Unrecognized solid viscosity model");
+     }
+
+   if(elc_ptr->solid_dil_viscosity_model == CONSTANT )
+     {
+       *dil_viscos = elc_ptr->solid_dil_viscosity;
+     }
+   else
+     {
+       EH(-1,"Unrecognized solid dilational viscosity model");
+     }
   return(1);
 } /*End of load_elastic_properties*/
 

@@ -127,21 +127,21 @@ PROTO((int ,			/* id - local element node number for the
 				 * boundaries)                               */
        double ));		/* scale - term scaling                      */
 
-EXTERN void put_fluid_stress_on_shell /* mm_fill_shell.c                    */
-PROTO((int ,			/* id - local element node number for the 
-				 * current node whose residual contribution
-				 * is being sought                           */
-       int ,                    /* Local shell element node num associated   */
-                                /* with id */
-       int ,			/* I - Global node number                    */
-       int ,			/* ielem_dim - physical dimension of element,
-				 * ie., 1, 2, 3                              */
-       double [],		/* resid_vector - Residual vector NO DUH!    */
-       int [],			/* local_node_list_fs - MDE list to keep track
-				 * of nodes at which liquid contributions have
-				 * been transfered to solid (fluid-solid 
-				 * boundaries)                               */
-       double ));		/* scale - term scaling                      */
+EXTERN
+void put_fluid_stress_on_shell(int id, /* local bulk element node number for the
+				   * current node whose residual contribution
+				   * is being sought                        */
+			  int id_shell_curv, /* local shell element node number corresponding to id */
+			  int id_shell_tens, /* local shell element node number corresponding to id */
+			  int I, /* Global node number                      */
+			  int ielem_dim, /* physical dimension of the elem  */
+			  double resid_vector[], /* Residual vector         */
+			  int local_node_list_fs[], /* MDE list to keep track
+						     * of nodes at which
+						     * bulk contributions 
+						     * have been transfered
+						     * to shell  */
+			  double scale); /* Scale factor, nondimension       */
 	   
 EXTERN void  put_shear_stress_on_shell
 PROTO((int ,		/* local element node number for the 
@@ -234,10 +234,14 @@ PROTO((struct Elastic_Constitutive *,
        double *,		/* lambda                                    */
        double * ,		/* thermexp                                  */
        double [MAX_CONC] ,	/* speciesexp                                */
+       double * ,		/* viscos                                    */
+       double * ,		/* dil_viscos                                */
        double [DIM][MDE],	/* d_mu_dx                                   */
        double [DIM][MDE],	/* d_lambda_dx                               */
        double [MAX_VARIABLE_TYPES+MAX_CONC],	/* d_thermexp_dx             */
-       double [MAX_CONC][MAX_VARIABLE_TYPES+MAX_CONC]));/* d_speciesexp_dx   */
+       double [MAX_CONC][MAX_VARIABLE_TYPES+MAX_CONC],  /* d_speciesexp_dx   */
+       double [MAX_VARIABLE_TYPES+MAX_CONC],	/* d_viscos_dx               */
+       double [MAX_VARIABLE_TYPES+MAX_CONC]));	/* d_dilviscos_dx            */
 
 EXTERN int load_plastic_properties /* mm_fill_solid.c                        */
 PROTO((double [MAX_CONC][MDE],	/* d_plastic_mu_dc                           */

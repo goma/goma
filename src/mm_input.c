@@ -1,4 +1,4 @@
-/************************************************************************ *
+﻿/************************************************************************ *
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
@@ -81,11 +81,11 @@ struct Boundary_Condition *BC_Types;
 
 struct Rotation_Specs *ROT_Types;
 
-struct AC_Information *augc;
+extern struct AC_Information *augc;
 
 struct HC_Information *hunt;
 
-struct Eigensolver_Info *eigen;
+extern struct Eigensolver_Info *eigen;
 
 struct Continuation_Conditions *cpcc;
 
@@ -98,6 +98,8 @@ struct User_Continuation_Info *tpuc;
 struct Level_Set_Data *ls;
 struct Level_Set_Interface *lsi;
 struct Phase_Function_Data *pfd;
+
+static char aprepro_command[1024];
 
 static Spfrtn sr;
 
@@ -119,7 +121,7 @@ static char default_string[MAX_CHAR_IN_INPUT] = "(default)";
 //static char specify_string[MAX_CHAR_IN_INPUT] = "          ";
 
 
-Strcpy_rtn strcpy_rtn;		/* Data type def'd in std.h */
+static Strcpy_rtn strcpy_rtn;		/* Data type def'd in std.h */
 
 int	run_aprepro=0;
 
@@ -779,11 +781,13 @@ void
 rd_genl_specs(FILE *ifp,
 	      char *input )
 {
-  int nargs;
+  int nargs, var_type;
+  double var_min, var_max;
   char err_msg[MAX_CHAR_IN_INPUT];
   char first_string[MAX_CHAR_IN_INPUT];
   char second_string[MAX_CHAR_IN_INPUT];
   char third_string[MAX_CHAR_IN_INPUT];
+  char var_string[MAX_CHAR_IN_INPUT];
   char *tmp; 
   char StringToSearch[]="Pixel"; /*used in strstr call below*/
 
@@ -805,7 +809,7 @@ rd_genl_specs(FILE *ifp,
   if (iread == 1) {
     if (fscanf(ifp,"%d",&Iout) != 1)
       {
-	fprintf (stderr, "%s:\tError reading Output Level\n", yo);
+	DPRINTF (stderr, "%s:\tError reading Output Level\n", yo);
 	exit (-1);
       }
   } else {
@@ -818,7 +822,7 @@ rd_genl_specs(FILE *ifp,
   if (iread == 1) {
     if (fscanf(ifp, "%d", &Debug_Flag) != 1)
       {
-	fprintf(stderr, "%s:\tError reading Debug Level\n", yo);
+	DPRINTF(stderr, "%s:\tError reading Debug Level\n", yo);
 	exit (-1);
       }
   } else {
@@ -835,89 +839,72 @@ rd_genl_specs(FILE *ifp,
   SPF(echo_string,"%s = %d","Number of Jacobian File Dumps", Number_Jac_Dump); ECHO(echo_string, echo_file);
 #endif
 
+  Num_Var_Bound=0;
   iread = look_for_optional(ifp,"Initial Guess",input,'=');
   if(iread == 1)
     {
       (void) read_string(ifp,input,'\n');
       strip(input);
-      nargs = sscanf(input, "%s %s %s", first_string, second_string, third_string);
-      if ( nargs == 0 )
-	{
+      nargs = sscanf(input, "%s %s %s %s %d %lf %lf", first_string, second_string, third_string,
+		var_string, &var_type, &var_min, &var_max);
+      if (nargs >= 2 && strcasecmp(first_string, "read_exoII_file") != 0 )
+            { EH(-1, "Undecipherable option for Initial guess."); }
+
+      switch (nargs)
+        {
+	case 0:
 	  EH(-1, "Found zero arguments for Initial Guess");
+	  break;
+	case 1:
+          if (strcasecmp(first_string, "zero") == 0 )
+            { Guess_Flag = 0; }
+          else if (strcasecmp(first_string, "random") == 0 )
+            { Guess_Flag = 1; }
+          else if (strcasecmp(first_string,"one") == 0 )
+            { Guess_Flag = 2; }
+          else if (strcasecmp(first_string,"sines") == 0 )
+            { Guess_Flag = 3; }
+          else if (strcasecmp(first_string, "read") == 0 )
+            { Guess_Flag = 4; }
+          else if (strcasecmp(first_string, "read_exoII") == 0 )
+            { Guess_Flag = 5; }
+          else if (strcasecmp(first_string, "read_exoII_file") == 0 )
+            { EH(-1, "Read from *what* exoII file?"); }
+	  break;
+        case 7:
+          Var_init[Num_Var_Bound].var =
+                    variable_string_to_int(var_string, "Initialize Keyword Error");
+          Var_init[Num_Var_Bound].ktype = var_type;
+          Var_init[Num_Var_Bound].init_val_min = var_min;
+          Var_init[Num_Var_Bound].init_val_max = var_max;
+          Num_Var_Bound++;
+        case 3:
+          if (sscanf(third_string, "%d", &ExoTimePlane) != 1) {
+                EH(-1, "Time plane for read_exoII_file option is undecipherable");
+                }
+	case 2:
+          Guess_Flag = 6;
+          strcpy(ExoAuxFile, second_string);
+	  break;
+	default:
+          DPRINTF(stderr,"%s:\tUnknown initial guess (%s)\n", yo, input);
+          exit(-1);
 	}
-      else if ( nargs == 1 )
-	{
-	  if (strcasecmp(first_string, "zero") == 0 )
-	    {
-	      Guess_Flag = 0;
-	    }
-	  else if (strcasecmp(first_string, "random") == 0 )
-	    {
-	      Guess_Flag = 1;
-	    }
-	  else if (strcasecmp(first_string,"one") == 0 )
-	    {
-	      Guess_Flag = 2;
-	    }
-	  else if (strcasecmp(first_string,"sines") == 0 )
-	    {
-	      Guess_Flag = 3;
-	    }
-	  else if (strcasecmp(first_string, "read") == 0 )
-	    {
-	      Guess_Flag = 4;
-	    }
-	  else if (strcasecmp(first_string, "read_exoII") == 0 )
-	    {
-	      Guess_Flag = 5;
-	    }
-	  else if (strcasecmp(first_string, "read_exoII_file") == 0 )
-	    {
-	      EH(-1, "Read from *what* exoII file?");
-	    }
-
-	  SPF(echo_string,eoformat,"Initial Guess", first_string); ECHO(echo_string, echo_file);
-
+      switch (nargs)
+        {
+	case 1:
+          SPF(echo_string,eoformat,"Initial Guess", first_string);
+	  break;
+	case 2:
+          SPF(echo_string,"%s = %s %s","Initial Guess", first_string, second_string); 
+        case 3:
+          SPF(echo_string,"%s = %s %s %d","Initial Guess", first_string, second_string, ExoTimePlane);
+	  break;
+        case 7:
+          SPF(echo_string,"%s = %s %s %d %s %d %f %f","Initial Guess", first_string, second_string, ExoTimePlane, var_string, var_type, var_min, var_max);
+	  break;
 	}
-      else if ( nargs == 2 )
-	{
-	  if (strcasecmp(first_string, "read_exoII_file") == 0 )
-	    {
-	      Guess_Flag = 6;
-	      strcpy(ExoAuxFile, second_string);
-	    }
-	  else
-	    {
-	      EH(-1, "Undecipherable 2 options for Initial guess.");
-	    }
-
-	  SPF(echo_string,"%s = %s %s","Initial Guess", first_string, second_string); ECHO(echo_string, echo_file);
-
-	}
-      else if ( nargs == 3 )
-	{
-	  if (strcasecmp(first_string, "read_exoII_file") == 0 )
-	    {
-	      Guess_Flag = 6;
-	      strcpy(ExoAuxFile, second_string);
-	      if (sscanf(third_string, "%d", &ExoTimePlane) != 1) {
-		EH(-1, "Time plane for read_exoII_file option is undecipherable");
-	      }
-	    }
-	  else
-	    {
-	      EH(-1, "Undecipherable first 2 options for Initial guess.");
-	    }
-
-	  SPF(echo_string,"%s = %s %s %d","Initial Guess", first_string, second_string, ExoTimePlane);
-	  ECHO(echo_string, echo_file);
-	    
-	}
-      else
-	{
-	  fprintf(stderr,"%s:\tUnknown initial guess (%s)\n", yo, input);
-	  exit(-1);
-	}
+        ECHO(echo_string, echo_file);
     } else {
       Guess_Flag = 0;
       ECHO("Initial Guess card not read correctly", echo_file);
@@ -949,7 +936,7 @@ rd_genl_specs(FILE *ifp,
         }
       else  
         {
-          fprintf(stderr,"%s:\tUnknown conformation map (%s)\n", yo, input);
+          DPRINTF(stderr,"%s:\tUnknown conformation map (%s)\n", yo, input);
           exit(-1);
         }
     } else {
@@ -959,7 +946,7 @@ rd_genl_specs(FILE *ifp,
   /*
    *             Search for commands to initialize a specific variable
    */
-  Num_Var_Init = 0;
+  Num_Var_Init = Num_Var_Bound;
   while ((iread = look_forward_optional(ifp,"Initialize",input,'=')) == 1)
   {
     /*
@@ -1465,8 +1452,8 @@ rd_timeint_specs(FILE *ifp,
     tran->eps = eps;
 
     /* initialize norm indicators */
-    for (i = 0; i < 9; i++) tran->use_var_norm[i] = 0;
-    tran->use_var_norm[9] = 1; /* for backwards Compatibility */
+    for (i = 0; i <= 9; i++) tran->use_var_norm[i] = 1;
+    /*tran->use_var_norm[9] = 1;  for backwards Compatibility */
     read_line(ifp, input, FALSE);
 
     if ( sscanf(input,"%d %d %d %d %d %d %d %d %d %d", 
@@ -1474,9 +1461,10 @@ rd_timeint_specs(FILE *ifp,
 		&tran->use_var_norm[2], &tran->use_var_norm[3], 
 		&tran->use_var_norm[4], &tran->use_var_norm[5],        
 		&tran->use_var_norm[6], &tran->use_var_norm[7], 
-		&tran->use_var_norm[8], &tran->use_var_norm[9]) < 8)   
+		&tran->use_var_norm[8], &tran->use_var_norm[9]) < 10)   
       {
-	fprintf(stdout, "Warning: Time step error prefers 1 flt 10 ints\n");
+	fprintf(stderr, "Defaulting on Time step error norm indicators\n");
+/*	fprintf(stdout, "Warning: Time step error prefers 1 flt 10 ints\n");
 	fprintf(stdout, 
 		"%s   d=%1d, v=%1d, T=%1d, y=%1d, P=%1d, S=%1d, V=%1d, sd=%1d, ls=%1d, ac=%1d\n", 
 		"Best guess:", 
@@ -1484,7 +1472,7 @@ rd_timeint_specs(FILE *ifp,
 		tran->use_var_norm[2], tran->use_var_norm[3],
 		tran->use_var_norm[4], tran->use_var_norm[5],
 		tran->use_var_norm[6], tran->use_var_norm[7],
-		tran->use_var_norm[8], tran->use_var_norm[9]);
+		tran->use_var_norm[8], tran->use_var_norm[9]);   */
       }
 
     SPF(echo_string,"%s = %.4g %d %d %d %d %d %d %d %d %d %d", "Time step error", tran->eps, 
@@ -3006,8 +2994,7 @@ rd_track_specs(FILE *ifp,
 	    }
 	  Continuation = ALC_NONE;
 	}
-      else
-	if ( strcmp(input,"zero") == 0 )
+      else if ( strcmp(input,"zero") == 0 )
 	  {
 	    if ( Debug_Flag && ProcID == 0 )
 	      {
@@ -3015,8 +3002,7 @@ rd_track_specs(FILE *ifp,
 	      }
 	    Continuation = ALC_ZEROTH;
 	  }
-	else
-	  if ( strcmp(input,"hzero") == 0 )
+	else if ( strcmp(input,"hzero") == 0 )
 	    {
 	      if ( Debug_Flag && ProcID == 0 )
 		{
@@ -3024,8 +3010,7 @@ rd_track_specs(FILE *ifp,
 		}
 	      Continuation = HUN_ZEROTH;
 	    }
-	  else
-	    if ( strcmp(input,"first") == 0 )
+	  else if ( strcmp(input,"first") == 0 )
 	      {
 		if ( Debug_Flag && ProcID == 0 )
 		  {
@@ -3033,8 +3018,7 @@ rd_track_specs(FILE *ifp,
 		  }
 		Continuation = ALC_FIRST;
 	      }
-	    else
-	      if ( strcmp(input,"hfirst") == 0 )
+	    else if ( strcmp(input,"hfirst") == 0 )
 		{
 		  if ( Debug_Flag && ProcID == 0 )
 		    {
@@ -3042,16 +3026,14 @@ rd_track_specs(FILE *ifp,
 		    }
 		  Continuation = HUN_FIRST;
 		}
-	      else
-		if ( strcmp(input,"second") == 0 )
+	      else if ( strcmp(input,"second") == 0 )
 		  {
 		    if ( Debug_Flag && ProcID == 0 )
 		      {
 			printf("%s:\tsecond order continuation\n", yo);
 		      }
 		    Continuation = ALC_SECOND;
-		  } else
-                  if ( strcmp(input,"loca") == 0 )
+		  } else if ( strcmp(input,"loca") == 0 )
                     {
                       if ( Debug_Flag && ProcID == 0 )
                         {
@@ -3080,8 +3062,7 @@ rd_track_specs(FILE *ifp,
 	    }
 	  Continuation = ALC_NONE;
 	}
-      else
-	if ( strcmp(input,"BC") == 0 )
+      else if ( strcmp(input,"BC") == 0 )
 	  {
 	    if ( Debug_Flag && ProcID == 0 )
 	      {
@@ -3089,8 +3070,7 @@ rd_track_specs(FILE *ifp,
 	      }
 	    ContType = 1;
 	  }
-	else
-	  if ( strcmp(input,"MT") == 0 )
+	else if ( strcmp(input,"MT") == 0 )
 	    {
 	      if ( Debug_Flag && ProcID == 0 )
 		{
@@ -3098,8 +3078,7 @@ rd_track_specs(FILE *ifp,
 		}
 	      ContType = 2;
 	    }
-       else
-	if ( strcmp(input,"AC") == 0 )
+       else if ( strcmp(input,"AC") == 0 )
  	  {
  	    if ( Debug_Flag && ProcID == 0 )
  	      {
@@ -3107,8 +3086,7 @@ rd_track_specs(FILE *ifp,
  	      }
  	    ContType = 3;
  	  }
-	else
-	  if ( strcmp(input,"UM") == 0 )
+	else if ( strcmp(input,"UM") == 0 )
 	    {
 	      if ( Debug_Flag && ProcID == 0 )
 		{
@@ -3116,8 +3094,7 @@ rd_track_specs(FILE *ifp,
 		}
 	      ContType = 4;
 	    }
-	else
-	  if ( strcmp(input,"UF") == 0 )
+	else if ( strcmp(input,"UF") == 0 )
 	    {
 	      if ( Debug_Flag && ProcID == 0 )
 		{
@@ -3125,8 +3102,7 @@ rd_track_specs(FILE *ifp,
 		}
 	      ContType = 5;
 	    }
-	else
-	  if ( strcmp(input,"AN") == 0 )
+	else if ( strcmp(input,"AN") == 0 )
 	    {
 	      if ( Debug_Flag && ProcID == 0 )
 		{
@@ -4584,13 +4560,19 @@ rd_hunt_specs(FILE *ifp,
       }
 	  
 	  ECHO(echo_string,echo_file);
-          if(hunt[iHC].ramp == 2 && 
-             ((hunt[iHC].BegParameterValue == hunt[iHC].EndParameterValue) ||
-             (hunt[iHC].BegParameterValue<0 || hunt[iHC].EndParameterValue<0)))
-             {
-              hunt[iHC].ramp = 0;  
-              fprintf(stderr, "%s:\tImproper Log ramp for hunting condition %d\n", yo, iHC);
-             }
+          if(hunt[iHC].ramp == 2)
+	    {
+             if((hunt[iHC].BegParameterValue == hunt[iHC].EndParameterValue) ||
+                 (hunt[iHC].BegParameterValue*hunt[iHC].EndParameterValue <= 0.0))
+                {
+                 hunt[iHC].ramp = 0;  
+                 fprintf(stderr, "%s:\tImproper Log ramp for hunting condition %d\n", yo, iHC);
+                }
+              else if(hunt[iHC].BegParameterValue < 0.0)
+                {
+                 hunt[iHC].ramp = -2;  
+                }
+	    }
   }
 
 /* This section is required for backward compatibility - EDW */
@@ -5873,7 +5855,7 @@ rd_solver_specs(FILE *ifp,
 	  SPF(echo_string," (%s = %d) %s", search_string, UMFPACK_IDIM, default_string); ECHO(echo_string,echo_file);
 	}
       else
-	SPF(echo_string,"%s = %d", search_string, UMFPACK_IDIM); ECHO(echo_string,echo_file);
+	{SPF(echo_string,"%s = %d", search_string, UMFPACK_IDIM); ECHO(echo_string,echo_file);}
     }
 
 
@@ -5895,7 +5877,7 @@ rd_solver_specs(FILE *ifp,
 	  SPF(echo_string," (%s = %d) %s","UMF_XDIM",UMFPACK_XDIM, default_string ); ECHO(echo_string,echo_file);
 	}
       else
-	SPF(echo_string,"%s = %d","UMF_XDIM",UMFPACK_XDIM ); ECHO(echo_string,echo_file);
+	{SPF(echo_string,"%s = %d","UMF_XDIM",UMFPACK_XDIM ); ECHO(echo_string,echo_file);}
     }
 
   strcpy(search_string, "AztecOO Solver");
@@ -6431,6 +6413,45 @@ rd_solver_specs(FILE *ifp,
     else
     {
       Epsilon[2]=1.0e+10;
+    }
+
+/**  Bit-wise code to request columns of solver output:
+	=>  summation of 2^(column_number) from column 0 to 11
+	Max value: 4095 (2^12 - 1)
+**/
+
+  Solver_Output_Format = 1023;
+  iread = look_for_optional(ifp, "Solver Output Format Bitmap", input, '=');
+  if (iread == 1) { 
+     int no_chars=80;
+     if (fscanf(ifp, "%d", &Solver_Output_Format) != 1)
+        {
+         EH( -1, "error reading Solver Format");
+        }
+     SPF(echo_string,"%s = %d", "Solver Output Format Bitmap", Solver_Output_Format);
+     no_chars = (Solver_Output_Format & 1)*9 + (Solver_Output_Format & 2)*2 +
+		(Solver_Output_Format & 4)*2 + (Solver_Output_Format & 8)*1 +
+		(Solver_Output_Format & 16)/2 + (Solver_Output_Format & 32)/4 +
+		(Solver_Output_Format & 64)/8 + (Solver_Output_Format & 128)/16 +
+		(Solver_Output_Format & 256)/64 + (Solver_Output_Format & 512)/32 +
+		(Solver_Output_Format & 1024)/128 + (Solver_Output_Format & 2048)/256;
+     if (no_chars > 80) WH( -1, "Solver Output greater than 80 characters...\n");
+     }
+
+/*  Toggle for Outputting Variable Statistics, i.e. min, max, mean,...  */
+
+  Output_Variable_Stats = 0;
+  iread = look_for_optional(ifp, "Output Variable Statistics", input, '=');
+  if(iread == 1) {
+    (void) read_string(ifp,input,'\n');
+    strip(input);
+    if ( strcmp(input,"no") == 0 )
+      { Output_Variable_Stats = FALSE; }
+    else if ( strcmp(input,"yes") == 0 )
+      { Output_Variable_Stats = TRUE; }
+    else
+      { EH( -1, "error reading Variable Stats"); }
+    SPF(echo_string,"%s = %d", "Output Variable Statistics", Output_Variable_Stats);
     }
 
   iread = look_for_optional(ifp, "Residual Ratio Tolerance", input, '=');
@@ -8074,6 +8095,10 @@ rd_eq_specs(FILE *ifp,
       ce = set_eqn(R_MASS_SURF, pd_ptr);
     } else if (!strcasecmp(ts, "continuity")) {
       ce = set_eqn(R_PRESSURE, pd_ptr);
+    } else if (!strcasecmp(ts, "continuity_em_real")) {
+      ce = set_eqn(R_EM_CONT_REAL, pd_ptr);
+    } else if (!strcasecmp(ts, "continuity_em_imag")) {
+      ce = set_eqn(R_EM_CONT_IMAG, pd_ptr);
     } else if (!strcasecmp(ts, "fill")) {
       ce = set_eqn(R_FILL, pd_ptr);
 #ifndef COUPLED_FILL
@@ -8265,26 +8290,26 @@ rd_eq_specs(FILE *ifp,
       ce = set_eqn(R_RESTIME, pd_ptr);  
     } else if (!strcasecmp(ts, "em_e1_real")) {
       ce = set_eqn(R_EM_E1_REAL, pd_ptr);  
-    } else if (!strcasecmp(ts, "em_e1_imag")) {
-      ce = set_eqn(R_EM_E1_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "em_e2_real")) {
       ce = set_eqn(R_EM_E2_REAL, pd_ptr);  
-    } else if (!strcasecmp(ts, "em_e2_imag")) {
-      ce = set_eqn(R_EM_E2_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "em_e3_real")) {
       ce = set_eqn(R_EM_E3_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "em_e1_imag")) {
+      ce = set_eqn(R_EM_E1_IMAG, pd_ptr);
+    } else if (!strcasecmp(ts, "em_e2_imag")) {
+      ce = set_eqn(R_EM_E2_IMAG, pd_ptr);
     } else if (!strcasecmp(ts, "em_e3_imag")) {
       ce = set_eqn(R_EM_E3_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "em_h1_real")) {
       ce = set_eqn(R_EM_H1_REAL, pd_ptr);  
-    } else if (!strcasecmp(ts, "em_h1_imag")) {
-      ce = set_eqn(R_EM_H1_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "em_h2_real")) {
       ce = set_eqn(R_EM_H2_REAL, pd_ptr);  
-    } else if (!strcasecmp(ts, "em_h2_imag")) {
-      ce = set_eqn(R_EM_H2_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "em_h3_real")) {
       ce = set_eqn(R_EM_H3_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "em_h1_imag")) {
+      ce = set_eqn(R_EM_H1_IMAG, pd_ptr);
+    } else if (!strcasecmp(ts, "em_h2_imag")) {
+      ce = set_eqn(R_EM_H2_IMAG, pd_ptr);
     } else if (!strcasecmp(ts, "em_h3_imag")) {
       ce = set_eqn(R_EM_H3_IMAG, pd_ptr);  
 
@@ -8800,6 +8825,10 @@ rd_eq_specs(FILE *ifp,
       cv = set_var(ACOUS_PIMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "ARS")) {
       cv = set_var(ACOUS_REYN_STRESS, pd_ptr);  
+    } else if (!strcasecmp(ts, "EPR")) {
+      cv = set_var(EM_CONT_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "EPI")) {
+      cv = set_var(EM_CONT_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "SH_BV")) {
       cv = set_var(SHELL_BDYVELO, pd_ptr);  
     } else if (!strcasecmp(ts, "SH_P")) {
@@ -8895,26 +8924,26 @@ rd_eq_specs(FILE *ifp,
       cv = set_var(RESTIME, pd_ptr);  
     } else if (!strcasecmp(ts, "EM_E1_REAL")) {
       cv = set_var(EM_E1_REAL, pd_ptr);  
-    } else if (!strcasecmp(ts, "EM_E1_IMAG")) {
-      cv = set_var(EM_E1_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "EM_E2_REAL")) {
       cv = set_var(EM_E2_REAL, pd_ptr);  
-    } else if (!strcasecmp(ts, "EM_E2_IMAG")) {
-      cv = set_var(EM_E2_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "EM_E3_REAL")) {
       cv = set_var(EM_E3_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "EM_E1_IMAG")) {
+      cv = set_var(EM_E1_IMAG, pd_ptr);
+    } else if (!strcasecmp(ts, "EM_E2_IMAG")) {
+      cv = set_var(EM_E2_IMAG, pd_ptr);
     } else if (!strcasecmp(ts, "EM_E3_IMAG")) {
       cv = set_var(EM_E3_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "EM_H1_REAL")) {
       cv = set_var(EM_H1_REAL, pd_ptr);  
-    } else if (!strcasecmp(ts, "EM_H1_IMAG")) {
-      cv = set_var(EM_H1_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "EM_H2_REAL")) {
       cv = set_var(EM_H2_REAL, pd_ptr);  
-    } else if (!strcasecmp(ts, "EM_H2_IMAG")) {
-      cv = set_var(EM_H2_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "EM_H3_REAL")) {
       cv = set_var(EM_H3_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "EM_H1_IMAG")) {
+      cv = set_var(EM_H1_IMAG, pd_ptr);
+    } else if (!strcasecmp(ts, "EM_H2_IMAG")) {
+      cv = set_var(EM_H2_IMAG, pd_ptr);
     } else if (!strcasecmp(ts, "EM_H3_IMAG")) {
       cv = set_var(EM_H3_IMAG, pd_ptr);  
 
@@ -9239,6 +9268,9 @@ rd_eq_specs(FILE *ifp,
        * Two terms.... 
        */
     case R_PRESSURE:
+    case R_EM_CONT_REAL:
+    case R_EM_CONT_IMAG:
+
 	if ( fscanf(ifp, "%lf %lf", 
 		    &(pd_ptr->etm[ce][(LOG2_ADVECTION)]),
 		    &(pd_ptr->etm[ce][(LOG2_SOURCE)]))
@@ -9370,8 +9402,14 @@ rd_eq_specs(FILE *ifp,
 		    &(pd_ptr->etm[ce][(LOG2_SOURCE)]))
 	     != 3 )
 	{
+	  pd_ptr->etm[ce][(LOG2_MASS)] = 1.0;
+          pd_ptr->etm[ce][(LOG2_ADVECTION)] = 1.0;
+	  pd_ptr->etm[ce][(LOG2_SOURCE)] = 1.0;
 	  sr = sprintf(err_msg, 
-		       "Provide 3 equation term multipliers (mas,adv,src) on %s in %s",
+		       "Using default equation term multipliers (mass,adv,src) on %s in %s",
+		       EQ_Name[ce].name1, pd_ptr->MaterialName);
+	  sr = sprintf(err_msg, 
+		       "Provide 3 equation term multipliers (mass,adv,src) on %s in %s",
 		       EQ_Name[ce].name1, pd_ptr->MaterialName);
 	  EH(-1, err_msg);
 	}
@@ -9583,16 +9621,16 @@ rd_eq_specs(FILE *ifp,
     case R_LIGHT_INTD:
     case R_RESTIME:  
     case R_EM_E1_REAL:
-    case R_EM_E1_IMAG:
     case R_EM_E2_REAL:
-    case R_EM_E2_IMAG:
     case R_EM_E3_REAL:
+    case R_EM_E1_IMAG:
+    case R_EM_E2_IMAG:
     case R_EM_E3_IMAG:
     case R_EM_H1_REAL:
-    case R_EM_H1_IMAG:
     case R_EM_H2_REAL:
-    case R_EM_H2_IMAG:
     case R_EM_H3_REAL:
+    case R_EM_H1_IMAG:
+    case R_EM_H2_IMAG:
     case R_EM_H3_IMAG:
 
 	if ( fscanf(ifp, "%lf %lf %lf %lf %lf", 
@@ -12627,12 +12665,12 @@ setup_table_BC(FILE *ifp,
   
      /* Read scaling factor */
  
-  if ( fscanf(ifp, "%lf", &BC_Type->BC_Data_Float[0]) != 1)
+  if ( fscanf(ifp, "%lf", &BC_Type->table->yscale) != 1)
     {
-      BC_Type->BC_Data_Float[0] = 1.0;
+      BC_Type->table->yscale = 1.0;
     }
 
-  SPF(endofstring(es)," %.4g", BC_Type->BC_Data_Float[0]); 
+  SPF(endofstring(es)," %.4g", BC_Type->table->yscale); 
 
   /* read interpolation order */
 
@@ -14310,6 +14348,8 @@ parse_press_datum_input(const char *input)
       units = 1;
     } else if (!strncasecmp(tok.tok_ptr[1], "cgs", 3)) {
       units = 2;
+    } else if (!strncasecmp(tok.tok_ptr[1], "kPa", 3)) {
+      units = 3;
     } else {
       goto L_ERROR;
     }
@@ -14321,6 +14361,8 @@ parse_press_datum_input(const char *input)
     value *= 1.01325E6 / 760;
   } else if (units == 2) {
     value *= 1.0;
+  } else if (units == 3) {
+    value *= 10000.0;
   }
   return value;
   /*

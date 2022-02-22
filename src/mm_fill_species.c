@@ -353,6 +353,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 
 
   struct SUPG_terms supg_terms;
+  zero_structure(&supg_terms, sizeof(struct SUPG_terms), 1);
 
   if( mp->Spwt_funcModel == GALERKIN)
     {
@@ -389,7 +390,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
     {
 
       if (supg != 0.) {
-        dbl D = 1e-6;
+        dbl D = 1.0e-6;
         if (mp->DiffusivityModel[w] == CONSTANT) {
           D = mp->diffusivity[w];
         }
@@ -630,7 +631,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 		   *  Sum up all of the individual contributions and store it
 		   *  in the local element residual vector.
 		   */
-		  lec->R[MAX_PROB_VAR + w][ii] += 
+                  lec->R[LEC_R_INDEX((MAX_PROB_VAR + w),ii)] +=
 		    mass + advection +  diffusion + source;
 		  
 		}   /* if active_dofs */
@@ -905,10 +906,11 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				  source *= wt_func;
 				  source *= h3 * det_J * wt;
 				  source *= pd->etm[eqn][(LOG2_SOURCE)];
-				}
+                                }
 			      
-			      lec->J[MAX_PROB_VAR + w][MAX_PROB_VAR + w1][ii][j] += 
+                              lec->J[LEC_J_INDEX((MAX_PROB_VAR + w),(MAX_PROB_VAR + w1),ii,j)] +=
 				mass + advection + diffusion + source;
+
 			    }
 			}
 		    }
@@ -1059,7 +1061,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				    }
 				}
 			      
-			      lec->J[MAX_PROB_VAR + w][pvar][ii][j] += 
+                              lec->J[LEC_J_INDEX((MAX_PROB_VAR + w),pvar,ii,j)] +=
 				advection+ diffusion + source;
 			      
 			    }
@@ -1091,7 +1093,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				  diffusion *= h3 * det_J * wt * pd->etm[eqn][LOG2_DIFFUSION]; 
 				}
 			      
-			      lec->J[MAX_PROB_VAR + w][pvar][ii][j] += 
+                              lec->J[LEC_J_INDEX((MAX_PROB_VAR + w),pvar,ii,j)] +=
 				diffusion;
 			      
 			    }
@@ -1372,7 +1374,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				  source *= pd->etm[eqn][LOG2_SOURCE];
 				}
 			      
-			      lec->J[MAX_PROB_VAR + w][pvar][ii][j] += 
+                              lec->J[LEC_J_INDEX((MAX_PROB_VAR + w),pvar,ii,j)] +=
 				mass + advection + diffusion + source;
 			    }
 			}
@@ -1467,7 +1469,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			      source *= pd->etm[eqn][LOG2_SOURCE];
 			    }
 			  
-			  lec->J[MAX_PROB_VAR + w][pvar][ii][j] += mass + advection + diffusion + source;
+                          lec->J[LEC_J_INDEX((MAX_PROB_VAR + w),pvar,ii,j)] += mass + advection + diffusion + source;
 			}		/* for(j) .... */
 		    }			/* if ( e[eqn], v[var]) .... */	      
 		  var = LIGHT_INTP;
@@ -1485,7 +1487,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			      source *= pd->etm[eqn][LOG2_SOURCE];
 			    }
 			  
-			  lec->J[MAX_PROB_VAR + w][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX((MAX_PROB_VAR + w),pvar,ii,j)] += source;
 			}		/* for(j) .... */
 		    }			/* if ( e[eqn], v[var]) .... */	      
 		  var = LIGHT_INTM;
@@ -1503,7 +1505,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			      source *= pd->etm[eqn][LOG2_SOURCE];
 			    }
 			  
-			  lec->J[MAX_PROB_VAR + w][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX((MAX_PROB_VAR + w),pvar,ii,j)] += source;
 			}		/* for(j) .... */
 		    }			/* if ( e[eqn], v[var]) .... */	      
 		  var = LIGHT_INTD;
@@ -1521,7 +1523,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			      source *= pd->etm[eqn][LOG2_SOURCE];
 			    }
 			  
-			  lec->J[MAX_PROB_VAR + w][pvar][ii][j] += source;
+                          lec->J[LEC_J_INDEX((MAX_PROB_VAR + w),pvar,ii,j)] += source;
 			}		/* for(j) .... */
 		    }			/* if ( e[eqn], v[var]) .... */	      
 		  
@@ -1583,7 +1585,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			      source *= pd->etm[eqn][LOG2_SOURCE];
 			    }
 			  
-			  lec->J[MAX_PROB_VAR + w][pvar][ii][j] += mass + advection + diffusion + source;
+                          lec->J[LEC_J_INDEX((MAX_PROB_VAR + w),pvar,ii,j)] += mass + advection + diffusion + source;
 			}  /* end of loop over j */
 		    }  /* end of var = VOLTAGE */
                 }
@@ -1612,7 +1614,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
 			    }
 			  
-			  lec->J[MAX_PROB_VAR + w][pvar][ii][j] += diffusion;
+                          lec->J[LEC_J_INDEX((MAX_PROB_VAR + w),pvar,ii,j)] += diffusion;
 			}		/* for(j) .... */
 		    }			/* if ( e[eqn], v[var]) .... */	      
                 }                       /* if cr->MassFluxModel == FICKIAN_CHARGED ...  */   
@@ -1667,7 +1669,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				* mp->AdvectiveScaling[w];
 			    }
 			  
-			  lec->J[MAX_PROB_VAR + w][pvar][ii][j] += advection + diffusion + mass;
+                          lec->J[LEC_J_INDEX((MAX_PROB_VAR + w),pvar,ii,j)] += advection + diffusion + mass;
 			}		/* for(j) .... */
 		    }			/* if ( e[eqn], v[var]) .... */
 		  
@@ -1695,11 +1697,35 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			      diffusion *= h3 * det_J * wt;
 			      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
 			      
-			      lec->J[MAX_PROB_VAR + w][pvar][ii][j] += diffusion;
+                              lec->J[LEC_J_INDEX((MAX_PROB_VAR + w),pvar,ii,j)] += diffusion;
 			      
 			    } /* for (j) .. J_s_SH */
 			}/* if (pd) */
 		    } /* if( cr) */ 
+
+		  if ( mp->SpeciesSourceModel[w] == SSM_BOND ) /* These terms only appear for the Bond src term model */
+		    {
+		      var = SHEAR_RATE;
+		      if ( pd->v[var])
+			{
+			  source = 0.0;
+			  if ( pd->e[eqn] & T_SOURCE )
+			    {
+			      pvar = upd->vp[var];
+			      for( j=0;  j<ei->dof[var] ; j++)
+				{
+				  source += s_terms.d_MassSource_dsh[w][j];
+				  source *= wt_func;
+				  source *= h3 * det_J * wt;
+				  source *= pd->etm[eqn][(LOG2_SOURCE)];
+				  
+                                  lec->J[LEC_J_INDEX((MAX_PROB_VAR + w),pvar,ii,j)] += source;
+			      
+				} /* for (j) .. J_s_SH */
+			    } /* if pd -eqn)*/
+			} /* if (pd -var) */
+		    } /* if( mp->SpeciesSource) */ 
+
 
 		  /*
 		   * J_s_G:
@@ -1739,7 +1765,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				      diffusion *= h3 * det_J * wt;
 				      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
 				      
-				      lec->J[MAX_PROB_VAR + w][pvar][ii][j] += diffusion;
+                                      lec->J[LEC_J_INDEX((MAX_PROB_VAR + w),pvar,ii,j)] += diffusion;
 				    }
 				}
 			    }
@@ -2193,7 +2219,7 @@ assemble_mass_transport_path_dependence
                   pvar = upd->vp[var];
                   for ( j=0; j<ei->dof[var]; j++ )
                     {
-                      lec->J[MAX_PROB_VAR + w][pvar][ii][j] += lsi->d_H_dF[j] * residual * sign;
+                      lec->J[LEC_J_INDEX((MAX_PROB_VAR + w),pvar,ii,j)] += lsi->d_H_dF[j] * residual * sign;
                     }
 		}   /* if active_dofs */
 	      
@@ -3540,7 +3566,9 @@ flory_huggins(double func[],
   double df3_dc[MAX_CONC][MAX_CONC],df_dc[MAX_CONC][MAX_CONC];
   double truedf_dc[MAX_CONC][MAX_CONC];
   double phi_j, A;
-  double C[MAX_CONC], vol[MAX_CONC], sv[MAX_CONC];
+  double C[MAX_CONC] = {0.0};
+  double vol[MAX_CONC] = {0.0};
+  double sv[MAX_CONC];
   double y_mol[MAX_CONC], y_mass[MAX_CONC];
   double mw[MAX_CONC], prod[MAX_CONC]; 
   double activity[MAX_CONC];
@@ -10018,12 +10046,7 @@ get_convection_velocity(double vconv[DIM], /*Calculated convection velocity */
 
        /* First test to see what type of prescribed kinematics model */
 
-    if (elc->v_mesh_sfs_model == CONSTANT)
-    {
-      /*do nothing??*/
-    }
-    else if (elc->v_mesh_sfs_model == ROTATIONAL ||
-		elc->v_mesh_sfs_model == ROTATIONAL_3D )
+    if (elc->v_mesh_sfs_model > CONSTANT)
     {
       (void) V_mesh_sfs_model(elc->u_v_mesh_sfs, elc->v_mesh_sfs, 
 				elc->v_mesh_sfs_model, -1);
@@ -10138,11 +10161,6 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
   int explicit[MAX_CONC]; /* move to input deck asap */
 
   int species;			/* Species number for the particle phase. */
-  int wim   = pd->Num_Dim;    /* wim is the number of velocity unknowns */
-  if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-     pd->CoordinateSystem == CARTESIAN_2pt5D)
-    wim = wim+1;
 
   if (mp->DensityModel == SUSPENSION_PM)
     species = (int) mp->u_density[0];
@@ -10923,6 +10941,210 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 
 	}
       }
+      else if (mp->SpeciesSourceModel[w]  == DROP_EVAP )
+      {
+	double *param,s,dsdC[MAX_CONC],dsdT,dsdrst;
+	double liq_C[MAX_CONC], liq_C0[MAX_CONC], radius, num_density, gas_conc, tmp;
+	double psat[MAX_CONC], dpsatdt[MAX_CONC], A, amb_pres, rad_ratio=1., d_ratio=0.;
+        double y_mole[MAX_CONC], dy_dC[MAX_CONC][MAX_CONC], x_mole[MAX_CONC], sum_invmv=0;
+	double C[MAX_CONC], activity[MAX_CONC], solvent_volfrac=0, conc_nv, dact_dr[MAX_CONC];
+	double pres_conv, dy_dP=0, dy_dT=0, dsdP=0, pres, near_unity=0.999999,evap_frac[MAX_CONC];
+	int mode=RAOULT;
+	double sum_C=0, sum_C0=0, R_gas=0.08205, Rgas_cgs=83.137E+06;
+	double kelvin=1, kelvin_arg=0, d_kelvin=0, kelvin_argmax=5.;
+
+	param = mp->u_species_source[w];
+	amb_pres = upd->Pressure_Datum;
+	radius = param[1];
+	num_density = param[2];
+	R_gas = param[4];
+	for (i = 0; i<pd->Num_Species_Eqn; i++)
+	    {
+	     liq_C0[i] = mp->u_species_source[i][0];  
+	     solvent_volfrac += liq_C0[i]*mp->molar_volume[i];
+	     evap_frac[i] = mp->u_species_source[i][3];
+	     sum_invmv += evap_frac[i]/mp->molar_volume[i];
+	     sum_C0 += liq_C0[i];
+	    }
+	  /* moles of non-volatile per mm^3 of droplet volume */
+	conc_nv = (1.-solvent_volfrac)/mp->molar_volume[pd->Num_Species_Eqn];
+	sum_C0 += conc_nv;
+	pres_conv = mp->u_vapor_pressure[w][0];
+#if 1
+	if(pd->v[RESTIME])
+	   {
+	    if( fv->restime > DBL_SMALL)
+		{ rad_ratio = fv->restime;  d_ratio = 1.;}
+	   }
+#else
+	if(pd->v[RESTIME])
+	   { 
+	    if( fv->restime > DBL_SMALL)
+		{ rad_ratio = cbrt(fv->restime);  d_ratio = rad_ratio/(3.*fv->restime);}
+	   }
+#endif
+
+	s = 0;       dsdT = 0;  
+	for(a=0; a<MAX_CONC; a++) dsdC[a]=0.;  
+  /*  Concentration field is the far-field gas  */
+	for (i = 0; i<pd->Num_Species_Eqn; i++)
+	      { C[i] = MAX(DBL_SMALL,fv->c[i]);}
+
+	if(pd->v[PRESSURE] && fv->P > 0.9*pres_conv)
+	  { gas_conc = fv->P/(pres_conv*R_gas*fv->T); pres = fv->P;}
+	else
+	  { gas_conc = amb_pres/(1000*Rgas_cgs*fv->T); pres = pres_conv;}
+
+        if(mp->Species_Var_Type == SPECIES_MOLE_FRACTION)
+          {
+	   y_mole[w] = MIN(C[w],near_unity); 
+	   dy_dP = 0;  dy_dT = 0;
+	   for(j=0;j<pd->Num_Species_Eqn;j++)
+	      { dy_dC[w][j] = delta(w,j); }
+          }
+        else if(mp->Species_Var_Type == SPECIES_CONCENTRATION)
+          {
+	   y_mole[w] = MIN(C[w]/gas_conc,near_unity); 
+	   dy_dP = -y_mole[w]/pres;
+	   dy_dT = y_mole[w]/fv->T;
+	   for(j=0;j<pd->Num_Species_Eqn;j++)
+	      { dy_dC[w][j] = delta(w,j)/gas_conc; }
+          }
+        else
+	  { EH(-1,"That species formulation not done in DROP_EVAP\n"); }
+
+
+  /* Convert liquid droplet concentration to mole fraction, if needed  */
+        if(mp->Species_Var_Type == SPECIES_MOLE_FRACTION ||
+	    mp->Species_Var_Type == SPECIES_CONCENTRATION)
+          {
+	   sum_C = conc_nv;
+           for ( i=0; i<pd->Num_Species_Eqn; i++) 
+		{ 
+		  liq_C[i] = liq_C0[i] + (CUBE(rad_ratio)-1.)*evap_frac[i]/mp->molar_volume[i]; 
+		  sum_C += liq_C[i]; 
+		}
+	   x_mole[w] = liq_C[w]/sum_C; 
+	   dact_dr[w] = 3*SQUARE(rad_ratio)*d_ratio/SQUARE(sum_C)*
+			(sum_C0*evap_frac[w]/mp->molar_volume[w]-liq_C0[w]*sum_invmv);
+          }
+        else if(mp->Species_Var_Type == SPECIES_DENSITY)
+          {
+          for ( i=0; i<pd->Num_Species_Eqn; i++) { sum_C += liq_C[i]; }
+	  x_mole[w] = liq_C[w]/sum_C; 
+          }
+        else
+	  { EH(-1,"That species formulation not done in DROP_EVAP\n"); }
+	x_mole[w] = MIN(x_mole[w], near_unity); 
+
+  /* Nonideal VP Calculations based on either ANTOINE or RIEDEL models */
+
+	if(mp->VaporPressureModel[w] == ANTOINE )
+	  {
+	    antoine_psat(w, mp->u_vapor_pressure[w], &psat[w], &dpsatdt[w]);
+	  }
+	else if(mp->VaporPressureModel[w] == RIEDEL )
+	  {
+	   riedel_psat(w, mp->u_vapor_pressure[w], &psat[w], &dpsatdt[w]);
+	  }
+        else
+	  { EH(-1,"Vapor Pressure should be ANTOINE or RIEDEL for DROP_EVAP\n"); }
+	if( 1 )	{
+	kelvin_arg = (2*mp->surface_tension/radius)*(mp->molar_volume[w]/(R_gas*fv->T)/pres_conv);
+	kelvin_arg /= rad_ratio;
+	if( kelvin_arg > kelvin_argmax)
+	   {
+	    kelvin = exp(kelvin_argmax);  d_kelvin = 0;
+	   }	else	{
+	    kelvin = exp(kelvin_arg);
+	    d_kelvin = kelvin*kelvin_arg;
+	   }
+	}
+	mp->vapor_pressure[w] = psat[w]*kelvin;
+	dpsatdt[w] *= kelvin;
+	dpsatdt[w] += psat[w]*d_kelvin*(-1./fv->T);
+
+	A = mp->vapor_pressure[w]/pres;
+
+  /**  Using Raoult activity model  **/
+	if(mode==RAOULT)
+	  {
+	   activity[w] = A*x_mole[w];
+	   if(activity[w] >= near_unity)	
+	     {
+	      activity[w] = near_unity;
+	      dact_dr[w] = 0.;
+	     }
+	   else
+	     {
+	      dact_dr[w] *= A;
+	      dact_dr[i] += x_mole[w]*psat[w]/pres*d_kelvin*(-1./rad_ratio)*d_ratio;
+	      dact_dr[i] /= (1.-activity[w]);
+	     }
+	  }
+
+	tmp = gas_conc*4*M_PIE*radius*mp->diffusivity[w]*num_density;
+	s = tmp*log((1-y_mole[w])/(1-activity[w]))*rad_ratio;
+	for(j=0;j<pd->Num_Species_Eqn;j++)
+	  {
+	   dsdC[j] = -dy_dC[w][j]/(1.-y_mole[w])*tmp*rad_ratio;
+	  }
+	   
+	if(pd->v[PRESSURE] && fv->P > 0.9*pres_conv)
+	   {
+	    dsdP = s/pres + tmp*rad_ratio*
+		(-activity[w]/pres/(1-activity[w]) - dy_dP/(1-y_mole[w]));
+	    dsdT = s*(-1./fv->T) + tmp*rad_ratio *
+		(dpsatdt[w]/pres*x_mole[w]/(1-activity[w])-dy_dT/(1-y_mole[w]));
+	   }
+	else
+	   { dsdT = s*(-1./fv->T) + tmp*rad_ratio *
+		(dpsatdt[w]/pres_conv*x_mole[w]/(1-activity[w])
+		-dy_dT/(1-y_mole[w]));
+	   }
+	dsdrst = tmp*log((1-y_mole[w])/(1-activity[w]))*d_ratio + tmp*rad_ratio*dact_dr[w];  
+
+	st->MassSource[w]= s;
+
+	if ( af->Assemble_Jacobian )
+	{
+	  var = TEMPERATURE;
+	  if(pd->v[var])
+	  {
+	    for ( j=0; j<ei->dof[var]; j++)
+	    {
+	      st->d_MassSource_dT[w][j]= dsdT*bf[var]->phi[j];
+	    }
+	  }
+
+	  var = MASS_FRACTION;
+	  if (pd->v[MASS_FRACTION] )
+	  {
+	    for ( j=0; j<ei->dof[var]; j++)
+	    {
+	      st->d_MassSource_dc[w][w][j]=dsdC[w]*bf[var]->phi[j];
+	    }
+	  }
+
+	  var = RESTIME;
+	  if(pd->v[var])
+	  {
+	    for ( j=0; j<ei->dof[var]; j++)
+	    {
+	      st->d_MassSource_drst[w][j]= dsdrst*bf[var]->phi[j];
+	    }
+	  }
+	  var = PRESSURE;
+	  if(pd->v[var])
+	  {
+	    for ( j=0; j<ei->dof[var]; j++)
+	    {
+	      st->d_MassSource_dP[w][j]= dsdP*bf[var]->phi[j];
+	    }
+	  }
+	}
+
+      }
       else if (mp->SpeciesSourceModel[w]  == EPOXY )
       {
 	err = epoxy_species_source(w, mp->u_species_source[w]);
@@ -10995,6 +11217,33 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	    for ( j=0; j<ei->dof[var]; j++)
 	    {
 	      st->d_MassSource_dT[w][j]= mp->d_species_source[var]*bf[var]->phi[j];
+	    }
+	  }
+
+	  var = MASS_FRACTION;
+	  if (pd->v[MASS_FRACTION] )
+	  {
+	    var_offset = MAX_VARIABLE_TYPES + w;
+	    for ( j=0; j<ei->dof[var]; j++)
+	    {
+	      st->d_MassSource_dc[w][w] [j]=mp->d_species_source[var_offset]
+		  *bf[var]->phi[j];
+	    }
+	  }
+	}
+      }
+      else if (mp->SpeciesSourceModel[w]  == SSM_BOND )
+      {
+	err = bond_species_source(w, mp->u_species_source[w]);
+	st->MassSource[w]    =  mp->species_source[w];
+	if ( af->Assemble_Jacobian )
+	{
+	  var = SHEAR_RATE;
+	  if(pd->v[var])
+	  {
+	    for ( j=0; j<ei->dof[var]; j++)
+	    {
+	      st->d_MassSource_dsh[w][j]= mp->d_species_source[var]*bf[var]->phi[j];
 	    }
 	  }
 
@@ -11357,7 +11606,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 		}
 	    }
 
-	  for (a = 0; a < wim; a++)
+	  for (a = 0; a < WIM; a++)
 	    {
 	      var = VELOCITY1 + a;
 	      if ( pd->v[var] )
@@ -13295,7 +13544,7 @@ assemble_invariant ( double tt,	/* parameter to vary time integration from
 		      source *= pd->etm[eqn][(LOG2_SOURCE)];
 		    }
 		  
-		  lec->R[peqn][i] += 
+		  lec->R[LEC_R_INDEX(peqn,i)] += 
 		    advection  + source +diffusion;      
   
 		}
@@ -13343,7 +13592,7 @@ assemble_invariant ( double tt,	/* parameter to vary time integration from
 				  
 			}
 			      
-		      lec->J[peqn][pvar][i][j] +=  advection;
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=  advection;
 		    }
 		}
 	    }
@@ -13382,7 +13631,7 @@ assemble_invariant ( double tt,	/* parameter to vary time integration from
 		    source *= pd->etm[eqn][(LOG2_SOURCE)];
 		  }
 
-	      lec->J[peqn][pvar][i][j] += advection + source + diffusion ;
+	      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection + source + diffusion ;
 	    }
 
 	  /*
@@ -13456,7 +13705,7 @@ assemble_invariant ( double tt,	/* parameter to vary time integration from
 			  source *=  wt_func*wt*pd->etm[eqn][(LOG2_SOURCE)];
 			}
 			      
-		      lec->J[peqn][pvar][i][j] += source + advection + diffusion;
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += source + advection + diffusion;
 		    }
 		}
 	    }
@@ -13774,12 +14023,7 @@ get_particle_convection_velocity(double pvconv[DIM],
 
        /* First test to see what type of prescribed kinematics model */
 
-       if (elc->v_mesh_sfs_model == CONSTANT)
-	 {
-           /*do nothing??*/
-	 }
-       else if (elc->v_mesh_sfs_model == ROTATIONAL ||
-		elc->v_mesh_sfs_model == ROTATIONAL_3D )
+       if (elc->v_mesh_sfs_model > CONSTANT)
 	 {
            (void) V_mesh_sfs_model(elc->u_v_mesh_sfs, elc->v_mesh_sfs, 
 				elc->v_mesh_sfs_model, -1);
@@ -13896,6 +14140,14 @@ ls_modulate_speciessource(int w,
 	      for ( i=0; i<ei->dof[var]; i++)
 		{
 		  st->d_MassSource_dT[w][i] *=factor;
+		}
+	    }
+
+	  if( pd->v[var=SHEAR_RATE] )
+	    {
+	      for ( i=0; i<ei->dof[var]; i++)
+		{
+		  st->d_MassSource_dsh[w][i] *=factor;
 		}
 	    }
 

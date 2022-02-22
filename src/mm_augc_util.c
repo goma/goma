@@ -183,6 +183,7 @@ load_extra_unknownsAC(int iAC,    /* ID NUMBER OF AC'S */
         case SPLINEZ_RS_BC:
         case FILLET_BC:
         case DOUBLE_RAD_BC:
+        case FEATURE_ROLLON_BC:
         case ROLL_FLUID_BC:
         case UVARY_BC:
         case VVARY_BC:
@@ -327,6 +328,14 @@ load_extra_unknownsAC(int iAC,    /* ID NUMBER OF AC'S */
 	xa[iAC] = mp_glob[mn]->FlowingLiquid_viscosity;
 	break;
       
+      case TAGC_DIFFUSIVITY_0: 
+	xa[iAC] = mp_glob[mn]->diffusivity[0];
+	break;
+      
+      case TAGC_DIFFUSIVITY_1: 
+	xa[iAC] = mp_glob[mn]->diffusivity[1];
+	break;
+      
 	/* 
 	 * Generalized Newtonian Models: 
 	 * Newtonian, Power Law, Carreau or Bingham(1,2,3)
@@ -444,6 +453,13 @@ load_extra_unknownsAC(int iAC,    /* ID NUMBER OF AC'S */
 	xa[iAC] = vn_glob[mn]->shift[augc[iAC].MPID-TAGC_SHIFT_FUNC];
 	break;
 
+      case TAGC_POLYMER_YIELD_STRESS:
+        xa[iAC] = ve_glob[mn][augc[iAC].MPID-TAGC_POLYMER_YIELD_STRESS]->gn->tau_y;
+        break;
+
+      case TAGC_POLYMER_YIELD_EXPONENT:
+        xa[iAC] = ve_glob[mn][augc[iAC].MPID-TAGC_POLYMER_YIELD_EXPONENT]->gn->fexp;
+        break;
 	/* 
 	 * Constants used in the Elasticity Constitutive Equations
 	 */
@@ -473,15 +489,15 @@ load_extra_unknownsAC(int iAC,    /* ID NUMBER OF AC'S */
 	break;
 
       case TAGC_CONV_LAG_VELX:
-	xa[iAC] = elc_glob[mn]->v_mesh_sfs[0];
+	xa[iAC] = *(elc_glob[mn]->v_mesh_sfs);
 	break;
 
       case TAGC_CONV_LAG_VELY:
-	xa[iAC] = elc_glob[mn]->v_mesh_sfs[1];
+	xa[iAC] = *(elc_glob[mn]->v_mesh_sfs+1);
 	break;
 
       case TAGC_CONV_LAG_VELZ:
-	xa[iAC] = elc_glob[mn]->v_mesh_sfs[2];
+	xa[iAC] = *(elc_glob[mn]->v_mesh_sfs+2);
 	break;
 
       case TAGC_CONV_LAG_ROTRATE:
@@ -509,15 +525,15 @@ load_extra_unknownsAC(int iAC,    /* ID NUMBER OF AC'S */
 	break;
 
       case TAGC_RS_CONV_LAG_VELX:
-	xa[iAC] = elc_rs_glob[mn]->v_mesh_sfs[0];
+	xa[iAC] = *(elc_rs_glob[mn]->v_mesh_sfs);
 	break;
 
       case TAGC_RS_CONV_LAG_VELY:
-	xa[iAC] = elc_rs_glob[mn]->v_mesh_sfs[1];
+	xa[iAC] = *(elc_rs_glob[mn]->v_mesh_sfs+1);
 	break;
 
       case TAGC_RS_CONV_LAG_VELZ:
-	xa[iAC] = elc_rs_glob[mn]->v_mesh_sfs[2];
+	xa[iAC] = *(elc_rs_glob[mn]->v_mesh_sfs+2);
 	break;
 
       case TAGC_RS_CONV_LAG_ROTRATE:
@@ -744,8 +760,60 @@ load_extra_unknownsAC(int iAC,    /* ID NUMBER OF AC'S */
         xa[iAC] = mp_glob[mn]->u_lubsource_function_constants[2];
         break;
 
+      case TAGC_RST_FUNC_0:
+        xa[iAC] = mp_glob[mn]->Rst_func;
+        break;
+
+      case TAGC_RST_FUNC_1:
+        xa[iAC] = mp_glob[mn]->Rst_diffusion;
+        break;
+
+      case TAGC_RST_FUNC_2:
+        xa[iAC] = mp_glob[mn]->Rst_func_supg;
+        break;
+
       case TAGC_HEAT_SOURCE_0:
         xa[iAC] = mp_glob[mn]->u_heat_source[0];
+        break;
+
+      case TAGC_SPECIES_SOURCE_0_P0:
+        xa[iAC] = mp_glob[mn]->u_species_source[0][0];
+        break;
+
+      case TAGC_SPECIES_SOURCE_0_P1:
+        xa[iAC] = mp_glob[mn]->u_species_source[0][1];
+        break;
+
+      case TAGC_SPECIES_SOURCE_0_P2:
+        xa[iAC] = mp_glob[mn]->u_species_source[0][2];
+        break;
+
+      case TAGC_SPECIES_SOURCE_0_P3:
+        xa[iAC] = mp_glob[mn]->u_species_source[0][3];
+        break;
+
+      case TAGC_SPECIES_SOURCE_1_P0:
+        xa[iAC] = mp_glob[mn]->u_species_source[1][0];
+        break;
+
+      case TAGC_SPECIES_SOURCE_1_P1:
+        xa[iAC] = mp_glob[mn]->u_species_source[1][1];
+        break;
+
+      case TAGC_SPECIES_SOURCE_1_P2:
+        xa[iAC] = mp_glob[mn]->u_species_source[1][2];
+        break;
+
+      case TAGC_SPECIES_SOURCE_1_P3:
+        xa[iAC] = mp_glob[mn]->u_species_source[1][3];
+        break;
+
+      case TAGC_LATENT_HEAT_0:
+        xa[iAC] = mp_glob[mn]->latent_heat_vap[0];
+        break;
+
+      case TAGC_LATENT_HEAT_1:
+        xa[iAC] = mp_glob[mn]->latent_heat_vap[1];
         break;
 
       default: 
@@ -891,6 +959,7 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
 		case SPLINEZ_RS_BC:
 		case FILLET_BC:
                 case DOUBLE_RAD_BC:
+                case FEATURE_ROLLON_BC:
 		case ROLL_FLUID_BC:
 		case UVARY_BC:
 		case VVARY_BC:
@@ -966,6 +1035,7 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
         case SPLINEZ_RS_BC:
         case FILLET_BC:
         case DOUBLE_RAD_BC:
+        case FEATURE_ROLLON_BC:
         case ROLL_FLUID_BC:
         case UVARY_BC:
         case VVARY_BC:
@@ -1102,6 +1172,14 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
 	mp_glob[mn]->FlowingLiquid_viscosity = lambda;
 	break;
       
+      case TAGC_DIFFUSIVITY_0: 
+	mp_glob[mn]->diffusivity[0] = lambda;
+	break;
+      
+      case TAGC_DIFFUSIVITY_1: 
+	mp_glob[mn]->diffusivity[1] = lambda;
+	break;
+      
 	/* 
 	 * Generalized Newtonian Models: 
 	 * Newtonian, Power Law, Carreau or Bingham(1,2,3)
@@ -1209,6 +1287,14 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
 	vn_glob[mn]->shift[augc[iAC].MPID-TAGC_SHIFT_FUNC] = lambda;
 	break;
 
+      case TAGC_POLYMER_YIELD_STRESS:
+        ve_glob[mn][augc[iAC].MPID-TAGC_POLYMER_YIELD_STRESS]->gn->tau_y = lambda;
+	break;
+
+      case TAGC_POLYMER_YIELD_EXPONENT:
+	ve_glob[mn][augc[iAC].MPID-TAGC_POLYMER_YIELD_EXPONENT]->gn->fexp = lambda;
+	break;
+
 	/* 
 	 * Constants used in the Elasticity Constitutive Equations
 	 */
@@ -1239,15 +1325,15 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
 	break;
 
       case TAGC_CONV_LAG_VELX:
-	elc_glob[mn]->v_mesh_sfs[0] = lambda;
+	*(elc_glob[mn]->v_mesh_sfs) = lambda;
 	break;
 
       case TAGC_CONV_LAG_VELY:
-	elc_glob[mn]->v_mesh_sfs[1] = lambda;
+	*(elc_glob[mn]->v_mesh_sfs+1) = lambda;
 	break;
 
       case TAGC_CONV_LAG_VELZ:
-	elc_glob[mn]->v_mesh_sfs[2] = lambda;
+	*(elc_glob[mn]->v_mesh_sfs+2) = lambda;
 	break;
 
       case TAGC_CONV_LAG_ROTRATE:
@@ -1275,15 +1361,15 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
 	break;
 
       case TAGC_RS_CONV_LAG_VELX:
-	elc_rs_glob[mn]->v_mesh_sfs[0] = lambda;
+	*(elc_rs_glob[mn]->v_mesh_sfs) = lambda;
 	break;
 
       case TAGC_RS_CONV_LAG_VELY:
-	elc_rs_glob[mn]->v_mesh_sfs[1] = lambda;
+	*(elc_rs_glob[mn]->v_mesh_sfs+1) = lambda;
 	break;
 
       case TAGC_RS_CONV_LAG_VELZ:
-	elc_rs_glob[mn]->v_mesh_sfs[2] = lambda;
+	*(elc_rs_glob[mn]->v_mesh_sfs+2) = lambda;
 	break;
 
       case TAGC_RS_CONV_LAG_ROTRATE:
@@ -1510,8 +1596,60 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
         mp_glob[mn]->u_lubsource_function_constants[2] = lambda;
         break;
 
+      case TAGC_RST_FUNC_0:
+        mp_glob[mn]->Rst_func = lambda;
+        break;
+
+      case TAGC_RST_FUNC_1:
+        mp_glob[mn]->Rst_diffusion = lambda;
+        break;
+
+      case TAGC_RST_FUNC_2:
+        mp_glob[mn]->Rst_func_supg = lambda;
+        break;
+
       case TAGC_HEAT_SOURCE_0:
         mp_glob[mn]->u_heat_source[0] = lambda;
+        break;
+
+      case TAGC_SPECIES_SOURCE_0_P0:
+        mp_glob[mn]->u_species_source[0][0] = lambda;
+        break;
+
+      case TAGC_SPECIES_SOURCE_0_P1:
+        mp_glob[mn]->u_species_source[0][1] = lambda;
+        break;
+
+      case TAGC_SPECIES_SOURCE_0_P2:
+        mp_glob[mn]->u_species_source[0][2] = lambda;
+        break;
+
+      case TAGC_SPECIES_SOURCE_0_P3:
+        mp_glob[mn]->u_species_source[0][3] = lambda;
+        break;
+
+      case TAGC_SPECIES_SOURCE_1_P0:
+        mp_glob[mn]->u_species_source[1][0] = lambda;
+        break;
+
+      case TAGC_SPECIES_SOURCE_1_P1:
+        mp_glob[mn]->u_species_source[1][1] = lambda;
+        break;
+
+      case TAGC_SPECIES_SOURCE_1_P2:
+        mp_glob[mn]->u_species_source[1][2] = lambda;
+        break;
+
+      case TAGC_SPECIES_SOURCE_1_P3:
+        mp_glob[mn]->u_species_source[1][3] = lambda;
+        break;
+
+      case TAGC_LATENT_HEAT_0:
+        mp_glob[mn]->latent_heat_vap[0] = lambda;
+        break;
+
+      case TAGC_LATENT_HEAT_1:
+        mp_glob[mn]->latent_heat_vap[1] = lambda;
         break;
 
       default: 

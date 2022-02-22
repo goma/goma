@@ -40,7 +40,7 @@ PROTO((double ,			/* time - present time value                 */
        double ));		/* dt - current time step size               */
 
 EXTERN void current_BV_surf	/* mm_fill_potential.c                       */
-PROTO((double [],		/* func                                      */
+PROTO((double [DIM],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
        int ,			/* wspec - species number of this BC         */
        double ,			/* nu - stoichiometric coefficient           */

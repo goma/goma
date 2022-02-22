@@ -118,7 +118,7 @@ evaluate_flux(
   int err;			/* temp variable to hold diagnostic flags. */
   int ielem=-1;                 /* element number */
   int ip_total, ielem_type, gnn, ledof, matIndex;
-  int num_local_nodes, iconnect_ptr, dim, ielem_dim, current_id, WIM;
+  int num_local_nodes, iconnect_ptr, dim, ielem_dim, current_id;
   int nset_id, sset_id;
   double Tract[DIM], Torque[DIM], local_Torque[DIM];
   double Mag_real[DIM], Mag_imag[DIM], E_real[DIM], E_imag[DIM];
@@ -263,11 +263,6 @@ evaluate_flux(
   memset( Torque, 0, sizeof(double)*DIM );
 
   dim   = pd_glob[0]->Num_Dim;
-  WIM = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    WIM = WIM+1;
 
   /* load eqn and variable number in tensor form */
   err = stress_eqn_pointer(v_s);
@@ -716,7 +711,7 @@ evaluate_flux(
 			                  }
 				      }
 #ifdef ANALEIG_PLEASE
-                                    analytical_exp_s(log_c, exp_s, eig_values, R1);
+                                    analytical_exp_s(log_c, exp_s, eig_values, R1, NULL);
 #else
 				    compute_exp_s(log_c, exp_s, eig_values, R1);
 #endif
@@ -4666,7 +4661,7 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
 		quantity == I_SURF_TEMP )
 	  {
  	   if(Num_Proc > 1)
- 		EH(-1,"SURFACE_SPECIES not recommended in parallel\n");
+ 		WH(-1,"SURFACE_SPECIES not recommended in parallel\n");
 	   if( quantity == I_SURF_SPECIES)
 	     {
 	   	for(i=0;i<ei->num_local_nodes;i++)	
@@ -4689,6 +4684,7 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
 	   else
 	     EH(-1,"That SURF quantity not available.");
 
+	  ierr=0;
 	  if(pd->Num_Dim == 3)
 		{
 		if( ei->ielem_type == TRILINEAR_HEX)
@@ -4696,7 +4692,7 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
  		    ierr = interface_crossing_3DL( ls_F, xf3D, side_id, ecrd);
 		   }
 		else
-	     	    EH(-1,"Only SURF 3D element is TRILINEAR_HEX.");
+	     	    WH(-1,"Only SURF 3D element is TRILINEAR_HEX.");
 		}
 	  else
 		{
@@ -4899,7 +4895,7 @@ compute_volume_integrand(const int quantity, const int elem,
   double det = bf[pd->ShapeVar]->detJ * fv->h3;
   double det_J = bf[pd->ShapeVar]->detJ;
   double h3 = fv->h3;
-  int a, b, p, q, var,j, dim=pd->Num_Dim, gnn, matIndex, ledof, c, WIM;
+  int a, b, p, q, var,j, dim=pd->Num_Dim, gnn, matIndex, ledof, c;
   int *n_dof=NULL;
   int dof_map[MDE];
 
@@ -4911,12 +4907,6 @@ compute_volume_integrand(const int quantity, const int elem,
     {
       weight *= 2.*M_PIE;
     }
-
-  WIM = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    WIM = WIM+1;
 
   switch ( quantity )
     {
@@ -5121,6 +5111,10 @@ compute_volume_integrand(const int quantity, const int elem,
   if (mp->HeatSourceModel == EM_DISS )
     {
       *sum += weight*det*em_diss_heat_source(NULL, mp->u_heat_source, mp->len_u_heat_source);
+    }
+  if (mp->HeatSourceModel == EM_VECTOR_DISS )
+    {
+      *sum += weight*det*em_diss_e_curlcurl_source(NULL, mp->u_heat_source, mp->len_u_heat_source);
     }
   else
     {
@@ -5447,6 +5441,8 @@ compute_volume_integrand(const int quantity, const int elem,
       rho = density( NULL, time );
       Cp = heat_capacity( NULL, time );
 
+      if(species_no == -9)
+	{ rho=1.0;  Cp=1.0;}
       *sum += rho*Cp*fv->T*weight*det;
 
       if( J_AC != NULL )
@@ -6370,7 +6366,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
   double dTT_dcur_strain[MAX_PDIM][MAX_PDIM][MDE];
   double TT_sens[MAX_PDIM][MAX_PDIM];
   double elast_modulus;
-  int dim, WIM;
+  int dim;
 
   double es[MAX_PDIM][MAX_PDIM], efield[MAX_PDIM];	/* electric stress */
   double efield_sqr;				/* efield magnitude squared  */
@@ -6435,11 +6431,6 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
   memset(TT_sens, 0, sizeof(double) * MAX_PDIM * MAX_PDIM);
 
   dim   = pd_glob[0]->Num_Dim;
-  WIM = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    WIM = WIM+1;
   /* load eqn and variable number in tensor form */
   err = stress_eqn_pointer(v_s);
   af->Assemble_Jacobian = TRUE;
@@ -9002,15 +8993,10 @@ load_fv_grads_sens(void)
   int dofs;			/* degrees of freedom for a var in the elem */
   int w;			/* concentration species counter */
   const int dim = pd->Num_Dim;
-  int status, WIM;
+  int status;
   int mode;
 
   status = 0;
-  WIM = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D)
-    WIM = WIM+1;
 
   /*
    * grad(T)

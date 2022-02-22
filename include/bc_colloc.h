@@ -82,6 +82,17 @@ PROTO((const int ,		/* ielem_dim */
        const double *,		/* p - function parameters from data card  */
        const int ));		/* number of parameters from bc card  */
 
+#ifdef FEATURE_ROLLON_PLEASE
+EXTERN void f_feature_rollon
+PROTO((const int ,		/* ielem_dim */
+       double *,		/* func */
+       double [],		/* d_func - dimensioned [MAX_VARIABLE_TYPES+MAX_CONC] */
+       const double *,		/* p - function parameters from data card  */
+       const int ,		/* number of parameters from bc card  */
+       const int ,		/* geometry model id  */
+       const double ));		/* time - time at which BC's are evaluated  */
+#endif
+
 EXTERN void f_roll_fluid
 PROTO((const int ,		/* ielem_dim */
        double *,		/* func */
@@ -192,6 +203,6 @@ PROTO((struct Data_Table *,   /* table               */
 
 EXTERN double interpolate_table_sat
 PROTO((struct Data_Table *,	/* table                                     */
-       double [3]));	      	/* slope                                     */
+       double [DIM]));	      	/* slope                                     */
 
 #endif /* _BC_COLLOC_H */

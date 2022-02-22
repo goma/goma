@@ -125,6 +125,13 @@ typedef char CK_NAME_STR[64];
  */
 #define MAX_LOCAL_VAR_DESC (MAX_PROB_VAR + MAX_CONC)
 
+
+#define LEC_R_INDEX(peqn_macro, index_macro) ((lec->max_dof * (peqn_macro)) + index_macro)
+
+#define LEC_J_INDEX(peqn_macro, pvar_macro, index_i, index_j) (((MAX_PROB_VAR + MAX_CONC)*lec->max_dof*lec->max_dof)*(peqn_macro)) + ((lec->max_dof*lec->max_dof)*(pvar_macro))+(lec->max_dof*(index_i)) + index_j
+
+#define LEC_J_STRESS_INDEX(peqn, pvar, index_i, index_j) ((lec->max_dof*MAX_LOCAL_VAR_DESC*lec->max_dof)*(peqn)) + ((MAX_LOCAL_VAR_DESC*lec->max_dof)*(pvar))+(lec->max_dof*(index_i)) + index_j
+
 #ifndef MAX_PHASE_FUNC
 #define MAX_PHASE_FUNC 5
 #endif
@@ -508,6 +515,8 @@ struct Element_Variable_Pointers
   dbl *sh_Kd[MDE];              /* sh_Kd[MDE], Shell surface curvature */
   dbl *apr[MDE];				/* acoustic pressure real part */
   dbl *api[MDE];				/* acoustic pressure imag part */
+  dbl *epr[MDE];				/* em lagr pressure real part */
+  dbl *epi[MDE];				/* em lagr pressure imag part */
   dbl *ars[MDE];				/* acoustic reynolds stress */
   dbl *sink_mass[MDE];				/* porous sink mass*/
   dbl *sh_bv[MDE];				/* acoustic boundary velocity */
@@ -623,6 +632,8 @@ struct Element_Stiffness_Pointers
   dbl **apr;			 /* *apr[MDE], acoustic pressure */
   dbl **api;			 /* *api[MDE], acoustic pressure */
   dbl **ars;			 /* *ars[MDE], acoustic reynolds stress */
+  dbl **epr;			 /* *epr[MDE], em pressure */
+  dbl **epi;			 /* *epi[MDE], em pressure */
   dbl **sink_mass;               /* Porous sink mass */
   dbl **sh_bv;                    /* sh_bv[MDE], acoustic bdy velocity */
   dbl **sh_p;                    /* sh_p[MDE], lub pressure */
@@ -702,17 +713,21 @@ struct Element_Quality_Metrics
 
 struct Local_Element_Contributions
 {
-  dbl R[MAX_PROB_VAR + MAX_CONC] [MDE];
-  dbl J[MAX_PROB_VAR + MAX_CONC][MAX_PROB_VAR + MAX_CONC] [MDE][MDE];
+  int max_dof;
+  dbl *R;
+  dbl *J;
+  //dbl R[MAX_PROB_VAR + MAX_CONC] [MDE];
+  //dbl J[MAX_PROB_VAR + MAX_CONC][MAX_PROB_VAR + MAX_CONC] [MDE][MDE];
   /* For face m and  mode k we have for mode imode
      d(tau_12_i)/d(tau_12_j) =
        J_stress_neighbor[m][i][POLYMER_STRESS11_k][j]
   */
-  dbl J_stress_neighbor[4][MDE][MAX_PROB_VAR + MAX_CONC][MDE];  
+  dbl *J_stress_neighbor;
+  //dbl J_stress_neighbor[4][MDE][MAX_PROB_VAR + MAX_CONC][MDE];
 
   /*
    * NOTE: concentration entries in local element arrays are stored at
-   *       the end of 
+   *       the end of
    *       the equation and variable lists (i.e. for species w use l
    *       ec->R[MAX_VARIABLE_TYPES + w][i]
    *       to get entry in local residual array
@@ -725,7 +740,6 @@ struct Local_Element_Contributions
    *  dbl x[MAX_VARIABLE_TYPES] [MDE];
    */
 };
-
 
 
 /*___________________________________________________________________________*/
@@ -1576,6 +1590,7 @@ struct Field_Variables
   dbl sh_J;                     /* Shell surface diffusion flux */
   dbl sh_Kd;                    /* Shell surface curvature */
   dbl apr, api, ars, sh_bv;			/* Acoustic pressure */
+  dbl epr, epi;                 /* LAGR MULT EM continuity */
   dbl sink_mass;                /* porous sink mass */
 
   dbl external_field[MAX_EXTERNAL_FIELD];           /* External field to be read and held const*/
@@ -1692,6 +1707,8 @@ struct Field_Variables
   dbl grad_em_ei[DIM][DIM];		/* Gradient of EM Efield (imag) */
   dbl grad_em_hr[DIM][DIM];		/* Gradient of EM Hfield (real) */
   dbl grad_em_hi[DIM][DIM];		/* Gradient of EM Hfield (imag) */
+  dbl curl_em_er[DIM];		/* Curl of EM Efield (real) */
+  dbl curl_em_ei[DIM];		/* Curl of EM Efield (imag) */
 
   /* these gradients of tensors are complete for Cartesian coordinates,
    * and currently work for axisymmetic coordinates, in context,
@@ -1932,6 +1949,7 @@ struct Diet_Field_Variables
   dbl sh_J;                     /* shell surface diffusion flux */
   dbl sh_Kd;                    /* shell surface curvature */
   dbl apr, api, ars, sh_bv;			/* Acoustic pressure */
+  dbl epr, epi;
   dbl sink_mass;                /* porous sink mass */
   dbl sh_p;                    /* lub approx. */
   dbl lubp;                    /* lub approx. */
@@ -1970,7 +1988,11 @@ struct Diet_Field_Variables
   dbl sh_sat_2;                /* Porous shell saturation layer 2 */
   dbl sh_sat_3;                /* Porous shell saturation layer 3 */
 
-  /*
+  dbl grad_em_er[DIM][DIM];             /* EM wave Fields */
+  dbl grad_em_ei[DIM][DIM];             /* EM wave Fields */
+  dbl grad_em_hr[DIM][DIM];             /* EM wave Fields */
+  dbl grad_em_hi[DIM][DIM];             /* EM wave Fields */
+  /*  
    * Grads of scalars... concentration is the only one we need in the
    * old form for VOF/Taylor-Galerkin stuff.
    */
@@ -1994,6 +2016,14 @@ struct Diet_Field_Variables
   /* Material tensors used at old time values */
   dbl strain[DIM][DIM];         /* Strain tensor */
   dbl volume_change;            /* Volume change */
+  dbl volume_strain;
+  dbl deform_grad[DIM][DIM];
+  dbl d_deform_grad_dx[DIM][DIM] [DIM][MDE];
+  dbl d_volume_change_dx[DIM][MDE];
+  dbl d_volume_strain_dx[DIM][MDE];
+  dbl d_strain_dx[DIM][DIM] [DIM][MDE];
+  dbl d_grad_d_dmesh[DIM][DIM] [DIM][MDE];
+  dbl d_grad_d_dot_dmesh[DIM][DIM][DIM][MDE];
   dbl grad_restime[DIM];       /* Gradient of the Residence time field */
 
   dbl grad_v[DIM][DIM];         /* Velocity gradient */
@@ -2307,6 +2337,7 @@ struct Porous_Media_Terms {
   dbl d_MassSource_dv[MAX_PMV] [DIM][MDE];
   dbl d_MassSource_dpv[MAX_PMV] [DIM][MDE];
   dbl d_MassSource_dT[MAX_PMV][MDE];
+  dbl d_MassSource_dsh[MAX_PMV][MDE];
   dbl d_MassSource_dV[MAX_PMV][MDE];
   dbl d_MassSource_dSM[MAX_PMV][MDE];  /*sink mass sensitivity */
 
@@ -2442,10 +2473,13 @@ struct Species_Conservation_Terms
   dbl d_MassSource_dv[MAX_CONC] [DIM][MDE];
   dbl d_MassSource_dpv[MAX_CONC] [DIM][MDE];
   dbl d_MassSource_dT[MAX_CONC][MDE];
+  dbl d_MassSource_dP[MAX_CONC][MDE];
+  dbl d_MassSource_dsh[MAX_CONC][MDE];
   dbl d_MassSource_dI[MAX_CONC][MDE];
   dbl d_MassSource_dV[MAX_CONC][MDE];
   dbl d_MassSource_dpmv[MAX_CONC] [MAX_PMV][MDE];
   dbl d_MassSource_dF[MAX_CONC][MDE];
+  dbl d_MassSource_drst[MAX_CONC][MDE];
 
 };
 /******************************************************************************/
@@ -2875,6 +2909,14 @@ struct viscosity_dependence
 };
 typedef struct viscosity_dependence VISCOSITY_DEPENDENCE_STRUCT;
 
+/* struct for d_saramito */
+struct saramito_coefficient_dependence
+{
+  double s[DIM][DIM];      /* stress dependence. */
+  double tau_y;            /* yield stress dependence. */
+};
+typedef struct saramito_coefficient_dependence SARAMITO_DEPENDENCE_STRUCT;
+
 /* struct for d_dilMu */
 struct dilViscosity_dependence
 {
@@ -2929,6 +2971,9 @@ struct heat_source_dependence
   double APR[MDE];	   /* acoustic pressure dependence  */
   double API[MDE];	   /* acoustic pressure dependence  */
   double INT[MDE];	   /* acoustic pressure dependence  */
+  double EM_ER[DIM][MDE];  /* time-harmonic electromagnetic dependence */
+  double EM_EI[DIM][MDE];  /* time-harmonic electromagnetic dependence */
+  double rst[MDE];	   /* residence time field dependence  */
 };
 typedef struct heat_source_dependence HEAT_SOURCE_DEPENDENCE_STRUCT;
 

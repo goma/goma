@@ -20,6 +20,7 @@
 
 /* Standard include files */
  
+#include "rf_fem_const.h"
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
@@ -74,7 +75,9 @@ apply_point_colloc_bc (
 {
   int w, i, I, ibc, j, id, err, var, eqn, ldof_eqn, ldof_var, icount;
   int ieqn, pvar;
+  int ivar, jvar;
   int el1, el2, nf, jk;
+  int inode;
   int status = 0;
   int index_eq, matID_apply;
   int bc_input_id;
@@ -83,7 +86,7 @@ apply_point_colloc_bc (
   int n_dof[MAX_VARIABLE_TYPES];
   int n_dofptr[MAX_VARIABLE_TYPES][MDE];
   int doMeshMapping = 0;
-  double xi[DIM];             /* Gaussian-quadrature point locations         */
+  double xi[DIM];
   double x_dot[MAX_PDIM];
   double dsigma_dx[DIM][MDE];
   double phi_j;
@@ -373,6 +376,16 @@ apply_point_colloc_bc (
 		       BC_Types[bc_input_id].u_BC,BC_Types[bc_input_id].len_u_BC);
 		break;
 
+	    case FEATURE_ROLLON_BC:
+#ifdef FEATURE_ROLLON_PLEASE
+		f_feature_rollon(ielem_dim, &func, d_func, 
+		       BC_Types[bc_input_id].u_BC,BC_Types[bc_input_id].len_u_BC,
+		       BC_Types[bc_input_id].BC_Data_Int[0],time_intermediate);
+#else
+		EH(-1, "FEATURE_ROLLON_PLEASE define needed and feature_rollon.h - talk to RBS");
+#endif
+		break;
+
 	    case ROLL_FLUID_BC:
                 icount = BC_Types[bc_input_id].BC_Data_Int[2];
 xsurf[0] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+1];
@@ -546,15 +559,34 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 		break;
 
 	    case SH_FLUID_STRESS_BC:
+                {
+                  int dof_map_curv[MDE] = {-1};
+                  int dof_map_tens[MDE] = {-1};
+                  /* Populate dof_map arrays */
+                  for (ivar = 0; ivar < ei->dof[VELOCITY1]; ivar++) {
+                    inode = ei->gnn_list[VELOCITY1][ivar];
+                    for (jvar = 0; jvar < ei->dof[SHELL_CURVATURE]; jvar++) {
+                      if (inode == ei->gnn_list[SHELL_CURVATURE][jvar]) {
+                        dof_map_curv[ivar] = jvar;
+                      }
+                    }
+                    for (jvar = 0; jvar < ei->dof[SHELL_TENSION]; jvar++) {
+                      if (inode == ei->gnn_list[SHELL_TENSION][jvar]) {
+                        dof_map_tens[ivar] = jvar;
+                      }
+                    }
+                  }
 
-	      /*Note that we send in i, with id, as this is the shell-element counterpart local num */
-	      put_fluid_stress_on_shell(id, i , I, 
-					ielem_dim, resid_vector,
-					local_node_list_fs,
-					BC_Types[bc_input_id].BC_Data_Float[0]);
-	      func = 0.; /* this boundary condition rearranges values already in res and jac,
-			    * and does not add anything into the residual */
-	      break;
+	          /*Note that we send both local node numbers for bulk and shell elements */
+	          put_fluid_stress_on_shell(id , dof_map_curv[id], dof_map_tens[id], I,
+					    ielem_dim, resid_vector,
+					    local_node_list_fs,
+					    BC_Types[bc_input_id].BC_Data_Float[0]);
+
+	          func = 0.; /* this boundary condition rearranges values already in res and jac,
+		  	      * and does not add anything into the residual */
+                }
+              break;
 
 	    case KINEMATIC_COLLOC_BC:
 	    case VELO_NORM_COLLOC_BC:
@@ -670,8 +702,8 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 	    }
 
 	    if (ldof_eqn != -1)   {
-	      lec->R[ieqn][ldof_eqn] += penalty * func;
-	      lec->R[ieqn][ldof_eqn] *= f_time;
+              lec->R[LEC_R_INDEX(ieqn,ldof_eqn)] += penalty * func;
+              lec->R[LEC_R_INDEX(ieqn,ldof_eqn)] *= f_time;
 
 	      /* 
 	       * add sensitivities into matrix
@@ -704,8 +736,8 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 			if (! doFullJac) {
 			  ldof_var = ei->ln_to_first_dof[var][id];
 			  if (ldof_var != -1) {  
-			    lec->J[ieqn][pvar][ldof_eqn][ldof_var] += penalty * d_func[var];
-			    lec->J[ieqn][pvar][ldof_eqn][ldof_var] *= f_time;
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,ldof_var)] += penalty * d_func[var];
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,ldof_var)] *= f_time;
 			  }
 			} else {
 			  
@@ -714,14 +746,14 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 			    for (j = 0; j < ei->dof[var]; j++) 
 			      {
 				jk = dof_map[j];
-				lec->J[ieqn][pvar][ldof_eqn][jk] += penalty * d_kfunc[0][var][j];
-				lec->J[ieqn][pvar][ldof_eqn][jk] *= f_time;
+                                lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,jk)] += penalty * d_kfunc[0][var][j];
+                                lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,jk)] *= f_time;
 			      }
 			  } else {
 			    for (j = 0; j < ei->dof[var]; j++) 
 			      {
-				lec->J[ieqn][pvar][ldof_eqn][j] += penalty * d_kfunc[0][var][j];
-				lec->J[ieqn][pvar][ldof_eqn][j] *= f_time;
+                                lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] += penalty * d_kfunc[0][var][j];
+                                lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] *= f_time;
 			      }
 			  }
 			}
@@ -732,8 +764,8 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 			 */
 			for (j = 0; j < ei->dof[var]; j++) {
 			  phi_j = bf[var]->phi[j];
-			  lec->J[ieqn][pvar] [ldof_eqn][j] += penalty * d_func[var] * phi_j;
-			  lec->J[ieqn][pvar] [ldof_eqn][j] *= f_time;
+                          lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] += penalty * d_func[var] * phi_j;
+                          lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] *= f_time;
 			}
 		      }
 		    } else {
@@ -742,8 +774,8 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 			if (Dolphin[I][var] > 0) {
 			  ldof_var = ei->ln_to_first_dof[var][id];
 			  if (ldof_var != -1) {
-			    lec->J[ieqn][pvar] [ldof_eqn][ldof_var] += penalty * d_func[MAX_VARIABLE_TYPES + w];
-			    lec->J[ieqn][pvar] [ldof_eqn][ldof_var] *= f_time;
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,ldof_var)] += penalty * d_func[MAX_VARIABLE_TYPES + w];
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,ldof_var)] *= f_time;
 			  }
 			}
 			/* if variable is not defined at this node,
@@ -751,8 +783,8 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 			else {
 			  for (j = 0; j < ei->dof[var]; j++) {
 			    phi_j = bf[var]->phi[j];
-			    lec->J[ieqn][pvar] [ldof_eqn][j] += penalty	* d_func[MAX_VARIABLE_TYPES + w] * phi_j;
-			    lec->J[ieqn][pvar] [ldof_eqn][j] *= f_time;
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] += penalty	* d_func[MAX_VARIABLE_TYPES + w] * phi_j;
+                            lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] *= f_time;
 			  }
 			}
 		      } /* end of loop over species */   
@@ -1080,6 +1112,10 @@ fprintf(stderr,"circle %g %g %g %g\n",xcirc,ycirc,xcen2, ycen2);
 
 } /* END of routine f_double_rad                                             */
 /*****************************************************************************/
+
+#ifdef FEATURE_ROLLON_PLEASE
+#include "feature_rollon.h"
+#endif
 
 void 
 f_roll_fluid (int ielem_dim,
@@ -1567,6 +1603,19 @@ int i;
       for(i=0;i<ielem_dim;i++)
          {
           d_func[MESH_DISPLACEMENT1+i] *= (1.0 + time_factor);
+         }
+     }
+/*  Add initial time ramp   */
+  else if(num_const == 5)
+     {
+      if(p[4] <= 0 || time >= p[4])
+	{ time_factor = 1.;}
+      else
+	{ time_factor = time/p[4];}
+      *func *= time_factor;
+      for(i=0;i<ielem_dim;i++)
+         {
+          d_func[MESH_DISPLACEMENT1+i] *= time_factor;
          }
      }
 
@@ -2422,6 +2471,16 @@ load_variable (double *x_var,        /* variable value */
       var = ACOUS_PIMAG;
       *d_x_var = 1.;
       break;
+    case EM_CONT_REAL:
+      *x_var = fv->epr;
+      var = EM_CONT_REAL;
+      *d_x_var = 1.;
+      break;
+    case EM_CONT_IMAG:
+      *x_var = fv->epi;
+      var = EM_CONT_IMAG;
+      *d_x_var = 1.;
+      break;
     case POR_SINK_MASS:
       *x_var = fv->sink_mass;
       var = POR_SINK_MASS;
@@ -2576,7 +2635,68 @@ load_variable (double *x_var,        /* variable value */
       *x_var = fv->restime;
       var = RESTIME;
       *d_x_var = 1.;
-      break;  
+      break;
+    case EM_E1_REAL:
+      *x_var = fv->em_er[0];
+      var = EM_E1_REAL;
+      *d_x_var = 1.;
+      break;
+    case EM_E2_REAL:
+      *x_var = fv->em_er[1];
+      var = EM_E2_REAL;
+      *d_x_var = 1.;
+      break;
+    case EM_E3_REAL:
+      *x_var = fv->em_er[2];
+      var = EM_E3_REAL;
+      *d_x_var = 1.;
+      break;
+    case EM_E1_IMAG:
+      *x_var = fv->em_ei[0];
+      var = EM_E1_IMAG;
+      *d_x_var = 1.;
+      break;
+    case EM_E2_IMAG:
+      *x_var = fv->em_ei[1];
+      var = EM_E2_IMAG;
+      *d_x_var = 1.;
+      break;
+    case EM_E3_IMAG:
+      *x_var = fv->em_ei[2];
+      var = EM_E3_IMAG;
+      *d_x_var = 1.;
+      break;
+    case EM_H1_REAL:
+      *x_var = fv->em_hr[0];
+      var = EM_H1_REAL;
+      *d_x_var = 1.;
+      break;
+    case EM_H2_REAL:
+      *x_var = fv->em_hr[1];
+      var = EM_H2_REAL;
+      *d_x_var = 1.;
+      break;
+    case EM_H3_REAL:
+      *x_var = fv->em_hr[2];
+      var = EM_H3_REAL;
+      *d_x_var = 1.;
+      break;
+    case EM_H1_IMAG:
+      *x_var = fv->em_hi[0];
+      var = EM_H1_IMAG;
+      *d_x_var = 1.;
+      break;
+    case EM_H2_IMAG:
+      *x_var = fv->em_hi[1];
+      var = EM_H2_IMAG;
+      *d_x_var = 1.;
+      break;
+    case EM_H3_IMAG:
+      *x_var = fv->em_hi[2];
+      var = EM_H3_IMAG;
+      *d_x_var = 1.;
+      break;
+
     case MASS_FRACTION:
       *x_var = fv->c[wspec];
       var = MASS_FRACTION;
@@ -3241,6 +3361,10 @@ bc_eqn_index(int id,               /* local node number                 */
     else if (ieqn == R_MOMENTUM1) ieqn += kdir;
     else if (ieqn == R_SOLID1)    ieqn += kdir;
     else if (ieqn == R_LAGR_MULT1)ieqn += kdir;
+    else if (ieqn == R_EM_H1_REAL)ieqn += kdir;// AMC: These vector bcs are not rotated..
+    else if (ieqn == R_EM_H1_IMAG)ieqn += kdir;
+    else if (ieqn == R_EM_E1_REAL)ieqn += kdir;
+    else if (ieqn == R_EM_E1_IMAG)ieqn += kdir;
     else EH(-1,"Can't have a rotated vector BC!");
   }
 
@@ -3726,8 +3850,8 @@ apply_table_bc( double *func,
       }
 
   interp_val = interpolate_table( BC_Type->table, x_table, &slope, dfunc_dx );
-  interp_val *= BC_Type->BC_Data_Float[0];
-  slope *= BC_Type->BC_Data_Float[0];
+  interp_val *= BC_Type->table->yscale;
+  slope *= BC_Type->table->yscale;
   
   var = BC_Type->table->f_index ;
 

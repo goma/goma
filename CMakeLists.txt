@@ -10,7 +10,7 @@
 ###* This software is distributed under the GNU General Public License.      *
 ###\************************************************************************/
 ###
-### CMake file for Goma 6.1
+### CMake file for Goma 6.2
 ###########################
 ###
 ### If you are a developer on this project: Do not commit any files generated

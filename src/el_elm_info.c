@@ -51,8 +51,9 @@ static char rcsid[] =
 *  Gq_surf_weight ()            double          "mm_fill.c" matrix_fill
 *  in_list   ()                 int              multiple routines
 *  get_type  ()                 int
-*
-*
+*  centroid_node()		int
+*  load_surf_st()		int
+*  find_edge_s ()		int
 ******************************************************************************/
 
 int
@@ -2930,6 +2931,13 @@ find_edge_s (const int iquad,                /* current GQ index  */
         case 0: xi[i_s] = *s =  Ftemp2;  break;
         case 1: xi[i_s] = *s =     0.0;  break;
         case 2: xi[i_s] = *s = -Ftemp2;  break;
+    }
+    break;
+
+  case TRILINEAR_TET:                 /* trilinear tetrahedron */
+    switch( iquad ){
+        case 0: xi[i_s] = *s =  0.2; break;
+        case 1: xi[i_s] = *s =  0.6; break;
     }
     break;
 

@@ -172,6 +172,8 @@ struct Material_Properties
   dbl Ewt_func;
   int Rst_funcModel;
   dbl Rst_func;
+  dbl Rst_diffusion;
+  dbl Rst_func_supg;
   int thermal_cond_external_field;
 
   dbl electrical_conductivity;	/* Yeah, you could make this a tensor... */
@@ -194,6 +196,12 @@ struct Material_Properties
   dbl *u_elect_surf_diffusivity;
   int Elect_Surf_DiffusivityModel;
  
+  dbl magnetic_permeability;
+  dbl d_magnetic_permeability[MAX_VARIABLE_TYPES + MAX_CONC];
+  int len_u_magnetic_permeability;
+  dbl *u_magnetic_permeability;
+  int MagneticPermeabilityModel;
+
   dbl shell_user_par;
   dbl d_shell_user_par[MAX_VARIABLE_TYPES + MAX_CONC];
   int len_u_shell_user_par;
@@ -1180,6 +1188,13 @@ struct Elastic_Constitutive
    dbl *u_thermal_expansion;
    dbl solid_reference_temp;
    int solid_reference_temp_model;
+  
+   dbl solid_viscosity;		/*  viscoelastic solid viscosity   */
+   int solid_viscosity_model;
+   int len_u_solid_viscosity;
+   dbl *u_solid_viscosity;
+   dbl solid_dil_viscosity;		/*  viscoelastic solid dilational viscosity   */
+   int solid_dil_viscosity_model;
 };
 
 typedef struct Elastic_Constitutive ELASTIC_CONST_STRUCT;
@@ -1242,6 +1257,8 @@ struct  Variable_Initialization
   int var;
   int ktype;
   double init_val;
+  double init_val_min;
+  double init_val_max;
   double init_val_minus;   /* Value in negative LS phase */
   double init_val_plus;    /* Value in positive LS phase */
   int slave_block;         /* this is set TRUE in order that this initialization value

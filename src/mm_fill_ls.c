@@ -5281,7 +5281,7 @@ ls_var_initialization ( double *u, Exo_DB *exo, Dpi *dpi, Comm_Ex *cx )
 		  i = Proc_Elem_Connect[index++];
 		  nv = Nodes[i]->Nodal_Vars_Info;
 
-		  for( j=Num_Var_Init; j<ls->Num_Var_Init + Num_Var_Init; j++)
+		  for( j=Num_Var_Init+Num_Var_Bound; j<ls->Num_Var_Init+Num_Var_Init+Num_Var_Bound; j++)
 		    {
 
 		      var = Var_init[j].var;
@@ -9472,11 +9472,11 @@ assemble_boundary_extension_velocity ( double x[],
 
               val_ptr = x + ei->ieqn_ledof[ei->lvdof_to_ledof[eqn][i]];
 
-              lec->R[peqn][i] += BIG_PENALTY * *val_ptr;
+              lec->R[LEC_R_INDEX(peqn,i)] += BIG_PENALTY * *val_ptr;
 
               val_ptr = x + ei->ieqn_ledof[ei->lvdof_to_ledof[eqn][closest_node]];
 
-              lec->R[peqn][i] -= BIG_PENALTY * *val_ptr;
+              lec->R[LEC_R_INDEX(peqn,i)] -= BIG_PENALTY * *val_ptr;
 
               if ( af->Assemble_Jacobian )
                 {
@@ -9486,8 +9486,8 @@ assemble_boundary_extension_velocity ( double x[],
                   var = eqn;
                   pvar = upd->vp[var];
 
-                  lec->J[peqn][pvar][i][i] += BIG_PENALTY;
-                  lec->J[peqn][pvar][i][closest_node] -= BIG_PENALTY;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,i)] += BIG_PENALTY;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,closest_node)] -= BIG_PENALTY;
                 }
             }
         }
@@ -9700,7 +9700,7 @@ assemble_extension_velocity (dbl hsquared[DIM],
 		  advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 	    }
 	
-	  lec->R[peqn][i] += advection;      
+          lec->R[LEC_R_INDEX(peqn,i)] += advection;
 	}
     } 
   
@@ -9755,7 +9755,7 @@ assemble_extension_velocity (dbl hsquared[DIM],
 		      
 		    }
 		  
-		  lec->J[peqn][pvar][i][j] += advection;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection;
 		}
 	    }
 	    
@@ -9809,7 +9809,7 @@ assemble_extension_velocity (dbl hsquared[DIM],
 		      
 		    }
 		  
-		  lec->J[peqn][pvar][i][j] += advection;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection;
 		}
 	    }
 #endif /* not COUPLED_FILL */
@@ -9866,7 +9866,7 @@ assemble_extension_velocity (dbl hsquared[DIM],
 			  
 			}
 		      
-		      lec->J[peqn][pvar][i][j] += advection;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection;
 		    }
 		}
 	    }
@@ -10324,7 +10324,7 @@ Courant_Time_Step( double x[], double x_old[], double x_older[],
   double hhv[DIM][DIM];
   double dhv_dxnode[DIM][MDE];
   double h_elem;
-  int dim, wim;
+  int dim;
   int a, i;
   
   for ( ebi=0; ebi<exo->num_elem_blocks; ebi++)
@@ -10337,12 +10337,6 @@ Courant_Time_Step( double x[], double x_old[], double x_older[],
       e_end   = exo->eb_ptr[ebi+1];
       
       dim = pd->Num_Dim;
-      wim = dim;
-
-      if (pd->CoordinateSystem == SWIRLING ||
-          pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-          pd->CoordinateSystem == CARTESIAN_2pt5D)
-        wim = wim+1;
 
       if (ls->var != NULL)
 	{
@@ -10385,7 +10379,7 @@ Courant_Time_Step( double x[], double x_old[], double x_older[],
 			      if ( extended_dof ) continue;
 			    }
 			  v_mag2 = 0.;
-			  for ( a=0; a<wim; a++ )
+			  for ( a=0; a<WIM; a++ )
 			    {
 			      v_mag2 += *esp->v[a][i] * *esp->v[a][i];
 			    }
@@ -10418,7 +10412,6 @@ Courant_Time_Step( double x[], double x_old[], double x_older[],
   double h_elem;
   double *xi, xi_array[3];
   double sum, sumv;
-  int dim, wim;
   int ip_total, ip;
   double wt, vnorm;
   int a;
@@ -10436,14 +10429,6 @@ Courant_Time_Step( double x[], double x_old[], double x_older[],
       e_start = exo->eb_ptr[ebi];
       e_end   = exo->eb_ptr[ebi+1];
       
-      dim = pd->Num_Dim;
-      wim = dim;
-
-      if (pd->CoordinateSystem == SWIRLING ||
-          pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-          pd->CoordinateSystem == CARTESIAN_2pt5D)
-        wim = wim+1;
-
       if ( pd->v[ls->var] )
 	{
 	  for( ielem = e_start ; ielem < e_end ; ielem++)

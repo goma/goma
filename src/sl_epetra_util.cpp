@@ -296,7 +296,7 @@ void EpetraLoadLec(Exo_DB *exo, int ielem, struct Aztec_Linear_Solver_System *am
               je_new = ei->ieqn_ledof[ledof] + ke;
               row_index = Index_Solution(gnn, e, ke, nvdof,
                   ei->matID_ledof[ledof]);
-              resid_vector[row_index] += lec->R[MAX_PROB_VAR + ke][i];
+              resid_vector[row_index] += lec->R[LEC_R_INDEX(MAX_PROB_VAR + ke,i)];
 
               if (af->Assemble_Jacobian) {
                 for (v = V_FIRST; v < V_LAST; v++) {
@@ -323,7 +323,7 @@ void EpetraLoadLec(Exo_DB *exo, int ielem, struct Aztec_Linear_Solver_System *am
                               ei_ptr->matID_ledof[ledof]);
                           EH(col_index, "Bad var index.");
                           Indices.push_back(ams->GlobalIDs[col_index]);
-                          Values.push_back(lec->J[pe][pv][i][j]);
+                          Values.push_back(lec->J[LEC_J_INDEX(pe,pv,i,j)]);
                         }
                       }
                     } else {
@@ -343,7 +343,7 @@ void EpetraLoadLec(Exo_DB *exo, int ielem, struct Aztec_Linear_Solver_System *am
                         }
                         EH(col_index, "Bad var index.");
                         Indices.push_back(ams->GlobalIDs[col_index]);
-                        Values.push_back(lec->J[pe][pv][i][j]);
+                        Values.push_back(lec->J[LEC_J_INDEX(pe,pv,i,j)]);
                       }
                     }
                   }
@@ -369,7 +369,7 @@ void EpetraLoadLec(Exo_DB *exo, int ielem, struct Aztec_Linear_Solver_System *am
           ledof = ei->lvdof_to_ledof[e][i];
           if (ei->owned_ledof[ledof]) {
             row_index = ei->gun_list[e][i];
-            resid_vector[row_index] += lec->R[pe][i];
+            resid_vector[row_index] += lec->R[LEC_R_INDEX(pe,i)];
 
             if (af->Assemble_Jacobian) {
               for (v = V_FIRST; v < V_LAST; v++) {
@@ -408,7 +408,7 @@ void EpetraLoadLec(Exo_DB *exo, int ielem, struct Aztec_Linear_Solver_System *am
                         }
                         EH(col_index, "Bad var index.");
                         Indices.push_back(ams->GlobalIDs[col_index]);
-                        Values.push_back(lec->J[pe][pv][i][j]);
+                        Values.push_back(lec->J[LEC_J_INDEX(pe,pv,i,j)]);
                       }
                     }
                   } else {
@@ -438,7 +438,7 @@ void EpetraLoadLec(Exo_DB *exo, int ielem, struct Aztec_Linear_Solver_System *am
                       }
                       EH(col_index, "Bad var index.");
                       Indices.push_back(ams->GlobalIDs[col_index]);
-                      Values.push_back(lec->J[pe][pv][i][j]);
+                      Values.push_back(lec->J[LEC_J_INDEX(pe,pv,i,j)]);
                     }
                   }
                 }

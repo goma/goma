@@ -444,7 +444,7 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
      ***************************************************************************/
 {
   int w;
-  int species, num_dep, matID, num_species;
+  int species, num_dep, matID, num_species, num_species_eqn;
   dbl F, vol=0, rho=0, rho_f, rho_s, pressureThermo, RGAS_CONST;
   double avgMolecWeight = 0.0, tmp;
   double *mw = matrl->molecular_weight;
@@ -470,6 +470,7 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
   }
 
   num_species = matrl->Num_Species;
+  num_species_eqn = matrl->Num_Species_Eqn;
 
   /*
    *   Branch according to the density model from the material properties
@@ -632,18 +633,21 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
   } 
   else if (matrl->DensityModel == DENSITY_IDEAL_GAS) 
     {
+     double mw_last, c_total;
+     mw_last = mp -> molecular_weight[pd->Num_Species_Eqn];
     /*
      * Specify the thermodynamic pressure here
      *   -> For the moment we ignore any coupling between
      *      the dynamic pressure field and the thermodynamic
      *      pressure field.
      */
-    pressureThermo = upd->Pressure_Datum;
+    pressureThermo = upd->Pressure_Datum;  /* This is always in cgs units, so not that useful*/
 
     /*
-     * Specify the gas constant according to CRC IUPAC conventions
+     * Specify the gas constant according to user's choice
      */
-    RGAS_CONST = 8.314510E7;        /*    g cm^2/(sec^2 g-mole K)  */
+    RGAS_CONST = matrl->u_density[0];  /*(cgs:cm^3-atm/g-mole K)  (si_mm: mm^3-kPa/kg-mole-degK) */
+    pressureThermo = matrl->u_density[1];  /*Pressure Datum in units of choice  */
   
     /*
      *  Base density calculation depends on species var type
@@ -663,9 +667,20 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
 	break;
     case SPECIES_CONCENTRATION:
         rho = 0.0;
-	for (w = 0; w < num_species; w++) {
-          rho += stateVector[SPECIES_UNK_0 + w] * mw[w];
-	}
+	if(matrl->molecular_weight[num_species_eqn] < 0)
+         {
+	  for (w = 0; w < num_species_eqn; w++) {
+             rho += stateVector[SPECIES_UNK_0 + w] * mw[w];
+	     }
+         }
+       else
+         {
+	  c_total = pressureThermo/(RGAS_CONST * stateVector[TEMPERATURE]);
+	  for (w = 0; w < num_species_eqn; w++) {
+             rho += stateVector[SPECIES_UNK_0 + w] * (mw[w]-mw_last);
+	     }
+	  rho += c_total*mw_last;
+         }
 	break;
     case SPECIES_DENSITY:
         rho = 0.0;
@@ -708,13 +723,13 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
 			       matID, num_species-1, 0.0, rho);
 	    break;
 	case SPECIES_CONCENTRATION:
-	    for (w = 0; w < num_species - 1; w++) {
-	      tmp =  mw[w] - mw[num_species - 1];
+	    for (w = 0; w < num_species_eqn; w++) {
+	      tmp =  mw[w] - mw_last;
 	      propertyJac_addEnd(densityJac, MASS_FRACTION,
 				 matID, w, tmp, rho);	     
 	    }
-	    propertyJac_addEnd(densityJac, MASS_FRACTION,
-			       matID, num_species-1, 0.0, rho);
+	    /*propertyJac_addEnd(densityJac, MASS_FRACTION,
+			       matID, num_species-1, 0.0, rho);  */
 	    break;
 	default:
 	    fprintf(stderr,"Density error: species var type not handled: %d\n",

@@ -365,7 +365,7 @@ int ShellElementParentElementCoverageForVariable[MAX_VARIABLE_TYPES] = {MAX_VARI
   phi_i = bf[eqn]->phi[i];
 
   res = (fv->A - 2.0 * fv->V) * phi_i * wt * det_J * h3;
-  lec->R[peqn][i] += res;
+  lEC->R[LEC_R_INDEX(PEQN,I)] += res;
   }
   }  Sa*/
 
@@ -390,7 +390,7 @@ int ShellElementParentElementCoverageForVariable[MAX_VARIABLE_TYPES] = {MAX_VARI
   {
   phi_j = bf[var]->phi[j];
   jac = phi_j * phi_i * wt * det_J * h3;
-  lec->J[peqn][pvar][i][j] += jac;
+  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += jac;
   }
   }  Sa*/
 
@@ -407,7 +407,7 @@ int ShellElementParentElementCoverageForVariable[MAX_VARIABLE_TYPES] = {MAX_VARI
   {
   phi_j = bf[var]->phi[j];
   jac = -2.0 * phi_j * phi_i * wt * det_J * h3;
-  lec->J[peqn][pvar][i][j] += jac;
+  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += jac;
   }
   }
   }
@@ -624,7 +624,7 @@ assemble_surface_charge(double time_value,  /* Time */
   		  diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
 		}
 	      res[i] += (mass+diffusion)*wt*h3*det_J;
-	      lec->R[peqn][i] += res[i];
+	      lec->R[LEC_R_INDEX(peqn,i)] += res[i];
 	    }
 	}
 
@@ -661,7 +661,7 @@ assemble_surface_charge(double time_value,  /* Time */
   		      diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
  		    }
 		  jac[i][pvar][j] += (mass + diffusion)*wt*h3*det_J;
-		  lec->J[peqn][pvar][i][j] += jac[i][pvar][j];
+		  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += jac[i][pvar][j];
 		}
 
 	      /* J_qs_x:  Mesh displacement sensitivity term completion & transfer */
@@ -689,7 +689,7 @@ assemble_surface_charge(double time_value,  /* Time */
 			    }
 			  jac[i][pvar][j] += ((mass + diffusion) * wt * dh3J_dm[p][j]
 					      + diff_dx * wt * h3 * det_J);
-			  lec->J[peqn][pvar][i][j] += jac[i][pvar][j];
+			  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += jac[i][pvar][j];
 			}
 		    }
 		}
@@ -716,7 +716,7 @@ assemble_surface_charge(double time_value,  /* Time */
                   diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
                 }
 	      res[i] += (mass+diffusion)*wt*h3*det_J;
-	      lec->R[peqn][i] += res[i];
+	      lec->R[LEC_R_INDEX(peqn,i)] += res[i];
 	    }
 	}
       /* Include Jacobian contributions from shell variables */
@@ -747,7 +747,7 @@ assemble_surface_charge(double time_value,  /* Time */
                       diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
                     }
 		  jac[i][pvar][j] += (mass + diffusion)*wt*h3*det_J;
-		  lec->J[peqn][pvar][i][j] += jac[i][pvar][j];
+		  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += jac[i][pvar][j];
 		}
 	      /* J_qs_x:  Mesh displacement sensitivity term completion & transfer */
 	      for (p = 0; p < pd->Num_Dim; p++)
@@ -768,7 +768,7 @@ assemble_surface_charge(double time_value,  /* Time */
 			      diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
 			    }
 			  jac[i][pvar][j] += (mass+diffusion)*wt*dh3J_dm[p][j];
-			  lec->J[peqn][pvar][i][j] += jac[i][pvar][j];
+			  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += jac[i][pvar][j];
 			}
 		    }
 		}
@@ -943,6 +943,12 @@ assemble_shell_structure(double time_value,  /* Time */
   det_J_sh = sqrt(d_sh_x_dxi*d_sh_x_dxi + d_sh_y_dxi*d_sh_y_dxi);
 
 
+  /* Add lubrication pressure if it resides in the same element block*/
+  double P_lub = 0.0;
+  if (pd->v[LUBP])
+    {
+     P_lub = fv->lubp;
+    }
 
   /* First process the side belonging to element el1. */
 
@@ -969,11 +975,12 @@ assemble_shell_structure(double time_value,  /* Time */
             {
               diffusion = -elc->bend_stiffness * d_phi_dxi[i] * d_sh_K_dxi/det_J_sh
                 - fv->sh_K * fv->sh_tens * phi_i * det_J_sh;
+              diffusion -= P_lub * phi_i * det_J_sh;
               diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
             }
 
           /* Sum the terms into res[] */
-          lec->R[peqn][i] += diffusion * wt * h3;
+          lec->R[LEC_R_INDEX(peqn,i)] += diffusion * wt * h3;
 
           /*Now the tangential shell component of momentum */
           eqn = R_SHELL_TENSION;
@@ -989,7 +996,7 @@ assemble_shell_structure(double time_value,  /* Time */
             }
 
           /* Sum the terms into res[] */
-          lec->R[peqn][i] += diffusion * wt * h3;
+          lec->R[LEC_R_INDEX(peqn,i)] += diffusion * wt * h3;
 
         }
     }
@@ -1021,7 +1028,7 @@ assemble_shell_structure(double time_value,  /* Time */
                         -phi_j * fv->sh_tens * phi_i * det_J_sh;
 
                       diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
-                      lec->J[peqn][pvar][i][j] += diffusion * wt * h3;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion * wt * h3;
                     }
                 }
             }
@@ -1042,11 +1049,32 @@ assemble_shell_structure(double time_value,  /* Time */
                       diffusion = -fv->sh_K * phi_j * phi_i * det_J_sh;
 
                       diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
-                      lec->J[peqn][pvar][i][j] += diffusion * wt * h3;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion * wt * h3;
                     }
                 }
             }
 
+
+          /* J_sh_K_lubp: */
+          var  = LUBP;
+          if ( pd->v[var] )
+            {
+              pvar = upd->vp[var];
+
+              /* diffusion term only */
+              diffusion = 0.0;
+              if (pd->e[eqn])
+                {
+                  for (j = 0; j < ei->dof[var]; j++)
+                    {
+                      phi_j = bf[var]->phi[j];
+                      diffusion -= phi_j * phi_i * det_J_sh;
+
+                      diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion * wt * h3;
+                    }
+                }
+            }
 
 
           /* J_k_sh_x:  Side 1 sensitivity */
@@ -1066,10 +1094,12 @@ assemble_shell_structure(double time_value,  /* Time */
                       diffusion = elc->bend_stiffness * d_phi_dxi[i] * d_sh_K_dxi * d_det_J_dmeshbj / det_J_sh / det_J_sh
                         -fv->sh_K * fv->sh_tens * phi_i * d_det_J_dmeshbj;
 
+                      diffusion -= P_lub * phi_i * d_det_J_dmeshbj;
+
                       diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
                     }
 
-                  lec->J[peqn][pvar][i][j] += (diffusion) * wt * h3;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (diffusion) * wt * h3;
                 }
             }
 
@@ -1090,10 +1120,12 @@ assemble_shell_structure(double time_value,  /* Time */
                       diffusion = elc->bend_stiffness * d_phi_dxi[i] * d_sh_K_dxi * d_det_J_dmeshbj / det_J_sh / det_J_sh
                         -fv->sh_K * fv->sh_tens * phi_i * d_det_J_dmeshbj;
 
+                      diffusion += P_lub * phi_i * d_det_J_dmeshbj;
+
                       diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
                     }
 
-                  lec->J[peqn][pvar][i][j] += (diffusion) * wt * h3;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (diffusion) * wt * h3;
                 }
             }
         }
@@ -1124,7 +1156,7 @@ assemble_shell_structure(double time_value,  /* Time */
                          fv->sh_K * d_phi_dxi[j]);
 
                       diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
-                      lec->J[peqn][pvar][i][j] += diffusion * wt * h3;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion * wt * h3;
                     }
                 }
             }
@@ -1146,7 +1178,7 @@ assemble_shell_structure(double time_value,  /* Time */
                       diffusion = phi_i * d_phi_dxi[j];
 
                       diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
-                      lec->J[peqn][pvar][i][j] += diffusion * wt * h3;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion * wt * h3;
                     }
                 }
             }
@@ -1296,7 +1328,7 @@ assemble_shell_web_structure(double time_value,  /* Time */
       diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
 
       /* Sum the terms into res[] */
-      lec->R[peqn][i] += diffusion * wt * h3;
+      lec->R[LEC_R_INDEX(peqn,i)] += diffusion * wt * h3;
     }
 
     // Now the tangential shell force balance
@@ -1311,7 +1343,7 @@ assemble_shell_web_structure(double time_value,  /* Time */
       diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
 
       /* Sum the terms into res[] */
-      lec->R[peqn][i] += diffusion * wt * h3;
+      lec->R[LEC_R_INDEX(peqn,i)] += diffusion * wt * h3;
     }
   }
 
@@ -1332,7 +1364,7 @@ assemble_shell_web_structure(double time_value,  /* Time */
         diffusion += -phi_j * tension * phi_i * det_J_sh;
         diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
 
-        lec->J[peqn][pvar][i][j] += diffusion * wt * h3;
+        lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion * wt * h3;
       }
 
       var  = SHELL_TENSION;
@@ -1344,7 +1376,7 @@ assemble_shell_web_structure(double time_value,  /* Time */
         diffusion = -fv->sh_K * phi_j * phi_i * det_J_sh;
         diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
 
-        lec->J[peqn][pvar][i][j] += diffusion * wt * h3;
+        lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion * wt * h3;
       }
 
       var  = MESH_DISPLACEMENT1;
@@ -1367,7 +1399,7 @@ assemble_shell_web_structure(double time_value,  /* Time */
           diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
 
 
-          lec->J[peqn][pvar][i][j] += (diffusion) * wt * h3;
+          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (diffusion) * wt * h3;
         }
       }
 
@@ -1389,7 +1421,7 @@ assemble_shell_web_structure(double time_value,  /* Time */
 
           diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
 
-          lec->J[peqn][pvar][i][j] += (diffusion) * wt * h3;
+          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (diffusion) * wt * h3;
         }
       }
 
@@ -1403,7 +1435,7 @@ assemble_shell_web_structure(double time_value,  /* Time */
           diffusion += d_p_applied_dP*phi_i*phi_j*det_J_sh;
           diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
 
-          lec->J[peqn][pvar][i][j] += (diffusion) * wt * h3;
+          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (diffusion) * wt * h3;
         }
       }
 
@@ -1426,7 +1458,7 @@ assemble_shell_web_structure(double time_value,  /* Time */
                        + elc->bend_stiffness*phi_i*fv->sh_K*d_phi_dxi[j];
           diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
 
-          lec->J[peqn][pvar][i][j] += diffusion * wt * h3;
+          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion * wt * h3;
         }
 
       }
@@ -1441,7 +1473,7 @@ assemble_shell_web_structure(double time_value,  /* Time */
         diffusion += phi_i * d_phi_dxi[j];
         diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
 
-        lec->J[peqn][pvar][i][j] += diffusion * wt * h3;
+        lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion * wt * h3;
       }
 
     }
@@ -1655,7 +1687,7 @@ assemble_shell_tension(double time_value,  /* Time */
 	    }
 
 	  /* Sum the terms into res[] */
-	  lec->R[peqn][i] += diffusion * wt * h3;
+	  lec->R[LEC_R_INDEX(peqn,i)] += diffusion * wt * h3;
 
 	}
     }
@@ -1682,7 +1714,7 @@ assemble_shell_tension(double time_value,  /* Time */
 		  diffusion = phi_i * d_phi_dxi[j];
 				  
 		  diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
-		  lec->J[peqn][pvar][i][j] += diffusion * wt * h3;
+		  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion * wt * h3;
 		}
 			  
 	    }
@@ -1836,7 +1868,7 @@ assemble_shell_coordinates(double time_value,  /* Time */
             }
 
           /* Sum the terms into res[] */
-          lec->R[peqn][i] += diffusion * wt * h3;
+          lec->R[LEC_R_INDEX(peqn,i)] += diffusion * wt * h3;
 
           /*Now the tangential shell component of momentum */
           eqn = R_MESH2;
@@ -1852,7 +1884,7 @@ assemble_shell_coordinates(double time_value,  /* Time */
             }
 
           /* Sum the terms into res[] */
-          lec->R[peqn][i] += diffusion * wt * h3;
+          lec->R[LEC_R_INDEX(peqn,i)] += diffusion * wt * h3;
 
         }
     }
@@ -1884,7 +1916,7 @@ assemble_shell_coordinates(double time_value,  /* Time */
                       diffusion = 0.;  /*const node space version */
 
                       diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
-                      lec->J[peqn][pvar][i][j] += diffusion * wt * h3;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion * wt * h3;
                     }
                 }
             }
@@ -1910,7 +1942,7 @@ assemble_shell_coordinates(double time_value,  /* Time */
                       diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
                     }
 
-                  lec->J[peqn][pvar][i][j] += (diffusion) * wt * h3;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (diffusion) * wt * h3;
                 }
             }
           var  = MESH_DISPLACEMENT2;
@@ -1933,7 +1965,7 @@ assemble_shell_coordinates(double time_value,  /* Time */
                       diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
                     }
 
-                  lec->J[peqn][pvar][i][j] += (diffusion) * wt * h3;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (diffusion) * wt * h3;
                 }
             }
         }
@@ -1962,7 +1994,7 @@ assemble_shell_coordinates(double time_value,  /* Time */
                       diffusion = -phi_i * phi_j * d_sh_x_dxi;
 
                       diffusion *= BIG_PENALTY*pd0->etm[eqn][(LOG2_DIFFUSION)];
-                      lec->J[peqn][pvar][i][j] += diffusion * wt * h3;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion * wt * h3;
                     }
                 }
             }
@@ -1988,7 +2020,7 @@ assemble_shell_coordinates(double time_value,  /* Time */
                       diffusion *= BIG_PENALTY* pd0->etm[eqn][(LOG2_DIFFUSION)];
                     }
 
-                  lec->J[peqn][pvar][i][j] += (diffusion) * wt * h3;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (diffusion) * wt * h3;
                 }
             }
           var  = MESH_DISPLACEMENT2;
@@ -2010,7 +2042,7 @@ assemble_shell_coordinates(double time_value,  /* Time */
                       diffusion *= BIG_PENALTY*pd0->etm[eqn][(LOG2_DIFFUSION)];
                     }
 
-                  lec->J[peqn][pvar][i][j] += (diffusion) * wt * h3;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (diffusion) * wt * h3;
                 }
             }
         }
@@ -2114,7 +2146,7 @@ assemble_shell_web_coordinates(double time_value,  /* Time */
       diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
 
       /* Sum the terms into res[] */
-      lec->R[peqn][i] += diffusion * wt * h3;
+      lec->R[LEC_R_INDEX(peqn,i)] += diffusion * wt * h3;
     }
 
     // Now the circle constraint
@@ -2130,7 +2162,7 @@ assemble_shell_web_coordinates(double time_value,  /* Time */
       diffusion *= penalty*pd0->etm[eqn][(LOG2_DIFFUSION)];
 
       /* Sum the terms into res[] */
-      lec->R[peqn][i] += diffusion * wt * h3;
+      lec->R[LEC_R_INDEX(peqn,i)] += diffusion * wt * h3;
 
     }
   }
@@ -2151,7 +2183,7 @@ assemble_shell_web_coordinates(double time_value,  /* Time */
         diffusion = d_phi_dxi[i]*det_J*d_det_J_dmeshkj[0][j];
         diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
 
-        lec->J[peqn][pvar][i][j] += (diffusion) * wt * h3;
+        lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (diffusion) * wt * h3;
       }
 
       var  = MESH_DISPLACEMENT2;
@@ -2162,7 +2194,7 @@ assemble_shell_web_coordinates(double time_value,  /* Time */
         // Diffusion term
         diffusion = d_phi_dxi[i]*det_J*d_det_J_dmeshkj[1][j];
 
-        lec->J[peqn][pvar][i][j] += (diffusion) * wt * h3;
+        lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (diffusion) * wt * h3;
       }
     }
       
@@ -2181,7 +2213,7 @@ assemble_shell_web_coordinates(double time_value,  /* Time */
         diffusion = -phi_i * phi_j * d_sh_x_dxi;
         diffusion *= penalty*pd0->etm[eqn][(LOG2_DIFFUSION)];
 
-        lec->J[peqn][pvar][i][j] += diffusion * wt * h3;
+        lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion * wt * h3;
       }
 
       var  = MESH_DISPLACEMENT1;
@@ -2195,7 +2227,7 @@ assemble_shell_web_coordinates(double time_value,  /* Time */
         diffusion += -phi_i*curvature*d_phi_dxi[j];
         diffusion *= penalty* pd0->etm[eqn][(LOG2_DIFFUSION)];
 
-        lec->J[peqn][pvar][i][j] += (diffusion) * wt * h3;
+        lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (diffusion) * wt * h3;
       }
 
       var  = MESH_DISPLACEMENT2;
@@ -2212,7 +2244,7 @@ assemble_shell_web_coordinates(double time_value,  /* Time */
         diffusion *= penalty*pd0->etm[eqn][(LOG2_DIFFUSION)];
 
 
-        lec->J[peqn][pvar][i][j] += (diffusion) * wt * h3;
+        lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (diffusion) * wt * h3;
       }
     }
   }
@@ -2397,7 +2429,7 @@ assemble_shell_diffusion(double time_value,  /* Time */
             }
 
           /* Sum the terms into res[] */
-          lec->R[peqn][i] += diffusion * wt * h3;
+          lec->R[LEC_R_INDEX(peqn,i)] += diffusion * wt * h3;
         }
     }
 
@@ -2422,7 +2454,7 @@ assemble_shell_diffusion(double time_value,  /* Time */
 
                   diffusion = Ds * Gs * Va * phi_j * d_phi_dxi[i];
                   diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
-                  lec->J[peqn][pvar][i][j] += diffusion * wt * h3;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion * wt * h3;
                 }
             }
 
@@ -2440,7 +2472,7 @@ assemble_shell_diffusion(double time_value,  /* Time */
 
                   diffusion = phi_j * phi_i * det_J_sh;
                   diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
-                  lec->J[peqn][pvar][i][j] += diffusion * wt * h3;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion * wt * h3;
                 }
             }
 
@@ -2457,7 +2489,7 @@ assemble_shell_diffusion(double time_value,  /* Time */
                       /* Diffusion term */
                       diffusion = fv->sh_J * phi_i * fv->dsurfdet_dx[p][j];
                       diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
-                      lec->J[peqn][pvar][i][j] += diffusion * wt * h3;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion * wt * h3;
                     }
                 }
             }
@@ -2630,7 +2662,7 @@ assemble_shell_geometry(double time_value,  /* Time */
               diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
 
               /* Sum the terms into res[] */
-              lec->R[peqn][i] += diffusion * wt * h3;
+              lec->R[LEC_R_INDEX(peqn,i)] += diffusion * wt * h3;
             }
         }
 #ifdef DEBUG_HKM
@@ -2660,7 +2692,7 @@ assemble_shell_geometry(double time_value,  /* Time */
                   diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
 
                   /* Sum the terms into res[] */
-                  lec->R[peqn][i] += diffusion * wt * h3;
+                  lec->R[LEC_R_INDEX(peqn,i)] += diffusion * wt * h3;
                 }
             }
         }
@@ -2692,7 +2724,7 @@ assemble_shell_geometry(double time_value,  /* Time */
                       phi_j = bf[var]->phi[j];
                       diffusion = phi_i * phi_j * det_J;
                       diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
-                      lec->J[peqn][pvar][i][j] += diffusion * wt * h3;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion * wt * h3;
                     }
                 }
 
@@ -2707,7 +2739,7 @@ assemble_shell_geometry(double time_value,  /* Time */
                         {
                           diffusion = -d_div_s_nv_dnv[p][j] * phi_i * det_J;
                           diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
-                          lec->J[peqn][pvar][i][j] += diffusion * wt * h3;
+                          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion * wt * h3;
                         }
                     }
 
@@ -2733,7 +2765,7 @@ assemble_shell_geometry(double time_value,  /* Time */
                                         - fac * d_div_s_nv_dmesh[p][j] * phi_i * det_J);
                           diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
 
-                          lec->J[peqn][pvar][i][j] += diffusion * wt * h3;
+                          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion * wt * h3;
                         }
                     }
                 }
@@ -2762,7 +2794,7 @@ assemble_shell_geometry(double time_value,  /* Time */
 
                       diffusion = phi_i * phi_j * det_J;
                       diffusion *= pd0->etm[eqn][(LOG2_DIFFUSION)];
-                      lec->J[peqn][pvar][i][j] += diffusion * wt * h3;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion * wt * h3;
                     }
 
                   /* J_n_d */
@@ -2786,10 +2818,10 @@ assemble_shell_geometry(double time_value,  /* Time */
 			  
 			  for (j = 0; j < n_dof[var]; j++) 
 			    {			   
-			      lec->J[peqn][pvar][i][j] += -fv->dsnormal_dx[p][b][j] * 
+			      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += -fv->dsnormal_dx[p][b][j] * 
 				phi_i * pd0->etm[eqn][(LOG2_DIFFUSION)] * wt * det_J * h3;
 			      
-			      lec->J[peqn][pvar][i][j] += (fv->n[p] - fv->snormal[p]) * 
+			      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (fv->n[p] - fv->snormal[p]) * 
 				phi_i * pd0->etm[eqn][(LOG2_DIFFUSION)] * wt * fv->dsurfdet_dx[b][j];
 			    }
 			}
@@ -3428,14 +3460,6 @@ apply_surface_viscosity(double cfunc[MDE][DIM],
       }
     }
   }
-  // Calculate the number of velocity dimensions
-  int wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING || 
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D) 
-    {
-      wim = 3;
-    }
   /***************************** EXECUTION BEGINS ******************************/
 
   /* See if there is a friend for this element */
@@ -3621,7 +3645,7 @@ apply_surface_viscosity(double cfunc[MDE][DIM],
     {
       for (b = 0; b < VIM; b++)
 	{ 
-	  for (r = 0; r < wim; r++)
+	  for (r = 0; r < WIM; r++)
 	    {
 	      var = VELOCITY1 + r;
 	      for (j = 0; j < ei->dof[var]; j++)
@@ -4196,19 +4220,19 @@ apply_surface_viscosity(double cfunc[MDE][DIM],
  */
 
 void 
-put_fluid_stress_on_shell(int id, /* local element node number for the 
+put_fluid_stress_on_shell(int id, /* local bulk element node number for the
 				   * current node whose residual contribution
 				   * is being sought                        */
-			  int id_shell, /* local shell element node number corresponding to id */
+			  int id_shell_curv, /* local shell element node number corresponding to id */
+			  int id_shell_tens, /* local shell element node number corresponding to id */
 			  int I, /* Global node number                      */
 			  int ielem_dim, /* physical dimension of the elem  */
 			  double resid_vector[], /* Residual vector         */
 			  int local_node_list_fs[], /* MDE list to keep track
-						     * of nodes at which 
-						     * solid contributions 
+						     * of nodes at which
+						     * bulk contributions 
 						     * have been transfered
-						     * to liquid (fluid-solid
-						     * boundaries)          */
+						     * to shell  */
 			  double scale) /* Scale factor, nondimension       */
 {
   int j_id, dim, var, pvar, q;
@@ -4222,35 +4246,25 @@ put_fluid_stress_on_shell(int id, /* local element node number for the
   dim = pd->Num_Dim;
 
   if (node->DBC) {
-     
+
     offset = get_nodal_unknown_offset(nv, R_SHELL_CURVATURE, -2, 0, NULL);
     curvature_fixed = (offset >= 0) && (node->DBC[offset] != -1);
     offset = get_nodal_unknown_offset(nv, R_SHELL_TENSION, -2, 0, NULL);
-    tension_fixed   = (offset >= 0) && (node->DBC[offset] != -1);	
+    tension_fixed   = (offset >= 0) && (node->DBC[offset] != -1);
   } else {
     curvature_fixed = tension_fixed = 0;
   }
 
 
-  /*
-   * if you are in the shell phase, return without doing anything
-   * In the shell phase, there are no fluid momentum equations.
-   * This probably is not needed since it is impossible with CUBIT to
-   * put attach a sideset to a shell element, and hence all sidesets
-   * are one-sided. 
-   */
-  if (!pd->e[R_MOMENTUM1]) return;
-
-  /* Hmm, unlike in the FLUID_SOLID case, we've no shell equations in the 
-   * bulk so we cannot use ei struct like this 
+  /* Hmm, unlike in the FLUID_SOLID case, we've no shell equations in the
+   * bulk so we cannot use ei struct like this
    * id_dofmom = ei->ln_to_dof[R_MOMENTUM1][id];
    * id_dofshell = ei->ln_to_dof[R_SHELL_CURVATURE][i];
    *
    * So try this because it is only 2D (assumption that there is a shell
    * variable at every surface node
    */
-  id_dofmom1 = ei->ln_to_dof[R_MOMENTUM1][id];
-  id_dofshell = id_shell;  /* This is the imperfect assumption */
+  id_dofmom1 = id;
 
 
   /*
@@ -4282,26 +4296,26 @@ put_fluid_stress_on_shell(int id, /* local element node number for the
       ieqn_shell = R_SHELL_CURVATURE;
       ieqn_mom1   = R_MOMENTUM1;
       ieqn_mom2   = R_MOMENTUM2;
-      id_dofmom1 = ei->ln_to_dof[ieqn_mom1][id];
-      id_dofmom2 = ei->ln_to_dof[ieqn_mom2][id];
-      id_dofshell = id_shell; 
-      lec->R[upd->ep[ieqn_shell]][id_dofshell] +=
-	scale * (fv->snormal[0] * lec->R[upd->ep[ieqn_mom1]][id_dofmom1] + 
-		 fv->snormal[1] * lec->R[upd->ep[ieqn_mom2]][id_dofmom2]);
+      id_dofmom1 = id;
+      id_dofmom2 = id;
+      id_dofshell = id_shell_curv;
+      lec->R[LEC_R_INDEX(upd->ep[ieqn_shell],id_dofshell)] +=
+        scale * (fv->snormal[0] * lec->R[LEC_R_INDEX(upd->ep[ieqn_mom1],id_dofmom1)] +
+                 fv->snormal[1] * lec->R[LEC_R_INDEX(upd->ep[ieqn_mom2],id_dofmom2)]);
     }
     if (!tension_fixed ) {
       ieqn_shell = R_SHELL_TENSION;
       ieqn_mom1   = R_MOMENTUM1;
       ieqn_mom2   = R_MOMENTUM2;
-      id_dofmom1 = ei->ln_to_dof[ieqn_mom1][id];
-      id_dofmom2 = ei->ln_to_dof[ieqn_mom2][id];
-      id_dofshell = id_shell; 
-      lec->R[upd->ep[ieqn_shell]][id_dofshell] +=
-	scale * (fv->stangent[0][0] * lec->R[upd->ep[ieqn_mom1]][id_dofmom1] + 
-		 fv->stangent[0][1] * lec->R[upd->ep[ieqn_mom2]][id_dofmom2]);
+      id_dofmom1 = id;
+      id_dofmom2 = id;
+      id_dofshell = id_shell_tens;
+      lec->R[LEC_R_INDEX(upd->ep[ieqn_shell],id_dofshell)] +=
+        scale * (fv->stangent[0][0] * lec->R[LEC_R_INDEX(upd->ep[ieqn_mom1],id_dofmom1)] +
+                 fv->stangent[0][1] * lec->R[LEC_R_INDEX(upd->ep[ieqn_mom2],id_dofmom2)]);
     }
   }
-    
+
   /*
    * loop over directions and add local contribution to solid
    * momentum into local contribution for liquid momentum
@@ -4314,15 +4328,15 @@ put_fluid_stress_on_shell(int id, /* local element node number for the
 	  peqn_shell = upd->ep[ieqn_shell];
 	  ieqn_mom1   = R_MOMENTUM1;
 	  ieqn_mom2   = R_MOMENTUM2;
-	  id_dofmom1 = ei->ln_to_dof[ieqn_mom1][id];
+	  id_dofmom1 = id;
 	  peqn_mom1 = upd->ep[ieqn_mom1];
-	  id_dofmom2 = ei->ln_to_dof[ieqn_mom2][id];
+	  id_dofmom2 = id;
 	  peqn_mom2 = upd->ep[ieqn_mom2];
-	  id_dofshell = id_shell; 
+	  id_dofshell = id_shell_curv;
 
 
 	  /* Add contributions due to all nodal sensitivities in shell element */
-	    
+
 	  /*
 	   * local J_m_d -> J_d_d
 	   */
@@ -4334,15 +4348,15 @@ put_fluid_stress_on_shell(int id, /* local element node number for the
 		  pvar = upd->vp[var];
 		  for ( j_id=0; j_id<ei->dof[var]; j_id++)
 		    {
-		      lec->J[peqn_shell][pvar][id_dofshell][j_id] +=
-			scale*(fv->snormal[0] * lec->J[peqn_mom1][pvar][id_dofmom1][j_id] +
-			       fv->snormal[1] * lec->J[peqn_mom2][pvar][id_dofmom2][j_id] +
-			       fv->dsnormal_dx[0][q][j_id] * lec->R[upd->ep[ieqn_mom1]][id_dofmom1] +
-			       fv->dsnormal_dx[1][q][j_id] * lec->R[upd->ep[ieqn_mom2]][id_dofmom2]);
+                      lec->J[LEC_J_INDEX(peqn_shell,pvar,id_dofshell,j_id)] +=
+                        scale*(fv->snormal[0] * lec->J[LEC_J_INDEX(peqn_mom1,pvar,id_dofmom1,j_id)] +
+                               fv->snormal[1] * lec->J[LEC_J_INDEX(peqn_mom2,pvar,id_dofmom2,j_id)] +
+                               fv->dsnormal_dx[0][q][j_id] * lec->R[LEC_R_INDEX(upd->ep[ieqn_mom1],id_dofmom1)] +
+                               fv->dsnormal_dx[1][q][j_id] * lec->R[LEC_R_INDEX(upd->ep[ieqn_mom2],id_dofmom2)]);
 		    }
 		}
 	    }
-	    
+
 	  /*
 	   * local J_m_P -> J_d_P
 	   */
@@ -4351,16 +4365,16 @@ put_fluid_stress_on_shell(int id, /* local element node number for the
 	    {
 	      pvar = upd->vp[var];
 	      for ( j_id=0; j_id<ei->dof[var]; j_id++)
-		{			
-		  lec->J[peqn_shell][pvar][id_dofshell][j_id] +=
-		    scale*(fv->snormal[0] * lec->J[peqn_mom1][pvar][id_dofmom1][j_id] +
-			   fv->snormal[1] * lec->J[peqn_mom2][pvar][id_dofmom2][j_id]);
+		{
+                  lec->J[LEC_J_INDEX(peqn_shell,pvar,id_dofshell,j_id)] +=
+                    scale*(fv->snormal[0] * lec->J[LEC_J_INDEX(peqn_mom1,pvar,id_dofmom1,j_id)] +
+                           fv->snormal[1] * lec->J[LEC_J_INDEX(peqn_mom2,pvar,id_dofmom2,j_id)]);
 		}
 	    }
-	    
-	    
+
+
 	  /*
-	   * local J_m_v -> J_d_v  
+	   * local J_m_v -> J_d_v
 	   */
 	  for ( q=0; q<dim; q++)
 	    {
@@ -4370,13 +4384,13 @@ put_fluid_stress_on_shell(int id, /* local element node number for the
 		  pvar = upd->vp[var];
 		  for ( j_id=0; j_id<ei->dof[var]; j_id++)
 		    {
-		      lec->J[peqn_shell][pvar][id_dofshell][j_id] +=
-			scale*(fv->snormal[0] * lec->J[peqn_mom1][pvar][id_dofmom1][j_id] +
-			       fv->snormal[1] * lec->J[peqn_mom2][pvar][id_dofmom2][j_id]);
+                      lec->J[LEC_J_INDEX(peqn_shell,pvar,id_dofshell,j_id)] +=
+                        scale*(fv->snormal[0] * lec->J[LEC_J_INDEX(peqn_mom1,pvar,id_dofmom1,j_id)] +
+                               fv->snormal[1] * lec->J[LEC_J_INDEX(peqn_mom2,pvar,id_dofmom2,j_id)]);
 		    }
 		}
 	    }
-	    
+
 	}
 
       if (! tension_fixed)
@@ -4386,15 +4400,15 @@ put_fluid_stress_on_shell(int id, /* local element node number for the
 	  peqn_shell = upd->ep[ieqn_shell];
 	  ieqn_mom1   = R_MOMENTUM1;
 	  ieqn_mom2   = R_MOMENTUM2;
-	  id_dofmom1 = ei->ln_to_dof[ieqn_mom1][id];
+	  id_dofmom1 = id;
 	  peqn_mom1 = upd->ep[ieqn_mom1];
-	  id_dofmom2 = ei->ln_to_dof[ieqn_mom2][id];
+	  id_dofmom2 = id;
 	  peqn_mom2 = upd->ep[ieqn_mom2];
-	  id_dofshell = id_shell; 
+	  id_dofshell = id_shell_tens;
 
 
 	  /* Add contributions due to all nodal sensitivities in shell element */
-	    
+
 	  /*
 	   * local J_m_d -> J_d_d
 	   */
@@ -4406,15 +4420,15 @@ put_fluid_stress_on_shell(int id, /* local element node number for the
 		  pvar = upd->vp[var];
 		  for ( j_id=0; j_id<ei->dof[var]; j_id++)
 		    {
-		      lec->J[peqn_shell][pvar][id_dofshell][j_id] +=
-			scale*(fv->stangent[0][0] * lec->J[peqn_mom1][pvar][id_dofmom1][j_id] +
-			       fv->stangent[0][1] * lec->J[peqn_mom2][pvar][id_dofmom2][j_id] +
-			       fv->dstangent_dx[0][0][q][j_id] * lec->R[upd->ep[ieqn_mom1]][id_dofmom1] +
-			       fv->dstangent_dx[0][1][q][j_id] * lec->R[upd->ep[ieqn_mom2]][id_dofmom2]);
+                      lec->J[LEC_J_INDEX(peqn_shell,pvar,id_dofshell,j_id)] +=
+                        scale*(fv->stangent[0][0] * lec->J[LEC_J_INDEX(peqn_mom1,pvar,id_dofmom1,j_id)] +
+                               fv->stangent[0][1] * lec->J[LEC_J_INDEX(peqn_mom2,pvar,id_dofmom2,j_id)] +
+                               fv->dstangent_dx[0][0][q][j_id] * lec->R[LEC_R_INDEX(upd->ep[ieqn_mom1],id_dofmom1)] +
+                               fv->dstangent_dx[0][1][q][j_id] * lec->R[LEC_R_INDEX(upd->ep[ieqn_mom2],id_dofmom2)]);
 		    }
 		}
 	    }
-	    
+
 	  /*
 	   * local J_m_P -> J_d_P
 	   */
@@ -4423,16 +4437,16 @@ put_fluid_stress_on_shell(int id, /* local element node number for the
 	    {
 	      pvar = upd->vp[var];
 	      for ( j_id=0; j_id<ei->dof[var]; j_id++)
-		{			
-		  lec->J[peqn_shell][pvar][id_dofshell][j_id] +=
-		    scale*(fv->stangent[0][0] * lec->J[peqn_mom1][pvar][id_dofmom1][j_id] +
-			   fv->stangent[0][1] * lec->J[peqn_mom2][pvar][id_dofmom2][j_id]);
+		{
+                  lec->J[LEC_J_INDEX(peqn_shell,pvar,id_dofshell,j_id)] +=
+                    scale*(fv->stangent[0][0] * lec->J[LEC_J_INDEX(peqn_mom1,pvar,id_dofmom1,j_id)] +
+                           fv->stangent[0][1] * lec->J[LEC_J_INDEX(peqn_mom2,pvar,id_dofmom2,j_id)]);
 		}
 	    }
-	    
-	    
+
+
 	  /*
-	   * local J_m_v -> J_d_v  
+	   * local J_m_v -> J_d_v
 	   */
 	  for ( q=0; q<dim; q++)
 	    {
@@ -4442,16 +4456,16 @@ put_fluid_stress_on_shell(int id, /* local element node number for the
 		  pvar = upd->vp[var];
 		  for ( j_id=0; j_id<ei->dof[var]; j_id++)
 		    {
-		      lec->J[peqn_shell][pvar][id_dofshell][j_id] +=
-			scale*(fv->stangent[0][0] * lec->J[peqn_mom1][pvar][id_dofmom1][j_id] +
-			       fv->stangent[0][1] * lec->J[peqn_mom2][pvar][id_dofmom2][j_id]);
+                      lec->J[LEC_J_INDEX(peqn_shell,pvar,id_dofshell,j_id)] +=
+                        scale*(fv->stangent[0][0] * lec->J[LEC_J_INDEX(peqn_mom1,pvar,id_dofmom1,j_id)] +
+                               fv->stangent[0][1] * lec->J[LEC_J_INDEX(peqn_mom2,pvar,id_dofmom2,j_id)]);
 		    }
 		}
 	    }
-	    
+
 	}
     } /* end of Jacobian entries */
-    
+
 } /* end of routine put_fluid_stress_on_shell */
 
 
@@ -4563,8 +4577,8 @@ put_shear_stress_on_shell(int id, /* local element node number for the
       id_shell = ei->ln_to_first_dof[ieqn_shell][id];
       /*id_dofshell = id_shell; */
 
-      lec->R[upd->ep[ieqn_shell]][id_dofshell] +=	  scale * (fv->stangent[0][0] * lec->R[upd->ep[ieqn_mom1]][id_dofmom1] + 
-								   fv->stangent[0][1] * lec->R[upd->ep[ieqn_mom2]][id_dofmom2]);
+      lec->R[LEC_R_INDEX(upd->ep[ieqn_shell],id_dofshell)] +=	  scale * (fv->stangent[0][0] * lec->R[LEC_R_INDEX(upd->ep[ieqn_mom1],id_dofmom1)] +
+                                                                   fv->stangent[0][1] * lec->R[LEC_R_INDEX(upd->ep[ieqn_mom2],id_dofmom2)]);
 		   
     }
   }
@@ -4605,11 +4619,11 @@ put_shear_stress_on_shell(int id, /* local element node number for the
 		  pvar = upd->vp[var];
 		  for ( j_id=0; j_id<ei->dof[var]; j_id++)
 		    {
-		      lec->J[peqn_shell][pvar][id_dofshell][j_id] +=
-			scale*(fv->stangent[0][0] * lec->J[peqn_mom1][pvar][id_dofmom1][j_id] +
-			       fv->stangent[0][1] * lec->J[peqn_mom2][pvar][id_dofmom2][j_id] +
-			       fv->dstangent_dx[0][0][q][j_id] * lec->R[upd->ep[ieqn_mom1]][id_dofmom1] +
-			       fv->dstangent_dx[0][1][q][j_id] * lec->R[upd->ep[ieqn_mom2]][id_dofmom2]);
+                      lec->J[LEC_J_INDEX(peqn_shell,pvar,id_dofshell,j_id)] +=
+                        scale*(fv->stangent[0][0] * lec->J[LEC_J_INDEX(peqn_mom1,pvar,id_dofmom1,j_id)] +
+                               fv->stangent[0][1] * lec->J[LEC_J_INDEX(peqn_mom2,pvar,id_dofmom2,j_id)] +
+                               fv->dstangent_dx[0][0][q][j_id] * lec->R[LEC_R_INDEX(upd->ep[ieqn_mom1],id_dofmom1)] +
+                               fv->dstangent_dx[0][1][q][j_id] * lec->R[LEC_R_INDEX(upd->ep[ieqn_mom2],id_dofmom2)]);
 		    }
 		}
 	    }
@@ -4623,10 +4637,10 @@ put_shear_stress_on_shell(int id, /* local element node number for the
 	      pvar = upd->vp[var];
 	      for ( j_id=0; j_id<ei->dof[var]; j_id++)
 		{	
-		  /*			lec->J[peqn_shell][pvar][id_dofshell][j_id] += scale* lec->J[peqn_mom1][pvar][id_dofmom1][j_id]	;	*/
-		  lec->J[peqn_shell][pvar][id_dofshell][j_id] +=
-		    scale*(fv->stangent[0][0] * lec->J[peqn_mom1][pvar][id_dofmom1][j_id] +
-			   fv->stangent[0][1] * lec->J[peqn_mom2][pvar][id_dofmom2][j_id]);
+                  /*			lec->J[LEC_J_INDEX(peqn_shell,pvar,id_dofshell,j_id)] += scale* lec->J[LEC_J_INDEX(peqn_mom1,pvar,id_dofmom1,j_id)]	;	*/
+                  lec->J[LEC_J_INDEX(peqn_shell,pvar,id_dofshell,j_id)] +=
+                    scale*(fv->stangent[0][0] * lec->J[LEC_J_INDEX(peqn_mom1,pvar,id_dofmom1,j_id)] +
+                           fv->stangent[0][1] * lec->J[LEC_J_INDEX(peqn_mom2,pvar,id_dofmom2,j_id)]);
 		}
 	    }
 	    
@@ -4642,10 +4656,10 @@ put_shear_stress_on_shell(int id, /* local element node number for the
 		  pvar = upd->vp[var];
 		  for ( j_id=0; j_id<ei->dof[var]; j_id++)
 		    {
-		      /*	lec->J[peqn_shell][pvar][id_dofshell][j_id] += scale* lec->J[peqn_mom1][pvar][id_dofmom1][j_id]; */
-		      lec->J[peqn_shell][pvar][id_dofshell][j_id] +=
-			scale*(fv->stangent[0][0] * lec->J[peqn_mom1][pvar][id_dofmom1][j_id] +
-			       fv->stangent[0][1] * lec->J[peqn_mom2][pvar][id_dofmom2][j_id]);
+                      /*	lec->J[LEC_J_INDEX(peqn_shell,pvar,id_dofshell,j_id)] += scale* lec->J[LEC_J_INDEX(peqn_mom1,pvar,id_dofmom1,j_id)]; */
+                      lec->J[LEC_J_INDEX(peqn_shell,pvar,id_dofshell,j_id)] +=
+                        scale*(fv->stangent[0][0] * lec->J[LEC_J_INDEX(peqn_mom1,pvar,id_dofmom1,j_id)] +
+                               fv->stangent[0][1] * lec->J[LEC_J_INDEX(peqn_mom2,pvar,id_dofmom2,j_id)]);
 		    }
 		}
 	    }
@@ -4767,7 +4781,7 @@ assemble_shell_angle(double time_value,   /* Time */
 	    {
 	      phi_i = bf[eqn]->phi[i];
 	      
-	      lec->R[peqn][i] += ( fv->sh_ang[p] - sn_ang[p] ) * phi_i * wt * det_J * h3;
+	      lec->R[LEC_R_INDEX(peqn,i)] += ( fv->sh_ang[p] - sn_ang[p] ) * phi_i * wt * det_J * h3;
 	    }
 	}
     }  
@@ -4795,7 +4809,7 @@ assemble_shell_angle(double time_value,   /* Time */
 		        {
 			  phi_j = bf[var]->phi[j];
 			  
-			  lec->J[peqn][pvar][i][j] += phi_j * phi_i * wt * det_J * h3;
+			  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += phi_j * phi_i * wt * det_J * h3;
 		        }
 		    }
 		}
@@ -4813,7 +4827,7 @@ assemble_shell_angle(double time_value,   /* Time */
                        * So get the DOF count from n_dof. */
 	              for(j = 0; j < n_dof[var]; j++) 
 		        {
-			  lec->J[peqn][pvar][i][j] += d_sn_ang_dsn[p][b] * phi_i *
+			  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += d_sn_ang_dsn[p][b] * phi_i *
 			    wt * det_J * h3;
 		        }
 		    }
@@ -4836,8 +4850,6 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
   int i, j, k, l, m, nn, r, jk;
   int peqn = -1;
   int dofs;
-  //! Number of velocities dimensions
-  int wim;
   int var, pvar;
   int p, b, a;
   double phi_i, phi_j;
@@ -4897,15 +4909,6 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
     EH(-1,"ERROR: inconsistency: need to set Vorticity Vector = yes in Post processing section");
   }
 
-  // Calculate the number of velocity dimensions
-  wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING || 
-      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
-      pd->CoordinateSystem == CARTESIAN_2pt5D) 
-    {
-      wim = 3;
-    }
-  
   /* See if there is a friend for this element */
   nf = num_elem_friends[el1];
   if (nf == 0) return(err); 
@@ -4997,7 +5000,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 	    }
 
 	  // Form the velocity dependencies 
-	  for (b = 0; b < wim; b++)
+	  for (b = 0; b < WIM; b++)
 	    {
 	      for (k = 0; k < n_dof[VELOCITY1]; k++)
 		{
@@ -5114,7 +5117,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 			     + fv->snormal[j]*fv->snormal[nn]* fv->snormal[i] * fv->d_grad_v_dmesh[nn][k][l][m]);
 			}
 		    }
-		  for (l = 0; l < wim; l++)
+		  for (l = 0; l < WIM; l++)
 		    { 
 		      for (m = 0; m < n_dof[VELOCITY1]; m++)
 			{
@@ -5148,7 +5151,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 		}
 	    }
 	}
-      for (b = 0; b < wim; b++)
+      for (b = 0; b < WIM; b++)
 	{
 	  for (j = 0; j < n_dof[VELOCITY1]; j++)
 	    {
@@ -5186,7 +5189,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 	  d_n_dot_curl_s_v_dx[b][j] = d_n_dot_curl_v_dx[b][j] - d_nn_dot_curl_v_dx[b][j];
 	}
     }
-  for (b = 0; b < wim; b++)
+  for (b = 0; b < WIM; b++)
     {
       for (j = 0; j < n_dof[VELOCITY1]; j++)
 	{
@@ -5213,7 +5216,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 		  d_grad_v_dot_n_dx[i][b][k] += fv->d_grad_v_dmesh[i][j][b][k] * fv->snormal[j] + fv->grad_v[i][j] * fv->dsnormal_dx[j][b][k];
 		}
 	    }
-	  for (b = 0; b < wim; b++)
+	  for (b = 0; b < WIM; b++)
 	    {
 	      var = VELOCITY1 + b;
 	      for (k = 0; k < n_dof[var]; k++)
@@ -5233,7 +5236,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 	{
 	  grad_s_v_dot_n[i] -= fv->snormal[i] * fv->snormal[j] * grad_v_dot_n[j];
 	  
-	  for (b = 0; b < wim; b++)
+	  for (b = 0; b < WIM; b++)
 	    {
 	      var = VELOCITY1 + b;
 	      for (k = 0; k < n_dof[var]; k++)
@@ -5276,7 +5279,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
       for (i = 0; i < ei->dof[eqn]; i++)
 	{
 	  phi_i = bfn->phi[i];
-	  lec->R[peqn][i] += ( *(esp->div_s_v[i])) * phi_i * wt * det_J * h3;
+	  lec->R[LEC_R_INDEX(peqn,i)] += ( *(esp->div_s_v[i])) * phi_i * wt * det_J * h3;
 	  tmp_i = 0.0;
 	  ndotv = 0.0;
 	  for (b = 0; b < dim; b++) 
@@ -5288,14 +5291,14 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 		  tmp_i -= fv->n[b] * fv->n[a] * fv->v[a] * bfn->grad_phi[i][b];
 		}
 	    }
-	  lec->R[peqn][i] += (2.0 * fv->curv * ndotv) * phi_i * wt * det_J * h3;	 
-	  lec->R[peqn][i] += tmp_i * wt * det_J * h3;
+	  lec->R[LEC_R_INDEX(peqn,i)] += (2.0 * fv->curv * ndotv) * phi_i * wt * det_J * h3;	 
+	  lec->R[LEC_R_INDEX(peqn,i)] += tmp_i * wt * det_J * h3;
 	}
 #else
       for (i = 0; i < ei->dof[eqn]; i++)
 	{
 	  phi_i = bf[eqn]->phi[i];
-	  lec->R[peqn][i] += (fv->div_s_v ) * phi_i * wt * det_J * h3;
+	  lec->R[LEC_R_INDEX(peqn,i)] += (fv->div_s_v ) * phi_i * wt * det_J * h3;
 	  tmp_i = 0.0;
 	  ndotv = 0.0;
 	  for (b = 0; b < dim; b++) 
@@ -5307,8 +5310,8 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 		  tmp_i -= fv->n[b] * fv->n[a] * fv->v[a] * bfn->grad_phi[i][b];
 		}
 	    }
-	  lec->R[peqn][i] += (2.0 * fv->curv * ndotv) * phi_i * wt * det_J * h3;
-	  lec->R[peqn][i] += tmp_i * wt * det_J * h3;
+	  lec->R[LEC_R_INDEX(peqn,i)] += (2.0 * fv->curv * ndotv) * phi_i * wt * det_J * h3;
+	  lec->R[LEC_R_INDEX(peqn,i)] += tmp_i * wt * det_J * h3;
 	}
 
 #endif
@@ -5318,13 +5321,13 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 	{
 	  phi_i = bf[eqn]->phi[i];
 	  // div_s_v_ml = *(esp->div_s_v[i]);
-	  lec->R[peqn][i] += ( *(esp->div_s_v[i]) - div_s_V) * phi_i * wt * det_J * h3;
+	  lec->R[LEC_R_INDEX(peqn,i)] += ( *(esp->div_s_v[i]) - div_s_V) * phi_i * wt * det_J * h3;
 	}
 #else
       for (i = 0; i < ei->dof[eqn]; i++)
 	{
 	  phi_i = bf[eqn]->phi[i];
-	  lec->R[peqn][i] += (fv->div_s_v - div_s_V) * phi_i * wt * det_J * h3;
+	  lec->R[LEC_R_INDEX(peqn,i)] += (fv->div_s_v - div_s_V) * phi_i * wt * det_J * h3;
 	}
 #endif
 #endif
@@ -5340,7 +5343,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 	    } 
 	  for (b = 0; b < dim; b++) 
 	    {
-	      lec->R[peqn][i] -= surfaceDiffusionCoeff * (fv->grad_div_s_v[b] * (bfn->grad_phi[i][b] - tmp * fv->n[b])) * wt * det_J * h3;
+	      lec->R[LEC_R_INDEX(peqn,i)] -= surfaceDiffusionCoeff * (fv->grad_div_s_v[b] * (bfn->grad_phi[i][b] - tmp * fv->n[b])) * wt * det_J * h3;
 	    }
 	}
 
@@ -5351,7 +5354,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
       for (i = 0; i < ei->dof[eqn]; i++)
 	{
 	  phi_i = bf[eqn]->phi[i];
-       	  lec->R[peqn][i] += (fv->curv - curv) * phi_i * wt * det_J * h3;
+       	  lec->R[LEC_R_INDEX(peqn,i)] += (fv->curv - curv) * phi_i * wt * det_J * h3;
 
 	}
       /*
@@ -5366,7 +5369,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 	    } 
 	  for (b = 0; b < dim; b++) 
 	    {
-	      lec->R[peqn][i] -= surfaceDiffusionCoeff3 * (fv->grad_curv[b] * (bfn->grad_phi[i][b] - tmp * fv->n[b]))  * wt * det_J * h3;
+	      lec->R[LEC_R_INDEX(peqn,i)] -= surfaceDiffusionCoeff3 * (fv->grad_curv[b] * (bfn->grad_phi[i][b] - tmp * fv->n[b]))  * wt * det_J * h3;
 	    }
 	}
 
@@ -5393,7 +5396,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 	{
 	  phi_i = bf[eqn]->phi[i];	      
 	
-	  lec->R[peqn][i] += (fv->n_dot_curl_s_v - n_dot_curl_s_v) * phi_i * wt * det_J * h3; 
+	  lec->R[LEC_R_INDEX(peqn,i)] += (fv->n_dot_curl_s_v - n_dot_curl_s_v) * phi_i * wt * det_J * h3; 
 	}
 
 
@@ -5408,7 +5411,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 	  for (i = 0; i < ei->dof[eqn]; i++)
 	    {
 	      phi_i = bf[eqn]->phi[i];
-	      lec->R[peqn][i] += (fv->grad_v_dot_n[p] - grad_s_v_dot_n[p]) * phi_i * wt * det_J * h3;
+	      lec->R[LEC_R_INDEX(peqn,i)] += (fv->grad_v_dot_n[p] - grad_s_v_dot_n[p]) * phi_i * wt * det_J * h3;
 	      
 	      /*
 	       *  Add surface diffusion term
@@ -5421,7 +5424,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 		} 
 	      for (b = 0; b < VIM; b++) 
 		{
-		  lec->R[peqn][i] -= surfaceDiffusionCoeff2 * (fv->serialgrad_grad_s_v_dot_n[p][b] * (bfn->grad_phi[i][b] - tmp * fv->n[b])) * wt * det_J * h3;
+		  lec->R[LEC_R_INDEX(peqn,i)] -= surfaceDiffusionCoeff2 * (fv->serialgrad_grad_s_v_dot_n[p][b] * (bfn->grad_phi[i][b] - tmp * fv->n[b])) * wt * det_J * h3;
 		}	      
 	    }
 	}
@@ -5435,7 +5438,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 	  eqn = R_GRAD_S_V_DOT_N1 + p;
 	  peqn = upd->ep[eqn];
 	  bfn = bf[eqn];
-	  // lec->R[peqn][i] += ( fv->grad_v_dot_n[p] - grad_s_v_dot_n[p] ) * phi_i * wt * det_J * h3;
+	  // lec->R[LEC_R_INDEX(peqn,i)] += ( fv->grad_v_dot_n[p] - grad_s_v_dot_n[p] ) * phi_i * wt * det_J * h3;
 	  for (i = 0; i < ei->dof[eqn]; i++)
 	    {
 	      phi_i = bf[eqn]->phi[i];
@@ -5448,7 +5451,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 		  for (j = 0; j < ei->dof[var]; j++) 
 		    {
 		      phi_j = bf[var]->phi[j];			  
-		      lec->J[peqn][pvar][i][j] += phi_j * phi_i * wt * det_J * h3;
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += phi_j * phi_i * wt * det_J * h3;
 		    }
 		}
 		
@@ -5463,11 +5466,11 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 		       * So get the DOF count from n_dof. */
 		      for (j = 0; j < n_dof[var]; j++) 
 			{
-			  lec->J[peqn][pvar][i][j] -= d_grad_s_v_dot_n_dx[p][b][j] * phi_i * wt * det_J * h3;
+			  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] -= d_grad_s_v_dot_n_dx[p][b][j] * phi_i * wt * det_J * h3;
 			}
 		      for (j = 0; j < n_dof[var]; j++) 
 			{
-			  lec->J[peqn][pvar][i][j] += (fv->grad_v_dot_n[p] - grad_s_v_dot_n[p]) * phi_i * wt * (fv->dsurfdet_dx[b][j]);
+			  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (fv->grad_v_dot_n[p] - grad_s_v_dot_n[p]) * phi_i * wt * (fv->dsurfdet_dx[b][j]);
 			}
 		    }
 		}
@@ -5482,7 +5485,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 		       * So get the DOF count from n_dof. */
 		      for (j = 0; j < n_dof[var]; j++) 
 			{
-			  lec->J[peqn][pvar][i][j] -= d_grad_s_v_dot_n_dv[p][b][j] * phi_i * wt * det_J * h3;
+			  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] -= d_grad_s_v_dot_n_dv[p][b][j] * phi_i * wt * det_J * h3;
 			}
 		    }
 		}
@@ -5506,8 +5509,8 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 		    {
 		      for (j = 0; j < ei->dof[var]; j++)
 			{			  
-			  //      lec->R[peqn][i] -= surfaceDiffusionCoeff2 * (fv->serialgrad_grad_s_v_dot_n[p][b] * (bfn->grad_phi[i][b] - tmp * fv->n[b])) * wt * det_J * h3;
-			  lec->J[peqn][pvar][i][j] -= surfaceDiffusionCoeff2 * bfn->grad_phi[j][b] * (bfn->grad_phi[i][b] - tmp * fv->n[b])  * wt * det_J * h3;
+			  //      lec->R[LEC_R_INDEX(peqn,i)] -= surfaceDiffusionCoeff2 * (fv->serialgrad_grad_s_v_dot_n[p][b] * (bfn->grad_phi[i][b] - tmp * fv->n[b])) * wt * det_J * h3;
+			  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] -= surfaceDiffusionCoeff2 * bfn->grad_phi[j][b] * (bfn->grad_phi[i][b] - tmp * fv->n[b])  * wt * det_J * h3;
 			}
 		    }
 		}
@@ -5521,11 +5524,11 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 		      for (j = 0; j < ei->dof[var]; j++)
 			{
 			  phi_j = bf[var]->phi[j];
-			  lec->J[peqn][pvar][i][j] -= surfaceDiffusionCoeff2 * fv->serialgrad_grad_s_v_dot_n[p][b] * (- tmp * phi_j)  * wt * det_J * h3;
+			  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] -= surfaceDiffusionCoeff2 * fv->serialgrad_grad_s_v_dot_n[p][b] * (- tmp * phi_j)  * wt * det_J * h3;
 		      
 			  for (a = 0; a < dim; a++)
 			    {
-			      lec->J[peqn][pvar][i][j] -= surfaceDiffusionCoeff2 * fv->serialgrad_grad_s_v_dot_n[p][a] * (- phi_j * bfn->grad_phi[i][b] * fv->n[a])  * wt * det_J * h3;
+			      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] -= surfaceDiffusionCoeff2 * fv->serialgrad_grad_s_v_dot_n[p][a] * (- phi_j * bfn->grad_phi[i][b] * fv->n[a])  * wt * det_J * h3;
 			    } 
 			}
 		    }
@@ -5542,7 +5545,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 			{
 			  for (b = 0; b < dim; b++)
 			    {
-			      lec->J[peqn][pvar][i][j] -= surfaceDiffusionCoeff2 * fv->serialgrad_grad_s_v_dot_n[p][b] * (bfn->grad_phi[i][b] - tmp * fv->n[b]) * wt * (fv->dsurfdet_dx[r][j]);	
+			      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] -= surfaceDiffusionCoeff2 * fv->serialgrad_grad_s_v_dot_n[p][b] * (bfn->grad_phi[i][b] - tmp * fv->n[b]) * wt * (fv->dsurfdet_dx[r][j]);	
 			    }
 			}
 	
@@ -5551,11 +5554,11 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 			  jk = dof_map[j];
 			  for (b = 0; b < dim; b++) 
 			    {
-			      lec->J[peqn][pvar][i][jk] -= surfaceDiffusionCoeff2 * fv->serialgrad_grad_s_v_dot_n[p][b] * (bfn->d_grad_phi_dmesh[i][b][r][j]) * wt *  det_J * h3;
-			      lec->J[peqn][pvar][i][jk] -= surfaceDiffusionCoeff2 * fv->d_serialgrad_grad_s_v_dot_n_dmesh[p][b][r][j] * (bfn->grad_phi[i][b] - tmp * fv->n[b]) * wt * det_J * h3;
+                              lec->J[LEC_J_INDEX(peqn,pvar,i,jk)] -= surfaceDiffusionCoeff2 * fv->serialgrad_grad_s_v_dot_n[p][b] * (bfn->d_grad_phi_dmesh[i][b][r][j]) * wt *  det_J * h3;
+                              lec->J[LEC_J_INDEX(peqn,pvar,i,jk)] -= surfaceDiffusionCoeff2 * fv->d_serialgrad_grad_s_v_dot_n_dmesh[p][b][r][j] * (bfn->grad_phi[i][b] - tmp * fv->n[b]) * wt * det_J * h3;
 			      for (a = 0; a < dim; a++) 
 				{
-				  lec->J[peqn][pvar][i][jk] -= surfaceDiffusionCoeff2 * fv->serialgrad_grad_s_v_dot_n[p][b] * (- fv->n[a] * bfn->d_grad_phi_dmesh[i][a][r][j] * fv->n[b]) * wt * det_J * h3;
+                                  lec->J[LEC_J_INDEX(peqn,pvar,i,jk)] -= surfaceDiffusionCoeff2 * fv->serialgrad_grad_s_v_dot_n[p][b] * (- fv->n[a] * bfn->d_grad_phi_dmesh[i][a][r][j] * fv->n[b]) * wt * det_J * h3;
 				}
 			    }
 			}
@@ -5568,7 +5571,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
       eqn = R_SHELL_SURF_DIV_V;
       peqn = upd->ep[eqn];
       bfn = bf[eqn];
-      //      lec->R[peqn][i] += (fv->div_s_v - div_s_V) * phi_i * wt * det_J * h3;
+      //      lec->R[LEC_R_INDEX(peqn,i)] += (fv->div_s_v - div_s_V) * phi_i * wt * det_J * h3;
       for (i = 0; i < ei->dof[eqn]; i++)
 	{
 	  phi_i = bfn->phi[i];
@@ -5591,17 +5594,17 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 	    {
 	      pvar = upd->vp[var];
 #ifdef MASSLUMP_PROJECTION_EQUATIONS
-	      lec->J[peqn][pvar][i][i] += phi_i * wt * det_J * h3;
+	      lec->J[LEC_J_INDEX(peqn,pvar,i,i)] += phi_i * wt * det_J * h3;
 #else
 	      for (j = 0; j < ei->dof[var]; j++) 
 		{
 		  phi_j = bf[var]->phi[j];			  
-		  lec->J[peqn][pvar][i][j] += phi_j * phi_i * wt * det_J * h3;
+		  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += phi_j * phi_i * wt * det_J * h3;
 		}
 #endif
 	    }
 #ifdef NEWMETHOD_SHELL_SURF_DIV_V
-	  //     lec->R[peqn][i] += (2.0 * fv->curv * fv->n[b] * fv->v[b]) * phi_i * wt * det_J * h3;
+	  //     lec->R[LEC_R_INDEX(peqn,i)] += (2.0 * fv->curv * fv->n[b] * fv->v[b]) * phi_i * wt * det_J * h3;
 	  for (b = 0; b < dim; b++)
 	    {
 	      var = VELOCITY1 + b;
@@ -5613,11 +5616,11 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 		  for (j = 0; j < n_dof[var]; j++) 
 		    {
 		      phi_j = bfv->phi[j];
-		      lec->J[peqn][pvar][i][j] += (2.0 * fv->curv * fv->n[b] * phi_j) * phi_i * wt * det_J * h3;
-		      lec->J[peqn][pvar][i][j] += phi_j * bfn->grad_phi[i][b] * wt * det_J * h3;
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (2.0 * fv->curv * fv->n[b] * phi_j) * phi_i * wt * det_J * h3;
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += phi_j * bfn->grad_phi[i][b] * wt * det_J * h3;
 		      for (a = 0; a < dim; a++) 
 			{ 
-			  lec->J[peqn][pvar][i][j] -= fv->n[a] * fv->n[b] * phi_j * bfn->grad_phi[i][a] * wt * det_J * h3;
+			  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] -= fv->n[a] * fv->n[b] * phi_j * bfn->grad_phi[i][a] * wt * det_J * h3;
 			}
 		    }
 		}
@@ -5632,10 +5635,10 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 		  for (j = 0; j < ei->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
-		      lec->J[peqn][pvar][i][j] += (2.0 * fv->curv * phi_j * fv->v[b]) * phi_i * wt * det_J * h3;
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (2.0 * fv->curv * phi_j * fv->v[b]) * phi_i * wt * det_J * h3;
 		      for (a = 0; a < dim; a++) 
 			{
-			  lec->J[peqn][pvar][i][j] -= phi_j * fv->n[a] *(fv->v[a] * bfn->grad_phi[i][b] + fv->v[b] * bfn->grad_phi[i][a]) * wt * det_J * h3;
+			  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] -= phi_j * fv->n[a] *(fv->v[a] * bfn->grad_phi[i][b] + fv->v[b] * bfn->grad_phi[i][a]) * wt * det_J * h3;
 			}
 		    }
 		}
@@ -5650,7 +5653,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 		  for (j = 0; j < ei->dof[var]; j++) 
 		    {
 		      phi_j = bf[var]->phi[j];
-		      lec->J[peqn][pvar][i][j] += (2.0 * phi_j * fv->n[b] * fv->v[b]) * phi_i * wt * det_J * h3;
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (2.0 * phi_j * fv->n[b] * fv->v[b]) * phi_i * wt * det_J * h3;
 		    }
 		}
 	    }
@@ -5676,7 +5679,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 		      tmp = fv->div_s_v;
 #endif
 		      tmp += (2.0 * fv->curv * ndotv);
-		      lec->J[peqn][pvar][i][j] += (tmp_i + tmp * phi_i) * wt * (fv->dsurfdet_dx[p][j]);
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (tmp_i + tmp * phi_i) * wt * (fv->dsurfdet_dx[p][j]);
 		    }
 		  /*
 		   *  This has been checked out in the debugger and it passes. What's going on?
@@ -5695,10 +5698,10 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 		      jk = dof_map[j];
 		      for (b = 0; b < dim; b++) 
 			{
-			  lec->J[peqn][pvar][i][jk] += fv->v[b] * bfn->d_grad_phi_dmesh[i][b][p][j] * wt * det_J * h3;
+                          lec->J[LEC_J_INDEX(peqn,pvar,i,jk)] += fv->v[b] * bfn->d_grad_phi_dmesh[i][b][p][j] * wt * det_J * h3;
 			  for (a = 0; a < dim; a++) 
 			    {
-			      lec->J[peqn][pvar][i][jk] -= fv->n[b] * fv->n[a] * fv->v[a] * bfn->d_grad_phi_dmesh[i][b][p][j] * wt * det_J * h3;
+                              lec->J[LEC_J_INDEX(peqn,pvar,i,jk)] -= fv->n[b] * fv->n[a] * fv->v[a] * bfn->d_grad_phi_dmesh[i][b][p][j] * wt * det_J * h3;
 			    }
 			}
 		    }
@@ -5717,17 +5720,17 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 		   * So get the DOF count from n_dof. */
 		  for (j = 0; j < n_dof[var]; j++) 
 		    {
-		      lec->J[peqn][pvar][i][j] -= d_div_s_V_dx[b][j] * phi_i * wt * det_J * h3;
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] -= d_div_s_V_dx[b][j] * phi_i * wt * det_J * h3;
 		    }
 #ifdef MASSLUMP_PROJECTION_EQUATIONS
 		  for (j = 0; j < n_dof[var]; j++) 
 		    {
-		      lec->J[peqn][pvar][i][j] += (*(esp->div_s_v[i]) - div_s_V) * phi_i * wt * (fv->dsurfdet_dx[b][j]);
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (*(esp->div_s_v[i]) - div_s_V) * phi_i * wt * (fv->dsurfdet_dx[b][j]);
 		    }
 #else
 		  for (j = 0; j < n_dof[var]; j++) 
 		    {
-		      lec->J[peqn][pvar][i][j] += (fv->div_s_v - div_s_V) * phi_i * wt * (fv->dsurfdet_dx[b][j]);
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (fv->div_s_v - div_s_V) * phi_i * wt * (fv->dsurfdet_dx[b][j]);
 		    }
 #endif
 		}
@@ -5743,7 +5746,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 		   * So get the DOF count from n_dof. */
 		  for (j = 0; j < n_dof[var]; j++) 
 		    {
-		      lec->J[peqn][pvar][i][j] -= d_div_s_V_dv[b][j] * phi_i * wt * det_J * h3;
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] -= d_div_s_V_dv[b][j] * phi_i * wt * det_J * h3;
 		    }
 		}
 	    }
@@ -5760,7 +5763,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 	      tmp += fv->n[a] * bfn->grad_phi[i][a];
 	    } 
 
-       	  //   lec->R[peqn][i] -= surfaceDiffusionCoeff * (fv->grad_div_s_v[b] * (bfn->grad_phi[i][b] - tmp * fv->n[b]))  * wt * det_J * h3;
+       	  //   lec->R[LEC_R_INDEX(peqn,i)] -= surfaceDiffusionCoeff * (fv->grad_div_s_v[b] * (bfn->grad_phi[i][b] - tmp * fv->n[b]))  * wt * det_J * h3;
 	
 	  var = eqn;
 	  if (pd->v[var])
@@ -5771,7 +5774,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 		  for (j = 0; j < ei->dof[var]; j++) 
 		    {
 		      phi_j = bf[var]->phi[j];	
-		      lec->J[peqn][pvar][i][j] -= surfaceDiffusionCoeff * bfn->grad_phi[j][b] * (bfn->grad_phi[i][b] - tmp * fv->n[b])  * wt * det_J * h3;
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] -= surfaceDiffusionCoeff * bfn->grad_phi[j][b] * (bfn->grad_phi[i][b] - tmp * fv->n[b])  * wt * det_J * h3;
 		    }
 		}
 	    }
@@ -5785,11 +5788,11 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 		  for (j = 0; j < ei->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
-		      lec->J[peqn][pvar][i][j] -= surfaceDiffusionCoeff * fv->grad_div_s_v[b] * (- tmp * phi_j)  * wt * det_J * h3;
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] -= surfaceDiffusionCoeff * fv->grad_div_s_v[b] * (- tmp * phi_j)  * wt * det_J * h3;
 
 		      for (a = 0; a < dim; a++)
 			{
-			  lec->J[peqn][pvar][i][j] -= surfaceDiffusionCoeff * fv->grad_div_s_v[a] * (- phi_j * bfn->grad_phi[i][b] * fv->n[a])  * wt * det_J * h3;
+			  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] -= surfaceDiffusionCoeff * fv->grad_div_s_v[a] * (- phi_j * bfn->grad_phi[i][b] * fv->n[a])  * wt * det_J * h3;
 			} 
 		    }
 		}
@@ -5800,7 +5803,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 	    {
 	      tmp += fv->n[b] *  bfn->grad_phi[i][b];
 	    } 
-	  //   lec->R[peqn][i] -= surfaceDiffusionCoeff * (fv->grad_div_s_v[b] * (bfn->grad_phi[i][b] - tmp * fv->n[b]))  * wt * det_J * h3;
+	  //   lec->R[LEC_R_INDEX(peqn,i)] -= surfaceDiffusionCoeff * (fv->grad_div_s_v[b] * (bfn->grad_phi[i][b] - tmp * fv->n[b]))  * wt * det_J * h3;
 	  for (p = 0; p < dim; p++ )
 	    {
 	      var = MESH_DISPLACEMENT1 + p;
@@ -5814,7 +5817,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 		    {
 		      for (b = 0; b < dim; b++)
 			{
-			  lec->J[peqn][pvar][i][j] -= surfaceDiffusionCoeff * (fv->grad_div_s_v[b] * (bfn->grad_phi[i][b] - tmp * fv->n[b]))   * wt * (fv->dsurfdet_dx[p][j]);
+			  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] -= surfaceDiffusionCoeff * (fv->grad_div_s_v[b] * (bfn->grad_phi[i][b] - tmp * fv->n[b]))   * wt * (fv->dsurfdet_dx[p][j]);
 			}
 		    }
 		  /*
@@ -5834,12 +5837,12 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 		      jk = dof_map[j];
 		      for (b = 0; b < dim; b++) 
 			{
-			  lec->J[peqn][pvar][i][jk] -= surfaceDiffusionCoeff * fv->grad_div_s_v[b] * (bfn->d_grad_phi_dmesh[i][b][p][j]) * wt *  det_J * h3 ;
-			  lec->J[peqn][pvar][i][jk] -= surfaceDiffusionCoeff * fv->d_grad_div_s_v_dmesh[b][p][j] * (bfn->grad_phi[i][b] - tmp * fv->n[b]) * wt *  det_J * h3;
+                          lec->J[LEC_J_INDEX(peqn,pvar,i,jk)] -= surfaceDiffusionCoeff * fv->grad_div_s_v[b] * (bfn->d_grad_phi_dmesh[i][b][p][j]) * wt *  det_J * h3 ;
+                          lec->J[LEC_J_INDEX(peqn,pvar,i,jk)] -= surfaceDiffusionCoeff * fv->d_grad_div_s_v_dmesh[b][p][j] * (bfn->grad_phi[i][b] - tmp * fv->n[b]) * wt *  det_J * h3;
 		
 			  for (a = 0; a < dim; a++) 
 			    {
-			      lec->J[peqn][pvar][i][jk] -= surfaceDiffusionCoeff * fv->grad_div_s_v[b] * (- fv->n[a] * bfn->d_grad_phi_dmesh[i][a][p][j] * fv->n[b]) * wt *  det_J * h3;
+                              lec->J[LEC_J_INDEX(peqn,pvar,i,jk)] -= surfaceDiffusionCoeff * fv->grad_div_s_v[b] * (- fv->n[a] * bfn->d_grad_phi_dmesh[i][a][p][j] * fv->n[b]) * wt *  det_J * h3;
 			    }
 			}
 		    }
@@ -5855,7 +5858,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
       for (i = 0; i < ei->dof[eqn]; i++)
 	{
 	  phi_i = bf[eqn]->phi[i];
-	  //  lec->R[peqn][i] += (fv->curv - curv) * phi_i * wt * det_J * h3;
+	  //  lec->R[LEC_R_INDEX(peqn,i)] += (fv->curv - curv) * phi_i * wt * det_J * h3;
 	  var = eqn;
 	  if (pd->v[var])
 	    {
@@ -5863,7 +5866,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 	      for (j = 0; j < ei->dof[var]; j++) 
 		{
 		  phi_j = bf[var]->phi[j];
-		  lec->J[peqn][pvar][i][j] += phi_j * phi_i * wt * det_J * h3;
+		  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += phi_j * phi_i * wt * det_J * h3;
 		}
 	    }
 
@@ -5875,7 +5878,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 		  pvar = upd->vp[var];   
 		  for (j = 0; j < ei->dof[var]; j++) 
 		    {
-		      lec->J[peqn][pvar][i][j] -=  (-0.5) * d_div_s_n_dn[b][j] * phi_i * wt * det_J * h3;
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] -=  (-0.5) * d_div_s_n_dn[b][j] * phi_i * wt * det_J * h3;
 		    }
 		}
 	    }
@@ -5895,12 +5898,12 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 		      //      if (fabs( d_div_s_n_dx[b][j]) != 0.0) {
 		      //	printf("we are here\n");
 		      //    }
-		      lec->J[peqn][pvar][i][j] -=  (-0.5) * d_div_s_n_dx[b][j] * phi_i * wt * det_J * h3;
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] -=  (-0.5) * d_div_s_n_dx[b][j] * phi_i * wt * det_J * h3;
 		    }
 
 		  for (j = 0; j < n_dof[var]; j++)
 		    {
-		      lec->J[peqn][pvar][i][j] += (fv->curv - curv) * phi_i * wt * (fv->dsurfdet_dx[b][j]);
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (fv->curv - curv) * phi_i * wt * (fv->dsurfdet_dx[b][j]);
 		    }
 		}
 	    }
@@ -5914,7 +5917,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 	      tmp += fv->n[a] * bfn->grad_phi[i][a];
 	    } 
 
-       	  //   lec->R[peqn][i] -= surfaceDiffusionCoeff * (fv->grad_curv[b] * (bfn->grad_phi[i][b] - tmp * fv->n[b]))  * wt * det_J * h3;
+       	  //   lec->R[LEC_R_INDEX(peqn,i)] -= surfaceDiffusionCoeff * (fv->grad_curv[b] * (bfn->grad_phi[i][b] - tmp * fv->n[b]))  * wt * det_J * h3;
 	
 	  var = eqn;
 	  if (pd->v[var])
@@ -5924,7 +5927,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 		{
 		  for (j = 0; j < ei->dof[var]; j++) 
 		    {
-		      lec->J[peqn][pvar][i][j] -= surfaceDiffusionCoeff3 * bfn->grad_phi[j][b] * (bfn->grad_phi[i][b] - tmp * fv->n[b])  * wt * det_J * h3;
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] -= surfaceDiffusionCoeff3 * bfn->grad_phi[j][b] * (bfn->grad_phi[i][b] - tmp * fv->n[b])  * wt * det_J * h3;
 		    }
 		}
 	    }
@@ -5938,10 +5941,10 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 		  for (j = 0; j < ei->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
-		      lec->J[peqn][pvar][i][j] -= surfaceDiffusionCoeff3 * fv->grad_curv[b] * (- tmp * phi_j)  * wt * det_J * h3;
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] -= surfaceDiffusionCoeff3 * fv->grad_curv[b] * (- tmp * phi_j)  * wt * det_J * h3;
 		      for (a = 0; a < dim; a++)
 			{
-			  lec->J[peqn][pvar][i][j] -= surfaceDiffusionCoeff3 * fv->grad_curv[a] * (- phi_j * bfn->grad_phi[i][b] * fv->n[a]) * wt * det_J * h3;
+			  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] -= surfaceDiffusionCoeff3 * fv->grad_curv[a] * (- phi_j * bfn->grad_phi[i][b] * fv->n[a]) * wt * det_J * h3;
 			}
 		    }
 		}
@@ -5952,7 +5955,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 	    {
 	      tmp += fv->n[b] *  bfn->grad_phi[i][b];
 	    } 
-	  //   lec->R[peqn][i] -= surfaceDiffusionCoeff * (fv->grad_curv[b] * (bfn->grad_phi[i][b] - tmp * fv->n[b]))  * wt * det_J * h3;
+	  //   lec->R[LEC_R_INDEX(peqn,i)] -= surfaceDiffusionCoeff * (fv->grad_curv[b] * (bfn->grad_phi[i][b] - tmp * fv->n[b]))  * wt * det_J * h3;
 	  for (p = 0; p < dim; p++ )
 	    {
 	      var = MESH_DISPLACEMENT1 + p;
@@ -5966,7 +5969,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 		    {
 		      for (b = 0; b < dim; b++)
 			{
-			  lec->J[peqn][pvar][i][j] -= surfaceDiffusionCoeff3 * (fv->grad_curv[b] * (bfn->grad_phi[i][b] - tmp * fv->n[b])) * wt * (fv->dsurfdet_dx[p][j]);
+			  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] -= surfaceDiffusionCoeff3 * (fv->grad_curv[b] * (bfn->grad_phi[i][b] - tmp * fv->n[b])) * wt * (fv->dsurfdet_dx[p][j]);
 			}
 		    }
 		  /*
@@ -5986,11 +5989,11 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 		      jk = dof_map[j];
 		      for (b = 0; b < dim; b++) 
 			{
-			  lec->J[peqn][pvar][i][jk] -= surfaceDiffusionCoeff3 * fv->grad_curv[b] * (bfn->d_grad_phi_dmesh[i][b][p][j]) * wt *  det_J * h3 ;
-			  lec->J[peqn][pvar][i][jk] -= surfaceDiffusionCoeff3 * fv->d_grad_curv_dmesh[b][p][j] * (bfn->grad_phi[i][b] - tmp * fv->n[b]) * wt *  det_J * h3;
+                          lec->J[LEC_J_INDEX(peqn,pvar,i,jk)] -= surfaceDiffusionCoeff3 * fv->grad_curv[b] * (bfn->d_grad_phi_dmesh[i][b][p][j]) * wt *  det_J * h3 ;
+                          lec->J[LEC_J_INDEX(peqn,pvar,i,jk)] -= surfaceDiffusionCoeff3 * fv->d_grad_curv_dmesh[b][p][j] * (bfn->grad_phi[i][b] - tmp * fv->n[b]) * wt *  det_J * h3;
 			  for (a = 0; a < dim; a++) 
 			    {
-			      lec->J[peqn][pvar][i][jk] -= surfaceDiffusionCoeff3 * fv->grad_curv[b] * (- fv->n[a] * bfn->d_grad_phi_dmesh[i][a][p][j] * fv->n[b]) * wt * det_J * h3;
+                              lec->J[LEC_J_INDEX(peqn,pvar,i,jk)] -= surfaceDiffusionCoeff3 * fv->grad_curv[b] * (- fv->n[a] * bfn->d_grad_phi_dmesh[i][a][p][j] * fv->n[b]) * wt * det_J * h3;
 			    }
 			}
 		    }
@@ -6014,7 +6017,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 	      for (j = 0; j < ei->dof[var]; j++) 
 		{
 		  phi_j = bf[var]->phi[j];  
-		  lec->J[peqn][pvar][i][j] += phi_j * phi_i * wt * det_J * h3;
+		  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += phi_j * phi_i * wt * det_J * h3;
 		}
 	    }
 	  
@@ -6031,7 +6034,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 
 		  for (j = 0; j < n_dof[var]; j++) 
 		    {
-		      lec->J[peqn][pvar][i][j] -= d_n_dot_curl_s_v_dx[b][j] * phi_i *
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] -= d_n_dot_curl_s_v_dx[b][j] * phi_i *
 			wt * det_J * h3;
 		    }
 		  /*
@@ -6051,7 +6054,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 		   */
 		  for (j = 0; j < n_dof[var]; j++) 
 		    {
-		      lec->J[peqn][pvar][i][j] += (fv->n_dot_curl_s_v - n_dot_curl_s_v) * phi_i *
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (fv->n_dot_curl_s_v - n_dot_curl_s_v) * phi_i *
 			wt * (fv->dsurfdet_dx[b][j]);
 		    }
 
@@ -6073,7 +6076,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 		   */
 		  for (j = 0; j < n_dof[var]; j++) 
 		    {
-		      lec->J[peqn][pvar][i][j] -= d_n_dot_curl_s_v_dv[b][j] * phi_i * wt * det_J * h3;
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] -= d_n_dot_curl_s_v_dv[b][j] * phi_i * wt * det_J * h3;
 		    }
 		}
 	    }
@@ -7034,8 +7037,8 @@ surface_lubrication_shell_bc(double R[MAX_PROB_VAR+MAX_CONC][MAX_NODES_PER_SIDE]
 /*ARGSUSED*/
 int 
 assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUBP2 */
-		     double time,	/* present time value */ 
-		     double tt,   	/* parameter to vary time integration from 
+		     double time,	/* present time value */
+		     double tt,   	/* parameter to vary time integration from
 			   	         * explicit (tt = 1) to implicit (tt = 0)    */
 		     double dt,         /* current time step size */
 		     double xi[DIM],    /* Local stu coordinates */
@@ -7045,7 +7048,7 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
   int i = -1, j, status; //, err;
   int *n_dof = NULL;
   int dof_map[MDE];
-  
+
   // dbl toggle_dh_dependence = 0.;
 
   dbl H, dH_dtime; 
@@ -7068,7 +7071,7 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
    */
   status = 0;
   // eqn   = R_LUBP;  //PRS: NEED TO DO SOMETHING HERE
-  eqn   = EQN;  
+  eqn   = EQN;
   if (! pd->e[eqn]) return(status);
 
   /*
@@ -7083,15 +7086,21 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
    */
   n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
   lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
-                                                                 
+
   /* Load proper FEM weights */
-  dbl det_J = fv->sdet;            
+  dbl det_J = fv->sdet;
 
   /* Load up source models -- momentum*/
   // err = load_lubrication_momentum_source(time, dt);
 
   /* Load up source models -- mass */
-  // No calls yet as only constat models exist. See mm_input_mp.c 
+  // No calls yet as only constat models exist. See mm_input_mp.c
+  int err = -1;
+  dbl flux = 0.0;
+  dbl d_flux[MAX_VARIABLE_TYPES][MDE];
+  memset(d_flux, 0.0, sizeof(double)*MAX_VARIABLE_TYPES*MDE);
+  err = lubrication_fluid_source(&flux, d_flux);
+  EH(err, "Error in loading lubrication_fluid_source");
 
   /* Time settings */
   if(pd->TimeIntegration != TRANSIENT) {
@@ -7104,10 +7113,10 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
   /*** CALCULATE PHYSICAL PROPERTIES AND SENSITIVITIES ************************/
 
   /* Lubrication height from model */
-  H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, dt); 
+  H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, dt);
   dH_dtime = dH_U_dtime - dH_L_dtime;
   /*
-  if (pd->v[SHELL_DELTAH] && 
+  if (pd->v[SHELL_DELTAH] &&
       (mp->HeightUFunctionModel == CONSTANT_SPEED_DEFORM ||
        mp->HeightUFunctionModel == CONSTANT_SPEED_MELT ||
        mp->HeightUFunctionModel == FLAT_GRAD_FLAT_MELT ||
@@ -7158,7 +7167,7 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
       if ( pd->TimeIntegration == TRANSIENT ) {
 	dH_dtime -= fv->snormal[i] * fv_dot->d_rs[i];
       }
-    }  
+    }
     break;
   }
 
@@ -7274,13 +7283,13 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
     // eqn = R_LUBP; //PRS: NEED TO DO SOMETHING HERE
     eqn = EQN;
     peqn = upd->ep[eqn];
-    
+
     /*** Loop over DOFs (i) ***/
     for ( i=0; i<ei->dof[eqn]; i++) {
-      
+
       /* Prepare basis funcitons */
       ShellBF( eqn, i, &phi_i, grad_phi_i, grad_II_phi_i, d_grad_II_phi_i_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-      
+
       /* Assemble diffusion term */
       diffusion = 0.0;
       if (pd->e[eqn] & T_DIFFUSION) {
@@ -7288,23 +7297,23 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
 	  diffusion += LubAux->q[p] * grad_II_phi_i[p];
 	}
 	diffusion *= det_J * wt * h3 * pd->etm[eqn][(LOG2_DIFFUSION)];
-      } 
-      
+      }
+
       /* Assemble source term */
       source = 0.0;
       if ( pd->e[eqn] & T_SOURCE ) {
-	source = (mp->lubsource);
-	source += -dH_dtime;     
+	source  = flux;
+	source += -dH_dtime;
 	source += (veloU[0]*dH_U_dX[0] + veloU[1]*dH_U_dX[1] - veloU[2]);
 	source -= (veloL[0]*dH_L_dX[0] + veloL[1]*dH_L_dX[1] - veloL[2]);
 	source *= phi_i;
       }
       source *= det_J * wt * h3 * pd->etm[eqn][(LOG2_SOURCE)];
-      
-      lec->R[peqn][i] += diffusion + source;  
+
+      lec->R[LEC_R_INDEX(peqn,i)] += diffusion + source;
     } /* end of loop over i */
   } /* end of Assemble_Residual */
-  
+
 
   /*** JACOBIAN ASSEMBLY ******************************************************/
 
@@ -7319,14 +7328,14 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
       /* Prepare basis functions (i) */
       ShellBF( eqn, i, &phi_i, grad_phi_i, grad_II_phi_i, d_grad_II_phi_i_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
 
-      /* 
-       * J_lubp_p or J_lubp2_p2  --the diagonal piece. 
+      /*
+       * J_lubp_p or J_lubp2_p2  --the diagonal piece.
        */
-      if(EQN==R_LUBP) 
+      if(EQN==R_LUBP)
 	{
 	  var = LUBP;
 	}
-      else if (EQN==R_LUBP_2) 
+      else if (EQN==R_LUBP_2)
 	{
 	  var = LUBP_2;
 	}
@@ -7334,13 +7343,13 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
 
       if ( pd->v[var] ) {
 	pvar = upd->vp[var];
-	
+
 	/*** Loop over DOFs (j) ***/
 	for ( j=0; j<ei->dof[var]; j++) {
 
 	  /* Load basis functions (j) */
 	  ShellBF( var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-	  
+
 	  /* Add diffusion term */
 	  diffusion = 0.0;
 	  if ( pd->e[eqn] && T_DIFFUSION ) {
@@ -7351,18 +7360,18 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
 	  }
 	  diffusion *= det_J * wt * h3 * pd->etm[eqn][(LOG2_DIFFUSION)];
 
-	  lec->J[peqn][pvar][i][j] += diffusion;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
 	} // End of loop over j
       } // End of J_lubp_p
 
 
-      /* 
+      /*
        * J_lubp_curv
        */
       var = SHELL_LUB_CURV;
       if ( pd->v[var] ) {
 	pvar = upd->vp[var];
-	
+
 	/*** Loop over DOFs (j) ***/
 	for ( j=0; j<ei->dof[var]; j++) {
 
@@ -7378,17 +7387,17 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
 	  }
 	  diffusion *= det_J * wt * h3 * pd->etm[eqn][(LOG2_DIFFUSION)];
 
-	  lec->J[peqn][pvar][i][j] += diffusion;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
 	} // End of loop over j
       } // End of J_lubp_curv
 
-     /* 
+     /*
        * J_lubp_curv_2
        */
       var = SHELL_LUB_CURV_2;
       if ( pd->v[var] ) {
 	pvar = upd->vp[var];
-	
+
 	/*** Loop over DOFs (j) ***/
 	for ( j=0; j<ei->dof[var]; j++) {
 
@@ -7404,12 +7413,12 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
 	  }
 	  diffusion *= det_J * wt * h3 * pd->etm[eqn][(LOG2_DIFFUSION)];
 
-	  lec->J[peqn][pvar][i][j] += diffusion;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
 	} // End of loop over j
       } // End of J_lubp_curv_2
 
 
-      /* 
+      /*
        * J_lubp_LS or J_lubp_phase1  depending on lubp or lubp2
        */
       var = LS;
@@ -7417,7 +7426,7 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
 
       if ( pd->v[var] ) {
 	pvar = upd->vp[var];
-	
+
 	/*** Loop over DOFs (j) ***/
 	for ( j=0; j<ei->dof[var]; j++) {
 
@@ -7433,14 +7442,12 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
 	  }
 	  diffusion *= det_J * wt * h3 * pd->etm[eqn][(LOG2_DIFFUSION)];
 
-	  lec->J[peqn][pvar][i][j] += diffusion;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
 	} // End of loop over j
       } // End of J_lubp_LS
 
 
-
-
-      /* 
+      /*
        * J_lubp_DMX
        */
       var = MESH_DISPLACEMENT1;
@@ -7461,10 +7468,10 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
 	  /*** Loop over DOFs (j) ***/
 	  for ( j=0; j < ei->dof[var]; j++) {
 	    jk = dof_map[j];
-	    
+
 	    /* Load basis functions (j) */
 	    ShellBF( eqn, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-	    
+
 	    /* Add diffusion term */
 	    diffusion = 0.0;
 	    if ( pd->e[eqn] && T_DIFFUSION ) {
@@ -7486,13 +7493,13 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
 	      source *= phi_i;
 	    }
 	    source *= wt * h3 * pd->etm[eqn][(LOG2_SOURCE)];
-	    
-	    lec->J[peqn][pvar][i][jk] += diffusion + source;
+
+            lec->J[LEC_J_INDEX(peqn,pvar,i,jk)] += diffusion + source;
 	  } // End of loop over j
 	} // End of loop over b
       } // End of J_lubp_mesh
 
-      /* 
+      /*
        * J_lubp_DRS
        */
       var = SOLID_DISPLACEMENT1;
@@ -7508,10 +7515,10 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
 	  /*** Loop over DOFs (j) ***/
 	  for ( j=0; j < ei->dof[var]; j++) {
 	    jk = dof_map[j];
-	    
+
 	    /* Load basis functions (j) */
 	    ShellBF( eqn, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-	    
+
 	    /* Add diffusion term */
 	    diffusion = 0.0;
 	    if ( pd->e[eqn] && T_DIFFUSION ) {
@@ -7528,11 +7535,36 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
 	      source *= phi_i;
 	    }
 	    source *= wt * h3 * pd->etm[eqn][(LOG2_SOURCE)];
-	    
-	    lec->J[peqn][pvar][i][jk] += diffusion + source;
+
+            lec->J[LEC_J_INDEX(peqn,pvar,i,jk)] += diffusion + source;
 	  } // End of loop over j
 	} // End of loop over b
       } // End of J_lubp_drs
+
+      /*
+       * J_lubp_pressure
+       */
+      var = PRESSURE;
+      if ( upd->vp[var] >= 0)
+        {
+	 pvar = upd->vp[var];
+
+	 /*** Loop over DOFs (j) ***/
+	 for ( j = 0; j < ei->dof[var]; j++)
+            {
+             jk = dof_map[j];
+
+             /* Add source term */
+             source = 0.0;
+             if ( pd->e[eqn] && T_SOURCE )
+               {
+                source += d_flux[var][j] * det_J;
+                source *= phi_i;
+               }
+             source *= wt * h3 * pd->etm[eqn][(LOG2_SOURCE)];
+             lec->J[LEC_J_INDEX(peqn,pvar,i,jk)] += source;
+            }
+        } // End of J_lubp_pressure
 
 
       /*
@@ -7568,24 +7600,24 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
             }
             source *= wt * h3 * pd->etm[eqn][(LOG2_SOURCE)];
 
-            lec->J[peqn][pvar][i][j] += diffusion + source;
+            lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion + source;
           } // End of loop over j
         } // End of loop over b
       } // End of J_lubp_shell_normal
 
-      /* 
+      /*
        * J_lubp_D_sh_dh
        */
       var = SHELL_DELTAH;
       if ( pd->v[var]) {
 	pvar = upd->vp[var];
-	
+
 	/*** Loop over DOFs (j) ***/
 	for ( j=0; j < ei->dof[var]; j++) {
-	  
+
 	  /* Load basis functions (j) */
 	  ShellBF( var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-	  
+
 	  /* Add diffusion term */
 	  diffusion = 0.0;
 	  if ( pd->e[eqn] && T_DIFFUSION ) {
@@ -7594,23 +7626,23 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
 	    }
 	  }
 	  diffusion *= wt * h3 * pd->etm[eqn][(LOG2_DIFFUSION)];
-	  
+
 	  /* Add source term */
 	  source = 0.0;
 	  if ( pd->e[eqn] && T_SOURCE ) {
-	    // dh_time no longer has dependence here, as of 4/11/2011. Talk to PRS. 
+	    // dh_time no longer has dependence here, as of 4/11/2011. Talk to PRS.
 	    // If you wanted to add some volume expansion, however, there would be
-	    // a boost here. 
+	    // a boost here.
 	    // source += -0.*toggle_dh_dependence*(1 + 2. * tt)*phi_j/dt;
 	     source *= phi_i;
 	  }
 	  source *= det_J * wt * h3 * pd->etm[eqn][(LOG2_SOURCE)];
-	  
-	  lec->J[peqn][pvar][i][j] += diffusion + source;
+
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion + source;
 	} // End of loop over j
       } // End of J_lubp_dDeltah
 
-      /* 
+      /*
        * J_lubp_D_sh_pc
        */
 
@@ -7626,24 +7658,24 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
              diffusion = 0.;
 	     if (pd->e[eqn] && T_DIFFUSION)
 	       {
-		for (p = 0; p < VIM; p++) 
+		for (p = 0; p < VIM; p++)
 	           {
 	            diffusion += LubAux->dq_dc[p][j] * phi_j * grad_II_phi_i[p];
                    }
-		    
+
 		 diffusion *= det_J * wt;
 		 diffusion *= h3;
 		 diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
                }
-	     lec->J[peqn][pvar][i][j] += diffusion;
+	     lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
             }// End of loop over j
         }// End of J_lubp_dsh_pc
 
 
-      
+
     } /* end of loop over i */
   } /* end of Assemble_Jacobian */
-  
+
     /* clean-up */
   fv->wt = wt;  /* load_neighbor_var_data screws this up */
   safe_free((void *) n_dof);
@@ -8146,7 +8178,7 @@ assemble_shell_energy(double time,	/* present time value */
 	  }
 	  source *= if_liquid * det_J * wt * h3 * pd->etm[eqn][(LOG2_SOURCE)];
       
-	  lec->R[peqn][i] += mass + advection + diffusion + source;  
+	  lec->R[LEC_R_INDEX(peqn,i)] += mass + advection + diffusion + source;  
     } /* end of loop over i */
   } /* end of Assemble_Residual */
   
@@ -8266,7 +8298,7 @@ assemble_shell_energy(double time,	/* present time value */
 	    }
 	  source *= if_liquid * det_J * wt * h3 * pd->etm[eqn][(LOG2_SOURCE)];
 
-	  lec->J[peqn][pvar][i][j] += mass + advection + diffusion + source ;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + advection + diffusion + source ;
 	} // End of loop over j
       } // End of J_shell_energy_d_shell_temperature
 
@@ -8420,7 +8452,7 @@ assemble_shell_energy(double time,	/* present time value */
 	    }
 	    source *= if_liquid * wt * h3 * pd->etm[eqn][(LOG2_SOURCE)];
 	    
-	    lec->J[peqn][pvar][i][jk] += mass+ advection + diffusion + source;
+            lec->J[LEC_J_INDEX(peqn,pvar,i,jk)] += mass+ advection + diffusion + source;
 	  } // End of loop over j
 	} // End of loop over b
       } // End of J_sh_energy_mesh
@@ -8535,7 +8567,7 @@ assemble_shell_energy(double time,	/* present time value */
 	    }
 	    source *= if_liquid * wt * h3 * pd->etm[eqn][(LOG2_SOURCE)];
 	    
-	    lec->J[peqn][pvar][i][jk] += mass+ advection + diffusion + source;
+            lec->J[LEC_J_INDEX(peqn,pvar,i,jk)] += mass+ advection + diffusion + source;
 	  } // End of loop over j
 	} // End of loop over b
       } // End of J_sh_energy_rs
@@ -8601,7 +8633,7 @@ assemble_shell_energy(double time,	/* present time value */
 		advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 
 	      }	    
-	    lec->J[peqn][pvar][i][j] += advection;
+	    lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection;
 	  } // End of loop over j
 	} // End of loop over b
       } // End of J_sh_energy_dvelocity
@@ -8689,7 +8721,7 @@ assemble_shell_energy(double time,	/* present time value */
 	    }
 	    source *= if_liquid * det_J * wt * h3 * pd->etm[eqn][(LOG2_SOURCE)];
 	    
-	    lec->J[peqn][pvar][i][j] += mass+ advection + diffusion + source;
+	    lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass+ advection + diffusion + source;
 	  } // End of loop over j
       } // End of J_sh_energy_d_dh
 
@@ -8770,7 +8802,7 @@ assemble_shell_energy(double time,	/* present time value */
 	  }
 	  source *= if_liquid * wt * det_J* h3 * pd->etm[eqn][(LOG2_SOURCE)];
 	  
-	  lec->J[peqn][pvar][i][j] +=  mass + advection + diffusion + source ;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=  mass + advection + diffusion + source ;
 	}
       }
     } /* end of loop over i */
@@ -8994,7 +9026,7 @@ assemble_film( double time,	/* present time value */
 
 /* Combine them all */
 
-	  lec->R[peqn][i] += mass + diffusion + source;
+	  lec->R[LEC_R_INDEX(peqn,i)] += mass + diffusion + source;
 
 	} /* end of loop over i */
 
@@ -9044,7 +9076,7 @@ assemble_film( double time,	/* present time value */
 
 /* Combine them all */
 
-	  lec->R[peqn][i] +=  diffusion + source;
+	  lec->R[LEC_R_INDEX(peqn,i)] +=  diffusion + source;
 
 	} /* end of loop over i */
 
@@ -9118,7 +9150,7 @@ assemble_film( double time,	/* present time value */
 		    }
 
 
-		  lec->J[peqn][pvar][i][j] += diffusion;
+		  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
 		}
 	    }
 
@@ -9182,7 +9214,7 @@ assemble_film( double time,	/* present time value */
                     }
 
 
-		  lec->J[peqn][pvar][i][j] += mass + diffusion + source;
+		  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + diffusion + source;
 		}
 
             }
@@ -9223,7 +9255,7 @@ assemble_film( double time,	/* present time value */
                        source *= pd->etm[eqn][(LOG2_SOURCE)];
                     }
 
-		  lec->J[peqn][pvar][i][j] += diffusion + source;
+		  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion + source;
 
 		}
 
@@ -9289,7 +9321,7 @@ assemble_film( double time,	/* present time value */
 		    }
 
 
-		  lec->J[peqn][pvar][i][j] += source;
+		  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += source;
 		}
 	    }
 
@@ -9329,7 +9361,7 @@ assemble_film( double time,	/* present time value */
 
 		    }
 
-		  lec->J[peqn][pvar][i][j] += diffusion;
+		  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
 		}
 	    }
 
@@ -9702,7 +9734,7 @@ assemble_film_particles(  double time,	/* present time value */
 
 /* Combine them all */
 
-	  lec->R[peqn][i] += mass + advection + diffusion + source;
+	  lec->R[LEC_R_INDEX(peqn,i)] += mass + advection + diffusion + source;
 
 	} /* end of loop over i */
 
@@ -9791,7 +9823,7 @@ assemble_film_particles(  double time,	/* present time value */
 		      advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 		    }
 
-		  lec->J[peqn][pvar][i][j] += advection;
+		  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection;
 		}
 	    }
 
@@ -9858,7 +9890,7 @@ assemble_film_particles(  double time,	/* present time value */
 		    }
 
 
-		  lec->J[peqn][pvar][i][j] += advection;
+		  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection;
 		}
 	    }
 
@@ -9971,7 +10003,7 @@ assemble_film_particles(  double time,	/* present time value */
 
 		    }
 
-		  lec->J[peqn][pvar][i][j] += mass + advection + diffusion + source;
+		  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + advection + diffusion + source;
 		}
 	    }
 
@@ -10063,7 +10095,7 @@ assemble_film_particles(  double time,	/* present time value */
 
 		    }
 
-		  lec->J[peqn][pvar][i][j] += mass + advection + diffusion + source;
+		  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + advection + diffusion + source;
 		}
 	    }
 
@@ -10122,7 +10154,7 @@ assemble_film_particles(  double time,	/* present time value */
                          advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 
                         }
-                      lec->J[peqn][pvar][i][j] += advection;
+                      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection;
                      }
                  }
             }
@@ -10513,7 +10545,7 @@ assemble_porous_shell_closed(
       divergence *= dA * etm_divergence;
       
       // Assemble full residual
-      lec->R[peqn][i] += mass + divergence;
+      lec->R[LEC_R_INDEX(peqn,i)] += mass + divergence;
       
     }  // End of loop over DOF (i)
 
@@ -10539,7 +10571,7 @@ assemble_porous_shell_closed(
       source *= dA * pd->etm[eqn][(LOG2_SOURCE)];
       
       // Add to residual vector
-      lec->R[peqn][i] += source;
+      lec->R[LEC_R_INDEX(peqn,i)] += source;
       
     } // End lf loop over DOF (i)
     
@@ -10584,7 +10616,7 @@ assemble_porous_shell_closed(
 	  divergence *= dA * etm_divergence;
 	  
 	  // Assemble full Jacobian
-	  lec->J[peqn][pvar][i][j] += mass + divergence;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + divergence;
 	  
 	} // End of loop over DOF (j)
 	
@@ -10612,7 +10644,7 @@ assemble_porous_shell_closed(
 	  divergence *= dA * etm_divergence;
 	  
 	  // Assemble full Jacobian
-	  lec->J[peqn][pvar][i][j] += mass + divergence;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + divergence;
 	  
 	} // End of loop over DOF (j)
 	
@@ -10640,7 +10672,7 @@ assemble_porous_shell_closed(
 	  divergence *= dA * etm_divergence;
 	  
 	  // Assemble full Jacobian
-	  lec->J[peqn][pvar][i][j] += mass + divergence;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + divergence;
 	  
 	} // End of loop over DOF (j)
 	
@@ -10668,7 +10700,7 @@ assemble_porous_shell_closed(
 	  divergence *= dA * etm_divergence;
 	  
 	  // Assemble full Jacobian
-	  lec->J[peqn][pvar][i][j] += mass + divergence;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + divergence;
 	  
 	} // End of loop over DOF (j)
 	
@@ -10696,7 +10728,7 @@ assemble_porous_shell_closed(
 	  divergence *= dA * etm_divergence;
 	  
 	  // Assemble full Jacobian
-	  lec->J[peqn][pvar][i][j] += mass + divergence;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + divergence;
 	  
 	} // End of loop over DOF (j)
 	
@@ -10734,7 +10766,7 @@ assemble_porous_shell_closed(
 	    divergence *= pd->etm[eqn][(LOG2_DIVERGENCE)];
 	    
 	    // Assemble Jacobian terms
-	    lec->J[peqn][pvar][i][jj] += (mass + divergence) * wt * h3 * fv->dsurfdet_dx[b][jj];
+            lec->J[LEC_J_INDEX(peqn,pvar,i,jj)] += (mass + divergence) * wt * h3 * fv->dsurfdet_dx[b][jj];
 	    
 	  } // End of loop over DOF (j)
 
@@ -10776,7 +10808,7 @@ assemble_porous_shell_closed(
 	  source *= dA * pd->etm[eqn][(LOG2_SOURCE)];
 
 	  // Assemble Jacobian terms
-	  lec->J[peqn][pvar][i][j] += source;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += source;
 
 	} // End of loop over DOF (j)
 
@@ -10801,7 +10833,7 @@ assemble_porous_shell_closed(
 	  source *= dA * pd->etm[eqn][(LOG2_SOURCE)];
 
 	  // Assemble Jacobian terms
-	  lec->J[peqn][pvar][i][j] += source;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += source;
 
 	} // End of loop over DOF (j)
 
@@ -10826,7 +10858,7 @@ assemble_porous_shell_closed(
 	  source *= dA * pd->etm[eqn][(LOG2_SOURCE)];
 
 	  // Assemble Jacobian terms
-	  lec->J[peqn][pvar][i][j] += source;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += source;
 
 	} // End of loop over DOF (j)
 
@@ -10851,7 +10883,7 @@ assemble_porous_shell_closed(
 	  source *= dA * pd->etm[eqn][(LOG2_SOURCE)];
 
 	  // Assemble Jacobian terms
-	  lec->J[peqn][pvar][i][j] += source;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += source;
 
 	} // End of loop over DOF (j)
 
@@ -10876,7 +10908,7 @@ assemble_porous_shell_closed(
 	  source *= dA * pd->etm[eqn][(LOG2_SOURCE)];
 
 	  // Assemble Jacobian terms
-	  lec->J[peqn][pvar][i][j] += source;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += source;
 
 	} // End of loop over DOF (j)
 
@@ -10910,7 +10942,7 @@ assemble_porous_shell_closed(
 	    source *= pd->etm[eqn][(LOG2_SOURCE)];
 	    
 	    // Assemble Jacobian terms
-	    lec->J[peqn][pvar][i][jj] += source;
+            lec->J[LEC_J_INDEX(peqn,pvar,i,jj)] += source;
 	    
 	  } // End of loop over DOF (j)
 
@@ -11067,7 +11099,7 @@ assemble_porous_shell_gasn(
       source *= wt * h3 * det_J * pd->etm[eqn][(LOG2_SOURCE)];
       
       // Assemble full residual
-      lec->R[peqn][i] += mass + source;
+      lec->R[LEC_R_INDEX(peqn,i)] += mass + source;
       
     }  // End of loop over DOF (i)
 
@@ -11114,7 +11146,7 @@ assemble_porous_shell_gasn(
 	  source *= wt * h3 * det_J * pd->etm[eqn][(LOG2_SOURCE)];
 	  
 	  // Assemble full residual
-	  lec->J[peqn][pvar][i][j] += mass + source;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + source;
 
 	} // End of loop over DOF (j)
 	
@@ -11142,7 +11174,7 @@ assemble_porous_shell_gasn(
 	  source *= wt * h3 * det_J * pd->etm[eqn][(LOG2_SOURCE)];
 	  
 	  // Assemble full residual
-	  lec->J[peqn][pvar][i][j] += mass + source;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + source;
 
 	} // End of loop over DOF (j)
 	
@@ -11170,7 +11202,7 @@ assemble_porous_shell_gasn(
 	  source *= wt * h3 * det_J * pd->etm[eqn][(LOG2_SOURCE)];
 	  
 	  // Assemble full residual
-	  lec->J[peqn][pvar][i][j] += mass + source;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + source;
 
 	} // End of loop over DOF (j)
 	
@@ -11208,7 +11240,7 @@ assemble_porous_shell_gasn(
 	    source *= wt * h3 * fv->dsurfdet_dx[b][jk] * pd->etm[eqn][(LOG2_SOURCE)];
 	    
 	    // Assemble full residual
-	    lec->J[peqn][pvar][i][jk] += mass + source;
+            lec->J[LEC_J_INDEX(peqn,pvar,i,jk)] += mass + source;
 	    
 	  } // End of loop over DOF (j)
 
@@ -11553,7 +11585,7 @@ assemble_porous_shell_open(
       sour *= dA * etm_sour;
 
       // Assemble full residual
-      lec->R[peqn][i] += mass + diff + sour;
+      lec->R[LEC_R_INDEX(peqn,i)] += mass + diff + sour;
 
     }  // End of loop over DOF (i)
 
@@ -11578,7 +11610,7 @@ assemble_porous_shell_open(
       sour *= dA * etm_sour * mytest[i];
 
       // Assemble full residual
-      lec->R[peqn][i] += sour;
+      lec->R[LEC_R_INDEX(peqn,i)] += sour;
 
     }  // End of loop over DOF (i)
 
@@ -11603,7 +11635,7 @@ assemble_porous_shell_open(
       sour *= dA * etm_sour * mytest_2[i];
 
       // Assemble full residual
-      lec->R[peqn][i] += sour;
+      lec->R[LEC_R_INDEX(peqn,i)] += sour;
 
     }  // End of loop over DOF (i)
 
@@ -11661,7 +11693,7 @@ assemble_porous_shell_open(
 	  sour *= dA * etm_sour;
 
 	  // Assemble full Jacobian
-	  lec->J[peqn][pvar][i][j] += mass + diff + sour;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + diff + sour;
 	} // End of loop over DOF (j)
 
       } // End of SHELL_PRESS_OPEN sensitivities
@@ -11682,7 +11714,7 @@ assemble_porous_shell_open(
           sour *= dA * etm_sour;
 
           // Assemble full Jacobian
-          lec->J[peqn][pvar][i][j] += sour;
+          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += sour;
 
         } // End of loop over DOF (j)
 
@@ -11707,7 +11739,7 @@ assemble_porous_shell_open(
 	  sour *= dA * etm_sour * mytest[i];
 
 	  // Assemble full Jacobian
-	  lec->J[peqn][pvar][i][j] += sour;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += sour;
 
 	} // End of loop over DOF (j)
 
@@ -11732,7 +11764,7 @@ assemble_porous_shell_open(
 	  sour *= dA * etm_sour * mytest_2[i];
 
 	  // Assemble full Jacobian
-	  lec->J[peqn][pvar][i][j] += sour;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += sour;
 
 	} // End of loop over DOF (j)
 
@@ -11757,7 +11789,7 @@ assemble_porous_shell_open(
 	  sour *= dA * etm_sour * mytest[i];
 
 	  // Assemble full Jacobian
-	  lec->J[peqn][pvar][i][j] += sour;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += sour;
 
 	} // End of loop over DOF (j)
 
@@ -11782,7 +11814,7 @@ assemble_porous_shell_open(
 	  sour *= dA * etm_sour * mytest_2[i];
 
 	  // Assemble full Jacobian
-	  lec->J[peqn][pvar][i][j] += sour;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += sour;
 
 	} // End of loop over DOF (j)
 
@@ -11821,7 +11853,7 @@ assemble_porous_shell_open(
 	  sour *= dA * etm_sour * mytest[i];
 
 	  // Assemble full Jacobian
-	  lec->J[peqn][pvar][i][j] += sour;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += sour;
 
 	} // End of loop over DOF (j)
 
@@ -11846,7 +11878,7 @@ assemble_porous_shell_open(
 	  sour *= dA * etm_sour * mytest[i];
 
 	  // Assemble full Jacobian
-	  lec->J[peqn][pvar][i][j] += sour;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += sour;
 
 	} // End of loop over DOF (j)
 
@@ -11871,7 +11903,7 @@ assemble_porous_shell_open(
 	  sour *= dA * etm_sour * mytest[i];
 
 	  // Assemble full Jacobian
-	  lec->J[peqn][pvar][i][j] += sour;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += sour;
 
 	} // End of loop over DOF (j)
 
@@ -11910,7 +11942,7 @@ assemble_porous_shell_open(
 	  sour *= dA * etm_sour * mytest_2[i];
 
 	  // Assemble full Jacobian
-	  lec->J[peqn][pvar][i][j] += sour;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += sour;
 
 	} // End of loop over DOF (j)
 
@@ -11935,7 +11967,7 @@ assemble_porous_shell_open(
 	  sour *= dA * etm_sour * mytest_2[i];
 
 	  // Assemble full Jacobian
-	  lec->J[peqn][pvar][i][j] += sour;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += sour;
 
 	} // End of loop over DOF (j)
 
@@ -11960,7 +11992,7 @@ assemble_porous_shell_open(
 	  sour *= dA * etm_sour * mytest_2[i];
 
 	  // Assemble full Jacobian
-	  lec->J[peqn][pvar][i][j] += sour;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += sour;
 
 	} // End of loop over DOF (j)
 
@@ -12220,7 +12252,7 @@ assemble_porous_shell_open_2(
       sour *= dA * etm_sour * mytest[i];
 
       // Assemble full residual
-      lec->R[peqn][i] += mass + diff + sour;
+      lec->R[LEC_R_INDEX(peqn,i)] += mass + diff + sour;
 
     }  // End of loop over DOF (i)
 
@@ -12245,7 +12277,7 @@ assemble_porous_shell_open_2(
       sour *= dA * etm_sour * mytest[i];
 
       // Assemble full residual
-      lec->R[peqn][i] += sour;
+      lec->R[LEC_R_INDEX(peqn,i)] += sour;
 
     }  // End of loop over DOF (i)
 
@@ -12303,7 +12335,7 @@ assemble_porous_shell_open_2(
 	  sour *= dA * etm_sour * mytest[i];
 
 	  // Assemble full Jacobian
-	  lec->J[peqn][pvar][i][j] += mass + diff + sour;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + diff + sour;
 
 	} // End of loop over DOF (j)
 
@@ -12328,7 +12360,7 @@ assemble_porous_shell_open_2(
 	  sour *= dA * etm_sour * mytest[i];
 
 	  // Assemble full Jacobian
-	  lec->J[peqn][pvar][i][j] += sour;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += sour;
 
 	} // End of loop over DOF (j)
 
@@ -12353,7 +12385,7 @@ assemble_porous_shell_open_2(
 	  sour *= dA * etm_sour * mytest[i];
 
 	  // Assemble full Jacobian
-	  lec->J[peqn][pvar][i][j] += sour;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += sour;
 
 	} // End of loop over DOF (j)
 
@@ -12392,7 +12424,7 @@ assemble_porous_shell_open_2(
 	  sour *= dA * etm_sour * mytest[i];
 
 	  // Assemble full Jacobian
-	  lec->J[peqn][pvar][i][j] += sour;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += sour;
 
 	} // End of loop over DOF (j)
 
@@ -12417,7 +12449,7 @@ assemble_porous_shell_open_2(
 	  sour *= dA * etm_sour * mytest[i];
 
 	  // Assemble full Jacobian
-	  lec->J[peqn][pvar][i][j] += sour;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += sour;
 
 	} // End of loop over DOF (j)
 
@@ -12442,7 +12474,7 @@ assemble_porous_shell_open_2(
 	  sour *= dA * etm_sour * mytest[i];
 
 	  // Assemble full Jacobian
-	  lec->J[peqn][pvar][i][j] += sour;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += sour;
 
 	} // End of loop over DOF (j)
 
@@ -13297,7 +13329,7 @@ assemble_lubrication_curvature(
       div *= det_J * wt * h3 * pd->etm[eqn][(LOG2_DIVERGENCE)];
 
       /* Assemble residual */
-      lec->R[peqn][i] += mass + diff + div;
+      lec->R[LEC_R_INDEX(peqn,i)] += mass + diff + div;
 
     } // End of loop over DOFs (i)
   } // End of residual assembly
@@ -13343,7 +13375,7 @@ assemble_lubrication_curvature(
 	  diff *= det_J * wt * h3 * pd->etm[eqn][(LOG2_DIFFUSION)];
 
 	  /* Assemble jacobian */
-	  lec->J[peqn][pvar][i][j] += mass + diff;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + diff;
 
 	} // End of loop over DOFs (j)
       } // End of SH_LUB_CURV assembly
@@ -13399,8 +13431,7 @@ assemble_lubrication_curvature(
 	    div *= wt * h3 * pd->etm[eqn][(LOG2_DIVERGENCE)];
 
 	    /* Assemble jacobian */
-	    lec->J[peqn][pvar][i][jj] += mass + diff + div;
-
+            lec->J[LEC_J_INDEX(peqn,pvar,i,jj)] += mass + diff + div;
 	  } // End of loop over DOFs (j)
 	} // End of loop over mesh dimensions
       } // End of DMX assembly
@@ -13424,7 +13455,7 @@ assemble_lubrication_curvature(
 	  div *= det_J * wt * h3 * pd->etm[eqn][(LOG2_DIVERGENCE)];
 
 	  /* Assemble jacobian */
-	  lec->J[peqn][pvar][i][j] += div;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += div;
 
 	} // End of loop over DOFs (j)
       } // End of FILL assembly
@@ -13611,7 +13642,7 @@ assemble_lubrication_curvature_2(
       div *= det_J * wt * h3 * pd->etm[eqn][(LOG2_DIVERGENCE)];
 
       /* Assemble residual */
-      lec->R[peqn][i] += mass + diff + div;
+      lec->R[LEC_R_INDEX(peqn,i)] += mass + diff + div;
 
     } // End of loop over DOFs (i)
   } // End of residual assembly
@@ -13658,7 +13689,7 @@ assemble_lubrication_curvature_2(
 	  diff *= det_J * wt * h3 * pd->etm[eqn][(LOG2_DIFFUSION)];
 
 	  /* Assemble jacobian */
-	  lec->J[peqn][pvar][i][j] += mass + diff;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + diff;
 
 	} // End of loop over DOFs (j)
       } // End of SH_LUB_CURV assembly
@@ -13714,8 +13745,8 @@ assemble_lubrication_curvature_2(
 	    div *= wt * h3 * pd->etm[eqn][(LOG2_DIVERGENCE)];
 
 	    /* Assemble jacobian */
-	    lec->J[peqn][pvar][i][jj] += mass + diff + div;
-
+            lec->J[LEC_J_INDEX(peqn,pvar,i,jj)] += mass + diff + div;
+	    
 	  } // End of loop over DOFs (j)
 	} // End of loop over mesh dimensions
       } // End of DMX assembly
@@ -13739,7 +13770,7 @@ assemble_lubrication_curvature_2(
 	  div *= det_J * wt * h3 * pd->etm[eqn][(LOG2_DIVERGENCE)];
 
 	  /* Assemble jacobian */
-	  lec->J[peqn][pvar][i][j] += div;
+	  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += div;
 
 	} // End of loop over DOFs (j)
       } // End of FILL assembly
@@ -13951,7 +13982,7 @@ assemble_lubrication_power_law( double time,    /* present time value */
 
 /* Combine them all */
 
-          lec->R[peqn][i] += advection + source;
+          lec->R[LEC_R_INDEX(peqn,i)] += advection + source;
 
         } /* end of loop over i */
 
@@ -14003,7 +14034,7 @@ assemble_lubrication_power_law( double time,    /* present time value */
 
 /* Combine them all */
 
-          lec->R[peqn][i] += advection + source;
+          lec->R[LEC_R_INDEX(peqn,i)] += advection + source;
 
         } /* end of loop over i */
 
@@ -14045,7 +14076,7 @@ assemble_lubrication_power_law( double time,    /* present time value */
 
 /* Combine them all */
 
-          lec->R[peqn][i] += advection + source;
+          lec->R[LEC_R_INDEX(peqn,i)] += advection + source;
 
         } /* end of loop over i */
 
@@ -14097,7 +14128,7 @@ assemble_lubrication_power_law( double time,    /* present time value */
 
 /* Combine them all */
 
-          lec->R[peqn][i] += diffusion + source;
+          lec->R[LEC_R_INDEX(peqn,i)] += diffusion + source;
 
         } /* end of loop over i */
 
@@ -14190,7 +14221,7 @@ assemble_lubrication_power_law( double time,    /* present time value */
                       source_minus *= pd->etm[eqn][(LOG2_SOURCE)];
                     }
 
-                  lec->J[peqn][pvar][i][j] += (source_plus - source_minus)/(eps_top);
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (source_plus - source_minus)/(eps_top);
 
                 }
             }
@@ -14266,7 +14297,7 @@ assemble_lubrication_power_law( double time,    /* present time value */
                       source_minus *= pd->etm[eqn][(LOG2_SOURCE)];
                     }
 
-                  lec->J[peqn][pvar][i][j] += (source_plus - source_minus)/(eps_bot);
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (source_plus - source_minus)/(eps_bot);
 
                 }
             }
@@ -14298,7 +14329,7 @@ assemble_lubrication_power_law( double time,    /* present time value */
                       source *= pd->etm[eqn][(LOG2_SOURCE)];
 
                     }
-                  lec->J[peqn][pvar][i][j] += source;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += source;
                 }
             }
 
@@ -14409,7 +14440,7 @@ assemble_lubrication_power_law( double time,    /* present time value */
                      source *= phi_i * det_J * h3 * wt;
                      source *= pd->etm[eqn][(LOG2_SOURCE)];
                     }
-                  lec->J[peqn][pvar][i][j] += advection + source;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection + source;
                 }
             }
         }                        
@@ -14494,7 +14525,7 @@ assemble_lubrication_power_law( double time,    /* present time value */
                       source_minus *= pd->etm[eqn][(LOG2_SOURCE)];
                     }
 
-                  lec->J[peqn][pvar][i][j] += (source_plus - source_minus)/(eps_top);
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (source_plus - source_minus)/(eps_top);
 
                 }
             }
@@ -14571,7 +14602,7 @@ assemble_lubrication_power_law( double time,    /* present time value */
                       source_minus *= pd->etm[eqn][(LOG2_SOURCE)];
                     }
 
-                  lec->J[peqn][pvar][i][j] += (source_plus - source_minus)/(eps_bot);
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (source_plus - source_minus)/(eps_bot);
 
 
                 }
@@ -14604,7 +14635,7 @@ assemble_lubrication_power_law( double time,    /* present time value */
 
                     }
 
-                  lec->J[peqn][pvar][i][j] += source;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += source;
                 }
             }
 
@@ -14717,7 +14748,7 @@ assemble_lubrication_power_law( double time,    /* present time value */
                      source *= pd->etm[eqn][(LOG2_SOURCE)];
                     }
 
-                  lec->J[peqn][pvar][i][j] += advection + source;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection + source;
                 }
             }
         }
@@ -14795,7 +14826,7 @@ assemble_lubrication_power_law( double time,    /* present time value */
                      source_minus *= pd->etm[eqn][(LOG2_SOURCE)];
                     }
 
-                  lec->J[peqn][pvar][i][j] += (source_plus - source_minus)/eps_top;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (source_plus - source_minus)/eps_top;
 
                 }
             }
@@ -14863,7 +14894,7 @@ assemble_lubrication_power_law( double time,    /* present time value */
                      source_minus *= pd->etm[eqn][(LOG2_SOURCE)];
                     }
 
-                  lec->J[peqn][pvar][i][j] += (source_plus - source_minus)/eps_bot;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (source_plus - source_minus)/eps_bot;
 
                 }
             }
@@ -14961,7 +14992,7 @@ assemble_lubrication_power_law( double time,    /* present time value */
                     }
 
 
-                  lec->J[peqn][pvar][i][j] += advection;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += advection;
                 }
             }
         }
@@ -15081,7 +15112,7 @@ assemble_lubrication_power_law( double time,    /* present time value */
                     }
 
 
-                  lec->J[peqn][pvar][i][j] += diffusion;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
                 }
             }
 
@@ -15179,7 +15210,7 @@ assemble_lubrication_power_law( double time,    /* present time value */
                     }
 
 
-                  lec->J[peqn][pvar][i][j] += diffusion;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
                 }
             }
 
@@ -15277,7 +15308,7 @@ assemble_lubrication_power_law( double time,    /* present time value */
                     }
 
 
-                  lec->J[peqn][pvar][i][j] += diffusion;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
                 }
             }
 
@@ -15376,7 +15407,7 @@ assemble_lubrication_power_law( double time,    /* present time value */
                     }
 
 
-                  lec->J[peqn][pvar][i][j] += diffusion;
+                  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
                 }
             }
         }
@@ -15493,7 +15524,7 @@ assemble_shell_normal( double xi[DIM],   /* Local stu coordinates */
                diffusion *= det_J * wt * h3 * pd->etm[eqn][(LOG2_DIFFUSION)];
               }
 
-            lec->R[peqn][i] += diffusion;
+            lec->R[LEC_R_INDEX(peqn,i)] += diffusion;
            }
        }
    }  /* End of if assemble residual */
@@ -15537,7 +15568,7 @@ assemble_shell_normal( double xi[DIM],   /* Local stu coordinates */
                            diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
                           }
 
-                        lec->J[peqn][pvar][i][j] += diffusion;
+                        lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
                        }
                    } /* End of loop over shell normal components VARIABLES */
                }
@@ -15569,7 +15600,7 @@ assemble_shell_normal( double xi[DIM],   /* Local stu coordinates */
                           diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
                          }
 
-                       lec->J[peqn][pvar][i][j] += diffusion;
+                       lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
 
                       } /* End of loop over DOFs (j) */
                   } /* End of loop over mesh displacements */
@@ -15836,7 +15867,7 @@ assemble_shell_curvature( double xi[DIM],   /* Local stu coordinates */
            diffusion *= det_J * wt * h3 * pd->etm[eqn][(LOG2_DIFFUSION)];
           }
 
-           lec->R[peqn][i] += diffusion;
+           lec->R[LEC_R_INDEX(peqn,i)] += diffusion;
        }
 
 
@@ -15858,7 +15889,7 @@ assemble_shell_curvature( double xi[DIM],   /* Local stu coordinates */
            diffusion *= det_J * wt * h3 * pd->etm[eqn][(LOG2_DIFFUSION)];
           }
 
-           lec->R[peqn][i] += diffusion;
+           lec->R[LEC_R_INDEX(peqn,i)] += diffusion;
        }
    }  /* End of if assemble residual */
 
@@ -15899,7 +15930,7 @@ assemble_shell_curvature( double xi[DIM],   /* Local stu coordinates */
                    diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
                   }
 
-                lec->J[peqn][pvar][i][j] += diffusion;
+                lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
                }
            }
 
@@ -15925,7 +15956,7 @@ assemble_shell_curvature( double xi[DIM],   /* Local stu coordinates */
                        diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
                       }
 
-                    lec->J[peqn][pvar][i][j] += diffusion;
+                    lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
                    }
                } /* End of loop over shell normal components VARIABLES */
            }
@@ -15956,7 +15987,7 @@ assemble_shell_curvature( double xi[DIM],   /* Local stu coordinates */
                        diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
                       }
 
-                    lec->J[peqn][pvar][i][j] += diffusion;
+                    lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
 
                    } /* End of loop over DOFs (j) */
                } /* End of loop over mesh displacements */
@@ -15994,7 +16025,7 @@ assemble_shell_curvature( double xi[DIM],   /* Local stu coordinates */
                    diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
                   }
 
-                lec->J[peqn][pvar][i][j] += diffusion;
+                lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
                }
            }
 
@@ -16020,7 +16051,7 @@ assemble_shell_curvature( double xi[DIM],   /* Local stu coordinates */
                        diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
                       }
 
-                    lec->J[peqn][pvar][i][j] += diffusion;
+                    lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
                    }
                } /* End of loop over shell normal components VARIABLES */
            }
@@ -16052,7 +16083,7 @@ assemble_shell_curvature( double xi[DIM],   /* Local stu coordinates */
                        diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
                       }
 
-                    lec->J[peqn][pvar][i][j] += diffusion;
+                    lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
 
                    } /* End of loop over DOFs (j) */
                } /* End of loop over mesh displacements */
@@ -16382,7 +16413,7 @@ assemble_shell_mesh(double time,   /* Time */
              source *= det_J * wt * h3 * pd->etm[eqn][(LOG2_SOURCE)];
             }
 
-          lec->R[peqn][i] += diffusion + source;
+          lec->R[LEC_R_INDEX(peqn,i)] += diffusion + source;
         }
 
 /* ************** ASSEMBLE RESIDUAL OF TANGENTIAL STRESS BALANCE IN DIRECTION 2 ********* */
@@ -16423,7 +16454,7 @@ assemble_shell_mesh(double time,   /* Time */
              source *= det_J * wt * h3 * pd->etm[eqn][(LOG2_SOURCE)];
             }
 
-          lec->R[peqn][i] += diffusion + source;
+          lec->R[LEC_R_INDEX(peqn,i)] += diffusion + source;
         }
 
 
@@ -16462,7 +16493,7 @@ assemble_shell_mesh(double time,   /* Time */
              source *= det_J * wt * h3 * pd->etm[eqn][(LOG2_SOURCE)];
             }
 
-          lec->R[peqn][i] += diffusion + source;
+          lec->R[LEC_R_INDEX(peqn,i)] += diffusion + source;
         }
 
     } /* End of if Assemble_Residual */
@@ -16549,7 +16580,7 @@ assemble_shell_mesh(double time,   /* Time */
                         source *= pd->etm[eqn][(LOG2_SOURCE)];
                        }
 
-                     lec->J[peqn][pvar][i][j] += diffusion + source;
+                     lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion + source;
 
                     } /* End of loop over DOFs (j) */
                 } /* End of loop over mesh displacements */
@@ -16585,7 +16616,7 @@ assemble_shell_mesh(double time,   /* Time */
                         diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
                        }
 
-                     lec->J[peqn][pvar][i][j] += diffusion;
+                     lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
 
                     } /* End of loop over DOF j */
                 } /* End of loop over shell normal components */
@@ -16615,7 +16646,7 @@ assemble_shell_mesh(double time,   /* Time */
                     diffusion *= det_J * wt * h3;
                     diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
                    }
-                 lec->J[peqn][pvar][i][j] += diffusion;
+                 lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
                 }
             }
 
@@ -16638,7 +16669,7 @@ assemble_shell_mesh(double time,   /* Time */
                     diffusion *= det_J * wt * h3;
                     diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
                    }
-                 lec->J[peqn][pvar][i][j] += diffusion;
+                 lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
                 }
             }
 
@@ -16718,7 +16749,7 @@ assemble_shell_mesh(double time,   /* Time */
                         source *= pd->etm[eqn][(LOG2_SOURCE)];
                        }
 
-                     lec->J[peqn][pvar][i][j] += diffusion + source;
+                     lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion + source;
 
                     } /* End of loop over DOFs (j) */
                 } /* End of loop over mesh displacements */
@@ -16754,7 +16785,7 @@ assemble_shell_mesh(double time,   /* Time */
                         diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
                        }
 
-                     lec->J[peqn][pvar][i][j] += diffusion;
+                     lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
 
                     } /* End of loop over DOF j */
                 } /* End of loop over shell normal components */
@@ -16781,7 +16812,7 @@ assemble_shell_mesh(double time,   /* Time */
                     diffusion *= det_J * wt * h3;
                     diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
                    }
-                 lec->J[peqn][pvar][i][j] += diffusion;
+                 lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
                 }
             }
 
@@ -16807,7 +16838,7 @@ assemble_shell_mesh(double time,   /* Time */
                     diffusion *= det_J * wt * h3;
                     diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
                    }
-                 lec->J[peqn][pvar][i][j] += diffusion;
+                 lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
                 }
             }
 
@@ -16878,7 +16909,7 @@ assemble_shell_mesh(double time,   /* Time */
                         source *= pd->etm[eqn][(LOG2_SOURCE)];
                        }
 
-                     lec->J[peqn][pvar][i][j] += diffusion + source;
+                     lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion + source;
 
                     } /* End of loop over DOF j */
                 } /* End of loop over mesh components */
@@ -16926,7 +16957,7 @@ assemble_shell_mesh(double time,   /* Time */
 			 }
 		     }
 
-                     lec->J[peqn][pvar][i][j] += diffusion + source;
+                     lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion + source;
 
                     } /* End of loop over DOF j */
                 } /* End of loop over shell normal components */
@@ -16957,7 +16988,7 @@ assemble_shell_mesh(double time,   /* Time */
                     diffusion *= det_J * wt * h3;
                     diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
                    }
-                 lec->J[peqn][pvar][i][j] += diffusion;
+                 lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
                 }
             }
 
@@ -16986,7 +17017,7 @@ assemble_shell_mesh(double time,   /* Time */
                     diffusion *= det_J * wt * h3;
                     diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
                    }
-                 lec->J[peqn][pvar][i][j] += diffusion;
+                 lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += diffusion;
                 }
             }
 
@@ -17012,7 +17043,7 @@ assemble_shell_mesh(double time,   /* Time */
 		source -= phi_i * dP_load_dlubp[j];
 		source *= det_J * wt * h3 * pd->etm[eqn][(LOG2_SOURCE)];
 	      }
-	      lec->J[peqn][pvar][i][j] += source;
+	      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += source;
 	    }
 	  }
 	
@@ -17029,7 +17060,7 @@ assemble_shell_mesh(double time,   /* Time */
 		  source *= det_J * wt * h3 * pd->etm[eqn][(LOG2_SOURCE)];
 		}
 		
-		lec->J[peqn][pvar][i][j] += source;
+		lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += source;
 	      }
 	    }
 	  }
@@ -17399,7 +17430,7 @@ assemble_shell_tfmp(double time,   /* Time */
         ////////////////////////////////////////////////
      */
 
-      lec->R[peqn][i] += mass + adv + diff;
+      lec->R[LEC_R_INDEX(peqn,i)] += mass + adv + diff;
     } // end of loop over i for eqn = R_TFMP_MASS
 
     /* Assemble the gas volume conservation equation */
@@ -17509,7 +17540,7 @@ assemble_shell_tfmp(double time,   /* Time */
       adv *= dA * etm_adv_eqn;
       source *= dA * etm_source_eqn;
 
-      lec->R[peqn][i] += mass + adv + source;
+      lec->R[LEC_R_INDEX(peqn,i)] += mass + adv + source;
     } //End of loop over i for eqn = R_TFMP_BOUND
   } // End of if (af->Assemble_Residual)
 
@@ -17568,7 +17599,7 @@ assemble_shell_tfmp(double time,   /* Time */
       ////////////////////////////////////////////////
      */
         // Assemble full Jacobian
-        lec->J[peqn][pvar][i][j] += mass + adv + diff;
+        lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + adv + diff;
       } // End of loop over DOF (j)
       // End of R_TFMP_MASS sensitivities to TFMP_PRES
 
@@ -17650,7 +17681,7 @@ assemble_shell_tfmp(double time,   /* Time */
     */
 
         // Assemble full Jacobian
-        lec->J[peqn][pvar][i][j] += mass + adv + diff;
+        lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + adv + diff;
       } // End of loop over DOF (j)
       // End of R_TFMP_MASS sensitivities to TFMP_SAT
 
@@ -17778,7 +17809,7 @@ assemble_shell_tfmp(double time,   /* Time */
          */
 
             // Assemble full Jacobian
-            lec->J[peqn][pvar][i][j] += mass + adv + diff;
+            lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + adv + diff;
           } // End of loop over DOF (j)
         }// End of R_TFMP_MASS sensitivities to MESH_DISPLACEMENT1 + l
 
@@ -17854,7 +17885,7 @@ assemble_shell_tfmp(double time,   /* Time */
             ////////////////////////////////////////////////
            */
               // Assemble full Jacobian
-              lec->J[peqn][pvar][i][j] += mass + adv + diff;
+              lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + adv + diff;
             } // End of loop over DOF (j)
 
           }// End of R_TFMP_MASS sensitivities to SHELL_NORMAL
@@ -17979,7 +18010,7 @@ assemble_shell_tfmp(double time,   /* Time */
           ////////////////////////////////////////////////
          */
           // Assemble full Jacobian
-          lec->J[peqn][pvar][i][j] += mass + adv + source;
+          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + adv + source;
 
         } // End of loop over DOF (j)
 
@@ -18090,7 +18121,7 @@ assemble_shell_tfmp(double time,   /* Time */
           ////////////////////////////////////////////////
          */
           // Assemble full Jacobian
-          lec->J[peqn][pvar][i][j] += mass + adv + source;
+          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + adv + source;
 
         } // End of loop over DOF (j)
 
@@ -18330,7 +18361,7 @@ assemble_shell_tfmp(double time,   /* Time */
            */
 
             // Assemble full Jacobian
-            lec->J[peqn][pvar][i][j] += mass + adv + source;
+            lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + adv + source;
 	  
           } // End of loop over DOF (j)
 
@@ -18459,7 +18490,7 @@ assemble_shell_tfmp(double time,   /* Time */
            */
 
             // Assemble full Jacobian
-            lec->J[peqn][pvar][i][j] += mass + adv + source;
+            lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + adv + source;
 
           } // End of loop over DOF (j)
 
@@ -18695,7 +18726,7 @@ assemble_shell_lubrication(double time,   /* Time */
         source *= dA;
 
       }
-      lec->R[peqn][i] += mass + adv + source;
+      lec->R[LEC_R_INDEX(peqn,i)] += mass + adv + source;
     }
   }
   if (af->Assemble_Jacobian) {
@@ -18716,7 +18747,7 @@ assemble_shell_lubrication(double time,   /* Time */
           adv += gradphi_i_dot_gradphi_j*h*h*h/12.0/mu_l;
           adv *= dA;
         }
-        lec->J[peqn][pvar][i][j] += adv;
+        lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += adv;
       }
 
       for (int l = 0; l<pd->Num_Dim; l++) {
@@ -18767,7 +18798,7 @@ assemble_shell_lubrication(double time,   /* Time */
           if (fpclassify(adv)!= fp_type && adv != 0.0) {
             EH(-1, "adv is not normal");
           }
-          lec->J[peqn][pvar][i][j] += mass + adv + source;
+          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + adv + source;
         }
       }
       for (int l=0; l<pd->Num_Dim; l++) {
@@ -18796,7 +18827,7 @@ assemble_shell_lubrication(double time,   /* Time */
           if (etm_source_eqn > 0) {
             source += veloAVG_dot_dgradh_dnormal_lj*phi_i;
           }
-          lec->J[peqn][pvar][i][j] += mass + adv + source;
+          lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + adv + source;
         }
       }
     }

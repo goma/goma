@@ -91,7 +91,7 @@ static char rcsid[] = "$Id: mm_qtensor_model.c,v 5.2 2009-05-20 15:31:33 hkmoffa
 //static int bias_eigenvector_to(dbl *, dbl *);
 
 static int get_local_qtensor
-PROTO((double [][DIM]));
+PROTO((double [DIM][DIM]));
 
 #define MAX_GAUSS_POINTS 12
 
@@ -889,7 +889,7 @@ assemble_vorticity_direction()
 		  source *= pd->etm[eqn][(LOG2_SOURCE)];
 		}
 	  
-	      lec->R[peqn][i] += 
+	      lec->R[LEC_R_INDEX(peqn,i)] += 
 		advection  + source ;  
 	      /* Save a convenient local copy for numerical Jacobians */
 	      R_old[a][i] += advection  + source ;
@@ -921,7 +921,7 @@ assemble_vorticity_direction()
 		      source *= wt_func*dV;
 		      source *= pd->etm[eqn][(LOG2_SOURCE)];
 		    }		      
-		  lec->J[peqn][pvar][i][j] +=source;
+		  lec->J[LEC_J_INDEX(peqn,pvar,i,j)] +=source;
 		}
 	    }
 	}
@@ -997,7 +997,7 @@ assemble_vorticity_direction()
 		      wt_func = bf[eqn]->phi[i];
 		      R_new[a][i] = (-vort_dir_pert[a]*pd->etm[eqn][(LOG2_ADVECTION)]+
 				     fv->vd[a]*pd->etm[eqn][(LOG2_SOURCE)])*wt_func * dV;
-		      lec->J[peqn][pvar][i][j] += (R_old[a][i]-R_new[a][i])/eps;
+		      lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (R_old[a][i]-R_new[a][i])/eps;
 		      
 		    }
 		}
@@ -1247,7 +1247,7 @@ assemble_vorticity_direction()
 			R_new[a][i] = (-vort_dir_pert[a]*pd->etm[eqn][(LOG2_ADVECTION)]+
 				       fv->vd[a]*pd->etm[eqn][(LOG2_SOURCE)])*wt_func 
 			  * wt * hh3 * detJ1;
-			lec->J[peqn][pvar][i][j] += (R_old[a][i]-R_new[a][i])/eps;
+			lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += (R_old[a][i]-R_new[a][i])/eps;
 			
 		      }
 		  }
