@@ -119,6 +119,7 @@ init_element_storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
   ELEMENT_STORAGE_STRUCT *s_ptr;
   double *d_ptr;
   double *base_ptr = NULL;
+
   /*
    * Check to make sure that we haven't already allocated storage
    */
@@ -142,6 +143,7 @@ init_element_storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
     } else {
       numStorage = ip_total;
     }
+
 
     /*
      * Do a large block allocation for efficiency
@@ -168,7 +170,7 @@ init_element_storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
     d_ptr = base_ptr;
     eb_ptr->ElemStorage = s_ptr;
     for (i = 0; i < eb_ptr->Num_Elems_In_Block; i++, s_ptr++) {
-      if (pd->e[R_POR_LIQ_PRES] || pd->e[R_SHELL_SAT_OPEN] || pd->e[R_SHELL_SAT_OPEN_2] ) {
+      if (pd->e[R_POR_LIQ_PRES] || pd->e[R_SHELL_SAT_OPEN] || pd->e[R_SHELL_SAT_OPEN_2]) {
       s_ptr->Sat_QP_tn = d_ptr;
       d_ptr += numStorage;
       s_ptr->p_cap_QP = d_ptr;
@@ -211,6 +213,7 @@ set_init_Element_Storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
 {
   int ip_total, i, j, ifound, ip;
   double sat_switch = 0.0, pc_switch = 0.0, Draining_curve, *ev_tmp;
+  double sat_max, sat_min, alpha_w, beta_w;
   int error, num_dim, num_nodes;
   int num_elem, num_elem_blk, num_node_sets, num_side_sets, time_step;
   float	version;		/* version number of EXODUS II */
@@ -224,7 +227,7 @@ set_init_Element_Storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
 
 
   /*Quick return if model is not hysteretic in nature */
-    
+
   if(mp_glob[mn]->SaturationModel == TANH_HYST)
     {
       ip_total        = eb_ptr->IP_total;
@@ -238,7 +241,7 @@ set_init_Element_Storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
 	{
 	  WH(-1,"Initializing Hysteretic Curve values at all Gauss points with read_exoII_file");
 	  CPU_word_size = sizeof(double);
-	  IO_word_size  = 0;    
+	  IO_word_size  = 0;
 
 	  exoid = ex_open(ExoAuxFile, EX_READ, &CPU_word_size, &IO_word_size , &version);
 	  EH(exoid, "ex_open");
@@ -254,7 +257,7 @@ set_init_Element_Storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
 	  error = ex_inquire(exoid, EX_INQ_TIME, &time_step, &ret_float, ret_char);
 	  EH(error, "ex_inquire");
 
-	  /* Based on problem type and available info in database, extract 
+	  /* Based on problem type and available info in database, extract
 	   * appropriate fields
 	   */
 
@@ -264,7 +267,7 @@ set_init_Element_Storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
 	   */
 	  error = ex_get_variable_param(exoid, EX_ELEM_BLOCK, &num_vars);
 	  EH(error, "ex_get_variable_param");
-  
+
 	  /* First extract all nodal variable names in exoII database */
 	  if (num_vars > 0) {
 	    var_names = alloc_VecFixedStrings(num_vars, (MAX_STR_LENGTH+1));
@@ -363,7 +366,7 @@ set_init_Element_Storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
 		}
 
 	    }
-	  
+
 	  error = ex_close(exoid);
 	  safer_free((void **) &var_names);
 	  free(ev_tmp);
@@ -378,10 +381,10 @@ set_init_Element_Storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
 	    }
 	  else if (Draining_curve == 0.0)
 	    {
-	      double sat_max = mp->u_saturation[0];
-	      double sat_min = mp->u_saturation[4];
-	      double alpha_w = mp->u_saturation[3];
-	      double beta_w  = mp->u_saturation[2];
+	      sat_max = mp->u_saturation[0];
+	      sat_min = mp->u_saturation[4];
+	      alpha_w = mp->u_saturation[3];
+	      beta_w  = mp->u_saturation[2];
 
 	      pc_switch = 1.e12*alpha_w;
 	      sat_switch = sat_max - ( sat_max - sat_min)*0.5*(1.0+tanh( beta_w - alpha_w/pc_switch ) ) ;
@@ -391,7 +394,7 @@ set_init_Element_Storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
 	      EH(-1,"TANH_HYST must have 1.0 or 0.0 in  9th spot");
 	    }
 
-	  for (i = 0; i < eb_ptr->Num_Elems_In_Block; i++) 
+	  for (i = 0; i < eb_ptr->Num_Elems_In_Block; i++)
 	    {
 	      for(ip = 0; ip < ip_total; ip++)
 		{
@@ -415,12 +418,12 @@ set_init_Element_Storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
 	{
 	  EH(-1,"Initializing solidified shrinkage model from exoII file not available yet. Use zero");
 	}
-	
+
       // Load em up as all unsolidified
 
       for(ip = 0; ip < ip_total; ip++)
 	{
-	  for (i = 0; i < eb_ptr->Num_Elems_In_Block; i++) 
+	  for (i = 0; i < eb_ptr->Num_Elems_In_Block; i++)
 	    {
 	      eb_ptr->ElemStorage[i].solidified[ip] = 0.0;
 	    }

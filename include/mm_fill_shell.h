@@ -181,17 +181,17 @@ PROTO((double,                   /* Time */
        double,                   /* theta or tt*/
        double,                   /* dt */
        double xi[DIM],           /* Local stu coordinates */
-       const Exo_DB *exo));                
+       const Exo_DB *exo));
 
 
 EXTERN int assemble_film_particles
 PROTO(( double time,   /* present time value */
-	double tt,     /* parameter to vary time integration from 
+	double tt,     /* parameter to vary time integration from
 			 explicit (tt = 1) to implicit (tt = 0)    */
-	double dt,     /* current time step size */  
+	double dt,     /* current time step size */
         double xi[DIM],           /* Local stu coordinates */
         const PG_DATA *pg_data,   /* petrov galerkins stuff */
-        const Exo_DB *exo));                
+        const Exo_DB *exo));
 
 
 EXTERN int assemble_porous_shell_closed
@@ -208,20 +208,26 @@ PROTO((
        double xi[DIM],
        const Exo_DB *exo
 ));
-     
+
 EXTERN int assemble_porous_shell_open
 PROTO((double,                   /* theta or tt */
        double,                  /* dt */
-       double xi[DIM],     
+       double xi[DIM],
        const Exo_DB *exo
 ));
-  
+
 EXTERN int assemble_porous_shell_open_2
 PROTO((double,                   /* theta or tt */
        double,                   /* dt */
        double xi[DIM],
        const Exo_DB *exo
 ));
+
+EXTERN int assemble_porous_shell_saturation
+PROTO((double,                   /* theta or tt*/
+       double,                   /* dt */
+       double xi[DIM],           /* Local stu coords */
+       const Exo_DB *exo));      /* ExodusII database struct pointer */
 
 EXTERN void shell_diff_kinematic_bc
 PROTO((double [DIM],             /* func */

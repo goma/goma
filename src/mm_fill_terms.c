@@ -7906,7 +7906,7 @@ load_fv(void)
   } /*else if ( upd->vp[v] == -1 ) {
       fv->sh_J = fv_old->sh_J = fv_dot->sh_J = 0.;
       }*/
-                                                                                 
+
 
   if ( pdv[SHELL_DIFF_CURVATURE] ) {
     v = SHELL_DIFF_CURVATURE;
@@ -7916,7 +7916,7 @@ load_fv(void)
   }/* else if ( upd->vp[v] == -1 ) {
       fv->sh_Kd = fv_old->sh_Kd = fv_dot->sh_Kd = 0.;
       }*/
- 
+
 
   if ( pdv[SHELL_NORMAL1] ) {
     v = SHELL_NORMAL1    ;
@@ -7926,7 +7926,7 @@ load_fv(void)
   } /*else if ( upd->vp[v] == -1 ) {
       fv->n[0] = fv_old->n[0] = fv_dot->n[0] = 0.;
       }*/
-                                                                                 
+
 
   if ( pdv[SHELL_NORMAL2] ) {
     v = SHELL_NORMAL2    ;
@@ -7984,7 +7984,7 @@ load_fv(void)
   } /*else if (upd->vp[v] == -1) {
       fv->api = fv_old->api = fv_dot->api = 0.;
       }*/
-  
+
 
 
   if (pdv[ACOUS_REYN_STRESS]) {
@@ -7995,7 +7995,7 @@ load_fv(void)
   } /*else if (upd->vp[v] == -1) {
       fv->ars = fv_old->ars = fv_dot->ars = 0.;
       }*/
- 
+
 
   if (pdv[SHELL_BDYVELO]) {
     v = SHELL_BDYVELO;
@@ -8009,42 +8009,42 @@ load_fv(void)
     scalar_fv_fill(esp->sh_p, esp_dot->sh_p, esp_old->sh_p, bf[v]->phi, ei->dof[v],
                    &(fv->sh_p), &(fv_dot->sh_p), &(fv_old->sh_p));
     stateVector[SHELL_LUBP] = fv->sh_p;
-  } 
+  }
 
   if (pdv[LUBP]) {
     v = LUBP;
     scalar_fv_fill(esp->lubp, esp_dot->lubp, esp_old->lubp, bf[v]->phi, ei->dof[v],
                    &(fv->lubp), &(fv_dot->lubp), &(fv_old->lubp));
     stateVector[LUBP] = fv->lubp;
-  } 
+  }
 
   if (pdv[LUBP_2]) {
     v = LUBP_2;
     scalar_fv_fill(esp->lubp_2, esp_dot->lubp_2, esp_old->lubp_2, bf[v]->phi, ei->dof[v],
                    &(fv->lubp_2), &(fv_dot->lubp_2), &(fv_old->lubp_2));
     stateVector[LUBP_2] = fv->lubp_2;
-  } 
+  }
 
  if (pdv[SHELL_FILMP]) {
     v = SHELL_FILMP;
     scalar_fv_fill(esp->sh_fp, esp_dot->sh_fp, esp_old->sh_fp, bf[v]->phi, ei->dof[v],
                    &(fv->sh_fp), &(fv_dot->sh_fp), &(fv_old->sh_fp));
     stateVector[SHELL_FILMP] = fv->sh_fp;
-  } 
+  }
 
   if (pdv[SHELL_FILMH]) {
     v = SHELL_FILMH;
     scalar_fv_fill(esp->sh_fh, esp_dot->sh_fh, esp_old->sh_fh, bf[v]->phi, ei->dof[v],
                    &(fv->sh_fh), &(fv_dot->sh_fh), &(fv_old->sh_fh));
     stateVector[SHELL_FILMH] = fv->sh_fh;
-  } 
-  
+  }
+
   if (pdv[SHELL_PARTC]) {
     v = SHELL_PARTC;
     scalar_fv_fill(esp->sh_pc, esp_dot->sh_pc, esp_old->sh_pc, bf[v]->phi, ei->dof[v],
                    &(fv->sh_pc), &(fv_dot->sh_pc), &(fv_old->sh_pc));
     stateVector[SHELL_PARTC] = fv->sh_pc;
-  } 
+  }
 
 
   if (pdv[SHELL_SAT_CLOSED]) {
@@ -8052,25 +8052,43 @@ load_fv(void)
     scalar_fv_fill(esp->sh_sat_closed, esp_dot->sh_sat_closed, esp_old->sh_sat_closed, bf[v]->phi, ei->dof[v],
                    &(fv->sh_sat_closed), &(fv_dot->sh_sat_closed), &(fv_old->sh_sat_closed));
     stateVector[SHELL_SAT_CLOSED] = fv->sh_sat_closed;
-  } 
+  }
   if (pdv[SHELL_PRESS_OPEN]) {
     v = SHELL_PRESS_OPEN;
     scalar_fv_fill(esp->sh_p_open, esp_dot->sh_p_open, esp_old->sh_p_open, bf[v]->phi, ei->dof[v],
                    &(fv->sh_p_open), &(fv_dot->sh_p_open), &(fv_old->sh_p_open));
     stateVector[SHELL_PRESS_OPEN] = fv->sh_p_open;
-  } 
+  }
   if (pdv[SHELL_PRESS_OPEN_2]) {
     v = SHELL_PRESS_OPEN_2;
     scalar_fv_fill(esp->sh_p_open_2, esp_dot->sh_p_open_2, esp_old->sh_p_open_2, bf[v]->phi, ei->dof[v],
                    &(fv->sh_p_open_2), &(fv_dot->sh_p_open_2), &(fv_old->sh_p_open_2));
     stateVector[SHELL_PRESS_OPEN_2] = fv->sh_p_open_2;
-  } 
+  }
+  if (pdv[SHELL_SAT_1]) {
+    v = SHELL_SAT_1;
+    scalar_fv_fill(esp->sh_sat_1, esp_dot->sh_sat_1, esp_old->sh_sat_1, bf[v]->phi, ei->dof[v],
+                   &(fv->sh_sat_1), &(fv_dot->sh_sat_1), &(fv_old->sh_sat_1));
+    stateVector[SHELL_SAT_1] = fv->sh_sat_1;
+  }
+  if (pdv[SHELL_SAT_2]) {
+    v = SHELL_SAT_2;
+    scalar_fv_fill(esp->sh_sat_2, esp_dot->sh_sat_2, esp_old->sh_sat_2, bf[v]->phi, ei->dof[v],
+                   &(fv->sh_sat_2), &(fv_dot->sh_sat_2), &(fv_old->sh_sat_2));
+    stateVector[SHELL_SAT_2] = fv->sh_sat_2;
+  }
+  if (pdv[SHELL_SAT_3]) {
+    v = SHELL_SAT_3;
+    scalar_fv_fill(esp->sh_sat_3, esp_dot->sh_sat_3, esp_old->sh_sat_3, bf[v]->phi, ei->dof[v],
+                   &(fv->sh_sat_3), &(fv_dot->sh_sat_3), &(fv_old->sh_sat_3));
+    stateVector[SHELL_SAT_3] = fv->sh_sat_3;
+  }
   if (pdv[SHELL_TEMPERATURE]) {
     v = SHELL_TEMPERATURE;
     scalar_fv_fill(esp->sh_t, esp_dot->sh_t, esp_old->sh_t, bf[v]->phi, ei->dof[v],
                    &(fv->sh_t), &(fv_dot->sh_t), &(fv_old->sh_t));
     stateVector[SHELL_TEMPERATURE] = fv->sh_t;
-  } 
+  }
   if (pdv[SHELL_DELTAH]) {
     v = SHELL_DELTAH;
     scalar_fv_fill(esp->sh_dh, esp_dot->sh_dh, esp_old->sh_dh, bf[v]->phi, ei->dof[v],
@@ -9893,7 +9911,7 @@ load_fv_grads(void)
 		  {
 			  fv->grad_c[w][p] = 0.;
 			  fv_old->grad_c[w][p] = 0.;
-			  
+
 			  for ( i=0; i<dofs; i++)
 			  {
 				  fv->grad_c[w][p] += 
@@ -9909,7 +9927,7 @@ load_fv_grads(void)
 	  }
   } else if (zero_unused_grads && upd->vp[MASS_FRACTION] == -1) {
 	  	  for ( w=0; w<pd->Num_Species_Eqn; w++)
-		  {			  
+		  {
 			  for ( p=0; p<VIM; p++ )
 			  {
 				  fv->grad_c[w][p] = 0.;
@@ -9917,7 +9935,7 @@ load_fv_grads(void)
 			  }
 		  }
   }
-  
+
   /*
    * Porous media unknowns ...
    */
@@ -9952,8 +9970,8 @@ load_fv_grads(void)
 		  fv_old->grad_p_liq[p] = 0.0;
 	  }
   }
-	  
-	  
+
+
 
 
   if ( pd->v[POR_GAS_PRES] )
@@ -10054,7 +10072,7 @@ load_fv_grads(void)
 		  for ( r=0; r<VIM; r++)
 		    {
 		      fv->grad_S[mode][r][p][q]=0.;
-					  
+
 		      for ( i=0; i<dofs; i++)
 			{
 			  if(p<=q)
@@ -10068,12 +10086,12 @@ load_fv_grads(void)
 				*esp->S[mode][q][p][i] * bf[v]->grad_phi[i][r] ;
 			    }
 			}
-					  
+
 		    }
 		}
 	    }
 	}
-	  
+
       /*
        * div(S) - this is a vector!
        */
@@ -10082,7 +10100,7 @@ load_fv_grads(void)
 		  for ( r=0; r<dim; r++)
 		  {
 			 fv->div_S[mode][r] = 0.0;
-			  
+
 			  for ( q=0; q<dim; q++)
 			  {
 				  fv->div_S[mode][r] += 
@@ -10090,7 +10108,7 @@ load_fv_grads(void)
 			  }
 		  }
 	  }
-      
+
       if ( pd->CoordinateSystem != CARTESIAN )
 	  {
 		  for ( mode=0; mode<vn->modes; mode++)
@@ -10119,8 +10137,8 @@ load_fv_grads(void)
 			  }
 		  }
 	  }
-	  
-	  
+
+
   } else if ( zero_unused_grads && upd->vp[POLYMER_STRESS11] == -1 )  {  
       for ( mode=0; mode<vn->modes; mode++)
 	  {
@@ -10154,7 +10172,7 @@ load_fv_grads(void)
 			  for ( r=0; r<VIM; r++)
 			  {
 				  fv->grad_G[r][p][q] = 0.0;
-				  
+
 				  for ( i=0; i<dofs; i++)
 				  {
 					  fv->grad_G[r][p][q] += 
@@ -10163,7 +10181,7 @@ load_fv_grads(void)
 			  }
 		  }
 	  }
-      
+
       /*
        * div(G) - this is a vector!
        */
@@ -10176,7 +10194,7 @@ load_fv_grads(void)
 			  fv->grad_G[q][q][r];
 		  }
 	  }
-      
+
       if ( pd->CoordinateSystem != CARTESIAN )
 	  {
           for ( s=0; s<VIM; s++)
@@ -10190,7 +10208,7 @@ load_fv_grads(void)
 				  }
 			  }
 		  }
-		  
+
           for ( s=0; s<VIM; s++)
 		  {
               for ( r=0; r<VIM; r++)
@@ -10203,7 +10221,7 @@ load_fv_grads(void)
 			  }
 		  }
 	  }
-	  
+
       /*
        * div(Gt) - this is a vector and the divergence of the
        * transpose of G.
@@ -10217,7 +10235,7 @@ load_fv_grads(void)
 			  fv->grad_G[q][r][q];
 		  }
 	  }
-      
+
       if ( pd->CoordinateSystem != CARTESIAN )
 	  {
           for ( s=0; s<VIM; s++)
@@ -10231,7 +10249,7 @@ load_fv_grads(void)
 				  }
 			  }
 		  }
-		  
+
           for ( s=0; s<VIM; s++)
 		  {
               for ( r=0; r<VIM; r++)
@@ -10244,7 +10262,7 @@ load_fv_grads(void)
 			  }
 		  }
 	  }
-	  
+
   } else if ( zero_unused_grads &&  upd->vp[VELOCITY_GRADIENT11] == -1 ) {  
       for ( p=0; p<VIM; p++)
 	  {
@@ -10268,7 +10286,7 @@ load_fv_grads(void)
     {
       v = VORT_DIR1;;
       dofs = ei->dof[v];
-		
+
       for (p = 0; p < DIM; p++)
 	{
           for (q = 0; q < DIM; q++)
@@ -10676,8 +10694,26 @@ load_fv_grads(void)
     {
       for (p=0; p<VIM; p++) fv->grad_sh_p_open_2[p] = 0.0;
     }
-  
-  
+
+  if ( pd->v[SHELL_SAT_1] )
+    {
+      v = SHELL_SAT_1;
+      dofs  = ei->dof[v];
+      for ( p=0; p<VIM; p++)
+	{
+	  fv->grad_sh_sat_1[p] = 0.0;
+	  for ( i=0; i<dofs; i++)
+	    {
+	      fv->grad_sh_sat_1[p] += *esp->sh_sat_1[i] * bf[v]->grad_phi[i] [p];
+	    }
+	}
+    }
+  else if ( zero_unused_grads && upd->vp[SHELL_SAT_1] == -1 )
+    {
+      for (p=0; p<VIM; p++) fv->grad_sh_sat_1[p] = 0.0;
+    }
+
+
   if ( pd->v[SHELL_FILMP] )
     {
       v = SHELL_FILMP;

@@ -480,6 +480,9 @@ variable_string_to_int(const char *input, const char *err_string)
   else if (!strcmp(input, "SHELL_SAT_CLOSED"))            var = SHELL_SAT_CLOSED;
   else if (!strcmp(input, "SHELL_PRESS_OPEN"))            var = SHELL_PRESS_OPEN;
   else if (!strcmp(input, "SHELL_PRESS_OPEN_2"))          var = SHELL_PRESS_OPEN_2;
+  else if (!strcmp(input, "SHELL_SAT_1"))                 var = SHELL_SAT_1;
+  else if (!strcmp(input, "SHELL_SAT_2"))                 var = SHELL_SAT_2;
+  else if (!strcmp(input, "SHELL_SAT_3"))                 var = SHELL_SAT_3;
   else if (!strcmp(input, "POR_SINK_MASS"))               var = POR_SINK_MASS;
   else if (!strcmp(input, "SHELL_FILMP"))                 var = SHELL_FILMP;
   else if (!strcmp(input, "SHELL_FILMH"))                 var = SHELL_FILMH;

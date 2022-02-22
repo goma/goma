@@ -79,8 +79,8 @@ height_function_model (double *H_U,
 		       double *dH_U_dp, 
 		       double *dH_U_ddh,
 		       double time,          /* present time value           */
-		       double delta_t)      /* present time step             */       
-		       
+		       double delta_t)      /* present time step             */
+
 /******************************************************************************
 *
 *  A function which computes the height at the current time and the rate-of-change of 
@@ -1384,6 +1384,33 @@ porous_shell_closed_porosity_model() {
 
 /*****************************************************************************/
 double
+porous_shell_porosity_model(int k) {
+/******************************************************************************
+*
+*  This function computes the porosity of a structured porous shell based on 
+*  either a constant value or reading data from a file.  This model is 
+*  used with the porous shell capability in assemble_porous_shell.
+*
+*  Scott A. Roberts (sarober@sandia.gov) - March 2010
+*
+******************************************************************************/
+  dbl phi = 0.0;
+
+  if ( mp->PorousShellPorosityModel[k] == CONSTANT ) {
+    phi = mp->PorousShellPorosity[k];
+
+  } else if ( mp->PorousShellPorosityModel[k] == EXTERNAL_FIELD ) {
+    phi = mp->u_PorousShellPorosity[k][0]*
+      (fv->external_field[mp->por_shell_porosity_ext_field_index[k]] + 0.01);
+  } else {
+    EH(-1,"Not a supported porosity model");
+  }
+  return(phi);
+}
+/* END of porous_shell_porosity_model */
+
+/*****************************************************************************/
+double
 porous_shell_closed_radius_model() {
 /******************************************************************************
 *
@@ -1407,7 +1434,7 @@ porous_shell_closed_radius_model() {
     r = 1.0;
 
   } else {
-    EH(-1,"Not a supported radius model");    
+    EH(-1,"Not a supported radius model");
   }
 
   return(r);
@@ -1417,7 +1444,7 @@ porous_shell_closed_radius_model() {
 
 /*****************************************************************************/
 double
-porous_shell_closed_height_model() {       
+porous_shell_closed_height_model() {
 /******************************************************************************
 *
 *  This function computes the height of a structured porous shell based on
@@ -1434,7 +1461,7 @@ porous_shell_closed_height_model() {
     H = mp->u_PorousShellClosedHeight_function_constants[0]*
       fv->external_field[mp->por_shell_closed_height_ext_field_index];
   } else {
-    EH(-1,"Not a supported height model");    
+    EH(-1,"Not a supported height model");
   }
   return(H);
 }
@@ -1443,7 +1470,38 @@ porous_shell_closed_height_model() {
 /*****************************************************************************/
 
 double
-porous_shell_cross_perm_model() {
+porous_shell_height_model(int ipore) {
+/******************************************************************************
+*
+*  This function computes the height of a structured porous shell based on
+*  either a constant value or an external field.  Used with the function
+*  assemble_porous_shell.
+*
+*  Scott A. Roberts (sarober@sandia.gov) - March 2010
+*
+******************************************************************************/
+  dbl H = 0.0;
+  if ( mp->PorousShellHeightModel[ipore] == CONSTANT )
+    {
+     H = mp->PorousShellHeight[ipore];
+    }
+  else if ( mp->PorousShellHeightModel[ipore] == EXTERNAL_FIELD )
+    {
+     H = mp->u_PorousShellHeight[ipore][0]*
+         fv->external_field[mp->por_shell_height_ext_field_index[ipore]];
+    }
+  else
+    {
+     EH(-1,"Not a supported height model");
+    }
+  return(H);
+}
+/* END of porous_shell_height_model */
+
+/*****************************************************************************/
+
+double
+porous_shell_cross_perm_model(int ipore) {
 /******************************************************************************
 *
 *  This function computes the cross permeability  of an open porous shell based on
@@ -1452,31 +1510,363 @@ porous_shell_cross_perm_model() {
 *
 *  Kristianto Tjiptowidjojo (tjiptowi@unm.edu) - April 2017
 *
+*  Updated in December 4 2019 to be used with saturation formulation of porous shell
+*
 ******************************************************************************/
   dbl kappa = 0.0;
 
-  if (mp->PorousShellCrossKappaModel == CONSTANT)
+  if (pd->e[R_SHELL_SAT_OPEN])  /* Pressure formulation */
     {
-      kappa                 = mp->PorousShellCrossKappa;
+     if (mp->PorousShellCrossKappaModel == CONSTANT)
+       {
+        kappa                 = mp->PorousShellCrossKappa;
+       }
+     else if (mp->PorousShellCrossKappaModel == EXTERNAL_FIELD)
+       {
+        EH(mp->Xperm_external_field_index, "Cross Permeability external field not found!");
+           kappa = mp->PorousShellCrossKappa = 
+           mp->u_PorousShellCrossKappa_function_constants[0]*fv->external_field[mp->Xperm_external_field_index];
+        if (pd->TimeIntegration == TRANSIENT)
+          {
+           mp_old->PorousShellCrossKappa =mp->u_PorousShellCrossKappa_function_constants[0]*fv->external_field[mp->Xperm_external_field_index];
+          }
+       }
+     else
+       {
+        EH(-1,"Unrecognized Porous Shell Cross Permeability  model");
+       }
     }
-  else if (mp->PorousShellCrossKappaModel == EXTERNAL_FIELD)
+  else if (pd->e[R_SHELL_SAT_1]) /* Saturation formulation */
     {
-      EH(mp->Xperm_external_field_index, "Cross Permeability external field not found!");
-      kappa = mp->PorousShellCrossKappa = 
-        mp->u_PorousShellCrossKappa_function_constants[0]*fv->external_field[mp->Xperm_external_field_index];
-      if (pd->TimeIntegration == TRANSIENT)
+     if (mp->PorousShellCrossPermeabilityModel[ipore] == CONSTANT)
+       {
+        kappa                 = mp->PorousShellCrossPermeability[ipore];
+       }
+     else if (mp->PorousShellCrossPermeabilityModel[ipore] == EXTERNAL_FIELD)
+       {
+        EH(mp->por_shell_cross_permeability_ext_field_index[ipore], "Cross Permeability external field not found!");
+           kappa = mp->PorousShellCrossPermeability[ipore] =
+           mp->u_PorousShellCrossPermeability[ipore][0]*fv->external_field[mp->por_shell_cross_permeability_ext_field_index[ipore]];
+       }
+     else
+       {
+        EH(-1,"Unrecognized Porous Shell Cross Permeability  model");
+       }
+    }
+  return(kappa);
+}
+/* END of porous_shell_cross_perm_model */
+
+/*****************************************************************************/
+
+double
+porous_shell_rel_perm_model(int ipore, double saturation) {
+/******************************************************************************
+*
+*  This function computes the relative permeability of an open porous shell.
+*  Used with the function assemble_porous_shell_saturation.
+*
+*  Kristianto Tjiptowidjojo (tjiptowi@unm.edu) - October 2018
+*
+******************************************************************************/
+  double k_rel = 0.0;
+  double s_eff, d_s_eff, a1, factor, factor2;
+  double expon2, sat_min, sat_max, viscosity, lambda;
+  int i_rel_perm_ev;
+  double scale;
+
+  switch (mp->PorousShellRelPermModel[ipore])
+   {
+
+    case CONSTANT:
+
+      k_rel = mp->PorousShellRelPerm[ipore];
+      mp->d_PorousShellRelPerm[ipore][SHELL_SAT_1] = 0.0;
+      mp->d_PorousShellRelPerm[ipore][SHELL_SAT_2] = 0.0;
+      mp->d_PorousShellRelPerm[ipore][SHELL_SAT_3] = 0.0;
+
+      break;
+
+    case VAN_GENUCHTEN:
+
+    /*
+     *
+     * FOR VAN_GENUCHTEN EQUATION
+     *  mp->u_PorousShellRelPerm[ipore][0] is the irreduceable water saturation
+     *  mp->u_PorousShellRelPerm[ipore][1] is the irreduceable air saturation
+     *  mp->u_PorousShellRelPerm[ipore][2] is the exponent, 1 - 1/beta
+     *  mp->u_PorousShellRelPerm[ipore][3] is the liquid viscosity
+     *
+     *  Store some temporary variables
+     */
+
+      sat_min = mp->u_PorousShellRelPerm[ipore][0];
+      sat_max = 1.0 - mp->u_PorousShellRelPerm[ipore][1];
+      s_eff = (saturation - sat_min) / (sat_max - sat_min);
+      viscosity = mp->u_PorousShellRelPerm[ipore][3];
+      lambda = mp->u_PorousShellRelPerm[ipore][2];
+
+    /*
+     *  Clip the relative permeability to zero if the effective saturation
+     *  is equal to or less than zero. -> there can be no transport
+     *  in a liquid phase if there is no continguous pathway in that phase.
+     */
+      if (s_eff < 0.0)
         {
-          mp_old->PorousShellCrossKappa =mp->u_PorousShellCrossKappa_function_constants[0]*fv->external_field[mp->Xperm_external_field_index];
+       	 k_rel = mp->PorousShellRelPerm[ipore] = 0.0;
+         mp->d_PorousShellRelPerm[ipore][SHELL_SAT_1] = 0.0;
+         mp->d_PorousShellRelPerm[ipore][SHELL_SAT_2] = 0.0;
+         mp->d_PorousShellRelPerm[ipore][SHELL_SAT_3] = 0.0;
+        }
+
+    /*
+     *  Clip the relative permeability at one -> it can never be
+     *  greater than one.  Actually, note that if somehow s_eff is
+     *  very close to 1.0 and fails this test, then you are dividing
+     *  by zero as factor=1.0 below.    Now and then GOMA aborts due
+     *  to this.
+     */
+      else if (s_eff >= 0.99999)
+        {
+       	 k_rel = mp->PorousShellRelPerm[ipore] = 1.0/viscosity;
+         mp->d_PorousShellRelPerm[ipore][SHELL_SAT_1] = 0.0;
+         mp->d_PorousShellRelPerm[ipore][SHELL_SAT_2] = 0.0;
+         mp->d_PorousShellRelPerm[ipore][SHELL_SAT_3] = 0.0;
+        }
+
+    /*
+     *  Otherwise, apply Van Genuchten formula
+     */
+      else
+        {
+         expon2 = 1.0 / lambda;
+         factor  = pow(s_eff, expon2);
+         factor2 = pow(1.0 - factor, lambda);
+         a1 = 1.0 - factor2;
+         k_rel = mp->PorousShellRelPerm[ipore] = sqrt(s_eff) * a1 * a1 / viscosity;
+
+    /*
+     *   Calculate Jacobian entries
+     */
+         if (a1 == 0.0)
+           {
+            mp->d_PorousShellRelPerm[ipore][SHELL_SAT_1] = 0.0;
+            mp->d_PorousShellRelPerm[ipore][SHELL_SAT_2] = 0.0;
+            mp->d_PorousShellRelPerm[ipore][SHELL_SAT_3] = 0.0;
+           }
+         d_s_eff = 1.0 / (sat_max - sat_min);
+         switch (ipore)
+            {
+             case 0:
+               mp->d_PorousShellRelPerm[ipore][SHELL_SAT_1] = d_s_eff * k_rel *
+                                                              (0.5 / s_eff + 2. * factor2 * factor / ((1.0 - factor) * s_eff * a1)  );
+               break;
+
+             case 1:
+               mp->d_PorousShellRelPerm[ipore][SHELL_SAT_2] = d_s_eff * k_rel *
+                                                              (0.5 / s_eff + 2. * factor2 * factor / ((1.0 - factor) * s_eff * a1)  );
+               break;
+
+             case 2:
+               mp->d_PorousShellRelPerm[ipore][SHELL_SAT_3] = d_s_eff * k_rel *
+                                                              (0.5 / s_eff + 2. * factor2 * factor / ((1.0 - factor) * s_eff * a1)  );
+               break;
+            }
+        }
+
+      break;
+
+    case EXTERNAL_FIELD:
+
+    /*
+     *
+     * FOR EXTERNAL FIELD
+     *  mp->u_PorousShellRelPerm[ipore][0] is the scaling factor for the read-in external field variable
+     */
+
+      i_rel_perm_ev = mp->por_shell_rel_perm_ext_field_index[ipore];
+      scale = mp->u_rel_liq_perm[0];
+
+      k_rel = mp->PorousShellRelPerm[ipore] = scale * fv->external_field[i_rel_perm_ev];
+      mp->d_PorousShellRelPerm[ipore][SHELL_SAT_1] = 0.0;
+      mp->d_PorousShellRelPerm[ipore][SHELL_SAT_2] = 0.0;
+      mp->d_PorousShellRelPerm[ipore][SHELL_SAT_3] = 0.0;
+
+      break;
+
+    case VAN_GENUCHTEN_EXTERNAL:
+
+    /*
+     *
+     * FOR VAN_GENUCHTEN_EXTERNAL
+     *  mp->u_PorousShellRelPerm[ipore][0] is the irreduceable water saturation
+     *  mp->u_PorousShellRelPerm[ipore][1] is the irreduceable air saturation
+     *  mp->u_PorousShellRelPerm[ipore][2] is the exponent, 1 - 1/beta for external field value of 0
+     *  mp->u_PorousShellRelPerm[ipore][3] is the liquid viscosity
+     *  mp->u_PorousShellRelPerm[ipore][4] is the exponent, 1 - 1/beta for external field value of 1
+     */
+
+     i_rel_perm_ev = mp->por_shell_rel_perm_ext_field_index[ipore];
+
+     sat_min = mp->u_PorousShellRelPerm[ipore][0];
+     sat_max = 1.0 - mp->u_PorousShellRelPerm[ipore][1];
+     s_eff = (saturation - sat_min) / (sat_max - sat_min);
+     viscosity = mp->u_PorousShellRelPerm[ipore][3];
+
+     /* Here I assume that efv is bounded between 0 and 1 */
+     lambda = fv->external_field[i_rel_perm_ev] *
+              ( mp->u_PorousShellRelPerm[ipore][4] - mp->u_PorousShellRelPerm[ipore][2])
+              + mp->u_PorousShellRelPerm[ipore][2];
+
+    /*
+     *  Clip the relative permeability to zero if the effective saturation
+     *  is equal to or less than zero. -> there can be no transport
+     *  in a liquid phase if there is no continguous pathway in that phase.
+     */
+      if (s_eff < 0.0)
+        {
+       	 k_rel = mp->PorousShellRelPerm[ipore] = 0.0;
+         mp->d_PorousShellRelPerm[ipore][SHELL_SAT_1] = 0.0;
+         mp->d_PorousShellRelPerm[ipore][SHELL_SAT_2] = 0.0;
+         mp->d_PorousShellRelPerm[ipore][SHELL_SAT_3] = 0.0;
+        }
+
+    /*
+     *  Clip the relative permeability at one -> it can never be
+     *  greater than one.  Actually, note that if somehow s_eff is
+     *  very close to 1.0 and fails this test, then you are dividing
+     *  by zero as factor=1.0 below.    Now and then GOMA aborts due
+     *  to this.
+     */
+      else if (s_eff >= 0.99999)
+        {
+       	 k_rel = mp->PorousShellRelPerm[ipore] = 1.0/viscosity;
+         mp->d_PorousShellRelPerm[ipore][SHELL_SAT_1] = 0.0;
+         mp->d_PorousShellRelPerm[ipore][SHELL_SAT_2] = 0.0;
+         mp->d_PorousShellRelPerm[ipore][SHELL_SAT_3] = 0.0;
+        }
+
+    /*
+     *  Otherwise, apply Van Genuchten formula
+     */
+      else
+        {
+         expon2 = 1.0 / lambda;
+         factor  = pow(s_eff, expon2);
+         factor2 = pow(1.0 - factor, lambda);
+         a1 = 1.0 - factor2;
+         k_rel = mp->PorousShellRelPerm[ipore] = sqrt(s_eff) * a1 * a1 / viscosity;
+
+    /*
+     *   Calculate Jacobian entries
+     */
+         if (a1 == 0.0)
+           {
+            mp->d_PorousShellRelPerm[ipore][SHELL_SAT_1] = 0.0;
+            mp->d_PorousShellRelPerm[ipore][SHELL_SAT_2] = 0.0;
+            mp->d_PorousShellRelPerm[ipore][SHELL_SAT_3] = 0.0;
+           }
+         d_s_eff = 1.0 / (sat_max - sat_min);
+         switch (ipore)
+            {
+             case 0:
+               mp->d_PorousShellRelPerm[ipore][SHELL_SAT_1] = d_s_eff * k_rel *
+                                                              (0.5 / s_eff + 2. * factor2 * factor / ((1.0 - factor) * s_eff * a1)  );
+               break;
+
+             case 1:
+               mp->d_PorousShellRelPerm[ipore][SHELL_SAT_2] = d_s_eff * k_rel *
+                                                              (0.5 / s_eff + 2. * factor2 * factor / ((1.0 - factor) * s_eff * a1)  );
+               break;
+
+             case 2:
+               mp->d_PorousShellRelPerm[ipore][SHELL_SAT_3] = d_s_eff * k_rel *
+                                                              (0.5 / s_eff + 2. * factor2 * factor / ((1.0 - factor) * s_eff * a1)  );
+               break;
+            }
+        }
+
+      break;
+
+    default:
+      EH(-1,"Unrecognized Porous Shell Relative Permeability model");
+      break;
+   }
+
+
+  return(k_rel);
+}
+/* END of porous_shell_rel_perm_model */
+
+/*****************************************************************************/
+
+void
+porous_shell_permeability_model(int ipore) {
+/******************************************************************************
+*
+*  This function computes the permeability  of an open porous shell
+*  Used with the function assemble_porous_shell_saturation.
+*
+*  Kristianto Tjiptowidjojo (tjiptowi@unm.edu) - November 2018
+*
+******************************************************************************/
+  int iext_field = -1;
+  int aa, bb;
+  double K11 = 0.0, K22 = 0.0, K33 = 0.0, a[DIM][DIM];
+
+  memset(mp->PorousShellPermTensor[ipore], 0, sizeof(double)*DIM*DIM);
+
+  if (mp->PorousShellPermeabilityModel[ipore] == CONSTANT)
+    {
+     /* Do nothing */
+    }
+  else if (mp->PorousShellPermeabilityModel[ipore] == EXTERNAL_FIELD)
+    {
+      iext_field = mp->por_shell_permeability_ext_field_index[ipore];
+      EH(iext_field, "Porous shell permeability external field not found!");
+      mp->PorousShellPermeability[ipore] = mp->u_PorousShellPermeability[ipore][0] * fv->external_field[iext_field];
+    }
+  else if (mp->PorousShellPermeabilityModel[ipore] == ORTHOTROPIC)
+    {
+      /* preload some things */
+      K11 = mp->u_PorousShellPermeability[ipore][0];
+      K22 = mp->u_PorousShellPermeability[ipore][1];
+      K33 = mp->u_PorousShellPermeability[ipore][2];
+
+      /*  N.B.   there are 3 base vectors at the rest state that define the
+       * orientation of the material relative to the orthotropic directions
+       * If we have sheet laying on the x-y plane, then this matrix of vectors
+       * is the Idemfactor.  This will most likely be the case.
+       */
+
+      a[0][0]  = mp->u_PorousShellPermeability[ipore][3];
+      a[0][1]  = mp->u_PorousShellPermeability[ipore][4];
+      a[0][2]  = mp->u_PorousShellPermeability[ipore][5];
+
+      a[1][0]  = mp->u_PorousShellPermeability[ipore][6];
+      a[1][1]  = mp->u_PorousShellPermeability[ipore][7];
+      a[1][2]  = mp->u_PorousShellPermeability[ipore][8];
+
+      a[2][0]  = mp->u_PorousShellPermeability[ipore][9];
+      a[2][1]  = mp->u_PorousShellPermeability[ipore][10];
+      a[2][2]  = mp->u_PorousShellPermeability[ipore][11];
+
+      for(aa = 0; aa < DIM; aa++)
+        {
+         for(bb = 0; bb < DIM; bb++)
+            {
+             mp->PorousShellPermTensor[ipore][aa][bb] =  a[0][aa]*a[0][bb] * K11 +
+                                                         a[1][aa]*a[1][bb] * K22 +
+                                                         a[2][aa]*a[2][bb] * K33 ;
+            }
         }
     }
   else
     {
-      EH(-1,"Unrecognized Porous Shell Cross Permeability  model");
+      EH(-1,"Unrecognized Porous Shell Permeability  model");
     }
-
-  return(kappa);
 }
-/* END of porous_shell_height_model */
+/* END of porous_shell_permeability_model */
 
 /*****************************************************************************/
 
@@ -1596,6 +1986,235 @@ void dynamic_contact_angle_model(
 }
 /*** END OF dynamic_contact_angle_model ***/
 
+/******************************************************************************/
+void porous_shell_open_source_model
+     (
+      double j_1_2[MDE],                  // Flux between porous layers 1 and 2
+      double j_2_3[MDE],                  // Flux between porous layers 2 and 3
+      double dj_1_2[MAX_POR_SHELL][MDE],  // Sensitivity of the flux between porous layers 1 and 2
+      double dj_2_3[MAX_POR_SHELL][MDE]   // Sensitivity of the flux between porous layers 2 and 3
+     )
+  /*****************************************************************************
+  * This function calculates inter-layer fluxes amongst porous shell layers.
+  * As of now, each layer is assumed to be stacked on top one another.
+  * i.e. Layer 3 on top of layer 2 on top of layer 1.
+  *
+  *
+  * Kristianto Tjiptowidjojo   (tjiptowi@unm.edu)  October 2019
+  *
+  *****************************************************************************/
+{
+  int ipore, var, j;
+
+  int porous_shell_var[MAX_POR_SHELL];
+  porous_shell_var[0] = SHELL_SAT_1;
+  porous_shell_var[1] = SHELL_SAT_2;
+  porous_shell_var[2] = SHELL_SAT_3;
+
+  dbl     H[MAX_POR_SHELL] = {0.0};               // Pore height (vertical)
+  dbl kappa[MAX_POR_SHELL] = {0.0};               // Cross permeability
+  dbl mu = mp->viscosity;                         // Viscosity
+
+  dbl sat_nodes[MAX_POR_SHELL][MDE] = {{0.0}};
+  dbl cap_pres_nodes[MAX_POR_SHELL][MDE] = {{0.0}};
+  dbl d_cap_pres_nodes_dS[MAX_POR_SHELL][MDE] = {{0.0}};
+
+  dbl Hside_1[MDE] = {0.0};
+  dbl dHside_1_dS[MDE] = {0.0};
+  dbl Hside_1_square[MDE] = {0.0};
+  dbl dHside_1_square_dS[MDE] = {0.0};
+  dbl sat_max_1 = 0.99;
+  dbl width_1 = 0.24;
+  dbl alpha_1 = 0.5 * width_1;
+  dbl sat_center_1 = sat_max_1 - alpha_1;
+  dbl sat_normalized_1[MDE] = {0.0};
+
+  dbl Hside_2[MDE] = {0.0};
+  dbl dHside_2_dS[MDE] = {0.0};
+  dbl sat_min_2 = 0.5;
+  dbl width_2 = 0.05;
+  dbl alpha_2 = 0.5 * width_2;
+  dbl sat_center_2 = sat_min_2 - alpha_2;
+  dbl sat_normalized_2[MDE] = {0.0};
+
+  dbl Hside_3[MDE] = {0.0};
+  dbl dHside_3_dS[MDE] = {0.0};
+  dbl Hside_3_square[MDE] = {0.0};
+  dbl dHside_3_square_dS[MDE] = {0.0};
+  dbl sat_max_3 = 0.99;
+  dbl width_3 = 0.24;
+  dbl alpha_3 = 0.5 * width_3;
+  dbl sat_center_3 = sat_max_3 - alpha_3;
+  dbl sat_normalized_3[MDE] = {0.0};
+
+  /* Extract all of the necessary information */
+  for (ipore = 0; ipore < pd->Num_Porous_Shell_Eqn; ipore++)
+     {
+      var = porous_shell_var[ipore];
+      if (pd->v[var])
+        {
+         for ( j = 0; j < ei->dof[var]; j++)
+            {
+             switch (ipore)
+               {
+                case 0:
+                  sat_nodes[ipore][j] = *esp->sh_sat_1[j];
+                  sat_normalized_1[j] = sat_nodes[ipore][j] - sat_center_1;
+                  break;
+                case 1:
+                  sat_nodes[ipore][j] = *esp->sh_sat_2[j];
+                  sat_normalized_2[j] = sat_nodes[ipore][j] - sat_center_2;
+                  break;
+                case 2:
+                  sat_nodes[ipore][j] = *esp->sh_sat_3[j];
+                  sat_normalized_3[j] = sat_nodes[ipore][j] - sat_center_3;
+                  break;
+               }
+             cap_pres_nodes[ipore][j] = load_cap_pres(ipore, j, -1, sat_nodes[ipore][j]);
+             d_cap_pres_nodes_dS[ipore][j] = mp->d_cap_pres[var];
+            }
+         H[ipore] = porous_shell_height_model(ipore);
+         kappa[ipore] = porous_shell_cross_perm_model(ipore);
+        }
+     }
+
+ /* Apply heaviside function to deactivate flux at S_1 > 0.99*/
+
+ for ( j = 0; j < ei->dof[SHELL_SAT_1]; j++)
+    {
+     if (sat_nodes[0][j] >= sat_max_1)
+       {
+        Hside_1[j]            = 0.0;
+        dHside_1_dS[j]        = 0.0;
+        Hside_1_square[j]     = 0.0;
+        dHside_1_square_dS[j] = 0.0;
+       }
+     else if (sat_nodes[0][j] <= (sat_max_1 - width_1) )
+       {
+        Hside_1[j]            = 1.0;
+        dHside_1_dS[j]        = 0.0;
+        Hside_1_square[j]     = 1.0;
+        dHside_1_square_dS[j] = 0.0;
+       }
+     else
+       {
+        Hside_1[j]            = 1.0 - 0.5 * (1. + sat_normalized_1[j] / alpha_1
+                              - sin(M_PIE * sat_normalized_1[j] / alpha_1 ) / M_PIE);
+        dHside_1_dS[j]        = - 0.5 * (1.0/alpha_1 + cos(M_PIE * sat_normalized_1[j]/alpha_1)/alpha_1 );
+        Hside_1_square[j]     = Hside_1[j] * Hside_1[j];
+        dHside_1_square_dS[j] = 2.0 * Hside_1[j] * dHside_1_dS[j];
+       }
+    }
+
+
+ /* Apply heaviside function to activate flux at S_2 > S_min*/
+ for ( j = 0; j < ei->dof[SHELL_SAT_2]; j++)
+    {
+     if (sat_nodes[1][j] >= sat_min_2)
+       {
+        Hside_2[j]     = 1.0;
+        dHside_2_dS[j] = 0.0;
+       }
+     else if (sat_nodes[1][j] <= (sat_min_2 - width_2) )
+       {
+        Hside_2[j]     = 0.0;
+        dHside_2_dS[j] = 0.0;
+       }
+     else
+       {
+        Hside_2[j]     = 0.5 * (1. + sat_normalized_2[j] / alpha_2
+                       + sin(M_PIE * sat_normalized_2[j] / alpha_2 ) / M_PIE);
+        dHside_2_dS[j] = 0.5 * (1.0/alpha_2 + cos(M_PIE * sat_normalized_2[j]/alpha_2)/alpha_2 );
+       }
+    }
+
+ /* Apply heaviside function to deactivate flux at S_3 > 0.99*/
+ if (pd->e[R_SHELL_SAT_3])
+   {
+    for ( j = 0; j < ei->dof[SHELL_SAT_3]; j++)
+       {
+        if (sat_nodes[2][j] >= sat_max_3)
+          {
+           Hside_3[j]            = 0.0;
+           dHside_3_dS[j]        = 0.0;
+           Hside_3_square[j]     = 0.0;
+           dHside_3_square_dS[j] = 0.0;
+          }
+        else if (sat_nodes[2][j] <= (sat_max_3 - width_3) )
+          {
+           Hside_3[j]            = 1.0;
+           dHside_3_dS[j]        = 0.0;
+           Hside_3_square[j]     = 1.0;
+           dHside_3_square_dS[j] = 0.0;
+          }
+        else
+          {
+           Hside_3[j]            = 1.0 - 0.5 * (1. + sat_normalized_3[j] / alpha_3
+                                 - sin(M_PIE * sat_normalized_3[j] / alpha_3 ) / M_PIE);
+           dHside_3_dS[j]        = - 0.5 * (1.0/alpha_3 + cos(M_PIE * sat_normalized_3[j]/alpha_3)/alpha_3 );
+           Hside_3_square[j]     = Hside_3[j] * Hside_3[j];
+           dHside_3_square_dS[j] = 2.0 * Hside_3[j] * dHside_3_dS[j];
+          }
+       }
+   }
+
+
+
+ /* Populate the interporous flux */
+ for ( j = 0; j < ei->dof[SHELL_SAT_1]; j++)
+    {
+     j_1_2[j]  = (kappa[0] / mu) * (cap_pres_nodes[0][j] - cap_pres_nodes[1][j]) / (2.0 * H[0]);
+     j_1_2[j] += (kappa[1] / mu) * (cap_pres_nodes[0][j] - cap_pres_nodes[1][j]) / (2.0 * H[1]);
+     j_1_2[j] *=  Hside_1_square[j] * Hside_2[j];
+
+     if (pd->e[R_SHELL_SAT_3])
+       {
+        j_2_3[j]  = (kappa[1] / mu) * (cap_pres_nodes[2][j] - cap_pres_nodes[1][j]) / (2.0 * H[1]);
+        j_2_3[j] += (kappa[2] / mu) * (cap_pres_nodes[2][j] - cap_pres_nodes[1][j]) / (2.0 * H[2]);
+        j_2_3[j] *= Hside_2[j] * Hside_3_square[j];
+       }
+    }
+
+
+ /* Populate the interporous flux sensitivity */
+ if (dj_1_2 != NULL)
+   {
+    for ( j = 0; j < ei->dof[SHELL_SAT_1]; j++)
+       {
+        dj_1_2[0][j]  =   Hside_1_square[j] * Hside_2[j] * (kappa[0] / mu) *   d_cap_pres_nodes_dS[0][j]  / (2.0 * H[0])
+                        + dHside_1_square_dS[j] * Hside_2[j] * (kappa[0] / mu) * (cap_pres_nodes[0][j] - cap_pres_nodes[1][j]) / (2.0 * H[0]);
+        dj_1_2[0][j] +=   Hside_1_square[j] * Hside_2[j] * (kappa[1] / mu) *   d_cap_pres_nodes_dS[0][j]  / (2.0 * H[1])
+                        + dHside_1_square_dS[j] * Hside_2[j] * (kappa[1] / mu) * (cap_pres_nodes[0][j] - cap_pres_nodes[1][j]) / (2.0 * H[1]);
+
+        dj_1_2[1][j]  =   Hside_1_square[j] * Hside_2[j] * (kappa[0] / mu) * (-d_cap_pres_nodes_dS[1][j]) / (2.0 * H[0])
+                        + Hside_1_square[j] * dHside_2_dS[j] * (kappa[0] / mu) * (cap_pres_nodes[0][j] - cap_pres_nodes[1][j]) / (2.0 * H[0]);
+        dj_1_2[1][j] +=   Hside_1_square[j] * Hside_2[j] * (kappa[1] / mu) * (-d_cap_pres_nodes_dS[1][j]) / (2.0 * H[1])
+                        + Hside_1_square[j] * dHside_2_dS[j] * (kappa[1] / mu) * (cap_pres_nodes[0][j] - cap_pres_nodes[1][j]) / (2.0 * H[1]);
+       }
+   }
+
+ if (pd->e[R_SHELL_SAT_3])
+   {
+    if (dj_2_3 != NULL)
+      {
+       for ( j = 0; j < ei->dof[SHELL_SAT_3]; j++)
+          {
+
+           dj_2_3[1][j]  =   Hside_2[j] * Hside_3_square[j] * (kappa[1] / mu) * (-d_cap_pres_nodes_dS[1][j])  / (2.0 * H[1])
+                           + dHside_2_dS[j] * Hside_3_square[j] * (kappa[1] / mu) * (cap_pres_nodes[2][j] - cap_pres_nodes[1][j]) / (2.0 * H[1]);
+           dj_2_3[1][j] +=   Hside_2[j] * Hside_3_square[j] * (kappa[2] / mu) * (-d_cap_pres_nodes_dS[1][j])  / (2.0 * H[2])
+                           + dHside_2_dS[j] * Hside_3_square[j] * (kappa[2] / mu) * (cap_pres_nodes[2][j] - cap_pres_nodes[1][j]) / (2.0 * H[2]);
+
+           dj_2_3[2][j]  =   Hside_2[j] * Hside_3_square[j] * (kappa[1] / mu) *   d_cap_pres_nodes_dS[2][j]  / (2.0 * H[1])
+                           + Hside_2[j] * dHside_3_square_dS[j] * (kappa[1] / mu) * (cap_pres_nodes[2][j] - cap_pres_nodes[1][j]) / (2.0 * H[1]);
+           dj_2_3[2][j] +=   Hside_2[j] * Hside_3_square[j] * (kappa[2] / mu) *   d_cap_pres_nodes_dS[2][j]  / (2.0 * H[2])
+                           + Hside_2[j] * dHside_3_square_dS[j] * (kappa[2] / mu) * (cap_pres_nodes[2][j] - cap_pres_nodes[1][j]) / (2.0 * H[2]);
+          }
+      }
+   }
+ return;
+}
+
 int
 lubrication_fluid_source(
                          double *flux,                         /* Fluid flux */
@@ -1651,3 +2270,4 @@ lubrication_fluid_source(
 }
 /* END of lubrication_fluid_source */
 /*****************************************************************************/
+/* END of file mm_std_models_shell.c */

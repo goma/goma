@@ -90,11 +90,11 @@ PROTO((double [DIM],		/* func                                      */
        dbl ,			/* tt - parm to vary time integration        */
        dbl ));			/* vflux                                     */
 
-EXTERN void porous_normal_velocity_bc 
+EXTERN void porous_normal_velocity_bc
 PROTO((double [],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
        double [DIM],		/* x_dot - mesh velocity vector              */
-       dbl ,			/* tt - parm to vary time integration from 
+       dbl ,			/* tt - parm to vary time integration from
 				 * explicit (tt = 1) to implicit (tt = 0)    */
        dbl ,			/* dt - current value of the time step       */
        int ,			/* bc_input_id                               */
@@ -108,7 +108,7 @@ EXTERN void put_gas_flux_in_pores
 PROTO((double [],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
        double [DIM],		/* x_dot - mesh velocity vector              */
-       dbl ,			/* tt - parm to vary time integration from 
+       dbl ,			/* tt - parm to vary time integration from
 				 * explicit (tt = 1) to implicit (tt = 0)    */
        dbl ,			/* dt - current value of the time step       */
        int ,			/* bc_input_id                               */
@@ -134,18 +134,24 @@ PROTO((double [],		/* func                                      */
        double ));		/* amb_pres - ambient pressure, perhaps?     */
 
 EXTERN double load_permeability
-PROTO((void));	      
+PROTO((void));
 
 EXTERN void load_permeability_tensor
-PROTO((void));      
+PROTO((void));
 
 EXTERN void load_shell_permeability_tensor
-PROTO((void));      
+PROTO((void));
 
 EXTERN double load_saturation
 PROTO((double ,			/* porosity                                  */
-       double ,			/* cap_pres                                  */ 
+       double ,			/* cap_pres                                  */
        double [2]));            /* d_cap_pres                         */
+
+EXTERN double load_cap_pres
+PROTO((int ,			/* porous layer index                        */
+       int ,                    /* local node number                         */
+       int ,                    /* global node number                        */
+       double ));		/* saturation                                */
 
 EXTERN void load_enthalpy
 PROTO((double ,                /* saturation                                */
@@ -384,22 +390,23 @@ PROTO((int,		        /* ip                                     */
        const double ,		/* tt - parm vary time integration method.   */
        const double ));		/* dt - current time step size               */
 
+
 EXTERN void porous_liq_fill
 PROTO((double *,	       /* func                                      */
        double [],              /* d_func           */
        const int, 	       /* i_mat_solid - mat block id porous phase   */
        const int,   	       /* i_mat_fluid - mat block id gas phase      */
-       double,    	       /* cap press fluid                           */ 
-       double,    	       /* cap press fluid                           */ 
-       double,    	       /* level set length scale                    */ 
-       MATRL_PROP_STRUCT *));  /* material property struct                  */ 
-	   
-void por_liq_flux_fill 
+       double,    	       /* cap press fluid                           */
+       double,    	       /* cap press fluid                           */
+       double,    	       /* level set length scale                    */
+       MATRL_PROP_STRUCT *));  /* material property struct                  */
+
+void por_liq_flux_fill
 PROTO(( double *,
 	double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
-	double , 
 	double ,
-	const int, 
+	double ,
+	const int,
 	const int ,
 	double ,
 	double ,

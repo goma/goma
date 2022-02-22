@@ -920,6 +920,9 @@ time_step_control(const double delta_t,  const double delta_t_old,
     Err_norm      += ecp[SHELL_SAT_CLOSED];
     Err_norm      += ecp[SHELL_PRESS_OPEN];
     Err_norm      += ecp[SHELL_PRESS_OPEN_2];
+    Err_norm      += ecp[SHELL_SAT_1];
+    Err_norm      += ecp[SHELL_SAT_2];
+    Err_norm      += ecp[SHELL_SAT_3];
     Err_norm      += ecp[SHELL_SAT_GASN];
     Err_norm      += ecp[SHELL_LUB_CURV];
     Err_norm      += ecp[SHELL_LUB_CURV_2];
@@ -928,6 +931,9 @@ time_step_control(const double delta_t,  const double delta_t_old,
     num_unknowns += ncp[SHELL_SAT_CLOSED];
     num_unknowns += ncp[SHELL_PRESS_OPEN];
     num_unknowns += ncp[SHELL_PRESS_OPEN_2];
+    num_unknowns += ncp[SHELL_SAT_1];
+    num_unknowns += ncp[SHELL_SAT_2];
+    num_unknowns += ncp[SHELL_SAT_3];
     num_unknowns += ncp[SHELL_SAT_GASN];
     num_unknowns += ncp[SHELL_LUB_CURV];
     num_unknowns += ncp[SHELL_LUB_CURV_2];
@@ -994,8 +1000,11 @@ time_step_control(const double delta_t,  const double delta_t_old,
   e_sht = ecp[SHELL_TENSION];
   e_shd = ecp[SHELL_X] + ecp[SHELL_Y];
   e_shu = ecp[SHELL_USER];
-  e_sh_lub = ecp[LUBP] + ecp[LUBP_2] + ecp[SHELL_FILMP]  + 
-             ecp[SHELL_FILMH] + ecp[SHELL_PARTC] + ecp[SHELL_SAT_CLOSED] + ecp[SHELL_SAT_GASN] + ecp[SHELL_TEMPERATURE] + ecp[SHELL_DELTAH] + ecp[SHELL_LUB_CURV] + ecp[SHELL_LUB_CURV_2] + ecp[SHELL_PRESS_OPEN] + ecp[SHELL_PRESS_OPEN_2];
+  e_sh_lub = ecp[LUBP] + ecp[LUBP_2] + ecp[SHELL_FILMP]  +
+             ecp[SHELL_FILMH] + ecp[SHELL_PARTC] + ecp[SHELL_SAT_CLOSED] +
+             ecp[SHELL_SAT_GASN] + ecp[SHELL_TEMPERATURE] + ecp[SHELL_DELTAH] +
+             ecp[SHELL_LUB_CURV] + ecp[SHELL_LUB_CURV_2] + ecp[SHELL_PRESS_OPEN] +
+             ecp[SHELL_PRESS_OPEN_2] + ecp[SHELL_SAT_1] + ecp[SHELL_SAT_2] + ecp[SHELL_SAT_3];
   e_F = ecp[FILL] + ecp[PHASE1];
   e_ap = ecp[ACOUS_PREAL] + ecp[ACOUS_PIMAG] + ecp[ACOUS_REYN_STRESS];
   e_extv = ecp[EXT_VELOCITY];
@@ -1056,7 +1065,9 @@ time_step_control(const double delta_t,  const double delta_t_old,
         if(ncp[ACOUS_PREAL] || ncp[ACOUS_PIMAG]){ DPRINTF(stderr, ", %7.1e", e_ap); }
         if(ncp[EXT_VELOCITY]){ DPRINTF(stderr, ", %7.1e", e_extv); }
 	if(ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]){ DPRINTF(stderr, ", %7.1e", e_int); }
-	if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] || ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]){ DPRINTF(stderr, ", %7.1e", e_sh_lub); }
+	if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] || 
+           ncp[SHELL_LUB_CURV] || ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || 
+           ncp[SHELL_PRESS_OPEN_2] || ncp[SHELL_SAT_1] || ncp[SHELL_SAT_2] || ncp[SHELL_SAT_3]){ DPRINTF(stderr, ", %7.1e", e_sh_lub); }
 	if(ncp[SHELL_NORMAL1] || ncp[SHELL_SURF_CURV] || ncp[GRAD_S_V_DOT_N1])
 		{ DPRINTF(stderr, ", %7.1e", e_rheo); }
         if(nAC > 0){ DPRINTF(stderr, ", %7.1e", e_AC); }
@@ -1083,7 +1094,9 @@ time_step_control(const double delta_t,  const double delta_t_old,
         if(ncp[ACOUS_PREAL] || ncp[ACOUS_PIMAG]){ DPRINTF(stderr, ", %7.1e", e_ap); }
         if(ncp[EXT_VELOCITY]){ DPRINTF(stderr, ", %7.1e", e_extv); }
 	if(ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]){ DPRINTF(stderr, ", %7.1e", e_int); }
-	if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] || ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]){ DPRINTF(stderr, ", %7.1e", e_sh_lub); }
+	if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] ||
+           ncp[SHELL_LUB_CURV] || ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] ||
+           ncp[SHELL_PRESS_OPEN_2] || ncp[SHELL_SAT_1] || ncp[SHELL_SAT_2] || ncp[SHELL_SAT_3]){ DPRINTF(stderr, ", %7.1e", e_sh_lub); }
 	if(ncp[SHELL_NORMAL1] || ncp[SHELL_SURF_CURV] || ncp[GRAD_S_V_DOT_N1])
 		{ DPRINTF(stderr, ", %7.1e", e_rheo); }
         if(nAC > 0){ DPRINTF(stderr, ", %7.1e", e_AC); }
@@ -1109,7 +1122,9 @@ time_step_control(const double delta_t,  const double delta_t_old,
         if(ncp[ACOUS_PREAL] || ncp[ACOUS_PIMAG]){ DPRINTF(stderr, ", %7.1e", e_ap); }
         if(ncp[EXT_VELOCITY]){ DPRINTF(stderr, ", %7.1e", e_extv); }
 	if(ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]){ DPRINTF(stderr, ", %7.1e", e_int); }
-	if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] ||  ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]){ DPRINTF(stderr, ", %7.1e", e_sh_lub); }
+	if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] ||
+           ncp[SHELL_LUB_CURV] ||  ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] ||
+           ncp[SHELL_PRESS_OPEN_2] || ncp[SHELL_SAT_1] || ncp[SHELL_SAT_2] || ncp[SHELL_SAT_3]){ DPRINTF(stderr, ", %7.1e", e_sh_lub); }
 	if(ncp[SHELL_NORMAL1] || ncp[SHELL_SURF_CURV] || ncp[GRAD_S_V_DOT_N1])
 		{ DPRINTF(stderr, ", %7.1e", e_rheo); }
         if(nAC > 0){ DPRINTF(stderr, ", %7.1e", e_AC); }
@@ -1136,13 +1151,15 @@ time_step_control(const double delta_t,  const double delta_t_old,
         if(ncp[ACOUS_PREAL] || ncp[ACOUS_PIMAG]){ DPRINTF(stderr, ",   %1d A  ", 1); }
         if(ncp[EXT_VELOCITY]){ DPRINTF(stderr, ",   %1d Ev  ", 1); }
 	if(ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]){ DPRINTF(stderr, ", %1d INT", 1); }
-	if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] || ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]){ DPRINTF(stderr, ", %1d SHELL", 1); }
+	if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] ||
+           ncp[SHELL_LUB_CURV] || ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] ||
+           ncp[SHELL_PRESS_OPEN_2] || ncp[SHELL_SAT_1] || ncp[SHELL_SAT_2] || ncp[SHELL_SAT_3]){ DPRINTF(stderr, ", %1d SHELL", 1); }
 	if(ncp[SHELL_NORMAL1] || ncp[SHELL_SURF_CURV] || ncp[GRAD_S_V_DOT_N1])
 		{ DPRINTF(stderr, ", %1d RHEO", 1); }
         if(nAC > 0){ DPRINTF(stderr, ",   %1d AC ", use_var_norm[9]); }
         DPRINTF(stderr, "]\n");
 
-      
+
   log_msg("Predictor details:");
   log_msg("                 %1d  e_d = %g", use_var_norm[0], e_d);
   log_msg("                 %1d  e_v = %g", use_var_norm[1], e_v);
@@ -3584,11 +3601,11 @@ advance_porosity_jas_leads(const int time_step,
   /* check for valid porosity external field index */
   i_por_ev = efv->ev_porous_index;
   EH(i_por_ev, "Porosity external field not found!");
-                                                                                
+
   /* Loop over nodes in problem */
   for (n=0; n<nn; n++)
     {
-      efv->ext_fld_ndl_val[i_por_ev][n] = p_por_final[n] - p_por_dot[n]*( animas_time_step + current_gtime - starting_gtime) ;   
+      efv->ext_fld_ndl_val[i_por_ev][n] = p_por_final[n] - p_por_dot[n]*( animas_time_step + current_gtime - starting_gtime) ;
     }
 
   return 0;
@@ -3596,8 +3613,244 @@ advance_porosity_jas_leads(const int time_step,
 
 #endif  /* LIBRARY_MODE */
 
+int
+init_pmv_hyst( const Exo_DB *exo )
+
+/*
+ * Function to initiate porous media variables hysteresis structure
+ * containing history of curve switching and other nodal quantities
+ *
+ * This update is done here on a node-by-node basis, rather than
+ * doing at assembly time.
+ */
+{
+  int i_num_switch_ext_field, i_curve_type_ext_field;
+
+  int inode, mn, ipore;
+
+
+  /* Loop over nodes in problem */
+  for (inode = 0; inode < exo->num_nodes ; inode++)
+    {
+
+  /*
+   * Get block number and DOF index for porous liquid pressure at node
+   * EDW note: This will only work for nodes along an element block
+   * boundary when the porous material has the smaller material index!
+   */
+     mn = first_matID_at_node(inode);
+
+     for (ipore = 0; ipore < pd_glob[mn]->Num_Porous_Shell_Eqn; ipore++)
+        {
+
+         /* Initialize switch trigger to OFF */
+         pmv_hyst->curve_switch[ipore][inode] = 0;
+
+         /* Initialize number of curve switches from external field */
+         i_num_switch_ext_field = mp_glob[mn]->por_shell_cap_pres_hyst_num_switch_ext_field_index[ipore];
+         if (i_num_switch_ext_field > -1)
+           {
+            pmv_hyst->num_switch[ipore][inode] = (int) efv->ext_fld_ndl_val[i_num_switch_ext_field][inode];
+           }
+
+         /* Initialize curve types from external field */
+         i_curve_type_ext_field = mp_glob[mn]->por_shell_cap_pres_hyst_curve_type_ext_field_index[ipore];
+         if (i_curve_type_ext_field > -1)
+           {
+            pmv_hyst->curve_type[ipore][inode]     = (int )efv->ext_fld_ndl_val[i_curve_type_ext_field][inode];
+            pmv_hyst->curve_type_old[ipore][inode] = (int )efv->ext_fld_ndl_val[i_curve_type_ext_field][inode];
+           }
+
+         /*
+          * Initialize imbibition minimum and drainage maximum saturation values from main curve parameters
+          * specified in the material file
+          */
+         pmv_hyst->sat_min_imbibe[ipore][inode] = mp_glob[mn]->u_PorousShellCapPres[ipore][0];
+         pmv_hyst->sat_max_drain[ipore][inode]  = mp_glob[mn]->u_PorousShellCapPres[ipore][5];
+
+         /* Finally initialize the saturation and capillary pressure values at switching points*/
+         if (pmv_hyst->curve_type[ipore][inode] == 1) /* If starting at draining curve */
+           {
+            pmv_hyst->sat_switch[ipore][inode] = mp_glob[mn]->u_PorousShellCapPres[0][4]; /* Switch at the minimum saturation */
+            pmv_hyst->cap_pres_switch[ipore][inode] = 1.0e-12; /* Set to arbitrary small capillary pressure */
+           }
+         else if (pmv_hyst->curve_type[ipore][inode] == 0) /* If starting at imbibition curve */
+           {
+            pmv_hyst->sat_switch[ipore][inode] = mp_glob[mn]->u_PorousShellCapPres[0][1]; /* Switch at the maximum saturation */
+            pmv_hyst->cap_pres_switch[ipore][inode] = 1.0e12; /* Set to arbitrary large capillary pressure */
+           }
+        }
+    }
+
+  return 0;
+}
+
 
 /****************************************************************************/
 /****************************************************************************/
 /****************************************************************************/
+
+int
+evaluate_sat_hyst_criterion_nodal(const dbl *x_static,
+                                  const dbl *x_dot_static, 
+                                  const Exo_DB *exo)
+/*
+ * Function to determine when to switch curves on hysteretic models
+ * of porous shell formulation
+ *
+ * This update is done here on a node-by-node basis, rather than
+ * doing at assembly time.
+ */
+{
+  int inode, mn, ipore, ie;
+  int num_switch = 0;
+  int curve_type = -1;
+  int num_switch_max = 4; /* Hard set the maximum number of curve switch for now */
+  double sat_node, sat_dot_node, cap_pres_node;
+  int i_num_switch_ext_field, i_curve_type_ext_field;
+
+  /* Loop over nodes in problem */
+  for (inode = 0; inode < exo->num_nodes ; inode++)
+    {
+
+  /*
+   * Get block number and DOF index for porous liquid pressure at node
+   * EDW note: This will only work for nodes along an element block
+   * boundary when the porous material has the smaller material index!
+   */
+     mn = first_matID_at_node(inode);
+
+     for (ipore = 0; ipore < pd_glob[mn]->Num_Porous_Shell_Eqn; ipore++)
+        {
+
+         num_switch = pmv_hyst->num_switch[ipore][inode];
+
+         if (ipore == 0)
+           {
+            ie = Index_Solution(inode, R_SHELL_SAT_1, 0, 0, -1);
+            sat_node     = x_static[ie];
+            sat_dot_node = x_dot_static[ie];
+           }
+         else if (ipore == 1)
+           {
+            ie = Index_Solution(inode, R_SHELL_SAT_2, 0, 0, -1);
+            sat_node     = x_static[ie];
+            sat_dot_node = x_dot_static[ie];
+           }
+         else if (ipore == 2)
+           {
+            ie = Index_Solution(inode, R_SHELL_SAT_3, 0, 0, -1);
+            sat_node     = x_static[ie];
+            sat_dot_node = x_dot_static[ie];
+           }
+
+         curve_type = pmv_hyst->curve_type[ipore][inode];
+
+         /* Call the load_cap_pres with curve switch OFF */
+         pmv_hyst->curve_switch[ipore][inode] = 0;
+         cap_pres_node = load_cap_pres(ipore, -1, inode, sat_node);
+
+
+         /*If the accumulation is positive, above a certain
+          *tolerance level, and was positive previously, then we will
+          *remain on the same wetting curve with same previous curve
+          *parameters.   Likewise for negative accumulation with the
+          *drying curve.    We will switch if the accumulation rate
+          *changes sign and the magnitude is above a certan tolerance
+          *level.
+          */
+
+          if ( (sat_dot_node > 0.0) && (curve_type == 0) )
+            {
+             /* We were on imbibition curve, and will remain so */
+             pmv_hyst->curve_switch[ipore][inode] = 0;
+            }
+
+          else if ( (sat_dot_node < 0.0) && (curve_type == 1) )
+            {
+             /* We were on a draining curve, and will remain so */
+             pmv_hyst->curve_switch[ipore][inode] = 0;
+            }
+
+          else if ( (sat_dot_node > 0.0) && (curve_type == 1) &&
+                    (num_switch < num_switch_max) )
+            {
+             /*
+              * We were on a draining curve but now may
+              * potentially switch to a imbibition curve
+              */
+
+              if ( fabs(sat_dot_node) > mp_glob[mn]->u_PorousShellCapPres[0][9] )
+              /* If greater than tolerance, switch to imbibition */
+                {
+                 pmv_hyst->curve_switch[ipore][inode] = 1;
+                 pmv_hyst->num_switch[ipore][inode]  += 1;
+
+
+                 pmv_hyst->curve_type_old[ipore][inode] = 1;
+                 pmv_hyst->curve_type[ipore][inode]     = 0;
+
+                 pmv_hyst->sat_switch[ipore][inode]      = sat_node;
+                 pmv_hyst->cap_pres_switch[ipore][inode] = cap_pres_node;
+                }
+              else
+              /* Else, don't switch */
+                {
+                 pmv_hyst->curve_switch[ipore][inode] = 0;
+                }
+            }
+
+
+          else if ( (sat_dot_node <  0.0) && (curve_type == 0) &&
+                    (num_switch < num_switch_max) )
+            {
+             /*
+              * We were on a imbibition curve but now may
+              * potentially switch to a draining curve
+              */
+
+              if ( fabs(sat_dot_node) > mp_glob[mn]->u_PorousShellCapPres[0][9] )
+              /* If greater than tolerance, switch to draining */
+                {
+                 pmv_hyst->curve_switch[ipore][inode] = 1;
+                 pmv_hyst->num_switch[ipore][inode]  += 1;
+
+
+                 pmv_hyst->curve_type_old[ipore][inode] = 0;
+                 pmv_hyst->curve_type[ipore][inode]     = 1;
+
+                 pmv_hyst->sat_switch[ipore][inode]      = sat_node;
+                 pmv_hyst->cap_pres_switch[ipore][inode] = cap_pres_node;
+                }
+              else
+              /* Else, don't switch */
+                {
+                 pmv_hyst->curve_switch[ipore][inode] = 0;
+                }
+            }
+
+         /* Finally, update the external field variables */
+
+         /* Update number of curve switches */
+         i_num_switch_ext_field = mp_glob[mn]->por_shell_cap_pres_hyst_num_switch_ext_field_index[ipore];
+         if (i_num_switch_ext_field > -1)
+           {
+            efv->ext_fld_ndl_val[i_num_switch_ext_field][inode] = (double) pmv_hyst->num_switch[ipore][inode];
+           }
+
+         /* Update curve type */
+         i_curve_type_ext_field = mp_glob[mn]->por_shell_cap_pres_hyst_curve_type_ext_field_index[ipore];
+         if (i_curve_type_ext_field > -1)
+           {
+            efv->ext_fld_ndl_val[i_curve_type_ext_field][inode] = (double) pmv_hyst->curve_type[ipore][inode];
+           }
+        }
+    }
+  return(1);
+}
+
+/****************************************************************************/
+/****************************************************************************/
+/****************************************************************************/
+
 /* END of file rf_util.c  */

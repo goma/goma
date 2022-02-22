@@ -1135,9 +1135,9 @@ noahs_ark()
   ddd_add_member(n, &upd->Pressure_Datum, 1, MPI_DOUBLE);
   ddd_add_member(n, &upd->Max_Num_Porous_Eqn, 1, MPI_INT);
   ddd_add_member(n, &upd->XFEM, 1, MPI_INT);
-  ddd_add_member(n, &upd->Process_Temperature, 1, MPI_DOUBLE);            
-  ddd_add_member(n, &upd->Acoustic_Frequency, 1, MPI_DOUBLE);            
-  ddd_add_member(n, &upd->Light_Cosmu, 1, MPI_DOUBLE);            
+  ddd_add_member(n, &upd->Process_Temperature, 1, MPI_DOUBLE);
+  ddd_add_member(n, &upd->Acoustic_Frequency, 1, MPI_DOUBLE);
+  ddd_add_member(n, &upd->Light_Cosmu, 1, MPI_DOUBLE);
 
   for (i = 0; i < upd->Num_Mat; i++)
     {
@@ -1177,6 +1177,7 @@ noahs_ark()
       ddd_add_member(n, &pd_glob[i]->VolumeIntegral, 1, MPI_INT);
       ddd_add_member(n, &pd_glob[i]->LSVelocityIntegral, 1, MPI_INT);
       ddd_add_member(n, &pd_glob[i]->Num_Porous_Eqn, 1, MPI_INT);
+      ddd_add_member(n, &pd_glob[i]->Num_Porous_Shell_Eqn, 1, MPI_INT);
       ddd_add_member(n, &pd_glob[i]->Do_Surf_Geometry, 1, MPI_INT);
     }
 
@@ -1558,6 +1559,7 @@ noahs_ark()
       ddd_add_member(n, &mp_ptr->Dropped_Last_Species_Eqn, 1, MPI_INT);
       ddd_add_member(n, &mp_ptr->NonDiluteFormulation, 1, MPI_INT);
       ddd_add_member(n, &mp_ptr->Num_Porous_Eqn,       1, MPI_INT);
+      ddd_add_member(n, &mp_ptr->Num_Porous_Shell_Eqn, 1, MPI_INT);
 
       ddd_add_member(n, &mp_glob[i]->FlowingLiquid_viscosity, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->Inertia_coefficient, 1, MPI_DOUBLE);
@@ -1593,6 +1595,7 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->rel_gas_perm, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->rel_liq_perm, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->saturation, 1, MPI_DOUBLE);
+      ddd_add_member(n, &mp_glob[i]->cap_pres, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->surface_tension, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->SurfaceDiffusionCoeffProjectionEqn, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->thermal_conductivity, 1, MPI_DOUBLE);
@@ -1696,6 +1699,7 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->RelGasPermModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->RelLiqPermModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->SaturationModel, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->CapPresModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->Porous_wt_funcModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->Porous_Mass_Lump, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->SolidusModel, 1, MPI_INT);
@@ -1726,6 +1730,7 @@ noahs_ark()
       ddd_add_member(n,&mp_glob[i]->perm_external_field_index, 1, MPI_INT);
       ddd_add_member(n,&mp_glob[i]->Xperm_external_field_index, 1, MPI_INT);
       ddd_add_member(n,&mp_glob[i]->SAT_external_field_index, 1, MPI_INT);
+      ddd_add_member(n,&mp_glob[i]->cap_pres_external_field_index, 1, MPI_INT);
       ddd_add_member(n,&mp_glob[i]->por_shell_closed_porosity_ext_field_index, 1, MPI_INT);
       ddd_add_member(n,&mp_glob[i]->por_shell_closed_height_ext_field_index, 1, MPI_INT);
       ddd_add_member(n,&mp_glob[i]->por_shell_closed_radius_ext_field_index, 1, MPI_INT);
@@ -1780,6 +1785,8 @@ noahs_ark()
       ddd_add_member(n, mp_glob[i]->d_rel_liq_perm,
 		     MAX_VARIABLE_TYPES + MAX_CONC, MPI_DOUBLE);
       ddd_add_member(n, mp_glob[i]->d_saturation,
+		     MAX_VARIABLE_TYPES + MAX_CONC, MPI_DOUBLE);
+      ddd_add_member(n, mp_glob[i]->d_cap_pres,
 		     MAX_VARIABLE_TYPES + MAX_CONC, MPI_DOUBLE);
       ddd_add_member(n, mp_glob[i]->d_species_source,
 		     MAX_VARIABLE_TYPES + MAX_CONC, MPI_DOUBLE);
@@ -1847,6 +1854,10 @@ noahs_ark()
 		     (MAX_VARIABLE_TYPES + MAX_CONC)*
 		     (MAX_VARIABLE_TYPES + MAX_CONC),
 		     MPI_DOUBLE);
+      ddd_add_member(n, &mp_glob[i]->d_d_cap_pres[0][0],
+		     (MAX_VARIABLE_TYPES + MAX_CONC)*
+		     (MAX_VARIABLE_TYPES + MAX_CONC),
+		     MPI_DOUBLE);
       /*
        * TFMP model parameters
        */
@@ -1907,6 +1918,7 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->len_u_rel_gas_perm, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->len_u_rel_liq_perm, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->len_u_saturation, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->len_u_cap_pres, 1, MPI_INT);
       ddd_add_member(n, &gn_glob[i]->len_u_tau_y, 1, MPI_INT);
       ddd_add_member(n, &gn_glob[i]->len_u_atexp, 1, MPI_INT);
       ddd_add_member(n, &gn_glob[i]->len_u_mu0, 1, MPI_INT);
@@ -1948,6 +1960,7 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->heat_capacity_tableid, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->diffusivity_tableid, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->saturation_tableid, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->cap_pres_tableid, 1, MPI_INT);
 
       /*
        * Material property constants that are vectors over the concentration
@@ -2033,6 +2046,30 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->PorousSinkConstantsModel, 1 , MPI_INT); 
       ddd_add_member(n, mp_glob[i]->PorVolExpModel,MAX_PMV,MPI_INT);
       ddd_add_member(n, mp_glob[i]->PorousMolecularWeightModel,MAX_PMV,MPI_INT);
+
+      ddd_add_member(n, mp_glob[i]->PorousShellPorosity, MAX_POR_SHELL, MPI_DOUBLE);
+      ddd_add_member(n, mp_glob[i]->PorousShellHeight, MAX_POR_SHELL, MPI_DOUBLE);
+      ddd_add_member(n, mp_glob[i]->PorousShellPermeability, MAX_POR_SHELL, MPI_DOUBLE);
+      ddd_add_member(n, mp_glob[i]->PorousShellCrossPermeability, MAX_POR_SHELL, MPI_DOUBLE);
+      ddd_add_member(n, mp_glob[i]->PorousShellRelPerm, MAX_POR_SHELL, MPI_DOUBLE);
+      ddd_add_member(n, mp_glob[i]->PorousShellCapPres, MAX_POR_SHELL, MPI_DOUBLE);
+
+      ddd_add_member(n, mp_glob[i]->PorousShellPorosityModel, MAX_POR_SHELL, MPI_INT);
+      ddd_add_member(n, mp_glob[i]->PorousShellHeightModel, MAX_POR_SHELL, MPI_INT);
+      ddd_add_member(n, mp_glob[i]->PorousShellPermeabilityModel, MAX_POR_SHELL, MPI_INT);
+      ddd_add_member(n, mp_glob[i]->PorousShellCrossPermeabilityModel, MAX_POR_SHELL, MPI_INT);
+      ddd_add_member(n, mp_glob[i]->PorousShellRelPermModel, MAX_POR_SHELL, MPI_INT);
+      ddd_add_member(n, mp_glob[i]->PorousShellCapPresModel, MAX_POR_SHELL, MPI_INT);
+
+      ddd_add_member(n, mp_glob[i]->por_shell_porosity_ext_field_index, MAX_POR_SHELL, MPI_INT);
+      ddd_add_member(n, mp_glob[i]->por_shell_height_ext_field_index, MAX_POR_SHELL, MPI_INT);
+      ddd_add_member(n, mp_glob[i]->por_shell_permeability_ext_field_index, MAX_POR_SHELL, MPI_INT);
+      ddd_add_member(n, mp_glob[i]->por_shell_cross_permeability_ext_field_index, MAX_POR_SHELL, MPI_INT);
+      ddd_add_member(n, mp_glob[i]->por_shell_rel_perm_ext_field_index, MAX_POR_SHELL, MPI_INT);
+      ddd_add_member(n, mp_glob[i]->por_shell_cap_pres_ext_field_index, MAX_POR_SHELL, MPI_INT);
+      ddd_add_member(n, mp_glob[i]->por_shell_cap_pres_hyst_curve_type_ext_field_index, MAX_POR_SHELL, MPI_INT);
+      ddd_add_member(n, mp_glob[i]->por_shell_cap_pres_hyst_num_switch_ext_field_index, MAX_POR_SHELL, MPI_INT);
+
       /*
        * Material property user constant lists that are vectors need
        * length variables that are vectors, too. The actual user variables
@@ -2069,6 +2106,12 @@ noahs_ark()
 
       ddd_add_member(n, mp_glob[i]->len_u_porous_vol_expansion,MAX_PMV,MPI_INT);
 
+      ddd_add_member(n, mp_glob[i]->len_u_PorousShellPorosity,MAX_POR_SHELL, MPI_INT);
+      ddd_add_member(n, mp_glob[i]->len_u_PorousShellHeight,MAX_POR_SHELL, MPI_INT);
+      ddd_add_member(n, mp_glob[i]->len_u_PorousShellPermeability,MAX_POR_SHELL, MPI_INT);
+      ddd_add_member(n, mp_glob[i]->len_u_PorousShellCrossPermeability,MAX_POR_SHELL, MPI_INT);
+      ddd_add_member(n, mp_glob[i]->len_u_PorousShellRelPerm,MAX_POR_SHELL, MPI_INT);
+      ddd_add_member(n, mp_glob[i]->len_u_PorousShellCapPres,MAX_POR_SHELL, MPI_INT);
 
       /* Special material properties that are for the lubrication equation */
       ddd_add_member(n, &mp_glob[i]->len_u_heightU_function_constants, 1 , MPI_INT);  
@@ -2147,6 +2190,31 @@ noahs_ark()
 		     MPI_DOUBLE);
 
       /*
+       * Material properties that are fixed size arrays governed by
+       * the maximum number of porous equations  and maximum number of dependent
+       * variables.
+       */
+
+      ddd_add_member(n, &mp_glob[i]->d_PorousShellPorosity[0][0],
+                     (MAX_POR_SHELL)*(MAX_VARIABLE_TYPES + MAX_CONC),
+                     MPI_DOUBLE);
+      ddd_add_member(n, &mp_glob[i]->d_PorousShellHeight[0][0],
+                     (MAX_POR_SHELL)*(MAX_VARIABLE_TYPES + MAX_CONC),
+                     MPI_DOUBLE);
+      ddd_add_member(n, &mp_glob[i]->d_PorousShellPermeability[0][0],
+                     (MAX_POR_SHELL)*(MAX_VARIABLE_TYPES + MAX_CONC),
+                     MPI_DOUBLE);
+      ddd_add_member(n, &mp_glob[i]->d_PorousShellCrossPermeability[0][0],
+                     (MAX_POR_SHELL)*(MAX_VARIABLE_TYPES + MAX_CONC),
+                     MPI_DOUBLE);
+      ddd_add_member(n, &mp_glob[i]->d_PorousShellRelPerm[0][0],
+                     (MAX_POR_SHELL)*(MAX_VARIABLE_TYPES + MAX_CONC),
+                     MPI_DOUBLE);
+      ddd_add_member(n, &mp_glob[i]->d_PorousShellCapPres[0][0],
+                     (MAX_POR_SHELL)*(MAX_VARIABLE_TYPES + MAX_CONC),
+                     MPI_DOUBLE);
+
+      /*
        * Material properties that are vectors with 1 dimension index.
        */
 
@@ -2160,6 +2228,7 @@ noahs_ark()
 
       ddd_add_member(n, &mp_glob[i]->perm_tensor[0][0], DIM*DIM, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->d_perm_tensor[0][0][0], DIM*DIM*(MAX_VARIABLE_TYPES + MAX_CONC), MPI_DOUBLE);
+      ddd_add_member(n, &mp_glob[i]->PorousShellPermTensor[0][0][0], MAX_POR_SHELL*DIM*DIM, MPI_DOUBLE);
 
       /*
        * Material properties that are arrays with 1 dimension and 1 vbl index.
@@ -2613,6 +2682,8 @@ noahs_ark()
   ddd_add_member(n, &DISJ_PRESS, 1, MPI_INT);
   ddd_add_member(n, &SH_SAT_OPEN, 1, MPI_INT);
   ddd_add_member(n, &SH_SAT_OPEN_2, 1, MPI_INT);
+  ddd_add_member(n, &SH_CAP_PRES, 1, MPI_INT);
+  ddd_add_member(n, &SH_PORE_FLUX, 1, MPI_INT);
   ddd_add_member(n, &SH_STRESS_TENSOR, 1, MPI_INT);
   ddd_add_member(n, &SH_TANG, 1, MPI_INT);
   ddd_add_member(n, &PP_LAME_MU, 1, MPI_INT);
@@ -3004,6 +3075,9 @@ ark_landing()
       dalloc( m->len_u_saturation,
 	      m->    u_saturation);
 
+      dalloc( m->len_u_cap_pres,
+	      m->    u_cap_pres);
+
       dalloc( m->len_u_surface_tension,
 	      m->    u_surface_tension);
 
@@ -3169,6 +3243,25 @@ ark_landing()
 	  dalloc( m->len_u_porous_vapor_pressure[j],
 		  m->    u_porous_vapor_pressure[j]);
 	}
+
+
+      for (j = 0; j < pd_glob[i]->Num_Porous_Shell_Eqn; j++)
+        {
+	  dalloc( m->len_u_PorousShellPorosity[j],
+		  m->    u_PorousShellPorosity[j]);
+	  dalloc( m->len_u_PorousShellHeight[j],
+		  m->    u_PorousShellHeight[j]);
+	  dalloc( m->len_u_PorousShellPermeability[j],
+		  m->    u_PorousShellPermeability[j]);
+	  dalloc( m->len_u_PorousShellCrossPermeability[j],
+		  m->    u_PorousShellCrossPermeability[j]);
+	  dalloc( m->len_u_PorousShellRelPerm[j],
+		  m->    u_PorousShellRelPerm[j]);
+	  dalloc( m->len_u_PorousShellCapPres[j],
+		  m->    u_PorousShellCapPres[j]);
+	}
+
+
       dalloc( m->len_u_porous_gas_constants, 
 	      m->    u_porous_gas_constants); 
 
@@ -3398,6 +3491,9 @@ noahs_dove()
     crdv( m->len_u_saturation,
 	  m->    u_saturation);
 
+    crdv( m->len_u_cap_pres,
+	  m->    u_cap_pres);
+
     crdv( m->len_u_porous_sink_constants,
 	  m->    u_porous_sink_constants);
 
@@ -3588,6 +3684,23 @@ noahs_dove()
 	  m->    u_porous_gas_constants);
 
     e = elc_glob[i];
+
+
+    for (j = 0; j < pd_glob[i]->Num_Porous_Shell_Eqn; j++)
+       {
+	crdv( m->len_u_PorousShellPorosity[j],
+              m->    u_PorousShellPorosity[j]);
+	crdv( m->len_u_PorousShellHeight[j],
+	      m->    u_PorousShellHeight[j]);
+	crdv( m->len_u_PorousShellPermeability[j],
+	      m->    u_PorousShellPermeability[j]);
+	crdv( m->len_u_PorousShellCrossPermeability[j],
+	      m->    u_PorousShellCrossPermeability[j]);
+	crdv( m->len_u_PorousShellRelPerm[j],
+	      m->    u_PorousShellRelPerm[j]);
+	crdv( m->len_u_PorousShellCapPres[j],
+	      m->    u_PorousShellCapPres[j]);
+       }
 
 
     /* 

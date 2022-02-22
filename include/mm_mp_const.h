@@ -375,6 +375,10 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define  VAN_GENUCHTEN_EXTERNAL   23
 #define  LEVER           24
 #define  SATURATION      25
+#define  ATANH           26
+#define  SINH            27
+#define  VAN_GENUCHTEN_HYST   28
+#define  VAN_GENUCHTEN_HYST_EXT   29
 
 /* Types of Flowing Liquid Viscosity Models */
 #define MOLTEN_GLASS     3

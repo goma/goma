@@ -63,14 +63,28 @@ PROTO((dbl, dbl));
 EXTERN double porous_shell_closed_porosity_model /* mm_std_models_shell.c          */
 PROTO((void));
 
+EXTERN double porous_shell_porosity_model /* mm_std_models_shell.c          */
+PROTO((int));
+
 EXTERN double porous_shell_closed_radius_model   /* mm_std_models_shell.c          */
 PROTO((void));
 
 EXTERN double porous_shell_closed_height_model   /* mm_std_models_shell.c          */
 PROTO((void));
 
+EXTERN double porous_shell_height_model /* mm_std_models_shell.c          */
+PROTO((int));
+
 EXTERN double porous_shell_cross_perm_model     /* mm_std_models_shell.c          */
-PROTO((void));
+PROTO((int));
+
+EXTERN double porous_shell_rel_perm_model     /* mm_std_models_shell.c          */
+PROTO((int,
+       double
+     ));
+
+EXTERN void porous_shell_permeability_model     /* mm_std_models_shell.c          */
+PROTO((int));
 
 EXTERN void dynamic_contact_angle_model
 PROTO((
@@ -88,10 +102,17 @@ PROTO((
        double
        ));
 
+EXTERN void porous_shell_open_source_model
+PROTO((
+       double [MDE],
+       double [MDE],
+       double [MAX_POR_SHELL][MDE],
+       double [MAX_POR_SHELL][MDE]
+     ));
+
 EXTERN int lubrication_fluid_source
 PROTO((
        double *,                        /* Flux */
        double [MAX_VARIABLE_TYPES][MDE] /* Flux sensitivities */
      ));
-
 #endif /* _MM_STD_MODELS_H */

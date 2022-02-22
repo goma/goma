@@ -121,6 +121,8 @@
 #define I_LAMB_MAG      43
 #define I_HELICITY      44
 #define I_Q_FCN         45
+#define I_POROUS_LIQUID_INV_2 46
+#define I_POROUS_LIQUID_INV_3 47
 
 
 #ifdef _MM_POST_PROC_C
@@ -230,6 +232,8 @@ VOL_NAME_STRUCT pp_vol_names[] =
   { "LS_ARC",          I_LS_ARC_LENGTH },
   { "II_GAMMA_DOT",    I_RATE_OF_DEF_II },
   { "POROUS_LIQ_INVENTORY", I_POROUS_LIQUID_INV },
+  { "POROUS_LIQ_INVENTORY_2", I_POROUS_LIQUID_INV_2 },
+  { "POROUS_LIQ_INVENTORY_3", I_POROUS_LIQUID_INV_3 },
   { "SPEED_SQUARED",   I_SPEED },
   { "SURFACE_SPECIES",   I_SURF_SPECIES },
   { "ELECTRIC_LOAD_X",   I_ELOADX },
@@ -574,6 +578,9 @@ extern double *u_post_proc;	/* user-provided values used in calculating
 extern int SAT_CURVE_TYPE;      /*Saturation hysteresis curve type */
 extern int CAP_PRESS_SWITCH;    /*Capillary pressure at hysteresis switch */
 extern int SAT_QP_SWITCH;       /*Saturation at hysteresis switch*/
+extern int NUM_CURVE_SWITCH;    /* Number of hysteretic curve switch */
+extern int SAT_HYST_MIN;        /* Minimum saturation value for scanning imbibition curve */
+extern int SAT_HYST_MAX;        /* Maximum saturation value for scanning draining curve */
 extern int ACOUSTIC_PRESSURE;       /* Acoustic Pressure Magnitude	*/
 extern int ACOUSTIC_PHASE_ANGLE;       /* Acoustic Pressure Phase Angle	*/
 extern int ACOUSTIC_ENERGY_DENSITY;       /* Acoustic Energy Density	*/
@@ -589,6 +596,8 @@ extern int LUB_VELO_FIELD_2;     /* Velocity field calculated from lubrication, 
 extern int DISJ_PRESS;       /* Disjoining pressure */
 extern int SH_SAT_OPEN;          /* Saturation for open porous shells */
 extern int SH_SAT_OPEN_2;        /* Saturation for open porous shells 2 */
+extern int SH_CAP_PRES;          /* Capillary pressure for porous shell */
+extern int SH_PORE_FLUX;         /* Flux between porous shell layers */
 extern int SH_STRESS_TENSOR;    /* stress tensor for structural shell */
 extern int SH_TANG;             /* Tangents vectors for structural shell */
 extern int PP_LAME_MU;         /* Lame MU coefficient for solid/mesh */

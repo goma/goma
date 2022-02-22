@@ -910,6 +910,11 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
       initial_guess_stress_to_log_conf(x, num_total_nodes);
     }
 
+  if ( (callnum == 1) && (pmv_hyst != NULL) )
+    {
+     error = init_pmv_hyst(exo);
+     EH(error, "Error in initiating Porous Media Variables Hysteresis Struct");
+    }
   /* Load external fields from import vectors xnv_in & xev_in */
 #ifdef LIBRARY_MODE
   /* First check if porosity updates are necessary */
@@ -1259,7 +1264,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
         fprintf(stderr,"MaxTimeSteps: %d \tTimeMax: %f\n",tran->MaxTimeSteps,tran->TimeMax);
 	fprintf(stderr,"solving transient problem\n");
       }
-    
+
     /*
      *  Transfer information from the Transient_Information structure to local variables
      */
@@ -1271,7 +1276,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     eps          = tran->eps;
 #ifndef COUPLED_FILL
     exp_subcycle = tran->exp_subcycle;
-#endif /* not COUPLED_FILL */   
+#endif /* not COUPLED_FILL */
 
     // Determine if we are using a constant time step or not
     if (delta_t0 < 0.0 ) {
@@ -1301,7 +1306,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
       }
     else
       {
-	if (callnum > 1 && delta_t_save*libio->decelerator > Delta_t0 ) 
+	if (callnum > 1 && delta_t_save*libio->decelerator > Delta_t0 )
 	  {
 	   Delta_t0 = delta_t_save*libio->decelerator;
 	  }
@@ -1314,11 +1319,11 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     if (delta_t0 > delta_t_max) delta_t0 = delta_t_max;
     delta_t = delta_t_old = delta_t_older = delta_t0;
     tran->delta_t = delta_t;    /*Load this up for use in load_fv_mesh_derivs */
-    tran->delta_t_avg = delta_t;    
+    tran->delta_t_avg = delta_t;
 
     /*
      *  Allocate space for prediction vector to be saved here,
-     *  since it is only used locally 
+     *  since it is only used locally
      */
     x_pred = alloc_dbl_1(numProcUnknowns, 0.0);
     x_pred_static = x_pred;
@@ -1335,7 +1340,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
      */
     find_and_set_Dirichlet(x, xdot, exo, dpi);
 
-      
+
     /*
      * Before propagating x_n back into the historical records in
      * x_n-1, x_n-2 and x_n-3, make sure external dofs are the best
@@ -1353,7 +1358,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
      * Now copy the initial solution, x[], into the history solutions
      * x_old[], etc. Note, xdot[] = xdot_old[] = 0 at this point,
      * which is in agreement with the specification of the history
-     * solutions. 
+     * solutions.
      */
     dcopy1(numProcUnknowns, x,       x_old);
     dcopy1(numProcUnknowns, x_old,   x_older);
@@ -1410,25 +1415,25 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
       matrix_systems_mask += 2;
     }
 #endif /* not COUPLED_FILL */
-      
+
     /* Call prefront (or mf_setup) if necessary */
     if (Linear_Solver == FRONT) {
-#ifdef HAVE_FRONT 	  
+#ifdef HAVE_FRONT
 
       /* Also have to define these because it wants pointers to these numbers */
-          
+
       max_unk_elem = (MAX_PROB_VAR + MAX_CONC)*MDE;
       one	   = 1;
       three	   = 3;
       /* NOTE: We need a overall flag in the vn_glob struct that tells whether FULL_DG
 	 is on anywhere in domain.  This assumes only one material.  See sl_front_setup for test.
 	 That test needs to be in the input parser.  */
-      if(vn_glob[0]->dg_J_model == FULL_DG) 
+      if(vn_glob[0]->dg_J_model == FULL_DG)
 	  max_unk_elem = (MAX_PROB_VAR + MAX_CONC)*MDE + 4*vn_glob[0]->modes*4*MDE;
-	
-      err = mf_setup(&exo->num_elems, 
-		     &NumUnknowns, 
-		     &max_unk_elem, 
+
+      err = mf_setup(&exo->num_elems,
+		     &NumUnknowns,
+		     &max_unk_elem,
 		     &three,
 		     &one,
 		     exo->elem_order_map,
@@ -1444,16 +1449,16 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
       EH(-1,"Don't have frontal solver compiled and linked in");
 #endif /* HAVE_FRONT */
     }
-      
+
 #ifdef COUPLED_FILL
     /*
-     * Prior to the primary time stepping loop, do any one time 
+     * Prior to the primary time stepping loop, do any one time
      * initialization required for the Aztec linear solver, for
      * the full Jacobian linear system.
      */
 #else /* COUPLED_FILL */
     /*
-     * Prior to the primary time stepping loop, do any one time 
+     * Prior to the primary time stepping loop, do any one time
      * initialization required for the Aztec linear solver, both
      * for the full Jacobian linear system *and* the explicit fill
      * equation linear system.
@@ -1466,15 +1471,15 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
      * appropriate, but the other items are there now, too.
      * Do this only once if in library mode.
      */
-    if (callnum == 1) sl_init(matrix_systems_mask, ams, exo, dpi, cx);	
-      
+    if (callnum == 1) sl_init(matrix_systems_mask, ams, exo, dpi, cx);
+
     /*
      * make sure the Aztec was properly initialized
      */
     check_parallel_error("Aztec Initialization");
-      
+
     /* Set the number of successful time steps, nt, to zero */
-    nt		     = 0;   
+    nt		     = 0;
     time_step_reform = Time_Jacobian_Reformation_stride;
     const_delta_ts   = const_delta_t;
     last_renorm_nt   = 0;
@@ -1489,7 +1494,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
      *  -> Helpful in debugging what's going on.
      */
     if (Write_Initial_Solution) {
-      if (file != NULL)  { 
+      if (file != NULL)  {
 	error = write_ascii_soln(x, resid_vector, numProcUnknowns,
 				 x_AC, nAC, time, file);
 	if (error != 0)
@@ -1552,7 +1557,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
        * What is known at this exact point in the code:
        *
        *
-       *  At time = time, x_old[] = the solution 
+       *  At time = time, x_old[] = the solution
        *                  xdot_old[] = derivative of the solution
        *  At time = time - delta_t_old:
        *                  x_older[] = the solution
@@ -1568,8 +1573,8 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
        *  associated xdot[], and then solving a corrected solution,
        *  x[], with associated time derivative, xdot[].
        *
-       *  Note, we may be here due to a failed time step. In this 
-       *  case x[] and xdot[] will be filled with garbage. For a 
+       *  Note, we may be here due to a failed time step. In this
+       *  case x[] and xdot[] will be filled with garbage. For a
        *  previously completed time step, x[] and xdot[] will be
        *  equal to x_old[] and xdot_old[].
        */
@@ -1594,27 +1599,27 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
       }
 
 
-      /* 
-       * Get started with forward/Backward Euler predictor-corrector 
+      /*
+       * Get started with forward/Backward Euler predictor-corrector
        * to damp out any bad things
        */
-      if ( ( nt - last_renorm_nt) == 0) 
-	{ 
-	  theta	      = 0.0; 
+      if ( ( nt - last_renorm_nt) == 0)
+	{
+	  theta	      = 0.0;
 	  const_delta_t = 1.0;
-	  
-	} 
-      else if ( (nt - last_renorm_nt) >= 3) 
+
+	}
+      else if ( (nt - last_renorm_nt) >= 3)
 	{
 	/* Now revert to the scheme input by the user */
-	theta	      = tran->theta; 
+	theta	      = tran->theta;
 	const_delta_t = const_delta_ts;
 	/*
 	 * If the previous step failed due to a convergence error
-	 * or time step truncation error, then revert to a 
+	 * or time step truncation error, then revert to a
 	 * Backwards-Euler method to restart the calculation
 	 * using a smaller time step.
-	 * -> standard ODE solver trick (HKM -> Haven't 
+	 * -> standard ODE solver trick (HKM -> Haven't
 	 *    had time to benchmark this. Will leave it commented
 	 *    out).
 	 *
@@ -1623,13 +1628,13 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 	 *  }
 	 */
 	}
-	  
+
       /* Reset the node->DBC[] arrays to -1 where set
        * so that the boundary conditions are set correctly
        * at each time step.
        */
       nullify_dirichlet_bcs();
-	  
+
       find_and_set_Dirichlet(x, xdot, exo, dpi);
 
       if ( nt == 0 )
@@ -1647,12 +1652,12 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
                 }
             }
         }
-        
+
       /*
        * Initial Start up (t=0) for the FILL/LEVEL_SET equations
        */
-    
-      if (upd->ep[FILL] > -1  && nt == 0) 
+
+      if (upd->ep[FILL] > -1  && nt == 0)
 	{ /*  Start of LS initialization */
 
 #ifndef COUPLED_FILL
@@ -1668,11 +1673,11 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 
 	if (ls != NULL || pfd != NULL) 
 	  {
-	
+
 	  int eqntype	   = ls->Init_Method;
 	  /* This is a temporary loc for this allocation */
-	  	  
-	  
+
+
           switch (ls->Evolution) {
             case LS_EVOLVE_ADVECT_EXPLICIT:
               DPRINTF(stdout, "\n\t Using decoupled / subcycling for FILL equation.\n");
@@ -1693,7 +1698,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 
 	  if ( ls->Length_Scale < 0.0 )
 	      EH(-1, "\tError: a Level Set Length Scale needs to be specified\n");
-            
+
 	  if( ls->Integration_Depth > 0 || ls->SubElemIntegration || ls->AdaptIntegration )
 	    {
 
@@ -1702,7 +1707,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 		  int first_elem;
 
 		  first_elem = find_first_elem_with_var( exo, LS );
-		  
+
 		  if( first_elem != -1 )
 		    {
                     load_ei(first_elem , exo, 0);
@@ -1733,16 +1738,16 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 	      EH(-1,"Use of \"PROJECT\" is obsolete.");
 #else /* COUPLED_FILL */
 	      init_vec_value (xf, 0.0, num_fill_unknowns);
-	      err = integrate_explicit_eqn(ams[FIL], rf, xf, xf_old, xfdot, 
+	      err = integrate_explicit_eqn(ams[FIL], rf, xf, xf_old, xfdot,
 					   xfdot_old, x, x_old, x_oldest,
-					   step_size, theta, &time2, 
+					   step_size, theta, &time2,
 					   PROJECT, node_to_fill, exo, dpi, cx);
 #endif /* COUPLED_FILL */
 
 	      break;
-		       
+
 	  case EXO_READ :
-		      
+
 	      DPRINTF(stderr, "\t\t Level set read from exodus database \n");
 
 	      break;
@@ -1757,7 +1762,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
                   if (!ls->init_surf_list) ls->init_surf_list = create_surf_list();
                   assemble_Global_surf_list( ls->init_surf_list );
                 }
-              
+
 	      surf_based_initialization( x, NULL, NULL, exo, num_total_nodes,
 					 ls->init_surf_list, 0., 0., 0. );
 
@@ -1785,7 +1790,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 		fclose(data_out);
 	      }
 #endif
-	      
+
 	      DPRINTF(stderr, "- done \n");
 
 #ifndef COUPLED_FILL
@@ -1827,10 +1832,10 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 	  case HUYGENS_C :
             Renorm_Now =  ( ls->Force_Initial_Renorm || (ls->Renorm_Freq != 0 && ls->Renorm_Countdown == 0) );
 
-	    did_renorm = huygens_renormalization(x, num_total_nodes, exo, cx, dpi,  
-						 num_fill_unknowns, numProcUnknowns,  
+	    did_renorm = huygens_renormalization(x, num_total_nodes, exo, cx, dpi,
+						 num_fill_unknowns, numProcUnknowns,
 						 time1, Renorm_Now );
-	    
+
 #ifndef COUPLED_FILL
 	    if ( did_renorm )
 	      {
@@ -1853,7 +1858,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 	    {
 	      double step_size =  ls->Length_Scale/10.0;
 	      int    num_steps = 15;
-	      
+
 	      put_fill_vector(num_total_nodes, x_old, xf, node_to_fill);
 	      exchange_dof(cx, dpi, x_old);
 	      put_fill_vector(num_total_nodes, x_oldest, xf, node_to_fill);
@@ -1863,7 +1868,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 				theta, num_steps, CORRECT, exo, dpi, cx);
 	    }
 #endif /* COUPLED_FILL */
-	    break;	
+	    break;
 	  default:
 	      if ( ls->Evolution == LS_EVOLVE_ADVECT_EXPLICIT ||
                    ls->Evolution == LS_EVOLVE_ADVECT_COUPLED )
@@ -1874,7 +1879,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 	   * More initialization needed. Have to set those field variables that initially are indexed by
 	   * level set function.  For example, species  concentration and temperature.
 	   */
-	  if( ls->Num_Var_Init > 0 ) 
+	  if( ls->Num_Var_Init > 0 )
 	    ls_var_initialization ( x, exo, dpi, cx );
 
 	  /* 	  DPRINTF(stderr, "Done with ls_var_initialization.\n"); */
@@ -1892,16 +1897,16 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 		build = build || ( BC_Types[ibc].BC_Name == LS_ADC_BC );
 		ibc++;
 	      }
-		  
+
 #ifndef COUPLED_FILL
 		build = build || ( ls->Evolution == LS_EVOLVE_SEMILAGRANGIAN );
 #endif
-		  
+
 	/* Here we create space for an isosurface list that is updated
-	 * every time step.  
+	 * every time step.
 	 */
-	  
-	    if( build && ls->last_surf_list == NULL ) 
+
+	    if( build && ls->last_surf_list == NULL )
 	      {
 		struct LS_Surf *tmp_surf = NULL;
 		struct LS_Surf_Iso_Data *tmp_data;
@@ -1915,11 +1920,11 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 
 		append_surf( ls->last_surf_list, tmp_surf );
 	      }
-            
+
 	  } /* matches int build */
 
 	}  /* end of ls != NULL */
-      
+
 
 
 #ifndef COUPLED_FILL
@@ -1944,12 +1949,12 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
       ls_old = ls;
       if(upd->vp[PHASE1] > -1 && nt == 0 )
 	{ /* Start of Phase Function initialization */
-		  
-		  
-		  
+
+
+
 		  if (pfd != NULL)
 		  {
-			struct Level_Set_Data *ls_save =ls;			
+			struct Level_Set_Data *ls_save =ls;
 			if (upd->vp[PHASE1] > -1)
 			  {
 			    switch (pfd->ls[0]->Evolution) {
@@ -1972,13 +1977,13 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 			  }
 
 			for (i = 0; i < pfd->num_phase_funcs;i++)
-			  {	  
-			    ls = pfd->ls[i];   /* This is a crucial step.  It allows us to use the Level Set Machinery 
+			  {
+			    ls = pfd->ls[i];   /* This is a crucial step.  It allows us to use the Level Set Machinery
 						  to initialize the phase functions
-						  BUT... Make sure to set it back to what we start with when through. 
-						  Many places the test ls != NULL is used to thread the code 
+						  BUT... Make sure to set it back to what we start with when through.
+						  Many places the test ls != NULL is used to thread the code
 					       */
-				  
+
 			    switch (ls->Init_Method)
 			      {
 			      case SURFACES:
@@ -1990,17 +1995,17 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 				    if (!ls->init_surf_list) ls->init_surf_list = create_surf_list();
 				    assemble_Global_surf_list( ls->init_surf_list );
 				  }
-						  
+
 				surf_based_initialization(x, NULL, NULL, exo, num_total_nodes,
 							  ls->init_surf_list, 0., 0., 0. );
 				break;
 			      case EXO_READ:
-				DPRINTF(stderr, "\n\t\t Exodus file read initialization for phase function fields");	  
+				DPRINTF(stderr, "\n\t\t Exodus file read initialization for phase function fields");
 				break;
 			      } /* end of switch(ls->Init_Method ) */
 			  } /* end of i<pfd->num_phase_funcs */
 
-			ls = ls_save;  /* OK, used the level set routines now be nice and point 
+			ls = ls_save;  /* OK, used the level set routines now be nice and point
 					  ls back to where you found it */
 
 
@@ -2010,7 +2015,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 			    int i;
 			    pfd->jac_info->d_pf_lm = alloc_dbl_1(numProcUnknowns, 0.0);
 			    pfd->jac_info->d_lm_pf = alloc_dbl_1(numProcUnknowns, 0.0);
-			    
+
 			    if (pfd->ls[0]->Init_Method != EXO_READ)
 			      {
 				for (i = 0; i < pfd->num_phase_funcs; i++)
@@ -2043,7 +2048,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 
 	    create_subsurfs(  ls->last_surf_list, x_old, exo );
 	  }
-      
+
 #ifndef COUPLED_FILL
       /* 
        * Subcycling of the fill vector
@@ -2062,7 +2067,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 	/*
 	 * Gather the fill equation unknowns at t = t_n into a vector, xf[]
 	 * and save them.  Note that we start from scratch each subcycling sequence
-	 * So xf_old should be equal to xf and xfdot and xfdot_old should be zero 
+	 * So xf_old should be equal to xf and xfdot and xfdot_old should be zero
 	 * IMHO, it is unnecessary work to try to extract info from previous successul
 	 * subcycling sequence, given that step sizes might have changed and the like (TAB)
 	 */
@@ -2071,7 +2076,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 	dcopy1(num_fill_unknowns, xf, xf_old);
 	memset( xfdot, 0, sizeof(double)*num_fill_unknowns );
 	memset( xfdot_old, 0, sizeof(double)*num_fill_unknowns );
-	
+
 
 	/*
 	 * Calculate the delta_t that will be used in the subcycle
@@ -2080,7 +2085,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 
 
 
-	DPRINTF(stderr, 
+	DPRINTF(stderr,
 		"\n\tsubcycling on Fill equation:  dt_exp = %e\n",
 		delta_t_exp);
 	log_msg("fill subcycle step %d, time = %g", n_exp, time2);
@@ -2159,7 +2164,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 	    }
 
 
-	      
+
 	  /*
 	   * Update the main solution vector with the new FILL values
 	   * and their derivatives
@@ -2182,9 +2187,9 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 	safer_free( ( void **) &tmp_x_old );
 	safer_free( ( void **) &tmp_xdot );
 
-	
+
       } /* End of the FILL variable subcycling in time */
-	  
+
 
 #endif /* not COUPLED_FILL */
 
@@ -2201,7 +2206,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 		"\n=> Try for soln at t=%g with dt=%g [%d for %d] %s\n",
 		time1, delta_t, nt, n, tspstring);
 	log_msg("Predicting try at t=%g, dt=%g [%d for %d so far] %s",
-		time1, delta_t, nt, n, tspstring);		      
+		time1, delta_t, nt, n, tspstring);
       }
 
       /*
@@ -2211,9 +2216,9 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
        */
 
       predict_solution(numProcUnknowns, delta_t, delta_t_old,
-		       delta_t_older,  theta, x, x_old, x_older, 
+		       delta_t_older,  theta, x, x_old, x_older,
 		       x_oldest, xdot, xdot_old, xdot_older);
-      
+
       if(tran->solid_inertia)
 	{
 	  predict_solution_newmark(num_total_nodes, delta_t, x, x_old, xdot, xdot_old);
@@ -2227,7 +2232,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
           double (*point1)[DIM] = NULL;
           int * owning_elem = NULL;
           int facet, num_facets;
-          
+
           num_facets = generate_facet_list(&point0, &point1, &owning_elem, x, exo);
           for ( facet = 0; facet < num_facets; ++facet )
             {
@@ -2236,7 +2241,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
             }
 	}
 #endif
-      
+
       if (ls != NULL && ls->Evolution == LS_EVOLVE_SLAVE)
 	{
 	  surf_based_initialization(x, NULL, NULL, exo, num_total_nodes,
@@ -2261,15 +2266,15 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 		        delta_t_older,  theta, x, x_old, x_older,
 		        x_oldest, xdot, xdot_old, xdot_older);
         }
-        
-      /* 
+
+      /*
        * Now, that we have a predicted solution for the current
        * time, x[], exchange the degrees of freedom to update the
        * ghost node information.
        */
       exchange_dof(cx, dpi, x);
       exchange_dof(cx, dpi, xdot);
-        
+
 #ifdef DEBUG
       if (nt == 0) {
 	print_array(x, numProcUnknowns, "x_A", type_double, ProcID);
@@ -2294,18 +2299,18 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
        *  Set dirichlet conditions in some places. Note, I believe
        *  this step can change the solution vector
        */
-      find_and_set_Dirichlet(x, xdot, exo, dpi); 
+      find_and_set_Dirichlet(x, xdot, exo, dpi);
 
 
 #ifndef COUPLED_FILL
-      /* 
+      /*
        * Now, that we have a predicted solution for the current
        * time, x[], exchange the degrees of freedom to update the
        * ghost node information.
        */
       if (Explicit_Fill) {
-	/* The predicted fill values from the previous call are not need 
-	   since ( in theory ) we have updated the fill field during 
+	/* The predicted fill values from the previous call are not need
+	   since ( in theory ) we have updated the fill field during
 	   the explicit loop.  Here we overwrite the predicted fill values;
 	*/
 
@@ -2337,7 +2342,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
       dcopy1(numProcUnknowns, x, x_pred);
       if ( nAC > 0 ) dcopy1( nAC, x_AC, x_AC_pred );
 
-#ifdef RESET_TRANSIENT_RELAXATION_PLEASE  
+#ifdef RESET_TRANSIENT_RELAXATION_PLEASE
   /* Set TRUE to disable relaxation on timesteps after the first*/
       /* For transient, reset the Newton damping factors after a
        *   successful time step
@@ -2361,11 +2366,11 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
        *  set the flag, converged, to true on return. If not
        *  set the flag to false.
        */
-      err = solve_nonlinear_problem(ams[JAC], x, delta_t, theta, x_old, 
-				    x_older, xdot, xdot_old, resid_vector,  
+      err = solve_nonlinear_problem(ams[JAC], x, delta_t, theta, x_old,
+				    x_older, xdot, xdot_old, resid_vector,
 				    x_update, scale, &converged, &nprint,
-				    tev, tev_post, gv, rd, gindex, p_gsize, 
-				    gvec, gvec_elem, time1, exo, dpi, cx, 
+				    tev, tev_post, gv, rd, gindex, p_gsize,
+				    gvec, gvec_elem, time1, exo, dpi, cx,
 				    n, &time_step_reform, is_steady_state,
  				    x_AC, x_AC_dot, time1, resid_vector_sens,
 				    x_sens, x_sens_p, NULL);
@@ -2391,6 +2396,13 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 
       if (converged) af->Sat_hyst_reevaluate = TRUE;  /*see load_saturation */
 
+      if ( (af->Sat_hyst_reevaluate) && (pmv_hyst != NULL) )
+        {
+         /* Determine what curve to follow and if switch is in order */
+         err = evaluate_sat_hyst_criterion_nodal(x, xdot, exo);
+        }
+
+
       /* Check element quality */
       good_mesh = element_quality(exo, x, ams[0]->proc_config);
 
@@ -2401,25 +2413,25 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
        * and retry.
        */
       if (converged) {
-	
+
 	delta_t_new = time_step_control(delta_t, delta_t_old, const_delta_t,
 					x, x_pred, x_old, x_AC, x_AC_pred,
 					eps, &success_dt, tran->use_var_norm);
-	if (const_delta_t) 
+	if (const_delta_t)
           {
 	  success_dt  = TRUE;
 	  delta_t_new = delta_t;
-	  } 
-       else if ( failed_recently_countdown > 0 ) 
+	  }
+       else if ( failed_recently_countdown > 0 )
           {
           delta_t_new = delta_t;
           failed_recently_countdown--;
-	  } 
+	  }
        else if (delta_t_new > delta_t_max)
           {
           delta_t_new = delta_t_max;
-          } 
-       else if ( delta_t_new < tran->resolved_delta_t_min ) 
+          }
+       else if ( delta_t_new < tran->resolved_delta_t_min )
           {
             /* fool algorithm into using delta_t = tran->resolved_delta_t_min */
             delta_t_new = tran->resolved_delta_t_min;
@@ -2429,17 +2441,17 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 	    tran->delta_t  = delta_t;
 	    tran->delta_t_avg = 0.25*(delta_t+delta_t_old+delta_t_older
 					+delta_t_oldest);  */
-          } 
-       else 
+          }
+       else
           {
             /* accept any converged solution with
-               delta_t <= tran->resolved_delta_t_min 
+               delta_t <= tran->resolved_delta_t_min
             */
             /*success_dt = TRUE;
             delta_t_new = delta_t;*/
-          }  
-        
-        if ( ls != NULL && tran->Courant_Limit != 0. ) 
+          }
+
+        if ( ls != NULL && tran->Courant_Limit != 0. )
           {
           double Courant_dt;
           Courant_dt = tran->Courant_Limit *

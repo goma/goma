@@ -419,7 +419,9 @@ matrix_fill(
   int ielem_type_mass = -1;	/* flag to give discontinuous interpolation type */
 
   int pspg_local = 0;
-  
+
+  int PorousShellOn = 0;     /* flag for porous shell equations */
+
   bool owner = TRUE;
 
   NODE_INFO_STRUCT *node;
@@ -1004,6 +1006,31 @@ matrix_fill(
 	}
     }
 
+  /* Initialize the flag for porous shell */
+  if ( (pde[R_SHELL_SAT_1]) ||
+       (pde[R_SHELL_SAT_2]) ||
+       (pde[R_SHELL_SAT_3]) )
+    {
+     PorousShellOn = 1;
+    }
+
+  /* Do precalcations for porous shell hysteresis problem */
+  if ( (mp->PorousMediaType != CONTINUOUS) &&
+       ((mp->PorousShellCapPresModel[0] == VAN_GENUCHTEN_HYST) ||
+        (mp->PorousShellCapPresModel[0] == VAN_GENUCHTEN_HYST_EXT)) &&
+       (PorousShellOn) )
+    {
+//     if (af->Sat_hyst_reevaluate)
+//       {
+//        ebn = find_elemblock_index(ielem, exo);
+//        ielem_local = ielem - exo->eb_ptr[ebn];
+        /* Determine what curve to follow and if switch is in order */
+//        err = evaluate_sat_hyst_criterion_nodal(ielem_local);
+//       }
+    }
+
+
+
   /******************************************************************************/
   /*                              BLOCK 2.0a                                    */
   /*                   START OF VOLUME INTEGRATION LOOP                         */
@@ -1577,7 +1604,9 @@ matrix_fill(
        *  Note that as of 4/06 we need to call this after mesh equation
        *  assembly as the anisotropic permeabilities depend on fv->deform_grad
        */
-      if (mp->PorousMediaType != CONTINUOUS)
+
+      if ( (mp->PorousMediaType != CONTINUOUS) &&
+           !(PorousShellOn) ) /* Exclude porous shell from this operation */
 	{
 	  err = load_porous_properties();
 	  EH( err, "load_porous_properties");
@@ -1597,20 +1626,20 @@ matrix_fill(
 
 		  /* Now that you have re-evaluated the switching parameter,
 		   * load up the saturation again in this case.
-		   */  
+		   */
 		  err = load_porous_properties();
 		  EH( err, "load_porous_properties");
 		}
 	    }
 	}
 
-      if (pde[R_MASS]) 
-        {	
+      if (pde[R_MASS])
+        {
           err = assemble_mass_transport(time_value, theta, delta_t, &pg_data);
-	  EH( err, "assemble_mass_transport");	  
+	  EH( err, "assemble_mass_transport");
 #ifdef CHECK_FINITE
-	  err = CHECKFINITE("assemble_mass_transport"); 
-	  if (err) return -1;	
+	  err = CHECKFINITE("assemble_mass_transport");
+	  if (err) return -1;
 #endif
           if( neg_elem_volume ) return -1;
 	}
@@ -1619,22 +1648,22 @@ matrix_fill(
 	err = assemble_porous_transport(time_value, theta, delta_t);
 	EH(err, "assemble_porous");
 #ifdef CHECK_FINITE
-	err = CHECKFINITE("assemble_porous"); 
-	if (err) return -1;	  
+	err = CHECKFINITE("assemble_porous");
+	if (err) return -1;
 #endif
 	if (neg_elem_volume) return -1;
       }
-      
+
       if (pde[R_SOLID1] && assemble_rs)
 	{
 	  err = assemble_real_solid(time_value, theta, delta_t);
 	  EH( err, "assemble_mesh");
 #ifdef CHECK_FINITE
-	  err = CHECKFINITE("assemble_mesh"); 
+	  err = CHECKFINITE("assemble_mesh");
 	  if (err) return -1;
 #endif
 	}
-      
+
       if( pde[R_ENERGY] )
 	{
           err = assemble_energy(time_value, theta, delta_t, &pg_data);
@@ -2164,6 +2193,19 @@ matrix_fill(
 	  if (err) return -1;
 #endif
         }
+
+      if( (pde[R_SHELL_SAT_1]) ||
+          (pde[R_SHELL_SAT_2]) ||
+          (pde[R_SHELL_SAT_3]) )
+        {
+          err = assemble_porous_shell_saturation(theta, delta_t, xi, exo);
+          EH( err, "assemble_porous_shell_saturation");
+#ifdef CHECK_FINITE
+          err = CHECKFINITE("assemble_porous_shell_saturation");
+	  if (err) return -1;
+#endif
+        }
+
       if( pde[R_SHELL_ANGLE1] )
         {
           err = assemble_shell_angle(time_value, theta, delta_t, xi, exo);

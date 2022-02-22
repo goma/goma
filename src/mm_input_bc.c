@@ -742,6 +742,9 @@ rd_bc_specs(FILE *ifp,
         case SHELL_PARTC_BC:
         case SHELL_OPEN_PRESS_BC:
         case SHELL_OPEN_PRESS_2_BC:
+        case SHELL_SAT_1_BC:
+        case SHELL_SAT_2_BC:
+        case SHELL_SAT_3_BC:
         case SH_GAMMA1_BC:
 	case SHELL_TFMP_PRES_BC:
 	case EM_E1R_BC:
