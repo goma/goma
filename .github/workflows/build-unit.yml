@@ -21,9 +21,9 @@ jobs:
     - name: CMake Configure Goma
       run: |
         cmake -DCMAKE_BUILD_TYPE=Release -Bbuild -DENABLE_TESTING=ON .
-    - name: build
+    - name: Build Goma
       run: |
-        cd Build Goma
+        cd build
         make -j 2
         ./goma -v
     - name: Goma Unit Tests
