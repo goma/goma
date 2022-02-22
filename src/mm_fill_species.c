@@ -9722,14 +9722,14 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
         sum_C0 += conc_nv;
         pres_conv = mp->u_vapor_pressure[w][0];
 #if 1
-        if (pd->v[RESTIME]) {
+        if (pd->gv[RESTIME]) {
           if (fv->restime > DBL_SMALL) {
             rad_ratio = fv->restime;
             d_ratio = 1.;
           }
         }
 #else
-        if (pd->v[RESTIME]) {
+        if (pd->gv[RESTIME]) {
           if (fv->restime > DBL_SMALL) {
             rad_ratio = cbrt(fv->restime);
             d_ratio = rad_ratio / (3. * fv->restime);
@@ -9746,7 +9746,7 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
           C[i] = MAX(DBL_SMALL, fv->c[i]);
         }
 
-        if (pd->v[PRESSURE] && fv->P > 0.9 * pres_conv) {
+        if (pd->gv[PRESSURE] && fv->P > 0.9 * pres_conv) {
           gas_conc = fv->P / (pres_conv * R_gas * fv->T);
           pres = fv->P;
         } else {
@@ -9839,7 +9839,7 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
           dsdC[j] = -dy_dC[w][j] / (1. - y_mole[w]) * tmp * rad_ratio;
         }
 
-        if (pd->v[PRESSURE] && fv->P > 0.9 * pres_conv) {
+        if (pd->gv[PRESSURE] && fv->P > 0.9 * pres_conv) {
           dsdP = s / pres + tmp * rad_ratio *
                                 (-activity[w] / pres / (1 - activity[w]) - dy_dP / (1 - y_mole[w]));
           dsdT = s * (-1. / fv->T) +
@@ -9877,7 +9877,7 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
             }
           }
           var = PRESSURE;
-          if (pd->v[var]) {
+          if (pd->v[pg->imtrx][var]) {
             for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
               st->d_MassSource_dP[w][j] = dsdP * bf[var]->phi[j];
             }
@@ -10522,7 +10522,7 @@ int Stefan_Maxwell_diff_flux(struct Species_Conservation_Terms *st, double time,
   volume_flag = (pd_glob[mn]->MassFluxModel == STEFAN_MAXWELL_VOLUME); /* RSL 8/24/00 */
 
   if (pd_glob[mn]
-          ->e[R_ENERGY]) /* if the energy-transport equation is active, get temperature from fv */
+          ->gv[R_ENERGY]) /* if the energy-transport equation is active, get temperature from fv */
   {
     T = fv->T;
     if (pd_glob[mn]->MassFluxModel == STEFAN_MAXWELL_CHARGED) {
@@ -11481,7 +11481,7 @@ int fickian_charged_flux_x(struct Species_Conservation_Terms *st, double time, d
   n_species = pd->Num_Species_Eqn + 1;
   mn = ei[pg->imtrx]->mn;
 
-  if (pd_glob[mn]->e[R_ENERGY]) /* if the energy equation is being solved */
+  if (pd_glob[mn]->gv[R_ENERGY]) /* if the energy equation is being solved */
   {
     T = fv->T;
   } else /* if the energy equation is NOT being solved */

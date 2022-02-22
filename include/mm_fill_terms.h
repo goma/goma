@@ -134,8 +134,8 @@ EXTERN int assemble_poynting /* mm_fill_terms.c                           */
      const int,              /*  Light intensity eqn id and var id		     */
      const int);
 
-EXTERN void restime_nobc_surf                    /* mm_fill_terms.c                           */
-    (double func[3], double d_func[3][215][27]); /* Time                                      */
+EXTERN void restime_nobc_surf /* mm_fill_terms.c                           */
+    (double func[MAX_PDIM], double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE]);
 
 EXTERN int assemble_acoustic_reynolds_stress /* mm_fill_terms.c */
     (double,                                 /* time */

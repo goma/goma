@@ -667,7 +667,7 @@ void fvelo_normal_lub_bc(double func[DIM],
 
       for (p = 0; p < pd->Num_Dim; p++) {
         var = MESH_DISPLACEMENT1 + p;
-        if (pd->v[var]) {
+        if (pd->v[pg->imtrx][var]) {
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             phi_j = bf[var]->phi[j];
             d_func[0][var][j] += (fv->v[kdir] - x_dot[kdir]) * fv->dsnormal_dx[kdir][p][j];
@@ -680,7 +680,7 @@ void fvelo_normal_lub_bc(double func[DIM],
       }
 
       var = VELOCITY1 + kdir;
-      if (pd->v[var]) {
+      if (pd->v[pg->imtrx][var]) {
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
           phi_j = bf[var]->phi[j];
           d_func[0][var][j] += phi_j * fv->snormal[kdir];
@@ -14748,8 +14748,8 @@ void qside_light_jump(double func[DIM],
   }
 }
 /****************************************************************************/
-void fvelo_slip_ls_heaviside(double func[3],
-                             double d_func[3][215][27],
+void fvelo_slip_ls_heaviside(double func[DIM],
+                             double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
                              double width,
                              double beta_negative,
                              double beta_positive,

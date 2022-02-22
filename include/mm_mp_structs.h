@@ -144,14 +144,23 @@ struct Material_Properties {
    * advection, diffusion,  and reaction, etc
    * (FALSE).
    */
-  int Num_Porous_Eqn;      /* Number of porous media eqns solved for in this
-                            * material
-                            */
-  int Porous_Eqn[MAX_PMV]; /* array containing the porous media equations
-                            * active in this material
-                            */
-  char **Porous_Names;     /* Pointer to a vector of porous phase names for the
-                            * current material */
+  int Num_Porous_Eqn; /* Number of porous media eqns solved for in this
+                       * material
+                       */
+
+  int Num_Porous_Shell_Eqn; /* Number of porous media shell eqns solved for in this
+                             * material
+                             */
+
+  int Porous_Eqn[MAX_PMV];             /* array containing the porous media equations
+                                        * active in this material
+                                        */
+  int Porous_Shell_Eqn[MAX_POR_SHELL]; /* array containing the porous shell equations
+                                        * active in this material
+                                        */
+
+  char **Porous_Names; /* Pointer to a vector of porous phase names for the
+                        * current material */
 
   dbl thermal_conductivity; /* Yeah, you could make this a tensor... */
   dbl d_thermal_conductivity[MAX_VARIABLE_TYPES + MAX_CONC];
@@ -564,6 +573,15 @@ struct Material_Properties {
   int saturation_tableid;
   int SAT_external_field_index;
 
+  dbl cap_pres;
+  int CapPresModel;
+  int len_u_cap_pres;
+  dbl *u_cap_pres;
+  dbl d_cap_pres[MAX_VARIABLE_TYPES + MAX_CONC];
+  dbl d_d_cap_pres[MAX_VARIABLE_TYPES + MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC];
+  int cap_pres_tableid;
+  int cap_pres_external_field_index;
+
   /*
    *  Porous_wt_funcModel: This is where you specify standard weighting
    *                       or SUPG. The wt_func should normally always be
@@ -836,6 +854,51 @@ struct Material_Properties {
   int len_u_PorousShellHenry_function_constants;
   dbl *u_PorousShellHenry_function_constants;
   int PorousShellHenryModel;
+
+  dbl PorousShellPorosity[MAX_POR_SHELL];
+  dbl d_PorousShellPorosity[MAX_POR_SHELL][MAX_VARIABLE_TYPES + MAX_CONC];
+  int len_u_PorousShellPorosity[MAX_POR_SHELL];
+  dbl *u_PorousShellPorosity[MAX_POR_SHELL];
+  int PorousShellPorosityModel[MAX_POR_SHELL];
+  int por_shell_porosity_ext_field_index[MAX_POR_SHELL];
+
+  dbl PorousShellHeight[MAX_POR_SHELL];
+  dbl d_PorousShellHeight[MAX_POR_SHELL][MAX_VARIABLE_TYPES + MAX_CONC];
+  int len_u_PorousShellHeight[MAX_POR_SHELL];
+  dbl *u_PorousShellHeight[MAX_POR_SHELL];
+  int PorousShellHeightModel[MAX_POR_SHELL];
+  int por_shell_height_ext_field_index[MAX_POR_SHELL];
+
+  dbl PorousShellPermeability[MAX_POR_SHELL];
+  dbl PorousShellPermTensor[MAX_POR_SHELL][DIM][DIM];
+  dbl d_PorousShellPermeability[MAX_POR_SHELL][MAX_VARIABLE_TYPES + MAX_CONC];
+  int len_u_PorousShellPermeability[MAX_POR_SHELL];
+  dbl *u_PorousShellPermeability[MAX_POR_SHELL];
+  int PorousShellPermeabilityModel[MAX_POR_SHELL];
+  int por_shell_permeability_ext_field_index[MAX_POR_SHELL];
+
+  dbl PorousShellCrossPermeability[MAX_POR_SHELL];
+  dbl d_PorousShellCrossPermeability[MAX_POR_SHELL][MAX_VARIABLE_TYPES + MAX_CONC];
+  int len_u_PorousShellCrossPermeability[MAX_POR_SHELL];
+  dbl *u_PorousShellCrossPermeability[MAX_POR_SHELL];
+  int PorousShellCrossPermeabilityModel[MAX_POR_SHELL];
+  int por_shell_cross_permeability_ext_field_index[MAX_POR_SHELL];
+
+  dbl PorousShellRelPerm[MAX_POR_SHELL];
+  dbl d_PorousShellRelPerm[MAX_POR_SHELL][MAX_VARIABLE_TYPES + MAX_CONC];
+  int len_u_PorousShellRelPerm[MAX_POR_SHELL];
+  dbl *u_PorousShellRelPerm[MAX_POR_SHELL];
+  int PorousShellRelPermModel[MAX_POR_SHELL];
+  int por_shell_rel_perm_ext_field_index[MAX_POR_SHELL];
+
+  dbl PorousShellCapPres[MAX_POR_SHELL];
+  dbl d_PorousShellCapPres[MAX_POR_SHELL][MAX_VARIABLE_TYPES + MAX_CONC];
+  int len_u_PorousShellCapPres[MAX_POR_SHELL];
+  dbl *u_PorousShellCapPres[MAX_POR_SHELL];
+  int PorousShellCapPresModel[MAX_POR_SHELL];
+  int por_shell_cap_pres_ext_field_index[MAX_POR_SHELL];
+  int por_shell_cap_pres_hyst_num_switch_ext_field_index[MAX_POR_SHELL];
+  int por_shell_cap_pres_hyst_curve_type_ext_field_index[MAX_POR_SHELL];
 
   /*
    * Boundary conditions...(these quantities and the geometric surface

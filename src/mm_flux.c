@@ -4000,6 +4000,8 @@ double evaluate_volume_integral(const Exo_DB *exo,  /* ptr to basic exodus ii me
   int i, j;
   int eb, e_start, e_end, elem;
 
+  int PorousShellOn = 0;
+
   int err = 0;
   int mn, ip, ip_total;
   double sum = 0.0;
@@ -4078,6 +4080,12 @@ double evaluate_volume_integral(const Exo_DB *exo,  /* ptr to basic exodus ii me
       fflush(jfp);
       fclose(jfp);
     }
+  }
+
+  /* Exclude porous shell from this */
+  if ((pd->e[pg->imtrx][R_SHELL_SAT_1]) || (pd->e[pg->imtrx][R_SHELL_SAT_2]) ||
+      (pd->e[pg->imtrx][R_SHELL_SAT_3])) {
+    PorousShellOn = 1;
   }
 
   mn = map_mat_index(blk_id);
@@ -4265,7 +4273,7 @@ double evaluate_volume_integral(const Exo_DB *exo,  /* ptr to basic exodus ii me
           GOMA_EH(err, "load_fv_mesh_derivs");
         }
 
-        if (mp->PorousMediaType != CONTINUOUS) {
+        if ((mp->PorousMediaType != CONTINUOUS) && (!PorousShellOn)) {
           err = load_porous_properties();
           GOMA_EH(err, "load_porous_properties");
         }
@@ -5323,10 +5331,24 @@ int compute_volume_integrand(const int quantity,
       lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
 
       det = fv->sdet; // Different determinant since this is a shell
+      dbl height = porous_shell_closed_height_model();
 
       /* clean-up */
       safe_free((void *)n_dof);
-      *sum += weight * det * pmv->bulk_density[0];
+      *sum += weight * det * pmv->bulk_density[0] * height;
+    }
+
+    if (pd->e[pg->imtrx][R_SHELL_SAT_1]) {
+      n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
+      lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+
+      det = fv->sdet; // Different determinant since this is a shell
+      dbl height = porous_shell_height_model(0);
+      dbl porosity = porous_shell_porosity_model(0);
+
+      /* clean-up */
+      safe_free((void *)n_dof);
+      *sum += weight * det * mp->density * height * porosity * fv->sh_sat_1;
     }
 
     if (pd->e[pg->imtrx][R_TFMP_MASS]) {
@@ -5349,7 +5371,34 @@ int compute_volume_integrand(const int quantity,
     }
 
   } break;
+  case I_POROUS_LIQUID_INV_2: {
+    if (pd->e[pg->imtrx][R_SHELL_SAT_2]) {
+      n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
+      lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
 
+      det = fv->sdet; // Different determinant since this is a shell
+      dbl height = porous_shell_height_model(1);
+      dbl porosity = porous_shell_porosity_model(1);
+
+      /* clean-up */
+      safe_free((void *)n_dof);
+      *sum += weight * det * mp->density * height * porosity * fv->sh_sat_2;
+    }
+  } break;
+  case I_POROUS_LIQUID_INV_3: {
+    if (pd->e[pg->imtrx][R_SHELL_SAT_3]) {
+      n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
+      lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+
+      det = fv->sdet; // Different determinant since this is a shell
+      dbl height = porous_shell_height_model(2);
+      dbl porosity = porous_shell_porosity_model(2);
+
+      /* clean-up */
+      safe_free((void *)n_dof);
+      *sum += weight * det * mp->density * height * porosity * fv->sh_sat_3;
+    }
+  } break;
   case I_ELOADX:
   case I_ELOADY:
   case I_ELOADZ: {
@@ -7431,6 +7480,33 @@ static int load_fv_sens(void) {
     dofs = ei[pg->imtrx]->dof[v];
     for (i = 0; i < dofs; i++) {
       fv_sens->sh_p_open_2 += *esp_old->sh_p_open_2[i] * bf[v]->phi[i];
+    }
+  }
+
+  v = SHELL_SAT_1;
+  fv_sens->sh_sat_1 = 0.;
+  if (pd->v[pg->imtrx][v]) {
+    dofs = ei[pg->imtrx]->dof[v];
+    for (i = 0; i < dofs; i++) {
+      fv_sens->sh_sat_1 += *esp_old->sh_sat_1[i] * bf[v]->phi[i];
+    }
+  }
+
+  v = SHELL_SAT_2;
+  fv_sens->sh_sat_2 = 0.;
+  if (pd->v[pg->imtrx][v]) {
+    dofs = ei[pg->imtrx]->dof[v];
+    for (i = 0; i < dofs; i++) {
+      fv_sens->sh_sat_2 += *esp_old->sh_sat_2[i] * bf[v]->phi[i];
+    }
+  }
+
+  v = SHELL_SAT_3;
+  fv_sens->sh_sat_3 = 0.;
+  if (pd->v[pg->imtrx][v]) {
+    dofs = ei[pg->imtrx]->dof[v];
+    for (i = 0; i < dofs; i++) {
+      fv_sens->sh_sat_3 += *esp_old->sh_sat_3[i] * bf[v]->phi[i];
     }
   }
 

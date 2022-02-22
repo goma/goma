@@ -78,6 +78,7 @@ struct Constitutive_Relations **cr_glob = NULL, *cr = NULL;
 struct Local_Element_Contributions *lec = NULL;
 struct Porous_Media_Variables *pmv = NULL, *pmv_old = NULL;
 PMV_ML_STRUCT *pmv_ml = NULL, *pmv_ml_old = NULL;
+struct Porous_Media_Variables_Hysteresis *pmv_hyst = NULL;
 struct Material_Properties *mp = NULL, **mp_glob = NULL, *mp_old = NULL;
 GEN_NEWT_STRUCT *gn = NULL;
 GEN_NEWT_STRUCT **gn_glob = NULL;
@@ -806,6 +807,7 @@ int assembly_alloc(Exo_DB *exo)
   int interp; /* index for interpolation order */
   int si;     /* index for element shape */
   int mn;
+  int ipore;
   int num_species_eqn; /* active number of species eqn */
   int imtrx;
 
@@ -1215,7 +1217,18 @@ int assembly_alloc(Exo_DB *exo)
       esp->cur_strain = (dbl **)alloc_ptr_1(MDE);
     }
 
+    if (Num_Var_In_Type[SHELL_SAT_1]) {
+      esp->sh_sat_1 = (dbl **)alloc_ptr_1(MDE);
+    }
+    if (Num_Var_In_Type[SHELL_SAT_2]) {
+      esp->sh_sat_2 = (dbl **)alloc_ptr_1(MDE);
+    }
+    if (Num_Var_In_Type[SHELL_SAT_3]) {
+      esp->sh_sat_3 = (dbl **)alloc_ptr_1(MDE);
+    }
+
   } /* End of loop over matrices */
+
   /*
    * Action_Flags______________________________________________________________
    */
@@ -1226,7 +1239,7 @@ int assembly_alloc(Exo_DB *exo)
   }
 
   /*
-   * Basis functions: allocate space only for a list of unique basis funntions
+   * Basis functions: allocate space only for a list of unique basis functions
    * required to assemble terms for this problem. Then, depending on the
    * particular weighing and interpolation to be used for each variable,
    * point to the appropriate member of the unique set.
@@ -1385,6 +1398,31 @@ int assembly_alloc(Exo_DB *exo)
       if ((mp_glob[mn]->Porous_Mass_Lump) ||
           (mp_glob[mn]->PorousMediaType == POROUS_SHELL_UNSATURATED)) {
         pmv_ml = alloc_struct_1(PMV_ML_STRUCT, 1);
+      }
+      break;
+    }
+  }
+  for (mn = 0; mn < upd->Num_Mat && pmv_hyst == NULL; mn++) {
+    if (mp_glob[mn]->PorousMediaType == POROUS_SHELL_UNSATURATED) {
+      for (ipore = 0; ipore < pd_glob[mn]->Num_Porous_Shell_Eqn; ipore++) {
+        if ((mp_glob[mn]->PorousShellCapPresModel[ipore] == VAN_GENUCHTEN_HYST) ||
+            (mp_glob[mn]->PorousShellCapPresModel[ipore] == VAN_GENUCHTEN_HYST_EXT)) {
+          pmv_hyst = alloc_struct_1(struct Porous_Media_Variables_Hysteresis, 1);
+          break;
+        }
+      }
+      if (pmv_hyst != NULL) {
+        for (ipore = 0; ipore < pd_glob[mn]->Num_Porous_Shell_Eqn; ipore++) {
+          pmv_hyst->curve_type[ipore] = alloc_int_1(exo->num_nodes, -1);
+          pmv_hyst->curve_type_old[ipore] = alloc_int_1(exo->num_nodes, -1);
+          pmv_hyst->curve_switch[ipore] = alloc_int_1(exo->num_nodes, -1);
+          pmv_hyst->num_switch[ipore] = alloc_int_1(exo->num_nodes, -1);
+
+          pmv_hyst->sat_switch[ipore] = alloc_dbl_1(exo->num_nodes, 0.0);
+          pmv_hyst->cap_pres_switch[ipore] = alloc_dbl_1(exo->num_nodes, 0.0);
+          pmv_hyst->sat_min_imbibe[ipore] = alloc_dbl_1(exo->num_nodes, 0.0);
+          pmv_hyst->sat_max_drain[ipore] = alloc_dbl_1(exo->num_nodes, 0.0);
+        }
       }
       break;
     }

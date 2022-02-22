@@ -245,6 +245,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   char err_msg[MAX_CHAR_ERR_MSG];
   int i, j, var;
   int imtrx;
+  int ipore;
   static const char yo[] = "rd_mp_specs";
   struct Elastic_Constitutive *dum_ptr;
 
@@ -270,7 +271,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
                                                 below) 052901 */
   int iread;
   int num_const, species_no;
-  int porous_no;
+  int porous_no, porous_shell_no;
+  int PorousShellOn;
   int mm;                          /* modal counter */
   int ii, jj, n_dij, k, n_species; /* KSC: 7/98 */
   dbl dij, E, T0;                  /* KSC: 7/98, 9/04 */
@@ -325,6 +327,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   mat_ptr->Num_Species_Eqn = pd_glob[mn]->Num_Species_Eqn;
   mat_ptr->Num_Species = pd_glob[mn]->Num_Species;
   mat_ptr->Num_Porous_Eqn = pd_glob[mn]->Num_Porous_Eqn;
+  mat_ptr->Num_Porous_Shell_Eqn = pd_glob[mn]->Num_Porous_Shell_Eqn;
 
   /*
    *  Intialize to good default behavior
@@ -495,7 +498,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     if (num_const < 2) {
       sprintf(err_msg, "Material %s - expected at least 2 constants for %s %s model.\n",
               pd_glob[mn]->MaterialName, "Density", "IDEAL_GAS");
-      GOMA_EH(-1, err_msg);
+      GOMA_EH(GOMA_ERROR, err_msg);
     }
     mat_ptr->len_u_density = num_const;
     SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_density);
@@ -655,7 +658,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       if (pfd != NULL) {
         for (i = 0; i < pfd->num_phase_funcs; i++) {
           if (fscanf(imp, "%lf", &(mat_ptr->mp2nd->density_phase[i])) != 1) {
-            GOMA_EH(-1, "error reading phase density");
+            GOMA_EH(GOMA_ERROR, "error reading phase density");
           }
           SPF(endofstring(es), " %g", mat_ptr->mp2nd->density_phase[i]);
         }
@@ -1400,7 +1403,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   } else if (!strcmp(model_name, "FOAM_PMDI_10")) {
     ConstitutiveEquation = FOAM_PMDI_10;
   } else {
-    GOMA_EH(-1, "Unrecognizable Constitutive Equation");
+    GOMA_EH(GOMA_ERROR, "Unrecognizable Constitutive Equation");
   }
 
   ECHO(es, echo_file);
@@ -1806,7 +1809,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
     iread = look_for_optional(imp, "Suspension Species Number", input, '=');
     if (fscanf(imp, "%d", &species_no) != 1) {
-      GOMA_EH(-1, "error reading Suspension Species Number");
+      GOMA_EH(GOMA_ERROR, "error reading Suspension Species Number");
     }
     gn_glob[mn]->sus_species_no = species_no;
 
@@ -1847,7 +1850,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
     look_for(imp, "Cure Species Number", input, '=');
     if (fscanf(imp, "%d", &species_no) != 1) {
-      GOMA_EH(-1, "error reading Cure Species Number");
+      GOMA_EH(GOMA_ERROR, "error reading Cure Species Number");
     }
 
     SPF(endofstring(es), " %d", species_no);
@@ -1866,7 +1869,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
     iread = look_for_optional(imp, "Suspension Species Number", input, '=');
     if (fscanf(imp, "%d", &species_no) != 1) {
-      GOMA_EH(-1, "error reading Suspension Species Number");
+      GOMA_EH(GOMA_ERROR, "error reading Suspension Species Number");
     }
     gn_glob[mn]->sus_species_no = species_no;
 
@@ -1877,7 +1880,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
     iread = look_for_optional(imp, "Suspension Species Number", input, '=');
     if (fscanf(imp, "%d", &species_no) != 1) {
-      GOMA_EH(-1, "error reading Suspension Species Number");
+      GOMA_EH(GOMA_ERROR, "error reading Suspension Species Number");
     }
     gn_glob[mn]->sus_species_no = species_no;
 
@@ -1892,7 +1895,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
     look_for(imp, "Cure Species Number", input, '=');
     if (fscanf(imp, "%d", &species_no) != 1) {
-      GOMA_EH(-1, "error reading Cure Species Number");
+      GOMA_EH(GOMA_ERROR, "error reading Cure Species Number");
     }
     SPF(es, "%s = %d", input, species_no);
     ECHO(es, echo_file);
@@ -1915,7 +1918,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
     look_for(imp, "Cure Species Number", input, '=');
     if (fscanf(imp, "%d", &species_no) != 1) {
-      GOMA_EH(-1, "error reading Cure Species Number");
+      GOMA_EH(GOMA_ERROR, "error reading Cure Species Number");
     }
     SPF(es, "%s = %d", input, species_no);
     ECHO(es, echo_file);
@@ -1927,7 +1930,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     look_for(imp, "Bond Evolution Parameters", input, '=');
     if (fscanf(imp, "%le %le %le %le %le %le", &gn_glob[mn]->k1, &gn_glob[mn]->k2, &gn_glob[mn]->n0,
                &gn_glob[mn]->pexp, &gn_glob[mn]->qexp, &gn_glob[mn]->diff) != 6) {
-      GOMA_EH(-1, "error reading Bond Evolution Parameters");
+      GOMA_EH(GOMA_ERROR, "error reading Bond Evolution Parameters");
     }
     SPF(es, "%s = ", "Bond Evolution Parameters");
     SPF(endofstring(es), " %.4g %.4g %.4g %.4g %.4g %.4g", gn_glob[mn]->k1, gn_glob[mn]->k2,
@@ -2032,7 +2035,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       if (pfd != NULL) {
         for (i = 0; i < pfd->num_phase_funcs; i++) {
           if (fscanf(imp, "%lf", &(mat_ptr->mp2nd->viscosity_phase[i])) != 1) {
-            GOMA_EH(-1, "error reading phase viscosity");
+            GOMA_EH(GOMA_ERROR, "error reading phase viscosity");
           }
           SPF(endofstring(es), " %g", mat_ptr->mp2nd->viscosity_phase[i]);
         }
@@ -2538,7 +2541,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
           nexp_val = 1;
         } else if (model_read == -2) {
           SPF(err_msg, "Only CONSTANT %s mode model supported.", search_string);
-          GOMA_EH(-1, err_msg);
+          GOMA_EH(GOMA_ERROR, err_msg);
         }
       }
 
@@ -2906,7 +2909,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       if (pfd != NULL) {
         for (i = 0; i < pfd->num_phase_funcs; i++) {
           if (fscanf(imp, "%lf", &(mat_ptr->mp2nd->thermalconductivity_phase[i])) != 1) {
-            GOMA_EH(-1, "error reading phase thermal conductivity");
+            GOMA_EH(GOMA_ERROR, "error reading phase thermal conductivity");
           }
           SPF(endofstring(es), " %g", mat_ptr->mp2nd->thermalconductivity_phase[i]);
         }
@@ -3025,7 +3028,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       if (pfd != NULL) {
         for (i = 0; i < pfd->num_phase_funcs; i++) {
           if (fscanf(imp, "%lf", &(mat_ptr->mp2nd->heatcapacity_phase[i])) != 1) {
-            GOMA_EH(-1, "error reading phase heat capacity");
+            GOMA_EH(GOMA_ERROR, "error reading phase heat capacity");
           }
           SPF(endofstring(es), " %g", mat_ptr->mp2nd->heatcapacity_phase[i]);
         }
@@ -3294,7 +3297,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   if (model_read == -1) {
     if (strncmp(model_name, " ", 1) != 0) {
       SPF(err_msg, "Syntax error or invalid model for %s\n", search_string);
-      GOMA_EH(-1, err_msg);
+      GOMA_EH(GOMA_ERROR, err_msg);
     } else {
       mat_ptr->MagneticPermeabilityModel = CONSTANT;
       mat_ptr->magnetic_permeability = 1.;
@@ -3445,7 +3448,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       if (pfd != NULL) {
         for (i = 0; i < pfd->num_phase_funcs; i++) {
           if (fscanf(imp, "%lf", &(mat_ptr->mp2nd->wavenumber_phase[i])) != 1) {
-            GOMA_EH(-1, "error reading phase wave number");
+            GOMA_EH(GOMA_ERROR, "error reading phase wave number");
           }
           SPF(endofstring(es), " %g", mat_ptr->mp2nd->wavenumber_phase[i]);
         }
@@ -3528,7 +3531,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       if (pfd != NULL) {
         for (i = 0; i < pfd->num_phase_funcs; i++) {
           if (fscanf(imp, "%lf", &(mat_ptr->mp2nd->acousticimpedance_phase[i])) != 1) {
-            GOMA_EH(-1, "error reading phase acoustic impedance");
+            GOMA_EH(GOMA_ERROR, "error reading phase acoustic impedance");
           }
           SPF(endofstring(es), " %g", mat_ptr->mp2nd->acousticimpedance_phase[i]);
         }
@@ -3611,7 +3614,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       if (pfd != NULL) {
         for (i = 0; i < pfd->num_phase_funcs; i++) {
           if (fscanf(imp, "%lf", &(mat_ptr->mp2nd->acousticabsorption_phase[i])) != 1) {
-            GOMA_EH(-1, "error reading phase acoustic absorption");
+            GOMA_EH(GOMA_ERROR, "error reading phase acoustic absorption");
           }
           SPF(endofstring(es), " %g", mat_ptr->mp2nd->acousticabsorption_phase[i]);
         }
@@ -3708,7 +3711,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       if (pfd != NULL) {
         for (i = 0; i < pfd->num_phase_funcs; i++) {
           if (fscanf(imp, "%lf", &(mat_ptr->mp2nd->refractiveindex_phase[i])) != 1) {
-            GOMA_EH(-1, "error reading phase refractive index");
+            GOMA_EH(GOMA_ERROR, "error reading phase refractive index");
           }
           SPF(endofstring(es), " %g", mat_ptr->mp2nd->refractiveindex_phase[i]);
         }
@@ -3790,7 +3793,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       if (pfd != NULL) {
         for (i = 0; i < pfd->num_phase_funcs; i++) {
           if (fscanf(imp, "%lf", &(mat_ptr->mp2nd->lightabsorption_phase[i])) != 1) {
-            GOMA_EH(-1, "error reading phase light absorption");
+            GOMA_EH(GOMA_ERROR, "error reading phase light absorption");
           }
           SPF(endofstring(es), " %g", mat_ptr->mp2nd->lightabsorption_phase[i]);
         }
@@ -3872,7 +3875,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       if (pfd != NULL) {
         for (i = 0; i < pfd->num_phase_funcs; i++) {
           if (fscanf(imp, "%lf", &(mat_ptr->mp2nd->extinctionindex_phase[i])) != 1) {
-            GOMA_EH(-1, "error reading phase extinction index");
+            GOMA_EH(GOMA_ERROR, "error reading phase extinction index");
           }
           SPF(endofstring(es), " %g", mat_ptr->mp2nd->extinctionindex_phase[i]);
         }
@@ -3906,13 +3909,24 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   mat_ptr->por_shell_closed_height_ext_field_index = -1;
   mat_ptr->por_shell_closed_radius_ext_field_index = -1;
 
+  /* This initialization is for porous shell equations */
+  for (i = 0; i < MAX_POR_SHELL; i++) {
+    mat_ptr->por_shell_porosity_ext_field_index[i] = -1;
+    mat_ptr->por_shell_height_ext_field_index[i] = -1;
+    mat_ptr->por_shell_permeability_ext_field_index[i] = -1;
+    mat_ptr->por_shell_rel_perm_ext_field_index[i] = -1;
+    mat_ptr->por_shell_cap_pres_ext_field_index[i] = -1;
+    mat_ptr->por_shell_cap_pres_hyst_curve_type_ext_field_index[i] = -1;
+    mat_ptr->por_shell_cap_pres_hyst_num_switch_ext_field_index[i] = -1;
+  }
+
   /*
    * Porous Section 1:  Microstructure Properties.  These are inputs
    * that are really a function of solid skeleton phase, and also some very
    * specific Darcy-law constants (e.g. permeabilities) that are only accessible
    * experimentally, in some cases.
    *
-   * Also imput here is the compressibility of the solvent liquid phase, which is
+   * Also input here is the compressibility of the solvent liquid phase, which is
    * taken to be constant regardless of composition.  This compressibility is required
    * for numerical stability on impregnation problems.
    *
@@ -3928,6 +3942,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   have_por_energy = 0;
   have_shell_sat_open = 0;
   have_shell_sat_open2 = 0;
+  int have_shell_sat_n = 0;
+  PorousShellOn = 0;
 
   for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
     if (pd_glob[mn]->e[imtrx][R_POR_LIQ_PRES]) {
@@ -3947,6 +3963,11 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     }
     if (pd_glob[mn]->e[imtrx][R_SHELL_SAT_OPEN_2]) {
       have_shell_sat_open2 = 1;
+    }
+    if ((pd_glob[mn]->e[imtrx][R_SHELL_SAT_1]) || (pd_glob[mn]->e[imtrx][R_SHELL_SAT_2]) ||
+        (pd_glob[mn]->e[imtrx][R_SHELL_SAT_3])) {
+      PorousShellOn = 1;
+      have_shell_sat_n = 1;
     }
   }
 
@@ -3989,9 +4010,9 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   } else if (model_read == -1 && (!strcmp(model_name, "POROUS_SHELL_UNSATURATED"))) {
     mat_ptr->PorousMediaType = POROUS_SHELL_UNSATURATED;
     mat_ptr->i_ys = 0;
-    if ((have_shell_sat_open == 0) && (have_shell_sat_open2 == 0)) {
+    if (!have_shell_sat_open && !have_shell_sat_open2 && !have_shell_sat_n) {
       GOMA_EH(GOMA_ERROR, "You cannot run a porous shell media simulation without selecting the "
-                          "sh_sat_open equation");
+                          "porous shell equation(s)");
     }
   } else if ((model_read == -1) && (strncmp(model_name, " ", 1) == 0)) {
     mat_ptr->PorousMediaType = CONTINUOUS;
@@ -4009,7 +4030,9 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   ECHO(es, echo_file);
 
-  if (mat_ptr->PorousMediaType != CONTINUOUS) {
+  if ((mat_ptr->PorousMediaType != CONTINUOUS) &&
+      (!PorousShellOn)) /* This only applies to continuum porous media equations */
+  {
     /* create a list of the porous media equations
        active in this material                     */
     i = 0;
@@ -4035,6 +4058,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     if (i != pd_glob[mn]->Num_Porous_Eqn) {
       GOMA_EH(GOMA_ERROR, "Possible duplicate porous media equations");
     }
+
     strcpy(search_string, "Porosity");
     model_read =
         look_for_mat_prop(imp, search_string, &(mat_ptr->PorosityModel), &(mat_ptr->porosity),
@@ -4319,7 +4343,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
                                    &(mat_ptr->PorousLiqRefPress), NO_USER, NULL, model_name,
                                    SCALAR_INPUT, &NO_SPECIES, es);
     ECHO(es, echo_file);
-  } /*end of if(mat_ptr->PorousMediaType != CONTINUOUS) */
+  } /*end of if( (mat_ptr->PorousMediaType != CONTINUOUS) && (!PorousShellOn) */
 
   /*
    * Read in the special Brinkman Equation Parameters:
@@ -4403,7 +4427,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         if (pfd != NULL) {
           for (i = 0; i < pfd->num_phase_funcs; i++) {
             if (fscanf(imp, "%lf", &(mat_ptr->mp2nd->FlowingLiquid_viscosity_phase[i])) != 1) {
-              GOMA_EH(-1, "error reading phase FlowingLiquid viscosity");
+              GOMA_EH(GOMA_ERROR, "error reading phase FlowingLiquid viscosity");
             }
             SPF(endofstring(es), " %g", mat_ptr->mp2nd->FlowingLiquid_viscosity_phase[i]);
           }
@@ -4432,9 +4456,10 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     ECHO(es, echo_file);
   }
 
-  if (mat_ptr->PorousMediaType == POROUS_UNSATURATED ||
-      mat_ptr->PorousMediaType == POROUS_TWO_PHASE ||
-      mat_ptr->PorousMediaType == POROUS_SHELL_UNSATURATED) {
+  if ((mat_ptr->PorousMediaType == POROUS_UNSATURATED ||
+       mat_ptr->PorousMediaType == POROUS_TWO_PHASE ||
+       mat_ptr->PorousMediaType == POROUS_SHELL_UNSATURATED) &&
+      (!PorousShellOn)) {
     model_read = look_for_mat_prop(imp, "Capillary Network Stress", &(mat_ptr->CapStress), &(a0),
                                    NO_USER, NULL, model_name, NO_INPUT, &NO_SPECIES, es);
     if (model_read == -1 && !strcmp(model_name, "WETTING")) {
@@ -4568,7 +4593,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     }
     ECHO(es, echo_file);
 
-    model_read = look_for_mat_proptable(
+    /* Read in Saturation */ model_read = look_for_mat_proptable(
         imp, "Saturation", &(mat_ptr->SaturationModel), &(mat_ptr->saturation),
         &(mat_ptr->u_saturation), &(mat_ptr->len_u_saturation), &(mat_ptr->saturation_tableid),
         model_name, SCALAR_INPUT, &NO_SPECIES, es);
@@ -4667,7 +4692,6 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       mat_ptr->len_u_saturation = num_const;
       SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_saturation);
 
-      /*initialize Gauss point structure */
     } else {
       GOMA_EH(model_read, "Saturation");
     }
@@ -4721,7 +4745,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   /* TAB here. just like to comment in passing that this whole porous media input section is
    * an unpleasant mess and needs fixing.  November 2005 */
 
-  if (mat_ptr->PorousMediaType != CONTINUOUS && mat_ptr->PorousMediaType != POROUS_BRINKMAN) {
+  if (mat_ptr->PorousMediaType != CONTINUOUS && mat_ptr->PorousMediaType != POROUS_BRINKMAN &&
+      (!PorousShellOn)) {
 
     /*
      *   Porous Weight Function:
@@ -5067,41 +5092,518 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         ECHO(es, echo_file);
       }
     }
-    /* Special constants for sink models formulation -- PRS 8/19/05 */
-    if (have_por_sink_mass == 1) {
-      model_read =
-          look_for_mat_prop(imp, "Sink Adsorption Rate Data", &(mat_ptr->PorousSinkConstantsModel),
-                            &(mat_ptr->porous_sink_constants), NO_USER, NULL, model_name,
-                            SCALAR_INPUT, &NO_SPECIES, es);
-      if (model_read == -1 && !strcmp(model_name, "LINEAR")) {
-        mat_ptr->PorousSinkConstantsModel = LINEAR;
+  } /*if ( mat_ptr->PorousMediaType != CONTINUOUS && != POROUS_BRINKMAN)*/
 
-        num_const = read_constants(imp, &(mat_ptr->u_porous_sink_constants), NO_SPECIES);
-        if (num_const < 8) {
-          sr = sprintf(err_msg, "Matl %s needs 8 constants for %s %s model.\n",
-                       pd_glob[mn]->MaterialName, "Sink Adsorption Rate Data", "LINEAR");
-          GOMA_EH(GOMA_ERROR, err_msg);
-        }
-        mat_ptr->len_u_porous_sink_constants = num_const;
-      } else if (model_read == -1 && !strcmp(model_name, "POWER_LAW")) {
-        mat_ptr->PorousSinkConstantsModel = POWER_LAW;
+  /*
+   *  Porous Shell Section
+   *
+   */
 
-        num_const = read_constants(imp, &(mat_ptr->u_porous_sink_constants), NO_SPECIES);
-        if (num_const < 4) {
-          sr = sprintf(err_msg, "Matl %s needs 4 constants for %s %s model.\n",
-                       pd_glob[mn]->MaterialName, "Sink Adsorption Rate Data", "POWER_LAW");
-          GOMA_EH(GOMA_ERROR, err_msg);
-        }
-        mat_ptr->len_u_porous_sink_constants = num_const;
-      } else if (!strcmp(model_name, "CONSTANT")) {
-        GOMA_EH(GOMA_ERROR, "Ironically we don't allow a CONSTANT model for Sink Adsorption Rate "
-                            "Data.  Try LINEAR");
-      } else {
-        GOMA_EH(model_read, "Sink Adsorption Rate Data");
+  if ((mat_ptr->PorousMediaType == POROUS_SHELL_UNSATURATED) &&
+      (PorousShellOn)) /* This only applies to porous shell  equations */
+  {
+
+    /* create a list of the porous media equations
+       active in this material                     */
+    i = 0;
+
+    for (int imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+      if (pd_glob[mn]->e[imtrx][R_SHELL_SAT_1]) {
+        mat_ptr->Porous_Shell_Eqn[i] = R_SHELL_SAT_1;
+        i++;
+      }
+
+      if (pd_glob[mn]->e[imtrx][R_SHELL_SAT_2]) {
+        mat_ptr->Porous_Shell_Eqn[i] = R_SHELL_SAT_2;
+        i++;
+      }
+
+      if (pd_glob[mn]->e[imtrx][R_SHELL_SAT_3]) {
+        mat_ptr->Porous_Shell_Eqn[i] = R_SHELL_SAT_3;
+        i++;
       }
     }
 
-  } /*if ( mat_ptr->PorousMediaType != CONTINUOUS && != POROUS_BRINKMAN)*/
+    if (i != pd_glob[mn]->Num_Porous_Shell_Eqn) {
+      GOMA_EH(GOMA_ERROR, "Number of porous shell equations do not add up");
+    }
+
+    /***************************************************************************
+     *  LOOP OVER THE POROUS SHELL LAYERS.
+     **************************************************************************/
+
+    /* Initialize porous shell no with maximum number of porous shell layers read from pd */
+
+    for (ipore = 0; ipore < pd_glob[mn]->Num_Porous_Shell_Eqn; ipore++) {
+
+      /******************
+       *                *
+       * Read porosity  *
+       *                *
+       *******************/
+      porous_shell_no = pd_glob[mn]->Num_Porous_Shell_Eqn;
+      strcpy(search_string, "Porosity");
+      model_read = look_for_mat_prop(imp, search_string, mat_ptr->PorousShellPorosityModel,
+                                     mat_ptr->PorousShellPorosity, NO_USER, NULL, model_name,
+                                     SCALAR_INPUT, &porous_shell_no, es);
+
+      if (model_read == -1 && !strcmp(model_name, "EXTERNAL_FIELD")) {
+        if (fscanf(imp, "%s", input) != 1) {
+          GOMA_EH(GOMA_ERROR, "Expecting trailing keyword for Porosity EXTERNAL_FIELD model.\n");
+        }
+        ii = 0;
+        for (j = 0; j < efv->Num_external_field; j++) {
+          if (!strcmp(efv->name[j], input)) {
+            ii = 1;
+            mat_ptr->por_shell_porosity_ext_field_index[ipore] = j;
+          }
+        }
+        if (ii == 0) {
+          GOMA_EH(GOMA_ERROR, "Cannot match the name with that in the external field file");
+        }
+        mat_ptr->PorousShellPorosityModel[ipore] = EXTERNAL_FIELD;
+
+        /* pick up scale factor for property */
+        num_const = read_constants(imp, mat_ptr->u_PorousShellPorosity, porous_shell_no);
+        mat_ptr->len_u_PorousShellPorosity[ipore] = num_const;
+        if (num_const < 1) {
+          sr = sprintf(err_msg, "Matl %s expected at least 1 constant for %s %s model.\n",
+                       pd_glob[mn]->MaterialName, "Porosity", "EXTERNAL_FIELD");
+          GOMA_EH(GOMA_ERROR, err_msg);
+        }
+      } else {
+        GOMA_EH(model_read, "Porosity: Is card missing?");
+      }
+
+      if (porous_shell_no != ipore) {
+        GOMA_EH(GOMA_ERROR, "Incomplete number of Porosity card");
+      }
+
+      ECHO(es, echo_file);
+
+      /***************
+       *             *
+       * Read height *
+       *             *
+       ****************/
+      porous_shell_no = pd_glob[mn]->Num_Porous_Shell_Eqn;
+      strcpy(search_string, "Porous Shell Height");
+      model_read = look_for_mat_prop(imp, search_string, mat_ptr->PorousShellHeightModel,
+                                     mat_ptr->PorousShellHeight, NO_USER, NULL, model_name,
+                                     SCALAR_INPUT, &porous_shell_no, es);
+      if (model_read == -1 && !strcmp(model_name, "EXTERNAL_FIELD")) {
+        if (fscanf(imp, "%s", input) != 1) {
+          GOMA_EH(GOMA_ERROR,
+                  "Expecting trailing keyword for Porous Shell Height EXTERNAL_FIELD model.\n");
+        }
+        ii = 0;
+        for (j = 0; j < efv->Num_external_field; j++) {
+          if (!strcmp(efv->name[j], input)) {
+            ii = 1;
+            mat_ptr->por_shell_height_ext_field_index[ipore] = j;
+          }
+        }
+        if (ii == 0) {
+          GOMA_EH(GOMA_ERROR, "Cannot match the name with that in the external field file");
+        }
+        mat_ptr->PorousShellHeightModel[ipore] = EXTERNAL_FIELD;
+
+        /* pick up scale factor for property */
+        num_const = read_constants(imp, mat_ptr->u_PorousShellHeight, porous_shell_no);
+        mat_ptr->len_u_PorousShellHeight[ipore] = num_const;
+        if (num_const < 1) {
+          sr = sprintf(err_msg, "Matl %s expected at least 1 constant for %s %s model.\n",
+                       pd_glob[mn]->MaterialName, "Porous Shell Height", "EXTERNAL_FIELD");
+          GOMA_EH(GOMA_ERROR, err_msg);
+        }
+      } else {
+        GOMA_EH(model_read, "Porous Shell Height: Is card missing?");
+      }
+
+      if (porous_shell_no != ipore) {
+        GOMA_EH(GOMA_ERROR, "Incomplete number of Porous Shell Height card");
+      }
+      ECHO(es, echo_file);
+
+      /*********************
+       *                   *
+       * Read permeability *
+       *                   *
+       *********************/
+      porous_shell_no = pd_glob[mn]->Num_Porous_Shell_Eqn;
+      strcpy(search_string, "Permeability");
+      model_read = look_for_mat_prop(imp, search_string, mat_ptr->PorousShellPermeabilityModel,
+                                     mat_ptr->PorousShellPermeability, NO_USER, NULL, model_name,
+                                     SCALAR_INPUT, &porous_shell_no, es);
+      if (model_read == -1 && !strcmp(model_name, "EXTERNAL_FIELD")) {
+        if (fscanf(imp, "%s", input) != 1) {
+          GOMA_EH(GOMA_ERROR,
+                  "Expecting trailing keyword for Permeability EXTERNAL_FIELD model.\n");
+        }
+        ii = 0;
+        for (j = 0; j < efv->Num_external_field; j++) {
+          if (!strcmp(efv->name[j], input)) {
+            ii = 1;
+            mat_ptr->por_shell_permeability_ext_field_index[ipore] = j;
+          }
+        }
+        if (ii == 0) {
+          GOMA_EH(GOMA_ERROR, "Cannot match the name with that in the external field file");
+        }
+        mat_ptr->PorousShellPermeabilityModel[ipore] = EXTERNAL_FIELD;
+
+        /* pick up scale factor for property */
+        num_const = read_constants(imp, mat_ptr->u_PorousShellPermeability, porous_shell_no);
+        mat_ptr->len_u_PorousShellPermeability[ipore] = num_const;
+        if (num_const < 1) {
+          sr = sprintf(err_msg, "Matl %s expected at least 1 constant for %s %s model.\n",
+                       pd_glob[mn]->MaterialName, "Permeability", "EXTERNAL_FIELD");
+          GOMA_EH(GOMA_ERROR, err_msg);
+        }
+      } else if (model_read == -1 && !strcmp(model_name, "ORTHOTROPIC")) {
+        mat_ptr->PorousShellPermeabilityModel[ipore] = ORTHOTROPIC;
+        num_const = read_constants(imp, mat_ptr->u_PorousShellPermeability, porous_shell_no);
+        if (num_const < 12) {
+          sr = sprintf(err_msg, "Matl %s expected at least 12 constants for %s %s model.\n",
+                       pd_glob[mn]->MaterialName, "Permeability", "ORTHOTROPIC");
+          GOMA_EH(GOMA_ERROR, err_msg);
+        }
+
+        memset(mat_ptr->PorousShellPermTensor[ipore], 0,
+               sizeof(double) * DIM * DIM); /*these are loaded up later */
+        mat_ptr->PorousShellPermeability[ipore] =
+            mat_ptr->u_PorousShellPermeability[ipore][0]; /*just in case */
+
+        mat_ptr->len_u_PorousShellPermeability[ipore] = num_const;
+      } else {
+        GOMA_EH(model_read, "Permeability: Is card missing?");
+      }
+
+      if (porous_shell_no != ipore) {
+        GOMA_EH(GOMA_ERROR, "Incomplete number of Permeability card");
+      }
+      ECHO(es, echo_file);
+
+      /******************************
+       *                            *
+       * Read relative permeability *
+       *                            *
+       * ****************************/
+      porous_shell_no = pd_glob[mn]->Num_Porous_Shell_Eqn;
+      strcpy(search_string, "Rel Liq Permeability");
+      model_read = look_for_mat_prop(imp, search_string, mat_ptr->PorousShellRelPermModel,
+                                     mat_ptr->PorousShellRelPerm, NO_USER, NULL, model_name,
+                                     SCALAR_INPUT, &porous_shell_no, es);
+      if (model_read == -1 && !strcmp(model_name, "EXTERNAL_FIELD")) {
+        if (fscanf(imp, "%s", input) != 1) {
+          GOMA_EH(GOMA_ERROR,
+                  "Expecting trailing keyword for Rel Liq Permeability EXTERNAL_FIELD model.\n");
+        }
+        ii = 0;
+        for (j = 0; j < efv->Num_external_field; j++) {
+          if (!strcmp(efv->name[j], input)) {
+            ii = 1;
+            mat_ptr->por_shell_rel_perm_ext_field_index[ipore] = j;
+          }
+        }
+        if (ii == 0) {
+          GOMA_EH(GOMA_ERROR, "Cannot match the name with that in the external field file");
+        }
+        mat_ptr->PorousShellRelPermModel[ipore] = EXTERNAL_FIELD;
+        /* pick up scale factor for property */
+        num_const = read_constants(imp, mat_ptr->u_PorousShellRelPerm, porous_shell_no);
+        mat_ptr->len_u_PorousShellRelPerm[ipore] = num_const;
+        if (num_const < 1) {
+          sr = sprintf(err_msg, "Matl %s expected at least 1 constant for %s %s model.\n",
+                       pd_glob[mn]->MaterialName, "Permeability", "EXTERNAL_FIELD");
+          GOMA_EH(GOMA_ERROR, err_msg);
+        }
+      } else if (model_read == -1 && !strcmp(model_name, "VAN_GENUCHTEN")) {
+        mat_ptr->PorousShellRelPermModel[ipore] = VAN_GENUCHTEN;
+        num_const = read_constants(imp, mat_ptr->u_PorousShellRelPerm, porous_shell_no);
+        if (num_const < 4) {
+          sr = sprintf(err_msg, "Matl %s expected at least 4 constants for %s %s model.\n",
+                       pd_glob[mn]->MaterialName, "Rel Liq Permeability", "VAN_GENUCHTEN");
+          GOMA_EH(GOMA_ERROR, err_msg);
+        }
+        mat_ptr->len_u_PorousShellRelPerm[ipore] = num_const;
+      } else if (model_read == -1 && !strcmp(model_name, "VAN_GENUCHTEN_EXTERNAL")) {
+        if (fscanf(imp, "%s", input) != 1) {
+          GOMA_EH(GOMA_ERROR, "Expecting trailing keyword for Rel Liq Permeability "
+                              "VAN_GENUCHTEN_EXTERNAL model.\n");
+        }
+        ii = 0;
+        for (j = 0; j < efv->Num_external_field; j++) {
+          if (!strcmp(efv->name[j], input)) {
+            ii = 1;
+            mat_ptr->por_shell_rel_perm_ext_field_index[ipore] = j;
+          }
+        }
+        if (ii == 0) {
+          GOMA_EH(GOMA_ERROR, "Cannot match the name with that in the external field file");
+        }
+        mat_ptr->PorousShellRelPermModel[ipore] = VAN_GENUCHTEN_EXTERNAL;
+        num_const = read_constants(imp, mat_ptr->u_PorousShellRelPerm, porous_shell_no);
+        if (num_const < 5) {
+          sr = sprintf(err_msg, "Matl %s expected at least 5 constants for %s %s model.\n",
+                       pd_glob[mn]->MaterialName, "Rel Liq Permeability", "VAN_GENUCHTEN_EXTERNAL");
+          GOMA_EH(GOMA_ERROR, err_msg);
+        }
+        mat_ptr->len_u_PorousShellRelPerm[ipore] = num_const;
+      } else {
+        GOMA_EH(model_read, "Rel Liq Permeability: Is card missing?");
+      }
+
+      if (porous_shell_no != ipore) {
+        GOMA_EH(GOMA_ERROR, "Incomplete number of Rel Liq Permeability card");
+      }
+      ECHO(es, echo_file);
+
+      /***************************
+       *                         *
+       * Read cross permeability *
+       *                         *
+       ***************************/
+      porous_shell_no = pd_glob[mn]->Num_Porous_Shell_Eqn;
+      strcpy(search_string, "Porous Shell Cross Permeability");
+      model_read = look_for_mat_prop(imp, search_string, mat_ptr->PorousShellCrossPermeabilityModel,
+                                     mat_ptr->PorousShellCrossPermeability, NO_USER, NULL,
+                                     model_name, SCALAR_INPUT, &porous_shell_no, es);
+      if (model_read == -1 && !strcmp(model_name, "EXTERNAL_FIELD")) {
+        if (fscanf(imp, "%s", input) != 1) {
+          GOMA_EH(GOMA_ERROR, "Expecting trailing keyword for Porous Shell Cross Permeability "
+                              "EXTERNAL_FIELD model.\n");
+        }
+        ii = 0;
+        for (j = 0; j < efv->Num_external_field; j++) {
+          if (!strcmp(efv->name[j], input)) {
+            ii = 1;
+            mat_ptr->por_shell_cross_permeability_ext_field_index[ipore] = j;
+          }
+        }
+        if (ii == 0) {
+          GOMA_EH(GOMA_ERROR, "Cannot match the name with that in the external field file");
+        }
+        mat_ptr->PorousShellCrossPermeabilityModel[ipore] = EXTERNAL_FIELD;
+
+        /* pick up scale factor for property */
+        num_const = read_constants(imp, mat_ptr->u_PorousShellCrossPermeability, porous_shell_no);
+        mat_ptr->len_u_PorousShellCrossPermeability[ipore] = num_const;
+        if (num_const < 1) {
+          sr = sprintf(err_msg, "Matl %s expected at least 1 constant for %s %s model.\n",
+                       pd_glob[mn]->MaterialName, "Porous Shell Cross Permeability",
+                       "EXTERNAL_FIELD");
+          GOMA_EH(GOMA_ERROR, err_msg);
+        }
+      } else {
+        GOMA_EH(model_read, "Porous Shell Cross Permeability: Is card missing?");
+      }
+
+      if (porous_shell_no != ipore) {
+        GOMA_EH(GOMA_ERROR, "Incomplete number of Porous Shell Cross Permeability card");
+      }
+      ECHO(es, echo_file);
+
+      /***************************
+       *                         *
+       * Read capillary pressure *
+       *                         *
+       ***************************/
+      porous_shell_no = pd_glob[mn]->Num_Porous_Shell_Eqn;
+      strcpy(search_string, "Capillary Pressure");
+      model_read = look_for_mat_prop(imp, search_string, mat_ptr->PorousShellCapPresModel,
+                                     mat_ptr->PorousShellCapPres, NO_USER, NULL, model_name,
+                                     SCALAR_INPUT, &porous_shell_no, es);
+
+      if (model_read == -1 && !strcmp(model_name, "ATANH")) {
+        mat_ptr->PorousShellCapPresModel[ipore] = ATANH;
+        num_const = read_constants(imp, mat_ptr->u_PorousShellCapPres, porous_shell_no);
+        if (num_const < 4) {
+          sr = sprintf(err_msg, "Matl %s expected at least 4 constants for %s %s model.\n",
+                       pd_glob[mn]->MaterialName, "Capillary Pressure", "ATANH");
+          GOMA_EH(GOMA_ERROR, err_msg);
+        }
+        mat_ptr->len_u_PorousShellCapPres[ipore] = num_const;
+      } else if (model_read == -1 && !strcmp(model_name, "SINH")) {
+        mat_ptr->PorousShellCapPresModel[ipore] = SINH;
+        num_const = read_constants(imp, mat_ptr->u_PorousShellCapPres, porous_shell_no);
+        if (num_const < 4) {
+          sr = sprintf(err_msg, "Matl %s expected at least 4 constants for %s %s model.\n",
+                       pd_glob[mn]->MaterialName, "Capillary Pressure", "SINH");
+          GOMA_EH(GOMA_ERROR, err_msg);
+        }
+        mat_ptr->len_u_PorousShellCapPres[ipore] = num_const;
+      } else if (model_read == -1 && !strcmp(model_name, "VAN_GENUCHTEN")) {
+        mat_ptr->PorousShellCapPresModel[ipore] = VAN_GENUCHTEN;
+        num_const = read_constants(imp, mat_ptr->u_PorousShellCapPres, porous_shell_no);
+        if (num_const < 4) {
+          sr = sprintf(err_msg, "Matl %s expected at least 4 constants for %s %s model.\n",
+                       pd_glob[mn]->MaterialName, "Capillary Pressure", "VAN_GENUCHTEN");
+          GOMA_EH(GOMA_ERROR, err_msg);
+        }
+        mat_ptr->len_u_PorousShellCapPres[ipore] = num_const;
+      } else if (model_read == -1 && !strcmp(model_name, "VAN_GENUCHTEN_EXTERNAL")) {
+        if (fscanf(imp, "%s", input) != 1) {
+          GOMA_EH(
+              GOMA_ERROR,
+              "Expecting trailing keyword for Capillary Pressure VAN_GENUCHTEN_EXTERNAL model.\n");
+        }
+        ii = 0;
+        for (j = 0; j < efv->Num_external_field; j++) {
+          if (!strcmp(efv->name[j], input)) {
+            ii = 1;
+            mat_ptr->por_shell_cap_pres_ext_field_index[ipore] = j;
+          }
+        }
+        if (ii == 0) {
+          GOMA_EH(GOMA_ERROR, "Cannot match the name with that in the external field file");
+        }
+        mat_ptr->PorousShellCapPresModel[ipore] = VAN_GENUCHTEN_EXTERNAL;
+        num_const = read_constants(imp, mat_ptr->u_PorousShellCapPres, porous_shell_no);
+        if (num_const < 8) {
+          sr = sprintf(err_msg, "Matl %s expected at least 8 constants for %s %s model.\n",
+                       pd_glob[mn]->MaterialName, "Capillary Pressure", "VAN_GENUCHTEN_EXTERNAL");
+          GOMA_EH(GOMA_ERROR, err_msg);
+        }
+        mat_ptr->len_u_PorousShellCapPres[ipore] = num_const;
+      } else if (model_read == -1 && !strcmp(model_name, "VAN_GENUCHTEN_HYST")) {
+        mat_ptr->PorousShellCapPresModel[ipore] = VAN_GENUCHTEN_HYST;
+        num_const = read_constants(imp, mat_ptr->u_PorousShellCapPres, porous_shell_no);
+        if (num_const < 10) {
+          sr = sprintf(err_msg, "Matl %s expected at least 10 constants for %s %s model.\n",
+                       pd_glob[mn]->MaterialName, "Capillary Pressure", "VAN_GENUCHTEN_HYST");
+          GOMA_EH(GOMA_ERROR, err_msg);
+        }
+        mat_ptr->len_u_PorousShellCapPres[ipore] = num_const;
+
+        /* New change in 2021, use external field to store history of the curve.
+         * For now, use fixed names of the field
+         */
+        if (efv->ev) {
+          for (i = 0; i < efv->Num_external_field; i++) {
+
+            /* Search for number of curve switches */
+            if (!strcmp(efv->name[i], "NUM_SWITCH_1")) {
+              mat_ptr->por_shell_cap_pres_hyst_num_switch_ext_field_index[0] = i;
+            }
+
+            if (!strcmp(efv->name[i], "NUM_SWITCH_2")) {
+              mat_ptr->por_shell_cap_pres_hyst_num_switch_ext_field_index[1] = i;
+            }
+
+            if (!strcmp(efv->name[i], "NUM_SWITCH_3")) {
+              mat_ptr->por_shell_cap_pres_hyst_num_switch_ext_field_index[2] = i;
+            }
+
+            /* Search for curve type - drainage or imbibition */
+            if (!strcmp(efv->name[i], "CURVE_TYPE_1")) {
+              mat_ptr->por_shell_cap_pres_hyst_curve_type_ext_field_index[0] = i;
+            }
+            if (!strcmp(efv->name[i], "CURVE_TYPE_2")) {
+              mat_ptr->por_shell_cap_pres_hyst_curve_type_ext_field_index[1] = i;
+            }
+            if (!strcmp(efv->name[i], "CURVE_TYPE_3")) {
+              mat_ptr->por_shell_cap_pres_hyst_curve_type_ext_field_index[2] = i;
+            }
+          }
+        } else {
+          GOMA_EH(GOMA_ERROR, " You need external fields to use VAN_GENUCHTEN_HYST");
+        }
+
+      } else if (model_read == -1 && !strcmp(model_name, "VAN_GENUCHTEN_HYST_EXT")) {
+        if (fscanf(imp, "%s", input) != 1) {
+          GOMA_EH(
+              GOMA_ERROR,
+              "Expecting trailing keyword for Capillary Pressure VAN_GENUCHTEN_HYST_EXT model.\n");
+        }
+        ii = 0;
+        for (j = 0; j < efv->Num_external_field; j++) {
+          if (!strcmp(efv->name[j], input)) {
+            ii = 1;
+            mat_ptr->por_shell_cap_pres_ext_field_index[ipore] = j;
+          }
+        }
+        if (ii == 0) {
+          GOMA_EH(GOMA_ERROR, "Cannot match the name with that in the external field file");
+        }
+
+        mat_ptr->PorousShellCapPresModel[ipore] = VAN_GENUCHTEN_HYST_EXT;
+        num_const = read_constants(imp, mat_ptr->u_PorousShellCapPres, porous_shell_no);
+        if (num_const < 18) {
+          sr = sprintf(err_msg, "Matl %s expected at least 18 constants for %s %s model.\n",
+                       pd_glob[mn]->MaterialName, "Capillary Pressure", "VAN_GENUCHTEN_HYST_EXT");
+          GOMA_EH(GOMA_ERROR, err_msg);
+        }
+        mat_ptr->len_u_PorousShellCapPres[ipore] = num_const;
+      } else {
+        GOMA_EH(model_read, "Capillary Pressure: Is card missing?");
+      }
+      if (porous_shell_no != ipore) {
+        GOMA_EH(GOMA_ERROR, "Incomplete number of Capillary Pressure card");
+      }
+      ECHO(es, echo_file);
+
+    } /* End of loop over porous shell layers*/
+
+    /*
+     *   Porous Mass Lumping:
+     *
+     *    This is where you specify whether you want to use
+     *    Mass Lumping of the time derivative or whether you
+     *    want to use a consistent time derivative treatment.
+     *    By default, mass lumping is always TRUE
+     *
+     */
+
+    model_read = look_for_mat_prop(imp, "Porous Mass Lumping", NULL, NULL, NO_USER, NULL,
+                                   model_name, SCALAR_INPUT, &NO_SPECIES, es);
+
+    if (!strcasecmp(model_name, "yes") || !strcasecmp(model_name, "true")) {
+      mat_ptr->Porous_Mass_Lump = TRUE;
+    } else if (!strcasecmp(model_name, "no") || !strcasecmp(model_name, "false")) {
+      mat_ptr->Porous_Mass_Lump = FALSE;
+    } else {
+      mat_ptr->Porous_Mass_Lump = TRUE;
+    }
+
+  } /*end of if( (mat_ptr->PorousMediaType == POROUS_SHELL_UNSATURATED) &&
+                 (!PorousShellOn) ) */
+
+  /* Special constants for sink models formulation -- PRS 8/19/05 */
+  if (have_por_sink_mass == 1) {
+    model_read =
+        look_for_mat_prop(imp, "Sink Adsorption Rate Data", &(mat_ptr->PorousSinkConstantsModel),
+                          &(mat_ptr->porous_sink_constants), NO_USER, NULL, model_name,
+                          SCALAR_INPUT, &NO_SPECIES, es);
+    if (model_read == -1 && !strcmp(model_name, "LINEAR")) {
+      mat_ptr->PorousSinkConstantsModel = LINEAR;
+
+      num_const = read_constants(imp, &(mat_ptr->u_porous_sink_constants), NO_SPECIES);
+      if (num_const < 8) {
+        sr = sprintf(err_msg, "Matl %s needs 8 constants for %s %s model.\n",
+                     pd_glob[mn]->MaterialName, "Sink Adsorption Rate Data", "LINEAR");
+        GOMA_EH(GOMA_ERROR, err_msg);
+      }
+      mat_ptr->len_u_porous_sink_constants = num_const;
+    } else if (model_read == -1 && !strcmp(model_name, "POWER_LAW")) {
+      mat_ptr->PorousSinkConstantsModel = POWER_LAW;
+
+      num_const = read_constants(imp, &(mat_ptr->u_porous_sink_constants), NO_SPECIES);
+      if (num_const < 4) {
+        sr = sprintf(err_msg, "Matl %s needs 4 constants for %s %s model.\n",
+                     pd_glob[mn]->MaterialName, "Sink Adsorption Rate Data", "POWER_LAW");
+        GOMA_EH(GOMA_ERROR, err_msg);
+      }
+      mat_ptr->len_u_porous_sink_constants = num_const;
+    } else if (!strcmp(model_name, "CONSTANT")) {
+      GOMA_EH(GOMA_ERROR, "Ironically we don't allow a CONSTANT model for Sink Adsorption Rate "
+                          "Data.  Try LINEAR");
+    } else {
+      GOMA_EH(model_read, "Sink Adsorption Rate Data");
+    }
+    ECHO(es, echo_file);
+  }
+
   /*
    * *****************Species Stuff*******************************
    */
@@ -5424,7 +5926,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
      */
     iread = look_for_optional(imp, "Number of chemical reactions", input, '=');
     if (fscanf(imp, "%d", &n_rxn) != 1) {
-      GOMA_EH(-1, "Expected to read 1 int for \"Number of chemical reactions\"");
+      GOMA_EH(GOMA_ERROR, "Expected to read 1 int for \"Number of chemical reactions\"");
     }
 
     pd_glob[mn]->Num_Rxn = n_rxn;
@@ -5433,7 +5935,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
               "Specified number of chemical rxns %d > %d, compiled limit - boost MAX_RXN in "
               "rf_fem_const.h",
               ii, MAX_RXN);
-      GOMA_EH(-1, err_msg);
+      GOMA_EH(GOMA_ERROR, err_msg);
     }
     SPF(es, "%s = %d", "Number of chemical reactions", n_rxn);
     ECHO(es, echo_file);
@@ -7071,7 +7573,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
           if (fscanf(imp, "%lf %lf %lf", &(mat_ptr->mp2nd->momentumsource_phase[i][0]),
                      &(mat_ptr->mp2nd->momentumsource_phase[i][1]),
                      &(mat_ptr->mp2nd->momentumsource_phase[i][2])) != 3) {
-            GOMA_EH(-1, "error reading phase momentum source");
+            GOMA_EH(GOMA_ERROR, "error reading phase momentum source");
           }
           SPF(endofstring(es), " %g %g %g ", mat_ptr->mp2nd->momentumsource_phase[i][0],
               mat_ptr->mp2nd->momentumsource_phase[i][1],
@@ -7248,7 +7750,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       if (pfd != NULL) {
         for (i = 0; i < pfd->num_phase_funcs; i++) {
           if (fscanf(imp, "%lf", &(mat_ptr->mp2nd->heatsource_phase[i])) != 1) {
-            GOMA_EH(-1, "error reading phase heat source");
+            GOMA_EH(GOMA_ERROR, "error reading phase heat source");
           }
           SPF(endofstring(es), " %g", mat_ptr->mp2nd->heatsource_phase[i]);
         }
@@ -7329,7 +7831,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       if (fscanf(imp, "%lf %lf %lf %lf %lf", &a0, &a1, &a2, &a3, &a4) != 5) {
         sr = sprintf(err_msg, "Matl %s needs  5 constants for %s %s model.\n",
                      pd_glob[mn]->MaterialName, "Species Source", "SSM_BOND");
-        GOMA_EH(-1, err_msg);
+        GOMA_EH(GOMA_ERROR, err_msg);
       }
 
       mat_ptr->u_species_source[species_no] = (dbl *)array_alloc(1, 5, sizeof(dbl));
@@ -7711,7 +8213,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       if (fscanf(imp, "%lf %lf %lf %lf %lf", &a0, &a1, &a2, &a3, &a4) != 5) {
         sr = sprintf(err_msg, "Matl %s needs 5 floats for %s %s model.\n",
                      pd_glob[mn]->MaterialName, "Species Source", "DROP_EVAP");
-        GOMA_EH(-1, err_msg);
+        GOMA_EH(GOMA_ERROR, err_msg);
       }
       mat_ptr->u_species_source[species_no] = (dbl *)array_alloc(1, 5, sizeof(dbl));
       mat_ptr->len_u_species_source[species_no] = 5;
@@ -7765,7 +8267,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
           if (pfd != NULL) {
             for (i = 0; i < pfd->num_phase_funcs; i++) {
               if (fscanf(imp, "%lf", &(mat_ptr->mp2nd->speciessource_phase[i][species_no])) != 1) {
-                GOMA_EH(-1, "error reading phase species source");
+                GOMA_EH(GOMA_ERROR, "error reading phase species source");
               }
               SPF(endofstring(es), " %g", mat_ptr->mp2nd->speciessource_phase[i][species_no]);
             }
@@ -7896,7 +8398,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     iread = look_for_optional(imp, "Non-condensable Molecular Weight", input, '=');
     if (iread != -1) {
       if (fscanf(imp, "%s %d %lf", model_name, &ii, &mw) != 3) {
-        GOMA_EH(-1, "Error reading non-condensable MW: e.g. CONSTANT species_no  MW");
+        GOMA_EH(GOMA_ERROR, "Error reading non-condensable MW: e.g. CONSTANT species_no  MW");
       } else {
         mat_ptr->molecular_weight[mat_ptr->Num_Species_Eqn] = mw;
         SPF(es, "%s = %s %d %.4g", "Non-condensable Molecular Weight", model_name, ii, mw);
@@ -7907,7 +8409,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     iread = look_for_optional(imp, "Non-volatile Molar Volume", input, '=');
     if (iread != -1) {
       if (fscanf(imp, "%s %d %lf", model_name, &ii, &mv) != 3) {
-        GOMA_EH(-1, "Error reading non-volatile Molar Volume: e.g. CONSTANT  species_id  MV");
+        GOMA_EH(GOMA_ERROR,
+                "Error reading non-volatile Molar Volume: e.g. CONSTANT  species_id  MV");
       } else {
         mat_ptr->molar_volume[pd_glob[mn]->Num_Species_Eqn] = mv;
         SPF(es, "%s = %s %d %.4g", "Non-volatile Molar Volume", model_name, ii, mw);
@@ -7918,7 +8421,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     iread = look_for_optional(imp, "Non-volatile Specific Volume", input, '=');
     if (iread != -1) {
       if (fscanf(imp, "%s %d %lf", model_name, &ii, &mv) != 3) {
-        GOMA_EH(-1, "Error reading non-volatile Specific Volume: e.g. CONSTANT  species_id  MV");
+        GOMA_EH(GOMA_ERROR,
+                "Error reading non-volatile Specific Volume: e.g. CONSTANT  species_id  MV");
       } else {
         mat_ptr->specific_volume[pd_glob[mn]->Num_Species_Eqn] = mv;
         SPF(es, "%s = %s %d %.4g", "Non-volatile Specific Volume", model_name, ii, mw);
@@ -7933,12 +8437,12 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       n_ij = (n_species * n_species - n_species) / 2;
 
       if (fscanf(imp, "%s", model_name) != 1) {
-        GOMA_EH(-1, "Error reading F-H parameter model name: e.g. CONSTANT");
+        GOMA_EH(GOMA_ERROR, "Error reading F-H parameter model name: e.g. CONSTANT");
       } else {
         for (i = 0; i < n_ij; i++) /* reading the chi parameters */
         {
           if (fscanf(imp, "%d %d %lf", &ii, &jj, &chi_ij) != 3) {
-            GOMA_EH(-1, "Error:must have three entries, i, j, and chi(i,j)");
+            GOMA_EH(GOMA_ERROR, "Error:must have three entries, i, j, and chi(i,j)");
           }
           mat_ptr->flory_param[ii][jj] = chi_ij;
           mat_ptr->flory_param[jj][ii] =
@@ -8623,7 +9127,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         if (num_const < 3) {
           sr = sprintf(err_msg, "Matl %s needs 3 constants for %s %s model.\n",
                        pd_glob[mn]->MaterialName, "Lubrication source", "CONTINUUM_FLUID");
-          GOMA_EH(-1, err_msg);
+          GOMA_EH(GOMA_ERROR, err_msg);
         }
 
         mat_ptr->len_lubsource = num_const;
@@ -8870,14 +9374,14 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   // mat_ptr->FSIModel = FSI_SHELL_ONLY;
   /*added by DSB 7/13; some post proc routines for 2D/shell problems
-                                          get confused if there are shell elements and no FSI model
-     is specified. Need to check that this doesn't break anything.*/
-
+                                        get confused if there are shell elements and no FSI model is
+     specified. Need to check that this doesn't break anything.*/
   if (pd_glob[mn]->gv[R_LUBP] || pd_glob[mn]->gv[R_LUBP_2] || pd_glob[mn]->gv[R_SHELL_FILMP] ||
       pd_glob[mn]->gv[R_SHELL_SAT_OPEN] || pd_glob[mn]->gv[R_SHELL_SAT_OPEN_2] ||
+      pd_glob[mn]->gv[R_SHELL_SAT_1] ||
       (pd_glob[mn]->gv[R_SHELL_NORMAL1] && pd_glob[mn]->gv[R_SHELL_NORMAL2] &&
        pd_glob[mn]->gv[R_SHELL_NORMAL3]) ||
-      (pd_glob[mn]->gv[R_TFMP_MASS] || pd_glob[mn]->gv[R_TFMP_BOUND])) {
+      pd_glob[mn]->gv[R_TFMP_MASS] || pd_glob[mn]->gv[R_TFMP_BOUND]) {
 
     model_read = look_for_mat_prop(imp, "FSI Deformation Model", &(mat_ptr->FSIModel), &(a0),
                                    NO_USER, NULL, model_name, NO_INPUT, &NO_SPECIES, es);

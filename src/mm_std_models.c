@@ -2769,13 +2769,13 @@ int Diffusivity(void)
                                   &mp->d_diffusivity[w][FILL]);
       break;
     case CHAPMAN_GAS:
-      if (pd->e[TEMPERATURE]) {
+      if (pd->gv[TEMPERATURE]) {
         T = fv->T;
       } else {
         T = upd->Process_Temperature;
       }
 
-      if (pd->e[PRESSURE] && fv->P > 0) {
+      if (pd->gv[PRESSURE] && fv->P > 0) {
         P = fv->P;
       } else {
         P = upd->Pressure_Datum / 10000.0;
@@ -2784,10 +2784,10 @@ int Diffusivity(void)
       mp->diffusivity[w] = mp->u_diffusivity[w][0] *
                            sqrt(1. / mp->molecular_weight[w] + 1. / mp->u_diffusivity[w][1]) *
                            pow(T, 1.5) / P;
-      if (pd->e[TEMPERATURE]) {
+      if (pd->e[pg->imtrx][TEMPERATURE]) {
         mp->d_diffusivity[w][TEMPERATURE] = 1.5 * mp->diffusivity[w] / T;
       }
-      if (pd->e[PRESSURE]) {
+      if (pd->e[pg->imtrx][PRESSURE]) {
         mp->d_diffusivity[w][PRESSURE] = mp->diffusivity[w] * P * log(P);
       }
 

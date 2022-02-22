@@ -50,21 +50,37 @@ EXTERN int load_lubrication_momentum_source /* mm_std_models_shell.c          */
 EXTERN double porous_shell_closed_porosity_model /* mm_std_models_shell.c          */
     (void);
 
+EXTERN double porous_shell_porosity_model /* mm_std_models_shell.c          */
+    (int);
+
 EXTERN double porous_shell_closed_radius_model /* mm_std_models_shell.c          */
     (void);
 
 EXTERN double porous_shell_closed_height_model /* mm_std_models_shell.c          */
     (void);
 
+EXTERN double porous_shell_height_model /* mm_std_models_shell.c          */
+    (int);
+
 EXTERN double porous_shell_cross_perm_model /* mm_std_models_shell.c          */
-    (void);
+    (int);
+
+EXTERN double porous_shell_rel_perm_model /* mm_std_models_shell.c          */
+    (int, double);
+
+EXTERN void porous_shell_permeability_model /* mm_std_models_shell.c          */
+    (int);
 
 EXTERN void dynamic_contact_angle_model(double *, double *, double, double *, double *);
 
 EXTERN double rolling_pressure(double, double *, double);
 
+EXTERN void porous_shell_open_source_model(double[MDE],
+                                           double[MDE],
+                                           double[MAX_POR_SHELL][MDE],
+                                           double[MAX_POR_SHELL][MDE]);
+
 EXTERN int lubrication_fluid_source(double *,                       /* Flux */
                                     double[MAX_VARIABLE_TYPES][MDE] /* Flux sensitivities */
 );
-
 #endif /* GOMA_MM_STD_MODELS_H */

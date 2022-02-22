@@ -203,6 +203,10 @@ int SAT_QP_SWITCH = -1;    /* Value of sat. function at hysteretic
                             * swtch point */
 int CAP_PRESS_SWITCH = -1; /* Value of cap. press function at hysteretic
                             * swtch point */
+int NUM_CURVE_SWITCH = -1; /* Number of hysteretic curve switch */
+int SAT_HYST_MIN = -1;     /* Minimum saturation value for scanning imbibition curve */
+int SAT_HYST_MAX = -1;     /* Maximum saturation value for scanning draining curve */
+
 int EVP_DEF_GRAD_TENSOR = -1;
 int EXTERNAL_POST = -1; /* external field variables read from other
                          * files */
@@ -279,6 +283,8 @@ int LUB_FLUID_SOURCE = -1;
 int DISJ_PRESS = -1;
 int SH_SAT_OPEN = -1;
 int SH_SAT_OPEN_2 = -1;
+int SH_CAP_PRES = -1;
+int SH_PORE_FLUX = -1;
 int SH_STRESS_TENSOR = -1;
 int SH_TANG = -1;
 int PP_LAME_MU = -1;
@@ -2950,6 +2956,70 @@ static int calc_standard_fields(double **post_proc_vect,
     local_lumped[SH_SAT_OPEN_2] = 1.0;
   } /* end of SH_SAT_OPEN_2 */
 
+  if ((SH_CAP_PRES != -1) && pd->e[pg->imtrx][R_SHELL_SAT_1]) {
+
+    double shell_cap_pressure_nodal[MDE] = {0.0};
+    double shell_cap_pressure = 0.0;
+
+    for (j = 0; j < ei[pg->imtrx]->dof[SHELL_SAT_1]; j++) {
+      shell_cap_pressure_nodal[j] = load_cap_pres(0, j, -1, *esp->sh_sat_1[j]);
+      shell_cap_pressure += shell_cap_pressure_nodal[j] * bf[SHELL_SAT_1]->phi[j];
+    }
+
+    /* Post capillary pressure */
+    local_post[SH_CAP_PRES] = shell_cap_pressure;
+    local_lumped[SH_CAP_PRES] = 1.0;
+
+    if (pd->e[pg->imtrx][R_SHELL_SAT_2]) {
+      shell_cap_pressure = 0.0;
+      for (j = 0; j < ei[pg->imtrx]->dof[SHELL_SAT_2]; j++) {
+        shell_cap_pressure_nodal[j] = load_cap_pres(1, j, -1, *esp->sh_sat_2[j]);
+        shell_cap_pressure += shell_cap_pressure_nodal[j] * bf[SHELL_SAT_2]->phi[j];
+      }
+
+      /* Post capillary pressure */
+      local_post[SH_CAP_PRES + 1] = shell_cap_pressure;
+      local_lumped[SH_CAP_PRES + 1] = 1.0;
+    }
+
+    if (pd->e[pg->imtrx][R_SHELL_SAT_3]) {
+      shell_cap_pressure = 0.0;
+      for (j = 0; j < ei[pg->imtrx]->dof[SHELL_SAT_3]; j++) {
+        shell_cap_pressure_nodal[j] = load_cap_pres(2, j, -1, *esp->sh_sat_3[j]);
+        shell_cap_pressure += shell_cap_pressure_nodal[j] * bf[SHELL_SAT_3]->phi[j];
+      }
+
+      /* Post capillary pressure */
+      local_post[SH_CAP_PRES + 2] = shell_cap_pressure;
+      local_lumped[SH_CAP_PRES + 2] = 1.0;
+    }
+
+  } /* end of SH_CAP_PRES */
+
+  if ((SH_PORE_FLUX != -1) && pd->e[pg->imtrx][R_SHELL_SAT_1] && pd->e[pg->imtrx][R_SHELL_SAT_2]) {
+
+    double j_1_2_nodal[MDE] = {0.0}, j_2_3_nodal[MDE] = {0.0};
+    double j_1_2 = 0.0, j_2_3 = 0.0;
+
+    /* Calculate the fluxes and their sensitivities */
+    porous_shell_open_source_model(j_1_2_nodal, j_2_3_nodal, NULL, NULL);
+
+    for (j = 0; j < ei[pg->imtrx]->dof[SHELL_SAT_3]; j++) {
+      j_1_2 += j_1_2_nodal[j] * bf[SHELL_SAT_1]->phi[j];
+      j_2_3 += j_2_3_nodal[j] * bf[SHELL_SAT_3]->phi[j];
+    }
+
+    /* Post flux between porous shell layers 1 and 2 */
+    local_post[SH_PORE_FLUX] = j_1_2;
+    local_lumped[SH_PORE_FLUX] = 1.0;
+
+    if (pd->e[pg->imtrx][R_SHELL_SAT_3]) {
+      /* Post flux between porous shell layers 2 and 3 */
+      local_post[SH_PORE_FLUX + 1] = j_2_3;
+      local_lumped[SH_PORE_FLUX + 1] = 1.0;
+    }
+  } /* end of SH_PORE_FLUX */
+
   if (REL_LIQ_PERM != -1 && (mp->PorousMediaType == POROUS_UNSATURATED ||
                              mp->PorousMediaType == POROUS_SHELL_UNSATURATED ||
                              mp->PorousMediaType == POROUS_TWO_PHASE)) {
@@ -3104,10 +3174,10 @@ static int calc_standard_fields(double **post_proc_vect,
        * }
        */
       if (lambda == 0.0) {
-        GOMA_EH(-1, "The conformation tensor needs a non-zero polymer time constant.");
+        GOMA_EH(GOMA_ERROR, "The conformation tensor needs a non-zero polymer time constant.");
       }
       if (mup == 0.0) {
-        GOMA_EH(-1, "The conformation tensor needs a non-zero polymer viscosity.");
+        GOMA_EH(GOMA_ERROR, "The conformation tensor needs a non-zero polymer viscosity.");
       }
 
       if (pd->v[pg->imtrx][v_s[mode][0][0]]) {
@@ -4827,7 +4897,7 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
       while (!p_done) {
 
         /*  Adjust particle size for droplets  */
-        if (pd->v[RESTIME] && mp->SpeciesSourceModel[0] == DROP_EVAP) {
+        if (pd->v[pg->imtrx][RESTIME] && mp->SpeciesSourceModel[0] == DROP_EVAP) {
           p_lambda = pp_particles[i]->mass * pp_particles[i]->mobility * SQUARE(fv->restime);
           p_force[0] = pp_particles[i]->mobility * pp_particles[i]->force[0] * SQUARE(fv->restime);
           p_force[1] = pp_particles[i]->mobility * pp_particles[i]->force[1] * SQUARE(fv->restime);
@@ -5205,7 +5275,7 @@ void post_process_elem(double x[],     /* soln vector */
             ev_indx++;
           }
         }
-      }
+      } /*End of loop over element block */
     }
   }
 
@@ -5389,7 +5459,7 @@ static int calc_zz_error_vel(double x[], /* Solution vector                     
       if (i_elem == i_start)
         max_dim = i_elem_dim;
       if (i_elem_dim != max_dim || i_elem_dim != exo->num_dim) {
-        GOMA_EH(-1, "Cannot mix element dimensionality for error computation");
+        GOMA_EH(GOMA_ERROR, "Cannot mix element dimensionality for error computation");
       }
 
       if (i_elem_gp > max_gp) {
@@ -5424,7 +5494,7 @@ static int calc_zz_error_vel(double x[], /* Solution vector                     
         if (i_elem == i_start)
           last_interp = pd->i[pg->imtrx][VELOCITY1];
         if (pd->i[pg->imtrx][VELOCITY1] != last_interp) {
-          GOMA_EH(-1, "Cannot mix velocity interpolation levels for error computation");
+          GOMA_EH(GOMA_ERROR, "Cannot mix velocity interpolation levels for error computation");
         }
       }
 
@@ -5938,7 +6008,8 @@ static int calc_zz_error_vel(double x[], /* Solution vector                     
               remesh_status);
       fprintf(stdout, "\n (Max error < target error, error reduction objective met)\n");
     } else {
-      GOMA_EH(-1, "Undetermined state encountered during error/remeshing size data calculation\n");
+      GOMA_EH(GOMA_ERROR,
+              "Undetermined state encountered during error/remeshing size data calculation\n");
     }
 
     fprintf(stdout, "\n Current number of nodes (resolution)                \t= %d\n",
@@ -6654,7 +6725,7 @@ static int fill_lhs_lspatch(double *i_node_coords,
 
       break;
     default:
-      GOMA_EH(-1, "Unsupported size in building LHS of least squares patch for error");
+      GOMA_EH(GOMA_ERROR, "Unsupported size in building LHS of least squares patch for error");
       break;
     }
   }
@@ -7198,6 +7269,8 @@ void rd_post_process_specs(FILE *ifp, char *input) {
   iread = look_for_post_proc(ifp, "Disjoining Pressure", &DISJ_PRESS);
   iread = look_for_post_proc(ifp, "Porous Shell Open Saturation", &SH_SAT_OPEN);
   iread = look_for_post_proc(ifp, "Porous Shell Open Saturation 2", &SH_SAT_OPEN_2);
+  iread = look_for_post_proc(ifp, "Porous Shell Capillary Pressure", &SH_CAP_PRES);
+  iread = look_for_post_proc(ifp, "Porous Shell Inter Layer Flux", &SH_PORE_FLUX);
   iread = look_for_post_proc(ifp, "Shell Stress Tensor", &SH_STRESS_TENSOR);
   iread = look_for_post_proc(ifp, "Shell Tangents", &SH_TANG);
   iread = look_for_post_proc(ifp, "Lame MU", &PP_LAME_MU);
@@ -7264,8 +7337,9 @@ void rd_post_process_specs(FILE *ifp, char *input) {
   i++;
   if (look_for_optional(ifp, "Error ZZ heat flux elem size", input, '=') == 1) {
     if (ERROR_ZZ_Q == -1) {
-      GOMA_EH(-1, "'Error ZZ heat flux elem size' card REQUIRES 'Error ZZ heat flux = yes' card - "
-                  "please add");
+      GOMA_EH(GOMA_ERROR,
+              "'Error ZZ heat flux elem size' card REQUIRES 'Error ZZ heat flux = yes' card - "
+              "please add");
     } else {
       ERROR_ZZ_Q_ELSIZE = 1;
       error_presence_key[i] = 1;
@@ -7277,8 +7351,9 @@ void rd_post_process_specs(FILE *ifp, char *input) {
   i++;
   if (look_for_optional(ifp, "Error ZZ pressure elem size", input, '=') == 1) {
     if (ERROR_ZZ_P == -1) {
-      GOMA_EH(-1, "'Error ZZ pressure elem size' card REQUIRES 'Error ZZ pressure = yes' card - "
-                  "please add");
+      GOMA_EH(GOMA_ERROR,
+              "'Error ZZ pressure elem size' card REQUIRES 'Error ZZ pressure = yes' card - "
+              "please add");
     } else {
       ERROR_ZZ_P_ELSIZE = 1;
       error_presence_key[i] = 1;
@@ -7304,7 +7379,7 @@ void rd_post_process_specs(FILE *ifp, char *input) {
                  &pp_error_data[i].error_params[1], &pp_error_data[i].error_params[2],
                  &pp_error_data[i].error_params[3], &pp_error_data[i].error_params[4],
                  &pp_error_data[i].error_params[5]) != 6) {
-        GOMA_EH(-1,
+        GOMA_EH(GOMA_ERROR,
                 " Error reading 'Error ZZ velocity elem size' card values - expecting 6 floats");
       }
 #ifdef RRL_DEBUG
@@ -7330,7 +7405,7 @@ void rd_post_process_specs(FILE *ifp, char *input) {
                  &pp_error_data[i].error_params[1], &pp_error_data[i].error_params[2],
                  &pp_error_data[i].error_params[3], &pp_error_data[i].error_params[4],
                  &pp_error_data[i].error_params[5]) != 6) {
-        GOMA_EH(-1,
+        GOMA_EH(GOMA_ERROR,
                 " Error reading 'Error ZZ heat flux elem size' card values - expecting 6 floats");
       }
 #ifdef RRL_DEBUG
@@ -7357,7 +7432,7 @@ void rd_post_process_specs(FILE *ifp, char *input) {
                  &pp_error_data[i].error_params[1], &pp_error_data[i].error_params[2],
                  &pp_error_data[i].error_params[3], &pp_error_data[i].error_params[4],
                  &pp_error_data[i].error_params[5]) != 6) {
-        GOMA_EH(-1,
+        GOMA_EH(GOMA_ERROR,
                 " Error reading 'Error ZZ pressure elem size' card values - expecting 6 floats");
       }
 #ifdef RRL_DEBUG
@@ -7416,7 +7491,7 @@ void rd_post_process_specs(FILE *ifp, char *input) {
       /* Read FLUX  type: i.e. FORCE_X, HEAT FLUX, etc. */
 
       if (fscanf(ifp, "%s", ts) != 1) {
-        GOMA_EH(-1, "error reading Post Processing Flux input variable");
+        GOMA_EH(GOMA_ERROR, "error reading Post Processing Flux input variable");
       }
 
       pp_fluxes[i]->flux_type = -1;
@@ -7428,7 +7503,7 @@ void rd_post_process_specs(FILE *ifp, char *input) {
         }
       }
       if (pp_fluxes[i]->flux_type == -1) {
-        GOMA_EH(-1, "Invalid Flux name");
+        GOMA_EH(GOMA_ERROR, "Invalid Flux name");
       }
       SPF(echo_string, "%s = %s", "FLUX", pp_fluxes[i]->flux_type_name);
 
@@ -7459,7 +7534,7 @@ void rd_post_process_specs(FILE *ifp, char *input) {
 
       /* read file name */
       if (fscanf(ifp, "%s", ts) != 1) {
-        GOMA_EH(-1, "error reading Post Processing Flux filename");
+        GOMA_EH(GOMA_ERROR, "error reading Post Processing Flux filename");
       }
       strcpy(pp_fluxes[i]->flux_filenm, ts);
 
@@ -7524,7 +7599,7 @@ void rd_post_process_specs(FILE *ifp, char *input) {
       look_for(ifp, "FLUX_SENS", input, '=');
       /* Read FLUX  type: i.e. FORCE_X, HEAT FLUX, etc. */
       if (fscanf(ifp, "%s", ts) != 1) {
-        GOMA_EH(-1, "error reading FLUX_SENS name");
+        GOMA_EH(GOMA_ERROR, "error reading FLUX_SENS name");
       }
 
       pp_fluxes_sens[i]->flux_type = -1;
@@ -7537,7 +7612,7 @@ void rd_post_process_specs(FILE *ifp, char *input) {
       }
 
       if (pp_fluxes_sens[i]->flux_type == -1) {
-        GOMA_EH(-1, "Invalid Flux name in Flux Sensitivity");
+        GOMA_EH(GOMA_ERROR, "Invalid Flux name in Flux Sensitivity");
       }
 
       sprintf(echo_string, "%s = %s", "FLUX", pp_fluxes_sens[i]->flux_type_name);
@@ -7678,7 +7753,7 @@ void rd_post_process_specs(FILE *ifp, char *input) {
 
       /* read file name */
       if (fscanf(ifp, "%s", ts) != 1) {
-        GOMA_EH(-1, "error reading Post Processing Flux Sens filename");
+        GOMA_EH(GOMA_ERROR, "error reading Post Processing Flux Sens filename");
       }
       strcpy(pp_fluxes_sens[i]->flux_filenm, ts);
 
@@ -7883,7 +7958,7 @@ void rd_post_process_specs(FILE *ifp, char *input) {
       look_for(ifp, "DATA_SENS", input, '=');
       /* Read DATA  type: i.e. VELOCITY1, VOLTAGE, etc. */
       if (fscanf(ifp, "%s", input) != 1) {
-        GOMA_EH(-1, "error reading DATA_SENS name");
+        GOMA_EH(GOMA_ERROR, "error reading DATA_SENS name");
       }
       /* Search for appropriate integer identifier in Var_Name struct */
 
@@ -8098,7 +8173,7 @@ void rd_post_process_specs(FILE *ifp, char *input) {
 
       if (fscanf(ifp, "%lf %lf %lf", &pp_particles[i]->coord[0], &pp_particles[i]->coord[1],
                  &pp_particles[i]->coord[2]) != 3) {
-        GOMA_EH(-1,
+        GOMA_EH(GOMA_ERROR,
                 "error reading particle input data (check to make sure you have 3 coord values");
       }
       SPF(echo_string, "%s = %g %g %g", "PARTICLE", pp_particles[i]->coord[0],
@@ -8106,7 +8181,7 @@ void rd_post_process_specs(FILE *ifp, char *input) {
 
       if (fscanf(ifp, "%lf %lf %lf", &pp_particles[i]->Start_Time, &pp_particles[i]->End_Time,
                  &pp_particles[i]->Delta_s) != 3) {
-        GOMA_EH(-1, "error reading particle time data (Start_time, End_Time, Delta_s)");
+        GOMA_EH(GOMA_ERROR, "error reading particle time data (Start_time, End_Time, Delta_s)");
       }
       SPF(endofstring(echo_string), " %g %g %g", pp_particles[i]->Start_Time,
           pp_particles[i]->End_Time, pp_particles[i]->Delta_s);
@@ -8304,7 +8379,7 @@ void rd_post_process_specs(FILE *ifp, char *input) {
       /* Read GLOBAL  type */
 
       if (fscanf(ifp, "%s", ts) != 1) {
-        GOMA_EH(-1, "error reading Post Processing Global input variable");
+        GOMA_EH(GOMA_ERROR, "error reading Post Processing Global input variable");
       }
 
       pp_global[i]->type = -1;
@@ -8316,7 +8391,7 @@ void rd_post_process_specs(FILE *ifp, char *input) {
         }
       }
       if (pp_global[i]->type == -1) {
-        GOMA_EH(-1, "Invalid Global name");
+        GOMA_EH(GOMA_ERROR, "Invalid Global name");
       }
       SPF(echo_string, "%s = %s", "GLOBAL", pp_global[i]->type_name);
 
@@ -8328,7 +8403,7 @@ void rd_post_process_specs(FILE *ifp, char *input) {
 
         /* read file name */
         if (fscanf(ifp, "%s", ts) != 1) {
-          GOMA_EH(-1, "error reading Post Processing Global filename");
+          GOMA_EH(GOMA_ERROR, "error reading Post Processing Global filename");
         }
         strcpy(pp_global[i]->filenm, ts);
         SPF(endofstring(echo_string), " %s", pp_global[i]->filenm);
@@ -8475,7 +8550,7 @@ static int look_for_post_proc(FILE *ifp,           /* pointer to file           
     } else if (strcmp(input, "no") == 0) {
       *flag_variable = -1;
     } else {
-      GOMA_EH(-1, "Unknown problem option");
+      GOMA_EH(GOMA_ERROR, "Unknown problem option");
     }
     SPF(echo_string, "%s = %s", search_string, input);
     ECHO(echo_string, echo_file);
@@ -9283,7 +9358,7 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
        (Num_Var_In_Type[pg->imtrx][R_EM_E1_REAL] || Num_Var_In_Type[pg->imtrx][R_EM_E2_REAL] ||
         Num_Var_In_Type[pg->imtrx][R_EM_E3_REAL]))) {
     if (POYNTING_VECTORS == 2) {
-      GOMA_EH(-1, "Post-processing vectors cannot be exported yet!");
+      GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
     }
     POYNTING_VECTORS = index_post;
     /* X Component */
@@ -9310,7 +9385,7 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
 
   if (SPECIES_SOURCES != -1 && Num_Var_In_Type[pg->imtrx][R_MASS]) {
     if (SPECIES_SOURCES == 2) {
-      GOMA_EH(-1, "Post-processing species source vectors cannot be exported yet!");
+      GOMA_EH(GOMA_ERROR, "Post-processing species source vectors cannot be exported yet!");
     }
     SPECIES_SOURCES = index_post;
     if (upd->Max_Num_Species_Eqn == 0)
@@ -10432,7 +10507,7 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
 
   if (LUB_FLUID_SOURCE != -1 && Num_Var_In_Type[pg->imtrx][R_LUBP]) {
     if (LUB_FLUID_SOURCE == 2) {
-      GOMA_EH(-1, "Post-processing vectors cannot be exported yet!");
+      GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
     }
     LUB_FLUID_SOURCE = index_post;
     sprintf(nm, "LUB_SOURCE");
@@ -10476,6 +10551,53 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
     set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
     index++;
     index_post++;
+  }
+
+  if (SH_CAP_PRES != -1 && Num_Var_In_Type[pg->imtrx][R_SHELL_SAT_1]) {
+    if (SH_CAP_PRES == 2) {
+      GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+    }
+    SH_CAP_PRES = index_post;
+    sprintf(nm, "SH_CAP_PRES_1");
+    sprintf(ds, "Porous Shell Capillary Pressure Layer 1");
+    set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+    index++;
+    index_post++;
+    if (Num_Var_In_Type[pg->imtrx][R_SHELL_SAT_2]) {
+      sprintf(nm, "SH_CAP_PRES_2");
+      sprintf(ds, "Porous Shell Capillary Pressure Layer 2");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+    }
+    if (Num_Var_In_Type[pg->imtrx][R_SHELL_SAT_3]) {
+      sprintf(nm, "SH_CAP_PRES_3");
+      sprintf(ds, "Porous Shell Capillary Pressure Layer 3");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+    }
+  }
+
+  if (SH_PORE_FLUX != -1 && Num_Var_In_Type[pg->imtrx][R_SHELL_SAT_1] &&
+      Num_Var_In_Type[pg->imtrx][R_SHELL_SAT_2]) {
+    if (SH_PORE_FLUX == 2) {
+      GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+    }
+    SH_PORE_FLUX = index_post;
+    sprintf(nm, "SH_PORE_FLUX_1_2");
+    sprintf(ds, "Porous Shell Flux Between Layers 1 and 2");
+    set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+    index++;
+    index_post++;
+
+    if (Num_Var_In_Type[pg->imtrx][R_SHELL_SAT_3]) {
+      sprintf(nm, "SH_PORE_FLUX_2_3");
+      sprintf(ds, "Porous Shell Flux Between Layers 2 and 3");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+    }
   }
 
   if (SH_STRESS_TENSOR != -1 &&
@@ -11020,7 +11142,7 @@ int load_elem_tkn(struct Results_Description *rd, const Exo_DB *exo, int tev, in
    * of Gauss points) for restart capability
    */
 
-  /* For now assume that if one block contains the element variablies
+  /* For now assume that if one block contains the element variables
    * for saturation hysteresis, then they all do.  This is inefficient but
    * to fix you need to make tev_post a element_block dependent array.
    */

@@ -149,7 +149,8 @@ int setup_pd(void) {
           if (pd_glob[mn]->etm[imtrx][ce][(LOG2_SOURCE)] != 0.) {
             pd_glob[mn]->e[imtrx][ce] |= T_SOURCE;
           }
-        } else if ((ce == R_SHELL_SAT_OPEN) || (ce == R_SHELL_SAT_OPEN_2)) {
+        } else if ((ce == R_SHELL_SAT_OPEN) || (ce == R_SHELL_SAT_OPEN_2) ||
+                   (ce == R_SHELL_SAT_1) || (ce == R_SHELL_SAT_2) || (ce == R_SHELL_SAT_3)) {
           if (pd_glob[mn]->etm[imtrx][ce][(LOG2_MASS)] != 0.) {
             pd_glob[mn]->e[imtrx][ce] |= T_MASS;
           }

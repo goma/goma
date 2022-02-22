@@ -687,6 +687,12 @@ int variable_string_to_int(const char *input, const char *err_string)
     var = TFMP_SAT;
   else if (!strcmp(input, "RESTIME"))
     var = RESTIME;
+  else if (!strcmp(input, "SHELL_SAT_1"))
+    var = SHELL_SAT_1;
+  else if (!strcmp(input, "SHELL_SAT_2"))
+    var = SHELL_SAT_2;
+  else if (!strcmp(input, "SHELL_SAT_3"))
+    var = SHELL_SAT_3;
   else if (!strcmp(input, "EM_E1_REAL"))
     var = EM_E1_REAL;
   else if (!strcmp(input, "EM_E2_REAL"))

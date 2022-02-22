@@ -2583,6 +2583,92 @@ struct BC_descriptions BC_Desc[] = {
      SINGLE_PHASE,
      DVI_SINGLE_PHASE_DB},
 
+    {"SHELL_SAT_1",
+     "SHELL_SAT_1_BC",
+     DIRICHLET,
+     SHELL_SAT_1_BC,
+     R_SHELL_SAT_1,
+     SCALAR,
+     NO_ROT,
+     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+     SINGLE_PHASE,
+     DVI_SINGLE_PHASE_DB},
+    {"SHELL_SAT_2",
+     "SHELL_SAT_2_BC",
+     DIRICHLET,
+     SHELL_SAT_2_BC,
+     R_SHELL_SAT_2,
+     SCALAR,
+     NO_ROT,
+     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+     SINGLE_PHASE,
+     DVI_SINGLE_PHASE_DB},
+    {"SHELL_SAT_3",
+     "SHELL_SAT_3_BC",
+     DIRICHLET,
+     SHELL_SAT_3_BC,
+     R_SHELL_SAT_3,
+     SCALAR,
+     NO_ROT,
+     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+     SINGLE_PHASE,
+     DVI_SINGLE_PHASE_DB},
+
+    {"F",
+     "F_BC",
+     DIRICHLET,
+     F_BC,
+     R_FILL,
+     SCALAR,
+     NO_ROT,
+     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+     SINGLE_PHASE,
+     DVI_SINGLE_PHASE_DB},
+    {"F_DIODE",
+     "F_DIODE_BC",
+     DIRICHLET,
+     F_DIODE_BC,
+     R_FILL,
+     SCALAR,
+     NO_ROT,
+     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+     SINGLE_PHASE,
+     DVI_SINGLE_PHASE_DB},
+    {"H",
+     "H_BC",
+     DIRICHLET,
+     H_BC,
+     R_CURVATURE,
+     SCALAR,
+     NO_ROT,
+     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+     SINGLE_PHASE,
+     DVI_SINGLE_PHASE_DB},
+    {"SH",
+     "SH_BC",
+     DIRICHLET,
+     SH_BC,
+     R_SHEAR_RATE,
+     SCALAR,
+     NO_ROT,
+     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+     SINGLE_PHASE,
+     DVI_SINGLE_PHASE_DB},
     {"F1",
      "F1_BC",
      DIRICHLET,
@@ -7048,8 +7134,8 @@ struct Equation_Names EQ_Name[] = {
     {"R_POR_SINK_MASS", "P_SINK_MASS", POR_SINK_MASS}, /*116 */
 
     {"R_VORT_DIR1", "VDX", R_VORT_DIR1},
-    {"R_VORT_DIR2", "VDY", R_VORT_DIR2},
-    {"R_VORT_DIR3", "VDZ", R_VORT_DIR3},
+    {"R_VORT_DIR2", "VDX", R_VORT_DIR1},
+    {"R_VORT_DIR3", "VDX", R_VORT_DIR1},
     {"R_VORT_LAMBDA", "VLAMBDA", R_VORT_LAMBDA}, /* 120 */
 
     {"R_CURVATURE", "H", R_CURVATURE},
@@ -7128,7 +7214,11 @@ struct Equation_Names EQ_Name[] = {
     {"R_TFMP_MASS", "TFMP_MASS", R_TFMP_MASS},                        /*   185  */
     {"R_TFMP_BOUND", "TFMP_BOUND", R_TFMP_BOUND},                     /*   186  */
     {"R_RESTIME", "RESTIME", R_RESTIME},                              /*   187  */
-    {"R_EM_E1_REAL", "EM_E1_REAL", R_EM_E1_REAL},                     /*   188  */
+    {"R_SHELL_SAT_1", "SHELL_SAT_1", R_SHELL_SAT_1},                  /*   188  */
+    {"R_SHELL_SAT_2", "SHELL_SAT_2", R_SHELL_SAT_2},                  /*   189  */
+    {"R_SHELL_SAT_3", "SHELL_SAT_3", R_SHELL_SAT_3},                  /*   190  */
+
+    {"R_EM_E1_REAL", "EM_E1_REAL", R_EM_E1_REAL}, /*   188  */
     {"R_EM_E2_REAL", "EM_E2_REAL", R_EM_E2_REAL},
     {"R_EM_E3_REAL", "EM_E3_REAL", R_EM_E3_REAL},
     {"R_EM_E1_IMAG", "EM_E1_IMAG", R_EM_E1_IMAG}, /*   191  */
@@ -7158,7 +7248,6 @@ struct Equation_Names EQ_Name[] = {
      *          There must be at least as many of these as there
      *          are species in the problem
      */
-
     {"R_Y0", "Y0", V_LAST + 0}, /* 200 */
     {"R_Y1", "Y1", V_LAST + 1},
     {"R_Y2", "Y2", V_LAST + 2},
@@ -7169,7 +7258,7 @@ struct Equation_Names EQ_Name[] = {
     {"R_Y7", "Y7", V_LAST + 7},
     {"R_Y8", "Y8", V_LAST + 8},
     {"R_Y9", "Y9", V_LAST + 9},
-    {"R_Y10", "Y10", V_LAST + 10}, /* 210 */
+    {"R_Y10", "Y10", V_LAST + 10}, /* 201 */
     {"R_Y11", "Y11", V_LAST + 11},
     {"R_Y12", "Y12", V_LAST + 12},
     {"R_Y13", "Y13", V_LAST + 13},
@@ -7179,7 +7268,7 @@ struct Equation_Names EQ_Name[] = {
     {"R_Y17", "Y17", V_LAST + 17},
     {"R_Y18", "Y18", V_LAST + 18},
     {"R_Y19", "Y19", V_LAST + 19},
-    {"R_Y20", "Y20", V_LAST + 20}, /* 220 */
+    {"R_Y20", "Y20", V_LAST + 20}, /* 211 */
     {"R_Y21", "Y21", V_LAST + 21},
     {"R_Y22", "Y22", V_LAST + 22},
     {"R_Y23", "Y23", V_LAST + 23},
@@ -7193,7 +7282,6 @@ struct Equation_Names EQ_Name[] = {
     /*
      * Add extra equation names for vector fields that can be rotated
      */
-
     {"R_MOM_NORMAL", "DN", R_MOM_NORMAL}, /* 230 */
     {"R_MOM_TANG1", "DT1", R_MOM_TANG1},
     {"R_MOM_TANG2", "DT2", R_MOM_TANG2},
@@ -7422,20 +7510,23 @@ struct Equation_Names Var_Name[] = {
     {"SHELL_LUB_CURV_2", "SH_L_CURV_2", SHELL_LUB_CURV_2},     /* 181 - PRS */
     {"LIGHT_INTP", "INTP", LIGHT_INTP},
     {"LIGHT_INTM", "INTM", LIGHT_INTM},
-    {"LIGHT_INTD", "INTD", LIGHT_INTD}, /* 184 */
-    {"TFMP_SAT", "SAT", TFMP_SAT},      /* 185 */
-    {"TFMP_PRES", "PRES", TFMP_PRES},   /* 186 */
-    {"RESTIME", "RST", RESTIME},        /* 187 */
-    {"EM_E1_REAL", "ERX", EM_E1_REAL},  //  188
+    {"LIGHT_INTD", "INTD", LIGHT_INTD},       /* 184 */
+    {"TFMP_SAT", "SAT", TFMP_SAT},            /* 185 */
+    {"TFMP_PRES", "PRES", TFMP_PRES},         /* 186 */
+    {"RESTIME", "RST", RESTIME},              /* 187 */
+    {"SHELL_SAT_1", "SH_SAT_1", SHELL_SAT_1}, /* 188 */
+    {"SHELL_SAT_2", "SH_SAT_2", SHELL_SAT_2}, /* 189 */
+    {"SHELL_SAT_3", "SH_SAT_3", SHELL_SAT_3},
+    /* 190 */ {"EM_E1_REAL", "ERX", EM_E1_REAL}, //  191
     {"EM_E2_REAL", "ERY", EM_E2_REAL},
     {"EM_E3_REAL", "ERZ", EM_E3_REAL},
-    {"EM_E1_IMAG", "EIX", EM_E1_IMAG}, //  191
+    {"EM_E1_IMAG", "EIX", EM_E1_IMAG}, //  194
     {"EM_E2_IMAG", "EIY", EM_E2_IMAG},
     {"EM_E3_IMAG", "EIZ", EM_E3_IMAG},
-    {"EM_H1_REAL", "HRX", EM_H1_REAL}, //  194
+    {"EM_H1_REAL", "HRX", EM_H1_REAL}, //  197
     {"EM_H2_REAL", "HRY", EM_H2_REAL},
     {"EM_H3_REAL", "HRZ", EM_H3_REAL},
-    {"EM_H1_IMAG", "HIX", EM_H1_IMAG}, //  197
+    {"EM_H1_IMAG", "HIX", EM_H1_IMAG}, //  200
     {"EM_H2_IMAG", "HIY", EM_H2_IMAG},
     {"EM_H3_IMAG", "HIZ", EM_H3_IMAG},
     {"EM_CONT_REAL", "EPR", EM_CONT_REAL},
@@ -7451,7 +7542,7 @@ struct Equation_Names Var_Name[] = {
     {"WSTAR", "USZ", WSTAR},
 
     {"MESH_POSITION1", "X", MESH_POSITION1},
-    {"MESH_POSITION2", "Y", MESH_POSITION2}, /* 201 */
+    {"MESH_POSITION2", "Y", MESH_POSITION2}, /* 206 */
     {"MESH_POSITION3", "Z", MESH_POSITION3},
 
     {"VEL_NORM", "VN", VEL_NORM},
@@ -7693,6 +7784,9 @@ struct Equation_Names Exo_Var_Names[] = {
     {"Thin Film Multiphase Lubrication Pressure", "TFMP_PRES", TFMP_PRES},
     {"Thin Film Multiphase Saturation", "TFMP_SAT", TFMP_SAT},
     {"Residence Time Function", "RST", RESTIME},
+    {"Porous Shell Saturation Layer 1", "SH_SAT_1", SHELL_SAT_1},
+    {"Porous Shell Saturation Layer 2", "SH_SAT_2", SHELL_SAT_2},
+    {"Porous Shell Saturation Layer 3", "SH_SAT_3", SHELL_SAT_3},
     {"Electric Field, Real x-component", "ERX", EM_E1_REAL},
     {"Electric Field, Real y-component", "ERY", EM_E2_REAL},
     {"Electric Field, Real z-component", "ERZ", EM_E3_REAL},
@@ -7991,6 +8085,9 @@ struct Equation_Names Var_Units[] = {
     {"Thin Film Multiphase Lubrication Pressure", "[1]", TFMP_PRES},
     {"Thin Film Multiphase Saturation", "[1]", TFMP_SAT},
     {"Residence Time Function", "[1]", RESTIME},
+    {"Porous Shell Saturation Layer 1", "[1]", SHELL_SAT_1},
+    {"Porous Shell Saturation Layer 2", "[1]", SHELL_SAT_2},
+    {"Porous Shell Saturation Layer 3", "[1]", SHELL_SAT_3},
     {"Electric Field, Real x-component", "[1]", EM_E1_REAL},
     {"Electric Field, Real y-component", "[1]", EM_E2_REAL},
     {"Electric Field, Real z-component", "[1]", EM_E3_REAL},

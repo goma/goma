@@ -931,7 +931,7 @@ int assemble_ewave_curlcurl(double time,      // present time
         idiffusion_etm = pd->etm[pg->imtrx][ieqn][(LOG2_DIFFUSION)];
         isource_etm = pd->etm[pg->imtrx][ieqn][(LOG2_SOURCE)];
 
-        if (pd->e[R_EM_E1_REAL + a]) {
+        if (pd->e[pg->imtrx][R_EM_E1_REAL + a]) {
           int eqn_real = EM_E1_REAL + a;
           int eqn_imag = EM_E1_IMAG + a;
           int peqn_real = upd->ep[pg->imtrx][eqn_real];

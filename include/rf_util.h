@@ -237,6 +237,17 @@ extern int advance_porosity_ev(const int time_step, /* Time step number in curre
                                dbl *base_p_liq);    /* Porous liquid pressure
                                                         at start of Goma call */
 
+extern int init_pmv_hyst(const Exo_DB * /* exo - ptr to finite element mesh database */
+);
 extern void read_porosity_data(const Exo_DB *exo /* Ptr to Exodus database */
 );
+
+extern int evaluate_sat_hyst_criterion_nodal(const dbl *const, /* x */
+                                             const dbl *const, /* x_dot */
+                                             const Exo_DB *exo /* Ptr to Exodus database */
+);
+
+/*
+ * Extern statements for variables defined in rf_util.c
+ */
 #endif

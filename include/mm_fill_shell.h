@@ -199,6 +199,12 @@ EXTERN int assemble_porous_shell_open_2(double, /* theta or tt */
                                         double xi[DIM],
                                         const Exo_DB *exo);
 
+EXTERN int
+assemble_porous_shell_saturation(double,             /* theta or tt*/
+                                 double,             /* dt */
+                                 double xi[DIM],     /* Local stu coords */
+                                 const Exo_DB *exo); /* ExodusII database struct pointer */
+
 EXTERN void shell_diff_kinematic_bc(double[DIM],                                     /* func */
                                     double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func */
                                     const double[MAX_PDIM],                          /* x_dot */

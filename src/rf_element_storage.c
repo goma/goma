@@ -215,6 +215,7 @@ void set_init_Element_Storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
 {
   int ip_total, i, j, ifound, ip;
   double sat_switch = 0.0, pc_switch = 0.0, Draining_curve, *ev_tmp;
+  double sat_max, sat_min, alpha_w, beta_w;
   int error, num_dim, num_nodes;
   int num_elem, num_elem_blk, num_node_sets, num_side_sets, time_step;
   float version;               /* version number of EXODUS II */
@@ -349,10 +350,10 @@ void set_init_Element_Storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
         sat_switch = mp->u_saturation[0];
         pc_switch = 1.e-12;
       } else if (Draining_curve == 0.0) {
-        double sat_max = mp->u_saturation[0];
-        double sat_min = mp->u_saturation[4];
-        double alpha_w = mp->u_saturation[3];
-        double beta_w = mp->u_saturation[2];
+        sat_max = mp->u_saturation[0];
+        sat_min = mp->u_saturation[4];
+        alpha_w = mp->u_saturation[3];
+        beta_w = mp->u_saturation[2];
 
         pc_switch = 1.e12 * alpha_w;
         sat_switch =

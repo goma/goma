@@ -841,6 +841,10 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
     initial_guess_stress_to_log_conf(x, num_total_nodes);
   }
 
+  if ((callnum == 1) && (pmv_hyst != NULL)) {
+    error = init_pmv_hyst(exo);
+    GOMA_EH(error, "Error in initiating Porous Media Variables Hysteresis Struct");
+  }
   /* Load external fields from import vectors xnv_in & xev_in */
 #ifdef LIBRARY_MODE
   /* First check if porosity updates are necessary */
@@ -1869,6 +1873,11 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 
       if (converged)
         af->Sat_hyst_reevaluate = TRUE; /*see load_saturation */
+
+      if ((af->Sat_hyst_reevaluate) && (pmv_hyst != NULL)) {
+        /* Determine what curve to follow and if switch is in order */
+        err = evaluate_sat_hyst_criterion_nodal(x, xdot, exo);
+      }
 
       /* Check element quality */
       good_mesh = element_quality(exo, x, ams[0]->proc_config);

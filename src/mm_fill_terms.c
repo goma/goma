@@ -7336,6 +7336,27 @@ int load_fv(void)
                    &(fv_old->sh_p_open_2));
     stateVector[SHELL_PRESS_OPEN_2] = fv->sh_p_open_2;
   }
+  if (pdgv[SHELL_SAT_1]) {
+    v = SHELL_SAT_1;
+    scalar_fv_fill(esp->sh_sat_1, esp_dot->sh_sat_1, esp_old->sh_sat_1, bf[v]->phi,
+                   ei[pg->imtrx]->dof[v], &(fv->sh_sat_1), &(fv_dot->sh_sat_1),
+                   &(fv_old->sh_sat_1));
+    stateVector[SHELL_SAT_1] = fv->sh_sat_1;
+  }
+  if (pdgv[SHELL_SAT_2]) {
+    v = SHELL_SAT_2;
+    scalar_fv_fill(esp->sh_sat_2, esp_dot->sh_sat_2, esp_old->sh_sat_2, bf[v]->phi,
+                   ei[pg->imtrx]->dof[v], &(fv->sh_sat_2), &(fv_dot->sh_sat_2),
+                   &(fv_old->sh_sat_2));
+    stateVector[SHELL_SAT_2] = fv->sh_sat_2;
+  }
+  if (pdgv[SHELL_SAT_3]) {
+    v = SHELL_SAT_3;
+    scalar_fv_fill(esp->sh_sat_3, esp_dot->sh_sat_3, esp_old->sh_sat_3, bf[v]->phi,
+                   ei[pg->imtrx]->dof[v], &(fv->sh_sat_3), &(fv_dot->sh_sat_3),
+                   &(fv_old->sh_sat_3));
+    stateVector[SHELL_SAT_3] = fv->sh_sat_3;
+  }
   if (pdgv[SHELL_TEMPERATURE]) {
     v = SHELL_TEMPERATURE;
     scalar_fv_fill(esp->sh_t, esp_dot->sh_t, esp_old->sh_t, bf[v]->phi,
@@ -9406,7 +9427,6 @@ int load_fv_grads(void)
       }
     }
   }
-
   /*
    * div(vd)
    */
@@ -9724,6 +9744,19 @@ int load_fv_grads(void)
       fv->grad_sh_p_open_2[p] = 0.0;
   }
 
+  if (pd->gv[SHELL_SAT_1]) {
+    v = SHELL_SAT_1;
+    dofs = ei[pg->imtrx]->dof[v];
+    for (p = 0; p < VIM; p++) {
+      fv->grad_sh_sat_1[p] = 0.0;
+      for (i = 0; i < dofs; i++) {
+        fv->grad_sh_sat_1[p] += *esp->sh_sat_1[i] * bf[v]->grad_phi[i][p];
+      }
+    }
+  } else if (zero_unused_grads && upd->vp[pg->imtrx][SHELL_SAT_1] == -1) {
+    for (p = 0; p < VIM; p++)
+      fv->grad_sh_sat_1[p] = 0.0;
+  }
   if (pd->gv[SHELL_FILMP]) {
     v = SHELL_FILMP;
     dofs = ei[upd->matrix_index[v]]->dof[v];
@@ -28065,12 +28098,12 @@ double heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
         h -= mp->latent_heat_vap[w] * s_terms.MassSource[w];
 
         var = TEMPERATURE;
-        if (d_h != NULL && pd->e[var]) {
+        if (d_h != NULL && pd->e[pg->imtrx][var]) {
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             d_h->T[j] -= mp->latent_heat_vap[w] * s_terms.d_MassSource_dT[w][j];
           }
         }
-        if (d_h != NULL && pd->v[MASS_FRACTION]) {
+        if (d_h != NULL && pd->v[pg->imtrx][MASS_FRACTION]) {
           for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
             var = MASS_FRACTION;
             for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
@@ -28079,13 +28112,13 @@ double heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
           }
         }
         var = RESTIME;
-        if (d_h != NULL && pd->e[var]) {
+        if (d_h != NULL && pd->e[pg->imtrx][var]) {
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             d_h->rst[j] -= mp->latent_heat_vap[w] * s_terms.d_MassSource_drst[w][j];
           }
         }
         var = PRESSURE;
-        if (d_h != NULL && pd->e[var]) {
+        if (d_h != NULL && pd->e[pg->imtrx][var]) {
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             d_h->P[j] -= mp->latent_heat_vap[w] * s_terms.d_MassSource_dP[w][j];
           }
@@ -30425,13 +30458,13 @@ double em_diss_e_curlcurl_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
       Rvar = EM_E1_REAL + p;
       Ivar = EM_E1_IMAG + p;
 
-      if (d_h != NULL && pd->v[Rvar]) {
+      if (d_h != NULL && pd->v[pg->imtrx][Rvar]) {
         for (j = 0; j < ei[pg->imtrx]->dof[Rvar]; j++) {
           d_h->EM_ER[p][j] += param[0] * h_factor * 2.0 * fv->em_er[p] * bf[Rvar]->phi[j];
         }
       }
 
-      if (d_h != NULL && pd->v[Ivar]) {
+      if (d_h != NULL && pd->v[pg->imtrx][Ivar]) {
         for (j = 0; j < ei[pg->imtrx]->dof[Ivar]; j++) {
           d_h->EM_EI[p][j] += param[0] * h_factor * 2.0 * fv->em_ei[p] * bf[Ivar]->phi[j];
         }
@@ -30647,7 +30680,7 @@ int assemble_poynting(double time, /* present time value */
       }
       break;
     case DROP_EVAP:
-      if (pd->e[R_MASS]) {
+      if (pd->gv[R_MASS]) {
         double init_radius = 0.010, num_density = 10., denom = 1;
         err = get_continuous_species_terms(&s_terms, time, tt, dt, hsquared);
         GOMA_EH(err, "problem in getting the species terms");
@@ -30856,7 +30889,7 @@ int assemble_poynting(double time, /* present time value */
        * J_e_Pressure
        */
       var = PRESSURE;
-      if (pd->v[var]) {
+      if (pd->v[pg->imtrx][var]) {
         pvar = upd->vp[pg->imtrx][var];
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
           phi_j = bf[var]->phi[j];
@@ -31024,8 +31057,9 @@ int assemble_poynting(double time, /* present time value */
   return (status);
 } /* end of assemble_poynting */
 
-void restime_nobc_surf(double func[3], double d_func[3][215][27])
+void restime_nobc_surf(
 
+    double func[MAX_PDIM], double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE])
 /******************************************************************************
  *
  *  Function which calculates the surface integral for the "no bc" restime boundary
@@ -31056,7 +31090,7 @@ void restime_nobc_surf(double func[3], double d_func[3][215][27])
 
   if (af->Assemble_Jacobian) {
     var = RESTIME;
-    if (pd->v[var]) {
+    if (pd->v[pg->imtrx][var]) {
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
         for (p = 0; p < dim; p++) {
           d_func[0][var][j] += fv->snormal[p] * diff_const * bf[var]->grad_phi[j][p];
@@ -31066,7 +31100,7 @@ void restime_nobc_surf(double func[3], double d_func[3][215][27])
       }
     }
 
-    if (pd->v[MESH_DISPLACEMENT1]) {
+    if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
       for (b = 0; b < dim; b++) {
         var = MESH_DISPLACEMENT1 + b;
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {

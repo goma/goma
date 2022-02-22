@@ -797,7 +797,7 @@ void rd_file_specs(FILE *ifp, char *input) {
     Write_Intermediate_Solutions = TRUE;
     ECHO("Write intermediate results = yes", echo_file);
   } else {
-    GOMA_EH(-1, "Bad specification for intermediate results");
+    GOMA_EH(GOMA_ERROR, "Bad specification for intermediate results");
   }
 
   /*
@@ -817,7 +817,7 @@ void rd_file_specs(FILE *ifp, char *input) {
       Write_Initial_Solution = TRUE;
       ECHO("Write initial solution = yes", echo_file);
     } else {
-      GOMA_EH(-1, "Bad specification for intermediate results");
+      GOMA_EH(GOMA_ERROR, "Bad specification for intermediate results");
     }
   }
 }
@@ -1116,7 +1116,8 @@ void rd_genl_specs(FILE *ifp, char *input) {
      */
 
     if (fscanf(ifp, "%s", input) != 1) {
-      GOMA_EH(-1, "error reading exodus II file Name or voxel file name for external field.");
+      GOMA_EH(GOMA_ERROR,
+              "error reading exodus II file Name or voxel file name for external field.");
     }
     strip(input);
 
@@ -1270,7 +1271,7 @@ void rd_genl_specs(FILE *ifp, char *input) {
   iread = look_for_optional(ifp, "Acoustic Frequency", input, '=');
   if (iread == 1) {
     if (fscanf(ifp, "%le", &upd->Acoustic_Frequency) != 1) {
-      GOMA_EH(-1, "error reading Acoustic Frequency");
+      GOMA_EH(GOMA_ERROR, "error reading Acoustic Frequency");
     }
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %g", "Acoustic Frequency",
              upd->Acoustic_Frequency);
@@ -1281,7 +1282,7 @@ void rd_genl_specs(FILE *ifp, char *input) {
   iread = look_for_optional(ifp, "Process Temperature", input, '=');
   if (iread == 1) {
     if (fscanf(ifp, "%le", &upd->Process_Temperature) != 1) {
-      GOMA_EH(-1, "error reading Process Temperature");
+      GOMA_EH(GOMA_ERROR, "error reading Process Temperature");
     }
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %g", "Process Temperature",
              upd->Process_Temperature);
@@ -1292,7 +1293,7 @@ void rd_genl_specs(FILE *ifp, char *input) {
   iread = look_for_optional(ifp, "Light Cosmu", input, '=');
   if (iread == 1) {
     if (fscanf(ifp, "%le", &upd->Light_Cosmu) != 1) {
-      GOMA_EH(-1, "error reading Light Incident Cos(Angle)");
+      GOMA_EH(GOMA_ERROR, "error reading Light Incident Cos(Angle)");
     }
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %g", "Light Cosmu", upd->Light_Cosmu);
     ECHO(echo_string, echo_file);
@@ -1313,7 +1314,7 @@ void rd_genl_specs(FILE *ifp, char *input) {
       Anneal_Mesh = TRUE;
       fprintf(stdout, "Annealing mesh on output\n");
     } else {
-      GOMA_EH(-1, "Bad specification for annealing mesh");
+      GOMA_EH(GOMA_ERROR, "Bad specification for annealing mesh");
     }
 
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "Anneal Mesh On Output", input);
@@ -1362,7 +1363,7 @@ void rd_timeint_specs(FILE *ifp, char *input) {
   } else if (strcmp(input, "transient") == 0) {
     TimeIntegration = TRANSIENT;
   } else {
-    GOMA_EH(-1, "unknown time integration option");
+    GOMA_EH(GOMA_ERROR, "unknown time integration option");
   }
 
   snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "Time integration", input);
@@ -1389,7 +1390,7 @@ void rd_timeint_specs(FILE *ifp, char *input) {
 
     look_for(ifp, "delta_t", input, '=');
     if (fscanf(ifp, "%le", &delta_t0) != 1) {
-      GOMA_EH(-1, "error reading delta_t");
+      GOMA_EH(GOMA_ERROR, "error reading delta_t");
     }
     tran->Delta_t0 = delta_t0;
 
@@ -1398,7 +1399,7 @@ void rd_timeint_specs(FILE *ifp, char *input) {
 
     look_for(ifp, "Maximum number of time steps", input, '=');
     if (fscanf(ifp, "%d", &max_time_steps) != 1) {
-      GOMA_EH(-1, "error reading max time steps");
+      GOMA_EH(GOMA_ERROR, "error reading max time steps");
     }
     tran->MaxTimeSteps = max_time_steps;
 
@@ -1408,7 +1409,7 @@ void rd_timeint_specs(FILE *ifp, char *input) {
 
     look_for(ifp, "Maximum time", input, '=');
     if (fscanf(ifp, "%le", &time_max) != 1) {
-      GOMA_EH(-1, "error reading maximum time");
+      GOMA_EH(GOMA_ERROR, "error reading maximum time");
     }
     tran->TimeMax = time_max;
 
@@ -1417,7 +1418,7 @@ void rd_timeint_specs(FILE *ifp, char *input) {
 
     look_for(ifp, "Minimum time step", input, '=');
     if (fscanf(ifp, "%le", &delta_t_min) != 1) {
-      GOMA_EH(-1, "error reading minimum time step");
+      GOMA_EH(GOMA_ERROR, "error reading minimum time step");
     }
     tran->Delta_t_min = delta_t_min;
 
@@ -1428,7 +1429,7 @@ void rd_timeint_specs(FILE *ifp, char *input) {
     iread = look_for_optional(ifp, "Maximum time step", input, '=');
     if (iread == 1) {
       if (fscanf(ifp, "%le", &delta_t_max) != 1) {
-        GOMA_EH(-1, "error reading Maximum time step");
+        GOMA_EH(GOMA_ERROR, "error reading Maximum time step");
       }
 
       snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", "Maximum time step", delta_t_max);
@@ -1439,7 +1440,7 @@ void rd_timeint_specs(FILE *ifp, char *input) {
 
     look_for(ifp, "Time step parameter", input, '=');
     if (fscanf(ifp, "%le", &(tran->theta)) != 1) {
-      GOMA_EH(-1, "error reading time step parameter");
+      GOMA_EH(GOMA_ERROR, "error reading time step parameter");
     }
 
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", "Time step parameter", tran->theta);
@@ -1447,7 +1448,7 @@ void rd_timeint_specs(FILE *ifp, char *input) {
 
     look_for(ifp, "Time step error", input, '=');
     if (fscanf(ifp, "%le", &eps) != 1) {
-      GOMA_EH(-1, "error reading Time step error, expected at least one float");
+      GOMA_EH(GOMA_ERROR, "error reading Time step error, expected at least one float");
     }
     tran->eps = eps;
 
@@ -1476,7 +1477,7 @@ void rd_timeint_specs(FILE *ifp, char *input) {
     tran->print_freq = print_freq;
     if (print_freq == 0) {
       if (fscanf(ifp, "%le", &print_delt) != 1) {
-        GOMA_EH(-1, "error reading Printing delta time");
+        GOMA_EH(GOMA_ERROR, "error reading Printing delta time");
       }
       tran->print_delt = print_delt;
 
@@ -1489,7 +1490,7 @@ void rd_timeint_specs(FILE *ifp, char *input) {
       iread = look_for_optional(ifp, "Second frequency time", input, '=');
       if (iread == 1) {
         if (fscanf(ifp, "%le %le", &print_delt2_time, &print_delt2) != 2) {
-          GOMA_EH(-1, "error reading second frequency time");
+          GOMA_EH(GOMA_ERROR, "error reading second frequency time");
         }
 
         snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g %.4g", "Second frequency time",
@@ -1523,7 +1524,7 @@ void rd_timeint_specs(FILE *ifp, char *input) {
     iread = look_for_optional(ifp, "Minimum Resolved Time Step", input, '=');
     if (iread == 1) {
       if (fscanf(ifp, "%le", &tran->resolved_delta_t_min) != 1) {
-        GOMA_EH(-1, "error reading Minimum Resolved Time Step");
+        GOMA_EH(GOMA_ERROR, "error reading Minimum Resolved Time Step");
       }
       snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", "Minimum Resolved Time Step",
                tran->resolved_delta_t_min);
@@ -1534,7 +1535,7 @@ void rd_timeint_specs(FILE *ifp, char *input) {
     iread = look_for_optional(ifp, "Courant Number Limit", input, '=');
     if (iread == 1) {
       if (fscanf(ifp, "%le", &tran->Courant_Limit) != 1) {
-        GOMA_EH(-1, "error reading Courant Number Limit");
+        GOMA_EH(GOMA_ERROR, "error reading Courant Number Limit");
       }
       snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", "Courant Number Limit",
                tran->Courant_Limit);
@@ -1545,7 +1546,7 @@ void rd_timeint_specs(FILE *ifp, char *input) {
     iread = look_for_optional(ifp, "Restart Time Integration After Renormalization", input, '=');
     if (iread == 1) {
       if (fscanf(ifp, "%s", input) != 1) {
-        GOMA_EH(-1, "error reading Restart Time Integration After Renormalization.");
+        GOMA_EH(GOMA_ERROR, "error reading Restart Time Integration After Renormalization.");
       }
       strip(input);
       stringup(input);
@@ -1569,7 +1570,7 @@ void rd_timeint_specs(FILE *ifp, char *input) {
     iread = look_for_optional(ifp, "Initial Time", input, '=');
     if (iread == 1) {
       if (fscanf(ifp, "%le", &(tran->init_time)) != 1) {
-        GOMA_EH(-1, "error reading Initial Time");
+        GOMA_EH(GOMA_ERROR, "error reading Initial Time");
       }
       snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", "Initial Time", tran->init_time);
       ECHO(echo_string, echo_file);
@@ -1587,7 +1588,7 @@ void rd_timeint_specs(FILE *ifp, char *input) {
     iread = look_for_optional(ifp, "Steps of constant delta_t after failure", input, '=');
     if (iread == 1) {
       if (fscanf(ifp, "%d", &tran->const_dt_after_failure) != 1) {
-        GOMA_EH(-1, "error reading Steps of constant delta_t after failure");
+        GOMA_EH(GOMA_ERROR, "error reading Steps of constant delta_t after failure");
       }
       snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d",
                "Steps of constant delta_t after failure", tran->const_dt_after_failure);
@@ -1602,7 +1603,7 @@ void rd_timeint_specs(FILE *ifp, char *input) {
     iread = look_for_optional(ifp, "Time step decelerator", input, '=');
     if (iread == 1) {
       if (fscanf(ifp, "%le", &tran->time_step_decelerator) != 1) {
-        GOMA_EH(-1, "error reading Time step decelerator");
+        GOMA_EH(GOMA_ERROR, "error reading Time step decelerator");
       }
 
       snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", "Time step decelerator",
@@ -1616,7 +1617,7 @@ void rd_timeint_specs(FILE *ifp, char *input) {
 
     if (iread == 1) {
       if (fscanf(ifp, "%s", input) != 1) {
-        GOMA_EH(-1, "error reading Fill Weight Function string");
+        GOMA_EH(GOMA_ERROR, "error reading Fill Weight Function string");
       }
 
       if (strcmp(input, "Galerkin") == 0) {
@@ -1650,7 +1651,7 @@ void rd_timeint_specs(FILE *ifp, char *input) {
 
     if (iread == 1) {
       if (fscanf(ifp, "%s", input) != 1) {
-        GOMA_EH(-1, "error reading Fill Equation string");
+        GOMA_EH(GOMA_ERROR, "error reading Fill Equation string");
       }
 
       if (strcmp(input, "Advection") == 0) {
@@ -1682,7 +1683,7 @@ void rd_timeint_specs(FILE *ifp, char *input) {
       TimeIntegration = TRANSIENT;
     } else {
 
-      GOMA_EH(-1, "Bad specification for March to Steady State");
+      GOMA_EH(GOMA_ERROR, "Bad specification for March to Steady State");
     }
 
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", "March to Steady State", input);
@@ -1708,7 +1709,7 @@ void rd_timeint_specs(FILE *ifp, char *input) {
     strip(input);
     tran->MaxSteadyStateSteps = read_int(ifp, "Maximum steady state steps");
     if (tran->MaxSteadyStateSteps < 2) {
-      GOMA_EH(-1, "error reading max steady state steps expected value > 1");
+      GOMA_EH(GOMA_ERROR, "error reading max steady state steps expected value > 1");
     }
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", "Maximum steady state steps",
              tran->MaxSteadyStateSteps);
@@ -1857,7 +1858,7 @@ void rd_levelset_specs(FILE *ifp, char *input) {
     iread = look_for_optional(ifp, "Level Set Length Scale", input, '=');
     if (iread == 1) {
       if (fscanf(ifp, "%lf", &(ls->Length_Scale)) != 1) {
-        GOMA_EH(-1, "error reading Level Set Length Scale");
+        GOMA_EH(GOMA_ERROR, "error reading Level Set Length Scale");
       }
       if (fabs(ls->Length_Scale) == 0.0)
         GOMA_WH(-1, "Possible Syntax error.  Level set length scale is zero.");
@@ -1895,7 +1896,7 @@ void rd_levelset_specs(FILE *ifp, char *input) {
       iread = look_for_optional(ifp, "Level Set Adapt Width", input, '=');
       if (iread == 1) {
         if (fscanf(ifp, "%lf", &(ls->adapt_width)) != 1) {
-          GOMA_EH(-1, "error reading Level Set Adapt Width");
+          GOMA_EH(GOMA_ERROR, "error reading Level Set Adapt Width");
         }
         if (fabs(ls->adapt_width) <= 0.0)
           GOMA_WH(-1, "Possible Syntax error.  Level set adapt width <= 0");
@@ -1911,7 +1912,7 @@ void rd_levelset_specs(FILE *ifp, char *input) {
       iread = look_for_optional(ifp, "Level Set Adapt Inner Size", input, '=');
       if (iread == 1) {
         if (fscanf(ifp, "%lf", &(ls->adapt_inner_size)) != 1) {
-          GOMA_EH(-1, "error reading Level Set Adapt Inner Size");
+          GOMA_EH(GOMA_ERROR, "error reading Level Set Adapt Inner Size");
         }
         if (fabs(ls->adapt_inner_size) <= 0.0)
           GOMA_WH(-1, "Possible Syntax error.  Level set adapt inner size <= 0");
@@ -1928,7 +1929,7 @@ void rd_levelset_specs(FILE *ifp, char *input) {
       iread = look_for_optional(ifp, "Level Set Adapt Outer Size", input, '=');
       if (iread == 1) {
         if (fscanf(ifp, "%lf", &(ls->adapt_outer_size)) != 1) {
-          GOMA_EH(-1, "error reading Level Set Adapt Outer Size");
+          GOMA_EH(GOMA_ERROR, "error reading Level Set Adapt Outer Size");
         }
 
         snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, ls->adapt_outer_size);
@@ -1937,17 +1938,17 @@ void rd_levelset_specs(FILE *ifp, char *input) {
                  ls->adapt_outer_size, default_string);
       }
       if (fabs(ls->adapt_outer_size) <= 0.0)
-        GOMA_EH(-1, "Possible Syntax error.  Level set adapt outer size <= 0");
+        GOMA_EH(GOMA_ERROR, "Possible Syntax error.  Level set adapt outer size <= 0");
 
       ECHO(echo_string, echo_file);
       ls->adapt_freq = 3;
       iread = look_for_optional(ifp, "Level Set Adapt Frequency", input, '=');
       if (iread == 1) {
         if (fscanf(ifp, "%d", &(ls->adapt_freq)) != 1) {
-          GOMA_EH(-1, "error reading Level Set Adapt Frequency");
+          GOMA_EH(GOMA_ERROR, "error reading Level Set Adapt Frequency");
         }
         if (ls->adapt_freq <= 0)
-          GOMA_EH(-1, "Syntax error.  Level set adapt freq <= 0");
+          GOMA_EH(GOMA_ERROR, "Syntax error.  Level set adapt freq <= 0");
 
         snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", input, ls->adapt_freq);
       } else {
@@ -1962,7 +1963,7 @@ void rd_levelset_specs(FILE *ifp, char *input) {
     iread = look_for_optional(ifp, "Level Set Initialization Method", input, '=');
     if (iread == 1) {
       if (fscanf(ifp, "%s", input) != 1) {
-        GOMA_EH(-1, "error reading Level Set Initialization string");
+        GOMA_EH(GOMA_ERROR, "error reading Level Set Initialization string");
       }
 
       if (strcmp(input, "Projection") == 0) {
@@ -2023,7 +2024,7 @@ void rd_levelset_specs(FILE *ifp, char *input) {
                  &(ls->Periodic_Plane_Loc[1]), &(ls->Periodic_Plane_Loc[2]),
                  &(ls->Periodic_Plane_Loc[3]), &(ls->Periodic_Plane_Loc[4]),
                  &(ls->Periodic_Plane_Loc[5])) != 6) {
-        GOMA_EH(-1, "error reading Level Set Periodic Planes");
+        GOMA_EH(GOMA_ERROR, "error reading Level Set Periodic Planes");
       }
       ls->Periodic_Planes = TRUE;
 
@@ -2040,7 +2041,7 @@ void rd_levelset_specs(FILE *ifp, char *input) {
 
     if (iread == 1) {
       if (fscanf(ifp, "%lf", &(ls->Control_Width)) != 1) {
-        GOMA_EH(-1, "error reading Level Set Length Scale");
+        GOMA_EH(GOMA_ERROR, "error reading Level Set Length Scale");
       }
 
       if (ls->Control_Width > 10.0)
@@ -2061,7 +2062,7 @@ void rd_levelset_specs(FILE *ifp, char *input) {
 
     if (iread == 1) {
       if (fscanf(ifp, "%s", input) != 1) {
-        GOMA_EH(-1, "Expecting string for Level Set Timestep Control");
+        GOMA_EH(GOMA_ERROR, "Expecting string for Level Set Timestep Control");
       }
       stringup(input);
       if (!strcmp(input, "YES") || !strcmp(input, "ON"))
@@ -2077,7 +2078,7 @@ void rd_levelset_specs(FILE *ifp, char *input) {
 
     if (iread == 1) {
       if (fscanf(ifp, "%lf", &(ls->Renorm_Tolerance)) != 1) {
-        GOMA_EH(-1, "error reading Level Set Renormalization tolerance");
+        GOMA_EH(GOMA_ERROR, "error reading Level Set Renormalization tolerance");
       }
       if (ls->Renorm_Tolerance > 1.0)
         GOMA_WH(-1, "That's an awfully large Level Set Renormalization Tolerance.\n");
@@ -2096,7 +2097,7 @@ void rd_levelset_specs(FILE *ifp, char *input) {
 
     if (iread == 1) {
       if (fscanf(ifp, "%s", input) != 1) {
-        GOMA_EH(-1, "error reading Level Set Renormalization string");
+        GOMA_EH(GOMA_ERROR, "error reading Level Set Renormalization string");
       }
 
       snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = ", "Level Set Renormalization Method");
@@ -2299,7 +2300,7 @@ void rd_levelset_specs(FILE *ifp, char *input) {
     iread = look_for_optional(ifp, "Ignore Level Set Dependencies", input, '=');
     if (iread == 1) {
       if (fscanf(ifp, "%s", input) != 1) {
-        GOMA_EH(-1, "error reading Ignore Level Set Dependencies");
+        GOMA_EH(GOMA_ERROR, "error reading Ignore Level Set Dependencies");
       }
       strip(input);
       stringup(input);
@@ -2369,7 +2370,7 @@ void rd_levelset_specs(FILE *ifp, char *input) {
     iread = look_for_optional(ifp, "Force Initial Level Set Renormalization", input, '=');
     if (iread == 1) {
       if (fscanf(ifp, "%s", input) != 1) {
-        GOMA_EH(-1, "error reading Force Initial Level Set Renormalization flag");
+        GOMA_EH(GOMA_ERROR, "error reading Force Initial Level Set Renormalization flag");
       }
       strip(input);
       stringup(input);
@@ -2387,7 +2388,7 @@ void rd_levelset_specs(FILE *ifp, char *input) {
     iread = look_for_optional(ifp, "Initial Level Set Displacement", input, '=');
     if (iread == 1) {
       if (fscanf(ifp, "%lf", &(ls->Initial_LS_Displacement)) != 1) {
-        GOMA_EH(-1, "error reading Initial Level Set Displacement");
+        GOMA_EH(GOMA_ERROR, "error reading Initial Level Set Displacement");
       }
 
       snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", "Initial Level Set Displacement",
@@ -2399,7 +2400,7 @@ void rd_levelset_specs(FILE *ifp, char *input) {
     iread = look_for_optional(ifp, "Level Set Reconstruction Method", input, '=');
     if (iread == 1) {
       if (fscanf(ifp, "%s", input) != 1) {
-        GOMA_EH(-1, "error reading Level Set Reconstruction Method");
+        GOMA_EH(GOMA_ERROR, "error reading Level Set Reconstruction Method");
       }
       strip(input);
       stringup(input);
@@ -2420,7 +2421,7 @@ void rd_levelset_specs(FILE *ifp, char *input) {
     iread = look_for_optional(ifp, "Level Set Contact Extension", input, '=');
     if (iread == 1) {
       if (fscanf(ifp, "%s", input) != 1) {
-        GOMA_EH(-1, "error reading Level Set Contact Extension flag");
+        GOMA_EH(GOMA_ERROR, "error reading Level Set Contact Extension flag");
       }
       strip(input);
       stringup(input);
@@ -2941,7 +2942,7 @@ void rd_levelset_specs(FILE *ifp, char *input) {
       for (i = 0; i < pfd->num_phase_funcs; i++) {
 
         if (fscanf(ifp, "%s", input) != 1) {
-          GOMA_EH(-1, "error reading Phase Function Initialization string");
+          GOMA_EH(GOMA_ERROR, "error reading Phase Function Initialization string");
         }
 
         if (strcmp(input, "Projection") == 0) {
@@ -2996,7 +2997,7 @@ void rd_levelset_specs(FILE *ifp, char *input) {
       double length_scale;
 
       if (fscanf(ifp, "%lf", &length_scale) != 1) {
-        GOMA_EH(-1, "error reading Phase Function Initialization string");
+        GOMA_EH(GOMA_ERROR, "error reading Phase Function Initialization string");
       }
 
       for (i = 0; i < pfd->num_phase_funcs; i++)
@@ -3012,7 +3013,7 @@ void rd_levelset_specs(FILE *ifp, char *input) {
     if (iread == 1) {
       double tolerance;
       if (fscanf(ifp, "%lf", &tolerance) != 1) {
-        GOMA_EH(-1, "error reading Phase Function Renormalization tolerance");
+        GOMA_EH(GOMA_ERROR, "error reading Phase Function Renormalization tolerance");
       }
       if (tolerance > 1.0)
         GOMA_WH(-1, "That's an awfully large Level Set Renormalization Tolerance.\n");
@@ -3031,7 +3032,7 @@ void rd_levelset_specs(FILE *ifp, char *input) {
       double Mass_Value = 0;
 
       if (fscanf(ifp, "%s", input) != 1) {
-        GOMA_EH(-1, "error reading Phase Function Initialization string");
+        GOMA_EH(GOMA_ERROR, "error reading Phase Function Initialization string");
       }
 
       if (strcmp(input, "Huygens") == 0) {
@@ -3065,7 +3066,7 @@ void rd_levelset_specs(FILE *ifp, char *input) {
   iread = look_for_optional(ifp, "Phase Function Constraint Method", input, '=');
   if (iread == 1) {
     if (fscanf(ifp, "%s", input) != 1) {
-      GOMA_EH(-1, "error reading Phase Function Initialization string");
+      GOMA_EH(GOMA_ERROR, "error reading Phase Function Initialization string");
     }
     stringup(input);
 
@@ -3151,7 +3152,7 @@ void rd_elem_quality_specs(FILE *ifp, char *input) {
     nEQM++;
     eqm->do_jac = TRUE;
     if (fscanf(ifp, "%lf", &(eqm->wt_jac)) != 1) {
-      GOMA_EH(-1, "error reading Jacobian quality weight");
+      GOMA_EH(GOMA_ERROR, "error reading Jacobian quality weight");
     }
   }
 
@@ -3162,7 +3163,7 @@ void rd_elem_quality_specs(FILE *ifp, char *input) {
     nEQM++;
     eqm->do_vol = TRUE;
     if (fscanf(ifp, "%lf", &(eqm->wt_vol)) != 1) {
-      GOMA_EH(-1, "error reading Volume change quality weight");
+      GOMA_EH(GOMA_ERROR, "error reading Volume change quality weight");
     }
   }
 
@@ -3173,7 +3174,7 @@ void rd_elem_quality_specs(FILE *ifp, char *input) {
     nEQM++;
     eqm->do_ang = TRUE;
     if (fscanf(ifp, "%lf", &(eqm->wt_ang)) != 1) {
-      GOMA_EH(-1, "error reading Angle quality weight");
+      GOMA_EH(GOMA_ERROR, "error reading Angle quality weight");
     }
   }
 
@@ -3184,7 +3185,7 @@ void rd_elem_quality_specs(FILE *ifp, char *input) {
     nEQM++;
     eqm->do_tri = TRUE;
     if (fscanf(ifp, "%lf", &(eqm->wt_tri)) != 1) {
-      GOMA_EH(-1, "error reading Triangle quality weight");
+      GOMA_EH(GOMA_ERROR, "error reading Triangle quality weight");
     }
   }
 
@@ -3193,7 +3194,7 @@ void rd_elem_quality_specs(FILE *ifp, char *input) {
   if (iread == 1) {
     eqm->do_jac = TRUE;
     if (fscanf(ifp, "%lf", &(eqm->eq_tol)) != 1) {
-      GOMA_EH(-1, "error reading Element quality tolerance");
+      GOMA_EH(GOMA_ERROR, "error reading Element quality tolerance");
     }
   }
 
@@ -3238,7 +3239,7 @@ void rd_elem_quality_specs(FILE *ifp, char *input) {
       }
       eqm->tol_type = EQM_WTMIN;
     } else {
-      GOMA_EH(-1, "error reading Element quality tolerance type");
+      GOMA_EH(GOMA_ERROR, "error reading Element quality tolerance type");
     }
   } else {
     eqm->tol_type = EQM_MIN;
@@ -3332,7 +3333,7 @@ void rd_track_specs(FILE *ifp, char *input) {
       }
       Continuation = LOCA;
     } else {
-      GOMA_EH(-1, "unknown Continuation option");
+      GOMA_EH(GOMA_ERROR, "unknown Continuation option");
     }
     SPF(endofstring(echo_string), " %s", input);
     ECHO(echo_string, echo_file);
@@ -3380,7 +3381,7 @@ void rd_track_specs(FILE *ifp, char *input) {
       }
       ContType = 6;
     } else {
-      GOMA_EH(-1, "Unknown ContType option (one of BC, MT, AC, UM, AN or UF)");
+      GOMA_EH(GOMA_ERROR, "Unknown ContType option (one of BC, MT, AC, UM, AN or UF)");
     }
 
     SPF(endofstring(echo_string), " %s", input);
@@ -3412,7 +3413,7 @@ void rd_track_specs(FILE *ifp, char *input) {
     iread = look_for_optional(ifp, "Boundary condition ID", input, '=');
     if (iread == 1) {
       if (fscanf(ifp, "%d", &BdyCondID) != 1) {
-        GOMA_EH(-1, "error reading Boundary condition ID");
+        GOMA_EH(GOMA_ERROR, "error reading Boundary condition ID");
       }
       snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", input, BdyCondID);
       ECHO(echo_string, echo_file);
@@ -3421,7 +3422,7 @@ void rd_track_specs(FILE *ifp, char *input) {
 
     look_for(ifp, "Boundary condition data float tag", input, '=');
     if (fscanf(ifp, "%d", &DataFltID) != 1) {
-      GOMA_EH(-1, "error reading Boundary condition data float tag id");
+      GOMA_EH(GOMA_ERROR, "error reading Boundary condition data float tag id");
     }
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", input, DataFltID);
     ECHO(echo_string, echo_file);
@@ -3430,7 +3431,7 @@ void rd_track_specs(FILE *ifp, char *input) {
 
     look_for(ifp, "Material id", input, '=');
     if (fscanf(ifp, "%d", &MatID) != 1) {
-      GOMA_EH(-1, "error reading Material id");
+      GOMA_EH(GOMA_ERROR, "error reading Material id");
     }
 
     cont->upMTID = MatID - 1;
@@ -3439,7 +3440,7 @@ void rd_track_specs(FILE *ifp, char *input) {
 
     look_for(ifp, "Material property tag", input, '=');
     if (fscanf(ifp, "%d", &MatPropID) != 1) {
-      GOMA_EH(-1, "error reading Material property tag id");
+      GOMA_EH(GOMA_ERROR, "error reading Material property tag id");
     }
     cont->upMPID = MatPropID;
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", input, MatPropID);
@@ -3447,7 +3448,7 @@ void rd_track_specs(FILE *ifp, char *input) {
 
     look_for(ifp, "Material property tag subindex", input, '=');
     if (fscanf(ifp, "%d", &MatPropSIID) != 1) {
-      GOMA_EH(-1, "error reading Material property tag subindex id");
+      GOMA_EH(GOMA_ERROR, "error reading Material property tag subindex id");
     }
     cont->upMDID = MatPropSIID;
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", input, MatPropSIID);
@@ -3456,7 +3457,7 @@ void rd_track_specs(FILE *ifp, char *input) {
     BegParameterValue = 0.0;
     look_for(ifp, "Initial parameter value", input, '=');
     if (fscanf(ifp, "%le", &BegParameterValue) != 1) {
-      GOMA_EH(-1, "error reading BegParameterValue");
+      GOMA_EH(GOMA_ERROR, "error reading BegParameterValue");
     }
     cont->BegParameterValue = BegParameterValue;
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, BegParameterValue);
@@ -3465,7 +3466,7 @@ void rd_track_specs(FILE *ifp, char *input) {
     EndParameterValue = 1.0;
     look_for(ifp, "Final parameter value", input, '=');
     if (fscanf(ifp, "%le", &EndParameterValue) != 1) {
-      GOMA_EH(-1, "error reading EndParameterValue");
+      GOMA_EH(GOMA_ERROR, "error reading EndParameterValue");
     }
     cont->EndParameterValue = EndParameterValue;
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, EndParameterValue);
@@ -3473,7 +3474,7 @@ void rd_track_specs(FILE *ifp, char *input) {
 
     look_for(ifp, "delta_s", input, '=');
     if (fscanf(ifp, "%le", &Delta_s0) != 1) {
-      GOMA_EH(-1, "error reading delta_s");
+      GOMA_EH(GOMA_ERROR, "error reading delta_s");
     }
     cont->Delta_s0 = Delta_s0;
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, Delta_s0);
@@ -3481,7 +3482,7 @@ void rd_track_specs(FILE *ifp, char *input) {
 
     look_for(ifp, "Maximum number of path steps", input, '=');
     if (fscanf(ifp, "%d", &MaxPathSteps) != 1) {
-      GOMA_EH(-1, "error reading maximum number of path steps");
+      GOMA_EH(GOMA_ERROR, "error reading maximum number of path steps");
     }
     cont->MaxPathSteps = MaxPathSteps;
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", input, MaxPathSteps);
@@ -3489,7 +3490,7 @@ void rd_track_specs(FILE *ifp, char *input) {
 
     look_for(ifp, "Minimum path step", input, '=');
     if (fscanf(ifp, "%le", &Delta_s_min) != 1) {
-      GOMA_EH(-1, "error reading minimum path step");
+      GOMA_EH(GOMA_ERROR, "error reading minimum path step");
     }
     cont->Delta_s_min = Delta_s_min;
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, Delta_s_min);
@@ -3498,7 +3499,7 @@ void rd_track_specs(FILE *ifp, char *input) {
     Delta_s_max = 1.e+12;
     look_for(ifp, "Maximum path step", input, '=');
     if (fscanf(ifp, "%le", &Delta_s_max) != 1) {
-      GOMA_EH(-1, "error reading Maximum path step");
+      GOMA_EH(GOMA_ERROR, "error reading Maximum path step");
     }
     cont->Delta_s_max = Delta_s_max;
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, Delta_s_max);
@@ -3506,7 +3507,7 @@ void rd_track_specs(FILE *ifp, char *input) {
 
     look_for(ifp, "Continuation Printing Frequency", input, '=');
     if (fscanf(ifp, "%d", &print_freq) != 1) {
-      GOMA_EH(-1, "error reading Continuation Printing Frequency");
+      GOMA_EH(GOMA_ERROR, "error reading Continuation Printing Frequency");
     }
     cont->print_freq = print_freq;
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", input, print_freq);
@@ -3547,7 +3548,7 @@ void rd_track_specs(FILE *ifp, char *input) {
           iread = look_for_optional(ifp, "Continuation order", input, '=');
           if (iread == 1) {
             if (fscanf(ifp, "%d", &(loca_in->Cont_Order)) != 1) {
-              GOMA_EH(-1, "error reading continuation order");
+              GOMA_EH(GOMA_ERROR, "error reading continuation order");
             }
             SPF(endofstring(echo_string), "/n%s = %d", input, loca_in->Cont_Order);
           }
@@ -3601,7 +3602,7 @@ void rd_track_specs(FILE *ifp, char *input) {
         }
 
         else {
-          GOMA_EH(-1, "Invalid LOCA method!");
+          GOMA_EH(GOMA_ERROR, "Invalid LOCA method!");
         }
       }
 
@@ -3611,7 +3612,7 @@ void rd_track_specs(FILE *ifp, char *input) {
       iread = look_for_optional(ifp, "Step control aggressiveness", input, '=');
       if (iread == 1) {
         if (fscanf(ifp, "%lf", &(loca_in->StepAggr)) != 1) {
-          GOMA_EH(-1, "error reading step control aggressiveness");
+          GOMA_EH(GOMA_ERROR, "error reading step control aggressiveness");
         }
         snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, loca_in->StepAggr);
         ECHO(echo_string, echo_file);
@@ -3629,7 +3630,7 @@ void rd_track_specs(FILE *ifp, char *input) {
       iread = look_for_optional(ifp, "Perturbation magnitude", input, '=');
       if (iread == 1) {
         if (fscanf(ifp, "%lf", &(loca_in->perturb)) != 1) {
-          GOMA_EH(-1, "error reading Perturbation magnitude");
+          GOMA_EH(GOMA_ERROR, "error reading Perturbation magnitude");
         }
         snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, loca_in->perturb);
         ECHO(echo_string, echo_file);
@@ -3639,7 +3640,7 @@ void rd_track_specs(FILE *ifp, char *input) {
       iread = look_for_optional(ifp, "LOCA print level", input, '=');
       if (iread == 1) {
         if (fscanf(ifp, "%d", &(loca_in->debug)) != 1) {
-          GOMA_EH(-1, "error reading LOCA print level");
+          GOMA_EH(GOMA_ERROR, "error reading LOCA print level");
         }
         snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", input, loca_in->debug);
         ECHO(echo_string, echo_file);
@@ -3649,7 +3650,7 @@ void rd_track_specs(FILE *ifp, char *input) {
       iread = look_for_optional(ifp, "ALC Desired solution fraction", input, '=');
       if (iread == 1) {
         if (fscanf(ifp, "%lf", &(loca_in->DpDs2)) != 1) {
-          GOMA_EH(-1, "error reading ALC Desired solution fraction");
+          GOMA_EH(GOMA_ERROR, "error reading ALC Desired solution fraction");
         }
         snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, loca_in->DpDs2);
         ECHO(echo_string, echo_file);
@@ -3659,7 +3660,7 @@ void rd_track_specs(FILE *ifp, char *input) {
       iread = look_for_optional(ifp, "ALC Max. parameter sensitivity", input, '=');
       if (iread == 1) {
         if (fscanf(ifp, "%lf", &(loca_in->DpDsHi)) != 1) {
-          GOMA_EH(-1, "error reading ALC Max. parameter sensitivity");
+          GOMA_EH(GOMA_ERROR, "error reading ALC Max. parameter sensitivity");
         }
         snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, loca_in->DpDsHi);
         ECHO(echo_string, echo_file);
@@ -3669,7 +3670,7 @@ void rd_track_specs(FILE *ifp, char *input) {
       iread = look_for_optional(ifp, "ALC Tangent factor exponent", input, '=');
       if (iread == 1) {
         if (fscanf(ifp, "%lf", &(loca_in->Texp)) != 1) {
-          GOMA_EH(-1, "error reading ALC Tangent factor exponent");
+          GOMA_EH(GOMA_ERROR, "error reading ALC Tangent factor exponent");
         }
         snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, loca_in->Texp);
         ECHO(echo_string, echo_file);
@@ -3679,7 +3680,7 @@ void rd_track_specs(FILE *ifp, char *input) {
       iread = look_for_optional(ifp, "ALC Tangent factor step limit", input, '=');
       if (iread == 1) {
         if (fscanf(ifp, "%lf", &(loca_in->MaxTS)) != 1) {
-          GOMA_EH(-1, "error reading ALC Tangent factor step limit");
+          GOMA_EH(GOMA_ERROR, "error reading ALC Tangent factor step limit");
         }
         snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, loca_in->MaxTS);
         ECHO(echo_string, echo_file);
@@ -3691,7 +3692,7 @@ void rd_track_specs(FILE *ifp, char *input) {
       iread = look_for_optional(ifp, "Number of continuation conditions", input, '=');
       if (iread == 1) {
         if (fscanf(ifp, "%d", &nCC) != 1) {
-          GOMA_EH(-1, "error reading Number of continuation conditions");
+          GOMA_EH(GOMA_ERROR, "error reading Number of continuation conditions");
         }
 
         if (nCC == -1) {
@@ -4027,7 +4028,7 @@ void rd_track_specs(FILE *ifp, char *input) {
         }
         TPContType = 6;
       } else {
-        GOMA_EH(-1, "unknown TP ContType option (one of BC, MT, AC, UM, AN, or UF)");
+        GOMA_EH(GOMA_ERROR, "unknown TP ContType option (one of BC, MT, AC, UM, AN, or UF)");
       }
 
       loca_in->TPupType = TPContType;
@@ -4055,7 +4056,7 @@ void rd_track_specs(FILE *ifp, char *input) {
       iread = look_for_optional(ifp, "TP Boundary condition ID", input, '=');
       if (iread == 1) {
         if (fscanf(ifp, "%d", &TPBdyCondID) != 1) {
-          GOMA_EH(-1, "error reading TP Boundary condition ID");
+          GOMA_EH(GOMA_ERROR, "error reading TP Boundary condition ID");
         }
         snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", input, TPBdyCondID);
         ECHO(echo_string, echo_file);
@@ -4064,7 +4065,7 @@ void rd_track_specs(FILE *ifp, char *input) {
 
       look_for(ifp, "TP BC data float tag", input, '=');
       if (fscanf(ifp, "%d", &TPDataFltID) != 1) {
-        GOMA_EH(-1, "error reading TP BC data float tag id");
+        GOMA_EH(GOMA_ERROR, "error reading TP BC data float tag id");
       }
       loca_in->TPupDFID = TPDataFltID;
       snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", input, TPDataFltID);
@@ -4072,7 +4073,7 @@ void rd_track_specs(FILE *ifp, char *input) {
 
       look_for(ifp, "TP parameter material id", input, '=');
       if (fscanf(ifp, "%d", &TPMatID) != 1) {
-        GOMA_EH(-1, "error reading TP parameter material id");
+        GOMA_EH(GOMA_ERROR, "error reading TP parameter material id");
       }
       loca_in->TPupMTID = TPMatID - 1;
       snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", input, TPMatID);
@@ -4080,7 +4081,7 @@ void rd_track_specs(FILE *ifp, char *input) {
 
       look_for(ifp, "TP parameter material property tag", input, '=');
       if (fscanf(ifp, "%d", &TPMatPropID) != 1) {
-        GOMA_EH(-1, "error reading TP parameter material property tag id");
+        GOMA_EH(GOMA_ERROR, "error reading TP parameter material property tag id");
       }
       loca_in->TPupMPID = TPMatPropID;
       snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", input, TPMatPropID);
@@ -4088,7 +4089,7 @@ void rd_track_specs(FILE *ifp, char *input) {
 
       look_for(ifp, "TP Material property tag subindex", input, '=');
       if (fscanf(ifp, "%d", &TPMatPropSIID) != 1) {
-        GOMA_EH(-1, "error reading TP Material property tag subindex id");
+        GOMA_EH(GOMA_ERROR, "error reading TP Material property tag subindex id");
       }
       loca_in->TPupMDID = TPMatPropSIID;
       snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", input, TPMatPropSIID);
@@ -4098,7 +4099,7 @@ void rd_track_specs(FILE *ifp, char *input) {
       iread = look_for_optional(ifp, "Initial guess of TP parameter", input, '=');
       if (iread == 1) {
         if (fscanf(ifp, "%lf", &(loca_in->TPGuess)) != 1) {
-          GOMA_EH(-1, "error reading initial guess of TP parameter");
+          GOMA_EH(GOMA_ERROR, "error reading initial guess of TP parameter");
         }
       }
       snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, loca_in->TPGuess);
@@ -4108,7 +4109,7 @@ void rd_track_specs(FILE *ifp, char *input) {
       iread = look_for_optional(ifp, "TP parameter final value", input, '=');
       if (iread == 1) {
         if (fscanf(ifp, "%lf", &(loca_in->TPFinal)) != 1) {
-          GOMA_EH(-1, "error reading TP parameter final value");
+          GOMA_EH(GOMA_ERROR, "error reading TP parameter final value");
         }
       }
       snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, loca_in->TPFinal);
@@ -4180,7 +4181,7 @@ void rd_track_specs(FILE *ifp, char *input) {
       iread = look_for_optional(ifp, "Number of TP continuation conditions", input, '=');
       if (iread == 1) {
         if (fscanf(ifp, "%d", &nTC) != 1) {
-          GOMA_EH(-1, "error reading Number of TP continuation conditions");
+          GOMA_EH(GOMA_ERROR, "error reading Number of TP continuation conditions");
         }
 
         if (nTC == -1) {
@@ -4516,7 +4517,7 @@ void rd_hunt_specs(FILE *ifp, char *input) {
 
   look_for(ifp, "Number of hunting conditions", input, '=');
   if (fscanf(ifp, "%d", &nHC) != 1) {
-    GOMA_EH(-1, "error reading Number of hunting conditions");
+    GOMA_EH(GOMA_ERROR, "error reading Number of hunting conditions");
   }
 
   /*
@@ -4778,7 +4779,7 @@ void rd_ac_specs(FILE *ifp, char *input) {
   }
 
   if (fscanf(ifp, "%d", &nAC) != 1) {
-    GOMA_EH(-1, "error reading Number of augmenting conditions");
+    GOMA_EH(GOMA_ERROR, "error reading Number of augmenting conditions");
   }
   ECHO("\n***Augmenting Conditions***\n", echo_file);
 
@@ -5452,11 +5453,11 @@ void rd_ac_specs(FILE *ifp, char *input) {
          augc[iAC].Type == AC_FLUX_MAT) &&
         augc[iAC].BCID == APREPRO_AC_BCID) {
       if (fscanf(ifp, "%s", string) != 1) {
-        GOMA_EH(-1, "error reading Parameter File name");
+        GOMA_EH(GOMA_ERROR, "error reading Parameter File name");
       }
       strcpy(augc[iAC].Params_File, string);
       if (fscanf(ifp, "%s", string) != 1) {
-        GOMA_EH(-1, "error reading Parameter name");
+        GOMA_EH(GOMA_ERROR, "error reading Parameter name");
       }
       strcpy(augc[iAC].AP_param, string);
 
@@ -5602,7 +5603,7 @@ void rd_solver_specs(FILE *ifp, char *input) {
       upd->SegregatedSolve = TRUE;
       ECHO("Segregated Solve = yes", echo_file);
     } else {
-      GOMA_EH(-1, "Bad specification for Segregated Solve");
+      GOMA_EH(GOMA_ERROR, "Bad specification for Segregated Solve");
     }
   }
 
@@ -6130,7 +6131,7 @@ void rd_solver_specs(FILE *ifp, char *input) {
 
   look_for(ifp, "Number of Newton Iterations", input, '=');
   if (fscanf(ifp, "%d", &Max_Newton_Steps) != 1) {
-    GOMA_EH(-1, "error reading Number of Newton Iterations");
+    GOMA_EH(GOMA_ERROR, "error reading Number of Newton Iterations");
   }
   snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", "Number of Newton Iterations",
            Max_Newton_Steps);
@@ -6149,7 +6150,7 @@ void rd_solver_specs(FILE *ifp, char *input) {
   iread = look_for_optional(ifp, "Modified Newton Tolerance", input, '=');
   if (iread == 1) {
     if (fscanf(ifp, "%le %le", &convergence_rate_tolerance, &modified_newt_norm_tol) != 2) {
-      GOMA_EH(-1, "ERROR reading Modified Newton Tolerance card");
+      GOMA_EH(GOMA_ERROR, "ERROR reading Modified Newton Tolerance card");
     } else {
       if (convergence_rate_tolerance != 0. && modified_newt_norm_tol != 0.) {
         modified_newton = TRUE;
@@ -6166,7 +6167,7 @@ void rd_solver_specs(FILE *ifp, char *input) {
   iread = look_for_optional(ifp, "Jacobian Reform Time Stride", input, '=');
   if (iread == 1) {
     if (fscanf(ifp, "%d", &Time_Jacobian_Reformation_stride) != 1) {
-      GOMA_EH(-1, "ERROR reading Jacobian Reform Stride card");
+      GOMA_EH(GOMA_ERROR, "ERROR reading Jacobian Reform Stride card");
     } else {
       if (Time_Jacobian_Reformation_stride > 1)
         modified_newton = TRUE;
@@ -6180,7 +6181,7 @@ void rd_solver_specs(FILE *ifp, char *input) {
 
   look_for(ifp, "Newton correction factor", input, '=');
   if (fscanf(ifp, "%le", &damp_factor1) != 1) {
-    GOMA_EH(-1, "error reading Newton correction factor, expected at least one float");
+    GOMA_EH(GOMA_ERROR, "error reading Newton correction factor, expected at least one float");
   }
 
   snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", "Newton correction factor", damp_factor1);
@@ -6229,7 +6230,7 @@ void rd_solver_specs(FILE *ifp, char *input) {
     }
 
     if (fscanf(ifp, "%le", &var_damp[var]) != 1) {
-      GOMA_EH(-1, "error reading value of variable type Newton correction factor");
+      GOMA_EH(GOMA_ERROR, "error reading value of variable type Newton correction factor");
     }
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s %.4g",
              "Variable Type Newton correction factor", Var_Name[k].name1, var_damp[var]);
@@ -6238,7 +6239,7 @@ void rd_solver_specs(FILE *ifp, char *input) {
 
   look_for(ifp, "Normalized Residual Tolerance", input, '=');
   if (fscanf(ifp, "%le", &Epsilon[0][0]) != 1) {
-    GOMA_EH(-1, "error reading Normalized (Newton) Residual Tolerance");
+    GOMA_EH(GOMA_ERROR, "error reading Normalized (Newton) Residual Tolerance");
   }
 
   for (imtrx = 1; imtrx < upd->Total_Num_Matrices; imtrx++) {
@@ -6251,7 +6252,7 @@ void rd_solver_specs(FILE *ifp, char *input) {
   iread = look_for_optional(ifp, "Normalized Correction Tolerance", input, '=');
   if (iread == 1) {
     if (fscanf(ifp, "%le", &Epsilon[0][2]) != 1) {
-      GOMA_EH(-1, "error reading Normalized (Newton) Correction Tolerance");
+      GOMA_EH(GOMA_ERROR, "error reading Normalized (Newton) Correction Tolerance");
     }
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", "Normalized Correction Tolerance",
              Epsilon[0][2]);
@@ -6278,7 +6279,7 @@ void rd_solver_specs(FILE *ifp, char *input) {
   if (iread == 1) {
     int no_chars = 80;
     if (fscanf(ifp, "%d", &Solver_Output_Format) != 1) {
-      GOMA_EH(-1, "error reading Solver Format");
+      GOMA_EH(GOMA_ERROR, "error reading Solver Format");
     }
     SPF(echo_string, "%s = %d", "Solver Output Format Bitmap", Solver_Output_Format);
     no_chars = (Solver_Output_Format & 1) * 9 + (Solver_Output_Format & 2) * 2 +
@@ -6314,7 +6315,7 @@ void rd_solver_specs(FILE *ifp, char *input) {
     strip(input);
     strcpy(Matrix_Convergence_Tolerance, input); /* save for aztec use */
     if (sscanf(input, "%le", &Epsilon[0][1]) != 1) {
-      GOMA_EH(-1, "Bad residual ratio (matrix convergence) tolerance.");
+      GOMA_EH(GOMA_ERROR, "Bad residual ratio (matrix convergence) tolerance.");
     }
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", "Residual Ratio Tolerance",
              Epsilon[0][1]);
@@ -6367,7 +6368,7 @@ void rd_solver_specs(FILE *ifp, char *input) {
   iread = look_for_optional(ifp, "Pressure Stabilization Scaling", input, '=');
   if (iread == 1) {
     if (fscanf(ifp, "%le", &PS_scaling) != 1) {
-      GOMA_EH(-1, "error reading Pressure Stabilization Scaling");
+      GOMA_EH(GOMA_ERROR, "error reading Pressure Stabilization Scaling");
     }
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", "Pressure Stabilization Scaling",
              PS_scaling);
@@ -6386,7 +6387,7 @@ void rd_solver_specs(FILE *ifp, char *input) {
     } else if (strcmp(input, "yes") == 0 || strcmp(input, "true") == 0) {
       upd->PSPG_advection_correction = true;
     } else {
-      GOMA_EH(-1, "invalid choice: PSPG Advection Correction, yes (true) or no (false)");
+      GOMA_EH(GOMA_ERROR, "invalid choice: PSPG Advection Correction, yes (true) or no (false)");
     }
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "PSPG Advection Correction", input);
     ECHO(echo_string, echo_file);
@@ -6404,7 +6405,7 @@ void rd_solver_specs(FILE *ifp, char *input) {
     } else if (strcmp(input, "yes") == 0 || strcmp(input, "true") == 0) {
       upd->devss_traceless_gradient = true;
     } else {
-      GOMA_EH(-1, "invalid choice: DEVSS Traceless Gradient, yes (true) or no (false)");
+      GOMA_EH(GOMA_ERROR, "invalid choice: DEVSS Traceless Gradient, yes (true) or no (false)");
     }
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "DEVSS Traceless Gradient", input);
     ECHO(echo_string, echo_file);
@@ -6428,7 +6429,7 @@ void rd_solver_specs(FILE *ifp, char *input) {
     }
 
     else {
-      GOMA_EH(-1, "invalid choice: Continuity Stabilization yes, local, or no");
+      GOMA_EH(GOMA_ERROR, "invalid choice: Continuity Stabilization yes, local, or no");
     }
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "Continuity Stabilization", input);
     ECHO(echo_string, echo_file);
@@ -6468,7 +6469,7 @@ void rd_solver_specs(FILE *ifp, char *input) {
     else if (!strncmp(input, "3Dfile", 6))
       Linear_Stability = LSA_3D_OF_2D_SAVE;
     else
-      GOMA_EH(-1, "Invalid choice: Linear Stability must be yes, no, file, 3D, or 3Dfile");
+      GOMA_EH(GOMA_ERROR, "Invalid choice: Linear Stability must be yes, no, file, 3D, or 3Dfile");
 
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "Linear Stability", input);
     ECHO(echo_string, echo_file);
@@ -6480,7 +6481,7 @@ void rd_solver_specs(FILE *ifp, char *input) {
   if (iread == 1) {
     Filter_Species = TRUE;
     if (fscanf(ifp, "%d %le %le", &filter_species_material_number, &c_min, &c_max) != 3) {
-      GOMA_EH(-1, "error reading Filter Concentration");
+      GOMA_EH(GOMA_ERROR, "error reading Filter Concentration");
     }
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d %.4g %.4g", "Filter Concentration",
              filter_species_material_number, c_min, c_max);
@@ -6502,7 +6503,7 @@ void rd_solver_specs(FILE *ifp, char *input) {
         Visc_Sens_Factor = 2;
       }
     } else {
-      GOMA_EH(-1, "invalid choice for Disable Viscosity Sensitivities:must be yes or no");
+      GOMA_EH(GOMA_ERROR, "invalid choice for Disable Viscosity Sensitivities:must be yes or no");
     }
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "Disable Viscosity Sensitivities", input);
     ECHO(echo_string, echo_file);
@@ -6521,7 +6522,7 @@ void rd_solver_specs(FILE *ifp, char *input) {
     } else if (strncmp(input, "yes", 3) == 0) {
       upd->petsc_solve_post_proc = true;
     } else {
-      GOMA_EH(-1, "invalid choice for PETSc solve post proc : must be yes or no");
+      GOMA_EH(GOMA_ERROR, "invalid choice for PETSc solve post proc : must be yes or no");
     }
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "PETSc solve post proc", input);
     ECHO(echo_string, echo_file);
@@ -6614,7 +6615,7 @@ void rd_solver_specs(FILE *ifp, char *input) {
 
 #ifdef PARALLEL
   if ((Num_Proc > 1) && (is_Solver_Serial == TRUE)) {
-    GOMA_EH(-1, "Your solver choice cannot be used for PARALLEL solutions");
+    GOMA_EH(GOMA_ERROR, "Your solver choice cannot be used for PARALLEL solutions");
   }
 #endif
 }
@@ -6816,7 +6817,7 @@ void rd_eigen_specs(FILE *ifp, char *input) {
     } else if (strcmp(input, "yes") == 0) {
       eigen->Eigen_Recycle = 1;
     } else {
-      GOMA_EH(-1, "invalid choice: Eigen Recycle must be yes or no");
+      GOMA_EH(GOMA_ERROR, "invalid choice: Eigen Recycle must be yes or no");
     }
     SPF(endofstring(echo_string), " %s", input);
   } else {
@@ -6865,7 +6866,7 @@ void rd_eigen_specs(FILE *ifp, char *input) {
   iread = look_for_optional(ifp, "Eigen Initial Vector Weight", input, '=');
   if (iread == 1) {
     if (fscanf(ifp, "%le", &eigen->Eigen_IV_Wt) != 1) {
-      GOMA_EH(-1, "error reading Eigen Initial Vector Weight");
+      GOMA_EH(GOMA_ERROR, "error reading Eigen Initial Vector Weight");
     }
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g", input, eigen->Eigen_IV_Wt);
   } else {
@@ -7134,7 +7135,7 @@ void rd_matl_blk_specs(FILE *ifp, char *input) {
   if (upd->Num_Mat > MAX_NUMBER_MATLS) {
     sprintf(err_msg, "Found num materials = %d > %d - boost MAX_NUMBER_MATLS in mm_mp_const.h",
             upd->Num_Mat, MAX_NUMBER_MATLS);
-    GOMA_EH(-1, err_msg);
+    GOMA_EH(GOMA_ERROR, err_msg);
   }
 
   snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", "Number of Materials", upd->Num_Mat);
@@ -7427,7 +7428,7 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
   look_for(ifp, "Coordinate System", input, '=');
 
   if (fscanf(ifp, "%s", tscs) != 1) {
-    GOMA_EH(-1, "error reading Coordinate System");
+    GOMA_EH(GOMA_ERROR, "error reading Coordinate System");
   }
   if (!strcasecmp(tscs, "CARTESIAN")) {
     CoordinateSystem = CARTESIAN;
@@ -7489,7 +7490,7 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
          "Also not good for GD_TABLE conditions.)",
          echo_file);
   } else {
-    GOMA_EH(-1, "invalid element mapping");
+    GOMA_EH(GOMA_ERROR, "invalid element mapping");
   }
   snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s", "Element Mapping", input);
   ECHO(echo_string, echo_file);
@@ -7500,7 +7501,7 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
 
   look_for(ifp, "Mesh Motion", input, '=');
   if (fscanf(ifp, "%s", tscs) != 1) {
-    GOMA_EH(-1, "error reading Mesh Motion");
+    GOMA_EH(GOMA_ERROR, "error reading Mesh Motion");
   }
   if (!strcmp(tscs, "ARBITRARY")) {
     MeshMotion = ARBITRARY;
@@ -7533,6 +7534,7 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
   pd_ptr->Num_Species_Eqn = numBulkSpec;
   pd_ptr->Num_Species = numBulkSpec;
   pd_ptr->Num_Porous_Eqn = 0;
+  pd_ptr->Num_Porous_Shell_Eqn = 0;
 
   snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", "Number of bulk species", numBulkSpec);
   ECHO(echo_string, echo_file);
@@ -7589,7 +7591,7 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
     if (nonDilute) {
       if (numBulkSpecEqn != pd_ptr->Num_Species_Eqn) {
         fprintf(stderr, "Confusing input: number of bulk species equations is illdefined\n");
-        GOMA_EH(-1,
+        GOMA_EH(GOMA_ERROR,
                 "\tNumber of bulk species equations is inconsistent with non-dilute assumption\n");
       }
       snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", "Number of bulk species equations",
@@ -7669,7 +7671,7 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
     ECHO(echo_string, echo_file);
   } else {
     if (fscanf(ifp, "%d", &vn_glob[mn]->modes) != 1) {
-      GOMA_EH(-1, "Expected to read 1 int for \"Number of viscoelastic modes\"");
+      GOMA_EH(GOMA_ERROR, "Expected to read 1 int for \"Number of viscoelastic modes\"");
     }
 
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", "Number of viscoelastic modes",
@@ -7698,7 +7700,8 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
     ECHO(echo_string, echo_file);
   } else {
     if (fscanf(ifp, "%d", &numMtrxLines) != 1) {
-      GOMA_EH(-1, "Expected to read 1 int for \"Number of Matrices\" - attempt to enumerate... ");
+      GOMA_EH(GOMA_ERROR,
+              "Expected to read 1 int for \"Number of Matrices\" - attempt to enumerate... ");
       numMtrxLines = -1;
     }
   }
@@ -7725,7 +7728,7 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
       look_for(ifp, "MATRIX", input, '=');
 
       if (fscanf(ifp, "%d", &mtrx_index1) != 1) {
-        GOMA_EH(-1, "Expected to read 1 int for \"MATRIX\"  ");
+        GOMA_EH(GOMA_ERROR, "Expected to read 1 int for \"MATRIX\"  ");
       }
 
       mtrx_index0 = mtrx_index1 - 1;
@@ -7791,7 +7794,7 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
         look_forward_optional_until(ifp, "Normalized Correction Tolerance", "MATRIX", input, '=');
     if (iread == 1) {
       if (fscanf(ifp, "%le", &Epsilon[imtrx][2]) != 1) {
-        GOMA_EH(-1, "error reading Normalized (Newton) Correction Tolerance");
+        GOMA_EH(GOMA_ERROR, "error reading Normalized (Newton) Correction Tolerance");
       }
       snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g matrix %d",
                "Normalized Correction Tolerance", Epsilon[imtrx][2], mtrx_index1);
@@ -7801,7 +7804,7 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
     iread = look_forward_optional_until(ifp, "Residual Ratio Tolerance", "MATRIX", input, '=');
     if (iread == 1) {
       if (fscanf(ifp, "%le", &Epsilon[imtrx][1]) != 1) {
-        GOMA_EH(-1, "Bad residual ratio (matrix convergence) tolerance.");
+        GOMA_EH(GOMA_ERROR, "Bad residual ratio (matrix convergence) tolerance.");
       }
       snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %.4g matrix %d", "Residual Ratio Tolerance",
                Epsilon[imtrx][1], mtrx_index1);
@@ -7833,7 +7836,7 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
     ECHO(echo_string, echo_file);
 
     if ((numEqnLines < 1 || numEqnLines > 25)) {
-      GOMA_EH(-1, "rd_eq_spec ERROR: Too many (>25) or too few eqn. lines");
+      GOMA_EH(GOMA_ERROR, "rd_eq_spec ERROR: Too many (>25) or too few eqn. lines");
     }
 
     /*
@@ -8090,6 +8093,15 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
       } else if (!strcasecmp(ts, "shell_sat_open_2")) {
         ce = set_eqn(R_SHELL_SAT_OPEN_2, mtrx_index0, pd_ptr);
         pd_ptr->Num_Porous_Eqn++;
+      } else if (!strcasecmp(ts, "shell_sat_1")) {
+        ce = set_eqn(R_SHELL_SAT_1, mtrx_index0, pd_ptr);
+        pd_ptr->Num_Porous_Shell_Eqn++;
+      } else if (!strcasecmp(ts, "shell_sat_2")) {
+        ce = set_eqn(R_SHELL_SAT_2, mtrx_index0, pd_ptr);
+        pd_ptr->Num_Porous_Shell_Eqn++;
+      } else if (!strcasecmp(ts, "shell_sat_3")) {
+        ce = set_eqn(R_SHELL_SAT_3, mtrx_index0, pd_ptr);
+        pd_ptr->Num_Porous_Shell_Eqn++;
       } else if (!strcasecmp(ts, "shell_energy")) {
         ce = set_eqn(R_SHELL_ENERGY, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "shell_deltah")) {
@@ -8639,6 +8651,12 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
         cv = set_var(SHELL_PRESS_OPEN, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "SH_P_OPEN_2")) {
         cv = set_var(SHELL_PRESS_OPEN_2, mtrx_index0, pd_ptr);
+      } else if (!strcasecmp(ts, "SH_SAT_1")) {
+        cv = set_var(SHELL_SAT_1, mtrx_index0, pd_ptr);
+      } else if (!strcasecmp(ts, "SH_SAT_2")) {
+        cv = set_var(SHELL_SAT_2, mtrx_index0, pd_ptr);
+      } else if (!strcasecmp(ts, "SH_SAT_3")) {
+        cv = set_var(SHELL_SAT_3, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "SH_T")) {
         cv = set_var(SHELL_TEMPERATURE, mtrx_index0, pd_ptr);
       } else if (!strcasecmp(ts, "SH_DH")) {
@@ -9224,6 +9242,9 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
         break;
       case R_SHELL_SAT_OPEN:
       case R_SHELL_SAT_OPEN_2:
+      case R_SHELL_SAT_1:
+      case R_SHELL_SAT_2:
+      case R_SHELL_SAT_3:
         if (fscanf(ifp, "%lf %lf %lf", &(pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)]),
                    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)]),
                    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)])) != 3) {
@@ -12635,17 +12656,17 @@ void rd_table_data(FILE *ifp, char *input, struct Data_Table *table, char *endli
   table->tablelength = Num_Pnts = count_datalines(ifp, input, endlist);
 
   if (table->tablelength == 0)
-    GOMA_EH(-1, "Error reading tabular data . Can't find any points ");
+    GOMA_EH(GOMA_ERROR, "Error reading tabular data . Can't find any points ");
 
   if (table->tablelength == 1)
-    GOMA_EH(-1, "Error reading tabular data . Need more than 1 point ");
+    GOMA_EH(GOMA_ERROR, "Error reading tabular data . Need more than 1 point ");
 
   if ((table->interp_method == QUADRATIC || table->interp_method == BIQUADRATIC ||
        table->interp_method == TRIQUADRATIC) &&
       Num_Pnts % 2 != 1)
-    GOMA_EH(-1, "Need odd number of points for (bi,tri)quadratic interpolation ");
+    GOMA_EH(GOMA_ERROR, "Need odd number of points for (bi,tri)quadratic interpolation ");
   if (table->interp_method == QUAD_GP && Num_Pnts % 3 != 0)
-    GOMA_EH(-1, "Need 3N points for quadratic gauss point interpolation ");
+    GOMA_EH(GOMA_ERROR, "Need 3N points for quadratic gauss point interpolation ");
 
   /* determine table dimension  */
 
@@ -13573,7 +13594,7 @@ void read_surface_objects(FILE *ifp, char *input, struct LS_Surf_List *list, int
       strip(input);
 
       if ((sfp = fopen(input, "r")) == NULL)
-        GOMA_EH(-1, "Could not open facet list file\n");
+        GOMA_EH(GOMA_ERROR, "Could not open facet list file\n");
 
       snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "\t\t%s = %s %s", "SURF", "FACET_LIST", input);
       ECHO(echo_string, echo_file);
@@ -13597,7 +13618,7 @@ void read_surface_objects(FILE *ifp, char *input, struct LS_Surf_List *list, int
           facet = create_surf_facet_line(vertex[0], vertex[1], -1, -1);
           append_surf(list, facet);
         } else if (num_points == 3) {
-          GOMA_EH(-1, "Not yet implemented in 3-D\n");
+          GOMA_EH(GOMA_ERROR, "Not yet implemented in 3-D\n");
         }
       }
       fclose(sfp);

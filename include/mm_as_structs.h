@@ -562,6 +562,9 @@ struct Element_Variable_Pointers {
   dbl *em_ei[DIM][MDE]; /* EMwave Electric Field imag part */
   dbl *em_hr[DIM][MDE]; /* EMwave Magnetic Field real part */
   dbl *em_hi[DIM][MDE]; /* EMwave Magnetic Field imag part */
+  dbl *sh_sat_1[MDE];   /* Porous shell saturation layer 1 */
+  dbl *sh_sat_2[MDE];   /* Porous shell saturation layer 2 */
+  dbl *sh_sat_3[MDE];   /* Porous shell saturation layer 3 */
 };
 
 /*___________________________________________________________________________*/
@@ -679,11 +682,14 @@ struct Element_Stiffness_Pointers {
   dbl **tfmp_sat;       /* thin-film multi-phase saturation */
   dbl ***moment;        /* *moment[MAX_MOMENTS][MDE], moments */
   dbl **rho;
-  dbl **restime; /* Residence Time Function Field */
-  dbl ***em_er;  /* *em_xx[DIM][MDE], em_wave*/
-  dbl ***em_ei;  /* *em_xx[DIM][MDE], em_wave*/
-  dbl ***em_hr;  /* *em_xx[DIM][MDE], em_wave*/
-  dbl ***em_hi;  /* *em_xx[DIM][MDE], em_wave*/
+  dbl **restime;  /* Residence Time Function Field */
+  dbl ***em_er;   /* *em_xx[DIM][MDE], em_wave*/
+  dbl ***em_ei;   /* *em_xx[DIM][MDE], em_wave*/
+  dbl ***em_hr;   /* *em_xx[DIM][MDE], em_wave*/
+  dbl ***em_hi;   /* *em_xx[DIM][MDE], em_wave*/
+  dbl **sh_sat_1; /* Porous shell saturation layer 1 */
+  dbl **sh_sat_2; /* Porous shell saturation layer 2 */
+  dbl **sh_sat_3; /* Porous shell saturation layer 3 */
 
   /*
    * These are for debugging purposes...
@@ -993,10 +999,11 @@ struct Problem_Description {
   int Num_Rxn;                                         /* Number of chemical reactions in present
                                                         * material */
   int VolumeIntegral;                                  /* Augmenting volume integral */
-  int LSVelocityIntegral; /* Augmenting sevel set velocity integral flag */
-  int Num_Porous_Eqn;     /* number of porous media Equations */
-  int Do_Surf_Geometry;   /* Problem needs a bundle of surface geometry defined on
-                             it */
+  int LSVelocityIntegral;   /* Augmenting sevel set velocity integral flag */
+  int Num_Porous_Eqn;       /* number of porous media Equations */
+  int Num_Porous_Shell_Eqn; /* number of porous media shell Equations */
+  int Do_Surf_Geometry;     /* Problem needs a bundle of surface geometry defined on
+                               it */
 };
 typedef struct Problem_Description PROBLEM_DESCRIPTION_STRUCT;
 
@@ -1684,6 +1691,9 @@ struct Field_Variables {
   dbl em_ei[DIM]; /* EM Electric Field Vector (imag)*/
   dbl em_hr[DIM]; /* EM Magnetic Field Vector (real)*/
   dbl em_hi[DIM]; /* EM Magnetic Field Vector (imag)*/
+  dbl sh_sat_1;   /* Porous shell saturation layer 1 */
+  dbl sh_sat_2;   /* Porous shell saturation layer 2 */
+  dbl sh_sat_3;   /* Porous shell saturation layer 3 */
 
   /*
    * Grads of scalars...
@@ -1728,6 +1738,9 @@ struct Field_Variables {
   dbl grad_tfmp_pres[DIM]; /* Gradient of the thin-film multi-phase lubrication pressure */
   dbl grad_tfmp_sat[DIM];  /* Gradient of the thin-film multi-phase lubrication saturation */
   dbl grad_restime[DIM];   /* Gradient of the residence time function */
+  dbl grad_sh_sat_1[DIM];  /* Gradient of porous shell saturation layer 1 */
+  dbl grad_sh_sat_2[DIM];  /* Gradient of porous shell saturation layer 2 */
+  dbl grad_sh_sat_3[DIM];  /* Gradient of porous shell saturation layer 3 */
 
   /*
    * Grads of vectors...
@@ -2053,11 +2066,15 @@ struct Diet_Field_Variables {
   dbl tfmp_sat;              /* thin-film multi-phase saturation */
   dbl moment[MAX_MOMENTS];
   dbl rho;
-  dbl restime;              /* residence time field */
-  dbl em_er[DIM];           /* EM wave Fields */
-  dbl em_ei[DIM];           /* EM wave Fields */
-  dbl em_hr[DIM];           /* EM wave Fields */
-  dbl em_hi[DIM];           /* EM wave Fields */
+  dbl restime;    /* residence time field */
+  dbl em_er[DIM]; /* EM wave Fields */
+  dbl em_ei[DIM]; /* EM wave Fields */
+  dbl em_hr[DIM]; /* EM wave Fields */
+  dbl em_hi[DIM]; /* EM wave Fields */
+  dbl sh_sat_1;   /* Porous shell saturation layer 1 */
+  dbl sh_sat_2;   /* Porous shell saturation layer 2 */
+  dbl sh_sat_3;   /* Porous shell saturation layer 3 */
+
   dbl grad_em_er[DIM][DIM]; /* EM wave Fields */
   dbl grad_em_ei[DIM][DIM]; /* EM wave Fields */
   dbl grad_em_hr[DIM][DIM]; /* EM wave Fields */
@@ -2428,6 +2445,29 @@ struct Porous_Media_Terms {
   dbl d_pi_supg_dpmv[MDE][MAX_PMV][MDE];
   dbl conv_flux_supg[MAX_PMV];
   dbl d_conv_flux_supg_dpmv[MAX_PMV][MAX_PMV][MDE];
+};
+
+/************************************************************************/
+/************************************************************************/
+/************************************************************************/
+/*
+ *  Structure used to store additional nodal variables
+ *  used in hysteretic porous media equations
+ *
+ *
+ */
+struct Porous_Media_Variables_Hysteresis {
+
+  /*  Each member has dimension of [MAX_POR_SHELL][NUM_NODES]  */
+
+  int *curve_type[MAX_POR_SHELL]; /*Draining = 1, imbibition = 0*/
+  int *curve_type_old[MAX_POR_SHELL];
+  int *curve_switch[MAX_POR_SHELL]; /*Trigger to switch the curves */
+  int *num_switch[MAX_POR_SHELL];   /*Number of curve switch on each node*/
+  double *sat_switch[MAX_POR_SHELL] /*Saturation value at switch point*/;
+  double *cap_pres_switch[MAX_POR_SHELL]; /*Capillary pressure value at switch point*/
+  double *sat_min_imbibe[MAX_POR_SHELL];  /* Minimum saturation value of imbibition curve*/
+  double *sat_max_drain[MAX_POR_SHELL];   /* Maximum saturation value of draining curve*/
 };
 
 /******************************************************************************/

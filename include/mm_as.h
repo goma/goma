@@ -55,6 +55,7 @@ extern struct Diet_Field_Variables *fv_dot_dot, *fv_dot_dot_old;
 extern struct Diet_Field_Variables *fv_old, *fv_dot, *fv_dot_old;
 extern struct External_Field_Variables *efv;
 extern struct Porous_Media_Variables *pmv, *pmv_old;
+extern struct Porous_Media_Variables_Hysteresis *pmv_hyst;
 extern PMV_ML_STRUCT *pmv_ml;
 extern struct Constitutive_Relations **cr_glob, *cr;
 extern struct Local_Element_Contributions *lec;

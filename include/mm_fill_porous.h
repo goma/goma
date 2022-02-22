@@ -140,6 +140,11 @@ EXTERN double load_saturation(double,     /* porosity                           
                               double,     /* cap_pres                                  */
                               double[2]); /* d_cap_pres                         */
 
+EXTERN double load_cap_pres(int,     /* porous layer index                        */
+                            int,     /* local node number                         */
+                            int,     /* global node number                        */
+                            double); /* saturation                                */
+
 EXTERN void load_enthalpy(double,  /* saturation                                */
                           double); /* pressure                                  */
 
