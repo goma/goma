@@ -12898,7 +12898,7 @@ assemble_porous_shell_saturation(
              sour *= dA * etm_sour[ipore];
 
              // Assemble full residual
-             lec->R[peqn][i] += mass + diff + sour;
+             lec->R[LEC_R_INDEX(peqn,i)] += mass + diff + sour;
             }  // End of loop over DOF (i)
         } // End of residual assembly of R_SHELL_SAT_1
     } // End of loop over porous shell layers
@@ -12980,7 +12980,7 @@ assemble_porous_shell_saturation(
 	               sour *= dA * etm_sour[ipore];
 
 	               // Assemble full Jacobian
-	               lec->J[peqn][pvar][i][j] += mass + diff + sour;
+	               lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += mass + diff + sour;
 	              } // End of loop over DOF (j)
 
                    } // End of SHELL_SAT_1 sensitivities
@@ -13006,7 +13006,7 @@ assemble_porous_shell_saturation(
                     sour *= dA * etm_sour[ipore];
 
                     // Assemble full Jacobian
-                    lec->J[peqn][pvar][i][j] += sour;
+                    lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += sour;
 
                    } // End of loop over DOF (j)
 

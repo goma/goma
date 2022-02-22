@@ -901,7 +901,6 @@ assembly_alloc(Exo_DB *exo)
   int si;			/* index for element shape */
   int mn;
   int ipore;
-  int vim, dim, wim;                 /* problem dimension */
   int num_species_eqn;                 /* active number of species eqn */
 
   /*

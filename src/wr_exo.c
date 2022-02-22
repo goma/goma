@@ -934,28 +934,25 @@ void create_truth_table(struct Results_Description *rd, Exo_DB *exo, double ***g
     mp = mp_glob[mat_num];
     eb_ptr = Element_Blocks + eb_indx;
     ip_total = elem_info(NQUAD, eb_ptr->Elem_Type);
-    if((mp->PorousMediaType == POROUS_UNSATURATED ||
-	mp->PorousMediaType == POROUS_SHELL_UNSATURATED ||
-	mp->PorousMediaType == POROUS_TWO_PHASE) &&
-        mp->SaturationModel == TANH_HYST &&
-       !if_ev)
-      {
-	for ( j = 0; j < ip_total; j++) {
-	  if(SAT_CURVE_TYPE != -1) tev++; /*For Sat curve type */
-	  if(CAP_PRESS_SWITCH != -1) tev++; /*For saturation switch */
-	  if(SAT_QP_SWITCH != -1) tev++; /*for cap press switch point*/
-	}
-	if_ev = TRUE;
+    if ((mp->PorousMediaType == POROUS_UNSATURATED ||
+         mp->PorousMediaType == POROUS_SHELL_UNSATURATED ||
+         mp->PorousMediaType == POROUS_TWO_PHASE) &&
+        mp->SaturationModel == TANH_HYST && !if_ev) {
+      for (j = 0; j < ip_total; j++) {
+        if (SAT_CURVE_TYPE != -1)
+          tev++; /*For Sat curve type */
+        if (CAP_PRESS_SWITCH != -1)
+          tev++; /*For saturation switch */
+        if (SAT_QP_SWITCH != -1)
+          tev++; /*for cap press switch point*/
       }
       if_ev = TRUE;
     }
   }
 
   /* Sanity check */
-  if ( tev != rd->nev ) {
-    sr = sprintf(err_msg,
-		 "%s: Elem var count mismatch: tev(%d)<>rd->nev(%d)!?",
-		 yo, tev, rd->nev);
+  if (tev != rd->nev) {
+    sr = sprintf(err_msg, "%s: Elem var count mismatch: tev(%d)<>rd->nev(%d)!?", yo, tev, rd->nev);
     EH(-1, err_msg);
     /*
     fprintf(stderr,
@@ -1117,44 +1114,30 @@ void create_truth_table(struct Results_Description *rd, Exo_DB *exo, double ***g
     }
 
     /*Now finally the saturation hysteresis variables */
-    if(SAT_CURVE_TYPE != -1 || CAP_PRESS_SWITCH != -1 || SAT_QP_SWITCH != -1)
-       {
-	 eb_ptr = Element_Blocks + eb_indx;
-	 ip_total = elem_info(NQUAD, eb_ptr->Elem_Type);
-         if((mp->PorousMediaType == POROUS_UNSATURATED ||
-	     mp->PorousMediaType == POROUS_SHELL_UNSATURATED ||
-	     mp->PorousMediaType == POROUS_TWO_PHASE) &&
-             mp->SaturationModel == TANH_HYST )
-           {
-	    for(j=0; j < ip_total; j++)
-	      {
-	      /*Note that we will set these for all 3 var types because you
-	       *will never see them individually.
-	       */
-	       exo->elem_var_tab[i++] = 1;
-	       ev_indx++;
-	       if ( has_been_called == 0 )
-	         {
-		  asdv ( &gvec_elem[eb_indx][ev_indx - 1],
-		         exo->eb_num_elems[eb_indx] );
-	         }
-	       exo->elem_var_tab[i++] = 1;
-	       ev_indx++;
-	       if ( has_been_called == 0 )
-	         {
-		  asdv ( &gvec_elem[eb_indx][ev_indx - 1],
-		         exo->eb_num_elems[eb_indx] );
-	         }
-	       exo->elem_var_tab[i++] = 1;
-	       ev_indx++;
-	       if ( has_been_called == 0 )
-	         {
-		  asdv ( &gvec_elem[eb_indx][ev_indx - 1],
-		         exo->eb_num_elems[eb_indx] );
-	         }
-              } /* End of loop over Gauss points*/
-	   } /* End of if TANH_HYST*/
-       }
+    if (SAT_CURVE_TYPE != -1 || CAP_PRESS_SWITCH != -1 || SAT_QP_SWITCH != -1) {
+      eb_ptr = Element_Blocks + eb_indx;
+      ip_total = elem_info(NQUAD, eb_ptr->Elem_Type);
+      for (j = 0; j < ip_total; j++) {
+        /*Note that we will set these for all 3 var types because you
+         *will never see them individually.
+         */
+        exo->elem_var_tab[i++] = 1;
+        ev_indx++;
+        if (has_been_called == 0) {
+          asdv(&gvec_elem[eb_indx][ev_indx - 1], exo->eb_num_elems[eb_indx]);
+        }
+        exo->elem_var_tab[i++] = 1;
+        ev_indx++;
+        if (has_been_called == 0) {
+          asdv(&gvec_elem[eb_indx][ev_indx - 1], exo->eb_num_elems[eb_indx]);
+        }
+        exo->elem_var_tab[i++] = 1;
+        ev_indx++;
+        if (has_been_called == 0) {
+          asdv(&gvec_elem[eb_indx][ev_indx - 1], exo->eb_num_elems[eb_indx]);
+        }
+      }
+    }
   }
 
   /* write out table */
@@ -1174,7 +1157,7 @@ void create_truth_table(struct Results_Description *rd, Exo_DB *exo, double ***g
  * Notes:    [1] A new QA record is created that is slightly larger that the
  *		 old one. The old information is transcribed and a new record
  *		 is added that reflects this analysis.
- *
+ *		
  *	     [2] New records are not added if there are at least 4 QA records
  *		 already accumulated. The threshhold varies according to the
  *		 C preprocessor symbol MAX_QA.
