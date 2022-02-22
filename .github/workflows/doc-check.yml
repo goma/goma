@@ -1,4 +1,4 @@
-name: Goma Documentation Build
+name: Documentation Check Build
 
 on: [push, pull_request]
 

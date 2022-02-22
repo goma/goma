@@ -1,9 +1,9 @@
-name: GitHub Pages
+name: Build Goma Documentation
 
 on:
   push:
     branches:
-      - develop
+      - main
   pull_request:
 
 jobs:
