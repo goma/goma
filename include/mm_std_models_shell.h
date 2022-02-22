@@ -49,7 +49,10 @@ PROTO((dbl,
 EXTERN double disjoining_pressure_model /* mm_std_models_shell.c                */
 PROTO((dbl,
        dbl [DIM],
+       int *,
+       int *,
        dbl [DIM],
+       dbl [DIM][MDE],
        dbl [DIM][MDE],
        dbl [DIM][MDE] ));
 
@@ -112,7 +115,8 @@ PROTO((
 
 EXTERN int lubrication_fluid_source
 PROTO((
-       double *,                        /* Flux */
-       double [MAX_VARIABLE_TYPES][MDE] /* Flux sensitivities */
+       double *,                         /* Flux */
+       double [MAX_VARIABLE_TYPES][MDE], /* Flux sensitivities */
+       int *                             /* Array containing numbers of DOF*/
      ));
 #endif /* _MM_STD_MODELS_H */

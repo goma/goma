@@ -9681,35 +9681,46 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       }
       (void) strip(input);
       var = variable_string_to_int(input, "Variable for matrl initialization");
-      if (var >= 0) 
+      if (var >= 0)
 	{
 	  Var_init_mat[mn][Num_Var_Init_Mat[mn]].var = var;
 	}
-      else 
+      else
 	{
 	  sprintf(err_msg,
 		"Invalid choice of initialization variable in material, %s",
 	         mat_ptr->Material_Name);
 	  EH(-1, err_msg);
 	}
-      
+
       if ( fscanf(imp, "%d %lf", &Var_init_mat[mn][Num_Var_Init_Mat[mn]].ktype,
 		  &Var_init_mat[mn][Num_Var_Init_Mat[mn]].init_val)
 	  != 2) EH(-1,"Error reading initialization data");
 
-      SPF(es,"%s = %s %d %.4g", "Initialize", input, Var_init_mat[mn][Num_Var_Init_Mat[mn]].ktype, 
+      SPF(es,"%s = %s %d %.4g", "Initialize", input, Var_init_mat[mn][Num_Var_Init_Mat[mn]].ktype,
 	                                             Var_init_mat[mn][Num_Var_Init_Mat[mn]].init_val );
-												 
+
 	  if( fscanf( imp, "%d", &Var_init_mat[mn][Num_Var_Init_Mat[mn]].slave_block) != 1)
-		Var_init_mat[mn][Num_Var_Init_Mat[mn]].slave_block = 0;	
+		Var_init_mat[mn][Num_Var_Init_Mat[mn]].slave_block = 0;
 	  else
 	    SPF(endofstring(es)," %d", Var_init_mat[mn][Num_Var_Init_Mat[mn]].slave_block);
-		
+
       Num_Var_Init_Mat[mn]++;
       ECHO(es,echo_file);
     }
 
-  ECHO("\n---Special Inputs\n", echo_file); /* added by PRS 3/17/2009 */ 
+  ECHO("\n---Special Inputs\n", echo_file); /* added by PRS 3/17/2009 */
+
+  /************ SHELL PROPERTIES SECTION ********************/
+
+  /*Initialize for good behavior */
+  mat_ptr->HeightUFunctionModel = CONSTANT;
+  mat_ptr->heightU = 0.0;
+
+  mat_ptr->VeloUFunctionModel = CONSTANT;
+  mat_ptr->veloU[0] = 0.0;
+  mat_ptr->veloU[1] = 0.0;
+  mat_ptr->veloU[2] = 0.0;
 
   if(pd_glob[mn]->e[R_LUBP] || pd_glob[mn]->e[R_LUBP_2] ||
      pd_glob[mn]->e[R_TFMP_MASS] || pd_glob[mn]->e[R_TFMP_BOUND] )
@@ -9731,7 +9742,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  num_const = read_constants(imp, &(mat_ptr->u_heightU_function_constants), NO_SPECIES);
 	  if( num_const < 2)
 	    {
-	      sr = sprintf(err_msg, 
+	      sr = sprintf(err_msg,
 			   "Matl %s needs at least 2 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Upper Height Function", "CONSTANT_SPEED");
@@ -9741,9 +9752,9 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  if (num_const > 2)
 	    {
 	      /* We may have an external field "height" we will be adding to this model.  Check
-	       * for it now and flag its existence through the material properties structure 
+	       * for it now and flag its existence through the material properties structure
 	       */
-	      mat_ptr->heightU_ext_field_index = -1; //Default to NO external field 
+	      mat_ptr->heightU_ext_field_index = -1; //Default to NO external field
 	      if ( efv->ev )
 		{
 		  for (i = 0; i < efv->Num_external_field; i++)
@@ -9764,14 +9775,14 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heightU_function_constants);
 
 	}
-      else if ( model_read == -1 && !strcmp(model_name, "CONSTANT_SPEED_MELT") )  
+      else if ( model_read == -1 && !strcmp(model_name, "CONSTANT_SPEED_MELT") )
 	{
 	  model_read = 1;
 	  mat_ptr->HeightUFunctionModel = CONSTANT_SPEED_MELT;
 	  num_const = read_constants(imp, &(mat_ptr->u_heightU_function_constants), NO_SPECIES);
 	  if( num_const < 2)
 	    {
-	      sr = sprintf(err_msg, 
+	      sr = sprintf(err_msg,
 			   "Matl %s needs at least 2 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Upper Height Function", "CONSTANT_SPEED");
@@ -9781,14 +9792,14 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heightU_function_constants);
 
 	}
-      else if ( model_read == -1 && !strcmp(model_name, "CONSTANT_SPEED_DEFORM") )  
+      else if ( model_read == -1 && !strcmp(model_name, "CONSTANT_SPEED_DEFORM") )
 	{
 	  model_read = 1;
 	  mat_ptr->HeightUFunctionModel = CONSTANT_SPEED_DEFORM;
 	  num_const = read_constants(imp, &(mat_ptr->u_heightU_function_constants), NO_SPECIES);
 	  if( num_const < 5)
 	    {
-	      sr = sprintf(err_msg, 
+	      sr = sprintf(err_msg,
 			   "Matl %s needs at least 5 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Upper Height Function", "CONSTANT_SPEED_DEFORM");
@@ -9798,7 +9809,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heightU_function_constants);
 
 	}
-      else if ( model_read == -1 && !strcmp(model_name, "ROLL_ON") )  
+      else if ( model_read == -1 && !strcmp(model_name, "ROLL_ON") )
 	{
 	  model_read = 1;
 	  mat_ptr->HeightUFunctionModel = ROLL_ON;
@@ -9815,9 +9826,9 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  if (num_const > 5)
 	    {
 	      /* We may have an external field "height" we will be adding to this model.  Check
-	       * for it now and flag its existence through the material properties structure 
+mat_ptr->veloU	       * for it now and flag its existence through the material properties structure
 	       */
-	      mat_ptr->heightU_ext_field_index = -1; //Default to NO external field 
+	      mat_ptr->heightU_ext_field_index = -1; //Default to NO external field
 	      if ( efv->ev )
 		{
 		  for (i = 0; i < efv->Num_external_field; i++)
@@ -9836,14 +9847,14 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  mat_ptr->len_u_heightU_function_constants = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heightU_function_constants);
 	}
-      else if ( model_read == -1 && !strcmp(model_name, "ROLL_ON_MELT") )  
+      else if ( model_read == -1 && !strcmp(model_name, "ROLL_ON_MELT") )
 	{
 	  model_read = 1;
 	  mat_ptr->HeightUFunctionModel = ROLL_ON_MELT;
 	  num_const = read_constants(imp, &(mat_ptr->u_heightU_function_constants), NO_SPECIES);
 	  if( num_const < 5)
 	    {
-	      sr = sprintf(err_msg, 
+	      sr = sprintf(err_msg,
 			   "Matl %s needs 5 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Upper Height Function", "ROLL_ON_MELT");
@@ -9852,15 +9863,15 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  mat_ptr->len_u_heightU_function_constants = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heightU_function_constants);
 	}
-    
-      else if ( model_read == -1 && !strcmp(model_name, "ROLL") )  
+
+      else if ( model_read == -1 && !strcmp(model_name, "ROLL") )
 	{
 	  model_read = 1;
 	  mat_ptr->HeightUFunctionModel = ROLL;
 	  num_const = read_constants(imp, &(mat_ptr->u_heightU_function_constants), NO_SPECIES);
 	  if( num_const < 8)
 	    {
-	      sr = sprintf(err_msg, 
+	      sr = sprintf(err_msg,
 			   "Matl %s needs 8 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Upper Height Function", "ROLL");
@@ -9977,29 +9988,29 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	     EH(-1,"Expecting trailing keyword for Upper height function EXTERNAL_FIELD model.\n");
 	   }
 	 model_read = 1;
-     
+
 	 ii = 0;
 	 for ( j=0; j<efv->Num_external_field; j++) {
-	   if ( strcmp(efv->name[j], input) == 0 ) { 
+	   if ( strcmp(efv->name[j], input) == 0 ) {
 	     ii=1;
 	     if ( mat_ptr->heightU_ext_field_index == -1)  mat_ptr->heightU_ext_field_index = j;
 	   }
 	 }
 	 if( ii==0 ) {
 	   EH(-1,"Must activate external fields to use this Upper height function model.  Field name needed for the EXTERNAL_FIELD");
-      }	  
+      }
 	 mat_ptr->HeightUFunctionModel = EXTERNAL_FIELD;
       /* pick up scale factor for property */
-	  num_const = read_constants(imp, &(mat_ptr->u_heightU_function_constants), 
+	  num_const = read_constants(imp, &(mat_ptr->u_heightU_function_constants),
 				     NO_SPECIES);
 
 	  mat_ptr->len_u_heightU_function_constants = num_const;
-	  if ( num_const < 1) 
+	  if ( num_const < 1)
 	    {
-	      sr = sprintf(err_msg, 
+	      sr = sprintf(err_msg,
 		   "Matl %s expected at least 3 constants for %s %s model.\n",
-			   pd_glob[mn]->MaterialName, 
-			   "Upper Height Function", 
+			   pd_glob[mn]->MaterialName,
+			   "Upper Height Function",
 			   "EXTERNAL_FIELD");
 	      EH(-1, err_msg);
 	    }
@@ -10085,25 +10096,32 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	   EH(model_read, "Upper Height Function model invalid");
 	 }
       ECHO(es,echo_file);
-      
-      model_read = look_for_mat_proptable(imp, "Lower Height Function Constants" , 
-              &(mat_ptr->HeightLFunctionModel), 
-              &(mat_ptr->heightL), 
+    } /* End of LUBP, LUBP_2, TFMP_MASS, and TFMP_BOUND cards */
+
+
+  if(pd_glob[mn]->e[R_LUBP] || pd_glob[mn]->e[R_LUBP_2] ||
+    (pd_glob[mn]->e[R_SHELL_FILMP] && pd_glob[mn]->e[R_SHELL_FILMH]) ||
+     pd_glob[mn]->e[R_TFMP_MASS] || pd_glob[mn]->e[R_TFMP_BOUND] )
+    {
+
+      model_read = look_for_mat_proptable(imp, "Lower Height Function Constants" ,
+              &(mat_ptr->HeightLFunctionModel),
+              &(mat_ptr->heightL),
               &(mat_ptr->u_heightL_function_constants),
               &(mat_ptr->len_u_heightL_function_constants),
               &(mat_ptr->heightL_function_constants_tableid),
               model_name, SCALAR_INPUT, &NO_SPECIES,es);
 
-      mat_ptr->heightL_ext_field_index = -1; //Default to NO external field 
+      mat_ptr->heightL_ext_field_index = -1; //Default to NO external field
 
-      if ( model_read == -1 && !strcmp(model_name, "CONSTANT_SPEED") )  
+      if ( model_read == -1 && !strcmp(model_name, "CONSTANT_SPEED") )
 	{
 	  model_read = 1;
 	  mat_ptr->HeightLFunctionModel = CONSTANT_SPEED;
 	  num_const = read_constants(imp, &(mat_ptr->u_heightL_function_constants), NO_SPECIES);
 	  if( num_const < 2)
 	    {
-	      sr = sprintf(err_msg, 
+	      sr = sprintf(err_msg,
 			   "Matl %s needs at least 2 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Lower Height Function", "CONSTANT_SPEED");
@@ -10112,9 +10130,9 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  if (num_const > 2)
 	    {
 	      /* We may have an external field "height" we will be adding to this model.  Check
-	       * for it now and flag its existence through the material properties structure 
+	       * for it now and flag its existence through the material properties structure
 	       */
-	      mat_ptr->heightL_ext_field_index = -1; //Default to NO external field 
+	      mat_ptr->heightL_ext_field_index = -1; //Default to NO external field
 	      if ( efv->ev )
 		{
 		  for (i = 0; i < efv->Num_external_field; i++)
@@ -10134,14 +10152,14 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heightL_function_constants);
 	}
 
-      else if ( model_read == -1 && !strcmp(model_name, "ROLL_ON") )  
+      else if ( model_read == -1 && !strcmp(model_name, "ROLL_ON") )
 	{
 	  model_read = 1;
 	  mat_ptr->HeightLFunctionModel = ROLL_ON;
 	  num_const = read_constants(imp, &(mat_ptr->u_heightL_function_constants), NO_SPECIES);
 	  if( num_const < 5)
 	    {
-	      sr = sprintf(err_msg, 
+	      sr = sprintf(err_msg,
 			   "Matl %s needs 5 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Lower Height Function", "ROLL_ON");
@@ -10151,14 +10169,14 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heightL_function_constants);
 	}
 
-      else if ( model_read == -1 && !strcmp(model_name, "ROLL") )  
+      else if ( model_read == -1 && !strcmp(model_name, "ROLL") )
 	{
 	  model_read = 1;
 	  mat_ptr->HeightLFunctionModel = ROLL;
 	  num_const = read_constants(imp, &(mat_ptr->u_heightL_function_constants), NO_SPECIES);
 	  if( num_const < 8)
 	    {
-	      sr = sprintf(err_msg, 
+	      sr = sprintf(err_msg,
 			   "Matl %s needs 8 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Lower Height Function", "ROLL");
@@ -10174,54 +10192,60 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	     EH(-1,"Expecting trailing keyword for Lower height function EXTERNAL_FIELD model.\n");
 	   }
 	 model_read = 1;
-     
+
 	 ii = 0;
 	 for ( j=0; j<efv->Num_external_field; j++) {
-	   if ( strcmp(efv->name[j], input) == 0 ) { 
+	   if ( strcmp(efv->name[j], input) == 0 ) {
 	     ii=1;
 	     if ( mat_ptr->heightL_ext_field_index == -1) mat_ptr->heightL_ext_field_index = j;
 	   }
 	 }
 	 if( ii==0 ) {
 	   EH(-1,"Must activate external fields to use this Lower height function model.  Field name needed for the EXTERNAL_FIELD");
-      }	  
+      }
 	 mat_ptr->HeightLFunctionModel = EXTERNAL_FIELD;
       /* pick up scale factor for property */
-	  num_const = read_constants(imp, &(mat_ptr->u_heightL_function_constants), 
+	  num_const = read_constants(imp, &(mat_ptr->u_heightL_function_constants),
 				     NO_SPECIES);
 
 	  mat_ptr->len_u_heightL_function_constants = num_const;
-	  if ( num_const < 3) 
+	  if ( num_const < 3)
 	    {
-	      sr = sprintf(err_msg, 
+	      sr = sprintf(err_msg,
 		   "Matl %s expected at least 3 constants for %s %s model.\n",
-			   pd_glob[mn]->MaterialName, 
-			   "Lower Height Function", 
+			   pd_glob[mn]->MaterialName,
+			   "Lower Height Function",
 			   "EXTERNAL_FIELD");
 	      EH(-1, err_msg);
 	    }
  }
-    
+
       else  if(model_read == -1)
 	{
 	  EH(model_read, "Lower Height Function model invalid");
 	}
       ECHO(es,echo_file);
 
-      model_read = look_for_mat_prop(imp, "Upper Velocity Function Constants", 
-				     &(mat_ptr->VeloUFunctionModel), 
-				     mat_ptr->veloU, 
-				     NO_USER, NULL, model_name, 
+    } /* End of LUBP, LUBP_2, SHELL_FILMP, SHELL_FILMH, TFMP_MASS, and TFMP_BOUND cards */
+
+
+  if(pd_glob[mn]->e[R_LUBP] || pd_glob[mn]->e[R_LUBP_2] ||
+     pd_glob[mn]->e[R_TFMP_MASS] || pd_glob[mn]->e[R_TFMP_BOUND] )
+    {
+      model_read = look_for_mat_prop(imp, "Upper Velocity Function Constants",
+				     &(mat_ptr->VeloUFunctionModel),
+				     mat_ptr->veloU,
+				     NO_USER, NULL, model_name,
 				     VECTOR_INPUT, &NO_SPECIES,es);
 
-      if ( model_read == -1 && !strcmp(model_name, "ROLL") )  
+      if ( model_read == -1 && !strcmp(model_name, "ROLL") )
 	{
 	  model_read = 1;
 	  mat_ptr->VeloUFunctionModel = ROLL;
 	  num_const = read_constants(imp, &(mat_ptr->u_veloU_function_constants), NO_SPECIES);
 	  if( num_const < 1)
 	    {
-	      sr = sprintf(err_msg, 
+	      sr = sprintf(err_msg,
 			   "Matl %s needs 1 constant for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Upper Velocity Function", "ROLL");
@@ -10265,12 +10289,19 @@ ECHO("\n----Acoustic Properties\n", echo_file);
           SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_veloU_function_constants);
         }
 
-    
+
       else  if(model_read == -1)
 	{
 	  EH(model_read, "Upper Velocity Function model invalid");
 	}
       ECHO(es,echo_file);
+
+    } /* End of LUBP, LUBP_2, TFMP_MASS, and TFMP_BOUND cards */
+
+  if(pd_glob[mn]->e[R_LUBP] || pd_glob[mn]->e[R_LUBP_2] ||
+    (pd_glob[mn]->e[R_SHELL_FILMP] && pd_glob[mn]->e[R_SHELL_FILMH]) ||
+     pd_glob[mn]->e[R_TFMP_MASS] || pd_glob[mn]->e[R_TFMP_BOUND] )
+    {
 
       model_read = look_for_mat_prop(imp, "Lower Velocity Function Constants", 
 				     &(mat_ptr->VeloLFunctionModel), 
@@ -10347,25 +10378,31 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	   SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_veloL_function_constants);
 	 }
 
-    
+
       else  if(model_read == -1)
 	{
 	  EH(model_read, "Lower Velocity Function model invalid");
 	}
       ECHO(es,echo_file);
 
-      model_read = look_for_mat_prop(imp, "Upper Contact Angle", 
-				     &(mat_ptr->DcaUFunctionModel), 
-				     &(mat_ptr->dcaU), 
-				     NO_USER, NULL, model_name, 
+    } /* End of LUBP, LUBP_2, TFMP_MASS, SHELL_FILMP, SHELL_FILMH, and TFMP_BOUND cards */
+
+
+  if(pd_glob[mn]->e[R_LUBP] || pd_glob[mn]->e[R_LUBP_2] ||
+     pd_glob[mn]->e[R_TFMP_MASS] || pd_glob[mn]->e[R_TFMP_BOUND] )
+    {
+      model_read = look_for_mat_prop(imp, "Upper Contact Angle",
+				     &(mat_ptr->DcaUFunctionModel),
+				     &(mat_ptr->dcaU),
+				     NO_USER, NULL, model_name,
 				     SCALAR_INPUT, &NO_SPECIES,es);
-  
+
       if ( model_read == -1 && !strcmp(model_name, "DYNAMIC") ) {
 	model_read = 1;
 	mat_ptr->DcaUFunctionModel = DYNAMIC_CA;
 	num_const = read_constants(imp, &(mat_ptr->u_dcaU_function_constants), NO_SPECIES);
 	if( num_const < 4 ) {
-	  sr = sprintf(err_msg, 
+	  sr = sprintf(err_msg,
 		       "Matl %s needs 4 constants for %s %s model.\n",
 		       pd_glob[mn]->MaterialName,
 		       "Upper Contact Angle", "DYNAMIC");
@@ -10380,7 +10417,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	mat_ptr->DcaUFunctionModel = DYNAMIC_LINEAR_CA;
 	num_const = read_constants(imp, &(mat_ptr->u_dcaU_function_constants), NO_SPECIES);
 	if( num_const < 4 ) {
-	  sr = sprintf(err_msg, 
+	  sr = sprintf(err_msg,
 		       "Matl %s needs 4 constants for %s %s model.\n",
 		       pd_glob[mn]->MaterialName,
 		       "Upper Contact Angle", "DYNAMIC_LINEAR");
@@ -10395,18 +10432,18 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       }
       ECHO(es,echo_file);
 
-      model_read = look_for_mat_prop(imp, "Lower Contact Angle", 
-				     &(mat_ptr->DcaLFunctionModel), 
-				     &(mat_ptr->dcaL), 
-				     NO_USER, NULL, model_name, 
+      model_read = look_for_mat_prop(imp, "Lower Contact Angle",
+				     &(mat_ptr->DcaLFunctionModel),
+				     &(mat_ptr->dcaL),
+				     NO_USER, NULL, model_name,
 				     SCALAR_INPUT, &NO_SPECIES,es);
-  
+
       if ( model_read == -1 && !strcmp(model_name, "DYNAMIC") ) {
 	model_read = 1;
 	mat_ptr->DcaLFunctionModel = DYNAMIC_CA;
 	num_const = read_constants(imp, &(mat_ptr->u_dcaL_function_constants), NO_SPECIES);
 	if( num_const < 4 ) {
-	  sr = sprintf(err_msg, 
+	  sr = sprintf(err_msg,
 		       "Matl %s needs 4 constants for %s %s model.\n",
 		       pd_glob[mn]->MaterialName,
 		       "Lower Contact Angle", "DYNAMIC");
@@ -10421,7 +10458,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	mat_ptr->DcaLFunctionModel = DYNAMIC_LINEAR_CA;
 	num_const = read_constants(imp, &(mat_ptr->u_dcaL_function_constants), NO_SPECIES);
 	if( num_const < 4 ) {
-	  sr = sprintf(err_msg, 
+	  sr = sprintf(err_msg,
 		       "Matl %s needs 4 constants for %s %s model.\n",
 		       pd_glob[mn]->MaterialName,
 		       "Lower Contact Angle", "DYNAMIC_LINEAR");
@@ -10436,6 +10473,13 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       }
       ECHO(es,echo_file);
 
+    } /* End of LUBP, LUBP_2, TFMP_MASS, and TFMP_BOUND cards */
+
+
+  if(pd_glob[mn]->e[R_LUBP] || pd_glob[mn]->e[R_LUBP_2] ||
+    (pd_glob[mn]->e[R_SHELL_FILMP] && pd_glob[mn]->e[R_SHELL_FILMH]) ||
+     pd_glob[mn]->e[R_TFMP_MASS] || pd_glob[mn]->e[R_TFMP_BOUND] )
+    {
       /* Optional lubrication fluid source term */
 
       strcpy(search_string,"Lubrication Fluid Source");
@@ -10516,6 +10560,14 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	      EH(-1,"Unrecognized lubrication fluid source model");
 	    }
 	}
+
+    } /* End of LUBP, LUBP_2, SHELL_FILMP, SHELL_FILMH, TFMP_MASS, and TFMP_BOUND cards */
+
+
+  if(pd_glob[mn]->e[R_LUBP] || pd_glob[mn]->e[R_LUBP_2] ||
+     pd_glob[mn]->e[R_TFMP_MASS] || pd_glob[mn]->e[R_TFMP_BOUND] )
+    {
+
       /* Optional lubrication momentum source term */
 
       strcpy(search_string,"Lubrication Momentum Source");
@@ -10554,8 +10606,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	    }
 	}
 
-
-    } /* End of shell lub_p cards */
+    } /* End of LUBP, LUBP_2, SHELL_FILMP, SHELL_FILMH, TFMP_MASS, and TFMP_BOUND card */
 
   /* Shell Energy Cards - heat sources, sinks, etc. */
 
@@ -10564,23 +10615,23 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       /* no source terms available.  Feel free to add some!  */
     } /* End of shell_energy cards */
 
-   if(pd_glob[mn]->e[R_SHELL_FILMP])
+   if( pd_glob[mn]->e[R_SHELL_FILMP] && pd_glob[mn]->e[R_SHELL_FILMH] )
     {
 
-      model_read = look_for_mat_prop(imp, "Film Evaporation Model", 
-				     &(mat_ptr->FilmEvapModel), 
-				     &(mat_ptr->FilmEvap), 
-				     NO_USER, NULL, model_name, 
+      model_read = look_for_mat_prop(imp, "Film Evaporation Model",
+				     &(mat_ptr->FilmEvapModel),
+				     &(mat_ptr->FilmEvap),
+				     NO_USER, NULL, model_name,
 				     SCALAR_INPUT, &NO_SPECIES,es);
 
-      if ( model_read == -1 && !strcmp(model_name, "CONC_POWER") )  
+      if ( model_read == -1 && !strcmp(model_name, "CONC_POWER") )
 	{
 	  model_read = 1;
 	  mat_ptr->FilmEvapModel = CONC_POWER;
 	  num_const = read_constants(imp, &(mat_ptr->u_FilmEvap_function_constants), NO_SPECIES);
 	  if( num_const < 3)
 	    {
-	      sr = sprintf(err_msg, 
+	      sr = sprintf(err_msg,
 			   "Matl %s needs 3 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Film Evaporation Model", "CONC_POWER");
@@ -10589,7 +10640,6 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  mat_ptr->len_u_FilmEvap_function_constants = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_FilmEvap_function_constants);
 	}
-    
 
 
       else if(model_read == -1)
@@ -10597,71 +10647,8 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  EH(model_read, "Film Evaporation Model invalid");
 	}
 
-      ECHO(es,echo_file);  
+      ECHO(es,echo_file);
 
-
-      model_read = look_for_mat_prop(imp, "Upper Velocity Function Constants", 
-				     &(mat_ptr->VeloUFunctionModel), 
-				     mat_ptr->veloU, 
-				     NO_USER, NULL, model_name, 
-				     VECTOR_INPUT, &NO_SPECIES,es);
-
-      if ( model_read == -1 && !strcmp(model_name, "ROLL") )  
-	{
-	  model_read = 1;
-	  mat_ptr->VeloUFunctionModel = ROLL;
-	  num_const = read_constants(imp, &(mat_ptr->u_veloU_function_constants), NO_SPECIES);
-	  if( num_const < 9)
-	    {
-	      sr = sprintf(err_msg, 
-			   "Matl %s needs 9 constants for %s %s model.\n",
-			   pd_glob[mn]->MaterialName,
-			   "Upper Velocity Function", "ROLL");
-	      EH(-1, err_msg);
-	    }
-	  mat_ptr->len_u_veloU_function_constants = num_const;
-	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_veloU_function_constants);
-	}
-
-      else  if(model_read == -1)
-	{
-	  EH(model_read, "Upper Velocity Function model invalid");
-	}
-
-
-      ECHO(es,echo_file);  
-
-
-      model_read = look_for_mat_prop(imp, "Lower Velocity Function Constants", 
-				     &(mat_ptr->VeloLFunctionModel), 
-				     mat_ptr->veloL, 
-				     NO_USER, NULL, model_name, 
-				     VECTOR_INPUT, &NO_SPECIES,es);
-
-      if ( model_read == -1 && !strcmp(model_name, "ROLL") )  
-	{
-	  model_read = 1;
-	  mat_ptr->VeloLFunctionModel = ROLL;
-	  num_const = read_constants(imp, &(mat_ptr->u_veloL_function_constants), NO_SPECIES);
-	  if( num_const < 9)
-	    {
-	      sr = sprintf(err_msg, 
-			   "Matl %s needs 9 constants for %s %s model.\n",
-			   pd_glob[mn]->MaterialName,
-			   "Lower Velocity Function", "ROLL");
-	      EH(-1, err_msg);
-	    }
-	  mat_ptr->len_u_veloL_function_constants = num_const;
-	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_veloL_function_constants);
-	}
-    
-      else  if(model_read == -1)
-	{
-	  EH(model_read, "Lower Velocity Function model invalid");
-	}
-
-
-      ECHO(es,echo_file);  
 
       /* Optional slip term */
 
@@ -10696,29 +10683,25 @@ ECHO("\n----Acoustic Properties\n", echo_file);
             {
               EH(-1,"Slip coefficient model invalid");
             }
-
         }
 
 
-    }
+     /* Disjoining pressure term */
 
-  if(pd_glob[mn]->e[R_SHELL_FILMH])
-    {
-
-      model_read = look_for_mat_prop(imp, "Disjoining Pressure Model", 
-				     &(mat_ptr->DisjPressModel), 
-				     &(mat_ptr->DisjPress), 
-				     NO_USER, NULL, model_name, 
+      model_read = look_for_mat_prop(imp, "Disjoining Pressure Model",
+				     &(mat_ptr->DisjPressModel),
+				     &(mat_ptr->DisjPress),
+				     NO_USER, NULL, model_name,
 				     SCALAR_INPUT, &NO_SPECIES,es);
 
-      if ( model_read == -1 && !strcmp(model_name, "TWO_TERM") )  
+      if ( model_read == -1 && !strcmp(model_name, "TWO_TERM") )
 	{
 	  model_read = 1;
 	  mat_ptr->DisjPressModel = TWO_TERM;
 	  num_const = read_constants(imp, &(mat_ptr->u_DisjPress_function_constants), NO_SPECIES);
 	  if( num_const < 5)
 	    {
-	      sr = sprintf(err_msg, 
+	      sr = sprintf(err_msg,
 			   "Matl %s needs 5 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Disjoining Pressure Model", "TWO_TERM");
@@ -10729,14 +10712,14 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	}
 
 
-      if ( model_read == -1 && !strcmp(model_name, "TWO_TERM_EXT_CA") )  
+      if ( model_read == -1 && !strcmp(model_name, "TWO_TERM_EXT_CA") )
 	{
 	  model_read = 1;
 	  mat_ptr->DisjPressModel = TWO_TERM_EXT_CA;
 	  num_const = read_constants(imp, &(mat_ptr->u_DisjPress_function_constants), NO_SPECIES);
 	  if( num_const < 4)
 	    {
-	      sr = sprintf(err_msg, 
+	      sr = sprintf(err_msg,
 			   "Matl %s needs 4 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Disjoining Pressure Model", "TWO_TERM_EXT_CA");
@@ -10747,14 +10730,14 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	}
 
 
-      if ( model_read == -1 && !strcmp(model_name, "ONE_TERM") )  
+      if ( model_read == -1 && !strcmp(model_name, "ONE_TERM") )
 	{
 	  model_read = 1;
 	  mat_ptr->DisjPressModel = ONE_TERM;
 	  num_const = read_constants(imp, &(mat_ptr->u_DisjPress_function_constants), NO_SPECIES);
 	  if( num_const < 3)
 	    {
-	      sr = sprintf(err_msg, 
+	      sr = sprintf(err_msg,
 			   "Matl %s needs 3 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Disjoining Pressure Model", "ONE_TERM");
@@ -10770,27 +10753,27 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  EH(model_read, "Disjoining Pressure model invalid");
 	}
 
-      ECHO(es,echo_file);  
+      ECHO(es,echo_file);
 
-    }
+    } /* End of SHELL_FILMP and SHELL_FILMH cards */
 
   if(pd_glob[mn]->e[R_SHELL_PARTC])
     {
 
-      model_read = look_for_mat_prop(imp, "Diffusion Coefficient Model", 
-				     &(mat_ptr->DiffCoeffModel), 
-				     &(mat_ptr->DiffCoeff), 
-				     NO_USER, NULL, model_name, 
+      model_read = look_for_mat_prop(imp, "Diffusion Coefficient Model",
+				     &(mat_ptr->DiffCoeffModel),
+				     &(mat_ptr->DiffCoeff),
+				     NO_USER, NULL, model_name,
 				     SCALAR_INPUT, &NO_SPECIES,es);
 
-      if ( model_read == -1 && !strcmp(model_name, "STOKES_EINSTEIN") )  
+      if ( model_read == -1 && !strcmp(model_name, "STOKES_EINSTEIN") )
 	{
 	  model_read = 1;
 	  mat_ptr->DiffCoeffModel = STOKES_EINSTEIN;
 	  num_const = read_constants(imp, &(mat_ptr->u_DiffCoeff_function_constants), NO_SPECIES);
 	  if( num_const < 3)
 	    {
-	      sr = sprintf(err_msg, 
+	      sr = sprintf(err_msg,
 			   "Matl %s needs 3 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Diffusion Coefficient Model", "STOKES_EINSTEIN");
@@ -10807,10 +10790,9 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  EH(model_read, "Diffusion Coefficient Model invalid");
 	}
 
-      ECHO(es,echo_file); 
+      ECHO(es,echo_file);
 
     }
-
 
 
   /*
@@ -10830,7 +10812,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 
     model_read = look_for_mat_prop(imp, "FSI Deformation Model",
 				   &(mat_ptr->FSIModel),
-				   &(a0), NO_USER, NULL, model_name, 
+				   &(a0), NO_USER, NULL, model_name,
 				   NO_INPUT, &NO_SPECIES, es);
 
     if ( !strcmp(model_name, "FSI_MESH_BOTH") ) {
@@ -10838,7 +10820,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       EH(model_read, "This FSI Deformation Model is not currently implemented!");
 
     } else if ( !strcmp(model_name, "FSI_MESH_CONTINUUM") ) {
-      //PRS: Made this a WH instead of a EH as if the mesh equations are in a higher block #, this trips. 
+      //PRS: Made this a WH instead of a EH as if the mesh equations are in a higher block #, this trips.
       if(upd->ep[R_MESH1] == -1) WH(-1," Must have mesh continuum equations on somewhere for FSI_MESH_CONTINUUM");
       mat_ptr->FSIModel = FSI_MESH_CONTINUUM;
 
@@ -10868,25 +10850,24 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       EH(model_read, "This FSI Deformation Model is not valid!");
     }
 
-    ECHO(es,echo_file);    
+    ECHO(es,echo_file);
   }
-  
-  /* 
-   * Input conditions for the structured porous shell equations 
+
+  /*
+   * Input conditions for the structured porous shell equations
    * Added by SAR 2010-03-01
    */
-  
   if(pd_glob[mn]->e[R_SHELL_SAT_CLOSED] ||
      pd_glob[mn]->e[R_SHELL_SAT_OPEN]   ||
      pd_glob[mn]->e[R_SHELL_SAT_OPEN_2])   {
-    
+
     // Structured shell porosity
-    model_read = look_for_mat_prop(imp, "Porous Shell Closed Porosity", 
-				   &(mat_ptr->PorousShellClosedPorosityModel), 
-				   &(mat_ptr->PorousShellClosedPorosity), 
-				   NO_USER, NULL, model_name, 
+    model_read = look_for_mat_prop(imp, "Porous Shell Closed Porosity",
+				   &(mat_ptr->PorousShellClosedPorosityModel),
+				   &(mat_ptr->PorousShellClosedPorosity),
+				   NO_USER, NULL, model_name,
 				   SCALAR_INPUT, &NO_SPECIES,es);
-    
+
     if (model_read == -1 && !strcmp(model_name, "EXTERNAL_FIELD")) {
       if ( fscanf(imp,"%s", input ) !=  1 )
 	    {

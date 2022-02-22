@@ -3761,7 +3761,7 @@ ShellRotate (
 
 void
 calculate_lub_q_v (
-		   const int EQN, 
+		   const int EQN,
 		   double time,
 		   double dt,
 		   double xi[DIM],
@@ -3812,10 +3812,10 @@ calculate_lub_q_v (
   if ( (EQN == R_LUBP) || (EQN == R_LUBP_2) )
     {
 
-      /* Set proper fill variable first.   If in lub_p layer, then use FILL, 
+      /* Set proper fill variable first.   If in lub_p layer, then use FILL,
        * but if in LUBP_2 layer use PHASE1.  This will have to be made more general
-       * if you wanted to do both LS phases and R_phaseN fields in same layer. 
-       * We will leave that to the next sucker to develop 
+       * if you wanted to do both LS phases and R_phaseN fields in same layer.
+       * We will leave that to the next sucker to develop
        */
 
       VAR = FILL;
@@ -3827,28 +3827,28 @@ calculate_lub_q_v (
 	}
 
       /***** INITIALIZE LUBRICATION COMPONENTS AND LOAD IN VARIABLES *****/
-            
+
       /* Setup lubrication shell constructs */
       dbl wt_old = fv->wt;
       int dof_map[MDE];
       int *n_dof = (int *) array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
       lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
-      
+
       /* Load viscosity and density */
       mu = viscosity(gn, NULL, d_mu);
       dmu_dc = mp->d_viscosity[SHELL_PARTC];
       rho = density(d_rho, time);
-      
+
       /* Extract wall velocities */
       velocity_function_model(veloU, veloL, time, dt);
-      
+
       /* Extract wall heights */
       dbl H_U, dH_U_dtime, H_L, dH_L_dtime;
       dbl dH_U_dX[DIM],dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
       H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, dt);
-      
+
       /***** DEFORM HEIGHT AND CALCULATE SENSITIVITIES *****/
-      
+
       /* Define variables */
       dbl D_H_DX[DIM][MDE], D_H_DP[MDE], D_H_DdH[MDE];
       dbl D_H_DRS[DIM][MDE];
@@ -3858,7 +3858,7 @@ calculate_lub_q_v (
       memset(D_H_DNORMAL, 0.0, sizeof(double)*DIM*MDE);
       memset(D_H_DP,  0.0, sizeof(double)*MDE);
       memset(D_H_DdH, 0.0, sizeof(double)*MDE);
-      
+
       /* Deform height */
       switch ( mp->FSIModel ) {
       case FSI_MESH_CONTINUUM:
@@ -3890,13 +3890,13 @@ calculate_lub_q_v (
 	}
 	break;
       }
-      
+
       /* Set some coefficients */
       dbl k_turb, d_k_turb_dmu, d_k_turb_dH;
-      k_turb = 12.; 
+      k_turb = 12.;
       d_k_turb_dmu = 0.0;
       d_k_turb_dH  = 0.0;
-      
+
 
       /* Calculate height sensitivity to mesh */
       switch ( mp->FSIModel ) {
@@ -3990,40 +3990,40 @@ calculate_lub_q_v (
       for ( i = 0; i < ei->dof[EQN]; i++) {
 	D_H_DP[i] = dH_U_dp;
       }
-      
+
       /* Calculate height sensitivity to melting */
       if (pd->v[SHELL_DELTAH] && (mp->HeightUFunctionModel == CONSTANT_SPEED_DEFORM || mp->HeightUFunctionModel == CONSTANT_SPEED_MELT || mp->HeightUFunctionModel == ROLL_ON_MELT || mp->HeightUFunctionModel == FLAT_GRAD_FLAT_MELT || mp->HeightUFunctionModel == CIRCLE_MELT )) {
 	for ( i = 0; i < ei->dof[SHELL_DELTAH]; i++) {
 	  D_H_DdH[i] = 1.0;
 	}
       }
-      
+
       /*
-       * Mesh deformation does not yet affect the slopes, nor is that 
+       * Mesh deformation does not yet affect the slopes, nor is that
        * Jacobian in there.  Maybe it should be.
        */
-      
-      
+
+
       /***** CALCULATE PRESSURE GRADIENT AND SENSITIVITIES *****/
-      
+
       /* Define variables */
       dbl GRADP[DIM];
       dbl D_GRADP_DP[DIM][MDE], D_GRADP_DX[DIM][DIM][MDE];
-      dbl d_grad_lubp_dmesh[DIM][DIM][MDE]; 
-      dbl d_grad_lubp_2_dmesh[DIM][DIM][MDE]; 
-      
+      dbl d_grad_lubp_dmesh[DIM][DIM][MDE];
+      dbl d_grad_lubp_2_dmesh[DIM][DIM][MDE];
+
       if(EQN == R_LUBP)
 	{
-	  memset(d_grad_lubp_dmesh, 0.0, sizeof(double)*DIM*DIM*MDE); 
+	  memset(d_grad_lubp_dmesh, 0.0, sizeof(double)*DIM*DIM*MDE);
 	}
       else
 	{
-	  memset(d_grad_lubp_2_dmesh, 0.0, sizeof(double)*DIM*DIM*MDE); 
+	  memset(d_grad_lubp_2_dmesh, 0.0, sizeof(double)*DIM*DIM*MDE);
 	}
       memset(GRADP,             0.0, sizeof(double)*DIM);
       memset(D_GRADP_DP,        0.0, sizeof(double)*DIM*MDE);
       memset(D_GRADP_DX,        0.0, sizeof(double)*DIM*DIM*MDE);
-      
+
       if(EQN == R_LUBP)
 	{
 	  /* Rotate and calculate mesh sensitivity */
@@ -4035,7 +4035,7 @@ calculate_lub_q_v (
 	      }
 	    }
 	  }
-	  ShellRotate( fv->grad_lubp, d_grad_lubp_dmesh, GRADP, D_GRADP_DX, n_dof[MESH_DISPLACEMENT1]); 
+	  ShellRotate( fv->grad_lubp, d_grad_lubp_dmesh, GRADP, D_GRADP_DX, n_dof[MESH_DISPLACEMENT1]);
 	}
       else
 	{
@@ -4050,28 +4050,28 @@ calculate_lub_q_v (
 	  }
 	  ShellRotate( fv->grad_lubp_2, d_grad_lubp_2_dmesh, GRADP, D_GRADP_DX, n_dof[MESH_DISPLACEMENT1]); 
 	}
-      
-      /* Calcualte pressure sensitivity */
+
+      /* Calculate pressure sensitivity */
       //PRS: NEED TO DO SOMETHING HERE
       for ( i = 0; i < dim; i++) {
-	for ( j = 0; j < ei->dof[EQN]; j++) { 
+	for ( j = 0; j < ei->dof[EQN]; j++) {
 	  D_GRADP_DP[i][j] = 1.0;
 	}
       }
-      
-      
+
+
       /***** CALCULATE HEAVISIDE GRADIENT AND SENSITIVITIES *****/
-      
+
       /* Define variables */
       dbl GRADH[DIM];
       dbl D_GRADH_DF[DIM][MDE], D_GRADH_DX[DIM][DIM][MDE];
       memset(GRADH,      0.0, sizeof(double)*DIM);
       memset(D_GRADH_DF, 0.0, sizeof(double)*DIM*MDE);
       memset(D_GRADH_DX, 0.0, sizeof(double)*DIM*DIM*MDE);
-      
+
       /* Rotate and calculate mesh sensitivity */
       dbl d_grad_Hside_dmx[DIM][DIM][MDE];
-      memset(d_grad_Hside_dmx, 0.0, sizeof(double)*DIM*DIM*MDE);  
+      memset(d_grad_Hside_dmx, 0.0, sizeof(double)*DIM*DIM*MDE);
       if ( pd->v[VAR] ) {
 	for ( i = 0; i < dim; i++) {
 	  for ( j = 0; j < dim; j++) {
@@ -4080,34 +4080,34 @@ calculate_lub_q_v (
 	      d_grad_Hside_dmx[i][j][jk] = lsi->d_gradHn_dmesh[i][j][k];
 	    }
 	  }
-	}   
+	}
 	ShellRotate( lsi->gradHn, d_grad_Hside_dmx, GRADH, D_GRADH_DX, n_dof[MESH_DISPLACEMENT1]);
       }
-      
+
       /* Calculate F sensitivity */
       if ( pd->v[VAR] ) {
 	for ( i = 0; i < dim; i++) {
 	  for ( j = 0; j < dim; j++) {
 	    for ( k = 0; k < ei->dof[VAR]; k++) {
 	      D_GRADH_DF[i][k] += lsi->d_gradHn_dF[j][k] * delta(i,j);
-	      D_GRADH_DF[i][k] -= lsi->d_gradHn_dF[j][k] * fv->snormal[i] * fv->snormal[j];	     
+	      D_GRADH_DF[i][k] -= lsi->d_gradHn_dF[j][k] * fv->snormal[i] * fv->snormal[j];
 	    }
 	  }
 	}
       }
-      
-      
+
+
       /***** CALCULATE CURVATURE AND SENSITIVITIES *****/
-      
+
       /* Define variables */
       dbl CURV = 0.0;
       dbl D_CURV_DH = 0.0;
       dbl D_CURV_DK[MDE], D_CURV_DF[MDE], D_CURV_DX[DIM][MDE], D_CURV_DNORMAL[DIM][MDE];
       memset(D_CURV_DK, 0.0, sizeof(double)*MDE);
       memset(D_CURV_DF, 0.0, sizeof(double)*MDE);
-      memset(D_CURV_DX, 0.0, sizeof(double)*DIM*MDE);  
-      memset(D_CURV_DNORMAL, 0.0, sizeof(double)*DIM*MDE);  
-      
+      memset(D_CURV_DX, 0.0, sizeof(double)*DIM*MDE);
+      memset(D_CURV_DNORMAL, 0.0, sizeof(double)*DIM*MDE);
+
       /* Curvature - analytic in the "z" direction  */
       dbl dcaU, dcaL, slopeU, slopeL;
       dcaU = dcaL = slopeU = slopeL = 0;
@@ -4123,7 +4123,7 @@ calculate_lub_q_v (
 	}
 	CURV += (cos(M_PIE-dcaU-atan(slopeU)) + cos(M_PIE-dcaL-atan(-slopeL)))/H ;
       }
-      
+
       /* Curvature - numerical in planview direction */
       if ( pd->e[SHELL_LUB_CURV] ) {
 	CURV += fv->sh_l_curv;
@@ -4131,10 +4131,10 @@ calculate_lub_q_v (
       if ( pd->e[SHELL_LUB_CURV_2] ) {
 	CURV += fv->sh_l_curv_2;
       }
-      
+
       /* Sensitivity to height */
-      if ( pd->v[VAR] )  D_CURV_DH = -(cos(M_PIE-dcaU-atan(slopeU)) + cos(M_PIE-dcaL-atan(-slopeL)))/(H*H); 
-      
+      if ( pd->v[VAR] )  D_CURV_DH = -(cos(M_PIE-dcaU-atan(slopeU)) + cos(M_PIE-dcaL-atan(-slopeL)))/(H*H);
+
       /* Sensitivity to curvature */
       if ( pd->e[SHELL_LUB_CURV] ) {
 	for ( i = 0; i < ei->dof[SHELL_LUB_CURV]; i++) {
@@ -4148,7 +4148,7 @@ calculate_lub_q_v (
 	  D_CURV_DK[i] = 1.0;
 	}
       }
-      
+
       /* Sensitivity to level set F */
       if ( pd->e[VAR] ) {
 	for ( i = 0; i < ei->dof[VAR]; i++) {
@@ -4156,9 +4156,9 @@ calculate_lub_q_v (
 	    D_CURV_DF[i] += sin(dcaU+atan(slopeU))/(H*(1+slopeU*slopeU))*dH_U_dX[j]**lsi->d_normal_dF[j];
 	    D_CURV_DF[i] += sin(dcaL+atan(slopeL))/(H*(1+slopeL*slopeL))*dH_L_dX[j]**lsi->d_normal_dF[j];
 	  }
-	}       
+	}
       }
-      
+
       /* Sensitivity to mesh */
       for ( i = 0; i < dim; i++) {
 	for ( j = 0; j < n_dof[MESH_DISPLACEMENT1]; j++) {
@@ -4172,27 +4172,27 @@ calculate_lub_q_v (
 	  D_CURV_DNORMAL[i][j] += D_CURV_DH * D_H_DNORMAL[i][j];
 	}
       }
-      
-      
+
+
       /***** CALCULATE GRAVITY AND LORENTZ (OTHER lubmomsource) / BODY FORCE AND SENSITIVITIES *****/
-      
+
       /* Define variables */
       dbl bodf[DIM], GRAV[DIM];
       dbl D_GRAV_DF[DIM][MDE], D_GRAV_DX[DIM][DIM][MDE];
       memset(bodf,      0.0, sizeof(double)*DIM);
       memset(GRAV,      0.0, sizeof(double)*DIM);
-      memset(D_GRAV_DF, 0.0, sizeof(double)*DIM*MDE); 
-      memset(D_GRAV_DX, 0.0, sizeof(double)*DIM*DIM*MDE); 
-      
+      memset(D_GRAV_DF, 0.0, sizeof(double)*DIM*MDE);
+      memset(D_GRAV_DX, 0.0, sizeof(double)*DIM*DIM*MDE);
+
       /* Calculate and rotate body force, calculate mesh derivatives */
       dbl d_bodf_dmx[DIM][DIM][MDE];
       memset(d_bodf_dmx, 0.0, sizeof(double)*DIM*DIM*MDE);
       for ( i = 0; i < dim; i++) {
 	bodf[i] = mp->momentum_source[i] * rho;
       }
-      
+
       ShellRotate( bodf, d_bodf_dmx, GRAV, D_GRAV_DX, n_dof[MESH_DISPLACEMENT1]);
-      
+
       /* Sensitivity to level set F, then rotate */
       dbl d_bodf_df[DIM][MDE];
       for ( i = 0; i < dim; i++) {
@@ -4204,12 +4204,12 @@ calculate_lub_q_v (
 	for ( i = 0; i < dim; i++) {
 	  for ( j = 0; j < dim; j++) {
 	    D_GRAV_DF[i][k] += d_bodf_df[j][k] * delta(i,j);
-	    D_GRAV_DF[i][k] -= d_bodf_df[j][k] * fv->snormal[i] * fv->snormal[j];	   
+	    D_GRAV_DF[i][k] -= d_bodf_df[j][k] * fv->snormal[i] * fv->snormal[j];
 	  }
 	}
       }
-      
-      
+
+
       /********** PREPARE VISCOSITY DERIVATIVES **********/
       dbl D_MU_DX[DIM][MDE];
       memset(D_MU_DX, 0.0, sizeof(double)*DIM*MDE);
@@ -4224,10 +4224,10 @@ calculate_lub_q_v (
 	{
 	  dmu_dc = mp->d_viscosity[SHELL_PARTC];
 	}
-      
+
       /********** CALCULATE FLOW RATE AND AVERAGE VELOCITY **********/
-      
-      
+
+
       /* Calculate flow rate and velocity */
       memset(q, 0.0, sizeof(double)*DIM);
       for (i = 0; i < dim; i++) {
@@ -4241,7 +4241,7 @@ calculate_lub_q_v (
 	v_avg[i] += 0.5 * (veloL[i] + veloU[i]);
 	if (pd->v[VAR]) v_avg[i] -= pow(H,2)/(k_turb * mu) * GRADH[i] * CURV * mp->surface_tension;
       }
-      
+
       /* Sensitivity w.r.t. height */
       dbl D_Q_DH[DIM] = {0.0};
       dbl D_V_DH[DIM] = {0.0};
@@ -4262,7 +4262,7 @@ calculate_lub_q_v (
 	  D_V_DH[i] -= -pow(H,2)/(k_turb * k_turb * mu)*d_k_turb_dH * GRADH[i] * CURV * mp->surface_tension;
 	}
       }
-      
+
       /* Sensitivity w.r.t. pressure */
       dbl D_Q_DP1[DIM][MDE], D_Q_DP2[DIM][MDE];
       dbl D_V_DP1[DIM][MDE], D_V_DP2[DIM][MDE];
@@ -4270,7 +4270,7 @@ calculate_lub_q_v (
       memset(D_Q_DP2, 0.0, sizeof(double)*DIM*MDE);
       memset(D_V_DP1, 0.0, sizeof(double)*DIM*MDE);
       memset(D_V_DP2, 0.0, sizeof(double)*DIM*MDE);
-      
+
       for ( i = 0; i < dim; i++) {
 	for ( j = 0; j < ei->dof[EQN]; j++) {
 	  D_Q_DP1[i][j] -= pow(H,3)/(k_turb * mu) * D_GRADP_DP[i][j];
@@ -4283,7 +4283,7 @@ calculate_lub_q_v (
 	  D_V_DP2[i][j] += D_V_DH[i] * D_H_DP[j];
 	}
       }
-      
+
       /* Sensitivity w.r.t. level set */
       dbl D_Q_DF[DIM][MDE], D_V_DF[DIM][MDE];
       memset(D_Q_DF, 0.0, sizeof(double)*DIM*MDE);
@@ -4314,14 +4314,14 @@ calculate_lub_q_v (
 	  }
 	}
       }
-      
+
       /* Sensitivity w.r.t. curvature */
       dbl D_Q_DK[DIM][MDE], D_V_DK[DIM][MDE];
       memset(D_Q_DK, 0.0, sizeof(double)*DIM*MDE);
       memset(D_V_DK, 0.0, sizeof(double)*DIM*MDE);
-      
+
       VAR2=SHELL_LUB_CURV;
-      if (EQN == R_LUBP_2) VAR2=SHELL_LUB_CURV_2; 
+      if (EQN == R_LUBP_2) VAR2=SHELL_LUB_CURV_2;
       for ( i = 0; i < dim; i++) {
 	for ( j = 0; j < ei->dof[VAR2]; j++) {
 	  D_Q_DK[i][j] -= pow(H,3)/(k_turb * mu) * GRADH[i] * D_CURV_DK[j] * mp->surface_tension;
@@ -4332,7 +4332,7 @@ calculate_lub_q_v (
 	  D_V_DK[i][j] -= pow(H,2)/(k_turb * mu) * GRADH[i] * D_CURV_DK[j] * mp->surface_tension;
 	}
       }
-      
+
       /* Sensitivity w.r.t. mesh and/or real-solid */
       dbl D_Q_DX[DIM][DIM][MDE], D_V_DX[DIM][DIM][MDE];
       dbl D_Q_DRS[DIM][DIM][MDE], D_V_DRS[DIM][DIM][MDE];
@@ -4378,7 +4378,7 @@ calculate_lub_q_v (
 	  }
 	}
 	break;
-	
+
       case FSI_REALSOLID_CONTINUUM:
 	for ( i = 0; i < dim; i++) {
 	  for ( j = 0; j < dim; j++) {
@@ -4430,7 +4430,7 @@ calculate_lub_q_v (
             for ( j = 0; j < dim; j++) {
               for ( k = 0; k < ei->dof[SHELL_NORMAL1]; k++) {
                 D_Q_DNORMAL[i][j][k] +=  D_Q_DH[i] * D_H_DNORMAL[j][k];
-	        if ( pd->v[VAR] ) 
+	        if ( pd->v[VAR] )
                   {
 		   D_Q_DNORMAL[i][j][k] -=  pow(H,3)/(k_turb * mu) * GRADH[i] * D_CURV_DNORMAL[j][k] * mp->surface_tension;
 	          }
@@ -4441,7 +4441,7 @@ calculate_lub_q_v (
             for ( j = 0; j < dim; j++) {
               for ( k = 0; k < ei->dof[SHELL_NORMAL1]; k++) {
                 D_V_DNORMAL[i][j][k] +=  D_V_DH[i] * D_H_DNORMAL[j][k];
-	        if ( pd->v[VAR] ) 
+	        if ( pd->v[VAR] )
                   {
 		   D_V_DNORMAL[i][j][k] -=  pow(H,2)/(k_turb * mu) * GRADH[i] * D_CURV_DNORMAL[j][k] * mp->surface_tension;
 	          }
@@ -4449,7 +4449,7 @@ calculate_lub_q_v (
             }
           }
 	}
-      
+
       /* Sensitivity w.r.t. dH */
       dbl D_Q_DdH[DIM][MDE], D_V_DdH[DIM][MDE];
       memset(D_Q_DdH, 0.0, sizeof(double)*DIM*MDE);
@@ -4466,8 +4466,8 @@ calculate_lub_q_v (
 	  }
         }
       }
-      
-      
+
+
       /* Sensitivity w.r.t. sh_pc */
       dbl D_Q_DC[DIM][MDE], D_V_DC[DIM][MDE];
       memset(D_Q_DC, 0.0, sizeof(double)*DIM*MDE);
@@ -4484,16 +4484,16 @@ calculate_lub_q_v (
 	  }
         }
       }
-      
-      
-      
+
+
+
       /******* STORE THE INFORMATION TO LUBRICATION AUXILIARIES STRUCTURE ***********/
-      
+
       memset(LubAux->dq_dx, 0.0, sizeof(double)*DIM*DIM*MDE);
       memset(LubAux->dq_dnormal, 0.0, sizeof(double)*DIM*DIM*MDE);
       VAR2=SHELL_LUB_CURV;
-      if (EQN == R_LUBP_2) VAR2=SHELL_LUB_CURV_2; 
-      
+      if (EQN == R_LUBP_2) VAR2=SHELL_LUB_CURV_2;
+
       LubAux->H = H;
       LubAux->gradP_mag = 0;
       for (i = 0; i < dim; i++)
@@ -4501,7 +4501,7 @@ calculate_lub_q_v (
 	  LubAux->q[i] = q[i];
 	  LubAux->v_avg[i] = v_avg[i];
 	  LubAux->gradP_mag += SQUARE(GRADP[i] - GRAV[i]);
-	  
+
 	  for ( j = 0; j < ei->dof[EQN]; j++) {
 	    LubAux->dq_dp1[i][j] = D_Q_DP1[i][j];
 	    LubAux->dq_dp2[i][j] = D_Q_DP2[i][j];
@@ -4545,10 +4545,10 @@ calculate_lub_q_v (
 	  for ( j = 0; j < ei->dof[SHELL_PARTC]; j++) {
 	    LubAux->dq_dc[i][j] = D_Q_DC[i][j];
 	    LubAux->dv_avg_dc[i][j] = D_V_DC[i][j];
-	  }	 
+	  }
         }
       LubAux->gradP_mag = sqrt(LubAux->gradP_mag);
-      
+
       for ( j = 0; j < ei->dof[MESH_DISPLACEMENT1]; j++) {
 	jk = dof_map[j];
 	for ( k = 0; k < dim; k++) {
@@ -4560,107 +4560,286 @@ calculate_lub_q_v (
       // Cleanup
       fv->wt = wt_old;
       safe_free((void *) n_dof);
-      
+
     }   /* End of Film flow - Newtonian   */
-  
+
   /* Film flow - Newtonian */
   else if (EQN == R_SHELL_FILMP)
     {
-      
+
       /******* PRECALCULATE ALL NECESSARY COMPONENTS ***********/
-      
+
+      /* Setup lubrication shell constructs */
+      dbl wt_old = fv->wt;
+      int dof_map[MDE];
+      int *n_dof = (int *) array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
+      lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+
       /* Load viscosity */
       mu = viscosity(gn, NULL, d_mu);
       dmu_dc = mp->d_viscosity[SHELL_PARTC];
-      
+
       /* Extract bottom wall velocity */
       velocity_function_model(veloU, veloL, time, dt);
-      
-      
+
+
       /* Get slip coefficient */
       double beta_slip;
       beta_slip = mp->SlipCoeff;
-      
-      
-      
+
+
+
       /***** CALCULATE HEIGHT, SLOPES, AND SENSITIVITIES *****/
-      
+
+      /* Get lower height from height function model */
+      dbl H_U, dH_U_dtime, H_L, dH_L_dtime;
+      dbl dH_U_dX[DIM],dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+      H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, dt);
+
+      /* Get the net film thickness */
+      dbl H = fv->sh_fh - H_L;
+
+      /* Define variables */
+      dbl D_H_DX[DIM][MDE], D_H_DP[MDE], D_H_DSH_FH[MDE];
+      dbl D_H_DRS[DIM][MDE];
+      dbl D_H_DNORMAL[DIM][MDE];
+      memset(D_H_DX,  0.0, sizeof(double)*DIM*MDE);
+      memset(D_H_DRS, 0.0, sizeof(double)*DIM*MDE);
+      memset(D_H_DNORMAL, 0.0, sizeof(double)*DIM*MDE);
+      memset(D_H_DP,  0.0, sizeof(double)*MDE);
+      memset(D_H_DSH_FH,  0.0, sizeof(double)*MDE);
+
+      /* Deform height */
+      switch ( mp->FSIModel )
+        {
+         case FSI_MESH_CONTINUUM:
+         case FSI_MESH_UNDEF:
+         case FSI_SHELL_ONLY_UNDEF:
+          for ( i = 0; i < dim; i++)
+             {
+              H -= fv->snormal[i] * fv->d[i];
+             }
+          break;
+         case FSI_SHELL_ONLY_MESH:
+           if (pd->e[R_SHELL_NORMAL1] && pd->e[R_SHELL_NORMAL2] && pd->e[R_SHELL_NORMAL3] )
+             {
+              for ( i = 0; i < dim; i++)
+                 {
+                  H -= fv->n[i] * fv->d[i];
+                 }
+             }
+           else
+             {
+              for ( i = 0; i < dim; i++)
+                 {
+                  H -= fv->snormal[i] * fv->d[i];
+                 }
+             }
+           break;
+         case FSI_REALSOLID_CONTINUUM:
+           for ( i = 0; i < dim; i++)
+              {
+               H -= fv->snormal[i] * fv->d_rs[i];
+              }
+           break;
+        }
+
+      /* Calculate height sensitivity to mesh */
+      switch ( mp->FSIModel )
+        {
+         case FSI_MESH_CONTINUUM:
+         case FSI_MESH_UNDEF:
+         case FSI_SHELL_ONLY_UNDEF:
+           for ( i = 0; i < dim; i++)
+              {
+               for ( j = 0; j < dim; j++)
+                  {
+                   for ( k = 0; k < ei->dof[MESH_DISPLACEMENT1]; k++)
+                      {
+                       jk = dof_map[k];
+                       D_H_DX[j][jk] += delta(i,j)*(-dH_L_dX[i])*bf[MESH_DISPLACEMENT1]->phi[k];
+                       D_H_DX[j][jk] -= fv->dsnormal_dx[i][j][jk] * fv->d[i];
+                       D_H_DX[j][jk] -= fv->snormal[i] * delta(i,j) * bf[MESH_DISPLACEMENT1]->phi[k];
+                      }
+                  }
+              }
+           break;
+         case FSI_SHELL_ONLY_MESH:
+           if ( (pd->e[R_SHELL_NORMAL1]) && (pd->e[R_SHELL_NORMAL2]) && (pd->e[R_SHELL_NORMAL3]) )
+             {
+              for ( i = 0; i < dim; i++)
+                 {
+                  for ( j = 0; j < dim; j++)
+                     {
+                      for ( k = 0; k < ei->dof[MESH_DISPLACEMENT1]; k++)
+                         {
+                          jk = dof_map[k];
+                          D_H_DX[j][jk] += delta(i,j)*(-dH_L_dX[i])*bf[MESH_DISPLACEMENT1]->phi[k];
+                          D_H_DX[j][jk] -= fv->n[i] * delta(i,j) * bf[MESH_DISPLACEMENT1]->phi[k];
+                         }
+                     }
+                 }
+             }
+           else
+             {
+              for ( i = 0; i < dim; i++)
+                 {
+                  for ( j = 0; j < dim; j++)
+                     {
+                      for ( k = 0; k < ei->dof[MESH_DISPLACEMENT1]; k++)
+                         {
+                          jk = dof_map[k];
+                          D_H_DX[j][jk] += delta(i,j)*(-dH_L_dX[i])*bf[MESH_DISPLACEMENT1]->phi[k];
+                          D_H_DX[j][jk] -= fv->dsnormal_dx[i][j][jk] * fv->d[i];
+                          D_H_DX[j][jk] -= fv->snormal[i] * delta(i,j) * bf[MESH_DISPLACEMENT1]->phi[k];
+                         }
+                     }
+                 }
+             }
+           break;
+        }
+
+      /* Calculate height sensitivity to shell normal */
+      switch ( mp->FSIModel )
+         {
+          case FSI_SHELL_ONLY_MESH:
+             if ( (pd->e[R_SHELL_NORMAL1]) && (pd->e[R_SHELL_NORMAL2]) && (pd->e[R_SHELL_NORMAL3]) )
+               {
+                for ( i = 0; i < dim; i++)
+                   {
+                    for ( j = 0; j < dim; j++)
+                       {
+                        for ( k = 0; k < ei->dof[SHELL_NORMAL1]; k++)
+                           {
+                            D_H_DNORMAL[j][k] -= delta(i,j) * bf[SHELL_NORMAL1]->phi[k] * fv->d[i];
+                           }
+                       }
+                  }
+              }
+             break;
+         }
+
+      /* Calculate height sensitivity to shell height */
+
+      for ( j = 0; j < ei->dof[SHELL_FILMH]; j++)
+         {
+          D_H_DSH_FH[j] =  1.0;
+         }
+
+      /* Calculate slopes and sensitivities */
+
+      dbl grad_H[DIM];
       dbl GRADH[DIM];
-      dbl D_GRADH_DH[DIM][MDE];
-      memset(GRADH,       0.0, sizeof(double)*DIM);
-      memset(D_GRADH_DH,  0.0, sizeof(double)*DIM);
-      
-      /* Extract film thickness */
-      H = fv->sh_fh;
-      
-      /* Perfrom I - nn gradient */
-      Inn(fv->grad_sh_fh, GRADH);
-      
-      
-      /* Calculate height sensitivity */
-      for ( i = 0; i < DIM; i++) {
-	for ( j = 0; j < ei->dof[SHELL_FILMH]; j++) {
-	  D_GRADH_DH[i][j] = 1.0;
-	}
-      }
-      
-      
-      
-      
+      dbl D_GRADH_DSH_FH[DIM][MDE], D_GRADH_DX[DIM][DIM][MDE];
+      dbl d_grad_H_dmesh[DIM][DIM][MDE];
+
+      memset(grad_H,             0.0, sizeof(double)*DIM);
+      for ( i = 0; i < dim; i++)
+         {
+          grad_H[i] = fv->grad_sh_fh - dH_L_dX; /* Net film thickness gradient */
+         }
+
+      memset(d_grad_H_dmesh,    0.0, sizeof(double)*DIM*DIM*MDE);
+      memset(GRADH,             0.0, sizeof(double)*DIM);
+      memset(D_GRADH_DSH_FH,    0.0, sizeof(double)*DIM*MDE);
+      memset(D_GRADH_DX,        0.0, sizeof(double)*DIM*DIM*MDE);
+
+      /* Rotate and calculate mesh sensitivity */
+      for ( i = 0; i < dim; i++)
+         {
+          for ( j = 0; j < dim; j++)
+             {
+              for ( k = 0; k < ei->dof[MESH_DISPLACEMENT1]; k++)
+                 {
+                  jk = dof_map[k];
+                  d_grad_H_dmesh[i][j][jk] = fv->d_grad_sh_fh_dmesh[i][j][k]; //Ignore dH_L_dX dependency on mesh for now
+                 }
+             }
+         }
+       ShellRotate( grad_H, d_grad_H_dmesh, GRADH, D_GRADH_DX, n_dof[MESH_DISPLACEMENT1]);
+
+      /* Calculate sensitivity w.r.t. shell height */
+      for ( j = 0; j < dim; j++)
+         {
+          for ( k = 0; k < ei->dof[SHELL_FILMH]; k++)
+             {
+              D_GRADH_DSH_FH[j][k] = 1.0;
+             }
+         }
+
       /***** CALCULATE GRAVITY AND LORENTZ (OTHER lubmomsource) / BODY FORCE AND SENSITIVITIES *****/
-      
+
       dbl GRAV[DIM];
       memset(GRAV,      0.0, sizeof(double)*DIM);
-      
+
       /* Calculate and rotate body force, calculate mesh derivatives */
       for ( i = 0; i < DIM; i++) {
 	GRAV[i] = mp->momentum_source[i];
       }
-      
-      
-      
+
+
+
       /***** CALCULATE PRESSURE GRADIENT AND SENSITIVITIES *****/
-      
+
       /* Define variables */
       dbl GRADP[DIM];
       dbl D_GRADP_DP[DIM][MDE];
+      dbl d_grad_P_dmesh[DIM][DIM][MDE];
+      dbl D_GRADP_DX[DIM][DIM][MDE];
+
       memset(GRADP,             0.0, sizeof(double)*DIM);
       memset(D_GRADP_DP,        0.0, sizeof(double)*DIM*MDE);
-      
-      
-      /* Perfrom I - nn gradient */
-      Inn(fv->grad_sh_fp, GRADP);
-      
-      
+
+      memset(d_grad_P_dmesh, 0.0, sizeof(double)*DIM*DIM*MDE);
+
+      /* Rotate and calculate mesh sensitivity */
+      for ( i = 0; i < dim; i++)
+         {
+          for ( j = 0; j < dim; j++)
+             {
+              for ( k = 0; k < ei->dof[MESH_DISPLACEMENT1]; k++)
+                 {
+                  jk = dof_map[k];
+                  d_grad_P_dmesh[i][j][jk] = fv->d_grad_sh_fp_dmesh[i][j][k];
+                 }
+             }
+          }
+
+      ShellRotate( fv->grad_sh_fp, d_grad_P_dmesh, GRADP, D_GRADP_DX, n_dof[MESH_DISPLACEMENT1]);
+
+
       /* Calculate pressure sensitivity */
       for ( i = 0; i < dim; i++) {
 	for ( j = 0; j < ei->dof[SHELL_FILMP]; j++) {
 	  D_GRADP_DP[i][j] = 1.0;
 	}
       }
-      
-      
+
+
       /***** CALCULATE DISJOINING PRESSURE GRADIENT AND SENSITIVITIES *****/
-      
+
       /* Define variables */
-      
+
       dbl GRAD_DISJ_PRESS[DIM];
       dbl D_GRAD_DISJ_PRESS_DH1[DIM][MDE], D_GRAD_DISJ_PRESS_DH2[DIM][MDE];
+      dbl D_GRAD_DISJ_PRESS_DH[DIM][MDE];
       memset(GRAD_DISJ_PRESS,          0.0, sizeof(double)*DIM);
       memset(D_GRAD_DISJ_PRESS_DH1,    0.0, sizeof(double)*DIM*MDE);
       memset(D_GRAD_DISJ_PRESS_DH2,    0.0, sizeof(double)*DIM*MDE);
-      
+      memset(D_GRAD_DISJ_PRESS_DH,     0.0, sizeof(double)*DIM*MDE);
+
       /* Evaluate disjoining pressure and its sensitivities */
-     disjoining_pressure_model(fv->sh_fh, fv->grad_sh_fh, 
-					    GRAD_DISJ_PRESS, D_GRAD_DISJ_PRESS_DH1, D_GRAD_DISJ_PRESS_DH2 ); 
-      
-      
-      
+     disjoining_pressure_model(fv->sh_fh, fv->grad_sh_fh, n_dof, dof_map,
+                               GRAD_DISJ_PRESS, D_GRAD_DISJ_PRESS_DH1, D_GRAD_DISJ_PRESS_DH2,
+                               D_GRAD_DISJ_PRESS_DH);
+
+
+
       /******* CALCULATE FLOW RATE AND AVERAGE VELOCITY ***********/
-      
+
       memset(q, 0.0, sizeof(double)*DIM);
       memset(v_avg, 0.0, sizeof(double)*DIM);
-      
+
       /* Evaluate flow rate and average velocity */
       for (i = 0; i < dim; i++)
         {
@@ -4672,7 +4851,7 @@ calculate_lub_q_v (
 	  q[i] +=  beta_slip * H * H * GRAV[i];
 	  q[i] +=  H * veloL[i];
         }
-      
+
       for (i = 0; i< dim; i++)
         {
 	  v_avg[i] += -pow(H,2)/(3. * mu) * GRADP[i];
@@ -4683,50 +4862,72 @@ calculate_lub_q_v (
 	  v_avg[i] +=  beta_slip * H * GRAV[i];
 	  v_avg[i] += veloL[i];
         }
-      
-      
+
+
       /******* CALCULATE FLOW RATE SENSITIVITIES ***********/
-      
+
       /*Evaluate flowrate sensitivity w.r.t. height */
       dbl D_Q_DH1[DIM][MDE];
       dbl D_Q_DH2[DIM][MDE];
+      dbl D_Q_DH[DIM][MDE];
+      dbl phi_j, grad_phi_j[DIM], grad_II_phi_j[DIM], d_grad_II_phi_j_dmesh[DIM][DIM][MDE];
       memset(D_Q_DH1, 0.0, sizeof(double)*DIM*MDE);
       memset(D_Q_DH2, 0.0, sizeof(double)*DIM*MDE);
+      memset(D_Q_DH,  0.0, sizeof(double)*DIM*MDE);
       for (i = 0; i < dim; i++)
         {
 	  for (j = 0; j < ei->dof[SHELL_FILMH]; j++)
             {
 	      D_Q_DH1[i][j] +=   pow(H,3)/(3. * mu) * D_GRAD_DISJ_PRESS_DH1[i][j]
 		+ beta_slip * H * H * D_GRAD_DISJ_PRESS_DH1[i][j];
-	      
-	      D_Q_DH2[i][j] += - pow(H,2)/mu * GRADP[i]
-		- 0.5 * beta_slip * H * GRADP[i];
-	      D_Q_DH2[i][j] +=   pow(H,3)/(3. * mu) * D_GRAD_DISJ_PRESS_DH2[i][j]
-		+ beta_slip * H * H * D_GRAD_DISJ_PRESS_DH2[i][j]
-		+ pow(H,2)/mu * GRAD_DISJ_PRESS[i]
-		+ 0.5 * beta_slip * H * GRAD_DISJ_PRESS[i];
-	      D_Q_DH2[i][j] +=   pow(H,2)/mu * GRAV[i]
-		+ 0.5 * beta_slip * H * GRAV[i];
+
+	      D_Q_DH2[i][j] += - pow(H,2)/mu * GRADP[i] * D_H_DSH_FH[j]
+		- 2.0 * beta_slip * H * GRADP[i] * D_H_DSH_FH[j];
+	      D_Q_DH2[i][j] +=   pow(H,3)/(3. * mu) * D_GRAD_DISJ_PRESS_DH2[i][j] * D_H_DSH_FH[j]
+		+ beta_slip * H * H * D_GRAD_DISJ_PRESS_DH2[i][j] * D_H_DSH_FH[j]
+		+ pow(H,2)/mu * GRAD_DISJ_PRESS[i] * D_H_DSH_FH[j]
+		+ 2.0 * beta_slip * H * GRAD_DISJ_PRESS[i] * D_H_DSH_FH[j];
+	      D_Q_DH2[i][j] +=   pow(H,2)/mu * GRAV[i] * D_H_DSH_FH[j]
+		+ 2.0 * beta_slip * H * GRAV[i] * D_H_DSH_FH[j];
 	      D_Q_DH2[i][j] +=   veloL[i];
+
+              ShellBF( SHELL_FILMH, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
+
+	      D_Q_DH[i][j] += - pow(H,2)/mu * phi_j * GRADP[i]
+		              - 2.0 * beta_slip * H * phi_j * GRADP[i];
+	      D_Q_DH[i][j] +=   pow(H,3)/(3. * mu) * D_GRAD_DISJ_PRESS_DH[i][j]
+		              + beta_slip * H * H * D_GRAD_DISJ_PRESS_DH[i][j];
+	      D_Q_DH[i][j] +=   pow(H,2)/mu * phi_j * GRAD_DISJ_PRESS[i]
+		              + 2.0 * beta_slip * H * phi_j * GRAD_DISJ_PRESS[i];
+	      D_Q_DH[i][j] += - pow(H,2)/mu * phi_j * GRAV[i]
+		              - 2.0 * beta_slip * H * phi_j * GRAV[i];
+              D_Q_DH[i][j] +=   veloL[i] * phi_j;
             }
         }
-      
-      
-      
+
+
+
       /*Evaluate flowrate sensitivity w.r.t. pressure */
       dbl D_Q_DP1[DIM][MDE];
+      dbl D_Q_DP[DIM][MDE];
       memset(D_Q_DP1, 0.0, sizeof(double)*DIM*MDE);
+      memset(D_Q_DP, 0.0, sizeof(double)*DIM*MDE);
       for (i = 0; i < dim; i++)
         {
 	  for (j = 0; j < ei->dof[SHELL_FILMP]; j++)
             {
 	      D_Q_DP1[i][j] += -pow(H,3)/(3. * mu) * D_GRADP_DP[i][j]
 		-beta_slip * H * H * D_GRADP_DP[i][j];
+
+              ShellBF( SHELL_FILMH, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
+	      D_Q_DP[i][j] += -pow(H,3)/(3. * mu) * grad_II_phi_j[i]
+		              -beta_slip * H * H * grad_II_phi_j[i];
+
             }
         }
-      
-      
-      
+
+
+
       /*Evaluate flowrate sensitivity w.r.t. particles volume fraction, if applicable */
       dbl D_Q_DC[DIM][MDE];
       memset(D_Q_DC, 0.0, sizeof(double)*DIM*MDE);
@@ -4742,23 +4943,65 @@ calculate_lub_q_v (
 		}
 	    }
 	}
-      
-      
+
+
+      /*Evaluate flowrate sensitivity w.r.t. mesh and/or real-solid */
+       dbl D_Q_DX[DIM][DIM][MDE];
+       dbl D_Q_DRS[DIM][DIM][MDE];
+       memset(D_Q_DX, 0.0, sizeof(double)*DIM*DIM*MDE);
+       memset(D_Q_DRS, 0.0, sizeof(double)*DIM*DIM*MDE);
+
+      switch ( mp->FSIModel )
+        {
+         case FSI_MESH_CONTINUUM:
+         case FSI_MESH_UNDEF:
+         case FSI_SHELL_ONLY_MESH:
+         case FSI_SHELL_ONLY_UNDEF:
+           for ( i = 0; i < dim; i++)
+              {
+               for ( j = 0; j < dim; j++)
+                  {
+                   for ( k = 0; k < n_dof[MESH_DISPLACEMENT1]; k++)
+                      {
+                       D_Q_DX[i][j][k] += -pow(H,2)/mu * GRADP[i] * D_H_DX[j][k];
+                       D_Q_DX[i][j][k] += -pow(H,3)/(3. * mu) * D_GRADP_DX[i][j][k];
+
+                       D_Q_DX[i][j][k] += -2.0 * beta_slip * H * GRADP[i] * D_H_DX[j][k];
+                       D_Q_DX[i][j][k] += -beta_slip * H * H * D_GRADP_DX[i][j][k];
+
+                       D_Q_DX[i][j][k] += pow(H,2)/mu * GRAD_DISJ_PRESS[i] * D_H_DX[j][k];
+                       // Ignore dependency of GRAD_DISJ_PRESS w.r.t. mesh and height for now
+
+                       D_Q_DX[i][j][k] += 2.0 * beta_slip * H * GRAD_DISJ_PRESS[i] * D_H_DX[j][k];
+                       // Ignore dependency of GRAD_DISJ_PRESS w.r.t. mesh and height for now
+
+                       D_Q_DX[i][j][k] += -pow(H,2)/mu * GRAV[i] * D_H_DX[j][k];
+
+                       D_Q_DX[i][j][k] += 2.0 * beta_slip * H * GRAV[i] * D_H_DX[j][k];
+
+                       D_Q_DX[i][j][k] += veloL[i] * D_H_DX[j][k];
+                      }
+                  }
+              }
+            break;
+        }
       /******* CALCULATE AVERAGE VELOCITY SENSITIVITIES ***********/
-      
+
       /*Evaluate average velocity sensitivity w.r.t. height */
       dbl D_V_DH1[DIM][MDE];
       dbl D_V_DH2[DIM][MDE];
+      dbl D_V_DH[DIM][MDE];
       memset(D_V_DH1, 0.0, sizeof(double)*DIM*MDE);
       memset(D_V_DH2, 0.0, sizeof(double)*DIM*MDE);
+      memset(D_V_DH, 0.0, sizeof(double)*DIM*MDE);
       for (i = 0; i < dim; i++)
         {
 	  for (j = 0; j < ei->dof[SHELL_FILMH]; j++)
             {
 	      D_V_DH1[i][j] +=   pow(H,2) /(3. * mu) * D_GRAD_DISJ_PRESS_DH1[i][j]
 		+ beta_slip * H * D_GRAD_DISJ_PRESS_DH1[i][j];
-	      
-	      
+
+
 	      D_V_DH2[i][j] += - 2. * H /(3. * mu) * GRADP[i]
 		- beta_slip * GRADP[i];
 	      D_V_DH2[i][j] +=   pow(H,2) /(3. * mu) * D_GRAD_DISJ_PRESS_DH2[i][j]
@@ -4767,23 +5010,38 @@ calculate_lub_q_v (
 		+ beta_slip * GRAD_DISJ_PRESS[i];
 	      D_V_DH2[i][j] +=   2. * H /(3. * mu) * GRAV[i]
 		+ beta_slip * GRAV[i];
+
+              ShellBF( SHELL_FILMH, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
+
+	      D_V_DH[i][j] += - 2. * H /(3. * mu) * GRADP[i] * phi_j
+		              - beta_slip * GRADP[i] * phi_j;
+	      D_V_DH[i][j] +=   pow(H,2) /(3. * mu) * D_GRAD_DISJ_PRESS_DH[i][j]
+		              + beta_slip * H * D_GRAD_DISJ_PRESS_DH[i][j];
+
             }
         }
-      
-      
-      
+
+
+
       /*Evaluate average velocity sensitivity w.r.t. pressure */
       dbl D_V_DP1[DIM][MDE];
+      dbl D_V_DP[DIM][MDE];
       memset(D_V_DP1, 0.0, sizeof(double)*DIM*MDE);
+      memset(D_V_DP,  0.0, sizeof(double)*DIM*MDE);
       for (i = 0; i < dim; i++)
         {
 	  for (j = 0; j < ei->dof[SHELL_FILMP]; j++)
             {
 	      D_V_DP1[i][j] += -pow(H,2)/(3. * mu) * D_GRADP_DP[i][j]
 		-beta_slip * H * D_GRADP_DP[i][j];
+
+              ShellBF( SHELL_FILMH, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
+	      D_V_DP[i][j] += -pow(H,2)/(3. * mu) * grad_II_phi_j[i]
+		              -beta_slip * H * grad_II_phi_j[i];
+
             }
         }
-      
+
       /*Evaluate average velocity sensitivity w.r.t. particles volume fraction, if applicable */
       dbl D_V_DC[DIM][MDE];
       memset(D_V_DC, 0.0, sizeof(double)*DIM*MDE);
@@ -4798,42 +5056,101 @@ calculate_lub_q_v (
 		}
 	    }
 	}
-      
-      
-      
+
+
+      /*Evaluate average velocity sensitivity w.r.t. mesh, if applicable */
+       dbl D_V_DX[DIM][DIM][MDE];
+       memset(D_V_DX, 0.0, sizeof(double)*DIM*DIM*MDE);
+
+      switch ( mp->FSIModel )
+        {
+         case FSI_MESH_CONTINUUM:
+         case FSI_MESH_UNDEF:
+         case FSI_SHELL_ONLY_MESH:
+         case FSI_SHELL_ONLY_UNDEF:
+           for ( i = 0; i < dim; i++)
+              {
+
+               for ( j = 0; j < dim; j++)
+                  {
+                   for ( k = 0; k < n_dof[MESH_DISPLACEMENT1]; k++)
+                      {
+                       D_V_DX[i][j][k] += -pow(H,2)/(3. * mu) * D_GRADP_DX[i][j][k];
+                       D_V_DX[i][j][k] += -2.0 * H/(3. * mu) * D_H_DX[j][k] * GRADP[i];
+
+                       D_V_DX[i][j][k] += -beta_slip  * H * D_GRADP_DX[i][j][k];
+                       D_V_DX[i][j][k] += -beta_slip  * D_H_DX[j][k] * GRADP[i];
+
+                       D_V_DX[i][j][k] +=  2.0 * H/(3. * mu) * D_H_DX[j][k] * GRAD_DISJ_PRESS[i];
+                       // Again ignore dependence of DISJ_PRESS w.r.t. mesh
+
+                       D_V_DX[i][j][k] +=  beta_slip * D_H_DX[j][k] * GRAD_DISJ_PRESS[i];
+                       // Again ignore dependence of DISJ_PRESS w.r.t. mesh
+
+                       D_V_DX[i][j][k] +=  2.0 * H/(3. * mu) * D_H_DX[j][k] * GRAV[i];
+
+                       D_V_DX[i][j][k] +=  beta_slip  * D_H_DX[j][k] * GRAV[i];
+                      }
+                  }
+              }
+            break;
+        }
+
+
       /******* STORE THE INFORMATION TO LUBRICATION AUXILIARIES STRUCTURE ***********/
-      
+
       for (i = 0; i < dim; i++)
         {
 	  LubAux->q[i] = q[i];
 	  LubAux->v_avg[i] = v_avg[i];
-	  
-	  for ( j = 0; j < ei->dof[SHELL_FILMH]; j++) {
-	    LubAux->dq_dh1[i][j] = D_Q_DH1[i][j];
-	    LubAux->dq_dh2[i][j] = D_Q_DH2[i][j];
-	    LubAux->dv_avg_dh1[i][j] = D_V_DH1[i][j];
-	    LubAux->dv_avg_dh2[i][j] = D_V_DH2[i][j];
-	  }
-	  
-	  for ( j = 0; j < ei->dof[SHELL_FILMP]; j++) {
-	    LubAux->dq_dp1[i][j] = D_Q_DP1[i][j];
-	    LubAux->dv_avg_dp1[i][j] = D_V_DP1[i][j];
-	  }
-	  
+
+	  for ( j = 0; j < ei->dof[SHELL_FILMH]; j++)
+             {
+	      LubAux->dq_dh1[i][j] = D_Q_DH1[i][j];
+	      LubAux->dq_dh2[i][j] = D_Q_DH2[i][j];
+	      LubAux->dq_dh[i][j]  = D_Q_DH[i][j];
+
+	      LubAux->dv_avg_dh1[i][j] = D_V_DH1[i][j];
+	      LubAux->dv_avg_dh2[i][j] = D_V_DH2[i][j];
+	      LubAux->dv_avg_dh[i][j]  = D_V_DH[i][j];
+	     }
+
+	  for ( j = 0; j < ei->dof[SHELL_FILMP]; j++)
+             {
+	      LubAux->dq_dp1[i][j] = D_Q_DP1[i][j];
+	      LubAux->dq_dp[i][j]  = D_Q_DP[i][j];
+
+	      LubAux->dv_avg_dp1[i][j] = D_V_DP1[i][j];
+	      LubAux->dv_avg_dp[i][j]  = D_V_DP[i][j];
+	     }
+
 	  if (pd->v[SHELL_PARTC])
 	    {
-	      for ( j = 0; j < ei->dof[SHELL_PARTC]; j++) {
-		LubAux->dq_dc[i][j] = D_Q_DC[i][j];
-		LubAux->dv_avg_dc[i][j] = D_V_DC[i][j];
-              }
+	      for ( j = 0; j < ei->dof[SHELL_PARTC]; j++)
+                 {
+		  LubAux->dq_dc[i][j] = D_Q_DC[i][j];
+		  LubAux->dv_avg_dc[i][j] = D_V_DC[i][j];
+                 }
 	    }
+          for ( j = 0; j < ei->dof[MESH_DISPLACEMENT1]; j++)
+             {
+              jk = dof_map[j];
+              for ( k = 0; k < dim; k++)
+                 {
+                  LubAux->dq_dx[i][k][j] = D_Q_DX[i][k][jk];
+                  LubAux->dv_avg_dx[i][k][j] = D_V_DX[i][k][jk];
+                 }
+             }
         }
-      
+
+      // Cleanup
+      fv->wt = wt_old;
+      safe_free((void *) n_dof);
+
     }
 
-  
   return;
-  
+
 } /* End of calculate_lub_q_v */
 
 void
@@ -5036,6 +5353,12 @@ calculate_lub_q_v_old (
 
      /******* PRECALCULATE ALL NECESSARY COMPONENTS ***********/
 
+     /* Setup lubrication shell constructs */
+     dbl wt_old = fv->wt;
+     int dof_map[MDE];
+     int *n_dof = (int *) array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
+     lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+
      /* Load viscosity */
      viscosity(gn, NULL, d_mu);
      mu_old = mp_old->viscosity;
@@ -5088,13 +5411,15 @@ calculate_lub_q_v_old (
 
      dbl GRAD_DISJ_PRESS[DIM];
      dbl D_GRAD_DISJ_PRESS_DH1[DIM][MDE], D_GRAD_DISJ_PRESS_DH2[DIM][MDE];
+     dbl D_GRAD_DISJ_PRESS_DH[DIM][MDE];
      memset(GRAD_DISJ_PRESS,          0.0, sizeof(double)*DIM);
      memset(D_GRAD_DISJ_PRESS_DH1,    0.0, sizeof(double)*DIM*MDE);
      memset(D_GRAD_DISJ_PRESS_DH2,    0.0, sizeof(double)*DIM*MDE);
+     memset(D_GRAD_DISJ_PRESS_DH,     0.0, sizeof(double)*DIM*MDE);
 
      /* Evaluate disjoining pressure and its sensitivities */
-     disjoining_pressure_model(fv_old->sh_fh, fv_old->grad_sh_fh, 
-                                           GRAD_DISJ_PRESS, D_GRAD_DISJ_PRESS_DH1, D_GRAD_DISJ_PRESS_DH2 ); 
+     disjoining_pressure_model(fv_old->sh_fh, fv_old->grad_sh_fh, n_dof, dof_map,
+                                           GRAD_DISJ_PRESS, D_GRAD_DISJ_PRESS_DH1, D_GRAD_DISJ_PRESS_DH2, D_GRAD_DISJ_PRESS_DH );
 
 
 
@@ -5131,6 +5456,10 @@ calculate_lub_q_v_old (
          LubAux_old->v_avg[i] = v_avg_old[i];
 
         }
+
+      // Cleanup
+      fv->wt = wt_old;
+      safe_free((void *) n_dof);
 
     }
 

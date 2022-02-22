@@ -720,7 +720,7 @@ shell_n_dot_gradp_bc(double func[DIM],
       *  Function which sets the pressure gradient at the side to be zero
       *
       *         func =   n .(-grad SH_FP + grad DisjPress)
-      *                         
+      *
       *
       *  The boundary condition SHELL_FLOW_DEVELOPED_BC employs this function.
       *
@@ -740,14 +740,15 @@ shell_n_dot_gradp_bc(double func[DIM],
       *              variable type.
       *
       *   Author: K. Tjiptowidjojo    (4/27/2011)
-      * 
+      *
       ********************************************************************/
 {
   int j, ii, var;
   int *n_dof = NULL;
   int dof_map[MDE];
   double grad_P[DIM];
-  double grad_DisjPress[DIM], dgrad_DisjPress_dH1[DIM][MDE], dgrad_DisjPress_dH2[DIM][MDE]; 
+  double grad_DisjPress[DIM], dgrad_DisjPress_dH1[DIM][MDE], dgrad_DisjPress_dH2[DIM][MDE];
+  double dgrad_DisjPress_dH[DIM][MDE];
   double phi_j;
   double grad_phi_j[DIM], grad_II_phi_j[DIM];
   double bound_normal[DIM];
@@ -774,7 +775,8 @@ shell_n_dot_gradp_bc(double func[DIM],
 
 /* Calculate disjoining pressure gradient and its sensitivities */
   
-   disjoining_pressure_model(fv->sh_fh, fv->grad_sh_fh, grad_DisjPress, dgrad_DisjPress_dH1, dgrad_DisjPress_dH2);
+   disjoining_pressure_model(fv->sh_fh, fv->grad_sh_fh, n_dof, dof_map,
+                             grad_DisjPress, dgrad_DisjPress_dH1, dgrad_DisjPress_dH2, dgrad_DisjPress_dH);
 
   if (af->Assemble_LSA_Mass_Matrix)
     {

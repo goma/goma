@@ -2031,35 +2031,43 @@ void init_shell_normal_unknowns(double x[], const Exo_DB *exo)
       num_local_nodes = elem_info(NNODES, ielem_type);
       iconnect_ptr    = Proc_Connect_Ptr[ielem];
 
-      /* Loop over nodes within the element */
-      for (ilnode = 0; ilnode < num_local_nodes; ilnode++)
+      switch (ei->ielem_shape)
          {
-          /* Find s, t, u, coordinates of each node */
-          find_nodal_stu (ilnode, ielem_type, &s, &t, &u);
-          xi[0] = s;
-          xi[1] = t;
-          xi[2] = u;
+          case LINE_SEGMENT:
+          case SHELL:
+          case TRISHELL:
 
-          setup_shop_at_point(ielem, xi, exo);
+          /* Loop over nodes within the element */
+          for (ilnode = 0; ilnode < num_local_nodes; ilnode++)
+             {
+              /* Find s, t, u, coordinates of each node */
+              find_nodal_stu (ilnode, ielem_type, &s, &t, &u);
+              xi[0] = s;
+              xi[1] = t;
+              xi[2] = u;
 
-          shell_determinant_and_normal(ielem, iconnect_ptr, num_local_nodes,
-                                       ielem_dim, 1);
+              setup_shop_at_point(ielem, xi, exo);
 
-          /* Get global node number */
-          ignode = Proc_Elem_Connect[iconnect_ptr + ilnode];
+              shell_determinant_and_normal(ielem, iconnect_ptr, num_local_nodes,
+                                           ielem_dim, 1);
 
-          /* Get node number and indices into solution vector for normal dofs */
-          nxi = Index_Solution(ignode, SHELL_NORMAL1, 0, 0, -2);
-          nyi = Index_Solution(ignode, SHELL_NORMAL2, 0, 0, -2);
+              /* Get global node number */
+              ignode = Proc_Elem_Connect[iconnect_ptr + ilnode];
 
-          x[nxi] = fv->snormal[0];
-          x[nyi] = fv->snormal[1];
+              /* Get node number and indices into solution vector for normal dofs */
+              nxi = Index_Solution(ignode, SHELL_NORMAL1, 0, 0, -2);
+              nyi = Index_Solution(ignode, SHELL_NORMAL2, 0, 0, -2);
 
-          if (pd->Num_Dim == 3)
-            {
-             nzi = Index_Solution(ignode, SHELL_NORMAL3, 0, 0, -2);
-             x[nzi] = fv->snormal[2];
-            }
+              x[nxi] = fv->snormal[0];
+              x[nyi] = fv->snormal[1];
+
+              if (pd->Num_Dim == 3)
+                {
+                 nzi = Index_Solution(ignode, SHELL_NORMAL3, 0, 0, -2);
+                 x[nzi] = fv->snormal[2];
+                }
+             }
+          break;
          }
      }
   }

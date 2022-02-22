@@ -76,15 +76,15 @@ height_function_model (double *H_U,
                        double *dH_L_dtime,
                        double dH_U_dX[DIM],
                        double dH_L_dX[DIM],
-		       double *dH_U_dp, 
+		       double *dH_U_dp,
 		       double *dH_U_ddh,
 		       double time,          /* present time value           */
 		       double delta_t)      /* present time step             */
 
 /******************************************************************************
 *
-*  A function which computes the height at the current time and the rate-of-change of 
-*  height.  This model is used for the lubrication capability 
+*  A function which computes the height at the current time and the rate-of-change of
+*  height.  This model is used for the lubrication capability
 *
 *  P. Randall Schunk (March 2009, Somewhere over Texas)
 *
@@ -102,16 +102,23 @@ height_function_model (double *H_U,
 
  if(pd->TimeIntegration == STEADY) time = 0.;
 
- 
+ if(mp->HeightUFunctionModel == CONSTANT)
+   {
+     *H_U = mp->heightU;
+     *dH_U_dtime = 0.0;
+     *dH_U_dp = 0.0;
+     *dH_U_ddh = 0.0;
+     dH_U_dX[0] = dH_U_dX[1] = dH_U_dX[2] = 0.0;
+   }
 
- if(mp->HeightUFunctionModel == CONSTANT_SPEED)
+ else if(mp->HeightUFunctionModel == CONSTANT_SPEED)
    {
      H_dot = mp->u_heightU_function_constants[0];
      H_init =  mp->u_heightU_function_constants[1];
      *H_U = H_dot*time + H_init;
 
      /* add on external field height if there is one. The scale factor will be the third user const*/
-     if(mp->heightU_ext_field_index >= 0) 
+     if(mp->heightU_ext_field_index >= 0)
        *H_U += mp->u_heightU_function_constants[2] * fv->external_field[mp->heightU_ext_field_index];
 
      *dH_U_dtime = H_dot;
@@ -137,7 +144,7 @@ height_function_model (double *H_U,
 
  else if(mp->HeightUFunctionModel == CONSTANT_SPEED_DEFORM)
    {
-     double E_mod, L_0, Pext; 
+     double E_mod, L_0, Pext;
      H_dot = mp->u_heightU_function_constants[0];
      H_init =  mp->u_heightU_function_constants[1];
      E_mod = mp->u_heightU_function_constants[2];
@@ -145,8 +152,8 @@ height_function_model (double *H_U,
      Pext  = mp->u_heightU_function_constants[4];
 
      *H_U = H_dot*time + H_init + (fv->lubp - Pext)/(E_mod/L_0);
-     // Right now this isn't complete because we need an augmenting condition 
-     // to give us a fv_dot->lubp kicker. 
+     // Right now this isn't complete because we need an augmenting condition
+     // to give us a fv_dot->lubp kicker.
      *dH_U_dtime = H_dot + fv_dot->lubp/(E_mod/L_0);
      *dH_U_dp = 1./(E_mod/L_0);
      *dH_U_ddh = 0.0;
@@ -158,10 +165,10 @@ height_function_model (double *H_U,
      H_init =  mp->u_heightU_function_constants[1];
 
      *H_U = H_dot*time + H_init + fv->sh_dh; // 0.01*fv->external_field[0];
-     
-     // PRS: I'll leave this in here for now 
-     // because this is where you would add 
-     // a volume expansion effect upon phase change. 
+
+     // PRS: I'll leave this in here for now
+     // because this is where you would add
+     // a volume expansion effect upon phase change.
      // otherwise it is 0.*fv_dot->sh_dh
 
      *dH_U_dtime = H_dot - 0.*fv_dot->sh_dh;
@@ -314,7 +321,7 @@ height_function_model (double *H_U,
      dbl z2   = 0.5 + atan(p*(x-x2))/PI;
      dbl z1_x = p/(PI*(pp*xx-2*pp*x1*x+pp*xx1+1));
      dbl z2_x = p/(PI*(pp*xx-2*pp*x2*x+pp*xx2+1));
-    
+
      // Assemble
      *H_U = (1-z1)*h1 + z1*(1-z2)*f + z2*h2;
      dH_U_dX[0] = -h1*z1_x + z1_x*(1-z2)*f - z1*z2_x*f + z1*(1-z2)*n + z2_x*h2;
@@ -365,12 +372,12 @@ height_function_model (double *H_U,
      // Read in parameters
      C = mp->u_heightU_function_constants[0];
      ecc = mp->u_heightU_function_constants[1];
-     
+
      // Read in current point
      x = fv->x[0];
      y = fv->x[1];
 
-     // Calculate cylinder radius 
+     // Calculate cylinder radius
      Ri = sqrt( x*x + y*y );
 
      // Calculate angle
@@ -384,7 +391,7 @@ height_function_model (double *H_U,
      *H_U = C*(1+ecc*y/Ri);
      dH_U_dX[0] = -C*ecc/Ri*sin(theta)*cos(theta);
      dH_U_dX[1] = +C*ecc/Ri*sin(theta)*sin(theta);
-    
+
    }
  else if(mp->HeightUFunctionModel == CIRCLE_MELT)
    {
@@ -479,7 +486,15 @@ height_function_model (double *H_U,
      EH(-1,"Not a supported height-function model");
    }
 
- if(mp->HeightLFunctionModel == CONSTANT_SPEED)
+
+ if(mp->HeightLFunctionModel == CONSTANT)
+   {
+    *H_L = mp->heightL;
+    *dH_L_dtime = 0.0;
+    dH_L_dX[0] = dH_L_dX[1] = dH_L_dX[2] = 0.0;
+   }
+
+ else if(mp->HeightLFunctionModel == CONSTANT_SPEED)
    {
      H_dot = mp->u_heightL_function_constants[0];
      H_init =  mp->u_heightL_function_constants[1];
@@ -1135,13 +1150,16 @@ film_evaporation_model (double C,             /* Suspension concentration */
 double
 disjoining_pressure_model (double H,                              /* Film thickness or interfacial separation */
                            double grad_H[DIM],                    /* Film slope */
+                           int *n_dof,                            /* Numbers of degrees of freedom array */
+                           int *dof_map,                          /* Map of DOFs */
                            double grad_DisjPress[DIM],            /* Disjoining pressure gradient */
-                           double dgrad_DisjPress_dH1[DIM][MDE],  /* Sensitivity of disjoining pressure w.r.t. film thickness */
-		           double dgrad_DisjPress_dH2[DIM][MDE] ) /* Second derivative of disjoining pressure w.r.t. film thickness */
+                           double dgrad_DisjPress_dH1[DIM][MDE],  /* Sensitivity of disjoining pressure w.r.t. film thicknes - grad_phi_j terms */
+                           double dgrad_DisjPress_dH2[DIM][MDE],  /* Sensitivity of disjoining pressure w.r.t. film thicknes - phi_j terms */
+		           double dgrad_DisjPress_dH[DIM][MDE] )  /* Sensitivity of disjoining pressure w.r.t. film thickness */
 /******************************************************************************
 *
 *  A function which computes disjoining pressure inside thin film
-*  This model is used for the lubrication capability 
+*  This model is used for the lubrication capability
 *
 *  Kris Tjiptowidjojo (January 26 2010)
 *
@@ -1163,13 +1181,16 @@ disjoining_pressure_model (double H,                              /* Film thickn
  double H_star;
  double factor;
 
+ double phi_j, grad_phi_j[DIM], grad_II_phi_j[DIM], d_grad_II_phi_j_dmesh[DIM][DIM][MDE];
+
  Inn(grad_H, grad_II_H);
 
  memset(grad_angle,  0.0, sizeof(double)*DIM);
 
- memset(grad_DisjPress,          0.0, sizeof(double)*DIM);
- memset(dgrad_DisjPress_dH1,     0.0, sizeof(double)*DIM*MDE);
+ memset(grad_DisjPress,         0.0, sizeof(double)*DIM);
+ memset(dgrad_DisjPress_dH1,    0.0, sizeof(double)*DIM*MDE);
  memset(dgrad_DisjPress_dH2,    0.0, sizeof(double)*DIM*MDE);
+ memset(dgrad_DisjPress_dH,     0.0, sizeof(double)*DIM*MDE);
 
 /************** CALCULATE DISJOINING PRESSURE AND ITS SENSITIVITIES **************/
 
@@ -1181,6 +1202,7 @@ disjoining_pressure_model (double H,                              /* Film thickn
      dB_dangle = 0.0;
      df_dH = 0.0;
      d2f_dH2 = 0.0;
+     return(DisjPress);
    }
 
  else if(mp->DisjPressModel == TWO_TERM)
@@ -1273,7 +1295,7 @@ disjoining_pressure_model (double H,                              /* Film thickn
 
  for (i = 0; i < DIM; i++)
     {
-     grad_DisjPress[i] =   dB_dangle * f * grad_angle[i] 
+     grad_DisjPress[i] =   dB_dangle * f * grad_angle[i]
                           + B * df_dH * grad_II_H[i];
     }
 
@@ -1291,6 +1313,21 @@ disjoining_pressure_model (double H,                              /* Film thickn
         {
          dgrad_DisjPress_dH2[i][j] =   dB_dangle * df_dH * grad_angle[i]
                                       + B * d2f_dH2 * grad_II_H[i] ;
+        }
+    }
+
+ for (i = 0; i < DIM; i++)
+    {
+     grad_DisjPress[i] =   dB_dangle * f * grad_angle[i]
+                          + B * df_dH * grad_II_H[i];
+
+     for (j = 0; j < ei->dof[SHELL_FILMH]; j++)
+        {
+         ShellBF( SHELL_FILMH, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
+
+         dgrad_DisjPress_dH[i][j] =    dB_dangle * df_dH * phi_j * grad_angle[i]
+                                     +  B * d2f_dH2 * phi_j * grad_II_H[i]
+                                     +  B * df_dH * grad_II_phi_j[i];
         }
     }
 
@@ -2217,25 +2254,42 @@ void porous_shell_open_source_model
 
 int
 lubrication_fluid_source(
-                         double *flux,                         /* Fluid flux */
-                         double d_flux[MAX_VARIABLE_TYPES][MDE] /* Fluid flux sensitivities */
+                         double *flux,                           /* Fluid flux */
+                         double d_flux[MAX_VARIABLE_TYPES][MDE], /* Fluid flux sensitivities */
+                         int *n_dof                              /* Array containing numbers of DOF */
                         )
 {
 /******************************************************************************
 *
 *  This function computes fluid flux into or out from lubrication shell.
 *  Right now it only supports for flux between continuum and lubrication layers
-*  Used with the function assemble_lubrication.
+*  Used with the functions assemble_lubrication and assemble_film.
 *
 *  Kristianto Tjiptowidjojo (tjiptowi@unm.edu) - February 2021
 *
 ******************************************************************************/
+  double lub_press = 0.0;
   double kappa = 0.0;
   double mu = 0.0;
   double L = 0.0;
   int j = 0;
   double phi_j;
 
+  /* Determine the appropriate lubrication pressure DOF */
+  if (pd->v[LUBP])
+    {
+     lub_press = fv->lubp;
+    }
+  else if (pd->v[SHELL_FILMP])
+    {
+     lub_press = fv->sh_fp;
+    }
+  else
+    {
+     EH(-1, "Cannot find appropriate lubrication pressure");
+    }
+
+  /* Evaluate lubrication fluid source */
   if (mp->LubSourceModel == CONSTANT)
     {
      *flux = mp->lubsource;
@@ -2246,19 +2300,34 @@ lubrication_fluid_source(
       mu    = mp->u_lubsource_function_constants[1];
       L     = mp->u_lubsource_function_constants[2];
 
-      *flux = (kappa/mu/L) * (fv->P - fv->lubp);
+
+      *flux = (kappa/mu/L) * (fv->P - lub_press);
       if (d_flux != NULL)
         {
-         for (j = 0; j < ei->dof[PRESSURE]; j++)
+         for (j = 0; j < n_dof[PRESSURE]; j++) // Use n_dof since PRESSURE only exists on continuum block
             {
              phi_j = bf[PRESSURE]->phi[j];
              d_flux[PRESSURE][j] = (kappa/mu/L) * phi_j;
             }
-         for (j = 0; j < ei->dof[LUBP]; j++)
-            {
-             phi_j = bf[LUBP]->phi[j];
-             d_flux[LUBP][j] = (kappa/mu/L) * (-phi_j);
-            }
+
+         if (pd->v[LUBP])
+           {
+            for (j = 0; j < ei->dof[LUBP]; j++)
+               {
+                phi_j = bf[LUBP]->phi[j];
+                d_flux[LUBP][j] = (kappa/mu/L) * (-phi_j);
+               }
+           }
+
+         if (pd->v[SHELL_FILMP])
+           {
+            for (j = 0; j < ei->dof[SHELL_FILMP]; j++)
+               {
+                phi_j = bf[SHELL_FILMP]->phi[j];
+                d_flux[SHELL_FILMP][j] = (kappa/mu/L) * (-phi_j);
+               }
+           }
+
         }
     }
   else
