@@ -180,7 +180,7 @@ endif()
 set(GOMA_TPL_LIBRARIES "")
 set(GOMA_TPL_LIBRARIES "")
 
-set(ARPACK_PREFIX "${Trilinos_DIR}/../../../../ARPACK" CACHE PATH "set ARPACK library location")
+set(ARPACK_PREFIX "${Trilinos_DIR}/../../../" CACHE PATH "set ARPACK library location")
 
 find_package(ARPACK)
 
@@ -191,7 +191,7 @@ else()
   message(STATUS "ARPACK library not found")
 endif()
 
-set(Sparse_PREFIX "${Trilinos_DIR}/../../../../sparse" CACHE PATH "set sparse library location")
+set(Sparse_PREFIX "${Trilinos_DIR}/../../../" CACHE PATH "set sparse library location")
 find_package(Sparse)
 if (Sparse_FOUND)
   message(STATUS "Using Sparse ${Sparse_LIBRARIES}")
@@ -202,7 +202,7 @@ else()
   set(Sparse_INCLUDES "")
 endif()
 
-set(METIS_PREFIX "" CACHE PATH "set METIS library location")
+set(METIS_PREFIX "${Trilinos_DIR}/../../../" CACHE PATH "set METIS library location")
 find_package(METIS)
 if (METIS_FOUND)
   list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_HAVE_METIS)
