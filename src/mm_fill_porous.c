@@ -967,7 +967,7 @@ int assemble_pore_sink_mass(double time, /* present time valuel; KSC           *
                    source *= wt_total * pd->etm[eqn][(LOG2_SOURCE)];
                   }
 
-                lec->J[peqn][pvar][i][j] += source;
+                lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += source;
                }
            }
 
@@ -985,7 +985,7 @@ int assemble_pore_sink_mass(double time, /* present time valuel; KSC           *
                    source *= wt_total * pd->etm[eqn][(LOG2_SOURCE)];
                   }
 
-               	lec->J[peqn][pvar][i][j] += source;
+               	lec->J[LEC_J_INDEX(peqn,pvar,i,j)] += source;
                }
            }
 
