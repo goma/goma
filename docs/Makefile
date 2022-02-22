@@ -18,10 +18,10 @@ github:
 	$(MAKE) clean
 	$(MAKE) html
 	mv docs tmp_docs
-	mv tmp_docs/html docs
+	mv tmp_docs/html site
 	rm -rf tmp_docs
-	touch docs/.nojekyll
-	echo "docs.gomafem.com" > docs/CNAME
+	touch site/.nojekyll
+	echo "docs.gomafem.com" > site/CNAME
 
 
 # Catch-all target: route all unknown targets to Sphinx using the new
