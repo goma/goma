@@ -2,7 +2,7 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2022 Sandia Corporation.                                  *
+* Copyright (c) 2014 Sandia Corporation.                                  *
 *                                                                         *
 * Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,  *
 * the U.S. Government retains certain rights in this software.            *
@@ -14,28 +14,45 @@
  *$Id: mm_std_models_shell.c,v 5.31 2010-07-30 20:48:38 prschun Exp $
  */
 
+#ifdef USE_RCSID
+static char rcsid[] = "$Id: mm_std_models_shell.c,v 5.31 2010-07-30 20:48:38 prschun Exp $";
+#endif
+
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 
 /* GOMA include files */
 
-#include "bc_colloc.h"
+#define GOMA_MM_STD_MODELS_SHELL_C
 #include "el_elm.h"
+#include "el_geom.h"
 #include "mm_as.h"
+#include "mm_as_const.h"
 #include "mm_as_structs.h"
-#include "mm_eh.h"
-#include "mm_mp.h"
 #include "mm_mp_const.h"
-#include "mm_mp_structs.h"
-#include "mm_shell_util.h"
 #include "rf_bc_const.h"
+#include "rf_fem.h"
 #include "rf_fem_const.h"
-#include "shell_tfmp_util.h"
+#include "rf_fill_const.h"
+#include "rf_io.h"
+#include "rf_io_const.h"
+#include "rf_io_structs.h"
+#include "rf_masks.h"
+#include "rf_mp.h"
+#include "rf_solver_const.h"
+#include "rf_vars_const.h"
 #include "std.h"
 
-#define GOMA_MM_STD_MODELS_SHELL_C
+#include "mm_mp.h"
+#include "mm_mp_structs.h"
+
+#include "mm_eh.h"
+
 #include "mm_fill_porous.h"
+#include "mm_shell_util.h"
 #include "mm_std_models_shell.h"
 
 /*********** R O U T I N E S   I N   T H I S   F I L E ************************
@@ -84,7 +101,15 @@ double height_function_model(double *H_U,
   if (pd->TimeIntegration == STEADY)
     time = 0.;
 
-  if (mp->HeightUFunctionModel == CONSTANT_SPEED) {
+  if (mp->HeightUFunctionModel == CONSTANT) {
+    *H_U = mp->heightU;
+    *dH_U_dtime = 0.0;
+    *dH_U_dp = 0.0;
+    *dH_U_ddh = 0.0;
+    dH_U_dX[0] = dH_U_dX[1] = dH_U_dX[2] = 0.0;
+  }
+
+  else if (mp->HeightUFunctionModel == CONSTANT_SPEED) {
     H_dot = mp->u_heightU_function_constants[0];
     H_init = mp->u_heightU_function_constants[1];
     *H_U = H_dot * time + H_init;
@@ -393,7 +418,7 @@ double height_function_model(double *H_U,
     if (mp->heightU_ext_field_index >= 0) {
       *H_U += mp->u_heightU_function_constants[3] * fv->external_field[mp->heightU_ext_field_index];
       if (*H_U < 0.0) {
-        GOMA_WH(-1, "read in a negative external field in height_function_model()");
+        GOMA_WH(GOMA_ERROR, "read in a negative external field in height_function_model()");
       }
     }
     if (external_field_multiplier == 1.0) {
@@ -433,7 +458,13 @@ double height_function_model(double *H_U,
     GOMA_EH(GOMA_ERROR, "Not a supported height-function model");
   }
 
-  if (mp->HeightLFunctionModel == CONSTANT_SPEED) {
+  if (mp->HeightLFunctionModel == CONSTANT) {
+    *H_L = mp->heightL;
+    *dH_L_dtime = 0.0;
+    dH_L_dX[0] = dH_L_dX[1] = dH_L_dX[2] = 0.0;
+  }
+
+  else if (mp->HeightLFunctionModel == CONSTANT_SPEED) {
     H_dot = mp->u_heightL_function_constants[0];
     H_init = mp->u_heightL_function_constants[1];
 
@@ -667,7 +698,7 @@ double velocity_function_model(double veloU[DIM],
         veloU[2] = omega * R * v_dir[2];
       }
     } else {
-      GOMA_WH(-1, "VelocityU and HeightU ROLL functions don't match.");
+      GOMA_WH(GOMA_ERROR, "VelocityU and HeightU ROLL functions don't match.");
     }
   } else if (mp->VeloUFunctionModel == TANGENTIAL_ROTATE) {
     dbl n[DIM], v[DIM], t1[DIM], t2[DIM];
@@ -832,7 +863,7 @@ double velocity_function_model(double veloU[DIM],
         veloL[2] = omega * R * v_dir[2];
       }
     } else {
-      GOMA_WH(-1, "VelocityL and HeightL ROLL functions don't match.");
+      GOMA_WH(GOMA_ERROR, "VelocityL and HeightL ROLL functions don't match.");
     }
   } else if (mp->VeloLFunctionModel == TANGENTIAL_ROTATE) {
     dbl n[DIM], v[DIM], t1[DIM], t2[DIM];
@@ -1023,14 +1054,18 @@ film_evaporation_model(double C,             /* Suspension concentration */
 }
 
 /*****************************************************************************/
-double
-disjoining_pressure_model(double H,                   /* Film thickness or interfacial separation */
-                          double grad_H[DIM],         /* Film slope */
-                          double grad_DisjPress[DIM], /* Disjoining pressure gradient */
-                          double dgrad_DisjPress_dH1[DIM][MDE], /* Sensitivity of disjoining
-                                                                   pressure w.r.t. film thickness */
-                          double dgrad_DisjPress_dH2[DIM][MDE]) /* Second derivative of disjoining
-                                                                   pressure w.r.t. film thickness */
+double disjoining_pressure_model(
+    double H,                             /* Film thickness or interfacial separation */
+    double grad_H[DIM],                   /* Film slope */
+    int *n_dof,                           /* Numbers of degrees of freedom array */
+    int *dof_map,                         /* Map of DOFs */
+    double grad_DisjPress[DIM],           /* Disjoining pressure gradient */
+    double dgrad_DisjPress_dH1[DIM][MDE], /* Sensitivity of disjoining pressure w.r.t. film thicknes
+                                             - grad_phi_j terms */
+    double dgrad_DisjPress_dH2[DIM][MDE], /* Sensitivity of disjoining pressure w.r.t. film thicknes
+                                             - phi_j terms */
+    double dgrad_DisjPress_dH[DIM]
+                             [MDE]) /* Sensitivity of disjoining pressure w.r.t. film thickness */
 /******************************************************************************
  *
  *  A function which computes disjoining pressure inside thin film
@@ -1056,6 +1091,8 @@ disjoining_pressure_model(double H,                   /* Film thickness or inter
   double H_star;
   double factor;
 
+  double phi_j, grad_phi_j[DIM], grad_II_phi_j[DIM], d_grad_II_phi_j_dmesh[DIM][DIM][MDE];
+
   Inn(grad_H, grad_II_H);
 
   memset(grad_angle, 0.0, sizeof(double) * DIM);
@@ -1063,6 +1100,7 @@ disjoining_pressure_model(double H,                   /* Film thickness or inter
   memset(grad_DisjPress, 0.0, sizeof(double) * DIM);
   memset(dgrad_DisjPress_dH1, 0.0, sizeof(double) * DIM * MDE);
   memset(dgrad_DisjPress_dH2, 0.0, sizeof(double) * DIM * MDE);
+  memset(dgrad_DisjPress_dH, 0.0, sizeof(double) * DIM * MDE);
 
   /************** CALCULATE DISJOINING PRESSURE AND ITS SENSITIVITIES **************/
 
@@ -1073,6 +1111,7 @@ disjoining_pressure_model(double H,                   /* Film thickness or inter
     dB_dangle = 0.0;
     df_dH = 0.0;
     d2f_dH2 = 0.0;
+    return (DisjPress);
   }
 
   else if (mp->DisjPressModel == TWO_TERM) {
@@ -1171,6 +1210,18 @@ disjoining_pressure_model(double H,                   /* Film thickness or inter
     }
   }
 
+  for (i = 0; i < DIM; i++) {
+    grad_DisjPress[i] = dB_dangle * f * grad_angle[i] + B * df_dH * grad_II_H[i];
+
+    for (j = 0; j < ei[pg->imtrx]->dof[SHELL_FILMH]; j++) {
+      ShellBF(SHELL_FILMH, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
+              n_dof[MESH_DISPLACEMENT1], dof_map);
+
+      dgrad_DisjPress_dH[i][j] = dB_dangle * df_dH * phi_j * grad_angle[i] +
+                                 B * d2f_dH2 * phi_j * grad_II_H[i] + B * df_dH * grad_II_phi_j[i];
+    }
+  }
+
   return (DisjPress);
 }
 
@@ -1218,7 +1269,7 @@ double diffusion_coefficient_model(double mu,              /* Viscosity of the l
   return (DiffCoeff);
 }
 /*****************************************************************************/
-double porous_shell_closed_porosity_model(void) {
+double porous_shell_closed_porosity_model() {
   /******************************************************************************
    *
    *  This function computes the porosity of a structured porous shell based on
@@ -1274,7 +1325,7 @@ double porous_shell_porosity_model(int k) {
 /* END of porous_shell_porosity_model */
 
 /*****************************************************************************/
-double porous_shell_closed_radius_model(void) {
+double porous_shell_closed_radius_model() {
   /******************************************************************************
    *
    *  This function computes the radius of a structured porous shell based on
@@ -1305,7 +1356,7 @@ double porous_shell_closed_radius_model(void) {
 /* END of porous_shell_radius_model */
 
 /*****************************************************************************/
-double porous_shell_closed_height_model(void) {
+double porous_shell_closed_height_model() {
   /******************************************************************************
    *
    *  This function computes the height of a structured porous shell based on
@@ -2017,24 +2068,36 @@ void porous_shell_open_source_model(
   return;
 }
 
-int lubrication_fluid_source(double *flux,                          /* Fluid flux */
-                             double d_flux[MAX_VARIABLE_TYPES][MDE] /* Fluid flux sensitivities */
+int lubrication_fluid_source(double *flux,                           /* Fluid flux */
+                             double d_flux[MAX_VARIABLE_TYPES][MDE], /* Fluid flux sensitivities */
+                             int *n_dof /* Array containing numbers of DOF */
 ) {
   /******************************************************************************
    *
    *  This function computes fluid flux into or out from lubrication shell.
    *  Right now it only supports for flux between continuum and lubrication layers
-   *  Used with the function assemble_lubrication.
+   *  Used with the functions assemble_lubrication and assemble_film.
    *
    *  Kristianto Tjiptowidjojo (tjiptowi@unm.edu) - February 2021
    *
    ******************************************************************************/
+  double lub_press = 0.0;
   double kappa = 0.0;
   double mu = 0.0;
   double L = 0.0;
   int j = 0;
   double phi_j;
 
+  /* Determine the appropriate lubrication pressure DOF */
+  if (pd->v[pg->imtrx][LUBP]) {
+    lub_press = fv->lubp;
+  } else if (pd->v[pg->imtrx][SHELL_FILMP]) {
+    lub_press = fv->sh_fp;
+  } else {
+    GOMA_EH(GOMA_ERROR, "Cannot find appropriate lubrication pressure");
+  }
+
+  /* Evaluate lubrication fluid source */
   if (mp->LubSourceModel == CONSTANT) {
     *flux = mp->lubsource;
   } else if (mp->LubSourceModel == CONTINUUM_FLUID) {
@@ -2042,15 +2105,27 @@ int lubrication_fluid_source(double *flux,                          /* Fluid flu
     mu = mp->u_lubsource_function_constants[1];
     L = mp->u_lubsource_function_constants[2];
 
-    *flux = (kappa / mu / L) * (fv->P - fv->lubp);
+    *flux = (kappa / mu / L) * (fv->P - lub_press);
     if (d_flux != NULL) {
-      for (j = 0; j < ei[pg->imtrx]->dof[PRESSURE]; j++) {
+      for (j = 0; j < n_dof[PRESSURE];
+           j++) // Use n_dof since PRESSURE only exists on continuum block
+      {
         phi_j = bf[PRESSURE]->phi[j];
         d_flux[PRESSURE][j] = (kappa / mu / L) * phi_j;
       }
-      for (j = 0; j < ei[pg->imtrx]->dof[LUBP]; j++) {
-        phi_j = bf[LUBP]->phi[j];
-        d_flux[LUBP][j] = (kappa / mu / L) * (-phi_j);
+
+      if (pd->v[pg->imtrx][LUBP]) {
+        for (j = 0; j < ei[pg->imtrx]->dof[LUBP]; j++) {
+          phi_j = bf[LUBP]->phi[j];
+          d_flux[LUBP][j] = (kappa / mu / L) * (-phi_j);
+        }
+      }
+
+      if (pd->v[pg->imtrx][SHELL_FILMP]) {
+        for (j = 0; j < ei[pg->imtrx]->dof[SHELL_FILMP]; j++) {
+          phi_j = bf[SHELL_FILMP]->phi[j];
+          d_flux[SHELL_FILMP][j] = (kappa / mu / L) * (-phi_j);
+        }
       }
     }
   } else {

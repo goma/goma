@@ -8498,6 +8498,17 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   ECHO("\n---Special Inputs\n", echo_file); /* added by PRS 3/17/2009 */
 
+  /************ SHELL PROPERTIES SECTION ********************/
+
+  /*Initialize for good behavior */
+  mat_ptr->HeightUFunctionModel = CONSTANT;
+  mat_ptr->heightU = 0.0;
+
+  mat_ptr->VeloUFunctionModel = CONSTANT;
+  mat_ptr->veloU[0] = 0.0;
+  mat_ptr->veloU[1] = 0.0;
+  mat_ptr->veloU[2] = 0.0;
+
   if (pd_glob[mn]->gv[R_LUBP] || pd_glob[mn]->gv[R_LUBP_2] || pd_glob[mn]->gv[R_TFMP_MASS] ||
       pd_glob[mn]->gv[R_TFMP_BOUND]) {
     model_read = look_for_mat_proptable(
@@ -8574,7 +8585,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
       if (num_const > 5) {
         /* We may have an external field "height" we will be adding to this model.  Check
-         * for it now and flag its existence through the material properties structure
+mat_ptr->veloU	       * for it now and flag its existence through the material properties structure
          */
         mat_ptr->heightU_ext_field_index = -1; // Default to NO external field
         if (efv->ev) {
@@ -8794,6 +8805,11 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       GOMA_EH(model_read, "Upper Height Function model invalid");
     }
     ECHO(es, echo_file);
+  } /* End of LUBP, LUBP_2, TFMP_MASS, and TFMP_BOUND cards */
+
+  if (pd_glob[mn]->gv[R_LUBP] || pd_glob[mn]->gv[R_LUBP_2] ||
+      (pd_glob[mn]->gv[R_SHELL_FILMP] && pd_glob[mn]->gv[R_SHELL_FILMH]) ||
+      pd_glob[mn]->gv[R_TFMP_MASS] || pd_glob[mn]->gv[R_TFMP_BOUND]) {
 
     model_read = look_for_mat_proptable(
         imp, "Lower Height Function Constants", &(mat_ptr->HeightLFunctionModel),
@@ -8894,6 +8910,10 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     }
     ECHO(es, echo_file);
 
+  } /* End of LUBP, LUBP_2, SHELL_FILMP, SHELL_FILMH, TFMP_MASS, and TFMP_BOUND cards */
+
+  if (pd_glob[mn]->gv[R_LUBP] || pd_glob[mn]->gv[R_LUBP_2] || pd_glob[mn]->gv[R_TFMP_MASS] ||
+      pd_glob[mn]->gv[R_TFMP_BOUND]) {
     model_read =
         look_for_mat_prop(imp, "Upper Velocity Function Constants", &(mat_ptr->VeloUFunctionModel),
                           mat_ptr->veloU, NO_USER, NULL, model_name, VECTOR_INPUT, &NO_SPECIES, es);
@@ -8942,6 +8962,11 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     }
     ECHO(es, echo_file);
 
+  } /* End of LUBP, LUBP_2, TFMP_MASS, and TFMP_BOUND cards */
+
+  if (pd_glob[mn]->gv[R_LUBP] || pd_glob[mn]->gv[R_LUBP_2] ||
+      (pd_glob[mn]->gv[R_SHELL_FILMP] && pd_glob[mn]->gv[R_SHELL_FILMH]) ||
+      pd_glob[mn]->gv[R_TFMP_MASS] || pd_glob[mn]->gv[R_TFMP_BOUND]) {
     model_read = look_for_mat_prop(
         imp, "Lower Velocity Function Constants", &(mat_ptr->VeloLFunctionModel), mat_ptr->veloL,
         &(mat_ptr->u_veloL_function_constants), &(mat_ptr->len_u_veloL_function_constants),
@@ -9004,6 +9029,10 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     }
     ECHO(es, echo_file);
 
+  } /* End of LUBP, LUBP_2, TFMP_MASS, SHELL_FILMP, SHELL_FILMH, and TFMP_BOUND cards */
+
+  if (pd_glob[mn]->gv[R_LUBP] || pd_glob[mn]->gv[R_LUBP_2] || pd_glob[mn]->gv[R_TFMP_MASS] ||
+      pd_glob[mn]->gv[R_TFMP_BOUND]) {
     model_read = look_for_mat_prop(imp, "Upper Contact Angle", &(mat_ptr->DcaUFunctionModel),
                                    &(mat_ptr->dcaU), NO_USER, NULL, model_name, SCALAR_INPUT,
                                    &NO_SPECIES, es);
@@ -9074,6 +9103,11 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     }
     ECHO(es, echo_file);
 
+  } /* End of LUBP, LUBP_2, TFMP_MASS, and TFMP_BOUND cards */
+
+  if (pd_glob[mn]->gv[R_LUBP] || pd_glob[mn]->gv[R_LUBP_2] ||
+      (pd_glob[mn]->gv[R_SHELL_FILMP] && pd_glob[mn]->gv[R_SHELL_FILMH]) ||
+      pd_glob[mn]->gv[R_TFMP_MASS] || pd_glob[mn]->gv[R_TFMP_BOUND]) {
     /* Optional lubrication fluid source term */
 
     strcpy(search_string, "Lubrication Fluid Source");
@@ -9138,6 +9172,12 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         GOMA_EH(GOMA_ERROR, "Unrecognized lubrication fluid source model");
       }
     }
+
+  } /* End of LUBP, LUBP_2, SHELL_FILMP, SHELL_FILMH, TFMP_MASS, and TFMP_BOUND cards */
+
+  if (pd_glob[mn]->gv[R_LUBP] || pd_glob[mn]->gv[R_LUBP_2] || pd_glob[mn]->gv[R_TFMP_MASS] ||
+      pd_glob[mn]->gv[R_TFMP_BOUND]) {
+
     /* Optional lubrication momentum source term */
 
     strcpy(search_string, "Lubrication Momentum Source");
@@ -9171,7 +9211,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       }
     }
 
-  } /* End of shell lub_p cards */
+  } /* End of LUBP, LUBP_2, SHELL_FILMP, SHELL_FILMH, TFMP_MASS, and TFMP_BOUND card */
 
   /* Shell Energy Cards - heat sources, sinks, etc. */
 
@@ -9179,7 +9219,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     /* no source terms available.  Feel free to add some!  */
   } /* End of shell_energy cards */
 
-  if (pd_glob[mn]->gv[R_SHELL_FILMP] == 1) {
+  if (pd_glob[mn]->gv[R_SHELL_FILMP] && pd_glob[mn]->gv[R_SHELL_FILMH]) {
 
     model_read = look_for_mat_prop(imp, "Film Evaporation Model", &(mat_ptr->FilmEvapModel),
                                    &(mat_ptr->FilmEvap), NO_USER, NULL, model_name, SCALAR_INPUT,
@@ -9207,48 +9247,6 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     model_read =
         look_for_mat_prop(imp, "Upper Velocity Function Constants", &(mat_ptr->VeloUFunctionModel),
                           mat_ptr->veloU, NO_USER, NULL, model_name, VECTOR_INPUT, &NO_SPECIES, es);
-
-    if (model_read == -1 && !strcmp(model_name, "ROLL")) {
-      model_read = 1;
-      mat_ptr->VeloUFunctionModel = ROLL;
-      num_const = read_constants(imp, &(mat_ptr->u_veloU_function_constants), NO_SPECIES);
-      if (num_const < 9) {
-        sr = sprintf(err_msg, "Matl %s needs 9 constants for %s %s model.\n",
-                     pd_glob[mn]->MaterialName, "Upper Velocity Function", "ROLL");
-        GOMA_EH(GOMA_ERROR, err_msg);
-      }
-      mat_ptr->len_u_veloU_function_constants = num_const;
-      SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_veloU_function_constants);
-    }
-
-    else if (model_read == -1) {
-      GOMA_EH(model_read, "Upper Velocity Function model invalid");
-    }
-
-    ECHO(es, echo_file);
-
-    model_read =
-        look_for_mat_prop(imp, "Lower Velocity Function Constants", &(mat_ptr->VeloLFunctionModel),
-                          mat_ptr->veloL, NO_USER, NULL, model_name, VECTOR_INPUT, &NO_SPECIES, es);
-
-    if (model_read == -1 && !strcmp(model_name, "ROLL")) {
-      model_read = 1;
-      mat_ptr->VeloLFunctionModel = ROLL;
-      num_const = read_constants(imp, &(mat_ptr->u_veloL_function_constants), NO_SPECIES);
-      if (num_const < 9) {
-        sr = sprintf(err_msg, "Matl %s needs 9 constants for %s %s model.\n",
-                     pd_glob[mn]->MaterialName, "Lower Velocity Function", "ROLL");
-        GOMA_EH(GOMA_ERROR, err_msg);
-      }
-      mat_ptr->len_u_veloL_function_constants = num_const;
-      SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_veloL_function_constants);
-    }
-
-    else if (model_read == -1) {
-      GOMA_EH(model_read, "Lower Velocity Function model invalid");
-    }
-
-    ECHO(es, echo_file);
 
     /* Optional slip term */
 
@@ -9279,9 +9277,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         GOMA_EH(GOMA_ERROR, "Slip coefficient model invalid");
       }
     }
-  }
 
-  if (pd_glob[mn]->gv[R_SHELL_FILMH] == 1) {
+    /* Disjoining pressure term */
 
     model_read = look_for_mat_prop(imp, "Disjoining Pressure Model", &(mat_ptr->DisjPressModel),
                                    &(mat_ptr->DisjPress), NO_USER, NULL, model_name, SCALAR_INPUT,
@@ -9331,7 +9328,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     }
 
     ECHO(es, echo_file);
-  }
+  } /* End of SHELL_FILMP and SHELL_FILMH cards */
 
   if (pd_glob[mn]->gv[R_SHELL_PARTC] == 1) {
 
@@ -9358,7 +9355,6 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
     ECHO(es, echo_file);
   }
-
   /*
    * Material input for fluid-structural interaction types for
    * lubrication shell elements

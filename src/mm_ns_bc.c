@@ -649,10 +649,22 @@ void fvelo_normal_lub_bc(double func[DIM],
   double mu = param[1];
   double L = param[2];
 
-  double lubflux = (kappa / mu / L) * (fv->P - fv->lubp);
+  double lub_press = 0.0;
+  double lubflux = 0.0;
 
-  double dlubflux_dp = (kappa / mu / L);
-  double dlubflux_dlubp = -(kappa / mu / L);
+  double dlubflux_dp = 0.0;
+  double dlubflux_dlub_press = 0.0;
+
+  /***** DETERMINE APPROPRIATE LUBRICATION FLUX AND ITS SENSITIVITIES *****/
+  if (n_dof[LUBP] > 0) {
+    lub_press = fv->lubp;
+  } else if (n_dof[SHELL_FILMP] > 0) {
+    lub_press = fv->sh_fp;
+  }
+
+  lubflux = (kappa / mu / L) * (fv->P - lub_press);
+  dlubflux_dp = (kappa / mu / L);
+  dlubflux_dlub_press = -(kappa / mu / L);
 
   /***** CALCULATE RESIDUAL CONTRIBUTION ********************/
   func[0] = -lubflux;
@@ -695,9 +707,19 @@ void fvelo_normal_lub_bc(double func[DIM],
     }
 
     var = LUBP;
-    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-      phi_j = bf[var]->phi[j];
-      d_func[0][var][j] += -dlubflux_dlubp * phi_j;
+    if (n_dof[var] > 0) {
+      for (j = 0; j < n_dof[var]; j++) {
+        phi_j = bf[var]->phi[j];
+        d_func[0][var][j] += -dlubflux_dlub_press * phi_j;
+      }
+    }
+
+    var = SHELL_FILMP;
+    if (n_dof[var] > 0) {
+      for (j = 0; j < n_dof[var]; j++) {
+        phi_j = bf[var]->phi[j];
+        d_func[0][var][j] += -dlubflux_dlub_press * phi_j;
+      }
     }
 
   } /* end of if Assemble_Jacobian */

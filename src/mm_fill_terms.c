@@ -12180,15 +12180,33 @@ int load_fv_mesh_derivs(int okToZero)
     siz = sizeof(double) * DIM * MDE;
     memset(fv->d_div_n_dmesh, 0, siz);
 
-    // HKM -> looks good according to d_grad_v_dmesh[][][][]
-    for (p = 0; p < VIM; p++) {
-      for (q = 0; q < VIM; q++) {
-        for (b = 0; b < dim; b++) {
-          for (j = 0; j < mdofs; j++) {
-            for (r = 0; r < dim; r++) {
-              for (i = 0; i < vdofs; i++) {
-                v_ri = *esp->n[r][i];
-                fv->d_grad_n_dmesh[p][q][b][j] += v_ri * bfv->d_grad_phi_e_dmesh[i][r][p][q][b][j];
+    if (v == NORMAL1) {
+      // HKM -> looks good according to d_grad_v_dmesh[][][][]
+      for (p = 0; p < VIM; p++) {
+        for (q = 0; q < VIM; q++) {
+          for (b = 0; b < dim; b++) {
+            for (j = 0; j < mdofs; j++) {
+              for (r = 0; r < dim; r++) {
+                for (i = 0; i < vdofs; i++) {
+                  v_ri = *esp->n[r][i];
+                  fv->d_grad_n_dmesh[p][q][b][j] +=
+                      v_ri * bfv->d_grad_phi_e_dmesh[i][r][p][q][b][j];
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    else if (v == SHELL_NORMAL1) {
+      for (r = 0; r < dim; r++) {
+        for (i = 0; i < vdofs; i++) {
+          v_ri = *esp->n[r][i];
+          for (p = 0; p < VIM; p++) {
+            for (b = 0; b < dim; b++) {
+              for (j = 0; j < mdofs; j++) {
+                fv->d_grad_n_dmesh[p][r][b][j] += v_ri * bfv->d_grad_phi_dmesh[i][p][b][j];
               }
             }
           }
@@ -12203,7 +12221,7 @@ int load_fv_mesh_derivs(int okToZero)
         }
       }
     }
-  } else if (((upd->vp[pg->imtrx][NORMAL1] != -1) || (upd->vp[pg->imtrx][SHELL_NORMAL1] != -1)) &&
+  } else if (((upd->vp[pg->imtrx][NORMAL1] != -1) && (upd->vp[pg->imtrx][SHELL_NORMAL1] != -1)) &&
              (okToZero)) {
     siz = sizeof(double) * DIM * VIM * DIM * MDE;
     memset(fv->d_grad_n_dmesh, 0, siz);

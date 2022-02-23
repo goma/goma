@@ -2018,13 +2018,23 @@ Revised:         Summer 1998, SY Tam (UNM)
     /* Both SHELL_FILMP and SHELL_FILMH have to be activated to solve film profile equation */
 
     if (pde[R_SHELL_FILMP] && pde[R_SHELL_FILMH]) {
-      err = assemble_film(time_value, theta, delta_t, xi, exo);
-      GOMA_EH(err, "assemble_film");
+      if (ei[pg->imtrx]->ielem_dim == 1) {
+        err = assemble_film_1D(time_value, theta, delta_t, xi, exo);
+        GOMA_EH(err, "assemble_film_1D");
 #ifdef CHECK_FINITE
-      err = CHECKFINITE("assemble_film");
-      if (err)
-        return -1;
+        err = CHECKFINITE("assemble_film_1D");
+        if (err)
+          return -1;
 #endif
+      } else {
+        err = assemble_film(time_value, theta, delta_t, xi, exo);
+        GOMA_EH(err, "assemble_film");
+#ifdef CHECK_FINITE
+        err = CHECKFINITE("assemble_film");
+        if (err)
+          return -1;
+#endif
+      }
     } else if ((!(pde[R_SHELL_FILMP])) && pde[R_SHELL_FILMH]) {
       GOMA_EH(-1, "Both SHELL_FILMP and SHELL_FILMH must be activated !");
     } else if (pde[R_SHELL_FILMP] && (!(pde[R_SHELL_FILMH]))) {
@@ -2259,7 +2269,7 @@ Revised:         Summer 1998, SY Tam (UNM)
     }
 
     if (pde[R_TFMP_MASS] && pde[R_TFMP_BOUND]) {
-      err = assemble_shell_tfmp(time_value, theta, delta_t, xi, exo);
+      err = assemble_shell_tfmp(time_value, theta, delta_t, xi, &pg_data, exo);
       GOMA_EH(err, "assemble_shell_tfmp");
 #ifdef CHECK_FINITE
       err = CHECKFINITE("assemble_shell_tfmp");

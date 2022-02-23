@@ -2832,7 +2832,8 @@ static int calc_standard_fields(double **post_proc_vect,
 
   } /* end of LUB_VELO_FIELD_2 */
 
-  if ((LUB_FLUID_SOURCE != -1) && (pd->e[pg->imtrx][R_LUBP])) {
+  if ((LUB_FLUID_SOURCE != -1) &&
+      ((pd->e[pg->imtrx][R_LUBP]) || (pd->e[pg->imtrx][R_SHELL_FILMP] && pd->e[pg->imtrx][R_SHELL_FILMH]))) {
     /* Setup lubrication */
     int *n_dof = NULL;
     int dof_map[MDE];
@@ -2842,7 +2843,7 @@ static int calc_standard_fields(double **post_proc_vect,
 
     /* Post values */
     double LubSourceFlux = 0.0;
-    lubrication_fluid_source(&LubSourceFlux, NULL);
+    lubrication_fluid_source(&LubSourceFlux, NULL, NULL);
 
     local_post[LUB_FLUID_SOURCE] = LubSourceFlux;
     local_lumped[LUB_FLUID_SOURCE] = 1.0;
@@ -2920,15 +2921,28 @@ static int calc_standard_fields(double **post_proc_vect,
 
   if (DISJ_PRESS != -1 && (pd->e[pg->imtrx][R_SHELL_FILMP])) {
 
+    /* Setup lubrication */
+    int *n_dof = NULL;
+    int dof_map[MDE];
+    dbl wt = fv->wt;
+    n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
+    lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+
     double DisjPress;
     double grad_DisjPress[DIM];
     double dgrad_DisjPress_dH1[DIM][MDE], dgrad_DisjPress_dH2[DIM][MDE];
+    double dgrad_DisjPress_dH[DIM][MDE];
 
-    DisjPress = disjoining_pressure_model(fv->sh_fh, fv->grad_sh_fh, grad_DisjPress,
-                                          dgrad_DisjPress_dH1, dgrad_DisjPress_dH2);
+    DisjPress =
+        disjoining_pressure_model(fv->sh_fh, fv->grad_sh_fh, n_dof, dof_map, grad_DisjPress,
+                                  dgrad_DisjPress_dH1, dgrad_DisjPress_dH2, dgrad_DisjPress_dH);
 
     local_post[DISJ_PRESS] = DisjPress;
     local_lumped[DISJ_PRESS] = 1.0;
+
+    /* Cleanup */
+    fv->wt = wt;
+    safe_free((void *)n_dof);
 
   } /* end of DISJ_PRESS */
 
@@ -10505,7 +10519,9 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
     index_post++;
   }
 
-  if (LUB_FLUID_SOURCE != -1 && Num_Var_In_Type[pg->imtrx][R_LUBP]) {
+  if (LUB_FLUID_SOURCE != -1 &&
+      ((Num_Var_In_Type[pg->imtrx][R_LUBP]) ||
+       (Num_Var_In_Type[R_SHELL_FILMP] && Num_Var_In_Type[R_SHELL_FILMH]))) {
     if (LUB_FLUID_SOURCE == 2) {
       GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
     }

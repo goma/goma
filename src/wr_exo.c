@@ -1642,7 +1642,7 @@ void add_info_stamp(Exo_DB *exo) {
   I = (INFO_Record *)smalloc(exo->num_info * sizeof(INFO_Record));
 
   for (i = 0; i < exo->num_info; i++) {
-    I[i] = (char *)calloc((MAX_LINE_LENGTH + 1), sizeof(char));
+    I[i] = (char *)smalloc((MAX_LINE_LENGTH + 1) * sizeof(char));
   }
 
   /*
