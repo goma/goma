@@ -183,6 +183,12 @@ PROTO((double,                   /* Time */
        double xi[DIM],           /* Local stu coordinates */
        const Exo_DB *exo));
 
+EXTERN int assemble_film_1D
+PROTO((double,                   /* Time */
+       double,                   /* theta or tt*/
+       double,                   /* dt */
+       double xi[DIM],           /* Local stu coordinates */
+       const Exo_DB *exo));
 
 EXTERN int assemble_film_particles
 PROTO(( double time,   /* present time value */

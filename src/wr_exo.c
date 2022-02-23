@@ -1313,7 +1313,7 @@ add_info_stamp(Exo_DB *exo)
 
   for ( i=0; i<exo->num_info; i++)
     {
-      I[i] = (char *) smalloc(MAX_LINE_LENGTH*sizeof(char));
+      I[i] = (char *) smalloc((MAX_LINE_LENGTH+1)*sizeof(char));
     }
 
   /*

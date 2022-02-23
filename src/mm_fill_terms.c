@@ -13495,7 +13495,7 @@ if ( pd->v[SHELL_LUB_CURV_2] )
    *           b is the mesh displacement coordinate.
    *           j is the mesh displacement degree of freedom in the current element
    *             (note for SHELL_NORMAL_1 this element refers to the shell element dof)
-   *            
+   *
    */
   if (pd->v[NORMAL1] || pd->v[SHELL_NORMAL1])
     {
@@ -13512,29 +13512,53 @@ if ( pd->v[SHELL_LUB_CURV_2] )
       memset(fv->d_grad_n_dmesh, 0, siz);
       siz = sizeof(double)*DIM*MDE;
       memset(fv->d_div_n_dmesh, 0, siz);
-	  
-      // HKM -> looks good according to d_grad_v_dmesh[][][][]
-      for (p = 0; p < VIM; p++)
-	{
-	  for (q = 0; q < VIM; q++)
+
+      if (v == NORMAL1)
+        {
+         // HKM -> looks good according to d_grad_v_dmesh[][][][]
+         for (p = 0; p < VIM; p++)
 	    {
-	      for (b = 0; b < dim; b++)
+	     for (q = 0; q < VIM; q++)
 	        {
-		  for (j = 0; j < mdofs; j++)
-		    {
-		      for (r = 0; r < dim; r++)
-			{
-			  for (i = 0; i < vdofs; i++)
+	         for (b = 0; b < dim; b++)
+	            {
+		     for (j = 0; j < mdofs; j++)
+		        {
+		         for (r = 0; r < dim; r++)
 			    {
-			      v_ri = *esp->n[r][i];				  
-			      fv->d_grad_n_dmesh[p][q] [b][j] += v_ri * bfv->d_grad_phi_e_dmesh[i][r] [p][q] [b][j];
+			     for (i = 0; i < vdofs; i++)
+			        {
+			         v_ri = *esp->n[r][i];
+			         fv->d_grad_n_dmesh[p][q] [b][j] += v_ri * bfv->d_grad_phi_e_dmesh[i][r] [p][q] [b][j];
+			        }
 			    }
-			}
+		        }
 		    }
-		}
+	        }
 	    }
-	}
-	  
+        }
+
+      else if (v == SHELL_NORMAL1)
+        {
+         for (r = 0; r < dim; r++)
+            {
+             for ( i=0; i<vdofs; i++)
+                {
+                 v_ri = *esp->n[r][i];
+                 for (p = 0; p < VIM; p++)
+                    {
+                     for (b = 0; b < dim; b++)
+                        {
+                         for (j = 0; j < mdofs; j++)
+                            {
+                             fv->d_grad_n_dmesh[p][r] [b][j] += v_ri * bfv->d_grad_phi_dmesh[i][p] [b][j];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
       for (b = 0; b < dim; b++)
 	{
 	  for (j = 0; j < mdofs; j++)
@@ -13546,7 +13570,7 @@ if ( pd->v[SHELL_LUB_CURV_2] )
 	    }
 	}
     }
-  else if (((upd->vp[NORMAL1] != -1) || (upd->vp[SHELL_NORMAL1] != -1)) && (okToZero))
+  else if (((upd->vp[NORMAL1] != -1) && (upd->vp[SHELL_NORMAL1] != -1)) && (okToZero))
     {
       siz = sizeof(double)*DIM*VIM*DIM*MDE;
       memset(fv->d_grad_n_dmesh,0, siz);

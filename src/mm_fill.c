@@ -2103,12 +2103,24 @@ matrix_fill(
 
       if( pde[R_SHELL_FILMP] && pde[R_SHELL_FILMH] )
 	{
-	  err = assemble_film(time_value, theta, delta_t, xi, exo);
-	  EH( err, "assemble_film");
+          if (ei->ielem_dim == 1)
+            {
+	     err = assemble_film_1D(time_value, theta, delta_t, xi, exo);
+	     EH( err, "assemble_film_1D");
 #ifdef CHECK_FINITE
-	  err = CHECKFINITE("assemble_film"); 
-	  if (err) return -1;
+	     err = CHECKFINITE("assemble_film_1D");
+	     if (err) return -1;
 #endif
+            }
+          else
+            {
+	     err = assemble_film(time_value, theta, delta_t, xi, exo);
+	     EH( err, "assemble_film");
+#ifdef CHECK_FINITE
+	     err = CHECKFINITE("assemble_film");
+	     if (err) return -1;
+#endif
+            }
         }
       else if( (!(pde[R_SHELL_FILMP])) && pde[R_SHELL_FILMH] )
 	{

@@ -2314,6 +2314,11 @@ set_interaction_masks(Exo_DB *exo)
 	  v = PRESSURE;
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 
+          v = LUBP;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_FILMP;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+
           v = SHELL_NORMAL1;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           v = SHELL_NORMAL2;
@@ -2382,14 +2387,18 @@ set_interaction_masks(Exo_DB *exo)
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           v = MESH_DISPLACEMENT3;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-                  v = VELOCITY1;
+          v = VELOCITY1;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-              v = VELOCITY2;
+          v = VELOCITY2;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-              v = VELOCITY3;
+          v = VELOCITY3;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-	      v = PRESSURE;
-	      if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+	  v = PRESSURE;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = LUBP;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_FILMP;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           break;
 
 	case R_SHELL_X:
@@ -2807,9 +2816,18 @@ set_interaction_masks(Exo_DB *exo)
           v = SHELL_FILMH;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           v = SHELL_PARTC;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;      
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 	  v = LUBP;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = PRESSURE;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_NORMAL1;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_NORMAL2;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_NORMAL3;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+
 
           break;
 
@@ -2826,6 +2844,13 @@ set_interaction_masks(Exo_DB *exo)
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           v = SHELL_PARTC;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_NORMAL1;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_NORMAL2;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_NORMAL3;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+
           break;
 
 	case R_SHELL_PARTC:

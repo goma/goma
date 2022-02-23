@@ -2720,7 +2720,10 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 
   } /* end of LUB_VELO_FIELD_2 */
 
-  if ( (LUB_FLUID_SOURCE != -1) && (pd->e[R_LUBP] ) ) {
+  if ( (LUB_FLUID_SOURCE != -1) &&
+       ( (pd->e[R_LUBP]) ||
+         (pd->e[R_SHELL_FILMP] && pd->e[R_SHELL_FILMH]))
+     ) {
     /* Setup lubrication */
     int *n_dof = NULL;
     int dof_map[MDE];
@@ -2730,7 +2733,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 
     /* Post values */
     double LubSourceFlux = 0.0;
-    lubrication_fluid_source(&LubSourceFlux, NULL);
+    lubrication_fluid_source(&LubSourceFlux, NULL, NULL);
 
     local_post[LUB_FLUID_SOURCE]   = LubSourceFlux;
     local_lumped[LUB_FLUID_SOURCE] = 1.0;
@@ -2809,16 +2812,29 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   } /* end of PP_LAME_LAMBDA */
 
   if ( DISJ_PRESS != -1 && (pd->e[R_SHELL_FILMP] ) ) {
- 
-      double DisjPress; 
-      double grad_DisjPress[DIM]; 
-      double dgrad_DisjPress_dH1[DIM][MDE], dgrad_DisjPress_dH2[DIM][MDE];
 
-      DisjPress = disjoining_pressure_model(fv->sh_fh, fv->grad_sh_fh,
-                                           grad_DisjPress, dgrad_DisjPress_dH1, dgrad_DisjPress_dH2 );
+      /* Setup lubrication */
+      int *n_dof = NULL;
+      int dof_map[MDE];
+      dbl wt = fv->wt;
+      n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
+      lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+
+      double DisjPress;
+      double grad_DisjPress[DIM];
+      double dgrad_DisjPress_dH1[DIM][MDE], dgrad_DisjPress_dH2[DIM][MDE];
+      double dgrad_DisjPress_dH[DIM][MDE];
+
+      DisjPress = disjoining_pressure_model(fv->sh_fh, fv->grad_sh_fh, n_dof, dof_map,
+                                           grad_DisjPress, dgrad_DisjPress_dH1, dgrad_DisjPress_dH2,
+                                           dgrad_DisjPress_dH);
 
       local_post[DISJ_PRESS] = DisjPress;
       local_lumped[DISJ_PRESS] = 1.0;
+
+      /* Cleanup */
+      fv->wt = wt;
+      safe_free((void *) n_dof);
 
   } /* end of DISJ_PRESS */
 
@@ -11185,7 +11201,10 @@ index_post, index_post_export);
       LUB_VELO_FIELD_2 = -1;
     }
 
-  if (LUB_FLUID_SOURCE != -1  &&  Num_Var_In_Type[R_LUBP] )
+  if ( LUB_FLUID_SOURCE != -1  &&
+      ( (Num_Var_In_Type[R_LUBP]) ||
+        (Num_Var_In_Type[R_SHELL_FILMP] && Num_Var_In_Type[R_SHELL_FILMH]) )
+     )
     {
       if (LUB_FLUID_SOURCE == 2)
         {
