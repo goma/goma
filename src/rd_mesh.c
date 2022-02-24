@@ -187,7 +187,7 @@ int read_mesh_exoII(Exo_DB *exo, Dpi *dpi) {
      */
     uni_dpi(dpi, exo);
   } else {
-    rd_dpi(exo, dpi, ExoFile); /* local extra info for distributed
+    rd_dpi(exo, dpi, ExoFile, true); /* local extra info for distributed
                           processing kept here, too.
                           some of this is stored in EXODUS names,
                           like the element number map, but some

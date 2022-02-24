@@ -49,6 +49,7 @@ extern char Echo_Input_File[MAX_FNL]; /* echo of problem def file  */
 extern int Decompose_Flag;
 
 extern int Decompose_Type;
+extern int Skip_Fix;
 
 extern char *GomaPetscOptions;
 extern int GomaPetscOptionsStrLen;

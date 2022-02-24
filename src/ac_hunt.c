@@ -25,6 +25,7 @@
 #include "ac_hunt.h"
 #include "ac_update_parameter.h"
 #include "az_aztec.h"
+#include "brkfix/fix.h"
 #include "decomp_interface.h"
 #include "dp_comm.h"
 #include "dp_types.h"
@@ -1177,15 +1178,16 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
         fflush(stdout);
     }
 
-    if (step_fix != 0 && nt == step_fix) {
 #ifdef PARALLEL
+    if (step_fix != 0 && nt == step_fix) {
       /* Barrier because fix needs both files to be finished printing
          and fix always occurs on the same timestep as printing */
       MPI_Barrier(MPI_COMM_WORLD);
-#endif
+      fix_output();
       /* Fix step is relative to print step */
       step_fix += cont->fix_freq * cont->print_freq;
     }
+#endif
 
     /*
      * backup old solutions

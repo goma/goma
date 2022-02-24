@@ -24,7 +24,6 @@
 #include "mm_as_structs.h"
 #include "mm_eh.h"
 #include "rf_fem_const.h"
-#include "mm_as_structs.h"
 #include "std.h"
 
 struct elem_side_bc_struct;
@@ -177,12 +176,11 @@ EXTERN int assemble_film(double,                         /* Time */
                          double xi[DIM],                 /* Local stu coordinates */
                          const Exo_DB *exo);
 
-EXTERN int assemble_film_1D
-(double,                   /* Time */
-       double,                   /* theta or tt*/
-       double,                   /* dt */
-       double xi[DIM],           /* Local stu coordinates */
-       const Exo_DB *exo);
+EXTERN int assemble_film_1D(double,         /* Time */
+                            double,         /* theta or tt*/
+                            double,         /* dt */
+                            double xi[DIM], /* Local stu coordinates */
+                            const Exo_DB *exo);
 EXTERN int assemble_film_particles(double time,    /* present time value */
                                    double tt,      /* parameter to vary time integration from
                                                      explicit (tt = 1) to implicit (tt = 0)    */
@@ -297,13 +295,12 @@ EXTERN int assemble_lubrication_power_law(double,          /* Time */
                                           double[DIM],     /* Local stu coords */
                                           const Exo_DB *); /* ExodusII database struct pointer */
 
-EXTERN int
-assemble_shell_tfmp(double time,   /* Time */
-                    double tt,        /* Time stepping parameter */
-                    double delta_t,      /* Time step size */
-                    double xi[DIM],      /* Local stu coordinates */
-                    PG_DATA *pg_data, /* Upwinding data struct */
-                    const Exo_DB *exo);
+EXTERN int assemble_shell_tfmp(double time,      /* Time */
+                               double tt,        /* Time stepping parameter */
+                               double delta_t,   /* Time step size */
+                               double xi[DIM],   /* Local stu coordinates */
+                               PG_DATA *pg_data, /* Upwinding data struct */
+                               const Exo_DB *exo);
 
 EXTERN int assemble_shell_lubrication(double,          /* Time */
                                       double,          /* theta or tt*/

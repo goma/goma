@@ -94,4 +94,9 @@ EXTERN void add_qa_stamp(Exo_DB *); /* exo                                      
 
 EXTERN void add_info_stamp(Exo_DB *); /* exo                                       */
 
+void wr_result_exo(
+    Exo_DB *exo, char *filename, int verbosity, int write_node_vars, int write_elem_vars);
+
+void wr_resetup_exo(Exo_DB *exo, char *filename, int verbosity);
+
 #endif /* GOMA_WR_EXO_H */

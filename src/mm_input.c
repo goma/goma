@@ -772,6 +772,23 @@ void rd_file_specs(FILE *ifp, char *input) {
     ECHO(echo_string, echo_file);
   }
 
+  foundBrkFile = look_for_optional(ifp, "Disable Fix", input, '=');
+  if (foundBrkFile == 1 && Skip_Fix != 1) {
+    (void)read_string(ifp, input, '\n');
+    strip(input);
+    if (strcasecmp(input, "YES") == 0 || strcasecmp(input, "ON") == 0) {
+      Skip_Fix = 0;
+    } else if (strcasecmp(input, "NO") || strcasecmp(input, "OFF") == 0) {
+      Skip_Fix = 1;
+    } else {
+      GOMA_EH(GOMA_ERROR,
+              "Unexpected input for External Decomposition: %s, expected (YES/NO) or (ON/OFF)",
+              input);
+    }
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, "External Decomposition", input);
+    ECHO(echo_string, echo_file);
+  }
+
   /*
    *   look_for Optional Domain mapping file, the usage of the default
    *   will be indicated by the null character string in the name.
@@ -1510,7 +1527,7 @@ void rd_timeint_specs(FILE *ifp, char *input) {
     /* Look for fix frequency */
 
     /* only look for fix frequency in parallel */
-    if (Num_Proc > 1) {
+    if (Num_Proc > 1 && !Skip_Fix) {
       iread = look_for_optional(ifp, "Fix Frequency", input, '=');
       if (iread == 1) {
         tran->fix_freq = read_int(ifp, "Fix Frequency");
@@ -10720,6 +10737,7 @@ void usage(const int exit_flag) {
   fprintf(stdout, "\t-restart FILE, -rest FILE       Read initial guess from FILE.\n");
   fprintf(stdout, "\t-d INT,     -debug INT          Set debug flag to INT.\n");
   fprintf(stdout, "\t-e,         -external_decomp    Use external decomposition.\n");
+  fprintf(stdout, "\t-nf,        -no_fix             Disable fix from running at the end.\n");
   fprintf(stdout, "\t-kway,                          Use KWAY internal decomposition.\n");
   fprintf(stdout, "\t-rcb,                           Use RCB internal decomposition.\n");
   fprintf(stdout, "\t-h,         -help               Print this message.\n");
@@ -11201,6 +11219,11 @@ void translate_command_line(int argc, char *argv[], struct Command_line_command 
         (*nclc)++;
         istr++;
         Decompose_Flag = 0;
+        clc[*nclc]->type = NOECHO;
+      } else if ((strcmp(argv[istr], "-nf") == 0) || (strcmp(argv[istr], "-no_fix")) == 0) {
+        (*nclc)++;
+        istr++;
+        Skip_Fix = 1;
         clc[*nclc]->type = NOECHO;
       } else if (strcmp(argv[istr], "-kway") == 0) {
         (*nclc)++;

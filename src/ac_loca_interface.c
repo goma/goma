@@ -1028,7 +1028,7 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
     /* Open a new ExodusII file */
     if (Num_Proc > 1)
       multiname(loca_in->NV_exoII_outfile, ProcID, Num_Proc);
-    one_base(exo);
+    one_base(exo, Num_Proc);
     wr_mesh_exo(exo, loca_in->NV_exoII_outfile, 0);
     wr_result_prelim_exo(rd, exo, loca_in->NV_exoII_outfile, NULL);
     if (Num_Proc > 1)

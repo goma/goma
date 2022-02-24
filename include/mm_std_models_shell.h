@@ -41,9 +41,7 @@ EXTERN double film_evaporation_model /* mm_std_models_shell.c                */
     (dbl, dbl *, dbl, dbl *);
 
 EXTERN double disjoining_pressure_model /* mm_std_models_shell.c                */
-    (dbl, dbl[DIM],int *,
-       int *,
-       dbl [DIM], dbl[DIM][MDE], dbl[DIM][MDE], dbl[DIM][MDE]);
+    (dbl, dbl[DIM], int *, int *, dbl[DIM], dbl[DIM][MDE], dbl[DIM][MDE], dbl[DIM][MDE]);
 
 EXTERN double diffusion_coefficient_model /* mm_std_models_shell.c                */
     (dbl, dbl *);
@@ -84,8 +82,8 @@ EXTERN void porous_shell_open_source_model(double[MDE],
                                            double[MAX_POR_SHELL][MDE],
                                            double[MAX_POR_SHELL][MDE]);
 
-EXTERN int lubrication_fluid_source(double *,                       /* Flux */
+EXTERN int lubrication_fluid_source(double *,                        /* Flux */
                                     double[MAX_VARIABLE_TYPES][MDE], /* Flux sensitivities */
-int *                             /* Array containing numbers of DOF*/
-     );
+                                    int * /* Array containing numbers of DOF*/
+);
 #endif /* GOMA_MM_STD_MODELS_H */

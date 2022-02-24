@@ -157,7 +157,7 @@ int rd_image_to_mesh(int N_ext, Exo_DB *exo) {
   */
 
   if (first_time_fopen) {
-    one_base(exo);
+    one_base(exo, Num_Proc);
     wr_mesh_exo(exo, outfile, 0);
     zero_base(exo);
     first_time_fopen = FALSE;

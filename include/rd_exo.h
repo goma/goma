@@ -41,7 +41,7 @@ EXTERN int free_exo(Exo_DB *); /* pointer to EXODUS II FE db structure */
 
 EXTERN void zero_base(Exo_DB *);
 
-EXTERN void one_base(Exo_DB *);
+EXTERN void one_base(Exo_DB *E, int num_proc);
 
 EXTERN int fence_post /* rd_exo.c                                  */
     (const int,       /* val    - integer whose category we seek   */

@@ -2835,7 +2835,8 @@ static int calc_standard_fields(double **post_proc_vect,
   } /* end of LUB_VELO_FIELD_2 */
 
   if ((LUB_FLUID_SOURCE != -1) &&
-      ((pd->e[pg->imtrx][R_LUBP]) || (pd->e[pg->imtrx][R_SHELL_FILMP] && pd->e[pg->imtrx][R_SHELL_FILMH]))) {
+      ((pd->e[pg->imtrx][R_LUBP]) ||
+       (pd->e[pg->imtrx][R_SHELL_FILMP] && pd->e[pg->imtrx][R_SHELL_FILMH]))) {
     /* Setup lubrication */
     int *n_dof = NULL;
     int dof_map[MDE];

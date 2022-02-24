@@ -175,7 +175,7 @@ int rd_image_to_mesh2(int N_ext, Exo_DB *exo) {
      been done This is the file we will write out the new fields to for future use as fields */
 
   if (first_time_fopen2) {
-    one_base(exo);
+    one_base(exo, Num_Proc);
     wr_mesh_exo(exo, exooutfilename, 0);
     zero_base(exo);
 

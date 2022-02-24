@@ -1298,7 +1298,9 @@ int free_exo(Exo_DB *x) /* pointer to EXODUS II FE db structure */
   free(x->elem_var_tab);
   free(x->ghost_node_to_base);
   for (int i = 0; i < x->num_elem_blocks; i++) {
-    free(x->eb_ghost_elem_to_base[i]);
+    if (x->eb_ghost_elem_to_base) {
+      free(x->eb_ghost_elem_to_base[i]);
+    }
   }
   free(x->eb_ghost_elem_to_base);
   free_base_mesh(x);
@@ -1494,7 +1496,7 @@ static void zero_base_base_mesh(Exo_DB *exo) {
  * Revised:
  */
 
-void one_base(Exo_DB *E) {
+void one_base(Exo_DB *E, int num_proc) {
   int eb;
   int i, j, l;
   int length_conn;
@@ -1574,7 +1576,7 @@ void one_base(Exo_DB *E) {
       (E->elem_map[i])++;
     }
   }
-  if (Num_Proc > 1) {
+  if (num_proc > 1) {
     one_base_base_mesh(E);
   } else {
     struct Exodus_Base *base = E->base_mesh;

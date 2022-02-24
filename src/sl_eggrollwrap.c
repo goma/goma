@@ -293,7 +293,7 @@ void eggrollwrap(int *istuff, /* info for eigenvalue extraction */
                 save_ExoFileOut);
 
       /* Replicate basic mesh info */
-      one_base(exo);
+      one_base(exo, Num_Proc);
       wr_mesh_exo(exo, ExoFileOut, 0);
       zero_base(exo);
       wr_result_prelim_exo(rd, exo, ExoFileOut, gvec_elem);

@@ -49,6 +49,7 @@ extern void handle_ieee(void);
 #ifdef GOMA_HAVE_METIS
 #include "metis_decomp.h"
 #endif
+#include "brkfix/fix.h"
 #include "mm_as.h"
 #include "mm_as_alloc.h"
 #include "mm_as_structs.h"
@@ -107,6 +108,7 @@ char Echo_Input_File[MAX_FNL] = "\0"; /* echo of problem def file  */
 
 int Decompose_Flag = 1;
 int Decompose_Type = 0;
+int Skip_Fix = 0;
 
 char *GomaPetscOptions = NULL;
 int GomaPetscOptionsStrLen = 0;
@@ -785,7 +787,7 @@ int main(int argc, char **argv)
      * mesh to be 1-based. After writing, return to the 0 based indexing
      * that is more convenient in C.
      */
-    one_base(EXO_ptr);
+    one_base(EXO_ptr, Num_Proc);
     wr_mesh_exo(EXO_ptr, ExoFileOut, 0);
     zero_base(EXO_ptr);
 
@@ -871,6 +873,8 @@ int main(int argc, char **argv)
 #ifdef PARALLEL
   MPI_Barrier(MPI_COMM_WORLD);
 #endif
+
+  fix_output();
 
   /***********************************************************************/
   /***********************************************************************/

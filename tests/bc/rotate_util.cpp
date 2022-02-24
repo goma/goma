@@ -293,7 +293,7 @@ TEST_CASE("goma_best_coordinate_system_3D 1 normal", "[bc][automatic_rotations]"
   double mn3[3] = {0.0, 0.0, -1.0};
   helper_set_normal_from_vector(normals[0], mn3);
 
-  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord,&type);
+  error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
   REQUIRE(error != GOMA_ERROR);
 
   REQUIRE(helper_coordinate_is_coordinate_system(rotated_coord));

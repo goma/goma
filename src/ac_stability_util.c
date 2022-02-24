@@ -804,7 +804,7 @@ int create_eigen_outfiles(Exo_DB *exo,
 
       /* Now, open a new ExodusII file with this composite name
          and initialize with basic mesh information */
-      one_base(exo);
+      one_base(exo, Num_Proc);
       wr_mesh_exo(exo, fname, 0);
       wr_result_prelim_exo(rd, exo, fname, gvec_elem);
       if (Num_Proc > 1)

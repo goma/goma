@@ -30,6 +30,7 @@
 #include "ac_particles.h"
 #include "ac_stability_util.h"
 #include "az_aztec.h"
+#include "brkfix/fix.h"
 #include "decomp_interface.h"
 #include "dp_comm.h"
 #include "dp_types.h"
@@ -2109,15 +2110,16 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
         evpl_glob[0]->update_flag = 1;
 
         /* Fix output if current time step matches frequency */
-        if ((step_fix != 0 && nt == step_fix) || ((i_fix == 1) && (tran->fix_freq > 0))) {
 #ifdef PARALLEL
+        if ((step_fix != 0 && nt == step_fix) || ((i_fix == 1) && (tran->fix_freq > 0))) {
           /* Barrier because fix needs both files to be finished printing
              and fix always occurs on the same timestep as printing */
           MPI_Barrier(MPI_COMM_WORLD);
-#endif
+          fix_output();
           /* Fix step is relative to print step */
           step_fix += tran->fix_freq * tran->print_freq;
         }
+#endif
         /*
          * Adjust the time step if the new time will be larger than the
          * next printing time.
@@ -2990,7 +2992,7 @@ int anneal_mesh(double x[],
   if (Num_Proc > 1)
     multiname(afilename, ProcID, Num_Proc);
 
-  one_base(exo); /* cause node numbers, etc. to start at 1 */
+  one_base(exo, Num_Proc); /* cause node numbers, etc. to start at 1 */
 
   wr_mesh_exo(exo, afilename, 0);
 

@@ -48,7 +48,7 @@
     }                                                                 \
   } while (0)
 
-int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
+int rd_dpi(Exo_DB *exo, Dpi *d, char *fn, bool parallel_call) {
   init_dpi_struct(d);
   float version = -4.98; /* initialize. ex_open() changes this. */
   int comp_wordsize = sizeof(dbl);
@@ -197,86 +197,93 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
     }
   }
 
-  int *local_ss_internal = find_ss_internal_boundary(exo);
-  int *global_ss_internal = calloc(d->num_side_sets_global, sizeof(int));
-  d->ss_internal_global = calloc(d->num_side_sets_global, sizeof(int));
-
-  for (int i = 0; i < exo->num_side_sets; i++) {
-    int global_ss_index = d->ss_index_global[i];
-    global_ss_internal[global_ss_index] = local_ss_internal[i];
-  }
+  int *local_ss_internal = NULL;
+  int *global_ss_internal = NULL;
+  d->ss_internal_global = NULL;
 
   if (d->num_side_sets_global > 0) {
-    d->ss_block_index_global = calloc(d->num_side_sets_global + 1, sizeof(int));
-    d->ss_block_list_global =
-        calloc(d->num_elem_blocks_global * d->num_side_sets_global, sizeof(int));
-    int *ss_block_count_proc =
-        calloc(d->num_elem_blocks_global * d->num_side_sets_global, sizeof(int));
-    int *ss_block_count_global =
-        calloc(d->num_elem_blocks_global * d->num_side_sets_global, sizeof(int));
+    if (parallel_call) {
+      local_ss_internal = find_ss_internal_boundary(exo);
+      global_ss_internal = calloc(d->num_side_sets_global, sizeof(int));
+      d->ss_internal_global = calloc(d->num_side_sets_global, sizeof(int));
 
-    for (int ss_id = 0; ss_id < exo->num_side_sets; ss_id++) {
-      for (int elem_index = exo->ss_elem_index[ss_id];
-           elem_index < (exo->ss_elem_index[ss_id] + exo->ss_num_sides[ss_id]); elem_index++) {
-        int elem = exo->ss_elem_list[elem_index];
-        int block = find_elemblock_index(elem, exo);
-        if (block == -1) {
-          GOMA_EH(GOMA_ERROR, "Element block not found ss_block_list");
-        }
-        for (int j = 0; j < d->num_elem_blocks_global; j++) {
-          if (d->eb_id_global[j] == exo->eb_id[block]) {
-            ss_block_count_proc[ss_id * d->num_elem_blocks_global + j] = 1;
+      for (int i = 0; i < exo->num_side_sets; i++) {
+        int global_ss_index = d->ss_index_global[i];
+        global_ss_internal[global_ss_index] = local_ss_internal[i];
+      }
+
+      d->ss_block_index_global = calloc(d->num_side_sets_global + 1, sizeof(int));
+      d->ss_block_list_global =
+          calloc(d->num_elem_blocks_global * d->num_side_sets_global, sizeof(int));
+      int *ss_block_count_proc =
+          calloc(d->num_elem_blocks_global * d->num_side_sets_global, sizeof(int));
+      int *ss_block_count_global =
+          calloc(d->num_elem_blocks_global * d->num_side_sets_global, sizeof(int));
+
+      for (int ss_id = 0; ss_id < exo->num_side_sets; ss_id++) {
+        for (int elem_index = exo->ss_elem_index[ss_id];
+             elem_index < (exo->ss_elem_index[ss_id] + exo->ss_num_sides[ss_id]); elem_index++) {
+          int elem = exo->ss_elem_list[elem_index];
+          int block = find_elemblock_index(elem, exo);
+          if (block == -1) {
+            GOMA_EH(GOMA_ERROR, "Element block not found ss_block_list");
+          }
+          for (int j = 0; j < d->num_elem_blocks_global; j++) {
+            if (d->eb_id_global[j] == exo->eb_id[block]) {
+              ss_block_count_proc[ss_id * d->num_elem_blocks_global + j] = 1;
+            }
           }
         }
       }
-    }
 
-    MPI_Allreduce(ss_block_count_proc, ss_block_count_global,
-                  d->num_elem_blocks_global * d->num_side_sets_global, MPI_INT, MPI_MAX,
-                  MPI_COMM_WORLD);
+      MPI_Allreduce(ss_block_count_proc, ss_block_count_global,
+                    d->num_elem_blocks_global * d->num_side_sets_global, MPI_INT, MPI_MAX,
+                    MPI_COMM_WORLD);
 
-    int ss_block_index = 0;
-    for (int ss_id = 0; ss_id < d->num_side_sets_global; ss_id++) {
-      int ss_start = ss_block_index;
-      for (int j = 0; j < d->num_elem_blocks_global; j++) {
-        int offset = ss_id * d->num_elem_blocks_global + j;
-        if (ss_block_count_global[offset] > 0) {
-          d->ss_block_list_global[ss_block_index] = j;
-          ss_block_index++;
+      int ss_block_index = 0;
+      for (int ss_id = 0; ss_id < d->num_side_sets_global; ss_id++) {
+        int ss_start = ss_block_index;
+        for (int j = 0; j < d->num_elem_blocks_global; j++) {
+          int offset = ss_id * d->num_elem_blocks_global + j;
+          if (ss_block_count_global[offset] > 0) {
+            d->ss_block_list_global[ss_block_index] = j;
+            ss_block_index++;
+          }
         }
+        d->ss_block_index_global[ss_id] = ss_start;
+        d->ss_block_index_global[ss_id + 1] = ss_block_index;
       }
-      d->ss_block_index_global[ss_id] = ss_start;
-      d->ss_block_index_global[ss_id + 1] = ss_block_index;
+
+      free(ss_block_count_proc);
+      free(ss_block_count_global);
     }
-
-    free(ss_block_count_proc);
-    free(ss_block_count_global);
-
-    d->elem_owner = alloc_int_1(exo->num_elems, ProcID);
   }
+  d->elem_owner = alloc_int_1(exo->num_elems, ProcID);
 
-  const int num_mpi_async = 2;
-  MPI_Request request_array[2];
+  if (parallel_call) {
+    const int num_mpi_async = 2;
+    MPI_Request request_array[2];
 
-  MPI_Iallreduce(eb_num_nodes_local, d->eb_num_nodes_per_elem_global, d->num_elem_blocks_global,
-                 MPI_INT, MPI_MAX, MPI_COMM_WORLD, &(request_array[0]));
+    MPI_Iallreduce(eb_num_nodes_local, d->eb_num_nodes_per_elem_global, d->num_elem_blocks_global,
+                   MPI_INT, MPI_MAX, MPI_COMM_WORLD, &(request_array[0]));
 
-  MPI_Iallreduce(global_ss_internal, d->ss_internal_global, d->num_side_sets_global, MPI_INT,
-                 MPI_MAX, MPI_COMM_WORLD, &(request_array[1]));
+    MPI_Iallreduce(global_ss_internal, d->ss_internal_global, d->num_side_sets_global, MPI_INT,
+                   MPI_MAX, MPI_COMM_WORLD, &(request_array[1]));
 
-  MPI_Waitall(num_mpi_async, request_array, MPI_STATUSES_IGNORE);
+    MPI_Waitall(num_mpi_async, request_array, MPI_STATUSES_IGNORE);
 
+    free(local_ss_internal);
+    free(global_ss_internal);
+    ex_error = ex_close(exoid);
+    CHECK_EX_ERROR(ex_error, "ex_close");
+
+    int min_external;
+    MPI_Allreduce(&d->num_external_nodes, &min_external, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
+    if (min_external > 0) {
+      GOMA_EH(-1, "Found > 0 external nodes, use element decomposition");
+    }
+  }
   free(eb_num_nodes_local);
-  free(local_ss_internal);
-  free(global_ss_internal);
-  ex_error = ex_close(exoid);
-  CHECK_EX_ERROR(ex_error, "ex_close");
-
-  int min_external;
-  MPI_Allreduce(&d->num_external_nodes, &min_external, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
-  if (min_external > 0) {
-    GOMA_EH(-1, "Found > 0 external nodes, use element decomposition");
-  }
 
   d->num_universe_nodes = d->num_internal_nodes + d->num_boundary_nodes + d->num_external_nodes;
 
@@ -290,243 +297,247 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
   zero_dpi(d);
 
   // setup node owners
-  d->num_neighbors = d->num_node_cmaps;
-  d->neighbor = alloc_int_1(d->num_neighbors, -1);
-  d->node_owner = alloc_int_1(exo->num_nodes, ProcID);
-  d->num_node_recv = alloc_int_1(d->num_neighbors, 0);
-  d->num_node_send = alloc_int_1(d->num_neighbors, 0);
-  for (int i = 0; i < d->num_node_cmaps; i++) {
-    int neighbor = d->node_map_proc_ids[i][0];
-    for (int j = 0; j < d->node_cmap_node_counts[i]; j++) {
-      if (neighbor != d->node_map_proc_ids[i][j]) {
-        GOMA_EH(GOMA_ERROR, "Unexpected proc id in node map proc ids");
-      }
-      if (neighbor < d->node_owner[d->node_map_node_ids[i][j]]) {
-        d->node_owner[d->node_map_node_ids[i][j]] = neighbor;
-        d->num_node_recv[i]++;
-      }
-    }
-    d->neighbor[i] = neighbor;
-  }
-
-  int elem_offset = 0;
-  for (int i = 0; i < exo->num_elem_blocks; i++) {
-    for (int j = 0; j < exo->eb_num_elems[i]; j++) {
-      int min_proc = ProcID;
-      int nnode_per_elem = exo->eb_num_nodes_per_elem[i];
-      for (int k = 0; k < nnode_per_elem; k++) {
-        int local_node = exo->eb_conn[i][j * nnode_per_elem + k];
-        int proc = d->node_owner[local_node];
-        if (proc < min_proc) {
-          min_proc = proc;
+  if (parallel_call) {
+    d->num_neighbors = d->num_node_cmaps;
+    d->neighbor = alloc_int_1(d->num_neighbors, -1);
+    d->node_owner = alloc_int_1(exo->num_nodes, ProcID);
+    d->num_node_recv = alloc_int_1(d->num_neighbors, 0);
+    d->num_node_send = alloc_int_1(d->num_neighbors, 0);
+    for (int i = 0; i < d->num_node_cmaps; i++) {
+      int neighbor = d->node_map_proc_ids[i][0];
+      for (int j = 0; j < d->node_cmap_node_counts[i]; j++) {
+        if (neighbor != d->node_map_proc_ids[i][j]) {
+          GOMA_EH(GOMA_ERROR, "Unexpected proc id in node map proc ids");
+        }
+        if (neighbor < d->node_owner[d->node_map_node_ids[i][j]]) {
+          d->node_owner[d->node_map_node_ids[i][j]] = neighbor;
+          d->num_node_recv[i]++;
         }
       }
-      d->elem_owner[elem_offset] = min_proc;
-      elem_offset++;
+      d->neighbor[i] = neighbor;
     }
-  }
 
-  goma_error err = generate_ghost_elems(exo, d);
-  GOMA_EH(err, "generate_ghost_elements");
-
-  int *num_send_nodes = alloc_int_1(d->num_neighbors, 0);
-  int **global_send_nodes = malloc(sizeof(int *) * d->num_neighbors);
-  int *num_recv_nodes = alloc_int_1(d->num_neighbors, 0);
-  int **global_recv_nodes = malloc(sizeof(int *) * d->num_neighbors);
-
-  MPI_Request *requests = calloc(sizeof(MPI_Request), 2 * d->num_neighbors);
-
-  for (int i = 0; i < d->num_neighbors; i++) {
-    MPI_Irecv(&num_send_nodes[i], 1, MPI_INT, d->neighbor[i], 206, MPI_COMM_WORLD,
-              &requests[d->num_neighbors + i]);
-    // printf("Proc %d recv from Proc %d tag %d", d->neighbor[i], ProcID, 206);
-  }
-  for (int i = 0; i < d->num_neighbors; i++) {
-    num_recv_nodes[i] = 0;
-    for (int j = 0; j < d->num_external_nodes; j++) {
-      if (d->node_owner[d->num_internal_nodes + d->num_boundary_nodes + j] == d->neighbor[i]) {
-        num_recv_nodes[i] += 1;
+    int elem_offset = 0;
+    for (int i = 0; i < exo->num_elem_blocks; i++) {
+      for (int j = 0; j < exo->eb_num_elems[i]; j++) {
+        int min_proc = ProcID;
+        int nnode_per_elem = exo->eb_num_nodes_per_elem[i];
+        for (int k = 0; k < nnode_per_elem; k++) {
+          int local_node = exo->eb_conn[i][j * nnode_per_elem + k];
+          int proc = d->node_owner[local_node];
+          if (proc < min_proc) {
+            min_proc = proc;
+          }
+        }
+        d->elem_owner[elem_offset] = min_proc;
+        elem_offset++;
       }
     }
-    MPI_Isend(&num_recv_nodes[i], 1, MPI_INT, d->neighbor[i], 206, MPI_COMM_WORLD, &requests[i]);
-    // printf("Proc %d sending to Proc %d tag %d", ProcID, d->neighbor[i], 206);
-  }
 
-  MPI_Waitall(d->num_neighbors * 2, requests, MPI_STATUSES_IGNORE);
+    goma_error err = generate_ghost_elems(exo, d);
+    GOMA_EH(err, "generate_ghost_elements");
 
-  for (int i = 0; i < d->num_neighbors; i++) {
-    global_send_nodes[i] = malloc(sizeof(int) * num_send_nodes[i]);
-    MPI_Irecv(global_send_nodes[i], num_send_nodes[i], MPI_INT, d->neighbor[i], 207, MPI_COMM_WORLD,
-              &requests[d->num_neighbors + i]);
-    // printf("Proc %d recv from Proc %d tag %d", d->neighbor[i], ProcID, 207);
-  }
+    int *num_send_nodes = alloc_int_1(d->num_neighbors, 0);
+    int **global_send_nodes = malloc(sizeof(int *) * d->num_neighbors);
+    int *num_recv_nodes = alloc_int_1(d->num_neighbors, 0);
+    int **global_recv_nodes = malloc(sizeof(int *) * d->num_neighbors);
 
-  for (int i = 0; i < d->num_neighbors; i++) {
-    global_recv_nodes[i] = malloc(sizeof(int) * num_recv_nodes[i]);
-    int recv_index = 0;
-    for (int j = 0; j < d->num_external_nodes; j++) {
-      int local_node = d->num_internal_nodes + d->num_boundary_nodes + j;
-      if (d->node_owner[local_node] == d->neighbor[i]) {
-        global_recv_nodes[i][recv_index++] = d->node_index_global[local_node];
+    MPI_Request *requests = calloc(sizeof(MPI_Request), 2 * d->num_neighbors);
+
+    for (int i = 0; i < d->num_neighbors; i++) {
+      MPI_Irecv(&num_send_nodes[i], 1, MPI_INT, d->neighbor[i], 206, MPI_COMM_WORLD,
+                &requests[d->num_neighbors + i]);
+      // printf("Proc %d recv from Proc %d tag %d", d->neighbor[i], ProcID, 206);
+    }
+    for (int i = 0; i < d->num_neighbors; i++) {
+      num_recv_nodes[i] = 0;
+      for (int j = 0; j < d->num_external_nodes; j++) {
+        if (d->node_owner[d->num_internal_nodes + d->num_boundary_nodes + j] == d->neighbor[i]) {
+          num_recv_nodes[i] += 1;
+        }
+      }
+      MPI_Isend(&num_recv_nodes[i], 1, MPI_INT, d->neighbor[i], 206, MPI_COMM_WORLD, &requests[i]);
+      // printf("Proc %d sending to Proc %d tag %d", ProcID, d->neighbor[i], 206);
+    }
+
+    MPI_Waitall(d->num_neighbors * 2, requests, MPI_STATUSES_IGNORE);
+
+    for (int i = 0; i < d->num_neighbors; i++) {
+      global_send_nodes[i] = malloc(sizeof(int) * num_send_nodes[i]);
+      MPI_Irecv(global_send_nodes[i], num_send_nodes[i], MPI_INT, d->neighbor[i], 207,
+                MPI_COMM_WORLD, &requests[d->num_neighbors + i]);
+      // printf("Proc %d recv from Proc %d tag %d", d->neighbor[i], ProcID, 207);
+    }
+
+    for (int i = 0; i < d->num_neighbors; i++) {
+      global_recv_nodes[i] = malloc(sizeof(int) * num_recv_nodes[i]);
+      int recv_index = 0;
+      for (int j = 0; j < d->num_external_nodes; j++) {
+        int local_node = d->num_internal_nodes + d->num_boundary_nodes + j;
+        if (d->node_owner[local_node] == d->neighbor[i]) {
+          global_recv_nodes[i][recv_index++] = d->node_index_global[local_node];
+        }
+      }
+      MPI_Isend(global_recv_nodes[i], num_recv_nodes[i], MPI_INT, d->neighbor[i], 207,
+                MPI_COMM_WORLD, &requests[i]);
+      // printf("Proc %d sending to Proc %d tag %d", ProcID, d->neighbor[i], 207);
+    }
+
+    MPI_Waitall(d->num_neighbors * 2, requests, MPI_STATUSES_IGNORE);
+    free(requests);
+
+    // verify we have the send nodes
+    for (int i = 0; i < d->num_neighbors; i++) {
+      for (int j = 0; j < num_send_nodes[i]; j++) {
+        int exists = in_list(global_send_nodes[i][j], d->num_internal_nodes,
+                             d->num_internal_nodes + d->num_boundary_nodes, d->node_index_global);
+        if (exists == -1) {
+          GOMA_EH(GOMA_ERROR, "Required node to communicate doesn't exist in border nodes");
+        }
       }
     }
-    MPI_Isend(global_recv_nodes[i], num_recv_nodes[i], MPI_INT, d->neighbor[i], 207, MPI_COMM_WORLD,
-              &requests[i]);
-    // printf("Proc %d sending to Proc %d tag %d", ProcID, d->neighbor[i], 207);
-  }
-
-  MPI_Waitall(d->num_neighbors * 2, requests, MPI_STATUSES_IGNORE);
-  free(requests);
-
-  // verify we have the send nodes
-  for (int i = 0; i < d->num_neighbors; i++) {
-    for (int j = 0; j < num_send_nodes[i]; j++) {
-      int exists = in_list(global_send_nodes[i][j], d->num_internal_nodes,
-                           d->num_internal_nodes + d->num_boundary_nodes, d->node_index_global);
-      if (exists == -1) {
-        GOMA_EH(GOMA_ERROR, "Required node to communicate doesn't exist in border nodes");
-      }
-    }
-  }
 
 #ifdef DEBUG_MPI
 
-  int *global_owners_min = alloc_int_1(d->num_nodes_global, Num_Proc + 1);
-  int *global_owners_max = alloc_int_1(d->num_nodes_global, -1);
-  int *all_global_owners_min = alloc_int_1(d->num_nodes_global, Num_Proc + 1);
-  int *all_global_owners_max = alloc_int_1(d->num_nodes_global, -1);
-  for (int i = 0; i < exo->num_nodes; i++) {
-    int gindex = d->node_index_global[i];
-    int owner = d->node_owner[i];
-    global_owners_max[gindex] = owner;
-    global_owners_min[gindex] = owner;
-  }
-
-  MPI_Allreduce(global_owners_min, all_global_owners_min, d->num_nodes_global, MPI_INT, MPI_MIN,
-                MPI_COMM_WORLD);
-  MPI_Allreduce(global_owners_max, all_global_owners_max, d->num_nodes_global, MPI_INT, MPI_MAX,
-                MPI_COMM_WORLD);
-
-  for (int i = 0; i < d->num_nodes_global; i++) {
-    if (all_global_owners_min[i] != all_global_owners_max[i]) {
-      GOMA_EH(GOMA_ERROR, "Inconsistent node owners");
+    int *global_owners_min = alloc_int_1(d->num_nodes_global, Num_Proc + 1);
+    int *global_owners_max = alloc_int_1(d->num_nodes_global, -1);
+    int *all_global_owners_min = alloc_int_1(d->num_nodes_global, Num_Proc + 1);
+    int *all_global_owners_max = alloc_int_1(d->num_nodes_global, -1);
+    for (int i = 0; i < exo->num_nodes; i++) {
+      int gindex = d->node_index_global[i];
+      int owner = d->node_owner[i];
+      global_owners_max[gindex] = owner;
+      global_owners_min[gindex] = owner;
     }
-  }
-  free(global_owners_min);
-  free(global_owners_max);
-  free(all_global_owners_max);
-  free(all_global_owners_min);
+
+    MPI_Allreduce(global_owners_min, all_global_owners_min, d->num_nodes_global, MPI_INT, MPI_MIN,
+                  MPI_COMM_WORLD);
+    MPI_Allreduce(global_owners_max, all_global_owners_max, d->num_nodes_global, MPI_INT, MPI_MAX,
+                  MPI_COMM_WORLD);
+
+    for (int i = 0; i < d->num_nodes_global; i++) {
+      if (all_global_owners_min[i] != all_global_owners_max[i]) {
+        GOMA_EH(GOMA_ERROR, "Inconsistent node owners");
+      }
+    }
+    free(global_owners_min);
+    free(global_owners_max);
+    free(all_global_owners_max);
+    free(all_global_owners_min);
 
 #endif
 
-  // reorder external nodes
-  int *new_external_node_order = alloc_int_1(d->num_external_nodes, 0);
-  int *old_to_new_external_node_order = alloc_int_1(d->num_external_nodes, 0);
-  int *old_node_owner = alloc_int_1(d->num_external_nodes, 0);
-  int new_index = 0;
-  int offset = d->num_internal_nodes + d->num_boundary_nodes;
-  for (int j = 0; j < d->num_neighbors; j++) {
-    int neighbor = d->neighbor[j];
-    for (int i = 0; i < d->num_external_nodes; i++) {
-      old_node_owner[i] = d->node_owner[i + offset];
-      if (d->node_owner[d->num_internal_nodes + d->num_boundary_nodes + i] == neighbor) {
-        new_external_node_order[new_index] = i;
-        old_to_new_external_node_order[i] = new_index;
-        new_index++;
-      }
-    }
-  }
-  if (new_index != d->num_external_nodes) {
-    GOMA_EH(GOMA_ERROR, "incorrect new ordering %d != %d", new_index, d->num_external_nodes);
-  }
-
-  // node index global
-  int *old_global_indices = alloc_int_1(d->num_external_nodes, 0);
-  for (int i = 0; i < d->num_external_nodes; i++) {
-    old_global_indices[i] = d->node_index_global[d->num_internal_nodes + d->num_boundary_nodes + i];
-  }
-  for (int i = 0; i < d->num_external_nodes; i++) {
-    d->node_index_global[d->num_internal_nodes + d->num_boundary_nodes + i] =
-        old_global_indices[new_external_node_order[i]];
-  }
-  free(old_global_indices);
-  double *x_old = alloc_dbl_1(d->num_external_nodes, 0);
-  double *y_old = alloc_dbl_1(d->num_external_nodes, 0);
-  double *z_old = alloc_dbl_1(d->num_external_nodes, 0);
-  for (int i = 0; i < d->num_external_nodes; i++) {
-    x_old[i] = exo->x_coord[offset + i];
-    if (exo->num_dim > 1) {
-      y_old[i] = exo->y_coord[offset + i];
-    }
-    if (exo->num_dim > 2) {
-      z_old[i] = exo->z_coord[offset + i];
-    }
-  }
-  for (int i = 0; i < d->num_external_nodes; i++) {
-    exo->x_coord[offset + i] = x_old[new_external_node_order[i]];
-    if (exo->num_dim > 1) {
-      exo->y_coord[offset + i] = y_old[new_external_node_order[i]];
-    }
-    if (exo->num_dim > 2) {
-      exo->z_coord[offset + i] = z_old[new_external_node_order[i]];
-    }
-  }
-  free(x_old);
-  free(y_old);
-  free(z_old);
-
-  // conn
-  for (int block = 0; block < exo->num_elem_blocks; block++) {
-    int num_nodes_per_blk = exo->eb_num_nodes_per_elem[block] * exo->eb_num_elems[block];
-    for (int i = 0; i < num_nodes_per_blk; i++) {
-      if (exo->eb_conn[block][i] >= offset) {
-        exo->eb_conn[block][i] =
-            old_to_new_external_node_order[exo->eb_conn[block][i] - offset] + offset;
-      }
-    }
-  }
-
-  // ns
-  for (int j = 0; j < exo->ns_node_len; j++) {
-    if (exo->ns_node_list[j] >= offset) {
-      exo->ns_node_list[j] = old_to_new_external_node_order[exo->ns_node_list[j] - offset] + offset;
-    }
-  }
-
-  // ss
-  for (int ins = 0; ins < exo->num_side_sets; ins++) {
-    for (int side_index = 0; side_index < exo->ss_num_sides[ins]; side_index++) {
-      for (int lni = exo->ss_node_side_index[ins][side_index];
-           lni < exo->ss_node_side_index[ins][side_index + 1]; lni++) {
-        int inode = exo->ss_node_list[ins][lni];
-        if (inode >= offset) {
-          exo->ss_node_list[ins][lni] = old_to_new_external_node_order[inode - offset] + offset;
+    // reorder external nodes
+    int *new_external_node_order = alloc_int_1(d->num_external_nodes, 0);
+    int *old_to_new_external_node_order = alloc_int_1(d->num_external_nodes, 0);
+    int *old_node_owner = alloc_int_1(d->num_external_nodes, 0);
+    int new_index = 0;
+    int offset = d->num_internal_nodes + d->num_boundary_nodes;
+    for (int j = 0; j < d->num_neighbors; j++) {
+      int neighbor = d->neighbor[j];
+      for (int i = 0; i < d->num_external_nodes; i++) {
+        old_node_owner[i] = d->node_owner[i + offset];
+        if (d->node_owner[d->num_internal_nodes + d->num_boundary_nodes + i] == neighbor) {
+          new_external_node_order[new_index] = i;
+          old_to_new_external_node_order[i] = new_index;
+          new_index++;
         }
       }
     }
-  }
+    if (new_index != d->num_external_nodes) {
+      GOMA_EH(GOMA_ERROR, "incorrect new ordering %d != %d", new_index, d->num_external_nodes);
+    }
 
-  // update node owners
-  for (int i = 0; i < d->num_external_nodes; i++) {
-    d->node_owner[offset + old_to_new_external_node_order[i]] = old_node_owner[i];
-  }
+    // node index global
+    int *old_global_indices = alloc_int_1(d->num_external_nodes, 0);
+    for (int i = 0; i < d->num_external_nodes; i++) {
+      old_global_indices[i] =
+          d->node_index_global[d->num_internal_nodes + d->num_boundary_nodes + i];
+    }
+    for (int i = 0; i < d->num_external_nodes; i++) {
+      d->node_index_global[d->num_internal_nodes + d->num_boundary_nodes + i] =
+          old_global_indices[new_external_node_order[i]];
+    }
+    free(old_global_indices);
+    double *x_old = alloc_dbl_1(d->num_external_nodes, 0);
+    double *y_old = alloc_dbl_1(d->num_external_nodes, 0);
+    double *z_old = alloc_dbl_1(d->num_external_nodes, 0);
+    for (int i = 0; i < d->num_external_nodes; i++) {
+      x_old[i] = exo->x_coord[offset + i];
+      if (exo->num_dim > 1) {
+        y_old[i] = exo->y_coord[offset + i];
+      }
+      if (exo->num_dim > 2) {
+        z_old[i] = exo->z_coord[offset + i];
+      }
+    }
+    for (int i = 0; i < d->num_external_nodes; i++) {
+      exo->x_coord[offset + i] = x_old[new_external_node_order[i]];
+      if (exo->num_dim > 1) {
+        exo->y_coord[offset + i] = y_old[new_external_node_order[i]];
+      }
+      if (exo->num_dim > 2) {
+        exo->z_coord[offset + i] = z_old[new_external_node_order[i]];
+      }
+    }
+    free(x_old);
+    free(y_old);
+    free(z_old);
 
-  // setup indexing from ghosted mesh to base mesh
-  setup_ghost_to_base(exo, d);
-  d->num_owned_nodes = d->num_internal_nodes + d->num_boundary_nodes;
-  d->num_universe_nodes = d->num_internal_nodes + d->num_boundary_nodes + d->num_external_nodes;
+    // conn
+    for (int block = 0; block < exo->num_elem_blocks; block++) {
+      int num_nodes_per_blk = exo->eb_num_nodes_per_elem[block] * exo->eb_num_elems[block];
+      for (int i = 0; i < num_nodes_per_blk; i++) {
+        if (exo->eb_conn[block][i] >= offset) {
+          exo->eb_conn[block][i] =
+              old_to_new_external_node_order[exo->eb_conn[block][i] - offset] + offset;
+        }
+      }
+    }
 
-  free(new_external_node_order);
-  free(old_to_new_external_node_order);
-  free(old_node_owner);
-  free(num_send_nodes);
-  free(num_recv_nodes);
-  for (int i = 0; i < d->num_neighbors; i++) {
-    free(global_send_nodes[i]);
-    free(global_recv_nodes[i]);
+    // ns
+    for (int j = 0; j < exo->ns_node_len; j++) {
+      if (exo->ns_node_list[j] >= offset) {
+        exo->ns_node_list[j] =
+            old_to_new_external_node_order[exo->ns_node_list[j] - offset] + offset;
+      }
+    }
+
+    // ss
+    for (int ins = 0; ins < exo->num_side_sets; ins++) {
+      for (int side_index = 0; side_index < exo->ss_num_sides[ins]; side_index++) {
+        for (int lni = exo->ss_node_side_index[ins][side_index];
+             lni < exo->ss_node_side_index[ins][side_index + 1]; lni++) {
+          int inode = exo->ss_node_list[ins][lni];
+          if (inode >= offset) {
+            exo->ss_node_list[ins][lni] = old_to_new_external_node_order[inode - offset] + offset;
+          }
+        }
+      }
+    }
+
+    // update node owners
+    for (int i = 0; i < d->num_external_nodes; i++) {
+      d->node_owner[offset + old_to_new_external_node_order[i]] = old_node_owner[i];
+    }
+
+    // setup indexing from ghosted mesh to base mesh
+    setup_ghost_to_base(exo, d);
+    d->num_owned_nodes = d->num_internal_nodes + d->num_boundary_nodes;
+    d->num_universe_nodes = d->num_internal_nodes + d->num_boundary_nodes + d->num_external_nodes;
+
+    free(new_external_node_order);
+    free(old_to_new_external_node_order);
+    free(old_node_owner);
+    free(num_send_nodes);
+    free(num_recv_nodes);
+    for (int i = 0; i < d->num_neighbors; i++) {
+      free(global_send_nodes[i]);
+      free(global_recv_nodes[i]);
+    }
+    free(global_send_nodes);
+    free(global_recv_nodes);
   }
-  free(global_send_nodes);
-  free(global_recv_nodes);
 
   return 0;
 }

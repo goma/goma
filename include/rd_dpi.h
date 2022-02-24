@@ -32,8 +32,8 @@
 #define EXTERN extern
 #endif
 
-EXTERN int rd_dpi                    /* rd_dpi.c */
-    (Exo_DB *exo, Dpi *d, char *fn); /* verbosity - how much to talk */
+EXTERN int rd_dpi                                        /* rd_dpi.c */
+    (Exo_DB *exo, Dpi *d, char *fn, bool parallel_call); /* verbosity - how much to talk */
 
 int zero_dpi(Dpi *d);
 int one_dpi(Dpi *d);

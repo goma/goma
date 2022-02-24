@@ -16,6 +16,7 @@
 #include <string.h>
 
 #include "az_aztec.h"
+#include "brkfix/fix.h"
 #include "dp_comm.h"
 #include "dp_types.h"
 #include "dp_utils.h"
@@ -2136,15 +2137,16 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
         evpl_glob[0]->update_flag = 1;
 
         /* Fix output if current time step matches frequency */
-        if (step_fix != 0 && nt == step_fix) {
 #ifdef PARALLEL
+        if (step_fix != 0 && nt == step_fix) {
           /* Barrier because fix needs both files to be finished printing
            and fix always occurs on the same timestep as printing */
           MPI_Barrier(MPI_COMM_WORLD);
-#endif
+          fix_output();
           /* Fix step is relative to print step */
           step_fix += tran->fix_freq * tran->print_freq;
         }
+#endif
 
         /*
          * Adjust the time step if the new time will be larger than the

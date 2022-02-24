@@ -1120,7 +1120,7 @@ void convert_omega_h_to_goma(
   safer_free((void **)&Dolphin);
 
   read_mesh_exoII(exo, dpi);
-  one_base(exo);
+  one_base(exo, Num_Proc);
   wr_mesh_exo(exo, ExoFileOut, 0);
   zero_base(exo);
 

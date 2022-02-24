@@ -109,6 +109,7 @@ void noahs_raven(void) {
 
   ddd_add_member(n, &Decompose_Flag, 1, MPI_INT);
   ddd_add_member(n, &Decompose_Type, 1, MPI_INT);
+  ddd_add_member(n, &Skip_Fix, 1, MPI_INT);
 
   ddd_add_member(n, &Num_Var_Init, 1, MPI_INT);
   ddd_add_member(n, &Num_Var_Bound, 1, MPI_INT);

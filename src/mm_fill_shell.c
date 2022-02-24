@@ -2,12 +2,14 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2014 Sandia Corporation.                                  *
+* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
+*               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
-* Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,  *
-* the U.S. Government retains certain rights in this software.            *
+* Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
+* certain rights in this software.                                        *
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
+* See LICENSE file.                                                       *
 \************************************************************************/
 
 /* Residual and sensitivity assembly routines for equations on shell elements */
@@ -8736,7 +8738,8 @@ int assemble_film(double time,    /* present time value */
 
             for (ii = 0; ii < dim; ii++) {
               //	                  diffusion += - LubAux->dq_dh1[ii][j] * grad_II_phi_j[ii] *
-              //grad_II_phi_i[ii]; 	                  diffusion += - LubAux->dq_dh2[ii][j] * phi_j * grad_II_phi_i[ii];
+              // grad_II_phi_i[ii]; 	                  diffusion += - LubAux->dq_dh2[ii][j] *
+              // phi_j * grad_II_phi_i[ii];
               diffusion += -LubAux->dq_dh[ii][j] * grad_II_phi_i[ii];
             }
 
@@ -9652,7 +9655,7 @@ int assemble_film_1D(double time,    /* present time value */
 
           /*** Loop over DOFs (j) ***/
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-            //jk = dof_map[j];
+            // jk = dof_map[j];
 
             /* Add mass term */
             mass = 0.0;
@@ -9799,7 +9802,7 @@ int assemble_film_1D(double time,    /* present time value */
 
           /*** Loop over DOFs (j) ***/
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-            //jk = dof_map[j];
+            // jk = dof_map[j];
 
             /* Add diffusion term */
             diffusion = 0.0;
