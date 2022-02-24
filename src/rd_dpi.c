@@ -2,12 +2,14 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2022 Sandia Corporation.                                  *
+* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
+*               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
-* Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,  *
-* the U.S. Government retains certain rights in this software.            *
+* Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
+* certain rights in this software.                                        *
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
+* See LICENSE file.                                                       *
 \************************************************************************/
 
 /* rd_dpi.c -- routines for reading distributed processing information
@@ -276,6 +278,15 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
     GOMA_EH(-1, "Found > 0 external nodes, use element decomposition");
   }
 
+  d->num_universe_nodes = d->num_internal_nodes + d->num_boundary_nodes + d->num_external_nodes;
+
+  // zero_base maps
+  for (int i = 0; i < exo->base_mesh->num_nodes; i++) {
+    exo->base_mesh->node_map[i]--;
+  }
+  for (int i = 0; i < exo->base_mesh->num_elems; i++) {
+    exo->base_mesh->elem_map[i]--;
+  }
   zero_dpi(d);
 
   // setup node owners
@@ -505,13 +516,6 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn) {
   d->num_owned_nodes = d->num_internal_nodes + d->num_boundary_nodes;
   d->num_universe_nodes = d->num_internal_nodes + d->num_boundary_nodes + d->num_external_nodes;
 
-  // zero_base maps
-  for (int i = 0; i < exo->base_mesh->num_nodes; i++) {
-    exo->base_mesh->node_map[i]--;
-  }
-  for (int i = 0; i < exo->base_mesh->num_elems; i++) {
-    exo->base_mesh->elem_map[i]--;
-  }
   free(new_external_node_order);
   free(old_to_new_external_node_order);
   free(old_node_owner);
