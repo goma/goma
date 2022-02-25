@@ -2,14 +2,12 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
-*               Solutions of Sandia, LLC (NTESS)                          *
+* Copyright (c) 2022 Sandia Corporation.                                  *
 *                                                                         *
-* Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
-* certain rights in this software.                                        *
+* Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,  *
+* the U.S. Government retains certain rights in this software.            *
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
-* See LICENSE file.                                                       *
 \************************************************************************/
 
 /*
@@ -30,12 +28,12 @@
 #include "ac_particles.h"
 #include "ac_stability_util.h"
 #include "az_aztec.h"
-#include "brkfix/fix.h"
 #include "decomp_interface.h"
 #include "dp_comm.h"
 #include "dp_types.h"
 #include "dp_utils.h"
 #include "dpi.h"
+#include "brkfix/fix.h"
 #include "el_elm.h"
 #include "el_elm_info.h"
 #include "el_geom.h"
@@ -334,8 +332,8 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
   int num_pvector = 0;      /* number of solution sensitivity vectors   */
 #ifdef HAVE_OMEGA_H
   int adapt_step = 0;
-#endif
   int last_adapt_nt = 0;
+#endif
 
   /* sparse variables for fill equation subcycling */
 
@@ -867,6 +865,8 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
   error = load_import_fields(base_p_por, exo, callnum);
   GOMA_EH(error, "Problem with load_import_fields!");
 #else
+
+
   /****************************Anneal from external***********************/
   if (efv->ev_porous_decouple) {
     anneal_mesh_with_external_field(exo);
@@ -1318,6 +1318,33 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
             }
           }
         }
+      }
+
+      /*
+       * Get started with forward/Backward Euler predictor-corrector
+       * to damp out any bad things
+       */
+      if ((nt - last_renorm_nt) == 0) {
+        theta = 0.0;
+        const_delta_t = 1.0;
+
+      } else if ((nt - last_renorm_nt) >= 3) {
+        /* Now revert to the scheme input by the user */
+        theta = tran->theta;
+        const_delta_t = const_delta_ts;
+        /*
+         * If the previous step failed due to a convergence error
+         * or time step truncation error, then revert to a
+         * Backwards-Euler method to restart the calculation
+         * using a smaller time step.
+         * -> standard ODE solver trick (HKM -> Haven't
+         *    had time to benchmark this. Will leave it commented
+         *    out).
+         *
+         *  if (!converged || !success_dt) {
+         *    theta = 0.0;
+         *  }
+         */
       }
 
       /* Reset the node->DBC[] arrays to -1 where set
@@ -1780,10 +1807,9 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
       if ((tran->ale_adapt || (ls != NULL && ls->adapt)) && pg->imtrx == 0 &&
           (nt == 0 || ((ls != NULL && nt % ls->adapt_freq == 0) ||
                        (tran->ale_adapt && nt % tran->ale_adapt_freq == 0)))) {
-        if (last_adapt_nt == nt && adapt_step > 0) {
+        if (last_adapt_nt == nt) {
           adapt_step--;
         }
-        last_adapt_nt = nt;
         adapt_mesh_omega_h(ams, exo, dpi, &x, &x_old, &x_older, &xdot, &xdot_old, &x_oldest,
                            &resid_vector, &x_update, &scale, adapt_step);
         adapt_step++;
@@ -1821,32 +1847,6 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
         find_and_set_Dirichlet(x, xdot, exo, dpi);
       }
 #endif
-      /*
-       * Get started with forward/Backward Euler predictor-corrector
-       * to damp out any bad things
-       */
-      if ((nt - last_renorm_nt) == 0 || (nt - last_adapt_nt) == 0) {
-        theta = 0.0;
-        const_delta_t = 1.0;
-
-      } else if ((nt - last_renorm_nt) >= 3 || (nt - last_adapt_nt) >= 2) {
-        /* Now revert to the scheme input by the user */
-        theta = tran->theta;
-        const_delta_t = const_delta_ts;
-        /*
-         * If the previous step failed due to a convergence error
-         * or time step truncation error, then revert to a
-         * Backwards-Euler method to restart the calculation
-         * using a smaller time step.
-         * -> standard ODE solver trick (HKM -> Haven't
-         *    had time to benchmark this. Will leave it commented
-         *    out).
-         *
-         *  if (!converged || !success_dt) {
-         *    theta = 0.0;
-         *  }
-         */
-      }
 
       numProcUnknowns = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
       /*
@@ -1877,7 +1877,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
       if (converged)
         af->Sat_hyst_reevaluate = TRUE; /*see load_saturation */
 
-      if ((af->Sat_hyst_reevaluate) && (pmv_hyst != NULL)) {
+            if ((af->Sat_hyst_reevaluate) && (pmv_hyst != NULL)) {
         /* Determine what curve to follow and if switch is in order */
         err = evaluate_sat_hyst_criterion_nodal(x, xdot, exo);
       }
