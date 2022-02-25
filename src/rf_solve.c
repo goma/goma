@@ -1324,11 +1324,11 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
        * Get started with forward/Backward Euler predictor-corrector
        * to damp out any bad things
        */
-      if ((nt - last_renorm_nt) == 0) {
+      if ((nt - last_renorm_nt) == 0 || (nt - last_adapt_nt) == 0) {
         theta = 0.0;
         const_delta_t = 1.0;
 
-      } else if ((nt - last_renorm_nt) >= 3) {
+      } else if ((nt - last_renorm_nt) >= 3 && (nt - last_adapt_nt) >= 2) {
         /* Now revert to the scheme input by the user */
         theta = tran->theta;
         const_delta_t = const_delta_ts;
@@ -1807,9 +1807,10 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
       if ((tran->ale_adapt || (ls != NULL && ls->adapt)) && pg->imtrx == 0 &&
           (nt == 0 || ((ls != NULL && nt % ls->adapt_freq == 0) ||
                        (tran->ale_adapt && nt % tran->ale_adapt_freq == 0)))) {
-        if (last_adapt_nt == nt) {
+        if (last_adapt_nt == nt && adapt_step > 0) {
           adapt_step--;
         }
+        last_adapt_nt = nt;
         adapt_mesh_omega_h(ams, exo, dpi, &x, &x_old, &x_older, &xdot, &xdot_old, &x_oldest,
                            &resid_vector, &x_update, &scale, adapt_step);
         adapt_step++;
