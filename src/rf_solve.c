@@ -28,12 +28,12 @@
 #include "ac_particles.h"
 #include "ac_stability_util.h"
 #include "az_aztec.h"
+#include "brkfix/fix.h"
 #include "decomp_interface.h"
 #include "dp_comm.h"
 #include "dp_types.h"
 #include "dp_utils.h"
 #include "dpi.h"
-#include "brkfix/fix.h"
 #include "el_elm.h"
 #include "el_elm_info.h"
 #include "el_geom.h"
@@ -865,7 +865,6 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
   error = load_import_fields(base_p_por, exo, callnum);
   GOMA_EH(error, "Problem with load_import_fields!");
 #else
-
 
   /****************************Anneal from external***********************/
   if (efv->ev_porous_decouple) {
@@ -1878,7 +1877,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
       if (converged)
         af->Sat_hyst_reevaluate = TRUE; /*see load_saturation */
 
-            if ((af->Sat_hyst_reevaluate) && (pmv_hyst != NULL)) {
+      if ((af->Sat_hyst_reevaluate) && (pmv_hyst != NULL)) {
         /* Determine what curve to follow and if switch is in order */
         err = evaluate_sat_hyst_criterion_nodal(x, xdot, exo);
       }

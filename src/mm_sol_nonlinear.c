@@ -1378,8 +1378,8 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     case STRATIMIKOS:
       if (strcmp(Matrix_Format, "epetra") == 0) {
         int iterations;
-        int err = stratimikos_solve(ams, delta_x, resid_vector, &iterations, Stratimikos_File,
-                                    pg->imtrx);
+        int err =
+            stratimikos_solve(ams, delta_x, resid_vector, &iterations, Stratimikos_File, pg->imtrx);
         if (err) {
           GOMA_EH(err, "Error in stratimikos solve");
           check_parallel_error("Error in solve - stratimikos");
@@ -1532,8 +1532,8 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
         case STRATIMIKOS:
           if (strcmp(Matrix_Format, "epetra") == 0) {
             int iterations;
-            int err = stratimikos_solve(ams, &wAC[iAC][0], &bAC[iAC][0], &iterations, Stratimikos_File,
-                                        pg->imtrx);
+            int err = stratimikos_solve(ams, &wAC[iAC][0], &bAC[iAC][0], &iterations,
+                                        Stratimikos_File, pg->imtrx);
             GOMA_EH(err, "Error in stratimikos solve");
             if (iterations == -1) {
               strcpy(stringer, "err");
@@ -1541,9 +1541,10 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
               aztec_stringer(AZ_normal, iterations, &stringer[0]);
             }
           } else {
-            GOMA_EH(GOMA_ERROR,
-                    "Sorry, only Epetra matrix formats are currently supported with the Stratimikos "
-                    "interface\n");
+            GOMA_EH(
+                GOMA_ERROR,
+                "Sorry, only Epetra matrix formats are currently supported with the Stratimikos "
+                "interface\n");
           }
           break;
         default:
