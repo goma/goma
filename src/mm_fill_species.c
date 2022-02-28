@@ -4643,10 +4643,15 @@ mass_flux_surf_etch(double func[DIM],
   double h[DIM] = {1.0, 1.0, 1.0};
 
   double etch_rate = 0.0;
-  double d_etch_rate_d_C[MAX_CONC] = {0.0};
+  double d_etch_rate_d_C[2] = {0.0};
 
   /* Bulk density of crystalline silicon (g/cm^3) */
   double rho_bulk_Si = 2.3290;
+
+ /* Get mass concentration of each species
+    Mass concentration unit is g/cm^3 */
+  double rho_H2O = fv->c[0];
+  double rho_KOH = fv->c[1];
 
   /* Molecular weight in mole/g */
   double MW_H2O = 18.01528;
@@ -4667,7 +4672,7 @@ mass_flux_surf_etch(double func[DIM],
   if (etch_plane == 100)
     {
      /* Get etch rate */
-     etch_rate = calc_KOH_Si_etch_rate_100(d_etch_rate_d_C);
+     etch_rate = calc_KOH_Si_etch_rate_100(rho_H2O, rho_KOH, d_etch_rate_d_C);
 
      /* Export it to mass_flux array, depending on their stochiometric coefficient */
      switch (wspec)

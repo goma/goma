@@ -434,7 +434,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
                                      * Same as regular Stefan-Maxwell_charged, but with
 				     * coefficients coming from liquid chemkin
 				     * package
-				     */				      
+				     */
 #define GENERALIZED_FICKIAN 15 /* generalized fickian ACS 4/00 */
 #define STEFAN_MAXWELL_VOLUME 16  /* RSL 6/28/00 */
 #define FICKIAN_CHARGED	17     /* Fickian diffusion of charged species, KSC 9/2000 */
@@ -443,7 +443,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define POWERLAW_DARCY_FICKIAN	20 /*PRS for P&G */
 #define HYDRODYNAMIC_QTENSOR    21
 #define HYDRODYNAMIC_QTENSOR_OLD    22
-
+#define FICKIAN_SHELL 23       /* Shell version of Fickian diffusion equation */
 
 /* surface tension laws */
 #define DILATION 3
@@ -496,6 +496,10 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 
 /* Photocuring reaction model  */
 #define PHOTO_CURING   934
+
+/* KOH etching models */
+#define ETCHING_KOH 935
+#define ETCHING_KOH_EXT 936
 
 /* Special material-related height function models */
 #define CONSTANT_SPEED 1011

@@ -218,7 +218,13 @@ PROTO((dbl,                     /* Current time */
 				 * explicit (tt = 1) to implicit (tt = 0) */
        double ));		/* dt - current time step size */
 
+EXTERN int etching_KOH_source /* mm_std_models.c                       */
+PROTO((int ,			/* species_no - Current species number       */
+       double *));		/* param - pointer to source model parameter list */
+
 EXTERN double calc_KOH_Si_etch_rate_100 /* mm_std_models.c */
-PROTO(( double [MAX_CONC] ));        /* Sensitivities of etch rate w.r.t. concentration */
+PROTO(( double,               /* Concentration of H2O */
+        double,               /* Concentration of KOH */
+        double [2] ));        /* Sensitivities of etch rate w.r.t. concentration of H2O and KOH */
 
 #endif /* _MM_STD_MODELS_H */

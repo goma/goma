@@ -1697,6 +1697,9 @@ set_interaction_masks(Exo_DB *exo)
 	  v = VELOCITY_GRADIENT33;
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 
+	  v = LUBP;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+
 	  break;
 
 	case R_MESH1:
@@ -2746,6 +2749,8 @@ set_interaction_masks(Exo_DB *exo)
           v = PRESSURE;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 
+	  v = MASS_FRACTION;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 
           /* Need to add the height-var here and velocity var here */
           break;

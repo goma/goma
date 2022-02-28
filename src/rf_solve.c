@@ -432,6 +432,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
   double *base_p_por=NULL;	 /* Base values for porosity updates */
   double *base_p_liq=NULL;	 /* Base values for porosity updates */
   int update_porosity=FALSE;	 /* Flag for external porosity updates */
+  int update_etch_area=FALSE;	 /* Flag for etch area fraction updates */
 #ifdef HAVE_FRONT  
   int max_unk_elem, one, three;  /* variables used as mf_setup arguments      */
 #endif
@@ -493,8 +494,19 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
   if (libio->goma_first == 1) fprintf(stderr, "  Goma goes first");
   if (libio->goma_first == 0) fprintf(stderr, "  Goma goes second");
 
-#endif   
- 
+#endif
+
+  /* Determine if external area fraction updates are required */
+  if ((Num_Var_In_Type[MASS_FRACTION]) &&
+      (efv->ev_etch_area > -1) &&
+      (efv->ev_etch_depth > -1))
+  {
+    update_etch_area = TRUE;
+    fprintf(stderr, " External fields etch area %d and etch depth %d will be updated.\n",
+            efv->ev_etch_area, efv->ev_etch_depth);
+  }
+
+
   if (Unlimited_Output && strlen(Soln_OutFile))  {
     file = fopen(Soln_OutFile, "w");
     if (file == NULL) {
@@ -693,7 +705,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
   fprintf(stderr, "P_%d: numProcUnknowns = %d (%d+%d)\n",ProcID, numProcUnknowns, 
 	  NumUnknowns, NumExtUnknowns);
 #endif /* DEBUG */
-  
+
   asdv(&resid_vector, numProcUnknowns);
   asdv(&resid_vector_sens, numProcUnknowns);
   asdv(&scale, numProcUnknowns);
@@ -711,8 +723,8 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
       for (i = 0; i < NUM_ALSS; i++)
         {
            ams[i] = alloc_struct_1(struct Aztec_Linear_Solver_System, 1);
-        }				
-    }				
+        }
+    }
 #ifdef MPI
   AZ_set_proc_config( ams[0]->proc_config, MPI_COMM_WORLD );
 #ifndef COUPLED_FILL
@@ -747,9 +759,9 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 
   if(tran->solid_inertia)
     {
-      tran->xdbl_dot = (double *) 
+      tran->xdbl_dot = (double *)
 	array_alloc(1, numProcUnknowns, sizeof(double));
-      tran->xdbl_dot_old = (double *) 
+      tran->xdbl_dot_old = (double *)
 	array_alloc(1, numProcUnknowns, sizeof(double));
 
       for (i = 0; i < numProcUnknowns; i++)
@@ -763,7 +775,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
       tran->newmark_gamma = 0.9;
       tran->newmark_beta = 0.49;
     }
-  
+
   node_to_fill = alloc_int_1(num_total_nodes, 0);
 
   /* Allocate sparse matrix */
@@ -837,16 +849,16 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
   } else {
     EH(-1, "Attempted to allocate unknown sparse matrix format");
   }
-	  
-  /* 
-   * allocate memory for Volume Constraint Jacobian. ACS 2/99 
+
+  /*
+   * allocate memory for Volume Constraint Jacobian. ACS 2/99
    * and level set velocity constraint Jacobian. AMG 4/02
    */
   if (nAC > 0) {
     for (iAC = 0; iAC < nAC; iAC++) {
       augc[iAC].d_evol_dx = alloc_dbl_1(numProcUnknowns, 0.0);
-      augc[iAC].d_lsvel_dx = alloc_dbl_1(numProcUnknowns, 0.0); 
-      augc[iAC].d_lsvol_dx = alloc_dbl_1(numProcUnknowns, 0.0); 
+      augc[iAC].d_lsvel_dx = alloc_dbl_1(numProcUnknowns, 0.0);
+      augc[iAC].d_lsvol_dx = alloc_dbl_1(numProcUnknowns, 0.0);
     }
   }
 
@@ -861,7 +873,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
   for (i = 0; i < nn_post_data_sens; i++)        {
     num_pvector = MAX(num_pvector, pp_data_sens[i]->vector_id);
   }
-  
+
   if ((nn_post_fluxes_sens + nn_post_data_sens) > 0) {
     num_pvector++;
     num_pvector = MAX(num_pvector,2);
@@ -886,7 +898,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     }
 
   /* Set initial guess from an input exodus file or other method on the first call only */
-  if (callnum == 1) 
+  if (callnum == 1)
     {
       init_vec(x, cx, exo, dpi, x_AC, nAC, &timeValueRead);
 
@@ -896,7 +908,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 #ifndef ALLOW_NEGATIVE_TIMES_PLEASE
       if (TimeIntegration != STEADY)
 	{
-	  if (tran->init_time < 0.0)  
+	  if (tran->init_time < 0.0)
 	    {
 	      tran->init_time = timeValueRead;
 	      DPRINTF(stdout, "\n Initial Simulation Time Has been set to %g\n", timeValueRead);
@@ -958,7 +970,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 #ifdef DEBUG
     fprintf(stderr, "P_%d %d beginning STEADY analysis...\n", ProcID, tnv);
 #endif /* DEBUG */
-      
+
     theta = 0.0;        /* for steady problems. theta def in rf_fem.h */
     delta_t = 0.0;
       
@@ -2528,6 +2540,13 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 	if(Particle_Dynamics)
 	  err = compute_particles(exo, x, x_old, xdot, xdot_old, resid_vector, time, delta_t, n);
 	EH(err, "Error performing particle calculations.");
+
+      	if (update_etch_area && converged)
+          {
+            err = advance_etch_area_ext_field(n, num_total_nodes,
+                                                delta_t, x);
+            EH(err, "Problem with advance_etch_area_ext_field()!");
+          }
 
 	error = 0;
 	if (i_print) {

@@ -289,7 +289,7 @@ apply_point_colloc_bc (
 		fTmelting (&func, d_func,
 			   BC_Types[bc_input_id].BC_Data_Float[0]);
 		break;
-		    
+
 	    case SPLINEX_BC:
 	    case SPLINEY_BC:
 	    case SPLINEZ_BC:
@@ -356,7 +356,7 @@ apply_point_colloc_bc (
 				mp_2);
 	      }
 		break;
-		    
+
 	    case PLANEX_BC:
 	    case PLANEY_BC:
 	    case PLANEZ_BC:
@@ -426,7 +426,7 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 				  &func, d_func, BC_Types[bc_input_id].u_BC,
 				  time_intermediate);
 		break;
-		    
+
 	    case U_PARABOLA_BC:
 	    case V_PARABOLA_BC:
 	    case W_PARABOLA_BC:
@@ -436,7 +436,7 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 			&func, d_func, BC_Types[bc_input_id].u_BC,
 			time_intermediate,BC_Types[bc_input_id].len_u_BC);
 		break;
-		    
+
 	    case U_VES11_PARABOLA_BC:
 	    case U_VES12_PARABOLA_BC:
 	    case U_VES22_PARABOLA_BC:
@@ -491,7 +491,7 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 			&func, d_func, BC_Types[bc_input_id].u_BC,
 			time_intermediate,BC_Types[bc_input_id].len_u_BC);
 		break;
-		    
+
 	    case GD_CONST_BC:
 	    case GD_LINEAR_BC:
 	    case GD_INVERSE_BC:
@@ -511,7 +511,7 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 		if (af->Assemble_LSA_Mass_Matrix)
 		    EH(-1, "LSA is not currently compatible with GD_TIME_BC");
 		break;
-                 
+
 	    case POROUS_PRESSURE_BC:
 		porous_pressure(&func, d_func, 
 				(int) BC_Types[bc_input_id].BC_Data_Int[0],
@@ -521,6 +521,14 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 	      porous_pressure_lub(&func, d_func,
 				   elem_side_bc->id_side, xi, exo, 
 				   BC_Types[bc_input_id].BC_Data_Float[0]);
+	      break;
+
+	    case LUB_PRESS_HYDROSTATIC_BC:
+	      lub_press_hydro(&func, d_func,
+		              BC_Types[bc_input_id].BC_Data_Float[0],
+		              BC_Types[bc_input_id].BC_Data_Float[1],
+		              BC_Types[bc_input_id].BC_Data_Float[2],
+		              BC_Types[bc_input_id].BC_Data_Float[3]);
 	      break;
 
 	    case LUBP_SH_FP_FLUX_BC:
