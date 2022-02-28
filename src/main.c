@@ -195,20 +195,22 @@ static int CVS_Extraction_Date_Stamp[] = { 2002, 9, 20, 21, 17, 15};
 */
 
 static char *legal_notice[] = {
-    "/************************************************************************ * \n",
-    "* Goma - Multiphysics finite element software.                            * \n",
-    "* Sandia National Laboratories.                                           * \n",
-    "*                                                                         * \n",
-    "* Copyright (c) 2014  Sandia Corporation.                                 * \n",
-    "*                                                                         * \n",
-    "* Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,  * \n",
-    "* the U.S. Government retains certain rights in this software.            * \n",
-    "*                                                                         * \n",
-    "* This software is distributed under the GNU General Public License.      * \n",
-    "\\************************************************************************/  \n",
+    "/*************************************************************************\n",
+    "* Goma - Multiphysics finite element software                            *\n",
+    "* Sandia National Laboratories                                           *\n",
+    "*                                                                        *\n",
+    "* Copyright (c) 2022 Goma Developers, National Technology & Engineering  *\n",
+    "*               Solutions of Sandia, LLC (NTESS)                         *\n",
+    "*                                                                        *\n",
+    "* Under the terms of Contract DE-NA0003525, the U.S. Government retains  *\n",
+    "* certain rights in this software.                                       *\n",
+    "*                                                                        *\n",
+    "* This software is distributed under the GNU General Public License.     *\n",
+    "* See LICENSE file.                                                      *\n",
+    "\\************************************************************************/\n",
     "\n",
     "PRS, PAS, RRR, KSC, RAC, TAB, DRN, PLH, DAL, IDG, ACK, ACS, RBS, RRL, MMH, SRS\n",
-    "HKM, RAR, EDW, PKN, SAR, EMB, KT, DSB, DSH ...\n"
+    "HKM, RAR, EDW, PKN, SAR, EMB, KT, DSB, DSH, WWO ...\n"
     "\n",
     LAST_LEGAL_STRING};
 

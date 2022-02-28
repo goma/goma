@@ -274,8 +274,6 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn, bool parallel_call) {
 
     free(local_ss_internal);
     free(global_ss_internal);
-    ex_error = ex_close(exoid);
-    CHECK_EX_ERROR(ex_error, "ex_close");
 
     int min_external;
     MPI_Allreduce(&d->num_external_nodes, &min_external, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
@@ -284,6 +282,8 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn, bool parallel_call) {
     }
   }
   free(eb_num_nodes_local);
+  ex_error = ex_close(exoid);
+  CHECK_EX_ERROR(ex_error, "ex_close");
 
   d->num_universe_nodes = d->num_internal_nodes + d->num_boundary_nodes + d->num_external_nodes;
 
