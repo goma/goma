@@ -283,25 +283,20 @@ int bouss_momentum_source(dbl f[DIM], /* Body force. */
   }
 
   /* Species piece */
-  if (pd->v[pg->imtrx][MASS_FRACTION] )
-    {
-      for(a = 0; a<DIM; a++)
-	{
-          if (hydrostatic)
-            {
-             f[a] = g[a] * mp->density;
-            }
+  if (pd->v[pg->imtrx][MASS_FRACTION]) {
+    for (a = 0; a < DIM; a++) {
+      if (hydrostatic) {
+        f[a] = g[a] * mp->density;
+      }
 
-	  for(w = 0; w < pd->Num_Species_Eqn; w++)
-	    {
+      for (w = 0; w < pd->Num_Species_Eqn; w++) {
         eqn = R_MOMENTUM1 + a;
         if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
           f[a] +=
-              -g[a] * mp->density * mp->species_vol_expansion[w] * (C[w] - mp->reference_concn[w]);}
-	      else if ( pd->gv[R_LUBP] )
-		{
-		  f[a] += - g[a] * mp->density * mp->species_vol_expansion[w]
-                                 * (C[w] - mp->reference_concn[w]);
+              -g[a] * mp->density * mp->species_vol_expansion[w] * (C[w] - mp->reference_concn[w]);
+        } else if (pd->gv[R_LUBP]) {
+          f[a] +=
+              -g[a] * mp->density * mp->species_vol_expansion[w] * (C[w] - mp->reference_concn[w]);
         }
       }
     }
@@ -354,18 +349,13 @@ int bouss_momentum_source(dbl f[DIM], /* Body force. */
             df->C[a][w][j] += -g[a] * mp->density * mp->species_vol_expansion[w] * bf[var]->phi[j];
           }
         }
+      } else if (pd->e[pg->imtrx][R_LUBP]) {
+        for (w = 0; w < pd->Num_Species_Eqn; w++) {
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            df->C[a][w][j] += -g[a] * mp->density * mp->species_vol_expansion[w] * bf[var]->phi[j];
+          }
+        }
       }
-	  else if ( pd->e[pg->imtrx][R_LUBP])
-	    {
-	      for(w = 0; w < pd->Num_Species_Eqn; w++)
-		{
-		  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
-		    {
-		      df->C[a][w][j] += - g[a] * mp->density * mp->species_vol_expansion[w] * bf[var]->phi[j];
-		    }
-		}
-	    }
-
     }
   }
 
@@ -6489,9 +6479,8 @@ static void cal_current_density(double x[],           /* global nodal solution v
 /*****************************************************************************/
 #endif
 
-int
-etching_KOH_source(int wspec,   /* Current species number */
-                   double *param )   /* pointer to source model parameter list */
+int etching_KOH_source(int wspec,     /* Current species number */
+                       double *param) /* pointer to source model parameter list */
 /******************************************************************************
 *
 *  A function that calculate source (or sink) terms in species equation (shell only for now)
@@ -6528,7 +6517,7 @@ etching_KOH_source(int wspec,   /* Current species number */
   double MW_OH = 17.008;
   double MW_Si = 28.0855;
   double MW_H2 = (2.0 * 1.00794);
-  double MW_SiO2OH2 = (28.0855 + 2.0*15.9994 + 2.0*17.008);
+  double MW_SiO2OH2 = (28.0855 + 2.0 * 15.9994 + 2.0 * 17.008);
 
   /* Get mass concentration of each species
      Mass concentration unit is g/cm^3 */
@@ -6538,74 +6527,77 @@ etching_KOH_source(int wspec,   /* Current species number */
   /* Area fraction, read from external field when available */
   double a_frac = 1.0;
   int i_ext_field = -1;
-  if ((efv->ev) &&
-      (mp->SpeciesSourceModel[wspec] == ETCHING_KOH_EXT))
-    {
-     i_ext_field = mp->species_source_external_field_index;
-     if (i_ext_field < 0) GOMA_EH(-1, "Trouble getting external field index in ETCHING_KOH_EXT");
-     a_frac = fv->external_field[i_ext_field];
-    }
+  if ((efv->ev) && (mp->SpeciesSourceModel[wspec] == ETCHING_KOH_EXT)) {
+    i_ext_field = mp->species_source_external_field_index;
+    if (i_ext_field < 0)
+      GOMA_EH(-1, "Trouble getting external field index in ETCHING_KOH_EXT");
+    a_frac = fv->external_field[i_ext_field];
+  }
 
   /* Right now it only handles KOH wet etching on plane 100 of crystalline silicon*/
   etch_rate = calc_KOH_Si_etch_rate_100(rho_H2O, rho_KOH, d_etch_rate_d_C);
 
   /* Export it to mp->species_source, depending on their stochiometric coefficient */
-  switch (wspec)
-    {
-     case 0: /* Water */
-       mp->species_source[wspec] = a_frac *  2.0 * rho_bulk_Si/MW_Si * MW_H2O * etch_rate;
-       break;
+  switch (wspec) {
+  case 0: /* Water */
+    mp->species_source[wspec] = a_frac * 2.0 * rho_bulk_Si / MW_Si * MW_H2O * etch_rate;
+    break;
 
-     case 1: /* OH */
-       mp->species_source[wspec] = a_frac *  2.0 * rho_bulk_Si/MW_Si * MW_OH * etch_rate;
-       break;
+  case 1: /* OH */
+    mp->species_source[wspec] = a_frac * 2.0 * rho_bulk_Si / MW_Si * MW_OH * etch_rate;
+    break;
 
-     case 2: /* H2 */
-       mp->species_source[wspec] = a_frac * -2.0 * rho_bulk_Si/MW_Si * MW_H2 * etch_rate;
-       break;
+  case 2: /* H2 */
+    mp->species_source[wspec] = a_frac * -2.0 * rho_bulk_Si / MW_Si * MW_H2 * etch_rate;
+    break;
 
-     case 3: /* SiO2OH2 */
-       mp->species_source[wspec] = a_frac * -1.0 * rho_bulk_Si/MW_Si * MW_SiO2OH2 * etch_rate;
-       break;
-    }
-
+  case 3: /* SiO2OH2 */
+    mp->species_source[wspec] = a_frac * -1.0 * rho_bulk_Si / MW_Si * MW_SiO2OH2 * etch_rate;
+    break;
+  }
 
   /* Export sensitivity to mp->d_species_source */
-  switch (wspec)
-    {
-     case 0: /* Water */
-       mp->d_species_source[MAX_VARIABLE_TYPES+0] = a_frac *  2.0 * rho_bulk_Si/MW_Si * MW_H2O * d_etch_rate_d_C[0];
-       mp->d_species_source[MAX_VARIABLE_TYPES+1] = a_frac *  2.0 * rho_bulk_Si/MW_Si * MW_H2O * d_etch_rate_d_C[1];
-       break;
+  switch (wspec) {
+  case 0: /* Water */
+    mp->d_species_source[MAX_VARIABLE_TYPES + 0] =
+        a_frac * 2.0 * rho_bulk_Si / MW_Si * MW_H2O * d_etch_rate_d_C[0];
+    mp->d_species_source[MAX_VARIABLE_TYPES + 1] =
+        a_frac * 2.0 * rho_bulk_Si / MW_Si * MW_H2O * d_etch_rate_d_C[1];
+    break;
 
-     case 1: /* KOH */
-       mp->d_species_source[MAX_VARIABLE_TYPES+0] = a_frac *  2.0 * rho_bulk_Si/MW_Si * MW_OH * d_etch_rate_d_C[0];
-       mp->d_species_source[MAX_VARIABLE_TYPES+1] = a_frac *  2.0 * rho_bulk_Si/MW_Si * MW_OH * d_etch_rate_d_C[1];
-       break;
+  case 1: /* KOH */
+    mp->d_species_source[MAX_VARIABLE_TYPES + 0] =
+        a_frac * 2.0 * rho_bulk_Si / MW_Si * MW_OH * d_etch_rate_d_C[0];
+    mp->d_species_source[MAX_VARIABLE_TYPES + 1] =
+        a_frac * 2.0 * rho_bulk_Si / MW_Si * MW_OH * d_etch_rate_d_C[1];
+    break;
 
-     case 2: /* H2 */
-       mp->d_species_source[MAX_VARIABLE_TYPES+0] = a_frac * -2.0 * rho_bulk_Si/MW_Si * MW_H2 * d_etch_rate_d_C[0];
-       mp->d_species_source[MAX_VARIABLE_TYPES+1] = a_frac * -2.0 * rho_bulk_Si/MW_Si * MW_H2 * d_etch_rate_d_C[1];
-       break;
+  case 2: /* H2 */
+    mp->d_species_source[MAX_VARIABLE_TYPES + 0] =
+        a_frac * -2.0 * rho_bulk_Si / MW_Si * MW_H2 * d_etch_rate_d_C[0];
+    mp->d_species_source[MAX_VARIABLE_TYPES + 1] =
+        a_frac * -2.0 * rho_bulk_Si / MW_Si * MW_H2 * d_etch_rate_d_C[1];
+    break;
 
-     case 3: /* SiO2OH2 */
-       mp->d_species_source[MAX_VARIABLE_TYPES+0] = a_frac * -1.0 * rho_bulk_Si/MW_Si * MW_SiO2OH2 * d_etch_rate_d_C[0];
-       mp->d_species_source[MAX_VARIABLE_TYPES+1] = a_frac * -1.0 * rho_bulk_Si/MW_Si * MW_SiO2OH2 * d_etch_rate_d_C[1];
-       break;
-       }
+  case 3: /* SiO2OH2 */
+    mp->d_species_source[MAX_VARIABLE_TYPES + 0] =
+        a_frac * -1.0 * rho_bulk_Si / MW_Si * MW_SiO2OH2 * d_etch_rate_d_C[0];
+    mp->d_species_source[MAX_VARIABLE_TYPES + 1] =
+        a_frac * -1.0 * rho_bulk_Si / MW_Si * MW_SiO2OH2 * d_etch_rate_d_C[1];
+    break;
+  }
 
-  mp->d_species_source[MAX_VARIABLE_TYPES+2] = 0.0;
-  mp->d_species_source[MAX_VARIABLE_TYPES+3] = 0.0;
+  mp->d_species_source[MAX_VARIABLE_TYPES + 2] = 0.0;
+  mp->d_species_source[MAX_VARIABLE_TYPES + 3] = 0.0;
 
   return 0;
 
 } /* END of calc_KOH_Si_etch_rate_100 */
 
-double
-calc_KOH_Si_etch_rate_100(double rho_H2O,             /* Concentration of water */
-                          double rho_KOH,             /* Concentration of KOH */
-                          double d_etch_rate_d_C[2] ) /* Sensitivity of etch rate w.r.t.
-                                                        concentration of water, and KOH */
+double calc_KOH_Si_etch_rate_100(double rho_H2O,            /* Concentration of water */
+                                 double rho_KOH,            /* Concentration of KOH */
+                                 double d_etch_rate_d_C[2]) /* Sensitivity of etch rate w.r.t.
+                                                              concentration of water, and KOH */
 /******************************************************************************
  *
  *  A function that outputs KOH wet etch rate of silicon surface (100 plane for now)
@@ -6677,64 +6669,51 @@ calc_KOH_Si_etch_rate_100(double rho_H2O,             /* Concentration of water 
   double rho_KOH_center = rho_KOH_max - alpha;
   double rho_KOH_normalized = rho_KOH - rho_KOH_center;
 
-  if (rho_KOH >= rho_KOH_max)
-    {
-     Hside = 1.0;
-     dHside_drho_KOH = 0.0;
-    }
-  else if (rho_KOH <= rho_KOH_min )
-    {
-     Hside = 0.0;
-     dHside_drho_KOH = 0.0;
-    }
-  else
-    {
-     Hside = 0.5 * (1. + rho_KOH_normalized / alpha
-             + sin(M_PIE * rho_KOH_normalized / alpha ) / M_PIE);
-     dHside_drho_KOH = 0.5 * (1.0/alpha + cos(M_PIE * rho_KOH_normalized/alpha)/alpha );
-    }
-
+  if (rho_KOH >= rho_KOH_max) {
+    Hside = 1.0;
+    dHside_drho_KOH = 0.0;
+  } else if (rho_KOH <= rho_KOH_min) {
+    Hside = 0.0;
+    dHside_drho_KOH = 0.0;
+  } else {
+    Hside =
+        0.5 * (1. + rho_KOH_normalized / alpha + sin(M_PIE * rho_KOH_normalized / alpha) / M_PIE);
+    dHside_drho_KOH = 0.5 * (1.0 / alpha + cos(M_PIE * rho_KOH_normalized / alpha) / alpha);
+  }
 
   /* Calculate etch rate (micron/hr) */
-  if ( rho_KOH > rho_KOH_min)
-    {
-     etch_rate = Hside *k0 * pow(C_H2O, 4.0) * pow(C_KOH, 0.25) * exp(-E_a / k_B / T);}
-  else
-    {
-     etch_rate = 0.0;
-    }
+  if (rho_KOH > rho_KOH_min) {
+    etch_rate = Hside * k0 * pow(C_H2O, 4.0) * pow(C_KOH, 0.25) * exp(-E_a / k_B / T);
+  } else {
+    etch_rate = 0.0;
+  }
 
   /* Convert to cm/s */
   etch_rate = etch_rate / 1.0e4 / 3600.0;
 
   /* Calculate sensitivity of etch rate w.r.t. concentration */
 
-  if (d_etch_rate_d_C != NULL)
-    {
-     if ( rho_KOH > rho_KOH_min)
-       {
+  if (d_etch_rate_d_C != NULL) {
+    if (rho_KOH > rho_KOH_min) {
 
-        d_etch_rate_d_H2O = Hside *4.0 * k0 * pow(C_H2O, 3.0) * pow(C_KOH, 0.25) * exp(-E_a / k_B / T) /
-                      (1.0e4 * 3600.0) * (1000.0 / MW_H2O);
+      d_etch_rate_d_H2O = Hside * 4.0 * k0 * pow(C_H2O, 3.0) * pow(C_KOH, 0.25) *
+                          exp(-E_a / k_B / T) / (1.0e4 * 3600.0) * (1000.0 / MW_H2O);
 
-        d_etch_rate_d_KOH = Hside *0.25 * k0 * pow(C_H2O, 4.0) / pow(C_KOH, 0.75) * exp(-E_a / k_B / T) /
-                      (1.0e4 * 3600.0) * (1000.0 / MW_KOH);
+      d_etch_rate_d_KOH = Hside * 0.25 * k0 * pow(C_H2O, 4.0) / pow(C_KOH, 0.75) *
+                          exp(-E_a / k_B / T) / (1.0e4 * 3600.0) * (1000.0 / MW_KOH);
 
-        d_etch_rate_d_KOH += k0 * pow(C_H2O, 4.0) * pow(C_KOH, 0.25 ) * exp(-E_a/k_B/T)
-                             / 1.0e4 / 3600.0 * dHside_drho_KOH;
-        }
-     else
-        {
-         d_etch_rate_d_H2O = 0.0;
-         d_etch_rate_d_KOH = 0.0;
-        }
+      d_etch_rate_d_KOH += k0 * pow(C_H2O, 4.0) * pow(C_KOH, 0.25) * exp(-E_a / k_B / T) / 1.0e4 /
+                           3600.0 * dHside_drho_KOH;
+    } else {
+      d_etch_rate_d_H2O = 0.0;
+      d_etch_rate_d_KOH = 0.0;
+    }
 
+    /* Export the etch rate and its sensitivities */
+    d_etch_rate_d_C[0] = d_etch_rate_d_H2O;
+    d_etch_rate_d_C[1] = d_etch_rate_d_KOH;
 
-     /* Export the etch rate and its sensitivities */
-     d_etch_rate_d_C[0] = d_etch_rate_d_H2O;
-     d_etch_rate_d_C[1] = d_etch_rate_d_KOH;
-
-    } /* End of if calculating Jacobian entries */
+  } /* End of if calculating Jacobian entries */
   return etch_rate;
 
 } /* END of calc_KOH_Si_etch_rate_100 */

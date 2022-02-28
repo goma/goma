@@ -518,13 +518,12 @@ int apply_point_colloc_bc(double resid_vector[], /* Residual vector for the curr
                                   BC_Types[bc_input_id].BC_Data_Float[0]);
               break;
 
-	    case LUB_PRESS_HYDROSTATIC_BC:
-	      lub_press_hydro(&func, d_func,
-		              BC_Types[bc_input_id].BC_Data_Float[0],
-		              BC_Types[bc_input_id].BC_Data_Float[1],
-		              BC_Types[bc_input_id].BC_Data_Float[2],
-		              BC_Types[bc_input_id].BC_Data_Float[3]);
-	      break;
+            case LUB_PRESS_HYDROSTATIC_BC:
+              lub_press_hydro(&func, d_func, BC_Types[bc_input_id].BC_Data_Float[0],
+                              BC_Types[bc_input_id].BC_Data_Float[1],
+                              BC_Types[bc_input_id].BC_Data_Float[2],
+                              BC_Types[bc_input_id].BC_Data_Float[3]);
+              break;
 
             case LUBP_SH_FP_FLUX_BC:
               put_lub_flux_in_film(id, I, ielem_dim, resid_vector,

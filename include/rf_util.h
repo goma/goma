@@ -244,11 +244,10 @@ extern int init_pmv_hyst(const Exo_DB * /* exo - ptr to finite element mesh data
 extern void read_porosity_data(const Exo_DB *exo /* Ptr to Exodus database */
 );
 
-extern int advance_etch_area_ext_field
-(const int time_step,             /* Time step number in current pass */
-       const int nn,                    /* Number of nodes on this proc */
-       const dbl delta_t,               /* Time step size */
-       dbl *x );                       /* Solution at current time step */
+extern int advance_etch_area_ext_field(const int time_step, /* Time step number in current pass */
+                                       const int nn,        /* Number of nodes on this proc */
+                                       const dbl delta_t,   /* Time step size */
+                                       dbl *x);             /* Solution at current time step */
 
 extern int evaluate_sat_hyst_criterion_nodal(const dbl *const, /* x */
                                              const dbl *const, /* x_dot */

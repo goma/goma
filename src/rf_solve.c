@@ -410,13 +410,13 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
   int tev_post; /* total number of elem variables and kinds
                    for post processing                       */
 
-  double *gv;                  /* Global variable values */
-  double *x_pp = NULL;         /* Post-proc variables for export */
-  static int *xp_id = NULL;    /* Post-proc variable ID */
-  double *base_p_por = NULL;   /* Base values for porosity updates */
-  double *base_p_liq = NULL;   /* Base values for porosity updates */
-  int update_porosity = FALSE; /* Flag for external porosity updates */
-  int update_etch_area=FALSE;	 /* Flag for etch area fraction updates */
+  double *gv;                   /* Global variable values */
+  double *x_pp = NULL;          /* Post-proc variables for export */
+  static int *xp_id = NULL;     /* Post-proc variable ID */
+  double *base_p_por = NULL;    /* Base values for porosity updates */
+  double *base_p_liq = NULL;    /* Base values for porosity updates */
+  int update_porosity = FALSE;  /* Flag for external porosity updates */
+  int update_etch_area = FALSE; /* Flag for etch area fraction updates */
 #ifdef HAVE_FRONT
   int max_unk_elem, one, three; /* variables used as mf_setup arguments      */
 #endif
@@ -477,15 +477,11 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 #endif
 
   /* Determine if external area fraction updates are required */
-  if ((Num_Var_In_Type[MASS_FRACTION]) &&
-      (efv->ev_etch_area > -1) &&
-      (efv->ev_etch_depth > -1))
-  {
+  if ((Num_Var_In_Type[MASS_FRACTION]) && (efv->ev_etch_area > -1) && (efv->ev_etch_depth > -1)) {
     update_etch_area = TRUE;
     fprintf(stderr, " External fields etch area %d and etch depth %d will be updated.\n",
             efv->ev_etch_area, efv->ev_etch_depth);
   }
-
 
   if (Unlimited_Output && strlen(Soln_OutFile)) {
     file = fopen(Soln_OutFile, "w");
@@ -2019,12 +2015,10 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
           err = compute_particles(exo, x, x_old, xdot, xdot_old, resid_vector, time, delta_t, n);
         GOMA_EH(err, "Error performing particle calculations.");
 
-      	if (update_etch_area && converged)
-          {
-            err = advance_etch_area_ext_field(n, num_total_nodes,
-                                                delta_t, x);
-            GOMA_EH(err, "Problem with advance_etch_area_ext_field()!");
-          }
+        if (update_etch_area && converged) {
+          err = advance_etch_area_ext_field(n, num_total_nodes, delta_t, x);
+          GOMA_EH(err, "Problem with advance_etch_area_ext_field()!");
+        }
 
         error = 0;
         if (i_print) {

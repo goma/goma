@@ -5687,10 +5687,9 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     /* EDW: Insert alternate call here! */
     if (!strcmp(model_name, "FICKIAN")) {
       DiffusionConstitutiveEquation = FICKIAN;
-    }else if ( !strcmp(model_name, "FICKIAN_SHELL") )
-	{
-	  DiffusionConstitutiveEquation = FICKIAN_SHELL;
-	} else if (!strcmp(model_name, "GENERALIZED_FICKIAN")) {
+    } else if (!strcmp(model_name, "FICKIAN_SHELL")) {
+      DiffusionConstitutiveEquation = FICKIAN_SHELL;
+    } else if (!strcmp(model_name, "GENERALIZED_FICKIAN")) {
       DiffusionConstitutiveEquation = GENERALIZED_FICKIAN;
     } else if (!strcmp(model_name, "STEFAN_MAXWELL")) {
       DiffusionConstitutiveEquation = STEFAN_MAXWELL;
@@ -7768,9 +7767,10 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   ECHO(es, echo_file);
 
-/* Initialize for good behavior */
+  /* Initialize for good behavior */
   efv->ev_etch_area = -1;
-  efv->ev_etch_depth = -1;  for (i = 0; i < mat_ptr->Num_Species; i++) {
+  efv->ev_etch_depth = -1;
+  for (i = 0; i < mat_ptr->Num_Species; i++) {
     /*
      *  set species number equal to max number of species
      *  it is changed to species number of input property
@@ -8231,53 +8231,44 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       mat_ptr->u_species_source[species_no][4] = a4; /* Ideal Gas constant */
 
       SPF_DBL_VEC(endofstring(es), 5, mat_ptr->u_species_source[species_no]);
-    }else if ( !strcmp(model_name, "ETCHING_KOH") )
-	{
-	  model_read = 1;
-	  mat_ptr->SpeciesSourceModel[species_no] = ETCHING_KOH;
-	}
+    } else if (!strcmp(model_name, "ETCHING_KOH")) {
+      model_read = 1;
+      mat_ptr->SpeciesSourceModel[species_no] = ETCHING_KOH;
+    }
 
-      else if ( !strcmp(model_name, "ETCHING_KOH_EXTERNAL") )
-	{
-          if ( fscanf(imp,"%s", input ) !=  1 )
-            {
-              GOMA_EH(GOMA_ERROR,"Expecting trailing keyword for ETCHING_KOH_EXTERNAL model.\n");
-            }
+    else if (!strcmp(model_name, "ETCHING_KOH_EXTERNAL")) {
+      if (fscanf(imp, "%s", input) != 1) {
+        GOMA_EH(GOMA_ERROR, "Expecting trailing keyword for ETCHING_KOH_EXTERNAL model.\n");
+      }
 
-          ii=0;
-          for ( j=0; j<efv->Num_external_field; j++)
-            {
-              if (!strcmp(efv->name[j], input))
-                {
-                  mat_ptr->species_source_external_field_index = j;
-                  efv->ev_etch_area = j;
-                }
-            }
+      ii = 0;
+      for (j = 0; j < efv->Num_external_field; j++) {
+        if (!strcmp(efv->name[j], input)) {
+          mat_ptr->species_source_external_field_index = j;
+          efv->ev_etch_area = j;
+        }
+      }
 
-          if ( fscanf(imp,"%s", input ) !=  1 )
-            {
-              GOMA_EH(GOMA_ERROR,"Expecting trailing keyword for ETCHING_KOH_EXTERNAL model.\n");
-            }
+      if (fscanf(imp, "%s", input) != 1) {
+        GOMA_EH(GOMA_ERROR, "Expecting trailing keyword for ETCHING_KOH_EXTERNAL model.\n");
+      }
 
-          for ( j=0; j<efv->Num_external_field; j++)
-            {
-              if (!strcmp(efv->name[j], input))
-                {
-                  ii = 1;
-                  efv->ev_etch_depth = j;
-                }
-            }
+      for (j = 0; j < efv->Num_external_field; j++) {
+        if (!strcmp(efv->name[j], input)) {
+          ii = 1;
+          efv->ev_etch_depth = j;
+        }
+      }
 
-          if( ii==0 )
-            {
-              GOMA_EH(GOMA_ERROR,"Must activate two external fields to use this ETCHING_KOH_EXTERNAL model");
-            }
+      if (ii == 0) {
+        GOMA_EH(GOMA_ERROR,
+                "Must activate two external fields to use this ETCHING_KOH_EXTERNAL model");
+      }
 
+      model_read = 1;
+      mat_ptr->SpeciesSourceModel[species_no] = ETCHING_KOH_EXT;
 
-	  model_read = 1;
-	  mat_ptr->SpeciesSourceModel[species_no] = ETCHING_KOH_EXT;
-
-        } else if (model_read == -1) {
+    } else if (model_read == -1) {
       GOMA_EH(model_read, "Species Source model invalid. May need more cards for other species");
     }
     ECHO(es, echo_file);
@@ -8563,8 +8554,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   mat_ptr->veloU[2] = 0.0;
 
   if (pd_glob[mn]->gv[R_LUBP] || pd_glob[mn]->gv[R_LUBP_2] || pd_glob[mn]->gv[R_TFMP_MASS] ||
-      pd_glob[mn]->gv[R_TFMP_BOUND]||
-     ( (pd_glob[mn]->gv[R_MASS]) && (pd_glob[mn]->MassFluxModel == FICKIAN_SHELL) ) ) {
+      pd_glob[mn]->gv[R_TFMP_BOUND] ||
+      ((pd_glob[mn]->gv[R_MASS]) && (pd_glob[mn]->MassFluxModel == FICKIAN_SHELL))) {
     model_read = look_for_mat_proptable(
         imp, "Upper Height Function Constants", &(mat_ptr->HeightUFunctionModel),
         &(mat_ptr->heightU), &(mat_ptr->u_heightU_function_constants),
@@ -9432,8 +9423,7 @@ mat_ptr->veloU	       * for it now and flag its existence through the material p
       (pd_glob[mn]->gv[R_SHELL_NORMAL1] && pd_glob[mn]->gv[R_SHELL_NORMAL2] &&
        pd_glob[mn]->gv[R_SHELL_NORMAL3]) ||
       pd_glob[mn]->gv[R_TFMP_MASS] || pd_glob[mn]->gv[R_TFMP_BOUND] ||
-( (pd_glob[mn]->gv[R_MASS]) && (pd_glob[mn]->MassFluxModel == FICKIAN_SHELL) )
-     ) {
+      ((pd_glob[mn]->gv[R_MASS]) && (pd_glob[mn]->MassFluxModel == FICKIAN_SHELL))) {
     model_read = look_for_mat_prop(imp, "FSI Deformation Model", &(mat_ptr->FSIModel), &(a0),
                                    NO_USER, NULL, model_name, NO_INPUT, &NO_SPECIES, es);
 

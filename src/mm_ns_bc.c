@@ -785,11 +785,11 @@ void fmesh_etch_bc(double *func,
   /* Right now we only consider KOH wet etching of silicon at 100 plane */
   if (etch_plane == 100) {
     /* Get etch rate */
-     double rho_H2O = fv->c[0];
-     double rho_KOH = fv->c[1];
-     etch_rate = calc_KOH_Si_etch_rate_100(rho_H2O, rho_KOH, d_etch_rate_d_C);
-     etch_rate_sens[0] = d_etch_rate_d_C[0];
-     etch_rate_sens[1] = d_etch_rate_d_C[1];
+    double rho_H2O = fv->c[0];
+    double rho_KOH = fv->c[1];
+    etch_rate = calc_KOH_Si_etch_rate_100(rho_H2O, rho_KOH, d_etch_rate_d_C);
+    etch_rate_sens[0] = d_etch_rate_d_C[0];
+    etch_rate_sens[1] = d_etch_rate_d_C[1];
   }
 
   /* Set the residual */

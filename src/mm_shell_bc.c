@@ -60,12 +60,12 @@
  *
  *
  *       NAME			        TYPE			CALLED BY
-*----------------------------------------------------------------------------
+ *----------------------------------------------------------------------------
  *
  *  shell_n_dot_flow_bc_confined         void
  *
-*  lub_press_hydro                      void
-*
+ *  lub_press_hydro                      void
+ *
  *  shell_n_dot_flow_bc_film             void
  *
  *  shell_t_dot_flow_bc_film             void
@@ -477,63 +477,59 @@ void lub_static_pressure(double func[DIM],
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-void
-lub_press_hydro(double *func,
-                double d_func[MAX_VARIABLE_TYPES + MAX_CONC],
-                const double delta_p_x,    /* Pressure variation in x direction */
-                const double delta_p_y,    /* Pressure variation in y direction */
-                const double delta_p_z,	   /* Pressure variation in z direction */
-                const double p_0)          /* Pressure datum */
+void lub_press_hydro(double *func,
+                     double d_func[MAX_VARIABLE_TYPES + MAX_CONC],
+                     const double delta_p_x, /* Pressure variation in x direction */
+                     const double delta_p_y, /* Pressure variation in y direction */
+                     const double delta_p_z, /* Pressure variation in z direction */
+                     const double p_0)       /* Pressure datum */
 
-     /***********************************************************************
-      *
-      * lub_press_hydro():
-      *
-      *  Function which evaluates the expression specifying the
-      *  hydrostatic pressure at a quadrature point normal to the side
-      *  of an element.
-      *
-      *         func =   LUB_P - (p_0 + delta_p_x * x
-                                      + delta_p_y * y
-      *                               + delta_p_z * z)
-      *
-      *  The boundary condition LUB_PRESS_HYDROSTATIC employs this function.
-      *
-      *
-      * Input:
-      *
-      *
-      *  LUB_P         = Lubrication pressure
-      *
-      *  delta_p_x     = specified on the bc card as the first float
-      *  delta_p_y     = specified on the bc card as the second float
-      *  delta_p_z     = specified on the bc card as the third float
-      *  p_0           = specified on the bc card as the fourth float
-      *
-      * Output:
-      *
-      *  func[0] = value of the function mentioned above
-      *  d_func[0][varType][lvardof] =
-      *              Derivate of func[0] wrt
-      *              the variable type, varType, and the local variable
-      *              degree of freedom, lvardof, corresponding to that
-      *              variable type.
-      *
-      *
-      *   Author: K. Tjiptowidjojo    (03/13/2019)
-      *
-      ********************************************************************/
+/***********************************************************************
+ *
+ * lub_press_hydro():
+ *
+ *  Function which evaluates the expression specifying the
+ *  hydrostatic pressure at a quadrature point normal to the side
+ *  of an element.
+ *
+ *         func =   LUB_P - (p_0 + delta_p_x * x
+                                 + delta_p_y * y
+ *                               + delta_p_z * z)
+ *
+ *  The boundary condition LUB_PRESS_HYDROSTATIC employs this function.
+ *
+ *
+ * Input:
+ *
+ *
+ *  LUB_P         = Lubrication pressure
+ *
+ *  delta_p_x     = specified on the bc card as the first float
+ *  delta_p_y     = specified on the bc card as the second float
+ *  delta_p_z     = specified on the bc card as the third float
+ *  p_0           = specified on the bc card as the fourth float
+ *
+ * Output:
+ *
+ *  func[0] = value of the function mentioned above
+ *  d_func[0][varType][lvardof] =
+ *              Derivate of func[0] wrt
+ *              the variable type, varType, and the local variable
+ *              degree of freedom, lvardof, corresponding to that
+ *              variable type.
+ *
+ *
+ *   Author: K. Tjiptowidjojo    (03/13/2019)
+ *
+ ********************************************************************/
 {
-  *func = fv->lubp - (p_0 + delta_p_x * fv->x[0]
-                          + delta_p_y * fv->x[1]
-                          + delta_p_z * fv->x[2]);
+  *func = fv->lubp - (p_0 + delta_p_x * fv->x[0] + delta_p_y * fv->x[1] + delta_p_z * fv->x[2]);
   d_func[LUBP] = 1.0;
 
 } /* END of routine lub_press_hydro  */
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-
 
 void shell_n_dot_flow_bc_film(double func[DIM],
                               double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
