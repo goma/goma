@@ -1305,8 +1305,10 @@ void adapt_mesh_omega_h(struct GomaLinearSolverData **ams,
 
   if (step == 0) {
     ss2 << base_name;
+  } else if (step > 0) {
+    ss2 << base_name << "-s." << step-1;
   } else {
-    ss2 << base_name << "-s." << step;
+    GOMA_EH(GOMA_ERROR, "Adapt step given < 0: %d", step);
   }
 
   goma::exodus::convert_omega_h_to_goma(ss2.str().c_str(), &mesh, exo, dpi, verbose, classify_with);
