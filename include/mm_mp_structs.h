@@ -675,6 +675,7 @@ struct Material_Properties {
   int len_u_species_source[MAX_CONC];
   dbl *u_species_source[MAX_CONC];
   dbl Jac_Species_Source[MAX_CONC * MAX_CONC];
+  int species_source_external_field_index;
 
   dbl species_vol_expansion[MAX_CONC];
   dbl d_species_vol_expansion[MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC];

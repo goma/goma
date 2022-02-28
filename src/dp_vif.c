@@ -607,7 +607,10 @@ void noahs_ark(void) {
       ddd_add_member(n, &efv->i[i], 1, MPI_INT);
       ddd_add_member(n, efv->field_type[i], 15, MPI_CHAR);
     }
+
   }
+  ddd_add_member(n, &efv->ev_etch_area, 1, MPI_INT);
+  ddd_add_member(n, &efv->ev_etch_depth, 1, MPI_INT);
 
   ddd_add_member(n, &Anneal_Mesh, 1, MPI_INT);
 
@@ -1621,6 +1624,8 @@ void noahs_ark(void) {
 
     ddd_add_member(n, &mp_glob[i]->thermal_cond_external_field, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->elec_cond_external_field, 1, MPI_INT);
+
+      ddd_add_member(n,&mp_glob[i]->species_source_external_field_index, 1, MPI_INT);
 
     /*
      * Material properties that are fixed length vectors of doubles.

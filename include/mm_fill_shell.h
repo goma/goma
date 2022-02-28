@@ -152,6 +152,15 @@ EXTERN int assemble_shell_energy(double,                 /* Time */
                                  double xi[DIM],         /* Local stu coords */
                                  const PG_DATA *pg_data, /* petrov galerkins stuff */
                                  const Exo_DB *exo);     /* ExodusII database struct pointer */
+
+EXTERN int assemble_shell_species
+(double,                   /* Time */
+       double,                   /* theta or tt*/
+       double,                   /* dt */
+       double xi[DIM],           /* Local stu coords */
+       const PG_DATA *pg_data,   /* petrov galerkins stuff */
+       const Exo_DB *exo);      /* ExodusII database struct pointer */
+
 EXTERN int assemble_shell_deltah(double,                 /* Time */
                                  double,                 /* theta or tt*/
                                  double,                 /* dt */

@@ -779,12 +779,17 @@ void fmesh_etch_bc(double *func,
   int var;
 
   double etch_rate = 0.0;
-  double d_etch_rate_d_C[MAX_CONC] = {0.0};
+  double d_etch_rate_d_C[2] = {0.0};
+  double etch_rate_sens[MAX_CONC] = {0.0};
 
   /* Right now we only consider KOH wet etching of silicon at 100 plane */
   if (etch_plane == 100) {
     /* Get etch rate */
-    etch_rate = calc_KOH_Si_etch_rate_100(d_etch_rate_d_C);
+     double rho_H2O = fv->c[0];
+     double rho_KOH = fv->c[1];
+     etch_rate = calc_KOH_Si_etch_rate_100(rho_H2O, rho_KOH, d_etch_rate_d_C);
+     etch_rate_sens[0] = d_etch_rate_d_C[0];
+     etch_rate_sens[1] = d_etch_rate_d_C[1];
   }
 
   /* Set the residual */
@@ -808,7 +813,7 @@ void fmesh_etch_bc(double *func,
   var = MASS_FRACTION;
   if (pd->v[pg->imtrx][var]) {
     for (w = 0; w < pd->Num_Species_Eqn; w++) {
-      d_func[MAX_VARIABLE_TYPES + w] -= d_etch_rate_d_C[w];
+      d_func[MAX_VARIABLE_TYPES + w] -= etch_rate_sens[w];
     }
   }
 

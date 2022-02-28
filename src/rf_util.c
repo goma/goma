@@ -3672,13 +3672,13 @@ int advance_porosity_jas_leads(const int time_step,
 
 int init_pmv_hyst(const Exo_DB *exo)
 
-/*
+/**********************************************************************
  * Function to initiate porous media variables hysteresis structure
  * containing history of curve switching and other nodal quantities
- *
  * This update is done here on a node-by-node basis, rather than
  * doing at assembly time.
- */
+ ***********************************************************************/
+
 {
   int i_num_switch_ext_field, i_curve_type_ext_field;
 
@@ -3743,6 +3743,76 @@ int init_pmv_hyst(const Exo_DB *exo)
 
   return 0;
 }
+
+
+/**********************************************************************
+ * Function updates the external field corresponding to imported nodal
+ * etch area  at each time step (after the first) according to the
+ * following relation:
+ *
+ *              n+1              n                     n+1    n
+ *    (etch_area)    = (etch_area)  - etch_rate   * [ t    - t  ]
+ * where:
+ *        etch rate = Rate of etching in CGS unit
+ *        t = time
+ *       n+1 = current
+ *         n = first in current Goma call
+ *
+ * This update is done here on a node-by-node basis, rather than
+ * doing at assembly time.
+ ***********************************************************************/
+int advance_etch_area_ext_field(const int time_step, const int nn,
+                            const dbl delta_t, dbl *x)
+{
+  int i_etch_area = -1, i_etch_depth = -1;
+  int n, i_H2O, i_KOH;
+  double rho_H2O, rho_KOH;
+  double etch_area_old, etch_depth_old, etch_area, etch_depth;
+  double etch_rate;
+
+  i_etch_area = efv->ev_etch_area;
+  i_etch_depth = efv->ev_etch_depth;
+
+  /* Loop over nodes in problem */
+  for (n=0; n<nn; n++)
+    {
+  /*
+   * Load up concentration field - g/cm^3
+   */
+     i_H2O = Index_Solution (n, MASS_FRACTION, 0, 0, -1, pg->imtrx);
+     i_KOH = Index_Solution (n, MASS_FRACTION, 1, 0, -1, pg->imtrx);
+     rho_H2O = x[i_H2O];
+     rho_KOH = x[i_KOH];
+
+  /*
+   * Load up etch area and depth from external field
+   */
+     etch_area_old = efv->ext_fld_ndl_val[i_etch_area][n];
+     etch_depth_old = efv->ext_fld_ndl_val[i_etch_depth][n];
+
+  /*
+   * Calculate etch rate
+   */
+     etch_rate = calc_KOH_Si_etch_rate_100(rho_H2O, rho_KOH, NULL);
+
+
+  /*
+   * Update etch area and depth
+   */
+     etch_area = etch_area_old - etch_rate * delta_t /(350.0 * 1.0e-7 ) / sqrt(2.0);
+     etch_depth = etch_depth_old + etch_rate * delta_t;
+
+     if (etch_area < 0.0)
+       {
+        etch_area = 0.0;
+        etch_depth = etch_depth_old;
+       }
+     efv->ext_fld_ndl_val[i_etch_area][n] = etch_area;
+     efv->ext_fld_ndl_val[i_etch_depth][n] = etch_depth;
+
+    } /* End of loop over nodes */
+  return 0;
+} /* End of advance_etch_area_ext_field */
 
 /****************************************************************************/
 /****************************************************************************/

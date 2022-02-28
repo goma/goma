@@ -498,7 +498,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define POWERLAW_DARCY_FICKIAN   20 /*PRS for P&G */
 #define HYDRODYNAMIC_QTENSOR     21
 #define HYDRODYNAMIC_QTENSOR_OLD 22
-
+#define FICKIAN_SHELL 23       /* Shell version of Fickian diffusion equation */
 /* surface tension laws */
 #define DILATION       3
 #define GIBBS_ISOTHERM 35
@@ -556,6 +556,10 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 
 /* Photocuring reaction model  */
 #define PHOTO_CURING 934
+
+/* KOH etching models */
+#define ETCHING_KOH 935
+#define ETCHING_KOH_EXT 936
 
 /* Special material-related height function models */
 #define CONSTANT_SPEED        1011

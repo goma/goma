@@ -1031,6 +1031,10 @@ struct External_Field_Variables {
                                    poroelastic flow activity */
   int ev_dpordt_index;          /* Index for the d porosity/dt external field */
 
+  int   ev_etch_area;          /* external area fraction in which etching reaction takes place */
+  int   ev_etch_depth;         /* external depth field due to etching reaction */
+
+
   char name[MAX_EXTERNAL_FIELD][20];
   /* names of external field variables*/
   char file_nm[MAX_EXTERNAL_FIELD][85];
@@ -3211,6 +3215,7 @@ struct Lubrication_Auxiliaries {
   double dq_ddh[DIM][MDE];          /* Flow rate sensitivities w.r.t. heat transport */
   double dq_dc[DIM][MDE];           /* Flow rate sensitivities w.r.t. particles volume
                                        fraction */
+  double dq_dconc[DIM][MAX_CONC][MDE]; /* Flow rate sensitivities w.r.t. species concentration */
   double dq_dshear_top[DIM][MDE];   /* Flow rate sensitivities w.r.t. top wall
                                        shear rate */
   double dq_dshear_bot[DIM][MDE];   /* Flow rate sensitivities w.r.t. bottom wall
@@ -3237,6 +3242,7 @@ struct Lubrication_Auxiliaries {
                                            transport */
   double dv_avg_dc[DIM][MDE];           /* Average velocity sensitivities w.r.t. particles
                                            volume fraction */
+  double dv_avg_dconc[DIM][MAX_CONC][MDE]; /* Average velocity sensitivities w.r.t. species concentration */
   double dv_avg_dshear_top[DIM][MDE];   /* Average velocity sensitivities w.r.t.
                                            top wall shear rate */
   double dv_avg_dshear_bot[DIM][MDE];   /* Average velocity sensitivities w.r.t.

@@ -59,6 +59,12 @@
 #include "mm_fill_ptrs.h"
 #include "mm_fill_rs.h"
 #include "mm_fill_shell.h"
+#include "mm_fill_em.h"
+#include "mm_shell_util.h"
+
+#include "exo_struct.h"
+#include "dpi.h"
+
 #include "mm_fill_species.h"
 #include "mm_fill_stress.h"
 #include "mm_fill_terms.h"
@@ -1562,6 +1568,12 @@ Revised:         Summer 1998, SY Tam (UNM)
     }
 
     if (pde[R_MASS]) {
+          if (pd->MassFluxModel == FICKIAN_SHELL)
+            {
+             err = assemble_shell_species(time_value, theta, delta_t, xi, &pg_data, exo);
+            }
+          else
+            {
       err = assemble_mass_transport(time_value, theta, delta_t, &pg_data);
       GOMA_EH(err, "assemble_mass_transport");
 #ifdef CHECK_FINITE
@@ -1572,6 +1584,7 @@ Revised:         Summer 1998, SY Tam (UNM)
       if (neg_elem_volume)
         return -1;
     }
+	}
 
     if (pde[R_POR_LIQ_PRES] || pde[R_POR_SATURATION]) {
       err = assemble_porous_transport(time_value, theta, delta_t);

@@ -6474,7 +6474,7 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
                          double dt,      /* current time step size */
                          double xi[DIM], /* Local stu coordinates */
                          const Exo_DB *exo) {
-  int eqn, var, peqn, pvar, p, a, b, k, jk;
+  int eqn, var, peqn, pvar, p, a, b, k, jk, w;
   int i = -1, j, status; //, err;
   int *n_dof = NULL;
   int dof_map[MDE];
@@ -6526,6 +6526,7 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
 
   /* Load up source models -- mass */
   // No calls yet as only constat models exist. See mm_input_mp.c
+
   int err = -1;
   dbl flux = 0.0;
   dbl d_flux[MAX_VARIABLE_TYPES][MDE];
@@ -7089,6 +7090,37 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
           lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += diffusion;
         } // End of loop over j
       }   // End of J_lubp_dsh_pc
+
+      /*
+       * J_lubp_D_C
+       */
+
+      var = MASS_FRACTION;
+
+      if (pd->v[pg->imtrx][var])
+	{
+	 for ( w = 0; w < pd->Num_Species_Eqn; w++ )
+            {
+	     for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                {
+	         phi_j = bf[var]->phi[j];
+
+                 diffusion = 0.;
+	         if (pd->e[eqn] && T_DIFFUSION)
+	           {
+		    for (p = 0; p < VIM; p++)
+	               {
+	                diffusion += LubAux->dq_dconc[p][w][j] * grad_II_phi_i[p];
+                       }
+
+		    diffusion *= det_J * wt;
+		    diffusion *= h3;
+		    diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+                   }
+                 lec->J[LEC_J_INDEX(peqn,MAX_PROB_VAR + w,i,j)] += diffusion;
+                }// End of loop over j
+            }// loop over species
+        }// End of J_lubp_d_C
 
     } /* end of loop over i */
   }   /* end of Assemble_Jacobian */
@@ -8152,6 +8184,412 @@ int assemble_shell_energy(double time,            /* present time value */
   return (status);
 } /* end of assemble_shell_energy */
 
+/***assemble_shell_species******************************************************/
+/*  _______________________________________________________________________  */
+
+/* assemble_shell_species -- assemble terms (Residual & Jacobian) for scalar shell
+ *                          energy equation, assuming constant concentration across shell.
+ *
+ * in:
+ *      ei -- pointer to Element Indices        structure
+ *      pd -- pointer to Problem Description    structure
+ *      af -- pointer to Action Flag            structure
+ *      bf -- pointer to Basis Function         structure
+ *      fv -- pointer to Field Variable         structure
+ *  fv_old -- pointer to old Diet Field Variable        structure
+ *  fv_dot -- pointer to dot Diet Field Variable        structure
+ *      cr -- pointer to Constitutive Relation  structure
+ *      md -- pointer to Mesh Derivative        structure
+ *      me -- pointer to Material Entity        structure
+ *
+ * out:
+ *      a   -- gets loaded up with proper contribution
+ *      lec -- gets loaded up with local contributions to resid, Jacobian
+ *      r   -- residual RHS vector
+ *
+ * Created:     Monday October 8, 2018 tjiptowi@unm.edu
+ *
+ */
+/*ARGSUSED*/
+int
+assemble_shell_species(double time,	  /* present time value */
+                       double tt,         /* parameter to vary time integration from
+                                           * explicit (tt = 1) to implicit (tt = 0)    */
+                       double dt,         /* current time step size */
+                       double xi[DIM],    /* Local stu coordinates */
+                       const PG_DATA *pg_data, /*Upwinding stuff */
+                       const Exo_DB *exo)
+{
+  int eqn, var, pvar, dim, a, w, w1;
+  int err;
+  int *n_dof = NULL;
+  int dof_map[MDE];
+  int i = -1, ii;
+  int j, jj, status;
+
+  dbl H;    /* Shell heights */
+  dbl H_U, dH_U_dtime, H_L, dH_L_dtime;
+  dbl dH_U_dX[DIM],dH_L_dX[DIM];
+  dbl dH_U_dp, dH_U_ddh;
+
+  dbl grad_c[MAX_CONC][DIM] = {{0.0}};  /* Shell concentration gradient. */
+
+
+  dbl mass, advection, diffusion,  source ;
+
+  /*
+   * Galerkin weighting functions for i-th shell residuals
+   * and some of their derivatives...
+   */
+  dbl phi_i, phi_j;
+  dbl grad_phi_i[DIM];
+  dbl grad_phi_j[DIM];
+
+
+  dbl h3;                       /* Volume element (scale factors). */
+  dbl det_J;
+  dbl wt;
+
+  /*   static char yo[] = "assemble_shell_species";*/
+  status = 0;
+
+  /*
+   * Bail out fast if there's nothing to do...
+   */
+  eqn   = R_MASS;
+  if (! pd->e[eqn]) return(status);
+
+  /*
+   * Load Gauss point weights before looking for friends
+   */
+  dim = pd->Num_Dim;
+  wt = fv->wt;                  /* Gauss point weight. */
+  h3 = fv->h3;                  /* Differential volume element. */
+
+  /*
+   * Prepare geometry
+   */
+  n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
+  lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+
+  /*
+   * Load proper FEM weights
+   */
+  det_J = fv->sdet;
+
+  /*
+   * Load material property constants
+   */
+   if (Diffusivity()) GOMA_EH(GOMA_ERROR, "Error in Diffusivity.");
+
+ /*
+   * Time settings
+   */
+  if(pd->TimeIntegration != TRANSIENT) {
+    tt = -0.5; dt = 1.0;
+  }
+
+  /*** CALCULATE PHYSICAL PROPERTIES AND SENSITIVITIES ************************/
+
+  /* Lubrication height from model */
+  H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, dt);
+
+  /* Concentration gradient */
+  for ( w = 0; w < pd->Num_Species_Eqn; w++)
+     {
+      for ( i = 0; i < dim; i++)
+         {
+          for ( j = 0; j < dim; j++)
+             {
+              grad_c[w][i] += ( fv->grad_c[w][j] * delta(i,j) -
+                                fv->grad_c[w][j] * ( fv->snormal[i] * fv->snormal[j] ) );
+             }
+         }
+     }
+
+ /* Call q calculator if lubrication equation is on */
+  if (pd->e[R_LUBP]) {
+     calculate_lub_q_v(R_LUBP, time, dt, xi, exo);
+  }
+
+
+  /* For some reason, using Boussinesq body force contribution from LubAux->q does not work
+     so I use a stripped down version below  */
+  double lub_q[DIM] = {0.0};
+  double grad_p[DIM] = {0.0};
+  double Bouss[DIM] = {0.0};
+  for ( i = 0; i < dim; i++)
+     {
+      for ( j = 0; j < dim; j++)
+         {
+          grad_p[i] += ( fv->grad_lubp[j] * delta(i,j) -
+                         fv->grad_lubp[j] * ( fv->snormal[i] * fv->snormal[j] ) );
+         }
+     }
+
+  for ( a = 0; a < dim; a++)
+     {
+      Bouss[a] = mp->momentum_source[a] * mp->density;
+      for(w = 0; w < pd->Num_Species_Eqn; w++)
+         {
+          Bouss[a] += - mp->momentum_source[a] * mp->density * mp->species_vol_expansion[w]
+                      * (fv->c[w] - mp->reference_concn[w]);
+         }
+     }
+
+  for ( a = 0; a < dim; a++)
+     {
+      lub_q[a] = pow(H,3)/(12.0 * mp->viscosity) * ( -grad_p[a] + Bouss[a] );
+     }
+
+
+  /*** RESIDUAL ASSEMBLY ******************************************************/
+  if (af->Assemble_Residual)
+    {
+     eqn = R_MASS;
+     /*
+      *   START loop over species equations. The outer loop is over
+      *   the species number
+      */
+     for ( w=0; w < pd->Num_Species_Eqn; w++)
+        {
+
+         /*** Loop over DOFs (i) ***/
+         for ( i=0; i < ei[pg->imtrx]->dof[eqn]; i++)
+            {
+
+             /* Prepare basis functions */
+             phi_i = bf[eqn]->phi[i];
+             for ( ii = 0; ii < dim; ii++)
+                {
+                 grad_phi_i[ii] = 0.0;
+                 for ( jj = 0; jj < dim; jj++)
+                    {
+                     grad_phi_i[ii] += ( bf[eqn]->grad_phi[i][jj] * delta(ii,jj) -
+                                         bf[eqn]->grad_phi[i][jj] * ( fv->snormal[ii] * fv->snormal[jj] ) );
+                    }
+                }
+
+             /* Mass term */
+             mass = 0.;
+             if ( pd->TimeIntegration != STEADY )
+               {
+                if ( pd->e[pg->imtrx][eqn] && T_MASS )
+                  {
+                   mass  = fv_dot->c[w];
+                   mass *= H * phi_i * det_J * wt;
+                   mass *= h3;
+                   mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+                 }
+	       }
+
+             /* Advection term */
+             advection = 0.0;
+             if (pd->e[pg->imtrx][R_LUBP] && pd->e[pg->imtrx][eqn] && T_ADVECTION)
+               {
+                for ( a = 0; a < dim; a++)
+                   {
+                    advection += lub_q[a] * grad_c[w][a];
+                   }
+                advection *= det_J * phi_i * wt;
+                advection *= h3;
+                advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+               }
+
+             /* Diffusion term */
+             diffusion = 0.0;
+             if (pd->e[pg->imtrx][eqn] && T_DIFFUSION)
+               {
+                for ( a = 0; a < dim; a++)
+                   {
+                    diffusion += H * mp->diffusivity[w] *  grad_phi_i[a] * grad_c[w][a];
+                   }
+                diffusion *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+               }
+
+             /* Source term */
+             source = 0.0;
+             if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
+               {
+                if (mp->SpeciesSourceModel[w] == CONSTANT)
+                  {
+                   source = mp->species_source[w];
+                  }
+                else if ( (mp->SpeciesSourceModel[w] == ETCHING_KOH) ||
+                          (mp->SpeciesSourceModel[w] == ETCHING_KOH_EXT) )
+                  {
+                   err = etching_KOH_source(w, mp->u_species_source[w]);
+                  GOMA_EH(err, "etching_KOH_source");
+                   source = mp->species_source[w];
+                  }
+                else
+                  {
+                   GOMA_EH(-1, "Only CONSTANT or ETCHING_KOH is permitted in source model of shell species equation ");
+                  }
+               }
+             source *= phi_i * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+
+             lec->R[LEC_R_INDEX(MAX_PROB_VAR + w,i)] += mass + advection +  diffusion + source;
+            } /* end of loop over equations */
+        } /* end of loop over species */
+    } /* end of assemble residuals */
+
+  /*
+   * Jacobian terms...
+   */
+
+  if ( af->Assemble_Jacobian )
+    {
+     for ( w = 0; w < pd->Num_Species_Eqn; w++)
+        {
+         for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
+            {
+
+             /* Prepare basis functions */
+             phi_i = bf[eqn]->phi[i];
+             for ( ii = 0; ii < dim; ii++)
+                {
+                 grad_phi_i[ii] = 0.0;
+                 for ( jj = 0; jj < dim; jj++)
+                    {
+                     grad_phi_i[ii] += ( bf[eqn]->grad_phi[i][jj] * delta(ii,jj) -
+                                         bf[eqn]->grad_phi[i][jj] * ( fv->snormal[ii] * fv->snormal[jj] ) );
+                    }
+                }
+
+             /*
+              * J_s_c derivative of residual pieces w.r.t. the species
+              *       unknowns
+              */
+             var = MASS_FRACTION;
+             if ( pd->e[pg->imtrx][eqn] && pd->v[pg->imtrx][var] )
+               {
+                for ( w1 = 0; w1 < pd->Num_Species_Eqn; w1++)
+                   {
+                    for ( j = 0; j < ei[pg->imtrx]->dof[var]; j++)
+                       {
+
+                        phi_j = bf[var]->phi[j];
+                        for ( ii = 0; ii < dim; ii++)
+                           {
+                            grad_phi_j[ii] = 0.0;
+                            for ( jj = 0; jj < dim; jj++)
+                               {
+                                grad_phi_j[ii] += ( bf[var]->grad_phi[j][jj] * delta(ii,jj) -
+                                                    bf[var]->grad_phi[j][jj] * ( fv->snormal[ii] * fv->snormal[jj] ) );
+                               }
+                           }
+
+                        /* Mass term */
+                        mass = 0.;
+                        if ( pd->TimeIntegration != STEADY )
+                          {
+                           if ( pd->e[pg->imtrx][eqn] && T_MASS )
+                             {
+                              mass =  (1 + 2. * tt) * phi_j / dt * delta(w,w1);
+                              mass *=  H * phi_i * det_J * wt;
+                              mass *= h3 * pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+                             }
+                          }
+
+                        /* Advection term */
+                        advection = 0.;
+                        if ( pd->e[pg->imtrx][R_LUBP] && T_ADVECTION )
+                          {
+                           for ( a = 0; a < dim; a++)
+                              {
+                               advection += lub_q[a] * grad_phi_j[a] * delta(w,w1);
+                               advection += pow(H,3)/(12.0 * mp->viscosity) * (-mp->momentum_source[a])
+                                            * mp->species_vol_expansion[w1] * phi_j * grad_c[w][a];
+                              }
+                           advection *= det_J * wt * phi_i;
+                           advection *= h3;
+                           advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+                          }
+
+                        /* Diffusion term */
+                        diffusion = 0.;
+                        if ( pd->e[pg->imtrx][eqn] && T_DIFFUSION )
+                          {
+                           for ( a = 0; a < dim; a++)
+                              {
+                               diffusion += H * mp->diffusivity[w] * grad_phi_i[a] * grad_phi_j[a] * delta(w,w1);
+                              }
+                           diffusion *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+                          }
+
+                        /* Source term */
+                        source = 0.;
+                        if ( pd->e[pg->imtrx][eqn] && T_SOURCE )
+                          {
+                           if (mp->SpeciesSourceModel[w] == CONSTANT)
+                             {
+                              source = 0.; /* Constant source --> no sensitivity */
+                             }
+                          else if ( (mp->SpeciesSourceModel[w] == ETCHING_KOH) ||
+                                    (mp->SpeciesSourceModel[w] == ETCHING_KOH_EXT) )
+                             {
+                              err = etching_KOH_source(w, mp->u_species_source[w]);
+                              source = mp->d_species_source[MAX_VARIABLE_TYPES+w1] * phi_j;
+                             }
+                          else
+                             {
+                              GOMA_EH(GOMA_ERROR, "Only CONSTANT or ETCHING_KOH is permitted in source model of shell species equation ");
+                             }
+                           source *= phi_i * det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+                          }
+
+                        lec->J[LEC_J_INDEX(MAX_PROB_VAR + w,MAX_PROB_VAR + w1,i,j)] += mass + advection + diffusion + source ;
+                       } /* end of loop over DOF*/
+                   } /* end of loop over species variables */
+               }/* end of species sensitivities */
+
+             /*
+              * J_s_lubp derivative of residual pieces w.r.t. lubrication pressure
+              *          unknowns
+              */
+             var = LUBP;
+             if ( pd->v[pg->imtrx][var] )
+               {
+                pvar = upd->vp[pg->imtrx][var];
+                for ( j = 0; j < ei[pg->imtrx]->dof[var]; j++)
+                   {
+                    phi_j = bf[var]->phi[j];
+                    for ( ii = 0; ii < dim; ii++)
+                       {
+                        grad_phi_j[ii] = 0.0;
+                        for ( jj = 0; jj < dim; jj++)
+                           {
+                            grad_phi_j[ii] += ( bf[var]->grad_phi[j][jj] * delta(ii,jj) -
+                                                bf[var]->grad_phi[j][jj] * ( fv->snormal[ii] * fv->snormal[jj] ) );
+                           }
+                       }
+
+                    /* Advection term */
+                    advection = 0.;
+                    if ( T_ADVECTION )
+                      {
+                       for ( a = 0; a < dim; a++)
+                          {
+                           advection -= pow(H,3)/(12.0 * mp->viscosity) * grad_phi_j[a] * grad_c[w][a];
+
+                          }
+                       advection *= det_J * wt * phi_i;
+                       advection *= h3;
+                       advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+                      }
+                    lec->J[LEC_J_INDEX(MAX_PROB_VAR + w,pvar,i,j)] += advection;
+                   }/* end of loop over DOF*/
+               }/* end of LUBP sensitivities*/
+            } /* end of loop over equations */
+        } /* end of loop over species */
+    } /* end of assemble Jacobian */
+
+    /* clean-up */
+  fv->wt = wt;  /* load_neighbor_var_data screws this up */
+  safe_free((void *) n_dof);
+  return(status);
+} /* End of assemble_shell_species */
 /*****************************************************************************/
 /***assemble_film******************************************************/
 /*  _______________________________________________________________________  */
@@ -9655,14 +10093,12 @@ int assemble_film_1D(double time,    /* present time value */
 
           /*** Loop over DOFs (j) ***/
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-            // jk = dof_map[j];
 
             /* Add mass term */
             mass = 0.0;
             if (pd->TimeIntegration != STEADY) {
               if (pd->e[pg->imtrx][eqn] & T_MASS) {
-                //                          mass += phi_i * dH_dot_dmesh[b][jk] * det_J;
-                //                          mass  = phi_i * H_dot * d_det_J_dmesh[b][jk];
+
                 mass += phi_i * dH_dot_dmesh[b][j] * det_J;
                 mass = phi_i * H_dot * d_det_J_dmesh[b][j];
                 mass *= wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
@@ -9672,9 +10108,7 @@ int assemble_film_1D(double time,    /* present time value */
             /* Add diffusion term */
             diffusion = 0.0;
             if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
-              //                       diffusion += - dq_dmesh[b][jk] * dphi_i_dS * det_J;
-              //                       diffusion += - q * d_dphi_dS_dmesh[i][b][jk] * det_J;
-              //                       diffusion += - q * dphi_i_dS * d_det_J_dmesh[b][jk];
+
               diffusion += -dq_dmesh[b][j] * dphi_i_dS * det_J;
               diffusion += -q * d_dphi_dS_dmesh[i][b][j] * det_J;
               diffusion += -q * dphi_i_dS * d_det_J_dmesh[b][j];
@@ -9684,12 +10118,11 @@ int assemble_film_1D(double time,    /* present time value */
             /* Add source term */
             source = 0.0;
             if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-              //                       source  += phi_i * flux * d_det_J_dmesh[b][jk];
+
               source += phi_i * flux * d_det_J_dmesh[b][j];
               source *= wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
             }
 
-            //                    lec->J[LEC_J_INDEX(peqn,pvar,i,jk)] += mass + diffusion + source;
             lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += mass + diffusion + source;
 
           } /* End of loop over j */
@@ -9802,16 +10235,10 @@ int assemble_film_1D(double time,    /* present time value */
 
           /*** Loop over DOFs (j) ***/
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-            // jk = dof_map[j];
 
             /* Add diffusion term */
             diffusion = 0.0;
             if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
-              //                       diffusion += - mp->surface_tension *
-              //                       d_dphi_dS_dmesh[i][b][jk] * grad_H * det_J; diffusion += -
-              //                       mp->surface_tension * dphi_i_dS * dgrad_H_dmesh[b][jk] *
-              //                       det_J; diffusion += - mp->surface_tension * dphi_i_dS *
-              //                       grad_H * d_det_J_dmesh[b][jk];
               diffusion += -mp->surface_tension * d_dphi_dS_dmesh[i][b][j] * grad_H * det_J;
               diffusion += -mp->surface_tension * dphi_i_dS * dgrad_H_dmesh[b][j] * det_J;
               diffusion += -mp->surface_tension * dphi_i_dS * grad_H * d_det_J_dmesh[b][j];
@@ -9821,12 +10248,11 @@ int assemble_film_1D(double time,    /* present time value */
             /* Add source term */
             source = 0.0;
             if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-              //                       source += phi_i * fv->sh_fp * d_det_J_dmesh[b][jk];
+
               source += phi_i * fv->sh_fp * d_det_J_dmesh[b][j];
               source *= wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
             }
 
-            //                    lec->J[LEC_J_INDEX(peqn,pvar,i,jk)] += diffusion + source;
             lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += diffusion + source;
 
           } /* End of loop over j */

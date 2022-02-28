@@ -882,6 +882,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
     case LS_QRAD_BC:
     case SURFTANG_EDGE_BC:
     case FLOW_HYDROSTATIC_BC:
+        case LUB_PRESS_HYDROSTATIC_BC:
     case VELO_TANGENT_3D_BC:
     case SHARP_WETLIN_VELOCITY_BC:
     case APR_PLANE_TRANS_BC:
