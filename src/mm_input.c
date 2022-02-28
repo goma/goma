@@ -1758,11 +1758,13 @@ void rd_timeint_specs(FILE *ifp, char *input) {
   if (iread == 1) {
     tran->ale_adapt_freq = read_int(ifp, "ALE Adapt Frequency");
     if (tran->ale_adapt_freq <= 0) {
-      GOMA_EH(GOMA_ERROR, "Expected ALE Frequency > 0");
+      GOMA_EH(GOMA_ERROR, "Expected ALE Adapt Frequency > 0, got %d", tran->ale_adapt_freq);
     }
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", "ALE Adapt Frequency",
              tran->ale_adapt_freq);
     ECHO(echo_string, echo_file);
+  } else if (tran->ale_adapt) {
+    GOMA_EH(GOMA_ERROR, "Expected ALE Adapt Frequency card since ALE Adapt = yes");
   }
 
   iread = look_for_optional(ifp, "ALE Adapt ISO Size", input, '=');
@@ -1774,6 +1776,8 @@ void rd_timeint_specs(FILE *ifp, char *input) {
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %g", "ALE Adapt ISO Size",
              tran->ale_adapt_iso_size);
     ECHO(echo_string, echo_file);
+  } else if (tran->ale_adapt) {
+    GOMA_EH(GOMA_ERROR, "Expected ALE Adapt ISO Size card since ALE Adapt = yes");
   }
 }
 /* rd_timeint_specs -- read input file for time integration specifications */
