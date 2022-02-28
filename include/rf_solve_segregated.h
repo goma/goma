@@ -12,7 +12,6 @@
 * See LICENSE file.                                                       *
 \************************************************************************/
 
-
 #ifndef GOMA_RF_SOLVE_SEGREGATED_H
 #define GOMA_RF_SOLVE_SEGREGATED_H
 

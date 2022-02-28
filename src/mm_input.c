@@ -1536,7 +1536,8 @@ void rd_timeint_specs(FILE *ifp, char *input) {
         }
         snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %d", "Fix Frequency", tran->fix_freq);
         ECHO(echo_string, echo_file);
-        GOMA_WH(GOMA_ERROR, "Warning fix frequency tends to slow down printing over time as exodus files become large");
+        GOMA_WH(GOMA_ERROR, "Warning fix frequency tends to slow down printing over time as exodus "
+                            "files become large");
       }
     }
 
