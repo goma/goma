@@ -4196,6 +4196,9 @@ calculate_lub_q_v (
       /* Calculate and rotate body force, calculate mesh derivatives */
       dbl d_bodf_dmx[DIM][DIM][MDE];
       memset(d_bodf_dmx, 0.0, sizeof(double)*DIM*DIM*MDE);
+      for ( i = 0; i < dim; i++) {
+        bodf[i] = mp->momentum_source[i] * rho;
+      }
 
       ShellRotate( bodf, d_bodf_dmx, GRAV, D_GRAV_DX, n_dof[MESH_DISPLACEMENT1]);
 
