@@ -1365,8 +1365,9 @@ void solve_NxN_system(dbl *A, dbl *b, dbl *x, const int rank, const int row_size
 /* Just give an Amesos error message and abort! */
 void amesos_solve_msr(
     char *choice, struct Aztec_Linear_Solver_System *ams, double *x_, double *b_, int flag) {
-  fprintf(stderr,
-          "Error: Need to compile with GOMA_ENABLE_AMESOS flag before using AMESOS solver packages.");
+  fprintf(
+      stderr,
+      "Error: Need to compile with GOMA_ENABLE_AMESOS flag before using AMESOS solver packages.");
   fprintf(stderr, "   Also make sure appropriate libraries are linked for solver packages.");
   exit(-1);
 }

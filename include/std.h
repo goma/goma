@@ -39,8 +39,8 @@
 #endif /* EIGEN_SERIAL */
 
 #ifdef EIGEN_PARALLEL
-#define GOMA_ENABLE_ARPACK  1
-#define HAVE_PARPACK 1
+#define GOMA_ENABLE_ARPACK 1
+#define HAVE_PARPACK       1
 #endif /* EIGEN_PARALLEL */
 
 #ifndef GOMA_VERSION /* 1) VERSION must be a keyword, won't work with it */
