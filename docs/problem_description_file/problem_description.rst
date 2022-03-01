@@ -71,5 +71,6 @@ However, some combinations or specifications do not make much sense, e.g., a cyl
    problem_description/shell_sat_open
    problem_description/shell_sat_open_2
    problem_description/shell_deltah
+   problem_description/moment
    problem_description/end_of_eq
    problem_description/end_of_mat

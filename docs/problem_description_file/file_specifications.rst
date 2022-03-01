@@ -15,3 +15,5 @@ required and optional input records are as follows:
    file_specifications/soln_file
    file_specifications/write_intermediate_results
    file_specifications/write_initial_solution
+   file_specifications/external_decomposition
+   file_specifications/decomposition_type

@@ -1,4 +1,4 @@
-Changes in version 7.0
+## Changes in version 7.0
 
 - Partial Segregated solver support
     - Some developer notes are located `docs/segregated_notes.org`
@@ -40,10 +40,13 @@ Changes in version 7.0
     - Automatic basic decomposition is available when configured with METIS
         - See cards `Decomposition Type`, `External Decomposition`
         - Command line flags `-e`, `-external_decomp`, `-kway`, `-rcb`
-        - Defaults to `rcb` when less than 8 processors and `kway` when more
+        - Defaults to `rcb` when less than 8 processors and `kway` when 8 or more
 - Various bug fixes and feature updates, see merged Pull Requests
+- SUPG formulation for Viscoelastic EVSS_F/LOG_CONF and Species has been modified
+- PSPG has an additional formulation `pspg_shakib`
+- Level set has additional SUPG formulations `SUPG_GP` and `SUPG_SHAKIB`
 
-Changes in version 6.2
+## Changes in version 6.2
 
 - Many bug fixes
 - Stratimikos support
@@ -54,7 +57,7 @@ Changes in version 6.2
 - Quadratic triangles
 - And more...
 
-Changes in version 6.1
+## Changes in version 6.1
 
 - Automatic creation of brk files (see `docs/parallel_integration.md`)
 - Bug fixes (mostly MPI related bugs)

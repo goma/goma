@@ -49,7 +49,7 @@
 #define STRINGCON(x)  STRINGCON_(x)
 #define GOMA_VERSION  STRINGCON(GIT_VERSION)
 #else
-#define GOMA_VERSION "7.0.0 alpha"
+#define GOMA_VERSION "7.0.0"
 #endif
 #endif
 

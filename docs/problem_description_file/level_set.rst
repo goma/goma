@@ -16,6 +16,11 @@ Level Set Specifications
    level_set/level_set_pspp_filtering
    level_set/level_set_length_scale
    level_set/level_set_initialize
+   level_set/level_set_adaptive_mesh
+   level_set/level_set_adapt_width
+   level_set/level_set_adapt_inner_size
+   level_set/level_set_adapt_outer_size
+   level_set/level_set_adapt_frequency
    level_set/level_set_initialization_method
    level_set/level_set_periodic_planes
    level_set/level_set_control_width
