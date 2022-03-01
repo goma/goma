@@ -358,7 +358,6 @@ option_definition(CHECK_FINITE ON)
 option_definition(NO_CHEBYSHEV_PLEASE ON)
 option_definition(PARALLEL ON)
 option_definition(FP_EXCEPT OFF)
-option_definition(SKIP_LAST_SOLVE OFF)
 option_definition(ANALEIG_PLEASE OFF)
 option_definition(DO_NO_UNROLL OFF)
 set(MDE
