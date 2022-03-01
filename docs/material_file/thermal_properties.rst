@@ -6,19 +6,15 @@ conduction and thermally-induced density changes (by volume expansion) and param
 controlling the onset of phase changes. Properties governing energy transport by convection,
 radiation and diffusion are specified elsewhere.
 
-.. include:: thermal_properties/heat_flux_model.rst
+.. toctree::
+   :maxdepth: 1
 
-.. include:: thermal_properties/conductivity.rst
-
-.. include:: thermal_properties/heat_capacity.rst
-
-.. include:: thermal_properties/volume_expansion.rst
-
-.. include:: thermal_properties/reference_temperature.rst
-
-.. include:: thermal_properties/liquidus_temperature.rst
-
-.. include:: thermal_properties/solidus_temperature.rst
-
-.. include:: thermal_properties/energy_weight_function.rst
+   thermal_properties/heat_flux_model
+   thermal_properties/conductivity
+   thermal_properties/heat_capacity
+   thermal_properties/volume_expansion
+   thermal_properties/reference_temperature
+   thermal_properties/liquidus_temperature
+   thermal_properties/solidus_temperature
+   thermal_properties/energy_weight_function
 

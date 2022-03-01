@@ -34,13 +34,12 @@ override surface conditions.
 Note: it is possible to solve a 3D problem with rotated boundaries by only creating rotation specifications for those boundaries, and letting *Goma* determine the behavior at the remaining boundaries. However, this is a dangerous practice; it is much better to explicitly tell *Goma* how to
 treat all boundaries so that the behavior is well defined. An important example is the intersection of a rotated boundary and an unrotated boundary, it is still a rotated boundary and requires an edge *ROT* specification.
 
-.. include:: rotation/rotation_specifications.rst
+.. toctree::
+   :maxdepth: 1
 
-.. include:: rotation/rot_surface.rst
-
-.. include:: rotation/rot_edge.rst
-
-.. include:: rotation/rot_vertex.rst
-
-.. include:: rotation/end_of_rot.rst
+   rotation/rotation_specifications
+   rotation/rot_surface
+   rotation/rot_edge
+   rotation/rot_vertex
+   rotation/end_of_rot
 

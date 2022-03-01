@@ -11,56 +11,33 @@ material files because they are actually boundary conditions and related paramet
 from the reduction of order (integration through the thin film). For more information, please see
 the shell-equation tutorial (GT-036).
 
-.. include:: shell_equation/upper_height_function_constants.rst
+.. toctree::
+   :maxdepth: 1
 
-.. include:: shell_equation/lower_height_function_constants.rst
-
-.. include:: shell_equation/upper_velocity_function_constants.rst
-
-.. include:: shell_equation/lower_velocity_function_constants.rst
-
-.. include:: shell_equation/upper_contact_angle.rst
-
-.. include:: shell_equation/lower_contact_angle.rst
-
-.. include:: shell_equation/lubrication_fluid_source.rst
-
-.. include:: shell_equation/lubrication_momentum_source.rst
-
-.. include:: shell_equation/turbulent_lubrication_model.rst
-
-.. include:: shell_equation/shell_energy_source_QCONV.rst
-
-.. include:: shell_equation/shell_energy_source_sliding_contact.rst
-
-.. include:: shell_equation/shell_energy_source_viscous_dissipation.rst
-
-.. include:: shell_equation/shell_energy_source_external.rst
-
-.. include:: shell_equation/FSI_deformation_model.rst
-
-.. include:: shell_equation/film_evaporation_model.rst
-
-.. include:: shell_equation/disjoining_pressure_model.rst
-
-.. include:: shell_equation/diffusion_coefficient_model.rst
-
-.. include:: shell_equation/porous_shell_radius.rst
-
-.. include:: shell_equation/porous_shell_height.rst
-
-.. include:: shell_equation/porous_shell_closed_porosity.rst
-
-.. include:: shell_equation/porous_shell_closed_gas_pressure.rst
-
-.. include:: shell_equation/porous_shell_atmospheric_pressure.rst
-
-.. include:: shell_equation/porous_shell_reference_pressure.rst
-
-.. include:: shell_equation/porous_shell_cross_permeability.rst
-
-.. include:: shell_equation/porous_shell_gas_diffusivity.rst
-
-.. include:: shell_equation/porous_shell_gas_temperature_constant.rst
-
-.. include:: shell_equation/porous_shell_henrys_law_constant.rst
+   shell_equation/upper_height_function_constants
+   shell_equation/lower_height_function_constants
+   shell_equation/upper_velocity_function_constants
+   shell_equation/lower_velocity_function_constants
+   shell_equation/upper_contact_angle
+   shell_equation/lower_contact_angle
+   shell_equation/lubrication_fluid_source
+   shell_equation/lubrication_momentum_source
+   shell_equation/turbulent_lubrication_model
+   shell_equation/shell_energy_source_QCONV
+   shell_equation/shell_energy_source_sliding_contact
+   shell_equation/shell_energy_source_viscous_dissipation
+   shell_equation/shell_energy_source_external
+   shell_equation/FSI_deformation_model
+   shell_equation/film_evaporation_model
+   shell_equation/disjoining_pressure_model
+   shell_equation/diffusion_coefficient_model
+   shell_equation/porous_shell_radius
+   shell_equation/porous_shell_height
+   shell_equation/porous_shell_closed_porosity
+   shell_equation/porous_shell_closed_gas_pressure
+   shell_equation/porous_shell_atmospheric_pressure
+   shell_equation/porous_shell_reference_pressure
+   shell_equation/porous_shell_cross_permeability
+   shell_equation/porous_shell_gas_diffusivity
+   shell_equation/porous_shell_gas_temperature_constant
+   shell_equation/porous_shell_henrys_law_constant

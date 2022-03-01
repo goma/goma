@@ -10,19 +10,15 @@ user must heed the following warning:
 **Make sure the equation term multipliers for the source terms being used are set to unity**
 *(Section 4.12 - Problem Description and Equation specification in Volume 1).*
 
-.. include:: source_terms/navier_stokes_source.rst
+.. toctree::
+   :maxdepth: 1
 
-.. include:: source_terms/solid_body_source.rst
-
-.. include:: source_terms/mass_source.rst
-
-.. include:: source_terms/heat_source.rst
-
-.. include:: source_terms/species_source.rst
-
-.. include:: source_terms/current_source.rst
-
-.. include:: source_terms/moment_source.rst
-
-.. include:: source_terms/initialize.rst
+   source_terms/navier_stokes_source
+   source_terms/solid_body_source
+   source_terms/mass_source
+   source_terms/heat_source
+   source_terms/species_source
+   source_terms/current_source
+   source_terms/moment_source
+   source_terms/initialize
 

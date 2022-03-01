@@ -6,6 +6,8 @@ materials are incompressible, density is a constant in the governing differentia
 However, several options for models of density are present in the code because numerous
 processes lead to density changes, though during any analysis cycle, the density is constant.
 
-.. include:: physical_properties/default_database.rst
+.. toctree::
+   :maxdepth: 1
 
-.. include:: physical_properties/density.rst
+   physical_properties/default_database
+   physical_properties/density

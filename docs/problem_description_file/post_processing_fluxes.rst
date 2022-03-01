@@ -11,26 +11,18 @@ further be used to as an objective function evaluator for engineering optimizati
 
 *Post Processing Data* output can be used to produce spatial {*value, x, y, z*} sets on a specified side set of any primitive variable in the problem, viz. pressure, x-component of velocity, etc. The quantity *value* is the value of the variable at a node in the side set, and x, y, z are the coordinates of the node.
 
-.. include:: post_processing_fluxes/post_processing_fluxes.rst
+.. toctree::
+   :maxdepth: 1
 
-.. include:: post_processing_fluxes/flux.rst
-
-.. include:: post_processing_fluxes/end_of_flux.rst
-
-.. include:: post_processing_fluxes/post_processing_data.rst
-
-.. include:: post_processing_fluxes/data.rst
-
-.. include:: post_processing_fluxes/end_of_data.rst
-
-.. include:: post_processing_fluxes/post_processing_flux_sensitivities.rst
-
-.. include:: post_processing_fluxes/flux_sens.rst
-
-.. include:: post_processing_fluxes/end_of_flux_sens.rst
-
-.. include:: post_processing_fluxes/post_processing_date_sensitivities.rst
-
-.. include:: post_processing_fluxes/data_sens.rst
-
-.. include:: post_processing_fluxes/end_of_data_sens.rst
+   post_processing_fluxes/post_processing_fluxes
+   post_processing_fluxes/flux
+   post_processing_fluxes/end_of_flux
+   post_processing_fluxes/post_processing_data
+   post_processing_fluxes/data
+   post_processing_fluxes/end_of_data
+   post_processing_fluxes/post_processing_flux_sensitivities
+   post_processing_fluxes/flux_sens
+   post_processing_fluxes/end_of_flux_sens
+   post_processing_fluxes/post_processing_date_sensitivities
+   post_processing_fluxes/data_sens
+   post_processing_fluxes/end_of_data_sens

@@ -14,57 +14,21 @@ In addition to the transient parameter information, some Level-Set function info
 supplied to *Goma* in this section. The method of Level-Sets is used to track fluid-fluid or fluidsolid
 interfaces in an Eulerian fashion, making the problem inherently transient.
 
-.. include:: time_integration/time_integration.rst
+.. toctree::
+   :maxdepth: 1
 
--------------------------------------------------------------------------------
-
-.. include:: time_integration/delta_t.rst
-
--------------------------------------------------------------------------------
-
-.. include:: time_integration/maximum_number_of_time_steps.rst
-
--------------------------------------------------------------------------------
-
-.. include:: time_integration/maximum_time.rst
-
--------------------------------------------------------------------------------
-
-.. include:: time_integration/minimum_time_step.rst
-
--------------------------------------------------------------------------------
-
-.. include:: time_integration/maximum_time_step.rst
-
--------------------------------------------------------------------------------
-
-.. include:: time_integration/minimum_resolved_time_step.rst
-
--------------------------------------------------------------------------------
-
-.. include:: time_integration/courant_number_limit.rst
-
--------------------------------------------------------------------------------
-
-.. include:: time_integration/time_step_parameter.rst
-
--------------------------------------------------------------------------------
-
-.. include:: time_integration/time_step_error.rst
-
--------------------------------------------------------------------------------
-
-.. include:: time_integration/printing_frequency.rst
-
--------------------------------------------------------------------------------
-
-.. include:: time_integration/fix_frequency.rst
-
--------------------------------------------------------------------------------
-
-.. include:: time_integration/second_frequency_time.rst
-
--------------------------------------------------------------------------------
-
-.. include:: time_integration/initial_time.rst
+   time_integration/time_integration
+   time_integration/delta_t
+   time_integration/maximum_number_of_time_steps
+   time_integration/maximum_time
+   time_integration/minimum_time_step
+   time_integration/maximum_time_step
+   time_integration/minimum_resolved_time_step
+   time_integration/courant_number_limit
+   time_integration/time_step_parameter
+   time_integration/time_step_error
+   time_integration/printing_frequency
+   time_integration/fix_frequency
+   time_integration/second_frequency_time
+   time_integration/initial_time
 

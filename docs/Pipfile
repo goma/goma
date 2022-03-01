@@ -9,7 +9,7 @@ jedi = "*"
 
 [packages]
 sphinx = "*"
-sphinx-rtd-theme = "*"
+pydata-sphinx-theme = "*"
 
 [requires]
 python_version = "3"

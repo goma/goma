@@ -11,42 +11,26 @@ species transport property specifications. These “sections” appear in this o
 sample input files.
 
 
-.. include:: microstructure/media_type.rst
+.. toctree::
+   :maxdepth: 1
 
-.. include:: microstructure/porosity.rst
-
-.. include:: microstructure/permeability.rst
-
-.. include:: microstructure/liquid_phase_compressibility.rst
-
-.. include:: microstructure/liquid_phase_reference_pressure.rst
-
-.. include:: microstructure/flowing_liquid_viscosity.rst
-
-.. include:: microstructure/inertia_coefficient.rst
-
-.. include:: microstructure/capillary_network_stress.rst
-
-.. include:: microstructure/rel_gas_permeability.rst
-
-.. include:: microstructure/rel_liq_permeability.rst
-
-.. include:: microstructure/saturation.rst
-
-.. include:: microstructure/porous_weight_function.rst
-
-.. include:: microstructure/porous_mass_lumping.rst
-
-.. include:: microstructure/porous_diffusion_constitutive_equation.rst
-
-.. include:: microstructure/porous_gas_diffusivity.rst
-
-.. include:: microstructure/porous_latent_heat_vaporization.rst
-
-.. include:: microstructure/porous_latent_heat_fusion.rst
-
-.. include:: microstructure/porous_vapor_pressure.rst
-
-.. include:: microstructure/porous_liquid_volume_expansion.rst
-
-.. include:: microstructure/porous_gas_constants.rst
+   microstructure/media_type
+   microstructure/porosity
+   microstructure/permeability
+   microstructure/liquid_phase_compressibility
+   microstructure/liquid_phase_reference_pressure
+   microstructure/flowing_liquid_viscosity
+   microstructure/inertia_coefficient
+   microstructure/capillary_network_stress
+   microstructure/rel_gas_permeability
+   microstructure/rel_liq_permeability
+   microstructure/saturation
+   microstructure/porous_weight_function
+   microstructure/porous_mass_lumping
+   microstructure/porous_diffusion_constitutive_equation
+   microstructure/porous_gas_diffusivity
+   microstructure/porous_latent_heat_vaporization
+   microstructure/porous_latent_heat_fusion
+   microstructure/porous_vapor_pressure
+   microstructure/porous_liquid_volume_expansion
+   microstructure/porous_gas_constants

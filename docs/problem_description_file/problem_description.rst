@@ -7,128 +7,69 @@ below), must be repeated for each material region in the problem. Within that re
 
 However, some combinations or specifications do not make much sense, e.g., a cylindrical coordinate region combined with a cartesian one. It is recommended that the user consult the usage tutorials and example problems to get a feel for how this section is constructed.
 
-.. include:: problem_description/number_of_materials.rst
+.. toctree::
+   :maxdepth: 1
 
-.. include:: problem_description/mat.rst
-
-.. include:: problem_description/coordinate_system.rst
-
-.. include:: problem_description/element_mapping.rst
-
-.. include:: problem_description/mesh_motion.rst
-
-.. include:: problem_description/number_of_bulk_species.rst
-
-.. include:: problem_description/material_is_nondilute.rst
-
-.. include:: problem_description/number_of_bulk_species_equations.rst
-
-.. include:: problem_description/default_material_species_type.rst
-
-.. include:: problem_description/number_of_viscoelastic_modes.rst
-
-.. include:: problem_description/number_of_eq.rst
-
-.. include:: problem_description/energy.rst
-
-.. include:: problem_description/momentum.rst
-
-.. include:: problem_description/pmomentum.rst
-
-.. include:: problem_description/stress.rst
-
-.. include:: problem_description/species_bulk.rst
-
-.. include:: problem_description/mesh.rst
-
-.. include:: problem_description/mom_solid.rst
-
-.. include:: problem_description/continuity.rst
-
-.. include:: problem_description/fill.rst
-
-.. include:: problem_description/lagr_mult_1_lagr_mult_2_lagr_mult_3.rst
-
-.. include:: problem_description/level_set.rst
-
-.. include:: problem_description/voltage.rst
-
-.. include:: problem_description/efield.rst
-
-.. include:: problem_description/enorm.rst
-
-.. include:: problem_description/shear_rate.rst
-
-.. include:: problem_description/vort_dir.rst
-
-.. include:: problem_description/vort_lambda.rst
-
-.. include:: problem_description/porous_sat.rst
-
-.. include:: problem_description/porous_unsat.rst
-
-.. include:: problem_description/porous_liq.rst
-
-.. include:: problem_description/porous_gas.rst
-
-.. include:: problem_description/porous_deform.rst
-
-.. include:: problem_description/porous_energy.rst
-
-.. include:: problem_description/surf_charge.rst
-
-.. include:: problem_description/shell_tension.rst
-
-.. include:: problem_description/shell_curvature.rst
-
-.. include:: problem_description/shell_angle.rst
-
-.. include:: problem_description/shell_diff_flux.rst
-
-.. include:: problem_description/shell_diff_curv.rst
-
-.. include:: problem_description/shell_normal.rst
-
-.. include:: problem_description/shell_surf_curv.rst
-
-.. include:: problem_description/shell_surf_div_v.rst
-
-.. include:: problem_description/grad_v_dot_n1_grad_v_dot_n2_grad_v_dot_n3.rst
-
-.. include:: problem_description/n_dot_curl_v.rst
-
-.. include:: problem_description/acous_preal.rst
-
-.. include:: problem_description/acous_pimag.rst
-
-.. include:: problem_description/acous_reyn_stress.rst
-
-.. include:: problem_description/potential1.rst
-
-.. include:: problem_description/potential2.rst
-
-.. include:: problem_description/lubp.rst
-
-.. include:: problem_description/lubp_2.rst
-
-.. include:: problem_description/shell_energy.rst
-
-.. include:: problem_description/shell_filmp.rst
-
-.. include:: problem_description/shell_filmh.rst
-
-.. include:: problem_description/shell_partc.rst
-
-.. include:: problem_description/shell_sat_closed.rst
-
-.. include:: problem_description/shell_sat_gasn.rst
-
-.. include:: problem_description/shell_sat_open.rst
-
-.. include:: problem_description/shell_sat_open_2.rst
-
-.. include:: problem_description/shell_deltah.rst
-
-.. include:: problem_description/end_of_eq.rst
-
-.. include:: problem_description/end_of_mat.rst
+   problem_description/number_of_materials
+   problem_description/mat
+   problem_description/coordinate_system
+   problem_description/element_mapping
+   problem_description/mesh_motion
+   problem_description/number_of_bulk_species
+   problem_description/material_is_nondilute
+   problem_description/number_of_bulk_species_equations
+   problem_description/default_material_species_type
+   problem_description/number_of_viscoelastic_modes
+   problem_description/number_of_eq
+   problem_description/energy
+   problem_description/momentum
+   problem_description/pmomentum
+   problem_description/stress
+   problem_description/species_bulk
+   problem_description/mesh
+   problem_description/mom_solid
+   problem_description/continuity
+   problem_description/fill
+   problem_description/lagr_mult_1_lagr_mult_2_lagr_mult_3
+   problem_description/level_set
+   problem_description/voltage
+   problem_description/efield
+   problem_description/enorm
+   problem_description/shear_rate
+   problem_description/vort_dir
+   problem_description/vort_lambda
+   problem_description/porous_sat
+   problem_description/porous_unsat
+   problem_description/porous_liq
+   problem_description/porous_gas
+   problem_description/porous_deform
+   problem_description/porous_energy
+   problem_description/surf_charge
+   problem_description/shell_tension
+   problem_description/shell_curvature
+   problem_description/shell_angle
+   problem_description/shell_diff_flux
+   problem_description/shell_diff_curv
+   problem_description/shell_normal
+   problem_description/shell_surf_curv
+   problem_description/shell_surf_div_v
+   problem_description/grad_v_dot_n1_grad_v_dot_n2_grad_v_dot_n3
+   problem_description/n_dot_curl_v
+   problem_description/acous_preal
+   problem_description/acous_pimag
+   problem_description/acous_reyn_stress
+   problem_description/potential1
+   problem_description/potential2
+   problem_description/lubp
+   problem_description/lubp_2
+   problem_description/shell_energy
+   problem_description/shell_filmp
+   problem_description/shell_filmh
+   problem_description/shell_partc
+   problem_description/shell_sat_closed
+   problem_description/shell_sat_gasn
+   problem_description/shell_sat_open
+   problem_description/shell_sat_open_2
+   problem_description/shell_deltah
+   problem_description/end_of_eq
+   problem_description/end_of_mat

@@ -6,9 +6,10 @@ trajectories. The coordinates of the trajectory starting point and time-stepping
 input using the cards in this section. The computation of quantities along the trajectories and their
 subsequent output is controlled through the *usr_ptracking* routine in user_post.c.
 
-.. include:: post_processing_particle/post_processing_particle_traces.rst
+.. toctree::
+   :maxdepth: 1
 
-.. include:: post_processing_particle/particle.rst
-
-.. include:: post_processing_particle/end_of_particles.rst
+   post_processing_particle/post_processing_particle_traces
+   post_processing_particle/particle
+   post_processing_particle/end_of_particles
 

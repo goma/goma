@@ -13,149 +13,44 @@ for good convergence of iterative matrix solvers can be an artful task for Navie
 and other poorly conditioned systems. It is recommended that the user consult the comprehensive
 report by Schunk, et al. (2002) for an overview and further usage tips.
 
-.. include:: solver_specifications/solution_algorithm.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/matrix_storage_format.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/stratimikos_file.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/preconditioner.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/matrix_subdomain_solver.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/matrix_scaling.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/matrix_residual_norm_type.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/matrix_output_type.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/matrix_factorization_reuse.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/matrix_graph_fillin.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/matrix_factorization_overlap.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/matrix_overlap_type.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/matrix_auxiliary_vector.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/matrix_drop_tolerance.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/matrix_polynomial_order.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/matrix_reorder.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/matrix_factorization_save.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/matrix_ilut_fill_factor.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/matrix_rilu_relax_factor.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/matrix_bilu_threshold.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/matrix_relative_threshold.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/matrix_absolute_threshold.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/size_of_krylov_subspace.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/orthogonalization.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/maximum_linear_solve_iterations.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/number_of_newton_iterations.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/modified_newton_tolerance.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/jacobian_reform_time_stride.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/newton_correction_factor.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/normalized_residual_tolerance.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/normalized_correction_tolerance.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/residual_ratio_tolerance.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/pressure_stabilization.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/pressure_stabilization_scaling.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/linear_stability.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/filter_concentration.rst
-
--------------------------------------------------------------------------------
-
-.. include:: solver_specifications/disable_viscosity_sensitivities.rst
+.. toctree::
+   :maxdepth: 1
+
+   solver_specifications/solution_algorithm
+   solver_specifications/matrix_storage_format
+   solver_specifications/stratimikos_file
+   solver_specifications/preconditioner
+   solver_specifications/matrix_subdomain_solver
+   solver_specifications/matrix_scaling
+   solver_specifications/matrix_residual_norm_type
+   solver_specifications/matrix_output_type
+   solver_specifications/matrix_factorization_reuse
+   solver_specifications/matrix_graph_fillin
+   solver_specifications/matrix_factorization_overlap
+   solver_specifications/matrix_overlap_type
+   solver_specifications/matrix_auxiliary_vector
+   solver_specifications/matrix_drop_tolerance
+   solver_specifications/matrix_polynomial_order
+   solver_specifications/matrix_reorder
+   solver_specifications/matrix_factorization_save
+   solver_specifications/matrix_ilut_fill_factor
+   solver_specifications/matrix_rilu_relax_factor
+   solver_specifications/matrix_bilu_threshold
+   solver_specifications/matrix_relative_threshold
+   solver_specifications/matrix_absolute_threshold
+   solver_specifications/size_of_krylov_subspace
+   solver_specifications/orthogonalization
+   solver_specifications/maximum_linear_solve_iterations
+   solver_specifications/number_of_newton_iterations
+   solver_specifications/modified_newton_tolerance
+   solver_specifications/jacobian_reform_time_stride
+   solver_specifications/newton_correction_factor
+   solver_specifications/normalized_residual_tolerance
+   solver_specifications/normalized_correction_tolerance
+   solver_specifications/residual_ratio_tolerance
+   solver_specifications/pressure_stabilization
+   solver_specifications/pressure_stabilization_scaling
+   solver_specifications/linear_stability
+   solver_specifications/filter_concentration
+   solver_specifications/disable_viscosity_sensitivities
 

@@ -5,6 +5,8 @@ Models for material electrical properties are simple or specialized, being very 
 The primary need for modeling electrical potential effects are to activate mass transport
 mechanisms that are charge-dependent.
 
-.. include:: electrical_properties/electrical_conductivity.rst
+.. toctree::
+   :maxdepth: 1
 
-.. include:: electrical_properties/electrical_permittivity.rst
+   electrical_properties/electrical_conductivity
+   electrical_properties/electrical_permittivity

@@ -210,76 +210,25 @@ and stand alone; the remaining cards belong to the categories of conditions disc
 ordering of input cards within this collection of BC input records (i.e., section) is sequential and
 some sections of interspersed comments accompany each boundary condition category.
 
-.. include:: boundary_conditions/number_of_bc.rst
+.. toctree::
+   :maxdepth: 1
 
----------------------------------------------------------------------------------------
-
-.. include:: boundary_conditions/any.rst
-
----------------------------------------------------------------------------------------
-
-.. include:: boundary_conditions/mesh.rst
-
----------------------------------------------------------------------------------------
-
-.. include:: boundary_conditions/real_solid.rst
-
----------------------------------------------------------------------------------------
-
-.. include:: boundary_conditions/fluid_momentum.rst
-
----------------------------------------------------------------------------------------
-
-.. include:: boundary_conditions/energy.rst
-
----------------------------------------------------------------------------------------
-
-.. include:: boundary_conditions/mass.rst
-
----------------------------------------------------------------------------------------
-
-.. include:: boundary_conditions/continuity.rst
-
----------------------------------------------------------------------------------------
-
-.. include:: boundary_conditions/porous.rst
-
----------------------------------------------------------------------------------------
-
-.. include:: boundary_conditions/stress.rst
-
----------------------------------------------------------------------------------------
-
-.. include:: boundary_conditions/gradient.rst
-
----------------------------------------------------------------------------------------
-
-.. include:: boundary_conditions/shear_rate.rst
-
----------------------------------------------------------------------------------------
-
-.. include:: boundary_conditions/fill.rst
-
----------------------------------------------------------------------------------------
-
-.. include:: boundary_conditions/potential.rst
-
----------------------------------------------------------------------------------------
-
-.. include:: boundary_conditions/fluid_solid_interaction.rst
-
----------------------------------------------------------------------------------------
-
-.. include:: boundary_conditions/level_set.rst
-
----------------------------------------------------------------------------------------
-
-.. include:: boundary_conditions/shell.rst
-
----------------------------------------------------------------------------------------
-
-.. include:: boundary_conditions/acoustic.rst
-
----------------------------------------------------------------------------------------
-
-.. include:: boundary_conditions/end_of_bc.rst
+   boundary_conditions/number_of_bc
+   boundary_conditions/any
+   boundary_conditions/mesh
+   boundary_conditions/real_solid
+   boundary_conditions/fluid_momentum
+   boundary_conditions/energy
+   boundary_conditions/mass
+   boundary_conditions/continuity
+   boundary_conditions/porous
+   boundary_conditions/stress
+   boundary_conditions/gradient
+   boundary_conditions/shear_rate
+   boundary_conditions/fill
+   boundary_conditions/potential
+   boundary_conditions/fluid_solid_interaction
+   boundary_conditions/level_set
+   boundary_conditions/shell
+   boundary_conditions/acoustic
+   boundary_conditions/end_of_bc

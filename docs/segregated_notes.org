@@ -62,5 +62,6 @@ assemble_mesh
 assemble_momentum
 assemble_continuity
 assemble_stress_fortin
-
-We only tested on ALE problems.
+assemble_fill
+assemble_gradient
+assemble_mass_transport

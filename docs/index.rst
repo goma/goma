@@ -1,17 +1,10 @@
-Goma User Manual
-================
+Goma Documentation
+==================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
-   introduction
-   background
-   code_structure_and_io
-   problem_description_file
-   material_files
-   references
-   documentation_lists
-   library_mode
+   user_manual
 
 Indices and tables
 ==================

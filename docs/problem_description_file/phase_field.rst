@@ -1,20 +1,11 @@
 Phase Field Specifications
 ###################################
 
-.. include:: phase_field/number_of_phase_functions.rst
+.. toctree::
+   :maxdepth: 1
 
--------------------------------------------------------------------------------
-
-.. include:: phase_field/phase_function_slave_surface.rst
-
--------------------------------------------------------------------------------
-
-.. include:: phase_field/phase_function_initialization_method.rst
-
--------------------------------------------------------------------------------
-
-.. include:: phase_field/phase_function_renormalization_tolerance.rst
-
--------------------------------------------------------------------------------
-
-.. include:: phase_field/phase_function_renormalization_method.rst
+   phase_field/number_of_phase_functions
+   phase_field/phase_function_slave_surface
+   phase_field/phase_function_initialization_method
+   phase_field/phase_function_renormalization_tolerance
+   phase_field/phase_function_renormalization_method
