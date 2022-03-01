@@ -173,7 +173,7 @@ void supg_tau_shakib(SUPG_terms *supg_terms, int dim, dbl dt, dbl diffusivity, i
   if (dt > 0) {
     supg_terms->supg_tau = 1.0 / (sqrt(4 / (dt * dt) + v_d_gv + diff_g_g));
   } else {
-    supg_terms->supg_tau = 1.0 / (sqrt(v_d_gv + diff_g_g));
+    supg_terms->supg_tau = 1.0 / (sqrt(v_d_gv + diff_g_g) + 1e-14);
   }
 
   for (int a = 0; a < dim; a++) {

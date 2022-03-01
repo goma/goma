@@ -10,15 +10,8 @@ required and optional input records are as follows:
    :maxdepth: 1
 
    file_specifications/fem_file
-   
    file_specifications/output_exodusII_file
-   
    file_specifications/guess_file
-   
    file_specifications/soln_file
-   
-   file_specifications/brk_file
-   
    file_specifications/write_intermediate_results
-   
    file_specifications/write_initial_solution
