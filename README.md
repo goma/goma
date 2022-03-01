@@ -7,6 +7,11 @@ For more information see the [Goma website](https://docs.gomafem.com)
 
 Most of the documentation can be found at [docs.gomafem.com](https://docs.gomafem.com)
 
+## License
+
+See [LICENSE](LICENSE) file. Some cmake modules under `cmake/` were modified from the Eigen library
+and are noted at the top of the cmake file.
+
 ## Major Changes
 
 [Major changes for current version](CHANGES.md)
@@ -14,6 +19,20 @@ Most of the documentation can be found at [docs.gomafem.com](https://docs.gomafe
 ## Build Instructions
 
 [Build instructions](BUILD.md)
+
+## Third party libraries
+
+- Metis 5.1.0 (Optional)
+- SEACAS 2022-01-27 (Required: Exodus and Aprepro)
+- BLAS/LAPACK (Configured through Trilinos)
+- Trilinos matrix solvers 13.0.1 (Required: AztecOO, Amesos, Epetra, TPL LAPACK; Optional: Stratimikos [with Teko, Ifpack, Belos, Tpetra])
+- PETSc matrix solvers (KSP, PC)
+- MUMPS 5.4.0 (through Trilinos or PETSc only)
+- Superlu_dist 7.2.0 (through Trilinos or PETSc only, Trilinos requires parmetis build)
+- UMFPACK, SuiteSparse 5.10.1 (Optional)
+- ARPACK/arpack-ng 3.8.0 (Optional)
+- sparse 1.4b (Optional)
+- Catch2 (Optional testing)
 
 ### Run the tutorial
 

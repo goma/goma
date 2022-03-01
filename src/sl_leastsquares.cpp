@@ -23,7 +23,7 @@
 #endif
 
 /* This removes the entire file if Amesos & Trilinos are not defined */
-#if defined(ENABLE_AMESOS) && defined(TRILINOS)
+#if defined(GOMA_ENABLE_AMESOS) && defined(TRILINOS)
 
 #if defined(PARALLEL) && !defined(EPETRA_MPI)
 #define EPETRA_MPI
@@ -227,4 +227,4 @@ construct_Epetra_CrsMatrix_ls(int const txt_num_pts, int const nnz_per_row, int 
   return (A);
 }
 
-#endif // if defined(ENABLE_AMESOS) && defined(TRILINOS)
+#endif // if defined(GOMA_ENABLE_AMESOS) && defined(TRILINOS)

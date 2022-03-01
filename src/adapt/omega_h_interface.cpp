@@ -12,7 +12,7 @@
 * See LICENSE file.                                                       *
 \************************************************************************/
 
-#ifdef HAVE_OMEGA_H
+#ifdef GOMA_ENABLE_OMEGA_H
 #include "adapt/omega_h_interface.h"
 
 #include <Omega_h_adapt.hpp>

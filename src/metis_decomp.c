@@ -1,4 +1,4 @@
-#ifdef GOMA_HAVE_METIS
+#ifdef GOMA_ENABLE_METIS
 #include <exodusII.h>
 #include <metis.h>
 #include <stdlib.h>

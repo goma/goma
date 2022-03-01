@@ -93,7 +93,7 @@
 #include "sl_util.h"
 #include "sl_util_structs.h"
 #include "std.h"
-#ifdef HAVE_PETSC
+#ifdef GOMA_ENABLE_PETSC
 #include "sl_petsc.h"
 #endif
 #include "mm_fill_split.h"
@@ -4842,7 +4842,7 @@ static void load_lec(Exo_DB *exo, /* ptr to EXODUS II finite element mesh db */
   if (strcmp(Matrix_Format, "epetra") == 0) {
     EpetraLoadLec(ielem, ams, resid_vector);
   }
-#ifdef HAVE_PETSC
+#ifdef GOMA_ENABLE_PETSC
   else if (strcmp(Matrix_Format, "petsc") == 0) {
     petsc_load_lec(ielem, ams, resid_vector);
   }

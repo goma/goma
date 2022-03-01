@@ -28,7 +28,7 @@
  *        -> will leave it as is right now.
  */
 int first_time_fill = TRUE;
-#ifdef HAVE_SPARSE
+#ifdef GOMA_ENABLE_SPARSE
 #include "spMatrix.h"
 
 void luf(const int N,
@@ -196,7 +196,7 @@ void luf(const int N,
 
 } /* END of routine luf */
 
-#else // HAVE_SPARSE
+#else // GOMA_ENABLE_SPARSE
 #include "mm_eh.h"
 
 void luf(const int N,
@@ -208,7 +208,7 @@ void luf(const int N,
          const int factor_flag) {
   GOMA_EH(GOMA_ERROR, "Goma not configured with sparse solver support");
 }
-#endif // HAVE_SPARSE
+#endif // GOMA_ENABLE_SPARSE
 /******************************************************************************/
 /* END of file sl_lu_fill.c */
 /******************************************************************************/

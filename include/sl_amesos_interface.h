@@ -25,7 +25,7 @@
 #define EXTERN extern
 #endif
 
-#ifdef ENABLE_AMESOS
+#ifdef GOMA_ENABLE_AMESOS
 
 /* Use this version when Amesos is linked in through Trilinos */
 #ifdef TRILINOS

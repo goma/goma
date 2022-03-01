@@ -25,7 +25,7 @@
 
 #define GOMA_SL_LU_C
 
-#ifdef HAVE_SPARSE
+#ifdef GOMA_ENABLE_SPARSE
 #include "spMatrix.h"
 /*
  * Uncomment the following line to write out the RHS, a, and ija vectors
@@ -159,7 +159,7 @@ void lu(const int N,
   /*  spDestroy(matrix);*/
 
 } /* END of routine lu */
-#else // HAVE_SPARSE
+#else // GOMA_ENABLE_SPARSE
 #include "mm_eh.h"
 
 void lu(const int N,
@@ -171,7 +171,7 @@ void lu(const int N,
         const int factor_flag) {
   GOMA_EH(GOMA_ERROR, "Goma not configured with sparse support");
 }
-#endif // HAVE_SPARSE
+#endif // GOMA_ENABLE_SPARSE
 /*****************************************************************************/
 /* END of file sl_lu.c */
 /*****************************************************************************/

@@ -1,7 +1,7 @@
 #ifndef GOMA_SL_PETSC_H
 #define GOMA_SL_PETSC_H
 
-#ifdef HAVE_PETSC
+#ifdef GOMA_ENABLE_PETSC
 #include "dpi.h"
 #include "exo_struct.h"
 #include "mm_as_structs.h"

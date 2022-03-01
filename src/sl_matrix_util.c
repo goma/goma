@@ -40,7 +40,7 @@
 #include "sl_util.h"
 #include "sl_util_structs.h"
 #include "std.h"
-#ifdef HAVE_PETSC
+#ifdef GOMA_ENABLE_PETSC
 #include "sl_petsc.h"
 #endif
 
@@ -446,7 +446,7 @@ void row_sum_scaling_scale(struct GomaLinearSolverData *ams, double b[], double 
                       b, scale);
   } else if (strcmp(Matrix_Format, "epetra") == 0) {
     row_sum_scale_epetra(ams, b, scale);
-#ifdef HAVE_PETSC
+#ifdef GOMA_ENABLE_PETSC
   } else if (strcmp(Matrix_Format, "petsc") == 0) {
     petsc_scale_matrix(ams, b, scale);
 #endif
@@ -826,7 +826,7 @@ int check_compatible_solver(void) {
     }
   }
 
-#ifdef HAVE_PETSC
+#ifdef GOMA_ENABLE_PETSC
   if (strcmp(Matrix_Format, "petsc") == 0) {
     switch (Linear_Solver) {
     case PETSC_SOLVER:

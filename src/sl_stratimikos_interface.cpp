@@ -1,4 +1,4 @@
-#ifdef HAVE_STRATIMIKOS
+#ifdef GOMA_ENABLE_STRATIMIKOS
 
 #include <iostream>
 #include <string>
@@ -29,7 +29,7 @@
 #include "Thyra_VectorBase.hpp"
 #include "sl_epetra_interface.h"
 
-#ifdef HAVE_TEKO
+#ifdef GOMA_ENABLE_TEKO
 // Teko-Package includes
 #include "Teko_StratimikosFactory.hpp"
 #endif
@@ -85,7 +85,7 @@ int stratimikos_solve(struct GomaLinearSolverData *ams,
     // Set up base builder
     Stratimikos::DefaultLinearSolverBuilder linearSolverBuilder;
 
-#ifdef HAVE_TEKO
+#ifdef GOMA_ENABLE_TEKO
     Teko::addTekoToStratimikosBuilder(linearSolverBuilder);
 #endif
 
@@ -141,7 +141,7 @@ int stratimikos_solve(struct GomaLinearSolverData *ams,
 
 } /* End extern "C" */
 
-#else /* HAVE_STRATIMIKOS */
+#else /* GOMA_ENABLE_STRATIMIKOS */
 
 #include "mpi.h"
 
@@ -158,4 +158,4 @@ int stratimikos_solve(struct Aztec_Linear_Solver_System *ams,
   return -1;
 }
 }
-#endif /* HAVE_STRATIMIKOS */
+#endif /* GOMA_ENABLE_STRATIMIKOS */

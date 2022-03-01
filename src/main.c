@@ -46,7 +46,7 @@ extern void handle_ieee(void);
 #include "dp_vif.h"
 #include "dpi.h"
 #include "exo_struct.h"
-#ifdef GOMA_HAVE_METIS
+#ifdef GOMA_ENABLE_METIS
 #include "metis_decomp.h"
 #endif
 #include "brkfix/fix.h"
@@ -76,7 +76,7 @@ extern void handle_ieee(void);
 #include "wr_dpi.h"
 #include "wr_exo.h"
 
-#ifdef HAVE_PETSC
+#ifdef GOMA_ENABLE_PETSC
 #include <petscsys.h>
 #endif
 
@@ -550,7 +550,7 @@ int main(int argc, char **argv)
 
 #endif /* End of ifdef PARALLEL */
 
-#ifdef GOMA_HAVE_METIS
+#ifdef GOMA_ENABLE_METIS
   /* Now break the exodus files */
   if (Decompose_Flag == 1 && Num_Proc > 1 && ProcID == 0) {
     char **filenames = malloc(sizeof(char *) * (2 + MAX_EXTERNAL_FIELD));
@@ -943,7 +943,7 @@ int main(int argc, char **argv)
 #ifdef PARALLEL
   total_time = (MPI_Wtime() - time_start) / 60.;
   DPRINTF(stdout, "\nProc 0 runtime: %10.2f Minutes.\n\n", total_time);
-#ifdef HAVE_PETSC
+#ifdef GOMA_ENABLE_PETSC
   PetscBool petsc_initialized = PETSC_FALSE;
   PetscInitialized(&petsc_initialized);
   if (petsc_initialized) {

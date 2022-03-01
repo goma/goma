@@ -35,11 +35,11 @@
 #define HAVE_Y12M 1
 
 #ifdef EIGEN_SERIAL
-#define HAVE_ARPACK 1
+#define GOMA_ENABLE_ARPACK 1
 #endif /* EIGEN_SERIAL */
 
 #ifdef EIGEN_PARALLEL
-#define HAVE_ARPACK  1
+#define GOMA_ENABLE_ARPACK  1
 #define HAVE_PARPACK 1
 #endif /* EIGEN_PARALLEL */
 

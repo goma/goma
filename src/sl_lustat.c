@@ -95,7 +95,7 @@
  *
  */
 
-#ifdef HAVE_SPARSE
+#ifdef GOMA_ENABLE_SPARSE
 #endif
 
 #ifdef MATRIX_STATISTICS
@@ -124,7 +124,7 @@ static void histogram(int,      /* n  */
 
 /* static int call=0; */
 
-#ifdef HAVE_SPARSE
+#ifdef GOMA_ENABLE_SPARSE
 void lustat(int n, int nnz, double a[], int ija[], double x[], spREAL norm, char *matrix) {
   /* LOCAL VARIABLES */
   /*

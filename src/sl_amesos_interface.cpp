@@ -26,7 +26,7 @@
 #endif
 
 /* This removes the entire file if Amesos & Trilinos are not defined */
-#if defined(ENABLE_AMESOS) && defined(TRILINOS)
+#if defined(GOMA_ENABLE_AMESOS) && defined(TRILINOS)
 
 #if defined(PARALLEL) && !defined(EPETRA_MPI)
 #define EPETRA_MPI
@@ -388,7 +388,7 @@ void *construct_Epetra_CrsMatrix(struct GomaLinearSolverData *ams) {
   return (A);
 }
 
-#endif // if defined(ENABLE_AMESOS) && defined(TRILINOS)
+#endif // if defined(GOMA_ENABLE_AMESOS) && defined(TRILINOS)
 
 #if 0
 
@@ -409,7 +409,7 @@ amesos_solve_msr(char *choice,
 {
 	
 	
-  std::string err_msg("Error: Need to compile with ENABLE_AMESOS flag before using AMESOS solver packages.");
+  std::string err_msg("Error: Need to compile with GOMA_ENABLE_AMESOS flag before using AMESOS solver packages.");
   std::string err_msg2("   Also make sure appropriate libraries are linked for solver packages.");
 	
   cout << err_msg << endl;

@@ -64,7 +64,7 @@
 #include "std.h"
 #include "wr_exo.h"
 #include "wr_soln.h"
-#ifdef HAVE_OMEGA_H
+#ifdef GOMA_ENABLE_OMEGA_H
 #include "adapt/omega_h_interface.h"
 #endif
 
@@ -561,7 +561,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
           EpetraCreateRowMatrix(num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]);
       EpetraCreateGomaProblemGraph(ams[pg->imtrx], exo, dpi);
     }
-#ifdef HAVE_PETSC
+#ifdef GOMA_ENABLE_PETSC
   } else if (strcmp(Matrix_Format, "petsc") == 0) {
     err = check_compatible_solver();
     GOMA_EH(err, "Incompatible matrix solver for petsc, solver must be petsc");
@@ -623,7 +623,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
   } else {
     GOMA_EH(GOMA_ERROR, "Attempted to allocate unknown sparse matrix format: %s", Matrix_Format);
   }
-#ifdef HAVE_PETSC
+#ifdef GOMA_ENABLE_PETSC
   if (upd->petsc_solve_post_proc) {
     int pp_set = 0;
     for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
@@ -1334,7 +1334,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
      *  TOP OF THE TIME STEP LOOP -> Loop over time steps whether
      *                               they be successful or not
      *******************************************************************/
-#ifdef HAVE_OMEGA_H
+#ifdef GOMA_ENABLE_OMEGA_H
     int adapt_step = 0;
 #endif
     int last_adapt_nt = 0;
@@ -1364,7 +1364,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
             xfem = matrix_xfem[pg->imtrx];
           }
 
-#ifdef HAVE_OMEGA_H
+#ifdef GOMA_ENABLE_OMEGA_H
           if ((tran->ale_adapt || (ls != NULL && ls->adapt)) && tran->theta != 0) {
             GOMA_EH(GOMA_ERROR, "Error theta time step parameter = %g only 0.0 supported",
                     tran->theta);

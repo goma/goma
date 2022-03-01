@@ -149,7 +149,7 @@ extern void solve_NxN_system(dbl *,      /* A */
                              const int,  /* rank (<= row_size) */
                              const int); /* row_size (A's 2nd dimension is row_size) */
 
-#if defined(ENABLE_AMESOS) && defined(TRILINOS)
+#if defined(GOMA_ENABLE_AMESOS) && defined(TRILINOS)
 /* Use prototype in sl_amesos_interface.h */
 #else
 extern void amesos_solve_msr(char *, struct Aztec_Linear_Solver_System *, double *, double *, int);

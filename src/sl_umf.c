@@ -65,7 +65,7 @@
 
 #include <stdio.h>
 
-#ifdef HAVE_UMFPACK
+#ifdef GOMA_ENABLE_UMFPACK
 #include <umfpack.h>
 #endif
 
@@ -79,7 +79,7 @@
 #define UMF_MAX_SYSTEMS 20
 #endif
 
-#ifdef HAVE_UMFPACK
+#ifdef GOMA_ENABLE_UMFPACK
 
 #include "umfpack.h"
 

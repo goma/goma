@@ -756,7 +756,7 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
       Linear_Stability = LSA_NONE;
     }
 #endif
-#ifndef HAVE_ARPACK
+#ifndef GOMA_ENABLE_ARPACK
     GOMA_WH(-1, "ARPACK was not compiled in -- cannot do eigensolves!");
     Linear_Stability = LSA_NONE;
 #endif
@@ -2237,7 +2237,7 @@ void create_shifted_matrix_conwrap(void)
  * Only used by eigensolver
  */
 {
-#ifdef HAVE_ARPACK
+#ifdef GOMA_ENABLE_ARPACK
   passdown.shifted_matrix = (double *)array_alloc(1, NZeros + 5, sizeof(double));
   init_vec_value(passdown.shifted_matrix, 0.0, NZeros + 5);
 #endif
@@ -2251,7 +2251,7 @@ void shifted_matrix_fill_conwrap(double sigma)
  * Only used by eigensolver
  */
 {
-#ifdef HAVE_ARPACK
+#ifdef GOMA_ENABLE_ARPACK
   struct GomaLinearSolverData *ams = &(passdown.ams[JAC]);
   int i;
 
@@ -2265,7 +2265,7 @@ void shifted_matrix_fill_conwrap(double sigma)
 /*****************************************************************************/
 /*****************************************************************************/
 void shifted_linear_solver_conwrap(double *x, double *y, int jac_flag, double tol) {
-#ifdef HAVE_ARPACK
+#ifdef GOMA_ENABLE_ARPACK
   struct GomaLinearSolverData *ams = &(passdown.ams[JAC]);
   static int first_linear_solver_call = TRUE;
   static int stab_umf_id = -1;
@@ -2476,7 +2476,7 @@ void shifted_linear_solver_conwrap(double *x, double *y, int jac_flag, double to
 /*****************************************************************************/
 void destroy_shifted_matrix_conwrap(void) {
 /* Just deallocate the matrix */
-#ifdef HAVE_ARPACK
+#ifdef GOMA_ENABLE_ARPACK
   safe_free((void *)passdown.shifted_matrix);
 #endif
   return;
@@ -2810,7 +2810,7 @@ void random_vector_conwrap(double *x, int numOwnedUnks)
  * Used by eigensolver only
  */
 {
-#ifdef HAVE_ARPACK
+#ifdef GOMA_ENABLE_ARPACK
   struct GomaLinearSolverData *ams = &(passdown.ams[JAC]);
 
   AZ_random_vector(x, ams->data_org, passdown.proc_config);
@@ -2897,7 +2897,7 @@ void solution_output_conwrap(int num_soln_flag,
   int displacement_somewhere;
   double **saved_xyz, **saved_displacement;
 
-#ifdef HAVE_ARPACK
+#ifdef GOMA_ENABLE_ARPACK
   int i, n;
   int freq = eigen->Eigen_Solve_Freq;
 #endif
@@ -2961,7 +2961,7 @@ void solution_output_conwrap(int num_soln_flag,
 
   /* If Eigenvalues requested using ARPACK, calculate them here */
   /* This is also the control point for 3D of 2D stability */
-#ifdef HAVE_ARPACK
+#ifdef GOMA_ENABLE_ARPACK
 
   /* Decide if eigenvalues will be calculated on this step */
   if (con->eigen_info.Num_Eigenvalues < 1)

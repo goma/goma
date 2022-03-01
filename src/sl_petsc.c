@@ -1,4 +1,4 @@
-#ifdef HAVE_PETSC
+#ifdef GOMA_ENABLE_PETSC
 #include <petscksp.h>
 #include <petscmat.h>
 #include <petscsys.h>

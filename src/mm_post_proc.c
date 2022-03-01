@@ -4424,7 +4424,7 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
   /*                      SMOOTHING                                             */
   /******************************************************************************/
 
-#ifdef HAVE_PETSC
+#ifdef GOMA_ENABLE_PETSC
   if (upd->petsc_solve_post_proc) {
     petsc_solve_post_proc(post_proc_vect, rd, dpi);
   } else {
@@ -4438,7 +4438,7 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
         }
       }
     }
-#ifdef HAVE_PETSC
+#ifdef GOMA_ENABLE_PETSC
   }
 #endif
 

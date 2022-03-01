@@ -1358,7 +1358,7 @@ void solve_NxN_system(dbl *A, dbl *b, dbl *x, const int rank, const int row_size
 
 /* Alternate amesos_solve_msr() for builds without Trilinos & Amesos */
 
-#if defined(ENABLE_AMESOS) && defined(TRILINOS)
+#if defined(GOMA_ENABLE_AMESOS) && defined(TRILINOS)
 /* Use the function in sl_amesos_interface.C; do nothing here! */
 
 #else
@@ -1366,7 +1366,7 @@ void solve_NxN_system(dbl *A, dbl *b, dbl *x, const int rank, const int row_size
 void amesos_solve_msr(
     char *choice, struct Aztec_Linear_Solver_System *ams, double *x_, double *b_, int flag) {
   fprintf(stderr,
-          "Error: Need to compile with ENABLE_AMESOS flag before using AMESOS solver packages.");
+          "Error: Need to compile with GOMA_ENABLE_AMESOS flag before using AMESOS solver packages.");
   fprintf(stderr, "   Also make sure appropriate libraries are linked for solver packages.");
   exit(-1);
 }

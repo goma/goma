@@ -91,7 +91,7 @@
 #define GOMA_RF_SOLVE_C
 #include "el_quality.h"
 
-#ifdef HAVE_OMEGA_H
+#ifdef GOMA_ENABLE_OMEGA_H
 #include "adapt/omega_h_interface.h"
 #endif
 
@@ -332,7 +332,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
   double *x_sens = NULL;    /* solution sensitivity                     */
   double **x_sens_p = NULL; /* solution sensitivity for parameters      */
   int num_pvector = 0;      /* number of solution sensitivity vectors   */
-#ifdef HAVE_OMEGA_H
+#ifdef GOMA_ENABLE_OMEGA_H
   int adapt_step = 0;
 #endif
   int last_adapt_nt = 0;
@@ -715,7 +715,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
     ams[JAC]->RowMatrix =
         EpetraCreateRowMatrix(num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]);
     EpetraCreateGomaProblemGraph(ams[JAC], exo, dpi);
-#ifdef HAVE_PETSC
+#ifdef GOMA_ENABLE_PETSC
   } else if (strcmp(Matrix_Format, "petsc") == 0) {
     err = check_compatible_solver();
     GOMA_EH(err, "Incompatible matrix solver for petsc, solver must be petsc");
@@ -779,7 +779,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
   } else {
     GOMA_EH(GOMA_ERROR, "Attempted to allocate unknown sparse matrix format: %s", Matrix_Format);
   }
-#ifdef HAVE_PETSC
+#ifdef GOMA_ENABLE_PETSC
   if (upd->petsc_solve_post_proc && rd->TotalNVPostOutput) {
     goma_setup_petsc_post_proc_matrix(exo, dpi, x, x_old, xdot, xdot_old);
   }
@@ -1809,7 +1809,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
         }
       }
 #endif
-#ifdef HAVE_OMEGA_H
+#ifdef GOMA_ENABLE_OMEGA_H
       if ((tran->ale_adapt || (ls != NULL && ls->adapt)) && tran->theta != 0) {
         GOMA_EH(GOMA_ERROR, "Error theta time step parameter = %g only 0.0 supported", tran->theta);
       }
@@ -2622,7 +2622,7 @@ free_and_clear:
         free(ams[JAC]->GlobalIDs);
       }
     }
-#ifdef HAVE_PETSC
+#ifdef GOMA_ENABLE_PETSC
     else if (strcmp(Matrix_Format, "petsc") == 0) {
       err = goma_petsc_free_matrix(ams[JAC]);
       GOMA_EH(err, "free petsc matrix");

@@ -16,7 +16,7 @@ Changes in version 7.0
 - Automatic rotations for normal conditions in 3D
     - Requires that no ROT conditions are specified and only NORMAL rotated BCs are used
     - Works for Momentum and Mesh
-    - Does not work for TANGENT or EDGE BCs
+    - Does not work for TANGENT or EDGE BCs, or if ROT cards are used
 - Quadratic tetrahedrons (TET10 in Cubit)
 - Partial PETSc support for matrix solvers
     - Can be used with a `petscrc` or `-petsc "petsc options"` on the command line
@@ -30,8 +30,18 @@ Changes in version 7.0
     - ALE adaptivity of uniform ("iso") mesh size, see `ALE Adapt` cards
     - Currently limited to single materials
     - Nodesets and Sidesets must contain the same geometry and have the same number
+- Brk/Fix support has been removed
+    - Now compatible with SEACAS tools using elemental decomposition
+    - epu from SEACAS replaces fix
+    - brkfiles are no longer supported
+    - See SEACAS decomp / nem_slice, nem_spread for more controlled decomposition
+    - Automatic fix is still included, Fix Frequency is still available though not recommended
+    - New output format is compatible with Paraview without `fix`ing
+    - Automatic basic decomposition is available when configured with METIS
+        - See cards `Decomposition Type`, `External Decomposition`
+        - Command line flags `-e`, `-external_decomp`, `-kway`, `-rcb`
+        - Defaults to `rcb` when less than 8 processors and `kway` when more
 - Various bug fixes and feature updates, see merged Pull Requests
-
 
 Changes in version 6.2
 

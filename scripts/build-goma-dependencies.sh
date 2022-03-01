@@ -1379,7 +1379,7 @@ else
 -D TPL_ENABLE_Boost:BOOL=OFF \
 -D Trilinos_ENABLE_Triutils:BOOL=ON \
 -D Trilinos_ENABLE_SEACAS:BOOL=ON \
--D Trilinos_ENABLE_Amesos:BOOL=ON \
+-D Trilinos_GOMA_ENABLE_AMESOS:BOOL=ON \
 -D Trilinos_ENABLE_Epetra:BOOL=ON \
 -D Trilinos_ENABLE_Xpetra:BOOL=ON \
 -D Trilinos_ENABLE_Ifpack:BOOL=ON \
@@ -1390,7 +1390,7 @@ else
 -D Trilinos_ENABLE_AztecOO:BOOL=ON \
 -D Trilinos_ENABLE_Stratimikos:BOOL=ON \
 -D Trilinos_ENABLE_Teko:BOOL=ON \
--D Trilinos_ENABLE_Amesos2:BOOL=ON \
+-D Trilinos_GOMA_ENABLE_AMESOS2:BOOL=ON \
 -D Trilinos_ENABLE_Belos:BOOL=ON \
 -D Trilinos_ENABLE_EpetraExt:BOOL=ON \
 -D Trilinos_ENABLE_Thyra:BOOL=ON \

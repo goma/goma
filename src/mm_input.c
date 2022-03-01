@@ -5693,7 +5693,7 @@ void rd_solver_specs(FILE *ifp, char *input) {
     Linear_Solver = STRATIMIKOS;
     is_Solver_Serial = FALSE;
   } else if (strcmp(Matrix_Solver, "petsc") == 0) {
-#ifdef HAVE_PETSC
+#ifdef GOMA_ENABLE_PETSC
     Linear_Solver = PETSC_SOLVER;
     is_Solver_Serial = FALSE;
 #else
@@ -13293,16 +13293,16 @@ void echo_compiler_settings(void) {
   fprintf(echo_file, "%-30s= %s\n", "HAVE_FRONT", "no");
 #endif
 
-#ifdef HAVE_UMFPACK
-  fprintf(echo_file, "%-30s= %s\n", "HAVE_UMFPACK", "yes");
+#ifdef GOMA_ENABLE_UMFPACK
+  fprintf(echo_file, "%-30s= %s\n", "GOMA_ENABLE_UMFPACK", "yes");
 #else
-  fprintf(echo_file, "%-30s= %s\n", "HAVE_UMFPACK", "no");
+  fprintf(echo_file, "%-30s= %s\n", "GOMA_ENABLE_UMFPACK", "no");
 #endif
 
-#ifdef HAVE_SPARSE
-  fprintf(echo_file, "%-30s= %s\n", "HAVE_SPARSE", "yes");
+#ifdef GOMA_ENABLE_SPARSE
+  fprintf(echo_file, "%-30s= %s\n", "GOMA_ENABLE_SPARSE", "yes");
 #else
-  fprintf(echo_file, "%-30s= %s\n", "HAVE_SPARSE", "no");
+  fprintf(echo_file, "%-30s= %s\n", "GOMA_ENABLE_SPARSE", "no");
 #endif
 
 #ifdef GOMA_HAVE_BLAS
@@ -13323,10 +13323,10 @@ void echo_compiler_settings(void) {
   fprintf(echo_file, "%-30s= %s\n", "HAVE_Y12M", "no");
 #endif
 
-#ifdef HAVE_ARPACK
-  fprintf(echo_file, "%-30s= %s\n", "HAVE_ARPACK", "yes");
+#ifdef GOMA_ENABLE_ARPACK
+  fprintf(echo_file, "%-30s= %s\n", "GOMA_ENABLE_ARPACK", "yes");
 #else
-  fprintf(echo_file, "%-30s= %s\n", "HAVE_ARPACK", "no");
+  fprintf(echo_file, "%-30s= %s\n", "GOMA_ENABLE_ARPACK", "no");
 #endif
 
 #ifdef HAVE_PARPACK

@@ -1358,7 +1358,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
       }
       break;
 
-#ifdef HAVE_PETSC
+#ifdef GOMA_ENABLE_PETSC
     case PETSC_SOLVER:
       if (strcmp(Matrix_Format, "petsc") == 0) {
         int its;
