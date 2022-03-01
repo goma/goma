@@ -34,4 +34,4 @@ Goma will do its best to find third party libraries, hints can be given through 
     -DSparse_PREFIX=<path to sparse install>
     -DARPACK_PREFIX=<path to arpack install>
 
-PETSc is configured through `pkg-config` so `pkg-config` should be available on the command line and `PETSC_DIR` (and possible `PETSC_ARCH`) should be set environment variables
+PETSc is configured through `pkg-config` so `pkg-config` should be available on the command line and `PETSC_DIR` (and maybe `PETSC_ARCH` depending on build) should be set environment variables
