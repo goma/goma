@@ -29,9 +29,9 @@ Examples
 Following is a sample card:
 ::
 
-MATRIX = 1
-	Normalized Residual Tolerance = 1.0e-8
-    Number of EQ = 3
+   MATRIX = 1
+       Normalized Residual Tolerance = 1.0e-8
+       Number of EQ = 3
 
 -------------------------
 Technical Discussion
