@@ -11,11 +11,4 @@ Goma User Manual
    material_files
    references
    documentation_lists
-   library_mode
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`search`
 

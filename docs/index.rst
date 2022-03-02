@@ -6,9 +6,3 @@ Goma Documentation
 
    user_manual
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`search`
-
