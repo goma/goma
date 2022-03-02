@@ -13267,7 +13267,7 @@ void echo_compiler_settings(void) {
   fprintf(echo_file, "%-30s= %d\n", "MAX_PROB_VAR", MAX_PROB_VAR);
   fprintf(echo_file, "%-30s= %d\n", "MAX_CONC", MAX_CONC);
   fprintf(echo_file, "%-30s= %d\n", "MAX_VARIABLE_TYPES", MAX_VARIABLE_TYPES);
-  fprintf(echo_file, "%-30s= %s\n", "HAVE_CONFIG_H", "no");
+  fprintf(echo_file, "%-30s= %d\n", "MAX_EXTERNAL_FIELD", MAX_EXTERNAL_FIELD);
 
 #ifdef HAVE_MPI_H
   fprintf(echo_file, "%-30s= %d\n", "PARALLEL             Num_Proc", Num_Proc);
@@ -13285,12 +13285,6 @@ void echo_compiler_settings(void) {
   fprintf(echo_file, "%-30s= %s\n", "USE_CHEMKIN", "yes");
 #else
   fprintf(echo_file, "%-30s= %s\n", "USE_CHEMKIN", "no");
-#endif
-
-#ifdef HAVE_FRONT
-  fprintf(echo_file, "%-30s= %s\n", "HAVE_FRONT", "yes");
-#else
-  fprintf(echo_file, "%-30s= %s\n", "HAVE_FRONT", "no");
 #endif
 
 #ifdef GOMA_ENABLE_UMFPACK
@@ -13317,12 +13311,6 @@ void echo_compiler_settings(void) {
   fprintf(echo_file, "%-30s= %s\n", "GOMA_HAVE_LAPACK", "no");
 #endif
 
-#ifdef HAVE_Y12M
-  fprintf(echo_file, "%-30s= %s\n", "HAVE_Y12M", "yes");
-#else
-  fprintf(echo_file, "%-30s= %s\n", "HAVE_Y12M", "no");
-#endif
-
 #ifdef GOMA_ENABLE_ARPACK
   fprintf(echo_file, "%-30s= %s\n", "GOMA_ENABLE_ARPACK", "yes");
 #else
@@ -13346,10 +13334,6 @@ void echo_compiler_settings(void) {
 #else
   fprintf(echo_file, "%-30s= %s\n", "TRILINOS", "no");
 #endif
-
-  fprintf(echo_file, "%-30s= %s\n", "COUPLED_FILL", "yes");
-
-  fprintf(echo_file, "%-30s= %s\n", "DEBUG", "no");
 
   fprintf(echo_file, "%-30s= %s\n", "Pressure Stabilization (PSPG)", (PSPG > 0 ? "yes" : "no"));
   fprintf(echo_file, "%-30s= %s\n", "Pressure Stabilization (PSPP)", (PSPP > 0 ? "yes" : "no"));

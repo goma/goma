@@ -25,10 +25,6 @@
  * Revised:  1998/08/29 07:22 MDT pasacki@sandia.gov
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 

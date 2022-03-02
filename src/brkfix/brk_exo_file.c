@@ -86,10 +86,6 @@
  * Revised:  1998/01/20 15:06 MST pasacki@sandia.gov
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <stdio.h>
 
 #include <sys/errno.h> /* needed on HP-UX */
