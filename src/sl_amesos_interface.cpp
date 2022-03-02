@@ -140,7 +140,7 @@ void amesos_solve_msr(char *choice,
       Pkg_Name = "Amesos_Mumps";
 #endif
     else {
-      std::cout << "Error: Unsupport Amesos solver package" << std::endl;
+      std::cerr << "Error: Unsupported Amesos solver package" << std::endl;
       exit(-1);
     }
   }
@@ -243,7 +243,7 @@ int amesos_solve_epetra(
     Pkg_Name = "Amesos_Mumps";
 #endif
   else {
-    std::cout << "Error: Unsupport Amesos solver package" << std::endl;
+    std::cerr << "Error: Unsupported Amesos solver package" << std::endl;
     exit(-1);
   }
 

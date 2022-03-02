@@ -5689,7 +5689,7 @@ int ion_reaction_source(int species_no) /* current species number */
   }
 
   eqn = MASS_FRACTION;
-  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+  for (int imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
     if (pd->e[imtrx][eqn] & T_SOURCE) {
       switch (species_no) {
       case 0:
