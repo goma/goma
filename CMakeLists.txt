@@ -125,85 +125,90 @@ endif()
 find_package(SEACASExodus REQUIRED HINTS ${Trilinos_DIR}/../SEACASExodus)
 message(STATUS "SEACASExodus_DIR = ${SEACASExodus_DIR}")
 
-# PETSC search set root of location to find PETSc configuration
-set(PETSC_PATH $ENV{PETSC_DIR}/$ENV{PETSC_ARCH})
-set(ENV{PKG_CONFIG_PATH} ${PETSC_PATH}/lib/pkgconfig)
+option(ENABLE_PETSC "ENABLE_PETSC" ON)
+if(ENABLE_PETSC)
+  # PETSC search set root of location to find PETSc configuration
+  set(PETSC_PATH $ENV{PETSC_DIR}/$ENV{PETSC_ARCH})
+  set(ENV{PKG_CONFIG_PATH} ${PETSC_PATH}/lib/pkgconfig)
 
-find_package(PkgConfig)
+  find_package(PkgConfig)
 
-if(PkgConfig_FOUND)
-  pkg_search_module(PETSC IMPORTED_TARGET PETSc)
+  if(PkgConfig_FOUND)
+    pkg_search_module(PETSC IMPORTED_TARGET PETSc)
 
-  # Determine PETSc compilers
-  if(PETSC_FOUND)
-    option(ENABLE_PETSC "ENABLE_PETSC" ON)
-    execute_process(
-      COMMAND pkg-config PETSc --variable=ccompiler
-      COMMAND tr -d '\n'
-      OUTPUT_VARIABLE PETSC_C_COMPILER)
-    execute_process(
-      COMMAND pkg-config PETSc --variable=cxxcompiler
-      COMMAND tr -d '\n'
-      OUTPUT_VARIABLE PETSC_CXX_COMPILER)
-    execute_process(
-      COMMAND pkg-config PETSc --variable=fcompiler
-      COMMAND tr -d '\n'
-      OUTPUT_VARIABLE PETSC_FORTRAN_COMPILER)
-    if(ENABLE_PETSC)
-      if(NOT (Trilinos_C_COMPILER STREQUAL PETSC_C_COMPILER))
-        if(GOMA_COMPILER_OVERRIDE)
-          message(
-            WARNING "Trilinos and Petsc compiled with different C compilers\n"
-                    "Trilinos C: ${Trilinos_C_COMPILER}\n"
-                    "PETSc C: ${PETSC_C_COMPILER}")
-        else()
-          message(
-            FATAL_ERROR
-              "Trilinos and Petsc compiled with different C compilers\n"
-              "Trilinos C: ${Trilinos_C_COMPILER}\n"
-              "PETSc C: ${PETSC_C_COMPILER}"
-              "Disable error by GOMA_COMPILER_OVERRIDE=ON if you know what you are doing"
-          )
+    # Determine PETSc compilers
+    if(PETSC_FOUND)
+      execute_process(
+        COMMAND pkg-config PETSc --variable=ccompiler
+        COMMAND tr -d '\n'
+        OUTPUT_VARIABLE PETSC_C_COMPILER)
+      execute_process(
+        COMMAND pkg-config PETSc --variable=cxxcompiler
+        COMMAND tr -d '\n'
+        OUTPUT_VARIABLE PETSC_CXX_COMPILER)
+      execute_process(
+        COMMAND pkg-config PETSc --variable=fcompiler
+        COMMAND tr -d '\n'
+        OUTPUT_VARIABLE PETSC_FORTRAN_COMPILER)
+      if(ENABLE_PETSC)
+        if(NOT (Trilinos_C_COMPILER STREQUAL PETSC_C_COMPILER))
+          if(GOMA_COMPILER_OVERRIDE)
+            message(
+              WARNING "Trilinos and Petsc compiled with different C compilers\n"
+                      "Trilinos C: ${Trilinos_C_COMPILER}\n"
+                      "PETSc C: ${PETSC_C_COMPILER}")
+          else()
+            message(
+              FATAL_ERROR
+                "Trilinos and Petsc compiled with different C compilers\n"
+                "Trilinos C: ${Trilinos_C_COMPILER}\n"
+                "PETSc C: ${PETSC_C_COMPILER}"
+                "Disable error by GOMA_COMPILER_OVERRIDE=ON if you know what you are doing"
+            )
+          endif()
         endif()
-      endif()
-      if(NOT (Trilinos_Fortran_COMPILER STREQUAL PETSC_FORTRAN_COMPILER))
-        if(GOMA_COMPILER_OVERRIDE)
-          message(
-            WARNING
-              "Trilinos and Petsc compiled with different Fortran compilers\n"
-              "Trilinos Fortran: ${Trilinos_Fortran_COMPILER}\n"
-              "PETSc Fortran: ${PETSC_FORTRAN_COMPILER}")
-        else()
-          message(
-            FATAL_ERROR
-              "Trilinos and Petsc compiled with different Fortran compilers\n"
-              "Trilinos Fortran: ${Trilinos_Fortran_COMPILER}\n"
-              "PETSc Fortran: ${PETSC_FORTRAN_COMPILER}"
-              "Disable error by GOMA_COMPILER_OVERRIDE=ON if you know what you are doing"
-          )
+        if(NOT (Trilinos_Fortran_COMPILER STREQUAL PETSC_FORTRAN_COMPILER))
+          if(GOMA_COMPILER_OVERRIDE)
+            message(
+              WARNING
+                "Trilinos and Petsc compiled with different Fortran compilers\n"
+                "Trilinos Fortran: ${Trilinos_Fortran_COMPILER}\n"
+                "PETSc Fortran: ${PETSC_FORTRAN_COMPILER}")
+          else()
+            message(
+              FATAL_ERROR
+                "Trilinos and Petsc compiled with different Fortran compilers\n"
+                "Trilinos Fortran: ${Trilinos_Fortran_COMPILER}\n"
+                "PETSc Fortran: ${PETSC_FORTRAN_COMPILER}"
+                "Disable error by GOMA_COMPILER_OVERRIDE=ON if you know what you are doing"
+            )
+          endif()
         endif()
-      endif()
-      if(NOT (Trilinos_CXX_COMPILER STREQUAL PETSC_CXX_COMPILER))
-        if(GOMA_COMPILER_OVERRIDE)
-          message(
-            WARNING "Trilinos and Petsc compiled with different CXX compilers\n"
-                    "Trilinos CXX: ${Trilinos_CXX_COMPILER}\n"
-                    "PETSc CXX: ${PETSC_CXX_COMPILER}")
-        else()
-          message(
-            FATAL_ERROR
-              "Trilinos and Petsc compiled with different CXX compilers\n"
-              "Trilinos CXX: ${Trilinos_CXX_COMPILER}\n"
-              "PETSc CXX: ${PETSC_CXX_COMPILER}"
-              "Disable error by GOMA_COMPILER_OVERRIDE=ON if you know what you are doing"
-          )
+        if(NOT (Trilinos_CXX_COMPILER STREQUAL PETSC_CXX_COMPILER))
+          if(GOMA_COMPILER_OVERRIDE)
+            message(
+              WARNING
+                "Trilinos and Petsc compiled with different CXX compilers\n"
+                "Trilinos CXX: ${Trilinos_CXX_COMPILER}\n"
+                "PETSc CXX: ${PETSC_CXX_COMPILER}")
+          else()
+            message(
+              FATAL_ERROR
+                "Trilinos and Petsc compiled with different CXX compilers\n"
+                "Trilinos CXX: ${Trilinos_CXX_COMPILER}\n"
+                "PETSc CXX: ${PETSC_CXX_COMPILER}"
+                "Disable error by GOMA_COMPILER_OVERRIDE=ON if you know what you are doing"
+            )
+          endif()
         endif()
       endif()
     endif()
-  endif()
 
+  else()
+    message(WARNING "pkg-config not found, not searching for PETSc")
+  endif()
 else()
-  message(WARNING "pkg-config not found, not searching for PETSc")
+  message(STATUS "PETSc is disabled")
 endif()
 
 set(GOMA_TPL_LIBRARIES "")
@@ -830,7 +835,7 @@ message(STATUS "CMAKE_Fortran_COMPILER=${CMAKE_Fortran_COMPILER}")
 message(STATUS "Trilinos_C_COMPILER=${Trilinos_C_COMPILER}")
 message(STATUS "Trilinos_CXX_COMPILER=${Trilinos_CXX_COMPILER}")
 message(STATUS "Trilinos_Fortran_COMPILER=${Trilinos_Fortran_COMPILER}")
-if(PETSC_FOUND)
+if(ENABLE_PETSC AND PETSC_FOUND)
   message(STATUS "PETSC_C_COMPILER=${PETSC_C_COMPILER}")
   message(STATUS "PETSC_CXX_COMPILER=${PETSC_CXX_COMPILER}")
   message(STATUS "PETSC_FORTRAN_COMPILER=${PETSC_FORTRAN_COMPILER}")
