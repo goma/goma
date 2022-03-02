@@ -1,10 +1,11 @@
 find_path(Sparse_INCLUDES spMatrix.h
-          PATHS ${Sparse_PREFIX}/sparse/include ${Sparse_PREFIX}/sparse/src
-                ${Sparse_PREFIX}/include ${Sparse_PREFIX}/src)
+          PATHS ${Sparse_PREFIX}/sparse $ENV{SPARSEDIR} ${Sparse_PREFIX}
+          PATH_SUFFIXES include src)
 find_library(
   Sparse_LIB
   NAMES sparse
-  PATHS ${Sparse_PREFIX}/sparse/lib ${Sparse_PREFIX}/lib)
+  PATHS ${Sparse_PREFIX}/sparse ${Sparse_PREFIX} $ENV{SPARSEDIR} ${LIB_INSTALL_DIR}
+  PATH_SUFFIXES lib)
 
 set(Sparse_LIBRARIES "${Sparse_LIB}")
 

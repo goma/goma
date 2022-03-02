@@ -235,12 +235,12 @@ echo "Start Goma Compile" >> $COMPILE_LOG
 HDF5_VERSION="1.12.1"
 HDF5_MD5="442469fbf43626006346e679c22cf10a"
 
-NETCDF_VERSION="c-4.8.0"
-NETCDF_MD5="a1e31625e2f270aa8044578d7320962c"
+NETCDF_VERSION="c-4.8.1"
+NETCDF_MD5=""
 
-TRILINOS_VERSION="13.0.0"
-TRILINOS_VERSION_DASH="13-0-0"
-TRILINOS_MD5="f0e9d7de4eb55598c5338b56bdc80df9"
+TRILINOS_VERSION="13.0.1"
+TRILINOS_VERSION_DASH="13-0-1"
+TRILINOS_MD5="9d76b494fe1c00cedb93d51dfc666a27"
 
 MUMPS_VERSION="5.4.1"
 MUMPS_MD5="93be789bf9c6c341a78c16038da3241b"
@@ -271,7 +271,7 @@ ARCHIVE_NAMES=("arpack96.tar.gz" \
 "netcdf-${NETCDF_VERSION}.tar.gz" \
 "parmetis-4.0.3.tar.gz" \
 "sparse.tar.gz" \
-"superlu_dist-5.1.3.tar.gz" \
+"superlu_dist-7.2.0.tar.gz" \
 "y12m.tar.gz" \
 "Trilinos-trilinos-release-$TRILINOS_VERSION_DASH.tar.gz" \
 "MUMPS_$MUMPS_VERSION.tar.gz" \
@@ -287,7 +287,7 @@ ARCHIVE_MD5SUMS=("fffaa970198b285676f4156cebc8626e" \
 "${NETCDF_MD5}" \
 "f69c479586bf6bb7aff6a9bc0c739628" \
 "1566d914d1035ac17b73fe9bc0eed02a" \
-"fdee368cba0e95cb0143b6d47915e7a1" \
+"10d20b97012e5ae89a6cc69b768f61b7" \
 "SKIP" \
 $TRILINOS_MD5 \
 $MUMPS_MD5 \
@@ -297,10 +297,10 @@ $MUMPS_MD5 \
 ARCHIVE_URLS=("http://www.caam.rice.edu/software/ARPACK/SRC/arpack96.tar.gz" \
 "http://www.caam.rice.edu/software/ARPACK/SRC/patch.tar.gz" \
 "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.12/hdf5-${HDF5_VERSION}/src/hdf5-${HDF5_VERSION}.tar.bz2" \
-"https://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-${NETCDF_VERSION}.tar.gz" \
+"https://downloads.unidata.ucar.edu/netcdf-c/4.8.1/netcdf-${NETCDF_VERSION}.tar.gz" \
 "http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz" \
 "http://downloads.sourceforge.net/project/sparse/sparse/sparse1.4b/sparse1.4b.tar.gz" \
-"http://codeload.github.com/xiaoyeli/superlu_dist/tar.gz/v5.1.3" \
+"http://codeload.github.com/xiaoyeli/superlu_dist/tar.gz/v7.2.0" \
 "http://www.netlib.org/cgi-bin/netlibfiles.tgz?format=tgz\\&filename=y12m%2Fy12m.f" \
 "https://github.com/trilinos/Trilinos/archive/trilinos-release-$TRILINOS_VERSION_DASH.tar.gz" \
 "http://mumps.enseeiht.fr/MUMPS_$MUMPS_VERSION.tar.gz" \
@@ -315,7 +315,7 @@ ARCHIVE_DIR_NAMES=("ARPACK" \
 "netcdf-${NETCDF_VERSION}" \
 "parmetis-4.0.3" \
 "sparse" \
-"superlu_dist-5.1.3" \
+"superlu_dist-7.2.0" \
 "y12m" \
 "Trilinos-trilinos-release-$TRILINOS_VERSION_DASH" \
 "MUMPS_$MUMPS_VERSION" \
@@ -1058,49 +1058,6 @@ EOF
     fi
 fi
 
-#make SuperLU
-cd $GOMA_LIB/superlu_dist-5.1.3
-if [ -e lib/libsuperludist.a ]
-then
-    log_echo "SuperLU_DIST already built"
-else
-    cat > make.inc << EOF
-SuperLUroot     =  $GOMA_LIB/superlu_dist-5.1.3
-DSUPERLULIB     = $GOMA_LIB/superlu_dist-5.1.3/lib/libsuperludist.a
-
-# BLASDEF       = -DUSE_VENDOR_BLAS
-
-LIBS            = $GOMA_LIB/superlu_dist-5.1.3/lib/libsuperludist.a $NON_INTEL_BLAS_LIBRARY $GOMA_LIB/parmetis-4.0.3/lib/libparmetis.a $GOMA_LIB/parmetis-4.0.3/lib/libmetis.a ${FORTRAN_LIBS}
-
-#
-#  The archiver and the flag(s) to use when building archive (library)
-#  If your system has no ranlib, set RANLIB = echo.
-#
-ARCH         = /usr/bin/ar
-ARCHFLAGS    = cr
-RANLIB       = /usr/bin/ranlib
-
-CC           = $MPI_C_COMPILER
-CFLAGS       = -O3 -DNDEBUG -DUSE_VENDOR_BLAS -DDEBUGlevel=0 -DPRNTlevel=0 -std=c99 -g -I$GOMA_LIB/parmetis-4.0.3/include
-CDEFS = -DAdd_
-# CFLAGS       += -D
-# CFLAGS       +=
-NOOPTS       = -O0
-FORTRAN      = $MPI_F90_COMPILER
-
-LOADER       = $MPI_CXX_COMPILER $BLAS_FLAGS
-LOADOPTS     = -Wl,-rpath,$GOMA_LIB/superlu_dist-5.1.3/lib
-EOF
-    mkdir -p lib
-    make 2>&1 | tee -a $COMPILE_LOG
-    if [ -e $GOMA_LIB/superlu_dist-5.1.3/lib/libsuperludist.a ]
-    then
-        log_echo "Built SuperLU_DIST 5.1.3"
-    else
-        log_echo "Failed to build SuperLU_DIST 5.1.3"
-        exit 1
-    fi
-fi
 
 if [[ "$MATH_LIBRARIES" == "netlib blas" ]]; then
     #make lapack/blas
@@ -1129,6 +1086,28 @@ if [[ "$MATH_LIBRARIES" == "netlib blas" ]]; then
     export LD_LIBRARY_PATH="${LAPACK_LIBRARY_DIR}:$LD_LIBRARY_PATH"
 fi
 
+#make SuperLU
+cd $GOMA_LIB/superlu_dist-7.2.0
+if [ -e lib64/libsuperlu_dist.a ]
+then
+    log_echo "SuperLU_DIST already built"
+else
+    mkdir -p build
+    CC=$MPI_C_COMPILER CXX=$MPI_CXX_COMPILER FC=$MPI_F90_COMPILER cmake -B build -DTPL_BLAS_LIBRARIES="${NON_INTEL_BLAS_LINK}" \
+      -DTPL_PARMETIS_LIBRARIES="$GOMA_LIB/parmetis-4.0.3/lib/libparmetis.a;$GOMA_LIB/parmetis-4.0.3/lib/libmetis.a" \
+      -DCMAKE_INSTALL_PREFIX=$GOMA_LIB/superlu_dist-7.2.0 \
+      -Denable_openmp:BOOL=FALSE \
+      -DTPL_PARMETIS_INCLUDE_DIRS="$GOMA_LIB/parmetis-4.0.3/include" 2>&1 | tee -a $COMPILE_LOG
+    make -C build 2>&1 | tee -a $COMPILE_LOG
+    make -C build install 2>&1 | tee -a $COMPILE_LOG
+    if [ -e $GOMA_LIB/superlu_dist-7.2.0/lib64/libsuperlu_dist.a ]
+    then
+        log_echo "Built SuperLU_DIST 7.2.0"
+    else
+        log_echo "Failed to build SuperLU_DIST 7.2.0"
+        exit 1
+    fi
+fi
 #make sparse
 cd $GOMA_LIB/sparse
 if [ -e lib/libsparse.a ]
@@ -1152,7 +1131,7 @@ fi
 
 #make SuiteSparse
 cd $GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION
-if [ -e UMFPACK/Lib/libumfpack.a ]
+if [ -e $GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/lib/libumfpack.a ]
 then
     log_echo "SuiteSparse is already built"
 else
@@ -1181,10 +1160,8 @@ else
              JOBS="$MAKE_JOBS" \
              AR="${ARCHIVER}" BLAS_FLAGS="${BLAS_FLAGS}" 2>&1 | tee -a $COMPILE_LOG
     fi
-    cd ${GOMA_LIB}/SuiteSparse-$SUITESPARSE_VERSION/UMFPACK/Include
-    ln -s ../../SuiteSparse_config/SuiteSparse_config.h UFconfig.h
-    ln -s ../../SuiteSparse_config/SuiteSparse_config.h SuiteSparse_config.h
-    if [ -e $GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/UMFPACK/Lib/libumfpack.a ]
+    find . -name '*.a' -exec cp "{}" $GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/lib \;
+    if [ -e $GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/lib/libumfpack.a ]
     then
         log_echo "Built SuiteSparse $SUITESPARSE_VERSION"
     else
@@ -1430,9 +1407,9 @@ else
   -D AMD_LIBRARY_DIRS:PATH="$GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/AMD/Lib;$GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/SuiteSparse_config" \
   -D AMD_INCLUDE_DIRS:PATH="$GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/AMD/Include;$GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/SuiteSparse_config" \
 -D TPL_ENABLE_SuperLUDist:BOOL=ON \
-  -D SuperLUDist_LIBRARY_NAMES:STRING="superludist" \
-  -D SuperLUDist_LIBRARY_DIRS:PATH=$GOMA_LIB/superlu_dist-5.1.3/lib \
-  -D SuperLUDist_INCLUDE_DIRS:PATH=$GOMA_LIB/superlu_dist-5.1.3/SRC \
+  -D SuperLUDist_LIBRARY_NAMES:STRING="superlu_dist" \
+  -D SuperLUDist_LIBRARY_DIRS:PATH=$GOMA_LIB/superlu_dist-7.2.0/lib64 \
+  -D SuperLUDist_INCLUDE_DIRS:PATH=$GOMA_LIB/superlu_dist-7.2.0/include \
 -D TPL_ENABLE_ParMETIS:BOOL=ON \
   -D ParMETIS_LIBRARY_DIRS:PATH=$GOMA_LIB/parmetis-4.0.3/lib \
   -D ParMETIS_INCLUDE_DIRS:PATH=$GOMA_LIB/parmetis-4.0.3/include \
@@ -1471,3 +1448,23 @@ $GOMA_LIB/Trilinos-trilinos-release-$TRILINOS_VERSION_DASH 2>&1 | tee -a $COMPIL
         exit 1
     fi
 fi
+
+
+# Generate a config file for bash
+cd $GOMA_LIB
+cat > config.sh <<EOF
+export CMAKE_PREFIX_PATH=$TRILINOS_INSTALL:\$CMAKE_PREFIX_PATH
+export PATH=$TRILINOS_INSTALL/bin:\$PATH
+export PATH=${GOMA_LIB}/openmpi-$OPENMPI_VERSION/bin:\$PATH
+export METISDIR=${GOMA_LIB}/parmetis-4.0.3
+export UMFPACK_DIR=${GOMA_LIB}/SuiteSparse-$SUITESPARSE_VERSION
+export ARPACKDIR=${GOMA_LIB}/ARPACK
+export SPARSEDIR=${GOMA_LIB}/sparse
+EOF
+
+
+if [ "$build_cmake" == "true" ] ; then
+    echo "export PATH=$GOMA_LIB/cmake-$CMAKE_VERSION-linux-x86_64/bin:\$PATH" >> config.sh
+fi
+
+log_echo "An example bash configuration file has been written to $GOMA_LIB/config.sh"

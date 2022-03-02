@@ -16,6 +16,7 @@ report by Schunk, et al. (2002) for an overview and further usage tips.
 .. toctree::
    :maxdepth: 1
 
+   solver_specifications/total_number_of_matrices
    solver_specifications/solution_algorithm
    solver_specifications/matrix_storage_format
    solver_specifications/stratimikos_file

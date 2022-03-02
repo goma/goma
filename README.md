@@ -1,4 +1,4 @@
-# Goma 6.2
+# Goma 
 A Full-Newton Finite Element Program for Free and Moving Boundary Problems with Coupled Fluid/Solid Momentum, Energy, Mass, and Chemical Species Transport
 
 For more information see the [Goma website](https://docs.gomafem.com)
@@ -25,7 +25,7 @@ and are noted at the top of the cmake file.
 - Metis 5.1.0 (Optional)
 - SEACAS 2022-01-27 (Required: Exodus and Aprepro)
 - BLAS/LAPACK (Configured through Trilinos)
-- Trilinos matrix solvers 13.0.1 (Required: AztecOO, Amesos, Epetra, TPL LAPACK; Optional: Stratimikos [with Teko, Ifpack, Belos, Tpetra])
+- Trilinos matrix solvers 13.0.1 and up (Required: AztecOO, Amesos, Epetra, TPL LAPACK; Optional: Stratimikos [with Teko, Ifpack, Belos, Tpetra])
 - PETSc matrix solvers (KSP, PC)
 - MUMPS 5.4.0 (through Trilinos or PETSc only)
 - Superlu_dist 7.2.0 (through Trilinos or PETSc only, Trilinos requires parmetis build)
