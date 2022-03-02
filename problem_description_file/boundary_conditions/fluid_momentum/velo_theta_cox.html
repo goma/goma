@@ -1,0 +1,344 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>VELO_THETA_COX &#8212; Goma User Manual 7.0.0 documentation</title>
+    
+    <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  
+    
+    <link rel="stylesheet"
+      href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+  
+    
+      
+  
+    
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/pydata-sphinx-theme.css" />
+    
+    <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+
+<a class="navbar-brand" href="../../../index.html">
+  <img src="../../../_static/goma.png" class="logo" alt="logo">
+</a>
+
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../user_manual.html">
+  Goma User Manual
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#description-usage">
+   <strong>
+    Description / Usage
+   </strong>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#examples">
+   <strong>
+    Examples
+   </strong>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#technical-discussion">
+   <strong>
+    Technical Discussion
+   </strong>
+  </a>
+ </li>
+</ul>
+
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <section id="velo-theta-cox">
+<h1><strong>VELO_THETA_COX</strong><a class="headerlink" href="#velo-theta-cox" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">VELO_THETA_COX</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">integer</span><span class="p">]</span>
+</pre></div>
+</div>
+<section id="description-usage">
+<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h2>
+<p><strong>(PCC/R_MOM_TANG1)</strong></p>
+<p>This boundary condition card applies a dynamic contact angle dependent velocity
+condition in a similiar fashion to VELO_THETA_TPL, but the functional form of the
+velocity is different. The functional form stems from the hydrodynamic theory of
+wetting by Cox.</p>
+<p>The &lt;float_list&gt; for this boundary condition has eight values; definitions of the input
+parameters are as follows:</p>
+<table class="table">
+<colgroup>
+<col style="width: 24%" />
+<col style="width: 76%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>VELO_THETA_COX</strong></p></td>
+<td><p>Name of the boundary condition.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>NS</strong></p></td>
+<td><p>Type of boundary condition (&lt;bc_type&gt;), where <strong>NS</strong> denotes
+node set in the EXODUS II database.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;bc_id&gt;</p></td>
+<td><p>The boundary flag identifier, an integer associated with
+&lt;bc_type&gt; that identifies the boundary location (node set in
+EXODUS II) in the problem domain.</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float1&gt;</p></td>
+<td><p><span class="math notranslate nohighlight">\(\theta\)</span>, equilibrium (static) contact angle subtended
+by wall normal and free surface normal, in units of degrees.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;float2&gt;</p></td>
+<td><p><span class="math notranslate nohighlight">\(n_x\)</span> , x-component of normal vector to the geometry
+boundary (see important note below regarding variable wall
+normals, viz. non-planar solid walls).</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float3&gt;</p></td>
+<td><p><span class="math notranslate nohighlight">\(n_y\)</span> , y-component of normal vector to the geometry
+boundary. (see important note below regarding variable wall
+normals, viz. non-planar solid walls).</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;float4&gt;</p></td>
+<td><p><span class="math notranslate nohighlight">\(n_z\)</span> , z-component of normal vector to the geometry
+boundary. (see important note below regarding variable wall
+normals, viz. non-planar solid walls).</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float5&gt;</p></td>
+<td><p><span class="math notranslate nohighlight">\(\varepsilon_s\)</span> is the dimensionless slip length, i.e.
+the  ratio of the slip
+length to the characteristic length scale of the macroscopic
+flow.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;float6&gt;</p></td>
+<td><p><span class="math notranslate nohighlight">\(\sigma\)</span> is the surface tension. This value is
+multiplied by the surface tension value stipulated by the
+surface tension material model.</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float7&gt;</p></td>
+<td><p><span class="math notranslate nohighlight">\(t_{relax}\)</span> is a relaxation time which can be used
+to smooth the imposed contact point velocity for transient
+problems. Set to zero for no smoothing.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;float8&gt;</p></td>
+<td><p><span class="math notranslate nohighlight">\(V_{old}\)</span> is an initial velocity used in velocity
+smoothing for transient problems. Set to zero when smoothing
+is not used.</p></td>
+</tr>
+<tr class="row-even"><td><p>[integer]</p></td>
+<td><p><em>blk_id</em>, an optional parameter that is the element block
+number in conjugate problems that identifies the material
+region to which the contact angle applies (usually the liquid
+element block in solid/liquid conjugate problems).</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples">
+<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>Following is a sample card:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">VELO_THETA_COX</span> <span class="n">NS</span>   <span class="mi">100</span>   <span class="p">{</span><span class="mi">45</span><span class="p">}</span>   <span class="mf">0.</span>   <span class="mf">1.</span>   <span class="mf">0.</span> <span class="mf">0.1</span>   <span class="mf">72.0</span>   <span class="mi">0</span>   <span class="mi">0</span>   <span class="mi">2</span>
+</pre></div>
+</div>
+<p>This condition applies a contact angle of 45 degrees between the free surface normal at
+the 100 nodeset and the vector (0,1,0). The surface tension is 72, the reciprocal of the
+slip coefficient is 0.1, and the dynamic contact angle is taken from element block 2.
+Normally, this latter vector is the normal to the solid surface in contact with the free
+surface at this point.</p>
+</section>
+<section id="technical-discussion">
+<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>The constraint that is imposed at the nodeset node is as follows:</p></li>
+</ul>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../../../_images/119_goma_physics.png"><img alt="../../../_images/119_goma_physics.png" src="../../../_images/119_goma_physics.png" style="width: 90%;" /></a>
+</figure>
+<p>where <span class="math notranslate nohighlight">\(v_{Cox}\)</span> is computed from</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../../../_images/120_goma_physics.png"><img alt="../../../_images/120_goma_physics.png" src="../../../_images/120_goma_physics.png" style="width: 90%;" /></a>
+</figure>
+<p>where the Cox functions, f and g, are given by;</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../../../_images/121_goma_physics.png"><img alt="../../../_images/121_goma_physics.png" src="../../../_images/121_goma_physics.png" style="width: 90%;" /></a>
+</figure>
+<ul class="simple">
+<li><p>The parameters <span class="math notranslate nohighlight">\(\lambda\)</span>, <span class="math notranslate nohighlight">\(q_{inner}\)</span>, and <span class="math notranslate nohighlight">\(q_{outer}\)</span> are currently not accessible from the input card
+and are hard-set to zero. <span class="math notranslate nohighlight">\(\lambda\)</span> is the ratio of gas viscosity to liquid viscosity whereas
+<span class="math notranslate nohighlight">\(q_{inner}\)</span> and <span class="math notranslate nohighlight">\(q_{outer}\)</span> represent influences from the inner and outer flow regions</p></li>
+</ul>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../../../_images/122_goma_physics.png"><img alt="../../../_images/122_goma_physics.png" src="../../../_images/122_goma_physics.png" style="width: 90%;" /></a>
+</figure>
+<p>When smoothing is not used, i.e. <span class="math notranslate nohighlight">\(t_{relax}\)</span> = 0 , the imposed velocity is equal to that
+stipulated by the Hoffman correlation. Also see WETTING_SPEED_COX and
+SHARP_COX_VELOCITY for level-set versions.</p>
+<ul class="simple">
+<li><p>For steady problems, the substrate velocity will be extracted from adjoining
+VELO_TANGENT, VELO_SLIP, or VELO_SLIP_ROT boundary conditions.</p></li>
+<li><p>The Cox wetting velocity requires evaluation of integrals for the function g
+( <span class="math notranslate nohighlight">\(\theta\)</span>, <span class="math notranslate nohighlight">\(\lambda\)</span>)
+which is currently done numerically using 10-point Gaussian quadrature. As such
+the evaluation of the integrals is expected to become inaccurate as either
+<span class="math notranslate nohighlight">\(\theta_eq\)</span> tends
+toward zero or <span class="math notranslate nohighlight">\(\theta\)</span> tends toward 180 degrees. Note that the integrand becomes
+singular as <span class="math notranslate nohighlight">\(\theta\)</span> tends toward 0 or 180 degrees.</p></li>
+<li><p>This condition was motivated by the Cox hydrodynamic theory of wetting (cf.
+Stephan F. Kistler, “Hydrodynamics of Wetting,” in Wettability edited by John
+Berg, 1993 ).</p></li>
+</ul>
+</section>
+</section>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+    <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2019 Goma Developers.<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

@@ -1,0 +1,335 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>NO_SLIP/NO_SLIP_RS &#8212; Goma User Manual 7.0.0 documentation</title>
+    
+    <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  
+    
+    <link rel="stylesheet"
+      href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+  
+    
+      
+  
+    
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/pydata-sphinx-theme.css" />
+    
+    <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+
+<a class="navbar-brand" href="../../../index.html">
+  <img src="../../../_static/goma.png" class="logo" alt="logo">
+</a>
+
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../user_manual.html">
+  Goma User Manual
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#description-usage">
+   <strong>
+    Description / Usage
+   </strong>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#examples">
+   <strong>
+    Examples
+   </strong>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#technical-discussion">
+   <strong>
+    Technical Discussion
+   </strong>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#references">
+   <strong>
+    References
+   </strong>
+  </a>
+ </li>
+</ul>
+
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <section id="no-slip-no-slip-rs">
+<h1><strong>NO_SLIP/NO_SLIP_RS</strong><a class="headerlink" href="#no-slip-no-slip-rs" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="p">{</span><span class="n">NO_SLIP</span> <span class="o">|</span> <span class="n">NO_SLIP_RS</span><span class="p">}</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer2</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<section id="description-usage">
+<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h2>
+<p><strong>(SIC/ VECTOR MOMENTUM)</strong></p>
+<p>This card invokes a special boundary condition that applies a no-slip condition to the
+fluid velocity at an interface between a liquid phase and a solid phase so that the fluid
+velocity and solid velocity will be in concert. The solid phase must be treated as a
+Lagrangian solid and may be in a convected frame of reference. The fluid velocity is
+equal to the velocity of the stress-free state mapped into the deformed state (for steadystate
+problems).</p>
+<p>In general, a <em>SOLID_FLUID</em> boundary condition must also be applied to the same
+boundary so that the force balance between liquid and solid is enforced. Note that a
+<em>FLUID_SOLID</em> boundary condition will have no effect since the strongly enforced
+<em>NO_SLIP/NO_SLIP_RS</em> on the fluid momentum equation will clobber it.</p>
+<p>All elements on both sides of the interface must have the same element type, i.e., the
+same order of interpolation and basis functions, e.g., Q1 or Q2.</p>
+<p>Definitions of the input parameters are as follows:</p>
+<table class="table">
+<colgroup>
+<col style="width: 31%" />
+<col style="width: 69%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>{NO_SLIP | NO_SLIP_RS}</strong></p></td>
+<td><p>Boundary condition name applied in the following
+formulations:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><strong>NO_SLIP</strong> - this condition applies when the solid
+phase is a purely <em>LAGRANGIAN</em> solid.</p></li>
+<li><p><strong>NO_SLIP_RS</strong> - this condition should be used instead
+when the displacements in the solid phase are
+determined via a <em>TALE</em> formulation.</p></li>
+</ul>
+</div></blockquote>
+</td>
+</tr>
+<tr class="row-even"><td><p><strong>SS</strong></p></td>
+<td><p>Type of boundary condition (&lt;bc_type&gt;), where <strong>SS</strong>
+denotes side set in the EXODUS II database.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;bc_id&gt;</p></td>
+<td><p>The boundary flag identifier, an integer associated with
+&lt;bc_type&gt; that identifies the boundary location (side set
+in EXODUS II) in the problem domain. This side set
+should be the intersection of liquid and solid element
+blocks and be defined so that it is present in both
+element blocks.</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;integer1&gt;</p></td>
+<td><p>the element block ID number of the solid phase material.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;integer2&gt;</p></td>
+<td><p>the element block ID number of the liquid phase material.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples">
+<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>The following is a sample input card:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span><span class="o">=</span> <span class="n">NO_SLIP</span> <span class="n">SS</span> <span class="mi">10</span>   <span class="mi">2</span> <span class="mi">1</span>
+</pre></div>
+</div>
+<p>This card will enforce continuity of velocity between the solid phase in element block 2
+with the fluid phase in element block 1. Side set 10 should be in common with both
+element blocks.</p>
+</section>
+<section id="technical-discussion">
+<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>This boundary condition is a vector condition meaning that all three components
+of the fluid momentum equation are affected by use of a single boundary
+condition. The actual constraints that are imposed at node <em>j</em> are:</p></li>
+</ul>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../../../_images/075_goma_physics.png"><img alt="../../../_images/075_goma_physics.png" src="../../../_images/075_goma_physics.png" style="width: 90%;" /></a>
+</figure>
+<p>where <span class="math notranslate nohighlight">\(\phi_j\)</span> is the finite element trial function, <span class="math notranslate nohighlight">\(v_f\)</span> is the fluid velocity, and <span class="math notranslate nohighlight">\(v_s\)</span> is the
+solid phase velocity. These three constraints are strongly enforced so they
+replace completely the x, y, and z fluid momentum components. The boundary
+condition is not rotated since all three components of the momentum equation
+are supplanted.</p>
+<ul class="simple">
+<li><p>As mentioned above this boundary condition is used most often in conjunction
+with the <em>SOLID_FLUID</em> boundary condition which equates stresses across fluid/
+solid interfaces. As described in the section discussing this card, this latter card
+imposes these forces by using the residuals of the fluid momentum equation as
+surrogates for the fluid phase forces. These forces however are imposed on the
+solid equations prior to imposition of the <em>NO_SLIP</em> boundary condition.</p></li>
+<li><p>As noted above, for this boundary condition to function properly it is necessary
+that the side set between the fluid and solid element block be present in both
+element blocks. To explain this it is necessary to recognize that side sets are
+defined as a set of faces attached to specific elements. This is in contrast to node
+sets which are simply a list of node numbers. Therefore, in the case of a side set
+that lies at the interface of two element blocks, it is possible for a given face in that
+side set to appear twice, once attached to the element in the first element block and
+a second time attached to the adjoining element in the second element block. This
+is the condition that is required for the proper execution of this boundary
+condition. Fortunately, this is the default of most meshing tools that interface with
+<em>Goma</em>.</p></li>
+<li><p>It is also important to reiterate that another necessary condition for the proper
+function of this boundary condition is that the interpolation order of the pseudosolid
+mesh unknowns <em>and the fluid velocity unknowns</em> in the <em>ALE</em> fluid phase block
+be identical to the interpolation order of the solid displacement unknowns in the
+<em>LAGRANGIAN</em> or <em>TALE</em> adjoining solid phase block. This usually means that the
+element type must be the same in both phases. In two-dimensions this generally is
+not a problem, but in three dimensions it can impose a considerable hardship on
+the analyst.</p></li>
+</ul>
+</section>
+<section id="references">
+<h2><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<p>No References.</p>
+</section>
+</section>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+    <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2019 Goma Developers.<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

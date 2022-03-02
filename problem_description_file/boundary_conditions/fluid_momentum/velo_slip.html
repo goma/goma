@@ -1,0 +1,322 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>VELO_SLIP &#8212; Goma User Manual 7.0.0 documentation</title>
+    
+    <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  
+    
+    <link rel="stylesheet"
+      href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+  
+    
+      
+  
+    
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/pydata-sphinx-theme.css" />
+    
+    <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+
+<a class="navbar-brand" href="../../../index.html">
+  <img src="../../../_static/goma.png" class="logo" alt="logo">
+</a>
+
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../user_manual.html">
+  Goma User Manual
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#description-usage">
+   <strong>
+    Description / Usage
+   </strong>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#examples">
+   <strong>
+    Examples
+   </strong>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#technical-discussion">
+   <strong>
+    Technical Discussion
+   </strong>
+  </a>
+ </li>
+</ul>
+
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <section id="velo-slip">
+<h1><strong>VELO_SLIP</strong><a class="headerlink" href="#velo-slip" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">VELO_SLIP</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">integer1</span><span class="p">]</span> <span class="p">[</span><span class="n">float5</span><span class="p">]</span>
+</pre></div>
+</div>
+<section id="description-usage">
+<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h2>
+<p><strong>(WIC/VECTOR MOMENTUM)</strong></p>
+<p>This boundary condition allows for slip between the fluid and a boundary using an
+implementation of the Navier slip relation. This relation fixes the amount of slip as a
+function of the applied shear stress. The scaling between stress and slip is a user
+parameter. This implementation also permits (in two dimensions only) variable scaling
+dependent upon distance from a mesh node. The latter can be used in modeling
+dynamic contact lines. This condition cannot currently be used on connecting surfaces.</p>
+<p>There are four required values in &lt;float_list&gt; and two optional values; definitions of
+the input parameters are as follows:</p>
+<table class="table">
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 85%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>VELO_SLIP</strong></p></td>
+<td><p>Name of the boundary condition (&lt;bc_name&gt;).</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>SS</strong></p></td>
+<td><p>Type of boundary condition (&lt;bc_type&gt;), where <strong>SS</strong> denotes
+side set in the EXODUS II database.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;bc_id&gt;</p></td>
+<td><p>The boundary flag identifier, an integer associated with
+&lt;bc_type&gt; that identifies the boundary location (side set in
+EXODUS II) in the problem domain.</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float1&gt;</p></td>
+<td><p><span class="math notranslate nohighlight">\(\beta\)</span>, the slip coefficient. The inverse of <span class="math notranslate nohighlight">\(\beta\)</span>
+defines the scaling
+between stress and slip. Hence, for small values of
+<span class="math notranslate nohighlight">\(\beta\)</span>, large
+shear stresses are needed for a given amount of slip, and
+conversely, for large values of <span class="math notranslate nohighlight">\(\beta\)</span>,
+the amount of stress
+needed for the same degree of slip decreases (see below for
+a more rigorous description).</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;float2&gt;</p></td>
+<td><p><span class="math notranslate nohighlight">\(v_{s,x}\)</span>, the x-component of surface velocity vector. This would
+be the x-component of the fluid velocity if a no slip
+condition were applied.</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float3&gt;</p></td>
+<td><p><span class="math notranslate nohighlight">\(v_{s,y}\)</span>, the y-component of surface velocity vector. This would
+be the y-component of the fluid velocity if a no slip
+condition were applied.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;float4&gt;</p></td>
+<td><p><span class="math notranslate nohighlight">\(v_{s,z}\)</span>, the z-component of surface velocity vector. This would
+be the z-component of the fluid velocity if a no slip
+condition were applied.</p></td>
+</tr>
+<tr class="row-even"><td><p>[integer]</p></td>
+<td><p><span class="math notranslate nohighlight">\(N_{cl}\)</span>, a single-node node set identification number. When the
+variable coefficient slip relation is used, distance is
+measured relative to this node (see discussion below).
+Normally, this node set represents the location of the
+dynamic contact line. Note that this option is generally only
+used in two-dimensional simulations.</p></td>
+</tr>
+<tr class="row-odd"><td><p>[float5]</p></td>
+<td><p><span class="math notranslate nohighlight">\(\alpha\)</span>, the distance scale in the variable slip model (see the
+discussion below). Both <span class="math notranslate nohighlight">\(N_{cl}\)</span> and <span class="math notranslate nohighlight">\(\alpha\)</span> should be present to
+activate the variable slip model.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples">
+<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>Following is a sample card without the optional parameters:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">VELO_SLIP</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">0.1</span> <span class="mf">0.0</span> <span class="mf">0.0</span> <span class="mf">0.0</span>
+</pre></div>
+</div>
+</section>
+<section id="technical-discussion">
+<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>The general form of this boundary condition is</p></li>
+</ul>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../../../_images/089_goma_physics.png"><img alt="../../../_images/089_goma_physics.png" src="../../../_images/089_goma_physics.png" style="width: 90%;" /></a>
+</figure>
+<p>where <span class="math notranslate nohighlight">\(\tau\)</span> is the deviatoric portion of the fluid stress tensor, <span class="math notranslate nohighlight">\(\beta\)</span> is the Navier slip
+coefficient and <span class="math notranslate nohighlight">\(v_s\)</span> is the velocity of the solid surface. The velocity of the surface
+must be specified, as described in the Description/Usage subsection above. It is a
+weakly integrated vector condition, as noted above, so it will be added to each of
+the three momentum equation components.</p>
+<p>This last point is important to keep in mind, especially when applying this
+condition to boundaries that are not parallel to any of the principle axes. It is
+possible under these circumstances that this condition will allow motion through a
+boundary curve in addition to slip tangential to it. This can be avoided by including
+a rotated boundary condition like <em>VELO_NORMAL</em> on the same sideset. This will
+cause the momentum equations to be rotated to normal and tangential components
+and also enforce no normal flow of the material. Whatever slipping that takes place
+will be in the tangential direction.</p>
+<ul class="simple">
+<li><p>The variable slip coefficient model is quite simple:
+<strong>EQUATION</strong>, where <em>d</em> is
+the absolute distance from node <span class="math notranslate nohighlight">\(N_{cl}\)</span> identified on the card; the coefficients <span class="math notranslate nohighlight">\(\beta\)</span> and <span class="math notranslate nohighlight">\(\alpha\)</span>
+are also supplied on input. This relation is protected against overflowing as <em>d</em>
+increases. This model can be used to allow slipping to occur in a region close to the
+node set, but at points further removed, a no slip boundary (<span class="math notranslate nohighlight">\(\beta\)</span> large) is reinstated on the sideset.</p></li>
+</ul>
+</section>
+</section>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+    <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2019 Goma Developers.<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

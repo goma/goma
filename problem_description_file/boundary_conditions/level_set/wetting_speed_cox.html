@@ -1,0 +1,337 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>WETTING_SPEED_COX &#8212; Goma User Manual 7.0.0 documentation</title>
+    
+    <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  
+    
+    <link rel="stylesheet"
+      href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+  
+    
+      
+  
+    
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/pydata-sphinx-theme.css" />
+    
+    <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+
+<a class="navbar-brand" href="../../../index.html">
+  <img src="../../../_static/goma.png" class="logo" alt="logo">
+</a>
+
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../user_manual.html">
+  Goma User Manual
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#description-usage">
+   <strong>
+    Description / Usage
+   </strong>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#examples">
+   <strong>
+    Examples
+   </strong>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#technical-discussion">
+   <strong>
+    Technical Discussion
+   </strong>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#theory">
+   <strong>
+    Theory
+   </strong>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#references">
+   <strong>
+    References
+   </strong>
+  </a>
+ </li>
+</ul>
+
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <section id="wetting-speed-cox">
+<h1><strong>WETTING_SPEED_COX</strong><a class="headerlink" href="#wetting-speed-cox" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">WETTING_SPEED_COX</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">floatlist</span>
+</pre></div>
+</div>
+<section id="description-usage">
+<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h2>
+<p><strong>(WIC/VECTOR MOMENTUM)</strong></p>
+<p>This boundary condition is used to induce fluid velocity at a wetting line when using
+<em>Level Set Interface Tracking</em>. It implements a version of the Cox hydrodynamic model
+of wetting.</p>
+<p>A description of the input parameters follows:</p>
+<table class="table">
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 75%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>WETTING_SPEED_COX</strong></p></td>
+<td><p>Name of the boundary condition.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>SS</strong></p></td>
+<td><p>Type of boundary condition (&lt;bc_type&gt;), where <strong>SS</strong>
+denotes side set in the EXODUS II database.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;bc_id&gt;</p></td>
+<td><p>The boundary flag identifier, an integer associated with
+&lt;bc_type&gt; that identifies the boundary location (side set in
+EXODUS II) in the problem domain.</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float1&gt;</p></td>
+<td><p><span class="math notranslate nohighlight">\(\theta_s\)</span>, the static contact angle, degrees.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;float2&gt;</p></td>
+<td><p><span class="math notranslate nohighlight">\(\varepsilon_s\)</span> is the dimensionless slip length,
+i.e. the ratio of the slip length to the characteristic length
+scale of the macroscopic flow.</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float3&gt;</p></td>
+<td><p><span class="math notranslate nohighlight">\(\sigma\)</span> is the surface tension.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;float4&gt;</p></td>
+<td><p><em>w</em> ,width of interfacial region near contact line. Defaults to
+level set length scale if zero or less.</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float5&gt;</p></td>
+<td><p><span class="math notranslate nohighlight">\(\beta\)</span>, slip coefficient.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;float6&gt;</p></td>
+<td><p>currently not used.</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float7&gt;</p></td>
+<td><p>currently not used.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;float8&gt;</p></td>
+<td><p>currently not used.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples">
+<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>An example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">WETTING_SPEED_COX</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">30.0</span> <span class="mf">0.01</span> <span class="mf">72.0</span> <span class="mf">0.</span>   <span class="mf">0.001</span> <span class="mf">0.</span> <span class="mf">0.</span> <span class="mf">0.</span>
+</pre></div>
+</div>
+</section>
+<section id="technical-discussion">
+<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h2>
+<p>The implementation for this wetting condition is identical to that of
+WETTING_SPEED_LINEAR, but the wetting velocity dependence is different.</p>
+<p>Note that it is a requirement that when using this boundary condition that slip to some
+extent be allowed on this boundary. This is most often done by applying a
+VELO_SLIP_LS boundary condition in conjunction with this boundary condition. In
+addition, a no penetration condition on the velocity is need in either the form of a
+Dirichlet condition or a VELO_NORMAL condition. It is important to note that the
+slipping condition need not relax the no slip requirement completely. In fact, its
+parameters should be set so that no slip is for the most part satisfied on the boundary in
+regions away from the contact line. Near the contact line however the parameters in
+the slip condition and the WETTING_SPEED_BLAKE condition need to be fixed so
+that appreciable fluid velocity is induced. This is a trial and error process at the
+current time.</p>
+</section>
+<section id="theory">
+<h2><strong>Theory</strong><a class="headerlink" href="#theory" title="Permalink to this headline">¶</a></h2>
+<p>Derivation of this boundary condition starts with a relation that represents the Cox
+hydrodynamic wetting model</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../../../_images/224_goma_physics.png"><img alt="../../../_images/224_goma_physics.png" src="../../../_images/224_goma_physics.png" style="width: 90%;" /></a>
+</figure>
+<p>See VELO_THETA_HOFFMAN for details of the Hoffman function g. Note that the
+convention for contact angles in this relation is that values of <span class="math notranslate nohighlight">\(\theta\)</span> near to zero indicate a
+high degree of wetting and values of <span class="math notranslate nohighlight">\(\theta\)</span> near 180 ° indicate the opposite. This is mapped
+to a stress value by analogy with Navier’s slip relation,</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../../../_images/225_goma_physics.png"><img alt="../../../_images/225_goma_physics.png" src="../../../_images/225_goma_physics.png" style="width: 90%;" /></a>
+</figure>
+<p>This relation contrasts with the “linear” relation applied by the
+WETTING_SPEED_LINEAR relation in that more consistent physical behavior
+should result.</p>
+<p>In point of fact this condition is a vector condition so this scalar stress value multiplies
+the unit vector tangent to the surface and normal to the contact line,
+<span class="math notranslate nohighlight">\(\vec{t}\)</span> . This stress is
+then weighted by smooth Dirac function to restrict its location to being near the
+interface, weighted by a FEM shape function, integrated over the boundary sideset and
+added to the fluid momentum equation for the corresponding node j, vis:</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../../../_images/226_goma_physics.png"><img alt="../../../_images/226_goma_physics.png" src="../../../_images/226_goma_physics.png" style="width: 90%;" /></a>
+</figure>
+</section>
+<section id="references">
+<h2><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<p>No References.</p>
+</section>
+</section>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+    <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2019 Goma Developers.<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

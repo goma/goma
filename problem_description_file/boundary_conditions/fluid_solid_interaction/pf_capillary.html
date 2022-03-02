@@ -1,0 +1,313 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>PF_CAPILLARY &#8212; Goma User Manual 7.0.0 documentation</title>
+    
+    <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  
+    
+    <link rel="stylesheet"
+      href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+  
+    
+      
+  
+    
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/pydata-sphinx-theme.css" />
+    
+    <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+
+<a class="navbar-brand" href="../../../index.html">
+  <img src="../../../_static/goma.png" class="logo" alt="logo">
+</a>
+
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../user_manual.html">
+  Goma User Manual
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#description-usage">
+   <strong>
+    Description / Usage
+   </strong>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#examples">
+   <strong>
+    Examples
+   </strong>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#technical-discussion">
+   <strong>
+    Technical Discussion
+   </strong>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#references">
+   <strong>
+    References
+   </strong>
+  </a>
+ </li>
+</ul>
+
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <section id="pf-capillary">
+<h1><strong>PF_CAPILLARY</strong><a class="headerlink" href="#pf-capillary" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">PF_CAPILLARY</span> <span class="n">LS</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float3</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<section id="description-usage">
+<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h2>
+<p><strong>(EMB/VECTOR MOMENTUM)</strong></p>
+<p>This boundary condition applies an “embedded” surface tension source term when
+solving capillary hydrodynamics problems with phase function level set interface
+tracking. Note that its counterpart for the base level set field is LS_CAPILLARY, and
+this boundary condition is applied the same way to other level-set fields defined by the
+Phase Function cards. It can be used with only subgrid integration. The surface
+tension value used in this boundary condition is obtained from the Surface Tension
+material parameter defined in the mat file. Note that each phase-function field requires
+a separate PF_CAPILLARY boundary condition.</p>
+<p>A description of the input parameters follows:</p>
+<table class="table">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>PF_CAPILLARY</strong></p></td>
+<td><p>Name of the boundary condition.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>PF</strong></p></td>
+<td><p>This string is used to indicated that this is a “boundary”
+condition is applied at an internal phase boundary defined
+by the zero contour of the level set function.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;integer&gt;</p></td>
+<td><p>An integer parameter that is used to specify to which phase
+function field that the boundary condition is to be applied.</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float1&gt;</p></td>
+<td><p>Not currently used.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;float2&gt;</p></td>
+<td><p>Not currently used.</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float3&gt;</p></td>
+<td><p>Not currently used.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples">
+<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>An example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">PF_CAPILLARY</span> <span class="n">PF</span> <span class="mi">1</span>
+</pre></div>
+</div>
+</section>
+<section id="technical-discussion">
+<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h2>
+<p>Surface tension forces at a level set (phase function) representation of an interfacial
+boundary are applied solely via this boundary condition. An additional divergence of
+stress tensor term <span class="math notranslate nohighlight">\(\Delta\)</span> ⋅
+<span class="math notranslate nohighlight">\(T_{cap}\)</span> is added to the fluid momentum equation. The form of this
+tensor is</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../../../_images/193_goma_physics.png"><img alt="../../../_images/193_goma_physics.png" src="../../../_images/193_goma_physics.png" style="width: 90%;" /></a>
+</figure>
+<p>where <em>s</em> is the (isotropic) surface tension, <em>I</em> is the identity tensor, <em>n</em> is the vector normal
+to the interface and <span class="math notranslate nohighlight">\(\zeta_a\)</span> ( <span class="math notranslate nohighlight">\(\phi\)</span> ) is the smoothed Dirac delta function. The surface tension
+value used in this expression is obtained from the Surface Tension card found in the
+material file.</p>
+<p>The actual implementation in Goma integrates the divergence term by parts so the
+expression that is added to the weak form of the momentum equation is:</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../../../_images/194_goma_physics.png"><img alt="../../../_images/194_goma_physics.png" src="../../../_images/194_goma_physics.png" style="width: 90%;" /></a>
+</figure>
+<p>This fact introduces the issue of integration error into the problem. As obvious above,
+this source term involves the non-linear Dirac delta function factor. Conventional
+numerical integration methods often do not offer adequate accuracy in evaluating this
+integral, especially if if the interface width is a fraction of the average element size.
+This has led to introduction the level-set-specific integration methods: subelement
+integration and subgrid integration. In the latter case, more integration points are
+clustered around the interface (in essence) to improve accuracy. The integer parameter
+on the card should be set to zero to signify that the surface tension forces are distributed
+in equal measure on both sides of the interfacial curve.</p>
+<p>In the subelement integration case, however, an actual subelement mesh is place on
+each of the interface-containing elements which is made to conform to the interface
+curve. That is, the interface curve itself is covered by these subelement boundaries.
+This allows the volume integral to be collapsed into a line integral and the line integral
+evaluated along the subelement boundaries. This, however, introduces the problem of
+identifying which side of the element the surface tension forces should actually be
+applied to. Applying them to both simultaneously while either result in a cancellation
+or a doubling of the surface tension effect. For these cases, the integer parameter on
+this card is set to a -1 or a +1 to signify that the surface tension forces are applied to the
+negative or positive side of the interface curve, respectively.</p>
+</section>
+<section id="references">
+<h2><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<p>No References.</p>
+</section>
+</section>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+    <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2019 Goma Developers.<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

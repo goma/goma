@@ -1,0 +1,771 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>TABLE &#8212; Goma User Manual 7.0.0 documentation</title>
+    
+    <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  
+    
+    <link rel="stylesheet"
+      href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+  
+    
+      
+  
+    
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/pydata-sphinx-theme.css" />
+    
+    <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+
+<a class="navbar-brand" href="../../../index.html">
+  <img src="../../../_static/goma.png" class="logo" alt="logo">
+</a>
+
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../user_manual.html">
+  Goma User Manual
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#description-usage">
+   Description / Usage
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#examples">
+   <strong>
+    Examples
+   </strong>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#technical-discussion">
+   <strong>
+    Technical Discussion
+   </strong>
+  </a>
+ </li>
+</ul>
+
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <section id="table">
+<h1>TABLE<a class="headerlink" href="#table" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">TABLE</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="p">{</span><span class="n">X</span><span class="o">|</span><span class="n">Y</span><span class="o">|</span><span class="n">Z</span><span class="o">|</span><span class="n">TIME</span><span class="p">}</span> <span class="p">{</span><span class="n">ordinate</span><span class="p">}</span> <span class="p">[</span><span class="n">species</span><span class="p">]</span> <span class="p">{</span><span class="n">interpolation</span><span class="p">}</span> <span class="p">[</span><span class="n">FILE</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">fname</span><span class="o">&gt;</span><span class="p">]</span> <span class="p">[</span><span class="n">NAME</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">identifier</span><span class="o">&gt;</span><span class="p">]</span>
+</pre></div>
+</div>
+<section id="description-usage">
+<h2>Description / Usage<a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h2>
+<p><strong>(PCC/VARIED))</strong></p>
+<p>This boundary condition is a stand-alone version of the more complicated <em>GD_TABLE</em>
+card. It allows the user to supply arbitrary univariate (one abscissa and one ordinate)
+data about the spatial variation of unknowns fields on a boundary. The abscissa will be
+one of the three spatial coordinates or time and the ordinate is one of a choice of
+unknown field variables. All <em>TABLE_BC</em> conditions must have attached tabular data as
+a list of paired float values either directly following the card or in a separate file
+(identified on the card). The list of data pairs is terminated by the string “END TABLE”
+on its own line.</p>
+<p>Definitions of the input parameters are as follows:</p>
+<dl class="simple">
+<dt>TABLE</dt><dd><p>Name of the boundary condition.</p>
+</dd>
+<dt>SS</dt><dd><p>Type of boundary condition (&lt;bc_type&gt;), where <strong>SS</strong> denotes side set in
+the EXODUS II database.</p>
+</dd>
+<dt>&lt;bc_id&gt;</dt><dd><p>The boundary flag identifier, an integer associated with &lt;bc_type&gt; that
+identifies the boundary location (side set in EXODUS II) in the problem
+domain.</p>
+</dd>
+<dt>{X|Y|Z|TIME}</dt><dd><p>A char_string that identifies the independent table variable (abscissa).
+The strings X,Y, and Z refer of course to the three spatial coordinates.
+Depending on the choice here, the x, y, or z coordinate value at a given
+point, respectively, is used to obtain an interpolated ordinate value using
+the attached table data. If the TIME string appears here, however, the
+current simulation time is used to interpolate an ordinate value. This
+single value is applied uniformly to the sideset.</p>
+</dd>
+<dt>{ordinate}</dt><dd><p>This string associates a variable type with the values of the ordinate in
+the attached table. It also identifies the equation that is supplanted by
+the boundary condition on the sideset. The following table lists the
+available string choices and the corresponding equation component clobbered
+by the boundary condition.</p>
+</dd>
+</dl>
+<table class="table">
+<colgroup>
+<col style="width: 40%" />
+<col style="width: 16%" />
+<col style="width: 44%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>String</strong></p></td>
+<td><p><strong>replaces</strong></p></td>
+<td><p><strong>Equation*</strong></p></td>
+</tr>
+<tr class="row-even"><td><p>VELOCITY1 or U</p></td>
+<td></td>
+<td><p>R_MOMENTUM1</p></td>
+</tr>
+<tr class="row-odd"><td><p>VELOCITY2 or V</p></td>
+<td></td>
+<td><p>R_MOMENTUM2</p></td>
+</tr>
+<tr class="row-even"><td><p>VELOCITY3 or W</p></td>
+<td></td>
+<td><p>R_MOMENTUM3</p></td>
+</tr>
+<tr class="row-odd"><td><p>MASS_FRACTION or Y or SPECIES</p></td>
+<td></td>
+<td><p>R_MASS</p></td>
+</tr>
+<tr class="row-even"><td><p>TEMPERATURE</p></td>
+<td></td>
+<td><p>R_ENERGY</p></td>
+</tr>
+<tr class="row-odd"><td><p>MESH_DISPLACEMENT1 or DX</p></td>
+<td></td>
+<td><p>R_MESH1</p></td>
+</tr>
+<tr class="row-even"><td><p>MESH_DISPLACEMENT2 or DY</p></td>
+<td></td>
+<td><p>R_MESH2</p></td>
+</tr>
+<tr class="row-odd"><td><p>MESH_DISPLACEMENT3 or DZ</p></td>
+<td></td>
+<td><p>R_MESH3</p></td>
+</tr>
+<tr class="row-even"><td><p>PRESSURE or P</p></td>
+<td></td>
+<td><p>R_PRESSURE</p></td>
+</tr>
+<tr class="row-odd"><td><p>SOLID_DISPLACEMENT1 or DX_RS</p></td>
+<td></td>
+<td><p>R_SOLID1</p></td>
+</tr>
+<tr class="row-even"><td><p>SOLID_DISPLACEMENT2 or DY_RS</p></td>
+<td></td>
+<td><p>R_SOLID2</p></td>
+</tr>
+<tr class="row-odd"><td><p>SOLID_DISPLACEMENT3 or DZ_RS</p></td>
+<td></td>
+<td><p>R_SOLID3</p></td>
+</tr>
+<tr class="row-even"><td><p>SHEAR_RATE or SH</p></td>
+<td></td>
+<td><p>R_SHEAR_RATE</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 40%" />
+<col style="width: 16%" />
+<col style="width: 44%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>String</strong></p></td>
+<td><p><strong>replaces</strong></p></td>
+<td><p><strong>Equation*</strong></p></td>
+</tr>
+<tr class="row-even"><td><p>S11</p></td>
+<td></td>
+<td><p>R_STRESS11</p></td>
+</tr>
+<tr class="row-odd"><td><p>S12</p></td>
+<td></td>
+<td><p>R_STRESS11</p></td>
+</tr>
+<tr class="row-even"><td><p>S22</p></td>
+<td></td>
+<td><p>R_STRESS11</p></td>
+</tr>
+<tr class="row-odd"><td><p>S13</p></td>
+<td></td>
+<td><p>R_STRESS11</p></td>
+</tr>
+<tr class="row-even"><td><p>S23</p></td>
+<td></td>
+<td><p>R_STRESS11</p></td>
+</tr>
+<tr class="row-odd"><td><p>S33</p></td>
+<td></td>
+<td><p>R_STRESS11</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 40%" />
+<col style="width: 16%" />
+<col style="width: 44%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>String</strong></p></td>
+<td><p><strong>replaces</strong></p></td>
+<td><p><strong>Equation*</strong></p></td>
+</tr>
+<tr class="row-even"><td><p>S11_1</p></td>
+<td></td>
+<td><p>R_STRESS11_1</p></td>
+</tr>
+<tr class="row-odd"><td><p>S12_1</p></td>
+<td></td>
+<td><p>R_STRESS12_1</p></td>
+</tr>
+<tr class="row-even"><td><p>S22_1</p></td>
+<td></td>
+<td><p>R_STRESS22_1</p></td>
+</tr>
+<tr class="row-odd"><td><p>S13_1</p></td>
+<td></td>
+<td><p>R_STRESS13_1</p></td>
+</tr>
+<tr class="row-even"><td><p>S23_1</p></td>
+<td></td>
+<td><p>R_STRESS23_1</p></td>
+</tr>
+<tr class="row-odd"><td><p>S33_1</p></td>
+<td></td>
+<td><p>R_STRESS33_1</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 40%" />
+<col style="width: 16%" />
+<col style="width: 44%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>String</strong></p></td>
+<td><p><strong>replaces</strong></p></td>
+<td><p><strong>Equation*</strong></p></td>
+</tr>
+<tr class="row-even"><td><p>S11_2</p></td>
+<td></td>
+<td><p>R_STRESS11_2</p></td>
+</tr>
+<tr class="row-odd"><td><p>S12_2</p></td>
+<td></td>
+<td><p>R_STRESS12_2</p></td>
+</tr>
+<tr class="row-even"><td><p>S22_2</p></td>
+<td></td>
+<td><p>R_STRESS22_2</p></td>
+</tr>
+<tr class="row-odd"><td><p>S13_2</p></td>
+<td></td>
+<td><p>R_STRESS13_2</p></td>
+</tr>
+<tr class="row-even"><td><p>S23_2</p></td>
+<td></td>
+<td><p>R_STRESS23_2</p></td>
+</tr>
+<tr class="row-odd"><td><p>S33_2</p></td>
+<td></td>
+<td><p>R_STRESS33_2</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 40%" />
+<col style="width: 16%" />
+<col style="width: 44%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>String</strong></p></td>
+<td><p><strong>replaces</strong></p></td>
+<td><p><strong>Equation*</strong></p></td>
+</tr>
+<tr class="row-even"><td><p>S11_3</p></td>
+<td></td>
+<td><p>R_STRESS11_3</p></td>
+</tr>
+<tr class="row-odd"><td><p>S12_3</p></td>
+<td></td>
+<td><p>R_STRESS12_3</p></td>
+</tr>
+<tr class="row-even"><td><p>S22_3</p></td>
+<td></td>
+<td><p>R_STRESS22_3</p></td>
+</tr>
+<tr class="row-odd"><td><p>S13_3</p></td>
+<td></td>
+<td><p>R_STRESS13_3</p></td>
+</tr>
+<tr class="row-even"><td><p>S23_3</p></td>
+<td></td>
+<td><p>R_STRESS23_3</p></td>
+</tr>
+<tr class="row-odd"><td><p>S33_3</p></td>
+<td></td>
+<td><p>R_STRESS33_3</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 40%" />
+<col style="width: 16%" />
+<col style="width: 44%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>String</strong></p></td>
+<td><p><strong>replaces</strong></p></td>
+<td><p><strong>Equation*</strong></p></td>
+</tr>
+<tr class="row-even"><td><p>S11_4</p></td>
+<td></td>
+<td><p>R_STRESS11_4</p></td>
+</tr>
+<tr class="row-odd"><td><p>S12_4</p></td>
+<td></td>
+<td><p>R_STRESS12_4</p></td>
+</tr>
+<tr class="row-even"><td><p>S22_4</p></td>
+<td></td>
+<td><p>R_STRESS22_4</p></td>
+</tr>
+<tr class="row-odd"><td><p>S13_4</p></td>
+<td></td>
+<td><p>R_STRESS13_4</p></td>
+</tr>
+<tr class="row-even"><td><p>S23_4</p></td>
+<td></td>
+<td><p>R_STRESS23_4</p></td>
+</tr>
+<tr class="row-odd"><td><p>S33_4</p></td>
+<td></td>
+<td><p>R_STRESS33_4</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 40%" />
+<col style="width: 16%" />
+<col style="width: 44%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>String</strong></p></td>
+<td><p><strong>replaces</strong></p></td>
+<td><p><strong>Equation*</strong></p></td>
+</tr>
+<tr class="row-even"><td><p>S11_5</p></td>
+<td></td>
+<td><p>R_STRESS11_5</p></td>
+</tr>
+<tr class="row-odd"><td><p>S12_5</p></td>
+<td></td>
+<td><p>R_STRESS12_5</p></td>
+</tr>
+<tr class="row-even"><td><p>S22_5</p></td>
+<td></td>
+<td><p>R_STRESS22_5</p></td>
+</tr>
+<tr class="row-odd"><td><p>S13_5</p></td>
+<td></td>
+<td><p>R_STRESS13_5</p></td>
+</tr>
+<tr class="row-even"><td><p>S23_5</p></td>
+<td></td>
+<td><p>R_STRESS23_5</p></td>
+</tr>
+<tr class="row-odd"><td><p>S33_5</p></td>
+<td></td>
+<td><p>R_STRESS33_5</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 40%" />
+<col style="width: 16%" />
+<col style="width: 44%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>String</strong></p></td>
+<td><p><strong>replaces</strong></p></td>
+<td><p><strong>Equation*</strong></p></td>
+</tr>
+<tr class="row-even"><td><p>S11_6</p></td>
+<td></td>
+<td><p>R_STRESS11_6</p></td>
+</tr>
+<tr class="row-odd"><td><p>S12_6</p></td>
+<td></td>
+<td><p>R_STRESS12_6</p></td>
+</tr>
+<tr class="row-even"><td><p>S22_6</p></td>
+<td></td>
+<td><p>R_STRESS22_6</p></td>
+</tr>
+<tr class="row-odd"><td><p>S13_6</p></td>
+<td></td>
+<td><p>R_STRESS13_6</p></td>
+</tr>
+<tr class="row-even"><td><p>S23_6</p></td>
+<td></td>
+<td><p>R_STRESS23_6</p></td>
+</tr>
+<tr class="row-odd"><td><p>S33_6</p></td>
+<td></td>
+<td><p>R_STRESS33_6</p></td>
+</tr>
+</tbody>
+</table>
+<table class="table">
+<colgroup>
+<col style="width: 40%" />
+<col style="width: 16%" />
+<col style="width: 44%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>String</strong></p></td>
+<td><p><strong>replaces</strong></p></td>
+<td><p><strong>Equation*</strong></p></td>
+</tr>
+<tr class="row-even"><td><p>S11_7</p></td>
+<td></td>
+<td><p>R_STRESS11_7</p></td>
+</tr>
+<tr class="row-odd"><td><p>S12_7</p></td>
+<td></td>
+<td><p>R_STRESS12_7</p></td>
+</tr>
+<tr class="row-even"><td><p>S22_7</p></td>
+<td></td>
+<td><p>R_STRESS22_7</p></td>
+</tr>
+<tr class="row-odd"><td><p>S13_7</p></td>
+<td></td>
+<td><p>R_STRESS13_7</p></td>
+</tr>
+<tr class="row-even"><td><p>S23_7</p></td>
+<td></td>
+<td><p>R_STRESS23_7</p></td>
+</tr>
+<tr class="row-odd"><td><p>S33_7</p></td>
+<td></td>
+<td><p>R_STRESS33_7</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="simple">
+<dt>[species]</dt><dd><p>An optional integer parameter that identifies the index of the appropriate
+species. Note, it should appear only when the &lt;ordinate&gt; string is
+<em>MASS_FRACTION</em>.</p>
+</dd>
+<dt>{interpolation}</dt><dd><p>A char_string parameter that identifies the method chosen to interpolate
+between the attached table data points. For one-dimensional tables, the
+choices are <em>LINEAR</em>, which denotes simple linear interpolation, and
+<em>QUADRATIC</em>, which denotes quadratic Lagrangian interpolation. Note that
+the latter requires an odd number of data points be supplied in the table.</p>
+</dd>
+<dt>[FILE = &lt;fname&gt;]</dt><dd><p>The optional char_string keyword “<strong>FILE</strong> =” indicates that the table data
+be read from a separate file identified by &lt;fname&gt;. This parameter is
+optional and if it is left out the table data will be read from the input
+deck itself following the <em>TABLE BC</em> card. Note that the file specified by
+&lt;fname&gt; will be first preprocessed by APREPRO if that option was enabled on
+the command line. This is a useful feature that allows for a quick way to
+introduce analytic expressions onto boundaries.</p>
+</dd>
+<dt>[NAME = &lt;identifier&gt;]</dt><dd><p>The optional char_string keyword <em>NAME</em> = allows for a set of table data to
+be attached to the char_string parameter &lt;identifier&gt;. This option can only
+be used if the table data is read from a separate file identified by <em>FILE</em>
+= &lt;<em>fname</em>&gt;. In this case, the file &lt;fname&gt; is scanned for the char_string
+“identifier:” (note the colon). Once found the table data is read until
+encountering <em>END TABLE</em>. This option permits multiple sets of data in the
+same file.</p>
+</dd>
+</dl>
+<p>The second half of the <em>TABLE_BC</em> implementation is the tabular data itself. In the
+<em>TABLE</em> boundary condition, it consists of a set of paired float values, each pair on its
+own line. This data should follow directly after the <em>TABLE</em> boundary condition card if
+the <em>FILE</em> = option is not used. If a value for &lt;fname&gt; is supplied, the table data should
+be written in the file so indicated. Note that in most implementations of UNIX,
+&lt;fname&gt; can include a complete path specification in case the datafile is in a different
+directory than the run directory. In either case, input deck or separate file, the set of
+data table pairs should always be terminated by the string <em>END TABLE</em> to terminate
+reading of the data. When reading the table data, <em>Goma</em> attempts to read a float value on
+each line. If it is unsuccessful, e.g., a string might start the line, it will proceed to the
+next line. If it is successful, it will attempt to read a second float value to complete the
+data pair. An unsuccessful read here is an error. Once the second value is read,
+however, the remainder of the line is discarded and the next line is read. This procedure
+permits inclusion of comments within. See the next section for some examples.</p>
+<p>Thus,</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>3. 1.e-4
+1. 3. % this is a good example
+$ 1. 40.0
+$ I have no idea where the following data came from
+    3.4   2.1
+    1.e-2   6000.0
+</pre></div>
+</div>
+<p>will result in four data points being read, whereas, both of the following</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mf">6.443</span>   <span class="mf">3.43</span><span class="n">c</span>
+<span class="mf">5.4099</span>   <span class="o">%</span> <span class="mf">099.0</span>
+</pre></div>
+</div>
+<p>will result in an error.</p>
+</section>
+<section id="examples">
+<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>The following is an example of a tabular data set that will be read correctly</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ This data came from M. Hobbs. God only knows where he got it.
+T   k
+0.5 1.e-4
+1. 15.   % I’m not particularly sure about this one.
+3.4   8.1
+5.6   23.0
+$ 1.0 40.0
+</pre></div>
+</div>
+<p>In this case, four data pairs will be read to form the table.</p>
+<p>Example usage of the <em>TABLE</em> card follows:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Setting the u-velocity on an inlet boundary for a power law fluid:</p></li>
+</ul>
+</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>BC = TABLE SS 1 Y U LINEAR
+$ r/R Ux
+0.000000 1.666667
+0.050000 1.666458
+0.100000 1.665000
+0.150000 1.661042
+0.200000 1.653333
+0.250000 1.640625
+0.300000 1.621667
+..
+..
+0.900000 0.451667
+0.950000 0.237708
+1.000000 0.000000
+END TABLE
+</pre></div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<blockquote>
+<div><ul class="simple">
+<li><p>Setting the inlet concentration profiles for species 0 and species 1 from data in
+y.table:</p></li>
+</ul>
+</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">TABLE</span> <span class="n">SS</span> <span class="mi">1</span> <span class="n">Y</span> <span class="n">SPECIES</span> <span class="mi">0</span> <span class="n">QUADRATIC</span> <span class="n">FILE</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">table</span> <span class="n">NAME</span> <span class="o">=</span> <span class="n">y0</span>
+<span class="n">BC</span> <span class="o">=</span> <span class="n">TABLE</span> <span class="n">SS</span> <span class="mi">1</span> <span class="n">Y</span> <span class="n">SPECIES</span> <span class="mi">1</span> <span class="n">QUADRATIC</span> <span class="n">FILE</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">table</span> <span class="n">NAME</span> <span class="o">=</span> <span class="n">y1</span>
+</pre></div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<blockquote>
+<div><ul class="simple">
+<li><p>The file y.table contains:</p></li>
+</ul>
+</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">y0</span><span class="p">:</span>
+        <span class="mf">0.</span>   <span class="mf">1.0</span>
+        <span class="mf">0.25</span> <span class="mf">0.75</span>
+        <span class="mf">0.5</span> <span class="mf">0.60</span>
+        <span class="mf">0.75</span> <span class="mf">0.30</span>
+        <span class="mf">1.0</span> <span class="mf">0.20</span>
+<span class="n">END</span> <span class="n">TABLE</span>
+<span class="n">y1</span><span class="p">:</span>
+        <span class="mf">0.</span> <span class="mf">0.0</span>
+        <span class="mf">0.25</span> <span class="mf">0.2</span>
+        <span class="mf">0.5</span> <span class="mf">0.3</span>
+        <span class="mf">0.75</span> <span class="mf">0.5</span>
+        <span class="mf">1.0</span> <span class="mf">0.8</span>
+<span class="n">END</span> <span class="n">TABLE</span>
+</pre></div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<blockquote>
+<div><ul class="simple">
+<li><p>Setting a temperature history on a sideset</p></li>
+</ul>
+</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">TABLE</span> <span class="n">SS</span> <span class="mi">1</span> <span class="n">TIME</span> <span class="n">TEMPERATURE</span> <span class="n">LINEAR</span>
+<span class="mf">0.0</span>   <span class="mf">0.0</span>
+<span class="mf">10.0</span>   <span class="mf">373.0</span>
+<span class="mf">40.0</span>   <span class="mf">373.0</span>
+<span class="mf">50.0</span>   <span class="mf">500.0</span>
+<span class="mf">100.0</span>   <span class="mf">500.0</span>
+<span class="mi">150</span>    <span class="mf">0.0</span>
+<span class="mf">100000.0</span>   <span class="mf">0.0</span>
+<span class="n">END</span> <span class="n">TABLE</span>
+</pre></div>
+</div>
+</section>
+<section id="technical-discussion">
+<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h2>
+<p>The <em>TABLE</em> boundary condition provides similar functionality to the <em>GD_TABLE</em>
+boundary condition but with a simplified interface the notion behind both cards is that
+often information on boundaries is known only as a set of data points at specific
+positions on the boundary. The <em>TABLE</em> boundary condition can use that boundary
+information to provide interpolated values at nodal locations and then impose them as a
+strong point collocated condition.</p>
+<p>Interpolation orders for this method are limited to <em>LINEAR</em> and <em>QUADRATIC</em> with the
+latter requiring an odd number of data points be supplied in the table.</p>
+</section>
+</section>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+    <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2019 Goma Developers.<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

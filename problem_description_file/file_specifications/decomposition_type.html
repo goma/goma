@@ -1,0 +1,3222 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Decomposition Type &#8212; Goma User Manual 7.0.0 documentation</title>
+    
+    <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  
+    
+    <link rel="stylesheet"
+      href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+  
+    
+      
+  
+    
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/pydata-sphinx-theme.css" />
+    
+    <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="General Specifications" href="../general_specifications.html" />
+    <link rel="prev" title="External Decomposition" href="external_decomposition.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+
+<a class="navbar-brand" href="../../index.html">
+  <img src="../../_static/goma.png" class="logo" alt="logo">
+</a>
+
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 current active nav-item">
+ <a class="reference internal nav-link" href="../../user_manual.html">
+  Goma User Manual
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    <ul class="current nav bd-sidenav">
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../introduction.html">
+   Introduction
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../background.html">
+   Background Information
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../code_structure_and_io.html">
+   Code Structure and I/O
+  </a>
+ </li>
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="../../problem_description_file.html">
+   Problem Description (Input File)
+  </a>
+  <input checked class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul class="current">
+   <li class="toctree-l2 current active has-children">
+    <a class="reference internal" href="../file_specifications.html">
+     File Specification
+    </a>
+    <input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+    <label for="toctree-checkbox-2">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul class="current">
+     <li class="toctree-l3">
+      <a class="reference internal" href="fem_file.html">
+       FEM File
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="output_exodusII_file.html">
+       Output EXODUS II File
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="guess_file.html">
+       Guess File
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="soln_file.html">
+       SOLN File
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="write_intermediate_results.html">
+       Write Intermediate Results
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="write_initial_solution.html">
+       Write Initial Solution
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="external_decomposition.html">
+       External Decomposition
+      </a>
+     </li>
+     <li class="toctree-l3 current active">
+      <a class="current reference internal" href="#">
+       Decomposition Type
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../general_specifications.html">
+     General Specifications
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+    <label for="toctree-checkbox-3">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../general_specifications/output_level.html">
+       <strong>
+        Output Level
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../general_specifications/debug.html">
+       <strong>
+        Debug
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../general_specifications/number_of_jacobian_file_dumps.html">
+       <strong>
+        Number of Jacobian File Dumps
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../general_specifications/initial_guess.html">
+       <strong>
+        Initial Guess
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../general_specifications/initialize.html">
+       <strong>
+        Initialize
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../general_specifications/external_field.html">
+       <strong>
+        External Field
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../general_specifications/export_field.html">
+       <strong>
+        Export Field
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../general_specifications/external_pixel_field.html">
+       <strong>
+        External Pixel Field
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../general_specifications/pressure_datum.html">
+       <strong>
+        Pressure Datum
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../general_specifications/anneal_mesh_on_output.html">
+       <strong>
+        Anneal Mesh on Output
+       </strong>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../time_integration.html">
+     Time Integration Specifications
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
+    <label for="toctree-checkbox-4">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../time_integration/time_integration.html">
+       Time Integration
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../time_integration/delta_t.html">
+       delta_t
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../time_integration/maximum_number_of_time_steps.html">
+       Maximum Number of Time Steps
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../time_integration/maximum_time.html">
+       Maximum Time
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../time_integration/minimum_time_step.html">
+       Minimum Time Step
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../time_integration/maximum_time_step.html">
+       Maximum Time Step
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../time_integration/minimum_resolved_time_step.html">
+       Minimum Resolved Time Step
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../time_integration/courant_number_limit.html">
+       Courant Number Limit
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../time_integration/time_step_parameter.html">
+       Time Step Parameter
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../time_integration/time_step_error.html">
+       Time Step Error
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../time_integration/printing_frequency.html">
+       Printing Frequency
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../time_integration/fix_frequency.html">
+       Fix Frequency
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../time_integration/second_frequency_time.html">
+       Second Frequency Time
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../time_integration/initial_time.html">
+       Initial Time
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../level_set.html">
+     Level Set Specifications
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/>
+    <label for="toctree-checkbox-5">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../level_set/fill_subcycle.html">
+       Fill Subcycle
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../level_set/fill_weight_function.html">
+       Fill Weight Function
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../level_set/level_set_interface_tracking.html">
+       Level Set Interface Tracking
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../level_set/level_set_semi_lagrange.html">
+       Level Set Semi_Lagrange
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../level_set/level_set_subgrid_integration_depth.html">
+       Level Set Subgrid Integration Depth
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../level_set/level_set_subelement_integration.html">
+       Level Set Subelement Integration
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../level_set/level_set_adaptive_integration.html">
+       Level Set Adaptive Integration
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../level_set/level_set_adaptive_order.html">
+       Level Set Adaptive Order
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../level_set/overlap_quadrature_points.html">
+       Overlap Quadrature Points
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../level_set/level_set_pspp_filtering.html">
+       Level Set PSPP Filtering
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../level_set/level_set_length_scale.html">
+       Level Set Length Scale
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../level_set/level_set_initialize.html">
+       Level Set Initialize
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../level_set/level_set_adaptive_mesh.html">
+       Level Set Adaptive Mesh
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../level_set/level_set_adapt_width.html">
+       Level Set Adapt Width
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../level_set/level_set_adapt_inner_size.html">
+       Level Set Adapt Inner Size
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../level_set/level_set_adapt_outer_size.html">
+       Level Set Adapt Outer Size
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../level_set/level_set_adapt_frequency.html">
+       Level Set Adapt Frequency
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../level_set/level_set_initialization_method.html">
+       Level Set Initialization Method
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../level_set/level_set_periodic_planes.html">
+       Level Set Periodic Planes
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../level_set/level_set_control_width.html">
+       Level Set Control Width
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../level_set/level_set_timestep_control.html">
+       Level Set Timestep Control
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../level_set/level_set_renormalization_tolerance.html">
+       Level Set Renormalization Tolerance
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../level_set/level_set_renormalization_method.html">
+       Level Set Renormalization Method
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../level_set/level_set_renormalization_frequency.html">
+       Level Set Renormalization Frequency
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../level_set/restart_time_integration_after_renormalization.html">
+       Restart Time Integration After Renormalization
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../level_set/level_set_reconstruction_method.html">
+       Level Set Reconstruction Method
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../level_set/level_set_contact_extension.html">
+       Level Set Contact Extension
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../level_set/level_set_slave_surface.html">
+       Level Set Slave Surface
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../level_set/ignore_level_set_dependencies.html">
+       Ignore Level Set Dependencies
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../level_set/force_initial_level_set_renormalization.html">
+       Force Initial Level Set Renormalization
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../phase_field.html">
+     Phase Field Specifications
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/>
+    <label for="toctree-checkbox-6">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../phase_field/number_of_phase_functions.html">
+       <strong>
+        Number of Phase Functions
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../phase_field/phase_function_slave_surface.html">
+       <strong>
+        Phase Function Slave Surface
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../phase_field/phase_function_initialization_method.html">
+       <strong>
+        Phase Function Initialization Method
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../phase_field/phase_function_renormalization_tolerance.html">
+       <strong>
+        Phase Function Renormalization Tolerance
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../phase_field/phase_function_renormalization_method.html">
+       <strong>
+        Phase Function Renormalization Method
+       </strong>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../continuation.html">
+     Continuation Specifications
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../hunting.html">
+     Hunting Specifications
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../augmenting_conditions.html">
+     Augmenting Conditions Specifications
+    </a>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../solver_specifications.html">
+     Solver Specifications
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/>
+    <label for="toctree-checkbox-7">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/total_number_of_matrices.html">
+       Total Number of Matrices
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/solution_algorithm.html">
+       Solution Algorithm
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/matrix_storage_format.html">
+       Matrix Storage Format
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/stratimikos_file.html">
+       Stratimikos File
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/preconditioner.html">
+       Preconditioner
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/matrix_subdomain_solver.html">
+       Matrix Subdomain Solver
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/matrix_scaling.html">
+       Matrix Scaling
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/matrix_residual_norm_type.html">
+       Matrix Residual Norm Type
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/matrix_output_type.html">
+       Matrix Output Type
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/matrix_factorization_reuse.html">
+       Matrix Factorization Reuse
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/matrix_graph_fillin.html">
+       Matrix Graph Fillin
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/matrix_factorization_overlap.html">
+       Matrix Factorization Overlap
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/matrix_overlap_type.html">
+       Matrix Overlap Type
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/matrix_auxiliary_vector.html">
+       Matrix Auxiliary Vector
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/matrix_drop_tolerance.html">
+       Matrix Drop Tolerance
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/matrix_polynomial_order.html">
+       Matrix Polynomial Order
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/matrix_reorder.html">
+       Matrix Reorder
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/matrix_factorization_save.html">
+       Matrix Factorization Save
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/matrix_ilut_fill_factor.html">
+       Matrix ILUT Fill Factor
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/matrix_rilu_relax_factor.html">
+       Matrix RILU Relax Factor
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/matrix_bilu_threshold.html">
+       Matrix BILU Threshold
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/matrix_relative_threshold.html">
+       Matrix Relative Threshold
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/matrix_absolute_threshold.html">
+       Matrix Absolute Threshold
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/size_of_krylov_subspace.html">
+       Size of Krylov Subspace
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/orthogonalization.html">
+       Orthogonalization
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/maximum_linear_solve_iterations.html">
+       Maximum Linear Solve Iterations
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/number_of_newton_iterations.html">
+       Number of Newton Iterations
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/modified_newton_tolerance.html">
+       Modified Newton Tolerance
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/jacobian_reform_time_stride.html">
+       Jacobian Reform Time Stride
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/newton_correction_factor.html">
+       Newton Correction Factor
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/normalized_residual_tolerance.html">
+       Normalized Residual Tolerance
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/normalized_correction_tolerance.html">
+       Normalized Correction Tolerance
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/residual_ratio_tolerance.html">
+       Residual Ratio Tolerance
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/pressure_stabilization.html">
+       Pressure Stabilization
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/pressure_stabilization_scaling.html">
+       Pressure Stabilization Scaling
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/linear_stability.html">
+       Linear Stability
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/filter_concentration.html">
+       Filter Concentration
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../solver_specifications/disable_viscosity_sensitivities.html">
+       Disable Viscosity Sensitivities
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../eigensolver.html">
+     Eigensolver Specifications
+    </a>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../boundary_conditions.html">
+     Boundary Condition Specifications
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/>
+    <label for="toctree-checkbox-8">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../boundary_conditions/number_of_bc.html">
+       Number of BC
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../boundary_conditions/any.html">
+       Category 1: Any Equation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../boundary_conditions/mesh.html">
+       Category 2: Mesh Equations
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../boundary_conditions/real_solid.html">
+       Category 3: Real Solid Equations
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../boundary_conditions/fluid_momentum.html">
+       Category 4: Fluid Momentum Equations
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../boundary_conditions/energy.html">
+       Category 5: Energy Equations
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../boundary_conditions/mass.html">
+       Category 6: Mass Equations
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../boundary_conditions/continuity.html">
+       Category 7: Continuity Equation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../boundary_conditions/porous.html">
+       Category 8: Porous Equations
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../boundary_conditions/stress.html">
+       Category 9: Stress Equations
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../boundary_conditions/gradient.html">
+       Category 10: Gradient Equations
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../boundary_conditions/shear_rate.html">
+       Category 11: Shear Rate Equation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../boundary_conditions/fill.html">
+       Category 12: Fill Equation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../boundary_conditions/potential.html">
+       Category 13: Potential Equation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../boundary_conditions/fluid_solid_interaction.html">
+       Category 14: Fluid-Solid Interaction
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../boundary_conditions/level_set.html">
+       Category 15: Level Set Interfaces
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../boundary_conditions/shell.html">
+       Category 16: Shell Equations
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../boundary_conditions/acoustic.html">
+       Category 17: Acoustic Equations
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../boundary_conditions/end_of_bc.html">
+       END OF BC
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../rotation.html">
+     Rotation Specifications
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/>
+    <label for="toctree-checkbox-9">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../rotation/rotation_specifications.html">
+       <strong>
+        Rotation Specifications
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../rotation/rot_surface.html">
+       <strong>
+        ROT SURFACE
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../rotation/rot_edge.html">
+       <strong>
+        ROT EDGE
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../rotation/rot_vertex.html">
+       <strong>
+        ROT VERTEX
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../rotation/end_of_rot.html">
+       <strong>
+        END OF ROT
+       </strong>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../problem_description.html">
+     Problem Description
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/>
+    <label for="toctree-checkbox-10">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/number_of_materials.html">
+       <strong>
+        Number of Materials
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/mat.html">
+       <strong>
+        MAT
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/coordinate_system.html">
+       <strong>
+        Coordinate System
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/element_mapping.html">
+       <strong>
+        Element Mapping
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/mesh_motion.html">
+       <strong>
+        Mesh Motion
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/number_of_bulk_species.html">
+       <strong>
+        Number of Bulk Species
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/material_is_nondilute.html">
+       <strong>
+        Material is Nondilute
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/number_of_bulk_species_equations.html">
+       <strong>
+        Number of Bulk Species Equations
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/default_material_species_type.html">
+       <strong>
+        Default Material Species Type
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/number_of_viscoelastic_modes.html">
+       <strong>
+        Number of Viscoelastic Modes
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/number_of_matrices.html">
+       Number of Matrices
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/matrix.html">
+       MATRIX
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/disable_time_step_control.html">
+       Disable time step control
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/normalized_residual_tolerance.html">
+       Normalized Residual Tolerance
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/number_of_eq.html">
+       <strong>
+        Number of EQ
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/energy.html">
+       <strong>
+        energy
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/momentum.html">
+       <strong>
+        momentum
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/pmomentum.html">
+       <strong>
+        pmomentum
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/stress.html">
+       <strong>
+        stress
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/species_bulk.html">
+       <strong>
+        species_bulk
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/mesh.html">
+       <strong>
+        mesh
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/mom_solid.html">
+       <strong>
+        mom_solid
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/continuity.html">
+       <strong>
+        continuity
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/fill.html">
+       <strong>
+        fill
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/lagr_mult_1_lagr_mult_2_lagr_mult_3.html">
+       <strong>
+        lagr_mult_1, lagr_mult_2, lagr_mult_3
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/level_set.html">
+       <strong>
+        level set
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/voltage.html">
+       <strong>
+        voltage
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/efield.html">
+       <strong>
+        efield
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/enorm.html">
+       <strong>
+        enorm
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/shear_rate.html">
+       <strong>
+        shear_rate
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/vort_dir.html">
+       <strong>
+        vort_dir
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/vort_lambda.html">
+       <strong>
+        vort_lambda
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/porous_sat.html">
+       <strong>
+        porous_sat
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/porous_unsat.html">
+       <strong>
+        porous_unsat
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/porous_liq.html">
+       <strong>
+        porous_liq
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/porous_gas.html">
+       <strong>
+        porous_gas
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/porous_deform.html">
+       <strong>
+        porous_deform
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/porous_energy.html">
+       <strong>
+        porous_energy
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/surf_charge.html">
+       <strong>
+        surf_charge
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/shell_tension.html">
+       <strong>
+        shell_tension
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/shell_curvature.html">
+       <strong>
+        shell_curvature
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/shell_angle.html">
+       <strong>
+        shell_angle
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/shell_diff_flux.html">
+       <strong>
+        shell_diff_flux
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/shell_diff_curv.html">
+       <strong>
+        shell_diff_curv
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/shell_normal.html">
+       <strong>
+        shell_normal
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/shell_surf_curv.html">
+       <strong>
+        shell_surf_curv
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/shell_surf_div_v.html">
+       <strong>
+        shell_surf_div_v
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/grad_v_dot_n1_grad_v_dot_n2_grad_v_dot_n3.html">
+       <strong>
+        grad_v_dot_n1, grad_v_dot_n2, grad_v_dot_n3
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/n_dot_curl_v.html">
+       <strong>
+        n_dot_curl_v
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/acous_preal.html">
+       <strong>
+        acous_preal
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/acous_pimag.html">
+       <strong>
+        acous_pimag
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/acous_reyn_stress.html">
+       <strong>
+        acous_reyn_stress
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/potential1.html">
+       <strong>
+        potential1
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/potential2.html">
+       <strong>
+        potential2
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/lubp.html">
+       <strong>
+        lubp
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/lubp_2.html">
+       <strong>
+        lubp_2
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/shell_energy.html">
+       <strong>
+        shell_energy
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/shell_filmp.html">
+       <strong>
+        shell_filmp
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/shell_filmh.html">
+       <strong>
+        shell_filmh
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/shell_partc.html">
+       <strong>
+        shell_partc
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/shell_sat_closed.html">
+       <strong>
+        shell_sat_closed
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/shell_sat_gasn.html">
+       <strong>
+        shell_sat_gasn
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/shell_sat_open.html">
+       <strong>
+        shell_sat_open
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/shell_sat_open_2.html">
+       <strong>
+        shell_sat_open_2
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/shell_deltah.html">
+       <strong>
+        shell_deltah
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/moment.html">
+       moment
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/end_of_eq.html">
+       <strong>
+        END OF EQ
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../problem_description/end_of_mat.html">
+       <strong>
+        END OF MAT
+       </strong>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../post_processing.html">
+     Post Processing Specifications
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/>
+    <label for="toctree-checkbox-11">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/stream_function.html">
+       <strong>
+        Stream Function
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/streamwise_normal_stress.html">
+       <strong>
+        Streamwise Normal Stress
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/cross_stream_shear_rate.html">
+       <strong>
+        Cross-Stream Shear Rate
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/mean_shear_rate.html">
+       <strong>
+        Mean Shear Rate
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/pressure_contours.html">
+       <strong>
+        Pressure Contours
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/fill_contours.html">
+       <strong>
+        Fill Contours
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/concentration_contours.html">
+       <strong>
+        Concentration Contours
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/stress_contours.html">
+       <strong>
+        Stress Contours
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/first_invariant_of_strain.html">
+       <strong>
+        First Invariant of Strain
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/second_invariant_of_strain.html">
+       <strong>
+        Second Invariant of Strain
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/third_invariant_of_strain.html">
+       <strong>
+        Third Invariant of Strain
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/velocity_divergence.html">
+       <strong>
+        Velocity Divergence
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/particle_velocity_divergence.html">
+       <strong>
+        Particle Velocity Divergence
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/total_velocity_divergence.html">
+       <strong>
+        Total Velocity Divergence
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/electric_field.html">
+       <strong>
+        Electric Field
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/electric_field_magnitude.html">
+       <strong>
+        Electric Field Magnitude
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/enormsq_field.html">
+       <strong>
+        Enormsq Field
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/enormsq_field_norm.html">
+       <strong>
+        Enormsq Field Norm
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/viscosity.html">
+       <strong>
+        Viscosity
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/density.html">
+       <strong>
+        Density
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/lame_mu.html">
+       <strong>
+        Lame MU
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/lame_lambda.html">
+       <strong>
+        Lame LAMBDA
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/von_mises_strain.html">
+       <strong>
+        Von Mises Strain
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/von_mises_stress.html">
+       <strong>
+        Von Mises Stress
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/navier_stokes_residuals.html">
+       <strong>
+        Navier Stokes Residuals
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/moving_mesh_residuals.html">
+       <strong>
+        Moving Mesh Residuals
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/mass_diffusion_vectors.html">
+       <strong>
+        Mass Diffusion Vectors
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/diffusive_mass_flux_vectors.html">
+       <strong>
+        Diffusive Mass Flux Vectors
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/mass_fluxlines.html">
+       <strong>
+        Mass Fluxlines
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/energy_conduction_vectors.html">
+       <strong>
+        Energy Conduction Vectors
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/energy_fluxlines.html">
+       <strong>
+        Energy Fluxlines
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/time_derivatives.html">
+       <strong>
+        Time Derivatives
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/mesh_stress_tensor.html">
+       <strong>
+        Mesh Stress Tensor
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/real_solid_stress_tensor.html">
+       <strong>
+        Real Solid Stress Tensor
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/mesh_strain_tensor.html">
+       <strong>
+        Mesh Strain Tensor
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/viscoplastic_def_grad_tensor.html">
+       <strong>
+        Viscoplastic Def_Grad Tensor
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/lagrangian_convection.html">
+       <strong>
+        Lagrangian Convection
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/normal_and_tangent_vectors.html">
+       <strong>
+        Normal and Tangent Vectors
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/error_zz_velocity.html">
+       <strong>
+        Error ZZ Velocity
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/error_zz_heat_flux.html">
+       <strong>
+        Error ZZ Heat Flux
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/error_zz_pressure.html">
+       <strong>
+        Error ZZ Pressure
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/user_defined_post_processing.html">
+       <strong>
+        User-Defined Post Processing
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/porous_saturation.html">
+       <strong>
+        Porous Saturation
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/total_density_of_solvents_in_porous_media.html">
+       <strong>
+        Total Density of Solvents in Porous Media
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/density_of_solvents_in_gas_phase_in_porous_media.html">
+       <strong>
+        Density of Solvents in Gas Phase in Porous Media
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/density_of_liquid_phase_in_porous_media.html">
+       <strong>
+        Density of Liquid Phase in Porous Media
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/gas_phase_darcy_velocity_in_porous_media.html">
+       <strong>
+        Gas Phase Darcy Velocity in Porous Media
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/liquid_phase_darcy_velocity_in_porous_media.html">
+       <strong>
+        Liquid Phase Darcy Velocity in Porous Media
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/capillary_pressure_in_porous_media.html">
+       <strong>
+        Capillary Pressure in Porous Media
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/grid_peclet_number_in_porous_media.html">
+       <strong>
+        Grid Peclet Number in Porous Media
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/supg_velocity_in_porous_media.html">
+       <strong>
+        SUPG Velocity in Porous Media
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing/vorticity_vector.html">
+       <strong>
+        Vorticity Vector
+       </strong>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../post_processing_fluxes.html">
+     Post Processing Fluxes and Data
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/>
+    <label for="toctree-checkbox-12">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing_fluxes/post_processing_fluxes.html">
+       <strong>
+        Post Processing Fluxes
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing_fluxes/flux.html">
+       <strong>
+        FLUX
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing_fluxes/end_of_flux.html">
+       <strong>
+        END OF FLUX
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing_fluxes/post_processing_data.html">
+       <strong>
+        Post Processing Data
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing_fluxes/data.html">
+       <strong>
+        DATA
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing_fluxes/end_of_data.html">
+       <strong>
+        END OF DATA
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing_fluxes/post_processing_flux_sensitivities.html">
+       <strong>
+        Post Processing Flux Sensitivities
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing_fluxes/flux_sens.html">
+       <strong>
+        FLUX_SENS
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing_fluxes/end_of_flux_sens.html">
+       <strong>
+        END OF FLUX_SENS
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing_fluxes/post_processing_date_sensitivities.html">
+       <strong>
+        Post Processing Data Sensitivities
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing_fluxes/data_sens.html">
+       <strong>
+        DATA_SENS
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing_fluxes/end_of_data_sens.html">
+       <strong>
+        END OF DATA_SENS
+       </strong>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../post_processing_particle.html">
+     Post Processing Particle Traces
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" type="checkbox"/>
+    <label for="toctree-checkbox-13">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing_particle/post_processing_particle_traces.html">
+       <strong>
+        Post Processing Particle Traces
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing_particle/particle.html">
+       <strong>
+        PARTICLE
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing_particle/end_of_particles.html">
+       <strong>
+        END OF PARTICLES
+       </strong>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../post_processing_volume.html">
+     Volumetric Integration
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" type="checkbox"/>
+    <label for="toctree-checkbox-14">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing_volume/post_processing_volumetric_integration.html">
+       <strong>
+        Post Processing Volumetric Integration
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing_volume/volume_int.html">
+       <strong>
+        VOLUME_INT
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../post_processing_volume/end_of_volume_int.html">
+       <strong>
+        END OF VOLUME_INT
+       </strong>
+      </a>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../../material_files.html">
+   Material Files
+  </a>
+  <input checked class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" type="checkbox"/>
+  <label for="toctree-checkbox-15">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../material_file/physical_properties.html">
+     Physical Properties
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" type="checkbox"/>
+    <label for="toctree-checkbox-16">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/physical_properties/default_database.html">
+       <strong>
+        Default Database
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/physical_properties/density.html">
+       <strong>
+        Density
+       </strong>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../material_file/mechanical_and_constitutive.html">
+     Mechanical Properties and Constitutive Equations
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" type="checkbox"/>
+    <label for="toctree-checkbox-17">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/solid_constitutive_equation.html">
+       Solid Constitutive Equation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/plasticity_equation.html">
+       Plasticity Equation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/convective_lagrangian_velocity.html">
+       Convective Lagrangian Velocity
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/lame_mu.html">
+       Lame MU
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/lame_lambda.html">
+       Lame LAMBDA
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/stress_free_solvent_vol_frac.html">
+       Stress Free Solvent Vol Frac
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/solid_thermal_expansion.html">
+       Solid Thermal Expansion
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/solid_reference_temperature.html">
+       Solid Reference Temperature
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/plastic_viscosity.html">
+       Plastic Viscosity
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/evp_yield_stress.html">
+       EVP Yield Stress
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/pseudo_solid_constitutive_equation.html">
+       Polymer Viscosity
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/pseudo_solid_lame_mu.html">
+       Pseudo-Solid Lame MU
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/pseudo_solid_lame_lambda.html">
+       Pseudo-Solid Lame LAMBDA
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/liquid_constitutive_equation.html">
+       Liquid Constitutive Equation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/viscosity.html">
+       Viscosity
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/low_rate_viscosity.html">
+       Low Rate Viscosity
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/power_law_exponent.html">
+       Power Law Exponent
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/high_rate_viscosity.html">
+       High Rate Viscosity
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/time_constant.html">
+       Time Constant
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/aexp.html">
+       Aexp
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/thermal_exponent.html">
+       Thermal Exponent
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/thermal_wlf_constant2.html">
+       Thermal WLF Constant2
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/yield_stress.html">
+       Yield Stress
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/yield_exponent.html">
+       Yield Exponent
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/suspension_maximum_packing.html">
+       Suspension Maximum Packing
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/suspension_species_number.html">
+       Suspension Species Number
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/cure_gel_point.html">
+       Cure Gel Point
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/cure_a_exponent.html">
+       Cure A Exponent
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/cure_b_exponent.html">
+       Cure B Exponent
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/cure_species_number.html">
+       Cure Species Number
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/unreacted_gel_temperature.html">
+       Unreacted Gel Temperature
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/polymer_constitutive_equation.html">
+       Polymer Constitutive Equation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/polymer_stress_formulation.html">
+       Polymer Stress Formulation
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/polymer_weight_function.html">
+       Polymer Weight Function
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/polymer_shift_function.html">
+       Polymer Shift Function
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/polymer_shock_function.html">
+       Polymer Shock Function
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/polymer_weighting.html">
+       <strong>
+        Polymer Weighting
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/discontinuous_jacobian_formulation.html">
+       <strong>
+        Discontinuous Jacobian Formulation
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/adaptive_viscosity_scaling.html">
+       <strong>
+        Adaptive Viscosity Scaling
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/polymer_viscosity.html">
+       <strong>
+        Polymer Viscosity
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/polymer_time_constant.html">
+       <strong>
+        Polymer Time Constant
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/polymer_yield_stress.html">
+       Polymer Yield Stress
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/mobility_parameter.html">
+       <strong>
+        Mobility Parameter
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/ptt_xi_parameter.html">
+       <strong>
+        PTT Xi parameter
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/ptt_epsilon_parameter.html">
+       <strong>
+        PTT Epsilon parameter
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/surface_tension.html">
+       <strong>
+        Surface Tension
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/second_level_set_conductivity.html">
+       <strong>
+        Second Level Set Conductivity
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/second_level_set_density.html">
+       <strong>
+        Second Level Set Density
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/second_level_set_heat_capacity.html">
+       <strong>
+        Second Level Set Heat Capacity
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/second_level_set_momentum_source.html">
+       <strong>
+        Second Level Set Momentum Source
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/second_level_set_viscosity.html">
+       <strong>
+        Second Level Set Viscosity
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/mechanical_and_constitutive/shell_bending_stiffness.html">
+       <strong>
+        Shell Bending Stiffness
+       </strong>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../material_file/thermal_properties.html">
+     Thermal Properties
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" type="checkbox"/>
+    <label for="toctree-checkbox-18">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/thermal_properties/heat_flux_model.html">
+       <strong>
+        Heat Flux Model
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/thermal_properties/conductivity.html">
+       <strong>
+        Conductivity
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/thermal_properties/heat_capacity.html">
+       <strong>
+        Heat Capacity
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/thermal_properties/volume_expansion.html">
+       <strong>
+        Volume Expansion
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/thermal_properties/reference_temperature.html">
+       <strong>
+        Reference Temperature
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/thermal_properties/liquidus_temperature.html">
+       <strong>
+        Liquidus Temperature
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/thermal_properties/solidus_temperature.html">
+       <strong>
+        Solidus Temperature
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/thermal_properties/energy_weight_function.html">
+       <strong>
+        Energy Weight Function
+       </strong>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../material_file/electrical.html">
+     Electrical Properties
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" type="checkbox"/>
+    <label for="toctree-checkbox-19">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/electrical_properties/electrical_conductivity.html">
+       <strong>
+        Electrical Conductivity
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/electrical_properties/electrical_permittivity.html">
+       <strong>
+        Electrical Permittivity
+       </strong>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../material_file/microstructure.html">
+     Microstructure Properties
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" type="checkbox"/>
+    <label for="toctree-checkbox-20">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/microstructure/media_type.html">
+       <strong>
+        Media Type
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/microstructure/porosity.html">
+       <strong>
+        Porosity
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/microstructure/permeability.html">
+       <strong>
+        Permeability
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/microstructure/liquid_phase_compressibility.html">
+       <strong>
+        Liquid phase compressibility
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/microstructure/liquid_phase_reference_pressure.html">
+       <strong>
+        Liquid phase reference pressure
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/microstructure/flowing_liquid_viscosity.html">
+       <strong>
+        Flowing Liquid Viscosity
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/microstructure/inertia_coefficient.html">
+       <strong>
+        Inertia Coefficient
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/microstructure/capillary_network_stress.html">
+       <strong>
+        Capillary Network Stress
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/microstructure/rel_gas_permeability.html">
+       <strong>
+        Rel Gas Permeability
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/microstructure/rel_liq_permeability.html">
+       <strong>
+        Rel Liq Permeability
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/microstructure/saturation.html">
+       <strong>
+        Saturation
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/microstructure/porous_weight_function.html">
+       <strong>
+        Porous Weight Function
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/microstructure/porous_mass_lumping.html">
+       <strong>
+        Porous Mass Lumping
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/microstructure/porous_diffusion_constitutive_equation.html">
+       <strong>
+        Porous Diffusion Constitutive Equation
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/microstructure/porous_gas_diffusivity.html">
+       <strong>
+        Porous Gas Diffusivity
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/microstructure/porous_latent_heat_vaporization.html">
+       <strong>
+        Porous Latent Heat Vaporization
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/microstructure/porous_latent_heat_fusion.html">
+       <strong>
+        Porous Latent Heat Fusion
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/microstructure/porous_vapor_pressure.html">
+       <strong>
+        Porous Vapor Pressure
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/microstructure/porous_liquid_volume_expansion.html">
+       <strong>
+        Porous Liquid Volume Expansion
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/microstructure/porous_gas_constants.html">
+       <strong>
+        Porous Gas Constants
+       </strong>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../material_file/species.html">
+     Species Properties
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" type="checkbox"/>
+    <label for="toctree-checkbox-21">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/number_of_species.html">
+       <strong>
+        Number of Species
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/diffusion_constitutive_equation.html">
+       <strong>
+        Diffusion Constitutive Equation
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/species_weight_function.html">
+       <strong>
+        Species Weight Function
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/number_of_chemical_reactions.html">
+       <strong>
+        Number of Chemical Reactions
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/reaction_rate.html">
+       <strong>
+        Reaction Rate
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/thermodynamic_potential.html">
+       <strong>
+        Thermodynamic Potential
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/interfacial_area.html">
+       <strong>
+        Interfacial Area
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/butler_volmer_j.html">
+       <strong>
+        Butler_Volmer_j
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/butler_volmer_ij.html">
+       <strong>
+        Butler_Volmer_ij
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/solution_temperature.html">
+       <strong>
+        Solution Temperature
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/porosity.html">
+       <strong>
+        Porosity
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/diffusivity.html">
+       <strong>
+        Diffusivity
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/shear_rate_diffusivity.html">
+       <strong>
+        Shear Rate Diffusivity
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/viscosity_diffusivity.html">
+       <strong>
+        Viscosity Diffusivity
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/curvature_diffusivity.html">
+       <strong>
+        Curvature Diffusivity
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/fickian_diffusivity.html">
+       <strong>
+        Fickian Diffusivity
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/gravity_based_diffusivity.html">
+       <strong>
+        Gravity-based Diffusivity
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/q_tensor_diffusivity.html">
+       <strong>
+        Q Tensor Diffusivity
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/species_time_integration.html">
+       <strong>
+        Species Time Integration
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/advective_scaling.html">
+       <strong>
+        Advective Scaling
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/latent_heat_vaporization.html">
+       <strong>
+        Latent Heat Vaporization
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/latent_heat_fusion.html">
+       <strong>
+        Latent Heat Fusion
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/vapor_pressure.html">
+       <strong>
+        Vapor Pressure
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/species_volume_expansion.html">
+       <strong>
+        Species Volume Expansion
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/standard_state_chemical_potential.html">
+       <strong>
+        Standard State Chemical Potential
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/pure_species_chemical_potential.html">
+       <strong>
+        Pure Species Chemical Potential
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/chemical_potential.html">
+       <strong>
+        Chemical Potential
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/reference_concentration.html">
+       <strong>
+        Reference Concentration
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/molecular_weight.html">
+       <strong>
+        Molecular Weight
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/specific_volume.html">
+       <strong>
+        Specific Volume
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/molar_volume.html">
+       <strong>
+        Molar Volume
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/charge_number.html">
+       <strong>
+        Charge Number
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/non_condensable_molecular_weight.html">
+       <strong>
+        Non-condensable Molecular Weight
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/non_volatile_molar_volume.html">
+       <strong>
+        Non-volatile Molar Volume
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/non_volatile_specific_volume.html">
+       <strong>
+        Non-volatile Specific Volume
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/species_properties/flory_huggins_parameters.html">
+       <strong>
+        Flory-Huggins parameters
+       </strong>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../material_file/source_terms.html">
+     Source Terms
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" type="checkbox"/>
+    <label for="toctree-checkbox-22">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/source_terms/navier_stokes_source.html">
+       <strong>
+        Navier-Stokes Source
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/source_terms/solid_body_source.html">
+       <strong>
+        Solid Body Source
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/source_terms/mass_source.html">
+       <strong>
+        Mass Source
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/source_terms/heat_source.html">
+       <strong>
+        Heat Source
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/source_terms/species_source.html">
+       <strong>
+        Species Source
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/source_terms/current_source.html">
+       <strong>
+        Current Source
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/source_terms/moment_source.html">
+       Moment Source
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/source_terms/initialize.html">
+       <strong>
+        Initialize
+       </strong>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../../material_file/shell_equation.html">
+     Shell Equation Properties and Models
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" type="checkbox"/>
+    <label for="toctree-checkbox-23">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/shell_equation/upper_height_function_constants.html">
+       <strong>
+        Upper Height Function Constants
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/shell_equation/lower_height_function_constants.html">
+       <strong>
+        Lower Height Function Constants
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/shell_equation/upper_velocity_function_constants.html">
+       <strong>
+        Upper Velocity Function Constants
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/shell_equation/lower_velocity_function_constants.html">
+       <strong>
+        Lower Velocity Function Constants
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/shell_equation/upper_contact_angle.html">
+       <strong>
+        Upper Contact Angle
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/shell_equation/lower_contact_angle.html">
+       <strong>
+        Lower Contact Angle
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/shell_equation/lubrication_fluid_source.html">
+       <strong>
+        Lubrication Fluid Source
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/shell_equation/lubrication_momentum_source.html">
+       <strong>
+        Lubrication Momentum Source
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/shell_equation/turbulent_lubrication_model.html">
+       <strong>
+        Turbulent Lubrication Mode
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/shell_equation/shell_energy_source_QCONV.html">
+       <strong>
+        Shell Energy Source QCONV
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/shell_equation/shell_energy_source_sliding_contact.html">
+       <strong>
+        Shell Energy Source Sliding Contact
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/shell_equation/shell_energy_source_viscous_dissipation.html">
+       <strong>
+        Shell Energy Source Viscous Dissipation
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/shell_equation/shell_energy_source_external.html">
+       <strong>
+        Shell Energy Source External
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/shell_equation/FSI_deformation_model.html">
+       <strong>
+        FSI Deformation Model
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/shell_equation/film_evaporation_model.html">
+       <strong>
+        Film Evaporation Model
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/shell_equation/disjoining_pressure_model.html">
+       <strong>
+        Disjoining Pressure Model
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/shell_equation/diffusion_coefficient_model.html">
+       <strong>
+        Diffusion Coefficient Model
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/shell_equation/porous_shell_radius.html">
+       <strong>
+        Porous Shell Radius
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/shell_equation/porous_shell_height.html">
+       <strong>
+        Porous Shell Height
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/shell_equation/porous_shell_closed_porosity.html">
+       <strong>
+        Porous Shell Closed Porosity
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/shell_equation/porous_shell_closed_gas_pressure.html">
+       <strong>
+        Porous Shell Closed Gas Pressure
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/shell_equation/porous_shell_atmospheric_pressure.html">
+       <strong>
+        Porous Shell Atmospheric Pressure
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/shell_equation/porous_shell_reference_pressure.html">
+       <strong>
+        Porous Shell Reference Pressure
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/shell_equation/porous_shell_cross_permeability.html">
+       <strong>
+        Porous Shell Cross Permeability
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/shell_equation/porous_shell_gas_diffusivity.html">
+       <strong>
+        Porous Shell Gas Diffusivity
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/shell_equation/porous_shell_gas_temperature_constant.html">
+       <strong>
+        Porous Shell Gas Temperature Constant
+       </strong>
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../../material_file/shell_equation/porous_shell_henrys_law_constant.html">
+       <strong>
+        Porous Shell Henrys Law Constant
+       </strong>
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../../material_file/moments.html">
+     Moment Properties
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../references.html">
+   References
+  </a>
+ </li>
+ <li class="toctree-l1">
+  <a class="reference internal" href="../../documentation_lists.html">
+   Appendix 1: Goma Documentation Lists
+  </a>
+ </li>
+</ul>
+
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#description-usage">
+   Description / Usage
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#examples">
+   Examples
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#technical-discussion">
+   Technical Discussion
+  </a>
+ </li>
+</ul>
+
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <section id="decomposition-type">
+<h1>Decomposition Type<a class="headerlink" href="#decomposition-type" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Decomposition</span> <span class="n">Type</span> <span class="o">=</span> <span class="p">{</span><span class="n">rcb</span> <span class="o">|</span> <span class="n">kway</span><span class="p">}</span>
+</pre></div>
+</div>
+<section id="description-usage">
+<h2>Description / Usage<a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h2>
+<p>This optional card controls which builtin METIS method for decomposition in parallel</p>
+<dl class="simple">
+<dt>rcb</dt><dd><p>Recurisve Bisection, default when less than 8 processors and this card is not specified</p>
+</dd>
+<dt>kway</dt><dd><p>KWAY default when 8 or more processors and this card is not specified</p>
+</dd>
+</dl>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>Following is a sample card:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Decomposition</span> <span class="n">Type</span> <span class="o">=</span> <span class="n">kway</span>
+</pre></div>
+</div>
+</section>
+<section id="technical-discussion">
+<h2>Technical Discussion<a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h2>
+<p>Also available from the command line with <code class="code docutils literal notranslate"><span class="pre">-rcb,</span> <span class="pre">-kway</span></code>.</p>
+</section>
+</section>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="external_decomposition.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">External Decomposition</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="../general_specifications.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">General Specifications</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+    <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2019 Goma Developers.<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

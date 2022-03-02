@@ -1,0 +1,366 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>LS_QLASER &#8212; Goma User Manual 7.0.0 documentation</title>
+    
+    <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  
+    
+    <link rel="stylesheet"
+      href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+  
+    
+      
+  
+    
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/pydata-sphinx-theme.css" />
+    
+    <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+
+<a class="navbar-brand" href="../../../index.html">
+  <img src="../../../_static/goma.png" class="logo" alt="logo">
+</a>
+
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../user_manual.html">
+  Goma User Manual
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#description-usage">
+   <strong>
+    Description / Usage
+   </strong>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#examples">
+   <strong>
+    Examples
+   </strong>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#technical-discussion">
+   <strong>
+    Technical Discussion
+   </strong>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#references">
+   <strong>
+    References
+   </strong>
+  </a>
+ </li>
+</ul>
+
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <section id="ls-qlaser">
+<h1><strong>LS_QLASER</strong><a class="headerlink" href="#ls-qlaser" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LS_QLASER</span> <span class="n">LS</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float3</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float4</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<section id="description-usage">
+<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h2>
+<p><strong>(EMB/ENERGY)</strong></p>
+<p>This boundary condition card specifies heat flux model derived from a laser welding
+application. This heat flux value is applied as an “embedded” source term on the heat
+conservation equation at the zero level set contour (cf. <em>BC = Q_LASER_WELD</em> for
+ALE surfaces). It can be used both when subgrid or subelement integration is being
+used. The &lt;float_list&gt; has twenty-seven parameters; definitions of the input parameters
+are as follows:</p>
+<p>A description of the input parameters follows:</p>
+<table class="table">
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 84%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>LS_QLASER</strong></p></td>
+<td><p>Name of the boundary condition.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>LS</strong></p></td>
+<td><p>This string is used to indicated that this is a “boundary”
+condition is applied at an internal phase boundary defined
+by the zero contour of the level set function.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;integer&gt;</p></td>
+<td><p>An integer parameter than is permitted to take one of three
+values -1, 0, or 1. Depending upon the choice of this
+parameter the heat flux value is applied to the negative
+phase, both phase, or the positive phase, respectively.
+Details are given below.</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float 1&gt;</p></td>
+<td><p>Nominal power of laser.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;float 2&gt;</p></td>
+<td><p>Power of laser at base state (simmer).</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float 3&gt;</p></td>
+<td><p>Base value of surface absorptivity.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;float 4&gt;</p></td>
+<td><p>Switch to allow tracking of normal component of liquid
+surface relative to laser beam axis for surface absorption
+(0 = OFF, 1 = ON)</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float 5&gt;</p></td>
+<td><p>Cutoff time for laser power.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;float 6&gt;</p></td>
+<td><p>Time at which laser power drops to 1/e.</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float 7&gt;</p></td>
+<td><p>For pulse weld, the laser power overshoot (%) of peak
+power at time to reach peak laser power.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;float 8&gt;</p></td>
+<td><p>Radius of laser beam.</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float 9&gt;</p></td>
+<td><p>For pulse weld, the time for laser pulse to reach peak power.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;float 10&gt;</p></td>
+<td><p>For pulse weld, the time for laser pulse to reach steady
+state in power.</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float 11&gt;</p></td>
+<td><p>Switch to either activate laser power distribution from
+beam center based on absolute distance (0) or based on
+radial distance in 2D plane (1).</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;float 12&gt;</p></td>
+<td><p>Location of laser beam center (x-coordinate).</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float 13&gt;</p></td>
+<td><p>Location of laser beam center (y-coordinate).</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;float 14&gt;</p></td>
+<td><p>Location of laser beam center (z-coordinate).</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float 15&gt;</p></td>
+<td><p>Laser beam orientation, normal to x-coordinate of body.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;float 16&gt;</p></td>
+<td><p>Laser beam orientation, normal to y-coordinate of body.</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float 17&gt;</p></td>
+<td><p>Laser beam orientation, normal to z-coordinate of body.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;float 18&gt;</p></td>
+<td><p>For pulse weld, spot frequency.</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float 19&gt;</p></td>
+<td><p>For pulse weld, total number of spots to simulate.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;float 20&gt;</p></td>
+<td><p>Switch to set type of weld simulation. (0=pulse weld,
+1=linear continuous weld, -1=pseudo pulse weld,
+2=sinusoidal continous weld)</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float 21&gt;</p></td>
+<td><p>For pulse weld, spacing of spots.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;float 22&gt;</p></td>
+<td><p>For radial traverse continuous weld, radius of beam travel.</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float 23&gt;</p></td>
+<td><p>Switch to activate beam shadowing for lap weld
+(0=OFF, 1=ON). Currently only active for ALE simulations.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;float 24&gt;</p></td>
+<td><p>Not active, should be set to zero.</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float 25&gt;</p></td>
+<td><p>For continuous weld, laser beam travel speed in xdirection
+(u velocity).</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;float 26&gt;</p></td>
+<td><p>For continuous weld, laser beam travel speed in ydirection
+(v velocity).</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float 27&gt;</p></td>
+<td><p>For continuous weld, laser beam travel speed in zdirection
+(w velocity).</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples">
+<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>An example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LS_QLASER</span> <span class="n">LS</span> <span class="o">-</span><span class="mi">1</span> <span class="mf">4.774648293</span> <span class="mi">0</span> <span class="mf">0.4</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mf">1.01</span> <span class="mf">4.774648293</span> <span class="mf">0.2</span>
+<span class="mf">0.01</span> <span class="mf">0.01</span> <span class="mi">1</span> <span class="mf">0.005</span> <span class="mi">0</span> <span class="o">-</span><span class="mf">0.198</span> <span class="o">-</span><span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mf">0.025</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mf">0.2032</span> <span class="o">-</span><span class="mi">1000</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span>
+<span class="mf">0.0254</span>
+</pre></div>
+</div>
+</section>
+<section id="technical-discussion">
+<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h2>
+<p>This is the level-set counterpart to <em>BC = Q_LASER</em> which is the same boundary
+condition applied to a parameterized mesh surface. Please see the discussion of that
+input record for the functional form of this boundary condition.</p>
+</section>
+<section id="references">
+<h2><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<p>No References.</p>
+</section>
+</section>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+    <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2019 Goma Developers.<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

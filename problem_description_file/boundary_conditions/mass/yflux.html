@@ -1,0 +1,363 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>YFLUX &#8212; Goma User Manual 7.0.0 documentation</title>
+    
+    <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  
+    
+    <link rel="stylesheet"
+      href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+  
+    
+      
+  
+    
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/pydata-sphinx-theme.css" />
+    
+    <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+
+<a class="navbar-brand" href="../../../index.html">
+  <img src="../../../_static/goma.png" class="logo" alt="logo">
+</a>
+
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../user_manual.html">
+  Goma User Manual
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#description-usage">
+   <strong>
+    Description / Usage
+   </strong>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#examples">
+   <strong>
+    Examples
+   </strong>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#technical-discussion">
+   <strong>
+    Technical Discussion
+   </strong>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#faqs">
+   <strong>
+    FAQs
+   </strong>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#references">
+   <strong>
+    References
+   </strong>
+  </a>
+ </li>
+</ul>
+
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <section id="yflux">
+<h1><strong>YFLUX</strong><a class="headerlink" href="#yflux" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">YFLUX</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float2</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<section id="description-usage">
+<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h2>
+<p><strong>(WIC/MASS)</strong></p>
+<p>This boundary condition card is used to specify the mass flux of a given species normal
+to the boundary (or interface) using a mass transfer coefficient. When used in
+conjunction with the <em>KIN_LEAK</em> card, the <em>YFLUX</em> card also enables the determination
+of velocity normal to the moving boundary at which the <em>YFLUX</em> boundary condition is
+applied.</p>
+<p>Definitions of the input parameters are as follows:</p>
+<table class="table">
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 88%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>YFLUX</strong></p></td>
+<td><p>Name of the boundary condition (&lt;bc_name&gt;).</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>SS</strong></p></td>
+<td><p>Type of boundary condition (&lt;bc_type&gt;), where <strong>SS</strong> denotes
+side set in the EXODUS II database.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;bc_id&gt;</p></td>
+<td><p>The boundary flag identifier, an integer associated with
+&lt;bc_type&gt; that identifies the boundary location (side set in
+EXODUS II) in the problem domain.</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;integer&gt;</p></td>
+<td><p><em>i</em>, species number of concentration.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;float1&gt;</p></td>
+<td><p><span class="math notranslate nohighlight">\(k_i\)</span>, value of mass transfer coefficient of species <em>i</em>.</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float2&gt;</p></td>
+<td><p><span class="math notranslate nohighlight">\(c_i^\infty\)</span> value of reference concentration of species <em>i</em>.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples">
+<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>Following are two sample cards:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">YFLUX</span> <span class="n">SS</span>   <span class="mi">3</span> <span class="mi">0</span>   <span class="mf">0.12</span>   <span class="mf">0.</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">YFLUX</span> <span class="n">SS</span>   <span class="mi">3</span> <span class="mi">1</span>   <span class="mf">0.05</span>   <span class="mf">0.</span>
+</pre></div>
+</div>
+</section>
+<section id="technical-discussion">
+<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h2>
+<p>Specifically, the species mass flux is given by</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../../../_images/136_goma_physics.png"><img alt="../../../_images/136_goma_physics.png" src="../../../_images/136_goma_physics.png" style="width: 90%;" /></a>
+</figure>
+<p>where <em>n</em> is the unit vector normal to the boundary, <span class="math notranslate nohighlight">\(J_i\)</span> is mass flux of species <em>i</em>, <em>v</em> is the
+fluid velocity, <span class="math notranslate nohighlight">\(v_m\)</span> is the mesh displacement velocity, <span class="math notranslate nohighlight">\(k_i\)</span> is mass transfer coefficient of
+species <em>i</em>, <span class="math notranslate nohighlight">\(c_i\)</span> is concentration of species <em>i</em> at the boundary surface,
+<span class="math notranslate nohighlight">\(c_i^\infty\)</span> and is reference
+concentration of species <em>i</em>. The units of <span class="math notranslate nohighlight">\(J_i\)</span>, <span class="math notranslate nohighlight">\(k_i\)</span>, <span class="math notranslate nohighlight">\(c_i\)</span> and
+<span class="math notranslate nohighlight">\(c_i^\infty\)</span> depend on the user’s choice. For
+example, if <span class="math notranslate nohighlight">\(c_i\)</span> and <span class="math notranslate nohighlight">\(c_i^\infty\)</span> are chosen to have units of moles/ <span class="math notranslate nohighlight">\(cm^3\)</span>, then <span class="math notranslate nohighlight">\(k_i\)</span> has the unit of cm/
+s, and <span class="math notranslate nohighlight">\(J_i\)</span> has the units of moles/ <span class="math notranslate nohighlight">\(cm^2\)</span> /s.</p>
+<p>For the <em>KIN_LEAK</em> and <em>VNORM_LEAK</em> cards, the information from <em>YFLUX</em> boundary
+conditions corresponding to each species is needed. <em>Goma</em> automatically searches for
+these boundary conditions and uses an extra variable in the BC data storage to record
+the boundary condition number of the next <em>YFLUX</em> condition in a linked list; when the
+extra storage value is -1, there are no more <em>YFLUX</em> conditions at this boundary.</p>
+</section>
+<section id="faqs">
+<h2><strong>FAQs</strong><a class="headerlink" href="#faqs" title="Permalink to this headline">¶</a></h2>
+<p>A question was raised regarding the use of volume flux in Goma; the following portion
+of the question and response elucidate this topic and the subject of units. Note the
+references in the response are to the Version 2.0 Goma User’s Manual.</p>
+<p><strong>Question</strong>: … I know what you are calling volume flux is mass flux divided by
+density. The point I am trying to make is that the conservation equations in the books I
+am familiar with talk about mass, energy, momentum, and heat fluxes. Why do you not
+write your conservation equations in their naturally occurring form? If density just so
+happens to be common in all of the terms, then it will be obvious to the user that the
+problem does not depend on density. You get the same answer no matter whether you
+input rho=1.0 or rho=6.9834, provided of course this does not impact iterative
+convergence. This way, you write fluxes in terms of gradients with the transport
+properties (viscosity, thermal conductivity, diffusion coefficient, etc.) being in familiar
+units.</p>
+<p><strong>Answer</strong>: First let me state the only error in the manual that exists with regard to
+the convection-diffusion equation is the following:</p>
+<blockquote>
+<div><p><span class="math notranslate nohighlight">\(J_t\)</span> in the nomenclature table … should be described as a volume flux with units
+of L/t, i.e., <span class="math notranslate nohighlight">\(D ⋅ \Delta_yi\)</span> , where D is in <span class="math notranslate nohighlight">\(L^2\)</span> ⁄ t units.</p>
+</div></blockquote>
+<p>Now, … this is actually stated correctly, as it states the <span class="math notranslate nohighlight">\(J_i\)</span> is a diffusion flux (without
+being specific); to be more specific here, we should say it is a “volume flux of species
+<em>i</em>.” So, in this case D is in L ⋅ L ⁄ t units, <span class="math notranslate nohighlight">\(y_i\)</span> is dimensionless and it is immaterial that (the
+mass conservation equation) is multiplied by density or not, <em>as long as density is
+constant</em>.</p>
+<p>Now, in <em>Goma</em> we actually code it up EXACTLY as in the … (mass conservation
+equation), i.e., there are no densities anywhere for the <em>FICKIAN</em> diffusion model. For
+the <em>HYDRO</em> diffusion model, we actually compute a <span class="math notranslate nohighlight">\(J_i\)</span> ⁄ ρ in the code, and handle variable density changes through that p . In that case <span class="math notranslate nohighlight">\(J_i\)</span> as computed in Goma is a mass
+flux vector, not a volume flux vector, but by dividing it by p and sending it back up to
+the mass conservation equation it changes back into a volume flux. i. e., everything is the same.</p>
+<p>Concerning the units of the mass transfer coefficient on the <em>YFLUX</em> boundary
+condition, the above discussion now sets those. <em>Goma</em> clearly needs the flux in the
+following form:</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../../../_images/137_goma_physics.png"><img alt="../../../_images/137_goma_physics.png" src="../../../_images/137_goma_physics.png" style="width: 90%;" /></a>
+</figure>
+<p>and dimensionally for the left hand side</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../../../_images/138_goma_physics.png"><img alt="../../../_images/138_goma_physics.png" src="../../../_images/138_goma_physics.png" style="width: 90%;" /></a>
+</figure>
+<p>where D is in units <span class="math notranslate nohighlight">\(L^2\)</span> /t , the gradient operator has units of 1/L so K HAS to be in units
+of L/t (period!) because <span class="math notranslate nohighlight">\(y_i\)</span> is a fraction.</p>
+<p>So, if you want a formulation as follows:</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../../../_images/139_goma_physics.png"><img alt="../../../_images/139_goma_physics.png" src="../../../_images/139_goma_physics.png" style="width: 90%;" /></a>
+</figure>
+<p>then K’s units will have to accommodate for the relationship between <span class="math notranslate nohighlight">\(p_i\)</span> and <span class="math notranslate nohighlight">\(y_i\)</span> in the
+liquid, hopefully a linear one as in Raoult’s law, i.e. if <span class="math notranslate nohighlight">\(p_i\)</span> = <span class="math notranslate nohighlight">\(P_V\)</span><span class="math notranslate nohighlight">\(y_i\)</span> where <span class="math notranslate nohighlight">\(P_v\)</span> is the vapor
+pressure, then</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../../../_images/140_goma_physics.png"><img alt="../../../_images/140_goma_physics.png" src="../../../_images/140_goma_physics.png" style="width: 90%;" /></a>
+</figure>
+<p>and so K on the <em>YFLUX</em> command has to be <span class="math notranslate nohighlight">\(KP_v\)</span> ….and so on.</p>
+<p>Finally, you will note, since we do not multiply through by density, you will have to
+take care of that, i. e., in the Price paper he gives K in units of t/L. So, that must be converted as follows:</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../../../_images/141_goma_physics.png"><img alt="../../../_images/141_goma_physics.png" src="../../../_images/141_goma_physics.png" style="width: 90%;" /></a>
+</figure>
+<p>This checks out!</p>
+</section>
+<section id="references">
+<h2><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<p>Price, P. E., Jr., S. Wang, I. H. Romdhane, 1997. “Extracting Effective Diffusion
+Parameters from Drying Experiments”, AIChE Journal, 43, 8, 1925-1934.</p>
+</section>
+</section>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+    <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2019 Goma Developers.<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

@@ -1,0 +1,321 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>GD_TABLE &#8212; Goma User Manual 7.0.0 documentation</title>
+    
+    <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  
+    
+    <link rel="stylesheet"
+      href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+  
+    
+      
+  
+    
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/pydata-sphinx-theme.css" />
+    
+    <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+
+<a class="navbar-brand" href="../../../index.html">
+  <img src="../../../_static/goma.png" class="logo" alt="logo">
+</a>
+
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../user_manual.html">
+  Goma User Manual
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#description-usage">
+   Description / Usage
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#examples">
+   Examples
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#technical-discussion">
+   Technical Discussion
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#references">
+   References
+  </a>
+ </li>
+</ul>
+
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <section id="gd-table">
+<h1>GD_TABLE<a class="headerlink" href="#gd-table" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">GD_TABLE</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">equation_name</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">variable_name</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">scale</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">interpolation</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">FILE</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">fname</span><span class="o">&gt;</span><span class="p">]</span>
+</pre></div>
+</div>
+<section id="description-usage">
+<h2>Description / Usage<a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h2>
+<p><strong>(PCC/VARIED)</strong></p>
+<p>This card is used to specify arbitrary, univariate (one abscissa and one ordinate: x1 - x2)
+data for boundary conditions on two-dimensional boundaries, e.g., the inlet velocity
+profile of a non-Newtonian fluid in a two-dimensional channel. The <em>GD_TABLE</em>
+specification differs slightly from the other cards in this category: the data are scalable
+and the data can be read from a file. Like the other <em>GD_*</em> cards, this card can be used as
+an additive building block for more complicated conditions. The examples below and
+at the end of the <em>GD_*</em> section will provide more detailed guidance.</p>
+<p>Definitions of the input parameters are described next. Differences between this card
+and other <em>GD_*</em> cards are pointed out.</p>
+<dl class="simple">
+<dt>GD_TIME</dt><dd><p>Name of the boundary condition (&lt;bc_name&gt;).</p>
+</dd>
+<dt>SS</dt><dd><p>Type of boundary condition (&lt;bc_type&gt;), where <strong>SS</strong> denotes side set in
+the EXODUS II database.</p>
+</dd>
+<dt>&lt;bc_id&gt;</dt><dd><p>The boundary flag identifier, an integer associated with &lt;bc_type&gt; that
+identifies the boundary location (side set in EXODUS II) in the problem
+domain.</p>
+</dd>
+<dt>&lt;equation_name&gt;</dt><dd><p>A character string indicating the equation to which this boundary condition
+is applied. See the list of permissible values in the discussion above for
+<em>Category 1</em>. In contrast to other <em>GD_*</em> cards, this parameter also serves
+to identify the equation that is being supplanted.</p>
+</dd>
+<dt>&lt;integer1&gt;</dt><dd><p>Species number of the mass transport equation. The value should be 0 unless
+the &lt;equation_name&gt; is of type <em>R_MASS</em>.</p>
+</dd>
+<dt>&lt;variable_name&gt;</dt><dd><p>A character string indicating the variable that should be used in the
+function. See the list of permissible values in the discussion above for
+<em>Category 1</em>. For this card, in contrast to other <em>GD_*</em> cards, this
+parameter also identifies what value is to serve as abscissa when
+interpolating the table.</p>
+</dd>
+<dt>&lt;integer2&gt;</dt><dd><p>Species number of the concentration variable.The value should be 0 unless
+the &lt;variable_name&gt; is of type <em>MASS_FRACTION</em>.</p>
+</dd>
+<dt>&lt;scale&gt;</dt><dd><p>A floating point value by which to multiply the ordinate list after
+interpolation. It can be used to scale the table values or change their
+sign, <em>e.g</em>. C<sub>0</sub>, scale factor in f(x<sub>1</sub>) = C<sub>0</sub> * x<sub>2</sub></p>
+</dd>
+<dt>&lt;interpolation&gt;</dt><dd><p>Specifies the method to use in interpolating between supplied data points.
+Currently the only choice available is <em>LINEAR</em>, which invokes a simple
+linear interpolation method. Alternative methods will/can be added latter
+as required or requested.</p>
+</dd>
+</dl>
+<p>The table data will be read from within the input deck itself (following the GD_TABLE
+BC card). The end of the table is signaled by the keywords “END TABLE.” (See the
+second example below.) An alternative to this method is to read a file with table data.</p>
+<dl class="simple">
+<dt>[FILE = &lt;fname&gt;]</dt><dd><p>The optional keyword ‘<em>FILE</em> =’ indicates that the table data is to be read
+from a separate file identified by &lt;fname&gt;.</p>
+</dd>
+</dl>
+<p>Note that this boundary condition card functions as every other GD condition, be it
+<em>LINEAR, QUADRATIC, POLYNOMIAL</em>, or in this case <em>TABULAR</em>. It is used simple as
+a piece of a residual on the appropriate equation. Hence, it usually requires more than
+one GD card to completely specify the boundary condition.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>Following is a sample card set in which the table data is to be read from an external file
+called upstream_land.dat:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">GD_LINEAR</span> <span class="n">SS</span> <span class="mi">1</span> <span class="n">R_MESH_NORMAL</span> <span class="mi">0</span> <span class="n">MESH_POSITION2</span> <span class="mi">0</span> <span class="mf">0.</span> <span class="o">-</span><span class="mf">1.</span>
+<span class="n">BC</span> <span class="o">=</span> <span class="n">GD_TABLE</span> <span class="n">SS</span> <span class="mi">1</span> <span class="n">R_MESH_NORMAL</span> <span class="mi">0</span> <span class="n">MESH_POSITION1</span> <span class="mi">0</span> <span class="mf">1.0</span> <span class="n">LINEAR</span>
+<span class="n">FILE</span><span class="o">=</span><span class="n">upstream_land</span><span class="o">.</span><span class="n">dat</span>
+</pre></div>
+</div>
+<p>This card set first creates a linear term in <em>MESH_POSITION2</em>, which is the y-coordinate
+of the mesh points along side set 1. The second, <em>GD_TABLE</em> card then creates a table of
+y-coordinate values based on x-mesh position. This boundary condition describes a
+land/filet composite geometry with x-y data points.</p>
+<p>Following is a sample card, where the table data is to be read directly from the input
+deck:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>BC = GD_TABLE SS 1 R_MOMENTUM1 0 MESH_POSITION2 0 1.0 LINEAR
+
+$ r/R         Uz
+0.000000      1.666667
+0.050000      1.666458
+0.100000      1.665000
+0.150000      1.661042
+0.200000      1.653333
+0.250000      1.640625
+0.300000      1.621667
+.
+.
+0.900000      0.451667
+0.950000      0.237708
+1.000000      0.000000
+END TABLE
+</pre></div>
+</div>
+<p>This table is used to specify the radial dependence of an axial velocity profile along the
+specified side set.</p>
+</section>
+<section id="technical-discussion">
+<h2>Technical Discussion<a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h2>
+<p>This capability is widely used for geometry and velocity profile boundary conditions
+that do not have a convenient closed form. Note that for geometry specifications you
+cannot specify multi-valued functions, like for a cutback angle.</p>
+</section>
+<section id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<p>GTM-021.0: Multiparameter continuation and linear stability analysis on highly
+deformable meshes in Goma, M. M. Hopkins, June 22, 2000</p>
+</section>
+</section>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+    <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2019 Goma Developers.<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

@@ -1,0 +1,323 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>YFLUX_HOR &#8212; Goma User Manual 7.0.0 documentation</title>
+    
+    <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  
+    
+    <link rel="stylesheet"
+      href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+  
+    
+      
+  
+    
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/pydata-sphinx-theme.css" />
+    
+    <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+
+<a class="navbar-brand" href="../../../index.html">
+  <img src="../../../_static/goma.png" class="logo" alt="logo">
+</a>
+
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../user_manual.html">
+  Goma User Manual
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#description-usage">
+   <strong>
+    Description / Usage
+   </strong>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#examples">
+   <strong>
+    Examples
+   </strong>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#technical-discussion">
+   <strong>
+    Technical Discussion
+   </strong>
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#references">
+   <strong>
+    References
+   </strong>
+  </a>
+ </li>
+</ul>
+
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <section id="yflux-hor">
+<h1><strong>YFLUX_HOR</strong><a class="headerlink" href="#yflux-hor" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">YFLUX_HOR</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">floatlist</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<section id="description-usage">
+<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h2>
+<p><strong>(WIC/MASS)</strong></p>
+<p>The <strong>YFLUX_HOR</strong> card enables computation of the molar flux of the specified species
+at the specified boundary (i.e., at the electrode surface) using the linearized Butler-
+Volmer kinetics such as that for the hydrogen-oxidation reaction in polymerelectrolyte-
+membrane fuel cells.</p>
+<p>The &lt;floatlist&gt; consists of 10 values; definitions of the input parameters are as follows:</p>
+<table class="table">
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 82%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>YFLUX_HOR</strong></p></td>
+<td><p>Name of the boundary condition (&lt;bc_name&gt;).</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>SS</strong></p></td>
+<td><p>Type of boundary condition (&lt;bc_type&gt;), where <strong>SS</strong> denotes
+side set in the EXODUS II database.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;bc_id&gt;</p></td>
+<td><p>The boundary flag identifier, an integer associated with
+&lt;bc_type&gt; that identifies the boundary location (side set in
+EXODUS II) in the problem domain.</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;integer&gt;</p></td>
+<td><p>Species number of concentration.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;float1&gt;</p></td>
+<td><p>Product of interfacial area per unit volume by exchange
+current density, <span class="math notranslate nohighlight">\(ai_0\)</span>, in units of <span class="math notranslate nohighlight">\(A/cm^3\)</span>.</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float2&gt;</p></td>
+<td><p>Catalyst layer or catalyzed electrode thickness,
+<em>H</em>, in unit of <em>cm</em>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;float3&gt;</p></td>
+<td><p>Reference concentration, <span class="math notranslate nohighlight">\(c_{ref}\)</span>, in units of
+<em>moles</em>/ <span class="math notranslate nohighlight">\(cm^3\)</span>.</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float4&gt;</p></td>
+<td><p>Anodic direction transfer coefficient, <span class="math notranslate nohighlight">\(\alpha_a\)</span>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;float5&gt;</p></td>
+<td><p>Cathodic direction transfer coefficient, <span class="math notranslate nohighlight">\(\alpha_c\)</span>.</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float6&gt;</p></td>
+<td><p>Temperature, <em>T</em>, in unit of <em>K</em>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;float7&gt;</p></td>
+<td><p>Theoretical open-circuit potential, <span class="math notranslate nohighlight">\(U_0\)</span>, in unit of V.</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float8&gt;</p></td>
+<td><p>Reaction order, <span class="math notranslate nohighlight">\(\beta\)</span>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&lt;float9&gt;</p></td>
+<td><p>Number of electrons involved in the reaction, <em>n</em>.</p></td>
+</tr>
+<tr class="row-even"><td><p>&lt;float10&gt;</p></td>
+<td><p>Electrode potential, <em>V</em>, in unit of <em>V</em>.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="examples">
+<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>The following is a sample input card:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">YFLUX_HOR</span> <span class="n">SS</span> <span class="mi">14</span> <span class="mi">0</span> <span class="mf">1000.</span> <span class="mf">0.001</span> <span class="mf">4.e-5</span> <span class="mf">1.</span> <span class="mf">1.</span> <span class="mf">353.</span> <span class="mf">0.</span> <span class="mf">0.5</span> <span class="mf">2.</span> <span class="mf">0.</span>
+</pre></div>
+</div>
+</section>
+<section id="technical-discussion">
+<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h2>
+<p>For electrochemical reactions such as the hydrogen-oxidation reaction (HOR), surface
+overpotential is relatively small such that the Butler-Volmer kinetic model can be
+linearized to yield:</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../../../_images/151_goma_physics.png"><img alt="../../../_images/151_goma_physics.png" src="../../../_images/151_goma_physics.png" style="width: 90%;" /></a>
+</figure>
+<p>where <em>r</em> is the surface reaction rate in units of <em>moles</em>/ <span class="math notranslate nohighlight">\(cm^2-s\)</span>;
+<span class="math notranslate nohighlight">\(ai_0\)</span> denotes the product of
+interfacial area per unit volume by exchange current density,
+which has units of <span class="math notranslate nohighlight">\(A/cm^3\)</span>;
+<em>H</em> is the catalyst layer or catalyzed electrode thickness in unit of <em>cm</em>; <em>n</em> is the number of
+electrons involved in the electrochemical reaction; <em>R</em> is the universal gas constant
+( <span class="math notranslate nohighlight">\(\equiv\)</span> 8.314 J/mole-K); T is temperature in unit of <em>K</em>; <em>c</em> and
+<span class="math notranslate nohighlight">\(c_{ref}\)</span> are, respectively, species
+and reference molar concentrations in units of <em>moles</em>/ <span class="math notranslate nohighlight">\(cm^3\)</span>; <span class="math notranslate nohighlight">\(\beta\)</span> is reaction order; <span class="math notranslate nohighlight">\(\alpha_a\)</span> and <span class="math notranslate nohighlight">\(\alpha_c\)</span>
+are, respetively, the anodic and cathodic transfer coefficients; <em>V</em> and <span class="math notranslate nohighlight">\(\phi\)</span> are,
+respectively, the electrode and electrolyte potentials in unit of <em>V</em>; <span class="math notranslate nohighlight">\(U_0\)</span> and is the opencircuit
+potential in unit of <em>V</em>.</p>
+</section>
+<section id="references">
+<h2><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<ol class="upperalpha simple" start="10">
+<li><p>Newman, Electrochemical Systems, 2nd Edition, Prentice-Hall, NJ (1991).</p></li>
+</ol>
+<p>K. S. Chen and M. A. Hickner, “Modeling PEM fuel cell performance using the finiteelement
+method and a fully-coupled implicit solution scheme via Newton’s technique”,
+in ASME Proceedings of FUELCELL2006-97032 (2006).</p>
+</section>
+</section>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+    <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2019 Goma Developers.<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

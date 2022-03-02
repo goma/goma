@@ -1,0 +1,363 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>TABLE_WICS &#8212; Goma User Manual 7.0.0 documentation</title>
+    
+    <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  
+    
+    <link rel="stylesheet"
+      href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+  
+    
+      
+  
+    
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/pydata-sphinx-theme.css" />
+    
+    <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+
+<a class="navbar-brand" href="../../../index.html">
+  <img src="../../../_static/goma.png" class="logo" alt="logo">
+</a>
+
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../../../user_manual.html">
+  Goma User Manual
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+<div class="tocsection onthispage pt-5 pb-3">
+    <i class="fas fa-list"></i> On this page
+</div>
+
+<nav id="bd-toc-nav">
+    <ul class="visible nav section-nav flex-column">
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#description-usage">
+   Description / Usage
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#examples">
+   Examples
+  </a>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#technical-discussion">
+   Technical Discussion
+  </a>
+ </li>
+</ul>
+
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <section id="table-wics">
+<h1>TABLE_WICS<a class="headerlink" href="#table-wics" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">TABLE_WICS</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="p">{</span><span class="n">abscissa</span><span class="p">}</span> <span class="p">{</span><span class="n">ordinate</span><span class="p">}</span> <span class="p">{</span><span class="n">scale</span><span class="p">}</span> <span class="p">{</span><span class="n">interpolation</span><span class="p">}</span> <span class="p">[</span><span class="n">FILE</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">fname</span><span class="o">&gt;</span><span class="p">]</span>
+</pre></div>
+</div>
+<section id="description-usage">
+<h2>Description / Usage<a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h2>
+<p><strong>(WIC/VARIED)</strong></p>
+<p>This boundary allows the user to supply boundary data for scalar weak integrated
+boundary conditions. See the <em>TABLE_WICV</em> card for vector weak integrated boundary
+conditions. A prime example of the use of the <em>TABLE_WICS</em> card is application of heat
+flux for a thermal problem.</p>
+<p>Definitions of the input parameters are as follows:</p>
+<dl class="simple">
+<dt>TABLE_WICS</dt><dd><p>Name of the boundary condition (&lt;bc_name&gt;).</p>
+</dd>
+<dt>SS</dt><dd><p>Type of boundary condition (&lt;bc_type&gt;), where <strong>SS</strong>
+denotes side set in the EXODUS II database.</p>
+</dd>
+<dt>&lt;bc_id&gt;</dt><dd><p>The boundary flag identifier, an integer associated with
+<em>TABLE_WICS</em> that identifies the boundary location (side
+set in EXODUS II) in the problem domain.</p>
+</dd>
+<dt>{abscissa}</dt><dd><p>For one-dimensional tables (i.e. for use in 2D
+problems), the choices are restricted to one of the three
+coordinate directions. Use the strings X, Y or Z to
+identify the direction of choice. For two-dimensional
+tables (i.e. for use in 3D problems) use XY, XZ, YX,
+YZ, ZX, or ZY to denote the coordinate of the first and
+second columns in the table.</p>
+</dd>
+<dt>{ordinate}</dt><dd><p>This string identifies the equation of the weak integrated
+boundary term that the boundary data is added to. For
+example, use of the VELOCITY1 string will cause the
+table data to be used for the x-component of the liquid
+traction in the boundary integral for the x-momentum
+equation. See the following table.</p>
+</dd>
+</dl>
+<table class="table">
+<colgroup>
+<col style="width: 43%" />
+<col style="width: 26%" />
+<col style="width: 30%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>String</strong></p></td>
+<td><p><strong>replaces</strong></p></td>
+<td><p><strong>Equation</strong></p></td>
+</tr>
+<tr class="row-even"><td><p>VELOCITY1 or U</p></td>
+<td><p>liquid x-traction</p></td>
+<td><p>R_MOMENTUM1</p></td>
+</tr>
+<tr class="row-odd"><td><p>VELOCITY2 or V</p></td>
+<td><p>liquid y-traction</p></td>
+<td><p>R_MOMENTUM2</p></td>
+</tr>
+<tr class="row-even"><td><p>VELOCITY3 or W</p></td>
+<td><p>liquid z-traction</p></td>
+<td><p>R_MOMENTUM3</p></td>
+</tr>
+<tr class="row-odd"><td><p>TEMPERATURE</p></td>
+<td><p>diffusive energy flux</p></td>
+<td><p>R_ENERGY</p></td>
+</tr>
+<tr class="row-even"><td><p>MESH_DISPLACEMENT1 or DX or MESH_POSITION1</p></td>
+<td><p>mesh x-traction</p></td>
+<td><p>R_MESH1</p></td>
+</tr>
+<tr class="row-odd"><td><p>MESH_DISPLACEMENT2 or DY or MESH_POSITION2</p></td>
+<td><p>mesh y-traction</p></td>
+<td><p>R_MESH2</p></td>
+</tr>
+<tr class="row-even"><td><p>MESH_DISPLACEMENT3 or DZ or MESH_POSITION3</p></td>
+<td><p>mesh z-traction</p></td>
+<td><p>R_MESH3</p></td>
+</tr>
+<tr class="row-odd"><td><p>SOLID_DISPLACEMENT1</p></td>
+<td><p>solid x-traction</p></td>
+<td><p>R_SOLID1</p></td>
+</tr>
+<tr class="row-even"><td><p>SOLID_DISPLACEMENT2</p></td>
+<td><p>solid y-traction</p></td>
+<td><p>R_SOLID2</p></td>
+</tr>
+<tr class="row-odd"><td><p>SOLID_DISPLACEMENT3</p></td>
+<td><p>solid z-traction</p></td>
+<td><p>R_SOLID3</p></td>
+</tr>
+<tr class="row-even"><td><p>S[1-3][1-3]_[1-7]</p></td>
+<td><p>polymer mode traction</p></td>
+<td><p>R_STRESS[1-3][1-3]_[1-7]</p></td>
+</tr>
+</tbody>
+</table>
+<dl>
+<dt>{scale}</dt><dd><p>A floating point scale multiplier which can be used to
+scale the tabular data. The boundary data used will be
+the product of {scale} and the tabular data.</p>
+</dd>
+<dt>{interpolation}</dt><dd><p>This is the method chosen to interpolate between
+supplied data points.</p>
+<p>For one-dimensional tables, the choices are <strong>LINEAR</strong>,
+which denotes linear interpolation, <strong>QUADRATIC</strong>,
+which denotes quadratic Lagrangian interpolation and
+requires an odd number of data points, and <strong>QUAD_GP</strong>,
+which denotes quadratic interpolation where the data
+points represent Gauss point values. 3N data points (see
+Technical Discussion) are required for <strong>QUAD_GP</strong> interpolation.</p>
+<p>For two-dimensional tables, <strong>BIQUADRATIC</strong> is
+currently the only choice. The first two columns of the
+table should define a rectangular, mapped grid where the
+second coordinate changes more quickly than the first.
+More complicated methods could be added latter.</p>
+</dd>
+<dt>[FILE = &lt;fname&gt;]</dt><dd><p>The keyword “<strong>FILE</strong> =” indicates that the table data be
+read from a separate file identified by &lt;fname&gt;. This
+parameter is optional and if it is left out the table data
+will be read from the input deck itself following the
+<em>TABLE_WICS</em> card. In this latter case, the end of the
+table is signaled by the keywords “END TABLE”. Note
+that the file specified by FILE = is fully <em>apreproable</em>,
+i.e., it will be preprocessed by APREPRO before
+reading if APREPRO is enabled.</p>
+</dd>
+</dl>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<p>Following is a sample card:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">TABLE_WICS</span> <span class="n">SS</span> <span class="mi">12</span> <span class="n">X</span> <span class="n">TEMPERATURE</span> <span class="n">QUADRATIC</span> <span class="n">FILE</span> <span class="o">=</span><span class="n">heatflux</span><span class="o">.</span><span class="n">table</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">heatflux</span><span class="o">.</span><span class="n">table</span><span class="p">:</span>
+
+<span class="mf">0.0</span>    <span class="mf">1.0</span>
+<span class="mf">0.5</span>    <span class="mf">1.5</span>
+<span class="mf">1.0</span>    <span class="mf">1.75</span>
+<span class="mf">1.5</span>    <span class="mf">2.0</span>
+<span class="mf">2.0</span>    <span class="mf">2.0</span>
+</pre></div>
+</div>
+</section>
+<section id="technical-discussion">
+<h2>Technical Discussion<a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h2>
+<p>The table data itself appears as columns of numbers. One-dimensional <em>TABLE_WICS</em>
+tables have two columns (column1=abscissa, column2=ordinate), whereas twodimensional
+<em>TABLE_WICS</em> tables have three columns (column1=abscissa1,
+column2=abscissa2, column3=ordinate). <em>Goma</em> will try to read float values from any
+line whose first parameter can be converted to a float.</p>
+<p>The QUAD_GP interpolation option is meant for the case when the table data comes
+from another finite element model or another <em>Goma</em> run and the data is most readily
+available at the integration points of the finite element mesh. Hence, with quadratic
+Gaussian quadrature, there are three data points per element. N is the number of
+elements from the model that the data is coming from and therefore 3N data points are
+the total expected.</p>
+<p>The user is also referred to the section on <strong>Boundary Condition Types</strong> at the beginning
+of the <em>Boundary Condition Specifications</em>. In particular, look at the discussion of
+Weakly Integrated Conditions (WIC).</p>
+</section>
+</section>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+    <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2019 Goma Developers.<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>
