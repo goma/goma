@@ -6,7 +6,7 @@ enable_language(C)
 enable_language(CXX)
 enable_language(Fortran)
 
-set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_EXTENSIONS OFF)
 

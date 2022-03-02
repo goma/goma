@@ -520,9 +520,14 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
           1. / (deform_grad[0][0] * deform_grad[1][1] - deform_grad[0][1] * deform_grad[1][0]);
       det2d_old = 1. / (deform_grad_old[0][0] * deform_grad_old[1][1] -
                         deform_grad_old[0][1] * deform_grad_old[1][0]);
-      det2d_dot = 1. / (deform_grad_dot[0][0] * deform_grad_dot[1][1] -
-                        deform_grad_dot[0][1] * deform_grad_dot[1][0]);
+      if (fabs(deform_grad_dot[0][0] * deform_grad_dot[1][1] -
+               deform_grad_dot[0][1] * deform_grad_dot[1][0]) > 0) {
 
+        det2d_dot = 1. / (deform_grad_dot[0][0] * deform_grad_dot[1][1] -
+                          deform_grad_dot[0][1] * deform_grad_dot[1][0]);
+      } else {
+        det2d_dot = 0;
+      }
       /* escape if element has inverted */
       if ((det2d <= 0.) && (Debug_Flag >= 0)) {
 #ifdef PARALLEL

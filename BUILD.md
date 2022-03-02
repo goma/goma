@@ -28,7 +28,9 @@ Options that might be useful:
     MAX_EXTERNAL_FIELD=<number>
     MAX_PROB_VAR=<number>
 
-### Third party libraries
+## Third party libraries
+
+### Configure options
 
 Goma will do its best to find third party libraries, hints can be given through cmake:
 
@@ -40,3 +42,6 @@ Goma will do its best to find third party libraries, hints can be given through 
     -DMETIS_PREFIX=<path to metis install>
 
 PETSc is configured through `pkg-config` so `pkg-config` should be available on the command line and `PETSC_DIR` (and maybe `PETSC_ARCH` depending on build) should be set environment variables
+
+### Building third party libraries
+

@@ -2,7 +2,7 @@
 
 - Partial Segregated solver support
     - Some developer notes are located `docs/segregated_notes.org`
-    - Small tutorial is available on website
+    - Small memo on segregated solves is available on website
     - Mostly tested the following equations
         - Momentum + Continuity
         - Level Set
