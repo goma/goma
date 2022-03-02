@@ -35,12 +35,24 @@ Dependencies for these scripts are:
 ## Environment Variables
 OpenMPI should be added to the path and library path:
 
-    export PATH="/[path to gomalibs]/openmpi-4.0.2/bin:$PATH"
+    export PATH="/[path to gomalibs]/openmpi-4.1.1/bin:$PATH"
 
 SEACAS tools from Trilinos (e.g. aprepro and blot) should be added to
 your path
 
     export PATH="/[path to gomalibs]/trilinos-13.0.1/bin:$PATH"  
+
+An example configuration for bash will be written to
+
+    [path to gomalibs]/config.sh
+
+One should be able to build goma with (assuming a bash like shell):
+
+	source [path to gomalibs]/config.sh
+	cmake -B build-goma [path to goma src]
+	make -C build-goma
+
+See [BUILD.md](../BUILD.md) for more build options
 
 ## Example dependencies for common operating systems:
 
@@ -50,9 +62,9 @@ For Ubuntu this will install the necessary packages to run the script:
 
 `sudo apt-get install git build-essential m4 zlib1g-dev libx11-dev gfortran`
 
-For CentOS
+For CentOS / Fedora
 
-`sudo yum install git patch gcc gcc-c++ gcc-gfortran m4 make wget bzip2 tar zlib-devel libX11-devel`
+`sudo [yum|dnf] install git patch gcc gcc-c++ gcc-gfortran m4 make wget bzip2 tar zlib-devel libX11-devel`
 
 ## Goma Dependencies build script usage
 
