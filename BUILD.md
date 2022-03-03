@@ -63,7 +63,7 @@ Then Goma can be configured using that environment:
 
 A spack package is in progress and soon one might be able to:
 
-   spack install goma
+    spack install goma
 
 #### Legacy build script
 
