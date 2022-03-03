@@ -14,11 +14,31 @@ and are noted at the top of the cmake file.
 
 ## Major Changes
 
-[Major changes for current version](CHANGES.md)
+See [CHANGES.md](CHANGES.md)
 
 ## Build Instructions
 
-[Build instructions](BUILD.md)
+See [BUILD.md](BUILD.md)
+
+## Spack package
+
+The Spack package manager [https://spack.io](https://spack.io/) can be used to install 
+Goma and all of Goma's third party libraries
+
+Currently available on the `develop` branch of spack.
+
+Example for a bash-like shell:
+
+    git clone https://github.com/spack/spack.git
+    . spack/share/spack/setup-env.sh
+    spack install goma
+
+For more information on build options see:
+
+    spack info goma
+
+For more information on using spack see the [spack documentation](https://spack.readthedocs.io/en/latest/).
+
 
 ## Third party libraries
 
