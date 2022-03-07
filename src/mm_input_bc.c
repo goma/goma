@@ -1343,6 +1343,14 @@ void rd_bc_specs(FILE *ifp, char *input) {
        * Fall through for all cases which require eight floating point (used to be 7)
        * values as data input and one optional integer (BC_Data_int[0]).
        */
+    case MOVING_PLANE_EXP_BC:
+      num_const = read_constants(ifp, &(BC_Types[ibc].u_BC), NO_SPECIES);
+      if (num_const < 7) {
+        GOMA_EH(GOMA_ERROR, "MOVING_PLANE_EXP expects 7 or more constants, read %d\n", num_const);
+      }
+      BC_Types[ibc].len_u_BC = num_const;
+      BC_Types[ibc].max_DFlt = num_const;
+      break;
     case CAP_REPULSE_BC:
 
       if (fscanf(ifp, "%lf %lf %lf %lf %lf %lf %lf %lf", &BC_Types[ibc].BC_Data_Float[0],

@@ -2131,6 +2131,30 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
    */
   if (vn_glob[mn]->ConstitutiveEquation) {
 
+    if (vn_glob[mn]->ConstitutiveEquation == PTT) {
+
+      strcpy(search_string, "PTT Form");
+
+      model_read = look_for_mat_prop(imp, search_string, &(vn_glob[mn]->evssModel), &(a0), NO_USER,
+                                     NULL, model_name, NO_INPUT, &NO_SPECIES, es);
+      if (!strcmp(model_name, "LINEAR")) {
+        vn_glob[mn]->ptt_type = PTT_LINEAR;
+        SPF(es, "\t%s = %s", "PTT Form", model_name);
+      } else if (!strcmp(model_name, "EXPONENTIAL")) {
+        vn_glob[mn]->ptt_type = PTT_EXPONENTIAL;
+        SPF(es, "\t%s = %s", "PTT Form", model_name);
+      } else {
+        GOMA_WH(GOMA_ERROR,
+                "Unrecognized PTT Form: %s, expected LINEAR or EXPONENTIAL defaulting EXPONENTIAL",
+                model_name);
+        vn_glob[mn]->ptt_type = PTT_EXPONENTIAL;
+        SPF(es, "\t(%s = %s)", "PTT Form", "EXPONENTIAL");
+      }
+      ECHO(es, echo_file);
+    } else {
+      vn_glob[mn]->ptt_type = PTT_EXPONENTIAL;
+    }
+
     strcpy(search_string, "Polymer Stress Formulation");
 
     model_read = look_for_mat_prop(imp, search_string, &(vn_glob[mn]->evssModel), &(a0), NO_USER,
@@ -8630,7 +8654,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
       if (num_const > 5) {
         /* We may have an external field "height" we will be adding to this model.  Check
-mat_ptr->veloU	       * for it now and flag its existence through the material properties structure
+  mat_ptr->veloU	       * for it now and flag its existence through the material properties
+  structure
          */
         mat_ptr->heightU_ext_field_index = -1; // Default to NO external field
         if (efv->ev) {

@@ -790,6 +790,7 @@
 #define ROLL_FLUID_BC              961124500
 #define TENSION_SHEET_BC           96210200
 #define MOVING_PLANE_BC            96110000
+#define MOVING_PLANE_EXP_BC        96110001
 #define MOVING_PLANE_ETCH_BC       96115000
 #define SM_PLANE_BC                961200000 /* Solid Model PLANE BC */
 #define MESH_CONSTRAINT_BC         961300000

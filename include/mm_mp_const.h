@@ -166,7 +166,9 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define SARAMITO_PTT      12
 #define MODIFIED_WLF      39
 
-/* MMH */
+// PTT forms
+#define PTT_EXPONENTIAL 0
+#define PTT_LINEAR      1
 
 /**********************************************************************************/
 /*  Density Models
