@@ -2,15 +2,17 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2014 Sandia Corporation.                                  *
+* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
+*               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
-* Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,  *
-* the U.S. Government retains certain rights in this software.            *
+* Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
+* certain rights in this software.                                        *
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
+* See LICENSE file.                                                       *
 \************************************************************************/
 
-/* 
+/*
  *	sl_rcm.h
  *
  *	RCM DRIVER DEFINES AND ROUTINE PROTOTYPES
@@ -19,12 +21,12 @@
  *
  */
 
-#ifndef _RCM_H
-#define _RCM_H
+#ifndef GOMA_SL_RCM_H
+#define GOMA_SL_RCM_H
 
-#define UPPER_CASE		/* Solaris, HP/UX, Linux, IRIX, janus, ... */
+#define UPPER_CASE /* Solaris, HP/UX, Linux, IRIX, janus, ... */
 
-#if defined (_AIX)
+#if defined(_AIX)
 #undef UPPER_CASE
 #define LOWER_CASE
 #endif
@@ -55,7 +57,7 @@
 #undef AZRCM
 #endif
 
-#if ( defined(TRILINOS) && !defined(AZTEC_2_1) )
+#if (defined(TRILINOS) && !defined(AZTEC_2_1))
 #define AZRCM
 #endif
 
@@ -65,29 +67,30 @@
 #define RCM rcm_
 #endif
 
-#undef  APPEND_0_UNDERSCORE
+#undef APPEND_0_UNDERSCORE
 #define APPEND_1_UNDERSCORE
-#undef  APPEND_2_UNDERSCORE
+#undef APPEND_2_UNDERSCORE
 
-#if defined (_AIX) || defined (__hpux)  
+#if defined(_AIX) || defined(__hpux)
 #define APPEND_0_UNDERSCORE
-#undef  APPEND_1_UNDERSCORE
-#undef  APPEND_2_UNDERSCORE
+#undef APPEND_1_UNDERSCORE
+#undef APPEND_2_UNDERSCORE
 #endif
 
-#if ( defined(__sun) && defined(__SVR4) ) || defined (SGI) || defined (__PUMAGON__ ) || ( defined (linux) && defined (COMPILER_64BIT) ) 
-#undef  APPEND_0_UNDERSCORE
+#if (defined(__sun) && defined(__SVR4)) || defined(SGI) || defined(__PUMAGON__) || \
+    (defined(linux) && defined(COMPILER_64BIT))
+#undef APPEND_0_UNDERSCORE
 #define APPEND_1_UNDERSCORE
-#undef  APPEND_2_UNDERSCORE
+#undef APPEND_2_UNDERSCORE
 #endif
 
-#if ( ( defined (linux) && !defined (COMPILER_64BIT) ) || defined(darwin) ) && !defined(__INTEL_COMPILER) 
-#undef  APPEND_0_UNDERSCORE
-#undef  APPEND_2_UNDERSCORE
+#if ((defined(linux) && !defined(COMPILER_64BIT)) || defined(darwin)) && !defined(__INTEL_COMPILER)
+#undef APPEND_0_UNDERSCORE
+#undef APPEND_2_UNDERSCORE
 #define APPEND_1_UNDERSCORE
 #endif
 
-#ifdef AZRCM  /* Current AztecOO */
+#ifdef AZRCM /* Current AztecOO */
 
 #ifdef APPEND_0_UNDERSCORE
 #define RCM az_rcm
@@ -101,7 +104,7 @@
 #define RCM az_rcm__
 #endif
 
-#else  /* Older AztecOO or Aztec */
+#else /* Older AztecOO or Aztec */
 #ifdef APPEND_0_UNDERSCORE
 #define RCM rcm
 #endif

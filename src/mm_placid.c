@@ -2,15 +2,17 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2014 Sandia Corporation.                                  *
+* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
+*               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
-* Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,  *
-* the U.S. Government retains certain rights in this software.            *
+* Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
+* certain rights in this software.                                        *
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
+* See LICENSE file.                                                       *
 \************************************************************************/
 
-/* 
+/*
  *  PLACID:
  *    This program solves for the surface production terms from a
  *  a chemkin reaction mechanism
@@ -23,10 +25,8 @@
 /* Putting in a single #include here to get rid of that damn "empty
  * translation unit" warning on compilation... */
 
-#include <stdio.h>
-
 /*
- *  The whole program is put in an ifdef block around the usage of 
+ *  The whole program is put in an ifdef block around the usage of
  *  chemkin. It doesn't make sense to compile this program if chemkin
  *  is not used.
  *
@@ -35,119 +35,154 @@
 
 /* Standard include files */
 
-#include <stdlib.h>
 #include <math.h>
+#include <stdlib.h>
 
 /*
  * Include the GOMA standard header information
  */
 #include "std.h"
-
 /* Chemkin include files */
-#include "cpc_defs.h"
 #include "ck_chemkin_const.h"
+#include "cpc_defs.h"
 
 /* GOMA include files  */
 
-#include "rf_allo.h"
-
-#include "rf_fem_const.h"
-#include "rf_vars_const.h"
-#include "mm_mp_const.h"
+#include "dp_types.h"
+#include "mm_as.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
-#include "mm_as.h"
-
-#include "mm_mp_structs.h"
-#include "mm_mp.h"
-
-#include "dp_types.h"
-
-#include "rf_util.h"
-
 #include "mm_chemkin.h"
+#include "mm_mp.h"
+#include "mm_mp_const.h"
+#include "mm_mp_structs.h"
+#include "rf_allo.h"
+#include "rf_fem_const.h"
+#include "rf_util.h"
+#include "rf_vars_const.h"
 
 /******************************************************************************
-*       STATIC ROUTINES DEFINED IN THIS FILE
-******************************************************************************/
+ *       STATIC ROUTINES DEFINED IN THIS FILE
+ ******************************************************************************/
 
-static void   calc_activity(double [], double []);
+static void calc_activity(double[], double[]);
 static double calc_damping(double *x, double *dx, int dim, int *);
-static double calc_update_norm(double [], double dx[], int, double, double);
-static double calc_t(double [], double [], int *, double);
+static double calc_update_norm(double[], double dx[], int, double, double);
+static double calc_t(double[], double[], int *, double);
 
 #ifdef DEBUG_PLACID
-static void print_stuff(int, double, int, double *[], double [], CK_NAME []);
-static void print_stuff2(int, double, int, int, double, double, int, double,
-                         double, double [], double [], double [], double [],
-                         int, BOOLEAN, CK_NAME []);
-static void print_header(int, int, int, double, int, double, double, double [],
-                         double, double, double[], double [], double [], double
-                         [], double [], CK_NAME []);
+static void print_stuff(int, double, int, double *[], double[], CK_NAME[]);
+static void print_stuff2(int,
+                         double,
+                         int,
+                         int,
+                         double,
+                         double,
+                         int,
+                         double,
+                         double,
+                         double[],
+                         double[],
+                         double[],
+                         double[],
+                         int,
+                         BOOLEAN,
+                         CK_NAME[]);
+static void print_header(int,
+                         int,
+                         int,
+                         double,
+                         int,
+                         double,
+                         double,
+                         double[],
+                         double,
+                         double,
+                         double[],
+                         double[],
+                         double[],
+                         double[],
+                         double[],
+                         CK_NAME[]);
 #endif
 
 /******************************************************************************
-*                    LAPACK PROTOTYPES
-******************************************************************************/
+ *                    LAPACK PROTOTYPES
+ ******************************************************************************/
 
-extern FSUB_TYPE dgetrf_(int *, int *, double *, int *, int [], int *);
-extern FSUB_TYPE dgetrs_(char *, int *, int *, double *, int *, int [],
-                         double [], int *, int *, unsigned int);
+extern FSUB_TYPE dgetrf_(int *, int *, double *, int *, int[], int *);
+extern FSUB_TYPE
+dgetrs_(char *, int *, int *, double *, int *, int[], double[], int *, int *, unsigned int);
 
 /******************************************************************************
-*   PROTOTYPES and PREPROC DIRECTIVES FOR MISC. ROUTINES NEEDED BY placid
-******************************************************************************/
-
+ *   PROTOTYPES and PREPROC DIRECTIVES FOR MISC. ROUTINES NEEDED BY placid
+ ******************************************************************************/
 
 #ifndef MAX
-#  define MAX(x,y) (( (x) > (y) ) ? (x) : (y))     /* max function */
+#define MAX(x, y) (((x) > (y)) ? (x) : (y)) /* max function */
 #endif
 
 #ifndef DAMPING
-#  define DAMPING TRUE
+#define DAMPING TRUE
 #endif
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
 
-int 
-placid_sd(int ifunc, int bulkFunc, double time_scale, double XGas[],
-	  double TKelvin, double Ptherm, double soln_init[], int dim,
-	  double reltol, double abstol, double sdot[], CK_NAME sname[])
+int placid_sd(int ifunc,
+              int bulkFunc,
+              double time_scale,
+              double XGas[],
+              double TKelvin,
+              double Ptherm,
+              double soln_init[],
+              int dim,
+              double reltol,
+              double abstol,
+              double sdot[],
+              CK_NAME sname[])
 
-    /*************************************************************************
-     *
-     * placid_sd():
-     *
-     *  Surface domain interface to placid
-     *
-     *
-     *************************************************************************/
+/*************************************************************************
+ *
+ * placid_sd():
+ *
+ *  Surface domain interface to placid
+ *
+ *
+ *************************************************************************/
 {
   int retn;
 
-  retn = placid(ifunc, bulkFunc, time_scale,  XGas, TKelvin, Ptherm,
-		soln_init, dim, reltol, abstol, sdot, sname);
+  retn = placid(ifunc, bulkFunc, time_scale, XGas, TKelvin, Ptherm, soln_init, dim, reltol, abstol,
+                sdot, sname);
   return retn;
 }
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
 
-int 
-placid(int ifunc, int bulkFunc, double time_scale, double XGas[],
-       double TKelvin, double Ptherm, double soln_init[], int dim,
-       double reltol, double abstol, double sdot[], CK_NAME sname[])
+int placid(int ifunc,
+           int bulkFunc,
+           double time_scale,
+           double XGas[],
+           double TKelvin,
+           double Ptherm,
+           double soln_init[],
+           int dim,
+           double reltol,
+           double abstol,
+           double sdot[],
+           CK_NAME sname[])
 
 /*****************************************************************************
  *
  * placid():
  *
- * The following calculation is a dimension dim=KkSurf+KkBulk Newton's 
- * method to get the surface fractions of the surface and bulk species 
- * by requiring that the surface species production rate = 0 and that 
- * the bulk fractions are  proportional to their production rates.  
+ * The following calculation is a dimension dim=KkSurf+KkBulk Newton's
+ * method to get the surface fractions of the surface and bulk species
+ * by requiring that the surface species production rate = 0 and that
+ * the bulk fractions are  proportional to their production rates.
  * The routine then returns surf_frac[]
  * and the corresponding sdot[] vector.
  *
@@ -355,38 +390,38 @@ placid(int ifunc, int bulkFunc, double time_scale, double XGas[],
   ****************************************************************************/
 {
 
-#define EXTRA_ACCURACY  0.1
+#define EXTRA_ACCURACY 0.1
 
   static char cflag = 'N';
-  int        kspec, kstart, kend, istart, iend, ispecial,
-    irow, jcol, krow, kcol, phase, info;
-  int        label_t=-1, label_d; /* Species IDs for time and damping control*/
-  int        iter=0, iter_max=1000, nrhs=1;
-  double     damp=1.0, sden_tot, GRbulk, RU, tmp, resid_norm,
-    sum, inv_t, t_real = 0.0, update_norm = 1.0E6;
-  double  **DsdotDX, **Jac, *Xsoln, *act, *resid, *soln_old, *dGRdXj, *sitdot,
-    *surf_frac;
-  int       *ipiv;
-  BOOLEAN    do_time = FALSE, not_converged = TRUE;
+  int kspec, kstart, kend, istart, iend, ispecial, irow, jcol, krow, kcol, phase, info;
+  int label_t = -1, label_d; /* Species IDs for time and damping control*/
+  int iter = 0, iter_max = 1000, nrhs = 1;
+  double damp = 1.0, sden_tot, GRbulk, RU, tmp, resid_norm, sum, inv_t, t_real = 0.0,
+         update_norm = 1.0E6;
+  double **DsdotDX, **Jac, *Xsoln, *act, *resid, *soln_old, *dGRdXj, *sitdot, *surf_frac;
+  int *ipiv;
+  BOOLEAN do_time = FALSE, not_converged = TRUE;
 
   /*-------------------------------------------------------------------------*/
 
 #ifdef DEBUG_PLACID
-  double         t1;
-  extern double  second(void);
+  double t1;
+  extern double second(void);
   int ioflag = 2;
 #endif
   /*-------------------------------------------------------------------------*/
 
 #ifdef DEBUG_PLACID
-  if (ioflag)  t1 = second();
+  if (ioflag)
+    t1 = second();
 #endif
 
   /*
    *       Set the initial value of the do_time parameter
    */
 
-  if (ifunc == SFLUX_INITIALIZE || ifunc == SFLUX_TRANSIENT) do_time = TRUE;
+  if (ifunc == SFLUX_INITIALIZE || ifunc == SFLUX_TRANSIENT)
+    do_time = TRUE;
 
   /*
    *  Allocate temporary storage -
@@ -401,19 +436,18 @@ placid(int ifunc, int bulkFunc, double time_scale, double XGas[],
    *      ipiv     = pivot storage for direct solver (dim)
    */
 
-  Jac      = alloc_dbl_2(dim, dim, DBL_NOINIT);
-  Xsoln    = alloc_dbl_1(4*dim + Ck.KkGas + Ck.KkTot + Ck.NnPhase, 
-                         DBL_NOINIT);
-  act      = Xsoln       + (Ck.KkGas + dim);
-  resid    = act         +  Ck.KkTot;
-  soln_old = resid       +  dim;
-  dGRdXj   = soln_old    +  dim;
-  sitdot   = dGRdXj      +  dim;
-  ipiv     = alloc_int_1(dim, INT_NOINIT);
-  DsdotDX  = alloc_dbl_2(Ck.KkTot, Ck.KkTot, DBL_NOINIT);
-  if (DsdotDX ==  NULL) {
+  Jac = alloc_dbl_2(dim, dim, DBL_NOINIT);
+  Xsoln = alloc_dbl_1(4 * dim + Ck.KkGas + Ck.KkTot + Ck.NnPhase, DBL_NOINIT);
+  act = Xsoln + (Ck.KkGas + dim);
+  resid = act + Ck.KkTot;
+  soln_old = resid + dim;
+  dGRdXj = soln_old + dim;
+  sitdot = dGRdXj + dim;
+  ipiv = alloc_int_1(dim, INT_NOINIT);
+  DsdotDX = alloc_dbl_2(Ck.KkTot, Ck.KkTot, DBL_NOINIT);
+  if (DsdotDX == NULL) {
     fprintf(stderr, "placid ERROR: out of memory");
-    exit (-1);
+    exit(-1);
   }
 
   /*
@@ -426,7 +460,7 @@ placid(int ifunc, int bulkFunc, double time_scale, double XGas[],
    *    Get the gas constant, RU, in cgs units.
    */
 
-  (void) ckrp_(Ck.Ickwrk_p, Ck.Rckwrk_p, &RU, &tmp, &sum);
+  (void)ckrp_(Ck.Ickwrk_p, Ck.Rckwrk_p, &RU, &tmp, &sum);
 
   /*
    *  Calculate the sum of the surface site densities.  This will be used
@@ -445,7 +479,7 @@ placid(int ifunc, int bulkFunc, double time_scale, double XGas[],
    */
 
   for (kspec = 0; kspec < Ck.KkGas; kspec++) {
-    Xsoln[kspec] = MAX(XGas[kspec],0.0);
+    Xsoln[kspec] = MAX(XGas[kspec], 0.0);
     act[kspec] = Xsoln[kspec];
   }
 
@@ -453,13 +487,13 @@ placid(int ifunc, int bulkFunc, double time_scale, double XGas[],
    *    Store the initial guess for the surface problem in the soln vector
    */
 
-  for (irow = 0; irow < dim; irow++)  surf_frac[irow] = soln_init[irow];
+  for (irow = 0; irow < dim; irow++)
+    surf_frac[irow] = soln_init[irow];
 
 #ifdef DEBUG_PLACID
   if (ioflag) {
-    print_header(ioflag, ifunc, bulkFunc, time_scale, DAMPING,
-		 reltol, abstol, XGas, TKelvin, Ptherm, soln_init, 
-		 sdot, sitdot, Xsoln, act, sname);
+    print_header(ioflag, ifunc, bulkFunc, time_scale, DAMPING, reltol, abstol, XGas, TKelvin,
+                 Ptherm, soln_init, sdot, sitdot, Xsoln, act, sname);
   }
 #endif
 
@@ -475,7 +509,8 @@ placid(int ifunc, int bulkFunc, double time_scale, double XGas[],
      *    Store previous iteration's solution in the old solution vector
      */
 
-    for (irow = 0; irow < dim; irow++)  soln_old[irow]  = surf_frac[irow];
+    for (irow = 0; irow < dim; irow++)
+      soln_old[irow] = surf_frac[irow];
 
     /*
      *  Calculate surface and bulk activities as a function of fractions
@@ -488,8 +523,8 @@ placid(int ifunc, int bulkFunc, double time_scale, double XGas[],
      *  Surface Chemkin calculates the derivatives of sdot wrt activities
      *  It also returns the corresponding values of sdot[] and sitdot[]
      */
-    (void) skdsdx_(&Ptherm, &TKelvin, Xsoln, act, Ck.SDen0, Ck.Iskwrk_p,
-                   Ck.Rskwrk_p, *DsdotDX, &Ck.KkTot, sdot, sitdot);
+    (void)skdsdx_(&Ptherm, &TKelvin, Xsoln, act, Ck.SDen0, Ck.Iskwrk_p, Ck.Rskwrk_p, *DsdotDX,
+                  &Ck.KkTot, sdot, sitdot);
 
     /*
      *    Calculate the value of the time step
@@ -500,8 +535,8 @@ placid(int ifunc, int bulkFunc, double time_scale, double XGas[],
       tmp = calc_t(sdot, surf_frac, &label_t, time_scale);
       if (iter < 10)
         inv_t = tmp;
-      else if (tmp > 2.0*inv_t)
-        inv_t =  2.0*inv_t;
+      else if (tmp > 2.0 * inv_t)
+        inv_t = 2.0 * inv_t;
       else
         inv_t = tmp;
 
@@ -510,17 +545,17 @@ placid(int ifunc, int bulkFunc, double time_scale, double XGas[],
        */
 
       if (ifunc == SFLUX_TRANSIENT) {
-        tmp = t_real + 1.0/inv_t;
-        if (tmp > time_scale) inv_t = 1.0/(time_scale - t_real);
+        tmp = t_real + 1.0 / inv_t;
+        if (tmp > time_scale)
+          inv_t = 1.0 / (time_scale - t_real);
       }
-    }
-    else
+    } else
       inv_t = 0.0;
 
     /*
      *     Zero the Jacobian
      */
-    init_vec_value(Jac[0], 0.0, dim*dim);
+    init_vec_value(Jac[0], 0.0, dim * dim);
 
     /*
      *        Loop Over the Row Index Now
@@ -529,16 +564,16 @@ placid(int ifunc, int bulkFunc, double time_scale, double XGas[],
      *         Skip the gas phase!
      */
 
-    for (phase = 1; phase < Ck.NnPhase; phase ++) {
+    for (phase = 1; phase < Ck.NnPhase; phase++) {
 
       /*
        *  Calculate some useful offsets for the phase
        */
 
       kstart = Ck.KFirst[phase];
-      kend   = Ck.KLast[phase];
-      istart = kstart        - Ck.KkGas;
-      iend   = kend          - Ck.KkGas;
+      kend = Ck.KLast[phase];
+      istart = kstart - Ck.KkGas;
+      iend = kend - Ck.KkGas;
 
       /*
        *    Find the species with the maximum mole fraction
@@ -547,7 +582,8 @@ placid(int ifunc, int bulkFunc, double time_scale, double XGas[],
 
       ispecial = istart;
       for (irow = istart; irow <= iend; irow++) {
-        if (surf_frac[irow] > surf_frac[ispecial]) ispecial = irow;
+        if (surf_frac[irow] > surf_frac[ispecial])
+          ispecial = irow;
       }
 
       /*
@@ -563,7 +599,7 @@ placid(int ifunc, int bulkFunc, double time_scale, double XGas[],
         init_vec_value(dGRdXj, 0.0, dim);
         for (krow = kstart; krow <= kend; krow++) {
           if (sdot[krow] > 0.0) {
-            GRbulk +=  sdot[krow];
+            GRbulk += sdot[krow];
             for (jcol = 0; jcol < dim; jcol++) {
               kcol = jcol + Ck.KkGas;
               dGRdXj[jcol] += DsdotDX[kcol][krow];
@@ -604,14 +640,13 @@ placid(int ifunc, int bulkFunc, double time_scale, double XGas[],
 
         else if (phase <= Ck.NlSurf) {
 
-          resid[irow] =  -sdot[krow]*Ck.Kcov[krow];
+          resid[irow] = -sdot[krow] * Ck.Kcov[krow];
           for (jcol = 0; jcol < dim; jcol++) {
             kcol = jcol + Ck.KkGas;
-            Jac[jcol][irow] =  -DsdotDX[kcol][krow]*Ck.Kcov[krow];
+            Jac[jcol][irow] = -DsdotDX[kcol][krow] * Ck.Kcov[krow];
           }
           if (do_time) {
-            resid[irow]     +=
-              inv_t * Ck.SDen0[phase] * (surf_frac[irow] - soln_old[irow]);
+            resid[irow] += inv_t * Ck.SDen0[phase] * (surf_frac[irow] - soln_old[irow]);
             Jac[irow][irow] += inv_t * Ck.SDen0[phase];
           }
         }
@@ -623,10 +658,9 @@ placid(int ifunc, int bulkFunc, double time_scale, double XGas[],
         else if (phase <= Ck.NlBulk) {
 
           if (GRbulk == 0.0 || bulkFunc == BULK_ETCH) {
-            resid[irow]     = surf_frac[irow] - soln_old[irow];
+            resid[irow] = surf_frac[irow] - soln_old[irow];
             Jac[irow][irow] = 1.0;
-          }
-          else {
+          } else {
 
             /*
              *        For phases where deposition occurs,
@@ -638,11 +672,9 @@ placid(int ifunc, int bulkFunc, double time_scale, double XGas[],
               resid[irow] = surf_frac[irow] * GRbulk - sdot[krow];
               for (jcol = 0; jcol < dim; jcol++) {
                 kcol = jcol + Ck.KkGas;
-                Jac[jcol][irow] = surf_frac[irow] * dGRdXj[jcol]
-                  - DsdotDX[kcol][krow] ;
+                Jac[jcol][irow] = surf_frac[irow] * dGRdXj[jcol] - DsdotDX[kcol][krow];
               }
-            }
-            else {
+            } else {
               resid[irow] = surf_frac[irow] * GRbulk;
               for (jcol = 0; jcol < dim; jcol++) {
                 Jac[jcol][irow] = surf_frac[irow] * dGRdXj[jcol];
@@ -657,9 +689,8 @@ placid(int ifunc, int bulkFunc, double time_scale, double XGas[],
              */
 
             if (do_time) {
-              resid[irow]     +=
-                inv_t*sden_tot*(surf_frac[irow]-soln_old[irow]);
-              Jac[irow][irow] += inv_t*sden_tot;
+              resid[irow] += inv_t * sden_tot * (surf_frac[irow] - soln_old[irow]);
+              Jac[irow][irow] += inv_t * sden_tot;
             }
           }
 
@@ -685,23 +716,24 @@ placid(int ifunc, int bulkFunc, double time_scale, double XGas[],
      *  Solve Linear system (with LAPACK).  The solution is in resid[]
      */
 
-/* 
-    if (resid_norm > 1.0e-7) {
-*/
-      (void) dgetrf_(&dim, &dim, *Jac, &dim, ipiv, &info);
+    /*
+        if (resid_norm > 1.0e-7) {
+    */
+    (void)dgetrf_(&dim, &dim, *Jac, &dim, ipiv, &info);
 
-    if (info==0) {
-      (void) dgetrs_(&cflag, &dim, &nrhs, *Jac, &dim, ipiv, resid, &dim,
-                     &info, 1);
+    if (info == 0) {
+      (void)dgetrs_(&cflag, &dim, &nrhs, *Jac, &dim, ipiv, resid, &dim, &info, 1);
     }
     /*
      *    Force convergence if residual is small to avoid
      *    "nan" results from the linear solve.
      */
     else {
-      printf("Zero pivot, assuming converged: %g (%d)\n",resid_norm, info);
-      for (jcol = 0; jcol < dim; jcol++) resid[jcol] = 0.0;
-      if (do_time) t_real += time_scale;
+      printf("Zero pivot, assuming converged: %g (%d)\n", resid_norm, info);
+      for (jcol = 0; jcol < dim; jcol++)
+        resid[jcol] = 0.0;
+      if (do_time)
+        t_real += time_scale;
 #ifdef DEBUG_PLACID
       printf("\nResidual is small, forcing convergence!\n");
 #endif
@@ -713,9 +745,9 @@ placid(int ifunc, int bulkFunc, double time_scale, double XGas[],
      *    in any unknown.
      */
 
-#   if (DAMPING == TRUE)
+#if (DAMPING == TRUE)
     damp = calc_damping(surf_frac, resid, dim, &label_d);
-#   endif
+#endif
 
     /*
      *    Calculate the weighted norm of the update vector
@@ -727,15 +759,16 @@ placid(int ifunc, int bulkFunc, double time_scale, double XGas[],
      *    Update the solution vector and real time
      */
 
-    for (irow = 0; irow < dim; irow++) surf_frac[irow] -= damp*resid[irow];
+    for (irow = 0; irow < dim; irow++)
+      surf_frac[irow] -= damp * resid[irow];
 
-    if (do_time) t_real += damp/inv_t;
+    if (do_time)
+      t_real += damp / inv_t;
 
 #ifdef DEBUG_PLACID
     if (ioflag) {
-      print_stuff2(ioflag, damp, label_d, label_t,  inv_t, t_real, iter,
-                   update_norm, resid_norm, sdot, surf_frac, resid, XGas,
-                   dim, do_time, sname);
+      print_stuff2(ioflag, damp, label_d, label_t, inv_t, t_real, iter, update_norm, resid_norm,
+                   sdot, surf_frac, resid, XGas, dim, do_time, sname);
     }
 #endif
 
@@ -743,13 +776,13 @@ placid(int ifunc, int bulkFunc, double time_scale, double XGas[],
       not_converged = (t_real < time_scale);
     else {
       if (do_time) {
-        if (t_real > time_scale) do_time = FALSE;
-      }
-      else {
+        if (t_real > time_scale)
+          do_time = FALSE;
+      } else {
         not_converged = (update_norm > EXTRA_ACCURACY);
       }
     }
-  }  /* End of Newton's Method while statement */
+  } /* End of Newton's Method while statement */
 
   /*
    *  End Newton's method.  If not converged, print error message and
@@ -760,10 +793,12 @@ placid(int ifunc, int bulkFunc, double time_scale, double XGas[],
   if (not_converged) {
     printf("#$#$#$# Error in placid $#$#$#$ \n");
     printf("Newton iter on surface species did not converge, "
-           "update_norm = %e \n", update_norm);
+           "update_norm = %e \n",
+           update_norm);
     printf("Continuing anyway\n");
   }
-  if (ioflag) printf("\nEnd of solve, time used: %e\n", second()-t1);
+  if (ioflag)
+    printf("\nEnd of solve, time used: %e\n", second() - t1);
 #endif
 
   /*
@@ -777,23 +812,23 @@ placid(int ifunc, int bulkFunc, double time_scale, double XGas[],
    */
 
   calc_activity(act, Xsoln);
-  (void) skrat_(&Ptherm, &TKelvin, act, Ck.SDen0, Ck.Iskwrk_p, 
-		Ck.Rskwrk_p, sdot, sitdot);
+  (void)skrat_(&Ptherm, &TKelvin, act, Ck.SDen0, Ck.Iskwrk_p, Ck.Rskwrk_p, sdot, sitdot);
 
   /*
    *        Transfer the solution to be returned to the return vector
    */
 
-  for (irow = 0; irow<dim; irow++) soln_init[irow] = surf_frac[irow];
+  for (irow = 0; irow < dim; irow++)
+    soln_init[irow] = surf_frac[irow];
 
   /*
    *        Free memory allocated within the routine.
    */
 
-  safe_free((void **) &DsdotDX);
-  safe_free((void **) &Jac);
-  safe_free((void **) &Xsoln);
-  safe_free((void **) &ipiv);
+  safe_free((void **)&DsdotDX);
+  safe_free((void **)&Jac);
+  safe_free((void **)&Xsoln);
+  safe_free((void **)&ipiv);
 
   /*
    *        Return with the appropriate flag
@@ -812,8 +847,7 @@ placid(int ifunc, int bulkFunc, double time_scale, double XGas[],
 /**************************************************************************/
 /**************************************************************************/
 
-static void 
-calc_activity(double act[], double Xsoln[])
+static void calc_activity(double act[], double Xsoln[])
 
 /*
  * This function calculates the surface and bulk activities as a function of
@@ -824,7 +858,8 @@ calc_activity(double act[], double Xsoln[])
   int i;
   extern int KkGas, KkTot;
 
-  for (i = KkGas; i < KkTot; i++) act[i] = Xsoln[i];
+  for (i = KkGas; i < KkTot; i++)
+    act[i] = Xsoln[i];
 }
 
 /**************************************************************************/
@@ -833,22 +868,21 @@ calc_activity(double act[], double Xsoln[])
 
 #define APPROACH 0.80
 
-static double 
-calc_damping(double x[], double dxneg[], int dim, int *label)
+static double calc_damping(double x[], double dxneg[], int dim, int *label)
 
-   /* This function calculates a damping factor for the Newton iteration update
-    * vector, dxneg, to insure that all site and bulk fractions, x, remain
-    * bounded between zero and one.
-    *
-    *      dxneg[] = negative of the update vector.
-    *
-    * The constant "APPROACH" sets the fraction of the distance to the boundary
-    * that the step can take.  If the full step would not force any fraction
-    * outside of 0-1, then Newton's method is allowed to operate normally.
-    */
+/* This function calculates a damping factor for the Newton iteration update
+ * vector, dxneg, to insure that all site and bulk fractions, x, remain
+ * bounded between zero and one.
+ *
+ *      dxneg[] = negative of the update vector.
+ *
+ * The constant "APPROACH" sets the fraction of the distance to the boundary
+ * that the step can take.  If the full step would not force any fraction
+ * outside of 0-1, then Newton's method is allowed to operate normally.
+ */
 {
-  int       i;
-  double    damp = 1.0, xnew, xtop, xbot;
+  int i;
+  double damp = 1.0, xnew, xtop, xbot;
   static double damp_old = 1.0;
 
   *label = -1;
@@ -867,29 +901,29 @@ calc_damping(double x[], double dxneg[], int dim, int *label)
      *     single order of magnitude at a time
      */
 
-    xtop = 1.0 - 0.1*fabs(1.0-x[i]);
-    xbot = fabs(x[i]*0.1) - 1.0e-16;
-    if (xnew > xtop )  {
-      damp = - APPROACH * (1.0 - x[i]) / dxneg[i];
+    xtop = 1.0 - 0.1 * fabs(1.0 - x[i]);
+    xbot = fabs(x[i] * 0.1) - 1.0e-16;
+    if (xnew > xtop) {
+      damp = -APPROACH * (1.0 - x[i]) / dxneg[i];
       *label = i;
-    }
-    else if (xnew < xbot) {
+    } else if (xnew < xbot) {
       damp = APPROACH * x[i] / dxneg[i];
       *label = i;
-    } else  if (xnew > 3.0*MAX(x[i], 1.0E-10)) {
-      damp = - 2.0 * MAX(x[i], 1.0E-10) / dxneg[i];
+    } else if (xnew > 3.0 * MAX(x[i], 1.0E-10)) {
+      damp = -2.0 * MAX(x[i], 1.0E-10) / dxneg[i];
       *label = i;
     }
   }
 
-  if (damp < 1.0e-6) damp = 1.0e-6;
+  if (damp < 1.0e-6)
+    damp = 1.0e-6;
   /*
    * Only allow the damping parameter to increase by a factor of three each
    * iteration. Heuristic to avoid oscillations in the value of damp
    */
 
-  if (damp > damp_old*3) {
-    damp = damp_old*3;
+  if (damp > damp_old * 3) {
+    damp = damp_old * 3;
     *label = -1;
   }
 
@@ -908,26 +942,24 @@ calc_damping(double x[], double dxneg[], int dim, int *label)
 /*************************************************************************/
 /*************************************************************************/
 
-static double 
-calc_update_norm(double x[], double dx[], int dim, double reltol,
-		 double abstol)
+static double calc_update_norm(double x[], double dx[], int dim, double reltol, double abstol)
 
-  /*
-   *    This function calculates the update norm using the same reltol
-   *    and abstol as the nonlinear solver.  The convergence of the
-   *    surface species is forced to converge better than the nonlinear
-   *    solver by the variable factor (factor < 1)
-   */
+/*
+ *    This function calculates the update norm using the same reltol
+ *    and abstol as the nonlinear solver.  The convergence of the
+ *    surface species is forced to converge better than the nonlinear
+ *    solver by the variable factor (factor < 1)
+ */
 {
-  int         i;
-  double      norm = 0.0, tmp;
+  int i;
+  double norm = 0.0, tmp;
 
   for (i = 0; i < dim; i++) {
-    tmp   = dx[i] / (reltol * fabs(x[i]) + abstol);
+    tmp = dx[i] / (reltol * fabs(x[i]) + abstol);
     norm += tmp * tmp;
   }
 
-  return (sqrt(norm/dim));
+  return (sqrt(norm / dim));
 
 } /* calc_update_norm */
 
@@ -935,34 +967,33 @@ calc_update_norm(double x[], double dx[], int dim, double reltol,
 /**************************************************************************/
 /**************************************************************************/
 
-static double 
-calc_t(double sdot[], double surf_frac[], int *label, double time_scale)
+static double calc_t(double sdot[], double surf_frac[], int *label, double time_scale)
 
-  /*
-   *    This routine calculates a pretty conservative 1/del_t based
-   *    on  MAX_i(sdot_i/(X_i*SDen0)).  This probably guarantees
-   *    diagonal dominance.
-   *
-   *     Small surface fractions are allowed to intervene in the del_t
-   *     determination, no matter how small.  This may be changed.
-   *     Now minimum changed to 1.0e-12,
-   *
-   *     Maximum time step set to time_scale.
-   */
+/*
+ *    This routine calculates a pretty conservative 1/del_t based
+ *    on  MAX_i(sdot_i/(X_i*SDen0)).  This probably guarantees
+ *    diagonal dominance.
+ *
+ *     Small surface fractions are allowed to intervene in the del_t
+ *     determination, no matter how small.  This may be changed.
+ *     Now minimum changed to 1.0e-12,
+ *
+ *     Maximum time step set to time_scale.
+ */
 {
-  int      phase, i, k, istart, iend;
-  double   inv_t = 0.0, tmp;
+  int phase, i, k, istart, iend;
+  double inv_t = 0.0, tmp;
 
-  for (phase = 1; phase <= Ck.NlSurf; phase ++) {
-    istart = Ck.KFirst[phase]  - Ck.KkGas;
-    iend   = Ck.KLast[phase]   - Ck.KkGas;
+  for (phase = 1; phase <= Ck.NlSurf; phase++) {
+    istart = Ck.KFirst[phase] - Ck.KkGas;
+    iend = Ck.KLast[phase] - Ck.KkGas;
     for (i = istart; i <= iend; i++) {
       k = i + Ck.KkGas;
       if (surf_frac[i] <= 1.0E-12)
         tmp = 1.0E-12;
       else
         tmp = surf_frac[i];
-      tmp = fabs(Ck.Kcov[k]*sdot[k]) /(tmp*Ck.SDen0[phase]);
+      tmp = fabs(Ck.Kcov[k] * sdot[k]) / (tmp * Ck.SDen0[phase]);
       if (tmp > inv_t) {
         inv_t = tmp;
         *label = i;
@@ -981,22 +1012,20 @@ calc_t(double sdot[], double surf_frac[], int *label, double time_scale)
 #ifdef DEBUG_PLACID
 
 static void
- print_stuff(int ioflag, double norm, int dim, double *Jac[],
-	     double resid[], CK_NAME sname[])
-{
+print_stuff(int ioflag, double norm, int dim, double *Jac[], double resid[], CK_NAME sname[]) {
   int i, j;
 
   if (ioflag > 1) {
     printf("Printout of residual and jacobian\n");
     printf("\tResidual: norm = %10.4e\n", norm);
     for (i = 0; i < dim; i++) {
-      printf("\t%d: %.16s: %e\n", i, sname[i+KkGas], resid[i]);
+      printf("\t%d: %.16s: %e\n", i, sname[i + KkGas], resid[i]);
     }
   }
-  if (ioflag >2) {
+  if (ioflag > 2) {
     printf("\tJacobian:\n");
     for (i = 0; i < dim; i++) {
-      printf("Row %d:%.16s:\n", i, sname[i+KkGas]);
+      printf("Row %d:%.16s:\n", i, sname[i + KkGas]);
       for (j = 0; j < dim; j++) {
         printf("%10.4e ", Jac[j][i]);
       }
@@ -1010,14 +1039,22 @@ static void
 /**************************************************************************/
 /**************************************************************************/
 
-static void
-print_header(int ioflag, int ifunc, int bulkFunc,
-	     double time_scale, int damping, double reltol,
-	     double abstol, double XGas[], double TKelvin,
-	     double Ptherm, double soln_init[], double sdot[],
-	     double sitdot[], double Xsoln[], double act[],
-	     CK_NAME sname[])
-{
+static void print_header(int ioflag,
+                         int ifunc,
+                         int bulkFunc,
+                         double time_scale,
+                         int damping,
+                         double reltol,
+                         double abstol,
+                         double XGas[],
+                         double TKelvin,
+                         double Ptherm,
+                         double soln_init[],
+                         double sdot[],
+                         double sitdot[],
+                         double Xsoln[],
+                         double act[],
+                         CK_NAME sname[]) {
   int i, k;
   extern int KkGas, KkBulk, KkSurf;
 
@@ -1026,22 +1063,18 @@ print_header(int ioflag, int ifunc, int bulkFunc,
     if (ifunc == SFLUX_INITIALIZE) {
       printf("\nPLACID Called with Initialization turned on\n");
       printf("  Time scale input = %9.3e\n", time_scale);
-    }
-    else if (ifunc == SFLUX_RESIDUAL) {
+    } else if (ifunc == SFLUX_RESIDUAL) {
       printf("\n PLACID Called to calculate steady state residual\n");
-      printf( "         from a good initial guess\n");
-    }
-    else if (ifunc == SFLUX_JACOBIAN)  {
+      printf("         from a good initial guess\n");
+    } else if (ifunc == SFLUX_JACOBIAN) {
       printf("\n PLACID Called to calculate steady state jacobian\n");
-      printf( "         from a good initial guess\n");
-    }
-    else if (ifunc == SFLUX_TRANSIENT) {
+      printf("         from a good initial guess\n");
+    } else if (ifunc == SFLUX_TRANSIENT) {
       printf("\n PLACID Called to integrate surface in time\n");
-      printf( "         for a total of %9.3e sec\n", time_scale);
-    }
-    else {
-      fprintf(stderr,"Unknown ifunc flag = %d\n", ifunc);
-      exit (-1);
+      printf("         for a total of %9.3e sec\n", time_scale);
+    } else {
+      fprintf(stderr, "Unknown ifunc flag = %d\n", ifunc);
+      exit(-1);
     }
 
     if (bulkFunc == BULK_DEPOSITION)
@@ -1049,8 +1082,8 @@ print_header(int ioflag, int ifunc, int bulkFunc,
     else if (bulkFunc == BULK_ETCH)
       printf("  Etching is to be expected\n");
     else {
-      fprintf(stderr,"Unknown bulkFunc flag = %d\n", bulkFunc);
-      exit (-1);
+      fprintf(stderr, "Unknown bulkFunc flag = %d\n", bulkFunc);
+      exit(-1);
     }
 
     if (damping)
@@ -1058,7 +1091,6 @@ print_header(int ioflag, int ifunc, int bulkFunc,
     else
       printf("  Damping is OFF  \n");
     printf("  Reltol = %9.3e, Abstol = %9.3e\n", reltol, abstol);
-
   }
 
   /*
@@ -1078,7 +1110,7 @@ print_header(int ioflag, int ifunc, int bulkFunc,
     for (k = 0; k < KkGas; k++) {
       printf("%.16s %10.3e %10.3e\n", sname[k], sdot[k], XGas[k]);
     }
-    for (i = 0; i < KkSurf+KkBulk; i++) {
+    for (i = 0; i < KkSurf + KkBulk; i++) {
       k = i + KkGas;
       printf("%.16s %10.3e %10.3e\n", sname[k], sdot[k], soln_init[i]);
     }
@@ -1097,41 +1129,52 @@ print_header(int ioflag, int ifunc, int bulkFunc,
 /**************************************************************************/
 /**************************************************************************/
 
-static void 
-print_stuff2(int ioflag, double damp, int label_d, int label_t,
-	     double inv_t, double t_real, int iter,
-	     double update_norm, double resid_norm,
-	     double sdot[], double surf_frac[],
-	     double resid[], double XGas[], int dim,
-	     BOOLEAN do_time, CK_NAME sname[])
-{
+static void print_stuff2(int ioflag,
+                         double damp,
+                         int label_d,
+                         int label_t,
+                         double inv_t,
+                         double t_real,
+                         int iter,
+                         double update_norm,
+                         double resid_norm,
+                         double sdot[],
+                         double surf_frac[],
+                         double resid[],
+                         double XGas[],
+                         int dim,
+                         BOOLEAN do_time,
+                         CK_NAME sname[]) {
   int i, k;
   if (ioflag == 1) {
 
     printf("%6d ", iter);
     if (do_time)
-      printf("%9.4e %9.4e ", t_real, 1.0/inv_t);
+      printf("%9.4e %9.4e ", t_real, 1.0 / inv_t);
     else
-      for (i = 0; i < 20; i++) printf(" ");
+      for (i = 0; i < 20; i++)
+        printf(" ");
     if (damp < 1.0)
       printf("%9.4e ", damp);
     else
-      for (i = 0; i < 10; i++) printf(" ");
+      for (i = 0; i < 10; i++)
+        printf(" ");
     printf("%9.4e %9.4e", update_norm, resid_norm);
     if (do_time)
-      printf(" %.16s", sname[KkGas+label_t]);
+      printf(" %.16s", sname[KkGas + label_t]);
     else
-      for (i = 0; i < 16; i++) printf(" ");
-    if (label_d >= 0) printf(" %.16s", sname[KkGas+label_d]);
+      for (i = 0; i < 16; i++)
+        printf(" ");
+    if (label_d >= 0)
+      printf(" %.16s", sname[KkGas + label_d]);
     printf("\n");
-  }
-  else if (ioflag > 1) {
+  } else if (ioflag > 1) {
     printf("\n=============================Iteration %5d "
            "========================\n",
            iter);
     if (do_time) {
       printf(" Real Time = %10.4e sec\n", t_real);
-      printf(" Delta t   = %10.4e sec\n", 1.0/inv_t);
+      printf(" Delta t   = %10.4e sec\n", 1.0 / inv_t);
     }
     if (damp < 1.0)
       printf(" Damping value =  %10.4e\n", damp);
@@ -1139,7 +1182,8 @@ print_stuff2(int ioflag, double damp, int label_d, int label_t,
     printf(" Weighted norm of residual = %10.4e\n\n", resid_norm);
 
     printf("  Name            Prod_Rate   Fraction    Fraction_Old      ");
-    if (damp < 1.0) printf(" UnDamped_Fraction");
+    if (damp < 1.0)
+      printf(" UnDamped_Fraction");
     printf("\n");
     printf("---------------------------------------------------------------"
            "--\n");
@@ -1148,13 +1192,15 @@ print_stuff2(int ioflag, double damp, int label_d, int label_t,
     }
     for (i = 0; i < dim; i++) {
       k = i + KkGas;
-      printf("%.16s %10.3e %10.3e %10.3e ", sname[k],
-             sdot[k], surf_frac[i], surf_frac[i]+damp*resid[i]);
+      printf("%.16s %10.3e %10.3e %10.3e ", sname[k], sdot[k], surf_frac[i],
+             surf_frac[i] + damp * resid[i]);
       if (damp < 1.0) {
-        printf("%10.4e ", surf_frac[i]+(damp-1.0)*resid[i]);
-        if (label_d == i) printf("Damp ");
+        printf("%10.4e ", surf_frac[i] + (damp - 1.0) * resid[i]);
+        if (label_d == i)
+          printf("Damp ");
       }
-      if (label_t == i) printf("Tctrl");
+      if (label_t == i)
+        printf("Tctrl");
       printf("\n");
     }
     printf("---------------------------------------------------------------"
@@ -1163,9 +1209,9 @@ print_stuff2(int ioflag, double damp, int label_d, int label_t,
 
 } /* print_stuff2 */
 
-#endif  /*  DEBUG_PLACID */
+#endif /*  DEBUG_PLACID */
 /**************************************************************************/
 /**************************************************************************/
 /**************************************************************************/
 
-#endif  /*  USE_CHEMKIN  */
+#endif /*  USE_CHEMKIN  */

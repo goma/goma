@@ -1,0 +1,12 @@
+find_library(
+  ARPACK_LIB
+  NAMES arpack
+  PATHS ${ARPACK_PREFIX} $ENV{ARPACKDIR} ${LIB_INSTALL_DIR}
+  HINTS ${ARPACK_PREFIX}/ARPACK/lib ${ARPACK_PREFIX}/ARPACK
+        ${ARPACK_PREFIX}/lib ${ARPACK_PREFIX}
+  PATH_SUFFIXES lib)
+
+set(ARPACK_LIBRARIES "${ARPACK_LIB}")
+
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(ARPACK DEFAULT_MSG ARPACK_LIBRARIES)

@@ -2,46 +2,71 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2014 Sandia Corporation.                                  *
+* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
+*               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
-* Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,  *
-* the U.S. Government retains certain rights in this software.            *
+* Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
+* certain rights in this software.                                        *
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
+* See LICENSE file.                                                       *
 \************************************************************************/
 
 /* directs and controls solution process for hunting with zero and
  * first order  hunting
  */
 
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
-#define _AC_HUNT_C
-#include "goma.h"
-#include "brk_utils.h"
-
-#ifdef HAVE_FRONT
-extern int mf_setup
-PROTO((int *,			/* nelem_glob */
-       int *,			/* neqn_glob */
-       int *,			/* mxdofel */
-       int *,			/* nfullsum */
-       int *,			/* symflag */
-       int *,			/* nell_order */
-       int *,			/* el_proc_assign */
-       int *,			/* level */
-       int *,			/* nopdof */
-       int *,			/* loc_dof */
-       int *,			/* constraint */
-       const char *,		/* cname */
-       int *));			/* allocated */
-#endif
-
-#include "sl_util.h"		/* defines sl_init() */
+#define GOMA_AC_HUNT_C
+#include "ac_hunt.h"
+#include "ac_update_parameter.h"
+#include "az_aztec.h"
+#include "brkfix/fix.h"
+#include "decomp_interface.h"
+#include "dp_comm.h"
+#include "dp_types.h"
+#include "dp_utils.h"
+#include "dpi.h"
+#include "el_geom.h"
 #include "el_quality.h"
+#include "exo_struct.h"
+#include "mm_as.h"
+#include "mm_as_structs.h"
+#include "mm_augc_util.h"
+#include "mm_bc.h"
+#include "mm_eh.h"
+#include "mm_fill_util.h"
+#include "mm_flux.h"
+#include "mm_more_utils.h"
+#include "mm_mp.h"
+#include "mm_mp_const.h"
+#include "mm_mp_structs.h"
+#include "mm_post_def.h"
+#include "mm_post_proc.h"
+#include "mm_sol_nonlinear.h"
+#include "mpi.h"
+#include "rf_allo.h"
+#include "rf_bc.h"
+#include "rf_fem.h"
+#include "rf_fem_const.h"
+#include "rf_io.h"
+#include "rf_io_const.h"
+#include "rf_io_structs.h"
+#include "rf_mp.h"
+#include "rf_node_const.h"
+#include "rf_solve.h"
+#include "rf_solver.h"
+#include "rf_util.h"
+#include "sl_auxutil.h"
+#include "sl_util.h" /* defines sl_init() */
+#include "sl_util_structs.h"
+#include "std.h"
+#include "wr_exo.h"
+#include "wr_soln.h"
 
 /*
 
@@ -56,24 +81,23 @@ PROTO((int *,			/* nelem_glob */
 
 */
 
-void
-hunt_problem(Comm_Ex *cx,	/* array of communications structures */
-	     Exo_DB *exo,	/* ptr to the finite element mesh database */
-	     Dpi *dpi)	        /* distributed processing information */
+void hunt_problem(Comm_Ex *cx, /* array of communications structures */
+                  Exo_DB *exo, /* ptr to the finite element mesh database */
+                  Dpi *dpi)    /* distributed processing information */
 {
-  int    *ija=NULL;           /* column pointer array                         */
-  double *a=NULL;             /* nonzero array                                */
-  double *a_old=NULL;         /* nonzero array                                */
-  double *x=NULL;             /* solution vector                              */
+  int *ija = NULL;      /* column pointer array                         */
+  double *a = NULL;     /* nonzero array                                */
+  double *a_old = NULL; /* nonzero array                                */
+  double *x = NULL;     /* solution vector                              */
 
-  int     iAC;                /* COUNTER                                      */
-  double *x_AC = NULL;        /* SOLUTION VECTOR OF EXTRA UNKNOWNS            */
-  double *x_AC_old=NULL;      /* old SOLUTION VECTOR OF EXTRA UNKNOWNS        */
+  int iAC;                 /* COUNTER                                      */
+  double *x_AC = NULL;     /* SOLUTION VECTOR OF EXTRA UNKNOWNS            */
+  double *x_AC_old = NULL; /* old SOLUTION VECTOR OF EXTRA UNKNOWNS        */
   double *x_AC_dot = NULL;
 
-  int     iHC;                /* COUNTER                                      */
+  int iHC; /* COUNTER                                      */
 
-  int    *ija_attic=NULL;     /* storage for external dofs                    */
+  int *ija_attic = NULL; /* storage for external dofs                    */
 
   int eb_indx, ev_indx;
 
@@ -91,12 +115,8 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   double *x_sens=NULL;        /* solution sensitivity */
   double **x_sens_p=NULL;     /* solution sensitivity for parameters */
   int num_pvector=0;          /*  number of solution sensitivity vectors */
-#ifdef COUPLED_FILL
-  struct Aztec_Linear_Solver_System *ams[NUM_ALSS]={NULL};
-#else /* COUPLED_FILL */
-  struct Aztec_Linear_Solver_System *ams[NUM_ALSS]={NULL, NULL};
-#endif /* COUPLED_FILL */
-                              /* sl_util_structs.h */
+  struct GomaLinearSolverData *ams[NUM_ALSS] = {NULL};
+  /* sl_util_structs.h */
 
   double *resid_vector=NULL;  /* residual */
   double *resid_vector_sens=NULL;    /* residual sensitivity */
@@ -140,42 +160,37 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
    * ALC management variables
    */
 
-  int           alqALC;
-  int           *aldALC=NULL;
+  int alqALC;
+  int *aldALC = NULL;
 
   /*
    * Other local variables
    */
 
-  int	        error, err, is_steady_state, inewton;
-  int 		*gindex = NULL, gsize;
-  int		*p_gsize=NULL;
-  double	*gvec=NULL;
-  double        ***gvec_elem;
-  FILE          *file=NULL;
-  double 	toler_org[3];
-  double        exo_time=0;
+  int error, err, is_steady_state, inewton;
+  int *gindex = NULL, gsize;
+  int *p_gsize = NULL;
+  double *gvec = NULL;
+  double ***gvec_elem;
+  FILE *file = NULL;
+  double toler_org[3];
+  double exo_time = 0;
 
-  struct Results_Description  *rd=NULL;
+  struct Results_Description *rd = NULL;
 
-  int		tnv;		/* total number of nodal variables and kinds */
-  int		tev;		/* total number of elem variables and kinds */
-  int		tnv_post;	/* total number of nodal variables and kinds
-					   for post processing */
-  int		tev_post;	/* total number of elem variables and kinds
-					   for post processing */
-  double        *gv;
+  int tnv;      /* total number of nodal variables and kinds */
+  int tev;      /* total number of elem variables and kinds */
+  int tnv_post; /* total number of nodal variables and kinds
+                           for post processing */
+  int tev_post; /* total number of elem variables and kinds
+                           for post processing */
+  double *gv;
 
-#ifdef HAVE_FRONT
-  int max_unk_elem, one, three; /* variables used as mf_setup arguments*/
-#endif
+  unsigned int matrix_systems_mask;
 
-  unsigned int
-  matrix_systems_mask;
-
-  double evol_local=0.0;
+  double evol_local = 0.0;
 #ifdef PARALLEL
-  double evol_global=0.0;
+  double evol_global = 0.0;
 #endif
 
   /* Set step_fix only if parallel run and only if fix freq is enabled*/
@@ -183,16 +198,11 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
     step_fix = 1; /* Always fix on the first timestep to match print frequency */
   }
 
-
-  static char yo[]="hunt_problem";
+  static char yo[] = "hunt_problem";
 
   /*
    * 		BEGIN EXECUTION
    */
-
-#ifdef DEBUG
-  fprintf(stderr, "hunt_problem() begins...\n");
-#endif
 
   toler_org[0] = custom_tol1;
   toler_org[1] = custom_tol2;
@@ -209,17 +219,13 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
    * For 2D prototype problem:  allocate space for T, dx, dy arrays
    */
 
-  if( strlen( Soln_OutFile)  )
-    {
-#ifdef DEBUG
-      printf("Trying to open \"%s\" for writing.\n", Soln_OutFile);
-#endif
-      file = fopen(Soln_OutFile, "w");
-      if (file == NULL)  {
-	DPRINTF(stderr, "%s:  opening soln file for writing\n", yo);
-        EH(-1, "\t");
-      }
+  if (strlen(Soln_OutFile)) {
+    file = fopen(Soln_OutFile, "w");
+    if (file == NULL) {
+      DPRINTF(stdout, "%s:  opening soln file for writing\n", yo);
+      GOMA_EH(GOMA_ERROR, "\t");
     }
+  }
 #ifdef PARALLEL
   check_parallel_error("Soln output file error");
 #endif
@@ -228,43 +234,32 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
    * Some preliminaries to help setup EXODUS II database output.
    */
 
-#ifdef DEBUG
-  fprintf(stderr, "cnt_nodal_vars() begins...\n");
-#endif
-
   tnv = cnt_nodal_vars();
   /*  tnv_post is calculated in load_nodal_tkn*/
   tev = cnt_elem_vars(exo);
   /*  tev_post is calculated in load_elem_tkn*/
 
-#ifdef DEBUG
-  fprintf(stderr, "Found %d total primitive nodal variables to output.\n", tnv);
-  fprintf(stderr, "Found %d total primitive elem variables to output.\n", tev);
-#endif
+  if (tnv < 0) {
+    DPRINTF(stderr, "%s:\tbad tnv.\n", yo);
+    GOMA_EH(GOMA_ERROR, "\t");
+  }
 
-  if ( tnv < 0 )
-    {
-      DPRINTF(stderr, "%s:\tbad tnv.\n", yo);
-      EH(-1, "\t");
-    }
+  if (tev < 0) {
+    DPRINTF(stderr, "%s:\tMaybe bad tev? See goma design committee ;) \n", yo);
+    /*       exit(-1); */
+  }
 
-  if ( tev < 0 )
-    {
-      DPRINTF(stderr, "%s:\tMaybe bad tev? See goma design committee ;) \n", yo);
-/*       exit(-1); */
-    }
+  rd = (struct Results_Description *)smalloc(sizeof(struct Results_Description));
 
-  rd = (struct Results_Description *)
-    smalloc(sizeof(struct Results_Description));
+  if (rd == NULL) {
+    GOMA_EH(GOMA_ERROR, "Could not grab Results Description.");
+  }
+  (void)memset((void *)rd, 0, sizeof(struct Results_Description));
 
-  if (rd == NULL)
-    { EH(-1, "Could not grab Results Description."); }
-  (void) memset((void *) rd, 0, sizeof(struct Results_Description));
-
-  rd->nev = 0;			/* number element variables in results */
-  rd->ngv = 6 + nAC;	        /* number global variables in results
-				   see load_global_var_info for names*/
-  rd->nhv = 0;			/* number history variables in results */
+  rd->nev = 0;       /* number element variables in results */
+  rd->ngv = 6 + nAC; /* number global variables in results
+                        see load_global_var_info for names*/
+  rd->nhv = 0;       /* number history variables in results */
 
   error = load_global_var_info(rd, 0, "CONV");
   error = load_global_var_info(rd, 1, "NEWT_IT");
@@ -273,67 +268,47 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   error = load_global_var_info(rd, 4, "CONVRATE");
   error = load_global_var_info(rd, 5, "MESH_VOLUME");
 
-  if ( rd->ngv > MAX_NGV )
-      EH(-1, "Augmenting condition values overflowing MAX_NGV.  Change and rerun .");
+  if (rd->ngv > MAX_NGV)
+    GOMA_EH(-1, "Augmenting condition values overflowing MAX_NGV.  Change and rerun .");
 
-  if ( nAC > 0   )
-    {
-      char name[20];
+  if (nAC > 0) {
+    char name[20];
 
-      for( i = 0 ; i < nAC ; i++ )
-	{
-	  sprintf(name, "AUGC_%d",i+1);
-	  error = load_global_var_info(rd, 6 + i, name);
-	}
+    for (i = 0; i < nAC; i++) {
+      sprintf(name, "AUGC_%d", i + 1);
+      error = load_global_var_info(rd, 6 + i, name);
     }
+  }
 
-  gv = alloc_dbl_1( rd->ngv, 0.0 );
+  gv = alloc_dbl_1(rd->ngv, 0.0);
 
   /* load nodal types, kinds, names */
-  error = load_nodal_tkn( rd,
-			  &tnv,
-			  &tnv_post); /* load nodal types, kinds, names */
+  error = load_nodal_tkn(rd, &tnv, &tnv_post); /* load nodal types, kinds, names */
 
-  if (error !=0)
-    {
-      DPRINTF(stderr, "%s:  problem with load_nodal_tkn()\n", yo);
-      EH(-1,"\t");
-    }
+  if (error != 0) {
+    DPRINTF(stderr, "%s:  problem with load_nodal_tkn()\n", yo);
+    GOMA_EH(GOMA_ERROR, "\t");
+  }
 
   /* load elem types, names */
-  error = load_elem_tkn( rd,
-			 exo,
-			 tev,
-			 &tev_post); /* load elem types, names */
+  error = load_elem_tkn(rd, exo, tev, &tev_post); /* load elem types, names */
 
-  if ( error !=0 )
-    {
-      DPRINTF(stderr, "%s:  problem with load_elem_tkn()\n", yo);
-      EH(-1,"\t");
-    }
+  if (error != 0) {
+    DPRINTF(stderr, "%s:  problem with load_elem_tkn()\n", yo);
+    GOMA_EH(GOMA_ERROR, "\t");
+  }
 
   /*
    * Write out the names of the nodal variables that we will be sending to
    * the EXODUS II output file later.
    */
 
-#ifdef DEBUG
-  fprintf(stderr, "wr_result_prelim() starts...\n", tnv);
-#endif
-
-  gvec_elem = (double ***) calloc (exo->num_elem_blocks, sizeof(double **));
+  gvec_elem = (double ***)calloc(exo->num_elem_blocks, sizeof(double **));
   for (i = 0; i < exo->num_elem_blocks; i++) {
-    gvec_elem[i] = (double **) calloc(tev + tev_post, sizeof(double *));
+    gvec_elem[i] = (double **)calloc(tev + tev_post, sizeof(double *));
   }
 
-  wr_result_prelim_exo( rd,
-                        exo,
-                        ExoFileOut,
-                        gvec_elem );
-
-#ifdef DEBUG
-  fprintf(stderr, "P_%d: wr_result_prelim_exo() ends...\n", ProcID, tnv);
-#endif
+  wr_result_prelim_exo(rd, exo, ExoFileOut, gvec_elem);
 
   /*
    * This gvec workhorse transports output variables as nodal based vectors
@@ -351,47 +326,39 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 
   num_total_nodes = dpi->num_universe_nodes;
 
-  numProcUnknowns = NumUnknowns + NumExtUnknowns;
+  numProcUnknowns = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
 
   /* allocate memory for Volume Constraint Jacobian. ACS 2/99 */
 
-  if ( nAC > 0)
-    {
-      for(iAC=0;iAC<nAC;iAC++) {
-	augc[iAC].d_evol_dx = (double*) malloc(numProcUnknowns*sizeof(double));
-      } }
+  if (nAC > 0) {
+    for (iAC = 0; iAC < nAC; iAC++) {
+      augc[iAC].d_evol_dx = (double *)malloc(numProcUnknowns * sizeof(double));
+    }
+  }
 
   asdv(&resid_vector, numProcUnknowns);
   asdv(&resid_vector_sens, numProcUnknowns);
   asdv(&scale, numProcUnknowns);
 
-  for (i=0;i<NUM_ALSS;i++)
-    {
-      ams[i] = (struct Aztec_Linear_Solver_System *)
-	array_alloc(1, 1, sizeof(struct Aztec_Linear_Solver_System ));
-    }
+  for (i = 0; i < NUM_ALSS; i++) {
+    ams[i] = (struct GomaLinearSolverData *)array_alloc(1, 1, sizeof(struct GomaLinearSolverData));
+  }
 
 #ifdef MPI
-  AZ_set_proc_config( ams[0]->proc_config, MPI_COMM_WORLD );
-#ifndef COUPLED_FILL
-  if( Explicit_Fill ) AZ_set_proc_config( ams[1]->proc_config, MPI_COMM_WORLD );
-#endif /* not COUPLED_FILL */
-#else /* MPI */
-  AZ_set_proc_config( ams[0]->proc_config, 0 );
-#ifndef COUPLED_FILL
-  if( Explicit_Fill ) AZ_set_proc_config( ams[1]->proc_config, 0 );
-#endif /* not COUPLED_FILL */
+  AZ_set_proc_config(ams[0]->proc_config, MPI_COMM_WORLD);
+#else  /* MPI */
+  AZ_set_proc_config(ams[0]->proc_config, 0);
 #endif /* MPI */
 
   /*
    * allocate space for and initialize solution arrays
    */
 
-  asdv(&x,        numProcUnknowns);
-  asdv(&x_old,    numProcUnknowns);
-  asdv(&x_older,  numProcUnknowns);
+  asdv(&x, numProcUnknowns);
+  asdv(&x_old, numProcUnknowns);
+  asdv(&x_older, numProcUnknowns);
   asdv(&x_oldest, numProcUnknowns);
-  asdv(&xdot,     numProcUnknowns);
+  asdv(&xdot, numProcUnknowns);
   asdv(&xdot_old, numProcUnknowns);
   asdv(&x_update, numProcUnknowns);
 
@@ -406,11 +373,11 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
    * ALLOCATE ALL THOSE WORK VECTORS FOR HUNTING
    */
 
-  asdv(&lambda,         nHC);
-  asdv(&lambdaEnd,      nHC);
-  asdv(&lambdaDelta,    nHC);
-  asdv(&lambdaLog,      nHC);
-  asdv(&lambdaRatio,    nHC);
+  asdv(&lambda, nHC);
+  asdv(&lambdaEnd, nHC);
+  asdv(&lambdaDelta, nHC);
+  asdv(&lambdaLog, nHC);
+  asdv(&lambdaRatio, nHC);
   asdv(&lambdaDeltaLog, nHC);
   asdv(&path,           nHC);
   asdv(&path1,          nHC);
@@ -423,16 +390,14 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   asdv(&delta_s_older,  nHC);
   asdv(&delta_s_oldest, nHC);
 
-  aldALC        = Ivector_birth(nHC);
+  aldALC = Ivector_birth(nHC);
   const_delta_s = Ivector_birth(nHC);
 
-  if (nAC > 0)
-  {
+  if (nAC > 0) {
     asdv(&x_AC, nAC);
     asdv(&x_AC_old, nAC);
     asdv(&x_AC_dot, nAC);
   }
-
 
   /*
 
@@ -443,14 +408,14 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   alqALC = 1;
 
   delta_t = 0.0;
-  tran->delta_t = 0.0;      /*for Newmark-Beta terms in Lagrangian Solid*/
+  tran->delta_t = 0.0; /*for Newmark-Beta terms in Lagrangian Solid*/
 
   nprint = 0;
 
-  MaxPathSteps      = cont->MaxPathSteps;
-  eps               = cont->eps;
+  MaxPathSteps = cont->MaxPathSteps;
+  eps = cont->eps;
 
-  for (iHC=0;iHC<nHC;iHC++) {
+  for (iHC = 0; iHC < nHC; iHC++) {
 
     const_delta_s[iHC] = 0;
 
@@ -478,19 +443,19 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
          { aldALC[iHC] = -1; }
 
     if (hunt[iHC].ramp == 1) {
-      hunt[iHC].Delta_s0 = fabs(lambdaDelta[iHC])/((double)(MaxPathSteps-1));
+      hunt[iHC].Delta_s0 = fabs(lambdaDelta[iHC]) / ((double)(MaxPathSteps - 1));
       const_delta_s[iHC] = 1;
     }
 
-    hDelta_s0[iHC]     = hunt[iHC].Delta_s0;
-    hDelta_s_min[iHC]  = hunt[iHC].Delta_s_min;
-    hDelta_s_max[iHC]  = hunt[iHC].Delta_s_max;
+    hDelta_s0[iHC] = hunt[iHC].Delta_s0;
+    hDelta_s_min[iHC] = hunt[iHC].Delta_s_min;
+    hDelta_s_max[iHC] = hunt[iHC].Delta_s_max;
 
     path[iHC] = path1[iHC] = lambda[iHC];
 
     if (Debug_Flag && ProcID == 0) {
-      fprintf(stderr,"MaxPathSteps: %d \tlambdaEnd: %f\n", MaxPathSteps, lambdaEnd[iHC]);
-      fprintf(stderr,"continuation in progress\n");
+      fprintf(stdout, "MaxPathSteps: %d \tlambdaEnd: %f\n", MaxPathSteps, lambdaEnd[iHC]);
+      fprintf(stdout, "continuation in progress\n");
     }
 
     if (hDelta_s0[iHC] > hDelta_s_max[iHC])
@@ -509,7 +474,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 
   /*  define continuation parameter */
 
-  iHC = MAX(0,log_ID);
+  iHC = MAX(0, log_ID);
   dhunt_par = 0.0;
   if(DOUBLE_ZERO(lambdaDelta[iHC]))
  	{	hunt_par = 1.0;	}
@@ -532,102 +497,62 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
  	}
   hunt_par_old = hunt_par;
   dhunt_par = dhunt_par_old = dhunt_par_0;
-    if (dhunt_par_0 > dhunt_par_max)
-    { dhunt_par_0 = dhunt_par_max; }
-
-  /* Call prefront (or mf_setup) if necessary */
-  if (Linear_Solver == FRONT)
-  {
-    if (Num_Proc > 1) EH(-1, "Whoa.  No front allowed with nproc>1");
-
-#ifdef HAVE_FRONT
-    /* Also got to define these because it wants pointers to these numbers */
-
-    max_unk_elem = (MAX_PROB_VAR + MAX_CONC)*MDE;
-    one = 1;
-    three = 3;
-
-    /* NOTE: We need a overall flag in the vn_glob struct that tells whether FULL_DG
-       is on anywhere in domain.  This assumes only one material.  See sl_front_setup for test.
-       that test needs to be in the input parser.  */
-
-    if(vn_glob[0]->dg_J_model == FULL_DG)
-    {
-      max_unk_elem = (MAX_PROB_VAR + MAX_CONC)*MDE + 4*vn_glob[0]->modes*4*MDE;
-    }
-
-    err = mf_setup(&exo->num_elems,
-		   &NumUnknowns,
-		   &max_unk_elem,
-		   &three,
-		   &one,
-		   exo->elem_order_map,
-		   fss->el_proc_assign,
-		   fss->level,
-		   fss->nopdof,
-		   fss->ncn,
-		   fss->constraint,
-		   front_scratch_directory,
-		   &fss->ntra);
-    EH(err,"problems in frontal setup ");
-
-#else
-    EH(-1,"Don't have frontal solver compiled and linked in");
-#endif
+  if (dhunt_par_0 > dhunt_par_max) {
+    dhunt_par_0 = dhunt_par_max;
   }
-
 
   /*
-         *  if compute parameter sensitivities, allocate space for solution
-         *  sensitivity vectors
-         */
+   *  if compute parameter sensitivities, allocate space for solution
+   *  sensitivity vectors
+   */
 
-        for(i=0;i<nn_post_fluxes_sens;i++)      {
-          num_pvector=MAX(num_pvector,pp_fluxes_sens[i]->vector_id);}
-        for(i=0;i<nn_post_data_sens;i++)        {
-          num_pvector=MAX(num_pvector,pp_data_sens[i]->vector_id);}
-
-  if((nn_post_fluxes_sens + nn_post_data_sens) > 0)
-  {
-    num_pvector++;
-    num_pvector = MAX(num_pvector,2);
-        x_sens_p = Dmatrix_birth(num_pvector,numProcUnknowns);
+  for (i = 0; i < nn_post_fluxes_sens; i++) {
+    num_pvector = MAX(num_pvector, pp_fluxes_sens[i]->vector_id);
   }
-  else
-  {
+  for (i = 0; i < nn_post_data_sens; i++) {
+    num_pvector = MAX(num_pvector, pp_data_sens[i]->vector_id);
+  }
+
+  if ((nn_post_fluxes_sens + nn_post_data_sens) > 0) {
+    num_pvector++;
+    num_pvector = MAX(num_pvector, 2);
+    x_sens_p = Dmatrix_birth(num_pvector, numProcUnknowns);
+  } else {
     x_sens_p = NULL;
   }
 
-
+  pg->matrices = malloc(sizeof(struct Matrix_Data));
+  pg->matrices[pg->imtrx].ams = ams[JAC];
+  pg->matrices[pg->imtrx].x = x;
+  pg->matrices[pg->imtrx].x_old = x_old;
+  pg->matrices[pg->imtrx].x_older = x_older;
+  pg->matrices[pg->imtrx].xdot = xdot;
+  pg->matrices[pg->imtrx].xdot_old = xdot_old;
+  pg->matrices[pg->imtrx].x_update = x_update;
+  pg->matrices[pg->imtrx].scale = scale;
+  pg->matrices[pg->imtrx].resid_vector = resid_vector;
 
   /* Allocate sparse matrix */
 
-  if( strcmp( Matrix_Format, "msr" ) == 0)
-  {
+  if (strcmp(Matrix_Format, "msr") == 0) {
     log_msg("alloc_MSR_sparse_arrays...");
-    alloc_MSR_sparse_arrays(&ija,
-			    &a,
-			    &a_old,
-			    0,
-			    node_to_fill,
-			    exo,
-			    dpi);
+    alloc_MSR_sparse_arrays(&ija, &a, &a_old, 0, node_to_fill, exo, dpi);
     /*
      * An attic to store external dofs column names is needed when
      * running in parallel.
      */
 
-    alloc_extern_ija_buffer(num_universe_dofs,
-			    num_internal_dofs+num_boundary_dofs,
-			    ija, &ija_attic);
+    alloc_extern_ija_buffer(num_universe_dofs[pg->imtrx],
+                            num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx], ija,
+                            &ija_attic);
     /*
      * Any necessary one time initialization of the linear
      * solver package (Aztec).
      */
 
-    ams[JAC]->bindx   = ija;
-    ams[JAC]->val     = a;
-    ams[JAC]->belfry  = ija_attic;
+    ams[JAC]->bindx = ija;
+    ams[JAC]->val = a;
+    ams[JAC]->belfry = ija_attic;
     ams[JAC]->val_old = a_old;
 
     /*
@@ -635,82 +560,74 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
      * format.
      */
 
-    ams[JAC]->indx  = NULL;
+    ams[JAC]->indx = NULL;
     ams[JAC]->bpntr = NULL;
     ams[JAC]->rpntr = NULL;
     ams[JAC]->cpntr = NULL;
-    ams[JAC]->npn      = dpi->num_internal_nodes + dpi->num_boundary_nodes;
-    ams[JAC]->npn_plus = dpi->num_internal_nodes + dpi->num_boundary_nodes + dpi->num_external_nodes;
+    ams[JAC]->npn = dpi->num_internal_nodes + dpi->num_boundary_nodes;
+    ams[JAC]->npn_plus =
+        dpi->num_internal_nodes + dpi->num_boundary_nodes + dpi->num_external_nodes;
 
-    ams[JAC]->npu      = num_internal_dofs+num_boundary_dofs;
-    ams[JAC]->npu_plus = num_universe_dofs;
+    ams[JAC]->npu = num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx];
+    ams[JAC]->npu_plus = num_universe_dofs[pg->imtrx];
 
-    ams[JAC]->nnz = ija[num_internal_dofs+num_boundary_dofs] - 1;
-    ams[JAC]->nnz_plus = ija[num_universe_dofs];
+    ams[JAC]->nnz = ija[num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]] - 1;
+    ams[JAC]->nnz_plus = ija[num_universe_dofs[pg->imtrx]];
 
-  }
-  else if(  strcmp( Matrix_Format, "vbr" ) == 0)
-  {
+  } else if (strcmp(Matrix_Format, "vbr") == 0) {
     log_msg("alloc_VBR_sparse_arrays...");
-    alloc_VBR_sparse_arrays ( ams[JAC],
-			      exo,
-			      dpi);
+    alloc_VBR_sparse_arrays(ams[JAC], exo, dpi);
     ija_attic = NULL;
-    ams[JAC]->belfry  = ija_attic;
+    ams[JAC]->belfry = ija_attic;
 
     a = ams[JAC]->val;
-    if( !save_old_A ) a_old = ams[JAC]->val_old;
-  }
-  else if ( strcmp( Matrix_Format, "front") == 0 )
-    {
-      /* Don't allocate any sparse matrix space when using front */
-      ams[JAC]->bindx   = NULL;
-      ams[JAC]->val     = NULL;
-      ams[JAC]->belfry  = NULL;
-      ams[JAC]->val_old = NULL;
-      ams[JAC]->indx  = NULL;
-      ams[JAC]->bpntr = NULL;
-      ams[JAC]->rpntr = NULL;
-      ams[JAC]->cpntr = NULL;
+    if (!save_old_A)
+      a_old = ams[JAC]->val_old;
+  } else if (strcmp(Matrix_Format, "front") == 0) {
+    /* Don't allocate any sparse matrix space when using front */
+    ams[JAC]->bindx = NULL;
+    ams[JAC]->val = NULL;
+    ams[JAC]->belfry = NULL;
+    ams[JAC]->val_old = NULL;
+    ams[JAC]->indx = NULL;
+    ams[JAC]->bpntr = NULL;
+    ams[JAC]->rpntr = NULL;
+    ams[JAC]->cpntr = NULL;
 
-    }
-  else
-  {
-    EH(-1,"Attempted to allocate unknown sparse matrix format");
+  } else {
+    GOMA_EH(GOMA_ERROR, "Attempted to allocate unknown sparse matrix format");
   }
 
   init_vec(x, cx, exo, dpi, x_AC, nAC, &timeValueRead);
 
-/*  if read ACs, update data floats */
-  if (nAC > 0)
-  {
-    if(augc[0].iread == 1)
-      {
-	for(iAC=0 ; iAC<nAC ; iAC++)
-	  { update_parameterAC(iAC, x, xdot, x_AC, cx, exo, dpi); }
+  /*  if read ACs, update data floats */
+  if (nAC > 0) {
+    if (augc[0].iread == 1) {
+      for (iAC = 0; iAC < nAC; iAC++) {
+        update_parameterAC(iAC, x, xdot, x_AC, cx, exo, dpi);
       }
+    }
   }
 
-
   /*
-       * set boundary conditions on the initial conditions
-       */
+   * set boundary conditions on the initial conditions
+   */
 
   find_and_set_Dirichlet(x, xdot, exo, dpi);
 
-  exchange_dof(cx, dpi, x);
+  exchange_dof(cx, dpi, x, pg->imtrx);
 
-  dcopy1(numProcUnknowns,x,x_old);
-  dcopy1(numProcUnknowns,x_old,x_older);
-  dcopy1(numProcUnknowns,x_older,x_oldest);
+  dcopy1(numProcUnknowns, x, x_old);
+  dcopy1(numProcUnknowns, x_old, x_older);
+  dcopy1(numProcUnknowns, x_older, x_oldest);
 
-  if( nAC > 0)
-  {
-    dcopy1(nAC,x_AC, x_AC_old);}
+  if (nAC > 0) {
+    dcopy1(nAC, x_AC, x_AC_old);
+  }
 
   /*
-       * initialize the counters for when to print out data
-       */
+   * initialize the counters for when to print out data
+   */
 
   step_print = 1;
 
@@ -721,66 +638,67 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 
 #ifdef PARALLEL
   /*
-  * Make sure the solver was properly initialized on all processors.
-  */
+   * Make sure the solver was properly initialized on all processors.
+   */
   check_parallel_error("Solver initialization problems");
 #endif
 
-      ams[JAC]->options[AZ_keep_info] = 1;
+  ams[JAC]->options[AZ_keep_info] = 1;
 
-    DPRINTF(stderr, "\nINITIAL ELEMENT QUALITY CHECK---\n");
-    good_mesh = element_quality(exo, x, ams[0]->proc_config);
+  DPRINTF(stdout, "\nINITIAL ELEMENT QUALITY CHECK---\n");
+  good_mesh = element_quality(exo, x, ams[0]->proc_config);
 
-     if( Output_Variable_Stats)	{
-        err = variable_stats ( x, path1[0]);
-        EH(err, "Problem with variable_stats!");
-        if(ProcID == 0) fflush(stdout); 
-        }
+  if (Output_Variable_Stats) {
+    err = variable_stats(x, path1[0]);
+    GOMA_EH(err, "Problem with variable_stats!");
+    if (ProcID == 0)
+      fflush(stdout);
+  }
 
   /*
-       * set the number of successful path steps to zero
-       */
+   * set the number of successful path steps to zero
+   */
 
   nt = 0;
 
   /*
-       * LOOP THROUGH PARAMETER UNTIL MAX NUMBER
-       * OF STEPS SURPASSED
-       */
+   * LOOP THROUGH PARAMETER UNTIL MAX NUMBER
+   * OF STEPS SURPASSED
+   */
 
   if (nAC > 0) {
-    dcopy1( nAC, x_AC, &(gv[5]) );
+    dcopy1(nAC, x_AC, &(gv[5]));
   }
 
-  for (n=0;n<MaxPathSteps;n++) {
+  for (n = 0; n < MaxPathSteps; n++) {
 
     alqALC = 1;
 
-    for (iHC=0;iHC<nHC;iHC++) {
+    for (iHC = 0; iHC < nHC; iHC++) {
 
       switch (aldALC[iHC]) {
       case -1: /* REDUCING PARAMETER DIRECTION */
-	  if (path1[iHC] <= lambdaEnd[iHC]) {
-	    alqALC = -1;
-	    path1[iHC] = lambdaEnd[iHC];
-	    delta_s[iHC] = path[iHC]-path1[iHC];
-	  }
-	  break;
+        if (path1[iHC] <= lambdaEnd[iHC]) {
+          alqALC = -1;
+          path1[iHC] = lambdaEnd[iHC];
+          delta_s[iHC] = path[iHC] - path1[iHC];
+        }
+        break;
       case +1: /* RISING PARAMETER DIRECTION */
-	  if (path1[iHC] >= lambdaEnd[iHC]) {
-	    alqALC = -1;
-	    path1[iHC] = lambdaEnd[iHC];
-	    delta_s[iHC] = path1[iHC]-path[iHC];
-	  }
-	  break;
+        if (path1[iHC] >= lambdaEnd[iHC]) {
+          alqALC = -1;
+          path1[iHC] = lambdaEnd[iHC];
+          delta_s[iHC] = path1[iHC] - path[iHC];
+        }
+        break;
       }
-    }   /*  end of iHC loop */
+    } /*  end of iHC loop */
 
-      /*
-       * ADJUST NATURAL PARAMETER
-       */
+    /*
+     * ADJUST NATURAL PARAMETER
+     */
 
-    for (iHC=0;iHC<nHC;iHC++) {
+    for (iHC = 0; iHC < nHC; iHC++) {
       update_parameterHC(iHC, path1[iHC], x, xdot, x_AC, delta_s[iHC], cx, exo, dpi);
     }   /*  end of iHC loop */
 
@@ -822,19 +740,20 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
     /*
      * IF STEP CHANGED, REDO FIRST ORDER PREDICTION
      */
- if (hunt_par >= 1.0) { alqALC = -1;  }
+    if (hunt_par >= 1.0) {
+      alqALC = -1;
+    }
 
-    if(alqALC == -1)
-    {
-      DPRINTF(stderr,"\n\t ******** LAST PATH STEP!\n");
-      dcopy1(numProcUnknowns,x_old,x);
+    if (alqALC == -1) {
+      DPRINTF(stdout, "\n\t ******** LAST PATH STEP!\n");
+      dcopy1(numProcUnknowns, x_old, x);
 
       switch (Continuation) {
       case HUN_ZEROTH:
-          break;
-      case  HUN_FIRST:
-          v1add(numProcUnknowns, &x[0], dhunt_par, &x_sens[0]);
-	  break;
+        break;
+      case HUN_FIRST:
+        v1add(numProcUnknowns, &x[0], dhunt_par, &x_sens[0]);
+        break;
       }
     }
 
@@ -846,144 +765,99 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 
     nullify_dirichlet_bcs();
 
-    find_and_set_Dirichlet (x, xdot, exo, dpi);
+    find_and_set_Dirichlet(x, xdot, exo, dpi);
 
-    exchange_dof(cx, dpi, x);
+    exchange_dof(cx, dpi, x, pg->imtrx);
 
-    if(ProcID ==0) {
-      DPRINTF(stderr, "\n\t----------------------------------");
+    if (ProcID == 0) {
+      DPRINTF(stdout, "\n\t----------------------------------");
       switch (Continuation) {
       case HUN_ZEROTH:
-	  DPRINTF(stderr, "\n\tZero Order Hunting:");
-	  break;
-      case  HUN_FIRST:
-	  DPRINTF(stderr, "\n\tFirst Order Hunting:");
-	  break; }
-      DPRINTF(stderr, "\n\tStep number: %4d of %4d (max)", n+1, MaxPathSteps);
-      DPRINTF(stderr, "\n\tAttempting solution at: theta = %g ;  step = %g",hunt_par,dhunt_par);
-      for (iHC=0;iHC<nHC;iHC++) {
-	switch (hunt[iHC].Type) {
-	case 1: /* BC */
-	    DPRINTF(stderr, "\n\tBCID=%3d DFID=%5d", hunt[iHC].BCID, hunt[iHC].DFID);
-	    break;
-	case 2: /* MT */
-	    DPRINTF(stderr, "\n\tMTID=%3d MPID=%5d", hunt[iHC].MTID+1, hunt[iHC].MPID);
-	    break;
- 	case 3: /* AC */
- 	    DPRINTF(stderr, "\n\tACID=%3d DFID=%5d", hunt[iHC].BCID, hunt[iHC].DFID);
- 	    break;
-	}
-	DPRINTF(stderr, " Parameter= % 10.6e delta_s= %10.6e", path1[iHC], delta_s[iHC]);
+        DPRINTF(stdout, "\n\tZero Order Hunting:");
+        break;
+      case HUN_FIRST:
+        DPRINTF(stdout, "\n\tFirst Order Hunting:");
+        break;
+      }
+      DPRINTF(stdout, "\n\tStep number: %4d of %4d (max)", n + 1, MaxPathSteps);
+      DPRINTF(stdout, "\n\tAttempting solution at: theta = %g ;  step = %g", hunt_par, dhunt_par);
+      for (iHC = 0; iHC < nHC; iHC++) {
+        switch (hunt[iHC].Type) {
+        case 1: /* BC */
+          DPRINTF(stdout, "\n\tBCID=%3d DFID=%5d", hunt[iHC].BCID, hunt[iHC].DFID);
+          break;
+        case 2: /* MT */
+          DPRINTF(stdout, "\n\tMTID=%3d MPID=%5d", hunt[iHC].MTID + 1, hunt[iHC].MPID);
+          break;
+        case 3: /* AC */
+          DPRINTF(stdout, "\n\tACID=%3d DFID=%5d", hunt[iHC].BCID, hunt[iHC].DFID);
+          break;
+        }
+        DPRINTF(stdout, " Parameter= % 10.6e delta_s= %10.6e", path1[iHC], delta_s[iHC]);
       }
     }
 
     ni = 0;
     do {
 
-#ifdef DEBUG
-      fprintf(stderr, "%s: starting solve_nonlinear_problem\n", yo);
-#endif
-      err = solve_nonlinear_problem(ams[JAC],
-				    x,
-				    delta_t,
-				    theta,
-				    x_old,
-				    x_older,
-				    xdot,
-				    xdot_old,
-				    resid_vector,
-				    x_update,
-				    scale,
-				    &converged,
-				    &nprint,
-				    tev,
-				    tev_post,
-				    gv,
-				    rd,
-				    gindex,
-				    p_gsize,
-				    gvec,
-				    gvec_elem,
- 				    path1[0],
-				    exo,
-				    dpi,
-				    cx,
-				    0,
-				    &path_step_reform,
-				    is_steady_state,
-				    x_AC,
- 				    x_AC_dot,
-				    hunt_par,
-				    resid_vector_sens,
-				    x_sens,
-				    x_sens_p,
-                                    NULL);
+      err = solve_nonlinear_problem(ams[JAC], x, delta_t, theta, x_old, x_older, xdot, xdot_old,
+                                    resid_vector, x_update, scale, &converged, &nprint, tev,
+                                    tev_post, gv, rd, gindex, p_gsize, gvec, gvec_elem, path1[0],
+                                    exo, dpi, cx, 0, &path_step_reform, is_steady_state, x_AC,
+                                    x_AC_dot, hunt_par, resid_vector_sens, x_sens, x_sens_p, NULL);
 
-#ifdef DEBUG
-      fprintf(stderr, "%s: returned from solve_nonlinear_problem\n", yo);
-#endif
-
-      if (err == -1) converged = 0;
+      if (err == -1)
+        converged = 0;
       inewton = err;
-      if (converged)
-      {
-	EH(error, "error writing ASCII soln file."); /* srs need to check */
+      if (converged) {
+        GOMA_EH(error, "error writing ASCII soln file."); /* srs need to check */
 
-	if (Write_Intermediate_Solutions == 0) {
-#ifdef DEBUG
-	  fprintf(stderr, "%s: write_solution call WIS\n", yo);
-#endif
-          exo_time = aldALC[0]*path1[0];
-	  write_solution(ExoFileOut, resid_vector, x, x_sens_p, x_old,
-			 xdot, xdot_old, tev, tev_post, gv,  rd, gindex,
-			 p_gsize, gvec, gvec_elem, &nprint, delta_s[0],
- 			 theta, exo_time, NULL, exo, dpi);
-#ifdef DEBUG
-	  fprintf(stderr, "%s: write_solution end call WIS\n", yo);
-#endif
-	}
+        if (Write_Intermediate_Solutions == 0) {
+          exo_time = aldALC[0] * path1[0];
+          write_solution(ExoFileOut, resid_vector, x, x_sens_p, x_old, xdot, xdot_old, tev,
+                         tev_post, gv, rd, gvec, gvec_elem, &nprint, delta_s[0], theta, exo_time,
+                         NULL, exo, dpi);
+        }
 
-	/*
-	 * PRINT OUT VALUES OF EXTRA UNKNOWNS
-	 * FROM AUGMENTING CONDITIONS
-	 */
+        /*
+         * PRINT OUT VALUES OF EXTRA UNKNOWNS
+         * FROM AUGMENTING CONDITIONS
+         */
 
-	if (nAC > 0)
-          {
+        if (nAC > 0) {
 
-	    DPRINTF(stderr, "\n------------------------------\n");
-	    DPRINTF(stderr, "Augmenting Conditions:    %4d\n", nAC);
-	    DPRINTF(stderr, "Number of extra unknowns: %4d\n\n", nAC);
+          DPRINTF(stdout, "\n------------------------------\n");
+          DPRINTF(stdout, "Augmenting Conditions:    %4d\n", nAC);
+          DPRINTF(stdout, "Number of extra unknowns: %4d\n\n", nAC);
 
-            for (iAC = 0; iAC < nAC; iAC++)
-             {
-              if (augc[iAC].Type == AC_USERBC)
-               {
-                DPRINTF(stderr, "\tAC[%4d] DF[%4d] = %10.6e\n",
-                        augc[iAC].BCID, augc[iAC].DFID, x_AC[iAC]);
-               }
-              else if (augc[iAC].Type == AC_USERMAT  ||
-                       augc[iAC].Type == AC_FLUX_MAT )
-               {
-                DPRINTF(stderr, "\n MT[%4d] MP[%4d] = %10.6e\n",
-                        augc[iAC].MTID, augc[iAC].MPID, x_AC[iAC]);
-               }
-              else if(augc[iAC].Type == AC_VOLUME)
-               {
-                evol_local = augc[iAC].evol;
+          for (iAC = 0; iAC < nAC; iAC++) {
+            if (augc[iAC].Type == AC_USERBC) {
+              DPRINTF(stdout, "\tAC[%4d] DF[%4d] = %10.6e\n", augc[iAC].BCID, augc[iAC].DFID,
+                      x_AC[iAC]);
+            } else if (augc[iAC].Type == AC_USERMAT || augc[iAC].Type == AC_FLUX_MAT) {
+              DPRINTF(stdout, "\n MT[%4d] MP[%4d] = %10.6e\n", augc[iAC].MTID, augc[iAC].MPID,
+                      x_AC[iAC]);
+            } else if (augc[iAC].Type == AC_VOLUME) {
+              evol_local = augc[iAC].evol;
 #ifdef PARALLEL
-                if( Num_Proc > 1 ) {
-                     MPI_Allreduce( &evol_local, &evol_global, 1,
-                                    MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+              if (Num_Proc > 1) {
+                MPI_Allreduce(&evol_local, &evol_global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
                 evol_local = evol_global;
-                }
+              }
 #endif
-                DPRINTF(stderr, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n",
-                        augc[iAC].MTID, augc[iAC].VOLID, evol_local,
-                        x_AC[iAC]);
-               }
-	      else if(augc[iAC].Type == AC_POSITION)
-               {
+              DPRINTF(stdout, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
+                      augc[iAC].VOLID, evol_local, x_AC[iAC]);
+            } else if (augc[iAC].Type == AC_POSITION) {
+              evol_local = augc[iAC].evol;
+#ifdef PARALLEL
+              if (Num_Proc > 1) {
+                MPI_Allreduce(&evol_local, &evol_global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+              }
+              evol_local = evol_global;
+#endif
+              DPRINTF(stdout, "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
+                      augc[iAC].VOLID, evol_local, x_AC[iAC]);
+	    }  else if(augc[iAC].Type == AC_ANGLE) {
                 evol_local = augc[iAC].evol;
 #ifdef PARALLEL
                 if( Num_Proc > 1 ) {
@@ -992,78 +866,55 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
                 }
                 evol_local = evol_global;
 #endif
-                DPRINTF(stderr, "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n",
+                DPRINTF(stdout, "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n",
                         augc[iAC].MTID, augc[iAC].VOLID, evol_local,
                         x_AC[iAC]);
                }
-               else if(augc[iAC].Type == AC_FLUX)
-               {
-                DPRINTF(stderr, "\tBC[%4d] DF[%4d]=%10.6e\n",
-                        augc[iAC].BCID, augc[iAC].DFID, x_AC[iAC]);
-               }
-             }
-	  }
+            } else if (augc[iAC].Type == AC_FLUX) {
+              DPRINTF(stdout, "\tBC[%4d] DF[%4d]=%10.6e\n", augc[iAC].BCID, augc[iAC].DFID,
+                      x_AC[iAC]);
+            }
+          }
+        }
 
-      /* Check element quality */
-      good_mesh = element_quality(exo, x, ams[0]->proc_config);
+        /* Check element quality */
+        good_mesh = element_quality(exo, x, ams[0]->proc_config);
 
-	/*
+        /*
 
-	  INTEGRATE FLUXES, FORCES
+          INTEGRATE FLUXES, FORCES
 
-	*/
+        */
 
-	for (i = 0; i < nn_post_fluxes; i++)
-	{
-	  evaluate_flux ( exo, dpi,
-			  pp_fluxes[i]->ss_id,
-			  pp_fluxes[i]->flux_type ,
-			  pp_fluxes[i]->flux_type_name ,
-			  pp_fluxes[i]->blk_id ,
-			  pp_fluxes[i]->species_number,
-			  pp_fluxes[i]->flux_filenm,
-			  pp_fluxes[i]->profile_flag,
-			  x,xdot,NULL,delta_s[0],path1[0],1);
-	}
+        for (i = 0; i < nn_post_fluxes; i++) {
+          evaluate_flux(exo, dpi, pp_fluxes[i]->ss_id, pp_fluxes[i]->flux_type,
+                        pp_fluxes[i]->flux_type_name, pp_fluxes[i]->blk_id,
+                        pp_fluxes[i]->species_number, pp_fluxes[i]->flux_filenm,
+                        pp_fluxes[i]->profile_flag, x, xdot, NULL, delta_s[0], path1[0], 1);
+        }
 
+        /*
+          COMPUTE FLUX, FORCE SENSITIVITIES
+        */
 
-	/*
-	  COMPUTE FLUX, FORCE SENSITIVITIES
-	*/
-
-
-	for (i = 0; i < nn_post_fluxes_sens; i++)
-	{
-	  evaluate_flux_sens ( exo, dpi,
-			       pp_fluxes_sens[i]->ss_id,
-			       pp_fluxes_sens[i]->flux_type ,
-			       pp_fluxes_sens[i]->flux_type_name ,
-			       pp_fluxes_sens[i]->blk_id ,
-			       pp_fluxes_sens[i]->species_number,
-			       pp_fluxes_sens[i]->sens_type,
-			       pp_fluxes_sens[i]->sens_id,
-			       pp_fluxes_sens[i]->sens_flt,
-			       pp_fluxes_sens[i]->sens_flt2,
-			       pp_fluxes_sens[i]->vector_id,
-			       pp_fluxes_sens[i]->flux_filenm,
-			       pp_fluxes_sens[i]->profile_flag,
-			       x,xdot,x_sens_p,delta_s[0],path1[0],1);
-	}
- 	/*
-      	 * Compute global volumetric quantities
-      	 */
-     	 for (i = 0; i < nn_volume; i++ ) {
-       		evaluate_volume_integral(exo, dpi,
-                                pp_volume[i]->volume_type,
-                                pp_volume[i]->volume_name,
-                                pp_volume[i]->blk_id,
-                                pp_volume[i]->species_no,
-                                pp_volume[i]->volume_fname,
-                                pp_volume[i]->params,
-                                pp_volume[i]->num_params,
-                                NULL,  x, xdot, delta_s[0],
-                                path1[0], 1);
-     		}
+        for (i = 0; i < nn_post_fluxes_sens; i++) {
+          evaluate_flux_sens(exo, dpi, pp_fluxes_sens[i]->ss_id, pp_fluxes_sens[i]->flux_type,
+                             pp_fluxes_sens[i]->flux_type_name, pp_fluxes_sens[i]->blk_id,
+                             pp_fluxes_sens[i]->species_number, pp_fluxes_sens[i]->sens_type,
+                             pp_fluxes_sens[i]->sens_id, pp_fluxes_sens[i]->sens_flt,
+                             pp_fluxes_sens[i]->sens_flt2, pp_fluxes_sens[i]->vector_id,
+                             pp_fluxes_sens[i]->flux_filenm, pp_fluxes_sens[i]->profile_flag, x,
+                             xdot, x_sens_p, delta_s[0], path1[0], 1);
+        }
+        /*
+         * Compute global volumetric quantities
+         */
+        for (i = 0; i < nn_volume; i++) {
+          evaluate_volume_integral(
+              exo, dpi, pp_volume[i]->volume_type, pp_volume[i]->volume_name, pp_volume[i]->blk_id,
+              pp_volume[i]->species_no, pp_volume[i]->volume_fname, pp_volume[i]->params,
+              pp_volume[i]->num_params, NULL, x, xdot, delta_s[0], path1[0], 1);
+        }
 
       } /* end of if converged block */
 
@@ -1082,22 +933,21 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 
       if (!converged) {
 
-	if (ni > Max_Newton_Steps/2) {
- 	  DPRINTF(stderr,"\n ************************************\n");
- 	  DPRINTF(stderr," W: Did not converge in Newton steps.\n");
- 	  DPRINTF(stderr,"    Find better initial guess.       \n");
- 	  DPRINTF(stderr," ************************************\n"); 
+        if (ni > Max_Newton_Steps / 2) {
+          DPRINTF(stdout, "\n ************************************\n");
+          DPRINTF(stdout, " W: Did not converge in Newton steps.\n");
+          DPRINTF(stdout, "    Find better initial guess.       \n");
+          DPRINTF(stdout, " ************************************\n");
           goto free_and_clear;
- 	  /*exit(0);  */
-	}
+          /*exit(0);  */
+        }
 
         /*
          * ADJUST STEP SIZE - unless failed on first step
          */
 
-        if ( nt != 0 )
-        {
-	DPRINTF(stderr, "\n\tFailed to converge:\n");
+        if (nt != 0) {
+          DPRINTF(stderr, "\n\tFailed to converge:\n");
 
 	dhunt_par *= 0.5;
         hunt_par = hunt_par_old + dhunt_par;
@@ -1116,22 +966,23 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
                path1[iHC] = lambda[iHC] + hunt_par*lambdaDelta[iHC];
               }
             }
+          }
 
-	alqALC = 1;
+          alqALC = 1;
 
-	DPRINTF(stderr, "Decreasing step-length to %10.6e.\n", dhunt_par);
+          DPRINTF(stdout, "Decreasing step-length to %10.6e.\n", dhunt_par);
 
-	if (dhunt_par < dhunt_par_min) {
- 	  DPRINTF(stderr,"\n X: C step-length reduced below minimum.");
- 	  DPRINTF(stderr,"\n theta: %g ;  theta_min: %g",dhunt_par,dhunt_par_min);
- 	  DPRINTF(stderr,"\n    Program terminated.\n");
-	  /* This needs to have a return value of 0, indicating
-	     * success, for the continuation script to not treat this
-	     * as a failed command. */
-        goto free_and_clear;
+          if (dhunt_par < dhunt_par_min) {
+            DPRINTF(stdout, "\n X: C step-length reduced below minimum.");
+            DPRINTF(stdout, "\n theta: %g ;  theta_min: %g", dhunt_par, dhunt_par_min);
+            DPRINTF(stdout, "\n    Program terminated.\n");
+            /* This needs to have a return value of 0, indicating
+             * success, for the continuation script to not treat this
+             * as a failed command. */
+            goto free_and_clear;
           }
 #ifdef PARALLEL
-              check_parallel_error("\t");
+          check_parallel_error("\t");
 #endif
 
 	  /*
@@ -1168,7 +1019,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 	case  HUN_FIRST:
 	    v2sum(numProcUnknowns, &x[0], 1.0, &x_old[0], dhunt_par, &x_sens[0]);
             break;
-	}
+          }
 
 	/* MMH: Needed to put this in, o/w it may find that the
          * solution and residual HAPPEN to satisfy the convergence
@@ -1176,7 +1027,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
          */
         find_and_set_Dirichlet(x, xdot, exo, dpi);
 
-        exchange_dof(cx, dpi, x);
+        exchange_dof(cx, dpi, x, pg->imtrx);
 
 	if (nAC > 0)
           {
@@ -1223,8 +1074,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
           */
          find_and_set_Dirichlet(x, xdot, exo, dpi);
 
-         exchange_dof(cx, dpi, x);
-
+         exchange_dof(cx, dpi, x, pg->imtrx);
 
  	if (nAC > 0)
           {
@@ -1288,45 +1138,37 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
     custom_tol2 = toler_org[1];
     custom_tol3 = toler_org[2];
     damp_factor1 = 1.0;
-    DPRINTF(stderr,
-	    "\n\tStep accepted, theta (proportion complete) = %10.6e\n",
-	    hunt_par);
-    for (iHC=0;iHC<nHC;iHC++) {
+    DPRINTF(stdout, "\n\tStep accepted, theta (proportion complete) = %10.6e\n", hunt_par);
+    for (iHC = 0; iHC < nHC; iHC++) {
       switch (hunt[iHC].Type) {
-      case 1:		/* BC */
-	  DPRINTF(stderr, "\tStep accepted, BCID=%3d DFID=%5d",
-		  hunt[iHC].BCID, hunt[iHC].DFID);
-	  break;
-      case 2:		/* MT */
-	  DPRINTF(stderr, "\tStep accepted, MTID=%3d MPID=%5d",
-		  hunt[iHC].MTID+1, hunt[iHC].MPID);
-	  break;
-      case 3:		/* AC */
-	  DPRINTF(stderr, "\tStep accepted, ACID=%3d DFID=%5d",
- 		  hunt[iHC].BCID, hunt[iHC].DFID);
- 	  break;
+      case 1: /* BC */
+        DPRINTF(stdout, "\tStep accepted, BCID=%3d DFID=%5d", hunt[iHC].BCID, hunt[iHC].DFID);
+        break;
+      case 2: /* MT */
+        DPRINTF(stdout, "\tStep accepted, MTID=%3d MPID=%5d", hunt[iHC].MTID + 1, hunt[iHC].MPID);
+        break;
+      case 3: /* AC */
+        DPRINTF(stdout, "\tStep accepted, ACID=%3d DFID=%5d", hunt[iHC].BCID, hunt[iHC].DFID);
+        break;
       }
-      DPRINTF(stderr, " Parameter= % 10.6e\n", path1[iHC]);
+      DPRINTF(stdout, " Parameter= % 10.6e\n", path1[iHC]);
     }
 
     /*
      * check path step error, if too large do not enlarge path step
      */
 
-    iHC = MAX(0,log_ID);
-    if ((ni == 1) && (n != 0) && (!const_delta_s[iHC]))
-      {
-       dhunt_par_new = path_step_control(num_total_nodes,
-					     dhunt_par, dhunt_par_old,
-					     x,
-					     eps,
-					     &success_ds,
-					     cont->use_var_norm, inewton);
-       if (dhunt_par_new > dhunt_par_max) {dhunt_par_new = dhunt_par_max;}
-      } else {
-	success_ds = 1;
-	dhunt_par_new = dhunt_par;
+    iHC = MAX(0, log_ID);
+    if ((ni == 1) && (n != 0) && (!const_delta_s[iHC])) {
+      dhunt_par_new = path_step_control(num_total_nodes, dhunt_par, dhunt_par_old, x, eps,
+                                        &success_ds, cont->use_var_norm, inewton);
+      if (dhunt_par_new > dhunt_par_max) {
+        dhunt_par_new = dhunt_par_max;
       }
+    } else {
+      success_ds = 1;
+      dhunt_par_new = dhunt_par;
+    }
 
     /*
      * determine whether to print out the data or not
@@ -1335,63 +1177,62 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
     i_print = 0;
     if (nt == step_print) {
       i_print = 1;
-      step_print += cont->print_freq; }
+      step_print += cont->print_freq;
+    }
 
-    if (alqALC == -1)
-    { i_print = 1; }
+    if (alqALC == -1) {
+      i_print = 1;
+    }
 
     if (i_print) {
-      error = write_ascii_soln(x, resid_vector, numProcUnknowns,
- 			       x_AC, nAC, path1[0], file);
+      error = write_ascii_soln(x, resid_vector, numProcUnknowns, x_AC, nAC, path1[0], file);
       if (error) {
-	DPRINTF(stderr, "%s:  error writing ASCII soln file\n", yo);
+        DPRINTF(stderr, "%s:  error writing ASCII soln file\n", yo);
       }
-      if ( Write_Intermediate_Solutions == 0 ) {
-        exo_time = aldALC[0]*path1[0];
-	write_solution(ExoFileOut, resid_vector, x, x_sens_p,
-		       x_old, xdot, xdot_old, tev, tev_post,  gv,
-		       rd, gindex, p_gsize, gvec, gvec_elem, &nprint,
- 		       delta_s[0], theta, exo_time, NULL, exo, dpi);
-	nprint++;
+      if (Write_Intermediate_Solutions == 0) {
+        exo_time = aldALC[0] * path1[0];
+        write_solution(ExoFileOut, resid_vector, x, x_sens_p, x_old, xdot, xdot_old, tev, tev_post,
+                       gv, rd, gvec, gvec_elem, &nprint, delta_s[0], theta, exo_time, NULL, exo,
+                       dpi);
+        nprint++;
       }
     }
 
-     if( Output_Variable_Stats)	{
-        err = variable_stats ( x, path1[0]);
-        EH(err, "Problem with variable_stats!");
-        if(ProcID == 0) fflush(stdout); 
-        }
+    if (Output_Variable_Stats) {
+      err = variable_stats(x, path1[0]);
+      GOMA_EH(err, "Problem with variable_stats!");
+      if (ProcID == 0)
+        fflush(stdout);
+    }
 
-      if (step_fix != 0 && nt == step_fix) {
 #ifdef PARALLEL
-        /* Barrier because fix needs both files to be finished printing
-           and fix always occurs on the same timestep as printing */
-        MPI_Barrier(MPI_COMM_WORLD);
+    if (step_fix != 0 && nt == step_fix) {
+      /* Barrier because fix needs both files to be finished printing
+         and fix always occurs on the same timestep as printing */
+      MPI_Barrier(MPI_COMM_WORLD);
+      fix_output();
+      /* Fix step is relative to print step */
+      step_fix += cont->fix_freq * cont->print_freq;
+    }
 #endif
-      	if (ProcID == 0 && Brk_Flag == 1) {
-          fix_output();
-        }
-	/* Fix step is relative to print step */
-        step_fix += cont->fix_freq*cont->print_freq;
-      }
 
     /*
      * backup old solutions
      * can use previous solutions for prediction one day
      */
 
-    dcopy1(numProcUnknowns,x_older,x_oldest);
-    dcopy1(numProcUnknowns,x_old,x_older);
-    dcopy1(numProcUnknowns,x,x_old);
+    dcopy1(numProcUnknowns, x_older, x_oldest);
+    dcopy1(numProcUnknowns, x_old, x_older);
+    dcopy1(numProcUnknowns, x, x_old);
 
-    dcopy1(nHC,delta_s_older,delta_s_oldest);
-    dcopy1(nHC,delta_s_old  ,delta_s_older );
-    dcopy1(nHC,delta_s      ,delta_s_old   );
-    dcopy1(nHC,delta_s_new  ,delta_s       );
+    dcopy1(nHC, delta_s_older, delta_s_oldest);
+    dcopy1(nHC, delta_s_old, delta_s_older);
+    dcopy1(nHC, delta_s, delta_s_old);
+    dcopy1(nHC, delta_s_new, delta_s);
     dhunt_par_old = dhunt_par;
     dhunt_par = dhunt_par_new;
     hunt_par_old = hunt_par;
-    if ( nAC > 0) {
+    if (nAC > 0) {
       dcopy1(nAC, x_AC, x_AC_old);
     }
 
@@ -1421,9 +1262,9 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
        * ADJUST NATURAL PARAMETER
        */
 
-    for (iHC=0;iHC<nHC;iHC++) {
+    for (iHC = 0; iHC < nHC; iHC++) {
       update_parameterHC(iHC, path1[iHC], x, xdot, x_AC, delta_s[iHC], cx, exo, dpi);
-    }  /*  end of iHC loop */
+    } /*  end of iHC loop */
 
     /*
      * GET FIRST ORDER PREDICTION
@@ -1431,12 +1272,14 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 
     switch (Continuation) {
     case HUN_ZEROTH:
-	break;
-    case  HUN_FIRST:
-	v1add(numProcUnknowns, &x[0], dhunt_par, &x_sens[0]);
-        break; }
+      break;
+    case HUN_FIRST:
+      v1add(numProcUnknowns, &x[0], dhunt_par, &x_sens[0]);
+      break;
+    }
 
-        if (!good_mesh) goto free_and_clear;
+    if (!good_mesh)
+      goto free_and_clear;
 
     /*
      *
@@ -1444,35 +1287,36 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
      *
      */
 
-    if (alqALC == -1)
-    { alqALC = 0; }
-    else
-    { alqALC = 1; }
+    if (alqALC == -1) {
+      alqALC = 0;
+    } else {
+      alqALC = 1;
+    }
 
     if (alqALC == 0) {
-      DPRINTF(stderr,"\n\n\t I will continue no more!\n\t No more continuation for you!\n");
+      DPRINTF(stdout, "\n\n\t I will continue no more!\n\t No more continuation for you!\n");
       goto free_and_clear;
     }
 
   } /* n */
 
-      if(n == MaxPathSteps &&
-	 aldALC[0] * (lambdaEnd[0] - path[0]) > 0)
-	{
-	  DPRINTF(stderr,"\n\tFailed to reach end of hunt in maximum number of successful steps (%d).\n\tSorry.\n",
-		  MaxPathSteps);
-          goto free_and_clear;
- 	  /*exit(0);  */
-	}
+  if (n == MaxPathSteps && aldALC[0] * (lambdaEnd[0] - path[0]) > 0) {
+    DPRINTF(
+        stderr,
+        "\n\tFailed to reach end of hunt in maximum number of successful steps (%d).\n\tSorry.\n",
+        MaxPathSteps);
+    goto free_and_clear;
+    /*exit(0);  */
+  }
 #ifdef PARALLEL
-      check_parallel_error("Hunting error");
+  check_parallel_error("Hunting error");
 #endif
 
   /*
    * DONE CONTINUATION
    */
 
- free_and_clear:
+free_and_clear:
 
   /*
    * Transform the node point coordinates according to the
@@ -1482,99 +1326,93 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
    */
 
   if (Anneal_Mesh) {
-#ifdef DEBUG
-    fprintf(stderr, "%s: anneal_mesh()...\n", yo);
-#endif
     err = anneal_mesh(x, tev, tev_post, NULL, rd, path1[0], exo, dpi);
-#ifdef DEBUG
-    DPRINTF(stderr, "%s: anneal_mesh()-done\n", yo);
-#endif
-    EH(err, "anneal_mesh() bad return.");
+    GOMA_EH(err, "anneal_mesh() bad return.");
   }
 
   /*
    * Free a bunch of variables that aren't needed anymore
    */
-  safer_free((void **) &ROT_Types);
-  safer_free((void **) &node_to_fill);
+  safer_free((void **)&ROT_Types);
+  safer_free((void **)&node_to_fill);
 
-  safer_free( (void **) &resid_vector);
-  safer_free( (void **) &resid_vector_sens);
-  safer_free( (void **) &scale);
-  safer_free( (void **) &x);
+  safer_free((void **)&resid_vector);
+  safer_free((void **)&resid_vector_sens);
+  safer_free((void **)&scale);
+  safer_free((void **)&x);
 
   if (nAC > 0) {
-    safer_free( (void **) &x_AC);
-    safer_free( (void **) &x_AC_old);
-    safer_free( (void **) &x_AC_dot);
+    safer_free((void **)&x_AC);
+    safer_free((void **)&x_AC_old);
+    safer_free((void **)&x_AC_dot);
   }
 
-  safer_free( (void **) &x_old);
-  safer_free( (void **) &x_older);
-  safer_free( (void **) &x_oldest);
-  safer_free( (void **) &xdot);
-  safer_free( (void **) &xdot_old);
-  safer_free( (void **) &x_update);
+  safer_free((void **)&x_old);
+  safer_free((void **)&x_older);
+  safer_free((void **)&x_oldest);
+  safer_free((void **)&xdot);
+  safer_free((void **)&xdot_old);
+  safer_free((void **)&x_update);
 
-  safer_free( (void **) &x_sens);
+  safer_free((void **)&x_sens);
 
-  if((nn_post_data_sens+nn_post_fluxes_sens) > 0)
-          Dmatrix_death(x_sens_p,num_pvector,numProcUnknowns);
+  if ((nn_post_data_sens + nn_post_fluxes_sens) > 0)
+    Dmatrix_death(x_sens_p, num_pvector, numProcUnknowns);
 
-  for(i = 0; i < MAX_NUMBER_MATLS; i++) {
-    for(n = 0; n < MAX_MODES; n++) {
-      safer_free((void **) &(ve_glob[i][n]->gn));
-      safer_free((void **) &(ve_glob[i][n]));
+  for (i = 0; i < MAX_NUMBER_MATLS; i++) {
+    for (n = 0; n < MAX_MODES; n++) {
+      safer_free((void **)&(ve_glob[i][n]->gn));
+      safer_free((void **)&(ve_glob[i][n]));
     }
-    safer_free((void **) &(vn_glob[i]));
+    safer_free((void **)&(vn_glob[i]));
   }
 
   sl_free(matrix_systems_mask, ams);
 
-  for (i=0;i<NUM_ALSS;i++) {
-    safer_free( (void**) &(ams[i]));
+  for (i = 0; i < NUM_ALSS; i++) {
+    safer_free((void **)&(ams[i]));
   }
 
-  safer_free( (void **) &gvec);
+  safer_free((void **)&gvec);
 
-  safer_free( (void **) &lambda);
-  safer_free( (void **) &lambdaEnd);
-  safer_free( (void **) &path);
-  safer_free( (void **) &path1);
-  safer_free( (void **) &hDelta_s0);
-  safer_free( (void **) &hDelta_s_min);
-  safer_free( (void **) &hDelta_s_max);
-  safer_free( (void **) &delta_s);
-  safer_free( (void **) &delta_s_new);
-  safer_free( (void **) &delta_s_old);
-  safer_free( (void **) &delta_s_older);
-  safer_free( (void **) &delta_s_oldest);
+  safer_free((void **)&lambda);
+  safer_free((void **)&lambdaEnd);
+  safer_free((void **)&path);
+  safer_free((void **)&path1);
+  safer_free((void **)&hDelta_s0);
+  safer_free((void **)&hDelta_s_min);
+  safer_free((void **)&hDelta_s_max);
+  safer_free((void **)&delta_s);
+  safer_free((void **)&delta_s_new);
+  safer_free((void **)&delta_s_old);
+  safer_free((void **)&delta_s_older);
+  safer_free((void **)&delta_s_oldest);
 
   Ivector_death(&aldALC[0], nHC);
   Ivector_death(&const_delta_s[0], nHC);
 
   i = 0;
-  for ( eb_indx = 0; eb_indx < exo->num_elem_blocks; eb_indx++ ) {
-    for ( ev_indx = 0; ev_indx < rd->nev; ev_indx++ ) {
-      if ( exo->elem_var_tab[i++] == 1 ) {
-        safer_free ((void **) &(gvec_elem [eb_indx][ev_indx]) );
+  for (eb_indx = 0; eb_indx < exo->num_elem_blocks; eb_indx++) {
+    for (ev_indx = 0; ev_indx < rd->nev; ev_indx++) {
+      if (exo->elem_var_tab[i++] == 1) {
+        safer_free((void **)&(gvec_elem[eb_indx][ev_indx]));
       }
     }
-    safer_free ((void **) &(gvec_elem [eb_indx]));
+    safer_free((void **)&(gvec_elem[eb_indx]));
   }
 
-  safer_free( (void **) &gvec_elem);
+  safer_free((void **)&gvec_elem);
 
-  safer_free( (void **) &rd);
-  safer_free( (void **) &Local_Offset);
-  safer_free( (void **) &Dolphin);
+  safer_free((void **)&rd);
+  safer_free((void **)&Local_Offset);
+  safer_free((void **)&Dolphin);
 
-  if( strlen( Soln_OutFile)  )
-    {
-       fclose(file);
-    }
+  if (strlen(Soln_OutFile)) {
+    fclose(file);
+  }
 
   free(gv);
+  free(pg->matrices);
 
   return;
 

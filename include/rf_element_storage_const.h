@@ -2,17 +2,18 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2014 Sandia Corporation.                                  *
+* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
+*               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
-* Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,  *
-* the U.S. Government retains certain rights in this software.            *
+* Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
+* certain rights in this software.                                        *
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
+* See LICENSE file.                                                       *
 \************************************************************************/
- 
-#ifndef _RF_ELEMENT_STORAGE_CONST_H
-#define _RF_ELEMENT_STORAGE_CONST_H
 
+#ifndef GOMA_RF_ELEMENT_STORAGE_CONST_H
+#define GOMA_RF_ELEMENT_STORAGE_CONST_H
 
 /*
  * prototypes for functions in rf_element_storage.c
@@ -29,4 +30,3 @@ extern void put_nodalSat_tn_IntoES(int, double);
 extern void put_Sat_tn_IntoES(int, double);
 
 #endif
-

@@ -2,84 +2,71 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2014 Sandia Corporation.                                  *
+* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
+*               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
-* Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,  *
-* the U.S. Government retains certain rights in this software.            *
+* Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
+* certain rights in this software.                                        *
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
+* See LICENSE file.                                                       *
 \************************************************************************/
- 
-#ifndef _MM_AS_ALLOC_H
-#define _MM_AS_ALLOC_H
 
+#ifndef GOMA_MM_AS_ALLOC_H
+#define GOMA_MM_AS_ALLOC_H
+
+#include "exo_struct.h"
+#include "md_timer.h"
+
+struct Problem_Description;
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_AS_ALLOC_C
+#ifdef GOMA_MM_AS_ALLOC_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _MM_AS_ALLOC_C
+#ifndef GOMA_MM_AS_ALLOC_C
 #define EXTERN extern
 #endif
 
-EXTERN int pd_alloc
-PROTO((void ));
+EXTERN int pd_alloc(void);
 
-EXTERN int efv_alloc
-PROTO((void ));
+EXTERN int efv_alloc(void);
 
-EXTERN int mp_alloc
-PROTO((void ));
+EXTERN int mp_alloc(void);
 
-EXTERN int cr_alloc
-PROTO((void ));
+EXTERN int cr_alloc(void);
 
-EXTERN int gn_alloc
-PROTO((void ));
+EXTERN int gn_alloc(void);
 
-EXTERN int ve_alloc
-PROTO((void ));
+EXTERN int ve_alloc(void);
 
-EXTERN int elc_alloc
-PROTO((void ));
+EXTERN int elc_alloc(void);
 
-EXTERN int evp_alloc
-PROTO((void ));
+EXTERN int evp_alloc(void);
 
-EXTERN int evp_tensor_alloc
-PROTO((Exo_DB *));		/* exo - ptr to std FE db */
+EXTERN int evp_tensor_alloc(Exo_DB *); /* exo - ptr to std FE db */
 
-EXTERN int elc_rs_alloc
-PROTO((void ));
+EXTERN int elc_rs_alloc(void);
 
-EXTERN int tran_alloc
-PROTO((void ));
+EXTERN int tran_alloc(void);
 
-EXTERN int libio_alloc
-PROTO((void ));
+EXTERN int libio_alloc(void);
 
-EXTERN int eigen_alloc
-PROTO((void ));
+EXTERN int eigen_alloc(void);
 
-EXTERN int cont_alloc
-PROTO((void ));
+EXTERN int cont_alloc(void);
 
-EXTERN int loca_alloc
-PROTO((void ));
+EXTERN int loca_alloc(void);
 
-EXTERN int assembly_alloc
-PROTO((Exo_DB *));
+EXTERN int assembly_alloc(Exo_DB *);
 
-EXTERN int bf_init
-PROTO((Exo_DB *));
+EXTERN int bf_init(Exo_DB *);
 
-EXTERN int bf_mp_init
-PROTO((struct Problem_Description *)); /* pd - std ptr to global beast */
+EXTERN int bf_mp_init(struct Problem_Description *); /* pd - std ptr to global beast */
 
-EXTERN void bf_reset
-PROTO((void));
+EXTERN void bf_reset(void);
 
-#endif /* _MM_AS_ALLOC_H */
+#endif /* GOMA_MM_AS_ALLOC_H */

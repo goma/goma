@@ -2,12 +2,14 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2014 Sandia Corporation.                                  *
+* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
+*               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
-* Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,  *
-* the U.S. Government retains certain rights in this software.            *
+* Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
+* certain rights in this software.                                        *
 *                                                                         *
-* This software is distributed under the GNU General Public License.	  *
+* This software is distributed under the GNU General Public License.      *
+* See LICENSE file.                                                       *
 \************************************************************************/
 
 #ifndef ARSCND_NAME
@@ -599,11 +601,11 @@ c
             kp(4) = nconv
             call ivout (logfil, 4, kp, ndigit, 
      &                  '_naup2: NEV, NP, NUMCNV, NCONV are')
-            call dvout (logfil, kplusp, ritzr, ndigit,
+            call dvout (logfil, kplusp, [ritzr], ndigit,
      &           '_naup2: Real part of the eigenvalues of H')
-            call dvout (logfil, kplusp, ritzi, ndigit,
+            call dvout (logfil, kplusp, [ritzi], ndigit,
      &           '_naup2: Imaginary part of the eigenvalues of H')
-            call dvout (logfil, kplusp, bounds, ndigit, 
+            call dvout (logfil, kplusp, [bounds], ndigit, 
      &          '_naup2: Ritz estimates of the current NCV Ritz values')
          end if
 c

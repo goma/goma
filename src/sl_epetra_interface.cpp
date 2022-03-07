@@ -6,14 +6,14 @@
 #define EPETRA_MPI
 #endif
 
-#include <iostream>
-#include <exception>
+#include <stdio.h>
 
-#include "mpi.h"
-#include "Epetra_Comm.h"
-#include "Epetra_Map.h"
-#include "Epetra_RowMatrix.h"
 #include "Epetra_CrsMatrix.h"
+#include "Epetra_DataAccess.h"
+#include "Epetra_Map.h"
+#include "mpi.h"
+
+class Epetra_RowMatrix;
 
 #ifdef EPETRA_MPI
 #include "Epetra_MpiComm.h"
@@ -28,7 +28,7 @@
  * @param NumberProcRows the number of rows on this processor
  * @return C compatible pointer to row matrix
  */
-C_Epetra_RowMatrix_t* EpetraCreateRowMatrix(int NumberProcRows) {
+C_Epetra_RowMatrix_t *EpetraCreateRowMatrix(int NumberProcRows) {
 #ifdef EPETRA_MPI
   Epetra_MpiComm comm(MPI_COMM_WORLD);
 #else
@@ -55,9 +55,12 @@ C_Epetra_RowMatrix_t* EpetraCreateRowMatrix(int NumberProcRows) {
  * @param Values Values to insert
  * @param Indices Indices of values
  */
-void EpetraInsertGlobalRowMatrix(C_Epetra_RowMatrix_t *AMatrix, int GlobalRow,
-    int NumEntries, const double *Values, const int *Indices) {
-  Epetra_CrsMatrix* CrsMatrix = dynamic_cast<Epetra_CrsMatrix*>(AMatrix);
+void EpetraInsertGlobalRowMatrix(C_Epetra_RowMatrix_t *AMatrix,
+                                 int GlobalRow,
+                                 int NumEntries,
+                                 const double *Values,
+                                 const int *Indices) {
+  Epetra_CrsMatrix *CrsMatrix = dynamic_cast<Epetra_CrsMatrix *>(AMatrix);
   if (CrsMatrix->Filled()) {
     CrsMatrix->ReplaceGlobalValues(GlobalRow, NumEntries, Values, Indices);
   } else {
@@ -73,11 +76,13 @@ void EpetraInsertGlobalRowMatrix(C_Epetra_RowMatrix_t *AMatrix, int GlobalRow,
  * @param Values Values to sum
  * @param Indices Indices for values
  */
-void EpetraSumIntoGlobalRowMatrix(C_Epetra_RowMatrix_t *AMatrix, int GlobalRow,
-    int NumEntries, const double* Values, const int* Indices) {
-  Epetra_CrsMatrix* CrsMatrix = dynamic_cast<Epetra_CrsMatrix*>(AMatrix);
-  int ierr = CrsMatrix->SumIntoGlobalValues(GlobalRow, NumEntries, Values,
-      Indices);
+void EpetraSumIntoGlobalRowMatrix(C_Epetra_RowMatrix_t *AMatrix,
+                                  int GlobalRow,
+                                  int NumEntries,
+                                  const double *Values,
+                                  const int *Indices) {
+  Epetra_CrsMatrix *CrsMatrix = dynamic_cast<Epetra_CrsMatrix *>(AMatrix);
+  int ierr = CrsMatrix->SumIntoGlobalValues(GlobalRow, NumEntries, Values, Indices);
   if (ierr)
     printf("Error in sum into epetra %d\n", ierr);
 }
@@ -88,7 +93,7 @@ void EpetraSumIntoGlobalRowMatrix(C_Epetra_RowMatrix_t *AMatrix, int GlobalRow,
  * @param scalar scalar value to set
  */
 void EpetraPutScalarRowMatrix(C_Epetra_RowMatrix_t *AMatrix, double scalar) {
-  Epetra_CrsMatrix* CrsMatrix = dynamic_cast<Epetra_CrsMatrix*>(AMatrix);
+  Epetra_CrsMatrix *CrsMatrix = dynamic_cast<Epetra_CrsMatrix *>(AMatrix);
   CrsMatrix->PutScalar(scalar);
 }
 
@@ -97,13 +102,13 @@ void EpetraPutScalarRowMatrix(C_Epetra_RowMatrix_t *AMatrix, double scalar) {
  * @param AMatrix Matrix to fill completely
  */
 void EpetraFillCompleteRowMatrix(C_Epetra_RowMatrix_t *AMatrix) {
-  Epetra_CrsMatrix* CrsMatrix = dynamic_cast<Epetra_CrsMatrix*>(AMatrix);
+  Epetra_CrsMatrix *CrsMatrix = dynamic_cast<Epetra_CrsMatrix *>(AMatrix);
   CrsMatrix->FillComplete();
 }
 
-int EpetraExtractRowValuesRowMatrix(C_Epetra_RowMatrix_t *AMatrix,
-    int GlobalRow, int size, double *values, int *indices) {
-  Epetra_CrsMatrix* CrsMatrix = dynamic_cast<Epetra_CrsMatrix*>(AMatrix);
+int EpetraExtractRowValuesRowMatrix(
+    C_Epetra_RowMatrix_t *AMatrix, int GlobalRow, int size, double *values, int *indices) {
+  Epetra_CrsMatrix *CrsMatrix = dynamic_cast<Epetra_CrsMatrix *>(AMatrix);
   int NumEntries;
   CrsMatrix->ExtractGlobalRowCopy(GlobalRow, size, NumEntries, values, indices);
   return NumEntries;
@@ -113,7 +118,4 @@ int EpetraExtractRowValuesRowMatrix(C_Epetra_RowMatrix_t *AMatrix,
  * Call deconstructor for row matrix (C interface)
  * @param AMatrix Row Matrix to delete
  */
-void EpetraDeleteRowMatrix(C_Epetra_RowMatrix_t *AMatrix) {
-  delete AMatrix;
-}
-
+void EpetraDeleteRowMatrix(C_Epetra_RowMatrix_t *AMatrix) { delete AMatrix; }

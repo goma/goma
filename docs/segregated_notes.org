@@ -1,0 +1,67 @@
+#+TITLE: Notes on Segregated Goma
+#+DATE: <2016-03-30 Wed>
+#+OPTIONS: texht:t
+#+LATEX_CLASS: article
+#+LATEX_CLASS_OPTIONS:
+#+LATEX_HEADER:
+#+LATEX_HEADER_EXTRA:
+
+* General structure changes
+
+Started by Kris, a global pg->imtrx was added that contains what
+current matrix the problem is in
+
+upd->Total_Num_Matrices was also added to keep track of the global
+number of matrices
+
+Kris also added matrix indices to many things in upd and pd:
+
+upd->Total_Num_EQ
+upd->Total_Num_Var
+upd->vp
+upd->ep
+
+pd->Matrix_Activity
+pd->e
+pd->v
+pd->Num_EQ
+pd->w
+pd->i
+pd->m
+pd->etm
+
+Kris also changed many other global variables such as Dolphin to have
+matrix indices
+
+After Kris's changes Weston added a few more
+
+Changed ei to include a matrix index e.g. ei[pg->imtrx] as ei is used
+for loading field variables
+
+Added two helper variables to the problem description structure
+
+pd->mi which contains a matrix index for a given variable
+
+e.g. pd->mi[VELOCITY1] would give the matrix that has VELOCITY1 active
+or -1 if no matrix had VELOCITY1
+
+and pd->gv which is a flag whether or not a variable is on in any
+matrix (this was for simpler use in residual contributions in assemble
+routines)
+
+Additional changes were made to some boundary condition global
+variables to have matrix indices to overcome issues arrising from
+segregation
+
+
+* Assemble routines that appear to be working
+
+The routines that appear to be working (and their subroutines) are:
+
+assemble_mesh
+assemble_momentum
+assemble_continuity
+assemble_stress_fortin
+assemble_fill
+assemble_gradient
+assemble_mass_transport

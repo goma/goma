@@ -2,14 +2,15 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2014 Sandia Corporation.                                  *
+* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
+*               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
-* Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,  *
-* the U.S. Government retains certain rights in this software.            *
+* Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
+* certain rights in this software.                                        *
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
+* See LICENSE file.                                                       *
 \************************************************************************/
- 
 
 /* Header file for most of the structures and #define'ed parameters
  * for the suite of sl_eggroll*.c source files.  These files constitute a
@@ -22,20 +23,19 @@
  *   - Jan 12, 2000, MMH rearranging and cleaning.
  */
 
-#ifndef _SL_EGGROLL_DEF_H
-#define _SL_EGGROLL_DEF_H
+#ifndef GOMA_SL_EGGROLL_DEF_H
+#define GOMA_SL_EGGROLL_DEF_H
 
-#define IDG_EPS    1.0e-14
-#define IDG_BIG    1.0e+14
-#define IDG_STEP   1.0e-08
+#define IDG_EPS  1.0e-14
+#define IDG_BIG  1.0e+14
+#define IDG_STEP 1.0e-08
 
 #define PARAMETER_ARRAY_LENGTH 20
 
 /* Eigenstuff structure.
  */
-typedef struct
-{ 
-  int n; 
+typedef struct {
+  int n;
   dbl *e;
   dbl *r;
   dbl *i;
@@ -45,8 +45,7 @@ typedef struct
 
 /* Postscript structure
  */
-typedef struct 
-{
+typedef struct {
   dbl unused;
   dbl xmin;
   dbl xmax;

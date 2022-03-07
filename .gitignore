@@ -1,5 +1,5 @@
 /bin/
-/build/
+/build*/
 /lib/
 /settings.mk
 /.settings/
@@ -11,8 +11,10 @@ goma
 .cproject
 .project
 /TAGS
+/tags
 /.settings/
 cmake-config
+/CMakeLists.txt.user*
 cmake-debug
 /scripts/easygomabuild.txt
 /scripts/gomaTPLs/
@@ -23,4 +25,16 @@ cmake-debug
 /*.cxxflags
 /*.files
 /*.includes
+*.orig
+/.spack-env/
+/scripts/.spack-env/
+/spack.lock
+/.idea/
+/cmake-build*/
+.cache/
+.envrc
 /.cache/
+*.code-workspace
+/docs/docs/
+/cmake-variants.yaml
+/cmake-variants.json

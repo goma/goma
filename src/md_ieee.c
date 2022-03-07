@@ -2,38 +2,15 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2014 Sandia Corporation.                                  *
+* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
+*               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
-* Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,  *
-* the U.S. Government retains certain rights in this software.            *
+* Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
+* certain rights in this software.                                        *
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
+* See LICENSE file.                                                       *
 \************************************************************************/
-
-/* 
- * ------------------------
- * | CVS File Information |
- * ------------------------
- * $RCSfile: md_ieee.c,v $
- * $Author: prschun $
- * $Date: 2007-09-18 18:53:42 $
- * $Revision: 5.1 $
- * $Name: not supported by cvs2svn $
- *====================================================================*/
-
-#ifdef USE_RCSID
-#ifndef lint
-static const char cvs_ieeehp_id[] =
-  "$Id: md_ieee.c,v 5.1 2007-09-18 18:53:42 prschun Exp $";
-#endif
-#endif
-
-#include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
-
-#include "std.h"
-#include "mm_eh.h"
 
 #ifdef hpux
 /*
@@ -52,17 +29,17 @@ static const char cvs_ieeehp_id[] =
  */
 
 #ifdef HAVE_SUNMATH_H
-#include <sunmath.h>		/* Need "-lsunmath -lm" libs too! */
+#include <sunmath.h> /* Need "-lsunmath -lm" libs too! */
 #endif
 
-void handle_ieee PROTO((void ));
+void handle_ieee(void);
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
 
 #ifdef hpux
-void handle_ieee (void)
+void handle_ieee(void)
 
 /***********************************************************************
  *    This function changes the default ieee floating point exceptions
@@ -94,7 +71,7 @@ void handle_ieee (void)
  *         default optimization is turned on, then spurious SIGFPE 8
  *         signals may occur, causing your program to prematurely
  *         terminate.
- *         There are two solutions to this (note already called HP on 
+ *         There are two solutions to this (note already called HP on
  *         this and was told that this is a undocumented "feature" not
  *         (gasp) a bug):
  *           1) Change the compile line options to include +Onomoveflops
@@ -104,32 +81,16 @@ void handle_ieee (void)
  *         compiler define.
  ***********************************************************************/
 {
-#ifdef DEBUG
-   (int) fpsetfastmode(0);  
-   (void) printf("ieee: fp exceptions are ignored\n");
-   (void) printf("ieee: Fast underflow mode is not enabled. IEEE-754 arithmetic\n");
-#else
-#ifdef DEBUG_HKM
-   extern void fpsetdefaults(void);   
-   fpsetdefaults();
-   (void) fpsetfastmode(0);
-   (void) printf("ieee: fp exceptions are set so that a core dump will occur\n");
-   (void) printf("ieee: Fast underflow mode is disabled\n");
-#else
-   (void) fpsetfastmode(1);
-   (void) printf("ieee: fp exceptions are ignored\n");
-   (void) printf("ieee: Fast underflow mode is enabled\n");
-#endif
-#endif
+  (void)fpsetfastmode(1);
+  (void)printf("ieee: fp exceptions are ignored\n");
+  (void)printf("ieee: Fast underflow mode is enabled\n");
 }
 /*****************************************************************************/
 
 #endif
 
 #ifdef solaris
-void 
-handle_ieee(void )
-{
+void handle_ieee(void) {
   static int err;
   static const char yo[] = "handle_ieee";
 
@@ -139,32 +100,31 @@ handle_ieee(void )
    * Clear any previous existing settings...
    */
 
-  err = ieee_handler ("clear", "all", SIGFPE_DEFAULT);
+  err = ieee_handler("clear", "all", SIGFPE_DEFAULT);
 
   /*
    * Call these harmless exceptions...
    */
 
-  err = ieee_handler ("set", "inexact",   SIGFPE_IGNORE);
-  err = ieee_handler ("set", "underflow", SIGFPE_IGNORE);
+  err = ieee_handler("set", "inexact", SIGFPE_IGNORE);
+  err = ieee_handler("set", "underflow", SIGFPE_IGNORE);
 
   /*
    * Call these exceptions worthy of halting right away...
    */
 
-  err = ieee_handler ("set", "division",  SIGFPE_ABORT);
-  err = ieee_handler ("set", "overflow",  SIGFPE_ABORT);
-  err = ieee_handler ("set", "invalid",   SIGFPE_ABORT);
+  err = ieee_handler("set", "division", SIGFPE_ABORT);
+  err = ieee_handler("set", "overflow", SIGFPE_ABORT);
+  err = ieee_handler("set", "invalid", SIGFPE_ABORT);
 
   /*
    * Insure none of these set attempts was thwarted...
    */
 
-  if ( err != 0 )
-    {
-      log_msg("Trouble initializing ANSI/IEEE Std 754-1985");
-      log_err("arithmetic handler on solaris");
-    }
+  if (err != 0) {
+    log_msg("Trouble initializing ANSI/IEEE Std 754-1985");
+    log_err("arithmetic handler on solaris");
+  }
 
   return;
 }
@@ -199,11 +159,5 @@ matherr(struct exception *e)
  * Default for this: do nothing.
  */
 
-void 
-handle_ieee (void)
-{
-#ifdef DEBUG
-  (void) printf("ieee: fp exceptions are not changed: generic block\n");
-#endif
-}
+void handle_ieee(void) {}
 #endif

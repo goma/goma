@@ -1,0 +1,86 @@
+*******
+**G11**
+*******
+
+::
+
+	BC = G11 NS <bc_id> <float1> [float2]
+
+-----------------------
+**Description / Usage**
+-----------------------
+
+**(DC/GRADIENT11)**
+
+This Dirichlet boundary condition specification is used to set a constant xx-velocity
+gradient component of the velocity gradient tensor. Definitions of the input parameters
+are as follows:
+
+============ ====================================================================
+**G11**      Boundary condition name (<bc_name>) that defines the xx-velocity
+             gradient.
+**NS**       Type of boundary condition (<bc_type>), where **NS** denotes
+             node set in the EXODUS II database.
+<bc_id>      The boundary flag identifier, an integer associated with
+             <bc_type> that identifies the boundary location (node set in
+             EXODUS II) in the problem domain.
+<float1>     Value of xx-velocity gradient.
+[float2]     An optional parameter (that serves as a flag to the code for a
+             Dirichlet boundary condition). If a value is present, and is
+             not -1.0, the condition is applied as a residual equation.
+             Otherwise, it is a "hard set" condition and is eliminated
+             from the matrix. *The residual method must be used when
+             this Dirichlet boundary condition is used as a parameter in
+             automatic continuation sequences*.
+============ ====================================================================
+
+------------
+**Examples**
+------------
+
+The following is a sample card for applying a Dirichlet condition on the xx-velocity
+gradient component on node set 100:
+::
+
+   BC = G11 NS 100   5.0
+
+::
+
+   BC = G11 NS 100   5.0   1.0
+
+where the second example uses the “residual” method for applying the same Dirichlet
+condition.
+
+-------------------------
+**Technical Discussion**
+-------------------------
+
+We solve a simple least squares equation to determine the continuous velocity gradient
+*G* from the velocity field. This is done so that we may have a differentiable field to get
+estimates of the second derivative of the velocity field for applications in complex
+rheology. The velocity gradient equation is:
+
+.. figure:: /figures/177_goma_physics.png
+	:align: center
+	:width: 90%
+
+Note, that boundary conditions are almost never set on the velocity gradient equation
+since it is just a least squares interpolation of the discontinuous velocity gradient
+derived from the velocity field.
+
+See the Technical Discussion for the *UVW* velocity boundary condition for a discussion
+of the two ways of applying Dirichlet boundary conditions. For details of the velocity
+gradient tensor and its use for solving viscoelastic flow problems, please see Rao
+(2000).
+
+
+
+--------------
+**References**
+--------------
+
+GT-014.1: Tutorial for Running Viscoelastic Flow Problems with GOMA, June 21,
+2000, R. R. Rao
+
+.. 
+	TODO - Line 63 has a photo that needs to be put into equation form.

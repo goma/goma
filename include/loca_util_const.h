@@ -2,14 +2,15 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2014 Sandia Corporation.                                  *
+* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
+*               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
-* Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,  *
-* the U.S. Government retains certain rights in this software.            *
+* Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
+* certain rights in this software.                                        *
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
+* See LICENSE file.                                                       *
 \************************************************************************/
- 
 
 /*
 #ifndef lint
@@ -38,16 +39,16 @@ static char *cvs_utilconsth_id =
 /*     EXTERN STATEMENTS FOR GLOBAL FUNCTIONS IN rf_util.c                   */
 /*****************************************************************************/
 
-extern void    initialize_util_routines(int n_o, int n_t);
-extern void    vec_init(double *u);
-extern void    vec_copy(double *dx, double *dy);
-extern double  dp(double *x, double *y);
-extern double  ip(double *x, double *y);
-extern double  ltransnorm(double *x, double *y);
+extern void initialize_util_routines(int n_o, int n_t);
+extern void vec_init(double *u);
+extern void vec_copy(double *dx, double *dy);
+extern double dp(double *x, double *y);
+extern double ip(double *x, double *y);
+extern double ltransnorm(double *x, double *y);
 extern double *alloc_vec(void);
-extern void    free_vec(double **ptr);
-extern double  null_vector_resid(double r_val, double i_val,
-                                 double *r_vec, double *i_vec, int mm_flag);
-extern void    sort_by_real(int nconv, int ncv, int ldv, double *d, double *v);
+extern void free_vec(double **ptr);
+extern double
+null_vector_resid(double r_val, double i_val, double *r_vec, double *i_vec, int mm_flag);
+extern void sort_by_real(int nconv, int ncv, int ldv, double *d, double *v);
 
 #endif

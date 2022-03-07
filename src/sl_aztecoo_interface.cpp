@@ -2,12 +2,14 @@
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
-* Copyright (c) 2014 Sandia Corporation.                                  *
+* Copyright (c) 2022 Goma Developers, National Technology & Engineering   *
+*               Solutions of Sandia, LLC (NTESS)                          *
 *                                                                         *
-* Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,  *
-* the U.S. Government retains certain rights in this software.            *
+* Under the terms of Contract DE-NA0003525, the U.S. Government retains   *
+* certain rights in this software.                                        *
 *                                                                         *
-* This software is distributed under the GNU General Public License.	  *
+* This software is distributed under the GNU General Public License.      *
+* See LICENSE file.                                                       *
 \************************************************************************/
 #if defined(PARALLEL) && !defined(EPETRA_MPI)
 #define EPETRA_MPI
@@ -17,33 +19,23 @@
 #define __cplusplus
 #endif
 
-#include "mpi.h"
-#include <stdio.h>
-#include <iostream>
-#include <ctime>
-
 #include "AztecOO.h"
+#include "Epetra_DataAccess.h"
+#include "Epetra_RowMatrix.h"
+#include "az_aztec.h"
+#include "mpi.h"
 
 #ifdef EPETRA_MPI
-#define AZ_MPI
-#define AZTEC_MPI
 #include "Epetra_MpiComm.h"
-#include "mpi.h"
-#else 
+#else
 #include "Epetra_SerialComm.h"
 #endif
 
-#include "Trilinos_Util.h"
-
-#include "Epetra_Map.h"
-#include "Epetra_MultiVector.h"
-#include "Epetra_Vector.h"
-#include "Epetra_CrsMatrix.h"
 #include "Epetra_LinearProblem.h"
-
-#include "sl_util_structs.h"
-#include "sl_epetra_interface.h"
+#include "Epetra_Map.h"
+#include "Epetra_Vector.h"
 #include "sl_aztecoo_interface.h"
+#include "sl_util_structs.h"
 
 extern "C" {
 
@@ -56,10 +48,7 @@ extern "C" {
  * @param x_ solution vector (initial guess), solution placed in this vector
  * @param b_ residual vector
  */
-void
-aztecoo_solve_epetra(struct Aztec_Linear_Solver_System *ams,
-		  double *x_, 
-		  double *b_) {
+void aztecoo_solve_epetra(struct GomaLinearSolverData *ams, double *x_, double *b_) {
 
   /* Initialize MPI communications */
 #ifdef EPETRA_MPI
@@ -71,11 +60,11 @@ aztecoo_solve_epetra(struct Aztec_Linear_Solver_System *ams,
   /* Define internal variables */
   Epetra_RowMatrix *A = ams->RowMatrix;
   Epetra_LinearProblem Problem;
-    
+
   Epetra_Map map = A->RowMatrixRowMap();
   Epetra_Vector x(Copy, map, x_);
   Epetra_Vector b(Copy, map, b_);
-  
+
   /* Assemble linear problem */
   Problem.SetOperator(A);
   Problem.SetLHS(&x);
@@ -91,13 +80,13 @@ aztecoo_solve_epetra(struct Aztec_Linear_Solver_System *ams,
   double tolerance = ams->params[AZ_tol];
   int max_iterations = ams->options[AZ_max_iter];
   /* Solve problem */
-  solver.Iterate(max_iterations,tolerance);
+  solver.Iterate(max_iterations, tolerance);
   solver.GetAllAztecStatus(ams->status);
 
   /* Convert solution vector */
   int NumMyRows = map.NumMyElements();
-  for(int i=0; i< NumMyRows; i++) {
-    x_[i] = x[i]; 
+  for (int i = 0; i < NumMyRows; i++) {
+    x_[i] = x[i];
   }
 }
 

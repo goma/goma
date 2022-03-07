@@ -1,0 +1,69 @@
+******************
+**F1 F2 F3 F4 F5**
+******************
+
+::
+
+	BC = {F1 | F2 | F3 | F4 | F5} NS <bc_id> <float1> [float2]
+
+-----------------------
+**Description / Usage**
+-----------------------
+
+**(DC/R_PHASE)**
+
+This boundary condition format is used to set a constant phase function field values at
+node sets. Please see “phase#” equation types for a description of the variables. Each
+such specification (for each field being used) is made on a separate input card. These
+boundary conditions must be applied to node sets. Definitions of the input parameters
+are as follows:
+
+============================= ===========================================================
+**{F1 | F2 | F3 | F4 | F5 }** Two-character boundary condition name (<bc_name>)
+                              that defines which phase field variable is being set. There
+                              are a maximum of five addtional level-set/phase fields.
+**NS**                        Type of boundary condition (<bc_type>), where **NS** denotes
+                              node set in the EXODUS II database.
+<bc_id>                       The boundary flag identifier, an integer associated with
+                              <bc_type> that identifies the boundary location (node set in
+                              EXODUS II) in the problem domain.
+<float1>                      Value at which the phase field unknown will be fixed on this
+                              node set.
+[float2]                      An optional parameter (that serves as a flag to the code for a
+                              Dirichlet boundary condition). If a value is present, and is
+                              not -1.0, the condition is applied as a residual equation.
+                              Otherwise, it is a “hard set” condition and is eliminated
+                              from the matrix. *The residual method must be used when
+                              this Dirichlet boundary condition is used as a parameter in
+                              automatic continuation sequences*.
+============================= ===========================================================
+
+------------
+**Examples**
+------------
+
+Following is a sample card which applies an phase field boundary condition to the
+nodes in node set 100, specifically an phase field-3 value of 1.0.
+::
+
+   BC = F3 NS 100 1.0
+
+-------------------------
+**Technical Discussion**
+-------------------------
+
+This boundary condition finds most of its use in the Phase Function interface tracking
+algorithm where it is used to fix the value of the color function at an inlet or outlet
+boundary. The phase function fields were put in to supplement Goma’s base level set
+capability to provide the ability to model multiple (more than two) materials. We don’t
+anticipate that these boundary conditions will be used much. Nonetheless, this
+condition allows Dirichlet conditions to be applied to each of the five additional level
+set fields.
+
+
+
+--------------
+**References**
+--------------
+
+GT-026.3
