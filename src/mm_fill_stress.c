@@ -1431,7 +1431,8 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
 
   SUPG_terms supg_terms;
   if (supg != 0.) {
-    supg_tau(&supg_terms, dim, 0.0, pg_data, dt, TRUE, eqn);
+    //supg_tau(&supg_terms, dim, 0.0, pg_data, dt, TRUE, eqn);
+    supg_tau_shakib(&supg_terms, dim, dt, 1e-7, R_STRESS11);
   }
   /* end Petrov-Galerkin addition */
 
