@@ -1128,6 +1128,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       imp, "Solid Thermal Expansion", &(elc_glob[mn]->thermal_expansion_model),
       &(elc_glob[mn]->thermal_expansion), &(elc_glob[mn]->u_thermal_expansion),
       &(elc_glob[mn]->len_u_thermal_expansion), model_name, SCALAR_INPUT, &NO_SPECIES, es);
+
   if (model_read == -1) {
 
     if (!strcmp(model_name, "SHRINKAGE")) {
@@ -1148,7 +1149,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         GOMA_EH(GOMA_ERROR, err_msg);
       }
       elc_glob[mn]->len_u_thermal_expansion = num_const;
-      else if( !strcmp(model_name, "THERMAL") ) {
+    } else if( !strcmp(model_name, "THERMAL") ) {
           elc_glob[mn]->thermal_expansion_model = THERMAL_HEAT;
           num_const = read_constants(imp, &(elc_glob[mn]->u_thermal_expansion), NO_SPECIES);
           if (num_const < 5)
@@ -1176,7 +1177,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
           SPF_DBL_VEC( endofstring(es), num_const,elc_glob[mn]->u_thermal_expansion);
         }
 
-    } else {
+     else {
       elc_glob[mn]->thermal_expansion_model = CONSTANT;
       elc_glob[mn]->thermal_expansion = 0.0;
     }
@@ -8534,6 +8535,11 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   Num_Var_Init_Mat[mn] = 0;
   while ((iread = look_forward_optional(imp, "Initialize", input, '=')) == 1) {
+        int curr_var = Num_Var_Init_Mat[mn];
+        char  line[255];
+        char  *arguments[MAX_NUMBER_PARAMS];
+
+        Var_init_mat[mn][curr_var].len_u_pars = -1;
     /*
      *  Read the variable name to be fixed
      */
@@ -8541,7 +8547,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       sprintf(err_msg, "Error reading variable for initialization in material, %s",
               mat_ptr->Material_Name);
       GOMA_EH(GOMA_ERROR, err_msg);
-    }
+      }
     (void)strip(input);
     var = variable_string_to_int(input, "Variable for matrl initialization");
     if (var >= 0) {
@@ -8563,6 +8569,23 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       Var_init_mat[mn][Num_Var_Init_Mat[mn]].slave_block = 0;
     else
       SPF(endofstring(es), " %d", Var_init_mat[mn][Num_Var_Init_Mat[mn]].slave_block);
+
+/* add float list */
+
+  if ( fgets(line, 255, imp) != NULL)
+    {
+      strip(line);
+      if ((num_const = count_parameters(line)) > 0) {
+        iread = tokenize_by_whsp(line, arguments, MAX_NUMBER_PARAMS);
+        Var_init_mat[mn][curr_var].len_u_pars = 0;
+        Var_init_mat[mn][curr_var].u_pars = alloc_dbl_1(num_const, 0.0);
+        for(i = 0; i < num_const; i++) {
+          Var_init_mat[mn][curr_var].u_pars[i] = atof(arguments[i]);
+          Var_init_mat[mn][curr_var].len_u_pars++;
+          SPF( endofstring(echo_string)," %.4g", Var_init_mat[mn][curr_var].u_pars[i]);
+                }
+        }
+      }
 
     Num_Var_Init_Mat[mn]++;
     ECHO(es, echo_file);
@@ -9201,238 +9224,9 @@ mat_ptr->veloU	       * for it now and flag its existence through the material p
         mat_ptr->len_lubsource = 1;
 
         if (fscanf(imp, "%lf", &(mat_ptr->lubsource)) != 1)
-
-  Num_Var_Init_Mat[mn] = 0;
-  while ((iread = look_forward_optional(imp, "Initialize", input, '='))
-	 == 1)
-    {
-	int curr_var = Num_Var_Init_Mat[mn];
-	char  line[255];
-	char  *arguments[MAX_NUMBER_PARAMS];
-
-        Var_init_mat[mn][curr_var].len_u_pars = -1;
-      /*
-       *  Read the variable name to be fixed
-       */
-      if (fscanf(imp, "%80s", input) != 1) 
-	{
-	  sprintf(err_msg,
-		  "Error reading variable for initialization in material, %s",
-		  mat_ptr->Material_Name);
-	  EH(-1, err_msg);
-      }
-      (void) strip(input);
-      var = variable_string_to_int(input, "Variable for matrl initialization");
-      if (var >= 0) 
-	{
-	  Var_init_mat[mn][curr_var].var = var;
-	}
-      else 
-	{
-	  sprintf(err_msg,
-		"Invalid choice of initialization variable in material, %s",
-	         mat_ptr->Material_Name);
-	  EH(-1, err_msg);
-	}
-      
-      if ( fscanf(imp, "%d %lf", &Var_init_mat[mn][curr_var].ktype,
-		  &Var_init_mat[mn][curr_var].init_val)
-	  != 2) EH(-1,"Error reading initialization data");
-
-      SPF(es,"%s = %s %d %.4g", "Initialize", input, Var_init_mat[mn][curr_var].ktype, 
-	                                        Var_init_mat[mn][curr_var].init_val );
-												 
-      if( fscanf( imp, "%d", &Var_init_mat[mn][curr_var].slave_block) != 1)
-	  Var_init_mat[mn][curr_var].slave_block = 0;	
-      else
-	  SPF(endofstring(es)," %d", Var_init_mat[mn][curr_var].slave_block);
-		
-/* add float list */
-
-  if ( fgets(line, 255, imp) != NULL)
-    {
-      strip(line);
-      if ((num_const = count_parameters(line)) > 0) {
-        iread = tokenize_by_whsp(line, arguments, MAX_NUMBER_PARAMS);
-        Var_init_mat[mn][curr_var].len_u_pars = 0;
-        Var_init_mat[mn][curr_var].u_pars = alloc_dbl_1(num_const, 0.0);
-        for(i = 0; i < num_const; i++) {
-          Var_init_mat[mn][curr_var].u_pars[i] = atof(arguments[i]);
-          Var_init_mat[mn][curr_var].len_u_pars++;
-          SPF( endofstring(echo_string)," %.4g", Var_init_mat[mn][curr_var].u_pars[i]);
+                {
+                  GOMA_EH(GOMA_ERROR, "Lubrication fluid source constant model expects 1 flt");
                 }
-        }
-      }
-
-      Num_Var_Init_Mat[mn]++;
-      ECHO(es,echo_file);
-    }
-
-  ECHO("\n---Special Inputs\n", echo_file); /* added by PRS 3/17/2009 */ 
-
-  if(pd_glob[mn]->e[R_LUBP] || pd_glob[mn]->e[R_LUBP_2] ||
-     pd_glob[mn]->e[R_TFMP_MASS] || pd_glob[mn]->e[R_TFMP_BOUND] )
-    {
-       model_read = look_for_mat_proptable(imp, "Upper Height Function Constants",
-					  &(mat_ptr->HeightUFunctionModel),
-					  &(mat_ptr->heightU),
-					  &(mat_ptr->u_heightU_function_constants),
-					  &(mat_ptr->len_u_heightU_function_constants),
-					  &(mat_ptr->heightU_function_constants_tableid),
-					  model_name, SCALAR_INPUT, &NO_SPECIES,es);
-
-      mat_ptr->heightU_ext_field_index = -1; //Default to NO external field
-
-      if ( model_read == -1 && !strcmp(model_name, "CONSTANT_SPEED") )
-	{
-	  model_read = 1;
-	  mat_ptr->HeightUFunctionModel = CONSTANT_SPEED;
-	  num_const = read_constants(imp, &(mat_ptr->u_heightU_function_constants), NO_SPECIES);
-	  if( num_const < 2)
-	    {
-	      sr = sprintf(err_msg, 
-			   "Matl %s needs at least 2 constants for %s %s model.\n",
-			   pd_glob[mn]->MaterialName,
-			   "Upper Height Function", "CONSTANT_SPEED");
-	      EH(-1, err_msg);
-	    }
-
-	  if (num_const > 2)
-	    {
-	      /* We may have an external field "height" we will be adding to this model.  Check
-	       * for it now and flag its existence through the material properties structure 
-	       */
-	      mat_ptr->heightU_ext_field_index = -1; //Default to NO external field 
-	      if ( efv->ev )
-		{
-		  for (i = 0; i < efv->Num_external_field; i++)
-		    {
-		      if(!strcmp(efv->name[i], "HEIGHT"))
-			{
-			  mat_ptr->heightU_ext_field_index = i;
-			}
-		    }
-		}
-	      else
-		{
-		  EH(-1," You have a third float on Upper Height Function Constants card, but NO external field");
-		}
-	    }
-
-	  mat_ptr->len_u_heightU_function_constants = num_const;
-	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heightU_function_constants);
-
-	}
-      else if ( model_read == -1 && !strcmp(model_name, "CONSTANT_SPEED_MELT") )  
-	{
-	  model_read = 1;
-	  mat_ptr->HeightUFunctionModel = CONSTANT_SPEED_MELT;
-	  num_const = read_constants(imp, &(mat_ptr->u_heightU_function_constants), NO_SPECIES);
-	  if( num_const < 2)
-	    {
-	      sr = sprintf(err_msg, 
-			   "Matl %s needs at least 2 constants for %s %s model.\n",
-			   pd_glob[mn]->MaterialName,
-			   "Upper Height Function", "CONSTANT_SPEED");
-	      EH(-1, err_msg);
-	    }
-	  mat_ptr->len_u_heightU_function_constants = num_const;
-	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heightU_function_constants);
-
-	}
-      else if ( model_read == -1 && !strcmp(model_name, "CONSTANT_SPEED_DEFORM") )  
-	{
-	  model_read = 1;
-	  mat_ptr->HeightUFunctionModel = CONSTANT_SPEED_DEFORM;
-	  num_const = read_constants(imp, &(mat_ptr->u_heightU_function_constants), NO_SPECIES);
-	  if( num_const < 5)
-	    {
-	      sr = sprintf(err_msg, 
-			   "Matl %s needs at least 5 constants for %s %s model.\n",
-			   pd_glob[mn]->MaterialName,
-			   "Upper Height Function", "CONSTANT_SPEED_DEFORM");
-	      EH(-1, err_msg);
-	    }
-	  mat_ptr->len_u_heightU_function_constants = num_const;
-	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heightU_function_constants);
-
-	}
-      else if ( model_read == -1 && !strcmp(model_name, "ROLL_ON") )  
-	{
-	  model_read = 1;
-	  mat_ptr->HeightUFunctionModel = ROLL_ON;
-	  num_const = read_constants(imp, &(mat_ptr->u_heightU_function_constants), NO_SPECIES);
-	  if( num_const < 5)
-	    {
-	      sr = sprintf(err_msg, 
-			   "Matl %s needs 5 constants for %s %s model.\n",
-			   pd_glob[mn]->MaterialName,
-			   "Upper Height Function", "ROLL_ON");
-	      EH(-1, err_msg);
-	    }
-
-	  if (num_const > 5)
-	    {
-	      /* We may have an external field "height" we will be adding to this model.  Check
-	       * for it now and flag its existence through the material properties structure 
-	       */
-	      mat_ptr->heightU_ext_field_index = -1; //Default to NO external field 
-	      if ( efv->ev )
-		{
-		  for (i = 0; i < efv->Num_external_field; i++)
-		    {
-		      if(!strcmp(efv->name[i], "HEIGHT"))
-			{
-			  mat_ptr->heightU_ext_field_index = i;
-			}
-		    }
-		}
-	      else
-		{
-		  EH(-1," You have a sixth float on Upper Height Function Constants card, but NO external field");
-		}
-	    }
-	  mat_ptr->len_u_heightU_function_constants = num_const;
-	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heightU_function_constants);
-	}
-      else if ( model_read == -1 && !strcmp(model_name, "ROLL_ON_MELT") )  
-	{
-	  model_read = 1;
-	  mat_ptr->HeightUFunctionModel = ROLL_ON_MELT;
-	  num_const = read_constants(imp, &(mat_ptr->u_heightU_function_constants), NO_SPECIES);
-	  if( num_const < 5)
-	    {
-	      sr = sprintf(err_msg, 
-			   "Matl %s needs 5 constants for %s %s model.\n",
-			   pd_glob[mn]->MaterialName,
-			   "Upper Height Function", "ROLL_ON_MELT");
-	      EH(-1, err_msg);
-	    }
-	  mat_ptr->len_u_heightU_function_constants = num_const;
-	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heightU_function_constants);
-	}
-    
-      else if ( model_read == -1 && !strcmp(model_name, "ROLL") )  
-	{
-	  model_read = 1;
-	  mat_ptr->HeightUFunctionModel = ROLL;
-	  num_const = read_constants(imp, &(mat_ptr->u_heightU_function_constants), NO_SPECIES);
-	  if( num_const < 8)
-	    {
-	      sr = sprintf(err_msg, 
-			   "Matl %s needs 8 constants for %s %s model.\n",
-			   pd_glob[mn]->MaterialName,
-			   "Upper Height Function", "ROLL");
-	      EH(-1, err_msg);
-	    }
-	  mat_ptr->len_u_heightU_function_constants = num_const;
-	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heightU_function_constants);
-	}
-
-       else if ( model_read == -1 && !strcmp(model_name, "CAP_SQUEEZE") )
-        {
-          GOMA_EH(GOMA_ERROR, "Lubrication fluid source constant model expects 1 flt");
-        }
 
         SPF(endofstring(es), "%g", mat_ptr->lubsource);
 
@@ -9544,10 +9338,6 @@ mat_ptr->veloU	       * for it now and flag its existence through the material p
     }
 
     ECHO(es, echo_file);
-
-    model_read =
-        look_for_mat_prop(imp, "Upper Velocity Function Constants", &(mat_ptr->VeloUFunctionModel),
-                          mat_ptr->veloU, NO_USER, NULL, model_name, VECTOR_INPUT, &NO_SPECIES, es);
 
     /* Optional slip term */
 

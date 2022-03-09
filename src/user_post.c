@@ -22,6 +22,7 @@
 #include "mm_as_structs.h"
 #include "std.h"
 #include "user_post.h"
+#include "mm_eh.h"
 
 #define GOMA_USER_POST_C
 
@@ -153,7 +154,7 @@ else if( model_id == -1)
 	}
 else
 	{
-	EH(-1,"invalid model_id in user_post");
+	GOMA_EH(-1,"invalid model_id in user_post");
 	}
 
   return post_value;

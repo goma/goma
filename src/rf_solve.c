@@ -1045,7 +1045,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 	}
 	if( Output_Variable_Stats)	{
 	    err = variable_stats ( x, time1);
-	    EH(err, "Problem with variable_stats!");
+	    GOMA_EH(err, "Problem with variable_stats!");
 	    if(ProcID == 0) fflush(stdout); 
 	    }
 

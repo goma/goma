@@ -29,8 +29,11 @@
 #include "mm_eh.h"
 #include "rf_bc_const.h"
 #include "rf_fem_const.h"
+#include "rf_fem.h"
 #include "rf_io.h"
 #include "std.h"
+#include "el_geom.h"
+#include "wr_side_data.h"
 
 /*
  * Prototype declarations of functions defined in this file.
@@ -211,7 +214,7 @@ double coord1, coord2, qflow, gap, veloc1, veloc2;
 	  }
 	else
 	{
-	EH(-1,"invalid model_id in velo_user_bc");
+	GOMA_EH(-1,"invalid model_id in velo_user_bc");
 	}
     }
   else if ( velo_condition == VVARY_BC )
@@ -337,7 +340,7 @@ double coord1, coord2, gap, veloc1, veloc2;
 	}
 	else
 	{
-	EH(-1,"invalid model_id in velo_user_bc");
+	GOMA_EH(-1,"invalid model_id in velo_user_bc");
 	}
     }
   else if ( velo_condition == WVARY_BC )
@@ -748,6 +751,7 @@ double coord1, coord2, qflow, gap, veloc1, veloc2;
     /*       f = -a2*x1*drdx2/radius/radius; */
     f = 0.;
   } else if (velo_condition == UVARY_BC) {
+    double a1;
     /* if(time<900.)
       {
         a1 = 0.002;
@@ -777,6 +781,7 @@ double coord1, coord2, qflow, gap, veloc1, veloc2;
 
     /*   f = ( 1. - x2*drdx2/radius)/radius; */
   } else if (velo_condition == WVARY_BC) {
+    double a2;
     a2 = p[0];
     f = a2 * x1 * cos(x2);
   }
@@ -1012,7 +1017,7 @@ dbl fnc(const dbl x1, const dbl x2, const dbl x3, const dbl p[], const dbl time)
 		}
         else
         	{
-      		EH(-1,"invalid gravure user_bc position");
+      		GOMA_EH(-1,"invalid gravure user_bc position");
         	}
 
 	f = SQUARE(x1-xcenter) + SQUARE(x2-ycenter) - SQUARE(roll_rad+ysurf);
@@ -1118,7 +1123,7 @@ dbl fnc(const dbl x1, const dbl x2, const dbl x3, const dbl p[], const dbl time)
 		case 23:
 			w1=x3; w2=x2; break;
 		default:
-      EH(-1,"invalid xyz in Pade function user_bc");
+      GOMA_EH(-1,"invalid xyz in Pade function user_bc");
 
 		}
 
@@ -2211,7 +2216,7 @@ dbl fnc(const dbl x1, const dbl x2, const dbl x3, const dbl p[], const dbl time)
 	  n_corner = ((int)p[1]);
 	  sign_bit = ((int)p[2]);
           if(n_corner > 10)
-          	{EH(-1,"too many corners in multiple radius lip\n");}
+          	{GOMA_EH(-1,"too many corners in multiple radius lip\n");}
           i_min = 1;
           for(i=0 ; i<n_corner ; i++)
           	{
@@ -2342,8 +2347,8 @@ if(x1>0.00001)fprintf(stderr,"radius  %g %g %g %g\n",f,rad[i_min],xcen[i_min],yc
                k = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
                for (dir = 0; dir < pd->Num_Dim ; dir++)
                    {
-                    i = Index_Solution (k, MESH_DISPLACEMENT1+dir, 0, 0, -1);
-                    EH(i, "Could not resolve index_solution.");
+                    i = Index_Solution (k, MESH_DISPLACEMENT1+dir, 0, 0, -1, pg->imtrx);
+                    GOMA_EH(i, "Could not resolve index_solution.");
 /*                    pos_dcl[dir] = Coor[dir][k] + x[i+dir];*/
                    }
              }
@@ -2354,8 +2359,8 @@ if(x1>0.00001)fprintf(stderr,"radius  %g %g %g %g\n",f,rad[i_min],xcen[i_min],yc
                k = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
                for (dir = 0; dir < pd->Num_Dim ; dir++)
                    {
-                    i = Index_Solution (k, MESH_DISPLACEMENT1+dir, 0, 0, -1);
-                    EH(i, "Could not resolve index_solution.");
+                    i = Index_Solution (k, MESH_DISPLACEMENT1+dir, 0, 0, -1, pg->imtrx);
+                    GOMA_EH(i, "Could not resolve index_solution.");
 /*                    pos_scl[dir] = Coor[dir][k] + x[i+dir];*/
                    }
              }
@@ -2370,17 +2375,13 @@ if(x1>0.00001)fprintf(stderr,"radius  %g %g %g %g\n",f,rad[i_min],xcen[i_min],yc
 	}
   else
     {
-      EH(-1,"invalid model_id in user_bc");
+      GOMA_EH(-1,"invalid model_id in user_bc");
     }
 
   return (f); /* Here's a good default behavior! */
 }
 /*****************************************************************************/
 /*****************************************************************************/
-dbl dfncd2(const dbl x1, const dbl x2, const dbl x3, const dbl p[], const dbl time) {
-  /* for PI use M_PIE Constant from std.h include file. */
-  dbl f = 0; /* dfdx2; */
-=======
 dbl dfncd1(const dbl x1, const dbl x2, const dbl x3, const dbl p[], const dbl time) {
 /* for PI use M_PIE Constant from std.h include file. */
 	int model_id;
@@ -2494,7 +2495,7 @@ dbl dfncd1(const dbl x1, const dbl x2, const dbl x3, const dbl p[], const dbl ti
 		}
         else
         	{
-      		EH(-1,"invalid gravure user_bc position");
+      		GOMA_EH(-1,"invalid gravure user_bc position");
         	}
 
 	dfdx1 = 2.*(x1-xcenter) - 2.*(roll_rad+ysurf)*ysurfds*dsdx;
@@ -2578,7 +2579,7 @@ dbl dfncd1(const dbl x1, const dbl x2, const dbl x3, const dbl p[], const dbl ti
 		  case 23:
 			  dfdx1 = 0.; break;
 		  default:
-		EH(-1,"invalid xyz in Pade function user_bc");
+		GOMA_EH(-1,"invalid xyz in Pade function user_bc");
 
 		}
 
@@ -3427,7 +3428,7 @@ dbl dfncd1(const dbl x1, const dbl x2, const dbl x3, const dbl p[], const dbl ti
 	  n_corner = ((int)p[1]);
 	  sign_bit = ((int)p[2]);
           if(n_corner > 10)
-          	{EH(-1,"too many corners in multiple radius lip\n");}
+          	{GOMA_EH(-1,"too many corners in multiple radius lip\n");}
           i_min = 1;
           for(i=0 ; i<n_corner ; i++)
           	{
@@ -3546,8 +3547,8 @@ if(x1>0.00001)fprintf(stderr,"radius  %g %g %g %g\n",dfdx1,rad[i_min],xcen[i_min
                k = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
                for (dir = 0; dir < pd->Num_Dim ; dir++)
                    {
-                    i = Index_Solution (k, MESH_DISPLACEMENT1+dir, 0, 0, -1);
-                    EH(i, "Could not resolve index_solution.");
+                    i = Index_Solution (k, MESH_DISPLACEMENT1+dir, 0, 0, -1, pg->imtrx);
+                    GOMA_EH(i, "Could not resolve index_solution.");
                   /*  pos_dcl[dir] = Coor[dir][k] + x[i+dir];  */
                    }
              }
@@ -3558,8 +3559,8 @@ if(x1>0.00001)fprintf(stderr,"radius  %g %g %g %g\n",dfdx1,rad[i_min],xcen[i_min
                k = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
                for (dir = 0; dir < pd->Num_Dim ; dir++)
                    {
-                    i = Index_Solution (k, MESH_DISPLACEMENT1+dir, 0, 0, -1);
-                    EH(i, "Could not resolve index_solution.");
+                    i = Index_Solution (k, MESH_DISPLACEMENT1+dir, 0, 0, -1, pg->imtrx);
+                    GOMA_EH(i, "Could not resolve index_solution.");
 /*                    pos_scl[dir] = Coor[dir][k] + x[i+dir];*/
                    }
              }
@@ -3574,7 +3575,7 @@ if(x1>0.00001)fprintf(stderr,"radius  %g %g %g %g\n",dfdx1,rad[i_min],xcen[i_min
 	}
         else
 	{
-      	EH(-1,"invalid model_id in user_bc");
+      	GOMA_EH(-1,"invalid model_id in user_bc");
 	}
         return(dfdx1);
 }
@@ -3694,7 +3695,7 @@ if(af->Assemble_LSA_Mass_Matrix)  return 0 ;
 		}
         else
         	{
-      		EH(-1,"invalid gravure user_bc position");
+      		GOMA_EH(-1,"invalid gravure user_bc position");
         	}
 
 	dfdx2 = 2.*(x2-ycenter) - 2.*(roll_rad+ysurf)*ysurfds*dsdy;
@@ -3778,7 +3779,7 @@ if(af->Assemble_LSA_Mass_Matrix)  return 0 ;
 		  case 13:
 			  dfdx2 = 0.; break;
 		  default:
-		EH(-1,"invalid xyz in Pade function user_bc");
+		GOMA_EH(-1,"invalid xyz in Pade function user_bc");
 
 		}
 	   } /* END OF FITTED CURVE */
@@ -4606,7 +4607,7 @@ if(af->Assemble_LSA_Mass_Matrix)  return 0 ;
 	  n_corner = ((int)p[1]);
 	  sign_bit = ((int)p[2]);
           if(n_corner > 10)
-          	{EH(-1,"too many corners in multiple radius lip\n");}
+          	{GOMA_EH(-1,"too many corners in multiple radius lip\n");}
           i_min = 1;
           for(i=0 ; i<n_corner ; i++)
           	{
@@ -4725,8 +4726,8 @@ if(x1>0.00001)fprintf(stderr,"radius  %g %g %g %g\n",dfdx2,rad[i_min],xcen[i_min
                k = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
                for (dir = 0; dir < pd->Num_Dim ; dir++)
                    {
-                    i = Index_Solution (k, MESH_DISPLACEMENT1+dir, 0, 0, -1);
-                    EH(i, "Could not resolve index_solution.");
+                    i = Index_Solution (k, MESH_DISPLACEMENT1+dir, 0, 0, -1, pg->imtrx);
+                    GOMA_EH(i, "Could not resolve index_solution.");
                     /*pos_dcl[dir] = Coor[dir][k] + x[i+dir];  */
                    }
              }
@@ -4737,8 +4738,8 @@ if(x1>0.00001)fprintf(stderr,"radius  %g %g %g %g\n",dfdx2,rad[i_min],xcen[i_min
                k = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
                for (dir = 0; dir < pd->Num_Dim ; dir++)
                    {
-                    i = Index_Solution (k, MESH_DISPLACEMENT1+dir, 0, 0, -1);
-                    EH(i, "Could not resolve index_solution.");
+                    i = Index_Solution (k, MESH_DISPLACEMENT1+dir, 0, 0, -1, pg->imtrx);
+                    GOMA_EH(i, "Could not resolve index_solution.");
 /*                    pos_scl[dir] = Coor[dir][k] + x[i+dir];  */
                    }
              }
@@ -4753,7 +4754,7 @@ if(x1>0.00001)fprintf(stderr,"radius  %g %g %g %g\n",dfdx2,rad[i_min],xcen[i_min
 	}
         else
 	  {
-	    EH(-1,"invalid model_id in user_bc");
+	    GOMA_EH(-1,"invalid model_id in user_bc");
 	  }
         return(dfdx2);
 	
@@ -4859,7 +4860,7 @@ if(af->Assemble_LSA_Mass_Matrix)  return 0 ;
 		}
         else
         	{
-      		EH(-1,"invalid gravure user_bc position");
+      		GOMA_EH(-1,"invalid gravure user_bc position");
         	}
 	dfdx3 = -2.*(roll_rad+ysurf)*ysurfds*dsdz;
 
@@ -4906,7 +4907,7 @@ if(af->Assemble_LSA_Mass_Matrix)  return 0 ;
 		  case 12:
 			  dfdx3 = 0.; break;
 		  default:
-		EH(-1,"invalid xyz in Pade function user_bc");
+			  GOMA_EH(-1,"invalid xyz in Pade function user_bc");
 
 		}
 	   }
@@ -5152,7 +5153,7 @@ void quser_surf(double func[DIM],
     var=TEMPERATURE;
      if (pd->v[var])
         {
-         for (j_id = 0; j_id < ei->dof[var]; j_id++) {
+         for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) {
            phi_j = bf[var]->phi[j_id];
 #if 1
            d_func[0][var][j_id] -= dqflow_dT * phi_j;
@@ -5165,7 +5166,7 @@ void quser_surf(double func[DIM],
      var = MESH_DISPLACEMENT1;
      if (pd->v[var])
         {
-         for (j_id = 0; j_id < ei->dof[var]; j_id++) {
+         for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) {
             phi_j = bf[var]->phi[j_id];
             d_func[0][var+coord_dir][j_id] -= dqflow_dX*phi_j;
            }
@@ -5306,7 +5307,7 @@ void uuser_surf(double func[DIM],
   int var;
 */
 /* Comment this out FIRST!!!!! */
-   EH(-1,"No U_USER model implemented"); 
+   GOMA_EH(-1,"No U_USER model implemented"); 
   
   
 /* 
@@ -5316,7 +5317,7 @@ void uuser_surf(double func[DIM],
       var = VELOCITY1; 
       if (pd->v[var])
         { 
-          for( j=0 ; j<ei->dof[var]; j++)
+          for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
             { 
               d_func[0][VELOCITY1][j] = bf[var]->phi[j];
             }  
@@ -5332,7 +5333,7 @@ void uuser_surf(double func[DIM],
       var = VELOCITY1; 
       if (pd->v[var])
         { 
-          for( j=0 ; j<ei->dof[var]; j++)
+          for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
             { 
               d_func[0][VELOCITY1][j] = bf[var]->phi[j];
             }  
@@ -5413,7 +5414,7 @@ void vuser_surf(double func[DIM],
 /* Local variables */
   
 /* Comment this out FIRST!!!!! */
-   EH(-1,"No V_USER  model implemented"); 
+   GOMA_EH(-1,"No V_USER  model implemented"); 
   
 /* Add your function and sensitivities here */
 
@@ -5461,7 +5462,7 @@ void wuser_surf(double func[DIM],
 /**************************** EXECUTION BEGINS *******************************/
   
 /* Comment this out FIRST!!!!! */
-   EH(-1,"No W_USER  model implemented"); 
+   GOMA_EH(-1,"No W_USER  model implemented"); 
   
 /* Add your function and sensitivities here */
 
@@ -5789,7 +5790,7 @@ void fn_dot_T_user(double func[DIM],
 	   {press = 0.0;}
 	else
 	   {press = pgrad*web_sp*(time-t_offset);}
-   for (a=0; a<ei->ielem_dim; a++)
+   for (a=0; a<ei[pg->imtrx]->ielem_dim; a++)
    	{  
    	  func[a] -= press * fv->snormal[a]; 
    	}
@@ -6315,7 +6316,7 @@ costheta = -(fv->snormal[0]*rad_dir[0] + fv->snormal[1]*rad_dir[1]
   var=MASS_FRACTION;
   if (pd->v[var])
   {
-  for (j_id = 0; j_id < ei->dof[var]; j_id++)
+  for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++)
     {
       phi_j = bf[var]->phi[j_id];
       for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++ )
@@ -6329,7 +6330,7 @@ costheta = -(fv->snormal[0]*rad_dir[0] + fv->snormal[1]*rad_dir[1]
   var=VOLTAGE;
   if (pd->v[var])
     {
-      for (j_id = 0; j_id < ei->dof[var]; j_id++)
+      for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++)
         {
           phi_j = bf[var]->phi[j_id];
 
@@ -6359,7 +6360,7 @@ costheta = -(fv->snormal[0]*rad_dir[0] + fv->snormal[1]*rad_dir[1]
        for ( b=0; b<VIM; b++)
          {
            var = MESH_DISPLACEMENT1+b;
-                for (j_id=0; j_id<ei->dof[var]; j_id++)
+                for (j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
                     {
           		phi_j = bf[var]->phi[j_id];
                          for (q=0; q<VIM; q++)

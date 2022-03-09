@@ -76,9 +76,8 @@ static int estimate_dAC_ALC(int, double[], double **, int, Comm_Ex *, MF_Args *)
 static double
 getPositionAC(struct AC_Information *augc, double *cAC_iAC, double *soln, Exo_DB *exo);
 
-static double getAngleAC
-PROTO((struct AC_Information *augc, double *cAC_iAC, double *soln, Exo_DB *exo
-));
+static double 
+getAngleAC(struct AC_Information *augc, double *cAC_iAC, double *soln, Exo_DB *exo);
 
 /*
 
@@ -1969,8 +1968,9 @@ int std_aug_cond(int iAC,
     for (jAC = 0; jAC < nAC; jAC++) {
       dAC[iAC][jAC] = 0.0;
     }
-  else if (augc[iAC].Type == AC_ANGLE)
-    {
+    // Formulate and store the residual for the augmented condition
+    gAC[iAC] = (inventory - augc[iAC].CONSTV);
+  } else if (augc[iAC].Type == AC_ANGLE) {
       inventory = getAngleAC(augc + iAC, cAC[iAC], mf_args->x, mf_args->exo);
 #ifdef PARALLEL
       if( Num_Proc > 1 ) 
@@ -3485,7 +3485,7 @@ double getAngleAC(struct AC_Information *augc, double *cAC_iAC,
   elem_list[0]=elem_list[1]=elem_list[2]=elem_list[3]=-1;
   local_node[0]=local_node[1]=local_node[2]=local_node[3]=-1;
   if ( ! exo->node_elem_conn_exists )
-     { EH(-1, "Cannot compute angle without node_elem_conn."); }
+     { GOMA_EH(-1, "Cannot compute angle without node_elem_conn."); }
 
   elem_list[0] = exo->node_elem_list[exo->node_elem_pntr[node]];
 
@@ -3498,7 +3498,7 @@ double getAngleAC(struct AC_Information *augc, double *cAC_iAC,
                           exo->elem_node_pntr[elem_list[0]+1],
                           exo->elem_node_list);
 
-  EH(local_node[0], "Can not find node in elem node connectivity!?! ");
+  GOMA_EH(local_node[0], "Can not find node in elem node connectivity!?! ");
   local_node[0] -= exo->elem_node_pntr[elem_list[0]];
   /* check for neighbors*/
 
@@ -3506,9 +3506,9 @@ double getAngleAC(struct AC_Information *augc, double *cAC_iAC,
   if( mat_num == find_mat_number(elem_list[0], exo))
      {elem_ct = 1;}
   else
-     {WH(-1,"block id doesn't match first element");}
-  load_ei(elem_list[0], exo, 0);
-    for (face=0 ; face<ei->num_sides ; face++)
+     {GOMA_WH(-1,"block id doesn't match first element");}
+  load_ei(elem_list[0], exo, 0, pg->imtrx);
+    for (face = 0; face < ei[pg->imtrx]->num_sides; face++) 
       {
        ielem = exo->elem_elem_list[exo->elem_elem_pntr[elem_list[0]]+face];
        if (ielem != -1)
@@ -3531,7 +3531,7 @@ double getAngleAC(struct AC_Information *augc, double *cAC_iAC,
   for (ielem = 0 ; ielem < elem_ct ; ielem++)
      {
       if ( local_node[ielem] < 0 || local_node[ielem] > 3 )
-         { EH(-1, "Node out of bounds."); }
+         { GOMA_EH(-1, "Node out of bounds."); }
 
                 /*
                  * Now, determine the local name of the sides adjacent to this
@@ -3547,7 +3547,7 @@ double getAngleAC(struct AC_Information *augc, double *cAC_iAC,
                  * With the side names, we can find the normal vector.
                  * Again, assume the sides live on the same element.
                  */
-      load_ei(elem_list[ielem], exo, 0);
+      load_ei(elem_list[0], exo, 0, pg->imtrx);
 
                 /*
                  * We abuse the argument list under the conditions that
@@ -3555,61 +3555,61 @@ double getAngleAC(struct AC_Information *augc, double *cAC_iAC,
                  * we're not interested in old time steps, time derivatives
                  * etc.
                  */
-      err = load_elem_dofptr( elem_list[ielem], exo, x, x, x, x, x, 0);
-      EH(err, "load_elem_dofptr");
+      err = load_elem_dofptr( elem_list[ielem], exo, x, x, x, x, 0);
+      GOMA_EH(err, "load_elem_dofptr");
 
       err = bf_mp_init(pd);
-      EH(err, "bf_mp_init");
+      GOMA_EH(err, "bf_mp_init");
 
                 /*
                  * What are the local coordinates of the nodes in a quadrilateral?
                  */
 
-      find_nodal_stu(local_node[ielem], ei->ielem_type, &xi[0], &xi[1], &xi[2]);
+      find_nodal_stu(local_node[ielem], ei[pg->imtrx]->ielem_type, &xi[0], &xi[1], &xi[2]);
 
       err = load_basis_functions(xi, bfd);
-      EH( err, "problem from load_basis_functions");
+      GOMA_EH( err, "problem from load_basis_functions");
 
       err = beer_belly();
-      EH( err, "beer_belly");
+      GOMA_EH( err, "beer_belly");
 
       err = load_fv();
-      EH( err, "load_fv");
+      GOMA_EH( err, "load_fv");
 
                /* First, one side... */
 
-      get_side_info(ei->ielem_type, local_side[0]+1, &num_nodes_on_side,
+      get_side_info(ei[pg->imtrx]->ielem_type, local_side[0]+1, &num_nodes_on_side,
                               side_nodes);
 
       surface_determinant_and_normal(elem_list[ielem],
                                                exo->elem_node_pntr[elem_list[ielem]],
-                                               ei->num_local_nodes,
-                                               ei->ielem_dim-1,
+                                               ei[pg->imtrx]->num_local_nodes,
+                                               ei[pg->imtrx]->ielem_dim-1,
                                                local_side[0]+1,
                                                num_nodes_on_side,
                                                side_nodes);
 
       n1[0] = fv->snormal[0];
       n1[1] = fv->snormal[1];
-      ielem_dim = ei->ielem_dim;
+      ielem_dim = ei[pg->imtrx]->ielem_dim;
       for(p=0;p<ielem_dim;p++)
         {
          for(q=0;q<ielem_dim;q++)
            {
-            for(k=0;k<ei->dof[MESH_DISPLACEMENT1];k++)
+            for(k=0;k<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];k++)
               { n1_dx[p][q][k]=fv->dsnormal_dx[p][q][k]; }
            }
         } 
 
                 /* Second, the adjacent side of the quad... */
 
-      get_side_info(ei->ielem_type, local_side[1]+1, &num_nodes_on_side,
+      get_side_info(ei[pg->imtrx]->ielem_type, local_side[1]+1, &num_nodes_on_side,
                               side_nodes);
 
       surface_determinant_and_normal(elem_list[ielem],
                                               exo->elem_node_pntr[elem_list[ielem]],
-                                               ei->num_local_nodes,
-                                               ei->ielem_dim-1,
+                                               ei[pg->imtrx]->num_local_nodes,
+                                               ei[pg->imtrx]->ielem_dim-1,
                                                local_side[1]+1,
                                                num_nodes_on_side,
                                                side_nodes);
@@ -3620,7 +3620,7 @@ double getAngleAC(struct AC_Information *augc, double *cAC_iAC,
         {
          for(q=0;q<ielem_dim;q++)
            {
-            for(k=0;k<ei->dof[MESH_DISPLACEMENT1];k++)
+            for(k=0;k<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];k++)
               { n2_dx[p][q][k]=fv->dsnormal_dx[p][q][k]; }
            }
         } 
@@ -3635,7 +3635,7 @@ double getAngleAC(struct AC_Information *augc, double *cAC_iAC,
         {
          for(q=0;q<ielem_dim;q++)
            {
-            for(k=0;k<ei->dof[MESH_DISPLACEMENT1];k++)
+            for(k=0;k<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];k++)
               { 
       		d_ord_dx[ielem][p][q][k] += 
 			(n1[p]*n2_dx[p][q][k]+n2[p]*n1_dx[p][q][k])/sqrt(1.-SQUARE(n_dot_n));
@@ -3653,19 +3653,19 @@ double getAngleAC(struct AC_Information *augc, double *cAC_iAC,
 
   if (node >= 0) {
     int je;
-    i = Index_Solution(node, MESH_DISPLACEMENT1, 0, 0, mat_num);
+    i = Index_Solution(node, MESH_DISPLACEMENT1, 0, 0, mat_num, pg->imtrx);
     for (ielem = 0 ; ielem < elem_ct ; ielem++)
      {
-      load_ei(ielem, exo, 0);
+      load_ei(elem_list[0], exo, 0, pg->imtrx);
 
       for(p=0;p<ielem_dim;p++)
         {
          for(q=0;q<ielem_dim;q++)
            {
-            for(k=0;k<ei->dof[MESH_DISPLACEMENT1];k++)
+            for(k=0;k<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];k++)
               { 
-		je     = ei->gun_list[MESH_DISPLACEMENT1][k];
-		EH(je, "Bad var index.");
+		je     = ei[pg->imtrx]->gun_list[MESH_DISPLACEMENT1][k];
+		GOMA_EH(je, "Bad var index.");
 		cAC_iAC[je] += d_ord_dx[ielem][p][q][k];
 	       }
             }

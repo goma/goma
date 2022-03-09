@@ -369,15 +369,15 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
                      * 1 -- this is the first LU,
                      * 2 -- >1st LU, similar matrix structure,
                      * 3 -- new rhs, use already factored LU
-  
+
                      UMFPACK USAGE:
-  
+
                      0   : LOAD MATRIX AND ANALYSIS/DECOMPOSITION
                            AND BACK SUBSTITUTION
                      1   : LOAD MATRIX AND DECOMPOSITION USING PAST ANALYSIS
                            AND BACK SUBSTITUTION
                      > 2 : BACK SUBSTITUTION ONLY
-  
+
                      */
 
   int matr_form = 0; /* 1: MSR FORMAT MATRIX FOR UMFPACK DRIVER */
@@ -968,7 +968,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
         case AC_VOLUME:
         case AC_LS_VEL:
         case AC_POSITION:
-	case AC_ANGLE:				
+	case AC_ANGLE:
           std_aug_cond(iAC, nAC, x_AC, bAC, cAC, dAC, gAC, numProcUnknowns, cx, &mf_args);
           break;
 
@@ -2053,161 +2053,45 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
         update_parameterAC(iAC, x, xdot, x_AC, cx, exo, dpi);
         augc[iAC].tmp1 = x_AC[iAC];
 
-	  /*
-	   * PRINT OUT VALUES OF EXTRA UNKNOWNS 
-	   * FROM AUGMENTING CONDITIONS 
-	   */
-	  if (Debug_Flag > 0) {
-	    if (augc[iAC].Type == AC_USERBC) {	      
-	      DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e Update=% 10.6e\n", 
-		      augc[iAC].BCID, augc[iAC].DFID, x_AC[iAC], 
-		      damp_factor*yAC[iAC]);	      
-	    } 
-	    else if (augc[iAC].Type == AC_USERMAT || augc[iAC].Type == AC_FLUX_MAT ) {
-		DPRINTF(stderr, "\tMT[%4d] MP[%4d]=% 10.6e Update=% 10.6e\n", 
-			augc[iAC].MTID, augc[iAC].MPID,
-			x_AC[iAC], damp_factor*yAC[iAC]);
-	      } 
-	    else if (augc[iAC].Type == AC_VOLUME) {
-		  DPRINTF(stderr,
-			  "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n", 
-			  augc[iAC].MTID, augc[iAC].VOLID,
-			  augc[iAC].evol, x_AC[iAC]);
-	      } 
-	    else if (augc[iAC].Type == AC_FLUX) {
-		    DPRINTF(stderr,
-			    "\tBC[%4d] DF[%4d]=% 10.6e Update=% 10.6e\n", 
-			    augc[iAC].BCID, augc[iAC].DFID,
-			    x_AC[iAC], damp_factor*yAC[iAC]);
-	      } 
-	    else if (augc[iAC].Type == AC_LGRM) {
-		      DPRINTF(stderr,
-			      "\tAC[%d], Lagrange Multiplier=%10.6e Update=%10.6e\n",
-			      iAC, x_AC[iAC], damp_factor*yAC[iAC] );
-	      } 
-	    else if (augc[iAC].Type == AC_ARC_LENGTH) {
-		        DPRINTF(stderr,
-			        "\tAC[%d], Arc Length Parameter=%10.6e Update=%10.6e\n",
-			        iAC, x_AC[iAC], damp_factor*yAC[iAC] );
-              } 
-	    else if (augc[iAC].Type == AC_OVERLAP) {
-                          DPRINTF(stderr,
-                                  "\tAC[%d], Elem %d Side %d  Dim %d:  LM=%10.6e  Update=%10.6e\n",
+        /*
+         * PRINT OUT VALUES OF EXTRA UNKNOWNS
+         * FROM AUGMENTING CONDITIONS
+         */
+        if (Debug_Flag > 0) {
+          if (augc[iAC].Type == AC_USERBC) {
+            DPRINTF(stdout, "\tBC[%4d] DF[%4d]=% 10.6e Update=% 10.6e\n", augc[iAC].BCID,
+                    augc[iAC].DFID, x_AC[iAC], damp_factor * yAC[iAC]);
+          } else if (augc[iAC].Type == AC_USERMAT || augc[iAC].Type == AC_FLUX_MAT) {
+              DPRINTF(stdout, "\tMT[%4d] MP[%4d]=% 10.6e Update=% 10.6e\n", augc[iAC].MTID,
+                      augc[iAC].MPID, x_AC[iAC], damp_factor * yAC[iAC]);
+          } else if (augc[iAC].Type == AC_VOLUME) {
+                DPRINTF(stdout, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
+                        augc[iAC].VOLID, augc[iAC].evol, x_AC[iAC]);
+          } else if (augc[iAC].Type == AC_FLUX) {
+                  DPRINTF(stdout, "\tBC[%4d] DF[%4d]=% 10.6e Update=% 10.6e\n", augc[iAC].BCID,
+                          augc[iAC].DFID, x_AC[iAC], damp_factor * yAC[iAC]);
+          } else if (augc[iAC].Type == AC_LGRM) {
+                    DPRINTF(stdout, "\tAC[%d], Lagrange Multiplier=%10.6e Update=%10.6e\n", iAC,
+                            x_AC[iAC], damp_factor * yAC[iAC]);
+          } else if (augc[iAC].Type == AC_ARC_LENGTH) {
+                      DPRINTF(stdout, "\tAC[%d], Arc Length Parameter=%10.6e Update=%10.6e\n", iAC,
+                              x_AC[iAC], damp_factor * yAC[iAC]);
+          } else if (augc[iAC].Type == AC_OVERLAP) {
+                        DPRINTF(stdout,
+                                "\tAC[%d], Elem %d Side %d  Dim %d:  LM=%10.6e  Update=%10.6e\n",
+                                iAC, augc[iAC].lm_elem, augc[iAC].lm_side, augc[iAC].lm_dim,
+                                x_AC[iAC], damp_factor * yAC[iAC]);
+          } else if (augc[iAC].Type == AC_PERIODIC) {
+                          DPRINTF(stdout,
+                                  "\tAC[%d], Elem %d Side %d  Var %s:  LM=%10.6e  Update=%10.6e\n",
                                   iAC, augc[iAC].lm_elem, augc[iAC].lm_side,
-                                  augc[iAC].lm_dim, x_AC[iAC], damp_factor*yAC[iAC] );
-              } 
-	    else if (augc[iAC].Type == AC_PERIODIC) {
-                            DPRINTF(stderr,
-                                    "\tAC[%d], Elem %d Side %d  Var %s:  LM=%10.6e  Update=%10.6e\n",
-                                    iAC, augc[iAC].lm_elem, augc[iAC].lm_side,
-                                    Var_Name[augc[iAC].VAR].name1, x_AC[iAC], damp_factor*yAC[iAC] );
-              } 
-	    else if (augc[iAC].Type == AC_POSITION) {
-			      DPRINTF(stderr,
-				      "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n", 
-				      augc[iAC].MTID, augc[iAC].VOLID,
-				      augc[iAC].evol, x_AC[iAC]);
-	    }
-	    else if (augc[iAC].Type == AC_ANGLE) {
-			      DPRINTF(stderr,
-				      "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n", 
-				      augc[iAC].MTID, augc[iAC].VOLID,
-				      augc[iAC].evol, x_AC[iAC]);
-	    }
-	  } 
-	}
-      }
-      /********************************************************************
-       *  CHECK IF CONVERGED
-       *   (EDW: Modified to check bordering algorithm convergence
-       *         as required by LOCA)
-       ********************************************************************/
-      
-      *converged = ((Norm[0][2] < Epsilon[0]) && (Norm[2][2] < Epsilon[0]) &&
-		    (Norm[0][0] < Epsilon[0]) && (Norm[0][2] < Epsilon[0] ) &&
-		    (Norm_r[0][2] < Epsilon[2]) && (Norm_r[1][2] < Epsilon[2]) &&
-		    (Norm_r[0][0] < Epsilon[2]) && (Norm_r[1][0] < Epsilon[2]) &&
-		    (continuation_converged));
-
-      /*******************************************************************
-       *
-       * copy out global unknowns if array as been allocated for them 
-       *
-       *
-       *******************************************************************/
-
-       if ( glob_var_vals != NULL )
-	 {
-	   glob_var_vals[0] = (double) *converged;
-	   glob_var_vals[1] = (double) inewton;
-	   glob_var_vals[2] = (double) Max_Newton_Steps;
-	   glob_var_vals[3] = Conv_order;
-	   glob_var_vals[4] = Conv_rate;
-	   total_mesh_volume = 0;
-
-	   for(i=0;nAC > 0 && i<nAC;i++) 
-	     {
-	       total_mesh_volume += augc[i].evol;
-	       glob_var_vals[6 + i ] = x_AC[i];
-	     }
-
-	   glob_var_vals[5] = (double) total_mesh_volume;
-	 }
-
-      /********************************************************************
-       *
-       *    OPTIONALLY, 
-       *    WRITE OUT THE INTERMEDIATE SOLUTION AT EACH NEWTON ITERATION
-       *
-       ********************************************************************/
-      
-      if (Write_Intermediate_Solutions) {
-	if (TimeIntegration == STEADY) {
-	  time_value = (double) *nprint+1.;
-	}
-
-	/* First nodal vars */
-	for (i = 0; i <  rd->TotalNVSolnOutput; i++) {
-	  extract_nodal_vec(x, rd->nvtype[i], rd->nvkind[i], 
-			    rd->nvmatID[i], gvec, exo, FALSE, time_value);
-	  wr_nodal_result_exo(exo, ExoFileOut, gvec, i+1, 
-			      *nprint+1, time_value);
-	}
-	/* Add additional user-specified post processing variables */
-	if (rd->TotalNVPostOutput > 0) {
-	  post_process_nodal(x, x_sens_p, x_old, xdot, xdot_old, 
-			     resid_vector, *nprint+1, &time_value,
-			     delta_t, theta, NULL, exo, dpi, rd, ExoFileOut);
-	}
-	/* Write out time derivatives if requested */
-	if (TIME_DERIVATIVES != -1 && (TimeIntegration != STEADY)) {
-	  for (i = 0; i < rd->TotalNVSolnOutput; i++) {
-	    i_post = rd->TotalNVSolnOutput + rd->TotalNVPostOutput + i;
-	    extract_nodal_vec(xdot, rd->nvtype[i_post], rd->nvkind[i_post],
-			      rd->nvmatID[i_post], gvec, exo, TRUE, time_value);
-	    wr_nodal_result_exo(exo, ExoFileOut, gvec, i_post+1, 
-				*nprint+1, time_value);
-	  }
-	}
-
-	/* Now element vars */
-	for (i = 0; i < tev; i++) {
-          extract_elem_vec(x, i, rd->evtype[i], gvec_elem, exo, 0);
-          wr_elem_result_exo(exo, ExoFileOut, gvec_elem, i, *nprint + 1, time_value, rd);
-        }
-        /* Add additional user-specified post processing variables */
-	if (tev_post > 0) {
-	  post_process_elem(x, x_old, xdot, xdot_old, resid_vector, tev, 
-			    tev_post, gvec_elem, *nprint+1,
-			    &time_value, delta_t, exo, dpi, rd);
-
-	  /* Write out time derivatives if requested */
-	  if (TIME_DERIVATIVES != -1 && (TimeIntegration != STEADY)) {
-	    for (i = 0; i < tev; i++) {
-	      i_post = tev_post + i;
-              extract_elem_vec(xdot, i_post, rd->evtype[i_post], gvec_elem, exo, 0);
-              wr_elem_result_exo(exo, ExoFileOut, gvec_elem, i_post, *nprint + 1, time_value, rd);
-            }
+                                  Var_Name[augc[iAC].VAR].name1, x_AC[iAC], damp_factor * yAC[iAC]);
+          } else if (augc[iAC].Type == AC_POSITION) {
+                            DPRINTF(stdout, "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n",
+                                    augc[iAC].MTID, augc[iAC].VOLID, augc[iAC].evol, x_AC[iAC]);
+          } else if (augc[iAC].Type == AC_ANGLE) {
+                            DPRINTF(stdout, "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n",
+                                    augc[iAC].MTID, augc[iAC].VOLID, augc[iAC].evol, x_AC[iAC]);
           }
         }
       }

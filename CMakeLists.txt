@@ -368,6 +368,13 @@ option_definition(PARALLEL ON)
 option_definition(FP_EXCEPT OFF)
 option_definition(ANALEIG_PLEASE OFF)
 option_definition(DO_NO_UNROLL OFF)
+option_definition(RESET_TRANSIENT_RELAXATION_PLEASE ON)
+option_definition(NEW_HOFFMAN_FCN_PLEASE ON)
+option_definition(ALE_DCA_INFO_PLEASE ON)
+option_definition(RELAX_ON_TRANSIENT_PLEASE ON)
+option_definition(ALLOW_NEGATIVE_TIMES_PLEASE ON)
+option_definition(DM_COORD_SCALE_PLEASE ON)
+option_definition(VAR_UPDATE_UNITY_SCALE ON)
 set(MDE
     "27"
     CACHE STRING "set MDE")

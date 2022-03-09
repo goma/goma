@@ -869,7 +869,6 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
                 DPRINTF(stdout, "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n",
                         augc[iAC].MTID, augc[iAC].VOLID, evol_local,
                         x_AC[iAC]);
-               }
             } else if (augc[iAC].Type == AC_FLUX) {
               DPRINTF(stdout, "\tBC[%4d] DF[%4d]=%10.6e\n", augc[iAC].BCID, augc[iAC].DFID,
                       x_AC[iAC]);
@@ -939,7 +938,6 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
           DPRINTF(stdout, "    Find better initial guess.       \n");
           DPRINTF(stdout, " ************************************\n");
           goto free_and_clear;
-          /*exit(0);  */
         }
 
         /*
@@ -947,7 +945,7 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
          */
 
         if (nt != 0) {
-          DPRINTF(stderr, "\n\tFailed to converge:\n");
+          DPRINTF(stdout, "\n\tFailed to converge:\n");
 
 	dhunt_par *= 0.5;
         hunt_par = hunt_par_old + dhunt_par;
@@ -966,7 +964,6 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
                path1[iHC] = lambda[iHC] + hunt_par*lambdaDelta[iHC];
               }
             }
-          }
 
           alqALC = 1;
 
@@ -1050,7 +1047,7 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
  	}
  	else if (inewton == -1)
  	{
- 	DPRINTF(stderr,"\nHmm... trouble on first step \n  Let's try some more relaxation  \n");
+ 	DPRINTF(stdout,"\nHmm... trouble on first step \n  Let's try some more relaxation  \n");
  	      if((damp_factor1 <= 1. && damp_factor1 >= 0.) &&
  	         (damp_factor2 <= 1. && damp_factor2 >= 0.) &&
         		 (damp_factor3 <= 1. && damp_factor3 >= 0.))
@@ -1058,12 +1055,12 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
  		custom_tol1 *= 0.01;
  		custom_tol2 *= 0.01;
  		custom_tol3 *= 0.01;
- 	DPRINTF(stderr,"  custom tolerances %g %g %g  \n",custom_tol1,custom_tol2,custom_tol3);
+ 	DPRINTF(stdout,"  custom tolerances %g %g %g  \n",custom_tol1,custom_tol2,custom_tol3);
  		}
  		else
  		{
  		damp_factor1 *= 0.5;
- 	DPRINTF(stderr,"  damping factor %g  \n",damp_factor1);
+ 	DPRINTF(stdout,"  damping factor %g  \n",damp_factor1);
  		}
 
  	    vcopy(numProcUnknowns, &x[0], 1.0, &x_old[0]);
@@ -1086,7 +1083,7 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
  	}
  	else
  	{
- 	DPRINTF(stderr,"\nHmm... could not converge on first step\n Let's try some more iterations\n");
+ 	DPRINTF(stdout,"\nHmm... could not converge on first step\n Let's try some more iterations\n");
  	      if((damp_factor1 <= 1. && damp_factor1 >= 0.) &&
  	         (damp_factor2 <= 1. && damp_factor2 >= 0.) &&
         		 (damp_factor3 <= 1. && damp_factor3 >= 0.))
@@ -1095,8 +1092,8 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
                    {
 	            if (Write_Intermediate_Solutions == 0) {
 	                 write_solution(ExoFileOut, resid_vector, x, x_sens_p, x_old,
-			        xdot, xdot_old, tev, tev_post, gv,  rd, gindex,
-			        p_gsize, gvec, gvec_elem, &nprint, delta_s[0],
+			        xdot, xdot_old, tev, tev_post, gv,  rd, 
+			        gvec, gvec_elem, &nprint, delta_s[0],
  			        theta, custom_tol1, NULL, exo, dpi);
 	                 nprint++;
  	                 }
@@ -1104,24 +1101,24 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
  		custom_tol1 *= 100.;
  		custom_tol2 *= 100.;
  		custom_tol3 *= 100.;
- 	DPRINTF(stderr,"  custom tolerances %g %g %g  \n",custom_tol1,custom_tol2,custom_tol3);
+ 	DPRINTF(stdout,"  custom tolerances %g %g %g  \n",custom_tol1,custom_tol2,custom_tol3);
  		}
  		else
  		{
                 if(hunt[0].BCID == -1)
                    {
 	            if (Write_Intermediate_Solutions == 0) {
- 	DPRINTF(stderr,"  writing solution %g  \n",damp_factor1);
+ 	DPRINTF(stdout,"  writing solution %g  \n",damp_factor1);
 	                 write_solution(ExoFileOut, resid_vector, x, x_sens_p, x_old,
-			        xdot, xdot_old, tev, tev_post, gv,  rd, gindex,
-			        p_gsize, gvec, gvec_elem, &nprint, delta_s[0],
+			        xdot, xdot_old, tev, tev_post, gv,  rd, 
+			        gvec, gvec_elem, &nprint, delta_s[0],
  			        theta, damp_factor1, NULL, exo, dpi);
 	                 nprint++;
  	                 }
  	         }
  		damp_factor1 *= 2.0;
 		damp_factor1 = MIN(damp_factor1,1.0);
- 	DPRINTF(stderr,"  damping factor %g  \n",damp_factor1);
+ 	DPRINTF(stdout,"  damping factor %g  \n",damp_factor1);
  		}
  	  }
 

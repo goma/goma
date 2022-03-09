@@ -29,6 +29,10 @@
 #include "rf_fem_const.h"
 #include "rf_mp.h"
 #include "std.h"
+#include "mm_augc_util.h"
+#include "el_geom.h"
+#include "mm_mp.h"
+#include "wr_side_data.h"
 
 #define GOMA_USER_AC_C
 
@@ -251,8 +255,8 @@ void user_aug_cond_residuals(int iAC,
           for (j = 0; j < Proc_NS_Count[nsp]; j++)
              {
                k = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
-               i = Index_Solution (k, MESH_DISPLACEMENT1, 0, 0, -1);
-               EH(i, "Could not resolve index_solution.");
+               i = Index_Solution (k, MESH_DISPLACEMENT1, 0, 0, -1, pg->imtrx);
+               GOMA_EH(i, "Could not resolve index_solution.");
                X = Coor[0][k];
                xb = Coor[0][k] + x[i];
                yb = Coor[1][k] + x[i+1];
@@ -263,8 +267,8 @@ void user_aug_cond_residuals(int iAC,
           for (j = 0; j < Proc_NS_Count[nsp]; j++)
              {
                k = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
-               i = Index_Solution (k, MESH_DISPLACEMENT1, 0, 0, -1);
-               EH(i, "Could not resolve index_solution.");
+               i = Index_Solution (k, MESH_DISPLACEMENT1, 0, 0, -1, pg->imtrx);
+               GOMA_EH(i, "Could not resolve index_solution.");
                xt = Coor[0][k] + x[i];
              }
 
@@ -290,7 +294,7 @@ void user_aug_cond_residuals(int iAC,
           flux = augc[iAC].DataFlt[5];     
           species_num=0;                     
                                              
-          for(i=0;i<NumUnknowns;i++){      
+          for(i=0;i<NumUnknowns[pg->imtrx];i++){      
           cAC[0][i]=0.0 ;         }     
                                          
           af->Assemble_Jacobian = TRUE; 
@@ -315,8 +319,8 @@ void user_aug_cond_residuals(int iAC,
           for (j = 0; j < Proc_NS_Count[nsp]; j++)
              {
                k = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
-               i = Index_Solution (k, MESH_DISPLACEMENT1, 0, 0, -1);
-               EH(i, "Could not resolve index_solution.");
+               i = Index_Solution (k, MESH_DISPLACEMENT1, 0, 0, -1, pg->imtrx);
+               GOMA_EH(i, "Could not resolve index_solution.");
                dx = x[i];
                xpoint = Coor[0][k] + x[i];
              }
@@ -339,8 +343,8 @@ void user_aug_cond_residuals(int iAC,
           for (j = 0; j < Proc_NS_Count[nsp]; j++)
              {
                k = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
-               i = Index_Solution (k, MESH_DISPLACEMENT1+idir-1, 0, 0, -1);
-               EH(i, "Could not resolve index_solution.");
+               i = Index_Solution (k, MESH_DISPLACEMENT1+idir-1, 0, 0, -1, pg->imtrx);
+               GOMA_EH(i, "Could not resolve index_solution.");
 	       coord1_sum += Coor[idir-1][k] + x[i];
 	       pt_count1++;
              }
@@ -350,19 +354,19 @@ void user_aug_cond_residuals(int iAC,
           for (j = 0; j < Proc_NS_Count[nsp]; j++)
              {
                k = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
-               i = Index_Solution (k, MESH_DISPLACEMENT1+idir-1, 0, 0, -1);
-               EH(i, "Could not resolve index_solution.");
+               i = Index_Solution (k, MESH_DISPLACEMENT1+idir-1, 0, 0, -1, pg->imtrx);
+               GOMA_EH(i, "Could not resolve index_solution.");
 	       coord2_sum += Coor[idir-1][k] + x[i];
 	       pt_count2++;
              }
           *have_cAC = TRUE;
-          for(i=0;i<NumUnknowns;i++){    cAC[iAC][i] = 0.0; } 
+          for(i=0;i<NumUnknowns[pg->imtrx];i++){    cAC[iAC][i] = 0.0; } 
           nsp = match_nsid(ns_id2);
           k = Proc_NS_List[Proc_NS_Pointers[nsp]];
           for (j = 0; j < Proc_NS_Count[nsp]; j++)
              {
                k = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
-               i = Index_Solution (k, MESH_DISPLACEMENT1+idir-1, 0, 0, -1);
+               i = Index_Solution (k, MESH_DISPLACEMENT1+idir-1, 0, 0, -1, pg->imtrx);
                cAC[iAC][i] = penalty*pt_count1;
              }
 
@@ -384,8 +388,8 @@ void user_aug_cond_residuals(int iAC,
           for (j = 0; j < Proc_NS_Count[nsp]; j++)
              {
                k = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
-               i = Index_Solution (k, MESH_DISPLACEMENT1, 0, 0, -1);
-               EH(i, "Could not resolve index_solution.");
+               i = Index_Solution (k, MESH_DISPLACEMENT1, 0, 0, -1, pg->imtrx);
+               GOMA_EH(i, "Could not resolve index_solution.");
                xpoint = Coor[0][k] + x[i];
              }
 
@@ -395,8 +399,8 @@ void user_aug_cond_residuals(int iAC,
           for (j = 0; j < Proc_NS_Count[nsp]; j++)
              {
                k = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
-               i = Index_Solution (k, MESH_DISPLACEMENT1, 0, 0, -1);
-               EH(i, "Could not resolve index_solution.");
+               i = Index_Solution (k, MESH_DISPLACEMENT1, 0, 0, -1, pg->imtrx);
+               GOMA_EH(i, "Could not resolve index_solution.");
                xpoint1 = Coor[0][k] + x[i];
              }
 
@@ -421,8 +425,8 @@ void user_aug_cond_residuals(int iAC,
                 temp = augc[iAC+1].DataFlt[0];
 		surf_tens = mp->u_surface_tension[0]+
 			mp->u_surface_tension[1]*(temp-Tref);
-                for(i=0;i<NumUnknowns;i++)     {cAC[iAC][i]=0.0 ;}   
-                for(i=0;i<NumUnknowns;i++)     {bAC[iAC][i]=0.0 ;}   
+                for(i=0;i<NumUnknowns[pg->imtrx];i++)     {cAC[iAC][i]=0.0 ;}   
+                for(i=0;i<NumUnknowns[pg->imtrx];i++)     {bAC[iAC][i]=0.0 ;}   
                 af->Assemble_Jacobian = TRUE;  
                 spec_flux = evaluate_flux(exo, dpi, ss_id, 7, "SPECIES_FLUX", 
                                 blk_id, 0 ,NULL,0,x,xdot,&cAC[iAC][0], delta_t,
@@ -444,13 +448,13 @@ void user_aug_cond_residuals(int iAC,
                 dAC[iAC][iAC+1]=-termK*1.0E+09;
                 *have_dAC = TRUE;
   
-                for(i=0;i<NumUnknowns;i++)
+                for(i=0;i<NumUnknowns[pg->imtrx];i++)
                       {cAC[iAC][i] *= 
 			(-Rgas/mp->molecular_weight[0]*temp*delta_t)*1.0E+09;}   
                 *have_cAC = TRUE;   
 fprintf(stderr,"AC1 %g %g %g %g %g\n",rad_B,delta_mass,termK,temp,AC[iAC]);
 
-                for(i=0;i<NumUnknowns;i++){    bAC[iAC][i] = 0.0; }   
+                for(i=0;i<NumUnknowns[pg->imtrx];i++){    bAC[iAC][i] = 0.0; }   
                 *have_bAC = FALSE;   
                 augc[iAC].DataFlt[6] = delta_mass;
                 }
@@ -471,8 +475,8 @@ fprintf(stderr,"AC1 %g %g %g %g %g\n",rad_B,delta_mass,termK,temp,AC[iAC]);
                 heat_cap = augc[iAC].DataFlt[7];
                 moles_init = augc[iAC].DataFlt[8];
 		extra_bc = augc[iAC].DFID;
-                for(i=0;i<NumUnknowns;i++)     {cAC[iAC][i]=0.0 ;}   
-                for(i=0;i<NumUnknowns;i++)     {bAC[iAC][i]=0.0 ;}   
+                for(i=0;i<NumUnknowns[pg->imtrx];i++)     {cAC[iAC][i]=0.0 ;}   
+                for(i=0;i<NumUnknowns[pg->imtrx];i++)     {bAC[iAC][i]=0.0 ;}   
                 af->Assemble_Jacobian = TRUE;  
                 spec_flux = evaluate_flux(exo, dpi, ss_id, 7, "SPECIES_FLUX", 
                                 blk_id, 0 ,NULL,0,x,xdot,&bAC[iAC][0], delta_t,
@@ -495,16 +499,16 @@ fprintf(stderr,"AC1 %g %g %g %g %g\n",rad_B,delta_mass,termK,temp,AC[iAC]);
 fprintf(stderr,"AC2 %g %g %g %g %g\n",temp,temp_init,delta_heat,spec_flux,AC[iAC]);
                 *have_dAC = TRUE;
   
-                for(i=0;i<NumUnknowns;i++)
+                for(i=0;i<NumUnknowns[pg->imtrx];i++)
                       {cAC[iAC][i] *= 1.0E+09*delta_t;}   
-                for(i=0;i<NumUnknowns;i++)
+                for(i=0;i<NumUnknowns[pg->imtrx];i++)
                       {cAC[iAC][i] += 1.0E+09*mp->latent_heat_vap[0]*bAC[iAC][i]*delta_t;}   
-                for(i=0;i<NumUnknowns;i++)
+                for(i=0;i<NumUnknowns[pg->imtrx];i++)
                       {cAC[iAC][i] -= 1.0E+09*alpha_sol*delta_t/mp->molecular_weight[0]
 				*bAC[iAC][i]*Rgas*(temp-temp_init);}   
                 *have_cAC = TRUE;   
 
-                for(i=0;i<NumUnknowns;i++){    bAC[iAC][i] = 0.0; }   
+                for(i=0;i<NumUnknowns[pg->imtrx];i++){    bAC[iAC][i] = 0.0; }   
                 *have_bAC = FALSE;   
                 augc[iAC].DataFlt[6] = delta_heat;
                 }
@@ -523,8 +527,8 @@ fprintf(stderr,"AC2 %g %g %g %g %g\n",temp,temp_init,delta_heat,spec_flux,AC[iAC
              {
                k = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
 	       index = MESH_DISPLACEMENT1-1+idir;
-               i = Index_Solution (k, index, 0, 0, -1);
-               EH(i, "Could not resolve index_solution.");
+               i = Index_Solution (k, index, 0, 0, -1, pg->imtrx);
+               GOMA_EH(i, "Could not resolve index_solution.");
                xpoint = Coor[idir-1][k] + x[i];
 	       coord_mean += xpoint;
 	       pt_count++;
@@ -552,8 +556,8 @@ fprintf(stderr,"AC2 %g %g %g %g %g\n",temp,temp_init,delta_heat,spec_flux,AC[iAC
               {
                k = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
  	       index = MESH_DISPLACEMENT2;
-               i = Index_Solution (k, index, 0, 0, -1);
-               EH(i, "Could not resolve index_solution.");
+               i = Index_Solution (k, index, 0, 0, -1, pg->imtrx);
+               GOMA_EH(i, "Could not resolve index_solution.");
                yscl = Coor[1][k] + x[i];
               }
      	nsp = match_nsid(ns_id2);
@@ -563,8 +567,8 @@ fprintf(stderr,"AC2 %g %g %g %g %g\n",temp,temp_init,delta_heat,spec_flux,AC[iAC
              {
                k = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
  	       index = MESH_DISPLACEMENT2;
-               i = Index_Solution (k, index, 0, 0, -1);
-               EH(i, "Could not resolve index_solution.");
+               i = Index_Solution (k, index, 0, 0, -1, pg->imtrx);
+               GOMA_EH(i, "Could not resolve index_solution.");
                ydcl = Coor[1][k] + x[i];
               }
    	AC[iAC] = yscl-ydcl+rad*(cos(sca-die_a)+cos(dca));
@@ -586,10 +590,10 @@ fprintf(stderr,"AC2 %g %g %g %g %g\n",temp,temp_init,delta_heat,spec_flux,AC[iAC
          for (j = 0; j < N; j++)
               {
                 k = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
-                idx = Index_Solution (k, MESH_DISPLACEMENT1, 0, 0, -1);
-                idy = Index_Solution (k, MESH_DISPLACEMENT2, 0, 0, -1);
-                EH(idx, "Could not resolve index_solution.");
-                EH(idy, "Could not resolve index_solution.");
+                idx = Index_Solution (k, MESH_DISPLACEMENT1, 0, 0, -1, pg->imtrx);
+                idy = Index_Solution (k, MESH_DISPLACEMENT2, 0, 0, -1, pg->imtrx);
+                GOMA_EH(idx, "Could not resolve index_solution.");
+                GOMA_EH(idy, "Could not resolve index_solution.");
                 xpoint = Coor[0][k] + x[idx];
                 ypoint = Coor[1][k] + x[idy];
  		xpt[id[j]] = xpoint;
@@ -627,7 +631,7 @@ fprintf(stderr,"AC2 %g %g %g %g %g\n",temp,temp_init,delta_heat,spec_flux,AC[iAC
            gamma  = augc[iAC].DataFlt[5];
            press = BC_Types[augc[iAC].BCID].BC_Data_Float[augc[iAC].DFID];
   
-              for(i=0;i<NumUnknowns;i++){
+              for(i=0;i<NumUnknowns[pg->imtrx];i++){
                        cAC[iAC][i]=0.0 ;         }
                        af->Assemble_Jacobian = TRUE;
            volume = evaluate_volume_integral(exo, dpi, 8, "POSITIVE_FILL", blk_id, 0
@@ -638,10 +642,10 @@ fprintf(stderr,"AC2 %g %g %g %g %g\n",temp,temp_init,delta_heat,spec_flux,AC[iAC
            dAC[iAC][iAC]=pow(volume,gamma);
            *have_dAC = TRUE;
 
-           for(i=0;i<NumUnknowns;i++){
+           for(i=0;i<NumUnknowns[pg->imtrx];i++){
                    cAC[iAC][i] = 0; }
              *have_cAC = TRUE;
-           for(i=0;i<NumUnknowns;i++){
+           for(i=0;i<NumUnknowns[pg->imtrx];i++){
                    bAC[iAC][i] = 0.0; }
                    *have_bAC = TRUE;
           }
@@ -658,7 +662,7 @@ fprintf(stderr,"AC2 %g %g %g %g %g\n",temp,temp_init,delta_heat,spec_flux,AC[iAC
            t2 = augc[iAC].DataFlt[4];
            press = BC_Types[augc[iAC].BCID].BC_Data_Float[augc[iAC].DFID];
 
-              for(i=0;i<NumUnknowns;i++){
+              for(i=0;i<NumUnknowns[pg->imtrx];i++){
                        cAC[iAC][i]=0.0 ;         }
                        af->Assemble_Jacobian = TRUE;
 
@@ -677,10 +681,10 @@ fprintf(stderr,"AC2 %g %g %g %g %g\n",temp,temp_init,delta_heat,spec_flux,AC[iAC
            dAC[iAC][iAC]=1.0;
            *have_dAC = TRUE;
 
-           for(i=0;i<NumUnknowns;i++){
+           for(i=0;i<NumUnknowns[pg->imtrx];i++){
                    cAC[iAC][i] = 0; }
              *have_cAC = TRUE;
-           for(i=0;i<NumUnknowns;i++){
+           for(i=0;i<NumUnknowns[pg->imtrx];i++){
                    bAC[iAC][i] = 0.0; }
              *have_bAC = TRUE;
           }
@@ -700,7 +704,7 @@ fprintf(stderr,"AC2 %g %g %g %g %g\n",temp,temp_init,delta_heat,spec_flux,AC[iAC
            t2 = augc[iAC].DataFlt[6];
            area = augc[iAC].DataFlt[7];
 
-           for(i=0;i<NumUnknowns;i++){
+           for(i=0;i<NumUnknowns[pg->imtrx];i++){
                cAC[iAC][i]=0.0 ; }
                af->Assemble_Jacobian = TRUE;
 
@@ -757,7 +761,7 @@ fprintf(stderr,"AC2 %g %g %g %g %g\n",temp,temp_init,delta_heat,spec_flux,AC[iAC
 	      table_abs[0]=time_value;
 	      pressure_target = interpolate_table( AC_Tables[0], table_abs, &slope, NULL);
   
-	   for(i=0;i<NumUnknowns;i++){      
+	   for(i=0;i<NumUnknowns[pg->imtrx];i++){      
 	       cAC[iAC][i]=0.0 ; }   
                af->Assemble_Jacobian = TRUE; 
                                      
@@ -809,7 +813,7 @@ fprintf(stderr,"AC2 %g %g %g %g %g\n",temp,temp_init,delta_heat,spec_flux,AC[iAC
           idir = (int) augc[iAC].DataFlt[6];
 
 
-           for(i=0;i<NumUnknowns;i++){
+           for(i=0;i<NumUnknowns[pg->imtrx];i++){
                cAC[iAC][i]=0.0 ; }
                af->Assemble_Jacobian = TRUE;
 
@@ -819,8 +823,8 @@ fprintf(stderr,"AC2 %g %g %g %g %g\n",temp,temp_init,delta_heat,spec_flux,AC[iAC
                {
                  k = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
                  index = MESH_DISPLACEMENT1-1+idir;
-                 i = Index_Solution (k, index, 0, 0, -1);
-                 EH(i, "Could not resolve index_solution.");
+                 i = Index_Solution (k, index, 0, 0, -1, pg->imtrx);
+                 GOMA_EH(i, "Could not resolve index_solution.");
                  xpoint = Coor[idir-1][k] + x[i];
                 }
 
@@ -844,7 +848,7 @@ fprintf(stderr,"AC2 %g %g %g %g %g\n",temp,temp_init,delta_heat,spec_flux,AC[iAC
            gamma  = augc[iAC].DataFlt[5];
            press = BC_Types[augc[iAC].BCID].BC_Data_Float[augc[iAC].DFID];
 
-              for(i=0;i<NumUnknowns;i++){
+              for(i=0;i<NumUnknowns[pg->imtrx];i++){
                        cAC[iAC][i]=0.0 ;         }
                        af->Assemble_Jacobian = TRUE;
            /*volume = evaluate_volume_integral(exo, dpi, 8, "POSITIVE_FILL", blk_id, 0*/
@@ -858,10 +862,10 @@ fprintf(stderr,"AC2 %g %g %g %g %g\n",temp,temp_init,delta_heat,spec_flux,AC[iAC
            dAC[iAC][iAC]=pow(volume,gamma);
            *have_dAC = TRUE;
 
-           for(i=0;i<NumUnknowns;i++){
+           for(i=0;i<NumUnknowns[pg->imtrx];i++){
                    cAC[iAC][i] = 0; }
              *have_cAC = TRUE;
-           for(i=0;i<NumUnknowns;i++){
+           for(i=0;i<NumUnknowns[pg->imtrx];i++){
                    bAC[iAC][i] = 0.0; }
                    *have_bAC = TRUE;
           }
@@ -880,7 +884,7 @@ fprintf(stderr,"AC2 %g %g %g %g %g\n",temp,temp_init,delta_heat,spec_flux,AC[iAC
            t2 = augc[iAC].DataFlt[4];
            press = BC_Types[augc[iAC].BCID].BC_Data_Float[augc[iAC].DFID];
 
-              for(i=0;i<NumUnknowns;i++){
+              for(i=0;i<NumUnknowns[pg->imtrx];i++){
                        cAC[iAC][i]=0.0 ;         }
                        af->Assemble_Jacobian = TRUE;
 
@@ -895,10 +899,10 @@ fprintf(stderr,"AC2 %g %g %g %g %g\n",temp,temp_init,delta_heat,spec_flux,AC[iAC
            dAC[iAC][iAC]=1.0;
            *have_dAC = TRUE;
 
-           for(i=0;i<NumUnknowns;i++){
+           for(i=0;i<NumUnknowns[pg->imtrx];i++){
                    cAC[iAC][i] = 0; }
              *have_cAC = TRUE;
-           for(i=0;i<NumUnknowns;i++){
+           for(i=0;i<NumUnknowns[pg->imtrx];i++){
                    bAC[iAC][i] = 0.0; }
              *have_bAC = TRUE;
           }
@@ -913,7 +917,7 @@ fprintf(stderr,"AC2 %g %g %g %g %g\n",temp,temp_init,delta_heat,spec_flux,AC[iAC
            t1 = augc[iAC].DataFlt[2];
            press = BC_Types[augc[iAC].BCID].BC_Data_Float[augc[iAC].DFID];
 
-              for(i=0;i<NumUnknowns;i++){
+              for(i=0;i<NumUnknowns[pg->imtrx];i++){
                        cAC[iAC][i]=0.0 ;         }
                        af->Assemble_Jacobian = TRUE;
 
@@ -928,10 +932,10 @@ fprintf(stderr,"AC2 %g %g %g %g %g\n",temp,temp_init,delta_heat,spec_flux,AC[iAC
            dAC[iAC][iAC]=1.0;
            *have_dAC = TRUE;
 
-           for(i=0;i<NumUnknowns;i++){
+           for(i=0;i<NumUnknowns[pg->imtrx];i++){
                    cAC[iAC][i] = 0; }
              *have_cAC = TRUE;
-           for(i=0;i<NumUnknowns;i++){
+           for(i=0;i<NumUnknowns[pg->imtrx];i++){
                    bAC[iAC][i] = 0.0; }
              *have_bAC = TRUE;
           }
@@ -960,7 +964,7 @@ fprintf(stderr,"AC2 %g %g %g %g %g\n",temp,temp_init,delta_heat,spec_flux,AC[iAC
            kine_ss1 = (int) augc[iAC].DataFlt[8+N_spring];
            kine_ss2 = (int) augc[iAC].DataFlt[9+N_spring];
 
-           for(i=0;i<NumUnknowns;i++){
+           for(i=0;i<NumUnknowns[pg->imtrx];i++){
                cAC[iAC][i]=0.0 ; 
                bAC[iAC][i]=0.0 ; 
 		}
@@ -1066,7 +1070,7 @@ fprintf(stderr,"AC2 %g %g %g %g %g\n",temp,temp_init,delta_heat,spec_flux,AC[iAC
 			+ 0.5*M_PIE*(1.-omega_u/omega_l);
 	   force = (forcey+forcey_dcl1+forcey_dcl2)*sin(angle_u) 
 			+ (forcex+forcex_dcl1+forcex_dcl2)*cos(angle_u);
-           for(i=0;i<NumUnknowns;i++){
+           for(i=0;i<NumUnknowns[pg->imtrx];i++){
                cAC[iAC][i]= cAC[iAC][i]*sin(angle_u) + bAC[iAC][i]*cos(angle_u); 
                bAC[iAC][i]=0.0 ; 
 		}
@@ -1112,7 +1116,7 @@ fprintf(stderr,"AC2 %g %g %g %g %g\n",temp,temp_init,delta_heat,spec_flux,AC[iAC
            mass = augc[iAC].DataFlt[7];
            ns_id = 500;
            idir = 1;
-           for(i=0;i<NumUnknowns;i++){
+           for(i=0;i<NumUnknowns[pg->imtrx];i++){
                cAC[iAC][i]=0.0 ; 
                bAC[iAC][i]=0.0 ; 
 		}
@@ -1124,13 +1128,13 @@ fprintf(stderr,"AC2 %g %g %g %g %g\n",temp,temp_init,delta_heat,spec_flux,AC[iAC
                {
                  k = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
                  index = VELOCITY1-1+idir;
-                 i = Index_Solution (k, index, 0, 0, blk_id);
-                 EH(i, "Could not resolve index_solution.");
+                 i = Index_Solution (k, index, 0, 0, blk_id, pg->imtrx);
+                 GOMA_EH(i, "Could not resolve index_solution.");
                  vpoint = x[i];
                  vdotpoint = xdot[i];
                  index_mesh = MESH_DISPLACEMENT1-1+idir;
-                 i = Index_Solution (k, index_mesh, 0, 0, blk_id);
-                 EH(i, "Could not resolve index_solution.");
+                 i = Index_Solution (k, index_mesh, 0, 0, blk_id, pg->imtrx);
+                 GOMA_EH(i, "Could not resolve index_solution.");
                  xpoint = Coor[idir-1][k] + x[i];
                 }
 
@@ -1171,11 +1175,11 @@ fprintf(stderr,"AC2 %g %g %g %g %g\n",temp,temp_init,delta_heat,spec_flux,AC[iAC
           fprintf(stderr,"forcex_dcl done %g %g %g\n",xpoint,vpoint,forcex_dcl);
 
 	   force =  (forcex+forcex_dcl);
-           for(i=0;i<NumUnknowns;i++){
+           for(i=0;i<NumUnknowns[pg->imtrx];i++){
                cAC[iAC][i]+= bAC[iAC][i]; 
 		}
 #if 0
-           for(i=0;i<NumUnknowns;i++){
+           for(i=0;i<NumUnknowns[pg->imtrx];i++){
                bAC[iAC][i]=0.0 ; 
 		}
            forcex_sens = evaluate_flux_sens( exo,
@@ -1249,7 +1253,7 @@ fprintf(stderr,"AC22 %g %g %g %g\n",force,force_value,AC[iAC],BC_Types[9].u_BC[4
            freq = augc[iAC].DataFlt[3];
            press = BC_Types[augc[iAC].BCID].BC_Data_Float[augc[iAC].DFID];
 
-              for(i=0;i<NumUnknowns;i++){
+              for(i=0;i<NumUnknowns[pg->imtrx];i++){
                        cAC[iAC][i]=0.0 ;         }
                        af->Assemble_Jacobian = TRUE;
 
@@ -1260,10 +1264,10 @@ fprintf(stderr,"AC22 %g %g %g %g\n",force,force_value,AC[iAC],BC_Types[9].u_BC[4
            dAC[iAC][iAC]=1.0;
            *have_dAC = TRUE;
 
-           for(i=0;i<NumUnknowns;i++){
+           for(i=0;i<NumUnknowns[pg->imtrx];i++){
                    cAC[iAC][i] = 0; }
              *have_cAC = TRUE;
-           for(i=0;i<NumUnknowns;i++){
+           for(i=0;i<NumUnknowns[pg->imtrx];i++){
                    bAC[iAC][i] = 0.0; }
              *have_bAC = TRUE;
           }
@@ -1285,7 +1289,7 @@ fprintf(stderr,"AC22 %g %g %g %g\n",force,force_value,AC[iAC],BC_Types[9].u_BC[4
            time1  = augc[iAC].DataFlt[5];
            flowrate = BC_Types[augc[iAC].BCID].BC_Data_Float[augc[iAC].DFID];
 
-           for(i=0;i<NumUnknowns;i++){
+           for(i=0;i<NumUnknowns[pg->imtrx];i++){
                cAC[iAC][i]=0.0 ; }
                af->Assemble_Jacobian = TRUE;
 
@@ -1323,10 +1327,10 @@ fprintf(stderr,"AC22 %g %g %g %g\n",force,force_value,AC[iAC],BC_Types[9].u_BC[4
            dAC[iAC][iAC]=1.;
            *have_dAC = TRUE;
 
-           for(i=0;i<NumUnknowns;i++){
+           for(i=0;i<NumUnknowns[pg->imtrx];i++){
                    cAC[iAC][i] = 0; }
              *have_cAC = TRUE;
-           for(i=0;i<NumUnknowns;i++){
+           for(i=0;i<NumUnknowns[pg->imtrx];i++){
                    bAC[iAC][i] = 0.0; }
                    *have_bAC = TRUE;
 
@@ -1353,7 +1357,7 @@ fprintf(stderr,"AC22 %g %g %g %g\n",force,force_value,AC[iAC],BC_Types[9].u_BC[4
            Q0 = 0;
            flowrate = BC_Types[augc[iAC].BCID].BC_Data_Float[augc[iAC].DFID];
 
-           for(i=0;i<NumUnknowns;i++){
+           for(i=0;i<NumUnknowns[pg->imtrx];i++){
                cAC[iAC][i]=0.0 ; }
                af->Assemble_Jacobian = TRUE;
 
@@ -1409,10 +1413,10 @@ fprintf(stderr,"AC22 %g %g %g %g\n",force,force_value,AC[iAC],BC_Types[9].u_BC[4
                        dAC[iAC][iAC]=1.;
                        *have_dAC = TRUE;
 
-                       for(i=0;i<NumUnknowns;i++){
+                       for(i=0;i<NumUnknowns[pg->imtrx];i++){
                                cAC[iAC][i] = 0; }
                          *have_cAC = TRUE;
-                       for(i=0;i<NumUnknowns;i++){
+                       for(i=0;i<NumUnknowns[pg->imtrx];i++){
                                bAC[iAC][i] = 0.0; }
                                *have_bAC = TRUE;
           }
@@ -1440,7 +1444,7 @@ fprintf(stderr,"AC22 %g %g %g %g\n",force,force_value,AC[iAC],BC_Types[9].u_BC[4
            p0 = F0;
            press = BC_Types[augc[iAC].BCID].BC_Data_Float[augc[iAC].DFID];
 
-           for(i=0;i<NumUnknowns;i++){
+           for(i=0;i<NumUnknowns[pg->imtrx];i++){
                cAC[iAC][i]=0.0 ; }
                af->Assemble_Jacobian = TRUE;
 
@@ -1489,10 +1493,10 @@ fprintf(stderr,"AC22 %g %g %g %g\n",force,force_value,AC[iAC],BC_Types[9].u_BC[4
            dAC[iAC][iAC]=1.;
            *have_dAC = TRUE;
 
-           for(i=0;i<NumUnknowns;i++){
+           for(i=0;i<NumUnknowns[pg->imtrx];i++){
                    cAC[iAC][i] = 0; }
              *have_cAC = TRUE;
-           for(i=0;i<NumUnknowns;i++){
+           for(i=0;i<NumUnknowns[pg->imtrx];i++){
                    bAC[iAC][i] = 0.0; }
                    *have_bAC = TRUE;
 
@@ -1533,7 +1537,7 @@ fprintf(stderr,"AC22 %g %g %g %g\n",force,force_value,AC[iAC],BC_Types[9].u_BC[4
            p2 = augc[iAC].DataFlt[6];
            press = BC_Types[augc[iAC].BCID].BC_Data_Float[augc[iAC].DFID];
 
-           for(i=0;i<NumUnknowns;i++){
+           for(i=0;i<NumUnknowns[pg->imtrx];i++){
                cAC[iAC][i]=0.0 ; }
                af->Assemble_Jacobian = TRUE;
 
@@ -1626,10 +1630,10 @@ fprintf(stderr,"AC22 %g %g %g %g\n",force,force_value,AC[iAC],BC_Types[9].u_BC[4
            dAC[iAC][iAC]=1.;
            *have_dAC = TRUE;
 
-           for(i=0;i<NumUnknowns;i++){
+           for(i=0;i<NumUnknowns[pg->imtrx];i++){
                    cAC[iAC][i] = 0; }
              *have_cAC = TRUE;
-           for(i=0;i<NumUnknowns;i++){
+           for(i=0;i<NumUnknowns[pg->imtrx];i++){
                    bAC[iAC][i] = 0.0; }
                    *have_bAC = TRUE;
 
@@ -1647,7 +1651,7 @@ fprintf(stderr,"AC22 %g %g %g %g\n",force,force_value,AC[iAC],BC_Types[9].u_BC[4
            freq = augc[iAC].DataFlt[3];
            press = BC_Types[augc[iAC].BCID].BC_Data_Float[augc[iAC].DFID];
 
-              for(i=0;i<NumUnknowns;i++){
+              for(i=0;i<NumUnknowns[pg->imtrx];i++){
                        cAC[iAC][i]=0.0 ;         }
                        af->Assemble_Jacobian = TRUE;
 
@@ -1658,10 +1662,10 @@ fprintf(stderr,"AC22 %g %g %g %g\n",force,force_value,AC[iAC],BC_Types[9].u_BC[4
            dAC[iAC][iAC]=1.0;
            *have_dAC = TRUE;
 
-           for(i=0;i<NumUnknowns;i++){
+           for(i=0;i<NumUnknowns[pg->imtrx];i++){
                    cAC[iAC][i] = 0; }
              *have_cAC = TRUE;
-           for(i=0;i<NumUnknowns;i++){
+           for(i=0;i<NumUnknowns[pg->imtrx];i++){
                    bAC[iAC][i] = 0.0; }
              *have_bAC = TRUE;
           }
@@ -1673,7 +1677,7 @@ fprintf(stderr,"AC22 %g %g %g %g\n",force,force_value,AC[iAC],BC_Types[9].u_BC[4
           {
            dbl Press0, NipLoad, PressMax, footprint, web_speed, area, force;
            int blk_id, ss_id;
-	   dbl force2, temp[NumUnknowns];
+	   dbl force2, temp[NumUnknowns[pg->imtrx]];
 	   int ss_id2;
            blk_id = (int) augc[iAC].DataFlt[1];
            ss_id = (int) augc[iAC].DataFlt[2];
@@ -1683,8 +1687,8 @@ fprintf(stderr,"AC22 %g %g %g %g\n",force,force_value,AC[iAC],BC_Types[9].u_BC[4
            web_speed = augc[iAC].DataFlt[6];
            area = augc[iAC].DataFlt[7];
 
-	   memset(cAC[iAC],0, sizeof(double)*NumUnknowns);
-	   memset(temp,0, sizeof(double)*NumUnknowns);
+	   memset(cAC[iAC],0, sizeof(double)*NumUnknowns[pg->imtrx]);
+	   memset(temp,0, sizeof(double)*NumUnknowns[pg->imtrx]);
            af->Assemble_Jacobian = TRUE;
 
            force = evaluate_flux( exo,
@@ -1742,7 +1746,7 @@ fprintf(stderr,"AC22 %g %g %g %g\n",force,force_value,AC[iAC],BC_Types[9].u_BC[4
                          {
              		  target = area*Press0;
                          }
-           for(i=0;i<NumUnknowns;i++){ cAC[iAC][i]  -= temp[i]; } 
+           for(i=0;i<NumUnknowns[pg->imtrx];i++){ cAC[iAC][i]  -= temp[i]; } 
              AC[iAC] =  target + force - force2;
 
           }
@@ -1754,7 +1758,7 @@ fprintf(stderr,"AC22 %g %g %g %g\n",force,force_value,AC[iAC],BC_Types[9].u_BC[4
           ratio = augc[iAC].DataFlt[2];
           depth = augc[iAC].DataFlt[3];
 
-	  memset(cAC[iAC],0, sizeof(double)*NumUnknowns);  
+	  memset(cAC[iAC],0, sizeof(double)*NumUnknowns[pg->imtrx]);  
           af->Assemble_Jacobian = TRUE;
 
           nsp = match_nsid(ns_id);
@@ -1763,12 +1767,12 @@ fprintf(stderr,"AC22 %g %g %g %g\n",force,force_value,AC[iAC],BC_Types[9].u_BC[4
                {
                  k = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
                  index = FILL;
-                 i1 = Index_Solution (k, index, 0, 0, -1);
-                 EH(i1, "Could not resolve index_solution.");
+                 i1 = Index_Solution (k, index, 0, 0, -1, pg->imtrx);
+                 GOMA_EH(i1, "Could not resolve index_solution.");
                  dist = x[i1];
                  index = MESH_DISPLACEMENT2;
-                 i2 = Index_Solution (k, index, 0, 0, -1);
-                 EH(i2, "Could not resolve index_solution.");
+                 i2 = Index_Solution (k, index, 0, 0, -1, pg->imtrx);
+                 GOMA_EH(i2, "Could not resolve index_solution.");
                  ycoord = Coor[1][k] + x[i2];
                 }
 
@@ -1803,8 +1807,8 @@ fprintf(stderr,"AC22 %g %g %g %g\n",force,force_value,AC[iAC],BC_Types[9].u_BC[4
                k = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
                for (dir = 0; dir < pd->Num_Dim ; dir++)
                    {
-                    i = Index_Solution (k, MESH_DISPLACEMENT1+dir, 0, 0, -1);
-                    EH(i, "Could not resolve index_solution.");
+                    i = Index_Solution (k, MESH_DISPLACEMENT1+dir, 0, 0, -1, pg->imtrx);
+                    GOMA_EH(i, "Could not resolve index_solution.");
                     i_dcl = i;
                     pos_dcl[dir] = Coor[dir][k] + x[i];
                    }
@@ -1816,8 +1820,8 @@ fprintf(stderr,"AC22 %g %g %g %g\n",force,force_value,AC[iAC],BC_Types[9].u_BC[4
                k = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
                for (dir = 0; dir < pd->Num_Dim ; dir++)
                    {
-                    i = Index_Solution (k, MESH_DISPLACEMENT1+dir, 0, 0, -1);
-                    EH(i, "Could not resolve index_solution.");
+                    i = Index_Solution (k, MESH_DISPLACEMENT1+dir, 0, 0, -1, pg->imtrx);
+                    GOMA_EH(i, "Could not resolve index_solution.");
                     i_scl = i;
                     pos_scl[dir] = Coor[dir][k];
                     dm_scl[dir] = x[i];
@@ -1871,11 +1875,11 @@ fprintf(stderr,"AC %g %g %g %g\n",xcenter,ycenter,radius,delta_s);
 
      	nsp            = match_nsid(ns_id2);
      	k           = Proc_NS_List[Proc_NS_Pointers[nsp]];
-        i = Index_Solution (k, MESH_DISPLACEMENT1, 0, 0, -1);
-        EH(i, "Could not resolve index_solution.");
+        i = Index_Solution (k, MESH_DISPLACEMENT1, 0, 0, -1, pg->imtrx);
+        GOMA_EH(i, "Could not resolve index_solution.");
         dns_xpt = Coor[0][k] + x[i];
-        i = Index_Solution (k, MESH_DISPLACEMENT2, 0, 0, -1);
-        EH(i, "Could not resolve index_solution.");
+        i = Index_Solution (k, MESH_DISPLACEMENT2, 0, 0, -1, pg->imtrx);
+        GOMA_EH(i, "Could not resolve index_solution.");
         dns_ypt = Coor[1][k] + x[i];
 
 	/*  whole side set list   */
@@ -1887,11 +1891,11 @@ fprintf(stderr,"AC %g %g %g %g\n",xcenter,ycenter,radius,delta_s);
         for (j = 0; j < num_nodes; j++)
              {
                k = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
-               i = Index_Solution (k, MESH_DISPLACEMENT1, 0, 0, -1);
-               EH(i, "Could not resolve index_solution.");
+               i = Index_Solution (k, MESH_DISPLACEMENT1, 0, 0, -1, pg->imtrx);
+               GOMA_EH(i, "Could not resolve index_solution.");
                xpoint[j] = Coor[0][k] + x[i];
-               i = Index_Solution (k, MESH_DISPLACEMENT2, 0, 0, -1);
-               EH(i, "Could not resolve index_solution.");
+               i = Index_Solution (k, MESH_DISPLACEMENT2, 0, 0, -1, pg->imtrx);
+               GOMA_EH(i, "Could not resolve index_solution.");
                ypoint[j] = Coor[1][k] + x[i];
              }
       for ( i = 1; i<num_nodes; i++)
@@ -1970,16 +1974,16 @@ fprintf(stderr,"AC %g %g %g %g\n",xcenter,ycenter,radius,delta_s);
 
      	nsp            = match_nsid(ns_id);
      	k           = Proc_NS_List[Proc_NS_Pointers[nsp]];
-        unk1 = Index_Solution (k, MESH_DISPLACEMENT2, 0, 0, -1);
-        EH(unk1, "Could not resolve index_solution.");
+        unk1 = Index_Solution (k, MESH_DISPLACEMENT2, 0, 0, -1, pg->imtrx);
+        GOMA_EH(unk1, "Could not resolve index_solution.");
         dns_ypt = Coor[1][k] + x[unk1];
-        i = Index_Solution (k, MESH_DISPLACEMENT1, 0, 0, -1);
-        EH(i, "Could not resolve index_solution.");
+        i = Index_Solution (k, MESH_DISPLACEMENT1, 0, 0, -1, pg->imtrx);
+        GOMA_EH(i, "Could not resolve index_solution.");
         dns_xpt = Coor[0][k] + x[i];
      	nsp            = match_nsid(ns_id2);
      	k           = Proc_NS_List[Proc_NS_Pointers[nsp]];
-        unk2 = Index_Solution (k, MESH_DISPLACEMENT2, 0, 0, -1);
-        EH(unk2, "Could not resolve index_solution.");
+        unk2 = Index_Solution (k, MESH_DISPLACEMENT2, 0, 0, -1, pg->imtrx);
+        GOMA_EH(unk2, "Could not resolve index_solution.");
         dns_ypt2= Coor[1][k] + x[unk2];
 
            flowrate = evaluate_flux( exo,
@@ -2016,7 +2020,7 @@ fprintf(stderr,"AC %g %g %g %g\n",xcenter,ycenter,radius,delta_s);
 	nsp = match_nsid(103);
       	k = Proc_NS_List[Proc_NS_Pointers[nsp]];
 	
-	i = Index_Solution(k,MESH_DISPLACEMENT1,0,0,-1);
+	i = Index_Solution(k,MESH_DISPLACEMENT1,0,0,-1, pg->imtrx);
 	/*xpoint = Coor[0][k] + x[i];*/
 
 	AC[iAC]=x[i];
@@ -2044,11 +2048,11 @@ fprintf(stderr,"AC %g %g %g %g\n",xcenter,ycenter,radius,delta_s);
         for (j = 0; j < Proc_NS_Count[nsp]; j++)
              {
                k = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
-         i = Index_Solution (k, SHELL_LUBP, 0, 0, -1);
-           EH(i, "Could not resolve index_solution.");
-        pressure = x[i];
+               i = Index_Solution (k, SHELL_LUBP, 0, 0, -1, pg->imtrx);
+               GOMA_EH(i, "Could not resolve index_solution.");
+               pressure = x[i];
                 }
-  	AC[iAC] = pressure - p_value;
+  	   AC[iAC] = pressure - p_value;
 	  }
 	else if(model_id == 1)
 	  {
@@ -2072,11 +2076,11 @@ fprintf(stderr,"AC %g %g %g %g\n",xcenter,ycenter,radius,delta_s);
         for (j = 0; j < num_nodes; j++)
              {
                k = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
-               i = Index_Solution (k, MESH_DISPLACEMENT1, 0, 0, -1);
-               EH(i, "Could not resolve index_solution.");
+               i = Index_Solution (k, MESH_DISPLACEMENT1, 0, 0, -1, pg->imtrx);
+               GOMA_EH(i, "Could not resolve index_solution.");
                xpoint[j] = Coor[0][k] + x[i];
-               i = Index_Solution (k, MESH_DISPLACEMENT2, 0, 0, -1);
-               EH(i, "Could not resolve index_solution.");
+               i = Index_Solution (k, MESH_DISPLACEMENT2, 0, 0, -1, pg->imtrx);
+               GOMA_EH(i, "Could not resolve index_solution.");
                ypoint[j] = Coor[1][k] + x[i];
              }
       for ( i = 1; i<num_nodes; i++)
@@ -2156,11 +2160,11 @@ fprintf(stderr,"AC %g %g %g %g\n",xcenter,ycenter,radius,delta_s);
         for (j = 0; j < num_nodes; j++)
              {
                k = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
-               i = Index_Solution (k, MESH_DISPLACEMENT1, 0, 0, -1);
-               EH(i, "Could not resolve index_solution.");
+               i = Index_Solution (k, MESH_DISPLACEMENT1, 0, 0, -1, pg->imtrx);
+               GOMA_EH(i, "Could not resolve index_solution.");
                xpoint[j] = Coor[0][k] + x[i];
-               i = Index_Solution (k, SHELL_USER, 0, 0, -1);
-               EH(i, "Could not resolve index_solution.");
+               i = Index_Solution (k, SHELL_USER, 0, 0, -1, pg->imtrx);
+               GOMA_EH(i, "Could not resolve index_solution.");
                ypoint[j] = x[i];
              }
       for ( i = 1; i<num_nodes; i++)
