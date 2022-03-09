@@ -1,3 +1,7 @@
+## Changes in version 7.0.1
+
+- Bugfix for Ubuntu OpenMPI and using build script on Ubuntu
+
 ## Changes in version 7.0
 
 - Partial Segregated solver support
