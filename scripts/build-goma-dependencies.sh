@@ -1088,7 +1088,7 @@ fi
 
 #make SuperLU
 cd $GOMA_LIB/superlu_dist-7.2.0
-if [ -e lib64/libsuperlu_dist.a ]
+if [ -e lib64/libsuperlu_dist.a ] || [ -e lib/libsuperlu_dist.a ]
 then
     log_echo "SuperLU_DIST already built"
 else
@@ -1100,13 +1100,17 @@ else
       -DTPL_PARMETIS_INCLUDE_DIRS="$GOMA_LIB/parmetis-4.0.3/include" 2>&1 | tee -a $COMPILE_LOG
     make -C build 2>&1 | tee -a $COMPILE_LOG
     make -C build install 2>&1 | tee -a $COMPILE_LOG
-    if [ -e $GOMA_LIB/superlu_dist-7.2.0/lib64/libsuperlu_dist.a ]
+    if [ -e $GOMA_LIB/superlu_dist-7.2.0/lib64/libsuperlu_dist.a ] || [ -e $GOMA_LIB/superlu_dist-7.2.0/lib64/libsuperlu_dist.a ]
     then
         log_echo "Built SuperLU_DIST 7.2.0"
     else
         log_echo "Failed to build SuperLU_DIST 7.2.0"
         exit 1
     fi
+fi
+SUPERLU_LIBDIR="lib64"
+if [ -e $GOMA_LIB/superlu_dist-7.2.0/lib/libsuperlu_dist.a ]; then
+  SUPERLU_LIBDIR="lib"
 fi
 #make sparse
 cd $GOMA_LIB/sparse
@@ -1408,7 +1412,7 @@ else
   -D AMD_INCLUDE_DIRS:PATH="$GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/AMD/Include;$GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/SuiteSparse_config" \
 -D TPL_ENABLE_SuperLUDist:BOOL=ON \
   -D SuperLUDist_LIBRARY_NAMES:STRING="superlu_dist" \
-  -D SuperLUDist_LIBRARY_DIRS:PATH=$GOMA_LIB/superlu_dist-7.2.0/lib64 \
+  -D SuperLUDist_LIBRARY_DIRS:PATH=$GOMA_LIB/superlu_dist-7.2.0/$SUPERLU_LIBDIR \
   -D SuperLUDist_INCLUDE_DIRS:PATH=$GOMA_LIB/superlu_dist-7.2.0/include \
 -D TPL_ENABLE_ParMETIS:BOOL=ON \
   -D ParMETIS_LIBRARY_DIRS:PATH=$GOMA_LIB/parmetis-4.0.3/lib \
