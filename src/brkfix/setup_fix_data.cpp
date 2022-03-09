@@ -14,6 +14,10 @@
 
 #include "brkfix/setup_fix_data.h"
 
+// include mpi before since it might get pulled in from Exodus
+// an error might occur because of mpicxx headers being included as C
+#include <mpi.h>
+
 extern "C" {
 #define DISABLE_CPP
 #include "base_mesh.h"
