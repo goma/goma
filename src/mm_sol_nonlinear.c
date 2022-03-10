@@ -883,10 +883,17 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
         goto free_and_clear;
       }
 
-      if (((vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV) &&
-           pd->v[pg->imtrx][POLYMER_STRESS11] && af->Assemble_Jacobian == TRUE) ||
-          ((pd->v[pg->imtrx][EM_E1_REAL] && pd->v[pg->imtrx][EM_H1_REAL]) &&
-           af->Assemble_Jacobian == TRUE)) {
+      bool enable_numerical_jacobian = false;
+      for (int mn = 0; mn < upd->Num_Mat; mn++) {
+        if (((vn_glob[mn]->evssModel == LOG_CONF || vn_glob[mn]->evssModel == LOG_CONF_GRADV) &&
+             pd_glob[mn]->v[pg->imtrx][POLYMER_STRESS11]) ||
+            ((pd_glob[mn]->v[pg->imtrx][EM_E1_REAL] && pd_glob[mn]->v[pg->imtrx][EM_H1_REAL]))) {
+          enable_numerical_jacobian = true;
+          break;
+        }
+      }
+
+      if (enable_numerical_jacobian && af->Assemble_Jacobian == TRUE) {
         err = numerical_jacobian_compute_stress(ams, x, resid_vector, delta_t, theta, x_old,
                                                 x_older, xdot, xdot_old, x_update, num_total_nodes,
                                                 First_Elem_Side_BC_Array[pg->imtrx], Debug_Flag,
