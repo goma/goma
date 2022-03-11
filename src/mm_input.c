@@ -10371,6 +10371,16 @@ int look_for_modal_prop(FILE *imp,                 /* ptr to input stream (in)*/
       }
       *MaterialModel = DumModel;
       iread = 1;
+    } else if(!strcmp(model_name, "HERSCHEL_BULKLEY"))
+    {
+      *MaterialModel= HERSCHEL_BULKLEY;
+      iread = 1;
+      printf("HERSCHEL_BULKLEY model used for %s\n", search_string);
+    } else if(!strcmp(model_name, "POWER_LAW"))
+    {
+      *MaterialModel= POWER_LAW;
+      iread = 1;
+      printf("POWER_LAW model used for %s\n", search_string);
     } else {
       iread = -2;
     }

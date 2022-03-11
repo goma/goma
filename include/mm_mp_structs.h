@@ -1140,6 +1140,8 @@ struct Viscoelastic_Constitutive {
   int epsModel;
 
   struct Positive_LS_Viscoelastic_Properties pos_ls;
+  dbl muJeffreys;           /* 2nd viscosity used in modified Jeffreys model */
+  int muJeffreysModel;
 };
 typedef struct Viscoelastic_Constitutive VISC_CONST_STRUCT;
 

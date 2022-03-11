@@ -9327,9 +9327,12 @@ int load_fv_grads(void)
       for (q = 0; q < VIM; q++) {
         for (r = 0; r < VIM; r++) {
           fv->grad_G[r][p][q] = 0.0;
+          fv->grad_Gt[r][p][q] = 0.0;
+
 
           for (i = 0; i < dofs; i++) {
             fv->grad_G[r][p][q] += *esp->G[p][q][i] * bf[v]->grad_phi[i][r];
+            fv->grad_Gt[r][p][q] += *esp->G[q][p][i] * bf[v]->grad_phi[i][r];
           }
         }
       }
