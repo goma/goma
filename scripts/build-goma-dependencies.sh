@@ -1100,7 +1100,7 @@ else
       -DTPL_PARMETIS_INCLUDE_DIRS="$GOMA_LIB/parmetis-4.0.3/include" 2>&1 | tee -a $COMPILE_LOG
     make -C build 2>&1 | tee -a $COMPILE_LOG
     make -C build install 2>&1 | tee -a $COMPILE_LOG
-    if [ -e $GOMA_LIB/superlu_dist-7.2.0/lib64/libsuperlu_dist.a ] || [ -e $GOMA_LIB/superlu_dist-7.2.0/lib64/libsuperlu_dist.a ]
+    if [ -e $GOMA_LIB/superlu_dist-7.2.0/lib/libsuperlu_dist.a ] || [ -e $GOMA_LIB/superlu_dist-7.2.0/lib64/libsuperlu_dist.a ]
     then
         log_echo "Built SuperLU_DIST 7.2.0"
     else
