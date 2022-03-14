@@ -1,3 +1,9 @@
+## Changes in version 7.0.2
+
+- Build script now builds `Omega_h` and `PETSc`
+- Various `CMake` changes to address consistency of setting third party libraries
+- Fix for Numerical Jacobian log conformation with multi-material
+
 ## Changes in version 7.0.1
 
 - Bugfix for Ubuntu OpenMPI and using build script on Ubuntu
