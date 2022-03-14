@@ -2728,7 +2728,7 @@ if [ -e $GOMA_LIB/Omega_h/lib/libomega_h.a ]; then
     log_echo "Omega_h is already built!"
 else
     cd $GOMA_LIB/omega_h-$OMEGA_H_VERSION
-    CC=mpicc CXX=mpicxx cmake -Bbuild -DCMAKE_INSTALL_PREFIX=$GOMA_LIB/Omega_h -DBUILD_SHARED_LIBS=OFF 2>&1 | tee -a $COMPILE_LOG
+    CC=mpicc CXX=mpicxx cmake -Bbuild -DCMAKE_INSTALL_PREFIX=$GOMA_LIB/Omega_h -DBUILD_SHARED_LIBS=OFF -DOmega_h_USE_MPI=ON 2>&1 | tee -a $COMPILE_LOG
     cmake --build build -j$MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
     make -C build install 2>&1 | tee -a $COMPILE_LOG
     if [ -e $GOMA_LIB/Omega_h/lib/libomega_h.a ]; then
