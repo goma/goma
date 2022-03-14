@@ -977,6 +977,7 @@ add_library(goma_util ${GOMA_UTIL_SOURCES} ${GOMA_UTIL_INCLUDES})
 target_include_directories(goma_util PUBLIC include)
 target_include_directories(goma_util SYSTEM PRIVATE ${GOMA_TPL_INCLUDES})
 target_link_libraries(goma_util PUBLIC ${GOMA_TPL_LIBRARIES} gds)
+target_link_directories(goma_util PUBLIC ${GOMA_TPL_LIBRARY_DIRS})
 target_compile_definitions(goma_util PUBLIC ${GOMA_COMPILE_DEFINITIONS})
 if(ENABLE_WARNINGS)
   target_compile_options(
