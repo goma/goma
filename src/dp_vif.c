@@ -2183,7 +2183,8 @@ void noahs_ark(void) {
     ddd_add_member(n, &vn_glob[i]->modes, 1, MPI_INT);
     ddd_add_member(n, &vn_glob[i]->shiftModel, 1, MPI_INT);
     ddd_add_member(n, &vn_glob[i]->dg_J_model, 1, MPI_INT);
-
+    ddd_add_member(n, &vn_glob[i]->shockcaptureModel, 1, MPI_INT);
+    ddd_add_member(n, &vn_glob[i]->shockcapture, 1, MPI_DOUBLE);
     /*
      * Dadblastit!!! If you add a shiny new variable argument list
      * take care to teleport it properly over to the other processors.
