@@ -34,8 +34,8 @@
     <script src="../../_static/doctools.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Polymer Weighting" href="polymer_weighting.html" />
-    <link rel="prev" title="Polymer Shift Function" href="polymer_shift_function.html" />
+    <link rel="next" title="Discontinuous Jacobian Formulation" href="discontinuous_jacobian_formulation.html" />
+    <link rel="prev" title="Polymer Weighting" href="polymer_weighting.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
     
@@ -2174,16 +2174,16 @@
        Polymer Shift Function
       </a>
      </li>
-     <li class="toctree-l3 current active">
-      <a class="current reference internal" href="#">
-       Polymer Shock Function
-      </a>
-     </li>
      <li class="toctree-l3">
       <a class="reference internal" href="polymer_weighting.html">
        <strong>
         Polymer Weighting
        </strong>
+      </a>
+     </li>
+     <li class="toctree-l3 current active">
+      <a class="current reference internal" href="#">
+       Polymer Shock Function
       </a>
      </li>
      <li class="toctree-l3">
@@ -3150,7 +3150,7 @@
                 
   <section id="polymer-shock-function">
 <h1>Polymer Shock Function<a class="headerlink" href="#polymer-shock-function" title="Permalink to this headline">¶</a></h1>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Polymer</span> <span class="n">Shock</span> <span class="n">Function</span> <span class="o">=</span> <span class="p">{</span><span class="n">NONE</span> <span class="o">|</span> <span class="n">DCDD</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span><span class="p">}</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Polymer</span> <span class="n">Shock</span> <span class="n">Capturing</span> <span class="o">=</span> <span class="p">{</span><span class="n">NONE</span> <span class="o">|</span> <span class="n">DCDD</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span><span class="p">}</span>
 </pre></div>
 </div>
 <section id="description-usage">
@@ -3158,7 +3158,7 @@
 <p>This optional card is used to specify the shock function for the polymer stress
 equation. Valid options are</p>
 <dl class="simple">
-<dt>NONE</dt><dd><p>No polymer shock function is used, default</p>
+<dt>NONE</dt><dd><p>No polymer shock capturing is used, default</p>
 </dd>
 <dt>DCDD</dt><dd><p>DCDD shock capturing term is used
 * &lt;float1&gt; the scaling value of the shock capturing term</p>
@@ -3170,11 +3170,11 @@ equation. Valid options are</p>
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
 <p>The following is a sample card that set the polymer shock function to <strong>SUPG</strong> and
 demonstrates the required cards.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Polymer</span> <span class="n">Shock</span> <span class="n">Function</span> <span class="o">=</span> <span class="n">DCDD</span> <span class="mi">1</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Polymer</span> <span class="n">Shock</span> <span class="n">Capturing</span> <span class="o">=</span> <span class="n">DCDD</span> <span class="mi">1</span>
 </pre></div>
 </div>
 <p>The following is a sample card that set the polymer shock function to <strong>NONE</strong>.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Polymer</span> <span class="n">Shock</span> <span class="n">Function</span> <span class="o">=</span> <span class="n">NONE</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Polymer</span> <span class="n">Shock</span> <span class="n">Capturing</span> <span class="o">=</span> <span class="n">NONE</span>
 </pre></div>
 </div>
 </section>
@@ -3190,17 +3190,17 @@ demonstrates the required cards.</p>
               
               <!-- Previous / next buttons -->
 <div class='prev-next-area'>
-    <a class='left-prev' id="prev-link" href="polymer_shift_function.html" title="previous page">
+    <a class='left-prev' id="prev-link" href="polymer_weighting.html" title="previous page">
         <i class="fas fa-angle-left"></i>
         <div class="prev-next-info">
             <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title">Polymer Shift Function</p>
+            <p class="prev-next-title"><strong>Polymer Weighting</strong></p>
         </div>
     </a>
-    <a class='right-next' id="next-link" href="polymer_weighting.html" title="next page">
+    <a class='right-next' id="next-link" href="discontinuous_jacobian_formulation.html" title="next page">
     <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title"><strong>Polymer Weighting</strong></p>
+        <p class="prev-next-title"><strong>Discontinuous Jacobian Formulation</strong></p>
     </div>
     <i class="fas fa-angle-right"></i>
     </a>
