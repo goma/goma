@@ -2957,8 +2957,8 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     	  load_lsi(ls->Length_Scale);
     	  load_lsi_derivs(); 
     	  dbl hsi  = lsi->H;
-    	  dbl dhsi = lsi->dH;
-    	  dbl H, H_U, dH_U_dtime, H_L, dH_L_dtime, dH_dtime, dH_U_ddH;
+    	  //dbl dhsi = lsi->dH;
+    	  dbl H, H_U, dH_U_dtime, H_L, dH_L_dtime, dH_U_ddH;
     	  dbl dH_U_dX[DIM],dH_L_dX[DIM], dH_U_dp;
     	  H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddH, time, delta_t);
     	  
@@ -3005,26 +3005,33 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
 
     /* Calculate velocities */
- 
+    /* Calculate velocities */
 
-    /* Post velocities */
-	dbl hsi  = 0.0, dhsi = 0.0;
-	//mu1 = mp->viscosity;
-	if (ls != NULL)
-	{
-		//mu2  = mp->mp2nd->viscosity;
-		load_lsi(ls->Length_Scale);
-		load_lsi_derivs(); 
-		hsi  = lsi->H;
-		dhsi = lsi->dH;
-	}
-    local_post[LUB_VELO_FIELD] = fv->sh_shear_top ;
-    local_lumped[LUB_VELO_FIELD] = 1.0;
-    local_post[LUB_VELO_FIELD+1] = fv->sh_shear_bot ;
-    local_lumped[LUB_VELO_FIELD+1] = 1.0;
-    local_post[LUB_VELO_FIELD+2] = 0.0 ;
-    local_lumped[LUB_VELO_FIELD+2] = 1.0;
+    if (gn->ConstitutiveEquation == BINGHAM){
+    	local_post[LUB_VELO_FIELD] = fv->sh_shear_top ;
+    	local_lumped[LUB_VELO_FIELD] = 1.0;
+    	local_post[LUB_VELO_FIELD+1] = fv->sh_shear_bot ;
+    	local_lumped[LUB_VELO_FIELD+1] = 1.0;
+    	local_post[LUB_VELO_FIELD+2] = 0.0 ;
+    	local_lumped[LUB_VELO_FIELD+2] = 1.0;
+    }
+    else{
+    	if(pd->e[R_LUBP])
+    	{
+    		calculate_lub_q_v(R_LUBP, time, delta_t, xi, exo);
+    	}
+    	else
+    	{
+    		calculate_lub_q_v(R_SHELL_FILMP, time, delta_t, xi, exo);
+    	}
 
+    	local_post[LUB_VELO_FIELD] = LubAux->v_avg[0];
+    	local_lumped[LUB_VELO_FIELD] = 1.0;
+    	local_post[LUB_VELO_FIELD+1] = LubAux->v_avg[1];
+    	local_lumped[LUB_VELO_FIELD+1] = 1.0;
+    	local_post[LUB_VELO_FIELD+2] = LubAux->v_avg[2];
+    	local_lumped[LUB_VELO_FIELD+2] = 1.0;
+    }
     /* Cleanup */
     safe_free((void *) n_dof);
 
