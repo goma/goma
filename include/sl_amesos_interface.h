@@ -10,14 +10,14 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _SL_AMESOS_INTERFACE_H
-#define _SL_AMESOS_INTERFACE_H
+#ifndef GOMA_SL_AMESOS_INTERFACE_H
+#define GOMA_SL_AMESOS_INTERFACE_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _SL_AMESOS_INTERFACE_CC
+#ifdef GOMA_SL_AMESOS_INTERFACE_CC
 #define EXTERN extern "C"
 #else
 #define EXTERN extern
@@ -33,24 +33,25 @@ amesos_solve_msr ( char *,
 		   struct Aztec_Linear_Solver_System *,
 		   double *,
 		   double *,
+		   int ,
 		   int );
 EXTERN int
 amesos_solve_epetra( char *choice,
                      struct Aztec_Linear_Solver_System *ams,
-                  double *x_,
-                  double *resid_vector);
+		     double *x_,
+		     double *resid_vector,
+		     int imtrx );
 
 EXTERN void
-trilinos_solve_ls (double *,
-		   int *,
-		   int *,
-		   double *,
-		   double *,
-		   double *,
-		   int, 
-		   int, 
-		   int,
-		   int);
+trilinos_solve_ls(double *bf_mat_, 
+		  int *j_map_,
+		  double *f_rhs_,
+		  double *x_,
+		  double *Atranspose_f_,
+		  int txt_num_pts,
+		  int nnz_per_row, 
+		  int num_cols,
+		  int NewMatrix); 
 #endif
 
 EXTERN void *

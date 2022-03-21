@@ -17,8 +17,8 @@
  *        of functions defined in mm_post_proc.c
  */
 
-#ifndef _MM_POST_DEF_H
-#define _MM_POST_DEF_H
+#ifndef GOMA_MM_POST_DEF_H
+#define GOMA_MM_POST_DEF_H
 
 /*
  *  These Define parameters help us parse the force and flux calculation
@@ -116,14 +116,16 @@
 #define I_KINETIC_ENERGY  38
 #define I_SHELL_VOLUME  39
 #define I_TFMP_FORCE    40
-#define I_VORTICITY     41
-#define I_GIESEKUS      42
-#define I_LAMB_MAG      43
-#define I_HELICITY      44
-#define I_Q_FCN         45
+#define I_MASS 41
+#define I_MASS_NEGATIVE_FILL  42
+#define I_MASS_POSITIVE_FILL  43
+#define I_VORTICITY     44
+#define I_GIESEKUS      45
+#define I_LAMB_MAG      46
+#define I_HELICITY      47
+#define I_Q_FCN         48
 
-
-#ifdef _MM_POST_PROC_C
+#ifdef GOMA_MM_POST_PROC_C
 struct Post_Processing_Flux_Names
 {
   char  *name;          /* flux string */
@@ -242,12 +244,15 @@ VOL_NAME_STRUCT pp_vol_names[] =
   { "SPECIES_SOURCE",    I_SPECIES_SOURCE},
   { "KINETIC_ENERGY",    I_KINETIC_ENERGY},
   { "SHELL_VOLUME",      I_SHELL_VOLUME},
+  { "TFMP_FORCE",        I_TFMP_FORCE},
+  { "MASS",              I_MASS},
+  { "MASS_NEGATIVE_FILL",              I_MASS_NEGATIVE_FILL},
+  { "MASS_POSITIVE_FILL",              I_MASS_POSITIVE_FILL},
   { "VORTICITY",         I_VORTICITY},
   { "GIESEKUS",          I_GIESEKUS},
   { "LAMB_MAG",          I_LAMB_MAG},
   { "HELICITY",          I_HELICITY},
-  { "Q_FCN",             I_Q_FCN},
-  { "TFMP_FORCE",        I_TFMP_FORCE}
+  { "Q_FCN",             I_Q_FCN}
 };
 
 int Num_Vol_Names = sizeof( pp_vol_names )/ sizeof( VOL_NAME_STRUCT );
@@ -400,6 +405,25 @@ struct Post_Processing_Global
 };
 
 typedef struct Post_Processing_Global pp_Global;
+
+typedef struct Post_Processing_Averages
+{
+  int type;
+  char type_name[MAX_VAR_NAME_LNGTH];
+  int species_index;
+  int index_post;
+  int index;
+  int non_variable_type;
+} pp_Average;
+
+enum AverageExtraTypes
+{
+  AVG_DENSITY,
+  AVG_HEAVISIDE,
+  AVG_VISCOSITY
+};
+
+
 /*
  * All of these variables are actually defined in mm_post_proc.c
  *
@@ -415,6 +439,7 @@ extern pp_Error         *pp_error_data;
 extern pp_Particles    **pp_particles;
 extern pp_Volume       **pp_volume;
 extern pp_Global       **pp_global;
+extern pp_Average      **pp_average;
 
 extern int nn_post_fluxes;
 extern int nn_post_fluxes_sens;
@@ -425,6 +450,7 @@ extern int nn_particles;
 extern int nn_volume;
 extern int ppvi_type;
 extern int nn_global;
+extern int nn_average;
 
 extern int Num_Nodal_Post_Proc_Var;
 extern int Num_Elem_Post_Proc_Var;
@@ -466,7 +492,11 @@ extern int DARCY_VELOCITY_LIQ;  /* Darcy velocity vectors for flow in a
 				 * saturated or unsaturated medium */
 extern int DENSITY;		/* density function at vertex and midside 
 				 * nodes, e.g. for particle settling etc. */
-extern int HEAVISIDE;
+extern int POLYMER_VISCOSITY;
+extern int POLYMER_TIME_CONST;
+extern int MOBILITY_PARAMETER;
+extern int PTT_XI;
+extern int PTT_EPSILON;
 extern int DIELECTROPHORETIC_FIELD;
                                 /* Dielectrophoretic force vectors. */
 extern int DIELECTROPHORETIC_FIELD_NORM;
@@ -593,17 +623,20 @@ extern int SH_STRESS_TENSOR;    /* stress tensor for structural shell */
 extern int SH_TANG;             /* Tangents vectors for structural shell */
 extern int PP_LAME_MU;         /* Lame MU coefficient for solid/mesh */
 extern int PP_LAME_LAMBDA;     /* Lame LAMBDA coefficient for solid/mesh */
-extern int VON_MISES_STRAIN;
-extern int VON_MISES_STRESS;
+extern int VON_MISES_STRAIN;   /* Von Mises strain */
+extern int VON_MISES_STRESS;   /* Von Mises stress */
 extern int LOG_CONF_MAP;      /* Map log-conformation tensor to stress */
 extern int J_FLUX;            /* Particle stress flux                  */
 extern int EIG;               /* Eigenvalues of rate-of-strain tensor  */
 extern int EIG1;              /* Eigenvector of rate-of-strain tensor  */
 extern int EIG2;              /* Eigenvector of rate-of-strain tensor  */
 extern int EIG3;              /* Eigenvector of rate-of-strain tensor  */
+extern int HEAVISIDE;
+extern int RHO_DOT;
+extern int MOMENT_SOURCES;
+extern int YZBETA;
 extern int GRAD_Y;            /* Concentration gradient                  */
 extern int GRAD_SH;            /* Shear gradient                */
-
 extern int UNTRACKED_SPEC;		/*Untracked Species Concentration */
 
 extern int TFMP_GAS_VELO;
@@ -619,6 +652,7 @@ extern int POYNTING_VECTORS;	/* EM Poynting Vectors*/
 extern int SARAMITO_YIELD;
 extern int STRESS_NORM;
 extern int SPECIES_SOURCES;	/* Species sources */
+extern int VISCOSITY_BONN;  /* Viscosity according to Bonn formulation for Bingham-Carreau-Yasuda */
 /*
  *  Post-processing Step 1: add a new variable flag to end of mm_post_proc.h
  *
@@ -628,4 +662,4 @@ extern int SPECIES_SOURCES;	/* Species sources */
  *       post-processing variable in load_nodal_tkn
  */
 
-#endif /* _MM_POST_DEF_H */
+#endif /* GOMA_MM_POST_DEF_H */

@@ -15,8 +15,8 @@
  *$Id: std.h,v 5.3 2010-07-01 17:29:33 ebenner Exp $
  */
 
-#ifndef _RF_GOMA_H
-#define _RF_GOMA_H
+#ifndef GOMA_RF_GOMA_H
+#define GOMA_RF_GOMA_H
 
 #include <ctype.h>
 #include <stdlib.h> /* WEXITSTATUS */
@@ -32,8 +32,6 @@
  */
 #else /* HAVE_CONFIG_H */
 
-#define HAVE_SPARSE 1
-#define HAVE_UMFPACK 1
 #define HAVE_AZTEC 1
 /* Trilinos now seems to define these */
 #ifndef GOMA_HAVE_BLAS
@@ -61,29 +59,8 @@
     #define STRINGCON(x) STRINGCON_(x)
     #define GOMA_VERSION STRINGCON(GIT_VERSION)
   #else
-    #define GOMA_VERSION "6.2.0"
+    #define GOMA_VERSION "7.0.0 alpha"
   #endif
-#endif
-
-/*****************************************************************************/
-/*
- *                  PROTOTYPES SECTION
- *
- *        Define the availability of prototypes. 
- */
-
-#ifndef HAVE_PROTOTYPES
-# if defined(__STDC__) || defined(__GNUC__) || defined(__cplusplus) || defined(c_plusplus)
-#     define	HAVE_PROTOTYPES
-# endif
-#endif
-
-#undef PROTO
-
-#ifdef HAVE_PROTOTYPES 
-#   define	PROTO(x)	x
-#else
-#   define	PROTO(x)	()
 #endif
 
 /***********************************************************************************/
@@ -227,8 +204,8 @@
 
 #define delta(m,n)	((m) == (n) ? 1 : 0 ) /* Kroenecker delta */
 #define permute(i,j,k) ( ((i)-(j))*((j)-(k))*((k)-(i))/2 ) /* Permutation symbol (epsilon) */
-#define stringup(a) { char *p; for( p=a; *p != '\0'; *p=toupper(*p), p++); }
-#define stringlow(a) { char *p; for( p=a; *p != '\0'; *p=tolower(*p), p++); }
+#define stringup(a) do { char *p; for( p=a; *p != '\0'; *p= (char) toupper(*p), p++); } while (0)
+#define stringlow(a) do { char *p; for( p=a; *p != '\0'; *p=tolower(*p), p++); } while (0)
 #define endofstring(a) strchr(a,'\0')
 /*
  * Comparisons against zero should be done using this double value
@@ -237,6 +214,10 @@
  */
 #ifndef DBL_SMALL
 #define DBL_SMALL 1.0E-298
+#endif
+
+#ifndef DBL_SEMI_SMALL
+#define DBL_SEMI_SMALL 1.0E-32
 #endif
 
 #ifdef sgi
@@ -383,9 +364,9 @@ typedef int MPI_Aint;
  */
 
 #ifdef PARALLEL
-#  define DPRINTF if ( ProcID == 0 ) fprintf
-#  define DFPUTS if ( ProcID == 0 ) fputs
-#  define P0PRINTF if (ProcID == 0) printf
+#  define DPRINTF(...) do {if ( ProcID == 0 ) { fprintf(__VA_ARGS__); } } while(0)
+#  define P0PRINTF(...) do {if (ProcID == 0) { printf(__VA_ARGS__); } } while(0)
+#  define DFPUTS(...) do {if (ProcID == 0) { fputs(__VA_ARGS__); } } while(0)
 #else
 #  define DPRINTF fprintf
 #  define DFPUTS fputs
@@ -540,23 +521,4 @@ extern int zero_detJ_global;
 /***************************************************************************/
 /*                       std.h end                                         */
 /***************************************************************************/
-#endif
-
-#if ( defined (linux) && defined (COMPILER_64BIT) )
-/* This ifndef was extracted from _RF_GOMA_H ifndef because of goma failures
- * when compiled with 64-bit gnu compilers 4.1+. (It may be a trilinos 9
- * versus 6 issue.)  This is not needed if goma is compiled with autoconf.
- * (Eric Benner 8/6/09)
- */ 
-
-#ifndef GOMA_VERSION                      /* 1) VERSION must be a keyword, won't work with it */
-  #ifdef GIT_VERSION                      /* 2) needed all of this to convet GIT_VERSION to the proper string */
-    #define STRINGCON_(x) #x
-    #define STRINGCON(x) STRINGCON_(x)
-    #define GOMA_VERSION STRINGCON(GIT_VERSION)
-  #else
-    #define GOMA_VERSION "6.2.0"
-  #endif
-#endif
-
 #endif

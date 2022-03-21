@@ -30,8 +30,8 @@
  * already been included...
  */
 
-#ifndef _FEM_CONST_H
-#define _FEM_CONST_H
+#ifndef GOMA_RF_FEM_CONST_H
+#define GOMA_RF_FEM_CONST_H
 
 /* Generic Logicals */
 #ifndef TRUE
@@ -67,12 +67,19 @@
 #define GALERKIN        1
 #define SUPG            2
 
+#define YZBETA_NONE     0
+#define YZBETA_ONE      1
+#define YZBETA_TWO      2
+#define YZBETA_MIXED    3
+#define YZBETA_CUSTOM   4
+
 /* Viscoelastic Constitutive equation formulation */
 #define EVSS_G          1  /* Rajagopalan's formulation */
 #define EVSS_F          2  /* Fortin's formulation */
 #define EVSS_L          3  /* Level set solid-fluid formulation */
 #define LOG_CONF        4  /* Log-conformation tensor formulation */
 #define EVSS_GRADV      5  /* Fortin's formulation using GradV instead of G */
+#define LOG_CONF_LAGGED 7
                            /* for stress constitutive equations */
 #define LOG_CONF_GRADV  6  /* Log-conformation tensor formulation using */
                            /* GradV instead of G for stress constitutive equations */
@@ -100,12 +107,14 @@
 #define EQM_WTMIN         10
 
 /* Fill Weight Function options */
-#define FILL_WEIGHT_G         1
-#define FILL_WEIGHT_TG        2
-#define FILL_WEIGHT_SUPG      3
-#define FILL_WEIGHT_GLS       4
-#define FILL_WEIGHT_SC        5
-#define FILL_WEIGHT_EXPLICIT  6
+#define FILL_WEIGHT_G           1
+#define FILL_WEIGHT_TG          2
+#define FILL_WEIGHT_SUPG        3
+#define FILL_WEIGHT_GLS         4
+#define FILL_WEIGHT_SC          5
+#define FILL_WEIGHT_EXPLICIT    6
+#define FILL_WEIGHT_SUPG_SHAKIB 7
+#define FILL_WEIGHT_SUPG_GP     8
 
 /* Fill Equation options */
 #define FILL_EQN_ADVECT   1
@@ -468,6 +477,12 @@
 #define EM_H3_IMAG            199
 #define EM_CONT_REAL          200
 #define EM_CONT_IMAG          201
+#define MOMENT0               202
+#define MOMENT1               203
+#define MOMENT2               204
+#define MOMENT3               205
+#define DENSITY_EQN           206
+#define LUBP_3                207
 /*
  * define a variable to hold an external field which will be 
  * held fixed in the problem but parametered by the basis functions
@@ -843,8 +858,13 @@
 #define R_EM_H3_IMAG            199 
 #define R_EM_CONT_REAL          200
 #define R_EM_CONT_IMAG          201
-#define V_LAST		        202
-
+#define R_MOMENT0               202
+#define R_MOMENT1               203
+#define R_MOMENT2               204
+#define R_MOMENT3               205
+#define R_DENSITY_EQN           206
+#define R_LUBP_3                207
+#define V_LAST		        208
 
 /* MMH
  * This is used for those parts of the code that want to ensure
@@ -994,6 +1014,12 @@
 #ifndef MAX_ELEMENT_INDICES_RELATED 
 #define MAX_ELEMENT_INDICES_RELATED 2
 #endif
+
+#ifndef MAX_NUM_MATRICES 
+#define MAX_NUM_MATRICES 11          /* Maximum number of matrices to be solved in segregated solver fashion */
+#endif
+
+#define MAX_MOMENTS 4
 
 /*
  * Magic numbers for adaptive time step selection -- how much acceleration,

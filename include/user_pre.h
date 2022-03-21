@@ -15,26 +15,26 @@
  *$Id: user_pre.h,v 5.1 2007-09-18 18:53:49 prschun Exp $
  */
 
-#ifndef _USER_PRE_H
-#define _USER_PRE_H
+#ifndef GOMA_USER_PRE_H
+#define GOMA_USER_PRE_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _USER_PRE_C
+#ifdef GOMA_USER_PRE_C
 #define EXTERN
 #
 #endif
 
-#ifndef _USER_PRE_C
+#ifndef GOMA_USER_PRE_C
 #define EXTERN extern
 #endif
 
 EXTERN double user_surf_object
-PROTO((int *,
+(int *,
        dbl *,    	/* param - ptr to user-defined list          */
-       dbl *));		
+       dbl *);		
 
 
-#endif /* _USER_PRE_H */
+#endif /* GOMA_USER_PRE_H */

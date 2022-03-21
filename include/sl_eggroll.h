@@ -24,8 +24,8 @@
  *   - Jan 12, 2000, MMH rearranging and cleaning.
  */
 
-#ifndef _SL_EGGROLL_H
-#define _SL_EGGROLL_H
+#ifndef GOMA_SL_EGGROLL_H
+#define GOMA_SL_EGGROLL_H
 
 #include "rf_io_structs.h"	/* for struct Results_Description */
 #include "exo_struct.h"		/* for typedef struct Exo_DB */
@@ -33,7 +33,7 @@
 #include "sl_eggroll_def.h"	/* for typedef struct EV */
  
 extern void gevp_solver_rc	/* sl_eggroll01.c */
-PROTO((int ,
+(int ,
        int ,
        int ,
        dbl ,
@@ -56,10 +56,10 @@ PROTO((int ,
        int *,
        dbl *,
        dbl *,
-       dbl * )); 
+       dbl * ); 
 
 extern void gevp_arnoldi_rc	/* sl_eggroll02.c */
-PROTO((int ,
+(int ,
        int ,
        int ,
        int ,
@@ -79,75 +79,75 @@ PROTO((int ,
        int *,
        dbl *,
        dbl *,
-       dbl *));
+       dbl *);
 
 extern void eigenvv		/* sl_eggroll04.c */
-PROTO((int ,
+(int ,
        dbl **,
-       EV *));
+       EV *);
 
 extern void balanc		/* sl_eggroll04.c */
-PROTO((int ,
+(int ,
        dbl **,
-       dbl *));
+       dbl *);
 
 extern void elmhes		/* sl_eggroll04.c */
-PROTO((int ,
+(int ,
        dbl **,
-       int *));
+       int *);
 
 extern void eltran		/* sl_eggroll04.c */
-PROTO((int ,
+(int ,
        dbl **,
        int *,
-       EV *));
+       EV *);
 
 extern void balbak		/* sl_eggroll04.c */
-PROTO((int ,
+(int ,
        dbl *,
-       EV *));
+       EV *);
 
 extern void eighqr		/* sl_eggroll04.c */
-PROTO((int ,
+(int ,
        dbl **,
-       EV *));
+       EV *);
 
 extern void _heapsort		/* sl_eggroll04.c */
-PROTO((int ,
+(int ,
        dbl *,
        dbl *,
        dbl *,
        int *,
-       int ));
+       int );
 
 extern void jeapsort		/* sl_eggroll04.c */
-PROTO((int ,
+(int ,
        dbl *,
        dbl *,
        dbl *,
        int *,
-       int ));
+       int );
 
 extern void cdiv		/* sl_eggrollutil.c */
-PROTO((dbl ,
+(dbl ,
        dbl ,
        dbl ,
        dbl ,
        dbl *,
-       dbl *));
+       dbl *);
 
 extern void gevp_order		/* sl_eggroll05.c */
-PROTO((int ,			/* nj */
+(int ,			/* nj */
        int ,			/* ev_n */
        dbl *,			/* ev_r */
        dbl *,			/* ev_i */
        dbl *,			/* ev_e */
        dbl *,			/* ev_x */
        dbl **,			/* evect */
-       dbl **));		/* schur */
+       dbl **);		/* schur */
 
 extern void gevp_transformation	/* sl_eggroll03.c */
-PROTO((int ,			/* UMF_system_id */
+(int ,			/* UMF_system_id */
        int ,			/* first */
        int ,			/* fflag */
        int ,			/* format */
@@ -162,10 +162,10 @@ PROTO((int ,			/* UMF_system_id */
        dbl *,			/* w */
        dbl *,			/* v */
        dbl ,			/* r_sigma */
-       dbl ));			/* i_sigma */
+       dbl );			/* i_sigma */
 
 extern void eggrollwrap /* sl_eggrollwrap.c */
-    PROTO((int *,       /* Info for eigenvalue extraction */
+          (int *,			/* Info for eigenvalue extraction */
            dbl *,       /* Info for eigenvalue extraction */
            int *,       /* Column pointer array */
            dbl *,       /* Nonzero array */
@@ -197,5 +197,5 @@ extern void eggrollwrap /* sl_eggrollwrap.c */
            dbl,
            Exo_DB *, /* Ptr to finite element mesh db */
            int,      /* Number of processors used */
-           Dpi *));  /* Ptr to distributed processing info */
+           Dpi *);			/* Ptr to distributed processing info */
 #endif

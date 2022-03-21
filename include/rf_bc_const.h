@@ -59,8 +59,8 @@
  *
  */
 
-#ifndef _RF_BC_CONST_H
-#define _RF_BC_CONST_H
+#ifndef GOMA_RF_BC_CONST_H
+#define GOMA_RF_BC_CONST_H
 
 #include "rf_fem_const.h"	/* To know about MAX_VARIABLE_TYPES */
 #include "exo_struct.h"		/* To know about Exo_DB type. */
@@ -112,7 +112,7 @@
 #endif
 
 #ifndef MAX_BC_TABLES
-#define MAX_BC_TABLES 30
+#define MAX_BC_TABLES 304
 #endif
 
 #ifndef MAX_MP_TABLES
@@ -216,6 +216,7 @@
 #define STRESS  6 /* Six components in each mode */
 #define VECTOR  3
 #define SCALAR  1
+#define STRESS  6
 
 #define NO_ROT  -1
 
@@ -392,6 +393,10 @@
 #define VUSER_COLLOC_BC 50
 
 #define PV_BC     60
+
+#define U_STAR_BC     989991
+#define V_STAR_BC     989992
+#define W_STAR_BC     989993
 
 #define W_BC     100
 
@@ -632,6 +637,7 @@
 
 #define P_BC 100000
 #define PSPG_BC 100001
+#define P_STAR_BC 989994
 
 /* thermal constants */
 
@@ -856,6 +862,7 @@
 #define VELO_SLIP_LEVEL_BC  964421000
 #define VELO_SLIP_LEVEL_SIC_BC  964421010
 #define VELO_SLIP_LS_ROT_BC  964421328
+#define VELO_SLIP_LS_HEAVISIDE_BC  964421009
 #define VELO_SLIP_SOLID_BC 964430000
 #define VELO_SLIP_ROT_FILL_BC 964435000
 #define VELO_SLIP_EK_BC       964440000
@@ -998,6 +1005,7 @@
 #define LS_CAP_HYSING_BC             47002010
 #define LS_CAP_DENNER_DIFF_BC             47002011
 
+
 /* surface normal dirichlet bc's */
 #define N1_BC                 47002100
 #define N2_BC                 47002101
@@ -1036,6 +1044,7 @@
 #define LS_EXTV_LATENT_BC         47002360
 #define LS_LATENT_HEAT_BC         47002361
 #define LS_ACOUSTIC_SOURCE_BC     47002370
+#define LS_WALL_ANGLE_BC          49002371
 
 #define SHARP_WETLIN_VELOCITY_BC  48002325
 #define SHARP_BLAKE_VELOCITY_BC   48002326
@@ -1103,7 +1112,11 @@
 
 #define RESTIME_BC        788000030
 #define SHELL_LUBRICATION_OUTFLOW_BC  777000050
-
+#define SHELL_CROSS_SHEAR_BC          777000051
+#define LUB_PRESS_3_BC  777000052
+#define GRAD_LUB_PRESS_3_BC  777000053
+#define SHELL_SHEAR_TOP_BC  777000054
+#define SHELL_SHEAR_BOT_BC  777000055
 /* Vectors used for rotations */
 #define ROT_NONE -1
 #define ROT_N    -2
@@ -1345,6 +1358,8 @@ struct Boundary_Condition {
                                  *  0 - no
                                  *  1 - Yes, hanging off of node info structure
                                  *  2 - Yes, hanging off of side  */
+  int matrix;
+  int equation;
 };
 typedef struct Boundary_Condition BOUNDARY_CONDITION_STRUCT;
 
@@ -1441,19 +1456,18 @@ struct elem_edge_bc_struct {
 extern int *boundary_node_list;
 extern int **ss_on_boundary_node_list;
 extern int num_boundary_nodes;
-extern int num_BC_nodes;
-extern int *BC_dup_nodes;
-extern int ***BC_dup_list;
-extern int BC_dup_ptr;
+extern int **BC_dup_nodes;
+extern int ****BC_dup_list;
+extern int *BC_dup_ptr;
 extern int *ss_to_blks[MAX_MAT_PER_SS+1];
 extern int dup_blks_list[MAX_MAT_PER_SS+1];
 extern int *SS_Internal_Boundary;
-extern int *mesh_rotate_node;
-extern int *mesh_rotate_ss;
-extern int num_mesh_rotate;
-extern int *mom_rotate_node;
-extern int *mom_rotate_ss;
-extern int num_mom_rotate;
+extern int **mesh_rotate_node;
+extern int **mesh_rotate_ss;
+extern int *num_mesh_rotate;
+extern int **mom_rotate_node;
+extern int **mom_rotate_ss;
+extern int *num_mom_rotate;
 extern int PRESSURE_DATUM; /* flag to determine if a pressure datum is set */
 extern int pressure_datum_element; /* element in which the pressure datum is set */
 extern double pressure_datum_value; /* value of the pressure datum */
