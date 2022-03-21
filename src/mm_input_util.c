@@ -65,6 +65,40 @@
 #include "mm_input.h"
 #include "rf_allo.h"
 
+/* Read up to n doubles from a file up to a newline 
+
+
+   ifp is the file ptr where the current line should be looked at
+
+   n is the number of doubles to look for
+
+   array is a double array of at least length n
+
+   return number of doubles found and read
+*/
+int look_for_n_doubles(FILE *ifp, int n, double *array)
+{
+  char strbuf[MAX_INPUT_LINE_LENGTH];
+  char *fgerror;
+  int error;
+  int i;
+  int buf_offset;
+  int read_count;
+  fgerror = fgets(strbuf, MAX_INPUT_LINE_LENGTH, ifp);
+  if (fgerror == NULL) {
+    EH(-1, "Error reading line");
+  }
+
+  buf_offset = 0;
+  for (i = 0; i < n; i++) {
+    error = sscanf(strbuf + buf_offset, "%lf%n", &array[i], &read_count );
+    buf_offset += read_count;
+    if (error != 1) break;
+  }
+
+  return i;
+}
+
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
@@ -477,6 +511,7 @@ variable_string_to_int(const char *input, const char *err_string)
   else if (!strcmp(input, "SHELL_LUBP"))                  var = SHELL_LUBP;
   else if (!strcmp(input, "LUBP"))                        var = LUBP;
   else if (!strcmp(input, "LUBP_2"))                      var = LUBP_2;
+  else if (!strcmp(input, "LUBP_3"))                      var = LUBP_3;
   else if (!strcmp(input, "SHELL_SAT_CLOSED"))            var = SHELL_SAT_CLOSED;
   else if (!strcmp(input, "SHELL_PRESS_OPEN"))            var = SHELL_PRESS_OPEN;
   else if (!strcmp(input, "SHELL_PRESS_OPEN_2"))          var = SHELL_PRESS_OPEN_2;
@@ -497,6 +532,12 @@ variable_string_to_int(const char *input, const char *err_string)
   else if (!strcmp(input, "LIGHT_INTP"))                  var = LIGHT_INTP;
   else if (!strcmp(input, "LIGHT_INTM"))                  var = LIGHT_INTM;
   else if (!strcmp(input, "LIGHT_INTD"))                  var = LIGHT_INTD;
+  else if (!strcmp(input, "MOMENT0"))                     var = MOMENT0;
+  else if (!strcmp(input, "MOMENT1"))                     var = MOMENT1;
+  else if (!strcmp(input, "MOMENT2"))                     var = MOMENT2;
+  else if (!strcmp(input, "MOMENT3"))                     var = MOMENT3;
+  else if (!strcmp(input, "DENSITY_EQN"))                 var = DENSITY_EQN;
+
   else if (!strcmp(input, "TFMP_PRES"))                   var = TFMP_PRES;
   else if (!strcmp(input, "TFMP_SAT"))                    var = TFMP_SAT;
   else if (!strcmp(input, "RESTIME"))                     var = RESTIME;

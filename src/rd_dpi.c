@@ -58,7 +58,7 @@
  * Revised: 1998/12/16 14:21 MST pasacki@sandia.gov
  */
 
-#define _RD_DPI_C
+#define GOMA_RD_DPI_C
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -149,13 +149,14 @@ static int get_variable_call_count = 0;
  * Prototypes of functions defined here and needed only here.
  */
 
-static void get_variable(const int netcdf_unit,
-                         const nc_type netcdf_type,
-                         const int num_dimensions,
-                         const int dimension_val_1,
-                         const int dimension_val_2,
-                         const int variable_identifier,
-                         void *variable_address);
+static void get_variable
+(const int netcdf_unit,
+       const nc_type netcdf_type,
+       const int num_dimensions,
+       const int dimension_val_1,
+       const int dimension_val_2,
+       const int variable_identifier,
+       void *variable_address);
 
 /**********************************************************************/
 /**********************************************************************/
@@ -914,8 +915,7 @@ rd_dpi(Dpi *d,
 	       -1,	-1, 
 	       si.undefined_basic_eqnvar_id, &(d->undefined_basic_eqnvar_id));
 
-  if (d->num_side_sets_global > 0)
-    {
+  if (d->num_side_sets_global > 0) {
       get_variable(u, NC_INT, 1,
                    d->num_side_sets_global, -1,
                    si.ss_internal_global, d->ss_internal_global);
@@ -927,8 +927,8 @@ rd_dpi(Dpi *d,
       get_variable(u, NC_INT, 1,
                    len_ss_block_list_global, -1,
                    si.ss_block_list_global, d->ss_block_list_global);
-    }
-    /*
+  }
+  /*
    * 7. Close up.
    */
 
@@ -1421,6 +1421,7 @@ free_dpi_uni(Dpi *d)
   safer_free((void **) &(d->set_membership));
   safer_free((void **) &(d->ss_index_global));
   free(d->ss_internal_global);
+
   return;
 }
 
@@ -1469,10 +1470,11 @@ get_variable(const int netcdf_unit,
     case NC_INT:
       err = nc_get_var_int(netcdf_unit, variable_identifier, variable_address);
       if ( err != NC_NOERR )
-        {
-          sprintf(err_msg, "nc_get_var_int() varid=%d",
-                  variable_identifier);
-        }
+	{
+	  sprintf(err_msg, "nc_get_var_int() varid=%d", 
+	          variable_identifier);
+          WH(-1, err_msg);
+	}
       break;
 
     case NC_CHAR:

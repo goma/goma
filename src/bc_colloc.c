@@ -34,7 +34,7 @@
 
 #include "dpi.h"
  
-#define _BC_COLLOC_C
+#define GOMA_BC_COLLOC_C
 #include "goma.h"
 
 
@@ -117,7 +117,7 @@ apply_point_colloc_bc (
   /*   - INITIALIZATION THAT IS DEPENDENT ON THE LOCAL ELEMENT NODE NUMBER   */
   /***************************************************************************/
 #ifdef DEBUG_HKM
-  if (ei->ielem == 1032) {
+  if (ei[pg->imtrx]->ielem == 1032) {
   //  printf("we are here - 1032\n");
   }
 #endif
@@ -228,7 +228,7 @@ apply_point_colloc_bc (
 	   * (i.e. no other overriding Dirichlet conditions,
 	   * And find the global unknown number for applying this condition
 	   */
-	  index_eq = bc_eqn_index(id, I, bc_input_id, ei->mn,
+	  index_eq = bc_eqn_index(id, I, bc_input_id, ei[pg->imtrx]->mn,
 				  0, &eqn, &matID_apply, &vd);
 	  if (index_eq >= 0) {
 
@@ -485,7 +485,7 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 	    case U_VES33_7_PARABOLA_BC:
 		var_flag = BC_Types[bc_input_id].desc->equation;
 		f_vestress_parabola(var_flag, ielem_dim, 
-			U_PARABOLA_BC, ei->mn,
+			U_PARABOLA_BC, ei[pg->imtrx]->mn,
 			&func, d_func, BC_Types[bc_input_id].u_BC,
 			time_intermediate,BC_Types[bc_input_id].len_u_BC);
 		break;
@@ -620,7 +620,7 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 	      fgamma1_deriv_bc(kfunc, d_kfunc, BC_Types[bc_input_id].BC_Data_Float[0]);
 	      func = kfunc[0];
 	      doFullJac = 1;
-	      el1 = ei->ielem;
+	      el1 = ei[pg->imtrx]->ielem;
 	      nf = num_elem_friends[el1];
 	      if (nf == 0) {
 		EH(-1, "no friends");
@@ -636,7 +636,7 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 	      fgamma2_deriv_bc(kfunc, d_kfunc, BC_Types[bc_input_id].BC_Data_Float[0]);
 	      func = kfunc[0];
 	      doFullJac = 1;
-	      el1 = ei->ielem;
+	      el1 = ei[pg->imtrx]->ielem;
 	      nf = num_elem_friends[el1];
 	      if (nf == 0) {
 		EH(-1, "no friends");
@@ -671,13 +671,13 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 	     * Collocated boundary conditions are always applied on the first 
 	     * dof at a node. They are not discontinuous variables friendly
 	     */
-	    ldof_eqn = ei->ln_to_first_dof[eqn][id];
+	    ldof_eqn = ei[pg->imtrx]->ln_to_first_dof[eqn][id];
 
 
 	    if (eqn == R_MASS) {
 	      ieqn = MAX_PROB_EQN + BC_Types[bc_input_id].species_eq;
 	    } else {
-	      ieqn = upd->ep[eqn];
+	      ieqn = upd->ep[pg->imtrx][eqn];
 	    }
 
 	    if (ldof_eqn != -1)   {
@@ -696,7 +696,7 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 	
 
 		for (var = 0; var < MAX_VARIABLE_TYPES; var++) {
-		  pvar = upd->vp[var];
+		  pvar = upd->vp[pg->imtrx][var];
 		  if (pvar != -1 && (BC_Types[bc_input_id].desc->sens[var] || 1)) {
 		    /*
 		     * Warning!!!!!!!!!!!!!!!!!!!!!!!
@@ -711,9 +711,9 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 		       * pointer to this entry *
 		       * if it exists, add sens into matrix
 		       */
-		      if (Dolphin[I][var] > 0) {				  
+		      if (Dolphin[pg->imtrx][I][var] > 0) {				  
 			if (! doFullJac) {
-			  ldof_var = ei->ln_to_first_dof[var][id];
+			  ldof_var = ei[pg->imtrx]->ln_to_first_dof[var][id];
 			  if (ldof_var != -1) {  
                             lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,ldof_var)] += penalty * d_func[var];
                             lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,ldof_var)] *= f_time;
@@ -722,14 +722,14 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 			  
 			  if (doMeshMapping && 
 			      (var == MESH_DISPLACEMENT1 || var == MESH_DISPLACEMENT2 || var == MESH_DISPLACEMENT3)) {
-			    for (j = 0; j < ei->dof[var]; j++) 
+			    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) 
 			      {
 				jk = dof_map[j];
                                 lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,jk)] += penalty * d_kfunc[0][var][j];
                                 lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,jk)] *= f_time;
 			      }
 			  } else {
-			    for (j = 0; j < ei->dof[var]; j++) 
+			    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) 
 			      {
                                 lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] += penalty * d_kfunc[0][var][j];
                                 lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] *= f_time;
@@ -741,7 +741,7 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 			 *   if variable is not defined at this node, loop
 			 *   over all dof for this variable in this element
 			 */
-			for (j = 0; j < ei->dof[var]; j++) {
+			for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 			  phi_j = bf[var]->phi[j];
                           lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] += penalty * d_func[var] * phi_j;
                           lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] *= f_time;
@@ -750,8 +750,8 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 		    } else {
 		      for (w = 0; w < pd->Num_Species_Eqn; w++) {
 			pvar = MAX_PROB_VAR + w;
-			if (Dolphin[I][var] > 0) {
-			  ldof_var = ei->ln_to_first_dof[var][id];
+			if (Dolphin[pg->imtrx][I][var] > 0) {
+			  ldof_var = ei[pg->imtrx]->ln_to_first_dof[var][id];
 			  if (ldof_var != -1) {
                             lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,ldof_var)] += penalty * d_func[MAX_VARIABLE_TYPES + w];
                             lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,ldof_var)] *= f_time;
@@ -760,7 +760,7 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 			/* if variable is not defined at this node,
 			 * loop over all dof in this element */
 			else {
-			  for (j = 0; j < ei->dof[var]; j++) {
+			  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 			    phi_j = bf[var]->phi[j];
                             lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] += penalty	* d_func[MAX_VARIABLE_TYPES + w] * phi_j;
                             lec->J[LEC_J_INDEX(ieqn,pvar,ldof_eqn,j)] *= f_time;
@@ -1187,7 +1187,7 @@ f_roll_fluid (int ielem_dim,
      v_roll[1] =  omega*roll_rad*v_dir[1];
      v_roll[2] =  omega*roll_rad*v_dir[2];
 
-     if( TimeIntegration == TRANSIENT && pd->e[R_MESH1] )
+     if( TimeIntegration == TRANSIENT && pd->gv[R_MESH1] )
           {
             /* Add the mesh motion to the substrate velocity */
             v_roll[0] += fv_dot->x[0];
@@ -1279,7 +1279,7 @@ fprintf(stderr,"more %g %g %g %g\n",res,jac, dthick_dV,dthick_dP);
         for (jvar=0; jvar<ei->ielem_dim; jvar++)
           {
             var = MESH_DISPLACEMENT1 + jvar;
-            if (pd->v[var])
+            if (pd->v[pg->imtrx][var])
               {
                     for (k = 0; k < pd->Num_Dim; k++)
                       {
@@ -1296,7 +1296,7 @@ fprintf(stderr,"more %g %g %g %g\n",res,jac, dthick_dV,dthick_dP);
 #endif
 #if 0
    var = PRESSURE;
-    if (pd->v[var])
+    if (pd->v[pg->imtrx][var])
       {
         if(Pflag )
           {
@@ -1335,7 +1335,7 @@ fvelocity_profile (int var_flag,
     d_func[var_flag] = 0.0;
   else
     d_func[var_flag] = -1.0;
-  if( pd->e[R_MESH1] )
+  if( pd->e[pg->imtrx][R_MESH1] )
   {
   d_func[MESH_DISPLACEMENT1] = 
     dvelo_vary_fnc_d1(velo_condition, fv->x[0], fv->x[1], fv->x[2], p, time);
@@ -1429,21 +1429,21 @@ int i;
                switch (velo_condition) {
                   case U_PARABOLA_BC:
                       *func = pre_factor*(fv->x[1]-coord1)*(coord2-fv->x[1]);
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
         d_func[MESH_DISPLACEMENT2] = pre_factor*(coord1+coord2-2.*fv->x[1]);
                          }
                       break;
                   case V_PARABOLA_BC:
 	              *func = pre_factor*(fv->x[0]-coord1)*(coord2-fv->x[0]);
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
        d_func[MESH_DISPLACEMENT1] = pre_factor*(coord1+coord2-2.*fv->x[0]);
                          }
                       break;
                   case W_PARABOLA_BC:
 	              *func = pre_factor*(fv->x[0]-coord1)*(coord2-fv->x[0]);
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
        d_func[MESH_DISPLACEMENT1] = pre_factor*(coord1+coord2-2.*fv->x[0]);
                          }
@@ -1459,7 +1459,7 @@ int i;
                       if(coord1 <= DBL_SMALL)
                           {
                            *func = pre_factor*(SQUARE(coord2)-SQUARE(fv->x[1]));
-                           if( pd->e[R_MESH1] )
+                           if( pd->e[pg->imtrx][R_MESH1] )
                               { 
                       d_func[MESH_DISPLACEMENT2] = pre_factor*(-2.*fv->x[1]); 
                               }
@@ -1469,7 +1469,7 @@ int i;
                            *func = pre_factor*(SQUARE(coord1)-SQUARE(fv->x[1])
                                     +(SQUARE(coord2)-SQUARE(coord1))*
                                     (log(fv->x[1]/coord1)/log(coord2/coord1)));
-                           if( pd->e[R_MESH1] )
+                           if( pd->e[pg->imtrx][R_MESH1] )
                               { 
                       d_func[MESH_DISPLACEMENT2] = pre_factor*(-2.*fv->x[1]
                 +(SQUARE(coord2)-SQUARE(coord1))/log(coord2/coord1)/fv->x[1]);
@@ -1478,7 +1478,7 @@ int i;
                       break;
                   case V_PARABOLA_BC:
 	              *func = pre_factor/fv->x[1]*(fv->x[0]-coord1)*(coord2-fv->x[0]);
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
        d_func[MESH_DISPLACEMENT1] = pre_factor/fv->x[1]*(coord1+coord2-2.*fv->x[0]);
        d_func[MESH_DISPLACEMENT2] = -(*func)/fv->x[1];
@@ -1505,7 +1505,7 @@ int i;
                   case U_PARABOLA_BC:
                       temp = 2*fv->x[1]-coord1-coord2;
                       *func = pre_factor*(pow(gap,expon) - pow(fabs(temp),expon));
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
     d_func[MESH_DISPLACEMENT2] = pre_factor*(-2.*SGN(temp)*expon*pow(fabs(temp),1./pl_index));
                          }
@@ -1513,7 +1513,7 @@ int i;
                   case V_PARABOLA_BC:
                       temp = 2*fv->x[0]-coord1-coord2;
                       *func = pre_factor*(pow(gap,expon) - pow(fabs(temp),expon));
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
     d_func[MESH_DISPLACEMENT1] = pre_factor*(-2.*SGN(temp)*expon*pow(fabs(temp),1./pl_index));
                          }
@@ -1521,7 +1521,7 @@ int i;
                   case W_PARABOLA_BC:
                       temp = 2*fv->x[0]-coord1-coord2;
                       *func = pre_factor*(pow(gap,expon) - pow(fabs(temp),expon));
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
     d_func[MESH_DISPLACEMENT1] = pre_factor*(-2.*SGN(temp)*expon*pow(fabs(temp),1./pl_index));
                          }
@@ -1540,7 +1540,7 @@ int i;
 	                   pre_factor = (3.*pl_index+1.)/(pl_index +1.)
                                          *qflow/M_PIE/pow(gap,expon+2.);
                            *func = pre_factor*(pow(gap,expon) - pow(fv->x[1],expon));
-                           if( pd->e[R_MESH1] )
+                           if( pd->e[pg->imtrx][R_MESH1] )
                                {
                                 d_func[MESH_DISPLACEMENT2] = pre_factor*
                                           (-expon*pow(fv->x[1],expon-1.));
@@ -1554,7 +1554,7 @@ int i;
                                          *qflow/M_PIE/pow(gap,expon+1.);
                       temp = 2*fv->x[0]-coord1-coord2;
                       *func = pre_factor/fv->x[1]*(pow(gap,expon) - pow(fabs(temp),expon));
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
                            d_func[MESH_DISPLACEMENT1] = pre_factor/fv->x[1]*
                                  (-2.*SGN(temp)*expon*pow(fabs(temp),expon-1.));
@@ -1612,7 +1612,7 @@ double Ws, A_alpha, Ksqr, f, mup;
 double gamma[DIM][DIM];
 int i, mode=0, strs=0;
 
-   if ( ! pd->v[POLYMER_STRESS11] )
+   if ( ! pd->v[pg->imtrx][POLYMER_STRESS11] )
 	{ EH(-1,"Polymer Stress needed for VE Stress PARABOLA BC."); }
 
    if (var_flag >= POLYMER_STRESS11_7)
@@ -1634,7 +1634,7 @@ int i, mode=0, strs=0;
    else
 	{ EH(-1,"Polymer Stress mode not found - VE Stress PARABOLA BC."); }
 
-   if ( pd->e[TEMPERATURE] )
+   if ( pd->gv[TEMPERATURE] )
        {temp = fv->T;}
    else
        {temp = upd->Process_Temperature;}
@@ -1715,17 +1715,17 @@ int i, mode=0, strs=0;
                switch (velo_condition) {
                   case U_PARABOLA_BC:
                       srate = pre_factor*(coord1+coord2-2.*fv->x[1]);
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          { d_func[MESH_DISPLACEMENT2] = -2.*pre_factor; }
                       break;
                   case V_PARABOLA_BC:
 	              srate = pre_factor*(coord1+coord2-2.*fv->x[0]);
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          { d_func[MESH_DISPLACEMENT1] = -2.*pre_factor; }
                       break;
                   case W_PARABOLA_BC:
 	              srate = pre_factor*(coord1+coord2-2.*fv->x[0]);
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          { d_func[MESH_DISPLACEMENT1] = -2.*pre_factor; }
                       break;
                   default:
@@ -1739,14 +1739,14 @@ int i, mode=0, strs=0;
                       if(coord1 <= DBL_SMALL)
                           {
                            srate = pre_factor*(-2.*fv->x[1]); 
-                           if( pd->e[R_MESH1] )
+                           if( pd->e[pg->imtrx][R_MESH1] )
                               { d_func[MESH_DISPLACEMENT2] = -2.*pre_factor; }
                           }
                       else
                           {
                            srate = pre_factor*(-2.*fv->x[1]
                 +(SQUARE(coord2)-SQUARE(coord1))/log(coord2/coord1)/fv->x[1]);
-                           if( pd->e[R_MESH1] )
+                           if( pd->e[pg->imtrx][R_MESH1] )
                               { 
                       d_func[MESH_DISPLACEMENT2] = pre_factor*(-2.
                 -(SQUARE(coord2)-SQUARE(coord1))/log(coord2/coord1)/SQUARE(fv->x[1]));
@@ -1755,7 +1755,7 @@ int i, mode=0, strs=0;
                       break;
                   case V_PARABOLA_BC:
 	              *func = pre_factor/fv->x[1]*(fv->x[0]-coord1)*(coord2-fv->x[0]);
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
        d_func[MESH_DISPLACEMENT1] = pre_factor/fv->x[1]*(coord1+coord2-2.*fv->x[0]);
        d_func[MESH_DISPLACEMENT2] = -(*func)/fv->x[1];
@@ -1782,7 +1782,7 @@ int i, mode=0, strs=0;
                   case U_PARABOLA_BC:
                       tmp = 2*fv->x[1]-coord1-coord2;
                       srate = pre_factor*(-2.*SGN(tmp)*expon*pow(fabs(tmp),1./pl_index));
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
     			  d_func[MESH_DISPLACEMENT2] = -4.*pre_factor*
 				(expon*(expon-1.)*pow(fabs(tmp),1./pl_index-1.));
@@ -1791,7 +1791,7 @@ int i, mode=0, strs=0;
                   case V_PARABOLA_BC:
                       tmp = 2*fv->x[0]-coord1-coord2;
                       srate = pre_factor*(-2.*SGN(tmp)*expon*pow(fabs(tmp),1./pl_index));
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
     			  d_func[MESH_DISPLACEMENT1] = -4.*pre_factor*
 				(expon*(expon-1.)*pow(fabs(tmp),1./pl_index-1.));
@@ -1800,7 +1800,7 @@ int i, mode=0, strs=0;
                   case W_PARABOLA_BC:
                       tmp = 2*fv->x[0]-coord1-coord2;
                       srate = pre_factor*(-2.*SGN(tmp)*expon*pow(fabs(tmp),1./pl_index));
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
     			  d_func[MESH_DISPLACEMENT1] = -4.*pre_factor*
 				(expon*(expon-1.)*pow(fabs(tmp),1./pl_index-1.));
@@ -1820,7 +1820,7 @@ int i, mode=0, strs=0;
 	                   pre_factor = (3.*pl_index+1.)/(pl_index +1.)
                                          *qflow/M_PIE/pow(gap,expon+2.);
                            srate = pre_factor*(-expon*pow(fv->x[1],expon-1.));
-                           if( pd->e[R_MESH1] )
+                           if( pd->e[pg->imtrx][R_MESH1] )
                                {
                                 d_func[MESH_DISPLACEMENT2] = pre_factor*
                                           (-expon*(expon-1.)*pow(fv->x[1],expon-2.));
@@ -1835,7 +1835,7 @@ int i, mode=0, strs=0;
                       tmp = 2*fv->x[0]-coord1-coord2;
                       srate = pre_factor/fv->x[1]*
                                  (-2.*SGN(tmp)*expon*pow(fabs(tmp),expon-1.));
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
                            d_func[MESH_DISPLACEMENT1] = pre_factor/fv->x[1]*
                                  (-4.*expon*(expon-1.)*pow(fabs(tmp),expon-2.));
@@ -1858,7 +1858,7 @@ int i, mode=0, strs=0;
      case GIESEKUS:
             alpha = ve_glob[mn][mode]->alpha;
             lambda = ve_glob[mn][mode]->time_const;
-            Ws = at*lambda*abs(srate);
+            Ws = at*lambda*fabs(srate);
             A_alpha = 8*alpha*(1.-alpha);
             mup = viscosity(ve[mode]->gn, gamma, NULL);
             if(Ws >= 0.1) 
@@ -1892,7 +1892,7 @@ int i, mode=0, strs=0;
           break;
      case OLDROYDB:
             lambda = ve_glob[mn][mode]->time_const;
-            Ws = at*lambda*abs(srate);
+            Ws = at*lambda*fabs(srate);
             mup = viscosity(ve[mode]->gn, gamma, NULL);
             switch (strs) {
                case 0:   /* S11 */
@@ -1934,7 +1934,7 @@ int i, mode=0, strs=0;
 
 void
 fspline (int ielem_dim,
-         double *func, 
+         double *func,
          double d_func[],     /* dimensioned [MAX_VARIABLE_TYPES + MAX_CONC] */
          double p[],          /* parameters to parameterize temperature eqn model*/
          double time)         /* time  at which bc's are evaluated     */
@@ -1950,7 +1950,7 @@ fspline (int ielem_dim,
 
   if (ielem_dim == 3) d_func[MESH_DISPLACEMENT3] =
 			dfncd3(fv->x[0], fv->x[1], fv->x[2], p, time);
-    
+
   *func = fnc(fv->x[0], fv->x[1], fv->x[2], p, time);
   
 } /* END of routine fspline                                                  */
@@ -1965,7 +1965,7 @@ fspline_rs (int ielem_dim,
 {
   if(af->Assemble_LSA_Mass_Matrix)
     return;
- 
+
   d_func[SOLID_DISPLACEMENT1] =
     dfncd1(fv->x[0], fv->x[1], fv->x[2], p,  time);
 
@@ -1974,7 +1974,7 @@ fspline_rs (int ielem_dim,
 
   if (ielem_dim == 3) d_func[SOLID_DISPLACEMENT3] =
 			dfncd3(fv->x[0], fv->x[1], fv->x[2], p, time);
-     
+
   *func = fnc(fv->x[0], fv->x[1], fv->x[2], p, time);
   
 } /* END of routine fspline_rs                                               */
@@ -2492,6 +2492,11 @@ load_variable (double *x_var,        /* variable value */
       var = LUBP_2;
       *d_x_var = 1.;
       break;
+    case LUBP_3:
+    	*x_var = fv->lubp_3;
+    	var = LUBP_3;
+    	*d_x_var = 1.;
+    	break;
     case SHELL_SAT_CLOSED:
       *x_var = fv->sh_sat_closed;
       var = SHELL_SAT_CLOSED;
@@ -3297,7 +3302,7 @@ bc_eqn_index(int id,               /* local node number                 */
   struct BC_descriptions *bc_desc = bc->desc;
   NODE_INFO_STRUCT *node = Nodes[I];
   VARIABLE_DESCRIPTION_STRUCT *vd, *vd2 = NULL;
-  nv = node->Nodal_Vars_Info;
+  nv = node->Nodal_Vars_Info[pg->imtrx];
     
   /*
    *  Find equation number and species number from the BC description
@@ -3342,81 +3347,83 @@ bc_eqn_index(int id,               /* local node number                 */
    *        results of this search (or just the need to do the
    *        search).
    */
-  bc_node = in_list(I, 0, BC_dup_ptr+1, BC_dup_nodes);
-  if (bc_node != -1) {
-    /* 
-     * current node is in the BC_duplication list.
-     * The current boundary condition may have been deleted.
-     * If the current boundary condition is a rotated boundary
-     * condition, it may have been moved to another coordinate
-     * direction.
-     */
-    i_calc = -1;
-    if (ieqn <= LAST_REAL_EQ) {
-      i_calc = search_bc_dup_list(bc_input_id, 
-				  BC_dup_list[bc_node][node_offset]);
-
-    } else if ((ieqn >= R_MESH_NORMAL) && (ieqn <= R_MESH_TANG2)) {
-      /*
-       * If it's a rotated boundary condition, the boundary
-       * condition could have been moved to another coordinate
-       * within check_for_bc_conflicts2D(). Therefore, we need
-       * to check all coordinate directions for the presence of the
-       * current boundary condition.
+  if (BC_dup_ptr != NULL) {
+    bc_node = in_list(I, 0, BC_dup_ptr[pg->imtrx]+1, BC_dup_nodes[pg->imtrx]);
+    if (bc_node != -1) {
+      /* 
+       * current node is in the BC_duplication list.
+       * The current boundary condition may have been deleted.
+       * If the current boundary condition is a rotated boundary
+       * condition, it may have been moved to another coordinate
+       * direction.
        */
-      for (jeqn = R_MESH1; jeqn <= R_MESH3; jeqn++) {
-	offset_j = get_nodal_unknown_offset(nv, jeqn, matID, 0, &vd2);
-	if (offset_j >= 0) {
-	  i_calc = search_bc_dup_list(bc_input_id, 
-				      BC_dup_list[bc_node][offset_j]);
-	  if (i_calc != -1) {
-	    node_offset = offset_j;
-	    ieqn = jeqn;
-	    vd = vd2;
-	    break;
-	  }
-	}
+      i_calc = -1;
+      if (ieqn <= LAST_REAL_EQ) {
+        i_calc = search_bc_dup_list(bc_input_id, 
+                                    BC_dup_list[pg->imtrx][bc_node][node_offset]);
+
+      } else if ((ieqn >= R_MESH_NORMAL) && (ieqn <= R_MESH_TANG2)) {
+        /*
+         * If it's a rotated boundary condition, the boundary
+         * condition could have been moved to another coordinate
+         * within check_for_bc_conflicts2D(). Therefore, we need
+         * to check all coordinate directions for the presence of the
+         * current boundary condition.
+         */
+        for (jeqn = R_MESH1; jeqn <= R_MESH3; jeqn++) {
+          offset_j = get_nodal_unknown_offset(nv, jeqn, matID, 0, &vd2);
+          if (offset_j >= 0) {
+            i_calc = search_bc_dup_list(bc_input_id, 
+                                        BC_dup_list[pg->imtrx][bc_node][offset_j]);
+            if (i_calc != -1) {
+              node_offset = offset_j;
+              ieqn = jeqn;
+              vd = vd2;
+              break;
+            }
+          }
+        }
+
+      } else if ((ieqn >= R_MOM_NORMAL) && (ieqn <= R_MOM_TANG2)) {
+        for (jeqn = R_MOMENTUM1; jeqn <= R_MOMENTUM3; jeqn++) {
+          offset_j = get_nodal_unknown_offset(nv, jeqn, matID, 0, &vd2);
+          if (offset_j >= 0) {
+            i_calc = search_bc_dup_list(bc_input_id, 
+                                        BC_dup_list[pg->imtrx][bc_node][offset_j]);
+            if (i_calc != -1) {
+              node_offset = offset_j;
+              ieqn = jeqn;
+              vd = vd2;
+              break;
+            }
+          }
+        }
+      } else if ((ieqn >= R_SOLID_NORMAL) && (ieqn <= R_SOLID_TANG2)) {
+        for (jeqn = R_SOLID1; jeqn <= R_SOLID3; jeqn++) {
+          offset_j = get_nodal_unknown_offset(nv, jeqn, matID, 0, &vd2);
+          if (offset_j >= 0) {
+            i_calc = search_bc_dup_list(bc_input_id, 
+                                        BC_dup_list[pg->imtrx][bc_node][offset_j]);
+            if (i_calc != -1) {
+              node_offset = offset_j;
+              ieqn = jeqn;
+              vd = vd2;
+              break;
+            }
+          }
+        }
+      } else {
+        EH(-1,"Equation not in list ");
       }
 
-    } else if ((ieqn >= R_MOM_NORMAL) && (ieqn <= R_MOM_TANG2)) {
-      for (jeqn = R_MOMENTUM1; jeqn <= R_MOMENTUM3; jeqn++) {
-	offset_j = get_nodal_unknown_offset(nv, jeqn, matID, 0, &vd2);
-	if (offset_j >= 0) {
-	  i_calc = search_bc_dup_list(bc_input_id, 
-				      BC_dup_list[bc_node][offset_j]);
-	  if (i_calc != -1) {
-	    node_offset = offset_j;
-	    ieqn = jeqn;
-	    vd = vd2;
-	    break;
-	  }
-	}
+      /*
+       * The current boundary condition has been deleted from application
+       * at the current node due to a conflict with another boundary
+       * condition. Return a -1.
+       */
+      if (i_calc == -1) {
+        return -1;
       }
-    } else if ((ieqn >= R_SOLID_NORMAL) && (ieqn <= R_SOLID_TANG2)) {
-      for (jeqn = R_SOLID1; jeqn <= R_SOLID3; jeqn++) {
-	offset_j = get_nodal_unknown_offset(nv, jeqn, matID, 0, &vd2);
-	if (offset_j >= 0) {
-	  i_calc = search_bc_dup_list(bc_input_id, 
-				      BC_dup_list[bc_node][offset_j]);
-	  if (i_calc != -1) {
-	    node_offset = offset_j;
-	    ieqn = jeqn;
-	    vd = vd2;
-	    break;
-	  }
-	}
-      }
-    } else {
-      EH(-1,"Equation not in list ");
-    }
-
-    /*
-     * The current boundary condition has been deleted from application
-     * at the current node due to a conflict with another boundary
-     * condition. Return a -1.
-     */
-    if (i_calc == -1) {
-      return -1;
     }
   }
   /*
@@ -3441,8 +3448,8 @@ bc_eqn_index(int id,               /* local node number                 */
    * If the regular unknown equation is replaced by a Dirichlet 
    * condition at this node, return -1
    */
-  if (node->DBC) {
-    if (((int) node->DBC[node_offset]) != -1) {
+  if (node->DBC[pg->imtrx]) {
+    if (((int) node->DBC[pg->imtrx][node_offset]) != -1) {
       return -1;
     }
   } 
@@ -3452,7 +3459,7 @@ bc_eqn_index(int id,               /* local node number                 */
    */
   *matID_retn = matID;
   *eqn = ieqn;
-  index_eqn = node->First_Unknown + node_offset;
+  index_eqn = node->First_Unknown[pg->imtrx] + node_offset;
   
   /*
    * HKM -> we can put this section into  
@@ -3473,9 +3480,6 @@ bc_eqn_index(int id,               /* local node number                 */
 
   return index_eqn;
 } /* END of routine bc_eqn_index                                             */
-/*****************************************************************************/
-/*****************************************************************************/
-/*****************************************************************************/
 
 int
 bc_eqn_index_stress(int id,               /* local node number                 */
@@ -3540,7 +3544,7 @@ bc_eqn_index_stress(int id,               /* local node number                 *
   struct BC_descriptions *bc_desc = bc->desc;
   NODE_INFO_STRUCT *node = Nodes[I];
   VARIABLE_DESCRIPTION_STRUCT *vd;
-  nv = node->Nodal_Vars_Info;
+  nv = node->Nodal_Vars_Info[pg->imtrx];
 
   /*
    *  Find equation number from the BC description
@@ -3609,7 +3613,7 @@ bc_eqn_index_stress(int id,               /* local node number                 *
    *  If a boundary condition isn't to be applied under non-
    *  conflicting conditions, it won't be applied under
    *  conflicting conditions. So exit here if bc is not
-   *  to be applied. 
+   *  to be applied.
    */
   node_offset = get_nodal_unknown_offset(nv, ieqn, matID, 0, &vd);
   if (node_offset < 0) {
@@ -3626,9 +3630,9 @@ bc_eqn_index_stress(int id,               /* local node number                 *
    *        results of this search (or just the need to do the
    *        search).
    */
-  bc_node = in_list(I, 0, BC_dup_ptr+1, BC_dup_nodes);
+  bc_node = in_list(I, 0, BC_dup_ptr[pg->imtrx]+1, BC_dup_nodes[pg->imtrx]);
   if (bc_node != -1) {
-    /* 
+    /*
      * current node is in the BC_duplication list.
      * The current boundary condition may have been deleted.
      * If the current boundary condition is a rotated boundary
@@ -3638,7 +3642,7 @@ bc_eqn_index_stress(int id,               /* local node number                 *
     i_calc = -1;
     if (ieqn <= LAST_REAL_EQ) {
       i_calc = search_bc_dup_list(bc_input_id,
-				  BC_dup_list[bc_node][node_offset]);
+				  BC_dup_list[pg->imtrx][bc_node][node_offset]);
     } else {
       EH(-1,"Equation not in list ");
     }
@@ -3657,19 +3661,19 @@ bc_eqn_index_stress(int id,               /* local node number                 *
    * If the regular unknown equation is replaced by a Dirichlet
    * condition at this node, return -1
    */
-  if (node->DBC) {
-    if (((int) node->DBC[node_offset]) != -1) {
+  if (node->DBC[pg->imtrx]) {
+    if (((int) node->DBC[pg->imtrx][node_offset]) != -1) {
       return -1;
     }
-  } 
+  }
 
   /*
    * Set up the return variables
    */
   *matID_retn = matID;
   *eqn = ieqn;
-  index_eqn = node->First_Unknown + node_offset;
-  
+  index_eqn = node->First_Unknown[pg->imtrx] + node_offset;
+
   /*
    * HKM -> we can put this section into
    *        a subroutine
@@ -3693,6 +3697,7 @@ bc_eqn_index_stress(int id,               /* local node number                 *
 /*****************************************************************************/
 /*****************************************************************************/
 
+
 int
 evaluate_time_func(const double current_time,
 		   double *f_time,      /* computed time function */
@@ -3713,6 +3718,13 @@ evaluate_time_func(const double current_time,
     }
   }
 
+  /* Check if max time was specified  and reset time if so */
+  if (BC_Types[bc_input_id].BC_Data_Int[3] == GD_TIME_MAX) {
+    if (time > BC_Types[bc_input_id].BC_Data_Float[2]) {
+      time = BC_Types[bc_input_id].BC_Data_Float[2];
+    }
+  }
+  
   /* ---- Find variable number and species number */
   time_function = BC_Types[bc_input_id].BC_Data_Int[2];
   
@@ -4069,7 +4081,7 @@ apply_table_bc( double *func,
       }
   else
       {
-      if(  basis != -1 && pd->e[R_MESH1 + basis] )
+      if(  basis != -1 && pd->e[pg->imtrx][R_MESH1 + basis] )
          {
                       d_func[R_MESH1 + basis ] -= slope;
          }

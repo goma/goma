@@ -31,7 +31,8 @@
 
 #include "rf_bc_const.h"
 #include "rf_bc.h"
- 
+#include "mm_as_structs.h"
+#include "mm_as.h"
 #include "mm_as_const.h"
 #include "rf_vars_const.h"
 #include "mm_mp_const.h"
@@ -215,8 +216,8 @@ global_qp_storage_destroy(void)
   e_start = EXO_ptr->eb_ptr[0];
   e_end   = EXO_ptr->eb_ptr[EXO_ptr->num_elem_blocks];
   for (ielem = e_start; ielem < e_end; ielem++) {
-    if (First_Elem_Side_BC_Array[ielem]) {
-      elem_qp_storage_free(First_Elem_Side_BC_Array[ielem]);
+    if (First_Elem_Side_BC_Array[pg->imtrx][ielem]) {
+      elem_qp_storage_free(First_Elem_Side_BC_Array[pg->imtrx][ielem]);
     }
   }
 }

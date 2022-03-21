@@ -42,7 +42,7 @@ static char rcsid[] = "$Id: mm_prob_def.c,v 5.7 2010-04-07 22:27:00 prschun Exp 
 #include "mm_post_proc.h"
 #include "mm_eh.h"
 
-#define _MM_PROB_DEF_C
+#define GOMA_MM_PROB_DEF_C
 #include "goma.h"
 
 /* 
@@ -67,13 +67,13 @@ static char rcsid[] = "$Id: mm_prob_def.c,v 5.7 2010-04-07 22:27:00 prschun Exp 
  */
 
 int 
-setup_pd()
+setup_pd(void)
 {
   int	i;
   int   mn;                     /* Current material number */
+  int   imtrx;                  /* Current matrix number */
   int	ce;			/* Current equation. */
   int   v;			/* Current variable. */
-  /* extern int ilog2i(); */
   int status;
 
   int kkSurf=10000;		/* Legacy variables made ridiculously large */
@@ -124,6 +124,7 @@ setup_pd()
       VIM = Num_Dim;
     }
 
+
    /*
     * Make one to one correspondence of each material in input file with each
     * block id in exodusII file, in numerical order.
@@ -142,95 +143,98 @@ setup_pd()
 
   for (mn = 0; mn < upd->Num_Mat; mn++)    
     {
-      for ( i=0; i<pd_glob[mn]->Num_EQ; i++)
-	{
-	  ce = pd_glob[mn]->m[i];
-	  if((ce == R_PRESSURE)   ||
-	     (ce == R_GRADIENT11) ||
-	     (ce == R_GRADIENT12) ||
-	     (ce == R_GRADIENT13) ||
-	     (ce == R_GRADIENT21) ||
-	     (ce == R_GRADIENT22) ||
-	     (ce == R_GRADIENT23) ||
-	     (ce == R_GRADIENT31) ||
-	     (ce == R_GRADIENT32) ||
-	     (ce == R_GRADIENT33) ||
-	     (ce == R_EFIELD1)    ||
-	     (ce == R_EFIELD2)    ||
-	     (ce == R_EFIELD3)    ||
-	     (ce == R_ENORM)      ||
-	     (ce == R_EXT_VELOCITY)||
-	     (ce == R_VORT_DIR1) ||
-	     (ce == R_VORT_DIR2) ||
-	     (ce == R_VORT_DIR3) ||
-	     (ce == R_NORMAL1)    ||
-	     (ce == R_NORMAL2)    ||
-	     (ce == R_NORMAL3)    ||
-             (ce == R_SHELL_SHEAR_TOP) ||
-             (ce == R_SHELL_SHEAR_BOT) ||
+      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+         {
+          for ( i=0; i<pd_glob[mn]->Num_EQ[imtrx]; i++)
+	     {
+	      ce = pd_glob[mn]->m[imtrx][i];
+	      if((ce == R_PRESSURE)   ||
+	         (ce == R_GRADIENT11) ||
+	         (ce == R_GRADIENT12) ||
+	         (ce == R_GRADIENT13) ||
+	         (ce == R_GRADIENT21) ||
+	         (ce == R_GRADIENT22) ||
+	         (ce == R_GRADIENT23) ||
+	         (ce == R_GRADIENT31) ||
+	         (ce == R_GRADIENT32) ||
+	         (ce == R_GRADIENT33) ||
+	         (ce == R_EFIELD1)    ||
+	         (ce == R_EFIELD2)    ||
+	         (ce == R_EFIELD3)    ||
+	         (ce == R_ENORM)      ||
+	         (ce == R_EXT_VELOCITY)||
+	         (ce == R_VORT_DIR1) ||
+	         (ce == R_VORT_DIR2) ||
+	         (ce == R_VORT_DIR3) ||
+	         (ce == R_NORMAL1)    ||
+	         (ce == R_NORMAL2)    ||
+	         (ce == R_NORMAL3)    ||
+                 (ce == R_SHELL_SHEAR_TOP) ||
+                 (ce == R_SHELL_SHEAR_BOT) ||
              (ce == R_EM_CONT_REAL) ||
              (ce == R_EM_CONT_IMAG) ||
-             (ce == R_SHELL_CROSS_SHEAR))  
-	    {
-	      if ( pd_glob[mn]->etm[ce][(LOG2_ADVECTION)] != 0. )
-		{
-		  pd_glob[mn]->e[ce] |= T_ADVECTION;
-		}
-	      if ( pd_glob[mn]->etm[ce][(LOG2_SOURCE)] != 0. )
-		{
-		  pd_glob[mn]->e[ce] |= T_SOURCE;
-		}
-	    }
-	  else if(
+                 (ce == R_SHELL_CROSS_SHEAR))  
+	        {
+	         if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_ADVECTION)] != 0. )
+		   {
+		    pd_glob[mn]->e[imtrx][ce] |= T_ADVECTION;
+		   }
+	         if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_SOURCE)] != 0. )
+		   {
+		    pd_glob[mn]->e[imtrx][ce] |= T_SOURCE;
+		   }
+	        }
+	      else if(
 		  (ce == R_SHELL_SAT_CLOSED) ||
 		  (ce == R_SHELL_DELTAH) ||
 		  (ce == R_SHELL_LUB_CURV) ||
 		  (ce == R_SHELL_LUB_CURV_2)
 		  )
-	    {
-	      if ( pd_glob[mn]->etm[ce][(LOG2_MASS)] != 0. )
-		{
-		  pd_glob[mn]->e[ce] |= T_MASS;
-		}
-	      if ( pd_glob[mn]->etm[ce][(LOG2_DIVERGENCE)] != 0. )
-		{
-		  pd_glob[mn]->e[ce] |= T_DIVERGENCE;
-		}
-	    }
-	  else if(
+	        {
+	         if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_MASS)] != 0. )
+		   {
+		    pd_glob[mn]->e[imtrx][ce] |= T_MASS;
+		   }
+	         if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_DIVERGENCE)] != 0. )
+		   {
+		    pd_glob[mn]->e[imtrx][ce] |= T_DIVERGENCE;
+		   }
+	        }
+	      else if(
 		  (ce == R_SHELL_SAT_GASN ||
 		   ce == R_MAX_STRAIN ||
                    ce == R_CUR_STRAIN)
 		  )
-	    {
-	      if ( pd_glob[mn]->etm[ce][(LOG2_MASS)] != 0. )
-		{
-		  pd_glob[mn]->e[ce] |= T_MASS;
-		}
-	      if ( pd_glob[mn]->etm[ce][(LOG2_SOURCE)] != 0. )
-		{
-		  pd_glob[mn]->e[ce] |= T_SOURCE;
-		}
-	    }
-	  else if(
+	        {
+	         if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_MASS)] != 0. )
+		   {
+		    pd_glob[mn]->e[imtrx][ce] |= T_MASS;
+		   }
+	         if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_SOURCE)] != 0. )
+		   {
+		    pd_glob[mn]->e[imtrx][ce] |= T_SOURCE;
+		   }
+	        }
+	      else if(
 		  (ce == R_SHELL_SAT_OPEN) ||
 		  (ce == R_SHELL_SAT_OPEN_2)
 		  )
-	    {
-	      if ( pd_glob[mn]->etm[ce][(LOG2_MASS)] != 0. )
-		{
-		  pd_glob[mn]->e[ce] |= T_MASS;
-		}
-	      if ( pd_glob[mn]->etm[ce][(LOG2_DIFFUSION)] != 0. )
-		{
-		  pd_glob[mn]->e[ce] |= T_DIFFUSION;
-		}
-	      if ( pd_glob[mn]->etm[ce][(LOG2_SOURCE)] != 0. )
-		{
-		  pd_glob[mn]->e[ce] |= T_SOURCE;
-		}
-	    }
-	  else if ((ce == R_FILL) ||
+	        {
+	         if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_MASS)] != 0. )
+		   {
+		    pd_glob[mn]->e[imtrx][ce] |= T_MASS;
+		   }
+	         if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_DIFFUSION)] != 0. )
+		   {
+		    pd_glob[mn]->e[imtrx][ce] |= T_DIFFUSION;
+		   }
+	         if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_SOURCE)] != 0. )
+		   {
+		    pd_glob[mn]->e[imtrx][ce] |= T_SOURCE;
+		   }
+	        }
+	      else if (
+                   (ce == R_FILL) || 
 		   (ce == R_PHASE1) ||
 		   (ce == R_PHASE2) ||
 		   (ce == R_PHASE3) ||
@@ -240,177 +244,165 @@ setup_pd()
 		   (ce == R_POR_SINK_MASS) ||
                    (ce == R_SHELL_LUBP))
 	    {
-	      if ( pd_glob[mn]->etm[ce][(LOG2_MASS)] != 0. )
+	      if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_MASS)] != 0. )
 		{
-		  pd_glob[mn]->e[ce] |= T_MASS;
+		  pd_glob[mn]->e[imtrx][ce] |= T_MASS;
 		}
-	      if ( pd_glob[mn]->etm[ce][(LOG2_ADVECTION)] != 0. )
+	      if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_ADVECTION)] != 0. )
 		{
-		  pd_glob[mn]->e[ce] |= T_ADVECTION;
+		  pd_glob[mn]->e[imtrx][ce] |= T_ADVECTION;
 		}
-	      if ( pd_glob[mn]->etm[ce][(LOG2_SOURCE)] != 0. )
+	      if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_SOURCE)] != 0. )
 		{
-		  pd_glob[mn]->e[ce] |= T_SOURCE;
+		  pd_glob[mn]->e[imtrx][ce] |= T_SOURCE;
 		}
 	    }
-	  else if (ce == R_BOND_EVOLUTION)
+          else if (ce == R_BOND_EVOLUTION ||
+                         (ce == R_TFMP_MASS) ||
+                         (ce == R_TFMP_BOUND))
 	    {
-	      if ( pd_glob[mn]->etm[ce][(LOG2_MASS)] != 0. )
+	      if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_MASS)] != 0. )
 		{
-		  pd_glob[mn]->e[ce] |= T_MASS;
+		  pd_glob[mn]->e[imtrx][ce] |= T_MASS;
 		}
-	      if ( pd_glob[mn]->etm[ce][(LOG2_ADVECTION)] != 0. )
+	      if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_ADVECTION)] != 0. )
 		{
-		  pd_glob[mn]->e[ce] |= T_ADVECTION;
+		  pd_glob[mn]->e[imtrx][ce] |= T_ADVECTION;
 		}
-	      if ( pd_glob[mn]->etm[ce][(LOG2_DIFFUSION)] != 0. )
+	      if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_DIFFUSION)] != 0. )
 		{
-		  pd_glob[mn]->e[ce] |= T_DIFFUSION;
+		  pd_glob[mn]->e[imtrx][ce] |= T_DIFFUSION;
 		}
-	      if ( pd_glob[mn]->etm[ce][(LOG2_SOURCE)] != 0. )
+	      if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_SOURCE)] != 0. )
 		{
-		  pd_glob[mn]->e[ce] |= T_SOURCE;
+		  pd_glob[mn]->e[imtrx][ce] |= T_SOURCE;
 		}
 	    }
 	  else if(ce == R_POTENTIAL)
 	    {
-	      if ( pd_glob[mn]->etm[ce][(LOG2_MASS)] != 0. )   /* mass term added by KSC: 2/4/99 */
+	      if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_MASS)] != 0. )   /* mass term added by KSC: 2/4/99 */
 		{
-		  pd_glob[mn]->e[ce] |= T_MASS;
+		  pd_glob[mn]->e[imtrx][ce] |= T_MASS;
 		}
-	      if ( pd_glob[mn]->etm[ce][(LOG2_BOUNDARY)] != 0. )
+	      if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_BOUNDARY)] != 0. )
 		{
-		  pd_glob[mn]->e[ce] |= T_BOUNDARY;
+		  pd_glob[mn]->e[imtrx][ce] |= T_BOUNDARY;
 		}
-	      if ( pd_glob[mn]->etm[ce][(LOG2_DIFFUSION)] != 0. )
+	      if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_DIFFUSION)] != 0. )
 		{
-		  pd_glob[mn]->e[ce] |= T_DIFFUSION;
+		  pd_glob[mn]->e[imtrx][ce] |= T_DIFFUSION;
 		}
-	      if ( pd_glob[mn]->etm[ce][(LOG2_SOURCE)] != 0. )
+	      if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_SOURCE)] != 0. )
 		{
-		  pd_glob[mn]->e[ce] |= T_SOURCE;
+		  pd_glob[mn]->e[imtrx][ce] |= T_SOURCE;
 		}
 	    }
 	  else if(ce == R_SHELL_CURVATURE)
 	    {
-	      if ( pd_glob[mn]->etm[ce][(LOG2_DIFFUSION)] != 0. )
+	      if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_DIFFUSION)] != 0. )
 		{
-		  pd_glob[mn]->e[ce] |= T_DIFFUSION;
+		  pd_glob[mn]->e[imtrx][ce] |= T_DIFFUSION;
 		}
 	    }
 	  else if(ce == R_SHELL_CURVATURE2)
 	    {
-	      if ( pd_glob[mn]->etm[ce][(LOG2_DIFFUSION)] != 0. )
+	      if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_DIFFUSION)] != 0. )
 		{
-		  pd_glob[mn]->e[ce] |= T_DIFFUSION;
+		  pd_glob[mn]->e[imtrx][ce] |= T_DIFFUSION;
 		}
 	    }
 	  else if(ce == R_SHELL_TENSION)
 	    {
-	      if ( pd_glob[mn]->etm[ce][(LOG2_DIFFUSION)] != 0. )
+	      if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_DIFFUSION)] != 0. )
 		{
-		  pd_glob[mn]->e[ce] |= T_DIFFUSION;
+		  pd_glob[mn]->e[imtrx][ce] |= T_DIFFUSION;
 		}
 	    }
 	  else if(ce == R_SHELL_X)
 	    {
-	      if ( pd_glob[mn]->etm[ce][(LOG2_DIFFUSION)] != 0. )
+	      if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_DIFFUSION)] != 0. )
 		{
-		  pd_glob[mn]->e[ce] |= T_DIFFUSION;
+		  pd_glob[mn]->e[imtrx][ce] |= T_DIFFUSION;
 		}
 	    }
 	  else if(ce == R_SHELL_Y)
 	    {
-	      if ( pd_glob[mn]->etm[ce][(LOG2_DIFFUSION)] != 0. )
+	      if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_DIFFUSION)] != 0. )
 		{
-		  pd_glob[mn]->e[ce] |= T_DIFFUSION;
+		  pd_glob[mn]->e[imtrx][ce] |= T_DIFFUSION;
 		}
 	    }
           else if(ce == R_SHELL_DIFF_FLUX)
             {
-              if ( pd_glob[mn]->etm[ce][(LOG2_DIFFUSION)] != 0. )
-                {
-                  pd_glob[mn]->e[ce] |= T_DIFFUSION;
+                 if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_DIFFUSION)] != 0. )
+                   {
+                    pd_glob[mn]->e[imtrx][ce] |= T_DIFFUSION;
+                   }
                 }
-            }
-          else if(ce == R_SHELL_DIFF_CURVATURE)
-            {
-              if ( pd_glob[mn]->etm[ce][(LOG2_DIFFUSION)] != 0. )
+              else if(ce == R_SHELL_DIFF_CURVATURE)
                 {
-                  pd_glob[mn]->e[ce] |= T_DIFFUSION;
+                 if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_DIFFUSION)] != 0. )
+                   {
+                    pd_glob[mn]->e[imtrx][ce] |= T_DIFFUSION;
+                   }
                 }
-            }
-          else if(ce == R_SHELL_NORMAL1)
-            {
-              if ( pd_glob[mn]->etm[ce][(LOG2_DIFFUSION)] != 0. )
+              else if(ce == R_SHELL_NORMAL1)
                 {
-                  pd_glob[mn]->e[ce] |= T_DIFFUSION;
+                 if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_DIFFUSION)] != 0. )
+                   {
+                    pd_glob[mn]->e[imtrx][ce] |= T_DIFFUSION;
+                   }
                 }
-            }
-          else if(ce == R_SHELL_NORMAL2)
-            {
-              if ( pd_glob[mn]->etm[ce][(LOG2_DIFFUSION)] != 0. )
+              else if(ce == R_SHELL_NORMAL2)
                 {
-                  pd_glob[mn]->e[ce] |= T_DIFFUSION;
+                 if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_DIFFUSION)] != 0. )
+                   {
+                    pd_glob[mn]->e[imtrx][ce] |= T_DIFFUSION;
+                   }
                 }
-            }
-          else if(ce == R_SHELL_NORMAL3)
-            {
-              if ( pd_glob[mn]->etm[ce][(LOG2_DIFFUSION)] != 0. )
+                else if(ce == R_SHELL_NORMAL3)
                 {
-                  pd_glob[mn]->e[ce] |= T_DIFFUSION;
+                  if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_DIFFUSION)] != 0. )
+                  {
+                    pd_glob[mn]->e[imtrx][ce] |= T_DIFFUSION;
+                  }
                 }
-            }
-	  else if(ce == R_SHEAR_RATE )
-	    {
-	      if ( pd_glob[mn]->etm[ce][(LOG2_ADVECTION)] != 0. )
-		{
-		  pd_glob[mn]->e[ce] |= T_ADVECTION;
-		}
-	      if ( pd_glob[mn]->etm[ce][(LOG2_DIFFUSION)] != 0. )
-		{
-		  pd_glob[mn]->e[ce] |= T_DIFFUSION;
-		}
-	      if ( pd_glob[mn]->etm[ce][(LOG2_SOURCE)] != 0. )
-		{
-		  pd_glob[mn]->e[ce] |= T_SOURCE;
-		}
-	    }
-	  else if((ce == R_CURVATURE ) ||
+	      else if(ce == R_SHEAR_RATE )
+	        {
+	         if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_ADVECTION)] != 0. )
+		   {
+		    pd_glob[mn]->e[imtrx][ce] |= T_ADVECTION;
+		   }
+	         if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_DIFFUSION)] != 0. )
+		   {
+		    pd_glob[mn]->e[imtrx][ce] |= T_DIFFUSION;
+		   }
+	         if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_SOURCE)] != 0. )
+		   {
+		    pd_glob[mn]->e[imtrx][ce] |= T_SOURCE;
+		   }
+	        }
+	      else if(
+                  (ce == R_CURVATURE ) ||
 		  (ce == R_LUBP) ||
-		  (ce == R_LUBP_2))
-	    {
-	      if ( pd_glob[mn]->etm[ce][(LOG2_BOUNDARY)] != 0. )
-		{
-		  pd_glob[mn]->e[ce] |= T_BOUNDARY;
-		}
-	      if ( pd_glob[mn]->etm[ce][(LOG2_DIFFUSION)] != 0. )
-		{
-		  pd_glob[mn]->e[ce] |= T_DIFFUSION;
-		}
-	      if ( pd_glob[mn]->etm[ce][(LOG2_SOURCE)] != 0. )
-		{
-		  pd_glob[mn]->e[ce] |= T_SOURCE;
-		}
-	    }
-
-	  else if ((ce == R_TFMP_MASS) ||
-	           (ce == R_TFMP_BOUND)) {
-	    if ( pd_glob[mn]->etm[ce][(LOG2_MASS)] != 0. ) {
-	      pd_glob[mn]->e[ce] |= T_MASS;
-	    }
-	    if ( pd_glob[mn]->etm[ce][(LOG2_ADVECTION)] != 0. ) {
-	      pd_glob[mn]->e[ce] |= T_ADVECTION;
-	    }
-	    if ( pd_glob[mn]->etm[ce][(LOG2_DIFFUSION)] != 0. ) {
-	      pd_glob[mn]->e[ce] |= T_DIFFUSION;
-	    }
-	    if ( pd_glob[mn]->etm[ce][(LOG2_SOURCE)] != 0. ) {
-	      pd_glob[mn]->e[ce] |= T_SOURCE;
-	    }
-	  }
-
-	  else if((ce == R_ENERGY )||
+		  (ce == R_LUBP_2)||
+		  (ce == R_LUBP_3))
+	        {
+	         if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_BOUNDARY)] != 0. )
+		   {
+		    pd_glob[mn]->e[imtrx][ce] |= T_BOUNDARY;
+		   }
+	         if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_DIFFUSION)] != 0. )
+		   {
+		    pd_glob[mn]->e[imtrx][ce] |= T_DIFFUSION;
+		   }
+	         if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_SOURCE)] != 0. )
+		   {
+		    pd_glob[mn]->e[imtrx][ce] |= T_SOURCE;
+		   }
+	        }
+	      else if(
+                  (ce == R_ENERGY )||
 		  (ce == R_MASS)||
 		  (ce == R_MESH1)||
 		  (ce == R_MESH2)||
@@ -448,29 +440,30 @@ setup_pd()
                   (ce == R_SHELL_FILMH) ||
                   (ce == R_SHELL_PARTC) || 
 		  (ce == R_SHELL_ENERGY))
-	    {
-	      if ( pd_glob[mn]->etm[ce][(LOG2_MASS)] != 0. )
-		{
-		  pd_glob[mn]->e[ce] |= T_MASS;
-		}
-	      if ( pd_glob[mn]->etm[ce][(LOG2_ADVECTION)] != 0. )
-		{
-		  pd_glob[mn]->e[ce] |= T_ADVECTION;
-		}
-	      if ( pd_glob[mn]->etm[ce][(LOG2_BOUNDARY)] != 0. )
-		{
-		  pd_glob[mn]->e[ce] |= T_BOUNDARY;
-		}
-	      if ( pd_glob[mn]->etm[ce][(LOG2_DIFFUSION)] != 0. )
-		{
-		  pd_glob[mn]->e[ce] |= T_DIFFUSION;
-		}
-	      if ( pd_glob[mn]->etm[ce][(LOG2_SOURCE)] != 0. )
-		{
-		  pd_glob[mn]->e[ce] |= T_SOURCE;
-		}
-	    }
-	  else if((ce == R_MOMENTUM1)||
+	        {
+	         if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_MASS)] != 0. )
+		   {
+		    pd_glob[mn]->e[imtrx][ce] |= T_MASS;
+		   }
+	         if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_ADVECTION)] != 0. )
+		   {
+		    pd_glob[mn]->e[imtrx][ce] |= T_ADVECTION;
+		   }
+	         if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_BOUNDARY)] != 0. )
+		   {
+		    pd_glob[mn]->e[imtrx][ce] |= T_BOUNDARY;
+		   }
+	         if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_DIFFUSION)] != 0. )
+		   {
+		    pd_glob[mn]->e[imtrx][ce] |= T_DIFFUSION;
+		   }
+	         if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_SOURCE)] != 0. )
+		   {
+		    pd_glob[mn]->e[imtrx][ce] |= T_SOURCE;
+		   }
+	        }
+	      else if(
+                  (ce == R_MOMENTUM1)||
 		  (ce == R_MOMENTUM2)||
 		  (ce == R_MOMENTUM3)||
 		  (ce == R_PMOMENTUM1)||
@@ -531,33 +524,34 @@ setup_pd()
 		  (ce == R_STRESS22_7)||
 		  (ce == R_STRESS23_7)||
 		  (ce == R_STRESS33_7))
-	    {
-	      if ( pd_glob[mn]->etm[ce][(LOG2_MASS)] != 0. )
-		{
-		  pd_glob[mn]->e[ce] |= T_MASS;
-		}
-	      if ( pd_glob[mn]->etm[ce][(LOG2_ADVECTION)] != 0. )
-		{
-		  pd_glob[mn]->e[ce] |= T_ADVECTION;
-		}
-	      if ( pd_glob[mn]->etm[ce][(LOG2_BOUNDARY)] != 0. )
-		{
-		  pd_glob[mn]->e[ce] |= T_BOUNDARY;
-		}
-	      if ( pd_glob[mn]->etm[ce][(LOG2_DIFFUSION)] != 0. )
-		{
-		  pd_glob[mn]->e[ce] |= T_DIFFUSION;
-		}
-	      if ( pd_glob[mn]->etm[ce][(LOG2_SOURCE)] != 0. )
-		{
-		  pd_glob[mn]->e[ce] |= T_SOURCE;
-		}
-	      if ( pd_glob[mn]->etm[ce][(LOG2_POROUS_BRINK)] != 0. )
-		{
-		  pd_glob[mn]->e[ce] |= T_POROUS_BRINK;
-		}
-	    }
-	  else if((ce == R_VORT_LAMBDA) ||
+	        {
+	         if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_MASS)] != 0. )
+		   {
+		    pd_glob[mn]->e[imtrx][ce] |= T_MASS;
+		   }
+	         if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_ADVECTION)] != 0. )
+		   {
+		    pd_glob[mn]->e[imtrx][ce] |= T_ADVECTION;
+		   }
+                 if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_BOUNDARY)] != 0. )
+		   {
+		    pd_glob[mn]->e[imtrx][ce] |= T_BOUNDARY;
+		   }
+	         if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_DIFFUSION)] != 0. )
+		   {
+		    pd_glob[mn]->e[imtrx][ce] |= T_DIFFUSION;
+		   }
+	         if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_SOURCE)] != 0. )
+		   {
+		    pd_glob[mn]->e[imtrx][ce] |= T_SOURCE;
+		   }
+	         if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_POROUS_BRINK)] != 0. )
+		   {
+		    pd_glob[mn]->e[imtrx][ce] |= T_POROUS_BRINK;
+		   }
+	        }
+	      else if(
+                  (ce == R_VORT_LAMBDA) ||
 		  (ce == R_LAGR_MULT1)  ||
 		  (ce == R_LAGR_MULT2)  ||
  		  (ce == R_LAGR_MULT3)  ||
@@ -568,22 +562,27 @@ setup_pd()
 		  (ce == R_N_DOT_CURL_V) ||
 		  (ce == R_GRAD_S_V_DOT_N1) ||
 		  (ce == R_GRAD_S_V_DOT_N2) ||
-		  (ce == R_GRAD_S_V_DOT_N3))
-	    {
+		  (ce == R_GRAD_S_V_DOT_N3) ||
+		  (ce == R_DENSITY_EQN))
+	        {
 	      /* These equations have no term multipliers, but
 	       * something needs to be set to make the equation
 	       * "active". */
-	      pd_glob[mn]->e[ce] |= T_MASS;
-	    }
-	  else
-	    {
-	      fprintf(stderr, "%s: problem with unknown equation\n", yo);
-	      status=-1;
-	    }
-	}
-      if(pd_glob[mn]->e[R_MOMENTUM3])
-	if(CoordinateSystem == CARTESIAN && Num_Dim == 2)
-	  EH(-1, "You have 3 velocity components, but only a 2D CARTESIAN mesh.\nDid you mean to use the PROJECTED_CARTESIAN coordinate system?");
+	         pd_glob[mn]->e[imtrx][ce] |= T_MASS;
+	        }
+	      else
+	        {
+	         fprintf(stderr, "%s: problem with unknown equation\n", yo);
+	         status=-1;
+	        }
+             }
+
+          if(pd_glob[mn]->e[imtrx][R_MOMENTUM3])
+            {
+	     if(CoordinateSystem == CARTESIAN && Num_Dim == 2)
+	     EH(-1, "You have 3 velocity components, but only a 2D CARTESIAN mesh.\nDid you mean to use the PROJECTED_CARTESIAN coordinate system?");
+            }
+         }
     }
   /* 
    * Now define the number of variables of each type in the problem
@@ -593,31 +592,42 @@ setup_pd()
    * We will have to revist this if we want to go on with parallel processing
    */
 
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+     {
+      for (v=V_FIRST; v<V_LAST; v++)
+         {
+          Num_Var_In_Type[imtrx][v] = 0;
+         }
+     }
   for( mn = 0; mn < upd->Num_Mat; mn++)
-    {
+     {
     
       /* 
        * Assign local pointer pd to appropriate material
        */
       pd = pd_glob[mn];
 
-      for (v=V_FIRST; v<V_LAST; v++)
-	{
-	  if(v == MASS_FRACTION)
-	    {
-	      Num_Var_In_Type[MASS_FRACTION]      |= ( pd->e[R_MASS] )      ? upd->Max_Num_Species_Eqn: 0;
-	    }
-	  else if (v == SURFACE )
-	    {
-	      Num_Var_In_Type[SURFACE]            |= ( pd->e[R_MASS_SURF])  ?  (kkSurf + kkBulk): 0;
-	    }
-	  else
-	    {
-	      Num_Var_In_Type[v]          |= ( pd->e[v] ) ?         1         : 0;
-	    }
-	}
+      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+         {
 
-    }
+          for (v=V_FIRST; v<V_LAST; v++)
+	     {
+	      if(v == MASS_FRACTION)
+	        {
+	         Num_Var_In_Type[imtrx][MASS_FRACTION]      |= ( pd->e[imtrx][R_MASS] )      ? upd->Max_Num_Species_Eqn: 0;
+	        }
+	      else if (v == SURFACE )
+	        {
+	         Num_Var_In_Type[imtrx][SURFACE]            |= ( pd->e[imtrx][R_MASS_SURF])  ?  (kkSurf + kkBulk): 0;
+	        }
+	      else
+	        {
+	         Num_Var_In_Type[imtrx][v]          |= ( pd->e[imtrx][v] ) ?         1         : 0;
+	        }
+	     }
+
+         }
+     }
 
 
   return(status);

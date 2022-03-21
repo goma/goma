@@ -50,7 +50,7 @@ static char rcsid[] = "$Id: ac_stability_util.c,v 5.6 2010-04-07 22:27:00 prschu
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
 
-#define _AC_STABILITY_UTIL_C
+#define GOMA_AC_STABILITY_UTIL_C
 #include "goma.h"
 #include "mm_species.h"
 #include "rf_allo.h"
@@ -96,7 +96,7 @@ do_LSA_mods(int mod_type)
   modify_basis_and_weight_functions_for_LSA_3D_of_2D();
 
 /* If not using a deforming mesh:  that's all, folks! */
-  if (!pd->e[R_MESH1]) return;
+  if (!pd->e[pg->imtrx][R_MESH1]) return;
 
 /* First, do modifications for field variables and basis/weight functions */
       modify_fv_mesh_derivs_for_LSA_3D_of_2D();
@@ -158,7 +158,7 @@ do_LSA_mods(int mod_type)
  *
  * Author: Matt Hopkins, 12/18/00.  */
 void
-modify_basis_and_weight_functions_for_LSA_3D_of_2D()
+modify_basis_and_weight_functions_for_LSA_3D_of_2D(void)
 {
   int i, j, a, b, bf_index, var, mn;
   BASIS_FUNCTIONS_STRUCT *bf_ptr;
@@ -168,7 +168,7 @@ modify_basis_and_weight_functions_for_LSA_3D_of_2D()
      !af->Assemble_LSA_Mass_Matrix)
     return;
 
-  mn = ei->mn;
+  mn = ei[pg->imtrx]->mn;
   N = LSA_3D_of_2D_wave_number;
   
   if(LSA_3D_of_2D_pass == 1)
@@ -196,9 +196,9 @@ modify_basis_and_weight_functions_for_LSA_3D_of_2D()
     sine_value = 0.0;
 
   /*
-  if(ei->ielem == 0)
+  if(ei[pg->imtrx]->ielem == 0)
     printf("pass = %d, ielem = %d, cv = %3.1g, sv = %3.1g, N = %g\n",
-	   LSA_3D_of_2D_pass, ei->ielem, cosine_value, sine_value, N);
+	   LSA_3D_of_2D_pass, ei[pg->imtrx]->ielem, cosine_value, sine_value, N);
   */
 
   for(bf_index = 0; bf_index < Num_Basis_Functions; bf_index++)
@@ -215,7 +215,7 @@ modify_basis_and_weight_functions_for_LSA_3D_of_2D()
 	  if(bf_ptr->interpolation != I_Q2_LSA &&
 	     bf_ptr->interpolation != I_Q2_D_LSA)
 	    {
-	      for(i = 0; i < ei->dof[var]; i++)
+	      for(i = 0; i < ei[pg->imtrx]->dof[var]; i++)
 		{
 		  orig_phi = bf_ptr->phi[i];
 		  bf_ptr->phi[i] *= cosine_value;
@@ -233,10 +233,10 @@ modify_basis_and_weight_functions_for_LSA_3D_of_2D()
 		   * assemble_* routines for the mesh equations
 		   * (assemble_mesh).  Note that grad_phi[i][2] == 0,
 		   * so we don't need to multiply by anything. */
-		  if(pd_glob[mn]->e[R_MESH1])
+		  if(pd_glob[mn]->e[pg->imtrx][R_MESH1])
 		    {
 		      for(b = 0; b < 2; b++)
-			for(j = 0; j < ei->dof[R_MESH1]; j++)
+			for(j = 0; j < ei[pg->imtrx]->dof[R_MESH1]; j++)
 			  {
 			    bf_ptr->d_grad_phi_dmesh[i][0][b][j] *=
 			      cosine_value;
@@ -272,7 +272,7 @@ modify_basis_and_weight_functions_for_LSA_3D_of_2D()
 	   * appropriately. */
 	  else
 	    {
-	      for(i = 0; i < ei->dof[var]; i++)
+	      for(i = 0; i < ei[pg->imtrx]->dof[var]; i++)
 		{
 		  orig_phi = bf_ptr->phi[i];
 		  bf_ptr->phi[i] *= sine_value;
@@ -289,9 +289,9 @@ modify_basis_and_weight_functions_for_LSA_3D_of_2D()
 		   * w-velocity/equation stuff, I'm pretty sure that
 		   * this is wasted work... Better to be consistent,
 		   * though! */
-		  if(pd_glob[mn]->e[R_MESH1])
+		  if(pd_glob[mn]->e[pg->imtrx][R_MESH1])
 		    for(b = 0; b < 2; b++)
-		      for(j = 0; j < ei->dof[R_MESH1]; j++)
+		      for(j = 0; j < ei[pg->imtrx]->dof[R_MESH1]; j++)
 			{
 			  bf_ptr->d_grad_phi_dmesh[i][0][b][j] *=
 			    sine_value;
@@ -358,17 +358,17 @@ modify_bf_mesh_derivs_for_LSA_3D_of_2D(void)
   struct Basis_Functions *bfv, *bfx;
 
   bfx = bf[R_MESH1];
-  mdof = ei->dof[R_MESH1];
+  mdof = ei[pg->imtrx]->dof[R_MESH1];
   for (k=0; k<Num_Basis_Functions; k++)
     {
       bfv = bf[k];
-      var = bfv->Var_Type_MatID[ei->mn];
+      var = bfv->Var_Type_MatID[ei[pg->imtrx]->mn];
       if (var != -1)
 	{
-	  vdof = ei->dof[var];
+	  vdof = ei[pg->imtrx]->dof[var];
 	  for (i=0; i<vdof; i++)
 	    {
-	      for (b=0; b<ei->ielem_dim; b++)
+	      for (b=0; b<ei[pg->imtrx]->ielem_dim; b++)
 		{
 		  for (j=0; j<mdof; j++)
 		    {
@@ -422,19 +422,19 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   struct Basis_Functions *bfx;
 
 /* Bail out fast if there's nothing to do */
-  if ( !(pd->e[R_MESH1]) ) return;
+  if ( !(pd->e[pg->imtrx][R_MESH1]) ) return;
 
 /* Initialize values which will be constant */
-  dim = ei->ielem_dim;
+  dim = ei[pg->imtrx]->ielem_dim;
   p = 2;
-  mdof = ei->dof[R_MESH1];
+  mdof = ei[pg->imtrx]->dof[R_MESH1];
   bfx = bf[R_MESH1];
 
 /* Modify each gradient in sequence */
 
 /* d(grad(T))/dmesh */
   v = TEMPERATURE;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (b=0; b<dim; b++)
 	{
@@ -448,7 +448,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
 
 /* d(grad(V))/dmesh */
   v = VOLTAGE;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (b=0; b<dim; b++)
 	{
@@ -462,7 +462,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
 
 /* d(grad(qs))/dmesh */
   v = SURF_CHARGE;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (b=0; b<dim; b++)
 	{
@@ -476,7 +476,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
 
 /* d(grad(sh_J))/dmesh */
   v = SHELL_DIFF_FLUX;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (b=0; b<dim; b++)
         {
@@ -490,7 +490,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
 
 /* d(grad(apr,api))/dmesh */
   v = ACOUS_PREAL;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (b=0; b<dim; b++)
 	{
@@ -502,7 +502,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
 	}
     }
   v = ACOUS_PIMAG;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (b=0; b<dim; b++)
 	{
@@ -514,7 +514,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
 	}
     }
   v = LIGHT_INTP;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (b=0; b<dim; b++)
 	{
@@ -526,7 +526,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
 	}
     }
   v = LIGHT_INTM;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (b=0; b<dim; b++)
 	{
@@ -538,7 +538,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
 	}
     }
   v = LIGHT_INTD;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (b=0; b<dim; b++)
 	{
@@ -551,7 +551,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
     }
 
   v = RESTIME;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (b=0; b<dim; b++)
 	{
@@ -564,7 +564,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
     }  
 
   v = ACOUS_REYN_STRESS;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (b=0; b<dim; b++)
 	{
@@ -577,7 +577,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
     }
 
   v = SHELL_BDYVELO;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (b=0; b<dim; b++)
 	{
@@ -590,7 +590,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
     }
 
   v = SHELL_LUBP;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (b=0; b<dim; b++)
       {
@@ -603,7 +603,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
     }
 
   v = LUBP;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (b=0; b<dim; b++)
       {
@@ -616,7 +616,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
     }
 
  v = LUBP_2;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (b=0; b<dim; b++)
       {
@@ -628,8 +628,21 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
       }
     }
 
+  v = LUBP_3;
+   if (pd->v[pg->imtrx][v])
+     {
+       for (b=0; b<dim; b++)
+       {
+         for (j=0; j<mdof; j++)
+           {
+             fv->d_grad_lubp_3_dmesh[p][b][j] =
+                 - fv->grad_lubp_3[b] * bfx->grad_phi[j][2];
+           }
+       }
+     }
+  
   v = SHELL_TEMPERATURE;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (b=0; b<dim; b++)
       {
@@ -642,7 +655,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
     }
 
   v = SHELL_FILMP;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (b=0; b<dim; b++)
       {
@@ -655,7 +668,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
     }
 
   v = SHELL_FILMH;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (b=0; b<dim; b++)
       {
@@ -668,7 +681,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
     }
 
   v = SHELL_PARTC;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (b=0; b<dim; b++)
       {
@@ -683,7 +696,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
 
 /* d(grad(SH))/dmesh */
   v = SHEAR_RATE;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (b=0; b<dim; b++)
 	{
@@ -697,7 +710,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
 
 /* d(grad(F))/dmesh */
   v = FILL;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (b=0; b<dim; b++)
 	{
@@ -711,7 +724,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
 
 /* d(grad(P))/dmesh */
   v = PRESSURE;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (b=0; b<dim; b++)
 	{
@@ -725,7 +738,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
 
 /* d(grad(nn))/dmesh */
   v = BOND_EVOLUTION;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (b=0; b<dim; b++)
 	{
@@ -741,7 +754,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = MASS_FRACTION;
   for ( w=0; w<pd->Num_Species_Eqn; w++)
     {
-      if (pd->v[v])
+      if (pd->v[pg->imtrx][v])
 	{
 	  for (b=0; b<dim; b++)
 	    {
@@ -757,7 +770,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
 /* d(grad(porous_media_variables))/dmesh */
 
   v = POR_LIQ_PRES;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (b=0; b<dim; b++)
 	{
@@ -770,7 +783,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
     }
 
   v = POR_GAS_PRES;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (b=0; b<dim; b++)
 	{
@@ -783,7 +796,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
     }
 
   v = POR_POROSITY;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (b=0; b<dim; b++)
 	{
@@ -797,7 +810,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
 
 /* d(grad(v))/dmesh */
   v = VELOCITY1;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (q=0; q<VIM; q++)
 	{
@@ -814,7 +827,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
 
 /* d(grad(ext_v))/dmesh */
   v = EXT_VELOCITY;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (b=0; b<dim; b++)
 	{
@@ -828,7 +841,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
 
 /* d(grad(E_field))/dmesh */
   v = EFIELD1;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (q=0; q<VIM; q++)
 	{
@@ -845,7 +858,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
 
 /* d(grad(pv))/dmesh */
   v = PVELOCITY1;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (q=0; q<VIM; q++)
 	{
@@ -862,7 +875,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
 
 /* d(grad(d))/dmesh */
   v = MESH_DISPLACEMENT1;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (q=0; q<VIM; q++)
 	{
@@ -879,7 +892,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
 
 /* d(grad(d_rs))/dmesh */
   v = SOLID_DISPLACEMENT1;
-  if (pd->v[v])
+  if (pd->v[pg->imtrx][v])
     {
       for (q=0; q<VIM; q++)
 	{
@@ -896,7 +909,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
 
 /* d(grad(S))/dmesh */
   v = POLYMER_STRESS11;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       for (m=0; m<vn->modes; m++)
         {
@@ -919,7 +932,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
 
 /* d(grad(G))/dmesh */
   v = VELOCITY_GRADIENT11;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       for (q=0; q<VIM; q++)
 	{
@@ -962,9 +975,9 @@ modify_normal_vector_for_LSA_3D_of_2D(void)
  *  they are needed.  NOTE: Binormal (stangent[0]) is not affected.
  */
 
-  if (LSA_3D_of_2D_pass == 0 || !(pd->e[R_MESH1]) ) return;
+  if (LSA_3D_of_2D_pass == 0 || !(pd->e[pg->imtrx][R_MESH1]) ) return;
 
-  for (j=0; j<ei->dof[MESH_DISPLACEMENT1]; j++)
+  for (j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; j++)
     {
       for (q=0; q<2; q++)
         {
@@ -1137,7 +1150,7 @@ anneal_mesh_LSA(double x[], Exo_DB *exo, double **saved_xyz, double **saved_disp
   /* Displace the coordinates and save the displacement fields*/
   for (gnn = 0; gnn < num_nodes; gnn++)
     {
-      idx = Index_Solution (gnn, MESH_DISPLACEMENT1, 0, 0, -1);
+      idx = Index_Solution (gnn, MESH_DISPLACEMENT1, 0, 0, -1, upd->matrix_index[MESH_DISPLACEMENT1]);
       if (idx > -1)
         {
          saved_displacement[0][gnn] = x[idx];
@@ -1151,7 +1164,7 @@ anneal_mesh_LSA(double x[], Exo_DB *exo, double **saved_xyz, double **saved_disp
 
       if( dim > 1 )
         {
-         idy = Index_Solution (gnn, MESH_DISPLACEMENT2, 0, 0, -1);
+         idy = Index_Solution (gnn, MESH_DISPLACEMENT2, 0, 0, -1, upd->matrix_index[MESH_DISPLACEMENT2]);
          if (idy > -1)
            {
             saved_displacement[1][gnn] = x[idy];
@@ -1166,7 +1179,7 @@ anneal_mesh_LSA(double x[], Exo_DB *exo, double **saved_xyz, double **saved_disp
 
       if( dim > 2 )
         {
-         idz = Index_Solution (gnn, MESH_DISPLACEMENT3, 0, 0, -1);
+         idz = Index_Solution (gnn, MESH_DISPLACEMENT3, 0, 0, -1, upd->matrix_index[MESH_DISPLACEMENT3]);
          if (idz > -1)
            {
             saved_displacement[2][gnn] = x[idz];
@@ -1210,7 +1223,7 @@ unanneal_mesh_LSA(double x[], Exo_DB *exo, double **saved_xyz, double **saved_di
   /* Put back the displacement field in solution vector*/
   for (gnn = 0; gnn < num_nodes; gnn++)
     {
-      idx = Index_Solution (gnn, MESH_DISPLACEMENT1, 0, 0, -1);
+      idx = Index_Solution (gnn, MESH_DISPLACEMENT1, 0, 0, -1, upd->matrix_index[MESH_DISPLACEMENT1]);
       if (idx > -1)
         {
          x[idx] = saved_displacement[0][gnn];
@@ -1218,7 +1231,7 @@ unanneal_mesh_LSA(double x[], Exo_DB *exo, double **saved_xyz, double **saved_di
 
       if( dim > 1 )
         {
-         idy = Index_Solution (gnn, MESH_DISPLACEMENT2, 0, 0, -1);
+         idy = Index_Solution (gnn, MESH_DISPLACEMENT2, 0, 0, -1, upd->matrix_index[MESH_DISPLACEMENT2]);;
          if (idy > -1)
            {
             x[idy] = saved_displacement[1][gnn];
@@ -1226,7 +1239,7 @@ unanneal_mesh_LSA(double x[], Exo_DB *exo, double **saved_xyz, double **saved_di
          }
       if( dim > 2 )
         {
-         idz = Index_Solution (gnn, MESH_DISPLACEMENT3, 0, 0, -1);
+         idz = Index_Solution (gnn, MESH_DISPLACEMENT3, 0, 0, -1, upd->matrix_index[MESH_DISPLACEMENT3]);
          if (idz > -1)
            {
             x[idz] = saved_displacement[2][gnn];
@@ -1278,7 +1291,7 @@ add_displacement_LSA(double x[], Exo_DB *exo, double **saved_displacement)
   /* Add the displacement field in solution vector*/
   for (gnn = 0; gnn < num_nodes; gnn++)
     {
-      idx = Index_Solution (gnn, MESH_DISPLACEMENT1, 0, 0, -1);
+      idx = Index_Solution (gnn, MESH_DISPLACEMENT1, 0, 0, -1, upd->matrix_index[MESH_DISPLACEMENT1]);
       if (idx > -1)
         {
          x[idx] += saved_displacement[0][gnn];
@@ -1286,7 +1299,7 @@ add_displacement_LSA(double x[], Exo_DB *exo, double **saved_displacement)
 
       if( dim > 1 )
         {
-         idy = Index_Solution (gnn, MESH_DISPLACEMENT2, 0, 0, -1);
+         idy = Index_Solution (gnn, MESH_DISPLACEMENT2, 0, 0, -1, upd->matrix_index[MESH_DISPLACEMENT2]);
          if (idy > -1)
            {
             x[idy] += saved_displacement[1][gnn];
@@ -1294,7 +1307,7 @@ add_displacement_LSA(double x[], Exo_DB *exo, double **saved_displacement)
          }
       if( dim > 2 )
         {
-         idz = Index_Solution (gnn, MESH_DISPLACEMENT3, 0, 0, -1);
+         idz = Index_Solution (gnn, MESH_DISPLACEMENT3, 0, 0, -1, upd->matrix_index[MESH_DISPLACEMENT3]);
          if (idz > -1)
            {
             x[idz] += saved_displacement[2][gnn];
@@ -1326,7 +1339,7 @@ undo_add_displacement_LSA(double x[], Exo_DB *exo, double **saved_displacement)
   /* Subtract the displacement field in solution vector*/
   for (gnn = 0; gnn < num_nodes; gnn++)
     {
-      idx = Index_Solution (gnn, MESH_DISPLACEMENT1, 0, 0, -1);
+      idx = Index_Solution (gnn, MESH_DISPLACEMENT1, 0, 0, -1, pg->imtrx);
       if (idx > -1)
         {
          x[idx] -= saved_displacement[0][gnn];
@@ -1334,7 +1347,7 @@ undo_add_displacement_LSA(double x[], Exo_DB *exo, double **saved_displacement)
 
       if( dim > 1 )
         {
-         idy = Index_Solution (gnn, MESH_DISPLACEMENT2, 0, 0, -1);
+         idy = Index_Solution (gnn, MESH_DISPLACEMENT2, 0, 0, -1, pg->imtrx);
          if (idy > -1)
            {
             x[idy] -= saved_displacement[1][gnn];
@@ -1342,7 +1355,7 @@ undo_add_displacement_LSA(double x[], Exo_DB *exo, double **saved_displacement)
          }
       if( dim > 2 )
         {
-         idz = Index_Solution (gnn, MESH_DISPLACEMENT3, 0, 0, -1);
+         idz = Index_Solution (gnn, MESH_DISPLACEMENT3, 0, 0, -1, pg->imtrx);
          if (idz > -1)
            {
             x[idz] -= saved_displacement[2][gnn];

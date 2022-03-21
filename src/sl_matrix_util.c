@@ -39,7 +39,7 @@ static char rcsid[] = "$Id: sl_matrix_util.c,v 5.2 2007-12-07 17:14:37 hkmoffa E
 #include "sl_epetra_interface.h"
 #include "sl_epetra_util.h"
 
-#define _SL_MATRIX_UTIL_C
+#define GOMA_SL_MATRIX_UTIL_C
 #include "goma.h"
 
 /* canine_chaos() - return useful information about the matrix problem
@@ -141,9 +141,9 @@ print_msr_matrix(int n, int *ija, double *a, double *x)
     fprintf(of, "%d %d %23.16e %23.16e\n", global_row, global_row,
 	    a[row], x[row]);
 #if 0
-    if (row < num_internal_dofs ) {
+    if (row < num_internal_dofs[pg->imtrx] ) {
       row_kind = 'I';
-    } else if (row < num_internal_dofs + num_boundary_dofs) {
+    } else if (row < num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]) {
       row_kind = 'B';
     } else {
       row_kind = 'E';
@@ -167,16 +167,16 @@ print_msr_matrix(int n, int *ija, double *a, double *x)
 
       fprintf(of, "%d %d %23.16e\n", global_row, global_col, a[i]);
 #if 0
-      if (row < num_internal_dofs ) {
+      if (row < num_internal_dofs[pg->imtrx] ) {
 	row_kind = 'I';
-      } else if ( row < num_internal_dofs + num_boundary_dofs ) {
+      } else if ( row < num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx] ) {
 	row_kind = 'B';
       } else {
 	row_kind = 'E';
       }
-      if (col < num_internal_dofs) {
+      if (col < num_internal_dofs[pg->imtrx]) {
 	col_kind = 'I';
-      } else if (col < num_internal_dofs + num_boundary_dofs ) {
+      } else if (col < num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx] ) {
 	col_kind = 'B';
       } else {
 	col_kind = 'E';
@@ -256,8 +256,8 @@ print_vbr_matrix( struct Aztec_Linear_Solver_System *ams, /* matrix info */
                  col_dof += unknowns_per_node[ii];
                }
 
-             row = Nodes[i]->First_Unknown;
-	     col = Nodes[col_node]->First_Unknown;
+             row = Nodes[i]->First_Unknown[pg->imtrx];
+	     col = Nodes[col_node]->First_Unknown[pg->imtrx];
             }
            else
             {
@@ -279,11 +279,11 @@ print_vbr_matrix( struct Aztec_Linear_Solver_System *ams, /* matrix info */
    
                   if( Num_Proc > 1 )
                     {
-                      if( col < num_internal_dofs )
+                      if( col < num_internal_dofs[pg->imtrx] )
                         {
                           col_kind = 'I';
                         }
-                       else if ( col < num_internal_dofs + num_boundary_dofs )
+                       else if ( col < num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx] )
                         {
                           col_kind = 'B';
                         }
@@ -411,9 +411,9 @@ pmax_matrix_norm ( int N,
 /* EXTERNAL FUNCTIONS and PROTOTYPES */
 extern double
 gmax_double
-   PROTO (( double,              /* var  */
+   ( double,              /* var  */
             int,                 /* me   */
-            int  ));             /* dim  */
+            int  );             /* dim  */
 
 
   row_max = 0.0;
@@ -500,7 +500,7 @@ row_sum_scaling_scale_AC( double **cAC,
                           int nAC )
 {
   int iAC, jAC, i;
-  int numProcUnknowns = NumUnknowns + NumExtUnknowns;
+  int numProcUnknowns = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
   double *row_sums, *local_sums, row_sum_inv;
 
   row_sums = alloc_dbl_1(nAC, 0.0);
@@ -568,7 +568,7 @@ row_sum_scale_MSR ( int N,
     if (fabs(row_sum) == 0.0 ) {
       if (dofname) {
         printf("row_sum_scaling_scale ERROR: Row %d is zero, dofname = %s\n",
-	       irow, dofname[irow]);
+	       irow, dofname[pg->imtrx][irow]);
       } else {
         printf("row_sum_scaling_scale ERROR: Row %d is zero, dofname = unknown\n",
 	       irow);
@@ -607,12 +607,12 @@ row_sum_scale_MSR ( int N,
       int inode = 0;
       VARIABLE_DESCRIPTION_STRUCT *vd;
       WH(-1, "row_sum_scale_MSR ERROR: row_sum = 0.0,");
-      vd = Index_Solution_Inv(irow, &inode, &i_Var_Desc, &i_offset, &idof);
+      vd = Index_Solution_Inv(irow, &inode, &i_Var_Desc, &i_offset, &idof, pg->imtrx);
       x[0] = Coor[0][inode]; x[1] = Coor[1][inode];
       if (pd_glob[0]->Num_Dim == 3) x[2] = Coor[2][inode];
       if (dofname) {
         printf("row_sum_scaling_scale ERROR: Row %d is zero, dofname = %s, x=(%g,%g,%g)\n",
-               irow, dofname[irow],x[0],x[1],x[2]);
+               irow, dofname[pg->imtrx][irow],x[0],x[1],x[2]);
       } else {
         printf("row_sum_scaling_scale ERROR: Row %d is zero, dofname = unknown\n",
                irow);
@@ -900,7 +900,7 @@ vector_scaling(const int N,
  * @return 0 if compatible, -1 if not
  */
 int
-check_compatible_solver()
+check_compatible_solver(void)
 {
   if (strcmp(Matrix_Format, "epetra") == 0) {
     switch (Linear_Solver) {

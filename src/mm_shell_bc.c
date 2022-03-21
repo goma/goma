@@ -19,6 +19,10 @@
 #include <string.h>
 #include <math.h>
 
+
+
+
+
 /* GOMA include files */
 
 #include "std.h"
@@ -47,11 +51,10 @@
 #include "mm_qp_storage.h"
 
 #include "mm_eh.h"
+
+#define GOMA_MM_SHELL_BC_C
+#include "mm_shell_bc.h"
 #include "shell_tfmp_util.h"
-
-#define eps(i,j,k)   ( (i-j)*(j-k)*(k-i)/2 )
-
-#define _MM_SHELL_BC_C
 #include "goma.h"
 
 /*
@@ -136,7 +139,20 @@ shell_n_dot_flow_bc_confined(double func[DIM],
   double grad_phi_j[DIM], grad_II_phi_j[DIM];
   double bound_normal[DIM];
 
-
+  /*dbl H, H_U, dH_U_dtime, H_L, dH_L_dtime, dH_U_ddh;
+  dbl dH_U_dX[DIM],dH_L_dX[DIM], dH_U_dp;
+  dbl *grad_P, *grad_II_P;
+  dbl veloU[DIM], veloL[DIM];
+  
+  grad_P = (double *) malloc(DIM * sizeof(double));
+  grad_II_P = (double *) malloc(DIM * sizeof(double));
+  H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, dt);
+  velocity_function_model(veloU, veloL, time, dt);*/
+  dbl phi_j;
+  //int i;
+  
+  
+	  
 /* Save the boundary normal vector */
 
   for(ii = 0; ii < pd->Num_Dim; ii++)
@@ -152,9 +168,12 @@ shell_n_dot_flow_bc_confined(double func[DIM],
 
 
 /* Calculate the flow rate and its sensitivties */
-
+  
+  if (gn->ConstitutiveEquation == BINGHAM){
+  }
+  else{
   calculate_lub_q_v(R_LUBP, time, dt, xi, exo);
-
+  }
 
 
   if (af->Assemble_LSA_Mass_Matrix)
@@ -163,38 +182,80 @@ shell_n_dot_flow_bc_confined(double func[DIM],
     }
 
   if (af->Assemble_Jacobian)
-    {
-      var = LUBP;
-      if (pd->v[var])
-      {
-        for ( j=0; j<ei->dof[var]; j++)
-           {
-            for (ii = 0; ii < pd->Num_Dim; ii++)
-              {
-                 grad_phi_j[ii] = bf[var]->grad_phi[j][ii];
-                 grad_II_phi_j[ii] = 0.0;
-              }
+  {
+	  if (gn->ConstitutiveEquation == BINGHAM)
+	  {
 
-            Inn(grad_phi_j, grad_II_phi_j);
+		  var = SHELL_SHEAR_TOP;
+		  if (pd->v[pg->imtrx][var])
+		  {
+			  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+			  {
+				  phi_j = bf[var]->phi[j];    	                      
 
-            for (ii=0; ii<pd->Num_Dim; ii++)
-              {
-               d_func[0][var][j] += LubAux->dq_dp1[ii][j] * grad_II_phi_j[ii] * bound_normal[ii];
-              }
-           }
-      }
+				  d_func[0][var][j] +=  phi_j  * bound_normal[0] ;
+
+			  }
+		  }
 
 
-    } /* end of if Assemble_Jacobian */
+
+		  var = SHELL_SHEAR_BOT;
+		  if (pd->v[pg->imtrx][var])
+		  {
+			  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+			  {
+				  phi_j = bf[var]->phi[j];
+
+				  d_func[0][var][j] +=  phi_j  * bound_normal[1] ;
+
+			  }
+		  }     	     	
+
+	  }
+	  else
+	  {
+		  var = LUBP;
+		  if (pd->v[pg->imtrx][var])
+		  {
+			  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+			  {
+				  phi_j = bf[var]->phi[j];
+
+				  for (ii = 0; ii < pd->Num_Dim; ii++)
+				  {
+					  grad_phi_j[ii] = bf[var]->grad_phi[j][ii];
+					  grad_II_phi_j[ii] = 0.0;
+				  }
+
+				  Inn(grad_phi_j, grad_II_phi_j);
+
+
+
+				  for (ii=0; ii<pd->Num_Dim; ii++)
+				  {
+					  d_func[0][var][j] += LubAux->dq_dp1[ii][j] * grad_II_phi_j[ii] * bound_normal[ii];
+				  }
+			  }
+		  }
+	  }
+
+  } /* end of if Assemble_Jacobian */
 
 
   /* Calculate the residual contribution        */
 
   func[0] = - flowrate;
-  for (ii = 0; ii < pd->Num_Dim; ii++)
-    {
-      func[0] +=  LubAux->q[ii] * bound_normal[ii];
-    }
+  if (gn->ConstitutiveEquation == BINGHAM)
+  {
+	  func[0] +=  fv->sh_shear_top * bound_normal[0] + fv->sh_shear_bot * bound_normal[1];
+  }
+  else{
+	  for (ii = 0; ii < pd->Num_Dim; ii++)
+	  {
+		  func[0] +=  LubAux->q[ii] * bound_normal[ii];
+	  }
+  } 
 
   /* clean-up */
   safe_free((void *) n_dof);
@@ -203,6 +264,20 @@ shell_n_dot_flow_bc_confined(double func[DIM],
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
+
+void
+shell_n_dot_flow_bc_confined_3(double func[DIM],
+                             double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                             const double flowrate, /* imposed flow rate */
+                             const double time,     /* current time */
+                             const double dt,       /* current time step size */
+                             double xi[DIM],        /* Local stu coordinates */
+                             const Exo_DB *exo)
+
+{
+	}
+
+
 
 void
 lub_static_pressure(double func[DIM],
@@ -294,7 +369,7 @@ lub_static_pressure(double func[DIM],
      }
   break;
   case FSI_SHELL_ONLY_MESH:
-    if (pd->e[R_SHELL_NORMAL1] && pd->e[R_SHELL_NORMAL2] && pd->e[R_SHELL_NORMAL3] )
+    if (pd->e[pg->imtrx][R_SHELL_NORMAL1] && pd->e[pg->imtrx][R_SHELL_NORMAL2] && pd->e[pg->imtrx][R_SHELL_NORMAL3] )
       {
        for ( i = 0; i < dim; i++)
           {
@@ -326,7 +401,7 @@ lub_static_pressure(double func[DIM],
     {
      for ( j = 0; j < dim; j++)
         {
-         for ( k = 0; k < ei->dof[MESH_DISPLACEMENT1]; k++)
+         for ( k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++)
             {
               jk = dof_map[k];
               D_H_DX[j][jk] += delta(i,j)*(dH_U_dX[i]-dH_L_dX[i])*bf[MESH_DISPLACEMENT1]->phi[k];
@@ -337,13 +412,13 @@ lub_static_pressure(double func[DIM],
     }
   break;
  case FSI_SHELL_ONLY_MESH:
-   if ( (pd->e[R_SHELL_NORMAL1]) && (pd->e[R_SHELL_NORMAL2]) && (pd->e[R_SHELL_NORMAL3]) )
+   if ( (pd->e[pg->imtrx][R_SHELL_NORMAL1]) && (pd->e[pg->imtrx][R_SHELL_NORMAL2]) && (pd->e[pg->imtrx][R_SHELL_NORMAL3]) )
      {
       for ( i = 0; i < dim; i++)
          {
           for ( j = 0; j < dim; j++)
              {
-              for ( k = 0; k < ei->dof[MESH_DISPLACEMENT1]; k++)
+              for ( k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++)
                  {
                   jk = dof_map[k];
                   D_H_DX[j][jk] += delta(i,j)*(dH_U_dX[i]-dH_L_dX[i])*bf[MESH_DISPLACEMENT1]->phi[k];
@@ -358,7 +433,7 @@ lub_static_pressure(double func[DIM],
          {
           for ( j = 0; j < dim; j++)
              {
-              for ( k = 0; k < ei->dof[MESH_DISPLACEMENT1]; k++)
+              for ( k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++)
                  {
                   jk = dof_map[k];
                   D_H_DX[j][jk] += delta(i,j)*(dH_U_dX[i]-dH_L_dX[i])*bf[MESH_DISPLACEMENT1]->phi[k];
@@ -374,13 +449,13 @@ lub_static_pressure(double func[DIM],
     {
      for ( j = 0; j < dim; j++) 
         {
-         for ( k = 0; k < ei->dof[MESH_DISPLACEMENT1]; k++) 
+         for ( k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) 
             {
              jk = dof_map[k];
              D_H_DX[j][jk] += delta(i,j)*(dH_U_dX[i]-dH_L_dX[i])*bf[MESH_DISPLACEMENT1]->phi[k];
              D_H_DX[j][jk] -= fv->dsnormal_dx[i][j][jk] * fv->d_rs[i];
 	    }
-         for ( k = 0; k < ei->dof[SOLID_DISPLACEMENT1]; k++) 
+         for ( k = 0; k < ei[pg->imtrx]->dof[SOLID_DISPLACEMENT1]; k++) 
             {
              jk = dof_map[k];
              D_H_DRS[j][jk] -= fv->snormal[i] * delta(i,j) * bf[SOLID_DISPLACEMENT1]->phi[jk];
@@ -394,13 +469,13 @@ lub_static_pressure(double func[DIM],
  switch ( mp->FSIModel ) {
 
  case FSI_SHELL_ONLY_MESH:
- if ( (pd->e[R_SHELL_NORMAL1]) && (pd->e[R_SHELL_NORMAL2]) && (pd->e[R_SHELL_NORMAL3]) )
+ if ( (pd->e[pg->imtrx][R_SHELL_NORMAL1]) && (pd->e[pg->imtrx][R_SHELL_NORMAL2]) && (pd->e[pg->imtrx][R_SHELL_NORMAL3]) )
    {
     for ( i = 0; i < dim; i++)
        {
         for ( j = 0; j < dim; j++)
            {
-            for ( k = 0; k < ei->dof[SHELL_NORMAL1]; k++)
+            for ( k = 0; k < ei[pg->imtrx]->dof[SHELL_NORMAL1]; k++)
                {
                 D_H_DNORMAL[j][k] -= delta(i,j) * bf[SHELL_NORMAL1]->phi[k] * fv->d[i];
                }
@@ -418,7 +493,7 @@ lub_static_pressure(double func[DIM],
   memset(D_Hn_DX, 0.0, sizeof(double)*DIM*MDE);
 
 
-  if ( pd->v[FILL] )
+  if ( pd->v[pg->imtrx][FILL] )
     {
      load_lsi( ls->Length_Scale );
      load_lsi_derivs();
@@ -426,9 +501,9 @@ lub_static_pressure(double func[DIM],
     }
 
   /* Calculate F sensitivity */
-  if ( pd->v[FILL] )
+  if ( pd->v[pg->imtrx][FILL] )
     {
-     for ( i = 0; i < ei->dof[FILL]; i++)
+     for ( i = 0; i < ei[pg->imtrx]->dof[FILL]; i++)
         {
          D_Hn_DF[i] = - lsi->d_Hn_dF[i];
         }
@@ -445,7 +520,7 @@ lub_static_pressure(double func[DIM],
   /* Curvature - analytic in the "z" direction  */
   dbl dcaU, dcaL, slopeU, slopeL;
   dcaU = dcaL = slopeU = slopeL = 0;
-  if ( pd->v[FILL] )
+  if ( pd->v[pg->imtrx][FILL] )
     {
      dcaU = mp->dcaU*M_PIE/180.0;
      dcaL = mp->dcaL*M_PIE/180.0;
@@ -459,13 +534,13 @@ lub_static_pressure(double func[DIM],
     }
 
   /* Sensitivity to height */
-  if ( pd->v[FILL] )  D_CURV_DH = -(cos(M_PIE-dcaU-atan(slopeU)) + cos(M_PIE-dcaL-atan(-slopeL)))/(H*H);
+  if ( pd->v[pg->imtrx][FILL] )  D_CURV_DH = -(cos(M_PIE-dcaU-atan(slopeU)) + cos(M_PIE-dcaL-atan(-slopeL)))/(H*H);
 
 
   /* Sensitivity to level set F */
-  if ( pd->v[FILL] )
+  if ( pd->v[pg->imtrx][FILL] )
     {
-     for ( i = 0; i < ei->dof[FILL]; i++)
+     for ( i = 0; i < ei[pg->imtrx]->dof[FILL]; i++)
         {
          for ( j = 0; j < dim; j++)
             {
@@ -476,7 +551,7 @@ lub_static_pressure(double func[DIM],
     }
 
   /* Sensitivity to mesh */
-  if ( pd->v[FILL] )
+  if ( pd->v[pg->imtrx][FILL] )
     {
      for ( i = 0; i < dim; i++)
         {
@@ -500,9 +575,9 @@ lub_static_pressure(double func[DIM],
 
       /* Sensitivity w.r.t. pressure */
       var = LUBP;
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
         {
-         for (j = 0; j < ei->dof[var]; j++)
+         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
             {
              phi_j = bf[var]->phi[j];
 
@@ -513,22 +588,22 @@ lub_static_pressure(double func[DIM],
 
       /* Sensitivity w.r.t. level set */
       var = FILL;
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
         {
-         for (j = 0; j < ei->dof[var]; j++)
+         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
             {
              d_func[0][var][j] = - mp->surface_tension * (D_Hn_DF[j] * CURV + Hn * D_CURV_DF[j]);
             }
 	}
 
       /* Sensitivity w.r.t. mesh */
-      if (pd->v[MESH_DISPLACEMENT1])
+      if (pd->v[pg->imtrx][MESH_DISPLACEMENT1])
         {
          for (i = 0; i < dim; i++)
             {
              var = MESH_DISPLACEMENT1 + i;
 
-             for (j = 0; j < ei->dof[var]; j++)
+             for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
                 {
                  d_func[0][var][j] = - mp->surface_tension * (D_Hn_DX[i][j] * CURV + Hn * D_CURV_DX[i][j]);
                 }
@@ -627,9 +702,9 @@ shell_n_dot_flow_bc_film(double func[DIM],
   if (af->Assemble_Jacobian) 
     {
       var = SHELL_FILMP;
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
       {
-        for ( j=0; j<ei->dof[var]; j++)
+        for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
            {
             for (ii = 0; ii < pd->Num_Dim; ii++)
               {
@@ -647,9 +722,9 @@ shell_n_dot_flow_bc_film(double func[DIM],
       }
 
       var = SHELL_FILMH;
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
       {
-        for ( j=0; j<ei->dof[var]; j++)
+        for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
            {
             phi_j = bf[var]->phi[j];
 
@@ -671,9 +746,9 @@ shell_n_dot_flow_bc_film(double func[DIM],
       }
 
       var = SHELL_PARTC;
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
       {
-        for ( j=0; j<ei->dof[var]; j++)
+        for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
            {
             phi_j = bf[var]->phi[j];
                        	              
@@ -785,9 +860,9 @@ shell_n_dot_gradp_bc(double func[DIM],
   if (af->Assemble_Jacobian) 
     {
       var = SHELL_FILMP;
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
       {
-        for ( j=0; j<ei->dof[var]; j++)
+        for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
            {
             for (ii = 0; ii < pd->Num_Dim; ii++)
               {
@@ -805,9 +880,9 @@ shell_n_dot_gradp_bc(double func[DIM],
       }
 
       var = SHELL_FILMH;
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
       {
-        for ( j=0; j<ei->dof[var]; j++)
+        for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
            {
             phi_j = bf[var]->phi[j];
 
@@ -900,8 +975,8 @@ shell_n_dot_gradh_bc(double func[DIM],
 
 /* Get the vector normal to the shell plane */
 
-   shell_determinant_and_normal(ei->ielem, ei->iconnect_ptr, ei->num_local_nodes,
-                                ei->ielem_dim, 1);
+   shell_determinant_and_normal(ei[pg->imtrx]->ielem, ei[pg->imtrx]->iconnect_ptr, ei[pg->imtrx]->num_local_nodes,
+                                ei[pg->imtrx]->ielem_dim, 1);
 
   for(ii = 0; ii < VIM; ii++)
     {
@@ -929,9 +1004,9 @@ shell_n_dot_gradh_bc(double func[DIM],
   if (af->Assemble_Jacobian) 
     {
       var = SHELL_FILMH;
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
       {
-        for ( j=0; j<ei->dof[var]; j++)
+        for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
            {	              
             for (ii=0; ii<VIM; ii++)
               {
@@ -1041,8 +1116,8 @@ shell_n_dot_pflux_bc(double func[DIM],
       bound_normal[ii] = fv->snormal[ii];
     }
 
-  shell_determinant_and_normal(ei->ielem, ei->iconnect_ptr, ei->num_local_nodes,
-                               ei->ielem_dim, 1);
+  shell_determinant_and_normal(ei[pg->imtrx]->ielem, ei[pg->imtrx]->iconnect_ptr, ei[pg->imtrx]->num_local_nodes,
+                               ei[pg->imtrx]->ielem_dim, 1);
 
   for(ii = 0; ii < VIM; ii++)
     {
@@ -1071,9 +1146,9 @@ shell_n_dot_pflux_bc(double func[DIM],
     {
 
       var = SHELL_FILMH;
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
       {
-        for ( j=0; j<ei->dof[var]; j++)
+        for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
            {
             phi_j = bf[var]->phi[j];
      
@@ -1093,9 +1168,9 @@ shell_n_dot_pflux_bc(double func[DIM],
 
 
       var = SHELL_PARTC;
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
       {
-        for ( j=0; j<ei->dof[var]; j++)
+        for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
            {
             phi_j = bf[var]->phi[j];
 
@@ -1248,7 +1323,7 @@ apply_shell_traction_bc(double func[DIM],
      {
       var = MESH_DISPLACEMENT1 + b;
 
-      for (j = 0; j < ei->dof[var]; j++)
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
          {
           for (a = 0; a < dim; a++)
              {
@@ -1268,7 +1343,7 @@ apply_shell_traction_bc(double func[DIM],
      {
       var = SHELL_NORMAL1 + b;
 
-      for (j = 0; j < ei->dof[var]; j++)
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
          {
           for (a = 0; a < dim; a++)
              {
@@ -1292,7 +1367,7 @@ apply_shell_traction_bc(double func[DIM],
     {
 
      var = MESH_DISPLACEMENT1;
-     if ( pd->v[var] )
+     if ( pd->v[pg->imtrx][var] )
        {
 
         /*** Loop over dimensions of mesh displacement ***/
@@ -1300,7 +1375,7 @@ apply_shell_traction_bc(double func[DIM],
            {
             var = MESH_DISPLACEMENT1 + b;
 
-            for (j = 0; j < ei->dof[var]; j++)
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
                {
                 d_func[0][var][j] = de_dx[0][b][j] * tx + de_dx[1][b][j] * ty + de_dx[2][b][j] * tz;
                }
@@ -1308,7 +1383,7 @@ apply_shell_traction_bc(double func[DIM],
        }
 
      var = SHELL_NORMAL1;
-     if ( pd->v[var] )
+     if ( pd->v[pg->imtrx][var] )
        {
 
         /*** Loop over dimensions of shell normal ***/
@@ -1316,7 +1391,7 @@ apply_shell_traction_bc(double func[DIM],
            {
             var = SHELL_NORMAL1 + b;
 
-            for (j = 0; j < ei->dof[var]; j++)
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
                {
                 d_func[0][var][j] = de_dnormal[0][b][j] * tx + de_dnormal[1][b][j] * ty + de_dnormal[2][b][j] * tz;
                }
@@ -1367,9 +1442,9 @@ void
       if (af->Assemble_Jacobian) {
 
 	var = LUBP;
-	for ( j_id=0; j_id<ei->dof[var]; j_id++)
+	for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 	  {
-	    if (pd->v[var])
+	    if (pd->v[pg->imtrx][var])
 	      {
 		phi_j = bf[var]->phi[j_id];
 		d_func[0][var][j_id] += phi_j;
@@ -1391,9 +1466,9 @@ void
       if (af->Assemble_Jacobian) {
 
 	var = SHELL_FILMP;
-	for ( j_id=0; j_id<ei->dof[var]; j_id++)
+	for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 	  {
-	    if (pd->v[var])
+	    if (pd->v[pg->imtrx][var])
 	      {
 		phi_j = bf[var]->phi[j_id];
 		d_func[0][var][j_id] -= phi_j;
@@ -1445,11 +1520,11 @@ put_lub_flux_in_film(int id, /* local element node number for the
      * if you are in the film phase, return without doing anything
      * In the solid phase, there are no fluid momentum equations.
      */
-    if (!pd->e[R_LUBP]) return;   
+    if (!pd->e[pg->imtrx][R_LUBP]) return;   
 
     
-    id_doflubp = ei->ln_to_dof[R_LUBP][id];
-    id_doffilmp = ei->ln_to_dof[R_SHELL_FILMP][id];
+    id_doflubp = ei[pg->imtrx]->ln_to_dof[R_LUBP][id];
+    id_doffilmp = ei[pg->imtrx]->ln_to_dof[R_SHELL_FILMP][id];
 
     if (Current_EB_ptr->Elem_Blk_Id != i_mat_lubp)
       { 
@@ -1476,8 +1551,8 @@ put_lub_flux_in_film(int id, /* local element node number for the
      * check to make sure that both lubp dof and sh_fp
      * dof exist at this node
      */
-    if (Dolphin[I][R_LUBP] <= 0)     return;
-    if (Dolphin[I][R_SHELL_FILMP] <= 0) return;
+    if (Dolphin[pg->imtrx][I][R_LUBP] <= 0)     return;
+    if (Dolphin[pg->imtrx][I][R_SHELL_FILMP] <= 0) return;
 
     /*
      * add local contribution to lubp equation
@@ -1487,10 +1562,10 @@ put_lub_flux_in_film(int id, /* local element node number for the
     if (af->Assemble_Residual) {
 	  ieqn_lubp = R_LUBP;
 	  ieqn_filmp = R_SHELL_FILMP;
-	  id_doflubp = ei->ln_to_dof[ieqn_lubp][id];
-	  id_doffilmp = ei->ln_to_dof[ieqn_filmp][id];
-          lec->R[LEC_R_INDEX(upd->ep[ieqn_filmp],id_doffilmp)] =
-               -lec->R[LEC_R_INDEX(upd->ep[ieqn_lubp],id_doflubp)];
+	  id_doflubp = ei[pg->imtrx]->ln_to_dof[ieqn_lubp][id];
+	  id_doffilmp = ei[pg->imtrx]->ln_to_dof[ieqn_filmp][id];
+          lec->R[LEC_R_INDEX(upd->ep[pg->imtrx][ieqn_filmp],id_doffilmp)] =
+               -lec->R[LEC_R_INDEX(upd->ep[pg->imtrx][ieqn_lubp],id_doflubp)];
     }
     
     /*
@@ -1500,11 +1575,11 @@ put_lub_flux_in_film(int id, /* local element node number for the
     if (af->Assemble_Jacobian)
       {
 	ieqn_lubp = R_LUBP;
-	peqn_lubp = upd->ep[ieqn_lubp];
+	peqn_lubp = upd->ep[pg->imtrx][ieqn_lubp];
 	ieqn_filmp = R_SHELL_FILMP;
-	peqn_filmp = upd->ep[ieqn_filmp];
-	id_doflubp = ei->ln_to_dof[ieqn_lubp][id];
-	id_doffilmp = ei->ln_to_dof[ieqn_filmp][id];
+	peqn_filmp = upd->ep[pg->imtrx][ieqn_filmp];
+	id_doflubp = ei[pg->imtrx]->ln_to_dof[ieqn_lubp][id];
+	id_doffilmp = ei[pg->imtrx]->ln_to_dof[ieqn_filmp][id];
 
 	/* Add contributions due to all nodal sensitivities in filmp element */
 
@@ -1514,10 +1589,10 @@ put_lub_flux_in_film(int id, /* local element node number for the
 	for ( q=0; q<dim; q++)
 	  {
 	    var = MESH_DISPLACEMENT1+q;
-	    if ( pd->v[var] )
+	    if ( pd->v[pg->imtrx][var] )
 	      {
-		pvar = upd->vp[var];
-		for ( j_id=0; j_id<ei->dof[var]; j_id++)
+		pvar = upd->vp[pg->imtrx][var];
+		for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 		  {
                     lec->J[LEC_J_INDEX(peqn_filmp,pvar,id_doffilmp,j_id)] =
                       -lec->J[LEC_J_INDEX(peqn_lubp,pvar,id_doflubp,j_id)];
@@ -1529,10 +1604,10 @@ put_lub_flux_in_film(int id, /* local element node number for the
 	 * local J_lubp_lubp -> J_filmp_lubp
 	 */
 	var = LUBP;
-	if ( pd->v[var] )
+	if ( pd->v[pg->imtrx][var] )
 	  {
-	    pvar = upd->vp[var];
-	    for ( j_id=0; j_id<ei->dof[var]; j_id++)
+	    pvar = upd->vp[pg->imtrx][var];
+	    for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 	      {			
                 lec->J[LEC_J_INDEX(peqn_filmp,pvar,id_doffilmp,j_id)] =
                   -lec->J[LEC_J_INDEX(peqn_lubp,pvar,id_doflubp,j_id)];
@@ -1611,7 +1686,7 @@ shell_n_dot_liq_velo_bc_tfmp(double func[DIM],
       for(k = 0; k < pd->Num_Dim; k++) {
         bound_normal[k] = fv->snormal[k];
         for (l = 0; l<DIM; l++) {
-          for (j = 0; j <ei->dof[MESH_DISPLACEMENT1]; j++) {
+          for (j = 0; j <ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; j++) {
             dbound_normal_dx[k][l][j] = fv->dsnormal_dx[k][l][j];
           }
         }
@@ -1694,21 +1769,21 @@ shell_n_dot_liq_velo_bc_tfmp(double func[DIM],
 
     double *grad;
 
-    if (pd->Num_Dim == 2 && ei->ielem_type == LINEAR_BAR) {
+    if (pd->Num_Dim == 2 && ei[pg->imtrx]->ielem_type == LINEAR_BAR) {
       // only one dimension to integrate over, s.
       var = TFMP_PRES;
       grad = gradII_P;
 
       memset (grad, 0.0, sizeof(double)*DIM);
       memset (csigrad, 0.0, sizeof(double)*DIM);
-      for (int i=0; i<ei->dof[var]; i++) {
+      for (int i=0; i<ei[pg->imtrx]->dof[var]; i++) {
         csigrad[0] += *esp->tfmp_pres[i]*bf[var]->dphidxi[i][0];
       }
 
       grad[0] = csigrad[0]/det_J;
 
       for (int k=0; k<DIM; k++) {
-        for (int i=0; i<ei->dof[var]; i++){
+        for (int i=0; i<ei[pg->imtrx]->dof[var]; i++){
           dgradII_P_dmesh[0][k][i] = csigrad[0]*(-1.0)/det_J/det_J*d_det_J_dmeshkj[k][i];
         }
       }
@@ -1728,8 +1803,8 @@ shell_n_dot_liq_velo_bc_tfmp(double func[DIM],
   /* Calculate Jacobian contributions */
   if (af->Assemble_Jacobian) {
     var = TFMP_PRES;
-    if (pd->v[var]) {
-      for (j=0; j<ei->dof[var]; j++) {
+    if (pd->v[pg->imtrx][var]) {
+      for (j=0; j<ei[pg->imtrx]->dof[var]; j++) {
         ShellBF(var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map);
 	
         n_dot_phi_j = 0.0;
@@ -1744,8 +1819,8 @@ shell_n_dot_liq_velo_bc_tfmp(double func[DIM],
     }
 
     var = TFMP_SAT;
-    if (pd->v[var]) {
-      for (j=0; j<ei->dof[var]; j++) {
+    if (pd->v[pg->imtrx][var]) {
+      for (j=0; j<ei[pg->imtrx]->dof[var]; j++) {
         ShellBF(R_TFMP_MASS, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map);
         n_dot_grad_P = 0.0;
         for (k=0; k<DIM; k++) {
@@ -1760,8 +1835,8 @@ shell_n_dot_liq_velo_bc_tfmp(double func[DIM],
 
     for (l = 0; l<DIM; l++) {
       var = MESH_DISPLACEMENT1 + l;
-      if (pd->v[var]) {
-	      for (j=0; j<ei->dof[var]; j++) {
+      if (pd->v[pg->imtrx][var]) {
+	      for (j=0; j<ei[pg->imtrx]->dof[var]; j++) {
           gradIIP_dot_bound_normal = 0.0;
           dgradIIP_dmesh_dot_bound_normal = 0.0;
           gradIIP_dot_dbound_normal_dmesh = 0.0;
@@ -1783,8 +1858,8 @@ shell_n_dot_liq_velo_bc_tfmp(double func[DIM],
 
     for (l = 0; l<DIM; l++) {
       var = SHELL_NORMAL1 + l;
-      if (pd->v[var]) {
-        for (j=0; j<ei->dof[var]; j++) {
+      if (pd->v[pg->imtrx][var]) {
+        for (j=0; j<ei[pg->imtrx]->dof[var]; j++) {
           gradIIP_dot_bound_normal = 0.0;
           // AMCTODO - is bound_normal sensitive to normal?
           // for ds: no
@@ -1892,8 +1967,8 @@ shell_num_diff_bc_tfmp(double func[DIM],
   /* Calculate Jacobian contributions */
   if (af->Assemble_Jacobian) {
     var = TFMP_SAT;
-    if (pd->v[var]) {
-      for (j=0; j<ei->dof[var]; j++) {
+    if (pd->v[pg->imtrx][var]) {
+      for (j=0; j<ei[pg->imtrx]->dof[var]; j++) {
         ShellBF( var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
         gradS_dot_n = 0.0;
         gradphi_j_dot_n= 0.0;
@@ -1972,7 +2047,7 @@ shell_tfmp_avg_plate_velo_liq(double func[DIM],
       for(k = 0; k < pd->Num_Dim; k++) {
         bound_normal[k] = fv->snormal[k];
         for (l = 0; l<DIM; l++) {
-          for (j = 0; j <ei->dof[MESH_DISPLACEMENT1]; j++) {
+          for (j = 0; j <ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; j++) {
             dbound_normal_dx[k][l][j] = fv->dsnormal_dx[k][l][j];
           }
         }
@@ -2040,7 +2115,7 @@ shell_tfmp_avg_plate_velo_liq(double func[DIM],
 
   velocity_function_model(veloU, veloL, time, delta_t);
 
-  for (k=0; k<ei->ielem_dim; k++) {
+  for (k=0; k<ei[pg->imtrx]->ielem_dim; k++) {
     v_avg[k] = (veloU[k] + veloL[k])/2.;
   }
   v_avg[2] = 0.0;
@@ -2057,8 +2132,8 @@ shell_tfmp_avg_plate_velo_liq(double func[DIM],
   if (af->Assemble_Jacobian) {
     
     var = TFMP_SAT;
-    if (pd->v[var]) {
-      for (j=0; j<ei->dof[var]; j++) {
+    if (pd->v[pg->imtrx][var]) {
+      for (j=0; j<ei[pg->imtrx]->dof[var]; j++) {
         phi_j = bf[var]->phi[j];
         for (k=0; k<DIM; k++) {
           d_func[0][var][j] += bound_normal[k]*v_avg[k]*h*phi_j;
@@ -2068,15 +2143,15 @@ shell_tfmp_avg_plate_velo_liq(double func[DIM],
 
     for (l=0; l<DIM; l++) {
       var = MESH_DISPLACEMENT1 + l;
-      if (pd->v[var]) {
+      if (pd->v[pg->imtrx][var]) {
 
-        for (j=0; j<ei->dof[var]; j++) {
+        for (j=0; j<ei[pg->imtrx]->dof[var]; j++) {
           d_func[0][var][j] += n_dot_v_avg*S*dh_dmesh[l][j];
         }
       }
       var = SHELL_NORMAL1 + l;
-      if (pd->v[var]) {
-        for (j=0; j<ei->dof[var]; j++) {
+      if (pd->v[pg->imtrx][var]) {
+        for (j=0; j<ei[pg->imtrx]->dof[var]; j++) {
           d_func[0][var][j] += n_dot_v_avg*S*dh_dnormal[l][j];
         }
       }
@@ -2160,8 +2235,8 @@ shell_tfmp_n_dot_grad_s(double func[DIM],
   if (af->Assemble_Jacobian) {
 
     var = TFMP_SAT;
-    if (pd->v[var]) {
-      for (j=0; j<ei->dof[var]; j++) {
+    if (pd->v[pg->imtrx][var]) {
+      for (j=0; j<ei[pg->imtrx]->dof[var]; j++) {
         ShellBF( var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
         gradphi_j_dot_n= 0.0;
         for (k=0; k<DIM; k++) {
@@ -2173,8 +2248,8 @@ shell_tfmp_n_dot_grad_s(double func[DIM],
 
     for (l=0; l<DIM; l++) {
       var = SHELL_NORMAL1 + l;
-      if (pd->v[var]) {
-        for (j=0; j<ei->dof[var]; j++) {
+      if (pd->v[pg->imtrx][var]) {
+        for (j=0; j<ei[pg->imtrx]->dof[var]; j++) {
           ShellBF( var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
           for (k=0; k<DIM; k++) {
             d_func[0][var][j] += phi_j*gradII_S[k];
@@ -2252,7 +2327,7 @@ shell_n_dot_gas_velo_bc_tfmp(double func[DIM],
       for(k = 0; k < pd->Num_Dim; k++) {
         bound_normal[k] = fv->snormal[k];
         for (l = 0; l<DIM; l++) {
-          for (j = 0; j <ei->dof[MESH_DISPLACEMENT1]; j++) {
+          for (j = 0; j <ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; j++) {
             dbound_normal_dx[k][l][j] = fv->dsnormal_dx[k][l][j];
           }
         }
@@ -2352,21 +2427,21 @@ shell_n_dot_gas_velo_bc_tfmp(double func[DIM],
 
     double *grad;
 
-    if (pd->Num_Dim == 2 && ei->ielem_type == LINEAR_BAR) {
+    if (pd->Num_Dim == 2 && ei[pg->imtrx]->ielem_type == LINEAR_BAR) {
       // only one dimension to integrate over, s.
       var = TFMP_PRES;
       grad = gradII_P;
 
       memset (grad, 0.0, sizeof(double)*DIM);
       memset (csigrad, 0.0, sizeof(double)*DIM);
-      for (int i=0; i<ei->dof[var]; i++) {
+      for (int i=0; i<ei[pg->imtrx]->dof[var]; i++) {
         csigrad[0] += *esp->tfmp_pres[i]*bf[var]->dphidxi[i][0];
       }
 
       grad[0] = csigrad[0]/det_J;
 
       for (int k=0; k<DIM; k++) {
-        for (int i=0; i<ei->dof[var]; i++){
+        for (int i=0; i<ei[pg->imtrx]->dof[var]; i++){
           dgradII_P_dmesh[0][k][i] = csigrad[0]*(-1.0)/det_J/det_J*d_det_J_dmeshkj[k][i];
         }
       }
@@ -2388,8 +2463,8 @@ shell_n_dot_gas_velo_bc_tfmp(double func[DIM],
   /* Calculate Jacobian contributions */
   if (af->Assemble_Jacobian) {
     var = TFMP_PRES;
-    if (pd->v[var]) {
-      for (j=0; j<ei->dof[var]; j++) {
+    if (pd->v[pg->imtrx][var]) {
+      for (j=0; j<ei[pg->imtrx]->dof[var]; j++) {
 	      ShellBF(var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map);
         n_dot_grad_phi_j = 0.0;
         for (k=0; k<DIM; k++) {
@@ -2401,8 +2476,8 @@ shell_n_dot_gas_velo_bc_tfmp(double func[DIM],
     }
 
     var = TFMP_SAT;
-    if (pd->v[var]) {
-      for (j=0; j<ei->dof[var]; j++) {
+    if (pd->v[pg->imtrx][var]) {
+      for (j=0; j<ei[pg->imtrx]->dof[var]; j++) {
         ShellBF(var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map);
         n_dot_grad_P = 0.0;
         for (k=0; k<DIM; k++) {
@@ -2417,8 +2492,8 @@ shell_n_dot_gas_velo_bc_tfmp(double func[DIM],
 
     for (l = 0; l<DIM; l++) {
       var = MESH_DISPLACEMENT1 + l;
-      if (pd->v[var]) {
-        for (j=0; j<ei->dof[var]; j++) {
+      if (pd->v[pg->imtrx][var]) {
+        for (j=0; j<ei[pg->imtrx]->dof[var]; j++) {
           gradIIP_dot_bound_normal = 0.0;
           dgradIIP_dmesh_dot_bound_normal = 0.0;
           gradIIP_dot_dbound_normal_dmesh = 0.0;
@@ -2441,8 +2516,8 @@ shell_n_dot_gas_velo_bc_tfmp(double func[DIM],
 
     for (l = 0; l<DIM; l++) {
       var = SHELL_NORMAL1 + l;
-      if (pd->v[var]) {
-        for (j=0; j<ei->dof[var]; j++) {
+      if (pd->v[pg->imtrx][var]) {
+        for (j=0; j<ei[pg->imtrx]->dof[var]; j++) {
           gradIIP_dot_bound_normal = 0.0;
           // AMCTODO - is bound_normal sensitive to normal?
           for (k = 0; k<DIM; k++) {
@@ -2553,21 +2628,21 @@ shell_lubrication_outflow(
 
     double *grad;
 
-    if (pd->Num_Dim == 2 && ei->ielem_type == LINEAR_BAR) {
+    if (pd->Num_Dim == 2 && ei[pg->imtrx]->ielem_type == LINEAR_BAR) {
       // only one dimension to integrate over, s.
       var = TFMP_PRES;
       grad = gradII_P;
 
       memset (grad, 0.0, sizeof(double)*DIM);
       memset (csigrad, 0.0, sizeof(double)*DIM);
-      for (int i=0; i<ei->dof[var]; i++) {
+      for (int i=0; i<ei[pg->imtrx]->dof[var]; i++) {
         csigrad[0] += *esp->tfmp_pres[i]*bf[var]->dphidxi[i][0];
       }
 
       grad[0] = csigrad[0]/det_J;
 
       for (int k=0; k<DIM; k++) {
-        for (int i=0; i<ei->dof[var]; i++){
+        for (int i=0; i<ei[pg->imtrx]->dof[var]; i++){
           dgradII_P_dmesh[0][k][i] = csigrad[0]*(-1.0)/det_J/det_J*d_det_J_dmeshkj[k][i];
         }
       }
@@ -2577,14 +2652,14 @@ shell_lubrication_outflow(
       grad = gradII_curv;
       memset (grad, 0.0, sizeof(double)*DIM);
       memset (csigrad, 0.0, sizeof(double)*DIM);
-      for (int i=0; i<ei->dof[var]; i++) {
+      for (int i=0; i<ei[pg->imtrx]->dof[var]; i++) {
         csigrad[0] += *esp->sh_K[i]*bf[var]->dphidxi[i][0];
       }
 
       grad[0] = csigrad[0]/det_J;
 
       for (int k=0; k<DIM; k++) {
-        for (int i=0; i<ei->dof[var]; i++){
+        for (int i=0; i<ei[pg->imtrx]->dof[var]; i++){
           dgradII_curv_dmesh[0][k][i] = csigrad[0]*(-1.0)/det_J/det_J*d_det_J_dmeshkj[k][i];
         }
       }
@@ -2603,32 +2678,32 @@ shell_lubrication_outflow(
   if (af->Assemble_Jacobian) {
     var = TFMP_PRES;
 
-    for (int j=0; j<ei->dof[var]; j++) {
+    for (int j=0; j<ei[pg->imtrx]->dof[var]; j++) {
       ShellBF(var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map);
       //d_func[0][var][j] += scale_factor*h*(-h*h/12.0f/mu_l*gradII_phi_j[0]);
       d_func[0][var][j] = -h*h*h/12.0/mu_l*gradII_phi_j[0];
     }
 
     var = SHELL_CURVATURE;
-    for (int j=0; j<ei->dof[var]; j++) {
+    for (int j=0; j<ei[pg->imtrx]->dof[var]; j++) {
       ShellBF(var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map);
       //d_func[0][var][j] += scale_factor*h*(-h*h/12.0/mu_l*fv->sh_tens*gradII_phi_j[0]);
     }
     var = SHELL_TENSION;
-    for (int j=0; j<ei->dof[var]; j++) {
+    for (int j=0; j<ei[pg->imtrx]->dof[var]; j++) {
       //ShellBF(var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map);
       //d_func[0][var][j] += scale_factor*h*(-h*h/12.0/mu_l*phi_j*gradII_curv[0]);
     }
     for (int l=0; l<pd->Num_Dim; l++) {
       var = MESH_DISPLACEMENT1 + l;
-      for (int j=0; j<ei->dof[var]; j++) {
+      for (int j=0; j<ei[pg->imtrx]->dof[var]; j++) {
         ShellBF(var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map);
         //d_func[0][var][j] += -scale_factor*3.0*h*h*dh_dmesh[l][j]/12.0/mu_l*gradII_P[0];
         d_func[0][var][j] += -h*h*dh_dmesh[l][j]/4.0/mu_l*gradII_P[0];
         d_func[0][var][j] += -h*h*h/12.0/mu_l*dgradII_P_dmesh[0][l][j];
       }
       var = SHELL_NORMAL1 + l;
-      for (int j=0; j<ei->dof[var]; j++) {
+      for (int j=0; j<ei[pg->imtrx]->dof[var]; j++) {
         ShellBF(var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map);
         //d_func[0][var][j] += -scale_factor*3.0*h*h*dh_dnormal[l][j]/12.0/mu_l*gradII_P[0];
         d_func[0][var][j] += -h*h*dh_dnormal[l][j]/4.0/mu_l*gradII_P[0];
@@ -2696,7 +2771,7 @@ shell_tfmp_avg_plate_velo_gas(double func[DIM],
     bound_normal[k] = fv->snormal[k];
     /*
     for (l = 0; l<DIM; l++) {
-      for (j = 0; j <ei->dof[MESH_DISPLACEMENT1]; j++) {
+      for (j = 0; j <ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; j++) {
 	      dbound_normal_dx[k][l][j] = fv->dsnormal_dx[k][l][j];
       }
     }
@@ -2770,8 +2845,8 @@ shell_tfmp_avg_plate_velo_gas(double func[DIM],
   double d_gradII_phi_j_dmesh[DIM][DIM][MDE];
   if (af->Assemble_Jacobian) {
     var = TFMP_SAT;
-    if (pd->v[var]) {
-      for (j=0; j<ei->dof[var]; j++) {
+    if (pd->v[pg->imtrx][var]) {
+      for (j=0; j<ei[pg->imtrx]->dof[var]; j++) {
         ShellBF(var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map);
         for (k=0; k<DIM; k++) {
           d_func[0][var][j] += -bound_normal[k]*v_avg[k]*h*phi_j;
@@ -2781,16 +2856,16 @@ shell_tfmp_avg_plate_velo_gas(double func[DIM],
 
     for (l=0; l<DIM; l++) {
       var = MESH_DISPLACEMENT1 + l;
-      if (pd->v[var]) {
-        for (j=0; j<ei->dof[var]; j++) {
+      if (pd->v[pg->imtrx][var]) {
+        for (j=0; j<ei[pg->imtrx]->dof[var]; j++) {
           for (k=0; k<DIM; k++) {
             d_func[0][var][j] += bound_normal[k]*v_avg[k]*(1.0 - S)*dh_dmesh[k][j];
           }
         }
       }
       var = SHELL_NORMAL1 + l;
-      if (pd->v[var]) {
-        for (j=0; j<ei->dof[var]; j++) {
+      if (pd->v[pg->imtrx][var]) {
+        for (j=0; j<ei[pg->imtrx]->dof[var]; j++) {
           for (k=0; k<DIM; k++) {
             d_func[0][var][j] += bound_normal[k]*v_avg[k]*(1.0 - S)*dh_dnormal[k][j];
           }
@@ -2857,14 +2932,14 @@ apply_sdet(double func[DIM],
 
             if (af->Assemble_Jacobian) {
               var = MESH_DISPLACEMENT1;
-              if (pd->v[var]) {
-                for (j=0; j<ei->dof[var]; j++) {
+              if (pd->v[pg->imtrx][var]) {
+                for (j=0; j<ei[pg->imtrx]->dof[var]; j++) {
                   d_func[0][var][j] += factor*det_J*d_det_J_dmeshkj[0][j];
                 }
               }
               var = MESH_DISPLACEMENT2;
-              if (pd->v[var]) {
-                for (j=0; j<ei->dof[var]; j++) {
+              if (pd->v[pg->imtrx][var]) {
+                for (j=0; j<ei[pg->imtrx]->dof[var]; j++) {
                   d_func[0][var][j] += factor*det_J*d_det_J_dmeshkj[1][j];
                 }
               }
@@ -2931,9 +3006,9 @@ apply_sh_weak(double func[DIM],
 
   memset(d_sh_y_dcsi_dmesh, 0.0, sizeof(double)*DIM*MDE);
 
-  for (i=0; i< ei->dof[eqn]; i++) {
-    node = ei->dof_list[R_MESH2][i];
-    index = Proc_Elem_Connect[ei->iconnect_ptr + node];
+  for (i=0; i< ei[pg->imtrx]->dof[eqn]; i++) {
+    node = ei[pg->imtrx]->dof_list[R_MESH2][i];
+    index = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + node];
     d_phi_dcsi[i] = bf[eqn]->dphidxi[i][0];
     d_sh_y_dcsi += (Coor[1][index] + *esp->d[1][i]) * d_phi_dcsi[i];
 
@@ -2957,8 +3032,8 @@ apply_sh_weak(double func[DIM],
   
   if (af->Assemble_Jacobian) {
     var = MESH_DISPLACEMENT1;
-    if (pd->v[var]) {
-      for (j=0; j<ei->dof[var]; j++) {
+    if (pd->v[pg->imtrx][var]) {
+      for (j=0; j<ei[pg->imtrx]->dof[var]; j++) {
         if (dy_ds == 0.0) {
           d_func[0][var][j] += d_sh_y_dcsi/det_J/det_J*d_det_J_dmeshkj[0][j];
         } else { // use input value (not sensitive to anything)
@@ -2968,8 +3043,8 @@ apply_sh_weak(double func[DIM],
       }
     }
     var = MESH_DISPLACEMENT2;
-    if (pd->v[var]) {
-      for (j=0; j<ei->dof[var]; j++) {
+    if (pd->v[pg->imtrx][var]) {
+      for (j=0; j<ei[pg->imtrx]->dof[var]; j++) {
         if (dy_ds == 0.0) {
           d_func[0][var][j] +=  d_sh_y_dcsi/det_J/det_J*d_det_J_dmeshkj[1][j];
           d_func[0][var][j] +=  -d_phi_dcsi[j]/det_J;

@@ -55,7 +55,7 @@
  * Modified: 1998/12/18 09:57 MST pasacki@sandia.gov
  */
 
-#define _RD_EXO_C
+#define GOMA_RD_EXO_C
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -97,8 +97,8 @@ static const int spc = sizeof(char *);
 static const int spi = sizeof(int *);
 static const int spd = sizeof(dbl *);
 
-static Spfrtn sr;			/* sprintf() return type */
-int 
+extern Spfrtn sr;			/* sprintf() return type */
+int
 rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
        const char *fn,
        const int verbosity,

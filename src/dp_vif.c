@@ -76,7 +76,7 @@ static char rcsid[] = "$Id: dp_vif.c,v 5.24 2010-07-21 16:39:26 hkmoffa Exp $";
 
 #include "rf_solver.h"
 
-#define _DP_VIF_C
+#define GOMA_DP_VIF_C
 #include "goma.h"
 
 #ifndef CDIM
@@ -102,7 +102,7 @@ extern DDD Noahs_Ark;
  */
 
 void 
-noahs_raven()
+noahs_raven(void)
 {
 #ifdef PARALLEL
   DDD n;
@@ -151,6 +151,7 @@ noahs_raven()
   ddd_add_member(n, &nn_post_data_sens, 1, MPI_INT);
   ddd_add_member(n, &nn_volume, 1, MPI_INT );
   ddd_add_member(n, &nn_global, 1, MPI_INT);
+  ddd_add_member(n, &nn_average, 1, MPI_INT);
   ddd_add_member(n, &Chemkin_Needed, 1, MPI_INT);
   ddd_add_member(n, &efv->ev, 1, MPI_INT);
   ddd_add_member(n, &LOCA_UMF_ID, 1, MPI_INT);
@@ -185,7 +186,7 @@ noahs_raven()
  */
 
 void 
-raven_landing()
+raven_landing(void)
 {
   int i;
   int m;
@@ -391,14 +392,24 @@ raven_landing()
   if ( nn_global > 0 )
     {
       pp_global = (struct Post_Processing_Global **)
-	array_alloc(1, nn_global, sizeof(struct Post_Processing_Global *));
+       array_alloc(1, nn_global, sizeof(struct Post_Processing_Global *));
       for ( i = 0; i < nn_global; i++)
 	{
 	  pp_global[i] = (struct Post_Processing_Global *)
-	    array_alloc(1, 1, sizeof(struct Post_Processing_Global));
+		    array_alloc(1, 1, sizeof(struct Post_Processing_Global));
 	}
     }
 
+  if ( nn_average > 0 )
+    {
+      pp_average = (struct Post_Processing_Averages **)
+       array_alloc(1, nn_average, sizeof(struct Post_Processing_Averages *));
+      for ( i = 0; i < nn_average; i++)
+        {
+          pp_average[i] = (struct Post_Processing_Averages *)
+                    array_alloc(1, 1, sizeof(struct Post_Processing_Averages));
+        }
+    }
   /*
    * Zienkewicz-Zhu error measures.
    */
@@ -584,7 +595,7 @@ raven_landing()
  */
 
 void 
-noahs_ark()
+noahs_ark(void)
 {
 #ifdef PARALLEL
   int i;
@@ -707,6 +718,7 @@ noahs_ark()
 
 
   ddd_add_member(n, &tran->MaxTimeSteps, 1, MPI_INT);
+  ddd_add_member(n, &tran->MaxSteadyStateSteps, 1, MPI_INT);
 #ifndef COUPLED_FILL
   ddd_add_member(n, &tran->exp_subcycle, 1, MPI_INT);
 #endif /* not COUPLED_FILL */
@@ -742,7 +754,8 @@ noahs_ark()
   ddd_add_member(n, &tran->resolved_delta_t_min, 1, MPI_DOUBLE);
   ddd_add_member(n, &tran->Courant_Limit, 1, MPI_DOUBLE);
   ddd_add_member(n, &tran->Restart_Time_Integ_After_Renorm, 1, MPI_INT);
-
+  ddd_add_member(n, &tran->steady_state_tolerance, 1, MPI_DOUBLE);
+  ddd_add_member(n, &tran->march_to_steady_state, 1, MPI_INT);
 
   /*
    * Solver stuff
@@ -784,7 +797,7 @@ noahs_ark()
   ddd_add_member(n, Matrix_Relative_Threshold, MAX_CHAR_IN_INPUT, MPI_CHAR);
   ddd_add_member(n, Matrix_Absolute_Threshold, MAX_CHAR_IN_INPUT, MPI_CHAR);
   ddd_add_member(n, Amesos_Package, MAX_CHAR_IN_INPUT, MPI_CHAR);
-  ddd_add_member(n, Stratimikos_File, MAX_CHAR_IN_INPUT, MPI_CHAR);
+  ddd_add_member(n, Stratimikos_File, MAX_CHAR_IN_INPUT*MAX_NUM_MATRICES, MPI_CHAR);
 
   ddd_add_member(n, &Linear_Solver, 1, MPI_INT);
 
@@ -803,7 +816,7 @@ noahs_ark()
   ddd_add_member(n, &modified_newton, 1, MPI_INT);
   ddd_add_member(n, &convergence_rate_tolerance, 1, MPI_DOUBLE);
   ddd_add_member(n, &modified_newt_norm_tol, 1, MPI_DOUBLE);
-  ddd_add_member(n, Epsilon, 3, MPI_DOUBLE);
+  ddd_add_member(n, Epsilon, MAX_NUM_MATRICES*3, MPI_DOUBLE);
 
   /*
    * Eigensolver inputs.
@@ -945,6 +958,8 @@ noahs_ark()
 
       ddd_add_member(n, &BC_Types[i].BC_Desc_index, 1, MPI_INT);            
       ddd_add_member(n, &BC_Types[i].index_dad, 1, MPI_INT);            
+      ddd_add_member(n, &BC_Types[i].equation, 1, MPI_INT);
+      ddd_add_member(n, &BC_Types[i].matrix, 1, MPI_INT);
       ddd_add_member(n, &BC_Types[i].species_eq, 1, MPI_INT);            
 
       ddd_add_member(n, &BC_Types[i].BC_relax, 1, MPI_DOUBLE);            
@@ -1116,12 +1131,12 @@ noahs_ark()
   /*
    * Broadcast the Uniform_Problem_Description Information
    */
-  ddd_add_member(n, &upd->Total_Num_EQ, 1, MPI_INT);
-  ddd_add_member(n, &upd->Total_Num_Var, 1, MPI_INT);
+  ddd_add_member(n, &upd->Total_Num_EQ, MAX_NUM_MATRICES, MPI_INT);
+  ddd_add_member(n, &upd->Total_Num_Var, MAX_NUM_MATRICES, MPI_INT);
   ddd_add_member(n, &upd->CoordinateSystem, 1, MPI_INT);
   ddd_add_member(n, &upd->Num_Dim, 1, MPI_INT);
-  ddd_add_member(n, upd->vp, MAX_VARIABLE_TYPES+MAX_CONC, MPI_INT);
-  ddd_add_member(n, upd->ep, MAX_VARIABLE_TYPES+MAX_CONC, MPI_INT);
+  ddd_add_member(n, upd->vp, MAX_NUM_MATRICES * (MAX_VARIABLE_TYPES+MAX_CONC), MPI_INT);
+  ddd_add_member(n, upd->ep, MAX_NUM_MATRICES * (MAX_VARIABLE_TYPES+MAX_CONC), MPI_INT);
   ddd_add_member(n, &upd->Max_Num_Species, 1, MPI_INT);
   ddd_add_member(n, &upd->Max_Num_Species_Eqn, 1, MPI_INT);
   ddd_add_member(n, &upd->Tot_Num_VolSpecies, 1, MPI_INT);
@@ -1134,18 +1149,27 @@ noahs_ark()
   ddd_add_member(n, &upd->Acoustic_Frequency, 1, MPI_DOUBLE);            
   ddd_add_member(n, &upd->Light_Cosmu, 1, MPI_DOUBLE);            
 
+  ddd_add_member(n, pg->time_step_control_disabled, MAX_NUM_MATRICES, MPI_INT);
+  ddd_add_member(n, pg->matrix_subcycle_count, MAX_NUM_MATRICES, MPI_INT);
+  ddd_add_member(n, upd->matrix_index, MAX_EQNS, MPI_INT);
+
+
   for (i = 0; i < upd->Num_Mat; i++)
     {
+      int imtrx;
+      ddd_add_member(n, &pd_glob[i]->Num_EQ, MAX_NUM_MATRICES, MPI_INT);
+      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+        ddd_add_member(n, pd_glob[i]->e[imtrx], MAX_EQNS, MPI_INT);
+        ddd_add_member(n, pd_glob[i]->v[imtrx], MAX_EQNS, MPI_INT);
+        ddd_add_member(n, pd_glob[i]->w[imtrx], MAX_EQNS, MPI_INT);
+        ddd_add_member(n, pd_glob[i]->i[imtrx], MAX_EQNS, MPI_INT);
+        ddd_add_member(n, pd_glob[i]->m[imtrx], MAX_EQNS, MPI_INT);
+        ddd_add_member(n, pd_glob[i]->gv, MAX_EQNS, MPI_INT);
+        ddd_add_member(n, pd_glob[i]->mi, MAX_EQNS, MPI_INT);
 
-      ddd_add_member(n, &pd_glob[i]->Num_EQ, 1, MPI_INT);
-
-      ddd_add_member(n, pd_glob[i]->e, MAX_EQNS, MPI_INT);
-      ddd_add_member(n, pd_glob[i]->v, MAX_EQNS, MPI_INT);
-      ddd_add_member(n, pd_glob[i]->w, MAX_EQNS, MPI_INT);
-      ddd_add_member(n, pd_glob[i]->i, MAX_EQNS, MPI_INT);
-      ddd_add_member(n, pd_glob[i]->m, MAX_EQNS, MPI_INT);
-      ddd_add_member(n, &pd_glob[i]->etm[0][0], MAX_EQNS*MAX_TERM_TYPES, 
+        ddd_add_member(n, &pd_glob[i]->etm[imtrx][0][0], MAX_EQNS*MAX_TERM_TYPES, 
 		     MPI_DOUBLE);
+      }
       /*  pd_glob[i]->CoordinateSystem  is already assigned */
       ddd_add_member(n, &pd_glob[i]->MeshMotion, 1, MPI_INT);
       ddd_add_member(n, &pd_glob[i]->MeshInertia, 1, MPI_INT);
@@ -1479,6 +1503,13 @@ noahs_ark()
       ddd_add_member(n, &ls->Periodic_Plane_Loc, 6,  MPI_DOUBLE);  
       ddd_add_member(n, &ls->PSPP_filter, 1,      MPI_INT);
       ddd_add_member(n, &ls->Sat_Hyst_Renorm_Lockout, 1,  MPI_INT);
+      ddd_add_member(n, &ls->SubcyclesAfterRenorm, 1,  MPI_INT);
+      ddd_add_member(n, &ls->ghost_stress, 1, MPI_INT);
+      ddd_add_member(n, &ls->Toure_Penalty, 1, MPI_INT);
+      ddd_add_member(n, &ls->YZbeta, 1, MPI_INT);
+      ddd_add_member(n, &ls->YZbeta_scale, 1, MPI_DOUBLE);
+      ddd_add_member(n, &ls->Huygens_Freeze_Nodes, 1, MPI_INT);
+      ddd_add_member(n, &ls->Semi_Implicit_Integration, 1, MPI_INT);
     }
 
   if ( pfd != NULL )
@@ -1557,9 +1588,38 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->FlowingLiquid_viscosity, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->Inertia_coefficient, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->Spwt_func, 1, MPI_DOUBLE);
+
+      ddd_add_member(n, &mp_glob[i]->SpSSPG_funcModel, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->SpSSPG_func, 1, MPI_DOUBLE);
+
+      ddd_add_member(n, &mp_glob[i]->SpYZbeta_funcModel, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->SpYZbeta_func, 1, MPI_DOUBLE);
+      ddd_add_member(n, &mp_glob[i]->SpYZbeta_value, 1, MPI_DOUBLE);
+
       ddd_add_member(n, &mp_glob[i]->Porous_wt_func, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->Volume_Expansion, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->current_source, 1, MPI_DOUBLE);
+
+      ddd_add_member(n, &mp_glob[i]->Momentwt_funcModel, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->Momentwt_func, 1, MPI_DOUBLE);
+
+
+      ddd_add_member(n, &mp_glob[i]->MomentSSPG_funcModel, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->MomentSSPG_func, 1, MPI_DOUBLE);
+
+
+      ddd_add_member(n, &mp_glob[i]->MomentShock_funcModel, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->MomentShock_func, 1, MPI_DOUBLE);
+      ddd_add_member(n, &mp_glob[i]->MomentShock_Ref, MAX_MOMENTS, MPI_DOUBLE);
+
+
+      ddd_add_member(n, &mp_glob[i]->MomentSecondLevelSetDiffusivityModel, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->MomentSecondLevelSetDiffusivity, 1, MPI_DOUBLE);
+
+      ddd_add_member(n, &mp_glob[i]->MomentLevelSetDiffusionOnly, 1, MPI_INT);
+
+
+      ddd_add_member(n, &mp_glob[i]->moment_source, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->density, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->electrical_conductivity, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->permittivity, 1, MPI_DOUBLE);
@@ -1599,6 +1659,7 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->viscosity, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->dilationalViscosity, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->dilationalViscosityRatio, 1, MPI_DOUBLE);
+      ddd_add_member(n, &mp_glob[i]->dilationalViscosityMultiplier, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->volumeFractionGas, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->reaction_rate, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->solution_temperature, 1, MPI_DOUBLE);
@@ -1638,12 +1699,19 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->light_absorption,1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->extinction_index,1, MPI_DOUBLE);
 
+      ddd_add_member(n, &mp_glob[i]->moment_coalescence_model, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->moment_coalescence_scale, 1, MPI_DOUBLE);
+      ddd_add_member(n, &mp_glob[i]->moment_growth_model, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->moment_growth_scale, 1, MPI_DOUBLE);
+      ddd_add_member(n, &mp_glob[i]->moment_growth_reference_pressure, 1, MPI_DOUBLE);
+
       ddd_add_member(n, &mp_glob[i]->CapStress, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->ConductivityModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->Ewt_funcModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->Rst_funcModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->Mwt_funcModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->CurrentSourceModel, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->MomentSourceModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->HeightUFunctionModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->HeightLFunctionModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->VeloUFunctionModel, 1, MPI_INT);
@@ -1712,6 +1780,7 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->Light_AbsorptionModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->Shell_User_ParModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->PermittivityModel, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->PBE_BA_Type, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->SBM_Length_enabled, 1, MPI_INT);
 
 
@@ -1745,6 +1814,8 @@ noahs_ark()
       ddd_add_member(n, mp_glob[i]->d_Volume_Expansion,
 		     MAX_VARIABLE_TYPES + MAX_CONC, MPI_DOUBLE);
       ddd_add_member(n, mp_glob[i]->d_current_source,
+		     MAX_VARIABLE_TYPES + MAX_CONC, MPI_DOUBLE);
+      ddd_add_member(n, mp_glob[i]->d_moment_source,
 		     MAX_VARIABLE_TYPES + MAX_CONC, MPI_DOUBLE);
       ddd_add_member(n, mp_glob[i]->d_density,
 		     MAX_VARIABLE_TYPES + MAX_CONC, MPI_DOUBLE);
@@ -1887,6 +1958,7 @@ noahs_ark()
 
       ddd_add_member(n, &mp_glob[i]->len_u_Volume_Expansion, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->len_u_current_source, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->len_u_moment_source, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->len_u_density, 1, MPI_INT);   
       ddd_add_member(n, &mp_glob[i]->len_u_electrical_conductivity, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->len_u_permittivity, 1, MPI_INT);
@@ -1988,6 +2060,10 @@ noahs_ark()
       ddd_add_member(n, mp_glob[i]->SpecVolExpModel, MAX_CONC, MPI_INT);
       ddd_add_member(n, mp_glob[i]->SpeciesSourceModel, MAX_CONC, MPI_INT);
       ddd_add_member(n, mp_glob[i]->SpeciesTimeIntegration, MAX_CONC, MPI_INT);
+      ddd_add_member(n, mp_glob[i]->SpeciesOnlyDiffusion, MAX_CONC, MPI_INT);
+
+      ddd_add_member(n, mp_glob[i]->SpeciesSecondLevelSetDiffusivity, MAX_CONC, MPI_DOUBLE);
+
       ddd_add_member(n, mp_glob[i]->FreeVolSolvent, MAX_CONC, MPI_INT);
       ddd_add_member(n, mp_glob[i]->VaporPressureModel, MAX_CONC, MPI_INT);
       ddd_add_member(n, mp_glob[i]->AdvectiveScalingModel, MAX_CONC, MPI_INT);
@@ -2206,6 +2282,10 @@ noahs_ark()
 	  ddd_add_member(n, &mp_glob[i]->mp2nd->heatcapacity, 1, MPI_DOUBLE);
 	  ddd_add_member(n, &mp_glob[i]->mp2nd->heatcapacitymask[0], 2, MPI_INT);
 
+	  ddd_add_member(n, &mp_glob[i]->mp2nd->HeatSourceModel, 1, MPI_INT);
+	  ddd_add_member(n, &mp_glob[i]->mp2nd->heatsource, 1, MPI_DOUBLE);
+	  ddd_add_member(n, &mp_glob[i]->mp2nd->heatsourcemask[0], 2, MPI_INT);
+
 	  ddd_add_member(n, &mp_glob[i]->mp2nd->ThermalConductivityModel, 1, MPI_INT);
 	  ddd_add_member(n, &mp_glob[i]->mp2nd->thermalconductivity, 1, MPI_DOUBLE);
 	  ddd_add_member(n, &mp_glob[i]->mp2nd->thermalconductivitymask[0], 2, MPI_INT);
@@ -2237,6 +2317,15 @@ noahs_ark()
 	  ddd_add_member(n, &mp_glob[i]->mp2nd->ExtinctionIndexModel, 1, MPI_INT);
 	  ddd_add_member(n, &mp_glob[i]->mp2nd->extinctionindex, 1, MPI_DOUBLE);
 	  ddd_add_member(n, &mp_glob[i]->mp2nd->extinctionindexmask[0], 2, MPI_INT);
+	  int w;
+	  for (w = 0; w < MAX_CONC; w++) {
+	    ddd_add_member(n, &mp_glob[i]->mp2nd->SpeciesSourceModel[w], 1, MPI_INT);
+	    ddd_add_member(n, &mp_glob[i]->mp2nd->speciessource[w], 1, MPI_DOUBLE);
+	    ddd_add_member(n, &mp_glob[i]->mp2nd->speciessourcemask[0][w], 1, MPI_INT);
+	    ddd_add_member(n, &mp_glob[i]->mp2nd->speciessourcemask[1][w], 1, MPI_INT);
+	    ddd_add_member(n, &mp_glob[i]->mp2nd->use_species_source_width[w], 1, MPI_INT);
+	    ddd_add_member(n, &mp_glob[i]->mp2nd->species_source_width[w], 1, MPI_DOUBLE);
+	  }
 	}
 
       /*
@@ -2283,6 +2372,7 @@ noahs_ark()
 	  ddd_add_member(n, &ve_glob[i][mode]->gn->ConstitutiveEquation, 1, MPI_INT);
 	  ddd_add_member(n, &ve_glob[i][mode]->gn->mu0, 1, MPI_DOUBLE);
 	  ddd_add_member(n, &ve_glob[i][mode]->gn->mu0Model, 1, MPI_INT);
+	  ddd_add_member(n, &ve_glob[i][mode]->gn->pos_ls_mup, 1, MPI_DOUBLE);
 	  ddd_add_member(n, &ve_glob[i][mode]->gn->nexp, 1, MPI_DOUBLE);
 	  ddd_add_member(n, &ve_glob[i][mode]->gn->nexpModel, 1, MPI_INT);
 	  ddd_add_member(n, &ve_glob[i][mode]->gn->muinf, 1, MPI_DOUBLE);
@@ -2330,6 +2420,11 @@ noahs_ark()
 	  ddd_add_member(n, &ve_glob[i][mode]->xiModel, 1, MPI_INT);
 	  ddd_add_member(n, &ve_glob[i][mode]->eps, 1, MPI_DOUBLE);
 	  ddd_add_member(n, &ve_glob[i][mode]->epsModel, 1, MPI_INT);
+
+	  ddd_add_member(n, &ve_glob[i][mode]->pos_ls.time_const, 1, MPI_DOUBLE);
+	  ddd_add_member(n, &ve_glob[i][mode]->pos_ls.alpha, 1, MPI_DOUBLE);
+	  ddd_add_member(n, &ve_glob[i][mode]->pos_ls.xi, 1, MPI_DOUBLE);
+	  ddd_add_member(n, &ve_glob[i][mode]->pos_ls.eps, 1, MPI_DOUBLE);
 	  
 	}
   
@@ -2553,10 +2648,15 @@ noahs_ark()
   ddd_add_member(n, &DIV_VELOCITY, 1, MPI_INT);
   ddd_add_member(n, &DIV_TOTAL, 1, MPI_INT);
   ddd_add_member(n, &PP_Viscosity, 1, MPI_INT);
+  ddd_add_member(n, &VISCOSITY_BONN, 1, MPI_INT);
   ddd_add_member(n, &PP_FlowingLiquid_Viscosity, 1, MPI_INT);
   ddd_add_member(n, &PP_VolumeFractionGas, 1, MPI_INT);
   ddd_add_member(n, &DENSITY, 1, MPI_INT);
-  ddd_add_member(n, &HEAVISIDE, 1, MPI_INT);
+  ddd_add_member(n, &POLYMER_VISCOSITY, 1, MPI_INT);
+  ddd_add_member(n, &POLYMER_TIME_CONST, 1, MPI_INT);
+  ddd_add_member(n, &MOBILITY_PARAMETER, 1, MPI_INT);
+  ddd_add_member(n, &PTT_XI, 1, MPI_INT);
+  ddd_add_member(n, &PTT_EPSILON, 1, MPI_INT);
   ddd_add_member(n, &NS_RESIDUALS, 1, MPI_INT);
   ddd_add_member(n, &MM_RESIDUALS, 1, MPI_INT);
   ddd_add_member(n, &FLUXLINES, 1, MPI_INT);
@@ -2608,6 +2708,10 @@ noahs_ark()
   ddd_add_member(n, &GIES_CRIT, 1, MPI_INT);
   ddd_add_member(n, &J_FLUX, 1, MPI_INT);
   ddd_add_member(n, &EIG, 1, MPI_INT);
+  ddd_add_member(n, &HEAVISIDE, 1, MPI_INT);
+  ddd_add_member(n, &RHO_DOT, 1, MPI_INT);
+  ddd_add_member(n, &MOMENT_SOURCES, 1, MPI_INT);
+  ddd_add_member(n, &YZBETA, 1, MPI_INT);
   ddd_add_member(n, &EIG1, 1, MPI_INT);
   ddd_add_member(n, &EIG2, 1, MPI_INT);
   ddd_add_member(n, &EIG3, 1, MPI_INT);
@@ -2617,6 +2721,11 @@ noahs_ark()
   ddd_add_member(n, &EXTERNAL_POST, 1, MPI_INT);
   ddd_add_member(n, &SURFACE_VECTORS, 1, MPI_INT);
   ddd_add_member(n, &SHELL_NORMALS, 1, MPI_INT);
+  ddd_add_member(n, &len_u_post_proc, 1, MPI_INT);
+  if ( len_u_post_proc > 0 )
+    {
+      ddd_add_member(n, u_post_proc, len_u_post_proc, MPI_DOUBLE);
+    }  
   ddd_add_member(n, &LAMB_VECTOR, 1, MPI_INT);
   ddd_add_member(n, &Q_FCN, 1, MPI_INT);
   ddd_add_member(n, &POYNTING_VECTORS, 1, MPI_INT);
@@ -2714,6 +2823,20 @@ noahs_ark()
 	  ddd_add_member(n,   pp_global[i]->filenm, MAX_FNL, MPI_CHAR );
 	}
     }
+
+
+    if( nn_average > 0 )
+    {
+      for( i=0; i< nn_average; i++)
+        {
+          ddd_add_member(n, &(pp_average[i]->type), 1, MPI_INT );
+          ddd_add_member(n, &(pp_average[i]->species_index), 1, MPI_INT );
+          ddd_add_member(n, &(pp_average[i]->index), 1, MPI_INT );
+          ddd_add_member(n, &(pp_average[i]->index_post), 1, MPI_INT );
+          ddd_add_member(n, &(pp_average[i]->non_variable_type), 1, MPI_INT );
+          ddd_add_member(n,   pp_average[i]->type_name, MAX_VAR_NAME_LNGTH, MPI_CHAR );
+        }
+    }
 			 
 /*
   if ( nn_error_metrics > 0 )
@@ -2742,7 +2865,7 @@ noahs_ark()
  */
 
 void
-ark_landing()
+ark_landing(void)
 {
   int i;
   int index;
@@ -2941,6 +3064,9 @@ ark_landing()
 
       dalloc( m->len_u_current_source,
 	      m->    u_current_source);
+
+      dalloc( m->len_u_moment_source,
+	      m->    u_moment_source);
 
       dalloc( m->len_u_density,
 	      m->    u_density);
@@ -3297,7 +3423,7 @@ ark_landing()
  */
 
 void 
-noahs_dove()
+noahs_dove(void)
 {
 #ifdef PARALLEL
   int i, j, k;
@@ -3335,6 +3461,9 @@ noahs_dove()
 
     crdv( m->len_u_current_source,
 	  m->    u_current_source);
+
+    crdv( m->len_u_moment_source,
+	  m->    u_moment_source);
 
     crdv( m->len_u_density,
 	    m->    u_density);

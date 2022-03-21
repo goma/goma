@@ -80,7 +80,10 @@
 #include "sl_util_structs.h"
 #include "dp_types.h"
 
-static int First_Call=TRUE;
+#include "mm_as_structs.h"
+#include "mm_as.h"
+
+static int Num_Calls = 0;
 
 /*
  * Initialize one or more Aztec matrix systems. 
@@ -131,6 +134,7 @@ sl_init(unsigned int option_mask,		/* option flag */
   FILE *out;
 #endif /* DEBUG */
   struct Aztec_Linear_Solver_System *A;
+  int imtrx = pg->imtrx;
 
 
   Do_Jacobian      = ( option_mask & 1 );
@@ -148,9 +152,9 @@ sl_init(unsigned int option_mask,		/* option flag */
   out = fopen(logfile, "a");
 #endif /* DEBUG */
 
-  if ( ! First_Call )
+  if ( Num_Calls >= upd->Total_Num_Matrices )
     {
-      EH(-1, "Exactly one call to sl_init() is appropriate.");
+      EH(-1, "Calls should match the number of matrices");
     }
   else
     {
@@ -161,7 +165,7 @@ sl_init(unsigned int option_mask,		/* option flag */
 	  DPRINTF(stderr, "Initializing Aztec for the Jacobian.\n");
 #endif /* DEBUG */
 
-	  A = ams[JAC];					/* Whoa, mule! */
+	  A = ams[imtrx];					/* Whoa, mule! */
 
 	  /* 
 	   * Manual version of AZ_processor_info(). Should work for both
@@ -180,7 +184,7 @@ sl_init(unsigned int option_mask,		/* option flag */
 	   * Number of equations in the matrix that this processor owns.
 	   */
 
-	  A->N_update = num_internal_dofs + num_boundary_dofs; /* Whoa, mule! */
+	  A->N_update = num_internal_dofs[imtrx] + num_boundary_dofs[imtrx]; /* Whoa, mule! */
 	  A->update   = NULL;
 
 	  AZ_defaults(A->options, A->params);
@@ -231,7 +235,7 @@ sl_init(unsigned int option_mask,		/* option flag */
 	      A->data_org[AZ_N_external]  = 0;
 	      A->data_org[AZ_N_neigh]     = 0;
 	      A->data_org[AZ_total_send]  = 0;
-	      A->data_org[AZ_name]        = 1+JAC;	       /* Whoa, mule! */
+	      A->data_org[AZ_name]        = 1+imtrx;	       /* Whoa, mule! */
 	      A->data_org[AZ_neighbors]   = 0;
 	      A->data_org[AZ_rec_length]  = 0;
 	      A->data_org[AZ_send_length] = 0;
@@ -266,13 +270,13 @@ sl_init(unsigned int option_mask,		/* option flag */
 	       *
 	       */
 
-	      length = AZ_COMM_SIZE + ptr_dof_send[dpi->num_neighbors];
+	      length = AZ_COMM_SIZE + ptr_dof_send[imtrx][dpi->num_neighbors];
 
 	      A->data_org = (int *) smalloc(length*sizeof(int));
 
-	      A->data_org[AZ_N_internal]  = num_internal_dofs;
-	      A->data_org[AZ_N_border]    = num_boundary_dofs;
-	      A->data_org[AZ_N_external]  = num_external_dofs;
+	      A->data_org[AZ_N_internal]  = num_internal_dofs[imtrx];
+	      A->data_org[AZ_N_border]    = num_boundary_dofs[imtrx];
+	      A->data_org[AZ_N_external]  = num_external_dofs[imtrx];
 
 	      if ( strcmp(Matrix_Format, "vbr") == 0 )
 		{
@@ -311,12 +315,12 @@ sl_init(unsigned int option_mask,		/* option flag */
 		  fprintf(stderr, "P_%d: update_index[%d] (local name) = %d\n", 
 			  ProcID, i, A->update_index[i]);
 		}
-	      for ( i=0; i<num_external_dofs; i++)
+	      for ( i=0; i<num_external_dofs[pg->imtrx]; i++)
 		{
 		  fprintf(stderr, "P_%d: external[%d] (global name) = %d\n", 
 			  ProcID, i, A->external[i]);
 		}
-	      for ( i=0; i<num_external_dofs; i++)
+	      for ( i=0; i<num_external_dofs[pg->imtrx]; i++)
 		{
 		  fprintf(stderr, "P_%d: extern_index[%d] (local name) = %d\n",
 			  ProcID, i, A->extern_index[i]);
@@ -324,8 +328,8 @@ sl_init(unsigned int option_mask,		/* option flag */
 	      */
 #endif /* DEBUG */
 	      A->data_org[AZ_N_neigh]     = dpi->num_neighbors;
-	      A->data_org[AZ_total_send]  = ptr_dof_send[dpi->num_neighbors];
-	      A->data_org[AZ_name]        = 1+JAC;	       /* Whoa, mule! */
+	      A->data_org[AZ_total_send]  = ptr_dof_send[imtrx][dpi->num_neighbors];
+	      A->data_org[AZ_name]        = 1+imtrx;	       /* Whoa, mule! */
 
 	      /*
 	       * The names of my neighbor processors and how much to send
@@ -350,9 +354,9 @@ sl_init(unsigned int option_mask,		/* option flag */
 	       * are indeces into the x[] vector with local meaning.
 	       */
 
-	      for ( i=0; i<ptr_dof_send[dpi->num_neighbors]; i++)
+	      for ( i=0; i<ptr_dof_send[imtrx][dpi->num_neighbors]; i++)
 		{
-		  A->data_org[AZ_send_list + i] = list_dof_send[i];
+		  A->data_org[AZ_send_list + i] = list_dof_send[imtrx][i];
 		}
 
 #ifdef DEBUG
@@ -597,7 +601,7 @@ sl_init(unsigned int option_mask,		/* option flag */
 	}
 #endif /* not COUPLED_FILL */      
     }
-  First_Call = FALSE;
+  Num_Calls++;
 #ifdef DEBUG
   fclose(out);
 #endif /* DEBUG */
@@ -762,10 +766,10 @@ set_aztec_options_params ( int options[],
       Linear_Solver = AMESOS;
       options[AZ_solver] = -1;
   }
-  else if ( strcmp(Matrix_Solver, "stratimikos") == 0)
+  else if ( strcmp(Matrix_Solver, "stratimikos") == 0 )
   {
-    Linear_Solver = STRATIMIKOS;
-    options[AZ_solver] = -1;
+      Linear_Solver = STRATIMIKOS;
+      options[AZ_solver] = -1;
   }
   else if ( strcmp(Matrix_Solver, "aztecoo") == 0 )
   {

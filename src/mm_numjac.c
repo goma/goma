@@ -52,27 +52,22 @@ static char rcsid[] = "$Id: mm_numjac.c,v 5.5 2009-04-24 23:42:33 hkmoffa Exp $"
 
 #include "sl_util.h"
 #include "mm_qp_storage.h"
-#define _MM_NUMJAC_C
+#define GOMA_MM_NUMJAC_C
 #include "goma.h"
 
 static void piksr2		/* mm_numjac.c                               */
-PROTO((int ,			/* n                                         */
+(int ,			/* n                                         */
        int [],			/* arr                                       */
        int [],			/* brr                                       */
-       dbl []));		/* crr                                       */
+       dbl []);		/* crr                                       */
 
 #ifdef FORWARD_DIFF_NUMJAC
 static void compute_numerical_jacobian_errors
-PROTO((dbl,			/* analytic value */
+(dbl,			/* analytic value */
        dbl,			/* numerical value */
        dbl [],			/* absolute error */
-       dbl []));		/* relative error */
+       dbl []);		/* relative error */
 #endif
-
-typedef struct {
-  int a_val, b_val;
-  dbl c_val;
-} data_t;
 
 typedef struct {
   int num_colors;
@@ -81,6 +76,19 @@ typedef struct {
   int *rowptr;
   int nnz;
 } Coloring;
+
+static Coloring* find_coloring(struct Aztec_Linear_Solver_System *ams,
+			int num_unknowns,
+			int num_total_nodes,
+			Exo_DB *exo,
+			Dpi *dpi);
+
+static void free_coloring(Coloring *coloring); 
+
+typedef struct {
+  int a_val, b_val;
+  dbl c_val;
+} data_t;
 
 typedef struct intLinkedList {
   int val;
@@ -130,7 +138,7 @@ static void free_int_linked_list(IntLinkedList *list)
    with the same color share no rows containing
    nonzeros in that column
 */
-Coloring* find_coloring(struct Aztec_Linear_Solver_System *ams,
+static Coloring* find_coloring(struct Aztec_Linear_Solver_System *ams,
 			int num_unknowns,
 			int num_total_nodes,
 			Exo_DB *exo,
@@ -280,7 +288,7 @@ Coloring* find_coloring(struct Aztec_Linear_Solver_System *ams,
   return coloring;
 }
 
-void free_coloring(Coloring *coloring) {
+static void free_coloring(Coloring *coloring) {
   free(coloring->colptr);
   free(coloring->rowptr);
   free(coloring->column_color);
@@ -365,7 +373,7 @@ numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
   double *nj;
   char errstring[256];
   double *resid_vector_save;
-  int numProcUnknowns = NumUnknowns + NumExtUnknowns;
+  int numProcUnknowns = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
   // assuming we are only computing coloring once, and that the matrix does not change
   Coloring *coloring = NULL;
 
@@ -405,7 +413,7 @@ numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
   memset(count, 0, (MAX_VARIABLE_TYPES)*sizeof(int));
   for (i = 0; i < numProcUnknowns; i++)
     {
-      var_i = idv[i][0];
+      var_i = idv[pg->imtrx][i][0];
       count[var_i]++;
       x_scale[var_i] += x[i]*x[i];
     }
@@ -456,7 +464,7 @@ numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
       double t1, t2, t3, t4;
       t1 = MPI_Wtime();
 #endif
-      memset(resid_vector_1, 0, NumUnknowns*sizeof(dbl));
+      memset(resid_vector_1, 0, NumUnknowns[pg->imtrx]*sizeof(dbl));
       /*
        * Perturb many variables
        */
@@ -466,7 +474,7 @@ numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
 #endif
       for (j = 0; j < numProcUnknowns; j++) {
 	if (coloring->column_color[j] == color) {
-	  dx = x_scale[idv[j][0]] * FD_DELTA_UNKNOWN;
+	  dx = x_scale[idv[pg->imtrx][j][0]] * FD_DELTA_UNKNOWN;
 	  if(dx < 1.0E-15) dx = 1.0E-7;
 	  x_1[j] = x[j] + dx;
 
@@ -478,7 +486,7 @@ numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
 #ifdef DEBUG_FD_COLORING
 	  count++;
 #endif
-	  my_node_num = idv[j][2];
+	  my_node_num = idv[pg->imtrx][j][2];
 
 	  for(i = exo->node_elem_pntr[my_node_num];
 	      i < exo->node_elem_pntr[my_node_num+1]; i++) {
@@ -581,15 +589,15 @@ numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
           for (idx = coloring->colptr[j]; idx < coloring->colptr[j + 1];
                idx++) {
             i = coloring->rowptr[idx];
-            var_i = idv[i][0];
-            var_j = idv[j][0];
+	    var_i = idv[pg->imtrx][i][0];
+	    var_j = idv[pg->imtrx][j][0];
             int gnode;
             int ivd;
             int i_offset;
             int idof;
-            Index_Solution_Inv(i, &gnode, &ivd, &i_offset, &idof);
+            Index_Solution_Inv(i, &gnode, &ivd, &i_offset, &idof, pg->imtrx);
 
-            if (pd->v[EM_E1_REAL]) {
+            if (pd->v[pg->imtrx][EM_E1_REAL]) {
               if (Inter_Mask[var_i][var_j]) {
                 int ja = (i == j) ? j
                                   : in_list(j, ams->bindx[i], ams->bindx[i + 1],
@@ -597,14 +605,14 @@ numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
                 if (ja == -1) {
                   sprintf(errstring,
                           "Index not found (%d, %d) for interaction (%d, %d)",
-                          i, j, idv[i][0], idv[j][0]);
+                          i, j, idv[pg->imtrx][i][0], idv[pg->imtrx][j][0]);
                   EH(ja, errstring);
                 }
-                if (Nodes[gnode]->DBC && Nodes[gnode]->DBC[i_offset] != -1 &&
+                if (Nodes[gnode]->DBC[pg->imtrx] && Nodes[gnode]->DBC[pg->imtrx][i_offset] != -1 &&
                     i == j) {
                   nj[ja] = 1.0;
-                } else if (Nodes[gnode]->DBC &&
-                           Nodes[gnode]->DBC[i_offset] != -1) {
+                } else if (Nodes[gnode]->DBC[pg->imtrx] &&
+                           Nodes[gnode]->DBC[pg->imtrx][i_offset] != -1) {
                   nj[ja] = 0.0;
                 } else {
                   nj[ja] = (resid_vector_1[i] - resid_vector[i]) / (dx_col[j]);
@@ -614,25 +622,23 @@ numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
 
             for (mode = 0; mode < vn->modes; mode++) {
               /* Only for stress terms */
-              if (idv[i][0] >= v_s[mode][0][0] &&
-                  idv[i][0] <= v_s[mode][2][2]) {
+		if (idv[pg->imtrx][i][0] >= v_s[mode][0][0] && idv[pg->imtrx][i][0] <= v_s[mode][2][2]) {
 
-                if (Inter_Mask[var_i][var_j]) {
+		    if (Inter_Mask[pg->imtrx][var_i][var_j]) {
 
                   int ja = (i == j) ? j
                                     : in_list(j, ams->bindx[i],
                                               ams->bindx[i + 1], ams->bindx);
                   if (ja == -1) {
-                    sprintf(errstring,
-                            "Index not found (%d, %d) for interaction (%d, %d)",
-                            i, j, idv[i][0], idv[j][0]);
+                    sprintf(errstring, "Index not found (%d, %d) for interaction (%d, %d)", i, j,
+                            idv[pg->imtrx][i][0], idv[pg->imtrx][j][0]);
                     EH(ja, errstring);
                   }
-                  if (Nodes[gnode]->DBC && Nodes[gnode]->DBC[i_offset] != -1 &&
+                  if (Nodes[gnode]->DBC[pg->imtrx] && Nodes[gnode]->DBC[pg->imtrx][i_offset] != -1 &&
                       i == j) {
                     nj[ja] = 1.0;
-                  } else if (Nodes[gnode]->DBC &&
-                             Nodes[gnode]->DBC[i_offset] != -1) {
+                  } else if (Nodes[gnode]->DBC[pg->imtrx] &&
+                             Nodes[gnode]->DBC[pg->imtrx][i_offset] != -1) {
                     nj[ja] = 0.0;
                   } else {
                     nj[ja] = (resid_vector_1[i] - resid_vector[i]) / (dx_col[j]);
@@ -819,25 +825,25 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
 
 /* calculates the total number of non-zero entries in the analytical jacobian, a[] */
   nnonzero = NZeros+1;
-  nn = ija[NumUnknowns]-ija[0]; /* total number of diagonal entries a[] */
+  nn = ija[NumUnknowns[pg->imtrx]]-ija[0]; /* total number of diagonal entries a[] */
 
   /* allocate arrays to hold jacobian and vector values */
   irow = (int *) array_alloc(1, nnonzero, sizeof(int));
   jcolumn = (int *) array_alloc(1, nnonzero, sizeof(int));
   nelem = (int *) array_alloc(1, nnonzero, sizeof(int));
-  aj_diag =  (double *) array_alloc(1, NumUnknowns, sizeof(double));
+  aj_diag =  (double *) array_alloc(1, NumUnknowns[pg->imtrx], sizeof(double));
   aj_off_diag =  (double *) array_alloc(1, nnonzero, sizeof(double));
-  resid_vector_1 =  (double *) array_alloc(1, NumUnknowns, sizeof(double));
-  x_1 =  (double *) array_alloc(1, NumUnknowns, sizeof(double));
-  scale =  (double *) array_alloc(1, NumUnknowns, sizeof(double));
-  output_list = (int *)array_alloc(1, NumUnknowns, sizeof(int));
-  dof_list = (int *)array_alloc(1, NumUnknowns, sizeof(int));
+  resid_vector_1 =  (double *) array_alloc(1, NumUnknowns[pg->imtrx], sizeof(double));
+  x_1 =  (double *) array_alloc(1, NumUnknowns[pg->imtrx], sizeof(double));
+  scale =  (double *) array_alloc(1, NumUnknowns[pg->imtrx], sizeof(double));
+  output_list = (int *)array_alloc(1, NumUnknowns[pg->imtrx], sizeof(int));
+  dof_list = (int *)array_alloc(1, NumUnknowns[pg->imtrx], sizeof(int));
   elem_list = (int *)array_alloc(1, ELEM_LIST_SIZE, sizeof(int));
 #ifdef FORWARD_DIFF_NUMJAC
   nj =  (double *) array_alloc(1, nnonzero, sizeof(double));
 #else
-  aj =  (double *) array_alloc(1, NumUnknowns, sizeof(double));
-  aj_1 =  (double *) array_alloc(1, NumUnknowns, sizeof(double));
+  aj =  (double *) array_alloc(1, NumUnknowns[pg->imtrx], sizeof(double));
+  aj_1 =  (double *) array_alloc(1, NumUnknowns[pg->imtrx], sizeof(double));
 #endif
 
   if (aj_off_diag == NULL || scale == NULL) EH(-1, "No room for storage for computing numerical jacobian");
@@ -847,17 +853,17 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
 
   /* Initialization */
   memset(aj_off_diag, 0, nnonzero*sizeof(dbl));
-  memset(aj_diag, 0, NumUnknowns*sizeof(dbl));
+  memset(aj_diag, 0, NumUnknowns[pg->imtrx]*sizeof(dbl));
 
-  /* save Inter_Mask away, turn on all entries so that we can make sure
-   * that Inter_Mask is being turned on for all entries being used
+  /* save Inter_Mask[pg->imtrx] away, turn on all entries so that we can make sure
+   * that Inter_Mask[pg->imtrx] is being turned on for all entries being used
    */
   for(j =0; j < MAX_VARIABLE_TYPES; j++)
     {
       for(i = 0; i < MAX_VARIABLE_TYPES; i++)
         {
-          Inter_Mask_save[j][i] = Inter_Mask[j][i];
-          Inter_Mask[j][i] = 1;
+          Inter_Mask_save[j][i] = Inter_Mask[pg->imtrx][j][i];
+          Inter_Mask[pg->imtrx][j][i] = 1;
         }
     }
 
@@ -868,9 +874,9 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
    * is to estimate the scale for all variables in the problem */
   memset(x_scale, 0, (MAX_VARIABLE_TYPES)*sizeof(dbl));
   memset(count, 0, (MAX_VARIABLE_TYPES)*sizeof(int));
-  for (i = 0; i < NumUnknowns; i++)
+  for (i = 0; i < NumUnknowns[pg->imtrx]; i++)
     {
-      var_i = idv[i][0];
+      var_i = idv[pg->imtrx][i][0];
       count[var_i]++;
       x_scale[var_i] += x[i]*x[i];
     }
@@ -904,7 +910,7 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
   if (ls != NULL && ls->Length_Scale != 0.) x_scale[FILL] = ls->Length_Scale;
 
   /* copy x vector */
-  for (i = 0; i < NumUnknowns; i++)
+  for (i = 0; i < NumUnknowns[pg->imtrx]; i++)
     {
       x_1[i] = x[i];
     }
@@ -941,7 +947,7 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
 #ifdef DEBUG_NUMJAC
       abs_min = 1.0e+10;
       abs_max = 0.0;
-      for(i = 0; i < NumUnknowns; i++)
+      for(i = 0; i < NumUnknowns[pg->imtrx]; i++)
 	{
 	  if(fabs(scale[i])>abs_max) abs_max=fabs(scale[i]);
 	  if(fabs(scale[i])<abs_min) abs_min = fabs(scale[i]);
@@ -954,9 +960,9 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
       /* Scale matrix by diagonal entry.  This is usually the largest
        * in magnitude.  If this is zero, then perform no scaling.
        */
-      for(i = 0; i < NumUnknowns; i++)
+      for(i = 0; i < NumUnknowns[pg->imtrx]; i++)
 	scale[i] = (a[i] == 0.0) ? 1.0 : a[i];
-      row_scaling(NumUnknowns, a, ija, resid_vector, scale);
+      row_scaling(NumUnknowns[pg->imtrx], a, ija, resid_vector, scale);
     }
 
 #ifdef DEBUG_NUMJAC
@@ -966,7 +972,7 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
   min_scale = 1.0e+20;
   max_scale = -min_scale;
   DPRINTF(stderr, "Scale vector:\n");
-  for(i = 0; i < NumUnknowns; i++)
+  for(i = 0; i < NumUnknowns[pg->imtrx]; i++)
     {
       DPRINTF(stderr, "scale[% 2d] = %-10.4g\n", i, scale[i]);
       if(scale[i] < min_scale) min_scale = scale[i];
@@ -978,17 +984,17 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
 
   /* extract diagonal and off-diagonal elements from the coefficient matrix stored
      in sparse-storage format */
-  for (i=0; i<NumUnknowns; i++)
+  for (i=0; i<NumUnknowns[pg->imtrx]; i++)
     aj_diag[i] = a[i];                    /* diagonal elements */
 
   kount=0;                              /* off-diagonal elements */
-  for (i=0; i<NumUnknowns; i++)
+  for (i=0; i<NumUnknowns[pg->imtrx]; i++)
     {
       nelem[i] = ija[i+1] - ija[i];
       for (k=0; k<nelem[i]; k++)
 	{
 	  irow[kount]=i;                   /* row # in global jacobian matrix */
-	  ii = kount + NumUnknowns + 1;
+	  ii = kount + NumUnknowns[pg->imtrx] + 1;
 	  jcolumn[kount]=ija[ii];          /* column # in global jacobian matrix */
 	  aj_off_diag[kount] = a[ii];
 	  kount=kount+1;
@@ -1005,25 +1011,25 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
    *  check that the perturbed residuals are consistent with range possible
    *  for range of analytical jacobian values
    */
-  for (j = 0; j < NumUnknowns; j++)       /* loop over each column */
+  for (j = 0; j < NumUnknowns[pg->imtrx]; j++)       /* loop over each column */
     {
       /*
        * Perturb one variable at a time
        */
 
-     if ( ls != NULL && ls->Ignore_F_deps && idv[j][0] == FILL ) continue;
+     if ( ls != NULL && ls->Ignore_F_deps && idv[pg->imtrx][j][0] == FILL ) continue;
 
 #ifdef FORWARD_DIFF_NUMJAC
-      x_1[j] = x[j] + x_scale[idv[j][0]] * DELTA_UNKNOWN;
+      x_1[j] = x[j] + x_scale[idv[pg->imtrx][j][0]] * DELTA_UNKNOWN;
 #else
-      dx = x_scale[idv[j][0]] * FD_DELTA_UNKNOWN;
+      dx = x_scale[idv[pg->imtrx][j][0]] * FD_DELTA_UNKNOWN;
       x_1[j] = x[j] + dx;
 #endif
 
       num_elems = 0;
       for(i = 0; i < ELEM_LIST_SIZE; i++)
 	elem_list[i] = 0;
-      for(i = 0; i < NumUnknowns; i++)
+      for(i = 0; i < NumUnknowns[pg->imtrx]; i++)
 	output_list[i] = FALSE;
 
       af->Assemble_Residual = TRUE;
@@ -1038,7 +1044,7 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
       neg_lub_height = FALSE;
       zero_detJ = FALSE;
 
-      my_node_num = idv[j][2];
+      my_node_num = idv[pg->imtrx][j][2];
 
       /* Which elements to fill?  We need every element that contains
        * this node, plus all of the elements connected to them, even if
@@ -1098,16 +1104,16 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
       for (i = exo->node_elem_pntr[my_node_num];
 	   i < exo->node_elem_pntr[my_node_num+1]; i++) {
 	my_elem_num = exo->node_elem_list[i];
-	load_ei(my_elem_num, exo, 0);
+	load_ei(my_elem_num, exo, 0, pg->imtrx);
 	for (k = exo->elem_node_pntr[my_elem_num];
 	     k < exo->elem_node_pntr[my_elem_num+1]; k++) {
 	  node_num = exo->elem_node_list[k];
 	  node = Nodes[node_num];
-	  nvs = node->Nodal_Vars_Info;
+	  nvs = node->Nodal_Vars_Info[pg->imtrx];
 	  for (l = 0; l < nvs->Num_Var_Desc; l++) {
 	    vd = nvs->Var_Desc_List[l];
 	    for (m = 0; m < vd->Ndof; m++) {
-	      index = node->First_Unknown + nvs->Nodal_Offset[l] + m;
+	      index = node->First_Unknown[pg->imtrx] + nvs->Nodal_Offset[l] + m;
 	      output_list[index] = TRUE;
 	    }
 	  }
@@ -1117,7 +1123,7 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
       /* make compact list of Eqdof's that will be checked; put diagonal term first */
       dof_list[0] = j;
       num_dofs = 1;
-      for (i=0; i<NumUnknowns; i++)
+      for (i=0; i<NumUnknowns[pg->imtrx]; i++)
         {
           if (i!=j && output_list[i])
             {
@@ -1127,7 +1133,7 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
 
       /* compute residual and Jacobian at perturbed soln */
       memset(a, 0, nnonzero*sizeof(dbl));
-      memset(resid_vector_1, 0, NumUnknowns*sizeof(dbl));
+      memset(resid_vector_1, 0, NumUnknowns[pg->imtrx]*sizeof(dbl));
 
       if (pd_glob[0]->TimeIntegration != STEADY) {
 	xdot[j] += (x_1[j] - x[j])  * (1.0 + 2 * theta) / delta_t;
@@ -1137,7 +1143,7 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
         clear_xfem_contribution( ams->npu );
 
       for (i = 0; i < num_elems; i++) {
-	load_ei(elem_list[i], exo, 0);
+	load_ei(elem_list[i], exo, 0, pg->imtrx);
 	matrix_fill(ams, x_1, resid_vector_1,
 		    x_old, x_older,  xdot, xdot_old, x_update,
 		    &delta_t, &theta,
@@ -1204,9 +1210,9 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
 	   * penalty parameter.
 	   */
 #ifdef FORWARD_DIFF_NUMJAC
-          vector_scaling(NumUnknowns, resid_vector_1, scale);
+          vector_scaling(NumUnknowns[pg->imtrx], resid_vector_1, scale);
 #else
-          row_scaling(NumUnknowns, a, ija, resid_vector_1, scale);
+          row_scaling(NumUnknowns[pg->imtrx], a, ija, resid_vector_1, scale);
 #endif
 	}
 
@@ -1241,13 +1247,13 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
 	 nj_scaled_err >= SCALED_RESIDUAL_TOLERANCE)
 	{
 	  DPRINTF(stderr, "Diag%.22s Var%.22s aj=%-10.4g nj=%-10.4g er=%9.4g rer=%9.4g x=%-10.4g r=%-10.4g\n"
-		  ,resname[j],dofname[j], aj_diag[j], nj[j], nj_err,
+		  ,resname[pg->imtrx][j],dofname[pg->imtrx][j], aj_diag[j], nj[j], nj_err,
 		  nj_scaled_err, x_1[j], resid_vector_1[j]);
 	}
 
 
       /* COMPARISON: analytical vs. numerical ---  the off-diagonal elements for column j */
-      for (k=0; k<(ija[NumUnknowns]-ija[0]); k++)
+      for (k=0; k<(ija[NumUnknowns[pg->imtrx]]-ija[0]); k++)
 	{
 	  if(jcolumn[k] == j)       /* match the column numbers */
 	    {
@@ -1266,7 +1272,7 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
 			 nj_scaled_err >= SCALED_RESIDUAL_TOLERANCE)
 			DPRINTF(stderr,
 				"  Eq%.42s Var%.42s aj=%-10.4g nj=%-10.4g er=%9.4g rer=%9.4g x=%-10.4g r=%-10.4g\n",
-				resname[irow[k]], dofname[jcolumn[k]],
+				resname[pg->imtrx][irow[k]], dofname[pg->imtrx][jcolumn[k]],
 				aj_off_diag[k], nj[i], nj_err,
 				nj_scaled_err, x_1[j], resid_vector_1[j]);
 		    }
@@ -1277,8 +1283,8 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
       /* BRACKETED JACOBIAN CHECKER */
       /* extract diagonal and off-diagonal elements from the coefficient matrix stored
          in sparse-storage format */
-      memset(aj, 0, NumUnknowns*sizeof(dbl));
-      memset(aj_1, 0, NumUnknowns*sizeof(dbl));
+      memset(aj, 0, NumUnknowns[pg->imtrx]*sizeof(dbl));
+      memset(aj_1, 0, NumUnknowns[pg->imtrx]*sizeof(dbl));
       for (ii = 0; ii < num_dofs; ii++)
         {
 	  i = dof_list[ii];
@@ -1289,7 +1295,7 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
             }
           else
             {
-              for (k=0; k<(ija[NumUnknowns]-ija[0]); k++)
+              for (k=0; k<(ija[NumUnknowns[pg->imtrx]]-ija[0]); k++)
                 {
                   if ((jcolumn[k] == j) && (irow[k] == i))
                     {
@@ -1326,11 +1332,11 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
           /* attempt to calculate the magnitude of the roundoff error in the
            * residual calculation.  this is estimated to be MAX( J x_scale ) */
           resid_scale = fabs( resid_vector[i] );
-          /*DRN-MAX BROKEN? resid_scale = MAX( resid_scale, fabs( a[i] * x_scale[idv[i][0]] ) );*/
-	  if ( fabs( a[i] * x_scale[idv[i][0]] ) > resid_scale ) resid_scale = fabs( a[i] * x_scale[idv[i][0]] );
+          /*DRN-MAX BROKEN? resid_scale = MAX( resid_scale, fabs( a[i] * x_scale[idv[pg->imtrx][i][0]] ) );*/
+	  if ( fabs( a[i] * x_scale[idv[pg->imtrx][i][0]] ) > resid_scale ) resid_scale = fabs( a[i] * x_scale[idv[pg->imtrx][i][0]] );
           for (k = ija[i]; k< ija[i+1]; k++)
             {
-              var_j = idv[ija[k]][0];
+              var_j = idv[pg->imtrx][ija[k]][0];
               /*DRN-MAX BROKEN? resid_scale = MAX( resid_scale, fabs( a[k] * x_scale[var_j]) );*/
 	      if ( fabs( a[k] * x_scale[var_j]) > resid_scale ) resid_scale = fabs( a[k] * x_scale[var_j]);
             }
@@ -1382,7 +1388,7 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
                 {
                   DPRINTF(stderr,
                     "Diag%32.32s Var%32.32s x=%-10.4g dx=%-10.4g aj=%-10.4g nj=%-10.4g aj_1=%-10.4g d_aj=%-10.4g conf=%-10.4g\n",
-	                  resname[i], dofname[j], x[j], dx,
+	                  resname[pg->imtrx][i], dofname[pg->imtrx][j], x[j], dx,
 			              aj[i], nj, aj_1[i],
                     delta_aj_percentage, confidence );
                 }
@@ -1390,7 +1396,7 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
                 {
 		              DPRINTF(stderr,
 			              "Eq%-32.32s Var%-32.32s x=%-10.2g dx=%-10.2g aj=%-10.4g nj=%-10.4g aj_1=%-10.2g d_aj=%-10.2g conf=%-10.2g\n",
-			              resname[i], dofname[j], x[j], dx,
+			              resname[pg->imtrx][i], dofname[pg->imtrx][j], x[j], dx,
 			              aj[i], nj, aj_1[i],
                     delta_aj_percentage, confidence );
                 }
@@ -1398,7 +1404,7 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
               /* print disclaimer for entries that have much lower confidence levels */
               if (x[j] == 0.)
                 {
-                  switch (idv[j][0])
+                  switch (idv[pg->imtrx][j][0])
                     {
                     case MESH_DISPLACEMENT1:
                     case MESH_DISPLACEMENT2:
@@ -1419,13 +1425,13 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
 
               /* list all BC's applied at this node and highlight ones with
                * desired sensitivity */
-              my_node_num = idv[i][2];
+              my_node_num = idv[pg->imtrx][i][2];
 
               for (k = exo->node_elem_pntr[my_node_num];
                    k < exo->node_elem_pntr[my_node_num+1]; k++)
                 {
                   my_elem_num = exo->node_elem_list[k];
-                  load_ei(my_elem_num, exo, 0);
+                  load_ei(my_elem_num, exo, 0, pg->imtrx);
 
                   if (first_elem_side_BC_array[my_elem_num] != NULL)
                     {
@@ -1439,9 +1445,9 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
                         {
                           for (ibc = 0; (bc_input_id = (int) elem_side_bc->BC_input_id[ibc]) != -1; ibc++)
                             {
-                              var_i = idv[i][0];
-                              var_j = idv[j][0];
-                              I = idv[i][2];
+                              var_i = idv[pg->imtrx][i][0];
+                              var_j = idv[pg->imtrx][j][0];
+                              I = idv[pg->imtrx][i][2];
 
                               if (in_list( I, 0, elem_side_bc->num_nodes_on_side, elem_side_bc->local_node_id ))
                                 {
@@ -1471,17 +1477,17 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
                 }
             }
 
-          /* check Inter_Mask for missing entries */
-          var_i = idv[i][0];
-          var_j = idv[j][0];
+          /* check Inter_Mask[pg->imtrx] for missing entries */
+          var_i = idv[pg->imtrx][i][0];
+          var_j = idv[pg->imtrx][j][0];
           if (!Inter_Mask_save[var_i][var_j])
             {
               /* check to make sure no dependence appears in analytical jacobian */
               if ((aj[i] != 0.) || (aj_1[i] != 0.))
                 {
                   DPRINTF(stderr,
-                    "Potential dependency error: Inter_Mask[Eq%.32s][Var%.32s]=0, but aj=%-10.4g aj_1=%-10.4g\n",
-	                  resname[i], dofname[j], aj[i], aj_1[i] );
+                    "Potential dependency error: Inter_Mask[pg->imtrx][Eq%.32s][Var%.32s]=0, but aj=%-10.4g aj_1=%-10.4g\n",
+	                  resname[pg->imtrx][i], dofname[pg->imtrx][j], aj[i], aj_1[i] );
                 }
 
               /* check to make sure no dependence appears in numerical jacobian */
@@ -1491,8 +1497,8 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
                 {
                   nj = (resid_vector_1[i] - resid_vector[i]) / dx;
                   DPRINTF(stderr,
-                    "Potential dependency error: Inter_Mask[Eq%.32s][Var%.32s]=0, but nj=%-10.4g\n",
-	                  resname[i], dofname[j], nj );
+                    "Potential dependency error: Inter_Mask[pg->imtrx][Eq%.32s][Var%.32s]=0, but nj=%-10.4g\n",
+	                  resname[pg->imtrx][i], dofname[pg->imtrx][j], nj );
                 }
             }
         }
@@ -1505,7 +1511,7 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
 	xdot[j] -= (x_1[j] - x[j])  * (1.0 + 2 * theta) / delta_t;
       }
       x_1[j] = x[j];
-    }                          /* End of for (j=0; j<NumUnknowns; j++) */
+    }                          /* End of for (j=0; j<NumUnknowns[pg->imtrx]; j++) */
 
   /* free arrays to hold jacobian and vector values */
   safe_free( (void *) irow) ;
@@ -1540,8 +1546,8 @@ intcompare(const void *left, const void *right)
 {
   register int left_a_val, right_a_val;
 
-  left_a_val = ((data_t *)left)->a_val;
-  right_a_val = ((data_t *)right)->a_val;
+  left_a_val = ((const data_t *)left)->a_val;
+  right_a_val = ((const data_t *)right)->a_val;
   if (left_a_val > right_a_val)
     return 1;
   else if (left_a_val < right_a_val)
