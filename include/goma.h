@@ -10,8 +10,8 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _GOMA_H
-#define _GOMA_H
+#ifndef GOMA_H
+#define GOMA_H
 
 /*
  * These include files should be just constant defs and new datatypes.

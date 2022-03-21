@@ -19,10 +19,12 @@
  * 	files "mm_as_const.h" and "mm_as_structs.h"
  */
 
-#ifndef _MM_AS_H
-#define _MM_AS_H
+#ifndef GOMA_MM_AS_H
+#define GOMA_MM_AS_H
 
-extern struct Element_Indices			*ei;
+#include "mm_as_structs.h"
+
+extern struct Element_Indices			**ei;
 extern struct Element_Indices		       **eiRelated;
 extern struct Element_Stiffness_Pointers	*esp;
 extern struct Element_Quality_Metrics           *eqm;
@@ -40,6 +42,8 @@ extern UPD_STRUCT                               *upd;
  *       where needed.
  */
 extern PROBLEM_DESCRIPTION_STRUCT              **pd_glob, *pd;
+
+extern PROBLEM_GRAPH_STRUCT                     *pg;
 
 extern struct Action_Flags			*af;
 extern BASIS_FUNCTIONS_STRUCT			**bf;
@@ -73,4 +77,4 @@ extern struct Phase_Function_Data               *pfd;
 extern struct Lubrication_Auxiliaries           *LubAux;
 extern struct Lubrication_Auxiliaries           *LubAux_old;
 
-#endif /* _MM_AS_H */
+#endif /* GOMA_MM_AS_H */

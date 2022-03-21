@@ -15,8 +15,8 @@
  *$Id: el_elm.h,v 5.3 2009-11-13 23:20:07 prschun Exp $
  */
 
-#ifndef _EL_ELM_H
-#define _EL_ELM_H
+#ifndef GOMA_EL_ELM_H
+#define GOMA_EL_ELM_H
 
 #include "rf_fem_const.h"
 
@@ -43,7 +43,7 @@ enum type_elem {BILINEAR_QUAD = 0,
                 QUAD_TRI,
                 QUAD6_TRI,      /* quadratic triangle with 6th order quadrature */
 
-		TRILINEAR_TET,   /* 3D linear tetrahedral element type */
+		LINEAR_TET,   /* 3D linear tetrahedral element type */
 
 		BILINEAR_SHELL,  /* 2D, linear elements for 3D shells */
 		BIQUAD_SHELL,    /* 2D, quadratic elements for 3D shells */
@@ -156,78 +156,78 @@ extern int ID_Side_Hex[];	/* defined in exo_conn.c */
 #if 0				/* died 1999/10/04 */
 extern int
 elem_info
-   PROTO (( int,                        /* info  */
-	    int  ));                    /* ielem_type  */
+   ( int,                        /* info  */
+	    int  );                    /* ielem_type  */
 
 extern int
 imax_quad
-   PROTO (( int,                        /*  n  */
-	    int [] ));                  /* elem_type[]  */
+   ( int,                        /*  n  */
+	    int [] );                  /* elem_type[]  */
 
 extern void
 find_stu
-   PROTO (( int,                        /* iquad  */
+   ( int,                        /* iquad  */
 	    int,                        /* ielem_type  */
 	    double *,                   /* *s  */
             double *,                   /* *t  */
-            double *  ));               /* *u  */
+            double *  );               /* *u  */
 
 extern void
 find_surf_st
-   PROTO (( int,                        /* iquad  */
+   ( int,                        /* iquad  */
 	    int,                        /* ielem_type  */ 
 	    int,                        /* iside  */
 	    int,                        /* dim  */
             double [],                  /* xi[MAX_PDIM]  */
 	    double *,                   /* *s  */
-            double *  ));               /* *t  */
+            double *  );               /* *t  */
 
 extern void
 find_nodal_stu
-   PROTO (( int,                        /* inode   */
+   ( int,                        /* inode   */
 	    int,                        /* ielem_type  */ 
 	    double *,                   /* *s   */
             double *,                   /* *t   */
-            double * ));                /* *u   */
+            double * );                /* *u   */
 
 extern double
 Gq_weight
-   PROTO (( int,                        /* iquad  */
-	    int  ));                    /* ielem_type */
+   ( int,                        /* iquad  */
+	    int  );                    /* ielem_type */
 
 extern double
 Gq_surf_weight
-   PROTO (( int,                        /* iquad  */
-	    int  ));                    /* ielem_type */
+   ( int,                        /* iquad  */
+	    int  );                    /* ielem_type */
 
 extern int
 in_list
-   PROTO (( int,                        /* ivalue  */
+   ( int,                        /* ivalue  */
 	    int,                        /* ibegin  */
             int,                        /* iend  */
-            int [] ));                  /* ivector[]  */
+            int [] );                  /* ivector[]  */
 
 extern int
 get_type
-   PROTO (( char [],                    /* string[]  */
-	    int  ));                    /* nodes  */
+   ( char [],                    /* string[]  */
+	    int  );                    /* nodes  */
 
 extern double
 shape
-   PROTO (( double,                     /*  s   */
+   ( double,                     /*  s   */
             double,                     /*  t   */
             double,                     /*  u   */
 	    int,                        /*  Ielem_type  */ 
 	    int,                        /*  Iquant  */
-	    int  ));                    /*  Inode   */
+	    int  );                    /*  Inode   */
 
 extern int
 type2shape
-   PROTO (( int ));			/* element_type */
+   ( int );			/* element_type */
 
 extern int
 shape2sides
-   PROTO (( int ));			/* element_shape */
+   ( int );			/* element_shape */
 #endif /* #if 0 since 1999/10/04 ... */
 
 #endif
