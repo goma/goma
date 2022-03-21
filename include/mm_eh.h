@@ -9,32 +9,39 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
 
 /*
  *$Id: mm_eh.h,v 5.2 2007-09-18 18:53:42 prschun Exp $
  */
 
-#ifndef _MM_EH_H
-#define _MM_EH_H
+#ifndef GOMA_MM_EH_H
+#define GOMA_MM_EH_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_EH_C
+#ifdef GOMA_MM_EH_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _MM_EH_C
+#ifndef GOMA_MM_EH_C
 #define EXTERN extern
 #endif
 
-#include <stdarg.h>		/* for var args... */
+typedef int goma_error;
+#define GOMA_ERROR   -1
+#define GOMA_SUCCESS 0
+#define GOMA_DEBUG   1
+
+#include <stdarg.h> /* for var args... */
+#include <stdbool.h>
+
+#include "std.h"
 
 /* Needed to use mm_eh without std.h */
 #ifndef MAX_CHAR_ERR_MSG
-  #define MAX_CHAR_ERR_MSG 1024
+#define MAX_CHAR_ERR_MSG 1024
 #endif
 
 /*
@@ -43,37 +50,22 @@
  */
 extern char Err_Msg[MAX_CHAR_ERR_MSG];
 
-EXTERN void eh
-PROTO((const int ,	       	/* error_flag                                */
-       const char * const,      /* file                                      */
-       const int ,	       	/* line                                      */
-       const char * const));	/* message                                   */
-      
-EXTERN void wh
-PROTO((const int ,	       	/* error_flag                                */
-       const char * const,      /* file                                      */
-       const int ,	       	/* line                                      */
-       const char * const,      /* message                                   */
-       int * const));		/* iw                                        */
-      
-extern void aborth(const int, const char * const, const int,
-		   const char * const);
+EXTERN void goma_eh(const int error_flag, const char *file, const int line, const char *format, ...);
 
-EXTERN void save_place		/* mm_eh.c                                   */
-PROTO((const int ,		/* severity                                  */
-       const char * const,	/* routine_name                              */
-       const char * const,	/* file_name                                 */
-       const int ));		/* line_number                               */
+EXTERN void
+goma_wh(const int error_flag, const char *const file, const int line, const char * format, ...);
 
-EXTERN void logprintf		/* mm_eh.c                                   */
-PROTO((const char *,		/* format                                    */
-       ... ));			/* var args */
-	   
-	   
-EXTERN void smooth_stop_with_msg
-PROTO((const char *  msg));
+EXTERN void save_place  /* mm_eh.c                                   */
+    (const int,         /* severity                                  */
+     const char *const, /* routine_name                              */
+     const char *const, /* file_name                                 */
+     const int);        /* line_number                               */
 
+EXTERN void logprintf /* mm_eh.c                                   */
+    (const char *,    /* format                                    */
+     ...);            /* var args */
 
+EXTERN void smooth_stop_with_msg(const char *msg);
 
 /* This macro expands to a function call to the error handler eh() with
  * four arguments:
@@ -81,27 +73,33 @@ PROTO((const char *  msg));
  *		    MESSAGE -- a string, which gets printed if the
  *			       error dump is activated by IERR=-1
  *
- *	eh() finally exits with -1 if an error occurred.
+ *	goma_eh() finally exits with -1 if an error occurred.
  *
  * Intent:
  * -------
  *		EH(return_code, "I am informative.");
  */
 
-#define     EH(IERR, MESSAGE)	eh(IERR, __FILE__, __LINE__, MESSAGE)
-#define	    WH(IERR, MESSAGE)	{static int iw=0; if (iw == 0) wh(IERR, __FILE__, __LINE__, MESSAGE, &iw);}
-#define     ABORTH(IERR, MESSAGE) aborth(IERR, __FILE__, __LINE__, MESSAGE)
+#define EH(IERR, FORMAT, ...) goma_eh(IERR, __FILE__, __LINE__, FORMAT, ##__VA_ARGS__)
+// We wrap in a do while with a static variable to only print warnings once
+// at a location
+#define WH(IERR, FORMAT, ...)                         \
+  do {                                            \
+    static bool print = true;                     \
+    if (print) {                                  \
+      goma_wh(IERR, __FILE__, __LINE__, FORMAT, ##__VA_ARGS__); \
+      print = false;                              \
+    }                                             \
+  } while (0)
 
-#define GOMA_ERR	(-1)	/* definitely print; definitely exit */
-#define GOMA_MSG	(0)	/* usually print; continue */
-#define GOMA_DBG	(1)	/* maybe print; continue */
+#define WH_MANY(IERR, FORMAT, ...) goma_wh(IERR, __FILE__, __LINE__, FORMAT, ##__VA_ARGS__)
 
-#define TIME_STRING_SIZE	(256)
+#define TIME_STRING_SIZE (256)
 
-extern char current_routine[];	/* name of current routine. */
-extern char current_file[];	/* name of current file */
-extern int current_line;	/* line number in file */
-extern int current_severity;	/* global error signal (-1=die,0=prnt,1=dbg) */
+extern char current_routine[]; /* name of current routine. */
+extern char current_file[];    /* name of current file */
+extern int current_line;       /* line number in file */
+extern int current_severity;   /* global error signal (-1=die,0=prnt,1=dbg) */
 
 /*
  * Yes, this is an accident waiting to happen to the unwary that don't
@@ -118,27 +116,23 @@ extern int current_severity;	/* global error signal (-1=die,0=prnt,1=dbg) */
  *
  * Requires use of a local static const char yo[] ="Routine_name".
  */
-#define log_err(...) \
-do \
-  { \
-    save_place(GOMA_ERR, yo, __FILE__, __LINE__);  \
-    logprintf(__VA_ARGS__); \
-  } while(0)
+#define log_err(...)                                \
+  do {                                              \
+    save_place(GOMA_ERROR, yo, __FILE__, __LINE__); \
+    logprintf(__VA_ARGS__);                         \
+  } while (0)
 
+#define log_msg(...)                                  \
+  do {                                                \
+    save_place(GOMA_SUCCESS, yo, __FILE__, __LINE__); \
+    logprintf(__VA_ARGS__);                           \
+  } while (0)
 
-#define log_msg(...) \
-do \
-  { \
-    save_place(GOMA_MSG, yo, __FILE__, __LINE__);  \
-    logprintf(__VA_ARGS__); \
-  } while(0)
-
-#define log_dbg(...) \
-do \
-  { \
-    save_place(GOMA_DBG, yo, __FILE__, __LINE__);  \
-    logprintf(__VA_ARGS__); \
-  } while(0)
+#define log_dbg(...)                                \
+  do {                                              \
+    save_place(GOMA_DEBUG, yo, __FILE__, __LINE__); \
+    logprintf(__VA_ARGS__);                         \
+  } while (0)
 
 #ifndef DEFAULT_GOMA_LOG_FILENAME
 #define DEFAULT_GOMA_LOG_FILENAME ".log"

@@ -10,60 +10,60 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _RD_DPI_H
-#define _RD_DPI_H
+#ifndef GOMA_RD_DPI_H
+#define GOMA_RD_DPI_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _RD_DPI_C
+#ifdef GOMA_RD_DPI_C
 #define EXTERN
 #
 #endif
 
-#ifndef _RD_DPI_C
+#ifndef GOMA_RD_DPI_C
 #define EXTERN extern
 #endif
 
 EXTERN int rd_dpi		/* rd_dpi.c */
-PROTO((Dpi *,			/* fantastic structure defd in "dpi.h" */
+(Dpi *,			/* fantastic structure defd in "dpi.h" */
        char *,			/* fn - filename */
-       const int ));		/* verbosity - how much to talk */
+       const int );		/* verbosity - how much to talk */
 
 EXTERN void getdid		/* rd_dpi.c */
-PROTO((int ,			/* netcdf_unit */
+(int ,			/* netcdf_unit */
        char *,			/* string_name */
        int,			/* boolean for hard error interpretation */
-       int *));			/* dimension_identifier_address */
+       int *);			/* dimension_identifier_address */
 
 
 EXTERN void getvid		/* rd_dpi.c */
-PROTO((int ,			/* netcdf_unit */
+(int ,			/* netcdf_unit */
        char *,			/* string_name */
        int,			/* boolean for hard error interpretation */
-       int *));			/* variable_identifier_address */
+       int *);			/* variable_identifier_address */
 
 EXTERN void getdim		/* rd_dpi.c */
-PROTO((int ,			/* netcdf_unit */
+(int ,			/* netcdf_unit */
        int ,			/* dimension_id */
-       int *));			/* where -- to put the dimension value */
+       int *);			/* where -- to put the dimension value */
 
 EXTERN void uni_dpi		/* rd_dpi.c                                  */
-PROTO((Dpi *,			/* dpi                                       */
-       Exo_DB *));		/* exo                                       */
+(Dpi *,			/* dpi                                       */
+       Exo_DB *);		/* exo                                       */
 
 EXTERN void free_dpi		/* rd_dpi.c */
-PROTO((Dpi *));			/* fantastic structure defd in "dpi.h" */
+(Dpi *);			/* fantastic structure defd in "dpi.h" */
 
 EXTERN void free_dpi_uni	/* rd_dpi.c */
-PROTO((Dpi *));			/* fantastic structure defd in "dpi.h" */
+(Dpi *);			/* fantastic structure defd in "dpi.h" */
 
 EXTERN void init_dpi_struct	/* rd_dpi.c */
-PROTO((Dpi *));			/* fantastic structure defd in "dpi.h" */
+(Dpi *);			/* fantastic structure defd in "dpi.h" */
 
 void 
 exo_dpi_clone(Exo_DB *exo, 
 	      Dpi *dpi);
 
-#endif /* _RD_DPI_H */
+#endif /* GOMA_RD_DPI_H */

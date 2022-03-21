@@ -10,8 +10,8 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _MM_MP_CONST_H
-#define _MM_MP_CONST_H
+#ifndef GOMA_MM_MP_CONST_H
+#define GOMA_MM_MP_CONST_H
 
 #ifndef MAX_NUMBER_MATLS
 #define MAX_NUMBER_MATLS  9     /* maximum number of materials allowed */
@@ -48,6 +48,16 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define  CAP_PRES          7
 #define  FAUX_PLASTIC      16
 
+/* Moment Property Models */
+// growth rate
+#define VISCOSITY_SCALED_GROWTH_RATE 4
+#define VISCOSITY_PRESSURE_GROWTH_RATE 5
+
+// coalescence
+#define ADDITION_COALESCENCE 4
+#define VISCOSITY_SCALED_COALESCENCE 5
+#define VISCOSITY_BUBBLE_RATIO_COALESCENCE 6
+
 /* Source term models */
 #define  BOUSS          3       /* Boussinesq including rho*g*beta hydrostatic
 				 * component */
@@ -60,6 +70,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define  FILL_SRC       10
 #define  VARIABLE_DENSITY 11    /* Drying of Polymeric Film */
 #define  LEVEL_SET      1212      /* density varies smoothly from - to + level set */
+#define  VE_LEVEL_SET      1213      /* density varies smoothly from - to + level set */
 #define  EHD_POLARIZATION 13    /* EHD Polarization force */
 #define  LS_QUADRATIC    14      /* variation on LEVEL_SET viscosity model */
 #define  ACOUSTIC    15      /* Acoustic energy density coupled to NS */
@@ -70,6 +81,8 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define MELT             20  /* Lubrication source term model*/
 #define EM_DISS         21   /* heat generation by EM waves */
 #define EM_VECTOR_DISS  22   /* heat generation by EM vector waves */
+#define HS_FOAM_PBE 23
+#define HS_FOAM_PMDI_10 24
 
 /* MMH */
 /* #define  SUSPENSION_PM xxx Defiend below. */
@@ -190,6 +203,10 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
                                     */
 #define DENSITY_SUSPENSION_PM 14     /* special model for this system */
 #define DENSITY_THERMAL_BATTERY  905 /* special density model for thermal bat work */
+#define DENSITY_FOAM_PBE 34
+#define DENSITY_FOAM_PBE_EQN 35
+#define DENSITY_FOAM_PMDI_10 20
+#define DENSITY_MOMENT_BASED 21
 /**********************************************************************************/
 
 /*
@@ -203,6 +220,13 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 
 #define CHEMPOT_IDEALSOLN   4
 #define CHEMPOT_STOICHPHASE 5
+
+
+/*
+ * PBE Types
+ */
+#define PBE_R_11 0
+#define PBE_N_PENTANE 1
 
 
 /* #define FILL xxx already defined in rf_fem_const.h */
@@ -268,6 +292,22 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define BOND_SH               26   /* bond evolution structure model for viscosity with shear rate variable*/
 
 
+#define FOAM_PBE_WATER	34
+#define FOAM_PBE_OH	35
+#define FOAM_PBE_CO2_L	36
+#define FOAM_PBE_CO2_G	37
+#define FOAM_PBE_BA_L	38
+#define FOAM_PBE_BA_G	39
+
+#define FOAM_PMDI_10              40
+#define FOAM_PMDI_10_RXN              41
+#define FOAM_PMDI_10_H2O              42
+#define FOAM_PMDI_10_CO2              43
+#define FOAM_PMDI_10_CO2_LIQ              44
+#define FOAM_PMDI_10_CO2_GAS              45
+
+#define MOMENT_CONSTANT_GROWTH 50
+#define MOMENT_SIZE_DEPENDENT_COALESCENCE 51
 
 /*
  *  Heat source modeling
@@ -289,7 +329,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define CONSTANT_MELT 25     /* Shell Energy Source QCONV model */
 #define CONSTANT_MELT_TURB 26    /* Shell Energy Source QCONV model */
 #define LUBRICATION_FRICTION 27  /* Shell energy source VD model with solid-solid friction */
-
+#define HSM_FOAM_PBE 34
 /*
  *  Viscosity modeling
  *      -> HKM separated out the individual sections
@@ -440,6 +480,11 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define DILATION 3
 #define GIBBS_ISOTHERM 35
 
+/* species only diffusion choices */
+#define DIFF_OFF 0
+#define DIFF_POSITIVE 10
+#define DIFF_NEGATIVE 11
+
 /* Species Time Integration choices */
 #define STANDARD  0
 #define TAYLOR_GALERKIN	1
@@ -452,6 +497,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 /*Various thermophysical property models */
 #define ENTHALPY 4
 #define THERMAL_HEAT  45
+#define FOAM_PBE 46
 
 /*Electrode-kinetics Species Source model: KSC 10/13/98 */
 #define ELECTRODE_KINETICS 904
