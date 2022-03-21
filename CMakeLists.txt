@@ -113,13 +113,13 @@ endforeach()
 list(FIND Trilinos_PACKAGE_LIST Stratimikos stratimikos_package_index)
 if(${stratimikos_package_index} GREATER_EQUAL 0)
   option(ENABLE_STRATIMIKOS "ENABLE_STRATIMIKOS" ON)
-  if (ENABLE_STRATIMIKOS)
+  if(ENABLE_STRATIMIKOS)
     message(STATUS "TRILINOS: Stratimikos found, enabling in Goma")
     list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_STRATIMIKOS)
     list(FIND Trilinos_PACKAGE_LIST Teko teko_package_index)
     if(${teko_package_index} GREATER_EQUAL 0)
       option(ENABLE_TEKO "ENABLE_TEKO" ON)
-      if (ENABLE_TEKO)
+      if(ENABLE_TEKO)
         message(STATUS "TRILINOS: Teko found, enabling in Goma")
         list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_TEKO)
       endif()
@@ -904,6 +904,10 @@ set(GOMA_TPL_INCLUDES
 set(GOMA_TPL_LIBRARY_DIRS
     ${SEACASExodus_LIBRARY_DIRS} ${SEACASExodus_TPL_LIBRARY_DIRS}
     ${Trilinos_LIBRARY_DIRS} ${Trilinos_TPL_LIBRARY_DIRS})
+if(ENABLE_PETSC AND PETSC_FOUND)
+  set(GOMA_TPL_LIBRARY_DIRS ${GOMA_TPL_LIBRARY_DIRS}
+                            ${PETSC_STATIC_LIBRARY_DIRS})
+endif()
 
 set(GOMA_TPL_LIBRARIES
     ${SEACASExodus_LIBRARIES}
@@ -914,6 +918,9 @@ set(GOMA_TPL_LIBRARIES
     ${Trilinos_EXTRA_LD_FLAGS}
     ${MPI_C_LIBRARIES}
     ${MPI_Fortran_LIBRARIES})
+if(ENABLE_PETSC AND PETSC_FOUND)
+  set(GOMA_TPL_LIBRARIES ${GOMA_TPL_LIBRARIES} ${PETSC_STATIC_LIBRARIES})
+endif()
 
 # remove some C++ files from unity build as MACROS conflict with Trilinos
 # headers
@@ -976,6 +983,7 @@ add_library(goma_util ${GOMA_UTIL_SOURCES} ${GOMA_UTIL_INCLUDES})
 target_include_directories(goma_util PUBLIC include)
 target_include_directories(goma_util SYSTEM PRIVATE ${GOMA_TPL_INCLUDES})
 target_link_libraries(goma_util PUBLIC ${GOMA_TPL_LIBRARIES} gds)
+target_link_directories(goma_util PUBLIC ${GOMA_TPL_LIBRARY_DIRS})
 target_compile_definitions(goma_util PUBLIC ${GOMA_COMPILE_DEFINITIONS})
 if(ENABLE_WARNINGS)
   target_compile_options(
