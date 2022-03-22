@@ -1321,7 +1321,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
         for (w = 0; w < efv->Num_external_field; w++) {
           if (strcmp(efv->field_type[w], "transient") == 0) {
             err = rd_trans_vectors_from_exoII(x_old, efv->file_nm[w], w, n, &timeValueReadTrans,
-                                              cx[0], dpi);
+                                              exo, cx[0], dpi);
             if (err != 0) {
               DPRINTF(stderr, "%s: err from rd_trans_vectors_from_exoII\n", yo);
             }

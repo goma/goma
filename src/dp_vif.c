@@ -603,7 +603,7 @@ void noahs_ark(void) {
     ddd_add_member(n, &efv->TALE, 1, MPI_INT);
     for (i = 0; i < efv->Num_external_field; i++) {
       ddd_add_member(n, efv->name[i], 20, MPI_CHAR);
-      ddd_add_member(n, efv->file_nm[i], 85, MPI_CHAR);
+      ddd_add_member(n, efv->file_nm[i], MAX_FNL, MPI_CHAR);
       ddd_add_member(n, &efv->i[i], 1, MPI_INT);
       ddd_add_member(n, efv->field_type[i], 15, MPI_CHAR);
     }
