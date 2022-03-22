@@ -1,3 +1,11 @@
+## Changes in version 7.0.4
+
+- bugfix for External Field Variables in Parallel
+
+## Changes in version 7.0.3
+
+- bugfix for VE Shock Capturing documentation and Parallel
+
 ## Changes in version 7.0.2
 
 - Build script now builds `Omega_h` and `PETSc`

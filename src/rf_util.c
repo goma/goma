@@ -13,6 +13,7 @@
 \************************************************************************/
 
 /* Needed to declare POSIX function drand48 */
+#include "rf_solve.h"
 #define _XOPEN_SOURCE
 
 #include <limits.h>
@@ -2522,14 +2523,14 @@ int rd_vectors_from_exoII(double u[],
       /*
        * Allocate memory for external field variable arrays
        */
-      efv->ext_fld_ndl_val[variable_no] = alloc_dbl_1(num_nodes, 0.0);
+      efv->ext_fld_ndl_val[variable_no] = alloc_dbl_1(exo->num_nodes, 0.0);
       printf("rd_vectors_from_exoII: Allocated field %d for %s at %p\n", variable_no,
              efv->name[variable_no], (void *)efv->ext_fld_ndl_val[variable_no]);
       vdex = -1;
 #ifdef REACTION_PRODUCT_EFV
       if (TimeIntegration != STEADY) {
-        efv->ext_fld_ndl_val_old[variable_no] = alloc_dbl_1(num_nodes, 0.);
-        efv->ext_fld_ndl_val_older[variable_no] = alloc_dbl_1(num_nodes, 0.);
+        efv->ext_fld_ndl_val_old[variable_no] = alloc_dbl_1(exo->num_nodes, 0.);
+        efv->ext_fld_ndl_val_older[variable_no] = alloc_dbl_1(exo->num_nodes, 0.);
       }
 #endif
       for (i = 0; i < num_vars; i++) {
@@ -2540,8 +2541,19 @@ int rd_vectors_from_exoII(double u[],
       if (vdex == -1) {
         DPRINTF(stdout, "\n Cannot find external fields in exoII database, setting to null");
       } else {
+        dbl *tmp_vector = alloc_dbl_1(num_nodes, 0.0);
         error = ex_get_var(exoid, time_step, EX_NODAL, vdex, 1, num_nodes,
-                           efv->ext_fld_ndl_val[variable_no]);
+                          tmp_vector);
+        for (int k = 0; k < exo->num_nodes; k++) {
+          int base_index = exo->ghost_node_to_base[k];
+          if (base_index != -1) {
+            efv->ext_fld_ndl_val[variable_no][k] = tmp_vector[base_index];
+          }
+        }
+
+        exchange_node(cx[0], DPI_ptr, efv->ext_fld_ndl_val[variable_no]);
+        free(tmp_vector);
+        
         GOMA_EH(error, "ex_get_var nodal");
       }
     }
@@ -2561,6 +2573,7 @@ int rd_trans_vectors_from_exoII(double u[],
                                 const int variable_no,
                                 const int desired_time_step,
                                 double *timeValueIn,
+                                Exo_DB *exo,
                                 Comm_Ex *cx,
                                 Dpi *dpi)
 
@@ -2711,17 +2724,14 @@ int rd_trans_vectors_from_exoII(double u[],
       error = ex_get_var(exoid, time_step_higher, EX_NODAL, vdex, 1, num_nodes, val_high);
       GOMA_EH(error, "ex_get_var nodal");
 
-      for (k = 0; k < num_nodes; k++) {
-        slope = (val_high[k] - val_low[k]) / (time_higher - time_lower);
-        yint = val_low[k] - slope * time_lower;
+      for (k = 0; k < exo->num_nodes; k++) {
+        int base_index = exo->ghost_node_to_base[k];
+        if (base_index != -1) {
+        slope = (val_high[base_index] - val_low[base_index]) / (time_higher - time_lower);
+        yint = val_low[base_index] - slope * time_lower;
         efv->ext_fld_ndl_val[variable_no][k] = slope * (*timeValueIn) + yint;
-        /*if (k == 12) {
-                fprintf(ofp, "val_low %e\n", val_low[k]);
-                fprintf(ofp, "val_high %e\n", val_high[k]);
-                fprintf(ofp, "slope %e\n", slope);
-                fprintf(ofp, "yint %e\n", yint);
-                fprintf(ofp, "field value %e\n\n", slope * (*timeValueIn) + yint);
-        }*/
+
+      }
       }
     }
   }
@@ -2733,10 +2743,8 @@ int rd_trans_vectors_from_exoII(double u[],
 
   /*
    *  Exchange the degrees of freedom with neighboring processors
-   *  Actually, we may not need to do this as we have "broken" the external field
-   *  variable file already.   Each proc will read from that file ont he fly.
    */
-  /// exchange_node(cx, dpi, efv->ext_fld_ndl_val[variable_no]);
+  exchange_node(cx, dpi, efv->ext_fld_ndl_val[variable_no]);
 
   return 0;
 } /* end rd_trans_vectors_from_exoII*/

@@ -35,6 +35,7 @@
 #include "mm_elem_block_structs.h"
 #include "mm_mp_const.h"
 #include "rf_bc_const.h"
+#include "rf_io_const.h"
 #include "rf_vars_const.h"
 #include "sl_util_structs.h"
 #include "std.h"
@@ -1034,9 +1035,9 @@ struct External_Field_Variables {
   int ev_etch_area;  /* external area fraction in which etching reaction takes place */
   int ev_etch_depth; /* external depth field due to etching reaction */
 
-  char name[MAX_EXTERNAL_FIELD][20];
+  char name[MAX_EXTERNAL_FIELD][32];
   /* names of external field variables*/
-  char file_nm[MAX_EXTERNAL_FIELD][85];
+  char file_nm[MAX_EXTERNAL_FIELD][MAX_FNL];
   /* names of exodus or pixel files with variables */
   int i[MAX_EXTERNAL_FIELD];           /* Interpolation of variables */
   int ipix[MAX_EXTERNAL_FIELD];        /* 0 for exoII file and 1 for pix file */
