@@ -2542,8 +2542,7 @@ int rd_vectors_from_exoII(double u[],
         DPRINTF(stdout, "\n Cannot find external fields in exoII database, setting to null");
       } else {
         dbl *tmp_vector = alloc_dbl_1(num_nodes, 0.0);
-        error = ex_get_var(exoid, time_step, EX_NODAL, vdex, 1, num_nodes,
-                          tmp_vector);
+        error = ex_get_var(exoid, time_step, EX_NODAL, vdex, 1, num_nodes, tmp_vector);
         for (int k = 0; k < exo->num_nodes; k++) {
           int base_index = exo->ghost_node_to_base[k];
           if (base_index != -1) {
@@ -2553,7 +2552,7 @@ int rd_vectors_from_exoII(double u[],
 
         exchange_node(cx[0], DPI_ptr, efv->ext_fld_ndl_val[variable_no]);
         free(tmp_vector);
-        
+
         GOMA_EH(error, "ex_get_var nodal");
       }
     }
@@ -2727,11 +2726,10 @@ int rd_trans_vectors_from_exoII(double u[],
       for (k = 0; k < exo->num_nodes; k++) {
         int base_index = exo->ghost_node_to_base[k];
         if (base_index != -1) {
-        slope = (val_high[base_index] - val_low[base_index]) / (time_higher - time_lower);
-        yint = val_low[base_index] - slope * time_lower;
-        efv->ext_fld_ndl_val[variable_no][k] = slope * (*timeValueIn) + yint;
-
-      }
+          slope = (val_high[base_index] - val_low[base_index]) / (time_higher - time_lower);
+          yint = val_low[base_index] - slope * time_lower;
+          efv->ext_fld_ndl_val[variable_no][k] = slope * (*timeValueIn) + yint;
+        }
       }
     }
   }
