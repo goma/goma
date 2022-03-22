@@ -1,5 +1,5 @@
 ***********************
-Polymer Shock Function
+Polymer Shock Capturing
 ***********************
 
 ::
