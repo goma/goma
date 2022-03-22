@@ -214,8 +214,9 @@ extern int rd_trans_vectors_from_exoII /* rf_util.c                          */
                                         * implies the last time plane in the        *
                                         * exodus file.                              */
      double *timeValueRead,            /* Value of the time in the time plane read  */
-     Comm_Ex *,                        /* cx - communications structure */
-     Dpi *);                           /* dpi - distributed processing struct */
+     Exo_DB *,
+     Comm_Ex *, /* cx - communications structure */
+     Dpi *);    /* dpi - distributed processing struct */
 
 extern void init_vec_value(double *, const double, const int);
 extern void dcopy1(const int, const double *, double *);
