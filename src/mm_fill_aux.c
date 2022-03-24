@@ -12,10 +12,12 @@
 * See LICENSE file.                                                       *
 \************************************************************************/
 
+#define GOMA_MM_FILL_AUX_C
 #include "mm_fill_aux.h"
 
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "dpi.h"
@@ -49,7 +51,6 @@ extern dbl *p0; /* Defined in mm_as_alloc.c */
 
 #include "mm_eh.h"
 
-#define GOMA_MM_FILL_AUX_C
 /*
  *  flag to use default normal and determinant in CARTESIAN
  *  coordinates - otherwise multiply by coordinate scale factors
@@ -1092,7 +1093,7 @@ void h_elem_siz(dbl hsquared[DIM],
     }
   } else {
     GOMA_EH(GOMA_ERROR,
-            "SUPG not allowed for tetrahedral elements yet, or whatever weird element you have");
+             "SUPG not allowed for tetrahedral elements yet, or whatever weird element you have");
   }
 }
 /*************************************************************************/

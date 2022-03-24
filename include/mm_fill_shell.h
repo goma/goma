@@ -297,7 +297,7 @@ EXTERN void dPdz_function(dbl,
 
 EXTERN void dPdz_calc(dbl, dbl, dbl *, dbl *, dbl *, dbl *, dbl *, dbl *);
 
-EXTERN int assemble_lubrication_power_law(double,          /* Time */
+EXTERN void dPdz_calc(dbl, dbl, dbl *, dbl *, dbl *, dbl *, dbl *, dbl *);EXTERN int assemble_lubrication_power_law(double,          /* Time */
                                           double,          /* theta or tt*/
                                           double,          /* dt */
                                           double[DIM],     /* Local stu coords */
@@ -329,5 +329,13 @@ EXTERN int assemble_shell_mesh(double,             /* Time */
                                double,             /* dt */
                                double[DIM],        /* Local stu coords */
                                const Exo_DB *exo); /* ExodusII database struct pointer */
+
+int assemble_lubrication_bonn(double time,    /* present time value */
+                              double tt,      /* parameter to vary time integration from
+                                              explicit (tt = 1) to implicit (tt = 0)    */
+                              double dt,      /* current time step size */
+                              double xi[DIM], /* Local stu coordinates */
+                              const Exo_DB *exo);
+
 
 #endif /* GOMA_MM_FILL_SHELL_H */

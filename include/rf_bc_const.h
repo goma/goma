@@ -112,7 +112,7 @@
 #endif
 
 #ifndef MAX_BC_TABLES
-#define MAX_BC_TABLES 30
+#define MAX_BC_TABLES 304
 #endif
 
 #ifndef MAX_MP_TABLES
@@ -1117,7 +1117,11 @@
 #define RESTIME_NOBC_BC              788000031
 #define RESTIME_GRADSIC_BC           788000032
 #define SHELL_LUBRICATION_OUTFLOW_BC 777000053
-
+#define SHELL_CROSS_SHEAR_BC         777000051
+#define LUB_PRESS_3_BC               777000052
+#define GRAD_LUB_PRESS_3_BC          777000053
+#define SHELL_SHEAR_TOP_BC           777000054
+#define SHELL_SHEAR_BOT_BC           777000055
 /* Vectors used for rotations */
 #define ROT_NONE -1
 #define ROT_N    -2

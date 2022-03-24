@@ -24,6 +24,7 @@
 #include <string.h>
 
 /* GOMA include files */
+#define GOMA_MM_FILL_C
 
 #include "ac_stability.h"
 #include "ac_stability_util.h"
@@ -100,7 +101,6 @@
 #include "stdbool.h"
 #include "wr_side_data.h"
 
-#define GOMA_MM_FILL_C
 
 /*
  * Global variables defined here. Declared frequently via rf_bc.h
@@ -895,7 +895,8 @@ Revised:         Summer 1998, SY Tam (UNM)
   if (pde[R_SOLID1]) {
     if (pd->etm[pg->imtrx][R_SOLID1][(LOG2_MASS)])
       GOMA_EH(GOMA_ERROR, "Cannot do real inertia for TALE yet. Remove this line if trying to "
-                          "perform EULERIAN solid mechanics");
+                          "perform EULERIAN "
+             "solid mechanics");
     eqn = R_SOLID1;
     if (pd->TimeIntegration != STEADY && pd->etm[pg->imtrx][R_SOLID1][(LOG2_MASS)] &&
         !ls->elem_overlap_state && *esp->F[0] >= 0.0) {
@@ -1154,14 +1155,18 @@ Revised:         Summer 1998, SY Tam (UNM)
         if (pfd != NULL && pde[R_EXT_VELOCITY]) {
           ls_old = ls;
           ls = pfd->ls[0];
-          err = assemble_fill(theta, delta_t, &pg_data, R_PHASE1, xi, exo, time_value,
+        // err = assemble_fill(theta, delta_t, &pg_data, R_PHASE1, xi, exo, time_value,
+          // &mass_lumped_penalty);
+          err = assemble_fill(theta, delta_t, &pg_data,
+                              R_FILL, xi, exo, time_value,
                               &mass_lumped_penalty);
           ls = ls_old; /*Make things right again */
           GOMA_EH(err, "assemble_fill");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_fill");
           if (err)
-            return -1;
+
+        return -1;
 #endif /* CHECK_FINITE */
         }
       }
@@ -1475,7 +1480,7 @@ Revised:         Summer 1998, SY Tam (UNM)
       err = assemble_stress_log_conf_transient(theta, delta_t, &pg_data);
 
       GOMA_EH(err, "assemble_stress_log_conf");
-      if (err)
+     if (err)
         return -1;
       err = segregate_stress_update(x_update);
       GOMA_EH(err, "assemble_stress_update");
@@ -1939,7 +1944,18 @@ Revised:         Summer 1998, SY Tam (UNM)
       GOMA_EH(GOMA_ERROR, "SHELL_LUBP routine not available yet");
     }
 
-    if (pde[R_LUBP]) {
+    if (pde[R_LUBP]){
+      if (gn->ConstitutiveEquation == BINGHAM) {
+        err = assemble_lubrication_bonn(time_value, theta, delta_t, xi, exo);
+        GOMA_EH(err, "assemble_lubrication_bonn");
+#ifdef CHECK_FINITE
+        err = CHECKFINITE("assemble_lubrication_bonn");
+        if (err)
+          return -1;
+#endif
+        if (neg_lub_height)
+          return -1;
+      } else {
       err = assemble_lubrication(R_LUBP, time_value, theta, delta_t, xi, exo);
       GOMA_EH(err, "assemble_lubrication");
 #ifdef CHECK_FINITE
@@ -1948,7 +1964,7 @@ Revised:         Summer 1998, SY Tam (UNM)
         return -1;
 #endif
       if (neg_lub_height)
-        return -1;
+        return -1;}
     }
 
     if (pde[R_LUBP_2]) {
@@ -2330,6 +2346,21 @@ Revised:         Summer 1998, SY Tam (UNM)
       err = CHECKFINITE("assemble_pmomentum");
       if (err)
         return -1;
+#endif
+    }
+
+    if (pde[R_MOMENT0] || pde[R_MOMENT1] || pde[R_MOMENT2] || pde[R_MOMENT3]) {
+      err = assemble_moments(time_value, theta, delta_t, &pg_data);
+      GOMA_EH(err, "assemble_moments");
+#ifdef CHECK_FINITE
+      CHECKFINITE("assemble_moments");
+#endif
+    }
+    if (pde[R_DENSITY_EQN]) {
+      err = assemble_density();
+      GOMA_EH(err, "assemble_density");
+#ifdef CHECK_FINITE
+      CHECKFINITE("assemble_density");
 #endif
     }
 
@@ -3152,7 +3183,7 @@ Revised:         Summer 1998, SY Tam (UNM)
           ls = pfd->ls[0];
         } else {
           GOMA_EH(GOMA_ERROR,
-                  "YOU cannot apply CONTACT_SURF BCs in mm_names.h with FILL field. R_PHASE only");
+                   "YOU cannot apply CONTACT_SURF BCs in mm_names.h with FILL field. R_PHASE only");
         }
 
         err = apply_contact_bc(x, resid_vector, delta_t, theta, pg_data.h_elem_avg, pg_data.h,
@@ -3832,7 +3863,8 @@ int matrix_fill_stress(struct GomaLinearSolverData *ams,
   if (pde[R_SOLID1]) {
     if (pd->etm[pg->imtrx][R_SOLID1][(LOG2_MASS)])
       GOMA_EH(GOMA_ERROR, "Cannot do real inertia for TALE yet. Remove this line if trying to "
-                          "perform EULERIAN solid mechanics");
+                          "perform EULERIAN "
+             "solid mechanics");
     eqn = R_SOLID1;
     if (pd->TimeIntegration != STEADY && pd->etm[pg->imtrx][R_SOLID1][(LOG2_MASS)] &&
         !ls->elem_overlap_state && *esp->F[0] >= 0.0) {
@@ -4573,7 +4605,7 @@ int matrix_fill_stress(struct GomaLinearSolverData *ams,
           ls = pfd->ls[0];
         } else {
           GOMA_EH(GOMA_ERROR,
-                  "YOU cannot apply CONTACT_SURF BCs in mm_names.h with FILL field. R_PHASE only");
+                   "YOU cannot apply CONTACT_SURF BCs in mm_names.h with FILL field. R_PHASE only");
         }
 
         err = apply_contact_bc(x, resid_vector, delta_t, theta, pg_data.h_elem_avg, pg_data.h,
