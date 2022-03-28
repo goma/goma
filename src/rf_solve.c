@@ -2056,8 +2056,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
             /* Write out the full solution */
             {
               write_solution(ExoFileOut, resid_vector, x, x_sens_p, x_old, xdot, xdot_old, tev,
-                             tev_post, gv, rd, gindex, p_gsize, gvec, gvec_elem, &nprint, delta_t,
-                             theta, time, x_pp, exo, dpi);
+                tev_post, gv, rd, gvec, gvec_elem, &nprint, delta_t, theta, time, x_pp, exo, dpi);
               nprint++;
             } else if (Num_Export_XP > 0)
             /* Just update the post-processing fields */
@@ -2385,7 +2384,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
           }
           if (Write_Intermediate_Solutions == 0) {
             write_solution(ExoFileOut, resid_vector, x, x_sens_p, x_old, xdot, xdot_old, tev,
-                           tev_post, gv, rd, gindex, p_gsize, gvec, gvec_elem, &nprint, delta_t,
+                           tev_post, gv, rd, gvec, gvec_elem, &nprint, delta_t,
                            theta, time, x_pp, exo, dpi);
             nprint++;
           }
