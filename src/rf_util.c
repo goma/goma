@@ -1841,7 +1841,7 @@ void init_vec(
               if (var == MASS_FRACTION && Var_init_mat[mn][j].ktype >= pd->Num_Species_Eqn) {
                 continue;
               }
-              if (nunks == 1) {
+	      if (nunks == 1 && Var_init_mat[mn][j].len_u_pars <= 0) {
                 ipos = Index_Solution(i, var, Var_init_mat[mn][j].ktype, 0, mn, pg->imtrx);
                 u[ipos] = Var_init_mat[mn][j].init_val;
               } else {
@@ -2037,7 +2037,8 @@ void init_vec(
 		  Var_init_mat[mn][j].ktype >= pd->Num_Species_Eqn) {
 		continue;
 	      }
-	      if (nunks == 1 && Var_init_mat[mn][j].len_u_pars == 7) {
+	      if (nunks == 1) {
+	       if (Var_init_mat[mn][j].len_u_pars == 7 && Var_init_mat[mn][j].var == TEMPERATURE) {
 		double xpt0[DIM], dist, distz, T_below;
 		double alpha, speed, ht, sum, xn, exp_arg;
 		int n_terms=4, nt, dir;
@@ -2049,7 +2050,6 @@ void init_vec(
 		ht = Var_init_mat[mn][j].u_pars[DIM+2];
 		T_below = Var_init_mat[mn][j].u_pars[DIM+3];
                 ipos = Index_Solution(i, var, Var_init_mat[mn][j].ktype, 0, mn, pg->imtrx);
-#if 1
 		sum = 0.;
 		for (nt=0 ; nt<n_terms ; nt++)
 		   {
@@ -2062,8 +2062,20 @@ void init_vec(
 		    sum += exp(exp_arg)*cos(M_PIE/ht*distz*xn)*2./M_PIE*pow(-1.,nt)/xn;
 		   }
 		u[ipos] = T_below - (T_below-Var_init_mat[mn][j].init_val)*sum;
-/*fprintf(stderr,"mat_init %g %g %g %g\n",u[ipos],exp_arg, sum, dist);*/
-#endif
+	        } 
+	       else 
+		if (Var_init_mat[mn][j].len_u_pars == 5 && Var_init_mat[mn][j].var == MESH_DISPLACEMENT1) {
+		   double xpt0[DIM], T_pos, T_ref;
+		   int dir;
+		   for (dir=0 ; dir<DIM ; dir++)
+		     {xpt0[dir] = Var_init_mat[mn][j].u_pars[dir]; }
+                   ipos = Index_Solution(i, var, TEMPERATURE, 0, mn, pg->imtrx);
+		   T_pos = u[ipos];
+                   ipos = Index_Solution(i, var, Var_init_mat[mn][j].ktype, 0, mn, pg->imtrx);
+		   T_ref = Var_init_mat[mn][j].u_pars[DIM+1];
+		   for (dir=0 ; dir<DIM ; dir++)
+		    {u[ipos+dir] = Var_init_mat[mn][j].u_pars[DIM]*(Coor[dir][i]-xpt0[dir])*(T_pos-T_ref);}
+	        } 
 	      } 
 	    }
 	  } /* end for j<Num_Var_Init_Mat[mn] */

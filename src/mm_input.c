@@ -9442,7 +9442,7 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
                    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)]),
                    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)]),
                    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)])) != 5) {
-          if (TimeIntegration == TRANSIENT) {
+          if (TimeIntegration == TRANSIENT || Linear_Stability != LSA_NONE) {
             pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)] = 1.0;
           } else {
             pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)] = .0;
@@ -9489,7 +9489,7 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
                    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)]),
                    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)]),
                    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_POROUS_BRINK)])) != 6) {
-          if (TimeIntegration == TRANSIENT) {
+          if (TimeIntegration == TRANSIENT || Linear_Stability != LSA_NONE) {
             pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)] = 1.0;
           } else {
             pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)] = .0;

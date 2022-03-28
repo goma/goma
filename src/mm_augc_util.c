@@ -3437,14 +3437,13 @@ double getPositionAC(struct AC_Information *augc, double *cAC_iAC, double *x, Ex
  */
 double getAngleAC(struct AC_Information *augc, double *cAC_iAC, 
 		     double *x, Exo_DB *exo)  {
-  double posNode[3], ordinate, n1[DIM],n2[DIM], n_dot_n, xi[DIM];
+  double ordinate, n1[DIM],n2[DIM], n_dot_n, xi[DIM];
   double n1_dx[DIM][DIM][MDE], n2_dx[DIM][DIM][MDE], d_ord_dx[4][DIM][DIM][MDE];
   int i, ins, inode, mat_num, face, node2, err, ielem, num_nodes_on_side;
   int p,q,k, ielem_dim;
   int local_side[2], side_nodes[3];		/* Assume quad has no more than 3 per side. */
   int elem_list[4],local_node[4],elem_ct;
   NODE_INFO_STRUCT  *node_ptr;
-  double pos1D = 0.0;
 
   if (augc->COMPID != 0 && augc->COMPID != 1) {
     printf("!augc->COMPID != 0,1 - don't know what to do\n");

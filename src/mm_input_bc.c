@@ -3096,6 +3096,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
   }
 
   SPF(echo_string, "%s = %d", "Number of rotation conditions", Num_ROT);
+  ECHO(echo_string, echo_file);
 
   /*
    *  Allocate space for the vector, ROT_Types.
