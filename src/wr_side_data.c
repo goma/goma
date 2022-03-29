@@ -196,10 +196,10 @@ int ns_data_print(pp_Data *p,
         }
         if (quantity == MASS_FRACTION) {
           id_var = Index_Solution(node, quantity, species_id, 0, mat_num, pg->imtrx);
-        } else if (quantity < 0) {
-          id_var = -1;
-        } else {
+        } else if (quantity >= V_FIRST && quantity <= V_LAST) {
           id_var = Index_Solution(node, quantity, 0, 0, mat_num, pg->imtrx);
+        } else {
+          id_var = -1;
         }
 
         /*
