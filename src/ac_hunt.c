@@ -534,17 +534,36 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
 
   /* Allocate sparse matrix */
 
-  if (strcmp(Matrix_Format, "msr") == 0) {
+  if (strcmp(Matrix_Format, "epetra") == 0) {
+    err = check_compatible_solver();
+    GOMA_EH(err,
+            "Incompatible matrix solver for epetra, epetra supports amesos and aztecoo solvers.");
+    check_parallel_error("Matrix format / Solver incompatibility");
+    ams[JAC]->RowMatrix =
+        EpetraCreateRowMatrix(num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]);
+    EpetraCreateGomaProblemGraph(ams[JAC], exo, dpi);
+#ifdef GOMA_ENABLE_PETSC
+  } else if (strcmp(Matrix_Format, "petsc") == 0) {
+    err = check_compatible_solver();
+    GOMA_EH(err, "Incompatible matrix solver for petsc, solver must be petsc");
+    check_parallel_error("Matrix format / Solver incompatibility");
+    pg->imtrx = 0;
+    goma_error err = goma_setup_petsc_matrix(
+        ams[JAC], exo, dpi, x, x_old, xdot, xdot_old, num_internal_dofs[pg->imtrx],
+        num_boundary_dofs[pg->imtrx], num_external_dofs[pg->imtrx], pg->imtrx);
+    GOMA_EH(err, "goma_setup_petsc_matrix");
+#endif
+  } else if (strcmp(Matrix_Format, "msr") == 0) {
     log_msg("alloc_MSR_sparse_arrays...");
     alloc_MSR_sparse_arrays(&ija, &a, &a_old, 0, node_to_fill, exo, dpi);
     /*
      * An attic to store external dofs column names is needed when
      * running in parallel.
      */
-
     alloc_extern_ija_buffer(num_universe_dofs[pg->imtrx],
                             num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx], ija,
                             &ija_attic);
+
     /*
      * Any necessary one time initialization of the linear
      * solver package (Aztec).

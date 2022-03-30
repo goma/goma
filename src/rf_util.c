@@ -1840,11 +1840,11 @@ void init_vec(
                */
               if (var == MASS_FRACTION && Var_init_mat[mn][j].ktype >= pd->Num_Species_Eqn) {
                 continue;
-              }
+                }
 	      if (nunks == 1 && Var_init_mat[mn][j].len_u_pars <= 0) {
                 ipos = Index_Solution(i, var, Var_init_mat[mn][j].ktype, 0, mn, pg->imtrx);
                 u[ipos] = Var_init_mat[mn][j].init_val;
-              } else {
+                } else {
                 /*
                  * Ok, there is more than one degree of freedom for this
                  * variable type at this node. Why? Let's break down
@@ -1999,7 +1999,7 @@ void init_vec(
     mp = mp_glob[mn];
     if (Num_Var_Init_Mat[mn] > 0) {
       e_start = exo->eb_ptr[ebi];
-      e_end   = exo->eb_ptr[ebi+1];
+      e_end = exo->eb_ptr[ebi+1];
 
       /*
        *  Loop over each element in the element block
