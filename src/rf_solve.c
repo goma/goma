@@ -1031,27 +1031,21 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
       /*
        * Compute global volumetric quantities
        */
-	for (i = 0; i < nn_volume; i++ ) {
-	  evaluate_volume_integral(exo, dpi,
-				   pp_volume[i]->volume_type,
-				   pp_volume[i]->volume_name,
-				   pp_volume[i]->blk_id,
-				   pp_volume[i]->species_no,
-				   pp_volume[i]->volume_fname,
-				   pp_volume[i]->params,
-				   pp_volume[i]->num_params,
-				   NULL,  x, xdot, delta_t,
-				   time1, 1);
-	}
-	if( Output_Variable_Stats)	{
-	    err = variable_stats ( x, time1);
-	    GOMA_EH(err, "Problem with variable_stats!");
-	    if(ProcID == 0) fflush(stdout); 
-	    }
+      for (i = 0; i < nn_volume; i++) {
+        evaluate_volume_integral(exo, dpi, pp_volume[i]->volume_type, pp_volume[i]->volume_name,
+                                 pp_volume[i]->blk_id, pp_volume[i]->species_no,
+                                 pp_volume[i]->volume_fname, pp_volume[i]->params,
+                                 pp_volume[i]->num_params, NULL, x, xdot, delta_t, time1, 1);
+      }
+      if (Output_Variable_Stats) {
+        err = variable_stats(x, time1);
+        GOMA_EH(err, "Problem with variable_stats!");
+        if (ProcID == 0)
+          fflush(stdout);
+      }
 
-	DPRINTF(stderr,"\t\tconverged SS!\n");
-    }	/* if converged */
-    
+      DPRINTF(stderr, "\t\tconverged SS!\n");
+    } /* if converged */
 
     if (Anneal_Mesh) {
       /*
@@ -1071,7 +1065,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
                                   xdot_old, x_update, &converged, &nprint, tnv, tnv_post, tev,
                                   tev_post, rd, gindex, p_gsize, gvec, gvec_elem, time1, exo, dpi);
       GOMA_EH(err, "Problem from solve_stability_problem.");
-      DPRINTF(stderr,"\t\tcompleted LSA!\n");
+      DPRINTF(stderr, "\t\tcompleted LSA!\n");
     }
 
     if (Particle_Dynamics) {
@@ -2056,7 +2050,8 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
             /* Write out the full solution */
             {
               write_solution(ExoFileOut, resid_vector, x, x_sens_p, x_old, xdot, xdot_old, tev,
-                tev_post, gv, rd, gvec, gvec_elem, &nprint, delta_t, theta, time, x_pp, exo, dpi);
+                             tev_post, gv, rd, gvec, gvec_elem, &nprint, delta_t, theta, time, x_pp,
+                             exo, dpi);
               nprint++;
             } else if (Num_Export_XP > 0)
             /* Just update the post-processing fields */
@@ -2124,9 +2119,10 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
                         augc[iAC].MTID, augc[iAC].evol, augc[iAC].lm_resid, augc[iAC].VOLID,
                         x_AC[iAC]);
               } else if (augc[iAC].Type == AC_ANGLE) {
-		DPRINTF(stderr, "\tNodeSet[%4d]_Ang = %10.6e F_bal = %10.6e VC[%4d] Param=%10.6e\n", 
-			augc[iAC].MTID, augc[iAC].evol, augc[iAC].lm_resid, augc[iAC].VOLID, x_AC[iAC]);
-	      }
+                DPRINTF(stderr, "\tNodeSet[%4d]_Ang = %10.6e F_bal = %10.6e VC[%4d] Param=%10.6e\n",
+                        augc[iAC].MTID, augc[iAC].evol, augc[iAC].lm_resid, augc[iAC].VOLID,
+                        x_AC[iAC]);
+              }
             }
           }
 
@@ -2384,8 +2380,8 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
           }
           if (Write_Intermediate_Solutions == 0) {
             write_solution(ExoFileOut, resid_vector, x, x_sens_p, x_old, xdot, xdot_old, tev,
-                           tev_post, gv, rd, gvec, gvec_elem, &nprint, delta_t,
-                           theta, time, x_pp, exo, dpi);
+                           tev_post, gv, rd, gvec, gvec_elem, &nprint, delta_t, theta, time, x_pp,
+                           exo, dpi);
             nprint++;
           }
         }

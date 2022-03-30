@@ -369,15 +369,15 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
                      * 1 -- this is the first LU,
                      * 2 -- >1st LU, similar matrix structure,
                      * 3 -- new rhs, use already factored LU
-
+  
                      UMFPACK USAGE:
-
+  
                      0   : LOAD MATRIX AND ANALYSIS/DECOMPOSITION
                            AND BACK SUBSTITUTION
                      1   : LOAD MATRIX AND DECOMPOSITION USING PAST ANALYSIS
                            AND BACK SUBSTITUTION
                      > 2 : BACK SUBSTITUTION ONLY
-
+  
                      */
 
   int matr_form = 0; /* 1: MSR FORMAT MATRIX FOR UMFPACK DRIVER */
@@ -975,7 +975,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
         case AC_VOLUME:
         case AC_LS_VEL:
         case AC_POSITION:
-	case AC_ANGLE:
+        case AC_ANGLE:
           std_aug_cond(iAC, nAC, x_AC, bAC, cAC, dAC, gAC, numProcUnknowns, cx, &mf_args);
           break;
 
@@ -2069,36 +2069,34 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
             DPRINTF(stdout, "\tBC[%4d] DF[%4d]=% 10.6e Update=% 10.6e\n", augc[iAC].BCID,
                     augc[iAC].DFID, x_AC[iAC], damp_factor * yAC[iAC]);
           } else if (augc[iAC].Type == AC_USERMAT || augc[iAC].Type == AC_FLUX_MAT) {
-              DPRINTF(stdout, "\tMT[%4d] MP[%4d]=% 10.6e Update=% 10.6e\n", augc[iAC].MTID,
-                      augc[iAC].MPID, x_AC[iAC], damp_factor * yAC[iAC]);
+            DPRINTF(stdout, "\tMT[%4d] MP[%4d]=% 10.6e Update=% 10.6e\n", augc[iAC].MTID,
+                    augc[iAC].MPID, x_AC[iAC], damp_factor * yAC[iAC]);
           } else if (augc[iAC].Type == AC_VOLUME) {
-                DPRINTF(stdout, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
-                        augc[iAC].VOLID, augc[iAC].evol, x_AC[iAC]);
+            DPRINTF(stdout, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
+                    augc[iAC].VOLID, augc[iAC].evol, x_AC[iAC]);
           } else if (augc[iAC].Type == AC_FLUX) {
-                  DPRINTF(stdout, "\tBC[%4d] DF[%4d]=% 10.6e Update=% 10.6e\n", augc[iAC].BCID,
-                          augc[iAC].DFID, x_AC[iAC], damp_factor * yAC[iAC]);
+            DPRINTF(stdout, "\tBC[%4d] DF[%4d]=% 10.6e Update=% 10.6e\n", augc[iAC].BCID,
+                    augc[iAC].DFID, x_AC[iAC], damp_factor * yAC[iAC]);
           } else if (augc[iAC].Type == AC_LGRM) {
-                    DPRINTF(stdout, "\tAC[%d], Lagrange Multiplier=%10.6e Update=%10.6e\n", iAC,
-                            x_AC[iAC], damp_factor * yAC[iAC]);
+            DPRINTF(stdout, "\tAC[%d], Lagrange Multiplier=%10.6e Update=%10.6e\n", iAC, x_AC[iAC],
+                    damp_factor * yAC[iAC]);
           } else if (augc[iAC].Type == AC_ARC_LENGTH) {
-                      DPRINTF(stdout, "\tAC[%d], Arc Length Parameter=%10.6e Update=%10.6e\n", iAC,
-                              x_AC[iAC], damp_factor * yAC[iAC]);
+            DPRINTF(stdout, "\tAC[%d], Arc Length Parameter=%10.6e Update=%10.6e\n", iAC, x_AC[iAC],
+                    damp_factor * yAC[iAC]);
           } else if (augc[iAC].Type == AC_OVERLAP) {
-                        DPRINTF(stdout,
-                                "\tAC[%d], Elem %d Side %d  Dim %d:  LM=%10.6e  Update=%10.6e\n",
-                                iAC, augc[iAC].lm_elem, augc[iAC].lm_side, augc[iAC].lm_dim,
-                                x_AC[iAC], damp_factor * yAC[iAC]);
+            DPRINTF(stdout, "\tAC[%d], Elem %d Side %d  Dim %d:  LM=%10.6e  Update=%10.6e\n", iAC,
+                    augc[iAC].lm_elem, augc[iAC].lm_side, augc[iAC].lm_dim, x_AC[iAC],
+                    damp_factor * yAC[iAC]);
           } else if (augc[iAC].Type == AC_PERIODIC) {
-                          DPRINTF(stdout,
-                                  "\tAC[%d], Elem %d Side %d  Var %s:  LM=%10.6e  Update=%10.6e\n",
-                                  iAC, augc[iAC].lm_elem, augc[iAC].lm_side,
-                                  Var_Name[augc[iAC].VAR].name1, x_AC[iAC], damp_factor * yAC[iAC]);
+            DPRINTF(stdout, "\tAC[%d], Elem %d Side %d  Var %s:  LM=%10.6e  Update=%10.6e\n", iAC,
+                    augc[iAC].lm_elem, augc[iAC].lm_side, Var_Name[augc[iAC].VAR].name1, x_AC[iAC],
+                    damp_factor * yAC[iAC]);
           } else if (augc[iAC].Type == AC_POSITION) {
-                            DPRINTF(stdout, "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n",
-                                    augc[iAC].MTID, augc[iAC].VOLID, augc[iAC].evol, x_AC[iAC]);
+            DPRINTF(stdout, "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
+                    augc[iAC].VOLID, augc[iAC].evol, x_AC[iAC]);
           } else if (augc[iAC].Type == AC_ANGLE) {
-                            DPRINTF(stdout, "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n",
-                                    augc[iAC].MTID, augc[iAC].VOLID, augc[iAC].evol, x_AC[iAC]);
+            DPRINTF(stdout, "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
+                    augc[iAC].VOLID, augc[iAC].evol, x_AC[iAC]);
           }
         }
       }

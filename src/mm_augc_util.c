@@ -76,8 +76,7 @@ static int estimate_dAC_ALC(int, double[], double **, int, Comm_Ex *, MF_Args *)
 static double
 getPositionAC(struct AC_Information *augc, double *cAC_iAC, double *soln, Exo_DB *exo);
 
-static double 
-getAngleAC(struct AC_Information *augc, double *cAC_iAC, double *soln, Exo_DB *exo);
+static double getAngleAC(struct AC_Information *augc, double *cAC_iAC, double *soln, Exo_DB *exo);
 
 /*
 
@@ -127,7 +126,7 @@ void load_extra_unknownsAC(int iAC,     /* ID NUMBER OF AC'S */
   }
 
   if (augc[iAC].Type == AC_USERBC || augc[iAC].Type == AC_VOLUME || augc[iAC].Type == AC_FLUX ||
-      augc[iAC].Type == AC_LS_VEL || augc[iAC].Type == AC_POSITION || augc[iAC].Type == AC_ANGLE )  {
+      augc[iAC].Type == AC_LS_VEL || augc[iAC].Type == AC_POSITION || augc[iAC].Type == AC_ANGLE) {
 
     ibc = augc[iAC].BCID;
     idf = augc[iAC].DFID;
@@ -855,10 +854,9 @@ void update_parameterAC(
       update_parameterC(iCC, value, x, xdot, xa, cont->Delta_s0, cx, exo, dpi);
     }
   }
-    
-  if (augc[iAC].Type == AC_USERBC || augc[iAC].Type == AC_VOLUME || 
-      augc[iAC].Type ==AC_FLUX    || augc[iAC].Type == AC_LS_VEL || 
-      augc[iAC].Type == AC_POSITION || augc[iAC].Type == AC_ANGLE ) {
+
+  if (augc[iAC].Type == AC_USERBC || augc[iAC].Type == AC_VOLUME || augc[iAC].Type == AC_FLUX ||
+      augc[iAC].Type == AC_LS_VEL || augc[iAC].Type == AC_POSITION || augc[iAC].Type == AC_ANGLE) {
 
     ibc = augc[iAC].BCID;
     idf = augc[iAC].DFID;
@@ -1971,25 +1969,22 @@ int std_aug_cond(int iAC,
     // Formulate and store the residual for the augmented condition
     gAC[iAC] = (inventory - augc[iAC].CONSTV);
   } else if (augc[iAC].Type == AC_ANGLE) {
-      inventory = getAngleAC(augc + iAC, cAC[iAC], mf_args->x, mf_args->exo);
+    inventory = getAngleAC(augc + iAC, cAC[iAC], mf_args->x, mf_args->exo);
 #ifdef PARALLEL
-      if( Num_Proc > 1 ) 
-	{
-	  MPI_Allreduce(&inventory, &global_inventory, 1, MPI_DOUBLE, MPI_SUM,
-			MPI_COMM_WORLD);
-	  inventory = global_inventory;
-	}
-#endif
-      /*
-       * And last of all. set the diagonal sensitivities to zero (but not for Level Set Velocity AC)
-       */
-      for (jAC = 0; jAC < nAC; jAC++)
-	{
-	  dAC[iAC][jAC] = 0.0;
-	}
-      // Formulate and store the residual for the augmented condition 
-      gAC[iAC] = (inventory -  augc[iAC].CONSTV);
+    if (Num_Proc > 1) {
+      MPI_Allreduce(&inventory, &global_inventory, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+      inventory = global_inventory;
     }
+#endif
+    /*
+     * And last of all. set the diagonal sensitivities to zero (but not for Level Set Velocity AC)
+     */
+    for (jAC = 0; jAC < nAC; jAC++) {
+      dAC[iAC][jAC] = 0.0;
+    }
+    // Formulate and store the residual for the augmented condition
+    gAC[iAC] = (inventory - augc[iAC].CONSTV);
+  }
 
   // Time dependent augmenting conditions. This small section provides an
   // example for turning on a time dependent
@@ -3435,22 +3430,21 @@ double getPositionAC(struct AC_Information *augc, double *cAC_iAC, double *x, Ex
  *  This is used by the AC_ANGLE augmenting condition to provide an
  *  additional equation to a system.
  */
-double getAngleAC(struct AC_Information *augc, double *cAC_iAC, 
-		     double *x, Exo_DB *exo)  {
-  double ordinate, n1[DIM],n2[DIM], n_dot_n, xi[DIM];
+double getAngleAC(struct AC_Information *augc, double *cAC_iAC, double *x, Exo_DB *exo) {
+  double ordinate, n1[DIM], n2[DIM], n_dot_n, xi[DIM];
   double n1_dx[DIM][DIM][MDE], n2_dx[DIM][DIM][MDE], d_ord_dx[4][DIM][DIM][MDE];
   int i, ins, inode, mat_num, face, node2, err, ielem, num_nodes_on_side;
-  int p,q,k, ielem_dim;
-  int local_side[2], side_nodes[3];		/* Assume quad has no more than 3 per side. */
-  int elem_list[4],local_node[4],elem_ct;
-  NODE_INFO_STRUCT  *node_ptr;
+  int p, q, k, ielem_dim;
+  int local_side[2], side_nodes[3]; /* Assume quad has no more than 3 per side. */
+  int elem_list[4], local_node[4], elem_ct;
+  NODE_INFO_STRUCT *node_ptr;
 
   if (augc->COMPID != 0 && augc->COMPID != 1) {
     printf("!augc->COMPID != 0,1 - don't know what to do\n");
     exit(-1);
   }
 
-  // Node set index of 1 node NS containing the position node 
+  // Node set index of 1 node NS containing the position node
   int NSIndexPosition = augc->MTID;
 
   // Get the global node number from the structure
@@ -3461,11 +3455,11 @@ double getAngleAC(struct AC_Information *augc, double *cAC_iAC,
        ID specified by NSIndexPosition */
     if (exo->ns_id[ins] == NSIndexPosition) {
       if (exo->ns_num_nodes[ins] != 1) {
-	printf("Should be equal to one %d\n", exo->ns_num_nodes[ins]);
-	exit(-1);
+        printf("Should be equal to one %d\n", exo->ns_num_nodes[ins]);
+        exit(-1);
       }
       /* Get the 0th local node in the current node set */
-      inode = exo->ns_node_list[exo->ns_node_index[ins] + 0 ];
+      inode = exo->ns_node_list[exo->ns_node_index[ins] + 0];
       node_ptr = Nodes[inode];
       globalNodeNum = node_ptr->Global_Node_Num;
     }
@@ -3473,18 +3467,19 @@ double getAngleAC(struct AC_Information *augc, double *cAC_iAC,
 
   // Decide whether this processor owns that node and get local node number
   int node = -1;
-  for (i = 0; i <  Num_Internal_Nodes + Num_Border_Nodes ; i++) {
+  for (i = 0; i < Num_Internal_Nodes + Num_Border_Nodes; i++) {
     node_ptr = Nodes[i];
-    if (globalNodeNum  == node_ptr->Global_Node_Num) {
+    if (globalNodeNum == node_ptr->Global_Node_Num) {
       node = i;
       break;
     }
   }
 
-  elem_list[0]=elem_list[1]=elem_list[2]=elem_list[3]=-1;
-  local_node[0]=local_node[1]=local_node[2]=local_node[3]=-1;
-  if ( ! exo->node_elem_conn_exists )
-     { GOMA_EH(-1, "Cannot compute angle without node_elem_conn."); }
+  elem_list[0] = elem_list[1] = elem_list[2] = elem_list[3] = -1;
+  local_node[0] = local_node[1] = local_node[2] = local_node[3] = -1;
+  if (!exo->node_elem_conn_exists) {
+    GOMA_EH(-1, "Cannot compute angle without node_elem_conn.");
+  }
 
   elem_list[0] = exo->node_elem_list[exo->node_elem_pntr[node]];
 
@@ -3494,191 +3489,165 @@ double getAngleAC(struct AC_Information *augc, double *cAC_iAC,
    */
 
   local_node[0] = in_list(node, exo->elem_node_pntr[elem_list[0]],
-                          exo->elem_node_pntr[elem_list[0]+1],
-                          exo->elem_node_list);
+                          exo->elem_node_pntr[elem_list[0] + 1], exo->elem_node_list);
 
   GOMA_EH(local_node[0], "Can not find node in elem node connectivity!?! ");
   local_node[0] -= exo->elem_node_pntr[elem_list[0]];
   /* check for neighbors*/
 
   mat_num = map_mat_index(augc->VOLID);
-  if( mat_num == find_mat_number(elem_list[0], exo))
-     {elem_ct = 1;}
-  else
-     {GOMA_WH(-1,"block id doesn't match first element");}
+  if (mat_num == find_mat_number(elem_list[0], exo)) {
+    elem_ct = 1;
+  } else {
+    GOMA_WH(-1, "block id doesn't match first element");
+  }
   load_ei(elem_list[0], exo, 0, pg->imtrx);
-    for (face = 0; face < ei[pg->imtrx]->num_sides; face++) 
-      {
-       ielem = exo->elem_elem_list[exo->elem_elem_pntr[elem_list[0]]+face];
-       if (ielem != -1)
-         {
-          node2 = in_list(node, exo->elem_node_pntr[ielem],
-                                    exo->elem_node_pntr[ielem+1],
-                                    exo->elem_node_list);
-          if (node2 != -1 && (mat_num == find_mat_number(ielem, exo)))
-             {
-              elem_list[elem_ct] = ielem;
-              local_node[elem_ct] = node2;
-              local_node[elem_ct] -= exo->elem_node_pntr[ielem];
-              elem_ct++;
-             }
-         }
+  for (face = 0; face < ei[pg->imtrx]->num_sides; face++) {
+    ielem = exo->elem_elem_list[exo->elem_elem_pntr[elem_list[0]] + face];
+    if (ielem != -1) {
+      node2 = in_list(node, exo->elem_node_pntr[ielem], exo->elem_node_pntr[ielem + 1],
+                      exo->elem_node_list);
+      if (node2 != -1 && (mat_num == find_mat_number(ielem, exo))) {
+        elem_list[elem_ct] = ielem;
+        local_node[elem_ct] = node2;
+        local_node[elem_ct] -= exo->elem_node_pntr[ielem];
+        elem_ct++;
       }
+    }
+  }
   ordinate = 0.0;
-  memset(d_ord_dx, 0.0, sizeof(dbl)*4*DIM*DIM*MDE);
+  memset(d_ord_dx, 0.0, sizeof(dbl) * 4 * DIM * DIM * MDE);
 
-  for (ielem = 0 ; ielem < elem_ct ; ielem++)
-     {
-      if ( local_node[ielem] < 0 || local_node[ielem] > 3 )
-         { GOMA_EH(-1, "Node out of bounds."); }
+  for (ielem = 0; ielem < elem_ct; ielem++) {
+    if (local_node[ielem] < 0 || local_node[ielem] > 3) {
+      GOMA_EH(-1, "Node out of bounds.");
+    }
 
-                /*
-                 * Now, determine the local name of the sides adjacent to this
-                 * node...this works for the exo patran convention for quads...
-                 *
-                 * Again, local_node and local_side are zero based...
-                 */
+    /*
+     * Now, determine the local name of the sides adjacent to this
+     * node...this works for the exo patran convention for quads...
+     *
+     * Again, local_node and local_side are zero based...
+     */
 
-      local_side[0] = (local_node[ielem]+3)%4;
-      local_side[1] = local_node[ielem];
+    local_side[0] = (local_node[ielem] + 3) % 4;
+    local_side[1] = local_node[ielem];
 
-                /*
-                 * With the side names, we can find the normal vector.
-                 * Again, assume the sides live on the same element.
-                 */
-      load_ei(elem_list[0], exo, 0, pg->imtrx);
+    /*
+     * With the side names, we can find the normal vector.
+     * Again, assume the sides live on the same element.
+     */
+    load_ei(elem_list[0], exo, 0, pg->imtrx);
 
-                /*
-                 * We abuse the argument list under the conditions that
-                 * we're going to do read-only operations and that
-                 * we're not interested in old time steps, time derivatives
-                 * etc.
-                 */
-      err = load_elem_dofptr( elem_list[ielem], exo, x, x, x, x, 0);
-      GOMA_EH(err, "load_elem_dofptr");
+    /*
+     * We abuse the argument list under the conditions that
+     * we're going to do read-only operations and that
+     * we're not interested in old time steps, time derivatives
+     * etc.
+     */
+    err = load_elem_dofptr(elem_list[ielem], exo, x, x, x, x, 0);
+    GOMA_EH(err, "load_elem_dofptr");
 
-      err = bf_mp_init(pd);
-      GOMA_EH(err, "bf_mp_init");
+    err = bf_mp_init(pd);
+    GOMA_EH(err, "bf_mp_init");
 
-                /*
-                 * What are the local coordinates of the nodes in a quadrilateral?
-                 */
+    /*
+     * What are the local coordinates of the nodes in a quadrilateral?
+     */
 
-      find_nodal_stu(local_node[ielem], ei[pg->imtrx]->ielem_type, &xi[0], &xi[1], &xi[2]);
+    find_nodal_stu(local_node[ielem], ei[pg->imtrx]->ielem_type, &xi[0], &xi[1], &xi[2]);
 
-      err = load_basis_functions(xi, bfd);
-      GOMA_EH( err, "problem from load_basis_functions");
+    err = load_basis_functions(xi, bfd);
+    GOMA_EH(err, "problem from load_basis_functions");
 
-      err = beer_belly();
-      GOMA_EH( err, "beer_belly");
+    err = beer_belly();
+    GOMA_EH(err, "beer_belly");
 
-      err = load_fv();
-      GOMA_EH( err, "load_fv");
+    err = load_fv();
+    GOMA_EH(err, "load_fv");
 
-               /* First, one side... */
+    /* First, one side... */
 
-      get_side_info(ei[pg->imtrx]->ielem_type, local_side[0]+1, &num_nodes_on_side,
-                              side_nodes);
+    get_side_info(ei[pg->imtrx]->ielem_type, local_side[0] + 1, &num_nodes_on_side, side_nodes);
 
-      surface_determinant_and_normal(elem_list[ielem],
-                                               exo->elem_node_pntr[elem_list[ielem]],
-                                               ei[pg->imtrx]->num_local_nodes,
-                                               ei[pg->imtrx]->ielem_dim-1,
-                                               local_side[0]+1,
-                                               num_nodes_on_side,
-                                               side_nodes);
+    surface_determinant_and_normal(elem_list[ielem], exo->elem_node_pntr[elem_list[ielem]],
+                                   ei[pg->imtrx]->num_local_nodes, ei[pg->imtrx]->ielem_dim - 1,
+                                   local_side[0] + 1, num_nodes_on_side, side_nodes);
 
-      n1[0] = fv->snormal[0];
-      n1[1] = fv->snormal[1];
-      ielem_dim = ei[pg->imtrx]->ielem_dim;
-      for(p=0;p<ielem_dim;p++)
-        {
-         for(q=0;q<ielem_dim;q++)
-           {
-            for(k=0;k<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];k++)
-              { n1_dx[p][q][k]=fv->dsnormal_dx[p][q][k]; }
-           }
-        } 
+    n1[0] = fv->snormal[0];
+    n1[1] = fv->snormal[1];
+    ielem_dim = ei[pg->imtrx]->ielem_dim;
+    for (p = 0; p < ielem_dim; p++) {
+      for (q = 0; q < ielem_dim; q++) {
+        for (k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) {
+          n1_dx[p][q][k] = fv->dsnormal_dx[p][q][k];
+        }
+      }
+    }
 
-                /* Second, the adjacent side of the quad... */
+    /* Second, the adjacent side of the quad... */
 
-      get_side_info(ei[pg->imtrx]->ielem_type, local_side[1]+1, &num_nodes_on_side,
-                              side_nodes);
+    get_side_info(ei[pg->imtrx]->ielem_type, local_side[1] + 1, &num_nodes_on_side, side_nodes);
 
-      surface_determinant_and_normal(elem_list[ielem],
-                                              exo->elem_node_pntr[elem_list[ielem]],
-                                               ei[pg->imtrx]->num_local_nodes,
-                                               ei[pg->imtrx]->ielem_dim-1,
-                                               local_side[1]+1,
-                                               num_nodes_on_side,
-                                               side_nodes);
+    surface_determinant_and_normal(elem_list[ielem], exo->elem_node_pntr[elem_list[ielem]],
+                                   ei[pg->imtrx]->num_local_nodes, ei[pg->imtrx]->ielem_dim - 1,
+                                   local_side[1] + 1, num_nodes_on_side, side_nodes);
 
-      n2[0] = fv->snormal[0];
-      n2[1] = fv->snormal[1];
-      for(p=0;p<ielem_dim;p++)
-        {
-         for(q=0;q<ielem_dim;q++)
-           {
-            for(k=0;k<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];k++)
-              { n2_dx[p][q][k]=fv->dsnormal_dx[p][q][k]; }
-           }
-        } 
+    n2[0] = fv->snormal[0];
+    n2[1] = fv->snormal[1];
+    for (p = 0; p < ielem_dim; p++) {
+      for (q = 0; q < ielem_dim; q++) {
+        for (k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) {
+          n2_dx[p][q][k] = fv->dsnormal_dx[p][q][k];
+        }
+      }
+    }
 
-                /* cos (theta) = n1.n2 / ||n1|| ||n2|| */
+    /* cos (theta) = n1.n2 / ||n1|| ||n2|| */
 
-      n_dot_n = 0.; 
-      for(p=0;p<ielem_dim;p++)
-         {  n_dot_n += n1[p]*n2[p];}
-      ordinate += M_PI-acos(n_dot_n);
-      for(p=0;p<ielem_dim;p++)
-        {
-         for(q=0;q<ielem_dim;q++)
-           {
-            for(k=0;k<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];k++)
-              { 
-      		d_ord_dx[ielem][p][q][k] += 
-			(n1[p]*n2_dx[p][q][k]+n2[p]*n1_dx[p][q][k])/sqrt(1.-SQUARE(n_dot_n));
-	      }
-           }
-        } 
+    n_dot_n = 0.;
+    for (p = 0; p < ielem_dim; p++) {
+      n_dot_n += n1[p] * n2[p];
+    }
+    ordinate += M_PI - acos(n_dot_n);
+    for (p = 0; p < ielem_dim; p++) {
+      for (q = 0; q < ielem_dim; q++) {
+        for (k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) {
+          d_ord_dx[ielem][p][q][k] +=
+              (n1[p] * n2_dx[p][q][k] + n2[p] * n1_dx[p][q][k]) / sqrt(1. - SQUARE(n_dot_n));
+        }
+      }
+    }
 
-     } /*ielem loop    */
+  } /*ielem loop    */
 
-
-
-   /* For nonlocal element information, we do a
-    * direct injection into a through Jac_BC.
-    */
+  /* For nonlocal element information, we do a
+   * direct injection into a through Jac_BC.
+   */
 
   if (node >= 0) {
     int je;
     i = Index_Solution(node, MESH_DISPLACEMENT1, 0, 0, mat_num, pg->imtrx);
-    for (ielem = 0 ; ielem < elem_ct ; ielem++)
-     {
+    for (ielem = 0; ielem < elem_ct; ielem++) {
       load_ei(elem_list[0], exo, 0, pg->imtrx);
 
-      for(p=0;p<ielem_dim;p++)
-        {
-         for(q=0;q<ielem_dim;q++)
-           {
-            for(k=0;k<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];k++)
-              { 
-		je     = ei[pg->imtrx]->gun_list[MESH_DISPLACEMENT1][k];
-		GOMA_EH(je, "Bad var index.");
-		cAC_iAC[je] += d_ord_dx[ielem][p][q][k];
-	       }
-            }
-         } 
+      for (p = 0; p < ielem_dim; p++) {
+        for (q = 0; q < ielem_dim; q++) {
+          for (k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) {
+            je = ei[pg->imtrx]->gun_list[MESH_DISPLACEMENT1][k];
+            GOMA_EH(je, "Bad var index.");
+            cAC_iAC[je] += d_ord_dx[ielem][p][q][k];
+          }
+        }
       }
+    }
 
-
-      // Figure out cAC -> there are cases where the position may be an unknown 
-      // in the problem.
-      if (i != -1) {
+    // Figure out cAC -> there are cases where the position may be an unknown
+    // in the problem.
+    if (i != -1) {
       augc->evol = ordinate;
       augc->lm_resid = ordinate - augc->CONSTV;
-      }
-  
+    }
   }
   return ordinate;
 }

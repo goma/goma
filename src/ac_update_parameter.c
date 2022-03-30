@@ -453,12 +453,12 @@ void update_MT_parameter(double lambda, /* Parameter value */
      * General Model Constants
      */
 
-  case TAGC_REFTEMP: 
-      mp_glob[mn]->reference[TEMPERATURE] = lambda;
-      break;
-      
-      /* these are for SUSPENSION/FILLED_EPOXY models */
-      
+  case TAGC_REFTEMP:
+    mp_glob[mn]->reference[TEMPERATURE] = lambda;
+    break;
+
+    /* these are for SUSPENSION/FILLED_EPOXY models */
+
   case TAGC_THERMAL_CONDUCTIVITY:
     mp_glob[mn]->thermal_conductivity = lambda;
     break;
@@ -1413,154 +1413,154 @@ void retrieve_MT_parameter(double *lambda, /* Parameter value */
      * General Model Constants
      */
 
-    case TAGC_THERMAL_CONDUCTIVITY: 
-      *lambda = mp_glob[mn]->thermal_conductivity;
-      break;
-      
-    case TAGC_ACOUSTIC_WAVENUMBER: 
-      *lambda = mp_glob[mn]->wave_number;
-      break;
-      
-    case TAGC_ACOUSTIC_IMPEDANCE: 
-      *lambda = mp_glob[mn]->acoustic_impedance;
-      break;
-      
-    case TAGC_ACOUSTIC_ABSORPTION: 
-      *lambda = mp_glob[mn]->acoustic_absorption;
-      break;
-      
-    case TAGC_REFRACTIVE_INDEX: 
-      *lambda = mp_glob[mn]->refractive_index;
-      break;
-      
-    case TAGC_LIGHT_ABSORPTION: 
-      *lambda = mp_glob[mn]->light_absorption;
-      break;
-      
-    case TAGC_EXTINCTION_INDEX: 
-      *lambda = mp_glob[mn]->extinction_index;
-      break;
-      
-    case TAGC_ELECTRICAL_CONDUCTIVITY: 
-      *lambda = mp_glob[mn]->electrical_conductivity;
-      break;
-      
-    case TAGC_VISCOSITY: 
-      *lambda = mp_glob[mn]->viscosity;
-      break;         
-      
-    case TAGC_SURFACE_TENSION: 
-      *lambda = mp_glob[mn]->surface_tension;
-      break;
-      
-    case TAGC_HEAT_CAPACITY: 
-      *lambda = mp_glob[mn]->heat_capacity;
-      break;
-      
-    case TAGC_VOLUME_EXPANSION: 
-      *lambda = mp_glob[mn]->Volume_Expansion;
-      break;
-      
-    case TAGC_DENSITY: 
-      *lambda = mp_glob[mn]->density;
-      break;
-      
-    case TAGC_POROSITY: 
-      *lambda = mp_glob[mn]->porosity;
-      break;              
-      
-    case TAGC_PERMEABILITY: 
-      *lambda = mp_glob[mn]->permeability;
-      break;
-      
-    case TAGC_REL_GAS_PERM: 
-      *lambda = mp_glob[mn]->rel_gas_perm;
-      break;
-      
-    case TAGC_REL_LIQ_PERM: 
-      *lambda = mp_glob[mn]->rel_liq_perm;
-      break;
-      
-    case TAGC_SATURATION: 
-      *lambda = mp_glob[mn]->saturation;
-      break;
-      
-    case TAGC_MELTING_POINT_LIQUIDUS: 
-      *lambda = mp_glob[mn]->melting_point_liquidus;
-      break;
-      
-    case TAGC_MELTING_POINT_SOLIDUS: 
-      *lambda = mp_glob[mn]->melting_point_solidus;
-      break;
-      
-    case TAGC_FLOWINGLIQUID_VISCOSITY: 
-      *lambda = mp_glob[mn]->FlowingLiquid_viscosity;
-      break;
-      
-    case TAGC_DIFFUSIVITY_0: 
-      *lambda = mp_glob[mn]->diffusivity[0];
-      break;
-      
-    case TAGC_DIFFUSIVITY_1: 
-      *lambda = mp_glob[mn]->diffusivity[1];
-      break;
-      
-      /* 
-       * Generalized Newtonian Models: 
-       * Newtonian, Power Law, Carreau or Bingham(1,2,3)
-       */
-      
-    case TAGC_MU0: 
-      *lambda = gn_glob[mn]->mu0;
-      break;
-    case TAGC_NEXP: 
-      *lambda = gn_glob[mn]->nexp;
-      break;
-    case TAGC_MUINF: 
-      *lambda = gn_glob[mn]->muinf;
-      break;
-    case TAGC_LAM: 
-      *lambda = gn_glob[mn]->lam;
-      break;
-    case TAGC_AEXP: 
-      *lambda = gn_glob[mn]->aexp;
-      break;
-    case TAGC_ATEXP: 
-      *lambda = gn_glob[mn]->atexp;
-      break;
+  case TAGC_THERMAL_CONDUCTIVITY:
+    *lambda = mp_glob[mn]->thermal_conductivity;
+    break;
 
-      /* CARREAU_WLF */
+  case TAGC_ACOUSTIC_WAVENUMBER:
+    *lambda = mp_glob[mn]->wave_number;
+    break;
 
-    case TAGC_WLFC2:
-      *lambda = gn_glob[mn]->wlfc2;
-      break;
-      
-    case TAGC_REFTEMP: 
-      *lambda = mp_glob[mn]->reference[TEMPERATURE];
-      break;
-      
-      /* these are for the BINGHAM yielding material model */
-      
-    case TAGC_TAU_Y: 
-      *lambda = gn_glob[mn]->tau_y;
-      break;
-    case TAGC_FEXP: 
-      *lambda = gn_glob[mn]->fexp;
-      break;
-      
-      /* these are for SUSPENSION/FILLED_EPOXY models */
-      
-    case TAGC_MAXPACK: 
-      *lambda = gn_glob[mn]->maxpack;
-      break;
-    case TAGC_FICKDIFF_X:
-      *lambda = mp_glob[mn]->u_fdiffusivity[0][0];
-      break;
-    case TAGC_FICKDIFF_Y:
-      *lambda = mp_glob[mn]->u_fdiffusivity[0][1];
-      break;
-      
-      /* these can be implemented for Ryan's Qtensor model as needed */
+  case TAGC_ACOUSTIC_IMPEDANCE:
+    *lambda = mp_glob[mn]->acoustic_impedance;
+    break;
+
+  case TAGC_ACOUSTIC_ABSORPTION:
+    *lambda = mp_glob[mn]->acoustic_absorption;
+    break;
+
+  case TAGC_REFRACTIVE_INDEX:
+    *lambda = mp_glob[mn]->refractive_index;
+    break;
+
+  case TAGC_LIGHT_ABSORPTION:
+    *lambda = mp_glob[mn]->light_absorption;
+    break;
+
+  case TAGC_EXTINCTION_INDEX:
+    *lambda = mp_glob[mn]->extinction_index;
+    break;
+
+  case TAGC_ELECTRICAL_CONDUCTIVITY:
+    *lambda = mp_glob[mn]->electrical_conductivity;
+    break;
+
+  case TAGC_VISCOSITY:
+    *lambda = mp_glob[mn]->viscosity;
+    break;
+
+  case TAGC_SURFACE_TENSION:
+    *lambda = mp_glob[mn]->surface_tension;
+    break;
+
+  case TAGC_HEAT_CAPACITY:
+    *lambda = mp_glob[mn]->heat_capacity;
+    break;
+
+  case TAGC_VOLUME_EXPANSION:
+    *lambda = mp_glob[mn]->Volume_Expansion;
+    break;
+
+  case TAGC_DENSITY:
+    *lambda = mp_glob[mn]->density;
+    break;
+
+  case TAGC_POROSITY:
+    *lambda = mp_glob[mn]->porosity;
+    break;
+
+  case TAGC_PERMEABILITY:
+    *lambda = mp_glob[mn]->permeability;
+    break;
+
+  case TAGC_REL_GAS_PERM:
+    *lambda = mp_glob[mn]->rel_gas_perm;
+    break;
+
+  case TAGC_REL_LIQ_PERM:
+    *lambda = mp_glob[mn]->rel_liq_perm;
+    break;
+
+  case TAGC_SATURATION:
+    *lambda = mp_glob[mn]->saturation;
+    break;
+
+  case TAGC_MELTING_POINT_LIQUIDUS:
+    *lambda = mp_glob[mn]->melting_point_liquidus;
+    break;
+
+  case TAGC_MELTING_POINT_SOLIDUS:
+    *lambda = mp_glob[mn]->melting_point_solidus;
+    break;
+
+  case TAGC_FLOWINGLIQUID_VISCOSITY:
+    *lambda = mp_glob[mn]->FlowingLiquid_viscosity;
+    break;
+
+  case TAGC_DIFFUSIVITY_0:
+    *lambda = mp_glob[mn]->diffusivity[0];
+    break;
+
+  case TAGC_DIFFUSIVITY_1:
+    *lambda = mp_glob[mn]->diffusivity[1];
+    break;
+
+    /*
+     * Generalized Newtonian Models:
+     * Newtonian, Power Law, Carreau or Bingham(1,2,3)
+     */
+
+  case TAGC_MU0:
+    *lambda = gn_glob[mn]->mu0;
+    break;
+  case TAGC_NEXP:
+    *lambda = gn_glob[mn]->nexp;
+    break;
+  case TAGC_MUINF:
+    *lambda = gn_glob[mn]->muinf;
+    break;
+  case TAGC_LAM:
+    *lambda = gn_glob[mn]->lam;
+    break;
+  case TAGC_AEXP:
+    *lambda = gn_glob[mn]->aexp;
+    break;
+  case TAGC_ATEXP:
+    *lambda = gn_glob[mn]->atexp;
+    break;
+
+    /* CARREAU_WLF */
+
+  case TAGC_WLFC2:
+    *lambda = gn_glob[mn]->wlfc2;
+    break;
+
+  case TAGC_REFTEMP:
+    *lambda = mp_glob[mn]->reference[TEMPERATURE];
+    break;
+
+    /* these are for the BINGHAM yielding material model */
+
+  case TAGC_TAU_Y:
+    *lambda = gn_glob[mn]->tau_y;
+    break;
+  case TAGC_FEXP:
+    *lambda = gn_glob[mn]->fexp;
+    break;
+
+    /* these are for SUSPENSION/FILLED_EPOXY models */
+
+  case TAGC_MAXPACK:
+    *lambda = gn_glob[mn]->maxpack;
+    break;
+  case TAGC_FICKDIFF_X:
+    *lambda = mp_glob[mn]->u_fdiffusivity[0][0];
+    break;
+  case TAGC_FICKDIFF_Y:
+    *lambda = mp_glob[mn]->u_fdiffusivity[0][1];
+    break;
+
+    /* these can be implemented for Ryan's Qtensor model as needed */
 
 #if 0
     case TAGC_QTENSOR_EXTENSION_P:

@@ -105,56 +105,56 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
    * variables for path traversal
    */
 
-  double *x_old=NULL;         /* old solution vector                          */
-  double *x_older=NULL;       /* older solution vector                        */
-  double *x_oldest=NULL;      /* oldest solution vector saved                 */
-  double *xdot=NULL;          /* current path derivative of soln              */
-  double *xdot_old=NULL;
-  double *x_update=NULL;
+  double *x_old = NULL;    /* old solution vector                          */
+  double *x_older = NULL;  /* older solution vector                        */
+  double *x_oldest = NULL; /* oldest solution vector saved                 */
+  double *xdot = NULL;     /* current path derivative of soln              */
+  double *xdot_old = NULL;
+  double *x_update = NULL;
 
-  double *x_sens=NULL;        /* solution sensitivity */
-  double **x_sens_p=NULL;     /* solution sensitivity for parameters */
-  int num_pvector=0;          /*  number of solution sensitivity vectors */
+  double *x_sens = NULL;    /* solution sensitivity */
+  double **x_sens_p = NULL; /* solution sensitivity for parameters */
+  int num_pvector = 0;      /*  number of solution sensitivity vectors */
   struct GomaLinearSolverData *ams[NUM_ALSS] = {NULL};
   /* sl_util_structs.h */
 
-  double *resid_vector=NULL;  /* residual */
-  double *resid_vector_sens=NULL;    /* residual sensitivity */
-  double *scale=NULL;      /* scale vector for modified newton */
+  double *resid_vector = NULL;      /* residual */
+  double *resid_vector_sens = NULL; /* residual sensitivity */
+  double *scale = NULL;             /* scale vector for modified newton */
 
-  int 	 *node_to_fill = NULL;
+  int *node_to_fill = NULL;
 
-  int		n;            /* total number of path steps attempted */
-  int		ni;           /* total number of nonlinear solves */
-  int		nt;           /* total number of successful path steps */
-  int		path_step_reform; /* counter for jacobian reformation stride */
-  int		converged;    /* success or failure of Newton iteration */
-  int		success_ds;   /* success or failure of path step */
+  int n;                /* total number of path steps attempted */
+  int ni;               /* total number of nonlinear solves */
+  int nt;               /* total number of successful path steps */
+  int path_step_reform; /* counter for jacobian reformation stride */
+  int converged;        /* success or failure of Newton iteration */
+  int success_ds;       /* success or failure of path step */
 
-  int           i;
+  int i;
 
-  int           nprint=0, num_total_nodes;
+  int nprint = 0, num_total_nodes;
 
-  int           numProcUnknowns;
-  int           *const_delta_s=NULL;
-  int           step_print;
-  double        i_print;
-  int           step_fix = 0;      /* What step to fix the problem on */
-  int           good_mesh = TRUE;
-  double	*path=NULL, *path1=NULL;
-  double	*delta_s=NULL, *delta_s_new=NULL, *delta_s_old=NULL;
-  double        *delta_s_older=NULL, *delta_s_oldest=NULL;
-  double        *hDelta_s0=NULL, *hDelta_s_min=NULL, *hDelta_s_max=NULL;
-  double        delta_t;
-  double	theta=0.0;
-  double        eps;
-  double        *lambda=NULL, *lambdaEnd=NULL, *lambdaDelta=NULL;
-  double	*lambdaLog=NULL, *lambdaRatio=NULL, *lambdaDeltaLog=NULL;
-  double	hunt_par, dhunt_par, hunt_par_old;	/* hunting continuation parameter */
-  double        dhunt_par_max=1.0, dhunt_par_min=0., dhunt_par_0=0.1;
-  double        dhunt_par_new=0.1, dhunt_par_old;
-  int           log_ID=-1;
-  double        timeValueRead = 0.0;
+  int numProcUnknowns;
+  int *const_delta_s = NULL;
+  int step_print;
+  double i_print;
+  int step_fix = 0; /* What step to fix the problem on */
+  int good_mesh = TRUE;
+  double *path = NULL, *path1 = NULL;
+  double *delta_s = NULL, *delta_s_new = NULL, *delta_s_old = NULL;
+  double *delta_s_older = NULL, *delta_s_oldest = NULL;
+  double *hDelta_s0 = NULL, *hDelta_s_min = NULL, *hDelta_s_max = NULL;
+  double delta_t;
+  double theta = 0.0;
+  double eps;
+  double *lambda = NULL, *lambdaEnd = NULL, *lambdaDelta = NULL;
+  double *lambdaLog = NULL, *lambdaRatio = NULL, *lambdaDeltaLog = NULL;
+  double hunt_par, dhunt_par, hunt_par_old; /* hunting continuation parameter */
+  double dhunt_par_max = 1.0, dhunt_par_min = 0., dhunt_par_0 = 0.1;
+  double dhunt_par_new = 0.1, dhunt_par_old;
+  int log_ID = -1;
+  double timeValueRead = 0.0;
 
   /*
    * ALC management variables
@@ -379,15 +379,15 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
   asdv(&lambdaLog, nHC);
   asdv(&lambdaRatio, nHC);
   asdv(&lambdaDeltaLog, nHC);
-  asdv(&path,           nHC);
-  asdv(&path1,          nHC);
-  asdv(&hDelta_s0,      nHC);
-  asdv(&hDelta_s_min,   nHC);
-  asdv(&hDelta_s_max,   nHC);
-  asdv(&delta_s,        nHC);
-  asdv(&delta_s_new,    nHC);
-  asdv(&delta_s_old,    nHC);
-  asdv(&delta_s_older,  nHC);
+  asdv(&path, nHC);
+  asdv(&path1, nHC);
+  asdv(&hDelta_s0, nHC);
+  asdv(&hDelta_s_min, nHC);
+  asdv(&hDelta_s_max, nHC);
+  asdv(&delta_s, nHC);
+  asdv(&delta_s_new, nHC);
+  asdv(&delta_s_old, nHC);
+  asdv(&delta_s_older, nHC);
   asdv(&delta_s_oldest, nHC);
 
   aldALC = Ivector_birth(nHC);
@@ -419,28 +419,28 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
 
     const_delta_s[iHC] = 0;
 
-    lambda[iHC]       = hunt[iHC].BegParameterValue;
-    lambdaEnd[iHC]    = hunt[iHC].EndParameterValue;
-    lambdaDelta[iHC]    = lambdaEnd[iHC] - lambda[iHC];
-    if(lambda[iHC] > 0. && lambdaEnd[iHC] > 0.0)
-	{
-	lambdaLog[iHC] = log10(lambda[iHC]);
-	lambdaRatio[iHC] = lambdaEnd[iHC]/lambda[iHC];
-	lambdaDeltaLog[iHC] = fabs(log10(lambdaRatio[iHC]));
-	}
-    else if(lambda[iHC] < 0. && lambdaEnd[iHC] < 0.0)
-	{
-	lambdaLog[iHC] = log10(-lambda[iHC]);
-	lambdaRatio[iHC] = lambdaEnd[iHC]/lambda[iHC];
-	lambdaDeltaLog[iHC] = log10(lambdaRatio[iHC]);
-	}
-    if(hunt[iHC].ramp == 2 )
-         { if(log_ID == -1) log_ID = iHC; }
+    lambda[iHC] = hunt[iHC].BegParameterValue;
+    lambdaEnd[iHC] = hunt[iHC].EndParameterValue;
+    lambdaDelta[iHC] = lambdaEnd[iHC] - lambda[iHC];
+    if (lambda[iHC] > 0. && lambdaEnd[iHC] > 0.0) {
+      lambdaLog[iHC] = log10(lambda[iHC]);
+      lambdaRatio[iHC] = lambdaEnd[iHC] / lambda[iHC];
+      lambdaDeltaLog[iHC] = fabs(log10(lambdaRatio[iHC]));
+    } else if (lambda[iHC] < 0. && lambdaEnd[iHC] < 0.0) {
+      lambdaLog[iHC] = log10(-lambda[iHC]);
+      lambdaRatio[iHC] = lambdaEnd[iHC] / lambda[iHC];
+      lambdaDeltaLog[iHC] = log10(lambdaRatio[iHC]);
+    }
+    if (hunt[iHC].ramp == 2) {
+      if (log_ID == -1)
+        log_ID = iHC;
+    }
 
-    if (lambdaDelta[iHC] > 0.0)
-         { aldALC[iHC] = +1; }
-    else
-         { aldALC[iHC] = -1; }
+    if (lambdaDelta[iHC] > 0.0) {
+      aldALC[iHC] = +1;
+    } else {
+      aldALC[iHC] = -1;
+    }
 
     if (hunt[iHC].ramp == 1) {
       hunt[iHC].Delta_s0 = fabs(lambdaDelta[iHC]) / ((double)(MaxPathSteps - 1));
@@ -458,10 +458,12 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
       fprintf(stdout, "continuation in progress\n");
     }
 
-    if (hDelta_s0[iHC] > hDelta_s_max[iHC])
-       { hDelta_s0[iHC] = hDelta_s_max[iHC]; }
-    if (hDelta_s0[iHC] < hDelta_s_min[iHC])
-       { hDelta_s0[iHC] = hDelta_s_min[iHC]; }
+    if (hDelta_s0[iHC] > hDelta_s_max[iHC]) {
+      hDelta_s0[iHC] = hDelta_s_max[iHC];
+    }
+    if (hDelta_s0[iHC] < hDelta_s_min[iHC]) {
+      hDelta_s0[iHC] = hDelta_s_min[iHC];
+    }
 
     delta_s[iHC] = delta_s_old[iHC] = delta_s_older[iHC] = hDelta_s0[iHC];
 
@@ -476,25 +478,22 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
 
   iHC = MAX(0, log_ID);
   dhunt_par = 0.0;
-  if(DOUBLE_ZERO(lambdaDelta[iHC]))
- 	{	hunt_par = 1.0;	}
-  else
- 	{
-          if(hunt[iHC].ramp == 2 )
-              {
-	       hunt_par = fabs(log10(fabs(path1[iHC]))-lambdaLog[iHC])/lambdaDeltaLog[iHC];
-	       dhunt_par_min = log10(1.0+hDelta_s_min[iHC]/fabs(lambda[iHC]))/lambdaDeltaLog[iHC];
-	       dhunt_par_max = log10(1.0+hDelta_s_max[iHC]/fabs(lambda[iHC]))/lambdaDeltaLog[iHC];
-	       dhunt_par_0 = log10(1.0+hDelta_s0[iHC]/fabs(lambda[iHC]))/lambdaDeltaLog[iHC];  
-		}
-          else   {
-	         hunt_par = (path1[iHC]-lambda[iHC])/lambdaDelta[iHC];
-	         dhunt_par_min = aldALC[iHC]*hunt[iHC].Delta_s_min/lambdaDelta[iHC];
-	         dhunt_par_max = aldALC[iHC]*hunt[iHC].Delta_s_max/lambdaDelta[iHC];
-	         dhunt_par_0 = aldALC[iHC]*hunt[iHC].Delta_s0/lambdaDelta[iHC];
-              }
-           hunt_par=fabs(hunt_par);
- 	}
+  if (DOUBLE_ZERO(lambdaDelta[iHC])) {
+    hunt_par = 1.0;
+  } else {
+    if (hunt[iHC].ramp == 2) {
+      hunt_par = fabs(log10(fabs(path1[iHC])) - lambdaLog[iHC]) / lambdaDeltaLog[iHC];
+      dhunt_par_min = log10(1.0 + hDelta_s_min[iHC] / fabs(lambda[iHC])) / lambdaDeltaLog[iHC];
+      dhunt_par_max = log10(1.0 + hDelta_s_max[iHC] / fabs(lambda[iHC])) / lambdaDeltaLog[iHC];
+      dhunt_par_0 = log10(1.0 + hDelta_s0[iHC] / fabs(lambda[iHC])) / lambdaDeltaLog[iHC];
+    } else {
+      hunt_par = (path1[iHC] - lambda[iHC]) / lambdaDelta[iHC];
+      dhunt_par_min = aldALC[iHC] * hunt[iHC].Delta_s_min / lambdaDelta[iHC];
+      dhunt_par_max = aldALC[iHC] * hunt[iHC].Delta_s_max / lambdaDelta[iHC];
+      dhunt_par_0 = aldALC[iHC] * hunt[iHC].Delta_s0 / lambdaDelta[iHC];
+    }
+    hunt_par = fabs(hunt_par);
+  }
   hunt_par_old = hunt_par;
   dhunt_par = dhunt_par_old = dhunt_par_0;
   if (dhunt_par_0 > dhunt_par_max) {
@@ -719,42 +718,34 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
 
     for (iHC = 0; iHC < nHC; iHC++) {
       update_parameterHC(iHC, path1[iHC], x, xdot, x_AC, delta_s[iHC], cx, exo, dpi);
-    }   /*  end of iHC loop */
+    } /*  end of iHC loop */
 
-        iHC = MAX(0,log_ID);
-  	if(DOUBLE_ZERO(lambdaDelta[iHC]))
- 		{	hunt_par = 1.0;	}
-	else
- 		{
-                  if(hunt[iHC].ramp == 2 )
-                    {
-	             hunt_par = fabs(log10(fabs(path1[iHC]))-lambdaLog[iHC])/lambdaDeltaLog[iHC];
-		     if(n > 0)
-	               {
-			dhunt_par=fabs(log10(fabs(path1[iHC]))-log10(fabs(path[iHC])))/lambdaDeltaLog[iHC];
-	       		dhunt_par_min = log10(1.0+hDelta_s_min[iHC]/fabs(path1[iHC]))/lambdaDeltaLog[iHC];
-	       		dhunt_par_max = log10(1.0+hDelta_s_max[iHC]/fabs(path1[iHC]))/lambdaDeltaLog[iHC];
-			}
-                    }
-		  else   
-		    {
-		     hunt_par = (path1[iHC]-lambda[iHC])/lambdaDelta[iHC];
-		     if(n > 0)
-		        {dhunt_par = (path1[iHC]-path[iHC])/lambdaDelta[iHC];}
-                    }
- 		  }
-	  for (iHC=0;iHC<nHC;iHC++) {
-              if(hunt[iHC].ramp == 2)
-                {
-                 delta_s[iHC] = -lambda[iHC] *
-                     pow(lambdaRatio[iHC],hunt_par-dhunt_par);
-                 delta_s[iHC] += lambda[iHC] *
-                     pow(lambdaRatio[iHC],hunt_par);
-                 }
-              else  {
-                 delta_s[iHC] = dhunt_par*lambdaDelta[iHC];
-                 }
-              }
+    iHC = MAX(0, log_ID);
+    if (DOUBLE_ZERO(lambdaDelta[iHC])) {
+      hunt_par = 1.0;
+    } else {
+      if (hunt[iHC].ramp == 2) {
+        hunt_par = fabs(log10(fabs(path1[iHC])) - lambdaLog[iHC]) / lambdaDeltaLog[iHC];
+        if (n > 0) {
+          dhunt_par = fabs(log10(fabs(path1[iHC])) - log10(fabs(path[iHC]))) / lambdaDeltaLog[iHC];
+          dhunt_par_min = log10(1.0 + hDelta_s_min[iHC] / fabs(path1[iHC])) / lambdaDeltaLog[iHC];
+          dhunt_par_max = log10(1.0 + hDelta_s_max[iHC] / fabs(path1[iHC])) / lambdaDeltaLog[iHC];
+        }
+      } else {
+        hunt_par = (path1[iHC] - lambda[iHC]) / lambdaDelta[iHC];
+        if (n > 0) {
+          dhunt_par = (path1[iHC] - path[iHC]) / lambdaDelta[iHC];
+        }
+      }
+    }
+    for (iHC = 0; iHC < nHC; iHC++) {
+      if (hunt[iHC].ramp == 2) {
+        delta_s[iHC] = -lambda[iHC] * pow(lambdaRatio[iHC], hunt_par - dhunt_par);
+        delta_s[iHC] += lambda[iHC] * pow(lambdaRatio[iHC], hunt_par);
+      } else {
+        delta_s[iHC] = dhunt_par * lambdaDelta[iHC];
+      }
+    }
 
     /*
      * IF STEP CHANGED, REDO FIRST ORDER PREDICTION
@@ -876,18 +867,16 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
 #endif
               DPRINTF(stdout, "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
                       augc[iAC].VOLID, evol_local, x_AC[iAC]);
-	    }  else if(augc[iAC].Type == AC_ANGLE) {
-                evol_local = augc[iAC].evol;
+            } else if (augc[iAC].Type == AC_ANGLE) {
+              evol_local = augc[iAC].evol;
 #ifdef PARALLEL
-                if( Num_Proc > 1 ) {
-                     MPI_Allreduce( &evol_local, &evol_global, 1,
-                                    MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                }
-                evol_local = evol_global;
+              if (Num_Proc > 1) {
+                MPI_Allreduce(&evol_local, &evol_global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+              }
+              evol_local = evol_global;
 #endif
-                DPRINTF(stdout, "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n",
-                        augc[iAC].MTID, augc[iAC].VOLID, evol_local,
-                        x_AC[iAC]);
+              DPRINTF(stdout, "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
+                      augc[iAC].VOLID, evol_local, x_AC[iAC]);
             } else if (augc[iAC].Type == AC_FLUX) {
               DPRINTF(stdout, "\tBC[%4d] DF[%4d]=%10.6e\n", augc[iAC].BCID, augc[iAC].DFID,
                       x_AC[iAC]);
@@ -966,23 +955,18 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
         if (nt != 0) {
           DPRINTF(stdout, "\n\tFailed to converge:\n");
 
-	dhunt_par *= 0.5;
-        hunt_par = hunt_par_old + dhunt_par;
-	for (iHC=0;iHC<nHC;iHC++) {
-            if(hunt[iHC].ramp == 2)
-              {
-               path1[iHC] = lambda[iHC] * pow(lambdaRatio[iHC],hunt_par);
-              }
-            else if(hunt[iHC].ramp == 1)
-              {
-               delta_s[iHC] *= 0.5;
-	       path1[iHC] = path[iHC] - ((double)aldALC[iHC])*delta_s[iHC];
-              }
-            else
-              {
-               path1[iHC] = lambda[iHC] + hunt_par*lambdaDelta[iHC];
-              }
+          dhunt_par *= 0.5;
+          hunt_par = hunt_par_old + dhunt_par;
+          for (iHC = 0; iHC < nHC; iHC++) {
+            if (hunt[iHC].ramp == 2) {
+              path1[iHC] = lambda[iHC] * pow(lambdaRatio[iHC], hunt_par);
+            } else if (hunt[iHC].ramp == 1) {
+              delta_s[iHC] *= 0.5;
+              path1[iHC] = path[iHC] - ((double)aldALC[iHC]) * delta_s[iHC];
+            } else {
+              path1[iHC] = lambda[iHC] + hunt_par * lambdaDelta[iHC];
             }
+          }
 
           alqALC = 1;
 
@@ -1001,148 +985,132 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
           check_parallel_error("\t");
 #endif
 
-	  /*
-	   * ADJUST NATURAL PARAMETER
-	   */
+          /*
+           * ADJUST NATURAL PARAMETER
+           */
 
-	for (iHC=0;iHC<nHC;iHC++) {
-	  update_parameterHC(iHC, path1[iHC], x, xdot, x_AC, delta_s[iHC], cx, exo, dpi);
-	}  /* end of iHC loop  */
+          for (iHC = 0; iHC < nHC; iHC++) {
+            update_parameterHC(iHC, path1[iHC], x, xdot, x_AC, delta_s[iHC], cx, exo, dpi);
+          } /* end of iHC loop  */
 
-        iHC = MAX(0,log_ID);
-  	if(DOUBLE_ZERO(lambdaDelta[iHC]))
- 		{	hunt_par = 1.0;	}
-	else
- 		{
-                 if(hunt[iHC].ramp == 2)
-                    {
-	             hunt_par = fabs(log10(fabs(path1[iHC]))-lambdaLog[iHC])/lambdaDeltaLog[iHC];
-                    }
-		 else   
-		    { hunt_par = (path1[iHC]-lambda[iHC])/lambdaDelta[iHC]; }
-	        dhunt_par = hunt_par-hunt_par_old;
- 		}
+          iHC = MAX(0, log_ID);
+          if (DOUBLE_ZERO(lambdaDelta[iHC])) {
+            hunt_par = 1.0;
+          } else {
+            if (hunt[iHC].ramp == 2) {
+              hunt_par = fabs(log10(fabs(path1[iHC])) - lambdaLog[iHC]) / lambdaDeltaLog[iHC];
+            } else {
+              hunt_par = (path1[iHC] - lambda[iHC]) / lambdaDelta[iHC];
+            }
+            dhunt_par = hunt_par - hunt_par_old;
+          }
 
-	/*
-	 * GET ZERO OR FIRST ORDER PREDICTION
-	 */
+          /*
+           * GET ZERO OR FIRST ORDER PREDICTION
+           */
 
-
-	switch (Continuation) {
-	case HUN_ZEROTH:
-	    vcopy(numProcUnknowns, &x[0], 1.0, &x_old[0]);
-	    break;
-	case  HUN_FIRST:
-	    v2sum(numProcUnknowns, &x[0], 1.0, &x_old[0], dhunt_par, &x_sens[0]);
+          switch (Continuation) {
+          case HUN_ZEROTH:
+            vcopy(numProcUnknowns, &x[0], 1.0, &x_old[0]);
+            break;
+          case HUN_FIRST:
+            v2sum(numProcUnknowns, &x[0], 1.0, &x_old[0], dhunt_par, &x_sens[0]);
             break;
           }
 
-	/* MMH: Needed to put this in, o/w it may find that the
-         * solution and residual HAPPEN to satisfy the convergence
-         * criterion for the next newton solve...
-         */
-        find_and_set_Dirichlet(x, xdot, exo, dpi);
+          /* MMH: Needed to put this in, o/w it may find that the
+           * solution and residual HAPPEN to satisfy the convergence
+           * criterion for the next newton solve...
+           */
+          find_and_set_Dirichlet(x, xdot, exo, dpi);
 
-        exchange_dof(cx, dpi, x, pg->imtrx);
+          exchange_dof(cx, dpi, x, pg->imtrx);
 
-	if (nAC > 0)
-          {
-	    dcopy1(nAC, x_AC_old, x_AC);
-	    for(iAC=0 ; iAC<nAC ; iAC++)
-	      { update_parameterAC(iAC, x, xdot, x_AC, cx, exo, dpi); }
-	  }
+          if (nAC > 0) {
+            dcopy1(nAC, x_AC_old, x_AC);
+            for (iAC = 0; iAC < nAC; iAC++) {
+              update_parameterAC(iAC, x, xdot, x_AC, cx, exo, dpi);
+            }
+          }
 
-                iHC = MAX(0,log_ID);
-  		if(DOUBLE_ZERO(lambdaDelta[iHC]))
- 		    {	hunt_par = 1.0;	}
-  		else
- 		    {
-                     if(hunt[iHC].ramp == 2)
-                       {
-	                hunt_par = fabs(log10(fabs(path1[iHC]))-lambdaLog[iHC])/lambdaDeltaLog[iHC];
-                       }
-		     else   { hunt_par = (path1[iHC]-lambda[iHC])/lambdaDelta[iHC]; }
-                    }
- 	}
- 	else if (inewton == -1)
- 	{
- 	DPRINTF(stdout,"\nHmm... trouble on first step \n  Let's try some more relaxation  \n");
- 	      if((damp_factor1 <= 1. && damp_factor1 >= 0.) &&
- 	         (damp_factor2 <= 1. && damp_factor2 >= 0.) &&
-        		 (damp_factor3 <= 1. && damp_factor3 >= 0.))
- 		{
- 		custom_tol1 *= 0.01;
- 		custom_tol2 *= 0.01;
- 		custom_tol3 *= 0.01;
- 	DPRINTF(stdout,"  custom tolerances %g %g %g  \n",custom_tol1,custom_tol2,custom_tol3);
- 		}
- 		else
- 		{
- 		damp_factor1 *= 0.5;
- 	DPRINTF(stdout,"  damping factor %g  \n",damp_factor1);
- 		}
+          iHC = MAX(0, log_ID);
+          if (DOUBLE_ZERO(lambdaDelta[iHC])) {
+            hunt_par = 1.0;
+          } else {
+            if (hunt[iHC].ramp == 2) {
+              hunt_par = fabs(log10(fabs(path1[iHC])) - lambdaLog[iHC]) / lambdaDeltaLog[iHC];
+            } else {
+              hunt_par = (path1[iHC] - lambda[iHC]) / lambdaDelta[iHC];
+            }
+          }
+        } else if (inewton == -1) {
+          DPRINTF(stdout, "\nHmm... trouble on first step \n  Let's try some more relaxation  \n");
+          if ((damp_factor1 <= 1. && damp_factor1 >= 0.) &&
+              (damp_factor2 <= 1. && damp_factor2 >= 0.) &&
+              (damp_factor3 <= 1. && damp_factor3 >= 0.)) {
+            custom_tol1 *= 0.01;
+            custom_tol2 *= 0.01;
+            custom_tol3 *= 0.01;
+            DPRINTF(stdout, "  custom tolerances %g %g %g  \n", custom_tol1, custom_tol2,
+                    custom_tol3);
+          } else {
+            damp_factor1 *= 0.5;
+            DPRINTF(stdout, "  damping factor %g  \n", damp_factor1);
+          }
 
- 	    vcopy(numProcUnknowns, &x[0], 1.0, &x_old[0]);
+          vcopy(numProcUnknowns, &x[0], 1.0, &x_old[0]);
 
- 	/* MMH: Needed to put this in, o/w it may find that the
-          * solution and residual HAPPEN to satisfy the convergence
-          * criterion for the next newton solve...
-          */
-         find_and_set_Dirichlet(x, xdot, exo, dpi);
+          /* MMH: Needed to put this in, o/w it may find that the
+           * solution and residual HAPPEN to satisfy the convergence
+           * criterion for the next newton solve...
+           */
+          find_and_set_Dirichlet(x, xdot, exo, dpi);
 
-         exchange_dof(cx, dpi, x, pg->imtrx);
+          exchange_dof(cx, dpi, x, pg->imtrx);
 
- 	if (nAC > 0)
-          {
- 	    dcopy1(nAC, x_AC_old, x_AC);
- 	    for(iAC=0 ; iAC<nAC ; iAC++)
- 	      { update_parameterAC(iAC, x, xdot, x_AC, cx, exo, dpi); }
- 	  }
+          if (nAC > 0) {
+            dcopy1(nAC, x_AC_old, x_AC);
+            for (iAC = 0; iAC < nAC; iAC++) {
+              update_parameterAC(iAC, x, xdot, x_AC, cx, exo, dpi);
+            }
+          }
 
- 	}
- 	else
- 	{
- 	DPRINTF(stdout,"\nHmm... could not converge on first step\n Let's try some more iterations\n");
- 	      if((damp_factor1 <= 1. && damp_factor1 >= 0.) &&
- 	         (damp_factor2 <= 1. && damp_factor2 >= 0.) &&
-        		 (damp_factor3 <= 1. && damp_factor3 >= 0.))
- 		{
-                if(hunt[0].BCID == -1)
-                   {
-	            if (Write_Intermediate_Solutions == 0) {
-	                 write_solution(ExoFileOut, resid_vector, x, x_sens_p, x_old,
-			        xdot, xdot_old, tev, tev_post, gv,  rd, 
-			        gvec, gvec_elem, &nprint, delta_s[0],
- 			        theta, custom_tol1, NULL, exo, dpi);
-	                 nprint++;
- 	                 }
- 	         }
- 		custom_tol1 *= 100.;
- 		custom_tol2 *= 100.;
- 		custom_tol3 *= 100.;
- 	DPRINTF(stdout,"  custom tolerances %g %g %g  \n",custom_tol1,custom_tol2,custom_tol3);
- 		}
- 		else
- 		{
-                if(hunt[0].BCID == -1)
-                   {
-	            if (Write_Intermediate_Solutions == 0) {
- 	DPRINTF(stdout,"  writing solution %g  \n",damp_factor1);
-	                 write_solution(ExoFileOut, resid_vector, x, x_sens_p, x_old,
-			        xdot, xdot_old, tev, tev_post, gv,  rd, 
-			        gvec, gvec_elem, &nprint, delta_s[0],
- 			        theta, damp_factor1, NULL, exo, dpi);
-	                 nprint++;
- 	                 }
- 	         }
- 		damp_factor1 *= 2.0;
-		damp_factor1 = MIN(damp_factor1,1.0);
- 	DPRINTF(stdout,"  damping factor %g  \n",damp_factor1);
- 		}
- 	  }
+        } else {
+          DPRINTF(stdout,
+                  "\nHmm... could not converge on first step\n Let's try some more iterations\n");
+          if ((damp_factor1 <= 1. && damp_factor1 >= 0.) &&
+              (damp_factor2 <= 1. && damp_factor2 >= 0.) &&
+              (damp_factor3 <= 1. && damp_factor3 >= 0.)) {
+            if (hunt[0].BCID == -1) {
+              if (Write_Intermediate_Solutions == 0) {
+                write_solution(ExoFileOut, resid_vector, x, x_sens_p, x_old, xdot, xdot_old, tev,
+                               tev_post, gv, rd, gvec, gvec_elem, &nprint, delta_s[0], theta,
+                               custom_tol1, NULL, exo, dpi);
+                nprint++;
+              }
+            }
+            custom_tol1 *= 100.;
+            custom_tol2 *= 100.;
+            custom_tol3 *= 100.;
+            DPRINTF(stdout, "  custom tolerances %g %g %g  \n", custom_tol1, custom_tol2,
+                    custom_tol3);
+          } else {
+            if (hunt[0].BCID == -1) {
+              if (Write_Intermediate_Solutions == 0) {
+                DPRINTF(stdout, "  writing solution %g  \n", damp_factor1);
+                write_solution(ExoFileOut, resid_vector, x, x_sens_p, x_old, xdot, xdot_old, tev,
+                               tev_post, gv, rd, gvec, gvec_elem, &nprint, delta_s[0], theta,
+                               damp_factor1, NULL, exo, dpi);
+                nprint++;
+              }
+            }
+            damp_factor1 *= 2.0;
+            damp_factor1 = MIN(damp_factor1, 1.0);
+            DPRINTF(stdout, "  damping factor %g  \n", damp_factor1);
+          }
+        }
 
-
-      }  /* end of !converged */
+      } /* end of !converged */
 
     } while (converged == 0);
 
@@ -1256,27 +1224,23 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
      * INCREMENT/DECREMENT PARAMETER
      */
 
-     hunt_par += dhunt_par;
-     if(hunt_par > 1.0)
-          {
-          dhunt_par = 1.0 - (hunt_par - dhunt_par);
-          hunt_par = 1.0;
-          }
-     for (iHC=0;iHC<nHC;iHC++) {
-           if(hunt[iHC].ramp == 2)
-             {
-              path1[iHC] = lambda[iHC]* pow(lambdaRatio[iHC],hunt_par);
-              path[iHC] = lambda[iHC]* pow(lambdaRatio[iHC],hunt_par-dhunt_par);
-             }
-           else
-             {
-           path1[iHC] = lambda[iHC] + hunt_par*lambdaDelta[iHC];
-           path[iHC] = lambda[iHC] + (hunt_par-dhunt_par)*lambdaDelta[iHC];
-             }
-          }
-      /*
-       * ADJUST NATURAL PARAMETER
-       */
+    hunt_par += dhunt_par;
+    if (hunt_par > 1.0) {
+      dhunt_par = 1.0 - (hunt_par - dhunt_par);
+      hunt_par = 1.0;
+    }
+    for (iHC = 0; iHC < nHC; iHC++) {
+      if (hunt[iHC].ramp == 2) {
+        path1[iHC] = lambda[iHC] * pow(lambdaRatio[iHC], hunt_par);
+        path[iHC] = lambda[iHC] * pow(lambdaRatio[iHC], hunt_par - dhunt_par);
+      } else {
+        path1[iHC] = lambda[iHC] + hunt_par * lambdaDelta[iHC];
+        path[iHC] = lambda[iHC] + (hunt_par - dhunt_par) * lambdaDelta[iHC];
+      }
+    }
+    /*
+     * ADJUST NATURAL PARAMETER
+     */
 
     for (iHC = 0; iHC < nHC; iHC++) {
       update_parameterHC(iHC, path1[iHC], x, xdot, x_AC, delta_s[iHC], cx, exo, dpi);
