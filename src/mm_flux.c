@@ -17,7 +17,8 @@
  */
 
 /* Standard include files */
-
+#include <complex.h>
+#undef I
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -45,6 +46,7 @@
 #include "mm_eh.h"
 #include "mm_fill_aux.h"
 #include "mm_fill_common.h"
+#include "mm_fill_em.h"
 #include "mm_fill_fill.h"
 #include "mm_fill_ls.h"
 #include "mm_fill_porous.h"
@@ -542,6 +544,9 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 
             err = load_bf_grad();
             GOMA_EH(err, "load_bf_grad");
+
+            err = load_fv_vector();
+            GOMA_EH(err, "load_fv_vector");
 
             err = load_bf_mesh_derivs();
             GOMA_EH(err, "load_bf_mesh_derivs");
@@ -1915,6 +1920,61 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
                 GOMA_EH(GOMA_ERROR, "Torque cannot be calculated in this case.");
               }
               break;
+            case SCATTERING_CROSS_SECTION: {
+              const double c0 =
+                  1.0 / (sqrt(upd->Free_Space_Permittivity * upd->Free_Space_Permeability));
+              const double eps0 = upd->Free_Space_Permittivity;
+              const double mu0 = upd->Free_Space_Permeability;
+
+              dbl freq = upd->EM_Frequency;
+              dbl lambda0 = c0 / freq;
+              dbl k0 = 2 * M_PI / lambda0;
+              dbl omega = k0 / sqrt(eps0 * mu0);
+              dbl Z0 = sqrt(mu0 / eps0);
+              complex double wave[3];
+              complex double curl_wave[3];
+              dbl x = fv->x[0];
+              dbl y = fv->x[1];
+              dbl z = fv->x[2];
+              incident_wave(x, y, z, k0, wave, curl_wave);
+              complex double permittivity;
+              complex double permittivity_matrix[DIM];
+              bool permittivity_is_matrix =
+                  relative_permittivity_model(&permittivity, permittivity_matrix);
+              if (permittivity_is_matrix) {
+                GOMA_EH(GOMA_ERROR, "Trying to compute scattered cross section when permittivity "
+                                    "is a matrix, not supported");
+              }
+              complex double Z1 = Z0 / 1.0; // see EM_ABSORB volint csqrt(creal(permittivity1));
+              complex double S0 = 1 / (2 * Z1);
+
+              complex double j = _Complex_I;
+              complex double E_s[DIM] = {fv->em_er[0] + j * fv->em_ei[0] - wave[0],
+                                         fv->em_er[1] + j * fv->em_ei[1] - wave[1],
+                                         fv->em_er[2] + j * fv->em_ei[2] - wave[2]};
+              complex double curl_E_s[DIM] = {
+                  fv->curl_em_er[0] + j * fv->curl_em_ei[0] - curl_wave[0],
+                  fv->curl_em_er[1] + j * fv->curl_em_ei[1] - curl_wave[1],
+                  fv->curl_em_er[2] + j * fv->curl_em_ei[2] - curl_wave[2]};
+
+              complex double H_s[DIM] = {0.0, 0.0, 0.0};
+
+              for (int i = 0; i < DIM; i++) {
+                H_s[i] = conj(-1.0 / (j * mu0 * omega) * curl_E_s[i]);
+              }
+
+              complex double P[DIM] = {
+                  0.5 * (E_s[1] * H_s[2] - E_s[2] * H_s[1]),
+                  0.5 * (E_s[2] * H_s[0] - E_s[0] * H_s[2]),
+                  0.5 * (E_s[0] * H_s[1] - E_s[1] * H_s[0]),
+              };
+
+              for (a = 0; a < dim; a++) {
+                local_q += creal((1 / S0) * P[a]) * fv->snormal[a];
+              }
+
+              local_flux += weight * det * local_q;
+            } break;
 
             case N_DOT_X:
               /*
@@ -5510,6 +5570,39 @@ int compute_volume_integrand(const int quantity,
       safe_free((void *)n_dof);
     }
     break;
+
+  case I_EM_ABSORB_CROSS_SECTION: {
+    const double c0 = 1.0 / (sqrt(upd->Free_Space_Permittivity * upd->Free_Space_Permeability));
+    const double eps0 = upd->Free_Space_Permittivity;
+    const double mu0 = upd->Free_Space_Permeability;
+    dbl x = fv->x[0];
+    dbl y = fv->x[1];
+    dbl z = fv->x[2];
+    dbl freq = upd->EM_Frequency;
+    dbl lambda0 = c0 / freq;
+    dbl k0 = 2 * M_PI / lambda0;
+    complex double permittivity;
+    complex double permittivity_matrix[DIM];
+    bool permittivity_is_matrix = relative_permittivity_model(&permittivity, permittivity_matrix);
+    if (permittivity_is_matrix) {
+      GOMA_EH(GOMA_ERROR, "Trying to compute Absorbtion cross section when permittivity "
+                          "is a matrix, not supported");
+    }
+    dbl Z0 = sqrt(mu0 / eps0);
+    complex double Z1 =
+        Z0 / 1.0; // this is of the surrounding phase set to 1 for now csqrt(creal(permittivity));
+    complex double S0 = 1 / (2 * Z1);
+    complex double invS0 = 1 / S0;
+    complex double wave[3];
+    complex double curl_wave[3];
+    incident_wave(x, y, z, k0, wave, curl_wave);
+    dbl E_mag = 0;
+    for (int i = 0; i < DIM; i++) {
+      E_mag += fv->em_er[i] * fv->em_er[i] + fv->em_ei[i] * fv->em_ei[i];
+    }
+    dbl omega = k0 / sqrt(eps0 * mu0);
+    *sum += creal(weight * det * invS0 * 0.5 * omega * eps0 * cimag(permittivity) * E_mag);
+  } break;
 
   default:
     break;

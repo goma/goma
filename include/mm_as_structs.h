@@ -876,6 +876,9 @@ struct Uniform_Problem_Description {
                                   (conversion factor is to an exact standard atm) */
   int Max_Num_Porous_Eqn;      /* max number of porous media Equations */
   dbl Acoustic_Frequency;      /* Frequency for Acoustic Harmonic Eqns */
+  dbl EM_Frequency;            /* Frequency for Time-Harmonic Maxwell Eqns */
+  dbl Free_Space_Permittivity; /* Free space permittivity for Time-Harmonic Maxwell Eqns */
+  dbl Free_Space_Permeability; /* Free space permeability for Time-Harmonic Maxwell Eqns */
   dbl Light_Cosmu;             /* Inclination of Incident Light */
   dbl Process_Temperature;     /* Temperature for thermal property data */
                                /*   for isothermal problems */
@@ -1499,6 +1502,12 @@ struct Basis_Functions {
   dbl phi[MDE];          /* phi_i */
   dbl dphidxi[MDE][DIM]; /* d(phi_i)/d(xi_j) */
 
+  // Nedelec / vector Basis
+  dbl phi_e[MDE][DIM];     /* vector phi_i e_k */
+  dbl ref_phi_e[MDE][DIM]; /* vector phi_i e_k */
+  dbl curl_e[MDE][DIM];
+  dbl curl_phi[MDE][DIM];
+
   /*
    * beer_belly() fills in these elemental Jacobian things...
    */
@@ -1507,6 +1516,7 @@ struct Basis_Functions {
    *  determinant of the jacobian of the matrix transformation
    *  of the ShapeVar shape function.
    */
+  int shape_dof;
   dbl detJ;
   dbl B[DIM][DIM]; /* inverse Jacobian */
   dbl d_det_J_dm[DIM][MDE];

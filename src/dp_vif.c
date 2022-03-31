@@ -996,6 +996,9 @@ void noahs_ark(void) {
   ddd_add_member(n, &upd->XFEM, 1, MPI_INT);
   ddd_add_member(n, &upd->Process_Temperature, 1, MPI_DOUBLE);
   ddd_add_member(n, &upd->Acoustic_Frequency, 1, MPI_DOUBLE);
+  ddd_add_member(n, &upd->EM_Frequency, 1, MPI_DOUBLE);
+  ddd_add_member(n, &upd->Free_Space_Permittivity, 1, MPI_DOUBLE);
+  ddd_add_member(n, &upd->Free_Space_Permeability, 1, MPI_DOUBLE);
   ddd_add_member(n, &upd->Light_Cosmu, 1, MPI_DOUBLE);
   ddd_add_member(n, &upd->SegregatedSolve, 1, MPI_INT);
   ddd_add_member(n, &upd->SegregatedSubcycles, 1, MPI_INT);
@@ -1449,7 +1452,9 @@ void noahs_ark(void) {
     ddd_add_member(n, &mp_glob[i]->density, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->electrical_conductivity, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->permittivity, 1, MPI_DOUBLE);
+    ddd_add_member(n, &mp_glob[i]->permittivity_imag, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->magnetic_permeability, 1, MPI_DOUBLE);
+    ddd_add_member(n, &mp_glob[i]->incident_wave, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->VoltageFormulation, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->heat_capacity, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->heat_source, 1, MPI_DOUBLE);
@@ -1469,6 +1474,7 @@ void noahs_ark(void) {
     ddd_add_member(n, &mp_glob[i]->matrix_density, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->specific_heat, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->permeability, 1, MPI_DOUBLE);
+    ddd_add_member(n, &mp_glob[i]->permeability_imag, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->PorousLiqCompress, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->PorousLiqRefPress, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->rel_gas_perm, 1, MPI_DOUBLE);
@@ -1610,6 +1616,8 @@ void noahs_ark(void) {
     ddd_add_member(n, &mp_glob[i]->Light_AbsorptionModel, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->Shell_User_ParModel, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->PermittivityModel, 1, MPI_INT);
+    ddd_add_member(n, &mp_glob[i]->MagneticPermeabilityModel, 1, MPI_INT);
+    ddd_add_member(n, &mp_glob[i]->IncidentWaveModel, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->PBE_BA_Type, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->SBM_Length_enabled, 1, MPI_INT);
 
@@ -1763,6 +1771,8 @@ void noahs_ark(void) {
     ddd_add_member(n, &mp_glob[i]->len_u_density, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->len_u_electrical_conductivity, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->len_u_permittivity, 1, MPI_INT);
+    ddd_add_member(n, &mp_glob[i]->len_u_magnetic_permeability, 1, MPI_INT);
+    ddd_add_member(n, &mp_glob[i]->len_u_incident_wave, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->len_u_heat_capacity, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->len_u_heat_source, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->len_u_mass_source, 1, MPI_INT);
@@ -2579,6 +2589,9 @@ void noahs_ark(void) {
   ddd_add_member(n, &VISCOUS_STRESS, 1, MPI_INT);
   ddd_add_member(n, &VISCOUS_STRESS_NORM, 1, MPI_INT);
   ddd_add_member(n, &VISCOUS_VON_MISES_STRESS, 1, MPI_INT);
+  ddd_add_member(n, &EM_CONTOURS, 1, MPI_INT);
+  ddd_add_member(n, &TOTAL_EM_CONTOURS, 1, MPI_INT);
+  ddd_add_member(n, &SCATTERED_EM_CONTOURS, 1, MPI_INT);
   ddd_add_member(n, &len_u_post_proc, 1, MPI_INT);
   ddd_add_member(n, &PSPG_PP, 1, MPI_INT);
 
@@ -2859,6 +2872,10 @@ void ark_landing(void) {
     dalloc(m->len_u_electrical_conductivity, m->u_electrical_conductivity);
 
     dalloc(m->len_u_permittivity, m->u_permittivity);
+
+    dalloc(m->len_u_magnetic_permeability, m->u_magnetic_permeability);
+
+    dalloc(m->len_u_incident_wave, m->u_incident_wave);
 
     dalloc(m->len_u_elect_surf_diffusivity, m->u_elect_surf_diffusivity);
 
@@ -3150,6 +3167,10 @@ void noahs_dove(void) {
     crdv(m->len_u_electrical_conductivity, m->u_electrical_conductivity);
 
     crdv(m->len_u_permittivity, m->u_permittivity);
+
+    crdv(m->len_u_magnetic_permeability, m->u_magnetic_permeability);
+
+    crdv(m->len_u_incident_wave, m->u_incident_wave);
 
     crdv(m->len_u_elect_surf_diffusivity, m->u_elect_surf_diffusivity);
 

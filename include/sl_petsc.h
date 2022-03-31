@@ -2,6 +2,11 @@
 #define GOMA_SL_PETSC_H
 
 #ifdef GOMA_ENABLE_PETSC
+#include <petscsystypes.h>
+#ifdef I
+#undef I
+#endif
+#if !(PETSC_USE_COMPLEX)
 #include "dpi.h"
 #include "exo_struct.h"
 #include "mm_as_structs.h"
@@ -44,6 +49,7 @@ typedef struct PetscMatrixData {
   PetscInt *pcd_ss_remove;
   PetscInt pcd_ns_remove_n;
   PetscInt *pcd_ns_remove;
+  PetscInt *real_to_complex;
 } PetscMatrixData;
 
 PetscErrorCode petsc_PCD_setup(PC ppc,
@@ -87,5 +93,6 @@ int petsc_solve(struct GomaLinearSolverData *ams, double *x_, double *b_, int *i
 goma_error petsc_scale_matrix(struct GomaLinearSolverData *ams, double *b_, double *scale);
 
 goma_error goma_petsc_free_matrix(struct GomaLinearSolverData *ams);
+#endif
 #endif
 #endif // GOMA_SL_PETSC_H

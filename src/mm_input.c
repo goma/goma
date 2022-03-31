@@ -59,6 +59,12 @@
 #include "sl_util.h"
 #include "std.h"
 #include "util/aprepro_helper.h"
+#ifdef GOMA_ENABLE_PETSC
+#include <petscsystypes.h>
+#ifdef I
+#undef I
+#endif
+#endif
 
 #define GOMA_MM_INPUT_C
 #include "mm_input.h"
@@ -1139,6 +1145,9 @@ void rd_genl_specs(FILE *ifp, char *input) {
     } else if (!strcmp(input, "TABLE")) {
       efv->i[Num_Var_External] = I_TABLE;
       num_ext_Tables++;
+    } else if (!strcmp(input, "N1")) {
+      efv->i[Num_Var_External] = I_N1;
+      num_ext_Tables++;
     } else {
       sprintf(err_msg, "??? interpolation \"%s\" for external field var", input);
       GOMA_EH(GOMA_ERROR, err_msg);
@@ -1353,6 +1362,35 @@ void rd_genl_specs(FILE *ifp, char *input) {
     }
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %g", "Acoustic Frequency",
              upd->Acoustic_Frequency);
+    ECHO(echo_string, echo_file);
+  }
+
+  iread = look_for_optional(ifp, "EM Frequency", input, '=');
+  if (iread == 1) {
+    if (fscanf(ifp, "%lf", &upd->EM_Frequency) != 1) {
+      GOMA_EH(GOMA_ERROR, "error reading EM Frequency");
+    }
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %g", "EM Frequency", upd->EM_Frequency);
+    ECHO(echo_string, echo_file);
+  }
+
+  iread = look_for_optional(ifp, "EM Free Space Permittivity", input, '=');
+  if (iread == 1) {
+    if (fscanf(ifp, "%lf", &upd->Free_Space_Permittivity) != 1) {
+      GOMA_EH(GOMA_ERROR, "error reading EM Free Space Permittivity");
+    }
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %g", "EM Free Space Permittivity",
+             upd->Free_Space_Permittivity);
+    ECHO(echo_string, echo_file);
+  }
+
+  iread = look_for_optional(ifp, "EM Free Space Permeability", input, '=');
+  if (iread == 1) {
+    if (fscanf(ifp, "%lf", &upd->Free_Space_Permeability) != 1) {
+      GOMA_EH(GOMA_ERROR, "error reading EM Free Space Permeability");
+    }
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %g", "EM Free Space Permeability",
+             upd->Free_Space_Permeability);
     ECHO(echo_string, echo_file);
   }
 
@@ -5782,6 +5820,16 @@ void rd_solver_specs(FILE *ifp, char *input) {
 #else
     GOMA_EH(GOMA_ERROR, "Goma not compiled with PETSc support");
 #endif
+  } else if (strcmp(Matrix_Solver, "petsc_complex") == 0) {
+#ifdef PETSC_USE_COMPLEX
+    Linear_Solver = PETSC_COMPLEX_SOLVER;
+    is_Solver_Serial = FALSE;
+#else
+    GOMA_EH(GOMA_ERROR, "Goma not compiled with a complex petsc");
+#endif
+#ifndef GOMA_ENABLE_PETSC
+    GOMA_EH(GOMA_ERROR, "Goma not compiled with PETSc support");
+#endif
   } else {
     Linear_Solver = AZTEC;
     is_Solver_Serial = FALSE;
@@ -5793,6 +5841,10 @@ void rd_solver_specs(FILE *ifp, char *input) {
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, search_string, Matrix_Format);
   } else if (strcmp(Matrix_Solver, "petsc") == 0) {
     strcpy(Matrix_Format, "petsc"); /* save string for aztec use */
+    strcpy(search_string, "Matrix storage format");
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, search_string, Matrix_Format);
+  } else if (strcmp(Matrix_Solver, "petsc_complex") == 0) {
+    strcpy(Matrix_Format, "petsc_complex"); /* save string for aztec use */
     strcpy(search_string, "Matrix storage format");
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, search_string, Matrix_Format);
   } else if (strcmp(Matrix_Solver, "front") != 0) {
@@ -7601,6 +7653,8 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
       printf("%s:\t(T,c) = Q2\n", yo);
     }
     pd_ptr->IntegrationMap = I_Q2;
+  } else if (strcasecmp(input, "N1") == 0) {
+    pd_ptr->IntegrationMap = I_N1;
   } else if (strcasecmp(input, "SP") == 0) {
     if (Debug_Flag && ProcID == 0) {
       printf("%s:\t(T,c) = SP\n", yo);
@@ -8552,6 +8606,8 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
         pd_ptr->w[mtrx_index0][ce] = I_SP;
         GOMA_WH(-1,
                 "CAUTION WITH SUBPARAMETRIC: DON'T USE WITH LAGRANGIAN OR TOTAL_ALE MESH MOTIONS");
+      } else if (!strcasecmp(ts, "N1")) {
+        pd_ptr->w[mtrx_index0][ce] = I_N1;
       } else {
         fprintf(stderr, "%s:\tUnrecognized Galerkin weighting function.\n", yo);
         exit(-1);
@@ -9057,6 +9113,8 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
         upd->XFEM = TRUE;
       } else if (!strcasecmp(ts, "SP")) {
         pd_ptr->i[mtrx_index0][cv] = I_SP;
+      } else if (!strcasecmp(ts, "N1")) {
+        pd_ptr->i[mtrx_index0][cv] = I_N1;
       } else {
         fprintf(stderr, "%s:\tUnrecognized interpolation function for variable.\n", yo);
         exit(-1);
@@ -12633,6 +12691,13 @@ struct Data_Table *setup_table_MP(FILE *imp, struct Data_Table *table, char *sea
         sprintf(err_msg, "%s:\tError reading species number on TABLE MP \n", yo);
         GOMA_EH(GOMA_ERROR, err_msg);
       }
+    } else if (strcmp(line, "WAVELENGTH") == 0) {
+      strcpy(table->t_name[i], "WAVELENGTH");
+      table->t_index[i] = WAVELENGTH;
+      if (fscanf(imp, "%d", &table->species_eq) != 1) {
+        sprintf(err_msg, "%s:\tError reading species number on TABLE MP \n", yo);
+        GOMA_EH(GOMA_ERROR, err_msg);
+      }
     } else if (strcmp(line, "LOWER_DISTANCE") == 0) {
       strcpy(table->t_name[i], "LOWER_DISTANCE");
       table->t_index[i] = LOWER_DISTANCE;
@@ -13448,6 +13513,14 @@ void echo_compiler_settings(void) {
   fprintf(echo_file, "%-30s= %s\n", "GOMA_ENABLE_PETSC", "yes");
 #else
   fprintf(echo_file, "%-30s= %s\n", "GOMA_ENABLE_PETSC", "no");
+#endif
+
+#ifdef GOMA_ENABLE_PETSC
+#ifdef PETSC_USE_COMPLEX
+  fprintf(echo_file, "%-30s= %s\n", "PETSC_USE_COMPLEX", "yes");
+#else
+  fprintf(echo_file, "%-30s= %s\n", "PETSC_USE_COMPLEX", "no");
+#endif
 #endif
 
 #ifdef GOMA_ENABLE_OMEGA_H

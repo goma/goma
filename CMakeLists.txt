@@ -155,6 +155,11 @@ if(ENABLE_PETSC)
     # Determine PETSc compilers
     if(PETSC_FOUND)
       execute_process(
+        COMMAND ${PKG_CONFIG_EXECUTABLE} PETSc --variable=prefix
+        COMMAND tr -d '\n'
+        OUTPUT_VARIABLE PETSC_PREFIX)
+      message(STATUS "Using PETSc prefix ${PETSC_PREFIX}")
+      execute_process(
         COMMAND ${PKG_CONFIG_EXECUTABLE} PETSc --variable=ccompiler
         COMMAND tr -d '\n'
         OUTPUT_VARIABLE PETSC_C_COMPILER)
@@ -486,6 +491,7 @@ set(GOMA_INCLUDES
     include/mm_mp.h
     include/mm_mp_structs.h
     include/mm_names.h
+    include/mm_em_bc.h
     include/mm_ns_bc.h
     include/mm_numjac.h
     include/mm_post_def.h
@@ -541,6 +547,7 @@ set(GOMA_INCLUDES
     include/sl_epetra_util.h
     include/sl_lu.h
     include/sl_petsc.h
+    include/sl_petsc_complex.h
     include/sl_matrix_util.h
     include/sl_stratimikos_interface.h
     include/sl_umf.h
@@ -631,6 +638,7 @@ set(GOMA_SOURCES
     src/mm_interface.c
     src/mm_matrl.c
     src/mm_more_utils.c
+    src/mm_em_bc.c
     src/mm_ns_bc.c
     src/mm_numjac.c
     src/mm_placid.c
@@ -689,6 +697,7 @@ set(GOMA_SOURCES
     src/sl_matrix_dump.c
     src/sl_petsc.c
     src/sl_petsc_pcd.c
+    src/sl_petsc_complex.c
     src/sl_matrix_util.c
     src/sl_squash.c
     src/sl_stratimikos_interface.cpp

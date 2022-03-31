@@ -429,6 +429,9 @@ void set_aztec_options_params(int options[], double params[]) {
   } else if (strcmp(Matrix_Solver, "petsc") == 0) {
     Linear_Solver = PETSC_SOLVER;
     options[AZ_solver] = -1;
+  } else if (strcmp(Matrix_Solver, "petsc_complex") == 0) {
+    Linear_Solver = PETSC_COMPLEX_SOLVER;
+    options[AZ_solver] = -1;
   } else if (strcmp(Matrix_Solver, "aztecoo") == 0) {
     Linear_Solver = AZTECOO;
     if (strcmp(AztecOO_Solver, "cg") == 0) {

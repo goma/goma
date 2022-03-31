@@ -90,10 +90,11 @@ typedef enum type_elem {
 
 /* define shape function information types */
 
-#define PSI    0
-#define DPSI_S 1
-#define DPSI_T 2
-#define DPSI_U 3
+#define PSI      0
+#define DPSI_S   1
+#define DPSI_T   2
+#define DPSI_U   3
+#define CURL_PSI 4
 
 /* define maximum quantities */
 
