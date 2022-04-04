@@ -19,14 +19,16 @@
 #ifndef DISABLE_COLOR_ERROR_PRINT
 #include <unistd.h>
 #endif
+#include <time.h>
 
 #define GOMA_MM_EH_C
 #include "mm_eh.h"
 #include "mpi.h"
+#include "rd_mesh.h"
+#include "rf_io.h"
 #include "rf_io_const.h"
 #include "rf_mp.h"
 #include "std.h"
-
 #ifdef PRINT_STACK_TRACE_ON_EH
 #include <execinfo.h>
 
