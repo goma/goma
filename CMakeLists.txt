@@ -375,6 +375,7 @@ option_definition(PARALLEL ON)
 option_definition(FP_EXCEPT OFF)
 option_definition(ANALEIG_PLEASE OFF)
 option_definition(DO_NO_UNROLL OFF)
+option_definition(ENABLE_LOGGING OFF)
 set(MDE
     "27"
     CACHE STRING "set MDE")
