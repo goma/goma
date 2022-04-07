@@ -76,7 +76,7 @@ void fix_output() {
   }
 }
 
-int fix_exo_file(int num_procs, char *exo_mono_name) {
+int fix_exo_file(int num_procs, const char *exo_mono_name) {
   int i;
   int p, pmax = 0, num_node_var_max = 0;
   int t;
