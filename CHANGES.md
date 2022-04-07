@@ -1,3 +1,8 @@
+## Changes in version 7.0.5
+
+- bugfix, fix anneal mesh not working
+- bugfix, add ENABLE_LOGGING and fix mm_eh.c includes when ENABLE_LOGGING
+
 ## Changes in version 7.0.4
 
 - bugfix for External Field Variables in Parallel

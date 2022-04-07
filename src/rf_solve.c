@@ -2926,7 +2926,18 @@ int anneal_mesh(double x[],
 
   for (p = 0; p < dim; p++) {
     new_coord[p] = (double *)calloc(num_nodes, sizeof(double));
-    dcopy1(num_nodes, Coor[p], new_coord[p]);
+  }
+
+  if (dim > 0) {
+    dcopy1(exo->base_mesh->num_nodes, exo->base_mesh->x_coord, new_coord[0]);
+  }
+
+  if (dim > 1) {
+    dcopy1(exo->base_mesh->num_nodes, exo->base_mesh->y_coord, new_coord[1]);
+  }
+
+  if (dim > 2) {
+    dcopy1(exo->base_mesh->num_nodes, exo->base_mesh->z_coord, new_coord[2]);
   }
 
   nodal_result_vector = (double *)calloc(num_nodes, sizeof(double));
@@ -2957,6 +2968,9 @@ int anneal_mesh(double x[],
 
       gnn = exo->elem_node_list[exo->elem_node_pntr[ielem] + ln];
 
+      if (exo->ghost_node_to_base[gnn] == -1)
+        continue;
+
       memset(displacement, 0, sizeof(double) * DIM);
 
       if (moved[gnn] != 1) {
@@ -2980,7 +2994,7 @@ int anneal_mesh(double x[],
       }
 
       for (p = 0; p < dim; p++)
-        new_coord[p][gnn] += factor * displacement[p];
+        new_coord[p][exo->ghost_node_to_base[gnn]] += factor * displacement[p];
     }
   }
 
@@ -2990,18 +3004,18 @@ int anneal_mesh(double x[],
    */
 
   if (dim > 0) {
-    savex = exo->x_coord;
-    exo->x_coord = &new_coord[0][0];
+    savex = exo->base_mesh->x_coord;
+    exo->base_mesh->x_coord = &new_coord[0][0];
   }
 
   if (dim > 1) {
-    savey = exo->y_coord;
-    exo->y_coord = &new_coord[1][0];
+    savey = exo->base_mesh->y_coord;
+    exo->base_mesh->y_coord = &new_coord[1][0];
   }
 
   if (dim > 2) {
-    savez = exo->z_coord;
-    exo->z_coord = &new_coord[2][0];
+    savez = exo->base_mesh->z_coord;
+    exo->base_mesh->z_coord = &new_coord[2][0];
   }
 
   if (Num_Proc > 1)
@@ -3022,13 +3036,13 @@ int anneal_mesh(double x[],
    */
 
   if (dim > 0)
-    exo->x_coord = savex;
+    exo->base_mesh->x_coord = savex;
 
   if (dim > 1)
-    exo->y_coord = savey;
+    exo->base_mesh->y_coord = savey;
 
   if (dim > 2)
-    exo->z_coord = savez;
+    exo->base_mesh->z_coord = savez;
 
   if ((tev + tev_post) != 0) {
     gvec_elem = (double ***)array_alloc(2, exo->num_elem_blocks, tev + tev_post, sizeof(double *));
@@ -3083,6 +3097,11 @@ int anneal_mesh(double x[],
     (void)write_ascii_soln(x_file, NULL, numProcUnknowns, x, 0, 0.0, anneal_dat);
 
     fclose(anneal_dat);
+  }
+
+  if (!Skip_Fix && Num_Proc > 1 && ProcID == 0) {
+    DPRINTF(stdout, "\nFixing exodus file %s\n", anneal_file);
+    fix_exo_file(Num_Proc, anneal_file);
   }
 
   /*
@@ -3185,6 +3204,20 @@ int anneal_mesh_with_external_field(const Exo_DB *exo)
 
   if (dim > 2) {
     Coor[2] = &new_coord[2][0];
+  }
+
+  // adjust base mesh
+  for (int i = 0; i < num_nodes; i++) {
+    int base_node = exo->ghost_node_to_base[i];
+    if (base_node != -1) {
+      exo->base_mesh->x_coord[base_node] = Coor[0][i];
+      if (dim > 1) {
+        exo->base_mesh->y_coord[base_node] = Coor[1][i];
+      }
+      if (dim > 2) {
+        exo->base_mesh->z_coord[base_node] = Coor[2][i];
+      }
+    }
   }
 
   for (p = 0; p < dim; p++) {

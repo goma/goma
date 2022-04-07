@@ -47,6 +47,6 @@ struct fix_data {
 };
 
 void fix_output(void);
-int fix_exo_file(int num_procs, char *exo_mono_name);
+int fix_exo_file(int num_procs, const char *exo_mono_name);
 
 #endif /* FIX_H */
