@@ -8,26 +8,23 @@
 
     <title>Density of Liquid Phase in Porous Media &#8212; Goma User Manual 7.0.0 documentation</title>
     
-    <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/pydata-sphinx-theme.css" />
     
-    <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
@@ -44,7 +41,7 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -3103,7 +3100,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage pt-5 pb-3">
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -3159,12 +3156,12 @@
               <div>
                 
   <section id="density-of-liquid-phase-in-porous-media">
-<h1><strong>Density of Liquid Phase in Porous Media</strong><a class="headerlink" href="#density-of-liquid-phase-in-porous-media" title="Permalink to this headline">¶</a></h1>
+<h1><strong>Density of Liquid Phase in Porous Media</strong><a class="headerlink" href="#density-of-liquid-phase-in-porous-media" title="Permalink to this headline">#</a></h1>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Density</span> <span class="n">of</span> <span class="n">liquid</span> <span class="n">phase</span> <span class="ow">in</span> <span class="n">porous</span> <span class="n">media</span> <span class="o">=</span> <span class="p">{</span><span class="n">yes</span> <span class="o">|</span> <span class="n">no</span><span class="p">}</span>
 </pre></div>
 </div>
 <section id="description-usage">
-<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">#</a></h2>
 <p>This post processing option can be used to trigger the computation and output of the
 density of solvents in the liquid phase only, averaged over the mixture, as a nodal field
 variable to the output EXODUS II file. The nodal variable is called <strong>Rho_Liq_Phase</strong>.
@@ -3188,7 +3185,7 @@ as a postprocessing variable to the output EXODUSII file.</p></td>
 </table>
 </section>
 <section id="examples">
-<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h2>
 <p>An example of an input card which activates writing of the density to the EXODUS II
 file is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Density</span> <span class="n">of</span> <span class="n">liquid</span> <span class="n">phase</span> <span class="ow">in</span> <span class="n">porous</span> <span class="n">media</span> <span class="o">=</span> <span class="n">yes</span>
@@ -3196,7 +3193,7 @@ file is:</p>
 </div>
 </section>
 <section id="technical-discussion">
-<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">#</a></h2>
 <p>In liquid-saturated flow cases, viz. for <em>Media Type</em> selection <em>POROUS_SATURATED</em>,
 the total solvent density in the liquid phase is</p>
 <figure class="align-center">
@@ -3213,7 +3210,7 @@ or <em>POROUS_TWO_PHASE</em>, the density of solvent in the liquid phase only is
 computed with the <em>Total density of solvents in porous media</em> card.</p>
 </section>
 <section id="references">
-<h2><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<h2><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">#</a></h2>
 <p>GT-009.3: GOMA’s Capabilities for Partially Saturated Flow in Porous Media,
 September 1, 2002, P. R. Schunk</p>
 </section>
@@ -3247,8 +3244,9 @@ September 1, 2002, P. R. Schunk</p>
       </div>
     </div>
   
-    <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -3259,7 +3257,7 @@ September 1, 2002, P. R. Schunk</p>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     

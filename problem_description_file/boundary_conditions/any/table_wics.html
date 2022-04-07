@@ -8,26 +8,23 @@
 
     <title>TABLE_WICS &#8212; Goma User Manual 7.0.0 documentation</title>
     
-    <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/styles/pydata-sphinx-theme.css" />
     
-    <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
     <script src="../../../_static/jquery.js"></script>
     <script src="../../../_static/underscore.js"></script>
@@ -41,7 +38,7 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -122,7 +119,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage pt-5 pb-3">
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -165,12 +162,12 @@
               <div>
                 
   <section id="table-wics">
-<h1>TABLE_WICS<a class="headerlink" href="#table-wics" title="Permalink to this headline">¶</a></h1>
+<h1>TABLE_WICS<a class="headerlink" href="#table-wics" title="Permalink to this headline">#</a></h1>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">TABLE_WICS</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="p">{</span><span class="n">abscissa</span><span class="p">}</span> <span class="p">{</span><span class="n">ordinate</span><span class="p">}</span> <span class="p">{</span><span class="n">scale</span><span class="p">}</span> <span class="p">{</span><span class="n">interpolation</span><span class="p">}</span> <span class="p">[</span><span class="n">FILE</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">fname</span><span class="o">&gt;</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="description-usage">
-<h2>Description / Usage<a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h2>
+<h2>Description / Usage<a class="headerlink" href="#description-usage" title="Permalink to this headline">#</a></h2>
 <p><strong>(WIC/VARIED)</strong></p>
 <p>This boundary allows the user to supply boundary data for scalar weak integrated
 boundary conditions. See the <em>TABLE_WICV</em> card for vector weak integrated boundary
@@ -293,7 +290,7 @@ reading if APREPRO is enabled.</p>
 </dl>
 </section>
 <section id="examples">
-<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h2>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">TABLE_WICS</span> <span class="n">SS</span> <span class="mi">12</span> <span class="n">X</span> <span class="n">TEMPERATURE</span> <span class="n">QUADRATIC</span> <span class="n">FILE</span> <span class="o">=</span><span class="n">heatflux</span><span class="o">.</span><span class="n">table</span>
 </pre></div>
@@ -309,7 +306,7 @@ reading if APREPRO is enabled.</p>
 </div>
 </section>
 <section id="technical-discussion">
-<h2>Technical Discussion<a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h2>
+<h2>Technical Discussion<a class="headerlink" href="#technical-discussion" title="Permalink to this headline">#</a></h2>
 <p>The table data itself appears as columns of numbers. One-dimensional <em>TABLE_WICS</em>
 tables have two columns (column1=abscissa, column2=ordinate), whereas twodimensional
 <em>TABLE_WICS</em> tables have three columns (column1=abscissa1,
@@ -341,8 +338,9 @@ Weakly Integrated Conditions (WIC).</p>
       </div>
     </div>
   
-    <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -353,7 +351,7 @@ Weakly Integrated Conditions (WIC).</p>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     

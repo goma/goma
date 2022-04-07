@@ -8,26 +8,23 @@
 
     <title>Code Structure and I/O &#8212; Goma User Manual 7.0.0 documentation</title>
     
-    <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/pydata-sphinx-theme.css" />
     
-    <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
@@ -43,7 +40,7 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -3102,7 +3099,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage pt-5 pb-3">
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -3140,9 +3137,9 @@
               <div>
                 
   <section id="code-structure-and-i-o">
-<h1>Code Structure and I/O<a class="headerlink" href="#code-structure-and-i-o" title="Permalink to this headline">¶</a></h1>
+<h1>Code Structure and I/O<a class="headerlink" href="#code-structure-and-i-o" title="Permalink to this headline">#</a></h1>
 <section id="files-for-data-input">
-<h2>Files for Data Input<a class="headerlink" href="#files-for-data-input" title="Permalink to this headline">¶</a></h2>
+<h2>Files for Data Input<a class="headerlink" href="#files-for-data-input" title="Permalink to this headline">#</a></h2>
 <p>The <em>Goma</em> file I/O structure is diagrammed in Figure 2. Input to the program is divided into six
 categories: (1) command-line options, (2) problem description file, (3) material files, (4) ASCII
 continuation/restart file, (5) EXODUS II database file, and (6) sundry material property or
@@ -3154,7 +3151,7 @@ debugging options.</p>
 <a class="reference internal image-reference" href="_images/002_goma_physics.png"><img alt="_images/002_goma_physics.png" src="_images/002_goma_physics.png" style="width: 90%;" /></a>
 <figcaption>
 <p><span class="caption-text">I/O structure for <em>Goma</em>. Dashed lines indicate that the files or commands are
-not required.</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+not required.</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
 </figcaption>
 </figure>
 <p>The <em>problem-description</em> file is by default called “input” but can be renamed with the -i switch on
@@ -3195,7 +3192,7 @@ containing the current problem mesh. All others are either output for postproces
 supply auxiliary external fields (e.g. magnetic fields).</p>
 </section>
 <section id="command-line-arguments">
-<h2>Command-Line Arguments<a class="headerlink" href="#command-line-arguments" title="Permalink to this headline">¶</a></h2>
+<h2>Command-Line Arguments<a class="headerlink" href="#command-line-arguments" title="Permalink to this headline">#</a></h2>
 <p><em>Goma</em> can be run using only the input files (all four listed above) to describe the problem and to
 direct the input and output; in this case <em>Goma</em> is run using the command “goma” without any
 arguments. However, command-line arguments offer additional flexibility for redirecting input or
@@ -3379,8 +3376,9 @@ overrides of information in the problem description file, so in some cases it ma
       </div>
     </div>
   
-    <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -3391,7 +3389,7 @@ overrides of information in the problem description file, so in some cases it ma
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     

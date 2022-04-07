@@ -8,26 +8,23 @@
 
     <title>VOLUME_INT &#8212; Goma User Manual 7.0.0 documentation</title>
     
-    <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/pydata-sphinx-theme.css" />
     
-    <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
@@ -44,7 +41,7 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -3103,7 +3100,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage pt-5 pb-3">
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -3159,12 +3156,12 @@
               <div>
                 
   <section id="volume-int">
-<h1><strong>VOLUME_INT</strong><a class="headerlink" href="#volume-int" title="Permalink to this headline">¶</a></h1>
+<h1><strong>VOLUME_INT</strong><a class="headerlink" href="#volume-int" title="Permalink to this headline">#</a></h1>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">VOLUME_INT</span> <span class="o">=</span> <span class="p">{</span><span class="n">volume_type</span><span class="p">}</span> <span class="o">&lt;</span><span class="n">blk_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">species_no</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">file_string</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float_list</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="description-usage">
-<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">#</a></h2>
 <p>The VOLUME_INT card activates computation of specified volumetric integrals
 during post processing. As many of these VOLUME_INT cards as desired can be input
 to <em>Goma</em>. Definitions of the input parameters are as follows:</p>
@@ -3264,7 +3261,7 @@ constants A, B, C, etc in the <strong>SURFACE_SPECIES</strong> type.</p></td>
 </table>
 </section>
 <section id="examples">
-<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h2>
 <p>Here is an example of an input deck with 3 VOLUME_INT cards.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Post</span> <span class="n">Processing</span> <span class="n">Volumetric</span> <span class="n">Integration</span> <span class="o">=</span>
 <span class="n">VOLUME_INT</span> <span class="o">=</span> <span class="n">VOLUME</span> <span class="mi">1</span> <span class="mi">0</span> <span class="n">volume</span><span class="o">.</span><span class="n">out</span>
@@ -3275,7 +3272,7 @@ constants A, B, C, etc in the <strong>SURFACE_SPECIES</strong> type.</p></td>
 </div>
 </section>
 <section id="technical-discussion">
-<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">#</a></h2>
 <p>The volume integrations are carried out as follows:</p>
 <table class="table">
 <colgroup>
@@ -3318,7 +3315,7 @@ constants A, B, C, etc in the <strong>SURFACE_SPECIES</strong> type.</p></td>
 </table>
 </section>
 <section id="references">
-<h2><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<h2><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">#</a></h2>
 <p>No References.</p>
 </section>
 </section>
@@ -3351,8 +3348,9 @@ constants A, B, C, etc in the <strong>SURFACE_SPECIES</strong> type.</p></td>
       </div>
     </div>
   
-    <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -3363,7 +3361,7 @@ constants A, B, C, etc in the <strong>SURFACE_SPECIES</strong> type.</p></td>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     

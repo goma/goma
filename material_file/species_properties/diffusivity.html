@@ -8,26 +8,23 @@
 
     <title>Diffusivity &#8212; Goma User Manual 7.0.0 documentation</title>
     
-    <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/pydata-sphinx-theme.css" />
     
-    <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
@@ -43,7 +40,7 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -3102,7 +3099,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage pt-5 pb-3">
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -3165,12 +3162,12 @@
               <div>
                 
   <section id="diffusivity">
-<h1><strong>Diffusivity</strong><a class="headerlink" href="#diffusivity" title="Permalink to this headline">¶</a></h1>
+<h1><strong>Diffusivity</strong><a class="headerlink" href="#diffusivity" title="Permalink to this headline">#</a></h1>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Diffusivity</span> <span class="o">=</span> <span class="p">{</span><span class="n">model_name</span><span class="p">}</span> <span class="o">&lt;</span><span class="n">species</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">varies</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="description-usage">
-<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">#</a></h2>
 <p>This required card is used to specify the model for the diffusivity for each species.
 Definitions of the input parameters are as follows:</p>
 <table class="table">
@@ -3444,7 +3441,7 @@ defined) of diffusivities, Dij, is required:</p>
 must also be specified in the material file so that the migration flux may be calculated.</p>
 </section>
 <section id="examples">
-<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h2>
 <p>Sections of material input files are shown below for several of the Diffusivity model
 options presented above.</p>
 <p>Following is a sample input card for the <strong>CONSTANT</strong> <em>Diffusivity</em> model:</p>
@@ -3534,7 +3531,7 @@ options presented above.</p>
 similarly specified as above in the <strong>CONSANT</strong> <em>Diffusivity</em> case)</p>
 </section>
 <section id="technical-discussion">
-<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">#</a></h2>
 <p>Following are brief comments on the various <em>Diffusivity</em> models.</p>
 <p><strong>POROUS</strong> For this model, diffusivity depends on the saturation and porosity in a
 porous medium. For two-phase or unsaturated flow in a porous medium, the diffusivity
@@ -3653,7 +3650,7 @@ as defined in the following Fickian flux model (cf. Newman, 1991; Chen, et. al.,
 <p>is taken to be constant. Here, ci is molar concentration of species i.</p>
 </section>
 <section id="faqs">
-<h2><strong>FAQs</strong><a class="headerlink" href="#faqs" title="Permalink to this headline">¶</a></h2>
+<h2><strong>FAQs</strong><a class="headerlink" href="#faqs" title="Permalink to this headline">#</a></h2>
 <p>The following is a discussion of Units in <em>Goma</em> but covers several important Diffusionrelated
 items. It comes from some emails exchanged at Sandia during January 1998; while the discussions are relevant for each
 user of the code, the deficiencies or lack ofclarity have been since been remedied prior to <em>Goma</em> 4.0.</p>
@@ -3713,7 +3710,7 @@ t ⁄ L. So, that must be converted as follows:</p>
 <p>This checks out!</p>
 </section>
 <section id="references">
-<h2><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<h2><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">#</a></h2>
 <p>Alsoy, S. and Duda, J. L., 1999. “Modeling of Multicomponent Drying of Polymer
 Films.” AIChE Journal, (45)4, 896-905.</p>
 <p>Chen, K. S., Evans, G. H., Larson, R. S., Noble, D. R. and Houf, W. G. “Final Report on
@@ -3783,8 +3780,9 @@ Multicomponent Diffusion.” AIChE Journal, (45)1, 1-12.</p>
       </div>
     </div>
   
-    <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -3795,7 +3793,7 @@ Multicomponent Diffusion.” AIChE Journal, (45)1, 1-12.</p>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     

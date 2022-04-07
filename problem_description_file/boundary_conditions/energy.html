@@ -8,26 +8,23 @@
 
     <title>Category 5: Energy Equations &#8212; Goma User Manual 7.0.0 documentation</title>
     
-    <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/pydata-sphinx-theme.css" />
     
-    <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
@@ -44,7 +41,7 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -3103,7 +3100,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage pt-5 pb-3">
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -3564,7 +3561,7 @@
               <div>
                 
   <section id="category-5-energy-equations">
-<h1>Category 5: Energy Equations<a class="headerlink" href="#category-5-energy-equations" title="Permalink to this headline">¶</a></h1>
+<h1>Category 5: Energy Equations<a class="headerlink" href="#category-5-energy-equations" title="Permalink to this headline">#</a></h1>
 <p>The following conditions are applied as boundary conditions to the energy equation. These
 conditions include strong Dirichlet conditions, such as hard sets on temperature on a boundary as
 a constant or function of position, weak-form conditions, such as a specified heat flux from a
@@ -3573,12 +3570,12 @@ change (viz. latent heat effects), etc. The energy equation is of course a scala
 equation (see Porous Energy).
 highly specialized equations are also available, such as a heat flux model for a laser interaction</p>
 <section id="t">
-<h2><strong>T</strong><a class="headerlink" href="#t" title="Permalink to this headline">¶</a></h2>
+<h2><strong>T</strong><a class="headerlink" href="#t" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">T</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="description-usage">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">#</a></h3>
 <p><strong>(DC/ENERGY)</strong></p>
 <p>This Dirichlet boundary condition card is used to set constant temperature. Definitions
 of the input parameters are as follows:</p>
@@ -3616,24 +3613,24 @@ automatic continuation sequences</em>.</p></td>
 </table>
 </section>
 <section id="examples">
-<h3><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">T</span> <span class="n">NS</span> <span class="mi">100</span> <span class="mf">273.13</span>
 </pre></div>
 </div>
 </section>
 <section id="technical-discussion">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">#</a></h3>
 <p>No Discussion.</p>
 </section>
 </section>
 <section id="t-user">
-<h2><strong>T_USER</strong><a class="headerlink" href="#t-user" title="Permalink to this headline">¶</a></h2>
+<h2><strong>T_USER</strong><a class="headerlink" href="#t-user" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">T_USER</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id1">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id1" title="Permalink to this headline">#</a></h3>
 <p><strong>(PCC/ENERGY)</strong></p>
 <p>This boundary condition card is used to call a routine for a user-defined temperature.
 Specification is made via the function tuser in file “user_bc.c.” Definitions of the
@@ -3667,28 +3664,28 @@ appropriate C function in file user_bc.c.</p></td>
 </table>
 </section>
 <section id="id2">
-<h3><strong>Examples</strong><a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id2" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample input card with two parameters passed to function tuser:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">T_USER</span> <span class="n">SS</span> <span class="mi">100</span>   <span class="mf">273.13</span> <span class="mf">100.0</span>
 </pre></div>
 </div>
 </section>
 <section id="id3">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id3" title="Permalink to this headline">#</a></h3>
 <p>No Discussion.</p>
 </section>
 <section id="references">
-<h3><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="qconv">
-<h2><strong>QCONV</strong><a class="headerlink" href="#qconv" title="Permalink to this headline">¶</a></h2>
+<h2><strong>QCONV</strong><a class="headerlink" href="#qconv" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">QCONV</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float2</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id4">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id4" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/ENERGY)</strong></p>
 <p>This boundary condition card specifies convective heat flux. Definitions of the input
 parameters are as follows:</p>
@@ -3720,14 +3717,14 @@ EXODUS II) in the problem domain.</p></td>
 </table>
 </section>
 <section id="id5">
-<h3><strong>Examples</strong><a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id5" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">QCONV</span> <span class="n">SS</span> <span class="mi">100</span> <span class="mf">10.0</span> <span class="mf">293.0</span>
 </pre></div>
 </div>
 </section>
 <section id="id6">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id6" title="Permalink to this headline">#</a></h3>
 <p>The convective heat flux is defined as</p>
 <figure class="align-center">
 <a class="reference internal image-reference" href="../../_images/131_goma_physics.png"><img alt="../../_images/131_goma_physics.png" src="../../_images/131_goma_physics.png" style="width: 90%;" /></a>
@@ -3736,12 +3733,12 @@ EXODUS II) in the problem domain.</p></td>
 </section>
 </section>
 <section id="qrad">
-<h2><strong>QRAD</strong><a class="headerlink" href="#qrad" title="Permalink to this headline">¶</a></h2>
+<h2><strong>QRAD</strong><a class="headerlink" href="#qrad" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">QRAD</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id7">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id7" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/ENERGY)</strong></p>
 <p>This boundary condition card specifies heat flux using both convective and radiative
 terms. The &lt;float_list&gt; has four parameters; definitions of the input parameters are as
@@ -3780,14 +3777,14 @@ EXODUS II) in the problem domain.</p></td>
 </table>
 </section>
 <section id="id8">
-<h3><strong>Examples</strong><a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id8" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">QRAD</span> <span class="n">SS</span> <span class="mi">100</span> <span class="mf">10.0</span> <span class="mf">273.0</span> <span class="mf">0.3</span> <span class="mf">5.6697e-8</span>
 </pre></div>
 </div>
 </section>
 <section id="id9">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id9" title="Permalink to this headline">#</a></h3>
 <p>The heat flux definition for this card is a combined convective and radiative
 formulation:</p>
 <figure class="align-center">
@@ -3803,12 +3800,12 @@ emissivity value to zero.</p>
 </section>
 </section>
 <section id="qside">
-<h2><strong>QSIDE</strong><a class="headerlink" href="#qside" title="Permalink to this headline">¶</a></h2>
+<h2><strong>QSIDE</strong><a class="headerlink" href="#qside" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">QSIDE</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id10">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id10" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/ENERGY)</strong></p>
 <p>This boundary condition card is used to specify a constant heat flux. Definitions of the
 input parameters are as follows:</p>
@@ -3839,14 +3836,14 @@ being taken from the system through the boundary.</p></td>
 </table>
 </section>
 <section id="id11">
-<h3><strong>Examples</strong><a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id11" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">QSIDE</span> <span class="n">SS</span> <span class="mi">22</span>   <span class="mf">1.50</span>
 </pre></div>
 </div>
 </section>
 <section id="id12">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id12" title="Permalink to this headline">#</a></h3>
 <p>The mathematical form of the boundary condition.</p>
 <figure class="align-center">
 <a class="reference internal image-reference" href="../../_images/133_goma_physics.png"><img alt="../../_images/133_goma_physics.png" src="../../_images/133_goma_physics.png" style="width: 90%;" /></a>
@@ -3854,7 +3851,7 @@ being taken from the system through the boundary.</p></td>
 </section>
 </section>
 <section id="t-contact-resis-t-contact-resis-2">
-<h2><strong>T_CONTACT_RESIS, T_CONTACT_RESIS_2</strong><a class="headerlink" href="#t-contact-resis-t-contact-resis-2" title="Permalink to this headline">¶</a></h2>
+<h2><strong>T_CONTACT_RESIS, T_CONTACT_RESIS_2</strong><a class="headerlink" href="#t-contact-resis-t-contact-resis-2" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">T_CONTACT_RESIS</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">int1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">int2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span>
 </pre></div>
 </div>
@@ -3862,7 +3859,7 @@ being taken from the system through the boundary.</p></td>
 </pre></div>
 </div>
 <section id="id13">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id13" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/ENERGY)</strong></p>
 <p>This boundary condition set is used to specify a thermal contact resistance at an
 interface between two mesh regions defined by a side set. Please see special usage
@@ -3904,7 +3901,7 @@ divided by length.</p></td>
 </table>
 </section>
 <section id="id14">
-<h3><strong>Examples</strong><a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id14" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">T_CONTACT_RESIS</span> <span class="n">SS</span> <span class="mi">3</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mf">10.0</span>
 </pre></div>
@@ -3918,7 +3915,7 @@ are reversed on the second card. These conditions apply a thermal contact resist
 10. (units of thermal conductivity divided by length) at the interface defined by SS 3.</p>
 </section>
 <section id="id15">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id15" title="Permalink to this headline">#</a></h3>
 <p>The mathematical form of the boundary condition.</p>
 <figure class="align-center">
 <a class="reference internal image-reference" href="../../_images/134_goma_physics.png"><img alt="../../_images/134_goma_physics.png" src="../../_images/134_goma_physics.png" style="width: 90%;" /></a>
@@ -3933,12 +3930,12 @@ condition is to pick up the all the terms from both sides of the interface with 
 </section>
 </section>
 <section id="qnobc">
-<h2>QNOBC<a class="headerlink" href="#qnobc" title="Permalink to this headline">¶</a></h2>
+<h2>QNOBC<a class="headerlink" href="#qnobc" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">QNOBC</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id16">
-<h3>Description / Usage<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h3>
+<h3>Description / Usage<a class="headerlink" href="#id16" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/ENERGY)</strong></p>
 <p>This boundary condition card applies the open boundary condition equivalent
 on the energy equation (see momentum open BC FLOW_STRESSNOBC)</p>
@@ -3964,7 +3961,7 @@ in EXODUS II) in the problem domain.</p></td>
 </table>
 </section>
 <section id="id17">
-<h3>Examples<a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h3>
+<h3>Examples<a class="headerlink" href="#id17" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">QNOBC</span> <span class="n">SS</span> <span class="mi">3</span>
 </pre></div>
@@ -3972,7 +3969,7 @@ in EXODUS II) in the problem domain.</p></td>
 <p>Here the BC is applied to SS 3</p>
 </section>
 <section id="id18">
-<h3>Technical Discussion<a class="headerlink" href="#id18" title="Permalink to this headline">¶</a></h3>
+<h3>Technical Discussion<a class="headerlink" href="#id18" title="Permalink to this headline">#</a></h3>
 <p>The finite element formulation of the energy equation generates
 boundary integrals of the form:</p>
 <div class="math notranslate nohighlight">
@@ -3982,7 +3979,7 @@ boundary integrals of the form:</p>
 natural boundary condition.</p>
 </section>
 <section id="id19">
-<h3><strong>References</strong><a class="headerlink" href="#id19" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id19" title="Permalink to this headline">#</a></h3>
 <p>Griffiths, D.F., “The ‘no boundary condition’ outflow boundary condition,” IJNMF, 24,
 393-411, (1997)</p>
 <p>Sani, R.L., and P.M. Gresho, “Resume and remarks on the open boundary condition
@@ -3990,12 +3987,12 @@ minisymposium,” IJNMF, 18, 983-1008, (1994).</p>
 </section>
 </section>
 <section id="quser">
-<h2><strong>QUSER</strong><a class="headerlink" href="#quser" title="Permalink to this headline">¶</a></h2>
+<h2><strong>QUSER</strong><a class="headerlink" href="#quser" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">QUSER</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id20">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id20" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id20" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/ENERGY)</strong></p>
 <p>This boundary condition card is used to call a routine for a user-defined heat flux
 model. Definitions of the input parameters are as follows:</p>
@@ -4028,24 +4025,24 @@ quser_surf C function in file user_bc.c.</p></td>
 </table>
 </section>
 <section id="id21">
-<h3><strong>Examples</strong><a class="headerlink" href="#id21" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id21" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample input card for a heat flux model requiring two parameters:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">QUSER</span> <span class="n">SS</span> <span class="mi">100</span>   <span class="mf">10.0</span> <span class="mf">3.14159</span>
 </pre></div>
 </div>
 </section>
 <section id="id22">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id22" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id22" title="Permalink to this headline">#</a></h3>
 <p>No Discussion.</p>
 </section>
 </section>
 <section id="q-velo-slip">
-<h2><strong>Q_VELO_SLIP</strong><a class="headerlink" href="#q-velo-slip" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Q_VELO_SLIP</strong><a class="headerlink" href="#q-velo-slip" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">Q_VELO_SLIP</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id23">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id23" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id23" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/ENERGY)</strong></p>
 <p>This boundary condition card is used to calculate the surface integral for viscous
 heating due to slip in the tangential velocity component on a surface. Definitions of
@@ -4072,25 +4069,25 @@ EXODUS II) in the problem domain.</p></td>
 </table>
 </section>
 <section id="id24">
-<h3><strong>Examples</strong><a class="headerlink" href="#id24" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id24" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">Q_VELO_SLIP_BC</span> <span class="n">SS</span> <span class="mi">10</span>
 </pre></div>
 </div>
 </section>
 <section id="id25">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id25" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id25" title="Permalink to this headline">#</a></h3>
 <p>Use of this boundary condition requires specification of the slip velocity components
 by using either the <em>VELO_SLIP</em> or <em>VELO_SLIP_ROT</em> boundary condition.</p>
 </section>
 </section>
 <section id="q-laser-weld">
-<h2><strong>Q_LASER_WELD</strong><a class="headerlink" href="#q-laser-weld" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Q_LASER_WELD</strong><a class="headerlink" href="#q-laser-weld" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">Q_LASER_WELD</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id26">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id26" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id26" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/ENERGY)</strong></p>
 <p>This boundary condition card specifies the thermal boundary conditions for laser
 welding. The &lt;float_list&gt; requires twenty-seven values be specified; definitions of the
@@ -4210,7 +4207,7 @@ radial distance in 2D plane (1).</p></td>
 </table>
 </section>
 <section id="id27">
-<h3><strong>Examples</strong><a class="headerlink" href="#id27" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id27" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">Q_LASER_WELD</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">4.774648293</span> <span class="mi">0</span> <span class="mf">0.4</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mf">1.01</span> <span class="mf">4.774648293</span> <span class="mf">0.2</span>
 <span class="mf">0.01</span> <span class="mf">0.01</span> <span class="mi">1</span> <span class="mf">0.005</span> <span class="mi">0</span> <span class="o">-</span><span class="mf">0.198</span> <span class="o">-</span><span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mf">0.025</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mf">0.2032</span> <span class="o">-</span><span class="mi">1000</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mf">0.0254</span>
@@ -4218,7 +4215,7 @@ radial distance in 2D plane (1).</p></td>
 </div>
 </section>
 <section id="id28">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id28" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id28" title="Permalink to this headline">#</a></h3>
 <p>Several required pieces of information to use this boundary condition are not in final
 form, and the user can expect future changes and improvements. Below is a listing of
 some of these parameters:</p>
@@ -4237,12 +4234,12 @@ material file).</p></li>
 </section>
 </section>
 <section id="q-vapor-bc">
-<h2><strong>Q_VAPOR_BC</strong><a class="headerlink" href="#q-vapor-bc" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Q_VAPOR_BC</strong><a class="headerlink" href="#q-vapor-bc" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">Q_VAPOR</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id29">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id29" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id29" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/ENERGY)</strong></p>
 <p>This boundary condition card is used to specify heat loss due to evaporation. It is
 typically used in conjunction with Q_LASER_WELD.</p>
@@ -4274,25 +4271,25 @@ in EXODUS II) in the problem domain.</p></td>
 </table>
 </section>
 <section id="id30">
-<h3><strong>Examples</strong><a class="headerlink" href="#id30" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id30" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">Q_VAPOR</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">100.</span> <span class="mf">10.</span>
 </pre></div>
 </div>
 </section>
 <section id="id31">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id31" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id31" title="Permalink to this headline">#</a></h3>
 <p>This condition is turned on above the boiling point, which is story in the melting
 point solidus temperature.</p>
 </section>
 </section>
 <section id="vp-equil">
-<h2><strong>VP_EQUIL</strong><a class="headerlink" href="#vp-equil" title="Permalink to this headline">¶</a></h2>
+<h2><strong>VP_EQUIL</strong><a class="headerlink" href="#vp-equil" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">VP_EQUIL</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer_list</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="nb">float</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id32">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id32" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id32" title="Permalink to this headline">#</a></h3>
 <p><strong>(SIC/ENERGY)</strong></p>
 <p>This boundary condition card is used to equate solvent partial pressure in the gas
 between the porous medium and the external phase. The condition is similar to the
@@ -4336,7 +4333,7 @@ II database.</p></td>
 </table>
 </section>
 <section id="id33">
-<h3><strong>Examples</strong><a class="headerlink" href="#id33" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id33" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">VP_EQUIL</span> <span class="n">SS</span> <span class="mi">100</span>   <span class="mi">1</span> <span class="mi">2</span> <span class="mi">0</span> <span class="mf">0.0</span>
 </pre></div>
@@ -4345,17 +4342,17 @@ II database.</p></td>
 in element block 2. The external gas phase pressure has been set to 0.0.</p>
 </section>
 <section id="id34">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id34" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id34" title="Permalink to this headline">#</a></h3>
 <p>No Discussion.</p>
 </section>
 </section>
 <section id="latent-heat">
-<h2><strong>LATENT_HEAT</strong><a class="headerlink" href="#latent-heat" title="Permalink to this headline">¶</a></h2>
+<h2><strong>LATENT_HEAT</strong><a class="headerlink" href="#latent-heat" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LATENT_HEAT</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id35">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id35" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id35" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/ENERGY)</strong></p>
 <p>This boundary condition card is used for latent heat release/adsorption at an external
 interface. The flux quantity is specified on a per mass basis so the heat and mass
@@ -4399,7 +4396,7 @@ multi-species problem and in the case of a pure fluid. Important usage comments 
 contained in the Technical Discussion below.</p>
 </section>
 <section id="id36">
-<h3><strong>Examples</strong><a class="headerlink" href="#id36" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id36" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LATENT_HEAT</span> <span class="n">SS</span> <span class="mi">3</span> <span class="mi">0</span>   <span class="mf">540.</span> <span class="mf">0.1</span>   <span class="mf">0.</span>
 </pre></div>
@@ -4407,7 +4404,7 @@ contained in the Technical Discussion below.</p>
 <p>Two more detailed examples are contained in the Technical Discussion section.</p>
 </section>
 <section id="id37">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id37" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id37" title="Permalink to this headline">#</a></h3>
 <p>The <em>LATENT_HEAT</em> boundary condition has the form</p>
 <figure class="align-center">
 <a class="reference internal image-reference" href="../../_images/135_goma_physics.png"><img alt="../../_images/135_goma_physics.png" src="../../_images/135_goma_physics.png" style="width: 90%;" /></a>
@@ -4471,17 +4468,17 @@ for each species is entered in the material file and the <em>LATENT_HEAT</em> ca
 </div>
 </section>
 <section id="id38">
-<h3><strong>References</strong><a class="headerlink" href="#id38" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id38" title="Permalink to this headline">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="latent-heat-internal">
-<h2><strong>LATENT_HEAT_INTERNAL</strong><a class="headerlink" href="#latent-heat-internal" title="Permalink to this headline">¶</a></h2>
+<h2><strong>LATENT_HEAT_INTERNAL</strong><a class="headerlink" href="#latent-heat-internal" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LATENT_HEAT_INTERNAL</span> <span class="n">SS</span> <span class="p">{</span><span class="n">char_string</span><span class="p">}</span> <span class="o">&lt;</span><span class="n">integer_list</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="nb">float</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id39">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id39" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id39" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/ENERGY)</strong></p>
 <p>This boundary condition card is used for latent heat release/adsorption at an internal
 interface. See usage comments in the Technical Discussion.</p>
@@ -4529,14 +4526,14 @@ material case, in units of Energy/mass.</p></td>
 </table>
 </section>
 <section id="id40">
-<h3><strong>Examples</strong><a class="headerlink" href="#id40" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id40" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LATENT_HEAT_INTERNAL</span> <span class="n">SS</span> <span class="mi">40</span> <span class="n">SOLID_LIQUID</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mf">2.6e5</span>
 </pre></div>
 </div>
 </section>
 <section id="id41">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id41" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id41" title="Permalink to this headline">#</a></h3>
 <p>The <em>LATENT_HEAT_INTERNAL</em> card should be used for internal surfaces, or
 interfaces, at which transfer is governed by actual physics being modeled as a part of
 the problem. See <em>LATENT_HEAT</em> card for further information.</p>
@@ -4572,8 +4569,9 @@ the problem. See <em>LATENT_HEAT</em> card for further information.</p>
       </div>
     </div>
   
-    <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -4584,7 +4582,7 @@ the problem. See <em>LATENT_HEAT</em> card for further information.</p>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     

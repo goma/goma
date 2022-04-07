@@ -8,26 +8,23 @@
 
     <title>Background Information &#8212; Goma User Manual 7.0.0 documentation</title>
     
-    <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/pydata-sphinx-theme.css" />
     
-    <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
@@ -43,7 +40,7 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -3102,7 +3099,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage pt-5 pb-3">
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -3167,11 +3164,11 @@
               <div>
                 
   <section id="background-information">
-<h1>Background Information<a class="headerlink" href="#background-information" title="Permalink to this headline">¶</a></h1>
+<h1>Background Information<a class="headerlink" href="#background-information" title="Permalink to this headline">#</a></h1>
 <section id="program-features">
-<h2>Program Features<a class="headerlink" href="#program-features" title="Permalink to this headline">¶</a></h2>
+<h2>Program Features<a class="headerlink" href="#program-features" title="Permalink to this headline">#</a></h2>
 <section id="free-and-moving-boundary-capabilites">
-<h3>Free and Moving Boundary Capabilites<a class="headerlink" href="#free-and-moving-boundary-capabilites" title="Permalink to this headline">¶</a></h3>
+<h3>Free and Moving Boundary Capabilites<a class="headerlink" href="#free-and-moving-boundary-capabilites" title="Permalink to this headline">#</a></h3>
 <p><em>Goma</em> is a general purpose program designed for the solution of both steady and transient, two and
 three-dimensional problems involving heat, mass, and momentum (solid and fluid) transport.
 A unique feature is the treatment of all boundaries and interfaces as <em>free</em> (position unknown) or
@@ -3214,7 +3211,7 @@ fashion. Further details of this algorithm and the corresponding equations can b
 references (e.g., Sackinger, Schunk, and Rao, 1995).</p>
 </section>
 <section id="coordinate-systems-and-frames-of-reference">
-<h3>Coordinate Systems and Frames of Reference<a class="headerlink" href="#coordinate-systems-and-frames-of-reference" title="Permalink to this headline">¶</a></h3>
+<h3>Coordinate Systems and Frames of Reference<a class="headerlink" href="#coordinate-systems-and-frames-of-reference" title="Permalink to this headline">#</a></h3>
 <p>Coordinate systems accessible through this version of <em>Goma</em> include two-dimensional and threedimensional
 Cartesian coordinates, cylindrical coordinates for axisymmetric problems, spherical
 coordinates, and a swirling option for two-dimensional axisymmetric problems with a (swirling)
@@ -3234,7 +3231,7 @@ our mesh moves with the material. This formulation is quite common in solid mech
 one advocated here for truly solid regions.</p>
 </section>
 <section id="problem-physics-and-thermophysical-properties">
-<h3>Problem Physics and Thermophysical Properties<a class="headerlink" href="#problem-physics-and-thermophysical-properties" title="Permalink to this headline">¶</a></h3>
+<h3>Problem Physics and Thermophysical Properties<a class="headerlink" href="#problem-physics-and-thermophysical-properties" title="Permalink to this headline">#</a></h3>
 <p>This brief section summarizes the physics capabilities in <strong>Goma</strong> and the thermophysical properties
 and constitutive equations available to the user. The rest of the manual is designed to greatly
 expand on all material parameter options, boundary condition options, and equation options;
@@ -3316,7 +3313,7 @@ capability, multiphase porous energy equation, Generalized surface and volume us
 Lagrange multiplier constraints, and much more.</p>
 </section>
 <section id="advanced-capabilities">
-<h3>Advanced Capabilities<a class="headerlink" href="#advanced-capabilities" title="Permalink to this headline">¶</a></h3>
+<h3>Advanced Capabilities<a class="headerlink" href="#advanced-capabilities" title="Permalink to this headline">#</a></h3>
 <p>Several developments in <em>Goma</em> that enable advanced engineering analysis of complex systems
 have been completed since the last major release. These developments include a complete,
 generalized capability of automated parameter continuation (zeroth-order, first-order, arclength,
@@ -3327,7 +3324,7 @@ The input record sections required to activate these features are not covered in
 </section>
 </section>
 <section id="numerical-methods">
-<h2>Numerical Methods<a class="headerlink" href="#numerical-methods" title="Permalink to this headline">¶</a></h2>
+<h2>Numerical Methods<a class="headerlink" href="#numerical-methods" title="Permalink to this headline">#</a></h2>
 <p>With over 150 different boundary conditions for 70 plus differential equation types, <em>Goma’s</em>
 algorithms are very extensive for any brief discussion. In this section we simply point out the
 foundation algorithms. A developer’s manual, advanced capabilities manual, and tutorial memos
@@ -3388,7 +3385,7 @@ developers to check the consistency of newly-created equations (whether bulk or 
 constraints) with their corresponding analytic Jacobian contributions.</p>
 </section>
 <section id="portability-software-library-infrastructure-and-code-accessibility">
-<h2>Portability, Software Library Infrastructure, and Code Accessibility<a class="headerlink" href="#portability-software-library-infrastructure-and-code-accessibility" title="Permalink to this headline">¶</a></h2>
+<h2>Portability, Software Library Infrastructure, and Code Accessibility<a class="headerlink" href="#portability-software-library-infrastructure-and-code-accessibility" title="Permalink to this headline">#</a></h2>
 <p><em>Goma</em> is written in the C programming language (specifically Kernighan and Ritchie, 1988, C
 with some ANSI extensions). It has been ported to a number of UNIX platforms including Solaris
 and Linux, with the Linux Enterprise-4 version being the most actively maintained. Most recent
@@ -3453,8 +3450,9 @@ specified finite element mesh that are input to <em>Goma</em> through the EXTERN
       </div>
     </div>
   
-    <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -3465,7 +3463,7 @@ specified finite element mesh that are input to <em>Goma</em> through the EXTERN
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     

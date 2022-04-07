@@ -8,26 +8,23 @@
 
     <title>LUBP_SH_FP_FLUX &#8212; Goma User Manual 7.0.0 documentation</title>
     
-    <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/styles/pydata-sphinx-theme.css" />
     
-    <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
     <script src="../../../_static/jquery.js"></script>
     <script src="../../../_static/underscore.js"></script>
@@ -41,7 +38,7 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -122,7 +119,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage pt-5 pb-3">
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -171,12 +168,12 @@
               <div>
                 
   <section id="lubp-sh-fp-flux">
-<h1><strong>LUBP_SH_FP_FLUX</strong><a class="headerlink" href="#lubp-sh-fp-flux" title="Permalink to this headline">¶</a></h1>
+<h1><strong>LUBP_SH_FP_FLUX</strong><a class="headerlink" href="#lubp-sh-fp-flux" title="Permalink to this headline">#</a></h1>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">C</span> <span class="o">=</span> <span class="n">LUBP_SH_FP_FLUX</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">int1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">int2</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="description-usage">
-<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">#</a></h2>
 <p><strong>(COLLOC/R_SHELL_FILMP)</strong></p>
 <p>This boundary condition card matches the mass flux in one region of confined flow (lubp) to the mass flux from a second region of film flow (shell_filmp). The flux matching is handled as a sideset between two shell regions. In this way both equations can be coupled for exit or entrance flows. The boundary condition is applied in collocated form, and replaces the R_SHELL_FILMP equation.</p>
 <table class="table">
@@ -209,7 +206,7 @@ shell_filmp equation.</p></td>
 </table>
 </section>
 <section id="examples">
-<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h2>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LUBP_SH_FP_FLUX</span> <span class="n">SS</span>   <span class="mi">100</span> <span class="mi">2</span> <span class="mi">1</span>
 </pre></div>
@@ -217,7 +214,7 @@ shell_filmp equation.</p></td>
 <p>This condition applies the matching tie condition at a side set boundary between block 2 (which invokes the EQ = lubp equation) and block 1 (which invokes the EQ=shell_filmp equation).</p>
 </section>
 <section id="technical-discussion">
-<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">#</a></h2>
 <p>The best example of the use of this equation is the exit of a metered coating flow. It must be used together with a pressure-matching condition LUBP_SH_FP_MATCH.</p>
 </section>
 </section>
@@ -236,8 +233,9 @@ shell_filmp equation.</p></td>
       </div>
     </div>
   
-    <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -248,7 +246,7 @@ shell_filmp equation.</p></td>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     

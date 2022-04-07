@@ -8,26 +8,23 @@
 
     <title>Category 1: Any Equation &#8212; Goma User Manual 7.0.0 documentation</title>
     
-    <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/pydata-sphinx-theme.css" />
     
-    <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
@@ -44,7 +41,7 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -3103,7 +3100,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage pt-5 pb-3">
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -3389,7 +3386,7 @@
               <div>
                 
   <section id="category-1-any-equation">
-<h1>Category 1: Any Equation<a class="headerlink" href="#category-1-any-equation" title="Permalink to this headline">¶</a></h1>
+<h1>Category 1: Any Equation<a class="headerlink" href="#category-1-any-equation" title="Permalink to this headline">#</a></h1>
 <p>This category includes a set of cards that are used to provide all boundary condition information
 for a generalized dirichlet (GD) boundary condition. The condition is applied as a pointwise
 collocation along a given node set. The general syntax for the GD_cards is as follows:</p>
@@ -3528,12 +3525,12 @@ equations sequentially in the order specified in the BC list.</p>
 <p>Descriptions of the GD cards are given next. An insert entitled “Usage Notes on the GD Cards”
 follows the descriptions, explaining how the cards are used together in various combinations.</p>
 <section id="fix">
-<h2>FIX<a class="headerlink" href="#fix" title="Permalink to this headline">¶</a></h2>
+<h2>FIX<a class="headerlink" href="#fix" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">FIX</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="p">{</span><span class="n">char_string</span><span class="p">}</span> <span class="o">&lt;</span><span class="n">integer1</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="description-usage">
-<h3>Description / Usage<a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h3>
+<h3>Description / Usage<a class="headerlink" href="#description-usage" title="Permalink to this headline">#</a></h3>
 <p><strong>(DC/VARIED)</strong></p>
 <p>This boundary condition card is used to fix the value of a nodal variable along a node
 set to the value it receives from an initial guess file (viz. either from the neutral file
@@ -3612,7 +3609,7 @@ concentration.</p>
 </dl>
 </section>
 <section id="examples">
-<h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
+<h3>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h3>
 <p>The following is an example of using this card to set the mesh displacement
 components in a 2-D problem:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span>    <span class="n">FIX</span>    <span class="n">NS</span>    <span class="mi">4</span>    <span class="n">MESH_DISPLACEMENT1</span>    <span class="mi">0</span>
@@ -3627,7 +3624,7 @@ moving another boundary (because the current displacements were not known, FIX
 was a convenient tool).</p>
 </section>
 <section id="technical-discussion">
-<h3>Technical Discussion<a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h3>
+<h3>Technical Discussion<a class="headerlink" href="#technical-discussion" title="Permalink to this headline">#</a></h3>
 <p>This boundary condition capability is indispensable for moving-mesh problems when
 the dependent variable is the mesh displacement from a stress free state. If one were to
 try to use the DX/DY/DZ type Dirichlet condition to suddenly freeze a mesh along a
@@ -3641,12 +3638,12 @@ variable types shown.</p>
 </section>
 <hr class="docutils" />
 <section id="gd-const">
-<h2>GD_CONST<a class="headerlink" href="#gd-const" title="Permalink to this headline">¶</a></h2>
+<h2>GD_CONST<a class="headerlink" href="#gd-const" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">GD_CONST</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">equation_name</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">variable_name</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="nb">float</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id1">
-<h3>Description / Usage<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<h3>Description / Usage<a class="headerlink" href="#id1" title="Permalink to this headline">#</a></h3>
 <p><strong>(PCC/VARIED)</strong></p>
 <p>This boundary condition of type <em>Category 1</em> (see discussion) is used to impose a
 constant value for any nodal variable, using the residual function form</p>
@@ -3685,7 +3682,7 @@ the &lt;variable_name&gt; is of type MASS_FRACTION.</p>
 </dl>
 </section>
 <section id="id2">
-<h3>Examples<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<h3>Examples<a class="headerlink" href="#id2" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">GD_CONST</span> <span class="n">SS</span> <span class="mi">2</span> <span class="n">R_MESH_NORMAL</span> <span class="mi">0</span> <span class="n">MASS_FRACTION</span> <span class="mi">0</span> <span class="mf">0.2</span>
 </pre></div>
@@ -3698,7 +3695,7 @@ this case would cause the mesh surface, defined by side set 2, to move as the
 isoconcentration surface of <span class="math notranslate nohighlight">\(C_1 = 0.2\)</span>.</p>
 </section>
 <section id="id3">
-<h3>Technical Discussion<a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<h3>Technical Discussion<a class="headerlink" href="#id3" title="Permalink to this headline">#</a></h3>
 <p>Note that this collocated boundary condition may be applied as a rotated, vector or
 scalar condition depending on the equation to which this condition applies. The
 example above is a powerful demonstration of this boundary condition as a
@@ -3709,12 +3706,12 @@ additive way with other <em>GD_*</em> cards.</p>
 </section>
 <hr class="docutils" />
 <section id="gd-linear">
-<h2>GD_LINEAR<a class="headerlink" href="#gd-linear" title="Permalink to this headline">¶</a></h2>
+<h2>GD_LINEAR<a class="headerlink" href="#gd-linear" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">GD_LINEAR</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">equation_name</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">variable_name</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float2</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id4">
-<h3>Description / Usage<a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<h3>Description / Usage<a class="headerlink" href="#id4" title="Permalink to this headline">#</a></h3>
 <p><strong>(PCC/VARIED)</strong></p>
 <p>This boundary condition of type <em>Category 1</em> (see discussion) is used to impose a linear
 function for any nodal variable, using the residual function form</p>
@@ -3757,7 +3754,7 @@ the &lt;variable_name&gt; is of type MASS_FRACTION.</p>
 </dl>
 </section>
 <section id="id5">
-<h3>Examples<a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<h3>Examples<a class="headerlink" href="#id5" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">GD_LINEAR</span> <span class="n">SS</span> <span class="mi">1</span> <span class="n">R_MESH1</span> <span class="mi">0</span> <span class="n">MESH_POSITION1</span> <span class="mi">0</span> <span class="o">-</span><span class="mf">1.</span> <span class="mf">2.</span>
 </pre></div>
@@ -3771,7 +3768,7 @@ case would lead to the mesh surface, defined by side set 1, to move or position 
 according to this linear relationship.</p>
 </section>
 <section id="id6">
-<h3>Technical Discussion<a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<h3>Technical Discussion<a class="headerlink" href="#id6" title="Permalink to this headline">#</a></h3>
 <p>Note that this collocated boundary condition may be applied as a rotated, vector or
 scalar condition depending on the equation to which this condition applies. Please
 consult the example discussions on the other <em>GD_*</em> options for more detailed
@@ -3780,12 +3777,12 @@ examples, as this boundary condition card can be used in an additive way with th
 </section>
 <hr class="docutils" />
 <section id="gd-parab">
-<h2>GD_PARAB<a class="headerlink" href="#gd-parab" title="Permalink to this headline">¶</a></h2>
+<h2>GD_PARAB<a class="headerlink" href="#gd-parab" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">GD_PARAB</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">equation_name</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">variable_name</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float3</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id7">
-<h3>Description / Usage<a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<h3>Description / Usage<a class="headerlink" href="#id7" title="Permalink to this headline">#</a></h3>
 <p><strong>(PCC/VARIED)</strong></p>
 <p>This boundary condition of type <em>Category 1</em> (see discussion) is used to impose a
 quadratic function for any nodal variable, using the residual function form</p>
@@ -3833,7 +3830,7 @@ the &lt;variable_name&gt; is of type MASS_FRACTION.</p>
 </dl>
 </section>
 <section id="id8">
-<h3>Examples<a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
+<h3>Examples<a class="headerlink" href="#id8" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">GD_PARAB</span> <span class="n">SS</span> <span class="mi">4</span> <span class="n">R_MESH1</span> <span class="mi">0</span> <span class="n">MESH_POSITION2</span> <span class="mi">0</span> <span class="mf">1.</span> <span class="o">-</span><span class="mf">2.</span> <span class="o">-</span><span class="mf">3.</span>
 </pre></div>
@@ -3850,7 +3847,7 @@ case would lead to the mesh surface, defined by side set 4, to move or position 
 according to this quadratic relationship.</p>
 </section>
 <section id="id9">
-<h3>Technical Discussion<a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
+<h3>Technical Discussion<a class="headerlink" href="#id9" title="Permalink to this headline">#</a></h3>
 <p>This condition is convenient for applying Poiseuille velocity profiles, as a circular
 condition on geometry, together with many other uses.</p>
 <p>Note that this collocated boundary condition may be applied as a rotated, vector or
@@ -3860,7 +3857,7 @@ more detailed examples, as this boundary condition card can be used in an additi
 with those.</p>
 </section>
 <section id="references">
-<h3>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h3>
+<h3>References<a class="headerlink" href="#references" title="Permalink to this headline">#</a></h3>
 <p>Please consult the following reference (on Roll Coating) for examples of roll surface
 geometry.</p>
 <p>GT-003.1: Roll coating templates and tutorial for GOMA and SEAMS, February 29,
@@ -3869,12 +3866,12 @@ geometry.</p>
 </section>
 <hr class="docutils" />
 <section id="gd-polyn">
-<h2>GD_POLYN<a class="headerlink" href="#gd-polyn" title="Permalink to this headline">¶</a></h2>
+<h2>GD_POLYN<a class="headerlink" href="#gd-polyn" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">GD_POLYN</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">equation_name</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">variable_name</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id10">
-<h3>Description / Usage<a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
+<h3>Description / Usage<a class="headerlink" href="#id10" title="Permalink to this headline">#</a></h3>
 <p><strong>(PCC/VARIED)</strong></p>
 <p>This boundary condition of type <em>Category 1</em> (see discussion) is used to impose a
 polynomial function for any nodal variable, using the residual function form of a 6<sup>th</sup> order
@@ -3923,7 +3920,7 @@ the &lt;variable_name&gt; is of type MASS_FRACTION.</p>
 </dl>
 </section>
 <section id="id11">
-<h3>Examples<a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
+<h3>Examples<a class="headerlink" href="#id11" title="Permalink to this headline">#</a></h3>
 <p>Following is a set of sample cards:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">GD_POLYN</span> <span class="n">SS</span> <span class="mi">2</span> <span class="n">R_ENERGY</span> <span class="mi">0</span> <span class="n">MESH_POSITION1</span> <span class="mi">0</span> <span class="p">{</span><span class="n">c1</span><span class="p">}</span> <span class="p">{</span><span class="n">c2</span><span class="p">}</span> <span class="p">{</span><span class="n">c3</span><span class="p">}</span> <span class="p">{</span><span class="n">c4</span><span class="p">}</span> <span class="p">{</span><span class="n">c5</span><span class="p">}</span> <span class="p">{</span><span class="n">c6</span><span class="p">}</span> <span class="p">{</span><span class="n">c7</span><span class="p">}</span>
 </pre></div>
@@ -3941,7 +3938,7 @@ mesh position (N.B. not displacement, as <em>MESH_POSITION2</em> would be replac
 <em>MESH_DISPLACEMENT2</em> in the above).</p>
 </section>
 <section id="id12">
-<h3>Technical Discussion<a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
+<h3>Technical Discussion<a class="headerlink" href="#id12" title="Permalink to this headline">#</a></h3>
 <p>This condition is not used as often as <em>GD_LINEAR</em> and <em>GD_PARAB</em>, and in fact
 supersedes those conditions. Please consult the example discussions on the other <em>GD_*</em>
 options and the example section after <em>GD_TABLE</em> for more descriptive examples.</p>
@@ -3949,12 +3946,12 @@ options and the example section after <em>GD_TABLE</em> for more descriptive exa
 </section>
 <hr class="docutils" />
 <section id="gd-time">
-<h2>GD_TIME<a class="headerlink" href="#gd-time" title="Permalink to this headline">¶</a></h2>
+<h2>GD_TIME<a class="headerlink" href="#gd-time" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">BC</span> <span class="o">=</span> <span class="n">GD_TIME</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">equation_name</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">time_func_name</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float2</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float3</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="id13">
-<h3>Description / Usage<a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h3>
+<h3>Description / Usage<a class="headerlink" href="#id13" title="Permalink to this headline">#</a></h3>
 <p><strong>(PCC/VARIED)</strong></p>
 <p>This boundary condition card is actually a multiplicative building block that can be
 used to impose a multiplicative time modulation of a specified functional form on any
@@ -4013,7 +4010,7 @@ values for this parameter are LINEAR, EXPONENTIAL, and SINUSOIDAL.</p>
 </table>
 </section>
 <section id="id14">
-<h3>Examples<a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h3>
+<h3>Examples<a class="headerlink" href="#id14" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card set:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">GD_LINEAR</span> <span class="n">SS</span> <span class="mi">1</span> <span class="n">R_MESH_NORMAL</span> <span class="mi">0</span> <span class="n">MESH_DISPLACEMENT1</span> <span class="mi">0</span> <span class="mf">1.</span> <span class="mf">0.</span>
 <span class="n">BC</span> <span class="o">=</span> <span class="n">GD_TIME</span> <span class="n">SS</span> <span class="mi">1</span> <span class="n">R_MESH_NORMAL</span> <span class="mi">0</span> <span class="n">SINUSOIDAL</span> <span class="mi">0</span> <span class="mf">10.</span> <span class="mf">2.</span>
@@ -4036,7 +4033,7 @@ term on mesh position. Note carefully the signs used.</p>
 </div>
 </section>
 <section id="id15">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id15" title="Permalink to this headline">#</a></h3>
 <p>This boundary condition building block is very useful for imposing time-dependent
 boundary conditions with some fairly standard functional forms without the
 inconvenience of writing a user-defined boundary condition. Boundary conditions for
@@ -4047,12 +4044,12 @@ end of this section on <em>GD_*</em> options will help the user construct such f
 </section>
 <hr class="docutils" />
 <section id="gd-circ">
-<h2>GD_CIRC<a class="headerlink" href="#gd-circ" title="Permalink to this headline">¶</a></h2>
+<h2>GD_CIRC<a class="headerlink" href="#gd-circ" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">GD_CIRC</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">equation_name</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">variable_name</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float3</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id16">
-<h3>Description / Usage<a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h3>
+<h3>Description / Usage<a class="headerlink" href="#id16" title="Permalink to this headline">#</a></h3>
 <p><strong>(PCC/VARIED)</strong></p>
 <p>This boundary condition of type <em>Category 1</em> (see discussion) is used to impose a
 quadratic function for any nodal variable using the residual function form</p>
@@ -4100,7 +4097,7 @@ each boundary</em>.</p>
 </dl>
 </section>
 <section id="id17">
-<h3>Examples<a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h3>
+<h3>Examples<a class="headerlink" href="#id17" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample set of cards:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">GD_CIRC</span> <span class="n">SS</span> <span class="mi">1</span> <span class="n">R_MESH_NORMAL</span> <span class="mi">0</span> <span class="n">MESH_POSITION1</span> <span class="mi">0</span> <span class="mf">1.</span> <span class="mf">1.</span> <span class="mf">1.</span>
 <span class="n">BC</span> <span class="o">=</span> <span class="n">GD_CIRC</span> <span class="n">SS</span> <span class="mi">1</span> <span class="n">R_MESH_NORMAL</span> <span class="mi">0</span> <span class="n">MESH_POSITION2</span> <span class="mi">0</span> <span class="mf">0.</span> <span class="mf">1.</span> <span class="mf">1.</span>
@@ -4113,12 +4110,12 @@ of 1.0 (note the radius only appears on one card).</p>
 </section>
 <hr class="docutils" />
 <section id="gd-table">
-<h2>GD_TABLE<a class="headerlink" href="#gd-table" title="Permalink to this headline">¶</a></h2>
+<h2>GD_TABLE<a class="headerlink" href="#gd-table" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">GD_TABLE</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">equation_name</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">variable_name</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">scale</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">interpolation</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">FILE</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">fname</span><span class="o">&gt;</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="id18">
-<h3>Description / Usage<a class="headerlink" href="#id18" title="Permalink to this headline">¶</a></h3>
+<h3>Description / Usage<a class="headerlink" href="#id18" title="Permalink to this headline">#</a></h3>
 <p><strong>(PCC/VARIED)</strong></p>
 <p>This card is used to specify arbitrary, univariate (one abscissa and one ordinate: x1 - x2)
 data for boundary conditions on two-dimensional boundaries, e.g., the inlet velocity
@@ -4180,7 +4177,7 @@ a piece of a residual on the appropriate equation. Hence, it usually requires mo
 one GD card to completely specify the boundary condition.</p>
 </section>
 <section id="id19">
-<h3>Examples<a class="headerlink" href="#id19" title="Permalink to this headline">¶</a></h3>
+<h3>Examples<a class="headerlink" href="#id19" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card set in which the table data is to be read from an external file
 called upstream_land.dat:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">GD_LINEAR</span> <span class="n">SS</span> <span class="mi">1</span> <span class="n">R_MESH_NORMAL</span> <span class="mi">0</span> <span class="n">MESH_POSITION2</span> <span class="mi">0</span> <span class="mf">0.</span> <span class="o">-</span><span class="mf">1.</span>
@@ -4216,20 +4213,20 @@ END TABLE
 specified side set.</p>
 </section>
 <section id="id20">
-<h3>Technical Discussion<a class="headerlink" href="#id20" title="Permalink to this headline">¶</a></h3>
+<h3>Technical Discussion<a class="headerlink" href="#id20" title="Permalink to this headline">#</a></h3>
 <p>This capability is widely used for geometry and velocity profile boundary conditions
 that do not have a convenient closed form. Note that for geometry specifications you
 cannot specify multi-valued functions, like for a cutback angle.</p>
 </section>
 <section id="id21">
-<h3>References<a class="headerlink" href="#id21" title="Permalink to this headline">¶</a></h3>
+<h3>References<a class="headerlink" href="#id21" title="Permalink to this headline">#</a></h3>
 <p>GTM-021.0: Multiparameter continuation and linear stability analysis on highly
 deformable meshes in Goma, M. M. Hopkins, June 22, 2000</p>
 </section>
 </section>
 <hr class="docutils" />
 <section id="usage-notes-on-the-gd-cards">
-<h2>Usage Notes on the GD Cards<a class="headerlink" href="#usage-notes-on-the-gd-cards" title="Permalink to this headline">¶</a></h2>
+<h2>Usage Notes on the GD Cards<a class="headerlink" href="#usage-notes-on-the-gd-cards" title="Permalink to this headline">#</a></h2>
 <p>Following are several examples of uses of the Generalized Dirichlet conditions:</p>
 <ul class="simple">
 <li><p>For a circular boundary ( with radius 1, center at (0,0), <span class="math notranslate nohighlight">\(x^2 + y^2 = 1\)</span> ):</p></li>
@@ -4372,12 +4369,12 @@ eqn.table for example:</p>
 </section>
 <hr class="docutils" />
 <section id="table-wicv">
-<h2>TABLE_WICV<a class="headerlink" href="#table-wicv" title="Permalink to this headline">¶</a></h2>
+<h2>TABLE_WICV<a class="headerlink" href="#table-wicv" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">TABLE_WICV</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="p">{</span><span class="n">abscissa</span><span class="p">}</span> <span class="p">{</span><span class="n">ordinate</span><span class="p">}</span> <span class="p">{</span><span class="n">scale</span><span class="p">}</span> <span class="p">{</span><span class="n">interpolation</span><span class="p">}</span> <span class="p">[</span><span class="n">FILE</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">fname</span><span class="o">&gt;</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="id22">
-<h3>Description / Usage<a class="headerlink" href="#id22" title="Permalink to this headline">¶</a></h3>
+<h3>Description / Usage<a class="headerlink" href="#id22" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/VECTOR VARIED)</strong></p>
 <p>This boundary allows the user to supply boundary data for vector weak integrated
 boundary conditions. See the <em>TABLE_WICS</em> card for scalar weak integrated boundary
@@ -4464,7 +4461,7 @@ reading if APREPRO is enabled.</p>
 </dl>
 </section>
 <section id="id23">
-<h3>Examples<a class="headerlink" href="#id23" title="Permalink to this headline">¶</a></h3>
+<h3>Examples<a class="headerlink" href="#id23" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">TABLE_WICV</span> <span class="n">SS</span> <span class="mi">12</span> <span class="n">ZX</span> <span class="n">MESH_DISPLACEMENT1</span> <span class="n">BIQUADRATIC</span> <span class="n">FILE</span> <span class="o">=</span> <span class="n">load</span><span class="o">.</span><span class="n">table</span>
 </pre></div>
@@ -4479,7 +4476,7 @@ reading if APREPRO is enabled.</p>
 </div>
 </section>
 <section id="id24">
-<h3>Technical Discussion<a class="headerlink" href="#id24" title="Permalink to this headline">¶</a></h3>
+<h3>Technical Discussion<a class="headerlink" href="#id24" title="Permalink to this headline">#</a></h3>
 <p>The table data itself appears as columns of numbers. One-dimensional <em>TABLE_WICV</em>
 tables have three columns (column1=abscissa, column2=ordinate component1,
 column3=ordinate component2), whereas two-dimensional <em>TABLE_WICV</em> tables have
@@ -4500,12 +4497,12 @@ Weakly Integrated Conditions (WIC).</p>
 </section>
 <hr class="docutils" />
 <section id="table-wics">
-<h2>TABLE_WICS<a class="headerlink" href="#table-wics" title="Permalink to this headline">¶</a></h2>
+<h2>TABLE_WICS<a class="headerlink" href="#table-wics" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">TABLE_WICS</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="p">{</span><span class="n">abscissa</span><span class="p">}</span> <span class="p">{</span><span class="n">ordinate</span><span class="p">}</span> <span class="p">{</span><span class="n">scale</span><span class="p">}</span> <span class="p">{</span><span class="n">interpolation</span><span class="p">}</span> <span class="p">[</span><span class="n">FILE</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">fname</span><span class="o">&gt;</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="id25">
-<h3>Description / Usage<a class="headerlink" href="#id25" title="Permalink to this headline">¶</a></h3>
+<h3>Description / Usage<a class="headerlink" href="#id25" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/VARIED)</strong></p>
 <p>This boundary allows the user to supply boundary data for scalar weak integrated
 boundary conditions. See the <em>TABLE_WICV</em> card for vector weak integrated boundary
@@ -4628,7 +4625,7 @@ reading if APREPRO is enabled.</p>
 </dl>
 </section>
 <section id="id26">
-<h3>Examples<a class="headerlink" href="#id26" title="Permalink to this headline">¶</a></h3>
+<h3>Examples<a class="headerlink" href="#id26" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">TABLE_WICS</span> <span class="n">SS</span> <span class="mi">12</span> <span class="n">X</span> <span class="n">TEMPERATURE</span> <span class="n">QUADRATIC</span> <span class="n">FILE</span> <span class="o">=</span><span class="n">heatflux</span><span class="o">.</span><span class="n">table</span>
 </pre></div>
@@ -4644,7 +4641,7 @@ reading if APREPRO is enabled.</p>
 </div>
 </section>
 <section id="id27">
-<h3>Technical Discussion<a class="headerlink" href="#id27" title="Permalink to this headline">¶</a></h3>
+<h3>Technical Discussion<a class="headerlink" href="#id27" title="Permalink to this headline">#</a></h3>
 <p>The table data itself appears as columns of numbers. One-dimensional <em>TABLE_WICS</em>
 tables have two columns (column1=abscissa, column2=ordinate), whereas twodimensional
 <em>TABLE_WICS</em> tables have three columns (column1=abscissa1,
@@ -4663,12 +4660,12 @@ Weakly Integrated Conditions (WIC).</p>
 </section>
 <hr class="docutils" />
 <section id="table">
-<h2>TABLE<a class="headerlink" href="#table" title="Permalink to this headline">¶</a></h2>
+<h2>TABLE<a class="headerlink" href="#table" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">TABLE</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="p">{</span><span class="n">X</span><span class="o">|</span><span class="n">Y</span><span class="o">|</span><span class="n">Z</span><span class="o">|</span><span class="n">TIME</span><span class="p">}</span> <span class="p">{</span><span class="n">ordinate</span><span class="p">}</span> <span class="p">[</span><span class="n">species</span><span class="p">]</span> <span class="p">{</span><span class="n">interpolation</span><span class="p">}</span> <span class="p">[</span><span class="n">FILE</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">fname</span><span class="o">&gt;</span><span class="p">]</span> <span class="p">[</span><span class="n">NAME</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">identifier</span><span class="o">&gt;</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="id28">
-<h3>Description / Usage<a class="headerlink" href="#id28" title="Permalink to this headline">¶</a></h3>
+<h3>Description / Usage<a class="headerlink" href="#id28" title="Permalink to this headline">#</a></h3>
 <p><strong>(PCC/VARIED))</strong></p>
 <p>This boundary condition is a stand-alone version of the more complicated <em>GD_TABLE</em>
 card. It allows the user to supply arbitrary univariate (one abscissa and one ordinate)
@@ -5124,7 +5121,7 @@ $ I have no idea where the following data came from
 <p>will result in an error.</p>
 </section>
 <section id="id29">
-<h3><strong>Examples</strong><a class="headerlink" href="#id29" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id29" title="Permalink to this headline">#</a></h3>
 <p>The following is an example of a tabular data set that will be read correctly</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ This data came from M. Hobbs. God only knows where he got it.
 T   k
@@ -5217,7 +5214,7 @@ y.table:</p></li>
 </div>
 </section>
 <section id="id30">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id30" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id30" title="Permalink to this headline">#</a></h3>
 <p>The <em>TABLE</em> boundary condition provides similar functionality to the <em>GD_TABLE</em>
 boundary condition but with a simplified interface the notion behind both cards is that
 often information on boundaries is known only as a set of data points at specific
@@ -5258,8 +5255,9 @@ latter requiring an odd number of data points be supplied in the table.</p>
       </div>
     </div>
   
-    <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -5270,7 +5268,7 @@ latter requiring an odd number of data points be supplied in the table.</p>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     

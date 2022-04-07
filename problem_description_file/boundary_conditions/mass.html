@@ -8,26 +8,23 @@
 
     <title>Category 6: Mass Equations &#8212; Goma User Manual 7.0.0 documentation</title>
     
-    <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/pydata-sphinx-theme.css" />
     
-    <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
@@ -44,7 +41,7 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -3103,7 +3100,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage pt-5 pb-3">
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -3771,7 +3768,7 @@
               <div>
                 
   <section id="category-6-mass-equations">
-<h1>Category 6: Mass Equations<a class="headerlink" href="#category-6-mass-equations" title="Permalink to this headline">¶</a></h1>
+<h1>Category 6: Mass Equations<a class="headerlink" href="#category-6-mass-equations" title="Permalink to this headline">#</a></h1>
 <p>The collection of boundary conditions in this category are applied to the mass balance equations,
 specifically the species component balance equations. Most boundary conditions are weakly
 integrated conditions defining fluxes at internal or external surfaces, although strongly integrated
@@ -3786,12 +3783,12 @@ will affect the volume of the bounding fluids. In these cases, users are referre
 momentum (mesh) equations. And finally, users are cautioned about different bases for
 concentration (volume, mass, molar) and several discussions on or references to units.</p>
 <section id="y">
-<h2><strong>Y</strong><a class="headerlink" href="#y" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Y</strong><a class="headerlink" href="#y" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">Y</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span><span class="p">]</span> <span class="p">[</span><span class="n">integer2</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="description-usage">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">#</a></h3>
 <p><strong>(DC/MASS)</strong></p>
 <p>This card is used to set the Dirichlet boundary condition of constant concentration
 for a given species. Definitions of the input parameters are as follows:</p>
@@ -3844,24 +3841,24 @@ variables interface.</p></td>
 </table>
 </section>
 <section id="examples">
-<h3><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample card with no Dirichlet flag:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">Y</span> <span class="n">NS</span> <span class="mi">3</span>   <span class="mi">0</span>   <span class="mf">0.00126</span>
 </pre></div>
 </div>
 </section>
 <section id="technical-discussion">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">#</a></h3>
 <p>No Discussion.</p>
 </section>
 </section>
 <section id="yuser">
-<h2><strong>YUSER</strong><a class="headerlink" href="#yuser" title="Permalink to this headline">¶</a></h2>
+<h2><strong>YUSER</strong><a class="headerlink" href="#yuser" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">YUSER</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id1">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id1" title="Permalink to this headline">#</a></h3>
 <p><strong>(SIC/MASS)</strong></p>
 <p>This is a user-defined mass concentration boundary. The user must supply the
 relationship in function <em>yuser_surf</em> within <em>user_bc.c</em>.</p>
@@ -3897,28 +3894,28 @@ appropriate C function.</p></td>
 </table>
 </section>
 <section id="id2">
-<h3><strong>Examples</strong><a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id2" title="Permalink to this headline">#</a></h3>
 <p>The following sample input card applies a user flux condition to side set 100 for species 0 that requires two input parameters:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">YUSER</span> <span class="n">SS</span> <span class="mi">100</span> <span class="mi">0</span> <span class="mf">.5</span> <span class="mf">.5</span>
 </pre></div>
 </div>
 </section>
 <section id="id3">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id3" title="Permalink to this headline">#</a></h3>
 <p>No Discussion.</p>
 </section>
 <section id="references">
-<h3><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="y-discontinuous">
-<h2><strong>Y_DISCONTINUOUS</strong><a class="headerlink" href="#y-discontinuous" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Y_DISCONTINUOUS</strong><a class="headerlink" href="#y-discontinuous" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">Y_DISCONTINUOUS</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span> <span class="n">integer2</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="id4">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id4" title="Permalink to this headline">#</a></h3>
 <p><strong>(DC/MASS)</strong></p>
 <p>This card is used to set a constant valued Dirichlet boundary condition for the species
 unknown. The condition only applies to interphase mass, heat, and momentum transfer
@@ -3977,14 +3974,14 @@ species value across a discontinuous variables interface.</p></td>
 </table>
 </section>
 <section id="id5">
-<h3><strong>Examples</strong><a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id5" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample input card with no Dirichlet flag:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">Y_DISCONTINUOUS</span> <span class="n">SS</span> <span class="mi">3</span>   <span class="mi">0</span>   <span class="mf">0.00126</span>
 </pre></div>
 </div>
 </section>
 <section id="id6">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id6" title="Permalink to this headline">#</a></h3>
 <p>Typically, this boundary condition may be used to set the species unknown variable on
 one side of a discontinuous variables interface, while the species unknown variable on
 the other side of the interface is solved for via a <em>KINEMATIC_SPECIES</em> boundary
@@ -3993,12 +3990,12 @@ may or may not work.</p>
 </section>
 </section>
 <section id="yflux">
-<h2><strong>YFLUX</strong><a class="headerlink" href="#yflux" title="Permalink to this headline">¶</a></h2>
+<h2><strong>YFLUX</strong><a class="headerlink" href="#yflux" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">YFLUX</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float2</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id7">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id7" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/MASS)</strong></p>
 <p>This boundary condition card is used to specify the mass flux of a given species normal
 to the boundary (or interface) using a mass transfer coefficient. When used in
@@ -4037,7 +4034,7 @@ EXODUS II) in the problem domain.</p></td>
 </table>
 </section>
 <section id="id8">
-<h3><strong>Examples</strong><a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id8" title="Permalink to this headline">#</a></h3>
 <p>Following are two sample cards:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">YFLUX</span> <span class="n">SS</span>   <span class="mi">3</span> <span class="mi">0</span>   <span class="mf">0.12</span>   <span class="mf">0.</span>
 </pre></div>
@@ -4047,7 +4044,7 @@ EXODUS II) in the problem domain.</p></td>
 </div>
 </section>
 <section id="id9">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id9" title="Permalink to this headline">#</a></h3>
 <p>Specifically, the species mass flux is given by</p>
 <figure class="align-center">
 <a class="reference internal image-reference" href="../../_images/136_goma_physics.png"><img alt="../../_images/136_goma_physics.png" src="../../_images/136_goma_physics.png" style="width: 90%;" /></a>
@@ -4067,7 +4064,7 @@ the boundary condition number of the next <em>YFLUX</em> condition in a linked l
 extra storage value is -1, there are no more <em>YFLUX</em> conditions at this boundary.</p>
 </section>
 <section id="faqs">
-<h3><strong>FAQs</strong><a class="headerlink" href="#faqs" title="Permalink to this headline">¶</a></h3>
+<h3><strong>FAQs</strong><a class="headerlink" href="#faqs" title="Permalink to this headline">#</a></h3>
 <p>A question was raised regarding the use of volume flux in Goma; the following portion
 of the question and response elucidate this topic and the subject of units. Note the
 references in the response are to the Version 2.0 Goma User’s Manual.</p>
@@ -4128,18 +4125,18 @@ take care of that, i. e., in the Price paper he gives K in units of t/L. So, tha
 <p>This checks out!</p>
 </section>
 <section id="id10">
-<h3><strong>References</strong><a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id10" title="Permalink to this headline">#</a></h3>
 <p>Price, P. E., Jr., S. Wang, I. H. Romdhane, 1997. “Extracting Effective Diffusion
 Parameters from Drying Experiments”, AIChE Journal, 43, 8, 1925-1934.</p>
 </section>
 </section>
 <section id="yflux-const">
-<h2><strong>YFLUX_CONST</strong><a class="headerlink" href="#yflux-const" title="Permalink to this headline">¶</a></h2>
+<h2><strong>YFLUX_CONST</strong><a class="headerlink" href="#yflux-const" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">YFLUX_CONST</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="nb">float</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id11">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id11" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/MASS)</strong></p>
 <p>This boundary condition card is used to specify a constant diffusive mass flux of a
 given species. This flux quantity can be specified on a per mass basis (e.g. with units of
@@ -4176,28 +4173,28 @@ concentration.</p></td>
 </table>
 </section>
 <section id="id12">
-<h3><strong>Examples</strong><a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id12" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">YFLUX_CONST</span> <span class="n">SS</span> <span class="mi">1</span> <span class="mi">0</span> <span class="mf">10000.2</span>
 </pre></div>
 </div>
 </section>
 <section id="id13">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id13" title="Permalink to this headline">#</a></h3>
 <p>No Discussion.</p>
 </section>
 <section id="id14">
-<h3><strong>References</strong><a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id14" title="Permalink to this headline">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="yflux-equil">
-<h2><strong>YFLUX_EQUIL</strong><a class="headerlink" href="#yflux-equil" title="Permalink to this headline">¶</a></h2>
+<h2><strong>YFLUX_EQUIL</strong><a class="headerlink" href="#yflux-equil" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">YFLUX_EQUIL</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="p">{</span><span class="n">char_string</span><span class="p">}</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id15">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id15" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/MASS)</strong></p>
 <p>This boundary card is used when equilibrium-based mass transfer is occurring at an
 vapor-liquid external boundary; i.e.,</p>
@@ -4248,30 +4245,30 @@ options are either <strong>FLORY</strong> or <strong>RAOULT</strong>.</p></td>
 </table>
 </section>
 <section id="id16">
-<h3><strong>Examples</strong><a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id16" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">YFLUX_EQUIL</span> <span class="n">SS</span> <span class="mi">1</span>   <span class="n">FLORY</span> <span class="mi">0</span>   <span class="mf">1.</span> <span class="mf">5.4e-3</span>   <span class="mf">0.</span>
 </pre></div>
 </div>
 </section>
 <section id="id17">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id17" title="Permalink to this headline">#</a></h3>
 <p>This boundary condition is very similar to <em>VL_EQUIL</em> and <em>VL_POLY</em> except that it is
 only applied at an external boundary where vapor phase is not modeled in the problem.</p>
 </section>
 <section id="id18">
-<h3><strong>References</strong><a class="headerlink" href="#id18" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id18" title="Permalink to this headline">#</a></h3>
 <p>GTM-007.1: New Multicomponent Vapor-Liquid Equilibrium Capabilities in GOMA,
 December 10, 1998, A. C. Sun</p>
 </section>
 </section>
 <section id="yflux-sulfidation">
-<h2><strong>YFLUX_SULFIDATION</strong><a class="headerlink" href="#yflux-sulfidation" title="Permalink to this headline">¶</a></h2>
+<h2><strong>YFLUX_SULFIDATION</strong><a class="headerlink" href="#yflux-sulfidation" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">YFLUX_SULFIDATION</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="p">{</span><span class="n">char_string</span><span class="p">}</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id19">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id19" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id19" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/MASS)</strong></p>
 <p>The <em>YFLUX_SULFIDATION</em> card enables computation of the molar flux of the
 diffusing species (e.g. copper vacancy) using copper-sulfidation kinetics at the
@@ -4356,7 +4353,7 @@ reaction.</p></td>
 </table>
 </section>
 <section id="id20">
-<h3><strong>Examples</strong><a class="headerlink" href="#id20" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id20" title="Permalink to this headline">#</a></h3>
 <p>Examples of this input card follow:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">YFLUX_SULFIDATION</span> <span class="n">SS</span> <span class="mi">3</span> <span class="n">SOLID_DIFFUSION_ELECTRONEUTRALITY</span> <span class="mi">0</span> <span class="o">-</span><span class="mf">2.0</span>
 <span class="mf">1.46e+7</span> <span class="mf">6300.0</span> <span class="mf">1.2e+14</span> <span class="mf">6300.0</span> <span class="mf">303.0</span> <span class="mf">1.61e-11</span> <span class="mf">8.4e-6</span> <span class="mf">159.14</span> <span class="mf">5.6</span>
@@ -4376,7 +4373,7 @@ reaction.</p></td>
 </div>
 </section>
 <section id="id21">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id21" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id21" title="Permalink to this headline">#</a></h3>
 <p>Key word <strong>SOLID_DIFFUSION_SIMPLIFIED</strong> refers to the following simplified
 kinetic model of copper sulfidation in which gas-phase diffusion is neglected and Cu
 is taken to be the diffusing species:</p>
@@ -4444,12 +4441,12 @@ concentrations of Cu vacancies and electron holes are taken to be equal to each 
 </section>
 </section>
 <section id="yflux-sus">
-<h2><strong>YFLUX_SUS</strong><a class="headerlink" href="#yflux-sus" title="Permalink to this headline">¶</a></h2>
+<h2><strong>YFLUX_SUS</strong><a class="headerlink" href="#yflux-sus" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">YFLUX_SUS</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id22">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id22" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id22" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/MASS)</strong></p>
 <p>This boundary defines a flux of suspension particles at an interface. Definitions of the input parameters are as follows:</p>
 <table class="table">
@@ -4477,14 +4474,14 @@ EXODUS II) in the problem domain.</p></td>
 </table>
 </section>
 <section id="id23">
-<h3><strong>Examples</strong><a class="headerlink" href="#id23" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id23" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">YFLUX_SUS</span> <span class="n">SS</span> <span class="mi">1</span>   <span class="mi">0</span>
 </pre></div>
 </div>
 </section>
 <section id="id24">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id24" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id24" title="Permalink to this headline">#</a></h3>
 <p>This condition is only used in conjunction with the <em>SUSPENSION</em> liquid constitutive
 models, <em>HYDRODYNAMIC</em> diffusivity model, and <em>SUSPENSION</em> or
 <em>SUSPENSION_PM</em> density models. A theoretical outflux condition associated with
@@ -4494,12 +4491,12 @@ understanding of the suspension flux model.</p>
 </section>
 </section>
 <section id="yflux-bv">
-<h2><strong>YFLUX_BV</strong><a class="headerlink" href="#yflux-bv" title="Permalink to this headline">¶</a></h2>
+<h2><strong>YFLUX_BV</strong><a class="headerlink" href="#yflux-bv" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">YFLUX_BV</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">floatlist</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id25">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id25" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id25" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/MASS)</strong></p>
 <p>The <em>YFLUX_BV</em> card enables computation of the molar flux of the specified species
 using Butler-Volmer kinetics at the specified boundary (namely, the electrode surface).
@@ -4559,24 +4556,24 @@ EXODUS II) in the problem domain.</p></td>
 </table>
 </section>
 <section id="id26">
-<h3><strong>Examples</strong><a class="headerlink" href="#id26" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id26" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">YFLUX_BV</span> <span class="n">SS</span> <span class="mi">1</span> <span class="mi">0</span> <span class="o">-</span><span class="mf">1.</span> <span class="mf">0.00001</span> <span class="mf">1.</span> <span class="mf">0.21</span> <span class="mf">0.21</span> <span class="o">-</span><span class="mf">0.8</span> <span class="o">-</span><span class="mf">0.22</span> <span class="mf">58.71</span> <span class="mf">8.9</span>
 </pre></div>
 </div>
 </section>
 <section id="id27">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id27" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id27" title="Permalink to this headline">#</a></h3>
 <p>No Discussion.</p>
 </section>
 </section>
 <section id="yflux-hor">
-<h2><strong>YFLUX_HOR</strong><a class="headerlink" href="#yflux-hor" title="Permalink to this headline">¶</a></h2>
+<h2><strong>YFLUX_HOR</strong><a class="headerlink" href="#yflux-hor" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">YFLUX_HOR</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">floatlist</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id28">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id28" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id28" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/MASS)</strong></p>
 <p>The <strong>YFLUX_HOR</strong> card enables computation of the molar flux of the specified species
 at the specified boundary (i.e., at the electrode surface) using the linearized Butler-
@@ -4641,14 +4638,14 @@ current density, <span class="math notranslate nohighlight">\(ai_0\)</span>, in 
 </table>
 </section>
 <section id="id29">
-<h3><strong>Examples</strong><a class="headerlink" href="#id29" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id29" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">YFLUX_HOR</span> <span class="n">SS</span> <span class="mi">14</span> <span class="mi">0</span> <span class="mf">1000.</span> <span class="mf">0.001</span> <span class="mf">4.e-5</span> <span class="mf">1.</span> <span class="mf">1.</span> <span class="mf">353.</span> <span class="mf">0.</span> <span class="mf">0.5</span> <span class="mf">2.</span> <span class="mf">0.</span>
 </pre></div>
 </div>
 </section>
 <section id="id30">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id30" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id30" title="Permalink to this headline">#</a></h3>
 <p>For electrochemical reactions such as the hydrogen-oxidation reaction (HOR), surface
 overpotential is relatively small such that the Butler-Volmer kinetic model can be
 linearized to yield:</p>
@@ -4669,7 +4666,7 @@ respectively, the electrode and electrolyte potentials in unit of <em>V</em>; <s
 potential in unit of <em>V</em>.</p>
 </section>
 <section id="id31">
-<h3><strong>References</strong><a class="headerlink" href="#id31" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id31" title="Permalink to this headline">#</a></h3>
 <ol class="upperalpha simple" start="10">
 <li><p>Newman, Electrochemical Systems, 2nd Edition, Prentice-Hall, NJ (1991).</p></li>
 </ol>
@@ -4679,12 +4676,12 @@ in ASME Proceedings of FUELCELL2006-97032 (2006).</p>
 </section>
 </section>
 <section id="yflux-orr">
-<h2><strong>YFLUX_ORR</strong><a class="headerlink" href="#yflux-orr" title="Permalink to this headline">¶</a></h2>
+<h2><strong>YFLUX_ORR</strong><a class="headerlink" href="#yflux-orr" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">YFLUX_ORR</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">floatlist</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id32">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id32" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id32" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/MASS)</strong></p>
 <p>The <strong>YFLUX_ORR</strong> card enables computation of the molar flux of the specified species
 at the specified boundary (i.e., at the electrode surface) using the Tafel kinetics such as
@@ -4744,14 +4741,14 @@ current density, <span class="math notranslate nohighlight">\(ai_0\)</span>, in 
 </table>
 </section>
 <section id="id33">
-<h3><strong>Examples</strong><a class="headerlink" href="#id33" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id33" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">YFLUX_ORR</span> <span class="n">SS</span> <span class="mi">15</span> <span class="mi">1</span> <span class="mf">0.01</span> <span class="mf">0.001</span> <span class="mf">4.e-5</span> <span class="mf">1.</span> <span class="mf">353.</span> <span class="mf">0.7</span> <span class="mf">1.18</span> <span class="mf">1.</span> <span class="mf">4.</span>
 </pre></div>
 </div>
 </section>
 <section id="id34">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id34" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id34" title="Permalink to this headline">#</a></h3>
 <p>For electrochemical reactions such as the hydrogen-oxidation reaction (HOR), surface
 overpotential is relatively small such that the Butler-Volmer kinetic model can be
 linearized to yield:</p>
@@ -4771,7 +4768,7 @@ temperature in unit of <em>K</em>; <em>V</em> and <span class="math notranslate 
 potentials in unit of <em>V</em>; <span class="math notranslate nohighlight">\(U_0\)</span> and is the open-circuit potential in unit of <em>V</em>.</p>
 </section>
 <section id="id35">
-<h3><strong>References</strong><a class="headerlink" href="#id35" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id35" title="Permalink to this headline">#</a></h3>
 <ol class="upperalpha simple" start="10">
 <li><p>Newman, Electrochemical Systems, 2nd Edition, Prentice-Hall, NJ (1991).</p></li>
 </ol>
@@ -4781,12 +4778,12 @@ in ASME Proceedings of FUELCELL2006-97032 (2006).</p>
 </section>
 </section>
 <section id="yflux-user">
-<h2><strong>YFLUX_USER</strong><a class="headerlink" href="#yflux-user" title="Permalink to this headline">¶</a></h2>
+<h2><strong>YFLUX_USER</strong><a class="headerlink" href="#yflux-user" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">YFLUX_USER</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id36">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id36" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id36" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/MASS)</strong></p>
 <p>This boundary condition card is used to set mass flux to a user-prescribed function and
 integrate by parts again. The user should provide detailed flux conditions in the
@@ -4825,28 +4822,28 @@ appropriate C function.</p></td>
 </table>
 </section>
 <section id="id37">
-<h3><strong>Examples</strong><a class="headerlink" href="#id37" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id37" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">YFLUX_USER</span> <span class="n">SS</span> <span class="mi">2</span>   <span class="mi">0</span> <span class="mf">.5</span> <span class="mf">.5</span>
 </pre></div>
 </div>
 </section>
 <section id="id38">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id38" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id38" title="Permalink to this headline">#</a></h3>
 <p>No Discussion.</p>
 </section>
 <section id="id39">
-<h3><strong>References</strong><a class="headerlink" href="#id39" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id39" title="Permalink to this headline">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="yflux-alloy">
-<h2><strong>YFLUX_ALLOY</strong><a class="headerlink" href="#yflux-alloy" title="Permalink to this headline">¶</a></h2>
+<h2><strong>YFLUX_ALLOY</strong><a class="headerlink" href="#yflux-alloy" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">YFLUX_ALLOY</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id40">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id40" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id40" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/MASS)</strong></p>
 <p>This boundary condition card calculates the surface integral for a mass flux transfer
 model for the evaporation rate of molten metal.</p>
@@ -4894,14 +4891,14 @@ in EXODUS II) in the problem domain.</p></td>
 </table>
 </section>
 <section id="id41">
-<h3><strong>Examples</strong><a class="headerlink" href="#id41" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id41" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">YFLUX_ALLOY</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mi">0</span> <span class="mf">1623.0</span> <span class="mf">0.5</span> <span class="mf">0.01</span> <span class="o">-</span><span class="mf">1e-3</span> <span class="mf">1e-4</span> <span class="o">-</span><span class="mf">1e-5</span>
 </pre></div>
 </div>
 </section>
 <section id="id42">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id42" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id42" title="Permalink to this headline">#</a></h3>
 <p>Basically the difference between this model and the simple convective mass transfer
 coefficient (say <span class="math notranslate nohighlight">\(k_i\)</span> for <em>YFLUX</em>) is that the transfer coefficient here (the exponential term) has a cubic dependence on temperature.</p>
 <figure class="align-center">
@@ -4910,12 +4907,12 @@ coefficient (say <span class="math notranslate nohighlight">\(k_i\)</span> for <
 </section>
 </section>
 <section id="ytotalflux-const">
-<h2><strong>YTOTALFLUX_CONST</strong><a class="headerlink" href="#ytotalflux-const" title="Permalink to this headline">¶</a></h2>
+<h2><strong>YTOTALFLUX_CONST</strong><a class="headerlink" href="#ytotalflux-const" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">YTOTALFLUX_CONST</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="nb">float</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id43">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id43" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id43" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/MASS)</strong></p>
 <p>This boundary condition card is used to specify a constant total mass flux (including
 contribution from diffusion, migration, and convection) of a given species. This card
@@ -4956,24 +4953,24 @@ concentration.</p></td>
 </table>
 </section>
 <section id="id44">
-<h3><strong>Examples</strong><a class="headerlink" href="#id44" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id44" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">YTOTALFLUX_CONST</span> <span class="n">SS</span> <span class="mi">5</span>   <span class="mi">0</span>   <span class="mf">0.0</span>
 </pre></div>
 </div>
 </section>
 <section id="id45">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id45" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id45" title="Permalink to this headline">#</a></h3>
 <p>No Discussion.</p>
 </section>
 </section>
 <section id="vl-equil">
-<h2><strong>VL_EQUIL</strong><a class="headerlink" href="#vl-equil" title="Permalink to this headline">¶</a></h2>
+<h2><strong>VL_EQUIL</strong><a class="headerlink" href="#vl-equil" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">VL_EQUIL</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer_list</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id46">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id46" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id46" title="Permalink to this headline">#</a></h3>
 <p><strong>(SIC/MASS)</strong></p>
 <p>This boundary condition card enforces vapor-liquid equilibrium between a gas phase
 and a liquid phase using Raoult’s law. The condition only applies to interphase mass,
@@ -5037,7 +5034,7 @@ interface. In this particular boundary, two of three components are considered
 is  considered either non-volatile or non-condensable, so it remains in a single phase.</p>
 </section>
 <section id="id47">
-<h3><strong>Examples</strong><a class="headerlink" href="#id47" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id47" title="Permalink to this headline">#</a></h3>
 <p>A sample input card follows for this boundary condition:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">VL_EQUIL</span> <span class="n">SS</span> <span class="mi">4</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mf">1.e+06</span> <span class="mf">28.</span> <span class="mf">18.</span> <span class="mf">1800.</span> <span class="mf">18.</span>
 </pre></div>
@@ -5048,7 +5045,7 @@ weights of the volatile species are 28 and 18; of the condensed phase and insolu
 portion of the gas phase, 1800 and 18, respectively.</p>
 </section>
 <section id="id48">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id48" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id48" title="Permalink to this headline">#</a></h3>
 <p>One of the simplest forms of the equilibrium relation is the Raoult’s law, where the
 mole fraction of a species is equal to its mole fraction in the liquid multiplied by the ratio of its pure component vapor pressure to the total pressure in the system.</p>
 <figure class="align-center">
@@ -5063,7 +5060,7 @@ Either Riedel or Antoine temperature-dependent vapor pressure model can be speci
 in the <em>VAPOR PRESSURE</em> material card in order to link temperature to Raoult’s law.</p>
 </section>
 <section id="id49">
-<h3><strong>References</strong><a class="headerlink" href="#id49" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id49" title="Permalink to this headline">#</a></h3>
 <p>GTM-007.1: New Multicomponent Vapor-Liquid Equilibrium Capabilities in GOMA,
 December 10, 1998, A. C. Sun</p>
 <p>Schunk, P.R. and Rao, R.R. 1994. “Finite element analysis of multicomponent twophase
@@ -5071,12 +5068,12 @@ flows with interphase mass and momentum transport,” IJNMF, 18, 821-842.</p>
 </section>
 </section>
 <section id="vl-poly">
-<h2><strong>VL_POLY</strong><a class="headerlink" href="#vl-poly" title="Permalink to this headline">¶</a></h2>
+<h2><strong>VL_POLY</strong><a class="headerlink" href="#vl-poly" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">VL_POLY</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="p">{</span><span class="n">char_string</span><span class="p">}</span> <span class="o">&lt;</span><span class="n">integer_list</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="nb">float</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id50">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id50" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id50" title="Permalink to this headline">#</a></h3>
 <p><strong>(SIC/MASS)</strong></p>
 <p>This boundary condition card enforces vapor-liquid equilibrium between a gas phase
 and a liquid phase using Flory-Huggins activity expression to describe polymer-solvent
@@ -5132,14 +5129,14 @@ based on volume fractions for all species.</p></li>
 </table>
 </section>
 <section id="id51">
-<h3><strong>Examples</strong><a class="headerlink" href="#id51" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id51" title="Permalink to this headline">#</a></h3>
 <p>This is a sample input card for this boundary condition:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">VL_POLY</span> <span class="n">SS</span> <span class="mi">7</span> <span class="n">MASS</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mf">1.e+05</span>
 </pre></div>
 </div>
 </section>
 <section id="id52">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id52" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id52" title="Permalink to this headline">#</a></h3>
 <p>One of the simplest forms of the equilibrium relation is the Raoult’s law, where the
 mole fraction of a species is equal to its mole fraction in the liquid multiplied by the ratio of its pure component vapor pressure to the total pressure in the system.</p>
 <figure class="align-center">
@@ -5167,7 +5164,7 @@ to the above model. For a simple binary pair (solvent (1)-polymer (2)) and assum
 </figure>
 </section>
 <section id="id53">
-<h3><strong>References</strong><a class="headerlink" href="#id53" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id53" title="Permalink to this headline">#</a></h3>
 <p>Flory, P., Principles of Polymer Chemistry, Cornell University Press, New York (1953)</p>
 <p>Patterson, D., Y.B. Tewari, H.P. Schreiber, and J.E. Guillet, “Application of Gas-Liquid
 Chromatography to the Thermodynamics of Polymer Solutions,”Macromolecules, 4, 3,
@@ -5177,12 +5174,12 @@ December 10, 1998, A. C. Sun</p>
 </section>
 </section>
 <section id="vl-equil-pseudorxn">
-<h2><strong>VL_EQUIL_PSEUDORXN</strong><a class="headerlink" href="#vl-equil-pseudorxn" title="Permalink to this headline">¶</a></h2>
+<h2><strong>VL_EQUIL_PSEUDORXN</strong><a class="headerlink" href="#vl-equil-pseudorxn" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">VL_EQUIL_PSEUDORXN</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer_list</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="nb">float</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id54">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id54" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id54" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/MASS)</strong></p>
 <p>This boundary condition card enforces vapor-liquid equilibrium between a gas phase
 and a liquid phase species component using Raoult’s law expressed via a finite-rate
@@ -5231,7 +5228,7 @@ have rapid mass exchange between phases. The best example of this is rapid
 evaporation of a liquid component into a gas.</p>
 </section>
 <section id="id55">
-<h3><strong>Examples</strong><a class="headerlink" href="#id55" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id55" title="Permalink to this headline">#</a></h3>
 <p>The following sample input card</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">VL_EQUIL_PSEUDORXN</span> <span class="n">SS</span> <span class="mi">4</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mf">100.</span>
 </pre></div>
@@ -5241,7 +5238,7 @@ block id is “1”; gas phase element block id is “2”; a forward rate const
 <span class="math notranslate nohighlight">\(s^{-1}\)</span>.</p>
 </section>
 <section id="id56">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id56" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id56" title="Permalink to this headline">#</a></h3>
 <p>The <em>VL_EQUIL_PSEUDORXN</em> boundary condition uses the following equations
 representing a kinetic approach to equilibrium expressed by Raoult’s law, relating
 species <em>k</em> on the liquid side to species <em>k</em> on the gas side.</p>
@@ -5287,12 +5284,12 @@ equivalent to a reaction with a reactive sticking coefficient of 0.01 at 1 atm a
 </section>
 </section>
 <section id="is-equil-pseudorxn">
-<h2><strong>IS_EQUIL_PSEUDORXN</strong><a class="headerlink" href="#is-equil-pseudorxn" title="Permalink to this headline">¶</a></h2>
+<h2><strong>IS_EQUIL_PSEUDORXN</strong><a class="headerlink" href="#is-equil-pseudorxn" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">IS_EQUIL_PSEUDORXN</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer_list</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="nb">float</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id57">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id57" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id57" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/MASS)</strong></p>
 <p>This boundary condition card enforces equilibrium between a species component in
 two ideal solution phases via a finite-rate kinetics formalism. The condition only
@@ -5343,7 +5340,7 @@ divided by time.</p></td>
 </table>
 </section>
 <section id="id58">
-<h3><strong>Examples</strong><a class="headerlink" href="#id58" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id58" title="Permalink to this headline">#</a></h3>
 <p>The sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">IS_EQUIL_PSEUDORXN</span> <span class="n">SS</span> <span class="mi">4</span> <span class="mi">0</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mf">100.</span>
 </pre></div>
@@ -5352,7 +5349,7 @@ divided by time.</p></td>
 element block id is “1”; the “-” phase element block id is “2”; a forward rate constant of 100. cm <span class="math notranslate nohighlight">\(s^{-1}\)</span>.</p>
 </section>
 <section id="id59">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id59" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id59" title="Permalink to this headline">#</a></h3>
 <p>The <em>IS_EQUIL_PSEUDORXN</em> boundary condition uses the following equations
 representing a kinetic approach to equilibrium expressed by an ideal solution model for
 thermodynamics on either side of the interface. Initially, we relate species <em>k</em> on the + side to species <em>k</em> on the - side of the interface via a kinetic formulation, whose rate constant is fast enough to ensure equilibrium in practice. However, later we may extend the capability to more complicated stoichiometric formulations for equilibrium, since the formulation for the equilibrium expression is readily extensible, unlike <em>Goma’s</em> previous treatment.</p>
@@ -5412,18 +5409,18 @@ coefficient of 0.01 at 1 atm and 300 K for a molecule whose molecular weight is 
 <span class="math notranslate nohighlight">\(H_2 S\)</span>.</p>
 </section>
 <section id="id60">
-<h3><strong>References</strong><a class="headerlink" href="#id60" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id60" title="Permalink to this headline">#</a></h3>
 <p>Denbigh, K., The Principles of Chemical Equilibrium, Cambridge University Press,
 Cambridge, 1981</p>
 </section>
 </section>
 <section id="surface-charge">
-<h2><strong>SURFACE_CHARGE</strong><a class="headerlink" href="#surface-charge" title="Permalink to this headline">¶</a></h2>
+<h2><strong>SURFACE_CHARGE</strong><a class="headerlink" href="#surface-charge" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SURFACE_CHARGE</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="nb">float</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id61">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id61" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id61" title="Permalink to this headline">#</a></h3>
 <p><strong>(SIC/MASS)</strong></p>
 <p>The <em>SURFACE_CHARGE</em> card specifies the electrostatic nature of a surface:
 electrically neutral, positively charged or negatively charged.</p>
@@ -5470,7 +5467,7 @@ applies.</p></td>
 </table>
 </section>
 <section id="id62">
-<h3><strong>Examples</strong><a class="headerlink" href="#id62" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id62" title="Permalink to this headline">#</a></h3>
 <p>The following input card indicates that on side set 1 species 1 is electrically neutral:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SURFACE_CHARGE</span> <span class="n">SS</span> <span class="mi">1</span>   <span class="mi">1</span>   <span class="mf">0.0</span>
 </pre></div>
@@ -5507,8 +5504,9 @@ applies.</p></td>
       </div>
     </div>
   
-    <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -5519,7 +5517,7 @@ applies.</p></td>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     

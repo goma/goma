@@ -8,26 +8,23 @@
 
     <title>VELO_SLIP_ROT &#8212; Goma User Manual 7.0.0 documentation</title>
     
-    <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/styles/pydata-sphinx-theme.css" />
     
-    <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
     <script src="../../../_static/jquery.js"></script>
     <script src="../../../_static/underscore.js"></script>
@@ -42,7 +39,7 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -123,7 +120,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage pt-5 pb-3">
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -179,12 +176,12 @@
               <div>
                 
   <section id="velo-slip-rot">
-<h1><strong>VELO_SLIP_ROT</strong><a class="headerlink" href="#velo-slip-rot" title="Permalink to this headline">¶</a></h1>
+<h1><strong>VELO_SLIP_ROT</strong><a class="headerlink" href="#velo-slip-rot" title="Permalink to this headline">#</a></h1>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">VELO_SLIP_ROT</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">integer</span><span class="p">]</span> <span class="p">[</span><span class="n">float5</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="description-usage">
-<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">#</a></h2>
 <p><strong>(WIC/VECTOR MOMENTUM)</strong></p>
 <p>This boundary condition is a variant of the <em>VELO_SLIP</em> boundary condition and serves
 much the same function: to allow the fluid to slip relative to a solid substrate boundary.
@@ -253,7 +250,7 @@ activate the variable slip model.</p></td>
 </table>
 </section>
 <section id="examples">
-<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h2>
 <p>The following is a sample card without the optional parameters:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">VELO_SLIP_ROT</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">0.1</span> <span class="mf">3.14</span> <span class="mf">0.0</span> <span class="mf">1.0</span>
 </pre></div>
@@ -262,7 +259,7 @@ activate the variable slip model.</p></td>
 rotating at 3.14 rad/sec around the point (0.0,1.0).</p>
 </section>
 <section id="technical-discussion">
-<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">#</a></h2>
 <p>The comments that appear in the Technical Discussion section of the <em>VELO_SLIP</em> card
 apply equally well here. In particular, the discussion of the variable slip coefficient
 model applies here as well. The only significant difference is that the velocity of the
@@ -270,7 +267,7 @@ substrate is not a fixed vector; instead, it is tangent to the cylindrical subst
 magnitude consistent with the radius of the cylinder and the rotation rate.</p>
 </section>
 <section id="references">
-<h2><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<h2><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">#</a></h2>
 <p>No References.</p>
 </section>
 </section>
@@ -289,8 +286,9 @@ magnitude consistent with the radius of the cylinder and the rotation rate.</p>
       </div>
     </div>
   
-    <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -301,7 +299,7 @@ magnitude consistent with the radius of the cylinder and the rotation rate.</p>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     

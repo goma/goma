@@ -8,26 +8,23 @@
 
     <title>Category 8: Porous Equations &#8212; Goma User Manual 7.0.0 documentation</title>
     
-    <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/pydata-sphinx-theme.css" />
     
-    <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
@@ -44,7 +41,7 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -3103,7 +3100,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage pt-5 pb-3">
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -3494,7 +3491,7 @@
               <div>
                 
   <section id="category-8-porous-equations">
-<h1>Category 8: Porous Equations<a class="headerlink" href="#category-8-porous-equations" title="Permalink to this headline">¶</a></h1>
+<h1>Category 8: Porous Equations<a class="headerlink" href="#category-8-porous-equations" title="Permalink to this headline">#</a></h1>
 <p>The following conditions are applied as boundary conditions to the porous-flow equations. These
 conditions include strong Dirichlet conditions, such as hard sets on porous phase pressure on a
 boundary as a constant or function of position, weak-form conditions, such as a specified phase
@@ -3509,12 +3506,12 @@ implicit terms can often lead to some confusion in setting the boundary conditio
 recommended that the user consult the supplementary documentation referenced in the following
 porous boundary condition cards.</p>
 <section id="porous-liq-pressure">
-<h2><strong>POROUS_LIQ_PRESSURE</strong><a class="headerlink" href="#porous-liq-pressure" title="Permalink to this headline">¶</a></h2>
+<h2><strong>POROUS_LIQ_PRESSURE</strong><a class="headerlink" href="#porous-liq-pressure" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">POROUS_LIQ_PRESSURE</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="description-usage">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">#</a></h3>
 <p><strong>(DC/POR_LIQ_PRES)</strong></p>
 <p>This Dirichlet boundary condition is used to set the liquid phase pore pressure at a noden set. It can be applied to a node set on a boundary of a <em>POROUS_SATURATED,
 POROUS_UNSATURATED</em> or <em>POROUS_TWO_PHASE</em> medium type (see <em>Media Type</em>
@@ -3553,7 +3550,7 @@ as a parameter in automatic continuation sequences</em>.</p></td>
 </table>
 </section>
 <section id="examples">
-<h3><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h3>
 <p>The boundary condition card</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">POROUS_LIQ_PRESSURE</span> <span class="n">NS</span> <span class="mi">101</span> <span class="p">{</span><span class="n">pcmin</span><span class="p">}</span>
 </pre></div>
@@ -3562,7 +3559,7 @@ as a parameter in automatic continuation sequences</em>.</p></td>
 represented by the APREPRO variable {pcmin}.</p>
 </section>
 <section id="technical-discussion">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">#</a></h3>
 <p>Setting the porous liquid pressure to a value cannot be done independently of the
 saturation as the two are related through the vapor pressure curve for simulations in
 partially saturated media (see <em>Saturation</em> model card). Keep in mind that when using
@@ -3581,7 +3578,7 @@ not relevant. In this case, one must only consider the pressure level as it may 
 isotropic stress in poroelastic problems.</p>
 </section>
 <section id="references">
-<h3><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">#</a></h3>
 <p>GT-008.2: Porous Media Capabilities/Tutorial for GOMA. User Guidance for Saturated
 Porous Penetration Problems, August 11, 1999, P. R. Schunk</p>
 <p>GT-009.3: GOMA’s Capabilities for Partially Saturated Flow in Porous Media,
@@ -3589,12 +3586,12 @@ September 1, 2002, P. R. Schunk</p>
 </section>
 </section>
 <section id="porous-liq-flux-const">
-<h2><strong>POROUS_LIQ_FLUX_CONST</strong><a class="headerlink" href="#porous-liq-flux-const" title="Permalink to this headline">¶</a></h2>
+<h2><strong>POROUS_LIQ_FLUX_CONST</strong><a class="headerlink" href="#porous-liq-flux-const" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">POROUS_LIQ_FLUX_CONST</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="id1">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id1" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/POR_LIQ_PRES)</strong></p>
 <p>This boundary condition sets the flux of liquid-phase solvent to a constant value in the
 Galerkin finite element weak sense. Specifically, this flux is applied to a side set as a
@@ -3635,7 +3632,7 @@ of the Dirichlet type.</p></td>
 </table>
 </section>
 <section id="id2">
-<h3><strong>Examples</strong><a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id2" title="Permalink to this headline">#</a></h3>
 <p>The input card</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">POROUS_LIQ_FLUX_CONST</span> <span class="n">SS</span> <span class="mi">102</span> <span class="mf">200.0</span>
 </pre></div>
@@ -3643,7 +3640,7 @@ of the Dirichlet type.</p></td>
 <p>sets the total liquid-solvent mass flux, in both gas and liquid phases, to 200.0 along the side set 102.</p>
 </section>
 <section id="id3">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id3" title="Permalink to this headline">#</a></h3>
 <p>This boundary condition is of the mathematical form:</p>
 <figure class="align-center">
 <a class="reference internal image-reference" href="../../_images/171_goma_physics.png"><img alt="../../_images/171_goma_physics.png" src="../../_images/171_goma_physics.png" style="width: 90%;" /></a>
@@ -3663,7 +3660,7 @@ case, viz. <em>POROUS_SATURATED</em> media type, this condition is applied as</p
 </figure>
 </section>
 <section id="id4">
-<h3><strong>References</strong><a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id4" title="Permalink to this headline">#</a></h3>
 <p>GT-008.2: Porous Media Capabilities/Tutorial for GOMA. User Guidance for Saturated
 Porous Penetration Problems, August 11, 1999, P. R. Schunk</p>
 <p>GT-009.3: GOMA’s Capabilities for Partially Saturated Flow in Porous Media,
@@ -3671,12 +3668,12 @@ September 1, 2002, P. R. Schunk</p>
 </section>
 </section>
 <section id="porous-gas-pressure">
-<h2><strong>POROUS_GAS_PRESSURE</strong><a class="headerlink" href="#porous-gas-pressure" title="Permalink to this headline">¶</a></h2>
+<h2><strong>POROUS_GAS_PRESSURE</strong><a class="headerlink" href="#porous-gas-pressure" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">POROUS_GAS_PRESSURE</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="id5">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id5" title="Permalink to this headline">#</a></h3>
 <p><strong>(DC/POR_GAS_PRES)</strong></p>
 <p>This Dirichlet boundary condition is used to set the gas-phase pore pressure at the
 boundary of a <em>POROUS_TWO_PHASE</em> medium type (see <em>Media Type</em> card). This
@@ -3717,7 +3714,7 @@ as a parameter in automatic continuation sequences</em>.</p></td>
 </table>
 </section>
 <section id="id6">
-<h3><strong>Examples</strong><a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id6" title="Permalink to this headline">#</a></h3>
 <p>The boundary condition card</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">POROUS_GAS_PRESSURE</span> <span class="n">NS</span> <span class="mi">101</span> <span class="p">{</span><span class="n">pgas</span><span class="p">}</span>
 </pre></div>
@@ -3726,7 +3723,7 @@ as a parameter in automatic continuation sequences</em>.</p></td>
 represented by the APREPRO variable {pgas}.</p>
 </section>
 <section id="id7">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id7" title="Permalink to this headline">#</a></h3>
 <p>Setting the porous liquid pressure to a value cannot be done independently of the
 saturation as the two are related through the vapor pressure curve for simulations in
 partially saturated media (see <em>Saturation</em> model card). Keep in mind that when using
@@ -3735,7 +3732,7 @@ capillary pressure, defined as <span class="math notranslate nohighlight">\(p_{g
 the capillary pressure <span class="math notranslate nohighlight">\(p_c\)</span> is greater than zero, the saturation level is less than unity, viz.the medium is partially saturated. When <span class="math notranslate nohighlight">\(p_c\)</span> is less than zero, i.e., when the liquid phase pressure is greater than the gas phase pressure, then the medium is saturated (in this case the capillary pressure is poorly defined, though). Also, this pressure sets the datum of pressure for deformable porous media and must be set in a manner compatible with the solid-stress values on the boundaries of the porous matrix.</p>
 </section>
 <section id="id8">
-<h3><strong>References</strong><a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id8" title="Permalink to this headline">#</a></h3>
 <p>GT-008.2: Porous Media Capabilities/Tutorial for GOMA. User Guidance for Saturated
 Porous Penetration Problems, August 11, 1999, P. R. Schunk</p>
 <p>GT-009.3: GOMA’s Capabilities for Partially Saturated Flow in Porous Media,
@@ -3743,12 +3740,12 @@ September 1, 2002, P. R. Schunk</p>
 </section>
 </section>
 <section id="porous-gas">
-<h2><strong>POROUS_GAS</strong><a class="headerlink" href="#porous-gas" title="Permalink to this headline">¶</a></h2>
+<h2><strong>POROUS_GAS</strong><a class="headerlink" href="#porous-gas" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">POROUS_GAS</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer_list</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id9">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id9" title="Permalink to this headline">#</a></h3>
 <p><strong>(SIC/POR_LIQ_PRES)</strong></p>
 <p>This boundary condition card is used to equate flux of solvent in the porous medium
 and external gas. The condition is similar to the solid-liquid interface conditions that
@@ -3795,28 +3792,28 @@ database.</p></td>
 </table>
 </section>
 <section id="id10">
-<h3><strong>Examples</strong><a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id10" title="Permalink to this headline">#</a></h3>
 <p>Users are referred to the Cairncross (1999) reference for the best example of card
 usage.</p>
 </section>
 <section id="id11">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id11" title="Permalink to this headline">#</a></h3>
 <p>This highly specialized boundary condition is best explained in a paper by Cairncross
 (1999).</p>
 </section>
 <section id="id12">
-<h3><strong>References</strong><a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id12" title="Permalink to this headline">#</a></h3>
 <p>GTM-028.0: Modeling Drying of Dip-Coated Films with Strongly-Coupled Gas Phase
 Natural Convection, R. A. Cairncross, 1999.</p>
 </section>
 </section>
 <section id="porous-gas-flux-const">
-<h2><strong>POROUS_GAS_FLUX_CONST</strong><a class="headerlink" href="#porous-gas-flux-const" title="Permalink to this headline">¶</a></h2>
+<h2><strong>POROUS_GAS_FLUX_CONST</strong><a class="headerlink" href="#porous-gas-flux-const" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">POROUS_GAS_FLUX_CONST</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="id13">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id13" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/POR_GAS_PRES)</strong></p>
 <p>This boundary condition card is used to set the flux of gas-phase solvent to a constant
 value in the Galerkin finite element weak sense. Specifically, this flux is applied to a
@@ -3859,7 +3856,7 @@ of the Dirichlet type.</p></td>
 </table>
 </section>
 <section id="id14">
-<h3><strong>Examples</strong><a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id14" title="Permalink to this headline">#</a></h3>
 <p>The input card</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">POROUS_LIQ_FLUX_CONST</span> <span class="n">SS</span> <span class="mi">102</span> <span class="mf">200.0</span>
 </pre></div>
@@ -3868,7 +3865,7 @@ of the Dirichlet type.</p></td>
 102.</p>
 </section>
 <section id="id15">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id15" title="Permalink to this headline">#</a></h3>
 <p>This boundary condition is of the mathematical form:</p>
 <figure class="align-center">
 <a class="reference internal image-reference" href="../../_images/173_goma_physics.png"><img alt="../../_images/173_goma_physics.png" src="../../_images/173_goma_physics.png" style="width: 90%;" /></a>
@@ -3884,12 +3881,12 @@ Note that this sets the flux relative to the boundary motion to the <em>const</e
 </section>
 </section>
 <section id="porous-conv">
-<h2><strong>POROUS_CONV</strong><a class="headerlink" href="#porous-conv" title="Permalink to this headline">¶</a></h2>
+<h2><strong>POROUS_CONV</strong><a class="headerlink" href="#porous-conv" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">POROUS_CONV</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id16">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id16" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/POR_LIQ_PRES)</strong></p>
 <p>This boundary condition is used to set the total flux of the liquid phase solvent (in both the gas and liquid phase) at the surface of a <em>POROUS_UNSATURATED</em> or
 <em>POROUS_TWO_PHASE</em> medium to the net convection of solvent due to a
@@ -3924,7 +3921,7 @@ of 11/2/01 is not active, so set to zero).</p></td>
 </table>
 </section>
 <section id="id17">
-<h3><strong>Examples</strong><a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id17" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">POROUS_CONV</span> <span class="n">SS</span> <span class="mi">12</span> <span class="mi">0</span>
 </pre></div>
@@ -3933,7 +3930,7 @@ of 11/2/01 is not active, so set to zero).</p></td>
 species number is currently not used and ignored.</p>
 </section>
 <section id="id18">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id18" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id18" title="Permalink to this headline">#</a></h3>
 <p>This boundary condition has the following form</p>
 <figure class="align-center">
 <a class="reference internal image-reference" href="../../_images/174_goma_physics.png"><img alt="../../_images/174_goma_physics.png" src="../../_images/174_goma_physics.png" style="width: 90%;" /></a>
@@ -3948,7 +3945,7 @@ single component of that solvent. Also, as of 11/02/01 the condition has not bee
 tested.</p>
 </section>
 <section id="id19">
-<h3><strong>References</strong><a class="headerlink" href="#id19" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id19" title="Permalink to this headline">#</a></h3>
 <p>GT-008.2: Porous Media Capabilities/Tutorial for GOMA. User Guidance for Saturated
 Porous Penetration Problems, August 11, 1999, P. R. Schunk</p>
 <p>GT-009.3: GOMA’s Capabilities for Partially Saturated Flow in Porous Media,
@@ -3956,12 +3953,12 @@ September 1, 2002, P. R. Schunk</p>
 </section>
 </section>
 <section id="porous-flux">
-<h2><strong>POROUS_FLUX</strong><a class="headerlink" href="#porous-flux" title="Permalink to this headline">¶</a></h2>
+<h2><strong>POROUS_FLUX</strong><a class="headerlink" href="#porous-flux" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">POROUS_FLUX</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id20">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id20" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id20" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/POR_LIQ_PRES)</strong></p>
 <p>This boundary condition is used to set the total flux of the liquid phase solvent (in both the gas and liquid phase) at the surface of a <em>POROUS_UNSATURATED</em> or
 <em>POROUS_TWO_PHASE</em> medium to mass transfer coefficient times driving force (see
@@ -4015,7 +4012,7 @@ of M/L/t.</p></td>
 </table>
 </section>
 <section id="id21">
-<h3><strong>Examples</strong><a class="headerlink" href="#id21" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id21" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">POROUS_FLUX</span> <span class="n">SS</span> <span class="mi">12</span> <span class="mi">0</span> <span class="mf">0.03</span> <span class="mf">0.</span> <span class="mf">0.</span> <span class="mf">0.</span> <span class="mf">0.</span>
 </pre></div>
@@ -4026,7 +4023,7 @@ boundary condition is applied to side set 12 and to the species number 0. This s
 number is currently not used and ignored.</p>
 </section>
 <section id="id22">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id22" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id22" title="Permalink to this headline">#</a></h3>
 <p>The mathematical form for this boundary condition is as follows</p>
 <figure class="align-center">
 <a class="reference internal image-reference" href="../../_images/175_goma_physics.png"><img alt="../../_images/175_goma_physics.png" src="../../_images/175_goma_physics.png" style="width: 90%;" /></a>
@@ -4047,7 +4044,7 @@ drips off or disappears, as liquid is not allowed to be sucked back in (Heavisid
 function, <em>H</em>), although the condition could be furbished for this.</p>
 </section>
 <section id="id23">
-<h3><strong>References</strong><a class="headerlink" href="#id23" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id23" title="Permalink to this headline">#</a></h3>
 <p>GT-008.2: Porous Media Capabilities/Tutorial for GOMA. User Guidance for Saturated
 Porous Penetration Problems, August 11, 1999, P. R. Schunk</p>
 <p>GT-009.3: GOMA’s Capabilities for Partially Saturated Flow in Porous Media,
@@ -4055,12 +4052,12 @@ September 1, 2002, P. R. Schunk</p>
 </section>
 </section>
 <section id="porous-pressure">
-<h2><strong>POROUS_PRESSURE</strong><a class="headerlink" href="#porous-pressure" title="Permalink to this headline">¶</a></h2>
+<h2><strong>POROUS_PRESSURE</strong><a class="headerlink" href="#porous-pressure" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">POROUS_PRESSURE</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer2</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id24">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id24" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id24" title="Permalink to this headline">#</a></h3>
 <p><strong>(PCC/POR_LIQ_PRES)</strong></p>
 <p>This condition enforces a continuous fluid-phase pressure between material types, and
 is applied to a side set between two materials, one of type <em>POROUS_SATURATED,
@@ -4096,7 +4093,7 @@ EXODUS II) in the problem domain.</p></td>
 </table>
 </section>
 <section id="id25">
-<h3><strong>Examples</strong><a class="headerlink" href="#id25" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id25" title="Permalink to this headline">#</a></h3>
 <p>An example input card for this boundary condition follows:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">POROUS_PRESSURE</span> <span class="n">NS</span> <span class="mi">101</span>   <span class="mi">1</span>   <span class="mi">2</span>
 </pre></div>
@@ -4106,7 +4103,7 @@ element block 1 equal to the continuous phase hydrodynamic pressure (<em>P</em> 
 EXODUS II file) in element block 2.</p>
 </section>
 <section id="id26">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id26" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id26" title="Permalink to this headline">#</a></h3>
 <p>The mathematical form for this boundary condition is as follows</p>
 <figure class="align-center">
 <a class="reference internal image-reference" href="../../_images/176_goma_physics.png"><img alt="../../_images/176_goma_physics.png" src="../../_images/176_goma_physics.png" style="width: 90%;" /></a>
@@ -4119,7 +4116,7 @@ datum in the continuous phase, and that effects the level of the Saturation vers
 capillary pressure curve (see <em>Saturation</em> material card).</p>
 </section>
 <section id="id27">
-<h3><strong>References</strong><a class="headerlink" href="#id27" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id27" title="Permalink to this headline">#</a></h3>
 <p>GT-008.2: Porous Media Capabilities/Tutorial for GOMA. User Guidance for Saturated
 Porous Penetration Problems, August 11, 1999, P. R. Schunk</p>
 <p>GT-009.3: GOMA’s Capabilities for Partially Saturated Flow in Porous Media,
@@ -4127,12 +4124,12 @@ September 1, 2002, P. R. Schunk</p>
 </section>
 </section>
 <section id="p-liq-user">
-<h2><strong>P_LIQ_USER</strong><a class="headerlink" href="#p-liq-user" title="Permalink to this headline">¶</a></h2>
+<h2><strong>P_LIQ_USER</strong><a class="headerlink" href="#p-liq-user" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">P_LIQ_USER</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id28">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id28" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id28" title="Permalink to this headline">#</a></h3>
 <p><strong>(PCC/R_POR_LIQ_PRES)</strong></p>
 <p>This boundary condition card is used to call a routine for a user-defined liquid-phase
 pressure for porous flow problems at an external boundary of a material of one of the
@@ -4169,28 +4166,28 @@ appropriate C function in file user_bc.c.</p></td>
 </table>
 </section>
 <section id="id29">
-<h3><strong>Examples</strong><a class="headerlink" href="#id29" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id29" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample input card with two parameters passed to function tuser:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span><span class="n">P_LIQ_USER</span> <span class="n">SS</span> <span class="mi">100</span>   <span class="mf">273.13</span> <span class="mf">100.0</span>
 </pre></div>
 </div>
 </section>
 <section id="id30">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id30" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id30" title="Permalink to this headline">#</a></h3>
 <p>No Discussion.</p>
 </section>
 <section id="id31">
-<h3><strong>References</strong><a class="headerlink" href="#id31" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id31" title="Permalink to this headline">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="porous-temperature">
-<h2><strong>POROUS_TEMPERATURE</strong><a class="headerlink" href="#porous-temperature" title="Permalink to this headline">¶</a></h2>
+<h2><strong>POROUS_TEMPERATURE</strong><a class="headerlink" href="#porous-temperature" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">POROUS_TEMPERATURE</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="id32">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id32" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id32" title="Permalink to this headline">#</a></h3>
 <p><strong>(DC/POR_TEMP)</strong></p>
 <p>This Dirichlet boundary condition is used to set the temperature for a nonisothermal
 porous media problem at a node set. It can be applied to a node set on a boundary of a
@@ -4230,7 +4227,7 @@ as a parameter in automatic continuation sequences</em>.</p></td>
 </table>
 </section>
 <section id="id33">
-<h3><strong>Examples</strong><a class="headerlink" href="#id33" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id33" title="Permalink to this headline">#</a></h3>
 <p>An example input card for this boundary condition follows:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">POROUS_TEMPERATURE</span> <span class="n">NS</span> <span class="mi">101</span>   <span class="mf">1.0</span>   <span class="mf">1.0</span>
 </pre></div>
@@ -4240,14 +4237,14 @@ as a parameter in automatic continuation sequences</em>.</p></td>
 apply this condition in a residual form.</p>
 </section>
 <section id="id34">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id34" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id34" title="Permalink to this headline">#</a></h3>
 <p>This condition is used to set a temperature boundary condition for nonisothermal
 porous media problems, viz. problems that use the R_POR_ENERGY equation (called
 <em>EQ = porous_energy</em>). This energy equation is written in multiphase enthalpy form
 and hence requires a different equatioin that for continuous media.</p>
 </section>
 <section id="id35">
-<h3><strong>References</strong><a class="headerlink" href="#id35" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id35" title="Permalink to this headline">#</a></h3>
 <p>GT-008.2: Porous Media Capabilities/Tutorial for GOMA. User Guidance for Saturated
 Porous Penetration Problems, August 11, 1999, P. R. Schunk</p>
 <p>GT-009.3: GOMA’s Capabilities for Partially Saturated Flow in Porous Media,
@@ -4284,8 +4281,9 @@ September 1, 2002, P. R. Schunk</p>
       </div>
     </div>
   
-    <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -4296,7 +4294,7 @@ September 1, 2002, P. R. Schunk</p>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     

@@ -8,26 +8,23 @@
 
     <title>Category 17: Acoustic Equations &#8212; Goma User Manual 7.0.0 documentation</title>
     
-    <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/pydata-sphinx-theme.css" />
     
-    <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
@@ -44,7 +41,7 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -3103,7 +3100,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage pt-5 pb-3">
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -3233,15 +3230,15 @@
               <div>
                 
   <section id="category-17-acoustic-equations">
-<h1>Category 17: Acoustic Equations<a class="headerlink" href="#category-17-acoustic-equations" title="Permalink to this headline">¶</a></h1>
+<h1>Category 17: Acoustic Equations<a class="headerlink" href="#category-17-acoustic-equations" title="Permalink to this headline">#</a></h1>
 <p>These boundary conditions are applied to acoustic equations (Preal, Pimag, Reyn_stress).</p>
 <section id="apr">
-<h2>APR<a class="headerlink" href="#apr" title="Permalink to this headline">¶</a></h2>
+<h2>APR<a class="headerlink" href="#apr" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">APR</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="description-usage">
-<h3>Description / Usage<a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h3>
+<h3>Description / Usage<a class="headerlink" href="#description-usage" title="Permalink to this headline">#</a></h3>
 <p><strong>(DC/ACOUS_PREAL)</strong></p>
 <p>This Dirichlet boundary condition card is used to set constant amplitude of the
 real part of the acoustic pressure. Definitions of the input parameters are as
@@ -3268,7 +3265,7 @@ continuation sequences</em>.</p>
 </dl>
 </section>
 <section id="examples">
-<h3><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">APR</span> <span class="n">NS</span> <span class="mi">100</span> <span class="mf">1000.0</span>
 </pre></div>
@@ -3277,12 +3274,12 @@ continuation sequences</em>.</p>
 </section>
 <hr class="docutils" />
 <section id="apr-plane-tran">
-<h2><strong>APR_PLANE_TRAN</strong><a class="headerlink" href="#apr-plane-tran" title="Permalink to this headline">¶</a></h2>
+<h2><strong>APR_PLANE_TRAN</strong><a class="headerlink" href="#apr-plane-tran" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">APR_PLANE_TRAN</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id1">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id1" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/SCALAR ACOUS_PREAL)</strong></p>
 <p>This boundary condition card applies the plane wave transmission conditions to the acoustic wave equations. This card concerns the real part while API_PLANE_TRAN concerns the imaginary component. This condition is used to set reflection/ transmission conditions for a surrounded material that is not being meshed. Definitions of the input parameters are as follows:</p>
 <dl class="simple">
@@ -3301,14 +3298,14 @@ speed) in the surrounded material.</p>
 </dl>
 </section>
 <section id="id2">
-<h3><strong>Examples</strong><a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id2" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">APR_PLANE_TRAN</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">0.1</span>
 </pre></div>
 </div>
 </section>
 <section id="technical-discussion">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">#</a></h3>
 <p>This condition should be used to account for transmission/reflection conditions for the external boundaries when the acoustic wave equation is used. It reflects characteristics for an acoustic wave encountering a planar interface between two materials;</p>
 <figure class="align-center">
 <a class="reference internal image-reference" href="../../_images/254_goma_physics.png"><img alt="../../_images/254_goma_physics.png" src="../../_images/254_goma_physics.png" style="width: 90%;" /></a>
@@ -3319,12 +3316,12 @@ speed) in the surrounded material.</p>
 </section>
 <hr class="docutils" />
 <section id="api">
-<h2><strong>API</strong><a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h2>
+<h2><strong>API</strong><a class="headerlink" href="#api" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">API</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="id3">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id3" title="Permalink to this headline">#</a></h3>
 <p><strong>(DC/ACOUS_PIMAG)</strong></p>
 <p>This Dirichlet boundary condition card is used to set constant amplitude of the
 imaginary part of the acoustic pressure. Definitions of the input parameters are as follows:</p>
@@ -3350,7 +3347,7 @@ continuation sequences</em>.</p>
 </dl>
 </section>
 <section id="id4">
-<h3><strong>Examples</strong><a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id4" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">API</span> <span class="n">NS</span> <span class="mi">100</span> <span class="mf">1000.0</span>
 </pre></div>
@@ -3359,12 +3356,12 @@ continuation sequences</em>.</p>
 </section>
 <hr class="docutils" />
 <section id="api-plane-tran">
-<h2><strong>API_PLANE_TRAN</strong><a class="headerlink" href="#api-plane-tran" title="Permalink to this headline">¶</a></h2>
+<h2><strong>API_PLANE_TRAN</strong><a class="headerlink" href="#api-plane-tran" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">API_PLANE_TRAN</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id5">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id5" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/SCALAR ACOUS_PIMAG)</strong></p>
 <p>This boundary condition card applies the plane wave transmission conditions to the acoustic wave equations. This card concerns the imaginary part while
 APR_PLANE_TRAN concerns the real component. This condition is used to set
@@ -3385,14 +3382,14 @@ speed) in the surrounded material.</p>
 </dl>
 </section>
 <section id="id6">
-<h3><strong>Examples</strong><a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id6" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">API_PLANE_TRAN</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">0.1</span>
 </pre></div>
 </div>
 </section>
 <section id="id7">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id7" title="Permalink to this headline">#</a></h3>
 <p>This condition should be used to account for transmission/reflection conditions for the external boundaries when the acoustic wave equation is used. It reflects characteristics for an acoustic wave encountering a planar interface between two materials;</p>
 <figure class="align-center">
 <a class="reference internal image-reference" href="../../_images/255_goma_physics.png"><img alt="../../_images/255_goma_physics.png" src="../../_images/255_goma_physics.png" style="width: 90%;" /></a>
@@ -3431,8 +3428,9 @@ speed) in the surrounded material.</p>
       </div>
     </div>
   
-    <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -3443,7 +3441,7 @@ speed) in the surrounded material.</p>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     

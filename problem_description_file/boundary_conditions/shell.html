@@ -8,26 +8,23 @@
 
     <title>Category 16: Shell Equations &#8212; Goma User Manual 7.0.0 documentation</title>
     
-    <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/pydata-sphinx-theme.css" />
     
-    <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
@@ -44,7 +41,7 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -3103,7 +3100,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage pt-5 pb-3">
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -3817,16 +3814,16 @@
               <div>
                 
   <section id="category-16-shell-equations">
-<h1>Category 16: Shell Equations<a class="headerlink" href="#category-16-shell-equations" title="Permalink to this headline">¶</a></h1>
+<h1>Category 16: Shell Equations<a class="headerlink" href="#category-16-shell-equations" title="Permalink to this headline">#</a></h1>
 <p>These boundary conditions are applied to shell equations, a special category of equations
 applied on 1D boundaries of 2D surfaces in Goma.</p>
 <section id="shell-surface-charge">
-<h2><strong>SHELL_SURFACE_CHARGE</strong><a class="headerlink" href="#shell-surface-charge" title="Permalink to this headline">¶</a></h2>
+<h2><strong>SHELL_SURFACE_CHARGE</strong><a class="headerlink" href="#shell-surface-charge" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SHELL_SURFACE_CHARGE</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="description-usage">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/POTENTIAL)</strong></p>
 <p>This boundary condition card is used to add to the potential equation the surface charge
 term at a shell surface. Definitions of the input parameters are as follows:</p>
@@ -3860,7 +3857,7 @@ implemented).</p></td>
 <p>This boundary condition is currently inoperative.</p>
 </section>
 <section id="examples">
-<h3><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h3>
 <p>For a system consisting of a solid material (element block ID 1) with a conducting shell
 surface (element block ID 2) whose location coincides with side set 20, the following is
 a sample usage:</p>
@@ -3869,7 +3866,7 @@ a sample usage:</p>
 </div>
 </section>
 <section id="technical-discussion">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">#</a></h3>
 <p>This boundary condition was originally developed to allow for fluid slip near a
 dynamic contact line, a necessary condition for dynamic wetting line motion when the
 contact angle is not 180 degrees (viz. rolling motion condition). The slippage
@@ -3884,12 +3881,12 @@ E = –<span class="math notranslate nohighlight">\(\Delta\)</span> V is the ele
 </section>
 </section>
 <section id="shell-surface-charge-sic">
-<h2><strong>SHELL_SURFACE_CHARGE_SIC</strong><a class="headerlink" href="#shell-surface-charge-sic" title="Permalink to this headline">¶</a></h2>
+<h2><strong>SHELL_SURFACE_CHARGE_SIC</strong><a class="headerlink" href="#shell-surface-charge-sic" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SHELL_SURFACE_CHARGE_SIC</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id1">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id1" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/POTENTIAL)</strong></p>
 <p>This boundary condition card is used to add to the potential equation the surface charge
 term at a shell surface. Physically it is the same as the SHELL_SURFACE_CHARGE
@@ -3926,7 +3923,7 @@ ID from which to apply the boundary condition
 <p>This boundary condition is currently inoperative…</p>
 </section>
 <section id="id2">
-<h3><strong>Examples</strong><a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id2" title="Permalink to this headline">#</a></h3>
 <p>For a system consisting of a solid material (element block ID 1) with a conducting shell
 surface (element block ID 2) whose location coincides with side set 20, the following is
 a sample usage:</p>
@@ -3935,7 +3932,7 @@ a sample usage:</p>
 </div>
 </section>
 <section id="id3">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id3" title="Permalink to this headline">#</a></h3>
 <dl class="simple">
 <dt>This boundary condition applies a surface charge balance along the shell</dt><dd><p>surface.. In its most general form, this balance is written</p>
 </dd>
@@ -3948,12 +3945,12 @@ a sample usage:</p>
 </section>
 </section>
 <section id="surface-electric-field">
-<h2><strong>SURFACE_ELECTRIC_FIELD</strong><a class="headerlink" href="#surface-electric-field" title="Permalink to this headline">¶</a></h2>
+<h2><strong>SURFACE_ELECTRIC_FIELD</strong><a class="headerlink" href="#surface-electric-field" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SURFACE_ELECTRIC_FIELD</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id4">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id4" title="Permalink to this headline">#</a></h3>
 <p><strong>(WSG/SURFACE CHARGE)</strong></p>
 <p>This boundary condition card is used to apply a part of the shell surface charge
 equation which includes the electric field, the negative gradient of the potential
@@ -3990,14 +3987,14 @@ applied.</p></td>
 <p>This boundary condition is currently inoperative…</p>
 </section>
 <section id="id5">
-<h3><strong>Examples</strong><a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id5" title="Permalink to this headline">#</a></h3>
 <p>For a system consisting of a solid material (element block ID 1) with a conducting shell surface (element block ID 2) whose location coincides with side set 20, the following is a sample usage:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SURFACE_ELECTRIC_FIELD</span> <span class="n">SS</span> <span class="mi">20</span> <span class="mi">1</span> <span class="mi">2</span>
 </pre></div>
 </div>
 </section>
 <section id="id6">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id6" title="Permalink to this headline">#</a></h3>
 <p>This is a special type of boundary condition, WEAK_SHELL_GRAD, which is a
 portion of a shell equation which involves spatial gradients of bulk variables. Since the
 values of bulk variable gradients depend on all of the degrees of freedom of that
@@ -4011,17 +4008,17 @@ and its potential sensitivities are evaluated within the bulk
 element for inclusion in the surface charge balance along the shell surface.. I</p>
 </section>
 <section id="references">
-<h3><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="sh-tens">
-<h2><strong>SH_TENS</strong><a class="headerlink" href="#sh-tens" title="Permalink to this headline">¶</a></h2>
+<h2><strong>SH_TENS</strong><a class="headerlink" href="#sh-tens" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SH_TENS</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="id7">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id7" title="Permalink to this headline">#</a></h3>
 <p><strong>(DC/shell_tension)</strong></p>
 <p>This Dirichlet boundary condition specification is used to set a tension (in
 stress per unit length) to the inextensible shell equations (see EQ =
@@ -4065,7 +4062,7 @@ automatic continuation sequences</em>.</p></td>
 </table>
 </section>
 <section id="id8">
-<h3><strong>Examples</strong><a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id8" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample card for applying a Dirichlet condition on the tension for a shell equation:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SH_TENS</span> <span class="n">NS</span> <span class="mi">100</span> <span class="mf">10.</span>
 </pre></div>
@@ -4073,21 +4070,21 @@ automatic continuation sequences</em>.</p></td>
 <p>This condition sets a tension of 10.0 at Nodeset 100.</p>
 </section>
 <section id="id9">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id9" title="Permalink to this headline">#</a></h3>
 <p>No Discussion.</p>
 </section>
 <section id="id10">
-<h3><strong>References</strong><a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id10" title="Permalink to this headline">#</a></h3>
 <p>GT-027.1: GOMA’s Shell Structure Capability: User Tutorial (GT-027.1)</p>
 </section>
 </section>
 <section id="sh-k">
-<h2><strong>SH_K</strong><a class="headerlink" href="#sh-k" title="Permalink to this headline">¶</a></h2>
+<h2><strong>SH_K</strong><a class="headerlink" href="#sh-k" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SH_K</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="id11">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id11" title="Permalink to this headline">#</a></h3>
 <p><strong>(DC/shell_curvature)</strong></p>
 <p>This Dirichlet boundary condition specification is used to set a curvature to the inextensible shell equations (see EQ = shell_tension and EQ = shell_curvature) at an endpoint. This boundary condition can be applied in two dimensions only, and only to the endpoint of a bar-type element:</p>
 <table class="table">
@@ -4127,7 +4124,7 @@ automatic continuation sequences</em>.</p></td>
 </table>
 </section>
 <section id="id12">
-<h3><strong>Examples</strong><a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id12" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample card for applying a Dirichlet condition on the curvature for a shell equation:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SH_K</span> <span class="n">NS</span> <span class="mi">100</span> <span class="mf">0.</span>
 </pre></div>
@@ -4135,21 +4132,21 @@ automatic continuation sequences</em>.</p></td>
 <p>This condition sets a curvature of zero at Nodeset 100.</p>
 </section>
 <section id="id13">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id13" title="Permalink to this headline">#</a></h3>
 <p>No Discussion.</p>
 </section>
 <section id="id14">
-<h3><strong>References</strong><a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id14" title="Permalink to this headline">#</a></h3>
 <p>GT-027.1: GOMA’s Shell Structure Capability: User Tutorial (GT-027.1)</p>
 </section>
 </section>
 <section id="sh-fluid-stress">
-<h2><strong>SH_FLUID_STRESS</strong><a class="headerlink" href="#sh-fluid-stress" title="Permalink to this headline">¶</a></h2>
+<h2><strong>SH_FLUID_STRESS</strong><a class="headerlink" href="#sh-fluid-stress" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SH_FLUID_STRESS</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="nb">float</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id15">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id15" title="Permalink to this headline">#</a></h3>
 <p><strong>(PCC/VECTOR MOMENTUM)</strong></p>
 <p>Used for fluid-structure interaction problems with structural shell elements, the <em>SH_FLUID_STRESS</em> condition equates the normal traction (the tangential and normal force components, per unit area) between adjacent fluid and solid structure. This condition is only to be used on boundaries between regions of ARBITRARY mesh motion with fluid momentum equations: see <em>Mesh Motion</em> and <em>EQ</em> cards. With this boundary condition, the local residual and Jacobian contributions from the fluid mechanics momentum equations (on the <em>ARBITRARY</em> side of the boundary) are added into weak form of the residual and Jacobian entries for the solid structural equations (<em>see EQ = shell_curvature and EQ = shell_tension</em>). All elements on both sides of the interface must have the same element type, i.e., the same order of interpolation and basis functions, e.g., Q1 fluid and Q1 (bar element) for shell. Q2 fluid momentum and Q2 (bar element) for the shell equations. Also, such interfaces must be defined as a
 mesh side set attached to the bulk fluid elements (most mesh generators will not allow for side sets in bar or sheet elements).</p>
@@ -4181,7 +4178,7 @@ nondimensional treatment.</p></td>
 </table>
 </section>
 <section id="id16">
-<h3><strong>Examples</strong><a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id16" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SH_FLUID_STRESS</span> <span class="n">SS</span> <span class="mi">5</span> <span class="mf">1.0</span>
 </pre></div>
@@ -4193,7 +4190,7 @@ nondimensional treatment.</p></td>
 <p>should also be applied.</p>
 </section>
 <section id="id17">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id17" title="Permalink to this headline">#</a></h3>
 <p>The functional form of the boundary condition is:</p>
 <figure class="align-center">
 <a class="reference internal image-reference" href="../../_images/247_goma_physics.png"><img alt="../../_images/247_goma_physics.png" src="../../_images/247_goma_physics.png" style="width: 90%;" /></a>
@@ -4211,7 +4208,7 @@ be supplemented by a statement of mass conservation across the interface, which 
 depend on whether the solid phase is of <em>CONTINUOUS</em> or <em>POROUS</em> media (see <em>Media Type</em> card).</p>
 </section>
 <section id="faqs">
-<h3><strong>FAQs</strong><a class="headerlink" href="#faqs" title="Permalink to this headline">¶</a></h3>
+<h3><strong>FAQs</strong><a class="headerlink" href="#faqs" title="Permalink to this headline">#</a></h3>
 <ul class="simple">
 <li><p><strong>Troubleshooting 1:</strong> This boundary condition requires that the side set
 contain elements from both the fluid and the solid side of the interface. For the FASTQ tool, this is the default case; for CUBIT and possibly other related tools, this can be forced on the side set definition options. Interestingly, the boundary condition does work if the side set is attached to the fluid phase only, but just due to the way in which it is applied.</p></li>
@@ -4221,19 +4218,19 @@ set of conditions is being applied, look at the BC_dup.txt file for nodes along 
 </ul>
 </section>
 <section id="id18">
-<h3><strong>References</strong><a class="headerlink" href="#id18" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id18" title="Permalink to this headline">#</a></h3>
 <p>GT-003.1: Roll coating templates and tutorial for GOMA and SEAMS, February 29,
 2000, P. R. Schunk and Matt Stay</p>
 <p>GT-006.3: Slot and Roll coating with remeshing templates and tutorial for GOMA and CUBIT/MAPVAR, August 3, 1999, R. R. Lober and P. R. Schunk</p>
 </section>
 </section>
 <section id="lub-press">
-<h2><strong>LUB_PRESS</strong><a class="headerlink" href="#lub-press" title="Permalink to this headline">¶</a></h2>
+<h2><strong>LUB_PRESS</strong><a class="headerlink" href="#lub-press" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LUB_PRESS</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id19">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id19" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id19" title="Permalink to this headline">#</a></h3>
 <p>This boundary condition card applies a lubrication pressure to the boundary of a shellelement sheet. The corresponding equation is EQ=lubp. The boundary condition is applied to a node set.</p>
 <table class="table">
 <colgroup>
@@ -4270,7 +4267,7 @@ parameter in automatic continuation sequences.</p></td>
 </table>
 </section>
 <section id="id20">
-<h3><strong>Examples</strong><a class="headerlink" href="#id20" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id20" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LUB_PRESS</span> <span class="n">NS</span>   <span class="mi">100</span> <span class="mf">100.</span>
 </pre></div>
@@ -4278,19 +4275,19 @@ parameter in automatic continuation sequences.</p></td>
 <p>This condition applies a lubrication pressure of 100.0 at nodeset 100.</p>
 </section>
 <section id="id21">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id21" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id21" title="Permalink to this headline">#</a></h3>
 <p>The equation applied at the specified nodeset in place of Reynold’s lubrication
 equation for confined flow. Note that it is not to be used for the film-flow
 lubrication equations.</p>
 </section>
 </section>
 <section id="grad-lub-press">
-<h2><strong>GRAD_LUB_PRESS</strong><a class="headerlink" href="#grad-lub-press" title="Permalink to this headline">¶</a></h2>
+<h2><strong>GRAD_LUB_PRESS</strong><a class="headerlink" href="#grad-lub-press" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">GRAD_LUB_PRESS</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id22">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id22" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id22" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/R_LUBP)</strong></p>
 <p>This boundary condition card applies <em>free</em> boundary condition, akin to Papanastasiou et al. (1992) for the fluid momentum, at the boundary of a shell-element sheet. The boundary condition is applied to a sideset.</p>
 <table class="table">
@@ -4318,7 +4315,7 @@ set in EXODUS II) in the problem domain.</p></td>
 </table>
 </section>
 <section id="id23">
-<h3><strong>Examples</strong><a class="headerlink" href="#id23" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id23" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">GRAD_LUB_PRESS</span> <span class="n">SS</span>   <span class="mi">100</span> <span class="mf">0.</span>
 </pre></div>
@@ -4326,17 +4323,17 @@ set in EXODUS II) in the problem domain.</p></td>
 <p>This condition applied at sideset 100.</p>
 </section>
 <section id="id24">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id24" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id24" title="Permalink to this headline">#</a></h3>
 <p>No Discussion.</p>
 </section>
 </section>
 <section id="shell-filmp">
-<h2><strong>SHELL_FILMP</strong><a class="headerlink" href="#shell-filmp" title="Permalink to this headline">¶</a></h2>
+<h2><strong>SHELL_FILMP</strong><a class="headerlink" href="#shell-filmp" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SHELL_FILMP</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id25">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id25" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id25" title="Permalink to this headline">#</a></h3>
 <p>This boundary condition card applies a film pressure to the boundary of a shell-element sheet. The corresponding equation is EQ=shell_filmp. The boundary condition is applied to a node set.</p>
 <table class="table">
 <colgroup>
@@ -4374,7 +4371,7 @@ parameter in automatic continuation sequences.</p></td>
 </table>
 </section>
 <section id="id26">
-<h3><strong>Examples</strong><a class="headerlink" href="#id26" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id26" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SHELL_FILMP</span> <span class="n">NS</span>   <span class="mi">100</span> <span class="mf">100.</span>
 </pre></div>
@@ -4382,17 +4379,17 @@ parameter in automatic continuation sequences.</p></td>
 <p>This condition applies a film pressure of 100.0 at nodeset 100.</p>
 </section>
 <section id="id27">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id27" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id27" title="Permalink to this headline">#</a></h3>
 <p>The equation applied at the specified nodeset in place of the film-flow lubrication equation.</p>
 </section>
 </section>
 <section id="shell-filmh">
-<h2><strong>SHELL_FILMH</strong><a class="headerlink" href="#shell-filmh" title="Permalink to this headline">¶</a></h2>
+<h2><strong>SHELL_FILMH</strong><a class="headerlink" href="#shell-filmh" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SHELL_FILMH</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id28">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id28" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id28" title="Permalink to this headline">#</a></h3>
 <p><strong>(DC/R_SHELL_FILMH)</strong></p>
 <p>This boundary condition card applies a film height to the boundary of a shell-element sheet. The corresponding equation is EQ=shell_filmh. The boundary condition is applied to a node set.</p>
 <table class="table">
@@ -4430,7 +4427,7 @@ parameter in automatic continuation sequences.</p></td>
 </table>
 </section>
 <section id="id29">
-<h3><strong>Examples</strong><a class="headerlink" href="#id29" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id29" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SHELL_FILMH</span> <span class="n">NS</span>   <span class="mi">100</span> <span class="mf">1.</span>
 </pre></div>
@@ -4438,18 +4435,18 @@ parameter in automatic continuation sequences.</p></td>
 <p>This condition applies a film height of 1.0 at nodeset 100.</p>
 </section>
 <section id="id30">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id30" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id30" title="Permalink to this headline">#</a></h3>
 <p>The equation applied at the specified nodeset in place of the film-flow height
 equation.</p>
 </section>
 </section>
 <section id="shell-partc">
-<h2><strong>SHELL_PARTC</strong><a class="headerlink" href="#shell-partc" title="Permalink to this headline">¶</a></h2>
+<h2><strong>SHELL_PARTC</strong><a class="headerlink" href="#shell-partc" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SHELL_PARTC</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id31">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id31" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id31" title="Permalink to this headline">#</a></h3>
 <p><strong>(DC/R_SHELL_PARTC)</strong></p>
 <p>This boundary condition card applies a particle volume fraction to the boundary of a shell-element sheet. The corresponding equation is EQ=shell_filmh. The boundary condition is applied to a node set.</p>
 <table class="table">
@@ -4487,7 +4484,7 @@ parameter in automatic continuation sequences.</p></td>
 </table>
 </section>
 <section id="id32">
-<h3><strong>Examples</strong><a class="headerlink" href="#id32" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id32" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SHELL_PARTC</span> <span class="n">NS</span>   <span class="mi">100</span> <span class="mf">0.</span>
 </pre></div>
@@ -4495,21 +4492,21 @@ parameter in automatic continuation sequences.</p></td>
 <p>This condition applies a particles volume fractioin of 0.0 at nodeset 100.</p>
 </section>
 <section id="id33">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id33" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id33" title="Permalink to this headline">#</a></h3>
 <p>The equation applied at the specified nodeset in place of the particles conservation equation.</p>
 </section>
 <section id="id34">
-<h3><strong>References</strong><a class="headerlink" href="#id34" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id34" title="Permalink to this headline">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="shell-grad-fp">
-<h2><strong>SHELL_GRAD_FP</strong><a class="headerlink" href="#shell-grad-fp" title="Permalink to this headline">¶</a></h2>
+<h2><strong>SHELL_GRAD_FP</strong><a class="headerlink" href="#shell-grad-fp" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">BC</span> <span class="o">=</span> <span class="n">SHELL_GRAD_FP</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id35">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id35" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id35" title="Permalink to this headline">#</a></h3>
 <p><strong>(SIC/R_SHELL_GRAD_FP)</strong></p>
 <p>This boundary condition card applies a volumetric flux of liquid film to the boundary of a shell-element sheet. The corresponding equation is EQ=shell_filmp. The boundary condition is applied to a node set.</p>
 <table class="table">
@@ -4537,7 +4534,7 @@ set in EXODUS II) in the problem domain.</p></td>
 </table>
 </section>
 <section id="id36">
-<h3><strong>Examples</strong><a class="headerlink" href="#id36" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id36" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SSHELL_GRAD_FP</span> <span class="n">SS</span>   <span class="mi">100</span> <span class="mf">0.0</span>
 </pre></div>
@@ -4545,7 +4542,7 @@ set in EXODUS II) in the problem domain.</p></td>
 <p>This condition applies a particles volume flux of 0.0 at nodeset 100.</p>
 </section>
 <section id="id37">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id37" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id37" title="Permalink to this headline">#</a></h3>
 <p>The actual weighted residual equation that is applied to node on the surface is</p>
 <figure class="align-center">
 <a class="reference internal image-reference" href="../../_images/248_goma_physics.png"><img alt="../../_images/248_goma_physics.png" src="../../_images/248_goma_physics.png" style="width: 90%;" /></a>
@@ -4556,12 +4553,12 @@ the surface, and q is the volumetric flux specified in the &lt;float1&gt;. Caref
 </section>
 </section>
 <section id="shell-grad-fp-nobc">
-<h2><strong>SHELL_GRAD_FP_NOBC</strong><a class="headerlink" href="#shell-grad-fp-nobc" title="Permalink to this headline">¶</a></h2>
+<h2><strong>SHELL_GRAD_FP_NOBC</strong><a class="headerlink" href="#shell-grad-fp-nobc" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">BC</span> <span class="o">=</span> <span class="n">SHELL_GRAD_FP_NOBC</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id38">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id38" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id38" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/R_SHELL_GRAD_FP_NOBC)</strong></p>
 <p>This boundary condition card applies <em>free</em> boundary condition, akin to Papanastasiou et al. (1992) for the fluid momentum, at the boundary of a shell-element sheet. The boundary condition is applied to a sideset.</p>
 <table class="table">
@@ -4586,7 +4583,7 @@ set in EXODUS II) in the problem domain.</p></td>
 </table>
 </section>
 <section id="id39">
-<h3><strong>Examples</strong><a class="headerlink" href="#id39" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id39" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SSHELL_GRAD_FP_NOBC</span> <span class="n">SS</span>   <span class="mi">100</span>
 </pre></div>
@@ -4594,7 +4591,7 @@ set in EXODUS II) in the problem domain.</p></td>
 <p>This condition applied at sideset 100.</p>
 </section>
 <section id="id40">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id40" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id40" title="Permalink to this headline">#</a></h3>
 <ul class="simple">
 <li><p>The finite element formulation of the first equation of the film profile
 equation boundary integral in the form of</p></li>
@@ -4609,12 +4606,12 @@ that the condition is now a weak integrated condition that is <em>added</em> to 
 </section>
 </section>
 <section id="shell-grad-fh">
-<h2><strong>SHELL_GRAD_FH</strong><a class="headerlink" href="#shell-grad-fh" title="Permalink to this headline">¶</a></h2>
+<h2><strong>SHELL_GRAD_FH</strong><a class="headerlink" href="#shell-grad-fh" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">BC</span> <span class="o">=</span> <span class="n">SHELL_GRAD_FH</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id41">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id41" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id41" title="Permalink to this headline">#</a></h3>
 <p><strong>(SIC/R_SHELL_GRAD_FH)</strong></p>
 <p>This boundary condition card sets a slope to the liquid film at the boundary of a shellelement sheet. The corresponding equation is EQ=shell_filmh. The boundary condition is applied to a node set.</p>
 <table class="table">
@@ -4642,7 +4639,7 @@ set in EXODUS II) in the problem domain.</p></td>
 </table>
 </section>
 <section id="id42">
-<h3><strong>Examples</strong><a class="headerlink" href="#id42" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id42" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SSHELL_GRAD_FH</span> <span class="n">SS</span>   <span class="mi">100</span> <span class="mf">0.0</span>
 </pre></div>
@@ -4650,7 +4647,7 @@ set in EXODUS II) in the problem domain.</p></td>
 <p>This condition applies a film slope of 0.0 at nodeset 100.</p>
 </section>
 <section id="id43">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id43" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id43" title="Permalink to this headline">#</a></h3>
 <ul class="simple">
 <li><p>he actual weighted residual equation that is applied to node on the surface
 is</p></li>
@@ -4666,12 +4663,12 @@ the surface, <span class="math notranslate nohighlight">\(\Sigma\)</span> and is
 </section>
 </section>
 <section id="shell-grad-fh-nobc">
-<h2><strong>SHELL_GRAD_FH_NOBC</strong><a class="headerlink" href="#shell-grad-fh-nobc" title="Permalink to this headline">¶</a></h2>
+<h2><strong>SHELL_GRAD_FH_NOBC</strong><a class="headerlink" href="#shell-grad-fh-nobc" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">BC</span> <span class="o">=</span> <span class="n">SHELL_GRAD_FH_NOBC</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id44">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id44" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id44" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/R_SHELL_GRAD_FH_NOBC)</strong></p>
 <p>This boundary condition card applies <em>free</em> boundary condition, akin to Papanastasiou et al. (1992) for the fluid momentum, at the boundary of a shell-element sheet, in terms of the slope of a thin Reynolds film. The boundary condition is applied to a sideset.</p>
 <table class="table">
@@ -4696,7 +4693,7 @@ set in EXODUS II) in the problem domain.</p></td>
 </table>
 </section>
 <section id="id45">
-<h3><strong>Examples</strong><a class="headerlink" href="#id45" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id45" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SSHELL_GRAD_FH_NOBC</span> <span class="n">SS</span>   <span class="mi">100</span>
 </pre></div>
@@ -4704,7 +4701,7 @@ set in EXODUS II) in the problem domain.</p></td>
 <p>This condition applied at sideset 100.</p>
 </section>
 <section id="id46">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id46" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id46" title="Permalink to this headline">#</a></h3>
 <ul class="simple">
 <li><p>The finite element formulation of the second equation of film profile
 equation generates boundary integral in the form of</p></li>
@@ -4721,12 +4718,12 @@ specified.</p></li>
 </section>
 </section>
 <section id="shell-grad-pc">
-<h2><strong>SHELL_GRAD_PC</strong><a class="headerlink" href="#shell-grad-pc" title="Permalink to this headline">¶</a></h2>
+<h2><strong>SHELL_GRAD_PC</strong><a class="headerlink" href="#shell-grad-pc" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">BC</span> <span class="o">=</span> <span class="n">SHELL_GRAD_PC</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id47">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id47" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id47" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/R_SHELL_GRAD_PC)</strong></p>
 <p>This boundary condition card allows the user to set volumetric flux of particles inside liquid film at the boundary of a shell-element sheet. The corresponding equation is EQ=shell_partc. The boundary condition is applied to a side set.</p>
 <table class="table">
@@ -4754,7 +4751,7 @@ set in EXODUS II) in the problem domain.</p></td>
 </table>
 </section>
 <section id="id48">
-<h3><strong>Examples</strong><a class="headerlink" href="#id48" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id48" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SHELL_GRAD_PC</span> <span class="n">SS</span>   <span class="mi">100</span> <span class="mf">1.</span>
 </pre></div>
@@ -4762,7 +4759,7 @@ set in EXODUS II) in the problem domain.</p></td>
 <p>This condition applied at sideset 100. and sets a particle flux to 1.0</p>
 </section>
 <section id="id49">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id49" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id49" title="Permalink to this headline">#</a></h3>
 <ul class="simple">
 <li><p>The actual weighted residual equation that is applied to node on the surface
 is</p></li>
@@ -4777,12 +4774,12 @@ is</p></li>
 </section>
 </section>
 <section id="shell-lubp-solid">
-<h2><strong>SHELL_LUBP_SOLID</strong><a class="headerlink" href="#shell-lubp-solid" title="Permalink to this headline">¶</a></h2>
+<h2><strong>SHELL_LUBP_SOLID</strong><a class="headerlink" href="#shell-lubp-solid" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SH_LUBP_SOLID</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id50">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id50" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id50" title="Permalink to this headline">#</a></h3>
 <p><strong>(WIC/R_MESH1/R_MESH2/RMESH3)</strong></p>
 <p>This vector boundary condition card balances the stress in an abutting continuum elastic solid with the lubrication forces (pressure and shear) in a surface shell. The boundary condition is applied to a sideset. Please see notes below on the sideset features which must be specified.</p>
 <table class="table">
@@ -4812,7 +4809,7 @@ nondimensionalization.</p></td>
 </table>
 </section>
 <section id="id51">
-<h3><strong>Examples</strong><a class="headerlink" href="#id51" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id51" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SH_LUBP_SOLID</span> <span class="n">SS</span>   <span class="mi">100</span> <span class="mf">1.0</span>
 </pre></div>
@@ -4820,7 +4817,7 @@ nondimensionalization.</p></td>
 <p>This boundary condition is applied at sideset 100.</p>
 </section>
 <section id="id52">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id52" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id52" title="Permalink to this headline">#</a></h3>
 <ul class="simple">
 <li><p>The mathematical form of the boundary condition is</p></li>
 </ul>
@@ -4837,12 +4834,12 @@ attached to the continuum domain and not the shell face, as those faces (top and
 </section>
 </section>
 <section id="shell-temp">
-<h2><strong>SHELL_TEMP</strong><a class="headerlink" href="#shell-temp" title="Permalink to this headline">¶</a></h2>
+<h2><strong>SHELL_TEMP</strong><a class="headerlink" href="#shell-temp" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SHELL_TEMP</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id53">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id53" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id53" title="Permalink to this headline">#</a></h3>
 <p><strong>(DC/R_SHELL_ENERGY)</strong></p>
 <p>This boundary condition card applies a shell temperature to the boundary of a shellelement sheet. The corresponding equation is EQ=shell_energy. The boundary
 condition is applied to a node set.</p>
@@ -4881,7 +4878,7 @@ parameter in automatic continuation sequences.</p></td>
 </table>
 </section>
 <section id="id54">
-<h3><strong>Examples</strong><a class="headerlink" href="#id54" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id54" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SHELL_TEMP</span> <span class="mi">100</span> <span class="mf">1.0</span>
 </pre></div>
@@ -4889,19 +4886,19 @@ parameter in automatic continuation sequences.</p></td>
 <p>This boundary condition is applied at nodeset 100.</p>
 </section>
 <section id="id55">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id55" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id55" title="Permalink to this headline">#</a></h3>
 <ul class="simple">
 <li><p>The equation applied at the specified nodeset in place of the
 shell-temperature equation.</p></li>
 </ul>
 </section>
 <section id="id56">
-<h3><strong>References</strong><a class="headerlink" href="#id56" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id56" title="Permalink to this headline">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="shell-open-press-shell-open-press-2">
-<h2><strong>SHELL_OPEN_PRESS, SHELL_OPEN_PRESS_2</strong><a class="headerlink" href="#shell-open-press-shell-open-press-2" title="Permalink to this headline">¶</a></h2>
+<h2><strong>SHELL_OPEN_PRESS, SHELL_OPEN_PRESS_2</strong><a class="headerlink" href="#shell-open-press-shell-open-press-2" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SHELL_OPEN_PRESS</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
@@ -4909,7 +4906,7 @@ shell-temperature equation.</p></li>
 </pre></div>
 </div>
 <section id="id57">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id57" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id57" title="Permalink to this headline">#</a></h3>
 <p><strong>(DC/R_SHELL_SAT_OPEN or SHELL_SAT_OPEN_2)</strong></p>
 <p>This Dirichlet boundary condition card applies a shell liquid phase pressure to the boundary of a shell-element sheet. The corresponding equation is EQ=shell_sat_open or correspondingly shell_sat_open_2, depending on which layer. The boundary condition is applied to a node set.</p>
 <table class="table">
@@ -4948,7 +4945,7 @@ parameter in automatic continuation sequences.</p></td>
 </table>
 </section>
 <section id="id58">
-<h3><strong>Examples</strong><a class="headerlink" href="#id58" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id58" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SHELL_OPEN_PRESS</span> <span class="mi">100</span> <span class="mf">1.0</span>
 </pre></div>
@@ -4956,24 +4953,24 @@ parameter in automatic continuation sequences.</p></td>
 <p>This boundary condition is applied at nodeset 100.</p>
 </section>
 <section id="id59">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id59" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id59" title="Permalink to this headline">#</a></h3>
 <ul class="simple">
 <li><p>The equation applied at the specified nodeset in place of the shell-sat-open
 equation.</p></li>
 </ul>
 </section>
 <section id="id60">
-<h3><strong>References</strong><a class="headerlink" href="#id60" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id60" title="Permalink to this headline">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="lubp-sh-fp-flux">
-<h2><strong>LUBP_SH_FP_FLUX</strong><a class="headerlink" href="#lubp-sh-fp-flux" title="Permalink to this headline">¶</a></h2>
+<h2><strong>LUBP_SH_FP_FLUX</strong><a class="headerlink" href="#lubp-sh-fp-flux" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">C</span> <span class="o">=</span> <span class="n">LUBP_SH_FP_FLUX</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">int1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">int2</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id61">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id61" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id61" title="Permalink to this headline">#</a></h3>
 <p><strong>(COLLOC/R_SHELL_FILMP)</strong></p>
 <p>This boundary condition card matches the mass flux in one region of confined flow (lubp) to the mass flux from a second region of film flow (shell_filmp). The flux matching is handled as a sideset between two shell regions. In this way both equations can be coupled for exit or entrance flows. The boundary condition is applied in collocated form, and replaces the R_SHELL_FILMP equation.</p>
 <table class="table">
@@ -5006,7 +5003,7 @@ shell_filmp equation.</p></td>
 </table>
 </section>
 <section id="id62">
-<h3><strong>Examples</strong><a class="headerlink" href="#id62" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id62" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LUBP_SH_FP_FLUX</span> <span class="n">SS</span>   <span class="mi">100</span> <span class="mi">2</span> <span class="mi">1</span>
 </pre></div>
@@ -5014,17 +5011,17 @@ shell_filmp equation.</p></td>
 <p>This condition applies the matching tie condition at a side set boundary between block 2 (which invokes the EQ = lubp equation) and block 1 (which invokes the EQ=shell_filmp equation).</p>
 </section>
 <section id="id63">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id63" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id63" title="Permalink to this headline">#</a></h3>
 <p>The best example of the use of this equation is the exit of a metered coating flow. It must be used together with a pressure-matching condition LUBP_SH_FP_MATCH.</p>
 </section>
 </section>
 <section id="lubp-sh-fp-match">
-<h2><strong>LUBP_SH_FP_MATCH</strong><a class="headerlink" href="#lubp-sh-fp-match" title="Permalink to this headline">¶</a></h2>
+<h2><strong>LUBP_SH_FP_MATCH</strong><a class="headerlink" href="#lubp-sh-fp-match" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">C</span> <span class="o">=</span> <span class="n">LUBP_SH_FP_MATCH</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">int1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">int2</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id64">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id64" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id64" title="Permalink to this headline">#</a></h3>
 <p><strong>(STRONG_INT_SURF/R_LUBP)</strong></p>
 <p>This boundary condition card matches the pressure in one region of confined flow (lubp) to the pressure from a second region of film flow (shell_filmp). The pressure matching is handled as a sideset between two shell regions. In this way both equations can be coupled for exit or entrance flows. The boundary condition is applied in collocated form, and replaces the R_LUBP equation.</p>
 <table class="table">
@@ -5057,7 +5054,7 @@ shell_filmp equation.</p></td>
 </table>
 </section>
 <section id="id65">
-<h3><strong>Examples</strong><a class="headerlink" href="#id65" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id65" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LUBP_SH_FP_MATCH</span> <span class="n">SS</span>   <span class="mi">100</span> <span class="mi">2</span> <span class="mi">1</span>
 </pre></div>
@@ -5065,7 +5062,7 @@ shell_filmp equation.</p></td>
 <p>This condition applies the matching tie condition at a side set boundary between block 2 (which invokes the EQ = lubp equation) and block 1 (which invokes the EQ=lubp equation).</p>
 </section>
 <section id="id66">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id66" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id66" title="Permalink to this headline">#</a></h3>
 <p>The best example of the use of this equation is the exit of a metered coating flow. It must be used together with a flux-matching condition LUBP_SH_FP_FLUX.</p>
 </section>
 </section>
@@ -5099,8 +5096,9 @@ shell_filmp equation.</p></td>
       </div>
     </div>
   
-    <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -5111,7 +5109,7 @@ shell_filmp equation.</p></td>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     

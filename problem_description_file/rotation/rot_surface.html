@@ -8,26 +8,23 @@
 
     <title>ROT SURFACE &#8212; Goma User Manual 7.0.0 documentation</title>
     
-    <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/pydata-sphinx-theme.css" />
     
-    <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
@@ -43,7 +40,7 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -3102,7 +3099,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage pt-5 pb-3">
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -3158,13 +3155,13 @@
               <div>
                 
   <section id="rot-surface">
-<h1><strong>ROT SURFACE</strong><a class="headerlink" href="#rot-surface" title="Permalink to this headline">¶</a></h1>
+<h1><strong>ROT SURFACE</strong><a class="headerlink" href="#rot-surface" title="Permalink to this headline">#</a></h1>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="n">ROT</span> <span class="o">=</span> <span class="p">{</span><span class="n">MESH</span> <span class="o">|</span> <span class="n">MOM</span><span class="p">}</span> <span class="n">SURFACE</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">string_x</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">int_x</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">string_y</span><span class="o">&gt;</span>
 <span class="o">&lt;</span><span class="n">int_y</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">string_z</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">int_z</span><span class="o">&gt;</span> <span class="p">{</span><span class="n">seed_method</span><span class="p">}</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float3</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="description-usage">
-<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">#</a></h2>
 <p>This rotation specification card identifies a specific surface that requires rotation of equations for proper application of boundary conditions in three dimensional problems. It identifies the boundary conditions that are to be applied on that surface. It also identifies which equation components are to be replaced by boundary conditions, which are to be replaced by rotated equation components, and which are to be left alone. Equation components refer, currently, to only rotation of mesh and momentum equations. This card also identifies the manner in which two independent tangent vectors are to be determined on the surface.</p>
 <p>Definitions of the first three input parameters are as follows:</p>
 <table class="table">
@@ -3394,7 +3391,7 @@ reseed tangent calculation in the adjacent elements.
 </table>
 </section>
 <section id="examples">
-<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h2>
 <p>The following are several examples of useful rotation specifications for surfaces:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ROT</span> <span class="o">=</span> <span class="n">MESH</span>   <span class="n">SURFACE</span>   <span class="mi">99</span>   <span class="n">KINEMATIC</span>   <span class="mi">99</span>   <span class="n">T2</span>   <span class="mi">0</span>   <span class="n">T1</span>   <span class="mi">0</span>   <span class="n">BASIS_RESEED</span>
 </pre></div>
@@ -3408,14 +3405,14 @@ reseed tangent calculation in the adjacent elements.
 <p>The first example applies to the mesh equations at side set 99, the second to mesh equations at side set 16, and the third to the fluid momentum equations at side set 5. As described previously, the &lt;string_x&gt;, &lt;string_y&gt; and &lt;string_z&gt; parameters can be any boundary condition name or rotation string. Thus for the first example above, the x-component of the mesh equation is replaced by a KINEMATIC boundary condition on side set 99, the y-component of the mesh equation is replaced by the second tangential component (T2) of the mesh equation, and the z-component of the mesh equation is replaced by the first tangential component (T1) of the mesh equation. Since the rotation selections in the first example (T2 and T1) are rotated components instead of boundary conditions, a value of zero for the &lt;int_y&gt; and &lt;int_z&gt; parameters is appropriate. Finally, for the first example, BASIS_RESEED was chosen as the {seed_method}, and thus no subsequent parameters were required. The second example, however, uses SEED as the {seed_method} and thus is followed by the x, y, and z components of the tangent vector, respectively, as &lt;float1&gt; of 1., &lt;float2&gt; of 0., and &lt;float3&gt; of 0.</p>
 </section>
 <section id="technical-discussion">
-<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">#</a></h2>
 <p>The necessary background discussing the nature and need for rotation procedures and rotation specifications is supplied in several of the references listed below. Briefly, however, in order to apply certain boundary conditions accurately it is necessary that the vector components of the solid mesh or fluid momentum equations be replaced by components that are tangent and normal to the surface in question. This procedure is referred to in this context as “rotation of equations.” It should be noted that explicitly specifying rotation conditions is really only necessary for three dimensional problems. Rotation also occurs in two-dimensional problems, but is sufficiently simpler that it can be automated and is therefore transparent to the user.</p>
 <p>Not every boundary condition needs an accompanying rotation specification card and those that do are identified in the description of each boundary condition. Each rotated boundary condition will require at least one SURFACE rotation card be included for the boundary condition’s side set. Failure to do so is an error. The boundary conditions most often encountered that will require rotation cards are the <em>VELO_NORMAL</em> card applied to the fluid momentum equations and the <em>KINEMATIC, PLANE</em>, and <em>SPLINE</em> cards applied to the solid mesh equations.</p>
 <p>In almost every case the boundary condition constraint will replace the normal rotated component so only the two tangential components of the rotated equation remain. All three examples shown above are just this situation. This has the effect of constraining the normal motion of the solid or fluid and imposing zero tangential forces due to the natural boundary conditions present in both fluid and solid momentum equations.</p>
 <p>Specification of a seed vector method is needed so that a unique pair of tangent vectors may be determined at each point on the surface. The BASIS, BASIS_FIRST and BASIS_RESEED use the finite element grid in the surface as a means of defining the first tangent vector. They can employ averaging over elements that share a node. They should be employed on surfaces for which it is difficult to find a single consistent seed vector for every point on the surface. The SEED method finds the projection of the vector supplied in the surface at the point of interest. This projection vector is normalized to obtain the first tangent vector. It should be clear that only vectors that are never normal to any point on the surface will be suitable. In practice, this condition can sometimes be hard to meet for some surfaces. In these cases, the other seeding methods should be used.</p>
 </section>
 <section id="references">
-<h2><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<h2><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">#</a></h2>
 <p>GT-007.2: Tutorial on droplet on incline problem, July 30, 1999, T. A. Baer</p>
 <p>GT-012.0: 3D Roll coating template and tutorial for GOMA, February 21, 2000, P.R. Schunk</p>
 <p>GT-018.1: ROT card tutorial, January 22, 2001, T. A. Baer</p>
@@ -3450,8 +3447,9 @@ reseed tangent calculation in the adjacent elements.
       </div>
     </div>
   
-    <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -3462,7 +3460,7 @@ reseed tangent calculation in the adjacent elements.
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     

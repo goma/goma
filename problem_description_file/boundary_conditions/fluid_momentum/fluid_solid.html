@@ -8,26 +8,23 @@
 
     <title>FLUID_SOLID &#8212; Goma User Manual 7.0.0 documentation</title>
     
-    <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/styles/pydata-sphinx-theme.css" />
     
-    <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
     <script src="../../../_static/jquery.js"></script>
     <script src="../../../_static/underscore.js"></script>
@@ -42,7 +39,7 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -123,7 +120,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage pt-5 pb-3">
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -186,12 +183,12 @@
               <div>
                 
   <section id="fluid-solid">
-<h1><strong>FLUID_SOLID</strong><a class="headerlink" href="#fluid-solid" title="Permalink to this headline">¶</a></h1>
+<h1><strong>FLUID_SOLID</strong><a class="headerlink" href="#fluid-solid" title="Permalink to this headline">#</a></h1>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">FLUID_SOLID</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer2</span><span class="o">&gt;</span> <span class="p">[</span><span class="nb">float</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="description-usage">
-<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">#</a></h2>
 <p><strong>(PCC/VECTOR MOMENTUM)</strong></p>
 <p>Used for fluid-structure interaction problems, the <em>FLUID_SOLID</em> condition equates the
 normal traction (the tangential and normal force components, per unit area) between
@@ -242,7 +239,7 @@ contribution, is optional; the default is 1.0.</p></td>
 </table>
 </section>
 <section id="examples">
-<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h2>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">FLUID_SOLID</span> <span class="n">SS</span> <span class="mi">5</span>   <span class="mi">2</span>   <span class="mi">1</span>
 </pre></div>
@@ -256,7 +253,7 @@ condition of the form</p>
 <p>should also be applied.</p>
 </section>
 <section id="technical-discussion">
-<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">#</a></h2>
 <p>The functional form of the boundary condition is:</p>
 <figure class="align-center">
 <a class="reference internal image-reference" href="../../../_images/114_goma_physics.png"><img alt="../../../_images/114_goma_physics.png" src="../../../_images/114_goma_physics.png" style="width: 90%;" /></a>
@@ -275,7 +272,7 @@ depend on whether the solid phase is of <em>CONTINUOUS</em> or <em>POROUS</em> m
 Type</em> card).</p>
 </section>
 <section id="faqs">
-<h2><strong>FAQs</strong><a class="headerlink" href="#faqs" title="Permalink to this headline">¶</a></h2>
+<h2><strong>FAQs</strong><a class="headerlink" href="#faqs" title="Permalink to this headline">#</a></h2>
 <p><strong>Troubleshooting 1</strong>: This boundary condition requires that the side set contain elements
 from both the fluid and the solid side of the interface. For the FASTQ tool, this is the
 default case; for CUBIT and possibly other related tools, this can be forced on the side
@@ -291,7 +288,7 @@ set of conditions is being applied, look at the BC_dup.txt file for nodes along 
 interface.</p>
 </section>
 <section id="references">
-<h2><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<h2><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">#</a></h2>
 <p>GT-003.1: Roll coating templates and tutorial for GOMA and SEAMS, February 29,
 2000, P. R. Schunk and Matt Stay</p>
 <p>GT-006.3: Slot and Roll coating with remeshing templates and tutorial for GOMA and
@@ -313,8 +310,9 @@ CUBIT/MAPVAR, August 3, 1999, R. R. Lober and P. R. Schunk</p>
       </div>
     </div>
   
-    <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -325,7 +323,7 @@ CUBIT/MAPVAR, August 3, 1999, R. R. Lober and P. R. Schunk</p>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     

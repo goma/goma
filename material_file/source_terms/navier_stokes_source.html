@@ -8,26 +8,23 @@
 
     <title>Navier-Stokes Source &#8212; Goma User Manual 7.0.0 documentation</title>
     
-    <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/pydata-sphinx-theme.css" />
     
-    <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
@@ -43,7 +40,7 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -3102,7 +3099,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage pt-5 pb-3">
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -3158,12 +3155,12 @@
               <div>
                 
   <section id="navier-stokes-source">
-<h1><strong>Navier-Stokes Source</strong><a class="headerlink" href="#navier-stokes-source" title="Permalink to this headline">¶</a></h1>
+<h1><strong>Navier-Stokes Source</strong><a class="headerlink" href="#navier-stokes-source" title="Permalink to this headline">#</a></h1>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Navier</span><span class="o">-</span><span class="n">Stokes</span> <span class="n">Source</span> <span class="o">=</span> <span class="p">{</span><span class="n">model_name</span><span class="p">}</span> <span class="p">{</span><span class="n">float_list</span><span class="p">}</span> <span class="p">[</span><span class="n">varies</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="description-usage">
-<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">#</a></h2>
 <p>This required card is used to specify the model for the fluid momentum source term
 vector in the Navier-Stokes equations. Gravitational and buoyancy effects often enter
 through this card.</p>
@@ -3426,7 +3423,7 @@ stress gradient multiplier, where:</p>
 <p>WARNING: Make sure the equation term multipliers for the source terms are set to unity.</p>
 </section>
 <section id="examples">
-<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h2>
 <p>Following are some sample input cards:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Navier</span><span class="o">-</span><span class="n">Stokes</span> <span class="n">Source</span> <span class="o">=</span> <span class="n">BOUSS</span> <span class="mf">0.</span> <span class="o">-</span><span class="mf">980.</span> <span class="mf">0.</span>
 <span class="n">Navier</span><span class="o">-</span><span class="n">Stokes</span> <span class="n">Source</span> <span class="o">=</span> <span class="n">LEVEL_SET</span> <span class="mf">0.</span> <span class="o">-</span><span class="mf">980.</span> <span class="mf">0.</span>
@@ -3434,7 +3431,7 @@ stress gradient multiplier, where:</p>
 </div>
 </section>
 <section id="technical-discussion">
-<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">#</a></h2>
 <p>This section contains user guidance, and theoretical background when appropriate, for
 each of the options for Navier-Stokes Source models.</p>
 <table class="table">
@@ -3656,7 +3653,7 @@ momentum source models.</p>
 equation are set to unity.</p>
 </section>
 <section id="references">
-<h2><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<h2><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">#</a></h2>
 <p>Gartling, D. K., TORO II - A Finite Element Computer Program for Nonlinear Quasi-
 Static Problems in Electromagnetics, Part I - Theoretical Background, SAND95-2472,
 Sandia National Laboratories, Albuquerque, NM, May 1996.</p>
@@ -3691,8 +3688,9 @@ Sandia National Laboratories, Albuquerque, NM, May 1996.</p>
       </div>
     </div>
   
-    <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -3703,7 +3701,7 @@ Sandia National Laboratories, Albuquerque, NM, May 1996.</p>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     

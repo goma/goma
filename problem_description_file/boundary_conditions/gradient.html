@@ -8,26 +8,23 @@
 
     <title>Category 10: Gradient Equations &#8212; Goma User Manual 7.0.0 documentation</title>
     
-    <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/pydata-sphinx-theme.css" />
     
-    <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
@@ -43,7 +40,7 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -3102,7 +3099,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage pt-5 pb-3">
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -3463,15 +3460,15 @@
               <div>
                 
   <section id="category-10-gradient-equations">
-<h1>Category 10: Gradient Equations<a class="headerlink" href="#category-10-gradient-equations" title="Permalink to this headline">¶</a></h1>
+<h1>Category 10: Gradient Equations<a class="headerlink" href="#category-10-gradient-equations" title="Permalink to this headline">#</a></h1>
 <p>As companion equations to the viscoelastic stress equations, a continuous velocity gradient is determined through the so-called Velocity Gradient Equations. These boundary conditions are of the Dirichlet type and can be used to put conditions on this class of equations.</p>
 <section id="g11">
-<h2><strong>G11</strong><a class="headerlink" href="#g11" title="Permalink to this headline">¶</a></h2>
+<h2><strong>G11</strong><a class="headerlink" href="#g11" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">G11</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="description-usage">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">#</a></h3>
 <p><strong>(DC/GRADIENT11)</strong></p>
 <p>This Dirichlet boundary condition specification is used to set a constant xx-velocity
 gradient component of the velocity gradient tensor. Definitions of the input parameters
@@ -3511,7 +3508,7 @@ automatic continuation sequences</em>.</p></td>
 </table>
 </section>
 <section id="examples">
-<h3><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample card for applying a Dirichlet condition on the xx-velocity
 gradient component on node set 100:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">G11</span> <span class="n">NS</span> <span class="mi">100</span>   <span class="mf">5.0</span>
@@ -3524,7 +3521,7 @@ gradient component on node set 100:</p>
 condition.</p>
 </section>
 <section id="technical-discussion">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">#</a></h3>
 <p>We solve a simple least squares equation to determine the continuous velocity gradient
 <em>G</em> from the velocity field. This is done so that we may have a differentiable field to get
 estimates of the second derivative of the velocity field for applications in complex
@@ -3541,18 +3538,18 @@ gradient tensor and its use for solving viscoelastic flow problems, please see R
 (2000).</p>
 </section>
 <section id="references">
-<h3><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">#</a></h3>
 <p>GT-014.1: Tutorial for Running Viscoelastic Flow Problems with GOMA, June 21,
 2000, R. R. Rao</p>
 </section>
 </section>
 <section id="g12">
-<h2><strong>G12</strong><a class="headerlink" href="#g12" title="Permalink to this headline">¶</a></h2>
+<h2><strong>G12</strong><a class="headerlink" href="#g12" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">G12</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="id1">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id1" title="Permalink to this headline">#</a></h3>
 <p><strong>(DC/GRADIENT12)</strong></p>
 <p>This Dirichlet boundary condition specification is used to set a constant xy-velocity
 gradient component of the velocity gradient tensor. Definitions of the input parameters
@@ -3592,7 +3589,7 @@ automatic continuation sequences</em>.</p></td>
 </table>
 </section>
 <section id="id2">
-<h3><strong>Examples</strong><a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id2" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card for applying a Dirichlet condition on the xy-velocity
 gradient component on node set 100:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">G12</span> <span class="n">NS</span> <span class="mi">100</span>   <span class="mf">5.0</span>
@@ -3605,7 +3602,7 @@ gradient component on node set 100:</p>
 condition.</p>
 </section>
 <section id="id3">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id3" title="Permalink to this headline">#</a></h3>
 <p>We solve a simple least squares equation to determine the continuous velocity gradient
 <em>G</em> from the velocity field. This is done so that we may have a differentiable field to get
 estimates of the second derivative of the velocity field for applications in complex
@@ -3622,18 +3619,18 @@ gradient tensor and its use for solving viscoelastic flow problems, please see R
 (2000).</p>
 </section>
 <section id="id4">
-<h3><strong>References</strong><a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id4" title="Permalink to this headline">#</a></h3>
 <p>GT-014.1: Tutorial for Running Viscoelastic Flow Problems with GOMA, June 21,
 2000, R. R. Rao</p>
 </section>
 </section>
 <section id="g13">
-<h2><strong>G13</strong><a class="headerlink" href="#g13" title="Permalink to this headline">¶</a></h2>
+<h2><strong>G13</strong><a class="headerlink" href="#g13" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">G13</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="id5">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id5" title="Permalink to this headline">#</a></h3>
 <p><strong>(DC/GRADIENT13)</strong></p>
 <p>This Dirichlet boundary condition specification is used to set a constant xz-velocity
 gradient component of the velocity gradient tensor. Definitions of the input parameters
@@ -3673,7 +3670,7 @@ automatic continuation sequences</em>.</p></td>
 </table>
 </section>
 <section id="id6">
-<h3><strong>Examples</strong><a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id6" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample card for applying a Dirichlet condition on the xz-velocity
 gradient component on node set 100:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">G13</span> <span class="n">NS</span> <span class="mi">100</span>   <span class="mf">5.0</span>
@@ -3686,7 +3683,7 @@ gradient component on node set 100:</p>
 condition.</p>
 </section>
 <section id="id7">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id7" title="Permalink to this headline">#</a></h3>
 <p>We solve a simple least squares equation to determine the continuous velocity gradient
 <em>G</em> from the velocity field. This is done so that we may have a differentiable field to get
 estimates of the second derivative of the velocity field for applications in complex
@@ -3703,18 +3700,18 @@ gradient tensor and its use for solving viscoelastic flow problems, please see R
 (2000).</p>
 </section>
 <section id="id8">
-<h3><strong>References</strong><a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id8" title="Permalink to this headline">#</a></h3>
 <p>GT-014.1: Tutorial for Running Viscoelastic Flow Problems with GOMA, June 21,
 2000, R. R. Rao</p>
 </section>
 </section>
 <section id="g21">
-<h2><strong>G21</strong><a class="headerlink" href="#g21" title="Permalink to this headline">¶</a></h2>
+<h2><strong>G21</strong><a class="headerlink" href="#g21" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">G21</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="id9">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id9" title="Permalink to this headline">#</a></h3>
 <p><strong>(DC/GRADIENT21)</strong></p>
 <p>This Dirichlet boundary condition specification is used to set a constant yx-velocity
 gradient component of the velocity gradient tensor. Definitions of the input parameters
@@ -3754,7 +3751,7 @@ automatic continuation sequences</em>.</p></td>
 </table>
 </section>
 <section id="id10">
-<h3><strong>Examples</strong><a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id10" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample card for applying a Dirichlet condition on the yx-velocity
 gradient component on node set 100:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">G21</span> <span class="n">NS</span> <span class="mi">100</span>   <span class="mf">5.0</span>
@@ -3767,7 +3764,7 @@ gradient component on node set 100:</p>
 condition.</p>
 </section>
 <section id="id11">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id11" title="Permalink to this headline">#</a></h3>
 <p>We solve a simple least squares equation to determine the continuous velocity gradient
 <em>G</em> from the velocity field. This is done so that we may have a differentiable field to get
 estimates of the second derivative of the velocity field for applications in complex
@@ -3784,18 +3781,18 @@ gradient tensor and its use for solving viscoelastic flow problems, please see R
 (2000).</p>
 </section>
 <section id="id12">
-<h3><strong>References</strong><a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id12" title="Permalink to this headline">#</a></h3>
 <p>GT-014.1: Tutorial for Running Viscoelastic Flow Problems with GOMA, June 21,
 2000, R. R. Rao</p>
 </section>
 </section>
 <section id="g22">
-<h2><strong>G22</strong><a class="headerlink" href="#g22" title="Permalink to this headline">¶</a></h2>
+<h2><strong>G22</strong><a class="headerlink" href="#g22" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">G22</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="id13">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id13" title="Permalink to this headline">#</a></h3>
 <p><strong>(DC/GRADIENT22)</strong></p>
 <p>This Dirichlet boundary condition specification is used to set a constant yy-velocity
 gradient component of the velocity gradient tensor. Definitions of the input parameters
@@ -3835,7 +3832,7 @@ automatic continuation sequences</em>.</p></td>
 </table>
 </section>
 <section id="id14">
-<h3><strong>Examples</strong><a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id14" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample card for applying a Dirichlet condition on the yy-velocity
 gradient component on node set 100:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">G22</span> <span class="n">NS</span> <span class="mi">100</span>   <span class="mf">5.0</span>
@@ -3848,7 +3845,7 @@ gradient component on node set 100:</p>
 condition.</p>
 </section>
 <section id="id15">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id15" title="Permalink to this headline">#</a></h3>
 <p>We solve a simple least squares equation to determine the continuous velocity gradient
 <em>G</em> from the velocity field. This is done so that we may have a differentiable field to get
 estimates of the second derivative of the velocity field for applications in complex
@@ -3865,18 +3862,18 @@ gradient tensor and its use for solving viscoelastic flow problems, please see R
 (2000).</p>
 </section>
 <section id="id16">
-<h3><strong>References</strong><a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id16" title="Permalink to this headline">#</a></h3>
 <p>GT-014.1: Tutorial for Running Viscoelastic Flow Problems with GOMA, June 21,
 2000, R. R. Rao</p>
 </section>
 </section>
 <section id="g23">
-<h2><strong>G23</strong><a class="headerlink" href="#g23" title="Permalink to this headline">¶</a></h2>
+<h2><strong>G23</strong><a class="headerlink" href="#g23" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">G23</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="id17">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id17" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id17" title="Permalink to this headline">#</a></h3>
 <p><strong>(DC/GRADIENT23)</strong></p>
 <p>This Dirichlet boundary condition specification is used to set a constant yz-velocity
 gradient component of the velocity gradient tensor. Definitions of the input parameters
@@ -3916,7 +3913,7 @@ automatic continuation sequences</em>.</p></td>
 </table>
 </section>
 <section id="id18">
-<h3><strong>Examples</strong><a class="headerlink" href="#id18" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id18" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample card for applying a Dirichlet condition on the yz-velocity
 gradient component on node set 100:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">G23</span> <span class="n">NS</span> <span class="mi">100</span>   <span class="mf">5.0</span>
@@ -3929,7 +3926,7 @@ gradient component on node set 100:</p>
 condition.</p>
 </section>
 <section id="id19">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id19" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id19" title="Permalink to this headline">#</a></h3>
 <p>We solve a simple least squares equation to determine the continuous velocity gradient
 <em>G</em> from the velocity field. This is done so that we may have a differentiable field to get
 estimates of the second derivative of the velocity field for applications in complex
@@ -3946,18 +3943,18 @@ gradient tensor and its use for solving viscoelastic flow problems, please see R
 (2000).</p>
 </section>
 <section id="id20">
-<h3><strong>References</strong><a class="headerlink" href="#id20" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id20" title="Permalink to this headline">#</a></h3>
 <p>GT-014.1: Tutorial for Running Viscoelastic Flow Problems with GOMA, June 21,
 2000, R. R. Rao</p>
 </section>
 </section>
 <section id="g31">
-<h2><strong>G31</strong><a class="headerlink" href="#g31" title="Permalink to this headline">¶</a></h2>
+<h2><strong>G31</strong><a class="headerlink" href="#g31" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">G31</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="id21">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id21" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id21" title="Permalink to this headline">#</a></h3>
 <p><strong>(DC/GRADIENT31)</strong></p>
 <p>This Dirichlet boundary condition specification is used to set a constant zx-velocity
 gradient component of the velocity gradient tensor. Definitions of the input parameters
@@ -3997,7 +3994,7 @@ automatic continuation sequences</em>.</p></td>
 </table>
 </section>
 <section id="id22">
-<h3><strong>Examples</strong><a class="headerlink" href="#id22" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id22" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample card for applying a Dirichlet condition on the zx-velocity
 gradient component on node set 100:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">G31</span> <span class="n">NS</span> <span class="mi">100</span>   <span class="mf">5.0</span>
@@ -4010,7 +4007,7 @@ gradient component on node set 100:</p>
 condition.</p>
 </section>
 <section id="id23">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id23" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id23" title="Permalink to this headline">#</a></h3>
 <p>We solve a simple least squares equation to determine the continuous velocity gradient
 <em>G</em> from the velocity field. This is done so that we may have a differentiable field to get
 estimates of the second derivative of the velocity field for applications in complex
@@ -4027,18 +4024,18 @@ gradient tensor and its use for solving viscoelastic flow problems, please see R
 (2000).</p>
 </section>
 <section id="id24">
-<h3><strong>References</strong><a class="headerlink" href="#id24" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id24" title="Permalink to this headline">#</a></h3>
 <p>GT-014.1: Tutorial for Running Viscoelastic Flow Problems with GOMA, June 21,
 2000, R. R. Rao</p>
 </section>
 </section>
 <section id="g32">
-<h2><strong>G32</strong><a class="headerlink" href="#g32" title="Permalink to this headline">¶</a></h2>
+<h2><strong>G32</strong><a class="headerlink" href="#g32" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">G32</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="id25">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id25" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id25" title="Permalink to this headline">#</a></h3>
 <p><strong>(DC/GRADIENT32)</strong></p>
 <p>This Dirichlet boundary condition specification is used to set a constant zy-velocity
 gradient component of the velocity gradient tensor. Definitions of the input parameters
@@ -4078,7 +4075,7 @@ automatic continuation sequences</em>.</p></td>
 </table>
 </section>
 <section id="id26">
-<h3><strong>Examples</strong><a class="headerlink" href="#id26" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id26" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample card for applying a Dirichlet condition on the zy-velocity
 gradient component on node set 100:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">G32</span> <span class="n">NS</span> <span class="mi">100</span>   <span class="mf">5.0</span>
@@ -4091,7 +4088,7 @@ gradient component on node set 100:</p>
 condition.</p>
 </section>
 <section id="id27">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id27" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id27" title="Permalink to this headline">#</a></h3>
 <p>We solve a simple least squares equation to determine the continuous velocity gradient
 <em>G</em> from the velocity field. This is done so that we may have a differentiable field to get
 estimates of the second derivative of the velocity field for applications in complex
@@ -4108,18 +4105,18 @@ gradient tensor and its use for solving viscoelastic flow problems, please see R
 (2000).</p>
 </section>
 <section id="id28">
-<h3><strong>References</strong><a class="headerlink" href="#id28" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id28" title="Permalink to this headline">#</a></h3>
 <p>GT-014.1: Tutorial for Running Viscoelastic Flow Problems with GOMA, June 21,
 2000, R. R. Rao</p>
 </section>
 </section>
 <section id="g33">
-<h2><strong>G33</strong><a class="headerlink" href="#g33" title="Permalink to this headline">¶</a></h2>
+<h2><strong>G33</strong><a class="headerlink" href="#g33" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">G33</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="id29">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id29" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id29" title="Permalink to this headline">#</a></h3>
 <p><strong>(DC/GRADIENT33)</strong></p>
 <p>This Dirichlet boundary condition specification is used to set a constant zz-velocity
 gradient component of the velocity gradient tensor. Definitions of the input parameters
@@ -4159,7 +4156,7 @@ automatic continuation sequences</em>.</p></td>
 </table>
 </section>
 <section id="id30">
-<h3><strong>Examples</strong><a class="headerlink" href="#id30" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id30" title="Permalink to this headline">#</a></h3>
 <p>The following is a sample card for applying a Dirichlet condition on the zz-velocity
 gradient component on node set 100:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">G33</span> <span class="n">NS</span> <span class="mi">100</span>   <span class="mf">5.0</span>
@@ -4172,7 +4169,7 @@ gradient component on node set 100:</p>
 condition.</p>
 </section>
 <section id="id31">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id31" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id31" title="Permalink to this headline">#</a></h3>
 <p>We solve a simple least squares equation to determine the continuous velocity gradient
 <em>G</em> from the velocity field. This is done so that we may have a differentiable field to get
 estimates of the second derivative of the velocity field for applications in complex
@@ -4189,7 +4186,7 @@ gradient tensor and its use for solving viscoelastic flow problems, please see R
 (2000).</p>
 </section>
 <section id="id32">
-<h3><strong>References</strong><a class="headerlink" href="#id32" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id32" title="Permalink to this headline">#</a></h3>
 <p>GT-014.1: Tutorial for Running Viscoelastic Flow Problems with GOMA, June 21,
 2000, R. R. Rao</p>
 <hr class="docutils" />
@@ -4225,8 +4222,9 @@ gradient tensor and its use for solving viscoelastic flow problems, please see R
       </div>
     </div>
   
-    <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -4237,7 +4235,7 @@ gradient tensor and its use for solving viscoelastic flow problems, please see R
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     

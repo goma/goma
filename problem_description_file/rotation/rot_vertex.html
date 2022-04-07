@@ -8,26 +8,23 @@
 
     <title>ROT VERTEX &#8212; Goma User Manual 7.0.0 documentation</title>
     
-    <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/pydata-sphinx-theme.css" />
     
-    <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
@@ -43,7 +40,7 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -3102,7 +3099,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage pt-5 pb-3">
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -3158,13 +3155,13 @@
               <div>
                 
   <section id="rot-vertex">
-<h1><strong>ROT VERTEX</strong><a class="headerlink" href="#rot-vertex" title="Permalink to this headline">¶</a></h1>
+<h1><strong>ROT VERTEX</strong><a class="headerlink" href="#rot-vertex" title="Permalink to this headline">#</a></h1>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="n">ROT</span> <span class="o">=</span> <span class="p">{</span><span class="n">MESH</span> <span class="o">|</span> <span class="n">MOM</span><span class="p">}</span> <span class="n">VERTEX</span> <span class="o">&lt;</span><span class="n">bc_id1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">bc_id2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">bc_id3</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">string_x</span><span class="o">&gt;</span>
 <span class="o">&lt;</span><span class="n">int_x</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">string_y</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">int_y</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">string_z</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">int_z</span><span class="o">&gt;</span> <span class="p">{</span><span class="n">seed_method</span><span class="p">}</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float3</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="description-usage">
-<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">#</a></h2>
 <p>This rotation specification card deals with rotation specification at vertices. In this context, a vertex is the intersection point of three side sets. It identifies the boundary conditions that will be applied at the vertex node and which equation components are to be associated with them. It also identifies which components of the rotated equations will be used. Currently, only rotation of mesh and momentum equations is allowed at a vertex. This card can also be used for specifying a seed vector if needed.</p>
 <p>Definitions of the input parameters are as follows:</p>
 <table class="table">
@@ -3333,7 +3330,7 @@ residual.</p></td>
 <p>In most cases, seeding of the tangent vectors is not needed along vertices, although it is possible to specify a seed method as defined in the <em>ROT SURFACE</em> card via the parameters {seed_method}, &lt;float1&gt;, &lt;float2&gt;, and &lt;float3&gt;. Note also that a seed vector must be specified to use the S rotation option.</p>
 </section>
 <section id="examples">
-<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h2>
 <p>The following is an example of a vertex rotation specification:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ROT</span> <span class="o">=</span> <span class="n">MESH</span>   <span class="n">VERTEX</span>   <span class="mi">3</span> <span class="mi">4</span> <span class="mi">6</span>   <span class="n">PLANE</span>   <span class="mi">4</span> <span class="n">PLANE</span> <span class="mi">3</span>   <span class="n">PLANE</span>   <span class="mi">6</span>   <span class="n">NONE</span>
 </pre></div>
@@ -3344,7 +3341,7 @@ residual.</p></td>
 <p>In the first example, the vertex is at the intersection of side sets 3, 4 and 6, and the three mesh equations at this vertex are replaced by <em>PLANE</em> conditions from side sets 4, 3, and 6, respectively. In the second example, the vertex is at the intersection of side sets 4, 5, and 6, respectively. Since it is conceivable that side set 5 might represent a free surface that curves in three dimensions, the last <em>VERTEX</em> card might apply to more than one point.</p>
 </section>
 <section id="technical-discussion">
-<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">#</a></h2>
 <ul>
 <li><p>Despite the fact that <em>VERTEX</em> cards apply only at single points,
 definitions
@@ -3367,7 +3364,7 @@ points where multiple <em>SURFACE</em> or <em>EDGE</em> cards could apply.</p></
 </ul>
 </section>
 <section id="references">
-<h2><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<h2><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">#</a></h2>
 <p>GT-007.2: Tutorial on droplet on incline problem, July 30, 1999, T. A. Baer</p>
 <p>GT-012.0: 3D Roll coating template and tutorial for GOMA, February 21, 2000, P.R. Schunk</p>
 <p>GT-018.1: ROT card tutorial, January 22, 2001, T. A. Baer</p>
@@ -3402,8 +3399,9 @@ points where multiple <em>SURFACE</em> or <em>EDGE</em> cards could apply.</p></
       </div>
     </div>
   
-    <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -3414,7 +3412,7 @@ points where multiple <em>SURFACE</em> or <em>EDGE</em> cards could apply.</p></
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     

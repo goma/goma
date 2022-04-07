@@ -8,26 +8,23 @@
 
     <title>Category 14: Fluid-Solid Interaction &#8212; Goma User Manual 7.0.0 documentation</title>
     
-    <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/pydata-sphinx-theme.css" />
     
-    <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
@@ -44,7 +41,7 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -3103,7 +3100,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage pt-5 pb-3">
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -3316,18 +3313,18 @@
               <div>
                 
   <section id="category-14-fluid-solid-interaction">
-<h1>Category 14: Fluid-Solid Interaction<a class="headerlink" href="#category-14-fluid-solid-interaction" title="Permalink to this headline">¶</a></h1>
+<h1>Category 14: Fluid-Solid Interaction<a class="headerlink" href="#category-14-fluid-solid-interaction" title="Permalink to this headline">#</a></h1>
 <p>This is a special group of boundary conditions for problems in which there are two distinct
 material phases (fluid and solid) with relative motion between them. These BC’s provide a means
 to apply conditions to a moving boundary with sensitivities to variables in both phases. These
 problems are formulated in Goma as overset-grid or phase function problems.</p>
 <section id="lagrange-no-slip">
-<h2><strong>LAGRANGE_NO_SLIP</strong><a class="headerlink" href="#lagrange-no-slip" title="Permalink to this headline">¶</a></h2>
+<h2><strong>LAGRANGE_NO_SLIP</strong><a class="headerlink" href="#lagrange-no-slip" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LAGRANGE_NO_SLIP</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer2</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="description-usage">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">#</a></h3>
 <p><strong>(CONTACT_SURF/R_LAGR_MULT1)</strong></p>
 <p>This boundary condition is used to apply a kinematic Lagrange multiplier constraint to
 a solid/fluid boundary while using Goma’s overset grid capability. The condition is
@@ -3367,7 +3364,7 @@ database.</p></td>
 </table>
 </section>
 <section id="examples">
-<h3><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LAGRANGE_NO_SLIP</span> <span class="n">SS</span> <span class="mi">2</span> <span class="mi">1</span> <span class="mi">2</span>
 </pre></div>
@@ -3378,7 +3375,7 @@ on the background fluid mesh. The solid material block ID is 1 in this case and 
 background fluid material ID is 2.</p>
 </section>
 <section id="technical-discussion">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">#</a></h3>
 <p>In this work, the governing equations consist of a fluid momentum balance:</p>
 <figure class="align-center">
 <a class="reference internal image-reference" href="../../_images/188_goma_physics.png"><img alt="../../_images/188_goma_physics.png" src="../../_images/188_goma_physics.png" style="width: 90%;" /></a>
@@ -3414,17 +3411,17 @@ the closest point to it on the solid boundary, respectively, <em>V</em> is the f
 constraint.</p>
 </section>
 <section id="references">
-<h3><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">#</a></h3>
 <p>GT-026.3: Goma’s Overset Mesh Capability. Randy Schunk.</p>
 </section>
 </section>
 <section id="overset-fluid-solid-baaijens-fluid-solid">
-<h2><strong>OVERSET_FLUID_SOLID/BAAIJENS_FLUID_SOLID</strong><a class="headerlink" href="#overset-fluid-solid-baaijens-fluid-solid" title="Permalink to this headline">¶</a></h2>
+<h2><strong>OVERSET_FLUID_SOLID/BAAIJENS_FLUID_SOLID</strong><a class="headerlink" href="#overset-fluid-solid-baaijens-fluid-solid" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">BAAIJENS_FLUID_SOLID</span> <span class="n">PF</span> <span class="o">&lt;</span><span class="n">pf_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer2</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id1">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id1" title="Permalink to this headline">#</a></h3>
 <p><strong>(EMBEDDED_SURF/R_MOMENTUM1)</strong></p>
 <p>This boundary condition is used to apply a traction to the fluid that comes from a solid
 while using <em>Goma’s</em> overset grid capability. The condition is used when the complete
@@ -3472,7 +3469,7 @@ Goma’s formulation was generated. We are in the process of changing that
 name to OVERSET_FLUID_SOLID.</p>
 </section>
 <section id="id2">
-<h3><strong>Examples</strong><a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id2" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">BAAIJENS_FLUID_SOLID</span> <span class="n">PF</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">2</span>
 </pre></div>
@@ -3485,22 +3482,22 @@ name to OVERSET_FLUID_SOLID.</p>
 (see Phase Function Initialization Method).</p>
 </section>
 <section id="id3">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id3" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id3" title="Permalink to this headline">#</a></h3>
 <p>See discussion on LANGRANGE_NO_SLIP. This condition applies the fluid traction
 boundary term on the fluid momentum equation.</p>
 </section>
 <section id="id4">
-<h3><strong>References</strong><a class="headerlink" href="#id4" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id4" title="Permalink to this headline">#</a></h3>
 <p>GT-026.3</p>
 </section>
 </section>
 <section id="overset-solid-fluid-baaijens-solid-fluid">
-<h2><strong>OVERSET_SOLID_FLUID/BAAIJENS_SOLID_FLUID</strong><a class="headerlink" href="#overset-solid-fluid-baaijens-solid-fluid" title="Permalink to this headline">¶</a></h2>
+<h2><strong>OVERSET_SOLID_FLUID/BAAIJENS_SOLID_FLUID</strong><a class="headerlink" href="#overset-solid-fluid-baaijens-solid-fluid" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">OVERSET_SOLID_FLUID</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id5">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id5" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id5" title="Permalink to this headline">#</a></h3>
 <p><strong>(CONTACT_SURF/ MESH)</strong></p>
 <p>This boundary condition is used to apply a traction to a solid that comes from the fluid
 while using <em>Goma’s</em> overset grid capability. The condition is used when the complete
@@ -3540,7 +3537,7 @@ Goma’s formulation was generated. We are in the process of changing that
 name to OVERSET_SOLID_FLUID.</p>
 </section>
 <section id="id6">
-<h3><strong>Examples</strong><a class="headerlink" href="#id6" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id6" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card set:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">BAAIJENS_SOLID_FLUID</span> <span class="n">SS</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">1</span>
 </pre></div>
@@ -3556,23 +3553,23 @@ solid phase defined by side set 1. In this case the solid phase material ID is 2
 fluid phase 1.</p>
 </section>
 <section id="id7">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id7" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id7" title="Permalink to this headline">#</a></h3>
 <p>See discussion on LAGRANGE_NO_SLIP. Basically, this condition results in a
 boundary traction set by the Lagrange multiplier constraint to be applied to the solid
 momentum equation (note the weak term that appears on that equation).</p>
 </section>
 <section id="id8">
-<h3><strong>References</strong><a class="headerlink" href="#id8" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id8" title="Permalink to this headline">#</a></h3>
 <p>GT-026.3</p>
 </section>
 </section>
 <section id="f1-f2-f3-f4-f5">
-<h2><strong>F1 F2 F3 F4 F5</strong><a class="headerlink" href="#f1-f2-f3-f4-f5" title="Permalink to this headline">¶</a></h2>
+<h2><strong>F1 F2 F3 F4 F5</strong><a class="headerlink" href="#f1-f2-f3-f4-f5" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="p">{</span><span class="n">F1</span> <span class="o">|</span> <span class="n">F2</span> <span class="o">|</span> <span class="n">F3</span> <span class="o">|</span> <span class="n">F4</span> <span class="o">|</span> <span class="n">F5</span><span class="p">}</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="id9">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id9" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id9" title="Permalink to this headline">#</a></h3>
 <p><strong>(DC/R_PHASE)</strong></p>
 <p>This boundary condition format is used to set a constant phase function field values at
 node sets. Please see “phase#” equation types for a description of the variables. Each
@@ -3616,7 +3613,7 @@ automatic continuation sequences</em>.</p></td>
 </table>
 </section>
 <section id="id10">
-<h3><strong>Examples</strong><a class="headerlink" href="#id10" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id10" title="Permalink to this headline">#</a></h3>
 <p>Following is a sample card which applies an phase field boundary condition to the
 nodes in node set 100, specifically an phase field-3 value of 1.0.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">F3</span> <span class="n">NS</span> <span class="mi">100</span> <span class="mf">1.0</span>
@@ -3624,7 +3621,7 @@ nodes in node set 100, specifically an phase field-3 value of 1.0.</p>
 </div>
 </section>
 <section id="id11">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id11" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id11" title="Permalink to this headline">#</a></h3>
 <p>This boundary condition finds most of its use in the Phase Function interface tracking
 algorithm where it is used to fix the value of the color function at an inlet or outlet
 boundary. The phase function fields were put in to supplement Goma’s base level set
@@ -3634,17 +3631,17 @@ condition allows Dirichlet conditions to be applied to each of the five addition
 set fields.</p>
 </section>
 <section id="id12">
-<h3><strong>References</strong><a class="headerlink" href="#id12" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id12" title="Permalink to this headline">#</a></h3>
 <p>GT-026.3</p>
 </section>
 </section>
 <section id="pf-capillary">
-<h2><strong>PF_CAPILLARY</strong><a class="headerlink" href="#pf-capillary" title="Permalink to this headline">¶</a></h2>
+<h2><strong>PF_CAPILLARY</strong><a class="headerlink" href="#pf-capillary" title="Permalink to this headline">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">PF_CAPILLARY</span> <span class="n">LS</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float3</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id13">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id13" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id13" title="Permalink to this headline">#</a></h3>
 <p><strong>(EMB/VECTOR MOMENTUM)</strong></p>
 <p>This boundary condition applies an “embedded” surface tension source term when
 solving capillary hydrodynamics problems with phase function level set interface
@@ -3686,14 +3683,14 @@ function field that the boundary condition is to be applied.</p></td>
 </table>
 </section>
 <section id="id14">
-<h3><strong>Examples</strong><a class="headerlink" href="#id14" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id14" title="Permalink to this headline">#</a></h3>
 <p>An example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">PF_CAPILLARY</span> <span class="n">PF</span> <span class="mi">1</span>
 </pre></div>
 </div>
 </section>
 <section id="id15">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id15" title="Permalink to this headline">¶</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id15" title="Permalink to this headline">#</a></h3>
 <p>Surface tension forces at a level set (phase function) representation of an interfacial
 boundary are applied solely via this boundary condition. An additional divergence of
 stress tensor term <span class="math notranslate nohighlight">\(\Delta\)</span> ⋅
@@ -3732,7 +3729,7 @@ this card is set to a -1 or a +1 to signify that the surface tension forces are 
 negative or positive side of the interface curve, respectively.</p>
 </section>
 <section id="id16">
-<h3><strong>References</strong><a class="headerlink" href="#id16" title="Permalink to this headline">¶</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id16" title="Permalink to this headline">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
@@ -3766,8 +3763,9 @@ negative or positive side of the interface curve, respectively.</p>
       </div>
     </div>
   
-    <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -3778,7 +3776,7 @@ negative or positive side of the interface curve, respectively.</p>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     

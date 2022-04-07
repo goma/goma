@@ -8,26 +8,23 @@
 
     <title>POROUS_GAS_PRESSURE &#8212; Goma User Manual 7.0.0 documentation</title>
     
-    <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/styles/pydata-sphinx-theme.css" />
     
-    <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
     <script src="../../../_static/jquery.js"></script>
     <script src="../../../_static/underscore.js"></script>
@@ -42,7 +39,7 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -123,7 +120,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage pt-5 pb-3">
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -179,12 +176,12 @@
               <div>
                 
   <section id="porous-gas-pressure">
-<h1><strong>POROUS_GAS_PRESSURE</strong><a class="headerlink" href="#porous-gas-pressure" title="Permalink to this headline">¶</a></h1>
+<h1><strong>POROUS_GAS_PRESSURE</strong><a class="headerlink" href="#porous-gas-pressure" title="Permalink to this headline">#</a></h1>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">POROUS_GAS_PRESSURE</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="description-usage">
-<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">#</a></h2>
 <p><strong>(DC/POR_GAS_PRES)</strong></p>
 <p>This Dirichlet boundary condition is used to set the gas-phase pore pressure at the
 boundary of a <em>POROUS_TWO_PHASE</em> medium type (see <em>Media Type</em> card). This
@@ -225,7 +222,7 @@ as a parameter in automatic continuation sequences</em>.</p></td>
 </table>
 </section>
 <section id="examples">
-<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h2>
 <p>The boundary condition card</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">POROUS_GAS_PRESSURE</span> <span class="n">NS</span> <span class="mi">101</span> <span class="p">{</span><span class="n">pgas</span><span class="p">}</span>
 </pre></div>
@@ -234,7 +231,7 @@ as a parameter in automatic continuation sequences</em>.</p></td>
 represented by the APREPRO variable {pgas}.</p>
 </section>
 <section id="technical-discussion">
-<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">#</a></h2>
 <p>Setting the porous liquid pressure to a value cannot be done independently of the
 saturation as the two are related through the vapor pressure curve for simulations in
 partially saturated media (see <em>Saturation</em> model card). Keep in mind that when using
@@ -243,7 +240,7 @@ capillary pressure, defined as <span class="math notranslate nohighlight">\(p_{g
 the capillary pressure <span class="math notranslate nohighlight">\(p_c\)</span> is greater than zero, the saturation level is less than unity, viz.the medium is partially saturated. When <span class="math notranslate nohighlight">\(p_c\)</span> is less than zero, i.e., when the liquid phase pressure is greater than the gas phase pressure, then the medium is saturated (in this case the capillary pressure is poorly defined, though). Also, this pressure sets the datum of pressure for deformable porous media and must be set in a manner compatible with the solid-stress values on the boundaries of the porous matrix.</p>
 </section>
 <section id="references">
-<h2><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<h2><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">#</a></h2>
 <p>GT-008.2: Porous Media Capabilities/Tutorial for GOMA. User Guidance for Saturated
 Porous Penetration Problems, August 11, 1999, P. R. Schunk</p>
 <p>GT-009.3: GOMA’s Capabilities for Partially Saturated Flow in Porous Media,
@@ -265,8 +262,9 @@ September 1, 2002, P. R. Schunk</p>
       </div>
     </div>
   
-    <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -277,7 +275,7 @@ September 1, 2002, P. R. Schunk</p>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     

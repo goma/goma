@@ -8,26 +8,23 @@
 
     <title>KIN_LEAK &#8212; Goma User Manual 7.0.0 documentation</title>
     
-    <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="../../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/styles/pydata-sphinx-theme.css" />
     
-    <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
     <script src="../../../_static/jquery.js"></script>
     <script src="../../../_static/underscore.js"></script>
@@ -41,7 +38,7 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -122,7 +119,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage pt-5 pb-3">
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -185,12 +182,12 @@
               <div>
                 
   <section id="kin-leak">
-<h1><strong>KIN_LEAK</strong><a class="headerlink" href="#kin-leak" title="Permalink to this headline">¶</a></h1>
+<h1><strong>KIN_LEAK</strong><a class="headerlink" href="#kin-leak" title="Permalink to this headline">#</a></h1>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">KIN_LEAK</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float2</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="description-usage">
-<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">#</a></h2>
 <p><strong>(SIC/ROTATED MESH)</strong></p>
 <p>This boundary condition card is used as a distinguishing condition - kinematic with
 mass transfer on mesh equations. The flux quantity is specified on a per mass basis so
@@ -229,7 +226,7 @@ from <em>YFLUX</em> boundary conditions corresponding to each species that is ne
 following examples.</p>
 </section>
 <section id="examples">
-<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h2>
 <p>Following are two sample input cards:</p>
 <p>Pure Liquid Case</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">KIN_LEAK</span> <span class="n">SS</span> <span class="mi">3</span>   <span class="mf">0.1</span>   <span class="mf">0.</span>
@@ -251,7 +248,7 @@ and is non-volatile so it requires no <em>YFLUX</em> card; a second volatile spe
 require a second <em>YFLUX</em> input card.</p>
 </section>
 <section id="technical-discussion">
-<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">#</a></h2>
 <p>Functionally, the <em>KIN_LEAK</em> boundary condition can be represented as the following:</p>
 <figure class="align-center">
 <a class="reference internal image-reference" href="../../../_images/045_goma_physics.png"><img alt="../../../_images/045_goma_physics.png" src="../../../_images/045_goma_physics.png" style="width: 90%;" /></a>
@@ -289,7 +286,7 @@ fraction, then we have a volume flux. So <em>kin_bc_leak</em> is consistent.</p>
 common approach is to build density into the mass transfer coefficient h<sub>i</sub> .</p>
 </section>
 <section id="faqs">
-<h2><strong>FAQs</strong><a class="headerlink" href="#faqs" title="Permalink to this headline">¶</a></h2>
+<h2><strong>FAQs</strong><a class="headerlink" href="#faqs" title="Permalink to this headline">#</a></h2>
 <ol class="arabic simple">
 <li><p>See the FAQ pertaining to “Continuation Strategies for Free Surface Flows” on the
 <em>DISTNG</em> boundary condition card.</p></li>
@@ -358,7 +355,7 @@ converted as follows:</p>
 <p>This checks out!</p>
 </section>
 <section id="references">
-<h2><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<h2><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">#</a></h2>
 <p>Price, P. E., Jr., S. Wang, I. H. Romdhane, “Extracting Effective Diffusion Parameters
 from Drying Experiments,” AIChE Journal, 43, 8, 1925-1934 (1997)</p>
 </section>
@@ -378,8 +375,9 @@ from Drying Experiments,” AIChE Journal, 43, 8, 1925-1934 (1997)</p>
       </div>
     </div>
   
-    <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -390,7 +388,7 @@ from Drying Experiments,” AIChE Journal, 43, 8, 1925-1934 (1997)</p>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     

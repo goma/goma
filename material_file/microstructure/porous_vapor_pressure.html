@@ -8,26 +8,23 @@
 
     <title>Porous Vapor Pressure &#8212; Goma User Manual 7.0.0 documentation</title>
     
-    <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
 <link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-  
+
     
-    <link rel="stylesheet"
-      href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
-    <link rel="preload" as="font" type="font/woff2" crossorigin
-      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
-  
-    
-      
-  
-    
+  <link rel="stylesheet"
+    href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../../_static/styles/pydata-sphinx-theme.css" />
     
-    <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
-  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
@@ -43,7 +40,7 @@
     <!-- Google Analytics -->
     
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
     
     <div class="container-fluid" id="banner"></div>
 
@@ -3102,7 +3099,7 @@
               
               <div class="toc-item">
                 
-<div class="tocsection onthispage pt-5 pb-3">
+<div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
 
@@ -3165,12 +3162,12 @@
               <div>
                 
   <section id="porous-vapor-pressure">
-<h1><strong>Porous Vapor Pressure</strong><a class="headerlink" href="#porous-vapor-pressure" title="Permalink to this headline">¶</a></h1>
+<h1><strong>Porous Vapor Pressure</strong><a class="headerlink" href="#porous-vapor-pressure" title="Permalink to this headline">#</a></h1>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Porous</span> <span class="n">Vapor</span> <span class="n">Pressure</span> <span class="o">=</span> <span class="p">{</span><span class="n">model_name</span><span class="p">}</span> <span class="p">{</span><span class="n">integer</span><span class="p">}</span> <span class="p">{</span><span class="n">float_list</span><span class="p">}</span> <span class="p">[</span><span class="n">M</span><span class="o">/</span><span class="n">L</span><span class="o">-</span><span class="n">t2</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="description-usage">
-<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">#</a></h2>
 <p>Used to specify the model for the vapor pressure for each multiphase flow component
 in the porous medium that is activated for <em>Media Type</em> <strong>POROUS_UNSATURATED</strong> or
 <strong>POROUS_TWO_PHASE</strong>.</p>
@@ -3241,7 +3238,7 @@ out the exponential function.</p>
 </table>
 </section>
 <section id="examples">
-<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h2>
 <p>The sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Porous</span> <span class="n">Vapor</span> <span class="n">Pressure</span> <span class="o">=</span> <span class="n">FLAT</span> <span class="mi">0</span> <span class="p">{</span><span class="n">Vap_Pres</span><span class="p">}</span> <span class="p">{</span><span class="n">density</span><span class="p">}</span> <span class="p">{</span><span class="mf">30.</span><span class="p">}</span> <span class="p">{</span><span class="n">Rgas</span><span class="p">}</span> <span class="p">{</span><span class="n">T</span><span class="p">}</span>
 </pre></div>
@@ -3250,7 +3247,7 @@ out the exponential function.</p>
 single component for now) using all APREPRO-defined parameters.</p>
 </section>
 <section id="technical-discussion">
-<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">¶</a></h2>
+<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">#</a></h2>
 <p>The <strong>KELVIN</strong> option is used to include the effect of vapor-pressure lowering that
 results in equilibrium over high curvature menisci, i.e., small pores. The equation form
 of this is:</p>
@@ -3277,14 +3274,14 @@ implemented for pure liquid solvents, so that no equilibrium solvent partitionin
 the interface is present.</p>
 </section>
 <section id="faqs">
-<h2><strong>FAQs</strong><a class="headerlink" href="#faqs" title="Permalink to this headline">¶</a></h2>
+<h2><strong>FAQs</strong><a class="headerlink" href="#faqs" title="Permalink to this headline">#</a></h2>
 <p>Sometimes system aborts can happen with the Kelvin model because of real large,
 negative capillary pressures. In this case, the exponential term can exceed the machine
 limit. This can happen well into a transient run. The user should be aware of this;
 consult GT-009.3 for tips related to dealing with this problem.</p>
 </section>
 <section id="references">
-<h2><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<h2><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">#</a></h2>
 <p>GT-008.2: Porous Media Capabilities/Tutorial for GOMA. User Guidance for Saturated
 Porous Penetration Problems, August 11, 1999, P. R. Schunk</p>
 <p>GT-009.3: GOMA’s Capabilities for Partially Saturated Flow in Porous Media,
@@ -3323,8 +3320,9 @@ Hurd and C. Brinker (September 1996)</p>
       </div>
     </div>
   
-    <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-  <footer class="footer mt-5 mt-md-0">
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+<footer class="footer mt-5 mt-md-0">
   <div class="container">
     
     <div class="footer-item">
@@ -3335,7 +3333,7 @@ Hurd and C. Brinker (September 1996)</p>
     
     <div class="footer-item">
       <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
 </p>
     </div>
     
