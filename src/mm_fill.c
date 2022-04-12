@@ -3432,9 +3432,11 @@ Revised:         Summer 1998, SY Tam (UNM)
       int count = 0, Num_CAs_done = 0;
       for (j = 0; j < MAX_CA; j++) {
         if (CA_proc[j] == ProcID) {
-          if (CA_id[j] == -2) Num_CAs_done++;
-          if (CA_id[j] != -1) count++;
-	}
+          if (CA_id[j] == -2)
+            Num_CAs_done++;
+          if (CA_id[j] != -1)
+            count++;
+        }
       }
 
       if (count != Num_CAs_done) {

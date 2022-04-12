@@ -2051,7 +2051,7 @@ void init_vec(
                   speed = Var_init_mat[mn][j].u_pars[DIM + 1];
                   ht = Var_init_mat[mn][j].u_pars[DIM + 2];
                   T_below = Var_init_mat[mn][j].u_pars[DIM + 3];
-		  T_init = Var_init_mat[mn][j].init_val;
+                  T_init = Var_init_mat[mn][j].init_val;
                   ipos = Index_Solution(i, var, Var_init_mat[mn][j].ktype, 0, mn, pg->imtrx);
                   sum = 0.;
                   for (nt = 0; nt < n_terms; nt++) {
@@ -2065,7 +2065,7 @@ void init_vec(
                     sum += exp(exp_arg) * cos(M_PIE / ht * distz * xn) * 2. / M_PIE * pow(-1., nt) /
                            xn;
                   }
-                  u[ipos] = fmin(T_below - (T_below - T_init) * sum,T_init);
+                  u[ipos] = fmin(T_below - (T_below - T_init) * sum, T_init);
                 } else if (Var_init_mat[mn][j].len_u_pars == 5 &&
                            Var_init_mat[mn][j].var == MESH_DISPLACEMENT1) {
                   double xpt0[DIM], T_pos, T_ref;
