@@ -1988,6 +1988,7 @@ void init_vec(
    * Loop over element blocks that exist for this processor, determine
    * which material corresponds to it.
    */
+#ifdef USERMAT_INITIALIZATION
 
   for (ebj = 0; ebj < exo->num_elem_blocks; ebj++) {
     ebi = block_order[ebj];
@@ -2039,7 +2040,7 @@ void init_vec(
               }
               if (nunks == 1) {
                 if (Var_init_mat[mn][j].len_u_pars == 7 && Var_init_mat[mn][j].var == TEMPERATURE) {
-                  double xpt0[DIM], dist, distz, T_below;
+                  double xpt0[DIM], dist, distz, T_below, T_init;
                   double alpha, speed, ht, sum, xn, exp_arg;
                   int n_terms = 4, nt, dir;
 
@@ -2050,6 +2051,7 @@ void init_vec(
                   speed = Var_init_mat[mn][j].u_pars[DIM + 1];
                   ht = Var_init_mat[mn][j].u_pars[DIM + 2];
                   T_below = Var_init_mat[mn][j].u_pars[DIM + 3];
+		  T_init = Var_init_mat[mn][j].init_val;
                   ipos = Index_Solution(i, var, Var_init_mat[mn][j].ktype, 0, mn, pg->imtrx);
                   sum = 0.;
                   for (nt = 0; nt < n_terms; nt++) {
@@ -2063,7 +2065,7 @@ void init_vec(
                     sum += exp(exp_arg) * cos(M_PIE / ht * distz * xn) * 2. / M_PIE * pow(-1., nt) /
                            xn;
                   }
-                  u[ipos] = T_below - (T_below - Var_init_mat[mn][j].init_val) * sum;
+                  u[ipos] = fmin(T_below - (T_below - T_init) * sum,T_init);
                 } else if (Var_init_mat[mn][j].len_u_pars == 5 &&
                            Var_init_mat[mn][j].var == MESH_DISPLACEMENT1) {
                   double xpt0[DIM], T_pos, T_ref;
@@ -2086,7 +2088,8 @@ void init_vec(
         }   /* end for n<num_nodes */
       }     /* end for e_start=ielem<e_end */
     }       /* end if (Num_Var_Init_Mat[mn] > 0 */
-  }
+  }         /* end for element blocks */
+#endif
   safer_free((void **)&block_order);
 
   /*
