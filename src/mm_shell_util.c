@@ -3446,7 +3446,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
  ******************************************************************************/
 {
   int i, j, k, jk, w;
-  dbl q[DIM], ev[DIM], pgrad;
+  dbl q[DIM], ev[DIM], pgrad, pg_cmp[DIM], dev_dpg[DIM][DIM];
   dbl v_avg[DIM];
   dbl H;
   dbl veloL[DIM], veloU[DIM];
@@ -3508,6 +3508,9 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       mu = gn->mu0;
       nexp = gn->nexp;
       yield = gn->tau_y;
+    } else {
+      mu = viscosity(gn, NULL, d_mu);
+      dmu_dc = mp->d_viscosity[SHELL_PARTC];
     }
 
     /* Extract wall velocities */
@@ -3894,7 +3897,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     /* Set some coefficients */
     dbl k_turb = 12., d_k_turb_dmu = 0., d_k_turb_dH = 0.;
     dbl vsqr, q_mag, v_mag, tau_w, pre_delP, vpre_delP;
-    dbl dq_gradp, dv_gradp, pg_cmp[DIM], dev_dpg[DIM][DIM];
+    dbl dq_gradp, dv_gradp;
     dbl dq_dH = 0., dv_dH = 0.;
     d_k_turb_dmu = 0.0;
     d_k_turb_dH = 0.0;
@@ -3983,15 +3986,21 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
             q[i] += pre_delP * GRADH[i] * CURV * mp->surface_tension;
         }
       }
+    } else {
+      k_turb = 12.;
+      dq_gradp = pre_delP = -CUBE(H) / (k_turb * mu);
+      q_mag = pre_delP * pgrad;
+      dv_gradp = vpre_delP = pre_delP / H;
+      v_mag = vpre_delP * pgrad;
+      dq_dH = -3. * SQUARE(H) / (k_turb * mu) * pgrad;
+      dv_dH = -2. * H / (k_turb * mu) * pgrad;
     }
-    if (gn->ConstitutiveEquation == NEWTONIAN) {
+    for (i = 0; i < dim; i++) {
+      q[i] += q_mag * ev[i];
+    }
+    if (gn->ConstitutiveEquation == NEWTONIAN || 1) {
       for (i = 0; i < dim; i++) {
-        q[i] += q_mag * ev[i];
         q[i] += 0.5 * H * (veloL[i] + veloU[i]);
-      }
-    } else if (DOUBLE_ZERO(vsqr)) {
-      for (i = 0; i < dim; i++) {
-        q[i] += q_mag * ev[i];
       }
     } else {
       GOMA_EH(GOMA_ERROR, "Shear-thining moving wall model not finished yet.\n");
@@ -4007,7 +4016,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     for (i = 0; i < dim; i++) {
       D_Q_DH[i] += dq_dH * ev[i];
       D_Q_DH[i] += q_mag * (-d_k_turb_dH / k_turb) * ev[i];
-      if (gn->ConstitutiveEquation == NEWTONIAN)
+      if (gn->ConstitutiveEquation == NEWTONIAN || 1)
         D_Q_DH[i] += 0.5 * (veloL[i] + veloU[i]);
     }
     for (i = 0; i < dim; i++) {
@@ -4059,8 +4068,8 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         D_Q_DF[i][j] += q_mag * (-dmu_df[j] / mu) * ev[i];
         D_Q_DF[i][j] -= dq_gradp * ev[i] * D_GRAV_DF[i][j];
         if (pd->v[pg->imtrx][VAR]) {
-          D_Q_DF[i][j] += dq_gradp * ev[i] * D_GRADH_DF[i][j] * CURV * mp->surface_tension;
-          D_Q_DF[i][j] += dq_gradp * ev[i] * GRADH[i] * D_CURV_DF[j] * mp->surface_tension;
+          D_Q_DF[i][j] += dq_gradp * D_GRADH_DF[i][j] * CURV * mp->surface_tension;
+          D_Q_DF[i][j] += dq_gradp * GRADH[i] * D_CURV_DF[j] * mp->surface_tension;
         }
       }
     }
@@ -4070,8 +4079,8 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         D_V_DF[i][j] += q_mag / H * (-dmu_df[j] / mu) * ev[i];
         D_V_DF[i][j] += q_mag / H * ev[i] * D_GRAV_DF[i][j];
         if (pd->v[pg->imtrx][VAR]) {
-          D_V_DF[i][j] += q_mag / H * ev[i] * D_GRADH_DF[i][j] * CURV * mp->surface_tension;
-          D_V_DF[i][j] += q_mag / H * ev[i] * GRADH[i] * D_CURV_DF[j] * mp->surface_tension;
+          D_V_DF[i][j] += q_mag / H * D_GRADH_DF[i][j] * CURV * mp->surface_tension;
+          D_V_DF[i][j] += q_mag / H * GRADH[i] * D_CURV_DF[j] * mp->surface_tension;
         }
       }
     }
@@ -4367,8 +4376,20 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
 
     /* Load viscosity */
-    mu = viscosity(gn, NULL, d_mu);
-    dmu_dc = mp->d_viscosity[SHELL_PARTC];
+    if (gn->ConstitutiveEquation == POWER_LAW) {
+      mu = gn->mu0;
+      nexp = gn->nexp;
+    } else if (gn->ConstitutiveEquation == BINGHAM) {
+      mu = gn->mu0;
+      yield = gn->tau_y;
+    } else if (gn->ConstitutiveEquation == HERSCHEL_BULKLEY) {
+      mu = gn->mu0;
+      nexp = gn->nexp;
+      yield = gn->tau_y;
+    } else {
+      mu = viscosity(gn, NULL, d_mu);
+      dmu_dc = mp->d_viscosity[SHELL_PARTC];
+    }
 
     /* Extract bottom wall velocity */
     velocity_function_model(veloU, veloL, time, dt);
@@ -4587,25 +4608,53 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
 
     memset(q, 0.0, sizeof(double) * DIM);
     memset(v_avg, 0.0, sizeof(double) * DIM);
+    dbl q_mag, pre_delP, dq_gradp, dv_gradp, vpre_delP;
+    dbl k_turb = 3.;
+    dbl vsqr, v_mag, dq_dH, dv_dH;
 
-    /* Evaluate flow rate and average velocity */
     for (i = 0; i < dim; i++) {
-      q[i] += -pow(H, 3) / (3. * mu) * GRADP[i];
-      q[i] += -beta_slip * H * H * GRADP[i];
-      q[i] += pow(H, 3) / (3. * mu) * GRAD_DISJ_PRESS[i];
-      q[i] += beta_slip * H * H * GRAD_DISJ_PRESS[i];
-      q[i] += pow(H, 3) / (3. * mu) * GRAV[i];
-      q[i] += beta_slip * H * H * GRAV[i];
+      pg_cmp[i] = GRADP[i] - GRAV[i] - GRAD_DISJ_PRESS[i];
+    }
+    pgrad = 0.;
+    vsqr = 0.;
+    for (i = 0; i < dim; i++) {
+      pgrad += SQUARE(pg_cmp[i]);
+      vsqr += SQUARE(veloL[i]);
+    }
+    pgrad = sqrt(pgrad);
+    if (DOUBLE_NONZERO(pgrad)) {
+      for (i = 0; i < dim; i++) {
+        ev[i] = pg_cmp[i] / pgrad;
+      }
+    } else {
+      ev[0] = 1.;
+    }
+    dev_dpg[0][0] = ev[1] * ev[1] + ev[2] * ev[2];
+    dev_dpg[1][1] = ev[0] * ev[0] + ev[2] * ev[2];
+    dev_dpg[2][2] = ev[1] * ev[1] + ev[0] * ev[0];
+    dev_dpg[0][1] = dev_dpg[1][0] = -ev[0] * ev[1];
+    dev_dpg[0][2] = dev_dpg[2][0] = -ev[0] * ev[2];
+    dev_dpg[1][2] = dev_dpg[2][1] = -ev[1] * ev[2];
+    /* Evaluate flow rate and average velocity */
+    if (gn->ConstitutiveEquation == POWER_LAW || gn->ConstitutiveEquation == BINGHAM ||
+        gn->ConstitutiveEquation == HERSCHEL_BULKLEY) {
+      GOMA_EH(GOMA_ERROR, "Shear-thining film models not finished yet.\n");
+    } else {
+      k_turb = 3.;
+      dq_gradp = pre_delP = -CUBE(H) / (k_turb * mu) - beta_slip * SQUARE(H);
+      q_mag = pre_delP * pgrad;
+      dv_gradp = vpre_delP = pre_delP / H;
+      v_mag = vpre_delP * pgrad;
+      dq_dH = (-3. * SQUARE(H) / (k_turb * mu) - 2. * H * beta_slip) * pgrad;
+      dv_dH = -2. * H / (k_turb * mu) * pgrad;
+    }
+    for (i = 0; i < dim; i++) {
+      q[i] += q_mag * ev[i];
       q[i] += H * veloL[i];
     }
 
     for (i = 0; i < dim; i++) {
-      v_avg[i] += -pow(H, 2) / (3. * mu) * GRADP[i];
-      v_avg[i] += -beta_slip * H * GRADP[i];
-      v_avg[i] += pow(H, 2) / (3. * mu) * GRAD_DISJ_PRESS[i];
-      v_avg[i] += beta_slip * H * GRAD_DISJ_PRESS[i];
-      v_avg[i] += pow(H, 2) / (3. * mu) * GRAV[i];
-      v_avg[i] += beta_slip * H * GRAV[i];
+      v_avg[i] += v_mag * ev[i];
       v_avg[i] += veloL[i];
     }
 
@@ -4621,26 +4670,17 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     memset(D_Q_DH, 0.0, sizeof(double) * DIM * MDE);
     for (i = 0; i < dim; i++) {
       for (j = 0; j < ei[pg->imtrx]->dof[SHELL_FILMH]; j++) {
-        D_Q_DH1[i][j] += pow(H, 3) / (3. * mu) * D_GRAD_DISJ_PRESS_DH1[i][j] +
-                         beta_slip * H * H * D_GRAD_DISJ_PRESS_DH1[i][j];
+        D_Q_DH1[i][j] += -dq_gradp * D_GRAD_DISJ_PRESS_DH1[i][j];
 
-        D_Q_DH2[i][j] += -pow(H, 2) / mu * GRADP[i] - 0.5 * beta_slip * H * GRADP[i];
-        D_Q_DH2[i][j] += pow(H, 3) / (3. * mu) * D_GRAD_DISJ_PRESS_DH2[i][j] +
-                         beta_slip * H * H * D_GRAD_DISJ_PRESS_DH2[i][j] +
-                         pow(H, 2) / mu * GRAD_DISJ_PRESS[i] +
-                         0.5 * beta_slip * H * GRAD_DISJ_PRESS[i];
-        D_Q_DH2[i][j] += pow(H, 2) / mu * GRAV[i] + 0.5 * beta_slip * H * GRAV[i];
+        D_Q_DH2[i][j] += dq_dH * ev[i];
+        D_Q_DH2[i][j] += -dq_gradp * D_GRAD_DISJ_PRESS_DH2[i][j];
         D_Q_DH2[i][j] += veloL[i];
 
         ShellBF(SHELL_FILMH, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
                 n_dof[MESH_DISPLACEMENT1], dof_map);
 
-        D_Q_DH[i][j] += -pow(H, 2) / mu * phi_j * GRADP[i] - 2.0 * beta_slip * H * phi_j * GRADP[i];
-        D_Q_DH[i][j] += pow(H, 3) / (3. * mu) * D_GRAD_DISJ_PRESS_DH[i][j] +
-                        beta_slip * H * H * D_GRAD_DISJ_PRESS_DH[i][j];
-        D_Q_DH[i][j] += pow(H, 2) / mu * phi_j * GRAD_DISJ_PRESS[i] +
-                        2.0 * beta_slip * H * phi_j * GRAD_DISJ_PRESS[i];
-        D_Q_DH[i][j] += -pow(H, 2) / mu * phi_j * GRAV[i] - 2.0 * beta_slip * H * phi_j * GRAV[i];
+        D_Q_DH[i][j] += dq_dH * phi_j * ev[i];
+        D_Q_DH[i][j] += -dq_gradp * D_GRAD_DISJ_PRESS_DH[i][j];
         D_Q_DH[i][j] += veloL[i] * phi_j;
       }
     }
@@ -4648,17 +4688,25 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     /*Evaluate flowrate sensitivity w.r.t. pressure */
     dbl D_Q_DP1[DIM][MDE];
     dbl D_Q_DP[DIM][MDE];
+    dbl D_Q_DGRADP[DIM][DIM][MDE];
     memset(D_Q_DP1, 0.0, sizeof(double) * DIM * MDE);
     memset(D_Q_DP, 0.0, sizeof(double) * DIM * MDE);
+    memset(D_Q_DGRADP, 0.0, sizeof(double) * DIM * DIM * MDE);
     for (i = 0; i < dim; i++) {
       for (j = 0; j < ei[pg->imtrx]->dof[SHELL_FILMP]; j++) {
-        D_Q_DP1[i][j] +=
-            -pow(H, 3) / (3. * mu) * D_GRADP_DP[i][j] - beta_slip * H * H * D_GRADP_DP[i][j];
+        D_Q_DP1[i][j] += dq_gradp * D_GRADP_DP[i][j];
 
         ShellBF(SHELL_FILMH, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
                 n_dof[MESH_DISPLACEMENT1], dof_map);
-        D_Q_DP[i][j] +=
-            -pow(H, 3) / (3. * mu) * grad_II_phi_j[i] - beta_slip * H * H * grad_II_phi_j[i];
+        D_Q_DP[i][j] += dq_gradp * grad_II_phi_j[i];
+      }
+    }
+    for (i = 0; i < dim; i++) {
+      for (j = 0; j < dim; j++) {
+        for (k = 0; k < ei[pg->imtrx]->dof[SHELL_FILMP]; k++) {
+          D_Q_DGRADP[i][j][k] +=
+              (dq_gradp * ev[i] * ev[j] + pre_delP * dev_dpg[i][j]) * D_GRADP_DP[j][k];
+        }
       }
     }
 
@@ -4826,6 +4874,11 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
 
         LubAux->dv_avg_dp1[i][j] = D_V_DP1[i][j];
         LubAux->dv_avg_dp[i][j] = D_V_DP[i][j];
+      }
+      for (j = 0; j < dim; j++) {
+        for (k = 0; k < ei[pg->imtrx]->dof[SHELL_FILMP]; k++) {
+          LubAux->dq_dgradp[i][j][k] = D_Q_DGRADP[i][j][k];
+        }
       }
 
       if (pd->v[pg->imtrx][SHELL_PARTC]) {

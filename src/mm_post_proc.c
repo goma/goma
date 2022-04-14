@@ -997,9 +997,7 @@ static int calc_standard_fields(double **post_proc_vect,
 
   if (PP_Viscosity != -1 && (pd->e[pg->imtrx][R_LUBP] || pd->e[pg->imtrx][R_SHELL_FILMP])) {
     dbl nexp = 1., muinf = 0., aexp = 2., atexp, lam = 1., yield = 0.;
-    if (gn->ConstitutiveEquation == NEWTONIAN) {
-      mu = viscosity(gn, NULL, NULL);
-    } else if (gn->ConstitutiveEquation == POWER_LAW) {
+    if (gn->ConstitutiveEquation == POWER_LAW) {
       mu = gn->mu0;
       nexp = gn->nexp;
     } else if (gn->ConstitutiveEquation == BINGHAM) {
@@ -1009,6 +1007,8 @@ static int calc_standard_fields(double **post_proc_vect,
       mu = gn->mu0;
       nexp = gn->nexp;
       yield = gn->tau_y;
+    } else {
+      mu = viscosity(gn, NULL, NULL);
     }
     local_post[PP_Viscosity] = mu;
     local_lumped[PP_Viscosity] = 1.0;
