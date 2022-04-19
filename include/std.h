@@ -43,13 +43,18 @@
 #define HAVE_PARPACK       1
 #endif /* EIGEN_PARALLEL */
 
-#ifndef GOMA_VERSION /* 1) VERSION must be a keyword, won't work with it */
-#ifdef GIT_VERSION   /* 2) needed all of this to convet GIT_VERSION to the proper string */
 #define STRINGCON_(x) #x
 #define STRINGCON(x)  STRINGCON_(x)
-#define GOMA_VERSION  STRINGCON(GIT_VERSION)
+
+#ifndef GOMA_VERSION /* 1) VERSION must be a keyword, won't work with it */
+#ifdef GIT_VERSION   /* 2) needed all of this to convet GIT_VERSION to the proper string */
+#define GOMA_VERSION STRINGCON(GIT_VERSION)
 #else
-#define GOMA_VERSION "7.0.0"
+#define GOMA_MAJOR_VERSION 7
+#define GOMA_MINOR_VERSION 0
+#define GOMA_PATCH_VERSION 5
+#define GOMA_VERSION \
+  STRINGCON(GOMA_MAJOR_VERSION) "." STRINGCON(GOMA_MINOR_VERSION) "." STRINGCON(GOMA_PATCH_VERSION)
 #endif
 #endif
 

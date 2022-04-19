@@ -603,7 +603,7 @@ void noahs_ark(void) {
     ddd_add_member(n, &efv->TALE, 1, MPI_INT);
     for (i = 0; i < efv->Num_external_field; i++) {
       ddd_add_member(n, efv->name[i], 20, MPI_CHAR);
-      ddd_add_member(n, efv->file_nm[i], 85, MPI_CHAR);
+      ddd_add_member(n, efv->file_nm[i], MAX_FNL, MPI_CHAR);
       ddd_add_member(n, &efv->i[i], 1, MPI_INT);
       ddd_add_member(n, efv->field_type[i], 15, MPI_CHAR);
     }
@@ -2184,7 +2184,8 @@ void noahs_ark(void) {
     ddd_add_member(n, &vn_glob[i]->modes, 1, MPI_INT);
     ddd_add_member(n, &vn_glob[i]->shiftModel, 1, MPI_INT);
     ddd_add_member(n, &vn_glob[i]->dg_J_model, 1, MPI_INT);
-
+    ddd_add_member(n, &vn_glob[i]->shockcaptureModel, 1, MPI_INT);
+    ddd_add_member(n, &vn_glob[i]->shockcapture, 1, MPI_DOUBLE);
     /*
      * Dadblastit!!! If you add a shiny new variable argument list
      * take care to teleport it properly over to the other processors.

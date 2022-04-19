@@ -1,11 +1,11 @@
 # Goma 
 A Full-Newton Finite Element Program for Free and Moving Boundary Problems with Coupled Fluid/Solid Momentum, Energy, Mass, and Chemical Species Transport
 
-For more information see the [Goma website](https://docs.gomafem.com)
+For more information see the [Goma website](https://www.gomafem.com)
 
 ## Documentation
 
-Most of the documentation can be found at [docs.gomafem.com](https://docs.gomafem.com)
+Most of the documentation can be found at [https://www.gomafem.com/documentation.html](https://www.gomafem.com/documentation.html)
 
 ## License
 

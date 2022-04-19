@@ -72,7 +72,7 @@ int rd_image_to_mesh2(int N_ext, Exo_DB *exo) {
 
   /* Input and output file names */
   char exooutfilename[256];
-  char voxfilename[256];
+  char voxfilename[MAX_FNL];
 
   /* Field variables.  */
   int num_nod_vars;     // Number of field variables (no duplicates)
