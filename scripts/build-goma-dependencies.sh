@@ -2741,6 +2741,128 @@ else
 fi
 
 #make trilinos
+
+cd $GOMA_LIB/Trilinos-trilinos-release-$TRILINOS_VERSION_DASH/packages/aztecoo/src
+
+cat << "EOF" > az_aztec_h.patch 
+731c731
+<   extern char *AZ_allocate(unsigned int iii);
+---
+>   extern char *AZ_allocate(size_t iii);
+1024c1024
+<   extern double *AZ_manage_memory(unsigned int size, int action, int type,
+---
+>   extern double *AZ_manage_memory(size_t size, int action, int type,
+1198c1198
+<   extern char *AZ_realloc(void *ptr, unsigned int size);
+---
+>   extern char *AZ_realloc(void *ptr, size_t size);
+EOF
+patch -f az_aztec.h < az_aztec_h.patch
+rm az_aztec_h.patch
+
+cat << "EOF" > az_util_c.patch 
+843c843
+<   (void) AZ_manage_memory((unsigned int) 0, AZ_CLEAR, label, (char *) NULL,
+---
+>   (void) AZ_manage_memory((size_t) 0, AZ_CLEAR, label, (char *) NULL,
+851c851
+< double *AZ_manage_memory(unsigned int input_size, int action, int type,
+---
+> double *AZ_manage_memory(size_t input_size, int action, int type,
+936c936
+<     int     size;
+---
+>     size_t  size;
+941c941
+<   long int size;
+---
+>   size_t                size, aligned_size;
+945,946c945,946
+<   long int aligned_str_mem, aligned_j, aligned_size;
+< double *dtmp;
+---
+>   unsigned int          aligned_str_mem, aligned_j;
+>   double *dtmp;
+949c949
+<   size = (long int) input_size;
+---
+>   size = input_size;
+997,998c997
+<       dtmp = (double *) AZ_allocate((unsigned int) (aligned_str_mem+aligned_j+
+<                                                 aligned_size) );
+---
+>       dtmp = (double *) AZ_allocate(aligned_str_mem+aligned_j+aligned_size);
+1183,1184c1182
+<     dtmp    = (double *) AZ_realloc((char *) dtmp,(unsigned int)
+<                                     aligned_str_mem+aligned_j+aligned_size);
+---
+>     dtmp    = (double *) AZ_realloc((char *) dtmp, aligned_str_mem+aligned_j+aligned_size);
+1872c1870
+<    int size;
+---
+>    size_t size;
+1902c1900
+< char *AZ_allocate(unsigned int isize) {
+---
+> char *AZ_allocate(size_t isize) {
+1917,1918c1915,1917
+<     int *size_ptr, i;
+<     unsigned int size;
+---
+>     int i;
+>     size_t size;
+>     size_t *size_ptr; 
+1952c1951
+<     size_ptr = (int *) ptr;
+---
+>     size_ptr = (size_t *) ptr;
+1992c1991
+<    int *iptr, size, i;
+---
+>    int i;
+1993a1993,1994
+>    size_t size;
+>    size_t* iptr;
+2023c2024
+<            iptr = (int *) ptr;
+---
+>            iptr = (size_t *) ptr;
+2073c2074
+< char *AZ_realloc(void *vptr, unsigned int new_size) {
+---
+> char *AZ_realloc(void *vptr, size_t new_size) {
+2076c2077
+<    int i, *iptr, size, *new_size_ptr;
+---
+>    int i;
+2079d2079
+<    int newmsize, smaller;
+2080a2081,2082
+>    size_t size, newmsize, smaller;
+>    size_t *iptr, *new_size_ptr; 
+2108c2110
+<            iptr = (int *) ptr;
+---
+>            iptr = (size_t *) ptr;
+2128c2130
+<     new_size_ptr = (int *) new_ptr;
+---
+>     new_size_ptr = (size_t *) new_ptr;
+2175c2177
+< char *AZ_allocate(unsigned int size) {
+---
+> char *AZ_allocate(size_t size) {
+2185c2187
+< char *AZ_realloc(void *ptr, unsigned int size) {
+---
+> char *AZ_realloc(void *ptr, size_t size) {
+EOF
+patch -f az_util.c < az_util_c.patch
+rm az_util_c.patch 
+
+cd $GOMA_LIB
+
 rm -rf $GOMA_LIB/trilinos-$TRILINOS_VERSION-Temp
 mkdir $GOMA_LIB/trilinos-$TRILINOS_VERSION-Temp
 cd $GOMA_LIB/trilinos-$TRILINOS_VERSION-Temp
