@@ -194,6 +194,16 @@ int apply_special_bc(struct GomaLinearSolverData *ams,
       iapply = 1;
     }
 
+    /*
+     *  However, override if the side set is an external one. In
+     *  other words, if the side set is an external side set, we will
+     *  apply the boundary condition no matter what.
+     */
+    if (SS_Internal_Boundary != NULL) {
+      if (SS_Internal_Boundary[ss_index] == -1) {
+        iapply = 1;
+      }
+    }
     /* We really need to put a clean indicator whether the bc type is
        for a user-prescribed geometry.  This would shorten these.
        Anyway, if the current condition is one of geometry, increment
