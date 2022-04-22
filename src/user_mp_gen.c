@@ -27,6 +27,7 @@
 #include "mm_as_structs.h"
 #include "mm_eh.h"
 #include "mm_fill_util.h"
+#include "mm_mp.h"
 #include "rf_fem.h"
 #include "rf_fem_const.h"
 #include "std.h"
@@ -63,6 +64,10 @@
  * Heat Source Model
  */
 
+// ignore warnings for user function
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-but-set-variable"
+
 /*
  * int usr_heat_source_gen (h, dhdT, dhdX, dhdC, dhdV, param)
  *
@@ -94,14 +99,14 @@ int usr_heat_source_gen(dbl *h,                  /* volumetric heat source */
   int dim;
   int a, b;
 
-  /*  int eqn */
-  /*  int err; */
-  /*  dbl X[DIM], T, C[MAX_CONC]; */ /* Convenient local variables */
-  /*  dbl rho, Cp, K; */             /* Convenient property names  */
+  int eqn;
+  int err;
+  dbl X[DIM], T, C[MAX_CONC]; /* Convenient local variables */
+  dbl rho, Cp, K;             /* Convenient property names  */
 
-  /*  dbl dCpdT[MDE];*/
+  dbl dCpdT[MDE];
 
-  /*  int i; */
+  int i;
   int j;
 
   /* Begin Execution */
@@ -114,39 +119,33 @@ int usr_heat_source_gen(dbl *h,                  /* volumetric heat source */
   /**********************************************************/
 
   dim = pd->Num_Dim;
-  /*  eqn   = R_ENERGY;	*/
+  eqn = R_ENERGY;
 
   /**********************************************************/
 
   /***Load up convenient local variables and properties******/
   /*NB This ought to be done once for all fields at gauss pt*/
 
-  /*
   T = fv->T;
-  for(a=0; a<DIM; a++)X[a] = fv->x[a];
-  for(i=0; i<pd->Num_Species_Eqn; i++) C[i] = fv->c[i];
+  for (a = 0; a < DIM; a++)
+    X[a] = fv->x[a];
+  for (i = 0; i < pd->Num_Species_Eqn; i++)
+    C[i] = fv->c[i];
 
-  rho  = mp->density;
-  K   = mp->thermal_conductivity;
-  */
+  rho = mp->density;
+  K = mp->thermal_conductivity;
   /* Accounting here must be made of potentially variable heat capacity */
-  /*
-  if (mp->HeatCapacityModel == CONSTANT)
-    {
-      Cp = mp->heat_capacity;
-    }
-  else if (mp->HeatCapacityModel == USER)
-    {
-      err = usr_heat_capacity(mp->u_heat_capacity, time);
-      Cp = mp->heat_capacity;
-      var = TEMPERATURE;
+  if (mp->HeatCapacityModel == CONSTANT) {
+    Cp = mp->heat_capacity;
+  } else if (mp->HeatCapacityModel == USER) {
+    err = usr_heat_capacity(mp->u_heat_capacity, time);
+    Cp = mp->heat_capacity;
+    var = TEMPERATURE;
 
-      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-        {
-          dCpdT[j]= mp->d_heat_capacity[var]*bf[var]->phi[j];
-        }
+    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+      dCpdT[j] = mp->d_heat_capacity[var] * bf[var]->phi[j];
     }
-  */
+  }
   /**********************************************************/
 
   /*
@@ -468,6 +467,8 @@ int usr_viscosity_gen(dbl *mu,
 
   return (0);
 } /* End of routine usr_viscosity_gen */
+
+#pragma GCC diagnostic pop
 /*****************************************************************************/
 /* End of routine user_mp_gen.c  */
 /*****************************************************************************/
