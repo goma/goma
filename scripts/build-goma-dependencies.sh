@@ -1165,23 +1165,23 @@ else
 
     log_echo ${MPI_C_COMPILER}
     if [ -z "${BLAS_FLAGS}" ]; then
-        make config AUTOCC="no" CC="${MPI_C_COMPILER}" \
+        make config CUDA="no" AUTOCC="no" CC="${MPI_C_COMPILER}" \
              CXX="${MPI_CXX_COMPILER}" \
              BLAS="$NON_INTEL_BLAS_LINK" \
              LAPACK="$SUITESPARSE_NON_INTEL_LAPACK_LINK" \
              AR="${ARCHIVER}" 2>&1 | tee -a $COMPILE_LOG
-        make AUTOCC="no" CC="${MPI_C_COMPILER}" \
+        make CUDA="no" AUTOCC="no" CC="${MPI_C_COMPILER}" \
              CXX="${MPI_CXX_COMPILER}" \
              BLAS="$NON_INTEL_BLAS_LINK" \
              LAPACK="$SUITESPARSE_NON_INTEL_LAPACK_LINK" \
              JOBS="$MAKE_JOBS" \
              AR="${ARCHIVER}" 2>&1 | tee -a $COMPILE_LOG
     else
-        make config AUTOCC="no" CC="${MPI_C_COMPILER} ${COMPILER_FLAG_MPI}" \
+        make config CUDA="no" AUTOCC="no" CC="${MPI_C_COMPILER} ${COMPILER_FLAG_MPI}" \
              CXX="${MPI_CXX_COMPILER} ${COMPILER_FLAG_MPI}" \
              JOBS="$MAKE_JOBS" \
              AR="${ARCHIVER}" BLAS_FLAGS="${BLAS_FLAGS}" 2>&1 | tee -a $COMPILE_LOG
-        make AUTOCC="no" CC="${MPI_C_COMPILER} ${COMPILER_FLAG_MPI}" \
+        make CUDA="no" AUTOCC="no" CC="${MPI_C_COMPILER} ${COMPILER_FLAG_MPI}" \
              CXX="${MPI_CXX_COMPILER} ${COMPILER_FLAG_MPI}" \
              JOBS="$MAKE_JOBS" \
              AR="${ARCHIVER}" BLAS_FLAGS="${BLAS_FLAGS}" 2>&1 | tee -a $COMPILE_LOG
