@@ -1805,6 +1805,13 @@ void init_vec(
       e_start = exo->eb_ptr[ebi];
       e_end = exo->eb_ptr[ebi + 1];
 
+      for (j = 0; j < Num_Var_Init_Mat[mn]; j++) {
+        if (Var_init_mat[mn][j].len_u_pars <= 0) {
+          DPRINTF(stdout, "\tSetting MAT %d %s number %d (variable [%d]) to %g\n", mn,
+                  Var_Name[Var_init_mat[mn][j].var].name1, Var_init_mat[mn][j].ktype,
+                  Var_init_mat[mn][j].var, Var_init_mat[mn][j].init_val);
+        }
+      }
       /*
        *  Loop over each element in the element block
        */
@@ -2002,6 +2009,13 @@ void init_vec(
       e_start = exo->eb_ptr[ebi];
       e_end = exo->eb_ptr[ebi + 1];
 
+      for (j = 0; j < Num_Var_Init_Mat[mn]; j++) {
+        if (Var_init_mat[mn][j].len_u_pars > 0) {
+          DPRINTF(stdout, "\tSetting MAT %d %s number %d (variable [%d]) to USER %g\n", mn,
+                  Var_Name[Var_init_mat[mn][j].var].name1, Var_init_mat[mn][j].ktype,
+                  Var_init_mat[mn][j].var, Var_init_mat[mn][j].init_val);
+        }
+      }
       /*
        *  Loop over each element in the element block
        */

@@ -8530,8 +8530,6 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   Num_Var_Init_Mat[mn] = 0;
   while ((iread = look_forward_optional(imp, "Initialize", input, '=')) == 1) {
     int curr_var = Num_Var_Init_Mat[mn];
-    char line[255];
-    char *arguments[MAX_NUMBER_PARAMS];
 
     Var_init_mat[mn][curr_var].len_u_pars = -1;
     /*
@@ -8559,26 +8557,23 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     SPF(es, "%s = %s %d %.4g", "Initialize", input, Var_init_mat[mn][Num_Var_Init_Mat[mn]].ktype,
         Var_init_mat[mn][Num_Var_Init_Mat[mn]].init_val);
 
-    if (fscanf(imp, "%d", &Var_init_mat[mn][Num_Var_Init_Mat[mn]].slave_block) != 1)
+    if (fscanf(imp, "%d", &Var_init_mat[mn][Num_Var_Init_Mat[mn]].slave_block) != 1) {
       Var_init_mat[mn][Num_Var_Init_Mat[mn]].slave_block = 0;
-    else
+    } else
       SPF(endofstring(es), " %d", Var_init_mat[mn][Num_Var_Init_Mat[mn]].slave_block);
 
+#ifdef USERMAT_INITIALIZATION
     /* add float list */
-
-    if (fgets(line, 255, imp) != NULL) {
-      strip(line);
-      if ((num_const = count_parameters(line)) > 0) {
-        iread = tokenize_by_whsp(line, arguments, MAX_NUMBER_PARAMS);
-        Var_init_mat[mn][curr_var].len_u_pars = 0;
-        Var_init_mat[mn][curr_var].u_pars = alloc_dbl_1(num_const, 0.0);
-        for (i = 0; i < num_const; i++) {
-          Var_init_mat[mn][curr_var].u_pars[i] = atof(arguments[i]);
-          Var_init_mat[mn][curr_var].len_u_pars++;
-          SPF(endofstring(echo_string), " %.4g", Var_init_mat[mn][curr_var].u_pars[i]);
-        }
-      }
+    double tmp;
+    Var_init_mat[mn][curr_var].u_pars = alloc_dbl_1(MAX_NUMBER_PARAMS, 0.0);
+    Var_init_mat[mn][curr_var].len_u_pars = 0;
+    while (fscanf(imp, "%lf ", &tmp) == 1) {
+      i = Var_init_mat[mn][curr_var].len_u_pars;
+      Var_init_mat[mn][curr_var].u_pars[i] = tmp;
+      Var_init_mat[mn][curr_var].len_u_pars++;
+      SPF(endofstring(echo_string), " %.4g", tmp);
     }
+#endif
 
     Num_Var_Init_Mat[mn]++;
     ECHO(es, echo_file);
@@ -9330,6 +9325,10 @@ mat_ptr->veloU	       * for it now and flag its existence through the material p
     }
 
     ECHO(es, echo_file);
+
+    model_read =
+        look_for_mat_prop(imp, "Upper Velocity Function Constants", &(mat_ptr->VeloUFunctionModel),
+                          mat_ptr->veloU, NO_USER, NULL, model_name, VECTOR_INPUT, &NO_SPECIES, es);
 
     /* Optional slip term */
 
