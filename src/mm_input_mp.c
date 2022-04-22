@@ -2599,13 +2599,13 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         exit(-1);
       }
 
-      if (vn_glob[mn]->evssModel == LOG_CONF || vn_glob[mn]->evssModel == LOG_CONF_GRADV) {
-        if (modal_data[mn] != 0.0) {
-          SPF(err_msg, "PTT Xi Parameter must equal zero for LOG_CONF formulation");
-          fprintf(stderr, "%s\n", err_msg);
-          exit(-1);
-        }
-      }
+      // if (vn_glob[mn]->evssModel == LOG_CONF || vn_glob[mn]->evssModel == LOG_CONF_GRADV) {
+      //   if (modal_data[mn] != 0.0) {
+      //     SPF(err_msg, "PTT Xi Parameter must equal zero for LOG_CONF formulation");
+      //     fprintf(stderr, "%s\n", err_msg);
+      //     exit(-1);
+      //   }
+      // }
 
       for (mm = 0; mm < vn_glob[mn]->modes; mm++) {
         ve_glob[mn][mm]->xi = modal_data[mm];
