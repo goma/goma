@@ -663,7 +663,7 @@ void setup_old_exo(Exo_DB *e, Dpi *dpi, int num_proc) {
       int end = dpi->ss_block_index_global[global_ss_index + 1];
       for (int bidx = start; bidx < end; bidx++) {
         // expects 1-indexed blocks
-        ss_to_blks[bidx - start + 1][ss_index] = dpi->ss_block_list_global[bidx] + 1;
+        ss_to_blks[bidx - start + 1][ss_index] = e->eb_id[dpi->ss_block_list_global[bidx]];
       }
     }
   } else {
