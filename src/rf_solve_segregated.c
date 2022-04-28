@@ -260,7 +260,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
   unsigned int matrix_systems_mask = 1;
 
   int i;
-  int inewton;
+  int inewton = 0;
   int *numProcUnknowns;
 
 #ifdef RELAX_ON_TRANSIENT_PLEASE

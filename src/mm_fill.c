@@ -3431,19 +3431,22 @@ Revised:         Summer 1998, SY Tam (UNM)
     if (zeroCA == 0) {
       int count = 0, Num_CAs_done = 0;
       for (j = 0; j < MAX_CA; j++) {
-        if (CA_id[j] == -2)
-          Num_CAs_done++;
-        if (CA_proc[j] == ProcID)
-          count++;
+        if (CA_proc[j] == ProcID) {
+          if (CA_id[j] == -2)
+            Num_CAs_done++;
+          if (CA_id[j] != -1)
+            count++;
+        }
       }
 
       if (count != Num_CAs_done) {
         GOMA_WH(-1, "\nNot all contact angle conditions were applied!\n");
         for (j = 0; j < count; j++) {
-          fprintf(stderr, "CA:%d ID:%d fselem:%d sselem:%d Proc:%d\n", j, CA_id[j], CA_fselem[j],
-                  CA_sselem[j], CA_proc[j]);
+          if (ProcID == CA_proc[j])
+            fprintf(stderr, "CA:%d ID:%d fselem:%d sselem:%d Proc:%d\n", j, CA_id[j], CA_fselem[j],
+                    CA_sselem[j], CA_proc[j]);
         }
-        fprintf(stderr, "Count=%d  Done=%d\n", count, Num_CAs_done);
+        DPRINTF(stderr, "Count=%d  Done=%d\n", count, Num_CAs_done);
       }
     }
   }

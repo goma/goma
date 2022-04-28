@@ -2879,13 +2879,14 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
   int SPECIES = MAX_VARIABLE_TYPES;
   dbl p_gas_star = 0.0;
 
-  dbl thermexp = 0;
+  dbl thermexp = 0, delta_thermexp = 0;
   dbl speciesexp[MAX_CONC];
   dbl d_thermexp_dx[MAX_VARIABLE_TYPES + MAX_CONC];
   dbl d_speciesexp_dx[MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC];
   dbl viscos = 0, dil_viscos = 0;
   dbl d_viscos_dx[MAX_VARIABLE_TYPES + MAX_CONC];
   dbl d_dilviscos_dx[MAX_VARIABLE_TYPES + MAX_CONC];
+  dbl orient[DIM];
 
   dim = ei[pg->imtrx]->ielem_dim;
   mat_ielem = PRS_mat_ielem;
@@ -2898,6 +2899,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
   memset(d_dilviscos_dx, 0, sizeof(double) * (MAX_VARIABLE_TYPES + MAX_CONC));
   memset(speciesexp, 0, sizeof(double) * MAX_CONC);
   memset(TT, 0, sizeof(dbl) * DIM * DIM);
+  memset(orient, 0, sizeof(dbl) * DIM);
 
   /*
    * Calculate the lame coefficients if they are not constant. Note, some of the
@@ -2909,6 +2911,14 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
                                 d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx, d_viscos_dx,
                                 d_dilviscos_dx);
   GOMA_EH(err, " Problem in loading up elastic constants");
+  if (elc->thermal_expansion_model == ORTHOTROPIC) {
+    if (efv->Num_external_field >= dim) {
+      for (p = 0; p < dim; p++) {
+        orient[p] = fv->external_field[p];
+      }
+    }
+    delta_thermexp = elc->u_thermal_expansion[5];
+  }
 
   /* Here we will simple use our cadre of Elastic models if no Viscoplastic
    * strain is allowed, otherwise we will call the EVP routine get_evp_stress_tensor
@@ -2945,28 +2955,39 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 
     /*  add thermo-elasticity  */
     if (pd->e[pg->imtrx][R_ENERGY]) {
-      if (elc->thermal_expansion_model == CONSTANT) {
+      if (elc->thermal_expansion_model == CONSTANT ||
+          elc->thermal_expansion_model == THERMAL_HEAT) {
         for (p = 0; p < VIM; p++) {
           for (q = 0; q < VIM; q++) {
             TT[p][q] -= (2. * mu + 3. * lambda) * thermexp * (fv->T - elc->solid_reference_temp) *
                         delta(p, q);
           }
         }
+      } else if (elc->thermal_expansion_model == ORTHOTROPIC) {
+        for (p = 0; p < VIM; p++) {
+          for (q = 0; q < VIM; q++) {
+            TT[p][q] -= (2. * mu + 3. * lambda) *
+                        (thermexp * delta(p, q) + delta_thermexp * orient[p] * orient[q]) *
+                        (fv->T - elc->solid_reference_temp);
+          }
+        }
       }
-      if (elc->thermal_expansion_model == IDEAL_GAS) {
+
+      else if (elc->thermal_expansion_model == IDEAL_GAS) {
         for (p = 0; p < VIM; p++) {
           for (q = 0; q < VIM; q++) {
             TT[p][q] -= (2. * mu + 3. * lambda) / (thermexp + fv->T) *
                         (fv->T - elc->solid_reference_temp) * delta(p, q);
           }
         }
-      }
-      if (elc->thermal_expansion_model == USER) {
+      } else if (elc->thermal_expansion_model == USER) {
         for (p = 0; p < VIM; p++) {
           for (q = 0; q < VIM; q++) {
             TT[p][q] -= (2. * mu + 3. * lambda) * thermexp * delta(p, q);
           }
         }
+      } else {
+        GOMA_EH(-1, "Unrecognized thermal expansion model");
       }
     }
 
@@ -4808,6 +4829,18 @@ int load_elastic_properties(struct Elastic_Constitutive *elcp,
   /*  thermal expansion	*/
   if (elc_ptr->thermal_expansion_model == CONSTANT) {
     *thermexp = elc_ptr->thermal_expansion;
+  } else if (elc_ptr->thermal_expansion_model == THERMAL_HEAT ||
+             elc_ptr->thermal_expansion_model == ORTHOTROPIC) {
+    double Tref, tmp;
+    Tref = elc_ptr->u_thermal_expansion[4];
+    tmp = fv->T - Tref;
+    *thermexp =
+        elc_ptr->u_thermal_expansion[0] +
+        tmp * (elc_ptr->u_thermal_expansion[1] +
+               tmp * (elc_ptr->u_thermal_expansion[2] + tmp * elc_ptr->u_thermal_expansion[3]));
+    d_thermexp_dx[TEMPERATURE] =
+        (elc_ptr->u_thermal_expansion[1] +
+         tmp * (2. * elc_ptr->u_thermal_expansion[2] + tmp * 3. * elc->u_thermal_expansion[3]));
   } else if (elc_ptr->thermal_expansion_model == SHRINKAGE) {
     *thermexp = elc_ptr->u_thermal_expansion[0];
   } else if (elc_ptr->thermal_expansion_model == IDEAL_GAS) {

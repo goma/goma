@@ -1805,6 +1805,13 @@ void init_vec(
       e_start = exo->eb_ptr[ebi];
       e_end = exo->eb_ptr[ebi + 1];
 
+      for (j = 0; j < Num_Var_Init_Mat[mn]; j++) {
+        if (Var_init_mat[mn][j].len_u_pars <= 0) {
+          DPRINTF(stdout, "\tSetting MAT %d %s number %d (variable [%d]) to %g\n", mn,
+                  Var_Name[Var_init_mat[mn][j].var].name1, Var_init_mat[mn][j].ktype,
+                  Var_init_mat[mn][j].var, Var_init_mat[mn][j].init_val);
+        }
+      }
       /*
        *  Loop over each element in the element block
        */
@@ -1841,7 +1848,7 @@ void init_vec(
               if (var == MASS_FRACTION && Var_init_mat[mn][j].ktype >= pd->Num_Species_Eqn) {
                 continue;
               }
-              if (nunks == 1) {
+              if (nunks == 1 && Var_init_mat[mn][j].len_u_pars <= 0) {
                 ipos = Index_Solution(i, var, Var_init_mat[mn][j].ktype, 0, mn, pg->imtrx);
                 u[ipos] = Var_init_mat[mn][j].init_val;
               } else {
@@ -1894,7 +1901,7 @@ void init_vec(
       }     /* end for e_start=ielem<e_end */
     }       /* end if (Num_Var_Init_Mat[mn] > 0 */
   }
-  safer_free((void **)&block_order);
+  /*  safer_free((void **) &block_order);  */
 
   /*
    * check for external variables which have to be read in
@@ -1984,6 +1991,120 @@ void init_vec(
                         exo, FALSE, 0.);
     }
   }
+  /* User initialization part
+   * Loop over element blocks that exist for this processor, determine
+   * which material corresponds to it.
+   */
+#ifdef USERMAT_INITIALIZATION
+
+  for (ebj = 0; ebj < exo->num_elem_blocks; ebj++) {
+    ebi = block_order[ebj];
+    mn = Matilda[ebi];
+    if (mn < 0) {
+      continue;
+    }
+    pd = pd_glob[mn];
+    mp = mp_glob[mn];
+    if (Num_Var_Init_Mat[mn] > 0) {
+      e_start = exo->eb_ptr[ebi];
+      e_end = exo->eb_ptr[ebi + 1];
+
+      for (j = 0; j < Num_Var_Init_Mat[mn]; j++) {
+        if (Var_init_mat[mn][j].len_u_pars > 0) {
+          DPRINTF(stdout, "\tSetting MAT %d %s number %d (variable [%d]) to USER %g\n", mn,
+                  Var_Name[Var_init_mat[mn][j].var].name1, Var_init_mat[mn][j].ktype,
+                  Var_init_mat[mn][j].var, Var_init_mat[mn][j].init_val);
+        }
+      }
+      /*
+       *  Loop over each element in the element block
+       */
+      for (ielem = e_start; ielem < e_end; ielem++) {
+        ielem_type = Elem_Type(exo, ielem);
+        num_nodes = elem_info(NNODES, ielem_type);
+        index = Proc_Connect_Ptr[ielem];
+        /*
+         *  Loop over each local node in the element
+         */
+        for (n = 0; n < num_nodes; n++) {
+          i = Proc_Elem_Connect[index++];
+          nv = Nodes[i]->Nodal_Vars_Info[pg->imtrx];
+          for (j = 0; j < Num_Var_Init_Mat[mn]; j++) {
+            int slaved = Var_init_mat[mn][j].slave_block;
+
+            var = Var_init_mat[mn][j].var;
+            nunks = get_nv_ndofs_modMF(nv, var);
+
+            if (slaved == 1)
+              slaved = Nodes[i]->Mat_List.Length > 1;
+
+            /*
+             * We only want to initialize a variable at a node
+             * if we have an unknown at that node, and there is
+             * a valid interpolation for that variable in the
+             * current element block
+             */
+            if (nunks > 0 && pd->i[pg->imtrx][var] && !slaved) {
+              /*
+               * Check against ktype here to make sure we have
+               * an associated unknown
+               */
+              if (var == MASS_FRACTION && Var_init_mat[mn][j].ktype >= pd->Num_Species_Eqn) {
+                continue;
+              }
+              if (nunks == 1) {
+                if (Var_init_mat[mn][j].len_u_pars == 7 && Var_init_mat[mn][j].var == TEMPERATURE) {
+                  double xpt0[DIM], dist, distz, T_below, T_init;
+                  double alpha, speed, ht, sum, xn, exp_arg;
+                  int n_terms = 4, nt, dir;
+
+                  for (dir = 0; dir < DIM; dir++) {
+                    xpt0[dir] = Var_init_mat[mn][j].u_pars[dir];
+                  }
+                  alpha = Var_init_mat[mn][j].u_pars[DIM];
+                  speed = Var_init_mat[mn][j].u_pars[DIM + 1];
+                  ht = Var_init_mat[mn][j].u_pars[DIM + 2];
+                  T_below = Var_init_mat[mn][j].u_pars[DIM + 3];
+                  T_init = Var_init_mat[mn][j].init_val;
+                  ipos = Index_Solution(i, var, Var_init_mat[mn][j].ktype, 0, mn, pg->imtrx);
+                  sum = 0.;
+                  for (nt = 0; nt < n_terms; nt++) {
+                    xn = 0.5 + ((double)nt);
+                    dist = 0.;
+                    for (dir = 0; dir < DIM; dir++) {
+                      dist += efv->ext_fld_ndl_val[dir][i] * (Coor[dir][i] - xpt0[dir]);
+                    }
+                    exp_arg = dist * alpha * SQUARE(xn * M_PIE / ht) / speed;
+                    distz = xpt0[2] + 0.5 * ht - Coor[2][i];
+                    sum += exp(exp_arg) * cos(M_PIE / ht * distz * xn) * 2. / M_PIE * pow(-1., nt) /
+                           xn;
+                  }
+                  u[ipos] = fmin(T_below - (T_below - T_init) * sum, T_init);
+                } else if (Var_init_mat[mn][j].len_u_pars == 5 &&
+                           Var_init_mat[mn][j].var == MESH_DISPLACEMENT1) {
+                  double xpt0[DIM], T_pos, T_ref;
+                  int dir;
+                  for (dir = 0; dir < DIM; dir++) {
+                    xpt0[dir] = Var_init_mat[mn][j].u_pars[dir];
+                  }
+                  ipos = Index_Solution(i, var, TEMPERATURE, 0, mn, pg->imtrx);
+                  T_pos = u[ipos];
+                  ipos = Index_Solution(i, var, Var_init_mat[mn][j].ktype, 0, mn, pg->imtrx);
+                  T_ref = Var_init_mat[mn][j].u_pars[DIM + 1];
+                  for (dir = 0; dir < DIM; dir++) {
+                    u[ipos + dir] = Var_init_mat[mn][j].u_pars[DIM] * (Coor[dir][i] - xpt0[dir]) *
+                                    (T_pos - T_ref);
+                  }
+                }
+              }
+            }
+          } /* end for j<Num_Var_Init_Mat[mn] */
+        }   /* end for n<num_nodes */
+      }     /* end for e_start=ielem<e_end */
+    }       /* end if (Num_Var_Init_Mat[mn] > 0 */
+  }         /* end for element blocks */
+#endif
+  safer_free((void **)&block_order);
 
   /*
    *  Exchange the degrees of freedom with neighboring processors
