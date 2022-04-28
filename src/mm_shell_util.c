@@ -3902,11 +3902,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     /* Set some coefficients */
     dbl k_turb = 12., d_k_turb_dmu = 0., d_k_turb_dH = 0.;
     dbl vsqr, q_mag = 0., v_mag = 0., tau_w, pre_delP = 0., vpre_delP = 0.;
-<<<<<<< Updated upstream
-    dbl dq_gradp = 0., dv_gradp = 0.;
-=======
     dbl dq_gradp = 1., dv_gradp = 1.;
->>>>>>> Stashed changes
     dbl dq_dH = 0., dv_dH = 0.;
     d_k_turb_dmu = 0.0;
     d_k_turb_dH = 0.0;
@@ -4643,11 +4639,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
 
     memset(q, 0.0, sizeof(double) * DIM);
     memset(v_avg, 0.0, sizeof(double) * DIM);
-<<<<<<< Updated upstream
-    dbl q_mag = 0., pre_delP = 0., dq_gradp = 0., vpre_delP = 0.;
-=======
     dbl q_mag = 0., pre_delP = 0., dq_gradp = 1., vpre_delP = 1.;
->>>>>>> Stashed changes
     dbl k_turb = 3.;
     dbl vsqr, v_mag = 0., dq_dH = 0., dv_dH = 0.;
 
