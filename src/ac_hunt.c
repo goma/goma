@@ -62,6 +62,18 @@
 #include "rf_solver.h"
 #include "rf_util.h"
 #include "sl_auxutil.h"
+<<<<<<< Updated upstream
+#include "sl_epetra_util.h"
+#include "sl_matrix_util.h"
+#ifdef GOMA_ENABLE_PETSC
+#include "sl_petsc.h"
+#endif
+=======
+#include "sl_epetra_interface.h"
+#include "sl_epetra_util.h"
+#include "sl_matrix_util.h"
+#include "sl_petsc.h"
+>>>>>>> Stashed changes
 #include "sl_util.h" /* defines sl_init() */
 #include "sl_util_structs.h"
 #include "std.h"

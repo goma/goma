@@ -996,17 +996,19 @@ static int calc_standard_fields(double **post_proc_vect,
   }
 
   if (PP_Viscosity != -1 && (pd->e[pg->imtrx][R_LUBP] || pd->e[pg->imtrx][R_SHELL_FILMP])) {
-    dbl nexp = 1., muinf = 0., aexp = 2., atexp, lam = 1., yield = 0.;
     if (gn->ConstitutiveEquation == POWER_LAW) {
-      mu = gn->mu0;
-      nexp = gn->nexp;
+      mu = gn->mu0 / pow(10., 1. - gn->nexp);
     } else if (gn->ConstitutiveEquation == BINGHAM) {
-      mu = gn->mu0;
-      yield = gn->tau_y;
+      mu = gn->tau_y / 10. + gn->mu0;
     } else if (gn->ConstitutiveEquation == HERSCHEL_BULKLEY) {
-      mu = gn->mu0;
+      mu = gn->mu0 / pow(10., 1. - gn->nexp) + gn->tau_y / 10.;
+    } else if (gn->ConstitutiveEquation == CARREAU) {
+      double muinf, nexp, lam, aexp;
       nexp = gn->nexp;
-      yield = gn->tau_y;
+      muinf = gn->muinf;
+      lam = gn->lam;
+      aexp = gn->aexp;
+      mu = muinf + (gn->mu0 - muinf) / pow(1. + pow(10. * lam, aexp), 1. - nexp);
     } else {
       mu = viscosity(gn, NULL, NULL);
     }

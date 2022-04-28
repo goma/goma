@@ -3450,8 +3450,8 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
   dbl v_avg[DIM];
   dbl H;
   dbl veloL[DIM], veloU[DIM];
-  dbl mu, dmu_dc;
-  dbl nexp = 1., muinf = 0., aexp = 2., atexp, lam = 1., yield = 0.;
+  dbl mu, dmu_dc = 0.;
+  dbl nexp = 1., muinf = 0., aexp = 2., lam = 1., yield = 0.;
   dbl *dmu_df;
   dbl rho;
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct; /* viscosity dependence */
@@ -3893,7 +3893,6 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         D_MU_DX[i][jk] = d_mu->X[i][k];
       }
     }
-    dbl dmu_dc = 0.0;
     if (pd->v[pg->imtrx][SHELL_PARTC]) {
       dmu_dc = mp->d_viscosity[SHELL_PARTC];
     }
@@ -3902,8 +3901,12 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
 
     /* Set some coefficients */
     dbl k_turb = 12., d_k_turb_dmu = 0., d_k_turb_dH = 0.;
-    dbl vsqr, q_mag, v_mag, tau_w, pre_delP, vpre_delP;
-    dbl dq_gradp, dv_gradp;
+    dbl vsqr, q_mag = 0., v_mag = 0., tau_w, pre_delP = 0., vpre_delP = 0.;
+<<<<<<< Updated upstream
+    dbl dq_gradp = 0., dv_gradp = 0.;
+=======
+    dbl dq_gradp = 1., dv_gradp = 1.;
+>>>>>>> Stashed changes
     dbl dq_dH = 0., dv_dH = 0.;
     d_k_turb_dmu = 0.0;
     d_k_turb_dH = 0.0;
@@ -3985,6 +3988,26 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     } else if (gn->ConstitutiveEquation == HERSCHEL_BULKLEY) {
       k_turb = 6.;
       q_mag = -SQUARE(H) / k_turb * tau_w * (1 - 1.5 * yield / tau_w + 0.5 * CUBE(yield / tau_w));
+      if (DOUBLE_ZERO(vsqr)) {
+        for (i = 0; i < dim; i++) {
+          q[i] += q_mag * ev[i];
+          if (pd->v[pg->imtrx][VAR])
+            q[i] += pre_delP * GRADH[i] * CURV * mp->surface_tension;
+        }
+      }
+    } else if (gn->ConstitutiveEquation == CARREAU) {
+      double shr_w, intw, xfact, bexp, bexp2;
+      aexp = 3.;
+      shr_w = tau_w / mu;
+      xfact = 1. + pow(lam * shr_w, aexp);
+      // vis_w = muinf + (mu - muinf) / pow(xfact, (1.-nexp)/aexp);
+      bexp = (2. * nexp + 1.) / aexp;
+      bexp2 = (nexp + 2.) / aexp;
+      intw = SQUARE(muinf) * CUBE(shr_w) / 3. +
+             2. * muinf * (mu - muinf) / (nexp + 2.) / CUBE(lam) * (pow(xfact, bexp2) - 1.) +
+             SQUARE(mu - muinf) / (2. * nexp + 1.) / CUBE(shr_w) * (pow(xfact, bexp) - 1.);
+      k_turb = 4.;
+      q_mag = -SQUARE(H) / k_turb * (shr_w - intw / SQUARE(tau_w));
       if (DOUBLE_ZERO(vsqr)) {
         for (i = 0; i < dim; i++) {
           q[i] += q_mag * ev[i];
@@ -4620,9 +4643,13 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
 
     memset(q, 0.0, sizeof(double) * DIM);
     memset(v_avg, 0.0, sizeof(double) * DIM);
-    dbl q_mag, pre_delP, dq_gradp, dv_gradp, vpre_delP;
+<<<<<<< Updated upstream
+    dbl q_mag = 0., pre_delP = 0., dq_gradp = 0., vpre_delP = 0.;
+=======
+    dbl q_mag = 0., pre_delP = 0., dq_gradp = 1., vpre_delP = 1.;
+>>>>>>> Stashed changes
     dbl k_turb = 3.;
-    dbl vsqr, v_mag, dq_dH, dv_dH;
+    dbl vsqr, v_mag = 0., dq_dH = 0., dv_dH = 0.;
 
     for (i = 0; i < dim; i++) {
       pg_cmp[i] = GRADP[i] - GRAV[i] - GRAD_DISJ_PRESS[i];
@@ -4655,7 +4682,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       k_turb = 3.;
       dq_gradp = pre_delP = -CUBE(H) / (k_turb * mu) - beta_slip * SQUARE(H);
       q_mag = pre_delP * pgrad;
-      dv_gradp = vpre_delP = pre_delP / H;
+      vpre_delP = pre_delP / H;
       v_mag = vpre_delP * pgrad;
       dq_dH = (-3. * SQUARE(H) / (k_turb * mu) - 2. * H * beta_slip) * pgrad;
       dv_dH = (-2. * H / (k_turb * mu) - beta_slip) * pgrad;

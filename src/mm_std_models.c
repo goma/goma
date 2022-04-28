@@ -1994,6 +1994,9 @@ double joule_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h, dbl time)
 
   dim = pd->Num_Dim;
 
+  memset(dkdT, 0, sizeof(double) * MDE);
+  memset(dkdV, 0, sizeof(double) * MDE);
+  memset(dkdX, 0, sizeof(double) * DIM * MDE);
   if (mp->Elec_ConductivityModel == USER) {
     usr_electrical_conductivity(mp->u_electrical_conductivity, time);
 
@@ -2027,23 +2030,6 @@ double joule_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h, dbl time)
 
     k = mp->electrical_conductivity;
 
-    var = TEMPERATURE;
-    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-      dkdT[j] = 0.;
-    }
-
-    var = VOLTAGE;
-    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-      dkdV[j] = 0.;
-    }
-    if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
-      for (a = 0; a < dim; a++) {
-        var = MESH_DISPLACEMENT1 + a;
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-          dkdX[a][j] = 0;
-        }
-      }
-    }
     if (pd->v[pg->imtrx][MASS_FRACTION]) {
       for (w = 0; w < pd->Num_Species_Eqn; w++) {
         var = MASS_FRACTION;
