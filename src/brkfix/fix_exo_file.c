@@ -282,7 +282,7 @@ int fix_exo_file(int num_procs, const char *exo_mono_name) {
      */
 
     build_global_conn(poly, dpin, mono, fix_data);
-    // build_global_attr(poly, dpin, mono, fix_data);
+    build_global_attr(poly, dpin, mono, fix_data);
 
     /*
      * Contribute to the node set node list and distribution factor list...
