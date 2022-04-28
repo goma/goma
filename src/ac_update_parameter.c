@@ -453,6 +453,12 @@ void update_MT_parameter(double lambda, /* Parameter value */
      * General Model Constants
      */
 
+  case TAGC_REFTEMP:
+    mp_glob[mn]->reference[TEMPERATURE] = lambda;
+    break;
+
+    /* these are for SUSPENSION/FILLED_EPOXY models */
+
   case TAGC_THERMAL_CONDUCTIVITY:
     mp_glob[mn]->thermal_conductivity = lambda;
     break;
@@ -1527,6 +1533,10 @@ void retrieve_MT_parameter(double *lambda, /* Parameter value */
 
   case TAGC_WLFC2:
     *lambda = gn_glob[mn]->wlfc2;
+    break;
+
+  case TAGC_REFTEMP:
+    *lambda = mp_glob[mn]->reference[TEMPERATURE];
     break;
 
     /* these are for the BINGHAM yielding material model */

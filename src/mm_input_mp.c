@@ -1128,6 +1128,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       imp, "Solid Thermal Expansion", &(elc_glob[mn]->thermal_expansion_model),
       &(elc_glob[mn]->thermal_expansion), &(elc_glob[mn]->u_thermal_expansion),
       &(elc_glob[mn]->len_u_thermal_expansion), model_name, SCALAR_INPUT, &NO_SPECIES, es);
+
   if (model_read == -1) {
 
     if (!strcmp(model_name, "SHRINKAGE")) {
@@ -1148,7 +1149,29 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         GOMA_EH(GOMA_ERROR, err_msg);
       }
       elc_glob[mn]->len_u_thermal_expansion = num_const;
-    } else {
+    } else if (!strcmp(model_name, "THERMAL")) {
+      elc_glob[mn]->thermal_expansion_model = THERMAL_HEAT;
+      num_const = read_constants(imp, &(elc_glob[mn]->u_thermal_expansion), NO_SPECIES);
+      if (num_const < 5) {
+        sprintf(err_msg, "Material %s - expected at least 5 constants for %s %s model.\n",
+                pd_glob[mn]->MaterialName, search_string, "THERMAL");
+        GOMA_EH(GOMA_ERROR, err_msg);
+      }
+      elc_glob[mn]->len_u_thermal_expansion = num_const;
+      SPF_DBL_VEC(endofstring(es), num_const, elc_glob[mn]->u_thermal_expansion);
+    } else if (!strcmp(model_name, "ORTHOTROPIC")) {
+      elc_glob[mn]->thermal_expansion_model = ORTHOTROPIC;
+      num_const = read_constants(imp, &(elc_glob[mn]->u_thermal_expansion), NO_SPECIES);
+      if (num_const < 6) {
+        sprintf(err_msg, "Material %s - expected at least 6 constants for %s %s model.\n",
+                pd_glob[mn]->MaterialName, search_string, "ORTHOTROPIC");
+        GOMA_EH(GOMA_ERROR, err_msg);
+      }
+      elc_glob[mn]->len_u_thermal_expansion = num_const;
+      SPF_DBL_VEC(endofstring(es), num_const, elc_glob[mn]->u_thermal_expansion);
+    }
+
+    else {
       elc_glob[mn]->thermal_expansion_model = CONSTANT;
       elc_glob[mn]->thermal_expansion = 0.0;
     }
@@ -8506,6 +8529,9 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   Num_Var_Init_Mat[mn] = 0;
   while ((iread = look_forward_optional(imp, "Initialize", input, '=')) == 1) {
+    int curr_var = Num_Var_Init_Mat[mn];
+
+    Var_init_mat[mn][curr_var].len_u_pars = -1;
     /*
      *  Read the variable name to be fixed
      */
@@ -8531,10 +8557,23 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     SPF(es, "%s = %s %d %.4g", "Initialize", input, Var_init_mat[mn][Num_Var_Init_Mat[mn]].ktype,
         Var_init_mat[mn][Num_Var_Init_Mat[mn]].init_val);
 
-    if (fscanf(imp, "%d", &Var_init_mat[mn][Num_Var_Init_Mat[mn]].slave_block) != 1)
+    if (fscanf(imp, "%d", &Var_init_mat[mn][Num_Var_Init_Mat[mn]].slave_block) != 1) {
       Var_init_mat[mn][Num_Var_Init_Mat[mn]].slave_block = 0;
-    else
+    } else
       SPF(endofstring(es), " %d", Var_init_mat[mn][Num_Var_Init_Mat[mn]].slave_block);
+
+#ifdef USERMAT_INITIALIZATION
+    /* add float list */
+    double tmp;
+    Var_init_mat[mn][curr_var].u_pars = alloc_dbl_1(MAX_NUMBER_PARAMS, 0.0);
+    Var_init_mat[mn][curr_var].len_u_pars = 0;
+    while (fscanf(imp, "%lf ", &tmp) == 1) {
+      i = Var_init_mat[mn][curr_var].len_u_pars;
+      Var_init_mat[mn][curr_var].u_pars[i] = tmp;
+      Var_init_mat[mn][curr_var].len_u_pars++;
+      SPF(endofstring(echo_string), " %.4g", tmp);
+    }
+#endif
 
     Num_Var_Init_Mat[mn]++;
     ECHO(es, echo_file);
@@ -9172,9 +9211,7 @@ mat_ptr->veloU	       * for it now and flag its existence through the material p
         mat_ptr->u_lubsource_function_constants = alloc_dbl_1(1, 0.0);
         mat_ptr->len_lubsource = 1;
 
-        if (fscanf(imp, "%lf", &(mat_ptr->lubsource)) != 1)
-
-        {
+        if (fscanf(imp, "%lf", &(mat_ptr->lubsource)) != 1) {
           GOMA_EH(GOMA_ERROR, "Lubrication fluid source constant model expects 1 flt");
         }
 

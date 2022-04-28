@@ -995,14 +995,22 @@ static int calc_standard_fields(double **post_proc_vect,
     local_lumped[PP_Viscosity] = 1.;
   }
 
-  if (PP_Viscosity != -1 && pd->e[pg->imtrx][R_LUBP]) {
+  if (PP_Viscosity != -1 && (pd->e[pg->imtrx][R_LUBP] || pd->e[pg->imtrx][R_SHELL_FILMP])) {
+    GOMA_WH(GOMA_ERROR, "Post processing Viscosity for Lubrication still in development");
+    // dbl nexp = 1., muinf = 0., aexp = 2., atexp, lam = 1., yield = 0.;
+    // if (gn->ConstitutiveEquation == POWER_LAW) {
+    //  mu = gn->mu0;
+    //  nexp = gn->nexp;
+    //} else if (gn->ConstitutiveEquation == BINGHAM) {
+    //  mu = gn->mu0;
+    //  yield = gn->tau_y;
+    //} else if (gn->ConstitutiveEquation == HERSCHEL_BULKLEY) {
+    //  mu = gn->mu0;
+    //  nexp = gn->nexp;
+    //  yield = gn->tau_y;
+    //} else {
     mu = viscosity(gn, NULL, NULL);
-    local_post[PP_Viscosity] = mu;
-    local_lumped[PP_Viscosity] = 1.0;
-  }
-
-  if (PP_Viscosity != -1 && pd->e[pg->imtrx][R_SHELL_FILMP]) {
-    mu = viscosity(gn, NULL, NULL);
+    //}
     local_post[PP_Viscosity] = mu;
     local_lumped[PP_Viscosity] = 1.0;
   }
