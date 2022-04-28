@@ -104,7 +104,7 @@ int rd_image_to_mesh(int N_ext, Exo_DB *exo) {
   int err, i, j, si;
   int elem_loc;
   int ilnode, ignode, ielem, ielem_shape;
-  int txt_num_pts;
+  int txt_num_pts = 0;
   int icount;
 
   /* Array of doubles */
@@ -209,6 +209,9 @@ int rd_image_to_mesh(int N_ext, Exo_DB *exo) {
   for (i = 0; i < txt_num_pts; i++) {
     xyz_data[i] = (double *)malloc(DIM * sizeof(double));
   }
+
+  // remove faulty warning GCC 9
+  GOMA_ASSERT_ALWAYS(((size_t)txt_num_pts) < PTRDIFF_MAX);
 
   f_data = (double *)calloc(txt_num_pts, sizeof(double));
 

@@ -3450,8 +3450,9 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
   dbl v_avg[DIM];
   dbl H;
   dbl veloL[DIM], veloU[DIM];
-  dbl mu, dmu_dc;
-  dbl nexp = 1., muinf = 0., aexp = 2., atexp, lam = 1., yield = 0.;
+  dbl mu, dmu_dc = 0.;
+  dbl nexp = 1., yield = 0.;
+  // dbl muinf = 0., aexp = 2., atexp, lam = 1.;
   dbl *dmu_df;
   dbl rho;
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct; /* viscosity dependence */
@@ -3508,12 +3509,12 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       mu = gn->mu0;
       nexp = gn->nexp;
       yield = gn->tau_y;
-    } else if (gn->ConstitutiveEquation == CARREAU) {
-      mu = gn->mu0;
-      nexp = gn->nexp;
-      lam = gn->lam;
-      aexp = gn->aexp;
-      muinf = gn->muinf;
+      //} else if (gn->ConstitutiveEquation == CARREAU) {
+      //  mu = gn->mu0;
+      //  nexp = gn->nexp;
+      //  lam = gn->lam;
+      //  aexp = gn->aexp;
+      //  muinf = gn->muinf;
     } else {
       mu = viscosity(gn, NULL, d_mu);
       dmu_dc = mp->d_viscosity[SHELL_PARTC];
@@ -3902,8 +3903,8 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
 
     /* Set some coefficients */
     dbl k_turb = 12., d_k_turb_dmu = 0., d_k_turb_dH = 0.;
-    dbl vsqr, q_mag, v_mag, tau_w, pre_delP, vpre_delP;
-    dbl dq_gradp, dv_gradp;
+    dbl vsqr, q_mag = 0., v_mag = 0., tau_w, pre_delP = 0., vpre_delP = 0.;
+    dbl dq_gradp = 0., dv_gradp = 0.;
     dbl dq_dH = 0., dv_dH = 0.;
     d_k_turb_dmu = 0.0;
     d_k_turb_dH = 0.0;
@@ -4392,12 +4393,12 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       mu = gn->mu0;
       nexp = gn->nexp;
       yield = gn->tau_y;
-    } else if (gn->ConstitutiveEquation == CARREAU) {
-      mu = gn->mu0;
-      nexp = gn->nexp;
-      lam = gn->lam;
-      aexp = gn->aexp;
-      muinf = gn->muinf;
+      // } else if (gn->ConstitutiveEquation == CARREAU) {
+      //   mu = gn->mu0;
+      //   nexp = gn->nexp;
+      //   lam = gn->lam;
+      //   aexp = gn->aexp;
+      //   muinf = gn->muinf;
     } else {
       mu = viscosity(gn, NULL, d_mu);
       dmu_dc = mp->d_viscosity[SHELL_PARTC];
@@ -4620,9 +4621,11 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
 
     memset(q, 0.0, sizeof(double) * DIM);
     memset(v_avg, 0.0, sizeof(double) * DIM);
-    dbl q_mag, pre_delP, dq_gradp, dv_gradp, vpre_delP;
+    dbl q_mag = 0., pre_delP = 0., dq_gradp = 0., vpre_delP = 0.;
+    // seems unused
+    // dbl dv_gradp = 0.;
     dbl k_turb = 3.;
-    dbl vsqr, v_mag, dq_dH, dv_dH;
+    dbl vsqr, v_mag = 0., dq_dH = 0., dv_dH = 0.;
 
     for (i = 0; i < dim; i++) {
       pg_cmp[i] = GRADP[i] - GRAV[i] - GRAD_DISJ_PRESS[i];
@@ -4655,7 +4658,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       k_turb = 3.;
       dq_gradp = pre_delP = -CUBE(H) / (k_turb * mu) - beta_slip * SQUARE(H);
       q_mag = pre_delP * pgrad;
-      dv_gradp = vpre_delP = pre_delP / H;
+      // dv_gradp = vpre_delP = pre_delP / H;
       v_mag = vpre_delP * pgrad;
       dq_dH = (-3. * SQUARE(H) / (k_turb * mu) - 2. * H * beta_slip) * pgrad;
       dv_dH = (-2. * H / (k_turb * mu) - beta_slip) * pgrad;
