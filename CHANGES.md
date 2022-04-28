@@ -1,3 +1,10 @@
+## Changes in version 7.0.6
+
+- bugfix, CA conditions error checking
+- bugfix, Output exodus properties, used with Nodeset associativity in CUBIT
+- bugfix, iapply is always on on external surfaces for "Special" BCs
+- build script contains fix for goma#346 issue
+
 ## Changes in version 7.0.5
 
 - bugfix, fix anneal mesh not working
