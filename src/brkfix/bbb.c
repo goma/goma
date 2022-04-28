@@ -175,10 +175,9 @@ void build_big_bones(Exo_DB *p, /* EXODUS info from representative polylith */
    * Protective measures against rampant replications of the EXODUS II
    * "ID" property virus in old versions of GOMA...
    */
-
-  m->eb_num_props = 0;
-  m->ns_num_props = 0;
-  m->ss_num_props = 0;
+  m->eb_num_props = p->eb_num_props;
+  m->ns_num_props = p->ns_num_props;
+  m->ss_num_props = p->ss_num_props;
 
   m->num_times = p->num_times;
 
@@ -376,6 +375,69 @@ void build_big_bones(Exo_DB *p, /* EXODUS info from representative polylith */
 
   m->eb_prop_name = NULL;
   m->eb_prop = NULL;
+
+  /*
+   * Properties of node sets...
+   */
+
+  if (m->ns_num_props > 1) {
+
+    m->ns_prop_name = (char **)smalloc(m->ns_num_props * spc);
+    for (i = 0; i < m->ns_num_props; i++) {
+      m->ns_prop_name[i] = (char *)smalloc(MAX_STR_LENGTH * sc);
+      strcpy(m->ns_prop_name[i], p->ns_prop_name[i]);
+    }
+
+    m->ns_prop = (int **)smalloc(m->ns_num_props * spi);
+    for (i = 0; i < m->ns_num_props; i++) {
+      m->ns_prop[i] = (int *)smalloc(m->num_node_sets * si);
+      for (j = 0; j < m->num_node_sets; j++) {
+        m->ns_prop[i][j] = p->ns_prop[i][j];
+      }
+    }
+  }
+
+  /*
+   * Properties of side sets...
+   */
+
+  if (m->ss_num_props > 1) {
+
+    m->ss_prop_name = (char **)smalloc(m->ss_num_props * spc);
+    for (i = 0; i < m->ss_num_props; i++) {
+      m->ss_prop_name[i] = (char *)smalloc(MAX_STR_LENGTH * sc);
+      strcpy(m->ss_prop_name[i], p->ss_prop_name[i]);
+    }
+
+    m->ss_prop = (int **)smalloc(m->ss_num_props * spi);
+    for (i = 0; i < m->ss_num_props; i++) {
+      m->ss_prop[i] = (int *)smalloc(m->num_side_sets * si);
+      for (j = 0; j < m->num_side_sets; j++) {
+        m->ss_prop[i][j] = p->ss_prop[i][j];
+      }
+    }
+  }
+
+  /*
+   * Properties of element blocks...
+   */
+
+  if (m->eb_num_props > 1) {
+
+    m->eb_prop_name = (char **)smalloc(m->eb_num_props * spc);
+    for (i = 0; i < m->eb_num_props; i++) {
+      m->eb_prop_name[i] = (char *)smalloc(MAX_STR_LENGTH * sc);
+      strcpy(m->eb_prop_name[i], p->eb_prop_name[i]);
+    }
+
+    m->eb_prop = (int **)smalloc(m->eb_num_props * spi);
+    for (i = 0; i < m->eb_num_props; i++) {
+      m->eb_prop[i] = (int *)smalloc(m->num_elem_blocks * si);
+      for (j = 0; j < m->num_elem_blocks; j++) {
+        m->eb_prop[i][j] = p->eb_prop[i][j];
+      }
+    }
+  }
 
   /*
    * Results data...how many of each kind.

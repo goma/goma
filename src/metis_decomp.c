@@ -590,6 +590,84 @@ goma_error goma_metis_decomposition(char **filenames, int n_files) {
       err = ex_put_qa(exoid, 1, Q);
       CHECK_EX_ERROR(err, "ex_put_qa");
 
+      /*
+       * Output properties from the monolith to the proc
+       */
+
+      /*
+       * Node sets...
+       */
+
+      if (monolith->ns_num_props > 1) {
+
+        err = ex_put_prop_names(exoid, EX_NODE_SET, monolith->ns_num_props - 1,
+                                &(monolith->ns_prop_name[1]));
+        GOMA_EH(err, "ex_put_prop_names(EX_NODE_SET)");
+
+        /*
+         * the following loop begins at 1 so as avoid writing
+         * the first "ID" node set property table
+         * This automatically added by ex_put_prop_array
+         * as the first property table written to all exodus files
+         * Consequently, if we were to write the "ID" table out
+         * here it would continually be replicated as the file
+         * is repeatedly rewritten
+         */
+
+        for (int i = 1; i < monolith->ns_num_props; i++) {
+          if (strcmp(monolith->ns_prop_name[i], "ID") != 0) {
+            err = ex_put_prop_array(exoid, EX_NODE_SET, monolith->ns_prop_name[i],
+                                    monolith->ns_prop[i]);
+            GOMA_EH(err, "ex_put_prop_array(EX_NODE_SET)");
+          }
+        }
+      }
+
+      /*
+       * Side sets...
+       */
+
+      if (monolith->ss_num_props > 1) {
+
+        /*
+         * Only write these out if the second property is not the same ole
+         * "ID" like the first one...
+         */
+
+        err = ex_put_prop_names(exoid, EX_SIDE_SET, monolith->ss_num_props - 1,
+                                &(monolith->ss_prop_name[1]));
+        GOMA_EH(err, "ex_get_prop_names(EX_SIDE_SET)");
+
+        for (int i = 1; i < monolith->ss_num_props; i++) {
+          if (strcmp(monolith->ss_prop_name[i], "ID") != 0) {
+
+            err = ex_put_prop_array(exoid, EX_SIDE_SET, monolith->ss_prop_name[i],
+                                    monolith->ss_prop[i]);
+            GOMA_EH(err, "ex_put_prop_array(EX_SIDE_SET)");
+          }
+        }
+      }
+
+      /*
+       * Element blocks...
+       */
+
+      if (monolith->eb_num_props > 1) {
+
+        err = ex_put_prop_names(exoid, EX_ELEM_BLOCK, monolith->eb_num_props - 1,
+                                &(monolith->eb_prop_name[1]));
+        GOMA_EH(err, "ex_put_prop_names(EX_ELEM_BLOCK)");
+
+        for (int i = 1; i < monolith->eb_num_props; i++) {
+          if (strcmp(monolith->ss_prop_name[i], "ID") != 0) {
+
+            err = ex_put_prop_array(exoid, EX_ELEM_BLOCK, monolith->eb_prop_name[i],
+                                    monolith->eb_prop[i]);
+            GOMA_EH(err, "ex_put_prop_array(EX_ELEM_BLOCK)");
+          }
+        }
+      }
+
       err = ex_close(exoid);
       CHECK_EX_ERROR(err, "ex_close");
 
@@ -749,6 +827,7 @@ goma_error goma_metis_decomposition(char **filenames, int n_files) {
           monolith_elem_values = calloc(monolith->num_elems, sizeof(dbl));
           proc_elem_values = calloc(num_elems_part[proc], sizeof(dbl));
         }
+
         for (int ts = 0; ts < num_time_steps; ts++) {
           int err = ex_put_time(proc_exoid, ts + 1, &times[ts]);
           CHECK_EX_ERROR(err, "ex_put_time");
