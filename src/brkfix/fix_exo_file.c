@@ -191,7 +191,8 @@ int fix_exo_file(int num_procs, const char *exo_mono_name) {
      */
 
     rd_exo(poly, polylith_name, 0,
-           (EXODB_ACTION_RD_INIT + EXODB_ACTION_RD_MESH + EXODB_ACTION_RD_RES0));
+           (EXODB_ACTION_RD_INIT + EXODB_ACTION_RD_MESH + EXODB_ACTION_RD_RES0 +
+            EXODB_ACTION_NO_GOMA));
 
     if (poly->num_node_vars > num_node_var_max) {
       num_node_var_max = poly->num_node_vars;
@@ -227,8 +228,9 @@ int fix_exo_file(int num_procs, const char *exo_mono_name) {
 
   init_dpi_struct(dpin);
 
-  rd_exo(poly, polylith_name, 0,
-         (EXODB_ACTION_RD_INIT + EXODB_ACTION_RD_MESH + EXODB_ACTION_RD_RES0));
+  rd_exo(
+      poly, polylith_name, 0,
+      (EXODB_ACTION_RD_INIT + EXODB_ACTION_RD_MESH + EXODB_ACTION_RD_RES0 + EXODB_ACTION_NO_GOMA));
   zero_base(poly);
   setup_base_mesh(dpin, poly, 1);
   rd_dpi(poly, dpin, polylith_name, false);
@@ -270,7 +272,8 @@ int fix_exo_file(int num_procs, const char *exo_mono_name) {
      * Set actions...
      */
 
-    rd_exo(poly, polylith_name, 0, (EXODB_ACTION_RD_INIT + EXODB_ACTION_RD_MESH));
+    rd_exo(poly, polylith_name, 0,
+           (EXODB_ACTION_RD_INIT + EXODB_ACTION_RD_MESH + EXODB_ACTION_NO_GOMA));
     zero_base(poly);
     setup_base_mesh(dpin, poly, 1);
     rd_dpi(poly, dpin, polylith_name, false);
@@ -343,7 +346,8 @@ int fix_exo_file(int num_procs, const char *exo_mono_name) {
        */
 
       rd_exo(poly, polylith_name, 0,
-             (EXODB_ACTION_RD_INIT + EXODB_ACTION_RD_MESH + EXODB_ACTION_RD_RES0));
+             (EXODB_ACTION_RD_INIT + EXODB_ACTION_RD_MESH + EXODB_ACTION_RD_RES0 +
+              EXODB_ACTION_NO_GOMA));
       zero_base(poly);
       setup_base_mesh(dpin, poly, 1);
       rd_dpi(poly, dpin, polylith_name, false);
@@ -405,7 +409,8 @@ int fix_exo_file(int num_procs, const char *exo_mono_name) {
       poly->num_nv_indeces = poly->num_node_vars;
 
       rd_exo(poly, polylith_name, 0,
-             (EXODB_ACTION_RD_RESN + EXODB_ACTION_RD_RESE + EXODB_ACTION_RD_RESG));
+             (EXODB_ACTION_RD_RESN + EXODB_ACTION_RD_RESE + EXODB_ACTION_RD_RESG +
+              EXODB_ACTION_NO_GOMA));
 
 #ifdef DEBUG
       fprintf(stderr, "C mono->nv_time_indeces[0] = %d\n", mono->nv_time_indeces[0]);
