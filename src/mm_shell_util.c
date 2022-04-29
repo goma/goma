@@ -3451,7 +3451,6 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
   dbl H;
   dbl veloL[DIM], veloU[DIM];
   dbl mu, dmu_dc = 0.;
-  dbl nexp = 1., muinf = 0., aexp = 2., lam = 1., yield = 0.;
   dbl *dmu_df;
   dbl rho;
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct; /* viscosity dependence */
@@ -3495,25 +3494,9 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
 
     /* Load viscosity and density */
     rho = density(d_rho, time);
-    if (gn->ConstitutiveEquation == NEWTONIAN) {
-      mu = viscosity(gn, NULL, d_mu);
-      dmu_dc = mp->d_viscosity[SHELL_PARTC];
-    } else if (gn->ConstitutiveEquation == POWER_LAW) {
+    if (gn->ConstitutiveEquation == POWER_LAW || gn->ConstitutiveEquation == BINGHAM ||
+        gn->ConstitutiveEquation == HERSCHEL_BULKLEY || gn->ConstitutiveEquation == CARREAU) {
       mu = gn->mu0;
-      nexp = gn->nexp;
-    } else if (gn->ConstitutiveEquation == BINGHAM) {
-      mu = gn->mu0;
-      yield = gn->tau_y;
-    } else if (gn->ConstitutiveEquation == HERSCHEL_BULKLEY) {
-      mu = gn->mu0;
-      nexp = gn->nexp;
-      yield = gn->tau_y;
-    } else if (gn->ConstitutiveEquation == CARREAU) {
-      mu = gn->mu0;
-      nexp = gn->nexp;
-      lam = gn->lam;
-      aexp = gn->aexp;
-      muinf = gn->muinf;
     } else {
       mu = viscosity(gn, NULL, d_mu);
       dmu_dc = mp->d_viscosity[SHELL_PARTC];
@@ -3939,19 +3922,12 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     dev_dpg[1][2] = dev_dpg[2][1] = -ev[1] * ev[2];
 
     tau_w = 0.5 * H * pgrad;
-    if (gn->ConstitutiveEquation == NEWTONIAN) {
-      k_turb = 12.;
-      dq_gradp = pre_delP = -CUBE(H) / (k_turb * mu);
-      q_mag = pre_delP * pgrad;
-      dv_gradp = vpre_delP = pre_delP / H;
-      v_mag = vpre_delP * pgrad;
-      dq_dH = -3. * SQUARE(H) / (k_turb * mu) * pgrad;
-      dv_dH = -2. * H / (k_turb * mu) * pgrad;
-    } else if (gn->ConstitutiveEquation == POWER_LAW) {
-      k_turb = 2. * (2. + 1. / nexp);
+    if (gn->ConstitutiveEquation == POWER_LAW) {
+      double nexp = gn->nexp;
+      k_turb = 4. * (2. + 1. / nexp);
       if (DOUBLE_NONZERO(pgrad)) {
-        q_mag = -SQUARE(H) / k_turb * pow(tau_w / mu, 1. / nexp);
-        pre_delP = -0.5 * CUBE(H) / (k_turb * mu) * pow(tau_w / mu, 1. / nexp - 1.);
+        q_mag = -2. * SQUARE(H) / k_turb * pow(tau_w / mu, 1. / nexp);
+        pre_delP = -CUBE(H) / (k_turb * mu) * pow(tau_w / mu, 1. / nexp - 1.);
         dq_gradp = pre_delP / nexp;
         dv_gradp = dq_gradp / H;
         vpre_delP = pre_delP / H;
@@ -3964,6 +3940,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         dv_gradp = vpre_delP = pre_delP / H;
       }
     } else if (gn->ConstitutiveEquation == BINGHAM) {
+      double yield = gn->tau_y;
       k_turb = 12.;
       if (tau_w > yield) {
         pre_delP =
@@ -3982,35 +3959,59 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         dq_gradp = dv_gradp = 0.;
       }
     } else if (gn->ConstitutiveEquation == HERSCHEL_BULKLEY) {
-      k_turb = 6.;
-      q_mag = -SQUARE(H) / k_turb * tau_w * (1 - 1.5 * yield / tau_w + 0.5 * CUBE(yield / tau_w));
-      if (DOUBLE_ZERO(vsqr)) {
-        for (i = 0; i < dim; i++) {
-          q[i] += q_mag * ev[i];
-          if (pd->v[pg->imtrx][VAR])
-            q[i] += pre_delP * GRADH[i] * CURV * mp->surface_tension;
-        }
+      double nexp = gn->nexp, yield = gn->tau_y;
+      k_turb = 4. * (2 * nexp + 1.);
+      if (tau_w > yield) {
+        pre_delP = -CUBE(H) / k_turb * pow((tau_w - yield) / mu, 1. / nexp) *
+                   (nexp / tau_w - nexp / (1. + nexp) * yield / SQUARE(tau_w) *
+                                       (1. + nexp * yield / SQUARE(tau_w)));
+        q_mag = pre_delP * pgrad;
+        dq_gradp =
+            -CUBE(H) / (k_turb * mu) * pow((tau_w - yield) / mu, 1. / nexp - 1.) *
+            (1. + (nexp - 1.) / (nexp + 1.) * yield / tau_w *
+                      (1. + 2. * nexp * yield / tau_w * (1. + nexp / (1. - nexp) * yield / tau_w)));
+        dv_gradp = dq_gradp / H;
+        vpre_delP = pre_delP / H;
+        dq_dH = 2 * q_mag / H + dq_gradp / H * pgrad;
+        dv_dH = 2 * v_mag / H + dv_gradp / H * pgrad;
+      } else {
+        q_mag = 0.;
+        pre_delP = 0., v_mag = 0;
+        vpre_delP = pre_delP / H;
+        dq_gradp = dv_gradp = 0.;
       }
     } else if (gn->ConstitutiveEquation == CARREAU) {
-      double shr_w, intw, xfact, bexp, bexp2;
+      double shr_w, intw, vis_w, xfact, bexp, bexp2, visd;
+      double nexp = gn->nexp, lam = gn->lam, aexp = gn->aexp, muinf = gn->muinf;
+      double res, xj, delta, eps = 1., epstol = 1.E-6;
+      int iter;
       aexp = 3.;
       shr_w = tau_w / mu;
-      xfact = 1. + pow(lam * shr_w, aexp);
-      // vis_w = muinf + (mu - muinf) / pow(xfact, (1.-nexp)/aexp);
+      iter = 0;
+      while (iter < 10 && eps > epstol) {
+        xfact = 1. + pow(lam * fabs(shr_w), aexp);
+        vis_w = muinf + (mu - muinf) / pow(xfact, (1. - nexp) / aexp);
+        visd = (mu - muinf) / pow(xfact, 1. - (1. - nexp) / aexp) * aexp * lam *
+               pow(lam * fabs(shr_w), aexp - 1.);
+        res = vis_w * shr_w - tau_w;
+        xj = vis_w + SQUARE(shr_w) * visd;
+        delta = -res / xj;
+        shr_w += delta;
+        eps = fabs(delta) / (1. + fabs(shr_w));
+      }
+      if (eps > epstol) {
+        GOMA_EH(GOMA_ERROR, "Carreau viscosity interation diverged!");
+      }
       bexp = (2. * nexp + 1.) / aexp;
       bexp2 = (nexp + 2.) / aexp;
+      xfact = 1. + pow(lam * fabs(shr_w), aexp);
       intw = SQUARE(muinf) * CUBE(shr_w) / 3. +
              2. * muinf * (mu - muinf) / (nexp + 2.) / CUBE(lam) * (pow(xfact, bexp2) - 1.) +
              SQUARE(mu - muinf) / (2. * nexp + 1.) / CUBE(shr_w) * (pow(xfact, bexp) - 1.);
       k_turb = 4.;
-      q_mag = -SQUARE(H) / k_turb * (shr_w - intw / SQUARE(tau_w));
-      if (DOUBLE_ZERO(vsqr)) {
-        for (i = 0; i < dim; i++) {
-          q[i] += q_mag * ev[i];
-          if (pd->v[pg->imtrx][VAR])
-            q[i] += pre_delP * GRADH[i] * CURV * mp->surface_tension;
-        }
-      }
+      /*q_mag = -SQUARE(H) / k_turb * (shr_w - intw / SQUARE(tau_w));*/
+      pre_delP = -0.5 * CUBE(H) / k_turb / tau_w * (shr_w - intw / SQUARE(tau_w));
+      q_mag = pre_delP * pgrad;
     } else {
       k_turb = 12.;
       dq_gradp = pre_delP = -CUBE(H) / (k_turb * mu);
@@ -4401,22 +4402,9 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
 
     /* Load viscosity */
-    if (gn->ConstitutiveEquation == POWER_LAW) {
+    if (gn->ConstitutiveEquation == POWER_LAW || gn->ConstitutiveEquation == BINGHAM ||
+        gn->ConstitutiveEquation == HERSCHEL_BULKLEY || gn->ConstitutiveEquation == CARREAU) {
       mu = gn->mu0;
-      nexp = gn->nexp;
-    } else if (gn->ConstitutiveEquation == BINGHAM) {
-      mu = gn->mu0;
-      yield = gn->tau_y;
-    } else if (gn->ConstitutiveEquation == HERSCHEL_BULKLEY) {
-      mu = gn->mu0;
-      nexp = gn->nexp;
-      yield = gn->tau_y;
-    } else if (gn->ConstitutiveEquation == CARREAU) {
-      mu = gn->mu0;
-      nexp = gn->nexp;
-      lam = gn->lam;
-      aexp = gn->aexp;
-      muinf = gn->muinf;
     } else {
       mu = viscosity(gn, NULL, d_mu);
       dmu_dc = mp->d_viscosity[SHELL_PARTC];

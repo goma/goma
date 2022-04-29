@@ -9739,12 +9739,6 @@ int assemble_film_1D(double time,    /* present time value */
   memset(dgrad_H_dmesh, 0.0, sizeof(double) * DIM * MDE);
 
   memcpy(dgrad_H_dmesh, d_dH_dS_dmesh, DIM * MDE * (sizeof(double)));
-  /*for (b = 0; b < dim; b++) {
-    var = MESH_DISPLACEMENT1 + b;
-    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-      dgrad_H_dmesh[b][j] = d_dH_dS_dmesh[b][j];
-    }
-  }*/
 
   switch (mp->FSIModel) {
   case FSI_MESH_CONTINUUM:
