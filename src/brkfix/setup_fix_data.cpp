@@ -120,7 +120,8 @@ setup_fix_data(const char *mono_name, int num_procs, struct fix_data *fd, int *p
      */
 
     rd_exo(poly, polylith_name, 0,
-           (EXODB_ACTION_RD_INIT + EXODB_ACTION_RD_MESH + EXODB_ACTION_RD_RES0));
+           (EXODB_ACTION_RD_INIT + EXODB_ACTION_RD_MESH + EXODB_ACTION_RD_RES0 +
+            EXODB_ACTION_NO_GOMA));
 
     if (poly->num_node_vars > num_node_var_max) {
       num_node_var_max = poly->num_node_vars;

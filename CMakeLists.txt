@@ -1022,8 +1022,28 @@ if(ENABLE_WARNINGS)
       -Wimplicit-fallthrough>)
 endif()
 
+add_executable(fix_exe src/fix_main.c)
+set_target_properties(fix_exe PROPERTIES OUTPUT_NAME "fix")
+target_include_directories(fix_exe PUBLIC include)
+target_include_directories(fix_exe SYSTEM PRIVATE ${GOMA_TPL_INCLUDES})
+target_link_libraries(fix_exe PUBLIC ${GOMA_TPL_LIBRARIES} goma goma_user
+                                      goma_util)
+target_compile_definitions(fix_exe PUBLIC ${GOMA_COMPILE_DEFINITIONS})
+if(ENABLE_WARNINGS)
+  target_compile_options(
+    fix_exe
+    PRIVATE
+      $<$<AND:$<C_COMPILER_ID:Clang>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
+      -Wextra
+      -Wno-unused-parameter>
+      $<$<AND:$<C_COMPILER_ID:GNU>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
+      -Wextra
+      -Wno-unused-parameter
+      -Wimplicit-fallthrough>)
+endif()
+
 install(
-  TARGETS goma_exe
+  TARGETS goma_exe fix_exe
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin

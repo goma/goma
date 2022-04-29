@@ -1,3 +1,12 @@
+## Changes in version 7.1.0
+
+- Add experimental standalone fix, usage: fix <exodusfile>.<num_proc>.00
+    example: `fix out.exoII.24.00`
+- bugfix, CA conditions error checking
+- bugfix, Output exodus properties, used with Nodeset associativity in CUBIT
+- bugfix, iapply is always on on external surfaces for "Special" BCs
+- build script contains fix for goma#346 issue
+
 ## Changes in version 7.0.5
 
 - bugfix, fix anneal mesh not working
