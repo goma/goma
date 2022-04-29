@@ -2138,14 +2138,8 @@ static struct elem_edge_bc_struct *setup_Elem_Edge_BC(struct elem_edge_bc_struct
 
     /* Initialize the structure */
     (*elem_edge_bc)->ielem = ielem;
-    int ielem_type = Elem_Type(exo, ielem);
-    if (ielem_type == LINEAR_TET || ielem_type == QUADRATIC_TET) {
-      (*elem_edge_bc)->id_edge = find_id_edge_TET(ielem, num_nodes_on_edge, local_edge_node_list,
-                                                  id_local_elem_coord, &param_dir, exo);
-    } else {
-      (*elem_edge_bc)->id_edge = find_id_edge(ielem, num_nodes_on_edge, local_edge_node_list,
-                                              id_local_elem_coord, &param_dir, exo);
-    }
+    (*elem_edge_bc)->id_edge = find_id_edge(ielem, num_nodes_on_edge, local_edge_node_list,
+                                            id_local_elem_coord, &param_dir, exo);
     (*elem_edge_bc)->num_nodes_on_edge = num_nodes_on_edge;
     (*elem_edge_bc)->ipin = ipin;
     (*elem_edge_bc)->shared = shared;
