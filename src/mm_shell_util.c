@@ -3450,7 +3450,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
   dbl v_avg[DIM];
   dbl H;
   dbl veloL[DIM], veloU[DIM];
-  dbl mu, dmu_dc = 0.;
+  dbl mu, dmu_dc = 0., srate = 0.;
   dbl *dmu_df;
   dbl rho;
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct; /* viscosity dependence */
@@ -3934,10 +3934,12 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         v_mag = q_mag / H;
         dq_dH = (2. + 1. / nexp) / H * q_mag;
         dv_dH = (1. + 1. / nexp) / H * v_mag;
+        srate = pow(fabs(tau_w) / mu, 1. / nexp);
       } else {
         q_mag = v_mag = dq_dH = dv_dH = 0.;
         dq_gradp = pre_delP = -CUBE(H) / (k_turb * mu);
         dv_gradp = vpre_delP = pre_delP / H;
+        srate = 0.;
       }
     } else if (gn->ConstitutiveEquation == BINGHAM) {
       double yield = gn->tau_y;
@@ -3952,11 +3954,14 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         v_mag = q_mag / H;
         dq_dH = 2 * q_mag / H + dq_gradp / H * pgrad;
         dv_dH = 2 * v_mag / H + dv_gradp / H * pgrad;
+        srate = (fabs(tau_w) - yield) / mu;
       } else {
         q_mag = 0.;
-        pre_delP = 0., v_mag = 0;
+        dq_gradp = pre_delP = -CUBE(H) / (k_turb * mu);
+        v_mag = 0;
         vpre_delP = pre_delP / H;
-        dq_gradp = dv_gradp = 0.;
+        dv_gradp = dq_gradp / H;
+        srate = 0.;
       }
     } else if (gn->ConstitutiveEquation == HERSCHEL_BULKLEY) {
       double nexp = gn->nexp, yield = gn->tau_y;
@@ -3974,11 +3979,13 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         vpre_delP = pre_delP / H;
         dq_dH = 2 * q_mag / H + dq_gradp / H * pgrad;
         dv_dH = 2 * v_mag / H + dv_gradp / H * pgrad;
+        srate = pow((fabs(tau_w) - yield) / mu, 1. / nexp);
       } else {
         q_mag = 0.;
-        pre_delP = 0., v_mag = 0;
+        dq_gradp = pre_delP = -CUBE(H) / (k_turb * mu);
+        v_mag = 0;
         vpre_delP = pre_delP / H;
-        dq_gradp = dv_gradp = 0.;
+        dv_gradp = dq_gradp / H;
       }
     } else if (gn->ConstitutiveEquation == CARREAU) {
       double shr_w, intw, vis_w, xfact, bexp, bexp2, visd;
@@ -4020,6 +4027,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       v_mag = vpre_delP * pgrad;
       dq_dH = -3. * SQUARE(H) / (k_turb * mu) * pgrad;
       dv_dH = -2. * H / (k_turb * mu) * pgrad;
+      srate = fabs(tau_w / mu);
     }
     for (i = 0; i < dim; i++) {
       q[i] += q_mag * ev[i];
@@ -4309,6 +4317,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
 
     LubAux->H = H;
     LubAux->gradP_mag = 0;
+    LubAux->srate = srate;
     for (i = 0; i < dim; i++) {
       LubAux->q[i] = q[i];
       LubAux->v_avg[i] = v_avg[i];
