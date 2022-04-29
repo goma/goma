@@ -48,7 +48,7 @@ double user_surf_object(int *int_params, dbl *param, dbl *r) {
 
   /* Comment out our remove this line if using this routine */
   if (warning == 0) {
-    fprintf(stderr, "\n\n#############\n"
+    DPRINTF(stderr, "\n\n#############\n"
                     "# WARNING!! #  No user_defined surface object model implemented"
                     "\n#############\n");
     warning = 1;
@@ -69,7 +69,7 @@ double user_mat_init(const int var,
   static int warning = -1;
 
   if (warning == 0) {
-    fprintf(stderr, "\n\n#############\n"
+    DPRINTF(stderr, "\n\n#############\n"
                     "# WARNING!! #  No user_defined material initialization model implemented"
                     "\n#############\n");
     warning = 1;
