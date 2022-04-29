@@ -116,6 +116,7 @@ typedef char *INFO_Record;
 #define EXODB_ACTION_WR_RESN (1L << 9)
 #define EXODB_ACTION_WR_RESE (1L << 10)
 #define EXODB_ACTION_WR_RESG (1L << 11)
+#define EXODB_ACTION_NO_GOMA (1L << 12)
 #endif
 
 /*
