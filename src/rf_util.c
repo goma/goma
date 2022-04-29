@@ -2080,7 +2080,7 @@ void init_vec(
                 ipos = Index_Solution(i, var, Var_init_mat[mn][j].ktype, 0, mn, pg->imtrx);
                 u[ipos] = user_mat_init(var, i, Var_init_mat[mn][j].init_val,
                                         Var_init_mat[mn][j].u_pars, xpt, mn, var_val);
-	      } else {
+              } else {
                 /*
                  * Ok, there is more than one degree of freedom for this
                  * variable type at this node. Why? Let's break down
@@ -2095,7 +2095,7 @@ void init_vec(
                    */
                   ipos = Index_Solution(i, var, Var_init_mat[mn][j].ktype, 0, mn, pg->imtrx);
                   u[ipos] = user_mat_init(var, i, Var_init_mat[mn][j].init_val,
-                                        Var_init_mat[mn][j].u_pars, xpt, mn, var_val);
+                                          Var_init_mat[mn][j].u_pars, xpt, mn, var_val);
                 } else if (interpType == I_PQ1 || interpType == I_PQ2) {
                   /*
                    * For linear and quadratic discontinuous interpolations
@@ -2112,7 +2112,7 @@ void init_vec(
                   for (k = 0; k < ndof; k++) {
                     ipos = Index_Solution(i, var, Var_init_mat[mn][j].ktype, k, mn, pg->imtrx);
                     u[ipos] = user_mat_init(var, i, Var_init_mat[mn][j].init_val,
-                                        Var_init_mat[mn][j].u_pars, xpt, mn, var_val);
+                                            Var_init_mat[mn][j].u_pars, xpt, mn, var_val);
                   }
                 } else {
                   /*
@@ -2124,15 +2124,15 @@ void init_vec(
                    */
                   ipos = Index_Solution(i, var, Var_init_mat[mn][j].ktype, 0, mn, pg->imtrx);
                   u[ipos] = user_mat_init(var, i, Var_init_mat[mn][j].init_val,
-                                        Var_init_mat[mn][j].u_pars, xpt, mn, var_val);
+                                          Var_init_mat[mn][j].u_pars, xpt, mn, var_val);
                 }
-	      }
+              }
             }
           } /* end for j<Num_Var_Init_Mat[mn] */
         }   /* end for n<num_nodes */
       }     /* end for e_start=ielem<e_end */
-    } /* end if (Num_Var_Init_Mat[mn] > 0 */
-  }   /* end for element blocks */
+    }       /* end if (Num_Var_Init_Mat[mn] > 0 */
+  }         /* end for element blocks */
   safer_free((void **)&block_order);
 
   /*
