@@ -501,11 +501,13 @@ int rd_exo(Exo_DB *x, /* def'd in exo_struct.h */
         }
         eb_ptr->Num_Nodes_Per_Elem = x->eb_num_nodes_per_elem[i];
         eb_ptr->Num_Attr_Per_Elem = x->eb_num_attr[i];
-        int mindex = map_mat_index(eb_ptr->Elem_Blk_Id);
-        if (mindex < 0) {
-          eb_ptr->MatlProp_ptr = NULL;
-        } else {
-          eb_ptr->MatlProp_ptr = mp_glob[mindex];
+        if (!(task & EXODB_ACTION_NO_GOMA)) {
+          int mindex = map_mat_index(eb_ptr->Elem_Blk_Id);
+          if (mindex < 0) {
+            eb_ptr->MatlProp_ptr = NULL;
+          } else {
+            eb_ptr->MatlProp_ptr = mp_glob[mindex];
+          }
         }
         eb_ptr->ElemStorage = NULL;
         eb_ptr->Num_Elems_In_Block = x->eb_num_elems[i];
