@@ -205,7 +205,7 @@ int rd_image_to_mesh(int N_ext, Exo_DB *exo) {
   txtid = fopen(txtfile, "r");
   err = fscanf(txtid, "%i", &txt_num_pts);
 
-  xyz_data = (double **)malloc(txt_num_pts * DIM * sizeof(double *));
+  xyz_data = (double **)malloc(txt_num_pts * sizeof(double *));
   for (i = 0; i < txt_num_pts; i++) {
     xyz_data[i] = (double *)malloc(DIM * sizeof(double));
   }

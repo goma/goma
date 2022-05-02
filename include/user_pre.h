@@ -38,4 +38,12 @@ EXTERN double user_surf_object(int *,
                                dbl *, /* param - ptr to user-defined list          */
                                dbl *);
 
+EXTERN double user_mat_init(const int,    /* variable                            */
+                            const int,    /* node number                            */
+                            const dbl,    /* Basic initial value                    */
+                            const dbl[],  /* p                                      */
+                            const dbl[],  /* nodal coordinates                      */
+                            const int,    /* material ID                            */
+                            const dbl[]); /* other variable values                 */
+
 #endif /* GOMA_USER_PRE_H */

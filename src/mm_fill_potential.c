@@ -244,6 +244,10 @@ int assemble_potential(double time, /* present time value */
   k = electrical_conductivity(dkdT, dkdV, dkdC, dkdX, time, dt);
 
   /*** Current Source ****/
+  memset(dhdT, 0, sizeof(double) * MDE);
+  memset(dhdV, 0, sizeof(double) * MDE);
+  memset(dhdX, 0, sizeof(double) * DIM * MDE);
+  memset(dhdC, 0, sizeof(double) * MAX_CONC * MDE);
   if (mp->CurrentSourceModel == USER) {
     (void)usr_current_source(mp->u_current_source);
     h = mp->current_source;
@@ -337,24 +341,6 @@ int assemble_potential(double time, /* present time value */
       dhdV[j] = F * sumzdrv * bf[var]->phi[j]; /* KSC: 7-29-04 */
     }
 
-    if (pd->v[pg->imtrx][VELOCITY1]) {
-      for (a = 0; a < dim; a++) {
-        var = VELOCITY1 + a;
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-          dhdv[a][j] = 0.0;
-        }
-      }
-    }
-
-    if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
-      for (a = 0; a < dim; a++) {
-        var = MESH_DISPLACEMENT1 + a;
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-          dhdX[a][j] = 0.0;
-        }
-      }
-    }
-
     /* Derivatives of the scalar h with respect to mole fraction are computed here; h is the
        single sum in Equation (2.13) of the thermal battery LDRD report. -- RSL 8/8/00 */
 
@@ -381,44 +367,6 @@ int assemble_potential(double time, /* present time value */
   else if (mp->CurrentSourceModel == CONSTANT) {
     h = mp->current_source;
 
-    var = TEMPERATURE;
-    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-      dhdT[j] = 0.0;
-    }
-
-    var = VOLTAGE;
-    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-      dhdV[j] = 0.0;
-    }
-
-    if (pd->v[pg->imtrx][VELOCITY1]) {
-      for (a = 0; a < dim; a++) {
-        var = VELOCITY1 + a;
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-          dhdv[a][j] = 0.0;
-        }
-      }
-    }
-
-    if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
-      for (a = 0; a < dim; a++) {
-        var = MESH_DISPLACEMENT1 + a;
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-          dhdX[a][j] = 0.0;
-        }
-      }
-    }
-
-    if (pd->v[pg->imtrx][MASS_FRACTION]) {
-      for (w = 0; w < pd->Num_Species_Eqn; w++) {
-        var = MASS_FRACTION;
-        var_offset = MAX_VARIABLE_TYPES + w;
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-          dhdC[w][j] = 0.0;
-        }
-      }
-    }
-
     /*Sensitivities were already set to zero */
   } else if (mp->CurrentSourceModel == BUTLER_VOLMER) /* added by KSC: 04/28/06 */
   {
@@ -441,9 +389,6 @@ int assemble_potential(double time, /* present time value */
     if (pd->v[pg->imtrx][MASS_FRACTION]) {
       for (w = 0; w < pd->Num_Species_Eqn; w++) {
         var = MASS_FRACTION;
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-          dhdC[w][j] = 0.0;
-        }
         dhdC[wspec][j] = dh[2] * bf[var]->phi[j];
       }
     }
@@ -456,77 +401,12 @@ int assemble_potential(double time, /* present time value */
     }
     h *= F;
 
-    var = TEMPERATURE;
-    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-      dhdT[j] = 0.0;
-    }
-
-    var = VOLTAGE;
-    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-      dhdV[j] = 0.0;
-    }
-
-    if (pd->v[pg->imtrx][VELOCITY1]) {
-      for (a = 0; a < dim; a++) {
-        var = VELOCITY1 + a;
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-          dhdv[a][j] = 0.0;
-        }
-      }
-    }
-
-    if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
-      for (a = 0; a < dim; a++) {
-        var = MESH_DISPLACEMENT1 + a;
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-          dhdX[a][j] = 0.0;
-        }
-      }
-    }
-
-    if (pd->v[pg->imtrx][MASS_FRACTION]) {
-      for (w = 0; w < pd->Num_Species_Eqn; w++) {
-        var = MASS_FRACTION;
-        var_offset = MAX_VARIABLE_TYPES + w;
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-          dhdC[w][j] = 0.0;
-        }
-      }
-    }
   } else if (mp->CurrentSourceModel == NET_CHARGE) {
     h = 0.0;
     for (w = 0; w < pd->Num_Species_Eqn; w++) {
       h += mp->charge_number[w] * fv->c[w];
     }
     h *= F;
-
-    var = TEMPERATURE;
-    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-      dhdT[j] = 0.0;
-    }
-
-    var = VOLTAGE;
-    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-      dhdV[j] = 0.0;
-    }
-
-    if (pd->v[pg->imtrx][VELOCITY1]) {
-      for (a = 0; a < dim; a++) {
-        var = VELOCITY1 + a;
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-          dhdv[a][j] = 0.0;
-        }
-      }
-    }
-
-    if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
-      for (a = 0; a < dim; a++) {
-        var = MESH_DISPLACEMENT1 + a;
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-          dhdX[a][j] = 0.0;
-        }
-      }
-    }
 
     if (pd->v[pg->imtrx][MASS_FRACTION]) {
       for (w = 0; w < pd->Num_Species_Eqn; w++) {
@@ -548,43 +428,6 @@ int assemble_potential(double time, /* present time value */
     lambda_d = mp->u_current_source[0];
     h /= (lambda_d * lambda_d);
 
-    var = TEMPERATURE;
-    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-      dhdT[j] = 0.0;
-    }
-
-    var = VOLTAGE;
-    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-      dhdV[j] = -bf[var]->phi[j] / (lambda_d * lambda_d);
-    }
-
-    if (pd->v[pg->imtrx][VELOCITY1]) {
-      for (a = 0; a < dim; a++) {
-        var = VELOCITY1 + a;
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-          dhdv[a][j] = 0.0;
-        }
-      }
-    }
-
-    if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
-      for (a = 0; a < dim; a++) {
-        var = MESH_DISPLACEMENT1 + a;
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-          dhdX[a][j] = 0.0;
-        }
-      }
-    }
-
-    if (pd->v[pg->imtrx][MASS_FRACTION]) {
-      for (w = 0; w < pd->Num_Species_Eqn; w++) {
-        var = MASS_FRACTION;
-        var_offset = MAX_VARIABLE_TYPES + w;
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-          dhdC[w][j] = 0.0;
-        }
-      }
-    }
   } else {
     GOMA_EH(GOMA_ERROR, "Unrecognized current source model");
   }

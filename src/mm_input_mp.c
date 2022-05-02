@@ -8553,9 +8553,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   Num_Var_Init_Mat[mn] = 0;
   while ((iread = look_forward_optional(imp, "Initialize", input, '=')) == 1) {
-    int curr_var = Num_Var_Init_Mat[mn];
-
-    Var_init_mat[mn][curr_var].len_u_pars = -1;
+    Var_init_mat[mn][Num_Var_Init_Mat[mn]].len_u_pars = -1;
     /*
      *  Read the variable name to be fixed
      */
@@ -8586,9 +8584,46 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     } else
       SPF(endofstring(es), " %d", Var_init_mat[mn][Num_Var_Init_Mat[mn]].slave_block);
 
-#ifdef USERMAT_INITIALIZATION
-    /* add float list */
+    Num_Var_Init_Mat[mn]++;
+    ECHO(es, echo_file);
+  }
+
+  while ((iread = look_forward_optional(imp, "User Initialize", input, '=')) == 1) {
+    int curr_var = Num_Var_Init_Mat[mn];
     double tmp;
+
+    Var_init_mat[mn][curr_var].len_u_pars = -1;
+    /*
+     *  Read the variable name to be fixed
+     */
+    if (fscanf(imp, "%80s", input) != 1) {
+      sprintf(err_msg, "Error reading variable for user initialization in material, %s",
+              mat_ptr->Material_Name);
+      GOMA_EH(GOMA_ERROR, err_msg);
+    }
+    (void)strip(input);
+    var = variable_string_to_int(input, "Variable for matrl initialization");
+    if (var >= 0) {
+      Var_init_mat[mn][curr_var].var = var;
+    } else {
+      sprintf(err_msg, "Invalid choice of user initialization variable in material, %s",
+              mat_ptr->Material_Name);
+      GOMA_EH(GOMA_ERROR, err_msg);
+    }
+
+    if (fscanf(imp, "%d %lf", &Var_init_mat[mn][Num_Var_Init_Mat[mn]].ktype,
+               &Var_init_mat[mn][curr_var].init_val) != 2)
+      GOMA_EH(GOMA_ERROR, "Error reading initialization data");
+
+    SPF(es, "%s = %s %d %.4g", "User Initialize", input, Var_init_mat[mn][curr_var].ktype,
+        Var_init_mat[mn][curr_var].init_val);
+
+    if (fscanf(imp, "%d", &Var_init_mat[mn][curr_var].slave_block) != 1) {
+      Var_init_mat[mn][curr_var].slave_block = 0;
+    } else
+      SPF(endofstring(es), " %d", Var_init_mat[mn][curr_var].slave_block);
+
+    /* add float list */
     Var_init_mat[mn][curr_var].u_pars = alloc_dbl_1(MAX_NUMBER_PARAMS, 0.0);
     Var_init_mat[mn][curr_var].len_u_pars = 0;
     while (fscanf(imp, "%lf ", &tmp) == 1) {
@@ -8597,7 +8632,6 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       Var_init_mat[mn][curr_var].len_u_pars++;
       SPF(endofstring(echo_string), " %.4g", tmp);
     }
-#endif
 
     Num_Var_Init_Mat[mn]++;
     ECHO(es, echo_file);
