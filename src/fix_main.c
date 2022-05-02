@@ -263,6 +263,10 @@ static void get_fix_info(char *filename, int *num_procs, char mono_name[MAX_FNL]
 
   char *token = strtok(parse_string, ".");
   int tk = 0;
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
+  strncpy(last_token, token, MAX_FNL - 1);
   while (token) {
     GOMA_ASSERT_ALWAYS(tk < 100);
     tokens[tk++] = token;
@@ -270,6 +274,7 @@ static void get_fix_info(char *filename, int *num_procs, char mono_name[MAX_FNL]
     strncpy(last_token, token, MAX_FNL - 1);
     token = strtok(NULL, ".");
   }
+#pragma GCC diagnostic pop
 
   if (tk < 4) {
     GOMA_EH(GOMA_ERROR, "Expected to find a file with at least 4 parts, got %d from %s", tk,

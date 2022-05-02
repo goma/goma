@@ -625,7 +625,7 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
         /* 		} */
       }
       break;
-    case 3:
+    case 3: {
       fv->volume_change = 1. / (deform_grad[0][0] * (deform_grad[1][1] * deform_grad[2][2] -
                                                      deform_grad[1][2] * deform_grad[2][1]) -
                                 deform_grad[0][1] * (deform_grad[1][0] * deform_grad[2][2] -
@@ -639,13 +639,16 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
                                          deform_grad_old[2][0] * deform_grad_old[1][2]) +
                 deform_grad_old[0][2] * (deform_grad_old[1][0] * deform_grad_old[2][1] -
                                          deform_grad_old[2][0] * deform_grad_old[1][1]));
-      fv_dot->volume_change =
-          1. / (deform_grad_dot[0][0] * (deform_grad_dot[1][1] * deform_grad_dot[2][2] -
-                                         deform_grad_dot[1][2] * deform_grad_dot[2][1]) -
-                deform_grad_dot[0][1] * (deform_grad_dot[1][0] * deform_grad_dot[2][2] -
-                                         deform_grad_dot[2][0] * deform_grad_dot[1][2]) +
-                deform_grad_dot[0][2] * (deform_grad_dot[1][0] * deform_grad_dot[2][1] -
-                                         deform_grad_dot[2][0] * deform_grad_dot[1][1]));
+      dbl det_deform_grad_dot =
+          (deform_grad_dot[0][0] * (deform_grad_dot[1][1] * deform_grad_dot[2][2] -
+                                    deform_grad_dot[1][2] * deform_grad_dot[2][1]) -
+           deform_grad_dot[0][1] * (deform_grad_dot[1][0] * deform_grad_dot[2][2] -
+                                    deform_grad_dot[2][0] * deform_grad_dot[1][2]) +
+           deform_grad_dot[0][2] * (deform_grad_dot[1][0] * deform_grad_dot[2][1] -
+                                    deform_grad_dot[2][0] * deform_grad_dot[1][1]));
+      if (DOUBLE_NONZERO(det_deform_grad_dot)) {
+        fv_dot->volume_change = det_deform_grad_dot;
+      }
       /* Check to make sure element hasn't inverted */
       if ((fv->volume_change <= 0.) && (Debug_Flag >= 0)) {
 #ifdef PARALLEL
@@ -702,7 +705,7 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
           }
         }
       }
-      break;
+    } break;
     default:
       GOMA_EH(-1, "Bad dim.");
     }
@@ -860,6 +863,8 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
 /*
  * This function inverts a matrix and evaluates it's sensitivities
  * Written by RAC 1- July 1996
+ *
+ * Modified to return 0 matrix if detA = 0
  */
 void invert_tensor(double A[DIM][DIM],            /* tensor to be inverted */
                    double B[DIM][DIM],            /* inverted tensor */
@@ -878,7 +883,11 @@ void invert_tensor(double A[DIM][DIM],            /* tensor to be inverted */
   switch (dim) {
   case 1:
     detA = A[0][0];
-    B[0][0] = 1. / detA;
+    if (DOUBLE_NONZERO(detA)) {
+      B[0][0] = 1. / detA;
+    } else {
+      B[0][0] = 0;
+    }
 
     if (sense && dA != NULL) {
       for (j = 0; j < dof; j++) {
@@ -891,7 +900,11 @@ void invert_tensor(double A[DIM][DIM],            /* tensor to be inverted */
 
   case 2:
     detA = A[0][0] * A[1][1] - A[0][1] * A[1][0];
-    detA_i = 1. / detA;
+    if (DOUBLE_NONZERO(detA)) {
+      detA_i = 1. / detA;
+    } else {
+      detA_i = 0;
+    }
 
     B[0][0] = A[1][1] * detA_i;
     B[0][1] = -A[0][1] * detA_i;
@@ -917,7 +930,11 @@ void invert_tensor(double A[DIM][DIM],            /* tensor to be inverted */
     detA = A[0][0] * (A[1][1] * A[2][2] - A[1][2] * A[2][1]) -
            A[0][1] * (A[1][0] * A[2][2] - A[2][0] * A[1][2]) +
            A[0][2] * (A[1][0] * A[2][1] - A[2][0] * A[1][1]);
-    detA_i = 1. / detA;
+    if (DOUBLE_NONZERO(detA)) {
+      detA_i = 1. / detA;
+    } else {
+      detA_i = 0;
+    }
 
     B[0][0] = (A[1][1] * A[2][2] - A[2][1] * A[1][2]) * detA_i;
 

@@ -5237,9 +5237,9 @@ double shell_saturation_pressure_curve(double Pliq, double *dSdP, double *dSdP_P
 #define _USE_MATH_DEFINES
 
   /* Calculate capillary radius */
-  dbl Rc = 2 * sigma * cos(theta / 180.0 * PI) / Pcap;
-  dbl Rc_P = -2 * sigma * cos(theta / 180.0 * PI) / pow(Pcap, 2) * dPdP;
-  dbl Rc_PP = 4 * sigma * cos(theta / 180.0 * PI) / pow(Pcap, 3) * pow(dPdP, 2);
+  dbl Rc = 2 * sigma * cos(theta / 180.0 * PI) / (Pcap + DBL_SEMI_SMALL);
+  dbl Rc_P = -2 * sigma * cos(theta / 180.0 * PI) / pow(Pcap + DBL_SEMI_SMALL, 2) * dPdP;
+  dbl Rc_PP = 4 * sigma * cos(theta / 180.0 * PI) / pow(Pcap + DBL_SEMI_SMALL, 3) * pow(dPdP, 2);
 
   /* Define limiting values */
   dbl Rmax3 = pow(Rmax, 3);
@@ -5253,8 +5253,14 @@ double shell_saturation_pressure_curve(double Pliq, double *dSdP, double *dSdP_P
   // dbl ModK    = 0.1;
   dbl ModK = 1;
   dbl ModF = (1 + tanh(ModK * (Pliq - PCut))) / 2.0;
-  dbl ModF_P = ModK * pow(cosh(ModK * (Pliq - PCut)), -2) / 2.0;
-  dbl ModF_PP = -pow(ModK, 2) * pow(cosh(ModK * (Pliq - PCut)), -2) * tanh(ModK * (Pliq - PCut));
+  dbl cosh_modk_p = 0;
+  if (fabs(ModK * (Pliq - PCut)) < 700) {
+    cosh_modk_p = cosh(ModK * (Pliq - PCut));
+  } else {
+    cosh_modk_p = cosh(SGN(ModK * (Pliq - PCut)) * 700);
+  }
+  dbl ModF_P = ModK * pow(cosh_modk_p, -2) / 2.0;
+  dbl ModF_PP = -pow(ModK, 2) * pow(cosh_modk_p, -2) * tanh(ModK * (Pliq - PCut));
 
   /* Define basic saturation function */
   // dbl BS    = (pow(Rc,3)-Rmin3)/(Rmax3-Rmin3);
