@@ -1073,6 +1073,8 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     if (Solver_Output_Format & 16)
       DPRINTF(stdout, "%7.1e ", Norm[0][2]);
 
+    fflush(stdout);
+
     if ((inewton > 0) && (Norm[0][2] < Epsilon[pg->imtrx][0]) &&
         (Norm[0][0] < Epsilon[pg->imtrx][0]) && (Norm[2][2] < Epsilon[pg->imtrx][0]) &&
         (Norm[2][0] < Epsilon[pg->imtrx][0])) {
@@ -1170,11 +1172,14 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
         if (inewton <= 1) {
           AConv_order = log10(AC_Resid_Norm_stack[2]) / log10(AC_Resid_Norm_stack[1]);
           AConv_rate = log10(AC_Resid_Norm_stack[1]) - log10(AC_Resid_Norm_stack[2]);
-        } else {
+        } else if (DOUBLE_NONZERO(log10(AC_Resid_Norm_stack[1] / AC_Resid_Norm_stack[0]))) {
           AConv_order = log10(AC_Resid_Norm_stack[2] / AC_Resid_Norm_stack[1]) /
                         log10(AC_Resid_Norm_stack[1] / AC_Resid_Norm_stack[0]);
           AConv_rate = -0.5 * log10(AC_Resid_Norm_stack[0]) + 2 * log10(AC_Resid_Norm_stack[1]) -
                        1.5 * log10(AC_Resid_Norm_stack[2]);
+        } else {
+          AConv_order = log10(AC_Resid_Norm_stack[2]) / log10(AC_Resid_Norm_stack[1]);
+          AConv_rate = log10(AC_Resid_Norm_stack[1]) - log10(AC_Resid_Norm_stack[2]);
         }
 #else
         AConv_order = log10(AC_Resid_Norm_stack[2]) / log10(AC_Resid_Norm_stack[1]);
