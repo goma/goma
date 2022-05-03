@@ -1557,12 +1557,18 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
       GOMA_EH(GOMA_ERROR, "Unknown PTT Epsilon parameter model");
     }
 
-    if (lambda == 0) {
-      Z = 1.0;
-      dZ_dtrace = 0;
-    } else {
-      Z = exp(eps * lambda * trace / mup);
-      dZ_dtrace = Z * eps * lambda / mup;
+    Z = 1.0;
+    dZ_dtrace = 0;
+    if (vn->ConstitutiveEquation == PTT) {
+      if (vn->ptt_type == PTT_LINEAR) {
+        Z = 1 + eps * lambda * trace / mup;
+        dZ_dtrace = eps * lambda / mup;
+      } else if (vn->ptt_type == PTT_EXPONENTIAL) {
+        Z = exp(eps * lambda * trace / mup);
+        dZ_dtrace = Z * eps * lambda / mup;
+      } else {
+        GOMA_EH(GOMA_ERROR, "Unrecognized PTT Form %d", vn->ptt_type);
+      }
     }
 
     /* get tensor dot products for future use */
@@ -2545,6 +2551,19 @@ int assemble_stress_log_conf(dbl tt,
       lambda = mup / ve[mode]->time_const;
     }
 
+    dbl xi = 0;
+    if (ve[mode]->xiModel == CONSTANT) {
+      xi = ve[mode]->xi;
+    } else if (ls != NULL && ve[mode]->xiModel == VE_LEVEL_SET) {
+      double pos_xi = ve[mode]->pos_ls.xi;
+      double neg_xi = ve[mode]->xi;
+      double width = ls->Length_Scale;
+      int err = level_set_property(neg_xi, pos_xi, width, &xi, NULL);
+      GOMA_EH(err, "level_set_property() failed for ptt xi parameter.");
+    } else {
+      GOMA_EH(GOMA_ERROR, "Unknown PTT Xi parameter model");
+    }
+
     if (lambda <= 0.) {
       GOMA_WH(-1, "Trouble: Zero relaxation time with LOG_CONF");
       return -1;
@@ -2587,10 +2606,19 @@ int assemble_stress_log_conf(dbl tt,
       for (j = 0; j < VIM; j++) {
         Rt_dot_gradv[i][j] = 0.;
         for (w = 0; w < VIM; w++) {
-          if (logc_gradv) {
-            Rt_dot_gradv[i][j] += R1_T[i][w] * grad_v[j][w];
+          if (DOUBLE_NONZERO(xi)) {
+            if (logc_gradv) {
+              Rt_dot_gradv[i][j] +=
+                  R1_T[i][w] * (grad_v[j][w] - 0.5 * xi * (grad_v[j][w] + grad_v[w][j]));
+            } else {
+              Rt_dot_gradv[i][j] += R1_T[i][w] * (gt[w][j] - 0.5 * xi * (gt[j][w] + gt[w][j]));
+            }
           } else {
-            Rt_dot_gradv[i][j] += R1_T[i][w] * gt[w][j];
+            if (logc_gradv) {
+              Rt_dot_gradv[i][j] += R1_T[i][w] * grad_v[j][w];
+            } else {
+              Rt_dot_gradv[i][j] += R1_T[i][w] * gt[w][j];
+            }
           }
         }
       }
@@ -2625,8 +2653,17 @@ int assemble_stress_log_conf(dbl tt,
     // PTT exponent
     eps = ve[mode]->eps;
 
-    // Exponential term for PTT
-    Z = exp(eps * (trace - (double)VIM));
+    // PTT
+    Z = 1;
+    if (vn->ConstitutiveEquation == PTT) {
+      if (vn->ptt_type == PTT_LINEAR) {
+        Z = 1 + eps * (trace - (double)VIM);
+      } else if (vn->ptt_type == PTT_EXPONENTIAL) {
+        Z = exp(eps * (trace - (double)VIM));
+      } else {
+        GOMA_EH(GOMA_ERROR, "Unrecognized PTT Form %d", vn->ptt_type);
+      }
+    }
 
     siz = sizeof(double) * DIM * DIM;
     memset(tmp1, 0, siz);

@@ -2178,6 +2178,7 @@ void noahs_ark(void) {
      */
 
     ddd_add_member(n, &vn_glob[i]->ConstitutiveEquation, 1, MPI_INT);
+    ddd_add_member(n, &vn_glob[i]->ptt_type, 1, MPI_INT);
     ddd_add_member(n, &vn_glob[i]->wt_func, 1, MPI_DOUBLE);
     ddd_add_member(n, &vn_glob[i]->wt_funcModel, 1, MPI_INT);
     ddd_add_member(n, &vn_glob[i]->eps, 1, MPI_DOUBLE);

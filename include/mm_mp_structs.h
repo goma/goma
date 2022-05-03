@@ -1159,6 +1159,7 @@ struct Viscoelastic_Nonmodal {
   dbl shockcapture;
   int shockcaptureModel;
 
+  int ptt_type;
   /* This is the adaptive viscosity scaling. If if it zero
    * we get the standard formulation, if nonzero we get
    * numerical viscosity that may stabilize the stress equations
