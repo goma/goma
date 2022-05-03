@@ -143,6 +143,7 @@ An optional card *PTT Form* is available to choose between Linear and Exponentia
 If not included EXPONENTIAL is the default.
 
 ::
+
    Polymer Consitutive Equation = PTT
    PTT Form = LINEAR
 
