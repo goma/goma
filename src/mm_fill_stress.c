@@ -1558,23 +1558,17 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
       GOMA_EH(GOMA_ERROR, "Unknown PTT Epsilon parameter model");
     }
 
-    if (lambda == 0) {
-      Z = 1.0;
-      dZ_dtrace = 0;
-    } else {
-      if (vn->ConstitutiveEquation == PTT) {
-        if (vn->ptt_type == PTT_LINEAR) {
-          Z = 1 + eps * lambda * trace / mup;
-          dZ_dtrace = eps * lambda / mup;
-        } else if (vn->ptt_type == PTT_EXPONENTIAL) {
-          Z = exp(eps * lambda * trace / mup);
-          dZ_dtrace = Z * eps * lambda / mup;
-        } else {
-          GOMA_EH(GOMA_ERROR, "Unrecognized PTT type %d", vn->ptt_type);
-        }
+    Z = 1.0;
+    dZ_dtrace = 0;
+    if (vn->ConstitutiveEquation == PTT) {
+      if (vn->ptt_type == PTT_LINEAR) {
+        Z = 1 + eps * lambda * trace / mup;
+        dZ_dtrace = eps * lambda / mup;
+      } else if (vn->ptt_type == PTT_EXPONENTIAL) {
+        Z = exp(eps * lambda * trace / mup);
+        dZ_dtrace = Z * eps * lambda / mup;
       } else {
-        Z = 1;
-        dZ_dtrace = 0;
+        GOMA_EH(GOMA_ERROR, "Unrecognized PTT Form %d", vn->ptt_type);
       }
     }
 
@@ -2660,17 +2654,16 @@ int assemble_stress_log_conf(dbl tt,
     // PTT exponent
     eps = ve[mode]->eps;
 
-    // Exponential term for PTT
+    // PTT
+    Z = 1;
     if (vn->ConstitutiveEquation == PTT) {
       if (vn->ptt_type == PTT_LINEAR) {
         Z = 1 + eps * (trace - (double)VIM);
       } else if (vn->ptt_type == PTT_EXPONENTIAL) {
         Z = exp(eps * (trace - (double)VIM));
       } else {
-        GOMA_EH(GOMA_ERROR, "Unrecognized PTT type %d", vn->ptt_type);
+        GOMA_EH(GOMA_ERROR, "Unrecognized PTT Form %d", vn->ptt_type);
       }
-    } else {
-      Z = 1;
     }
 
     siz = sizeof(double) * DIM * DIM;
