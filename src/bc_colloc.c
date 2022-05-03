@@ -408,25 +408,6 @@ int apply_point_colloc_bc(double resid_vector[], /* Residual vector for the curr
               if (af->Assemble_LSA_Mass_Matrix)
                 GOMA_EH(GOMA_ERROR, "LSA is not currently compatible with MOVING_PLANE_BC");
             } break;
-            case MOVING_PLANE_EXP_BC: {
-              double t = time_intermediate;
-              double tmax = DBL_MAX;
-              if (BC_Types[bc_input_id].len_u_BC >= 11) {
-                tmax = BC_Types[bc_input_id].u_BC[9];
-              }
-
-              fplane(ielem_dim, &func, d_func, BC_Types[bc_input_id].u_BC);
-
-              if (t < tmax) {
-                func += (BC_Types[bc_input_id].u_BC[4] * t +
-                         BC_Types[bc_input_id].u_BC[5] * t * t +
-                         BC_Types[bc_input_id].u_BC[6] * t * t * t) +
-                         BC_Types[bc_input_id].u_BC[7] * exp(BC_Types[bc_input_id].u_BC[8] * t);
-              }
-
-              if (af->Assemble_LSA_Mass_Matrix)
-                GOMA_EH(GOMA_ERROR, "LSA is not currently compatible with MOVING_PLANE_EXP_BC");
-            } break;
 
             case MOVING_PLANE_ETCH_BC:
               fmesh_etch_bc(&func, d_func, BC_Types[bc_input_id].BC_Data_Int[0], id, x_dot, theta,

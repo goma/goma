@@ -2615,9 +2615,10 @@ int assemble_stress_log_conf(dbl tt,
         for (w = 0; w < VIM; w++) {
           if (DOUBLE_NONZERO(xi)) {
             if (logc_gradv) {
-              Rt_dot_gradv[i][j] += R1_T[i][w] * (grad_v[j][w] - 0.5*xi*(grad_v[j][w] + grad_v[w][j]));
+              Rt_dot_gradv[i][j] +=
+                  R1_T[i][w] * (grad_v[j][w] - 0.5 * xi * (grad_v[j][w] + grad_v[w][j]));
             } else {
-              Rt_dot_gradv[i][j] += R1_T[i][w] *(gt[w][j] - 0.5*xi*(gt[j][w] + gt[w][j]));
+              Rt_dot_gradv[i][j] += R1_T[i][w] * (gt[w][j] - 0.5 * xi * (gt[j][w] + gt[w][j]));
             }
           } else {
             if (logc_gradv) {
