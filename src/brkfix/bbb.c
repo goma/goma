@@ -500,7 +500,7 @@ void build_big_bones(Exo_DB *p, /* EXODUS info from representative polylith */
    * the Dpi...
    */
 
-  m->elem_var_tab = NULL;
+  m->elem_var_tab = calloc(m->num_elem_blocks * m->num_elem_vars, sizeof(int));
 
   m->state |= EXODB_STATE_MESH;
   m->state |= EXODB_STATE_RES0;
