@@ -273,7 +273,8 @@ int fix_exo_file(int num_procs, const char *exo_mono_name) {
      */
 
     rd_exo(poly, polylith_name, 0,
-           (EXODB_ACTION_RD_INIT + EXODB_ACTION_RD_MESH + EXODB_ACTION_NO_GOMA + EXODB_ACTION_RD_RES0));
+           (EXODB_ACTION_RD_INIT + EXODB_ACTION_RD_MESH + EXODB_ACTION_NO_GOMA +
+            EXODB_ACTION_RD_RES0));
     zero_base(poly);
     setup_base_mesh(dpin, poly, 1);
     rd_dpi(poly, dpin, polylith_name, false);
