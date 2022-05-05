@@ -273,7 +273,8 @@ int fix_exo_file(int num_procs, const char *exo_mono_name) {
      */
 
     rd_exo(poly, polylith_name, 0,
-           (EXODB_ACTION_RD_INIT + EXODB_ACTION_RD_MESH + EXODB_ACTION_NO_GOMA));
+           (EXODB_ACTION_RD_INIT + EXODB_ACTION_RD_MESH + EXODB_ACTION_NO_GOMA +
+            EXODB_ACTION_RD_RES0));
     zero_base(poly);
     setup_base_mesh(dpin, poly, 1);
     rd_dpi(poly, dpin, polylith_name, false);
@@ -286,12 +287,16 @@ int fix_exo_file(int num_procs, const char *exo_mono_name) {
 
     build_global_conn(poly, dpin, mono, fix_data);
 
+    // element truth table checking
+    for (int i = 0; i < (mono->num_elem_blocks * mono->num_elem_vars); i++) {
+      mono->elem_var_tab[i] |= poly->elem_var_tab[i];
+    }
+
     /*
      * Contribute to the node set node list and distribution factor list...
      */
 
     free_element_blocks(poly);
-
     free_exo(poly);
     free(poly);
 
