@@ -3034,4 +3034,7 @@ if [ "$build_cmake" == "true" ] ; then
     echo "export PATH=$GOMA_LIB/cmake-$CMAKE_VERSION-linux-x86_64/bin:\$PATH" >> config.sh
 fi
 
+log_echo
 log_echo "An example bash configuration file has been written to $GOMA_LIB/config.sh"
+log_echo
+log_echo "Activate with $ source $GOMA_LIB/config.sh"
