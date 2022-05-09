@@ -139,6 +139,16 @@ constant and nonlinear PTT parameters.:
 
    PTT Epsilon parameter = CONSTANT 0.05
 
+An optional card *PTT Form* is available to choose between Linear and Exponential PTT forms.
+If not included EXPONENTIAL is the default.
+
+::
+
+   Polymer Consitutive Equation = PTT
+   PTT Form = LINEAR
+
+
+
 The following is a sample card that sets the polymer constitutive equation to
 **SARAMITO_OLDROYDB**. This option requires six cards describing the polymer
 stress formulation, weight function, viscosity, time constant, yield stress, 

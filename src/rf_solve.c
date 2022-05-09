@@ -3104,6 +3104,8 @@ int anneal_mesh(double x[],
     fclose(anneal_dat);
   }
 
+  MPI_Barrier(MPI_COMM_WORLD);
+
   if (!Skip_Fix && Num_Proc > 1 && ProcID == 0) {
     DPRINTF(stdout, "\nFixing exodus file %s\n", anneal_file);
     fix_exo_file(Num_Proc, anneal_file);

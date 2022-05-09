@@ -3361,8 +3361,11 @@ double getPositionAC(struct AC_Information *augc, double *cAC_iAC, double *x, Ex
     /* Check for a match between the ID of the current node set and the node set
        ID specified by NSIndexPosition */
     if (exo->ns_id[ins] == NSIndexPosition) {
-      if (exo->ns_num_nodes[ins] != 1) {
-        printf("Should be equal to one %d\n", exo->ns_num_nodes[ins]);
+      if (exo->ns_num_nodes[ins] == 0 && Num_Proc > 1) {
+        // we probably aren't this ns owner
+        break;
+      } else if (exo->ns_num_nodes[ins] != 1) {
+        printf("NS %d, nodes should be equal to one %d\n", exo->ns_id[ins], exo->ns_num_nodes[ins]);
         exit(-1);
       }
       /* Get the 0th local node in the current node set */
