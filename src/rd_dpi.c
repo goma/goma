@@ -539,6 +539,83 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn, bool parallel_call) {
     free(global_recv_nodes);
   }
 
+  d->goma_dpi_data = false;
+  // read ns and ss consistency data
+  int ncid;
+  int err = nc_open(fn, NC_NOWRITE | NC_SHARE, &ncid);
+  if (err)
+    GOMA_EH(GOMA_ERROR, nc_strerror(err));
+
+  int nc_ns_id;
+  size_t nc_ns_len;
+  bool goma_ns_found = true;
+  err = nc_inq_dimid(ncid, GOMA_NC_DIM_LEN_NS_NODE_LIST, &nc_ns_id);
+  if (err == NC_EBADID) {
+    goma_ns_found = false;
+  } else if (err != NC_NOERR) {
+    GOMA_EH(GOMA_ERROR, nc_strerror(err));
+  }
+
+  int nc_ss_id;
+  size_t nc_ss_len;
+  bool goma_ss_found = true;
+  err = nc_inq_dimid(ncid, GOMA_NC_DIM_LEN_SS_ELEM_LIST, &nc_ss_id);
+  if (err == NC_EBADID) {
+    goma_ns_found = false;
+  } else if (err != NC_NOERR) {
+    GOMA_EH(GOMA_ERROR, nc_strerror(err));
+  }
+
+  d->global_ns_node_len = 0;
+  if (goma_ns_found) {
+    err = nc_inq_dimlen(ncid, nc_ns_id, &nc_ns_len);
+    if (err)
+      GOMA_EH(GOMA_ERROR, nc_strerror(err));
+
+    int nc_node_list;
+    err = nc_inq_varid(ncid, GOMA_NC_VAR_NS_NODE_LIST, &nc_node_list);
+    if (err)
+      GOMA_EH(GOMA_ERROR, nc_strerror(err));
+
+    d->goma_dpi_data = true;
+    d->global_ns_node_len = nc_ns_len;
+    d->global_ns_nodes = calloc(nc_ns_len, sizeof(int));
+    err = nc_get_var(ncid, nc_node_list, d->global_ns_nodes);
+    if (err)
+      GOMA_EH(GOMA_ERROR, nc_strerror(err));
+  }
+
+  d->global_ss_elem_len = 0;
+  if (goma_ss_found) {
+    err = nc_inq_dimlen(ncid, nc_ss_id, &nc_ss_len);
+    if (err)
+      GOMA_EH(GOMA_ERROR, nc_strerror(err));
+
+    int nc_elem_list;
+    int nc_side_list;
+    err = nc_inq_varid(ncid, GOMA_NC_VAR_SS_ELEM_LIST, &nc_elem_list);
+    if (err)
+      GOMA_EH(GOMA_ERROR, nc_strerror(err));
+    err = nc_inq_varid(ncid, GOMA_NC_VAR_SS_SIDE_LIST, &nc_side_list);
+    if (err)
+      GOMA_EH(GOMA_ERROR, nc_strerror(err));
+
+    d->goma_dpi_data = true;
+    d->global_ss_elem_len = nc_ss_len;
+    d->global_ss_elems = calloc(nc_ss_len, sizeof(int));
+    d->global_ss_sides = calloc(nc_ss_len, sizeof(int));
+    err = nc_get_var(ncid, nc_elem_list, d->global_ss_elems);
+    if (err)
+      GOMA_EH(GOMA_ERROR, nc_strerror(err));
+    err = nc_get_var(ncid, nc_side_list, d->global_ss_sides);
+    if (err)
+      GOMA_EH(GOMA_ERROR, nc_strerror(err));
+  }
+
+  err = nc_close(ncid);
+  if (err)
+    GOMA_EH(GOMA_ERROR, nc_strerror(err));
+
   return 0;
 }
 int zero_dpi(Dpi *d) {
