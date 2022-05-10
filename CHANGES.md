@@ -1,7 +1,8 @@
 ## Changes in version 7.1.0
 
 - Add experimental standalone fix, usage: fix <exodusfile>.<num_proc>.00
-    example: `fix out.exoII.24.00`
+  - example: `fix out.exoII.24.00`
+- Linear PTT model, see PTT Form
 - bugfix, CA conditions error checking
 - bugfix, Output exodus properties, used with Nodeset associativity in CUBIT
 - bugfix, iapply is always on on external surfaces for "Special" BCs
