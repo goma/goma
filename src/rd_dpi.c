@@ -829,6 +829,12 @@ void free_dpi(Dpi *d) {
   free(d->num_node_recv);
   free(d->num_node_send);
   free(d->exodus_to_omega_h_node);
+
+  if (d->goma_dpi_data) {
+    free(d->global_ns_nodes);
+    free(d->global_ss_elems);
+    free(d->global_ss_sides);
+  }
 }
 /************************************************************************/
 /************************************************************************/
