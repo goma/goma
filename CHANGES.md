@@ -6,6 +6,7 @@
 - bugfix, Output exodus properties, used with Nodeset associativity in CUBIT
 - bugfix, iapply is always on on external surfaces for "Special" BCs
 - build script contains fix for goma#346 issue
+- bugfix, consistent NS and SS when using METIS decomposition
 
 ## Changes in version 7.0.5
 

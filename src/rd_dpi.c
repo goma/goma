@@ -550,20 +550,16 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn, bool parallel_call) {
   size_t nc_ns_len;
   bool goma_ns_found = true;
   err = nc_inq_dimid(ncid, GOMA_NC_DIM_LEN_NS_NODE_LIST, &nc_ns_id);
-  if (err == NC_EBADID) {
+  if (err != NC_NOERR) {
     goma_ns_found = false;
-  } else if (err != NC_NOERR) {
-    GOMA_EH(GOMA_ERROR, nc_strerror(err));
   }
 
   int nc_ss_id;
   size_t nc_ss_len;
   bool goma_ss_found = true;
   err = nc_inq_dimid(ncid, GOMA_NC_DIM_LEN_SS_ELEM_LIST, &nc_ss_id);
-  if (err == NC_EBADID) {
-    goma_ns_found = false;
-  } else if (err != NC_NOERR) {
-    GOMA_EH(GOMA_ERROR, nc_strerror(err));
+  if (err != NC_NOERR) {
+    goma_ss_found = false;
   }
 
   d->global_ns_node_len = 0;
