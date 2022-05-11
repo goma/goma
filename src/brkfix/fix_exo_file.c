@@ -288,8 +288,12 @@ int fix_exo_file(int num_procs, const char *exo_mono_name) {
     build_global_conn(poly, dpin, mono, fix_data);
 
     // element truth table checking
-    for (int i = 0; i < (mono->num_elem_blocks * mono->num_elem_vars); i++) {
-      mono->elem_var_tab[i] |= poly->elem_var_tab[i];
+    if (mono->elem_var_tab != NULL) {
+      for (int i = 0; i < (mono->num_elem_blocks * mono->num_elem_vars); i++) {
+        if (poly->elem_var_tab != NULL) { // guard against pieces without element variables
+          mono->elem_var_tab[i] |= poly->elem_var_tab[i];
+        }
+      }
     }
 
     /*
