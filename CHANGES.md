@@ -1,11 +1,13 @@
 ## Changes in version 7.1.0
 
 - Add experimental standalone fix, usage: fix <exodusfile>.<num_proc>.00
-    example: `fix out.exoII.24.00`
+  - example: `fix out.exoII.24.00`
+- Linear PTT model, see PTT Form
 - bugfix, CA conditions error checking
 - bugfix, Output exodus properties, used with Nodeset associativity in CUBIT
 - bugfix, iapply is always on on external surfaces for "Special" BCs
 - build script contains fix for goma#346 issue
+- bugfix, consistent NS and SS when using METIS decomposition
 
 ## Changes in version 7.0.5
 

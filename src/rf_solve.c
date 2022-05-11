@@ -477,7 +477,8 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 #endif
 
   /* Determine if external area fraction updates are required */
-  if ((Num_Var_In_Type[MASS_FRACTION]) && (efv->ev_etch_area > -1) && (efv->ev_etch_depth > -1)) {
+  if ((Num_Var_In_Type[pg->imtrx][MASS_FRACTION]) && (efv->ev_etch_area > -1) &&
+      (efv->ev_etch_depth > -1)) {
     update_etch_area = TRUE;
     fprintf(stderr, " External fields etch area %d and etch depth %d will be updated.\n",
             efv->ev_etch_area, efv->ev_etch_depth);

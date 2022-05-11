@@ -7105,7 +7105,7 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
             phi_j = bf[var]->phi[j];
 
             diffusion = 0.;
-            if (pd->e[eqn] && T_DIFFUSION) {
+            if (pd->e[pg->imtrx][eqn] && T_DIFFUSION) {
               for (p = 0; p < VIM; p++) {
                 diffusion += LubAux->dq_dconc[p][w][j] * grad_II_phi_i[p];
               }
@@ -8250,7 +8250,7 @@ int assemble_shell_species(double time,            /* present time value */
    * Bail out fast if there's nothing to do...
    */
   eqn = R_MASS;
-  if (!pd->e[eqn])
+  if (!pd->e[pg->imtrx][eqn])
     return (status);
 
   /*
@@ -8302,7 +8302,7 @@ int assemble_shell_species(double time,            /* present time value */
   }
 
   /* Call q calculator if lubrication equation is on */
-  if (pd->e[R_LUBP]) {
+  if (pd->gv[R_LUBP]) {
     calculate_lub_q_v(R_LUBP, time, dt, xi, exo);
   }
 

@@ -594,7 +594,7 @@ int numerical_jacobian_compute_stress(struct GomaLinearSolverData *ams,
           Index_Solution_Inv(i, &gnode, &ivd, &i_offset, &idof, pg->imtrx);
 
           if (pd->v[pg->imtrx][EM_E1_REAL]) {
-            if (Inter_Mask[var_i][var_j]) {
+            if (Inter_Mask[pg->imtrx][var_i][var_j]) {
               int ja = (i == j) ? j : in_list(j, ams->bindx[i], ams->bindx[i + 1], ams->bindx);
               if (ja == -1) {
                 sprintf(errstring, "Index not found (%d, %d) for interaction (%d, %d)", i, j,

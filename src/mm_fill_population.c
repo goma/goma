@@ -336,8 +336,8 @@ void adaptive_wheeler(
       nodes[i] = eigenvalues[i];
     }
 
-    double dab[n1];
-    double mab[n1];
+    double dab[MAX_MOMENTS] = {0.};
+    double mab[MAX_MOMENTS] = {0.};
     for (int i = n1 - 1; i > 0; i--) {
       dab[i] = fabs(nodes[i] - nodes[0]);
       mab[i] = fabs(nodes[i] - nodes[0]);

@@ -1219,13 +1219,13 @@ int assembly_alloc(Exo_DB *exo)
       esp->cur_strain = (dbl **)alloc_ptr_1(MDE);
     }
 
-    if (Num_Var_In_Type[SHELL_SAT_1]) {
+    if (Num_Var_In_Type[imtrx][SHELL_SAT_1]) {
       esp->sh_sat_1 = (dbl **)alloc_ptr_1(MDE);
     }
-    if (Num_Var_In_Type[SHELL_SAT_2]) {
+    if (Num_Var_In_Type[imtrx][SHELL_SAT_2]) {
       esp->sh_sat_2 = (dbl **)alloc_ptr_1(MDE);
     }
-    if (Num_Var_In_Type[SHELL_SAT_3]) {
+    if (Num_Var_In_Type[imtrx][SHELL_SAT_3]) {
       esp->sh_sat_3 = (dbl **)alloc_ptr_1(MDE);
     }
 

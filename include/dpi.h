@@ -15,6 +15,8 @@
 #ifndef GOMA_DPI_H
 #define GOMA_DPI_H
 
+#include <stdbool.h>
+
 struct Distributed_Processing_Information {
   int num_elem_blocks_global;
   int num_elems; /* New! */
@@ -145,8 +147,24 @@ struct Distributed_Processing_Information {
 
   int base_internal_elems;
   int base_border_elems;
+
+  // ns and ss consistency for Cubit
+  bool goma_dpi_data;
+  int global_ns_node_len;
+  int *global_ns_nodes;
+  int global_ss_elem_len;
+  int *global_ss_elems;
+  int *global_ss_sides;
 };
 typedef struct Distributed_Processing_Information Dpi;
 
 extern Dpi *DPI_ptr;
 #endif
+
+// NETCDF definitions
+
+#define GOMA_NC_DIM_LEN_NS_NODE_LIST "goma_len_ns_node_list"
+#define GOMA_NC_DIM_LEN_SS_ELEM_LIST "goma_len_ss_elem_list"
+#define GOMA_NC_VAR_NS_NODE_LIST     "goma_ns_node_list"
+#define GOMA_NC_VAR_SS_ELEM_LIST     "goma_ss_elem_list"
+#define GOMA_NC_VAR_SS_SIDE_LIST     "goma_ss_side_list"
