@@ -693,13 +693,28 @@ void setup_old_exo(Exo_DB *e, Dpi *dpi, int num_proc) {
    * Reality checks...
    */
 
-  if (Num_Node / Num_Proc < 1) {
-    sprintf(err_msg, "Whoa! Problem with %d nodes on %d processors.", Num_Node, Num_Proc);
+  unsigned long long num_global_node = 0;
+  unsigned long long num_local_node = Num_Node;
+  unsigned long long num_global_elem = 0;
+  unsigned long long num_local_elem = Num_Elem;
+
+  if (num_proc > 1) {
+    MPI_Allreduce(&num_local_node, &num_global_node, 1, MPI_UNSIGNED_LONG_LONG, MPI_SUM,
+                  MPI_COMM_WORLD);
+    MPI_Allreduce(&num_local_elem, &num_global_elem, 1, MPI_UNSIGNED_LONG_LONG, MPI_SUM,
+                  MPI_COMM_WORLD);
+  } else {
+    num_global_elem = Num_Elem;
+    num_global_node = Num_Node;
+  }
+
+  if (num_global_node / Num_Proc < 1) {
+    sprintf(err_msg, "Whoa! Problem with %lld nodes on %d processors.", num_global_node, Num_Proc);
     GOMA_EH(GOMA_ERROR, err_msg);
   }
 
-  if (Num_Elem / Num_Proc < 1) {
-    sprintf(err_msg, "Whoa! Problem with %d elems on %d processors.", Num_Elem, Num_Proc);
+  if (num_global_elem / Num_Proc < 1) {
+    sprintf(err_msg, "Whoa! Problem with %lld elems on %d processors.", num_global_elem, Num_Proc);
     GOMA_EH(GOMA_ERROR, err_msg);
   }
 
