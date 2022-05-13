@@ -31,7 +31,7 @@
     <script src="../../_static/doctools.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Polymer Stress Formulation" href="polymer_stress_formulation.html" />
+    <link rel="next" title="PTT Form" href="ptt_form.html" />
     <link rel="prev" title="Unreacted Gel Temperature" href="unreacted_gel_temperature.html" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="docsearch:language" content="None">
@@ -2157,6 +2157,11 @@
       </a>
      </li>
      <li class="toctree-l3">
+      <a class="reference internal" href="ptt_form.html">
+       PTT Form
+      </a>
+     </li>
+     <li class="toctree-l3">
       <a class="reference internal" href="polymer_stress_formulation.html">
        Polymer Stress Formulation
       </a>
@@ -3258,6 +3263,12 @@ constant and nonlinear PTT parameters.:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">PTT</span> <span class="n">Epsilon</span> <span class="n">parameter</span> <span class="o">=</span> <span class="n">CONSTANT</span> <span class="mf">0.05</span>
 </pre></div>
 </div>
+<p>An optional card <em>PTT Form</em> is available to choose between Linear and Exponential PTT forms.
+If not included EXPONENTIAL is the default.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Polymer</span> <span class="n">Consitutive</span> <span class="n">Equation</span> <span class="o">=</span> <span class="n">PTT</span>
+<span class="n">PTT</span> <span class="n">Form</span> <span class="o">=</span> <span class="n">LINEAR</span>
+</pre></div>
+</div>
 <p>The following is a sample card that sets the polymer constitutive equation to
 <strong>SARAMITO_OLDROYDB</strong>. This option requires six cards describing the polymer
 stress formulation, weight function, viscosity, time constant, yield stress,
@@ -3375,10 +3386,10 @@ to multimodes.</p>
             <p class="prev-next-title">Unreacted Gel Temperature</p>
         </div>
     </a>
-    <a class='right-next' id="next-link" href="polymer_stress_formulation.html" title="next page">
+    <a class='right-next' id="next-link" href="ptt_form.html" title="next page">
     <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Polymer Stress Formulation</p>
+        <p class="prev-next-title">PTT Form</p>
     </div>
     <i class="fas fa-angle-right"></i>
     </a>
