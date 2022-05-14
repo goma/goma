@@ -140,6 +140,73 @@ int wr_dpi(Dpi *d, char *filename) {
   ex_error = ex_close(exoid);
   CHECK_EX_ERROR(ex_error, "ex_close");
 
+  // goma consistency
+
+  if (d->goma_dpi_data) {
+
+    int ncid;
+    int err = nc_open(filename, NC_WRITE | NC_SHARE, &ncid);
+    if (err)
+      GOMA_EH(GOMA_ERROR, nc_strerror(err));
+
+    if (d->global_ns_node_len > 0) {
+      err = nc_redef(ncid);
+      if (err)
+        GOMA_EH(GOMA_ERROR, nc_strerror(err));
+
+      int nc_ns_len;
+      err = nc_def_dim(ncid, GOMA_NC_DIM_LEN_NS_NODE_LIST, d->global_ns_node_len, &nc_ns_len);
+      if (err)
+        GOMA_EH(GOMA_ERROR, nc_strerror(err));
+      int nc_ns;
+      err = nc_def_var(ncid, GOMA_NC_VAR_NS_NODE_LIST, NC_INT, 1, &nc_ns_len, &nc_ns);
+      if (err)
+        GOMA_EH(GOMA_ERROR, nc_strerror(err));
+
+      err = nc_enddef(ncid);
+      if (err)
+        GOMA_EH(GOMA_ERROR, nc_strerror(err));
+
+      err = nc_put_var(ncid, nc_ns, d->global_ns_nodes);
+      if (err)
+        GOMA_EH(GOMA_ERROR, nc_strerror(err));
+    }
+
+    if (d->global_ss_elem_len > 0) {
+      err = nc_redef(ncid);
+      if (err)
+        GOMA_EH(GOMA_ERROR, nc_strerror(err));
+
+      int nc_ss_len;
+      err = nc_def_dim(ncid, GOMA_NC_DIM_LEN_SS_ELEM_LIST, d->global_ss_elem_len, &nc_ss_len);
+      if (err)
+        GOMA_EH(GOMA_ERROR, nc_strerror(err));
+      int nc_ss_elem;
+      err = nc_def_var(ncid, GOMA_NC_VAR_SS_ELEM_LIST, NC_INT, 1, &nc_ss_len, &nc_ss_elem);
+      if (err)
+        GOMA_EH(GOMA_ERROR, nc_strerror(err));
+
+      int nc_ss_side;
+      err = nc_def_var(ncid, GOMA_NC_VAR_SS_SIDE_LIST, NC_INT, 1, &nc_ss_len, &nc_ss_side);
+      if (err)
+        GOMA_EH(GOMA_ERROR, nc_strerror(err));
+      err = nc_enddef(ncid);
+      if (err)
+        GOMA_EH(GOMA_ERROR, nc_strerror(err));
+
+      err = nc_put_var(ncid, nc_ss_elem, d->global_ss_elems);
+      if (err)
+        GOMA_EH(GOMA_ERROR, nc_strerror(err));
+      err = nc_put_var(ncid, nc_ss_side, d->global_ss_sides);
+      if (err)
+        GOMA_EH(GOMA_ERROR, nc_strerror(err));
+    }
+
+    err = nc_close(ncid);
+    if (err)
+      GOMA_EH(GOMA_ERROR, nc_strerror(err));
+  }
+
   GOMA_EH(zero_dpi(d), "zero_dpi");
   return 0;
 }

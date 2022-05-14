@@ -10533,7 +10533,7 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
 
   if (LUB_FLUID_SOURCE != -1 &&
       ((Num_Var_In_Type[pg->imtrx][R_LUBP]) ||
-       (Num_Var_In_Type[R_SHELL_FILMP] && Num_Var_In_Type[R_SHELL_FILMH]))) {
+       (Num_Var_In_Type[pg->imtrx][R_SHELL_FILMP] && Num_Var_In_Type[pg->imtrx][R_SHELL_FILMH]))) {
     if (LUB_FLUID_SOURCE == 2) {
       GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
     }

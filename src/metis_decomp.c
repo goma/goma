@@ -1,6 +1,7 @@
 #ifdef GOMA_ENABLE_METIS
 #include <exodusII.h>
 #include <metis.h>
+#include <netcdf.h>
 #include <stdlib.h>
 
 #include "base_mesh.h"
@@ -541,10 +542,113 @@ goma_error goma_metis_decomposition(char **filenames, int n_files) {
 
       if (monolith->num_node_sets > 0) {
         put_node_sets(exoid, monolith, node_indicator, global_to_local);
+
+        // global ns order preservation
+        // only store on proc 0
+        if (proc == 0) {
+          ex_close(exoid);
+          int ncid;
+          err = nc_open(proc_name, NC_WRITE | NC_SHARE, &ncid);
+          if (err)
+            GOMA_EH(GOMA_ERROR, nc_strerror(err));
+
+          err = nc_redef(ncid);
+          if (err)
+            GOMA_EH(GOMA_ERROR, nc_strerror(err));
+
+          int nc_ns_len;
+          err = nc_def_dim(ncid, GOMA_NC_DIM_LEN_NS_NODE_LIST, monolith->ns_node_len, &nc_ns_len);
+          if (err)
+            GOMA_EH(GOMA_ERROR, nc_strerror(err));
+          int nc_ns;
+          err = nc_def_var(ncid, GOMA_NC_VAR_NS_NODE_LIST, NC_INT, 1, &nc_ns_len, &nc_ns);
+          if (err)
+            GOMA_EH(GOMA_ERROR, nc_strerror(err));
+
+          err = nc_enddef(ncid);
+          if (err)
+            GOMA_EH(GOMA_ERROR, nc_strerror(err));
+
+          int *ns_nodes = calloc(monolith->ns_node_len, sizeof(int));
+          for (int i = 0; i < monolith->ns_node_len; i++) {
+            ns_nodes[i] = dpi->node_index_global[monolith->ns_node_list[i]];
+          }
+
+          err = nc_put_var(ncid, nc_ns, ns_nodes);
+          if (err)
+            GOMA_EH(GOMA_ERROR, nc_strerror(err));
+
+          err = nc_close(ncid);
+          if (err)
+            GOMA_EH(GOMA_ERROR, nc_strerror(err));
+
+          free(ns_nodes);
+
+          int comp_ws = monolith->comp_wordsize;
+          int io_ws = monolith->io_wordsize;
+          float version = monolith->version;
+          exoid = ex_open(proc_name, EX_WRITE, &comp_ws, &io_ws, &version);
+        }
       }
 
       if (monolith->num_side_sets > 0) {
         put_side_sets(exoid, monolith, elem_indicator, global_to_local_elem);
+
+        // global ss order preservation
+        if (proc == 0) {
+          ex_close(exoid);
+          int ncid;
+          err = nc_open(proc_name, NC_WRITE, &ncid);
+          if (err)
+            GOMA_EH(GOMA_ERROR, nc_strerror(err));
+
+          err = nc_redef(ncid);
+          if (err)
+            GOMA_EH(GOMA_ERROR, nc_strerror(err));
+
+          int nc_ss_len;
+          err = nc_def_dim(ncid, GOMA_NC_DIM_LEN_SS_ELEM_LIST, monolith->ss_elem_len, &nc_ss_len);
+          if (err)
+            GOMA_EH(GOMA_ERROR, nc_strerror(err));
+          int nc_ss_elem;
+          err = nc_def_var(ncid, GOMA_NC_VAR_SS_ELEM_LIST, NC_INT, 1, &nc_ss_len, &nc_ss_elem);
+          if (err)
+            GOMA_EH(GOMA_ERROR, nc_strerror(err));
+          int nc_ss_side;
+          err = nc_def_var(ncid, GOMA_NC_VAR_SS_SIDE_LIST, NC_INT, 1, &nc_ss_len, &nc_ss_side);
+          if (err)
+            GOMA_EH(GOMA_ERROR, nc_strerror(err));
+
+          err = nc_enddef(ncid);
+          if (err)
+            GOMA_EH(GOMA_ERROR, nc_strerror(err));
+
+          int *ss_elems = calloc(monolith->ss_elem_len, sizeof(int));
+          int *ss_sides = calloc(monolith->ss_elem_len, sizeof(int));
+          for (int i = 0; i < monolith->ss_elem_len; i++) {
+            ss_elems[i] = dpi->elem_index_global[monolith->ss_elem_list[i]];
+            ss_sides[i] = monolith->ss_side_list[i];
+          }
+
+          err = nc_put_var(ncid, nc_ss_elem, ss_elems);
+          if (err)
+            GOMA_EH(GOMA_ERROR, nc_strerror(err));
+          err = nc_put_var(ncid, nc_ss_side, ss_sides);
+          if (err)
+            GOMA_EH(GOMA_ERROR, nc_strerror(err));
+
+          err = nc_close(ncid);
+          if (err)
+            GOMA_EH(GOMA_ERROR, nc_strerror(err));
+
+          free(ss_elems);
+          free(ss_sides);
+
+          int comp_ws = monolith->comp_wordsize;
+          int io_ws = monolith->io_wordsize;
+          float version = monolith->version;
+          exoid = ex_open(proc_name, EX_WRITE, &comp_ws, &io_ws, &version);
+        }
       }
 
       err = ex_put_init_global(exoid, monolith->num_nodes, monolith->num_elems,

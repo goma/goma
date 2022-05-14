@@ -793,8 +793,14 @@ void build_global_ns(Dpi *d, /* distributed processing info from polylith */
     return;
   }
 
-  for (i = 0; i < m->ns_node_len; i++) {
-    m->ns_node_list[i] = fd->ns_node_list[i];
+  if (d->goma_dpi_data) {
+    for (i = 0; i < m->ns_node_len; i++) {
+      m->ns_node_list[i] = d->global_ns_nodes[i];
+    }
+  } else {
+    for (i = 0; i < m->ns_node_len; i++) {
+      m->ns_node_list[i] = fd->ns_node_list[i];
+    }
   }
 
   for (i = 0; i < m->ns_distfact_len; i++) {
@@ -836,9 +842,16 @@ void build_global_ss(Dpi *d, /* distributed processing info from polylith */
     return;
   }
 
-  for (i = 0; i < m->ss_elem_len; i++) {
-    m->ss_elem_list[i] = fd->ss_elem_list[i];
-    m->ss_side_list[i] = fd->ss_side_list[i];
+  if (d->goma_dpi_data) {
+    for (i = 0; i < m->ss_elem_len; i++) {
+      m->ss_elem_list[i] = d->global_ss_elems[i];
+      m->ss_side_list[i] = d->global_ss_sides[i];
+    }
+  } else {
+    for (i = 0; i < m->ss_elem_len; i++) {
+      m->ss_elem_list[i] = fd->ss_elem_list[i];
+      m->ss_side_list[i] = fd->ss_side_list[i];
+    }
   }
 
   for (i = 0; i < m->ss_distfact_len; i++) {
