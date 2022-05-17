@@ -762,7 +762,7 @@ void rd_file_specs(FILE *ifp, char *input) {
     strip(input);
     if (strcasecmp(input, "kway") == 0) {
       Decompose_Type = 2;
-    } else if (strcasecmp(input, "rcb")) {
+    } else if (strcasecmp(input, "rcb") == 0) {
       Decompose_Type = 1;
     } else {
       GOMA_EH(GOMA_ERROR, "Unexpected input for Decomposition_Type: %s, expected kway or rcb",
