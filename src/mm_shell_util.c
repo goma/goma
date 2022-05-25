@@ -3930,15 +3930,15 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         dq_gradp = pre_delP / nexp;
         dq_dH = (2. + 1. / nexp) / H * q_mag;
         srate = pow(fabs(tau_w) / mu, 1. / nexp);
-	vis_w = tau_w / srate;
+        vis_w = tau_w / srate;
       } else {
         q_mag = dq_dH = 0.;
         dq_gradp = pre_delP = -CUBE(H) / (k_turb * mu);
         srate = 0.;
-	vis_w = mu;
+        vis_w = mu;
       }
     } else if (gn->ConstitutiveEquation == BINGHAM || gn->ConstitutiveEquation == BINGHAM_WLF ||
-	       gn->ConstitutiveEquation == CARREAU || gn->ConstitutiveEquation == CARREAU_WLF) {
+               gn->ConstitutiveEquation == CARREAU || gn->ConstitutiveEquation == CARREAU_WLF) {
       err = lub_viscosity_integrate(tau_w, H, &q_mag, &dq_gradp, &dq_dH, &srate, &pre_delP, &vis_w);
     } else if (gn->ConstitutiveEquation == HERSCHEL_BULKLEY) {
       double nexp = gn->nexp, yield = gn->tau_y;
@@ -3965,14 +3965,15 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       dq_dH = -3. * SQUARE(H) / (k_turb * mu) * pgrad;
       srate = fabs(tau_w / mu);
       vis_w = mu;
-    }  /*  End of Viscosity Models **/
+    } /*  End of Viscosity Models **/
 
-  if(0) {
-     double pre_P;
+    if (0) {
+      double pre_P;
       pre_P = -CUBE(H) / (k_turb * mu);
-  fprintf(stderr, "newt_q_v %g %g %g %g %g\n",pre_P*pgrad, pre_P, pre_P, tau_w/mu, 3*pre_P/H*pgrad);   
-  fprintf(stderr, "lub_q_v %g %g %g %g %g\n",q_mag,dq_gradp,pre_delP,srate, dq_dH);   
-  }
+      fprintf(stderr, "newt_q_v %g %g %g %g %g\n", pre_P * pgrad, pre_P, pre_P, tau_w / mu,
+              3 * pre_P / H * pgrad);
+      fprintf(stderr, "lub_q_v %g %g %g %g %g\n", q_mag, dq_gradp, pre_delP, srate, dq_dH);
+    }
     v_mag = q_mag / H;
     dv_gradp = dq_gradp / H;
     dv_dH = dq_dH / H - q_mag / SQUARE(H);
@@ -3981,10 +3982,10 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     for (i = 0; i < dim; i++) {
       q[i] += q_mag * ev[i];
     }
-    if (DOUBLE_NONZERO(vsqr) && 
-	(gn->ConstitutiveEquation == BINGHAM || gn->ConstitutiveEquation == BINGHAM_WLF ||
-        gn->ConstitutiveEquation == CARREAU || gn->ConstitutiveEquation == CARREAU_WLF ||
-        gn->ConstitutiveEquation == POWER_LAW || gn->ConstitutiveEquation == HERSCHEL_BULKLEY)) {
+    if (DOUBLE_NONZERO(vsqr) &&
+        (gn->ConstitutiveEquation == BINGHAM || gn->ConstitutiveEquation == BINGHAM_WLF ||
+         gn->ConstitutiveEquation == CARREAU || gn->ConstitutiveEquation == CARREAU_WLF ||
+         gn->ConstitutiveEquation == POWER_LAW || gn->ConstitutiveEquation == HERSCHEL_BULKLEY)) {
       GOMA_EH(GOMA_ERROR, "Shear-thining moving wall model not finished yet.\n");
     } else {
       for (i = 0; i < dim; i++) {
@@ -4671,7 +4672,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       dq_dH = (-3. * SQUARE(H) / (k_turb * mu) - 2. * H * beta_slip) * pgrad;
       srate = fabs(tau_w / mu);
       vis_w = mu;
-    }  /*  End of Viscosity Models **/
+    } /*  End of Viscosity Models **/
 
     dq_gradpt = dq_gradp - beta_slip * SQUARE(H);
     dv_gradp = dq_gradp / H;
@@ -4681,10 +4682,10 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     for (i = 0; i < dim; i++) {
       q[i] += q_mag * ev[i];
     }
-    if (DOUBLE_NONZERO(vsqr) && 
-	(gn->ConstitutiveEquation == BINGHAM || gn->ConstitutiveEquation == BINGHAM_WLF ||
-        gn->ConstitutiveEquation == CARREAU || gn->ConstitutiveEquation == CARREAU_WLF ||
-        gn->ConstitutiveEquation == POWER_LAW || gn->ConstitutiveEquation == HERSCHEL_BULKLEY)) {
+    if (DOUBLE_NONZERO(vsqr) &&
+        (gn->ConstitutiveEquation == BINGHAM || gn->ConstitutiveEquation == BINGHAM_WLF ||
+         gn->ConstitutiveEquation == CARREAU || gn->ConstitutiveEquation == CARREAU_WLF ||
+         gn->ConstitutiveEquation == POWER_LAW || gn->ConstitutiveEquation == HERSCHEL_BULKLEY)) {
       GOMA_EH(GOMA_ERROR, "Shear-thining moving wall model not finished yet.\n");
     } else {
       for (i = 0; i < dim; i++) {
@@ -4979,7 +4980,7 @@ void calculate_lub_q_v_old(
     int *n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
     lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
 
-        /* Load viscosity and density */
+    /* Load viscosity and density */
     rho_old = density(d_rho, time_old);
     if (gn->ConstitutiveEquation == POWER_LAW || gn->ConstitutiveEquation == BINGHAM ||
         gn->ConstitutiveEquation == HERSCHEL_BULKLEY || gn->ConstitutiveEquation == CARREAU ||
@@ -4988,7 +4989,6 @@ void calculate_lub_q_v_old(
     } else {
       mu_old = viscosity(gn, NULL, d_mu);
     }
-
 
     /* Extract wall velocities */
     velocity_function_model(veloU_old, veloL_old, time_old, dt_old);
@@ -5073,7 +5073,7 @@ void calculate_lub_q_v_old(
 
     /******* CALCULATE FLOW RATE AND AVERAGE VELOCITY ***********/
 
-        /* Set some coefficients */
+    /* Set some coefficients */
     dbl k_turb = 12.;
     dbl vsqr, q_mag = 0., tau_w;
 
@@ -5118,8 +5118,8 @@ void calculate_lub_q_v_old(
       k_turb = 4. * (2 * nexp + 1.);
       if (tau_w > yield) {
         q_mag = -CUBE(H_old) / k_turb * pow((tau_w - yield) / mu_old, 1. / nexp) *
-                   (nexp / tau_w - nexp / (1. + nexp) * yield / SQUARE(tau_w) *
-                                       (1. + nexp * yield / SQUARE(tau_w)));
+                (nexp / tau_w -
+                 nexp / (1. + nexp) * yield / SQUARE(tau_w) * (1. + nexp * yield / SQUARE(tau_w)));
         q_mag *= pgrad;
       } else {
         q_mag = 0.;
@@ -5128,7 +5128,7 @@ void calculate_lub_q_v_old(
       k_turb = 12.;
       q_mag = -CUBE(H_old) / (k_turb * mu_old);
       q_mag *= pgrad;
-    }  /*  End of Viscosity Models **/
+    } /*  End of Viscosity Models **/
 
     memset(q_old, 0.0, sizeof(double) * DIM);
     for (i = 0; i < dim; i++) {
@@ -5849,8 +5849,14 @@ void calculate_lub_q_v_nonnewtonian_sens(double mu,
 
 } /* End of calculate_lub_q_v_nonnewtonian_sens */
 
-int lub_viscosity_integrate(const double strs, const double H,
-		double *flow_mag, double *dq_gradp, double *dq_dh, double *srate, double *pre_P, double *mu_star)
+int lub_viscosity_integrate(const double strs,
+                            const double H,
+                            double *flow_mag,
+                            double *dq_gradp,
+                            double *dq_dh,
+                            double *srate,
+                            double *pre_P,
+                            double *mu_star)
 /******************************************************************************
  *
  * lub_viscosity_integrate()
@@ -5865,9 +5871,9 @@ int lub_viscosity_integrate(const double strs, const double H,
   double nexp = gn->nexp, lam = gn->lam, aexp = gn->aexp, muinf = gn->muinf;
   double yield = gn->tau_y, F = gn->fexp, mu0 = gn->mu0;
   double eps, res;
-  int iter, ITERMAX=50, jdi, JDI_MAX=25, ierr=0;
-  double xint = 0., xintold = 0.,temp, at = 1.;
-  double wt[3] = {5./18., 4./9., 5./18.};
+  int iter, ITERMAX = 50, jdi, JDI_MAX = 25, ierr = 0;
+  double xint = 0., xintold = 0., temp, at = 1.;
+  double wt[3] = {5. / 18., 4. / 9., 5. / 18.};
   double gp[3] = {0.11270166537925831148, 0.5, 0.8872983346207416885};
 
   if (pd->gv[SHELL_TEMPERATURE]) {
@@ -5877,11 +5883,12 @@ int lub_viscosity_integrate(const double strs, const double H,
   }
 
   if (DOUBLE_NONZERO(temp) && DOUBLE_NONZERO(mp->reference[TEMPERATURE])) {
-    if (gn->ConstitutiveEquation  == BINGHAM) {
-      at = exp(gn->atexp*(1./temp - 1./mp->reference[TEMPERATURE]));
-    } 
-    else if (gn->ConstitutiveEquation == CARREAU_WLF || gn->ConstitutiveEquation == BINGHAM_WLF) {
-      at = exp(gn->atexp*(mp->reference[TEMPERATURE] - temp) / (gn->wlfc2 + temp - mp->reference[TEMPERATURE]));;
+    if (gn->ConstitutiveEquation == BINGHAM) {
+      at = exp(gn->atexp * (1. / temp - 1. / mp->reference[TEMPERATURE]));
+    } else if (gn->ConstitutiveEquation == CARREAU_WLF || gn->ConstitutiveEquation == BINGHAM_WLF) {
+      at = exp(gn->atexp * (mp->reference[TEMPERATURE] - temp) /
+               (gn->wlfc2 + temp - mp->reference[TEMPERATURE]));
+      ;
     }
   }
   muinf = at * gn->muinf;
@@ -5890,110 +5897,115 @@ int lub_viscosity_integrate(const double strs, const double H,
   F = at * gn->fexp;
 
   /**  Take care of de-generate case first **/
-  if(DOUBLE_ZERO(strs)) {
+  if (DOUBLE_ZERO(strs)) {
     switch (gn->ConstitutiveEquation) {
-      case CARREAU:
-      case CARREAU_WLF:
-        vis_w = mu0;
-        break;
-      case BINGHAM:
-      case BINGHAM_WLF:
-        vis_w = mu0 + yield*F; 
-        break;
-      default:
+    case CARREAU:
+    case CARREAU_WLF:
+      vis_w = mu0;
+      break;
+    case BINGHAM:
+    case BINGHAM_WLF:
+      vis_w = mu0 + yield * F;
+      break;
+    default:
     }
     *flow_mag = 0.;
-    if(dq_gradp != NULL) *dq_gradp = *pre_P =  -CUBE(H) / (12. * vis_w);
-    if(pre_P != NULL) *pre_P =  -CUBE(H) / (12. * vis_w);
-    if(dq_dh != NULL) *dq_dh = 0.;
-    if(srate != NULL) *srate = 0.;
-    if(mu_star != NULL) *mu_star = vis_w;
+    if (dq_gradp != NULL)
+      *dq_gradp = *pre_P = -CUBE(H) / (12. * vis_w);
+    if (pre_P != NULL)
+      *pre_P = -CUBE(H) / (12. * vis_w);
+    if (dq_dh != NULL)
+      *dq_dh = 0.;
+    if (srate != NULL)
+      *srate = 0.;
+    if (mu_star != NULL)
+      *mu_star = vis_w;
     return (ierr);
   }
 
   /** First iterate to find shearrate that corresponds to stress */
   shr = strs / mu0;
-  for (iter=0 ; iter < ITERMAX ; iter++) {
+  for (iter = 0; iter < ITERMAX; iter++) {
     double xfact, tmp, tpe, xj, delta, visd = 0.;
     xfact = 1. + pow(lam * fabs(shr), aexp);
     tmp = pow(xfact, (1. - nexp) / aexp);
     switch (gn->ConstitutiveEquation) {
-      case CARREAU:
-      case CARREAU_WLF:
-        vis_w = muinf + (mu0 - muinf) / tmp;
-        visd = (mu0 - muinf) * (nexp-1.) * SQUARE(lam) *
-               pow(lam * fabs(shr), aexp - 2.) / tmp / xfact;
-        break;
-      case BINGHAM:
-      case BINGHAM_WLF:
-	tpe = (1. - exp(-F*fabs(shr)))/fabs(shr);
-        vis_w = muinf + (mu0 - muinf + yield*tpe) / tmp;
-        visd = (mu0 - muinf + yield*tpe) * (nexp-1.) * SQUARE(lam) / tmp / xfact 
-		* pow(lam * fabs(shr), aexp - 2.);
-	visd += yield*(exp(-F*fabs(shr))*(F*fabs(shr) +1.)-1.)/CUBE(fabs(shr));
-        break;
-      default:
+    case CARREAU:
+    case CARREAU_WLF:
+      vis_w = muinf + (mu0 - muinf) / tmp;
+      visd =
+          (mu0 - muinf) * (nexp - 1.) * SQUARE(lam) * pow(lam * fabs(shr), aexp - 2.) / tmp / xfact;
+      break;
+    case BINGHAM:
+    case BINGHAM_WLF:
+      tpe = (1. - exp(-F * fabs(shr))) / fabs(shr);
+      vis_w = muinf + (mu0 - muinf + yield * tpe) / tmp;
+      visd = (mu0 - muinf + yield * tpe) * (nexp - 1.) * SQUARE(lam) / tmp / xfact *
+             pow(lam * fabs(shr), aexp - 2.);
+      visd += yield * (exp(-F * fabs(shr)) * (F * fabs(shr) + 1.) - 1.) / CUBE(fabs(shr));
+      break;
+    default:
     }
     res = vis_w * shr - strs;
     xj = vis_w + SQUARE(shr) * visd;
     delta = -res / xj;
-    if( iter > ITERMAX/3) {
-      shr += 0.5*delta;
-    }
-    else if( iter > ITERMAX/2) {
-      shr += 0.2*delta;
-    }
-    else {
+    if (iter > ITERMAX / 3) {
+      shr += 0.5 * delta;
+    } else if (iter > ITERMAX / 2) {
+      shr += 0.2 * delta;
+    } else {
       shr += delta;
     }
     eps = fabs(delta) / (1. + fabs(shr));
-    if( fabs(res) < Epsilon[pg->imtrx][0] && eps < Epsilon[pg->imtrx][2]) break;
+    if (fabs(res) < Epsilon[pg->imtrx][0] && eps < Epsilon[pg->imtrx][2])
+      break;
   }
   if (eps > Epsilon[pg->imtrx][2]) {
     if (eps < sqrt(Epsilon[pg->imtrx][2])) {
       ierr = -2;
       GOMA_WH(GOMA_ERROR, "Viscosity iteration sort of converged!");
-    }
-    else {
+    } else {
       ierr = -1;
       GOMA_EH(GOMA_ERROR, "Viscosity iteration not converged!");
-      }
+    }
   }
 
   /** Second compute viscosity integral (stationary walls) */
-  for (jdi=0 ; jdi < JDI_MAX ; jdi++) {
+  for (jdi = 0; jdi < JDI_MAX; jdi++) {
     double cee, x0, delx, vis = 1., jdiv, xfact, tmp, tpe;
     int idiv, l;
-    jdiv = pow(2.,jdi);
-    delx = 1./jdiv; x0 = 0.;
-    xint=0.; 
-    for ( idiv=0 ; idiv<jdiv ; idiv++) {
-      for ( l=0 ; l<3 ; l++)  {
-        cee=x0+gp[l]*delx;
+    jdiv = pow(2., jdi);
+    delx = 1. / jdiv;
+    x0 = 0.;
+    xint = 0.;
+    for (idiv = 0; idiv < jdiv; idiv++) {
+      for (l = 0; l < 3; l++) {
+        cee = x0 + gp[l] * delx;
         xfact = 1. + pow(lam * cee * shr, aexp);
         tmp = pow(xfact, (1. - nexp) / aexp);
         switch (gn->ConstitutiveEquation) {
-          case CARREAU:
-          case CARREAU_WLF:
-            vis = muinf + (mu0 - muinf) / tmp;
-	    vis /= vis_w;
-            break;
-          case BINGHAM:
-          case BINGHAM_WLF:
-	    tpe = (1. - exp(-F*fabs(shr)))/fabs(shr);
-            vis = muinf + (mu0 - muinf + yield*tpe) / tmp;
-	    vis /= vis_w;
-            break;
-          default:
+        case CARREAU:
+        case CARREAU_WLF:
+          vis = muinf + (mu0 - muinf) / tmp;
+          vis /= vis_w;
+          break;
+        case BINGHAM:
+        case BINGHAM_WLF:
+          tpe = (1. - exp(-F * fabs(shr))) / fabs(shr);
+          vis = muinf + (mu0 - muinf + yield * tpe) / tmp;
+          vis /= vis_w;
+          break;
+        default:
         }
-        xint += SQUARE(vis*cee)*delx*wt[l];
+        xint += SQUARE(vis * cee) * delx * wt[l];
       }
       x0 += delx;
     }
-    eps=fabs(xint - xintold);
+    eps = fabs(xint - xintold);
     xintold = xint;
-    if( eps < Epsilon[pg->imtrx][2]) break;
-  } 
+    if (eps < Epsilon[pg->imtrx][2])
+      break;
+  }
   if (eps > Epsilon[pg->imtrx][2]) {
     ierr = -1;
     GOMA_EH(GOMA_ERROR, "Viscosity Integral not converged!");
@@ -6001,11 +6013,16 @@ int lub_viscosity_integrate(const double strs, const double H,
 
   /**  Compute flow magnitude  **/
   *flow_mag = -0.25 * SQUARE(H) * shr * (1.0 - xint);
-  if(dq_gradp != NULL) *dq_gradp = -0.25 * CUBE(H) * xint / vis_w;
-  if(pre_P != NULL) *pre_P = -0.125 * CUBE(H) * (1. - xint) / vis_w;
-  if(dq_dh != NULL) *dq_dh = -0.5 * H * shr;
-  if(srate != NULL) *srate = shr;
-  if(mu_star != NULL) *mu_star = vis_w;
+  if (dq_gradp != NULL)
+    *dq_gradp = -0.25 * CUBE(H) * xint / vis_w;
+  if (pre_P != NULL)
+    *pre_P = -0.125 * CUBE(H) * (1. - xint) / vis_w;
+  if (dq_dh != NULL)
+    *dq_dh = -0.5 * H * shr;
+  if (srate != NULL)
+    *srate = shr;
+  if (mu_star != NULL)
+    *mu_star = vis_w;
   return (ierr);
 
 } /* End of lub_viscosity_integrate */

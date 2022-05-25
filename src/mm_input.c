@@ -976,7 +976,7 @@ void rd_genl_specs(FILE *ifp, char *input) {
     ECHO("Initial Guess card not read correctly", echo_file);
   }
 
-    /*
+  /*
    *             Search for commands to initialize a specific variable
    */
   Num_Var_Bound = 0;
@@ -993,14 +993,14 @@ void rd_genl_specs(FILE *ifp, char *input) {
      */
     Var_init[Num_Var_Bound].var = variable_string_to_int(input, "Initialize Keyword Error");
 
-    if (fscanf(ifp, "%d %lf %lf", &Var_init[Num_Var_Bound].ktype, &Var_init[Num_Var_Bound].init_val_min
-			    , &Var_init[Num_Var_Bound].init_val_max) != 3) {
+    if (fscanf(ifp, "%d %lf %lf", &Var_init[Num_Var_Bound].ktype,
+               &Var_init[Num_Var_Bound].init_val_min, &Var_init[Num_Var_Bound].init_val_max) != 3) {
       GOMA_EH(GOMA_ERROR, "Error reading Variable Bound data");
     }
 
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s %d %f %f", "Initialization Bound", input,
-             Var_init[Num_Var_Bound].ktype, Var_init[Num_Var_Bound].init_val_min, 
-	     Var_init[Num_Var_Bound].init_val_max);
+             Var_init[Num_Var_Bound].ktype, Var_init[Num_Var_Bound].init_val_min,
+             Var_init[Num_Var_Bound].init_val_max);
     ECHO(echo_string, echo_file);
 
     Num_Var_Bound++;

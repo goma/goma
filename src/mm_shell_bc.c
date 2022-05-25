@@ -160,8 +160,9 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
 
         for (ii = 0; ii < pd->Num_Dim; ii++) {
           for (jj = 0; jj < pd->Num_Dim; jj++) {
-            d_func[0][var][j] += LubAux->dq_dgradp[ii][jj][j] * grad_II_phi_j[jj] * bound_normal[ii];
-	  }
+            d_func[0][var][j] +=
+                LubAux->dq_dgradp[ii][jj][j] * grad_II_phi_j[jj] * bound_normal[ii];
+          }
         }
       }
     }
@@ -170,8 +171,8 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
 
   /* Calculate the residual contribution        */
 
- /* func[0] = -flowrate; */
-  func[0] = -flowrate*(1./3.*CUBE(LubAux->H)/SQUARE(1.905)); 
+  /* func[0] = -flowrate; */
+  func[0] = -flowrate * (1. / 3. * CUBE(LubAux->H) / SQUARE(1.905));
   for (ii = 0; ii < pd->Num_Dim; ii++) {
     func[0] += LubAux->q[ii] * bound_normal[ii];
   }
@@ -616,8 +617,9 @@ void shell_n_dot_flow_bc_film(double func[DIM],
 
         for (ii = 0; ii < pd->Num_Dim; ii++) {
           for (jj = 0; jj < pd->Num_Dim; jj++) {
-            d_func[0][var][j] += LubAux->dq_dgradp[ii][jj][j] * grad_II_phi_j[jj] * bound_normal[ii];
-	  }
+            d_func[0][var][j] +=
+                LubAux->dq_dgradp[ii][jj][j] * grad_II_phi_j[jj] * bound_normal[ii];
+          }
         }
       }
     }
