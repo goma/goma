@@ -171,8 +171,7 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
 
   /* Calculate the residual contribution        */
 
-  /* func[0] = -flowrate; */
-  func[0] = -flowrate * (1. / 3. * CUBE(LubAux->H) / SQUARE(1.905));
+  func[0] = -flowrate * CUBE(LubAux->H);
   for (ii = 0; ii < pd->Num_Dim; ii++) {
     func[0] += LubAux->q[ii] * bound_normal[ii];
   }

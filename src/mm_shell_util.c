@@ -5908,6 +5908,7 @@ int lub_viscosity_integrate(const double strs,
       vis_w = mu0 + yield * F;
       break;
     default:
+      GOMA_EH(GOMA_ERROR, "Missing Lub Viscosity model!");
     }
     *flow_mag = 0.;
     if (dq_gradp != NULL)
@@ -5945,6 +5946,7 @@ int lub_viscosity_integrate(const double strs,
       visd += yield * (exp(-F * fabs(shr)) * (F * fabs(shr) + 1.) - 1.) / CUBE(fabs(shr));
       break;
     default:
+      GOMA_EH(GOMA_ERROR, "Missing Lub Viscosity model!");
     }
     res = vis_w * shr - strs;
     xj = vis_w + SQUARE(shr) * visd;
@@ -5996,6 +5998,7 @@ int lub_viscosity_integrate(const double strs,
           vis /= vis_w;
           break;
         default:
+          GOMA_EH(GOMA_ERROR, "Missing Lub Viscosity model!");
         }
         xint += SQUARE(vis * cee) * delx * wt[l];
       }
