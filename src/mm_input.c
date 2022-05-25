@@ -860,13 +860,11 @@ void rd_file_specs(FILE *ifp, char *input) {
  */
 
 void rd_genl_specs(FILE *ifp, char *input) {
-  int nargs, var_type;
-  double var_min, var_max;
+  int nargs;
   char err_msg[MAX_CHAR_IN_INPUT];
   char first_string[MAX_CHAR_IN_INPUT];
   char second_string[MAX_CHAR_IN_INPUT];
   char third_string[MAX_CHAR_IN_INPUT];
-  char var_string[MAX_CHAR_IN_INPUT];
   char *tmp;
   char StringToSearch[] = "Pixel"; /*used in strstr call below*/
 
@@ -918,13 +916,11 @@ void rd_genl_specs(FILE *ifp, char *input) {
   ECHO(echo_string, echo_file);
 #endif
 
-  Num_Var_Bound = 0;
   iread = look_for_optional(ifp, "Initial Guess", input, '=');
   if (iread == 1) {
     (void)read_string(ifp, input, '\n');
     strip(input);
-    nargs = sscanf(input, "%s %s %s %s %d %lf %lf", first_string, second_string, third_string,
-                   var_string, &var_type, &var_min, &var_max);
+    nargs = sscanf(input, "%s %s %s ", first_string, second_string, third_string);
     if (nargs >= 2 && strcasecmp(first_string, "read_exoII_file") != 0) {
       GOMA_EH(GOMA_ERROR, "Undecipherable option for Initial guess.");
     }
@@ -950,13 +946,6 @@ void rd_genl_specs(FILE *ifp, char *input) {
         GOMA_EH(GOMA_ERROR, "Read from *what* exoII file?");
       }
       break;
-    case 7:
-      Var_init[Num_Var_Bound].var = variable_string_to_int(var_string, "Initialize Keyword Error");
-      Var_init[Num_Var_Bound].ktype = var_type;
-      Var_init[Num_Var_Bound].init_val_min = var_min;
-      Var_init[Num_Var_Bound].init_val_max = var_max;
-      Num_Var_Bound++;
-      // Fall through
     case 3:
       if (sscanf(third_string, "%d", &ExoTimePlane) != 1) {
         GOMA_EH(GOMA_ERROR, "Time plane for read_exoII_file option is undecipherable");
@@ -980,15 +969,41 @@ void rd_genl_specs(FILE *ifp, char *input) {
     case 3:
       SPF(echo_string, "%s = %s %s %d", "Initial Guess", first_string, second_string, ExoTimePlane);
       break;
-    case 7:
-      SPF(echo_string, "%s = %s %s %d %s %d %f %f", "Initial Guess", first_string, second_string,
-          ExoTimePlane, var_string, var_type, var_min, var_max);
-      break;
     }
     ECHO(echo_string, echo_file);
   } else {
     Guess_Flag = 0;
     ECHO("Initial Guess card not read correctly", echo_file);
+  }
+
+    /*
+   *             Search for commands to initialize a specific variable
+   */
+  Num_Var_Bound = 0;
+  while ((iread = look_forward_optional(ifp, "Initialization Bound", input, '=')) == 1) {
+    /*
+     *  Read the variable name to be fixed
+     */
+    if (fscanf(ifp, "%80s", input) != 1) {
+      GOMA_EH(GOMA_ERROR, "Error reading variable for initialization");
+    }
+    /*
+     *  Translate the string variable name to the internal integer value for
+     *  that variable.
+     */
+    Var_init[Num_Var_Bound].var = variable_string_to_int(input, "Initialize Keyword Error");
+
+    if (fscanf(ifp, "%d %lf %lf", &Var_init[Num_Var_Bound].ktype, &Var_init[Num_Var_Bound].init_val_min
+			    , &Var_init[Num_Var_Bound].init_val_max) != 3) {
+      GOMA_EH(GOMA_ERROR, "Error reading Variable Bound data");
+    }
+
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s %d %f %f", "Initialization Bound", input,
+             Var_init[Num_Var_Bound].ktype, Var_init[Num_Var_Bound].init_val_min, 
+	     Var_init[Num_Var_Bound].init_val_max);
+    ECHO(echo_string, echo_file);
+
+    Num_Var_Bound++;
   }
 
   iread = look_for_optional(ifp, "Conformation Map", input, '=');
