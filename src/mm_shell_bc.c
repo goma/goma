@@ -79,12 +79,12 @@
 
 void shell_n_dot_flow_bc_confined(double func[DIM],
                                   double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
-                                  const double flowrate, /* imposed flow rate */
-                                  const double flow_gap, /* imposed gap dependent flow */
+                                  const double flowrate,  /* imposed flow rate */
+                                  const double flow_gap,  /* imposed gap dependent flow */
                                   const double pwr_index, /* power-law for gap dependence */
-                                  const double time,     /* current time */
-                                  const double dt,       /* current time step size */
-                                  double xi[DIM],        /* Local stu coordinates */
+                                  const double time,      /* current time */
+                                  const double dt,        /* current time step size */
+                                  double xi[DIM],         /* Local stu coordinates */
                                   const Exo_DB *exo)
 
 /***********************************************************************
@@ -175,7 +175,7 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
 
   /* Calculate the residual contribution        */
 
-  func[0] = -flowrate - flow_gap * pow(LubAux->H, 2 + 1./pwr_index);
+  func[0] = -flowrate - flow_gap * pow(LubAux->H, 2 + 1. / pwr_index);
   for (ii = 0; ii < pd->Num_Dim; ii++) {
     func[0] += LubAux->q[ii] * bound_normal[ii];
   }
