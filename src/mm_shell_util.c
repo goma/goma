@@ -3890,7 +3890,6 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     dbl dq_dH = 0., dv_dH;
 
     /* Calculate flow rate and velocity */
-    memset(q, 0.0, sizeof(double) * DIM);
     memset(ev, 0.0, sizeof(double) * DIM);
     memset(dev_dpg, 0.0, sizeof(double) * DIM * DIM);
     for (i = 0; i < dim; i++) {
@@ -3975,6 +3974,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     dv_dH = dq_dH / H - q_mag / SQUARE(H);
     vpre_delP = pre_delP / H;
 
+    memset(q, 0.0, sizeof(double) * DIM);
     for (i = 0; i < dim; i++) {
       q[i] += q_mag * ev[i];
     }
@@ -5136,12 +5136,14 @@ void calculate_lub_q_v_old(
     for (i = 0; i < dim; i++) {
       q_old[i] += q_mag * ev[i];
     }
-    if (gn->ConstitutiveEquation == NEWTONIAN || 1) {
+    if (gn->ConstitutiveEquation == POWER_LAW || gn->ConstitutiveEquation == BINGHAM ||
+        gn->ConstitutiveEquation == HERSCHEL_BULKLEY || gn->ConstitutiveEquation == CARREAU ||
+        gn->ConstitutiveEquation == CARREAU_WLF || gn->ConstitutiveEquation == BINGHAM_WLF) {
+      GOMA_EH(GOMA_ERROR, "Shear-thining moving wall model not finished yet.\n");
+    } else {
       for (i = 0; i < dim; i++) {
         q_old[i] += 0.5 * H_old * (veloL_old[i] + veloU_old[i]);
       }
-    } else {
-      GOMA_EH(GOMA_ERROR, "Shear-thining moving wall model not finished yet.\n");
     }
     memset(v_avg_old, 0.0, sizeof(double) * DIM);
     for (i = 0; i < dim; i++) {
@@ -5914,7 +5916,7 @@ int lub_viscosity_integrate(const double strs,
     }
     *flow_mag = 0.;
     if (dq_gradp != NULL)
-      *dq_gradp = *pre_P = -CUBE(H) / (12. * vis_w);
+      *dq_gradp = -CUBE(H) / (12. * vis_w);
     if (pre_P != NULL)
       *pre_P = -CUBE(H) / (12. * vis_w);
     if (dq_dh != NULL)

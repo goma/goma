@@ -517,6 +517,16 @@ void rd_bc_specs(FILE *ifp, char *input) {
         SPF(endofstring(echo_string), " %.4g %.4g %.4g", BC_Types[ibc].BC_Data_Float[1],
             BC_Types[ibc].BC_Data_Float[2], BC_Types[ibc].BC_Data_Float[3]);
       }
+      BC_Types[ibc].BC_Data_Float[1] = 0.;
+      BC_Types[ibc].BC_Data_Float[2] = 1.;
+      if (BC_Types[ibc].BC_Name == GRAD_LUB_PRESS_BC) {
+        if (fscanf(ifp, "%lf %lf", &BC_Types[ibc].BC_Data_Float[1],
+                   &BC_Types[ibc].BC_Data_Float[2]) != 2) {
+        }
+        BC_Types[ibc].max_DFlt = 3;
+        SPF(endofstring(echo_string), " %.4g %.4g", BC_Types[ibc].BC_Data_Float[1],
+            BC_Types[ibc].BC_Data_Float[2]);
+      }
       break;
 
       /*

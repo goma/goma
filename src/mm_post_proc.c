@@ -995,21 +995,28 @@ static int calc_standard_fields(double **post_proc_vect,
     local_lumped[PP_Viscosity] = 1.;
   }
 
-  if (PP_Viscosity != -1 && (pd->e[pg->imtrx][R_LUBP] || pd->e[pg->imtrx][R_SHELL_FILMP])) {
-    int *n_dof = NULL;
-    int dof_map[MDE];
-    n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
-    lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
-    /* Calculate Shear-rate */
-    if (pd->e[pg->imtrx][R_LUBP]) {
-      calculate_lub_q_v(R_LUBP, time, delta_t, xi, exo);
+  if (PP_Viscosity != -1 &&
+      (pd->e[pg->imtrx][R_LUBP] || pd->e[pg->imtrx][R_SHELL_FILMP] || pd->e[pg->imtrx][R_LUBP_2])) {
+    if (gn->ConstitutiveEquation == POWER_LAW || gn->ConstitutiveEquation == BINGHAM ||
+        gn->ConstitutiveEquation == HERSCHEL_BULKLEY || gn->ConstitutiveEquation == CARREAU ||
+        gn->ConstitutiveEquation == CARREAU_WLF || gn->ConstitutiveEquation == BINGHAM_WLF) {
+      int *n_dof = NULL;
+      int dof_map[MDE];
+      n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
+      lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+      /* Calculate Shear-rate */
+      if (pd->e[pg->imtrx][R_LUBP]) {
+        calculate_lub_q_v(R_LUBP, time, delta_t, xi, exo);
+      } else if (pd->e[pg->imtrx][R_LUBP_2]) {
+        calculate_lub_q_v(R_SHELL_FILMP, time, delta_t, xi, exo);
+      } else {
+        calculate_lub_q_v(R_SHELL_FILMP, time, delta_t, xi, exo);
+      }
+      local_post[PP_Viscosity] = LubAux->mu_star;
     } else {
-      calculate_lub_q_v(R_SHELL_FILMP, time, delta_t, xi, exo);
+      local_post[PP_Viscosity] = viscosity(gn, NULL, NULL);
     }
-    local_post[PP_Viscosity] = LubAux->mu_star;
     local_lumped[PP_Viscosity] = 1.0;
-    /* Cleanup */
-    safe_free((void *)n_dof);
   }
 
   if (PP_FlowingLiquid_Viscosity != -1 && pd->e[pg->imtrx][R_MOMENTUM1]) {
