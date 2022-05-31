@@ -2034,7 +2034,7 @@ void alloc_exo_nv(Exo_DB *x, const int num_timeplanes, const int num_nodal_vars)
   for (i = 0; i < x->num_nv_time_indeces; i++) {
     x->nv[i] = (dbl **)smalloc(x->num_nv_indeces * sizeof(dbl *));
     for (j = 0; j < x->num_nv_indeces; j++) {
-      x->nv[i][j] = (dbl *)smalloc(x->num_nodes * sizeof(dbl));
+      x->nv[i][j] = (dbl *)calloc(x->num_nodes, sizeof(dbl));
     }
   }
 
