@@ -1081,7 +1081,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
       *converged = (Epsilon[pg->imtrx][2] > 1.0) ? TRUE : FALSE;
     }
     if (!isfinite(Norm[0][0]) || !isfinite(Norm[0][1]) || !isfinite(Norm[0][2])) {
-	    DPRINTF(stderr, "\nNaN found in residual norms\n");
+      DPRINTF(stderr, "\nNaN found in residual norms\n");
       return_value = -1;
       goto free_and_clear;
     }
