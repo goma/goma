@@ -1008,7 +1008,7 @@ static int calc_standard_fields(double **post_proc_vect,
       if (pd->e[pg->imtrx][R_LUBP]) {
         calculate_lub_q_v(R_LUBP, time, delta_t, xi, exo);
       } else if (pd->e[pg->imtrx][R_LUBP_2]) {
-        calculate_lub_q_v(R_SHELL_FILMP, time, delta_t, xi, exo);
+        calculate_lub_q_v(R_LUBP_2, time, delta_t, xi, exo);
       } else {
         calculate_lub_q_v(R_SHELL_FILMP, time, delta_t, xi, exo);
       }
