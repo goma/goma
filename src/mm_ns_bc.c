@@ -6821,9 +6821,19 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
 
     eps = ve[mode]->eps;
 
-    Z = exp(eps * lambda * trace / mup);
-    dZ_dtrace = Z * eps * lambda / mup;
-
+    Z = 1.0;
+    dZ_dtrace = 0;
+    if (vn->ConstitutiveEquation == PTT) {
+      if (vn->ptt_type == PTT_LINEAR) {
+        Z = 1 + eps * lambda * trace / mup;
+        dZ_dtrace = eps * lambda / mup;
+      } else if (vn->ptt_type == PTT_EXPONENTIAL) {
+        Z = exp(eps * lambda * trace / mup);
+        dZ_dtrace = Z * eps * lambda / mup;
+      } else {
+        GOMA_EH(GOMA_ERROR, "Unrecognized PTT Form %d", vn->ptt_type);
+      }
+    }
     /* get tensor dot products for future use */
 
     if (alpha != 0.)
@@ -7159,7 +7169,6 @@ void stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
   int R_s[MAX_MODES][DIM][DIM];
   int v_s[MAX_MODES][DIM][DIM];
   int inv_v_s[DIM][DIM];
-  int dim = pd->Num_Dim;
   int logc_gradv = 0;
 
   dbl grad_v[DIM][DIM]; /* Velocity gradient based on velocity - discontinuous across element */
@@ -7354,8 +7363,17 @@ void stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
     // PTT exponent
     eps = ve[mode]->eps;
 
-    // Exponential term for PTT
-    Z = exp(eps * (trace - (double)dim));
+    // PTT
+    Z = 1;
+    if (vn->ConstitutiveEquation == PTT) {
+      if (vn->ptt_type == PTT_LINEAR) {
+        Z = 1 + eps * (trace - (double)VIM);
+      } else if (vn->ptt_type == PTT_EXPONENTIAL) {
+        Z = exp(eps * (trace - (double)VIM));
+      } else {
+        GOMA_EH(GOMA_ERROR, "Unrecognized PTT Form %d", vn->ptt_type);
+      }
+    }
 
     siz = sizeof(double) * DIM * DIM;
     memset(tmp1, 0, siz);
@@ -7455,7 +7473,6 @@ void stress_no_v_dot_gradS_logc_transient(
   int R_s[MAX_MODES][DIM][DIM];
   int v_s[MAX_MODES][DIM][DIM];
   int inv_v_s[DIM][DIM];
-  int dim = pd->Num_Dim;
   int logc_gradv = 0;
 
   dbl grad_v[DIM][DIM]; /* Velocity gradient based on velocity - discontinuous across element */
@@ -7665,8 +7682,17 @@ void stress_no_v_dot_gradS_logc_transient(
     // PTT exponent
     eps = ve[mode]->eps;
 
-    // Exponential term for PTT
-    Z = exp(eps * (trace - (double)dim));
+    // PTT
+    Z = 1;
+    if (vn->ConstitutiveEquation == PTT) {
+      if (vn->ptt_type == PTT_LINEAR) {
+        Z = 1 + eps * (trace - (double)VIM);
+      } else if (vn->ptt_type == PTT_EXPONENTIAL) {
+        Z = exp(eps * (trace - (double)VIM));
+      } else {
+        GOMA_EH(GOMA_ERROR, "Unrecognized PTT Form %d", vn->ptt_type);
+      }
+    }
 
     siz = sizeof(double) * DIM * DIM;
     memset(tmp1, 0, siz);
