@@ -1,18 +1,22 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
     <title>Category 13: Potential Equation &#8212; Goma User Manual 7.0.0 documentation</title>
-    
-  <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<script>
+  document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+  document.documentElement.dataset.theme = localStorage.getItem("theme") || "light"
+</script>
 
-    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=92025949c220c2e29695" rel="stylesheet">
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=92025949c220c2e29695" rel="stylesheet">
+
+
   <link rel="stylesheet"
     href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
   <link rel="preload" as="font" type="font/woff2" crossorigin
@@ -21,47 +25,55 @@
     href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    
+
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=92025949c220c2e29695">
 
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
     <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Category 14: Fluid-Solid Interaction" href="fluid_solid_interaction.html" />
     <link rel="prev" title="Category 12: Fill Equation" href="fill.html" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="None">
-    
-
-    <!-- Google Analytics -->
-    
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="docsearch:language" content="en">
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
-    
-    <div class="container-fluid" id="banner"></div>
+  
+  
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="180" data-default-mode="">
+    <div class="bd-header-announcement container-fluid" id="banner">
+      
+
+    </div>
 
     
-    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+    <nav class="bd-header navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="bd-header__inner container-xl">
 
   <div id="navbar-start">
     
     
+  
 
-<a class="navbar-brand" href="../../index.html">
-  <img src="../../_static/goma.png" class="logo" alt="logo">
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+    <img src="../../_static/goma.png" class="logo__image only-light" alt="Logo image">
+    <img src="../../_static/goma.png" class="logo__image only-dark" alt="Logo image">
+  
+  
 </a>
-
-
     
   </div>
 
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
+    <span class="fas fa-bars"></span>
   </button>
 
   
@@ -85,6 +97,14 @@
     <div id="navbar-end">
       
       <div class="navbar-end-item">
+        <span id="theme-switch" class="btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
         <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
       </ul>
       </div>
@@ -95,13 +115,13 @@
     </nav>
     
 
-    <div class="container-xl">
-      <div class="row">
+    <div class="bd-container container-xl">
+      <div class="bd-container__inner row">
           
-            
-            <!-- Only show if we have sidebars configured, else just a small margin  -->
-            <div class="col-12 col-md-3 bd-sidebar">
-              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../search.html" method="get">
+
+<!-- Only show if we have sidebars configured, else just a small margin  -->
+<div class="bd-sidebar-primary col-12 col-md-3 bd-sidebar">
+  <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../search.html" method="get">
   <i class="icon fas fa-search"></i>
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
 </form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
@@ -3092,19 +3112,20 @@
 
   </div>
 </nav>
-              </div>
-              <div class="sidebar-end-items">
-              </div>
-            </div>
-            
-          
+  </div>
+  <div class="sidebar-end-items">
+  </div>
+</div>
+
 
           
-          <div class="d-none d-xl-block col-xl-2 bd-toc">
-            
-              
-              <div class="toc-item">
-                
+
+
+<div class="bd-sidebar-secondary d-none d-xl-block col-xl-2 bd-toc">
+  
+    
+    <div class="toc-item">
+      
 <div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
@@ -3352,44 +3373,38 @@
 </ul>
 
 </nav>
-              </div>
-              
-              <div class="toc-item">
-                
-              </div>
-              
-            
-          </div>
-          
+    </div>
+    
+    <div class="toc-item">
+      
+    </div>
+    
+  
+</div>
+
 
           
           
-            
-          
-          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+          <div class="bd-content col-12 col-md-9 col-xl-7">
               
-              <div>
+              <article class="bd-article" role="main">
                 
   <section id="category-13-potential-equation">
-<h1>Category 13: Potential Equation<a class="headerlink" href="#category-13-potential-equation" title="Permalink to this headline">#</a></h1>
+<h1>Category 13: Potential Equation<a class="headerlink" href="#category-13-potential-equation" title="Permalink to this heading">#</a></h1>
 <p>The <em>Potential</em> equation is a Laplace equation for the voltage (potential) given a charge distribution
 in a dielectric medium or a voltage or current boundary condition in an electrically conductive
 medium. The following boundary conditions allow the current or voltage to be set on a boundary.</p>
 <section id="current">
-<h2><strong>CURRENT</strong><a class="headerlink" href="#current" title="Permalink to this headline">#</a></h2>
+<h2><strong>CURRENT</strong><a class="headerlink" href="#current" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CURRENT</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="nb">float</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="description-usage">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/POTENTIAL)</strong></p>
 <p>This card specifies the electrical current density at a given boundary.</p>
 <p>Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 17%" />
-<col style="width: 83%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>CURRENT</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;).</p></td>
@@ -3412,32 +3427,28 @@ units of length scale used in the problem).</p></td>
 </table>
 </section>
 <section id="examples">
-<h3><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this heading">#</a></h3>
 <p>An example input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CURRENT</span> <span class="n">SS</span> <span class="mi">1</span>   <span class="o">-</span><span class="mf">0.05</span>
 </pre></div>
 </div>
 </section>
 <section id="technical-discussion">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this heading">#</a></h3>
 <p>No Discussion.</p>
 </section>
 </section>
 <section id="current-user">
-<h2><strong>CURRENT_USER</strong><a class="headerlink" href="#current-user" title="Permalink to this headline">#</a></h2>
+<h2><strong>CURRENT_USER</strong><a class="headerlink" href="#current-user" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CURRENT_USER</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id1">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id1" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/POTENTIAL)</strong></p>
 <p>This boundary condition card is used to define a routine for a user-defined electrical
 current density model. Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 21%" />
-<col style="width: 79%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>CURRENT_USER</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;).</p></td>
@@ -3462,32 +3473,28 @@ array to the appropriate C function.</p></td>
 </table>
 </section>
 <section id="id2">
-<h3><strong>Examples</strong><a class="headerlink" href="#id2" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id2" title="Permalink to this heading">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CURRENT_USER</span> <span class="n">SS</span> <span class="mi">100</span>   <span class="mf">10.0</span> <span class="mf">3.14159</span>
 </pre></div>
 </div>
 </section>
 <section id="id3">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id3" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id3" title="Permalink to this heading">#</a></h3>
 <p>No Discussion.</p>
 </section>
 </section>
 <section id="volt">
-<h2><strong>VOLT</strong><a class="headerlink" href="#volt" title="Permalink to this headline">#</a></h2>
+<h2><strong>VOLT</strong><a class="headerlink" href="#volt" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">VOLT</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="id4">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id4" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id4" title="Permalink to this heading">#</a></h3>
 <p><strong>(DC/POTENTIAL)</strong></p>
 <p>This Dirichlet boundary condition card is used to set a constant voltage. Definitions of
 the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 12%" />
-<col style="width: 88%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>VOLT</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;).</p></td>
@@ -3517,24 +3524,24 @@ automatic continuation sequences</em>.</p></td>
 </table>
 </section>
 <section id="id5">
-<h3><strong>Examples</strong><a class="headerlink" href="#id5" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id5" title="Permalink to this heading">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">VOLT</span> <span class="n">NS</span> <span class="mi">3</span>   <span class="o">-</span><span class="mf">0.22</span>
 </pre></div>
 </div>
 </section>
 <section id="id6">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id6" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id6" title="Permalink to this heading">#</a></h3>
 <p>No Discussion.</p>
 </section>
 </section>
 <section id="current-bv">
-<h2><strong>CURRENT_BV</strong><a class="headerlink" href="#current-bv" title="Permalink to this headline">#</a></h2>
+<h2><strong>CURRENT_BV</strong><a class="headerlink" href="#current-bv" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CURRENT_BV</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">floatlist</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id7">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id7" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id7" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/POTENTIAL)</strong></p>
 <p>The <em>CURRENT_BV</em> card enables the specification of variable electrical current density
 as given by Butler-Volmer kinetics and the Faraday’s law at the specified boundary
@@ -3542,10 +3549,6 @@ as given by Butler-Volmer kinetics and the Faraday’s law at the specified boun
 <p>The &lt;floatlist&gt; has seven parameters for this boundary condition; definitions of the
 input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 19%" />
-<col style="width: 81%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>CURRENT_BV</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;).</p></td>
@@ -3587,20 +3590,20 @@ in EXODUS II) in the problem domain.</p></td>
 </table>
 </section>
 <section id="id8">
-<h3><strong>Examples</strong><a class="headerlink" href="#id8" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id8" title="Permalink to this heading">#</a></h3>
 <p>An example input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CURRENT_BV</span> <span class="n">SS</span> <span class="mi">1</span> <span class="mi">0</span>   <span class="o">-</span><span class="mf">1.0</span> <span class="mf">0.000002</span> <span class="mf">1.0</span> <span class="mf">0.21</span> <span class="mf">0.21</span> <span class="o">-</span><span class="mf">0.65</span>   <span class="o">-</span><span class="mf">0.22</span>
 </pre></div>
 </div>
 </section>
 <section id="id9">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id9" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id9" title="Permalink to this heading">#</a></h3>
 <p>Users are referred to Chen (2000) for details of the Butler-Volmer model and also
 Newman (1991), particularly Equations 8.6 and 8.10 and Chapter 8, pp. 188-189 in the
 latter.</p>
 </section>
 <section id="references">
-<h3><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this heading">#</a></h3>
 <p>GTM-025.0: Modeling diffusion and migration transport of charged species in dilute
 electrolyte solutions: GOMA implementation and sample computed predictions from a
 case study of electroplating, K. S. Chen, September 21, 2000</p>
@@ -3613,12 +3616,12 @@ case study of electroplating, K. S. Chen, September 21, 2000</p>
 </section>
 </section>
 <section id="current-hor">
-<h2><strong>CURRENT_HOR</strong><a class="headerlink" href="#current-hor" title="Permalink to this headline">#</a></h2>
+<h2><strong>CURRENT_HOR</strong><a class="headerlink" href="#current-hor" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CURRENT_HOR</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">floatlist</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id10">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id10" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id10" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/POTENTIAL)</strong></p>
 <p>The <strong>CURRENT_HOR</strong> card enables the specification of the variable current density as
 given by linearized Butler-Volmer kinetics (such as that for the hydrogen-oxidation
@@ -3626,10 +3629,6 @@ reaction in polymer-electrolyte-membrane fuel cells) at the specified boundary (
 the electrode surface).</p>
 <p>The &lt;floatlist&gt; consists of 9 values; definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 18%" />
-<col style="width: 82%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>CURRENT_HOR</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;).</p></td>
@@ -3681,14 +3680,14 @@ in unit of <em>cm</em>.</p></td>
 </table>
 </section>
 <section id="id11">
-<h3><strong>Examples</strong><a class="headerlink" href="#id11" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id11" title="Permalink to this heading">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CURRENT_HOR</span> <span class="n">SS</span> <span class="mi">14</span> <span class="mi">0</span> <span class="mf">1000.</span> <span class="mf">0.001</span> <span class="mf">4.e-5</span> <span class="mf">1.</span> <span class="mf">1.</span> <span class="mf">353.</span> <span class="mf">0.</span> <span class="mf">0.5</span> <span class="mf">0.</span>
 </pre></div>
 </div>
 </section>
 <section id="id12">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id12" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id12" title="Permalink to this heading">#</a></h3>
 <p>For electrochemical reactions such as the hydrogen-oxidation reaction (HOR), surface
 overpotential is relatively small such that the Butler-Volmer kinetic model can be
 linearized to yield a simplified equation for computing current density:</p>
@@ -3705,7 +3704,7 @@ Faraday’s constant ( 96487 <em>C/mole</em>); <em>R</em> is the universal gasl 
 electrolyte potentials in unit of <em>V</em>; <span class="math notranslate nohighlight">\(U_0\)</span> and is the open-circuit potential in unit of <em>V</em>.</p>
 </section>
 <section id="id13">
-<h3><strong>References</strong><a class="headerlink" href="#id13" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id13" title="Permalink to this heading">#</a></h3>
 <ol class="upperalpha simple" start="10">
 <li><p>Newman, Electrochemical Systems, 2nd Edition, Prentice-Hall, NJ (1991).</p></li>
 </ol>
@@ -3715,12 +3714,12 @@ in ASME Proceedings of FUELCELL2006-97032 (2006).</p>
 </section>
 </section>
 <section id="current-orr">
-<h2><strong>CURRENT_ORR</strong><a class="headerlink" href="#current-orr" title="Permalink to this headline">#</a></h2>
+<h2><strong>CURRENT_ORR</strong><a class="headerlink" href="#current-orr" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CURRENT_ORR</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">floatlist</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id14">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id14" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id14" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/POTENTIAL)</strong></p>
 <p>The <strong>CURRENT_ORR</strong> card enables the specification of the variable current density as
 given by the Tafel kinetics (such as that for the oxygen-reduction reaction in polymerelectrolyte-
@@ -3728,10 +3727,6 @@ membrane fuel cells) at the specified boundary (i.e., at the electrode
 surface).</p>
 <p>The &lt;floatlist&gt; consists of 8 values; definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 19%" />
-<col style="width: 81%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>CURRENT_ORR</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;).</p></td>
@@ -3780,14 +3775,14 @@ moles/ <span class="math notranslate nohighlight">\(cm^3\)</span>.</p></td>
 </table>
 </section>
 <section id="id15">
-<h3><strong>Examples</strong><a class="headerlink" href="#id15" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id15" title="Permalink to this heading">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CURRENT_ORR</span> <span class="n">SS</span> <span class="mi">15</span> <span class="mi">1</span> <span class="mf">0.01</span> <span class="mf">0.001</span> <span class="mf">4.e-5</span> <span class="mf">1.</span> <span class="mf">353.</span> <span class="mf">0.7</span> <span class="mf">1.18</span> <span class="mf">1.</span>
 </pre></div>
 </div>
 </section>
 <section id="id16">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id16" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id16" title="Permalink to this heading">#</a></h3>
 <p>For electrochemical reactions such as the oxygen-reduction reaction (ORR), surface
 overpotential is large and negative such that the first exponential term in the Butler-
 Volmer kinetic model is much smaller than the second term and thus can be dropped to
@@ -3801,7 +3796,7 @@ catalyst layer or catalyzed electrode thickness in unit of <em>cm</em>; <em>c</e
 species and reference molar concentrations in units of moles/ <span class="math notranslate nohighlight">\(cm^3\)</span>; <span class="math notranslate nohighlight">\(\beta\)</span> is reaction order; <span class="math notranslate nohighlight">\(\alpha_c\)</span> is the anodic and cathodic transfer coefficient; <em>F</em> is the Faraday’s constant ( 96487 <em>C/mole</em>); <em>R</em> is the universal gasl constant ( 8.314 <em>J/mole-K</em>); <em>T</em> is temperature in unit of <em>K</em>; <em>V</em> and <span class="math notranslate nohighlight">\(\phi\)</span> are, respectively, the electrode and electrolyte potentials in unit of <em>V</em>; and <span class="math notranslate nohighlight">\(U_0\)</span> is the open-circuit potential in unit of <em>V</em>.</p>
 </section>
 <section id="id17">
-<h3><strong>References</strong><a class="headerlink" href="#id17" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id17" title="Permalink to this heading">#</a></h3>
 <ol class="upperalpha simple" start="10">
 <li><p>Newman, Electrochemical Systems, 2nd Edition, Prentice-Hall, NJ (1991).</p></li>
 </ol>
@@ -3811,20 +3806,16 @@ in ASME Proceedings of FUELCELL2006-97032 (2006).</p>
 </section>
 </section>
 <section id="volt-user">
-<h2><strong>VOLT_USER</strong><a class="headerlink" href="#volt-user" title="Permalink to this headline">#</a></h2>
+<h2><strong>VOLT_USER</strong><a class="headerlink" href="#volt-user" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">VOLT_USER</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id18">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id18" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id18" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/POTENTIAL)</strong></p>
 <p>This boundary condition card is used to specify a voltage or potential computed via a
 user-defined function. Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 19%" />
-<col style="width: 81%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>VOLT_USER</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;).</p></td>
@@ -3849,72 +3840,76 @@ array to the appropriate C function.</p></td>
 </table>
 </section>
 <section id="id19">
-<h3><strong>Examples</strong><a class="headerlink" href="#id19" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id19" title="Permalink to this heading">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">VOLT_USER</span> <span class="n">SS</span> <span class="mi">14</span> <span class="mf">0.33</span> <span class="mf">1000.</span> <span class="mf">0.001</span> <span class="mf">4e-5</span> <span class="mf">1.</span> <span class="mf">1.</span> <span class="mf">353.</span> <span class="mf">0.</span>
 </pre></div>
 </div>
 </section>
 <section id="id20">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id20" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id20" title="Permalink to this heading">#</a></h3>
 <p>In the <strong>VOLT_USER</strong> model currently implemented in GOMA, the electrolyte potential
 is given by the linearized Butler-Volmer kinetic model as in the hydrogen-oxidation
 reaction of a hydrogen-fueled polymer-electrolyte-membrane fuel cell. See the
 <em>user_bc.c</em> routine for details.</p>
 </section>
 <section id="id21">
-<h3><strong>References</strong><a class="headerlink" href="#id21" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id21" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 </section>
 
 
-              </div>
+              </article>
               
-              
-              <!-- Previous / next buttons -->
-<div class='prev-next-area'>
-    <a class='left-prev' id="prev-link" href="fill.html" title="previous page">
-        <i class="fas fa-angle-left"></i>
-        <div class="prev-next-info">
-            <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title">Category 12: Fill Equation</p>
-        </div>
-    </a>
-    <a class='right-next' id="next-link" href="fluid_solid_interaction.html" title="next page">
-    <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Category 14: Fluid-Solid Interaction</p>
-    </div>
-    <i class="fas fa-angle-right"></i>
-    </a>
-</div>
-              
-          </main>
-          
 
+              
+              <footer class="bd-footer-article">
+                  <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+  <a class='left-prev' id="prev-link" href="fill.html" title="previous page">
+      <i class="fas fa-angle-left"></i>
+      <div class="prev-next-info">
+          <p class="prev-next-subtitle">previous</p>
+          <p class="prev-next-title">Category 12: Fill Equation</p>
+      </div>
+  </a>
+  <a class='right-next' id="next-link" href="fluid_solid_interaction.html" title="next page">
+  <div class="prev-next-info">
+      <p class="prev-next-subtitle">next</p>
+      <p class="prev-next-title">Category 14: Fluid-Solid Interaction</p>
+  </div>
+  <i class="fas fa-angle-right"></i>
+  </a>
+</div>
+              </footer>
+              
+          </div>
+          
       </div>
     </div>
+
+  
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-<footer class="footer mt-5 mt-md-0">
-  <div class="container">
-    
-    <div class="footer-item">
-      <p class="copyright">
+  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=92025949c220c2e29695"></script>
+
+<footer class="bd-footer"><div class="bd-footer__inner container">
+  
+  <div class="footer-item">
+    <p class="copyright">
     &copy; Copyright 2019 Goma Developers.<br>
 </p>
-    </div>
-    
-    <div class="footer-item">
-      <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
-</p>
-    </div>
-    
   </div>
+  
+  <div class="footer-item">
+    <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.0.2.<br>
+</p>
+  </div>
+  
+</div>
 </footer>
   </body>
 </html>

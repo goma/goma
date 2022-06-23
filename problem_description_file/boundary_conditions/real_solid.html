@@ -1,18 +1,22 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
     <title>Category 3: Real Solid Equations &#8212; Goma User Manual 7.0.0 documentation</title>
-    
-  <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<script>
+  document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+  document.documentElement.dataset.theme = localStorage.getItem("theme") || "light"
+</script>
 
-    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=92025949c220c2e29695" rel="stylesheet">
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=92025949c220c2e29695" rel="stylesheet">
+
+
   <link rel="stylesheet"
     href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
   <link rel="preload" as="font" type="font/woff2" crossorigin
@@ -21,47 +25,55 @@
     href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    
+
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=92025949c220c2e29695">
 
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
     <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Category 4: Fluid Momentum Equations" href="fluid_momentum.html" />
     <link rel="prev" title="Category 2: Mesh Equations" href="mesh.html" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="None">
-    
-
-    <!-- Google Analytics -->
-    
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="docsearch:language" content="en">
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
-    
-    <div class="container-fluid" id="banner"></div>
+  
+  
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="180" data-default-mode="">
+    <div class="bd-header-announcement container-fluid" id="banner">
+      
+
+    </div>
 
     
-    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+    <nav class="bd-header navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="bd-header__inner container-xl">
 
   <div id="navbar-start">
     
     
+  
 
-<a class="navbar-brand" href="../../index.html">
-  <img src="../../_static/goma.png" class="logo" alt="logo">
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+    <img src="../../_static/goma.png" class="logo__image only-light" alt="Logo image">
+    <img src="../../_static/goma.png" class="logo__image only-dark" alt="Logo image">
+  
+  
 </a>
-
-
     
   </div>
 
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
+    <span class="fas fa-bars"></span>
   </button>
 
   
@@ -85,6 +97,14 @@
     <div id="navbar-end">
       
       <div class="navbar-end-item">
+        <span id="theme-switch" class="btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
         <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
       </ul>
       </div>
@@ -95,13 +115,13 @@
     </nav>
     
 
-    <div class="container-xl">
-      <div class="row">
+    <div class="bd-container container-xl">
+      <div class="bd-container__inner row">
           
-            
-            <!-- Only show if we have sidebars configured, else just a small margin  -->
-            <div class="col-12 col-md-3 bd-sidebar">
-              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../search.html" method="get">
+
+<!-- Only show if we have sidebars configured, else just a small margin  -->
+<div class="bd-sidebar-primary col-12 col-md-3 bd-sidebar">
+  <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../search.html" method="get">
   <i class="icon fas fa-search"></i>
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
 </form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
@@ -3092,19 +3112,20 @@
 
   </div>
 </nav>
-              </div>
-              <div class="sidebar-end-items">
-              </div>
-            </div>
-            
-          
+  </div>
+  <div class="sidebar-end-items">
+  </div>
+</div>
+
 
           
-          <div class="d-none d-xl-block col-xl-2 bd-toc">
-            
-              
-              <div class="toc-item">
-                
+
+
+<div class="bd-sidebar-secondary d-none d-xl-block col-xl-2 bd-toc">
+  
+    
+    <div class="toc-item">
+      
 <div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
@@ -3447,38 +3468,36 @@
 </ul>
 
 </nav>
-              </div>
-              
-              <div class="toc-item">
-                
-              </div>
-              
-            
-          </div>
-          
+    </div>
+    
+    <div class="toc-item">
+      
+    </div>
+    
+  
+</div>
+
 
           
           
-            
-          
-          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+          <div class="bd-content col-12 col-md-9 col-xl-7">
               
-              <div>
+              <article class="bd-article" role="main">
                 
   <section id="category-3-real-solid-equations">
-<h1>Category 3: Real Solid Equations<a class="headerlink" href="#category-3-real-solid-equations" title="Permalink to this headline">#</a></h1>
+<h1>Category 3: Real Solid Equations<a class="headerlink" href="#category-3-real-solid-equations" title="Permalink to this heading">#</a></h1>
 <p>The reader is referred to a report by Schunk (2000) for a complete description of this equation
 type. Briefly, these boundary conditions pertain to the <em>TOTAL_ALE</em> mesh motion type (see <em>Mesh
 Motion</em> card), and are applied to the real solid only, viz. the boundary conditions applied to the
 companion mesh motion equations are still needed to control the mesh, independent of the realsolid
 material.</p>
 <section id="dxdydz-rs">
-<h2><strong>DXDYDZ_RS</strong><a class="headerlink" href="#dxdydz-rs" title="Permalink to this headline">#</a></h2>
+<h2><strong>DXDYDZ_RS</strong><a class="headerlink" href="#dxdydz-rs" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="p">{</span><span class="n">DX_RS</span> <span class="o">|</span> <span class="n">DY_RS</span> <span class="o">|</span> <span class="n">DZ_RS</span><span class="p">}</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="description-usage">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this heading">#</a></h3>
 <p><strong>(DC/REALSOLID)</strong></p>
 <p>This boundary condition format is used to set a constant X, Y, or Z real-solid
 displacement on the real-solid mesh motion equations (see <em>TOTAL_ALE</em> option on the
@@ -3486,10 +3505,6 @@ displacement on the real-solid mesh motion equations (see <em>TOTAL_ALE</em> opt
 boundary conditions are of the Dirichlet type and must be applied on EXODUS II node
 sets. Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 30%" />
-<col style="width: 70%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p>{<strong>DX_RS | DY_RS | DZ_RS</strong>}</p></td>
 <td><p>Boundary condition name (&lt;bc_name&gt;) that defines the
@@ -3529,7 +3544,7 @@ automatic continuation sequences</em>.</p></td>
 </table>
 </section>
 <section id="examples">
-<h3><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this heading">#</a></h3>
 <p>Following is a sample card which applies in an X-displacement boundary condition to
 the real-solid to the nodes in node set 100, specifically an X- real-solid Displacement of
 0.1. These displacements are applied immediately to the unknowns, and hence result in
@@ -3547,7 +3562,7 @@ situations, as the nodes are gradually moved as a part of the mesh deformation p
 Sudden movements, as in the first example, can lead to folds in the mesh.</p>
 </section>
 <section id="technical-discussion">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this heading">#</a></h3>
 <p>This condition performs the same function as <em>DX|DY|DZ</em> boundary conditions, except
 that it is applied to the real-solid of a <em>TOTAL_ALE</em> solid mesh motion model (see <em>Mesh
 Motion</em> card). More than likely, these conditions are applied together with geometry
@@ -3557,19 +3572,19 @@ motion equations (<em>mesh1</em> and <em>mesh2</em>), and real-solid elasticity 
 and <em>mom_solid2</em>).</p>
 </section>
 <section id="references">
-<h3><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this heading">#</a></h3>
 <p>GT-005.3: THE NEW TOTAL-ARBITRARY-LAGRANGIAN-EULERIAN (TALE)
 CAPABILITY and its applicability to coating with/on deformable media, August 6,
 1999, P. R. Schunk</p>
 </section>
 </section>
 <section id="force-rs">
-<h2><strong>FORCE_RS</strong><a class="headerlink" href="#force-rs" title="Permalink to this headline">#</a></h2>
+<h2><strong>FORCE_RS</strong><a class="headerlink" href="#force-rs" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">FORCE_RS</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float3</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id1">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id1" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/VECTOR REALSOLID)</strong></p>
 <p>This boundary condition card applies a force per unit area (traction) on a real-solid
 material region (as opposed to a Lagrangian solid region), as is the case with
@@ -3577,10 +3592,6 @@ material region (as opposed to a Lagrangian solid region), as is the case with
 applied uniformly over the boundary delineated by the side set ID. The applied force is
 of course a vector. Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 16%" />
-<col style="width: 84%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>FORCE_RS</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;)</p></td>
@@ -3607,7 +3618,7 @@ EXODUS II) in the problem domain.</p></td>
 </table>
 </section>
 <section id="id2">
-<h3><strong>Examples</strong><a class="headerlink" href="#id2" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id2" title="Permalink to this heading">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">FORCE_RS</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">0.</span> <span class="mf">1.0</span> <span class="mf">1.0</span>
 </pre></div>
@@ -3617,7 +3628,7 @@ to the side set boundary delineated by flag 10, where the element block bounded 
 boundary is of a <em>TOTAL_ALE</em> mesh motion type.</p>
 </section>
 <section id="id3">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id3" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id3" title="Permalink to this heading">#</a></h3>
 <p>It is important to note that this boundary condition can only be applied to <em>TOTAL_ALE</em>
 mesh motion types (cf. <em>Mesh Motion</em> card). (see <em>FORCE</em> for all other mesh motion
 types). Furthermore, it is rare and unlikely that this boundary condition be applied to
@@ -3627,12 +3638,12 @@ region, like a rubber roller, so as to squeeze and drive flow in a liquid region
 the usage tutorials cited below will direct you to some specifics.</p>
 </section>
 <section id="faqs">
-<h3><strong>FAQs</strong><a class="headerlink" href="#faqs" title="Permalink to this headline">#</a></h3>
+<h3><strong>FAQs</strong><a class="headerlink" href="#faqs" title="Permalink to this heading">#</a></h3>
 <p>On internal two-sided side sets, this boundary condition results in double the force in
 the same direction.</p>
 </section>
 <section id="id4">
-<h3><strong>References</strong><a class="headerlink" href="#id4" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id4" title="Permalink to this heading">#</a></h3>
 <p>GT-005.3: THE NEW TOTAL-ARBITRARY-LAGRANGIAN-EULERIAN (TALE)
 CAPABILITY and its applicability to coating with/on deformable media, August 6,
 1999, P. R. Schunk</p>
@@ -3641,12 +3652,12 @@ Structure Interaction Problems, P. R. Schunk (May 2000)</p>
 </section>
 </section>
 <section id="norm-force-rs">
-<h2><strong>NORM_FORCE_RS</strong><a class="headerlink" href="#norm-force-rs" title="Permalink to this headline">#</a></h2>
+<h2><strong>NORM_FORCE_RS</strong><a class="headerlink" href="#norm-force-rs" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">NORM_FORCE_RS</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float3</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id5">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id5" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id5" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/VECTOR REALSOLID)</strong></p>
 <p>This boundary condition card applies a force per unit area (traction) on a real-solid in a
 <em>TOTAL_ALE</em> mesh region (see <em>Mesh Motion</em> card). The force per unit area is applied
@@ -3655,10 +3666,6 @@ course a vector. Unlike the <em>FORCE_RS</em> boundary condition card, the vecto
 here is defined in normal-tangent vector basis. Definitions of the input parameters are
 as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 22%" />
-<col style="width: 78%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>NORM_FORCE_RS</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;).</p></td>
@@ -3688,7 +3695,7 @@ force/area (in 3-D).</p></td>
 set of elements. Hence, the units on the floating point input must be force/area.</p>
 </section>
 <section id="id6">
-<h3><strong>Examples</strong><a class="headerlink" href="#id6" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id6" title="Permalink to this heading">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">NORM_FORCE_RS</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">0.</span> <span class="mf">1.0</span> <span class="mf">1.0</span>
 </pre></div>
@@ -3702,7 +3709,7 @@ sides of the interface, this condition will result in exactly a zero traction, i
 surface side sets must be attached to one element block only to get a net effect.</p>
 </section>
 <section id="id7">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id7" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id7" title="Permalink to this heading">#</a></h3>
 <p>It is important to note that this boundary condition can only be applied to <em>TOTAL_ALE</em>
 mesh motion types (cf. <em>Mesh Motion</em> card). As an example of how this boundary
 condition card is used, consider the need to apply some load pressure uniformly on the
@@ -3713,17 +3720,17 @@ gas law.</p>
 counterparts.</p>
 </section>
 <section id="id8">
-<h3><strong>References</strong><a class="headerlink" href="#id8" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id8" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="rep-force-rs">
-<h2><strong>REP_FORCE_RS</strong><a class="headerlink" href="#rep-force-rs" title="Permalink to this headline">#</a></h2>
+<h2><strong>REP_FORCE_RS</strong><a class="headerlink" href="#rep-force-rs" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">REP_FORCE_RS</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">floatlist</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id9">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id9" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id9" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/VECTOR REALSOLID)</strong></p>
 <p>This boundary condition card applies a force per unit area (traction) that varies as the
 inverse of the fourth power of the distance from a planar surface (see Technical
@@ -3736,10 +3743,6 @@ The applied force is a vector in the normal direction to the Lagrangian interfac
 <p>Definitions of the input parameters are as follows, where &lt;floatlist&gt; has five
 parameters:</p>
 <table class="table">
-<colgroup>
-<col style="width: 23%" />
-<col style="width: 77%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>REP_FORCE_RS</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;)</p></td>
@@ -3772,7 +3775,7 @@ in EXODUS II) in the problem domain.</p></td>
 </table>
 </section>
 <section id="id10">
-<h3><strong>Examples</strong><a class="headerlink" href="#id10" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id10" title="Permalink to this heading">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">REP_FORCE_RS</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">1.e+03</span><span class="o">.</span> <span class="mf">1.0</span> <span class="mf">0.0</span> <span class="mf">0.0</span> <span class="o">-</span><span class="mf">3.0</span>
 </pre></div>
@@ -3782,7 +3785,7 @@ defined by <span class="math notranslate nohighlight">\(\vec F\)</span> = –1.0
 <em>h</em> from the plane specified by 1.0x – 3.0 = 0.0 .</p>
 </section>
 <section id="id11">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id11" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id11" title="Permalink to this heading">#</a></h3>
 <p>The repulsive force is defined by <span class="math notranslate nohighlight">\(\vec F\)</span> = F(<span class="math notranslate nohighlight">\(\vec n\)</span>) where <em>F</em> is a force per unit area that varies
 with the distance <em>h</em> from a plane defined by the equation ax + by + cz + d = 0. The
 magnitude of the function <span class="math notranslate nohighlight">\(\vec F\)</span> is defined as:</p>
@@ -3800,19 +3803,19 @@ is large enough such that this surface never penetrates a predefined planar boun
 This condition hence can be use to impose an impenetrable contact condition.</p>
 </section>
 <section id="id12">
-<h3><strong>References</strong><a class="headerlink" href="#id12" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id12" title="Permalink to this heading">#</a></h3>
 <p>GT-005.3: THE NEW TOTAL-ARBITRARY-LAGRANGIAN-EULERIAN (TALE)
 CAPABILITY and its applicability to coating with/on deformable media, August 6,
 1999, P. R. Schunk</p>
 </section>
 </section>
 <section id="force-user-rs">
-<h2><strong>FORCE_USER_RS</strong><a class="headerlink" href="#force-user-rs" title="Permalink to this headline">#</a></h2>
+<h2><strong>FORCE_USER_RS</strong><a class="headerlink" href="#force-user-rs" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">FORCE_USER_RS</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;...&lt;</span><span class="n">floatn</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id13">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id13" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id13" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/VECTOR REALSOLID)</strong></p>
 <p>This boundary condition card applies a user-defined force per unit area (traction) on a
 <em>TOTAL_ALE</em> real solid region (see <em>Mesh Motion</em> card). It differs from its counterpart
@@ -3823,10 +3826,6 @@ the independent or dependent variables of the problem, including position (see e
 below). The force per unit area is applied to boundary delineated by the side set ID.
 Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 25%" />
-<col style="width: 75%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>FORCE_USER_RS</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;)</p></td>
@@ -3849,7 +3848,7 @@ through the p[]array in force_user_surf.</p></td>
 </table>
 </section>
 <section id="id14">
-<h3><strong>Examples</strong><a class="headerlink" href="#id14" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id14" title="Permalink to this heading">#</a></h3>
 <p>The input card</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">FORCE_USER_RS</span> <span class="n">SS</span> <span class="mi">3</span>   <span class="p">{</span><span class="n">delta_t</span><span class="p">}</span> <span class="mf">0.</span>   <span class="mf">1000.0</span> <span class="mf">0.</span>
 </pre></div>
@@ -3878,7 +3877,7 @@ time period {<em>delta_t</em>}. Note how p[0] is the time period, viz. {<em>delt
 force is ramped up.</p>
 </section>
 <section id="id15">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id15" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id15" title="Permalink to this heading">#</a></h3>
 <p>Used commonly to apply a force per unit area to an external surface of a solid region
 (<em>TOTAL_ALE</em> type, cf. <em>FORCE_USER</em>), that is nonconstant, viz. time varying or
 spatially varying. The <em>FORCE_RS</em> and <em>NORM_FORCE_RS</em> boundary conditions can
@@ -3886,17 +3885,17 @@ be used for constant forces. This condition is applied as a weak integrated cond
 Goma, and hence will be additive with others of its kind.</p>
 </section>
 <section id="id16">
-<h3><strong>References</strong><a class="headerlink" href="#id16" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id16" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="solid-fluid-rs">
-<h2><strong>SOLID_FLUID_RS</strong><a class="headerlink" href="#solid-fluid-rs" title="Permalink to this headline">#</a></h2>
+<h2><strong>SOLID_FLUID_RS</strong><a class="headerlink" href="#solid-fluid-rs" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SOLID_FLUID_RS</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer2</span><span class="o">&gt;</span> <span class="p">[</span><span class="nb">float</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="id17">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id17" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id17" title="Permalink to this heading">#</a></h3>
 <p><strong>(PCC/VECTOR REALSOLID)</strong></p>
 <p>Used for fluid-structure interaction problems, the <em>SOLID_FLUID_RS</em> condition
 equates the normal traction between adjacent fluid and solid materials. (By “normal
@@ -3910,10 +3909,6 @@ order of interpolation and basis functions) e.g., Q1 or Q2. Also, such interface
 include element sides from both sides of the interface in the defining side set.</p>
 <p>Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 23%" />
-<col style="width: 77%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>SOLID_FLUID_RS</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;).</p></td>
@@ -3944,7 +3939,7 @@ liquid phase contribution, is optional; the default is 1.0.</p></td>
 </table>
 </section>
 <section id="id18">
-<h3><strong>Examples</strong><a class="headerlink" href="#id18" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id18" title="Permalink to this heading">#</a></h3>
 <p>The following set of input cards is a sample specification for a fluid-structure
 interaction problem:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SOLID_FLUID_RS</span> <span class="n">SS</span> <span class="mi">5</span>   <span class="mi">2</span>   <span class="mi">1</span>
@@ -3964,7 +3959,7 @@ same side set. Also, because this condition involves a <em>TOTAL_ALE</em> mesh r
 solid boundary to follow the side set.</p>
 </section>
 <section id="id19">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id19" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id19" title="Permalink to this heading">#</a></h3>
 <p>The functional form of the <em>SOLID_FLUID_RS</em> boundary condition is:</p>
 <figure class="align-center">
 <a class="reference internal image-reference" href="../../_images/072_goma_physics.png"><img alt="../../_images/072_goma_physics.png" src="../../_images/072_goma_physics.png" style="width: 90%;" /></a>
@@ -3982,7 +3977,7 @@ real-solid <em>TOTAL_ALE</em> side of the boundary).</p>
 2001).</p>
 </section>
 <section id="id20">
-<h3><strong>References</strong><a class="headerlink" href="#id20" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id20" title="Permalink to this heading">#</a></h3>
 <p>GT-005.3: THE NEW TOTAL-ARBITRARY-LAGRANGIAN-EULERIAN (TALE)
 CAPABILITY and its applicability to coating with/on deformable media, August 6,
 1999, P. R. Schunk</p>
@@ -3991,9 +3986,9 @@ Structure Interaction Problems, P. R. Schunk (May 2000)</p>
 </section>
 </section>
 <section id="splinexyz-rs">
-<h2><strong>SPLINEXYZ_RS</strong><a class="headerlink" href="#splinexyz-rs" title="Permalink to this headline">#</a></h2>
+<h2><strong>SPLINEXYZ_RS</strong><a class="headerlink" href="#splinexyz-rs" title="Permalink to this heading">#</a></h2>
 <section id="id21">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id21" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id21" title="Permalink to this heading">#</a></h3>
 <p><strong>(PCC/MESH)</strong></p>
 <p>This card is used to specify a general surface (solid) boundary description for
 TOTAL_ALE real solid equations (see <em>Mesh Motion</em> card). These boundary conditions
@@ -4007,10 +4002,6 @@ derivative of the function with respect to global coordinates are required. Note
 takes an arbitrary number of floating-point parameters, depending on the user’s needs.</p>
 <p>Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 19%" />
-<col style="width: 81%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p>{bc_name}</p></td>
 <td><p>Boundary condition name that defines the general surface;
@@ -4041,7 +4032,7 @@ input in user-defined routine fnc.</p></td>
 </table>
 </section>
 <section id="id22">
-<h3><strong>Examples</strong><a class="headerlink" href="#id22" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id22" title="Permalink to this heading">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SPLINEZ_RS</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">1.0</span> <span class="mf">100.</span> <span class="mf">20.0</span> <span class="mf">1001.0</span> <span class="mf">32.0</span>
 </pre></div>
@@ -4051,7 +4042,7 @@ points to the boundary defined by side set 10. Most importantly, the condition r
 the Z-component of the real solid equation.</p>
 </section>
 <section id="id23">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id23" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id23" title="Permalink to this heading">#</a></h3>
 <p>The mathematical form of this distinguishing condition is arbitrary and is specified by
 the user in the fnc routine in user_bc.c. Derivatives of the user-specified function
 must also be provided so as to maintain strong convergence in the Newton iteration
@@ -4062,17 +4053,17 @@ directs the equation application of the condition, even though rotations are not
 performed.</p>
 </section>
 <section id="id24">
-<h3><strong>References</strong><a class="headerlink" href="#id24" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id24" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="spline-rs">
-<h2><strong>SPLINE_RS</strong><a class="headerlink" href="#spline-rs" title="Permalink to this headline">#</a></h2>
+<h2><strong>SPLINE_RS</strong><a class="headerlink" href="#spline-rs" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SPLINE_RS</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">floatlist</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="id25">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id25" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id25" title="Permalink to this heading">#</a></h3>
 <p><strong>(PCC/VECTOR REALSOLID)</strong></p>
 <p>This card is used to specify a general surface (solid) boundary description for
 TOTAL_ALE type mesh motion (see <em>Mesh Motion</em> card). Like most other
@@ -4085,10 +4076,6 @@ function with respect to global coordinates are required. . Note that it takes a
 number of floating-point parameters, depending on the user’s needs.</p>
 <p>Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 21%" />
-<col style="width: 79%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>SPLINE_RS</strong></p></td>
 <td><p>Name of the boundary condition &lt;bc_name&gt;).</p></td>
@@ -4110,7 +4097,7 @@ user-defined routine fnc.</p></td>
 </table>
 </section>
 <section id="id26">
-<h3><strong>Examples</strong><a class="headerlink" href="#id26" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id26" title="Permalink to this heading">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SPLINE_RS</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">1.0</span> <span class="mf">100.</span> <span class="mf">20.0</span> <span class="mf">1001.0</span> <span class="mf">32.0</span>
 </pre></div>
@@ -4119,24 +4106,24 @@ user-defined routine fnc.</p></td>
 floating point values, to the boundary defined by side set 10.</p>
 </section>
 <section id="id27">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id27" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id27" title="Permalink to this heading">#</a></h3>
 <p>This condition is applied to the normal component of the real solid equations along a
 boundary in two dimensions; in three dimensions application needs to be further
 directed with the <em>ROT</em> conditions. Examples of typical distinguishing conditions can be
 found in user_bc.c in the fnc routine and companion derivative routines.</p>
 </section>
 <section id="id28">
-<h3><strong>References</strong><a class="headerlink" href="#id28" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id28" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="friction-rs">
-<h2><strong>FRICTION_RS</strong><a class="headerlink" href="#friction-rs" title="Permalink to this headline">#</a></h2>
+<h2><strong>FRICTION_RS</strong><a class="headerlink" href="#friction-rs" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">FRICTION_RS</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">integer1</span><span class="p">]</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id29">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id29" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id29" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/VECTOR REAL SOLID)</strong></p>
 <p>This boundary condition card applies a force per unit area (traction) on the
 TOTAL_ALE solid mechanics equations. The force per unit area is applied according
@@ -4144,10 +4131,6 @@ to Coulomb’s friction law over the boundary delineated by the side set ID. The
 traction is of course a vector. The vector traction is defined in normal-tangent vector
 basis. Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 21%" />
-<col style="width: 79%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>FRICTION_RS</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;).</p></td>
@@ -4174,14 +4157,14 @@ this condition will be applied.</p></td>
 set of elements.</p>
 </section>
 <section id="id30">
-<h3><strong>Examples</strong><a class="headerlink" href="#id30" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id30" title="Permalink to this heading">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">FRICTION_RS</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">0.1</span> <span class="mi">2</span>
 </pre></div>
 </div>
 </section>
 <section id="id31">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id31" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id31" title="Permalink to this heading">#</a></h3>
 <p><strong>Important note</strong>: this boundary condition can only be applied to <em>TOTAL_ALE</em> mesh
 motion types (cf. <em>Mesh Motion</em> card). For other mesh motion types, refer to <em>FRICTION</em>.</p>
 <p>This condition should be utilized in conjunction with a rotated condition such as
@@ -4197,51 +4180,55 @@ that the direction of the frictional force is determined by the velocity directi
 </section>
 
 
-              </div>
+              </article>
               
-              
-              <!-- Previous / next buttons -->
-<div class='prev-next-area'>
-    <a class='left-prev' id="prev-link" href="mesh.html" title="previous page">
-        <i class="fas fa-angle-left"></i>
-        <div class="prev-next-info">
-            <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title">Category 2: Mesh Equations</p>
-        </div>
-    </a>
-    <a class='right-next' id="next-link" href="fluid_momentum.html" title="next page">
-    <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Category 4: Fluid Momentum Equations</p>
-    </div>
-    <i class="fas fa-angle-right"></i>
-    </a>
-</div>
-              
-          </main>
-          
 
+              
+              <footer class="bd-footer-article">
+                  <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+  <a class='left-prev' id="prev-link" href="mesh.html" title="previous page">
+      <i class="fas fa-angle-left"></i>
+      <div class="prev-next-info">
+          <p class="prev-next-subtitle">previous</p>
+          <p class="prev-next-title">Category 2: Mesh Equations</p>
+      </div>
+  </a>
+  <a class='right-next' id="next-link" href="fluid_momentum.html" title="next page">
+  <div class="prev-next-info">
+      <p class="prev-next-subtitle">next</p>
+      <p class="prev-next-title">Category 4: Fluid Momentum Equations</p>
+  </div>
+  <i class="fas fa-angle-right"></i>
+  </a>
+</div>
+              </footer>
+              
+          </div>
+          
       </div>
     </div>
+
+  
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-<footer class="footer mt-5 mt-md-0">
-  <div class="container">
-    
-    <div class="footer-item">
-      <p class="copyright">
+  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=92025949c220c2e29695"></script>
+
+<footer class="bd-footer"><div class="bd-footer__inner container">
+  
+  <div class="footer-item">
+    <p class="copyright">
     &copy; Copyright 2019 Goma Developers.<br>
 </p>
-    </div>
-    
-    <div class="footer-item">
-      <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
-</p>
-    </div>
-    
   </div>
+  
+  <div class="footer-item">
+    <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.0.2.<br>
+</p>
+  </div>
+  
+</div>
 </footer>
   </body>
 </html>

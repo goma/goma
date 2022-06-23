@@ -1,18 +1,22 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
     <title>Navier-Stokes Source &#8212; Goma User Manual 7.0.0 documentation</title>
-    
-  <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<script>
+  document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+  document.documentElement.dataset.theme = localStorage.getItem("theme") || "light"
+</script>
 
-    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=92025949c220c2e29695" rel="stylesheet">
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=92025949c220c2e29695" rel="stylesheet">
+
+
   <link rel="stylesheet"
     href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
   <link rel="preload" as="font" type="font/woff2" crossorigin
@@ -21,46 +25,54 @@
     href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    
+
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=92025949c220c2e29695">
 
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Solid Body Source" href="solid_body_source.html" />
     <link rel="prev" title="Source Terms" href="../source_terms.html" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="None">
-    
-
-    <!-- Google Analytics -->
-    
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="docsearch:language" content="en">
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
-    
-    <div class="container-fluid" id="banner"></div>
+  
+  
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="180" data-default-mode="">
+    <div class="bd-header-announcement container-fluid" id="banner">
+      
+
+    </div>
 
     
-    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+    <nav class="bd-header navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="bd-header__inner container-xl">
 
   <div id="navbar-start">
     
     
+  
 
-<a class="navbar-brand" href="../../index.html">
-  <img src="../../_static/goma.png" class="logo" alt="logo">
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+    <img src="../../_static/goma.png" class="logo__image only-light" alt="Logo image">
+    <img src="../../_static/goma.png" class="logo__image only-dark" alt="Logo image">
+  
+  
 </a>
-
-
     
   </div>
 
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
+    <span class="fas fa-bars"></span>
   </button>
 
   
@@ -84,6 +96,14 @@
     <div id="navbar-end">
       
       <div class="navbar-end-item">
+        <span id="theme-switch" class="btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
         <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
       </ul>
       </div>
@@ -94,13 +114,13 @@
     </nav>
     
 
-    <div class="container-xl">
-      <div class="row">
+    <div class="bd-container container-xl">
+      <div class="bd-container__inner row">
           
-            
-            <!-- Only show if we have sidebars configured, else just a small margin  -->
-            <div class="col-12 col-md-3 bd-sidebar">
-              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../search.html" method="get">
+
+<!-- Only show if we have sidebars configured, else just a small margin  -->
+<div class="bd-sidebar-primary col-12 col-md-3 bd-sidebar">
+  <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../search.html" method="get">
   <i class="icon fas fa-search"></i>
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
 </form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
@@ -3091,19 +3111,20 @@
 
   </div>
 </nav>
-              </div>
-              <div class="sidebar-end-items">
-              </div>
-            </div>
-            
-          
+  </div>
+  <div class="sidebar-end-items">
+  </div>
+</div>
+
 
           
-          <div class="d-none d-xl-block col-xl-2 bd-toc">
-            
-              
-              <div class="toc-item">
-                
+
+
+<div class="bd-sidebar-secondary d-none d-xl-block col-xl-2 bd-toc">
+  
+    
+    <div class="toc-item">
+      
 <div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
@@ -3141,40 +3162,34 @@
 </ul>
 
 </nav>
-              </div>
-              
-              <div class="toc-item">
-                
-              </div>
-              
-            
-          </div>
-          
+    </div>
+    
+    <div class="toc-item">
+      
+    </div>
+    
+  
+</div>
+
 
           
           
-            
-          
-          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+          <div class="bd-content col-12 col-md-9 col-xl-7">
               
-              <div>
+              <article class="bd-article" role="main">
                 
   <section id="navier-stokes-source">
-<h1><strong>Navier-Stokes Source</strong><a class="headerlink" href="#navier-stokes-source" title="Permalink to this headline">#</a></h1>
+<h1><strong>Navier-Stokes Source</strong><a class="headerlink" href="#navier-stokes-source" title="Permalink to this heading">#</a></h1>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Navier</span><span class="o">-</span><span class="n">Stokes</span> <span class="n">Source</span> <span class="o">=</span> <span class="p">{</span><span class="n">model_name</span><span class="p">}</span> <span class="p">{</span><span class="n">float_list</span><span class="p">}</span> <span class="p">[</span><span class="n">varies</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="description-usage">
-<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">#</a></h2>
+<h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this heading">#</a></h2>
 <p>This required card is used to specify the model for the fluid momentum source term
 vector in the Navier-Stokes equations. Gravitational and buoyancy effects often enter
 through this card.</p>
 <p>Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 23%" />
-<col style="width: 77%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p>{model_name}</p></td>
 <td><p>Name of the fluid momentum source term model for the Navier-Stokes equations. The
@@ -3207,10 +3222,6 @@ is determined by the selection for {model _name}.</p></td>
 additional user guidance can be found in the Technical Discussion section following
 the Examples.</p>
 <table class="table">
-<colgroup>
-<col style="width: 23%" />
-<col style="width: 77%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>CONSTANT</strong> &lt;float1&gt;
 &lt;float2&gt; &lt;float3&gt;</p></td>
@@ -3428,7 +3439,7 @@ stress gradient multiplier, where:</p>
 <p>WARNING: Make sure the equation term multipliers for the source terms are set to unity.</p>
 </section>
 <section id="examples">
-<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h2>
+<h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this heading">#</a></h2>
 <p>Following are some sample input cards:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Navier</span><span class="o">-</span><span class="n">Stokes</span> <span class="n">Source</span> <span class="o">=</span> <span class="n">BOUSS</span> <span class="mf">0.</span> <span class="o">-</span><span class="mf">980.</span> <span class="mf">0.</span>
 <span class="n">Navier</span><span class="o">-</span><span class="n">Stokes</span> <span class="n">Source</span> <span class="o">=</span> <span class="n">LEVEL_SET</span> <span class="mf">0.</span> <span class="o">-</span><span class="mf">980.</span> <span class="mf">0.</span>
@@ -3436,14 +3447,10 @@ stress gradient multiplier, where:</p>
 </div>
 </section>
 <section id="technical-discussion">
-<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">#</a></h2>
+<h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this heading">#</a></h2>
 <p>This section contains user guidance, and theoretical background when appropriate, for
 each of the options for Navier-Stokes Source models.</p>
 <table class="table">
-<colgroup>
-<col style="width: 23%" />
-<col style="width: 77%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>CONSTANT</strong></p></td>
 <td><p>A constant source model has a body force [M/L2t2] for the material which does not
@@ -3488,10 +3495,6 @@ formulation. T0 is set on the Reference Temperature card.</p>
 <a class="reference internal image-reference" href="../../_images/463_goma_physics.png"><img alt="../../_images/463_goma_physics.png" src="../../_images/463_goma_physics.png" style="width: 90%;" /></a>
 </figure>
 <table class="table">
-<colgroup>
-<col style="width: 23%" />
-<col style="width: 77%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>BOUSSINESQ</strong></p></td>
 <td><p>This model prescribes a body force source term that is very similar to the BOUSS
@@ -3520,10 +3523,6 @@ is set on the Reference Temperature card.</p></td>
 <a class="reference internal image-reference" href="../../_images/466_goma_physics.png"><img alt="../../_images/466_goma_physics.png" src="../../_images/466_goma_physics.png" style="width: 90%;" /></a>
 </figure>
 <table class="table">
-<colgroup>
-<col style="width: 23%" />
-<col style="width: 77%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>BOUSS_JXB</strong></p></td>
 <td><p>This model is a generalized Boussinesq source term, as above, but also includes
@@ -3554,10 +3553,6 @@ the Reference Temperature card.</p>
 <a class="reference internal image-reference" href="../../_images/467_goma_physics.png"><img alt="../../_images/467_goma_physics.png" src="../../_images/467_goma_physics.png" style="width: 90%;" /></a>
 </figure>
 <table class="table">
-<colgroup>
-<col style="width: 23%" />
-<col style="width: 77%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>FILL</strong></p></td>
 <td><p>The body force applied when using this momentum source model is as follows:
@@ -3571,10 +3566,6 @@ the three entries in the {float_list} of the FILL momentum source card.</p></td>
 <a class="reference internal image-reference" href="../../_images/468_goma_physics.png"><img alt="../../_images/468_goma_physics.png" src="../../_images/468_goma_physics.png" style="width: 90%;" /></a>
 </figure>
 <table class="table">
-<colgroup>
-<col style="width: 23%" />
-<col style="width: 77%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>LEVEL_SET</strong></p></td>
 <td><p>The body force applied when this model is used is given by the following function of
@@ -3591,10 +3582,6 @@ following the LEVEL_SET model name.</p></td>
 <a class="reference internal image-reference" href="../../_images/469_goma_physics.png"><img alt="../../_images/469_goma_physics.png" src="../../_images/469_goma_physics.png" style="width: 90%;" /></a>
 </figure>
 <table class="table">
-<colgroup>
-<col style="width: 23%" />
-<col style="width: 77%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>PHASE_FUNCTION</strong></p></td>
 <td><p>The body force applied when this model is specified is identical in concept to that
@@ -3624,10 +3611,6 @@ flux option, only one species can use the HYDRO diffusivity model.</p>
 <a class="reference internal image-reference" href="../../_images/470_goma_physics.png"><img alt="../../_images/470_goma_physics.png" src="../../_images/470_goma_physics.png" style="width: 90%;" /></a>
 </figure>
 <table class="table">
-<colgroup>
-<col style="width: 23%" />
-<col style="width: 77%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>SUSPENSION</strong></p></td>
 <td><p>This model is identical to the SUSPEND momentum source model in terms of the assembly
@@ -3658,7 +3641,7 @@ momentum source models.</p>
 equation are set to unity.</p>
 </section>
 <section id="references">
-<h2><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">#</a></h2>
+<h2><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this heading">#</a></h2>
 <p>Gartling, D. K., TORO II - A Finite Element Computer Program for Nonlinear Quasi-
 Static Problems in Electromagnetics, Part I - Theoretical Background, SAND95-2472,
 Sandia National Laboratories, Albuquerque, NM, May 1996.</p>
@@ -3666,51 +3649,55 @@ Sandia National Laboratories, Albuquerque, NM, May 1996.</p>
 </section>
 
 
-              </div>
+              </article>
               
-              
-              <!-- Previous / next buttons -->
-<div class='prev-next-area'>
-    <a class='left-prev' id="prev-link" href="../source_terms.html" title="previous page">
-        <i class="fas fa-angle-left"></i>
-        <div class="prev-next-info">
-            <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title">Source Terms</p>
-        </div>
-    </a>
-    <a class='right-next' id="next-link" href="solid_body_source.html" title="next page">
-    <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title"><strong>Solid Body Source</strong></p>
-    </div>
-    <i class="fas fa-angle-right"></i>
-    </a>
-</div>
-              
-          </main>
-          
 
+              
+              <footer class="bd-footer-article">
+                  <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+  <a class='left-prev' id="prev-link" href="../source_terms.html" title="previous page">
+      <i class="fas fa-angle-left"></i>
+      <div class="prev-next-info">
+          <p class="prev-next-subtitle">previous</p>
+          <p class="prev-next-title">Source Terms</p>
+      </div>
+  </a>
+  <a class='right-next' id="next-link" href="solid_body_source.html" title="next page">
+  <div class="prev-next-info">
+      <p class="prev-next-subtitle">next</p>
+      <p class="prev-next-title"><strong>Solid Body Source</strong></p>
+  </div>
+  <i class="fas fa-angle-right"></i>
+  </a>
+</div>
+              </footer>
+              
+          </div>
+          
       </div>
     </div>
+
+  
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-<footer class="footer mt-5 mt-md-0">
-  <div class="container">
-    
-    <div class="footer-item">
-      <p class="copyright">
+  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=92025949c220c2e29695"></script>
+
+<footer class="bd-footer"><div class="bd-footer__inner container">
+  
+  <div class="footer-item">
+    <p class="copyright">
     &copy; Copyright 2019 Goma Developers.<br>
 </p>
-    </div>
-    
-    <div class="footer-item">
-      <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
-</p>
-    </div>
-    
   </div>
+  
+  <div class="footer-item">
+    <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.0.2.<br>
+</p>
+  </div>
+  
+</div>
 </footer>
   </body>
 </html>

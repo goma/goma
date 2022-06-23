@@ -1,18 +1,22 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
     <title>Category 15: Level Set Interfaces &#8212; Goma User Manual 7.0.0 documentation</title>
-    
-  <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<script>
+  document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+  document.documentElement.dataset.theme = localStorage.getItem("theme") || "light"
+</script>
 
-    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=92025949c220c2e29695" rel="stylesheet">
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=92025949c220c2e29695" rel="stylesheet">
+
+
   <link rel="stylesheet"
     href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
   <link rel="preload" as="font" type="font/woff2" crossorigin
@@ -21,47 +25,55 @@
     href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    
+
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=92025949c220c2e29695">
 
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
     <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Category 16: Shell Equations" href="shell.html" />
     <link rel="prev" title="Category 14: Fluid-Solid Interaction" href="fluid_solid_interaction.html" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="None">
-    
-
-    <!-- Google Analytics -->
-    
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="docsearch:language" content="en">
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
-    
-    <div class="container-fluid" id="banner"></div>
+  
+  
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="180" data-default-mode="">
+    <div class="bd-header-announcement container-fluid" id="banner">
+      
+
+    </div>
 
     
-    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+    <nav class="bd-header navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="bd-header__inner container-xl">
 
   <div id="navbar-start">
     
     
+  
 
-<a class="navbar-brand" href="../../index.html">
-  <img src="../../_static/goma.png" class="logo" alt="logo">
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+    <img src="../../_static/goma.png" class="logo__image only-light" alt="Logo image">
+    <img src="../../_static/goma.png" class="logo__image only-dark" alt="Logo image">
+  
+  
 </a>
-
-
     
   </div>
 
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
+    <span class="fas fa-bars"></span>
   </button>
 
   
@@ -85,6 +97,14 @@
     <div id="navbar-end">
       
       <div class="navbar-end-item">
+        <span id="theme-switch" class="btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
         <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
       </ul>
       </div>
@@ -95,13 +115,13 @@
     </nav>
     
 
-    <div class="container-xl">
-      <div class="row">
+    <div class="bd-container container-xl">
+      <div class="bd-container__inner row">
           
-            
-            <!-- Only show if we have sidebars configured, else just a small margin  -->
-            <div class="col-12 col-md-3 bd-sidebar">
-              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../search.html" method="get">
+
+<!-- Only show if we have sidebars configured, else just a small margin  -->
+<div class="bd-sidebar-primary col-12 col-md-3 bd-sidebar">
+  <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../search.html" method="get">
   <i class="icon fas fa-search"></i>
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
 </form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
@@ -3092,19 +3112,20 @@
 
   </div>
 </nav>
-              </div>
-              <div class="sidebar-end-items">
-              </div>
-            </div>
-            
-          
+  </div>
+  <div class="sidebar-end-items">
+  </div>
+</div>
+
 
           
-          <div class="d-none d-xl-block col-xl-2 bd-toc">
-            
-              
-              <div class="toc-item">
-                
+
+
+<div class="bd-sidebar-secondary d-none d-xl-block col-xl-2 bd-toc">
+  
+    
+    <div class="toc-item">
+      
 <div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
@@ -4250,35 +4271,33 @@
 </ul>
 
 </nav>
-              </div>
-              
-              <div class="toc-item">
-                
-              </div>
-              
-            
-          </div>
-          
+    </div>
+    
+    <div class="toc-item">
+      
+    </div>
+    
+  
+</div>
+
 
           
           
-            
-          
-          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+          <div class="bd-content col-12 col-md-9 col-xl-7">
               
-              <div>
+              <article class="bd-article" role="main">
                 
   <section id="category-15-level-set-interfaces">
-<h1>Category 15: Level Set Interfaces<a class="headerlink" href="#category-15-level-set-interfaces" title="Permalink to this headline">#</a></h1>
+<h1>Category 15: Level Set Interfaces<a class="headerlink" href="#category-15-level-set-interfaces" title="Permalink to this heading">#</a></h1>
 <p>These boundary conditions are designed to apply conditions in materials along surfaces whose
 position is monitored using Level Set Interface Tracking.</p>
 <section id="ls-adc">
-<h2><strong>LS_ADC</strong><a class="headerlink" href="#ls-adc" title="Permalink to this headline">#</a></h2>
+<h2><strong>LS_ADC</strong><a class="headerlink" href="#ls-adc" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LS_ADC</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float3</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="description-usage">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this heading">#</a></h3>
 <p><strong>(Special/LEVEL SET)</strong></p>
 <p>This boundary condition is used exclusively with level set interface tracking. It is used
 to simulate contact and dewetting events. It employs a probabilistic model applied to
@@ -4287,10 +4306,6 @@ dewetting occurs there. It then uses a direct, brute force algortihm to manipula
 level set field to enforce contact or dewetting.</p>
 <p>A description of the input parameters follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 17%" />
-<col style="width: 83%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>LS_ADC</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -4317,14 +4332,14 @@ considered as possibilities for ADC events.</p></td>
 </table>
 </section>
 <section id="examples">
-<h3><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this heading">#</a></h3>
 <p>An example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LS_ADC</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">15.0</span>   <span class="mf">0.2</span>   <span class="mf">100.0</span>
 </pre></div>
 </div>
 </section>
 <section id="technical-discussion">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this heading">#</a></h3>
 <p>It has been found that level set interface tracking problems that involve contact or
 dewetting of the interfacial representation pose special problems for our numerical
 method. To a certain extent, we can model this type of event by making special
@@ -4390,27 +4405,23 @@ should be aware of this assumption and be careful that these events do not occur
 regular basis as then the mass loss might be more significant.</p>
 </section>
 <section id="references">
-<h3><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="ls-ca-h">
-<h2><strong>LS_CA_H</strong><a class="headerlink" href="#ls-ca-h" title="Permalink to this headline">#</a></h2>
+<h2><strong>LS_CA_H</strong><a class="headerlink" href="#ls-ca-h" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LS_CA_H</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="nb">float</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id1">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id1" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/SCALAR CURVATURE)</strong></p>
 <p>This boundary condition is used only in conjunction with level set interface tracking
 and the LS_CAP_CURVE embedded surface tension source term. Its function is
 impose a contact angle condition on that boundary.</p>
 <p>A description of the input parameters follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 14%" />
-<col style="width: 86%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>LS_CA_H</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -4431,14 +4442,14 @@ EXODUS II) in the problem domain.</p></td>
 </table>
 </section>
 <section id="id2">
-<h3><strong>Examples</strong><a class="headerlink" href="#id2" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id2" title="Permalink to this heading">#</a></h3>
 <p>An example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LS_CA_H</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">45.0</span>
 </pre></div>
 </div>
 </section>
 <section id="id3">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id3" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id3" title="Permalink to this heading">#</a></h3>
 <p>The projection equation operator for solving for the curvature degree of freedom from a
 level set field is a Laplacian. It is standard to integrate these operators by parts but in
 the process one always generates a boundary integral. In this case the integral takes the
@@ -4463,17 +4474,17 @@ value imposed on this card. The user should expect that the contact angle will
 instantaneously jumped to the imposed value.</p>
 </section>
 <section id="id4">
-<h3><strong>References</strong><a class="headerlink" href="#id4" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id4" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="ls-capillary">
-<h2><strong>LS_CAPILLARY</strong><a class="headerlink" href="#ls-capillary" title="Permalink to this headline">#</a></h2>
+<h2><strong>LS_CAPILLARY</strong><a class="headerlink" href="#ls-capillary" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LS_CAPILLARY</span> <span class="n">LS</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id5">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id5" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id5" title="Permalink to this heading">#</a></h3>
 <p><strong>(EMB/VECTOR MOMENTUM)</strong></p>
 <p>This boundary condition applies an “embedded” surface tension source term when
 solving capillary hydrodynamics problems with level set interface tracking. It can be
@@ -4482,10 +4493,6 @@ value used in this boundary condition is obtained from the Surface Tension mater
 parameter defined in the mat file.</p>
 <p>A description of the input parameters follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 22%" />
-<col style="width: 78%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>LS_CAPILLARY</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -4506,14 +4513,14 @@ respectively. Details are given below.</p></td>
 </table>
 </section>
 <section id="id6">
-<h3><strong>Examples</strong><a class="headerlink" href="#id6" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id6" title="Permalink to this heading">#</a></h3>
 <p>An example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LS_CAPILLARY</span> <span class="n">LS</span> <span class="mi">0</span>
 </pre></div>
 </div>
 </section>
 <section id="id7">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id7" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id7" title="Permalink to this heading">#</a></h3>
 <p><em>First, a warning: If subelement integration is off, make sure there is a nonzero levelset
 length scale or no surface forces term will be applied.</em></p>
 <p>Surface tension forces at a level set representation of an interfacial boundary are
@@ -4553,17 +4560,17 @@ this card is set to a -1 or a +1 to signify that the surface tension forces are 
 negative or positive side of the interface curve, respectively.</p>
 </section>
 <section id="id8">
-<h3><strong>References</strong><a class="headerlink" href="#id8" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id8" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="ls-cap-denner-diff">
-<h2>LS_CAP_DENNER_DIFF<a class="headerlink" href="#ls-cap-denner-diff" title="Permalink to this headline">#</a></h2>
+<h2>LS_CAP_DENNER_DIFF<a class="headerlink" href="#ls-cap-denner-diff" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LS_CAP_DENNER_DIFF</span> <span class="n">LS</span> <span class="o">&lt;</span><span class="n">double</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id9">
-<h3>Description / Usage<a class="headerlink" href="#id9" title="Permalink to this headline">#</a></h3>
+<h3>Description / Usage<a class="headerlink" href="#id9" title="Permalink to this heading">#</a></h3>
 <p><strong>(EMB/VECTOR MOMENTUM)</strong></p>
 <p>This boundary condition is expected to be paired with another boundary
 condition that represents the surface tension term.</p>
@@ -4578,10 +4585,6 @@ with reducing spurious currents.</p>
 <p>Not compatible with subelement integration.</p>
 <p>A description of the input parameters follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 31%" />
-<col style="width: 69%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p>LS_CAP_DENNER_DIFF</p></td>
 <td><p>Boundary condition name</p></td>
@@ -4597,14 +4600,14 @@ condition</p></td>
 </table>
 </section>
 <section id="id10">
-<h3>Examples<a class="headerlink" href="#id10" title="Permalink to this headline">#</a></h3>
+<h3>Examples<a class="headerlink" href="#id10" title="Permalink to this heading">#</a></h3>
 <p>An example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LS_CAP_DENNER_DIFF</span> <span class="n">LS</span> <span class="mf">1.0</span>
 </pre></div>
 </div>
 </section>
 <section id="id11">
-<h3>Technical Discussion<a class="headerlink" href="#id11" title="Permalink to this headline">#</a></h3>
+<h3>Technical Discussion<a class="headerlink" href="#id11" title="Permalink to this heading">#</a></h3>
 <p>Adds the following embedded boundary condition to the momentum
 equations:</p>
 <div class="math notranslate nohighlight">
@@ -4618,15 +4621,15 @@ from the level set function (or from the normal equations when
 enabled), and <span class="math notranslate nohighlight">\(\mathbf{u}\)</span> is the velocity.</p>
 </section>
 <section id="theory">
-<h3>Theory<a class="headerlink" href="#theory" title="Permalink to this headline">#</a></h3>
+<h3>Theory<a class="headerlink" href="#theory" title="Permalink to this heading">#</a></h3>
 <p>No Theory.</p>
 </section>
 <section id="faqs">
-<h3>FAQs<a class="headerlink" href="#faqs" title="Permalink to this headline">#</a></h3>
+<h3>FAQs<a class="headerlink" href="#faqs" title="Permalink to this heading">#</a></h3>
 <p>No FAQs.</p>
 </section>
 <section id="id12">
-<h3>References<a class="headerlink" href="#id12" title="Permalink to this headline">#</a></h3>
+<h3>References<a class="headerlink" href="#id12" title="Permalink to this heading">#</a></h3>
 <p>Denner, F., Evrard, F., Serfaty, R. and van Wachem,
 B.G., 2017. Artificial viscosity model to mitigate numerical artefacts
 at fluid interfaces with surface tension. Computers &amp; Fluids, 143,
@@ -4634,12 +4637,12 @@ pp.59-72.</p>
 </section>
 </section>
 <section id="ls-cap-hysing">
-<h2>LS_CAP_HYSING<a class="headerlink" href="#ls-cap-hysing" title="Permalink to this headline">#</a></h2>
+<h2>LS_CAP_HYSING<a class="headerlink" href="#ls-cap-hysing" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LS_CAP_HYSING</span> <span class="n">LS</span> <span class="o">&lt;</span><span class="n">double</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id13">
-<h3>Description / Usage<a class="headerlink" href="#id13" title="Permalink to this headline">#</a></h3>
+<h3>Description / Usage<a class="headerlink" href="#id13" title="Permalink to this heading">#</a></h3>
 <p><strong>(EMB/VECTOR MOMENTUM)</strong></p>
 <p>Embedded boundary condition for applying a surface tension source term
 with level set.  Has the added advantage of a time scaled diffusion
@@ -4649,10 +4652,6 @@ material parameter defined in the mat file.</p>
 <p>Not compatible with subelement integration.</p>
 <p>A description of the input parameters follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 31%" />
-<col style="width: 69%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p>LS_CAP_HYSING</p></td>
 <td><p>Boundary condition name</p></td>
@@ -4668,14 +4667,14 @@ condition</p></td>
 </table>
 </section>
 <section id="id14">
-<h3>Examples<a class="headerlink" href="#id14" title="Permalink to this headline">#</a></h3>
+<h3>Examples<a class="headerlink" href="#id14" title="Permalink to this heading">#</a></h3>
 <p>An example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LS_CAP_HYSING</span> <span class="n">LS</span> <span class="mf">1.0</span>
 </pre></div>
 </div>
 </section>
 <section id="id15">
-<h3>Technical Discussion<a class="headerlink" href="#id15" title="Permalink to this headline">#</a></h3>
+<h3>Technical Discussion<a class="headerlink" href="#id15" title="Permalink to this heading">#</a></h3>
 <p>Adds the following embedded boundary condition to the momentum equations:</p>
 <div class="math notranslate nohighlight">
 \[- \int \nabla \mathbf{v} : (\mathbf{I} - \mathbf{\hat{n}}^n \mathbf{\hat{n}}^n) d\mathbf{x}
@@ -4684,15 +4683,15 @@ condition</p></td>
 found from the level set function, and <span class="math notranslate nohighlight">\(\mathbf{u}\)</span> is the velocity.</p>
 </section>
 <section id="id16">
-<h3>Theory<a class="headerlink" href="#id16" title="Permalink to this headline">#</a></h3>
+<h3>Theory<a class="headerlink" href="#id16" title="Permalink to this heading">#</a></h3>
 <p>No Theory.</p>
 </section>
 <section id="id17">
-<h3>FAQs<a class="headerlink" href="#id17" title="Permalink to this headline">#</a></h3>
+<h3>FAQs<a class="headerlink" href="#id17" title="Permalink to this heading">#</a></h3>
 <p>No FAQs.</p>
 </section>
 <section id="id18">
-<h3>References<a class="headerlink" href="#id18" title="Permalink to this headline">#</a></h3>
+<h3>References<a class="headerlink" href="#id18" title="Permalink to this heading">#</a></h3>
 <p>Hysing, S.R., Turek, S., Kuzmin, D., Parolini, N., Burman, E.,
 Ganesan, S. and Tobiska, L., 2009. Quantitative benchmark computations
 of two‐dimensional bubble dynamics. International Journal for
@@ -4700,22 +4699,18 @@ Numerical Methods in Fluids, 60(11), pp.1259-1288.</p>
 </section>
 </section>
 <section id="ls-flow-pressure">
-<h2><strong>LS_FLOW_PRESSURE</strong><a class="headerlink" href="#ls-flow-pressure" title="Permalink to this headline">#</a></h2>
+<h2><strong>LS_FLOW_PRESSURE</strong><a class="headerlink" href="#ls-flow-pressure" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LS_FLOW_PRESSURE</span> <span class="n">LS</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id19">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id19" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id19" title="Permalink to this heading">#</a></h3>
 <p><strong>(EMB/VECTOR MOMENTUM)</strong></p>
 <p>This boundary condition applies a scalar pressure value as an “embedded” source term
 on the fluid momentum equation at the zero level set contour. It can be used both when
 subgrid or subelement integration is being used.</p>
 <p>A description of the input parameters follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 25%" />
-<col style="width: 75%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>LS_FLOW_PRESSURE</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -4740,14 +4735,14 @@ level set contour.</p></td>
 </table>
 </section>
 <section id="id20">
-<h3><strong>Examples</strong><a class="headerlink" href="#id20" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id20" title="Permalink to this heading">#</a></h3>
 <p>An example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LS_FLOW_PRESSURE</span> <span class="n">LS</span> <span class="mi">0</span> <span class="mf">1013250.0</span>
 </pre></div>
 </div>
 </section>
 <section id="id21">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id21" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id21" title="Permalink to this heading">#</a></h3>
 <p>This boundary condition is somewhat analogous to the FLOW_PRESSURE boundary
 condition used quite often in ALE problems. It applies a scalar pressure at the
 interfacial curve as an embedded boundary condtion. It can be used in by subgrid and
@@ -4771,17 +4766,17 @@ cancellation. This is much the same as was seen for the LS_CAPILLARY boundary
 condition and the reader is referred to that card for a more detailed discussion.</p>
 </section>
 <section id="id22">
-<h3><strong>References</strong><a class="headerlink" href="#id22" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id22" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="ls-fluid-solid-contact">
-<h2><strong>LS_FLUID_SOLID_CONTACT</strong><a class="headerlink" href="#ls-fluid-solid-contact" title="Permalink to this headline">#</a></h2>
+<h2><strong>LS_FLUID_SOLID_CONTACT</strong><a class="headerlink" href="#ls-fluid-solid-contact" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LS_FLUID_SOLID_CONTACT</span> <span class="n">LS</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer1</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id23">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id23" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id23" title="Permalink to this heading">#</a></h3>
 <p><strong>(EMB/MOMENTUM)</strong></p>
 <p>This boundary condition applies a fluid-solid stress balance at a level set interface that
 is slaved to an overset mesh (see GT-026.3). It is applied as an “embedded” source
@@ -4790,10 +4785,6 @@ boundary condition has been deprecated in favor of the</em> <strong>BAAIJENS_SOL
 <em>and</em> <strong>BAAIJENS_FLUID_SOLID</strong> <em>boundary conditions, as described in the memo</em>.</p>
 <p>A description of the input parameters follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 29%" />
-<col style="width: 71%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>LS_FLUID_SOLID_CONTACT</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -4817,21 +4808,21 @@ Details are given below.</p></td>
 </table>
 </section>
 <section id="id24">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id24" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id24" title="Permalink to this heading">#</a></h3>
 <p>We discourage use of this experimental boundary condition.</p>
 </section>
 <section id="id25">
-<h3><strong>References</strong><a class="headerlink" href="#id25" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id25" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="ls-inlet">
-<h2><strong>LS_INLET</strong><a class="headerlink" href="#ls-inlet" title="Permalink to this headline">#</a></h2>
+<h2><strong>LS_INLET</strong><a class="headerlink" href="#ls-inlet" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LS_INLET</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id26">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id26" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id26" title="Permalink to this heading">#</a></h3>
 <p><strong>(PCC/LEVEL SET)</strong></p>
 <p>This boundary condition is used to set the values of the level set function on a sideset.
 Most of this is done on an inlet or outlet boundary to elminate the potential for
@@ -4839,10 +4830,6 @@ oscillations in the level set field at those points from introducing spurious in
 (zero contours) .</p>
 <p>A description of the input parameters follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 15%" />
-<col style="width: 85%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>LS_INLET</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -4861,14 +4848,14 @@ respectively. Details are given below.</p></td>
 </table>
 </section>
 <section id="id27">
-<h3><strong>Examples</strong><a class="headerlink" href="#id27" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id27" title="Permalink to this heading">#</a></h3>
 <p>An example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LS_INLET</span> <span class="n">SS</span> <span class="mi">10</span>
 </pre></div>
 </div>
 </section>
 <section id="id28">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id28" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id28" title="Permalink to this heading">#</a></h3>
 <p>Surface tension forces at a level set representation of an interfacial boundary are
 applied solely via this boundary condition. An additional divergence of stress tensor
 term <span class="math notranslate nohighlight">\(\Delta\)</span> ⋅ <span class="math notranslate nohighlight">\(T_{cap}\)</span> is added to the fluid momentum equation. Following Jacqmin the form of this tensor is</p>
@@ -4904,17 +4891,17 @@ this card is set to a -1 or a +1 to signify that the surface tension forces are 
 to the negative or positive side of the interface curve, respectively.</p>
 </section>
 <section id="id29">
-<h3><strong>References</strong><a class="headerlink" href="#id29" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id29" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="ls-no-slip">
-<h2><strong>LS_NO_SLIP</strong><a class="headerlink" href="#ls-no-slip" title="Permalink to this headline">#</a></h2>
+<h2><strong>LS_NO_SLIP</strong><a class="headerlink" href="#ls-no-slip" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LS_NO_SLIP</span> <span class="n">PF</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id30">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id30" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id30" title="Permalink to this heading">#</a></h3>
 <p><strong>(EMB/VECTOR MOMENTUM)</strong></p>
 <p>This boundary condition is used to enforce the fluid/solid kinematic constraint for 1)
 overset grid applications in which 2) the solid material is assumed rigid and therefore
@@ -4922,10 +4909,6 @@ has no internal stresses. It requires 3) a slaved phase function be defined alon
 a vector field of Lagrange multipliers.</p>
 <p>A description of the input parameters follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 18%" />
-<col style="width: 82%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>LS_NO_SLIP</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -4944,14 +4927,14 @@ should always be one.</p></td>
 </table>
 </section>
 <section id="id31">
-<h3><strong>Examples</strong><a class="headerlink" href="#id31" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id31" title="Permalink to this heading">#</a></h3>
 <p>An example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LS_NO_SLIP</span> <span class="n">PF</span> <span class="mi">1</span>
 </pre></div>
 </div>
 </section>
 <section id="id32">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id32" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id32" title="Permalink to this heading">#</a></h3>
 <p>This boundary condition is used in the context of Goma’s overset grid capability. A
 thorough treatment of this method is provided in the Goma document (GT-026.3) and
 the user is directed there. However, a brief discussion of the nature of this boundary
@@ -4993,27 +4976,23 @@ identify the sideset number of the boundary on the solid material which is the f
 solid interface.</p>
 </section>
 <section id="id33">
-<h3><strong>References</strong><a class="headerlink" href="#id33" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id33" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="ls-q">
-<h2><strong>LS_Q</strong><a class="headerlink" href="#ls-q" title="Permalink to this headline">#</a></h2>
+<h2><strong>LS_Q</strong><a class="headerlink" href="#ls-q" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LS_Q</span> <span class="n">LS</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id34">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id34" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id34" title="Permalink to this heading">#</a></h3>
 <p><strong>(EMB/ENERGY)</strong></p>
 <p>This boundary condition applies a scalar heat flux value as an “embedded” source term
 on the heat conservation equation at the zero level set contour. It can be used both
 when subgrid or subelement integration is being used.</p>
 <p>A description of the input parameters follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 15%" />
-<col style="width: 85%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>LS_Q</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -5038,14 +5017,14 @@ level set contour.</p></td>
 </table>
 </section>
 <section id="id35">
-<h3><strong>Examples</strong><a class="headerlink" href="#id35" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id35" title="Permalink to this heading">#</a></h3>
 <p>An example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LS_Q</span> <span class="n">LS</span> <span class="mi">0</span> <span class="o">-</span><span class="mf">1.1e-3</span>
 </pre></div>
 </div>
 </section>
 <section id="id36">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id36" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id36" title="Permalink to this heading">#</a></h3>
 <p>This boundary condition is somewhat analogous to the QSIDE boundary condition
 used quite often in non-level set problems. It applies a scalar heat flux at the interfacial
 curve as an embedded boundary condtion. It can be used in by subgrid and subelement
@@ -5066,17 +5045,17 @@ This is much the same as was seen for the LS_CAPILLARY boundary condition and
 the reader is referred to that card for a more detailed discussion.</p>
 </section>
 <section id="id37">
-<h3><strong>References</strong><a class="headerlink" href="#id37" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id37" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="ls-qrad">
-<h2><strong>LS_QRAD</strong><a class="headerlink" href="#ls-qrad" title="Permalink to this headline">#</a></h2>
+<h2><strong>LS_QRAD</strong><a class="headerlink" href="#ls-qrad" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LS_QRAD</span> <span class="n">LS</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float3</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float4</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id38">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id38" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id38" title="Permalink to this heading">#</a></h3>
 <p><strong>(EMB/ENERGY)</strong></p>
 <p>This boundary condition card specifies heat flux using both convective and radiative
 terms. This heat flux value is applied as an “embedded” source term on the heat
@@ -5085,10 +5064,6 @@ It can be used both when subgrid or subelement integration is being used. The
 &lt;float_list&gt; has four parameters; definitions of the input parameters are as follows:</p>
 <p>A description of the input parameters follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 16%" />
-<col style="width: 84%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>LS_QRAD</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -5121,30 +5096,30 @@ Details are given below.</p></td>
 </table>
 </section>
 <section id="id39">
-<h3><strong>Examples</strong><a class="headerlink" href="#id39" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id39" title="Permalink to this heading">#</a></h3>
 <p>An example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LS_QRAD</span> <span class="n">LS</span> <span class="mi">0</span> <span class="mf">10.0</span> <span class="mf">273.0</span> <span class="mf">0.3</span> <span class="mf">5.6697e-8</span>
 </pre></div>
 </div>
 </section>
 <section id="id40">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id40" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id40" title="Permalink to this heading">#</a></h3>
 <p>This is the level-set counterpart to <em>BC = QRAD</em> which is the same boundary condition
 applied to a parameterized mesh surface. Please see the discussion of that input record
 for the functional form of this boundary condition.</p>
 </section>
 <section id="id41">
-<h3><strong>References</strong><a class="headerlink" href="#id41" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id41" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="ls-qlaser">
-<h2><strong>LS_QLASER</strong><a class="headerlink" href="#ls-qlaser" title="Permalink to this headline">#</a></h2>
+<h2><strong>LS_QLASER</strong><a class="headerlink" href="#ls-qlaser" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LS_QLASER</span> <span class="n">LS</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float3</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float4</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id42">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id42" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id42" title="Permalink to this heading">#</a></h3>
 <p><strong>(EMB/ENERGY)</strong></p>
 <p>This boundary condition card specifies heat flux model derived from a laser welding
 application. This heat flux value is applied as an “embedded” source term on the heat
@@ -5154,10 +5129,6 @@ used. The &lt;float_list&gt; has twenty-seven parameters; definitions of the inp
 are as follows:</p>
 <p>A description of the input parameters follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 16%" />
-<col style="width: 84%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>LS_QLASER</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -5271,7 +5242,7 @@ radial distance in 2D plane (1).</p></td>
 </table>
 </section>
 <section id="id43">
-<h3><strong>Examples</strong><a class="headerlink" href="#id43" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id43" title="Permalink to this heading">#</a></h3>
 <p>An example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LS_QLASER</span> <span class="n">LS</span> <span class="o">-</span><span class="mi">1</span> <span class="mf">4.774648293</span> <span class="mi">0</span> <span class="mf">0.4</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mf">1.01</span> <span class="mf">4.774648293</span> <span class="mf">0.2</span>
 <span class="mf">0.01</span> <span class="mf">0.01</span> <span class="mi">1</span> <span class="mf">0.005</span> <span class="mi">0</span> <span class="o">-</span><span class="mf">0.198</span> <span class="o">-</span><span class="mi">1</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mf">0.025</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mf">0.2032</span> <span class="o">-</span><span class="mi">1000</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span>
@@ -5280,23 +5251,23 @@ radial distance in 2D plane (1).</p></td>
 </div>
 </section>
 <section id="id44">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id44" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id44" title="Permalink to this heading">#</a></h3>
 <p>This is the level-set counterpart to <em>BC = Q_LASER</em> which is the same boundary
 condition applied to a parameterized mesh surface. Please see the discussion of that
 input record for the functional form of this boundary condition.</p>
 </section>
 <section id="id45">
-<h3><strong>References</strong><a class="headerlink" href="#id45" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id45" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="ls-recoil-pressure">
-<h2><strong>LS_RECOIL_PRESSURE</strong><a class="headerlink" href="#ls-recoil-pressure" title="Permalink to this headline">#</a></h2>
+<h2><strong>LS_RECOIL_PRESSURE</strong><a class="headerlink" href="#ls-recoil-pressure" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LS_RECOIL_PRESSURE</span> <span class="n">LS</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float3</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float4</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id46">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id46" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id46" title="Permalink to this heading">#</a></h3>
 <p><strong>(EMB/VECTOR MOMENTUM)</strong></p>
 <p>This boundary condition card specifies heat flux model derived from a laser welding
 application.. This heat flux value is applied as an “embedded” source term on the heat
@@ -5306,10 +5277,6 @@ used. The &lt;float_list&gt; has seven parameters; definitions of the input para
 follows:</p>
 <p>A description of the input parameters follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 27%" />
-<col style="width: 73%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>LS_RECOIL_PRESSURE</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -5353,27 +5320,27 @@ Temperature” card for this.</p></td>
 </table>
 </section>
 <section id="id47">
-<h3><strong>Examples</strong><a class="headerlink" href="#id47" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id47" title="Permalink to this heading">#</a></h3>
 </section>
 <section id="id48">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id48" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id48" title="Permalink to this heading">#</a></h3>
 <p>Currently this boundary condition has coefficients for only iron and water. Several
 required pieces of information to use this boundary condition are not in final form, and
 the user can expect future changes and improvements. This boundary condition is
 designed for use with <em>LS_QLASER</em>.</p>
 </section>
 <section id="id49">
-<h3><strong>References</strong><a class="headerlink" href="#id49" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id49" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="ls-vapor-ls-qvapor">
-<h2><strong>LS_VAPOR/LS_QVAPOR</strong><a class="headerlink" href="#ls-vapor-ls-qvapor" title="Permalink to this headline">#</a></h2>
+<h2><strong>LS_VAPOR/LS_QVAPOR</strong><a class="headerlink" href="#ls-vapor-ls-qvapor" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LS_VAPOR</span> <span class="n">LS</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float3</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float4</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id50">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id50" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id50" title="Permalink to this heading">#</a></h3>
 <p><strong>(EMB/ENERGY)</strong></p>
 <p>This boundary condition card specifies heat flux model derived from a laser welding
 application. This particular contribution accounts for the energy lost by vapor flux.
@@ -5383,10 +5350,6 @@ It can be used both when subgrid or subelement integration is being used. The
 &lt;float_list&gt; has four parameters; definitions of the input parameters are as follows:</p>
 <p>A description of the input parameters follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 18%" />
-<col style="width: 82%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>LS_VAPOR</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -5413,41 +5376,37 @@ Details are given below.</p></td>
 </table>
 </section>
 <section id="id51">
-<h3><strong>Examples</strong><a class="headerlink" href="#id51" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id51" title="Permalink to this heading">#</a></h3>
 <p>An example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LS_VAPOR</span> <span class="n">LS</span> <span class="mi">0</span> <span class="mf">273.</span> <span class="mf">1.</span>
 </pre></div>
 </div>
 </section>
 <section id="id52">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id52" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id52" title="Permalink to this heading">#</a></h3>
 <p>Currently this BC is hardwired to parameters (viz. heat capacitance, etc.) for iron. The
 melting point temperature is taken from the material property “Liquidus Temperature”.
 This boundary condition is still in the developmental stage. In using it is advisable to
 be working with the Sandia Goma code team.</p>
 </section>
 <section id="id53">
-<h3><strong>References</strong><a class="headerlink" href="#id53" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id53" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="ls-yflux">
-<h2><strong>LS_YFLUX</strong><a class="headerlink" href="#ls-yflux" title="Permalink to this headline">#</a></h2>
+<h2><strong>LS_YFLUX</strong><a class="headerlink" href="#ls-yflux" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LS_YFLUX</span> <span class="n">LS</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float2</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id54">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id54" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id54" title="Permalink to this heading">#</a></h3>
 <p><strong>(EMB/ENERGY)</strong></p>
 <p>This boundary condition applies a scalar mass flux value as an “embedded” source
 term on a species conservation equation at the zero level set contour. It can be used
 both when subgrid or subelement integration is being used.</p>
 <p>A description of the input parameters follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 17%" />
-<col style="width: 83%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>LS_YFLUX</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -5481,14 +5440,14 @@ the mass flux.</p></td>
 </table>
 </section>
 <section id="id55">
-<h3><strong>Examples</strong><a class="headerlink" href="#id55" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id55" title="Permalink to this heading">#</a></h3>
 <p>An example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LS_YFLUX</span> <span class="n">LS</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mf">1.e-2</span> <span class="mf">0.75</span>
 </pre></div>
 </div>
 </section>
 <section id="id56">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id56" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id56" title="Permalink to this heading">#</a></h3>
 <p>This boundary condition is somewhat analogous to the YFLUX boundary condition
 used quite often in non-level set problems to apply a scalar species flux at a at boundary
 defined by a side set. It applies a scalar mass transfer flux at the interfacial curve as an
@@ -5513,17 +5472,17 @@ This is much the same as was seen for the LS_CAPILLARY boundary condition and
 the reader is referred to that card for a more detailed discussion.</p>
 </section>
 <section id="id57">
-<h3><strong>References</strong><a class="headerlink" href="#id57" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id57" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="sharp-blake-velocity">
-<h2><strong>SHARP_BLAKE_VELOCITY</strong><a class="headerlink" href="#sharp-blake-velocity" title="Permalink to this headline">#</a></h2>
+<h2><strong>SHARP_BLAKE_VELOCITY</strong><a class="headerlink" href="#sharp-blake-velocity" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SHARP_BLAKE_VELOCITY</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">floatlist</span>
 </pre></div>
 </div>
 <section id="id58">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id58" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id58" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/VECTOR MOMENTUM)</strong></p>
 <p>This boundary condition is used to induce fluid velocity at a wetting line when using
 <em>Level Set Interface Tracking</em>. Its formulation is identical to the
@@ -5532,10 +5491,6 @@ source on the boundary instead of a distributed stress.</p>
 <p>This boundary condition can only be used for two-dimensional problems.</p>
 <p>A description of the input parameters follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 20%" />
-<col style="width: 80%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>SHARP_BLAKE_VELOCITY</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -5576,14 +5531,14 @@ smoothing is not used.</p></td>
 </table>
 </section>
 <section id="id59">
-<h3><strong>Examples</strong><a class="headerlink" href="#id59" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id59" title="Permalink to this heading">#</a></h3>
 <p>An example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SHARP_BLAKE_VELOCITY</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">30.0</span> <span class="mf">0.1</span> <span class="mf">8.</span> <span class="mf">0.001</span> <span class="mi">0</span>   <span class="mi">0</span>
 </pre></div>
 </div>
 </section>
 <section id="id60">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id60" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id60" title="Permalink to this heading">#</a></h3>
 <p>The implementation for this wetting condition is identical to that of
 SHARP_WETLIN_VELOCITY, but the wetting velocity dependence is different.
 Because the wetting stress is not applied at a point, it is most appropriate for use when
@@ -5594,7 +5549,7 @@ problems. Attempting to apply it to a three dimensional problem will result in a
 message.</p>
 </section>
 <section id="id61">
-<h3><strong>Theory</strong><a class="headerlink" href="#id61" title="Permalink to this headline">#</a></h3>
+<h3><strong>Theory</strong><a class="headerlink" href="#id61" title="Permalink to this heading">#</a></h3>
 <p>Derivation of the force condition for this boundary condition starts with a simple
 relation for wetting line velocity</p>
 <figure class="align-center">
@@ -5609,26 +5564,22 @@ following form when the velocity smoothing is not used,</p>
 </figure>
 </section>
 <section id="id62">
-<h3><strong>References</strong><a class="headerlink" href="#id62" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id62" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="sharp-ca-2d">
-<h2><strong>SHARP_CA_2D</strong><a class="headerlink" href="#sharp-ca-2d" title="Permalink to this headline">#</a></h2>
+<h2><strong>SHARP_CA_2D</strong><a class="headerlink" href="#sharp-ca-2d" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SHARP_CA_2D</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="nb">float</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id63">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id63" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id63" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/VECTOR MOMENTUM)</strong></p>
 <p>This boundary condition is used to impose a contact angle on a boundary when using
 <em>Level Set Interface Tracking</em>. It can only be used for two-dimensional problems.</p>
 <p>A description of the input parameters follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 15%" />
-<col style="width: 85%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>FILL_CA</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -5649,14 +5600,14 @@ EXODUS II) in the problem domain.</p></td>
 </table>
 </section>
 <section id="id64">
-<h3><strong>Examples</strong><a class="headerlink" href="#id64" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id64" title="Permalink to this heading">#</a></h3>
 <p>An example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SHARP_CA_2D</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">30.0</span>
 </pre></div>
 </div>
 </section>
 <section id="id65">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id65" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id65" title="Permalink to this heading">#</a></h3>
 <p>This boundary condition must be used in conjunction with the <em>VELO_SLIP_FILL</em> or
 <em>VELO_SLIP_LS</em> boundary condition. These latter conditions permits the fluid to slip in
 the vicinity of the contact line. The SHARP_CA_2D acts by imposing a force on the
@@ -5675,17 +5626,17 @@ twodimensions. Hence, this boundary condition is stricly limited to two-dimensio
 problems.</p>
 </section>
 <section id="id66">
-<h3><strong>References</strong><a class="headerlink" href="#id66" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id66" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="sharp-cox-velocity">
-<h2><strong>SHARP_COX_VELOCITY</strong><a class="headerlink" href="#sharp-cox-velocity" title="Permalink to this headline">#</a></h2>
+<h2><strong>SHARP_COX_VELOCITY</strong><a class="headerlink" href="#sharp-cox-velocity" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SHARP_COX_VELOCITY</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">floatlist</span>
 </pre></div>
 </div>
 <section id="id67">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id67" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id67" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/VECTOR MOMENTUM)</strong></p>
 <p>This boundary condition is used to induce fluid velocity at a wetting line when using
 <em>Level Set Interface Tracking</em>. Its formulation is identical to the
@@ -5694,10 +5645,6 @@ on the boundary instead of a distributed stress.</p>
 <p>This boundary condition can only be used for two-dimensional problems.</p>
 <p>A description of the input parameters follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 18%" />
-<col style="width: 82%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>SHARP_COX_VELOCITY</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -5737,14 +5684,14 @@ for transient problems. Set to zero when smoothing is not used.</p></td>
 </table>
 </section>
 <section id="id68">
-<h3><strong>Examples</strong><a class="headerlink" href="#id68" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id68" title="Permalink to this heading">#</a></h3>
 <p>An example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SHARP_COX_VELOCITY</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">30.0</span> <span class="mf">72.0</span> <span class="mf">0.01</span> <span class="mf">0.1</span>   <span class="mi">0</span>   <span class="mi">0</span>
 </pre></div>
 </div>
 </section>
 <section id="id69">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id69" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id69" title="Permalink to this heading">#</a></h3>
 <p>The implementation for this wetting condition is identical to that of
 SHARP_WETLIN_VELOCITY, but the wetting velocity dependence is different.
 Because the wetting stress is not applied at a point, it is most appropriate for use when
@@ -5755,7 +5702,7 @@ problems. Attempting to apply it to a three dimensional problem will result in a
 message.</p>
 </section>
 <section id="id70">
-<h3><strong>Theory</strong><a class="headerlink" href="#id70" title="Permalink to this headline">#</a></h3>
+<h3><strong>Theory</strong><a class="headerlink" href="#id70" title="Permalink to this heading">#</a></h3>
 <p>Derivation of the force condition for this boundary condition starts with a relation for
 wetting line velocity</p>
 <figure class="align-center">
@@ -5784,17 +5731,17 @@ evaluation of the integrals is expected to become inaccurate as either
 zero or <span class="math notranslate nohighlight">\(\theta\)</span> tends toward 180 degrees. Note that the integrand becomes singular as <span class="math notranslate nohighlight">\(\theta\)</span> tends toward 0 or 180 degrees.</p>
 </section>
 <section id="id71">
-<h3><strong>References</strong><a class="headerlink" href="#id71" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id71" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="sharp-hoffman-velocity">
-<h2><strong>SHARP_HOFFMAN_VELOCITY</strong><a class="headerlink" href="#sharp-hoffman-velocity" title="Permalink to this headline">#</a></h2>
+<h2><strong>SHARP_HOFFMAN_VELOCITY</strong><a class="headerlink" href="#sharp-hoffman-velocity" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SHARP_HOFFMAN_VELOCITY</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">floatlist</span>
 </pre></div>
 </div>
 <section id="id72">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id72" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id72" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/VECTOR MOMENTUM)</strong></p>
 <p>This boundary condition is used to induce fluid velocity at a wetting line when using
 <em>Level Set Interface Tracking</em>. Its formulation is identical to the
@@ -5803,10 +5750,6 @@ source on the boundary instead of a distributed stress.</p>
 <p>This boundary condition can only be used for two-dimensional problems.</p>
 <p>A description of the input parameters follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 21%" />
-<col style="width: 79%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>SHARP_HOFFMAN_VELOCITY</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -5841,14 +5784,14 @@ smoothing for transient problems. Set to zero when smoothing is not used.</p></t
 </table>
 </section>
 <section id="id73">
-<h3><strong>Examples</strong><a class="headerlink" href="#id73" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id73" title="Permalink to this heading">#</a></h3>
 <p>An example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SHARP_HOFFMAN_VELOCITY</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">30.0</span> <span class="mf">72.0</span> <span class="mf">0.1</span>   <span class="mi">0</span>   <span class="mi">0</span>
 </pre></div>
 </div>
 </section>
 <section id="id74">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id74" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id74" title="Permalink to this heading">#</a></h3>
 <p>The implementation for this wetting condition is identical to that of
 SHARP_WETLIN_VELOCITY, but the wetting velocity dependence is different.
 Because the wetting stress is not applied at a point, it is most appropriate for use when
@@ -5859,7 +5802,7 @@ problems. Attempting to apply it to a three dimensional problem will result in a
 message.</p>
 </section>
 <section id="id75">
-<h3><strong>Theory</strong><a class="headerlink" href="#id75" title="Permalink to this headline">#</a></h3>
+<h3><strong>Theory</strong><a class="headerlink" href="#id75" title="Permalink to this heading">#</a></h3>
 <p>Derivation of the force condition for this boundary condition starts with a relation for
 wetting line velocity</p>
 <figure class="align-center">
@@ -5883,17 +5826,17 @@ of the wetting velocity. As a result, for very high Capillary numbers, i.e.
 iteration procedure in Goma may need to be modified.</p>
 </section>
 <section id="id76">
-<h3><strong>References</strong><a class="headerlink" href="#id76" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id76" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="sharp-wetlin-velocity">
-<h2><strong>SHARP_WETLIN_VELOCITY</strong><a class="headerlink" href="#sharp-wetlin-velocity" title="Permalink to this headline">#</a></h2>
+<h2><strong>SHARP_WETLIN_VELOCITY</strong><a class="headerlink" href="#sharp-wetlin-velocity" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SHARP_WETLIN_VELOCITY</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">floatlist</span>
 </pre></div>
 </div>
 <section id="id77">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id77" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id77" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/VECTOR MOMENTUM)</strong></p>
 <p>This boundary condition is used to induce fluid velocity at a wetting line when using
 <em>Level Set Interface Tracking</em>. Its formulation is identical to the
@@ -5902,10 +5845,6 @@ source on the boundary instead of a distributed stress.</p>
 <p>This boundary condition can only be used for two-dimensional problems.</p>
 <p>A description of the input parameters follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 31%" />
-<col style="width: 69%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>SHARP_WETLIN_VELOCITY</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -5935,14 +5874,14 @@ set in EXODUS II) in the problem domain.</p></td>
 </table>
 </section>
 <section id="id78">
-<h3><strong>Examples</strong><a class="headerlink" href="#id78" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id78" title="Permalink to this heading">#</a></h3>
 <p>An example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SHARP_WETLIN_VELOCITY</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">30.0</span> <span class="mf">0.1</span> <span class="mf">0.</span> <span class="mf">0.001</span>
 </pre></div>
 </div>
 </section>
 <section id="id79">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id79" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id79" title="Permalink to this heading">#</a></h3>
 <p>As noted above, this boundary condition imposes the same wetting stress dependence
 as the WETTING_SPEED_LINEAR boundary condition. However, its application in
 the FEM context is different. Instead of the wetting stress,
@@ -5967,7 +5906,7 @@ problems. Attempting to apply it to a three dimensional problem will result in a
 message.</p>
 </section>
 <section id="id80">
-<h3><strong>Theory</strong><a class="headerlink" href="#id80" title="Permalink to this headline">#</a></h3>
+<h3><strong>Theory</strong><a class="headerlink" href="#id80" title="Permalink to this heading">#</a></h3>
 <p>Derivation of the force condition for this boundary condition starts with a simple
 relation for wetting line velocity</p>
 <figure class="align-center">
@@ -5986,27 +5925,23 @@ The two parameters are interchangeable. In non-linear models, (see
 WETTING_SPEED_BLAKE) this is no longer true.</p>
 </section>
 <section id="id81">
-<h3><strong>References</strong><a class="headerlink" href="#id81" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id81" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="wetting-speed-blake">
-<h2><strong>WETTING_SPEED_BLAKE</strong><a class="headerlink" href="#wetting-speed-blake" title="Permalink to this headline">#</a></h2>
+<h2><strong>WETTING_SPEED_BLAKE</strong><a class="headerlink" href="#wetting-speed-blake" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">WETTING_SPEED_BLAKE</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">floatlist</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id82">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id82" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id82" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/VECTOR MOMENTUM)</strong></p>
 <p>This boundary condition is used to induce fluid velocity at a wetting line when using
 <em>Level Set Interface Tracking</em>. It implements a version of the Blake-DeConinck
 molecular-kinetic theory wetting model.</p>
 <p>A description of the input parameters follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 26%" />
-<col style="width: 74%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>WETTING_SPEED_BLAKE</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -6050,14 +5985,14 @@ level set length scale if zero or less.</p></td>
 </table>
 </section>
 <section id="id83">
-<h3><strong>Examples</strong><a class="headerlink" href="#id83" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id83" title="Permalink to this heading">#</a></h3>
 <p>An example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">WETTING_SPEED_BLAKE</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">30.0</span> <span class="mf">20.1</span> <span class="mf">7.0</span> <span class="mf">0.</span>   <span class="mf">0.001</span> <span class="mf">0.</span> <span class="mf">0.</span> <span class="mf">0.</span>
 </pre></div>
 </div>
 </section>
 <section id="id84">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id84" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id84" title="Permalink to this heading">#</a></h3>
 <p>The implementation for this wetting condition is identical to that of
 WETTING_SPEED_LINEAR, but the wetting velocity dependence is different.</p>
 <p>Note that it is a requirement that when using this boundary condition that slip to some
@@ -6073,7 +6008,7 @@ that appreciable fluid velocity is induced. This is a trial and error process at
 time.</p>
 </section>
 <section id="id85">
-<h3><strong>Theory</strong><a class="headerlink" href="#id85" title="Permalink to this headline">#</a></h3>
+<h3><strong>Theory</strong><a class="headerlink" href="#id85" title="Permalink to this heading">#</a></h3>
 <p>Derivation of this boundary condition starts with a relation propose by Blake and
 DeConinck for wetting line motion</p>
 <figure class="align-center">
@@ -6098,27 +6033,23 @@ added to the fluid momentum equation for the corresponding node j, vis:</p>
 </figure>
 </section>
 <section id="id86">
-<h3><strong>References</strong><a class="headerlink" href="#id86" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id86" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="wetting-speed-cox">
-<h2><strong>WETTING_SPEED_COX</strong><a class="headerlink" href="#wetting-speed-cox" title="Permalink to this headline">#</a></h2>
+<h2><strong>WETTING_SPEED_COX</strong><a class="headerlink" href="#wetting-speed-cox" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">WETTING_SPEED_COX</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">floatlist</span>
 </pre></div>
 </div>
 <section id="id87">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id87" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id87" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/VECTOR MOMENTUM)</strong></p>
 <p>This boundary condition is used to induce fluid velocity at a wetting line when using
 <em>Level Set Interface Tracking</em>. It implements a version of the Cox hydrodynamic model
 of wetting.</p>
 <p>A description of the input parameters follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 25%" />
-<col style="width: 75%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>WETTING_SPEED_COX</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -6163,14 +6094,14 @@ level set length scale if zero or less.</p></td>
 </table>
 </section>
 <section id="id88">
-<h3><strong>Examples</strong><a class="headerlink" href="#id88" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id88" title="Permalink to this heading">#</a></h3>
 <p>An example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">WETTING_SPEED_COX</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">30.0</span> <span class="mf">0.01</span> <span class="mf">72.0</span> <span class="mf">0.</span>   <span class="mf">0.001</span> <span class="mf">0.</span> <span class="mf">0.</span> <span class="mf">0.</span>
 </pre></div>
 </div>
 </section>
 <section id="id89">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id89" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id89" title="Permalink to this heading">#</a></h3>
 <p>The implementation for this wetting condition is identical to that of
 WETTING_SPEED_LINEAR, but the wetting velocity dependence is different.</p>
 <p>Note that it is a requirement that when using this boundary condition that slip to some
@@ -6186,7 +6117,7 @@ that appreciable fluid velocity is induced. This is a trial and error process at
 current time.</p>
 </section>
 <section id="id90">
-<h3><strong>Theory</strong><a class="headerlink" href="#id90" title="Permalink to this headline">#</a></h3>
+<h3><strong>Theory</strong><a class="headerlink" href="#id90" title="Permalink to this heading">#</a></h3>
 <p>Derivation of this boundary condition starts with a relation that represents the Cox
 hydrodynamic wetting model</p>
 <figure class="align-center">
@@ -6213,27 +6144,23 @@ added to the fluid momentum equation for the corresponding node j, vis:</p>
 </figure>
 </section>
 <section id="id91">
-<h3><strong>References</strong><a class="headerlink" href="#id91" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id91" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="wetting-speed-hoffman">
-<h2><strong>WETTING_SPEED_HOFFMAN</strong><a class="headerlink" href="#wetting-speed-hoffman" title="Permalink to this headline">#</a></h2>
+<h2><strong>WETTING_SPEED_HOFFMAN</strong><a class="headerlink" href="#wetting-speed-hoffman" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">WETTING_SPEED_HOFFMAN</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">floatlist</span>
 </pre></div>
 </div>
 <section id="id92">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id92" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id92" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/VECTOR MOMENTUM)</strong></p>
 <p>This boundary condition is used to induce fluid velocity at a wetting line when using
 <em>Level Set Interface Tracking</em>. It implements a version of the Hoffman wetting
 correlation.</p>
 <p>A description of the input parameters follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 31%" />
-<col style="width: 69%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>WETTING_SPEED_HOFFMAN</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -6276,14 +6203,14 @@ Defaults to level set length scale if zero or less.</p></td>
 </table>
 </section>
 <section id="id93">
-<h3><strong>Examples</strong><a class="headerlink" href="#id93" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id93" title="Permalink to this heading">#</a></h3>
 <p>An example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">WETTING_SPEED_HOFFMAN</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">30.0</span> <span class="mi">0</span> <span class="mf">72.0</span>   <span class="mf">0.</span> <span class="mf">0.001</span> <span class="mf">0.</span> <span class="mf">0.</span> <span class="mf">0.</span>
 </pre></div>
 </div>
 </section>
 <section id="id94">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id94" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id94" title="Permalink to this heading">#</a></h3>
 <p>The implementation for this wetting condition is identical to that of
 WETTING_SPEED_LINEAR, but the wetting velocity dependence is different.</p>
 <p>Note that it is a requirement that when using this boundary condition that slip to some
@@ -6299,7 +6226,7 @@ that appreciable fluid velocity is induced. This is a trial and error process at
 current time.</p>
 </section>
 <section id="id95">
-<h3><strong>Theory</strong><a class="headerlink" href="#id95" title="Permalink to this headline">#</a></h3>
+<h3><strong>Theory</strong><a class="headerlink" href="#id95" title="Permalink to this heading">#</a></h3>
 <p>Derivation of this boundary condition starts with a relation that represents the Hoffman
 wetting correlation</p>
 <figure class="align-center">
@@ -6326,27 +6253,23 @@ added to the fluid momentum equation for the corresponding node j, vis:</p>
 </figure>
 </section>
 <section id="id96">
-<h3><strong>References</strong><a class="headerlink" href="#id96" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id96" title="Permalink to this heading">#</a></h3>
 <p>Stephan F. Kistler 1993. “Hydrodynamics of Wetting” in Wettability, edited by John
 Berg, Surfactant Science Series, 49, Marcel Dekker, NewYork, NY, pp. 311-429.</p>
 </section>
 </section>
 <section id="wetting-speed-linear">
-<h2><strong>WETTING_SPEED_LINEAR</strong><a class="headerlink" href="#wetting-speed-linear" title="Permalink to this headline">#</a></h2>
+<h2><strong>WETTING_SPEED_LINEAR</strong><a class="headerlink" href="#wetting-speed-linear" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">WETTING_SPEED_LINEAR</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">floatlist</span>
 </pre></div>
 </div>
 <section id="id97">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id97" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id97" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/VECTOR MOMENTUM)</strong></p>
 <p>This boundary condition is used to induce fluid velocity at a wetting line when using
 <em>Level Set Interface Tracking</em>.</p>
 <p>A description of the input parameters follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 30%" />
-<col style="width: 70%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>WETTING_SPEED_LINEAR</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -6386,14 +6309,14 @@ Defaults to level set length scale if zero or less (L).</p></td>
 </table>
 </section>
 <section id="id98">
-<h3><strong>Examples</strong><a class="headerlink" href="#id98" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id98" title="Permalink to this heading">#</a></h3>
 <p>An example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">WETTING_SPEED_LINEAR</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">30.0</span> <span class="mf">0.1</span> <span class="mf">0.</span> <span class="mf">0.001</span> <span class="mf">0.</span> <span class="mf">0.</span> <span class="mf">0.</span>
 </pre></div>
 </div>
 </section>
 <section id="id99">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id99" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id99" title="Permalink to this heading">#</a></h3>
 <p>The prescence of wetting or contact lines in problems using level set interface tracking
 introduces the problem of modeling the motion of the wetting line. This boundary
 condition presents one potential means for doing this. It adds a wall stress value at the
@@ -6416,7 +6339,7 @@ that appreciable fluid velocity is induced. This is a trial and error process at
 time.</p>
 </section>
 <section id="id100">
-<h3><strong>Theory</strong><a class="headerlink" href="#id100" title="Permalink to this headline">#</a></h3>
+<h3><strong>Theory</strong><a class="headerlink" href="#id100" title="Permalink to this heading">#</a></h3>
 <p>Derivation of this boundary condition starts with a simple relation for wetting line
 velocity</p>
 <figure class="align-center">
@@ -6444,17 +6367,17 @@ added to the fluid momentum equation for the corresponding node j, vis:</p>
 </figure>
 </section>
 <section id="id101">
-<h3><strong>References</strong><a class="headerlink" href="#id101" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id101" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="linear-wetting-sic">
-<h2><strong>LINEAR_WETTING_SIC</strong><a class="headerlink" href="#linear-wetting-sic" title="Permalink to this headline">#</a></h2>
+<h2><strong>LINEAR_WETTING_SIC</strong><a class="headerlink" href="#linear-wetting-sic" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LINEAR_WETTING_SIC</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">floatlist</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id102">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id102" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id102" title="Permalink to this heading">#</a></h3>
 <p><strong>(SIC/VECTOR MOMENTUM)</strong></p>
 <p>This boundary condition is used to induce fluid velocity at a wetting line when using
 <em>Level Set Interface Tracking</em>. It is an alternative to the WETTING_SPEED_LINEAR
@@ -6462,10 +6385,6 @@ BC which does not require the VELO_SLIP_LS or VELO_SLIP_FILL BC’s on the
 wetting boundary.</p>
 <p>A description of the input parameters follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 26%" />
-<col style="width: 74%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>LINEAR_WETTING_SIC</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -6508,14 +6427,14 @@ level set length scale if zero or less (L).</p></td>
 </table>
 </section>
 <section id="id103">
-<h3><strong>Examples</strong><a class="headerlink" href="#id103" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id103" title="Permalink to this heading">#</a></h3>
 <p>Here is an example card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">LINEAR_WETTING_SIC</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">30.0</span> <span class="mf">0.1</span> <span class="mf">0.</span> <span class="mf">0.001</span> <span class="mf">0.</span> <span class="mf">0.</span> <span class="mf">0.</span> <span class="mf">0.</span>
 </pre></div>
 </div>
 </section>
 <section id="id104">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id104" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id104" title="Permalink to this heading">#</a></h3>
 <p>This boundary condition is an additional means to impose a wetting line velocity at the
 contact line for level set interface tracking problems. The boundary condition uses a
 form of the Navier-Stokes slip condition to impose a boundary shear stress term to the
@@ -6566,17 +6485,17 @@ recognize that this term is not consistent from a physical standpoint and theref
 should endeavor to keep <span class="math notranslate nohighlight">\(\tau\)</span> as small as possible if not in fact equal to zero.</p>
 </section>
 <section id="id105">
-<h3><strong>References</strong><a class="headerlink" href="#id105" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id105" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="blake-dirichlet">
-<h2><strong>BLAKE_DIRICHLET</strong><a class="headerlink" href="#blake-dirichlet" title="Permalink to this headline">#</a></h2>
+<h2><strong>BLAKE_DIRICHLET</strong><a class="headerlink" href="#blake-dirichlet" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">BLAKE_DIRICHLET</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">floatlist</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id106">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id106" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id106" title="Permalink to this heading">#</a></h3>
 <p><strong>(SIC/VECTOR MOMENTUM)</strong></p>
 <p>This boundary condition is used to induce fluid velocity at a wetting line when using
 <em>Level Set Interface Tracking</em>. It is an alternative to the WETTING_SPEED_BLAKE
@@ -6587,10 +6506,6 @@ WETTING_SPEED_BLAKE in that wetting velocity is in a strong fashion on the
 wetting boundary.</p>
 <p>A description of the input parameters follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>BLAKE_DIRICHLET</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -6635,14 +6550,14 @@ the level set length scale if zero of less.</p></td>
 </table>
 </section>
 <section id="id107">
-<h3><strong>Examples</strong><a class="headerlink" href="#id107" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id107" title="Permalink to this heading">#</a></h3>
 <p>Here is an example card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">BLAKE_DIRICHLET</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">30.0</span> <span class="mf">20.1</span> <span class="mf">7.0</span> <span class="mf">0.0</span> <span class="mf">0.001</span> <span class="mf">0.</span> <span class="mf">0.</span> <span class="mf">0.</span>
 </pre></div>
 </div>
 </section>
 <section id="id108">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id108" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id108" title="Permalink to this heading">#</a></h3>
 <p>This boundary condition is an additional means to impose a wetting line velocity at the
 contact line for level set interface tracking problems. It is related to the
 WETTING_SPEED_BLAKE condition in that it uses the same Blake-DeConninck
@@ -6685,7 +6600,7 @@ set.</p>
 surface tension value supplied with Surface Tension card in the material file.</p>
 </section>
 <section id="id109">
-<h3><strong>Theory</strong><a class="headerlink" href="#id109" title="Permalink to this headline">#</a></h3>
+<h3><strong>Theory</strong><a class="headerlink" href="#id109" title="Permalink to this heading">#</a></h3>
 <p>The wetting speed model for this boundary condition is the same used by the
 WETTING_SPEED_BLAKE card:</p>
 <figure class="align-center">
@@ -6693,18 +6608,18 @@ WETTING_SPEED_BLAKE card:</p>
 </figure>
 </section>
 <section id="id110">
-<h3><strong>References</strong><a class="headerlink" href="#id110" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id110" title="Permalink to this heading">#</a></h3>
 <p>T. D. Blake and J. De Coninck 2002. “The Influence of Solid-Liquid Interactions on
 Dynamic Wetting”, Advances in Colloid and Interface Science, 96, 21-36.</p>
 </section>
 </section>
 <section id="cox-dirichlet">
-<h2><strong>COX_DIRICHLET</strong><a class="headerlink" href="#cox-dirichlet" title="Permalink to this headline">#</a></h2>
+<h2><strong>COX_DIRICHLET</strong><a class="headerlink" href="#cox-dirichlet" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">COX_DIRICHLET</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">floatlist</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id111">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id111" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id111" title="Permalink to this heading">#</a></h3>
 <p><strong>(SIC/VECTOR MOMENTUM)</strong></p>
 <p>This boundary condition is used to induce fluid velocity at a wetting line when using
 <em>Level Set Interface Tracking</em>. It is an alternative to the WETTING_SPEED_COX
@@ -6715,10 +6630,6 @@ WETTING_SPEED_COX in that wetting velocity is applied in a strong fashion on the
 wetting boundary.</p>
 <p>A description of the input parameters follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 22%" />
-<col style="width: 78%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>COX_DIRICHLET</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -6766,14 +6677,14 @@ defaults to the level set length scale if zero of less (L).</p></td>
 </table>
 </section>
 <section id="id112">
-<h3><strong>Examples</strong><a class="headerlink" href="#id112" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id112" title="Permalink to this heading">#</a></h3>
 <p>Here is an example card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">COX_DIRICHLET</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">30.0</span> <span class="mf">0.01</span> <span class="mf">72.0</span>   <span class="mf">0.</span> <span class="mf">0.001</span> <span class="mf">0.</span> <span class="mf">0.</span> <span class="mf">0.</span>
 </pre></div>
 </div>
 </section>
 <section id="id113">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id113" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id113" title="Permalink to this heading">#</a></h3>
 <p>This boundary condition is applied in exactly the same manner as the
 BLAKE_DIRICHLET boundary condition. The only substantial difference is the
 model used to derive the wetting speeds relation to the local apparent contact angle.
@@ -6781,7 +6692,7 @@ The reader is referred to the BLAKE_DIRICHLET section of the manual for further
 reference.</p>
 </section>
 <section id="id114">
-<h3><strong>Theory</strong><a class="headerlink" href="#id114" title="Permalink to this headline">#</a></h3>
+<h3><strong>Theory</strong><a class="headerlink" href="#id114" title="Permalink to this heading">#</a></h3>
 <p>This boundary condition uses this relation that represents the Cox hydrodynamic
 wetting model</p>
 <figure class="align-center">
@@ -6793,18 +6704,18 @@ hard-set to zero. <span class="math notranslate nohighlight">\(\lambda\)</span> 
 <span class="math notranslate nohighlight">\(q_{outer}\)</span> represent influences from the inner and outer flow regions.</p>
 </section>
 <section id="id115">
-<h3><strong>References</strong><a class="headerlink" href="#id115" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id115" title="Permalink to this heading">#</a></h3>
 <p>Stephan F. Kistler 1993. “Hydrodynamics of Wetting” in Wettability, edited by John
 Berg, Surfactant Science Series, 49, Marcel Dekker, NewYork, NY, pp. 311-429.</p>
 </section>
 </section>
 <section id="hoffman-dirichlet">
-<h2><strong>HOFFMAN_DIRICHLET</strong><a class="headerlink" href="#hoffman-dirichlet" title="Permalink to this headline">#</a></h2>
+<h2><strong>HOFFMAN_DIRICHLET</strong><a class="headerlink" href="#hoffman-dirichlet" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">HOFFMAN_DIRICHLET</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">floatlist</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id116">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id116" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id116" title="Permalink to this heading">#</a></h3>
 <p><strong>(SIC/VECTOR MOMENTUM)</strong></p>
 <p>This boundary condition is used to induce fluid velocity at a wetting line when using
 <em>Level Set Interface Tracking</em>. It is an alternative to the
@@ -6814,10 +6725,6 @@ implies, this boundary condition differs from WETTING_SPEED_HOFFMAN in that
 wetting velocity is in a strong fashion on the wetting boundary.</p>
 <p>A description of the input parameters follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 27%" />
-<col style="width: 73%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>HOFFMAN_DIRICHLET</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -6862,14 +6769,14 @@ defaults to the level set length scale if zero of less.</p></td>
 </table>
 </section>
 <section id="id117">
-<h3><strong>Examples</strong><a class="headerlink" href="#id117" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id117" title="Permalink to this heading">#</a></h3>
 <p>Here is an example card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">HOFFMAN_DIRICHLET</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">30.0</span> <span class="mi">0</span> <span class="mf">72.0</span> <span class="mf">0.0</span> <span class="mf">0.001</span> <span class="mf">0.</span> <span class="mf">0.</span> <span class="mf">0.</span>
 </pre></div>
 </div>
 </section>
 <section id="id118">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id118" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id118" title="Permalink to this heading">#</a></h3>
 <p>The technical details of the application of this boundary differ not at all from those
 described for the BLAKE_DIRICHLET boundary condition. The user is referred to
 that section for further details. This boundary condition differs only in the model used
@@ -6877,7 +6784,7 @@ to determine the wetting velocity. This is described below and in the
 VELO_THETA_HOFFMAN card.</p>
 </section>
 <section id="id119">
-<h3><strong>Theory</strong><a class="headerlink" href="#id119" title="Permalink to this headline">#</a></h3>
+<h3><strong>Theory</strong><a class="headerlink" href="#id119" title="Permalink to this heading">#</a></h3>
 <p>Derivation of this boundary condition starts with a relation that represents the Hoffman
 wetting correlation</p>
 <figure class="align-center">
@@ -6892,18 +6799,18 @@ to a stress value by analogy with Navier’s slip relation,</p>
 </figure>
 </section>
 <section id="id120">
-<h3><strong>References</strong><a class="headerlink" href="#id120" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id120" title="Permalink to this heading">#</a></h3>
 <p>Stephan F. Kistler 1993. “Hydrodynamics of Wetting” in Wettability, edited by John
 Berg, Surfactant Science Series, 49, Marcel Dekker, NewYork, NY, pp. 311-429.</p>
 </section>
 </section>
 <section id="velo-slip-ls">
-<h2><strong>VELO_SLIP_LS</strong><a class="headerlink" href="#velo-slip-ls" title="Permalink to this headline">#</a></h2>
+<h2><strong>VELO_SLIP_LS</strong><a class="headerlink" href="#velo-slip-ls" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">VELO_SLIP_LS</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id121">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id121" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id121" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/VECTOR MOMENTUM)</strong></p>
 <p>This boundary condition is applied only in problems involving embedded interface
 tracking, that is, level set or volume of fluid. The boundary condition serves two major
@@ -6919,10 +6826,6 @@ necessary to use VELO_SLIP_LS with a large slipping coefficient so that effectiv
 no-slip is relaxed completely near the interface.</p>
 <p>Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 18%" />
-<col style="width: 82%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>VELO_SLIP_LS</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -6981,7 +6884,7 @@ Hence, this parameter is usually set to a small value
 </table>
 </section>
 <section id="id122">
-<h3><strong>Examples</strong><a class="headerlink" href="#id122" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id122" title="Permalink to this heading">#</a></h3>
 <p>Following is a sample card without the optional parameters:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">VELO_SLIP_LS</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">0.05</span> <span class="mf">100000.0</span> <span class="mf">0.0</span> <span class="mf">0.0</span> <span class="mf">1.e-6</span>
 </pre></div>
@@ -6991,7 +6894,7 @@ interface, a region that has a half-width of 0.05 centered about the contact lin
 from the contact line (outside the hat function of width 0.05), the slip coefficient is 1.e-6, which corresponds to significantly less slip. Note also that if the substrate defined by SS 10 is in contact with gas (light phase), and a liquid front (zero-level set) is nearby, or within a distance 8 times 0.05, then the light phase is allowed to slip along the wall with a coefficient of 100000.0. This is to help facilitate contact.</p>
 </section>
 <section id="id123">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id123" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id123" title="Permalink to this heading">#</a></h3>
 <p>This boundary condition was originally developed to allow for fluid slip near a
 dynamic contact line, a necessary condition for dynamic wetting line motion when the
 contact angle is not 180 degrees (viz. rolling motion condition). The slippage
@@ -7051,51 +6954,55 @@ hopefully clarifies the condition a little better.</p></li>
 </section>
 
 
-              </div>
+              </article>
               
-              
-              <!-- Previous / next buttons -->
-<div class='prev-next-area'>
-    <a class='left-prev' id="prev-link" href="fluid_solid_interaction.html" title="previous page">
-        <i class="fas fa-angle-left"></i>
-        <div class="prev-next-info">
-            <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title">Category 14: Fluid-Solid Interaction</p>
-        </div>
-    </a>
-    <a class='right-next' id="next-link" href="shell.html" title="next page">
-    <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Category 16: Shell Equations</p>
-    </div>
-    <i class="fas fa-angle-right"></i>
-    </a>
-</div>
-              
-          </main>
-          
 
+              
+              <footer class="bd-footer-article">
+                  <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+  <a class='left-prev' id="prev-link" href="fluid_solid_interaction.html" title="previous page">
+      <i class="fas fa-angle-left"></i>
+      <div class="prev-next-info">
+          <p class="prev-next-subtitle">previous</p>
+          <p class="prev-next-title">Category 14: Fluid-Solid Interaction</p>
+      </div>
+  </a>
+  <a class='right-next' id="next-link" href="shell.html" title="next page">
+  <div class="prev-next-info">
+      <p class="prev-next-subtitle">next</p>
+      <p class="prev-next-title">Category 16: Shell Equations</p>
+  </div>
+  <i class="fas fa-angle-right"></i>
+  </a>
+</div>
+              </footer>
+              
+          </div>
+          
       </div>
     </div>
+
+  
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-<footer class="footer mt-5 mt-md-0">
-  <div class="container">
-    
-    <div class="footer-item">
-      <p class="copyright">
+  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=92025949c220c2e29695"></script>
+
+<footer class="bd-footer"><div class="bd-footer__inner container">
+  
+  <div class="footer-item">
+    <p class="copyright">
     &copy; Copyright 2019 Goma Developers.<br>
 </p>
-    </div>
-    
-    <div class="footer-item">
-      <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
-</p>
-    </div>
-    
   </div>
+  
+  <div class="footer-item">
+    <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.0.2.<br>
+</p>
+  </div>
+  
+</div>
 </footer>
   </body>
 </html>

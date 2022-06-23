@@ -1,18 +1,22 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
     <title>Category 2: Mesh Equations &#8212; Goma User Manual 7.0.0 documentation</title>
-    
-  <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<script>
+  document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+  document.documentElement.dataset.theme = localStorage.getItem("theme") || "light"
+</script>
 
-    
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=92025949c220c2e29695" rel="stylesheet">
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=92025949c220c2e29695" rel="stylesheet">
+
+
   <link rel="stylesheet"
     href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
   <link rel="preload" as="font" type="font/woff2" crossorigin
@@ -21,47 +25,55 @@
     href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
-    
+
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=92025949c220c2e29695">
 
     <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
     <script src="../../_static/jquery.js"></script>
     <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
     <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Category 3: Real Solid Equations" href="real_solid.html" />
     <link rel="prev" title="Category 1: Any Equation" href="any.html" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="docsearch:language" content="None">
-    
-
-    <!-- Google Analytics -->
-    
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="docsearch:language" content="en">
   </head>
-  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="60">
-    
-    <div class="container-fluid" id="banner"></div>
+  
+  
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="180" data-default-mode="">
+    <div class="bd-header-announcement container-fluid" id="banner">
+      
+
+    </div>
 
     
-    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+    <nav class="bd-header navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="bd-header__inner container-xl">
 
   <div id="navbar-start">
     
     
+  
 
-<a class="navbar-brand" href="../../index.html">
-  <img src="../../_static/goma.png" class="logo" alt="logo">
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+    <img src="../../_static/goma.png" class="logo__image only-light" alt="Logo image">
+    <img src="../../_static/goma.png" class="logo__image only-dark" alt="Logo image">
+  
+  
 </a>
-
-
     
   </div>
 
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
+    <span class="fas fa-bars"></span>
   </button>
 
   
@@ -85,6 +97,14 @@
     <div id="navbar-end">
       
       <div class="navbar-end-item">
+        <span id="theme-switch" class="btn btn-sm btn-outline-primary navbar-btn rounded-circle">
+    <a class="theme-switch" data-mode="light"><i class="fas fa-sun"></i></a>
+    <a class="theme-switch" data-mode="dark"><i class="far fa-moon"></i></a>
+    <a class="theme-switch" data-mode="auto"><i class="fas fa-adjust"></i></a>
+</span>
+      </div>
+      
+      <div class="navbar-end-item">
         <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
       </ul>
       </div>
@@ -95,13 +115,13 @@
     </nav>
     
 
-    <div class="container-xl">
-      <div class="row">
+    <div class="bd-container container-xl">
+      <div class="bd-container__inner row">
           
-            
-            <!-- Only show if we have sidebars configured, else just a small margin  -->
-            <div class="col-12 col-md-3 bd-sidebar">
-              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../search.html" method="get">
+
+<!-- Only show if we have sidebars configured, else just a small margin  -->
+<div class="bd-sidebar-primary col-12 col-md-3 bd-sidebar">
+  <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../search.html" method="get">
   <i class="icon fas fa-search"></i>
   <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
 </form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
@@ -3092,19 +3112,20 @@
 
   </div>
 </nav>
-              </div>
-              <div class="sidebar-end-items">
-              </div>
-            </div>
-            
-          
+  </div>
+  <div class="sidebar-end-items">
+  </div>
+</div>
+
 
           
-          <div class="d-none d-xl-block col-xl-2 bd-toc">
-            
-              
-              <div class="toc-item">
-                
+
+
+<div class="bd-sidebar-secondary d-none d-xl-block col-xl-2 bd-toc">
+  
+    
+    <div class="toc-item">
+      
 <div class="tocsection onthispage mt-5 pt-1 pb-3">
     <i class="fas fa-list"></i> On this page
 </div>
@@ -4559,38 +4580,36 @@
 </ul>
 
 </nav>
-              </div>
-              
-              <div class="toc-item">
-                
-              </div>
-              
-            
-          </div>
-          
+    </div>
+    
+    <div class="toc-item">
+      
+    </div>
+    
+  
+</div>
+
 
           
           
-            
-          
-          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+          <div class="bd-content col-12 col-md-9 col-xl-7">
               
-              <div>
+              <article class="bd-article" role="main">
                 
   <section id="category-2-mesh-equations">
-<h1>Category 2: Mesh Equations<a class="headerlink" href="#category-2-mesh-equations" title="Permalink to this headline">#</a></h1>
+<h1>Category 2: Mesh Equations<a class="headerlink" href="#category-2-mesh-equations" title="Permalink to this heading">#</a></h1>
 <p>The boundary conditions in this section involve the mesh motion equations in LAGRANGIAN or
 ARBITRARY form (cf. <em>Mesh Motion</em> card). These conditions can be used to pin the mesh, specify
 its slope at some boundary intersection, apply a traction to a surface, etc. Several more boundary
 conditions that are applied to the mesh motion equations but include other problem physics are
 also available.</p>
 <section id="distng">
-<h2><strong>DISTNG</strong><a class="headerlink" href="#distng" title="Permalink to this headline">#</a></h2>
+<h2><strong>DISTNG</strong><a class="headerlink" href="#distng" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">DISTNG</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="nb">float</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="description-usage">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this heading">#</a></h3>
 <p><strong>(PCC/ROTATED MESH)</strong></p>
 <p>This boundary condition card is used to specify a distinguishing condition for mesh
 motion based on an isotherm, viz. the distinguishing condition forces the mesh
@@ -4602,10 +4621,6 @@ normal component automatically; in three dimensions it is suggested to put it on
 normal component, as specified by the <em>ROT</em> conditions. Definitions of the input
 parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 17%" />
-<col style="width: 83%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>DISTNG</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bcname&gt;).</p></td>
@@ -4629,7 +4644,7 @@ used, like <em>SPLINE</em> or <em>GEOM</em>.</p></td>
 </table>
 </section>
 <section id="examples">
-<h3><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this heading">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">DISTNG</span> <span class="n">SS</span> <span class="mi">123</span> <span class="mf">273.0</span>
 </pre></div>
@@ -4638,7 +4653,7 @@ used, like <em>SPLINE</em> or <em>GEOM</em>.</p></td>
 to the isotherm temperature of 273.0.</p>
 </section>
 <section id="technical-discussion">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this heading">#</a></h3>
 <p>The mathematical form of this distinguishing condition is as follows:</p>
 <div class="math notranslate nohighlight">
 \[T - T_{\mathrm{mp}} = 0\]</div>
@@ -4649,7 +4664,7 @@ temperatures. In three dimensions, usage needs to be completed with a companion 
 input card which directs the equation application of the condition.</p>
 </section>
 <section id="faqs">
-<h3><strong>FAQs</strong><a class="headerlink" href="#faqs" title="Permalink to this headline">#</a></h3>
+<h3><strong>FAQs</strong><a class="headerlink" href="#faqs" title="Permalink to this heading">#</a></h3>
 <p>Continuation Strategies for Free Surface Flows In free surface problems, there exists
 one or more boundaries or internal surfaces whose position(s) are unknown a <em>priori</em>. As
 such, the geometry of the problem becomes part of the problem and must be
@@ -4723,27 +4738,23 @@ way to start up a coating flow analysis may be to acquire a “template” devel
 a previous analysis of some closely related flows.</p>
 </section>
 <section id="references">
-<h3><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this heading">#</a></h3>
 <p>Allen Roach’s or Randy’s ESR tutorials. Perhaps these need to be put into the
 repository.</p>
 </section>
 </section>
 <section id="dxdydz">
-<h2><strong>DXDYDZ</strong><a class="headerlink" href="#dxdydz" title="Permalink to this headline">#</a></h2>
+<h2><strong>DXDYDZ</strong><a class="headerlink" href="#dxdydz" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="p">{</span><span class="n">DX</span> <span class="o">|</span> <span class="n">DY</span> <span class="o">|</span> <span class="n">DZ</span><span class="p">}</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="id1">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id1" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h3>
 <p><strong>(DC/MESH)</strong></p>
 <p>This boundary condition format is used to set a constant X, Y, or Z displacement. Each
 such specification is made on a separate input card. These boundary conditions must be
 applied to node sets. Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 20%" />
-<col style="width: 80%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>{DX | DY | DZ}</strong></p></td>
 <td><p>Two-character boundary condition name (&lt;bc_name&gt;) that
@@ -4782,7 +4793,7 @@ automatic continuation sequences.</em></p></td>
 </table>
 </section>
 <section id="id2">
-<h3><strong>Examples</strong><a class="headerlink" href="#id2" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id2" title="Permalink to this heading">#</a></h3>
 <p>Following is a sample card which applies an X-displacement boundary condition to the
 nodes in node set 100, specifically an X-Displacement of 1.0. These displacements are
 applied immediately to the unknowns and hence result in immediate mesh
@@ -4800,7 +4811,7 @@ situations, as the nodes are gradually moved as a part of the mesh deformation p
 sudden movements, as in the first example, can lead to folds in the mesh.</p>
 </section>
 <section id="id3">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id3" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id3" title="Permalink to this heading">#</a></h3>
 <p>Application of boundary conditions of the Dirichlet type on mesh motion requires
 different considerations than those on non-mesh degrees of freedom. Sudden
 displacements at a point, without any motion in the mesh surrounding that point, can
@@ -4810,7 +4821,7 @@ are used to move solid structures relative to a fluid, as in a roll-coating flow
 contained in the references below.</p>
 </section>
 <section id="id4">
-<h3><strong>References</strong><a class="headerlink" href="#id4" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id4" title="Permalink to this heading">#</a></h3>
 <p>GT-003.1: Roll coating templates and tutorial for GOMA and SEAMS, February 29,
 2000, P. R. Schunk and M. S. Stay</p>
 <p>GT-005.3: THE NEW TOTAL-ARBITRARY-LAGRANGIAN-EULERIAN (TALE)
@@ -4819,12 +4830,12 @@ CAPABILITY and its applicability to coating with/on deformable media, August 6,
 </section>
 </section>
 <section id="dxuser-dyuser-dzuser">
-<h2><strong>DXUSER DYUSER DZUSER</strong><a class="headerlink" href="#dxuser-dyuser-dzuser" title="Permalink to this headline">#</a></h2>
+<h2><strong>DXUSER DYUSER DZUSER</strong><a class="headerlink" href="#dxuser-dyuser-dzuser" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="p">{</span><span class="n">DXUSER</span> <span class="o">|</span> <span class="n">DYUSER</span> <span class="o">|</span> <span class="n">DZUSER</span><span class="p">}</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id5">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id5" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id5" title="Permalink to this heading">#</a></h3>
 <p><strong>(PCC/MESH)</strong></p>
 <p>This boundary condition format is used to set a constant X, Y, or Z displacement as a
 function of any independent variable available in Goma. These boundary conditions
@@ -4834,10 +4845,6 @@ deck each such specification is made on a separate input card. These boundary
 conditions must be applied to side sets. Definitions of the input parameters are as
 follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 35%" />
-<col style="width: 65%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>{DX_USER | DY_USER | DZ_USER}</strong></p></td>
 <td><p>Seven-character boundary condition
@@ -4871,7 +4878,7 @@ array to the appropriate C function.</p></td>
 </table>
 </section>
 <section id="id6">
-<h3><strong>Examples</strong><a class="headerlink" href="#id6" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id6" title="Permalink to this heading">#</a></h3>
 <p>Following is a sample card which applies an X-displacement boundary condition to the
 nodes in node set 100, with a functional form set by the user and parameterized by the
 single floating point number . These displacements are applied immediately to the
@@ -4882,17 +4889,17 @@ unknowns and hence result in immediate mesh displacement from the initial state.
 <p>Please consult the user-definition subroutines for examples.</p>
 </section>
 <section id="id7">
-<h3><strong>References</strong><a class="headerlink" href="#id7" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id7" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="dxyzdistng">
-<h2><strong>DXYZDISTNG</strong><a class="headerlink" href="#dxyzdistng" title="Permalink to this headline">#</a></h2>
+<h2><strong>DXYZDISTNG</strong><a class="headerlink" href="#dxyzdistng" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="p">{</span><span class="n">DXDISTNG</span> <span class="o">|</span> <span class="n">DYDISTNG</span> <span class="o">|</span> <span class="n">DZDISTNG</span><span class="p">}</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="nb">float</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id8">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id8" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id8" title="Permalink to this heading">#</a></h3>
 <p><strong>(PCC/MESH)</strong></p>
 <p>This boundary condition card is used to specify a distinguishing condition for mesh
 motion based on an isotherm, viz. the distinguishing condition forces the mesh
@@ -4906,10 +4913,6 @@ question is basically oriented so that the normal vector is mostly in the positi
 negative Y-direction, then <em>DYDISTNG</em> should be chosen. Definitions of the input
 parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 37%" />
-<col style="width: 63%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>{DXDISTNG | DYDISTNG | DZDISTNG}</strong></p></td>
 <td><p>Eight-character boundary condition name (&lt;bc_name&gt;)
@@ -4942,7 +4945,7 @@ boundary conditions be used.</p></td>
 </table>
 </section>
 <section id="id9">
-<h3><strong>Examples</strong><a class="headerlink" href="#id9" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id9" title="Permalink to this heading">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">DYDISTNG</span> <span class="n">SS</span> <span class="mi">123</span> <span class="mf">273.0</span>
 </pre></div>
@@ -4952,7 +4955,7 @@ to the isotherm temperature of 273.0. Most importantly, the y-component of the m
 equation residuals is replaced by this condition.</p>
 </section>
 <section id="id10">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id10" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id10" title="Permalink to this heading">#</a></h3>
 <p>The mathematical form of this distinguishing condition is as follows:</p>
 <div class="math notranslate nohighlight">
 \[T - T_{\mathrm{mp}} = 0\]</div>
@@ -4967,12 +4970,12 @@ rotations are not actually performed.</p>
 </section>
 </section>
 <section id="splinexyz-geomxyz">
-<h2><strong>SPLINEXYZ/GEOMXYZ</strong><a class="headerlink" href="#splinexyz-geomxyz" title="Permalink to this headline">#</a></h2>
+<h2><strong>SPLINEXYZ/GEOMXYZ</strong><a class="headerlink" href="#splinexyz-geomxyz" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="p">{</span><span class="n">bc_name</span><span class="p">}</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">floatlist</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="id11">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id11" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id11" title="Permalink to this heading">#</a></h3>
 <p><strong>(PCC/MESH)</strong></p>
 <p>This card is used to specify a general surface (solid) boundary description for ALE (or
 in special cases LAGRANGIAN) type mesh motion (see <em>Mesh Motion</em> card). These
@@ -4988,10 +4991,6 @@ exactly the same condition. SPLINE* usage is being deprecated. Note that it take
 arbitrary number of floating-point parameters, depending on the user’s needs.</p>
 <p>Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 18%" />
-<col style="width: 82%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p>{bc_name}</p></td>
 <td><p>Boundary condition name that defines the general surface;
@@ -5022,7 +5021,7 @@ user-defined routine fnc.</p></td>
 </table>
 </section>
 <section id="id12">
-<h3><strong>Examples</strong><a class="headerlink" href="#id12" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id12" title="Permalink to this heading">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">GEOMZ</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">1.0</span> <span class="mf">100.</span> <span class="mf">20.0</span> <span class="mf">1001.0</span> <span class="mf">32.0</span>
 </pre></div>
@@ -5032,7 +5031,7 @@ points to the boundary defined by side set 10. Most importantly, the condition r
 the Z-component of the momentum equation.</p>
 </section>
 <section id="id13">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id13" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id13" title="Permalink to this heading">#</a></h3>
 <p>The mathematical form of this distinguishing condition is arbitrary and is specified by
 the user in the fnc routine in user_bc.c. Derivatives of the user-specified function
 must also be provided so as to maintain strong convergence in the Newton iteration
@@ -5044,12 +5043,12 @@ performed.</p>
 </section>
 </section>
 <section id="spline-geom">
-<h2><strong>SPLINE/GEOM</strong><a class="headerlink" href="#spline-geom" title="Permalink to this headline">#</a></h2>
+<h2><strong>SPLINE/GEOM</strong><a class="headerlink" href="#spline-geom" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="p">{</span><span class="n">SPLINE</span><span class="o">|</span><span class="n">GEOM</span><span class="p">}</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">floatlist</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="id14">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id14" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id14" title="Permalink to this heading">#</a></h3>
 <p><strong>(PCC/ROTATED MESH)</strong></p>
 <p>This card is used to specify a general surface (solid) boundary description for ALE (or
 in special cases LAGRANGIAN) type mesh motion (see <em>Mesh Motion</em> card). Like most
@@ -5064,10 +5063,6 @@ hence as of the time of this writing we are deprecating the use of SPLINE. Note 
 takes an arbitrary number of floating-point parameters, depending on the user’s needs.</p>
 <p>Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 18%" />
-<col style="width: 82%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>SPLINE/GEOM</strong></p></td>
 <td><p>Name of the boundary condition &lt;bc_name&gt;).</p></td>
@@ -5089,7 +5084,7 @@ user-defined routine fnc.</p></td>
 </table>
 </section>
 <section id="id15">
-<h3><strong>Examples</strong><a class="headerlink" href="#id15" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id15" title="Permalink to this heading">#</a></h3>
 <p>The following sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SPLINE</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">1.0</span> <span class="mf">100.</span> <span class="mf">20.0</span> <span class="mf">1001.0</span> <span class="mf">32.0</span>
 </pre></div>
@@ -5098,7 +5093,7 @@ user-defined routine fnc.</p></td>
 floating point values, to the boundary defined by side set 10.</p>
 </section>
 <section id="id16">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id16" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id16" title="Permalink to this heading">#</a></h3>
 <p>This condition, like <em>DISTNG, PLANE</em>, and others that can be applied to geometry, is
 applied to the normal component of the mesh motion equations along a boundary in
 two dimensions; in three dimensions application needs to be further directed with the
@@ -5107,12 +5102,12 @@ user_bc.c in the fnc routine and companion derivative routines.</p>
 </section>
 </section>
 <section id="planexyz">
-<h2><strong>PLANEXYZ</strong><a class="headerlink" href="#planexyz" title="Permalink to this headline">#</a></h2>
+<h2><strong>PLANEXYZ</strong><a class="headerlink" href="#planexyz" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="p">{</span><span class="n">PLANEX</span> <span class="o">|</span> <span class="n">PLANEY</span> <span class="o">|</span> <span class="n">PLANEZ</span><span class="p">}</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">floatlist</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id17">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id17" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id17" title="Permalink to this heading">#</a></h3>
 <p><strong>(PCC/ MESH)</strong></p>
 <p>This boundary condition card is used to specify a planar surface (solid) boundary
 description as a replacement on the X, Y, or Z-component (<em>PLANEX, PLANEY,
@@ -5125,10 +5120,6 @@ condition card (see PLANE for description), but is applied to the mesh motion
 equations without rotation. Definitions of the input parameters are given below; note
 that &lt;floatlist&gt; has four parameters corresponding to the four constants in the equation:</p>
 <table class="table">
-<colgroup>
-<col style="width: 34%" />
-<col style="width: 66%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>{PLANEX | PLANEY | PLANEZ}</strong></p></td>
 <td><p>Boundary condition name (&lt;bc_name&gt;) where:</p>
@@ -5164,7 +5155,7 @@ in EXODUS II) in the problem domain.</p></td>
 </table>
 </section>
 <section id="id18">
-<h3><strong>Examples</strong><a class="headerlink" href="#id18" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id18" title="Permalink to this heading">#</a></h3>
 <p>Following is a sample input card for a predominantly X-directed surface (viz, as planar
 surface whose normal has a dominant component in the positive or negative X
 direction):</p>
@@ -5175,7 +5166,7 @@ direction):</p>
 to the <em>mesh1</em> equation on EXODUS II side set number 101.</p>
 </section>
 <section id="id19">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id19" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id19" title="Permalink to this heading">#</a></h3>
 <p>These conditions are sometimes used instead of the more general <em>PLANE</em> boundary
 condition in situations where <em>ROTATION</em> (see <em>ROT</em> command section) leads to poor
 convergence of the matrix solvers or is not desirable for some other reason. In general,
@@ -5185,7 +5176,7 @@ mesh stress equation residuals. Full understanding of the boundary rotation conc
 necessary to understand these reasons (see <em>Rotation Specifications</em>).</p>
 </section>
 <section id="id20">
-<h3><strong>References</strong><a class="headerlink" href="#id20" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id20" title="Permalink to this heading">#</a></h3>
 <p>GT-001.4: GOMA and SEAMS tutorial for new users, February 18, 2002, P. R. Schunk
 and D. A. Labreche</p>
 <p>GT-007.2: Tutorial on droplet on incline problem, July 30, 1999, T. A. Baer</p>
@@ -5194,12 +5185,12 @@ and D. A. Labreche</p>
 </section>
 </section>
 <section id="plane">
-<h2><strong>PLANE</strong><a class="headerlink" href="#plane" title="Permalink to this headline">#</a></h2>
+<h2><strong>PLANE</strong><a class="headerlink" href="#plane" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">PLANE</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">floatlist</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id21">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id21" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id21" title="Permalink to this heading">#</a></h3>
 <p><strong>(PCC/ROTATED MESH)</strong></p>
 <p>This card is used to specify a surface (solid) boundary position of a planar surface. It is
 applied as a rotated condition on the mesh equations (see <em>EQ</em> cards <em>mesh1, mesh2
@@ -5209,10 +5200,6 @@ mesh3</em>). The form of this equation is given by</p>
 <p>Definitions of the input parameters are given below; note that &lt;floatlist&gt; has four
 parameters corresponding to the four constants in the equation:</p>
 <table class="table">
-<colgroup>
-<col style="width: 20%" />
-<col style="width: 80%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>PLANE</strong></p></td>
 <td><p>Name of the boundary condition name (&lt;bc_name&gt;).</p></td>
@@ -5242,7 +5229,7 @@ EXODUS II) in the problem domain.</p></td>
 </table>
 </section>
 <section id="id22">
-<h3><strong>Examples</strong><a class="headerlink" href="#id22" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id22" title="Permalink to this heading">#</a></h3>
 <p>Following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">PLANE</span> <span class="n">SS</span> <span class="mi">3</span> <span class="mf">0.0</span> <span class="mf">1.0</span> <span class="mf">0.0</span> <span class="o">-</span><span class="mf">0.3</span>
 </pre></div>
@@ -5251,7 +5238,7 @@ EXODUS II) in the problem domain.</p></td>
 equation <span class="math notranslate nohighlight">\(f(x, y, z, t) = y – 0.3 = 0\)</span> .</p>
 </section>
 <section id="id23">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id23" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id23" title="Permalink to this heading">#</a></h3>
 <p>This, like most boundary conditions on geometry with arbitrary grid motion, is applied
 to the weighted residuals of the mesh equation rotated into the normal-tangential basis
 on the boundary. Specifically, this boundary condition displaces the normal component
@@ -5262,19 +5249,19 @@ for mesh to slide freely in the tangential direction of the plane surface.</p>
 convenient to use when one desires to move the plane with time normal to itself.</p>
 </section>
 <section id="id24">
-<h3><strong>References</strong><a class="headerlink" href="#id24" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id24" title="Permalink to this heading">#</a></h3>
 <p>GT-001.4: GOMA and SEAMS tutorial for new users, February 18, 2002, P. R. Schunk
 and D. A. Labreche</p>
 <p>GT-013.2: Computations for slot coater edge section, October 10, 2002, T.A. Baer</p>
 </section>
 </section>
 <section id="moving-plane">
-<h2><strong>MOVING_PLANE</strong><a class="headerlink" href="#moving-plane" title="Permalink to this headline">#</a></h2>
+<h2><strong>MOVING_PLANE</strong><a class="headerlink" href="#moving-plane" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">MOVING_PLANE</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">floatlist</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id25">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id25" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id25" title="Permalink to this heading">#</a></h3>
 <p><strong>(PCC/ROTATED MESH)</strong></p>
 <p>The <em>MOVING_PLANE</em> card is used to specify a surface (solid) boundary position
 versus time for a planar surface (cf. <em>PLANE</em> boundary condition card). It is applied as a
@@ -5288,10 +5275,6 @@ form of the equation is given by</p>
 <p>Definitions of the input parameters are given below; note that &lt;floatlist&gt; has seven
 parameters corresponding to the seven constants in the above equations:</p>
 <table class="table">
-<colgroup>
-<col style="width: 27%" />
-<col style="width: 73%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>MOVING_ PLANE</strong></p></td>
 <td><p>Name of the boundary condition name (&lt;bc_name&gt;).</p></td>
@@ -5330,7 +5313,7 @@ EXODUS II) in the problem domain.</p></td>
 </table>
 </section>
 <section id="id26">
-<h3><strong>Examples</strong><a class="headerlink" href="#id26" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id26" title="Permalink to this heading">#</a></h3>
 <p>The boundary condition card</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">MOVING_PLANE</span> <span class="n">SS</span> <span class="mi">3</span> <span class="mf">0.</span> <span class="mf">1.</span> <span class="mf">0.</span> <span class="o">-</span><span class="mf">0.3</span> <span class="mf">0.1</span> <span class="mf">0.0</span> <span class="mf">0.0</span>
 </pre></div>
@@ -5341,7 +5324,7 @@ the position of all nodes on the plane will follow:</p>
 \[f(x, y, z, t) = y - 0.3 + 0.1t = 0\]</div>
 </section>
 <section id="id27">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id27" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id27" title="Permalink to this heading">#</a></h3>
 <p>This, like most boundary conditions on geometry with arbitrary grid motion, is applied
 to the weighted residuals of the mesh equation rotated into the normal-tangential basis
 on the boundary. Specifically, this boundary condition displaces the normal component
@@ -5354,12 +5337,12 @@ normal to itself.</p>
 </section>
 </section>
 <section id="slopexyz">
-<h2><strong>SLOPEXYZ</strong><a class="headerlink" href="#slopexyz" title="Permalink to this headline">#</a></h2>
+<h2><strong>SLOPEXYZ</strong><a class="headerlink" href="#slopexyz" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="p">{</span><span class="n">SLOPEX</span> <span class="o">|</span> <span class="n">SLOPEY</span> <span class="o">|</span> <span class="n">SLOPEZ</span><span class="p">}</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">floatlist</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id28">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id28" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id28" title="Permalink to this heading">#</a></h3>
 <p><strong>(SIC/MESH)</strong></p>
 <p>This boundary condition card applies a slope at the boundary of a <em>LAGRANGIAN,
 TALE</em>, or <em>ARBITRARY</em> solid (see <em>Mesh Motion</em> card) such that the normal vector to the
@@ -5368,10 +5351,6 @@ surface is colinear with the vector specified as input, viz
 is the vector specified component-wise via the three &lt;floatlist&gt; parameters on the input
 card. Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 31%" />
-<col style="width: 69%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>{SLOPEX | SLOPEY | SLOPEZ}</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;).</p></td>
@@ -5398,7 +5377,7 @@ EXODUS II) in the problem domain.</p></td>
 </table>
 </section>
 <section id="id29">
-<h3><strong>Examples</strong><a class="headerlink" href="#id29" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id29" title="Permalink to this heading">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SLOPEX</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">1.0</span> <span class="mf">1.0</span> <span class="mf">0.0</span>
 </pre></div>
@@ -5409,19 +5388,19 @@ momentum equations such that the outward facing surface normal vector along side
 of the mesh residual equations.</p>
 </section>
 <section id="id30">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id30" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id30" title="Permalink to this heading">#</a></h3>
 <p>See discussion for <em>BC</em> card <em>SLOPE</em>. The only difference in these conditions and the
 <em>SLOPE</em> conditions, is that the latter invokes rotation of the vector mesh residual
 equations on the boundary.</p>
 </section>
 </section>
 <section id="slope">
-<h2><strong>SLOPE</strong><a class="headerlink" href="#slope" title="Permalink to this headline">#</a></h2>
+<h2><strong>SLOPE</strong><a class="headerlink" href="#slope" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SLOPE</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float3</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id31">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id31" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id31" title="Permalink to this heading">#</a></h3>
 <p><strong>(SIC/ROTATED MESH)</strong></p>
 <p>This boundary condition card applies a slope at the boundary of a <em>LAGRANGIAN,
 TALE</em>, or <em>ARBITRARY</em> solid (see <em>Mesh Motion</em> card) such that the normal vector to the
@@ -5429,10 +5408,6 @@ surface is colinear with the vector specified as input, viz <span class="math no
 the vector specified component-wise via the three &lt;float&gt; parameters on the input card.
 Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 13%" />
-<col style="width: 87%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>SLOPE</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;).</p></td>
@@ -5459,7 +5434,7 @@ EXODUS II) in the problem domain.</p></td>
 </table>
 </section>
 <section id="id32">
-<h3><strong>Examples</strong><a class="headerlink" href="#id32" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id32" title="Permalink to this heading">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SLOPE</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">1.0</span> <span class="mf">1.0</span> <span class="mf">0.0</span>
 </pre></div>
@@ -5469,7 +5444,7 @@ momentum equations such that the outward facing surface normal vector along side
 10 is colinear with the vector [1.0, 1.0, 0.0].</p>
 </section>
 <section id="id33">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id33" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id33" title="Permalink to this heading">#</a></h3>
 <p>This condition, although not often used, allows for a planar boundary condition (cf.
 <em>PLANE, PLANEX</em>, etc.) to be specified in terms of a slope, rather than a specific
 equation. Clearly, at some point along the surface (most likely at the ends), the
@@ -5483,12 +5458,12 @@ description with the <em>ROT</em> cards.</p>
 </section>
 </section>
 <section id="kinematic">
-<h2><strong>KINEMATIC</strong><a class="headerlink" href="#kinematic" title="Permalink to this headline">#</a></h2>
+<h2><strong>KINEMATIC</strong><a class="headerlink" href="#kinematic" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">KINEMATIC</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">integer</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="id34">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id34" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id34" title="Permalink to this heading">#</a></h3>
 <p><strong>(SIC/ROTATED MESH)</strong></p>
 <p>This boundary condition card is used as a distinguishing condition on the mesh motion
 equations (viz. <em>mesh1, mesh2</em>, and <em>mesh3</em> under the <em>EQ</em> card). It enforces the boundary
@@ -5501,10 +5476,6 @@ Specifications</em>). The application of this condition should be compared with
 <em>KINEMATIC_PETROV</em> and <em>KINEMATIC_COLLOC</em>.</p>
 <p>Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 19%" />
-<col style="width: 81%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>KINEMATIC</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;).</p></td>
@@ -5530,7 +5501,7 @@ which to apply the boundary condition.</p></td>
 </table>
 </section>
 <section id="id35">
-<h3><strong>Examples</strong><a class="headerlink" href="#id35" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id35" title="Permalink to this heading">#</a></h3>
 <p>The following sample card</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">KINEMATIC</span> <span class="n">SS</span> <span class="mi">7</span> <span class="mf">0.0</span>
 </pre></div>
@@ -5539,7 +5510,7 @@ which to apply the boundary condition.</p></td>
 component of the mesh-stress equation on the boundary defined by side set 7.</p>
 </section>
 <section id="id36">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id36" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id36" title="Permalink to this heading">#</a></h3>
 <p>The functional form of the kinematic boundary condition is:</p>
 <div class="math notranslate nohighlight">
 \[\underline{n} \cdot \left( \underline{v} - \underline{v}_s \right) = \dot{m}\]</div>
@@ -5550,23 +5521,23 @@ position equation, and hence is considered as a distinguishing condition on the 
 of the mesh relative to the fluid domain.</p>
 </section>
 <section id="id37">
-<h3><strong>FAQs</strong><a class="headerlink" href="#id37" title="Permalink to this headline">#</a></h3>
+<h3><strong>FAQs</strong><a class="headerlink" href="#id37" title="Permalink to this heading">#</a></h3>
 <p>See the FAQ pertaining to “Continuation Strategies for Free Surface Flows” on the
 <em>DISTNG</em> boundary condition card.</p>
 </section>
 <section id="id38">
-<h3><strong>References</strong><a class="headerlink" href="#id38" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id38" title="Permalink to this heading">#</a></h3>
 <p>GT-001.4: GOMA and SEAMS tutorial for new users, February 18, 2002, P. R. Schunk
 and D. A. Labreche</p>
 </section>
 </section>
 <section id="kinematic-petrov">
-<h2><strong>KINEMATIC_PETROV</strong><a class="headerlink" href="#kinematic-petrov" title="Permalink to this headline">#</a></h2>
+<h2><strong>KINEMATIC_PETROV</strong><a class="headerlink" href="#kinematic-petrov" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">KINEMATIC_PETROV</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">integer</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="id39">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id39" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id39" title="Permalink to this heading">#</a></h3>
 <p><strong>(SIC/ROTATED MESH)</strong></p>
 <p>This boundary condition card is used as a distinguishing condition on the mesh motion
 equations (viz. <em>mesh1, mesh2</em>, and <em>mesh3</em> under the <em>EQ</em> card). It enforces the boundary
@@ -5578,10 +5549,6 @@ boundary condition needs to be further directed with the <em>ROT</em> cards (see
 Specifications</em>). Please consult the Technical Discussion for important inofrmation.</p>
 <p>Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 24%" />
-<col style="width: 76%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>KINEMATIC_PETROV</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;).</p></td>
@@ -5607,7 +5574,7 @@ which to apply the boundary condition.</p></td>
 </table>
 </section>
 <section id="id40">
-<h3><strong>Examples</strong><a class="headerlink" href="#id40" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id40" title="Permalink to this heading">#</a></h3>
 <p>The following sample card</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">KINEMATIC_PETROV</span> <span class="n">SS</span> <span class="mi">7</span> <span class="mf">0.0</span>
 </pre></div>
@@ -5616,7 +5583,7 @@ which to apply the boundary condition.</p></td>
 component of the mesh-stress equation to the boundary defined by side set 7.</p>
 </section>
 <section id="id41">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id41" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id41" title="Permalink to this heading">#</a></h3>
 <p><strong>Important note</strong>: This condition is actually the same as the <em>KINEMATIC</em> condition but
 is applied with different numerics for special cases. Specifically, rather than treated in a
 Galerkin fashion with a weighting function equal to the interpolation function for
@@ -5629,12 +5596,12 @@ this to the <em>KINEMATIC</em> boundary condition description.</p>
 </section>
 </section>
 <section id="kinematic-colloc">
-<h2><strong>KINEMATIC_COLLOC</strong><a class="headerlink" href="#kinematic-colloc" title="Permalink to this headline">#</a></h2>
+<h2><strong>KINEMATIC_COLLOC</strong><a class="headerlink" href="#kinematic-colloc" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">KINEMATIC_COLLOC</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id42">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id42" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id42" title="Permalink to this heading">#</a></h3>
 <p><strong>(PCC/ROTATED MESH)</strong></p>
 <p>This boundary condition card is used as a distinguishing condition on the mesh motion
 equations (viz. <em>mesh1, mesh2</em>, and <em>mesh3</em> under the <em>EQ</em> card). It enforces the boundary
@@ -5645,10 +5612,6 @@ rotated into normal-tangential form. In three dimensions the application of this
 boundary condition needs to be further directed with the <em>ROT</em> cards (see <em>Rotation
 Specifications</em>). Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 26%" />
-<col style="width: 74%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>KINEMATIC_COLLOC</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;).</p></td>
@@ -5670,7 +5633,7 @@ the free boundary.</p></td>
 </table>
 </section>
 <section id="id43">
-<h3><strong>Examples</strong><a class="headerlink" href="#id43" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id43" title="Permalink to this heading">#</a></h3>
 <p>The following sample card</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">KINEMATIC_COLLOC</span> <span class="n">SS</span> <span class="mi">7</span> <span class="mf">0.0</span>
 </pre></div>
@@ -5679,7 +5642,7 @@ the free boundary.</p></td>
 component of the mesh-stress equation to the boundary defined by side set 7.</p>
 </section>
 <section id="id44">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id44" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id44" title="Permalink to this heading">#</a></h3>
 <p><strong>Important note</strong>: This condition is actually the same as the <em>KINEMATIC</em> condition but
 is applied with different numerics for special cases. Specifically, rather than treated in a
 Galerkin fashion, with a weighting function equal to the interpolation function for
@@ -5689,12 +5652,12 @@ cases in which Galerkin’s method is often not the best approach.</p>
 </section>
 </section>
 <section id="kinematic-disc">
-<h2><strong>KINEMATIC_DISC</strong><a class="headerlink" href="#kinematic-disc" title="Permalink to this headline">#</a></h2>
+<h2><strong>KINEMATIC_DISC</strong><a class="headerlink" href="#kinematic-disc" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">KINEMATIC_DISC</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id45">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id45" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id45" title="Permalink to this heading">#</a></h3>
 <p><strong>(SIC/ROTATED MESH)</strong></p>
 <p>This boundary condition card is used as a distinguishing condition on the mesh motion
 equations (viz. <em>mesh1, mesh2</em>, and <em>mesh3</em> under the <em>EQ</em> card) in the special case of an
@@ -5713,10 +5676,6 @@ Q2_D interpolation type, indicating a discontinuous variable treatment at the in
 (see <em>EQ</em> card).</p>
 <p>Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 24%" />
-<col style="width: 76%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>KINEMATIC_DISC</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;).</p></td>
@@ -5739,7 +5698,7 @@ for external boundaries.</p></td>
 </table>
 </section>
 <section id="id46">
-<h3><strong>Examples</strong><a class="headerlink" href="#id46" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id46" title="Permalink to this heading">#</a></h3>
 <p>The following sample card</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">KINEMATIC_DISC</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">0.0</span>
 </pre></div>
@@ -5748,7 +5707,7 @@ for external boundaries.</p></td>
 from both abutting materials) to enforce the overall conservation of mass exchange.</p>
 </section>
 <section id="id47">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id47" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id47" title="Permalink to this heading">#</a></h3>
 <p>This boundary condition is typically applied to multicomponent two-phase flows that
 have rapid mass exchange between phases, rapid enough to induce a diffusion velocity
 at the interface. The best example of this is rapid evaporation of a liquid component
@@ -5766,18 +5725,18 @@ degrees of freedom at the interface in question (see for example boundary condit
 <em>VL_EQUIL_PSEUDORXN</em>).</p>
 </section>
 <section id="id48">
-<h3><strong>References</strong><a class="headerlink" href="#id48" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id48" title="Permalink to this heading">#</a></h3>
 <p>GTM-015.1: Implementation Plan for Upgrading Boundary Conditions at
 Discontinuous-Variable Interfaces, January 8, 2001, H. K. Moffat</p>
 </section>
 </section>
 <section id="kinematic-edge">
-<h2><strong>KINEMATIC_EDGE</strong><a class="headerlink" href="#kinematic-edge" title="Permalink to this headline">#</a></h2>
+<h2><strong>KINEMATIC_EDGE</strong><a class="headerlink" href="#kinematic-edge" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">KINEMATIC_EDGE</span> <span class="o">&lt;</span><span class="n">bc_id1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">bc_id2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id49">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id49" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id49" title="Permalink to this heading">#</a></h3>
 <p><strong>(SIC/ROTATED MESH)</strong></p>
 <p>This boundary condition card is used as a distinguishing condition on the mesh motion
 equations (viz. <em>mesh1, mesh2</em>, and <em>mesh3</em> under the <em>EQ</em> card). It enforces the boundary
@@ -5788,10 +5747,6 @@ and a geometrical solid, the intersection of which is partially characterized by
 the binormal tangent as described below.</p>
 <p>Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 21%" />
-<col style="width: 79%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>KINEMATIC_EDGE</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;).</p></td>
@@ -5820,7 +5775,7 @@ the free boundary.</p></td>
 </table>
 </section>
 <section id="id50">
-<h3><strong>Examples</strong><a class="headerlink" href="#id50" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id50" title="Permalink to this heading">#</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">KINEMATIC_SPECIES</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mi">2</span> <span class="mf">0.0</span>
 </pre></div>
 </div>
@@ -5830,7 +5785,7 @@ application of this condition is the one in the plane of side-set 10, viz. it is
 the surface delineated by side set 10.</p>
 </section>
 <section id="id51">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id51" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id51" title="Permalink to this heading">#</a></h3>
 <p>The functional form of the kinematic boundary condition is:</p>
 <div class="math notranslate nohighlight">
 \[\underline{n}_{\mathrm{cl}} \cdot \left( \underline{v} - \underline{v}_s \right) = 0\]</div>
@@ -5843,17 +5798,17 @@ three dimensions, and needs to be directed with <em>ROT</em> conditions for prop
 </figure>
 </section>
 <section id="id52">
-<h3><strong>References</strong><a class="headerlink" href="#id52" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id52" title="Permalink to this heading">#</a></h3>
 <p>GT-007.2: Tutorial on droplet on incline problem, July 30, 1999, T. A. Baer</p>
 </section>
 </section>
 <section id="kinematic-species">
-<h2><strong>KINEMATIC_SPECIES</strong><a class="headerlink" href="#kinematic-species" title="Permalink to this headline">#</a></h2>
+<h2><strong>KINEMATIC_SPECIES</strong><a class="headerlink" href="#kinematic-species" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">KINEMATIC_SPECIES</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id53">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id53" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id53" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/MASS)</strong></p>
 <p>This boundary condition card is used to impose an interphase species flux continuity
 constraint on species components undergoing phase change between two materials.
@@ -5863,10 +5818,6 @@ discontinuous concentration at the interface. This condition should be used in
 conjunction with <em>VL_EQUIL</em> tie condition for each species. Definitions of the input
 parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 27%" />
-<col style="width: 73%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>KINEMATIC_SPECIES</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;).</p></td>
@@ -5894,7 +5845,7 @@ at the interface, and to thermal contact resistance type problems. The best exam
 this is rapid evaporation of a liquid component into a gas.</p>
 </section>
 <section id="id54">
-<h3><strong>Examples</strong><a class="headerlink" href="#id54" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id54" title="Permalink to this heading">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">KINEMATIC_SPECIES</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mi">2</span> <span class="mf">0.0</span>
 </pre></div>
@@ -5907,7 +5858,7 @@ materials (i.e., must be attached to both materials), each deploying basis funct
 interpolation of type <strong>Q1_D</strong> or <strong>Q2_D</strong>.</p>
 </section>
 <section id="id55">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id55" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id55" title="Permalink to this heading">#</a></h3>
 <p>The condition only applies to interphase mass transfer problems with discontinuous (or
 multivalued) variables at an interface, and it must be invoked on fields that employ the
 <strong>Q1_D</strong> or <strong>Q2_D</strong> interpolation functions to “tie” together or constrain the extra degrees
@@ -5922,7 +5873,7 @@ come from a Dirichlet boundary condition like (BC =) Y, or an equilibrium bounda
 condition like <em>VL_EQUIL</em>.</p>
 </section>
 <section id="id56">
-<h3><strong>References</strong><a class="headerlink" href="#id56" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id56" title="Permalink to this heading">#</a></h3>
 <p>Schunk, P. R. and Rao, R. R. 1994. “Finite element analysis of multicomponent twophase
 flows with interphase mass and momentum transport”, Int. J. Numer. Meth.
 Fluids, 18, 821-842.</p>
@@ -5931,22 +5882,18 @@ December 10, 1998, A. C. Sun</p>
 </section>
 </section>
 <section id="kin-displacement-petrov">
-<h2><strong>KIN_DISPLACEMENT_PETROV</strong><a class="headerlink" href="#kin-displacement-petrov" title="Permalink to this headline">#</a></h2>
+<h2><strong>KIN_DISPLACEMENT_PETROV</strong><a class="headerlink" href="#kin-displacement-petrov" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">KIN_DISPLACEMENT_PETROV</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id57">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id57" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id57" title="Permalink to this heading">#</a></h3>
 <p><strong>(SIC/ROTATED MESH)</strong></p>
 <p>The <em>KIN_DISPLACEMENT_PETROV</em> boundary condition is exactly the same as
 <em>KIN_DISPLACEMENT</em> except in the way in which it is applied numerically to a
 problem. See <em>KIN_DISPLACEMENT</em> for a full discussion.</p>
 <p>Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 30%" />
-<col style="width: 70%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>KIN_DISPLACEMENT_PETROV</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;).</p></td>
@@ -5972,7 +5919,7 @@ issues and implementation, consult the description for the fluid-counterpart
 <em>KINEMATIC_PETROV</em> card.</p>
 </section>
 <section id="id58">
-<h3><strong>Examples</strong><a class="headerlink" href="#id58" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id58" title="Permalink to this heading">#</a></h3>
 <p>The following sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">KIN_DISPLACEMENT_PETROV</span> <span class="n">SS</span> <span class="mi">7</span> <span class="mi">12</span>
 </pre></div>
@@ -5983,31 +5930,27 @@ defined by side set 7. The element block ID number which shares this boundary wi
 neighboring <em>TALE</em> or fluid <em>ARBITRARY</em> region is 12.</p>
 </section>
 <section id="id59">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id59" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id59" title="Permalink to this heading">#</a></h3>
 <p>See discussions on the <em>KINEMATIC_PETROV</em> and <em>KIN_DISPLACEMENT</em> cards.</p>
 </section>
 <section id="id60">
-<h3><strong>References</strong><a class="headerlink" href="#id60" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id60" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="kin-displacement-colloc">
-<h2><strong>KIN_DISPLACEMENT_COLLOC</strong><a class="headerlink" href="#kin-displacement-colloc" title="Permalink to this headline">#</a></h2>
+<h2><strong>KIN_DISPLACEMENT_COLLOC</strong><a class="headerlink" href="#kin-displacement-colloc" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">KIN_DISPLACEMENT_COLLOC</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id61">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id61" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id61" title="Permalink to this heading">#</a></h3>
 <p><strong>(SIC/ROTATED MESH)</strong></p>
 <p>The <em>KIN_DISPLACEMENT_COLLOC</em> boundary condition is exactly the same as
 <em>KIN_DISPLACEMENT</em> except in the way in which it is applied numerically to a
 problem. See <em>KIN_DISPLACEMENT</em> for a full discussion.</p>
 <p>Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 30%" />
-<col style="width: 70%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>KIN_DISPLACEMENT_COLLOC</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;).</p></td>
@@ -6033,7 +5976,7 @@ issues and implementation, consult the description for the fluid-counterpart
 <em>KINEMATIC_COLLOC</em> card.</p>
 </section>
 <section id="id62">
-<h3><strong>Examples</strong><a class="headerlink" href="#id62" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id62" title="Permalink to this heading">#</a></h3>
 <p>The following sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">KIN_DISPLACEMENT_COLLOC</span> <span class="n">SS</span> <span class="mi">7</span> <span class="mi">12</span>
 </pre></div>
@@ -6044,21 +5987,21 @@ defined by side set 7. The element block ID number which shares this boundary wi
 neighboring <em>TALE</em> or fluid <em>ARBITRARY</em> region is 12.</p>
 </section>
 <section id="id63">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id63" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id63" title="Permalink to this heading">#</a></h3>
 <p>See discussions on the <em>KINEMATIC_COLLOC</em> and <em>KIN_DISPLACEMENT</em> cards.</p>
 </section>
 <section id="id64">
-<h3><strong>References</strong><a class="headerlink" href="#id64" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id64" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="kin-displacement">
-<h2><strong>KIN_DISPLACEMENT</strong><a class="headerlink" href="#kin-displacement" title="Permalink to this headline">#</a></h2>
+<h2><strong>KIN_DISPLACEMENT</strong><a class="headerlink" href="#kin-displacement" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">KIN_DISPLACEMENT</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id65">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id65" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id65" title="Permalink to this heading">#</a></h3>
 <p><strong>(SIC/ROTATED MESH)</strong></p>
 <p>This boundary condition card is used as a distinguishing condition on the mesh motion
 equations (viz. <em>mesh1, mesh2</em>, and <em>mesh3</em> under the <em>EQ</em> card). It forces the boundary of
@@ -6074,10 +6017,6 @@ specifications). The application of this condition should be compared with
 KIN_DISPLACEMENT_PETROV</em> and <em>KIN_DISPLACEMENT_COLLOC</em>.</p>
 <p>Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 24%" />
-<col style="width: 76%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>KIN_DISPLACEMENT</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;).</p></td>
@@ -6099,7 +6038,7 @@ solid mesh motion.</p></td>
 </table>
 </section>
 <section id="id66">
-<h3><strong>Examples</strong><a class="headerlink" href="#id66" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id66" title="Permalink to this heading">#</a></h3>
 <p>The following sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">KIN_DISPLACEMENT</span> <span class="n">SS</span> <span class="mi">7</span> <span class="mi">12</span>
 </pre></div>
@@ -6110,7 +6049,7 @@ defined by side set 7. The element block ID number which shares this boundary wi
 neighboring <em>TALE</em> or fluid <em>ARBITRARY</em> region is 12.</p>
 </section>
 <section id="id67">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id67" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id67" title="Permalink to this heading">#</a></h3>
 <p>The functional form of the kinematic boundary condition is:</p>
 <figure class="align-center">
 <a class="reference internal image-reference" href="../../_images/044_goma_physics.png"><img alt="../../_images/044_goma_physics.png" src="../../_images/044_goma_physics.png" style="width: 90%;" /></a>
@@ -6128,7 +6067,7 @@ and <em>TALE</em> solid region. In essence, it maintains a real solid displaceme
 no real-solid mass penetrates the boundary described by this condition.</p>
 </section>
 <section id="id68">
-<h3><strong>References</strong><a class="headerlink" href="#id68" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id68" title="Permalink to this heading">#</a></h3>
 <p>SAND2000-0807: TALE: An Arbitrary Lagrangian-Eulerian Approach to Fluid-
 Structure Interaction Problems, P. R. Schunk, May 2000</p>
 <p>GT-005.3: THE NEW TOTAL-ARBITRARY-LAGRANGIAN-EULERIAN (TALE)
@@ -6137,22 +6076,18 @@ CAPABILITY and its applicability to coating with/on deformable media, August 6,
 </section>
 </section>
 <section id="kin-leak">
-<h2><strong>KIN_LEAK</strong><a class="headerlink" href="#kin-leak" title="Permalink to this headline">#</a></h2>
+<h2><strong>KIN_LEAK</strong><a class="headerlink" href="#kin-leak" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">KIN_LEAK</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float2</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id69">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id69" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id69" title="Permalink to this heading">#</a></h3>
 <p><strong>(SIC/ROTATED MESH)</strong></p>
 <p>This boundary condition card is used as a distinguishing condition - kinematic with
 mass transfer on mesh equations. The flux quantity is specified on a per mass basis so
 heat and mass transfer coefficients are in units of L/t.</p>
 <p>Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 24%" />
-<col style="width: 76%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>KIN_LEAK</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;).</p></td>
@@ -6181,7 +6116,7 @@ from <em>YFLUX</em> boundary conditions corresponding to each species that is ne
 following examples.</p>
 </section>
 <section id="id70">
-<h3><strong>Examples</strong><a class="headerlink" href="#id70" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id70" title="Permalink to this heading">#</a></h3>
 <p>Following are two sample input cards:</p>
 <p>Pure Liquid Case</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">KIN_LEAK</span> <span class="n">SS</span> <span class="mi">3</span>   <span class="mf">0.1</span>   <span class="mf">0.</span>
@@ -6203,7 +6138,7 @@ and is non-volatile so it requires no <em>YFLUX</em> card; a second volatile spe
 require a second <em>YFLUX</em> input card.</p>
 </section>
 <section id="id71">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id71" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id71" title="Permalink to this heading">#</a></h3>
 <p>Functionally, the <em>KIN_LEAK</em> boundary condition can be represented as the following:</p>
 <figure class="align-center">
 <a class="reference internal image-reference" href="../../_images/045_goma_physics.png"><img alt="../../_images/045_goma_physics.png" src="../../_images/045_goma_physics.png" style="width: 90%;" /></a>
@@ -6241,7 +6176,7 @@ fraction, then we have a volume flux. So <em>kin_bc_leak</em> is consistent.</p>
 common approach is to build density into the mass transfer coefficient h<sub>i</sub> .</p>
 </section>
 <section id="id72">
-<h3><strong>FAQs</strong><a class="headerlink" href="#id72" title="Permalink to this headline">#</a></h3>
+<h3><strong>FAQs</strong><a class="headerlink" href="#id72" title="Permalink to this heading">#</a></h3>
 <ol class="arabic simple">
 <li><p>See the FAQ pertaining to “Continuation Strategies for Free Surface Flows” on the
 <em>DISTNG</em> boundary condition card.</p></li>
@@ -6310,28 +6245,24 @@ converted as follows:</p>
 <p>This checks out!</p>
 </section>
 <section id="id73">
-<h3><strong>References</strong><a class="headerlink" href="#id73" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id73" title="Permalink to this heading">#</a></h3>
 <p>Price, P. E., Jr., S. Wang, I. H. Romdhane, “Extracting Effective Diffusion Parameters
 from Drying Experiments,” AIChE Journal, 43, 8, 1925-1934 (1997)</p>
 </section>
 </section>
 <section id="kin-chem">
-<h2><strong>KIN_CHEM</strong><a class="headerlink" href="#kin-chem" title="Permalink to this headline">#</a></h2>
+<h2><strong>KIN_CHEM</strong><a class="headerlink" href="#kin-chem" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">KIN_CHEM</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="o">...</span> <span class="o">&lt;</span><span class="n">floatn</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id74">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id74" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id74" title="Permalink to this heading">#</a></h3>
 <p><strong>(SIC/ROTATED MESH)</strong></p>
 <p>This boundary condition card is used to establish the sign of flux contributions to the
 overall mass balance on boundaries so that movements are appropriately advancing or
 receding depending on whether a species is a reactant or product in a surface reaction.</p>
 <p>Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 14%" />
-<col style="width: 86%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>KIN_CHEM</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;).</p></td>
@@ -6360,41 +6291,37 @@ species, versus recession of that interface when a reaction leads to consumption
 species.</p>
 </section>
 <section id="id75">
-<h3><strong>Examples</strong><a class="headerlink" href="#id75" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id75" title="Permalink to this heading">#</a></h3>
 <p>Following is a sample card for two reactant and one product species:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">KIN_CHEM</span> <span class="n">SS</span> <span class="mi">25</span>   <span class="o">-</span><span class="mf">1.0</span>   <span class="o">-</span><span class="mf">1.0</span>   <span class="mf">1.0</span>
 </pre></div>
 </div>
 </section>
 <section id="id76">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id76" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id76" title="Permalink to this heading">#</a></h3>
 <p>This function is built from the same function as boundary condition <em>KIN_LEAK</em>, i.e.,
 <em>kin_bc_leak</em>, so the user is referred to discussions for this boundary condition for
 appropriate details. The stoichiometric coefficients are read from the <em>KIN_CHEM</em> card
 or set equal to 1.0 in the absence of <em>KIN_CHEM</em>.</p>
 </section>
 <section id="id77">
-<h3><strong>References</strong><a class="headerlink" href="#id77" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id77" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="force">
-<h2><strong>FORCE</strong><a class="headerlink" href="#force" title="Permalink to this headline">#</a></h2>
+<h2><strong>FORCE</strong><a class="headerlink" href="#force" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">FORCE</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float3</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id78">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id78" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id78" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/VECTOR MESH)</strong></p>
 <p>This boundary condition card applies a force per unit area (traction) on a Lagrangian
 mesh region. The force per unit area is applied uniformly over the boundary delineated
 by the side set ID. The applied force is of course a vector. Definitions of the input
 parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 14%" />
-<col style="width: 86%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>FORCE</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;)</p></td>
@@ -6421,7 +6348,7 @@ EXODUS II) in the problem domain.</p></td>
 </table>
 </section>
 <section id="id79">
-<h3><strong>Examples</strong><a class="headerlink" href="#id79" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id79" title="Permalink to this heading">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">FORCE</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">0.</span> <span class="mf">1.0</span> <span class="mf">1.0</span>
 </pre></div>
@@ -6430,7 +6357,7 @@ EXODUS II) in the problem domain.</p></td>
 applied to the side set boundary delineated by the number 10.</p>
 </section>
 <section id="id80">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id80" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id80" title="Permalink to this heading">#</a></h3>
 <p><strong>Important note</strong>: this boundary condition can only be applied to <em>LAGRANGIAN,
 DYNAMIC_LAGRANGIAN</em> or <em>ARBITRARY</em> mesh motion types (cf. <em>Mesh Motion</em> card).
 For real-solid mesh motion types, refer to <em>FORCE_RS</em>. Furthermore, it is rare and
@@ -6440,24 +6367,24 @@ some load pressure to a solid Lagrangian region, like a rubber roller, so as to 
 and drive flow in a liquid region.</p>
 </section>
 <section id="id81">
-<h3><strong>FAQs</strong><a class="headerlink" href="#id81" title="Permalink to this headline">#</a></h3>
+<h3><strong>FAQs</strong><a class="headerlink" href="#id81" title="Permalink to this heading">#</a></h3>
 <p>On internal two-sided side sets, this boundary condition results in double the force in
 the same direction.</p>
 </section>
 <section id="id82">
-<h3><strong>References</strong><a class="headerlink" href="#id82" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id82" title="Permalink to this heading">#</a></h3>
 <p>A MEMS Ejector for Printing Applications, A. Gooray, G. Roller, P. Galambos, K.
 Zavadil, R. Givler, F. Peter and J. Crowley, Proceedings of the Society of Imaging
 Science &amp; Technology, Ft. Lauderdale FL, September 2001.</p>
 </section>
 </section>
 <section id="norm-force">
-<h2><strong>NORM_FORCE</strong><a class="headerlink" href="#norm-force" title="Permalink to this headline">#</a></h2>
+<h2><strong>NORM_FORCE</strong><a class="headerlink" href="#norm-force" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">NORM_FORCE</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float3</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id83">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id83" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id83" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/VECTOR MESH)</strong></p>
 <p>This boundary condition card applies a force per unit area (traction) on a Lagrangian
 mesh region. The force per unit area is applied uniformly over the boundary delineated
@@ -6465,10 +6392,6 @@ by the side set ID. The applied traction is of course a vector. Unlike the <em>F
 boundary condition card, the vector traction here is defined in normal-tangent vector
 basis. Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 19%" />
-<col style="width: 81%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>NORM_FORCE</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;).</p></td>
@@ -6498,7 +6421,7 @@ force/area (in 3-D).</p></td>
 side set of elements. Hence, the units on the floating point input must be force/area.</p>
 </section>
 <section id="id84">
-<h3><strong>Examples</strong><a class="headerlink" href="#id84" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id84" title="Permalink to this heading">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">NORM_FORCE</span> <span class="n">SS</span> <span class="mi">10</span>   <span class="mf">0.</span>   <span class="mf">1.0</span>   <span class="mf">1.0</span>
 </pre></div>
@@ -6511,7 +6434,7 @@ a zero traction, i.e., internal surface side sets must be attached to one elemen
 only to get a net effect.</p>
 </section>
 <section id="id85">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id85" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id85" title="Permalink to this heading">#</a></h3>
 <p><strong>Important note</strong>: this boundary condition can only be applied to <em>LAGRANGIAN,
 DYNAMIC_LAGRANGIAN</em> or <em>ARBITRARY</em> mesh motion types (cf. <em>Mesh Motion</em> card).
 For real-solid mesh motion types, refer to <em>NORM_FORCE_RS</em>. Furthermore, it is rare
@@ -6525,12 +6448,12 @@ counterparts.</p>
 </section>
 </section>
 <section id="rep-force">
-<h2><strong>REP_FORCE</strong><a class="headerlink" href="#rep-force" title="Permalink to this headline">#</a></h2>
+<h2><strong>REP_FORCE</strong><a class="headerlink" href="#rep-force" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">REP_FORCE</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id86">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id86" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id86" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/VECTOR MESH)</strong></p>
 <p>This boundary condition card applies a force per unit area (traction) that varies as the
 inverse of the fourth power of the distance from a planar surface to a Lagrangian or
@@ -6542,10 +6465,6 @@ in the normal direction to the Lagrangian interface.</p>
 <p>Definitions of the input parameters are as follows, with &lt;float_list&gt; having five
 parameters:</p>
 <table class="table">
-<colgroup>
-<col style="width: 19%" />
-<col style="width: 81%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>REP_FORCE</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;)</p></td>
@@ -6579,7 +6498,7 @@ EXODUS II) in the problem domain.</p></td>
 <p>Refer to the Technical Discussion for an explanation of the various coefficients.</p>
 </section>
 <section id="id87">
-<h3><strong>Examples</strong><a class="headerlink" href="#id87" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id87" title="Permalink to this heading">#</a></h3>
 <p>The following sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">FORCE_REP</span> <span class="n">SS</span>   <span class="mi">10</span>  <span class="mf">1.e+03</span><span class="o">.</span>   <span class="mf">1.0</span>   <span class="mf">0.0</span> <span class="mf">0.0</span>   <span class="o">-</span><span class="mf">3.0</span>
 </pre></div>
@@ -6590,7 +6509,7 @@ side set 10 and the distance h is measured from side set 10 to the plane defined
 1.0x – 3. = 0.</p>
 </section>
 <section id="id88">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id88" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id88" title="Permalink to this heading">#</a></h3>
 <p>The <em>REP_FORCE</em> boundary condition produces a vector traction in the normal
 direction to a surface side set, defined by:</p>
 <figure class="align-center">
@@ -6615,18 +6534,18 @@ predefined planar boundary. Hence, this condition can be use to impose an
 impenetrable contact condition.</p>
 </section>
 <section id="id89">
-<h3><strong>FAQs</strong><a class="headerlink" href="#id89" title="Permalink to this headline">#</a></h3>
+<h3><strong>FAQs</strong><a class="headerlink" href="#id89" title="Permalink to this heading">#</a></h3>
 <p>On internal two-sided side sets, this boundary condition results in double the force in
 the same direction.</p>
 </section>
 </section>
 <section id="force-user">
-<h2><strong>FORCE_USER</strong><a class="headerlink" href="#force-user" title="Permalink to this headline">#</a></h2>
+<h2><strong>FORCE_USER</strong><a class="headerlink" href="#force-user" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">FORCE_USER</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="o">...&lt;</span><span class="n">floatn</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id90">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id90" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id90" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/VECTOR MESH)</strong></p>
 <p>This boundary condition card applies a user-defined force per unit area (traction) on a
 Lagrangian or dynamic Lagrangian (see <em>Mesh Motion</em> card) mesh region. The
@@ -6636,10 +6555,6 @@ variables of the problem, including position (see example below). The force per 
 area is applied to boundary delineated by the side set ID. Definitions of the input
 parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 22%" />
-<col style="width: 78%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>FORCE_USR</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;)</p></td>
@@ -6662,7 +6577,7 @@ through the p[]array in force_user_surf.</p></td>
 </table>
 </section>
 <section id="id91">
-<h3><strong>Examples</strong><a class="headerlink" href="#id91" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id91" title="Permalink to this heading">#</a></h3>
 <p>The input card</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">FORCE_USER</span> <span class="n">SS</span> <span class="mi">3</span>   <span class="p">{</span><span class="n">delta_t</span><span class="p">}</span> <span class="mf">0.</span>   <span class="mf">1000.0</span> <span class="mf">0.</span>
 </pre></div>
@@ -6690,7 +6605,7 @@ through the p[]array in force_user_surf.</p></td>
 time period {<em>delta_t</em>}.</p>
 </section>
 <section id="id92">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id92" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id92" title="Permalink to this heading">#</a></h3>
 <p>Used commonly to apply a force per unit area to an external surface of a solid region
 (<em>LAGRANGIAN</em> type, cf. <em>FORCE_USER_RS</em>), that is nonconstant, viz. time varying or
 spatially varying. The <em>FORCE</em> and <em>NORM_FORCE</em> boundary conditions can be used
@@ -6698,22 +6613,22 @@ for constant forces. This condition is applied as a weak integrated condition in
 and hence will be additive with others of its kind.</p>
 </section>
 <section id="id93">
-<h3><strong>FAQs</strong><a class="headerlink" href="#id93" title="Permalink to this headline">#</a></h3>
+<h3><strong>FAQs</strong><a class="headerlink" href="#id93" title="Permalink to this heading">#</a></h3>
 <p>On internal two-sided side sets, this boundary condition results in double the force in
 the same direction.</p>
 </section>
 <section id="id94">
-<h3><strong>References</strong><a class="headerlink" href="#id94" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id94" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="ca">
-<h2><strong>CA</strong><a class="headerlink" href="#ca" title="Permalink to this headline">#</a></h2>
+<h2><strong>CA</strong><a class="headerlink" href="#ca" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CA</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id95">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id95" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id95" title="Permalink to this heading">#</a></h3>
 <p><strong>(PCC/ROTATED MESH)</strong></p>
 <p>This boundary condition card applies a specified contact-angle on the mesh at a single
 node nodeset. It is used exclusively in two dimensional computations. Its primary
@@ -6723,10 +6638,6 @@ the nodeset is usually found where a free-surface boundary intersects a fixed,
 <p>The &lt;float_list&gt; for this boundary condition has four values; definitions of the input
 parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 16%" />
-<col style="width: 84%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>CA</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -6763,7 +6674,7 @@ normals, viz. non-planar solid walls).</p></td>
 </table>
 </section>
 <section id="id96">
-<h3><strong>Examples</strong><a class="headerlink" href="#id96" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id96" title="Permalink to this heading">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CA</span> <span class="n">NS</span> <span class="mi">100</span> <span class="mf">1.4</span> <span class="mf">0.</span> <span class="mf">1.</span> <span class="mf">0.</span>
 </pre></div>
@@ -6773,7 +6684,7 @@ the 100 nodeset and the vector (0,1,0). Normally, this latter vector is the norm
 solid surface in contact with the free surface at this point.</p>
 </section>
 <section id="id97">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id97" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id97" title="Permalink to this heading">#</a></h3>
 <ul>
 <li><p>The constraint that is imposed at the nodeset node is:</p>
 <blockquote>
@@ -6826,17 +6737,17 @@ angle. Recall that the angle is specified in radians on this card.</p></li>
 </figure>
 </section>
 <section id="id98">
-<h3><strong>References</strong><a class="headerlink" href="#id98" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id98" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="ca-or-fix">
-<h2><strong>CA_OR_FIX</strong><a class="headerlink" href="#ca-or-fix" title="Permalink to this headline">#</a></h2>
+<h2><strong>CA_OR_FIX</strong><a class="headerlink" href="#ca-or-fix" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CA_OR_FIX</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id99">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id99" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id99" title="Permalink to this heading">#</a></h3>
 <p><strong>(PCC/ROTATED MESH)</strong></p>
 <p>This boundary condition card allows the application of Gibb’s inequality condition in
 conjuction with a contact angle. This allows for a point to be specified at which a
@@ -6849,10 +6760,6 @@ attaching. This boundary condition is applicable only to two-dimensional problem
 see <em>CA_EDGE_OR_FIX</em> for details on three dimensional implementations.</p>
 <p>The &lt;float_list&gt; has seven values, with definition of the input parameters as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 22%" />
-<col style="width: 78%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>CA_OR_FIX</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -6903,14 +6810,14 @@ EXODUS II) in the problem domain.</p></td>
 </table>
 </section>
 <section id="id100">
-<h3><strong>Examples</strong><a class="headerlink" href="#id100" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id100" title="Permalink to this heading">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CA_OR_FIX</span> <span class="n">NS</span> <span class="mi">100</span> <span class="mf">1.3</span> <span class="mf">0.</span> <span class="mf">1.</span> <span class="mf">0.</span> <span class="o">-</span><span class="mf">0.5</span> <span class="mf">1.</span> <span class="mf">0.</span>
 </pre></div>
 </div>
 </section>
 <section id="id101">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id101" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id101" title="Permalink to this heading">#</a></h3>
 <p>The Gibb’s inequality condition is illustrated in the accompanying figure. The fixed
 point is indicated by the plane, x = x<sub>0</sub>. Initially, the contact line is far from this point as
 the condition at the contact line fixes the contact angle to the value θ<sub>dcl</sub>. However,
@@ -6932,7 +6839,7 @@ special case when the meniscus is moving along a surface of constant x.</span><a
 used for specifying wall and free surface normal vectors.</p>
 </section>
 <section id="theory">
-<h3><strong>Theory</strong><a class="headerlink" href="#theory" title="Permalink to this headline">#</a></h3>
+<h3><strong>Theory</strong><a class="headerlink" href="#theory" title="Permalink to this heading">#</a></h3>
 <p>The principle behind this condition applies when a contact line encounters a sharp
 feature on a surface. The feature from a distance might appear as a sharp corner at
 which the meniscus/contact line prefers to locate rather than undergo continued
@@ -6944,17 +6851,17 @@ a certain range. The line can release again if the meniscus pulls the contact li
 sufficiently to overcome specified bounds.</p>
 </section>
 <section id="id102">
-<h3><strong>References</strong><a class="headerlink" href="#id102" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id102" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="ca-edge">
-<h2><strong>CA_EDGE</strong><a class="headerlink" href="#ca-edge" title="Permalink to this headline">#</a></h2>
+<h2><strong>CA_EDGE</strong><a class="headerlink" href="#ca-edge" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CA_EDGE</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">bc_id2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id103">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id103" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id103" title="Permalink to this heading">#</a></h3>
 <p><strong>(PCC-EDGE/ROTATED MESH)</strong></p>
 <p>This boundary condition card specifies a constant contact angle on the edge defined by
 the intersection of the primary and secondary side sets. This card is used most often to
@@ -6967,10 +6874,6 @@ card. It is important to note that this outward-pointing normal should be variab
 to say, the primary side set is most likely a free-surface.</p>
 <p>Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 18%" />
-<col style="width: 82%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>CA_EDGE</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -7016,7 +6919,7 @@ every node that lies on the edge (subject to overriding <em>ROT</em> cards or Di
 conditions).</p>
 </section>
 <section id="id104">
-<h3><strong>Examples</strong><a class="headerlink" href="#id104" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id104" title="Permalink to this heading">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CA_EDGE</span> <span class="n">SS</span> <span class="mi">40</span> <span class="mi">50</span> <span class="mf">33.0</span> <span class="mf">0.</span> <span class="mf">1.</span> <span class="mf">0.</span>
 </pre></div>
@@ -7026,7 +6929,7 @@ side set 40 and the vector (0,1,0) at all points on the edge defined by the inte
 side set 40 and side set 50.</p>
 </section>
 <section id="id105">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id105" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id105" title="Permalink to this heading">#</a></h3>
 <ul class="simple">
 <li><p>Although this constraint deals with vector quantities, it is a scalar constraint. The
 actual requirement that is imposed is:</p></li>
@@ -7063,17 +6966,17 @@ CA_EDGE_CURVE_INT, VAR_CA_EDGE, VAR_CA_USER</em>.</p></li>
 </ul>
 </section>
 <section id="id106">
-<h3><strong>References</strong><a class="headerlink" href="#id106" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id106" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="ca-edge-int">
-<h2><strong>CA_EDGE_INT</strong><a class="headerlink" href="#ca-edge-int" title="Permalink to this headline">#</a></h2>
+<h2><strong>CA_EDGE_INT</strong><a class="headerlink" href="#ca-edge-int" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CA_EDGE_INT</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">bc_id2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id107">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id107" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id107" title="Permalink to this heading">#</a></h3>
 <p><strong>(SIC-EDGE/ROTATED MESH)</strong></p>
 <p>This boundary condition card specifies a constant contact angle on the edge defined by
 the intersection of the primary and secondary side sets. It is identical in format and
@@ -7081,10 +6984,6 @@ function as the <em>CA_EDGE</em> boundary condition. The only difference is that
 boundary condition is a strong integrated constraint.</p>
 <p>Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 20%" />
-<col style="width: 80%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>CA_EDGE_INT</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -7127,7 +7026,7 @@ should lie in the range 0 ≤ angle ≤ 180.</p></td>
 </table>
 </section>
 <section id="id108">
-<h3><strong>Examples</strong><a class="headerlink" href="#id108" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id108" title="Permalink to this heading">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CA_EDGE_INT</span> <span class="n">SS</span> <span class="mi">40</span> <span class="mi">50</span> <span class="mf">33.0</span> <span class="mf">0.</span> <span class="mf">1.</span> <span class="mf">0.</span>
 </pre></div>
@@ -7137,7 +7036,7 @@ side set 40 and the vector (0,1,0) at all points on the edge defined by the inte
 side set 40 and side set 50.</p>
 </section>
 <section id="id109">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id109" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id109" title="Permalink to this heading">#</a></h3>
 <ul class="simple">
 <li><p>As noted above, this boundary condition is identical in function to the <em>CA_EDGE</em>
 condition. It differs only in the manner of its application. Whereas, the former was
@@ -7166,17 +7065,17 @@ CA_EDGE_CURVE_INT, VAR_CA_EDGE, VAR_CA_USER</em>.</p></li>
 </ul>
 </section>
 <section id="id110">
-<h3><strong>References</strong><a class="headerlink" href="#id110" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id110" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="ca-edge-or-fix">
-<h2><strong>CA_EDGE_OR_FIX</strong><a class="headerlink" href="#ca-edge-or-fix" title="Permalink to this headline">#</a></h2>
+<h2><strong>CA_EDGE_OR_FIX</strong><a class="headerlink" href="#ca-edge-or-fix" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CA_EDGE_OR_FIX</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">bc_id2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">type_string</span><span class="o">&gt;</span> <span class="p">{</span><span class="n">float_list</span><span class="p">}</span>
 </pre></div>
 </div>
 <section id="id111">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id111" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id111" title="Permalink to this heading">#</a></h3>
 <p><strong>(PCC/ROTATED MESH)</strong></p>
 <p>In analogy to the two-dimensional condition, <em>CA_OR_FIX</em>, boundary condition, this
 boundary condition imposes a contact angle on an edge feature in a three-dimensional
@@ -7188,11 +7087,6 @@ condition also permits the contact line to release from the curve if the overall
 mechanics would promote a recession of the contact line.</p>
 <p>Description of the card parameters is as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 23%" />
-<col style="width: 14%" />
-<col style="width: 63%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>CA_EDGE_OR_FIX</strong></p></td>
 <td colspan="2"><p>Name of boundary condition.</p></td>
@@ -7292,7 +7186,7 @@ imposing the appropriate contact angle.</p></td>
 </table>
 </section>
 <section id="id112">
-<h3><strong>Examples</strong><a class="headerlink" href="#id112" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id112" title="Permalink to this heading">#</a></h3>
 <p>An example making use of the <strong>CIRCLE</strong> feature curve option is as follows:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CA_EDGE_OR_FIX</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mi">20</span> <span class="n">CIRCLE</span> <span class="mf">1.3</span>   <span class="mf">0.</span> <span class="o">-</span><span class="mf">1.</span> <span class="mf">0.</span>   <span class="mf">0.</span> <span class="mf">0.</span> <span class="mf">0.</span>   <span class="mf">1.0</span>
 </pre></div>
@@ -7304,7 +7198,7 @@ must be completely inside of the feature circle. Note also that the circle cente
 lie in the substrate plane.</p>
 </section>
 <section id="id113">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id113" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id113" title="Permalink to this heading">#</a></h3>
 <ul class="simple">
 <li><p>See the Technical Discussion under the boundary condition <em>CA_OR_FIX</em> for a
 detailed discussion of the nature of the Gibb’s criterion as it applies to contact
@@ -7328,17 +7222,17 @@ angle by a small amount.</p></li>
 </ul>
 </section>
 <section id="id114">
-<h3><strong>References</strong><a class="headerlink" href="#id114" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id114" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="ca-edge-curve">
-<h2><strong>CA_EDGE_CURVE</strong><a class="headerlink" href="#ca-edge-curve" title="Permalink to this headline">#</a></h2>
+<h2><strong>CA_EDGE_CURVE</strong><a class="headerlink" href="#ca-edge-curve" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CA_EDGE_CURVE</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">bc_id2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id115">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id115" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id115" title="Permalink to this heading">#</a></h3>
 <p><strong>(PCC-EDGE/ROTATED MESH)</strong></p>
 <p>This boundary condition allows the user to specify a constant contact angle along an
 edge in three-dimensions. It is similar in function to the <em>CA_EDGE</em> boundary condition
@@ -7349,10 +7243,6 @@ curving surface. The boundary condition is applied to the edge curve defined by 
 intersection of the primary and secondary side sets.</p>
 <p>Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 22%" />
-<col style="width: 78%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>CA_EDGE_CURVE</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -7384,7 +7274,7 @@ the range 0 ≤ angle ≤ 180.</p></td>
 </table>
 </section>
 <section id="id116">
-<h3><strong>Examples</strong><a class="headerlink" href="#id116" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id116" title="Permalink to this heading">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CA_EDGE_CURVE</span> <span class="n">SS</span> <span class="mi">40</span> <span class="mi">50</span> <span class="mf">135.0</span>
 </pre></div>
@@ -7395,7 +7285,7 @@ the edge defined by side set 40 and 50. There is no restriction on whether side 
 normal vectors must be constant.</p>
 </section>
 <section id="id117">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id117" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id117" title="Permalink to this heading">#</a></h3>
 <ul>
 <li><p>Although this boundary condition deals with vector quantities it is a scalar
 constraint. The actual requirement that is imposed is:</p>
@@ -7424,17 +7314,17 @@ CA_EDGE_CURVE_INT, VAR_CA_EDGE, VAR_CA_USER</em>.</p></li>
 </ul>
 </section>
 <section id="id118">
-<h3><strong>References</strong><a class="headerlink" href="#id118" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id118" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="ca-edge-curve-int">
-<h2><strong>CA_EDGE_CURVE_INT</strong><a class="headerlink" href="#ca-edge-curve-int" title="Permalink to this headline">#</a></h2>
+<h2><strong>CA_EDGE_CURVE_INT</strong><a class="headerlink" href="#ca-edge-curve-int" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CA_EDGE_CURVE_INT</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">bc_id2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id119">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id119" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id119" title="Permalink to this heading">#</a></h3>
 <p><strong>(SIC/ROTATED MESH)</strong></p>
 <p>This boundary condition allows the user to specify a constant contact angle along an
 edge in three-dimensions. It is identical in function to <em>CA_EDGE_CURVE</em> boundary
@@ -7443,10 +7333,6 @@ applied to the edge curve defined by the intersection of the primary and seconda
 sets.</p>
 <p>Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 26%" />
-<col style="width: 74%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>CA_EDGE_CURVE_INT</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -7478,7 +7364,7 @@ lie in the range 0 ≤ angle ≤ 180.</p></td>
 </table>
 </section>
 <section id="id120">
-<h3><strong>Examples</strong><a class="headerlink" href="#id120" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id120" title="Permalink to this heading">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">CA_EDGE_CURVE_INT</span> <span class="n">SS</span> <span class="mi">40</span> <span class="mi">50</span> <span class="mf">135.0</span>
 </pre></div>
@@ -7489,7 +7375,7 @@ the edge defined by side set 40 and 50. The is no restriction on whether side se
 normal vectors must be constant.</p>
 </section>
 <section id="id121">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id121" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id121" title="Permalink to this heading">#</a></h3>
 <ul>
 <li><p>Although this boundary condition deals with vector quantities it is a scalar
 constraint. As noted above the form of the constraint is identical to that in the
@@ -7521,17 +7407,17 @@ VAR_CA_EDGE, VAR_CA_USER</em>.</p></li>
 </ul>
 </section>
 <section id="id122">
-<h3><strong>References</strong><a class="headerlink" href="#id122" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id122" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="var-ca-edge">
-<h2><strong>VAR_CA_EDGE</strong><a class="headerlink" href="#var-ca-edge" title="Permalink to this headline">#</a></h2>
+<h2><strong>VAR_CA_EDGE</strong><a class="headerlink" href="#var-ca-edge" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">VAR_</span> <span class="n">CA_EDGE</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">bc_id2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id123">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id123" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id123" title="Permalink to this heading">#</a></h3>
 <p><strong>(SIC-EDGE/ROTATED MESH)</strong></p>
 <p>This card is used to set a variable contact angle on a dynamic three-dimensional contact
 line. A local contact angle is determined based upon the local rate of advance/recession
@@ -7543,10 +7429,6 @@ The contact angle is imposed between the outward-pointing normal of the primary
 sideset and the outward-pointing normal of the secondary sideset.</p>
 <p>Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 19%" />
-<col style="width: 81%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>VAR_CA_EDGE</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -7595,7 +7477,7 @@ Discussion.</p></td>
 </table>
 </section>
 <section id="id124">
-<h3><strong>Examples</strong><a class="headerlink" href="#id124" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id124" title="Permalink to this heading">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">VAR_CA_EDGE</span> <span class="n">SS</span> <span class="mi">60</span> <span class="mi">20</span>   <span class="mf">135.</span> <span class="mf">0.02</span>   <span class="mf">0.</span> <span class="o">-</span><span class="mf">1.</span> <span class="mf">0.</span>
 </pre></div>
@@ -7605,7 +7487,7 @@ Discussion.</p></td>
 substrate is moving at the fixed velocity (0, -1., 0.).</p>
 </section>
 <section id="id125">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id125" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id125" title="Permalink to this heading">#</a></h3>
 <ul>
 <li><p>A contact line that moves relative to its underlying solid substrate is referred to as
 a dynamic contact line. For a dynamic contact line associated with threedimensional
@@ -7691,27 +7573,23 @@ on the edge is:</p></li>
 </div></blockquote>
 </section>
 <section id="id126">
-<h3><strong>References</strong><a class="headerlink" href="#id126" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id126" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="var-ca-user">
-<h2><strong>VAR_CA_USER</strong><a class="headerlink" href="#var-ca-user" title="Permalink to this headline">#</a></h2>
+<h2><strong>VAR_CA_USER</strong><a class="headerlink" href="#var-ca-user" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">VAR_CA_USER</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">bc_id2</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float_list</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id127">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id127" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id127" title="Permalink to this heading">#</a></h3>
 <p><strong>(SIC-EDGE/ROTATED MESH)</strong></p>
 <p>This card is used to set a variable contact angle on a dynamic three-dimensional contact
 line. It is identical in function to the <em>VAR_CA_USER</em> except that it allows the user to
 provide a contact angle model to relate local contact angle to local capillary number.</p>
 <p>Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 23%" />
-<col style="width: 77%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>VAR_CA_USER</strong></p></td>
 <td><p>Name of the boundary condition.</p></td>
@@ -7752,7 +7630,7 @@ user-supplied function for use with the user model.</p></td>
 </table>
 </section>
 <section id="id128">
-<h3><strong>Examples</strong><a class="headerlink" href="#id128" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id128" title="Permalink to this heading">#</a></h3>
 <p>The following is a sample input card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">VAR_CA_USER</span> <span class="n">SS</span> <span class="mi">60</span> <span class="mi">20</span>   <span class="o">-</span><span class="mf">1.</span> <span class="mf">0.</span> <span class="mf">0.</span> <span class="mf">1.e-3</span> <span class="mf">135.0</span>
 </pre></div>
@@ -7763,7 +7641,7 @@ function is passed the constants 1.e-3 and 135.0 in variable locations p[0] and 
 respectively.</p>
 </section>
 <section id="id129">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id129" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id129" title="Permalink to this heading">#</a></h3>
 <ul class="simple">
 <li><p><em>VAR_CA_USER</em> function is identical to <em>VAR_CA_EDGE</em>. It is applied to threedimensional
 dynamic contact lines in order to set a variable contact angle. The user
@@ -7793,17 +7671,17 @@ described in <em>VAR_CA_EDGE</em>.</p></li>
 </div>
 </section>
 <section id="id130">
-<h3><strong>References</strong><a class="headerlink" href="#id130" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id130" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="friction">
-<h2><strong>FRICTION</strong><a class="headerlink" href="#friction" title="Permalink to this headline">#</a></h2>
+<h2><strong>FRICTION</strong><a class="headerlink" href="#friction" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">FRICTION</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">integer1</span><span class="p">]</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="id131">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id131" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id131" title="Permalink to this heading">#</a></h3>
 <p><strong>(WIC/VECTOR MESH)</strong></p>
 <p>This boundary condition card applies a force per unit area (traction) on a Lagrangian
 mesh region. The force per unit area is applied according to Coulomb’s friction law
@@ -7811,10 +7689,6 @@ over the boundary delineated by the side set ID. The applied traction is of cour
 vector. The vector traction is defined in normal-tangent vector basis. Definitions of the
 input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 17%" />
-<col style="width: 83%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>FRICTION</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;).</p></td>
@@ -7841,14 +7715,14 @@ this condition will be applied.</p></td>
 set of elements.</p>
 </section>
 <section id="id132">
-<h3><strong>Examples</strong><a class="headerlink" href="#id132" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id132" title="Permalink to this heading">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">FRICTION</span> <span class="n">SS</span> <span class="mi">10</span> <span class="mf">0.1</span> <span class="mi">2</span>
 </pre></div>
 </div>
 </section>
 <section id="id133">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id133" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id133" title="Permalink to this heading">#</a></h3>
 <p><strong>Important note</strong>: this boundary condition can only be applied to <em>LAGRANGIAN,
 DYNAMIC_LAGRANGIAN</em> or <em>ARBITRARY</em> mesh motion types (cf. <em>Mesh Motion</em> card).
 For real-solid mesh motion types, refer to <em>FRICTION_RS</em>.</p>
@@ -7862,12 +7736,12 @@ that the direction of the frictional force is determined by the velocity directi
 </section>
 </section>
 <section id="solid-fluid">
-<h2><strong>SOLID_FLUID</strong><a class="headerlink" href="#solid-fluid" title="Permalink to this headline">#</a></h2>
+<h2><strong>SOLID_FLUID</strong><a class="headerlink" href="#solid-fluid" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SOLID_FLUID</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer1</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer2</span><span class="o">&gt;</span> <span class="p">[</span><span class="nb">float</span><span class="p">]</span>
 </pre></div>
 </div>
 <section id="id134">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id134" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id134" title="Permalink to this heading">#</a></h3>
 <p><strong>(PCC/VECTOR REALSOLID)</strong></p>
 <p>The <em>SOLID_FLUID</em> condition performs the exact same task as the <em>FLUID_SOLID</em>
 condition. The usage and example are also the same, so consult the discussion on that
@@ -7878,10 +7752,6 @@ have kept this boundary condition around even though it invokes the exact same
 function that the <em>FLUID_SOLID</em> boundary condition does.</p>
 <p>Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 20%" />
-<col style="width: 80%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>SOLID_FLUID</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;).</p></td>
@@ -7912,49 +7782,49 @@ contribution of stress, is optional. The default is 1.0.</p></td>
 </table>
 </section>
 <section id="id135">
-<h3><strong>Examples</strong><a class="headerlink" href="#id135" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id135" title="Permalink to this heading">#</a></h3>
 <p>See <em>FLUID_SOLID</em> description.</p>
 </section>
 <section id="id136">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id136" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id136" title="Permalink to this heading">#</a></h3>
 <p>See <em>FLUID_SOLID</em> description.</p>
 </section>
 <section id="id137">
-<h3><strong>References</strong><a class="headerlink" href="#id137" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id137" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="penetration">
-<h2><strong>PENETRATION</strong><a class="headerlink" href="#penetration" title="Permalink to this headline">#</a></h2>
+<h2><strong>PENETRATION</strong><a class="headerlink" href="#penetration" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">PENETRATION</span>
 </pre></div>
 </div>
 <section id="id138">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id138" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id138" title="Permalink to this heading">#</a></h3>
 <p><strong>()</strong></p>
 <p>No longer supported/used in <em>Goma</em>. See <em>DARCY_CONTINUOUS</em> boundary condition
 card.</p>
 </section>
 <section id="id139">
-<h3><strong>Examples</strong><a class="headerlink" href="#id139" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id139" title="Permalink to this heading">#</a></h3>
 <p>No Example.</p>
 </section>
 <section id="id140">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id140" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id140" title="Permalink to this heading">#</a></h3>
 <p>No Discussion.</p>
 </section>
 <section id="id141">
-<h3><strong>References</strong><a class="headerlink" href="#id141" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id141" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="porous-kin">
-<h2><strong>POROUS_KIN</strong><a class="headerlink" href="#porous-kin" title="Permalink to this headline">#</a></h2>
+<h2><strong>POROUS_KIN</strong><a class="headerlink" href="#porous-kin" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">POROUS_KIN</span>
 </pre></div>
 </div>
 <section id="id142">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id142" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id142" title="Permalink to this heading">#</a></h3>
 <p><strong>()</strong></p>
 <p>This boundary condition card was used as a distinguishing condition for the Darcy-
 Flow in porous medium, in an arbitrary frame of reference.</p>
@@ -7962,25 +7832,25 @@ Flow in porous medium, in an arbitrary frame of reference.</p>
 in <em>Goma</em> for poroelasticity; this boundary condition was poorly formulated.</p>
 </section>
 <section id="id143">
-<h3><strong>Examples</strong><a class="headerlink" href="#id143" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id143" title="Permalink to this heading">#</a></h3>
 <p>No Example.</p>
 </section>
 <section id="id144">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id144" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id144" title="Permalink to this heading">#</a></h3>
 <p>No Discussion.</p>
 </section>
 <section id="id145">
-<h3><strong>References</strong><a class="headerlink" href="#id145" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id145" title="Permalink to this heading">#</a></h3>
 <p>No References.</p>
 </section>
 </section>
 <section id="sdc-kin-sf">
-<h2><strong>SDC_KIN_SF</strong><a class="headerlink" href="#sdc-kin-sf" title="Permalink to this headline">#</a></h2>
+<h2><strong>SDC_KIN_SF</strong><a class="headerlink" href="#sdc-kin-sf" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SDC_KIN_SF</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">integer</span><span class="o">&gt;</span> <span class="p">{</span><span class="n">char_string</span><span class="p">}</span>
 </pre></div>
 </div>
 <section id="id146">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id146" title="Permalink to this headline">#</a></h3>
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id146" title="Permalink to this heading">#</a></h3>
 <p><strong>(SIC/ROTATED MESH)</strong></p>
 <p>This boundary condition represents the specification of the normal component of the
 mesh velocity. This is a DVI_MULTI_PHASE_SINGLE boundary condition that has an
@@ -8004,10 +7874,6 @@ conditions are by the expression for the interface reaction. The sum is over all
 interfacial source terms for species in the phase.</p>
 <p>Definitions of the input parameters are as follows:</p>
 <table class="table">
-<colgroup>
-<col style="width: 19%" />
-<col style="width: 81%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>SDC_KIN_SF</strong></p></td>
 <td><p>Name of the boundary condition (&lt;bc_name&gt;).</p></td>
@@ -8045,7 +7911,7 @@ implemented, so <strong>SDC_SURFRXN</strong> currently does nothing.</p>
 </table>
 </section>
 <section id="id147">
-<h3><strong>Examples</strong><a class="headerlink" href="#id147" title="Permalink to this headline">#</a></h3>
+<h3><strong>Examples</strong><a class="headerlink" href="#id147" title="Permalink to this heading">#</a></h3>
 <p>Following is a sample card:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">SDC_KIN_SF</span> <span class="n">SS</span> <span class="mi">1</span>   <span class="mi">0</span> <span class="n">VL_EQUIL_PSEUDORXN</span>
 </pre></div>
@@ -8056,7 +7922,7 @@ interface. The source term to be used in the above equation will be taken from m
 previously specified multiple VL_EQUIL_PSEUDORXN cards.</p>
 </section>
 <section id="id148">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id148" title="Permalink to this headline">#</a></h3>
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id148" title="Permalink to this heading">#</a></h3>
 <ul class="simple">
 <li><p>This boundary condition is exactly the same as SDC_STEFANFLOW, except for the
 fact that it is applied on the normal component of the mesh velocity instead of the
@@ -8075,7 +7941,7 @@ to Moffat (2001) for detailed presentation on discontinuous variables.</p></li>
 </ul>
 </section>
 <section id="id149">
-<h3><strong>References</strong><a class="headerlink" href="#id149" title="Permalink to this headline">#</a></h3>
+<h3><strong>References</strong><a class="headerlink" href="#id149" title="Permalink to this heading">#</a></h3>
 <p>GTM-015.1: Implementation Plan for Upgrading Boundary Conditions at
 Discontinuous-Variable Interfaces, January 8, 2001, H. K. Moffat</p>
 <hr class="docutils" />
@@ -8084,51 +7950,55 @@ Discontinuous-Variable Interfaces, January 8, 2001, H. K. Moffat</p>
 </section>
 
 
-              </div>
+              </article>
               
-              
-              <!-- Previous / next buttons -->
-<div class='prev-next-area'>
-    <a class='left-prev' id="prev-link" href="any.html" title="previous page">
-        <i class="fas fa-angle-left"></i>
-        <div class="prev-next-info">
-            <p class="prev-next-subtitle">previous</p>
-            <p class="prev-next-title">Category 1: Any Equation</p>
-        </div>
-    </a>
-    <a class='right-next' id="next-link" href="real_solid.html" title="next page">
-    <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Category 3: Real Solid Equations</p>
-    </div>
-    <i class="fas fa-angle-right"></i>
-    </a>
-</div>
-              
-          </main>
-          
 
+              
+              <footer class="bd-footer-article">
+                  <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+  <a class='left-prev' id="prev-link" href="any.html" title="previous page">
+      <i class="fas fa-angle-left"></i>
+      <div class="prev-next-info">
+          <p class="prev-next-subtitle">previous</p>
+          <p class="prev-next-title">Category 1: Any Equation</p>
+      </div>
+  </a>
+  <a class='right-next' id="next-link" href="real_solid.html" title="next page">
+  <div class="prev-next-info">
+      <p class="prev-next-subtitle">next</p>
+      <p class="prev-next-title">Category 3: Real Solid Equations</p>
+  </div>
+  <i class="fas fa-angle-right"></i>
+  </a>
+</div>
+              </footer>
+              
+          </div>
+          
       </div>
     </div>
+
+  
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
-<footer class="footer mt-5 mt-md-0">
-  <div class="container">
-    
-    <div class="footer-item">
-      <p class="copyright">
+  <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=92025949c220c2e29695"></script>
+
+<footer class="bd-footer"><div class="bd-footer__inner container">
+  
+  <div class="footer-item">
+    <p class="copyright">
     &copy; Copyright 2019 Goma Developers.<br>
 </p>
-    </div>
-    
-    <div class="footer-item">
-      <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.5.0.<br>
-</p>
-    </div>
-    
   </div>
+  
+  <div class="footer-item">
+    <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.0.2.<br>
+</p>
+  </div>
+  
+</div>
 </footer>
   </body>
 </html>
