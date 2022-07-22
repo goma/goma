@@ -75,9 +75,11 @@ element blocks.
   of the fluid momentum equation are affected by use of a single boundary
   condition. The actual constraints that are imposed at node *j* are:
 
-.. figure:: /figures/075_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+  \int \phi_j (v_f - v_s) \cdot \delta_x d \Gamma = 0 \int \phi_j (v_f - v_s) \cdot \delta_y | d \Gamma = 0 \int \phi_j (v_f - v_s) \cdot \delta_z d \Gamma = 0
+
+
 
 
 where :math:`\phi_j` is the finite element trial function, :math:`v_f` is the fluid velocity, and :math:`v_s` is the
