@@ -1017,7 +1017,7 @@ double bingham_viscosity(struct Generalized_Newtonian *gn_local,
   }
 
   var = TEMPERATURE;
-  if (pd->gv[var] && DOUBLE_NONZERO(temp) && DOUBLE_NONZERO(mp->reference[TEMPERATURE])) {
+  if (DOUBLE_NONZERO(temp) && DOUBLE_NONZERO(mp->reference[TEMPERATURE])) {
 #if MELTING_BINGHAM
     /* melting version */
     if (temp <= tmelt) {

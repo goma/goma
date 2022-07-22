@@ -79,10 +79,12 @@
 
 void shell_n_dot_flow_bc_confined(double func[DIM],
                                   double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
-                                  const double flowrate, /* imposed flow rate */
-                                  const double time,     /* current time */
-                                  const double dt,       /* current time step size */
-                                  double xi[DIM],        /* Local stu coordinates */
+                                  const double flowrate,  /* imposed flow rate */
+                                  const double flow_gap,  /* imposed gap dependent flow */
+                                  const double pwr_index, /* power-law for gap dependence */
+                                  const double time,      /* current time */
+                                  const double dt,        /* current time step size */
+                                  double xi[DIM],         /* Local stu coordinates */
                                   const Exo_DB *exo)
 
 /***********************************************************************
@@ -102,6 +104,8 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
  * Input:
  *
  *  flowrate      = specified on the bc card as the first float
+ *  flow_gap      = specified on the bc card as the second float (optional)
+ *  pwr_index     = specified on the bc card as the third float (optional)
  *  grad LUB_P    = Lubrication pressure gradient
  *  U_top         = Velocity of the top wall
  *  U_bot         = Velocity of the bottom wall
@@ -121,7 +125,7 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
  *
  ********************************************************************/
 {
-  int j, ii, var;
+  int j, ii, jj, var;
   int *n_dof = NULL;
   int dof_map[MDE];
   double grad_phi_j[DIM], grad_II_phi_j[DIM];
@@ -159,7 +163,10 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
         Inn(grad_phi_j, grad_II_phi_j);
 
         for (ii = 0; ii < pd->Num_Dim; ii++) {
-          d_func[0][var][j] += LubAux->dq_dp1[ii][j] * grad_II_phi_j[ii] * bound_normal[ii];
+          for (jj = 0; jj < pd->Num_Dim; jj++) {
+            d_func[0][var][j] +=
+                LubAux->dq_dgradp[ii][jj][j] * grad_II_phi_j[jj] * bound_normal[ii];
+          }
         }
       }
     }
@@ -168,7 +175,7 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
 
   /* Calculate the residual contribution        */
 
-  func[0] = -flowrate;
+  func[0] = -flowrate - flow_gap * pow(LubAux->H, 2 + 1. / pwr_index);
   for (ii = 0; ii < pd->Num_Dim; ii++) {
     func[0] += LubAux->q[ii] * bound_normal[ii];
   }
@@ -573,7 +580,7 @@ void shell_n_dot_flow_bc_film(double func[DIM],
  *
  ********************************************************************/
 {
-  int j, ii, var;
+  int j, ii, jj, var;
   int *n_dof = NULL;
   int dof_map[MDE];
   double phi_j;
@@ -612,7 +619,10 @@ void shell_n_dot_flow_bc_film(double func[DIM],
         Inn(grad_phi_j, grad_II_phi_j);
 
         for (ii = 0; ii < pd->Num_Dim; ii++) {
-          d_func[0][var][j] += LubAux->dq_dp1[ii][j] * grad_II_phi_j[ii] * bound_normal[ii];
+          for (jj = 0; jj < pd->Num_Dim; jj++) {
+            d_func[0][var][j] +=
+                LubAux->dq_dgradp[ii][jj][j] * grad_II_phi_j[jj] * bound_normal[ii];
+          }
         }
       }
     }

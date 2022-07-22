@@ -1171,12 +1171,6 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
      */
     exchange_dof(cx[0], dpi, x, 0);
 
-    if (Output_Variable_Stats) {
-      err = variable_stats(x, time);
-      GOMA_EH(err, "Problem with variable_stats!");
-      if (ProcID == 0)
-        fflush(stdout);
-    }
     /*
      * Now copy the initial solution, x[], into the history solutions
      * x_old[], etc. Note, xdot[] = xdot_old[] = 0 at this point,

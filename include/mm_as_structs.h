@@ -3193,6 +3193,7 @@ struct Lubrication_Auxiliaries {
   double gradP_normal[DIM];  /* Unit vector perpendicular to the pressure */
   double H;                  /* Lubrication Gap Height */
   double srate;              /* Lubrication Characteristic Shear Rate */
+  double mu_star;            /* Lubrication Characteristic Viscosity */
 
   double dgradP_mag_dP;          /* Pressure gradient magnitude sensitivities w.r.t.
                                     pressure */
