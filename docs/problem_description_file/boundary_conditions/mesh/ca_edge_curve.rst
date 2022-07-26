@@ -62,9 +62,11 @@ normal vectors must be constant.
 * Although this boundary condition deals with vector quantities it is a scalar
   constraint. The actual requirement that is imposed is:
 
-  .. figure:: /figures/059_goma_physics.png
-	:align: center
-	:width: 90%
+  .. math::
+
+    n_f \cdot n_s = cos\ \left(\theta \right)
+
+    
 
   where n\ :sub:`f` is the outward-pointing normal to the
   primary side set, n\ :sub:`s` is the outward-pointing normal

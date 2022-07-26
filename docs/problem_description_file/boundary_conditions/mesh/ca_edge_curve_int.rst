@@ -62,9 +62,11 @@ normal vectors must be constant.
   *CA_EDGE_CURVE* boundary. In this case, it is applied as a strong integrated
   constraint:
 
-  .. figure:: /figures/061_goma_physics.png
-	:align: center
-	:width: 90%
+  .. math::
+
+    \int_{\Gamma} \phi_i \left(n_f \cdot n_s - cos\ (\theta) \right) d \Gamma = 0
+
+    
 
   where φ\ :sub:`i` is the finite element trial function for node
   *i*, Γ is the edge space curve, n\ :sub:`f` is the outwardpointing

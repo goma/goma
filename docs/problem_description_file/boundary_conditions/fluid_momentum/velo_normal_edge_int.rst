@@ -66,9 +66,11 @@ curve defined by the intersections of side set 5 and 4.
 * This boundary condition imposes a strongly
   integrated constraint of the form:
 
-.. figure:: /figures/081_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+  \int_C \phi_i \left(n_{cl} \cdot (v - v_m) - V_n\right)dC = 0
+
+  
 
 where :math:`\phi_i` is the velocity trial function, *v* is the
 fluid velocity, :math:`v_m` is the mesh velocity and :math:`n_cl`

@@ -25,7 +25,7 @@ Definitions of the input parameters are as follows:
 <bc_id>               The boundary flag identifier, an integer associated with
                       <bc_type> that identifies the boundary location 
                       (side set in EXODUS II) in the problem domain.
-<float>               :math:`V_n`, value of normal velocity component. Note that this
+<float>               :math:`v_n`, value of normal velocity component. Note that this
                       velocity component is relative to the motion of the
                       underlying mesh.
 ===================== ==========================================================
@@ -51,9 +51,11 @@ common context for this boundary condition.
 * The actual equation that is applied to a node, *j*, on the surface in question is 
   as follows:
 
-.. figure:: /figures/077_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+  n \cdot \left(v_j - v_s\right) = v_n
+
+  
 
 where :math:`v_j` is the fluid velocity at the node, *n* the outward-pointing normal to the
 surface, :math:`v_s` the velocity of the underlying mesh at the node, and :math:`v_n` is the normal
