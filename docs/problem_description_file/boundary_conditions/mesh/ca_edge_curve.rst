@@ -64,7 +64,7 @@ normal vectors must be constant.
 
   .. math::
 
-    n_f \cdot n_s = cos \left(\theta \right)
+    n_f \cdot n_s = cos\ \left(\theta \right)
 
     
 

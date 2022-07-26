@@ -77,7 +77,7 @@ is replaced by the residual equation,
 
 .. math::
 
-	R = v - <float1>|
+	R_i = v - \texttt{<float1>}
 
 	
 

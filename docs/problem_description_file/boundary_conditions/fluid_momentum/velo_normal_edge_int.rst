@@ -68,7 +68,7 @@ curve defined by the intersections of side set 5 and 4.
 
 .. math::
 
-  \int_C \phi_i \left(N_{cl} \cdot (v - v_m) - V_n\right)dC = 0
+  \int_C \phi_i \left(n_{cl} \cdot (v - v_m) - V_n\right)dC = 0
 
   
 

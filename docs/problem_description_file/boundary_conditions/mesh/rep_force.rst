@@ -62,7 +62,7 @@ direction to a surface side set, defined by:
 
 .. math::
 
-	\overrightarrow{F} = F (\overrightarrow{n}) = - \frac{\lambda}{h^4}
+	\vec{F} = F (\vec{n}) = - \frac{\lambda}{h^4}
 
 	
 

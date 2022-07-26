@@ -25,7 +25,7 @@ solves the following equation representing Stefan flow at a boundary.
 
 .. math::
 
-  n_l \cdot \left[\rho^l (u^l - u_s)\right] = \sum^E_{k = 1} - W_k S^l_k
+  n_l \cdot \left[\rho^l (u^l - u_s)\right] = \sum^N_{k = 1} - W_k S^l_k
 
 
 

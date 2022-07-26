@@ -181,7 +181,7 @@ So, if you want a formulation as follows:
 
 .. math::
 
-	\underline n \cdot D \nabla Y = K \left(p_i - p_i^{\infty} \right)
+	\underline n \cdot D \nabla Y = K \left(y_i - y_i^{\infty} \right)
 
 
 

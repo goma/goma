@@ -67,7 +67,7 @@ side set 40 and side set 50.
 
 .. math::
 
-  \int_{\Gamma} \phi_i \left(n_f \cdot n - cos (\theta) \right) d \Gamma = 0
+  \int_{\Gamma} \phi_i \left(n_f \cdot n - cos\ (\theta) \right) d \Gamma = 0
 
   
 

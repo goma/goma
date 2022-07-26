@@ -77,9 +77,11 @@ element blocks.
 
 .. math::
 
-  \int \phi_j (v_f - v_s) \cdot \delta_x d \Gamma = 0 \int \phi_j (v_f - v_s) \cdot \delta_y | d \Gamma = 0 \int \phi_j (v_f - v_s) \cdot \delta_z d \Gamma = 0
-
-
+  \int \phi_j \cdot (v_f - v_s) \cdot e_x d \Gamma = 0 
+  \\
+  \int \phi_j \cdot (v_f - v_s) \cdot e_y d \Gamma = 0 
+  \\ 
+  \int \phi_j \cdot (v_f - v_s) \cdot e_z d \Gamma = 0
 
 
 where :math:`\phi_j` is the finite element trial function, :math:`v_f` is the fluid velocity, and :math:`v_s` is the

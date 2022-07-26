@@ -28,7 +28,7 @@ The <float_list> has three parameters; definitions for all input parameters is a
 <bc_id>          The boundary flag identifier, an integer associated with
                  <bc_type> that identifies the boundary location (side set
                  in EXODUS II) in the problem domain.
-<integer>        :math:`N_cl`, parameter that identifies a single-node node
+<integer>        :math:`N_{cl}`, parameter that identifies a single-node node
                  set that coincides with the location in the model of the 
                  moving contact line. Distances in the slipping model are
                  computed relative to the location of this node. When the

@@ -55,7 +55,7 @@ SPLINE in order to apply a tangential force which is proportional to the normal 
 
 .. math::
 
-     \underline F = \mu_n \frac{\underline v}{|\underline v|}
+     \underline F = \mu F_n \frac{\underline v}{|\underline v|}
 
      
 

@@ -126,7 +126,7 @@ substrate is moving at the fixed velocity (0, -1., 0.).
 
 .. math::
 
-  cos \theta = cos \theta_s - c_T Ca_L
+  cos\ \theta = cos\ \theta_s - c_T Ca_L
 
 
 
@@ -147,7 +147,7 @@ substrate is moving at the fixed velocity (0, -1., 0.).
 
 .. math::
 
-  \int_{\Gamma} \phi_i \left(n_f \cdot n_s - (cos \theta_s - c_T Ca_L)\right) d \Gamma = 0
+  \int_{\Gamma} \phi_i \left(n_f \cdot n_s - (cos\ \theta_s - c_T Ca_L)\right) d \Gamma = 0
 
   
 

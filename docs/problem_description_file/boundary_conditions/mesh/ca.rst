@@ -58,7 +58,11 @@ solid surface in contact with the free surface at this point.
 **Technical Discussion**
 -------------------------
 * The constraint that is imposed at the nodeset node is:
-  :math:`\underline n \cdot \underline n_{fs} = cos \ \theta`
+
+  .. math::
+  
+    \underline n \cdot \underline n_{fs} = cos \ \theta
+    
   
   where *n* is the normal to the geometry specified on the card itself, and n\ :sub:`fs` is the normal to the outward free surface computed internally by *Goma*. Also see the
   *CA_OR_FIX* card for an extension to this condition and *CA_EDGE* for its

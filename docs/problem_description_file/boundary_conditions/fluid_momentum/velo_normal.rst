@@ -24,7 +24,7 @@ Definitions of the input parameters are as follows:
 <bc_id>          The boundary flag identifier, an integer associated with
                  <bc_type> that identifies the boundary location (side set
                  in EXODUS II) in the problem domain.
-<float>          :math:`V_n`, value of the normal velocity component. Note that
+<float>          :math:`v_n`, value of the normal velocity component. Note that
                  this velocity component is relative to the motion of the
                  underlying mesh.
 [integer]        *blk_id*, an optional parameter that is the element block

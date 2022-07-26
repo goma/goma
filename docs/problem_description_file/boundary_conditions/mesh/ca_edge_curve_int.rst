@@ -64,7 +64,7 @@ normal vectors must be constant.
 
   .. math::
 
-    \int_{\Gamma} \phi_i \left(n_f \cdot n_s - cos (\theta) \right) d \Gamma = 0
+    \int_{\Gamma} \phi_i \left(n_f \cdot n_s - cos\ (\theta) \right) d \Gamma = 0
 
     
 
