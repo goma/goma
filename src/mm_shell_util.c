@@ -5136,9 +5136,10 @@ void calculate_lub_q_v_old(
     for (i = 0; i < dim; i++) {
       q_old[i] += q_mag * ev[i];
     }
-    if (gn->ConstitutiveEquation == POWER_LAW || gn->ConstitutiveEquation == BINGHAM ||
+    if (DOUBLE_NONZERO(vsqr) &&
+        (gn->ConstitutiveEquation == POWER_LAW || gn->ConstitutiveEquation == BINGHAM ||
         gn->ConstitutiveEquation == HERSCHEL_BULKLEY || gn->ConstitutiveEquation == CARREAU ||
-        gn->ConstitutiveEquation == CARREAU_WLF || gn->ConstitutiveEquation == BINGHAM_WLF) {
+        gn->ConstitutiveEquation == CARREAU_WLF || gn->ConstitutiveEquation == BINGHAM_WLF)) {
       GOMA_EH(GOMA_ERROR, "Shear-thining moving wall model not finished yet.\n");
     } else {
       for (i = 0; i < dim; i++) {

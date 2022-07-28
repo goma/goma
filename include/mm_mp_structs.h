@@ -1235,6 +1235,7 @@ struct Elastic_Constitutive {
   int thermal_expansion_model;
   int len_u_thermal_expansion;
   dbl *u_thermal_expansion;
+  int thermal_expansion_tableid;
   dbl solid_reference_temp;
   int solid_reference_temp_model;
 
