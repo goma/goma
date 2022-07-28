@@ -58,9 +58,11 @@ from both abutting materials) to enforce the overall conservation of mass exchan
 * This boundary condition card applies the following constraint to nodes on the side
   set: 
 
-.. figure:: /figures/078_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+  \rho_1 n \cdot \left(v - v_s\right) |_1 = \rho_2 n \cdot \left(v - v_s\right) |_2
+
+  
 
 where 1 denotes evaluation in phase 1 and 2 denotes evaluation in phase 2. This
 constraint replaces only one of the momentum equations present at an internal

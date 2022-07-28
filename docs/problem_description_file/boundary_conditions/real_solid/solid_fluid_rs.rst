@@ -72,9 +72,11 @@ solid boundary to follow the side set.
 
 The functional form of the *SOLID_FLUID_RS* boundary condition is:
 
-.. figure:: /figures/072_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+     \lambda (\underline n \cdot \underline T) = \underline n \cdot \underline \sigma
+
+     
 
 where :math:`\underline{T}` is the fluid phase stress tensor given by any one of the specified fluid-phase
 constitutive equations, and :math:`\underline{\sigma}` is the real-solid solid phase stress tensor, also given by

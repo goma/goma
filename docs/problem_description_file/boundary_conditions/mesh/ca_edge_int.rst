@@ -65,9 +65,11 @@ side set 40 and side set 50.
   a point collocated constraint, this boundary condition strongly enforces the
   following *integrated* constraint at a node i**:
 
-.. figure:: /figures/058_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+  \int_{\Gamma} \phi_i \left(n_f \cdot n - cos\ (\theta) \right) d \Gamma = 0
+
+  
 
 |
 

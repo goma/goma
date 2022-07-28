@@ -60,16 +60,20 @@ side set 10 and the distance h is measured from side set 10 to the plane defined
 The *REP_FORCE* boundary condition produces a vector traction in the normal
 direction to a surface side set, defined by:
 
-.. figure:: /figures/052_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+	\vec{F} = F (\vec{n}) = - \frac{\lambda}{h^4}
+
+	
 
 where *F* is a force per unit area that varies with the distance *h* from a plane defined 
 by
 
-.. figure:: /figures/053_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+	ax + by + cz + d = 0
+
+
 
 The normal vector is defined as the outward pointing normal to the surface. For internal
 surfaces defined by side sets which include both sides of the interface, this condition

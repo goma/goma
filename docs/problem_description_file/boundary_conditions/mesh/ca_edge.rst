@@ -73,11 +73,10 @@ side set 40 and side set 50.
 * Although this constraint deals with vector quantities, it is a scalar constraint. The
   actual requirement that is imposed is:
 
-.. figure:: /figures/057_goma_physics.png
-	:align: center
-	:width: 90%
-
-|
+  .. math::
+  
+    n_f \cdot n = cos\ \left(\theta \right)
+  
 
   where n\ :sub:`f` is the outward-pointing normal to the primary side set, *n* is the vector
   supplied on the card, and θ is the angle supplied on the card. It should be

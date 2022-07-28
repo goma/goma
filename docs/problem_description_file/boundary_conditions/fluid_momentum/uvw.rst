@@ -75,9 +75,11 @@ from -1.0). In this case, the Dirichlet constraint is applied as a residual equa
 is, the momentum equation for the appropriate component at each node in the nodeset
 is replaced by the residual equation,
 
-.. figure:: /figures/074_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+	R_i = v - \texttt{<float1>}
+
+	
 
 This residual equation is included in the Newton’s method iteration scheme like any
 other residual equation. Note that in this case, nothing is set in the solution vector since
