@@ -3631,10 +3631,6 @@ double getAngleAC(struct AC_Information *augc, double *cAC_iAC, double *x, Exo_D
         }
       }
 
-      /*              ordinate += 180. - (180. / M_PI) * acos((n1[0] * n2[0] + n1[1] * n2[1]) /
-                                                            (sqrt(n1[0] * n1[0] + n1[1] * n1[1]) *
-                                                             sqrt(n2[0] * n2[0] + n2[1] * n2[1])));
-      */
     } /*ielem loop    */
 
     /* For nonlocal element information, we do a

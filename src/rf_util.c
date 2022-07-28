@@ -1720,7 +1720,7 @@ void init_vec(
                 Var_init[i].var, Var_init[i].init_val);
         break;
       }
-      if (1 || Var_init[i].len_u_pars == -1) { /* Disabled for now */
+      if (1 || Var_init[i].len_u_pars == -1) { /* Disabled for now, still some bugs */
         init_vec_value(dum_var, Var_init[i].init_val, DPI_ptr->num_universe_nodes);
         inject_nodal_vec(u, Var_init[i].var, Var_init[i].ktype, 0, -2, dum_var);
       } else {

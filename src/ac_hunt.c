@@ -967,7 +967,7 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
 
           if (dhunt_par < dhunt_par_min) {
             DPRINTF(stdout, "\n X: C step-length reduced below minimum.");
-            DPRINTF(stdout, "\n theta: %g ;  theta_min: %g", dhunt_par, dhunt_par_min);
+            DPRINTF(stdout, "\n theta: %g ; delta theta %g ; delta theta_min: %g", hunt_par, dhunt_par, dhunt_par_min);
             DPRINTF(stdout, "\n    Program terminated.\n");
             /* This needs to have a return value of 0, indicating
              * success, for the continuation script to not treat this
