@@ -79,9 +79,11 @@ substrate is moving at the fixed velocity (0, -1., 0.).
   recession) rate of the contact line, u\ :sub:`wet`, as the normal component of the contact
   line velocity, x\ :sub:`cl` , relative to the substrate velocity, *W*:
 
-   .. figure:: /figures/063_goma_physics.png
-	:align: center
-	:width: 90%
+   .. math::
+
+    u_{wet} = n_{cl} \cdot \left(W - \dot x_{cl} \right) 
+
+
 
   where n\ :sub:`cl` is a unit vector normal to the contact
   line in the plane of the substrate as illustrated
@@ -94,9 +96,11 @@ substrate is moving at the fixed velocity (0, -1., 0.).
 	:align: center
 	:width: 90%
 
-.. figure:: /figures/065_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+  Ca_L = \mu u_{wet} / \sigma
+
+
 
 |
 
@@ -120,9 +124,11 @@ substrate is moving at the fixed velocity (0, -1., 0.).
   via a simple linear relationship between the local capillary number and the cosine
   of the contact angle:
 
-.. figure:: /figures/067_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+  cos\ \theta = cos\ \theta_s - c_T Ca_L
+
+
 
 |
 
@@ -139,9 +145,11 @@ substrate is moving at the fixed velocity (0, -1., 0.).
   applied as a strong integrated constraint. The equation associated with each node
   on the edge is:
 
-.. figure:: /figures/068_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+  \int_{\Gamma} \phi_i \left(n_f \cdot n_s - (cos\ \theta_s - c_T Ca_L)\right) d \Gamma = 0
+
+  
 
 |
 

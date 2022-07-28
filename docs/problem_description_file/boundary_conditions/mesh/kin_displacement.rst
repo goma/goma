@@ -58,9 +58,12 @@ neighboring *TALE* or fluid *ARBITRARY* region is 12.
 
 The functional form of the kinematic boundary condition is:
 
-.. figure:: /figures/044_goma_physics.png
-	:align: center
-	:width: 90%
+
+.. math::
+
+    \underline n \cdot \left(\underline d_m - \underline d_m^0 \right) - \underline n \cdot \left(\underline d - \underline d^0 \right) = 0
+
+
 
 Here **EQUATION** is the unit normal vector to the solid-fluid free surface, **EQUATION** 
 is the mesh

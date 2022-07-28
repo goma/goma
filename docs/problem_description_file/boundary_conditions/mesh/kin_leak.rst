@@ -69,9 +69,11 @@ require a second *YFLUX* input card.
 
 Functionally, the *KIN_LEAK* boundary condition can be represented as the following:
 
-.. figure:: /figures/045_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+	\underline n \cdot \left(\underline v - \underline v_s\right) = \sum_{i} h_i \left(y_i - y_i^0\right)
+
+
 
 where **EQUATION** is the vector velocity; **EQUATION** is the velocity of the boundary itself (not independent
 from the mesh velocity); **EQUATION** is the normal vector to the surface; **EQUATION** is the concentration
@@ -91,9 +93,11 @@ convective-diffusion equation.
 
 The convective-diffusion equation in *Goma* is given as
 
-.. figure:: /figures/046_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+	\frac{d y_i}{dt} = - \left(v - v_m\right) \cdot \nabla y_i - \nabla \cdot J_i + R_i
+
+
 
 with mass being entirely left out of the expression. *J* is divided by density before
 adding into the balance equation; this presumes that volume fraction and mass fraction
@@ -155,15 +159,19 @@ Concerning the units of the mass transfer coefficient on the YFLUX boundary
 condition, the above discussion now sets those. *Goma* clearly needs the flux in the
 following form:
 
-.. figure:: /figures/047_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+	\underline n \cdot D \nabla Y = K \cdot \left(p_i - p_i^{\infty}\right)
+
+
 
 and dimensionally for the left hand side
 
-.. figure:: /figures/048_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+	\left(L^2 / t\right) \cdot \left(1/L \right) = L/t
+
+
 
 where D is in units L\ :sup:`2`/t, the gradient operator has units of 1/L so K *has* to 
 be in units
@@ -171,9 +179,11 @@ of L/t (period!) because y\ :sub:`i` is a fraction.
 
 So, if you want a formulation as follows:
 
-.. figure:: /figures/049_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+	\underline n \cdot D \nabla Y = K \left(y_i - y_i^{\infty} \right)
+
+
 
 then K’s units will have to accommodate for the relationship between p\ :sub:`i` and 
 y\ :sub:`i` in the
@@ -181,9 +191,11 @@ liquid, hopefully a linear one as in Raoult’s law, i.e. if p\ :sub:`i` = PvV\ 
 where Pv is the vapor
 pressure, then
 
-.. figure:: /figures/050_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+	\underline n \cdot D \nabla Y = KP_V \left(y_i - y_i^{\infty} \right)
+
+
 
 and so K on the YFLUX command has to be KPv....and so on.
 
@@ -191,9 +203,14 @@ Finally, you will note, since we do not multiply through by density, you will ha
 take care of that, i. e., in the Price paper he gives K in units of t/L. So, that must be
 converted as follows:
 
-.. figure:: /figures/051_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+	K_{price} \left(P_V / p \right) = K_{goma} 
+
+
+
+	\left(t / L \right) \left(M / L t^2\right) \left(L^3 / M \right) = L/t
+
 
 This checks out!
 
