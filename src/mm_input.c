@@ -1291,8 +1291,7 @@ void rd_genl_specs(FILE *ifp, char *input) {
       GOMA_EH(GOMA_ERROR, err_msg);
     }
 
-    if (fscanf(ifp, "%d %lf", &Var_init[Num_Var_Init].ktype,
-               &Var_init[curr_var].init_val) != 2)
+    if (fscanf(ifp, "%d %lf", &Var_init[Num_Var_Init].ktype, &Var_init[curr_var].init_val) != 2)
       GOMA_EH(GOMA_ERROR, "Error reading initialization data");
 
     SPF(err_msg, "%s = %s %d %.4g", "User Initialize", input, Var_init[curr_var].ktype,
@@ -4733,7 +4732,7 @@ void rd_hunt_specs(FILE *ifp, char *input) {
           (hunt[iHC].BegParameterValue * hunt[iHC].EndParameterValue <= 0.0)) {
         hunt[iHC].ramp = 0;
         fprintf(stderr, "%s:\tImproper Log ramp for hunting condition %d\n", yo, iHC);
-      } 
+      }
     }
   }
 
@@ -9321,9 +9320,9 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
           pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)] = 1.0;
           pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)] = 1.0;
           pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)] = 1.0;
-          sr =
-              sprintf(err_msg, "Using default equation term multipliers (bdy, diff,src) on %s in %s",
-                      EQ_Name[ce].name1, pd_ptr->MaterialName);
+          sr = sprintf(err_msg,
+                       "Using default equation term multipliers (bdy, diff,src) on %s in %s",
+                       EQ_Name[ce].name1, pd_ptr->MaterialName);
           GOMA_WH(GOMA_ERROR, err_msg);
           DPRINTF(stderr, "\t %s %.4g %.4g %.4g \n", EQ_Name[ce].name1,
                   pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)],

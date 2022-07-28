@@ -834,13 +834,13 @@ void continue_problem(Comm_Ex *cx, /* array of communications structures */
           DPRINTF(stdout, "Number of extra unknowns: %4d\n\n", nAC);
 
           for (iAC = 0; iAC < nAC; iAC++) {
-              evol_local = augc[iAC].evol; 
+            evol_local = augc[iAC].evol;
 #ifdef PARALLEL
-              if (Num_Proc > 1 && 
-                (augc[iAC].Type == AC_VOLUME || augc[iAC].Type == AC_POSITION || augc[iAC].Type == AC_ANGLE)) {
-                MPI_Allreduce(&evol_local, &evol_global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                evol_local = evol_global;
-              }
+            if (Num_Proc > 1 && (augc[iAC].Type == AC_VOLUME || augc[iAC].Type == AC_POSITION ||
+                                 augc[iAC].Type == AC_ANGLE)) {
+              MPI_Allreduce(&evol_local, &evol_global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+              evol_local = evol_global;
+            }
 #endif
             if (augc[iAC].Type == AC_USERBC) {
               DPRINTF(stdout, "\tBC[%4d] DF[%4d] = %10.6e\n", augc[iAC].BCID, augc[iAC].DFID,
@@ -857,8 +857,7 @@ void continue_problem(Comm_Ex *cx, /* array of communications structures */
             } else if (augc[iAC].Type == AC_ANGLE) {
               evol_local = augc[iAC].lm_resid + augc[iAC].CONSTV;
               DPRINTF(stdout, "\tNodeSet[%4d]_Ang = %g F_bal = %6.3e VC[%4d] Param=%6.3e\n",
-                        augc[iAC].MTID, evol_local, augc[iAC].lm_resid, augc[iAC].VOLID,
-                        x_AC[iAC]);
+                      augc[iAC].MTID, evol_local, augc[iAC].lm_resid, augc[iAC].VOLID, x_AC[iAC]);
             } else if (augc[iAC].Type == AC_FLUX) {
               DPRINTF(stdout, "\tBC[%4d] DF[%4d]=%10.6e\n", augc[iAC].BCID, augc[iAC].DFID,
                       x_AC[iAC]);

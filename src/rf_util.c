@@ -1720,11 +1720,10 @@ void init_vec(
                 Var_init[i].var, Var_init[i].init_val);
         break;
       }
-      if (1 || Var_init[i].len_u_pars == -1) {   /* Disabled for now */
+      if (1 || Var_init[i].len_u_pars == -1) { /* Disabled for now */
         init_vec_value(dum_var, Var_init[i].init_val, DPI_ptr->num_universe_nodes);
         inject_nodal_vec(u, Var_init[i].var, Var_init[i].ktype, 0, -2, dum_var);
-      }
-      else {
+      } else {
         double xpt[DIM] = {0, 0, 0}, var_val[MAX_VARIABLE_TYPES];
         int dir, ierr;
         for (dir = 0; dir < pd->Num_Dim; dir++) {
@@ -1733,7 +1732,7 @@ void init_vec(
         init_vec_value(var_val, 0.0, MAX_VARIABLE_TYPES);
         ierr = user_initialize(Var_init[i].var, u, Var_init[i].init_val, Var_init[i].u_pars, xpt,
                                var_val);
-        if( ierr == -1) {
+        if (ierr == -1) {
           GOMA_EH(ierr, "Problem with user_initialize...");
         }
       }

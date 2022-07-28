@@ -3432,7 +3432,7 @@ double getPositionAC(struct AC_Information *augc, double *cAC_iAC, double *x, Ex
  *  additional equation to a system.
  */
 double getAngleAC(struct AC_Information *augc, double *cAC_iAC, double *x, Exo_DB *exo) {
-  double ordinate=0., n1[DIM], n2[DIM], n_dot_n, n1_mag, n2_mag, xi[DIM];
+  double ordinate = 0., n1[DIM], n2[DIM], n_dot_n, n1_mag, n2_mag, xi[DIM];
   double n1_dx[DIM][DIM][MDE], n2_dx[DIM][DIM][MDE], d_ord_dx[4][DIM][DIM][MDE];
   int i, ins, inode, mat_num, face, node2, err, ielem, num_nodes_on_side;
   int p, q, k, ielem_dim;
@@ -3460,9 +3460,11 @@ double getAngleAC(struct AC_Information *augc, double *cAC_iAC, double *x, Exo_D
       } else if (exo->ns_num_nodes[ins] != 1) {
         inode = exo->ns_node_list[exo->ns_node_index[ins] + 0];
         for (i = 1; i < exo->ns_num_nodes[ins]; i++) {
-          if(exo->ns_node_list[exo->ns_node_index[ins] + i] != inode) {
-            printf("NS %d, non-unique nodes in list of %d\n", exo->ns_id[ins], exo->ns_num_nodes[ins]);
-            printf("Proc %d Nodes %d %d\n", ProcID, inode, exo->ns_node_list[exo->ns_node_index[ins]+i]);
+          if (exo->ns_node_list[exo->ns_node_index[ins] + i] != inode) {
+            printf("NS %d, non-unique nodes in list of %d\n", exo->ns_id[ins],
+                   exo->ns_num_nodes[ins]);
+            printf("Proc %d Nodes %d %d\n", ProcID, inode,
+                   exo->ns_node_list[exo->ns_node_index[ins] + i]);
           }
         }
       }
@@ -3492,17 +3494,17 @@ double getAngleAC(struct AC_Information *augc, double *cAC_iAC, double *x, Exo_D
 
     elem_list[0] = exo->node_elem_list[exo->node_elem_pntr[node]];
 
-  /*
-   * Find out where this node appears in the elements local
-   * node ordering scheme...
-   */
+    /*
+     * Find out where this node appears in the elements local
+     * node ordering scheme...
+     */
 
     local_node[0] = in_list(node, exo->elem_node_pntr[elem_list[0]],
-                          exo->elem_node_pntr[elem_list[0] + 1], exo->elem_node_list);
+                            exo->elem_node_pntr[elem_list[0] + 1], exo->elem_node_list);
 
     GOMA_EH(local_node[0], "Can not find node in elem node connectivity!?! ");
     local_node[0] -= exo->elem_node_pntr[elem_list[0]];
-  /* check for neighbors*/
+    /* check for neighbors*/
 
     mat_num = map_mat_index(augc->VOLID);
     if (mat_num == find_mat_number(elem_list[0], exo)) {
@@ -3515,7 +3517,7 @@ double getAngleAC(struct AC_Information *augc, double *cAC_iAC, double *x, Exo_D
       ielem = exo->elem_elem_list[exo->elem_elem_pntr[elem_list[0]] + face];
       if (ielem != -1) {
         node2 = in_list(node, exo->elem_node_pntr[ielem], exo->elem_node_pntr[ielem + 1],
-                      exo->elem_node_list);
+                        exo->elem_node_list);
         if (node2 != -1 && (mat_num == find_mat_number(ielem, exo))) {
           elem_list[elem_ct] = ielem;
           local_node[elem_ct] = node2;
@@ -3531,37 +3533,37 @@ double getAngleAC(struct AC_Information *augc, double *cAC_iAC, double *x, Exo_D
         GOMA_EH(-1, "Node out of bounds.");
       }
 
-    /*
-     * Now, determine the local name of the sides adjacent to this
-     * node...this works for the exo patran convention for quads...
-     *
-     * Again, local_node and local_side are zero based...
-     */
+      /*
+       * Now, determine the local name of the sides adjacent to this
+       * node...this works for the exo patran convention for quads...
+       *
+       * Again, local_node and local_side are zero based...
+       */
 
       local_side[0] = (local_node[ielem] + 3) % 4;
       local_side[1] = local_node[ielem];
 
-    /*
-     * With the side names, we can find the normal vector.
-     * Again, assume the sides live on the same element.
-     */
+      /*
+       * With the side names, we can find the normal vector.
+       * Again, assume the sides live on the same element.
+       */
       load_ei(elem_list[ielem], exo, 0, pg->imtrx);
 
-    /*
-     * We abuse the argument list under the conditions that
-     * we're going to do read-only operations and that
-     * we're not interested in old time steps, time derivatives
-     * etc.
-     */
+      /*
+       * We abuse the argument list under the conditions that
+       * we're going to do read-only operations and that
+       * we're not interested in old time steps, time derivatives
+       * etc.
+       */
       err = load_elem_dofptr(elem_list[ielem], exo, x, x, x, x, 0);
       GOMA_EH(err, "load_elem_dofptr");
 
       err = bf_mp_init(pd);
       GOMA_EH(err, "bf_mp_init");
 
-    /*
-     * What are the local coordinates of the nodes in a quadrilateral?
-     */
+      /*
+       * What are the local coordinates of the nodes in a quadrilateral?
+       */
 
       find_nodal_stu(local_node[ielem], ei[pg->imtrx]->ielem_type, &xi[0], &xi[1], &xi[2]);
 
@@ -3574,13 +3576,13 @@ double getAngleAC(struct AC_Information *augc, double *cAC_iAC, double *x, Exo_D
       err = load_fv();
       GOMA_EH(err, "load_fv");
 
-    /* First, one side... */
+      /* First, one side... */
 
       get_side_info(ei[pg->imtrx]->ielem_type, local_side[0] + 1, &num_nodes_on_side, side_nodes);
 
       surface_determinant_and_normal(elem_list[ielem], exo->elem_node_pntr[elem_list[ielem]],
-                                   ei[pg->imtrx]->num_local_nodes, ei[pg->imtrx]->ielem_dim - 1,
-                                   local_side[0] + 1, num_nodes_on_side, side_nodes);
+                                     ei[pg->imtrx]->num_local_nodes, ei[pg->imtrx]->ielem_dim - 1,
+                                     local_side[0] + 1, num_nodes_on_side, side_nodes);
 
       n1[0] = fv->snormal[0];
       n1[1] = fv->snormal[1];
@@ -3593,13 +3595,13 @@ double getAngleAC(struct AC_Information *augc, double *cAC_iAC, double *x, Exo_D
         }
       }
 
-    /* Second, the adjacent side of the quad... */
+      /* Second, the adjacent side of the quad... */
 
       get_side_info(ei[pg->imtrx]->ielem_type, local_side[1] + 1, &num_nodes_on_side, side_nodes);
 
       surface_determinant_and_normal(elem_list[ielem], exo->elem_node_pntr[elem_list[ielem]],
-                                   ei[pg->imtrx]->num_local_nodes, ei[pg->imtrx]->ielem_dim - 1,
-                                   local_side[1] + 1, num_nodes_on_side, side_nodes);
+                                     ei[pg->imtrx]->num_local_nodes, ei[pg->imtrx]->ielem_dim - 1,
+                                     local_side[1] + 1, num_nodes_on_side, side_nodes);
 
       n2[0] = fv->snormal[0];
       n2[1] = fv->snormal[1];
@@ -3611,7 +3613,7 @@ double getAngleAC(struct AC_Information *augc, double *cAC_iAC, double *x, Exo_D
         }
       }
 
-    /* cos (theta) = n1.n2 / ||n1|| ||n2|| */
+      /* cos (theta) = n1.n2 / ||n1|| ||n2|| */
 
       n_dot_n = n1_mag = n2_mag = 0.;
       for (p = 0; p < ielem_dim; p++) {
@@ -3619,25 +3621,25 @@ double getAngleAC(struct AC_Information *augc, double *cAC_iAC, double *x, Exo_D
         n1_mag += n1[p] * n1[p];
         n2_mag += n2[p] * n2[p];
       }
-      ordinate += M_PI - acos(n_dot_n/sqrt(n1_mag * n2_mag));
+      ordinate += M_PI - acos(n_dot_n / sqrt(n1_mag * n2_mag));
       for (p = 0; p < ielem_dim; p++) {
         for (q = 0; q < ielem_dim; q++) {
           for (k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) {
             d_ord_dx[ielem][p][q][k] +=
-              (n1[p] * n2_dx[p][q][k] + n2[p] * n1_dx[p][q][k]) / sqrt(1. - SQUARE(n_dot_n));
+                (n1[p] * n2_dx[p][q][k] + n2[p] * n1_dx[p][q][k]) / sqrt(1. - SQUARE(n_dot_n));
           }
         }
       }
 
-/*              ordinate += 180. - (180. / M_PI) * acos((n1[0] * n2[0] + n1[1] * n2[1]) /
-                                                      (sqrt(n1[0] * n1[0] + n1[1] * n1[1]) *
-                                                       sqrt(n2[0] * n2[0] + n2[1] * n2[1])));
-*/
-  } /*ielem loop    */
+      /*              ordinate += 180. - (180. / M_PI) * acos((n1[0] * n2[0] + n1[1] * n2[1]) /
+                                                            (sqrt(n1[0] * n1[0] + n1[1] * n1[1]) *
+                                                             sqrt(n2[0] * n2[0] + n2[1] * n2[1])));
+      */
+    } /*ielem loop    */
 
-  /* For nonlocal element information, we do a
-   * direct injection into a through Jac_BC.
-   */
+    /* For nonlocal element information, we do a
+     * direct injection into a through Jac_BC.
+     */
 
     int je;
     i = Index_Solution(node, MESH_DISPLACEMENT1, 0, 0, mat_num, pg->imtrx);

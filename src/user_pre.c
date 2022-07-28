@@ -100,7 +100,7 @@ double user_mat_init(const int var,
     value = fmin(T_below - (T_below - T_init) * sum, T_init);
     value = fmax(value, T_below);
     if (value < 0) {
-    fprintf(stderr, "Trouble, negative temperature! %g %g %g %g\n", value, sum, exp_arg, dist);
+      fprintf(stderr, "Trouble, negative temperature! %g %g %g %g\n", value, sum, exp_arg, dist);
     }
   } else if (var >= MESH_DISPLACEMENT1 && var <= MESH_DISPLACEMENT3) {
     double xpt0[DIM], T_pos, T_ref;
@@ -120,11 +120,11 @@ double user_mat_init(const int var,
 } /* End of routine user_mat_init */
 
 int user_initialize(const int var,
-                       double *x,
-                       const double init_value,
-                       const double p[],
-                       const double xpt[],
-                       const double var_vals[]) {
+                    double *x,
+                    const double init_value,
+                    const double p[],
+                    const double xpt[],
+                    const double var_vals[]) {
 
   double value = 0;
   int i, var_somewhere, idv, mn;
@@ -138,7 +138,7 @@ int user_initialize(const int var,
     warning = 1;
   }
 
-  if( var > -1) {
+  if (var > -1) {
     if (upd->vp[pg->imtrx][var] > -1) {
       for (i = 0; i < DPI_ptr->num_owned_nodes; i++) {
         var_somewhere = FALSE;
