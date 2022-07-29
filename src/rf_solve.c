@@ -969,21 +969,28 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
       DPRINTF(stdout, "Number of extra unknowns: %4d\n\n", nAC);
 
       for (iAC = 0; iAC < nAC; iAC++) {
+        evol_local = augc[iAC].evol;
+#ifdef PARALLEL
+        if (Num_Proc > 1 && (augc[iAC].Type == AC_VOLUME || augc[iAC].Type == AC_POSITION ||
+                             augc[iAC].Type == AC_ANGLE)) {
+          MPI_Allreduce(&evol_local, &evol_global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+          evol_local = evol_global;
+        }
+#endif
         if (augc[iAC].Type == AC_USERBC) {
           DPRINTF(stdout, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].BCID, augc[iAC].DFID, x_AC[iAC]);
         } else if (augc[iAC].Type == AC_USERMAT || augc[iAC].Type == AC_FLUX_MAT) {
           DPRINTF(stdout, "\tMT[%4d] MP[%4d]=% 10.6e\n", augc[iAC].MTID, augc[iAC].MPID, x_AC[iAC]);
         } else if (augc[iAC].Type == AC_VOLUME) {
-          evol_local = augc[iAC].evol;
-#ifdef PARALLEL
-          if (Num_Proc > 1) {
-            MPI_Allreduce(&evol_local, &evol_global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-
-            evol_local = evol_global;
-          }
-#endif /* PARALLEL */
           DPRINTF(stdout, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
                   augc[iAC].VOLID, evol_local, x_AC[iAC]);
+        } else if (augc[iAC].Type == AC_POSITION) {
+          DPRINTF(stdout, "\tNodeSet[%4d]_Pos = %10.6e F_bal = %10.6e VC[%4d] Param=%10.6e\n",
+                  augc[iAC].MTID, evol_local, augc[iAC].lm_resid, augc[iAC].VOLID, x_AC[iAC]);
+        } else if (augc[iAC].Type == AC_ANGLE) {
+          evol_local = augc[iAC].lm_resid + augc[iAC].CONSTV;
+          DPRINTF(stdout, "\tNodeSet[%4d]_Ang = %g F_bal = %6.3e VC[%4d] Param=%6.3e\n",
+                  augc[iAC].MTID, evol_local, augc[iAC].lm_resid, augc[iAC].VOLID, x_AC[iAC]);
         } else if (augc[iAC].Type == AC_LS_VEL) {
           evol_local = augc[iAC].lsvol;
           lsvel_local = augc[iAC].lsvel;
@@ -2072,38 +2079,21 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
             DPRINTF(stdout, "Number of extra unknowns: %4d\n\n", nAC);
 
             for (iAC = 0; iAC < nAC; iAC++) {
+              evol_local = augc[iAC].evol;
+#ifdef PARALLEL
+              if (Num_Proc > 1 && (augc[iAC].Type == AC_VOLUME || augc[iAC].Type == AC_POSITION ||
+                                   augc[iAC].Type == AC_ANGLE)) {
+                MPI_Allreduce(&evol_local, &evol_global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                evol_local = evol_global;
+              }
+#endif
               if (augc[iAC].Type == AC_USERBC) {
                 DPRINTF(stdout, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].BCID, augc[iAC].DFID,
                         x_AC[iAC]);
-/* temporary printing */
-#if 0
-                  if( (int)augc[iAC].DataFlt[1] == 6)
-			{
-		  DPRINTF(stdout, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].DFID, 0, BC_Types[augc[iAC].DFID].BC_Data_Float[0]);
-		  DPRINTF(stdout, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].DFID, 2, BC_Types[augc[iAC].DFID].BC_Data_Float[2]);
-		  DPRINTF(stdout, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].DFID, 3, BC_Types[augc[iAC].DFID].BC_Data_Float[3]);
-                  augc[iAC].DataFlt[5] += augc[iAC].DataFlt[6];
-		  DPRINTF(stdout, "\tAC[%4d] DF[%4d]=% 10.6e\n", iAC, 5, augc[iAC].DataFlt[5]);
-
-			}
-                  if( (int)augc[iAC].DataFlt[1] == 61)
-			{
-                  augc[iAC].DataFlt[5] += augc[iAC].DataFlt[6];
-		  DPRINTF(stdout, "\tAC[%4d] DF[%4d]=% 10.6e\n", iAC, 5, augc[iAC].DataFlt[5]);
-
-			}
-#endif
               } else if (augc[iAC].Type == AC_USERMAT || augc[iAC].Type == AC_FLUX_MAT) {
                 DPRINTF(stdout, "\tMT[%4d] MP[%4d]=% 10.6e\n", augc[iAC].MTID, augc[iAC].MPID,
                         x_AC[iAC]);
               } else if (augc[iAC].Type == AC_VOLUME) {
-                evol_local = augc[iAC].evol;
-#ifdef PARALLEL
-                if (Num_Proc > 1) {
-                  MPI_Allreduce(&evol_local, &evol_global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                  evol_local = evol_global;
-                }
-#endif
                 DPRINTF(stdout, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
                         augc[iAC].VOLID, evol_local, x_AC[iAC]);
               } else if (augc[iAC].Type == AC_FLUX) {
@@ -2111,12 +2101,11 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
                         x_AC[iAC]);
               } else if (augc[iAC].Type == AC_POSITION) {
                 DPRINTF(stdout, "\tNodeSet[%4d]_Pos = %10.6e F_bal = %10.6e VC[%4d] Param=%10.6e\n",
-                        augc[iAC].MTID, augc[iAC].evol, augc[iAC].lm_resid, augc[iAC].VOLID,
-                        x_AC[iAC]);
+                        augc[iAC].MTID, evol_local, augc[iAC].lm_resid, augc[iAC].VOLID, x_AC[iAC]);
               } else if (augc[iAC].Type == AC_ANGLE) {
-                DPRINTF(stderr, "\tNodeSet[%4d]_Ang = %10.6e F_bal = %10.6e VC[%4d] Param=%10.6e\n",
-                        augc[iAC].MTID, augc[iAC].evol, augc[iAC].lm_resid, augc[iAC].VOLID,
-                        x_AC[iAC]);
+                evol_local = augc[iAC].lm_resid + augc[iAC].CONSTV;
+                DPRINTF(stdout, "\tNodeSet[%4d]_Ang = %g F_bal = %6.3e VC[%4d] Param=%6.3e\n",
+                        augc[iAC].MTID, evol_local, augc[iAC].lm_resid, augc[iAC].VOLID, x_AC[iAC]);
               }
             }
           }

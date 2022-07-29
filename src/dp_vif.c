@@ -2376,6 +2376,7 @@ void noahs_ark(void) {
     ddd_add_member(n, &elc_glob[i]->thermal_expansion, 1, MPI_DOUBLE);
     ddd_add_member(n, &elc_glob[i]->thermal_expansion_model, 1, MPI_INT);
     ddd_add_member(n, &elc_glob[i]->len_u_thermal_expansion, 1, MPI_INT);
+    ddd_add_member(n, &elc_glob[i]->thermal_expansion_tableid, 1, MPI_INT);
 
     ddd_add_member(n, &elc_glob[i]->solid_reference_temp, 1, MPI_DOUBLE);
     ddd_add_member(n, &elc_glob[i]->solid_reference_temp_model, 1, MPI_INT);

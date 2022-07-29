@@ -1720,8 +1720,22 @@ void init_vec(
                 Var_init[i].var, Var_init[i].init_val);
         break;
       }
-      init_vec_value(dum_var, Var_init[i].init_val, DPI_ptr->num_universe_nodes);
-      inject_nodal_vec(u, Var_init[i].var, Var_init[i].ktype, 0, -2, dum_var);
+      if (1 || Var_init[i].len_u_pars == -1) { /* Disabled for now, still some bugs */
+        init_vec_value(dum_var, Var_init[i].init_val, DPI_ptr->num_universe_nodes);
+        inject_nodal_vec(u, Var_init[i].var, Var_init[i].ktype, 0, -2, dum_var);
+      } else {
+        double xpt[DIM] = {0, 0, 0}, var_val[MAX_VARIABLE_TYPES];
+        int dir, ierr;
+        for (dir = 0; dir < pd->Num_Dim; dir++) {
+          xpt[dir] = Coor[dir][i];
+        }
+        init_vec_value(var_val, 0.0, MAX_VARIABLE_TYPES);
+        ierr = user_initialize(Var_init[i].var, u, Var_init[i].init_val, Var_init[i].u_pars, xpt,
+                               var_val);
+        if (ierr == -1) {
+          GOMA_EH(ierr, "Problem with user_initialize...");
+        }
+      }
     }
     /*
      *    Section to calculate a consistent set of species fractions
@@ -1997,6 +2011,7 @@ void init_vec(
     }
   }
   exchange_dof(cx, dpi, u, pg->imtrx);
+
   /* User initialization part
    * Loop over element blocks that exist for this processor, determine
    * which material corresponds to it.
@@ -2022,7 +2037,7 @@ void init_vec(
           for (i = 0; i < Var_init_mat[mn][j].len_u_pars; i++) {
             DPRINTF(stdout, "\t %g", Var_init_mat[mn][j].u_pars[i]);
           }
-          DPRINTF(stdout, "\n");
+          DPRINTF(stdout, " \n");
         }
       }
       /*

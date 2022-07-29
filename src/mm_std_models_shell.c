@@ -527,8 +527,6 @@ double height_function_model(double *H_U,
     /*  compute radial direction	*/
 
     dist = sqrt(SQUARE(fv->x[0] - axis_pt[0]) + SQUARE(fv->x[1] - axis_pt[1]));
-    if (dist > fabs(R))
-      GOMA_EH(GOMA_ERROR, "point outside of roll");
     if (dist > fabs(R)) {
       *H_L = -fabs(R);
       dH_L_dX[0] = dH_L_dX[1] = dH_L_dX[2] = 0.0;

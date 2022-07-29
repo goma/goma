@@ -434,7 +434,7 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
     } else if (lambda[iHC] < 0. && lambdaEnd[iHC] < 0.0) {
       lambdaLog[iHC] = log10(-lambda[iHC]);
       lambdaRatio[iHC] = lambdaEnd[iHC] / lambda[iHC];
-      lambdaDeltaLog[iHC] = log10(lambdaRatio[iHC]);
+      lambdaDeltaLog[iHC] = fabs(log10(lambdaRatio[iHC]));
     }
     if (hunt[iHC].ramp == 2) {
       if (log_ID == -1)
@@ -745,8 +745,8 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
     }
     for (iHC = 0; iHC < nHC; iHC++) {
       if (hunt[iHC].ramp == 2) {
-        delta_s[iHC] = -lambda[iHC] * pow(lambdaRatio[iHC], hunt_par - dhunt_par);
-        delta_s[iHC] += lambda[iHC] * pow(lambdaRatio[iHC], hunt_par);
+        delta_s[iHC] = -fabs(lambda[iHC]) * pow(lambdaRatio[iHC], hunt_par - dhunt_par);
+        delta_s[iHC] += fabs(lambda[iHC]) * pow(lambdaRatio[iHC], hunt_par);
       } else {
         delta_s[iHC] = dhunt_par * lambdaDelta[iHC];
       }
@@ -846,6 +846,14 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
           DPRINTF(stdout, "Number of extra unknowns: %4d\n\n", nAC);
 
           for (iAC = 0; iAC < nAC; iAC++) {
+            evol_local = augc[iAC].evol;
+#ifdef PARALLEL
+            if (Num_Proc > 1 && (augc[iAC].Type == AC_VOLUME || augc[iAC].Type == AC_POSITION ||
+                                 augc[iAC].Type == AC_ANGLE)) {
+              MPI_Allreduce(&evol_local, &evol_global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+              evol_local = evol_global;
+            }
+#endif
             if (augc[iAC].Type == AC_USERBC) {
               DPRINTF(stdout, "\tAC[%4d] DF[%4d] = %10.6e\n", augc[iAC].BCID, augc[iAC].DFID,
                       x_AC[iAC]);
@@ -853,35 +861,15 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
               DPRINTF(stdout, "\n MT[%4d] MP[%4d] = %10.6e\n", augc[iAC].MTID, augc[iAC].MPID,
                       x_AC[iAC]);
             } else if (augc[iAC].Type == AC_VOLUME) {
-              evol_local = augc[iAC].evol;
-#ifdef PARALLEL
-              if (Num_Proc > 1) {
-                MPI_Allreduce(&evol_local, &evol_global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                evol_local = evol_global;
-              }
-#endif
               DPRINTF(stdout, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
                       augc[iAC].VOLID, evol_local, x_AC[iAC]);
             } else if (augc[iAC].Type == AC_POSITION) {
-              evol_local = augc[iAC].evol;
-#ifdef PARALLEL
-              if (Num_Proc > 1) {
-                MPI_Allreduce(&evol_local, &evol_global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-              }
-              evol_local = evol_global;
-#endif
               DPRINTF(stdout, "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
                       augc[iAC].VOLID, evol_local, x_AC[iAC]);
             } else if (augc[iAC].Type == AC_ANGLE) {
-              evol_local = augc[iAC].evol;
-#ifdef PARALLEL
-              if (Num_Proc > 1) {
-                MPI_Allreduce(&evol_local, &evol_global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-              }
-              evol_local = evol_global;
-#endif
-              DPRINTF(stdout, "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
-                      augc[iAC].VOLID, evol_local, x_AC[iAC]);
+              evol_local = augc[iAC].lm_resid + augc[iAC].CONSTV;
+              DPRINTF(stdout, "\tNodeSet[%4d]_Ang = %g F_bal = %6.3e VC[%4d] Param=%6.3e\n",
+                      augc[iAC].MTID, evol_local, augc[iAC].lm_resid, augc[iAC].VOLID, x_AC[iAC]);
             } else if (augc[iAC].Type == AC_FLUX) {
               DPRINTF(stdout, "\tBC[%4d] DF[%4d]=%10.6e\n", augc[iAC].BCID, augc[iAC].DFID,
                       x_AC[iAC]);
@@ -979,7 +967,8 @@ void hunt_problem(Comm_Ex *cx, /* array of communications structures */
 
           if (dhunt_par < dhunt_par_min) {
             DPRINTF(stdout, "\n X: C step-length reduced below minimum.");
-            DPRINTF(stdout, "\n theta: %g ;  theta_min: %g", dhunt_par, dhunt_par_min);
+            DPRINTF(stdout, "\n theta: %g ; delta theta %g ; delta theta_min: %g", hunt_par,
+                    dhunt_par, dhunt_par_min);
             DPRINTF(stdout, "\n    Program terminated.\n");
             /* This needs to have a return value of 0, indicating
              * success, for the continuation script to not treat this

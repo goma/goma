@@ -2106,8 +2106,8 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
             DPRINTF(stdout, "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
                     augc[iAC].VOLID, augc[iAC].evol, x_AC[iAC]);
           } else if (augc[iAC].Type == AC_ANGLE) {
-            DPRINTF(stdout, "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
-                    augc[iAC].VOLID, augc[iAC].evol, x_AC[iAC]);
+            DPRINTF(stdout, "\tMT[%4d] ANG[%4d]=%10.6e Param=%10.6e\n", augc[iAC].VOLID,
+                    augc[iAC].MTID, augc[iAC].evol, x_AC[iAC]);
           }
         }
       }

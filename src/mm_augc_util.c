@@ -3347,8 +3347,7 @@ double getPositionAC(struct AC_Information *augc, double *cAC_iAC, double *x, Ex
   double pos1D = 0.0;
 
   if (augc->COMPID != 0 && augc->COMPID != 1) {
-    printf("!augc->COMPID != 0,1 - don't know what to do\n");
-    exit(-1);
+    GOMA_EH(-1, "!augc->COMPID != 0,1 - don't know what to do?");
   }
 
   // Node set index of 1 node NS containing the position node
@@ -3404,8 +3403,7 @@ double getPositionAC(struct AC_Information *augc, double *cAC_iAC, double *x, Ex
     // Process a 1D idea of what we need from the position
     int coordDir = augc->VOLID;
     if (coordDir < 0 || coordDir > 2) {
-      printf("shouldn't be here\n");
-      exit(-1);
+      GOMA_EH(-1, "shouldn't be here");
     }
 
     if (augc->COMPID == 1) {
@@ -3434,7 +3432,7 @@ double getPositionAC(struct AC_Information *augc, double *cAC_iAC, double *x, Ex
  *  additional equation to a system.
  */
 double getAngleAC(struct AC_Information *augc, double *cAC_iAC, double *x, Exo_DB *exo) {
-  double ordinate, n1[DIM], n2[DIM], n_dot_n, xi[DIM];
+  double ordinate = 0., n1[DIM], n2[DIM], n_dot_n, n1_mag, n2_mag, xi[DIM];
   double n1_dx[DIM][DIM][MDE], n2_dx[DIM][DIM][MDE], d_ord_dx[4][DIM][DIM][MDE];
   int i, ins, inode, mat_num, face, node2, err, ielem, num_nodes_on_side;
   int p, q, k, ielem_dim;
@@ -3443,8 +3441,7 @@ double getAngleAC(struct AC_Information *augc, double *cAC_iAC, double *x, Exo_D
   NODE_INFO_STRUCT *node_ptr;
 
   if (augc->COMPID != 0 && augc->COMPID != 1) {
-    printf("!augc->COMPID != 0,1 - don't know what to do\n");
-    exit(-1);
+    GOMA_EH(-1, "!augc->COMPID != 0,1 - don't know what to do?");
   }
 
   // Node set index of 1 node NS containing the position node
@@ -3457,9 +3454,19 @@ double getAngleAC(struct AC_Information *augc, double *cAC_iAC, double *x, Exo_D
     /* Check for a match between the ID of the current node set and the node set
        ID specified by NSIndexPosition */
     if (exo->ns_id[ins] == NSIndexPosition) {
-      if (exo->ns_num_nodes[ins] != 1) {
-        printf("Should be equal to one %d\n", exo->ns_num_nodes[ins]);
-        exit(-1);
+      if (exo->ns_num_nodes[ins] == 0 && Num_Proc > 1) {
+        // we probably aren't this ns owner
+        break;
+      } else if (exo->ns_num_nodes[ins] != 1) {
+        inode = exo->ns_node_list[exo->ns_node_index[ins] + 0];
+        for (i = 1; i < exo->ns_num_nodes[ins]; i++) {
+          if (exo->ns_node_list[exo->ns_node_index[ins] + i] != inode) {
+            printf("NS %d, non-unique nodes in list of %d\n", exo->ns_id[ins],
+                   exo->ns_num_nodes[ins]);
+            printf("Proc %d Nodes %d %d\n", ProcID, inode,
+                   exo->ns_node_list[exo->ns_node_index[ins] + i]);
+          }
+        }
       }
       /* Get the 0th local node in the current node set */
       inode = exo->ns_node_list[exo->ns_node_index[ins] + 0];
@@ -3478,161 +3485,162 @@ double getAngleAC(struct AC_Information *augc, double *cAC_iAC, double *x, Exo_D
     }
   }
 
-  elem_list[0] = elem_list[1] = elem_list[2] = elem_list[3] = -1;
-  local_node[0] = local_node[1] = local_node[2] = local_node[3] = -1;
-  if (!exo->node_elem_conn_exists) {
-    GOMA_EH(-1, "Cannot compute angle without node_elem_conn.");
-  }
-
-  elem_list[0] = exo->node_elem_list[exo->node_elem_pntr[node]];
-
-  /*
-   * Find out where this node appears in the elements local
-   * node ordering scheme...
-   */
-
-  local_node[0] = in_list(node, exo->elem_node_pntr[elem_list[0]],
-                          exo->elem_node_pntr[elem_list[0] + 1], exo->elem_node_list);
-
-  GOMA_EH(local_node[0], "Can not find node in elem node connectivity!?! ");
-  local_node[0] -= exo->elem_node_pntr[elem_list[0]];
-  /* check for neighbors*/
-
-  mat_num = map_mat_index(augc->VOLID);
-  if (mat_num == find_mat_number(elem_list[0], exo)) {
-    elem_ct = 1;
-  } else {
-    GOMA_WH(-1, "block id doesn't match first element");
-  }
-  load_ei(elem_list[0], exo, 0, pg->imtrx);
-  for (face = 0; face < ei[pg->imtrx]->num_sides; face++) {
-    ielem = exo->elem_elem_list[exo->elem_elem_pntr[elem_list[0]] + face];
-    if (ielem != -1) {
-      node2 = in_list(node, exo->elem_node_pntr[ielem], exo->elem_node_pntr[ielem + 1],
-                      exo->elem_node_list);
-      if (node2 != -1 && (mat_num == find_mat_number(ielem, exo))) {
-        elem_list[elem_ct] = ielem;
-        local_node[elem_ct] = node2;
-        local_node[elem_ct] -= exo->elem_node_pntr[ielem];
-        elem_ct++;
-      }
-    }
-  }
-  ordinate = 0.0;
-  memset(d_ord_dx, 0.0, sizeof(dbl) * 4 * DIM * DIM * MDE);
-
-  for (ielem = 0; ielem < elem_ct; ielem++) {
-    if (local_node[ielem] < 0 || local_node[ielem] > 3) {
-      GOMA_EH(-1, "Node out of bounds.");
-    }
-
-    /*
-     * Now, determine the local name of the sides adjacent to this
-     * node...this works for the exo patran convention for quads...
-     *
-     * Again, local_node and local_side are zero based...
-     */
-
-    local_side[0] = (local_node[ielem] + 3) % 4;
-    local_side[1] = local_node[ielem];
-
-    /*
-     * With the side names, we can find the normal vector.
-     * Again, assume the sides live on the same element.
-     */
-    load_ei(elem_list[0], exo, 0, pg->imtrx);
-
-    /*
-     * We abuse the argument list under the conditions that
-     * we're going to do read-only operations and that
-     * we're not interested in old time steps, time derivatives
-     * etc.
-     */
-    err = load_elem_dofptr(elem_list[ielem], exo, x, x, x, x, 0);
-    GOMA_EH(err, "load_elem_dofptr");
-
-    err = bf_mp_init(pd);
-    GOMA_EH(err, "bf_mp_init");
-
-    /*
-     * What are the local coordinates of the nodes in a quadrilateral?
-     */
-
-    find_nodal_stu(local_node[ielem], ei[pg->imtrx]->ielem_type, &xi[0], &xi[1], &xi[2]);
-
-    err = load_basis_functions(xi, bfd);
-    GOMA_EH(err, "problem from load_basis_functions");
-
-    err = beer_belly();
-    GOMA_EH(err, "beer_belly");
-
-    err = load_fv();
-    GOMA_EH(err, "load_fv");
-
-    /* First, one side... */
-
-    get_side_info(ei[pg->imtrx]->ielem_type, local_side[0] + 1, &num_nodes_on_side, side_nodes);
-
-    surface_determinant_and_normal(elem_list[ielem], exo->elem_node_pntr[elem_list[ielem]],
-                                   ei[pg->imtrx]->num_local_nodes, ei[pg->imtrx]->ielem_dim - 1,
-                                   local_side[0] + 1, num_nodes_on_side, side_nodes);
-
-    n1[0] = fv->snormal[0];
-    n1[1] = fv->snormal[1];
-    ielem_dim = ei[pg->imtrx]->ielem_dim;
-    for (p = 0; p < ielem_dim; p++) {
-      for (q = 0; q < ielem_dim; q++) {
-        for (k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) {
-          n1_dx[p][q][k] = fv->dsnormal_dx[p][q][k];
-        }
-      }
-    }
-
-    /* Second, the adjacent side of the quad... */
-
-    get_side_info(ei[pg->imtrx]->ielem_type, local_side[1] + 1, &num_nodes_on_side, side_nodes);
-
-    surface_determinant_and_normal(elem_list[ielem], exo->elem_node_pntr[elem_list[ielem]],
-                                   ei[pg->imtrx]->num_local_nodes, ei[pg->imtrx]->ielem_dim - 1,
-                                   local_side[1] + 1, num_nodes_on_side, side_nodes);
-
-    n2[0] = fv->snormal[0];
-    n2[1] = fv->snormal[1];
-    for (p = 0; p < ielem_dim; p++) {
-      for (q = 0; q < ielem_dim; q++) {
-        for (k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) {
-          n2_dx[p][q][k] = fv->dsnormal_dx[p][q][k];
-        }
-      }
-    }
-
-    /* cos (theta) = n1.n2 / ||n1|| ||n2|| */
-
-    n_dot_n = 0.;
-    for (p = 0; p < ielem_dim; p++) {
-      n_dot_n += n1[p] * n2[p];
-    }
-    ordinate += M_PI - acos(n_dot_n);
-    for (p = 0; p < ielem_dim; p++) {
-      for (q = 0; q < ielem_dim; q++) {
-        for (k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) {
-          d_ord_dx[ielem][p][q][k] +=
-              (n1[p] * n2_dx[p][q][k] + n2[p] * n1_dx[p][q][k]) / sqrt(1. - SQUARE(n_dot_n));
-        }
-      }
-    }
-
-  } /*ielem loop    */
-
-  /* For nonlocal element information, we do a
-   * direct injection into a through Jac_BC.
-   */
-
   if (node >= 0) {
+    elem_list[0] = elem_list[1] = elem_list[2] = elem_list[3] = -1;
+    local_node[0] = local_node[1] = local_node[2] = local_node[3] = -1;
+    if (!exo->node_elem_conn_exists) {
+      GOMA_EH(-1, "Cannot compute angle without node_elem_conn.");
+    }
+
+    elem_list[0] = exo->node_elem_list[exo->node_elem_pntr[node]];
+
+    /*
+     * Find out where this node appears in the elements local
+     * node ordering scheme...
+     */
+
+    local_node[0] = in_list(node, exo->elem_node_pntr[elem_list[0]],
+                            exo->elem_node_pntr[elem_list[0] + 1], exo->elem_node_list);
+
+    GOMA_EH(local_node[0], "Can not find node in elem node connectivity!?! ");
+    local_node[0] -= exo->elem_node_pntr[elem_list[0]];
+    /* check for neighbors*/
+
+    mat_num = map_mat_index(augc->VOLID);
+    if (mat_num == find_mat_number(elem_list[0], exo)) {
+      elem_ct = 1;
+    } else {
+      GOMA_WH(-1, "block id doesn't match first element");
+    }
+    load_ei(elem_list[0], exo, 0, pg->imtrx);
+    for (face = 0; face < ei[pg->imtrx]->num_sides; face++) {
+      ielem = exo->elem_elem_list[exo->elem_elem_pntr[elem_list[0]] + face];
+      if (ielem != -1) {
+        node2 = in_list(node, exo->elem_node_pntr[ielem], exo->elem_node_pntr[ielem + 1],
+                        exo->elem_node_list);
+        if (node2 != -1 && (mat_num == find_mat_number(ielem, exo))) {
+          elem_list[elem_ct] = ielem;
+          local_node[elem_ct] = node2;
+          local_node[elem_ct] -= exo->elem_node_pntr[ielem];
+          elem_ct++;
+        }
+      }
+    }
+    memset(d_ord_dx, 0.0, sizeof(dbl) * 4 * DIM * DIM * MDE);
+
+    for (ielem = 0; ielem < elem_ct; ielem++) {
+      if (local_node[ielem] < 0 || local_node[ielem] > 3) {
+        GOMA_EH(-1, "Node out of bounds.");
+      }
+
+      /*
+       * Now, determine the local name of the sides adjacent to this
+       * node...this works for the exo patran convention for quads...
+       *
+       * Again, local_node and local_side are zero based...
+       */
+
+      local_side[0] = (local_node[ielem] + 3) % 4;
+      local_side[1] = local_node[ielem];
+
+      /*
+       * With the side names, we can find the normal vector.
+       * Again, assume the sides live on the same element.
+       */
+      load_ei(elem_list[ielem], exo, 0, pg->imtrx);
+
+      /*
+       * We abuse the argument list under the conditions that
+       * we're going to do read-only operations and that
+       * we're not interested in old time steps, time derivatives
+       * etc.
+       */
+      err = load_elem_dofptr(elem_list[ielem], exo, x, x, x, x, 0);
+      GOMA_EH(err, "load_elem_dofptr");
+
+      err = bf_mp_init(pd);
+      GOMA_EH(err, "bf_mp_init");
+
+      /*
+       * What are the local coordinates of the nodes in a quadrilateral?
+       */
+
+      find_nodal_stu(local_node[ielem], ei[pg->imtrx]->ielem_type, &xi[0], &xi[1], &xi[2]);
+
+      err = load_basis_functions(xi, bfd);
+      GOMA_EH(err, "problem from load_basis_functions");
+
+      err = beer_belly();
+      GOMA_EH(err, "beer_belly");
+
+      err = load_fv();
+      GOMA_EH(err, "load_fv");
+
+      /* First, one side... */
+
+      get_side_info(ei[pg->imtrx]->ielem_type, local_side[0] + 1, &num_nodes_on_side, side_nodes);
+
+      surface_determinant_and_normal(elem_list[ielem], exo->elem_node_pntr[elem_list[ielem]],
+                                     ei[pg->imtrx]->num_local_nodes, ei[pg->imtrx]->ielem_dim - 1,
+                                     local_side[0] + 1, num_nodes_on_side, side_nodes);
+
+      n1[0] = fv->snormal[0];
+      n1[1] = fv->snormal[1];
+      ielem_dim = ei[pg->imtrx]->ielem_dim;
+      for (p = 0; p < ielem_dim; p++) {
+        for (q = 0; q < ielem_dim; q++) {
+          for (k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) {
+            n1_dx[p][q][k] = fv->dsnormal_dx[p][q][k];
+          }
+        }
+      }
+
+      /* Second, the adjacent side of the quad... */
+
+      get_side_info(ei[pg->imtrx]->ielem_type, local_side[1] + 1, &num_nodes_on_side, side_nodes);
+
+      surface_determinant_and_normal(elem_list[ielem], exo->elem_node_pntr[elem_list[ielem]],
+                                     ei[pg->imtrx]->num_local_nodes, ei[pg->imtrx]->ielem_dim - 1,
+                                     local_side[1] + 1, num_nodes_on_side, side_nodes);
+
+      n2[0] = fv->snormal[0];
+      n2[1] = fv->snormal[1];
+      for (p = 0; p < ielem_dim; p++) {
+        for (q = 0; q < ielem_dim; q++) {
+          for (k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) {
+            n2_dx[p][q][k] = fv->dsnormal_dx[p][q][k];
+          }
+        }
+      }
+
+      /* cos (theta) = n1.n2 / ||n1|| ||n2|| */
+
+      n_dot_n = n1_mag = n2_mag = 0.;
+      for (p = 0; p < ielem_dim; p++) {
+        n_dot_n += n1[p] * n2[p];
+        n1_mag += n1[p] * n1[p];
+        n2_mag += n2[p] * n2[p];
+      }
+      ordinate += M_PI - acos(n_dot_n / sqrt(n1_mag * n2_mag));
+      for (p = 0; p < ielem_dim; p++) {
+        for (q = 0; q < ielem_dim; q++) {
+          for (k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) {
+            d_ord_dx[ielem][p][q][k] +=
+                (n1[p] * n2_dx[p][q][k] + n2[p] * n1_dx[p][q][k]) / sqrt(1. - SQUARE(n_dot_n));
+          }
+        }
+      }
+
+    } /*ielem loop    */
+
+    /* For nonlocal element information, we do a
+     * direct injection into a through Jac_BC.
+     */
+
     int je;
     i = Index_Solution(node, MESH_DISPLACEMENT1, 0, 0, mat_num, pg->imtrx);
     for (ielem = 0; ielem < elem_ct; ielem++) {
-      load_ei(elem_list[0], exo, 0, pg->imtrx);
+      load_ei(elem_list[ielem], exo, 0, pg->imtrx);
 
       for (p = 0; p < ielem_dim; p++) {
         for (q = 0; q < ielem_dim; q++) {

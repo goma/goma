@@ -19,6 +19,7 @@
 #ifndef GOMA_USER_PRE_H
 #define GOMA_USER_PRE_H
 
+#include "mm_unknown_map.h"
 #include "std.h"
 #include "user_post.h"
 #ifdef EXTERN
@@ -45,5 +46,12 @@ EXTERN double user_mat_init(const int,    /* variable                           
                             const dbl[],  /* nodal coordinates                      */
                             const int,    /* material ID                            */
                             const dbl[]); /* other variable values                 */
+
+EXTERN int user_initialize(const int,    /* variable                            */
+                           double *,     /* solution vector                     */
+                           const dbl,    /* Basic initial value                 */
+                           const dbl[],  /* p                                   */
+                           const dbl[],  /* nodal coordinates                   */
+                           const dbl[]); /* other variable values               */
 
 #endif /* GOMA_USER_PRE_H */

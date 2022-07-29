@@ -56,6 +56,7 @@ double user_surf_object(int *int_params, dbl *param, dbl *r) {
 
   return distance;
 } /* End of routine user_init_object */
+
 double user_mat_init(const int var,
                      const int node,
                      const double init_value,
@@ -97,6 +98,10 @@ double user_mat_init(const int var,
       sum += exp(exp_arg) * cos(M_PIE / ht * distz * xn) * 2. / M_PIE * pow(-1., nt) / xn;
     }
     value = fmin(T_below - (T_below - T_init) * sum, T_init);
+    value = fmax(value, T_below);
+    if (value < 0) {
+      fprintf(stderr, "Trouble, negative temperature! %g %g %g %g\n", value, sum, exp_arg, dist);
+    }
   } else if (var >= MESH_DISPLACEMENT1 && var <= MESH_DISPLACEMENT3) {
     double xpt0[DIM], T_pos, T_ref;
     int dir;
@@ -113,6 +118,75 @@ double user_mat_init(const int var,
   }
   return value;
 } /* End of routine user_mat_init */
+
+int user_initialize(const int var,
+                    double *x,
+                    const double init_value,
+                    const double p[],
+                    const double xpt[],
+                    const double var_vals[]) {
+
+  double value = 0;
+  int i, var_somewhere, idv, mn;
+  /* Set this to a nonzero value if using this routine */
+  static int warning = -1;
+
+  if (warning == 0) {
+    DPRINTF(stderr, "\n\n#############\n"
+                    "# WARNING!! #  No user_defined material initialization model implemented"
+                    "\n#############\n");
+    warning = 1;
+  }
+
+  if (var > -1) {
+    if (upd->vp[pg->imtrx][var] > -1) {
+      for (i = 0; i < DPI_ptr->num_owned_nodes; i++) {
+        var_somewhere = FALSE;
+        for (mn = 0; mn < upd->Num_Mat; mn++) {
+          idv = Index_Solution(i, var, 0, 0, mn, pg->imtrx);
+          if (idv != -1) {
+            var_somewhere = TRUE;
+            break;
+          }
+        }
+        if (var_somewhere) {
+          if (var == TEMPERATURE) {
+            double dist, alpha, speed, ht, T_below, T_init, sum, xn, exp_arg;
+            int n_terms = 4, nt, dir;
+            alpha = p[0];
+            speed = p[1];
+            ht = p[2];
+            T_below = p[3];
+            T_init = init_value;
+            sum = 0.;
+            for (nt = 0; nt < n_terms; nt++) {
+              xn = 0.5 + ((double)nt);
+              dist = 0.;
+              for (dir = 0; dir < DIM; dir++) {
+                dist += SQUARE(xpt[dir]);
+              }
+              dist = sqrt(dist);
+              exp_arg = dist * alpha * SQUARE(xn * M_PIE / ht) / speed;
+              sum += exp(exp_arg) * cos(M_PIE / ht * dist * xn) * 2. / M_PIE * pow(-1., nt) / xn;
+            }
+            value = fmin(T_below - (T_below - T_init) * sum, T_init);
+            value = fmax(value, T_below);
+            if (value < 0) {
+              fprintf(stderr, "Trouble, negative temperature! %g %g %g %g\n", value, sum, exp_arg,
+                      dist);
+            }
+            x[idv] = value;
+          } else {
+            GOMA_EH(GOMA_ERROR, "Not a supported user initialization condition ");
+          }
+        }
+      }
+    }
+  }
+
+  return 1;
+} /* End of routine user_initialize */
+
 /*****************************************************************************/
 /* End of file user_pre.c*/
 /*****************************************************************************/
