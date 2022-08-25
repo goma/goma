@@ -5925,7 +5925,7 @@ int lub_viscosity_integrate(const double strs,
   double shr, shr1, vis_w = 1.;
   double nexp = gn->nexp, lam = gn->lam, aexp = gn->aexp, muinf = gn->muinf;
   double yield = gn->tau_y, F = gn->fexp, mu0 = gn->mu0, P_eps = 0.05;
-  double eps, res, tol_f=0.01;
+  double eps, res, tol_f = 0.01;
   int iter, ITERMAX = 50, jdi, JDI_MAX = 25, ierr = 0;
   double xint = 0., xintold = 0., temp, at = 1.;
   double wt[3] = {5. / 18., 4. / 9., 5. / 18.};
