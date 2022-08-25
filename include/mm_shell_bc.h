@@ -37,6 +37,8 @@ EXTERN void shell_n_dot_flow_bc_confined(double func[DIM],
                                          const double flowrate,  /* imposed flow rate */
                                          const double flow_gap,  /* imposed flow - gap dependent */
                                          const double pwr_index, /* power-law index */
+                                         const int ibc_flag,     /* NOBC flag from input */
+                                         const int bc_id,        /* BC_Name */
                                          const double time,      /* current time */
                                          const double dt,        /* current time step size */
                                          double xi[DIM],         /* Local stu coords */

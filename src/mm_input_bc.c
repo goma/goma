@@ -471,6 +471,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
     case SH_SDET_BC:
     case SH_MESH2_WEAK_BC:
     case RESTIME_GRADSIC_BC:
+    case GRAD_LUBP_NOBC_BC:
 
       if (fscanf(ifp, "%lf", &BC_Types[ibc].BC_Data_Float[0]) != 1) {
         sr = sprintf(err_msg, "%s: Expected 1 flt for %s.", yo, BC_Types[ibc].desc->name1);
@@ -479,7 +480,8 @@ void rd_bc_specs(FILE *ifp, char *input) {
       BC_Types[ibc].max_DFlt = 1;
 
       SPF(endofstring(echo_string), " %.4g", BC_Types[ibc].BC_Data_Float[0]);
-      if (BC_Types[ibc].BC_Name == GRAD_LUB_PRESS_BC) {
+      if (BC_Types[ibc].BC_Name == GRAD_LUB_PRESS_BC ||
+          BC_Types[ibc].BC_Name == GRAD_LUBP_NOBC_BC) {
         BC_Types[ibc].BC_Data_Float[1] = 0.;
         BC_Types[ibc].BC_Data_Float[2] = 1.;
         if (fscanf(ifp, "%lf %lf", &BC_Types[ibc].BC_Data_Float[1],
