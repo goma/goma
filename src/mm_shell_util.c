@@ -3907,12 +3907,6 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       vsqr += SQUARE(veloU[i]);
     }
     pgrad = sqrt(pgrad);
-    if (isnan(pgrad)) {
-      fprintf(stderr, "pg %g %g %g %g\n", pgrad, GRADP[0], GRADP[1], GRADP[2]);
-      fprintf(stderr, "pg_cmp %g %g %g\n", pg_cmp[0], pg_cmp[1], pg_cmp[2]);
-      fprintf(stderr, "GRADH %g %g %g %g %g\n", GRADH[0], GRADH[1], GRADH[2], CURV,
-              mp->surface_tension);
-    }
     if (DOUBLE_NONZERO(pgrad)) {
       for (i = 0; i < dim; i++) {
         ev[i] = pg_cmp[i] / pgrad;
@@ -5931,7 +5925,7 @@ int lub_viscosity_integrate(const double strs,
   double shr, shr1, vis_w = 1.;
   double nexp = gn->nexp, lam = gn->lam, aexp = gn->aexp, muinf = gn->muinf;
   double yield = gn->tau_y, F = gn->fexp, mu0 = gn->mu0, P_eps = 0.05;
-  double eps, res;
+  double eps, res, tol_f=0.01;
   int iter, ITERMAX = 50, jdi, JDI_MAX = 25, ierr = 0;
   double xint = 0., xintold = 0., temp, at = 1.;
   double wt[3] = {5. / 18., 4. / 9., 5. / 18.};
@@ -6029,11 +6023,11 @@ int lub_viscosity_integrate(const double strs,
       shr += delta;
     }
     eps = fabs(delta) / (1. + fabs(shr));
-    if (fabs(res) < Epsilon[pg->imtrx][0] && eps < Epsilon[pg->imtrx][2])
+    if (fabs(res) < tol_f*Epsilon[pg->imtrx][0] && eps < tol_f*Epsilon[pg->imtrx][2])
       break;
   }
   if (eps > Epsilon[pg->imtrx][2]) {
-    if (eps < sqrt(Epsilon[pg->imtrx][2])) {
+    if (eps < sqrt(tol_f*Epsilon[pg->imtrx][2])) {
       ierr = -2;
       GOMA_WH(GOMA_ERROR, "Viscosity iteration sort of converged!");
     } else {
@@ -6088,7 +6082,7 @@ int lub_viscosity_integrate(const double strs,
             shr += delta;
           }
           eps = fabs(delta) / (1. + fabs(shr));
-          if (fabs(res) < Epsilon[pg->imtrx][0] && eps < Epsilon[pg->imtrx][2]) {
+          if (fabs(res) < tol_f*Epsilon[pg->imtrx][0] && eps < tol_f*Epsilon[pg->imtrx][2]) {
             iconv = 1;
             break;
           }
@@ -6157,7 +6151,7 @@ int lub_viscosity_integrate(const double strs,
     xint /= SQUARE(vis_w);
     eps = fabs(xint - xintold);
     xintold = xint;
-    if (eps < Epsilon[pg->imtrx][2])
+    if (eps < tol_f*Epsilon[pg->imtrx][2])
       break;
   }
   if (eps > Epsilon[pg->imtrx][2]) {
