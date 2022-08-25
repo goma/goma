@@ -386,10 +386,8 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
   double eps;
 
   double time2 = 0.0;
-#ifdef RESET_TRANSIENT_RELAXATION_PLEASE
   double damp_factor_org[2] = {damp_factor1, damp_factor2};
   double toler_org[3] = {custom_tol1, custom_tol2, custom_tol3};
-#endif
   /*
    * Other local variables...
    */
