@@ -5925,11 +5925,14 @@ int lub_viscosity_integrate(const double strs,
   double shr, shr1, vis_w = 1.;
   double nexp = gn->nexp, lam = gn->lam, aexp = gn->aexp, muinf = gn->muinf;
   double yield = gn->tau_y, F = gn->fexp, mu0 = gn->mu0, P_eps = 0.05;
-  double eps, res, tol_f = 0.01;
+  double eps, res, TOL_CEIL = 1.e-6, res_tol, soln_tol;
   int iter, ITERMAX = 50, jdi, JDI_MAX = 25, ierr = 0;
   double xint = 0., xintold = 0., temp, at = 1.;
   double wt[3] = {5. / 18., 4. / 9., 5. / 18.};
   double gp[3] = {0.11270166537925831148, 0.5, 0.8872983346207416885};
+
+  res_tol = MIN(TOL_CEIL, Epsilon[pg->imtrx][0]);
+  soln_tol = MIN(TOL_CEIL, Epsilon[pg->imtrx][2]);
 
   if (pd->gv[SHELL_TEMPERATURE]) {
     temp = fv->sh_t;
@@ -6023,11 +6026,11 @@ int lub_viscosity_integrate(const double strs,
       shr += delta;
     }
     eps = fabs(delta) / (1. + fabs(shr));
-    if (fabs(res) < tol_f*Epsilon[pg->imtrx][0] && eps < tol_f*Epsilon[pg->imtrx][2])
+    if (fabs(res) < res_tol && eps < soln_tol)
       break;
   }
-  if (eps > Epsilon[pg->imtrx][2]) {
-    if (eps < sqrt(tol_f*Epsilon[pg->imtrx][2])) {
+  if (eps > soln_tol) {
+    if (eps < sqrt(soln_tol)) {
       ierr = -2;
       GOMA_WH(GOMA_ERROR, "Viscosity iteration sort of converged!");
     } else {
@@ -6082,7 +6085,7 @@ int lub_viscosity_integrate(const double strs,
             shr += delta;
           }
           eps = fabs(delta) / (1. + fabs(shr));
-          if (fabs(res) < tol_f*Epsilon[pg->imtrx][0] && eps < tol_f*Epsilon[pg->imtrx][2]) {
+          if (fabs(res) < res_tol && eps < soln_tol) {
             iconv = 1;
             break;
           }
@@ -6151,10 +6154,10 @@ int lub_viscosity_integrate(const double strs,
     xint /= SQUARE(vis_w);
     eps = fabs(xint - xintold);
     xintold = xint;
-    if (eps < tol_f*Epsilon[pg->imtrx][2])
+    if (eps < soln_tol)
       break;
   }
-  if (eps > Epsilon[pg->imtrx][2]) {
+  if (eps > soln_tol) {
     ierr = -1;
     GOMA_EH(GOMA_ERROR, "Viscosity Integral not converged!");
   }
