@@ -26699,6 +26699,7 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
   if (pd->gv[POLYMER_STRESS11]) {
     for (a = 0; a < VIM; a++) {
       for (b = 0; b < VIM; b++) {
+        // TODO : derivative may be missing here...
         Pi[a][b] += -evss_f * (mu - mus) * gamma_cont[a][b] + Heaviside * s[a][b];
       }
     }
@@ -26888,6 +26889,7 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
             }
           }
         }
+        
         if (!kappaWipesMu) {
           for (b = 0; b < WIM; b++) {
             for (j = 0; j < ei[pg->imtrx]->dof[VELOCITY1]; j++) {
@@ -26899,6 +26901,18 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
           }
         }
       }
+
+    if (pd->v[pg->imtrx][POLYMER_STRESS11]) {
+      for (p = 0; p < VIM; p++) {
+        for (q = 0; q < VIM; q++) {
+          for (b = 0; b < WIM; b++) {
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              d_Pi->v[p][q][b][j] -= evss_f * (d_mu->v[b][j] - d_mus->v[b][j]) * gamma_cont[p][q];
+            }
+          }
+        }
+      }
+    }
     } else {
       /* For CYLINDRICAL, we can assume that all of the velocity
        * components share the same interpolating basis function.
