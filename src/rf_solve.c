@@ -386,8 +386,10 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
   double eps;
 
   double time2 = 0.0;
+#ifdef RESET_TRANSIENT_RELAXATION_PLEASE
   double damp_factor_org[2] = {damp_factor1, damp_factor2};
   double toler_org[3] = {custom_tol1, custom_tol2, custom_tol3};
+#endif
   /*
    * Other local variables...
    */
@@ -2386,6 +2388,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
       {
         if (relax_bit && (nonconv_roll < no_relax_retry)) {
           /*success_dt = TRUE;  */
+#ifdef RESET_TRANSIENT_RELAXATION_PLEASE
           nonconv_roll++;
           if (nonconv_roll == 1 && nt != 0) {
             damp_factor1 = damp_factor_org[0];
@@ -2394,6 +2397,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
             custom_tol2 = toler_org[1];
             custom_tol3 = toler_org[2];
           }
+#endif
           if (inewton == -1) {
             DPRINTF(stdout, "\nHmm... trouble on this step \n  Let's try some more relaxation %d\n",
                     no_relax_retry - nonconv_roll);
