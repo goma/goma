@@ -1773,11 +1773,18 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     ECHO(es, echo_file);
   }
 
-  if (ConstitutiveEquation == BINGHAM_MIXED) {
+  if (ConstitutiveEquation == BINGHAM_MIXED || ConstitutiveEquation == BINGHAM ||
+      ConstitutiveEquation == BINGHAM_WLF) {
     model_read = look_for_mat_prop(imp, "Epsilon Regularization", &(gn_glob[mn]->epsilonModel),
                                    &(gn_glob[mn]->epsilon), NO_USER, NULL, model_name, SCALAR_INPUT,
                                    &NO_SPECIES, es);
-    GOMA_EH(model_read, "Epsilon Regularization");
+    if ((ConstitutiveEquation == BINGHAM || ConstitutiveEquation == BINGHAM_WLF) &&
+        model_read == -1) {
+      gn_glob[mn]->epsilon = 0.0;
+      gn_glob[mn]->epsilonModel = CONSTANT;
+    } else {
+      GOMA_EH(model_read, "Epsilon Regularization");
+    }
     ECHO(es, echo_file);
   }
   /*

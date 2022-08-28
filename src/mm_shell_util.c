@@ -3944,21 +3944,23 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         GOMA_WH(GOMA_ERROR, "Trouble, tau_w is nan...\n");
       err = lub_viscosity_integrate(tau_w, H, &q_mag, &dq_gradp, &dq_dH, &srate, &pre_delP, &vis_w);
       if (isnan(srate))
-        fprintf(stderr, "lub_q %g %g %g %g\n", tau_w, q_mag, srate, vis_w);
+        fprintf(stderr, "lub_srate isnan %g %g %g %g\n", tau_w, q_mag, srate, vis_w);
       if (err < 0) {
         GOMA_WH(GOMA_ERROR, "Some trouble with Numerical Lubrication...\n");
       }
-      ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
-      q_mag2 = q_mag * ratio;
-      q_mag =
-          ls_modulate_property(q_mag, q_mag2, ls->Length_Scale, (double)mp->mp2nd->viscositymask[0],
-                               (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
-      factor *= (1. - ratio);
-      factor += ratio;
-      dq_gradp *= factor;
-      dq_dH *= factor;
-      pre_delP *= factor;
-      vis_w /= factor;
+      if (pd->v[pg->imtrx][VAR]) {
+        ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
+        q_mag2 = q_mag * ratio;
+        q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
+                                     (double)mp->mp2nd->viscositymask[0],
+                                     (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
+        factor *= (1. - ratio);
+        factor += ratio;
+        dq_gradp *= factor;
+        dq_dH *= factor;
+        pre_delP *= factor;
+        vis_w /= factor;
+      }
 
     } else if (gn->ConstitutiveEquation == HERSCHEL_BULKLEY) {
       double nexp = gn->nexp, yield = gn->tau_y;
@@ -4662,17 +4664,19 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       if (err < 0) {
         GOMA_WH(GOMA_ERROR, "Some trouble with Numerical Lubrication...\n");
       }
-      ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
-      q_mag2 = q_mag * ratio;
-      q_mag =
-          ls_modulate_property(q_mag, q_mag2, ls->Length_Scale, (double)mp->mp2nd->viscositymask[0],
-                               (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
-      factor *= (1. - ratio);
-      factor += ratio;
-      dq_gradp *= factor;
-      dq_dH *= factor;
-      pre_delP *= factor;
-      vis_w /= factor;
+      if (pd->v[pg->imtrx][VAR]) {
+        ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
+        q_mag2 = q_mag * ratio;
+        q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
+                                     (double)mp->mp2nd->viscositymask[0],
+                                     (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
+        factor *= (1. - ratio);
+        factor += ratio;
+        dq_gradp *= factor;
+        dq_dH *= factor;
+        pre_delP *= factor;
+        vis_w /= factor;
+      }
 
       /** Make corrections for film flow from confined calculations **/
       q_mag *= 2.;
@@ -5157,13 +5161,15 @@ void calculate_lub_q_v_old(
       if (err < 0) {
         GOMA_WH(GOMA_ERROR, "Some trouble with Numerical Lubrication...\n");
       }
-      ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
-      q_mag2 = q_mag * ratio;
-      q_mag =
-          ls_modulate_property(q_mag, q_mag2, ls->Length_Scale, (double)mp->mp2nd->viscositymask[0],
-                               (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
-      factor *= (1. - ratio);
-      factor += ratio;
+      if (pd->v[pg->imtrx][VAR]) {
+        ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
+        q_mag2 = q_mag * ratio;
+        q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
+                                     (double)mp->mp2nd->viscositymask[0],
+                                     (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
+        factor *= (1. - ratio);
+        factor += ratio;
+      }
 
     } else if (gn->ConstitutiveEquation == HERSCHEL_BULKLEY) {
       double nexp = gn->nexp, yield = gn->tau_y;
@@ -5922,9 +5928,9 @@ int lub_viscosity_integrate(const double strs,
  *
  ******************************************************************************/
 {
-  double shr, shr1, vis_w = 1.;
+  double shr, shr1, vis_w = 1., visd = 0.;
   double nexp = gn->nexp, lam = gn->lam, aexp = gn->aexp, muinf = gn->muinf;
-  double yield = gn->tau_y, F = gn->fexp, mu0 = gn->mu0, P_eps = 0.05;
+  double yield = gn->tau_y, F = gn->fexp, mu0 = gn->mu0, P_eps = gn->epsilon;
   double eps, res, TOL_CEIL = 1.e-6, res_tol, soln_tol;
   int iter, ITERMAX = 50, jdi, JDI_MAX = 25, ierr = 0;
   double xint = 0., xintold = 0., temp, at = 1.;
@@ -5985,7 +5991,7 @@ int lub_viscosity_integrate(const double strs,
   /** First iterate to find shearrate that corresponds to stress */
   shr = strs / mu0;
   for (iter = 0; iter < ITERMAX; iter++) {
-    double xfact, tmp, tp1, tp2, tpe, tpe_d, xj, delta, visd = 0., P_sig;
+    double xfact, tmp, tp1, tp2, tpe, tpe_d, xj, delta, P_sig;
     shr1 = fabs(shr);
     tp1 = lam * shr1;
     xfact = 1. + pow(tp1, aexp);
@@ -6048,7 +6054,7 @@ int lub_viscosity_integrate(const double strs,
         Yc = th * yield;
         shr = shr0 + step * shrd;
         for (iter = 0; iter < ITERMAX; iter++) {
-          double xfact, tmp, tp1, tp2, tpe, tpe_d, xj, delta, visd = 0., P_sig;
+          double xfact, tmp, tp1, tp2, tpe, tpe_d, xj, delta, P_sig;
           shr1 = fabs(shr);
           tp1 = lam * shr1;
           xfact = 1. + pow(tp1, aexp);
@@ -6164,8 +6170,13 @@ int lub_viscosity_integrate(const double strs,
 
   /**  Compute flow magnitude  **/
   *flow_mag = -0.25 * SQUARE(H) * shr * (1.0 - xint);
-  if (dq_gradp != NULL)
-    *dq_gradp = -0.25 * CUBE(H) * xint / vis_w;
+  if (dq_gradp != NULL) {
+    if (Include_Visc_Sens) {
+      *dq_gradp = -0.25 * CUBE(H) * xint / vis_w;
+    } else {
+      *dq_gradp = -0.25 * CUBE(H) * xint / vis_w * (1. + visd / vis_w);
+    }
+  }
   if (pre_P != NULL)
     *pre_P = -0.125 * CUBE(H) * (1. - xint) / vis_w;
   if (dq_dh != NULL)
