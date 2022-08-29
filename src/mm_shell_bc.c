@@ -82,6 +82,8 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
                                   const double flowrate,  /* imposed flow rate */
                                   const double flow_gap,  /* imposed gap dependent flow */
                                   const double pwr_index, /* power-law for gap dependence */
+                                  const int ibc_flag,     /* NOBC flag from bc input  */
+                                  const int bc_id,        /* BC_Name */
                                   const double time,      /* current time */
                                   const double dt,        /* current time step size */
                                   double xi[DIM],         /* Local stu coordinates */
@@ -174,8 +176,9 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
   } /* end of if Assemble_Jacobian */
 
   /* Calculate the residual contribution        */
-
-  func[0] = -flowrate - flow_gap * pow(LubAux->H, 2 + 1. / pwr_index);
+  if (bc_id == GRAD_LUB_PRESS_BC) {
+    func[0] = -flowrate - flow_gap * pow(LubAux->H, 2 + 1. / pwr_index);
+  }
   for (ii = 0; ii < pd->Num_Dim; ii++) {
     func[0] += LubAux->q[ii] * bound_normal[ii];
   }

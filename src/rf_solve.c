@@ -440,7 +440,8 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 #else
   int relax_bit = FALSE;
 #endif
-  int no_relax_retry = 8;
+  int no_relax_retry = 6;
+  int nonconv_roll = 0;
 
   static const char yo[] = "solve_problem"; /* So my name is in a string.        */
 
@@ -985,11 +986,11 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
           DPRINTF(stdout, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
                   augc[iAC].VOLID, evol_local, x_AC[iAC]);
         } else if (augc[iAC].Type == AC_POSITION) {
-          DPRINTF(stdout, "\tNodeSet[%4d]_Pos = %10.6e F_bal = %10.6e VC[%4d] Param=%10.6e\n",
+          DPRINTF(stdout, "\tNodeSet[%4d]_Pos = %10.6e F_bal = %10.6e MT[%4d] Param=%10.6e\n",
                   augc[iAC].MTID, evol_local, augc[iAC].lm_resid, augc[iAC].VOLID, x_AC[iAC]);
         } else if (augc[iAC].Type == AC_ANGLE) {
           evol_local = augc[iAC].lm_resid + augc[iAC].CONSTV;
-          DPRINTF(stdout, "\tNodeSet[%4d]_Ang = %g F_bal = %6.3e VC[%4d] Param=%6.3e\n",
+          DPRINTF(stdout, "\tNodeSet[%4d]_Ang = %g F_bal = %6.3e MT[%4d] Param=%6.3e\n",
                   augc[iAC].MTID, evol_local, augc[iAC].lm_resid, augc[iAC].VOLID, x_AC[iAC]);
         } else if (augc[iAC].Type == AC_LS_VEL) {
           evol_local = augc[iAC].lsvol;
@@ -1799,17 +1800,10 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
       /* For transient, reset the Newton damping factors after a
        *   successful time step
        */
-      if (nt > 0) {
-        if (converged) {
-          damp_factor2 = -1.;
-          damp_factor1 = 1.0;
-        } else if (nt < no_relax_retry) {
-          damp_factor2 = damp_factor_org[1];
-          damp_factor1 = damp_factor_org[0];
-          custom_tol1 = toler_org[0];
-          custom_tol2 = toler_org[1];
-          custom_tol3 = toler_org[2];
-        }
+      if (nt > 0 && converged) {
+        damp_factor2 = -1.;
+        damp_factor1 = 1.0;
+        nonconv_roll = 0;
       }
 #endif
 #ifdef GOMA_ENABLE_OMEGA_H
@@ -2100,11 +2094,11 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
                 DPRINTF(stdout, "\tBC[%4d] DF[%4d]=%10.6e\n", augc[iAC].BCID, augc[iAC].DFID,
                         x_AC[iAC]);
               } else if (augc[iAC].Type == AC_POSITION) {
-                DPRINTF(stdout, "\tNodeSet[%4d]_Pos = %10.6e F_bal = %10.6e VC[%4d] Param=%10.6e\n",
+                DPRINTF(stdout, "\tNodeSet[%4d]_Pos = %10.6e F_bal = %10.6e MT[%4d] Param=%10.6e\n",
                         augc[iAC].MTID, evol_local, augc[iAC].lm_resid, augc[iAC].VOLID, x_AC[iAC]);
               } else if (augc[iAC].Type == AC_ANGLE) {
                 evol_local = augc[iAC].lm_resid + augc[iAC].CONSTV;
-                DPRINTF(stdout, "\tNodeSet[%4d]_Ang = %g F_bal = %6.3e VC[%4d] Param=%6.3e\n",
+                DPRINTF(stdout, "\tNodeSet[%4d]_Ang = %g F_bal = %6.3e MT[%4d] Param=%6.3e\n",
                         augc[iAC].MTID, evol_local, augc[iAC].lm_resid, augc[iAC].VOLID, x_AC[iAC]);
               }
             }
@@ -2392,11 +2386,21 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 
       else /* not converged or unsuccessful time step */
       {
-        if (relax_bit && ((n - nt) < no_relax_retry)) {
+        if (relax_bit && (nonconv_roll < no_relax_retry)) {
           /*success_dt = TRUE;  */
+#ifdef RESET_TRANSIENT_RELAXATION_PLEASE
+          nonconv_roll++;
+          if (nonconv_roll == 1 && nt != 0) {
+            damp_factor1 = damp_factor_org[0];
+            damp_factor2 = damp_factor_org[1];
+            custom_tol1 = toler_org[0];
+            custom_tol2 = toler_org[1];
+            custom_tol3 = toler_org[2];
+          }
+#endif
           if (inewton == -1) {
-            DPRINTF(stdout,
-                    "\nHmm... trouble on first step \n  Let's try some more relaxation  \n");
+            DPRINTF(stdout, "\nHmm... trouble on this step \n  Let's try some more relaxation %d\n",
+                    no_relax_retry - nonconv_roll);
             if ((damp_factor1 <= 1. && damp_factor1 >= 0.) &&
                 (damp_factor2 <= 1. && damp_factor2 >= 0.) &&
                 (damp_factor3 <= 1. && damp_factor3 >= 0.)) {
@@ -2411,7 +2415,8 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
             }
           } else if (!converged) {
             DPRINTF(stdout,
-                    "\nHmm... could not converge on first step\n Let's try some more iterations\n");
+                    "\nHmm... could not converge on this step\nLet's try some more iterations %d\n",
+                    no_relax_retry - nonconv_roll);
             dcopy1(numProcUnknowns, x, x_old);
             if (nAC > 0) {
               dcopy1(nAC, x_AC, x_AC_old);
@@ -2419,19 +2424,23 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
             if ((damp_factor1 <= 1. && damp_factor1 >= 0.) &&
                 (damp_factor2 <= 1. && damp_factor2 >= 0.) &&
                 (damp_factor3 <= 1. && damp_factor3 >= 0.)) {
-              custom_tol1 *= 100.;
-              custom_tol2 *= 100.;
-              custom_tol3 *= 100.;
-              DPRINTF(stdout, "  custom tolerances %g %g %g  \n", custom_tol1, custom_tol2,
-                      custom_tol3);
+              if (nonconv_roll > 1 || nt == 0) {
+                custom_tol1 *= 100.;
+                custom_tol2 *= 100.;
+                custom_tol3 *= 100.;
+                DPRINTF(stdout, "  custom tolerances %g %g %g  \n", custom_tol1, custom_tol2,
+                        custom_tol3);
+              }
             } else {
-              damp_factor1 *= 2.0;
-              damp_factor1 = MIN(damp_factor1, 1.0);
+              if (nonconv_roll > 1 || nt == 0) {
+                damp_factor1 *= 2.0;
+                damp_factor1 = MIN(damp_factor1, 1.0);
+              }
               DPRINTF(stdout, "  damping factor %g  \n", damp_factor1);
             }
           } else {
-            DPRINTF(stderr, "Not Looking Good..., Iter: %d Converged: %d Success_dt: %d \n",
-                    inewton, converged, success_dt);
+            /*DPRINTF(stderr, "Not Looking Good..., Iter: %d Converged: %d Success_dt: %d \n",
+                    inewton, converged, success_dt); */
             DPRINTF(stderr, "\n\tlast time step failed, dt *= %g for next try!\n",
                     tran->time_step_decelerator);
 
