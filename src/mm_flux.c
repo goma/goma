@@ -381,27 +381,63 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
               (quantity == POS_LS_FLUX || quantity == NEG_LS_FLUX || quantity == DELTA ||
                quantity == LS_DCA)) {
             if (ls->var != LS)
-              GOMA_WH(-1, "Level-set variable is not LS!");
-            switch (id_side) {
-            case 1:
-              ls_F[0] = *esp_old->F[0];
-              ls_F[1] = *esp_old->F[1];
-              ls_F[2] = *esp_old->F[4];
+              GOMA_WH(GOMA_ERROR, "Level-set variable is not LS!");
+            switch (ielem_type) {
+            case BIQUAD_QUAD:
+            case BIQUAD_SHELL:
+              switch (id_side) {
+              case 1:
+                ls_F[0] = *esp_old->F[0];
+                ls_F[1] = *esp_old->F[1];
+                ls_F[2] = *esp_old->F[4];
+                break;
+              case 2:
+                ls_F[0] = *esp_old->F[1];
+                ls_F[1] = *esp_old->F[2];
+                ls_F[2] = *esp_old->F[5];
+                break;
+              case 3:
+                ls_F[0] = *esp_old->F[3];
+                ls_F[1] = *esp_old->F[2];
+                ls_F[2] = *esp_old->F[6];
+                break;
+              case 4:
+                ls_F[0] = *esp_old->F[0];
+                ls_F[1] = *esp_old->F[3];
+                ls_F[2] = *esp_old->F[7];
+                break;
+              default:
+                break;
+              }
               break;
-            case 2:
-              ls_F[0] = *esp_old->F[1];
-              ls_F[1] = *esp_old->F[2];
-              ls_F[2] = *esp_old->F[5];
-              break;
-            case 3:
-              ls_F[0] = *esp_old->F[3];
-              ls_F[1] = *esp_old->F[2];
-              ls_F[2] = *esp_old->F[6];
-              break;
-            case 4:
-              ls_F[0] = *esp_old->F[0];
-              ls_F[1] = *esp_old->F[3];
-              ls_F[2] = *esp_old->F[7];
+            case BILINEAR_QUAD:
+            case BILINEAR_SHELL:
+              switch (id_side) {
+              case 1:
+                ls_F[0] = *esp_old->F[0];
+                ls_F[1] = *esp_old->F[1];
+                ls_F[2] = 0.5 * (*esp_old->F[0] + *esp_old->F[1]);
+                break;
+              case 2:
+                ls_F[0] = *esp_old->F[1];
+                ls_F[1] = *esp_old->F[2];
+                ls_F[2] = 0.5 * (*esp_old->F[1] + *esp_old->F[2]);
+                break;
+              case 3:
+                ls_F[0] = *esp_old->F[3];
+                ls_F[1] = *esp_old->F[2];
+                ls_F[2] = 0.5 * (*esp_old->F[3] + *esp_old->F[2]);
+                break;
+              case 4:
+                ls_F[0] = *esp_old->F[0];
+                ls_F[1] = *esp_old->F[3];
+                ls_F[2] = 0.5 * (*esp_old->F[0] + *esp_old->F[3]);
+                break;
+              default:
+                break;
+              }
+            default:
+              GOMA_EH(GOMA_ERROR, "Element crossing not done for that element!");
               break;
             }
             if (species_id > 0) {
@@ -426,6 +462,8 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
                 ls_F[0] = *esp_old->pF[var][0];
                 ls_F[1] = *esp_old->pF[var][3];
                 ls_F[2] = *esp_old->pF[var][7];
+                break;
+              default:
                 break;
               }
             }
@@ -4193,10 +4231,14 @@ double evaluate_volume_integral(const Exo_DB *exo,  /* ptr to basic exodus ii me
           } else
             GOMA_WH(-1, "Only SURF 3D element is TRILINEAR_HEX.");
         } else {
-          if (ei[pg->imtrx]->ielem_type == BIQUAD_QUAD) {
+          if (ei[pg->imtrx]->ielem_type == BIQUAD_QUAD ||
+              ei[pg->imtrx]->ielem_type == BIQUAD_SHELL ||
+              ei[pg->imtrx]->ielem_type == BILINEAR_QUAD ||
+              ei[pg->imtrx]->ielem_type == BILINEAR_SHELL) {
             ierr = interface_crossing_2DQ(ls_F, xf2D, side_id, nint2D, ecrd);
           } else
-            GOMA_EH(GOMA_ERROR, "Only SURF 2D element is BIQUAD_QUAD.");
+            GOMA_EH(GOMA_ERROR,
+                    "Only SURF 2D element is BIQUAD_QUAD/SHELL or BILINEAR_QUAD/SHELL.");
         }
         if (ierr) {
           FILE *jfp;
@@ -8539,7 +8581,7 @@ int adaptive_weight(double w[],
   int dupl_side = 0, dupl_id = 0, side1 = -1, side2 = -1;
   double int_angle[8], xloc;
 
-  if (elem_type != BIQUAD_QUAD) {
+  if (elem_type != BIQUAD_QUAD && elem_type != BIQUAD_SHELL) {
     GOMA_EH(GOMA_ERROR, "adaptive integration for 2D quads only!");
   }
 

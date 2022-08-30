@@ -8963,6 +8963,11 @@ double Courant_Time_Step(double x[],
                 vnorm += (2.5 * fv->v[a] - 1.5 * fv_old->v[a]) * lsi->normal[a];
               }
             }
+            if (pd->gv[LUBP] && tran->Fill_Equation != FILL_EQN_EXT_V) {
+              for (a = 0; a < DIM; a++) {
+                vnorm += (2.5 * LubAux->v_avg[a] - 1.5 * LubAux_old->v_avg[a]) * lsi->normal[a];
+              }
+            }
             sumv += fv->wt * vnorm;
             sum += fv->wt;
           }

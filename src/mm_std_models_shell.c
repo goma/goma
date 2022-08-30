@@ -238,11 +238,11 @@ double height_function_model(double *H_U,
     /*  compute radial direction	*/
 
     dist = sqrt(SQUARE(fv->x[0] - axis_pt[0]) + SQUARE(fv->x[1] - axis_pt[1]));
-    if (dist > R) {
-      *H_U = R;
+    if (dist > fabs(R)) {
+      *H_U = fabs(R);
       dH_U_dX[0] = dH_U_dX[1] = dH_U_dX[2] = 0.0;
     } else {
-      *H_U = axis_pt[2] - fv->x[2] - sqrt(SQUARE(R) - SQUARE(dist));
+      *H_U = SGN(R) * (axis_pt[2] - fv->x[2] - sqrt(SQUARE(R) - SQUARE(dist)));
       *dH_U_dtime = 0.; /* finish later  */
       dH_U_dX[0] = ((fv->x[0] - axis_pt[0]) * (1. - SQUARE(dir_angle[0]) / cos_denom) +
                     (fv->x[1] - axis_pt[1]) * (-dir_angle[0] * dir_angle[1] / cos_denom) +
@@ -527,13 +527,11 @@ double height_function_model(double *H_U,
     /*  compute radial direction	*/
 
     dist = sqrt(SQUARE(fv->x[0] - axis_pt[0]) + SQUARE(fv->x[1] - axis_pt[1]));
-    if (dist > R)
-      GOMA_EH(GOMA_ERROR, "point outside of roll");
-    if (dist > R) {
-      *H_L = -R;
+    if (dist > fabs(R)) {
+      *H_L = -fabs(R);
       dH_L_dX[0] = dH_L_dX[1] = dH_L_dX[2] = 0.0;
     } else {
-      *H_L = axis_pt[2] - fv->x[2] + sqrt(SQUARE(R) - SQUARE(dist));
+      *H_L = SGN(R) * (axis_pt[2] - fv->x[2] - sqrt(SQUARE(R) - SQUARE(dist)));
       *dH_L_dtime = 0.; /* finish later  */
       dH_L_dX[0] = -((fv->x[0] - axis_pt[0]) * (1. - SQUARE(dir_angle[0]) / cos_denom) +
                      (fv->x[1] - axis_pt[1]) * (-dir_angle[0] * dir_angle[1] / cos_denom) +

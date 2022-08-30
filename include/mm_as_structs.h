@@ -35,6 +35,7 @@
 #include "mm_elem_block_structs.h"
 #include "mm_mp_const.h"
 #include "rf_bc_const.h"
+#include "rf_io_const.h"
 #include "rf_vars_const.h"
 #include "sl_util_structs.h"
 #include "std.h"
@@ -1034,9 +1035,9 @@ struct External_Field_Variables {
   int ev_etch_area;  /* external area fraction in which etching reaction takes place */
   int ev_etch_depth; /* external depth field due to etching reaction */
 
-  char name[MAX_EXTERNAL_FIELD][20];
+  char name[MAX_EXTERNAL_FIELD][32];
   /* names of external field variables*/
-  char file_nm[MAX_EXTERNAL_FIELD][85];
+  char file_nm[MAX_EXTERNAL_FIELD][MAX_FNL];
   /* names of exodus or pixel files with variables */
   int i[MAX_EXTERNAL_FIELD];           /* Interpolation of variables */
   int ipix[MAX_EXTERNAL_FIELD];        /* 0 for exoII file and 1 for pix file */
@@ -3192,6 +3193,8 @@ struct Lubrication_Auxiliaries {
   double gradP_tangent[DIM]; /* Tangent vector of the pressure gradient */
   double gradP_normal[DIM];  /* Unit vector perpendicular to the pressure */
   double H;                  /* Lubrication Gap Height */
+  double srate;              /* Lubrication Characteristic Shear Rate */
+  double mu_star;            /* Lubrication Characteristic Viscosity */
 
   double dgradP_mag_dP;          /* Pressure gradient magnitude sensitivities w.r.t.
                                     pressure */
@@ -3222,6 +3225,7 @@ struct Lubrication_Auxiliaries {
                                           shear rate */
   double dq_dcross_shear[DIM][MDE];    /* Flow rate sensitivities w.r.t. cross
                                           stream shear stress */
+  double dq_dgradp[DIM][DIM][MDE];     /* Flow rate sensitivities w.r.t. pressure gradient */
 
   double dv_avg_dh[DIM][MDE];  /* Average velocity sensitivities w.r.t. height */
   double dv_avg_dh1[DIM][MDE]; /* Average velocity sensitivities w.r.t. height */
@@ -3250,9 +3254,10 @@ struct Lubrication_Auxiliaries {
                                            bottom wall shear rate */
   double dv_avg_dcross_shear[DIM][MDE]; /* Average velocity sensitivities w.r.t.
                                            cross stream shear stress */
-  double dH_dmesh[DIM][MDE];            /* lubrication gap sensitivities w.r.t. mesh */
-  double dH_drealsolid[DIM][MDE];       /* lubrication gap sensitivities w.r.t. real
-                                           solid */
+  double dv_dgradp[DIM][DIM][MDE]; /* Average velocity sensitivities w.r.t. pressure gradient */
+  double dH_dmesh[DIM][MDE];       /* lubrication gap sensitivities w.r.t. mesh */
+  double dH_drealsolid[DIM][MDE];  /* lubrication gap sensitivities w.r.t. real
+                                      solid */
 };
 
 typedef struct Lubrication_Auxiliaries LUBRICATION_AUXILIARIES_STRUCT;

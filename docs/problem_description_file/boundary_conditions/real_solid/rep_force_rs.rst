@@ -59,9 +59,11 @@ The repulsive force is defined by :math:`\vec F` = F(:math:`\vec n`) where *F* i
 with the distance *h* from a plane defined by the equation ax + by + cz + d = 0. The
 magnitude of the function :math:`\vec F` is defined as:
 
-.. figure:: /figures/071_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+     F = - \frac{\lambda}{h^4}
+
+     
 
 The normal vector is defined as the outward pointing normal to the surface. For internal
 surfaces defined by side sets which include both sides of the interface, this condition

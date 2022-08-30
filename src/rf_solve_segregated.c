@@ -260,7 +260,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
   unsigned int matrix_systems_mask = 1;
 
   int i;
-  int inewton;
+  int inewton = 0;
   int *numProcUnknowns;
 
 #ifdef RELAX_ON_TRANSIENT_PLEASE
@@ -1495,7 +1495,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
                   if (strcmp(efv->field_type[w], "transient") == 0) {
                     err = rd_trans_vectors_from_exoII(pg->sub_step_solutions[pg->imtrx].x_old,
                                                       efv->file_nm[w], w, n, &timeValueReadTrans,
-                                                      cx[pg->imtrx], dpi);
+                                                      exo, cx[pg->imtrx], dpi);
                     if (err != 0) {
                       DPRINTF(stderr, "%s: err from rd_trans_vectors_from_exoII\n", yo);
                     }
@@ -1722,7 +1722,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
               for (w = 0; w < efv->Num_external_field; w++) {
                 if (strcmp(efv->field_type[w], "transient") == 0) {
                   err = rd_trans_vectors_from_exoII(x_old[pg->imtrx], efv->file_nm[w], w, n,
-                                                    &timeValueReadTrans, cx[pg->imtrx], dpi);
+                                                    &timeValueReadTrans, exo, cx[pg->imtrx], dpi);
                   if (err != 0) {
                     DPRINTF(stderr, "%s: err from rd_trans_vectors_from_exoII\n", yo);
                   }

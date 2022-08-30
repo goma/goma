@@ -26,11 +26,13 @@ static char *cvs_util_id =
 */
 
 #include <math.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "loca_const.h"
 #include "loca_util_const.h"
+#include "mm_eh.h"
 
 int N_o = -1;    /* Length of vector that is acted on (owned unknowns)  */
 int N_t = -1;    /* Length of vector that is allcoated (total unknowns) */
@@ -331,7 +333,8 @@ void sort_by_real(int nconv, int ncv, int ldv, double *d, double *v) {
 
   /* Mark final element of count array with -1 */
   count[ncv] = -1;
-
+  // remove faulty warning GCC 12
+  GOMA_ASSERT_ALWAYS(((size_t)(ntd * sizeof(double))) < PTRDIFF_MAX);
   /* Arrays td and tv will hold the sorted eigenvalues and eigenvectors */
   td = (double *)calloc(ntd, sizeof(double));
   for (i = 0; i < ntd; i++)

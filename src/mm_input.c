@@ -762,7 +762,7 @@ void rd_file_specs(FILE *ifp, char *input) {
     strip(input);
     if (strcasecmp(input, "kway") == 0) {
       Decompose_Type = 2;
-    } else if (strcasecmp(input, "rcb")) {
+    } else if (strcasecmp(input, "rcb") == 0) {
       Decompose_Type = 1;
     } else {
       GOMA_EH(GOMA_ERROR, "Unexpected input for Decomposition_Type: %s, expected kway or rcb",
@@ -860,13 +860,11 @@ void rd_file_specs(FILE *ifp, char *input) {
  */
 
 void rd_genl_specs(FILE *ifp, char *input) {
-  int nargs, var_type;
-  double var_min, var_max;
+  int nargs;
   char err_msg[MAX_CHAR_IN_INPUT];
   char first_string[MAX_CHAR_IN_INPUT];
   char second_string[MAX_CHAR_IN_INPUT];
   char third_string[MAX_CHAR_IN_INPUT];
-  char var_string[MAX_CHAR_IN_INPUT];
   char *tmp;
   char StringToSearch[] = "Pixel"; /*used in strstr call below*/
 
@@ -918,13 +916,11 @@ void rd_genl_specs(FILE *ifp, char *input) {
   ECHO(echo_string, echo_file);
 #endif
 
-  Num_Var_Bound = 0;
   iread = look_for_optional(ifp, "Initial Guess", input, '=');
   if (iread == 1) {
     (void)read_string(ifp, input, '\n');
     strip(input);
-    nargs = sscanf(input, "%s %s %s %s %d %lf %lf", first_string, second_string, third_string,
-                   var_string, &var_type, &var_min, &var_max);
+    nargs = sscanf(input, "%s %s %s ", first_string, second_string, third_string);
     if (nargs >= 2 && strcasecmp(first_string, "read_exoII_file") != 0) {
       GOMA_EH(GOMA_ERROR, "Undecipherable option for Initial guess.");
     }
@@ -950,13 +946,6 @@ void rd_genl_specs(FILE *ifp, char *input) {
         GOMA_EH(GOMA_ERROR, "Read from *what* exoII file?");
       }
       break;
-    case 7:
-      Var_init[Num_Var_Bound].var = variable_string_to_int(var_string, "Initialize Keyword Error");
-      Var_init[Num_Var_Bound].ktype = var_type;
-      Var_init[Num_Var_Bound].init_val_min = var_min;
-      Var_init[Num_Var_Bound].init_val_max = var_max;
-      Num_Var_Bound++;
-      // Fall through
     case 3:
       if (sscanf(third_string, "%d", &ExoTimePlane) != 1) {
         GOMA_EH(GOMA_ERROR, "Time plane for read_exoII_file option is undecipherable");
@@ -980,15 +969,41 @@ void rd_genl_specs(FILE *ifp, char *input) {
     case 3:
       SPF(echo_string, "%s = %s %s %d", "Initial Guess", first_string, second_string, ExoTimePlane);
       break;
-    case 7:
-      SPF(echo_string, "%s = %s %s %d %s %d %f %f", "Initial Guess", first_string, second_string,
-          ExoTimePlane, var_string, var_type, var_min, var_max);
-      break;
     }
     ECHO(echo_string, echo_file);
   } else {
     Guess_Flag = 0;
     ECHO("Initial Guess card not read correctly", echo_file);
+  }
+
+  /*
+   *             Search for commands to apply bounds to initialized variables
+   */
+  Num_Var_Bound = 0;
+  while ((iread = look_forward_optional(ifp, "Initialization Bound", input, '=')) == 1) {
+    /*
+     *  Read the variable name to be bounded
+     */
+    if (fscanf(ifp, "%80s", input) != 1) {
+      GOMA_EH(GOMA_ERROR, "Error reading variable for initialization");
+    }
+    /*
+     *  Translate the string variable name to the internal integer value for
+     *  that variable.
+     */
+    Var_init[Num_Var_Bound].var = variable_string_to_int(input, "Initialize Keyword Error");
+
+    if (fscanf(ifp, "%d %lf %lf", &Var_init[Num_Var_Bound].ktype,
+               &Var_init[Num_Var_Bound].init_val_min, &Var_init[Num_Var_Bound].init_val_max) != 3) {
+      GOMA_EH(GOMA_ERROR, "Error reading Variable Bound data");
+    }
+
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %s %d %f %f", "Initialization Bound", input,
+             Var_init[Num_Var_Bound].ktype, Var_init[Num_Var_Bound].init_val_min,
+             Var_init[Num_Var_Bound].init_val_max);
+    ECHO(echo_string, echo_file);
+
+    Num_Var_Bound++;
   }
 
   iread = look_for_optional(ifp, "Conformation Map", input, '=');
@@ -1031,6 +1046,7 @@ void rd_genl_specs(FILE *ifp, char *input) {
      *  Translate the string variable name to the internal integer value for
      *  that variable.
      */
+    Var_init[Num_Var_Init].len_u_pars = -1;
     Var_init[Num_Var_Init].var = variable_string_to_int(input, "Initialize Keyword Error");
 
     if (fscanf(ifp, "%d %lf", &Var_init[Num_Var_Init].ktype, &Var_init[Num_Var_Init].init_val) !=
@@ -1089,7 +1105,7 @@ void rd_genl_specs(FILE *ifp, char *input) {
      */
 
     if (fscanf(ifp, "%s", input) != 1) {
-      fprintf(stderr, "%s: problem reading interpolation for external variable.\n", yo);
+      DPRINTF(stderr, "%s: problem reading interpolation for external variable.\n", yo);
       exit(-1);
     }
     /*
@@ -1236,7 +1252,7 @@ void rd_genl_specs(FILE *ifp, char *input) {
      * Ensure the id corresponds to a valid Goma variable
      */
     if (ex_id < 0 || ex_id >= V_LAST) {
-      fprintf(stderr, "Export Field %d is not a valid variable ID!", ex_id);
+      DPRINTF(stderr, "Export Field %d is not a valid variable ID!", ex_id);
       exit(-1);
     }
 
@@ -1256,6 +1272,48 @@ void rd_genl_specs(FILE *ifp, char *input) {
 
   /* XFEM turned off by default */
   upd->XFEM = FALSE;
+
+  while ((iread = look_forward_optional(ifp, "User Initialize", input, '=')) == 1) {
+    int curr_var = Num_Var_Init, var;
+    double tmp;
+
+    Var_init[curr_var].len_u_pars = -1;
+    if (fscanf(ifp, "%80s", input) != 1) {
+      sprintf(err_msg, "Error reading variable for user initialization");
+      GOMA_EH(GOMA_ERROR, err_msg);
+    }
+    (void)strip(input);
+    var = variable_string_to_int(input, "Variable for user initialization");
+    if (var >= 0) {
+      Var_init[curr_var].var = var;
+    } else {
+      sprintf(err_msg, "Invalid choice of user initialization variable");
+      GOMA_EH(GOMA_ERROR, err_msg);
+    }
+
+    if (fscanf(ifp, "%d %lf", &Var_init[Num_Var_Init].ktype, &Var_init[curr_var].init_val) != 2)
+      GOMA_EH(GOMA_ERROR, "Error reading initialization data");
+
+    SPF(err_msg, "%s = %s %d %.4g", "User Initialize", input, Var_init[curr_var].ktype,
+        Var_init[curr_var].init_val);
+
+    if (fscanf(ifp, "%d", &Var_init[curr_var].slave_block) != 1) {
+      Var_init[curr_var].slave_block = 0;
+    } else
+      SPF(endofstring(err_msg), " %d", Var_init[curr_var].slave_block);
+
+    Var_init[curr_var].u_pars = alloc_dbl_1(MAX_NUMBER_PARAMS, 0.0);
+    Var_init[curr_var].len_u_pars = 0;
+    while (fscanf(ifp, "%lf ", &tmp) == 1) {
+      iread = Var_init[curr_var].len_u_pars;
+      Var_init[curr_var].u_pars[iread] = tmp;
+      Var_init[curr_var].len_u_pars++;
+      SPF(endofstring(err_msg), " %.4g", tmp);
+    }
+
+    Num_Var_Init++;
+    ECHO(err_msg, echo_file);
+  }
 
   /*
    *  Pressure Datum - Optional
@@ -1331,7 +1389,7 @@ void rd_genl_specs(FILE *ifp, char *input) {
       Anneal_Mesh = FALSE;
     } else if (strcmp(input, "yes") == 0) {
       Anneal_Mesh = TRUE;
-      fprintf(stdout, "Annealing mesh on output\n");
+      DPRINTF(stdout, "Annealing mesh on output\n");
     } else {
       GOMA_EH(GOMA_ERROR, "Bad specification for annealing mesh");
     }
@@ -3799,8 +3857,8 @@ void rd_track_specs(FILE *ifp, char *input) {
             snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = ", input);
 
             if (fscanf(ifp, "%80s", input) != 1) {
-              fprintf(stderr, "%s:\tError reading CC[iCC].Set_Type ", yo);
-              fprintf(stderr, "(one of BC, MT, UM, or AC)\n");
+              DPRINTF(stderr, "%s:\tError reading CC[iCC].Set_Type ", yo);
+              DPRINTF(stderr, "(one of BC, MT, UM, or AC)\n");
               exit(-1);
             }
             if (!strcmp(input, "BC")) {
@@ -3812,11 +3870,11 @@ void rd_track_specs(FILE *ifp, char *input) {
             } else if (!strcmp(input, "UM")) {
               cpcc[iCC].Type = 4;
             } else {
-              fprintf(stderr, "%s:\tImproper CC set type - %s\n", yo, input);
+              DPRINTF(stderr, "%s:\tImproper CC set type - %s\n", yo, input);
               if (!strcmp(input, "UF"))
-                fprintf(stderr, "\tUM is not a valid option for CC cards!");
+                DPRINTF(stderr, "\tUM is not a valid option for CC cards!");
               if (!strcmp(input, "AN"))
-                fprintf(stderr, "\tAN is not a valid option for CC cards!");
+                DPRINTF(stderr, "\tAN is not a valid option for CC cards!");
               exit(-1);
             }
             SPF(endofstring(echo_string), " %s", input);
@@ -3828,25 +3886,25 @@ void rd_track_specs(FILE *ifp, char *input) {
 
             if (cpcc[iCC].Type == 4) {
               if (fscanf(ifp, "%d %d %d %d", &id1, &id2, &id3, &iflag) != 4) {
-                fprintf(stderr, "%s:\tError reading integer inputs, ", yo);
-                fprintf(stderr, "for CC[%d]\n", iCC + 1);
-                fprintf(stderr, "\tFormat: CC = UM MTID MPID MDID FLAG ...\n");
+                DPRINTF(stderr, "%s:\tError reading integer inputs, ", yo);
+                DPRINTF(stderr, "for CC[%d]\n", iCC + 1);
+                DPRINTF(stderr, "\tFormat: CC = UM MTID MPID MDID FLAG ...\n");
                 exit(-1);
               }
               SPF(endofstring(echo_string), " %d %d %d %d", id1, id2, id3, iflag);
 
             } else {
               if (fscanf(ifp, "%d %d %d", &id1, &id2, &iflag) != 3) {
-                fprintf(stderr, "%s:\tError reading integer inputs ", yo);
-                fprintf(stderr, "for CC[%d]\n", iCC + 1);
+                DPRINTF(stderr, "%s:\tError reading integer inputs ", yo);
+                DPRINTF(stderr, "for CC[%d]\n", iCC + 1);
                 if (cpcc[iCC].Type == 1) {
-                  fprintf(stderr, "\tFormat: CC = BC BCID DFID FLAG ...\n");
+                  DPRINTF(stderr, "\tFormat: CC = BC BCID DFID FLAG ...\n");
                 }
                 if (cpcc[iCC].Type == 2) {
-                  fprintf(stderr, "\tFormat: CC = MT MTID MPID FLAG ...\n");
+                  DPRINTF(stderr, "\tFormat: CC = MT MTID MPID FLAG ...\n");
                 }
                 if (cpcc[iCC].Type == 3) {
-                  fprintf(stderr, "\tFormat: CC = AC ACID DFID FLAG ...\n");
+                  DPRINTF(stderr, "\tFormat: CC = AC ACID DFID FLAG ...\n");
                 }
                 exit(-1);
               }
@@ -3871,8 +3929,8 @@ void rd_track_specs(FILE *ifp, char *input) {
             {
               if (fscanf(ifp, "%lf %lf %lf", &cpcc[iCC].coeff_0, &cpcc[iCC].coeff_1,
                          &cpcc[iCC].coeff_2) != 3) {
-                fprintf(stderr, "%s:\tError reading CC[%d] floats\n", yo, iCC + 1);
-                fprintf(stderr, "\tThree floats are required!\n");
+                DPRINTF(stderr, "%s:\tError reading CC[%d] floats\n", yo, iCC + 1);
+                DPRINTF(stderr, "\tThree floats are required!\n");
                 exit(-1);
               }
               SPF(endofstring(echo_string), " %.4g %.4g %.4g", cpcc[iCC].coeff_0, cpcc[iCC].coeff_1,
@@ -3880,8 +3938,8 @@ void rd_track_specs(FILE *ifp, char *input) {
             } else /* Two floats are required */
             {
               if (fscanf(ifp, "%lf %lf", &cpcc[iCC].coeff_0, &cpcc[iCC].coeff_1) != 2) {
-                fprintf(stderr, "%s:\tError reading CC[%d] floats\n", yo, iCC + 1);
-                fprintf(stderr, "\tFormat: ...start end/range\n");
+                DPRINTF(stderr, "%s:\tError reading CC[%d] floats\n", yo, iCC + 1);
+                DPRINTF(stderr, "\tFormat: ...start end/range\n");
                 exit(-1);
               }
               SPF(endofstring(echo_string), " %.4g %.4g", cpcc[iCC].coeff_0, cpcc[iCC].coeff_1);
@@ -3960,7 +4018,7 @@ void rd_track_specs(FILE *ifp, char *input) {
                                          cpcc[iCC].coeff_2 * cos(end_angle);
                 break;
               default:
-                fprintf(stderr, "%s:\tCC[%d] flag must be 0-3\n", yo, iCC + 1);
+                DPRINTF(stderr, "%s:\tCC[%d] flag must be 0-3\n", yo, iCC + 1);
                 exit(-1);
                 break;
               }
@@ -3993,7 +4051,7 @@ void rd_track_specs(FILE *ifp, char *input) {
                     cpcc[iCC].coeff_1 * pow(EndParameterValue, cpcc[iCC].coeff_2);
                 /* fall through */
               default:
-                fprintf(stderr, "%s:\tCC[%d] flag must be 0, 1, or 2\n", yo, iCC + 1);
+                DPRINTF(stderr, "%s:\tCC[%d] flag must be 0, 1, or 2\n", yo, iCC + 1);
                 exit(-1);
                 break;
               }
@@ -4674,8 +4732,6 @@ void rd_hunt_specs(FILE *ifp, char *input) {
           (hunt[iHC].BegParameterValue * hunt[iHC].EndParameterValue <= 0.0)) {
         hunt[iHC].ramp = 0;
         fprintf(stderr, "%s:\tImproper Log ramp for hunting condition %d\n", yo, iHC);
-      } else if (hunt[iHC].BegParameterValue < 0.0) {
-        hunt[iHC].ramp = -2;
       }
     }
   }
@@ -4907,6 +4963,8 @@ void rd_ac_specs(FILE *ifp, char *input) {
       augc[iAC].Type = AC_VOLUME;
     } else if (!strcmp(input, "XY") || !strcmp(input, "POSITION")) {
       augc[iAC].Type = AC_POSITION;
+    } else if (!strcmp(input, "XY") || !strcmp(input, "ANGLE")) {
+      augc[iAC].Type = AC_ANGLE;
     } else if (!strcmp(input, "LSV") || !strcmp(input, "LS_VELOCITY")) {
       augc[iAC].Type = AC_LS_VEL;
 
@@ -4969,6 +5027,7 @@ void rd_ac_specs(FILE *ifp, char *input) {
       break;
 
     case AC_POSITION:
+    case AC_ANGLE:
       /*
        *  first  int - NSID Node set ID to be used
        *  second int - CoordID direction to be used
@@ -9097,7 +9156,7 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
           sr = sprintf(err_msg, "Using default equation term multipliers (adv,src) on %s in %s",
                        EQ_Name[ce].name1, pd_ptr->MaterialName);
           GOMA_WH(-1, err_msg);
-          fprintf(stderr, "\t %s %.4g %.4g \n", EQ_Name[ce].name1,
+          DPRINTF(stderr, "\t %s %.4g %.4g \n", EQ_Name[ce].name1,
                   pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)],
                   pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)]);
         }
@@ -9125,7 +9184,7 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
           sr = sprintf(err_msg, "Using default equation term multipliers (adv,src) on %s in %s",
                        EQ_Name[ce].name1, pd_ptr->MaterialName);
           GOMA_WH(-1, err_msg);
-          fprintf(stderr, "\t %s %.4g %.4g \n", EQ_Name[ce].name1,
+          DPRINTF(stderr, "\t %s %.4g %.4g \n", EQ_Name[ce].name1,
                   pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)],
                   pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)]);
         }
@@ -9210,9 +9269,11 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
           sr =
               sprintf(err_msg, "Using default equation term multipliers (mass,adv,src) on %s in %s",
                       EQ_Name[ce].name1, pd_ptr->MaterialName);
-          sr = sprintf(err_msg, "Provide 3 equation term multipliers (mass,adv,src) on %s in %s",
-                       EQ_Name[ce].name1, pd_ptr->MaterialName);
-          GOMA_EH(GOMA_ERROR, err_msg);
+          GOMA_WH(GOMA_ERROR, err_msg);
+          DPRINTF(stderr, "\t %s %.4g %.4g %.4g \n", EQ_Name[ce].name1,
+                  pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)],
+                  pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)],
+                  pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)]);
         }
 
         SPF(endofstring(echo_string), "\t %.4g %.4g %.4g",
@@ -9256,9 +9317,17 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
         if (fscanf(ifp, "%lf %lf %lf", &(pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)]),
                    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)]),
                    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)])) != 3) {
-          sr = sprintf(err_msg, "Provide 3 equation term multipliers (diff,src, bnd) on %s in %s",
+          pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)] = 1.0;
+          pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)] = 1.0;
+          pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)] = 1.0;
+          sr = sprintf(err_msg,
+                       "Using default equation term multipliers (bdy, diff,src) on %s in %s",
                        EQ_Name[ce].name1, pd_ptr->MaterialName);
-          GOMA_EH(GOMA_ERROR, err_msg);
+          GOMA_WH(GOMA_ERROR, err_msg);
+          DPRINTF(stderr, "\t %s %.4g %.4g %.4g \n", EQ_Name[ce].name1,
+                  pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)],
+                  pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)],
+                  pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)]);
         }
         SPF(endofstring(echo_string), "\t %.4g %.4g %.4g",
             pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)],
@@ -9441,7 +9510,7 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
                    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)]),
                    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)]),
                    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)])) != 5) {
-          if (TimeIntegration == TRANSIENT) {
+          if (TimeIntegration == TRANSIENT || Linear_Stability != LSA_NONE) {
             pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)] = 1.0;
           } else {
             pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)] = .0;
@@ -9488,7 +9557,7 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
                    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)]),
                    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)]),
                    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_POROUS_BRINK)])) != 6) {
-          if (TimeIntegration == TRANSIENT) {
+          if (TimeIntegration == TRANSIENT || Linear_Stability != LSA_NONE) {
             pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)] = 1.0;
           } else {
             pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)] = .0;

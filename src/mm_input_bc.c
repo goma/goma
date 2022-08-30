@@ -471,6 +471,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
     case SH_SDET_BC:
     case SH_MESH2_WEAK_BC:
     case RESTIME_GRADSIC_BC:
+    case GRAD_LUBP_NOBC_BC:
 
       if (fscanf(ifp, "%lf", &BC_Types[ibc].BC_Data_Float[0]) != 1) {
         sr = sprintf(err_msg, "%s: Expected 1 flt for %s.", yo, BC_Types[ibc].desc->name1);
@@ -479,6 +480,17 @@ void rd_bc_specs(FILE *ifp, char *input) {
       BC_Types[ibc].max_DFlt = 1;
 
       SPF(endofstring(echo_string), " %.4g", BC_Types[ibc].BC_Data_Float[0]);
+      if (BC_Types[ibc].BC_Name == GRAD_LUB_PRESS_BC ||
+          BC_Types[ibc].BC_Name == GRAD_LUBP_NOBC_BC) {
+        BC_Types[ibc].BC_Data_Float[1] = 0.;
+        BC_Types[ibc].BC_Data_Float[2] = 1.;
+        if (fscanf(ifp, "%lf %lf", &BC_Types[ibc].BC_Data_Float[1],
+                   &BC_Types[ibc].BC_Data_Float[2]) != 2) {
+        }
+        BC_Types[ibc].max_DFlt = 3;
+        SPF(endofstring(echo_string), " %.4g %.4g", BC_Types[ibc].BC_Data_Float[1],
+            BC_Types[ibc].BC_Data_Float[2]);
+      }
       if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[0]) != 1) {
         BC_Types[ibc].BC_Data_Int[0] = -1;
         /* The default for this int now becomes an added sign needed to resolve unhandled issues
@@ -501,13 +513,13 @@ void rd_bc_specs(FILE *ifp, char *input) {
           }
         }
       }
-      BC_Types[ibc].BC_Data_Float[1] = 0.;
-      BC_Types[ibc].BC_Data_Float[2] = 0.;
-      BC_Types[ibc].BC_Data_Float[3] = 135.;
       if (BC_Types[ibc].BC_Name == VELO_NORMAL_LS_BC ||
           BC_Types[ibc].BC_Name == VELO_NORMAL_LS_PETROV_BC ||
           BC_Types[ibc].BC_Name == VELO_NORMAL_LS_COLLOC_BC ||
           BC_Types[ibc].BC_Name == VELO_TANGENT_LS_BC) {
+        BC_Types[ibc].BC_Data_Float[1] = 0.;
+        BC_Types[ibc].BC_Data_Float[2] = 0.;
+        BC_Types[ibc].BC_Data_Float[3] = 135.;
         if (fscanf(ifp, "%lf %lf %lf", &BC_Types[ibc].BC_Data_Float[1],
                    &BC_Types[ibc].BC_Data_Float[2], &BC_Types[ibc].BC_Data_Float[3]) != 3) {
           sr = sprintf(err_msg, "%s: Expected 3 flts for %s.", yo, BC_Types[ibc].desc->name1);
@@ -3096,6 +3108,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
   }
 
   SPF(echo_string, "%s = %d", "Number of rotation conditions", Num_ROT);
+  ECHO(echo_string, echo_file);
 
   /*
    *  Allocate space for the vector, ROT_Types.

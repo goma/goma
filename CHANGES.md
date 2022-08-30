@@ -1,3 +1,44 @@
+## Changes in version 7.1.1
+
+- bugfix for linear PTT BC `STRESS_DEVELOPED`
+- bugfix garbage malloc for `fix` program
+- bugfix for RCB specification in input card
+
+
+## Changes in version 7.1.0
+
+- Add experimental standalone fix, usage: fix <exodusfile>.<num_proc>.00
+  - example: `fix out.exoII.24.00`
+- Linear PTT model, see PTT Form
+- bugfix, CA conditions error checking
+- bugfix, Output exodus properties, used with Nodeset associativity in CUBIT
+- bugfix, iapply is always on on external surfaces for "Special" BCs
+- build script contains fix for goma#346 issue
+- bugfix, consistent NS and SS when using METIS decomposition
+
+## Changes in version 7.0.5
+
+- bugfix, fix anneal mesh not working
+- bugfix, add ENABLE_LOGGING and fix mm_eh.c includes when ENABLE_LOGGING
+
+## Changes in version 7.0.4
+
+- bugfix for External Field Variables in Parallel
+
+## Changes in version 7.0.3
+
+- bugfix for VE Shock Capturing documentation and Parallel
+
+## Changes in version 7.0.2
+
+- Build script now builds `Omega_h` and `PETSc`
+- Various `CMake` changes to address consistency of setting third party libraries
+- Fix for Numerical Jacobian log conformation with multi-material
+
+## Changes in version 7.0.1
+
+- Bugfix for Ubuntu OpenMPI and using build script on Ubuntu
+
 ## Changes in version 7.0
 
 - Partial Segregated solver support

@@ -14,6 +14,10 @@
 
 #include "brkfix/setup_fix_data.h"
 
+// include mpi before since it might get pulled in from Exodus
+// an error might occur because of mpicxx headers being included as C
+#include <mpi.h>
+
 extern "C" {
 #define DISABLE_CPP
 #include "base_mesh.h"
@@ -43,7 +47,8 @@ extern "C" {
 #include <unordered_set>
 #include <vector>
 
-extern "C" void setup_fix_data(char *mono_name, int num_procs, struct fix_data *fd, int *pmax) {
+extern "C" void
+setup_fix_data(const char *mono_name, int num_procs, struct fix_data *fd, int *pmax) {
 
   std::vector<std::unordered_set<int>> ns_nodes;
   std::vector<std::vector<std::pair<int, int>>> ss_elem_sides;
@@ -115,7 +120,8 @@ extern "C" void setup_fix_data(char *mono_name, int num_procs, struct fix_data *
      */
 
     rd_exo(poly, polylith_name, 0,
-           (EXODB_ACTION_RD_INIT + EXODB_ACTION_RD_MESH + EXODB_ACTION_RD_RES0));
+           (EXODB_ACTION_RD_INIT + EXODB_ACTION_RD_MESH + EXODB_ACTION_RD_RES0 +
+            EXODB_ACTION_NO_GOMA));
 
     if (poly->num_node_vars > num_node_var_max) {
       num_node_var_max = poly->num_node_vars;

@@ -603,7 +603,7 @@ void noahs_ark(void) {
     ddd_add_member(n, &efv->TALE, 1, MPI_INT);
     for (i = 0; i < efv->Num_external_field; i++) {
       ddd_add_member(n, efv->name[i], 20, MPI_CHAR);
-      ddd_add_member(n, efv->file_nm[i], 85, MPI_CHAR);
+      ddd_add_member(n, efv->file_nm[i], MAX_FNL, MPI_CHAR);
       ddd_add_member(n, &efv->i[i], 1, MPI_INT);
       ddd_add_member(n, efv->field_type[i], 15, MPI_CHAR);
     }
@@ -1061,6 +1061,8 @@ void noahs_ark(void) {
       ddd_add_member(n, &Var_init_mat[i][j].var, 1, MPI_INT);
       ddd_add_member(n, &Var_init_mat[i][j].ktype, 1, MPI_INT);
       ddd_add_member(n, &Var_init_mat[i][j].init_val, 1, MPI_DOUBLE);
+      ddd_add_member(n, &Var_init_mat[i][j].slave_block, 1, MPI_INT);
+      ddd_add_member(n, &Var_init_mat[i][j].len_u_pars, 1, MPI_INT);
     }
   }
 
@@ -2176,6 +2178,7 @@ void noahs_ark(void) {
      */
 
     ddd_add_member(n, &vn_glob[i]->ConstitutiveEquation, 1, MPI_INT);
+    ddd_add_member(n, &vn_glob[i]->ptt_type, 1, MPI_INT);
     ddd_add_member(n, &vn_glob[i]->wt_func, 1, MPI_DOUBLE);
     ddd_add_member(n, &vn_glob[i]->wt_funcModel, 1, MPI_INT);
     ddd_add_member(n, &vn_glob[i]->eps, 1, MPI_DOUBLE);
@@ -2183,7 +2186,8 @@ void noahs_ark(void) {
     ddd_add_member(n, &vn_glob[i]->modes, 1, MPI_INT);
     ddd_add_member(n, &vn_glob[i]->shiftModel, 1, MPI_INT);
     ddd_add_member(n, &vn_glob[i]->dg_J_model, 1, MPI_INT);
-
+    ddd_add_member(n, &vn_glob[i]->shockcaptureModel, 1, MPI_INT);
+    ddd_add_member(n, &vn_glob[i]->shockcapture, 1, MPI_DOUBLE);
     /*
      * Dadblastit!!! If you add a shiny new variable argument list
      * take care to teleport it properly over to the other processors.
@@ -2372,6 +2376,7 @@ void noahs_ark(void) {
     ddd_add_member(n, &elc_glob[i]->thermal_expansion, 1, MPI_DOUBLE);
     ddd_add_member(n, &elc_glob[i]->thermal_expansion_model, 1, MPI_INT);
     ddd_add_member(n, &elc_glob[i]->len_u_thermal_expansion, 1, MPI_INT);
+    ddd_add_member(n, &elc_glob[i]->thermal_expansion_tableid, 1, MPI_INT);
 
     ddd_add_member(n, &elc_glob[i]->solid_reference_temp, 1, MPI_DOUBLE);
     ddd_add_member(n, &elc_glob[i]->solid_reference_temp_model, 1, MPI_INT);
@@ -3065,6 +3070,10 @@ void ark_landing(void) {
 
     dalloc(v->len_dg_J_model_wt, v->dg_J_model_wt);
     dalloc(v->len_shift, v->shift);
+
+    for (j = 0; j < Num_Var_Init_Mat[i]; j++) {
+      dalloc(Var_init_mat[i][j].len_u_pars, Var_init_mat[i][j].u_pars);
+    }
   }
 
   dalloc(len_u_post_proc, u_post_proc);
@@ -3346,6 +3355,10 @@ void noahs_dove(void) {
     crdv(v->len_dg_J_model_wt, v->dg_J_model_wt);
 
     crdv(v->len_shift, v->shift);
+
+    for (j = 0; j < Num_Var_Init_Mat[i]; j++) {
+      crdv(Var_init_mat[i][j].len_u_pars, Var_init_mat[i][j].u_pars);
+    }
   }
 
   for (i = 0; i < Num_BC; i++) {

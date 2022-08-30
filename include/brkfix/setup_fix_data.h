@@ -18,7 +18,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-void setup_fix_data(char *mono_name, int num_procs, struct fix_data *fd, int *pmax);
+void setup_fix_data(const char *mono_name, int num_procs, struct fix_data *fd, int *pmax);
 void free_fix_data(struct fix_data *fd);
 #ifdef __cplusplus
 }

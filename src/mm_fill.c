@@ -530,14 +530,17 @@ Revised:         Summer 1998, SY Tam (UNM)
       case VELO_THETA_HOFFMAN_BC:
       case VELO_THETA_TPL_BC:
       case VELO_THETA_COX_BC:
-      case VELO_THETA_SHIK_BC:
+      case VELO_THETA_SHIK_BC: {
         nsp = match_nsid(BC_Types[j].BC_ID);
-        nspk = Proc_NS_List[Proc_NS_Pointers[nsp]];
-        if (nsp != -1 && Nodes[nspk]->Proc == ProcID) {
-          count++;
-          CA_proc[count] = ProcID;
+        if (nsp != -1) {
+          nspk = Proc_NS_List[Proc_NS_Pointers[nsp]];
+          int n_nodes = Proc_NS_Pointers[nsp + 1] - Proc_NS_Pointers[nsp];
+          if (n_nodes > 0 && Nodes[nspk]->Proc == ProcID) {
+            count++;
+            CA_proc[count] = ProcID;
+          }
         }
-        break;
+      } break;
       }
     }
 
@@ -3426,6 +3429,7 @@ Revised:         Summer 1998, SY Tam (UNM)
     P0PRINTF("%s: ends\n", yo);
     MMH_ip = -1;
   }
+
   if ((Linear_Solver != FRONT && ielem == exo->eb_ptr[exo->num_elem_blocks] - 1) ||
       (Linear_Solver == FRONT && ielem == exo->elem_order_map[exo->num_elem_blocks] - 1)) {
     if (zeroCA == 0) {

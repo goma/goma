@@ -60,11 +60,11 @@ The build-goma-dependencies.sh script relies on several packages readily availab
 
 For Ubuntu this will install the necessary packages to run the script:
 
-`sudo apt-get install git build-essential m4 zlib1g-dev libx11-dev gfortran`
+`sudo apt-get install git build-essential m4 zlib1g-dev libx11-dev gfortran pkg-config`
 
 For CentOS / Fedora
 
-`sudo [yum|dnf] install git patch gcc gcc-c++ gcc-gfortran m4 make wget bzip2 tar zlib-devel libX11-devel`
+`sudo [yum|dnf] install git patch gcc gcc-c++ gcc-gfortran m4 make wget bzip2 tar zlib-devel libX11-devel pkgconfig`
 
 ## Goma Dependencies build script usage
 

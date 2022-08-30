@@ -23,9 +23,11 @@ The SURFDOMAINCHEMKIN_KIN_STEFAN_FLOW boundary condition (shortened to
 SDC_KIN_SF in the *name2* member of the *BC_descriptions* struct in mm_names.h)
 solves the following equation representing Stefan flow at a boundary.
 
-.. figure:: /figures/070_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+  n_l \cdot \left[\rho^l (u^l - u_s)\right] = \sum^N_{k = 1} - W_k S^l_k
+
+
 
 where :math:`n_1` is the outward facing normal to the liquid material, :math:`p^1` is the liquid density, :math:`u^1`
 is the (mass average) velocity at the current surface quadrature point, and :math:`u_s` the

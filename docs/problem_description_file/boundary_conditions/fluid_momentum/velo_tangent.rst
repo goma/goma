@@ -28,7 +28,7 @@ The <float_list> has three parameters; definitions for all input parameters is a
 <bc_id>          The boundary flag identifier, an integer associated with
                  <bc_type> that identifies the boundary location (side set
                  in EXODUS II) in the problem domain.
-<integer>        :math:`N_cl`, parameter that identifies a single-node node
+<integer>        :math:`N_{cl}`, parameter that identifies a single-node node
                  set that coincides with the location in the model of the 
                  moving contact line. Distances in the slipping model are
                  computed relative to the location of this node. When the
@@ -67,18 +67,22 @@ The following is a sample input card:
   this case, this boundary condition would be used to set the tangential velocity to be
   zero. The constraint applied at node *i* is as follows:
 
-.. figure:: /figures/083_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+  \int_\Gamma \phi_i \left(t \cdot v - v_t \right)d \Gamma = 0
+
+
 
 * Alternatively, a dynamic contact line might be present in the problem and it is
   desirable that this condition be relaxed near the position of this contact line. This
   can be done by supplying non-zero values for :math:`\alpha` and :math:`\beta`. In this case, the constraint
   that is applied at the :math:`i^{th}` node on the boundary is:
 
-.. figure:: /figures/084_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+  \int_\Gamma \phi_i \left(t \cdot v - \beta \dot x e^{-\alpha d} - v_t\right)d \Gamma = 0
+
+  
 
 |
 

@@ -44,11 +44,12 @@ momentum conservation equations.
    mechanical_and_constitutive/cure_species_number
    mechanical_and_constitutive/unreacted_gel_temperature
    mechanical_and_constitutive/polymer_constitutive_equation
+   mechanical_and_constitutive/ptt_form
    mechanical_and_constitutive/polymer_stress_formulation
    mechanical_and_constitutive/polymer_weight_function
    mechanical_and_constitutive/polymer_shift_function
-   mechanical_and_constitutive/polymer_shock_function
    mechanical_and_constitutive/polymer_weighting
+   mechanical_and_constitutive/polymer_shock_capturing
    mechanical_and_constitutive/discontinuous_jacobian_formulation
    mechanical_and_constitutive/adaptive_viscosity_scaling
    mechanical_and_constitutive/polymer_viscosity

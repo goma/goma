@@ -152,18 +152,18 @@ static goma_error setup_base_mesh_parallel(Dpi *dpi, Exo_DB *exo) {
   MALLOC_COPY(base->ss_elem_list, exo->ss_elem_list, sizeof(int) * exo->ss_elem_len);
   MALLOC_COPY(base->ss_distfact_list, exo->ss_distfact_list, sizeof(dbl) * exo->ss_distfact_len);
 
-  // we don't use these as far as I know so just zero them
-  base->ns_num_props = 0;
-  base->ss_num_props = 0;
-  base->eb_num_props = 0;
+  EXO_TO_BASE(ns_num_props);
+  EXO_TO_BASE(ss_num_props);
+  EXO_TO_BASE(eb_num_props);
 
-  base->eb_prop_name = NULL;
-  base->ns_prop_name = NULL;
-  base->ss_prop_name = NULL;
+  EXO_TO_BASE(eb_prop_name);
+  EXO_TO_BASE(ns_prop_name);
+  EXO_TO_BASE(ss_prop_name);
 
-  base->eb_prop = NULL;
-  base->ns_prop = NULL;
-  base->ss_prop = NULL;
+  EXO_TO_BASE(eb_prop);
+  EXO_TO_BASE(ns_prop);
+  EXO_TO_BASE(ss_prop);
+
   exo->base_mesh_is_serial = false;
   return GOMA_SUCCESS;
 }

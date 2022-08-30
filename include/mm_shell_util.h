@@ -173,4 +173,12 @@ extern void calculate_lub_q_v_nonnewtonian_sens(double mu,
                                                 double eps_top,
                                                 double eps_bot);
 
+extern int lub_viscosity_integrate(const double strs,
+                                   const double H,
+                                   double *flow_mag,
+                                   double *dq_gradp,
+                                   double *dq_dh,
+                                   double *srate,
+                                   double *pre_P,
+                                   double *mu_star);
 #endif /* GOMA_MM_FILL_SHELL_H */

@@ -48,10 +48,10 @@ ARCHIVER=ar
 
 # if mpi is built by the script these get reset later.
 MPI_C_COMPILER="mpicc" 
-MPI_CXX_COMPILER="mpiCC"
-# mpif90 and mpif77 are depricated in favor of just mpifort.
-MPI_F90_COMPILER="mpifort"
-MPI_F77_COMPILER="mpifort"
+MPI_CXX_COMPILER="mpicxx"
+# mpif90 and mpif77 are depricated in favor of just mpif90.
+MPI_F90_COMPILER="mpif90"
+MPI_F77_COMPILER="mpif77"
 MPI_RUNNER="mpirun"
 FORTRAN_LIBS="-lgfortran"
 
@@ -232,38 +232,47 @@ fi
 echo "Start Goma Build" >> $BUILD_LOG
 echo "Start Goma Compile" >> $COMPILE_LOG
 
-HDF5_VERSION="1.12.1"
-HDF5_MD5="442469fbf43626006346e679c22cf10a"
+HDF5_VERSION="1.12.2"
+HDF5_MD5="4f4c87981ee5e3db12975f0904b634e2"
 
 NETCDF_VERSION="c-4.8.1"
-NETCDF_MD5=""
+NETCDF_MD5="8da8665f1f185b85bc8127bc0bad0ee6"
 
-TRILINOS_VERSION="13.0.1"
-TRILINOS_VERSION_DASH="13-0-1"
-TRILINOS_MD5="9d76b494fe1c00cedb93d51dfc666a27"
+TRILINOS_VERSION="13.2.0"
+TRILINOS_VERSION_DASH="13-2-0"
+TRILINOS_MD5="099680cd3660dba5ec447ddc50a8406c"
 
-MUMPS_VERSION="5.4.1"
-MUMPS_MD5="93be789bf9c6c341a78c16038da3241b"
+MUMPS_VERSION="5.5.0"
+MUMPS_MD5="08eb0887bfd1e570ce7faecbd8bf97c0"
 
-OPENMPI_VERSION="4.1.1"
-OPENMPI_MD5="9aa7cb64a8b1a773cac719e700d5bb2a"
+OPENMPI_VERSION="4.1.3"
+OPENMPI_MD5="292fcbce24b1e6c18218e0fdcdc080e4"
 OPENMPI_ARCHIVE_URL="https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-$OPENMPI_VERSION.tar.bz2"
 OPENMPI_EXTRA_CONFIGURE_FLAGS=""
 
 CMAKE_VERSION="3.21.1"
 CMAKE_MD5="1d8d33628f1c56b0c3cda67abddbea91"
 
-SUITESPARSE_VERSION="5.10.1"
-SUITESPARSE_MD5="68bb912f3cf3d2b01f30ebafef690302"
+SUITESPARSE_VERSION="5.12.0"
+SUITESPARSE_MD5="08292a05b16acf37767090875d210ced"
 
 MATIO_VERSION="1.5.21"
 MATIO_MD5="afeb5d21b234699fd5b9dc4564afe1ca"
 
-SCALAPACK_VERSION="2.1.0"
-SCALAPACK_MD5="3b239ef80353c67354a0a62d54946fa8"
+SCALAPACK_VERSION="2.2.0"
+SCALAPACK_MD5="2397d36790d1445383bc3cdb1e18ca5f"
 
-LAPACK_VERSION="3.10.0"
-LAPACK_MD5="d70fc27a8bdebe00481c97c728184f09"
+LAPACK_VERSION="3.8.0"
+LAPACK_MD5="96591affdbf58c450d45c1daa540dbd2"
+
+PETSC_VERSION="3.17.1"
+PETSC_MD5="7a39f099b99f2b03edb9e02876cebb6d"
+
+OMEGA_H_VERSION="9.34.8"
+OMEGA_H_MD5="daa3efaf5ea3aed32d2d60760d1a928e"
+
+SUPERLU_DIST_VERSION="7.2.0"
+SUPERLU_DIST_MD5="10d20b97012e5ae89a6cc69b768f61b7"
 
 ARCHIVE_NAMES=("arpack96.tar.gz" \
 "patch.tar.gz" \
@@ -271,12 +280,14 @@ ARCHIVE_NAMES=("arpack96.tar.gz" \
 "netcdf-${NETCDF_VERSION}.tar.gz" \
 "parmetis-4.0.3.tar.gz" \
 "sparse.tar.gz" \
-"superlu_dist-7.2.0.tar.gz" \
+"superlu_dist-$SUPERLU_DIST_VERSION.tar.gz" \
 "y12m.tar.gz" \
 "Trilinos-trilinos-release-$TRILINOS_VERSION_DASH.tar.gz" \
 "MUMPS_$MUMPS_VERSION.tar.gz" \
 "SuiteSparse-$SUITESPARSE_VERSION.tar.gz" \
-"matio-$MATIO_VERSION.tar.gz")
+"matio-$MATIO_VERSION.tar.gz"  \
+"petsc-$PETSC_VERSION.tar.gz" \
+"omega_h-v$OMEGA_H_VERSION.tar.gz")
 
 #y12m archive is skipped because it stores the number of downloads in the header
 
@@ -287,12 +298,14 @@ ARCHIVE_MD5SUMS=("fffaa970198b285676f4156cebc8626e" \
 "${NETCDF_MD5}" \
 "f69c479586bf6bb7aff6a9bc0c739628" \
 "1566d914d1035ac17b73fe9bc0eed02a" \
-"10d20b97012e5ae89a6cc69b768f61b7" \
+"$SUPERLU_DIST_MD5" \
 "SKIP" \
 $TRILINOS_MD5 \
 $MUMPS_MD5 \
 "$SUITESPARSE_MD5" \
-"$MATIO_MD5")
+"$MATIO_MD5" \
+"$PETSC_MD5" \
+"$OMEGA_H_MD5")
 
 ARCHIVE_URLS=("http://www.caam.rice.edu/software/ARPACK/SRC/arpack96.tar.gz" \
 "http://www.caam.rice.edu/software/ARPACK/SRC/patch.tar.gz" \
@@ -300,12 +313,14 @@ ARCHIVE_URLS=("http://www.caam.rice.edu/software/ARPACK/SRC/arpack96.tar.gz" \
 "https://downloads.unidata.ucar.edu/netcdf-c/4.8.1/netcdf-${NETCDF_VERSION}.tar.gz" \
 "http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz" \
 "http://downloads.sourceforge.net/project/sparse/sparse/sparse1.4b/sparse1.4b.tar.gz" \
-"http://codeload.github.com/xiaoyeli/superlu_dist/tar.gz/v7.2.0" \
+"http://codeload.github.com/xiaoyeli/superlu_dist/tar.gz/v$SUPERLU_DIST_VERSION" \
 "http://www.netlib.org/cgi-bin/netlibfiles.tgz?format=tgz\\&filename=y12m%2Fy12m.f" \
 "https://github.com/trilinos/Trilinos/archive/trilinos-release-$TRILINOS_VERSION_DASH.tar.gz" \
 "http://mumps.enseeiht.fr/MUMPS_$MUMPS_VERSION.tar.gz" \
 "https://github.com/DrTimothyAldenDavis/SuiteSparse/archive/refs/tags/v$SUITESPARSE_VERSION.tar.gz" \
-"https://github.com/tbeu/matio/releases/download/v$MATIO_VERSION/matio-$MATIO_VERSION.tar.gz")
+"https://github.com/tbeu/matio/releases/download/v$MATIO_VERSION/matio-$MATIO_VERSION.tar.gz" \
+"https://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-$PETSC_VERSION.tar.gz" \
+"https://github.com/sandialabs/omega_h/archive/refs/tags/v$OMEGA_H_VERSION.tar.gz")
 
 # You can't call the ARPACK patch ARPACK or it will think it is already extracted
 # When in reality it isn't
@@ -315,12 +330,14 @@ ARCHIVE_DIR_NAMES=("ARPACK" \
 "netcdf-${NETCDF_VERSION}" \
 "parmetis-4.0.3" \
 "sparse" \
-"superlu_dist-7.2.0" \
+"superlu_dist-$SUPERLU_DIST_VERSION" \
 "y12m" \
 "Trilinos-trilinos-release-$TRILINOS_VERSION_DASH" \
 "MUMPS_$MUMPS_VERSION" \
 "SuiteSparse-$SUITESPARSE_VERSION" \
-"matio-$MATIO_VERSION")
+"matio-$MATIO_VERSION" \
+"petsc-$PETSC_VERSION" \
+"omega_h-$OMEGA_H_VERSION")
 
 ARCHIVE_HOMEPAGES=("http://www.caam.rice.edu/software/ARPACK/" \
 "https://www.hdfgroup.org/" \
@@ -332,7 +349,9 @@ ARCHIVE_HOMEPAGES=("http://www.caam.rice.edu/software/ARPACK/" \
 "https://trilinos.org/" \
 "http://mumps.enseeiht.fr/" \
 "http://faculty.cse.tamu.edu/davis/suitesparse.html" \
-"https://sourceforge.net/projects/matio/")
+"https://sourceforge.net/projects/matio/" \
+"https://petsc.org" \
+"https://github.com/sandialabs/omega_h/")
 
 ARCHIVE_REAL_NAMES=("ARPACK96" \
 "HDF5" \
@@ -344,7 +363,9 @@ ARCHIVE_REAL_NAMES=("ARPACK96" \
 "Trilinos" \
 "MUMPS" \
 "SuiteSparse-$SUITESPARSE_VERSION" \
-"MATIO")
+"MATIO" \
+"PETSc" \
+"Omega_h")
 
 if [[ "$MPI_BASE_DIR" == "BUILD" ]]; then
     ARCHIVE_NAMES+=("openmpi-$OPENMPI_VERSION.tar.bz2")
@@ -424,8 +445,8 @@ function setCompilerVars() {
         if [ "$MPI_NAME" == "open" ]; then
             export MPI_C_COMPILER="mpicc"
             export MPI_CXX_COMPILER="mpic++"
-            export MPI_F90_COMPILER="mpifort"
-            export MPI_F77_COMPILER="mpifort"
+            export MPI_F90_COMPILER="mpif90"
+            export MPI_F77_COMPILER="mpif77"
         else
             export MPI_C_COMPILER="mpiicc"
             export MPI_CXX_COMPILER="mpiicpc"
@@ -448,15 +469,15 @@ function setCompilerVars() {
             export GCC_EXTRA_FFLAGS="-fallow-argument-mismatch"
         fi
         export MPI_C_COMPILER="mpicc"
-        export MPI_CXX_COMPILER="mpiCC"
+        export MPI_CXX_COMPILER="mpicxx"
         # mpif90 and mpif77 are depricated in favor of just mpifort.
         if [ "$MPI_NAME" == "intel" ]; then
             # Intel calls their mpi fortran compiler mpifc (for some reason
             export MPI_F90_COMPILER="mpifc"
             export MPI_F77_COMPILER="mpifc"
         else
-            export MPI_F90_COMPILER="mpifort"
-            export MPI_F77_COMPILER="mpifort"
+            export MPI_F90_COMPILER="mpif90"
+            export MPI_F77_COMPILER="mpif77"
         fi
         export MPI_RUNNER="mpirun"
         export FORTRAN_LIBS="-lgfortran"
@@ -578,6 +599,7 @@ function setMathVars {
         SCALAPACK_INCLUDE_DIR="${GOMA_LIB}/scalapack-$SCALAPACK_VERSION/include"
         # Alternative to the intel "blas_flags" variable
         NON_INTEL_BLAS_LIBRARY="${BLAS_LIBRARY_DIR}/libblas.a"
+        NON_INTEL_LAPACK_LIBRARY="${LAPACK_LIBRARY_DIR}/liblapack.a"
         NON_INTEL_BLAS_LINK="-L${BLAS_LIBRARY_DIR} -l${BLAS_LIBRARY_NAME} ${FORTRAN_LIBS}"
         SUITESPARSE_NON_INTEL_LAPACK_LINK="${LAPACK_LIBRARY_NAME_ARG} ${FORTRAN_LIBS}"
 
@@ -1071,7 +1093,7 @@ if [[ "$MATH_LIBRARIES" == "netlib blas" ]]; then
 	mv $tempdir $LAPACK_DIR/src
 	mkdir $LAPACK_DIR/src/build
         cd $LAPACK_DIR/src/build
-        cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_INSTALL_PREFIX=$LAPACK_DIR $LAPACK_DIR/src 2>&1 | tee -a $COMPILE_LOG
+        CC=$MPI_C_COMPILER CXX=$MPI_CXX_COMPILER FC=$MPI_F90_COMPILER cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_INSTALL_PREFIX=$LAPACK_DIR $LAPACK_DIR/src 2>&1 | tee -a $COMPILE_LOG
 	make -j$MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
 	make install 2>&1 | tee -a $COMPILE_LOG
 	cd $GOMA_LIB
@@ -1087,26 +1109,30 @@ if [[ "$MATH_LIBRARIES" == "netlib blas" ]]; then
 fi
 
 #make SuperLU
-cd $GOMA_LIB/superlu_dist-7.2.0
-if [ -e lib64/libsuperlu_dist.a ]
+cd $GOMA_LIB/superlu_dist-$SUPERLU_DIST_VERSION
+if [ -e lib64/libsuperlu_dist.a ] || [ -e lib/libsuperlu_dist.a ]
 then
     log_echo "SuperLU_DIST already built"
 else
     mkdir -p build
     CC=$MPI_C_COMPILER CXX=$MPI_CXX_COMPILER FC=$MPI_F90_COMPILER cmake -B build -DTPL_BLAS_LIBRARIES="${NON_INTEL_BLAS_LINK}" \
       -DTPL_PARMETIS_LIBRARIES="$GOMA_LIB/parmetis-4.0.3/lib/libparmetis.a;$GOMA_LIB/parmetis-4.0.3/lib/libmetis.a" \
-      -DCMAKE_INSTALL_PREFIX=$GOMA_LIB/superlu_dist-7.2.0 \
+      -DCMAKE_INSTALL_PREFIX=$GOMA_LIB/superlu_dist-$SUPERLU_DIST_VERSION \
       -Denable_openmp:BOOL=FALSE \
       -DTPL_PARMETIS_INCLUDE_DIRS="$GOMA_LIB/parmetis-4.0.3/include" 2>&1 | tee -a $COMPILE_LOG
     make -C build 2>&1 | tee -a $COMPILE_LOG
     make -C build install 2>&1 | tee -a $COMPILE_LOG
-    if [ -e $GOMA_LIB/superlu_dist-7.2.0/lib64/libsuperlu_dist.a ]
+    if [ -e $GOMA_LIB/superlu_dist-$SUPERLU_DIST_VERSION/lib/libsuperlu_dist.a ] || [ -e $GOMA_LIB/superlu_dist-$SUPERLU_DIST_VERSION/lib64/libsuperlu_dist.a ]
     then
-        log_echo "Built SuperLU_DIST 7.2.0"
+        log_echo "Built SuperLU_DIST $SUPERLU_DIST_VERSION"
     else
-        log_echo "Failed to build SuperLU_DIST 7.2.0"
+        log_echo "Failed to build SuperLU_DIST $SUPERLU_DIST_VERSION"
         exit 1
     fi
+fi
+SUPERLU_LIBDIR="lib64"
+if [ -e $GOMA_LIB/superlu_dist-$SUPERLU_DIST_VERSION/lib/libsuperlu_dist.a ]; then
+  SUPERLU_LIBDIR="lib"
 fi
 #make sparse
 cd $GOMA_LIB/sparse
@@ -1139,23 +1165,36 @@ else
 
     log_echo ${MPI_C_COMPILER}
     if [ -z "${BLAS_FLAGS}" ]; then
-        make config AUTOCC="no" CC="${MPI_C_COMPILER}" \
+	targets=(SuiteSparse_config AMD BTF CAMD CCOLAMD COLAMD CHOLMOD CXSparse LDL KLU UMFPACK RBio SPQR)
+	make CUDA="no" AUTOCC="no" CC="${MPI_C_COMPILER}" \
              CXX="${MPI_CXX_COMPILER}" \
              BLAS="$NON_INTEL_BLAS_LINK" \
              LAPACK="$SUITESPARSE_NON_INTEL_LAPACK_LINK" \
-             AR="${ARCHIVER}" 2>&1 | tee -a $COMPILE_LOG
-        make AUTOCC="no" CC="${MPI_C_COMPILER}" \
-             CXX="${MPI_CXX_COMPILER}" \
-             BLAS="$NON_INTEL_BLAS_LINK" \
-             LAPACK="$SUITESPARSE_NON_INTEL_LAPACK_LINK" \
-             JOBS="$MAKE_JOBS" \
-             AR="${ARCHIVER}" 2>&1 | tee -a $COMPILE_LOG
+	     MY_METIS_LIB="-L$GOMA_LIB/parmetis-4.0.3/lib -lmetis" \
+	     MY_METIS_INC="$GOMA_LIB/parmetis-4.0.3/include" \
+	     AR="${ARCHIVER}" -C SuiteSparse_config library config 2>&1 | tee -a $COMPILE_LOG
+	for target in "${targets[@]}"; do
+	    make CUDA="no" AUTOCC="no" CC="${MPI_C_COMPILER}" \
+                 CXX="${MPI_CXX_COMPILER}" \
+                 BLAS="$NON_INTEL_BLAS_LINK" \
+                 LAPACK="$SUITESPARSE_NON_INTEL_LAPACK_LINK" \
+	         MY_METIS_LIB="-L$GOMA_LIB/parmetis-4.0.3/lib -lmetis" \
+	         MY_METIS_INC="$GOMA_LIB/parmetis-4.0.3/include" \
+	         AR="${ARCHIVER}" -C $target library 2>&1 | tee -a $COMPILE_LOG
+	    make CUDA="no" AUTOCC="no" CC="${MPI_C_COMPILER}" \
+                 CXX="${MPI_CXX_COMPILER}" \
+                 BLAS="$NON_INTEL_BLAS_LINK" \
+                 LAPACK="$SUITESPARSE_NON_INTEL_LAPACK_LINK" \
+	         MY_METIS_LIB="-L$GOMA_LIB/parmetis-4.0.3/lib -lmetis" \
+	         MY_METIS_INC="$GOMA_LIB/parmetis-4.0.3/include" \
+	         AR="${ARCHIVER}" -C $target install 2>&1 | tee -a $COMPILE_LOG
+        done
     else
-        make config AUTOCC="no" CC="${MPI_C_COMPILER} ${COMPILER_FLAG_MPI}" \
+        make config CUDA="no" AUTOCC="no" CC="${MPI_C_COMPILER} ${COMPILER_FLAG_MPI}" \
              CXX="${MPI_CXX_COMPILER} ${COMPILER_FLAG_MPI}" \
              JOBS="$MAKE_JOBS" \
              AR="${ARCHIVER}" BLAS_FLAGS="${BLAS_FLAGS}" 2>&1 | tee -a $COMPILE_LOG
-        make AUTOCC="no" CC="${MPI_C_COMPILER} ${COMPILER_FLAG_MPI}" \
+        make CUDA="no" AUTOCC="no" CC="${MPI_C_COMPILER} ${COMPILER_FLAG_MPI}" \
              CXX="${MPI_CXX_COMPILER} ${COMPILER_FLAG_MPI}" \
              JOBS="$MAKE_JOBS" \
              AR="${ARCHIVER}" BLAS_FLAGS="${BLAS_FLAGS}" 2>&1 | tee -a $COMPILE_LOG
@@ -1221,16 +1260,1384 @@ else
     if [ -f $GOMA_LIB/scalapack-$SCALAPACK_VERSION/lib/libscalapack.a ]; then
         log_echo "scalapack already built"
     else
-        mv $GOMA_LIB/scalapack-$SCALAPACK_VERSION src-scalapack
-        mkdir $GOMA_LIB/scalapack-$SCALAPACK_VERSION
-        mv src-scalapack $GOMA_LIB/scalapack-$SCALAPACK_VERSION/src
+        if [ ! -d " $GOMA_LIB/scalapack-$SCALAPACK_VERSION/src" ]; then
+            mv $GOMA_LIB/scalapack-$SCALAPACK_VERSION src-scalapack
+            mkdir $GOMA_LIB/scalapack-$SCALAPACK_VERSION
+            mv src-scalapack $GOMA_LIB/scalapack-$SCALAPACK_VERSION/src
+        fi
         cd $GOMA_LIB/scalapack-$SCALAPACK_VERSION/src
-        mkdir build
-        cd build
-        cmake .. -DCMAKE_INSTALL_PREFIX=$GOMA_LIB/scalapack-$SCALAPACK_VERSION -DBUILD_SHARED=OFF -DCMAKE_C_COMPILER=$MPI_C_COMPILER -DCMAKE_CXX_COMPILER=$MPI_CXX_COMPILER -DCMAKE_Fortran_Compiler=$MPI_F90_COMPILER -DCMAKE_Fortran_FLAGS="$GCC_EXTRA_FFLAGS"
-        2>&1 | tee -a $COMPILE_LOG
-        make -j$MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
-        make install 2>&1 | tee -a $COMPILE_LOG
+        # Use PETSc's parallel make changes
+cat > Makefile.objs <<EOF
+objslamov = \
+SRC/clamov.o \
+SRC/dlamov.o \
+SRC/slamov.o \
+SRC/zlamov.o \
+
+objsblacs = \
+BLACS/SRC/igesd2d_.o BLACS/SRC/sgesd2d_.o BLACS/SRC/dgesd2d_.o BLACS/SRC/cgesd2d_.o BLACS/SRC/zgesd2d_.o \
+BLACS/SRC/itrsd2d_.o BLACS/SRC/strsd2d_.o BLACS/SRC/dtrsd2d_.o BLACS/SRC/ctrsd2d_.o BLACS/SRC/ztrsd2d_.o \
+BLACS/SRC/igerv2d_.o BLACS/SRC/sgerv2d_.o BLACS/SRC/dgerv2d_.o BLACS/SRC/cgerv2d_.o BLACS/SRC/zgerv2d_.o \
+BLACS/SRC/itrrv2d_.o BLACS/SRC/strrv2d_.o BLACS/SRC/dtrrv2d_.o BLACS/SRC/ctrrv2d_.o BLACS/SRC/ztrrv2d_.o \
+BLACS/SRC/igebs2d_.o BLACS/SRC/sgebs2d_.o BLACS/SRC/dgebs2d_.o BLACS/SRC/cgebs2d_.o BLACS/SRC/zgebs2d_.o \
+BLACS/SRC/igebr2d_.o BLACS/SRC/sgebr2d_.o BLACS/SRC/dgebr2d_.o BLACS/SRC/cgebr2d_.o BLACS/SRC/zgebr2d_.o \
+BLACS/SRC/itrbs2d_.o BLACS/SRC/strbs2d_.o BLACS/SRC/dtrbs2d_.o BLACS/SRC/ctrbs2d_.o BLACS/SRC/ztrbs2d_.o \
+BLACS/SRC/itrbr2d_.o BLACS/SRC/strbr2d_.o BLACS/SRC/dtrbr2d_.o BLACS/SRC/ctrbr2d_.o BLACS/SRC/ztrbr2d_.o \
+BLACS/SRC/igsum2d_.o BLACS/SRC/sgsum2d_.o BLACS/SRC/dgsum2d_.o BLACS/SRC/cgsum2d_.o BLACS/SRC/zgsum2d_.o \
+BLACS/SRC/igamx2d_.o BLACS/SRC/sgamx2d_.o BLACS/SRC/dgamx2d_.o BLACS/SRC/cgamx2d_.o BLACS/SRC/zgamx2d_.o \
+BLACS/SRC/igamn2d_.o BLACS/SRC/sgamn2d_.o BLACS/SRC/dgamn2d_.o BLACS/SRC/cgamn2d_.o BLACS/SRC/zgamn2d_.o \
+BLACS/SRC/blacs_setup_.o BLACS/SRC/blacs_set_.o BLACS/SRC/blacs_get_.o \
+BLACS/SRC/blacs_abort_.o BLACS/SRC/blacs_exit_.o BLACS/SRC/blacs_pnum_.o BLACS/SRC/blacs_pcoord_.o \
+BLACS/SRC/ksendid_.o BLACS/SRC/krecvid_.o BLACS/SRC/kbsid_.o BLACS/SRC/kbrid_.o \
+BLACS/SRC/dcputime00_.o BLACS/SRC/dwalltime00_.o BLACS/SRC/blacs_pinfo_.o \
+BLACS/SRC/blacs_init_.o BLACS/SRC/blacs_map_.o BLACS/SRC/blacs_free_.o BLACS/SRC/blacs_grid_.o BLACS/SRC/blacs_info_.o \
+BLACS/SRC/blacs_barr_.o BLACS/SRC/sys2blacs_.o BLACS/SRC/blacs2sys_.o BLACS/SRC/free_handle_.o
+
+objs = \
+BLACS/SRC/BI_Arecv.o \
+BLACS/SRC/BI_ArgCheck.o \
+BLACS/SRC/BI_Asend.o \
+BLACS/SRC/BI_BeComb.o \
+BLACS/SRC/BI_BlacsAbort.o \
+BLACS/SRC/BI_BlacsErr.o \
+BLACS/SRC/BI_BlacsWarn.o \
+BLACS/SRC/BI_BuffIsFree.o \
+BLACS/SRC/BI_ContxtNum.o \
+BLACS/SRC/BI_EmergencyBuff.o \
+BLACS/SRC/BI_GetBuff.o \
+BLACS/SRC/BI_GetMpiGeType.o \
+BLACS/SRC/BI_GetMpiTrType.o \
+BLACS/SRC/BI_GlobalVars.o \
+BLACS/SRC/BI_HypBR.o \
+BLACS/SRC/BI_HypBS.o \
+BLACS/SRC/BI_IdringBR.o \
+BLACS/SRC/BI_IdringBS.o \
+BLACS/SRC/BI_MpathBR.o \
+BLACS/SRC/BI_MpathBS.o \
+BLACS/SRC/BI_MringComb.o \
+BLACS/SRC/BI_Pack.o \
+BLACS/SRC/BI_Rsend.o \
+BLACS/SRC/BI_Srecv.o \
+BLACS/SRC/BI_SringBR.o \
+BLACS/SRC/BI_SringBS.o \
+BLACS/SRC/BI_Ssend.o \
+BLACS/SRC/BI_TransDist.o \
+BLACS/SRC/BI_TransUserComm.o \
+BLACS/SRC/BI_TreeBR.o \
+BLACS/SRC/BI_TreeBS.o \
+BLACS/SRC/BI_TreeComb.o \
+BLACS/SRC/BI_Unpack.o \
+BLACS/SRC/BI_UpdateBuffs.o \
+BLACS/SRC/BI_cMPI_amn.o \
+BLACS/SRC/BI_cMPI_amn2.o \
+BLACS/SRC/BI_cMPI_amx.o \
+BLACS/SRC/BI_cMPI_amx2.o \
+BLACS/SRC/BI_cMPI_sum.o \
+BLACS/SRC/BI_cvvamn.o \
+BLACS/SRC/BI_cvvamn2.o \
+BLACS/SRC/BI_cvvamx.o \
+BLACS/SRC/BI_cvvamx2.o \
+BLACS/SRC/BI_cvvsum.o \
+BLACS/SRC/BI_dMPI_amn.o \
+BLACS/SRC/BI_dMPI_amn2.o \
+BLACS/SRC/BI_dMPI_amx.o \
+BLACS/SRC/BI_dMPI_amx2.o \
+BLACS/SRC/BI_dmvcopy.o \
+BLACS/SRC/BI_dvmcopy.o \
+BLACS/SRC/BI_dvvamn.o \
+BLACS/SRC/BI_dvvamn2.o \
+BLACS/SRC/BI_dvvamx.o \
+BLACS/SRC/BI_dvvamx2.o \
+BLACS/SRC/BI_dvvsum.o \
+BLACS/SRC/BI_iMPI_amn.o \
+BLACS/SRC/BI_iMPI_amn2.o \
+BLACS/SRC/BI_iMPI_amx.o \
+BLACS/SRC/BI_iMPI_amx2.o \
+BLACS/SRC/BI_imvcopy.o \
+BLACS/SRC/BI_ivmcopy.o \
+BLACS/SRC/BI_ivvamn.o \
+BLACS/SRC/BI_ivvamn2.o \
+BLACS/SRC/BI_ivvamx.o \
+BLACS/SRC/BI_ivvamx2.o \
+BLACS/SRC/BI_ivvsum.o \
+BLACS/SRC/BI_sMPI_amn.o \
+BLACS/SRC/BI_sMPI_amn2.o \
+BLACS/SRC/BI_sMPI_amx.o \
+BLACS/SRC/BI_sMPI_amx2.o \
+BLACS/SRC/BI_smvcopy.o \
+BLACS/SRC/BI_svmcopy.o \
+BLACS/SRC/BI_svvamn.o \
+BLACS/SRC/BI_svvamn2.o \
+BLACS/SRC/BI_svvamx.o \
+BLACS/SRC/BI_svvamx2.o \
+BLACS/SRC/BI_svvsum.o \
+BLACS/SRC/BI_zMPI_amn.o \
+BLACS/SRC/BI_zMPI_amn2.o \
+BLACS/SRC/BI_zMPI_amx.o \
+BLACS/SRC/BI_zMPI_amx2.o \
+BLACS/SRC/BI_zMPI_sum.o \
+BLACS/SRC/BI_zvvamn.o \
+BLACS/SRC/BI_zvvamn2.o \
+BLACS/SRC/BI_zvvamx.o \
+BLACS/SRC/BI_zvvamx2.o \
+BLACS/SRC/BI_zvvsum.o \
+PBLAS/SRC/pcagemv_.o \
+PBLAS/SRC/pcahemv_.o \
+PBLAS/SRC/pcamax_.o \
+PBLAS/SRC/pcatrmv_.o \
+PBLAS/SRC/pcaxpy_.o \
+PBLAS/SRC/pccopy_.o \
+PBLAS/SRC/pcdotc_.o \
+PBLAS/SRC/pcdotu_.o \
+PBLAS/SRC/pcgeadd_.o \
+PBLAS/SRC/pcgemm_.o \
+PBLAS/SRC/pcgemv_.o \
+PBLAS/SRC/pcgerc_.o \
+PBLAS/SRC/pcgeru_.o \
+PBLAS/SRC/pchemm_.o \
+PBLAS/SRC/pchemv_.o \
+PBLAS/SRC/pcher2_.o \
+PBLAS/SRC/pcher2k_.o \
+PBLAS/SRC/pcher_.o \
+PBLAS/SRC/pcherk_.o \
+PBLAS/SRC/pcscal_.o \
+PBLAS/SRC/pcsscal_.o \
+PBLAS/SRC/pcswap_.o \
+PBLAS/SRC/pcsymm_.o \
+PBLAS/SRC/pcsyr2k_.o \
+PBLAS/SRC/pcsyrk_.o \
+PBLAS/SRC/pctradd_.o \
+PBLAS/SRC/pctranc_.o \
+PBLAS/SRC/pctranu_.o \
+PBLAS/SRC/pctrmm_.o \
+PBLAS/SRC/pctrmv_.o \
+PBLAS/SRC/pctrsm_.o \
+PBLAS/SRC/pctrsv_.o \
+PBLAS/SRC/pdagemv_.o \
+PBLAS/SRC/pdamax_.o \
+PBLAS/SRC/pdasum_.o \
+PBLAS/SRC/pdasymv_.o \
+PBLAS/SRC/pdatrmv_.o \
+PBLAS/SRC/pdaxpy_.o \
+PBLAS/SRC/pdcopy_.o \
+PBLAS/SRC/pddot_.o \
+PBLAS/SRC/pdgeadd_.o \
+PBLAS/SRC/pdgemm_.o \
+PBLAS/SRC/pdgemv_.o \
+PBLAS/SRC/pdger_.o \
+PBLAS/SRC/pdnrm2_.o \
+PBLAS/SRC/pdscal_.o \
+PBLAS/SRC/pdswap_.o \
+PBLAS/SRC/pdsymm_.o \
+PBLAS/SRC/pdsymv_.o \
+PBLAS/SRC/pdsyr2_.o \
+PBLAS/SRC/pdsyr2k_.o \
+PBLAS/SRC/pdsyr_.o \
+PBLAS/SRC/pdsyrk_.o \
+PBLAS/SRC/pdtradd_.o \
+PBLAS/SRC/pdtran_.o \
+PBLAS/SRC/pdtrmm_.o \
+PBLAS/SRC/pdtrmv_.o \
+PBLAS/SRC/pdtrsm_.o \
+PBLAS/SRC/pdtrsv_.o \
+PBLAS/SRC/pdzasum_.o \
+PBLAS/SRC/pdznrm2_.o \
+PBLAS/SRC/picopy_.o \
+PBLAS/SRC/pilaenv.o \
+PBLAS/SRC/psagemv_.o \
+PBLAS/SRC/psamax_.o \
+PBLAS/SRC/psasum_.o \
+PBLAS/SRC/psasymv_.o \
+PBLAS/SRC/psatrmv_.o \
+PBLAS/SRC/psaxpy_.o \
+PBLAS/SRC/pscasum_.o \
+PBLAS/SRC/pscnrm2_.o \
+PBLAS/SRC/pscopy_.o \
+PBLAS/SRC/psdot_.o \
+PBLAS/SRC/psgeadd_.o \
+PBLAS/SRC/psgemm_.o \
+PBLAS/SRC/psgemv_.o \
+PBLAS/SRC/psger_.o \
+PBLAS/SRC/psnrm2_.o \
+PBLAS/SRC/psscal_.o \
+PBLAS/SRC/psswap_.o \
+PBLAS/SRC/pssymm_.o \
+PBLAS/SRC/pssymv_.o \
+PBLAS/SRC/pssyr2_.o \
+PBLAS/SRC/pssyr2k_.o \
+PBLAS/SRC/pssyr_.o \
+PBLAS/SRC/pssyrk_.o \
+PBLAS/SRC/pstradd_.o \
+PBLAS/SRC/pstran_.o \
+PBLAS/SRC/pstrmm_.o \
+PBLAS/SRC/pstrmv_.o \
+PBLAS/SRC/pstrsm_.o \
+PBLAS/SRC/pstrsv_.o \
+PBLAS/SRC/pzagemv_.o \
+PBLAS/SRC/pzahemv_.o \
+PBLAS/SRC/pzamax_.o \
+PBLAS/SRC/pzatrmv_.o \
+PBLAS/SRC/pzaxpy_.o \
+PBLAS/SRC/pzcopy_.o \
+PBLAS/SRC/pzdotc_.o \
+PBLAS/SRC/pzdotu_.o \
+PBLAS/SRC/pzdscal_.o \
+PBLAS/SRC/pzgeadd_.o \
+PBLAS/SRC/pzgemm_.o \
+PBLAS/SRC/pzgemv_.o \
+PBLAS/SRC/pzgerc_.o \
+PBLAS/SRC/pzgeru_.o \
+PBLAS/SRC/pzhemm_.o \
+PBLAS/SRC/pzhemv_.o \
+PBLAS/SRC/pzher2_.o \
+PBLAS/SRC/pzher2k_.o \
+PBLAS/SRC/pzher_.o \
+PBLAS/SRC/pzherk_.o \
+PBLAS/SRC/pzscal_.o \
+PBLAS/SRC/pzswap_.o \
+PBLAS/SRC/pzsymm_.o \
+PBLAS/SRC/pzsyr2k_.o \
+PBLAS/SRC/pzsyrk_.o \
+PBLAS/SRC/pztradd_.o \
+PBLAS/SRC/pztranc_.o \
+PBLAS/SRC/pztranu_.o \
+PBLAS/SRC/pztrmm_.o \
+PBLAS/SRC/pztrmv_.o \
+PBLAS/SRC/pztrsm_.o \
+PBLAS/SRC/pztrsv_.o \
+REDIST/SRC/pcgemr.o \
+REDIST/SRC/pcgemr2.o \
+REDIST/SRC/pctrmr.o \
+REDIST/SRC/pctrmr2.o \
+REDIST/SRC/pdgemr.o \
+REDIST/SRC/pdgemr2.o \
+REDIST/SRC/pdtrmr.o \
+REDIST/SRC/pdtrmr2.o \
+REDIST/SRC/pgemraux.o \
+REDIST/SRC/pigemr.o \
+REDIST/SRC/pigemr2.o \
+REDIST/SRC/pitrmr.o \
+REDIST/SRC/pitrmr2.o \
+REDIST/SRC/psgemr.o \
+REDIST/SRC/psgemr2.o \
+REDIST/SRC/pstrmr.o \
+REDIST/SRC/pstrmr2.o \
+REDIST/SRC/pzgemr.o \
+REDIST/SRC/pzgemr2.o \
+REDIST/SRC/pztrmr.o \
+REDIST/SRC/pztrmr2.o \
+SRC/bdlaapp.o \
+SRC/bdlaexc.o \
+SRC/bdtrexc.o \
+SRC/bslaapp.o \
+SRC/bslaexc.o \
+SRC/bstrexc.o \
+SRC/cdbtf2.o \
+SRC/cdbtrf.o \
+SRC/cdttrf.o \
+SRC/cdttrsv.o \
+SRC/clahqr2.o \
+SRC/clamsh.o \
+SRC/clanv2.o \
+SRC/claref.o \
+SRC/cpttrsv.o \
+SRC/csteqr2.o \
+SRC/ctrmvt.o \
+SRC/ddbtf2.o \
+SRC/ddbtrf.o \
+SRC/ddttrf.o \
+SRC/ddttrsv.o \
+SRC/dlamsh.o \
+SRC/dlapst.o \
+SRC/dlaqr6.o \
+SRC/dlar1va.o \
+SRC/dlaref.o \
+SRC/dlarrb2.o \
+SRC/dlarrd2.o \
+SRC/dlarre2.o \
+SRC/dlarre2a.o \
+SRC/dlarrf2.o \
+SRC/dlarrv2.o \
+SRC/dlasorte.o \
+SRC/dlasrt2.o \
+SRC/dpttrsv.o \
+SRC/dstegr2.o \
+SRC/dstegr2a.o \
+SRC/dstegr2b.o \
+SRC/dstein2.o \
+SRC/dsteqr2.o \
+SRC/dtrmvt.o \
+SRC/getpbbuf.o \
+SRC/pbchkvect.o \
+SRC/pcdbsv.o \
+SRC/pcdbtrf.o \
+SRC/pcdbtrs.o \
+SRC/pcdbtrsv.o \
+SRC/pcdtsv.o \
+SRC/pcdttrf.o \
+SRC/pcdttrs.o \
+SRC/pcdttrsv.o \
+SRC/pcgbsv.o \
+SRC/pcgbtrf.o \
+SRC/pcgbtrs.o \
+SRC/pcgebd2.o \
+SRC/pcgebrd.o \
+SRC/pcgecon.o \
+SRC/pcgeequ.o \
+SRC/pcgehd2.o \
+SRC/pcgehrd.o \
+SRC/pcgelq2.o \
+SRC/pcgelqf.o \
+SRC/pcgels.o \
+SRC/pcgeql2.o \
+SRC/pcgeqlf.o \
+SRC/pcgeqpf.o \
+SRC/pcgeqr2.o \
+SRC/pcgeqrf.o \
+SRC/pcgerfs.o \
+SRC/pcgerq2.o \
+SRC/pcgerqf.o \
+SRC/pcgesv.o \
+SRC/pcgesvd.o \
+SRC/pcgesvx.o \
+SRC/pcgetf2.o \
+SRC/pcgetrf.o \
+SRC/pcgetri.o \
+SRC/pcgetrs.o \
+SRC/pcggqrf.o \
+SRC/pcggrqf.o \
+SRC/pcheev.o \
+SRC/pcheevd.o \
+SRC/pcheevr.o \
+SRC/pcheevx.o \
+SRC/pchegs2.o \
+SRC/pchegst.o \
+SRC/pchegvx.o \
+SRC/pchengst.o \
+SRC/pchentrd.o \
+SRC/pchetd2.o \
+SRC/pchetrd.o \
+SRC/pchettrd.o \
+SRC/pclabrd.o \
+SRC/pclacgv.o \
+SRC/pclacon.o \
+SRC/pclaconsb.o \
+SRC/pclacp2.o \
+SRC/pclacp3.o \
+SRC/pclacpy.o \
+SRC/pclaevswp.o \
+SRC/pclahqr.o \
+SRC/pclahrd.o \
+SRC/pclamr1d.o \
+SRC/pclange.o \
+SRC/pclanhe.o \
+SRC/pclanhs.o \
+SRC/pclansy.o \
+SRC/pclantr.o \
+SRC/pclapiv.o \
+SRC/pclapv2.o \
+SRC/pclaqge.o \
+SRC/pclaqsy.o \
+SRC/pclarf.o \
+SRC/pclarfb.o \
+SRC/pclarfc.o \
+SRC/pclarfg.o \
+SRC/pclarft.o \
+SRC/pclarz.o \
+SRC/pclarzb.o \
+SRC/pclarzc.o \
+SRC/pclarzt.o \
+SRC/pclascl.o \
+SRC/pclase2.o \
+SRC/pclaset.o \
+SRC/pclasmsub.o \
+SRC/pclassq.o \
+SRC/pclaswp.o \
+SRC/pclatra.o \
+SRC/pclatrd.o \
+SRC/pclatrs.o \
+SRC/pclatrz.o \
+SRC/pclattrs.o \
+SRC/pclauu2.o \
+SRC/pclauum.o \
+SRC/pclawil.o \
+SRC/pcmax1.o \
+SRC/pcpbsv.o \
+SRC/pcpbtrf.o \
+SRC/pcpbtrs.o \
+SRC/pcpbtrsv.o \
+SRC/pcpocon.o \
+SRC/pcpoequ.o \
+SRC/pcporfs.o \
+SRC/pcposv.o \
+SRC/pcposvx.o \
+SRC/pcpotf2.o \
+SRC/pcpotrf.o \
+SRC/pcpotri.o \
+SRC/pcpotrs.o \
+SRC/pcptsv.o \
+SRC/pcpttrf.o \
+SRC/pcpttrs.o \
+SRC/pcpttrsv.o \
+SRC/pcrot.o \
+SRC/pcsrscl.o \
+SRC/pcstein.o \
+SRC/pctrcon.o \
+SRC/pctrevc.o \
+SRC/pctrrfs.o \
+SRC/pctrti2.o \
+SRC/pctrtri.o \
+SRC/pctrtrs.o \
+SRC/pctzrzf.o \
+SRC/pcung2l.o \
+SRC/pcung2r.o \
+SRC/pcungl2.o \
+SRC/pcunglq.o \
+SRC/pcungql.o \
+SRC/pcungqr.o \
+SRC/pcungr2.o \
+SRC/pcungrq.o \
+SRC/pcunm2l.o \
+SRC/pcunm2r.o \
+SRC/pcunmbr.o \
+SRC/pcunmhr.o \
+SRC/pcunml2.o \
+SRC/pcunmlq.o \
+SRC/pcunmql.o \
+SRC/pcunmqr.o \
+SRC/pcunmr2.o \
+SRC/pcunmr3.o \
+SRC/pcunmrq.o \
+SRC/pcunmrz.o \
+SRC/pcunmtr.o \
+SRC/pddbsv.o \
+SRC/pddbtrf.o \
+SRC/pddbtrs.o \
+SRC/pddbtrsv.o \
+SRC/pddtsv.o \
+SRC/pddttrf.o \
+SRC/pddttrs.o \
+SRC/pddttrsv.o \
+SRC/pdgbsv.o \
+SRC/pdgbtrf.o \
+SRC/pdgbtrs.o \
+SRC/pdgebal.o \
+SRC/pdgebd2.o \
+SRC/pdgebrd.o \
+SRC/pdgecon.o \
+SRC/pdgeequ.o \
+SRC/pdgehd2.o \
+SRC/pdgehrd.o \
+SRC/pdgelq2.o \
+SRC/pdgelqf.o \
+SRC/pdgels.o \
+SRC/pdgeql2.o \
+SRC/pdgeqlf.o \
+SRC/pdgeqpf.o \
+SRC/pdgeqr2.o \
+SRC/pdgeqrf.o \
+SRC/pdgerfs.o \
+SRC/pdgerq2.o \
+SRC/pdgerqf.o \
+SRC/pdgesv.o \
+SRC/pdgesvd.o \
+SRC/pdgesvx.o \
+SRC/pdgetf2.o \
+SRC/pdgetrf.o \
+SRC/pdgetri.o \
+SRC/pdgetrs.o \
+SRC/pdggqrf.o \
+SRC/pdggrqf.o \
+SRC/pdhseqr.o \
+SRC/pdlabad.o \
+SRC/pdlabrd.o \
+SRC/pdlacon.o \
+SRC/pdlaconsb.o \
+SRC/pdlacp2.o \
+SRC/pdlacp3.o \
+SRC/pdlacpy.o \
+SRC/pdlaed0.o \
+SRC/pdlaed1.o \
+SRC/pdlaed2.o \
+SRC/pdlaed3.o \
+SRC/pdlaedz.o \
+SRC/pdlaevswp.o \
+SRC/pdlahqr.o \
+SRC/pdlahrd.o \
+SRC/pdlaiect.o \
+SRC/pdlamch.o \
+SRC/pdlamr1d.o \
+SRC/pdlamve.o \
+SRC/pdlange.o \
+SRC/pdlanhs.o \
+SRC/pdlansy.o \
+SRC/pdlantr.o \
+SRC/pdlapiv.o \
+SRC/pdlapv2.o \
+SRC/pdlaqge.o \
+SRC/pdlaqr0.o \
+SRC/pdlaqr1.o \
+SRC/pdlaqr2.o \
+SRC/pdlaqr3.o \
+SRC/pdlaqr4.o \
+SRC/pdlaqr5.o \
+SRC/pdlaqsy.o \
+SRC/pdlared1d.o \
+SRC/pdlared2d.o \
+SRC/pdlarf.o \
+SRC/pdlarfb.o \
+SRC/pdlarfg.o \
+SRC/pdlarft.o \
+SRC/pdlarz.o \
+SRC/pdlarzb.o \
+SRC/pdlarzt.o \
+SRC/pdlascl.o \
+SRC/pdlase2.o \
+SRC/pdlaset.o \
+SRC/pdlasmsub.o \
+SRC/pdlasrt.o \
+SRC/pdlassq.o \
+SRC/pdlaswp.o \
+SRC/pdlatra.o \
+SRC/pdlatrd.o \
+SRC/pdlatrs.o \
+SRC/pdlatrz.o \
+SRC/pdlauu2.o \
+SRC/pdlauum.o \
+SRC/pdlawil.o \
+SRC/pdorg2l.o \
+SRC/pdorg2r.o \
+SRC/pdorgl2.o \
+SRC/pdorglq.o \
+SRC/pdorgql.o \
+SRC/pdorgqr.o \
+SRC/pdorgr2.o \
+SRC/pdorgrq.o \
+SRC/pdorm2l.o \
+SRC/pdorm2r.o \
+SRC/pdormbr.o \
+SRC/pdormhr.o \
+SRC/pdorml2.o \
+SRC/pdormlq.o \
+SRC/pdormql.o \
+SRC/pdormqr.o \
+SRC/pdormr2.o \
+SRC/pdormr3.o \
+SRC/pdormrq.o \
+SRC/pdormrz.o \
+SRC/pdormtr.o \
+SRC/pdpbsv.o \
+SRC/pdpbtrf.o \
+SRC/pdpbtrs.o \
+SRC/pdpbtrsv.o \
+SRC/pdpocon.o \
+SRC/pdpoequ.o \
+SRC/pdporfs.o \
+SRC/pdposv.o \
+SRC/pdposvx.o \
+SRC/pdpotf2.o \
+SRC/pdpotrf.o \
+SRC/pdpotri.o \
+SRC/pdpotrs.o \
+SRC/pdptsv.o \
+SRC/pdpttrf.o \
+SRC/pdpttrs.o \
+SRC/pdpttrsv.o \
+SRC/pdrot.o \
+SRC/pdrscl.o \
+SRC/pdstebz.o \
+SRC/pdstedc.o \
+SRC/pdstein.o \
+SRC/pdsyev.o \
+SRC/pdsyevd.o \
+SRC/pdsyevr.o \
+SRC/pdsyevx.o \
+SRC/pdsygs2.o \
+SRC/pdsygst.o \
+SRC/pdsygvx.o \
+SRC/pdsyngst.o \
+SRC/pdsyntrd.o \
+SRC/pdsytd2.o \
+SRC/pdsytrd.o \
+SRC/pdsyttrd.o \
+SRC/pdtrcon.o \
+SRC/pdtrord.o \
+SRC/pdtrrfs.o \
+SRC/pdtrsen.o \
+SRC/pdtrti2.o \
+SRC/pdtrtri.o \
+SRC/pdtrtrs.o \
+SRC/pdtzrzf.o \
+SRC/pdzsum1.o \
+SRC/pilaenvx.o \
+SRC/pilaver.o \
+SRC/piparmq.o \
+SRC/pjlaenv.o \
+SRC/pmpcol.o \
+SRC/pmpim2.o \
+SRC/pscsum1.o \
+SRC/psdbsv.o \
+SRC/psdbtrf.o \
+SRC/psdbtrs.o \
+SRC/psdbtrsv.o \
+SRC/psdtsv.o \
+SRC/psdttrf.o \
+SRC/psdttrs.o \
+SRC/psdttrsv.o \
+SRC/psgbsv.o \
+SRC/psgbtrf.o \
+SRC/psgbtrs.o \
+SRC/psgebal.o \
+SRC/psgebd2.o \
+SRC/psgebrd.o \
+SRC/psgecon.o \
+SRC/psgeequ.o \
+SRC/psgehd2.o \
+SRC/psgehrd.o \
+SRC/psgelq2.o \
+SRC/psgelqf.o \
+SRC/psgels.o \
+SRC/psgeql2.o \
+SRC/psgeqlf.o \
+SRC/psgeqpf.o \
+SRC/psgeqr2.o \
+SRC/psgeqrf.o \
+SRC/psgerfs.o \
+SRC/psgerq2.o \
+SRC/psgerqf.o \
+SRC/psgesv.o \
+SRC/psgesvd.o \
+SRC/psgesvx.o \
+SRC/psgetf2.o \
+SRC/psgetrf.o \
+SRC/psgetri.o \
+SRC/psgetrs.o \
+SRC/psggqrf.o \
+SRC/psggrqf.o \
+SRC/pshseqr.o \
+SRC/pslabad.o \
+SRC/pslabrd.o \
+SRC/pslacon.o \
+SRC/pslaconsb.o \
+SRC/pslacp2.o \
+SRC/pslacp3.o \
+SRC/pslacpy.o \
+SRC/pslaed0.o \
+SRC/pslaed1.o \
+SRC/pslaed2.o \
+SRC/pslaed3.o \
+SRC/pslaedz.o \
+SRC/pslaevswp.o \
+SRC/pslahqr.o \
+SRC/pslahrd.o \
+SRC/pslaiect.o \
+SRC/pslamch.o \
+SRC/pslamr1d.o \
+SRC/pslamve.o \
+SRC/pslange.o \
+SRC/pslanhs.o \
+SRC/pslansy.o \
+SRC/pslantr.o \
+SRC/pslapiv.o \
+SRC/pslapv2.o \
+SRC/pslaqge.o \
+SRC/pslaqr0.o \
+SRC/pslaqr1.o \
+SRC/pslaqr2.o \
+SRC/pslaqr3.o \
+SRC/pslaqr4.o \
+SRC/pslaqr5.o \
+SRC/pslaqsy.o \
+SRC/pslared1d.o \
+SRC/pslared2d.o \
+SRC/pslarf.o \
+SRC/pslarfb.o \
+SRC/pslarfg.o \
+SRC/pslarft.o \
+SRC/pslarz.o \
+SRC/pslarzb.o \
+SRC/pslarzt.o \
+SRC/pslascl.o \
+SRC/pslase2.o \
+SRC/pslaset.o \
+SRC/pslasmsub.o \
+SRC/pslasrt.o \
+SRC/pslassq.o \
+SRC/pslaswp.o \
+SRC/pslatra.o \
+SRC/pslatrd.o \
+SRC/pslatrs.o \
+SRC/pslatrz.o \
+SRC/pslauu2.o \
+SRC/pslauum.o \
+SRC/pslawil.o \
+SRC/psorg2l.o \
+SRC/psorg2r.o \
+SRC/psorgl2.o \
+SRC/psorglq.o \
+SRC/psorgql.o \
+SRC/psorgqr.o \
+SRC/psorgr2.o \
+SRC/psorgrq.o \
+SRC/psorm2l.o \
+SRC/psorm2r.o \
+SRC/psormbr.o \
+SRC/psormhr.o \
+SRC/psorml2.o \
+SRC/psormlq.o \
+SRC/psormql.o \
+SRC/psormqr.o \
+SRC/psormr2.o \
+SRC/psormr3.o \
+SRC/psormrq.o \
+SRC/psormrz.o \
+SRC/psormtr.o \
+SRC/pspbsv.o \
+SRC/pspbtrf.o \
+SRC/pspbtrs.o \
+SRC/pspbtrsv.o \
+SRC/pspocon.o \
+SRC/pspoequ.o \
+SRC/psporfs.o \
+SRC/psposv.o \
+SRC/psposvx.o \
+SRC/pspotf2.o \
+SRC/pspotrf.o \
+SRC/pspotri.o \
+SRC/pspotrs.o \
+SRC/psptsv.o \
+SRC/pspttrf.o \
+SRC/pspttrs.o \
+SRC/pspttrsv.o \
+SRC/psrot.o \
+SRC/psrscl.o \
+SRC/psstebz.o \
+SRC/psstedc.o \
+SRC/psstein.o \
+SRC/pssyev.o \
+SRC/pssyevd.o \
+SRC/pssyevr.o \
+SRC/pssyevx.o \
+SRC/pssygs2.o \
+SRC/pssygst.o \
+SRC/pssygvx.o \
+SRC/pssyngst.o \
+SRC/pssyntrd.o \
+SRC/pssytd2.o \
+SRC/pssytrd.o \
+SRC/pssyttrd.o \
+SRC/pstrcon.o \
+SRC/pstrord.o \
+SRC/pstrrfs.o \
+SRC/pstrsen.o \
+SRC/pstrti2.o \
+SRC/pstrtri.o \
+SRC/pstrtrs.o \
+SRC/pstzrzf.o \
+SRC/pzaxpy.o \
+SRC/pzdbsv.o \
+SRC/pzdbtrf.o \
+SRC/pzdbtrs.o \
+SRC/pzdbtrsv.o \
+SRC/pzdotc.o \
+SRC/pzdotu.o \
+SRC/pzdrscl.o \
+SRC/pzdtsv.o \
+SRC/pzdttrf.o \
+SRC/pzdttrs.o \
+SRC/pzdttrsv.o \
+SRC/pzgbsv.o \
+SRC/pzgbtrf.o \
+SRC/pzgbtrs.o \
+SRC/pzgebd2.o \
+SRC/pzgebrd.o \
+SRC/pzgecon.o \
+SRC/pzgeequ.o \
+SRC/pzgehd2.o \
+SRC/pzgehrd.o \
+SRC/pzgelq2.o \
+SRC/pzgelqf.o \
+SRC/pzgels.o \
+SRC/pzgeql2.o \
+SRC/pzgeqlf.o \
+SRC/pzgeqpf.o \
+SRC/pzgeqr2.o \
+SRC/pzgeqrf.o \
+SRC/pzgerfs.o \
+SRC/pzgerq2.o \
+SRC/pzgerqf.o \
+SRC/pzgesv.o \
+SRC/pzgesvd.o \
+SRC/pzgesvx.o \
+SRC/pzgetf2.o \
+SRC/pzgetrf.o \
+SRC/pzgetri.o \
+SRC/pzgetrs.o \
+SRC/pzggqrf.o \
+SRC/pzggrqf.o \
+SRC/pzheev.o \
+SRC/pzheevd.o \
+SRC/pzheevr.o \
+SRC/pzheevx.o \
+SRC/pzhegs2.o \
+SRC/pzhegst.o \
+SRC/pzhegvx.o \
+SRC/pzhengst.o \
+SRC/pzhentrd.o \
+SRC/pzhetd2.o \
+SRC/pzhetrd.o \
+SRC/pzhettrd.o \
+SRC/pzlabrd.o \
+SRC/pzlacgv.o \
+SRC/pzlacon.o \
+SRC/pzlaconsb.o \
+SRC/pzlacp2.o \
+SRC/pzlacp3.o \
+SRC/pzlacpy.o \
+SRC/pzlaevswp.o \
+SRC/pzlahqr.o \
+SRC/pzlahrd.o \
+SRC/pzlamr1d.o \
+SRC/pzlange.o \
+SRC/pzlanhe.o \
+SRC/pzlanhs.o \
+SRC/pzlansy.o \
+SRC/pzlantr.o \
+SRC/pzlapiv.o \
+SRC/pzlapv2.o \
+SRC/pzlaqge.o \
+SRC/pzlaqsy.o \
+SRC/pzlarf.o \
+SRC/pzlarfb.o \
+SRC/pzlarfc.o \
+SRC/pzlarfg.o \
+SRC/pzlarft.o \
+SRC/pzlarz.o \
+SRC/pzlarzb.o \
+SRC/pzlarzc.o \
+SRC/pzlarzt.o \
+SRC/pzlascl.o \
+SRC/pzlase2.o \
+SRC/pzlaset.o \
+SRC/pzlasmsub.o \
+SRC/pzlassq.o \
+SRC/pzlaswp.o \
+SRC/pzlatra.o \
+SRC/pzlatrd.o \
+SRC/pzlatrs.o \
+SRC/pzlatrz.o \
+SRC/pzlattrs.o \
+SRC/pzlauu2.o \
+SRC/pzlauum.o \
+SRC/pzlawil.o \
+SRC/pzmax1.o \
+SRC/pzpbsv.o \
+SRC/pzpbtrf.o \
+SRC/pzpbtrs.o \
+SRC/pzpbtrsv.o \
+SRC/pzpocon.o \
+SRC/pzpoequ.o \
+SRC/pzporfs.o \
+SRC/pzposv.o \
+SRC/pzposvx.o \
+SRC/pzpotf2.o \
+SRC/pzpotrf.o \
+SRC/pzpotri.o \
+SRC/pzpotrs.o \
+SRC/pzptsv.o \
+SRC/pzpttrf.o \
+SRC/pzpttrs.o \
+SRC/pzpttrsv.o \
+SRC/pzrot.o \
+SRC/pzstein.o \
+SRC/pztrcon.o \
+SRC/pztrevc.o \
+SRC/pztrrfs.o \
+SRC/pztrti2.o \
+SRC/pztrtri.o \
+SRC/pztrtrs.o \
+SRC/pztzrzf.o \
+SRC/pzung2l.o \
+SRC/pzung2r.o \
+SRC/pzungl2.o \
+SRC/pzunglq.o \
+SRC/pzungql.o \
+SRC/pzungqr.o \
+SRC/pzungr2.o \
+SRC/pzungrq.o \
+SRC/pzunm2l.o \
+SRC/pzunm2r.o \
+SRC/pzunmbr.o \
+SRC/pzunmhr.o \
+SRC/pzunml2.o \
+SRC/pzunmlq.o \
+SRC/pzunmql.o \
+SRC/pzunmqr.o \
+SRC/pzunmr2.o \
+SRC/pzunmr3.o \
+SRC/pzunmrq.o \
+SRC/pzunmrz.o \
+SRC/pzunmtr.o \
+SRC/sdbtf2.o \
+SRC/sdbtrf.o \
+SRC/sdttrf.o \
+SRC/sdttrsv.o \
+SRC/slamsh.o \
+SRC/slapst.o \
+SRC/slaqr6.o \
+SRC/slar1va.o \
+SRC/slaref.o \
+SRC/slarrb2.o \
+SRC/slarrd2.o \
+SRC/slarre2.o \
+SRC/slarre2a.o \
+SRC/slarrf2.o \
+SRC/slarrv2.o \
+SRC/slasorte.o \
+SRC/slasrt2.o \
+SRC/spttrsv.o \
+SRC/sstegr2.o \
+SRC/sstegr2a.o \
+SRC/sstegr2b.o \
+SRC/sstein2.o \
+SRC/ssteqr2.o \
+SRC/strmvt.o \
+SRC/zdbtf2.o \
+SRC/zdbtrf.o \
+SRC/zdttrf.o \
+SRC/zdttrsv.o \
+SRC/zlahqr2.o \
+SRC/zlamsh.o \
+SRC/zlanv2.o \
+SRC/zlaref.o \
+SRC/zpttrsv.o \
+SRC/zsteqr2.o \
+SRC/ztrmvt.o \
+TOOLS/LAPACK/clagge.o \
+TOOLS/LAPACK/claghe.o \
+TOOLS/LAPACK/clagsy.o \
+TOOLS/LAPACK/clarnd.o \
+TOOLS/LAPACK/clarnv.o \
+TOOLS/LAPACK/clarot.o \
+TOOLS/LAPACK/clatm1.o \
+TOOLS/LAPACK/clatms.o \
+TOOLS/LAPACK/dlagge.o \
+TOOLS/LAPACK/dlagsy.o \
+TOOLS/LAPACK/dlaran.o \
+TOOLS/LAPACK/dlarnd.o \
+TOOLS/LAPACK/dlarot.o \
+TOOLS/LAPACK/dlatm1.o \
+TOOLS/LAPACK/dlatms.o \
+TOOLS/LAPACK/icopy.o \
+TOOLS/LAPACK/slagge.o \
+TOOLS/LAPACK/slagsy.o \
+TOOLS/LAPACK/slaran.o \
+TOOLS/LAPACK/slarnd.o \
+TOOLS/LAPACK/slarot.o \
+TOOLS/LAPACK/slatm1.o \
+TOOLS/LAPACK/slatms.o \
+TOOLS/LAPACK/zlagge.o \
+TOOLS/LAPACK/zlaghe.o \
+TOOLS/LAPACK/zlagsy.o \
+TOOLS/LAPACK/zlarnd.o \
+TOOLS/LAPACK/zlarnv.o \
+TOOLS/LAPACK/zlarot.o \
+TOOLS/LAPACK/zlatm1.o \
+TOOLS/LAPACK/zlatms.o \
+TOOLS/SL_gridreshape.o \
+TOOLS/SL_init.o \
+TOOLS/ccdotc.o \
+TOOLS/ccdotu.o \
+TOOLS/chk1mat.o \
+TOOLS/clatcpy.o \
+TOOLS/cmatadd.o \
+TOOLS/dddot.o \
+TOOLS/desc_convert.o \
+TOOLS/descinit.o \
+TOOLS/descset.o \
+TOOLS/dlatcpy.o \
+TOOLS/dmatadd.o \
+TOOLS/dsasum.o \
+TOOLS/dscasum.o \
+TOOLS/dscnrm2.o \
+TOOLS/dsnrm2.o \
+TOOLS/iceil.o \
+TOOLS/ilacpy.o \
+TOOLS/ilcm.o \
+TOOLS/indxg2l.o \
+TOOLS/indxg2p.o \
+TOOLS/indxl2g.o \
+TOOLS/infog1l.o \
+TOOLS/infog2l.o \
+TOOLS/npreroc.o \
+TOOLS/numroc.o \
+TOOLS/pcchekpad.o \
+TOOLS/pccol2row.o \
+TOOLS/pcelget.o \
+TOOLS/pcelset.o \
+TOOLS/pcelset2.o \
+TOOLS/pcfillpad.o \
+TOOLS/pchkxmat.o \
+TOOLS/pclaprnt.o \
+TOOLS/pclaread.o \
+TOOLS/pclawrite.o \
+TOOLS/pcmatadd.o \
+TOOLS/pcrow2col.o \
+TOOLS/pctreecomb.o \
+TOOLS/pdchekpad.o \
+TOOLS/pdcol2row.o \
+TOOLS/pdelget.o \
+TOOLS/pdelset.o \
+TOOLS/pdelset2.o \
+TOOLS/pdfillpad.o \
+TOOLS/pdlaprnt.o \
+TOOLS/pdlaread.o \
+TOOLS/pdlawrite.o \
+TOOLS/pdmatadd.o \
+TOOLS/pdrow2col.o \
+TOOLS/pdtreecomb.o \
+TOOLS/pichekpad.o \
+TOOLS/picol2row.o \
+TOOLS/pielget.o \
+TOOLS/pielset.o \
+TOOLS/pielset2.o \
+TOOLS/pifillpad.o \
+TOOLS/pilaprnt.o \
+TOOLS/pirow2col.o \
+TOOLS/pitreecomb.o \
+TOOLS/pschekpad.o \
+TOOLS/pscol2row.o \
+TOOLS/pselget.o \
+TOOLS/pselset.o \
+TOOLS/pselset2.o \
+TOOLS/psfillpad.o \
+TOOLS/pslaprnt.o \
+TOOLS/pslaread.o \
+TOOLS/pslawrite.o \
+TOOLS/psmatadd.o \
+TOOLS/psrow2col.o \
+TOOLS/pstreecomb.o \
+TOOLS/pzchekpad.o \
+TOOLS/pzcol2row.o \
+TOOLS/pzelget.o \
+TOOLS/pzelset.o \
+TOOLS/pzelset2.o \
+TOOLS/pzfillpad.o \
+TOOLS/pzlaprnt.o \
+TOOLS/pzlaread.o \
+TOOLS/pzlawrite.o \
+TOOLS/pzmatadd.o \
+TOOLS/pzrow2col.o \
+TOOLS/pztreecomb.o \
+TOOLS/reshape.o \
+TOOLS/slatcpy.o \
+TOOLS/sltimer.o \
+TOOLS/smatadd.o \
+TOOLS/ssdot.o \
+TOOLS/zlatcpy.o \
+TOOLS/zmatadd.o \
+TOOLS/zzdotc.o \
+TOOLS/zzdotu.o \
+PBLAS/SRC/PBBLAS/pbcmatadd.o \
+PBLAS/SRC/PBBLAS/pbctran.o \
+PBLAS/SRC/PBBLAS/pbctrget.o \
+PBLAS/SRC/PBBLAS/pbctrnv.o \
+PBLAS/SRC/PBBLAS/pbctrsrt.o \
+PBLAS/SRC/PBBLAS/pbctrst1.o \
+PBLAS/SRC/PBBLAS/pbcvecadd.o \
+PBLAS/SRC/PBBLAS/pbdmatadd.o \
+PBLAS/SRC/PBBLAS/pbdtran.o \
+PBLAS/SRC/PBBLAS/pbdtrget.o \
+PBLAS/SRC/PBBLAS/pbdtrnv.o \
+PBLAS/SRC/PBBLAS/pbdtrsrt.o \
+PBLAS/SRC/PBBLAS/pbdtrst1.o \
+PBLAS/SRC/PBBLAS/pbdvecadd.o \
+PBLAS/SRC/PBBLAS/pbsmatadd.o \
+PBLAS/SRC/PBBLAS/pbstran.o \
+PBLAS/SRC/PBBLAS/pbstrget.o \
+PBLAS/SRC/PBBLAS/pbstrnv.o \
+PBLAS/SRC/PBBLAS/pbstrsrt.o \
+PBLAS/SRC/PBBLAS/pbstrst1.o \
+PBLAS/SRC/PBBLAS/pbsvecadd.o \
+PBLAS/SRC/PBBLAS/pbzmatadd.o \
+PBLAS/SRC/PBBLAS/pbztran.o \
+PBLAS/SRC/PBBLAS/pbztrget.o \
+PBLAS/SRC/PBBLAS/pbztrnv.o \
+PBLAS/SRC/PBBLAS/pbztrsrt.o \
+PBLAS/SRC/PBBLAS/pbztrst1.o \
+PBLAS/SRC/PBBLAS/pbzvecadd.o \
+PBLAS/SRC/PTOOLS/PB_CGatherV.o \
+PBLAS/SRC/PTOOLS/PB_CInOutV.o \
+PBLAS/SRC/PTOOLS/PB_CInOutV2.o \
+PBLAS/SRC/PTOOLS/PB_CInV.o \
+PBLAS/SRC/PTOOLS/PB_CInV2.o \
+PBLAS/SRC/PTOOLS/PB_COutV.o \
+PBLAS/SRC/PTOOLS/PB_CScatterV.o \
+PBLAS/SRC/PTOOLS/PB_CVMcontig.o \
+PBLAS/SRC/PTOOLS/PB_CVMinit.o \
+PBLAS/SRC/PTOOLS/PB_CVMloc.o \
+PBLAS/SRC/PTOOLS/PB_CVMnpq.o \
+PBLAS/SRC/PTOOLS/PB_CVMpack.o \
+PBLAS/SRC/PTOOLS/PB_CVMswp.o \
+PBLAS/SRC/PTOOLS/PB_CVMupdate.o \
+PBLAS/SRC/PTOOLS/PB_Cabort.o \
+PBLAS/SRC/PTOOLS/PB_Cainfog2l.o \
+PBLAS/SRC/PTOOLS/PB_CargFtoC.o \
+PBLAS/SRC/PTOOLS/PB_Cbinfo.o \
+PBLAS/SRC/PTOOLS/PB_Cchkmat.o \
+PBLAS/SRC/PTOOLS/PB_Cchkvec.o \
+PBLAS/SRC/PTOOLS/PB_Cconjg.o \
+PBLAS/SRC/PTOOLS/PB_Cctypeset.o \
+PBLAS/SRC/PTOOLS/PB_Cdescribe.o \
+PBLAS/SRC/PTOOLS/PB_Cdescset.o \
+PBLAS/SRC/PTOOLS/PB_Cdtypeset.o \
+PBLAS/SRC/PTOOLS/PB_Cfirstnb.o \
+PBLAS/SRC/PTOOLS/PB_Cg2lrem.o \
+PBLAS/SRC/PTOOLS/PB_Cgcd.o \
+PBLAS/SRC/PTOOLS/PB_Cgetbuf.o \
+PBLAS/SRC/PTOOLS/PB_Cindxg2p.o \
+PBLAS/SRC/PTOOLS/PB_Cinfog2l.o \
+PBLAS/SRC/PTOOLS/PB_Citypeset.o \
+PBLAS/SRC/PTOOLS/PB_Clastnb.o \
+PBLAS/SRC/PTOOLS/PB_Clcm.o \
+PBLAS/SRC/PTOOLS/PB_Cmalloc.o \
+PBLAS/SRC/PTOOLS/PB_Cnnxtroc.o \
+PBLAS/SRC/PTOOLS/PB_Cnpreroc.o \
+PBLAS/SRC/PTOOLS/PB_Cnumroc.o \
+PBLAS/SRC/PTOOLS/PB_Cpaxpby.o \
+PBLAS/SRC/PTOOLS/PB_CpaxpbyDN.o \
+PBLAS/SRC/PTOOLS/PB_CpaxpbyND.o \
+PBLAS/SRC/PTOOLS/PB_CpaxpbyNN.o \
+PBLAS/SRC/PTOOLS/PB_Cpdot11.o \
+PBLAS/SRC/PTOOLS/PB_CpdotND.o \
+PBLAS/SRC/PTOOLS/PB_CpdotNN.o \
+PBLAS/SRC/PTOOLS/PB_Cpgeadd.o \
+PBLAS/SRC/PTOOLS/PB_CpgemmAB.o \
+PBLAS/SRC/PTOOLS/PB_CpgemmAC.o \
+PBLAS/SRC/PTOOLS/PB_CpgemmBC.o \
+PBLAS/SRC/PTOOLS/PB_Cplacnjg.o \
+PBLAS/SRC/PTOOLS/PB_Cplapad.o \
+PBLAS/SRC/PTOOLS/PB_Cplapd2.o \
+PBLAS/SRC/PTOOLS/PB_Cplaprnt.o \
+PBLAS/SRC/PTOOLS/PB_Cplasca2.o \
+PBLAS/SRC/PTOOLS/PB_Cplascal.o \
+PBLAS/SRC/PTOOLS/PB_CpswapND.o \
+PBLAS/SRC/PTOOLS/PB_CpswapNN.o \
+PBLAS/SRC/PTOOLS/PB_Cpsym.o \
+PBLAS/SRC/PTOOLS/PB_CpsymmAB.o \
+PBLAS/SRC/PTOOLS/PB_CpsymmBC.o \
+PBLAS/SRC/PTOOLS/PB_Cpsyr.o \
+PBLAS/SRC/PTOOLS/PB_Cpsyr2.o \
+PBLAS/SRC/PTOOLS/PB_Cpsyr2kA.o \
+PBLAS/SRC/PTOOLS/PB_Cpsyr2kAC.o \
+PBLAS/SRC/PTOOLS/PB_CpsyrkA.o \
+PBLAS/SRC/PTOOLS/PB_CpsyrkAC.o \
+PBLAS/SRC/PTOOLS/PB_Cptradd.o \
+PBLAS/SRC/PTOOLS/PB_Cptran.o \
+PBLAS/SRC/PTOOLS/PB_Cptrm.o \
+PBLAS/SRC/PTOOLS/PB_CptrmmAB.o \
+PBLAS/SRC/PTOOLS/PB_CptrmmB.o \
+PBLAS/SRC/PTOOLS/PB_Cptrsm.o \
+PBLAS/SRC/PTOOLS/PB_CptrsmAB.o \
+PBLAS/SRC/PTOOLS/PB_CptrsmAB0.o \
+PBLAS/SRC/PTOOLS/PB_CptrsmAB1.o \
+PBLAS/SRC/PTOOLS/PB_CptrsmB.o \
+PBLAS/SRC/PTOOLS/PB_Cptrsv.o \
+PBLAS/SRC/PTOOLS/PB_Cspan.o \
+PBLAS/SRC/PTOOLS/PB_Cstypeset.o \
+PBLAS/SRC/PTOOLS/PB_Ctop.o \
+PBLAS/SRC/PTOOLS/PB_Ctzahemv.o \
+PBLAS/SRC/PTOOLS/PB_Ctzasymv.o \
+PBLAS/SRC/PTOOLS/PB_Ctzatrmv.o \
+PBLAS/SRC/PTOOLS/PB_Ctzhemm.o \
+PBLAS/SRC/PTOOLS/PB_Ctzhemv.o \
+PBLAS/SRC/PTOOLS/PB_Ctzher.o \
+PBLAS/SRC/PTOOLS/PB_Ctzher2.o \
+PBLAS/SRC/PTOOLS/PB_Ctzher2k.o \
+PBLAS/SRC/PTOOLS/PB_Ctzherk.o \
+PBLAS/SRC/PTOOLS/PB_Ctzsymm.o \
+PBLAS/SRC/PTOOLS/PB_Ctzsymv.o \
+PBLAS/SRC/PTOOLS/PB_Ctzsyr.o \
+PBLAS/SRC/PTOOLS/PB_Ctzsyr2.o \
+PBLAS/SRC/PTOOLS/PB_Ctzsyr2k.o \
+PBLAS/SRC/PTOOLS/PB_Ctzsyrk.o \
+PBLAS/SRC/PTOOLS/PB_Ctztrmm.o \
+PBLAS/SRC/PTOOLS/PB_Ctztrmv.o \
+PBLAS/SRC/PTOOLS/PB_Cwarn.o \
+PBLAS/SRC/PTOOLS/PB_Cztypeset.o \
+PBLAS/SRC/PTOOLS/PB_freebuf_.o \
+PBLAS/SRC/PTOOLS/PB_topget_.o \
+PBLAS/SRC/PTOOLS/PB_topset_.o \
+PBLAS/SRC/PTZBLAS/cagemv.o \
+PBLAS/SRC/PTZBLAS/cahemv.o \
+PBLAS/SRC/PTZBLAS/casymv.o \
+PBLAS/SRC/PTZBLAS/catrmv.o \
+PBLAS/SRC/PTZBLAS/ccshft.o \
+PBLAS/SRC/PTZBLAS/chescal.o \
+PBLAS/SRC/PTZBLAS/cmmadd.o \
+PBLAS/SRC/PTZBLAS/cmmcadd.o \
+PBLAS/SRC/PTZBLAS/cmmdda.o \
+PBLAS/SRC/PTZBLAS/cmmddac.o \
+PBLAS/SRC/PTZBLAS/cmmddact.o \
+PBLAS/SRC/PTZBLAS/cmmddat.o \
+PBLAS/SRC/PTZBLAS/cmmtadd.o \
+PBLAS/SRC/PTZBLAS/cmmtcadd.o \
+PBLAS/SRC/PTZBLAS/crshft.o \
+PBLAS/SRC/PTZBLAS/cset.o \
+PBLAS/SRC/PTZBLAS/csymv.o \
+PBLAS/SRC/PTZBLAS/csyr.o \
+PBLAS/SRC/PTZBLAS/csyr2.o \
+PBLAS/SRC/PTZBLAS/ctzcnjg.o \
+PBLAS/SRC/PTZBLAS/ctzpad.o \
+PBLAS/SRC/PTZBLAS/ctzpadcpy.o \
+PBLAS/SRC/PTZBLAS/ctzscal.o \
+PBLAS/SRC/PTZBLAS/cvvdotc.o \
+PBLAS/SRC/PTZBLAS/cvvdotu.o \
+PBLAS/SRC/PTZBLAS/dagemv.o \
+PBLAS/SRC/PTZBLAS/dascal.o \
+PBLAS/SRC/PTZBLAS/dasqrtb.o \
+PBLAS/SRC/PTZBLAS/dasymv.o \
+PBLAS/SRC/PTZBLAS/datrmv.o \
+PBLAS/SRC/PTZBLAS/dcshft.o \
+PBLAS/SRC/PTZBLAS/dmmadd.o \
+PBLAS/SRC/PTZBLAS/dmmcadd.o \
+PBLAS/SRC/PTZBLAS/dmmdda.o \
+PBLAS/SRC/PTZBLAS/dmmddac.o \
+PBLAS/SRC/PTZBLAS/dmmddact.o \
+PBLAS/SRC/PTZBLAS/dmmddat.o \
+PBLAS/SRC/PTZBLAS/dmmtadd.o \
+PBLAS/SRC/PTZBLAS/dmmtcadd.o \
+PBLAS/SRC/PTZBLAS/drshft.o \
+PBLAS/SRC/PTZBLAS/dset.o \
+PBLAS/SRC/PTZBLAS/dtzpad.o \
+PBLAS/SRC/PTZBLAS/dtzpadcpy.o \
+PBLAS/SRC/PTZBLAS/dtzscal.o \
+PBLAS/SRC/PTZBLAS/dvasum.o \
+PBLAS/SRC/PTZBLAS/dvvdot.o \
+PBLAS/SRC/PTZBLAS/dzvasum.o \
+PBLAS/SRC/PTZBLAS/immadd.o \
+PBLAS/SRC/PTZBLAS/immdda.o \
+PBLAS/SRC/PTZBLAS/immddat.o \
+PBLAS/SRC/PTZBLAS/immtadd.o \
+PBLAS/SRC/PTZBLAS/pxerbla.o \
+PBLAS/SRC/PTZBLAS/sagemv.o \
+PBLAS/SRC/PTZBLAS/sascal.o \
+PBLAS/SRC/PTZBLAS/sasqrtb.o \
+PBLAS/SRC/PTZBLAS/sasymv.o \
+PBLAS/SRC/PTZBLAS/satrmv.o \
+PBLAS/SRC/PTZBLAS/scshft.o \
+PBLAS/SRC/PTZBLAS/scvasum.o \
+PBLAS/SRC/PTZBLAS/smmadd.o \
+PBLAS/SRC/PTZBLAS/smmcadd.o \
+PBLAS/SRC/PTZBLAS/smmdda.o \
+PBLAS/SRC/PTZBLAS/smmddac.o \
+PBLAS/SRC/PTZBLAS/smmddact.o \
+PBLAS/SRC/PTZBLAS/smmddat.o \
+PBLAS/SRC/PTZBLAS/smmtadd.o \
+PBLAS/SRC/PTZBLAS/smmtcadd.o \
+PBLAS/SRC/PTZBLAS/srshft.o \
+PBLAS/SRC/PTZBLAS/sset.o \
+PBLAS/SRC/PTZBLAS/stzpad.o \
+PBLAS/SRC/PTZBLAS/stzpadcpy.o \
+PBLAS/SRC/PTZBLAS/stzscal.o \
+PBLAS/SRC/PTZBLAS/svasum.o \
+PBLAS/SRC/PTZBLAS/svvdot.o \
+PBLAS/SRC/PTZBLAS/zagemv.o \
+PBLAS/SRC/PTZBLAS/zahemv.o \
+PBLAS/SRC/PTZBLAS/zasymv.o \
+PBLAS/SRC/PTZBLAS/zatrmv.o \
+PBLAS/SRC/PTZBLAS/zcshft.o \
+PBLAS/SRC/PTZBLAS/zhescal.o \
+PBLAS/SRC/PTZBLAS/zmmadd.o \
+PBLAS/SRC/PTZBLAS/zmmcadd.o \
+PBLAS/SRC/PTZBLAS/zmmdda.o \
+PBLAS/SRC/PTZBLAS/zmmddac.o \
+PBLAS/SRC/PTZBLAS/zmmddact.o \
+PBLAS/SRC/PTZBLAS/zmmddat.o \
+PBLAS/SRC/PTZBLAS/zmmtadd.o \
+PBLAS/SRC/PTZBLAS/zmmtcadd.o \
+PBLAS/SRC/PTZBLAS/zrshft.o \
+PBLAS/SRC/PTZBLAS/zset.o \
+PBLAS/SRC/PTZBLAS/zsymv.o \
+PBLAS/SRC/PTZBLAS/zsyr.o \
+PBLAS/SRC/PTZBLAS/zsyr2.o \
+PBLAS/SRC/PTZBLAS/ztzcnjg.o \
+PBLAS/SRC/PTZBLAS/ztzpad.o \
+PBLAS/SRC/PTZBLAS/ztzpadcpy.o \
+PBLAS/SRC/PTZBLAS/ztzscal.o \
+PBLAS/SRC/PTZBLAS/zvvdotc.o \
+PBLAS/SRC/PTZBLAS/zvvdotu.o
+EOF
+cat > Makefile.parallel <<EOF
+include SLmake.inc
+include Makefile.objs
+
+objsblacsC = \$(objsblacs:.o=.oo)
+
+lib: \${objslamov} \${objsblacs} \${objs}
+	\$(ARCH) \$(ARCHFLAGS) \$(SCALAPACKLIB) \${objslamov} \${objsblacs} \${objs} \${objsblacsC}
+	\$(RANLIB) \$(SCALAPACKLIB)
+
+\${objslamov}:
+	\$(CC) -o \$*.o -c \$(CFLAGS) \$(CDEFS) \$*.c
+
+\${objsblacs}:
+	\$(CC) -o \$*.oo -c \$(CDEFS) \$(CCFLAGS) -DCallFromC \$*.c
+	\$(CC) -o \$*.o -c \$(CDEFS) \$(CCFLAGS) \$*.c
+
+.f.o :
+	\$(FC) -o \$*.o -c \$(FCFLAGS) \$*.f
+
+.c.o :
+	\$(CC) -o \$*.o -c \$(CDEFS) \$(CCFLAGS) \$*.c
+
+cleanlib :
+	rm -f \${objslamov} \${objsblacs} \${objs} \${objsblacsC}
+	rm -f \$(SCALAPACKLIB)
+EOF
+cat > SLmake.inc <<EOF
+CDEFS         = -DAdd_
+
+#
+#  The fortran and C compilers, loaders, and their flags
+#
+
+FC            = $MPI_F90_COMPILER
+CC            = $MPI_C_COMPILER
+NOOPT         = -O0
+FCFLAGS       = -O3 $GCC_EXTRA_FFLAGS
+CCFLAGS       = -O3
+FCLOADER      = \$(FC)
+CCLOADER      = \$(CC)
+FCLOADFLAGS   = \$(FCFLAGS)
+CCLOADFLAGS   = \$(CCFLAGS)
+
+#
+#  The archiver and the flag(s) to use when building archive (library)
+#  Also the ranlib routine.  If your system has no ranlib, set RANLIB = echo
+#
+
+ARCH          = ar
+ARCHFLAGS     = cr
+RANLIB        = ranlib
+
+#
+#  The name of the ScaLAPACK library to be created
+#
+
+SCALAPACKLIB  = libscalapack.a
+
+#
+#  BLAS, LAPACK (and possibly other) libraries needed for linking test programs
+#
+
+BLASLIB       = $NON_INTEL_BLAS_LINK
+LAPACKLIB     = $NON_INTEL_LAPACK_LINK
+LIBS          = \$(LAPACKLIB) \$(BLASLIB)
+EOF
+        make -f Makefile.parallel -j$MAKE_JOBS
+        mkdir -p $GOMA_LIB/scalapack-$SCALAPACK_VERSION/lib
+        cp -a libscalapack.a $GOMA_LIB/scalapack-$SCALAPACK_VERSION/lib
         mkdir -p $GOMA_LIB/scalapack-$SCALAPACK_VERSION/include
         cd $GOMA_LIB
         if [ -f $GOMA_LIB/scalapack-$SCALAPACK_VERSION/lib/libscalapack.a ]; then
@@ -1318,7 +2725,9 @@ EOF
         log_echo -e $("$MUMPS_MAKE_PATCH") > examples/Makefile.patch
         patch -f examples/Makefile < examples/Makefile.patch
     fi
-    make -j$MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
+    make -j$MAKE_JOBS prerequisites 2>&1 | tee -a $COMPILE_LOG
+    make -j$MAKE_JOBS all 2>&1 | tee -a $COMPILE_LOG
+
     if [ -e $GOMA_LIB/MUMPS_$MUMPS_VERSION/lib/libdmumps.a ]
     then
         log_echo "Built MUMPS $MUMPS_VERSION"
@@ -1328,10 +2737,30 @@ EOF
     fi
 fi
 
+if [ -e $GOMA_LIB/Omega_h/lib/libomega_h.a ]; then
+    log_echo "Omega_h is already built!"
+else
+    cd $GOMA_LIB/omega_h-$OMEGA_H_VERSION
+    CC=mpicc CXX=mpicxx cmake -Bbuild -DCMAKE_INSTALL_PREFIX=$GOMA_LIB/Omega_h -DBUILD_SHARED_LIBS=OFF -DOmega_h_USE_MPI=ON 2>&1 | tee -a $COMPILE_LOG
+    cmake --build build -j$MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
+    make -C build install 2>&1 | tee -a $COMPILE_LOG
+    if [ -e $GOMA_LIB/Omega_h/lib/libomega_h.a ]; then
+        log_echo "Omega_h built!"
+    else
+        log_echo "Failed to build Omega_H $OMEGA_H_VERSION"
+        exit 1
+    fi
+    cd $GOMA_LIB
+fi
+
 #make trilinos
+
+
+
+cd $GOMA_LIB
+
 rm -rf $GOMA_LIB/trilinos-$TRILINOS_VERSION-Temp
 mkdir $GOMA_LIB/trilinos-$TRILINOS_VERSION-Temp
-cd $GOMA_LIB/trilinos-$TRILINOS_VERSION-Temp
 
 rm -f CMakeCache.txt
 
@@ -1344,6 +2773,124 @@ TRILINOS_INSTALL=$GOMA_LIB/trilinos-$TRILINOS_VERSION
 if [ -e $TRILINOS_INSTALL/bin/aprepro ]; then
     log_echo "Trilinos is already built!"
 else
+cd $GOMA_LIB/Trilinos-trilinos-release-$TRILINOS_VERSION_DASH/packages/aztecoo/src
+cat << "EOF" > az_aztec_h.patch 
+731c731
+<   extern char *AZ_allocate(unsigned int iii);
+---
+>   extern char *AZ_allocate(size_t iii);
+1024c1024
+<   extern double *AZ_manage_memory(unsigned int size, int action, int type,
+---
+>   extern double *AZ_manage_memory(size_t size, int action, int type,
+1198c1198
+<   extern char *AZ_realloc(void *ptr, unsigned int size);
+---
+>   extern char *AZ_realloc(void *ptr, size_t size);
+EOF
+patch -f az_aztec.h < az_aztec_h.patch
+rm az_aztec_h.patch
+
+cat << "EOF" > az_util_c.patch 
+843c843
+<   (void) AZ_manage_memory((unsigned int) 0, AZ_CLEAR, label, (char *) NULL,
+---
+>   (void) AZ_manage_memory((size_t) 0, AZ_CLEAR, label, (char *) NULL,
+851c851
+< double *AZ_manage_memory(unsigned int input_size, int action, int type,
+---
+> double *AZ_manage_memory(size_t input_size, int action, int type,
+936c936
+<     int     size;
+---
+>     size_t  size;
+941c941
+<   long int size;
+---
+>   size_t                size, aligned_size;
+945,946c945,946
+<   long int aligned_str_mem, aligned_j, aligned_size;
+< double *dtmp;
+---
+>   unsigned int          aligned_str_mem, aligned_j;
+>   double *dtmp;
+949c949
+<   size = (long int) input_size;
+---
+>   size = input_size;
+997,998c997
+<       dtmp = (double *) AZ_allocate((unsigned int) (aligned_str_mem+aligned_j+
+<                                                 aligned_size) );
+---
+>       dtmp = (double *) AZ_allocate(aligned_str_mem+aligned_j+aligned_size);
+1183,1184c1182
+<     dtmp    = (double *) AZ_realloc((char *) dtmp,(unsigned int)
+<                                     aligned_str_mem+aligned_j+aligned_size);
+---
+>     dtmp    = (double *) AZ_realloc((char *) dtmp, aligned_str_mem+aligned_j+aligned_size);
+1872c1870
+<    int size;
+---
+>    size_t size;
+1902c1900
+< char *AZ_allocate(unsigned int isize) {
+---
+> char *AZ_allocate(size_t isize) {
+1917,1918c1915,1917
+<     int *size_ptr, i;
+<     unsigned int size;
+---
+>     int i;
+>     size_t size;
+>     size_t *size_ptr; 
+1952c1951
+<     size_ptr = (int *) ptr;
+---
+>     size_ptr = (size_t *) ptr;
+1992c1991
+<    int *iptr, size, i;
+---
+>    int i;
+1993a1993,1994
+>    size_t size;
+>    size_t* iptr;
+2023c2024
+<            iptr = (int *) ptr;
+---
+>            iptr = (size_t *) ptr;
+2073c2074
+< char *AZ_realloc(void *vptr, unsigned int new_size) {
+---
+> char *AZ_realloc(void *vptr, size_t new_size) {
+2076c2077
+<    int i, *iptr, size, *new_size_ptr;
+---
+>    int i;
+2079d2079
+<    int newmsize, smaller;
+2080a2081,2082
+>    size_t size, newmsize, smaller;
+>    size_t *iptr, *new_size_ptr; 
+2108c2110
+<            iptr = (int *) ptr;
+---
+>            iptr = (size_t *) ptr;
+2128c2130
+<     new_size_ptr = (int *) new_ptr;
+---
+>     new_size_ptr = (size_t *) new_ptr;
+2175c2177
+< char *AZ_allocate(unsigned int size) {
+---
+> char *AZ_allocate(size_t size) {
+2185c2187
+< char *AZ_realloc(void *ptr, unsigned int size) {
+---
+> char *AZ_realloc(void *ptr, size_t size) {
+EOF
+patch -f az_util.c < az_util_c.patch
+rm az_util_c.patch 
+cd $GOMA_LIB/trilinos-$TRILINOS_VERSION-Temp
     cmake \
 -D CMAKE_AR=/usr/bin/ar \
 -D CMAKE_RANLIB=/usr/bin/ranlib \
@@ -1408,8 +2955,8 @@ else
   -D AMD_INCLUDE_DIRS:PATH="$GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/AMD/Include;$GOMA_LIB/SuiteSparse-$SUITESPARSE_VERSION/SuiteSparse_config" \
 -D TPL_ENABLE_SuperLUDist:BOOL=ON \
   -D SuperLUDist_LIBRARY_NAMES:STRING="superlu_dist" \
-  -D SuperLUDist_LIBRARY_DIRS:PATH=$GOMA_LIB/superlu_dist-7.2.0/lib64 \
-  -D SuperLUDist_INCLUDE_DIRS:PATH=$GOMA_LIB/superlu_dist-7.2.0/include \
+  -D SuperLUDist_LIBRARY_DIRS:PATH=$GOMA_LIB/superlu_dist-$SUPERLU_DIST_VERSION/$SUPERLU_LIBDIR \
+  -D SuperLUDist_INCLUDE_DIRS:PATH=$GOMA_LIB/superlu_dist-$SUPERLU_DIST_VERSION/include \
 -D TPL_ENABLE_ParMETIS:BOOL=ON \
   -D ParMETIS_LIBRARY_DIRS:PATH=$GOMA_LIB/parmetis-4.0.3/lib \
   -D ParMETIS_INCLUDE_DIRS:PATH=$GOMA_LIB/parmetis-4.0.3/include \
@@ -1422,6 +2969,7 @@ else
   -D MUMPS_LIBRARY_DIRS:PATH="$GOMA_LIB/MUMPS_$MUMPS_VERSION/lib;$GOMA_LIB/MUMPS_$MUMPS_VERSION/PORD/lib;$SCALAPACK_LIBRARY_DIR" \
   -D MUMPS_INCLUDE_DIRS:PATH="$GOMA_LIB/MUMPS_$MUMPS_VERSION/include;$GOMA_LIB/MUMPS_$MUMPS_VERSION/PORD/include" \
   -D CMAKE_CXX_FLAGS:STRING="-DMUMPS_5_0 $BLAS_FLAGS $COMPILER_FLAG_MPI" \
+  -D CMAKE_Fortran_FLAGS:STRING="$GCC_EXTRA_FLAGS" \
   -D Amesos_ENABLE_SCALAPACK:BOOL=ON \
   -D SCALAPACK_INCLUDE_DIRS:FILEPATH="${SCALAPACK_INCLUDE_DIR}" \
   -D SCALAPACK_LIBRARY_DIRS:FILEPATH="${SCALAPACK_LIBRARY_DIR}" \
@@ -1449,17 +2997,37 @@ $GOMA_LIB/Trilinos-trilinos-release-$TRILINOS_VERSION_DASH 2>&1 | tee -a $COMPIL
     fi
 fi
 
+cd $GOMA_LIB/petsc-$PETSC_VERSION
+export PETSC_DIR=$GOMA_LIB/petsc-$PETSC_VERSION
+export PETSC_ARCH=arch-linux-c-opt
+
+if [ -e $PETSC_DIR/$PETSC_ARCH/lib/libpetsc.a ]; then
+    log_echo "PETSc is already built!"
+else
+    ./configure --with-shared-libraries=0 --with-cc=$(which mpicc) --with-cxx=$(which mpicxx) --with-fc=$(which mpif90) --with-debugging=0 COPTFLAGS='-O3' CXXOPTFLAGS='-O3' FOPTFLAGS='-O3' --download-hypre --with-scalapack=1 --with-scalapack-dir=$(readlink --canonicalize-missing "${SCALAPACK_LIBRARY_DIR}/..") --with-superlu_dist=1 --with-superlu_dist-dir=$GOMA_LIB/superlu_dist-$SUPERLU_DIST_VERSION --with-metis=1 --with-metis-dir=$GOMA_LIB/parmetis-4.0.3 --with-parmetis=1 --with-parmetis-dir=$GOMA_LIB/parmetis-4.0.3 --with-blas-lib=${NON_INTEL_BLAS_LIBRARY} --with-lapack-lib=${NON_INTEL_LAPACK_LIBRARY} --with-mumps=1 --with-mumps-dir="$GOMA_LIB/MUMPS_$MUMPS_VERSION"  2>&1 | tee -a $COMPILE_LOG
+    make -j$MAKE_JOBS all 2>&1 | tee -a $COMPILE_LOG
+    make check 2>&1 | tee -a $COMPILE_LOG
+    if [ -e $PETSC_DIR/$PETSC_ARCH/lib/libpetsc.a ]; then
+        log_echo "PETSc built!"
+    else
+        log_echo "Failed to build PETSc $PETSC_VERSION"
+        exit 1
+    fi
+fi
+
 
 # Generate a config file for bash
 cd $GOMA_LIB
 cat > config.sh <<EOF
-export CMAKE_PREFIX_PATH=$TRILINOS_INSTALL:\$CMAKE_PREFIX_PATH
+export CMAKE_PREFIX_PATH=$TRILINOS_INSTALL:${GOMA_LIB}/Omega_h:\$CMAKE_PREFIX_PATH
 export PATH=$TRILINOS_INSTALL/bin:\$PATH
 export PATH=${GOMA_LIB}/openmpi-$OPENMPI_VERSION/bin:\$PATH
 export METISDIR=${GOMA_LIB}/parmetis-4.0.3
 export UMFPACK_DIR=${GOMA_LIB}/SuiteSparse-$SUITESPARSE_VERSION
 export ARPACKDIR=${GOMA_LIB}/ARPACK
 export SPARSEDIR=${GOMA_LIB}/sparse
+export PETSC_DIR=${PETSC_DIR}
+export PETSC_ARCH=${PETSC_ARCH}
 EOF
 
 
@@ -1467,4 +3035,7 @@ if [ "$build_cmake" == "true" ] ; then
     echo "export PATH=$GOMA_LIB/cmake-$CMAKE_VERSION-linux-x86_64/bin:\$PATH" >> config.sh
 fi
 
+log_echo
 log_echo "An example bash configuration file has been written to $GOMA_LIB/config.sh"
+log_echo
+log_echo "Activate with $ source $GOMA_LIB/config.sh"

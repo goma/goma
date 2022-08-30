@@ -6772,8 +6772,10 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
           diffusion = 0.0;
           if (pd->e[pg->imtrx][eqn] && T_DIFFUSION) {
             for (a = 0; a < dim; a++) {
-              diffusion += LubAux->dq_dp1[a][j] * grad_II_phi_j[a] * grad_II_phi_i[a];
               diffusion += LubAux->dq_dp2[a][j] * phi_j * grad_II_phi_i[a];
+              for (b = 0; b < dim; b++) {
+                diffusion += LubAux->dq_dgradp[a][b][j] * grad_II_phi_j[b] * grad_II_phi_i[a];
+              }
             }
           }
           diffusion *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
@@ -7103,7 +7105,7 @@ int assemble_lubrication(const int EQN,  /* equation type: either R_LUBP or R_LU
             phi_j = bf[var]->phi[j];
 
             diffusion = 0.;
-            if (pd->e[eqn] && T_DIFFUSION) {
+            if (pd->e[pg->imtrx][eqn] && T_DIFFUSION) {
               for (p = 0; p < VIM; p++) {
                 diffusion += LubAux->dq_dconc[p][w][j] * grad_II_phi_i[p];
               }
@@ -8248,7 +8250,7 @@ int assemble_shell_species(double time,            /* present time value */
    * Bail out fast if there's nothing to do...
    */
   eqn = R_MASS;
-  if (!pd->e[eqn])
+  if (!pd->e[pg->imtrx][eqn])
     return (status);
 
   /*
@@ -8300,7 +8302,7 @@ int assemble_shell_species(double time,            /* present time value */
   }
 
   /* Call q calculator if lubrication equation is on */
-  if (pd->e[R_LUBP]) {
+  if (pd->gv[R_LUBP]) {
     calculate_lub_q_v(R_LUBP, time, dt, xi, exo);
   }
 
@@ -9736,12 +9738,7 @@ int assemble_film_1D(double time,    /* present time value */
   memset(dH_dot_dmesh, 0.0, sizeof(double) * DIM * MDE);
   memset(dgrad_H_dmesh, 0.0, sizeof(double) * DIM * MDE);
 
-  for (b = 0; b < dim; b++) {
-    var = MESH_DISPLACEMENT1 + b;
-    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-      dgrad_H_dmesh[b][j] = d_dH_dS_dmesh[b][j];
-    }
-  }
+  memcpy(dgrad_H_dmesh, d_dH_dS_dmesh, DIM * MDE * (sizeof(double)));
 
   switch (mp->FSIModel) {
   case FSI_MESH_CONTINUUM:

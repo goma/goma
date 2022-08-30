@@ -112,18 +112,25 @@ endforeach()
 # stratimikos and teko
 list(FIND Trilinos_PACKAGE_LIST Stratimikos stratimikos_package_index)
 if(${stratimikos_package_index} GREATER_EQUAL 0)
-  message(STATUS "TRILINOS: Stratimikos found, enabling in Goma")
-  list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_STRATIMIKOS)
-  list(FIND Trilinos_PACKAGE_LIST Teko teko_package_index)
-  if(${teko_package_index} GREATER_EQUAL 0)
-    message(STATUS "TRILINOS: Teko found, enabling in Goma")
-    list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_TEKO)
+  option(ENABLE_STRATIMIKOS "ENABLE_STRATIMIKOS" ON)
+  if(ENABLE_STRATIMIKOS)
+    message(STATUS "TRILINOS: Stratimikos found, enabling in Goma")
+    list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_STRATIMIKOS)
+    list(FIND Trilinos_PACKAGE_LIST Teko teko_package_index)
+    if(${teko_package_index} GREATER_EQUAL 0)
+      option(ENABLE_TEKO "ENABLE_TEKO" ON)
+      if(ENABLE_TEKO)
+        message(STATUS "TRILINOS: Teko found, enabling in Goma")
+        list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_TEKO)
+      endif()
+    endif()
   endif()
 endif()
 
 # Exodus
 find_package(SEACASExodus REQUIRED HINTS ${Trilinos_DIR}/../SEACASExodus)
 message(STATUS "SEACASExodus_DIR = ${SEACASExodus_DIR}")
+message(STATUS "PETSC_DIR = $ENV{PETSC_DIR}")
 
 option(ENABLE_PETSC "ENABLE_PETSC" ON)
 if(ENABLE_PETSC)
@@ -139,15 +146,15 @@ if(ENABLE_PETSC)
     # Determine PETSc compilers
     if(PETSC_FOUND)
       execute_process(
-        COMMAND pkg-config PETSc --variable=ccompiler
+        COMMAND ${PKG_CONFIG_EXECUTABLE} PETSc --variable=ccompiler
         COMMAND tr -d '\n'
         OUTPUT_VARIABLE PETSC_C_COMPILER)
       execute_process(
-        COMMAND pkg-config PETSc --variable=cxxcompiler
+        COMMAND ${PKG_CONFIG_EXECUTABLE} PETSc --variable=cxxcompiler
         COMMAND tr -d '\n'
         OUTPUT_VARIABLE PETSC_CXX_COMPILER)
       execute_process(
-        COMMAND pkg-config PETSc --variable=fcompiler
+        COMMAND ${PKG_CONFIG_EXECUTABLE} PETSc --variable=fcompiler
         COMMAND tr -d '\n'
         OUTPUT_VARIABLE PETSC_FORTRAN_COMPILER)
       if(ENABLE_PETSC)
@@ -276,7 +283,8 @@ option(ENABLE_OMEGA_H "ENABLE_OMEGA_H" ON)
 if(ENABLE_OMEGA_H)
   find_package(Omega_h 9)
   if(Omega_h_FOUND)
-    set_target_properties(Omega_h::omega_h PROPERTIES INTERFACE_COMPILE_OPTIONS "")
+    set_target_properties(Omega_h::omega_h PROPERTIES INTERFACE_COMPILE_OPTIONS
+                                                      "")
     set(GOMA_TPL_LIBRARIES ${GOMA_TPL_LIBRARIES} Omega_h::omega_h)
     list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_OMEGA_H)
   else()
@@ -328,7 +336,7 @@ macro(option_definition OPTION VALUE)
   endif()
 endmacro()
 
-if (ARPACK_FOUND)
+if(ARPACK_FOUND)
   if(ENABLE_ARPACK)
     option(EIGEN_SERIAL "EIGEN_SERIAL" ON)
     option(EIGEN_PARALLEL "EIGEN_PARALLEL" OFF)
@@ -368,6 +376,8 @@ option_definition(PARALLEL ON)
 option_definition(FP_EXCEPT OFF)
 option_definition(ANALEIG_PLEASE OFF)
 option_definition(DO_NO_UNROLL OFF)
+option_definition(USERMAT_INITIALIZATION OFF)
+option_definition(ENABLE_LOGGING OFF)
 set(MDE
     "27"
     CACHE STRING "set MDE")
@@ -384,6 +394,10 @@ set(MAX_PROB_VAR
     "15"
     CACHE STRING "set MAX_PROB_VAR")
 list(APPEND GOMA_COMPILE_DEFINITIONS MAX_PROB_VAR=${MAX_PROB_VAR})
+set(MAX_NUMBER_MATLS
+    "9"
+    CACHE STRING "set MAX_NUMBER_MATLS")
+list(APPEND GOMA_COMPILE_DEFINITIONS MAX_NUMBER_MATLS=${MAX_NUMBER_MATLS})
 
 set(GOMA_INCLUDES
     include/adapt/omega_h_interface.h
@@ -684,6 +698,7 @@ set(GOMA_USER_INCLUDES
     include/user_pre.h
     include/user_shell.h
     include/usr_print.h)
+
 set(GOMA_USER_SOURCES
     src/user_ac.c
     src/user_bc.c
@@ -707,7 +722,7 @@ set(GDS_SOURCES src/gds/gds_vector.c)
 
 # Set a default build type for single-configuration CMake generators if no build
 # type is set. https://blog.kitware.com/cmake-and-the-default-build-type/
-set(default_build_type "Release")
+set(default_build_type "RelWithDebInfo")
 get_property(isMultiConfig GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 
 if(isMultiConfig)
@@ -735,85 +750,97 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
       CACHE STRING "Choose the type of build." FORCE)
 endif()
 
-set(CMAKE_C_FLAGS_ASAN
-    "${CMAKE_C_FLAGS_DEBUG} -fsanitize=address -fno-omit-frame-pointer"
-    CACHE STRING
-          "Flags used by the C compiler for Asan build type or configuration."
-          FORCE)
+if(${CMAKE_BUILD_TYPE} STREQUAL "Asan")
+  set(CMAKE_C_FLAGS_ASAN
+      "${CMAKE_C_FLAGS_DEBUG} -fsanitize=address -fno-omit-frame-pointer"
+      CACHE STRING
+            "Flags used by the C compiler for Asan build type or configuration."
+            FORCE)
+  mark_as_advanced(CMAKE_C_FLAGS_ASAN)
 
-set(CMAKE_CXX_FLAGS_ASAN
-    "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address -fno-omit-frame-pointer"
-    CACHE STRING
-          "Flags used by the C++ compiler for Asan build type or configuration."
-          FORCE)
+  set(CMAKE_CXX_FLAGS_ASAN
+      "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address -fno-omit-frame-pointer"
+      CACHE
+        STRING
+        "Flags used by the C++ compiler for Asan build type or configuration."
+        FORCE)
+  mark_as_advanced(CMAKE_CXX_FLAGS_ASAN)
 
-set(CMAKE_Fortran_FLAGS_ASAN
-    "${CMAKE_Fortran_FLAGS_DEBUG} -fsanitize=address -fno-omit-frame-pointer"
-    CACHE
-      STRING
-      "Flags used by the Fortran compiler for Asan build type or configuration."
-      FORCE)
+  set(CMAKE_Fortran_FLAGS_ASAN
+      "${CMAKE_Fortran_FLAGS_DEBUG} -fsanitize=address -fno-omit-frame-pointer"
+      CACHE
+        STRING
+        "Flags used by the Fortran compiler for Asan build type or configuration."
+        FORCE)
+  mark_as_advanced(CMAKE_Fortran_FLAGS_ASAN)
 
-set(CMAKE_EXE_LINKER_FLAGS_ASAN
-    "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} -fsanitize=address"
-    CACHE STRING
-          "Linker flags to be used to create executables for Asan build type."
-          FORCE)
+  set(CMAKE_EXE_LINKER_FLAGS_ASAN
+      "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} -fsanitize=address"
+      CACHE STRING
+            "Linker flags to be used to create executables for Asan build type."
+            FORCE)
+  mark_as_advanced(CMAKE_EXE_LINKER_FLAGS_ASAN)
 
-set(CMAKE_SHARED_LINKER_FLAGS_ASAN
-    "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} -fsanitize=address"
-    CACHE
-      STRING
-      "Linker lags to be used to create shared libraries for Asan build type."
-      FORCE)
+  set(CMAKE_SHARED_LINKER_FLAGS_ASAN
+      "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} -fsanitize=address"
+      CACHE
+        STRING
+        "Linker lags to be used to create shared libraries for Asan build type."
+        FORCE)
+  mark_as_advanced(CMAKE_SHARED_LINKER_FLAGS_ASAN)
+endif()
 
-set(CMAKE_C_FLAGS_GPROF
-    "${CMAKE_C_FLAGS_DEBUG} -pg"
-    CACHE STRING
-          "Flags used by the C compiler for Gprof build type or configuration."
-          FORCE)
+if(${CMAKE_BUILD_TYPE} STREQUAL "Gprof")
+  set(CMAKE_C_FLAGS_GPROF
+      "${CMAKE_C_FLAGS_DEBUG} -pg"
+      CACHE
+        STRING
+        "Flags used by the C compiler for Gprof build type or configuration."
+        FORCE)
+  mark_as_advanced(CMAKE_C_FLAGS_GPROF)
 
-set(CMAKE_CXX_FLAGS_GPROF
-    "${CMAKE_CXX_FLAGS_DEBUG} -pg"
-    CACHE
-      STRING
-      "Flags used by the C++ compiler for Gprof build type or configuration."
-      FORCE)
+  set(CMAKE_CXX_FLAGS_GPROF
+      "${CMAKE_CXX_FLAGS_DEBUG} -pg"
+      CACHE
+        STRING
+        "Flags used by the C++ compiler for Gprof build type or configuration."
+        FORCE)
+  mark_as_advanced(CMAKE_CXX_FLAGS_GPROF)
 
-set(CMAKE_Fortran_FLAGS_GPROF
-    "${CMAKE_Fortran_FLAGS_DEBUG} -pg"
-    CACHE
-      STRING
-      "Flags used by the Fortran compiler for Gprof build type or configuration."
-      FORCE)
+  set(CMAKE_Fortran_FLAGS_GPROF
+      "${CMAKE_Fortran_FLAGS_DEBUG} -pg"
+      CACHE
+        STRING
+        "Flags used by the Fortran compiler for Gprof build type or configuration."
+        FORCE)
+  mark_as_advanced(CMAKE_Fortran_FLAGS_GPROF)
 
-set(CMAKE_EXE_LINKER_FLAGS_GPROF
-    "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} -pg"
-    CACHE STRING
-          "Linker flags to be used to create executables for Gprof build type."
-          FORCE)
+  set(CMAKE_EXE_LINKER_FLAGS_GPROF
+      "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} -pg"
+      CACHE
+        STRING
+        "Linker flags to be used to create executables for Gprof build type."
+        FORCE)
+  mark_as_advanced(CMAKE_EXE_LINKER_FLAGS_GPROF)
 
-set(CMAKE_SHARED_LINKER_FLAGS_GPROF
-    "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} -pg"
-    CACHE
-      STRING
-      "Linker lags to be used to create shared libraries for Gprof build type."
-      FORCE)
+  set(CMAKE_SHARED_LINKER_FLAGS_GPROF
+      "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} -pg"
+      CACHE
+        STRING
+        "Linker lags to be used to create shared libraries for Gprof build type."
+        FORCE)
+  mark_as_advanced(CMAKE_SHARED_LINKER_FLAGS_GPROF)
+endif()
 
-set(GOMA_WARNINGS
-    "-Wall -Wextra -Wno-unused-parameter -Wimplicit-fallthrough"
-    CACHE STRING "set warnings for goma C and CXX")
-set(GOMA_DEBUG_FLAGS
-    "-O0 -ggdb3"
-    CACHE STRING "set debug flags for goma C and CXX")
-set(GOMA_RELEASE_FLAGS
-    "-O2 -DNDEBUG"
-    CACHE STRING "set release flags for goma C and CXX")
+option(ENABLE_WARNINGS "ENABLE_WARNINGS" ON)
 
 execute_process(
   COMMAND git describe --dirty --always --tags
   OUTPUT_VARIABLE goma_git_version
-  RESULT_VARIABLE goma_using_git)
+  RESULT_VARIABLE goma_using_git
+  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+  ERROR_QUIET)
+  
 if(goma_using_git EQUAL 0)
   string(REGEX REPLACE "\n$" "" goma_git_version "${goma_git_version}")
 else()
@@ -821,15 +848,8 @@ else()
 endif()
 if(goma_git_version)
   list(APPEND GOMA_COMPILE_DEFINITIONS GIT_VERSION=${goma_git_version})
+  MESSAGE(STATUS "Git found setting version: ${goma_git_version}")
 endif()
-
-# Select flags.
-set(CMAKE_CXX_FLAGS "${GOMA_WARNINGS}")
-set(CMAKE_CXX_FLAGS_RELEASE "${GOMA_RELEASE_FLAGS}")
-set(CMAKE_CXX_FLAGS_DEBUG "${GOMA_DEBUG_FLAGS}")
-set(CMAKE_C_FLAGS "${GOMA_WARNINGS}")
-set(CMAKE_C_FLAGS_RELEASE "${GOMA_RELEASE_FLAGS}")
-set(CMAKE_C_FLAGS_DEBUG "${GOMA_DEBUG_FLAGS}")
 
 message(STATUS "CMAKE_C_COMPILER=${CMAKE_C_COMPILER}")
 message(STATUS "CMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}")
@@ -844,18 +864,31 @@ if(ENABLE_PETSC AND PETSC_FOUND)
 endif()
 
 message(STATUS "CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
-message(STATUS "CMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}")
-message(STATUS "CMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}")
-message(STATUS "CMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}")
-message(STATUS "CMAKE_CXX_FLAGS_ASAN=${CMAKE_CXX_FLAGS_ASAN}")
-message(STATUS "CMAKE_Fortran_FLAGS=${CMAKE_Fortran_FLAGS}")
-message(STATUS "CMAKE_Fortran_FLAGS_RELEASE=${CMAKE_Fortran_FLAGS_RELEASE}")
-message(STATUS "CMAKE_Fortran_FLAGS_DEBUG=${CMAKE_Fortran_FLAGS_DEBUG}")
-message(STATUS "CMAKE_Fortran_FLAGS_ASAN=${CMAKE_Fortran_FLAGS_ASAN}")
-message(STATUS "CMAKE_C_FLAGS=${CMAKE_C_FLAGS}")
-message(STATUS "CMAKE_C_FLAGS_RELEASE=${CMAKE_C_FLAGS_RELEASE}")
-message(STATUS "CMAKE_C_FLAGS_DEBUG=${CMAKE_C_FLAGS_DEBUG}")
-message(STATUS "CMAKE_C_FLAGS_ASAN=${CMAKE_C_FLAGS_ASAN}")
+if(${CMAKE_BUILD_TYPE} STREQUAL "RelWithDebInfo")
+  message(STATUS "CMAKE_C_FLAGS_RELWITHDEBINFO=${CMAKE_C_FLAGS_RELWITHDEBINFO}")
+  message(
+    STATUS "CMAKE_CXX_FLAGS_RELWITHDEBINFO=${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+  message(
+    STATUS
+      "CMAKE_Fortran_FLAGS_RELWITHDEBINFO=${CMAKE_Fortran_FLAGS_RELWITHDEBINFO}"
+  )
+elseif(${CMAKE_BUILD_TYPE} STREQUAL "Release")
+  message(STATUS "CMAKE_C_FLAGS_RELEASE=${CMAKE_C_FLAGS_RELEASE}")
+  message(STATUS "CMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}")
+  message(STATUS "CMAKE_Fortran_FLAGS_RELEASE=${CMAKE_Fortran_FLAGS_RELEASE}")
+elseif(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+  message(STATUS "CMAKE_C_FLAGS_DEBUG=${CMAKE_C_FLAGS_DEBUG}")
+  message(STATUS "CMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}")
+  message(STATUS "CMAKE_Fortran_FLAGS_DEBUG=${CMAKE_Fortran_FLAGS_DEBUG}")
+elseif(${CMAKE_BUILD_TYPE} STREQUAL "Asan")
+  message(STATUS "CMAKE_C_FLAGS_ASAN=${CMAKE_C_FLAGS_ASAN}")
+  message(STATUS "CMAKE_CXX_FLAGS_ASAN=${CMAKE_CXX_FLAGS_ASAN}")
+  message(STATUS "CMAKE_Fortran_FLAGS_ASAN=${CMAKE_Fortran_FLAGS_ASAN}")
+elseif(${CMAKE_BUILD_TYPE} STREQUAL "Gprof")
+  message(STATUS "CMAKE_C_FLAGS_GPROF=${CMAKE_C_FLAGS_GPROF}")
+  message(STATUS "CMAKE_CXX_FLAGS_GPROF=${CMAKE_CXX_FLAGS_GPROF}")
+  message(STATUS "CMAKE_Fortran_FLAGS_GPROF=${CMAKE_Fortran_FLAGS_GPROF}")
+endif()
 message("\n")
 message(STATUS "Goma compile defines:")
 foreach(d ${GOMA_COMPILE_DEFINITIONS})
@@ -875,6 +908,10 @@ set(GOMA_TPL_INCLUDES
 set(GOMA_TPL_LIBRARY_DIRS
     ${SEACASExodus_LIBRARY_DIRS} ${SEACASExodus_TPL_LIBRARY_DIRS}
     ${Trilinos_LIBRARY_DIRS} ${Trilinos_TPL_LIBRARY_DIRS})
+if(ENABLE_PETSC AND PETSC_FOUND)
+  set(GOMA_TPL_LIBRARY_DIRS ${GOMA_TPL_LIBRARY_DIRS}
+                            ${PETSC_STATIC_LIBRARY_DIRS})
+endif()
 
 set(GOMA_TPL_LIBRARIES
     ${SEACASExodus_LIBRARIES}
@@ -885,6 +922,9 @@ set(GOMA_TPL_LIBRARIES
     ${Trilinos_EXTRA_LD_FLAGS}
     ${MPI_C_LIBRARIES}
     ${MPI_Fortran_LIBRARIES})
+if(ENABLE_PETSC AND PETSC_FOUND)
+  set(GOMA_TPL_LIBRARIES ${GOMA_TPL_LIBRARIES} ${PETSC_STATIC_LIBRARIES})
+endif()
 
 # remove some C++ files from unity build as MACROS conflict with Trilinos
 # headers
@@ -896,22 +936,71 @@ add_library(goma_user ${GOMA_USER_SOURCES} ${GOMA_USER_INCLUDES})
 target_include_directories(goma_user PUBLIC include)
 target_include_directories(goma_user SYSTEM PRIVATE ${GOMA_TPL_INCLUDES})
 target_compile_definitions(goma_user PUBLIC ${GOMA_COMPILE_DEFINITIONS})
+if(ENABLE_WARNINGS)
+  target_compile_options(
+    goma_user
+    PRIVATE
+      $<$<AND:$<C_COMPILER_ID:Clang>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
+      -Wextra
+      -Wno-unused-parameter>
+      $<$<AND:$<C_COMPILER_ID:GNU>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
+      -Wextra
+      -Wno-unused-parameter
+      -Wimplicit-fallthrough>)
+endif()
 
 add_library(goma ${GOMA_SOURCES} ${GOMA_INCLUDES})
 target_include_directories(goma PUBLIC include)
 target_include_directories(goma SYSTEM PRIVATE ${GOMA_TPL_INCLUDES})
 target_link_directories(goma PUBLIC ${GOMA_TPL_LIBRARY_DIRS})
-target_link_libraries(goma ${GOMA_TPL_LIBRARIES} gds)
+target_link_libraries(goma PUBLIC ${GOMA_TPL_LIBRARIES} gds)
 target_compile_definitions(goma PUBLIC ${GOMA_COMPILE_DEFINITIONS})
+if(ENABLE_WARNINGS)
+  target_compile_options(
+    goma
+    PRIVATE
+      $<$<AND:$<C_COMPILER_ID:Clang>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
+      -Wextra
+      -Wno-unused-parameter>
+      $<$<AND:$<C_COMPILER_ID:GNU>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
+      -Wextra
+      -Wno-unused-parameter
+      -Wimplicit-fallthrough>)
+endif()
 
 add_library(gds ${GDS_SOURCES} ${GDS_INCLUDES})
 target_include_directories(gds PUBLIC include)
+if(ENABLE_WARNINGS)
+  target_compile_options(
+    gds
+    PRIVATE
+      $<$<AND:$<C_COMPILER_ID:Clang>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
+      -Wextra
+      -Wno-unused-parameter>
+      $<$<AND:$<C_COMPILER_ID:GNU>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
+      -Wextra
+      -Wno-unused-parameter
+      -Wimplicit-fallthrough>)
+endif()
 
 add_library(goma_util ${GOMA_UTIL_SOURCES} ${GOMA_UTIL_INCLUDES})
 target_include_directories(goma_util PUBLIC include)
 target_include_directories(goma_util SYSTEM PRIVATE ${GOMA_TPL_INCLUDES})
 target_link_libraries(goma_util PUBLIC ${GOMA_TPL_LIBRARIES} gds)
+target_link_directories(goma_util PUBLIC ${GOMA_TPL_LIBRARY_DIRS})
 target_compile_definitions(goma_util PUBLIC ${GOMA_COMPILE_DEFINITIONS})
+if(ENABLE_WARNINGS)
+  target_compile_options(
+    goma_util
+    PRIVATE
+      $<$<AND:$<C_COMPILER_ID:Clang>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
+      -Wextra
+      -Wno-unused-parameter>
+      $<$<AND:$<C_COMPILER_ID:GNU>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
+      -Wextra
+      -Wno-unused-parameter
+      -Wimplicit-fallthrough>)
+endif()
 
 add_executable(goma_exe src/main.c)
 set_target_properties(goma_exe PROPERTIES OUTPUT_NAME "goma")
@@ -920,9 +1009,41 @@ target_include_directories(goma_exe SYSTEM PRIVATE ${GOMA_TPL_INCLUDES})
 target_link_libraries(goma_exe PUBLIC ${GOMA_TPL_LIBRARIES} goma goma_user
                                       goma_util)
 target_compile_definitions(goma_exe PUBLIC ${GOMA_COMPILE_DEFINITIONS})
+if(ENABLE_WARNINGS)
+  target_compile_options(
+    goma_exe
+    PRIVATE
+      $<$<AND:$<C_COMPILER_ID:Clang>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
+      -Wextra
+      -Wno-unused-parameter>
+      $<$<AND:$<C_COMPILER_ID:GNU>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
+      -Wextra
+      -Wno-unused-parameter
+      -Wimplicit-fallthrough>)
+endif()
+
+add_executable(fix_exe src/fix_main.c)
+set_target_properties(fix_exe PROPERTIES OUTPUT_NAME "fix")
+target_include_directories(fix_exe PUBLIC include)
+target_include_directories(fix_exe SYSTEM PRIVATE ${GOMA_TPL_INCLUDES})
+target_link_libraries(fix_exe PUBLIC ${GOMA_TPL_LIBRARIES} goma goma_user
+                                      goma_util)
+target_compile_definitions(fix_exe PUBLIC ${GOMA_COMPILE_DEFINITIONS})
+if(ENABLE_WARNINGS)
+  target_compile_options(
+    fix_exe
+    PRIVATE
+      $<$<AND:$<C_COMPILER_ID:Clang>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
+      -Wextra
+      -Wno-unused-parameter>
+      $<$<AND:$<C_COMPILER_ID:GNU>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
+      -Wextra
+      -Wno-unused-parameter
+      -Wimplicit-fallthrough>)
+endif()
 
 install(
-  TARGETS goma_exe
+  TARGETS goma_exe fix_exe
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
   RUNTIME DESTINATION bin

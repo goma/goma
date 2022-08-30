@@ -883,10 +883,17 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
         goto free_and_clear;
       }
 
-      if (((vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV) &&
-           pd->v[pg->imtrx][POLYMER_STRESS11] && af->Assemble_Jacobian == TRUE) ||
-          ((pd->v[pg->imtrx][EM_E1_REAL] && pd->v[pg->imtrx][EM_H1_REAL]) &&
-           af->Assemble_Jacobian == TRUE)) {
+      bool enable_numerical_jacobian = false;
+      for (int mn = 0; mn < upd->Num_Mat; mn++) {
+        if (((vn_glob[mn]->evssModel == LOG_CONF || vn_glob[mn]->evssModel == LOG_CONF_GRADV) &&
+             pd_glob[mn]->v[pg->imtrx][POLYMER_STRESS11]) ||
+            ((pd_glob[mn]->v[pg->imtrx][EM_E1_REAL] && pd_glob[mn]->v[pg->imtrx][EM_H1_REAL]))) {
+          enable_numerical_jacobian = true;
+          break;
+        }
+      }
+
+      if (enable_numerical_jacobian && af->Assemble_Jacobian == TRUE) {
         err = numerical_jacobian_compute_stress(ams, x, resid_vector, delta_t, theta, x_old,
                                                 x_older, xdot, xdot_old, x_update, num_total_nodes,
                                                 First_Elem_Side_BC_Array[pg->imtrx], Debug_Flag,
@@ -968,6 +975,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
         case AC_VOLUME:
         case AC_LS_VEL:
         case AC_POSITION:
+        case AC_ANGLE:
           std_aug_cond(iAC, nAC, x_AC, bAC, cAC, dAC, gAC, numProcUnknowns, cx, &mf_args);
           break;
 
@@ -1065,10 +1073,17 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
     if (Solver_Output_Format & 16)
       DPRINTF(stdout, "%7.1e ", Norm[0][2]);
 
+    fflush(stdout);
+
     if ((inewton > 0) && (Norm[0][2] < Epsilon[pg->imtrx][0]) &&
         (Norm[0][0] < Epsilon[pg->imtrx][0]) && (Norm[2][2] < Epsilon[pg->imtrx][0]) &&
         (Norm[2][0] < Epsilon[pg->imtrx][0])) {
       *converged = (Epsilon[pg->imtrx][2] > 1.0) ? TRUE : FALSE;
+    }
+    if (!isfinite(Norm[0][0]) || !isfinite(Norm[0][1]) || !isfinite(Norm[0][2])) {
+      DPRINTF(stderr, "\nNaN found in residual norms\n");
+      return_value = -1;
+      goto free_and_clear;
     }
 
 #ifdef DEBUG_NORM
@@ -1156,17 +1171,20 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
       }
 
       if (nAC && inewton && (AC_Resid_Norm_stack[2] > 0) && (AC_Resid_Norm_stack[2] != 1) &&
-          (AC_Resid_Norm_stack[1] > 0) && (AC_Resid_Norm_stack[0] != 1) &&
+          (AC_Resid_Norm_stack[1] > 0) && (AC_Resid_Norm_stack[1] != 1) &&
           (inewton <= 1 || ((AC_Resid_Norm_stack[0] > 0) && (AC_Resid_Norm_stack[0] != 1)))) {
 #if 1
         if (inewton <= 1) {
           AConv_order = log10(AC_Resid_Norm_stack[2]) / log10(AC_Resid_Norm_stack[1]);
           AConv_rate = log10(AC_Resid_Norm_stack[1]) - log10(AC_Resid_Norm_stack[2]);
-        } else {
+        } else if (DOUBLE_NONZERO(1.0 - AC_Resid_Norm_stack[1] / AC_Resid_Norm_stack[0])) {
           AConv_order = log10(AC_Resid_Norm_stack[2] / AC_Resid_Norm_stack[1]) /
                         log10(AC_Resid_Norm_stack[1] / AC_Resid_Norm_stack[0]);
           AConv_rate = -0.5 * log10(AC_Resid_Norm_stack[0]) + 2 * log10(AC_Resid_Norm_stack[1]) -
                        1.5 * log10(AC_Resid_Norm_stack[2]);
+        } else {
+          AConv_order = log10(AC_Resid_Norm_stack[2]) / log10(AC_Resid_Norm_stack[1]);
+          AConv_rate = log10(AC_Resid_Norm_stack[1]) - log10(AC_Resid_Norm_stack[2]);
         }
 #else
         AConv_order = log10(AC_Resid_Norm_stack[2]) / log10(AC_Resid_Norm_stack[1]);
@@ -1786,12 +1804,13 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
         (AC_Resid_Norm_stack[1] > 0) && (AC_Resid_Norm_stack[0] != 1) &&
         (inewton <= 1 || ((AC_Resid_Norm_stack[0] > 0) && (AC_Resid_Norm_stack[0] != 1)))) {
 #if 1
-      if (inewton <= 1) {
+      if (inewton <= 1 && DOUBLE_NONZERO(log10(AC_Resid_Norm_stack[1]))) {
         AConv_order = log10(AC_Resid_Norm_stack[2]) / log10(AC_Resid_Norm_stack[1]);
         ASoln_order = log10(AC_Soln_Norm_stack[2]) / log10(AC_Soln_Norm_stack[1]);
         AConv_rate = log10(AC_Resid_Norm_stack[1]) - log10(AC_Resid_Norm_stack[2]);
         ASoln_rate = log10(AC_Soln_Norm_stack[1]) - log10(AC_Soln_Norm_stack[2]);
-      } else {
+      } else if (AC_Resid_Norm_stack[0] > 0 && AC_Resid_Norm_stack[1] > 0 &&
+                 DOUBLE_NONZERO(log10(AC_Resid_Norm_stack[1] / AC_Resid_Norm_stack[0]))) {
         AConv_order = log10(AC_Resid_Norm_stack[2] / AC_Resid_Norm_stack[1]) /
                       log10(AC_Resid_Norm_stack[1] / AC_Resid_Norm_stack[0]);
         ASoln_order = log10(AC_Soln_Norm_stack[2] / AC_Soln_Norm_stack[1]) /
@@ -2060,50 +2079,35 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
           if (augc[iAC].Type == AC_USERBC) {
             DPRINTF(stdout, "\tBC[%4d] DF[%4d]=% 10.6e Update=% 10.6e\n", augc[iAC].BCID,
                     augc[iAC].DFID, x_AC[iAC], damp_factor * yAC[iAC]);
-          } else {
-            if (augc[iAC].Type == AC_USERMAT || augc[iAC].Type == AC_FLUX_MAT) {
-              DPRINTF(stdout, "\tMT[%4d] MP[%4d]=% 10.6e Update=% 10.6e\n", augc[iAC].MTID,
-                      augc[iAC].MPID, x_AC[iAC], damp_factor * yAC[iAC]);
-            } else {
-              if (augc[iAC].Type == AC_VOLUME) {
-                DPRINTF(stdout, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
-                        augc[iAC].VOLID, augc[iAC].evol, x_AC[iAC]);
-              } else {
-                if (augc[iAC].Type == AC_FLUX) {
-                  DPRINTF(stdout, "\tBC[%4d] DF[%4d]=% 10.6e Update=% 10.6e\n", augc[iAC].BCID,
-                          augc[iAC].DFID, x_AC[iAC], damp_factor * yAC[iAC]);
-                } else {
-                  if (augc[iAC].Type == AC_LGRM) {
-                    DPRINTF(stdout, "\tAC[%d], Lagrange Multiplier=%10.6e Update=%10.6e\n", iAC,
-                            x_AC[iAC], damp_factor * yAC[iAC]);
-                  } else {
-                    if (augc[iAC].Type == AC_ARC_LENGTH) {
-                      DPRINTF(stdout, "\tAC[%d], Arc Length Parameter=%10.6e Update=%10.6e\n", iAC,
-                              x_AC[iAC], damp_factor * yAC[iAC]);
-                    } else {
-                      if (augc[iAC].Type == AC_OVERLAP) {
-                        DPRINTF(stdout,
-                                "\tAC[%d], Elem %d Side %d  Dim %d:  LM=%10.6e  Update=%10.6e\n",
-                                iAC, augc[iAC].lm_elem, augc[iAC].lm_side, augc[iAC].lm_dim,
-                                x_AC[iAC], damp_factor * yAC[iAC]);
-                      } else {
-                        if (augc[iAC].Type == AC_PERIODIC) {
-                          DPRINTF(stdout,
-                                  "\tAC[%d], Elem %d Side %d  Var %s:  LM=%10.6e  Update=%10.6e\n",
-                                  iAC, augc[iAC].lm_elem, augc[iAC].lm_side,
-                                  Var_Name[augc[iAC].VAR].name1, x_AC[iAC], damp_factor * yAC[iAC]);
-                        } else {
-                          if (augc[iAC].Type == AC_POSITION) {
-                            DPRINTF(stdout, "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n",
-                                    augc[iAC].MTID, augc[iAC].VOLID, augc[iAC].evol, x_AC[iAC]);
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
+          } else if (augc[iAC].Type == AC_USERMAT || augc[iAC].Type == AC_FLUX_MAT) {
+            DPRINTF(stdout, "\tMT[%4d] MP[%4d]=% 10.6e Update=% 10.6e\n", augc[iAC].MTID,
+                    augc[iAC].MPID, x_AC[iAC], damp_factor * yAC[iAC]);
+          } else if (augc[iAC].Type == AC_VOLUME) {
+            DPRINTF(stdout, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
+                    augc[iAC].VOLID, augc[iAC].evol, x_AC[iAC]);
+          } else if (augc[iAC].Type == AC_FLUX) {
+            DPRINTF(stdout, "\tBC[%4d] DF[%4d]=% 10.6e Update=% 10.6e\n", augc[iAC].BCID,
+                    augc[iAC].DFID, x_AC[iAC], damp_factor * yAC[iAC]);
+          } else if (augc[iAC].Type == AC_LGRM) {
+            DPRINTF(stdout, "\tAC[%d], Lagrange Multiplier=%10.6e Update=%10.6e\n", iAC, x_AC[iAC],
+                    damp_factor * yAC[iAC]);
+          } else if (augc[iAC].Type == AC_ARC_LENGTH) {
+            DPRINTF(stdout, "\tAC[%d], Arc Length Parameter=%10.6e Update=%10.6e\n", iAC, x_AC[iAC],
+                    damp_factor * yAC[iAC]);
+          } else if (augc[iAC].Type == AC_OVERLAP) {
+            DPRINTF(stdout, "\tAC[%d], Elem %d Side %d  Dim %d:  LM=%10.6e  Update=%10.6e\n", iAC,
+                    augc[iAC].lm_elem, augc[iAC].lm_side, augc[iAC].lm_dim, x_AC[iAC],
+                    damp_factor * yAC[iAC]);
+          } else if (augc[iAC].Type == AC_PERIODIC) {
+            DPRINTF(stdout, "\tAC[%d], Elem %d Side %d  Var %s:  LM=%10.6e  Update=%10.6e\n", iAC,
+                    augc[iAC].lm_elem, augc[iAC].lm_side, Var_Name[augc[iAC].VAR].name1, x_AC[iAC],
+                    damp_factor * yAC[iAC]);
+          } else if (augc[iAC].Type == AC_POSITION) {
+            DPRINTF(stdout, "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
+                    augc[iAC].VOLID, augc[iAC].evol, x_AC[iAC]);
+          } else if (augc[iAC].Type == AC_ANGLE) {
+            DPRINTF(stdout, "\tMT[%4d] ANG[%4d]=%10.6e Param=%10.6e\n", augc[iAC].VOLID,
+                    augc[iAC].MTID, augc[iAC].evol, x_AC[iAC]);
           }
         }
       }

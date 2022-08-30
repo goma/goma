@@ -1131,7 +1131,7 @@ void bc_matrl_index(Exo_DB *exo)
                                node_matrl_1, node_matrl_2, node_matrl_3, node_matrl_4, ibc);
         }
       } else {
-        if (num_matrl_needed > 1) {
+        if (num_matrl_needed > 2) {
           printf("%s P_%d: problem in finding a needed second matrl index:\n", yo, ProcID);
           GOMA_EH(GOMA_ERROR, "bc_matrl_index ERROR");
         }

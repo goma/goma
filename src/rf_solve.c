@@ -440,7 +440,8 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 #else
   int relax_bit = FALSE;
 #endif
-  int no_relax_retry = 8;
+  int no_relax_retry = 6;
+  int nonconv_roll = 0;
 
   static const char yo[] = "solve_problem"; /* So my name is in a string.        */
 
@@ -477,7 +478,8 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 #endif
 
   /* Determine if external area fraction updates are required */
-  if ((Num_Var_In_Type[MASS_FRACTION]) && (efv->ev_etch_area > -1) && (efv->ev_etch_depth > -1)) {
+  if ((Num_Var_In_Type[pg->imtrx][MASS_FRACTION]) && (efv->ev_etch_area > -1) &&
+      (efv->ev_etch_depth > -1)) {
     update_etch_area = TRUE;
     fprintf(stderr, " External fields etch area %d and etch depth %d will be updated.\n",
             efv->ev_etch_area, efv->ev_etch_depth);
@@ -968,21 +970,28 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
       DPRINTF(stdout, "Number of extra unknowns: %4d\n\n", nAC);
 
       for (iAC = 0; iAC < nAC; iAC++) {
+        evol_local = augc[iAC].evol;
+#ifdef PARALLEL
+        if (Num_Proc > 1 && (augc[iAC].Type == AC_VOLUME || augc[iAC].Type == AC_POSITION ||
+                             augc[iAC].Type == AC_ANGLE)) {
+          MPI_Allreduce(&evol_local, &evol_global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+          evol_local = evol_global;
+        }
+#endif
         if (augc[iAC].Type == AC_USERBC) {
           DPRINTF(stdout, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].BCID, augc[iAC].DFID, x_AC[iAC]);
         } else if (augc[iAC].Type == AC_USERMAT || augc[iAC].Type == AC_FLUX_MAT) {
           DPRINTF(stdout, "\tMT[%4d] MP[%4d]=% 10.6e\n", augc[iAC].MTID, augc[iAC].MPID, x_AC[iAC]);
         } else if (augc[iAC].Type == AC_VOLUME) {
-          evol_local = augc[iAC].evol;
-#ifdef PARALLEL
-          if (Num_Proc > 1) {
-            MPI_Allreduce(&evol_local, &evol_global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-
-            evol_local = evol_global;
-          }
-#endif /* PARALLEL */
           DPRINTF(stdout, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
                   augc[iAC].VOLID, evol_local, x_AC[iAC]);
+        } else if (augc[iAC].Type == AC_POSITION) {
+          DPRINTF(stdout, "\tNodeSet[%4d]_Pos = %10.6e F_bal = %10.6e MT[%4d] Param=%10.6e\n",
+                  augc[iAC].MTID, evol_local, augc[iAC].lm_resid, augc[iAC].VOLID, x_AC[iAC]);
+        } else if (augc[iAC].Type == AC_ANGLE) {
+          evol_local = augc[iAC].lm_resid + augc[iAC].CONSTV;
+          DPRINTF(stdout, "\tNodeSet[%4d]_Ang = %g F_bal = %6.3e MT[%4d] Param=%6.3e\n",
+                  augc[iAC].MTID, evol_local, augc[iAC].lm_resid, augc[iAC].VOLID, x_AC[iAC]);
         } else if (augc[iAC].Type == AC_LS_VEL) {
           evol_local = augc[iAC].lsvol;
           lsvel_local = augc[iAC].lsvel;
@@ -1031,6 +1040,12 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
       /*
        * Compute global volumetric quantities
        */
+      for (i = 0; i < nn_volume; i++) {
+        evaluate_volume_integral(exo, dpi, pp_volume[i]->volume_type, pp_volume[i]->volume_name,
+                                 pp_volume[i]->blk_id, pp_volume[i]->species_no,
+                                 pp_volume[i]->volume_fname, pp_volume[i]->params,
+                                 pp_volume[i]->num_params, NULL, x, xdot, delta_t, time1, 1);
+      }
       if (Output_Variable_Stats) {
         err = variable_stats(x, time1);
         GOMA_EH(err, "Problem with variable_stats!");
@@ -1038,13 +1053,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
           fflush(stdout);
       }
 
-      for (i = 0; i < nn_volume; i++) {
-        evaluate_volume_integral(exo, dpi, pp_volume[i]->volume_type, pp_volume[i]->volume_name,
-                                 pp_volume[i]->blk_id, pp_volume[i]->species_no,
-                                 pp_volume[i]->volume_fname, pp_volume[i]->params,
-                                 pp_volume[i]->num_params, NULL, x, xdot, delta_t, time1, 1);
-      }
-
+      DPRINTF(stderr, "\t\tconverged SS!\n");
     } /* if converged */
 
     if (Anneal_Mesh) {
@@ -1065,6 +1074,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
                                   xdot_old, x_update, &converged, &nprint, tnv, tnv_post, tev,
                                   tev_post, rd, gindex, p_gsize, gvec, gvec_elem, time1, exo, dpi);
       GOMA_EH(err, "Problem from solve_stability_problem.");
+      DPRINTF(stderr, "\t\tcompleted LSA!\n");
     }
 
     if (Particle_Dynamics) {
@@ -1169,12 +1179,6 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
      */
     exchange_dof(cx[0], dpi, x, 0);
 
-    if (Output_Variable_Stats) {
-      err = variable_stats(x, time);
-      GOMA_EH(err, "Problem with variable_stats!");
-      if (ProcID == 0)
-        fflush(stdout);
-    }
     /*
      * Now copy the initial solution, x[], into the history solutions
      * x_old[], etc. Note, xdot[] = xdot_old[] = 0 at this point,
@@ -1321,7 +1325,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
         for (w = 0; w < efv->Num_external_field; w++) {
           if (strcmp(efv->field_type[w], "transient") == 0) {
             err = rd_trans_vectors_from_exoII(x_old, efv->file_nm[w], w, n, &timeValueReadTrans,
-                                              cx[0], dpi);
+                                              exo, cx[0], dpi);
             if (err != 0) {
               DPRINTF(stderr, "%s: err from rd_trans_vectors_from_exoII\n", yo);
             }
@@ -1796,17 +1800,10 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
       /* For transient, reset the Newton damping factors after a
        *   successful time step
        */
-      if (nt > 0) {
-        if (converged) {
-          damp_factor2 = -1.;
-          damp_factor1 = 1.0;
-        } else if (nt < no_relax_retry) {
-          damp_factor2 = damp_factor_org[1];
-          damp_factor1 = damp_factor_org[0];
-          custom_tol1 = toler_org[0];
-          custom_tol2 = toler_org[1];
-          custom_tol3 = toler_org[2];
-        }
+      if (nt > 0 && converged) {
+        damp_factor2 = -1.;
+        damp_factor1 = 1.0;
+        nonconv_roll = 0;
       }
 #endif
 #ifdef GOMA_ENABLE_OMEGA_H
@@ -2049,8 +2046,8 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
             /* Write out the full solution */
             {
               write_solution(ExoFileOut, resid_vector, x, x_sens_p, x_old, xdot, xdot_old, tev,
-                             tev_post, gv, rd, gindex, p_gsize, gvec, gvec_elem, &nprint, delta_t,
-                             theta, time, x_pp, exo, dpi);
+                             tev_post, gv, rd, gvec, gvec_elem, &nprint, delta_t, theta, time, x_pp,
+                             exo, dpi);
               nprint++;
             } else if (Num_Export_XP > 0)
             /* Just update the post-processing fields */
@@ -2076,47 +2073,33 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
             DPRINTF(stdout, "Number of extra unknowns: %4d\n\n", nAC);
 
             for (iAC = 0; iAC < nAC; iAC++) {
+              evol_local = augc[iAC].evol;
+#ifdef PARALLEL
+              if (Num_Proc > 1 && (augc[iAC].Type == AC_VOLUME || augc[iAC].Type == AC_POSITION ||
+                                   augc[iAC].Type == AC_ANGLE)) {
+                MPI_Allreduce(&evol_local, &evol_global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+                evol_local = evol_global;
+              }
+#endif
               if (augc[iAC].Type == AC_USERBC) {
                 DPRINTF(stdout, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].BCID, augc[iAC].DFID,
                         x_AC[iAC]);
-/* temporary printing */
-#if 0
-                  if( (int)augc[iAC].DataFlt[1] == 6)
-			{
-		  DPRINTF(stdout, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].DFID, 0, BC_Types[augc[iAC].DFID].BC_Data_Float[0]);
-		  DPRINTF(stdout, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].DFID, 2, BC_Types[augc[iAC].DFID].BC_Data_Float[2]);
-		  DPRINTF(stdout, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].DFID, 3, BC_Types[augc[iAC].DFID].BC_Data_Float[3]);
-                  augc[iAC].DataFlt[5] += augc[iAC].DataFlt[6];
-		  DPRINTF(stdout, "\tAC[%4d] DF[%4d]=% 10.6e\n", iAC, 5, augc[iAC].DataFlt[5]);
-
-			}
-                  if( (int)augc[iAC].DataFlt[1] == 61)
-			{
-                  augc[iAC].DataFlt[5] += augc[iAC].DataFlt[6];
-		  DPRINTF(stdout, "\tAC[%4d] DF[%4d]=% 10.6e\n", iAC, 5, augc[iAC].DataFlt[5]);
-
-			}
-#endif
               } else if (augc[iAC].Type == AC_USERMAT || augc[iAC].Type == AC_FLUX_MAT) {
                 DPRINTF(stdout, "\tMT[%4d] MP[%4d]=% 10.6e\n", augc[iAC].MTID, augc[iAC].MPID,
                         x_AC[iAC]);
               } else if (augc[iAC].Type == AC_VOLUME) {
-                evol_local = augc[iAC].evol;
-#ifdef PARALLEL
-                if (Num_Proc > 1) {
-                  MPI_Allreduce(&evol_local, &evol_global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                  evol_local = evol_global;
-                }
-#endif
                 DPRINTF(stdout, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
                         augc[iAC].VOLID, evol_local, x_AC[iAC]);
               } else if (augc[iAC].Type == AC_FLUX) {
                 DPRINTF(stdout, "\tBC[%4d] DF[%4d]=%10.6e\n", augc[iAC].BCID, augc[iAC].DFID,
                         x_AC[iAC]);
               } else if (augc[iAC].Type == AC_POSITION) {
-                DPRINTF(stdout, "\tNodeSet[%4d]_Pos = %10.6e F_bal = %10.6e VC[%4d] Param=%10.6e\n",
-                        augc[iAC].MTID, augc[iAC].evol, augc[iAC].lm_resid, augc[iAC].VOLID,
-                        x_AC[iAC]);
+                DPRINTF(stdout, "\tNodeSet[%4d]_Pos = %10.6e F_bal = %10.6e MT[%4d] Param=%10.6e\n",
+                        augc[iAC].MTID, evol_local, augc[iAC].lm_resid, augc[iAC].VOLID, x_AC[iAC]);
+              } else if (augc[iAC].Type == AC_ANGLE) {
+                evol_local = augc[iAC].lm_resid + augc[iAC].CONSTV;
+                DPRINTF(stdout, "\tNodeSet[%4d]_Ang = %g F_bal = %6.3e MT[%4d] Param=%6.3e\n",
+                        augc[iAC].MTID, evol_local, augc[iAC].lm_resid, augc[iAC].VOLID, x_AC[iAC]);
               }
             }
           }
@@ -2375,8 +2358,8 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
           }
           if (Write_Intermediate_Solutions == 0) {
             write_solution(ExoFileOut, resid_vector, x, x_sens_p, x_old, xdot, xdot_old, tev,
-                           tev_post, gv, rd, gindex, p_gsize, gvec, gvec_elem, &nprint, delta_t,
-                           theta, time, x_pp, exo, dpi);
+                           tev_post, gv, rd, gvec, gvec_elem, &nprint, delta_t, theta, time, x_pp,
+                           exo, dpi);
             nprint++;
           }
         }
@@ -2403,11 +2386,21 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 
       else /* not converged or unsuccessful time step */
       {
-        if (relax_bit && ((n - nt) < no_relax_retry)) {
+        if (relax_bit && (nonconv_roll < no_relax_retry)) {
           /*success_dt = TRUE;  */
+#ifdef RESET_TRANSIENT_RELAXATION_PLEASE
+          nonconv_roll++;
+          if (nonconv_roll == 1 && nt != 0) {
+            damp_factor1 = damp_factor_org[0];
+            damp_factor2 = damp_factor_org[1];
+            custom_tol1 = toler_org[0];
+            custom_tol2 = toler_org[1];
+            custom_tol3 = toler_org[2];
+          }
+#endif
           if (inewton == -1) {
-            DPRINTF(stdout,
-                    "\nHmm... trouble on first step \n  Let's try some more relaxation  \n");
+            DPRINTF(stdout, "\nHmm... trouble on this step \n  Let's try some more relaxation %d\n",
+                    no_relax_retry - nonconv_roll);
             if ((damp_factor1 <= 1. && damp_factor1 >= 0.) &&
                 (damp_factor2 <= 1. && damp_factor2 >= 0.) &&
                 (damp_factor3 <= 1. && damp_factor3 >= 0.)) {
@@ -2422,7 +2415,8 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
             }
           } else if (!converged) {
             DPRINTF(stdout,
-                    "\nHmm... could not converge on first step\n Let's try some more iterations\n");
+                    "\nHmm... could not converge on this step\nLet's try some more iterations %d\n",
+                    no_relax_retry - nonconv_roll);
             dcopy1(numProcUnknowns, x, x_old);
             if (nAC > 0) {
               dcopy1(nAC, x_AC, x_AC_old);
@@ -2430,19 +2424,23 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
             if ((damp_factor1 <= 1. && damp_factor1 >= 0.) &&
                 (damp_factor2 <= 1. && damp_factor2 >= 0.) &&
                 (damp_factor3 <= 1. && damp_factor3 >= 0.)) {
-              custom_tol1 *= 100.;
-              custom_tol2 *= 100.;
-              custom_tol3 *= 100.;
-              DPRINTF(stdout, "  custom tolerances %g %g %g  \n", custom_tol1, custom_tol2,
-                      custom_tol3);
+              if (nonconv_roll > 1 || nt == 0) {
+                custom_tol1 *= 100.;
+                custom_tol2 *= 100.;
+                custom_tol3 *= 100.;
+                DPRINTF(stdout, "  custom tolerances %g %g %g  \n", custom_tol1, custom_tol2,
+                        custom_tol3);
+              }
             } else {
-              damp_factor1 *= 2.0;
-              damp_factor1 = MIN(damp_factor1, 1.0);
+              if (nonconv_roll > 1 || nt == 0) {
+                damp_factor1 *= 2.0;
+                damp_factor1 = MIN(damp_factor1, 1.0);
+              }
               DPRINTF(stdout, "  damping factor %g  \n", damp_factor1);
             }
           } else {
-            DPRINTF(stderr, "Not Looking Good..., Iter: %d Converged: %d Success_dt: %d \n",
-                    inewton, converged, success_dt);
+            /*DPRINTF(stderr, "Not Looking Good..., Iter: %d Converged: %d Success_dt: %d \n",
+                    inewton, converged, success_dt); */
             DPRINTF(stderr, "\n\tlast time step failed, dt *= %g for next try!\n",
                     tran->time_step_decelerator);
 
@@ -2926,7 +2924,18 @@ int anneal_mesh(double x[],
 
   for (p = 0; p < dim; p++) {
     new_coord[p] = (double *)calloc(num_nodes, sizeof(double));
-    dcopy1(num_nodes, Coor[p], new_coord[p]);
+  }
+
+  if (dim > 0) {
+    dcopy1(exo->base_mesh->num_nodes, exo->base_mesh->x_coord, new_coord[0]);
+  }
+
+  if (dim > 1) {
+    dcopy1(exo->base_mesh->num_nodes, exo->base_mesh->y_coord, new_coord[1]);
+  }
+
+  if (dim > 2) {
+    dcopy1(exo->base_mesh->num_nodes, exo->base_mesh->z_coord, new_coord[2]);
   }
 
   nodal_result_vector = (double *)calloc(num_nodes, sizeof(double));
@@ -2957,6 +2966,9 @@ int anneal_mesh(double x[],
 
       gnn = exo->elem_node_list[exo->elem_node_pntr[ielem] + ln];
 
+      if (exo->ghost_node_to_base[gnn] == -1)
+        continue;
+
       memset(displacement, 0, sizeof(double) * DIM);
 
       if (moved[gnn] != 1) {
@@ -2980,7 +2992,7 @@ int anneal_mesh(double x[],
       }
 
       for (p = 0; p < dim; p++)
-        new_coord[p][gnn] += factor * displacement[p];
+        new_coord[p][exo->ghost_node_to_base[gnn]] += factor * displacement[p];
     }
   }
 
@@ -2990,18 +3002,18 @@ int anneal_mesh(double x[],
    */
 
   if (dim > 0) {
-    savex = exo->x_coord;
-    exo->x_coord = &new_coord[0][0];
+    savex = exo->base_mesh->x_coord;
+    exo->base_mesh->x_coord = &new_coord[0][0];
   }
 
   if (dim > 1) {
-    savey = exo->y_coord;
-    exo->y_coord = &new_coord[1][0];
+    savey = exo->base_mesh->y_coord;
+    exo->base_mesh->y_coord = &new_coord[1][0];
   }
 
   if (dim > 2) {
-    savez = exo->z_coord;
-    exo->z_coord = &new_coord[2][0];
+    savez = exo->base_mesh->z_coord;
+    exo->base_mesh->z_coord = &new_coord[2][0];
   }
 
   if (Num_Proc > 1)
@@ -3022,13 +3034,13 @@ int anneal_mesh(double x[],
    */
 
   if (dim > 0)
-    exo->x_coord = savex;
+    exo->base_mesh->x_coord = savex;
 
   if (dim > 1)
-    exo->y_coord = savey;
+    exo->base_mesh->y_coord = savey;
 
   if (dim > 2)
-    exo->z_coord = savez;
+    exo->base_mesh->z_coord = savez;
 
   if ((tev + tev_post) != 0) {
     gvec_elem = (double ***)array_alloc(2, exo->num_elem_blocks, tev + tev_post, sizeof(double *));
@@ -3083,6 +3095,13 @@ int anneal_mesh(double x[],
     (void)write_ascii_soln(x_file, NULL, numProcUnknowns, x, 0, 0.0, anneal_dat);
 
     fclose(anneal_dat);
+  }
+
+  MPI_Barrier(MPI_COMM_WORLD);
+
+  if (!Skip_Fix && Num_Proc > 1 && ProcID == 0) {
+    DPRINTF(stdout, "\nFixing exodus file %s\n", anneal_file);
+    fix_exo_file(Num_Proc, anneal_file);
   }
 
   /*
@@ -3185,6 +3204,20 @@ int anneal_mesh_with_external_field(const Exo_DB *exo)
 
   if (dim > 2) {
     Coor[2] = &new_coord[2][0];
+  }
+
+  // adjust base mesh
+  for (int i = 0; i < num_nodes; i++) {
+    int base_node = exo->ghost_node_to_base[i];
+    if (base_node != -1) {
+      exo->base_mesh->x_coord[base_node] = Coor[0][i];
+      if (dim > 1) {
+        exo->base_mesh->y_coord[base_node] = Coor[1][i];
+      }
+      if (dim > 2) {
+        exo->base_mesh->z_coord[base_node] = Coor[2][i];
+      }
+    }
   }
 
   for (p = 0; p < dim; p++) {
