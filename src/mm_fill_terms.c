@@ -3680,7 +3680,7 @@ int assemble_momentum(dbl time,       /* current time */
            * J_m_G
            */
           if (gn->ConstitutiveEquation == BINGHAM_MIXED ||
-              (pdv[POLYMER_STRESS11] &&
+              (pd->gv[POLYMER_STRESS11] &&
                (vn->evssModel == EVSS_F || vn->evssModel == LOG_CONF ||
                 vn->evssModel == EVSS_GRADV || vn->evssModel == LOG_CONF_GRADV))) {
             for (b = 0; b < VIM; b++) {
@@ -3714,7 +3714,6 @@ int assemble_momentum(dbl time,       /* current time */
               }
             }
           }
-
           /*
            * J_m_d
            */
@@ -4244,8 +4243,7 @@ int assemble_continuity(dbl time_value, /* current time */
      */
 
     w0 =
-        (int)
-            mp->u_density[0]; /* This is the species number that is transported HYDRODYNAMICally  */
+        (int)mp->u_density[0]; /* This is the species number that is transported HYDRODYNAMICally */
 
     hydro_flux(&s_terms, w0, tt, dt, pg_data->hsquared);
 
@@ -9328,7 +9326,6 @@ int load_fv_grads(void)
         for (r = 0; r < VIM; r++) {
           fv->grad_G[r][p][q] = 0.0;
           fv->grad_Gt[r][p][q] = 0.0;
-
 
           for (i = 0; i < dofs; i++) {
             fv->grad_G[r][p][q] += *esp->G[p][q][i] * bf[v]->grad_phi[i][r];
@@ -26478,7 +26475,7 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
   /* load up shear rate tensor based on velocity */
   for (a = 0; a < VIM; a++) {
     for (b = 0; b < VIM; b++) {
-      gamma[a][b] = grad_v[a][b] + grad_v[b][a];
+      gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
     }
   }
   if (do_dilational_visc) {
@@ -26889,7 +26886,7 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
             }
           }
         }
-        
+
         if (!kappaWipesMu) {
           for (b = 0; b < WIM; b++) {
             for (j = 0; j < ei[pg->imtrx]->dof[VELOCITY1]; j++) {
@@ -26902,17 +26899,6 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
         }
       }
 
-    if (pd->v[pg->imtrx][POLYMER_STRESS11]) {
-      for (p = 0; p < VIM; p++) {
-        for (q = 0; q < VIM; q++) {
-          for (b = 0; b < WIM; b++) {
-            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-              d_Pi->v[p][q][b][j] -= evss_f * (d_mu->v[b][j] - d_mus->v[b][j]) * gamma_cont[p][q];
-            }
-          }
-        }
-      }
-    }
     } else {
       /* For CYLINDRICAL, we can assume that all of the velocity
        * components share the same interpolating basis function.
@@ -26946,7 +26932,7 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
       for (p = 0; p < VIM; p++) {
         for (q = 0; q < VIM; q++) {
           for (b = 0; b < WIM; b++) {
-            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            for (j = 0; j < ei[pg->imtrx]->dof[VELOCITY1]; j++) {
               d_Pi->v[p][q][b][j] -= evss_f * (d_mu->v[b][j] - d_mus->v[b][j]) * gamma_cont[p][q];
             }
           }
@@ -27024,7 +27010,7 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
     }
   }
 
-  if (d_Pi != NULL && pd->gv[VELOCITY_GRADIENT11] && pd->gv[POLYMER_STRESS11]) {
+  if (d_Pi != NULL && pd->v[pg->imtrx][VELOCITY_GRADIENT11] && pd->gv[POLYMER_STRESS11]) {
     for (p = 0; p < VIM; p++) {
       for (q = 0; q < VIM; q++) {
         for (b = 0; b < VIM; b++) {
