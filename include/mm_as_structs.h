@@ -1233,14 +1233,14 @@ struct Loca_Input {
   double TPGuess;            /* Initial guess of parameter value at turning point */
   double TPFinal;            /* Final TP parameter value			   */
   int NVRestart;             /* Restart flag: read previous null vector if true */
-  char NV_exoII_infile[85];  /* Exodus file name for null vector for starting*/
+  char NV_exoII_infile[MAX_FNL];  /* Exodus file name for null vector for starting*/
                              /* TP or pitchfork tracking algorithm	   */
-  char NV_imag_infile[85];   /* Exodus file name for null vector (imag. part) */
+  char NV_imag_infile[MAX_FNL];   /* Exodus file name for null vector (imag. part) */
                              /* for starting Hopf tracking algorithm         */
   int NVSave;                /* Flag to save current TP/PF null vector       */
-  char NV_exoII_outfile[85]; /* Exodus file name for saving final null vector*/
+  char NV_exoII_outfile[MAX_FNL]; /* Exodus file name for saving final null vector*/
                              /* from TP tracking algorithm		   */
-  char NV_imag_outfile[85];  /* Exodus file name for saving imaginary      */
+  char NV_imag_outfile[MAX_FNL];  /* Exodus file name for saving imaginary      */
                              /* part of null vector from Hopf algorithm      */
   int NV_time_index;         /* Time index to read Null vector from above file */
   float **PF_Nod_Vals;       /* Temporary array for storing nodal values of null
