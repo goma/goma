@@ -8781,20 +8781,19 @@ void fapply_var_CA_user(double *func,
 /*****************************************************************************/
 /*****************************************************************************/
 
-int evaluate_gibbs_criterion(
-    const double fsnormal[MAX_PDIM], /* free surface normal components          */
-    const double ssnormal[MAX_PDIM], /* solid surface normal components         */
-    int *ipin,                       /* Flag which tracks whether pinned or not   */
-    const double contact_angle,      /* Static or dynamic contact angle           */
-    const double x_pos,              /* x-coordinate of sharp edge                */
-    const double y_pos,              /* y-coordinate of sharp edge                */
-    const double z_pos,              /* z-coordinate of sharp edge                */
-    const double sign_origx,         /* original relative sign on x-position of   *
-                                      * contact line with specified sharp edge    */
-    const double sign_origy,         /* original relative sign on y-position of   *
-                                      * contact line with specified sharp edge    */
-    const double sign_origz)         /* original relative sign on z-position of   *
-                                      * contact line with specified sharp edge    */
+int evaluate_gibbs_criterion(const double fsnormal[MAX_PDIM], /* free surface normal components */
+                             const double ssnormal[MAX_PDIM], /* solid surface normal components */
+                             int *ipin, /* Flag which tracks whether pinned or not   */
+                             const double contact_angle, /* Static or dynamic contact angle */
+                             const double x_pos, /* x-coordinate of sharp edge                */
+                             const double y_pos, /* y-coordinate of sharp edge                */
+                             const double z_pos, /* z-coordinate of sharp edge                */
+                             const double sign_origx, /* original relative sign on x-position of   *
+                                                       * contact line with specified sharp edge */
+                             const double sign_origy, /* original relative sign on y-position of   *
+                                                       * contact line with specified sharp edge */
+                             const double sign_origz) /* original relative sign on z-position of   *
+                                                       * contact line with specified sharp edge */
 
 /*******************************************************************************
  *

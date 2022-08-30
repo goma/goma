@@ -83,21 +83,20 @@ EXTERN void calc_unseeded_edge_tangents(struct Rotation_Vectors *, /* tangent */
                                         const int);  /* param_dir - parametric direction of the
                                                       * edge in local coordinates                 */
 
-EXTERN void
-calc_unseeded_edge_tangents_TET(struct Rotation_Vectors *, /* tangent */
-                                const int,                 /* iconnect_ptr - Ptr to beginning of the
-                                                            * elem-node connectivity list for the current
-                                                            * element                                   */
-                                const int,   /* dim - physical dimension of the surface
-                                              * of the element i.e., (0, 1, 2)            */
-                                const int,   /* id_side - ID of the side of the element   */
-                                const int,   /* id_edge - ID of the edge of the element   */
-                                const int,   /* num_nodes_on_edge - number of nodes on the
-                                              * edge of the element                       */
-                                const int[], /* edge_elem_node_id - local element node
-                                              * numbers on the edge of the element        */
-                                const int);  /* param_dir - parametric direction of the
-                                              * edge in local coordinates                 */
+EXTERN void calc_unseeded_edge_tangents_TET(struct Rotation_Vectors *, /* tangent */
+                                            const int, /* iconnect_ptr - Ptr to beginning of the
+                                                        * elem-node connectivity list for the
+                                                        * current element */
+                                            const int, /* dim - physical dimension of the surface
+                                                        * of the element i.e., (0, 1, 2) */
+                                            const int, /* id_side - ID of the side of the element */
+                                            const int, /* id_edge - ID of the edge of the element */
+                                            const int, /* num_nodes_on_edge - number of nodes on the
+                                                        * edge of the element */
+                                            const int[], /* edge_elem_node_id - local element node
+                                                          * numbers on the edge of the element */
+                                            const int);  /* param_dir - parametric direction of the
+                                                          * edge in local coordinates  */
 
 EXTERN void simple_normalize_vector(struct Rotation_Vectors *, /* vector */
                                     const int);                /* dim                */
