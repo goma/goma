@@ -637,7 +637,6 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
     dcopy1(nAC, x_AC, &(gv[5]));
   }
 
-
   /* Initialize linear solver */
   matrix_systems_mask = 1;
   log_msg("sl_init()...");
