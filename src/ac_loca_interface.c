@@ -632,8 +632,11 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
   dcopy1(numProcUnknowns, x, x_old);
   dcopy1(numProcUnknowns, x_old, x_older);
   dcopy1(numProcUnknowns, x_older, x_oldest);
-  if (nAC > 0)
+  if (nAC > 0) {
     dcopy1(nAC, x_AC, x_AC_old);
+    dcopy1(nAC, x_AC, &(gv[5]));
+  }
+
 
   /* Initialize linear solver */
   matrix_systems_mask = 1;
@@ -779,8 +782,6 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
   /*********************************************************
    *     End of passdown structure Initialization          *
    *********************************************************/
-
-  dcopy1(nAC, x_AC, &(gv[5]));
 
   /*********************************************************
    *    Begin loading of 'con' structure of input info     *
