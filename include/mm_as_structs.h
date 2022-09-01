@@ -1215,49 +1215,49 @@ struct Loca_Input {
    * Contains inputs for LOCA.
    */
 
-  int Cont_Alg;              /* Specific LOCA algorithm - see ac_con_const.h */
-  int Cont_Order;            /* Continuation order: presently 0, 1, or 2     */
-  double StepAggr;           /* Parameter for increasing step size           */
-  double perturb;            /* Perturbation size for bordering algorithms   */
-  int debug;                 /* LOCA print level:  higher = more output      */
-  double DpDs2;              /* Desired solution contribution to arc length  */
-  double DpDsHi;             /* High value of dp_ds at which to rescale      */
-  double Texp;               /* Exponent used to calculate tangent factor    */
-  double MaxTS;              /* Maximum step change in tangent factor        */
-  int TPupType;              /* Turning point parameter type (BC or MT)      */
-  int TPupBCID;              /* ID tag of BC type turning point parameter    */
-  int TPupDFID;              /* Float ID of BC type turning point parameter  */
-  int TPupMTID;              /* Matl ID of MT type turning point parameter   */
-  int TPupMPID;              /* Property ID of MT type turning point parameter */
-  int TPupMDID;              /* Subindex ID of MT type turning point parameter */
-  double TPGuess;            /* Initial guess of parameter value at turning point */
-  double TPFinal;            /* Final TP parameter value			   */
-  int NVRestart;             /* Restart flag: read previous null vector if true */
-  char NV_exoII_infile[85];  /* Exodus file name for null vector for starting*/
-                             /* TP or pitchfork tracking algorithm	   */
-  char NV_imag_infile[85];   /* Exodus file name for null vector (imag. part) */
-                             /* for starting Hopf tracking algorithm         */
-  int NVSave;                /* Flag to save current TP/PF null vector       */
-  char NV_exoII_outfile[85]; /* Exodus file name for saving final null vector*/
-                             /* from TP tracking algorithm		   */
-  char NV_imag_outfile[85];  /* Exodus file name for saving imaginary      */
-                             /* part of null vector from Hopf algorithm      */
-  int NV_time_index;         /* Time index to read Null vector from above file */
-  float **PF_Nod_Vals;       /* Temporary array for storing nodal values of null
-                                vector read in from PF_exoII_file for
-                                pitchfork tracking runs */
-  double *X_pitchfork;       /* Null vector for pitchfork tracking runs,
-                                dimensioned exactly like the solution vector x */
-  float **HP_Nod_Vals;       /* Temporary array for storing nodal values of
-                                complex part of eigenvector read in from
-                                PF_exoII_file for Hopf tracking runs */
-  double *X_hopf;            /* Eigenvector for Hopf tracking runs,
-                                dimensioned exactly like the solution vector x */
-  double omega;              /* Imaginary part of Eigenvalue for Hopf tracking
-                                problems */
-  int Mass_Derivatives;      /* Flag which determines whether to calculate
-                                Mass Matrix derivatives for Hopf tracking
-                                problems */
+  int Cont_Alg;                   /* Specific LOCA algorithm - see ac_con_const.h */
+  int Cont_Order;                 /* Continuation order: presently 0, 1, or 2     */
+  double StepAggr;                /* Parameter for increasing step size           */
+  double perturb;                 /* Perturbation size for bordering algorithms   */
+  int debug;                      /* LOCA print level:  higher = more output      */
+  double DpDs2;                   /* Desired solution contribution to arc length  */
+  double DpDsHi;                  /* High value of dp_ds at which to rescale      */
+  double Texp;                    /* Exponent used to calculate tangent factor    */
+  double MaxTS;                   /* Maximum step change in tangent factor        */
+  int TPupType;                   /* Turning point parameter type (BC or MT)      */
+  int TPupBCID;                   /* ID tag of BC type turning point parameter    */
+  int TPupDFID;                   /* Float ID of BC type turning point parameter  */
+  int TPupMTID;                   /* Matl ID of MT type turning point parameter   */
+  int TPupMPID;                   /* Property ID of MT type turning point parameter */
+  int TPupMDID;                   /* Subindex ID of MT type turning point parameter */
+  double TPGuess;                 /* Initial guess of parameter value at turning point */
+  double TPFinal;                 /* Final TP parameter value			   */
+  int NVRestart;                  /* Restart flag: read previous null vector if true */
+  char NV_exoII_infile[MAX_FNL];  /* Exodus file name for null vector for starting*/
+                                  /* TP or pitchfork tracking algorithm	   */
+  char NV_imag_infile[MAX_FNL];   /* Exodus file name for null vector (imag. part) */
+                                  /* for starting Hopf tracking algorithm         */
+  int NVSave;                     /* Flag to save current TP/PF null vector       */
+  char NV_exoII_outfile[MAX_FNL]; /* Exodus file name for saving final null vector*/
+                                  /* from TP tracking algorithm		   */
+  char NV_imag_outfile[MAX_FNL];  /* Exodus file name for saving imaginary      */
+                                  /* part of null vector from Hopf algorithm      */
+  int NV_time_index;              /* Time index to read Null vector from above file */
+  float **PF_Nod_Vals;            /* Temporary array for storing nodal values of null
+                                     vector read in from PF_exoII_file for
+                                     pitchfork tracking runs */
+  double *X_pitchfork;            /* Null vector for pitchfork tracking runs,
+                                     dimensioned exactly like the solution vector x */
+  float **HP_Nod_Vals;            /* Temporary array for storing nodal values of
+                                     complex part of eigenvector read in from
+                                     PF_exoII_file for Hopf tracking runs */
+  double *X_hopf;                 /* Eigenvector for Hopf tracking runs,
+                                     dimensioned exactly like the solution vector x */
+  double omega;                   /* Imaginary part of Eigenvalue for Hopf tracking
+                                     problems */
+  int Mass_Derivatives;           /* Flag which determines whether to calculate
+                                     Mass Matrix derivatives for Hopf tracking
+                                     problems */
 };
 
 //! Structure containing parameter information for a single augmenting
