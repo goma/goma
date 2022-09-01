@@ -291,7 +291,7 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
   double *resid_vector_sens = NULL; /* Newton residual sensitivity	*/
   double *scale = NULL;             /* Scale vector for solution		*/
   double *gvec = NULL;
-  double *gv;                   /* Global variable values */
+  double *gv; /* Global variable values */
   double ***gvec_elem = NULL;
   double timeValueRead = 0.0;
 
@@ -3102,7 +3102,7 @@ void eigenvector_output_conwrap(int j,
 
   /* Write the real vector using the real eigenvalue part as the time stamp */
   write_solution(efile, passdown.resid_vector, xr, passdown.x_sens_p, passdown.x_old, passdown.xdot,
-                 passdown.xdot_old, passdown.tev, passdown.tev_post,passdown.gv, passdown.rd,
+                 passdown.xdot_old, passdown.tev, passdown.tev_post, passdown.gv, passdown.rd,
                  passdown.gvec, passdown.gvec_elem, &nprint, 0.0, passdown.theta, evr, NULL,
                  passdown.exo, passdown.dpi);
 
