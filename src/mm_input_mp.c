@@ -7695,6 +7695,89 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     }
 
     ECHO(es, echo_file);
+
+model_read = look_for_mat_prop(imp, "Moment Breakage Kernel", 
+                          &(mat_ptr->moment_coalescence_model),
+                          &(mat_ptr->moment_coalescence_scale), 
+                          NULL, 
+                          NULL, 
+                          model_name,SCALAR_INPUT, &NO_SPECIES, es);
+    if (!strcmp(model_name, "POWERLAW_BREAKAGE")) {
+      model_read = 1;
+      mat_ptr->moment_breakage_kernel_model = POWERLAW_BREAKAGE;
+      if (fscanf(imp, "%lf %lf", &a0, &a1) != 2) {
+        sr = sprintf(err_msg, "Matl %s needs 2 constants for %s %s model.\n",
+             pd_glob[mn]->MaterialName, "Moment Breakage Kernel", "POWERLAW BREAKAGE");
+        GOMA_EH(GOMA_ERROR, err_msg);
+      }
+      mat_ptr->moment_breakage_kernel_rate_coeff = a0;
+      mat_ptr->moment_breakage_kernel_exp        = a1;
+      SPF_DBL_VEC(endofstring(es), 1, &(mat_ptr->moment_breakage_kernel_rate_coeff));
+    }
+    else if ( !strcmp(model_name, "EXPONENTIAL_BREAKAGE") )
+    {
+      model_read = 1;
+      mat_ptr->moment_breakage_kernel_model = EXPONENTIAL_BREAKAGE;
+      if ( fscanf(imp, "%lf %lf",&a0, &a1)!= 2){     
+         sr = sprintf(err_msg, "Matl %s needs 2 constants for %s %s model.\n",
+              pd_glob[mn]->MaterialName,"Moment Breakage Kernel", "EXPONENTIAL_BREAKAGE" );
+        GOMA_EH(GOMA_ERROR, err_msg);
+      }     
+      mat_ptr->moment_breakage_kernel_rate_coeff = a0; 
+      mat_ptr->moment_breakage_kernel_exp = a1; 
+      SPF_DBL_VEC(endofstring(es), 1, &(mat_ptr->moment_breakage_rate_coeff);
+    }
+    else  
+    {
+    if(model_read == -1)
+    {
+    GOMA_EH(model_read, "Moment Breakage Kernel invalid");
+    }
+    GOMA_EH(model_read, "Moment Breakage Kernel");
+    }
+
+    ECHO(es, echo_file);
+
+model_read =
+  look_for_mat_prop(imp, "Moment Fragment Distribution",
+    &(mat_ptr->moment_fragment_model),
+    &(mat_ptr->moment_fragment),
+    NULL, 
+    NULL, 
+    model_name, SCALAR_INPUT, &NO_SPECIES,es);
+
+    if ( !strcmp(model_name, "SYMMETRIC_FRAGMENT") )
+    {
+      model_read = 1;
+      mat_ptr->moment_fragment_model = SYMMETRIC_FRAGMENT;
+    }
+    else if ( !strcmp(model_name, "EROSION_FRAGMENT") )
+    {
+      model_read = 1;
+      mat_ptr->moment_fragment_model = EROSION_FRAGMENT;
+    }
+    else if ( !strcmp(model_name, "ONEFOUR_FRAGMENT") )
+    {
+      model_read = 1;
+      mat_ptr->moment_fragment_model = ONEFOUR_FRAGMENT;
+    }
+    else if ( !strcmp(model_name, "PARABOLIC_FRAGMENT") )
+    {
+      model_read = 1;
+      mat_ptr->moment_fragment_model = PARABOLIC_FRAGMENT;
+    }
+
+    else
+    {
+      if(model_read == -1)
+      {
+        GOMA_EH(model_read, "Moment Fragment Distribution invalid");
+      }
+       GOMA_EH(model_read, "Moment Fragment Distribution");
+     }
+
+    ECHO(es, echo_file);
+
   }
 
   /*
@@ -8821,7 +8904,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
       /* Requires growth rate and coalescence rate constants */
       if (num_const < 2) {
-        sr = sprintf(err_msg, "Matl %s needs 2 constants for %s %s model.\n",
+        sr = sprintf(err_msg, "Matl %s needs at least 2 constants for %s %s model (growth and coalescence (breakage, nucleation).\n",
                      pd_glob[mn]->MaterialName, "Moment Source", "FOAM_PMDI_10");
         GOMA_EH(GOMA_ERROR, err_msg);
       }

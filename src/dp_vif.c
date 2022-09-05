@@ -1544,6 +1544,10 @@ void noahs_ark(void) {
     ddd_add_member(n, &mp_glob[i]->light_absorption, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->extinction_index, 1, MPI_DOUBLE);
 
+    ddd_add_member(n, &mp_glob[i]->moment_fragment_model, 1, MPI_INT);
+    ddd_add_member(n, &mp_glob[i]->moment_breakage_kernel_model, 1, MPI_INT);
+    ddd_add_member(n, &mp_glob[i]->moment_breakage_kernel_rate_coeff, 1, MPI_INT);
+    ddd_add_member(n, &mp_glob[i]->moment_breakage_kernel_exp, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->moment_coalescence_model, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->moment_coalescence_scale, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->moment_growth_model, 1, MPI_INT);

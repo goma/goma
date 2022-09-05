@@ -661,6 +661,13 @@ struct Material_Properties {
   int moment_coalescence_model;
   dbl moment_coalescence_scale;
 
+  int moment_breakage_kernel_model;
+  dbl moment_breakage_kernel_rate_coeff;
+  dbl moment_breakage_kernel_exp;
+  
+  int moment_fragment_model;
+  dbl moment_fragment;
+
   /*
    * Source terms...
    */

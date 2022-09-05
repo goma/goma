@@ -1191,13 +1191,15 @@ int foam_pmdi10_h2o_species_source(int species_no, /* Current species number */
   int eqn, var;
 
   double CH2O = fv->c[species_no];
+  //printf("ch2 %e\n", CH2O);
   double T = fv->T;
   double n = param[0];
   double t_nuc = param[1];
   double A = param[2];
   double norm_E = param[3];
 
-  double N = 0.5 * (1 + tanh((time - t_nuc) / t_nuc));
+  //double N = 0.5 * (1 + tanh((time - t_nuc) / t_nuc));
+  double N = 1;
 
   double source = 0;
 
@@ -1212,6 +1214,7 @@ int foam_pmdi10_h2o_species_source(int species_no, /* Current species number */
     source = 0;
     mp->species_source[species_no] = 0;
   } else {
+    //printf("ch2o %lf, n %lf ", CH2O, n));
     source = -N * A * exp(-norm_E / T) * pow(CH2O, n);
   }
   /**********************************************************/
@@ -1234,7 +1237,7 @@ int foam_pmdi10_h2o_species_source(int species_no, /* Current species number */
       mp->d_species_source[var] = -norm_E / (T * T) * source;
     }
   }
-
+  //printf("source %lf \n", source);
   return source;
 }
 
@@ -1243,6 +1246,7 @@ int foam_pmdi10_co2_species_source(int species_no, /* Current species number */
                                    double time,
                                    double tt,
                                    double dt) {
+  //NOT USED IN WESTON PMDI10
   int eqn, var;
 
   double T = fv->T;
@@ -1266,7 +1270,8 @@ int foam_pmdi10_co2_species_source(int species_no, /* Current species number */
   double A = mp->u_species_source[wH2O][2];
   double norm_E = mp->u_species_source[wH2O][3];
 
-  double N = 0.5 * (1 + tanh((time - t_nuc) / t_nuc));
+  //double N = 0.5 * (1 + tanh((time - t_nuc) / t_nuc));
+  double N = 1;
 
   double source;
 
@@ -1362,7 +1367,8 @@ int foam_pmdi10_co2_liq_species_source(int species_no, /* Current species number
   double A = mp->u_species_source[wH2O][2];
   double norm_E = mp->u_species_source[wH2O][3];
 
-  double N = 0.5 * (1 + tanh((time - t_nuc) / t_nuc));
+  //double N = 0.5 * (1 + tanh((time - t_nuc) / t_nuc));
+  double N = 1;
 
   double source;
 
@@ -1384,6 +1390,7 @@ int foam_pmdi10_co2_liq_species_source(int species_no, /* Current species number
   } else {
     source_a = N * A * exp(-norm_E / T) * pow(CH2O, n);
   }
+  //printf("gr %e \n", MGR->G[species_no][1]);
   source = source_a - MGR->G[species_no][1] * ref_press / (Rgas_const * T);
 
   /**********************************************************/
@@ -1467,6 +1474,7 @@ int foam_pmdi10_co2_gas_species_source(int species_no, /* Current species number
   if (mp->DensityModel == DENSITY_FOAM_PMDI_10) {
     ref_press = mp->u_density[2];
     Rgas_const = mp->u_density[3];
+    //printf("refpres %e R %e\n", ref_press, Rgas_const);
   } else {
     GOMA_EH(GOMA_ERROR, "Expected DENSITY_FOAM_PMDI_10 density model");
   }

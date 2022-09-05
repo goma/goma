@@ -64,6 +64,18 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define VISCOSITY_SCALED_COALESCENCE       5
 #define VISCOSITY_BUBBLE_RATIO_COALESCENCE 6
 
+// breakage
+#define POWERLAW_BREAKAGE                4
+#define EXPONENTIAL_BREAKAGE             5
+
+// fragment
+#define SYMMETRIC_FRAGMENT  6
+#define EROSION_FRAGMENT    7
+#define ONEFOUR_FRAGMENT    8
+#define PARABOLIC_FRAGMENT  9
+
+
+
 /* Source term models */
 #define BOUSS                                      \
   3 /* Boussinesq including rho*g*beta hydrostatic \
