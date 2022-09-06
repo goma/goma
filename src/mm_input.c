@@ -7839,8 +7839,8 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
       read_string(ifp, input, '\n');
       strip(input);
       strcpy(Stratimikos_File[imtrx], input);
-      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "Stratimikos file = %s for matrix %d",
-               input, mtrx_index1);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "Stratimikos file = %s for matrix %d", input,
+               mtrx_index1);
       ECHO(echo_string, echo_file);
     } else {
       // Set stratimikos.xml as defualt stratimikos file
