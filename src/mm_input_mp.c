@@ -7714,8 +7714,7 @@ model_read = look_for_mat_prop(imp, "Moment Breakage Kernel",
       mat_ptr->moment_breakage_kernel_exp        = a1;
       SPF_DBL_VEC(endofstring(es), 1, &(mat_ptr->moment_breakage_kernel_rate_coeff));
     }
-    else if ( !strcmp(model_name, "EXPONENTIAL_BREAKAGE") )
-    {
+    else if ( !strcmp(model_name, "EXPONENTIAL_BREAKAGE") ){
       model_read = 1;
       mat_ptr->moment_breakage_kernel_model = EXPONENTIAL_BREAKAGE;
       if ( fscanf(imp, "%lf %lf",&a0, &a1)!= 2){     
@@ -7725,12 +7724,10 @@ model_read = look_for_mat_prop(imp, "Moment Breakage Kernel",
       }     
       mat_ptr->moment_breakage_kernel_rate_coeff = a0; 
       mat_ptr->moment_breakage_kernel_exp = a1; 
-      SPF_DBL_VEC(endofstring(es), 1, &(mat_ptr->moment_breakage_rate_coeff);
+      SPF_DBL_VEC(endofstring(es), 1, &(mat_ptr->moment_breakage_kernel_rate_coeff));
     }
-    else  
-    {
-    if(model_read == -1)
-    {
+    else {
+    if(model_read == -1){
     GOMA_EH(model_read, "Moment Breakage Kernel invalid");
     }
     GOMA_EH(model_read, "Moment Breakage Kernel");
@@ -7746,8 +7743,7 @@ model_read =
     NULL, 
     model_name, SCALAR_INPUT, &NO_SPECIES,es);
 
-    if ( !strcmp(model_name, "SYMMETRIC_FRAGMENT") )
-    {
+    if ( !strcmp(model_name, "SYMMETRIC_FRAGMENT") ){
       model_read = 1;
       mat_ptr->moment_fragment_model = SYMMETRIC_FRAGMENT;
     }
@@ -7778,8 +7774,38 @@ model_read =
 
     ECHO(es, echo_file);
 
-  }
+  model_read =look_for_mat_prop(imp, "Moment Nucleation Kernel",
+                   &(mat_ptr->moment_nucleation_kernel_model),
+                   &(mat_ptr->moment_nucleation_kernel_rate_coeff),
+                   NULL,
+                   NULL,
+                   model_name, SCALAR_INPUT, &NO_SPECIES,es);
 
+        if ( !strcmp(model_name, "CONCENTRATION_DEPENDENT") ){
+                   model_read = 1;
+                   mat_ptr->moment_nucleation_kernel_model = CONCENTRATION_DEPENDENT;
+                   if ( fscanf(imp, "%lf %lf ",
+                   &a0, &a1)
+                   != 2 )
+                   {
+                   sr = sprintf(err_msg,
+                   "Matl %s needs 2 constants for %s %s model.\n",
+                   pd_glob[mn]->MaterialName,
+                   "Moment Nucleation Kernel", "CONCENTRATION_DEPENDENT_NUCLEATION" );
+                   GOMA_EH(GOMA_ERROR, err_msg);
+                   }
+                   mat_ptr->moment_nucleation_kernel_rate_coeff = a0;
+                   mat_ptr->moment_nucleation_min_conc = a1;
+                   SPF_DBL_VEC(endofstring(es), 1, &(mat_ptr->moment_nucleation_kernel_rate_coeff));
+                   }
+          else{if(model_read == -1)
+                {
+                  GOMA_EH(model_read, "Moment Nucleation Kernel invalid");
+                 }
+                 GOMA_EH(model_read, "Moment Nucleation Kernel");
+                }
+    ECHO(es,echo_file);
+}
   /*
    * Source Terms
    */

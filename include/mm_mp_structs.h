@@ -668,6 +668,11 @@ struct Material_Properties {
   int moment_fragment_model;
   dbl moment_fragment;
 
+  int moment_nucleation_kernel_model;
+  dbl moment_nucleation_kernel_rate_coeff;
+  dbl moment_nucleation_min_conc;
+
+
   /*
    * Source terms...
    */

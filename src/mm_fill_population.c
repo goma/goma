@@ -36,6 +36,8 @@ extern FSUB_TYPE dsyev_(char *JOBZ,
                         int len_jobz,
                         int len_uplo);
 
+extern int get_moment_kernel_struct(struct moment_kernel_struct *MKS);
+
 static void moments_set_lognormal(
     int mom_index_1, int mom_index_2, int n_moments, double *moments, double *log_norm_moments);
 
@@ -716,7 +718,7 @@ int foam_pmdi_growth_rate(double growth_rate[MAX_CONC],
 
     for (w = 0; w < pd->Num_Species_Eqn; w++) {
       if (w == wCO2Liq) {
-        double CO2_max = 4.4e-4;
+        double CO2_max = mp->u_density[4];;
         
         //printf("co2max %e\n", CO2_max);
         double mf = fv_old->c[wCO2Liq] * M_CO2 / rho_liq;
@@ -1110,7 +1112,7 @@ void foam_pbe_co2_liquid_source(struct Species_Conservation_Terms *st,
   free(MKS);
 }
 
-int growth_rate_model(int species_index,
+extern int growth_rate_model(int species_index,
                       double *nodes,
                       double *weights,
                       int n_nodes,
@@ -1118,12 +1120,6 @@ int growth_rate_model(int species_index,
                       double *growth_rate,
                       struct moment_kernel_struct *MKS) {
 
-  //  double gamma[DIM][DIM];
-  //  for (int a = 0; a < VIM; a++) {
-  //    for (int b = 0; b < VIM; b++) {
-  //      gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
-  //    }
-  //  }
 
   dbl mu0 = gn->mu0;
   dbl alpha_g = gn->gelpoint;
@@ -1158,8 +1154,11 @@ int growth_rate_model(int species_index,
   }
 
   dbl volF = (fv_old->moment[1] / (1 + fv_old->moment[1]));
+
   if (volF > 0.98) {
-    volF kernel_struct
+    volF =0.98;
+  }
+
   dbl mu = muL * exp(volF / (1 - volF));
   double eta0 = muL;
 
@@ -1206,7 +1205,7 @@ int growth_rate_model(int species_index,
   return 0;
 }
 
-int coalescence_kernel_model(double *nodes, double *weights, int n_nodes, int n_moments, struct moment_kernel_struct *MKS) {
+extern int coalescence_kernel_model(double *nodes, double *weights, int n_nodes, int n_moments, struct moment_kernel_struct *MKS) {
 
   dbl mu0 = gn->mu0;
   dbl alpha_g = gn->gelpoint;
@@ -1348,6 +1347,80 @@ extern int breakage_kernel_model(double *nodes, double *weights, int n_nodes,
 
   return 0;
 }
+// ---------------------------------------- //
+// -------- nucleation_kernel_model ------- //
+// ---------------------------------------- //
+extern int nucleation_kernel_model(int n_moments, struct moment_kernel_struct *MKS) {
+
+  double nucleation_kernel;
+  int wCO2Liq;
+  int wCO2Gas;
+  int wH2O;
+  int w;
+
+  for (int k = 0; k < n_moments; k++){
+    MKS->NUC[k] = 0;
+  }
+
+  switch (mp->moment_nucleation_kernel_model){
+    case CONSTANT:
+      nucleation_kernel = mp->moment_nucleation_kernel_rate_coeff;
+      MKS->NUC[0] += nucleation_kernel;
+      break;
+    case CONCENTRATION_DEPENDENT:
+      wCO2Liq = -1;
+      wCO2Gas = -1;
+      wH2O    = -1;
+
+      /* the below for loop figures out which source model goes with which species*/
+      for (w = 0; w < pd->Num_Species; w++){
+        switch (mp->SpeciesSourceModel[w]){
+          case FOAM_PMDI_10_CO2_LIQ:
+            wCO2Liq = w;
+            break;
+          case FOAM_PMDI_10_CO2_GAS:
+            wCO2Gas = w;
+            break;
+          case FOAM_PMDI_10_H2O:
+            wH2O = w;
+            break;
+          default:
+          break;
+        }
+      }
+      /* the below for loop figures out which source model goes with which species*/
+      if (wCO2Liq == -1){
+        GOMA_EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_CO2_LIQ");
+        return -1;
+      }
+      else if (wH2O == -1){
+        GOMA_EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_H2O");
+        return -1;
+      }
+      else if (wCO2Gas == -1){
+        GOMA_EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_CO2_GAS");
+        return -1;
+       }
+
+      double M_CO2       = mp->u_density[0];
+      double rho_liq     = mp->u_density[1];
+      double mf          = fv_old->c[wCO2Liq] * M_CO2 / rho_liq; /*equiv w_{CO2} in eqn (14)*/
+      nucleation_kernel  = mp->moment_nucleation_kernel_rate_coeff;
+      double CO2_max_nuc = mp->moment_nucleation_min_conc;
+
+      if ( mf>CO2_max_nuc ){
+        //printf("min %lf, curr %lf, nuc: %f12 \n",CO2_max_nuc, mf, nucleation_kernel*(((mf/CO2_max_nuc)-1)));
+        MKS->NUC[0] += nucleation_kernel*(((mf/CO2_max_nuc)-1));
+      }
+      //printf("nuc %lf\n",MKS->NUC[0]);
+      break;
+      default:
+      GOMA_EH(GOMA_ERROR, "Unknown nucleation kernel model");
+      return -1;
+      }
+  return 0;
+}
+
 
 int get_moment_kernel_struct(struct moment_kernel_struct *MKS) {
   int nnodes = 2; // currently hardcoded for 2 Nodes (4 Moments)
@@ -1460,13 +1533,18 @@ int get_moment_kernel_struct(struct moment_kernel_struct *MKS) {
       return -1;
     }
 
+   // evaluate growth kernel
     foam_pmdi_growth_rate(growth_rate, d_growth_rate_dc, d_growth_rate_dT);
 
     growth_rate_model(wCO2Liq, nodes, weights, nnodes_out, 2 * nnodes, growth_rate, MKS);
 
    // evaluate breakage kernel
     breakage_kernel_model(nodes, weights, nnodes_out, 2 * nnodes, MKS);
+    
+   // evaluate nucleation kernel
+    nucleation_kernel_model(2 * nnodes, MKS);
 
+   // evaluate coalescence kernel (only make sense when nndoes>1 b/c 2nd order process)
     if (nnodes_out > 1) {
       coalescence_kernel_model(nodes, weights, nnodes_out, 2 * nnodes, MKS);
     }
@@ -1579,7 +1657,7 @@ int get_moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msourc
     double growth_kernel_scale      = mp->u_moment_source[0];
     double coalescence_kernel_scale = mp->u_moment_source[1];
     double breakage_kernel_scale    = mp->u_moment_source[2];
-//    double nucleation_kernel_scale  = mp->u_moment_source[3];
+    double nucleation_kernel_scale  = mp->u_moment_source[3];
 
     int wCO2Liq;
     int wCO2Gas;
@@ -1635,10 +1713,11 @@ int get_moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msourc
     for (int mom = 0; mom < MAX_MOMENTS; mom++) {
       msource[mom] = H * (growth_kernel_scale*MKS->G[wCO2Liq][mom] 
                           + coalescence_kernel_scale*MKS->S[mom]
-                          + breakage_kernel_scale*MKS->BA[mom]);
-      //if (mom ==1){
-      //  if (MKS->G[wCO2Liq][1]>0){
-      //    printf("mom %d growth %lf\n", mom, MKS->G[wCO2Liq][mom]);
+                          + breakage_kernel_scale*MKS->BA[mom]
+                          + nucleation_kernel_scale * MKS->NUC[mom]);
+     // if (mom ==1){
+      //  if (MKS->NUC[mom]>0){
+      //    printf("mom %d nucleation %lf\n", mom, nucleation_kernel_scale*MKS->NUC[mom]);
       //  }
       //}
       if (pd->v[pg->imtrx][MASS_FRACTION]) {

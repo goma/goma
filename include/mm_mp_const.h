@@ -74,6 +74,10 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define ONEFOUR_FRAGMENT    8
 #define PARABOLIC_FRAGMENT  9
 
+// nucleation
+#define TIME_CONTROLLED_NUCLEATION  7
+#define CONCENTRATION_DEPENDENT     8
+
 
 
 /* Source term models */

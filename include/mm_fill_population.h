@@ -44,6 +44,23 @@
 #define MOMENT_GR_PBE     0
 #define MOMENT_GR_PMDI_10 1
 
+struct moment_source_dependence {
+  double T[MAX_MOMENTS][MDE];           /* temperature dependence. */
+  double C[MAX_MOMENTS][MAX_CONC][MDE]; /* conc dependence. */
+};
+
+typedef struct moment_source_dependence MOMENT_SOURCE_DEPENDENCE_STRUCT;
+
+struct moment_kernel_struct {
+  double G[MAX_CONC][MAX_MOMENTS];
+  double d_G_dC[MAX_CONC][MAX_MOMENTS][MDE];
+  double d_G_dT[MAX_CONC][MAX_MOMENTS][MDE];
+  double S[MAX_MOMENTS];   // coalescence
+  double BA[MAX_MOMENTS];  // breakage
+  double NUC[MAX_MOMENTS]; // nucleation
+};
+
+
 extern void wheeler_algorithm(int N, double *moments, double *weights, double *nodes);
 
 extern int get_foam_pbe_indices(int *index_W,
@@ -60,19 +77,7 @@ EXTERN double foam_pbe_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 
 extern double foam_pbe_conductivity(CONDUCTIVITY_DEPENDENCE_STRUCT *d_k, dbl time);
 
-struct moment_source_dependence {
-  double T[MAX_MOMENTS][MDE];           /* temperature dependence. */
-  double C[MAX_MOMENTS][MAX_CONC][MDE]; /* conc dependence. */
-};
-typedef struct moment_source_dependence MOMENT_SOURCE_DEPENDENCE_STRUCT;
 
-struct moment_growth_rate {
-  double G[MAX_CONC][MAX_MOMENTS];
-  double d_G_dC[MAX_CONC][MAX_MOMENTS][MDE];
-  double d_G_dT[MAX_CONC][MAX_MOMENTS][MDE];
-  double S[MAX_MOMENTS];  // coelescence
-  double BA[MAX_MOMENTS]; //breakage
-};
 
 extern int get_moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msource);
 
@@ -91,7 +96,7 @@ extern double PBEVolumeSource(double time,
                               double dFVS_dC[MAX_CONC][MDE],
                               double dFVS_dMOM[MAX_MOMENTS][MDE]);
 
-extern int get_moment_growth_rate_term(struct moment_kernel_struct *MKS);
+extern int get_moment_kernel_struct(struct moment_kernel_struct *MKS);
 
 extern void
 foam_pbe_conversion_water(struct Species_Conservation_Terms *st, double time, double tt, double dt);
@@ -117,7 +122,7 @@ extern int assemble_density(void);
 
 extern double PBEVolumeSource_rhoeqn(double time, double dt, double tt, double dFVS_drho[MDE]);
 
-int growth_rate_model(int species_index,
+extern int growth_rate_model(int species_index,
                       double *nodes,
                       double *weights,
                       int n_nodes,
@@ -125,10 +130,15 @@ int growth_rate_model(int species_index,
                       double *growth_rate,
                       struct moment_kernel_struct *MKS);
 
-int coalescence_kernel_model(
+extern int coalescence_kernel_model(
     double *nodes, double *weights, int n_nodes, int n_moments, struct moment_kernel_struct *MKS);
 
-int moment_breakage_kernel_model(
+extern int moment_breakage_kernel_model(
     double *nodes, double *weights, int n_nodes, int n_moments, struct moment_kernel_struct *MKS);
+
+extern int moment_nucleation_kernel_model(
+    double *nodes, double *weights, int n_nodes, int n_moments, struct moment_kernel_struct *MKS);
+
+extern int get_moment_kernel_struct(struct moment_kernel_struct *MKS);
 
 #endif /* MM_FILL_POPULATION_H */

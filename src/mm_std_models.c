@@ -1325,7 +1325,7 @@ int foam_pmdi10_co2_liq_species_source(int species_no, /* Current species number
   double T = fv->T;
   int wH2O = -1;
   int w;
-  struct moment_growth_rate *MGR;
+  struct moment_kernel_struct *MKS;
 
   for (w = 0; w < pd->Num_Species; w++) {
     if (mp->SpeciesSourceModel[w] == FOAM_PMDI_10_H2O) {
@@ -1344,10 +1344,10 @@ int foam_pmdi10_co2_liq_species_source(int species_no, /* Current species number
     return -1;
   }
 
-  MGR = calloc(sizeof(struct moment_growth_rate), 1);
-  int err = get_moment_growth_rate_term(MGR);
+  MKS = calloc(sizeof(struct moment_kernel_struct), 1);
+  int err = get_moment_kernel_struct(MKS);
   if (err) {
-    free(MGR);
+    free(MKS);
     return -1;
   }
 
@@ -1377,7 +1377,7 @@ int foam_pmdi10_co2_liq_species_source(int species_no, /* Current species number
     mp->d_species_source[MAX_VARIABLE_TYPES + species_no] = 0;
     mp->d_species_source[MAX_VARIABLE_TYPES + wH2O] = 0;
     mp->d_species_source[TEMPERATURE] = 0;
-    free(MGR);
+    free(MKS);
     return (source);
   }
 
@@ -1390,8 +1390,7 @@ int foam_pmdi10_co2_liq_species_source(int species_no, /* Current species number
   } else {
     source_a = N * A * exp(-norm_E / T) * pow(CH2O, n);
   }
-  //printf("gr %e \n", MGR->G[species_no][1]);
-  source = source_a - MGR->G[species_no][1] * ref_press / (Rgas_const * T);
+  source = source_a - MKS->G[species_no][1] * ref_press / (Rgas_const * T);
 
   /**********************************************************/
 
@@ -1410,7 +1409,7 @@ int foam_pmdi10_co2_liq_species_source(int species_no, /* Current species number
           st->d_MassSource_dc[species_no][wH2O][j] = source_a * n / CH2O * bf[var]->phi[j];
         }
         st->d_MassSource_dc[species_no][species_no][j] =
-            -MGR->d_G_dC[species_no][1][j] * ref_press / (Rgas_const * T);
+            -MKS->d_G_dC[species_no][1][j] * ref_press / (Rgas_const * T);
       }
     }
 
@@ -1419,11 +1418,11 @@ int foam_pmdi10_co2_liq_species_source(int species_no, /* Current species number
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
         st->d_MassSource_dT[species_no][j] =
             -norm_E / (T * T) * source_a * bf[var]->phi[j] -
-            MGR->d_G_dT[species_no][1][j] * ref_press / (Rgas_const * T);
+            MKS->d_G_dT[species_no][1][j] * ref_press / (Rgas_const * T);
       }
     }
   }
-  free(MGR);
+  free(MKS);
   return 0;
 }
 
@@ -1439,7 +1438,7 @@ int foam_pmdi10_co2_gas_species_source(int species_no, /* Current species number
   int wH2O = -1;
   int wCO2Liq = -1;
   int w;
-  struct moment_growth_rate *MGR;
+  struct moment_kernel_struct *MKS;
 
   for (w = 0; w < pd->Num_Species; w++) {
     if (mp->SpeciesSourceModel[w] == FOAM_PMDI_10_H2O) {
@@ -1461,10 +1460,10 @@ int foam_pmdi10_co2_gas_species_source(int species_no, /* Current species number
     return -1;
   }
 
-  MGR = calloc(sizeof(struct moment_growth_rate), 1);
-  int err = get_moment_growth_rate_term(MGR);
+  MKS = calloc(sizeof(struct moment_kernel_struct), 1);
+  int err = get_moment_kernel_struct(MKS);
   if (err) {
-    free(MGR);
+    free(MKS);
     return -1;
   }
 
@@ -1485,11 +1484,11 @@ int foam_pmdi10_co2_gas_species_source(int species_no, /* Current species number
     mp->d_species_source[MAX_VARIABLE_TYPES + species_no] = 0;
     mp->d_species_source[MAX_VARIABLE_TYPES + wH2O] = 0;
     mp->d_species_source[TEMPERATURE] = 0;
-    free(MGR);
+    free(MKS);
     return 0;
   }
 
-  source = MGR->G[wCO2Liq][1] * ref_press / (Rgas_const * T);
+  source = MKS->G[wCO2Liq][1] * ref_press / (Rgas_const * T);
 
   /**********************************************************/
 
@@ -1505,7 +1504,7 @@ int foam_pmdi10_co2_gas_species_source(int species_no, /* Current species number
     if (pd->v[pg->imtrx][var]) {
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
         st->d_MassSource_dc[species_no][wCO2Liq][j] =
-            MGR->d_G_dC[wCO2Liq][1][j] * ref_press / (Rgas_const * T);
+            MKS->d_G_dC[wCO2Liq][1][j] * ref_press / (Rgas_const * T);
       }
     }
 
@@ -1513,12 +1512,12 @@ int foam_pmdi10_co2_gas_species_source(int species_no, /* Current species number
     if (pd->v[pg->imtrx][var]) {
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
         st->d_MassSource_dT[species_no][j] =
-            MGR->d_G_dT[species_no][1][j] * ref_press / (Rgas_const * T);
+            MKS->d_G_dT[species_no][1][j] * ref_press / (Rgas_const * T);
       }
     }
   }
 
-  free(MGR);
+  free(MKS);
   return 0;
 }
 
