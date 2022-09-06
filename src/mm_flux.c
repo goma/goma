@@ -436,6 +436,7 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
               default:
                 break;
               }
+              break;
             default:
               GOMA_EH(GOMA_ERROR, "Element crossing not done for that element!");
               break;
