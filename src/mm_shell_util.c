@@ -5932,8 +5932,8 @@ int lub_viscosity_integrate(const double strs,
   double nexp = gn->nexp, lam = gn->lam, aexp = gn->aexp, muinf = gn->muinf;
   double yield = gn->tau_y, F = gn->fexp, mu0 = gn->mu0, P_eps = gn->epsilon;
   double eps, res, TOL_CEIL = 1.e-6, res_tol, soln_tol;
-  int iter, ITERMAX = 50, jdi, JDI_MAX = 25, ierr = 0, a_visc_type = 0;
-  double xint = 0., xint_a, visc_a, xintold = 0., temp, at = 1.;
+  int iter, ITERMAX = 50, jdi, JDI_MAX = 25, ierr = 0, a_visc_type = FALSE;
+  double xint = 0., xint_a = 0., visc_a = 0., xintold = 0., temp, at = 1.;
   double wt[3] = {5. / 18., 4. / 9., 5. / 18.};
   double gp[3] = {0.11270166537925831148, 0.5, 0.8872983346207416885};
 
@@ -6127,26 +6127,26 @@ int lub_viscosity_integrate(const double strs,
   /** Second compute viscosity integral (stationary walls) */
   shr1 = fabs(shr);
   /** test analytical viscosity integration types **/
-  switch (a_visc_type){
-  case 0:
-    xint_a = 0.;
-    break;
-  case 1:
-    double tmp_pl = 1./pow(lam*shr1, 1. - nexp);
-    double tmp_ty = yield / shr1;
-    xint_a = SQUARE(muinf) / 3. +
-             2. * muinf * tmp_pl * ((mu0 - muinf) / (2. + nexp) + tmp_ty / (1. + nexp)) +
-             SQUARE(tmp_pl) * (SQUARE(mu0 - muinf) / (1. + 2. * nexp) +
-                               (mu0 - muinf) * tmp_ty / nexp + SQUARE(tmp_ty) / (2 * nexp - 1.));
-    break;
-  case 2:
-    double tmp_pl3 = 1./CUBE(lam*shr1);
-    double tmp_cy1 = pow( 1. + CUBE(lam*shr1),(2. + nexp)/3.) - 1.;
-    double tmp_cy2 = pow( 1. + CUBE(lam*shr1),(2.*nexp + 1.)/3.) - 1.;
-    xint_a = SQUARE(muinf) / 3. +
-             2. * muinf * tmp_pl3 * (mu0 - muinf) / (2. + nexp) * tmp_cy1 +
-             tmp_pl3 * SQUARE(mu0 - muinf) / (1. + 2. * nexp) * tmp_cy2;
-    break;
+  if (a_visc_type) {
+    switch (gn->ConstitutiveEquation) {
+    case CARREAU:
+    case CARREAU_WLF: {
+      double tmp_pl = 1. / pow(lam * shr1, 1. - nexp);
+      double tmp_ty = yield / shr1;
+      xint_a = SQUARE(muinf) / 3. +
+               2. * muinf * tmp_pl * ((mu0 - muinf) / (2. + nexp) + tmp_ty / (1. + nexp)) +
+               SQUARE(tmp_pl) * (SQUARE(mu0 - muinf) / (1. + 2. * nexp) +
+                                 (mu0 - muinf) * tmp_ty / nexp + SQUARE(tmp_ty) / (2 * nexp - 1.));
+    } break;
+    case BINGHAM:
+    case BINGHAM_WLF: {
+      double tmp_pl3 = 1. / CUBE(lam * shr1);
+      double tmp_cy1 = pow(1. + CUBE(lam * shr1), (2. + nexp) / 3.) - 1.;
+      double tmp_cy2 = pow(1. + CUBE(lam * shr1), (2. * nexp + 1.) / 3.) - 1.;
+      xint_a = SQUARE(muinf) / 3. + 2. * muinf * tmp_pl3 * (mu0 - muinf) / (2. + nexp) * tmp_cy1 +
+               tmp_pl3 * SQUARE(mu0 - muinf) / (1. + 2. * nexp) * tmp_cy2;
+    } break;
+    }
   }
   for (jdi = 0; jdi < JDI_MAX; jdi++) {
     double cee, x0, delx, vis = 1., jdiv, xfact, tmp, tpe, tp2, P_sig;
@@ -6160,7 +6160,7 @@ int lub_viscosity_integrate(const double strs,
       for (l = 0; l < 3; l++) {
         cee = x0 + gp[l] * delx;
         xfact = 1. + pow(lam * cee * shr1, aexp);
-        tmp = 1./pow(xfact, (1. - nexp) / aexp);
+        tmp = 1. / pow(xfact, (1. - nexp) / aexp);
         switch (gn->ConstitutiveEquation) {
         case CARREAU:
         case CARREAU_WLF:
@@ -6176,28 +6176,28 @@ int lub_viscosity_integrate(const double strs,
         default:
           GOMA_EH(GOMA_ERROR, "Missing Lub Viscosity model!");
         }
-        switch (a_visc_type){
-        case 0:
-          visc_a = 0.;
-          break;
-        case 1:
-          tmp_pl = 1./pow(lam*cee*shr1, 1. - nexp);
-          tmp_ty = yield / (cee * shr1);
-          visc_a = muinf + (mu0 - muinf + tmp_ty) * tmp_pl;
-          break;
-        case 2:
-          tmp_pl = 1./pow( 1. + CUBE(cee*lam*shr1), (1. - nexp)/3.);
-          visc_a = muinf + (mu0 - muinf) * tmp_pl;
-          break;
+        if (a_visc_type) {
+          switch (gn->ConstitutiveEquation) {
+          case BINGHAM:
+          case BINGHAM_WLF:
+            tmp_pl = 1. / pow(lam * cee * shr1, 1. - nexp);
+            tmp_ty = yield / (cee * shr1);
+            visc_a = muinf + (mu0 - muinf + tmp_ty) * tmp_pl;
+            break;
+          case CARREAU:
+          case CARREAU_WLF:
+            tmp_pl = 1. / pow(1. + CUBE(cee * lam * shr1), (1. - nexp) / 3.);
+            visc_a = muinf + (mu0 - muinf) * tmp_pl;
+            break;
+          }
         }
-        xint += (vis*vis - visc_a*visc_a) * SQUARE(cee) * delx * wt[l];
+        xint += (vis * vis - visc_a * visc_a) * SQUARE(cee) * delx * wt[l];
       }
       x0 += delx;
     }
     xint += xint_a;
     xint /= SQUARE(vis_w);
     eps = fabs(xint - xintold);
-/*fprintf(stderr, "xint %d %g %g %g %g %g %g\n",jdi,shr1,xint_a,xint,xintold,vis,visc_a);  */
     xintold = xint;
     if (eps < soln_tol)
       break;
