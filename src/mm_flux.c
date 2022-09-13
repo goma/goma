@@ -8582,7 +8582,8 @@ int adaptive_weight(double w[],
   int dupl_side = 0, dupl_id = 0, side1 = -1, side2 = -1;
   double int_angle[8], xloc;
 
-  if (elem_type != BIQUAD_QUAD && elem_type != BIQUAD_SHELL) {
+  if (elem_type != BIQUAD_QUAD && elem_type != BIQUAD_SHELL && elem_type != BILINEAR_QUAD &&
+      elem_type != BILINEAR_SHELL) {
     GOMA_EH(GOMA_ERROR, "adaptive integration for 2D quads only!");
   }
 
