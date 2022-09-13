@@ -6129,8 +6129,8 @@ int lub_viscosity_integrate(const double strs,
   /** test analytical viscosity integration types **/
   if (a_visc_type) {
     switch (gn->ConstitutiveEquation) {
-    case CARREAU:
-    case CARREAU_WLF: {
+    case BINGHAM:
+    case BINGHAM_WLF: {
       double tmp_pl = 1. / pow(lam * shr1, 1. - nexp);
       double tmp_ty = yield / shr1;
       xint_a = SQUARE(muinf) / 3. +
@@ -6138,8 +6138,8 @@ int lub_viscosity_integrate(const double strs,
                SQUARE(tmp_pl) * (SQUARE(mu0 - muinf) / (1. + 2. * nexp) +
                                  (mu0 - muinf) * tmp_ty / nexp + SQUARE(tmp_ty) / (2 * nexp - 1.));
     } break;
-    case BINGHAM:
-    case BINGHAM_WLF: {
+    case CARREAU:
+    case CARREAU_WLF: {
       double tmp_pl3 = 1. / CUBE(lam * shr1);
       double tmp_cy1 = pow(1. + CUBE(lam * shr1), (2. + nexp) / 3.) - 1.;
       double tmp_cy2 = pow(1. + CUBE(lam * shr1), (2. * nexp + 1.) / 3.) - 1.;
