@@ -1209,18 +1209,36 @@ static int calc_standard_fields(double **post_proc_vect,
     local_post[MOBILITY_PARAMETER] = alpha;
     local_lumped[MOBILITY_PARAMETER] = 1.;
   }
-  if (MEAN_SHEAR != -1 && pd->e[pg->imtrx][R_MOMENTUM1]) {
-    double gammadot, gamma[DIM][DIM];
-    for (a = 0; a < VIM; a++) {
-      for (b = 0; b < VIM; b++) {
-        gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+  if (MEAN_SHEAR != -1) {
+    if (pd->e[pg->imtrx][R_MOMENTUM1]) {
+      double gammadot, gamma[DIM][DIM];
+      for (a = 0; a < VIM; a++) {
+        for (b = 0; b < VIM; b++) {
+          gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+        }
       }
-    }
-    /* find second invariant of strain-rate */
-    calc_shearrate(&gammadot, gamma, NULL, NULL);
+      /* find second invariant of strain-rate */
+      calc_shearrate(&gammadot, gamma, NULL, NULL);
 
-    local_post[MEAN_SHEAR] = gammadot;
-    local_lumped[MEAN_SHEAR] = 1.;
+      local_post[MEAN_SHEAR] = gammadot;
+      local_lumped[MEAN_SHEAR] = 1.;
+    }
+    if (pd->e[pg->imtrx][R_LUBP] || pd->e[pg->imtrx][R_SHELL_FILMP] || pd->e[pg->imtrx][R_LUBP_2]) {
+      int *n_dof = NULL;
+      int dof_map[MDE];
+      n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
+      lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+      /* Calculate Shear-rate */
+      if (pd->e[pg->imtrx][R_LUBP]) {
+        calculate_lub_q_v(R_LUBP, time, delta_t, xi, exo);
+      } else if (pd->e[pg->imtrx][R_LUBP_2]) {
+        calculate_lub_q_v(R_LUBP_2, time, delta_t, xi, exo);
+      } else {
+        calculate_lub_q_v(R_SHELL_FILMP, time, delta_t, xi, exo);
+      }
+      local_post[PP_Viscosity] = LubAux->srate;
+      local_lumped[MEAN_SHEAR] = 1.;
+    }
   }
 
   if (GIES_CRIT != -1 && pd->e[pg->imtrx][R_MOMENTUM1]) {
