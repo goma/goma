@@ -6220,8 +6220,10 @@ void flow_n_dot_T_nobc(double func[DIM],
   }
 
   /* compute stress tensor and its derivatives */
-  if (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV) {
+  if (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV || vn->evssModel == CONF) {
     fluid_stress_conf(Pi, d_Pi);
+  } else if (vn->evssModel == SQRT_CONF) {
+    fluid_stress_sqrt_conf(Pi, d_Pi);
   } else {
     fluid_stress(Pi, d_Pi);
   }
@@ -6366,7 +6368,7 @@ void flow_n_dot_T_nobc(double func[DIM],
 
     if (gn->ConstitutiveEquation == BINGHAM_MIXED ||
         (pd->v[pg->imtrx][POLYMER_STRESS11] &&
-         (vn->evssModel == EVSS_F || vn->evssModel == LOG_CONF || vn->evssModel == EVSS_GRADV ||
+         (vn->evssModel == EVSS_F || vn->evssModel == SQRT_CONF || vn->evssModel == LOG_CONF || vn->evssModel == EVSS_GRADV || vn->evssModel == CONF ||
           vn->evssModel == LOG_CONF_GRADV))) {
       for (p = 0; p < pd->Num_Dim; p++) {
         for (q = 0; q < pd->Num_Dim; q++) {

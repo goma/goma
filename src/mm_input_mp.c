@@ -2204,6 +2204,10 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       vn_glob[mn]->evssModel = EVSS_L;
     } else if (!strcmp(model_name, "LOG_CONF")) {
       vn_glob[mn]->evssModel = LOG_CONF;
+    } else if (!strcmp(model_name, "SQRT_CONF")) {
+      vn_glob[mn]->evssModel = SQRT_CONF;
+    } else if (!strcmp(model_name, "CONF")) {
+      vn_glob[mn]->evssModel = CONF;
     } else if (!strcmp(model_name, "LOG_CONF_TRANSIENT")) {
       vn_glob[mn]->evssModel = LOG_CONF_TRANSIENT;
     } else if (!strcmp(model_name, "LOG_CONF_TRANSIENT_GRADV")) {
