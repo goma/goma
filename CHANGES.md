@@ -1,3 +1,7 @@
+## Changes in version 7.1.3
+
+- Komplex support now compiles, untested
+
 ## Changes in version 7.1.2
 
 - bugfix for LOCA parallel
