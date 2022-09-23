@@ -66,9 +66,11 @@ curve defined by the intersections of side set 5 and 4.
 * This boundary condition imposes a point
   collocated constraint of the form:
 
-.. figure:: /figures/079_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+  n_{cl} \cdot \left(v - v_m\right) = V_n
+
+  
 
 where *v* is the fluid velocity, :math:`v_m` is the mesh
 velocity and :math:`n_cl` is the normal to the contact

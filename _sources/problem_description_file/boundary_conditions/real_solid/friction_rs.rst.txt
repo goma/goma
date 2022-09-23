@@ -54,9 +54,11 @@ This condition should be utilized in conjunction with a rotated condition such a
 SPLINE_RS in order to apply a tangential force which is proportional to the normal
 force;
 
-.. figure:: /figures/073_goma_physics.png
-	:align: center
-	:width: 90%
+.. math::
+
+     \underline F = \mu F_n \frac{\underline v}{|\underline v|}
+
+     
 
 where :math:`\mu` is the coefficient of friction and :math:`\underline{v}` is the velocity of the convected solid. Note
 that the direction of the frictional force is determined by the velocity direction.
