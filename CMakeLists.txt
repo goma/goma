@@ -378,6 +378,7 @@ option_definition(ANALEIG_PLEASE OFF)
 option_definition(DO_NO_UNROLL OFF)
 option_definition(USERMAT_INITIALIZATION OFF)
 option_definition(ENABLE_LOGGING OFF)
+option_definition(ENABLE_KOMPLEX OFF)
 set(MDE
     "27"
     CACHE STRING "set MDE")
