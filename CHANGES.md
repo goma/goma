@@ -1,3 +1,9 @@
+## Changes in version 7.1.2
+
+- bugfix for LOCA parallel
+- bugfix LOCA global variables exodus output
+- add ENABLE_KOMPLEX to CMakeLists.txt
+
 ## Changes in version 7.1.1
 
 - bugfix for linear PTT BC `STRESS_DEVELOPED`
