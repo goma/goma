@@ -9397,6 +9397,8 @@ void build_integ_element(Integ_Elem *e,
   if (!e->is_conformal) {
     switch (ielem_type) {
     case BIQUAD_QUAD:
+    case BIQUAD_SHELL:
+    case BILINEAR_SHELL:
     case BILINEAR_QUAD: {
       int job = -1; /* job == -1: no subelements
                        job == 0: create 4 triangles
@@ -9456,7 +9458,7 @@ void build_integ_element(Integ_Elem *e,
         nodes[1][0] = e->xi[1][0];
         nodes[1][1] = e->xi[1][1];
         nodes[1][2] = 0.;
-        if (ielem_type == BIQUAD_QUAD) {
+        if (ielem_type == BIQUAD_QUAD || ielem_type == BIQUAD_SHELL) {
           nodes[2][0] = e->xi[8][0];
           nodes[2][1] = e->xi[8][1];
           nodes[2][2] = 0.;
@@ -9490,7 +9492,7 @@ void build_integ_element(Integ_Elem *e,
         nodes[1][0] = e->xi[2][0];
         nodes[1][1] = e->xi[2][1];
         nodes[1][2] = 0.;
-        if (ielem_type == BIQUAD_QUAD) {
+        if (ielem_type == BIQUAD_QUAD || ielem_type == BIQUAD_SHELL) {
           nodes[2][0] = e->xi[8][0];
           nodes[2][1] = e->xi[8][1];
           nodes[2][2] = 0.;
@@ -9524,7 +9526,7 @@ void build_integ_element(Integ_Elem *e,
         nodes[1][0] = e->xi[3][0];
         nodes[1][1] = e->xi[3][1];
         nodes[1][2] = 0.;
-        if (ielem_type == BIQUAD_QUAD) {
+        if (ielem_type == BIQUAD_QUAD || ielem_type == BIQUAD_SHELL) {
           nodes[2][0] = e->xi[8][0];
           nodes[2][1] = e->xi[8][1];
           nodes[2][2] = 0.;
@@ -9558,7 +9560,7 @@ void build_integ_element(Integ_Elem *e,
         nodes[1][0] = e->xi[0][0];
         nodes[1][1] = e->xi[0][1];
         nodes[1][2] = 0.;
-        if (ielem_type == BIQUAD_QUAD) {
+        if (ielem_type == BIQUAD_QUAD || ielem_type == BIQUAD_SHELL) {
           nodes[2][0] = e->xi[8][0];
           nodes[2][1] = e->xi[8][1];
           nodes[2][2] = 0.;
