@@ -158,7 +158,7 @@
 
 struct elem_side_bc_struct;
 
-#ifdef KOMPLEX
+#ifdef ENABLE_KOMPLEX
 #include "azk_komplex.h"
 #endif
 
@@ -905,9 +905,9 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
     con.general_info.method = HOPF_CONTINUATION;
 
     /* Make sure Komplex library is compiled for Hopf tracking */
-#ifndef KOMPLEX
+#ifndef ENABLE_KOMPLEX
     GOMA_EH(GOMA_ERROR, "Hopf Tracking Algorithm Requires Komplex Library!\n"
-                        "Recompile with KOMPLEX flag set.\n");
+                        "Recompile with ENABLE_KOMPLEX flag set.\n");
 #endif
 
     /* Set variables in the con.hopf_info structure: */
@@ -1052,7 +1052,7 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
   }
 
   /* Write null vector to files if requested (Hopf tracking case) */
-#ifdef KOMPLEX
+#ifdef ENABLE_KOMPLEX
   if (loca_in->NVSave && passdown.method == HOPF_CONTINUATION) {
 
     /* Open two new ExodusII files */
@@ -1060,13 +1060,13 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
       multiname(loca_in->NV_exoII_outfile, ProcID, Num_Proc);
       multiname(loca_in->NV_imag_outfile, ProcID, Num_Proc);
     }
-    one_base(exo);
+    one_base(exo, Num_Proc);
 
     /* First write real part (y_vec) to NV_exoII_outfile */
     wr_mesh_exo(exo, loca_in->NV_exoII_outfile, 0);
     wr_result_prelim_exo(rd, exo, loca_in->NV_exoII_outfile, NULL);
     if (Num_Proc > 1)
-      wr_dpi(dpi, loca_in->NV_exoII_outfile, 0);
+      wr_dpi(dpi, loca_in->NV_exoII_outfile);
     *passdown.nprint = 0;
 
     write_solution(loca_in->NV_exoII_outfile, passdown.resid_vector, con.hopf_info.y_vec,
@@ -1079,7 +1079,7 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
     wr_mesh_exo(exo, loca_in->NV_imag_outfile, 0);
     wr_result_prelim_exo(rd, exo, loca_in->NV_imag_outfile, NULL);
     if (Num_Proc > 1)
-      wr_dpi(dpi, loca_in->NV_imag_outfile, 0);
+      wr_dpi(dpi, loca_in->NV_imag_outfile);
     *passdown.nprint = 0;
 
     write_solution(loca_in->NV_imag_outfile, passdown.resid_vector, con.hopf_info.z_vec,
@@ -1664,7 +1664,7 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-#ifndef KOMPLEX
+#ifndef ENABLE_KOMPLEX
 #define KOMPLEX_UNUSED UNUSED
 #else
 #define KOMPLEX_UNUSED
@@ -1694,10 +1694,10 @@ int komplex_linear_solver_conwrap(KOMPLEX_UNUSED double *c,
  *    Negative value means linear solver didn't converge.
  */
 {
-#ifdef KOMPLEX
+#ifdef ENABLE_KOMPLEX
 
   /* Declare Variables */
-  struct Aztec_Linear_Solver_System *ams = &(passdown.ams[JAC]);
+  struct GomaLinearSolverData *ams = &(passdown.ams[JAC]);
   int numUnks = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
   int i;
   int tmp_pre_calc;

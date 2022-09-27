@@ -9,14 +9,19 @@ spack:
   - parmetis~int64
   - hypre~int64
   - mumps~openmp+metis+parmetis
-  - trilinos+amesos+amesos2+aztec+belos+boost~chaco+epetra+epetraext~exodus+explicit_template_instantiation+fortran+hdf5~hypre+ifpack+ml+mpi+muelu+mumps+shared+stratimikos+suite-sparse+superlu-dist+teko+tpetra+zoltan+zoltan2
+  - trilinos@13.4.0+amesos+amesos2+aztec+belos+boost~chaco+epetra+epetraext~exodus+explicit_template_instantiation+fortran+hdf5~hypre+ifpack+ml+mpi+muelu+mumps+shared+stratimikos+suite-sparse+superlu-dist+teko+tpetra+zoltan+zoltan2
     build_type=Release gotype=long_long
   - omega-h build_type=Release
-  - petsc~X~batch~cgns~complex~cuda~debug+double~exodusii~fftw~giflib+hdf5~hwloc+hypre~int64~jpeg~knl~libpng~libyaml~memkind+metis~mkl-pardiso~moab~mpfr+mpi+mumps~openmp+p4est+ptscotch~random123~rocm~saws+shared+suite-sparse~superlu-dist+trilinos
+  - petsc~X~batch~cgns~complex~cuda~debug+double~exodusii~fftw~giflib+hdf5~hwloc+hypre~int64~jpeg~knl~libpng~libyaml~memkind+metis~mkl-pardiso~moab~mpfr+mpi+mumps~openmp+p4est+ptscotch~random123~rocm~saws+shared+suite-sparse~superlu-dist~trilinos
   - seacas+applications
   view:
     default:
       root: .spack-env/view
-      exclude: [python, sqlite, ncurses, openssl]
+      exclude:
+      - python
+      - sqlite
+      - ncurses
+      - openssl
       link_type: symlink
-  concretization: together
+  concretizer:
+    unify: true
