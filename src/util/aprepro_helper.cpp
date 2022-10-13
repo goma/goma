@@ -1,3 +1,4 @@
+#ifdef GOMA_ENABLE_APREPRO_LIB
 #include <aprepro.h>
 #include <fstream>
 #include <sstream>
@@ -9,6 +10,21 @@ extern "C" {
 #undef DISABLE_CPP
 }
 #include "util/aprepro_helper.h"
+
+extern "C" goma_error aprepro_parse_file(char *infile, char *outfile) {
+  SEAMS::Aprepro aprepro;
+
+  auto result = aprepro.parse_file(infile);
+
+  if (!result) {
+    return GOMA_ERROR;
+  }
+
+  std::ofstream aprepro_out(outfile, std::ofstream::out);
+
+  aprepro_out << aprepro.parsing_results().str();
+  return GOMA_SUCCESS;
+}
 
 extern "C" goma_error aprepro_parse_goma_file(char *filename) {
   SEAMS::Aprepro aprepro;
@@ -45,8 +61,7 @@ extern "C" goma_error aprepro_parse_goma_single_var(char *filename, char *var, d
   return GOMA_SUCCESS;
 }
 
-extern "C" goma_error
-aprepro_parse_goma_augc(struct AC_Information *ac, double val) {
+extern "C" goma_error aprepro_parse_goma_augc(struct AC_Information *ac, double val) {
   SEAMS::Aprepro aprepro;
   std::string var = ac->AP_param;
   aprepro.add_variable(var, val, true);
@@ -115,3 +130,4 @@ aprepro_parse_goma_augc(struct AC_Information *ac, double val) {
   }
   return GOMA_SUCCESS;
 }
+#endif

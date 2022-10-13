@@ -218,18 +218,17 @@ fvelo_tangential_solid_bc(double[], /* func                                     
                                                    * method from BE(0) to CN(1/2) to FE(1)     */
                           const dbl);             /* dt - current value of the time step size  */
 
-EXTERN void
-fvelo_normal_solid_bc(double[], /* func                                      */
-                      double[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func      */
-                      double[MAX_PDIM], /* solution vector x                         */
-                      double[DIM],      /* time derivative of solution vector x      */
-                      double[DIM],      /* time derivative of solution vector x_rs      */
-                      const int,        /* bc type */
-                      const int,        /* i_mat_solid                               */
-                      const int,        /* i_mat_fluid                               */
-                      const dbl,        /* tt - parameter to vary time integration
-                                         * method from BE(0) to CN(1/2) to FE(1)     */
-                      const dbl);       /* dt - current value of the time step size  */
+EXTERN void fvelo_normal_solid_bc(double[], /* func                                      */
+                                  double[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func */
+                                  double[MAX_PDIM], /* solution vector x                         */
+                                  double[DIM],      /* time derivative of solution vector x      */
+                                  double[DIM], /* time derivative of solution vector x_rs      */
+                                  const int,   /* bc type */
+                                  const int,   /* i_mat_solid                               */
+                                  const int,   /* i_mat_fluid                               */
+                                  const dbl,   /* tt - parameter to vary time integration
+                                                * method from BE(0) to CN(1/2) to FE(1)     */
+                                  const dbl);  /* dt - current value of the time step size  */
 
 void fvelo_slip_bc(double func[MAX_PDIM],
                    double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
@@ -712,10 +711,9 @@ void apply_linear_wetting_sic(double[MAX_PDIM],
                               double,
                               double);
 
-EXTERN void
-apply_wetting_tension(double[MAX_PDIM], /* func                                      */
-                      double[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func      */
-                      const double); /* wetting tension                           */
+EXTERN void apply_wetting_tension(double[MAX_PDIM], /* func                                      */
+                                  double[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func */
+                                  const double); /* wetting tension                           */
 
 EXTERN void velocity_profile(const int, /* irow_index - Elemental stiffness matrix
                                          * row index                                 */
@@ -754,11 +752,10 @@ continuous_tangent_velocity(double[DIM], /* func                                
                             const int); /* ielem_dim - physical dimension of the
                                          * element, ie., 1, 2, 3                     */
 
-EXTERN void
-continuous_normal_velocity(double[DIM], /* func                                      */
-                           double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
-                           const int); /* ielem_dim - physical dimension of the
-                                        * element, ie., 1, 2, 3                     */
+EXTERN void continuous_normal_velocity(double[DIM], /* func                                      */
+                                       double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func */
+                                       const int); /* ielem_dim - physical dimension of the
+                                                    * element, ie., 1, 2, 3                     */
 
 EXTERN void discontinuous_velocity(double[DIM], /* func                                      */
                                    double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func */

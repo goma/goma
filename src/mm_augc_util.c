@@ -864,11 +864,15 @@ void update_parameterAC(
 
     /*  case for user defined parameter  */
 
+#ifdef GOMA_ENABLE_APREPRO_LIB
     if (ibc == APREPRO_LIB_AC_BCID) {
       goma_error err = aprepro_parse_goma_augc(&augc[iAC], lambda);
       GOMA_EH(err, "Issue with aprepro augmenting condition parsing");
       augc[iAC].DataFlt[0] = lambda;
     } else if (ibc == APREPRO_AC_BCID) {
+#else
+    if (ibc == APREPRO_AC_BCID) {
+#endif // GOMA_ENABLE_APREPRO_LIB
 #ifndef tflop
       int err;
       FILE *jfp = NULL;

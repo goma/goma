@@ -58,6 +58,7 @@
 #include "rf_solver_const.h"
 #include "sl_util.h"
 #include "std.h"
+#include "util/aprepro_helper.h"
 
 #define GOMA_MM_INPUT_C
 #include "mm_input.h"
@@ -5532,10 +5533,17 @@ void rd_ac_specs(FILE *ifp, char *input) {
     }
 
     /*  read parameter filename for Aprepro parameter cases  */
+#ifndef GOMA_ENABLE_APREPRO_LIB
+    if (augc[iAC].BCID == APREPRO_LIB_AC_BCID) {
+      GOMA_EH(GOMA_ERROR,
+              "Found Aprepro Library augmenting condition but GOMA_ENABLE_APREPRO_LIB=no");
+    }
+#endif
 
-    if (augc[iAC].BCID == APREPRO_LIB_AC_BCID || ((augc[iAC].Type == AC_USERBC || augc[iAC].Type == AC_FLUX ||
-         augc[iAC].Type == AC_FLUX_MAT) &&
-        augc[iAC].BCID == APREPRO_AC_BCID)) {
+    if (augc[iAC].BCID == APREPRO_LIB_AC_BCID ||
+        ((augc[iAC].Type == AC_USERBC || augc[iAC].Type == AC_FLUX ||
+          augc[iAC].Type == AC_FLUX_MAT) &&
+         augc[iAC].BCID == APREPRO_AC_BCID)) {
       if (fscanf(ifp, "%s", string) != 1) {
         GOMA_EH(GOMA_ERROR, "error reading Parameter File name");
       }
@@ -5547,15 +5555,18 @@ void rd_ac_specs(FILE *ifp, char *input) {
 
       SPF(endofstring(echo_string), " %s %s", augc[iAC].Params_File, augc[iAC].AP_param);
 
-      // read in the file 
+      // read in the file
       if (augc[iAC].BCID == APREPRO_LIB_AC_BCID) {
         FILE *fp = fopen(augc[iAC].Params_File, "rb");
         fseek(fp, 0L, SEEK_END);
         int sz = ftell(fp);
         rewind(fp);
         augc[iAC].Aprepro_lib_string_len = sz;
-        augc[iAC].Aprepro_lib_string = calloc(sz+1, sizeof(char));
-        fread(augc[iAC].Aprepro_lib_string, sz, 1, fp);
+        augc[iAC].Aprepro_lib_string = calloc(sz + 1, sizeof(char));
+        size_t retval = fread(augc[iAC].Aprepro_lib_string, sz, 1, fp);
+        if (retval != (size_t)sz) {
+          GOMA_EH(GOMA_ERROR, "Error reading APREPRO_LIB parameter file");
+        }
         fclose(fp);
       }
     }
@@ -7361,30 +7372,42 @@ void rd_matl_blk_specs(FILE *ifp, char *input) {
 
     if ((imp = fopen(MatFile, "r")) != NULL) {
       strcpy_rtn = strcpy(current_mat_file_name, MatFile);
-      if (run_aprepro == 1) {
+      if (run_aprepro) {
         fclose(imp);
-        /*
-         * Start fresh for each matl, build up command and temporary
-         * file name from available information...
-         */
-        System_Command[0] = '\0';
         TmpMatFile[0] = '\0';
         strcat(TmpMatFile, "tmp.");
         strcat(TmpMatFile, MatFile);
-        sprintf(System_Command, "%s %s %s", aprepro_command, MatFile, TmpMatFile);
+#ifdef GOMA_ENABLE_APREPRO_LIB
+        if (run_aprepro == 2) {
+          goma_error err = aprepro_parse_file(MatFile, TmpMatFile);
+          GOMA_EH(err, "Aprepro failed on %s", MatFile);
+        } else if (run_aprepro == 1) {
+#else
+        if (run_aprepro == 1) {
+#endif
+          /*
+           * Start fresh for each matl, build up command and temporary
+           * file name from available information...
+           */
+          System_Command[0] = '\0';
+          TmpMatFile[0] = '\0';
+          strcat(TmpMatFile, "tmp.");
+          strcat(TmpMatFile, MatFile);
+          sprintf(System_Command, "%s %s %s", aprepro_command, MatFile, TmpMatFile);
 #ifndef tflop
-        err = system(System_Command);
-        GOMA_EH(err, "system() choked on mat file.");
+          err = system(System_Command);
+          GOMA_EH(err, "system() choked on mat file.");
 
-        if (WEXITSTATUS(err) == 127) {
-          GOMA_EH(GOMA_ERROR, "System call failed, aprepro not found");
-        }
+          if (WEXITSTATUS(err) == 127) {
+            GOMA_EH(GOMA_ERROR, "System call failed, aprepro not found");
+          }
 
 #else
-        GOMA_EH(GOMA_ERROR, "aprepro the mat file prior to running goma.");
+          GOMA_EH(GOMA_ERROR, "aprepro the mat file prior to running goma.");
 #endif
-        if (Debug_Flag > 0) {
-          fprintf(stdout, "system: %s\n", System_Command);
+          if (Debug_Flag > 0) {
+            fprintf(stdout, "system: %s\n", System_Command);
+          }
         }
         imp = fopen(TmpMatFile, "r");
         if (imp == NULL) {
@@ -11104,7 +11127,11 @@ void translate_command_line(int argc, char *argv[], struct Command_line_command 
         (*nclc)++;
         istr++;
         clc[*nclc]->type = APREPRO;
+#ifdef GOMA_ENABLE_APREPRO_LIB
+        run_aprepro = 2;
+#else
         run_aprepro = 1;
+#endif
 
         /* check for aprepro options */
         sr = sprintf(command_line_ap, "aprepro ");
@@ -11117,8 +11144,10 @@ void translate_command_line(int argc, char *argv[], struct Command_line_command 
         while (istr < argc && (*argv[istr] != '-' || *(argv[istr] + 1) == '-')) {
           if (*(argv[istr] + 1) == '-') {
             strcat(command_line_ap, argv[istr++] + 1); /* remove first '-' */
+            run_aprepro = 1;
           } else {
             strcat(command_line_ap, argv[istr++]);
+            run_aprepro = 1;
           }
           strcat(command_line_ap, " ");
         }
@@ -11373,29 +11402,37 @@ void translate_command_line(int argc, char *argv[], struct Command_line_command 
   }
   /* Perform system calls to aprepro, fastq, etc */
 
-  if (run_aprepro == 1) {
+  if (run_aprepro) {
     strcpy(temp_file_inp, "tmp.");
     strcat(temp_file_inp, Input_File);
 
-    strcat(command_line_ap, Input_File);
-    strcat(command_line_ap, " ");
-    strcat(command_line_ap, temp_file_inp);
-    if (Debug_Flag > 0) {
-      fprintf(stdout, "system: %s\n", command_line_ap);
-    }
+#ifdef GOMA_ENABLE_APREPRO_LIB
+    if (run_aprepro == 2) {
+      goma_error err = aprepro_parse_file(Input_File, temp_file_inp);
+      GOMA_EH(err, "Issue with Aprepro parsing %s", Input_File);
+    } else if (run_aprepro == 1) {
+#else
+    if (run_aprepro == 1) {
+#endif
+      strcat(command_line_ap, Input_File);
+      strcat(command_line_ap, " ");
+      strcat(command_line_ap, temp_file_inp);
+      if (Debug_Flag > 0) {
+        fprintf(stdout, "system: %s\n", command_line_ap);
+      }
 
 #ifndef tflop
-    err = system(command_line_ap);
-    GOMA_EH(err, "system() choked on input file.");
+      err = system(command_line_ap);
+      GOMA_EH(err, "system() choked on input file.");
 
-    if (WEXITSTATUS(err) == 127) {
-      GOMA_EH(GOMA_ERROR, "System call failed, aprepro not found");
-      return;
-    }
+      if (WEXITSTATUS(err) == 127) {
+        GOMA_EH(GOMA_ERROR, "System call failed, aprepro not found");
+        return;
+      }
 #else
-    GOMA_EH(GOMA_ERROR, "aprepro the input file prior to running goma.");
+      GOMA_EH(GOMA_ERROR, "aprepro the input file prior to running goma.");
 #endif
-
+    }
     strcpy(Input_File, temp_file_inp);
     if (Debug_Flag > 0) {
       fprintf(stdout, "reading input from \"%s\"\n", Input_File);
@@ -13410,6 +13447,30 @@ void echo_compiler_settings(void) {
   fprintf(echo_file, "%-30s= %s\n", "GOMA_ENABLE_OMEGA_H", "no");
 #endif
 
+#ifdef GOMA_ENABLE_STRATIMIKOS
+  fprintf(echo_file, "%-30s= %s\n", "GOMA_ENABLE_STRATIMIKOS", "yes");
+#else
+  fprintf(echo_file, "%-30s= %s\n", "GOMA_ENABLE_STRATIMIKOS", "no");
+#endif
+
+#ifdef GOMA_ENABLE_TEKO
+  fprintf(echo_file, "%-30s= %s\n", "GOMA_ENABLE_TEKO", "yes");
+#else
+  fprintf(echo_file, "%-30s= %s\n", "GOMA_ENABLE_TEKO", "no");
+#endif
+
+#ifdef GOMA_ENABLE_METIS
+  fprintf(echo_file, "%-30s= %s\n", "GOMA_ENABLE_METIS", "yes");
+#else
+  fprintf(echo_file, "%-30s= %s\n", "GOMA_ENABLE_METIS", "no");
+#endif
+
+#ifdef GOMA_ENABLE_APREPRO_LIB
+  fprintf(echo_file, "%-30s= %s\n", "GOMA_ENABLE_APREPRO_LIB", "yes");
+#else
+  fprintf(echo_file, "%-30s= %s\n", "GOMA_ENABLE_APREPRO_LIB", "no");
+#endif
+
 #ifdef HAVE_PARPACK
   fprintf(echo_file, "%-30s= %s\n", "HAVE_PARPACK", "yes");
 #else
@@ -13426,6 +13487,18 @@ void echo_compiler_settings(void) {
   fprintf(echo_file, "%-30s= %s\n", "TRILINOS", "yes");
 #else
   fprintf(echo_file, "%-30s= %s\n", "TRILINOS", "no");
+#endif
+
+#ifdef FP_EXCEPT
+  fprintf(echo_file, "%-30s= %s\n", "FP_EXCEPT", "yes");
+#else
+  fprintf(echo_file, "%-30s= %s\n", "FP_EXCEPT", "no");
+#endif
+
+#ifdef CHECK_FINITE
+  fprintf(echo_file, "%-30s= %s\n", "CHECK_FINITE", "yes");
+#else
+  fprintf(echo_file, "%-30s= %s\n", "CHECK_FINITE", "no");
 #endif
 
   fprintf(echo_file, "%-30s= %s\n", "Pressure Stabilization (PSPG)", (PSPG > 0 ? "yes" : "no"));

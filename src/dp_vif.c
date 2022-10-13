@@ -3086,7 +3086,7 @@ void ark_landing(void) {
   for (i = 0; i < nAC; i++) {
     dalloc(augc[i].len_AC, augc[i].DataFlt);
     if (augc[i].Aprepro_lib_string_len > 0) {
-      augc[i].Aprepro_lib_string = calloc(augc[i].Aprepro_lib_string_len+1, sizeof(char));
+      augc[i].Aprepro_lib_string = calloc(augc[i].Aprepro_lib_string_len + 1, sizeof(char));
     }
   }
 
