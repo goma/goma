@@ -5533,9 +5533,9 @@ void rd_ac_specs(FILE *ifp, char *input) {
 
     /*  read parameter filename for Aprepro parameter cases  */
 
-    if ((augc[iAC].Type == AC_USERBC || augc[iAC].Type == AC_FLUX ||
+    if (augc[iAC].BCID == APREPRO_LIB_AC_BCID || ((augc[iAC].Type == AC_USERBC || augc[iAC].Type == AC_FLUX ||
          augc[iAC].Type == AC_FLUX_MAT) &&
-        augc[iAC].BCID == APREPRO_AC_BCID) {
+        augc[iAC].BCID == APREPRO_AC_BCID)) {
       if (fscanf(ifp, "%s", string) != 1) {
         GOMA_EH(GOMA_ERROR, "error reading Parameter File name");
       }
@@ -5546,6 +5546,18 @@ void rd_ac_specs(FILE *ifp, char *input) {
       strcpy(augc[iAC].AP_param, string);
 
       SPF(endofstring(echo_string), " %s %s", augc[iAC].Params_File, augc[iAC].AP_param);
+
+      // read in the file 
+      if (augc[iAC].BCID == APREPRO_LIB_AC_BCID) {
+        FILE *fp = fopen(augc[iAC].Params_File, "rb");
+        fseek(fp, 0L, SEEK_END);
+        int sz = ftell(fp);
+        rewind(fp);
+        augc[iAC].Aprepro_lib_string_len = sz;
+        augc[iAC].Aprepro_lib_string = calloc(sz+1, sizeof(char));
+        fread(augc[iAC].Aprepro_lib_string, sz, 1, fp);
+        fclose(fp);
+      }
     }
 
     /* add float list */

@@ -132,6 +132,8 @@ find_package(SEACASExodus REQUIRED HINTS ${Trilinos_DIR}/../SEACASExodus)
 message(STATUS "SEACASExodus_DIR = ${SEACASExodus_DIR}")
 message(STATUS "PETSC_DIR = $ENV{PETSC_DIR}")
 
+find_package(SEACASAprepro REQUIRED HINTS ${Trilinos_DIR}/../SEACASAprepro)
+
 option(ENABLE_PETSC "ENABLE_PETSC" ON)
 if(ENABLE_PETSC)
   # PETSC search set root of location to find PETSc configuration
@@ -713,9 +715,13 @@ set(GOMA_USER_SOURCES
     src/user_senkin.F)
 
 set(GOMA_UTIL_INCLUDES include/bc/rotate_util.h include/mm_eh.h
-                       include/util/goma_normal.h)
+                       include/util/goma_normal.h
+                       include/util/aprepro_helper.h)
 
-set(GOMA_UTIL_SOURCES src/bc/rotate_util.c src/util/goma_normal.c src/mm_eh.c)
+set(GOMA_UTIL_SOURCES src/bc/rotate_util.c
+                      src/util/goma_normal.c
+                      src/mm_eh.c
+                      src/util/aprepro_helper.cpp)
 
 set(GDS_INCLUDES include/gds/gds_vector.h)
 
@@ -902,12 +908,15 @@ set(GOMA_TPL_INCLUDES
     ${Sparse_INCLUDES}
     ${SEACASExodus_INCLUDE_DIRS}
     ${SEACASExodus_TPL_INCLUDE_DIRS}
+    ${SEACASAprepro_INCLUDE_DIRS}
+    ${SEACASAprepro_TPL_INCLUDE_DIRS}
     ${Trilinos_INCLUDE_DIRS}
     ${Trilinos_TPL_INCLUDE_DIRS}
     ${MPI_C_INCLUDE_PATH})
 
 set(GOMA_TPL_LIBRARY_DIRS
     ${SEACASExodus_LIBRARY_DIRS} ${SEACASExodus_TPL_LIBRARY_DIRS}
+    ${SEACASAprepro_LIBRARY_DIRS} ${SEACASAprepro_TPL_LIBRARY_DIRS}
     ${Trilinos_LIBRARY_DIRS} ${Trilinos_TPL_LIBRARY_DIRS})
 if(ENABLE_PETSC AND PETSC_FOUND)
   set(GOMA_TPL_LIBRARY_DIRS ${GOMA_TPL_LIBRARY_DIRS}
@@ -917,6 +926,8 @@ endif()
 set(GOMA_TPL_LIBRARIES
     ${SEACASExodus_LIBRARIES}
     ${SEACASExodus_TPL_LIBRARIES}
+    ${SEACASAprepro_LIBRARIES}
+    ${SEACASAprepro_TPL_LIBRARIES}
     ${GOMA_TPL_LIBRARIES}
     ${Trilinos_LIBRARIES}
     ${Trilinos_TPL_LIBRARIES}

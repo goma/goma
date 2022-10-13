@@ -31,6 +31,7 @@
 
 #ifndef APREPRO_AC_BCID
 #define APREPRO_AC_BCID -9
+#define APREPRO_LIB_AC_BCID (APREPRO_AC_BCID - 1)
 #endif
 
 #include "bc_contact.h"
