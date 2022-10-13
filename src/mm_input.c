@@ -5563,9 +5563,9 @@ void rd_ac_specs(FILE *ifp, char *input) {
         rewind(fp);
         augc[iAC].Aprepro_lib_string_len = sz;
         augc[iAC].Aprepro_lib_string = calloc(sz + 1, sizeof(char));
-        size_t retval = fread(augc[iAC].Aprepro_lib_string, sz, 1, fp);
+        size_t retval = fread(augc[iAC].Aprepro_lib_string, sizeof(char), sz, fp);
         if (retval != (size_t)sz) {
-          GOMA_EH(GOMA_ERROR, "Error reading APREPRO_LIB parameter file");
+          GOMA_EH(GOMA_ERROR, "Error reading APREPRO_LIB parameter file, %d != %lu", sz, retval);
         }
         fclose(fp);
       }
@@ -12343,7 +12343,7 @@ FILE *fopen_aprepro(const char *filename, const char *format) {
   char Tmpfilename[MAX_FNL];
   static char System_Command[MAX_SYSTEM_COMMAND_LENGTH];
 
-  if (run_aprepro == 1) {
+  if (run_aprepro == 1 || run_aprepro == 2) { // 1 or 2 as aprepro lib isn't supported here
     System_Command[0] = '\0';
     Tmpfilename[0] = '\0';
     (void)strcat(Tmpfilename, "tmp.");

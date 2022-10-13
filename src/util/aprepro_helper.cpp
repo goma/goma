@@ -76,6 +76,9 @@ extern "C" goma_error aprepro_parse_goma_augc(struct AC_Information *ac, double 
 
   std::string line;
   while (std::getline(aprepro_out, line)) {
+    if (line[0] == '$' || line[0] == '#') {
+      continue;
+    }
     std::stringstream ss(line);
     int bcid, bcidx;
     double computed_value;
