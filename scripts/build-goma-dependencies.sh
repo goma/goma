@@ -235,26 +235,28 @@ echo "Start Goma Compile" >> $COMPILE_LOG
 HDF5_VERSION="1.12.2"
 HDF5_MD5="4f4c87981ee5e3db12975f0904b634e2"
 
-NETCDF_VERSION="c-4.8.1"
-NETCDF_MD5="8da8665f1f185b85bc8127bc0bad0ee6"
+NETCDF_VERSION="c-4.9.0"
+NETCDF_VERSION_ONLY="4.9.0"
+NETCDF_MD5="26cfd1b2e32d511bd82477803976365d"
 
-TRILINOS_VERSION="13.2.0"
-TRILINOS_VERSION_DASH="13-2-0"
-TRILINOS_MD5="099680cd3660dba5ec447ddc50a8406c"
+TRILINOS_VERSION="13.4.0"
+TRILINOS_VERSION_DASH="13-4-0"
+TRILINOS_MD5="8f0c9ef997b7fa1eff0d2dd16fddb7ad"
 
-MUMPS_VERSION="5.5.0"
-MUMPS_MD5="08eb0887bfd1e570ce7faecbd8bf97c0"
+MUMPS_VERSION="5.5.1"
+MUMPS_URL="https://graal.ens-lyon.fr/MUMPS/MUMPS_$MUMPS_VERSION.tar.gz"
+MUMPS_MD5="da26c4b43d53a9a6096775245cee847f"
 
-OPENMPI_VERSION="4.1.3"
-OPENMPI_MD5="292fcbce24b1e6c18218e0fdcdc080e4"
+OPENMPI_VERSION="4.1.4"
+OPENMPI_MD5="f057e12aabaf7dd5a6a658180fca404e"
 OPENMPI_ARCHIVE_URL="https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-$OPENMPI_VERSION.tar.bz2"
 OPENMPI_EXTRA_CONFIGURE_FLAGS=""
 
-CMAKE_VERSION="3.21.1"
-CMAKE_MD5="1d8d33628f1c56b0c3cda67abddbea91"
+CMAKE_VERSION="3.24.2"
+CMAKE_MD5="f6f79ec66c91bbc075757a70205128ca"
 
-SUITESPARSE_VERSION="5.12.0"
-SUITESPARSE_MD5="08292a05b16acf37767090875d210ced"
+SUITESPARSE_VERSION="5.13.0"
+SUITESPARSE_MD5="e9e7bc594b77ae4b58d943cdc286d679"
 
 MATIO_VERSION="1.5.21"
 MATIO_MD5="afeb5d21b234699fd5b9dc4564afe1ca"
@@ -265,17 +267,24 @@ SCALAPACK_MD5="2397d36790d1445383bc3cdb1e18ca5f"
 LAPACK_VERSION="3.8.0"
 LAPACK_MD5="96591affdbf58c450d45c1daa540dbd2"
 
-PETSC_VERSION="3.17.1"
-PETSC_MD5="7a39f099b99f2b03edb9e02876cebb6d"
+PETSC_VERSION="3.18.0"
+PETSC_MD5="f7cf693ba8b1c04088deb65f9c5e8187"
 
-OMEGA_H_VERSION="9.34.8"
-OMEGA_H_MD5="daa3efaf5ea3aed32d2d60760d1a928e"
+OMEGA_H_VERSION="9.34.13"
+OMEGA_H_MD5="b6eee23870bb21b58f9bbf0f640bf12a"
 
 SUPERLU_DIST_VERSION="7.2.0"
 SUPERLU_DIST_MD5="10d20b97012e5ae89a6cc69b768f61b7"
 
-ARCHIVE_NAMES=("arpack96.tar.gz" \
-"patch.tar.gz" \
+OPENBLAS_VERSION="0.3.21"
+OPENBLAS_MD5="ffb6120e2309a2280471716301824805"
+OPENBLAS_URL="https://github.com/xianyi/OpenBLAS/releases/download/v$OPENBLAS_VERSION/OpenBLAS-$OPENBLAS_VERSION.tar.gz"
+
+ARPACK_NG_VERSION="3.8.0"
+ARPACK_NG_MD5="bb4cf448f2480a0ffe5517d579f980c3"
+ARPACK_NG_URL="https://github.com/opencollab/arpack-ng/archive/refs/tags/$ARPACK_NG_VERSION.tar.gz"
+
+ARCHIVE_NAMES=("arpack-ng-$ARPACK_NG_VERSION.tar.gz" \
 "hdf5-${HDF5_VERSION}.tar.bz2" \
 "netcdf-${NETCDF_VERSION}.tar.gz" \
 "parmetis-4.0.3.tar.gz" \
@@ -292,8 +301,7 @@ ARCHIVE_NAMES=("arpack96.tar.gz" \
 #y12m archive is skipped because it stores the number of downloads in the header
 
 #meaning each y12m tar has a unique MD5SUM.
-ARCHIVE_MD5SUMS=("fffaa970198b285676f4156cebc8626e" \
-"14830d758f195f272b8594a493501fa2" \
+ARCHIVE_MD5SUMS=("$ARPACK_NG_MD5" \
 "${HDF5_MD5}" \
 "${NETCDF_MD5}" \
 "f69c479586bf6bb7aff6a9bc0c739628" \
@@ -307,16 +315,15 @@ $MUMPS_MD5 \
 "$PETSC_MD5" \
 "$OMEGA_H_MD5")
 
-ARCHIVE_URLS=("http://www.caam.rice.edu/software/ARPACK/SRC/arpack96.tar.gz" \
-"http://www.caam.rice.edu/software/ARPACK/SRC/patch.tar.gz" \
+ARCHIVE_URLS=("$ARPACK_NG_URL" \
 "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.12/hdf5-${HDF5_VERSION}/src/hdf5-${HDF5_VERSION}.tar.bz2" \
-"https://downloads.unidata.ucar.edu/netcdf-c/4.8.1/netcdf-${NETCDF_VERSION}.tar.gz" \
+"https://downloads.unidata.ucar.edu/netcdf-c/${NETCDF_VERSION_ONLY}/netcdf-${NETCDF_VERSION}.tar.gz" \
 "http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz" \
 "http://downloads.sourceforge.net/project/sparse/sparse/sparse1.4b/sparse1.4b.tar.gz" \
 "http://codeload.github.com/xiaoyeli/superlu_dist/tar.gz/v$SUPERLU_DIST_VERSION" \
 "http://www.netlib.org/cgi-bin/netlibfiles.tgz?format=tgz\\&filename=y12m%2Fy12m.f" \
 "https://github.com/trilinos/Trilinos/archive/trilinos-release-$TRILINOS_VERSION_DASH.tar.gz" \
-"http://mumps.enseeiht.fr/MUMPS_$MUMPS_VERSION.tar.gz" \
+"$MUMPS_URL" \
 "https://github.com/DrTimothyAldenDavis/SuiteSparse/archive/refs/tags/v$SUITESPARSE_VERSION.tar.gz" \
 "https://github.com/tbeu/matio/releases/download/v$MATIO_VERSION/matio-$MATIO_VERSION.tar.gz" \
 "https://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-$PETSC_VERSION.tar.gz" \
@@ -324,8 +331,7 @@ ARCHIVE_URLS=("http://www.caam.rice.edu/software/ARPACK/SRC/arpack96.tar.gz" \
 
 # You can't call the ARPACK patch ARPACK or it will think it is already extracted
 # When in reality it isn't
-ARCHIVE_DIR_NAMES=("ARPACK" \
-"FAKE_DIR_FOR_ARPACK_PATCH" \
+ARCHIVE_DIR_NAMES=("arpack-ng-${ARPACK_NG_VERSION}" \
 "hdf5-${HDF5_VERSION}" \
 "netcdf-${NETCDF_VERSION}" \
 "parmetis-4.0.3" \
@@ -339,7 +345,7 @@ ARCHIVE_DIR_NAMES=("ARPACK" \
 "petsc-$PETSC_VERSION" \
 "omega_h-$OMEGA_H_VERSION")
 
-ARCHIVE_HOMEPAGES=("http://www.caam.rice.edu/software/ARPACK/" \
+ARCHIVE_HOMEPAGES=("https://github.com/opencollab/arpack-ng/" \
 "https://www.hdfgroup.org/" \
 "https://www.unidata.ucar.edu/software/netcdf/" \
 "http://glaros.dtc.umn.edu/gkhome/metis/metis/overview" \
@@ -353,7 +359,7 @@ ARCHIVE_HOMEPAGES=("http://www.caam.rice.edu/software/ARPACK/" \
 "https://petsc.org" \
 "https://github.com/sandialabs/omega_h/")
 
-ARCHIVE_REAL_NAMES=("ARPACK96" \
+ARCHIVE_REAL_NAMES=("arpack-ng" \
 "HDF5" \
 "NetCDF" \
 "Metis" \
@@ -600,6 +606,39 @@ function setMathVars {
         # Alternative to the intel "blas_flags" variable
         NON_INTEL_BLAS_LIBRARY="${BLAS_LIBRARY_DIR}/libblas.a"
         NON_INTEL_LAPACK_LIBRARY="${LAPACK_LIBRARY_DIR}/liblapack.a"
+        NON_INTEL_BLAS_LINK="-L${BLAS_LIBRARY_DIR} -l${BLAS_LIBRARY_NAME} ${FORTRAN_LIBS}"
+        SUITESPARSE_NON_INTEL_LAPACK_LINK="${LAPACK_LIBRARY_NAME_ARG} ${FORTRAN_LIBS}"
+    elif [[ "$MATH_LIBRARIES" == "openblas" ]]; then
+        USING_MKLS="OFF"
+        #Add packages that otherwise come preinstalled in intel compiler.
+        ARCHIVE_NAMES+=("OpenBLAS-$OPENBLAS_VERSION.tar.gz" \
+        "scalapack-$SCALAPACK_VERSION.tgz")
+        ARCHIVE_MD5SUMS+=("$OPENBLAS_MD5" \
+        "$SCALAPACK_MD5" )
+        ARCHIVE_URLS+=("$OPENBLAS_URL" \
+        "http://www.netlib.org/scalapack/scalapack-$SCALAPACK_VERSION.tgz" )
+        ARCHIVE_DIR_NAMES+=("OpenBLAS-$OPENBLAS_VERSION" \
+        "scalapack-$SCALAPACK_VERSION" )
+        ARCHIVE_HOMEPAGES+=("https://github.com/xianyi/OpenBLAS/" \
+        "http://www.netlib.org/scalapack/")
+        ARCHIVE_REAL_NAMES+=("OpenBLAS" \
+        "ScaLAPACK")
+
+        LAPACK_DIR="${GOMA_LIB}/OpenBLAS-$OPENBLAS_VERSION"
+        LAPACK_LIBRARY_DIR="$LAPACK_DIR/lib"
+        LAPACK_LIBRARY_NAME_ARG="-L${LAPACK_LIBRARY_DIR} -lopenblas"
+        LAPACK_LIBRARY_NAME="openblas"
+        BLAS_LIBRARY_DIR="${LAPACK_LIBRARY_DIR}"
+        BLAS_LIBRARY_NAME_ARG="-L${BLAS_LIBRARY_DIR} -lopenblas"
+        BLAS_LIBRARY_NAME="openblas"
+        BLACS_LIBRARY_NAME="scalapack"
+        SCALAPACK_LIBRARY_DIR="${GOMA_LIB}/scalapack-$SCALAPACK_VERSION/lib"
+        SCALAPACK_LIBRARY_NAME="scalapack"
+        SCALAPACK_LIBRARY_NAME_ARG="-L${SCALAPACK_LIBRARY_DIR} -lscalapack"
+        SCALAPACK_INCLUDE_DIR="${GOMA_LIB}/scalapack-$SCALAPACK_VERSION/include"
+        # Alternative to the intel "blas_flags" variable
+        NON_INTEL_BLAS_LIBRARY="${BLAS_LIBRARY_DIR}/libopenblas.a"
+        NON_INTEL_LAPACK_LIBRARY="${LAPACK_LIBRARY_DIR}/libopenblas.a"
         NON_INTEL_BLAS_LINK="-L${BLAS_LIBRARY_DIR} -l${BLAS_LIBRARY_NAME} ${FORTRAN_LIBS}"
         SUITESPARSE_NON_INTEL_LAPACK_LINK="${LAPACK_LIBRARY_NAME_ARG} ${FORTRAN_LIBS}"
 
@@ -1033,52 +1072,52 @@ fi
 
 
 #make ARPACK
-cd $GOMA_LIB/ARPACK
-if [ -e lib/libarpack.a ]
-then
-    log_echo "ARPACK already built"
-else
-    cat > ARmake.patch << EOF
-28c28
-< home = \$(HOME)/ARPACK
----
-> home = $GOMA_LIB/ARPACK
-35c35
-< PLAT = SUN4
----
-> PLAT = x86_64
-104,105c104,105
-< FC      = f77
-< FFLAGS	= -O -cg89
----
-> FC      = $MPI_F77_COMPILER
-> FFLAGS	= -O $BLAS_FLAGS $GCC_EXTRA_FFLAGS
-115c115
-< MAKE    = /bin/make
----
-> MAKE    = make
-EOF
-
-    patch ARmake.inc < ARmake.patch
-    # Documentation says this should always be needed but in reality only intel MKL requires it.
-    cat > UTIL/second.f.patch << EOF
-24c24
-<       EXTERNAL           ETIME
----
-> *     EXTERNAL           ETIME
-EOF
-    patch UTIL/second.f < UTIL/second.f.patch
-    make all 2>&1 | tee -a $COMPILE_LOG
-    mkdir lib
-    cp libarpack_x86_64.a lib/libarpack.a
-    if [ -e $GOMA_LIB/ARPACK/lib/libarpack.a ]
-    then
-        log_echo "Built ARPACK"
-    else
-        log_echo "Failed to build ARPACK"
-        exit 1
-    fi
-fi
+#cd $GOMA_LIB/ARPACK
+#if [ -e lib/libarpack.a ]
+#then
+#    log_echo "ARPACK already built"
+#else
+#    cat > ARmake.patch << EOF
+#28c28
+#< home = \$(HOME)/ARPACK
+#---
+#> home = $GOMA_LIB/ARPACK
+#35c35
+#< PLAT = SUN4
+#---
+#> PLAT = x86_64
+#104,105c104,105
+#< FC      = f77
+#< FFLAGS	= -O -cg89
+#---
+#> FC      = $MPI_F77_COMPILER
+#> FFLAGS	= -O $BLAS_FLAGS $GCC_EXTRA_FFLAGS
+#115c115
+#< MAKE    = /bin/make
+#---
+#> MAKE    = make
+#EOF
+#
+#    patch ARmake.inc < ARmake.patch
+#    # Documentation says this should always be needed but in reality only intel MKL requires it.
+#    cat > UTIL/second.f.patch << EOF
+#24c24
+#<       EXTERNAL           ETIME
+#---
+#> *     EXTERNAL           ETIME
+#EOF
+#    patch UTIL/second.f < UTIL/second.f.patch
+#    make all 2>&1 | tee -a $COMPILE_LOG
+#    mkdir lib
+#    cp libarpack_x86_64.a lib/libarpack.a
+#    if [ -e $GOMA_LIB/ARPACK/lib/libarpack.a ]
+#    then
+#        log_echo "Built ARPACK"
+#    else
+#        log_echo "Failed to build ARPACK"
+#        exit 1
+#    fi
+#fi
 
 
 if [[ "$MATH_LIBRARIES" == "netlib blas" ]]; then
@@ -1107,6 +1146,64 @@ if [[ "$MATH_LIBRARIES" == "netlib blas" ]]; then
     fi
     export LD_LIBRARY_PATH="${LAPACK_LIBRARY_DIR}:$LD_LIBRARY_PATH"
 fi
+
+if [[ "$MATH_LIBRARIES" == "openblas" ]]; then
+    #make lapack/blas
+    if [ -e $LAPACK_DIR/lib/libopenblas.a ]
+    then
+        log_echo "OpenBLAS already built"
+    else
+        tempdir=$(mktemp -u -p $GOMA_LIB)
+        mv $LAPACK_DIR $tempdir
+	mkdir $LAPACK_DIR
+	mv $tempdir $LAPACK_DIR/src
+        cd $LAPACK_DIR/src
+        CC=$MPI_C_COMPILER CXX=$MPI_CXX_COMPILER FC=$MPI_F90_COMPILER make USE_THREAD=0 USE_OPENMP=0 NO_SHARED=1 2>&1 | tee -a $COMPILE_LOG
+	make PREFIX=$LAPACK_DIR USE_THREAD=0 USE_OPENMP=0 NO_SHARED=1 install 2>&1 | tee -a $COMPILE_LOG
+	cd $GOMA_LIB
+        if [ -e $LAPACK_LIBRARY_DIR/libopenblas.a ]
+        then
+            log_echo "Built OpenBLAS"
+        else
+            log_echo "Failed to build OpenBLAS"
+            exit 1
+        fi
+    fi
+    export LD_LIBRARY_PATH="${LAPACK_LIBRARY_DIR}:$LD_LIBRARY_PATH"
+fi
+
+#make arpack
+if [ -e arpack-ng-$ARPACK_NG_VERSION/lib/libarpack.a ]
+then
+    log_echo "Arpack-ng already built"
+else
+    tempdir=$(mktemp -u -p $GOMA_LIB)
+    mv arpack-ng-$ARPACK_NG_VERSION $tempdir
+    mkdir arpack-ng-$ARPACK_NG_VERSION
+    mv $tempdir arpack-ng-$ARPACK_NG_VERSION/src
+    cd arpack-ng-$ARPACK_NG_VERSION/src/
+    # openblas only seems to work with cmake for static builds
+    # netlib lapack doesn't work with cmake
+    if [[ "$MATH_LIBRARIES" == "openblas" ]]; then
+        mkdir build
+        cd build
+        CC=$MPI_C_COMPILER CXX=$MPI_CXX_COMPILER FC=$MPI_F90_COMPILER cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBLAS_LIBRARIES=$NON_INTEL_BLAS_LIBRARY -DLAPACK_LIBRARIES="$NON_INTEL_LAPACK_LIBRARY;$NON_INTEL_BLAS_LIBRARY" $GOMA_LIB/arpack-ng-$ARPACK_NG_VERSION/src -DCMAKE_INSTALL_PREFIX=$GOMA_LIB/arpack-ng-$ARPACK_NG_VERSION -DBUILD_SHARED_LIBS=OFF 2>&1 | tee -a $COMPILE_LOG
+    else
+        ./bootstrap 2>&1 | tee -a $COMPILE_LOG
+        CC=$MPI_C_COMPILER CXX=$MPI_CXX_COMPILER FC=$MPI_F90_COMPILER ./configure --enable-static=yes --enable-shared=no --with-blas=$NON_INTEL_BLAS_LIBRARY --with-lapack=$NON_INTEL_LAPACK_LIBRARY --prefix=$GOMA_LIB/arpack-ng-$ARPACK_NG_VERSION
+    fi
+    make -j$MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
+    make install 2>&1 | tee -a $COMPILE_LOG
+    cd $GOMA_LIB
+    if [ -e $GOMA_LIB/arpack-ng-$ARPACK_NG_VERSION/lib/libarpack.a ]
+    then
+        log_echo "Built Arpack-NG"
+    else
+        log_echo "Failed to build arpack-ng"
+        exit 1
+    fi
+fi
+ export LD_LIBRARY_PATH="arpack-ng-${ARPACK_NG_VERSION}:$LD_LIBRARY_PATH"
 
 #make SuperLU
 cd $GOMA_LIB/superlu_dist-$SUPERLU_DIST_VERSION
@@ -3024,15 +3121,28 @@ export PATH=$TRILINOS_INSTALL/bin:\$PATH
 export PATH=${GOMA_LIB}/openmpi-$OPENMPI_VERSION/bin:\$PATH
 export METISDIR=${GOMA_LIB}/parmetis-4.0.3
 export UMFPACK_DIR=${GOMA_LIB}/SuiteSparse-$SUITESPARSE_VERSION
-export ARPACKDIR=${GOMA_LIB}/ARPACK
+export ARPACKDIR=${GOMA_LIB}/arpack-ng-$ARPACK_NG_VERSION
 export SPARSEDIR=${GOMA_LIB}/sparse
 export PETSC_DIR=${PETSC_DIR}
 export PETSC_ARCH=${PETSC_ARCH}
 EOF
 
+cat > config.fish <<EOF
+set -x CMAKE_PREFIX_PATH $TRILINOS_INSTALL ${GOMA_LIB}/Omega_h \$CMAKE_PREFIX_PATH
+set -x PATH $TRILINOS_INSTALL/bin \$PATH
+set -x PATH ${GOMA_LIB}/openmpi-$OPENMPI_VERSION/bin \$PATH
+set -x METISDIR ${GOMA_LIB}/parmetis-4.0.3
+set -x UMFPACK_DIR ${GOMA_LIB}/SuiteSparse-$SUITESPARSE_VERSION
+set -x ARPACKDIR ${GOMA_LIB}/arpack-ng-$ARPACK_NG_VERSION
+set -x SPARSEDIR ${GOMA_LIB}/sparse
+set -x PETSC_DIR ${PETSC_DIR}
+set -x PETSC_ARCH ${PETSC_ARCH}
+EOF
+
 
 if [ "$build_cmake" == "true" ] ; then
     echo "export PATH=$GOMA_LIB/cmake-$CMAKE_VERSION-linux-x86_64/bin:\$PATH" >> config.sh
+    echo "set -x PATH $GOMA_LIB/cmake-$CMAKE_VERSION-linux-x86_64/bin \$PATH" >> config.fish
 fi
 
 log_echo

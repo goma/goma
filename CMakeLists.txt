@@ -130,8 +130,17 @@ endif()
 # Exodus
 find_package(SEACASExodus REQUIRED HINTS ${Trilinos_DIR}/../SEACASExodus)
 message(STATUS "SEACASExodus_DIR = ${SEACASExodus_DIR}")
-message(STATUS "PETSC_DIR = $ENV{PETSC_DIR}")
 
+option(ENABLE_APREPRO_LIB "ENABLE_APREPRO_LIB" ON)
+if(ENABLE_APREPRO_LIB)
+  find_package(SEACASAprepro HINTS ${SEACASExodus_DIR}/../SEACASAprepro)
+  if(SEACASAprepro_FOUND)
+    message(STATUS "Aprepro Library found, enabling")
+    message(STATUS "SEACASAprepro_DIR = ${SEACASAprepro_DIR}")
+  endif()
+endif()
+
+message(STATUS "PETSC_DIR = $ENV{PETSC_DIR}")
 option(ENABLE_PETSC "ENABLE_PETSC" ON)
 if(ENABLE_PETSC)
   # PETSC search set root of location to find PETSc configuration
@@ -366,11 +375,15 @@ if(PRINT_STACK_TRACE_ON_EH)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -rdynamic")
 endif()
 
+if(ENABLE_APREPRO_LIB AND SEACASAprepro_FOUND)
+  list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_APREPRO_LIB)
+endif()
+
 option_definition(DISABLE_COLOR_ERROR_PRINT OFF)
 option_definition(COMPILER_64BIT ON)
 option_definition(GOMA_ENABLE_AMESOS ON)
 option_definition(TRILINOS ON)
-option_definition(CHECK_FINITE ON)
+option_definition(CHECK_FINITE OFF)
 option_definition(NO_CHEBYSHEV_PLEASE ON)
 option_definition(PARALLEL ON)
 option_definition(FP_EXCEPT OFF)
@@ -713,9 +726,10 @@ set(GOMA_USER_SOURCES
     src/user_senkin.F)
 
 set(GOMA_UTIL_INCLUDES include/bc/rotate_util.h include/mm_eh.h
-                       include/util/goma_normal.h)
+                       include/util/goma_normal.h include/util/aprepro_helper.h)
 
-set(GOMA_UTIL_SOURCES src/bc/rotate_util.c src/util/goma_normal.c src/mm_eh.c)
+set(GOMA_UTIL_SOURCES src/bc/rotate_util.c src/util/goma_normal.c src/mm_eh.c
+                      src/util/aprepro_helper.cpp)
 
 set(GDS_INCLUDES include/gds/gds_vector.h)
 
@@ -841,7 +855,7 @@ execute_process(
   RESULT_VARIABLE goma_using_git
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
   ERROR_QUIET)
-  
+
 if(goma_using_git EQUAL 0)
   string(REGEX REPLACE "\n$" "" goma_git_version "${goma_git_version}")
 else()
@@ -849,7 +863,7 @@ else()
 endif()
 if(goma_git_version)
   list(APPEND GOMA_COMPILE_DEFINITIONS GIT_VERSION=${goma_git_version})
-  MESSAGE(STATUS "Git found setting version: ${goma_git_version}")
+  message(STATUS "Git found setting version: ${goma_git_version}")
 endif()
 
 message(STATUS "CMAKE_C_COMPILER=${CMAKE_C_COMPILER}")
@@ -902,12 +916,15 @@ set(GOMA_TPL_INCLUDES
     ${Sparse_INCLUDES}
     ${SEACASExodus_INCLUDE_DIRS}
     ${SEACASExodus_TPL_INCLUDE_DIRS}
+    ${SEACASAprepro_INCLUDE_DIRS}
+    ${SEACASAprepro_TPL_INCLUDE_DIRS}
     ${Trilinos_INCLUDE_DIRS}
     ${Trilinos_TPL_INCLUDE_DIRS}
     ${MPI_C_INCLUDE_PATH})
 
 set(GOMA_TPL_LIBRARY_DIRS
     ${SEACASExodus_LIBRARY_DIRS} ${SEACASExodus_TPL_LIBRARY_DIRS}
+    ${SEACASAprepro_LIBRARY_DIRS} ${SEACASAprepro_TPL_LIBRARY_DIRS}
     ${Trilinos_LIBRARY_DIRS} ${Trilinos_TPL_LIBRARY_DIRS})
 if(ENABLE_PETSC AND PETSC_FOUND)
   set(GOMA_TPL_LIBRARY_DIRS ${GOMA_TPL_LIBRARY_DIRS}
@@ -917,6 +934,8 @@ endif()
 set(GOMA_TPL_LIBRARIES
     ${SEACASExodus_LIBRARIES}
     ${SEACASExodus_TPL_LIBRARIES}
+    ${SEACASAprepro_LIBRARIES}
+    ${SEACASAprepro_TPL_LIBRARIES}
     ${GOMA_TPL_LIBRARIES}
     ${Trilinos_LIBRARIES}
     ${Trilinos_TPL_LIBRARIES}
@@ -1028,7 +1047,7 @@ set_target_properties(fix_exe PROPERTIES OUTPUT_NAME "fix")
 target_include_directories(fix_exe PUBLIC include)
 target_include_directories(fix_exe SYSTEM PRIVATE ${GOMA_TPL_INCLUDES})
 target_link_libraries(fix_exe PUBLIC ${GOMA_TPL_LIBRARIES} goma goma_user
-                                      goma_util)
+                                     goma_util)
 target_compile_definitions(fix_exe PUBLIC ${GOMA_COMPILE_DEFINITIONS})
 if(ENABLE_WARNINGS)
   target_compile_options(

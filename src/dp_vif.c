@@ -1133,6 +1133,9 @@ void noahs_ark(void) {
     ddd_add_member(n, &augc[i].lm_dim, 1, MPI_INT);
     ddd_add_member(n, &augc[i].lm_value, 1, MPI_DOUBLE);
     ddd_add_member(n, &augc[i].lm_resid, 1, MPI_DOUBLE);
+    ddd_add_member(n, &augc[i].Params_File, 128, MPI_CHAR);
+    ddd_add_member(n, &augc[i].AP_param, 64, MPI_CHAR);
+    ddd_add_member(n, &augc[i].Aprepro_lib_string_len, 1, MPI_INT);
   }
 
   /*
@@ -3082,6 +3085,9 @@ void ark_landing(void) {
 
   for (i = 0; i < nAC; i++) {
     dalloc(augc[i].len_AC, augc[i].DataFlt);
+    if (augc[i].Aprepro_lib_string_len > 0) {
+      augc[i].Aprepro_lib_string = calloc(augc[i].Aprepro_lib_string_len + 1, sizeof(char));
+    }
   }
 
   for (i = 0; i < nn_volume; i++) {
@@ -3386,6 +3392,9 @@ void noahs_dove(void) {
 
   for (i = 0; i < nAC; i++) {
     crdv(augc[i].len_AC, augc[i].DataFlt);
+    if (augc[i].Aprepro_lib_string_len > 0) {
+      ddd_add_member(n, augc[i].Aprepro_lib_string, augc[i].Aprepro_lib_string_len, MPI_CHAR);
+    }
   }
   /*   Post-processing parameters    */
 
