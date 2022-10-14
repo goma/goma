@@ -1,3 +1,9 @@
+## Changes in version 7.2.0
+
+- Add basic aprepro library support, so aprepro isn't needed on path for most tasks
+- Add Augmenting Condition on multple Boundary condition parameters using aprepro
+  see [https://github.com/goma/goma/pull/406](https://github.com/goma/goma/pull/406)
+
 ## Changes in version 7.1.3
 
 - Komplex support now compiles, untested
