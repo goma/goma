@@ -4938,6 +4938,7 @@ void rd_ac_specs(FILE *ifp, char *input) {
     augc[iAC].VOLID = -99;
     augc[iAC].MFID = -99;
     augc[iAC].iread = 0;
+    augc[iAC].Aprepro_lib_string_len = 0;
     if (AC_rd_file == 1) {
       augc[iAC].iread = 1;
     }
