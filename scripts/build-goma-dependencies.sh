@@ -1181,9 +1181,17 @@ else
     mv arpack-ng-$ARPACK_NG_VERSION $tempdir
     mkdir arpack-ng-$ARPACK_NG_VERSION
     mv $tempdir arpack-ng-$ARPACK_NG_VERSION/src
-    mkdir arpack-ng-$ARPACK_NG_VERSION/src/build
-    cd arpack-ng-$ARPACK_NG_VERSION/src/build
-    CC=$MPI_C_COMPILER CXX=$MPI_CXX_COMPILER FC=$MPI_F90_COMPILER cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBLAS_LIBRARIES=$NON_INTEL_BLAS_LIBRARY $GOMA_LIB/arpack-ng-$ARPACK_NG_VERSION/src -DCMAKE_INSTALL_PREFIX=$GOMA_LIB/arpack-ng-$ARPACK_NG_VERSION -DBUILD_SHARED_LIBS=OFF 2>&1 | tee -a $COMPILE_LOG
+    cd arpack-ng-$ARPACK_NG_VERSION/src/
+    # openblas only seems to work with cmake for static builds
+    # netlib lapack doesn't work with cmake
+    if [[ "$MATH_LIBRARIES" == "openblas" ]]; then
+        mkdir build
+        cd build
+        CC=$MPI_C_COMPILER CXX=$MPI_CXX_COMPILER FC=$MPI_F90_COMPILER cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBLAS_LIBRARIES=$NON_INTEL_BLAS_LIBRARY -DLAPACK_LIBRARIES="$NON_INTEL_LAPACK_LIBRARY;$NON_INTEL_BLAS_LIBRARY" $GOMA_LIB/arpack-ng-$ARPACK_NG_VERSION/src -DCMAKE_INSTALL_PREFIX=$GOMA_LIB/arpack-ng-$ARPACK_NG_VERSION -DBUILD_SHARED_LIBS=OFF 2>&1 | tee -a $COMPILE_LOG
+    else
+        ./bootstrap 2>&1 | tee -a $COMPILE_LOG
+        CC=$MPI_C_COMPILER CXX=$MPI_CXX_COMPILER FC=$MPI_F90_COMPILER ./configure --enable-static=yes --enable-shared=no --with-blas=$NON_INTEL_BLAS_LIBRARY --with-lapack=$NON_INTEL_LAPACK_LIBRARY --prefix=$GOMA_LIB/arpack-ng-$ARPACK_NG_VERSION
+    fi
     make -j$MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
     make install 2>&1 | tee -a $COMPILE_LOG
     cd $GOMA_LIB
