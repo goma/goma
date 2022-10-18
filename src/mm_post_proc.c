@@ -3192,8 +3192,7 @@ static int calc_standard_fields(double **post_proc_vect,
   }
 
   if (LOG_CONF_MAP != -1 && pd->v[pg->imtrx][POLYMER_STRESS11] &&
-      (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV ||
-      vn->evssModel == CONF ||
+      (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV || vn->evssModel == CONF ||
        vn->evssModel == LOG_CONF_TRANSIENT || vn->evssModel == LOG_CONF_TRANSIENT_GRADV)) {
     index = 0;
     VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
@@ -3204,18 +3203,18 @@ static int calc_standard_fields(double **post_proc_vect,
     double eig_values[DIM];
     dbl exp_s[DIM][DIM];
     for (mode = 0; mode < vn->modes; mode++) {
-      if (vn->evssModel== CONF) {
+      if (vn->evssModel == CONF) {
 
         for (a = 0; a < VIM; a++) {
           for (b = 0; b < VIM; b++) {
             exp_s[a][b] = fv->S[mode][a][b];
           }
-      }
+        }
       } else {
 #ifdef ANALEIG_PLEASE
-      analytical_exp_s(fv->S[mode], exp_s, eig_values, R1, NULL);
+        analytical_exp_s(fv->S[mode], exp_s, eig_values, R1, NULL);
 #else
-      compute_exp_s(fv->S[mode], exp_s, eig_values, R1);
+        compute_exp_s(fv->S[mode], exp_s, eig_values, R1);
 #endif
       }
       mup = viscosity(ve[mode]->gn, gamma, d_mup);
@@ -3255,8 +3254,7 @@ static int calc_standard_fields(double **post_proc_vect,
     } // Loop over modes
   }
 
-  if (LOG_CONF_MAP != -1 && pd->v[pg->imtrx][POLYMER_STRESS11] &&
-      (vn->evssModel == SQRT_CONF)) {
+  if (LOG_CONF_MAP != -1 && pd->v[pg->imtrx][POLYMER_STRESS11] && (vn->evssModel == SQRT_CONF)) {
     index = 0;
     VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
     VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
@@ -3270,13 +3268,13 @@ static int calc_standard_fields(double **post_proc_vect,
       for (int ii = 0; ii < VIM; ii++) {
         for (int jj = 0; jj < VIM; jj++) {
           if (ii <= jj) {
-          cb[ii][jj] = fv->S[mode][ii][jj];
-          cb[jj][ii] = cb[ii][jj];
+            cb[ii][jj] = fv->S[mode][ii][jj];
+            cb[jj][ii] = cb[ii][jj];
           }
         }
       }
 
-      tensor_dot(cb,cb,b_dot_b,VIM);
+      tensor_dot(cb, cb, b_dot_b, VIM);
       // Polymer time constant
       lambda = 0.0;
       if (ve[mode]->time_constModel == CONSTANT) {
@@ -3302,7 +3300,7 @@ static int calc_standard_fields(double **post_proc_vect,
                only assemble the upper half */
             if (a <= b) {
               if (pd->v[pg->imtrx][v_s[mode][a][b]]) {
-                local_post[LOG_CONF_MAP + index] = -(mup / lambda) * (delta(a,b) - b_dot_b[a][b]);
+                local_post[LOG_CONF_MAP + index] = -(mup / lambda) * (delta(a, b) - b_dot_b[a][b]);
                 local_lumped[LOG_CONF_MAP + index] = 1.;
                 index++;
               }

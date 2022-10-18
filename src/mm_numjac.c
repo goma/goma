@@ -563,10 +563,9 @@ int numerical_jacobian_compute_stress(struct GomaLinearSolverData *ams,
       /*needed for saturation hyst. func. */
       PRS_mat_ielem = ielem - exo->eb_ptr[ebn];
 
-      int err =
-          matrix_fill(ams, x_1, resid_vector_1, x_old, x_older, xdot, xdot_old, x_update,
-                             &delta_t, &theta, first_elem_side_BC_array, &time_value, exo, dpi,
-                             &ielem, &num_total_nodes, h_elem_avg, U_norm, NULL, zeroCA);
+      int err = matrix_fill(ams, x_1, resid_vector_1, x_old, x_older, xdot, xdot_old, x_update,
+                            &delta_t, &theta, first_elem_side_BC_array, &time_value, exo, dpi,
+                            &ielem, &num_total_nodes, h_elem_avg, U_norm, NULL, zeroCA);
       if (err)
         retval = -1;
       zeroCA = -1;
@@ -613,33 +612,33 @@ int numerical_jacobian_compute_stress(struct GomaLinearSolverData *ams,
             }
           }
 
-//          for (mode = 0; mode < vn->modes; mode++) {
-//            /* Only for stress terms */
-//            if ((idv[pg->imtrx][i][0] >= v_s[mode][0][0] &&
-//                idv[pg->imtrx][i][0] <= v_s[mode][2][2]) || 
-//             (idv[pg->imtrx][j][0] >= v_s[mode][0][0] &&
-//                idv[pg->imtrx][j][0] <= v_s[mode][2][2]) ){
-//
-              if (Inter_Mask[pg->imtrx][var_i][var_j]) {
+          //          for (mode = 0; mode < vn->modes; mode++) {
+          //            /* Only for stress terms */
+          //            if ((idv[pg->imtrx][i][0] >= v_s[mode][0][0] &&
+          //                idv[pg->imtrx][i][0] <= v_s[mode][2][2]) ||
+          //             (idv[pg->imtrx][j][0] >= v_s[mode][0][0] &&
+          //                idv[pg->imtrx][j][0] <= v_s[mode][2][2]) ){
+          //
+          if (Inter_Mask[pg->imtrx][var_i][var_j]) {
 
-                int ja = (i == j) ? j : in_list(j, ams->bindx[i], ams->bindx[i + 1], ams->bindx);
-                if (ja == -1) {
-                  sprintf(errstring, "Index not found (%d, %d) for interaction (%d, %d)", i, j,
-                          idv[pg->imtrx][i][0], idv[pg->imtrx][j][0]);
-                  GOMA_EH(ja, errstring);
-                }
-                if (Nodes[gnode]->DBC[pg->imtrx] && Nodes[gnode]->DBC[pg->imtrx][i_offset] != -1 &&
-                    i == j) {
-                  nj[ja] = 1.0;
-                } else if (Nodes[gnode]->DBC[pg->imtrx] &&
-                           Nodes[gnode]->DBC[pg->imtrx][i_offset] != -1) {
-                  nj[ja] = 0.0;
-                } else {
-                  nj[ja] = (resid_vector_1[i] - resid_vector[i]) / (dx_col[j]);
-                }
-              }
- //           }
- //         } // Loop over modes
+            int ja = (i == j) ? j : in_list(j, ams->bindx[i], ams->bindx[i + 1], ams->bindx);
+            if (ja == -1) {
+              sprintf(errstring, "Index not found (%d, %d) for interaction (%d, %d)", i, j,
+                      idv[pg->imtrx][i][0], idv[pg->imtrx][j][0]);
+              GOMA_EH(ja, errstring);
+            }
+            if (Nodes[gnode]->DBC[pg->imtrx] && Nodes[gnode]->DBC[pg->imtrx][i_offset] != -1 &&
+                i == j) {
+              nj[ja] = 1.0;
+            } else if (Nodes[gnode]->DBC[pg->imtrx] &&
+                       Nodes[gnode]->DBC[pg->imtrx][i_offset] != -1) {
+              nj[ja] = 0.0;
+            } else {
+              nj[ja] = (resid_vector_1[i] - resid_vector[i]) / (dx_col[j]);
+            }
+          }
+          //           }
+          //         } // Loop over modes
         }
       }
     }

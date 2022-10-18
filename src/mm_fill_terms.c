@@ -2450,8 +2450,7 @@ int assemble_momentum(dbl time,       /* current time */
   /*
    * Calculate the momentum stress tensor at the current gauss point
    */
-  if (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV ||
-   vn->evssModel == CONF ||
+  if (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV || vn->evssModel == CONF ||
       vn->evssModel == LOG_CONF_TRANSIENT || vn->evssModel == LOG_CONF_TRANSIENT_GRADV) {
     fluid_stress_conf(Pi, d_Pi);
   } else if (vn->evssModel == SQRT_CONF) {
@@ -27864,15 +27863,14 @@ void fluid_stress_sqrt_conf(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi)
               dbl conf[DIM][DIM];
               for (int ii = 0; ii < VIM; ii++) {
                 for (int jj = 0; jj < VIM; jj++) {
-                  conf[ii][jj] = (mup / lambda) * 
-                              (b[c][jj] * (double)delta(ii, r) + b[ii][r] * (double)delta(jj, c));
+                  conf[ii][jj] = (mup / lambda) * (b[c][jj] * (double)delta(ii, r) +
+                                                   b[ii][r] * (double)delta(jj, c));
                 }
               }
               for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
                 d_Pi->S[p][q][mode][r][c][j] =
-                    conf[p][q] * bf[var]->phi[j] +
-                    mu_over_mu_num * d_mun_dS[mode][r][c][j] *
-                        (gamma[p][q] - evss_f * gamma_cont[p][q]);
+                    conf[p][q] * bf[var]->phi[j] + mu_over_mu_num * d_mun_dS[mode][r][c][j] *
+                                                       (gamma[p][q] - evss_f * gamma_cont[p][q]);
               }
             }
           }

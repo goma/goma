@@ -203,12 +203,12 @@ void compute_saramito_model_terms(
     const int); // bounds S to [0,1] if TRUE. Only use this for postprocessing!
 
 int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
-                                    * explicit (tt = 1) to implicit (tt = 0) */
-                           dbl dt, /* current time step size */
-                           PG_DATA *pg_data);
+                                       * explicit (tt = 1) to implicit (tt = 0) */
+                              dbl dt, /* current time step size */
+                              PG_DATA *pg_data);
 
 int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
-                                    * explicit (tt = 1) to implicit (tt = 0) */
-                           dbl dt, /* current time step size */
-                           PG_DATA *pg_data);
+                                  * explicit (tt = 1) to implicit (tt = 0) */
+                         dbl dt, /* current time step size */
+                         PG_DATA *pg_data);
 #endif /* GOMA_MM_FILL_STRESS_H */

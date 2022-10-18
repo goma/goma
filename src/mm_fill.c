@@ -4008,7 +4008,6 @@ int matrix_fill_stress(struct GomaLinearSolverData *ams,
       }
     }
 
-
     if (pde[R_PRESSURE]) {
       if (upd->SegregatedSolve) {
         err = assemble_continuity_segregated(time_value, theta, delta_t, &pg_data);
