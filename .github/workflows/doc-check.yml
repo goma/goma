@@ -15,7 +15,8 @@ jobs:
         cache: pip
         with:
           python-version: '3.10'
-        run: |
+
+      - run: |
           # install pip=>20.1 to use "pip cache dir"
           pip install --upgrade pip
           pip install --upgrade pipenv
