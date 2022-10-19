@@ -12,8 +12,8 @@ jobs:
 
       - name: Setup Python
         uses: actions/setup-python@v4
-        cache: pip
         with:
+          cache: pip
           python-version: '3.10'
 
       - run: |
