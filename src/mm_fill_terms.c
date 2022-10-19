@@ -8828,9 +8828,9 @@ int load_fv_grads(void)
     fv->div_d_rs = 0.;
   }
 
-  /*
-   * grad(v)
-   */
+  /////+(*
+  ////+(* grad(v)
+  ////+(*/
   if (pd->gv[VELOCITY1]) {
     v = VELOCITY1;
     dofs = ei[upd->matrix_index[v]]->dof[v];

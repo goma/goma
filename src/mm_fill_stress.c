@@ -6534,11 +6534,11 @@ void compute_saramito_model_terms(dbl *sCoeff,
   */
 }
 
-static void compute_a_dot_b(dbl b[DIM][DIM],
-                            dbl G[DIM][DIM],
-                            dbl a_dot_b[DIM][DIM],
-                            dbl d_a_dot_b_db[DIM][DIM][DIM][DIM],
-                            dbl d_a_dot_b_dG[DIM][DIM][DIM][DIM]) {
+void compute_a_dot_b(dbl b[DIM][DIM],
+                     dbl G[DIM][DIM],
+                     dbl a_dot_b[DIM][DIM],
+                     dbl d_a_dot_b_db[DIM][DIM][DIM][DIM],
+                     dbl d_a_dot_b_dG[DIM][DIM][DIM][DIM]) {
 
   if (VIM == 2) {
 

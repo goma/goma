@@ -982,6 +982,10 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
           flow_n_dot_T_gradv(func, d_func, bc->BC_Data_Float[0], bc->BC_Data_Int[0]);
           break;
 
+        case FLOW_GRADV_T_BC:
+          flow_n_dot_T_gradv_t(func, d_func, bc->BC_Data_Float[0], bc->BC_Data_Int[0]);
+          break;
+
         case FLOW_GRADV_SIC_BC:
           flow_n_dot_T_gradv_sic(func, d_func, bc->BC_Data_Float[0], bc->BC_Data_Int[0]);
           break;
@@ -992,6 +996,8 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
           } else if (vn->evssModel == LOG_CONF_TRANSIENT ||
                      vn->evssModel == LOG_CONF_TRANSIENT_GRADV) {
             stress_no_v_dot_gradS_logc_transient(func_stress, d_func_stress, delta_t, theta);
+          } else if (vn->evssModel == SQRT_CONF) {
+            stress_no_v_dot_gradS_sqrt(func_stress, d_func_stress, delta_t, theta);
           } else {
             stress_no_v_dot_gradS(func_stress, d_func_stress, delta_t, theta);
           }
