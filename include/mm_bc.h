@@ -42,10 +42,9 @@ EXTERN void find_and_set_Dirichlet(double[], /* x - solution vector at this proc
                                    Exo_DB *, /* exo - ptr to EXODUS II FE database        */
                                    Dpi *);   /* dpi - ptr to distrib proc FE database     */
 
-EXTERN void
-alloc_First_Elem_BC(struct elem_side_bc_struct ****, /* First_Elem_Side_BC_Array ptr       */
-                    struct elem_edge_bc_struct ****, /* First_Elem_Edge_BC_Array ptr       */
-                    const int);                      /* num_internal_elems                 */
+EXTERN void alloc_First_Elem_BC(struct elem_side_bc_struct ****, /* First_Elem_Side_BC_Array ptr */
+                                struct elem_edge_bc_struct ****, /* First_Elem_Edge_BC_Array ptr */
+                                const int); /* num_internal_elems                 */
 
 EXTERN void set_up_Surf_BC(struct elem_side_bc_struct **[], /* First_Elem_Side_BC_Array          */
                            Exo_DB *, /* exo - ptr to FE db                        */

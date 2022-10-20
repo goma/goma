@@ -1373,6 +1373,8 @@ struct AC_Information {
   /*   file name and parameter name for aprepro parameters  */
   char Params_File[128];
   char AP_param[64];
+  char *Aprepro_lib_string;
+  int Aprepro_lib_string_len;
 };
 
 struct Continuation_Conditions {

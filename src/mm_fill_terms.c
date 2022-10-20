@@ -4244,8 +4244,7 @@ int assemble_continuity(dbl time_value, /* current time */
      */
 
     w0 =
-        (int)
-            mp->u_density[0]; /* This is the species number that is transported HYDRODYNAMICally  */
+        (int)mp->u_density[0]; /* This is the species number that is transported HYDRODYNAMICally */
 
     hydro_flux(&s_terms, w0, tt, dt, pg_data->hsquared);
 

@@ -58,6 +58,7 @@
 #include "sl_util_structs.h"
 #include "std.h"
 #include "user_ac.h"
+#include "util/aprepro_helper.h"
 
 #define GOMA_MM_AUGC_UTIL_C
 
@@ -133,7 +134,7 @@ void load_extra_unknownsAC(int iAC,     /* ID NUMBER OF AC'S */
 
     /*  case for user defined parameter  */
 
-    if (ibc == APREPRO_AC_BCID) {
+    if (ibc == APREPRO_AC_BCID || ibc == APREPRO_LIB_AC_BCID) {
       xa[iAC] = augc[iAC].DataFlt[0];
     } else {
 
@@ -863,7 +864,15 @@ void update_parameterAC(
 
     /*  case for user defined parameter  */
 
+#ifdef GOMA_ENABLE_APREPRO_LIB
+    if (ibc == APREPRO_LIB_AC_BCID) {
+      goma_error err = aprepro_parse_goma_augc(&augc[iAC], lambda);
+      GOMA_EH(err, "Issue with aprepro augmenting condition parsing");
+      augc[iAC].DataFlt[0] = lambda;
+    } else if (ibc == APREPRO_AC_BCID) {
+#else
     if (ibc == APREPRO_AC_BCID) {
+#endif // GOMA_ENABLE_APREPRO_LIB
 #ifndef tflop
       int err;
       FILE *jfp = NULL;
