@@ -1461,8 +1461,7 @@ Revised:         Summer 1998, SY Tam (UNM)
         return -1;
 #endif
     } else if (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV) {
-      err = assemble_stress_log_conf(theta, delta_t, pg_data.hsquared, pg_data.hhv,
-                                     pg_data.dhv_dxnode, pg_data.v_avg, pg_data.dv_dnode);
+      err = assemble_stress_log_conf(theta, delta_t, &pg_data);
 
       GOMA_EH(err, "assemble_stress_log_conf");
       if (err)
@@ -4043,8 +4042,7 @@ int matrix_fill_stress(struct GomaLinearSolverData *ams,
     }
 
     if (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV) {
-      err = assemble_stress_log_conf(theta, delta_t, pg_data.hsquared, pg_data.hhv,
-                                     pg_data.dhv_dxnode, pg_data.v_avg, pg_data.dv_dnode);
+      err = assemble_stress_log_conf(theta, delta_t, &pg_data);
       if (err)
         return -1;
       err = segregate_stress_update(x_update);

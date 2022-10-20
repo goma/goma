@@ -2371,13 +2371,7 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
 /*
  * This routine assembles the stress with a log-conformation tensor formulation.
  */
-int assemble_stress_log_conf(dbl tt,
-                             dbl dt,
-                             dbl h[DIM],
-                             dbl hh[DIM][DIM],
-                             dbl dh_dxnode[DIM][MDE],
-                             dbl vcent[DIM],
-                             dbl dvc_dnode[DIM][MDE]) {
+int assemble_stress_log_conf(dbl tt, dbl dt, PG_DATA *pg_data) {
   int dim, q, a, b, w;
   int eqn, siz;
 
@@ -2509,7 +2503,7 @@ int assemble_stress_log_conf(dbl tt,
 
   SUPG_terms supg_terms;
   if (supg != 0.0) {
-    supg_tau_shakib(&supg_terms, dim, dt, 1e-8, eqn);
+    supg_tau_gauss_point(&supg_terms, dim, 1e-7, pg_data);
   }
 
   dbl dcdd_factor = 0.0;
@@ -2748,7 +2742,7 @@ int assemble_stress_log_conf(dbl tt,
                   for (int w = 0; w < dim; w++) {
                     tmp += (v[w] - x_dot[w]) * (v[w] - x_dot[w]);
                   }
-                  tmp = 1.0 / sqrt(tmp);
+                  tmp = 1.0 / (sqrt(tmp) + 1e-16);
                   for (int w = 0; w < dim; w++) {
                     s[w] = (v[w] - x_dot[w]) * tmp;
                   }
@@ -2793,10 +2787,13 @@ int assemble_stress_log_conf(dbl tt,
                   }
                   magv = sqrt(magv);
 
-                  dbl tau_dcdd = 0.5 * he * magv * magv * pow((1.0 / mags) * hrgn, 1.0);
+                  dbl tau_dcdd = 0.5 * he * magv * magv * pow((1.0 / (mags + 1e-16)) * hrgn, 1.0);
                   // dbl tau_dcdd = (1.0 / mags) * hrgn * hrgn;
-                  tau_dcdd = 1 / sqrt(1.0 / (supg_terms.supg_tau * supg_terms.supg_tau) +
-                                      1.0 / (tau_dcdd * tau_dcdd));
+                  tau_dcdd = 1 / sqrt(1.0 / (supg_terms.supg_tau * supg_terms.supg_tau + 1e-32) +
+                                      (supg_terms.supg_tau * supg_terms.supg_tau *
+                                           supg_terms.supg_tau * supg_terms.supg_tau +
+                                       1e-32) +
+                                      1.0 / (tau_dcdd * tau_dcdd + 1e-32));
                   dbl ss[DIM][DIM] = {{0.0}};
                   dbl rr[DIM][DIM] = {{0.0}};
                   dbl rdots = 0.0;
@@ -7224,7 +7221,7 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
 
   SUPG_terms supg_terms;
   if (supg != 0.) {
-    supg_tau(&supg_terms, dim, 0.0, pg_data, dt, TRUE, eqn);
+    supg_tau(&supg_terms, dim, 1e-6, pg_data, dt, TRUE, eqn);
   }
   /* end Petrov-Galerkin addition */
 
@@ -7529,6 +7526,28 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
 
               diffusion = 0.;
               if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
+                Z = 1e-16 + v_dot_del_b[ii][jj] - x_dot_del_b[ii][jj];
+                //Z -= b_dot_g[ii][jj];
+                //Z -= a_dot_b[ii][jj];
+                //Z -= 0.5 * (binv[ii][jj] - b[ii][jj]);
+
+                dbl Y_inv = 1.0 / 10;
+                dbl hdc = 0;
+                dbl js = 0;
+                for (int k = 0; k < ei[pg->imtrx]->dof[eqn]; k++) {
+                  for (int p = 0; p < VIM; p++) {
+                    js += fabs(grad_b[p][ii][jj] * bf[eqn]->grad_phi[k][p]);
+                  }
+                }
+                hdc = 1 / (js + 1e-16);
+
+                // dbl kdc = fabs(Y_inv * Z) * hdc * hdc;
+                dbl kdc = fabs(Y_inv * Z) * hdc * hdc;
+                // kdc = hdc * hdc;
+                for (int r = 0; r < VIM; r++) {
+                  diffusion += kdc * grad_b[r][ii][jj] * bf[eqn]->grad_phi[i][r];
+                }
+
                 diffusion *= det_J * wt * h3;
                 diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
               }
@@ -7575,14 +7594,10 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
             peqn = upd->ep[pg->imtrx][eqn];
 
             R_advection = v_dot_del_b[ii][jj] - x_dot_del_b[ii][jj];
-            R_advection += b_dot_g[ii][jj] + a_dot_b[ii][jj];
+            R_advection -= b_dot_g[ii][jj];
+            R_advection -= a_dot_b[ii][jj];
 
-            R_source = delta(ii, jj) - b[ii][jj];
-
-            if (DOUBLE_NONZERO(alpha))
-              R_source += alpha * lambda * (s_dot_s[ii][jj] / mup);
-            R_source *= saramitoCoeff;
-            R_source += -at * mup * (g[ii][jj] + gt[ii][jj]);
+            R_source = -0.5 * (binv[ii][jj] - b[ii][jj]);
 
             for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
 
@@ -7715,6 +7730,33 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
 
                     diffusion = 0.;
                     if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
+                      dbl Z = 1e-16 + v_dot_del_b[ii][jj] - x_dot_del_b[ii][jj];
+                      //Z -= b_dot_g[ii][jj];
+                      //Z -= a_dot_b[ii][jj];
+                      //Z -= 0.5 * (binv[ii][jj] - b[ii][jj]);
+                      dbl dZ = phi_j * (grad_b[p][ii][jj]);
+                      dbl Y_inv = 1.0 / 10;
+                      dbl hdc = 0;
+                      dbl js = 0;
+                      for (int k = 0; k < ei[pg->imtrx]->dof[eqn]; k++) {
+                        for (int r = 0; r < VIM; r++) {
+                          js += fabs(grad_b[r][ii][jj] * bf[eqn]->grad_phi[k][r]);
+                        }
+                      }
+                      hdc = 1 / (js + 1e-16);
+
+                      //                      dbl kdc = fabs(Y_inv * Z) * hdc * hdc;
+                      //                      dbl dkdc = ((Y_inv * dZ * Y_inv * Z) / fabs( Y_inv *
+                      //                      Z)) * hdc * hdc;
+                      //
+                      dbl kdc = fabs(Y_inv * Z) * hdc * hdc;
+                      dbl dkdc = Y_inv * dZ * Y_inv * Z / fabs(Y_inv * Z) * hdc * hdc;
+                      // dkdc = 0;
+
+                      for (int r = 0; r < VIM; r++) {
+                        diffusion += dkdc * grad_b[r][ii][jj] * bf[eqn]->grad_phi[i][r];
+                      }
+
                       diffusion *= det_J * wt * h3;
                       diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
                     }
@@ -7722,25 +7764,9 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                     source = 0.;
 
                     if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-                      source_c = -at * d_mup_dv_pj * (g[ii][jj] + gt[ii][jj]);
-                      if (evss_gradv) {
-                        if (pd->CoordinateSystem != CYLINDRICAL) {
-                          source_c -= at * mup *
-                                      (bf[VELOCITY1 + ii]->grad_phi_e[j][p][ii][jj] +
-                                       bf[VELOCITY1 + jj]->grad_phi_e[j][p][jj][ii]);
-                        } else {
-                          source_c -= at * mup *
-                                      (bf[VELOCITY1]->grad_phi_e[j][p][ii][jj] +
-                                       bf[VELOCITY1]->grad_phi_e[j][p][jj][ii]);
-                        }
-                      }
-                      source_c *= wt_func;
+                      source_c = 0;
 
                       source_a = 0.;
-                      if (DOUBLE_NONZERO(alpha)) {
-                        source_a = -s_dot_s[ii][jj] / (mup * mup);
-                        source_a *= wt_func * saramitoCoeff * alpha * lambda * d_mup_dv_pj;
-                      }
 
                       source_b = 0.;
                       if (supg != 0.) {
@@ -8001,6 +8027,38 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                         diffusion = 0.;
 
                         if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
+                          dbl Z = 1e-16 + v_dot_del_b[ii][jj] - x_dot_del_b[ii][jj];
+                          //Z -= b_dot_g[ii][jj];
+                          //Z -= a_dot_b[ii][jj];
+                          Z -= 0.5 * (binv[ii][jj] - b[ii][jj]);
+                          dbl dZ = 0;
+                          for (int k = 0; k < VIM; k++) {
+                            //dZ += -b[ii][k] * delta(p, k) * delta(jj, q);
+                          }
+                          //dZ += -d_a_dot_b_dG[p][q][ii][jj];
+                          //dZ *= bf[var]->phi[j];
+                          dbl Y_inv = 1.0 / 10;
+                          dbl hdc = 0;
+                          dbl js = 0;
+                          for (int k = 0; k < ei[pg->imtrx]->dof[eqn]; k++) {
+                            for (int r = 0; r < VIM; r++) {
+                              js += fabs(grad_b[r][ii][jj] * bf[eqn]->grad_phi[k][r]);
+                            }
+                          }
+                          hdc = 1 / (js + 1e-16);
+
+                          //                      dbl kdc = fabs(Y_inv * Z) * hdc * hdc;
+                          //                      dbl dkdc = ((Y_inv * dZ * Y_inv * Z) / fabs( Y_inv
+                          //                      * Z)) * hdc * hdc;
+                          //
+                          dbl kdc = fabs(Y_inv * Z) * hdc * hdc;
+                          dbl dkdc = Y_inv * dZ * Y_inv * Z / fabs(Y_inv * Z) * hdc * hdc;
+                          // dkdc = 0;
+
+                          for (int r = 0; r < VIM; r++) {
+                            diffusion += dkdc * grad_b[r][ii][jj] * bf[eqn]->grad_phi[i][r];
+                          }
+
                           diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
                         }
 
@@ -8142,6 +8200,57 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                         diffusion = 0.;
 
                         if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
+                          dbl dZ = 0;
+                          if ((ii == p) && (jj == q)) {
+                            for (r = 0; r < WIM; r++) {
+                              dZ += (v[r] - x_dot[r]) * bf[var]->grad_phi[j][r];
+                            }
+                          }
+                          for (int k = 0; k < VIM; k++) {
+                            //dZ -= phi_j *
+                            //      (delta(ii, q) * delta(k, p) | delta(ii, p) * delta(k, q)) *
+                            //      g[k][jj];
+                          }
+                          //dZ -= phi_j * d_a_dot_b_db[p][q][ii][jj];
+                          //dZ = -0.5 * (d_binv_db[p][q][ii][jj] - delta(ii, p) * delta(jj, q));
+
+                          Z = 1e-16 + v_dot_del_b[ii][jj] - x_dot_del_b[ii][jj];
+                          //Z -= b_dot_g[ii][jj];
+                          //Z -= a_dot_b[ii][jj];
+                          //Z -= 0.5 * (binv[ii][jj] - b[ii][jj]);
+
+                          dbl Y_inv = 1.0 / 10;
+                          dbl hdc = 0;
+                          dbl djs = 0;
+                          for (int k = 0; k < ei[pg->imtrx]->dof[eqn]; k++) {
+                            for (int r = 0; r < VIM; r++) {
+                              djs += delta(p, ii) * delta(q, jj) * grad_b[r][ii][jj] *
+                                     bf[eqn]->grad_phi[k][r] * bf[var]->grad_phi[j][r] *
+                                     bf[eqn]->grad_phi[k][r] /
+                                     fabs(grad_b[r][ii][jj] * bf[eqn]->grad_phi[k][r] + 1e-16);
+                            }
+                          }
+                          dbl js = 0;
+                          for (int k = 0; k < ei[pg->imtrx]->dof[eqn]; k++) {
+                            for (int r = 0; r < VIM; r++) {
+                              js += fabs(grad_b[r][ii][jj] * bf[eqn]->grad_phi[k][r]);
+                            }
+                          }
+                          dbl dhdc = -1 * djs / ((js + 1e-16) * (js + 1e-16));
+                          hdc = 1 / (js + 1e-16);
+
+                          dbl kdc = fabs(Y_inv * Z) * hdc * hdc;
+                          dbl dkdc = ((Y_inv * dZ * Y_inv * Z) / fabs(Y_inv * Z)) * hdc * hdc;
+                          dkdc += fabs(Y_inv * Z) * 2 * hdc * dhdc;
+                          // kdc =  hdc*hdc;
+                          // dkdc =  2.0 * hdc * dhdc;
+
+                          for (int r = 0; r < VIM; r++) {
+                            diffusion += dkdc * grad_b[r][ii][jj] * bf[eqn]->grad_phi[i][r];
+                            diffusion += kdc * delta(p, ii) * delta(q, jj) *
+                                         bf[var]->grad_phi[j][r] * bf[eqn]->grad_phi[i][r];
+                          }
+
                           diffusion *= det_J * wt * h3;
                           diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
                         }

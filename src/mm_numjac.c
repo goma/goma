@@ -612,33 +612,33 @@ int numerical_jacobian_compute_stress(struct GomaLinearSolverData *ams,
             }
           }
 
-          //          for (mode = 0; mode < vn->modes; mode++) {
-          //            /* Only for stress terms */
-          //            if ((idv[pg->imtrx][i][0] >= v_s[mode][0][0] &&
-          //                idv[pg->imtrx][i][0] <= v_s[mode][2][2]) ||
-          //             (idv[pg->imtrx][j][0] >= v_s[mode][0][0] &&
-          //                idv[pg->imtrx][j][0] <= v_s[mode][2][2]) ){
-          //
-          if (Inter_Mask[pg->imtrx][var_i][var_j]) {
+          for (mode = 0; mode < vn->modes; mode++) {
+            /* Only for stress terms */
+            //        if ((idv[pg->imtrx][i][0] >= v_s[mode][0][0] &&
+            //            idv[pg->imtrx][i][0] <= v_s[mode][2][2]) ||
+            if ((idv[pg->imtrx][i][0] >= v_s[mode][0][0] &&
+                 idv[pg->imtrx][i][0] <= v_s[mode][2][2])) {
+              //
+              if (Inter_Mask[pg->imtrx][var_i][var_j]) {
 
-            int ja = (i == j) ? j : in_list(j, ams->bindx[i], ams->bindx[i + 1], ams->bindx);
-            if (ja == -1) {
-              sprintf(errstring, "Index not found (%d, %d) for interaction (%d, %d)", i, j,
-                      idv[pg->imtrx][i][0], idv[pg->imtrx][j][0]);
-              GOMA_EH(ja, errstring);
+                int ja = (i == j) ? j : in_list(j, ams->bindx[i], ams->bindx[i + 1], ams->bindx);
+                if (ja == -1) {
+                  sprintf(errstring, "Index not found (%d, %d) for interaction (%d, %d)", i, j,
+                          idv[pg->imtrx][i][0], idv[pg->imtrx][j][0]);
+                  GOMA_EH(ja, errstring);
+                }
+                if (Nodes[gnode]->DBC[pg->imtrx] && Nodes[gnode]->DBC[pg->imtrx][i_offset] != -1 &&
+                    i == j) {
+                  nj[ja] = 1.0;
+                } else if (Nodes[gnode]->DBC[pg->imtrx] &&
+                           Nodes[gnode]->DBC[pg->imtrx][i_offset] != -1) {
+                  nj[ja] = 0.0;
+                } else {
+                  nj[ja] = (resid_vector_1[i] - resid_vector[i]) / (dx_col[j]);
+                }
+              }
             }
-            if (Nodes[gnode]->DBC[pg->imtrx] && Nodes[gnode]->DBC[pg->imtrx][i_offset] != -1 &&
-                i == j) {
-              nj[ja] = 1.0;
-            } else if (Nodes[gnode]->DBC[pg->imtrx] &&
-                       Nodes[gnode]->DBC[pg->imtrx][i_offset] != -1) {
-              nj[ja] = 0.0;
-            } else {
-              nj[ja] = (resid_vector_1[i] - resid_vector[i]) / (dx_col[j]);
-            }
-          }
-          //           }
-          //         } // Loop over modes
+          } // Loop over modes
         }
       }
     }

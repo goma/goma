@@ -7957,6 +7957,7 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
   dbl d_xdotdels_dm;
 
   dbl d_vdotdels_dm;
+  int inv_v_s[DIM][DIM];
 
   dbl trace = 0.0; /* trace of the stress tensor */
 
@@ -7967,6 +7968,12 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
   status = 0;
 
   eqn = R_STRESS11;
+  inv_v_s[0][0] = 0; /* S11 */
+  inv_v_s[0][1] = 1; /* S12 */
+  inv_v_s[1][1] = 2; /* S22 */
+  inv_v_s[0][2] = 3; /* S13 */
+  inv_v_s[1][2] = 4; /* S23 */
+  inv_v_s[2][2] = 5; /* S33 */
 
   /*
    * Bail out fast if there's nothing to do...
@@ -8310,6 +8317,7 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
           if (ii <= jj) /* since the stress tensor is symmetric, only assemble the upper half */
           {
             eqn = R_s[mode][ii][jj];
+            k = inv_v_s[ii][jj];
 
             /*
              * In the element, there will be contributions to this many equations
@@ -8383,6 +8391,7 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
           if (ii <= jj) /* since the stress tensor is symmetric, only assemble the upper half */
           {
             eqn = R_s[mode][ii][jj];
+            k = inv_v_s[ii][jj];
             peqn = upd->ep[pg->imtrx][eqn];
 
             R_advection = v_dot_del_b[ii][jj] - x_dot_del_b[ii][jj];
