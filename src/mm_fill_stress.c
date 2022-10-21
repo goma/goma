@@ -8036,15 +8036,9 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
 
                     if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
                       source_a = R_source;
-                      source_b = -at * (g[ii][jj] + gt[ii][jj]);
 
-                      if (DOUBLE_NONZERO(alpha)) {
-                        source_b += -s_dot_s[ii][jj] / (mup * mup) * alpha * lambda * saramitoCoeff;
-                      }
 
                       source_a *= wt_func * (d_det_J_dmesh_pj * h3 + det_J * dh3dmesh_pj);
-
-                      source_b *= wt_func * det_J * h3 * d_mup_dmesh_pj;
 
                       source_c = 0.;
                       if (supg != 0.) {
@@ -8057,7 +8051,7 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                         source_c *= R_source * det_J * h3;
                       }
 
-                      source = source_a + source_b + source_c;
+                      source = source_a + source_c;
 
                       source *= wt * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
                     }
