@@ -2139,6 +2139,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     vn_glob[mn]->ConstitutiveEquation = SARAMITO_GIESEKUS;
   } else if (!strcmp(model_name, "SARAMITO_PTT")) {
     vn_glob[mn]->ConstitutiveEquation = SARAMITO_PTT;
+  } else if (!strcmp(model_name, "MODIFIED_JEFFREYS")) {
+    vn_glob[mn]->ConstitutiveEquation = MODIFIED_JEFFREYS;
   } else if (!strcmp(model_name, "NOPOLYMER")) {
     vn_glob[mn]->ConstitutiveEquation = NOPOLYMER;
     /* set defaults if the next section is not entered */
@@ -2407,25 +2409,93 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       if (model_read == -1)
         SPF(err_msg, "%s card is missing.", search_string);
       if (model_read == -2)
-        SPF(err_msg, "Only CONSTANT %s mode model supported.", search_string);
+        SPF(err_msg, "Only CONSTANT, POWER LAW and HERSCHEL_BULKLEY %s mode model supported.",
+            search_string);
       fprintf(stderr, "%s\n", err_msg);
       exit(-1);
+    }
+
+    // in case of non-constant polymer viscosity, parse polymer viscosity parameters
+    // For now, these all assume a single node
+    const bool mupIsConstant = matl_model == CONSTANT;
+
+    int nExpModel = CONSTANT;
+    int aExpModel = CONSTANT;
+    int fExpModel = CONSTANT;
+    int mu0Model = CONSTANT;
+    int muInfModel = CONSTANT;
+    int lamModel = CONSTANT;
+    int tauyModel = CONSTANT;
+    dbl nExpVal = 0;
+    dbl aExpVal = 0;
+    dbl fExpVal = 0;
+    dbl mu0Val = 0;
+    dbl muInfVal = 0;
+    dbl lamVal = 0;
+    dbl tauyVal = 0;
+
+    if (!mupIsConstant) {
+      model_read = look_for_mat_prop(imp, "Polymer Low Rate Viscosity", &(mu0Model), &(mu0Val),
+                                     NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
+      printf("Polymer Low Rate Viscosity model %s\n", model_name);
+      printf("Polymer Low Rate Viscosity value %E\n", mu0Val);
+      ECHO(es, echo_file);
+
+      model_read = look_for_mat_prop(imp, "Polymer Power Law Exponent", &(nExpModel), &(nExpVal),
+                                     NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
+      printf("Polymer Power Law Exponent model %s\n", model_name);
+      printf("Polymer Power Law Exponent value %E\n", nExpVal);
+      ECHO(es, echo_file);
+
+      model_read = look_for_mat_prop(imp, "Polymer High Rate Viscosity", &(muInfModel), &(muInfVal),
+                                     NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
+      printf("Polymer High Rate Viscosity model %s\n", model_name);
+      printf("Polymer High Rate Viscosity value %E\n", muInfVal);
+      ECHO(es, echo_file);
+
+      model_read = look_for_mat_prop(imp, "Polymer Viscosity Time Constant", &(lamModel), &(lamVal),
+                                     NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
+      printf("Polymer Viscosity Time Constant model %s\n", model_name);
+      printf("Polymer Viscosity Time Constant value %E\n", lamVal);
+      ECHO(es, echo_file);
+
+      model_read = look_for_mat_prop(imp, "Polymer Aexp", &(aExpModel), &(aExpVal), NO_USER, NULL,
+                                     model_name, SCALAR_INPUT, &NO_SPECIES, es);
+      printf("Polymer Aexp model %s\n", model_name);
+      printf("Polymer Aexp value %E\n", aExpVal);
+      ECHO(es, echo_file);
+
+      model_read = look_for_mat_prop(imp, "Polymer Yield Stress", &(tauyModel), &(tauyVal), NO_USER,
+                                     NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
+      printf("Polymer Yield Stress model %s\n", model_name);
+      printf("Polymer Yield Stress value %E\n", tauyVal);
+      ECHO(es, echo_file);
+
+      model_read =
+          look_for_mat_prop(imp, "Polymer Viscosity Yield Exponent", &(fExpModel), &(fExpVal),
+                            NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
+      printf("Polymer Viscosity Yield Exponent model %s\n", model_name);
+      printf("Polymer Viscosity Yield Exponent value %E\n", fExpVal);
+      ECHO(es, echo_file);
     }
 
     ECHO(es, echo_file);
 
     for (mm = 0; mm < vn_glob[mn]->modes; mm++) {
       ve_glob[mn][mm]->gn->ConstitutiveEquation = matl_model;
-      ve_glob[mn][mm]->gn->mu0 = modal_data[mm];
-      ve_glob[mn][mm]->gn->mu0Model = matl_model;
-      ve_glob[mn][mm]->gn->muinf = 0.;
-      ve_glob[mn][mm]->gn->muinfModel = CONSTANT;
-      ve_glob[mn][mm]->gn->lam = 0.;
-      ve_glob[mn][mm]->gn->lamModel = CONSTANT;
-      ve_glob[mn][mm]->gn->aexp = 0.;
-      ve_glob[mn][mm]->gn->aexpModel = CONSTANT;
-      ve_glob[mn][mm]->gn->nexp = 0.;
-      ve_glob[mn][mm]->gn->nexpModel = CONSTANT;
+      ve_glob[mn][mm]->gn->mu0 = (mupIsConstant ? modal_data[mm] : mu0Val);
+      ve_glob[mn][mm]->gn->muinf = muInfVal;
+      ve_glob[mn][mm]->gn->muinfModel = muInfModel;
+      ve_glob[mn][mm]->gn->lam = lamVal;
+      ve_glob[mn][mm]->gn->lamModel = lamModel;
+      ve_glob[mn][mm]->gn->aexp = aExpVal;
+      ve_glob[mn][mm]->gn->aexpModel = aExpModel;
+      ve_glob[mn][mm]->gn->nexp = nExpVal;
+      ve_glob[mn][mm]->gn->nexpModel = nExpModel;
+      ve_glob[mn][mm]->gn->tau_yModel = tauyModel;
+      ve_glob[mn][mm]->gn->tau_y = tauyVal;
+      ve_glob[mn][mm]->gn->fexpModel = fExpModel;
+      ve_glob[mn][mm]->gn->fexp = fExpVal;
     }
 
     strcpy(search_string, "Positive Level Set Polymer Viscosity");
@@ -2499,6 +2569,29 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       SPF(err_msg, "Only CONSTANT %s mode model supported.", search_string);
       fprintf(stderr, "%s\n", err_msg);
       exit(-1);
+    }
+
+    if (vn_glob[mn]->ConstitutiveEquation == MODIFIED_JEFFREYS) {
+      strcpy(search_string, "Jeffreys Viscosity");
+
+      model_read =
+          look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model, modal_data, es);
+
+      if (model_read < 1) {
+        if (model_read == -1)
+          SPF(err_msg, "%s card is missing", search_string);
+        if (model_read == -2)
+          SPF(err_msg, "Only CONSTANT %s  mode model supported.", search_string);
+        fprintf(stderr, "%s\n", err_msg);
+        exit(-1);
+      }
+
+      ECHO(es, echo_file);
+
+      for (mm = 0; mm < vn_glob[mn]->modes; mm++) {
+        ve_glob[mn][mm]->muJeffreys = modal_data[mm];
+        ve_glob[mn][mm]->muJeffreysModel = matl_model;
+      }
     }
 
     if (vn_glob[mn]->ConstitutiveEquation == GIESEKUS ||

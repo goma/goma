@@ -1235,8 +1235,12 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
   dbl source1;
   dbl source_a = 0, source_b = 0, source_c = 0;
   int err;
-  dbl alpha = 0;  /* This is the Geisekus mobility parameter */
-  dbl lambda = 0; /* polymer relaxation constant */
+  dbl alpha = 0;      /* This is the Geisekus mobility parameter */
+  dbl lambda1 = 0;    /* polymer relaxation constant */
+  dbl lambda2 = 0;    /* 2nd polymer relaxation constant -- for modified Jeffreys model */
+  dbl elasticMod = 0; /* elastic modulus -- needed for the modified Jeffreys model */
+  dbl lambda =
+      0; /* lambda1 + lambda2 -- this is just lambda1 unless using the modified Jeffreys model */
   dbl d_lambda_dF[MDE];
   double xi;
   double d_xi_dF[MDE];
@@ -1283,8 +1287,10 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
   dbl d_grad_s_dmesh[DIM][DIM][DIM][DIM]
                     [MDE]; /* derivative of grad of stress tensor for mode ve_mode */
 
-  dbl g[DIM][DIM];  /* velocity gradient tensor */
-  dbl gt[DIM][DIM]; /* transpose of velocity gradient tensor */
+  dbl g[DIM][DIM];      /* velocity gradient tensor */
+  dbl gt[DIM][DIM];     /* transpose of velocity gradient tensor */
+  dbl g_dot[DIM][DIM];  /* velocity gradient tensor time derivative */
+  dbl gt_dot[DIM][DIM]; /* transpose of velocity gradient tensor time derivative */
 
   /* dot product tensors */
 
@@ -1294,6 +1300,10 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
   dbl s_dot_gt[DIM][DIM];
   dbl gt_dot_s[DIM][DIM];
 
+  dbl g_dot_g[DIM][DIM];
+  dbl gt_dot_g[DIM][DIM];
+  dbl gt_dot_gt[DIM][DIM];
+
   /* polymer viscosity and derivatives */
   dbl mup;
   VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
@@ -1301,6 +1311,11 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
 
   SARAMITO_DEPENDENCE_STRUCT d_saramito_struct;
   SARAMITO_DEPENDENCE_STRUCT *d_saramito = &d_saramito_struct;
+
+  /* 2nd polymer viscosity -- for modified Jefreys model*/
+  dbl mupJeff;
+
+  const bool jeffreysEnabled = (vn->ConstitutiveEquation == MODIFIED_JEFFREYS);
 
   // todo: will want to parse necessary parameters... for now hard code
   const bool saramitoEnabled =
@@ -1324,6 +1339,12 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
   /* advective terms are precalculated */
   dbl v_dot_del_s[DIM][DIM];
   dbl x_dot_del_s[DIM][DIM];
+
+  dbl v_dot_del_g[DIM][DIM];
+  dbl v_dot_del_gt[DIM][DIM];
+
+  dbl x_dot_del_g[DIM][DIM];
+  dbl x_dot_del_gt[DIM][DIM];
 
   dbl d_xdotdels_dm;
 
@@ -1461,6 +1482,36 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
     at = 1.;
   }
 
+  // if a modified Jeffreys model is being run, load time derivative of velocity gradient
+  if (jeffreysEnabled) {
+    (void)tensor_dot(g, g, g_dot_g, VIM);
+    (void)tensor_dot(gt, gt, gt_dot_gt, VIM);
+    (void)tensor_dot(gt, g, gt_dot_g, VIM);
+
+    for (a = 0; a < VIM; a++) {
+      for (b = 0; b < VIM; b++) {
+        v_dot_del_g[a][b] = 0.;
+        v_dot_del_gt[a][b] = 0.;
+        x_dot_del_g[a][b] = 0.;
+        x_dot_del_gt[a][b] = 0.;
+
+        for (q = 0; q < dim; q++) {
+          v_dot_del_g[a][b] += v[q] * fv->grad_G[q][a][b];
+          v_dot_del_gt[a][b] += v[q] * fv->grad_G[q][b][a];
+          x_dot_del_g[a][b] += x_dot[q] * fv->grad_G[q][a][b];
+          x_dot_del_gt[a][b] += x_dot[q] * fv->grad_G[q][b][a];
+        }
+
+        if (pd->TimeIntegration != STEADY) {
+          g_dot[a][b] = fv_dot->G[a][b];
+        } else {
+          g_dot[a][b] = 0.;
+        }
+        gt_dot[b][a] = g_dot[a][b];
+      }
+    }
+  }
+
   /* Begin loop over modes */
   for (mode = 0; mode < vn->modes; mode++) {
 
@@ -1555,6 +1606,16 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
       GOMA_EH(err, "level_set_property() failed for ptt epsilon parameter.");
     } else {
       GOMA_EH(GOMA_ERROR, "Unknown PTT Epsilon parameter model");
+    }
+
+    if (jeffreysEnabled) {
+      mupJeff = ve[mode]->muJeffreys;
+      // if the modified Jeffreys model is used, the parsed value of lambda is the
+      // elastic modulus rather than the time consant
+      elasticMod = lambda;
+      lambda1 = mup / elasticMod; // mup/G
+      lambda2 = mupJeff / elasticMod;
+      lambda = lambda1 + lambda2;
     }
 
     Z = 1.0;
@@ -1662,6 +1723,12 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
                   source += source1;
                 }
 
+                if (jeffreysEnabled) {
+                  source -= mup * lambda2 *
+                            (g_dot[a][b] + gt_dot[a][b] + v_dot_del_g[a][b] + v_dot_del_gt[a][b] -
+                             (g_dot_g[a][b] + 2 * gt_dot_g[a][b] + gt_dot_gt[a][b]));
+                }
+
                 source *= wt_func * det_J * h3 * wt;
 
                 source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
@@ -1707,6 +1774,13 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
             R_source *= saramitoCoeff;
             R_source += -at * mup * (g[a][b] + gt[a][b]);
 
+            if (jeffreysEnabled) {
+              R_source -= at * lambda2 * mup *
+                          (g_dot[a][b] + gt_dot[a][b] + v_dot_del_g[a][b] - x_dot_del_g[a][b] +
+                           v_dot_del_gt[a][b] - x_dot_del_gt[b][a] -
+                           (g_dot_g[a][b] + 2 * gt_dot_g[a][b] + gt_dot_gt[a][b]));
+            }
+
             for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
 
               wt_func = bf[eqn]->phi[i];
@@ -1733,11 +1807,19 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
                   phi_j = bf[var]->phi[j];
 
                   mass = 0.;
+                  dbl d_lambda_dT = 0;
+                  if (jeffreysEnabled) {
+                    d_lambda_dT = d_mup->T[j] / elasticMod;
+                  }
 
                   if (pd->TimeIntegration != STEADY) {
                     if (pd->e[pg->imtrx][eqn] & T_MASS) {
-                      mass = s_dot[a][b];
-                      mass *= wt_func * d_at_dT[j] * lambda * det_J * wt;
+                      mass = s_dot[a][b] * d_at_dT[j] * lambda;
+
+                      if (jeffreysEnabled)
+                        mass += s_dot[a][b] * at * d_lambda_dT;
+
+                      mass *= wt_func * det_J * wt;
                       mass *= h3;
                       mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
                     }
@@ -1753,8 +1835,9 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
                       if (lcwt != 0.)
                         advection += lcwt * (s_dot_gt[a][b] + g_dot_s[a][b]);
 
-                      advection *= wt_func * d_at_dT[j] * lambda * det_J * wt * h3;
-                      advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+                      advection *= d_at_dT[j] * lambda + (jeffreysEnabled ? d_lambda_dT * at : 0);
+                      advection *=
+                          pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)] * wt_func * det_J * wt * h3;
                     }
                   }
 
@@ -1763,6 +1846,12 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
                   if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
                     source = -(g[a][b] + gt[a][b]) * (at * d_mup->T[j] + mup * d_at_dT[j]);
 
+                    if (jeffreysEnabled) {
+                      source -= d_mup->T[j] * lambda2 *
+                                (g_dot[a][b] + gt_dot[a][b] + v_dot_del_g[a][b] -
+                                 x_dot_del_g[a][b] + v_dot_del_gt[a][b] - v_dot_del_gt[b][a] -
+                                 (g_dot_g[a][b] + 2 * gt_dot_g[a][b] + gt_dot_gt[a][b]));
+                    }
                     if (DOUBLE_NONZERO(alpha)) {
                       source1 -= s_dot_s[a][b] / (mup * mup) * d_mup->T[j];
                       source1 *= lambda * alpha * saramitoCoeff;
@@ -1786,6 +1875,12 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
                   for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
                     phi_j = bf[var]->phi[j];
                     d_mup_dv_pj = d_mup->v[p][j];
+                    dbl d_lambda2_dv_pj = 0.;
+                    dbl d_lambda_dv_pj = 0.;
+                    if (jeffreysEnabled) {
+                      d_lambda2_dv_pj = 0;
+                      d_lambda_dv_pj = d_mup_dv_pj / elasticMod;
+                    }
 
                     mass = 0.;
 
@@ -1804,6 +1899,10 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
 
                         mass *=
                             pd->etm[pg->imtrx][eqn][(LOG2_MASS)] * at * lambda * det_J * wt * h3;
+                        if (jeffreysEnabled) {
+                          mass += s_dot[a][b] * wt_func * pd->etm[pg->imtrx][eqn][(LOG2_MASS)] *
+                                  at * d_lambda_dv_pj * det_J * wt * h3;
+                        }
                       }
                     }
 
@@ -1868,6 +1967,9 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
                         advection = advection_a + advection_b + advection_c;
                         advection *= at * lambda * det_J * wt * h3;
                         advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+
+                        advection += R_advection * d_lambda_dv_pj * wt_func * det_J * wt * h3 *
+                                     pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
                       }
                     }
 
@@ -1881,6 +1983,16 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
 
                     if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
                       source_c = -at * d_mup_dv_pj * (g[a][b] + gt[a][b]);
+
+                      if (jeffreysEnabled) {
+                        source_c -= d_mup_dv_pj * at * lambda2 *
+                                    (g_dot[a][b] + gt_dot[a][b] + v_dot_del_g[a][b] -
+                                     x_dot_del_g[a][b] + v_dot_del_gt[a][b] - x_dot_del_gt[b][a] -
+                                     (g_dot_g[a][b] + 2 * gt_dot_g[a][b] + gt_dot_gt[a][b]));
+
+                        source_c -= lambda2 * mup *
+                                    (phi_j * fv->grad_G[p][a][b] + phi_j * fv->grad_G[p][b][a]);
+                      }
                       if (evss_gradv) {
                         if (pd->CoordinateSystem != CYLINDRICAL) {
                           source_c -= at * mup *
@@ -1937,6 +2049,13 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
                     if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
                       source_a = -at * d_mup->C[w][j] * (g[a][b] + gt[a][b]);
 
+                      if (jeffreysEnabled) {
+                        source_a -= at * d_mup->C[w][j] * lambda2 *
+                                    (g_dot[a][b] + gt_dot[a][b] + v_dot_del_g[a][b] -
+                                     x_dot_del_g[a][b] + v_dot_del_gt[a][b] - v_dot_del_gt[b][a] -
+                                     (g_dot_g[a][b] + 2 * gt_dot_g[a][b] + gt_dot_gt[a][b]));
+                      }
+
                       source_b = 0.;
                       if (DOUBLE_NONZERO(alpha)) {
                         source_b -= s_dot_s[a][b] / (mup * mup);
@@ -1968,6 +2087,13 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
                   source = 0.;
                   if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
                     source_a += -at * d_mup->P[j] * (g[a][b] + gt[a][b]);
+
+                    if (jeffreysEnabled) {
+                      source_a -= at * d_mup->P[j] * lambda2 *
+                                  (g_dot[a][b] + gt_dot[a][b] + v_dot_del_g[a][b] -
+                                   x_dot_del_g[a][b] + v_dot_del_gt[a][b] - v_dot_del_gt[b][a] -
+                                   (g_dot_g[a][b] + 2 * gt_dot_g[a][b] + gt_dot_gt[a][b]));
+                    }
 
                     source_b = 0.;
                     if (DOUBLE_NONZERO(alpha)) {
@@ -2115,7 +2241,68 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
                         source_c *= R_source * det_J * h3;
                       }
 
-                      source = source_a + source_b + source_c;
+                      dbl source_jeff = 0;
+                      if (jeffreysEnabled) {
+
+                        dbl source_ja = 0;
+                        dbl source_jb = 0;
+                        dbl source_jc = 0;
+                        dbl source_jd = 0;
+
+                        source_ja -= mup * lambda2 * at *
+                                     (g_dot[a][b] + gt_dot[a][b] + v_dot_del_g[a][b] -
+                                      x_dot_del_g[a][b] + v_dot_del_gt[a][b] - v_dot_del_gt[b][a] -
+                                      (g_dot_g[a][b] + 2 * gt_dot_g[a][b] + gt_dot_gt[a][b]));
+
+                        source_ja *= wt_func * (d_det_J_dmesh_pj * h3 + det_J * dh3dmesh_pj);
+
+                        dbl d_vdotdelg_dm = 0.;
+                        dbl d_vdotdelgt_dm = 0.;
+
+                        for (q = 0; q < dim; q++) {
+                          d_vdotdels_dm += (v[q] - x_dot[q]) * d_grad_s_dmesh[q][a][b][p][j];
+                          d_vdotdelg_dm += (v[q] - x_dot[q]) * fv->d_grad_G_dmesh[q][a][b][p][j];
+                          d_vdotdelgt_dm += (v[q] - x_dot[q]) * fv->d_grad_G_dmesh[q][b][a][p][j];
+                        }
+
+                        source_jb += (lambda2 * at * mup * (d_vdotdelg_dm + d_vdotdelgt_dm));
+                        source_jb -= d_mup_dmesh_pj * lambda2 *
+                                     (g_dot[a][b] + gt_dot[a][b] + v_dot_del_g[a][b] -
+                                      x_dot_del_g[a][b] + v_dot_del_gt[a][b] - v_dot_del_gt[b][a] -
+                                      (g_dot_g[a][b] + 2 * gt_dot_g[a][b] + gt_dot_gt[a][b]));
+
+                        source_jb *= wt_func * det_J * h3;
+
+                        if (pd->TimeIntegration != STEADY) {
+                          const dbl d_xdotdelg_dm =
+                              (1. + 2. * tt) * phi_j / dt * fv->grad_G[p][a][b];
+                          const dbl d_xdotdelgt_dm =
+                              (1. + 2. * tt) * phi_j / dt * fv->grad_G[p][b][a];
+
+                          source_jc -= lambda2 * mup * (d_xdotdelg_dm + d_xdotdelgt_dm);
+
+                          source_jc *= wt_func * h3 * det_J;
+                        }
+
+                        if (supg != 0.) {
+                          for (w = 0; w < dim; w++) {
+                            source_jd += supg * (supg_terms.supg_tau * v[w] *
+                                                     bf[eqn]->d_grad_phi_dmesh[i][w][p][j] +
+                                                 supg_terms.d_supg_tau_dX[p][j] * v[w] *
+                                                     bf[eqn]->grad_phi[i][w]);
+                          }
+
+                          // advection_d *=
+                          //     -lambda2 * at * det_J * h3 *
+                          //     (g_dot[a][b] + gt_dot[a][b] + v_dot_del_g[a][b] - x_dot_del_g[a][b]
+                          //     +
+                          //      v_dot_del_gt[a][b] - v_dot_del_gt[b][a] -
+                          //      (g_dot_g[a][b] + 2 * gt_dot_g[a][b] + gt_dot_gt[a][b]));
+                        }
+                        source_jeff = source_ja + source_jb + source_jc + source_jb;
+                      }
+
+                      source = source_a + source_b + source_c + source_jeff;
 
                       source *= wt * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
                     }
@@ -2133,10 +2320,15 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
                   for (q = 0; q < VIM; q++) {
                     var = v_g[p][q];
 
+                    dbl dG[DIM][DIM] = {{0.0}};
+                    dbl dGt[DIM][DIM] = {{0.0}};
+
                     if (pd->v[pg->imtrx][var]) {
                       pvar = upd->vp[pg->imtrx][var];
                       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
                         phi_j = bf[var]->phi[j];
+                        dG[p][q] = phi_j;
+                        dGt[q][p] = phi_j;
                         advection = 0.;
                         advection_a = 0.;
                         if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
@@ -2174,6 +2366,51 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
                           source = -at * mup * phi_j *
                                    ((double)delta(a, p) * (double)delta(b, q) +
                                     (double)delta(b, p) * (double)delta(a, q));
+                          if (jeffreysEnabled) {
+                            dbl source_jeffrey = 0;
+                            // g_dot
+                            source_jeffrey += (1. + 2. * tt) * phi_j / dt * (double)delta(a, p) *
+                                              (double)delta(b, q);
+                            // gt_dot
+                            source_jeffrey += (1. + 2. * tt) * phi_j / dt * (double)delta(a, q) *
+                                              (double)delta(b, p);
+                            //// v_dot_del_g
+                            if ((a == p) && (b == q)) {
+                              for (r = 0; r < dim; r++) {
+                                source_jeffrey += (v[r] - x_dot[r]) * bf[var]->grad_phi[j][r];
+                              }
+                            }
+                            //// v_dot_del_gt
+                            if ((a == q) && (b == p)) {
+                              for (r = 0; r < dim; r++) {
+                                source_jeffrey += (v[r] - x_dot[r]) * bf[var]->grad_phi[j][r];
+                              }
+                            }
+                            //// g_dot_g
+                            dbl dG_dot_g[DIM][DIM] = {{0.}};
+                            dbl g_dot_dG[DIM][DIM] = {{0.}};
+                            tensor_dot(dG, g, dG_dot_g, VIM);
+                            tensor_dot(g, dG, g_dot_dG, VIM);
+                            source_jeffrey -= g_dot_dG[a][b] + dG_dot_g[a][b];
+                            //// g_dot_gt
+                            // source_jeffrey -=  (g[a][p] * (double)delta(b, q) + gt[q][b] *
+                            // (double)delta(a, p)) *bf[var]->phi[j];
+                            //// 2*gt_dot_g
+                            dbl dGt_dot_g[DIM][DIM] = {{0.}};
+                            dbl gt_dot_dG[DIM][DIM] = {{0.}};
+                            tensor_dot(dGt, g, dGt_dot_g, VIM);
+                            tensor_dot(gt, dG, gt_dot_dG, VIM);
+                            source_jeffrey -= 2. * (dGt_dot_g[a][b] + gt_dot_dG[a][b]);
+                            // source_jeffrey -= 2.*(gt[a][p] * (double)delta(b, q) + g[q][b] *
+                            // (double)delta(a, p)) * bf[var]->phi[j];
+                            //// gt_dot_gt
+                            source_jeffrey -= g_dot_dG[b][a] + dG_dot_g[b][a];
+                            // source_jeffrey -=  (gt[a][p] * (double)delta(b, q) + g[q][b] *
+                            // (double)delta(a, p)) * bf[var]->phi[j];
+
+                            source_jeffrey *= -mup * lambda2;
+                            source += source_jeffrey;
+                          }
                           source *=
                               det_J * h3 * wt_func * wt * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
                         }

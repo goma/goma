@@ -3285,7 +3285,7 @@ int create_periodic_acs(Exo_DB *exo)
        * Now fill in data for each new AC constraint.
        */
       ac_count = nAC;
-      for (i = 0; i < count1; i++) {
+      for (i = 0; (i < count1) && (ac_count < new_nAC); i++) {
         augc[ac_count].Type = AC_PERIODIC;
         augc[ac_count].VAR = var;
         augc[ac_count].SSID = ssid1;
