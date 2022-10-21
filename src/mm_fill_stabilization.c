@@ -259,7 +259,8 @@ void supg_tau_gauss_point(SUPG_terms *supg_terms,
     for (int i = 0; i < DIM; i++) {
       for (int j = 0; j < MDE; j++) {
         if (pd->e[pg->imtrx][VELOCITY1 + i]) {
-          eta_dV[i][j] = 0.5 * 0.5 * hk * fv->v[i] * bf[VELOCITY1 + i]->phi[j] / (vnorm * D + 1e-16);
+          eta_dV[i][j] =
+              0.5 * 0.5 * hk * fv->v[i] * bf[VELOCITY1 + i]->phi[j] / (vnorm * D + 1e-16);
         }
 
         if (pd->e[pg->imtrx][MESH_DISPLACEMENT1 + i]) {

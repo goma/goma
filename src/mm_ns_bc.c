@@ -8087,118 +8087,9 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
 
     load_modal_pointers(mode, tt, dt, b, b_dot, grad_b, d_grad_s_dmesh);
 
-    dbl binv[DIM][DIM];
-    dbl d_binv_db[DIM][DIM][DIM][DIM];
-    if (VIM == 2) {
-      dbl det = b[0][0] * b[1][1] - b[0][1] * b[0][1] + 1e-16;
-      binv[0][0] = b[1][1] / det;
-      binv[0][1] = -b[0][1] / det;
-      binv[1][0] = -b[0][1] / det;
-      binv[1][1] = b[0][0] / det;
-
-      for (int p = 0; p < VIM; p++) {
-        for (int q = 0; q < VIM; q++) {
-          for (int ii = 0; ii < VIM; ii++) {
-            for (int jj = 0; jj < VIM; jj++) {
-              dbl ddet = delta(p, 0) * delta(q, 0) * b[1][1] + b[0][0] * delta(p, 1) * delta(q, 1) -
-                         2.0 * (delta(p, 0) * delta(q, 1) + delta(p, 1) * delta(q, 0)) * b[0][1];
-              d_binv_db[p][q][0][0] =
-                  (det * delta(p, 1) * delta(q, 1) - ddet * b[1][1]) / (det * det);
-              d_binv_db[p][q][0][1] =
-                  (-det * delta(p, 0) * delta(q, 1) + ddet * b[0][1]) / (det * det);
-              d_binv_db[p][q][1][0] =
-                  (-det * delta(p, 0) * delta(q, 1) + ddet * b[1][0]) / (det * det);
-              d_binv_db[p][q][1][1] =
-                  (det * delta(p, 0) * delta(q, 0) - ddet * b[0][0]) / (det * det);
-            }
-          }
-        }
-      }
-    } else if (VIM == 3) {
-      dbl det = b[0][0] * (b[1][1] * b[2][2] - b[1][2] * b[2][1]) -
-                b[0][1] * (b[1][0] * b[2][2] - b[2][0] * b[1][2]) +
-                b[0][2] * (b[1][0] * b[2][1] - b[2][0] * b[1][1]) + 1e-16;
-
-      binv[0][0] = (b[1][1] * b[2][2] - b[2][1] * b[1][2]) / (det);
-
-      binv[0][1] = -(b[0][1] * b[2][2] - b[2][1] * b[0][2]) / (det);
-
-      binv[0][2] = (b[0][1] * b[1][2] - b[1][1] * b[0][2]) / (det);
-
-      binv[1][0] = -(b[1][0] * b[2][2] - b[2][0] * b[1][2]) / (det);
-
-      binv[1][1] = (b[0][0] * b[2][2] - b[2][0] * b[0][2]) / (det);
-
-      binv[1][2] = -(b[0][0] * b[1][2] - b[1][0] * b[0][2]) / (det);
-
-      binv[2][0] = (b[1][0] * b[2][1] - b[1][1] * b[2][0]) / (det);
-
-      binv[2][1] = -(b[0][0] * b[2][1] - b[2][0] * b[0][1]) / (det);
-
-      binv[2][2] = (b[0][0] * b[1][1] - b[1][0] * b[0][1]) / (det);
-
-      for (int p = 0; p < VIM; p++) {
-        for (int q = 0; q < VIM; q++) {
-          dbl db[DIM][DIM] = {{0.}};
-          db[p][q] = 1.0;
-          db[q][p] = 1.0;
-          dbl ddet = db[0][0] * (b[1][1] * b[2][2] - b[1][2] * b[2][1]) +
-                     b[0][0] * (db[1][1] * b[2][2] - db[1][2] * b[2][1] + b[1][1] * db[2][2] -
-                                b[1][2] * db[2][1]) -
-                     db[0][1] * (b[1][0] * b[2][2] - b[2][0] * b[1][2]) -
-                     b[0][1] * (db[1][0] * b[2][2] - db[2][0] * b[1][2] + b[1][0] * db[2][2] -
-                                b[2][0] * db[1][2]) +
-                     db[0][2] * (b[1][0] * b[2][1] - b[2][0] * b[1][1]) +
-                     b[0][2] * (db[1][0] * b[2][1] - db[2][0] * b[1][1] + b[1][0] * db[2][1] -
-                                b[2][0] * db[1][1]);
-
-          d_binv_db[p][q][0][0] =
-              (db[1][1] * b[2][2] - db[2][1] * b[1][2] + b[1][1] * db[2][2] - b[2][1] * db[1][2]) /
-              (det);
-          d_binv_db[p][q][0][0] += (b[1][1] * b[2][2] - b[2][1] * b[1][2]) * -ddet / (det * det);
-
-          d_binv_db[p][q][0][1] =
-              -(db[0][1] * b[2][2] - db[2][1] * b[0][2] + b[0][1] * db[2][2] - b[2][1] * db[0][2]) /
-              (det);
-          d_binv_db[p][q][0][1] += -(b[0][1] * b[2][2] - b[2][1] * b[0][2]) * -ddet / (det * det);
-
-          d_binv_db[p][q][0][2] =
-              (db[0][1] * b[1][2] - db[1][1] * b[0][2] + b[0][1] * db[1][2] - b[1][1] * db[0][2]) /
-              (det);
-          d_binv_db[p][q][0][2] += (b[0][1] * b[1][2] - b[1][1] * b[0][2]) * -ddet / (det * det);
-
-          d_binv_db[p][q][1][0] =
-              -(db[1][0] * b[2][2] - db[2][0] * b[1][2] + b[1][0] * db[2][2] - b[2][0] * db[1][2]) /
-              (det);
-          d_binv_db[p][q][1][0] += -(b[1][0] * b[2][2] - b[2][0] * b[1][2]) * -ddet / (det * det);
-
-          d_binv_db[p][q][1][1] =
-              (db[0][0] * b[2][2] - db[2][0] * b[0][2] + b[0][0] * db[2][2] - b[2][0] * db[0][2]) /
-              (det);
-          d_binv_db[p][q][1][1] += (b[0][0] * b[2][2] - b[2][0] * b[0][2]) * -ddet / (det * det);
-
-          d_binv_db[p][q][1][2] =
-              -(db[0][0] * b[1][2] - db[1][0] * b[0][2] + b[0][0] * db[1][2] - b[1][0] * db[0][2]) /
-              (det);
-          d_binv_db[p][q][1][2] += -(b[0][0] * b[1][2] - b[1][0] * b[0][2]) * -ddet / (det * det);
-
-          d_binv_db[p][q][2][0] =
-              (db[1][0] * b[2][1] - db[1][1] * b[2][0] + b[1][0] * db[2][1] - b[1][1] * db[2][0]) /
-              (det);
-          d_binv_db[p][q][2][0] += (b[1][0] * b[2][1] - b[1][1] * b[2][0]) * -ddet / (det * det);
-
-          d_binv_db[p][q][2][1] =
-              -(db[0][0] * b[2][1] - db[2][0] * b[0][1] + b[0][0] * db[2][1] - b[2][0] * db[0][1]) /
-              (det);
-          d_binv_db[p][q][2][1] += -(b[0][0] * b[2][1] - b[2][0] * b[0][1]) * -ddet / (det * det);
-
-          d_binv_db[p][q][2][2] =
-              (db[0][0] * b[1][1] - db[1][0] * b[0][1] + b[0][0] * db[1][1] - b[1][0] * db[0][1]) /
-              (det);
-          d_binv_db[p][q][2][2] += (b[0][0] * b[1][1] - b[1][0] * b[0][1]) * -ddet / (det * det);
-        }
-      }
-    }
+    dbl source_term[DIM][DIM];
+    dbl d_source_term_db[DIM][DIM][DIM][DIM];
+    sqrt_conf_source(mode, b, source_term, d_source_term_db);
 
     /* precalculate advective terms of form (v dot del tensor)*/
 
@@ -8360,7 +8251,7 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
               source = 0.;
               if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
                 // consider whether saramitoCoeff should multiply here
-                source -= 0.5 * (binv[ii][jj] - b[ii][jj]);
+                source += source_term[ii][jj];
 
                 source *= det_J * h3 * wt;
 
@@ -8874,7 +8765,7 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
                         source = 0.;
 
                         if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-                          source = -0.5 * (d_binv_db[p][q][ii][jj] - delta(ii, p) * delta(jj, q));
+                          source = d_source_term_db[ii][jj][p][q];
                           source *=
                               phi_j * det_J * h3 * wt * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
                         }

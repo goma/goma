@@ -2503,7 +2503,7 @@ int assemble_stress_log_conf(dbl tt, dbl dt, PG_DATA *pg_data) {
 
   SUPG_terms supg_terms;
   if (supg != 0.0) {
-    supg_tau_gauss_point(&supg_terms, dim, 1e-7, pg_data);
+    supg_tau(&supg_terms, dim, 1e-6, pg_data, dt, true, eqn);
   }
 
   dbl dcdd_factor = 0.0;
@@ -6994,6 +6994,203 @@ void compute_a_dot_b(dbl b[DIM][DIM],
   }
 }
 
+int sqrt_conf_source(int mode,
+                     dbl b[DIM][DIM],
+                     dbl source_term[DIM][DIM],
+                     dbl d_source_term_db[DIM][DIM][DIM][DIM]) {
+  dbl binv[DIM][DIM];
+  dbl d_binv_db[DIM][DIM][DIM][DIM];
+  if (VIM == 2) {
+    dbl det = b[0][0] * b[1][1] - b[0][1] * b[0][1] + 1e-16;
+    binv[0][0] = b[1][1] / det;
+    binv[0][1] = -b[0][1] / det;
+    binv[1][0] = -b[0][1] / det;
+    binv[1][1] = b[0][0] / det;
+
+    for (int p = 0; p < VIM; p++) {
+      for (int q = 0; q < VIM; q++) {
+        dbl ddet = delta(p, 0) * delta(q, 0) * b[1][1] + b[0][0] * delta(p, 1) * delta(q, 1) -
+                   2.0 * (delta(p, 0) * delta(q, 1) + delta(p, 1) * delta(q, 0)) * b[0][1];
+        d_binv_db[0][0][p][q] = (det * delta(p, 1) * delta(q, 1) - ddet * b[1][1]) / (det * det);
+        d_binv_db[0][1][p][q] = (-det * delta(p, 0) * delta(q, 1) + ddet * b[0][1]) / (det * det);
+        d_binv_db[1][0][p][q] = (-det * delta(p, 0) * delta(q, 1) + ddet * b[1][0]) / (det * det);
+        d_binv_db[1][1][p][q] = (det * delta(p, 0) * delta(q, 0) - ddet * b[0][0]) / (det * det);
+      }
+    }
+  } else if (VIM == 3) {
+    dbl det = b[0][0] * (b[1][1] * b[2][2] - b[1][2] * b[2][1]) -
+              b[0][1] * (b[1][0] * b[2][2] - b[2][0] * b[1][2]) +
+              b[0][2] * (b[1][0] * b[2][1] - b[2][0] * b[1][1]) + 1e-16;
+
+    binv[0][0] = (b[1][1] * b[2][2] - b[2][1] * b[1][2]) / (det);
+
+    binv[0][1] = -(b[0][1] * b[2][2] - b[2][1] * b[0][2]) / (det);
+
+    binv[0][2] = (b[0][1] * b[1][2] - b[1][1] * b[0][2]) / (det);
+
+    binv[1][0] = -(b[1][0] * b[2][2] - b[2][0] * b[1][2]) / (det);
+
+    binv[1][1] = (b[0][0] * b[2][2] - b[2][0] * b[0][2]) / (det);
+
+    binv[1][2] = -(b[0][0] * b[1][2] - b[1][0] * b[0][2]) / (det);
+
+    binv[2][0] = (b[1][0] * b[2][1] - b[1][1] * b[2][0]) / (det);
+
+    binv[2][1] = -(b[0][0] * b[2][1] - b[2][0] * b[0][1]) / (det);
+
+    binv[2][2] = (b[0][0] * b[1][1] - b[1][0] * b[0][1]) / (det);
+
+    for (int p = 0; p < VIM; p++) {
+      for (int q = 0; q < VIM; q++) {
+        dbl db[DIM][DIM] = {{0.}};
+        db[p][q] = 1.0;
+        db[q][p] = 1.0;
+        dbl ddet = db[0][0] * (b[1][1] * b[2][2] - b[1][2] * b[2][1]) +
+                   b[0][0] * (db[1][1] * b[2][2] - db[1][2] * b[2][1] + b[1][1] * db[2][2] -
+                              b[1][2] * db[2][1]) -
+                   db[0][1] * (b[1][0] * b[2][2] - b[2][0] * b[1][2]) -
+                   b[0][1] * (db[1][0] * b[2][2] - db[2][0] * b[1][2] + b[1][0] * db[2][2] -
+                              b[2][0] * db[1][2]) +
+                   db[0][2] * (b[1][0] * b[2][1] - b[2][0] * b[1][1]) +
+                   b[0][2] * (db[1][0] * b[2][1] - db[2][0] * b[1][1] + b[1][0] * db[2][1] -
+                              b[2][0] * db[1][1]);
+
+        d_binv_db[0][0][p][q] =
+            (db[1][1] * b[2][2] - db[2][1] * b[1][2] + b[1][1] * db[2][2] - b[2][1] * db[1][2]) /
+            (det);
+        d_binv_db[0][0][p][q] += (b[1][1] * b[2][2] - b[2][1] * b[1][2]) * -ddet / (det * det);
+
+        d_binv_db[0][1][p][q] =
+            -(db[0][1] * b[2][2] - db[2][1] * b[0][2] + b[0][1] * db[2][2] - b[2][1] * db[0][2]) /
+            (det);
+        d_binv_db[0][1][p][q] += -(b[0][1] * b[2][2] - b[2][1] * b[0][2]) * -ddet / (det * det);
+
+        d_binv_db[0][2][p][q] =
+            (db[0][1] * b[1][2] - db[1][1] * b[0][2] + b[0][1] * db[1][2] - b[1][1] * db[0][2]) /
+            (det);
+        d_binv_db[0][2][p][q] += (b[0][1] * b[1][2] - b[1][1] * b[0][2]) * -ddet / (det * det);
+
+        d_binv_db[1][0][p][q] =
+            -(db[1][0] * b[2][2] - db[2][0] * b[1][2] + b[1][0] * db[2][2] - b[2][0] * db[1][2]) /
+            (det);
+        d_binv_db[1][0][p][q] += -(b[1][0] * b[2][2] - b[2][0] * b[1][2]) * -ddet / (det * det);
+
+        d_binv_db[1][1][p][q] =
+            (db[0][0] * b[2][2] - db[2][0] * b[0][2] + b[0][0] * db[2][2] - b[2][0] * db[0][2]) /
+            (det);
+        d_binv_db[1][1][p][q] += (b[0][0] * b[2][2] - b[2][0] * b[0][2]) * -ddet / (det * det);
+
+        d_binv_db[1][2][p][q] =
+            -(db[0][0] * b[1][2] - db[1][0] * b[0][2] + b[0][0] * db[1][2] - b[1][0] * db[0][2]) /
+            (det);
+        d_binv_db[1][2][p][q] += -(b[0][0] * b[1][2] - b[1][0] * b[0][2]) * -ddet / (det * det);
+
+        d_binv_db[2][0][p][q] =
+            (db[1][0] * b[2][1] - db[1][1] * b[2][0] + b[1][0] * db[2][1] - b[1][1] * db[2][0]) /
+            (det);
+        d_binv_db[2][0][p][q] += (b[1][0] * b[2][1] - b[1][1] * b[2][0]) * -ddet / (det * det);
+
+        d_binv_db[2][1][p][q] =
+            -(db[0][0] * b[2][1] - db[2][0] * b[0][1] + b[0][0] * db[2][1] - b[2][0] * db[0][1]) /
+            (det);
+        d_binv_db[2][1][p][q] += -(b[0][0] * b[2][1] - b[2][0] * b[0][1]) * -ddet / (det * det);
+
+        d_binv_db[2][2][p][q] =
+            (db[0][0] * b[1][1] - db[1][0] * b[0][1] + b[0][0] * db[1][1] - b[1][0] * db[0][1]) /
+            (det);
+        d_binv_db[2][2][p][q] += (b[0][0] * b[1][1] - b[1][0] * b[0][1]) * -ddet / (det * det);
+      }
+    }
+  }
+
+  switch (vn->ConstitutiveEquation) {
+  case OLDROYDB: {
+    for (int ii = 0; ii < VIM; ii++) {
+      for (int jj = 0; jj < VIM; jj++) {
+        source_term[ii][jj] = -0.5 * (binv[ii][jj] - b[ii][jj]);
+      }
+    }
+    if (af->Assemble_Jacobian) {
+      for (int ii = 0; ii < VIM; ii++) {
+        for (int jj = 0; jj < VIM; jj++) {
+          for (int p = 0; p < VIM; p++) {
+            for (int q = 0; q < VIM; q++) {
+              d_source_term_db[ii][jj][p][q] =
+                  -0.5 * (d_binv_db[ii][jj][p][q] - delta(ii, p) * delta(jj, q));
+            }
+          }
+        }
+      }
+    }
+  } break;
+  case PTT: {
+
+    dbl d_trace_db[DIM][DIM] = {{0.0}};
+
+    dbl trace = 0;
+    for (int i = 0; i < VIM; i++) {
+      for (int j = 0; j < VIM; j++) {
+        trace += b[i][j] * b[i][j];
+      }
+    }
+
+    if (af->Assemble_Jacobian) {
+      for (int p = 0; p < VIM; p++) {
+        for (int q = 0; q < VIM; q++) {
+          d_trace_db[p][q] = 0.0;
+          for (int i = 0; i < VIM; i++) {
+            for (int j = 0; j < VIM; j++) {
+              d_trace_db[p][q] +=
+                  2.0 * b[i][j] * (delta(p, i) * delta(q, j) | delta(p, j) * delta(q, i));
+            }
+          }
+        }
+      }
+    }
+
+    dbl Z = 1.0;
+    dbl dZ_dtrace = 0;
+
+    // PTT exponent
+    eps = ve[mode]->eps;
+
+    if (vn->ptt_type == PTT_LINEAR) {
+      Z = 1 + eps * (trace - (double)VIM);
+      dZ_dtrace = eps;
+    } else if (vn->ptt_type == PTT_EXPONENTIAL) {
+      Z = exp(eps * (trace - (double)VIM));
+      dZ_dtrace = eps * Z;
+    } else {
+      GOMA_EH(GOMA_ERROR, "Unrecognized PTT Form %d", vn->ptt_type);
+    }
+
+    for (int ii = 0; ii < VIM; ii++) {
+      for (int jj = 0; jj < VIM; jj++) {
+        source_term[ii][jj] = -0.5 * Z * (binv[ii][jj] - b[ii][jj]);
+      }
+    }
+    if (af->Assemble_Jacobian) {
+      for (int ii = 0; ii < VIM; ii++) {
+        for (int jj = 0; jj < VIM; jj++) {
+          for (int p = 0; p < VIM; p++) {
+            for (int q = 0; q < VIM; q++) {
+              d_source_term_db[ii][jj][p][q] =
+                  -0.5 * Z * (d_binv_db[ii][jj][p][q] - delta(ii, p) * delta(jj, q)) -
+                  0.5 * dZ_dtrace * d_trace_db[p][q] * (binv[ii][jj] - b[ii][jj]);
+            }
+          }
+        }
+      }
+    }
+  } break;
+  default:
+    GOMA_EH(GOMA_ERROR, "Unknown Constitutive equation form for SQRT_CONF");
+    break;
+  }
+
+  return GOMA_SUCCESS;
+}
+
 int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                                        * explicit (tt = 1) to implicit (tt = 0) */
                               dbl dt, /* current time step size */
@@ -7256,119 +7453,6 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
 
     load_modal_pointers(mode, tt, dt, b, b_dot, grad_b, d_grad_s_dmesh);
 
-    dbl binv[DIM][DIM];
-    dbl d_binv_db[DIM][DIM][DIM][DIM];
-    if (VIM == 2) {
-      dbl det = b[0][0] * b[1][1] - b[0][1] * b[0][1] + 1e-16;
-      binv[0][0] = b[1][1] / det;
-      binv[0][1] = -b[0][1] / det;
-      binv[1][0] = -b[0][1] / det;
-      binv[1][1] = b[0][0] / det;
-
-      for (int p = 0; p < VIM; p++) {
-        for (int q = 0; q < VIM; q++) {
-          for (int ii = 0; ii < VIM; ii++) {
-            for (int jj = 0; jj < VIM; jj++) {
-              dbl ddet = delta(p, 0) * delta(q, 0) * b[1][1] + b[0][0] * delta(p, 1) * delta(q, 1) -
-                         2.0 * (delta(p, 0) * delta(q, 1) + delta(p, 1) * delta(q, 0)) * b[0][1];
-              d_binv_db[p][q][0][0] =
-                  (det * delta(p, 1) * delta(q, 1) - ddet * b[1][1]) / (det * det);
-              d_binv_db[p][q][0][1] =
-                  (-det * delta(p, 0) * delta(q, 1) + ddet * b[0][1]) / (det * det);
-              d_binv_db[p][q][1][0] =
-                  (-det * delta(p, 0) * delta(q, 1) + ddet * b[1][0]) / (det * det);
-              d_binv_db[p][q][1][1] =
-                  (det * delta(p, 0) * delta(q, 0) - ddet * b[0][0]) / (det * det);
-            }
-          }
-        }
-      }
-    } else if (VIM == 3) {
-      dbl det = b[0][0] * (b[1][1] * b[2][2] - b[1][2] * b[2][1]) -
-                b[0][1] * (b[1][0] * b[2][2] - b[2][0] * b[1][2]) +
-                b[0][2] * (b[1][0] * b[2][1] - b[2][0] * b[1][1]) + 1e-16;
-
-      binv[0][0] = (b[1][1] * b[2][2] - b[2][1] * b[1][2]) / (det);
-
-      binv[0][1] = -(b[0][1] * b[2][2] - b[2][1] * b[0][2]) / (det);
-
-      binv[0][2] = (b[0][1] * b[1][2] - b[1][1] * b[0][2]) / (det);
-
-      binv[1][0] = -(b[1][0] * b[2][2] - b[2][0] * b[1][2]) / (det);
-
-      binv[1][1] = (b[0][0] * b[2][2] - b[2][0] * b[0][2]) / (det);
-
-      binv[1][2] = -(b[0][0] * b[1][2] - b[1][0] * b[0][2]) / (det);
-
-      binv[2][0] = (b[1][0] * b[2][1] - b[1][1] * b[2][0]) / (det);
-
-      binv[2][1] = -(b[0][0] * b[2][1] - b[2][0] * b[0][1]) / (det);
-
-      binv[2][2] = (b[0][0] * b[1][1] - b[1][0] * b[0][1]) / (det);
-
-      for (int p = 0; p < VIM; p++) {
-        for (int q = 0; q < VIM; q++) {
-          dbl db[DIM][DIM] = {{0.}};
-          db[p][q] = 1.0;
-          db[q][p] = 1.0;
-          dbl ddet = db[0][0] * (b[1][1] * b[2][2] - b[1][2] * b[2][1]) +
-                     b[0][0] * (db[1][1] * b[2][2] - db[1][2] * b[2][1] + b[1][1] * db[2][2] -
-                                b[1][2] * db[2][1]) -
-                     db[0][1] * (b[1][0] * b[2][2] - b[2][0] * b[1][2]) -
-                     b[0][1] * (db[1][0] * b[2][2] - db[2][0] * b[1][2] + b[1][0] * db[2][2] -
-                                b[2][0] * db[1][2]) +
-                     db[0][2] * (b[1][0] * b[2][1] - b[2][0] * b[1][1]) +
-                     b[0][2] * (db[1][0] * b[2][1] - db[2][0] * b[1][1] + b[1][0] * db[2][1] -
-                                b[2][0] * db[1][1]);
-
-          d_binv_db[p][q][0][0] =
-              (db[1][1] * b[2][2] - db[2][1] * b[1][2] + b[1][1] * db[2][2] - b[2][1] * db[1][2]) /
-              (det);
-          d_binv_db[p][q][0][0] += (b[1][1] * b[2][2] - b[2][1] * b[1][2]) * -ddet / (det * det);
-
-          d_binv_db[p][q][0][1] =
-              -(db[0][1] * b[2][2] - db[2][1] * b[0][2] + b[0][1] * db[2][2] - b[2][1] * db[0][2]) /
-              (det);
-          d_binv_db[p][q][0][1] += -(b[0][1] * b[2][2] - b[2][1] * b[0][2]) * -ddet / (det * det);
-
-          d_binv_db[p][q][0][2] =
-              (db[0][1] * b[1][2] - db[1][1] * b[0][2] + b[0][1] * db[1][2] - b[1][1] * db[0][2]) /
-              (det);
-          d_binv_db[p][q][0][2] += (b[0][1] * b[1][2] - b[1][1] * b[0][2]) * -ddet / (det * det);
-
-          d_binv_db[p][q][1][0] =
-              -(db[1][0] * b[2][2] - db[2][0] * b[1][2] + b[1][0] * db[2][2] - b[2][0] * db[1][2]) /
-              (det);
-          d_binv_db[p][q][1][0] += -(b[1][0] * b[2][2] - b[2][0] * b[1][2]) * -ddet / (det * det);
-
-          d_binv_db[p][q][1][1] =
-              (db[0][0] * b[2][2] - db[2][0] * b[0][2] + b[0][0] * db[2][2] - b[2][0] * db[0][2]) /
-              (det);
-          d_binv_db[p][q][1][1] += (b[0][0] * b[2][2] - b[2][0] * b[0][2]) * -ddet / (det * det);
-
-          d_binv_db[p][q][1][2] =
-              -(db[0][0] * b[1][2] - db[1][0] * b[0][2] + b[0][0] * db[1][2] - b[1][0] * db[0][2]) /
-              (det);
-          d_binv_db[p][q][1][2] += -(b[0][0] * b[1][2] - b[1][0] * b[0][2]) * -ddet / (det * det);
-
-          d_binv_db[p][q][2][0] =
-              (db[1][0] * b[2][1] - db[1][1] * b[2][0] + b[1][0] * db[2][1] - b[1][1] * db[2][0]) /
-              (det);
-          d_binv_db[p][q][2][0] += (b[1][0] * b[2][1] - b[1][1] * b[2][0]) * -ddet / (det * det);
-
-          d_binv_db[p][q][2][1] =
-              -(db[0][0] * b[2][1] - db[2][0] * b[0][1] + b[0][0] * db[2][1] - b[2][0] * db[0][1]) /
-              (det);
-          d_binv_db[p][q][2][1] += -(b[0][0] * b[2][1] - b[2][0] * b[0][1]) * -ddet / (det * det);
-
-          d_binv_db[p][q][2][2] =
-              (db[0][0] * b[1][1] - db[1][0] * b[0][1] + b[0][0] * db[1][1] - b[1][0] * db[0][1]) /
-              (det);
-          d_binv_db[p][q][2][2] += (b[0][0] * b[1][1] - b[1][0] * b[0][1]) * -ddet / (det * det);
-        }
-      }
-    }
-
     /* precalculate advective terms of form (v dot del tensor)*/
 
     trace = 0.0;
@@ -7472,6 +7556,10 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
     dbl d_a_dot_b_dG[DIM][DIM][DIM][DIM];
 
     compute_a_dot_b(b, g, a_dot_b, d_a_dot_b_db, d_a_dot_b_dG);
+
+    dbl source_term[DIM][DIM];
+    dbl d_source_term_db[DIM][DIM][DIM][DIM];
+    sqrt_conf_source(mode, b, source_term, d_source_term_db);
     /*
      * Residuals_________________________________________________________________
      */
@@ -7527,9 +7615,9 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
               diffusion = 0.;
               if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
                 Z = 1e-16 + v_dot_del_b[ii][jj] - x_dot_del_b[ii][jj];
-                //Z -= b_dot_g[ii][jj];
-                //Z -= a_dot_b[ii][jj];
-                //Z -= 0.5 * (binv[ii][jj] - b[ii][jj]);
+                Z -= b_dot_g[ii][jj];
+                // Z -= a_dot_b[ii][jj];
+                Z -= source_term[ii][jj];
 
                 dbl Y_inv = 1.0 / 10;
                 dbl hdc = 0;
@@ -7559,8 +7647,7 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
               source = 0.;
               if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
                 // consider whether saramitoCoeff should multiply here
-                source -= 0.5 * (binv[ii][jj] - b[ii][jj]);
-
+                source = source_term[ii][jj];
                 source *= wt_func * det_J * h3 * wt;
 
                 source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
@@ -7597,7 +7684,7 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
             R_advection -= b_dot_g[ii][jj];
             R_advection -= a_dot_b[ii][jj];
 
-            R_source = -0.5 * (binv[ii][jj] - b[ii][jj]);
+            R_source = source_term[ii][jj];
 
             for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
 
@@ -7653,13 +7740,7 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                   source = 0.;
                   source1 = 0.;
                   if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-                    source = -(g[ii][jj] + gt[ii][jj]) * (at * d_mup->T[j] + mup * d_at_dT[j]);
-
-                    if (DOUBLE_NONZERO(alpha)) {
-                      source1 -= s_dot_s[ii][jj] / (mup * mup) * d_mup->T[j];
-                      source1 *= lambda * alpha * saramitoCoeff;
-                      source += source1;
-                    }
+                    source = 0;
                     source *= wt_func * det_J * wt * h3;
                     source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
                   }
@@ -7731,9 +7812,9 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                     diffusion = 0.;
                     if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
                       dbl Z = 1e-16 + v_dot_del_b[ii][jj] - x_dot_del_b[ii][jj];
-                      //Z -= b_dot_g[ii][jj];
-                      //Z -= a_dot_b[ii][jj];
-                      //Z -= 0.5 * (binv[ii][jj] - b[ii][jj]);
+                      Z -= b_dot_g[ii][jj];
+                      // Z -= a_dot_b[ii][jj];
+                      Z += source_term[ii][jj];
                       dbl dZ = phi_j * (grad_b[p][ii][jj]);
                       dbl Y_inv = 1.0 / 10;
                       dbl hdc = 0;
@@ -7746,8 +7827,8 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                       hdc = 1 / (js + 1e-16);
 
                       //                      dbl kdc = fabs(Y_inv * Z) * hdc * hdc;
-                      //                      dbl dkdc = ((Y_inv * dZ * Y_inv * Z) / fabs( Y_inv *
-                      //                      Z)) * hdc * hdc;
+                      //                      dbl dkdc = ((Y_inv * dZ * Y_inv * Z) / fabs( Y_inv
+                      //                      * Z)) * hdc * hdc;
                       //
                       dbl kdc = fabs(Y_inv * Z) * hdc * hdc;
                       dbl dkdc = Y_inv * dZ * Y_inv * Z / fabs(Y_inv * Z) * hdc * hdc;
@@ -7835,14 +7916,7 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
 
                   source = 0.;
                   if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-                    source_a += -at * d_mup->P[j] * (g[ii][jj] + gt[ii][jj]);
 
-                    source_b = 0.;
-                    if (DOUBLE_NONZERO(alpha)) {
-                      source_b -= (s_dot_s[ii][jj] / (mup * mup));
-                      source_b *= d_mup->P[j] * alpha * lambda * saramitoCoeff;
-                    }
-                    source = source_a + source_b;
                     source *= wt_func * det_J * wt * h3;
                     source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
                   }
@@ -8028,15 +8102,15 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
 
                         if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
                           dbl Z = 1e-16 + v_dot_del_b[ii][jj] - x_dot_del_b[ii][jj];
-                          //Z -= b_dot_g[ii][jj];
-                          //Z -= a_dot_b[ii][jj];
-                          Z -= 0.5 * (binv[ii][jj] - b[ii][jj]);
+                          Z -= b_dot_g[ii][jj];
+                          // Z -= a_dot_b[ii][jj];
+                          Z += source_term[ii][jj];
                           dbl dZ = 0;
                           for (int k = 0; k < VIM; k++) {
-                            //dZ += -b[ii][k] * delta(p, k) * delta(jj, q);
+                            dZ += -b[ii][k] * delta(p, k) * delta(jj, q);
                           }
-                          //dZ += -d_a_dot_b_dG[p][q][ii][jj];
-                          //dZ *= bf[var]->phi[j];
+                          // dZ += -d_a_dot_b_dG[p][q][ii][jj];
+                          dZ *= bf[var]->phi[j];
                           dbl Y_inv = 1.0 / 10;
                           dbl hdc = 0;
                           dbl js = 0;
@@ -8048,7 +8122,8 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                           hdc = 1 / (js + 1e-16);
 
                           //                      dbl kdc = fabs(Y_inv * Z) * hdc * hdc;
-                          //                      dbl dkdc = ((Y_inv * dZ * Y_inv * Z) / fabs( Y_inv
+                          //                      dbl dkdc = ((Y_inv * dZ * Y_inv * Z) / fabs(
+                          //                      Y_inv
                           //                      * Z)) * hdc * hdc;
                           //
                           dbl kdc = fabs(Y_inv * Z) * hdc * hdc;
@@ -8207,17 +8282,17 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                             }
                           }
                           for (int k = 0; k < VIM; k++) {
-                            //dZ -= phi_j *
-                            //      (delta(ii, q) * delta(k, p) | delta(ii, p) * delta(k, q)) *
-                            //      g[k][jj];
+                            dZ -= phi_j *
+                                  (delta(ii, q) * delta(k, p) | delta(ii, p) * delta(k, q)) *
+                                  g[k][jj];
                           }
-                          //dZ -= phi_j * d_a_dot_b_db[p][q][ii][jj];
-                          //dZ = -0.5 * (d_binv_db[p][q][ii][jj] - delta(ii, p) * delta(jj, q));
+                          // dZ -= phi_j * d_a_dot_b_db[p][q][ii][jj];
+                          dZ = d_source_term_db[ii][jj][p][q] * bf[var]->phi[j];
 
                           Z = 1e-16 + v_dot_del_b[ii][jj] - x_dot_del_b[ii][jj];
-                          //Z -= b_dot_g[ii][jj];
-                          //Z -= a_dot_b[ii][jj];
-                          //Z -= 0.5 * (binv[ii][jj] - b[ii][jj]);
+                          Z -= b_dot_g[ii][jj];
+                          // Z -= a_dot_b[ii][jj];
+                          Z += source_term[ii][jj];
 
                           dbl Y_inv = 1.0 / 10;
                           dbl hdc = 0;
@@ -8262,7 +8337,7 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                         source = 0.;
 
                         if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-                          source = -0.5 * (d_binv_db[p][q][ii][jj] - delta(ii, p) * delta(jj, q));
+                          source = d_source_term_db[ii][jj][p][q];
                           source *= phi_j * det_J * h3 * wt_func * wt *
                                     pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
                         }
