@@ -2320,13 +2320,12 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
                   for (q = 0; q < VIM; q++) {
                     var = v_g[p][q];
 
-                    dbl dG[DIM][DIM] = {{0.0}};
-                    dbl dGt[DIM][DIM] = {{0.0}};
-
                     if (pd->v[pg->imtrx][var]) {
                       pvar = upd->vp[pg->imtrx][var];
                       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
                         phi_j = bf[var]->phi[j];
+                        dbl dG[DIM][DIM] = {{0.0}};
+                        dbl dGt[DIM][DIM] = {{0.0}};
                         dG[p][q] = phi_j;
                         dGt[q][p] = phi_j;
                         advection = 0.;
@@ -8273,7 +8272,6 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
 
                     if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
                       source_a = R_source;
-
 
                       source_a *= wt_func * (d_det_J_dmesh_pj * h3 + det_J * dh3dmesh_pj);
 

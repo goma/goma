@@ -7042,6 +7042,9 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
   dbl g[DIM][DIM];     /* velocity gradient tensor */
   dbl gt[DIM][DIM];    /* transpose of velocity gradient tensor */
 
+  dbl g_dot[DIM][DIM];  /* velocity gradient tensor time derivative */
+  dbl gt_dot[DIM][DIM]; /* transpose of velocity gradient tensor time derivative */
+
   /* dot product tensors */
 
   dbl s_dot_s[DIM][DIM];
@@ -7050,16 +7053,23 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
   dbl g_dot_s[DIM][DIM];
   dbl gt_dot_s[DIM][DIM];
 
+  dbl g_dot_g[DIM][DIM];
+  dbl gt_dot_g[DIM][DIM];
+  dbl gt_dot_gt[DIM][DIM];
+
   /* polymer viscosity and derivatives */
   dbl mup;
   VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
   VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
   dbl d_mup_dv_pj;
 
-  dbl saramitoCoeff;
+  dbl saramitoCoeff = 1.;
   SARAMITO_DEPENDENCE_STRUCT d_saramito_struct;
   SARAMITO_DEPENDENCE_STRUCT *d_saramito = &d_saramito_struct;
+  /* 2nd polymer viscosity -- for modified Jefreys model*/
+  dbl mupJeff;
 
+  const bool jeffreysEnabled = (vn->ConstitutiveEquation == MODIFIED_JEFFREYS);
   // todo: will want to parse necessary parameters... for now hard code
   const bool saramitoEnabled =
       (vn->ConstitutiveEquation == SARAMITO_OLDROYDB || vn->ConstitutiveEquation == SARAMITO_PTT ||
@@ -7077,6 +7087,10 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
   dbl eps;        /* This is the PTT elongation parameter */
   dbl Z = 1.0;    /* This is the factor appearing in front of the stress tensor in PTT */
   dbl dZ_dtrace = 0.0;
+
+  dbl lambda1;
+  dbl lambda2;
+  dbl elasticMod;
 
   /* ETMs*/
   dbl mass, advection, source;
@@ -7157,6 +7171,25 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
     at = 1.;
   }
 
+  // if a modified Jeffreys model is being run, load time derivative of velocity gradient
+  if (jeffreysEnabled) {
+    (void)tensor_dot(g, g, g_dot_g, VIM);
+    (void)tensor_dot(gt, gt, gt_dot_gt, VIM);
+    (void)tensor_dot(gt, g, gt_dot_g, VIM);
+
+    for (a = 0; a < VIM; a++) {
+      for (b = 0; b < VIM; b++) {
+
+        if (pd->TimeIntegration != STEADY) {
+          g_dot[a][b] = fv_dot->G[a][b];
+        } else {
+          g_dot[a][b] = 0.;
+        }
+        gt_dot[b][a] = g_dot[a][b];
+      }
+    }
+  }
+
   /* Begin loop over modes */
   for (mode = 0; mode < vn->modes; mode++) {
 
@@ -7209,6 +7242,16 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
     lcwt = ve[mode]->xi / 2.0;
 
     eps = ve[mode]->eps;
+
+    if (jeffreysEnabled) {
+      mupJeff = ve[mode]->muJeffreys;
+      // if the modified Jeffreys model is used, the parsed value of lambda is the
+      // elastic modulus rather than the time consant
+      elasticMod = lambda;
+      lambda1 = mup / elasticMod; // mup/G
+      lambda2 = mupJeff / elasticMod;
+      lambda = lambda1 + lambda2;
+    }
 
     Z = 1.0;
     dZ_dtrace = 0;
@@ -7269,8 +7312,18 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
           /* Source term */
           source = 0.;
           source += saramitoCoeff * Z * s[a][b] - at * mup * (g[a][b] + gt[a][b]);
-          if (alpha != 0.) {
-            source += saramitoCoeff * alpha * lambda * s_dot_s[a][b] / mup;
+
+          if (DOUBLE_NONZERO(alpha)) {
+            dbl source1 = (s_dot_s[a][b] / mup);
+
+            source1 *= alpha * lambda * saramitoCoeff;
+            source += source1;
+          }
+
+          if (jeffreysEnabled) {
+            source -= mup * lambda2 *
+                      (g_dot[a][b] + gt_dot[a][b] -
+                       (g_dot_g[a][b] + 2 * gt_dot_g[a][b] + gt_dot_gt[a][b]));
           }
           source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
@@ -7310,6 +7363,12 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
                     source -=
                         saramitoCoeff * alpha * lambda * d_mup_dv_pj * s_dot_s[a][b] / (mup * mup);
                   }
+
+                  if (jeffreysEnabled) {
+                    source = d_mup_dv_pj * at * lambda2 *
+                             (g_dot[a][b] + gt_dot[a][b] -
+                              (g_dot_g[a][b] + 2 * gt_dot_g[a][b] + gt_dot_gt[a][b]));
+                  }
                   source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
                   /* Load them up */
@@ -7333,6 +7392,11 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
                 if (alpha != 0.0) {
                   source -=
                       saramitoCoeff * alpha * lambda * d_mup->P[j] * s_dot_s[a][b] / (mup * mup);
+                }
+                if (jeffreysEnabled) {
+                  source -= at * d_mup->P[j] * lambda2 *
+                            (g_dot[a][b] + gt_dot[a][b] -
+                             (g_dot_g[a][b] + 2 * gt_dot_g[a][b] + gt_dot_gt[a][b]));
                 }
                 source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
@@ -7370,6 +7434,11 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
                   source -=
                       saramitoCoeff * alpha * lambda * d_mup->T[j] * s_dot_s[a][b] / (mup * mup);
                 }
+                if (jeffreysEnabled) {
+                  source -= d_mup->T[j] * lambda2 *
+                            (g_dot[a][b] + gt_dot[a][b] -
+                             (g_dot_g[a][b] + 2 * gt_dot_g[a][b] + gt_dot_gt[a][b]));
+                }
                 source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
                 /* Load them up */
@@ -7396,6 +7465,13 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
                   if (alpha != 0.) {
                     source -= saramitoCoeff * alpha * lambda * d_mup->X[p][j] * s_dot_s[a][b] /
                               (mup * mup);
+                  }
+
+                  if (jeffreysEnabled) {
+
+                    source -= d_mup->X[p][j] * lambda2 *
+                              (g_dot[a][b] + gt_dot[a][b] -
+                               (g_dot_g[a][b] + 2 * gt_dot_g[a][b] + gt_dot_gt[a][b]));
                   }
                   source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
@@ -7440,6 +7516,10 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
 
                   for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
                     phi_j = bf[var]->phi[j];
+                    dbl dG[DIM][DIM] = {{0.0}};
+                    dbl dGt[DIM][DIM] = {{0.0}};
+                    dG[p][q] = phi_j;
+                    dGt[q][p] = phi_j;
 
                     /* mass term */
                     mass = 0.0;
@@ -7459,6 +7539,40 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
                     source = -at * mup * phi_j *
                              ((double)delta(a, p) * (double)delta(b, q) +
                               (double)delta(b, p) * (double)delta(a, q));
+                    if (jeffreysEnabled) {
+                      dbl source_jeffrey = 0;
+                      // g_dot
+                      source_jeffrey +=
+                          (1. + 2. * tt) * phi_j / dt * (double)delta(a, p) * (double)delta(b, q);
+                      // gt_dot
+                      source_jeffrey +=
+                          (1. + 2. * tt) * phi_j / dt * (double)delta(a, q) * (double)delta(b, p);
+
+                      //// g_dot_g
+                      dbl dG_dot_g[DIM][DIM] = {{0.}};
+                      dbl g_dot_dG[DIM][DIM] = {{0.}};
+                      tensor_dot(dG, g, dG_dot_g, VIM);
+                      tensor_dot(g, dG, g_dot_dG, VIM);
+                      source_jeffrey -= g_dot_dG[a][b] + dG_dot_g[a][b];
+                      //// g_dot_gt
+                      // source_jeffrey -=  (g[a][p] * (double)delta(b, q) + gt[q][b] *
+                      // (double)delta(a, p)) *bf[var]->phi[j];
+                      //// 2*gt_dot_g
+                      dbl dGt_dot_g[DIM][DIM] = {{0.}};
+                      dbl gt_dot_dG[DIM][DIM] = {{0.}};
+                      tensor_dot(dGt, g, dGt_dot_g, VIM);
+                      tensor_dot(gt, dG, gt_dot_dG, VIM);
+                      source_jeffrey -= 2. * (dGt_dot_g[a][b] + gt_dot_dG[a][b]);
+                      // source_jeffrey -= 2.*(gt[a][p] * (double)delta(b, q) + g[q][b] *
+                      // (double)delta(a, p)) * bf[var]->phi[j];
+                      //// gt_dot_gt
+                      source_jeffrey -= g_dot_dG[b][a] + dG_dot_g[b][a];
+                      // source_jeffrey -=  (gt[a][p] * (double)delta(b, q) + g[q][b] *
+                      // (double)delta(a, p)) * bf[var]->phi[j];
+
+                      source_jeffrey *= -mup * lambda2;
+                      source += source_jeffrey;
+                    }
                     source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
                     /* Load them up */
