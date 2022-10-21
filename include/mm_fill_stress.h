@@ -57,9 +57,7 @@ EXTERN int assemble_stress_fortin(dbl,        /* tt - parm to vary time integrat
                                   dbl,        /* dt - current time step size               */
                                   PG_DATA *); /* dvc_dnode                                 */
 
-EXTERN int assemble_stress_log_conf(dbl tt,
-                                    dbl dt,
-                                    PG_DATA *pg_data);
+EXTERN int assemble_stress_log_conf(dbl tt, dbl dt, PG_DATA *pg_data);
 
 EXTERN int assemble_stress_log_conf_transient(dbl tt, dbl dt, PG_DATA *pg_data);
 
@@ -208,9 +206,9 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
                          dbl dt, /* current time step size */
                          PG_DATA *pg_data);
 int sqrt_conf_source(int mode,
-                            dbl b[DIM][DIM],
-                            dbl source_term[DIM][DIM],
-                            dbl d_source_term_db[DIM][DIM][DIM][DIM]);
+                     dbl b[DIM][DIM],
+                     dbl source_term[DIM][DIM],
+                     dbl d_source_term_db[DIM][DIM][DIM][DIM]);
 void compute_a_dot_b(dbl b[DIM][DIM],
                      dbl G[DIM][DIM],
                      dbl a_dot_b[DIM][DIM],
