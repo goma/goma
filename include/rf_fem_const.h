@@ -141,6 +141,12 @@
 #define FSI_SHELL_ONLY_MESH     8
 #define FSI_SHELL_ONLY_UNDEF    9
 
+/* Lubrication Viscosity Integration Options */
+#define LUB_VISCINT_GAUSSIAN    25
+#define LUB_VISCINT_ANALYTICAL  26
+#define LUB_VISCINT_POWERLAW    27
+#define MAX_LUB_NGP             5
+
 /* Residence time kernel functions */
 #define LINEAR_TIMETEMP      1110
 #define EXPONENTIAL_TIMETEMP 1120

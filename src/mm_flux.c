@@ -24,6 +24,7 @@
 #include <string.h>
 
 /* GOMA include files */
+#define GOMA_MM_FLUX_C
 
 #include "mm_flux.h"
 
@@ -77,7 +78,6 @@
 #include "user_mp.h"
 #include "wr_side_data.h"
 
-#define GOMA_MM_FLUX_C
 
 static int load_fv_sens(void);
 
@@ -8518,6 +8518,8 @@ int adaptive_weight(double w[],
   double ecrd[12][MAX_PDIM];
 
 #ifndef NO_CHEBYSHEV_PLEASE
+  int chev_order = ls->Adaptive_Order;
+#else
   int chev_order = 3;
 #endif
   double gauss_wt1D[3] = {5 / 9., 8 / 9., 5 / 9.};
@@ -8586,10 +8588,6 @@ int adaptive_weight(double w[],
       elem_type != BILINEAR_SHELL) {
     GOMA_EH(GOMA_ERROR, "adaptive integration for 2D quads only!");
   }
-
-#ifndef NO_CHEBYSHEV_PLEASE
-  chev_order = ls->Adaptive_Order;
-#endif
 
   if (sharp_interface) {
 
