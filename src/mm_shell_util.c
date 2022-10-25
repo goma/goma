@@ -6265,8 +6265,8 @@ int lub_viscosity_integrate(const double strs,
           switch (gn->ConstitutiveEquation) {
           case BINGHAM:
           case BINGHAM_WLF:
-            double shrF = 1. / F,
-                   shrY = pow(yield * pow(lam, 1. - nexp) / (mu0 - muinf), 1. / nexp);
+            double shrF = 1. / F;
+            double shrY = pow(yield * pow(lam, 1. - nexp) / (mu0 - muinf), 1. / nexp);
             if (cee * shrw < shrF) {
               visc_a = F * yield + mu0;
             } else if (cee * shrw < shrY) {
