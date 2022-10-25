@@ -886,6 +886,9 @@
 #define VELO_SLIP_FLUID_BC     964900000
 #define VELO_SLIP_ROT_FLUID_BC 964910000
 
+#define EDDY_MU_BC  966666666
+
+
 /* Structural Shells */
 #define SH_K_BC             970000000
 #define SH_TENS_BC          970000001
@@ -1117,6 +1120,7 @@
 #define RESTIME_NOBC_BC              788000031
 #define RESTIME_GRADSIC_BC           788000032
 #define SHELL_LUBRICATION_OUTFLOW_BC 777000053
+
 
 /* Vectors used for rotations */
 #define ROT_NONE -1

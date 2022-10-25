@@ -321,6 +321,9 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define MOMENT_CONSTANT_GROWTH            50
 #define MOMENT_SIZE_DEPENDENT_COALESCENCE 51
 
+/* Turbulent viscosity models for Reynolds Averaged NS */
+#define TURBULENT_SA 52 /* Spallart Allmaras */
+
 /*
  *  Heat source modeling
  *

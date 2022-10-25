@@ -6987,6 +6987,22 @@ struct BC_descriptions BC_Desc[] = {
      },
      SINGLE_PHASE,
      DVI_SINGLE_PHASE_DB},
+    {"EDDY_MU",
+     "EDDY_MU_BC",
+     DIRICHLET,
+     EDDY_MU_BC,
+     R_EDDY_MU,
+     SCALAR,
+     NO_ROT,
+     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1},
+     SINGLE_PHASE,
+     DVI_SINGLE_PHASE_DB},
+
 };
 
 /* order of sensitivities in list (as of 5/15/95):
@@ -7258,6 +7274,7 @@ struct Equation_Names EQ_Name[] = {
     {"R_USTAR", "USTAR", R_USTAR},
     {"R_VSTAR", "VSTAR", R_VSTAR},
     {"R_WSTAR", "WSTAR", R_WSTAR},
+    {"R_EDDY_MU", "EDDY_MU", R_EDDY_MU},
 
     /*
      *  Note -> these entries must remain until we get rid
@@ -7557,6 +7574,7 @@ struct Equation_Names Var_Name[] = {
     {"USTAR", "USX", USTAR},
     {"VSTAR", "USY", VSTAR},
     {"WSTAR", "USZ", WSTAR},
+    {"EDDY_MU", "EDDY_VISC", EDDY_MU},
 
     {"MESH_POSITION1", "X", MESH_POSITION1},
     {"MESH_POSITION2", "Y", MESH_POSITION2}, /* 206 */
@@ -7827,6 +7845,7 @@ struct Equation_Names Exo_Var_Names[] = {
     {"U Int.", "USX", USTAR},
     {"V Int.", "USY", VSTAR},
     {"W Int.", "USZ", WSTAR},
+    {"Eddy Turbulence Viscosity.", "EDDY_MU", EDDY_MU},
 };
 
 int Num_Exo_Var_Names = sizeof(Exo_Var_Names) / sizeof(struct Equation_Names);
@@ -8128,6 +8147,7 @@ struct Equation_Names Var_Units[] = {
     {"USTAR", "[1]", USTAR},
     {"VSTAR", "[1]", VSTAR},
     {"WSTAR", "[1]", WSTAR},
+    {"EDDY_MU", "[1]", EDDY_MU},
 };
 
 int Num_Var_Units = sizeof(Var_Units) / sizeof(struct Equation_Names);

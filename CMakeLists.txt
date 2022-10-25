@@ -462,6 +462,7 @@ set(GOMA_INCLUDES
     include/mm_fill_split.h
     include/mm_fill_stress.h
     include/mm_fill_terms.h
+    include/mm_fill_turbulent.h
     include/mm_fill_util.h
     include/mm_fill_stabilization.h
     include/mm_flux.h
@@ -605,6 +606,7 @@ set(GOMA_SOURCES
     src/mm_fill_species.c
     src/mm_fill_stress.c
     src/mm_fill_terms.c
+    src/mm_fill_turbulent.c
     src/mm_fill_split.c
     src/mm_fill_util.c
     src/mm_fill_stabilization.c

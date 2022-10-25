@@ -1860,6 +1860,11 @@ int load_elem_dofptr(const int ielem,
     load_varType_Interpolation_ptrs(eqn, esp->cur_strain, esp_old->cur_strain, esp_dot->cur_strain);
   }
 
+  eqn = R_EDDY_MU;
+  if (upd->ep[pg->imtrx][eqn] >= 0) {
+    load_varType_Interpolation_ptrs(eqn, esp->eddy_mu, esp_old->eddy_mu, esp_dot->eddy_mu);
+  }
+
   eqn = R_STRESS11;
   if (upd->ep[pg->imtrx][eqn] >= 0) {
     /* This should loop through all the stress variables

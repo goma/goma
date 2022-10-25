@@ -2965,6 +2965,32 @@ int assemble_momentum(dbl time,       /* current time */
             }
           }
 
+
+          /*
+           * J_m_eddy_mu
+           */
+
+          if (pdv[EDDY_MU]) {
+            var = EDDY_MU;
+            pvar = upd->vp[pg->imtrx][var];
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              phi_j = bf[var]->phi[j];
+
+              diffusion = 0.;
+              if (diffusion_on) {
+                for (p = 0; p < VIM; p++) {
+                  for (q = 0; q < VIM; q++) {
+                    diffusion += grad_phi_i_e_a[p][q] * d_Pi->eddy_mu[q][p][j];
+                  }
+                }
+                diffusion *= -d_area;
+                diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+              }
+
+              lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += diffusion;
+            }
+          }
+
           /*
            * J_m_F
            */
@@ -7428,6 +7454,15 @@ int load_fv(void)
                    &(fv_old->cur_strain));
     stateVector[CUR_STRAIN] = fv->cur_strain;
   }
+
+  if (pdgv[EDDY_MU]) {
+    v = EDDY_MU;
+    scalar_fv_fill(esp->eddy_mu, esp_dot->eddy_mu, esp_old->eddy_mu, bf[v]->phi,
+                   ei[upd->matrix_index[v]]->dof[v], &(fv->eddy_mu), &(fv_dot->eddy_mu),
+                   &(fv_old->eddy_mu));
+    stateVector[EDDY_MU] = fv->eddy_mu;
+  }
+
   if (pdgv[LIGHT_INTP]) {
     v = LIGHT_INTP;
     scalar_fv_fill(esp->poynt[0], esp_dot->poynt[0], esp_old->poynt[0], bf[v]->phi,
@@ -9583,6 +9618,26 @@ int load_fv_grads(void)
       fv->grad_sh_J[p] = 0.0;
   }
 
+  /* grad(eddy_mu)
+   *
+   */
+  if (pd->gv[EDDY_MU]) {
+    v = EDDY_MU;
+    bfn = bf[v];
+    dofs = ei[upd->matrix_index[v]]->dof[v];
+    for (p = 0; p < VIM; p++) {
+      fv->grad_eddy_mu[p] = 0.0;
+      for (i = 0; i < dofs; i++) {
+        fv->grad_eddy_mu[p] += *esp->eddy_mu[i] * bfn->grad_phi[i][p];
+      }
+    }
+  } else if (zero_unused_grads && upd->vp[pg->imtrx][EDDY_MU] == -1) {
+    for (p = 0; p < VIM; p++) {
+      fv->grad_eddy_mu[p] = 0.0;
+    }
+  }
+
+
   /*
    * grad(APR)
    */
@@ -11198,6 +11253,64 @@ int load_fv_mesh_derivs(int okToZero)
     siz = sizeof(double) * DIM * DIM * MDE;
     memset(&(fv->d_grad_sh_t_dmesh[0][0][0]), 0, siz);
   }
+
+  if (pd->gv[EDDY_MU]) {
+    v = EDDY_MU;
+    bfv = bf[v];
+    vdofs = ei[upd->matrix_index[v]]->dof[v];
+#ifdef DO_NOT_UNROLL
+    siz = sizeof(double) * DIM * DIM * MDE;
+    memset(&(fv->d_grad_eddy_mu_dmesh[0][0][0]), 0, siz);
+    for (i = 0; i < vdofs; i++) {
+      T_i = *esp->eddy_mu[i];
+      for (p = 0; p < dimNonSym; p++) {
+        for (b = 0; b < dim; b++) {
+          for (j = 0; j < mdofs; j++) {
+            fv->d_grad_eddy_mu_dmesh[p][b][j] += T_i * bfv->d_grad_phi_dmesh[i][p][b][j];
+          }
+        }
+      }
+    }
+#else
+    for (j = 0; j < mdofs; j++) {
+      T_i = *esp->eddy_mu[0];
+
+      fv->d_grad_eddy_mu_dmesh[0][0][j] = T_i * bfv->d_grad_phi_dmesh[0][0][0][j];
+      fv->d_grad_eddy_mu_dmesh[1][1][j] = T_i * bfv->d_grad_phi_dmesh[0][1][1][j];
+      fv->d_grad_eddy_mu_dmesh[1][0][j] = T_i * bfv->d_grad_phi_dmesh[0][1][0][j];
+      fv->d_grad_eddy_mu_dmesh[0][1][j] = T_i * bfv->d_grad_phi_dmesh[0][0][1][j];
+
+      if (dimNonSym == 3) {
+        fv->d_grad_eddy_mu_dmesh[2][2][j] = T_i * bfv->d_grad_phi_dmesh[0][2][2][j];
+        fv->d_grad_eddy_mu_dmesh[2][0][j] = T_i * bfv->d_grad_phi_dmesh[0][2][0][j];
+        fv->d_grad_eddy_mu_dmesh[2][1][j] = T_i * bfv->d_grad_phi_dmesh[0][2][1][j];
+        fv->d_grad_eddy_mu_dmesh[0][2][j] = T_i * bfv->d_grad_phi_dmesh[0][0][2][j];
+        fv->d_grad_eddy_mu_dmesh[1][2][j] = T_i * bfv->d_grad_phi_dmesh[0][1][2][j];
+      }
+
+      for (i = 1; i < vdofs; i++) {
+        T_i = *esp->eddy_mu[i];
+
+        fv->d_grad_eddy_mu_dmesh[0][0][j] += T_i * bfv->d_grad_phi_dmesh[i][0][0][j];
+        fv->d_grad_eddy_mu_dmesh[1][1][j] += T_i * bfv->d_grad_phi_dmesh[i][1][1][j];
+        fv->d_grad_eddy_mu_dmesh[1][0][j] += T_i * bfv->d_grad_phi_dmesh[i][1][0][j];
+        fv->d_grad_eddy_mu_dmesh[0][1][j] += T_i * bfv->d_grad_phi_dmesh[i][0][1][j];
+
+        if (dimNonSym == 3) {
+          fv->d_grad_eddy_mu_dmesh[2][2][j] += T_i * bfv->d_grad_phi_dmesh[i][2][2][j];
+          fv->d_grad_eddy_mu_dmesh[2][0][j] += T_i * bfv->d_grad_phi_dmesh[i][2][0][j];
+          fv->d_grad_eddy_mu_dmesh[2][1][j] += T_i * bfv->d_grad_phi_dmesh[i][2][1][j];
+          fv->d_grad_eddy_mu_dmesh[0][2][j] += T_i * bfv->d_grad_phi_dmesh[i][0][2][j];
+          fv->d_grad_eddy_mu_dmesh[1][2][j] += T_i * bfv->d_grad_phi_dmesh[i][1][2][j];
+        }
+      }
+    }
+#endif
+  } else if (upd->vp[pg->imtrx][EDDY_MU] != -1) {
+    siz = sizeof(double) * DIM * DIM * MDE;
+    memset(&(fv->d_grad_eddy_mu_dmesh[0][0][0]), 0, siz);
+  }
+
 
   if (pd->gv[LIGHT_INTP]) {
     v = LIGHT_INTP;
@@ -26862,6 +26975,18 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
       }
     }
   }
+
+  var = EDDY_MU;
+  if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
+    for (p = 0; p < VIM; p++) {
+      for (q = 0; q < VIM; q++) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          d_Pi->eddy_mu[p][q][j] = d_mu->eddy_mu[j] * gamma[p][q];
+        }
+      }
+    }
+  }
+
 
   if (d_Pi != NULL && pd->v[pg->imtrx][VELOCITY1]) {
     /* Damn... It is unfortunate that grad_phi_e is 1) assumed to be

@@ -7308,6 +7308,21 @@ static int load_fv_sens(void) {
   }
 
   /*
+   *  Eddy viscosity for turbulent flow
+   */
+
+  v = EDDY_MU;
+  fv_sens->eddy_mu = 0.;
+  if (pd->v[pg->imtrx][v]) {
+    dofs = ei[pg->imtrx]->dof[v];
+    for (i = 0; i < dofs; i++) {
+      fv_sens->eddy_mu += *esp_old->eddy_mu[i] * bf[v]->phi[i];
+    }
+  }
+
+
+
+  /*
    * Acoustic Pressure
    */
 

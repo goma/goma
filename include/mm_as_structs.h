@@ -568,6 +568,8 @@ struct Element_Variable_Pointers {
   dbl *sh_sat_1[MDE];   /* Porous shell saturation layer 1 */
   dbl *sh_sat_2[MDE];   /* Porous shell saturation layer 2 */
   dbl *sh_sat_3[MDE];   /* Porous shell saturation layer 3 */
+
+  dbl *eddy_mu[MDE];    /* Eddy viscosity for turbulent flow */
 };
 
 /*___________________________________________________________________________*/
@@ -693,6 +695,8 @@ struct Element_Stiffness_Pointers {
   dbl **sh_sat_1; /* Porous shell saturation layer 1 */
   dbl **sh_sat_2; /* Porous shell saturation layer 2 */
   dbl **sh_sat_3; /* Porous shell saturation layer 3 */
+
+  dbl **eddy_mu; /* Eddy viscosity for turbulent flow */
 
   /*
    * These are for debugging purposes...
@@ -1034,6 +1038,7 @@ struct External_Field_Variables {
 
   int ev_etch_area;  /* external area fraction in which etching reaction takes place */
   int ev_etch_depth; /* external depth field due to etching reaction */
+
 
   char name[MAX_EXTERNAL_FIELD][32];
   /* names of external field variables*/
@@ -1701,6 +1706,8 @@ struct Field_Variables {
   dbl sh_sat_2;   /* Porous shell saturation layer 2 */
   dbl sh_sat_3;   /* Porous shell saturation layer 3 */
 
+  dbl eddy_mu;    /* Eddy viscosity for turbulent flow */
+
   /*
    * Grads of scalars...
    */
@@ -1747,6 +1754,8 @@ struct Field_Variables {
   dbl grad_sh_sat_1[DIM];  /* Gradient of porous shell saturation layer 1 */
   dbl grad_sh_sat_2[DIM];  /* Gradient of porous shell saturation layer 2 */
   dbl grad_sh_sat_3[DIM];  /* Gradient of porous shell saturation layer 3 */
+
+  dbl grad_eddy_mu[DIM];   /* Gradient of Eddy viscosity */
 
   /*
    * Grads of vectors...
@@ -1929,6 +1938,7 @@ struct Field_Variables {
   dbl d_grad_sh_p_open_2_dmesh[DIM][DIM][MDE];
   dbl d_max_strain_dmesh[DIM][MDE];
   dbl d_cur_strain_dmesh[DIM][MDE];
+  dbl d_grad_eddy_mu_dmesh[DIM][DIM][MDE];
   dbl d_grad_restime_dmesh[DIM][DIM][MDE];
   /*
    * Values at surfaces for integrated boundary conditions
@@ -2080,6 +2090,8 @@ struct Diet_Field_Variables {
   dbl sh_sat_1;   /* Porous shell saturation layer 1 */
   dbl sh_sat_2;   /* Porous shell saturation layer 2 */
   dbl sh_sat_3;   /* Porous shell saturation layer 3 */
+
+  dbl eddy_mu;    /* Eddy viscosity for turbulent flow */
 
   dbl grad_em_er[DIM][DIM]; /* EM wave Fields */
   dbl grad_em_ei[DIM][DIM]; /* EM wave Fields */
@@ -2989,6 +3001,7 @@ struct stress_dependence {
   double S[DIM][DIM][MAX_MODES][DIM][DIM][MDE];
   double pf[DIM][DIM][MAX_PHASE_FUNC][MDE];
   double degrade[DIM][DIM][MDE];
+  double eddy_mu[DIM][DIM][MDE];
 };
 typedef struct stress_dependence STRESS_DEPENDENCE_STRUCT;
 
@@ -3037,6 +3050,7 @@ struct viscosity_dependence {
   double gd;                      /* strain rate dependence */
   double pf[MAX_PHASE_FUNC][MDE]; /* phase function */
   double degrade[MDE];            /* amount of degradation */
+  double eddy_mu[MDE];            /* Turbulent viscosity */
 };
 typedef struct viscosity_dependence VISCOSITY_DEPENDENCE_STRUCT;
 

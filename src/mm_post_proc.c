@@ -218,6 +218,7 @@ int FLUXLINES = -1;           /* mass flux function. This is analogous to
                                * stream function but represents mass flux */
 int LAGRANGE_CONVECTION = -1; /* Lagrangian convection velocity */
 int MEAN_SHEAR = -1;
+int MEAN_VORTICITY = -1;
 int MM_RESIDUALS = -1; /* stress equation residuals at vertex
                         * and midside nodes*/
 int NS_RESIDUALS = -1; /* Navier-Stokes residuals at vertex
@@ -1221,6 +1222,20 @@ static int calc_standard_fields(double **post_proc_vect,
 
     local_post[MEAN_SHEAR] = gammadot;
     local_lumped[MEAN_SHEAR] = 1.;
+  }
+
+  if (MEAN_VORTICITY != -1 && pd->e[pg->imtrx][R_MOMENTUM1]) {
+    double vorticity, omega[DIM][DIM];
+    for (a = 0; a < VIM; a++) {
+      for (b = 0; b < VIM; b++) {
+        omega[a][b] = fv->grad_v[a][b] - fv->grad_v[b][a];
+      }
+    }
+    /* find second invariant of vorticity dyadic */
+    calc_shearrate(&vorticity, omega, NULL, NULL);
+
+    local_post[MEAN_VORTICITY] = vorticity;
+    local_lumped[MEAN_VORTICITY] = 1.;
   }
 
   if (GIES_CRIT != -1 && pd->e[pg->imtrx][R_MOMENTUM1]) {
@@ -7182,6 +7197,7 @@ void rd_post_process_specs(FILE *ifp, char *input) {
   iread = look_for_post_proc(ifp, "Streamwise shear stress", &STREAM_SHEAR_STRESS);
   iread = look_for_post_proc(ifp, "Streamwise Stress Difference", &STREAM_TENSION);
   iread = look_for_post_proc(ifp, "Mean shear rate", &MEAN_SHEAR);
+  iread = look_for_post_proc(ifp, "Mean vorticity", &MEAN_VORTICITY);
   iread = look_for_post_proc(ifp, "Pressure contours", &PRESSURE_CONT);
   iread = look_for_post_proc(ifp, "Shell div_s_v contours", &SH_DIV_S_V_CONT);
   iread = look_for_post_proc(ifp, "Shell curv contours", &SH_CURV_CONT);
@@ -8990,6 +9006,17 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
       index_post_export++;
     }
     MEAN_SHEAR = index_post;
+    index_post++;
+  }
+
+  if (MEAN_VORTICITY != -1 && Num_Var_In_Type[pg->imtrx][R_MOMENTUM1]) {
+    set_nv_tkud(rd, index, 0, 0, -2, "VORT", "[1]", "Mean vorticity", FALSE);
+    index++;
+    if (MEAN_VORTICITY == 2) {
+      Export_XP_ID[index_post_export] = index_post;
+      index_post_export++;
+    }
+    MEAN_VORTICITY = index_post;
     index_post++;
   }
 

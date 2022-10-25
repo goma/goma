@@ -67,6 +67,7 @@
 #include "mm_fill_species.h"
 #include "mm_fill_stress.h"
 #include "mm_fill_terms.h"
+#include "mm_fill_turbulent.h"
 #include "mm_fill_util.h"
 #include "mm_flux.h"
 #include "mm_mp.h"
@@ -2331,6 +2332,16 @@ Revised:         Summer 1998, SY Tam (UNM)
       GOMA_EH(err, "assemble_pmomentum");
 #ifdef CHECK_FINITE
       err = CHECKFINITE("assemble_pmomentum");
+      if (err)
+        return -1;
+#endif
+    }
+
+    if (pde[R_EDDY_MU]) {
+      err = assemble_spalart_allmaras(time_value, theta, delta_t, &pg_data);
+      GOMA_EH(err, "assemble_spalart_allmaras");
+#ifdef CHECK_FINITE
+      err = CHECKFINITE("assemble_spalart_allmaras");
       if (err)
         return -1;
 #endif

@@ -1628,6 +1628,8 @@ void noahs_ark(void) {
 
     ddd_add_member(n, &mp_glob[i]->species_source_external_field_index, 1, MPI_INT);
 
+    ddd_add_member(n, &mp_glob[i]->dist_wall_ext_field_index, 1, MPI_INT);
+
     /*
      * Material properties that are fixed length vectors of doubles.
      * Lengths are: total variable types (regular + concentrations)

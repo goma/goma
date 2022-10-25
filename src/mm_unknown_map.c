@@ -1583,6 +1583,11 @@ static void set_interaction_masks(Exo_DB *exo)
         v = DENSITY_EQN;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
+
+        v = EDDY_MU;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+
         break;
       case R_USTAR:
       case R_VSTAR:
@@ -3157,6 +3162,33 @@ static void set_interaction_masks(Exo_DB *exo)
         v = MESH_DISPLACEMENT3;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
+        break;
+
+      case R_EDDY_MU:
+        v = EDDY_MU;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+
+        v = MESH_DISPLACEMENT1;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = MESH_DISPLACEMENT2;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = MESH_DISPLACEMENT3;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+
+        v = VELOCITY1;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = VELOCITY2;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+        v = VELOCITY3;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
+
         break;
 
       case R_ACOUS_PREAL:
