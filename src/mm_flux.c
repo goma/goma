@@ -78,7 +78,6 @@
 #include "user_mp.h"
 #include "wr_side_data.h"
 
-
 static int load_fv_sens(void);
 
 static int load_fv_grads_sens(void);

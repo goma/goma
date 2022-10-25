@@ -438,7 +438,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 #else
   int relax_bit = FALSE;
 #endif
-  int no_relax_retry = ceil(1.-log(damp_factor_org[0])/log(2.));
+  int no_relax_retry = ceil(1. - log(damp_factor_org[0]) / log(2.));
   int nonconv_roll = 0;
   int use_custom_damp =
       ((damp_factor1 <= 1. && damp_factor1 >= 0.) && (damp_factor2 <= 1. && damp_factor2 >= 0.) &&

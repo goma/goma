@@ -1980,7 +1980,7 @@ void shell_determinant_and_normal(
       } else if (id_side == 5) {
         T[0][0] = 1.;
         T[1][1] = -1.;
-      } else if (id_side == 6 ) {
+      } else if (id_side == 6) {
         T[0][0] = 1.;
         T[1][1] = 1.;
       } else {
@@ -3242,7 +3242,7 @@ void lubrication_shell_initialize(int *n_dof,        // Degrees of freedom
       }
     }
 
-    /* Big T calculation 
+    /* Big T calculation
     T[0][0] = 1.;
     T[0][1] = 0.;
     T[0][2] = 0.;
@@ -3250,36 +3250,36 @@ void lubrication_shell_initialize(int *n_dof,        // Degrees of freedom
     T[1][1] = 1.;
     T[1][2] = 0.;*/
 
-  siz = (DIM - 1) * DIM * sizeof(double);
-  memset(T, 0, siz);
-  memset(t, 0, siz);
-  /*  since T & t are zeroed, only need to set nonzero elements */
-/* revert back by setting id_side = 6  */
+    siz = (DIM - 1) * DIM * sizeof(double);
+    memset(T, 0, siz);
+    memset(t, 0, siz);
+    /*  since T & t are zeroed, only need to set nonzero elements */
+    /* revert back by setting id_side = 6  */
     switch (ei[pg->imtrx]->ielem_shape) {
-      case SHELL:
-      case TRISHELL:
-        if (id_side == 1) {
-          T[0][0] = 1.;
-          T[1][2] = 1.;
-        } else if (id_side == 2) {
-          T[0][1] = 1.;
-          T[1][2] = 1.;
-        } else if (id_side == 3) {
-          T[0][0] = -1.;
-          T[1][2] = 1.;
-        } else if (id_side == 4) {
-          T[0][1] = -1.;
-          T[1][2] = 1.;
-        } else if (id_side == 5) {
-          T[0][0] = 1.;
-          T[1][1] = -1.;
-        } else if (id_side == 6 || id_side == -1) {
-          T[0][0] = 1.;
-          T[1][1] = 1.;
-        } else {
-          GOMA_EH(GOMA_ERROR, "Incorrect side for SHELL");
-        }
-        break;
+    case SHELL:
+    case TRISHELL:
+      if (id_side == 1) {
+        T[0][0] = 1.;
+        T[1][2] = 1.;
+      } else if (id_side == 2) {
+        T[0][1] = 1.;
+        T[1][2] = 1.;
+      } else if (id_side == 3) {
+        T[0][0] = -1.;
+        T[1][2] = 1.;
+      } else if (id_side == 4) {
+        T[0][1] = -1.;
+        T[1][2] = 1.;
+      } else if (id_side == 5) {
+        T[0][0] = 1.;
+        T[1][1] = -1.;
+      } else if (id_side == 6 || id_side == -1) {
+        T[0][0] = 1.;
+        T[1][1] = 1.;
+      } else {
+        GOMA_EH(GOMA_ERROR, "Incorrect side for SHELL");
+      }
+      break;
     }
     /* Little t calculation */
     for (p = 0; p < 2; p++) {
@@ -3991,7 +3991,6 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         srate = 0.;
         vis_w = mu;
       }
-/*fprintf(stderr,"PL %g %g %g %g %g\n",tau_w, srate, q_mag, H, mu);*/
     } else if (gn->ConstitutiveEquation == BINGHAM || gn->ConstitutiveEquation == BINGHAM_WLF ||
                gn->ConstitutiveEquation == CARREAU || gn->ConstitutiveEquation == CARREAU_WLF) {
       if (isnan(tau_w))
@@ -4050,9 +4049,9 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     if (pd->v[pg->imtrx][VAR]) {
       ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
       q_mag2 = q_mag * ratio;
-      q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
-                                     (double)mp->mp2nd->viscositymask[0],
-                                     (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
+      q_mag =
+          ls_modulate_property(q_mag, q_mag2, ls->Length_Scale, (double)mp->mp2nd->viscositymask[0],
+                               (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
       factor *= (1. - ratio);
       factor += ratio;
       dq_gradp *= factor;
@@ -6007,7 +6006,7 @@ int lub_viscosity_integrate(const double strs,
   res_tol = MIN(TOL_CEIL, Epsilon[pg->imtrx][0]);
   soln_tol = MIN(TOL_CEIL, Epsilon[pg->imtrx][2]);
 
-  if(mp->LubIntegrationModel == LUB_VISCINT_ANALYTICAL) {
+  if (mp->LubIntegrationModel == LUB_VISCINT_ANALYTICAL) {
     a_visc_type = TRUE;
   } else {
     a_visc_type = FALSE;
@@ -6204,7 +6203,7 @@ int lub_viscosity_integrate(const double strs,
     switch (gn->ConstitutiveEquation) {
     case BINGHAM:
     case BINGHAM_WLF: {
-      double shrF = 1./F, shrY = pow(yield*pow(lam,1.-nexp)/(mu0-muinf), 1./nexp);
+      double shrF = 1. / F, shrY = pow(yield * pow(lam, 1. - nexp) / (mu0 - muinf), 1. / nexp);
       double tmp_pl3 = 1. / CUBE(lam * shrw);
       double tmp_cy1 = pow(1. + CUBE(lam * shrw), (2. + nexp) / 3.);
       double tmp_cyY = pow(1. + CUBE(lam * shrY), (2. * nexp) / 3.);
@@ -6213,17 +6212,16 @@ int lub_viscosity_integrate(const double strs,
       double shr1 = MIN(shrw, shrF), shr2 = MIN(shrw, shrY);
 
       xint_a = SQUARE(F * yield + mu0) * CUBE(shr1 / shrw) / 3.;
-      if( shrw > shrF) {
-        xint_a += (SQUARE(yield) * (shr2 - shrF) + mu0 * yield *
-                  (SQUARE(shr2) - SQUARE(shrF)) + SQUARE(mu0) / 3. * (CUBE(shr2) - CUBE(shrF))) /
+      if (shrw > shrF) {
+        xint_a += (SQUARE(yield) * (shr2 - shrF) + mu0 * yield * (SQUARE(shr2) - SQUARE(shrF)) +
+                   SQUARE(mu0) / 3. * (CUBE(shr2) - CUBE(shrF))) /
                   CUBE(shrw);
       }
-      if( shrw > shrY) {
-        xint_a += SQUARE(muinf) / 3. * (1. - CUBE(shrY/shrw)) +
-               2. * muinf * tmp_pl3 * (mu0 - muinf) / (2. + nexp) * (tmp_cy1 - tmp_cyY) +
-               tmp_pl3 * SQUARE(mu0 - muinf) / (1. + 2. * nexp) * (tmp_cy2 - tmp_cyY2);
+      if (shrw > shrY) {
+        xint_a += SQUARE(muinf) / 3. * (1. - CUBE(shrY / shrw)) +
+                  2. * muinf * tmp_pl3 * (mu0 - muinf) / (2. + nexp) * (tmp_cy1 - tmp_cyY) +
+                  tmp_pl3 * SQUARE(mu0 - muinf) / (1. + 2. * nexp) * (tmp_cy2 - tmp_cyY2);
       }
-fprintf(stderr,"anal_int %g %g %g %g\n",shrw,shrF,shrY,xint_a);
     } break;
     case CARREAU:
     case CARREAU_WLF: {
@@ -6267,11 +6265,12 @@ fprintf(stderr,"anal_int %g %g %g %g\n",shrw,shrF,shrY,xint_a);
           switch (gn->ConstitutiveEquation) {
           case BINGHAM:
           case BINGHAM_WLF:
-            double shrF = 1./F, shrY = pow(yield*pow(lam,1.-nexp)/(mu0-muinf), 1./nexp);
-            if(cee*shrw < shrF) {
-              visc_a = F*yield + mu0;
-            } else if ( cee*shrw < shrY) {
-              visc_a = mu0 + yield / (cee*shrw);
+            double shrF = 1. / F,
+                   shrY = pow(yield * pow(lam, 1. - nexp) / (mu0 - muinf), 1. / nexp);
+            if (cee * shrw < shrF) {
+              visc_a = F * yield + mu0;
+            } else if (cee * shrw < shrY) {
+              visc_a = mu0 + yield / (cee * shrw);
             } else {
               tmp_pl = 1. / pow(1. + CUBE(cee * lam * shrw), (1. - nexp) / 3.);
               visc_a = muinf + (mu0 - muinf) * tmp_pl;

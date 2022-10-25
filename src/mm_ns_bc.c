@@ -632,7 +632,7 @@ void fvelo_normal_lub_bc(double func[DIM],
   double bound_normal[DIM], d_bd_normal_dx[DIM][DIM][MDE];
   int el1, el2, nf, nbr_type, nbr_dim;
 
- /* Basic data for local element */
+  /* Basic data for local element */
   el1 = ei[pg->imtrx]->ielem;
 
   nf = num_elem_friends[el1];
@@ -647,7 +647,8 @@ void fvelo_normal_lub_bc(double func[DIM],
 
     /* NOTE: this will not work for an edge of a 3D element yet */
     /* return if not on the shell element */
-    if (ei[pg->imtrx]->ielem_dim > nbr_dim) return;
+    if (ei[pg->imtrx]->ielem_dim > nbr_dim)
+      return;
   } else {
     GOMA_EH(GOMA_ERROR, "Not ready for multiple neighbors yet...");
   }
@@ -665,7 +666,7 @@ void fvelo_normal_lub_bc(double func[DIM],
    * Prepare geometry
    */
   n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
-  lubrication_shell_initialize(n_dof, dof_map, id_side, xi, exo, 0);  
+  lubrication_shell_initialize(n_dof, dof_map, id_side, xi, exo, 0);
 
   /* Calculate the flow rate and its sensitivties */
 
@@ -699,7 +700,7 @@ void fvelo_normal_lub_bc(double func[DIM],
   /***** CALCULATE RESIDUAL CONTRIBUTION ********************/
   func[0] = lubflux;
   for (kdir = 0; kdir < pd->Num_Dim; kdir++) {
-    func[0] += (LubAux->q[kdir] - LubAux->H*x_dot[kdir]) * bound_normal[kdir];
+    func[0] += (LubAux->q[kdir] - LubAux->H * x_dot[kdir]) * bound_normal[kdir];
   }
 
   /***** CALCULATE JACOBIAN CONTRIBUTION ********************/
@@ -712,8 +713,11 @@ void fvelo_normal_lub_bc(double func[DIM],
         if (pd->v[pg->imtrx][var]) {
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             phi_j = bf[var]->phi[j];
-            d_func[0][var][j] += (LubAux->q[kdir] - LubAux->H*x_dot[kdir]) * d_bd_normal_dx[kdir][p][j];
-            d_func[0][var][j] += (LubAux->dq_dx[kdir][p][j] - LubAux->dH_dmesh[p][j]*x_dot[kdir]) * bound_normal[kdir];
+            d_func[0][var][j] +=
+                (LubAux->q[kdir] - LubAux->H * x_dot[kdir]) * d_bd_normal_dx[kdir][p][j];
+            d_func[0][var][j] +=
+                (LubAux->dq_dx[kdir][p][j] - LubAux->dH_dmesh[p][j] * x_dot[kdir]) *
+                bound_normal[kdir];
             if (TimeIntegration != 0 && p == kdir) {
               d_func[0][var][j] +=
                   (-(1. + 2. * tt) * phi_j / dt) * bound_normal[kdir] * delta(p, kdir);
@@ -748,13 +752,14 @@ void fvelo_normal_lub_bc(double func[DIM],
         phi_j = bf[var]->phi[j];
         /* Prepare basis functions */
         ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
-              n_dof[MESH_DISPLACEMENT1], dof_map);
+                n_dof[MESH_DISPLACEMENT1], dof_map);
         for (p = 0; p < pd->Num_Dim; p++) {
           d_func[0][var][j] += LubAux->dq_dp2[p][j] * phi_j * grad_II_phi_j[p] * bound_normal[p];
-              for (q = 0; q < pd->Num_Dim; q++) {
-                d_func[0][var][j] += LubAux->dq_dgradp[p][q][j] * grad_II_phi_j[q] * grad_II_phi_j[p] * bound_normal[p];
-              }
-            }
+          for (q = 0; q < pd->Num_Dim; q++) {
+            d_func[0][var][j] +=
+                LubAux->dq_dgradp[p][q][j] * grad_II_phi_j[q] * grad_II_phi_j[p] * bound_normal[p];
+          }
+        }
       }
     }
 

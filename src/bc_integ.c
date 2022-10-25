@@ -507,7 +507,7 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
                               bc->BC_Data_Float);
           surface_determinant_and_normal(
               ielem, iconnect_ptr, num_local_nodes, ielem_dim - 1, (int)elem_side_bc->id_side,
-              (int)elem_side_bc->num_nodes_on_side, (elem_side_bc->local_elem_node_id));  
+              (int)elem_side_bc->num_nodes_on_side, (elem_side_bc->local_elem_node_id));
           break;
         case VELO_TANGENT_LS_BC:
 
@@ -1921,13 +1921,13 @@ int apply_integrated_bc(double x[],            /* Solution vector for the curren
                *   And, find the global unknown number, index_eq, on which
                *   to applyi this additive boundary condition, eqn
                */
-if(bc->BC_Name == LUB_KINEMATIC_BC) {
-              index_eq =
-                  bc_eqn_index(id, I, bc_input_id, map_mat_index(bc->BC_Data_Int[0]), p, &eqn, &matID_apply, &vd);
-} else {
-              index_eq =
-                  bc_eqn_index(id, I, bc_input_id, ei[pg->imtrx]->mn, p, &eqn, &matID_apply, &vd);
-}
+              if (bc->BC_Name == LUB_KINEMATIC_BC) {
+                index_eq = bc_eqn_index(id, I, bc_input_id, map_mat_index(bc->BC_Data_Int[0]), p,
+                                        &eqn, &matID_apply, &vd);
+              } else {
+                index_eq =
+                    bc_eqn_index(id, I, bc_input_id, ei[pg->imtrx]->mn, p, &eqn, &matID_apply, &vd);
+              }
 
               if (index_eq >= 0) {
                 /*

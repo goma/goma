@@ -9564,13 +9564,16 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     model_read =
         look_for_mat_prop(imp, "Lubrication Integration Model", &(mat_ptr->LubIntegrationModel),
                           &(a0), NO_USER, NULL, model_name, NO_INPUT, &NO_SPECIES, es);
-    if (model_read == -1 ) {
+    if (model_read == -1) {
       if (!strcmp(model_name, "GAUSSIAN")) {
-        mat_ptr->LubIntegrationModel = LUB_VISCINT_GAUSSIAN; model_read = 1;
+        mat_ptr->LubIntegrationModel = LUB_VISCINT_GAUSSIAN;
+        model_read = 1;
       } else if (!strcmp(model_name, "ANALYTICAL")) {
-        mat_ptr->LubIntegrationModel = LUB_VISCINT_ANALYTICAL; model_read = 1;
+        mat_ptr->LubIntegrationModel = LUB_VISCINT_ANALYTICAL;
+        model_read = 1;
       } else if (!strcmp(model_name, "POWER_LAW")) {
-        mat_ptr->LubIntegrationModel = LUB_VISCINT_POWERLAW; model_read = 1;
+        mat_ptr->LubIntegrationModel = LUB_VISCINT_POWERLAW;
+        model_read = 1;
       }
     }
     if (model_read == 1) {
@@ -9578,109 +9581,113 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         sr = sprintf(err_msg, "Error reading Lubrication Gauss pts %s", model_name);
         GOMA_EH(GOMA_ERROR, err_msg);
       } else {
-      SPF(endofstring(es), " %d", mat_ptr->LubInt_NGP);
+        SPF(endofstring(es), " %d", mat_ptr->LubInt_NGP);
       }
       if (mat_ptr->LubIntegrationModel == LUB_VISCINT_GAUSSIAN ||
           mat_ptr->LubIntegrationModel == LUB_VISCINT_ANALYTICAL) {
-      /* These are Gaussian integration constants shifted to the interval [0,1]
-         Source: Abramowitz & Stegun, Handbook of Mathematical Functions, 9th printing, 1972*/
+        /* These are Gaussian integration constants shifted to the interval [0,1]
+           Source: Abramowitz & Stegun, Handbook of Mathematical Functions, 9th printing, 1972*/
         if (mat_ptr->LubInt_NGP == 2) {
           mat_ptr->Lub_wts[0] = 0.5;
           mat_ptr->Lub_wts[1] = 0.5;
-          mat_ptr->Lub_gpts[0] = 0.5*(1.-sqrt(1./3.));
-          mat_ptr->Lub_gpts[1] = 0.5*(1.+sqrt(1./3.));
-        }
-        else if (mat_ptr->LubInt_NGP == 3) {
+          mat_ptr->Lub_gpts[0] = 0.5 * (1. - sqrt(1. / 3.));
+          mat_ptr->Lub_gpts[1] = 0.5 * (1. + sqrt(1. / 3.));
+        } else if (mat_ptr->LubInt_NGP == 3) {
           mat_ptr->Lub_wts[0] = 5. / 18.;
           mat_ptr->Lub_wts[1] = 4. / 9;
           mat_ptr->Lub_wts[2] = 5. / 18.;
-          mat_ptr->Lub_gpts[0] = 0.5*(1.-sqrt(0.6));
+          mat_ptr->Lub_gpts[0] = 0.5 * (1. - sqrt(0.6));
           mat_ptr->Lub_gpts[1] = 0.5;
-          mat_ptr->Lub_gpts[2] = 0.5*(1.+sqrt(0.6));
-        }
-        else if (mat_ptr->LubInt_NGP == 4) {
+          mat_ptr->Lub_gpts[2] = 0.5 * (1. + sqrt(0.6));
+        } else if (mat_ptr->LubInt_NGP == 4) {
           mat_ptr->Lub_wts[0] = 0.5 * 0.347854845137454;
           mat_ptr->Lub_wts[1] = 0.5 * 0.652145154862546;
           mat_ptr->Lub_wts[2] = mat_ptr->Lub_wts[1];
           mat_ptr->Lub_wts[3] = mat_ptr->Lub_wts[0];
-          mat_ptr->Lub_gpts[0] = 0.5*(1.-0.861136311594053);
-          mat_ptr->Lub_gpts[1] = 0.5*(1.-0.339981043584856);
-          mat_ptr->Lub_gpts[2] = 0.5*(1.+0.339981043584856);
-          mat_ptr->Lub_gpts[3] = 0.5*(1.+0.861136311594053);
-        }
-        else if (mat_ptr->LubInt_NGP == 5) {
+          mat_ptr->Lub_gpts[0] = 0.5 * (1. - 0.861136311594053);
+          mat_ptr->Lub_gpts[1] = 0.5 * (1. - 0.339981043584856);
+          mat_ptr->Lub_gpts[2] = 0.5 * (1. + 0.339981043584856);
+          mat_ptr->Lub_gpts[3] = 0.5 * (1. + 0.861136311594053);
+        } else if (mat_ptr->LubInt_NGP == 5) {
           mat_ptr->Lub_wts[0] = 0.5 * 0.236926885056189;
           mat_ptr->Lub_wts[1] = 0.5 * 0.478628670499366;
           mat_ptr->Lub_wts[2] = 0.5 * 0.568888888888889;
           mat_ptr->Lub_wts[3] = mat_ptr->Lub_wts[1];
           mat_ptr->Lub_wts[4] = mat_ptr->Lub_wts[0];
-          mat_ptr->Lub_gpts[0] = 0.5*(1.-0.906179845938664);
-          mat_ptr->Lub_gpts[1] = 0.5*(1.-0.538469310105683);
+          mat_ptr->Lub_gpts[0] = 0.5 * (1. - 0.906179845938664);
+          mat_ptr->Lub_gpts[1] = 0.5 * (1. - 0.538469310105683);
           mat_ptr->Lub_gpts[2] = 0.5;
-          mat_ptr->Lub_gpts[3] = 0.5*(1.+0.538469310105683);
-          mat_ptr->Lub_gpts[0] = 0.5*(1.+0.906179845938664);
+          mat_ptr->Lub_gpts[3] = 0.5 * (1. + 0.538469310105683);
+          mat_ptr->Lub_gpts[0] = 0.5 * (1. + 0.906179845938664);
         } else {
           GOMA_EH(GOMA_ERROR, "Those integration points not defined yet!");
         }
-    } else if (mat_ptr->LubIntegrationModel == LUB_VISCINT_POWERLAW) {
-      double n = 0.5, beta0, beta1, beta2;
-      if (fscanf(imp, "%lf", &(mat_ptr->LubInt_PL)) != 1) {
-        sr = sprintf(err_msg, "Error reading POWER_LAW index %s", model_name);
-        GOMA_EH(GOMA_ERROR, err_msg);
-      } else {
-        n = mat_ptr->LubInt_PL;
-      }
-      SPF(endofstring(es), " %g", mat_ptr->LubInt_PL);
-      beta0 = 1./(2.*n+1);
-      beta1 = SQUARE(beta0)/(2.*n+3.);
-      beta2 = beta0 + 2.*SQUARE(2.*n+3)/(n+1.)*beta1 - 2.*(2.*n*n+7.*n+7.)/(n+1.)/SQUARE(2.*n+1)
-                  + SQUARE((2.*n+3.)*(n+2.)/((n+1.)*(2.*n+1.)))/(2.*n+5.);
-      if (mat_ptr->LubInt_NGP == 2 && DOUBLE_NONZERO(n)) {
-        double disc = sqrt((1.+n)/(2*n+3));
-        double fcn11, fcn12;
-        mat_ptr->Lub_gpts[0] = (n+1.-disc)/(n+2.);
-        mat_ptr->Lub_gpts[1] = (n+1.+disc)/(n+2.);
-        fcn11 = SQUARE(1. - (2.*n+2)/(2.*n+1)*mat_ptr->Lub_gpts[0]);
-        fcn12 = SQUARE(1. - (2.*n+2)/(2.*n+1)*mat_ptr->Lub_gpts[1]);
-        mat_ptr->Lub_wts[0] = (beta1 - beta0 * fcn12)/(fcn11 - fcn12);
-        mat_ptr->Lub_wts[1] = beta0 - mat_ptr->Lub_wts[0];
-      }
-      else if (mat_ptr->LubInt_NGP == 3) {   /* Trignometric Cubic Solution  */
-        double p, q, r, a, b, three_th, mag;
-        double f11, f12, f13, f21, f22, f23;
+      } else if (mat_ptr->LubIntegrationModel == LUB_VISCINT_POWERLAW) {
+        double n = 0.5, beta0, beta1, beta2;
+        if (fscanf(imp, "%lf", &(mat_ptr->LubInt_PL)) != 1) {
+          sr = sprintf(err_msg, "Error reading POWER_LAW index %s", model_name);
+          GOMA_EH(GOMA_ERROR, err_msg);
+        } else {
+          n = mat_ptr->LubInt_PL;
+        }
+        SPF(endofstring(es), " %g", mat_ptr->LubInt_PL);
+        beta0 = 1. / (2. * n + 1);
+        beta1 = SQUARE(beta0) / (2. * n + 3.);
+        beta2 = beta0 + 2. * SQUARE(2. * n + 3) / (n + 1.) * beta1 -
+                2. * (2. * n * n + 7. * n + 7.) / (n + 1.) / SQUARE(2. * n + 1) +
+                SQUARE((2. * n + 3.) * (n + 2.) / ((n + 1.) * (2. * n + 1.))) / (2. * n + 5.);
+        if (mat_ptr->LubInt_NGP == 2 && DOUBLE_NONZERO(n)) {
+          double disc = sqrt((1. + n) / (2 * n + 3));
+          double fcn11, fcn12;
+          mat_ptr->Lub_gpts[0] = (n + 1. - disc) / (n + 2.);
+          mat_ptr->Lub_gpts[1] = (n + 1. + disc) / (n + 2.);
+          fcn11 = SQUARE(1. - (2. * n + 2) / (2. * n + 1) * mat_ptr->Lub_gpts[0]);
+          fcn12 = SQUARE(1. - (2. * n + 2) / (2. * n + 1) * mat_ptr->Lub_gpts[1]);
+          mat_ptr->Lub_wts[0] = (beta1 - beta0 * fcn12) / (fcn11 - fcn12);
+          mat_ptr->Lub_wts[1] = beta0 - mat_ptr->Lub_wts[0];
+        } else if (mat_ptr->LubInt_NGP == 3) { /* Trignometric Cubic Solution  */
+          double p, q, r, a, b, three_th, mag;
+          double f11, f12, f13, f21, f22, f23;
 
-        p = -3*(2*n + 3)/(2*n + 6);
-        q = -p*(2*n + 2)/(2*n + 5);
-        r = -q*(2*n + 1)/(2*n + 4)/3.;
-        a = (3*q - SQUARE(p))/3.;
-        b = (2*CUBE(p) - 9*p*q +27*r)/27.;
-        mag = 2*sqrt(-a/3.);
-        three_th = acos(3*b/a/mag);
-        
-        mat_ptr->Lub_gpts[0] = mag*cos(three_th/3.) - p/3.;
-        mat_ptr->Lub_gpts[1] = mag*cos(three_th/3. + 2./3.*M_PIE) - p/3.;
-        mat_ptr->Lub_gpts[2] = mag*cos(three_th/3. + 4./3.*M_PIE) - p/3.;
-        f11 = SQUARE(1. - (2.*n+2)/(2.*n+1)*mat_ptr->Lub_gpts[0]);
-        f12 = SQUARE(1. - (2.*n+2)/(2.*n+1)*mat_ptr->Lub_gpts[1]);
-        f13 = SQUARE(1. - (2.*n+2)/(2.*n+1)*mat_ptr->Lub_gpts[2]);
-        f21 = SQUARE(1. - 2*(2*n+3)/(2*n+1)*mat_ptr->Lub_gpts[0] + (2*n+3)/(2*n+1)*(n+2)/(n+1)*SQUARE(mat_ptr->Lub_gpts[0]));
-        f22 = SQUARE(1. - 2*(2*n+3)/(2*n+1)*mat_ptr->Lub_gpts[1] + (2*n+3)/(2*n+1)*(n+2)/(n+1)*SQUARE(mat_ptr->Lub_gpts[1]));
-        f23 = SQUARE(1. - 2*(2*n+3)/(2*n+1)*mat_ptr->Lub_gpts[2] + (2*n+3)/(2*n+1)*(n+2)/(n+1)*SQUARE(mat_ptr->Lub_gpts[2]));
-        mat_ptr->Lub_wts[2] = (beta2 - f21*beta0 - (f22-f21)/(f12-f11)*(beta1-f11*beta0))
-                               /(f23 - f21 - (f22-f21)/(f12-f11)*(f13-f11));
-        mat_ptr->Lub_wts[1] = (beta1 - f11*beta0 - (f13-f11)*mat_ptr->Lub_wts[2])/(f12-f11);
-        mat_ptr->Lub_wts[0] = beta0 - mat_ptr->Lub_wts[2] - mat_ptr->Lub_wts[1];
-      }
-      else if (mat_ptr->LubInt_NGP == 4) {
-        GOMA_EH(GOMA_ERROR, "4-point POWER_LAW integration points not defined yet!");
+          p = -3 * (2 * n + 3) / (2 * n + 6);
+          q = -p * (2 * n + 2) / (2 * n + 5);
+          r = -q * (2 * n + 1) / (2 * n + 4) / 3.;
+          a = (3 * q - SQUARE(p)) / 3.;
+          b = (2 * CUBE(p) - 9 * p * q + 27 * r) / 27.;
+          mag = 2 * sqrt(-a / 3.);
+          three_th = acos(3 * b / a / mag);
+
+          mat_ptr->Lub_gpts[0] = mag * cos(three_th / 3.) - p / 3.;
+          mat_ptr->Lub_gpts[1] = mag * cos(three_th / 3. + 2. / 3. * M_PIE) - p / 3.;
+          mat_ptr->Lub_gpts[2] = mag * cos(three_th / 3. + 4. / 3. * M_PIE) - p / 3.;
+          f11 = SQUARE(1. - (2. * n + 2) / (2. * n + 1) * mat_ptr->Lub_gpts[0]);
+          f12 = SQUARE(1. - (2. * n + 2) / (2. * n + 1) * mat_ptr->Lub_gpts[1]);
+          f13 = SQUARE(1. - (2. * n + 2) / (2. * n + 1) * mat_ptr->Lub_gpts[2]);
+          f21 =
+              SQUARE(1. - 2 * (2 * n + 3) / (2 * n + 1) * mat_ptr->Lub_gpts[0] +
+                     (2 * n + 3) / (2 * n + 1) * (n + 2) / (n + 1) * SQUARE(mat_ptr->Lub_gpts[0]));
+          f22 =
+              SQUARE(1. - 2 * (2 * n + 3) / (2 * n + 1) * mat_ptr->Lub_gpts[1] +
+                     (2 * n + 3) / (2 * n + 1) * (n + 2) / (n + 1) * SQUARE(mat_ptr->Lub_gpts[1]));
+          f23 =
+              SQUARE(1. - 2 * (2 * n + 3) / (2 * n + 1) * mat_ptr->Lub_gpts[2] +
+                     (2 * n + 3) / (2 * n + 1) * (n + 2) / (n + 1) * SQUARE(mat_ptr->Lub_gpts[2]));
+          mat_ptr->Lub_wts[2] =
+              (beta2 - f21 * beta0 - (f22 - f21) / (f12 - f11) * (beta1 - f11 * beta0)) /
+              (f23 - f21 - (f22 - f21) / (f12 - f11) * (f13 - f11));
+          mat_ptr->Lub_wts[1] =
+              (beta1 - f11 * beta0 - (f13 - f11) * mat_ptr->Lub_wts[2]) / (f12 - f11);
+          mat_ptr->Lub_wts[0] = beta0 - mat_ptr->Lub_wts[2] - mat_ptr->Lub_wts[1];
+        } else if (mat_ptr->LubInt_NGP == 4) {
+          GOMA_EH(GOMA_ERROR, "4-point POWER_LAW integration points not defined yet!");
+        } else {
+          GOMA_EH(GOMA_ERROR, "More than 4 POWER_LAW integration points not allowed yet!");
+        }
       } else {
-        GOMA_EH(GOMA_ERROR, "More than 4 POWER_LAW integration points not allowed yet!");
+        GOMA_EH(model_read, "This Integration Model is not valid!");
       }
-    } else {
-      GOMA_EH(model_read, "This Integration Model is not valid!");
+      ECHO(es, echo_file);
     }
-    ECHO(es, echo_file);
-  }
   }
 
   /*

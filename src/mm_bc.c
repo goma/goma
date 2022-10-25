@@ -2335,7 +2335,7 @@ int find_id_side(const int ielem,                /* element index number */
   case 2:
     /* newly added for triangles */
     /* This is messing with shell elements so setting it aside */
-    if(ielem_type != BILINEAR_SHELL && ielem_type != BIQUAD_SHELL) {
+    if (ielem_type != BILINEAR_SHELL && ielem_type != BIQUAD_SHELL) {
       for (i = 0, sum = 0.0; i < num_nodes_on_side; i++)
         sum += shape(0.5, 0.0, 0.0, ielem_type, PSI, id_local_elem_coord[i]);
       if (sum > 0.999)
