@@ -2254,7 +2254,6 @@ void find_surf_st(const int iquad,      /* current GQ index */
       i_s = 1;
       break;
     default:
-fprintf(stderr,"el_elm %d %d\n",iside,ielem_type);
       GOMA_EH(GOMA_ERROR, "Illegal side number for 2-D element");
       break;
     }
