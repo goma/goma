@@ -189,7 +189,8 @@ int apply_point_colloc_bc(double resid_vector[], /* Residual vector for the curr
           ielem, iconnect_ptr, num_local_nodes, ielem_dim - 1, (int)elem_side_bc->id_side,
           (int)elem_side_bc->num_nodes_on_side, (elem_side_bc->local_elem_node_id));
 
-      if (ielem_dim != 3 && ielem_dim == pd->Num_Dim) {
+      /*  Need to avoid calling this for shells */
+      if (ielem_dim != 3 && ielem_type != BILINEAR_SHELL && ielem_type != BIQUAD_SHELL) {
         calc_surf_tangent(ielem, iconnect_ptr, num_local_nodes, ielem_dim - 1,
                           (int)elem_side_bc->num_nodes_on_side, (elem_side_bc->local_elem_node_id));
       }

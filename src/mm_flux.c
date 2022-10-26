@@ -572,7 +572,8 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 
             do_LSA_mods(LSA_SURFACE);
 
-            if (ielem_dim != 3) {
+            /*  Need to avoid calling this for shells */
+            if (ielem_dim != 3 && ielem_type != BILINEAR_SHELL && ielem_type != BIQUAD_SHELL) {
               calc_surf_tangent(ei[pg->imtrx]->ielem, iconnect_ptr, num_local_nodes, ielem_dim - 1,
                                 num_nodes_on_side, id_local_elem_coord);
             }
@@ -1981,7 +1982,8 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 
                 do_LSA_mods(LSA_SURFACE);
 
-                if (ielem_dim != 3) {
+                /*  Need to avoid calling this for shells */
+                if (ielem_dim != 3 && ielem_type != BILINEAR_SHELL && ielem_type != BIQUAD_SHELL) {
                   calc_surf_tangent(ei[pg->imtrx]->ielem, iconnect_ptr, num_local_nodes,
                                     ielem_dim - 1, num_nodes_on_side, id_local_elem_coord);
                 }
@@ -3711,7 +3713,8 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
               err = load_fv_mesh_derivs(1);
               GOMA_EH(err, "load_fv_mesh_derivs");
 
-              if (ielem_dim != 3) {
+              /*  Need to avoid calling this for shells */
+              if (ielem_dim != 3 && ielem_type != BILINEAR_SHELL && ielem_type != BIQUAD_SHELL) {
                 calc_surf_tangent(corner_elem, iconnect_ptr, num_local_nodes, ielem_dim - 1,
                                   num_nodes_on_side, id_local_elem_coord);
               }
@@ -6090,7 +6093,8 @@ double evaluate_flux_sens(const Exo_DB *exo,       /* ptr to basic exodus ii mes
 
             do_LSA_mods(LSA_SURFACE);
 
-            if (ielem_dim != 3) {
+            /*  Need to avoid calling this for shells */
+            if (ielem_dim != 3 && ielem_type != BILINEAR_SHELL && ielem_type != BIQUAD_SHELL) {
               calc_surf_tangent(ei[pg->imtrx]->ielem, iconnect_ptr, num_local_nodes, ielem_dim - 1,
                                 num_nodes_on_side, id_local_elem_coord);
             }
@@ -6989,7 +6993,8 @@ double evaluate_flux_sens(const Exo_DB *exo,       /* ptr to basic exodus ii mes
               err = load_fv_mesh_derivs(1);
               GOMA_EH(err, "load_fv_mesh_derivs");
 
-              if (ielem_dim != 3) {
+              /*  Need to avoid calling this for shells */
+              if (ielem_dim != 3 && ielem_type != BILINEAR_SHELL && ielem_type != BIQUAD_SHELL) {
                 calc_surf_tangent(corner_elem, iconnect_ptr, num_local_nodes, ielem_dim - 1,
                                   num_nodes_on_side, id_local_elem_coord);
               }
