@@ -1951,7 +1951,8 @@ void shell_determinant_and_normal(
   memset(T, 0, siz);
   memset(t, 0, siz);
   ids = id_side;
-  if (id_side == 1) ids = -1;
+  if (id_side == 1)
+    ids = -1;
   /*  since T & t are zeroed, only need to set nonzero elements */
   switch (ielem_surf_dim) {
   case 1:
