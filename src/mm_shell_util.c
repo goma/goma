@@ -1920,7 +1920,7 @@ void shell_determinant_and_normal(
   int DeformingMesh;
   double r_det, det_h01, r_det_h01, d_det_h01_x;
   double phi_i;
-  int siz;
+  int siz, ids;
   double T[DIM - 1][DIM], t[DIM - 1][DIM]; /* t = J . T */
   double dt_x[DIM - 1][DIM][DIM][MDE];     /* d(t) / d(x_j) */
   struct Basis_Functions *map_bf;
@@ -1950,6 +1950,8 @@ void shell_determinant_and_normal(
   siz = (DIM - 1) * DIM * sizeof(double);
   memset(T, 0, siz);
   memset(t, 0, siz);
+  ids = id_side;
+  if (id_side == 1) ids = -1;
   /*  since T & t are zeroed, only need to set nonzero elements */
   switch (ielem_surf_dim) {
   case 1:
@@ -1965,7 +1967,7 @@ void shell_determinant_and_normal(
   case 2:
     switch (ei[pg->imtrx]->ielem_shape) {
     case SHELL:
-      switch (id_side) {
+      switch (ids) {
       case 1:
         T[0][0] = 1.;
         T[1][2] = 1.;
