@@ -3253,7 +3253,7 @@ void lubrication_shell_initialize(int *n_dof,        // Degrees of freedom
       }
     }
 
-#if 1
+#if 0
     /* Big T calculation*/
     T[0][0] = 1.;
     T[0][1] = 0.;
@@ -4024,19 +4024,6 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       if (err < 0) {
         GOMA_WH(GOMA_ERROR, "Some trouble with Numerical Lubrication...\n");
       }
-      if (pd->v[pg->imtrx][VAR]) {
-        ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
-        q_mag2 = q_mag * ratio;
-        q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
-                                     (double)mp->mp2nd->viscositymask[0],
-                                     (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
-        factor *= (1. - ratio);
-        factor += ratio;
-        dq_gradp *= factor;
-        dq_dH *= factor;
-        pre_delP *= factor;
-        vis_w /= factor;
-      }
 
     } else if (gn->ConstitutiveEquation == HERSCHEL_BULKLEY) {
       double nexp = gn->nexp, yield = gn->tau_y;
@@ -4069,7 +4056,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     } /*  End of Viscosity Models **/
 
     /* modulate q if level-set interface present */
-    if (pd->v[pg->imtrx][VAR]) {
+    if (pd->v[pg->imtrx][VAR] && mp->mp2nd->ViscosityModel == RATIO) {
       ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
       q_mag2 = q_mag * ratio;
       q_mag =
@@ -4755,19 +4742,6 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       if (err < 0) {
         GOMA_WH(GOMA_ERROR, "Some trouble with Numerical Lubrication...\n");
       }
-      if (pd->v[pg->imtrx][VAR]) {
-        ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
-        q_mag2 = q_mag * ratio;
-        q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
-                                     (double)mp->mp2nd->viscositymask[0],
-                                     (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
-        factor *= (1. - ratio);
-        factor += ratio;
-        dq_gradp *= factor;
-        dq_dH *= factor;
-        pre_delP *= factor;
-        vis_w /= factor;
-      }
 
       /** Make corrections for film flow from confined calculations **/
       q_mag *= 2.;
@@ -4807,6 +4781,19 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       }
     } /*  End of Viscosity Models **/
 
+    if (pd->v[pg->imtrx][VAR] && mp->mp2nd->ViscosityModel == RATIO) {
+      ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
+      q_mag2 = q_mag * ratio;
+      q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
+                                     (double)mp->mp2nd->viscositymask[0],
+                                     (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
+      factor *= (1. - ratio);
+      factor += ratio;
+      dq_gradp *= factor;
+      dq_dH *= factor;
+      pre_delP *= factor;
+      vis_w /= factor;
+    }
     dq_gradpt = dq_gradp - beta_slip * SQUARE(H);
     dv_gradp = dq_gradp / H;
     dv_dH = dq_dH / H - q_mag / SQUARE(H);
@@ -5252,15 +5239,6 @@ void calculate_lub_q_v_old(
       if (err < 0) {
         GOMA_WH(GOMA_ERROR, "Some trouble with Numerical Lubrication...\n");
       }
-      if (pd->v[pg->imtrx][VAR]) {
-        ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
-        q_mag2 = q_mag * ratio;
-        q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
-                                     (double)mp->mp2nd->viscositymask[0],
-                                     (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
-        factor *= (1. - ratio);
-        factor += ratio;
-      }
 
     } else if (gn->ConstitutiveEquation == HERSCHEL_BULKLEY) {
       double nexp = gn->nexp, yield = gn->tau_y;
@@ -5278,6 +5256,15 @@ void calculate_lub_q_v_old(
       q_mag = -CUBE(H_old) / (k_turb * mu_old);
       q_mag *= pgrad;
     } /*  End of Viscosity Models **/
+    if (pd->v[pg->imtrx][VAR] && mp->mp2nd->ViscosityModel == RATIO) {
+      ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
+      q_mag2 = q_mag * ratio;
+      q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
+                                     (double)mp->mp2nd->viscositymask[0],
+                                     (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
+      factor *= (1. - ratio);
+      factor += ratio;
+    }
 
     memset(q_old, 0.0, sizeof(double) * DIM);
     for (i = 0; i < dim; i++) {
