@@ -4349,7 +4349,6 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
            * mesh displacement derivatives
            */
 
-          /*if (ielem_dim != 3 && ielem_dim == pd->Num_Dim) {*/
           if (ielem_dim != 3) {
             calc_surf_tangent(ei[pg->imtrx]->ielem, iconnect_ptr, num_local_nodes, ielem_dim - 1,
                               num_nodes_on_side, id_local_elem_coord);
