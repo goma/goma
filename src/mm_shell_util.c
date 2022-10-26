@@ -3253,14 +3253,16 @@ void lubrication_shell_initialize(int *n_dof,        // Degrees of freedom
       }
     }
 
-    /* Big T calculation
+#if 1
+    /* Big T calculation*/
     T[0][0] = 1.;
     T[0][1] = 0.;
     T[0][2] = 0.;
     T[1][0] = 0.;
     T[1][1] = 1.;
-    T[1][2] = 0.;*/
+    T[1][2] = 0.;
 
+#else
     siz = (DIM - 1) * DIM * sizeof(double);
     memset(T, 0, siz);
     memset(t, 0, siz);
@@ -3301,6 +3303,7 @@ void lubrication_shell_initialize(int *n_dof,        // Degrees of freedom
       }
       break;
     }
+#endif
     /* Little t calculation */
     for (p = 0; p < 2; p++) {
       for (a = 0; a < pd->Num_Dim; a++) {
