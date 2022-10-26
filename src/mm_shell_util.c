@@ -4784,9 +4784,9 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
     if (pd->v[pg->imtrx][VAR] && mp->mp2nd->ViscosityModel == RATIO) {
       ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
       q_mag2 = q_mag * ratio;
-      q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
-                                     (double)mp->mp2nd->viscositymask[0],
-                                     (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
+      q_mag =
+          ls_modulate_property(q_mag, q_mag2, ls->Length_Scale, (double)mp->mp2nd->viscositymask[0],
+                               (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
       factor *= (1. - ratio);
       factor += ratio;
       dq_gradp *= factor;
@@ -5259,9 +5259,9 @@ void calculate_lub_q_v_old(
     if (pd->v[pg->imtrx][VAR] && mp->mp2nd->ViscosityModel == RATIO) {
       ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
       q_mag2 = q_mag * ratio;
-      q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
-                                     (double)mp->mp2nd->viscositymask[0],
-                                     (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
+      q_mag =
+          ls_modulate_property(q_mag, q_mag2, ls->Length_Scale, (double)mp->mp2nd->viscositymask[0],
+                               (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
       factor *= (1. - ratio);
       factor += ratio;
     }
