@@ -605,7 +605,7 @@ double height_function_model(double *H_U,
     GOMA_EH(GOMA_ERROR, "Not a supported height-function model");
   }
 
-  H = MAX(*H_U - *H_L, DBL_SEMI_SMALL);  /* Negative H would be seem to be a bad thing...*/
+  H = MAX(*H_U - *H_L, DBL_SEMI_SMALL); /* Negative H would be seem to be a bad thing...*/
   return (H);
 }
 

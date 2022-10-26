@@ -1965,29 +1965,37 @@ void shell_determinant_and_normal(
   case 2:
     switch (ei[pg->imtrx]->ielem_shape) {
     case SHELL:
-      if (id_side == 1) {
+      switch (id_side) {
+      case 1:
         T[0][0] = 1.;
         T[1][2] = 1.;
-      } else if (id_side == 2) {
+        break;
+      case 2:
         T[0][1] = 1.;
         T[1][2] = 1.;
-      } else if (id_side == 3) {
+        break;
+      case 3:
         T[0][0] = -1.;
         T[1][2] = 1.;
-      } else if (id_side == 4) {
+        break;
+      case 4:
         T[0][1] = -1.;
         T[1][2] = 1.;
-      } else if (id_side == 5) {
+        break;
+      case 5:
         T[0][0] = 1.;
         T[1][1] = -1.;
-      } else if (id_side == 6) {
+        break;
+      case 6:
+      case -1:
         T[0][0] = 1.;
         T[1][1] = 1.;
-      } else {
+        break;
+      default:
         GOMA_EH(GOMA_ERROR, "Incorrect side for SHELL");
+        break;
       }
       break;
-
     case TRISHELL:
       /* if (id_side == 5 )
         {
@@ -3258,26 +3266,35 @@ void lubrication_shell_initialize(int *n_dof,        // Degrees of freedom
     switch (ei[pg->imtrx]->ielem_shape) {
     case SHELL:
     case TRISHELL:
-      if (id_side == 1) {
+      switch (id_side) {
+      case 1:
         T[0][0] = 1.;
         T[1][2] = 1.;
-      } else if (id_side == 2) {
+        break;
+      case 2:
         T[0][1] = 1.;
         T[1][2] = 1.;
-      } else if (id_side == 3) {
+        break;
+      case 3:
         T[0][0] = -1.;
         T[1][2] = 1.;
-      } else if (id_side == 4) {
+        break;
+      case 4:
         T[0][1] = -1.;
         T[1][2] = 1.;
-      } else if (id_side == 5) {
+        break;
+      case 5:
         T[0][0] = 1.;
         T[1][1] = -1.;
-      } else if (id_side == 6 || id_side == -1) {
+        break;
+      case 6:
+      case -1:
         T[0][0] = 1.;
         T[1][1] = 1.;
-      } else {
+        break;
+      default:
         GOMA_EH(GOMA_ERROR, "Incorrect side for SHELL");
+        break;
       }
       break;
     }
