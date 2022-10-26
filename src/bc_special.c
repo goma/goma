@@ -314,8 +314,9 @@ int apply_special_bc(struct GomaLinearSolverData *ams,
             ielem, iconnect_ptr, num_local_nodes, ielem_dim - 1, (int)elem_side_bc->id_side,
             (int)elem_side_bc->num_nodes_on_side, (elem_side_bc->local_elem_node_id));
 
-        /*  Need to avoid calling this for shells */
-        if (ielem_dim != 3 && ielem_type != BILINEAR_SHELL && ielem_type != BIQUAD_SHELL) {
+        /*  Need to avoid calling this for shells 
+        if (ielem_dim != 3 && ielem_type != BILINEAR_SHELL && ielem_type != BIQUAD_SHELL) {*/
+        if (ielem_dim != 3) {
           calc_surf_tangent(ielem, iconnect_ptr, num_local_nodes, ielem_dim - 1,
                             (int)elem_side_bc->num_nodes_on_side,
                             (elem_side_bc->local_elem_node_id));
@@ -568,8 +569,9 @@ int apply_special_bc(struct GomaLinearSolverData *ams,
                     ielem, iconnect_ptr, num_local_nodes, ielem_dim - 1, (int)elem_side_bc->id_side,
                     (int)elem_side_bc->num_nodes_on_side, (elem_side_bc->local_elem_node_id));
 
-                /*  Need to avoid calling this for shells */
-                if (ielem_dim != 3 && ielem_type != BILINEAR_SHELL && ielem_type != BIQUAD_SHELL) {
+                /*  Need to avoid calling this for shells 
+                if (ielem_dim != 3 && ielem_type != BILINEAR_SHELL && ielem_type != BIQUAD_SHELL) {*/
+                if (ielem_dim != 3) {
                   calc_surf_tangent(ielem, iconnect_ptr, num_local_nodes, ielem_dim - 1,
                                     (int)elem_side_bc->num_nodes_on_side,
                                     (elem_side_bc->local_elem_node_id));
@@ -1361,8 +1363,9 @@ int apply_shell_grad_bc(double x[],              /* Solution vector for the curr
         surface_determinant_and_normal(elem1, ei[pg->imtrx]->iconnect_ptr, num_local_nodes,
                                        ielem_dim - 1, id_side, nodes_per_side, local_elem_node_id);
 
-        /*  Need to avoid calling this for shells */
-        if (ielem_dim != 3 && ielem_type != BILINEAR_SHELL && ielem_type != BIQUAD_SHELL) {
+        /*  Need to avoid calling this for shells 
+        if (ielem_dim != 3 && ielem_type != BILINEAR_SHELL && ielem_type != BIQUAD_SHELL) {*/
+        if (ielem_dim != 3) {
           calc_surf_tangent(elem1, ei[pg->imtrx]->iconnect_ptr, num_local_nodes, ielem_dim - 1,
                             nodes_per_side, local_elem_node_id);
         }
