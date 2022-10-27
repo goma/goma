@@ -8580,13 +8580,12 @@ int adaptive_weight(double w[],
   GOMA_EH(GOMA_ERROR, "Turn off NO_CHEBYSHEV_PLEASE please.\n");
 #else
   int chev_order;
-  if(ls->AdaptIntegration) {
+  if (ls->AdaptIntegration) {
     chev_order = ls->Adaptive_Order;
   } else {
     chev_order = 3;
   }
 #endif
-    
 
   if (elem_type != BIQUAD_QUAD && elem_type != BIQUAD_SHELL && elem_type != BILINEAR_QUAD &&
       elem_type != BILINEAR_SHELL) {
