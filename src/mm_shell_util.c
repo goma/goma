@@ -1905,6 +1905,7 @@ void shell_determinant_and_normal(
  *      vector.
  *
  *      Adapted from surface_determinant_and_normal by PR Schunk (9/2/2009)
+ *      Looks like id_side is always 1, so pretty much not used - RBS
  *
  *  Returns:
  * ------------
@@ -1920,7 +1921,7 @@ void shell_determinant_and_normal(
   int DeformingMesh;
   double r_det, det_h01, r_det_h01, d_det_h01_x;
   double phi_i;
-  int siz, ids;
+  int siz;
   double T[DIM - 1][DIM], t[DIM - 1][DIM]; /* t = J . T */
   double dt_x[DIM - 1][DIM][DIM][MDE];     /* d(t) / d(x_j) */
   struct Basis_Functions *map_bf;
@@ -1950,9 +1951,6 @@ void shell_determinant_and_normal(
   siz = (DIM - 1) * DIM * sizeof(double);
   memset(T, 0, siz);
   memset(t, 0, siz);
-  ids = id_side;
-  if (id_side == 1)
-    ids = -1;
   /*  since T & t are zeroed, only need to set nonzero elements */
   switch (ielem_surf_dim) {
   case 1:
@@ -1968,37 +1966,6 @@ void shell_determinant_and_normal(
   case 2:
     switch (ei[pg->imtrx]->ielem_shape) {
     case SHELL:
-      switch (ids) {
-      case 1:
-        T[0][0] = 1.;
-        T[1][2] = 1.;
-        break;
-      case 2:
-        T[0][1] = 1.;
-        T[1][2] = 1.;
-        break;
-      case 3:
-        T[0][0] = -1.;
-        T[1][2] = 1.;
-        break;
-      case 4:
-        T[0][1] = -1.;
-        T[1][2] = 1.;
-        break;
-      case 5:
-        T[0][0] = 1.;
-        T[1][1] = -1.;
-        break;
-      case 6:
-      case -1:
-        T[0][0] = 1.;
-        T[1][1] = 1.;
-        break;
-      default:
-        GOMA_EH(GOMA_ERROR, "Incorrect side for SHELL");
-        break;
-      }
-      break;
     case TRISHELL:
       /* if (id_side == 5 )
         {
