@@ -631,6 +631,7 @@ void fvelo_normal_lub_bc(double func[DIM],
   double phi_j;
   double bound_normal[DIM], d_bd_normal_dx[DIM][DIM][MDE];
   int el1, el2, nf, nbr_type, nbr_dim;
+  double lubflux = param[0];
 
   /* Basic data for local element */
   el1 = ei[pg->imtrx]->ielem;
@@ -672,31 +673,6 @@ void fvelo_normal_lub_bc(double func[DIM],
 
   calculate_lub_q_v(R_LUBP, tran->time_value, dt, xi, exo);
 
-#if 0
-
-  double kappa = param[0];
-  double mu = param[1];
-  double L = param[2];
-
-  double lub_press = 0.0;
-  double lubflux = 0.0;
-
-  double dlubflux_dp = 0.0;
-  double dlubflux_dlub_press = 0.0;
-
-  /***** DETERMINE APPROPRIATE LUBRICATION FLUX AND ITS SENSITIVITIES *****/
-  if (n_dof[LUBP] > 0) {
-    lub_press = fv->lubp;
-  } else if (n_dof[SHELL_FILMP] > 0) {
-    lub_press = fv->sh_fp;
-  }
-
-  lubflux = (kappa / mu / L) * (fv->P - lub_press);
-  dlubflux_dp = (kappa / mu / L);
-  dlubflux_dlub_press = -(kappa / mu / L);
-#endif
-  double lubflux = param[0];
-  double dlubflux_dlub_press = 0.0;
   /***** CALCULATE RESIDUAL CONTRIBUTION ********************/
   func[0] = lubflux;
   for (kdir = 0; kdir < pd->Num_Dim; kdir++) {
@@ -725,25 +701,7 @@ void fvelo_normal_lub_bc(double func[DIM],
           }
         }
       }
-
-#if 0
-      var = VELOCITY1 + kdir;
-      if (pd->v[pg->imtrx][var]) {
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-          phi_j = bf[var]->phi[j];
-          d_func[0][var][j] += phi_j * fv->snormal[kdir];
-        }
-      }
-#endif
     } /* for: kdir */
-
-#if 0
-    var = PRESSURE;
-    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-      phi_j = bf[var]->phi[j];
-      d_func[0][var][j] += -dlubflux_dp * phi_j;
-    }
-#endif
 
     var = LUBP;
     if (n_dof[var] > 0) {
@@ -765,9 +723,19 @@ void fvelo_normal_lub_bc(double func[DIM],
 
     var = SHELL_FILMP;
     if (n_dof[var] > 0) {
+      double grad_phi_j[DIM], grad_II_phi_j[DIM], d_grad_II_phi_j_dmesh[DIM][DIM][MDE];
       for (j = 0; j < n_dof[var]; j++) {
         phi_j = bf[var]->phi[j];
-        d_func[0][var][j] += -dlubflux_dlub_press * phi_j;
+        /* Prepare basis functions */
+        ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
+                n_dof[MESH_DISPLACEMENT1], dof_map);
+        for (p = 0; p < pd->Num_Dim; p++) {
+          d_func[0][var][j] += LubAux->dq_dp2[p][j] * phi_j * grad_II_phi_j[p] * bound_normal[p];
+          for (q = 0; q < pd->Num_Dim; q++) {
+            d_func[0][var][j] +=
+                LubAux->dq_dgradp[p][q][j] * grad_II_phi_j[q] * grad_II_phi_j[p] * bound_normal[p];
+          }
+        }
       }
     }
 

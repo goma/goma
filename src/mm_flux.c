@@ -8515,12 +8515,6 @@ int adaptive_weight(double w[],
   int side_diff, side_ct;
   int return_val = 1;
   double ecrd[12][MAX_PDIM];
-
-#ifndef NO_CHEBYSHEV_PLEASE
-  int chev_order = ls->Adaptive_Order;
-#else
-  int chev_order = 3;
-#endif
   double gauss_wt1D[3] = {5 / 9., 8 / 9., 5 / 9.};
   double gauss_wt2D[9] = {25 / 81., 40 / 81., 25 / 81., 40 / 81., 64 / 81.,
                           40 / 81., 25 / 81., 40 / 81., 25 / 81.};
@@ -8582,6 +8576,17 @@ int adaptive_weight(double w[],
 
   int dupl_side = 0, dupl_id = 0, side1 = -1, side2 = -1;
   double int_angle[8], xloc;
+#ifdef NO_CHEBYSHEV_PLEASE
+  GOMA_EH(GOMA_ERROR, "Turn off NO_CHEBYSHEV_PLEASE please.\n");
+#else
+  int chev_order;
+  if(ls->AdaptIntegration) {
+    chev_order = ls->Adaptive_Order;
+  } else {
+    chev_order = 3;
+  }
+#endif
+    
 
   if (elem_type != BIQUAD_QUAD && elem_type != BIQUAD_SHELL && elem_type != BILINEAR_QUAD &&
       elem_type != BILINEAR_SHELL) {
