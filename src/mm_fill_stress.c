@@ -2740,7 +2740,7 @@ int assemble_stress_log_conf(dbl tt, dbl dt, PG_DATA *pg_data) {
 
   SUPG_terms supg_terms;
   if (supg != 0.0) {
-    supg_tau(&supg_terms, dim, 1e-6, pg_data, dt, true, eqn);
+    supg_tau(&supg_terms, dim, 1e-8, pg_data, dt, true, eqn);
   }
 
   dbl dcdd_factor = 0.0;
