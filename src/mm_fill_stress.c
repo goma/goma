@@ -7506,7 +7506,7 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
   dbl b[DIM][DIM];     /* stress tensor */
   dbl b_dot[DIM][DIM]; /* stress tensor from last time step */
   dbl grad_b[DIM][DIM][DIM];
-  dbl d_grad_s_dmesh[DIM][DIM][DIM][DIM]
+  dbl d_grad_b_dmesh[DIM][DIM][DIM][DIM]
                     [MDE]; /* derivative of grad of stress tensor for mode ve_mode */
 
   dbl g[DIM][DIM];  /* velocity gradient tensor */
@@ -7697,7 +7697,7 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
   /* Begin loop over modes */
   for (mode = 0; mode < vn->modes; mode++) {
 
-    load_modal_pointers(mode, tt, dt, b, b_dot, grad_b, d_grad_s_dmesh);
+    load_modal_pointers(mode, tt, dt, b, b_dot, grad_b, d_grad_b_dmesh);
 
     /* precalculate advective terms of form (v dot del tensor)*/
 
@@ -7888,6 +7888,7 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                     dbl bt = beta[ib];
                     kdc += fabs(Y_inv * Z) * pow(hdc, bt) * pow(fabs(b[ii][jj]), 1 - bt) *
                            pow(inner, bt / 2 - 1);
+                    // kdc += pow(inner, bt / 2 - 1);
                   }
                   kdc *= 0.5;
                   for (int r = 0; r < VIM; r++) {
@@ -8258,7 +8259,7 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
 
                         d_vdotdels_dm = 0.;
                         for (q = 0; q < WIM; q++) {
-                          d_vdotdels_dm += (v[q] - x_dot[q]) * d_grad_s_dmesh[q][ii][jj][p][j];
+                          d_vdotdels_dm += (v[q] - x_dot[q]) * d_grad_b_dmesh[q][ii][jj][p][j];
                         }
 
                         advection_b = d_vdotdels_dm;
@@ -8305,7 +8306,7 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                         dbl dZ = 0;
                         d_vdotdels_dm = 0.;
                         for (q = 0; q < WIM; q++) {
-                          d_vdotdels_dm += (v[q] - x_dot[q]) * d_grad_s_dmesh[q][ii][jj][p][j];
+                          d_vdotdels_dm += (v[q] - x_dot[q]) * d_grad_b_dmesh[q][ii][jj][p][j];
                         }
 
                         dZ = d_vdotdels_dm;
@@ -8345,7 +8346,8 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                         }
                         dbl d_inner = 0;
                         for (int r = 0; r < VIM; r++) {
-                          d_inner += Y_inv * 2.0 * grad_b[r][ii][jj] * bf[var]->grad_phi[j][r];
+                          d_inner +=
+                              Y_inv * 2.0 * grad_b[r][ii][jj] * d_grad_b_dmesh[r][ii][jj][p][j];
                         }
 
                         dbl kdc = 0;
@@ -8358,10 +8360,12 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                                   pow(fabs(b[ii][jj]), 1 - bt) * pow(inner, bt / 2 - 1);
                           dkdc += fabs(Y_inv * Z) * bt * dhdc * pow(hdc, bt - 1) *
                                   pow(fabs(b[ii][jj]), 1 - bt) * pow(inner, bt / 2 - 1);
-                          dkdc += fabs(Y_inv * Z) * pow(hdc, bt) * (1 - bt) * b[ii][jj] /
-                                  fabs(b[ii][jj] + 1e-16) * bf[var]->phi[j] * delta(p, ii) *
-                                  delta(q, jj) * pow(fabs(b[ii][jj]), 1 - bt) *
-                                  pow(inner, bt / 2 - 1);
+                          if (DOUBLE_NONZERO(b[ii][jj])) {
+                            dkdc += fabs(Y_inv * Z) * pow(hdc, bt) * (1 - bt) *
+                                    (b[ii][jj] / fabs(b[ii][jj])) * bf[var]->phi[j] * delta(p, ii) *
+                                    delta(q, jj) * pow(fabs(b[ii][jj]), -bt) *
+                                    pow(inner, bt / 2 - 1);
+                          }
                           dkdc += fabs(Y_inv * Z) * pow(hdc, bt) * pow(fabs(b[ii][jj]), 1 - bt) *
                                   d_inner * (bt / 2 - 1) * pow(inner, bt / 2 - 2);
                         }
@@ -8373,7 +8377,7 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                         for (int r = 0; r < VIM; r++) {
                           diffusion_a += dkdc * grad_b[r][ii][jj] * bf[eqn]->grad_phi[i][r];
                           diffusion_a +=
-                              kdc * d_grad_s_dmesh[r][ii][jj][p][j] * bf[eqn]->grad_phi[i][r];
+                              kdc * d_grad_b_dmesh[r][ii][jj][p][j] * bf[eqn]->grad_phi[i][r];
                           diffusion_b += kdc * grad_b[r][ii][jj] * bf[eqn]->grad_phi[i][r];
                         }
                         diffusion_a *= yzbeta_factor * det_J * wt * h3;
@@ -8687,7 +8691,8 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                             }
                             dbl d_inner = 0;
                             for (int r = 0; r < VIM; r++) {
-                              d_inner += Y_inv * 2.0 * grad_b[r][ii][jj] * bf[var]->grad_phi[j][r];
+                              d_inner += Y_inv * 2.0 * delta(p, ii) * delta(q, jj) *
+                                         grad_b[r][ii][jj] * bf[var]->grad_phi[j][r];
                             }
 
                             dbl kdc = 0;
