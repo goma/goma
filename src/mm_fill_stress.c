@@ -7868,7 +7868,7 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                   Z *= at * lambda;
                   Z += source_term[ii][jj];
 
-                  dbl Y_inv = 1.0 / 10;
+                  dbl Y_inv = 1.0;
                   dbl hdc = 0;
                   dbl js = 0;
                   for (int k = 0; k < ei[pg->imtrx]->dof[eqn]; k++) {
@@ -8081,7 +8081,7 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
 
                         dbl dZ = phi_j * (grad_b[p][ii][jj]);
                         dZ *= at * lambda;
-                        dbl Y_inv = 1.0 / 10;
+                        dbl Y_inv = 1.0;
                         dbl hdc = 0;
                         dbl js = 0;
                         for (int k = 0; k < ei[pg->imtrx]->dof[eqn]; k++) {
@@ -8320,7 +8320,7 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                         }
                         dZ *= at * lambda;
 
-                        dbl Y_inv = 1.0 / 10;
+                        dbl Y_inv = 1.0;
                         dbl hdc = 0;
                         dbl djs = 0;
                         for (int k = 0; k < ei[pg->imtrx]->dof[eqn]; k++) {
@@ -8468,7 +8468,7 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                             dZ += -d_a_dot_b_dG[p][q][ii][jj];
                             dZ *= bf[var]->phi[j];
                             dZ *= at * lambda;
-                            dbl Y_inv = 1.0 / 10;
+                            dbl Y_inv = 1.0;
                             dbl hdc = 0;
                             dbl js = 0;
                             for (int k = 0; k < ei[pg->imtrx]->dof[eqn]; k++) {
@@ -8666,7 +8666,7 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                             dZ *= at * lambda;
                             dZ += d_source_term_db[ii][jj][p][q] * bf[var]->phi[j];
 
-                            dbl Y_inv = 1.0 / 10;
+                            dbl Y_inv = 1.0;
                             dbl hdc = 0;
                             dbl djs = 0;
                             for (int k = 0; k < ei[pg->imtrx]->dof[eqn]; k++) {
