@@ -40,6 +40,7 @@
 #include "mm_mp.h"
 #include "mm_mp_const.h"
 #include "mm_mp_structs.h"
+#include "mm_post_def.h"
 #include "rf_allo.h"
 #include "rf_bc.h"
 #include "rf_bc_const.h"
@@ -2274,6 +2275,14 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         err = fscanf(imp, "%lg", &(vn_glob[mn]->shockcapture));
         if (err != 1) {
           GOMA_EH(GOMA_ERROR, "Expected to read one double for Polymer Shock Capturing = DCDD");
+        }
+        SPF(endofstring(es), " %.4g", vn_glob[mn]->shockcapture);
+      } else if (!strcmp(model_name, "YZBETA")) {
+        int err;
+        vn_glob[mn]->shockcaptureModel = SC_YZBETA;
+        err = fscanf(imp, "%lg", &(vn_glob[mn]->shockcapture));
+        if (err != 1) {
+          GOMA_EH(GOMA_ERROR, "Expected to read one double for Polymer Shock Capturing = YZBETA");
         }
         SPF(endofstring(es), " %.4g", vn_glob[mn]->shockcapture);
       } else {

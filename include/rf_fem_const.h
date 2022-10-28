@@ -78,6 +78,7 @@
 #define YZBETA_MIXED  3
 #define YZBETA_CUSTOM 4
 #define SC_DCDD       5
+#define SC_YZBETA       6
 
 /* Viscoelastic Constitutive equation formulation */
 #define EVSS_G     1               /* Rajagopalan's formulation */

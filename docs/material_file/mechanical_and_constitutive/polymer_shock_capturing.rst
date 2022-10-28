@@ -16,10 +16,13 @@ equation. Valid options are
 NONE
    No polymer shock capturing is used, default
 DCDD
-   DCDD shock capturing term is used
+   DCDD shock capturing term is used (currently only in LOG_CONF/LOG_CONF_GRADV)
+   * <float1> the scaling value of the shock capturing term
+YZBETA
+   YZBETA shock capturing term is used (currently only in SQRT_CONF)
    * <float1> the scaling value of the shock capturing term
 
-Currently only available for log-conformation formulations.
+Currently only available for log-conformation / sqrt-conformation formulations.
 
 ------------
 Examples
@@ -30,7 +33,7 @@ demonstrates the required cards.
 
 ::
 
-   Polymer Shock Capturing = DCDD 1
+   Polymer Shock Capturing = DCDD 1.0
 
 The following is a sample card that set the polymer shock function to **NONE**.
 ::

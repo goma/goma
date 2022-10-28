@@ -64,7 +64,7 @@ In the preceding example, the pressure value used is obtained from the solution 
   *FLOW_STRESSNOBC* boundary condition in that it includes terms for the
   boundary integrals that appear in the momentum equation after application of
   integration by parts and the divergence theorem. In this boundary condition, the
-  following integral is included with the momentum equation:
+  following integral is included with the momentum equation (for Newtonian):
 
   
 .. math::
@@ -80,6 +80,8 @@ This imposes a natural BC of :math:`n\cdot\nabla v = 0`
 * The pressure term in the preceding may be replaced by a fixed, imposed pressure
   value. This is done by setting the optional input integer to -1 and providing the
   imposed value in :math:`P_{applied}` ; otherwise, the value set in :math:`P_{applied}` is ignored.
+
+* Modifications are done to work for Viscoelastic flow with DEVSS-G stabilization
 
 
 
