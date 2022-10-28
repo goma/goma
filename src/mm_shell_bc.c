@@ -133,6 +133,8 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
   double grad_phi_j[DIM], grad_II_phi_j[DIM];
   double bound_normal[DIM];
 
+  if (ei[pg->imtrx]->ielem_dim == 3)
+    return;
   /* Save the boundary normal vector */
 
   for (ii = 0; ii < pd->Num_Dim; ii++) {

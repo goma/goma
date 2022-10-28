@@ -1579,7 +1579,7 @@ void init_vec(
     DPRINTF(stdout, "\nInitial guess read from \"%s\" ...(last soln in file)\n", ExoFile);
     err = rd_vectors_from_exoII(u, ExoFile, 0, 0, INT_MAX, timeValueRead, exo);
     if (err != 0) {
-      DPRINTF(stderr, "%s: err fr rd_vectors_from_exoII()\n", yo);
+      DPRINTF(stderr, "%s: err for rd_vectors_from_exoII()\n", yo);
       exit(-1);
     }
     DPRINTF(stdout, "\t\t Values read time plane at time = %g\n", *timeValueRead);
@@ -1624,7 +1624,7 @@ void init_vec(
     }
     err = rd_vectors_from_exoII(u, ExoAuxFile, 0, 0, ExoTimePlane, timeValueRead, exo);
     if (err != 0) {
-      DPRINTF(stderr, "%s:  err fr rd_vectors_from_exoII()\n", yo);
+      DPRINTF(stderr, "%s:  err for rd_vectors_from_exoII()\n", yo);
     }
     DPRINTF(stdout, "\t\t Values read time plane at time = %g\n", *timeValueRead);
     /*

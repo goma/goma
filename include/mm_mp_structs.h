@@ -750,6 +750,11 @@ struct Material_Properties {
   int DcaLFunctionModel;
 
   int FSIModel;
+  int LubIntegrationModel;
+  int LubInt_NGP;
+  dbl Lub_gpts[MAX_LUB_NGP];
+  dbl Lub_wts[MAX_LUB_NGP];
+  dbl LubInt_PL;
 
   int TurbulentLubricationModel;
 

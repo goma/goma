@@ -414,6 +414,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
     case CURRENT_BC:
     case CURRENT_SIC_BC:
     case KINEMATIC_BC:
+    case LUB_KINEMATIC_BC:
     case KIN_LEAK_HEAT_BC:
     case KINEMATIC_PETROV_BC:
     case KINEMATIC_COLLOC_BC:

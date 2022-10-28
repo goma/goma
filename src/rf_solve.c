@@ -386,10 +386,6 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
   double eps;
 
   double time2 = 0.0;
-#ifdef RESET_TRANSIENT_RELAXATION_PLEASE
-  double damp_factor_org[2] = {damp_factor1, damp_factor2};
-  double toler_org[3] = {custom_tol1, custom_tol2, custom_tol3};
-#endif
   /*
    * Other local variables...
    */
@@ -435,13 +431,18 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 #ifdef LIBRARY_MODE
   int last_step = FALSE; /* Indicates final time step on this call */
 #endif
+  double damp_factor_org[2] = {damp_factor1, damp_factor2};
 #ifdef RELAX_ON_TRANSIENT_PLEASE
   int relax_bit = TRUE; /* Enables relaxation after a transient convergence failure*/
+  double toler_org[3] = {custom_tol1, custom_tol2, custom_tol3};
 #else
   int relax_bit = FALSE;
 #endif
-  int no_relax_retry = 6;
+  int no_relax_retry = ceil(1. - log(damp_factor_org[0]) / log(2.));
   int nonconv_roll = 0;
+  int use_custom_damp =
+      ((damp_factor1 <= 1. && damp_factor1 >= 0.) && (damp_factor2 <= 1. && damp_factor2 >= 0.) &&
+       (damp_factor3 <= 1. && damp_factor3 >= 0.));
 
   static const char yo[] = "solve_problem"; /* So my name is in a string.        */
 
@@ -2401,9 +2402,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
           if (inewton == -1) {
             DPRINTF(stdout, "\nHmm... trouble on this step \n  Let's try some more relaxation %d\n",
                     no_relax_retry - nonconv_roll);
-            if ((damp_factor1 <= 1. && damp_factor1 >= 0.) &&
-                (damp_factor2 <= 1. && damp_factor2 >= 0.) &&
-                (damp_factor3 <= 1. && damp_factor3 >= 0.)) {
+            if (use_custom_damp) {
               custom_tol1 *= 0.01;
               custom_tol2 *= 0.01;
               custom_tol3 *= 0.01;
@@ -2421,9 +2420,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
             if (nAC > 0) {
               dcopy1(nAC, x_AC, x_AC_old);
             }
-            if ((damp_factor1 <= 1. && damp_factor1 >= 0.) &&
-                (damp_factor2 <= 1. && damp_factor2 >= 0.) &&
-                (damp_factor3 <= 1. && damp_factor3 >= 0.)) {
+            if (use_custom_damp) {
               if (nonconv_roll > 1 || nt == 0) {
                 custom_tol1 *= 100.;
                 custom_tol2 *= 100.;
