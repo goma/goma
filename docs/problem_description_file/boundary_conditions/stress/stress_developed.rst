@@ -36,7 +36,7 @@ This is a fully developed flow condition from Xie and Pasquali for viscoelastic 
 **Technical Discussion**
 -------------------------
 
-Replaces boundary contributions of stress equations with stress equations the advective term removed (:math:`v\cdot\nabla S \rightarrow 0`)
+Replaces boundary contributions of stress equations with stress equations where the advective term is removed (:math:`v\cdot\nabla S \rightarrow 0`)
 
 
 --------------
