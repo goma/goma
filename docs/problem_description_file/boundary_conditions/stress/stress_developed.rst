@@ -17,7 +17,7 @@ This is a fully developed flow condition from Xie and Pasquali for viscoelastic 
 <bc_id>                                                          
    The boundary flag identifier, an integer associated  
    with <bc_type> that identifies the boundary location 
-   (node set in EXODUS II) in the problem domain.       
+   (side set in EXODUS II) in the problem domain.       
 
 ------------
 **Examples**
