@@ -52,8 +52,11 @@ The following is a sample card that sets the polymer stress formulation to EVSS_
 **Technical Discussion**
 -------------------------
 
-No Discussion.
+If using *SQRT_CONF* with no guess for the square root of stress tensor, :math:`b`,
+recommended initial guess is the identity tensor for all modes.
 
+Use post processing card *Map Conf Stress* to output the stress values, otherwise the usual S values are the given conformation tensor 
+base form such as the SQRT being :math:`b` in :math:`b^Tb = c` or LOG being :math:`s = log c` 
 
 
 --------------

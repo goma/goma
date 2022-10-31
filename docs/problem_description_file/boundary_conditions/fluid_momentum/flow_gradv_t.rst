@@ -1,5 +1,5 @@
 **************
-**FLOW_GRADV** 
+FLOW_GRADV_T 
 **************
 
 ::
@@ -17,26 +17,29 @@ boundary with the option of setting the pressure level.
 
 Definitions of the input parameters are as follows:
 
-+--------------+-----------------------------------------------------------------+
-|**FLOW_GRADV**| Name of the boundary condition.                                 |
-+--------------+-----------------------------------------------------------------+
-|**SS**        | Type of boundary condition (<bc_type>), where **SS** denotes    |
-|              | side set in the EXODUS II database.                             |
-+--------------+-----------------------------------------------------------------+
-|<bc_id>       | The boundary flag identifier, an integer associated with        |
-|              | <bc_type> that identifies the boundary location (side set in    |
-|              | EXODUS II) in the problem domain.                               |
-+--------------+-----------------------------------------------------------------+ 
-|<float>       | :math:`P_{applied}`, the applied pressure.                      |
-+--------------+-----------------------------------------------------------------+
-|[integer]     | An optional parameter.                                          |
-+--------------+------------+----------------------------------------------------+
-|              |   blank/-1 | the pressure in the normal stress is replaced      |
-|              |            | by :math:`P_{applied}`.                            |
-+--------------+------------+----------------------------------------------------+
-|              |   ≠ –1     |the pressure in the solution vector is              |
-|              |            | retained in the normal stress.                     |
-+--------------+------------+----------------------------------------------------+
+FLOW_GRADV_T 
+  Name of the boundary condition.
+
+SS         
+  Type of boundary condition (<bc_type>), where **SS** denotes    
+  side set in the EXODUS II database.                             
+
+<bc_id>
+  The boundary flag identifier, an integer associated with        
+  <bc_type> that identifies the boundary location (side set in    
+  EXODUS II) in the problem domain.                               
+
+<float>
+  :math:`P_{applied}`, the applied pressure.                      
+
+[integer]      
+  An optional parameter.                                          
+
+  *blank/-1*  the pressure in the normal stress is replaced      
+  by :math:`P_{applied}`.                            
+
+  *≠ –1*     the pressure in the solution vector is              
+  retained in the normal stress.                     
 
 ------------
 **Examples**
@@ -71,11 +74,11 @@ In the preceding example, the pressure value used is obtained from the solution 
 
    n \cdot T = n \cdot (-pI + \mu \nabla v^T)
 
-where :math:`\mu` is the viscosity of a Newtonian or generalized Newtonian fluid. As in the
-case of the *FLOW_STRESSNOBC* condition the preceding integral appears as a
-function of pressure and velocity unknowns as any other term.
-
-This imposes a natural BC of :math:`n\cdot\nabla v = 0`
+  where :math:`\mu` is the viscosity of a Newtonian or generalized Newtonian fluid. As in the
+  case of the *FLOW_STRESSNOBC* condition the preceding integral appears as a
+  function of pressure and velocity unknowns as any other term.
+  
+  This imposes a natural BC of :math:`n\cdot\nabla v = 0`
 
 * The pressure term in the preceding may be replaced by a fixed, imposed pressure
   value. This is done by setting the optional input integer to -1 and providing the
