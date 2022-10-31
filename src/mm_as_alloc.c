@@ -1233,7 +1233,6 @@ int assembly_alloc(Exo_DB *exo)
       esp->eddy_mu = (dbl **)alloc_ptr_1(MDE);
     }
 
-
   } /* End of loop over matrices */
 
   /*

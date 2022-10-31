@@ -1801,8 +1801,7 @@ int MMH_assemble_continuity(double time_value,       /* current value of time */
      */
 
     w0 =
-        (int)
-            mp->u_density[0]; /* This is the species number that is transported HYDRODYNAMICally  */
+        (int)mp->u_density[0]; /* This is the species number that is transported HYDRODYNAMICally */
 
     hydro_flux(&s_terms, w0, tt, dt, hsquared);
 

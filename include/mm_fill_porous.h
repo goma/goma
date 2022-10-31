@@ -91,19 +91,18 @@ EXTERN void porous_kinematic_bc(double[DIM], /* func                            
                                 dbl,  /* tt - parm to vary time integration        */
                                 dbl); /* vflux                                     */
 
-EXTERN void
-porous_normal_velocity_bc(double[], /* func                                      */
-                          double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
-                          double[DIM], /* x_dot - mesh velocity vector              */
-                          dbl,         /* tt - parm to vary time integration from
-                                        * explicit (tt = 1) to implicit (tt = 0)    */
-                          dbl,         /* dt - current value of the time step       */
-                          int,         /* bc_input_id                               */
-                          struct Boundary_Condition *, /* BC_Types                              */
-                          int,     /* i_mat_solid - mat block id porous phase   */
-                          int,     /* i_mat_fluid - mat block id gas phase      */
-                          int,     /* wspec                                     */
-                          double); /* dens_vap - density of pure solvent vapor  */
+EXTERN void porous_normal_velocity_bc(double[], /* func                                      */
+                                      double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func */
+                                      double[DIM], /* x_dot - mesh velocity vector              */
+                                      dbl,         /* tt - parm to vary time integration from
+                                                    * explicit (tt = 1) to implicit (tt = 0)    */
+                                      dbl,         /* dt - current value of the time step       */
+                                      int,         /* bc_input_id                               */
+                                      struct Boundary_Condition *, /* BC_Types */
+                                      int,     /* i_mat_solid - mat block id porous phase   */
+                                      int,     /* i_mat_fluid - mat block id gas phase      */
+                                      int,     /* wspec                                     */
+                                      double); /* dens_vap - density of pure solvent vapor  */
 
 EXTERN void put_gas_flux_in_pores(double[], /* func                                      */
                                   double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func */

@@ -80,18 +80,17 @@ EXTERN dbl global_h_elem_siz(dbl[],    /* x                                     
                              Exo_DB *, /* exo - ptr to EXODUS II FE database        */
                              Dpi *);   /* dpi - distributed processing information  */
 
-EXTERN void
-surface_determinant_and_normal(const int,    /* ielem - current element number            */
-                               const int,    /* iconnect_ptr - Pointer to beginning of
-                                              * connectivity list for current element     */
-                               const int,    /* nodes_per_elem - number of nodes in elem  */
-                               const int,    /* ielem_surf_dim - physical dimension of the
-                                              * element surface (0, 1, 2)                 */
-                               const int,    /* id_side - ID of element side              */
-                               const int,    /* num_nodes_on_side - number of nodes on
-                                              * side of element                           */
-                               const int[]); /* local_elem_node_id - local element node
-                                              * numbers on the side of the element        */
+EXTERN void surface_determinant_and_normal(const int, /* ielem - current element number */
+                                           const int, /* iconnect_ptr - Pointer to beginning of
+                                                       * connectivity list for current element */
+                                           const int, /* nodes_per_elem - number of nodes in elem */
+                                           const int, /* ielem_surf_dim - physical dimension of the
+                                                       * element surface (0, 1, 2) */
+                                           const int, /* id_side - ID of element side */
+                                           const int, /* num_nodes_on_side - number of nodes on
+                                                       * side of element */
+                                           const int[]); /* local_elem_node_id - local element node
+                                                          * numbers on the side of the element */
 
 EXTERN void edge_determinant_and_vectors(const int, /* ielem - current element number            */
                                          const int, /* iconnect_ptr - Pointer into the beginning

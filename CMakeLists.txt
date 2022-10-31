@@ -842,7 +842,7 @@ execute_process(
   RESULT_VARIABLE goma_using_git
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
   ERROR_QUIET)
-  
+
 if(goma_using_git EQUAL 0)
   string(REGEX REPLACE "\n$" "" goma_git_version "${goma_git_version}")
 else()
@@ -850,7 +850,7 @@ else()
 endif()
 if(goma_git_version)
   list(APPEND GOMA_COMPILE_DEFINITIONS GIT_VERSION=${goma_git_version})
-  MESSAGE(STATUS "Git found setting version: ${goma_git_version}")
+  message(STATUS "Git found setting version: ${goma_git_version}")
 endif()
 
 message(STATUS "CMAKE_C_COMPILER=${CMAKE_C_COMPILER}")
@@ -1029,7 +1029,7 @@ set_target_properties(fix_exe PROPERTIES OUTPUT_NAME "fix")
 target_include_directories(fix_exe PUBLIC include)
 target_include_directories(fix_exe SYSTEM PRIVATE ${GOMA_TPL_INCLUDES})
 target_link_libraries(fix_exe PUBLIC ${GOMA_TPL_LIBRARIES} goma goma_user
-                                      goma_util)
+                                     goma_util)
 target_compile_definitions(fix_exe PUBLIC ${GOMA_COMPILE_DEFINITIONS})
 if(ENABLE_WARNINGS)
   target_compile_options(

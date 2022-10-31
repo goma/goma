@@ -1443,8 +1443,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   /* read in constants for constitutive equation if they are input */
 
-  if ( (ConstitutiveEquation == NEWTONIAN) ||
-       (ConstitutiveEquation == TURBULENT_SA) ) {
+  if ((ConstitutiveEquation == NEWTONIAN) || (ConstitutiveEquation == TURBULENT_SA)) {
     model_read = look_for_mat_proptable(
         imp, "Viscosity", &(mp_glob[mn]->ViscosityModel), &(mp_glob[mn]->viscosity),
         &(mp_glob[mn]->u_viscosity), &(mp_glob[mn]->len_u_viscosity),
@@ -1526,13 +1525,13 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     gn_glob[mn]->mu0 = mat_ptr->viscosity;
 
     /* If turbulent flow, read external field for distance from walls */
-    if (ConstitutiveEquation == TURBULENT_SA){
+    if (ConstitutiveEquation == TURBULENT_SA) {
       mat_ptr->dist_wall_ext_field_index = -1;
       if (efv->ev) {
         for (i = 0; i < efv->Num_external_field; i++) {
-            if (!strcmp(efv->name[i], "DIST")) {
-              mat_ptr->dist_wall_ext_field_index = i;
-            }
+          if (!strcmp(efv->name[i], "DIST")) {
+            mat_ptr->dist_wall_ext_field_index = i;
+          }
         }
       } else {
         GOMA_EH(GOMA_ERROR, "You need an external field DIST to use TURBULENT_SA model ");

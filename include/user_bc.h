@@ -87,12 +87,11 @@ extern void yuser_surf(double *, /* func                                      */
                        const double[], /* u_bc - to parameterize species eqn model  */
                        const double);  /* time */
 
-extern void
-y2_electroneutrality_surf(double *, /* func                                      */
-                          double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func             */
-                          const int,      /* species                                   */
-                          const double[], /* u_bc - to parameterize species eqn model  */
-                          const double);  /* time */
+extern void y2_electroneutrality_surf(double *, /* func                                      */
+                                      double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func */
+                                      const int, /* species                                   */
+                                      const double[], /* u_bc - to parameterize species eqn model */
+                                      const double);  /* time */
 
 extern void uuser_surf(double[DIM], /* func                                      */
                        double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */

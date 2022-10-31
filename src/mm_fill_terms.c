@@ -2752,8 +2752,7 @@ int assemble_momentum(dbl time,       /* current time */
               if (supg != 0.) {
                 dbl d_wt_func = 0;
                 for (p = 0; p < dim; p++) {
-                  d_wt_func +=
-                      supg * supg_terms.d_supg_tau_dT[j] * v[p] * bfm->grad_phi[i][p];
+                  d_wt_func += supg * supg_terms.d_supg_tau_dT[j] * v[p] * bfm->grad_phi[i][p];
                 }
                 if (transient_run) {
                   if (mass_on) {
@@ -2993,8 +2992,7 @@ int assemble_momentum(dbl time,       /* current time */
               if (supg != 0.) {
                 dbl d_wt_func = 0;
                 for (p = 0; p < dim; p++) {
-                  d_wt_func +=
-                      supg * supg_terms.d_supg_tau_dnn[j] * v[p] * bfm->grad_phi[i][p];
+                  d_wt_func += supg * supg_terms.d_supg_tau_dnn[j] * v[p] * bfm->grad_phi[i][p];
                 }
                 if (transient_run) {
                   if (mass_on) {
@@ -3066,7 +3064,7 @@ int assemble_momentum(dbl time,       /* current time */
                 diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
               }
 
-              lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += mass+advection+diffusion +source;
+              lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += mass + advection + diffusion + source;
             }
           }
 
@@ -3210,8 +3208,7 @@ int assemble_momentum(dbl time,       /* current time */
               if (supg != 0.) {
                 dbl d_wt_func = 0;
                 for (p = 0; p < dim; p++) {
-                  d_wt_func +=
-                      supg * supg_terms.d_supg_tau_dF[j] * v[p] * bfm->grad_phi[i][p];
+                  d_wt_func += supg * supg_terms.d_supg_tau_dF[j] * v[p] * bfm->grad_phi[i][p];
                 }
                 if (transient_run) {
                   if (mass_on) {

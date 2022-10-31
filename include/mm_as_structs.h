@@ -569,7 +569,7 @@ struct Element_Variable_Pointers {
   dbl *sh_sat_2[MDE];   /* Porous shell saturation layer 2 */
   dbl *sh_sat_3[MDE];   /* Porous shell saturation layer 3 */
 
-  dbl *eddy_mu[MDE];    /* Eddy viscosity for turbulent flow */
+  dbl *eddy_mu[MDE]; /* Eddy viscosity for turbulent flow */
 };
 
 /*___________________________________________________________________________*/
@@ -1038,7 +1038,6 @@ struct External_Field_Variables {
 
   int ev_etch_area;  /* external area fraction in which etching reaction takes place */
   int ev_etch_depth; /* external depth field due to etching reaction */
-
 
   char name[MAX_EXTERNAL_FIELD][32];
   /* names of external field variables*/
@@ -1706,7 +1705,7 @@ struct Field_Variables {
   dbl sh_sat_2;   /* Porous shell saturation layer 2 */
   dbl sh_sat_3;   /* Porous shell saturation layer 3 */
 
-  dbl eddy_mu;    /* Eddy viscosity for turbulent flow */
+  dbl eddy_mu; /* Eddy viscosity for turbulent flow */
 
   /*
    * Grads of scalars...
@@ -1755,7 +1754,7 @@ struct Field_Variables {
   dbl grad_sh_sat_2[DIM];  /* Gradient of porous shell saturation layer 2 */
   dbl grad_sh_sat_3[DIM];  /* Gradient of porous shell saturation layer 3 */
 
-  dbl grad_eddy_mu[DIM];   /* Gradient of Eddy viscosity */
+  dbl grad_eddy_mu[DIM]; /* Gradient of Eddy viscosity */
 
   /*
    * Grads of vectors...
@@ -2091,7 +2090,7 @@ struct Diet_Field_Variables {
   dbl sh_sat_2;   /* Porous shell saturation layer 2 */
   dbl sh_sat_3;   /* Porous shell saturation layer 3 */
 
-  dbl eddy_mu;    /* Eddy viscosity for turbulent flow */
+  dbl eddy_mu; /* Eddy viscosity for turbulent flow */
 
   dbl grad_em_er[DIM][DIM]; /* EM wave Fields */
   dbl grad_em_ei[DIM][DIM]; /* EM wave Fields */

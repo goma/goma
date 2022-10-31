@@ -7320,8 +7320,6 @@ static int load_fv_sens(void) {
     }
   }
 
-
-
   /*
    * Acoustic Pressure
    */
