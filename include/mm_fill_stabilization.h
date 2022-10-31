@@ -11,7 +11,20 @@ typedef struct {
   dbl d_supg_tau_dX[DIM][MDE];
 } SUPG_terms;
 
+typedef struct {
+  dbl supg_tau;
+  dbl d_supg_tau_dv[DIM][MDE];
+  dbl d_supg_tau_dX[DIM][MDE];
+  dbl d_supg_tau_dT[MDE];                  /* temperature dependence. */
+  dbl d_supg_tau_dC[MAX_CONC][MDE];        /* conc dependence. */
+  dbl d_supg_tau_dP[MDE];                  /* pressure dependence. */
+  dbl d_supg_tau_dF[MDE];                  /* FILL dependence. */
+  dbl d_supg_tau_dnn[MDE];                 /* bond concentration dependence */
+  dbl d_supg_tau_deddy_mu[MDE];            /* Turbulent viscosity */
+} SUPG_momentum_terms;
+
 void supg_tau_shakib(SUPG_terms *supg_terms, int dim, dbl dt, dbl diffusivity, int interp_eqn);
+void supg_tau_momentum_shakib(SUPG_momentum_terms *supg_terms, int dim, dbl dt);
 
 void get_supg_tau(SUPG_terms *supg_terms, int dim, dbl diffusivity, PG_DATA *pg_data);
 

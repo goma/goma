@@ -2238,7 +2238,7 @@ int assemble_momentum(dbl time,       /* current time */
   dbl wt_func;
 
   /* SUPG variables */
-  SUPG_terms supg_terms;
+  SUPG_momentum_terms supg_terms;
 
   // Continuity stabilization
   dbl continuity_stabilization;
@@ -2287,17 +2287,7 @@ int assemble_momentum(dbl time,       /* current time */
   rho = density(d_rho, time);
 
   if (supg != 0.) {
-    dbl gamma[DIM][DIM];
-
-    for (a = 0; a < VIM; a++) {
-      for (b = 0; b < VIM; b++) {
-        gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
-      }
-    }
-
-    dbl mu = viscosity(gn, gamma, NULL);
-    supg_tau(&supg_terms, dim, (2 / (rho * sqrt(3))) * mu, pg_data, dt,
-             mp->Mwt_funcModel == SUPG_SHAKIB, VELOCITY1);
+    supg_tau_momentum_shakib(&supg_terms, dim, dt);
   }
   /* end Petrov-Galerkin addition */
 
@@ -2756,6 +2746,75 @@ int assemble_momentum(dbl time,       /* current time */
             for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
               phi_j = phi_j_vector[j];
 
+              dbl mass_supg = 0;
+              dbl advection_supg = 0;
+              dbl source_supg = 0;
+              if (supg != 0.) {
+                dbl d_wt_func = 0;
+                for (p = 0; p < dim; p++) {
+                  d_wt_func +=
+                      supg * supg_terms.d_supg_tau_dT[j] * v[p] * bfm->grad_phi[i][p];
+                }
+                if (transient_run) {
+                  if (mass_on) {
+                    mass_supg = v_dot[a] * rho;
+                    mass_supg *= -d_wt_func * d_area;
+                    mass_supg *= mass_etm;
+                  }
+
+                  if (porous_brinkman_on) {
+                    mass_supg /= por;
+                  }
+
+                  if (particle_momentum_on) {
+                    mass_supg *= ompvf;
+                  }
+                }
+
+                if (advection_on) {
+#ifdef DO_NO_UNROLL
+                  for (p = 0; p < WIM; p++) {
+                    advection_supg += (v[p] - x_dot[p]) * grad_v[p][a];
+                  }
+#else
+                  advection_supg += (v[0] - x_dot[0]) * grad_v[0][a];
+                  advection_supg += (v[1] - x_dot[1]) * grad_v[1][a];
+                  if (WIM == 3)
+                    advection_supg += (v[2] - x_dot[2]) * grad_v[2][a];
+#endif
+
+                  if (upd->PSPG_advection_correction) {
+                    advection_supg -= pspg[0] * grad_v[0][a];
+                    advection_supg -= pspg[1] * grad_v[1][a];
+                    if (WIM == 3)
+                      advection_supg -= pspg[2] * grad_v[2][a];
+                  }
+
+                  advection_supg *= rho;
+                  advection_supg *= -d_wt_func * d_area;
+                  advection_supg *= advection_etm;
+
+                  if (porous_brinkman_on) {
+                    por2 = por * por;
+                    advection_supg /= por2;
+                  }
+
+                  if (particle_momentum_on) {
+                    advection_supg *= ompvf;
+                  }
+                }
+
+                /*
+                 * Source term...
+                 */
+
+                if (source_on) {
+                  source_supg += f[a];
+                  source_supg *= d_wt_func * d_area;
+                  source_supg *= source_etm;
+                }
+              }
+
               mass = 0.;
 
               if (transient_run) {
@@ -2844,6 +2903,9 @@ int assemble_momentum(dbl time,       /* current time */
               /*lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] += mass + advection + porous + diffusion +
                * source;*/
               J[j] += mass + advection + porous + diffusion + source;
+              if (supg != 0) {
+                J[j] += mass_supg + advection_supg + source_supg;
+              }
             }
           }
 
@@ -2925,6 +2987,74 @@ int assemble_momentum(dbl time,       /* current time */
             for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
               phi_j = bf[var]->phi[j];
 
+              mass = 0;
+              advection = 0;
+              source = 0;
+              if (supg != 0.) {
+                dbl d_wt_func = 0;
+                for (p = 0; p < dim; p++) {
+                  d_wt_func +=
+                      supg * supg_terms.d_supg_tau_dnn[j] * v[p] * bfm->grad_phi[i][p];
+                }
+                if (transient_run) {
+                  if (mass_on) {
+                    mass = v_dot[a] * rho;
+                    mass *= -d_wt_func * d_area;
+                    mass *= mass_etm;
+                  }
+
+                  if (porous_brinkman_on) {
+                    mass /= por;
+                  }
+
+                  if (particle_momentum_on) {
+                    mass *= ompvf;
+                  }
+                }
+
+                if (advection_on) {
+#ifdef DO_NO_UNROLL
+                  for (p = 0; p < WIM; p++) {
+                    advection += (v[p] - x_dot[p]) * grad_v[p][a];
+                  }
+#else
+                  advection += (v[0] - x_dot[0]) * grad_v[0][a];
+                  advection += (v[1] - x_dot[1]) * grad_v[1][a];
+                  if (WIM == 3)
+                    advection += (v[2] - x_dot[2]) * grad_v[2][a];
+#endif
+
+                  if (upd->PSPG_advection_correction) {
+                    advection -= pspg[0] * grad_v[0][a];
+                    advection -= pspg[1] * grad_v[1][a];
+                    if (WIM == 3)
+                      advection -= pspg[2] * grad_v[2][a];
+                  }
+
+                  advection *= rho;
+                  advection *= -d_wt_func * d_area;
+                  advection *= advection_etm;
+
+                  if (porous_brinkman_on) {
+                    por2 = por * por;
+                    advection /= por2;
+                  }
+
+                  if (particle_momentum_on) {
+                    advection *= ompvf;
+                  }
+                }
+
+                /*
+                 * Source term...
+                 */
+
+                if (source_on) {
+                  source += f[a];
+                  source *= d_wt_func * d_area;
+                  source *= source_etm;
+                }
+              }
               diffusion = 0.;
               if (diffusion_on) {
                 for (p = 0; p < VIM; p++) {
@@ -2936,7 +3066,7 @@ int assemble_momentum(dbl time,       /* current time */
                 diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
               }
 
-              lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += diffusion;
+              lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += mass+advection+diffusion +source;
             }
           }
 
@@ -2965,7 +3095,6 @@ int assemble_momentum(dbl time,       /* current time */
             }
           }
 
-
           /*
            * J_m_eddy_mu
            */
@@ -2975,6 +3104,75 @@ int assemble_momentum(dbl time,       /* current time */
             pvar = upd->vp[pg->imtrx][var];
             for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
               phi_j = bf[var]->phi[j];
+
+              mass = 0.;
+              advection = 0.;
+              source = 0.0;
+              if (supg != 0.) {
+                dbl d_wt_func = 0;
+                for (p = 0; p < dim; p++) {
+                  d_wt_func +=
+                      supg * supg_terms.d_supg_tau_deddy_mu[j] * v[p] * bfm->grad_phi[i][p];
+                }
+                if (transient_run) {
+                  if (mass_on) {
+                    mass = v_dot[a] * rho;
+                    mass *= -d_wt_func * d_area;
+                    mass *= mass_etm;
+                  }
+
+                  if (porous_brinkman_on) {
+                    mass /= por;
+                  }
+
+                  if (particle_momentum_on) {
+                    mass *= ompvf;
+                  }
+                }
+
+                if (advection_on) {
+#ifdef DO_NO_UNROLL
+                  for (p = 0; p < WIM; p++) {
+                    advection += (v[p] - x_dot[p]) * grad_v[p][a];
+                  }
+#else
+                  advection += (v[0] - x_dot[0]) * grad_v[0][a];
+                  advection += (v[1] - x_dot[1]) * grad_v[1][a];
+                  if (WIM == 3)
+                    advection += (v[2] - x_dot[2]) * grad_v[2][a];
+#endif
+
+                  if (upd->PSPG_advection_correction) {
+                    advection -= pspg[0] * grad_v[0][a];
+                    advection -= pspg[1] * grad_v[1][a];
+                    if (WIM == 3)
+                      advection -= pspg[2] * grad_v[2][a];
+                  }
+
+                  advection *= rho;
+                  advection *= -d_wt_func * d_area;
+                  advection *= advection_etm;
+
+                  if (porous_brinkman_on) {
+                    por2 = por * por;
+                    advection /= por2;
+                  }
+
+                  if (particle_momentum_on) {
+                    advection *= ompvf;
+                  }
+                }
+
+                /*
+                 * Source term...
+                 */
+
+                if (source_on) {
+                  source += f[a];
+                  source *= d_wt_func * d_area;
+                  source *= source_etm;
+                }
+              }
 
               diffusion = 0.;
               if (diffusion_on) {
@@ -2987,7 +3185,7 @@ int assemble_momentum(dbl time,       /* current time */
                 diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
               }
 
-              lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += diffusion;
+              lec->J[LEC_J_INDEX(peqn, pvar, ii, j)] += mass + advection + diffusion + source;
             }
           }
 
@@ -3006,6 +3204,74 @@ int assemble_momentum(dbl time,       /* current time */
             for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
               phi_j = phi_j_vector[j];
 
+              dbl mass_supg = 0;
+              dbl advection_supg = 0;
+              dbl source_supg = 0;
+              if (supg != 0.) {
+                dbl d_wt_func = 0;
+                for (p = 0; p < dim; p++) {
+                  d_wt_func +=
+                      supg * supg_terms.d_supg_tau_dF[j] * v[p] * bfm->grad_phi[i][p];
+                }
+                if (transient_run) {
+                  if (mass_on) {
+                    mass_supg = v_dot[a] * rho;
+                    mass_supg *= -d_wt_func * d_area;
+                    mass_supg *= mass_etm;
+                  }
+
+                  if (porous_brinkman_on) {
+                    mass_supg /= por;
+                  }
+
+                  if (particle_momentum_on) {
+                    mass_supg *= ompvf;
+                  }
+                }
+
+                if (advection_on) {
+#ifdef DO_NO_UNROLL
+                  for (p = 0; p < WIM; p++) {
+                    advection_supg += (v[p] - x_dot[p]) * grad_v[p][a];
+                  }
+#else
+                  advection_supg += (v[0] - x_dot[0]) * grad_v[0][a];
+                  advection_supg += (v[1] - x_dot[1]) * grad_v[1][a];
+                  if (WIM == 3)
+                    advection_supg += (v[2] - x_dot[2]) * grad_v[2][a];
+#endif
+
+                  if (upd->PSPG_advection_correction) {
+                    advection_supg -= pspg[0] * grad_v[0][a];
+                    advection_supg -= pspg[1] * grad_v[1][a];
+                    if (WIM == 3)
+                      advection_supg -= pspg[2] * grad_v[2][a];
+                  }
+
+                  advection_supg *= rho;
+                  advection_supg *= -d_wt_func * d_area;
+                  advection_supg *= advection_etm;
+
+                  if (porous_brinkman_on) {
+                    por2 = por * por;
+                    advection_supg /= por2;
+                  }
+
+                  if (particle_momentum_on) {
+                    advection_supg *= ompvf;
+                  }
+                }
+
+                /*
+                 * Source term...
+                 */
+
+                if (source_on) {
+                  source_supg += f[a];
+                  source_supg *= d_wt_func * d_area;
+                  source_supg *= source_etm;
+                }
+              }
               mass = 0.;
               if (transient_run) {
                 if (mass_on) {
@@ -3105,6 +3371,9 @@ int assemble_momentum(dbl time,       /* current time */
                 advection *= (1.0 - p_vol_frac);
               }
               J[j] += mass + advection + porous + diffusion + source;
+              if (supg != 0) {
+                J[j] += mass_supg + advection_supg + source_supg;
+              }
               /*lec->J[LEC_J_INDEX(peqn,pvar,ii,j)] +=mass + advection + porous + diffusion +
                * source; */
             }
@@ -3218,7 +3487,7 @@ int assemble_momentum(dbl time,       /* current time */
                       if (WIM == 3)
                         advection_b -= pspg[2] * grad_v[2][a];
                     }
-                    advection_b *= d_wt_func * rho * d_area;
+                    advection_b *= -d_wt_func * rho * d_area;
                   }
                   advection = advection_a + advection_b;
                   advection *= advection_etm;
@@ -4270,8 +4539,7 @@ int assemble_continuity(dbl time_value, /* current time */
      */
 
     w0 =
-        (int)
-            mp->u_density[0]; /* This is the species number that is transported HYDRODYNAMICally  */
+        (int)mp->u_density[0]; /* This is the species number that is transported HYDRODYNAMICally */
 
     hydro_flux(&s_terms, w0, tt, dt, pg_data->hsquared);
 
@@ -9637,7 +9905,6 @@ int load_fv_grads(void)
     }
   }
 
-
   /*
    * grad(APR)
    */
@@ -11310,7 +11577,6 @@ int load_fv_mesh_derivs(int okToZero)
     siz = sizeof(double) * DIM * DIM * MDE;
     memset(&(fv->d_grad_eddy_mu_dmesh[0][0][0]), 0, siz);
   }
-
 
   if (pd->gv[LIGHT_INTP]) {
     v = LIGHT_INTP;
@@ -26986,7 +27252,6 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
       }
     }
   }
-
 
   if (d_Pi != NULL && pd->v[pg->imtrx][VELOCITY1]) {
     /* Damn... It is unfortunate that grad_phi_e is 1) assumed to be
