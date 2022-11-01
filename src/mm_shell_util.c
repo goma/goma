@@ -1905,6 +1905,7 @@ void shell_determinant_and_normal(
  *      vector.
  *
  *      Adapted from surface_determinant_and_normal by PR Schunk (9/2/2009)
+ *      Looks like id_side is always 1, so pretty much not used - RBS
  *
  *  Returns:
  * ------------
@@ -1947,19 +1948,21 @@ void shell_determinant_and_normal(
   }
 
   /* define space of surface */
+  siz = (DIM - 1) * DIM * sizeof(double);
+  memset(T, 0, siz);
+  memset(t, 0, siz);
+  /*  since T & t are zeroed, only need to set nonzero elements */
   switch (ielem_surf_dim) {
   case 1:
     switch (ei[pg->imtrx]->ielem_shape) {
     case LINE_SEGMENT:
       T[0][0] = 1.;
-      T[0][1] = 0.;
       break;
     default:
       GOMA_EH(GOMA_ERROR, "Invalid shape");
       break;
     }
     break;
-
   case 2:
     switch (ei[pg->imtrx]->ielem_shape) {
     case SHELL:
@@ -1989,11 +1992,7 @@ void shell_determinant_and_normal(
        */
 
       T[0][0] = 1.;
-      T[0][1] = 0.;
-      T[0][2] = 0.;
-      T[1][0] = 0.;
       T[1][1] = 1.;
-      T[1][2] = 0.;
       break;
 
     default:
@@ -3111,8 +3110,9 @@ void lubrication_shell_initialize(int *n_dof,        // Degrees of freedom
   int edim = ei[pg->imtrx]->ielem_dim;
   int pdim = pd->Num_Dim;
   int node, index;
-  double Jlocal[DIM][DIM], T[2][DIM], t[DIM][DIM];
-
+  double Jlocal[DIM][DIM];
+  double T[DIM - 1][DIM], t[DIM - 1][DIM]; /* t = J . T */
+  int siz;
   double nx, ny, nz;
   double r_det;
 
@@ -3220,7 +3220,8 @@ void lubrication_shell_initialize(int *n_dof,        // Degrees of freedom
       }
     }
 
-    /* Big T calculation */
+#if 0
+    /* Big T calculation*/
     T[0][0] = 1.;
     T[0][1] = 0.;
     T[0][2] = 0.;
@@ -3228,6 +3229,48 @@ void lubrication_shell_initialize(int *n_dof,        // Degrees of freedom
     T[1][1] = 1.;
     T[1][2] = 0.;
 
+#else
+    siz = (DIM - 1) * DIM * sizeof(double);
+    memset(T, 0, siz);
+    memset(t, 0, siz);
+    /*  since T & t are zeroed, only need to set nonzero elements */
+    /* revert back by setting id_side = 6  */
+    switch (ei[pg->imtrx]->ielem_shape) {
+    case SHELL:
+    case TRISHELL:
+      switch (id_side) {
+      case 1:
+        T[0][0] = 1.;
+        T[1][2] = 1.;
+        break;
+      case 2:
+        T[0][1] = 1.;
+        T[1][2] = 1.;
+        break;
+      case 3:
+        T[0][0] = -1.;
+        T[1][2] = 1.;
+        break;
+      case 4:
+        T[0][1] = -1.;
+        T[1][2] = 1.;
+        break;
+      case 5:
+        T[0][0] = 1.;
+        T[1][1] = -1.;
+        break;
+      case 6:
+      case -1:
+        T[0][0] = 1.;
+        T[1][1] = 1.;
+        break;
+      default:
+        GOMA_EH(GOMA_ERROR, "Incorrect side for SHELL");
+        break;
+      }
+      break;
+    }
+#endif
     /* Little t calculation */
     for (p = 0; p < 2; p++) {
       for (a = 0; a < pd->Num_Dim; a++) {
@@ -3948,19 +3991,6 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       if (err < 0) {
         GOMA_WH(GOMA_ERROR, "Some trouble with Numerical Lubrication...\n");
       }
-      if (pd->v[pg->imtrx][VAR]) {
-        ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
-        q_mag2 = q_mag * ratio;
-        q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
-                                     (double)mp->mp2nd->viscositymask[0],
-                                     (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
-        factor *= (1. - ratio);
-        factor += ratio;
-        dq_gradp *= factor;
-        dq_dH *= factor;
-        pre_delP *= factor;
-        vis_w /= factor;
-      }
 
     } else if (gn->ConstitutiveEquation == HERSCHEL_BULKLEY) {
       double nexp = gn->nexp, yield = gn->tau_y;
@@ -3991,6 +4021,21 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         dqmag_dF[j] += q_mag * (-d_k_turb_dmu * dmu_df[j] / k_turb - dmu_df[j] / mu);
       }
     } /*  End of Viscosity Models **/
+
+    /* modulate q if level-set interface present */
+    if (pd->v[pg->imtrx][VAR] && mp->mp2nd->ViscosityModel == RATIO) {
+      ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
+      q_mag2 = q_mag * ratio;
+      q_mag =
+          ls_modulate_property(q_mag, q_mag2, ls->Length_Scale, (double)mp->mp2nd->viscositymask[0],
+                               (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
+      factor *= (1. - ratio);
+      factor += ratio;
+      dq_gradp *= factor;
+      dq_dH *= factor;
+      pre_delP *= factor;
+      vis_w /= factor;
+    }
 
     v_mag = q_mag / H;
     dv_gradp = dq_gradp / H;
@@ -4664,19 +4709,6 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       if (err < 0) {
         GOMA_WH(GOMA_ERROR, "Some trouble with Numerical Lubrication...\n");
       }
-      if (pd->v[pg->imtrx][VAR]) {
-        ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
-        q_mag2 = q_mag * ratio;
-        q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
-                                     (double)mp->mp2nd->viscositymask[0],
-                                     (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
-        factor *= (1. - ratio);
-        factor += ratio;
-        dq_gradp *= factor;
-        dq_dH *= factor;
-        pre_delP *= factor;
-        vis_w /= factor;
-      }
 
       /** Make corrections for film flow from confined calculations **/
       q_mag *= 2.;
@@ -4716,6 +4748,19 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       }
     } /*  End of Viscosity Models **/
 
+    if (pd->v[pg->imtrx][VAR] && mp->mp2nd->ViscosityModel == RATIO) {
+      ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
+      q_mag2 = q_mag * ratio;
+      q_mag =
+          ls_modulate_property(q_mag, q_mag2, ls->Length_Scale, (double)mp->mp2nd->viscositymask[0],
+                               (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
+      factor *= (1. - ratio);
+      factor += ratio;
+      dq_gradp *= factor;
+      dq_dH *= factor;
+      pre_delP *= factor;
+      vis_w /= factor;
+    }
     dq_gradpt = dq_gradp - beta_slip * SQUARE(H);
     dv_gradp = dq_gradp / H;
     dv_dH = dq_dH / H - q_mag / SQUARE(H);
@@ -5161,15 +5206,6 @@ void calculate_lub_q_v_old(
       if (err < 0) {
         GOMA_WH(GOMA_ERROR, "Some trouble with Numerical Lubrication...\n");
       }
-      if (pd->v[pg->imtrx][VAR]) {
-        ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
-        q_mag2 = q_mag * ratio;
-        q_mag = ls_modulate_property(q_mag, q_mag2, ls->Length_Scale,
-                                     (double)mp->mp2nd->viscositymask[0],
-                                     (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
-        factor *= (1. - ratio);
-        factor += ratio;
-      }
 
     } else if (gn->ConstitutiveEquation == HERSCHEL_BULKLEY) {
       double nexp = gn->nexp, yield = gn->tau_y;
@@ -5187,6 +5223,15 @@ void calculate_lub_q_v_old(
       q_mag = -CUBE(H_old) / (k_turb * mu_old);
       q_mag *= pgrad;
     } /*  End of Viscosity Models **/
+    if (pd->v[pg->imtrx][VAR] && mp->mp2nd->ViscosityModel == RATIO) {
+      ratio = 1. / mp->mp2nd->viscosity; /* Assuming model = RATIO for now */
+      q_mag2 = q_mag * ratio;
+      q_mag =
+          ls_modulate_property(q_mag, q_mag2, ls->Length_Scale, (double)mp->mp2nd->viscositymask[0],
+                               (double)mp->mp2nd->viscositymask[1], dqmag_dF, &factor);
+      factor *= (1. - ratio);
+      factor += ratio;
+    }
 
     memset(q_old, 0.0, sizeof(double) * DIM);
     for (i = 0; i < dim; i++) {
@@ -5928,17 +5973,21 @@ int lub_viscosity_integrate(const double strs,
  *
  ******************************************************************************/
 {
-  double shr, shr1, vis_w = 1., visd = 0.;
+  double shr, shrw, vis_w = 1., visd = 0.;
   double nexp = gn->nexp, lam = gn->lam, aexp = gn->aexp, muinf = gn->muinf;
   double yield = gn->tau_y, F = gn->fexp, mu0 = gn->mu0, P_eps = gn->epsilon;
   double eps, res, TOL_CEIL = 1.e-6, res_tol, soln_tol;
-  int iter, ITERMAX = 50, jdi, JDI_MAX = 25, ierr = 0, a_visc_type = FALSE;
+  int iter, ITERMAX = 50, jdi, JDI_MAX = 25, ierr = 0, a_visc_type;
   double xint = 0., xint_a = 0., visc_a = 0., xintold = 0., temp, at = 1.;
-  double wt[3] = {5. / 18., 4. / 9., 5. / 18.};
-  double gp[3] = {0.11270166537925831148, 0.5, 0.8872983346207416885};
 
   res_tol = MIN(TOL_CEIL, Epsilon[pg->imtrx][0]);
   soln_tol = MIN(TOL_CEIL, Epsilon[pg->imtrx][2]);
+
+  if (mp->LubIntegrationModel == LUB_VISCINT_ANALYTICAL) {
+    a_visc_type = TRUE;
+  } else {
+    a_visc_type = FALSE;
+  }
 
   if (pd->gv[SHELL_TEMPERATURE]) {
     temp = fv->sh_t;
@@ -5992,8 +6041,8 @@ int lub_viscosity_integrate(const double strs,
   shr = strs / mu0;
   for (iter = 0; iter < ITERMAX; iter++) {
     double xfact, tmp, tp1, tp2, tpe, tpe_d, xj, delta, P_sig;
-    shr1 = fabs(shr);
-    tp1 = lam * shr1;
+    shrw = fabs(shr);
+    tp1 = lam * shrw;
     xfact = 1. + pow(tp1, aexp);
     tmp = pow(xfact, (1. - nexp) / aexp);
     switch (gn->ConstitutiveEquation) {
@@ -6004,10 +6053,10 @@ int lub_viscosity_integrate(const double strs,
       break;
     case BINGHAM:
     case BINGHAM_WLF:
-      tp2 = F * shr1;
+      tp2 = F * shrw;
       P_sig = pow(1. + tp2, P_eps);
-      tpe = (1. - exp(-tp2)) / shr1 * P_sig;
-      tpe_d = (exp(-tp2) * (1. + tp2) - 1.) * P_sig / shr1 + P_eps * tp2 * tpe / (1. + tp2);
+      tpe = (1. - exp(-tp2)) / shrw * P_sig;
+      tpe_d = (exp(-tp2) * (1. + tp2) - 1.) * P_sig / shrw + P_eps * tp2 * tpe / (1. + tp2);
       vis_w = muinf + (mu0 - muinf + yield * tpe) / tmp;
       visd = (mu0 - muinf + yield * tpe) * (nexp - 1.) * pow(tp1, aexp) / (tmp * xfact);
       visd += yield * tpe_d / tmp;
@@ -6055,8 +6104,8 @@ int lub_viscosity_integrate(const double strs,
         shr = shr0 + step * shrd;
         for (iter = 0; iter < ITERMAX; iter++) {
           double xfact, tmp, tp1, tp2, tpe, tpe_d, xj, delta, P_sig;
-          shr1 = fabs(shr);
-          tp1 = lam * shr1;
+          shrw = fabs(shr);
+          tp1 = lam * shrw;
           xfact = 1. + pow(tp1, aexp);
           tmp = pow(xfact, (1. - nexp) / aexp);
           switch (gn->ConstitutiveEquation) {
@@ -6067,10 +6116,10 @@ int lub_viscosity_integrate(const double strs,
             break;
           case BINGHAM:
           case BINGHAM_WLF:
-            tp2 = Fc * shr1;
+            tp2 = Fc * shrw;
             P_sig = pow(1. + tp2, P_eps);
-            tpe = (1. - exp(-tp2)) / shr1 * P_sig;
-            tpe_d = (exp(-tp2) * (1. + tp2) - 1.) * P_sig / shr1 + P_eps * tp2 * tpe / (1. + tp2);
+            tpe = (1. - exp(-tp2)) / shrw * P_sig;
+            tpe_d = (exp(-tp2) * (1. + tp2) - 1.) * P_sig / shrw + P_eps * tp2 * tpe / (1. + tp2);
             vis_w = muinf + (mu0 - muinf + Yc * tpe) / tmp;
             visd = (mu0 - muinf + Yc * tpe) * (nexp - 1.) * pow(tp1, aexp) / (tmp * xfact);
             visd += Yc * tpe_d / tmp;
@@ -6125,24 +6174,37 @@ int lub_viscosity_integrate(const double strs,
   }
 
   /** Second compute viscosity integral (stationary walls) */
-  shr1 = fabs(shr);
+  shrw = fabs(shr);
   /** test analytical viscosity integration types **/
   if (a_visc_type) {
     switch (gn->ConstitutiveEquation) {
     case BINGHAM:
     case BINGHAM_WLF: {
-      double tmp_pl = 1. / pow(lam * shr1, 1. - nexp);
-      double tmp_ty = yield / shr1;
-      xint_a = SQUARE(muinf) / 3. +
-               2. * muinf * tmp_pl * ((mu0 - muinf) / (2. + nexp) + tmp_ty / (1. + nexp)) +
-               SQUARE(tmp_pl) * (SQUARE(mu0 - muinf) / (1. + 2. * nexp) +
-                                 (mu0 - muinf) * tmp_ty / nexp + SQUARE(tmp_ty) / (2 * nexp - 1.));
+      double shrF = 1. / F, shrY = pow(yield * pow(lam, 1. - nexp) / (mu0 - muinf), 1. / nexp);
+      double tmp_pl3 = 1. / CUBE(lam * shrw);
+      double tmp_cy1 = pow(1. + CUBE(lam * shrw), (2. + nexp) / 3.);
+      double tmp_cyY = pow(1. + CUBE(lam * shrY), (2. * nexp) / 3.);
+      double tmp_cy2 = pow(1. + CUBE(lam * shrw), (1. + 2. * nexp) / 3.);
+      double tmp_cyY2 = pow(1. + CUBE(lam * shrY), (1. + 2. * nexp) / 3.);
+      double shr1 = MIN(shrw, shrF), shr2 = MIN(shrw, shrY);
+
+      xint_a = SQUARE(F * yield + mu0) * CUBE(shr1 / shrw) / 3.;
+      if (shrw > shrF) {
+        xint_a += (SQUARE(yield) * (shr2 - shrF) + mu0 * yield * (SQUARE(shr2) - SQUARE(shrF)) +
+                   SQUARE(mu0) / 3. * (CUBE(shr2) - CUBE(shrF))) /
+                  CUBE(shrw);
+      }
+      if (shrw > shrY) {
+        xint_a += SQUARE(muinf) / 3. * (1. - CUBE(shrY / shrw)) +
+                  2. * muinf * tmp_pl3 * (mu0 - muinf) / (2. + nexp) * (tmp_cy1 - tmp_cyY) +
+                  tmp_pl3 * SQUARE(mu0 - muinf) / (1. + 2. * nexp) * (tmp_cy2 - tmp_cyY2);
+      }
     } break;
     case CARREAU:
     case CARREAU_WLF: {
-      double tmp_pl3 = 1. / CUBE(lam * shr1);
-      double tmp_cy1 = pow(1. + CUBE(lam * shr1), (2. + nexp) / 3.) - 1.;
-      double tmp_cy2 = pow(1. + CUBE(lam * shr1), (2. * nexp + 1.) / 3.) - 1.;
+      double tmp_pl3 = 1. / CUBE(lam * shrw);
+      double tmp_cy1 = pow(1. + CUBE(lam * shrw), (2. + nexp) / 3.) - 1.;
+      double tmp_cy2 = pow(1. + CUBE(lam * shrw), (2. * nexp + 1.) / 3.) - 1.;
       xint_a = SQUARE(muinf) / 3. + 2. * muinf * tmp_pl3 * (mu0 - muinf) / (2. + nexp) * tmp_cy1 +
                tmp_pl3 * SQUARE(mu0 - muinf) / (1. + 2. * nexp) * tmp_cy2;
     } break;
@@ -6151,15 +6213,15 @@ int lub_viscosity_integrate(const double strs,
   for (jdi = 0; jdi < JDI_MAX; jdi++) {
     double cee, x0, delx, vis = 1., jdiv, xfact, tmp, tpe, tp2, P_sig;
     int idiv, l;
-    double tmp_pl, tmp_ty;
+    double tmp_pl;
     jdiv = pow(2., jdi);
     delx = 1. / jdiv;
     x0 = 0.0;
     xint = 0.;
     for (idiv = 0; idiv < jdiv; idiv++) {
-      for (l = 0; l < 3; l++) {
-        cee = x0 + gp[l] * delx;
-        xfact = 1. + pow(lam * cee * shr1, aexp);
+      for (l = 0; l < mp->LubInt_NGP; l++) {
+        cee = x0 + mp->Lub_gpts[l] * delx;
+        xfact = 1. + pow(lam * cee * shrw, aexp);
         tmp = 1. / pow(xfact, (1. - nexp) / aexp);
         switch (gn->ConstitutiveEquation) {
         case CARREAU:
@@ -6168,9 +6230,9 @@ int lub_viscosity_integrate(const double strs,
           break;
         case BINGHAM:
         case BINGHAM_WLF:
-          tp2 = F * shr1;
+          tp2 = F * shrw;
           P_sig = pow(1. + tp2, P_eps);
-          tpe = (1. - exp(-tp2)) / shr1 * P_sig;
+          tpe = (1. - exp(-tp2)) / shrw * P_sig;
           vis = muinf + (mu0 - muinf + yield * tpe) * tmp;
           break;
         default:
@@ -6179,19 +6241,26 @@ int lub_viscosity_integrate(const double strs,
         if (a_visc_type) {
           switch (gn->ConstitutiveEquation) {
           case BINGHAM:
-          case BINGHAM_WLF:
-            tmp_pl = 1. / pow(lam * cee * shr1, 1. - nexp);
-            tmp_ty = yield / (cee * shr1);
-            visc_a = muinf + (mu0 - muinf + tmp_ty) * tmp_pl;
-            break;
+          case BINGHAM_WLF: {
+            double shrF = 1. / F;
+            double shrY = pow(yield * pow(lam, 1. - nexp) / (mu0 - muinf), 1. / nexp);
+            if (cee * shrw < shrF) {
+              visc_a = F * yield + mu0;
+            } else if (cee * shrw < shrY) {
+              visc_a = mu0 + yield / (cee * shrw);
+            } else {
+              tmp_pl = 1. / pow(1. + CUBE(cee * lam * shrw), (1. - nexp) / 3.);
+              visc_a = muinf + (mu0 - muinf) * tmp_pl;
+            }
+          } break;
           case CARREAU:
           case CARREAU_WLF:
-            tmp_pl = 1. / pow(1. + CUBE(cee * lam * shr1), (1. - nexp) / 3.);
+            tmp_pl = 1. / pow(1. + CUBE(cee * lam * shrw), (1. - nexp) / 3.);
             visc_a = muinf + (mu0 - muinf) * tmp_pl;
             break;
           }
         }
-        xint += (vis * vis - visc_a * visc_a) * SQUARE(cee) * delx * wt[l];
+        xint += (vis * vis - visc_a * visc_a) * SQUARE(cee) * delx * mp->Lub_wts[l];
       }
       x0 += delx;
     }

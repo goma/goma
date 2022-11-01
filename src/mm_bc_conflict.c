@@ -741,6 +741,7 @@ void check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
                 if (BC_Types[ibc1].BC_Name == KINEMATIC_BC ||
                     BC_Types[ibc1].BC_Name == KINEMATIC_DISC_BC ||
                     BC_Types[ibc1].BC_Name == KINEMATIC_PETROV_BC ||
+                    BC_Types[ibc1].BC_Name == LUB_KINEMATIC_BC ||
                     BC_Types[ibc1].BC_Name == KINEMATIC_COLLOC_BC) {
                   for (j = 0; j < idup2; j++) {
                     ibc2 = BC_Unk_List[inode][offset_mom2][j];
@@ -1505,6 +1506,7 @@ void check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
                              */
                           case KIN_LEAK_BC:
                           case KINEMATIC_BC:
+                          case LUB_KINEMATIC_BC:
                           case KINEMATIC_DISC_BC:
                           case KINEMATIC_COLLOC_BC:
                           case KINEMATIC_PETROV_BC:

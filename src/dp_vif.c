@@ -1548,6 +1548,7 @@ void noahs_ark(void) {
     ddd_add_member(n, &mp_glob[i]->DcaLFunctionModel, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->FSIModel, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->TurbulentLubricationModel, 1, MPI_INT);
+    ddd_add_member(n, &mp_glob[i]->LubIntegrationModel, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->PorousShellClosedPorosityModel, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->PorousShellClosedRadiusModel, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->PorousShellClosedHeightModel, 1, MPI_INT);
@@ -1817,6 +1818,8 @@ void noahs_ark(void) {
     ddd_add_member(n, &mp_glob[i]->diffusivity_tableid, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->saturation_tableid, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->cap_pres_tableid, 1, MPI_INT);
+    ddd_add_member(n, &mp_glob[i]->LubInt_NGP, 1, MPI_INT);
+    ddd_add_member(n, &mp_glob[i]->LubInt_PL, 1, MPI_DOUBLE);
 
     /*
      * Material property constants that are vectors over the concentration
@@ -3233,6 +3236,9 @@ void noahs_dove(void) {
     crdv(m->len_tfmp_drop_lattice_const, m->tfmp_drop_lattice_const);
 
     crdv(m->len_shell_tangent_seed_vec_const, m->shell_tangent_seed_vec_const);
+
+    crdv(m->LubInt_NGP, m->Lub_gpts);
+    crdv(m->LubInt_NGP, m->Lub_wts);
 
     /*
      *  Add species names

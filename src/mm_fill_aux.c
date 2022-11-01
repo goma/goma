@@ -1244,7 +1244,7 @@ surface_determinant_and_normal(
      *   fv->sdet = surface determinant at the quadrature point
      *   fv->snormal[] = surface normal at the quadrature point
      *   fv->dsurfdet_dx[][] = sensitivity of fv->sdet wrt mesh displacements.
-     *   fv-.dsnormal_dx[][] = sensitivity of fv->snormal[]
+     *   fv->dsnormal_dx[][] = sensitivity of fv->snormal[]
      *                         wrt mesh displacements
      ***********************************************************************/
 {
@@ -1324,6 +1324,10 @@ surface_determinant_and_normal(
   }
 
   /* define space of surface */
+  siz = (DIM - 1) * DIM * sizeof(double);
+  memset(T, 0, siz);
+  memset(t, 0, siz);
+  /*  since T & t are zeroed, only need to set nonzero elements */
   switch (ielem_surf_dim) {
   case 1:
     switch (ei[pg->imtrx]->ielem_shape) {
@@ -1336,31 +1340,41 @@ surface_determinant_and_normal(
         T[0][0] = -1.;
         T[0][1] = 1.;
       } else if (id_side == 2) {
-        T[0][0] = 0.;
         T[0][1] = -1.;
       } else if (id_side == 3) {
         T[0][0] = 1.;
-        T[0][1] = 0.;
       } else {
         GOMA_EH(GOMA_ERROR, "Incorrect side for TRIANGLE");
       }
       break;
     case QUADRILATERAL:
-    case SHELL:
       if (id_side == 1) {
         T[0][0] = 1.;
-        T[0][1] = 0.;
       } else if (id_side == 2) {
-        T[0][0] = 0.;
         T[0][1] = 1.;
       } else if (id_side == 3) {
         T[0][0] = -1.;
-        T[0][1] = 0.;
       } else if (id_side == 4) {
-        T[0][0] = 0.;
         T[0][1] = -1.;
       } else {
         GOMA_EH(GOMA_ERROR, "Incorrect side for QUADRILATERAL");
+      }
+      break;
+    case SHELL:
+      if (id_side == 1) {
+        T[0][0] = 1.;
+      } else if (id_side == 2) {
+        T[0][1] = 1.;
+      } else if (id_side == 3) {
+        T[0][0] = -1.;
+      } else if (id_side == 4) {
+        T[0][1] = -1.;
+      } else if (id_side == 5) {
+        T[0][2] = 1.;
+      } else if (id_side == 6) {
+        T[0][2] = 1.;
+      } else {
+        GOMA_EH(GOMA_ERROR, "Incorrect side for SHELL");
       }
       break;
     default:
@@ -1381,50 +1395,26 @@ surface_determinant_and_normal(
        */
       if (id_side == 1) {
         T[0][0] = 1.;
-        T[0][1] = 0.;
-        T[0][2] = 0.;
-        T[1][0] = 0.;
-        T[1][1] = 0.;
         T[1][2] = 1.;
       } else if (id_side == 2) {
-        T[0][0] = 0.;
         T[0][1] = 1.;
-        T[0][2] = 0.;
-        T[1][0] = 0.;
-        T[1][1] = 0.;
         T[1][2] = 1.;
       } else if (id_side == 3) {
         T[0][0] = -1.;
-        T[0][1] = 0.;
-        T[0][2] = 0.;
-        T[1][0] = 0.;
-        T[1][1] = 0.;
         T[1][2] = 1.;
       } else if (id_side == 4) {
         // T[0][0] =  0.; T[0][1] = -1.; T[0][2] =  0.;
         // T[1][0] =  0.; T[1][1] =  0.; T[1][2] =  1.;
-        T[0][0] = 0.;
-        T[0][1] = 0.;
         T[0][2] = 1.;
-        T[1][0] = 0.;
         T[1][1] = 1.;
-        T[1][2] = 0.;
       } else if (id_side == 5) {
         // T[0][0] =  1.; T[0][1] =  0.; T[0][2] =  0.;
         // T[1][0] =  0.; T[1][1] = -1.; T[1][2] =  0.;
-        T[0][0] = 0.;
         T[0][1] = 1.;
-        T[0][2] = 0.;
         T[1][0] = 1.;
-        T[1][1] = 0.;
-        T[1][2] = 0.;
       } else if (id_side == 6) {
         T[0][0] = 1.;
-        T[0][1] = 0.;
-        T[0][2] = 0.;
-        T[1][0] = 0.;
         T[1][1] = 1.;
-        T[1][2] = 0.;
       } else {
         GOMA_EH(GOMA_ERROR, "Incorrect side for HEXAHEDRAL");
       }
@@ -1433,34 +1423,20 @@ surface_determinant_and_normal(
     case TETRAHEDRON:
       if (id_side == 1) {
         T[0][0] = 1.;
-        T[0][1] = 0.;
-        T[0][2] = 0.;
-        T[1][0] = 0.;
-        T[1][1] = 0.;
         T[1][2] = 1.;
       } else if (id_side == 2) {
         // T[0][0] = -1.0/sqrt(2.); T[0][1] =  1./sqrt(2.0); T[0][2] =  0.;
         // T[1][0] =  0.; T[1][1] = -1./sqrt(2); T[1][2] =  1./sqrt(2);
         T[0][0] = -1.0;
         T[0][1] = 1.;
-        T[0][2] = 0.;
-        T[1][0] = 0.;
         T[1][1] = -1.;
         T[1][2] = 1.;
       } else if (id_side == 3) {
-        T[0][0] = 0.;
-        T[0][1] = 0.;
         T[0][2] = 1.;
-        T[1][0] = 0.;
         T[1][1] = 1.;
-        T[1][2] = 0.;
       } else if (id_side == 4) {
-        T[0][0] = 0.;
         T[0][1] = 1.;
-        T[0][2] = 0.;
         T[1][0] = 1.;
-        T[1][1] = 0.;
-        T[1][2] = 0.;
       } else {
         GOMA_EH(GOMA_ERROR, "Incorrect side for TETRAHEDRON");
       }
@@ -1474,9 +1450,9 @@ surface_determinant_and_normal(
 
   /* transform from element to physical coords */
   for (p = 0; p < ielem_surf_dim; p++) {
-    for (a = 0; a < ei[pg->imtrx]->ielem_dim; a++) {
+    for (a = 0; a < dim; a++) {
       t[p][a] = 0.;
-      for (b = 0; b < ei[pg->imtrx]->ielem_dim; b++) {
+      for (b = 0; b < dim; b++) {
         t[p][a] += map_bf->J[b][a] * T[p][b] * fv->h[b];
       }
     }
@@ -1484,7 +1460,7 @@ surface_determinant_and_normal(
 
   if (af->Assemble_Jacobian && DeformingMesh) {
     for (p = 0; p < ielem_surf_dim; p++) {
-      for (a = 0; a < ei[pg->imtrx]->ielem_dim; a++) {
+      for (a = 0; a < dim; a++) {
         for (i = 0; i < num_nodes_on_side; i++) {
           id = local_elem_node_id[i];
           inode = Proc_Elem_Connect[iconnect_ptr + id];
@@ -1494,7 +1470,7 @@ surface_determinant_and_normal(
 
             for (q = 0; q < ei[pg->imtrx]->ielem_dim; q++) {
               dt_x[p][a][q][ldof] = 0.0;
-              for (b = 0; b < ei[pg->imtrx]->ielem_dim; b++) {
+              for (b = 0; b < dim; b++) {
                 dt_x[p][a][q][ldof] += T[p][b] * (map_bf->dJ[b][a][q][ldof] * fv->h[b] +
                                                   map_bf->J[b][a] * phi_i * fv->hq[b][q]);
               }
@@ -1508,7 +1484,7 @@ surface_determinant_and_normal(
   if (ielem_surf_dim == 1) {
     /* calculate surface determinant using the coordinate scale factors
      * for orthogonal curvilinear coordinates */
-    det_h01 = sqrt(t[0][0] * t[0][0] + t[0][1] * t[0][1]);
+    det_h01 = sqrt(t[0][0] * t[0][0] + t[0][1] * t[0][1] + t[0][2] * t[0][2]);
 
     /*
      * If the shells are not aligned in the x-y plane, det_h01 is zero
@@ -1544,7 +1520,7 @@ surface_determinant_and_normal(
 
           for (a = 0; a < ei[pg->imtrx]->ielem_dim; a++) {
             d_det_h01_x = 0.;
-            for (b = 0; b < ei[pg->imtrx]->ielem_dim; b++) {
+            for (b = 0; b < dim; b++) {
               d_det_h01_x += r_det_h01 * t[0][b] * dt_x[0][b][a][ldof];
             }
 

@@ -794,6 +794,7 @@
 #define SM_PLANE_BC                961200000 /* Solid Model PLANE BC */
 #define MESH_CONSTRAINT_BC         961300000
 #define KINEMATIC_BC               962000000
+#define LUB_KINEMATIC_BC           962050000
 #define KIN_LEAK_BC                962100000
 #define KIN_ELECTRODEPOSITION_BC   962200000 /* RSL 5/24/02 */
 #define KINEMATIC_EDGE_BC          962400000
