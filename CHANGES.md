@@ -1,3 +1,13 @@
+## Changes in version 7.3.0
+
+- Add SQRT form of Viscoelastic conformation tensor https://doi.org/10.1016/j.jnnfm.2011.02.008 for 2D, 3D, Axisymmetric OldroydB, PTT-EXPONENTIAL, PTT-LINEAR
+- Add KDR model from @jtmcconnell https://doi.org/10.1103/PhysRevLett.126.218002
+- Add `FLOW_GRADV_T` to impose $n\cdot\nabla v=0$ naturally (probably what `FLOW_GRADV` should've been)
+- Update `STRESS_DEVELOPED` to use new forms
+- Fix `LOG_CONF` numerical Jacobian
+- $YZ\beta$ shock capturing for `SQRT_CONF`
+
+
 ## Changes in version 7.2.0
 
 - Add basic aprepro library support, so aprepro isn't needed on path for most tasks
