@@ -7463,7 +7463,7 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
   dbl d_lambda_dF[MDE];
   double xi;
   double d_xi_dF[MDE];
-  dbl eps = 0;    /* This is the PTT elongation parameter */
+  dbl eps = 0; /* This is the PTT elongation parameter */
   double d_eps_dF[MDE];
   /*
    *
@@ -7748,7 +7748,6 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
 
     if (DOUBLE_NONZERO(xi)) {
       GOMA_EH(GOMA_ERROR, "PTT Xi parameter currently required to be 0 for SQRT_CONF");
-
     }
 
     if (ve[mode]->epsModel == CONSTANT) {

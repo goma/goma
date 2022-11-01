@@ -26412,7 +26412,6 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
    *				       d x_a
    */
 
-
   if (pd->gv[POLYMER_STRESS11]) {
     memset(s, 0, sizeof(dbl) * DIM * DIM);
     for (a = 0; a < VIM; a++) {

@@ -7968,7 +7968,7 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
                                 const double dt,
                                 const double tt) {
 
-  int dim, p, q,  w, k;
+  int dim, p, q, w, k;
 
   int eqn;
   int evss_gradv = 0;
@@ -8070,7 +8070,6 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
   dbl at = 0.0;
   dbl d_at_dT[MDE];
   dbl wlf_denom;
-
 
   /* advective terms are precalculated */
   dbl v_dot_del_b[DIM][DIM];
