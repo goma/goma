@@ -448,6 +448,12 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
                            double d_func[MAX_MODES][6][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
                            const double dt,
                            const double tt);
+
+EXTERN void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
+                                double d_func[MAX_MODES][6][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                                const double dt,
+                                const double tt);
+
 void stress_no_v_dot_gradS_logc_transient(
     double func[MAX_MODES][6],
     double d_func[MAX_MODES][6][MAX_VARIABLE_TYPES + MAX_CONC][MDE],

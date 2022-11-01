@@ -26343,7 +26343,6 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
   dbl d_tau_p_dp[DIM][DIM][MDE];
   int w0; /* suspension species number */
 
-  dbl *grad_v[DIM];         /* Gradient of v. */
   dbl gamma[DIM][DIM];      /* shrearrate tensor based on velocity */
   dbl s[DIM][DIM];          /* polymer stress tensor */
   dbl gamma_cont[DIM][DIM]; /* shearrate tensor based on continuous gradient of velocity */
@@ -26413,9 +26412,6 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
    *				       d x_a
    */
 
-  for (a = 0; a < VIM; a++) {
-    grad_v[a] = fv->grad_v[a];
-  }
 
   if (pd->gv[POLYMER_STRESS11]) {
     memset(s, 0, sizeof(dbl) * DIM * DIM);

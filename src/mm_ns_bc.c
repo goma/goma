@@ -6613,7 +6613,7 @@ void flow_n_dot_T_gradv_t(double func[DIM],
       /*  shift factor  */
       dbl at = 0.0;
       dbl d_at_dT[MDE];
-      dbl wlf_denom, temp;
+      dbl wlf_denom;
       if (pd->e[pg->imtrx][TEMPERATURE]) {
         if (vn->shiftModel == CONSTANT) {
           at = vn->shift[0];
@@ -7953,13 +7953,12 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
                                 const double dt,
                                 const double tt) {
 
-  int dim, p, q, r, w, k;
+  int dim, p, q,  w, k;
 
-  int eqn, var;
-  int peqn, pvar;
+  int eqn;
   int evss_gradv = 0;
 
-  int i, j, status, mode;
+  int i, j, mode;
   dbl v[DIM];      /* Velocity field. */
   dbl x_dot[DIM];  /* current position field derivative wrt time. */
   dbl h3;          /* Volume element (scale factors). */
@@ -8042,9 +8041,6 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
   VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
   VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
 
-  SARAMITO_DEPENDENCE_STRUCT d_saramito_struct;
-  SARAMITO_DEPENDENCE_STRUCT *d_saramito = &d_saramito_struct;
-
   // todo: will want to parse necessary parameters... for now hard code
   const bool saramitoEnabled =
       (vn->ConstitutiveEquation == SARAMITO_OLDROYDB || vn->ConstitutiveEquation == SARAMITO_PTT ||
@@ -8060,9 +8056,6 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
   dbl d_at_dT[MDE];
   dbl wlf_denom;
 
-  /* constitutive equation parameters */
-  dbl Z = 1.0; /* This is the factor appearing in front of the stress tensor in PTT */
-  dbl dZ_dtrace = 0.0;
 
   /* advective terms are precalculated */
   dbl v_dot_del_b[DIM][DIM];
@@ -8073,13 +8066,9 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
   dbl d_vdotdels_dm;
   int inv_v_s[DIM][DIM];
 
-  dbl trace = 0.0; /* trace of the stress tensor */
-
   if (vn->evssModel == EVSS_GRADV) {
     evss_gradv = 1;
   }
-
-  status = 0;
 
   eqn = R_STRESS11;
   inv_v_s[0][0] = 0; /* S11 */
@@ -8207,8 +8196,6 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
 
     /* precalculate advective terms of form (v dot del tensor)*/
 
-    trace = 0.0;
-
     /*
      * Stress tensor...(Note "anti-BSL" sign convention on deviatoric stress)
      */
@@ -8283,20 +8270,6 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
       GOMA_EH(err, "level_set_property() failed for ptt epsilon parameter.");
     } else {
       GOMA_EH(GOMA_ERROR, "Unknown PTT Epsilon parameter model");
-    }
-
-    Z = 1.0;
-    dZ_dtrace = 0;
-    if (vn->ConstitutiveEquation == PTT) {
-      if (vn->ptt_type == PTT_LINEAR) {
-        Z = 1 + eps * lambda * trace / mup;
-        dZ_dtrace = eps * lambda / mup;
-      } else if (vn->ptt_type == PTT_EXPONENTIAL) {
-        Z = exp(eps * lambda * trace / mup);
-        dZ_dtrace = Z * eps * lambda / mup;
-      } else {
-        GOMA_EH(GOMA_ERROR, "Unrecognized PTT Form %d", vn->ptt_type);
-      }
     }
 
     /* get tensor dot products for future use */
@@ -8397,7 +8370,6 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
           {
             eqn = R_s[mode][ii][jj];
             k = inv_v_s[ii][jj];
-            peqn = upd->ep[pg->imtrx][eqn];
 
             R_advection = v_dot_del_b[ii][jj] - x_dot_del_b[ii][jj];
             R_advection += b_dot_g[ii][jj] + a_dot_b[ii][jj];
@@ -8418,7 +8390,6 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
 
               var = TEMPERATURE;
               if (pd->v[pg->imtrx][var]) {
-                pvar = upd->vp[pg->imtrx][var];
                 for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
                   phi_j = bf[var]->phi[j];
 
@@ -8466,7 +8437,6 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
               for (p = 0; p < WIM; p++) {
                 var = VELOCITY1 + p;
                 if (pd->v[pg->imtrx][var]) {
-                  pvar = upd->vp[pg->imtrx][var];
                   for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
                     phi_j = bf[var]->phi[j];
                     d_mup_dv_pj = d_mup->v[p][j];
@@ -8567,7 +8537,6 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
                */
               var = PRESSURE;
               if (pd->v[pg->imtrx][var]) {
-                pvar = upd->vp[pg->imtrx][var];
                 for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
                   phi_j = bf[var]->phi[j];
 
@@ -8595,7 +8564,6 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
               for (p = 0; p < dim; p++) {
                 var = MESH_DISPLACEMENT1 + p;
                 if (pd->v[pg->imtrx][var]) {
-                  pvar = upd->vp[pg->imtrx][var];
                   for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
                     phi_j = bf[var]->phi[j];
                     d_det_J_dmesh_pj = bf[eqn]->d_det_J_dm[p][j];
@@ -8708,7 +8676,6 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
                     var = v_g[p][q];
 
                     if (pd->v[pg->imtrx][var]) {
-                      pvar = upd->vp[pg->imtrx][var];
                       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
                         phi_j = bf[var]->phi[j];
                         advection = 0.;
@@ -8754,7 +8721,6 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
                */
               var = FILL;
               if (pd->v[pg->imtrx][var]) {
-                pvar = upd->vp[pg->imtrx][var];
                 for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
                   phi_j = bf[var]->phi[j];
 
@@ -8828,7 +8794,6 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
                     var = v_s[mode][p][q];
 
                     if (pd->v[pg->imtrx][var]) {
-                      pvar = upd->vp[pg->imtrx][var];
                       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
                         phi_j = bf[var]->phi[j];
                         mass = 0.;

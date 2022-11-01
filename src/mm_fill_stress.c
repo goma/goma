@@ -1876,10 +1876,8 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
                   for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
                     phi_j = bf[var]->phi[j];
                     d_mup_dv_pj = d_mup->v[p][j];
-                    dbl d_lambda2_dv_pj = 0.;
                     dbl d_lambda_dv_pj = 0.;
                     if (jeffreysEnabled) {
-                      d_lambda2_dv_pj = 0;
                       d_lambda_dv_pj = d_mup_dv_pj / elasticMod;
                     }
 
@@ -7434,7 +7432,7 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                                        * explicit (tt = 1) to implicit (tt = 0) */
                               dbl dt, /* current time step size */
                               PG_DATA *pg_data) {
-  int dim, p, q, r, w, k;
+  int dim, p, q, r, w;
 
   int eqn, var;
   int peqn, pvar;
@@ -7458,7 +7456,6 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
   dbl advection_a, advection_b, advection_c, advection_d;
   dbl diffusion;
   dbl source;
-  dbl source1;
   dbl source_a = 0, source_b = 0, source_c = 0;
   int err;
   dbl alpha = 0;  /* This is the Geisekus mobility parameter */
@@ -7466,7 +7463,6 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
   dbl d_lambda_dF[MDE];
   double xi;
   double d_xi_dF[MDE];
-  dbl ucwt, lcwt; /* Upper convected derviative weight, Lower convected derivative weight */
   dbl eps = 0;    /* This is the PTT elongation parameter */
   double d_eps_dF[MDE];
   /*
@@ -7516,36 +7512,26 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
 
   dbl s_dot_s[DIM][DIM];
   dbl b_dot_g[DIM][DIM];
-  dbl g_dot_s[DIM][DIM];
-  dbl s_dot_gt[DIM][DIM];
-  dbl gt_dot_s[DIM][DIM];
 
   /* polymer viscosity and derivatives */
   dbl mup;
   VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
   VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
 
-  SARAMITO_DEPENDENCE_STRUCT d_saramito_struct;
-  SARAMITO_DEPENDENCE_STRUCT *d_saramito = &d_saramito_struct;
-
-  // todo: will want to parse necessary parameters... for now hard code
   const bool saramitoEnabled =
       (vn->ConstitutiveEquation == SARAMITO_OLDROYDB || vn->ConstitutiveEquation == SARAMITO_PTT ||
        vn->ConstitutiveEquation == SARAMITO_GIESEKUS);
 
   dbl saramitoCoeff = 1.;
 
-  dbl d_mup_dv_pj;
-  dbl d_mup_dmesh_pj;
+  if (saramitoEnabled) {
+    GOMA_EH(GOMA_ERROR, "Saramito not available for SQRT_CONF");
+  }
 
   /*  shift function */
   dbl at = 0.0;
   dbl d_at_dT[MDE];
   dbl wlf_denom;
-
-  /* constitutive equation parameters */
-  dbl Z = 1.0; /* This is the factor appearing in front of the stress tensor in PTT */
-  dbl dZ_dtrace = 0.0;
 
   /* advective terms are precalculated */
   dbl v_dot_del_b[DIM][DIM];
@@ -7554,8 +7540,6 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
   dbl d_xdotdels_dm;
 
   dbl d_vdotdels_dm;
-
-  dbl trace = 0.0; /* trace of the stress tensor */
 
   /* SUPG variables */
   dbl supg = 0;
@@ -7701,8 +7685,6 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
 
     /* precalculate advective terms of form (v dot del tensor)*/
 
-    trace = 0.0;
-
     /*
      * Stress tensor...(Note "anti-BSL" sign convention on deviatoric stress)
      */
@@ -7764,8 +7746,10 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
       GOMA_EH(GOMA_ERROR, "Unknown PTT Xi parameter model");
     }
 
-    ucwt = 1.0 - xi / 2.0;
-    lcwt = xi / 2.0;
+    if (DOUBLE_NONZERO(xi)) {
+      GOMA_EH(GOMA_ERROR, "PTT Xi parameter currently required to be 0 for SQRT_CONF");
+
+    }
 
     if (ve[mode]->epsModel == CONSTANT) {
       eps = ve[mode]->eps;
@@ -7778,22 +7762,6 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
     } else {
       GOMA_EH(GOMA_ERROR, "Unknown PTT Epsilon parameter model");
     }
-
-    Z = 1.0;
-    dZ_dtrace = 0;
-    if (vn->ConstitutiveEquation == PTT) {
-      if (vn->ptt_type == PTT_LINEAR) {
-        Z = 1 + eps * lambda * trace / mup;
-        dZ_dtrace = eps * lambda / mup;
-      } else if (vn->ptt_type == PTT_EXPONENTIAL) {
-        Z = exp(eps * lambda * trace / mup);
-        dZ_dtrace = Z * eps * lambda / mup;
-      } else {
-        GOMA_EH(GOMA_ERROR, "Unrecognized PTT Form %d", vn->ptt_type);
-      }
-    }
-
-    /* get tensor dot products for future use */
 
     (void)tensor_dot(b, g, b_dot_g, VIM);
 
@@ -7861,7 +7829,7 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
               diffusion = 0.;
               if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
                 if (vn->shockcaptureModel == SC_YZBETA) {
-                  Z = b_dot[ii][jj];
+                  dbl Z = b_dot[ii][jj];
                   Z += 1e-16 + v_dot_del_b[ii][jj] - x_dot_del_b[ii][jj];
                   Z -= b_dot_g[ii][jj];
                   Z -= a_dot_b[ii][jj];
@@ -7986,11 +7954,7 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                   if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
                     if (DOUBLE_NONZERO(lambda)) {
 
-                      advection += v_dot_del_b[ii][jj] - x_dot_del_b[ii][jj];
-                      if (ucwt != 0.)
-                        advection -= ucwt * (gt_dot_s[ii][jj] + b_dot_g[ii][jj]);
-                      if (lcwt != 0.)
-                        advection += lcwt * (s_dot_gt[ii][jj] + g_dot_s[ii][jj]);
+                      advection += R_advection;
 
                       advection *= wt_func * d_at_dT[j] * lambda * det_J * wt * h3;
                       advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
@@ -7998,7 +7962,6 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                   }
 
                   source = 0.;
-                  source1 = 0.;
                   if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
                     source = 0;
                     source *= wt_func * det_J * wt * h3;
@@ -8018,7 +7981,6 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                   pvar = upd->vp[pg->imtrx][var];
                   for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
                     phi_j = bf[var]->phi[j];
-                    d_mup_dv_pj = d_mup->v[p][j];
 
                     mass = 0.;
 
@@ -8207,7 +8169,6 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                     phi_j = bf[var]->phi[j];
                     d_det_J_dmesh_pj = bf[eqn]->d_det_J_dm[p][j];
                     dh3dmesh_pj = fv->dh3dq[p] * bf[var]->phi[j];
-                    d_mup_dmesh_pj = d_mup->X[p][j];
 
                     mass = 0.;
                     mass_a = 0.;
@@ -8540,12 +8501,7 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                   if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
                     if (d_lambda_dF[j] != 0.) {
 
-                      advection += v_dot_del_b[ii][jj] - x_dot_del_b[ii][jj];
-                      if (ucwt != 0.)
-                        advection -= ucwt * (gt_dot_s[ii][jj] + b_dot_g[ii][jj]);
-                      if (lcwt != 0.)
-                        advection += lcwt * (s_dot_gt[ii][jj] + g_dot_s[ii][jj]);
-
+                      advection += R_advection;
                       advection *= d_lambda_dF[j];
                       advection *= wt_func * at * det_J * wt * h3;
                       advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
