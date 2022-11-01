@@ -859,7 +859,9 @@ PROTO((double [DIM],		/* func                                      */
        double ,			/* T_c - bath temperature (Kelvin)	     */
        double ,			/* emissivity                                */
        double ,		        /* Boltzmann's constant                      */
-       int    ));               /* Optional model number                     */
+       int    ,                 /* Optional model number                     */
+       int    ,                 /* bc_input_id for table bc                  */
+       double ));               /* time_val for input table                  */
 
 EXTERN void qrad_surf_repulse		/* mm_ns_bc.c                           */
 PROTO((double [DIM],		/* func                                      */

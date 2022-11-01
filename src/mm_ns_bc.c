@@ -15326,7 +15326,9 @@ qrad_surf(double func[DIM],
           double T_c,             /* bath temperature (Kelvin)	             */
           double epsilon,         /* emissivity                              */
           double sigma,           /* Boltzmann's constant                    */
-          int modeln)             /* Optional model number                   */
+          int modeln,             /* Optional model number                   */
+          int bc_input_id,       /* bc_input_id for table bc                */
+          double time)            /* time for interpolation of boundary vals */
 /******************************************************************************
 *
 *  Function which calculates the surface integral for radiative - convective
@@ -15344,11 +15346,13 @@ qrad_surf(double func[DIM],
   double omega[MAX_CONC],rho[MAX_CONC],depsilon_dx[MAX_CONC],deps_dc[MAX_CONC];
   double density_tot;
   double dw_dc[MAX_CONC][MAX_CONC],drho_dc[MAX_CONC][MAX_CONC];
+  double d_Tc[DIM][MAX_VARIABLE_TYPES+MAX_CONC][MDE];
+  double Ta[DIM];
   PROPERTYJAC_STRUCT *densityJac = NULL;
   propertyJac_realloc(&densityJac, mp->Num_Species+1);
 /***************************** EXECUTION BEGINS *******************************/
   
-  if (modeln==1)
+  if (modeln==1 || modeln==2)
     {
       density_tot = calc_density(mp, TRUE, densityJac, 0.0);
       memset(rho,0,sizeof(dbl)*MAX_CONC);
@@ -15407,7 +15411,15 @@ qrad_surf(double func[DIM],
 
         }
     }
- 
+  if (modeln==2 || modeln==3) 
+  {
+    apply_table_wic_bc(Ta, d_Tc, &BC_Types[bc_input_id], time);
+    T_c = Ta[0];
+  }
+  if (modeln==3)
+  {
+    epsilon = 0.0;
+  }
 /* Calculate the residual contribution					     */
   
   *func += heat_tran_coeff * (T_c - fv->T) + 

@@ -12028,7 +12028,7 @@ setup_table_BC(FILE *ifp,
                 {BC_Type->table->columns = 3;}
   else { BC_Type->table->columns = 2;}
 
-  if ( fscanf(ifp, "%80s", input ) != 1 )
+  if ( fscanf(ifp, "%150s", input ) != 1 )
     {
       	sprintf (err_msg, "%s:\tError reading TABLE BC \n", yo);
 	EH(-1,err_msg);
@@ -12131,7 +12131,7 @@ setup_table_BC(FILE *ifp,
    * "y-axis" of table
    */
 
-  if ( fscanf(ifp, "%80s", input ) != 1 )
+  if ( fscanf(ifp, "%150s", input ) != 1 )
     {
       	sprintf (err_msg, "%s:\tError reading TABLE BC \n", yo);
 	EH(-1,err_msg);
@@ -12656,7 +12656,7 @@ setup_table_BC(FILE *ifp,
 
   /* read interpolation order */
 
-  if ( fscanf(ifp, "%80s", input ) != 1 )
+  if ( fscanf(ifp, "%150s", input ) != 1 )
     {
       	sprintf (err_msg, "%s:\tError reading interpolation order for table: %s\n", yo, BC_Type->table->f_name );
 	EH(-1,err_msg);	
