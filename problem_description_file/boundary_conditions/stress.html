@@ -37,6 +37,7 @@
     <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
     <script src="../../_static/sphinx_highlight.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'problem_description_file/boundary_conditions/stress';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -510,6 +511,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../post_processing/grid_peclet_number_in_porous_media.html"><strong>Grid Peclet Number in Porous Media</strong></a></li>
 <li class="toctree-l3"><a class="reference internal" href="../post_processing/supg_velocity_in_porous_media.html"><strong>SUPG Velocity in Porous Media</strong></a></li>
 <li class="toctree-l3"><a class="reference internal" href="../post_processing/vorticity_vector.html"><strong>Vorticity Vector</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../post_processing/map_conf_stress.html">Map Conf Stress</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../post_processing_fluxes.html">Post Processing Fluxes and Data</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -759,13 +761,47 @@
 <h1>Category 9: Stress Equations<a class="headerlink" href="#category-9-stress-equations" title="Permalink to this heading">#</a></h1>
 <p>The following conditions provide a means to set boundary conditions for the hyperbolic
 viscoelastic stress equations</p>
+<section id="stress-developed">
+<h2>STRESS_DEVELOPED<a class="headerlink" href="#stress-developed" title="Permalink to this heading">#</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">STRESS_DEVELOPED</span> <span class="n">SS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<section id="description-usage">
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this heading">#</a></h3>
+<p><strong>(SIC/POLYMER_STRESS)</strong></p>
+<p>This is a fully developed flow condition from Xie and Pasquali for viscoelastic flows</p>
+<dl class="simple">
+<dt>&lt;bc_id&gt;</dt><dd><p>The boundary flag identifier, an integer associated
+with &lt;bc_type&gt; that identifies the boundary location
+(side set in EXODUS II) in the problem domain.</p>
+</dd>
+</dl>
+</section>
+<section id="examples">
+<h3><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this heading">#</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">STRESS_DEVELOPED</span> <span class="n">SS</span> <span class="mi">1</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">S11_1</span> <span class="n">NS</span> <span class="mi">7</span>   <span class="mf">4.0</span>   <span class="mf">1.0</span>
+</pre></div>
+</div>
+</section>
+<section id="technical-discussion">
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this heading">#</a></h3>
+<p>Replaces boundary contributions of stress equations with stress equations where the advective term is removed (<span class="math notranslate nohighlight">\(v\cdot\nabla S \rightarrow 0\)</span>)</p>
+</section>
+<section id="references">
+<h3><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this heading">#</a></h3>
+<p>Xie, Xueying, and Matteo Pasquali. “A new, convenient way of imposing open-flow boundary conditions in two-and three-dimensional viscoelastic flows.” Journal of non-newtonian fluid mechanics 122, no. 1-3 (2004): 159-176.</p>
+</section>
+</section>
 <section id="s11">
 <h2><strong>S11</strong><a class="headerlink" href="#s11" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="p">{</span><span class="n">bc_name</span><span class="p">}</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="description-usage">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this heading">#</a></h3>
+<section id="id1">
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h3>
 <p><strong>(DC/STRESS11)</strong></p>
 <p>This Dirichlet boundary condition specification is used to set a constant xx-stress for
 any given mode of the stress tensor. Each such specification is made on a separate input
@@ -833,8 +869,8 @@ parameter in automatic continuation sequences</em>.</p></td>
 </tbody>
 </table>
 </section>
-<section id="examples">
-<h3><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this heading">#</a></h3>
+<section id="id2">
+<h3><strong>Examples</strong><a class="headerlink" href="#id2" title="Permalink to this heading">#</a></h3>
 <p>Following are sample cards for applying a Dirichlet condition on the xx-stress
 component for mode 2 on node set 7:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">S11_1</span> <span class="n">NS</span> <span class="mi">7</span>   <span class="mf">4.0</span>
@@ -846,15 +882,15 @@ component for mode 2 on node set 7:</p>
 <p>where the second example uses the “residual” method for applying the same Dirichlet
 condition.</p>
 </section>
-<section id="technical-discussion">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this heading">#</a></h3>
+<section id="id3">
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id3" title="Permalink to this heading">#</a></h3>
 <p>See the technical discussion for the <em>UVW</em> velocity boundary condition for a discussion
 of the two ways of applying Dirichlet boundary conditions.</p>
 <p>For details of the stress tensor and its use for solving viscoelastic flow problems, please
 see the viscoelastic flow tutorial (Rao, 2000).</p>
 </section>
-<section id="references">
-<h3><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this heading">#</a></h3>
+<section id="id4">
+<h3><strong>References</strong><a class="headerlink" href="#id4" title="Permalink to this heading">#</a></h3>
 <p>GT-014.1: Tutorial for Running Viscoelastic Flow Problems with GOMA, June 21,
 2000, R. R. Rao</p>
 </section>
@@ -864,8 +900,8 @@ see the viscoelastic flow tutorial (Rao, 2000).</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="p">{</span><span class="n">bc_name</span><span class="p">}</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="id1">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h3>
+<section id="id5">
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id5" title="Permalink to this heading">#</a></h3>
 <p><strong>(DC/STRESS12)</strong></p>
 <p>This Dirichlet boundary condition specification is used to set a constant xy-stress (also
 known as the shear stress) for any given mode of the stress tensor. Each such
@@ -934,8 +970,8 @@ automatic continuation sequences.</p></td>
 </tbody>
 </table>
 </section>
-<section id="id2">
-<h3><strong>Examples</strong><a class="headerlink" href="#id2" title="Permalink to this heading">#</a></h3>
+<section id="id6">
+<h3><strong>Examples</strong><a class="headerlink" href="#id6" title="Permalink to this heading">#</a></h3>
 <p>Following are sample cards for applying a Dirichlet condition on the xy-stress
 component for mode 5 on node set 10:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">S12_4</span> <span class="n">NS</span> <span class="mi">10</span>   <span class="mf">1.25</span>
@@ -947,15 +983,15 @@ component for mode 5 on node set 10:</p>
 <p>where the second example uses the “residual” method for applying the same Dirichlet
 condition.</p>
 </section>
-<section id="id3">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id3" title="Permalink to this heading">#</a></h3>
+<section id="id7">
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id7" title="Permalink to this heading">#</a></h3>
 <p>See the technical discussion for the <em>UVW</em> velocity boundary condition for a discussion
 of the two ways of applying Dirichlet boundary conditions.</p>
 <p>For details of the stress tensor and its use for solving viscoelastic flow problems, please
 see the viscoelastic flow tutorial (Rao, 2000).</p>
 </section>
-<section id="id4">
-<h3><strong>References</strong><a class="headerlink" href="#id4" title="Permalink to this heading">#</a></h3>
+<section id="id8">
+<h3><strong>References</strong><a class="headerlink" href="#id8" title="Permalink to this heading">#</a></h3>
 <p>GT-014.1: Tutorial for Running Viscoelastic Flow Problems with GOMA, June 21,
 2000, R. R. Rao</p>
 </section>
@@ -965,8 +1001,8 @@ see the viscoelastic flow tutorial (Rao, 2000).</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="p">{</span><span class="n">bc_name</span><span class="p">}</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="id5">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id5" title="Permalink to this heading">#</a></h3>
+<section id="id9">
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id9" title="Permalink to this heading">#</a></h3>
 <p><strong>(DC/STRESS13)</strong></p>
 <p>This Dirichlet boundary condition specification is used to set a constant xz-stress for
 any given mode of the stress tensor. Each such specification is made on a separate input
@@ -1034,8 +1070,8 @@ automatic continuation sequences.</p></td>
 </tbody>
 </table>
 </section>
-<section id="id6">
-<h3><strong>Examples</strong><a class="headerlink" href="#id6" title="Permalink to this heading">#</a></h3>
+<section id="id10">
+<h3><strong>Examples</strong><a class="headerlink" href="#id10" title="Permalink to this heading">#</a></h3>
 <p>Following is a sample card for applying a Dirichlet condition for the xz-stress
 component for mode 5 on node set 10:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">S13_4</span> <span class="n">NS</span> <span class="mi">10</span>   <span class="mf">1.3</span>
@@ -1047,15 +1083,15 @@ component for mode 5 on node set 10:</p>
 <p>where the second example uses the “residual” method for applying the same Dirichlet
 condition.</p>
 </section>
-<section id="id7">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id7" title="Permalink to this heading">#</a></h3>
+<section id="id11">
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id11" title="Permalink to this heading">#</a></h3>
 <p>See the technical discussion for the <em>UVW</em> velocity boundary condition for a discussion
 of the two ways of applying Dirichlet boundary conditions.</p>
 <p>For details of the stress tensor and its use for solving viscoelastic flow problems, please
 see the viscoelastic flow tutorial (Rao, 2000).</p>
 </section>
-<section id="id8">
-<h3><strong>References</strong><a class="headerlink" href="#id8" title="Permalink to this heading">#</a></h3>
+<section id="id12">
+<h3><strong>References</strong><a class="headerlink" href="#id12" title="Permalink to this heading">#</a></h3>
 <p>GT-014.1: Tutorial for Running Viscoelastic Flow Problems with GOMA, June 21,
 2000, R. R. Rao</p>
 </section>
@@ -1065,8 +1101,8 @@ see the viscoelastic flow tutorial (Rao, 2000).</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="p">{</span><span class="n">bc_name</span><span class="p">}</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="id9">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id9" title="Permalink to this heading">#</a></h3>
+<section id="id13">
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id13" title="Permalink to this heading">#</a></h3>
 <p><strong>(DC/STRESS22)</strong></p>
 <p>This Dirichlet boundary condition specification is used to set a constant yy-stress (also
 known as the shear stress) for any given mode of the stress tensor. Each such
@@ -1135,8 +1171,8 @@ automatic continuation sequences.</p></td>
 </tbody>
 </table>
 </section>
-<section id="id10">
-<h3><strong>Examples</strong><a class="headerlink" href="#id10" title="Permalink to this heading">#</a></h3>
+<section id="id14">
+<h3><strong>Examples</strong><a class="headerlink" href="#id14" title="Permalink to this heading">#</a></h3>
 <p>Following are sample cards for applying a Dirichlet condition on the yy-stress
 component for mode 8 on node set 20:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">S22_7</span> <span class="n">NS</span> <span class="mi">20</span>   <span class="mf">5.0</span>
@@ -1148,15 +1184,15 @@ component for mode 8 on node set 20:</p>
 <p>where the second example uses the “residual” method for applying the same Dirichlet
 condition.</p>
 </section>
-<section id="id11">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id11" title="Permalink to this heading">#</a></h3>
+<section id="id15">
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id15" title="Permalink to this heading">#</a></h3>
 <p>See the technical discussion for the <em>UVW</em> velocity boundary condition for a discussion
 of the two ways of applying Dirichlet boundary conditions.</p>
 <p>For details of the stress tensor and its use for solving viscoelastic flow problems, please
 see the viscoelastic flow tutorial (Rao, 2000).</p>
 </section>
-<section id="id12">
-<h3><strong>References</strong><a class="headerlink" href="#id12" title="Permalink to this heading">#</a></h3>
+<section id="id16">
+<h3><strong>References</strong><a class="headerlink" href="#id16" title="Permalink to this heading">#</a></h3>
 <p>GT-014.1: Tutorial for Running Viscoelastic Flow Problems with GOMA, June 21,
 2000, R. R. Rao</p>
 </section>
@@ -1166,8 +1202,8 @@ see the viscoelastic flow tutorial (Rao, 2000).</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="p">{</span><span class="n">bc_name</span><span class="p">}</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="id13">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id13" title="Permalink to this heading">#</a></h3>
+<section id="id17">
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id17" title="Permalink to this heading">#</a></h3>
 <p><strong>(DC/STRESS23)</strong></p>
 <p>This Dirichlet boundary condition specification is used to set a constant yz-stress for
 any given mode of the stress tensor. Each such specification is made on a separate input
@@ -1235,8 +1271,8 @@ automatic continuation sequences.</p></td>
 </tbody>
 </table>
 </section>
-<section id="id14">
-<h3><strong>Examples</strong><a class="headerlink" href="#id14" title="Permalink to this heading">#</a></h3>
+<section id="id18">
+<h3><strong>Examples</strong><a class="headerlink" href="#id18" title="Permalink to this heading">#</a></h3>
 <p>Following are sample cards for applying a Dirichlet condition on the yz-stress
 component for mode 8 on node set 20:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">S23_7</span> <span class="n">NS</span> <span class="mi">20</span>   <span class="mf">5.0</span>
@@ -1248,15 +1284,15 @@ component for mode 8 on node set 20:</p>
 <p>where the second example uses the “residual” method for applying the same Dirichlet
 condition.</p>
 </section>
-<section id="id15">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id15" title="Permalink to this heading">#</a></h3>
+<section id="id19">
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id19" title="Permalink to this heading">#</a></h3>
 <p>See the technical discussion for the <em>UVW</em> velocity boundary condition for a discussion
 of the two ways of applying Dirichlet boundary conditions.</p>
 <p>For details of the stress tensor and its use for solving viscoelastic flow problems, please
 see the viscoelastic flow tutorial (Rao, 2000).</p>
 </section>
-<section id="id16">
-<h3><strong>References</strong><a class="headerlink" href="#id16" title="Permalink to this heading">#</a></h3>
+<section id="id20">
+<h3><strong>References</strong><a class="headerlink" href="#id20" title="Permalink to this heading">#</a></h3>
 <p>GT-014.1: Tutorial for Running Viscoelastic Flow Problems with GOMA, June 21,
 2000, R. R. Rao</p>
 </section>
@@ -1266,8 +1302,8 @@ see the viscoelastic flow tutorial (Rao, 2000).</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="p">{</span><span class="n">bc_name</span><span class="p">}</span> <span class="n">NS</span> <span class="o">&lt;</span><span class="n">bc_id</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">float1</span><span class="o">&gt;</span> <span class="p">[</span><span class="n">float2</span><span class="p">]</span>
 </pre></div>
 </div>
-<section id="id17">
-<h3><strong>Description / Usage</strong><a class="headerlink" href="#id17" title="Permalink to this heading">#</a></h3>
+<section id="id21">
+<h3><strong>Description / Usage</strong><a class="headerlink" href="#id21" title="Permalink to this heading">#</a></h3>
 <p><strong>(DC/STRESS33)</strong></p>
 <p>This Dirichlet boundary condition specification is used to set a constant zz-stress for
 any given mode of the stress tensor. Each such specification is made on a separate input
@@ -1335,8 +1371,8 @@ automatic continuation sequences.</p></td>
 </tbody>
 </table>
 </section>
-<section id="id18">
-<h3><strong>Examples</strong><a class="headerlink" href="#id18" title="Permalink to this heading">#</a></h3>
+<section id="id22">
+<h3><strong>Examples</strong><a class="headerlink" href="#id22" title="Permalink to this heading">#</a></h3>
 <p>Following are sample cards for applying a Dirichlet condition on the zz-stress
 component for mode 1 on node set 100:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span> <span class="o">=</span> <span class="n">S33</span> <span class="n">NS</span> <span class="mi">100</span>   <span class="mf">5.0</span>
@@ -1348,15 +1384,15 @@ component for mode 1 on node set 100:</p>
 <p>where the second example uses the “residual” method for applying the same Dirichlet
 condition.</p>
 </section>
-<section id="id19">
-<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id19" title="Permalink to this heading">#</a></h3>
+<section id="id23">
+<h3><strong>Technical Discussion</strong><a class="headerlink" href="#id23" title="Permalink to this heading">#</a></h3>
 <p>See the technical discussion for the <em>UVW</em> velocity boundary condition for a discussion
 of the two ways of applying Dirichlet boundary conditions.</p>
 <p>For details of the stress tensor and its use for solving viscoelastic flow problems, please
 see the viscoelastic flow tutorial (Rao, 2000).</p>
 </section>
-<section id="id20">
-<h3><strong>References</strong><a class="headerlink" href="#id20" title="Permalink to this heading">#</a></h3>
+<section id="id24">
+<h3><strong>References</strong><a class="headerlink" href="#id24" title="Permalink to this heading">#</a></h3>
 <p>GT-014.1: Tutorial for Running Viscoelastic Flow Problems with GOMA, June 21,
 2000, R. R. Rao</p>
 </section>
@@ -1402,10 +1438,8 @@ see the viscoelastic flow tutorial (Rao, 2000).</p>
 <nav id="bd-toc-nav" class="page-toc">
     <ul class="visible nav section-nav flex-column">
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#s11">
-   <strong>
-    S11
-   </strong>
+  <a class="reference internal nav-link" href="#stress-developed">
+   STRESS_DEVELOPED
   </a>
   <ul class="nav section-nav flex-column">
    <li class="toc-h3 nav-item toc-entry">
@@ -1439,9 +1473,9 @@ see the viscoelastic flow tutorial (Rao, 2000).</p>
   </ul>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#s12">
+  <a class="reference internal nav-link" href="#s11">
    <strong>
-    S12
+    S11
    </strong>
   </a>
   <ul class="nav section-nav flex-column">
@@ -1476,9 +1510,9 @@ see the viscoelastic flow tutorial (Rao, 2000).</p>
   </ul>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#s13">
+  <a class="reference internal nav-link" href="#s12">
    <strong>
-    S13
+    S12
    </strong>
   </a>
   <ul class="nav section-nav flex-column">
@@ -1513,9 +1547,9 @@ see the viscoelastic flow tutorial (Rao, 2000).</p>
   </ul>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#s22">
+  <a class="reference internal nav-link" href="#s13">
    <strong>
-    S22
+    S13
    </strong>
   </a>
   <ul class="nav section-nav flex-column">
@@ -1550,9 +1584,9 @@ see the viscoelastic flow tutorial (Rao, 2000).</p>
   </ul>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#s23">
+  <a class="reference internal nav-link" href="#s22">
    <strong>
-    S23
+    S22
    </strong>
   </a>
   <ul class="nav section-nav flex-column">
@@ -1587,9 +1621,9 @@ see the viscoelastic flow tutorial (Rao, 2000).</p>
   </ul>
  </li>
  <li class="toc-h2 nav-item toc-entry">
-  <a class="reference internal nav-link" href="#s33">
+  <a class="reference internal nav-link" href="#s23">
    <strong>
-    S33
+    S23
    </strong>
   </a>
   <ul class="nav section-nav flex-column">
@@ -1616,6 +1650,43 @@ see the viscoelastic flow tutorial (Rao, 2000).</p>
    </li>
    <li class="toc-h3 nav-item toc-entry">
     <a class="reference internal nav-link" href="#id20">
+     <strong>
+      References
+     </strong>
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toc-h2 nav-item toc-entry">
+  <a class="reference internal nav-link" href="#s33">
+   <strong>
+    S33
+   </strong>
+  </a>
+  <ul class="nav section-nav flex-column">
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id21">
+     <strong>
+      Description / Usage
+     </strong>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id22">
+     <strong>
+      Examples
+     </strong>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id23">
+     <strong>
+      Technical Discussion
+     </strong>
+    </a>
+   </li>
+   <li class="toc-h3 nav-item toc-entry">
+    <a class="reference internal nav-link" href="#id24">
      <strong>
       References
      </strong>
@@ -1681,7 +1752,7 @@ see the viscoelastic flow tutorial (Rao, 2000).</p>
   <div class="footer-item">
     
 <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.2.3.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br>
 </p>
 
   </div>

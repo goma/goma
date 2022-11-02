@@ -37,6 +37,7 @@
     <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../../_static/doctools.js"></script>
     <script src="../../_static/sphinx_highlight.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'material_file/mechanical_and_constitutive/polymer_stress_formulation';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -510,6 +511,7 @@
 <li class="toctree-l3"><a class="reference internal" href="../../problem_description_file/post_processing/grid_peclet_number_in_porous_media.html"><strong>Grid Peclet Number in Porous Media</strong></a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../problem_description_file/post_processing/supg_velocity_in_porous_media.html"><strong>SUPG Velocity in Porous Media</strong></a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../problem_description_file/post_processing/vorticity_vector.html"><strong>Vorticity Vector</strong></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../problem_description_file/post_processing/map_conf_stress.html">Map Conf Stress</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../problem_description_file/post_processing_fluxes.html">Post Processing Fluxes and Data</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-12"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -764,23 +766,26 @@
 <h2><strong>Description / Usage</strong><a class="headerlink" href="#description-usage" title="Permalink to this heading">#</a></h2>
 <p>This card specifies which formulation of the polymer constitutive equation should be
 used. Valid options are</p>
-<table class="table">
-<tbody>
-<tr class="row-odd"><td><p><strong>EVSS_G</strong></p></td>
-<td><p>Uses the classic elastic-viscous stress splitting of Rajagopalan (1990) where the stress is the elastic
+<dl class="simple">
+<dt><strong>EVSS_G</strong></dt><dd><p>Uses the classic elastic-viscous stress splitting of Rajagopalan (1990) where the stress is the elastic
 stress only without a Newtonian component. This option is the default if this <em>Polymer Stress Formulation</em>
-card is not supplied. This formulation is almost never used.</p></td>
-</tr>
-<tr class="row-even"><td><p><strong>EVSS_F</strong></p></td>
-<td><p>Uses the EVSS formulation of Guenette and Fortin (1995) that solves the standard stress equation with the
-addition of a new term to the momentum equation. This formulation is used most often.</p></td>
-</tr>
-<tr class="row-odd"><td><p><strong>EVSS_L</strong></p></td>
-<td><p>Uses a research formulation for viscoelasticity that includes a level set discretization that switches the
-equations from solid to fluid. This option is not currently in production usage.</p></td>
-</tr>
-</tbody>
-</table>
+card is not supplied. This formulation is almost never used. Prefer EVSS_F</p>
+</dd>
+<dt><strong>EVSS_F</strong></dt><dd><p>Uses the EVSS formulation of Guenette and Fortin (1995) that solves the standard stress equation with the
+addition of a new term to the momentum equation. This formulation is used most often.</p>
+</dd>
+<dt><strong>EVSS_L</strong></dt><dd><p>Uses a research formulation for viscoelasticity that includes a level set discretization that switches the
+equations from solid to fluid. This option is not currently in production usage. Partial level set support is
+included in EVSS_F formulation</p>
+</dd>
+<dt><strong>LOG_CONF</strong></dt><dd><p>Log-conformation tensor formulation from Fattal and Kupferman 2004, uses DEVSS-G</p>
+</dd>
+<dt><strong>LOG_CONF_GRADV</strong></dt><dd><p>Log-conformation tensor formulation from Fattal and Kupferman 2004, uses DEVSS-G but all gradient terms in constitutive
+equation are the field variable <span class="math notranslate nohighlight">\(\nabla v\)</span> instead of the projection <span class="math notranslate nohighlight">\(G\)</span></p>
+</dd>
+<dt><strong>SQRT_CONF</strong></dt><dd><p>sqrt-conformation tensor formulation from Balci et al. 2011, uses DEVSS-G stabilization</p>
+</dd>
+</dl>
 </section>
 <section id="examples">
 <h2><strong>Examples</strong><a class="headerlink" href="#examples" title="Permalink to this heading">#</a></h2>
@@ -791,7 +796,10 @@ equations from solid to fluid. This option is not currently in production usage.
 </section>
 <section id="technical-discussion">
 <h2><strong>Technical Discussion</strong><a class="headerlink" href="#technical-discussion" title="Permalink to this heading">#</a></h2>
-<p>No Discussion.</p>
+<p>If using <em>SQRT_CONF</em> with no guess for the square root of stress tensor, <span class="math notranslate nohighlight">\(b\)</span>,
+recommended initial guess is the identity tensor for all modes.</p>
+<p>Use post processing card <em>Map Conf Stress</em> to output the stress values, otherwise the usual S values are the given conformation tensor
+base form such as the SQRT being <span class="math notranslate nohighlight">\(b\)</span> in <span class="math notranslate nohighlight">\(b^Tb = c\)</span> or LOG being <span class="math notranslate nohighlight">\(s = log c\)</span></p>
 </section>
 <section id="references">
 <h2><strong>References</strong><a class="headerlink" href="#references" title="Permalink to this heading">#</a></h2>
@@ -927,7 +935,7 @@ Fluid Mech., 36 (1990) 159-192.</p>
   <div class="footer-item">
     
 <p class="sphinx-version">
-Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.2.3.<br>
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 5.3.0.<br>
 </p>
 
   </div>
