@@ -367,6 +367,8 @@ EXTERN void fluid_stress(double[DIM][DIM],            /* Pi[DIM][DIM] */
 
 EXTERN void fluid_stress_conf(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi);
 
+void fluid_stress_sqrt_conf(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi);
+
 EXTERN void heat_flux(double[DIM],                   /* q[DIM] */
                       HEAT_FLUX_DEPENDENCE_STRUCT *, /* dq     */
                       double);                       /* time   */

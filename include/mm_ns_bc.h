@@ -430,6 +430,11 @@ EXTERN void flow_n_dot_T_gradv(double[DIM], /* func                             
                                const double, /* pdatum - pressure datum from input card   */
                                const int);   /* iflag - -1 to use pdatum, otherwise use P */
 
+void flow_n_dot_T_gradv_t(double func[DIM],
+                          double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                          const double pdatum, /* pressure datum from input card */
+                          const int iflag);    /* -1 to use pdatum, otherwise use P  */
+
 EXTERN void flow_n_dot_T_segregated(double[DIM],                                      // func
                                     double[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE]); // d_func
 
@@ -443,6 +448,13 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
                            double d_func[MAX_MODES][6][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
                            const double dt,
                            const double tt);
+
+EXTERN void
+stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
+                           double d_func[MAX_MODES][6][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                           const double dt,
+                           const double tt);
+
 void stress_no_v_dot_gradS_logc_transient(
     double func[MAX_MODES][6],
     double d_func[MAX_MODES][6][MAX_VARIABLE_TYPES + MAX_CONC][MDE],

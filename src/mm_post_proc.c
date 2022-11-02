@@ -294,7 +294,7 @@ int PP_LAME_LAMBDA = -1;
 int VON_MISES_STRESS = -1;
 int VON_MISES_STRAIN = -1;
 int UNTRACKED_SPEC = -1;
-int LOG_CONF_MAP = -1;
+int CONF_MAP = -1;
 int RHO_DOT = -1;
 int MOMENT_SOURCES = -1;
 int YZBETA = -1;
@@ -3191,8 +3191,8 @@ static int calc_standard_fields(double **post_proc_vect,
     local_lumped[VON_MISES_STRESS] = 1.;
   }
 
-  if (LOG_CONF_MAP != -1 && pd->v[pg->imtrx][POLYMER_STRESS11] &&
-      (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV ||
+  if (CONF_MAP != -1 && pd->v[pg->imtrx][POLYMER_STRESS11] &&
+      (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV || vn->evssModel == CONF ||
        vn->evssModel == LOG_CONF_TRANSIENT || vn->evssModel == LOG_CONF_TRANSIENT_GRADV)) {
     index = 0;
     VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
@@ -3203,11 +3203,20 @@ static int calc_standard_fields(double **post_proc_vect,
     double eig_values[DIM];
     dbl exp_s[DIM][DIM];
     for (mode = 0; mode < vn->modes; mode++) {
+      if (vn->evssModel == CONF) {
+
+        for (a = 0; a < VIM; a++) {
+          for (b = 0; b < VIM; b++) {
+            exp_s[a][b] = fv->S[mode][a][b];
+          }
+        }
+      } else {
 #ifdef ANALEIG_PLEASE
-      analytical_exp_s(fv->S[mode], exp_s, eig_values, R1, NULL);
+        analytical_exp_s(fv->S[mode], exp_s, eig_values, R1, NULL);
 #else
-      compute_exp_s(fv->S[mode], exp_s, eig_values, R1);
+        compute_exp_s(fv->S[mode], exp_s, eig_values, R1);
 #endif
+      }
       mup = viscosity(ve[mode]->gn, gamma, d_mup);
       // Polymer time constant
       lambda = 0.0;
@@ -3234,8 +3243,8 @@ static int calc_standard_fields(double **post_proc_vect,
                only assemble the upper half */
             if (a <= b) {
               if (pd->v[pg->imtrx][v_s[mode][a][b]]) {
-                local_post[LOG_CONF_MAP + index] = (mup / lambda) * (exp_s[a][b] - delta(a, b));
-                local_lumped[LOG_CONF_MAP + index] = 1.;
+                local_post[CONF_MAP + index] = (mup / lambda) * (exp_s[a][b] - delta(a, b));
+                local_lumped[CONF_MAP + index] = 1.;
                 index++;
               }
             }
@@ -3245,6 +3254,62 @@ static int calc_standard_fields(double **post_proc_vect,
     } // Loop over modes
   }
 
+  if (CONF_MAP != -1 && pd->v[pg->imtrx][POLYMER_STRESS11] && (vn->evssModel == SQRT_CONF)) {
+    index = 0;
+    VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
+    VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
+    d_mup = NULL;
+    double lambda;
+    for (mode = 0; mode < vn->modes; mode++) {
+      mup = viscosity(ve[mode]->gn, gamma, d_mup);
+
+      dbl b_dot_b[DIM][DIM];
+      dbl cb[DIM][DIM];
+      for (int ii = 0; ii < VIM; ii++) {
+        for (int jj = 0; jj < VIM; jj++) {
+          if (ii <= jj) {
+            cb[ii][jj] = fv->S[mode][ii][jj];
+            cb[jj][ii] = cb[ii][jj];
+          }
+        }
+      }
+
+      tensor_dot(cb, cb, b_dot_b, VIM);
+      // Polymer time constant
+      lambda = 0.0;
+      if (ve[mode]->time_constModel == CONSTANT) {
+        lambda = ve[mode]->time_const;
+      }
+      /* Looks like these models are not working right now
+       *else if(ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW)
+       * {
+       *   lambda = mup/ve[mode]->time_const;
+       * }
+       */
+      if (lambda == 0.0) {
+        GOMA_EH(GOMA_ERROR, "The conformation tensor needs a non-zero polymer time constant.");
+      }
+      if (mup == 0.0) {
+        GOMA_EH(GOMA_ERROR, "The conformation tensor needs a non-zero polymer viscosity.");
+      }
+
+      if (pd->v[pg->imtrx][v_s[mode][0][0]]) {
+        for (a = 0; a < VIM; a++) {
+          for (b = 0; b < VIM; b++) {
+            /* since the stress tensor is symmetric,
+               only assemble the upper half */
+            if (a <= b) {
+              if (pd->v[pg->imtrx][v_s[mode][a][b]]) {
+                local_post[CONF_MAP + index] = -(mup / lambda) * (delta(a, b) - b_dot_b[a][b]);
+                local_lumped[CONF_MAP + index] = 1.;
+                index++;
+              }
+            }
+          } // for b
+        }   // for a
+      }
+    } // Loop over modes
+  }
   /*if (cr->MassFluxModel == DM_SUSPENSION_BALANCE ) {
     index = 0;
     int w = 0;
@@ -7247,7 +7312,8 @@ void rd_post_process_specs(FILE *ifp, char *input) {
   iread = look_for_post_proc(ifp, "Error ZZ velocity", &ERROR_ZZ_VEL);
   iread = look_for_post_proc(ifp, "Error ZZ heat flux", &ERROR_ZZ_Q);
   iread = look_for_post_proc(ifp, "Error ZZ pressure", &ERROR_ZZ_P);
-  iread = look_for_post_proc(ifp, "Map Log-Conf Stress", &LOG_CONF_MAP);
+  iread = look_for_post_proc(ifp, "Map Log-Conf Stress", &CONF_MAP);
+  iread = look_for_post_proc(ifp, "Map Conf Stress", &CONF_MAP);
   iread = look_for_post_proc(ifp, "Velocity Magnitude", &VELO_SPEED);
   iread = look_for_post_proc(ifp, "Giesekus Criterion", &GIES_CRIT);
   iread = look_for_post_proc(ifp, "Particle stress flux", &J_FLUX);
@@ -9745,8 +9811,8 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
     }
   }
 
-  if (LOG_CONF_MAP != -1 && Num_Var_In_Type[pg->imtrx][POLYMER_STRESS11]) {
-    LOG_CONF_MAP = index_post;
+  if (CONF_MAP != -1 && Num_Var_In_Type[pg->imtrx][POLYMER_STRESS11]) {
+    CONF_MAP = index_post;
     // Loop over any additional viscoelastic modes
     for (mode = 0; mode < MAX_MODES; mode++) {
       for (a = 0; a < VIM; a++) {
