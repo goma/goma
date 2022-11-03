@@ -764,7 +764,7 @@ double herschel_buckley_viscosity(struct Generalized_Newtonian *gn_local,
   val = pow(gammadot + offset, nexp - 2.);
 
   if (d_mu != NULL)
-    d_mu->gd = mu0 * (nexp - 1.0) * val;
+    d_mu->gd = mu0 * (nexp - 1.0) * val - tau_y / pow(gammadot + offset, 2.0);
   /*   *d_mu_dgd -= tau_y/pow(gammadot+offset, 2.0); Disabling the sensitivities on this term
    *  otherwise converges not
    */

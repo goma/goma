@@ -819,6 +819,7 @@
 #define FLOW_STRESSNOBC_BC         963700000
 #define FLOW_GRADV_BC              963800000
 #define FLOW_GRADV_SIC_BC          963800001
+#define FLOW_GRADV_T_BC            963800002
 #define SHEET_ENDSLOPE_BC          963900000
 #define CA_BC                      964000000
 #define CA_MOMENTUM_BC             964000008

@@ -436,6 +436,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
     case FLOW_PRESSURE_VAR_BC:
     case FLOW_STRESSNOBC_BC:
     case FLOW_GRADV_BC:
+    case FLOW_GRADV_T_BC:
     case FLOW_GRADV_SIC_BC:
     case FILL_INLET_BC:
     case FILL_CA_BC:

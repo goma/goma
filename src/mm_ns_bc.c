@@ -6235,8 +6235,10 @@ void flow_n_dot_T_nobc(double func[DIM],
   }
 
   /* compute stress tensor and its derivatives */
-  if (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV) {
+  if (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV || vn->evssModel == CONF) {
     fluid_stress_conf(Pi, d_Pi);
+  } else if (vn->evssModel == SQRT_CONF) {
+    fluid_stress_sqrt_conf(Pi, d_Pi);
   } else {
     fluid_stress(Pi, d_Pi);
   }
@@ -6381,7 +6383,8 @@ void flow_n_dot_T_nobc(double func[DIM],
 
     if (gn->ConstitutiveEquation == BINGHAM_MIXED ||
         (pd->v[pg->imtrx][POLYMER_STRESS11] &&
-         (vn->evssModel == EVSS_F || vn->evssModel == LOG_CONF || vn->evssModel == EVSS_GRADV ||
+         (vn->evssModel == EVSS_F || vn->evssModel == SQRT_CONF || vn->evssModel == LOG_CONF ||
+          vn->evssModel == EVSS_GRADV || vn->evssModel == CONF ||
           vn->evssModel == LOG_CONF_GRADV))) {
       for (p = 0; p < pd->Num_Dim; p++) {
         for (q = 0; q < pd->Num_Dim; q++) {
@@ -6528,6 +6531,392 @@ void flow_n_dot_T_gradv(double func[DIM],
 } /* END of routine flow_n_dot_T_gradv                                      */
 /*****************************************************************************/
 
+void flow_n_dot_T_gradv_t(double func[DIM],
+                          double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                          const double pdatum, /* pressure datum from input card */
+                          const int iflag)     /* -1 to use pdatum, otherwise use P  */
+
+/****************************************************************************
+ *
+ *  Function which uses the fully-developed fluid stresses
+ *		 in the fluid stress bcs
+ *
+ *  Imposes n . nabla v = 0 naturally
+ *
+ *****************************************************************************/
+{
+  int j, var, p, q;
+  int b, c, mode, w;
+  double P = fv->P;
+
+  /*
+   * Variables for stress tensor and derivative
+   */
+
+  dbl Pi[DIM][DIM];
+  STRESS_DEPENDENCE_STRUCT d_Pi_struct;
+  STRESS_DEPENDENCE_STRUCT *d_Pi = &d_Pi_struct;
+
+  int v_s[MAX_MODES][DIM][DIM];
+  int v_g[DIM][DIM];
+
+  if (af->Assemble_LSA_Mass_Matrix)
+    return;
+
+  (void)stress_eqn_pointer(v_s);
+
+  v_g[0][0] = VELOCITY_GRADIENT11;
+  v_g[0][1] = VELOCITY_GRADIENT12;
+  v_g[1][0] = VELOCITY_GRADIENT21;
+  v_g[1][1] = VELOCITY_GRADIENT22;
+  v_g[0][2] = VELOCITY_GRADIENT13;
+  v_g[1][2] = VELOCITY_GRADIENT23;
+  v_g[2][0] = VELOCITY_GRADIENT31;
+  v_g[2][1] = VELOCITY_GRADIENT32;
+  v_g[2][2] = VELOCITY_GRADIENT33;
+
+  if (!af->Assemble_Jacobian)
+    d_Pi = NULL; /* save cost if we aren't assembling the Jacobian */
+
+  /* if we are using the datum for pressure, put it into fv->P
+     and we'll fix it after calculating the stress tensor
+   */
+  if (iflag == -1)
+    fv->P = pdatum;
+
+  /* hydrostatic part for int == -2  ; func[] is set to n.p_hydrostatic in
+          flow_n_dot_T_var_density. "var_density" is a misnomer - density would need
+          to be spatially invariate since pressure is relative to p(origin). Even
+          density(T) or density(P) would imply T or P is spatially invariate
+  */
+  // if (iflag == -2) {
+  //   flow_n_dot_T_var_density(func, d_func, pdatum, time);
+  //   fv->P = 0;
+  // }
+
+  bool evss_f = false;
+
+  if (pd->gv[POLYMER_STRESS11]) {
+    evss_f = vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV ||
+             vn->evssModel == CONF || vn->evssModel == SQRT_CONF || vn->evssModel == EVSS_F ||
+             vn->evssModel == EVSS_GRADV;
+  }
+  /* compute stress tensor and its derivatives */
+  if (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV || vn->evssModel == CONF) {
+    fluid_stress_conf(Pi, d_Pi);
+  } else if (vn->evssModel == SQRT_CONF) {
+    fluid_stress_sqrt_conf(Pi, d_Pi);
+  } else {
+    fluid_stress(Pi, d_Pi);
+  }
+
+  VISCOSITY_DEPENDENCE_STRUCT d_mus_struct; /* viscosity dependence */
+  VISCOSITY_DEPENDENCE_STRUCT *d_mus = &d_mus_struct;
+  VISCOSITY_DEPENDENCE_STRUCT d_mup_struct; /* viscosity dependence */
+  VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
+  zeroStructures(d_mup, 1);
+  dbl gamma[DIM][DIM]; // Shear rate tensor based on velocity
+  for (int a = 0; a < VIM; a++) {
+    for (int b = 0; b < VIM; b++) {
+      gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+    }
+  }
+  dbl mus = viscosity(gn, gamma, d_mus);
+  dbl mup = 0;
+  if (evss_f) {
+    for (mode = 0; mode < vn->modes; mode++) {
+      /*  shift factor  */
+      dbl at = 0.0;
+      dbl d_at_dT[MDE];
+      dbl wlf_denom;
+      if (pd->e[pg->imtrx][TEMPERATURE]) {
+        if (vn->shiftModel == CONSTANT) {
+          at = vn->shift[0];
+          for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
+            d_at_dT[j] = 0.;
+          }
+        } else if (vn->shiftModel == MODIFIED_WLF) {
+          wlf_denom = vn->shift[1] + fv->T - mp->reference[TEMPERATURE];
+          if (wlf_denom != 0.) {
+            at = exp(vn->shift[0] * (mp->reference[TEMPERATURE] - fv->T) / wlf_denom);
+            for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
+              d_at_dT[j] = -at * vn->shift[0] * vn->shift[1] / (wlf_denom * wlf_denom) *
+                           bf[TEMPERATURE]->phi[j];
+            }
+          } else {
+            at = 1.;
+          }
+          for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
+            d_at_dT[j] = 0.;
+          }
+        }
+      } else {
+        at = 1.;
+      }
+      int a, j, w;
+      VISCOSITY_DEPENDENCE_STRUCT d_muptmp_struct; /* viscosity dependence */
+      VISCOSITY_DEPENDENCE_STRUCT *d_muptmp = &d_muptmp_struct;
+      // Polymer viscosity
+      dbl muptmp = viscosity(ve[mode]->gn, gamma, d_muptmp);
+
+      mup += muptmp;
+      var = VELOCITY1;
+      if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
+        for (a = 0; a < WIM; a++) {
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            d_mup->v[a][j] += at * d_muptmp->v[a][j];
+          }
+        }
+      }
+
+      var = MESH_DISPLACEMENT1;
+      if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
+        for (a = 0; a < pd->Num_Dim; a++) {
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            d_mup->X[a][j] += at * d_muptmp->X[a][j];
+          }
+        }
+      }
+
+      var = TEMPERATURE;
+      if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          d_mup->T[j] += (at * d_muptmp->T[j] + mup * d_at_dT[j]);
+        }
+      }
+
+      var = BOND_EVOLUTION;
+      if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          d_mup->nn[j] += at * d_muptmp->nn[j];
+        }
+      }
+
+      var = RESTIME;
+      if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          d_mup->degrade[j] += at * d_muptmp->degrade[j];
+        }
+      }
+
+      var = FILL;
+      if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          d_mup->F[j] += at * d_muptmp->F[j];
+        }
+      }
+
+      var = PRESSURE;
+      if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          d_mup->P[j] += at * d_muptmp->P[j];
+        }
+      }
+
+      var = MASS_FRACTION;
+      if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
+        for (w = 0; w < pd->Num_Species_Eqn; w++) {
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            d_mup->C[w][j] += at * d_muptmp->C[w][j];
+          }
+        }
+      }
+    } // for mode
+  }   // if evss_f
+  /* now is the time to clean up, so, if using the datum for pressure, fix fv->P
+   */
+  /* Ahh...no.  This seems like a bad idea.
+    if(iflag == -1) fv->P = P;*/
+
+  if (af->Assemble_Jacobian) {
+    var = TEMPERATURE;
+    if (pd->v[pg->imtrx][var]) {
+
+      for (p = 0; p < pd->Num_Dim; p++) {
+        for (q = 0; q < pd->Num_Dim; q++) {
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            d_func[p][var][j] += fv->snormal[q] * d_Pi->T[p][q][j] -
+                                 ((d_mus->T[j] + d_mup->T[j]) * fv->grad_v[p][q] -
+                                  evss_f * d_mup->T[j] * (fv->grad_v[p][q] - fv->G[p][q]));
+          }
+        }
+      }
+    }
+
+    var = BOND_EVOLUTION;
+    if (pd->v[pg->imtrx][var]) {
+
+      for (p = 0; p < pd->Num_Dim; p++) {
+        for (q = 0; q < pd->Num_Dim; q++) {
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            d_func[p][var][j] += fv->snormal[q] * d_Pi->nn[p][q][j];
+          }
+        }
+      }
+    }
+
+    var = RESTIME;
+    if (pd->v[pg->imtrx][var]) {
+
+      for (p = 0; p < pd->Num_Dim; p++) {
+        for (q = 0; q < pd->Num_Dim; q++) {
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            d_func[p][var][j] += fv->snormal[q] * d_Pi->degrade[p][q][j];
+          }
+        }
+      }
+    }
+
+    var = FILL;
+    if (pd->v[pg->imtrx][var]) {
+      for (p = 0; p < pd->Num_Dim; p++) {
+        for (q = 0; q < pd->Num_Dim; q++) {
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            d_func[p][var][j] += fv->snormal[q] * d_Pi->F[p][q][j] -
+                                 ((d_mus->F[j] + d_mup->F[j]) * fv->grad_v[p][q] -
+                                  evss_f * d_mup->F[j] * (fv->grad_v[p][q] - fv->G[p][q]));
+          }
+        }
+      }
+    }
+
+    var = MASS_FRACTION;
+    if (pd->v[pg->imtrx][var]) {
+      for (p = 0; p < pd->Num_Dim; p++) {
+        for (q = 0; q < pd->Num_Dim; q++) {
+          for (w = 0; w < pd->Num_Species_Eqn; w++) {
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              d_func[p][MAX_VARIABLE_TYPES + w][j] +=
+                  fv->snormal[q] * d_Pi->C[p][q][w][j] -
+                  ((d_mus->C[w][j] + d_mup->C[w][j]) * fv->grad_v[p][q] -
+                   evss_f * d_mup->C[w][j] * (fv->grad_v[p][q] - fv->G[p][q]));
+            }
+          }
+        }
+      }
+    }
+
+    if (iflag != -1) {
+      var = PRESSURE;
+      if (pd->v[pg->imtrx][var]) {
+        for (p = 0; p < pd->Num_Dim; p++) {
+          for (q = 0; q < pd->Num_Dim; q++) {
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              d_func[p][var][j] += fv->snormal[q] * d_Pi->P[p][q][j] -
+                                   ((d_mus->P[j] + d_mup->P[j]) * fv->grad_v[p][q] -
+                                    evss_f * d_mup->P[j] * (fv->grad_v[p][q] - fv->G[p][q]));
+            }
+          }
+        }
+      }
+    }
+
+    if (pd->v[pg->imtrx][VELOCITY1]) {
+      for (p = 0; p < pd->Num_Dim; p++) {
+        for (q = 0; q < pd->Num_Dim; q++) {
+          for (b = 0; b < VIM; b++) {
+            var = VELOCITY1 + b;
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              d_func[p][var][j] +=
+                  fv->snormal[q] * (d_Pi->v[p][q][b][j] -
+                                    ((d_mus->v[b][j] + evss_f * d_mup->v[b][j]) * d_mup->v[b][j] *
+                                     fv->grad_v[p][q]) -
+                                    ((mus + evss_f * mup) * bf[var]->grad_phi_e[j][b][p][q]));
+            }
+          }
+        }
+      }
+    }
+
+    if (pd->v[pg->imtrx][VORT_DIR1]) {
+      for (p = 0; p < pd->Num_Dim; p++) {
+        for (q = 0; q < pd->Num_Dim; q++) {
+          for (b = 0; b < VIM; b++) {
+            var = VORT_DIR1 + b;
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              d_func[p][var][j] += fv->snormal[q] * d_Pi->vd[p][q][b][j];
+            }
+          }
+        }
+      }
+    }
+
+    if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
+      for (p = 0; p < pd->Num_Dim; p++) {
+        for (q = 0; q < pd->Num_Dim; q++) {
+          for (b = 0; b < VIM; b++) {
+            var = MESH_DISPLACEMENT1 + b;
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              d_func[p][var][j] += fv->snormal[q] * d_Pi->X[p][q][b][j] +
+                                   fv->dsnormal_dx[q][b][j] * Pi[p][q] -
+                                   ((d_mus->X[b][j] + d_mup->X[b][j]) * fv->grad_v[p][q] -
+                                    evss_f * d_mup->X[b][j] * (fv->grad_v[p][q] - fv->G[p][q])) -
+                                   ((mus + mup) * fv->d_grad_v_dmesh[p][q][b][j]);
+            }
+          }
+        }
+      }
+    }
+
+    if (pd->v[pg->imtrx][POLYMER_STRESS11]) {
+      for (p = 0; p < pd->Num_Dim; p++) {
+        for (q = 0; q < pd->Num_Dim; q++) {
+          for (mode = 0; mode < vn->modes; mode++) {
+            for (b = 0; b < VIM; b++) {
+              for (c = 0; c < VIM; c++) {
+                var = v_s[mode][b][c];
+                for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
+
+                {
+                  d_func[p][var][j] += fv->snormal[q] * d_Pi->S[p][q][mode][b][c][j];
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (gn->ConstitutiveEquation == BINGHAM_MIXED ||
+        (pd->v[pg->imtrx][POLYMER_STRESS11] &&
+         (vn->evssModel == EVSS_F || vn->evssModel == SQRT_CONF || vn->evssModel == LOG_CONF ||
+          vn->evssModel == EVSS_GRADV || vn->evssModel == CONF ||
+          vn->evssModel == LOG_CONF_GRADV))) {
+      for (p = 0; p < pd->Num_Dim; p++) {
+        for (q = 0; q < pd->Num_Dim; q++) {
+          for (b = 0; b < VIM; b++) {
+            for (c = 0; c < VIM; c++) {
+              var = v_g[b][c];
+              for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                d_func[p][var][j] -=
+                    fv->snormal[q] * (d_Pi->g[p][q][b][c][j] -
+                                      evss_f * mup * delta(b, p) * delta(c, q) * bf[var]->phi[j]);
+              }
+            }
+          }
+        }
+      }
+    }
+
+  } /*  end of if Assemble_Jacobian  */
+
+  /*  load in stresses */
+
+  for (p = 0; p < pd->Num_Dim; p++) {
+    if (iflag != -2) {
+      func[p] = 0.;
+    }
+    for (q = 0; q < pd->Num_Dim; q++) {
+      func[p] +=
+          fv->snormal[q] *
+          (Pi[p][q] - (mus * fv->grad_v[p][q] + evss_f * mup * (fv->grad_v[p][q] - fv->G[p][q])));
+    }
+  }
+  if (iflag == -1 || iflag == -2)
+    fv->P = P;
+
+} /* END of routine flow_n_dot_T_gradv                                      */
+
 /* FLOW_GRADV_SIC Strongly integrated condition */
 void flow_n_dot_T_gradv_sic(double func[DIM],
                             double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
@@ -6668,6 +7057,9 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
   dbl g[DIM][DIM];     /* velocity gradient tensor */
   dbl gt[DIM][DIM];    /* transpose of velocity gradient tensor */
 
+  dbl g_dot[DIM][DIM];  /* velocity gradient tensor time derivative */
+  dbl gt_dot[DIM][DIM]; /* transpose of velocity gradient tensor time derivative */
+
   /* dot product tensors */
 
   dbl s_dot_s[DIM][DIM];
@@ -6676,16 +7068,23 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
   dbl g_dot_s[DIM][DIM];
   dbl gt_dot_s[DIM][DIM];
 
+  dbl g_dot_g[DIM][DIM];
+  dbl gt_dot_g[DIM][DIM];
+  dbl gt_dot_gt[DIM][DIM];
+
   /* polymer viscosity and derivatives */
   dbl mup;
   VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
   VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
   dbl d_mup_dv_pj;
 
-  dbl saramitoCoeff;
+  dbl saramitoCoeff = 1.;
   SARAMITO_DEPENDENCE_STRUCT d_saramito_struct;
   SARAMITO_DEPENDENCE_STRUCT *d_saramito = &d_saramito_struct;
+  /* 2nd polymer viscosity -- for modified Jefreys model*/
+  dbl mupJeff;
 
+  const bool jeffreysEnabled = (vn->ConstitutiveEquation == MODIFIED_JEFFREYS);
   // todo: will want to parse necessary parameters... for now hard code
   const bool saramitoEnabled =
       (vn->ConstitutiveEquation == SARAMITO_OLDROYDB || vn->ConstitutiveEquation == SARAMITO_PTT ||
@@ -6703,6 +7102,10 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
   dbl eps;        /* This is the PTT elongation parameter */
   dbl Z = 1.0;    /* This is the factor appearing in front of the stress tensor in PTT */
   dbl dZ_dtrace = 0.0;
+
+  dbl lambda1;
+  dbl lambda2;
+  dbl elasticMod;
 
   /* ETMs*/
   dbl mass, advection, source;
@@ -6783,6 +7186,25 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
     at = 1.;
   }
 
+  // if a modified Jeffreys model is being run, load time derivative of velocity gradient
+  if (jeffreysEnabled) {
+    (void)tensor_dot(g, g, g_dot_g, VIM);
+    (void)tensor_dot(gt, gt, gt_dot_gt, VIM);
+    (void)tensor_dot(gt, g, gt_dot_g, VIM);
+
+    for (a = 0; a < VIM; a++) {
+      for (b = 0; b < VIM; b++) {
+
+        if (pd->TimeIntegration != STEADY) {
+          g_dot[a][b] = fv_dot->G[a][b];
+        } else {
+          g_dot[a][b] = 0.;
+        }
+        gt_dot[b][a] = g_dot[a][b];
+      }
+    }
+  }
+
   /* Begin loop over modes */
   for (mode = 0; mode < vn->modes; mode++) {
 
@@ -6835,6 +7257,16 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
     lcwt = ve[mode]->xi / 2.0;
 
     eps = ve[mode]->eps;
+
+    if (jeffreysEnabled) {
+      mupJeff = ve[mode]->muJeffreys;
+      // if the modified Jeffreys model is used, the parsed value of lambda is the
+      // elastic modulus rather than the time consant
+      elasticMod = lambda;
+      lambda1 = mup / elasticMod; // mup/G
+      lambda2 = mupJeff / elasticMod;
+      lambda = lambda1 + lambda2;
+    }
 
     Z = 1.0;
     dZ_dtrace = 0;
@@ -6895,8 +7327,18 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
           /* Source term */
           source = 0.;
           source += saramitoCoeff * Z * s[a][b] - at * mup * (g[a][b] + gt[a][b]);
-          if (alpha != 0.) {
-            source += saramitoCoeff * alpha * lambda * s_dot_s[a][b] / mup;
+
+          if (DOUBLE_NONZERO(alpha)) {
+            dbl source1 = (s_dot_s[a][b] / mup);
+
+            source1 *= alpha * lambda * saramitoCoeff;
+            source += source1;
+          }
+
+          if (jeffreysEnabled) {
+            source -= mup * lambda2 *
+                      (g_dot[a][b] + gt_dot[a][b] -
+                       (g_dot_g[a][b] + 2 * gt_dot_g[a][b] + gt_dot_gt[a][b]));
           }
           source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
@@ -6936,6 +7378,12 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
                     source -=
                         saramitoCoeff * alpha * lambda * d_mup_dv_pj * s_dot_s[a][b] / (mup * mup);
                   }
+
+                  if (jeffreysEnabled) {
+                    source = d_mup_dv_pj * at * lambda2 *
+                             (g_dot[a][b] + gt_dot[a][b] -
+                              (g_dot_g[a][b] + 2 * gt_dot_g[a][b] + gt_dot_gt[a][b]));
+                  }
                   source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
                   /* Load them up */
@@ -6959,6 +7407,11 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
                 if (alpha != 0.0) {
                   source -=
                       saramitoCoeff * alpha * lambda * d_mup->P[j] * s_dot_s[a][b] / (mup * mup);
+                }
+                if (jeffreysEnabled) {
+                  source -= at * d_mup->P[j] * lambda2 *
+                            (g_dot[a][b] + gt_dot[a][b] -
+                             (g_dot_g[a][b] + 2 * gt_dot_g[a][b] + gt_dot_gt[a][b]));
                 }
                 source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
@@ -6996,6 +7449,11 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
                   source -=
                       saramitoCoeff * alpha * lambda * d_mup->T[j] * s_dot_s[a][b] / (mup * mup);
                 }
+                if (jeffreysEnabled) {
+                  source -= d_mup->T[j] * lambda2 *
+                            (g_dot[a][b] + gt_dot[a][b] -
+                             (g_dot_g[a][b] + 2 * gt_dot_g[a][b] + gt_dot_gt[a][b]));
+                }
                 source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
                 /* Load them up */
@@ -7022,6 +7480,13 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
                   if (alpha != 0.) {
                     source -= saramitoCoeff * alpha * lambda * d_mup->X[p][j] * s_dot_s[a][b] /
                               (mup * mup);
+                  }
+
+                  if (jeffreysEnabled) {
+
+                    source -= d_mup->X[p][j] * lambda2 *
+                              (g_dot[a][b] + gt_dot[a][b] -
+                               (g_dot_g[a][b] + 2 * gt_dot_g[a][b] + gt_dot_gt[a][b]));
                   }
                   source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
@@ -7066,6 +7531,10 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
 
                   for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
                     phi_j = bf[var]->phi[j];
+                    dbl dG[DIM][DIM] = {{0.0}};
+                    dbl dGt[DIM][DIM] = {{0.0}};
+                    dG[p][q] = phi_j;
+                    dGt[q][p] = phi_j;
 
                     /* mass term */
                     mass = 0.0;
@@ -7085,6 +7554,40 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
                     source = -at * mup * phi_j *
                              ((double)delta(a, p) * (double)delta(b, q) +
                               (double)delta(b, p) * (double)delta(a, q));
+                    if (jeffreysEnabled) {
+                      dbl source_jeffrey = 0;
+                      // g_dot
+                      source_jeffrey +=
+                          (1. + 2. * tt) * phi_j / dt * (double)delta(a, p) * (double)delta(b, q);
+                      // gt_dot
+                      source_jeffrey +=
+                          (1. + 2. * tt) * phi_j / dt * (double)delta(a, q) * (double)delta(b, p);
+
+                      //// g_dot_g
+                      dbl dG_dot_g[DIM][DIM] = {{0.}};
+                      dbl g_dot_dG[DIM][DIM] = {{0.}};
+                      tensor_dot(dG, g, dG_dot_g, VIM);
+                      tensor_dot(g, dG, g_dot_dG, VIM);
+                      source_jeffrey -= g_dot_dG[a][b] + dG_dot_g[a][b];
+                      //// g_dot_gt
+                      // source_jeffrey -=  (g[a][p] * (double)delta(b, q) + gt[q][b] *
+                      // (double)delta(a, p)) *bf[var]->phi[j];
+                      //// 2*gt_dot_g
+                      dbl dGt_dot_g[DIM][DIM] = {{0.}};
+                      dbl gt_dot_dG[DIM][DIM] = {{0.}};
+                      tensor_dot(dGt, g, dGt_dot_g, VIM);
+                      tensor_dot(gt, dG, gt_dot_dG, VIM);
+                      source_jeffrey -= 2. * (dGt_dot_g[a][b] + gt_dot_dG[a][b]);
+                      // source_jeffrey -= 2.*(gt[a][p] * (double)delta(b, q) + g[q][b] *
+                      // (double)delta(a, p)) * bf[var]->phi[j];
+                      //// gt_dot_gt
+                      source_jeffrey -= g_dot_dG[b][a] + dG_dot_g[b][a];
+                      // source_jeffrey -=  (gt[a][p] * (double)delta(b, q) + g[q][b] *
+                      // (double)delta(a, p)) * bf[var]->phi[j];
+
+                      source_jeffrey *= -mup * lambda2;
+                      source += source_jeffrey;
+                    }
                     source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
                     /* Load them up */
@@ -7459,6 +7962,920 @@ void stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
     }
   } /* End of loop over modes */
 } /* END of routine stress_no_v_dot_gradS_logc                                 */
+
+void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
+                                double d_func[MAX_MODES][6][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                                const double dt,
+                                const double tt) {
+
+  int dim, p, q, w, k;
+
+  int eqn;
+  int evss_gradv = 0;
+
+  int i, j, mode;
+  dbl v[DIM];      /* Velocity field. */
+  dbl x_dot[DIM];  /* current position field derivative wrt time. */
+  dbl h3;          /* Volume element (scale factors). */
+  dbl dh3dmesh_pj; /* Sensitivity to (p,j) mesh dof. */
+
+  dbl grad_v[DIM][DIM];
+  dbl gamma[DIM][DIM]; /* Shear-rate tensor based on velocity */
+  dbl det_J;           /* determinant of element Jacobian */
+
+  dbl d_det_J_dmesh_pj; /* for specific (p,j) mesh dof */
+
+  dbl mass; /* For terms and their derivatives */
+  dbl mass_a, mass_b;
+  dbl advection;
+  dbl advection_a, advection_b, advection_c, advection_d;
+  dbl diffusion;
+  dbl source;
+  dbl source1;
+  dbl source_a = 0, source_b = 0, source_c = 0;
+  int err;
+  dbl alpha = 0;  /* This is the Geisekus mobility parameter */
+  dbl lambda = 0; /* polymer relaxation constant */
+  dbl d_lambda_dF[MDE];
+  double xi;
+  double d_xi_dF[MDE];
+  dbl ucwt, lcwt; /* Upper convected derviative weight, Lower convected derivative weight */
+  dbl eps = 0;    /* This is the PTT elongation parameter */
+  double d_eps_dF[MDE];
+  /*
+   *
+   * Note how carefully we avoid refering to d(phi[i])/dx[j] and refer instead
+   * to the j-th component of grad_phi[j][i] so that this vector can be loaded
+   * up with components that may be different in non Cartesian coordinate
+   * systems.
+   *
+   * We will, however, insist on *orthogonal* coordinate systems, even if we
+   * might permit them to be curvilinear.
+   *
+   * Assume all components of velocity are interpolated with the same kind
+   * of basis function.
+   */
+
+  /*
+   * Petrov-Galerkin weighting functions for i-th and ab-th stress residuals
+   * and some of their derivatives...
+   */
+
+  /*
+   * Interpolation functions for variables and some of their derivatives.
+   */
+
+  dbl phi_j;
+  dbl wt;
+
+  /* Variables for stress */
+
+  int R_s[MAX_MODES][DIM][DIM];
+  int v_s[MAX_MODES][DIM][DIM];
+  int v_g[DIM][DIM];
+
+  dbl b[DIM][DIM];     /* stress tensor */
+  dbl b_dot[DIM][DIM]; /* stress tensor from last time step */
+  dbl grad_b[DIM][DIM][DIM];
+  dbl d_grad_s_dmesh[DIM][DIM][DIM][DIM]
+                    [MDE]; /* derivative of grad of stress tensor for mode ve_mode */
+
+  dbl g[DIM][DIM];  /* velocity gradient tensor */
+  dbl gt[DIM][DIM]; /* transpose of velocity gradient tensor */
+
+  /* dot product tensors */
+
+  dbl s_dot_s[DIM][DIM];
+  dbl b_dot_g[DIM][DIM];
+  dbl g_dot_s[DIM][DIM];
+  dbl s_dot_gt[DIM][DIM];
+  dbl gt_dot_s[DIM][DIM];
+
+  /* polymer viscosity and derivatives */
+  dbl mup;
+  VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
+  VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
+
+  // todo: will want to parse necessary parameters... for now hard code
+  const bool saramitoEnabled =
+      (vn->ConstitutiveEquation == SARAMITO_OLDROYDB || vn->ConstitutiveEquation == SARAMITO_PTT ||
+       vn->ConstitutiveEquation == SARAMITO_GIESEKUS);
+
+  dbl saramitoCoeff = 1.;
+
+  dbl d_mup_dv_pj;
+  dbl d_mup_dmesh_pj;
+
+  /*  shift function */
+  dbl at = 0.0;
+  dbl d_at_dT[MDE];
+  dbl wlf_denom;
+
+  /* advective terms are precalculated */
+  dbl v_dot_del_b[DIM][DIM];
+  dbl x_dot_del_b[DIM][DIM];
+
+  dbl d_xdotdels_dm;
+
+  dbl d_vdotdels_dm;
+  int inv_v_s[DIM][DIM];
+
+  if (vn->evssModel == EVSS_GRADV) {
+    evss_gradv = 1;
+  }
+
+  eqn = R_STRESS11;
+  inv_v_s[0][0] = 0; /* S11 */
+  inv_v_s[0][1] = 1; /* S12 */
+  inv_v_s[1][1] = 2; /* S22 */
+  inv_v_s[0][2] = 3; /* S13 */
+  inv_v_s[1][2] = 4; /* S23 */
+  inv_v_s[2][2] = 5; /* S33 */
+
+  /*
+   * Bail out fast if there's nothing to do...
+   */
+
+  if (!pd->e[pg->imtrx][eqn]) {
+    return;
+  }
+
+  /*
+   * Unpack variables from structures for local convenience...
+   */
+
+  dim = pd->Num_Dim;
+
+  wt = fv->wt;
+
+  det_J = bf[eqn]->detJ; /* Really, ought to be mesh eqn. */
+
+  h3 = fv->h3; /* Differential volume element (scales). */
+
+  /* load eqn and variable number in tensor form */
+  (void)stress_eqn_pointer(v_s);
+  (void)stress_eqn_pointer(R_s);
+
+  v_g[0][0] = VELOCITY_GRADIENT11;
+  v_g[0][1] = VELOCITY_GRADIENT12;
+  v_g[1][0] = VELOCITY_GRADIENT21;
+  v_g[1][1] = VELOCITY_GRADIENT22;
+  v_g[0][2] = VELOCITY_GRADIENT13;
+  v_g[1][2] = VELOCITY_GRADIENT23;
+  v_g[2][0] = VELOCITY_GRADIENT31;
+  v_g[2][1] = VELOCITY_GRADIENT32;
+  v_g[2][2] = VELOCITY_GRADIENT33;
+
+  /*
+   * Field variables...
+   */
+  for (int a = 0; a < WIM; a++) {
+    v[a] = fv->v[a];
+
+    /* note, these are zero for steady calculations */
+    x_dot[a] = 0.0;
+    if (pd->TimeIntegration != STEADY && pd->gv[MESH_DISPLACEMENT1 + a]) {
+      x_dot[a] = fv_dot->x[a];
+    }
+  }
+
+  /*
+   * In Cartesian coordinates, this velocity gradient tensor will
+   * have components that are...
+   *
+   * 			grad_v[a][b] = d v_b
+   *				       -----
+   *				       d x_a
+   */
+
+  for (int a = 0; a < VIM; a++) {
+    for (int b = 0; b < VIM; b++) {
+      grad_v[a][b] = fv->grad_v[a][b];
+    }
+  }
+
+  /* load up shearrate tensor based on velocity */
+  for (int a = 0; a < VIM; a++) {
+    for (int b = 0; b < VIM; b++) {
+      gamma[a][b] = grad_v[a][b] + grad_v[b][a];
+    }
+  }
+
+  for (int a = 0; a < VIM; a++) {
+    for (int b = 0; b < VIM; b++) {
+      if (evss_gradv) {
+        g[a][b] = fv->grad_v[a][b];
+        gt[a][b] = fv->grad_v[b][a];
+      } else {
+        g[a][b] = fv->G[a][b];
+        gt[b][a] = g[a][b];
+      }
+    }
+  }
+
+  /*  shift factor  */
+  if (pd->gv[TEMPERATURE]) {
+    if (vn->shiftModel == CONSTANT) {
+      at = vn->shift[0];
+      for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
+        d_at_dT[j] = 0.;
+      }
+    } else if (vn->shiftModel == MODIFIED_WLF) {
+      wlf_denom = vn->shift[1] + fv->T - mp->reference[TEMPERATURE];
+      if (wlf_denom != 0.) {
+        at = exp(vn->shift[0] * (mp->reference[TEMPERATURE] - fv->T) / wlf_denom);
+        for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
+          d_at_dT[j] =
+              -at * vn->shift[0] * vn->shift[1] / (wlf_denom * wlf_denom) * bf[TEMPERATURE]->phi[j];
+        }
+      } else {
+        at = 1.;
+      }
+      for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
+        d_at_dT[j] = 0.;
+      }
+    }
+  } else {
+    at = 1.;
+  }
+
+  /* Begin loop over modes */
+  for (mode = 0; mode < vn->modes; mode++) {
+
+    load_modal_pointers(mode, tt, dt, b, b_dot, grad_b, d_grad_s_dmesh);
+
+    dbl source_term[DIM][DIM];
+    dbl d_source_term_db[DIM][DIM][DIM][DIM];
+    sqrt_conf_source(mode, b, source_term, d_source_term_db);
+
+    /* precalculate advective terms of form (v dot del tensor)*/
+
+    /*
+     * Stress tensor...(Note "anti-BSL" sign convention on deviatoric stress)
+     */
+    for (int ii = 0; ii < VIM; ii++) {
+      for (int jj = 0; jj < VIM; jj++) {
+        v_dot_del_b[ii][jj] = 0.;
+        x_dot_del_b[ii][jj] = 0.;
+        for (q = 0; q < WIM; q++) {
+          v_dot_del_b[ii][jj] += v[q] * grad_b[q][ii][jj];
+          x_dot_del_b[ii][jj] += x_dot[q] * grad_b[q][ii][jj];
+        }
+      }
+    }
+
+    /* get polymer viscosity */
+    mup = viscosity(ve[mode]->gn, gamma, d_mup);
+
+    if (saramitoEnabled == TRUE) {
+      GOMA_EH(GOMA_ERROR, "Saramito not enabled sqrt");
+    }
+
+    double d_alpha_dF[MDE];
+    /* get Geisekus mobility parameter */
+    if (ve[mode]->alphaModel == CONSTANT) {
+      alpha = ve[mode]->alpha;
+    } else if (ls != NULL && ve[mode]->alphaModel == VE_LEVEL_SET) {
+      double pos_alpha = ve[mode]->pos_ls.alpha;
+      double neg_alpha = ve[mode]->alpha;
+      double width = ls->Length_Scale;
+      err = level_set_property(neg_alpha, pos_alpha, width, &alpha, d_alpha_dF);
+      GOMA_EH(err, "level_set_property() failed for mobility parameter.");
+    } else {
+      GOMA_EH(GOMA_ERROR, "Unknown mobility parameter model");
+    }
+
+    /* get time constant */
+    if (ve[mode]->time_constModel == CONSTANT) {
+      lambda = ve[mode]->time_const;
+    } else if (ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW) {
+      lambda = mup / ve[mode]->time_const;
+    } else if (ls != NULL && ve[mode]->time_constModel == VE_LEVEL_SET) {
+      double pos_lambda = ve[mode]->pos_ls.time_const;
+      double neg_lambda = ve[mode]->time_const;
+      double width = ls->Length_Scale;
+      err = level_set_property(neg_lambda, pos_lambda, width, &lambda, d_lambda_dF);
+      GOMA_EH(err, "level_set_property() failed for polymer time constant.");
+    }
+
+    xi = 0;
+    if (ve[mode]->xiModel == CONSTANT) {
+      xi = ve[mode]->xi;
+    } else if (ls != NULL && ve[mode]->xiModel == VE_LEVEL_SET) {
+      double pos_xi = ve[mode]->pos_ls.xi;
+      double neg_xi = ve[mode]->xi;
+      double width = ls->Length_Scale;
+      err = level_set_property(neg_xi, pos_xi, width, &xi, d_xi_dF);
+      GOMA_EH(err, "level_set_property() failed for ptt xi parameter.");
+    } else {
+      GOMA_EH(GOMA_ERROR, "Unknown PTT Xi parameter model");
+    }
+
+    ucwt = 1.0 - xi / 2.0;
+    lcwt = xi / 2.0;
+
+    if (ve[mode]->epsModel == CONSTANT) {
+      eps = ve[mode]->eps;
+    } else if (ls != NULL && ve[mode]->epsModel == VE_LEVEL_SET) {
+      double pos_eps = ve[mode]->pos_ls.eps;
+      double neg_eps = ve[mode]->eps;
+      double width = ls->Length_Scale;
+      err = level_set_property(neg_eps, pos_eps, width, &eps, d_eps_dF);
+      GOMA_EH(err, "level_set_property() failed for ptt epsilon parameter.");
+    } else {
+      GOMA_EH(GOMA_ERROR, "Unknown PTT Epsilon parameter model");
+    }
+
+    /* get tensor dot products for future use */
+
+    (void)tensor_dot(b, g, b_dot_g, VIM);
+
+    dbl a_dot_b[DIM][DIM];
+    dbl d_a_dot_b_db[DIM][DIM][DIM][DIM];
+    dbl d_a_dot_b_dG[DIM][DIM][DIM][DIM];
+
+    compute_a_dot_b(b, g, a_dot_b, d_a_dot_b_db, d_a_dot_b_dG);
+    /*
+     * Residuals_________________________________________________________________
+     */
+
+    if (af->Assemble_Residual) {
+      /*
+       * Assemble each component "ab" of the polymer stress equation...
+       */
+      for (int ii = 0; ii < VIM; ii++) {
+        for (int jj = 0; jj < VIM; jj++) {
+
+          if (ii <= jj) /* since the stress tensor is symmetric, only assemble the upper half */
+          {
+            eqn = R_s[mode][ii][jj];
+            k = inv_v_s[ii][jj];
+
+            /*
+             * In the element, there will be contributions to this many equations
+             * based on the number of degrees of freedom...
+             */
+
+            for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+              mass = 0.;
+
+              if (pd->TimeIntegration != STEADY) {
+                if (pd->e[pg->imtrx][eqn] & T_MASS) {
+                  mass = b_dot[ii][jj];
+                  mass *= at * lambda * det_J * wt;
+                  mass *= h3;
+                  mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+                }
+              }
+
+              advection = 0.;
+              if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
+                if (DOUBLE_NONZERO(lambda)) {
+
+                  advection -= b_dot_g[ii][jj];
+                  advection -= a_dot_b[ii][jj];
+                  advection *= at * lambda * det_J * wt * h3;
+                  advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+                }
+              }
+
+              diffusion = 0.;
+              if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
+                diffusion *= det_J * wt * h3;
+                diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+              }
+
+              /*
+               * Source term...
+               */
+
+              source = 0.;
+              if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
+                // consider whether saramitoCoeff should multiply here
+                source += source_term[ii][jj];
+
+                source *= det_J * h3 * wt;
+
+                source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+              }
+
+              /*
+               * Add contributions to this residual (globally into Resid, and
+               * locally into an accumulator)
+               */
+
+              func[mode][k] += mass + advection + diffusion + source;
+            }
+          }
+        }
+      }
+    }
+
+    /*
+     * Jacobian terms...
+     */
+
+    if (af->Assemble_Jacobian) {
+      dbl R_source, R_advection; /* Places to put the raw residual portions
+                                    instead of constantly recalcing them */
+      for (int ii = 0; ii < VIM; ii++) {
+        for (int jj = 0; jj < VIM; jj++) {
+          if (ii <= jj) /* since the stress tensor is symmetric, only assemble the upper half */
+          {
+            eqn = R_s[mode][ii][jj];
+            k = inv_v_s[ii][jj];
+
+            R_advection = v_dot_del_b[ii][jj] - x_dot_del_b[ii][jj];
+            R_advection += b_dot_g[ii][jj] + a_dot_b[ii][jj];
+
+            R_source = delta(ii, jj) - b[ii][jj];
+
+            if (DOUBLE_NONZERO(alpha))
+              R_source += alpha * lambda * (s_dot_s[ii][jj] / mup);
+            R_source *= saramitoCoeff;
+            R_source += -at * mup * (g[ii][jj] + gt[ii][jj]);
+
+            for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+              int var;
+
+              /*
+               * J_S_T
+               */
+
+              var = TEMPERATURE;
+              if (pd->v[pg->imtrx][var]) {
+                for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                  phi_j = bf[var]->phi[j];
+
+                  mass = 0.;
+
+                  if (pd->TimeIntegration != STEADY) {
+                    if (pd->e[pg->imtrx][eqn] & T_MASS) {
+                      mass = b_dot[ii][jj];
+                      mass *= d_at_dT[j] * lambda * det_J * wt;
+                      mass *= h3;
+                      mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+                    }
+                  }
+
+                  advection = 0.;
+                  if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
+                    if (DOUBLE_NONZERO(lambda)) {
+                      advection -= (a_dot_b[ii][jj] + b_dot_g[ii][jj]);
+                      advection *= d_at_dT[j] * lambda * det_J * wt * h3;
+                      advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+                    }
+                  }
+
+                  source = 0.;
+                  source1 = 0.;
+                  if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
+                    source = -(g[ii][jj] + gt[ii][jj]) * (at * d_mup->T[j] + mup * d_at_dT[j]);
+
+                    if (DOUBLE_NONZERO(alpha)) {
+                      source1 -= s_dot_s[ii][jj] / (mup * mup) * d_mup->T[j];
+                      source1 *= lambda * alpha * saramitoCoeff;
+                      source += source1;
+                    }
+                    source *= det_J * wt * h3;
+                    source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+                  }
+
+                  d_func[mode][k][var][j] += mass + advection + source;
+                }
+              }
+
+              /*
+               * J_S_v
+               */
+              for (p = 0; p < WIM; p++) {
+                var = VELOCITY1 + p;
+                if (pd->v[pg->imtrx][var]) {
+                  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                    phi_j = bf[var]->phi[j];
+                    d_mup_dv_pj = d_mup->v[p][j];
+
+                    mass = 0.;
+
+                    if (pd->TimeIntegration != STEADY) {
+                      if (pd->e[pg->imtrx][eqn] & T_MASS) {
+
+                        mass *=
+                            pd->etm[pg->imtrx][eqn][(LOG2_MASS)] * at * lambda * det_J * wt * h3;
+                      }
+                    }
+
+                    advection = 0.;
+                    if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
+                      if (DOUBLE_NONZERO(lambda)) {
+                        advection *= at * lambda * det_J * wt * h3;
+                        advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+                      }
+                    }
+
+                    diffusion = 0.;
+                    if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
+                      diffusion *= det_J * wt * h3;
+                      diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+                    }
+
+                    source = 0.;
+
+                    if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
+                      source_c = -at * d_mup_dv_pj * (g[ii][jj] + gt[ii][jj]);
+                      if (evss_gradv) {
+                        if (pd->CoordinateSystem != CYLINDRICAL) {
+                          source_c -= at * mup *
+                                      (bf[VELOCITY1 + ii]->grad_phi_e[j][p][ii][jj] +
+                                       bf[VELOCITY1 + jj]->grad_phi_e[j][p][jj][ii]);
+                        } else {
+                          source_c -= at * mup *
+                                      (bf[VELOCITY1]->grad_phi_e[j][p][ii][jj] +
+                                       bf[VELOCITY1]->grad_phi_e[j][p][jj][ii]);
+                        }
+                      }
+
+                      source_a = 0.;
+                      if (DOUBLE_NONZERO(alpha)) {
+                        source_a = -s_dot_s[ii][jj] / (mup * mup);
+                        source_a *= saramitoCoeff * alpha * lambda * d_mup_dv_pj;
+                      }
+
+                      source_b = 0.;
+                      source = source_a + source_b + source_c;
+                      source *= det_J * wt * h3;
+                      source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+                    }
+
+                    d_func[mode][k][var][j] += mass + advection + diffusion + source;
+                  }
+                }
+              }
+
+              /*
+               * J_S_c
+               */
+              var = MASS_FRACTION;
+              if (pd->v[pg->imtrx][var]) {
+                for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                  phi_j = bf[var]->phi[j];
+
+                  for (w = 0; w < pd->Num_Species_Eqn; w++) {
+
+                    source = 0.;
+
+                    if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
+                      source_a = -at * d_mup->C[w][j] * (g[ii][jj] + gt[ii][jj]);
+
+                      source_b = 0.;
+                      if (DOUBLE_NONZERO(alpha)) {
+                        source_b -= s_dot_s[ii][jj] / (mup * mup);
+                        source_b *= alpha * lambda * saramitoCoeff * d_mup->C[w][j];
+                      }
+                      source = source_a + source_b;
+                      source *= det_J * wt * h3;
+                      source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+                    }
+
+                    if (w > 1) {
+                      GOMA_EH(GOMA_ERROR, "Need more arrays for each species.");
+                    }
+
+                    d_func[mode][k][var][j] += source;
+                  }
+                }
+              }
+
+              /*
+               * J_S_P
+               */
+              var = PRESSURE;
+              if (pd->v[pg->imtrx][var]) {
+                for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                  phi_j = bf[var]->phi[j];
+
+                  source = 0.;
+                  if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
+                    source_a += -at * d_mup->P[j] * (g[ii][jj] + gt[ii][jj]);
+
+                    source_b = 0.;
+                    if (DOUBLE_NONZERO(alpha)) {
+                      source_b -= (s_dot_s[ii][jj] / (mup * mup));
+                      source_b *= d_mup->P[j] * alpha * lambda * saramitoCoeff;
+                    }
+                    source = source_a + source_b;
+                    source *= det_J * wt * h3;
+                    source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+                  }
+
+                  d_func[mode][k][var][j] += source;
+                }
+              }
+
+              /*
+               * J_S_d
+               */
+              for (p = 0; p < dim; p++) {
+                var = MESH_DISPLACEMENT1 + p;
+                if (pd->v[pg->imtrx][var]) {
+                  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                    phi_j = bf[var]->phi[j];
+                    d_det_J_dmesh_pj = bf[eqn]->d_det_J_dm[p][j];
+                    dh3dmesh_pj = fv->dh3dq[p] * bf[var]->phi[j];
+                    d_mup_dmesh_pj = d_mup->X[p][j];
+
+                    mass = 0.;
+                    mass_a = 0.;
+                    mass_b = 0.;
+                    if (pd->TimeIntegration != STEADY) {
+                      if (pd->e[pg->imtrx][eqn] & T_MASS) {
+                        mass_a = b_dot[ii][jj];
+                        mass_a *= (d_det_J_dmesh_pj * h3 + det_J * dh3dmesh_pj);
+
+                        mass = mass_a + mass_b;
+                        mass *= at * lambda * wt * pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+                      }
+                    }
+
+                    advection = 0.;
+
+                    if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
+                      if (DOUBLE_NONZERO(lambda)) {
+                        /*
+                         * Four parts:
+                         *    advection_a =
+                         *    	Int ( ea.(v-xdot).d(Vv)/dmesh h3 |Jv| )
+                         *
+                         *    advection_b =
+                         *  (i)	Int ( ea.(v-xdot).Vv h3 d(|Jv|)/dmesh )
+                         *  (ii)  Int ( ea.(v-xdot).d(Vv)/dmesh h3 |Jv| )
+                         *  (iii) Int ( ea.(v-xdot).Vv dh3/dmesh |Jv|   )
+                         *
+                         * For unsteady problems, we have an
+                         * additional term
+                         *
+                         *    advection_c =
+                         *    	Int ( ea.d(v-xdot)/dmesh.Vv h3 |Jv| )
+                         */
+
+                        advection_a = R_advection;
+
+                        advection_a *= (d_det_J_dmesh_pj * h3 + det_J * dh3dmesh_pj);
+
+                        d_vdotdels_dm = 0.;
+
+                        advection_b = d_vdotdels_dm;
+                        advection_b *= det_J * h3;
+
+                        advection_c = 0.;
+                        if (pd->TimeIntegration != STEADY) {
+                          if (pd->e[pg->imtrx][eqn] & T_MASS) {
+                            d_xdotdels_dm = (1. + 2. * tt) * phi_j / dt * grad_b[p][ii][jj];
+
+                            advection_c -= d_xdotdels_dm;
+
+                            advection_c *= h3 * det_J;
+                          }
+                        }
+
+                        advection_d = 0.;
+
+                        advection = advection_a + advection_b + advection_c + advection_d;
+
+                        advection *= wt * at * lambda * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+                      }
+                    }
+
+                    diffusion = 0.;
+                    if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
+                      diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+                    }
+
+                    /*
+                     * Source term...
+                     */
+
+                    source = 0.;
+
+                    if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
+                      source_a = R_source;
+                      source_b = -at * (g[ii][jj] + gt[ii][jj]);
+
+                      if (DOUBLE_NONZERO(alpha)) {
+                        source_b += -s_dot_s[ii][jj] / (mup * mup) * alpha * lambda * saramitoCoeff;
+                      }
+
+                      source_a *= (d_det_J_dmesh_pj * h3 + det_J * dh3dmesh_pj);
+
+                      source_b *= det_J * h3 * d_mup_dmesh_pj;
+
+                      source_c = 0.;
+
+                      source = source_a + source_b + source_c;
+
+                      source *= wt * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+                    }
+
+                    d_func[mode][k][var][j] += mass + advection + diffusion + source;
+                  }
+                }
+              }
+
+              /*
+               * J_S_G
+               */
+              if (evss_gradv == 0) {
+                for (p = 0; p < VIM; p++) {
+                  for (q = 0; q < VIM; q++) {
+                    var = v_g[p][q];
+
+                    if (pd->v[pg->imtrx][var]) {
+                      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                        phi_j = bf[var]->phi[j];
+                        advection = 0.;
+                        advection_a = 0.;
+                        if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
+                          if (DOUBLE_NONZERO(lambda)) {
+                            for (int k = 0; k < VIM; k++) {
+                              advection += -b[ii][k] * delta(p, k) * delta(jj, q);
+                            }
+                            advection += -d_a_dot_b_dG[p][q][ii][jj];
+                            advection *= phi_j * h3 * det_J;
+
+                            advection *=
+                                wt * at * lambda * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+                          }
+                        }
+
+                        /*
+                         * Diffusion...
+                         */
+
+                        diffusion = 0.;
+
+                        if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
+                          diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+                        }
+
+                        /*
+                         * Source term...
+                         */
+
+                        source = 0.;
+
+                        d_func[mode][k][var][j] += advection + diffusion + source;
+                      }
+                    }
+                  }
+                }
+              }
+
+              /*
+               * J_S_F
+               */
+              var = FILL;
+              if (pd->v[pg->imtrx][var]) {
+                for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                  phi_j = bf[var]->phi[j];
+
+                  mass = 0.;
+
+                  if (pd->TimeIntegration != STEADY) {
+                    if (pd->e[pg->imtrx][eqn] & T_MASS) {
+
+                      mass = b_dot[ii][jj];
+                      mass *= d_lambda_dF[j];
+                      mass *= at * det_J * wt;
+                      mass *= h3;
+                      mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+                    }
+                  }
+
+                  advection = 0.;
+
+                  if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
+                    if (d_lambda_dF[j] != 0.) {
+
+                      advection += v_dot_del_b[ii][jj] - x_dot_del_b[ii][jj];
+                      if (ucwt != 0.)
+                        advection -= ucwt * (gt_dot_s[ii][jj] + b_dot_g[ii][jj]);
+                      if (lcwt != 0.)
+                        advection += lcwt * (s_dot_gt[ii][jj] + g_dot_s[ii][jj]);
+
+                      advection *= d_lambda_dF[j];
+                      advection *= at * det_J * wt * h3;
+                      advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+                    }
+                  }
+
+                  diffusion = 0.;
+
+                  if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
+                    /* add SU term in here when appropriate */
+
+                    diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+                  }
+
+                  source = 0.;
+
+                  if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
+
+                    double invmup = 1 / mup;
+                    // PTT
+
+                    // Giesekus
+                    if (alpha != 0.) {
+                      source += s_dot_s[ii][jj] *
+                                (-alpha * lambda * d_mup->F[j] * invmup * invmup +
+                                 d_alpha_dF[j] * lambda * invmup + alpha * d_lambda_dF[j] * invmup);
+                    }
+
+                    source *= det_J * h3 * wt;
+
+                    source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+                  }
+
+                  d_func[mode][k][var][j] += mass + advection + diffusion + source;
+                }
+              }
+
+              /*
+               * J_S_S
+               */
+              for (p = 0; p < VIM; p++) {
+                for (q = 0; q < VIM; q++) {
+                  if (q >= p) {
+                    var = v_s[mode][p][q];
+
+                    if (pd->v[pg->imtrx][var]) {
+                      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                        phi_j = bf[var]->phi[j];
+                        mass = 0.;
+                        if (pd->TimeIntegration != STEADY) {
+                          if (pd->e[pg->imtrx][eqn] & T_MASS) {
+                            mass = (1. + 2. * tt) * phi_j / dt * (double)delta(ii, p) *
+                                   (double)delta(jj, q);
+                            mass *= h3 * det_J;
+                            mass *= at * lambda * wt * pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+                          }
+                        }
+
+                        advection = 0.;
+
+                        if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
+                          if (DOUBLE_NONZERO(lambda)) {
+
+                            for (int k = 0; k < VIM; k++) {
+                              advection -=
+                                  phi_j *
+                                  (delta(ii, q) * delta(k, p) | delta(ii, p) * delta(k, q)) *
+                                  g[k][jj];
+                            }
+                            advection -= phi_j * d_a_dot_b_db[p][q][ii][jj];
+
+                            advection *= h3 * det_J;
+
+                            advection *=
+                                wt * at * lambda * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+                          }
+                        }
+
+                        /*
+                         * Diffusion...
+                         */
+
+                        diffusion = 0.;
+
+                        if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) {
+                          diffusion *= det_J * wt * h3;
+                          diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+                        }
+
+                        /*
+                         * Source term...
+                         */
+
+                        source = 0.;
+
+                        if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
+                          source = d_source_term_db[ii][jj][p][q];
+                          source *=
+                              phi_j * det_J * h3 * wt * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+                        }
+
+                        d_func[mode][k][var][j] += mass + advection + diffusion + source;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    } /* End Assemble Jacobian */
+  }   /* End loop over modes */
+}
 
 void stress_no_v_dot_gradS_logc_transient(
     double func[MAX_MODES][6],
