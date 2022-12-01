@@ -7934,7 +7934,7 @@ void stress_no_v_dot_gradS_sqrt(double func[MAX_MODES][6],
   dbl d_lambda_dF[MDE];
   double xi;
   double d_xi_dF[MDE];
-  dbl eps = 0;    /* This is the PTT elongation parameter */
+  dbl eps = 0; /* This is the PTT elongation parameter */
   double d_eps_dF[MDE];
   /*
    *
