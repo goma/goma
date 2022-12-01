@@ -1,10 +1,13 @@
-#include <catch2/catch.hpp>
+#include <catch2/catch_approx.hpp>
+#include <catch2/catch_test_macros.hpp>
+
+#include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <math.h>
 #include <stddef.h>
 
 #include "gds/gds_vector.h"
 
-static const auto zero_comp = Catch::Floating::WithinAbsMatcher(0.0, 1e-15);
+static const auto zero_comp = Catch::Matchers::WithinAbsMatcher(0.0, 1e-15);
 
 TEST_CASE("gds vector Allocation", "[gds][gds_vector]") {
   gds_vector *v = gds_vector_alloc(3);
@@ -351,9 +354,9 @@ TEST_CASE("gds_vector_add_normalize", "[gds][gds_vector]") {
   REQUIRE(gds_vector_get(w, 1) == 0);
   REQUIRE(gds_vector_get(w, 2) == 1);
 
-  REQUIRE(gds_vector_get(z, 0) == Approx(0.4242640687));
-  REQUIRE(gds_vector_get(z, 1) == Approx(0.7071067812));
-  REQUIRE(gds_vector_get(z, 2) == Approx(0.5656854249));
+  REQUIRE(gds_vector_get(z, 0) == Catch::Approx(0.4242640687));
+  REQUIRE(gds_vector_get(z, 1) == Catch::Approx(0.7071067812));
+  REQUIRE(gds_vector_get(z, 2) == Catch::Approx(0.5656854249));
 
   gds_vector_free(v);
   gds_vector_free(u);
@@ -377,12 +380,12 @@ TEST_CASE("gds_vector_cross", "[gds][gds_vector]") {
   gds_vector_cross(w, z, cross);
   REQUIRE(gds_vector_get(cross, 0) == 0);
   REQUIRE(gds_vector_get(cross, 1) == 0);
-  REQUIRE(gds_vector_get(cross, 2) == Approx(1));
+  REQUIRE(gds_vector_get(cross, 2) == Catch::Approx(1));
 
   gds_vector_cross(z, w, cross);
   REQUIRE(gds_vector_get(cross, 0) == 0);
   REQUIRE(gds_vector_get(cross, 1) == 0);
-  REQUIRE(gds_vector_get(cross, 2) == Approx(-1));
+  REQUIRE(gds_vector_get(cross, 2) == Catch::Approx(-1));
 
   gds_vector_cross(z, z, cross);
   REQUIRE(gds_vector_get(cross, 0) == 0);
@@ -453,24 +456,24 @@ TEST_CASE("gds_vector_rotate_around_vector", "[gds][gds_vector]") {
   gds_vector_set(z, 2, 0);
 
   gds_vector_rotate_around_vector(u, w, z, M_PI);
-  REQUIRE(gds_vector_get(u, 0) == Approx(-1));
+  REQUIRE(gds_vector_get(u, 0) == Catch::Approx(-1));
   REQUIRE(zero_comp.match(gds_vector_get(u, 1)));
   REQUIRE(zero_comp.match(gds_vector_get(u, 2)));
 
   gds_vector_rotate_around_vector(u, z, w, M_PI);
   REQUIRE(zero_comp.match(gds_vector_get(u, 0)));
-  REQUIRE(gds_vector_get(u, 1) == Approx(-1));
+  REQUIRE(gds_vector_get(u, 1) == Catch::Approx(-1));
   REQUIRE(zero_comp.match(gds_vector_get(u, 2)));
 
   gds_vector_rotate_around_vector(u, w, z, M_PI / 2);
   REQUIRE(zero_comp.match(gds_vector_get(u, 0)));
   REQUIRE(zero_comp.match(gds_vector_get(u, 1)));
-  REQUIRE(gds_vector_get(u, 2) == Approx(-1));
+  REQUIRE(gds_vector_get(u, 2) == Catch::Approx(-1));
 
   gds_vector_rotate_around_vector(u, w, z, -M_PI / 2);
   REQUIRE(zero_comp.match(gds_vector_get(u, 0)));
   REQUIRE(zero_comp.match(gds_vector_get(u, 1)));
-  REQUIRE(gds_vector_get(u, 2) == Approx(1));
+  REQUIRE(gds_vector_get(u, 2) == Catch::Approx(1));
 
   gds_vector_free(u);
   gds_vector_free(w);

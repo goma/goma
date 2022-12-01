@@ -3412,15 +3412,21 @@ double getPositionAC(struct AC_Information *augc, double *cAC_iAC, double *x, Ex
     // Process a 1D idea of what we need from the position
     int coordDir = augc->VOLID;
     if (coordDir < 0 || coordDir > 2) {
-      GOMA_EH(-1, "shouldn't be here");
+      GOMA_EH(GOMA_ERROR, "shouldn't be here");
     }
 
     if (augc->COMPID == 1) {
       // Special section for buoyant cylinder
 
     } else {
-
+      // for some reason GCC 12 will throw a warning despite the if above,
+      // if that if (coorDir < 0 || coordDir > 2) is placed here in addition
+      // to the one above it will not throw a warning for some reason
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
       pos1D = posNode[coordDir];
+      // restore Warray-bounds
+#pragma GCC diagnostic pop
 
       // Figure out cAC -> there are cases where the position may be an unknown
       // in the problem.

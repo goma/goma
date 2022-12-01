@@ -16427,7 +16427,8 @@ double quad_isomap_invert(const double x1,
   double pt[5] = {0.5, 1.0, 0.0, 0.5, 1.0};
   double phi[27], phic[27], phie[27], phig[27];
   double coord[3][27], xpt[3], pp[27];
-  double jac[3][3], detjt, detjti = 0.0;
+  double jac[3][3] = {{0.0}};
+  double detjt, detjti = 0.0;
   static double xi[3] = {0.5, 0.5, 0.5};
   static int nell = 0;
   int itp[27];

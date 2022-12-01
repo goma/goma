@@ -7338,6 +7338,8 @@ int sqrt_conf_source(int mode,
         d_binv_db[2][2][p][q] += (b[0][0] * b[1][1] - b[1][0] * b[0][1]) * -ddet / (det * det);
       }
     }
+  } else {
+    GOMA_EH(GOMA_ERROR, "Unknown VIM = %d for SQRT conformation tensor", VIM);
   }
 
   switch (vn->ConstitutiveEquation) {

@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 3.11)
 cmake_policy(VERSION 3.11)
 
-find_package(Catch2 REQUIRED)
+find_package(Catch2 3 REQUIRED)
 
 set(GOMA_TEST_SOURCES
     gds/gds_vector.cpp
