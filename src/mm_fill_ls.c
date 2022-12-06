@@ -9648,7 +9648,7 @@ void build_integ_element(Integ_Elem *e,
 
         if (overlaps_interface) {
           /* determine size of subelement compared to interface thickness */
-          map_subelement_stu(center, e, yi);
+          map_subelement_stu(yi, e, center);
           detJ = subelement_detJ(e, yi, FALSE);
           length_scale = pow(detJ, 1.0 / ((double)pd->Num_Dim));
           if (length_scale > ls->Length_Scale / scale)

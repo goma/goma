@@ -1756,10 +1756,10 @@ Revised:         Summer 1998, SY Tam (UNM)
       //        err = assemble_ewave_tensor_bf(time_value, theta, delta_t,
       //                                R_EM_E2_REAL, EM_E2_REAL);
       //        GOMA_EH( err, "assemble_ewave");
-      //#ifdef CHECK_FINITE
+      // #ifdef CHECK_FINITE
       //        err = CHECKFINITE("assemble_ewave");
       //        if (err) return -1;
-      //#endif
+      // #endif
     } else if (pde[R_EM_E2_REAL]) {
       err = assemble_emwave(time_value, theta, delta_t, &pg_data, R_EM_E2_REAL, EM_E2_REAL,
                             EM_E2_IMAG);
@@ -1775,10 +1775,10 @@ Revised:         Summer 1998, SY Tam (UNM)
       //        err = assemble_ewave_tensor_bf(time_value, theta, delta_t,
       //                                R_EM_E3_REAL, EM_E3_REAL);
       //        GOMA_EH( err, "assemble_ewave");
-      //#ifdef CHECK_FINITE
+      // #ifdef CHECK_FINITE
       //        err = CHECKFINITE("assemble_ewave");
       //        if (err) return -1;
-      //#endif
+      // #endif
     } else if (pde[R_EM_E3_REAL]) {
       err = assemble_emwave(time_value, theta, delta_t, &pg_data, R_EM_E3_REAL, EM_E3_REAL,
                             EM_E3_IMAG);
@@ -1794,10 +1794,10 @@ Revised:         Summer 1998, SY Tam (UNM)
       //        err = assemble_ewave_tensor_bf(time_value, theta, delta_t,
       //                                R_EM_E1_IMAG, EM_E1_IMAG);
       //        GOMA_EH( err, "assemble_ewave");
-      //#ifdef CHECK_FINITE
+      // #ifdef CHECK_FINITE
       //        err = CHECKFINITE("assemble_ewave");
       //        if (err) return -1;
-      //#endif
+      // #endif
     } else if (pde[R_EM_E1_IMAG]) {
       err = assemble_emwave(time_value, theta, delta_t, &pg_data, R_EM_E1_IMAG, EM_E1_IMAG,
                             EM_E1_REAL);
@@ -1813,10 +1813,10 @@ Revised:         Summer 1998, SY Tam (UNM)
       //        err = assemble_ewave_tensor_bf(time_value, theta, delta_t,
       //                                R_EM_E2_IMAG, EM_E2_IMAG);
       //        GOMA_EH( err, "assemble_ewave");
-      //#ifdef CHECK_FINITE
+      // #ifdef CHECK_FINITE
       //        err = CHECKFINITE("assemble_ewave");
       //        if (err) return -1;
-      //#endif
+      // #endif
     } else if (pde[R_EM_E2_IMAG]) {
       err = assemble_emwave(time_value, theta, delta_t, &pg_data, R_EM_E2_IMAG, EM_E2_IMAG,
                             EM_E2_REAL);
@@ -1832,10 +1832,10 @@ Revised:         Summer 1998, SY Tam (UNM)
       //        err = assemble_ewave_tensor_bf(time_value, theta, delta_t,
       //                                R_EM_E3_IMAG, EM_E3_IMAG);
       //        GOMA_EH( err, "assemble_ewave");
-      //#ifdef CHECK_FINITE
+      // #ifdef CHECK_FINITE
       //        err = CHECKFINITE("assemble_ewave");
       //        if (err) return -1;
-      //#endif
+      // #endif
     } else if (pde[R_EM_E3_IMAG]) {
       err = assemble_emwave(time_value, theta, delta_t, &pg_data, R_EM_E3_IMAG, EM_E3_IMAG,
                             EM_E3_REAL);
