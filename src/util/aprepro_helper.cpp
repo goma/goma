@@ -2,6 +2,9 @@
 #include <aprepro.h>
 #include <fstream>
 #include <sstream>
+// Include MPI here for cases when openmpi is built with CXX support
+// otherwise imports will be broken in the extern "C" section
+#include <mpi.h>
 extern "C" {
 #define DISABLE_CPP
 #include "mm_as_structs.h"
