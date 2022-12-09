@@ -479,7 +479,8 @@ void assemble_new_qtensor(dbl *el_length) /* 2 x approximate element length scal
   int ielem_type, ip_total, ip;
   dbl dp;
   dbl delta[DIM], xi[DIM], delta_xi[DIM];
-  dbl local_q[DIM][DIM], local_q2[DIM][DIM];
+  dbl local_q[DIM][DIM] = {{0.}};
+  dbl local_q2[DIM][DIM];
   dbl d_qtensor[DIM][DIM][DIM];
 
   /* Catch cases which are not available */

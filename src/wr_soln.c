@@ -253,15 +253,15 @@ void write_solution_segregated(char output_file[],
   /* Add additional user-specified post processing variables */
   //  if (tev_post > 0) {
   //      step = (*nprint) + 1;
-  //#ifdef DEBUG
+  // #ifdef DEBUG
   //      fprintf(stderr, "%s: start post_process_elem\n", yo);
-  //#endif
+  // #endif
   //
   //      post_process_elem(x, x_old, xdot, xdot_old, resid_vector, tev, tev_post,
   //                        gvec_elem, step, &time_value, delta_t, exo, dpi, rd);
-  //#ifdef DEBUG
+  // #ifdef DEBUG
   //      fprintf(stderr, "%s: done w/ post_process_elem\n", yo);
-  //#endif
+  // #endif
   //
   //      /* Write out time derivatives if requested */
   //      if (TIME_DERIVATIVES != -1 && (TimeIntegration != STEADY)) {

@@ -3242,7 +3242,7 @@ void rotate_momentum_auto(int id,  /* Elemental stiffness matrix row index */
   int pvar, peq;
   int n;
   int kdir, ldir;
-  double rotated_resid[MDE];
+  double rotated_resid[DIM];
   double rotated_jacobian_scalar[MAX_PDIM][MDE];
 
   /************************ EXECUTION BEGINS **********************************/
@@ -3337,7 +3337,7 @@ void rotate_mesh_auto(int id,  /* Elemental stiffness matrix row index */
   int pvar, peq;
   int n;
   int kdir, ldir;
-  double rotated_resid[MDE];
+  double rotated_resid[DIM];
   double rotated_jacobian_scalar[MAX_PDIM][MDE];
 
   /************************ EXECUTION BEGINS **********************************/

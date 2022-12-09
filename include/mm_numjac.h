@@ -46,7 +46,7 @@ struct elem_side_bc_struct;
  * most text books on the subject. This is roughly 1.0E-7.
  */
 #define DELTA_UNKNOWN (1.0e-7) /* for infinitesimal finite difference */
-//#define FD_DELTA_UNKNOWN (1.0e-4)	   /* for finite difference */
+// #define FD_DELTA_UNKNOWN (1.0e-4)	   /* for finite difference */
 #define FD_DELTA_UNKNOWN (1.0e-6) /* for finite difference */
 
 #define RESIDUAL_TOLERANCE        (1.0e-3) /* absolute error required for output */
