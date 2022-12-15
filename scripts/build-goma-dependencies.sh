@@ -318,7 +318,7 @@ $MUMPS_MD5 \
 ARCHIVE_URLS=("$ARPACK_NG_URL" \
 "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.12/hdf5-${HDF5_VERSION}/src/hdf5-${HDF5_VERSION}.tar.bz2" \
 "https://downloads.unidata.ucar.edu/netcdf-c/${NETCDF_VERSION_ONLY}/netcdf-${NETCDF_VERSION}.tar.gz" \
-"http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz" \
+"https://github.com/goma/mirror-parmetis/releases/download/v4.0.3/parmetis-4.0.3.tar.gz" \
 "http://downloads.sourceforge.net/project/sparse/sparse/sparse1.4b/sparse1.4b.tar.gz" \
 "http://codeload.github.com/xiaoyeli/superlu_dist/tar.gz/v$SUPERLU_DIST_VERSION" \
 "http://www.netlib.org/cgi-bin/netlibfiles.tgz?format=tgz\\&filename=y12m%2Fy12m.f" \
