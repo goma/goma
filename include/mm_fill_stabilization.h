@@ -10,6 +10,7 @@ typedef struct {
   dbl d_supg_tau_dv[DIM][MDE];
   dbl d_supg_tau_dX[DIM][MDE];
 } SUPG_terms;
+
 typedef struct {
   dbl supg_tau;
   dbl d_supg_tau_dv[DIM][MDE];
@@ -22,6 +23,7 @@ typedef struct {
 } SUPG_momentum_terms;
 
 void supg_tau_momentum_shakib(SUPG_momentum_terms *supg_terms, int dim, dbl dt);
+
 void supg_tau_shakib(SUPG_terms *supg_terms, int dim, dbl dt, dbl diffusivity, int interp_eqn);
 
 void get_supg_tau(SUPG_terms *supg_terms, int dim, dbl diffusivity, PG_DATA *pg_data);
