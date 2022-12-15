@@ -3882,6 +3882,7 @@ int assemble_momentum(dbl time,       /* current time */
           if (gn->ConstitutiveEquation == BINGHAM_MIXED ||
               (pd->gv[POLYMER_STRESS11] &&
                (vn->evssModel == EVSS_F || vn->evssModel == LOG_CONF ||
+                vn->evssModel == SQRT_CONF || vn->evssModel == CONF ||
                 vn->evssModel == EVSS_GRADV || vn->evssModel == LOG_CONF_GRADV))) {
             for (b = 0; b < VIM; b++) {
               for (c = 0; c < VIM; c++) {
