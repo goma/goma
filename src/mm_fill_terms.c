@@ -2440,9 +2440,11 @@ int assemble_momentum(dbl time,       /* current time */
   /*
    * Calculate the momentum stress tensor at the current gauss point
    */
-  if (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV ||
+  if (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV || vn->evssModel == CONF ||
       vn->evssModel == LOG_CONF_TRANSIENT || vn->evssModel == LOG_CONF_TRANSIENT_GRADV) {
     fluid_stress_conf(Pi, d_Pi);
+  } else if (vn->evssModel == SQRT_CONF) {
+    fluid_stress_sqrt_conf(Pi, d_Pi);
   } else {
     fluid_stress(Pi, d_Pi);
   }
@@ -3878,7 +3880,7 @@ int assemble_momentum(dbl time,       /* current time */
            * J_m_G
            */
           if (gn->ConstitutiveEquation == BINGHAM_MIXED ||
-              (pdv[POLYMER_STRESS11] &&
+              (pd->gv[POLYMER_STRESS11] &&
                (vn->evssModel == EVSS_F || vn->evssModel == LOG_CONF ||
                 vn->evssModel == EVSS_GRADV || vn->evssModel == LOG_CONF_GRADV))) {
             for (b = 0; b < VIM; b++) {
