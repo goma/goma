@@ -137,6 +137,121 @@ void get_metric_tensor_deriv(dbl B[DIM][DIM],
   }
 }
 
+void supg_tau_momentum_shakib(SUPG_momentum_terms *supg_terms, int dim, dbl dt) {
+  dbl G[DIM][DIM];
+  dbl gamma[DIM][DIM];
+  dbl mu;
+  VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;
+  VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
+
+  int interp_eqn = VELOCITY1;
+  get_metric_tensor(bf[interp_eqn]->B, dim, ei[pg->imtrx]->ielem_type, G);
+
+  dbl v_d_gv = 0;
+  for (int i = 0; i < dim; i++) {
+    for (int j = 0; j < dim; j++) {
+      v_d_gv += fabs(fv->v[i] * G[i][j] * fv->v[j]);
+    }
+  }
+
+  for (int i = 0; i < dim; i++) {
+    for (int j = 0; j < dim; j++) {
+      gamma[i][j] = fv->grad_v[i][j] + fv->grad_v[j][i];
+    }
+  }
+
+  mu = viscosity(gn, gamma, d_mu);
+
+  dbl coeff = (12.0 * mu * mu);
+  dbl diff_g_g = 0;
+  for (int i = 0; i < dim; i++) {
+    for (int j = 0; j < dim; j++) {
+      diff_g_g += coeff * G[i][j] * G[i][j];
+    }
+  }
+
+  dbl d_v_d_gv[DIM][MDE];
+  for (int a = 0; a < dim; a++) {
+    for (int k = 0; k < ei[pg->imtrx]->dof[VELOCITY1]; k++) {
+      d_v_d_gv[a][k] = 0.0;
+      for (int i = 0; i < dim; i++) {
+        for (int j = 0; j < dim; j++) {
+          d_v_d_gv[a][k] += delta(a, i) * bf[VELOCITY1 + a]->phi[k] * G[i][j] * fv->v[j] +
+                            delta(a, j) * fv->v[i] * G[i][j] * bf[VELOCITY1 + a]->phi[k];
+        }
+      }
+    }
+  }
+
+  if (pd->TimeIntegration != STEADY) {
+    supg_terms->supg_tau = 1.0 / (sqrt(4 / (dt * dt) + v_d_gv + diff_g_g));
+  } else {
+    supg_terms->supg_tau = 1.0 / (sqrt(v_d_gv + diff_g_g) + 1e-14);
+  }
+
+  dbl d_diff_g_g_dmu = 2.0 * diff_g_g / mu;
+  dbl supg_tau_cubed = supg_terms->supg_tau * supg_terms->supg_tau * supg_terms->supg_tau;
+
+  for (int a = 0; a < dim; a++) {
+    for (int k = 0; k < ei[pg->imtrx]->dof[VELOCITY1]; k++) {
+      supg_terms->d_supg_tau_dv[a][k] =
+          -0.5 * (d_v_d_gv[a][k] + (d_diff_g_g_dmu * d_mu->v[a][k])) * supg_tau_cubed;
+    }
+  }
+
+  if (pd->e[pg->imtrx][MESH_DISPLACEMENT1]) {
+    dbl dG[DIM][DIM][DIM][MDE];
+    get_metric_tensor_deriv(bf[MESH_DISPLACEMENT1]->B, bf[MESH_DISPLACEMENT1]->dB, dim,
+                            MESH_DISPLACEMENT1, ei[pg->imtrx]->ielem_type, dG);
+    for (int a = 0; a < dim; a++) {
+      for (int k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1 + a]; k++) {
+        dbl v_d_gv_dx = 0;
+        for (int i = 0; i < dim; i++) {
+          for (int j = 0; j < dim; j++) {
+            v_d_gv_dx += fv->v[i] * dG[i][j][a][k] * fv->v[j];
+          }
+        }
+
+        dbl diff_g_g_dx = 0;
+        for (int i = 0; i < dim; i++) {
+          for (int j = 0; j < dim; j++) {
+            diff_g_g_dx += 2 * coeff * dG[i][j][a][k] * G[i][j];
+          }
+        }
+        supg_terms->d_supg_tau_dX[a][k] =
+            -0.5 * (v_d_gv_dx + diff_g_g_dx + d_mu->X[a][k] * d_diff_g_g_dmu) * supg_tau_cubed;
+      }
+    }
+  }
+  if (pd->e[pg->imtrx][TEMPERATURE]) {
+    for (int k = 0; k < ei[pg->imtrx]->dof[TEMPERATURE]; k++) {
+      supg_terms->d_supg_tau_dT[k] = -0.5 * (d_mu->T[k] * d_diff_g_g_dmu) * supg_tau_cubed;
+    }
+  }
+  if (pd->e[pg->imtrx][PRESSURE]) {
+    for (int k = 0; k < ei[pg->imtrx]->dof[PRESSURE]; k++) {
+      supg_terms->d_supg_tau_dP[k] = -0.5 * (d_mu->P[k] * d_diff_g_g_dmu) * supg_tau_cubed;
+    }
+  }
+  if (pd->e[pg->imtrx][FILL]) {
+    for (int k = 0; k < ei[pg->imtrx]->dof[FILL]; k++) {
+      supg_terms->d_supg_tau_dF[k] = -0.5 * (d_mu->F[k] * d_diff_g_g_dmu) * supg_tau_cubed;
+    }
+  }
+  if (pd->e[pg->imtrx][BOND_EVOLUTION]) {
+    for (int k = 0; k < ei[pg->imtrx]->dof[BOND_EVOLUTION]; k++) {
+      supg_terms->d_supg_tau_dnn[k] = -0.5 * (d_mu->nn[k] * d_diff_g_g_dmu) * supg_tau_cubed;
+    }
+  }
+  if (pd->e[pg->imtrx][MASS_FRACTION]) {
+    for (int w = 0; w < pd->Num_Species_Eqn; w++) {
+      for (int k = 0; k < ei[pg->imtrx]->dof[MASS_FRACTION]; k++) {
+        supg_terms->d_supg_tau_dC[w][k] = -0.5 * (d_mu->C[w][k] * d_diff_g_g_dmu) * supg_tau_cubed;
+      }
+    }
+  }
+}
+
 void supg_tau_shakib(SUPG_terms *supg_terms, int dim, dbl dt, dbl diffusivity, int interp_eqn) {
   dbl G[DIM][DIM];
 
