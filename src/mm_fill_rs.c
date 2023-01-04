@@ -1892,14 +1892,14 @@ void f_kinematic_displacement_bc(double func[DIM],
       }
       pt_rad = sqrt(pt_rad);
       for (int r = 0; r < pd->Num_Dim; r++) {
-         dpt_rad_dX[r] = (fv->x[r] - fv->d_rs[r] - origin[r]) / pt_rad;
+        dpt_rad_dX[r] = (fv->x[r] - fv->d_rs[r] - origin[r]) / pt_rad;
       }
 
       for (p = 0; p < pd->Num_Dim; p++) {
         dns[p] = origin[p] + roll_rad / pt_rad * (fv->x[p] - fv->d_rs[p] - origin[p]);
         for (int r = 0; r < pd->Num_Dim; r++) {
-          dns_dX[p][r] = -roll_rad * dpt_rad_dX[r] / (pt_rad * pt_rad) *
-                         (fv->x[p] - fv->d_rs[p] - origin[p]);
+          dns_dX[p][r] =
+              -roll_rad * dpt_rad_dX[r] / (pt_rad * pt_rad) * (fv->x[p] - fv->d_rs[p] - origin[p]);
           dns_dX[p][r] += delta(p, r) * roll_rad / pt_rad;
           dns_drs[p][r] = -dns_dX[p][r];
         }
@@ -1941,8 +1941,12 @@ void f_kinematic_displacement_bc(double func[DIM],
 
       for (p = 0; p < pd->Num_Dim; p++) {
         for (int r = 0; r < pd->Num_Dim; r++) {
-          dns_dX[p][r] = delta(p,r) + -u_pars[p] * u_pars[p] * delta(p,r) / (SQUARE(u_pars[0]) + SQUARE(u_pars[1]) + SQUARE(u_pars[2]));
-          dns_drs[p][r] = -delta(p,r) + u_pars[p] * u_pars[p] * delta(p,r) / (SQUARE(u_pars[0]) + SQUARE(u_pars[1]) + SQUARE(u_pars[2]));
+          dns_dX[p][r] =
+              delta(p, r) + -u_pars[p] * u_pars[p] * delta(p, r) /
+                                (SQUARE(u_pars[0]) + SQUARE(u_pars[1]) + SQUARE(u_pars[2]));
+          dns_drs[p][r] =
+              -delta(p, r) + u_pars[p] * u_pars[p] * delta(p, r) /
+                                 (SQUARE(u_pars[0]) + SQUARE(u_pars[1]) + SQUARE(u_pars[2]));
         }
       }
 
