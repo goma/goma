@@ -1939,6 +1939,13 @@ void f_kinematic_displacement_bc(double func[DIM],
       for (p = 0; p < pd->Num_Dim; p++)
         dns[p] += u_pars[p] * t;
 
+      for (p = 0; p < pd->Num_Dim; p++) {
+        for (int r = 0; r < pd->Num_Dim; r++) {
+          dns_dX[p][r] = delta(p,r) + -u_pars[p] * u_pars[p] * delta(p,r) / (SQUARE(u_pars[0]) + SQUARE(u_pars[1]) + SQUARE(u_pars[2]));
+          dns_drs[p][r] = -delta(p,r) + u_pars[p] * u_pars[p] * delta(p,r) / (SQUARE(u_pars[0]) + SQUARE(u_pars[1]) + SQUARE(u_pars[2]));
+        }
+      }
+
     } else {
       GOMA_WH(-1, "Reverting to old base_displacement version.\n");
       base_displ_model = FALSE;
