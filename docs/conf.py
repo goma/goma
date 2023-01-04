@@ -123,6 +123,10 @@ html_theme = 'pydata_sphinx_theme'
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
+  "logo": {
+    "image_light": "figures/goma.png",
+    "image_dark": "figures/goma.png"
+  },
   "show_nav_level": 2
 }
 
