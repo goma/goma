@@ -1886,20 +1886,16 @@ void f_kinematic_displacement_bc(double func[DIM],
       for (p = 0; p < pd->Num_Dim; p++)
         origin[p] = elc_rs_glob[mn]->u_v_mesh_sfs[p + 1];
       pt_rad = 0;
-      dbl dpt_rad_dX[DIM] = {0.};
       for (p = 0; p < pd->Num_Dim; p++) {
         pt_rad += SQUARE(fv->x[p] - fv->d_rs[p] - origin[p]);
       }
       pt_rad = sqrt(pt_rad);
-      for (int r = 0; r < pd->Num_Dim; r++) {
-        dpt_rad_dX[r] = (fv->x[r] - fv->d_rs[r] - origin[r]) / pt_rad;
-      }
 
       for (p = 0; p < pd->Num_Dim; p++) {
         dns[p] = origin[p] + roll_rad / pt_rad * (fv->x[p] - fv->d_rs[p] - origin[p]);
         for (int r = 0; r < pd->Num_Dim; r++) {
-          dns_dX[p][r] =
-              -roll_rad * dpt_rad_dX[r] / (pt_rad * pt_rad) * (fv->x[p] - fv->d_rs[p] - origin[p]);
+          dns_dX[p][r] = -roll_rad * (fv->x[r] - fv->d_rs[r] - origin[r]) /
+                         (pt_rad * pt_rad * pt_rad) * (fv->x[p] - fv->d_rs[p] - origin[p]);
           dns_dX[p][r] += delta(p, r) * roll_rad / pt_rad;
           dns_drs[p][r] = -dns_dX[p][r];
         }
