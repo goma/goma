@@ -187,14 +187,16 @@ goma_error generate_ghost_elems(Exo_DB *exo, Dpi *dpi) {
   }
 
   std::vector<std::array<int, 3>> recv_sizes(dpi->num_neighbors);
-  std::vector<std::array<int, 3>> send_sizes;
+  std::vector<std::array<int, 3>> send_sizes(dpi->num_neighbors);
   std::vector<MPI_Request> requests(dpi->num_neighbors * 2);
 
   for (int i = 0; i < dpi->num_neighbors; i++) {
     std::array<int, 3> sizes{static_cast<int>(shared_elems_neighbor[i].size()),
                              static_cast<int>(connectivity[i].size()),
                              static_cast<int>(shared_nodes_neighbor[i].size())};
-    send_sizes.emplace_back(sizes);
+    for (unsigned int j = 0; j < sizes.size(); j++) {
+      send_sizes[i][j] = sizes[j];
+    }
 
     MPI_Irecv(recv_sizes[i].data(), 3, MPI_INT, dpi->neighbor[i], 2500, MPI_COMM_WORLD,
               &requests[i]);
