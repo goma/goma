@@ -1,3 +1,7 @@
+## Changes in version 7.4.1
+
+- Bugfix for Goma builds without PETSc
+
 ## Changes in version 7.4.0
 
 - Add Nedelec Hcurl first order Basis functions [goma#413](https://github.com/goma/goma/pull/413)
