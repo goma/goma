@@ -187,6 +187,7 @@ struct Material_Properties {
   int elec_cond_external_field;
 
   dbl permittivity;
+  dbl permittivity_imag;
   dbl d_permittivity[MAX_VARIABLE_TYPES + MAX_CONC];
   int len_u_permittivity;
   dbl *u_permittivity;
@@ -536,6 +537,7 @@ struct Material_Properties {
   dbl d_specific_heat[MAX_VARIABLE_TYPES + MAX_CONC + MAX_PMV];
 
   dbl permeability;
+  dbl permeability_imag;
   dbl perm_tensor[DIM][DIM];
   int PermeabilityModel;
   dbl d_permeability[MAX_VARIABLE_TYPES + MAX_CONC + MAX_PMV];
@@ -907,6 +909,12 @@ struct Material_Properties {
   int por_shell_cap_pres_ext_field_index[MAX_POR_SHELL];
   int por_shell_cap_pres_hyst_num_switch_ext_field_index[MAX_POR_SHELL];
   int por_shell_cap_pres_hyst_curve_type_ext_field_index[MAX_POR_SHELL];
+
+  // EM incident wave, mix between boundary condition / source / problem property
+  int IncidentWaveModel;
+  dbl incident_wave;
+  int len_u_incident_wave;
+  dbl *u_incident_wave;
 
   /*
    * Boundary conditions...(these quantities and the geometric surface

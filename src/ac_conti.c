@@ -16,6 +16,7 @@
  * irst order continuation
  */
 
+#include "sl_matrix_util.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -62,6 +63,8 @@
 #include "rf_solver_const.h"
 #include "rf_util.h"
 #include "sl_auxutil.h"
+#include "sl_petsc.h"
+#include "sl_petsc_complex.h"
 #include "sl_util.h" /* defines sl_init() */
 #include "sl_util_structs.h"
 #include "std.h"
@@ -589,9 +592,39 @@ void continue_problem(Comm_Ex *cx, /* array of communications structures */
     a = ams[JAC]->val;
     if (!save_old_A)
       a_old = ams[JAC]->val_old = NULL;
+#ifdef GOMA_ENABLE_PETSC
+#if PETSC_USE_COMPLEX
+  } else if (strcmp(Matrix_Format, "petsc_complex") == 0) {
+    err = check_compatible_solver();
+    GOMA_EH(err, "Incompatible matrix solver for petsc_complex, solver must be petsc_complex");
+    check_parallel_error("Matrix format / Solver incompatibility");
+    pg->imtrx = 0;
+    goma_error err = goma_setup_petsc_matrix_complex(
+        ams[JAC], exo, dpi, x, x_old, xdot, xdot_old, num_internal_dofs[pg->imtrx],
+        num_boundary_dofs[pg->imtrx], num_external_dofs[pg->imtrx], pg->imtrx);
+    GOMA_EH(err, "goma_setup_petsc_matrix");
+#else
+  } else if (strcmp(Matrix_Format, "petsc") == 0) {
+    err = check_compatible_solver();
+    GOMA_EH(err, "Incompatible matrix solver for petsc, solver must be petsc");
+    check_parallel_error("Matrix format / Solver incompatibility");
+    pg->imtrx = 0;
+    goma_error err = goma_setup_petsc_matrix(
+        ams[JAC], exo, dpi, x, x_old, xdot, xdot_old, num_internal_dofs[pg->imtrx],
+        num_boundary_dofs[pg->imtrx], num_external_dofs[pg->imtrx], pg->imtrx);
+    GOMA_EH(err, "goma_setup_petsc_matrix");
+#endif
+#endif
   } else
     GOMA_EH(GOMA_ERROR, "Attempted to allocate unknown sparse matrix format");
 
+#ifdef GOMA_ENABLE_PETSC
+#if !(PETSC_USE_COMPLEX)
+  if (upd->petsc_solve_post_proc && rd->TotalNVPostOutput) {
+    goma_setup_petsc_post_proc_matrix(exo, dpi, x, x_old, xdot, xdot_old);
+  }
+#endif
+#endif
   init_vec(x, cx, exo, dpi, x_AC, nAC, &timeValueRead);
 
   /*  if read ACs, update data floats */

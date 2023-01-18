@@ -10,3 +10,7 @@ mechanisms that are charge-dependent.
 
    electrical_properties/electrical_conductivity
    electrical_properties/electrical_permittivity
+   electrical_properties/magnetic_permeability
+   electrical_properties/electromagnetic_incident_wave
+   electrical_properties/extinction_index
+   electrical_properties/refractive_index

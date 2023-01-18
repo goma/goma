@@ -5370,7 +5370,7 @@ int variable_type_nodalInterp(int var)
           i_type == I_Q1_HV || i_type == I_Q1_HG || i_type == I_Q1_HVG || i_type == I_Q2_HV ||
           i_type == I_Q2_HG || i_type == I_Q2_HVG || i_type == I_Q2_D || i_type == I_Q2_LSA ||
           i_type == I_Q2_D_LSA || i_type == I_Q1_D || i_type == I_H3 || i_type == I_S2 ||
-          i_type == I_SP)
+          i_type == I_SP || i_type == I_N1)
         post_flag = 1;
     }
   }

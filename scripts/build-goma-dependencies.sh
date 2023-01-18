@@ -3112,9 +3112,43 @@ else
     fi
 fi
 
+if [ -n "$BUILD_PETSC_COMPLEX" ]; then
+
+export PETSC_ARCH=arch-linux-c-debug-complex
+if [ -e $PETSC_DIR/$PETSC_ARCH/lib/libpetsc.a ]; then
+    log_echo "PETSc is already built!"
+else
+    ./configure --with-shared-libraries=0 --with-cc=$(which mpicc) --with-cxx=$(which mpicxx) --with-fc=$(which mpif90) --with-debugging=1 --download-hypre --with-scalapack=1 --with-scalapack-dir=$(readlink --canonicalize-missing "${SCALAPACK_LIBRARY_DIR}/..") --with-superlu_dist=1 --with-superlu_dist-dir=$GOMA_LIB/superlu_dist-$SUPERLU_DIST_VERSION --with-metis=1 --with-metis-dir=$GOMA_LIB/parmetis-4.0.3 --with-parmetis=1 --with-parmetis-dir=$GOMA_LIB/parmetis-4.0.3 --with-blas-lib=${NON_INTEL_BLAS_LIBRARY} --with-lapack-lib=${NON_INTEL_LAPACK_LIBRARY} --with-mumps=1 --with-mumps-dir="$GOMA_LIB/MUMPS_$MUMPS_VERSION" --with-scalar-type=complex 2>&1 | tee -a $COMPILE_LOG
+    make -j$MAKE_JOBS all 2>&1 | tee -a $COMPILE_LOG
+    make check 2>&1 | tee -a $COMPILE_LOG
+    if [ -e $PETSC_DIR/$PETSC_ARCH/lib/libpetsc.a ]; then
+        log_echo "PETSc built!"
+    else
+        log_echo "Failed to build PETSc $PETSC_VERSION"
+        exit 1
+    fi
+fi
+
+export PETSC_ARCH=arch-linux-c-opt-complex
+if [ -e $PETSC_DIR/$PETSC_ARCH/lib/libpetsc.a ]; then
+    log_echo "PETSc is already built!"
+else
+    ./configure --with-shared-libraries=0 --with-cc=$(which mpicc) --with-cxx=$(which mpicxx) --with-fc=$(which mpif90) --with-debugging=0 COPTFLAGS='-O3' CXXOPTFLAGS='-O3' FOPTFLAGS='-O3' --download-hypre --with-scalapack=1 --with-scalapack-dir=$(readlink --canonicalize-missing "${SCALAPACK_LIBRARY_DIR}/..") --with-superlu_dist=1 --with-superlu_dist-dir=$GOMA_LIB/superlu_dist-$SUPERLU_DIST_VERSION --with-metis=1 --with-metis-dir=$GOMA_LIB/parmetis-4.0.3 --with-parmetis=1 --with-parmetis-dir=$GOMA_LIB/parmetis-4.0.3 --with-blas-lib=${NON_INTEL_BLAS_LIBRARY} --with-lapack-lib=${NON_INTEL_LAPACK_LIBRARY} --with-mumps=1 --with-mumps-dir="$GOMA_LIB/MUMPS_$MUMPS_VERSION" --with-scalar-type=complex 2>&1 | tee -a $COMPILE_LOG
+    make -j$MAKE_JOBS all 2>&1 | tee -a $COMPILE_LOG
+    make check 2>&1 | tee -a $COMPILE_LOG
+    if [ -e $PETSC_DIR/$PETSC_ARCH/lib/libpetsc.a ]; then
+        log_echo "PETSc built!"
+    else
+        log_echo "Failed to build PETSc $PETSC_VERSION"
+        exit 1
+    fi
+fi
+
+fi
 
 # Generate a config file for bash
 cd $GOMA_LIB
+export PETSC_ARCH=arch-linux-c-opt
 cat > config.sh <<EOF
 export CMAKE_PREFIX_PATH=$TRILINOS_INSTALL:${GOMA_LIB}/Omega_h:\$CMAKE_PREFIX_PATH
 export PATH=$TRILINOS_INSTALL/bin:\$PATH
@@ -3139,6 +3173,60 @@ set -x PETSC_DIR ${PETSC_DIR}
 set -x PETSC_ARCH ${PETSC_ARCH}
 EOF
 
+if [ -n "$BUILD_PETSC_COMPLEX" ]; then
+cd $GOMA_LIB
+export PETSC_ARCH=arch-linux-c-opt-complex
+cat > config-complex.sh <<EOF
+export CMAKE_PREFIX_PATH=$TRILINOS_INSTALL:${GOMA_LIB}/Omega_h:\$CMAKE_PREFIX_PATH
+export PATH=$TRILINOS_INSTALL/bin:\$PATH
+export PATH=${GOMA_LIB}/openmpi-$OPENMPI_VERSION/bin:\$PATH
+export METISDIR=${GOMA_LIB}/parmetis-4.0.3
+export UMFPACK_DIR=${GOMA_LIB}/SuiteSparse-$SUITESPARSE_VERSION
+export ARPACKDIR=${GOMA_LIB}/arpack-ng-$ARPACK_NG_VERSION
+export SPARSEDIR=${GOMA_LIB}/sparse
+export PETSC_DIR=${PETSC_DIR}
+export PETSC_ARCH=${PETSC_ARCH}
+EOF
+
+cat > config-complex.fish <<EOF
+set -x CMAKE_PREFIX_PATH $TRILINOS_INSTALL ${GOMA_LIB}/Omega_h \$CMAKE_PREFIX_PATH
+set -x PATH $TRILINOS_INSTALL/bin \$PATH
+set -x PATH ${GOMA_LIB}/openmpi-$OPENMPI_VERSION/bin \$PATH
+set -x METISDIR ${GOMA_LIB}/parmetis-4.0.3
+set -x UMFPACK_DIR ${GOMA_LIB}/SuiteSparse-$SUITESPARSE_VERSION
+set -x ARPACKDIR ${GOMA_LIB}/arpack-ng-$ARPACK_NG_VERSION
+set -x SPARSEDIR ${GOMA_LIB}/sparse
+set -x PETSC_DIR ${PETSC_DIR}
+set -x PETSC_ARCH ${PETSC_ARCH}
+EOF
+
+cd $GOMA_LIB
+export PETSC_ARCH=arch-linux-c-opt-debug-complex
+cat > config-debug-complex.sh <<EOF
+export CMAKE_PREFIX_PATH=$TRILINOS_INSTALL:${GOMA_LIB}/Omega_h:\$CMAKE_PREFIX_PATH
+export PATH=$TRILINOS_INSTALL/bin:\$PATH
+export PATH=${GOMA_LIB}/openmpi-$OPENMPI_VERSION/bin:\$PATH
+export METISDIR=${GOMA_LIB}/parmetis-4.0.3
+export UMFPACK_DIR=${GOMA_LIB}/SuiteSparse-$SUITESPARSE_VERSION
+export ARPACKDIR=${GOMA_LIB}/arpack-ng-$ARPACK_NG_VERSION
+export SPARSEDIR=${GOMA_LIB}/sparse
+export PETSC_DIR=${PETSC_DIR}
+export PETSC_ARCH=${PETSC_ARCH}
+EOF
+
+cat > config-debug-complex.fish <<EOF
+set -x CMAKE_PREFIX_PATH $TRILINOS_INSTALL ${GOMA_LIB}/Omega_h \$CMAKE_PREFIX_PATH
+set -x PATH $TRILINOS_INSTALL/bin \$PATH
+set -x PATH ${GOMA_LIB}/openmpi-$OPENMPI_VERSION/bin \$PATH
+set -x METISDIR ${GOMA_LIB}/parmetis-4.0.3
+set -x UMFPACK_DIR ${GOMA_LIB}/SuiteSparse-$SUITESPARSE_VERSION
+set -x ARPACKDIR ${GOMA_LIB}/arpack-ng-$ARPACK_NG_VERSION
+set -x SPARSEDIR ${GOMA_LIB}/sparse
+set -x PETSC_DIR ${PETSC_DIR}
+set -x PETSC_ARCH ${PETSC_ARCH}
+EOF
+fi
+
 
 if [ "$build_cmake" == "true" ] ; then
     echo "export PATH=$GOMA_LIB/cmake-$CMAKE_VERSION-linux-x86_64/bin:\$PATH" >> config.sh
@@ -3149,3 +3237,8 @@ log_echo
 log_echo "An example bash configuration file has been written to $GOMA_LIB/config.sh"
 log_echo
 log_echo "Activate with $ source $GOMA_LIB/config.sh"
+if [ -n "$BUILD_PETSC_COMPLEX" ]; then
+log_echo "An example bash configuration file has been written to $GOMA_LIB/config-complex.sh"
+log_echo
+log_echo "Activate with $ source $GOMA_LIB/config-complex.sh"
+fi
