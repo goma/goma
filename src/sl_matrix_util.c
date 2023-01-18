@@ -447,8 +447,13 @@ void row_sum_scaling_scale(struct GomaLinearSolverData *ams, double b[], double 
   } else if (strcmp(Matrix_Format, "epetra") == 0) {
     row_sum_scale_epetra(ams, b, scale);
 #ifdef GOMA_ENABLE_PETSC
+#if PETSC_USE_COMPLEX
+  } else if (strcmp(Matrix_Format, "petsc_complex") == 0) {
+    // Skip
+#else
   } else if (strcmp(Matrix_Format, "petsc") == 0) {
     petsc_scale_matrix(ams, b, scale);
+#endif
 #endif
   } else {
     GOMA_EH(GOMA_ERROR, "Unknown sparse matrix format");
@@ -830,6 +835,14 @@ int check_compatible_solver(void) {
   if (strcmp(Matrix_Format, "petsc") == 0) {
     switch (Linear_Solver) {
     case PETSC_SOLVER:
+      return GOMA_SUCCESS;
+    default:
+      return GOMA_ERROR;
+    }
+  }
+  if (strcmp(Matrix_Format, "petsc_complex") == 0) {
+    switch (Linear_Solver) {
+    case PETSC_COMPLEX_SOLVER:
       return GOMA_SUCCESS;
     default:
       return GOMA_ERROR;

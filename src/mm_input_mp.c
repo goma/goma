@@ -36,6 +36,7 @@
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_eh.h"
+#include "mm_fill_em.h"
 #include "mm_input.h"
 #include "mm_mp.h"
 #include "mm_mp_const.h"
@@ -3429,7 +3430,23 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
                         &(mat_ptr->u_permittivity), &(mat_ptr->len_u_permittivity), model_name,
                         SCALAR_INPUT, &NO_SPECIES, es);
   if (model_read == -1) {
-    if (strncmp(model_name, " ", 1) != 0) {
+    if (strcmp(model_name, "COMPLEX_CONSTANT") == 0) {
+      mat_ptr->PermittivityModel = COMPLEX_CONSTANT;
+      if (fscanf(imp, "%lf %lf", &(mat_ptr->permittivity), &(mat_ptr->permittivity_imag)) != 2) {
+        GOMA_EH(GOMA_ERROR, "Expected 2 constants for %s = %s", search_string, model_name);
+      }
+    } else if (strcmp(model_name, "RADIAL_PML") == 0) {
+      mat_ptr->PermittivityModel = RADIAL_PML;
+      num_const = read_constants(imp, &(mat_ptr->u_permittivity), 0);
+      if (num_const != 5) {
+        GOMA_EH(GOMA_ERROR, "Expected 5 constants for %s = %s", search_string, model_name);
+      }
+      mat_ptr->len_u_permittivity = num_const;
+    } else if (strcmp(model_name, "REFRACTIVE_INDEX") == 0) {
+      mat_ptr->PermittivityModel = REFRACTIVE_INDEX;
+      mat_ptr->len_u_permittivity = 0;
+    } else if (strncmp(model_name, " ", 1) != 0) {
+
       SPF(err_msg, "Syntax error or invalid model for %s\n", search_string);
       GOMA_EH(GOMA_ERROR, err_msg);
     } else {
@@ -3450,7 +3467,19 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       &(mat_ptr->u_magnetic_permeability), &(mat_ptr->len_u_magnetic_permeability), model_name,
       SCALAR_INPUT, &NO_SPECIES, es);
   if (model_read == -1) {
-    if (strncmp(model_name, " ", 1) != 0) {
+    if (strcmp(model_name, "COMPLEX_CONSTANT") == 0) {
+      mat_ptr->PermeabilityModel = COMPLEX_CONSTANT;
+      if (fscanf(imp, "%lf %lf", &(mat_ptr->permeability), &(mat_ptr->permeability_imag)) != 2) {
+        GOMA_EH(GOMA_ERROR, "Expected 2 constants for %s = %s", search_string, model_name);
+      }
+    } else if (strcmp(model_name, "RADIAL_PML") == 0) {
+      mat_ptr->PermeabilityModel = RADIAL_PML;
+      num_const = read_constants(imp, &(mat_ptr->u_permeability), 0);
+      if (num_const != 5) {
+        GOMA_EH(GOMA_ERROR, "Expected 5 constants for %s = %s", search_string, model_name);
+      }
+      mat_ptr->len_u_permeability = num_const;
+    } else if (strncmp(model_name, " ", 1) != 0) {
       SPF(err_msg, "Syntax error or invalid model for %s\n", search_string);
       GOMA_EH(GOMA_ERROR, err_msg);
     } else {
@@ -3478,6 +3507,28 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   }
   ECHO(es, echo_file);
 
+  rewind(imp);
+  strcpy(search_string, "Electromagnetic Incident Wave");
+  model_read =
+      look_for_mat_prop(imp, search_string, &(mat_ptr->IncidentWaveModel),
+                        &(mat_ptr->incident_wave), &(mat_ptr->u_incident_wave),
+                        &(mat_ptr->len_u_incident_wave), model_name, SCALAR_INPUT, &NO_SPECIES, es);
+  if (model_read == -1) {
+    if (strcmp(model_name, "PLANE_Z_WAVE") == 0) {
+      mat_ptr->IncidentWaveModel = EM_INC_PLANE_Z_WAVE;
+      num_const = read_constants(imp, &mat_ptr->u_incident_wave, 0);
+      mat_ptr->len_u_incident_wave = num_const;
+      if (num_const != 1) {
+        GOMA_EH(GOMA_ERROR, "Expected 1 constants for %s = %s", search_string, model_name);
+      }
+    } else {
+      mat_ptr->IncidentWaveModel = CONSTANT;
+      mat_ptr->len_u_incident_wave = 0;
+      SPF(es, "\t(%s = %s %.4g)", search_string, "NONE", mat_ptr->incident_wave);
+    }
+  }
+
+  ECHO(es, echo_file);
   strcpy(search_string, "Shell User Parameter");
   model_read = look_for_mat_prop(imp, search_string, &(mat_ptr->Shell_User_ParModel),
                                  &(mat_ptr->shell_user_par), &(mat_ptr->u_shell_user_par),

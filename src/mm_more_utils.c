@@ -206,7 +206,9 @@ int goal_post_nodal(const int var) {
          pd_glob[mat]->i[pg->imtrx][var] == I_Q2_HVG ||
          pd_glob[mat]->i[pg->imtrx][var] == I_Q2_LSA || pd_glob[mat]->i[pg->imtrx][var] == I_Q1_D ||
          pd_glob[mat]->i[pg->imtrx][var] == I_Q2_D ||
-         pd_glob[mat]->i[pg->imtrx][var] == I_Q2_D_LSA || pd_glob[mat]->i[pg->imtrx][var] == I_SP);
+         pd_glob[mat]->i[pg->imtrx][var] == I_Q2_D_LSA || pd_glob[mat]->i[pg->imtrx][var] == I_SP ||
+         pd_glob[mat]->i[pg->imtrx][var] == I_N1);
+    ;
   }
 
   if (post_flag) {
@@ -1072,4 +1074,5 @@ void elements_attached_to_NS(int *element_list, int NS_ID, Exo_DB *exo) {
   }
   return;
 }
+
 /* END of file mm_more_utils.c */

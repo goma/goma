@@ -819,6 +819,8 @@ int dof_lnode_interp_type(const int n,
       return ((n == 0) ? 1 : 0);
     case I_P1: /* 1 node, 3 dof/node, piecewise linear */
       return ((n == 0) ? 3 : 0);
+    case I_N1:
+      return (n >= 3 && n < 6) ? 1 : 0;
     default:
       GOMA_EH(GOMA_ERROR, "node_interp_info: Unrecognized triangle interpolation.");
       break;
@@ -990,6 +992,8 @@ int dof_lnode_interp_type(const int n,
         break;
       }
       break;
+    case I_N1:
+      return (n >= 4 && n < 8) ? 1 : 0;
     default:
       GOMA_EH(GOMA_ERROR, "Unrecognized quadrilateral interpolation.");
       break;
@@ -1011,6 +1015,8 @@ int dof_lnode_interp_type(const int n,
       return ((n == 0) ? 1 : 0);
     case I_P1: /* 1 node, 4 dof/node, piecewise linear */
       return ((n == 0) ? 4 : 0);
+    case I_N1:
+      return (n >= 4 && n < 10) ? 1 : 0;
     default:
       GOMA_EH(GOMA_ERROR, "Unrecognized tetrahedron interpolation.");
       break;
@@ -1134,6 +1140,8 @@ int dof_lnode_interp_type(const int n,
       break;
     case I_H3: /* 8 node, 8 dof/node, Hermite tricubic */
       return ((n < 8) ? 8 : 0);
+    case I_N1:
+      return (n >= 8 && n < 20) ? 1 : 0;
     default:
       GOMA_EH(GOMA_ERROR, "Unrecognized hexahedron interpolation.");
       break;
@@ -1397,6 +1405,8 @@ int getdofs(const int element_shape, const int interpolation)
 
     case I_P1: /* 1 node, 3 dof/node, piecewise linear */
       return (3);
+    case I_N1:
+      return 3;
 
     default:
       GOMA_EH(GOMA_ERROR, "Unrecognized triangle interpolation.");
@@ -1475,7 +1485,8 @@ int getdofs(const int element_shape, const int interpolation)
 
     case I_PQ2:
       return (9); /* centroid node, 9 dof/node, biquadratic discontinous */
-
+    case I_N1:
+      return 4;
     default:
       GOMA_EH(GOMA_ERROR, "Unrecognized quadrilateral interpolation.");
       break;
@@ -1501,6 +1512,8 @@ int getdofs(const int element_shape, const int interpolation)
     case I_P1: /* 1 node, 4 dof/node, piecewise linear */
       return (4);
 
+    case I_N1:
+      return 6;
     default:
       GOMA_EH(GOMA_ERROR, "Unrecognized tetrahedron interpolation.");
       break;
@@ -1581,7 +1594,8 @@ int getdofs(const int element_shape, const int interpolation)
 
     case I_H3: /* 8 node, 8 dof/node, Hermite tricubic */
       return (64);
-
+    case I_N1:
+      return 12;
     default:
       GOMA_EH(GOMA_ERROR, "Unrecognized hexahedron interpolation.");
       break;

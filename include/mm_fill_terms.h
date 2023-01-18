@@ -165,6 +165,8 @@ EXTERN int load_fv /* mm_fill_terms.c                           */
 
 EXTERN int load_fv_all(void);
 
+EXTERN int load_fv_vector(void);
+
 EXTERN int load_fv_grads /* mm_fill_terms.c                           */
     (void);
 
