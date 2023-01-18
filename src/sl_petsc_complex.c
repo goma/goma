@@ -1,11 +1,11 @@
 #include <mpi.h>
-#include <petscmath.h>
 #include <stddef.h>
 #ifdef GOMA_ENABLE_PETSC
 #include <petscsystypes.h>
 #if (PETSC_USE_COMPLEX)
 #include <petscksp.h>
 #include <petscmat.h>
+#include <petscmath.h>
 #include <petscsys.h>
 #include <petscvec.h>
 #ifdef I
