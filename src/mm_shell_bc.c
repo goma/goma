@@ -164,9 +164,9 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
     var = LUBP;
     if (pd->v[pg->imtrx][var]) {
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-          /* Load basis functions (j) */
-          ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
-                  n_dof[MESH_DISPLACEMENT1], dof_map);
+        /* Load basis functions (j) */
+        ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
+                n_dof[MESH_DISPLACEMENT1], dof_map);
 
         Inn(grad_phi_j, grad_II_phi_j);
 
@@ -179,14 +179,14 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
         }
       }
     }
-      /*
-       * J_lubp_DMX
-       */
+    /*
+     * J_lubp_DMX
+     */
     var = MESH_DISPLACEMENT1;
     if (pd->v[pg->imtrx][var] &&
-       (mp->FSIModel == FSI_MESH_CONTINUUM || mp->FSIModel == FSI_REALSOLID_CONTINUUM ||
-        mp->FSIModel == FSI_MESH_UNDEF || mp->FSIModel == FSI_SHELL_ONLY_MESH ||
-        mp->FSIModel == FSI_SHELL_ONLY_UNDEF)) {
+        (mp->FSIModel == FSI_MESH_CONTINUUM || mp->FSIModel == FSI_REALSOLID_CONTINUUM ||
+         mp->FSIModel == FSI_MESH_UNDEF || mp->FSIModel == FSI_SHELL_ONLY_MESH ||
+         mp->FSIModel == FSI_SHELL_ONLY_UNDEF)) {
 
       /*** Loop over dimensions of mesh displacement ***/
       for (jj = 0; jj < pd->Num_Dim; jj++) {
@@ -198,7 +198,7 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
 
           /* Load basis functions (j) */
           ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
-                    n_dof[MESH_DISPLACEMENT1], dof_map);
+                  n_dof[MESH_DISPLACEMENT1], dof_map);
 
           if (pd->e[pg->imtrx][var]) {
             for (ii = 0; ii < pd->Num_Dim; ii++) {
@@ -299,27 +299,28 @@ void shell_n_dot_flow_wall(double func[DIM],
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
         /* Load basis functions (j) */
         ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
-                  n_dof[MESH_DISPLACEMENT1], dof_map);
+                n_dof[MESH_DISPLACEMENT1], dof_map);
 
         Inn(grad_phi_j, grad_II_phi_j);
 
         for (ii = 0; ii < pd->Num_Dim; ii++) {
-          d_func[0][var][j] += wall_factor*LubAux->dq_dp2[ii][j] * phi_j * bdy_tangent[ii] / fv->sdet;
+          d_func[0][var][j] +=
+              wall_factor * LubAux->dq_dp2[ii][j] * phi_j * bdy_tangent[ii] / fv->sdet;
           for (jj = 0; jj < pd->Num_Dim; jj++) {
-            d_func[0][var][j] +=
-                wall_factor*LubAux->dq_dgradp[ii][jj][j] * grad_II_phi_j[jj] * bdy_tangent[ii] / fv->sdet;
+            d_func[0][var][j] += wall_factor * LubAux->dq_dgradp[ii][jj][j] * grad_II_phi_j[jj] *
+                                 bdy_tangent[ii] / fv->sdet;
           }
         }
       }
     }
-      /*
-       * J_lubp_DMX
-       */
+    /*
+     * J_lubp_DMX
+     */
     var = MESH_DISPLACEMENT1;
     if (pd->v[pg->imtrx][var] &&
-       (mp->FSIModel == FSI_MESH_CONTINUUM || mp->FSIModel == FSI_REALSOLID_CONTINUUM ||
-        mp->FSIModel == FSI_MESH_UNDEF || mp->FSIModel == FSI_SHELL_ONLY_MESH ||
-        mp->FSIModel == FSI_SHELL_ONLY_UNDEF)) {
+        (mp->FSIModel == FSI_MESH_CONTINUUM || mp->FSIModel == FSI_REALSOLID_CONTINUUM ||
+         mp->FSIModel == FSI_MESH_UNDEF || mp->FSIModel == FSI_SHELL_ONLY_MESH ||
+         mp->FSIModel == FSI_SHELL_ONLY_UNDEF)) {
 
       /*** Loop over dimensions of mesh displacement ***/
       for (jj = 0; jj < pd->Num_Dim; jj++) {
@@ -331,13 +332,16 @@ void shell_n_dot_flow_wall(double func[DIM],
 
           /* Load basis functions (j) */
           ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
-                    n_dof[MESH_DISPLACEMENT1], dof_map);
+                  n_dof[MESH_DISPLACEMENT1], dof_map);
 
           if (pd->e[pg->imtrx][var]) {
             for (ii = 0; ii < pd->Num_Dim; ii++) {
-              d_func[0][var][j] += wall_factor*LubAux->dq_dx[ii][jj][j] * bdy_tangent[ii] / fv->sdet;
-              d_func[0][var][j] += wall_factor*LubAux->q[ii] * bdy_dstangent_dx[ii][jj][jk] / fv->sdet;
-              d_func[0][var][j] += wall_factor*LubAux->q[ii] * bdy_tangent[ii] * (-fv->dsurfdet_dx[jj][j] / SQUARE(fv->sdet));
+              d_func[0][var][j] +=
+                  wall_factor * LubAux->dq_dx[ii][jj][j] * bdy_tangent[ii] / fv->sdet;
+              d_func[0][var][j] +=
+                  wall_factor * LubAux->q[ii] * bdy_dstangent_dx[ii][jj][jk] / fv->sdet;
+              d_func[0][var][j] += wall_factor * LubAux->q[ii] * bdy_tangent[ii] *
+                                   (-fv->dsurfdet_dx[jj][j] / SQUARE(fv->sdet));
             }
           }
         }
@@ -350,7 +354,7 @@ void shell_n_dot_flow_wall(double func[DIM],
   for (ii = 0; ii < pd->Num_Dim; ii++) {
     func[0] += LubAux->q[ii] * bdy_tangent[ii];
   }
-  func[0] *= wall_factor/fv->sdet;
+  func[0] *= wall_factor / fv->sdet;
 
   /* clean-up */
   safe_free((void *)n_dof);

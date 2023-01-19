@@ -1782,8 +1782,7 @@ double usr_heat_flux(const double gradP[],      /*   pressure gradient  */
                      double q[],                /*   flow vector            */
                      double dq_gradP[DIM][DIM], /*   flow sens wrt gradP    */
                      double dq_dX[DIM][DIM],    /*   flow sens wrt coords   */
-                     const double time)
-{
+                     const double time) {
   GOMA_EH(GOMA_ERROR, "No usr_heat_flux model supplied");
   return (1.);
 } /* End of usr_heat_flux */
@@ -1927,4 +1926,3 @@ int usr_yield_stress(dbl *param, dbl time) /* pointer to user-defined parameter 
 /*****************************************************************************/
 /* End of file user_mp.c */
 /*****************************************************************************/
-

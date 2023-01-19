@@ -1736,32 +1736,30 @@ static int calc_standard_fields(double **post_proc_vect,
           qc[a] = 0.;
         }
       }
-      if(fv->x0[2] <= 0.79375) {
-        dir = 0; 
+      if (fv->x0[2] <= 0.79375) {
+        dir = 0;
       } else {
         double tmp;
-        tmp = modf((fv->x0[2] - radius)/(2*radius-overlap), &sign);
+        tmp = modf((fv->x0[2] - radius) / (2 * radius - overlap), &sign);
         sign += 1.;
         dir = (int)sign % 2;
       }
-      sign = 2*(double)dir - 1.;
+      sign = 2 * (double)dir - 1.;
       for (a = 0; a < dim; a++) {
-        local_post[ORIENTATION_VECTORS + a] = sign*qc[a]/sqrt(q_mag);
+        local_post[ORIENTATION_VECTORS + a] = sign * qc[a] / sqrt(q_mag);
         local_lumped[ORIENTATION_VECTORS + a] = 1.;
       }
-    }
-    else if (pd->e[pg->imtrx][R_MOMENTUM1]) {
+    } else if (pd->e[pg->imtrx][R_MOMENTUM1]) {
       double velo_sqrd = 0.;
       for (a = 0; a < VIM; a++) {
         velo_sqrd += SQUARE(fv->v[a]);
       }
       for (a = 0; a < VIM; a++) {
-        local_post[ORIENTATION_VECTORS + a] = fv->v[a]/sqrt(velo_sqrd);
+        local_post[ORIENTATION_VECTORS + a] = fv->v[a] / sqrt(velo_sqrd);
         local_lumped[ORIENTATION_VECTORS + a] = 1.;
       }
-    }
-    else {
-      GOMA_EH(GOMA_ERROR,"Orientation field not defined!");
+    } else {
+      GOMA_EH(GOMA_ERROR, "Orientation field not defined!");
     }
   }
   if (SHELL_NORMALS != -1 && (pd->e[pg->imtrx][R_SHELL_ANGLE1] || pd->e[pg->imtrx][R_LUBP])) {

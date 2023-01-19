@@ -4392,8 +4392,8 @@ double evaluate_volume_integral(const Exo_DB *exo,  /* ptr to basic exodus ii me
           is_shell = TRUE;
         }
 
-        compute_volume_integrand(quantity, elem, is_shell, species_id, params, num_params, &sum, J_AC,
-                                 adaptive_integration_active, time_value, delta_t, xi, exo);
+        compute_volume_integrand(quantity, elem, is_shell, species_id, params, num_params, &sum,
+                                 J_AC, adaptive_integration_active, time_value, delta_t, xi, exo);
 #ifdef PARALLEL
         delta_sum = sum - sum0;
 
@@ -4499,7 +4499,7 @@ int compute_volume_integrand(const int quantity,
     weight *= 2. * M_PIE;
   }
 
-  if(is_shell) {
+  if (is_shell) {
     n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
     lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
     det = fv->sdet; // Different determinant since this is a shell
@@ -4571,7 +4571,6 @@ int compute_volume_integrand(const int quantity,
                               &dH_U_ddh, time, delta_t);
 
     *sum += H * weight * det;
-
 
     break;
   }
@@ -5552,7 +5551,8 @@ int compute_volume_integrand(const int quantity,
     break;
   }
   /* clean-up */
-  if(is_shell) safe_free((void *)n_dof);
+  if (is_shell)
+    safe_free((void *)n_dof);
 
   return (1);
 }

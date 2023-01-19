@@ -3999,7 +3999,7 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
         f = yield / tau_w;
         f_c = 1. - f;
         f_term = 1. - SQUARE(f) - SQUARE(f_c) / (2. * nexp + 1.) - 2. * f * f_c / (2. + nexp);
-        f_termd = SQUARE(f) + f * f_c/(2*nexp+1.) + f*(1.-2*f)/(2+nexp);
+        f_termd = SQUARE(f) + f * f_c / (2 * nexp + 1.) + f * (1. - 2 * f) / (2 + nexp);
         srate = pow((tau_w - yield) / mu, 1. / nexp);
         vis_w = tau_w / srate;
         q_mag = -0.25 * SQUARE(H) * srate * f_term;
