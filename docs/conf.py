@@ -124,8 +124,8 @@ html_theme = 'pydata_sphinx_theme'
 # documentation.
 html_theme_options = {
   "logo": {
-    "image_light": "figures/goma.png",
-    "image_dark": "figures/goma.png"
+    "image_light": "goma.png",
+    "image_dark": "goma.png"
   },
   "show_nav_level": 2
 }

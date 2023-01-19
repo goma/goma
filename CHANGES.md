@@ -1,3 +1,11 @@
+## Changes in version 7.4.2
+
+- Online documentation fix, broken with newer Sphinx [goma#415](https://github.com/goma/goma/pull/415)
+
+## Changes in version 7.4.1
+
+- Bugfix for Goma builds without PETSc [goma#414](https://github.com/goma/goma/pull/414)
+
 ## Changes in version 7.4.0
 
 - Add Nedelec Hcurl first order Basis functions [goma#413](https://github.com/goma/goma/pull/413)
