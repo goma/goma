@@ -50,7 +50,7 @@ EXTERN void shell_n_dot_flow_wall(double func[DIM],
                                   const double time,      /* current time */
                                   const double dt,        /* current time step size */
                                   double xi[DIM],         /* Local stu coords */
-                                  const Exo_DB *exo); /* ExodusII database struct pointer */
+                                  const Exo_DB *exo);     /* ExodusII database struct pointer */
 
 EXTERN void lub_static_pressure(double func[DIM],
                                 double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
