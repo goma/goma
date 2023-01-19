@@ -1778,25 +1778,11 @@ int usr_solid_viscosity(dbl *param, /* ptr to user-defined parameter list       
 /********************************************
  *    user-defined heat flux model  *
  ********************************************/
-#if defined SECOR_HEAT_FLUX
-double usr_heat_flux(const double gradP[],      /*   pressure gradient  */
-                     double q[],                /*   flow vector            */
-                     double dq_gradP[DIM][DIM], /*   flow sens wrt gradP    */
-                     double dq_dX[DIM][DIM],    /*   flow sens wrt coords   */
-                     const double time,
-                     const double h,
-                     const double dh_dX[DIM],
-                     const double vb[DIM],
-                     const double vt[DIM],
-                     double dq_dVb[DIM][DIM],
-                     double dq_dVt[DIM][DIM])
-#else
 double usr_heat_flux(const double gradP[],      /*   pressure gradient  */
                      double q[],                /*   flow vector            */
                      double dq_gradP[DIM][DIM], /*   flow sens wrt gradP    */
                      double dq_dX[DIM][DIM],    /*   flow sens wrt coords   */
                      const double time)
-#endif
 {
   GOMA_EH(GOMA_ERROR, "No usr_heat_flux model supplied");
   return (1.);

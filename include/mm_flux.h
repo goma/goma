@@ -101,6 +101,7 @@ evaluate_volume_integral(const Exo_DB *exo,        /* ptr to basic exodus ii mes
 EXTERN int compute_volume_integrand(const int,
                                     const int,
                                     const int,
+                                    const int,
                                     const double *,
                                     const int,
                                     double *,

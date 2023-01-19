@@ -439,7 +439,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 #else
   int relax_bit = FALSE;
 #endif
-  int no_relax_retry = ceil(1. - log(damp_factor_org[0]) / log(2.));
+  int no_relax_retry = ceil(2. - log(damp_factor_org[0]) / log(2.));
   int nonconv_roll = 0;
   int use_custom_damp =
       ((damp_factor1 <= 1. && damp_factor1 >= 0.) && (damp_factor2 <= 1. && damp_factor2 >= 0.) &&
@@ -2456,6 +2456,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
             DPRINTF(stderr, "\n\tlast time step failed, dt *= %g for next try!\n",
                     tran->time_step_decelerator);
 
+            damp_factor1 = MAX(damp_factor1, 1.0);
             delta_t *= tran->time_step_decelerator;
             tran->delta_t = delta_t;
             tran->delta_t_avg = 0.25 * (delta_t + delta_t_old + delta_t_older + delta_t_oldest);

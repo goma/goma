@@ -7103,8 +7103,8 @@ void stress_no_v_dot_gradS(double func[MAX_MODES][6],
   dbl Z = 1.0;    /* This is the factor appearing in front of the stress tensor in PTT */
   dbl dZ_dtrace = 0.0;
 
-  dbl lambda1;
-  dbl lambda2;
+  dbl lambda1 = 0;
+  dbl lambda2 = 0;
   dbl elasticMod;
 
   /* ETMs*/

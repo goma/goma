@@ -956,41 +956,16 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
                   local_qconv += rho * Cp * fv->T * fv->snormal[a] * (fv->v[a] - x_dot[a]);
                 }
               } else if (cr->HeatFluxModel == CR_HF_USER) {
-                double delP = 0.;
-#if defined SECOR_HEAT_FLUX
-                double *hpar, h, dh_dX[DIM], Vb[DIM], Vt[DIM];
-                double dq_dVb[DIM][DIM], dq_dVt[DIM][DIM];
-
-                hpar = &mp->u_thermal_conductivity[0];
-                h = hpar[0] + hpar[4] * fv->x[0] +
-                    (hpar[1] - hpar[5] * fv->x[0]) * (hpar[3] - fv->x[1]) +
-                    0.5 * hpar[2] * SQUARE(hpar[3] - fv->x[1]);
-
-                dh_dX[0] = hpar[4] - hpar[5] * (hpar[3] - fv->x[1]);
-                dh_dX[1] = hpar[5] * fv->x[0] - hpar[1] - hpar[2] * (hpar[3] - fv->x[1]);
-
-                /*     velocities of bottom and top surfaces   */
-                Vb[0] = mp->u_heat_capacity[0];
-                Vb[1] = mp->u_heat_capacity[1];
-                Vt[0] = mp->u_heat_capacity[2];
-                Vt[1] = mp->u_heat_capacity[3];
-
-                usr_heat_flux(fv->grad_T, q, dq_gradT, dq_dX, time_value, h, dh_dX, Vb, Vt, dq_dVb,
-                              dq_dVt);
-#else
                 usr_heat_flux(fv->grad_T, q, dq_gradT, dq_dX, time_value);
                 printf("untested\n");
                 exit(-1);
-#endif
 
                 for (a = 0; a < VIM; a++) {
-                  delP += fv->snormal[a] * fv->grad_T[a];
                   local_q += fv->snormal[a] * q[a];
                   for (b = 0; b < VIM; b++) {
                     local_qconv += fv->snormal[a] * dq_gradT[a][b] * fv->snormal[b];
                   }
                 }
-                /*                                local_qconv *= delP/fv->T;  */
               }
               local_flux += weight * det * local_q;
               local_flux_conv += weight * det * local_qconv;
@@ -4123,6 +4098,7 @@ double evaluate_volume_integral(const Exo_DB *exo,  /* ptr to basic exodus ii me
 {
   int i, j;
   int eb, e_start, e_end, elem;
+  int is_shell = FALSE;
 
   int PorousShellOn = 0;
 
@@ -4412,7 +4388,11 @@ double evaluate_volume_integral(const Exo_DB *exo,  /* ptr to basic exodus ii me
         if (subelement_surf_integration_active)
           bf[pd->ShapeVar]->detJ = 1.;
 
-        compute_volume_integrand(quantity, elem, species_id, params, num_params, &sum, J_AC,
+        if (ei[pg->imtrx]->ielem_type >= BILINEAR_SHELL && ei[pg->imtrx]->ielem_type <= P0_SHELL) {
+          is_shell = TRUE;
+        }
+
+        compute_volume_integrand(quantity, elem, is_shell, species_id, params, num_params, &sum, J_AC,
                                  adaptive_integration_active, time_value, delta_t, xi, exo);
 #ifdef PARALLEL
         delta_sum = sum - sum0;
@@ -4485,6 +4465,7 @@ double evaluate_volume_integral(const Exo_DB *exo,  /* ptr to basic exodus ii me
 
 int compute_volume_integrand(const int quantity,
                              const int elem,
+                             const int is_shell,
                              const int species_no,
                              const double *params,
                              const int num_params,
@@ -4504,8 +4485,7 @@ int compute_volume_integrand(const int quantity,
  ******************************************************************************/
 {
   double weight = fv->wt;
-  double det = bf[pd->ShapeVar]->detJ * fv->h3;
-  double det_J = bf[pd->ShapeVar]->detJ;
+  double det, det_J = bf[pd->ShapeVar]->detJ;
   double h3 = fv->h3;
   int a, b, p, q, var, j, dim = pd->Num_Dim, gnn, matIndex, ledof, c;
   int *n_dof = NULL;
@@ -4517,6 +4497,14 @@ int compute_volume_integrand(const int quantity,
 
   if (upd->CoordinateSystem == CYLINDRICAL || upd->CoordinateSystem == SWIRLING) {
     weight *= 2. * M_PIE;
+  }
+
+  if(is_shell) {
+    n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
+    lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+    det = fv->sdet; // Different determinant since this is a shell
+  } else {
+    det = det_J * h3;
   }
 
   switch (quantity) {
@@ -4570,22 +4558,12 @@ int compute_volume_integrand(const int quantity,
 
   break;
   case I_LUB_LOAD: {
-    n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
-    lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
-
-    det = fv->sdet; // Different determinant since this is a shell
 
     *sum += fv->lubp * weight * det;
-
-    /* clean-up */
-    safe_free((void *)n_dof);
 
     break;
   }
   case I_SHELL_VOLUME: {
-    n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
-    lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
-    det = fv->sdet; // Different determinant since this is a shell
 
     dbl H, H_U, dH_U_dtime, H_L, dH_L_dtime;
     dbl dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
@@ -4594,8 +4572,6 @@ int compute_volume_integrand(const int quantity,
 
     *sum += H * weight * det;
 
-    /* clean-up */
-    safe_free((void *)n_dof);
 
     break;
   }
@@ -5455,41 +5431,25 @@ int compute_volume_integrand(const int quantity,
     break;
   case I_POROUS_LIQUID_INV: {
     if (pd->e[pg->imtrx][R_SHELL_SAT_OPEN]) {
-      n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
-      lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
-
-      det = fv->sdet; // Different determinant since this is a shell
       dbl height = porous_shell_closed_height_model();
 
-      /* clean-up */
-      safe_free((void *)n_dof);
       *sum += weight * det * pmv->bulk_density[0] * height;
     }
 
     if (pd->e[pg->imtrx][R_SHELL_SAT_1]) {
-      n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
-      lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
-
-      det = fv->sdet; // Different determinant since this is a shell
       dbl height = porous_shell_height_model(0);
       dbl porosity = porous_shell_porosity_model(0);
 
-      /* clean-up */
-      safe_free((void *)n_dof);
       *sum += weight * det * mp->density * height * porosity * fv->sh_sat_1;
     }
 
     if (pd->e[pg->imtrx][R_TFMP_MASS]) {
-      n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
-      lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
-      det = fv->sdet; // Different determinant since this is a shell
       dbl saturation, height;
       double H_U, dH_U_dtime, H_L, dH_L_dtime;
       double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
       height = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX,
                                      &dH_U_dp, &dH_U_ddh, time, delta_t);
       saturation = fv->tfmp_sat;
-      safe_free((void *)n_dof);
       *sum += weight * det * saturation * height;
     }
 
@@ -5501,29 +5461,17 @@ int compute_volume_integrand(const int quantity,
   } break;
   case I_POROUS_LIQUID_INV_2: {
     if (pd->e[pg->imtrx][R_SHELL_SAT_2]) {
-      n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
-      lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
-
-      det = fv->sdet; // Different determinant since this is a shell
       dbl height = porous_shell_height_model(1);
       dbl porosity = porous_shell_porosity_model(1);
 
-      /* clean-up */
-      safe_free((void *)n_dof);
       *sum += weight * det * mp->density * height * porosity * fv->sh_sat_2;
     }
   } break;
   case I_POROUS_LIQUID_INV_3: {
     if (pd->e[pg->imtrx][R_SHELL_SAT_3]) {
-      n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
-      lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
-
-      det = fv->sdet; // Different determinant since this is a shell
       dbl height = porous_shell_height_model(2);
       dbl porosity = porous_shell_porosity_model(2);
 
-      /* clean-up */
-      safe_free((void *)n_dof);
       *sum += weight * det * mp->density * height * porosity * fv->sh_sat_3;
     }
   } break;
@@ -5554,9 +5502,6 @@ int compute_volume_integrand(const int quantity,
 
   case I_TFMP_FORCE:
     if (pd->e[pg->imtrx][R_TFMP_MASS]) {
-      n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
-      lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
-      det = fv->sdet; // Different determinant since this is a shell
       dbl pressure;
       pressure = fv->tfmp_pres;
       // atmospheric pressure, as defined at the boundary
@@ -5567,7 +5512,6 @@ int compute_volume_integrand(const int quantity,
       dbl surface_tension = ;//[cgs please]
        */
       *sum += weight * det * (pressure - Patm);
-      safe_free((void *)n_dof);
     }
     break;
 
@@ -5607,6 +5551,8 @@ int compute_volume_integrand(const int quantity,
   default:
     break;
   }
+  /* clean-up */
+  if(is_shell) safe_free((void *)n_dof);
 
   return (1);
 }
@@ -6505,31 +6451,9 @@ double evaluate_flux_sens(const Exo_DB *exo,       /* ptr to basic exodus ii mes
                 }
               } else if (cr->HeatFluxModel == CR_HF_USER) {
 
-#if defined SECOR_HEAT_FLUX
-                double *hpar, h, dh_dX[DIM], Vb[DIM], Vt[DIM];
-                double dq_dVb[DIM][DIM], dq_dVt[DIM][DIM];
-
-                hpar = &mp->u_thermal_conductivity[0];
-                h = hpar[0] + hpar[4] * fv->x[0] +
-                    (hpar[1] - hpar[5] * fv->x[0]) * (hpar[3] - fv->x[1]) +
-                    0.5 * hpar[2] * SQUARE(hpar[3] - fv->x[1]);
-
-                dh_dX[0] = hpar[4] - hpar[5] * (hpar[3] - fv->x[1]);
-                dh_dX[1] = hpar[5] * fv->x[0] - hpar[1] - hpar[2] * (hpar[3] - fv->x[1]);
-
-                /*     velocities of bottom and top surfaces   */
-                Vb[0] = mp->u_heat_capacity[0];
-                Vb[1] = mp->u_heat_capacity[1];
-                Vt[0] = mp->u_heat_capacity[2];
-                Vt[1] = mp->u_heat_capacity[3];
-
-                usr_heat_flux(fv->grad_T, q, dq_gradT, dq_dX, time_value, h, dh_dX, Vb, Vt, dq_dVb,
-                              dq_dVt);
-#else
                 usr_heat_flux(fv->grad_T, q, dq_gradT, dq_dX, time_value);
                 printf("untested\n");
                 exit(-1);
-#endif
                 for (j = 0; j < VIM; j++) {
                   for (a = 0; a < VIM; a++) {
                     local_q += fv->snormal[j] * dq_gradT[j][a] * fv_sens->grad_T[a];

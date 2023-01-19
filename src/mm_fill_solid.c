@@ -2896,7 +2896,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
   int SPECIES = MAX_VARIABLE_TYPES;
   dbl p_gas_star = 0.0;
 
-  dbl thermexp = 0, delta_thermexp = 0;
+  dbl thermexp = 0, delta_thermexp = 0, Tref = elc->solid_reference_temp;
   dbl speciesexp[MAX_CONC];
   dbl d_thermexp_dx[MAX_VARIABLE_TYPES + MAX_CONC];
   dbl d_speciesexp_dx[MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC];
@@ -2928,6 +2928,9 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
                                 d_mu_dx, d_lambda_dx, d_thermexp_dx, d_speciesexp_dx, d_viscos_dx,
                                 d_dilviscos_dx);
   GOMA_EH(err, " Problem in loading up elastic constants");
+  if (elc->thermal_expansion_model == THERMAL_HEAT) {
+    Tref = elc->u_thermal_expansion[4];
+  }
   if (elc->thermal_expansion_model == ORTHOTROPIC) {
     if (efv->Num_external_field >= dim) {
       for (p = 0; p < dim; p++) {
@@ -2935,6 +2938,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
       }
     }
     delta_thermexp = elc->u_thermal_expansion[5];
+    Tref = elc->u_thermal_expansion[4];
   }
 
   /* Here we will simple use our cadre of Elastic models if no Viscoplastic
@@ -2976,7 +2980,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
           elc->thermal_expansion_model == THERMAL_HEAT) {
         for (p = 0; p < VIM; p++) {
           for (q = 0; q < VIM; q++) {
-            TT[p][q] -= (2. * mu + 3. * lambda) * thermexp * (fv->T - elc->solid_reference_temp) *
+            TT[p][q] -= (2. * mu + 3. * lambda) * thermexp * (fv->T - Tref) *
                         delta(p, q);
           }
         }
@@ -2985,7 +2989,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
           for (q = 0; q < VIM; q++) {
             TT[p][q] -= (2. * mu + 3. * lambda) *
                         (thermexp * delta(p, q) + delta_thermexp * orient[p] * orient[q]) *
-                        (fv->T - elc->solid_reference_temp);
+                        (fv->T - Tref);
           }
         }
       }
@@ -2994,7 +2998,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
         for (p = 0; p < VIM; p++) {
           for (q = 0; q < VIM; q++) {
             TT[p][q] -= (2. * mu + 3. * lambda) / (thermexp + fv->T) *
-                        (fv->T - elc->solid_reference_temp) * delta(p, q);
+                        (fv->T - Tref) * delta(p, q);
           }
         }
       } else if (elc->thermal_expansion_model == USER) {
@@ -3042,11 +3046,17 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
                 }
                 if (pd->e[pg->imtrx][R_ENERGY]) {
                   if (elc->thermal_expansion_model == CONSTANT ||
+                      elc->thermal_expansion_model == THERMAL_HEAT ||
                       elc->thermal_expansion_model == IDEAL_GAS) {
                     dTT_dx[p][q][b][j] -= (2. * d_mu_dx[b][j] + 3. * d_lambda_dx[b][j]) * thermexp *
-                                          (fv->T - elc->solid_reference_temp) * delta(p, q);
+                                          (fv->T - Tref) * delta(p, q);
                   }
-                  if (elc->thermal_expansion_model == USER) {
+                  else if (elc->thermal_expansion_model == ORTHOTROPIC) {
+                    dTT_dx[p][q][b][j] -= (2. * d_mu_dx[b][j] + 3. * d_lambda_dx[b][j]) * 
+                        (thermexp * delta(p, q) + delta_thermexp * orient[p] * orient[q]) *
+                        (fv->T - Tref);
+                  }
+                  else if (elc->thermal_expansion_model == USER) {
                     dTT_dx[p][q][b][j] -=
                         ((2. * d_mu_dx[b][j] + 3. * d_lambda_dx[b][j]) * thermexp +
                          (2. * mu + 3. * lambda) * d_thermexp_dx[v] * bf[v]->phi[j]) *
@@ -3083,14 +3093,30 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
                 dTT_dT[p][q][j] -= (2. * mu + 3. * lambda) * thermexp * bf[v]->phi[j] * delta(p, q);
               }
             }
-            if (elc->thermal_expansion_model == IDEAL_GAS) {
+            else if (elc->thermal_expansion_model == IDEAL_GAS) {
               for (j = 0; j < dofs; j++) {
                 dTT_dT[p][q][j] -= (2. * mu + 3. * lambda) *
                                    (thermexp + elc->solid_reference_temp) /
                                    SQUARE(fv->T + thermexp) * bf[v]->phi[j] * delta(p, q);
               }
             }
-            if (elc->thermal_expansion_model == USER) {
+            else if (elc->thermal_expansion_model == THERMAL_HEAT) {
+              for (j = 0; j < dofs; j++) {
+                dTT_dT[p][q][j] -= (2. * mu + 3. * lambda) *
+                                   (thermexp + (fv->T - Tref) * d_thermexp_dx[TEMPERATURE]) *
+                                   bf[v]->phi[j] * delta(p, q);
+              }
+            } 
+            else if (elc->thermal_expansion_model == ORTHOTROPIC) {
+              for (j = 0; j < dofs; j++) {
+                dTT_dT[p][q][j] -=
+                    (2. * mu + 3. * lambda) *
+                    ((thermexp + (fv->T - Tref) * d_thermexp_dx[TEMPERATURE]) * delta(p, q) +
+                     delta_thermexp * orient[p] * orient[q]) *
+                    bf[v]->phi[j];
+              }
+            } 
+            else if (elc->thermal_expansion_model == USER) {
               for (j = 0; j < dofs; j++) {
                 dTT_dT[p][q][j] -=
                     (2. * mu + 3. * lambda) * d_thermexp_dx[v] * bf[v]->phi[j] * delta(p, q);
