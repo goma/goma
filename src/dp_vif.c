@@ -2594,6 +2594,7 @@ void noahs_ark(void) {
   ddd_add_member(n, &SCATTERED_EM_CONTOURS, 1, MPI_INT);
   ddd_add_member(n, &len_u_post_proc, 1, MPI_INT);
   ddd_add_member(n, &PSPG_PP, 1, MPI_INT);
+  ddd_add_member(n, &ORIENTATION_VECTORS, 1, MPI_INT);
 
   if (nn_post_fluxes > 0) {
     for (i = 0; i < nn_post_fluxes; i++) {

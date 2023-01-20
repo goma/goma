@@ -2337,6 +2337,22 @@ struct BC_descriptions BC_Desc[] = {
      SINGLE_PHASE,
      DVI_SINGLE_PHASE_DB},
 
+    {"SHELL_LUB_WALL",
+     "SHELL_LUB_WALL_BC",
+     WEAK_INT_SURF,
+     SHELL_LUB_WALL_BC,
+     R_LUBP,
+     SCALAR,
+     NO_ROT,
+     {0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+     SINGLE_PHASE,
+     DVI_SINGLE_PHASE_DB},
+
     {"SHELL_TEMP",
      "SHELL_TEMP_BC",
      DIRICHLET,
@@ -8034,6 +8050,7 @@ struct Equation_Names Post_Var_Name[] = {
     {"LAMB_VECTOR", "LAMB_VECTOR", -1},
     {"Q_FCN", "Q_FCN", -1},
     {"POYNTING_VECTORS", "POYNTING_VECTORS", -1},
+    {"ORIENTATION_VECTORS", "ORIENTATION_VECTORS", -1},
 };
 
 int Num_Post_Var_Names = sizeof(Post_Var_Name) / sizeof(struct Equation_Names);

@@ -6275,9 +6275,6 @@ void surface_lubrication_shell_bc(
 
   double qlub[DIM], dq_gradP[DIM][DIM], dq_dX[DIM][DIM], grad_P[DIM];
   double dq_dVb[DIM][DIM];
-#ifdef SECOR_HEAT_FLUX
-  double dq_dVt[DIM][DIM], Vt[DIM], Vb[DIM], dgap_dx[DIM];
-#endif
   model_id = (int)mp->u_shell_user_par[0];
   if (model_id == 1) {
     flow_inlet = mp->u_shell_user_par[3];
@@ -6291,10 +6288,6 @@ void surface_lubrication_shell_bc(
     dns_width = mp->u_shell_user_par[11];
 
     gap = gap_nom + roll_rad - sqrt(SQUARE(roll_rad) - SQUARE(coord[0] - x0)) - coord[1];
-#ifdef SECOR_HEAT_FLUX
-    dgap_dx[0] = (coord[0] - x0) / sqrt(SQUARE(roll_rad) - SQUARE(coord[0] - x0));
-    dgap_dx[1] = -1.;
-#endif
     Vwebx = Vweb * sqrt(SQUARE(roll_rad) - SQUARE(coord[0] - x0)) / roll_rad;
     F_dns = dns_xloc - coord[0];
     if (fabs(F_dns) > 0.5 * dns_width) {
@@ -6359,27 +6352,11 @@ void surface_lubrication_shell_bc(
   grad_P[0] = shell_pgrad;
   grad_P[1] = 0.;
 
-#if defined SECOR_HEAT_FLUX
-  Vt[0] = Vwebx;
-  Vt[1] = 0.;
-  Vb[0] = vconv[0];
-  Vb[1] = 0.;
-  usr_heat_flux(grad_P, qlub, dq_gradP, dq_dX, 0.0, gap, dgap_dx, Vb, Vt, dq_dVb, dq_dVt);
-#else
   usr_heat_flux(grad_P, qlub, dq_gradP, dq_dX, 0.0);
   printf("untested\n");
   exit(-1);
-#endif
-#if 0
-  fprintf(stderr,"lub_shell %g %g %g %g %g\n",coord[0],shell_pgrad,shell_p,vconv[0],vconv[1]);
-  fprintf(stderr,"grad %g %g %g \n",shell_pgrad, fv->stangent[0][0],fv->sdet);
-#endif
 
   flow_target = heavi * flow_inlet + (1. - heavi) * gap * (Vwebx + vconv[0]) * 0.5;
-#if 0
-  fprintf(stderr,"grad %g %g %g\n",pgrad_lub,vconv[0],Vwebx);
-  fprintf(stderr,"F %g %g %g %g\n",coord[0],F_dns,F_ups, heavi);
-#endif
   /* Residuals */
   if (af->Assemble_Residual) {
     for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
