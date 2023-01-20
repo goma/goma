@@ -1720,7 +1720,7 @@ static int calc_standard_fields(double **post_proc_vect,
 
   if (ORIENTATION_VECTORS != -1) {
     /* parameters are sent through USER_POST input line for 3D printing orientation ...  */
-    if (pd->e[pg->imtrx][R_ENERGY] && USER_POST != -1) {
+    if (pd->e[pg->imtrx][R_ENERGY] && USER_POST != -1 && len_u_post_proc > 2) {
       double q_mag = 0., sign = 0.;
       double radius = u_post_proc[1], overlap = u_post_proc[2];
       int dir = 0;
@@ -1740,8 +1740,7 @@ static int calc_standard_fields(double **post_proc_vect,
       if (fv->x0[2] <= radius) {
         dir = 0;
       } else {
-        double tmp;
-        tmp = modf((fv->x0[2] - radius) / (2 * radius - overlap), &sign);
+        double tmp = modf((fv->x0[2] - radius) / (2 * radius - overlap), &sign);
         sign += 1.;
         dir = (int)sign % 2;
       }
@@ -3516,7 +3515,6 @@ static int calc_standard_fields(double **post_proc_vect,
     /* calculate a user-specified post-processing variable */
 
     err = get_continuous_species_terms(&s_terms, time, theta, delta_t, hs);
-
     local_post[USER_POST] = user_post(u_post_proc);
     local_lumped[USER_POST] = 1.;
   }
@@ -7697,7 +7695,6 @@ void rd_post_process_specs(FILE *ifp, char *input) {
   iread = look_for_post_proc(ifp, "Concentration gradient", &GRAD_Y);
   iread = look_for_post_proc(ifp, "Vorticity Vector", &CURL_V);
   iread = look_for_post_proc(ifp, "Helicity Value", &HELICITY);
-  iread = look_for_post_proc(ifp, "User-Defined Post Processing", &USER_POST);
   iread = look_for_post_proc(ifp, "Moment Sources", &MOMENT_SOURCES);
   iread = look_for_post_proc(ifp, "YZbeta Species", &YZBETA);
   iread = look_for_post_proc(ifp, "Heaviside", &HEAVISIDE);
@@ -7712,6 +7709,7 @@ void rd_post_process_specs(FILE *ifp, char *input) {
   iread = look_for_post_proc(ifp, "Viscous Stress Norm", &VISCOUS_STRESS_NORM);
   iread = look_for_post_proc(ifp, "Viscous Von Mises Stress", &VISCOUS_VON_MISES_STRESS);
   iread = look_for_post_proc(ifp, "Orientation Vectors", &ORIENTATION_VECTORS);
+  iread = look_for_post_proc(ifp, "User-Defined Post Processing", &USER_POST);
 
   /*
    * Initialize for surety before communication to other processors.
