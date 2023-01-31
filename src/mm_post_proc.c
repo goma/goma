@@ -1722,7 +1722,7 @@ static int calc_standard_fields(double **post_proc_vect,
     /* parameters are sent through USER_POST input line for 3D printing orientation ...  */
     if (pd->e[pg->imtrx][R_ENERGY] && USER_POST != -1 && len_u_post_proc > 2) {
       double q_mag = 0., sign = 0.;
-      double radius = u_post_proc[1], overlap = u_post_proc[2];
+      double radius = u_post_proc[1]; // overlap = u_post_proc[2];
       int dir = 0;
       if (cr->HeatFluxModel == CR_HF_FOURIER_0) {
         if (mp->ConductivityModel == USER) {
@@ -1740,7 +1740,7 @@ static int calc_standard_fields(double **post_proc_vect,
       if (fv->x0[2] <= radius) {
         dir = 0;
       } else {
-        double tmp = modf((fv->x0[2] - radius) / (2 * radius - overlap), &sign);
+        // double tmp = modf((fv->x0[2] - radius) / (2 * radius - overlap), &sign);
         sign += 1.;
         dir = (int)sign % 2;
       }

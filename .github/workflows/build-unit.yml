@@ -23,6 +23,8 @@ jobs:
         cmake -DCMAKE_BUILD_TYPE=Release -Bbuild -DENABLE_TESTING=ON .
     - name: Build Goma
       run: |
+        cp scripts/gcc-warnings.json "$HOME/"
+        echo "::add-matcher::$HOME/gcc-warnings.json"
         cd build
         make -j 2
         ./goma -v
