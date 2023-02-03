@@ -3993,22 +3993,27 @@ void calculate_lub_q_v(const int EQN, double time, double dt, double xi[DIM], co
       }
 
     } else if (gn->ConstitutiveEquation == HERSCHEL_BULKLEY) {
-      double nexp = gn->nexp, yield = gn->tau_y;
-      k_turb = 4. * (2 * nexp + 1.);
-      if (tau_w > yield) {
-        pre_delP = -CUBE(H) / k_turb * pow((tau_w - yield) / mu, 1. / nexp) *
-                   (nexp / tau_w - nexp / (1. + nexp) * yield / SQUARE(tau_w) *
-                                       (1. + nexp * yield / SQUARE(tau_w)));
-        q_mag = pre_delP * pgrad;
-        dq_gradp =
-            -CUBE(H) / (k_turb * mu) * pow((tau_w - yield) / mu, 1. / nexp - 1.) *
-            (1. + (nexp - 1.) / (nexp + 1.) * yield / tau_w *
-                      (1. + 2. * nexp * yield / tau_w * (1. + nexp / (1. - nexp) * yield / tau_w)));
-        dq_dH = 2 * q_mag / H + dq_gradp / H * pgrad;
-        srate = pow((fabs(tau_w) - yield) / mu, 1. / nexp);
+      double nexp = gn->nexp, yield = gn->tau_y, eps_rate = 0.000001;
+      if (tau_w - yield > 0.) {
+        double f, f_c, f_term, f_termd;
+        f = yield / tau_w;
+        f_c = 1. - f;
+        f_term = 1. - SQUARE(f) - SQUARE(f_c) / (2. * nexp + 1.) - 2. * f * f_c / (2. + nexp);
+        f_termd = SQUARE(f) + f * f_c / (2 * nexp + 1.) + f * (1. - 2 * f) / (2 + nexp);
+        srate = pow((tau_w - yield) / mu, 1. / nexp);
+        vis_w = tau_w / srate;
+        q_mag = -0.25 * SQUARE(H) * srate * f_term;
+        pre_delP = 0.5 * H * q_mag / tau_w;
+        dq_gradp = -0.125 * CUBE(H) * f_term / (nexp * f_c * vis_w);
+        dq_gradp += -0.25 * CUBE(H) * f_termd / vis_w;
+        dq_dH = (2 + 1. / nexp / f_c) * q_mag / H - 0.5 * H * srate * f_termd;
       } else {
+        srate = 0.;
+        vis_w = yield / eps_rate;
         q_mag = 0.;
-        dq_gradp = pre_delP = -CUBE(H) / (k_turb * mu);
+        pre_delP = 0.;
+        dq_gradp = -0.25 * CUBE(H) / vis_w * SQUARE(nexp + 1.) / nexp / (nexp + 2.);
+        dq_dH = 0.;
       }
     } else { /*  Newtonian type models */
       k_turb = 12.;

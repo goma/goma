@@ -682,7 +682,7 @@ extern int VISCOUS_VON_MISES_STRESS;
 extern int EM_CONTOURS;
 extern int TOTAL_EM_CONTOURS;
 extern int SCATTERED_EM_CONTOURS;
-
+extern int ORIENTATION_VECTORS; /* EM Poynting Vectors*/
 /*
  *  Post-processing Step 1: add a new variable flag to end of mm_post_proc.h
  *

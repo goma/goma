@@ -326,6 +326,7 @@ int VISCOUS_VON_MISES_STRESS = -1;
 int EM_CONTOURS = -1;
 int TOTAL_EM_CONTOURS = -1;
 int SCATTERED_EM_CONTOURS = -1;
+int ORIENTATION_VECTORS = -1; /* orientation vectors*/
 
 int len_u_post_proc = 0; /* size of dynamically allocated u_post_proc
                           * actually is */
@@ -1703,29 +1704,9 @@ static int calc_standard_fields(double **post_proc_vect,
       }
     } else if (cr->HeatFluxModel == CR_HF_USER) {
       double dq_gradT[DIM][DIM], dq_dX[DIM][DIM];
-#if defined SECOR_HEAT_FLUX
-      double *hpar, h, dh_dX[DIM];
-      double dq_dVb[DIM][DIM], dq_dVt[DIM][DIM], Vt[DIM], Vb[DIM];
-
-      hpar = &mp->u_thermal_conductivity[0];
-      h = hpar[0] + hpar[4] * fv->x[0] + (hpar[1] - hpar[5] * fv->x[0]) * (hpar[3] - fv->x[1]) +
-          0.5 * hpar[2] * SQUARE(hpar[3] - fv->x[1]);
-
-      dh_dX[0] = hpar[4] - hpar[5] * (hpar[3] - fv->x[1]);
-      dh_dX[1] = hpar[5] * fv->x[0] - hpar[1] - hpar[2] * (hpar[3] - fv->x[1]);
-
-      /*     velocities of bottom and top surfaces   */
-      Vb[0] = mp->u_heat_capacity[0];
-      Vb[1] = mp->u_heat_capacity[1];
-      Vt[0] = mp->u_heat_capacity[2];
-      Vt[1] = mp->u_heat_capacity[3];
-
-      usr_heat_flux(fv->grad_T, qc, dq_gradT, dq_dX, time, h, dh_dX, Vb, Vt, dq_dVb, dq_dVt);
-#else
       usr_heat_flux(fv->grad_T, qc, dq_gradT, dq_dX, time);
       printf("untested\n");
       exit(-1);
-#endif
     } else {
       for (a = 0; a < dim; a++) {
         qc[a] = 0.;
@@ -1737,6 +1718,50 @@ static int calc_standard_fields(double **post_proc_vect,
     }
   }
 
+  if (ORIENTATION_VECTORS != -1) {
+    /* parameters are sent through USER_POST input line for 3D printing orientation ...  */
+    if (pd->e[pg->imtrx][R_ENERGY] && USER_POST != -1 && len_u_post_proc > 2) {
+      double q_mag = 0., sign = 0.;
+      double radius = u_post_proc[1]; // overlap = u_post_proc[2];
+      int dir = 0;
+      if (cr->HeatFluxModel == CR_HF_FOURIER_0) {
+        if (mp->ConductivityModel == USER) {
+          err = usr_thermal_conductivity(mp->u_thermal_conductivity, time);
+        }
+        for (a = 0; a < dim; a++) {
+          qc[a] = -mp->thermal_conductivity * fv->grad_T[a];
+          q_mag += SQUARE(qc[a]);
+        }
+      } else {
+        for (a = 0; a < dim; a++) {
+          qc[a] = 0.;
+        }
+      }
+      if (fv->x0[2] <= radius) {
+        dir = 0;
+      } else {
+        // double tmp = modf((fv->x0[2] - radius) / (2 * radius - overlap), &sign);
+        sign += 1.;
+        dir = (int)sign % 2;
+      }
+      sign = 2 * (double)dir - 1.;
+      for (a = 0; a < dim; a++) {
+        local_post[ORIENTATION_VECTORS + a] = sign * qc[a] / sqrt(q_mag);
+        local_lumped[ORIENTATION_VECTORS + a] = 1.;
+      }
+    } else if (pd->e[pg->imtrx][R_MOMENTUM1]) {
+      double velo_sqrd = 0.;
+      for (a = 0; a < VIM; a++) {
+        velo_sqrd += SQUARE(fv->v[a]);
+      }
+      for (a = 0; a < VIM; a++) {
+        local_post[ORIENTATION_VECTORS + a] = fv->v[a] / sqrt(velo_sqrd);
+        local_lumped[ORIENTATION_VECTORS + a] = 1.;
+      }
+    } else {
+      GOMA_EH(GOMA_ERROR, "Orientation field not defined!");
+    }
+  }
   if (SHELL_NORMALS != -1 && (pd->e[pg->imtrx][R_SHELL_ANGLE1] || pd->e[pg->imtrx][R_LUBP])) {
     double sh_n[DIM];
     for (a = 0; a < DIM; a++) {
@@ -3490,7 +3515,6 @@ static int calc_standard_fields(double **post_proc_vect,
     /* calculate a user-specified post-processing variable */
 
     err = get_continuous_species_terms(&s_terms, time, theta, delta_t, hs);
-
     local_post[USER_POST] = user_post(u_post_proc);
     local_lumped[USER_POST] = 1.;
   }
@@ -7671,7 +7695,6 @@ void rd_post_process_specs(FILE *ifp, char *input) {
   iread = look_for_post_proc(ifp, "Concentration gradient", &GRAD_Y);
   iread = look_for_post_proc(ifp, "Vorticity Vector", &CURL_V);
   iread = look_for_post_proc(ifp, "Helicity Value", &HELICITY);
-  iread = look_for_post_proc(ifp, "User-Defined Post Processing", &USER_POST);
   iread = look_for_post_proc(ifp, "Moment Sources", &MOMENT_SOURCES);
   iread = look_for_post_proc(ifp, "YZbeta Species", &YZBETA);
   iread = look_for_post_proc(ifp, "Heaviside", &HEAVISIDE);
@@ -7685,6 +7708,8 @@ void rd_post_process_specs(FILE *ifp, char *input) {
   iread = look_for_post_proc(ifp, "Viscous Stress", &VISCOUS_STRESS);
   iread = look_for_post_proc(ifp, "Viscous Stress Norm", &VISCOUS_STRESS_NORM);
   iread = look_for_post_proc(ifp, "Viscous Von Mises Stress", &VISCOUS_VON_MISES_STRESS);
+  iread = look_for_post_proc(ifp, "Orientation Vectors", &ORIENTATION_VECTORS);
+  iread = look_for_post_proc(ifp, "User-Defined Post Processing", &USER_POST);
 
   /*
    * Initialize for surety before communication to other processors.
@@ -10116,6 +10141,33 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
     if (Num_Dim > 2) {
       sprintf(nm, "POYNTZ");
       sprintf(ds, "Poynting in Z direction");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+    }
+  }
+
+  if (ORIENTATION_VECTORS != -1 && Num_Var_In_Type[pg->imtrx][R_ENERGY]) {
+    if (ORIENTATION_VECTORS == 2) {
+      GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+    }
+    ORIENTATION_VECTORS = index_post;
+    /* X Component */
+    sprintf(nm, "ORX");
+    sprintf(ds, "Orientation in X direction");
+    set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+    index++;
+    index_post++;
+    /* Y Component */
+    sprintf(nm, "ORY");
+    sprintf(ds, "Orientation in Y direction");
+    set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+    index++;
+    index_post++;
+    /* Z Component */
+    if (Num_Dim > 2) {
+      sprintf(nm, "ORZ");
+      sprintf(ds, "Orientation in Z direction");
       set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
       index++;
       index_post++;

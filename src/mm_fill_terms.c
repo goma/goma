@@ -28992,73 +28992,8 @@ void heat_flux(double q[DIM], HEAT_FLUX_DEPENDENCE_STRUCT *d_q, double time) {
       }
     }
   } else if (cr->HeatFluxModel == CR_HF_USER) {
-#ifdef SECOR_HEAT_FLUX
-    double *hpar, h, dh_dX[DIM], Vb[DIM], Vt[DIM];
-    double dq_dVb[DIM][DIM], dq_dVt[DIM][DIM];
-#endif
-#if 0
-        int npadex,npadey;
-        double dnum,dden,*pn,*pd;
-        double hx,hy,dnumdx,ddendx;
-#endif
 
-/*     gap functions - product of pade functions */
-#ifdef SECOR_HEAT_FLUX
-    hpar = &mp->u_thermal_conductivity[0];
-    h = hpar[0] + hpar[4] * fv->x[0] + (hpar[1] - hpar[5] * fv->x[0]) * (hpar[3] - fv->x[1]) +
-        0.5 * hpar[2] * SQUARE(hpar[3] - fv->x[1]);
-
-    dh_dX[0] = hpar[4] - hpar[5] * (hpar[3] - fv->x[1]);
-    dh_dX[1] = hpar[5] * fv->x[0] - hpar[1] - hpar[2] * (hpar[3] - fv->x[1]);
-#endif
-#if 0
-        npadex = ((int)mp->u_thermal_conductivity[0]);
-        pn = &mp->u_thermal_conductivity[1];
-        pd = &mp->u_thermal_conductivity[npadex+1];
-        dnum = pn[npadex-1];
-        dden = pd[npadex-2];
-        dnumdx = (npadex-1.)*pn[npadex-1];
-        ddendx = (npadex-2.)*pd[npadex-2];
-        for (i=npadex-2;i>=0;i--)
-                { dnum = pn[i]+fv->x[0]*dnum; }
-        for (i=npadex-3;i>=0;i--)
-                { dden = pd[i]+fv->x[0]*dden;
-                  dnumdx = (i+1.)*pn[i+1]+fv->x[0]*dnumdx;}
-        for (i=npadex-4;i>=0;i--)
-                { ddendx = (i+1.)*pd[i+1]+fv->x[0]*ddendx; }
-        hx = dnum/dden;
-        dhdx = (dden*dnumdx - dnum*ddendx)/(dden*dden);
-        npadey = ((int)mp->u_thermal_conductivity[2*npadex]);
-        pn = &mp->u_thermal_conductivity[2*npadex+1];
-        pd = &mp->u_thermal_conductivity[2*npadex+1+npadey];
-        dnum = pn[npadey-1];
-        dden = pd[npadey-2];
-        dnumdx = (npadey-1.)*pn[npadey-1];
-        ddendx = (npadey-2.)*pd[npadey-2];
-        for (i=npadey-2;i>=0;i--)
-                { dnum = pn[i]+fv->x[1]*dnum; }
-        for (i=npadey-3;i>=0;i--)
-                { dden = pd[i]+fv->x[1]*dden;
-                  dnumdx = (i+1.)*pn[i+1]+fv->x[1]*dnumdx;}
-        for (i=npadey-4;i>=0;i--)
-                { ddendx = (i+1.)*pd[i+1]+fv->x[1]*ddendx; }
-        hy = dnum/dden;
-        dhdy = hx*(dden*dnumdx - dnum*ddendx)/(dden*dden);
-        dhdx *= hy;
-        h = hx*hy;
-#endif
-
-#ifdef SECOR_HEAT_FLUX
-    /*     velocities of bottom and top surfaces   */
-    Vb[0] = mp->u_heat_capacity[0];
-    Vb[1] = mp->u_heat_capacity[1];
-    Vt[0] = mp->u_heat_capacity[2];
-    Vt[1] = mp->u_heat_capacity[3];
-
-    usr_heat_flux(grad_T, q, dq_gradT, dq_dX, time, h, dh_dX, Vb, Vt, dq_dVb, dq_dVt);
-#else
     usr_heat_flux(grad_T, q, dq_gradT, dq_dX, time);
-#endif
 
     var = TEMPERATURE;
     if (d_q != NULL && pd->v[pg->imtrx][var]) {
