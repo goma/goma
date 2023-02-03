@@ -1365,6 +1365,7 @@ void rd_genl_specs(FILE *ifp, char *input) {
     ECHO(echo_string, echo_file);
   }
 
+  upd->EM_Frequency = upd->Acoustic_Frequency; // Initialize for backwards compatibility
   iread = look_for_optional(ifp, "EM Frequency", input, '=');
   if (iread == 1) {
     if (fscanf(ifp, "%lf", &upd->EM_Frequency) != 1) {
