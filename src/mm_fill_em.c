@@ -166,7 +166,7 @@ int assemble_emwave(double time, /* present time value */
    * with temperature, spatial coordinates, and species concentration.
    */
 
-  omega = upd->Acoustic_Frequency;
+  omega = upd->EM_Frequency;
   n = refractive_index(d_n, time);
 
   k = extinction_index(d_k, time);
@@ -721,7 +721,7 @@ int assemble_ewave(double time,      // present time
    * with temperature, spatial coordinates, and species concentration.
    */
 
-  omega = upd->Acoustic_Frequency;
+  omega = upd->EM_Frequency;
   n = refractive_index(d_n, time);
 
   k = extinction_index(d_k, time);
@@ -885,7 +885,7 @@ int assemble_ewave_curlcurl(double time,      // present time
     return (1);
   }
 
-  omega = upd->Acoustic_Frequency;
+  omega = upd->EM_Frequency;
   dbl n; /* Refractive index. */
   CONDUCTIVITY_DEPENDENCE_STRUCT d_n_struct;
   CONDUCTIVITY_DEPENDENCE_STRUCT *d_n = &d_n_struct;
@@ -1235,7 +1235,7 @@ int assemble_ewave_laplacian(double time,      // present time
     return (1);
   }
 
-  omega = upd->Acoustic_Frequency;
+  omega = upd->EM_Frequency;
   dbl n; /* Refractive index. */
   CONDUCTIVITY_DEPENDENCE_STRUCT d_n_struct;
   CONDUCTIVITY_DEPENDENCE_STRUCT *d_n = &d_n_struct;
@@ -1963,7 +1963,7 @@ bool relative_permittivity_model(complex double *permittivity_out,
     dbl x = fv->x[0];
     dbl y = fv->x[1];
     dbl z = fv->x[2];
-    dbl freq = upd->Acoustic_Frequency;
+    dbl freq = upd->EM_Frequency;
     dbl lambda0 = c0 / freq;
     dbl k0 = 2 * M_PI / lambda0;
     dbl d = pml_outer_radius - pml_inner_radius;
@@ -2043,7 +2043,7 @@ bool relative_permeability_model(complex double *permeability_out,
     dbl x = fv->x[0];
     dbl y = fv->x[1];
     dbl z = fv->x[2];
-    dbl freq = upd->Acoustic_Frequency;
+    dbl freq = upd->EM_Frequency;
     dbl lambda0 = c0 / freq;
     dbl k0 = 2 * M_PI / lambda0;
 
