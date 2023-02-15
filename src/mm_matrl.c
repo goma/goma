@@ -452,8 +452,8 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac, PROPERTYJAC_STRUCT *densityJac
     rho = matrl->density;
 
   } else if (matrl->DensityModel == DENSITY_THERMEXP) {
-    rho = matrl->u_density[0]/(1. + matrl->u_density[1]*
-                   (stateVector[TEMPERATURE] - matrl->reference[TEMPERATURE]));
+    rho = matrl->u_density[0] /
+          (1. + matrl->u_density[1] * (stateVector[TEMPERATURE] - matrl->reference[TEMPERATURE]));
 
   } else if (matrl->DensityModel == FILL) {
     F = stateVector[FILL];

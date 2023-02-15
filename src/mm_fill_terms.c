@@ -13741,12 +13741,13 @@ double density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
     }
 
   } else if (mp->DensityModel == DENSITY_THERMEXP) {
-    rho = mp->u_density[0]/(1. + mp->u_density[1]*(fv->T - mp->reference[TEMPERATURE]));
+    rho = mp->u_density[0] / (1. + mp->u_density[1] * (fv->T - mp->reference[TEMPERATURE]));
     if (d_rho != NULL) {
       var = TEMPERATURE;
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-        d_rho->T[j] = rho*mp->u_density[1]/
-                          (1.+mp->u_density[1]*(fv->T-mp->reference[TEMPERATURE]))*bf[var]->phi[j];
+        d_rho->T[j] = rho * mp->u_density[1] /
+                      (1. + mp->u_density[1] * (fv->T - mp->reference[TEMPERATURE])) *
+                      bf[var]->phi[j];
       }
     }
 

@@ -967,12 +967,10 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   }
   ECHO(es, echo_file);
 
-  model_read = look_for_mat_prop(imp, "Solid Dilational Viscosity",
-                                 &(elc_glob[mn]->solid_dil_viscosity_model),
-                                 &(elc_glob[mn]->solid_dil_viscosity), 
-                                 &(elc_glob[mn]->u_solid_dil_viscosity), 
-                                 &(elc_glob[mn]->len_u_solid_dil_viscosity), model_name,
-                                 SCALAR_INPUT, &NO_SPECIES, es);
+  model_read = look_for_mat_prop(
+      imp, "Solid Dilational Viscosity", &(elc_glob[mn]->solid_dil_viscosity_model),
+      &(elc_glob[mn]->solid_dil_viscosity), &(elc_glob[mn]->u_solid_dil_viscosity),
+      &(elc_glob[mn]->len_u_solid_dil_viscosity), model_name, SCALAR_INPUT, &NO_SPECIES, es);
 
   if (model_read == -1) {
     elc_glob[mn]->solid_dil_viscosity_model = CONSTANT;

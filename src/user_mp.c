@@ -1456,7 +1456,7 @@ int usr_expansion(dbl *param, /* ptr to user-defined parameter list        */
   /* f = param[0] * sin(param[1] * tran->time_value);  */
   /* Double exponential thermal expansion model        */
 
-  if(T > Tmax) {
+  if (T > Tmax) {
     f = param[0] * exp(param[1] * (Tmax - param[2]));
     f += param[3] * exp(param[4] * (Tmax - param[5]));
     f *= param[6];
@@ -1768,11 +1768,12 @@ int usr_solid_viscosity(dbl *param, /* ptr to user-defined parameter list       
   double visc0 = param[0], aT;
   double C1 = param[1], C2 = param[2], Tref = param[3];
 
-  if(T <= Tref-C2) GOMA_WH(-1,"Trouble WLF denominator is zero!\n");
+  if (T <= Tref - C2)
+    GOMA_WH(-1, "Trouble WLF denominator is zero!\n");
 
-  aT = visc0 * exp(-C1 * (T - Tref) / (C2 + T -Tref));
+  aT = visc0 * exp(-C1 * (T - Tref) / (C2 + T - Tref));
   f = visc0 * aT;
-  dfdT = visc0 * aT * (-C1 * C2 / SQUARE(C2 + T -Tref));
+  dfdT = visc0 * aT * (-C1 * C2 / SQUARE(C2 + T - Tref));
 
   /**********************************************************/
   f = 1.;
@@ -1824,8 +1825,8 @@ int usr_solid_viscosity(dbl *param, /* ptr to user-defined parameter list       
  */
 
 int usr_solid_dil_viscosity(dbl *param, /* ptr to user-defined parameter list        */
-                        double *viscos,
-                        double d_viscos_dx[MAX_VARIABLE_TYPES + MAX_CONC]) {
+                            double *viscos,
+                            double d_viscos_dx[MAX_VARIABLE_TYPES + MAX_CONC]) {
   int a, b;
   int w;
 
@@ -1871,11 +1872,12 @@ int usr_solid_dil_viscosity(dbl *param, /* ptr to user-defined parameter list   
   double visc0 = param[0], aT;
   double C1 = param[1], C2 = param[2], Tref = param[3];
 
-  if(T <= Tref-C2) GOMA_WH(-1,"Trouble WLF denominator is zero!\n");
+  if (T <= Tref - C2)
+    GOMA_WH(-1, "Trouble WLF denominator is zero!\n");
 
-  aT = visc0 * exp(-C1 * (T - Tref) / (C2 + T -Tref));
+  aT = visc0 * exp(-C1 * (T - Tref) / (C2 + T - Tref));
   f = visc0 * aT;
-  dfdT = visc0 * aT * (-C1 * C2 / SQUARE(C2 + T -Tref));
+  dfdT = visc0 * aT * (-C1 * C2 / SQUARE(C2 + T - Tref));
 
   /**********************************************************/
   f = 1.;
