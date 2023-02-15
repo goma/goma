@@ -3224,7 +3224,8 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
                     (2. * mu + 3. * lambda) * d_thermexp_dx[v] * bf[v]->phi[j] * delta(p, q);
               }
             }
-
+/*  seems like this should be covered above */
+#if 0
             if (elc->lame_mu_model == USER) {
               for (j = 0; j < dofs; j++) {
                 dTT_dT[p][q][j] +=
@@ -3238,6 +3239,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
                     bf[v]->phi[j];
               }
             }
+#endif
           }
           /*  max_strain sensitivities here */
           v = MAX_STRAIN;
