@@ -8051,6 +8051,9 @@ struct Equation_Names Post_Var_Name[] = {
     {"Q_FCN", "Q_FCN", -1},
     {"POYNTING_VECTORS", "POYNTING_VECTORS", -1},
     {"ORIENTATION_VECTORS", "ORIENTATION_VECTORS", -1},
+    {"FIRST_STRAINRATE_INVAR", "FIRST_STRAINRATE_INVAR", -1},
+    {"SEC_STRAINRATE_INVAR", "SEC_STRAINRATE_INVAR", -1},
+    {"THIRD_STRAINRATE_INVAR", "THIRD_STRAINRATE_INVAR", -1},
 };
 
 int Num_Post_Var_Names = sizeof(Post_Var_Name) / sizeof(struct Equation_Names);

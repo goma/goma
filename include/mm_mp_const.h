@@ -219,6 +219,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
  * vary.
  * -> appropriate for dilute transport
  */
+#define DENSITY_THERMEXP        13  /* Normal linear expansion for solids */
 #define DENSITY_SUSPENSION_PM   14  /* special model for this system */
 #define DENSITY_THERMAL_BATTERY 905 /* special density model for thermal bat work */
 #define DENSITY_FOAM_PBE        34

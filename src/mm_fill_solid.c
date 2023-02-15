@@ -199,15 +199,23 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
           for (j = 0; j < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1 + b]; j++) {
             d_grad_d[0][b][b][j] = bfv->d_phi[j][0];
             d_grad_d[1][b][b][j] = bfv->d_phi[j][1];
+            d_grad_d_dot[0][b][b][j] = bfv->d_phi[j][0];
+            d_grad_d_dot[1][b][b][j] = bfv->d_phi[j][1];
 
-            if (dim == 3)
+            if (dim == 3) {
               d_grad_d[2][b][b][j] = bfv->d_phi[j][2];
+              d_grad_d_dot[2][b][b][j] = bfv->d_phi[j][2];
+            }
 
             for (i = 0; i < ei[pg->imtrx]->dof[v]; i++) {
               d_grad_d[0][0][b][j] += *esp->d[0][i] * bfv->d_d_phi_dmesh[i][0][b][j];
               d_grad_d[1][1][b][j] += *esp->d[1][i] * bfv->d_d_phi_dmesh[i][1][b][j];
               d_grad_d[1][0][b][j] += *esp->d[0][i] * bfv->d_d_phi_dmesh[i][1][b][j];
               d_grad_d[0][1][b][j] += *esp->d[1][i] * bfv->d_d_phi_dmesh[i][0][b][j];
+              d_grad_d_dot[0][0][b][j] += *esp_dot->d[0][i] * bfv->d_d_phi_dmesh[i][0][b][j];
+              d_grad_d_dot[1][1][b][j] += *esp_dot->d[1][i] * bfv->d_d_phi_dmesh[i][1][b][j];
+              d_grad_d_dot[1][0][b][j] += *esp_dot->d[0][i] * bfv->d_d_phi_dmesh[i][1][b][j];
+              d_grad_d_dot[0][1][b][j] += *esp_dot->d[1][i] * bfv->d_d_phi_dmesh[i][0][b][j];
 
               if (dim == 3) {
                 d_grad_d[2][2][b][j] += *esp->d[2][i] * bfv->d_d_phi_dmesh[i][2][b][j];
@@ -215,6 +223,11 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
                 d_grad_d[2][0][b][j] += *esp->d[0][i] * bfv->d_d_phi_dmesh[i][2][b][j];
                 d_grad_d[1][2][b][j] += *esp->d[2][i] * bfv->d_d_phi_dmesh[i][1][b][j];
                 d_grad_d[0][2][b][j] += *esp->d[2][i] * bfv->d_d_phi_dmesh[i][0][b][j];
+                d_grad_d_dot[2][2][b][j] += *esp_dot->d[2][i] * bfv->d_d_phi_dmesh[i][2][b][j];
+                d_grad_d_dot[2][1][b][j] += *esp_dot->d[1][i] * bfv->d_d_phi_dmesh[i][2][b][j];
+                d_grad_d_dot[2][0][b][j] += *esp_dot->d[0][i] * bfv->d_d_phi_dmesh[i][2][b][j];
+                d_grad_d_dot[1][2][b][j] += *esp_dot->d[2][i] * bfv->d_d_phi_dmesh[i][1][b][j];
+                d_grad_d_dot[0][2][b][j] += *esp_dot->d[2][i] * bfv->d_d_phi_dmesh[i][0][b][j];
               }
             }
           }
@@ -230,6 +243,7 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
         grad_d[p][q] = fv->grad_d[p][q];
         grad_d_old[p][q] = fv_old->grad_d[p][q];
         grad_d_dot[p][q] = fv_dot->grad_d[p][q];
+        grad_d_dot[p][q] = fv->grad_d_dot[p][q];
       }
     }
     if (af->Assemble_Jacobian) {
@@ -239,6 +253,7 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
             for (j = 0; j < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1 + b]; j++) {
               d_grad_d[p][q][b][j] = fv->d_grad_d_dmesh[p][q][b][j];
               d_grad_d_dot[p][q][b][j] = fv_dot->d_grad_d_dmesh[p][q][b][j];
+              d_grad_d_dot[p][q][b][j] = fv->d_grad_d_dot_dmesh[p][q][b][j];
             }
           }
         }
@@ -303,8 +318,10 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
                 d_cauchy_green_dx[p][q][b][j] -= 0.5 * (d_grad_d[p][a][b][j] * grad_d[q][a] +
                                                         grad_d[p][a] * d_grad_d[q][a][b][j]);
                 d_cauchy_green_dot_dx[p][q][b][j] -=
-                    0.5 * (d_grad_d_dot[p][a][b][j] * grad_d_dot[q][a] +
-                           grad_d_dot[p][a] * d_grad_d_dot[q][a][b][j]);
+                    0.5 * (d_grad_d[p][a][b][j] * grad_d_dot[q][a] +
+                           grad_d_dot[p][a] * d_grad_d_dot[q][a][b][j] +
+                           grad_d[p][a] * d_grad_d_dot[q][a][b][j] +
+                           d_grad_d_dot[p][a][b][j] * grad_d[q][a]);
               }
             }
           }
@@ -320,6 +337,14 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
         d_cauchy_green_dx[1][1][b][j] = 0.5 * (d_grad_d[1][1][b][j] + d_grad_d[1][1][b][j]);
         d_cauchy_green_dx[0][1][b][j] = 0.5 * (d_grad_d[0][1][b][j] + d_grad_d[1][0][b][j]);
         d_cauchy_green_dx[1][0][b][j] = 0.5 * (d_grad_d[1][0][b][j] + d_grad_d[0][1][b][j]);
+        d_cauchy_green_dot_dx[0][0][b][j] =
+            0.5 * (d_grad_d_dot[0][0][b][j] + d_grad_d_dot[0][0][b][j]);
+        d_cauchy_green_dot_dx[1][1][b][j] =
+            0.5 * (d_grad_d_dot[1][1][b][j] + d_grad_d_dot[1][1][b][j]);
+        d_cauchy_green_dot_dx[0][1][b][j] =
+            0.5 * (d_grad_d_dot[0][1][b][j] + d_grad_d_dot[1][0][b][j]);
+        d_cauchy_green_dot_dx[1][0][b][j] =
+            0.5 * (d_grad_d_dot[1][0][b][j] + d_grad_d_dot[0][1][b][j]);
 
         if (VIM == 3) {
           d_cauchy_green_dx[2][2][b][j] = 0.5 * (d_grad_d[2][2][b][j] + d_grad_d[2][2][b][j]);
@@ -327,6 +352,16 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
           d_cauchy_green_dx[2][0][b][j] = 0.5 * (d_grad_d[2][0][b][j] + d_grad_d[0][2][b][j]);
           d_cauchy_green_dx[1][2][b][j] = 0.5 * (d_grad_d[1][2][b][j] + d_grad_d[2][1][b][j]);
           d_cauchy_green_dx[0][2][b][j] = 0.5 * (d_grad_d[0][2][b][j] + d_grad_d[2][0][b][j]);
+          d_cauchy_green_dot_dx[2][2][b][j] =
+              0.5 * (d_grad_d_dot[2][2][b][j] + d_grad_d_dot[2][2][b][j]);
+          d_cauchy_green_dot_dx[2][1][b][j] =
+              0.5 * (d_grad_d_dot[2][1][b][j] + d_grad_d_dot[1][2][b][j]);
+          d_cauchy_green_dot_dx[2][0][b][j] =
+              0.5 * (d_grad_d_dot[2][0][b][j] + d_grad_d_dot[0][2][b][j]);
+          d_cauchy_green_dot_dx[1][2][b][j] =
+              0.5 * (d_grad_d_dot[1][2][b][j] + d_grad_d_dot[2][1][b][j]);
+          d_cauchy_green_dot_dx[0][2][b][j] =
+              0.5 * (d_grad_d_dot[0][2][b][j] + d_grad_d_dot[2][0][b][j]);
         }
       }
     }
@@ -345,6 +380,26 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
                 0.5 * (d_grad_d[0][a][b][j] * grad_d[1][a] + grad_d[0][a] * d_grad_d[1][a][b][j]);
             d_cauchy_green_dx[1][0][b][j] -=
                 0.5 * (d_grad_d[1][a][b][j] * grad_d[0][a] + grad_d[1][a] * d_grad_d[0][a][b][j]);
+            d_cauchy_green_dot_dx[0][0][b][j] -=
+                0.5 *
+                (d_grad_d[0][a][b][j] * grad_d_dot[0][a] +
+                 grad_d_dot[0][a] * d_grad_d_dot[0][a][b][j] +
+                 grad_d[0][a] * d_grad_d_dot[0][a][b][j] + d_grad_d_dot[0][a][b][j] * grad_d[0][a]);
+            d_cauchy_green_dot_dx[1][1][b][j] -=
+                0.5 *
+                (d_grad_d[1][a][b][j] * grad_d_dot[1][a] +
+                 grad_d_dot[1][a] * d_grad_d_dot[1][a][b][j] +
+                 grad_d[1][a] * d_grad_d_dot[1][a][b][j] + d_grad_d_dot[1][a][b][j] * grad_d[1][a]);
+            d_cauchy_green_dot_dx[0][1][b][j] -=
+                0.5 *
+                (d_grad_d[0][a][b][j] * grad_d_dot[1][a] +
+                 grad_d_dot[0][a] * d_grad_d_dot[1][a][b][j] +
+                 grad_d[0][a] * d_grad_d_dot[1][a][b][j] + d_grad_d_dot[0][a][b][j] * grad_d[1][a]);
+            d_cauchy_green_dot_dx[1][0][b][j] -=
+                0.5 *
+                (d_grad_d[1][a][b][j] * grad_d_dot[0][a] +
+                 grad_d_dot[1][a] * d_grad_d_dot[0][a][b][j] +
+                 grad_d[1][a] * d_grad_d_dot[0][a][b][j] + d_grad_d_dot[1][a][b][j] * grad_d[0][a]);
 
             if (VIM == 3) {
               d_cauchy_green_dx[2][2][b][j] -=
@@ -357,6 +412,31 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
                   0.5 * (d_grad_d[1][a][b][j] * grad_d[2][a] + grad_d[1][a] * d_grad_d[2][a][b][j]);
               d_cauchy_green_dx[0][2][b][j] -=
                   0.5 * (d_grad_d[0][a][b][j] * grad_d[2][a] + grad_d[0][a] * d_grad_d[2][a][b][j]);
+              d_cauchy_green_dot_dx[2][2][b][j] -=
+                  0.5 * (d_grad_d[2][a][b][j] * grad_d_dot[2][a] +
+                         grad_d_dot[2][a] * d_grad_d_dot[2][a][b][j] +
+                         grad_d[2][a] * d_grad_d_dot[2][a][b][j] +
+                         d_grad_d_dot[2][a][b][j] * grad_d[2][a]);
+              d_cauchy_green_dot_dx[2][1][b][j] -=
+                  0.5 * (d_grad_d[2][a][b][j] * grad_d_dot[1][a] +
+                         grad_d_dot[2][a] * d_grad_d_dot[1][a][b][j] +
+                         grad_d[2][a] * d_grad_d_dot[1][a][b][j] +
+                         d_grad_d_dot[2][a][b][j] * grad_d[1][a]);
+              d_cauchy_green_dot_dx[2][0][b][j] -=
+                  0.5 * (d_grad_d[2][a][b][j] * grad_d_dot[0][a] +
+                         grad_d_dot[2][a] * d_grad_d_dot[0][a][b][j] +
+                         grad_d[2][a] * d_grad_d_dot[0][a][b][j] +
+                         d_grad_d_dot[2][a][b][j] * grad_d[0][a]);
+              d_cauchy_green_dot_dx[1][2][b][j] -=
+                  0.5 * (d_grad_d[1][a][b][j] * grad_d_dot[2][a] +
+                         grad_d_dot[1][a] * d_grad_d_dot[2][a][b][j] +
+                         grad_d[1][a] * d_grad_d_dot[2][a][b][j] +
+                         d_grad_d_dot[1][a][b][j] * grad_d[2][a]);
+              d_cauchy_green_dot_dx[0][2][b][j] -=
+                  0.5 * (d_grad_d[0][a][b][j] * grad_d_dot[2][a] +
+                         grad_d_dot[0][a] * d_grad_d_dot[2][a][b][j] +
+                         grad_d[0][a] * d_grad_d_dot[2][a][b][j] +
+                         d_grad_d_dot[0][a][b][j] * grad_d[2][a]);
             }
           }
         }
@@ -721,6 +801,8 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
     for (p = 0; p < VIM; p++) {
       for (q = 0; q < VIM; q++) {
         fv->strain[p][q] = cauchy_green[p][q];
+        fv_old->strain[p][q] = cauchy_green_old[p][q];
+        fv_dot->strain[p][q] = cauchy_green_dot[p][q];
 
         if (af->Assemble_Jacobian) {
           for (i = 0; i < dim; i++) {
@@ -742,6 +824,11 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
     fv_old->strain[1][0] = cauchy_green_old[1][0];
     fv_old->strain[0][1] = cauchy_green_old[0][1];
 
+    fv_dot->strain[0][0] = cauchy_green_dot[0][0];
+    fv_dot->strain[1][1] = cauchy_green_dot[1][1];
+    fv_dot->strain[1][0] = cauchy_green_dot[1][0];
+    fv_dot->strain[0][1] = cauchy_green_dot[0][1];
+
     if (VIM == 3) {
       fv->strain[2][2] = cauchy_green[2][2];
       fv->strain[2][1] = cauchy_green[2][1];
@@ -754,6 +841,12 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
       fv_old->strain[2][0] = cauchy_green_old[2][0];
       fv_old->strain[1][2] = cauchy_green_old[1][2];
       fv_old->strain[0][2] = cauchy_green_old[0][2];
+
+      fv_dot->strain[2][2] = cauchy_green_dot[2][2];
+      fv_dot->strain[2][1] = cauchy_green_dot[2][1];
+      fv_dot->strain[2][0] = cauchy_green_dot[2][0];
+      fv_dot->strain[1][2] = cauchy_green_dot[1][2];
+      fv_dot->strain[0][2] = cauchy_green_dot[0][2];
     }
 
     if (af->Assemble_Jacobian) {
@@ -785,6 +878,11 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
                            cauchy_green[p][q] * pow(fv->volume_change, 2. / 3.);
         fv_old->strain[p][q] = factor * delta(p, q) * (1. - pow(fv_old->volume_change, 2. / 3.)) +
                                cauchy_green_old[p][q] * pow(fv_old->volume_change, 2. / 3.);
+        fv_dot->strain[p][q] =
+            factor * delta(p, q) * (-2. / 3. * pow(fv->volume_change, -1. / 3.)) *
+                fv_dot->volume_change +
+            cauchy_green_dot[p][q] * pow(fv->volume_change, 2. / 3.) +
+            cauchy_green[p][q] * 2. / 3. * pow(fv->volume_change, -1. / 3.) * fv_dot->volume_change;
       }
     }
     if (af->Assemble_Jacobian) {
@@ -2955,7 +3053,8 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
     if (TimeIntegration != STEADY && cr->MeshFluxModel == KELVIN_VOIGT) {
       for (p = 0; p < VIM; p++) {
         for (q = 0; q < VIM; q++) {
-          TT[p][q] += 2. * viscos * fv_dot->strain[p][q];
+          TT[p][q] +=
+              dil_viscos * fv_dot->volume_strain * delta(p, q) + 2. * viscos * fv_dot->strain[p][q];
         }
       }
     }
@@ -2991,9 +3090,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
                         (fv->T - Tref);
           }
         }
-      }
-
-      else if (elc->thermal_expansion_model == IDEAL_GAS) {
+      } else if (elc->thermal_expansion_model == IDEAL_GAS) {
         for (p = 0; p < VIM; p++) {
           for (q = 0; q < VIM; q++) {
             TT[p][q] -= (2. * mu + 3. * lambda) / (thermexp + fv->T) * (fv->T - Tref) * delta(p, q);
@@ -3038,9 +3135,13 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
                 dTT_dx[p][q][b][j] += d_lambda_dx[b][j] * fv->volume_strain * delta(p, q) +
                                       2. * d_mu_dx[b][j] * fv->strain[p][q];
                 if (TimeIntegration != STEADY && cr->MeshFluxModel == KELVIN_VOIGT) {
-                  dTT_dx[p][q][b][j] += 2. * viscos * fv_dot->d_strain_dx[p][q][b][j];
+                  dTT_dx[p][q][b][j] +=
+                      dil_viscos * fv_dot->d_volume_strain_dx[b][j] * delta(p, q) +
+                      2. * viscos * fv_dot->d_strain_dx[p][q][b][j];
 
-                  dTT_dx[p][q][b][j] += 2. * d_viscos_dx[v] * bf[v]->phi[j] * fv_dot->strain[p][q];
+                  dTT_dx[p][q][b][j] +=
+                      d_dilviscos_dx[v] * bf[v]->phi[j] * fv_dot->volume_strain * delta(p, q) +
+                      2. * d_viscos_dx[v] * bf[v]->phi[j] * fv_dot->strain[p][q];
                 }
                 if (pd->e[pg->imtrx][R_ENERGY]) {
                   if (elc->thermal_expansion_model == CONSTANT ||
@@ -3083,6 +3184,16 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
                * set_mp_to_unity */
               dTT_dT[p][q][j] +=
                   (2. * elc->d_lame_mu[TEMPERATURE] * fv->strain[p][q]) * bf[v]->phi[j];
+              dTT_dT[p][q][j] +=
+                  (elc->d_lame_lambda[TEMPERATURE] * fv->volume_strain * delta(p, q)) *
+                  bf[v]->phi[j];
+            }
+            if (TimeIntegration != STEADY && cr->MeshFluxModel == KELVIN_VOIGT) {
+              for (j = 0; j < dofs; j++) {
+                dTT_dT[p][q][j] +=
+                    d_dilviscos_dx[v] * bf[v]->phi[j] * fv_dot->volume_strain * delta(p, q) +
+                    2. * d_viscos_dx[v] * bf[v]->phi[j] * fv_dot->strain[p][q];
+              }
             }
 
             if (elc->thermal_expansion_model == CONSTANT) {
@@ -3117,13 +3228,17 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
             }
 
             if (elc->lame_mu_model == USER) {
-              dTT_dT[p][q][j] +=
-                  (2. * elc->d_lame_mu[TEMPERATURE] * fv->strain[p][q]) * bf[v]->phi[j];
+              for (j = 0; j < dofs; j++) {
+                dTT_dT[p][q][j] +=
+                    (2. * elc->d_lame_mu[TEMPERATURE] * fv->strain[p][q]) * bf[v]->phi[j];
+              }
             }
             if (elc->lame_lambda_model == USER) {
-              dTT_dT[p][q][j] +=
-                  (elc->d_lame_lambda[TEMPERATURE] * fv->volume_strain * delta(p, q)) *
-                  bf[v]->phi[j];
+              for (j = 0; j < dofs; j++) {
+                dTT_dT[p][q][j] +=
+                    (elc->d_lame_lambda[TEMPERATURE] * fv->volume_strain * delta(p, q)) *
+                    bf[v]->phi[j];
+              }
             }
           }
           /*  max_strain sensitivities here */
@@ -4763,7 +4878,7 @@ int load_elastic_properties(struct Elastic_Constitutive *elcp,
     GOMA_EH(GOMA_ERROR, "Unrecognized mu model");
   }
 
-  /*If needed, hit lame_me with temperature shift */
+  /*If needed, hit lame_mu with temperature shift */
   if (elc_ptr->lameTempShiftModel == CONSTANT) {
     *mu *= elc_ptr->lame_TempShift;
     elc_ptr->lame_mu *= elc_ptr->lame_TempShift;
@@ -4886,6 +5001,16 @@ int load_elastic_properties(struct Elastic_Constitutive *elcp,
       GOMA_EH(GOMA_ERROR, "No TALE Real-solid jacobian entries for USER");
     err = usr_expansion(elc_ptr->u_thermal_expansion, &value, d_thermexp_dx);
     *thermexp = value;
+  } else if (elc_ptr->thermal_expansion_model == TABLE) {
+    struct Data_Table *table_local;
+    int var;
+    table_local = MP_Tables[elc_ptr->thermal_expansion_tableid];
+    apply_table_mp(&elc_ptr->thermal_expansion, table_local);
+    *thermexp = elc_ptr->thermal_expansion;
+    for (i = 0; i < table_local->columns - 1; i++) {
+      var = table_local->t_index[i];
+      d_thermexp_dx[var] = table_local->slope[i];
+    }
   } else {
     GOMA_EH(GOMA_ERROR, "Unrecognized thermal expansion model");
   }
@@ -4913,6 +5038,9 @@ int load_elastic_properties(struct Elastic_Constitutive *elcp,
 
   if (elc_ptr->solid_dil_viscosity_model == CONSTANT) {
     *dil_viscos = elc_ptr->solid_dil_viscosity;
+  } else if (elc_ptr->solid_dil_viscosity_model == USER) {
+    err = usr_solid_dil_viscosity(elc_ptr->u_solid_dil_viscosity, &value, d_dilviscos_dx);
+    *dil_viscos = value;
   } else {
     GOMA_EH(GOMA_ERROR, "Unrecognized solid dilational viscosity model");
   }

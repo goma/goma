@@ -2366,6 +2366,7 @@ void noahs_ark(void) {
     ddd_add_member(n, &elc_glob[i]->len_u_solid_viscosity, 1, MPI_INT);
     ddd_add_member(n, &elc_glob[i]->solid_dil_viscosity, 1, MPI_DOUBLE);
     ddd_add_member(n, &elc_glob[i]->solid_dil_viscosity_model, 1, MPI_INT);
+    ddd_add_member(n, &elc_glob[i]->len_u_solid_dil_viscosity, 1, MPI_INT);
 
     ddd_add_member(n, &elc_glob[i]->bend_stiffness, 1, MPI_DOUBLE);
     ddd_add_member(n, &elc_glob[i]->bend_stiffness_model, 1, MPI_INT);
@@ -2429,6 +2430,7 @@ void noahs_ark(void) {
     ddd_add_member(n, &elc_rs_glob[i]->len_u_solid_viscosity, 1, MPI_INT);
     ddd_add_member(n, &elc_rs_glob[i]->solid_dil_viscosity, 1, MPI_DOUBLE);
     ddd_add_member(n, &elc_rs_glob[i]->solid_dil_viscosity_model, 1, MPI_INT);
+    ddd_add_member(n, &elc_rs_glob[i]->len_u_solid_dil_viscosity, 1, MPI_INT);
 
     ddd_add_member(n, &elc_rs_glob[i]->poisson, 1, MPI_DOUBLE);
     ddd_add_member(n, &elc_rs_glob[i]->Strss_fr_sol_vol_frac, 1, MPI_DOUBLE);
@@ -2577,9 +2579,6 @@ void noahs_ark(void) {
   ddd_add_member(n, &SURFACE_VECTORS, 1, MPI_INT);
   ddd_add_member(n, &SHELL_NORMALS, 1, MPI_INT);
   ddd_add_member(n, &len_u_post_proc, 1, MPI_INT);
-  if (len_u_post_proc > 0) {
-    ddd_add_member(n, u_post_proc, len_u_post_proc, MPI_DOUBLE);
-  }
   ddd_add_member(n, &LAMB_VECTOR, 1, MPI_INT);
   ddd_add_member(n, &Q_FCN, 1, MPI_INT);
   ddd_add_member(n, &POYNTING_VECTORS, 1, MPI_INT);
@@ -2595,6 +2594,12 @@ void noahs_ark(void) {
   ddd_add_member(n, &len_u_post_proc, 1, MPI_INT);
   ddd_add_member(n, &PSPG_PP, 1, MPI_INT);
   ddd_add_member(n, &ORIENTATION_VECTORS, 1, MPI_INT);
+  ddd_add_member(n, &FIRST_STRAINRATE_INVAR, 1, MPI_INT);
+  ddd_add_member(n, &SEC_STRAINRATE_INVAR, 1, MPI_INT);
+  ddd_add_member(n, &THIRD_STRAINRATE_INVAR, 1, MPI_INT);
+  if (len_u_post_proc > 0) {
+    ddd_add_member(n, u_post_proc, len_u_post_proc, MPI_DOUBLE);
+  }
 
   if (nn_post_fluxes > 0) {
     for (i = 0; i < nn_post_fluxes; i++) {
@@ -3072,6 +3077,10 @@ void ark_landing(void) {
 
     dalloc(e->len_u_thermal_expansion, e->u_thermal_expansion);
 
+    dalloc(e->len_u_solid_viscosity, e->u_solid_viscosity);
+
+    dalloc(e->len_u_solid_dil_viscosity, e->u_solid_dil_viscosity);
+
     e = elc_rs_glob[i];
 
     dalloc(e->len_u_mu, e->u_mu);
@@ -3083,6 +3092,10 @@ void ark_landing(void) {
     dalloc(e->len_u_v_mesh_sfs, e->u_v_mesh_sfs);
 
     dalloc(e->len_u_thermal_expansion, e->u_thermal_expansion);
+
+    dalloc(e->len_u_solid_viscosity, e->u_solid_viscosity);
+
+    dalloc(e->len_u_solid_dil_viscosity, e->u_solid_dil_viscosity);
 
     dalloc(evpl_glob[i]->len_u_plastic_mu, evpl_glob[i]->u_plastic_mu);
 
@@ -3370,6 +3383,10 @@ void noahs_dove(void) {
 
     crdv(e->len_u_thermal_expansion, e->u_thermal_expansion);
 
+    crdv(e->len_u_solid_viscosity, e->u_solid_viscosity);
+
+    crdv(e->len_u_solid_dil_viscosity, e->u_solid_dil_viscosity);
+
     e = elc_rs_glob[i];
 
     crdv(e->len_u_mu, e->u_mu);
@@ -3381,6 +3398,10 @@ void noahs_dove(void) {
     crdv(e->len_u_v_mesh_sfs, e->u_v_mesh_sfs);
 
     crdv(e->len_u_thermal_expansion, e->u_thermal_expansion);
+
+    crdv(e->len_u_solid_viscosity, e->u_solid_viscosity);
+
+    crdv(e->len_u_solid_dil_viscosity, e->u_solid_dil_viscosity);
 
     crdv(evpl_glob[i]->len_u_plastic_mu, evpl_glob[i]->u_plastic_mu);
 
