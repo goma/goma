@@ -242,7 +242,6 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
       for (q = 0; q < VIM; q++) {
         grad_d[p][q] = fv->grad_d[p][q];
         grad_d_old[p][q] = fv_old->grad_d[p][q];
-        grad_d_dot[p][q] = fv_dot->grad_d[p][q];
         grad_d_dot[p][q] = fv->grad_d_dot[p][q];
       }
     }
@@ -252,7 +251,6 @@ int belly_flop(dbl mu) /* elastic modulus (plane stress case) */
           for (b = 0; b < dim; b++) {
             for (j = 0; j < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1 + b]; j++) {
               d_grad_d[p][q][b][j] = fv->d_grad_d_dmesh[p][q][b][j];
-              d_grad_d_dot[p][q][b][j] = fv_dot->d_grad_d_dmesh[p][q][b][j];
               d_grad_d_dot[p][q][b][j] = fv->d_grad_d_dot_dmesh[p][q][b][j];
             }
           }
