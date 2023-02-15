@@ -75,8 +75,8 @@ EXTERN int usr_solid_viscosity(dbl *, /* param - ptr to user-defined parm list  
                                double[MAX_VARIABLE_TYPES + MAX_CONC]);
 
 EXTERN int usr_solid_dil_viscosity(dbl *, /* param - ptr to user-defined parm list     */
-                               double *,
-                               double[MAX_VARIABLE_TYPES + MAX_CONC]);
+                                   double *,
+                                   double[MAX_VARIABLE_TYPES + MAX_CONC]);
 
 EXTERN double usr_heat_flux(const double[],   /*   temperature gradient       */
                             double[],         /*   heat flux vector       */
