@@ -77,6 +77,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 // nucleation
 #define TIME_CONTROLLED_NUCLEATION  7
 #define CONCENTRATION_DEPENDENT     8
+#define SUSPENSION_NUCLEATION       9
 
 
 
@@ -348,9 +349,17 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define MOMENT_CONSTANT_GROWTH            50
 #define MOMENT_SIZE_DEPENDENT_COALESCENCE 51
 
+//<<<<<<< HEAD
 /* Turbulent viscosity models for Reynolds Averaged NS */
 #define TURBULENT_SA         52 /* Spallart Allmaras */
 #define TURBULENT_SA_DYNAMIC 53 /* Spallart Allmaras */
+//=======
+#define MOMENT_SUSPENSION 53
+#define SUSPENSION_LIQUID_SOURCE_CONSTANT 54
+#define SUSPENSION_SOLID_SOURCE_CONSTANT  55
+#define SUSPENSION_LIQUID_SOURCE_ARRHENIUS  56
+#define SUSPENSION_SOLID_SOURCE_ARRHENIUS  57
+//>>>>>>> added rotational BC, constant and arrenius rxn rates for suspensions...
 
 /*
  *  Heat source modeling

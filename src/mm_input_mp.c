@@ -7798,6 +7798,23 @@ model_read =
                    mat_ptr->moment_nucleation_min_conc = a1;
                    SPF_DBL_VEC(endofstring(es), 1, &(mat_ptr->moment_nucleation_kernel_rate_coeff));
                    }
+        if ( !strcmp(model_name, "SUSPENSION_NUCLEATION") ){
+                   model_read = 1;
+                   mat_ptr->moment_nucleation_kernel_model = SUSPENSION_NUCLEATION;
+                   if ( fscanf(imp, "%lf %lf ",
+                   &a0, &a1)
+                   != 2 )
+                   {
+                   sr = sprintf(err_msg,
+                   "Matl %s needs 2 constants for %s %s model.\n",
+                   pd_glob[mn]->MaterialName,
+                   "Moment Nucleation Kernel", "SUSPENSION_NUCLEATION" );
+                   GOMA_EH(GOMA_ERROR, err_msg);
+                   }
+                   mat_ptr->moment_nucleation_kernel_rate_coeff = a0;
+                   mat_ptr->moment_nucleation_min_conc = a1;
+                   SPF_DBL_VEC(endofstring(es), 1, &(mat_ptr->moment_nucleation_kernel_rate_coeff));
+                   }
           else{if(model_read == -1)
                 {
                   GOMA_EH(model_read, "Moment Nucleation Kernel invalid");
@@ -8559,7 +8576,57 @@ model_read =
       model_read = 1;
       mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
       mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 1;
+    } else if (!strcmp(model_name, "SUSPENSION_LIQUID_SOURCE_CONSTANT")) {
+      SpeciesSourceModel = SUSPENSION_LIQUID_SOURCE_CONSTANT;
+      model_read = 1;
+      mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
+      mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 0;
+      if (fscanf(imp, "%lf %lf", &a0, &a1) != 2) {
+        sr = sprintf(err_msg, "Matl %s needs 2 constants for %s %s model.\n",
+                     pd_glob[mn]->MaterialName, "Species Source", "SUSPENSION_LIQUID_SOURCE_CONSTANT");
+        GOMA_EH(GOMA_ERROR, err_msg);
+      }
+
+      mat_ptr->u_species_source[species_no] = (dbl *)array_alloc(1, 2, sizeof(dbl));
+
+      mat_ptr->len_u_species_source[species_no] = 2;
+
+      mat_ptr->u_species_source[species_no][0] = a0; /* rate of reaction*/
+      mat_ptr->u_species_source[species_no][1] = a1; /* mass fraction liquid source*/
+      SPF_DBL_VEC(endofstring(es), 1, mat_ptr->u_species_source[species_no]);
+    } else if (!strcmp(model_name, "SUSPENSION_SOLID_SOURCE_CONSTANT")) {
+      SpeciesSourceModel = SUSPENSION_SOLID_SOURCE_CONSTANT;
+      model_read = 1;
+      mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
+      mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 0;
+    } else if (!strcmp(model_name, "SUSPENSION_LIQUID_SOURCE_ARRHENIUS")) {
+      SpeciesSourceModel = SUSPENSION_LIQUID_SOURCE_ARRHENIUS;
+      model_read = 1;
+      mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
+      mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 0;
+      if (fscanf(imp, "%lf %lf %lf %lf %lf ", &a0, &a1, &a2, &a3, &a4) != 5) {
+        sr = sprintf(err_msg, "Matl %s needs 5 constants for %s %s model.\n",
+                     pd_glob[mn]->MaterialName, "Species Source", "SUSPENSION_LIQUID_SOURCE_ARRHENIUS");
+        GOMA_EH(GOMA_ERROR, err_msg);
+      }
+
+      mat_ptr->u_species_source[species_no] = (dbl *)array_alloc(1, 5, sizeof(dbl));
+
+      mat_ptr->len_u_species_source[species_no] = 5;
+
+      mat_ptr->u_species_source[species_no][0] = a0;/* molar mass */
+      mat_ptr->u_species_source[species_no][1] = a1;/* n */
+      mat_ptr->u_species_source[species_no][2] = a2; /* A */
+      mat_ptr->u_species_source[species_no][3] = a3; /* En/R */
+      mat_ptr->u_species_source[species_no][4] = a4; /* concentration cuttoff */
+      SPF_DBL_VEC(endofstring(es), 1, mat_ptr->u_species_source[species_no]);
+    } else if (!strcmp(model_name, "SUSPENSION_SOLID_SOURCE_ARRHENIUS")) {
+      SpeciesSourceModel = SUSPENSION_SOLID_SOURCE_ARRHENIUS;
+      model_read = 1;
+      mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
+      mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 0;
     } else if (!strcmp(model_name, "BUTLER_VOLMER")) {
+
       if (MAX_CONC <= 4)
         GOMA_EH(GOMA_ERROR, "MAX_CONC must be greater than 4 for Butler_volumer");
       SpeciesSourceModel = BUTLER_VOLMER;
@@ -8937,7 +9004,21 @@ model_read =
       mat_ptr->len_u_moment_source = num_const;
       SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_moment_source);
     }
-    if (!strcmp(model_name, "CONSTANT_GROWTH")) {
+    else if (!strcmp(model_name, "MOMENT_SUSPENSION")) {
+      mat_ptr->MomentSourceModel = MOMENT_SUSPENSION;
+      model_read = 1;
+      num_const = read_constants(imp, &(mat_ptr->u_moment_source), NO_SPECIES);
+
+      /* Requires growth rate and coalescence rate constants */
+      if (num_const < 2) {
+        sr = sprintf(err_msg, "Matl %s needs at least 2 constants for %s %s model (growth and nucleation).\n",
+                     pd_glob[mn]->MaterialName, "Moment Source", "MOMENT SUSPENSION");
+        GOMA_EH(GOMA_ERROR, err_msg);
+      }
+      mat_ptr->len_u_moment_source = num_const;
+      SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_moment_source);
+    }
+    else if (!strcmp(model_name, "CONSTANT_GROWTH")) {
       mat_ptr->MomentSourceModel = MOMENT_CONSTANT_GROWTH;
       model_read = 1;
       num_const = read_constants(imp, &(mat_ptr->u_moment_source), NO_SPECIES);

@@ -249,6 +249,30 @@ EXTERN int foam_pmdi10_co2_gas_species_source(int species_no, /* Current species
                                               double tt,
                                               double dt);
 
+EXTERN int suspension_liquid_species_source(int species_no, /* Current species number */
+                                    double *param,
+                                    double time,
+                                    double tt,
+                                    double dt);
+
+EXTERN int suspension_solid_species_source(int species_no, /* Current species number */
+                                    double *param,
+                                    double time,
+                                    double tt,
+                                    double dt);
+
+EXTERN int suspension_liquid_species_source_arrhenius(int species_no, /* Current species number */
+                                    double *param,
+                                    double time,
+                                    double tt,
+                                    double dt);
+
+EXTERN int suspension_solid_species_source_arrhenius(int species_no, /* Current species number */
+                                    double *param,
+                                    double time,
+                                    double tt,
+                                    double dt);
+
 EXTERN int assemble_bond_evolution /* mm_std_models.c */
     (dbl,                          /* Current time */
      double,                       /* tt - parameter varies time integration from

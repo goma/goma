@@ -10164,8 +10164,119 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
 
         st->MassSource[w] = mp->species_source[w];
       }
+       else if (mp->SpeciesSourceModel[w] == SUSPENSION_LIQUID_SOURCE_CONSTANT) {
+        for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
+          var_offset = MAX_VARIABLE_TYPES + w1;
+          mp->d_species_source[var_offset] = 0.0;
+        }
 
-      else if (mp->SpeciesSourceModel[w] == CONSTANT) {
+        err = suspension_liquid_species_source(w, mp->u_species_source[w], time, tt, dt);
+        st->MassSource[w] = mp->species_source[w];
+
+        if (af->Assemble_Jacobian) {
+
+          var = MASS_FRACTION;
+          if (pd->v[pg->imtrx][MASS_FRACTION]) {
+            for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
+              var_offset = MAX_VARIABLE_TYPES + w1;
+              for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                st->d_MassSource_dc[w][w1][j] = mp->d_species_source[var_offset] * bf[var]->phi[j];
+              }
+            }
+          }
+
+         // var = TEMPERATURE;
+         // if (pd->v[pg->imtrx][var]) {
+         //   for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+         //     st->d_MassSource_dT[w][j] = mp->d_species_source[var] * bf[var]->phi[j];
+         //   }
+         // }
+        }
+      }  else if (mp->SpeciesSourceModel[w] == SUSPENSION_SOLID_SOURCE_CONSTANT) {
+        for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
+          var_offset = MAX_VARIABLE_TYPES + w1;
+          mp->d_species_source[var_offset] = 0.0;
+        }
+
+        err = suspension_solid_species_source(w, mp->u_species_source[w], time, tt, dt);
+        st->MassSource[w] = mp->species_source[w];
+
+        if (af->Assemble_Jacobian) {
+
+          var = MASS_FRACTION;
+          if (pd->v[pg->imtrx][MASS_FRACTION]) {
+            for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
+              var_offset = MAX_VARIABLE_TYPES + w1;
+              for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                st->d_MassSource_dc[w][w1][j] = mp->d_species_source[var_offset] * bf[var]->phi[j];
+              }
+            }
+          }
+
+        //  var = TEMPERATURE;
+        //  if (pd->v[pg->imtrx][var]) {
+        //    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        //      st->d_MassSource_dT[w][j] = mp->d_species_source[var] * bf[var]->phi[j];
+        //    }
+        //  }
+        }
+       } else if (mp->SpeciesSourceModel[w] == SUSPENSION_LIQUID_SOURCE_ARRHENIUS) {
+          for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
+          var_offset = MAX_VARIABLE_TYPES + w1;
+          mp->d_species_source[var_offset] = 0.0;
+        }
+
+        err = suspension_liquid_species_source_arrhenius(w, mp->u_species_source[w], time, tt, dt);
+        st->MassSource[w] = mp->species_source[w];
+
+        if (af->Assemble_Jacobian) {
+
+          var = MASS_FRACTION;
+          if (pd->v[pg->imtrx][MASS_FRACTION]) {
+            for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
+              var_offset = MAX_VARIABLE_TYPES + w1;
+              for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                st->d_MassSource_dc[w][w1][j] = mp->d_species_source[var_offset] * bf[var]->phi[j];
+              }
+            }
+          }
+
+          var = TEMPERATURE;
+          if (pd->v[pg->imtrx][var]) {
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              st->d_MassSource_dT[w][j] = mp->d_species_source[var] * bf[var]->phi[j];
+            }
+          }
+        }
+      }  else if (mp->SpeciesSourceModel[w] == SUSPENSION_SOLID_SOURCE_ARRHENIUS) {
+        for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
+          var_offset = MAX_VARIABLE_TYPES + w1;
+          mp->d_species_source[var_offset] = 0.0;
+        }
+
+        err = suspension_solid_species_source_arrhenius(w, mp->u_species_source[w], time, tt, dt);
+        st->MassSource[w] = mp->species_source[w];
+
+        if (af->Assemble_Jacobian) {
+
+          var = MASS_FRACTION;
+          if (pd->v[pg->imtrx][MASS_FRACTION]) {
+            for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
+              var_offset = MAX_VARIABLE_TYPES + w1;
+              for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                st->d_MassSource_dc[w][w1][j] = mp->d_species_source[var_offset] * bf[var]->phi[j];
+              }
+            }
+          }
+
+          var = TEMPERATURE;
+          if (pd->v[pg->imtrx][var]) {
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              st->d_MassSource_dT[w][j] = mp->d_species_source[var] * bf[var]->phi[j];
+            }
+          }
+        }
+      } else if (mp->SpeciesSourceModel[w] == CONSTANT) {
         st->MassSource[w] = mp->species_source[w];
         /* Jacobians should default to zero without us doing anything b/c of
          *  the initial memset of st - hopefully!

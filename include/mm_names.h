@@ -7630,8 +7630,8 @@ struct Equation_Names Var_Name[] = {
     {"POLYMER_STRESS23_7", "S23_7", POLYMER_STRESS23_7},
     {"POLYMER_STRESS33_7", "S33_7", POLYMER_STRESS33_7}, /* 75 */
 
-    {"Species_Conc_0", "Sp_0", SPECIES_UNK_0},
-    {"Species_Conc_1", "Sp_1", SPECIES_UNK_1},
+    {"SPECIES_CONC_0", "Sp_0", SPECIES_UNK_0},
+    {"SPECIES_CONC_1", "Sp_1", SPECIES_UNK_1},
     {"Species_Conc_2", "Sp_2", SPECIES_UNK_2},
     {"Species_Conc_3", "Sp_3", SPECIES_UNK_3}, /* 79 */
     {"Species_Conc_4", "Sp_4", SPECIES_UNK_4},

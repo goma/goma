@@ -75,126 +75,70 @@ dbl velo_vary_fnc(const int velo_condition,
 
       f = a1*x1/radius;
       }  */
-
+  double thetadot = p[0]; // rate of change of theta wrt to time
   if (velo_condition == UVARY_BC) {
-    /* if(time<900.)
-      {
-        a1 = 0.002;
-      }
-    else if(time>=900.&&time<1800.)
-      {
-        a1 = 0.02;
-      }
-    else if(time>=1800.&&time<2700.)
-      {
-        a1 = 0.2;
-      }
-    else if(time>=2700.&&time<3600.)
-      {
-        a1 = 0.02;
-      }
-    else if(time>=3600.&&time<4500.)
-      {
-        a1 = 0.002;
-      }
-    else if(time>=4500.)
-      {
-        a1 = 0.;
-      }
-    */
-    double y = x2, z = x3;
-
-    // origin of circle
-    double z0 = 0.0; //(2.162810-1.21031)*0.5 + 1.21031;
-    double y0 = 0.0;
-
-    double R = 0.1; // 0.254*0.25;//0.1; // Radius of tube
-
-    double v_max = 5 * tanh(time);
-
-    double coeff = v_max * (1 / (R * R));
-
-    double r = sqrt((y - y0) * (y - y0) + (z - z0) * (z - z0));
-
-    f = coeff * (R * R - r * r);
-
-    /*  f = -a2*x2/radius; */
+      f = -thetadot*x2;
   } else if (velo_condition == VVARY_BC) {
-    f = 0;
+      f = thetadot*x1;
   } else if (velo_condition == WVARY_BC) {
-
-    double y = x2, x = x1;
-
-    // origin of circle
-    double x0 = -0.461101; //(2.162810-1.21031)*0.5 + 1.21031;
-    double y0 = -0.127;
-
-    double R = 0.17; // Radius of tube
-                     // double R = 5; // Radius of tube
-
-    double v_max = 0.1;
-    double coeff = v_max * (1 / (R * R)) * tanh(time * 2);
-
-    double r = sqrt((y - y0) * (y - y0) + (x - x0) * (x - x0));
-
-    f = coeff * (R * R - r * r);
+    f = 0;
   }
   return (f);
 
-  /*  return((dbl)0);	*/ /* Here's a good default behavior! */
+  //  return((dbl)0);	*/ /* Here's a good default behavior! */
 
-  /* Example code fragments:
-   *
-   * channel Poisuelle flow in negative y-direction
-   * with p[0]=(flowrate/width) and p[1]=h/2
-   *
-   *  if ( velo_condition == UVARY_BC )
-   *    {
-   *       f = (0.1 - 0.3*(x2/p[0])*(x2/p[0]))*p[1];
-   *
-   *     for fountain flow: KSC on 8/1/94
-   *
-   *  f = (1.0-(x2/p[0]))*p[1];  KSC on 8/17/94  for blade coating
-   *
-   *
-   * For Couette Poisuelle flow across a gap p[0] thick
-   * with fractional flowrate Q=p[1] V p[0] (Couette if p[1]=0.5)
-   * and  v=0 at y=p[0] and v=1 at y=0
-   * (change y/p[0] to 1-y/p[0] to invert this) RAC 10/17/94
-   *
-   * f=1.0 + (6.0*p[1]-4.0)*((x2 - 2)/p[0])
-   *       + (3.0-6.0*p[1])*((x2 - 2)/p[0])*((x2 - 2)/p[0]);
-   *
-   * printf("in UVARY, x2=, p[0]=, p[1]=, f=%13.5f %13.5f %13.5f %13.5\n",
-   *	  x2,  p[0],  p[1],  f);
-   *
-   *    f = + 1.5*(1. - SQUARE(x2) ) -1.;
-   *     f = 0.2 - 0.4 * SQUARE(x2);
-   *     f = 0.1 - 0.3 * SQUARE(x2);
-   *    f = +1.5*(1. - SQUARE(x2) );
-   *
-   * Inlet of the backward facing step:
-   *      u(y) = 0    at y=step
-   *             v_in at y=(step+channel)/2
-   *	       0    at y= channel
-   *
-   *	v_max   = p[0];
-   *	gap     = p[1];
-   *	channel = 1;
-   *	midpt   = channel - gap/2.;
-   *	u       = v_max - (SQUARE(x2-midpt))/(v_max*(SQUARE(gap/2.)));
-   *	f       = u;
-   *      }
-   *  else if (velo_condition == VVARY_BC)
-   *    {
-   *      f = -p[1] * (1 - (x1/p[0]) * (x1/p[0]));
-   *    }
-   *  else if (velo_condition == WVARY_BC)
-   *    {
-   *      f = 0.;
-   *    }
-   *  return (f);
-   */
+  // Example code fragments:
+  // *
+  // * channel Poisuelle flow in negative y-direction
+  // * with p[0]=(flowrate/width) and p[1]=h/2
+  // *
+  // *  if ( velo_condition == UVARY_BC )
+  // *    {
+  // *       f = (0.1 - 0.3*(x2/p[0])*(x2/p[0]))*p[1];
+  // *
+  // *     for fountain flow: KSC on 8/1/94
+  // *
+  // *  f = (1.0-(x2/p[0]))*p[1];  KSC on 8/17/94  for blade coating
+  // *
+  // *
+  // * For Couette Poisuelle flow across a gap p[0] thick
+  // * with fractional flowrate Q=p[1] V p[0] (Couette if p[1]=0.5)
+  // * and  v=0 at y=p[0] and v=1 at y=0
+  // * (change y/p[0] to 1-y/p[0] to invert this) RAC 10/17/94
+  // *
+  // * f=1.0 + (6.0*p[1]-4.0)*((x2 - 2)/p[0])
+  // *       + (3.0-6.0*p[1])*((x2 - 2)/p[0])*((x2 - 2)/p[0]);
+  // *
+  // * printf("in UVARY, x2=, p[0]=, p[1]=, f=%13.5f %13.5f %13.5f %13.5\n",
+  // *	  x2,  p[0],  p[1],  f);
+  // *
+  // *    f = + 1.5*(1. - SQUARE(x2) ) -1.;
+  // *     f = 0.2 - 0.4 * SQUARE(x2);
+  // *     f = 0.1 - 0.3 * SQUARE(x2);
+  // *    f = +1.5*(1. - SQUARE(x2) );
+  // *
+  // * Inlet of the backward facing step:
+  // *      u(y) = 0    at y=step
+  // *             v_in at y=(step+channel)/2
+  // *	       0    at y= channel
+  // *
+  // *	v_max   = p[0];
+  // *	gap     = p[1];
+  // *	channel = 1;
+  // *	midpt   = channel - gap/2.;
+  // *	u       = v_max - (SQUARE(x2-midpt))/(v_max*(SQUARE(gap/2.)));
+  // *	f       = u;
+  // *      }
+  // *  else if (velo_condition == VVARY_BC)
+  // *    {
+  // *      f = -p[1] * (1 - (x1/p[0]) * (x1/p[0]));
+  // *    }
+  // *  else if (velo_condition == WVARY_BC)
+  // *    {
+  // *      f = 0.;
+  // *    }
+  // *  return (f);
+  // *
 }
 /*****************************************************************************/
 dbl dvelo_vary_fnc_d1(const int velo_condition,
