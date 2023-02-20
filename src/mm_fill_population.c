@@ -666,10 +666,10 @@ int suspension_growth_rate(double growth_rate[MAX_CONC],
   wSolid = -1;
   for (w = 0; w < pd->Num_Species; w++) {
     switch (mp->SpeciesSourceModel[w]) {
-    case CONSTANT:
+    case SUSPENSION_LIQUID_SOURCE_ARRHENIUS:
       wLiquid = w;
       break;
-    case SUSPENSION_SOLID_SOURCE_CONSTANT:
+    case SUSPENSION_SOLID_SOURCE_ARRHENIUS:
       wSolid = w;
       break;
     default:
@@ -678,10 +678,10 @@ int suspension_growth_rate(double growth_rate[MAX_CONC],
   }
 
   if (wLiquid == -1) {
-    GOMA_EH(GOMA_ERROR, "Expected a Species Source for SUSPENSION_LIQUID_SOURCE_CONSTANT");
+    GOMA_EH(GOMA_ERROR, "Expected a Species Source for SUSPENSION_LIQUID_SOURCE_ARRHENIUS");
     return -1;
   } else if (wSolid == -1) {
-    GOMA_EH(GOMA_ERROR, "Expected a Species Source for SUSPENSION_SOLID_SOURCE_CONSTANT");
+    GOMA_EH(GOMA_ERROR, "Expected a Species Source for SUSPENSION_SOLID_SOURCE_ARRHENIUS");
     return -1;
   }
 
@@ -1663,10 +1663,10 @@ int get_moment_kernel_struct(struct moment_kernel_struct *MKS) {
 
     for (int w = 0; w < pd->Num_Species; w++) {
       switch (mp->SpeciesSourceModel[w]) {
-      case CONSTANT:
+      case SUSPENSION_LIQUID_SOURCE_ARRHENIUS:
         wLiquid = w;
         break;
-      case SUSPENSION_SOLID_SOURCE_CONSTANT:
+      case SUSPENSION_SOLID_SOURCE_ARRHENIUS:
         wSolid = w;
         break;
       default:
@@ -1678,7 +1678,7 @@ int get_moment_kernel_struct(struct moment_kernel_struct *MKS) {
       GOMA_EH(GOMA_ERROR, "Expected a Species Source for liquid suspension");
       return -1;
     } else if (wSolid == -1) {
-      GOMA_EH(GOMA_ERROR, "Expected a Species Source of SUSPENSION_SOLID_SOURCE");
+      GOMA_EH(GOMA_ERROR, "Expected a Species Source of solid suspension");
       return -1;
     }
 
@@ -1691,7 +1691,7 @@ int get_moment_kernel_struct(struct moment_kernel_struct *MKS) {
    // breakage_kernel_model(nodes, weights, nnodes_out, 2 * nnodes, MKS);
     
    // evaluate nucleation kernel
-    nucleation_kernel_model(2 * nnodes, MKS);
+   // nucleation_kernel_model(2 * nnodes, MKS);
 
    // evaluate coalescence kernel (only make sense when nndoes>1 b/c 2nd order process)
     //if (nnodes_out > 1) {
@@ -1897,10 +1897,10 @@ int get_moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msourc
 
     for (w = 0; w < pd->Num_Species; w++) {
       switch (mp->SpeciesSourceModel[w]) {
-      case CONSTANT:
+      case SUSPENSION_LIQUID_SOURCE_ARRHENIUS:
         wLiquid = w;
         break;
-      case SUSPENSION_SOLID_SOURCE_CONSTANT:
+      case SUSPENSION_SOLID_SOURCE_ARRHENIUS:
         wSolid = w;
         break;
       default:
@@ -1912,7 +1912,7 @@ int get_moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msourc
       GOMA_EH(GOMA_ERROR, "Expected a Species Source for suspension liquid");
       return -1;
     } else if (wSolid == -1) {
-      GOMA_EH(GOMA_ERROR, "Expected a Species Source for SUSPENSION_SOLID_SOURCE");
+      GOMA_EH(GOMA_ERROR, "Expected a Species Source for suspension solid");
       return -1;
     }
 
@@ -1932,8 +1932,8 @@ int get_moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msourc
     }
 
     for (int mom = 0; mom < MAX_MOMENTS; mom++) {
-      msource[mom] = H * (growth_kernel_scale*MKS->G[wSolid][mom] 
-                          + nucleation_kernel_scale * MKS->NUC[mom]);
+      msource[mom] = H * (growth_kernel_scale*MKS->G[wSolid][mom]);
+                          //+ nucleation_kernel_scale * MKS->NUC[mom]);
      // if (mom ==1){
       //  if (MKS->NUC[mom]>0){
       //    printf("mom %d nucleation %lf\n", mom, nucleation_kernel_scale*MKS->NUC[mom]);
