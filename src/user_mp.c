@@ -51,11 +51,12 @@
  *    usr_momentum_source  ()         int      momentum_source_term
  *    usr_lame_mu          ()         int      load_elastic_properties
  *    usr_lame_lambda      ()         int      load_elastic_properties
+ *    usr_expansion        ()         int      load_elastic_properties
  *    usr_diffusivity      ()         int      Diffusivity
  *    usr_FlowingLiquidViscosity ()   int      assemble_momentum & _continuity
  *    usr_heat_flux        ()         int      assemble_energy
- *    usr_solid_viscosity  ()         int      solid_viscosity
- *    usr_solid_dil_viscosity  ()     int      solid_dil_viscosity
+ *    usr_solid_viscosity  ()         int      load_elastic_properties
+ *    usr_solid_dil_viscosity  ()     int      load_elastic_properties
  *
  *******************************************************************************/
 /*
@@ -1386,31 +1387,13 @@ int usr_lame_lambda(struct Elastic_Constitutive *ep,
 /*
  * int usr_expansion ()
  *
- * ----------------------------------------------------------------------------
- * This routine is responsible for filling up the following portions of the elc structure
- * at the current gauss point:
- *     intput:  param - array of constants input on the property card.
- *
- *     output:  f       => elc->lame_lambda - shear modulus
- *              dfdT    => elc->d_lambda[a][TEMPERATURE]
- *                                         - derivative wrt teelcerature.
- *              dfdC[i] => elc->d_lambda[MAX_VARIABLE_TYPES+i]
- *                                         - derivative wrt mass frac species i
- *              dfdV[0] => elc->d_lambda[VELOCITY1]
- *                            elc->d_lambda[VELOCITY2]
- *                            elc->d_lambda[VELOCITY3]
- *                                         - derivative wrt velocities
- *              dfdX[0] => elc->d_lambda[MESH_DISPLACEMENT1]
- *                            elc->d_lambda[MESH_DISPLACEMENT2]
- *                            elc->d_lambda[MESH_DISPLACEMENT3]
- *                                         - derivative wrt mesh displacements
- *
  *   NB: The user need only supply f, dfdT, dfdC, etc....elc struct is loaded up for you
  */
 
 int usr_expansion(dbl *param, /* ptr to user-defined parameter list        */
                   double *thermexp,
-                  double d_thermexp_dx[MAX_VARIABLE_TYPES + MAX_CONC]) {
+                  double d_thermexp_dx[MAX_VARIABLE_TYPES + MAX_CONC],
+                  const int len_pars) {
   int a, b;
   int w;
 
@@ -1418,7 +1401,6 @@ int usr_expansion(dbl *param, /* ptr to user-defined parameter list        */
   dbl dfdV[DIM];      /* momentum source derivative wrt velocity*/
   dbl dfdC[MAX_CONC]; /* momentum source derivative wrt concentration*/
   dbl dfdX[DIM];      /* momentum source derivative wrt displacement*/
-  double Tmax = 163.0;
 
   int i;
   dbl X[DIM], T, C[MAX_CONC]; /* Convenient local variables */
@@ -1456,15 +1438,15 @@ int usr_expansion(dbl *param, /* ptr to user-defined parameter list        */
   /* f = param[0] * sin(param[1] * tran->time_value);  */
   /* Double exponential thermal expansion model        */
 
-  if (T > Tmax) {
-    f = param[0] * exp(param[1] * (Tmax - param[2]));
-    f += param[3] * exp(param[4] * (Tmax - param[5]));
-    f *= param[6];
-    dfdT = 0.;
+  if (len_pars < 8)
+    GOMA_EH(-1, "not enough user parameters for usr_expansion");
+
+  f = param[0] * exp(param[1] * (T - param[2]));
+  f += param[3] * exp(param[4] * (T - param[5]));
+  f *= param[6];
+  if (f > param[7]) {
+    f = param[7];
   } else {
-    f = param[0] * exp(param[1] * (T - param[2]));
-    f += param[3] * exp(param[4] * (T - param[5]));
-    f *= param[6];
     dfdT = param[0] * param[1] * exp(param[1] * (T - param[2]));
     dfdT += param[3] * param[4] * exp(param[4] * (T - param[5]));
     dfdT *= param[6];
@@ -1704,17 +1686,17 @@ int usr_FlowingLiquidViscosity(dbl *param) /* ptr to user-defined parameter list
  *     intput:  param - array of constants input on the property card.
  *
  *     output:  f       => elc->solid_viscosity
- *              dfdT    => elc->d_viscoslambda[a][TEMPERATURE]
+ *              dfdT    => elc->d_viscos_dx[TEMPERATURE]
  *                                         - derivative wrt temperature.
- *              dfdC[i] => elc->d_lambda[MAX_VARIABLE_TYPES+i]
+ *              dfdC[i] => elc->d_viscos_dx[MAX_VARIABLE_TYPES+i]
  *                                         - derivative wrt mass frac species i
- *              dfdV[0] => elc->d_lambda[VELOCITY1]
- *                            elc->d_lambda[VELOCITY2]
- *                            elc->d_lambda[VELOCITY3]
+ *              dfdV[0] => elc->d_viscos_dx[VELOCITY1]
+ *                            elc->d_viscos_dx[VELOCITY2]
+ *                            elc->d_viscos_dx[VELOCITY3]
  *                                         - derivative wrt velocities
- *              dfdX[0] => elc->d_lambda[MESH_DISPLACEMENT1]
- *                            elc->d_lambda[MESH_DISPLACEMENT2]
- *                            elc->d_lambda[MESH_DISPLACEMENT3]
+ *              dfdX[0] => elc->d_viscos_dx[MESH_DISPLACEMENT1]
+ *                            elc->d_viscos_dx[MESH_DISPLACEMENT2]
+ *                            elc->d_viscos_dx[MESH_DISPLACEMENT3]
  *                                         - derivative wrt mesh displacements
  *
  *   NB: The user need only supply f, dfdT, dfdC, etc....elc struct is loaded up for you
@@ -1722,7 +1704,8 @@ int usr_FlowingLiquidViscosity(dbl *param) /* ptr to user-defined parameter list
 
 int usr_solid_viscosity(dbl *param, /* ptr to user-defined parameter list        */
                         double *viscos,
-                        double d_viscos_dx[MAX_VARIABLE_TYPES + MAX_CONC]) {
+                        double d_viscos_dx[MAX_VARIABLE_TYPES + MAX_CONC],
+                        const int len_pars) {
   int a, b;
   int w;
 
@@ -1765,6 +1748,8 @@ int usr_solid_viscosity(dbl *param, /* ptr to user-defined parameter list       
   for (i = 0; i < pd->Num_Species_Eqn; i++)
     C[i] = fv->c[i]; /*Do not touch */
 
+  if (len_pars < 4)
+    GOMA_EH(-1, "not enough user parameters for usr_solid_viscosity");
   double visc0 = param[0], aT;
   double C1 = param[1], C2 = param[2], Tref = param[3];
 
@@ -1826,7 +1811,8 @@ int usr_solid_viscosity(dbl *param, /* ptr to user-defined parameter list       
 
 int usr_solid_dil_viscosity(dbl *param, /* ptr to user-defined parameter list        */
                             double *viscos,
-                            double d_viscos_dx[MAX_VARIABLE_TYPES + MAX_CONC]) {
+                            double d_viscos_dx[MAX_VARIABLE_TYPES + MAX_CONC],
+                            const int len_pars) {
   int a, b;
   int w;
 
@@ -1869,6 +1855,8 @@ int usr_solid_dil_viscosity(dbl *param, /* ptr to user-defined parameter list   
   for (i = 0; i < pd->Num_Species_Eqn; i++)
     C[i] = fv->c[i]; /*Do not touch */
 
+  if (len_pars < 4)
+    GOMA_EH(-1, "not enough user parameters for usr_solid_dil_viscosity");
   double visc0 = param[0], aT;
   double C1 = param[1], C2 = param[2], Tref = param[3];
 

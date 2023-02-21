@@ -3176,7 +3176,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
     /*  add thermo-elasticity  */
     if (pd->e[pg->imtrx][R_ENERGY]) {
       if (elc->thermal_expansion_model == CONSTANT ||
-          elc->thermal_expansion_model == THERMAL_HEAT) {
+          elc->thermal_expansion_model == THERMAL_HEAT || elc->thermal_expansion_model == USER) {
         for (p = 0; p < VIM; p++) {
           for (q = 0; q < VIM; q++) {
             TT[p][q] -= (2. * mu + 3. * lambda) * thermexp * (fv->T - Tref) * delta(p, q);
@@ -3194,12 +3194,6 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
         for (p = 0; p < VIM; p++) {
           for (q = 0; q < VIM; q++) {
             TT[p][q] -= (2. * mu + 3. * lambda) / (thermexp + fv->T) * (fv->T - Tref) * delta(p, q);
-          }
-        }
-      } else if (elc->thermal_expansion_model == USER) {
-        for (p = 0; p < VIM; p++) {
-          for (q = 0; q < VIM; q++) {
-            TT[p][q] -= (2. * mu + 3. * lambda) * thermexp * delta(p, q);
           }
         }
       } else {
@@ -3259,7 +3253,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
                     dTT_dx[p][q][b][j] -=
                         ((2. * d_mu_dx[b][j] + 3. * d_lambda_dx[b][j]) * thermexp +
                          (2. * mu + 3. * lambda) * d_thermexp_dx[v] * bf[v]->phi[j]) *
-                        delta(p, q);
+                        (fv->T - Tref) * delta(p, q);
                   }
                 }
                 if (pd->e[pg->imtrx][R_MASS]) {
@@ -3307,7 +3301,8 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
                                    (thermexp + elc->solid_reference_temp) /
                                    SQUARE(fv->T + thermexp) * bf[v]->phi[j] * delta(p, q);
               }
-            } else if (elc->thermal_expansion_model == THERMAL_HEAT) {
+            } else if (elc->thermal_expansion_model == THERMAL_HEAT ||
+                       elc->thermal_expansion_model == USER) {
               for (j = 0; j < dofs; j++) {
                 dTT_dT[p][q][j] -= (2. * mu + 3. * lambda) *
                                    (thermexp + (fv->T - Tref) * d_thermexp_dx[TEMPERATURE]) *
@@ -3319,24 +3314,6 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
                     (2. * mu + 3. * lambda) *
                     ((thermexp + (fv->T - Tref) * d_thermexp_dx[TEMPERATURE]) * delta(p, q) +
                      delta_thermexp * orient[p] * orient[q]) *
-                    bf[v]->phi[j];
-              }
-            } else if (elc->thermal_expansion_model == USER) {
-              for (j = 0; j < dofs; j++) {
-                dTT_dT[p][q][j] -=
-                    (2. * mu + 3. * lambda) * d_thermexp_dx[v] * bf[v]->phi[j] * delta(p, q);
-              }
-            }
-            if (elc->lame_mu_model == USER) {
-              for (j = 0; j < dofs; j++) {
-                dTT_dT[p][q][j] +=
-                    (2. * elc->d_lame_mu[TEMPERATURE] * fv->strain[p][q]) * bf[v]->phi[j];
-              }
-            }
-            if (elc->lame_lambda_model == USER) {
-              for (j = 0; j < dofs; j++) {
-                dTT_dT[p][q][j] +=
-                    (elc->d_lame_lambda[TEMPERATURE] * fv->volume_strain * delta(p, q)) *
                     bf[v]->phi[j];
               }
             }
@@ -4977,11 +4954,11 @@ int load_elastic_properties(struct Elastic_Constitutive *elcp,
     } else {
       /* This is where we should come for non-FAUX_PLASTIC lame_mu tables */
       apply_table_mp(&elc_ptr->lame_mu, table_local);
-      *mu = elc_ptr->lame_mu;
+      *mu = elc_ptr->lame_mu * table_local->yscale;
 
       for (i = 0; i < table_local->columns - 1; i++) {
         var = table_local->t_index[i];
-        elc_ptr->d_lame_mu[var] = table_local->slope[i];
+        elc_ptr->d_lame_mu[var] = table_local->slope[i] * table_local->yscale;
         /* put displacement derivatives in d_mu_dx */
         if (var <= MESH_DISPLACEMENT1 && var <= MESH_DISPLACEMENT3) {
           for (q = 0; q < dim; q++) {
@@ -5151,16 +5128,17 @@ int load_elastic_properties(struct Elastic_Constitutive *elcp,
   } else if (elc_ptr->thermal_expansion_model == USER) {
     if (pd->MeshMotion == TOTAL_ALE)
       GOMA_EH(GOMA_ERROR, "No TALE Real-solid jacobian entries for USER");
-    err = usr_expansion(elc_ptr->u_thermal_expansion, &value, d_thermexp_dx);
+    err = usr_expansion(elc_ptr->u_thermal_expansion, &value, d_thermexp_dx,
+                        elc_ptr->len_u_thermal_expansion);
     *thermexp = value;
   } else if (elc_ptr->thermal_expansion_model == TABLE) {
     struct Data_Table *table_local;
     table_local = MP_Tables[elc_ptr->thermal_expansion_tableid];
     apply_table_mp(&elc_ptr->thermal_expansion, table_local);
-    *thermexp = elc_ptr->thermal_expansion;
+    *thermexp = elc_ptr->thermal_expansion * table_local->yscale;
     for (i = 0; i < table_local->columns - 1; i++) {
       var = table_local->t_index[i];
-      d_thermexp_dx[var] = table_local->slope[i];
+      d_thermexp_dx[var] = table_local->slope[i] * table_local->yscale;
     }
   } else {
     GOMA_EH(GOMA_ERROR, "Unrecognized thermal expansion model");
@@ -5181,7 +5159,8 @@ int load_elastic_properties(struct Elastic_Constitutive *elcp,
   if (elc_ptr->solid_viscosity_model == CONSTANT) {
     *viscos = elc_ptr->solid_viscosity;
   } else if (elc_ptr->solid_viscosity_model == USER) {
-    err = usr_solid_viscosity(elc_ptr->u_solid_viscosity, &value, d_viscos_dx);
+    err = usr_solid_viscosity(elc_ptr->u_solid_viscosity, &value, d_viscos_dx,
+                              elc_ptr->len_u_solid_viscosity);
     *viscos = value;
   } else {
     GOMA_EH(GOMA_ERROR, "Unrecognized solid viscosity model");
@@ -5190,7 +5169,8 @@ int load_elastic_properties(struct Elastic_Constitutive *elcp,
   if (elc_ptr->solid_dil_viscosity_model == CONSTANT) {
     *dil_viscos = elc_ptr->solid_dil_viscosity;
   } else if (elc_ptr->solid_dil_viscosity_model == USER) {
-    err = usr_solid_dil_viscosity(elc_ptr->u_solid_dil_viscosity, &value, d_dilviscos_dx);
+    err = usr_solid_dil_viscosity(elc_ptr->u_solid_dil_viscosity, &value, d_dilviscos_dx,
+                                  elc_ptr->len_u_solid_dil_viscosity);
     *dil_viscos = value;
   } else {
     GOMA_EH(GOMA_ERROR, "Unrecognized solid dilational viscosity model");
