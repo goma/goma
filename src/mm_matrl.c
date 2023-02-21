@@ -451,6 +451,10 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac, PROPERTYJAC_STRUCT *densityJac
     (void)usr_density(matrl->u_density);
     rho = matrl->density;
 
+  } else if (matrl->DensityModel == DENSITY_THERMEXP) {
+    rho = matrl->u_density[0] /
+          (1. + matrl->u_density[1] * (stateVector[TEMPERATURE] - matrl->reference[TEMPERATURE]));
+
   } else if (matrl->DensityModel == FILL) {
     F = stateVector[FILL];
     if (F < 0.1) {
@@ -463,7 +467,6 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac, PROPERTYJAC_STRUCT *densityJac
              matrl->DensityModel == DENSITY_FOAM_TIME_TEMP ||
              matrl->DensityModel == DENSITY_FOAM_TIME) {
     double param = matrl->u_density[0];
-
     double S = fv->c[0];
 
     rho = param * (1.0 - S);

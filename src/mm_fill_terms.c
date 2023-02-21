@@ -10594,7 +10594,7 @@ int load_fv_mesh_derivs(int okToZero)
   int dim;       /* # dimensions in the physical mesh */
   unsigned int siz;
   int mode; /* modal counter */
-  int transient_run, discontinuous_porous_media;
+  int transient_run, discontinuous_porous_media, ve_solid;
 
   dbl T_i, v_ri, P_i, d_ri, F_i, d_dot_ri;
   dbl em_er_ri, em_ei_ri, em_hr_ri, em_hi_ri;
@@ -10632,6 +10632,7 @@ int load_fv_mesh_derivs(int okToZero)
 
   transient_run = pd->TimeIntegration != STEADY;
   discontinuous_porous_media = mp->PorousMediaType != CONTINUOUS;
+  ve_solid = cr->MeshFluxModel == KELVIN_VOIGT;
 
   okToZero = FALSE;
 
@@ -13135,7 +13136,7 @@ int load_fv_mesh_derivs(int okToZero)
             fv->d_grad_d_dmesh[p][q][b][j] += bfv->grad_phi_e[j][b][p][q];
 
             /*N.B. PRS: need to actually furbish this for Newmark Beta schemes */
-            if (transient_run && discontinuous_porous_media) {
+            if (transient_run && (discontinuous_porous_media || ve_solid)) {
               fv->d_grad_d_dot_dmesh[p][q][b][j] +=
                   (1. + 2. * tran->theta) * bfv->grad_phi_e[j][b][p][q] / tran->delta_t;
             }
@@ -13166,7 +13167,7 @@ int load_fv_mesh_derivs(int okToZero)
         }
 
         /*N.B. PRS: need to actually furbish this for Newmark Beta schemes */
-        if (transient_run && discontinuous_porous_media) {
+        if (transient_run && (discontinuous_porous_media || ve_solid)) {
           /* fv->d_grad_d_dot_dmesh[p][q] [b][j] += (1.+2.*tran->theta)*bfv->grad_phi_e[j][b]
            * [p][q]/tran->delta_t;*/
 
@@ -13737,6 +13738,17 @@ double density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
             d_rho->C[w][j] = mp->d_density[var_offset] * bf[var]->phi[j];
           }
         }
+      }
+    }
+
+  } else if (mp->DensityModel == DENSITY_THERMEXP) {
+    rho = mp->u_density[0] / (1. + mp->u_density[1] * (fv->T - mp->reference[TEMPERATURE]));
+    if (d_rho != NULL) {
+      var = TEMPERATURE;
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        d_rho->T[j] = -rho * mp->u_density[1] /
+                      (1. + mp->u_density[1] * (fv->T - mp->reference[TEMPERATURE])) *
+                      bf[var]->phi[j];
       }
     }
 

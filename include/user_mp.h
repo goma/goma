@@ -63,7 +63,8 @@ EXTERN int usr_lame_lambda(struct Elastic_Constitutive *,
 
 EXTERN int usr_expansion(dbl *, /* param - ptr to user-defined parm list     */
                          double *,
-                         double[MAX_VARIABLE_TYPES + MAX_CONC]);
+                         double[MAX_VARIABLE_TYPES + MAX_CONC],
+                         const int);
 
 EXTERN int usr_diffusivity(int,    /* species_no - of diffusivity etc. needed   */
                            dbl *); /* param - ptr to user-defined parm list     */
@@ -72,7 +73,13 @@ EXTERN int usr_FlowingLiquidViscosity(dbl *); /* param - ptr to user-defined par
 
 EXTERN int usr_solid_viscosity(dbl *, /* param - ptr to user-defined parm list     */
                                double *,
-                               double[MAX_VARIABLE_TYPES + MAX_CONC]);
+                               double[MAX_VARIABLE_TYPES + MAX_CONC],
+                               const int);
+
+EXTERN int usr_solid_dil_viscosity(dbl *, /* param - ptr to user-defined parm list     */
+                                   double *,
+                                   double[MAX_VARIABLE_TYPES + MAX_CONC],
+                                   const int);
 
 EXTERN double usr_heat_flux(const double[],   /*   temperature gradient       */
                             double[],         /*   heat flux vector       */

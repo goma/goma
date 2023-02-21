@@ -1260,6 +1260,8 @@ struct Elastic_Constitutive {
   dbl *u_solid_viscosity;
   dbl solid_dil_viscosity; /*  viscoelastic solid dilational viscosity   */
   int solid_dil_viscosity_model;
+  int len_u_solid_dil_viscosity;
+  dbl *u_solid_dil_viscosity;
 };
 
 typedef struct Elastic_Constitutive ELASTIC_CONST_STRUCT;

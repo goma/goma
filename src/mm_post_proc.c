@@ -327,6 +327,9 @@ int EM_CONTOURS = -1;
 int TOTAL_EM_CONTOURS = -1;
 int SCATTERED_EM_CONTOURS = -1;
 int ORIENTATION_VECTORS = -1; /* orientation vectors*/
+int FIRST_STRAINRATE_INVAR = -1;
+int SEC_STRAINRATE_INVAR = -1;
+int THIRD_STRAINRATE_INVAR = -1;
 
 int len_u_post_proc = 0; /* size of dynamically allocated u_post_proc
                           * actually is */
@@ -1555,6 +1558,27 @@ static int calc_standard_fields(double **post_proc_vect,
     /* this is actually the volume change - third invarient of the Deformation Gradient! */
     local_post[THIRD_INVAR_STRAIN] = fv->volume_change;
     local_lumped[THIRD_INVAR_STRAIN] = 1.;
+  }
+
+  if (FIRST_STRAINRATE_INVAR != -1 && pd->e[pg->imtrx][R_MESH1]) {
+    dbl INV, d_INV_dT[DIM][DIM];
+    INV = calc_tensor_invariant(fv_dot->strain, d_INV_dT, 1);
+    local_post[FIRST_STRAINRATE_INVAR] = INV;
+    local_lumped[FIRST_STRAINRATE_INVAR] = 1.;
+  }
+
+  if (SEC_STRAINRATE_INVAR != -1 && pd->e[pg->imtrx][R_MESH1]) {
+    dbl INV, d_INV_dT[DIM][DIM];
+    INV = calc_tensor_invariant(fv_dot->strain, d_INV_dT, 2);
+    local_post[SEC_STRAINRATE_INVAR] = INV;
+    local_lumped[SEC_STRAINRATE_INVAR] = 1.;
+  }
+
+  if (THIRD_STRAINRATE_INVAR != -1 && pd->e[pg->imtrx][R_MESH1]) {
+    dbl INV, d_INV_dT[DIM][DIM];
+    INV = calc_tensor_invariant(fv_dot->strain, d_INV_dT, 3);
+    local_post[THIRD_STRAINRATE_INVAR] = INV;
+    local_lumped[THIRD_STRAINRATE_INVAR] = 1.;
   }
 
   if (DIELECTROPHORETIC_FIELD != -1 && pd->e[pg->imtrx][R_ENORM]) {
@@ -7709,6 +7733,9 @@ void rd_post_process_specs(FILE *ifp, char *input) {
   iread = look_for_post_proc(ifp, "Viscous Stress Norm", &VISCOUS_STRESS_NORM);
   iread = look_for_post_proc(ifp, "Viscous Von Mises Stress", &VISCOUS_VON_MISES_STRESS);
   iread = look_for_post_proc(ifp, "Orientation Vectors", &ORIENTATION_VECTORS);
+  iread = look_for_post_proc(ifp, "First StrainRate Invariant", &FIRST_STRAINRATE_INVAR);
+  iread = look_for_post_proc(ifp, "Second StrainRate Invariant", &SEC_STRAINRATE_INVAR);
+  iread = look_for_post_proc(ifp, "Third StrainRate Invariant", &THIRD_STRAINRATE_INVAR);
   iread = look_for_post_proc(ifp, "User-Defined Post Processing", &USER_POST);
 
   /*
@@ -9948,6 +9975,39 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
       index_post_export++;
     }
     THIRD_INVAR_STRAIN = index_post;
+    index_post++;
+  }
+
+  if (FIRST_STRAINRATE_INVAR != -1 && Num_Var_In_Type[pg->imtrx][R_MESH1]) {
+    set_nv_tkud(rd, index, 0, 0, -2, "ISR", "[1]", "1st strain rate invariant", FALSE);
+    index++;
+    if (FIRST_STRAINRATE_INVAR == 2) {
+      Export_XP_ID[index_post_export] = index_post;
+      index_post_export++;
+    }
+    FIRST_STRAINRATE_INVAR = index_post;
+    index_post++;
+  }
+
+  if (SEC_STRAINRATE_INVAR != -1 && Num_Var_In_Type[pg->imtrx][R_MESH1]) {
+    set_nv_tkud(rd, index, 0, 0, -2, "IISR", "[1]", "2nd strain rate invariant", FALSE);
+    index++;
+    if (SEC_STRAINRATE_INVAR == 2) {
+      Export_XP_ID[index_post_export] = index_post;
+      index_post_export++;
+    }
+    SEC_STRAINRATE_INVAR = index_post;
+    index_post++;
+  }
+
+  if (THIRD_STRAINRATE_INVAR != -1 && Num_Var_In_Type[pg->imtrx][R_MESH1]) {
+    set_nv_tkud(rd, index, 0, 0, -2, "IIISR", "[1]", "3rd strain rate invariant", FALSE);
+    index++;
+    if (THIRD_STRAINRATE_INVAR == 2) {
+      Export_XP_ID[index_post_export] = index_post;
+      index_post_export++;
+    }
+    THIRD_STRAINRATE_INVAR = index_post;
     index_post++;
   }
 
