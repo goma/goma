@@ -1332,6 +1332,8 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num, double lamb
   }
   nits = err;
 
+  int good_mesh = TRUE;
+
   /* Write converged solution */
   if (converged) {
     if (Write_Intermediate_Solutions == 0 && Unlimited_Output) {
@@ -1393,7 +1395,7 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num, double lamb
     }
 
     /* Check element quality */
-    element_quality(passdown.exo, x, ams->proc_config);
+    good_mesh = element_quality(passdown.exo, x, ams->proc_config);
 
     /* INTEGRATE FLUXES, FORCES */
 
@@ -1420,6 +1422,10 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num, double lamb
   passdown.num_mat_fills += nits;
   if (Linear_Solver == AZTEC)
     passdown.num_linear_its += ams->status[AZ_its];
+
+  if (!good_mesh) {
+    return -1;
+  }
 
   if (!converged)
     return (-nits);
