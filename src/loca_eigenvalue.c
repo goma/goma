@@ -174,7 +174,6 @@ extern void cpdneupc_(MPI_Comm *comm,
 extern void cpdmout_(MPI_Comm *comm, int *lout, int *m, int *n, double *A, int *lda, int *idigit);
 extern double second_(void);
 
-
 #define SHIFTS   0
 #define MAX_ITRS 2
 #define MODE     6

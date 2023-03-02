@@ -35,7 +35,6 @@
 #ifndef GOMA_LOCA_CONST_H_
 #define GOMA_LOCA_CONST_H_
 
-
 #include "exo_struct.h"
 #include "sl_util_structs.h"
 
