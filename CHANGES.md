@@ -1,3 +1,11 @@
+## Changes in version 7.4.3
+
+- Element quality exits consistently with LOCA continuation [goma#424](https://github.com/goma/goma/pull/424)
+- Various bugfixes/Cleanup [goma#424](https://github.com/goma/goma/pull/424)
+  [goma#421](https://github.com/goma/goma/pull/424)
+  [goma#420](https://github.com/goma/goma/pull/424)
+  [goma#419](https://github.com/goma/goma/pull/424)
+
 ## Changes in version 7.4.2
 
 - Online documentation fix, broken with newer Sphinx [goma#415](https://github.com/goma/goma/pull/415)
