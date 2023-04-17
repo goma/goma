@@ -1,3 +1,4 @@
+#include "mm_shell_util.h"
 #ifdef GOMA_ENABLE_METIS
 #include <exodusII.h>
 #include <metis.h>
@@ -36,6 +37,8 @@ static void mark_elems_nodes(Exo_DB *monolith,
                              bool *elem_indicator,
                              int *num_elems,
                              int *num_nodes);
+
+static void link_shell_to_bulk(Exo_DB *monolith, int *partitions);
 
 static void put_coordinates(int exoid, Exo_DB *monolith, bool *node_indicator, int num_nodes) {
   dbl *x_coords = malloc(sizeof(dbl) * num_nodes);
@@ -462,6 +465,9 @@ goma_error goma_metis_decomposition(char **filenames, int n_files) {
     METIS_PartGraphKway(&monolith->num_elems, &n_con, elem_adj_pntr, elem_adj_list, vwgt, NULL,
                         NULL, &n_parts, NULL, NULL, options, &edgecut, partitions);
   }
+
+  // Fix for shell elements
+  link_shell_to_bulk(monolith, partitions);
 
   bool **node_indicators = malloc(sizeof(bool *) * n_parts);
   bool **elem_indicators = malloc(sizeof(bool *) * n_parts);
@@ -1061,6 +1067,112 @@ static void mark_elems_nodes(Exo_DB *monolith,
           if (!node_indicator[node]) {
             node_indicator[node] = true;
             (*num_nodes)++;
+          }
+        }
+      }
+    }
+  }
+}
+
+#define MAX_NEIGHBORS 100
+// Link shell elements to neighbor to avoid issues with
+// DOF management in parallel
+static void link_shell_to_bulk(Exo_DB *monolith, int *partitions) {
+  // check for shell elements
+  bool have_shell_elements = false;
+  for (int block = 0; block < monolith->num_elem_blocks; block++) {
+    if (is_shell_element_type(monolith->eb_elem_itype[block])) {
+      have_shell_elements = true;
+    }
+  }
+
+  if (!have_shell_elements)
+    return;
+
+  for (int block = 0; block < monolith->num_elem_blocks; block++) {
+    if (is_shell_element_type(monolith->eb_elem_itype[block])) {
+      // we are in a shell block
+
+      // We must share all nodes with an element to be attached to it.
+      int shared_nodes = 0;
+      switch (monolith->eb_elem_itype[block]) {
+      case LINEAR_BAR:
+        shared_nodes = 2;
+        break;
+      case QUAD_BAR:
+        shared_nodes = 3;
+        break;
+      case BILINEAR_SHELL:
+        shared_nodes = 4;
+        break;
+      case BIQUAD_SHELL:
+        shared_nodes = 9;
+        break;
+      case BILINEAR_TRISHELL:
+        shared_nodes = 3;
+        break;
+      }
+
+      if (shared_nodes == 0) {
+        GOMA_WH(
+            GOMA_ERROR,
+            "Unknown number of shared nodes for shell element type, decomposition might be bad");
+      }
+
+      for (int elem = monolith->eb_ptr[block]; elem < monolith->eb_ptr[block + 1]; elem++) {
+        int neighbor_elems[MAX_NEIGHBORS] = {-1};
+        int neighbor_counts[MAX_NEIGHBORS] = {0};
+
+        // elem_elem_pntr doesn't work for shells, probably should look into it or add one for
+        // shells use elem node pntr for now as we must have a shared element in all nodes on a
+        // different block
+        for (int i = monolith->elem_node_pntr[elem]; i < monolith->elem_node_pntr[elem + 1]; i++) {
+          int node = monolith->elem_node_list[i];
+          for (int j = monolith->node_elem_pntr[node]; j < monolith->node_elem_pntr[node + 1];
+               j++) {
+            int neighbor_elem = monolith->node_elem_list[j];
+            int neighbor_block = monolith->elem_eb[neighbor_elem];
+            if (neighbor_block != block) {
+              for (int k = 0; k < MAX_NEIGHBORS; k++) {
+                if (neighbor_elems[k] == neighbor_elem) {
+                  neighbor_counts[k]++;
+                  break;
+                }
+                if (neighbor_elems[k] == -1) {
+                  neighbor_elems[k] = neighbor_elem;
+                  neighbor_counts[k]++;
+                  break;
+                }
+              }
+            }
+          }
+        }
+
+        // now we can assign all to the same processor.
+        // first check to see if there is a bulk and assign it to first found
+        bool bulk_found = false;
+        for (int i = 0; i < MAX_NEIGHBORS; i++) {
+          if (i == -1)
+            break;
+
+          if (neighbor_counts[i] == shared_nodes &&
+              !is_shell_element_type(
+                  monolith->eb_elem_itype[monolith->elem_eb[neighbor_elems[i]]])) {
+            partitions[elem] = partitions[neighbor_elems[i]];
+            bulk_found = true;
+            break;
+          }
+        }
+        if (bulk_found)
+          return;
+
+        // else just assign it to first found
+        for (int i = 0; i < MAX_NEIGHBORS; i++) {
+          if (i == -1)
+            break;
+
+          if (neighbor_counts[i] == shared_nodes) {
+            partitions[elem] = partitions[neighbor_elems[i]];
           }
         }
       }
