@@ -792,10 +792,14 @@ int apply_point_colloc_bc(double resid_vector[], /* Residual vector for the curr
                          *   over all dof for this variable in this element
                          */
                         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-                          phi_j = bf[var]->phi[j];
-                          lec->J[LEC_J_INDEX(ieqn, pvar, ldof_eqn, j)] +=
-                              penalty * d_func[var] * phi_j;
-                          lec->J[LEC_J_INDEX(ieqn, pvar, ldof_eqn, j)] *= f_time;
+                          // I'm not sure this phi_j is ever going to be non-zero with the Dolphin
+                          // check above check if we have a bf available before trying to use it
+                          if (bf[var]) {
+                            phi_j = bf[var]->phi[j];
+                            lec->J[LEC_J_INDEX(ieqn, pvar, ldof_eqn, j)] +=
+                                penalty * d_func[var] * phi_j;
+                            lec->J[LEC_J_INDEX(ieqn, pvar, ldof_eqn, j)] *= f_time;
+                          }
                         }
                       }
                     } else {
