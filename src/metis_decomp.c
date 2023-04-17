@@ -1173,6 +1173,7 @@ static void link_shell_to_bulk(Exo_DB *monolith, int *partitions) {
 
           if (neighbor_counts[i] == shared_nodes) {
             partitions[elem] = partitions[neighbor_elems[i]];
+            break;
           }
         }
       }
