@@ -1,14 +1,14 @@
 ## Changes in version 7.4.3
 
-- Bugfix for parallel decomposition
+- Bugfix for parallel decomposition [goma#427](https://github.com/goma/goma/pull/427)
 
 ## Changes in version 7.4.3
 
 - Element quality exits consistently with LOCA continuation [goma#424](https://github.com/goma/goma/pull/424)
 - Various bugfixes/Cleanup [goma#424](https://github.com/goma/goma/pull/424)
-  [goma#421](https://github.com/goma/goma/pull/424)
-  [goma#420](https://github.com/goma/goma/pull/424)
-  [goma#419](https://github.com/goma/goma/pull/424)
+  [goma#421](https://github.com/goma/goma/pull/421)
+  [goma#420](https://github.com/goma/goma/pull/420)
+  [goma#419](https://github.com/goma/goma/pull/419)
 
 ## Changes in version 7.4.2
 
