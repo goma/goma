@@ -1,4 +1,4 @@
-## Changes in version 7.4.3
+## Changes in version 7.4.4
 
 - Bugfix for parallel decomposition [goma#427](https://github.com/goma/goma/pull/427)
 
