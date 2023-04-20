@@ -286,7 +286,7 @@ goma_normal_val acos_goma_normal_val(const goma_normal_val *val) {
 
   retval.val = acos(value);
 
-  double tmp = 1.0 / sqrt(1 - value*value + DBL_SEMI_SMALL);
+  double tmp = 1.0 / sqrt(1 - value * value + DBL_SEMI_SMALL);
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < MDE; j++) {
       retval.d_val[i][j] = -val->d_val[i][j] * tmp;
