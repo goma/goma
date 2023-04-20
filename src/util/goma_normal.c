@@ -281,10 +281,12 @@ goma_normal_val fabs_goma_normal_val(const goma_normal_val *val) {
 goma_normal_val acos_goma_normal_val(const goma_normal_val *val) {
 
   goma_normal_val retval;
+  // maximum value for a normal dotted with a normal should be 1 lets make sure
+  double value = fmin(1, val->val);
 
-  retval.val = acos(val->val);
+  retval.val = acos(value);
 
-  double tmp = 1.0 / sqrt(1 - val->val * val->val + DBL_SEMI_SMALL);
+  double tmp = 1.0 / sqrt(1 - value*value + DBL_SEMI_SMALL);
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < MDE; j++) {
       retval.d_val[i][j] = -val->d_val[i][j] * tmp;
