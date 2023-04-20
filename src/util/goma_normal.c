@@ -283,6 +283,7 @@ goma_normal_val acos_goma_normal_val(const goma_normal_val *val) {
   goma_normal_val retval;
   // maximum value for a normal dotted with a normal should be 1 lets make sure
   double value = fmin(1, val->val);
+  value = fmax(-1, value);
 
   retval.val = acos(value);
 
