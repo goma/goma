@@ -35,12 +35,8 @@
 #ifndef GOMA_LOCA_CONST_H_
 #define GOMA_LOCA_CONST_H_
 
-/*
-#ifndef lint
-static char *cvs_conconsth_id =
-  "$Id: loca_const.h,v 5.1 2007-09-18 18:53:42 prschun Exp $";
-#endif
-*/
+#include "exo_struct.h"
+#include "sl_util_structs.h"
 
 /*****************************************************************************/
 /*                       DEFINE STATEMENTS                                   */
@@ -205,7 +201,7 @@ struct con_struct {
 
 /*****************************************************************************/
 
-extern int con_lib(struct con_struct *con);
+extern int con_lib(struct con_struct *con, Exo_DB *exo, struct GomaLinearSolverData *ams);
 extern int arc_length_bordering_alg(
     double *x, double *delta_x, struct con_struct *con, double reltol, double abstol);
 extern int

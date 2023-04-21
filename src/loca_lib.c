@@ -32,13 +32,16 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  -----------------------------------------------------------------------------
 */
-
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
 
+#include "el_quality.h"
+#include "exo_struct.h"
 #include "loca_const.h"
 #include "loca_util_const.h"
+#include "sl_util_structs.h"
+#include "std.h"
 
 /*****************************************************************************/
 /********************* Static Functions Used *********************************/
@@ -68,7 +71,7 @@ static void print_line(char *charstr, int ntimes);
 /*****************************************************************************/
 /*****************************************************************************/
 
-int con_lib(struct con_struct *con)
+int con_lib(struct con_struct *con, Exo_DB *exo, struct GomaLinearSolverData *ams)
 
 /*****************************************************************************
  *
@@ -536,6 +539,12 @@ int con_lib(struct con_struct *con)
           break;
         }
 
+        /* Check element quality */
+        int good_mesh = element_quality(exo, x, ams->proc_config);
+        if (!good_mesh) {
+          goto free_and_clear;
+        }
+
         /*
          * Check current parameter value against the maximum.
          */
@@ -841,7 +850,7 @@ int con_lib(struct con_struct *con)
   } /* END of loop over continuation step attempts --- for (n = 0; ... --- */
 
   /*********************CLEAN-UP AREA*****************************************/
-
+free_and_clear:
   /*
    * Free auxillary vectors no matter what happened
    */

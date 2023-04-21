@@ -1017,7 +1017,7 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
   /* Otherwise, now call continuation library and return */
 
   else
-    nstep = con_lib(&con);
+    nstep = con_lib(&con, exo, ams[0]);
 
   *con_par_ptr = con.general_info.param;
 
@@ -1391,9 +1391,6 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num, double lamb
         }
       }
     }
-
-    /* Check element quality */
-    element_quality(passdown.exo, x, ams->proc_config);
 
     /* INTEGRATE FLUXES, FORCES */
 
