@@ -2738,7 +2738,7 @@ int assemble_stress_log_conf(dbl tt, dbl dt, PG_DATA *pg_data) {
 
   SUPG_terms supg_terms;
   if (supg != 0.0) {
-    supg_tau(&supg_terms, dim, 1e-8, pg_data, dt, true, eqn);
+    supg_tau(&supg_terms, dim, 0, pg_data, dt, true, eqn);
   }
 
   dbl dcdd_factor = 0.0;
@@ -4992,11 +4992,6 @@ void load_modal_pointers(int ve_mode, /* mode number */
   int a, b, p, q; /* indeces for dimensions */
   int j;          /* indeces for dofs */
   int var;
-  size_t siz;
-
-  siz = sizeof(double) * DIM * DIM * DIM * DIM * MDE;
-  memset(d_grad_s_dm, 0, siz);
-
   /* load up things we need in the assembly routine for each mode in turn*/
 
   /* put stress in a nice working array */

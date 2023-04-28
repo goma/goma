@@ -4051,57 +4051,6 @@ int matrix_fill_stress(struct GomaLinearSolverData *ams,
      */
     do_LSA_mods(LSA_VOLUME);
 
-    if (pde[R_MOMENTUM1]) {
-      if (upd->SegregatedSolve) {
-        err = assemble_momentum_segregated(time_value, theta, delta_t, &pg_data);
-        GOMA_EH(err, "assemble_momentum");
-#ifdef CHECK_FINITE
-        CHECKFINITE("assemble_momentum");
-#endif
-      } else {
-        dbl h_elem_avg = pg_data.h_elem_avg;
-        err = assemble_momentum(time_value, theta, delta_t, h_elem_avg, &pg_data, xi, exo);
-        GOMA_EH(err, "assemble_momentum");
-#ifdef CHECK_FINITE
-        CHECKFINITE("assemble_momentum");
-#endif
-      }
-    }
-
-    if (pde[R_PRESSURE]) {
-      if (upd->SegregatedSolve) {
-        err = assemble_continuity_segregated(time_value, theta, delta_t, &pg_data);
-        GOMA_EH(err, "assemble_continuity");
-#ifdef CHECK_FINITE
-        CHECKFINITE("assemble_continuity");
-#endif
-        if (neg_elem_volume)
-          return -1;
-      } else {
-        err = assemble_continuity(time_value, theta, delta_t, &pg_data);
-        GOMA_EH(err, "assemble_continuity");
-#ifdef CHECK_FINITE
-        CHECKFINITE("assemble_continuity");
-#endif
-        if (neg_elem_volume)
-          return -1;
-      }
-    }
-
-    if (pde[R_GRADIENT11]) {
-      if (gn->ConstitutiveEquation == BINGHAM_MIXED) {
-        err = assemble_rate_of_strain(theta, delta_t);
-      } else {
-        err = assemble_gradient(theta, delta_t);
-      }
-      GOMA_EH(err, "assemble_gradient");
-#ifdef CHECK_FINITE
-      err = CHECKFINITE("assemble_gradient");
-      if (err)
-        return -1;
-#endif
-    }
-
     if (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV) {
       err = assemble_stress_log_conf(theta, delta_t, &pg_data);
       if (err)
@@ -5431,10 +5380,12 @@ static void zero_lec(void)
  **************************************************************************/
 {
   memset(lec->R, 0, MAX_LOCAL_VAR_DESC * lec->max_dof * sizeof(dbl));
-  memset(lec->J, 0,
-         MAX_LOCAL_VAR_DESC * MAX_LOCAL_VAR_DESC * lec->max_dof * lec->max_dof * sizeof(dbl));
-  memset(lec->J_stress_neighbor, 0,
-         4 * lec->max_dof * MAX_LOCAL_VAR_DESC * lec->max_dof * sizeof(dbl));
+  if (af->Assemble_Jacobian) {
+    memset(lec->J, 0,
+           MAX_LOCAL_VAR_DESC * MAX_LOCAL_VAR_DESC * lec->max_dof * lec->max_dof * sizeof(dbl));
+    memset(lec->J_stress_neighbor, 0,
+           4 * lec->max_dof * MAX_LOCAL_VAR_DESC * lec->max_dof * sizeof(dbl));
+  }
 }
 /****************************************************************************/
 
