@@ -10158,9 +10158,29 @@ int get_continuous_species_terms(struct Species_Conservation_Terms *st,
         err = foam_pmdi10_co2_liq_species_source(w, st, mp->u_species_source[w], time, tt, dt);
 
         st->MassSource[w] = mp->species_source[w];
+        } 
+        else if (mp->SpeciesSourceModel[w] == SUSPENSION_LIQUID_SOURCE_ARRHENIUS_PLUS_MOMENTS) {
+        err = suspension_liquid_species_source_arrhenius_plus_moments(w, st, mp->u_species_source[w], time, tt, dt);
 
-      } else if (mp->SpeciesSourceModel[w] == FOAM_PMDI_10_CO2_GAS) {
+        st->MassSource[w] = mp->species_source[w];
+
+      } else if (mp->SpeciesSourceModel[w] == SUSPENSION_SOLID_SOURCE_ARRHENIUS_PLUS_MOMENTS) {
+        err = suspension_solid_species_source_arrhenius_plus_moments(w, st, mp->u_species_source[w], time, tt, dt);
+
+        st->MassSource[w] = mp->species_source[w];
+
+      } 
+       else if (mp->SpeciesSourceModel[w] == FOAM_PMDI_10_CO2_GAS) {
         err = foam_pmdi10_co2_gas_species_source(w, st, mp->u_species_source[w], time, tt, dt);
+
+        st->MassSource[w] = mp->species_source[w];
+      } else if (mp->SpeciesSourceModel[w] == GILLETTE_FOAMY_LIQUID) {
+        err = gillette_foamy_liquid_species_source(w, st, mp->u_species_source[w], time, tt, dt);
+
+        st->MassSource[w] = mp->species_source[w];
+
+      } else if (mp->SpeciesSourceModel[w] == GILLETTE_FOAMY_GASEOUS) {
+        err = gillette_foamy_gaseous_species_source(w, st, mp->u_species_source[w], time, tt, dt);
 
         st->MassSource[w] = mp->species_source[w];
       }

@@ -296,7 +296,7 @@ goma_error count_pressure_nodes(PetscMatrixData *matrix_data,
     dblColGIDs[i] = (double)nz[i];
   }
   matrix_data->schur_s_local_to_global = (PetscInt *)malloc(sizeof(PetscInt) * num_cols);
-  exchange_node(cx[0], dpi, dblColGIDs);
+  exchange_node(cx[pg->imtrx], dpi, dblColGIDs);
   for (int i = 0; i < num_cols; i++) {
     matrix_data->schur_s_local_to_global[i] = (PetscInt)dblColGIDs[i];
   }
@@ -794,7 +794,7 @@ static goma_error initialize_petsc_post_proc_matrix(Exo_DB *exo,
   }
   matrix_data->local_to_global = (PetscInt *)malloc(sizeof(PetscInt) * num_cols);
 
-  exchange_node(cx[0], dpi, dblColGIDs);
+  exchange_node(cx[pg->imtrx], dpi, dblColGIDs);
   // convert back to Int
   for (int i = 0; i < num_cols; i++) {
     matrix_data->local_to_global[i] = (PetscInt)dblColGIDs[i];
@@ -1767,7 +1767,7 @@ void petsc_solve_post_proc(double **post_proc_vect, RESULTS_DESCRIPTION_STRUCT *
   double start = MPI_Wtime();
   for (int pp = 0; pp < rd->TotalNVPostOutput; pp++) {
     double pp_start = MPI_Wtime();
-    exchange_node(cx[0], dpi, post_proc_vect[pp]);
+    exchange_node(cx[pg->imtrx], dpi, post_proc_vect[pp]);
     for (PetscInt i = 0; i < dpi->num_internal_nodes + dpi->num_boundary_nodes; i++) {
       VecSetValue(matrix_data->residual, matrix_data->local_to_global[i], post_proc_vect[pp][i],
                   INSERT_VALUES);

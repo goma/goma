@@ -1193,7 +1193,7 @@ int foam_pmdi10_h2o_species_source(int species_no, /* Current species number */
   double CH2O = fv->c[species_no];
   double T = fv->T;
   double n = param[0];
-  double t_nuc = param[1];
+  //double t_nuc = param[1];
   double A = param[2];
   double norm_E = param[3];
 
@@ -1265,7 +1265,7 @@ int foam_pmdi10_co2_species_source(int species_no, /* Current species number */
   }
   double CH2O = fv->c[wH2O];
   double n = mp->u_species_source[wH2O][0];
-  double t_nuc = mp->u_species_source[wH2O][1];
+  //double t_nuc = mp->u_species_source[wH2O][1];
   double A = mp->u_species_source[wH2O][2];
   double norm_E = mp->u_species_source[wH2O][3];
 
@@ -1362,7 +1362,7 @@ int foam_pmdi10_co2_liq_species_source(int species_no, /* Current species number
 
   double CH2O = fv->c[wH2O];
   double n = mp->u_species_source[wH2O][0];
-  double t_nuc = mp->u_species_source[wH2O][1];
+  //double t_nuc = mp->u_species_source[wH2O][1];
   double A = mp->u_species_source[wH2O][2];
   double norm_E = mp->u_species_source[wH2O][3];
 
@@ -1422,6 +1422,7 @@ int foam_pmdi10_co2_liq_species_source(int species_no, /* Current species number
   free(MKS);
   return 0;
 }
+
 
 int foam_pmdi10_co2_gas_species_source(int species_no, /* Current species number */
                                        struct Species_Conservation_Terms *st,
@@ -1510,6 +1511,175 @@ int foam_pmdi10_co2_gas_species_source(int species_no, /* Current species number
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
         st->d_MassSource_dT[species_no][j] =
             MKS->d_G_dT[species_no][1][j] * ref_press / (Rgas_const * T);
+      }
+    }
+  }
+
+  free(MKS);
+  return 0;
+}
+
+int gillette_foamy_liquid_species_source(int species_no, /* Current species number */
+                                       struct Species_Conservation_Terms *st,
+                                       double *param,
+                                       double time,
+                                       double tt,
+                                       double dt) {
+  // dy0/dt + u dot grad y0 - D0 grad^2 y0 = -G1 *P /RT liquid gillette foamy
+  // dy1/dt + u dot grad y1 - D1 grad^2 y1 = G1 *P /RT  bubble/gaseos gillette foamy
+  
+  int eqn, var;
+
+  double T = fv->T;
+  struct moment_kernel_struct *MKS;
+
+
+  if (!pd->gv[MOMENT1]) {
+    GOMA_EH(GOMA_ERROR, "Expected to find moment equations for FOAM_PMDI_10_CO2_LIQ");
+    return -1;
+  }
+
+
+  MKS = calloc(sizeof(struct moment_kernel_struct), 1);
+  int err = get_moment_kernel_struct(MKS);
+  if (err) {
+    free(MKS);
+    return -1;
+  }
+
+  double Rgas_const   = param[0];
+  double ref_press    = param[1];
+  double conc_lim     = param[2];
+  double myconversion = param[3];
+
+
+  double conc = fv->c[species_no];
+  
+  double source;
+  double growth_term_conv = MKS->G[species_no][1]*myconversion;  // MKS->G[species_no][1] convert to correct units
+
+  if (T <= 0) {
+    source = 0;
+    mp->d_species_source[MAX_VARIABLE_TYPES + species_no] = 0;
+    mp->d_species_source[TEMPERATURE] = 0;
+    free(MKS);
+    return (source);
+  }
+
+  if (conc <= conc_lim) {
+    source = 0;
+    mp->species_source[species_no] = 0;
+  } else {
+    source = -growth_term_conv * ref_press / (Rgas_const * T);
+  }
+
+  /**********************************************************/
+
+  /* Species piece */
+  eqn = MASS_FRACTION;
+  if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
+    int j;
+    mp->species_source[species_no] = source;
+    st->MassSource[species_no] = source;
+
+    /* Jacobian entries for source term */
+    var = MASS_FRACTION;
+    if (pd->v[pg->imtrx][var]) {
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        if (conc > 1e-6) {
+        st->d_MassSource_dc[species_no][species_no][j] = -myconversion*MKS->d_G_dC[species_no][1][j] * ref_press / (Rgas_const * T);
+      }
+    }
+}
+
+    var = TEMPERATURE;
+    if (pd->v[pg->imtrx][var]) {
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        st->d_MassSource_dT[species_no][j] = - myconversion*MKS->d_G_dT[species_no][1][j] * ref_press / (Rgas_const * T);
+      }
+    }
+  }
+  free(MKS);
+  return 0;
+}
+
+
+
+int gillette_foamy_gaseous_species_source(int species_no, /* Current species number */
+                                       struct Species_Conservation_Terms *st,
+                                       double *param,
+                                       double time,
+                                       double tt,
+                                       double dt) {
+  int eqn, var;
+  double T = fv->T;
+  int wLiq = -1;
+  int w;
+  struct moment_kernel_struct *MKS;
+
+  for (w = 0; w < pd->Num_Species; w++) {
+    if (mp->SpeciesSourceModel[w] == GILLETTE_FOAMY_LIQUID) {
+      wLiq = w;
+    }
+  }
+
+  if (!pd->gv[MOMENT1]) {
+    GOMA_EH(GOMA_ERROR, "Expected to find moment equations for GILLETTE_FOAMY");
+  }
+
+   if (wLiq == -1) {
+    GOMA_EH(GOMA_ERROR, "Expected to find a speices with source GILLETTE_FOAMY");
+    return -1;
+  }
+
+  MKS = calloc(sizeof(struct moment_kernel_struct), 1);
+  int err = get_moment_kernel_struct(MKS);
+  if (err) {
+    free(MKS);
+    return -1;
+  }
+
+  double Rgas_const   = mp->u_species_source[wLiq][0];
+  double ref_press    = mp->u_species_source[wLiq][1];
+  //double conc_lim     = mp->u_species_source[wLiq][2];
+  double myconversion = mp->u_species_source[wLiq][3];
+  
+  double source;
+  double growth_term_conv = MKS->G[wLiq][1]*myconversion;  // MKS->G[species_no][1] convert to correct units
+
+  if (T <= 0) {
+    source = 0;
+    mp->d_species_source[MAX_VARIABLE_TYPES + species_no] = 0;
+    mp->d_species_source[TEMPERATURE] = 0;
+    free(MKS);
+    return 0;
+  }
+
+  source = growth_term_conv * ref_press / (Rgas_const * T);
+
+  /**********************************************************/
+
+  /* Species piece */
+  eqn = MASS_FRACTION;
+  if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
+    int j;
+    mp->species_source[species_no] = source;
+    st->MassSource[species_no] = source;
+
+    /* Jacobian entries for source term */
+    var = MASS_FRACTION;
+    if (pd->v[pg->imtrx][var]) {
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        st->d_MassSource_dc[species_no][wLiq][j] =
+            MKS->d_G_dC[wLiq][1][j] *myconversion * ref_press / (Rgas_const * T);
+      }
+    }
+
+    var = TEMPERATURE;
+    if (pd->v[pg->imtrx][var]) {
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        st->d_MassSource_dT[species_no][j] =
+            myconversion*MKS->d_G_dT[species_no][1][j] * ref_press / (Rgas_const * T);
       }
     }
   }
@@ -1690,7 +1860,6 @@ int suspension_liquid_species_source_arrhenius(int species_no, /* Current specie
   }
   
 
-    double rate_rxn = -A*exp(-norm_E / T);
   if (Cliq <= concentration_cutoff ) {
     //printf("liquid concentration as dropped below cuttoff ");
     source = 0;
@@ -1723,6 +1892,7 @@ int suspension_liquid_species_source_arrhenius(int species_no, /* Current specie
   //printf("source %lf \n", source);
   return source;
 }
+
 int suspension_solid_species_source_arrhenius(int species_no, /* Current species number */
                                    double *param,
                                    double time,
@@ -1799,6 +1969,210 @@ int suspension_solid_species_source_arrhenius(int species_no, /* Current species
   }
   //printf("source %lf \n", source);
   return source;
+}
+
+int suspension_liquid_species_source_arrhenius_plus_moments(int species_no, /* Current species number */
+                                   struct Species_Conservation_Terms *st,
+                                   double *param,
+                                   double time,
+                                   double tt,
+                                   double dt)
+/* param - pointer to user-defined parameter list */
+/* tt, dt - time derivative parameters */
+{
+  int eqn, var;
+  struct moment_kernel_struct *MKS;
+
+  double Cliq   = fv->c[species_no];   // current concentration of liquid species
+  double T      = fv->T;
+
+   if (!pd->gv[MOMENT1]) {
+    GOMA_EH(GOMA_ERROR, "Expected to find moment equations for SUSPENSION_LIQUID_SOURCE_ARRHENIUS_PLUS_MOMENTS");
+      return -1;
+    }
+
+   //printf("%d",mp->MomentSourceModel);
+   double msource[MAX_MOMENTS];
+   MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msource;
+   d_msource = calloc(sizeof(MOMENT_SOURCE_DEPENDENCE_STRUCT), 1);
+   get_moment_source(msource, d_msource);
+   
+   MKS = calloc(sizeof(struct moment_kernel_struct), 1);
+   int err = get_moment_kernel_struct(MKS);
+   if (err) {
+     free(MKS);
+     return -1;
+   }
+
+   double mom0;
+   mom0        = msource[0];
+   double Gbar = MKS->G[species_no][1];
+  
+   double rho_liq = mp->u_density[1]; // density of liquid species
+  
+   double MW_liq   = param[0];
+   double max_frac = param[1];;
+   double curr_mf  = Cliq*MW_liq/rho_liq;
+  
+   double source;
+
+  if (T <= 0) {
+    source = 0;
+    mp->d_species_source[MAX_VARIABLE_TYPES + species_no] = 0;
+    mp->d_species_source[TEMPERATURE] = 0;
+    return (source);
+  }
+  
+
+   source = -rho_liq * Gbar * mom0/MW_liq;
+  
+  //if (curr_mf <= max_frac ) {
+  //  //printf("liquid concentration as dropped below cuttoff ");
+  //  source = 0;
+  //  mp->species_source[species_no] = 0;
+  //} else {
+  //  //printf("ch2o %lf, n %lf ", CH2O, n));
+  //  source = -rho_liq * Gbar * mom0/MW_liq;
+  // // printf("liquid: %lf  ", source);
+  //}
+  /**********************************************************/
+
+  /* Species piece */
+  eqn = MASS_FRACTION;
+  if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
+    int j;
+    mp->species_source[species_no] = source;
+
+    /* Jacobian entries for source term */
+    var = MASS_FRACTION;
+    if (pd->v[pg->imtrx][var]) {
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        if (curr_mf > max_frac) {
+          st->d_MassSource_dc[species_no][species_no][j] = 
+              -(rho_liq/max_frac) *(MKS->d_G_dC[species_no][1][j] * mom0 + d_msource->C[0][species_no][j]*Gbar);
+      }
+    }
+  }
+
+    var = TEMPERATURE;
+    if (pd->v[pg->imtrx][var]) {
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+      st->d_MassSource_dT[species_no][j] = 
+         -(rho_liq/MW_liq) * (mom0 * MKS->d_G_dT[species_no][1][j] + Gbar*d_msource->T[0][j]);
+      }
+    }
+  }
+  free(MKS);
+  return 0;
+}
+
+int suspension_solid_species_source_arrhenius_plus_moments(int species_no, /* Current species number */
+                                   struct Species_Conservation_Terms *st,
+                                   double *param,
+                                   double time,
+                                   double tt,
+                                   double dt)
+/* param - pointer to user-defined parameter list */
+/* tt, dt - time derivative parameters */
+{
+  int eqn, var,w;
+  struct moment_kernel_struct *MKS;
+
+  int wliquid = -1;
+  double T    = fv->T;
+
+  for (w = 0; w < pd->Num_Species; w++) {
+    if (mp->SpeciesSourceModel[w] == SUSPENSION_LIQUID_SOURCE_ARRHENIUS_PLUS_MOMENTS) {
+       wliquid = w;
+    }
+  }
+  
+if (wliquid == -1) {
+    GOMA_EH(GOMA_ERROR, "Expected to find a speices with source SUSPENSION_LIQUID_SOURCE_ARRHENIUS_PLUS_MOMENTS");
+    return -1;
+  } 
+
+   if (!pd->gv[MOMENT0]) {
+    GOMA_EH(GOMA_ERROR, "Expected to find moment equations for SUSPENSION_LIQUID_SOURCE_ARRHENIUS_PLUS_MOMENTS");
+      return -1;
+    }
+
+  double msource[MAX_MOMENTS];
+  MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msource;
+  d_msource = calloc(sizeof(MOMENT_SOURCE_DEPENDENCE_STRUCT), 1);
+  get_moment_source(msource, d_msource);
+
+  MKS = calloc(sizeof(struct moment_kernel_struct), 1);
+  int err = get_moment_kernel_struct(MKS);
+  if (err) {
+    free(MKS);
+    return -1;
+  }
+
+  double mom0;
+  mom0 = msource[0];
+  double Gbar = MKS->G[wliquid][1];
+  
+  double Cliq    = fv->c[wliquid];   // current concentration of liquid species
+  double rho_liq = mp->u_density[1]; // density of liquid species
+  double MW_liq   = mp->u_species_source[wliquid][0];
+  double max_frac = mp->u_species_source[wliquid][1];
+  double curr_mf  = Cliq*MW_liq/rho_liq;
+
+  double source;
+
+  if (T <= 0) {
+    source = 0;
+    mp->d_species_source[MAX_VARIABLE_TYPES + species_no] = 0;
+    mp->d_species_source[MAX_VARIABLE_TYPES + wliquid] = 0;
+    mp->d_species_source[TEMPERATURE] = 0;
+    return (source);
+  }
+  
+  source = Gbar * mom0;
+  //if (curr_mf < max_frac ) {
+  //  source = 0;
+  //  mp->species_source[species_no] = 0;
+  //} else {
+  //  //printf("ch2o %lf, n %lf ", CH2O, n));
+  //  //source = A*exp(norm_E / T) * pow(Cliq*MW_liq/rho_liq,n);
+  //  double mf = (curr_mf-max_frac)/max_frac;
+  //  source    = mf * G0 * mom0;
+  //   if (source<0) {
+  //     printf("source%lf  ", source);
+  //   }
+  //  //printf("solid: %lf  ", source);
+  //  //printf("%9E\n", source);
+  //}
+  /**********************************************************/
+
+  /* Species piece */
+  eqn = MASS_FRACTION;
+  if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
+    mp->species_source[species_no] = source;
+
+    /* Jacobian entries for source term */
+    var = MASS_FRACTION;
+    if (pd->v[pg->imtrx][var]) {
+      for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        if (curr_mf > max_frac) {
+          st->d_MassSource_dc[species_no][wliquid][j] =
+                (MKS->d_G_dC[wliquid][1][j] * mom0 + d_msource->C[0][wliquid][j]*Gbar);
+         }
+       }
+     }
+
+    var = TEMPERATURE;
+    if (pd->v[pg->imtrx][var]) {
+      for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        st->d_MassSource_dT[species_no][j] =
+             (mom0 * MKS->d_G_dT[species_no][1][j] + Gbar*d_msource->T[0][j]);
+         }
+    }
+  }
+  //printf("source %lf \n", source);
+  free(MKS);
+  return 0;
 }
 double epoxy_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
                          double tt, /* parameter to vary time integration from

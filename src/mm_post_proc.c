@@ -4991,7 +4991,7 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
 #endif
 
   for (ii = 0; ii < rd->TotalNVPostOutput; ii++) {
-    exchange_node(cx[0], dpi, post_proc_vect[ii]);
+    exchange_node(cx[pg->imtrx], dpi, post_proc_vect[ii]);
   }
 
   /******************************************************************************/
@@ -5295,7 +5295,7 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
     post_process_average(x, x_old, xdot, xdot_old, resid_vector, exo, dpi, post_proc_vect,
                          *time_ptr);
     for (int ii = 0; ii < nn_average; ii++) {
-      exchange_node(cx[0], dpi, post_proc_vect[pp_average[ii]->index_post]);
+      exchange_node(cx[pg->imtrx], dpi, post_proc_vect[pp_average[ii]->index_post]);
     }
   }
 

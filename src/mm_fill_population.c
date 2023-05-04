@@ -386,6 +386,7 @@ void adaptive_wheeler(
     }
 
     if (((minweight / maxweight) > rmin[n1 - 1]) && ((mindab / maxmab) > eabs)) {
+      //printf("%lf vs %lf", minweight/maxweight, rmin);
       return;
     }
   }
@@ -655,63 +656,6 @@ static int foam_pbe_growth_rate(double growth_rate[MAX_CONC],
   return 0;
 }
 
-int suspension_growth_rate(double growth_rate[MAX_CONC],
-                          double d_growth_rate_dc[MAX_CONC][MDE],
-                          double d_growth_rate_dT[MAX_CONC][MDE]) {
-  int wLiquid;
-  int wSolid;
-  int w;
-
-  wLiquid = -1;
-  wSolid = -1;
-  for (w = 0; w < pd->Num_Species; w++) {
-    switch (mp->SpeciesSourceModel[w]) {
-    case SUSPENSION_LIQUID_SOURCE_ARRHENIUS:
-      wLiquid = w;
-      break;
-    case SUSPENSION_SOLID_SOURCE_ARRHENIUS:
-      wSolid = w;
-      break;
-    default:
-      break;
-    }
-  }
-
-  if (wLiquid == -1) {
-    GOMA_EH(GOMA_ERROR, "Expected a Species Source for SUSPENSION_LIQUID_SOURCE_ARRHENIUS");
-    return -1;
-  } else if (wSolid == -1) {
-    GOMA_EH(GOMA_ERROR, "Expected a Species Source for SUSPENSION_SOLID_SOURCE_ARRHENIUS");
-    return -1;
-  }
-
-  int var, j;
-
-  for (w = 0; w < MAX_CONC; w++) {
-    growth_rate[w] = 0;
-    for (j = 0; j < MDE; j++) {
-      d_growth_rate_dc[w][j] = 0.0;
-      d_growth_rate_dT[w][j] = 0.0;
-    }
-  }
-    var = MASS_FRACTION;
-
-    for (w = 0; w < pd->Num_Species_Eqn; w++) {
-      if (w == wSolid) {
-          growth_rate[wSolid] = 1;
-          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-            d_growth_rate_dc[wSolid][j] = 0; 
-          }
-
-          for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
-            d_growth_rate_dT[wSolid][j] = 0;
-          }
-        }
-      }
-
-  return 0;
-}
-
 int foam_pmdi_growth_rate(double growth_rate[MAX_CONC],
                           double d_growth_rate_dc[MAX_CONC][MDE],
                           double d_growth_rate_dT[MAX_CONC][MDE]) {
@@ -776,7 +720,7 @@ int foam_pmdi_growth_rate(double growth_rate[MAX_CONC],
     for (w = 0; w < pd->Num_Species_Eqn; w++) {
       if (w == wCO2Liq) {
         double CO2_max = mp->u_density[4];;
-        
+
         //printf("co2max %e\n", CO2_max);
         double mf = fv_old->c[wCO2Liq] * M_CO2 / rho_liq;
         // double dmfdC = M_CO2 / rho_liq;
@@ -785,7 +729,7 @@ int foam_pmdi_growth_rate(double growth_rate[MAX_CONC],
         if (mf > CO2_max) {
           growth_rate[wCO2Liq] = G0 * (mf - CO2_max) / CO2_max;
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-            d_growth_rate_dc[wCO2Liq][j] = 0; // G0 * dmfdC * bf[var]->phi[j] / CO2_max;
+            d_growth_rate_dc[wCO2Liq][j] =  0;//G0 * dmfdC * bf[var]->phi[j] / CO2_max;
           }
 
           for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
@@ -796,6 +740,222 @@ int foam_pmdi_growth_rate(double growth_rate[MAX_CONC],
     }
   } else {
     GOMA_EH(GOMA_ERROR, "Expected DENSITY_FOAM_PMDI_10 for growth rate");
+    return -1;
+  }
+
+  return 0;
+}
+
+int suspension_growth_rate_plus_moments(double growth_rate[MAX_CONC],
+                          double d_growth_rate_dc[MAX_CONC][MDE],
+                          double d_growth_rate_dT[MAX_CONC][MDE]) {
+  int wLiquid;
+  int wSolid;
+  int w;
+
+  wLiquid = -1;
+  wSolid = -1;
+  for (w = 0; w < pd->Num_Species; w++) {
+    switch (mp->SpeciesSourceModel[w]) {
+    case SUSPENSION_LIQUID_SOURCE_ARRHENIUS_PLUS_MOMENTS:
+      wLiquid = w;
+      break;
+    case SUSPENSION_SOLID_SOURCE_ARRHENIUS_PLUS_MOMENTS:
+      wSolid = w;
+      break;
+    default:
+      break;
+    }
+  }
+
+  if (wLiquid == -1) {
+    GOMA_EH(GOMA_ERROR, "Expected a Species Source for SUSPENSION_LIQUID_SOURCE_ARRHENIUS_PLUS_MOMENTS");
+    return -1;
+  } else if (wSolid == -1) {
+    GOMA_EH(GOMA_ERROR, "Expected a Species Source for SUSPENSION_SOLID_SOURCE_ARRHENIUS_PLUS_MOMENTS");
+    return -1;
+  }
+
+  int var, j;
+
+  for (w = 0; w < MAX_CONC; w++) {
+    growth_rate[w] = 0;
+    for (j = 0; j < MDE; j++) {
+      d_growth_rate_dc[w][j] = 0.0; // dG/dc
+      d_growth_rate_dT[w][j] = 0.0; // dG/dT
+    }
+  }
+
+
+  if (mp->moment_growth_model = ARRHENIUS_GROWTH_RATE) {
+    double T        = fv->T;
+    double Aexp     = mp->moment_growth_scale;
+    double norm_E   = mp->moment_growth_E_over_R;
+    double G0       = Aexp * exp(norm_E/T);
+    double M_liq    = mp->u_species_source[wLiquid][0];
+    double max_frac = mp->u_species_source[wLiquid][1];
+    double rho_liq  = mp->u_density[1];;
+
+    var = MASS_FRACTION;
+
+    for (w = 0; w < pd->Num_Species_Eqn; w++) {
+      if (w == wLiquid) {
+        
+        double mf = fv_old->c[wLiquid] * M_liq / rho_liq;
+
+        if (mf > max_frac) {
+          growth_rate[wLiquid] =  G0 * (mf - max_frac) / max_frac;
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            d_growth_rate_dc[wLiquid][j] =  G0 *(M_liq/rho_liq) * bf[var]->phi[j] / max_frac; // dG/dCliq
+          }
+
+          for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
+            d_growth_rate_dT[wLiquid][j] = (-norm_E/(T*T)) * G0 * (mf - max_frac) / max_frac* bf[TEMPERATURE]->phi[j]; //dG/dT
+          }
+        }
+      }
+    }
+  } else{
+    GOMA_EH(GOMA_ERROR, "Expected moment growth model for ARRHENIUS_GROWTH_RATE");
+    return -1;
+    }
+  return 0;
+}
+int suspension_growth_rate(double growth_rate[MAX_CONC],
+                          double d_growth_rate_dc[MAX_CONC][MDE],
+                          double d_growth_rate_dT[MAX_CONC][MDE]) {
+  int wLiquid;
+  int wSolid;
+  int w;
+
+  wLiquid = -1;
+  wSolid = -1;
+  for (w = 0; w < pd->Num_Species; w++) {
+    switch (mp->SpeciesSourceModel[w]) {
+    case SUSPENSION_LIQUID_SOURCE_ARRHENIUS:
+      wLiquid = w;
+      break;
+    case SUSPENSION_SOLID_SOURCE_ARRHENIUS:
+      wSolid = w;
+      break;
+    default:
+      break;
+    }
+  }
+
+  if (wLiquid == -1) {
+    GOMA_EH(GOMA_ERROR, "Expected a Species Source for SUSPENSION_LIQUID_SOURCE_ARRHENIUS");
+    return -1;
+  } else if (wSolid == -1) {
+    GOMA_EH(GOMA_ERROR, "Expected a Species Source for SUSPENSION_SOLID_SOURCE_ARRHENIUS");
+    return -1;
+  }
+
+
+  int var, j;
+
+  for (w = 0; w < MAX_CONC; w++) {
+    growth_rate[w] = 0;
+    for (j = 0; j < MDE; j++) {
+      d_growth_rate_dc[w][j] = 0.0;
+      d_growth_rate_dT[w][j] = 0.0;
+    }
+  }
+
+
+  double G0       = mp->u_moment_source[0];
+  double max_frac = mp->moment_growth_max_frac;
+  double M_liq    = mp->moment_growth_molar_mass;
+  double rho_liq  = mp->moment_growth_solute_density;
+
+  var = MASS_FRACTION;
+
+  for (w = 0; w < pd->Num_Species_Eqn; w++) {
+    if (w == wLiquid) {
+      
+      double mf = fv_old->c[wLiquid] * M_liq / rho_liq;
+
+      if (mf > max_frac) {
+        growth_rate[wLiquid] = G0 * (mf - max_frac) / max_frac;
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          d_growth_rate_dc[wLiquid][j] =  G0 *(M_liq/rho_liq) * bf[var]->phi[j] / max_frac;
+        }
+
+        for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
+          d_growth_rate_dT[wLiquid][j] = 0;
+        }
+      }
+    }
+  }
+
+  return 0;
+}
+
+int gillette_foamy_growth_rate(double growth_rate[MAX_CONC],
+                          double d_growth_rate_dc[MAX_CONC][MDE],
+                          double d_growth_rate_dT[MAX_CONC][MDE]) {
+  int wLiq;
+  int w;
+
+  wLiq = -1;
+  for (w = 0; w < pd->Num_Species; w++) {
+    switch (mp->SpeciesSourceModel[w]) {
+    case GILLETTE_FOAMY_LIQUID:
+      wLiq = w;
+      break;
+    default:
+      break;
+    }
+  }
+
+  if (wLiq == -1) {
+    GOMA_EH(GOMA_ERROR, "Expected a Species Source of Gillette Foamy");
+    return -1;
+  }
+
+  double G0;
+
+  G0 = mp->u_moment_source[0];
+
+  int j;
+
+  for (w = 0; w < MAX_CONC; w++) {
+    growth_rate[w] = 0;
+    for (j = 0; j < MDE; j++) {
+      d_growth_rate_dc[w][j] = 0.0;
+      d_growth_rate_dT[w][j] = 0.0;
+    }
+  }
+
+  if (mp->DensityModel == DENSITY_MOMENT_BASED) {
+    int var, j;
+    int w;
+
+    double M_liq = mp->u_density[2];
+    double rho_liq = mp->u_density[1];
+
+    var = MASS_FRACTION;
+
+    for (w = 0; w < pd->Num_Species_Eqn; w++) {
+      if (w == wLiq) {
+        double max_frac = mp->u_density[3];
+        
+        double mf = fv_old->c[wLiq] * M_liq / rho_liq;
+
+        if (mf > max_frac) {
+          growth_rate[wLiq] = G0 * (mf - max_frac) / max_frac;
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            d_growth_rate_dc[wLiq][j] = 0; // G0 * dmfdC * bf[var]->phi[j] / CO2_max;
+          }
+
+          for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
+            d_growth_rate_dT[wLiq][j] = 0;
+          }
+        }
+      }
+    }
+  } else {
+    GOMA_EH(GOMA_ERROR, "Expected DENSITY_MOMENT_BASED for growth rate");
     return -1;
   }
 
@@ -1169,7 +1329,7 @@ void foam_pbe_co2_liquid_source(struct Species_Conservation_Terms *st,
   free(MKS);
 }
 
-extern int growth_rate_model(int species_index,
+extern int growth_rate_model_pmdi10(int species_index,
                       double *nodes,
                       double *weights,
                       int n_nodes,
@@ -1261,7 +1421,58 @@ extern int growth_rate_model(int species_index,
   return 0;
 }
 
-extern int coalescence_kernel_model(double *nodes, double *weights, int n_nodes, int n_moments, struct moment_kernel_struct *MKS) {
+extern int growth_rate_model(int species_index,
+                      double *nodes,
+                      double *weights,
+                      int n_nodes,
+                      int n_moments,
+                      double growth_rate[MAX_CONC],
+                      double d_growth_rate_dc[MAX_CONC][MDE],
+                      double d_growth_rate_dT[MAX_CONC][MDE],
+                      struct moment_kernel_struct *MKS) {
+
+
+  double scale;
+  for (int k = 0; k < n_moments; k++) {
+    MKS->G[species_index][k] = 0;
+
+    for (int alpha = 0; alpha < n_nodes; alpha++) {
+
+      switch (mp->moment_growth_model) {
+      case CONSTANT:
+        scale = mp->moment_growth_scale;
+        break;
+      case MASS_FRACTION_SCALED_GROWTH_RATE:
+        scale = mp->moment_growth_scale;
+        break;
+      case ARRHENIUS_GROWTH_RATE:
+         scale = mp->u_moment_source[0];
+        break;
+       default:
+        GOMA_EH(GOMA_ERROR, "Unknown growth kernel");
+        return -1;
+      }
+      double coeff = k * weights[alpha] * pow(fmax(nodes[alpha], PBE_FP_SMALL), k - 1);
+      MKS->G[species_index][k] += scale * coeff * growth_rate[species_index];
+      if (af->Assemble_Jacobian) {
+           if (pd->v[pg->imtrx][MASS_FRACTION]) {
+             for (int j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) {
+               MKS->d_G_dC[species_index][k][j] = scale * coeff * d_growth_rate_dc[species_index][j];
+             }
+           }
+ 
+           if (pd->v[pg->imtrx][TEMPERATURE]) {
+             for (int j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
+               MKS->d_G_dT[species_index][k][j] = scale * coeff * d_growth_rate_dT[species_index][j];
+             }
+           }
+         }
+    }
+  }
+  return 0;
+}
+
+extern int coalescence_kernel_model_pmdi10(double *nodes, double *weights, int n_nodes, int n_moments, struct moment_kernel_struct *MKS) {
 
   dbl mu0 = gn->mu0;
   dbl alpha_g = gn->gelpoint;
@@ -1336,7 +1547,41 @@ extern int coalescence_kernel_model(double *nodes, double *weights, int n_nodes,
         double nb = nodes[beta];
         MKS->S[k] += wa * wb * (pow(na + nb, k) - pow(na, k) - pow(nb, k)) * coalescence_kernel;
       //printf(" coalescene kernel %lf wa %lf * frag_dist %lf na %lf\n",  breakage_kernel, wa, fragment_dist, na);
-      printf(" coalescene %.10e\n", MKS->S[k]);
+      //printf(" coalescene %.10e\n", MKS->S[k]);
+      }
+      MKS->S[k] *= 0.5;
+    }
+  }
+
+  return 0;
+}
+extern int coalescence_kernel_model(double *nodes, double *weights, int n_nodes, int n_moments, struct moment_kernel_struct *MKS) {
+
+
+  for (int k = 0; k < n_moments; k++) {
+    MKS->S[k] = 0;
+    for (int alpha = 0; alpha < n_nodes; alpha++) {
+      for (int beta = 0; beta < n_nodes; beta++) {
+        double coalescence_kernel;
+
+        switch (mp->moment_coalescence_model) {
+        case CONSTANT:
+          coalescence_kernel = mp->moment_coalescence_scale;
+          break;
+        case ADDITION_COALESCENCE:
+          coalescence_kernel = mp->moment_coalescence_scale * (nodes[alpha] + nodes[beta]);
+          break;
+        default:
+          GOMA_EH(GOMA_ERROR, "Unknown coalescence kernel");
+          return -1;
+        }
+        double wa = weights[alpha];
+        double wb = weights[beta];
+        double na = nodes[alpha];
+        double nb = nodes[beta];
+        MKS->S[k] += wa * wb * (pow(na + nb, k) - pow(na, k) - pow(nb, k)) * coalescence_kernel;
+      //printf(" coalescene kernel %lf wa %lf * frag_dist %lf na %lf\n",  breakage_kernel, wa, fragment_dist, na);
+     // printf(" coalescene %.10e\n", MKS->S[k]);
       }
       MKS->S[k] *= 0.5;
     }
@@ -1599,8 +1844,7 @@ int get_moment_kernel_struct(struct moment_kernel_struct *MKS) {
       }
     }
     return 0;
-  }
-  case FOAM_PMDI_10: {
+  } case FOAM_PMDI_10: {
     int wCO2Liq;
     int wCO2Gas;
     int wH2O;
@@ -1639,7 +1883,7 @@ int get_moment_kernel_struct(struct moment_kernel_struct *MKS) {
    // evaluate growth kernel
     foam_pmdi_growth_rate(growth_rate, d_growth_rate_dc, d_growth_rate_dT);
 
-    growth_rate_model(wCO2Liq, nodes, weights, nnodes_out, 2 * nnodes, growth_rate, MKS);
+    growth_rate_model_pmdi10(wCO2Liq, nodes, weights, nnodes_out, 2 * nnodes, growth_rate, MKS);
 
    // evaluate breakage kernel
     breakage_kernel_model(nodes, weights, nnodes_out, 2 * nnodes, MKS);
@@ -1649,12 +1893,58 @@ int get_moment_kernel_struct(struct moment_kernel_struct *MKS) {
 
    // evaluate coalescence kernel (only make sense when nndoes>1 b/c 2nd order process)
     if (nnodes_out > 1) {
-      printf("here!!\n");
+      //printf("here!!\n");
+      coalescence_kernel_model_pmdi10(nodes, weights, nnodes_out, 2 * nnodes, MKS);
+    }
+    return 0;
+  } case MOMENT_RHEOMETER: {
+   //printf("nnodes out %d", nnodes_out);
+    int wLiq;
+    int wGas;
+    int w;
+
+    wLiq = -1;
+    wGas = -1;
+    for (w = 0; w < pd->Num_Species; w++) {
+      switch (mp->SpeciesSourceModel[w]) {
+      case GILLETTE_FOAMY_LIQUID:
+        wLiq = w;
+        break;
+      case GILLETTE_FOAMY_GASEOUS:
+        wGas = w;
+        break;
+      default:
+        break;
+      }
+    }
+
+    if (wLiq == -1) {
+      GOMA_EH(GOMA_ERROR, "Expected a Species Source of GILLETTE_FOAMY_LIQUID");
+      return -1;
+    } else if (wGas == -1) {
+      GOMA_EH(GOMA_ERROR, "Expected a Species Source of GILLETTE_FOAMY_GASEOUS");
+      return -1;
+    }
+
+   // evaluate growth kernel
+    gillette_foamy_growth_rate(growth_rate, d_growth_rate_dc, d_growth_rate_dT);
+
+    growth_rate_model(wLiq, nodes, weights, nnodes_out, 2 * nnodes, growth_rate, d_growth_rate_dc, d_growth_rate_dT, MKS);
+
+   // evaluate breakage kernel
+    breakage_kernel_model(nodes, weights, nnodes_out, 2 * nnodes, MKS);
+    
+   // evaluate nucleation kernel
+    nucleation_kernel_model(2 * nnodes, MKS);
+
+   // evaluate coalescence kernel (only make sense when nndoes>1 b/c 2nd order process)
+    if (nnodes_out > 1) {
+      //printf("did we make it?");
       coalescence_kernel_model(nodes, weights, nnodes_out, 2 * nnodes, MKS);
     }
     return 0;
   }
- case MOMENT_SUSPENSION: {
+   case MOMENT_SUSPENSION_PLUS_MOMENTS: {
     int wLiquid;
     int wSolid;
 
@@ -1663,10 +1953,10 @@ int get_moment_kernel_struct(struct moment_kernel_struct *MKS) {
 
     for (int w = 0; w < pd->Num_Species; w++) {
       switch (mp->SpeciesSourceModel[w]) {
-      case SUSPENSION_LIQUID_SOURCE_ARRHENIUS:
+      case SUSPENSION_LIQUID_SOURCE_ARRHENIUS_PLUS_MOMENTS:
         wLiquid = w;
         break;
-      case SUSPENSION_SOLID_SOURCE_ARRHENIUS:
+      case SUSPENSION_SOLID_SOURCE_ARRHENIUS_PLUS_MOMENTS:
         wSolid = w;
         break;
       default:
@@ -1675,17 +1965,17 @@ int get_moment_kernel_struct(struct moment_kernel_struct *MKS) {
     }
 
     if (wLiquid == -1) {
-      GOMA_EH(GOMA_ERROR, "Expected a Species Source for liquid suspension");
+      GOMA_EH(GOMA_ERROR, "Expected a Species Source for liquid suspension plus moments");
       return -1;
     } else if (wSolid == -1) {
-      GOMA_EH(GOMA_ERROR, "Expected a Species Source of solid suspension");
+      GOMA_EH(GOMA_ERROR, "Expected a Species Source of solid suspension  plus moments");
       return -1;
     }
 
    // evaluate growth kernel
-    suspension_growth_rate(growth_rate, d_growth_rate_dc, d_growth_rate_dT);
+    suspension_growth_rate_plus_moments(growth_rate, d_growth_rate_dc, d_growth_rate_dT);
 
-    growth_rate_model(wSolid, nodes, weights, nnodes_out, 2 * nnodes, growth_rate, MKS);
+    growth_rate_model(wLiquid, nodes, weights, nnodes_out, 2 * nnodes, growth_rate, d_growth_rate_dc, d_growth_rate_dT, MKS);
 
    // evaluate breakage kernel
    // breakage_kernel_model(nodes, weights, nnodes_out, 2 * nnodes, MKS);
@@ -1699,7 +1989,8 @@ int get_moment_kernel_struct(struct moment_kernel_struct *MKS) {
    // }
     return 0;
   }
-  case MOMENT_CONSTANT_GROWTH:
+
+  case MOMENT_CONSTANT_GROWTH:{
     MKS->G[0][0] = 0;
     for (int k = 0; k < 2 * nnodes; k++) {
       MKS->S[k] = 0;
@@ -1741,7 +2032,9 @@ int get_moment_kernel_struct(struct moment_kernel_struct *MKS) {
       MKS->S[k] *= 0.5;
     }
     return 0;
+   }
   default:
+    return 0;
     GOMA_EH(GOMA_ERROR, "Unknown moment source model");
     return -1;
   }
@@ -1755,6 +2048,7 @@ int get_moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msourc
       msource[i] = mp->moment_source;
     }
   } break;
+
   case FOAM_PBE: {
     int species_BA_l;
     int species_CO2_l;
@@ -1801,6 +2095,7 @@ int get_moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msourc
     }
     free(MKS);
   } break;
+
   case FOAM_PMDI_10: {
 
     double growth_kernel_scale      = mp->u_moment_source[0];
@@ -1882,37 +2177,38 @@ int get_moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msourc
     free(MKS);
   } break;
 
-  case MOMENT_SUSPENSION: {
+  case MOMENT_RHEOMETER: {
 
-    double growth_kernel_scale     = mp->u_moment_source[0];
-    double nucleation_kernel_scale = mp->u_moment_source[3];
+    double growth_kernel_scale      = mp->u_moment_source[0];
+    double coalescence_kernel_scale = mp->u_moment_source[1];
+    double breakage_kernel_scale    = mp->u_moment_source[2];
+    double nucleation_kernel_scale  = mp->u_moment_source[3];
 
-    int wLiquid;
-    int wSolid;
+    int wLiq;
+    int wGas;
     int w;
     int j;
 
-    wLiquid = -1;
-    wSolid = -1;
-
+    wLiq = -1;
+    wGas = -1;
     for (w = 0; w < pd->Num_Species; w++) {
       switch (mp->SpeciesSourceModel[w]) {
-      case SUSPENSION_LIQUID_SOURCE_ARRHENIUS:
-        wLiquid = w;
+      case GILLETTE_FOAMY_LIQUID:
+        wLiq = w;
         break;
-      case SUSPENSION_SOLID_SOURCE_ARRHENIUS:
-        wSolid = w;
+      case GILLETTE_FOAMY_GASEOUS:
+        wGas = w;
         break;
       default:
         break;
       }
     }
 
-    if (wLiquid == -1) {
-      GOMA_EH(GOMA_ERROR, "Expected a Species Source for suspension liquid");
+    if (wLiq == -1) {
+      GOMA_EH(GOMA_ERROR, "Expected a Species Source of GILLETTE_FOAMY_LIQUID");
       return -1;
-    } else if (wSolid == -1) {
-      GOMA_EH(GOMA_ERROR, "Expected a Species Source for suspension solid");
+    } else if (wGas == -1) {
+      GOMA_EH(GOMA_ERROR, "Expected a Species Source of GILLETTE_FOAMY_GASEOUS");
       return -1;
     }
 
@@ -1932,7 +2228,77 @@ int get_moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msourc
     }
 
     for (int mom = 0; mom < MAX_MOMENTS; mom++) {
-      msource[mom] = H * (growth_kernel_scale*MKS->G[wSolid][mom]);
+      msource[mom] = H * (growth_kernel_scale*MKS->G[wLiq][mom] 
+                          + coalescence_kernel_scale*MKS->S[mom]
+                          + breakage_kernel_scale*MKS->BA[mom]
+                          + nucleation_kernel_scale * MKS->NUC[mom]);
+      
+      if (pd->v[pg->imtrx][MASS_FRACTION]) {
+        for (j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) {
+          d_msource->C[mom][wLiq][j] = H * MKS->d_G_dC[wLiq][mom][j];
+        }
+      }
+    //HELEN FROM HERE TO ˅˅˅˅˅˅˅˅˅˅˅˅
+      if (pd->v[pg->imtrx][TEMPERATURE]) {
+        for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
+          d_msource->T[mom][j] =
+              H * (MKS->d_G_dT[wLiq][mom][j]);
+        }
+      }
+    }
+    free(MKS);
+  } break;
+
+  case MOMENT_SUSPENSION_PLUS_MOMENTS: {
+    double growth_kernel_scale     = mp->u_moment_source[0];
+    double nucleation_kernel_scale = mp->u_moment_source[3];
+
+    int wLiquid;
+    int wSolid;
+    int w;
+    int j;
+
+    wLiquid = -1;
+    wSolid = -1;
+
+    for (w = 0; w < pd->Num_Species; w++) {
+      switch (mp->SpeciesSourceModel[w]) {
+      case SUSPENSION_LIQUID_SOURCE_ARRHENIUS_PLUS_MOMENTS:
+        wLiquid = w;
+        break;
+      case SUSPENSION_SOLID_SOURCE_ARRHENIUS_PLUS_MOMENTS:
+        wSolid = w;
+        break;
+      default:
+        break;
+      }
+    }
+
+    if (wLiquid == -1) {
+      GOMA_EH(GOMA_ERROR, "Expected a Species Source for suspension liquid plus moments");
+      return -1;
+    } else if (wSolid == -1) {
+      GOMA_EH(GOMA_ERROR, "Expected a Species Source for suspension solid plus moments");
+      return -1;
+    }
+
+    double H = 1;
+
+    if (ls != NULL) {
+      load_lsi(ls->Length_Scale);
+      H = 1 - lsi->H;
+    }
+    int err = 0;
+    MKS = calloc(sizeof(struct moment_kernel_struct), 1);
+    err = get_moment_kernel_struct(MKS);
+
+    if (err) {
+      free(MKS);
+      return err;
+    }
+
+    for (int mom = 0; mom < MAX_MOMENTS; mom++) {
+      msource[mom] = H * (growth_kernel_scale*MKS->G[wLiquid][mom]);
                           //+ nucleation_kernel_scale * MKS->NUC[mom]);
      // if (mom ==1){
       //  if (MKS->NUC[mom]>0){
@@ -1941,7 +2307,13 @@ int get_moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msourc
       //}
       if (pd->v[pg->imtrx][MASS_FRACTION]) {
         for (j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) {
-          d_msource->C[mom][wSolid][j] = H * MKS->d_G_dC[wSolid][mom][j];
+          d_msource->C[mom][wLiquid][j] = H * MKS->d_G_dC[wLiquid][mom][j];
+        }
+      }
+      if (pd->v[pg->imtrx][TEMPERATURE]) {
+        for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
+          d_msource->T[mom][j] =
+              H * (MKS->d_G_dT[wLiquid][mom][j]);
         }
       }
     }
@@ -1974,6 +2346,7 @@ int get_moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msourc
     }
     free(MKS);
   } break;
+
   default:
     GOMA_EH(GOMA_ERROR, "Unknown moment source model");
     break;
