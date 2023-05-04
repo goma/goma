@@ -249,6 +249,20 @@ EXTERN int foam_pmdi10_co2_gas_species_source(int species_no, /* Current species
                                               double tt,
                                               double dt);
 
+EXTERN int gillette_foamy_liquid_species_source(int species_no, /* Current species number */
+                                                struct Species_Conservation_Terms *st,
+                                                double *param,
+                                                double time,
+                                                double tt,
+                                                double dt);
+
+EXTERN int gillette_foamy_gaseous_species_source(int species_no, /* Current species number */
+                                                 struct Species_Conservation_Terms *st,
+                                                 double *param,
+                                                 double time,
+                                                 double tt,
+                                                 double dt);
+
 EXTERN int suspension_liquid_species_source(int species_no, /* Current species number */
                                     double *param,
                                     double time,
@@ -268,6 +282,20 @@ EXTERN int suspension_liquid_species_source_arrhenius(int species_no, /* Current
                                     double dt);
 
 EXTERN int suspension_solid_species_source_arrhenius(int species_no, /* Current species number */
+                                    double *param,
+                                    double time,
+                                    double tt,
+                                    double dt);
+
+EXTERN int suspension_liquid_species_source_arrhenius_plus_moments(int species_no, /* Current species number */
+                                    struct Species_Conservation_Terms *st,
+                                    double *param,
+                                    double time,
+                                    double tt,
+                                    double dt);
+
+EXTERN int suspension_solid_species_source_arrhenius_plus_moments(int species_no, /* Current species number */
+                                    struct Species_Conservation_Terms *st,
                                     double *param,
                                     double time,
                                     double tt,

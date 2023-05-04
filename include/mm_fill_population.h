@@ -127,7 +127,9 @@ extern int growth_rate_model(int species_index,
                       double *weights,
                       int n_nodes,
                       int n_moments,
-                      double *growth_rate,
+                      double growth_rate[MAX_CONC],
+                      double d_growth_rate_dc[MAX_CONC][MDE],
+                      double d_growth_rate_dT[MAX_CONC][MDE],
                       struct moment_kernel_struct *MKS);
 
 extern int coalescence_kernel_model(

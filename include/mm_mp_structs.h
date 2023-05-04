@@ -654,9 +654,13 @@ struct Material_Properties {
   int PorousMolecularWeightModel[MAX_PMV];
   dbl d_porous_molecular_weight[MAX_PMV][MAX_VARIABLE_TYPES + MAX_CONC];
 
-  int moment_growth_model;
-  dbl moment_growth_scale;
-  dbl moment_growth_reference_pressure;
+  int moment_growth_model; // eg: VISCOSITY_SCALED_GROWTH_RATE 
+  dbl moment_growth_scale; // float, scaler on growth  a0
+  dbl moment_growth_reference_pressure; // models that use P
+  dbl moment_growth_max_frac;  // mass fraction past which growth starts from y0 to y1
+  dbl moment_growth_molar_mass;  // molar mass of y0 (source species)
+  dbl moment_growth_solute_density; // density of y0 (source species)
+  dbl moment_growth_E_over_R; //
 
   int moment_coalescence_model;
   dbl moment_coalescence_scale;

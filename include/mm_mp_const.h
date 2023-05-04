@@ -58,6 +58,8 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 // growth rate
 #define VISCOSITY_SCALED_GROWTH_RATE   4
 #define VISCOSITY_PRESSURE_GROWTH_RATE 5
+#define MASS_FRACTION_SCALED_GROWTH_RATE 6
+#define ARRHENIUS_GROWTH_RATE 7
 
 // coalescence
 #define ADDITION_COALESCENCE               4
@@ -346,6 +348,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define FOAM_PMDI_10_CO2_LIQ 44
 #define FOAM_PMDI_10_CO2_GAS 45
 
+#define MOMENT_RHEOMETER 49
 #define MOMENT_CONSTANT_GROWTH            50
 #define MOMENT_SIZE_DEPENDENT_COALESCENCE 51
 
@@ -359,7 +362,16 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define SUSPENSION_SOLID_SOURCE_CONSTANT  55
 #define SUSPENSION_LIQUID_SOURCE_ARRHENIUS  56
 #define SUSPENSION_SOLID_SOURCE_ARRHENIUS  57
+//<<<<<<< HEAD
 //>>>>>>> added rotational BC, constant and arrenius rxn rates for suspensions...
+//=======
+#define SUSPENSION_LIQUID_SOURCE_ARRHENIUS_PLUS_MOMENTS  58
+#define SUSPENSION_SOLID_SOURCE_ARRHENIUS_PLUS_MOMENTS  59
+#define MOMENT_SUSPENSION_PLUS_MOMENTS 60
+
+#define GILLETTE_FOAMY_LIQUID 58
+#define GILLETTE_FOAMY_GASEOUS 59
+//>>>>>>> updates to include files...
 
 /*
  *  Heat source modeling
