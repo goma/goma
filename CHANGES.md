@@ -1,3 +1,7 @@
+## Changes in version 7.4.5
+
+- Bugfix for CA conditions [goma#429](https://github.com/goma/goma/pull/429)
+
 ## Changes in version 7.4.4
 
 - Bugfix for parallel decomposition [goma#427](https://github.com/goma/goma/pull/427)
