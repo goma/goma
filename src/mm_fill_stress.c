@@ -8710,6 +8710,142 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
   return (status);
 }
 
+int conf_source(int mode,
+                dbl c[DIM][DIM],
+                dbl source_term[DIM][DIM],
+                dbl d_source_term_db[DIM][DIM][DIM][DIM]) {
+  bool compute_derivatives = d_source_term_db != NULL && af->Assemble_Jacobian;
+  switch (vn->ConstitutiveEquation) {
+  case OLDROYDB: {
+    for (int ii = 0; ii < VIM; ii++) {
+      for (int jj = 0; jj < VIM; jj++) {
+        source_term[ii][jj] = -(c[ii][jj] - delta(ii,jj));
+      }
+    }
+    if (compute_derivatives) {
+      for (int ii = 0; ii < VIM; ii++) {
+        for (int jj = 0; jj < VIM; jj++) {
+          for (int p = 0; p < VIM; p++) {
+            for (int q = 0; q < VIM; q++) {
+              d_source_term_db[ii][jj][p][q] = -delta(ii,p) * delta(jj,q);
+            }
+          }
+        }
+      }
+    }
+  } break;
+  case PTT: {
+
+    dbl d_trace_dc[DIM][DIM] = {{0.0}};
+
+    dbl trace = 0;
+    for (int i = 0; i < VIM; i++) {
+      for (int j = 0; j < VIM; j++) {
+        trace += c[i][j] * c[i][j];
+      }
+    }
+
+    if (compute_derivatives) {
+      for (int p = 0; p < VIM; p++) {
+        for (int q = 0; q < VIM; q++) {
+          d_trace_dc[p][q] = 0.0;
+          for (int i = 0; i < VIM; i++) {
+            for (int j = 0; j < VIM; j++) {
+              d_trace_dc[p][q] +=
+                  2.0 * c[i][j] * (delta(p, i) * delta(q, j) | delta(p, j) * delta(q, i));
+            }
+          }
+        }
+      }
+    }
+
+    dbl Z = 1.0;
+    dbl dZ_dtrace = 0;
+
+    // PTT exponent
+    eps = ve[mode]->eps;
+
+    if (vn->ptt_type == PTT_LINEAR) {
+      Z = 1 + eps * (trace - (double)VIM);
+      dZ_dtrace = eps;
+    } else if (vn->ptt_type == PTT_EXPONENTIAL) {
+      Z = exp(eps * (trace - (double)VIM));
+      dZ_dtrace = eps * Z;
+    } else {
+      GOMA_EH(GOMA_ERROR, "Unrecognized PTT Form %d", vn->ptt_type);
+    }
+
+    for (int ii = 0; ii < VIM; ii++) {
+      for (int jj = 0; jj < VIM; jj++) {
+        source_term[ii][jj] = - Z * (c[ii][jj] - delta(ii,jj));
+      }
+    }
+    if (compute_derivatives) {
+      for (int ii = 0; ii < VIM; ii++) {
+        for (int jj = 0; jj < VIM; jj++) {
+          for (int p = 0; p < VIM; p++) {
+            for (int q = 0; q < VIM; q++) {
+              d_source_term_db[ii][jj][p][q] =
+                  - Z * (delta(ii,p)*delta(jj,q)) -
+                  dZ_dtrace * d_trace_dc[p][q] * (c[ii][jj] - delta(ii,jj));
+            }
+          }
+        }
+      }
+    }
+  } break;
+  case ROLIE_POLY: {
+
+    dbl d_trace_dc[DIM][DIM] = {{0.0}};
+
+    dbl trace = 0;
+    for (int i = 0; i < VIM; i++) {
+      for (int j = 0; j < VIM; j++) {
+        trace += c[i][j] * c[i][j];
+      }
+    }
+
+    dbl tau_R = ve[mode]->stretch_time;
+    dbl beta = ve[mode]->CCR_coefficient;
+    dbl n = ve[mode]->polymer_exponent;
+    dbl lambda_max = ve[mode]->polymer_exponent;
+
+
+    dbl lambda_s = sqrt(trace/3);
+
+    dbl k = ((3 - lambda_s*lambda_s/(lambda_max*lambda_max)) * (1 - 1/(lambda_max*lambda_max))) / (1 - lambda_s*lambda_s/ (lambda_max*lambda_max) * (3-1/(lambda_max*lambda_max)));
+
+    for (int ii = 0; ii < VIM; ii++) {
+      for (int jj = 0; jj < VIM; jj++) {
+        source_term[ii][jj] = -(c[ii][jj] - delta(ii,jj));
+        source_term[ii][jj] += -(2.0/tau_R) * k * (1 - sqrt(3/trace)) * (c[ii][jj] + beta * pow(trace/3,n) * (c[ii][jj] -delta(ii,jj)));
+      }
+    }
+
+
+    if (compute_derivatives) {
+      for (int p = 0; p < VIM; p++) {
+        for (int q = 0; q < VIM; q++) {
+          d_trace_dc[p][q] = 0.0;
+          for (int i = 0; i < VIM; i++) {
+            for (int j = 0; j < VIM; j++) {
+              d_trace_dc[p][q] +=
+                  2.0 * c[i][j] * (delta(p, i) * delta(q, j) | delta(p, j) * delta(q, i));
+            }
+          }
+        }
+      }
+    }
+  } break;
+  default:
+    GOMA_EH(GOMA_ERROR, "Unknown Constitutive equation form for SQRT_CONF");
+    break;
+  }
+
+  return GOMA_SUCCESS;
+
+}
+
 int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
                                   * explicit (tt = 1) to implicit (tt = 0) */
                          dbl dt, /* current time step size */
@@ -9095,6 +9231,8 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
      * Residuals_________________________________________________________________
      */
 
+    dbl source_term[DIM][DIM];
+    conf_source(mode, s, source_term, NULL);
     if (af->Assemble_Residual) {
       /*
        * Assemble each component "ab" of the polymer stress equation...
@@ -9125,7 +9263,7 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
               if (pd->TimeIntegration != STEADY) {
                 if (pd->e[pg->imtrx][eqn] & T_MASS) {
                   mass = s_dot[a][b];
-                  mass *= wt_func * at * lambda * det_J * wt;
+                  mass *= wt_func * at * det_J * wt;
                   mass *= h3;
                   mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
                 }
@@ -9141,7 +9279,7 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
                   if (lcwt != 0.)
                     advection += lcwt * (s_dot_gt[a][b] + g_dot_s[a][b]);
 
-                  advection *= wt_func * at * lambda * det_J * wt * h3;
+                  advection *= wt_func * at * det_J * wt * h3;
                   advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
                 }
               }
@@ -9159,9 +9297,8 @@ int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
               source = 0.;
               if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
                 // consider whether saramitoCoeff should multiply here
-                source -= (delta(a, b) - s[a][b]);
-
-                source *= wt_func * det_J * h3 * wt;
+                source -= source_term[a][b];
+                source *= (1/lambda) * wt_func * det_J * h3 * wt;
 
                 source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
               }

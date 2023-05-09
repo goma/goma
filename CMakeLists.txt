@@ -469,6 +469,7 @@ set(GOMA_INCLUDES
     include/mm_fill.h
     include/mm_fill_jac.h
     include/mm_fill_ls.h
+    include/mm_fill_momentum.h
     include/mm_fill_population.h
     include/mm_fill_porous.h
     include/mm_fill_potential.h
@@ -615,6 +616,7 @@ set(GOMA_SOURCES
     src/mm_fill_interface.c
     src/mm_fill_jac.c
     src/mm_fill_ls.c
+    src/mm_fill_momentum.c
     src/mm_fill_population.c
     src/mm_fill_porous.c
     src/mm_fill_potential.c

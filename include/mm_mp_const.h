@@ -171,6 +171,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define SARAMITO_GIESEKUS 11
 #define SARAMITO_PTT      12
 #define MODIFIED_JEFFREYS 13
+#define ROLIE_POLY 14
 #define MODIFIED_WLF      39
 
 // PTT forms
