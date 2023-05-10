@@ -2274,6 +2274,14 @@ void noahs_ark(void) {
       ddd_add_member(n, &ve_glob[i][mode]->epsModel, 1, MPI_INT);
       ddd_add_member(n, &ve_glob[i][mode]->muJeffreys, 1, MPI_DOUBLE);
       ddd_add_member(n, &ve_glob[i][mode]->muJeffreysModel, 1, MPI_INT);
+      ddd_add_member(n, &ve_glob[i][mode]->stretch_time, 1, MPI_DOUBLE);
+      ddd_add_member(n, &ve_glob[i][mode]->stretchModel, 1, MPI_INT);
+      ddd_add_member(n, &ve_glob[i][mode]->CCR_coefficient, 1, MPI_DOUBLE);
+      ddd_add_member(n, &ve_glob[i][mode]->CCR_coefficientModel, 1, MPI_INT);
+      ddd_add_member(n, &ve_glob[i][mode]->polymer_exponent, 1, MPI_DOUBLE);
+      ddd_add_member(n, &ve_glob[i][mode]->polymer_exponentModel, 1, MPI_INT);
+      ddd_add_member(n, &ve_glob[i][mode]->maximum_stretch_ratio, 1, MPI_DOUBLE);
+      ddd_add_member(n, &ve_glob[i][mode]->maximum_stretch_ratioModel, 1, MPI_INT);
 
       ddd_add_member(n, &ve_glob[i][mode]->pos_ls.time_const, 1, MPI_DOUBLE);
       ddd_add_member(n, &ve_glob[i][mode]->pos_ls.alpha, 1, MPI_DOUBLE);

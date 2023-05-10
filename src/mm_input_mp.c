@@ -2841,7 +2841,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       strcpy(search_string, "Stretch Time Constant");
 
       model_read =
-          look_for_modal_prop(imp, "Stretch Time", vn_glob[mn]->modes, &matl_model, modal_data, es);
+          look_for_modal_prop(imp, "Stretch Time Constant", vn_glob[mn]->modes, &matl_model, modal_data, es);
 
       if (model_read < 1) {
         if (model_read == -1)
@@ -2850,18 +2850,13 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
           SPF(err_msg, "Only CONSTANT %s mode models supported.", search_string);
         fprintf(stderr, "%s\n", err_msg);
         exit(-1);
-
+      } else if (model_read == 1) {
         for (mm = 0; mm < vn_glob[mn]->modes; mm++) {
           ve_glob[mn][mm]->stretch_time = modal_data[mm];
           ve_glob[mn][mm]->stretchModel = matl_model;
         }
-
         ECHO(es, echo_file);
-      } else if (model_read == -2) {
-        SPF(err_msg, "Only CONSTANT %s mode model supported.", search_string);
-        fprintf(stderr, "%s\n", err_msg);
-        exit(-1);
-      }
+      } 
 
       strcpy(search_string, "CCR Coefficient");
 
@@ -2876,17 +2871,13 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         fprintf(stderr, "%s\n", err_msg);
         exit(-1);
 
+      } else if (model_read == 1) {
         for (mm = 0; mm < vn_glob[mn]->modes; mm++) {
           ve_glob[mn][mm]->CCR_coefficient = modal_data[mm];
           ve_glob[mn][mm]->CCR_coefficientModel = matl_model;
         }
-
         ECHO(es, echo_file);
-      } else if (model_read == -2) {
-        SPF(err_msg, "Only CONSTANT %s mode model supported.", search_string);
-        fprintf(stderr, "%s\n", err_msg);
-        exit(-1);
-      }
+      } 
 
       strcpy(search_string, "Polymer Exponent");
 
@@ -2901,19 +2892,15 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         fprintf(stderr, "%s\n", err_msg);
         exit(-1);
 
+      } else if (model_read == 1) {
         for (mm = 0; mm < vn_glob[mn]->modes; mm++) {
           ve_glob[mn][mm]->polymer_exponent = modal_data[mm];
           ve_glob[mn][mm]->polymer_exponentModel = matl_model;
         }
-
         ECHO(es, echo_file);
-      } else if (model_read == -2) {
-        SPF(err_msg, "Only CONSTANT %s mode model supported.", search_string);
-        fprintf(stderr, "%s\n", err_msg);
-        exit(-1);
-      }
-      strcpy(search_string, "Maximum Stretch Ratio");
+      } 
 
+      strcpy(search_string, "Maximum Stretch Ratio");
       model_read = look_for_modal_prop(imp, "Maximum Stretch Ratio", vn_glob[mn]->modes,
                                        &matl_model, modal_data, es);
 
@@ -2925,17 +2912,13 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         fprintf(stderr, "%s\n", err_msg);
         exit(-1);
 
+      } else if (model_read == 1) {
         for (mm = 0; mm < vn_glob[mn]->modes; mm++) {
           ve_glob[mn][mm]->maximum_stretch_ratio = modal_data[mm];
           ve_glob[mn][mm]->maximum_stretch_ratioModel = matl_model;
         }
-
         ECHO(es, echo_file);
-      } else if (model_read == -2) {
-        SPF(err_msg, "Only CONSTANT %s mode model supported.", search_string);
-        fprintf(stderr, "%s\n", err_msg);
-        exit(-1);
-      }
+      } 
     } else {
       for (mm = 0; mm < vn_glob[mn]->modes; mm++) {
         ve_glob[mn][mm]->stretch_time = 0.;

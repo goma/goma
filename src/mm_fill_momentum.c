@@ -439,7 +439,7 @@ int assemble_momentum(dbl time,       /* current time */
   /*
    * Calculate the momentum stress tensor at the current gauss point
    */
-  if (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV || vn->evssModel == CONF ||
+  if (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV ||
       vn->evssModel == LOG_CONF_TRANSIENT || vn->evssModel == LOG_CONF_TRANSIENT_GRADV) {
     fluid_stress_conf(Pi, d_Pi);
   } else if (vn->evssModel == SQRT_CONF) {
@@ -2267,7 +2267,7 @@ void ve_polymer_stress(double gamma[DIM][DIM],
             trace += fv->S[mode][i][j] * fv->S[mode][i][j];
           }
         }
-        dbl lambda_max = ve[mode]->polymer_exponent;
+        dbl lambda_max = ve[mode]->maximum_stretch_ratio;
 
         dbl lambda_s = sqrt(trace / 3);
 
@@ -2332,7 +2332,7 @@ void ve_polymer_stress(double gamma[DIM][DIM],
               trace += fv->S[mode][i][j] * fv->S[mode][i][j];
             }
           }
-          dbl lambda_max = ve[mode]->polymer_exponent;
+          dbl lambda_max = ve[mode]->maximum_stretch_ratio;
           dbl d_trace_dc[DIM][DIM] = {{0.0}};
           for (int p = 0; p < VIM; p++) {
             for (int q = 0; q < VIM; q++) {
@@ -2352,7 +2352,10 @@ void ve_polymer_stress(double gamma[DIM][DIM],
                (1 - 1 / (lambda_max * lambda_max))) /
               (1 - lambda_s * lambda_s / (lambda_max * lambda_max) *
                        (3 - 1 / (lambda_max * lambda_max)));
-          dbl d_k_dlamda_s = 4 * lambda_s *lambda_max*lambda_max *(lambda_max*lambda_max - 1) / (pow(lambda_s*lambda_s - lambda_max*lambda_max, 2.0)* (3*lambda_max*lambda_max-1));
+          dbl d_k_dlamda_s = 4 * lambda_s * lambda_max * lambda_max *
+                             (lambda_max * lambda_max - 1) /
+                             (pow(lambda_s * lambda_s - lambda_max * lambda_max, 2.0) *
+                              (3 * lambda_max * lambda_max - 1));
 
           for (int p = 0; p < VIM; p++) {
             for (int q = 0; q < VIM; q++) {
@@ -2377,10 +2380,10 @@ void ve_polymer_stress(double gamma[DIM][DIM],
             for (int p = 0; p < VIM; p++) {
               for (int q = 0; q < VIM; q++) {
                 int var = v_s[mode][p][q];
-                for (int j = 0; j < ei[pg->imtrx]->dof[var]; q++) {
+                for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
                   d_stress->S[a][b][mode][p][q][j] +=
-                      mup * k / lambda * delta(a, p) * delta(b, q) * bf[var]->phi[j]
-                      + (mup * d_k[p][q] / lambda) * bf[var]->phi[j] * (fv->S[mode][a][b]);
+                      mup * k / lambda * delta(a, p) * delta(b, q) * bf[var]->phi[j] +
+                      (mup * d_k[p][q] / lambda) * bf[var]->phi[j] * (fv->S[mode][a][b]);
                 }
               }
             }
@@ -2401,7 +2404,7 @@ void ve_polymer_stress(double gamma[DIM][DIM],
             for (int p = 0; p < VIM; p++) {
               for (int q = 0; q < VIM; q++) {
                 int var = v_s[mode][p][q];
-                for (int k = 0; k < ei[pg->imtrx]->dof[var]; q++) {
+                for (int k = 0; k < ei[pg->imtrx]->dof[var]; k++) {
                   d_stress->S[i][j][mode][p][q][k] += delta(i, p) * delta(j, q) * bf[var]->phi[k];
                 }
               }

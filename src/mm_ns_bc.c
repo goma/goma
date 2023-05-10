@@ -40,6 +40,7 @@
 #include "mm_elem_block_structs.h"
 #include "mm_fill_jac.h"
 #include "mm_fill_ls.h"
+#include "mm_fill_momentum.h"
 #include "mm_fill_ptrs.h"
 #include "mm_fill_rs.h"
 #include "mm_fill_solid.h"
