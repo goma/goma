@@ -89,7 +89,7 @@ int apply_em_farfield_direct_vec(double func[DIM],
 
   k1 = extinction_index(d_k1, 0.0);
   // Compute complex impedance
-  complex cpx_refractive_index1, cpx_rel_permittivity1, cpx_permittivity1, impedance1, kappa1;
+  complex double cpx_refractive_index1, cpx_rel_permittivity1, cpx_permittivity1, impedance1, kappa1;
 
   cpx_refractive_index1 = n1 + _Complex_I * k1;
   cpx_rel_permittivity1 = SQUARE(cpx_refractive_index1);
@@ -104,7 +104,7 @@ int apply_em_farfield_direct_vec(double func[DIM],
   // n2 = 1.000293; // air (wikipedia 2019)
   // k2 = 0;
   //  Compute complex impedance
-  complex cpx_refractive_index2, cpx_rel_permittivity2, cpx_permittivity2, impedance2;
+  complex double cpx_refractive_index2, cpx_rel_permittivity2, cpx_permittivity2, impedance2;
 
   cpx_refractive_index2 = n2 + _Complex_I * k2;
   cpx_rel_permittivity2 = SQUARE(cpx_refractive_index2);
@@ -117,8 +117,8 @@ int apply_em_farfield_direct_vec(double func[DIM],
     normal[p] = fv->snormal[p];
   }
 
-  complex Gamma, tau, incidentE[DIM];
-  complex incidentH[DIM] = {0.0};
+  complex double Gamma, tau, incidentE[DIM];
+  complex double incidentH[DIM] = {0.0};
   Gamma = (impedance2 - impedance1) / (impedance2 + impedance1);
   tau = (2.0 * impedance2) / (impedance2 + impedance1);
 
@@ -186,7 +186,7 @@ int apply_em_farfield_direct_vec(double func[DIM],
     }
   }
 
-  complex cpx_func[DIM] = {0.0};
+  complex double cpx_func[DIM] = {0.0};
 
   // double real, imag;
   switch (bc_name) {

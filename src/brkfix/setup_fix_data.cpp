@@ -243,8 +243,8 @@ setup_fix_data(const char *mono_name, int num_procs, struct fix_data *fd, int *p
     ns_nodes_vec[i].assign(ns_nodes[i].begin(), ns_nodes[i].end());
     ns_nodes_count += ns_nodes_vec[i].size();
   }
-  GOMA_ASSERT(ns_nodes_count == fd->ns_node_len_global);
-  GOMA_ASSERT(ss_elem_count == fd->ss_elem_len_global);
+  GOMA_ASSERT_ALWAYS(ns_nodes_count == fd->ns_node_len_global);
+  GOMA_ASSERT_ALWAYS(ss_elem_count == fd->ss_elem_len_global);
   int offset = 0;
   for (unsigned int i = 0; i < ns_nodes.size(); i++) {
     for (unsigned int j = 0; j < ns_nodes[i].size(); j++) {

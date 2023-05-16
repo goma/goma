@@ -5860,15 +5860,6 @@ double evaluate_flux_sens(const Exo_DB *exo,       /* ptr to basic exodus ii mes
   double local_qconv;
   double local_area = 0.0;
 #ifdef PARALLEL
-  double local_flux0 = 0.0;      /* old flux sum */
-  double local_flux_conv0 = 0.0; /* old convective flux sum */
-  double local_area0 = 0.0;      /* old area sum */
-  double proc_flux = 0.0;        /* current flux sum on this proc */
-  double proc_flux_conv = 0.0;   /* current convective flux sum on this proc */
-  double proc_area = 0.0;        /* current area sum on this proc */
-  double delta_flux = 0.0;       /* increment of flux             */
-  double delta_flux_conv = 0.0;  /* increment of convective flux  */
-  double delta_area = 0.0;       /* increment of area */
   double global_flux = 0.0;      /* flux sum over all procs */
   double global_flux_conv = 0.0; /* convective flux sum over all procs */
   double global_area = 0.0;      /* area sum over all procs */
@@ -6910,21 +6901,6 @@ double evaluate_flux_sens(const Exo_DB *exo,       /* ptr to basic exodus ii mes
             } /*  end of switch */
 
             local_area += weight * det;
-#ifdef PARALLEL
-            delta_flux = local_flux - local_flux0;
-            delta_flux_conv = local_flux_conv - local_flux_conv0;
-            delta_area = local_area - local_area0;
-
-            if (Num_Proc > 1 && dpi->elem_owner[elem_list[i]] == ProcID) {
-              proc_flux += delta_flux;
-              proc_flux_conv += delta_flux_conv;
-              proc_area += delta_area;
-            }
-
-            local_flux0 = local_flux;
-            local_flux_conv0 = local_flux_conv;
-            local_area0 = local_area;
-#endif
 
             if (profile_flag && print_flag) {
               FILE *jfp = 0;
@@ -7128,21 +7104,6 @@ double evaluate_flux_sens(const Exo_DB *exo,       /* ptr to basic exodus ii mes
                 GOMA_EH(GOMA_ERROR, "Illegal flux type");
                 break;
               } /*  end of switch */
-#ifdef PARALLEL
-              delta_flux = local_flux - local_flux0;
-              delta_flux_conv = local_flux_conv - local_flux_conv0;
-              delta_area = local_area - local_area0;
-
-              if (Num_Proc > 1 && dpi->elem_owner[elem_list[i]] == ProcID) {
-                proc_flux += delta_flux;
-                proc_flux_conv += delta_flux_conv;
-                proc_area += delta_area;
-              }
-
-              local_flux0 = local_flux;
-              local_flux_conv0 = local_flux_conv;
-              local_area0 = local_area;
-#endif
             } /*  mat_id  */
           }
         } /*  ss_sides loop  */

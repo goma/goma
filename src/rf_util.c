@@ -2517,7 +2517,7 @@ int rd_vectors_from_exoII(double u[],
  * out:	u	        initial guess to solution vector.
  *******************************************************************/
 {
-  int i, error, vdex, num_dim, num_nodes, mn, icount;
+  int i, error, vdex, num_dim, num_nodes, mn;
   int num_elem, num_elem_blk, num_node_sets, num_side_sets, time_step;
   float version;               /* version number of EXODUS II */
   int exoid;                   /* ID of the open EXODUS II file */
@@ -2623,7 +2623,6 @@ int rd_vectors_from_exoII(double u[],
 
   if (action_flag == 0) {
     for (var = V_FIRST; var < V_LAST; var++) {
-      icount = 0;
       if (Num_Var_In_Type[pg->imtrx][var]) {
         if (var == MASS_FRACTION) {
           for (mn = -1; mn < upd->Num_Mat; mn++) {
@@ -2639,8 +2638,6 @@ int rd_vectors_from_exoII(double u[],
             for (w = 0; w < matrl->Num_Species_Eqn; w++) {
               error = rd_exoII_nv(u, var, mn, matrl, var_names, num_nodes, num_vars, exoid,
                                   time_step, w);
-              if (!error)
-                icount++;
             }
           }
         } else {
@@ -2675,8 +2672,6 @@ int rd_vectors_from_exoII(double u[],
               error = rd_exoII_nv(u, var, mn, matrl, var_names, num_nodes, num_vars, exoid,
                                   time_step, 0);
             }
-            if (!error)
-              icount++;
           }
         }
       }

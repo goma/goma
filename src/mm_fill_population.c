@@ -56,12 +56,14 @@ static void moments_set_lognormal(
   int i = mom_index_1;
   int j = mom_index_2;
 
+// NOLINTBEGIN(bugprone-integer-division)
   double mu = (j / (i * j - i * i)) * log(moments[i] / moments[0]) +
               (i / (i * j - j * j)) * log(moments[j] / moments[0]);
 
   double sigma_var = ((2.0 / (j * j)) * log(moments[j] / moments[0]) -
                       (2.0 / (i * j)) * log(moments[i] / moments[0])) /
                      (1.0 - i / j);
+// NOLINTEND(bugprone-integer-division)
 
   if (sigma_var < 0) {
     sigma_var = 0;
@@ -2666,7 +2668,7 @@ int assemble_moments(double time, /* present time value */
                 source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
               }
 
-              lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += Heaviside * (mass + advection) + source;
+              lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += Heaviside * (mass + advection) + source + divergence;
             }
           }
         }

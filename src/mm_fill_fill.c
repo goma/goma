@@ -3945,7 +3945,6 @@ int assemble_phase_function(double time_value, double tt, double dt, double xi[D
   dbl x_dot[DIM]; /* Time derivative of the mesh displacements. */
   dbl *x_dot_old; /* Old x_dot[]. */
 
-  dbl v_dot_DF; /* v.grad(F) */
   dbl dtinv;    /* = 1 / dt */
   double v_rel[DIM], v_rel_old[DIM];
 
@@ -4031,7 +4030,6 @@ int assemble_phase_function(double time_value, double tt, double dt, double xi[D
     x_old = fv_old->x;
   }
 
-  v_dot_DF = 0.0;
   if (pd->TimeIntegration != STEADY && pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
     x_dot_old = fv_dot_old->x;
     for (a = 0; a < VIM; a++) {
@@ -4040,11 +4038,6 @@ int assemble_phase_function(double time_value, double tt, double dt, double xi[D
         x_dot[a] = (1 + 2 * tt) / dt * (xx[a] - x_old[a]);
       v_rel[a] = v[a] - x_dot[a];
       v_rel_old[a] = v_old[a] - x_dot_old[a];
-      if (lubon) {
-        v_dot_DF += v_rel[a] * grad_II_pf[a]; /* v.gradII(pF) */
-      } else {
-        v_dot_DF += v_rel[a] * grad_pf[a]; /* v.grad(pF) */
-      }
     }
   } else if (pd->TimeIntegration != STEADY && pd->etm[pg->imtrx][R_SOLID1][(LOG2_MASS)] &&
              pd->MeshMotion == TOTAL_ALE) /*This is the Eulerian solid-mech case */
@@ -4063,25 +4056,12 @@ int assemble_phase_function(double time_value, double tt, double dt, double xi[D
         v_rel_old[a] -= x_dot_old[b] * fv_old->grad_d_rs[b][a];
       }
     }
-    for (a = 0; a < VIM; a++) {
-      if (lubon) {
-        v_dot_DF += v_rel[a] * grad_II_pf[a]; /* v.gradII(pF) */
-      } else {
-        v_dot_DF += v_rel[a] * grad_pf[a]; /* v.grad(pF) */
-      }
-    }
-
   } else {
     x_dot_old = zero;
     for (a = 0; a < VIM; a++) {
       x_dot[a] = 0.0;
       v_rel[a] = v[a];
       v_rel_old[a] = v_old[a];
-      if (lubon) {
-        v_dot_DF += v_rel[a] * grad_II_pf[a]; /* v.gradII(pF) */
-      } else {
-        v_dot_DF += v_rel[a] * grad_pf[a]; /* v.grad(pF) */
-      }
     }
   }
 

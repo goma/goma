@@ -225,6 +225,8 @@ if(ENABLE_PETSC)
       endif()
     endif()
 
+    # For some reason this causes a lot of issues
+    list(APPEND GOMA_COMPILE_DEFINITIONS PETSC_SKIP_ATTRIBUTE_MPI_TYPE_TAG)
   else()
     message(WARNING "pkg-config not found, not searching for PETSc")
   endif()
@@ -971,7 +973,8 @@ if(ENABLE_WARNINGS)
     PRIVATE
       $<$<AND:$<C_COMPILER_ID:Clang>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
       -Wextra
-      -Wno-unused-parameter>
+      -Wno-unused-parameter
+      -Wno-unknown-warning-option>
       $<$<AND:$<C_COMPILER_ID:GNU>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
       -Wextra
       -Wno-unused-parameter
@@ -990,7 +993,8 @@ if(ENABLE_WARNINGS)
     PRIVATE
       $<$<AND:$<C_COMPILER_ID:Clang>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
       -Wextra
-      -Wno-unused-parameter>
+      -Wno-unused-parameter
+      -Wno-unknown-warning-option>
       $<$<AND:$<C_COMPILER_ID:GNU>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
       -Wextra
       -Wno-unused-parameter
@@ -1005,7 +1009,8 @@ if(ENABLE_WARNINGS)
     PRIVATE
       $<$<AND:$<C_COMPILER_ID:Clang>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
       -Wextra
-      -Wno-unused-parameter>
+      -Wno-unused-parameter
+      -Wno-unknown-warning-option>
       $<$<AND:$<C_COMPILER_ID:GNU>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
       -Wextra
       -Wno-unused-parameter
@@ -1024,7 +1029,8 @@ if(ENABLE_WARNINGS)
     PRIVATE
       $<$<AND:$<C_COMPILER_ID:Clang>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
       -Wextra
-      -Wno-unused-parameter>
+      -Wno-unused-parameter
+      -Wno-unknown-warning-option>
       $<$<AND:$<C_COMPILER_ID:GNU>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
       -Wextra
       -Wno-unused-parameter
@@ -1044,7 +1050,8 @@ if(ENABLE_WARNINGS)
     PRIVATE
       $<$<AND:$<C_COMPILER_ID:Clang>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
       -Wextra
-      -Wno-unused-parameter>
+      -Wno-unused-parameter
+      -Wno-unknown-warning-option>
       $<$<AND:$<C_COMPILER_ID:GNU>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
       -Wextra
       -Wno-unused-parameter
@@ -1064,7 +1071,8 @@ if(ENABLE_WARNINGS)
     PRIVATE
       $<$<AND:$<C_COMPILER_ID:Clang>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
       -Wextra
-      -Wno-unused-parameter>
+      -Wno-unused-parameter
+      -Wno-unknown-warning-option>
       $<$<AND:$<C_COMPILER_ID:GNU>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
       -Wextra
       -Wno-unused-parameter

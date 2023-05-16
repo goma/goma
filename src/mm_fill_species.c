@@ -1002,6 +1002,7 @@ int assemble_mass_transport(double time, /* present time valuel; KSC            
                     source_b *= d_wt_func * h3 * det_J * wt;
                     source_b *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
                   }
+                  source += source_b;
                 }
 
                 lec->J[LEC_J_INDEX((MAX_PROB_VAR + w), pvar, ii, j)] +=
@@ -6850,7 +6851,7 @@ void compute_leak_velocity(double *vnorm,
   double vnormal, phi_j;
 
   int mode;
-  double amb_pres, A, mtc, Y_inf, driving_force;
+  double amb_pres, mtc, Y_inf;
   double d_mtc[MAX_VARIABLE_TYPES + MAX_CONC];
   double activity[MAX_CONC];
   double dact_dC[MAX_CONC][MAX_CONC];
@@ -6980,7 +6981,6 @@ void compute_leak_velocity(double *vnorm,
        * sensitivity to all variable types
        * ACS: modified 10/99 to accommodate mass conc. formulation for YFLUX_EQUIL  */
 
-      driving_force = 1.;
 
       if (pd->v[pg->imtrx][MASS_FRACTION]) {
         wspec = fluxbc->BC_Data_Int[0];
@@ -7016,8 +7016,6 @@ void compute_leak_velocity(double *vnorm,
         mass_flux_equil_mtc(mp->mass_flux, mp->d_mass_flux, activity, dact_dC, fv->c, mode,
                             amb_pres, wspec, mtc, d_mtc, Y_inf);
 
-        A = mp->vapor_pressure[wspec] / amb_pres;
-        driving_force -= A * activity[wspec];
         vnormal += mp->mass_flux[wspec];
         /* This was causing compiler warnings: probably due to C[w] which should have been C[w][j]
          */
@@ -7616,7 +7614,7 @@ void compute_leak_energy(double *enorm,
   double enormal, phi_j;
 
   int mode;
-  double amb_pres, A, mtc, Y_inf, driving_force;
+  double amb_pres, mtc, Y_inf;
   double d_mtc[MAX_VARIABLE_TYPES + MAX_CONC];
   double activity[MAX_CONC];
   double dact_dC[MAX_CONC][MAX_CONC];
@@ -7683,7 +7681,6 @@ void compute_leak_energy(double *enorm,
        * sensitivity to all variable types
        * ACS: modified 10/99 to accommodate mass conc. formulation for YFLUX_EQUIL  */
 
-      driving_force = 1.;
 
       if (pd->v[pg->imtrx][MASS_FRACTION]) {
         wspec = fluxbc->BC_Data_Int[0];
@@ -7724,8 +7721,6 @@ void compute_leak_energy(double *enorm,
         mass_flux_equil_mtc(mp->mass_flux, mp->d_mass_flux, activity, dact_dC, fv->c, mode,
                             amb_pres, wspec, mtc, d_mtc, Y_inf);
 
-        A = mp->vapor_pressure[wspec] / amb_pres;
-        driving_force -= A * activity[wspec];
         enormal +=
             mp->density * mp->latent_heat_vap[wspec] * mp->mass_flux[wspec] * StoiCoef[wspec];
 

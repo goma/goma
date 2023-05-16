@@ -2290,6 +2290,7 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
                                                  supg_terms.d_supg_tau_dX[p][j] * v[w] *
                                                      bf[eqn]->grad_phi[i][w]);
                           }
+                          source_jd *= R_source * det_J * h3;
 
                           // advection_d *=
                           //     -lambda2 * at * det_J * h3 *
@@ -2298,7 +2299,7 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
                           //      v_dot_del_gt[a][b] - v_dot_del_gt[b][a] -
                           //      (g_dot_g[a][b] + 2 * gt_dot_g[a][b] + gt_dot_gt[a][b]));
                         }
-                        source_jeff = source_ja + source_jb + source_jc + source_jb;
+                        source_jeff = source_ja + source_jb + source_jc + source_jb + source_jd;
                       }
 
                       source = source_a + source_b + source_c + source_jeff;

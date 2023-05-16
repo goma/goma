@@ -1697,10 +1697,6 @@ void shell_n_dot_liq_velo_bc_tfmp(double func[DIM],
     veloAVG[k] = (veloU[k] + veloL[k]) / 2.;
   }
   veloAVG[2] = 0.0;
-  double n_dot_v_avg = 0.0;
-  for (k = 0; k < DIM; k++) {
-    n_dot_v_avg += bound_normal[k] * veloAVG[k];
-  }
 
   //  rel perms
   double Krl, dKrl_dS, Krg, dKrg_dS;
