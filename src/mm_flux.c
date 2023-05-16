@@ -7104,7 +7104,7 @@ double evaluate_flux_sens(const Exo_DB *exo,       /* ptr to basic exodus ii mes
                 GOMA_EH(GOMA_ERROR, "Illegal flux type");
                 break;
               } /*  end of switch */
-            } /*  mat_id  */
+            }   /*  mat_id  */
           }
         } /*  ss_sides loop  */
         if (corner_elem == -1)

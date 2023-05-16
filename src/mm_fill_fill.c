@@ -3945,7 +3945,7 @@ int assemble_phase_function(double time_value, double tt, double dt, double xi[D
   dbl x_dot[DIM]; /* Time derivative of the mesh displacements. */
   dbl *x_dot_old; /* Old x_dot[]. */
 
-  dbl dtinv;    /* = 1 / dt */
+  dbl dtinv; /* = 1 / dt */
   double v_rel[DIM], v_rel_old[DIM];
 
   double v_dot_grad_pf, v_dot_Dphi[MDE], vc_dot_Dphi[MDE];

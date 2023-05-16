@@ -105,7 +105,7 @@ extern Comm_Ex **cx;
 #undef DISABLE_CPP
 }
 
-//#define DEBUG_OMEGA_H
+// #define DEBUG_OMEGA_H
 
 static bool power_of_two(int num) { return (num & (num - 1)) == 0; }
 

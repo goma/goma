@@ -6982,7 +6982,6 @@ void compute_leak_velocity(double *vnorm,
        * sensitivity to all variable types
        * ACS: modified 10/99 to accommodate mass conc. formulation for YFLUX_EQUIL  */
 
-
       if (pd->v[pg->imtrx][MASS_FRACTION]) {
         wspec = fluxbc->BC_Data_Int[0];
         mode = fluxbc->BC_Data_Int[2];
@@ -7681,7 +7680,6 @@ void compute_leak_energy(double *enorm,
       /* call routine to calculate surface flux of bulk component and it's
        * sensitivity to all variable types
        * ACS: modified 10/99 to accommodate mass conc. formulation for YFLUX_EQUIL  */
-
 
       if (pd->v[pg->imtrx][MASS_FRACTION]) {
         wspec = fluxbc->BC_Data_Int[0];

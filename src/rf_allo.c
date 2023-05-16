@@ -140,7 +140,7 @@ double *array_alloc(va_alist) va_dcl
     int total; /* Total number of elements 		*/
     int size;  /* Size of a single element in bytes	*/
     int off;   /* offset from beginning of array	*/
-  } * dim;     /* Info about each dimension 		*/
+  } *dim;      /* Info about each dimension 		*/
 #ifndef __STDC__
   int numdim; /* Number of dimensions			*/
 #endif

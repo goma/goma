@@ -16432,7 +16432,6 @@ int assemble_shell_mesh(double time,    /* Time */
     h = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp,
                               &dH_U_ddh, time, delta_t);
 
-
     // Setup Height function model and sensitivities to mesh motion, and normal
     switch (mp->FSIModel) {
     case FSI_SHELL_ONLY_MESH:
@@ -17404,7 +17403,7 @@ int assemble_shell_tfmp(double time,      /* Time */
   double gradP_dot_gradphi_i;
   // double gradP_dot_gradh;
   // double gradh_dot_gradphi_j;
-  // double dgradP_dmesh_lj_dot_gradh; 
+  // double dgradP_dmesh_lj_dot_gradh;
   // double gradP_dot_dgradh_dmesh_lj;
   double gradP_dot_dgrad_phi_i_dmesh_lj, dgradP_dmesh_lj_dot_gradphi_i;
   double gradS_dot_dgrad_phi_i_dmesh_lj, dgradS_dmesh_lj_dot_gradphi_i;

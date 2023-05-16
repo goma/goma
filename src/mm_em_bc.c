@@ -89,7 +89,8 @@ int apply_em_farfield_direct_vec(double func[DIM],
 
   k1 = extinction_index(d_k1, 0.0);
   // Compute complex impedance
-  complex double cpx_refractive_index1, cpx_rel_permittivity1, cpx_permittivity1, impedance1, kappa1;
+  complex double cpx_refractive_index1, cpx_rel_permittivity1, cpx_permittivity1, impedance1,
+      kappa1;
 
   cpx_refractive_index1 = n1 + _Complex_I * k1;
   cpx_rel_permittivity1 = SQUARE(cpx_refractive_index1);
