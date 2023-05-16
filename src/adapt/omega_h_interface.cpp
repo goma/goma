@@ -1006,11 +1006,11 @@ void convert_omega_h_to_goma(
       std::vector<int> all_ns_nodes(max * Num_Proc);
       MPI_Allgather(ns_global_nodes.data(), max, MPI_INT, all_ns_nodes.data(), max, MPI_INT,
                     MPI_COMM_WORLD);
-      
+
       std::set<int> ns_nodes_set;
       for (int j = 0; j < Num_Proc; j++) {
         size_t offset = j * max;
-        for (int k = 0; k < all_sizes[j*surface_set_vec.size() + i]; k++) {
+        for (int k = 0; k < all_sizes[j * surface_set_vec.size() + i]; k++) {
           ns_nodes_set.insert(all_ns_nodes[offset + k]);
         }
       }
