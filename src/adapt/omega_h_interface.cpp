@@ -12,6 +12,7 @@
 * See LICENSE file.                                                       *
 \************************************************************************/
 
+#include <cstddef>
 #ifdef GOMA_ENABLE_OMEGA_H
 #include "adapt/omega_h_interface.h"
 
@@ -613,6 +614,7 @@ void convert_omega_h_to_goma(
       }
     }
   }
+  std::vector<LO> surface_set_vec(surface_set.begin(), surface_set.end());
   auto elem_class_ids = mesh->get_array<ClassId>(dim, "class_id");
   auto h_elem_class_ids = HostRead<LO>(elem_class_ids);
   for (LO i = 0; i < h_elem_class_ids.size(); ++i) {
@@ -623,7 +625,7 @@ void convert_omega_h_to_goma(
   auto h_side_class_ids = HostRead<LO>(side_class_ids);
   auto h_side_class_dims = HostRead<I8>(side_class_dims);
   auto nelem_blocks = int(region_set.size());
-  auto nside_sets = (classify_with & exodus::SIDE_SETS) ? int(surface_set.size()) : 0;
+  auto nside_sets = (classify_with & exodus::SIDE_SETS) ? int(surface_set_vec.size()) : 0;
   auto nnode_sets = (classify_with & exodus::NODE_SETS) ? int(node_set.size()) : 0;
 
   auto all_conn = mesh->ask_elem_verts();
@@ -865,10 +867,12 @@ void convert_omega_h_to_goma(
     elem_file_offset += nblock_elems;
   }
 
-  std::vector<int> nset_global_node;
+  std::vector<int> global_node_counts(dpi->num_node_sets_global);
   std::vector<int> sset_global_side;
   if (1 && classify_with) {
-    for (auto set_id : surface_set) {
+
+    std::vector<std::vector<int>> ns_nodes(surface_set_vec.size());
+    for (auto set_id : surface_set_vec) {
       auto sides_in_set =
           land_each(each_eq_to(side_class_ids, set_id), each_eq_to(side_class_dims, I8(dim - 1)));
       if (classify_with & exodus::SIDE_SETS) {
@@ -911,31 +915,35 @@ void convert_omega_h_to_goma(
         auto set_nodes2node = collect_marked(nodes_in_set);
         auto set_nodes2node_ex = add_to_each(set_nodes2node, 1);
         auto nset_nodes = set_nodes2node.size();
-        std::vector<int> nset_nodes_new;
+        std::size_t set_id_offset = 0;
+        for (std::size_t i = 0; i < surface_set_vec.size(); i++) {
+          if (surface_set_vec[i] == set_id) {
+            set_id_offset = i;
+          }
+        }
         for (int i = 0; i < set_nodes2node.size(); i++) {
           int local_node = old_to_new_node_map[set_nodes2node[i]];
           if (local_node != -1) {
-            nset_nodes_new.push_back(local_node + 1);
+            ns_nodes[set_id_offset].push_back(local_node + 1);
           }
         }
         if (verbose) {
           std::cout << "node set " << set_id << " has " << nset_nodes << " nodes\n";
         }
         auto h_set_nodes2node = HostRead<LO>(set_nodes2node_ex);
-        nset_global_node.push_back(nset_nodes_new.size());
-        CALL(ex_put_set_param(exoid, EX_NODE_SET, set_id, nset_nodes_new.size(), 0));
-        if (nset_nodes_new.size() > 0) {
-          CALL(ex_put_set(exoid, EX_NODE_SET, set_id, nset_nodes_new.data(), nullptr));
+        CALL(ex_put_set_param(exoid, EX_NODE_SET, set_id, ns_nodes[set_id_offset].size(), 0));
+        if (ns_nodes[set_id_offset].size() > 0) {
+          CALL(ex_put_set(exoid, EX_NODE_SET, set_id, ns_nodes[set_id_offset].data(), nullptr));
         }
       }
-      std::vector<std::string> set_names(surface_set.size());
+      std::vector<std::string> set_names(surface_set_vec.size());
       for (auto &pair : mesh->class_sets) {
         auto &name = pair.first;
         for (auto &cp : pair.second) {
           if (cp.dim != I8(dim - 1))
             continue;
           std::size_t index = 0;
-          for (auto surface_id : surface_set) {
+          for (auto surface_id : surface_set_vec) {
             if (surface_id == cp.id) {
               set_names[index] = name;
               if (verbose && (classify_with & exodus::NODE_SETS)) {
@@ -949,7 +957,7 @@ void convert_omega_h_to_goma(
           }
         }
       }
-      std::vector<char *> set_name_ptrs(surface_set.size(), nullptr);
+      std::vector<char *> set_name_ptrs(surface_set_vec.size(), nullptr);
       for (std::size_t i = 0; i < set_names.size(); ++i) {
         if (set_names[i].empty()) {
           std::stringstream ss;
@@ -971,6 +979,44 @@ void convert_omega_h_to_goma(
         CALL(ex_put_names(exoid, EX_NODE_SET, set_name_ptrs.data()));
       }
     }
+
+    // Nodeset dpi information needs total nodes for each nodeset and we need
+    // to share information in order to have an accurate count.
+    std::vector<int> my_sizes(surface_set_vec.size());
+    std::vector<int> all_sizes(surface_set_vec.size() * Num_Proc);
+    for (size_t i = 0; i < surface_set_vec.size(); i++) {
+      my_sizes[i] = ns_nodes[i].size();
+    }
+
+    MPI_Allgather(my_sizes.data(), surface_set_vec.size(), MPI_INT, all_sizes.data(),
+                  surface_set_vec.size(), MPI_INT, MPI_COMM_WORLD);
+
+    for (size_t i = 0; i < surface_set_vec.size(); i++) {
+      size_t count = 0;
+      int max = 0;
+      for (int j = 0; j < Num_Proc; j++) {
+        count += all_sizes[j * surface_set_vec.size()];
+        max = std::max(all_sizes[j * surface_set_vec.size() + i], max);
+      }
+      std::vector<int> ns_global_nodes(max);
+      for (size_t j = 0; j < ns_nodes[i].size(); j++) {
+        ns_global_nodes[j] = global_node[ns_nodes[i][j] - 1];
+      }
+
+      std::vector<int> all_ns_nodes(max * Num_Proc);
+      MPI_Allgather(ns_global_nodes.data(), max, MPI_INT, all_ns_nodes.data(), max, MPI_INT,
+                    MPI_COMM_WORLD);
+      
+      std::set<int> ns_nodes_set;
+      for (int j = 0; j < Num_Proc; j++) {
+        size_t offset = j * max;
+        for (int k = 0; k < all_sizes[j*surface_set_vec.size() + i]; k++) {
+          ns_nodes_set.insert(all_ns_nodes[offset + k]);
+        }
+      }
+
+      global_node_counts[i] = ns_nodes_set.size();
+    }
   }
   std::vector<int> node_map(global_node.begin(), global_node.end());
   auto add1 = [](int &v) { v++; };
@@ -981,12 +1027,12 @@ void convert_omega_h_to_goma(
   ex_put_id_map(exoid, EX_NODE_MAP, node_map.data());
   ex_put_id_map(exoid, EX_ELEM_MAP, elem_map.data());
 
-  int max_sets = surface_set.size();
+  int max_sets = surface_set_vec.size();
   int gmax_sets;
   MPI_Allreduce(&max_sets, &gmax_sets, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
   std::vector<int> all_sets(gmax_sets * Num_Proc + 1);
   std::fill(all_sets.begin(), all_sets.end(), -1);
-  std::vector<int> my_sets(surface_set.begin(), surface_set.end());
+  std::vector<int> my_sets(surface_set_vec.begin(), surface_set_vec.end());
   my_sets.resize(gmax_sets);
   MPI_Allgather(my_sets.data(), my_sets.size(), MPI_INT, all_sets.data(), gmax_sets, MPI_INT,
                 MPI_COMM_WORLD);
@@ -999,7 +1045,6 @@ void convert_omega_h_to_goma(
 
   std::vector<int> global_sets(global_set_uniq.begin(), global_set_uniq.end());
   std::sort(global_sets.begin(), global_sets.end());
-  std::vector<int> global_node_counts(global_sets.size());
   std::vector<int> global_side_counts(global_sets.size());
   std::vector<int> df_counts(global_sets.size());
   std::fill(df_counts.begin(), df_counts.end(), 0);
@@ -1009,8 +1054,6 @@ void convert_omega_h_to_goma(
     auto my_offset = std::find(my_sets.begin(), my_sets.end(), set);
     if (my_offset != my_sets.end()) {
       int index = std::distance(my_sets.begin(), my_offset);
-      MPI_Allreduce(&nset_global_node[index], &global_node_counts[setidx], 1, MPI_INT, MPI_SUM,
-                    MPI_COMM_WORLD);
       MPI_Allreduce(&sset_global_side[index], &global_side_counts[setidx], 1, MPI_INT, MPI_SUM,
                     MPI_COMM_WORLD);
     }
