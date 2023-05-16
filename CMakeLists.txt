@@ -82,6 +82,7 @@ set(GOMA_COMPILER_OVERRIDE
       "allow goma to compile with different compilers than TPLs, use with caution"
 )
 
+if (${Trilinos_VERSION} LESS 14)
 # Trilinos required packages
 foreach(package Amesos AztecOO Epetra)
   list(FIND Trilinos_PACKAGE_LIST ${package} trilinos_package_index)
@@ -124,6 +125,19 @@ if(${stratimikos_package_index} GREATER_EQUAL 0)
         list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_TEKO)
       endif()
     endif()
+  endif()
+endif()
+else() # Trilinos > 13
+  option(ENABLE_STRATIMIKOS "ENABLE_STRATIMIKOS" ON)
+  option(ENABLE_TEKO "ENABLE_TEKO" ON)
+  if(ENABLE_STRATIMIKOS)
+    message(STATUS "Stratimikos enabled set with -DENABLE_STRATIMIKOS=ON/OFF")
+    list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_STRATIMIKOS)
+      option(ENABLE_TEKO "ENABLE_TEKO" ON)
+      if(ENABLE_TEKO)
+    message(STATUS "TEKO enabled set with -DENABLE_TEKO=ON/OFF")
+        list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_TEKO)
+      endif()
   endif()
 endif()
 

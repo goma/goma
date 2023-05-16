@@ -482,7 +482,7 @@ dbl yzbeta(dbl scale,
            dbl deriv[MDE]) {
   // dbl Y_inv = 1.0 / Y;
 
-  dbl gradunit[DIM];
+  // dbl gradunit[DIM];
   dbl grad_u_norm = 0;
 
   for (int i = 0; i < dim; i++) {
@@ -516,9 +516,9 @@ dbl yzbeta(dbl scale,
 
     dbl d_inv_grad_u_norm = -inv_grad_u_norm * inv_grad_u_norm * d_grad_u_norm;
 
-    for (int i = 0; i < dim; i++) {
-      gradunit[i] = grad_u[i] * inv_grad_u_norm;
-    }
+    // for (int i = 0; i < dim; i++) {
+    //   gradunit[i] = grad_u[i] * inv_grad_u_norm;
+    // }
 
     // dbl h_dc = 0;
     // for (int i = 0; i < ei[pd->mi[interp_eqn]]->dof[interp_eqn]; i++) {
