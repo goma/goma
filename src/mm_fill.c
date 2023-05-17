@@ -516,7 +516,7 @@ Revised:         Summer 1998, SY Tam (UNM)
    *
    */
 
-  if (Proc_NS_List_Length > 0 &&
+  if (exo->ns_node_len > 0 &&
       ((zeroCA == 1) || ((Linear_Solver != FRONT && ielem == exo->eb_ptr[0]) ||
                          (Linear_Solver == FRONT && ielem == exo->elem_order_map[0] - 1)))) {
     int nsp, nspk, count = -1;
@@ -534,11 +534,13 @@ Revised:         Summer 1998, SY Tam (UNM)
       case VELO_THETA_SHIK_BC: {
         nsp = match_nsid(BC_Types[j].BC_ID);
         if (nsp != -1) {
-          nspk = Proc_NS_List[Proc_NS_Pointers[nsp]];
-          int n_nodes = Proc_NS_Pointers[nsp + 1] - Proc_NS_Pointers[nsp];
-          if (n_nodes > 0 && Nodes[nspk]->Proc == ProcID) {
-            count++;
-            CA_proc[count] = ProcID;
+          int n_nodes = exo->ns_num_nodes[nsp];
+          if (n_nodes > 0) {
+            nspk = exo->ns_node_list[exo->ns_node_index[nsp]];
+            if (Nodes[nspk]->Proc == ProcID) {
+              count++;
+              CA_proc[count] = ProcID;
+            }
           }
         }
       } break;
