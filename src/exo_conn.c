@@ -358,6 +358,10 @@ void build_node_node(Exo_DB *exo) {
      */
 
     for (i = 0; i < curr_list_size; i++, total_list_size++) {
+      if (total_list_size >= length) {
+        length = length * 1.5;
+        exo->node_node_list = (int *)realloc(exo->node_node_list, length * sizeof(int));
+      }
       exo->node_node_list[total_list_size] = list[i];
     }
 

@@ -136,10 +136,19 @@ int setup_pd(void) {
           if (pd_glob[mn]->etm[imtrx][ce][(LOG2_SOURCE)] != 0.) {
             pd_glob[mn]->e[imtrx][ce] |= T_SOURCE;
           }
-        } else if ((ce == R_SHELL_SAT_CLOSED) || (ce == R_SHELL_DELTAH) ||
-                   (ce == R_SHELL_LUB_CURV) || (ce == R_SHELL_LUB_CURV_2)) {
+        } else if ((ce == R_SHELL_SAT_CLOSED) || (ce == R_SHELL_DELTAH)) {
           if (pd_glob[mn]->etm[imtrx][ce][(LOG2_MASS)] != 0.) {
             pd_glob[mn]->e[imtrx][ce] |= T_MASS;
+          }
+          if (pd_glob[mn]->etm[imtrx][ce][(LOG2_DIVERGENCE)] != 0.) {
+            pd_glob[mn]->e[imtrx][ce] |= T_DIVERGENCE;
+          }
+        } else if ((ce == R_SHELL_LUB_CURV) || (ce == R_SHELL_LUB_CURV_2)) {
+          if (pd_glob[mn]->etm[imtrx][ce][(LOG2_MASS)] != 0.) {
+            pd_glob[mn]->e[imtrx][ce] |= T_MASS;
+          }
+          if (pd_glob[mn]->etm[imtrx][ce][(LOG2_DIFFUSION)] != 0.) {
+            pd_glob[mn]->e[imtrx][ce] |= T_DIFFUSION;
           }
           if (pd_glob[mn]->etm[imtrx][ce][(LOG2_DIVERGENCE)] != 0.) {
             pd_glob[mn]->e[imtrx][ce] |= T_DIVERGENCE;

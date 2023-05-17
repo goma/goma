@@ -86,7 +86,7 @@ double raoults_law_prxn(JACOBIAN_VAR_DESC_STRUCT *func_jac,
  *            current side of the interface.
  **********************************************************************/
 {
-  int i, num_terms, have_T, pos, speciesVT, index_is, index_lvdesc;
+  int i, have_T, pos, speciesVT, index_is, index_lvdesc;
   int wspec = bc->BC_Data_Int[0];
   int ebID_mat_liq = bc->BC_Data_Int[1], ebIndex_liq, ebIndex_gas;
   int liquidSide = (Current_EB_ptr->Elem_Blk_Id == ebID_mat_liq);
@@ -106,10 +106,7 @@ double raoults_law_prxn(JACOBIAN_VAR_DESC_STRUCT *func_jac,
   ebIndex_gas = ebID_to_ebIndex(bc->BC_Data_Int[2]);
   mp_liq = mp_glob[Matilda[ebIndex_liq]];
   mp_gas = mp_glob[Matilda[ebIndex_gas]];
-  num_terms = mp_liq->Num_Species + mp_gas->Num_Species;
   have_T = (upd->vp[pg->imtrx][TEMPERATURE] != -1);
-  if (have_T)
-    num_terms++;
 
   /*
    * Find the storage for this bc from the linked list attached
@@ -457,7 +454,7 @@ double is_equil_prxn(JACOBIAN_VAR_DESC_STRUCT *func_jac,
  *             current side of the interface.
  **********************************************************************/
 {
-  int i, num_terms, have_T, pos, speciesVT, index_is, index_lvdesc;
+  int i, have_T, pos, speciesVT, index_is, index_lvdesc;
   int wspec_a = bc->BC_Data_Int[0], wspec_b;
   int ebID_mat_a = bc->BC_Data_Int[1], ebIndex_a, ebIndex_b;
   int a_Side = (Current_EB_ptr->Elem_Blk_Id == ebID_mat_a);
@@ -477,10 +474,7 @@ double is_equil_prxn(JACOBIAN_VAR_DESC_STRUCT *func_jac,
   ebIndex_b = ebID_to_ebIndex(bc->BC_Data_Int[2]);
   mp_a = mp_glob[Matilda[ebIndex_a]];
   mp_b = mp_glob[Matilda[ebIndex_b]];
-  num_terms = mp_a->Num_Species + mp_b->Num_Species;
   have_T = (upd->vp[pg->imtrx][TEMPERATURE] != -1);
-  if (have_T)
-    num_terms++;
 
   /*
    * Currently we limit this bc to one type of species

@@ -1696,7 +1696,7 @@ int shell_normal_div_s(dbl *div_s_nv, dbl d_div_s_nv_dnv[DIM][MDE], dbl d_div_s_
   int eqn = R_SHELL_NORMAL1;
   int i, j, k, p, q, r, dofs, pdim, node, index;
   int b;
-  double phi_j, sJsum;
+  double phi_j;
   // double sJdet;
   double grad_nv[DIM][DIM], d_grad_nv_dnv[DIM][DIM][DIM][MDE];
   double d_grad_nv_dmesh[DIM][DIM][DIM][MDE];
@@ -1728,7 +1728,7 @@ int shell_normal_div_s(dbl *div_s_nv, dbl d_div_s_nv_dnv[DIM][MDE], dbl d_div_s_
    * of the physical coordinate derivatives of basis functions and
    * gradients for shell elements, calculate them locally for now.
    */
-  sJsum = 0.0;
+  // double sJsum = 0.0;
   for (j = 0; j < pdim; j++) {
     for (k = 0; k < dofs; k++) {
       node = ei[pg->imtrx]->dof_list[eqn][k];
@@ -1736,7 +1736,7 @@ int shell_normal_div_s(dbl *div_s_nv, dbl d_div_s_nv_dnv[DIM][MDE], dbl d_div_s_
       local_x[j][k] = Coor[j][index] + *esp->d[j][k];
       sJ[j] += local_x[j][k] * bf[eqn]->dphidxi[k][0];
     }
-    sJsum += sJ[j] * sJ[j];
+    // sJsum += sJ[j] * sJ[j];
   }
   //  sJdet = sqrt(sJsum);
 

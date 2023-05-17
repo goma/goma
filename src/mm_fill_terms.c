@@ -26885,7 +26885,7 @@ int assemble_max_strain(void) {
 
       // Assemble mass term
       mass = 0.0;
-      if (T_MASS) {
+      if (pd->e[pg->imtrx][eqn] & T_MASS) {
         if (mass_lump) {
           mass -= *esp->max_strain[i] * phi_i;
         } else {
@@ -26896,7 +26896,7 @@ int assemble_max_strain(void) {
 
       // Assemble source term
       source = 0.0;
-      if (T_SOURCE) {
+      if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
         if (use_new) {
           source += vmE * phi_i;
         } else {
@@ -26936,7 +26936,7 @@ int assemble_max_strain(void) {
 
           // Assemble mass terms
           mass = 0.0;
-          if (T_MASS) {
+          if (pd->e[pg->imtrx][eqn] & T_MASS) {
             if (mass_lump) {
               mass -= phi_i * delta(i, j);
             } else {
@@ -26969,7 +26969,7 @@ int assemble_max_strain(void) {
 
             // Assemble mass terms
             mass = 0.0;
-            if (T_MASS) {
+            if (pd->e[pg->imtrx][eqn] & T_MASS) {
               if (mass_lump) {
                 mass -= *esp->max_strain[i] * phi_i * fv->dh3dmesh[k][j] * det_J;
                 mass -= *esp->max_strain[i] * phi_i * h3 * bf[eqn]->d_det_J_dm[k][j];
@@ -26982,7 +26982,7 @@ int assemble_max_strain(void) {
 
             // Assemble source term
             source = 0.0;
-            if (T_SOURCE) {
+            if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
               if (use_new) {
                 for (a = 0; a < DIM; a++) {
                   for (b = 0; b < DIM; b++) {
@@ -27083,7 +27083,7 @@ int assemble_cur_strain(void) {
 
       // Assemble mass term
       mass = 0.0;
-      if (T_MASS) {
+      if (pd->e[pg->imtrx][eqn] & T_MASS) {
         if (mass_lump) {
           mass -= *esp->cur_strain[i] * phi_i;
         } else {
@@ -27094,7 +27094,7 @@ int assemble_cur_strain(void) {
 
       // Assemble source term
       source = 0.0;
-      if (T_SOURCE) {
+      if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
         source += vmE * phi_i;
       }
       source *= dA * etm_source;
@@ -27130,7 +27130,7 @@ int assemble_cur_strain(void) {
 
           // Assemble mass terms
           mass = 0.0;
-          if (T_MASS) {
+          if (pd->e[pg->imtrx][eqn] & T_MASS) {
             if (mass_lump) {
               mass -= phi_i * delta(i, j);
             } else {
@@ -27163,7 +27163,7 @@ int assemble_cur_strain(void) {
 
             // Assemble mass terms
             mass = 0.0;
-            if (T_MASS) {
+            if (pd->e[pg->imtrx][eqn] & T_MASS) {
               if (mass_lump) {
                 mass -= *esp->cur_strain[i] * phi_i * fv->dh3dmesh[k][j] * det_J;
                 mass -= *esp->cur_strain[i] * phi_i * h3 * bf[eqn]->d_det_J_dm[k][j];
@@ -27176,7 +27176,7 @@ int assemble_cur_strain(void) {
 
             // Assemble source term
             source = 0.0;
-            if (T_SOURCE) {
+            if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
               for (a = 0; a < DIM; a++) {
                 for (b = 0; b < DIM; b++) {
                   source += d_vmE_dstrain[a][b] * fv->d_strain_dx[a][b][k][j] * h3 * det_J;

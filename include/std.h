@@ -52,7 +52,7 @@
 #else
 #define GOMA_MAJOR_VERSION 7
 #define GOMA_MINOR_VERSION 4
-#define GOMA_PATCH_VERSION 3
+#define GOMA_PATCH_VERSION 5
 #define GOMA_VERSION \
   STRINGCON(GOMA_MAJOR_VERSION) "." STRINGCON(GOMA_MINOR_VERSION) "." STRINGCON(GOMA_PATCH_VERSION)
 #endif
@@ -197,8 +197,10 @@
 #endif
 
 #define delta(m, n) ((m) == (n) ? 1 : 0) /* Kroenecker delta */
+// NOLINTBEGIN(bugprone-integer-division)
 #define permute(i, j, k) \
   (((i) - (j)) * ((j) - (k)) * ((k) - (i)) / 2) /* Permutation symbol (epsilon) */
+// NOLINTEND(bugprone-integer-division)
 #define stringup(a)                                      \
   do {                                                   \
     char *p;                                             \

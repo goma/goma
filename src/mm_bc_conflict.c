@@ -276,7 +276,7 @@ void check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
   int es, i, ibc, iss, num_bc_nodes, used_BC, varType;
   int ibc1, ibc2, inode, bct1, bct2 = -1, k;
   int ins, action, idum, imove, istay, i_delete, i_dont_move;
-  int eqn, idup, idup1, idup2, p, j, num_total_nodes, dups;
+  int eqn, idup, idup1, idup2, p, j, num_total_nodes;
   int ***BC_Unk_List;
   double sum, a1, a2, a3, a4, a5, a6, a7, b1, b2, b3, b4, b5, b6, b7, max, c1;
   double c2, det, det1, det2, det3;
@@ -620,7 +620,6 @@ void check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
         node = Nodes[inode];
         nv = node->Nodal_Vars_Info[pg->imtrx];
         /* check for duplications */
-        dups = 0;
         for (offset = 0; offset < nv->Num_Unknowns; offset++) {
           get_nv_vd_from_offset(nv, offset, &vd, &idof);
           eqn = vd->Variable_Type;
@@ -655,8 +654,6 @@ void check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
               }
               fprintf(stderr, "\n");
             }
-            /* increment count of # duplications at this node */
-            dups++;
 
             /*****************************************************************************/
             /* try to resolve the differences quickly */
@@ -2026,7 +2023,7 @@ void check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
   int *ssid_list;
   int i, ibc, iss, num_bc_nodes;
   int ibc1, ibc2, inode, bct1, bct2, k, ins;
-  int ***BC_Unk_List, **NS_list, eqn, idup, p, q, j, num_total_nodes, dups;
+  int ***BC_Unk_List, **NS_list, eqn, idup, p, q, j, num_total_nodes;
   int num_rot_nodes, irc, eq = -1, node_ok, iptr;
 #ifndef PARALLEL
   int bc_found;
@@ -2486,7 +2483,6 @@ void check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
         /* Currently don't worry about rotation unless a BC exists at a
          * node
          */
-        dups = 0;
         for (offset = 0; offset < nv->Num_Unknowns; offset++) {
           get_nv_vd_from_offset(nv, offset, &vd, &idof);
           eqn = vd->Variable_Type;
@@ -2733,7 +2729,6 @@ void check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
               if (Debug_Flag > 0 && Unlimited_Output) {
                 fprintf(ofbc, "\n");
               }
-              dups++; /* increment count of # duplications at this node */
 
               /*********************************************************************/
               /* try to resolve the differences quickly */
@@ -2936,7 +2931,6 @@ void check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
         }
         nv = node->Nodal_Vars_Info[pg->imtrx];
         /* check for duplications */
-        dups = 0;
         for (offset = 0; offset < nv->Num_Unknowns; offset++) {
           get_nv_vd_from_offset(nv, offset, &vd, &idof);
           eqn = vd->Variable_Type;
