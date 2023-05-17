@@ -37,7 +37,7 @@ static dbl yzbeta1(dbl scale,
 static dbl
 yzbeta2(dbl scale, dbl Y, dbl Z, dbl d_Z[MDE], dbl deriv[MDE], dbl h_elem, int interp_eqn);
 
-static const dbl DIFFUSION_EPSILON = 1e-8;
+// static const dbl DIFFUSION_EPSILON = 1e-8;
 
 void get_metric_tensor(dbl B[DIM][DIM], int dim, int element_type, dbl G[DIM][DIM]) {
   dbl adjustment[DIM][DIM] = {{0}};
@@ -480,9 +480,9 @@ dbl yzbeta(dbl scale,
            dbl h_elem,
            int interp_eqn,
            dbl deriv[MDE]) {
-  dbl Y_inv = 1.0 / Y;
+  // dbl Y_inv = 1.0 / Y;
 
-  dbl gradunit[DIM];
+  // dbl gradunit[DIM];
   dbl grad_u_norm = 0;
 
   for (int i = 0; i < dim; i++) {
@@ -492,16 +492,16 @@ dbl yzbeta(dbl scale,
   dbl inv_grad_u_norm = 1 / grad_u_norm;
 
   for (int j = 0; j < ei[pd->mi[interp_eqn]]->dof[interp_eqn]; j++) {
-    dbl inner = 0;
-    for (int i = 0; i < dim; i++) {
-      inner += Y_inv * grad_u[i] * Y_inv * grad_u[i];
-    }
-    inner += DIFFUSION_EPSILON;
-
-    dbl d_inner = 0;
-    for (int i = 0; i < dim; i++) {
-      d_inner += 2 * Y_inv * d_grad_u[j][i] * Y_inv * grad_u[i];
-    }
+    // dbl inner = 0;
+    // for (int i = 0; i < dim; i++) {
+    // inner += Y_inv * grad_u[i] * Y_inv * grad_u[i];
+    // }
+    // inner += DIFFUSION_EPSILON;
+    //
+    // dbl d_inner = 0;
+    // for (int i = 0; i < dim; i++) {
+    // d_inner += 2 * Y_inv * d_grad_u[j][i] * Y_inv * grad_u[i];
+    // }
 
     //    dbl scalar_part = Y_inv * u + DIFFUSION_EPSILON;
 
@@ -516,16 +516,16 @@ dbl yzbeta(dbl scale,
 
     dbl d_inv_grad_u_norm = -inv_grad_u_norm * inv_grad_u_norm * d_grad_u_norm;
 
-    for (int i = 0; i < dim; i++) {
-      gradunit[i] = grad_u[i] * inv_grad_u_norm;
-    }
+    // for (int i = 0; i < dim; i++) {
+    //   gradunit[i] = grad_u[i] * inv_grad_u_norm;
+    // }
 
-    dbl h_dc = 0;
-    for (int i = 0; i < ei[pd->mi[interp_eqn]]->dof[interp_eqn]; i++) {
-      for (int j = 0; j < dim; j++) {
-        h_dc += fabs(gradunit[j] * d_grad_u[i][j]);
-      }
-    }
+    // dbl h_dc = 0;
+    // for (int i = 0; i < ei[pd->mi[interp_eqn]]->dof[interp_eqn]; i++) {
+    //   for (int j = 0; j < dim; j++) {
+    //     h_dc += fabs(gradunit[j] * d_grad_u[i][j]);
+    //   }
+    // }
 
     // h_dc = 2 / h_dc;
 

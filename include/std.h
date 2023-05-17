@@ -197,8 +197,10 @@
 #endif
 
 #define delta(m, n) ((m) == (n) ? 1 : 0) /* Kroenecker delta */
+// NOLINTBEGIN(bugprone-integer-division)
 #define permute(i, j, k) \
   (((i) - (j)) * ((j) - (k)) * ((k) - (i)) / 2) /* Permutation symbol (epsilon) */
+// NOLINTEND(bugprone-integer-division)
 #define stringup(a)                                      \
   do {                                                   \
     char *p;                                             \
