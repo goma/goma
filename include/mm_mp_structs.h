@@ -1165,6 +1165,10 @@ struct Viscoelastic_Constitutive {
   dbl maximum_stretch_ratio;
   int maximum_stretch_ratioModel;
 
+  // FENE
+  dbl extensibility;
+  int extensibilityModel;
+
   // level set
   struct Positive_LS_Viscoelastic_Properties pos_ls;
   dbl muJeffreys; /* 2nd viscosity used in modified Jeffreys model */

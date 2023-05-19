@@ -6236,7 +6236,7 @@ void flow_n_dot_T_nobc(double func[DIM],
   }
 
   /* compute stress tensor and its derivatives */
-  if (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV || vn->evssModel == CONF) {
+  if (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV) {
     fluid_stress_conf(Pi, d_Pi);
   } else if (vn->evssModel == SQRT_CONF) {
     fluid_stress_sqrt_conf(Pi, d_Pi);

@@ -8786,7 +8786,8 @@ int conf_source(int mode,
       }
     }
   } break;
-  case ROLIE_POLY: {
+  case ROLIE_POLY:
+  case ROLIE_POLY_FE: {
 
     dbl d_trace_dc[DIM][DIM] = {{0.0}};
 
@@ -8803,16 +8804,19 @@ int conf_source(int mode,
 
     dbl lambda_s = sqrt(trace / 3);
 
-    dbl k =
-        ((3 - lambda_s * lambda_s / (lambda_max * lambda_max)) *
-         (1 - 1 / (lambda_max * lambda_max))) /
-        (1 - lambda_s * lambda_s / (lambda_max * lambda_max) * (3 - 1 / (lambda_max * lambda_max)));
+    dbl k = 1.0;
+    if (vn->ConstitutiveEquation == ROLIE_POLY_FE) {
+      k = ((3 - lambda_s * lambda_s / (lambda_max * lambda_max)) *
+           (1 - 1 / (lambda_max * lambda_max))) /
+          (1 -
+           lambda_s * lambda_s / (lambda_max * lambda_max) * (3 - 1 / (lambda_max * lambda_max)));
+    }
 
     for (int ii = 0; ii < VIM; ii++) {
       for (int jj = 0; jj < VIM; jj++) {
         source_term[ii][jj] = -(c[ii][jj] - delta(ii, jj));
-        source_term[ii][jj] += -(2.0*tau_D / tau_R) * k * (1 - sqrt(3 / (trace))) *
-         (c[ii][jj] + beta * pow(trace / 3, n) * (c[ii][jj] - delta(ii, jj)));
+        source_term[ii][jj] += -(2.0 * tau_D / tau_R) * k * (1 - sqrt(3 / (trace))) *
+                               (c[ii][jj] + beta * pow(trace / 3, n) * (c[ii][jj] - delta(ii, jj)));
       }
     }
 
@@ -8825,14 +8829,16 @@ int conf_source(int mode,
           }
         }
       }
-      dbl d_k[DIM][DIM];
-      dbl d_k_dlamda_s = 4 * lambda_s * lambda_max * lambda_max * (lambda_max * lambda_max - 1) /
-                         (pow(lambda_s * lambda_s - lambda_max * lambda_max, 2.0) *
-                          (3 * lambda_max * lambda_max - 1));
+      dbl d_k[DIM][DIM] = {{0.}};
+      if (vn->ConstitutiveEquation == ROLIE_POLY_FE) {
+        dbl d_k_dlamda_s = 4 * lambda_s * lambda_max * lambda_max * (lambda_max * lambda_max - 1) /
+                           (pow(lambda_s * lambda_s - lambda_max * lambda_max, 2.0) *
+                            (3 * lambda_max * lambda_max - 1));
 
-      for (int p = 0; p < VIM; p++) {
-        for (int q = 0; q < VIM; q++) {
-          d_k[p][q] = d_k_dlamda_s * d_trace_dc[p][q];
+        for (int p = 0; p < VIM; p++) {
+          for (int q = 0; q < VIM; q++) {
+            d_k[p][q] = d_k_dlamda_s * d_trace_dc[p][q];
+          }
         }
       }
 
@@ -8842,14 +8848,16 @@ int conf_source(int mode,
             for (int q = 0; q < VIM; q++) {
               d_source_term_dc[ii][jj][p][q] = -(delta(ii, p) * delta(jj, q));
               d_source_term_dc[ii][jj][p][q] +=
-                  -(2.0 *tau_D/ tau_R) * d_k[p][q] * (1 - sqrt(3 / (trace))) *
-                  (c[ii][jj] + beta * pow(trace / 3, n) * (c[ii][jj] - delta(ii, jj)))
-                  - (2.0 * tau_D / tau_R) * k * d_trace_dc[p][q] * sqrt(3)/2.0 * pow(1/ (trace),3.0/2.0)
-                  * (c[ii][jj] + beta * pow(trace / 3, n) * (c[ii][jj] - delta(ii, jj)))
-                  - (2.0 * tau_D/ tau_R) * k * (1 - sqrt(3 / (trace))) *
-                  ((delta(ii, p) * delta(jj, q)) + d_trace_dc[p][q]*(n/3) *beta * pow(trace / 3,
-                  n-1) * (c[ii][jj] - delta(ii, jj)) + beta * pow(trace / 3, n) * ((delta(ii, p)
-                  * delta(jj, q))));
+                  -(2.0 * tau_D / tau_R) * d_k[p][q] * (1 - sqrt(3 / (trace))) *
+                      (c[ii][jj] + beta * pow(trace / 3, n) * (c[ii][jj] - delta(ii, jj))) -
+                  (2.0 * tau_D / tau_R) * k * d_trace_dc[p][q] * sqrt(3) / 2.0 *
+                      pow(1 / (trace), 3.0 / 2.0) *
+                      (c[ii][jj] + beta * pow(trace / 3, n) * (c[ii][jj] - delta(ii, jj))) -
+                  (2.0 * tau_D / tau_R) * k * (1 - sqrt(3 / (trace))) *
+                      ((delta(ii, p) * delta(jj, q)) +
+                       d_trace_dc[p][q] * (n / 3) * beta * pow(trace / 3, n - 1) *
+                           (c[ii][jj] - delta(ii, jj)) +
+                       beta * pow(trace / 3, n) * ((delta(ii, p) * delta(jj, q))));
             }
           }
         }

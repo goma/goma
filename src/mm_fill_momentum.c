@@ -2259,7 +2259,7 @@ void ve_polymer_stress(double gamma[DIM][DIM],
     for (int mode = 0; mode < vn->modes; mode++) {
       dbl k = 1.0;
       switch (vn->ConstitutiveEquation) {
-      case ROLIE_POLY: {
+      case ROLIE_POLY_FE: {
 
         dbl trace = 0;
         for (int i = 0; i < VIM; i++) {
@@ -2271,10 +2271,13 @@ void ve_polymer_stress(double gamma[DIM][DIM],
 
         dbl lambda_s = sqrt(trace / 3);
 
+
+      if (vn->ConstitutiveEquation == ROLIE_POLY_FE) {
         k = ((3 - lambda_s * lambda_s / (lambda_max * lambda_max)) *
              (1 - 1 / (lambda_max * lambda_max))) /
             (1 -
              lambda_s * lambda_s / (lambda_max * lambda_max) * (3 - 1 / (lambda_max * lambda_max)));
+      }
       } break;
       default:
         break;
@@ -2324,7 +2327,7 @@ void ve_polymer_stress(double gamma[DIM][DIM],
         dbl k = 1.0;
         dbl d_k[DIM][DIM] = {{0.}};
         switch (vn->ConstitutiveEquation) {
-        case ROLIE_POLY: {
+        case ROLIE_POLY_FE: {
 
           dbl trace = 0;
           for (int i = 0; i < VIM; i++) {
