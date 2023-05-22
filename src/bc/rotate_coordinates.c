@@ -842,13 +842,6 @@ goma_error setup_rotated_bc_nodes(
 
   free(side_set_seen);
 
-  int num_rotated_nodes = 0;
-  for (int i = 0; i < exo->num_nodes; i++) {
-    if (rotations[i].is_rotated) {
-      num_rotated_nodes++;
-    }
-  }
-
   for (int i = 0; i < exo->num_nodes; i++) {
     if (rotations[i].is_rotated) {
       goma_error err =

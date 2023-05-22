@@ -1142,6 +1142,7 @@ fi
 #    fi
 #fi
 
+cd $GOMA_LIB
 
 if [[ "$MATH_LIBRARIES" == "netlib blas" ]]; then
     #make lapack/blas

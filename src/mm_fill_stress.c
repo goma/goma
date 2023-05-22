@@ -2290,6 +2290,7 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
                                                  supg_terms.d_supg_tau_dX[p][j] * v[w] *
                                                      bf[eqn]->grad_phi[i][w]);
                           }
+                          source_jd *= R_source * det_J * h3;
 
                           // advection_d *=
                           //     -lambda2 * at * det_J * h3 *
@@ -2298,7 +2299,7 @@ int assemble_stress_fortin(dbl tt, /* parameter to vary time integration from
                           //      v_dot_del_gt[a][b] - v_dot_del_gt[b][a] -
                           //      (g_dot_g[a][b] + 2 * gt_dot_g[a][b] + gt_dot_gt[a][b]));
                         }
-                        source_jeff = source_ja + source_jb + source_jc + source_jb;
+                        source_jeff = source_ja + source_jb + source_jc + source_jb + source_jd;
                       }
 
                       source = source_a + source_b + source_c + source_jeff;
@@ -7524,8 +7525,6 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
       (vn->ConstitutiveEquation == SARAMITO_OLDROYDB || vn->ConstitutiveEquation == SARAMITO_PTT ||
        vn->ConstitutiveEquation == SARAMITO_GIESEKUS);
 
-  dbl saramitoCoeff = 1.;
-
   if (saramitoEnabled) {
     GOMA_EH(GOMA_ERROR, "Saramito not available for SQRT_CONF");
   }
@@ -8121,10 +8120,6 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
                       source_a = -at * d_mup->C[w][j] * (g[ii][jj] + gt[ii][jj]);
 
                       source_b = 0.;
-                      if (DOUBLE_NONZERO(alpha)) {
-                        source_b -= s_dot_s[ii][jj] / (mup * mup);
-                        source_b *= alpha * lambda * saramitoCoeff * d_mup->C[w][j];
-                      }
                       source = source_a + source_b;
                       source *= wt_func * det_J * wt * h3;
                       source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];

@@ -172,7 +172,7 @@ int assemble_emwave(double time, /* present time value */
   k = extinction_index(d_k, time);
 
   // Compute complex impedance
-  complex cpx_refractive_index, cpx_rel_permittivity,
+  complex double cpx_refractive_index, cpx_rel_permittivity,
       cpx_permittivity; //, impedance;
 
   cpx_refractive_index = n + _Complex_I * k; // k > 0 is extinction
@@ -1919,13 +1919,13 @@ void calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
  * cross product.
  * TODO: create a return struct that contains sensitivities to input
  */
-void complex_cross_vectors(const complex *v0, /* v0 */
-                           const complex *v1, /* v1 */
-                           complex *v2)       /* v2 = v0 x v1 */
+void complex_cross_vectors(const complex double *v0, /* v0 */
+                           const complex double *v1, /* v1 */
+                           complex double *v2)       /* v2 = v0 x v1 */
 {
   int i, j, k;
 
-  memset(v2, 0, DIM * sizeof(complex));
+  memset(v2, 0, DIM * sizeof(complex double));
   for (i = 0; i < DIM; i++)
     for (j = 0; j < DIM; j++)
       for (k = 0; k < DIM; k++)
