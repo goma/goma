@@ -47,4 +47,8 @@ EXTERN int assemble_momentum /* mm_fill_terms.c                           */
 
 EXTERN void fluid_stress(double[DIM][DIM],            /* Pi[DIM][DIM] */
                          STRESS_DEPENDENCE_STRUCT *); /* d_Pi         */
+
+void ve_polymer_stress(double gamma[DIM][DIM],
+                       double stress[DIM][DIM],
+                       STRESS_DEPENDENCE_STRUCT *d_stress);
 #endif /* GOMA_MM_FILL_MOMENTUM_H */

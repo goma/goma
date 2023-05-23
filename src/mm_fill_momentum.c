@@ -439,13 +439,10 @@ int assemble_momentum(dbl time,       /* current time */
   /*
    * Calculate the momentum stress tensor at the current gauss point
    */
-  if (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV ||
-      vn->evssModel == LOG_CONF_TRANSIENT || vn->evssModel == LOG_CONF_TRANSIENT_GRADV) {
-    fluid_stress_conf(Pi, d_Pi);
-  } else if (vn->evssModel == SQRT_CONF) {
-    fluid_stress_sqrt_conf(Pi, d_Pi);
-  } else {
+  if (af->Assemble_Jacobian) {
     fluid_stress(Pi, d_Pi);
+  } else {
+    fluid_stress(Pi, NULL);
   }
 
   (void)momentum_source_term(f, df, time);
@@ -2206,9 +2203,7 @@ void ve_polymer_stress(double gamma[DIM][DIM],
   case LOG_CONF_GRADV:
   case LOG_CONF_TRANSIENT_GRADV:
   case LOG_CONF_TRANSIENT: {
-
-    dbl exp_s[MAX_MODES][DIM][DIM];
-    dbl d_exp_s_ds[MAX_MODES][DIM][DIM][DIM][DIM];
+    dbl exp_s[DIM][DIM];
     dbl R1[DIM][DIM];
     dbl eig_values[DIM];
 
@@ -2228,31 +2223,47 @@ void ve_polymer_stress(double gamma[DIM][DIM],
 #else
 
         if (pg->imtrx == upd->matrix_index[POLYMER_STRESS11]) {
-          compute_exp_s(fv_old->S[mode], exp_s[mode], eig_values, R1);
+          compute_exp_s(fv_old->S[mode], exp_s, eig_values, R1);
         } else {
-          compute_exp_s(fv->S[mode], exp_s[mode], eig_values, R1);
+          compute_exp_s(fv->S[mode], exp_s, eig_values, R1);
         }
 #endif
       } else {
-
-#ifdef ANALEIG_PLEASE
-        analytical_exp_s(fv->S[mode], exp_s[mode], eig_values, R1, d_exp_s_ds[mode]);
-        // Calculate d_exp_s_ds for LOG_CONF case
-#else
-        for (mode = 0; mode < vn->modes; mode++) {
-          compute_d_exp_s_ds(fv->S[mode], exp_s[mode], d_exp_s_ds[mode]);
-        }
-#endif
+        compute_exp_s(fv->S[mode], exp_s, eig_values, R1);
       }
 
       for (int i = 0; i < VIM; i++) {
         for (int j = 0; j < VIM; j++) {
-          stress[i][j] += mup / lambda * (exp_s[mode][i][j] - (double)delta(i, j));
+          stress[i][j] += mup / lambda * (exp_s[i][j] - (double)delta(i, j));
         }
       }
     }
   } break;
   case SQRT_CONF: {
+    for (int mode = 0; mode < vn->modes; mode++) {
+      /* get polymer viscosity */
+      dbl mup = viscosity(ve[mode]->gn, gamma, NULL);
+      dbl lambda = ve[mode]->time_const;
+
+      dbl bdotb[DIM][DIM];
+      dbl b[DIM][DIM];
+      for (int ii = 0; ii < VIM; ii++) {
+        for (int jj = 0; jj < VIM; jj++) {
+          if (ii <= jj) {
+            b[ii][jj] = fv->S[mode][ii][jj];
+            b[jj][ii] = b[ii][jj];
+          }
+        }
+      }
+
+      tensor_dot(b, b, bdotb, VIM);
+
+      for (int ii = 0; ii < VIM; ii++) {
+        for (int jj = 0; jj < VIM; jj++) {
+          stress[ii][jj] += -(mup / lambda) * (delta(ii, jj) - bdotb[ii][jj]);
+        }
+      }
+    }
 
   } break;
   case CONF: {
@@ -2271,13 +2282,12 @@ void ve_polymer_stress(double gamma[DIM][DIM],
 
         dbl lambda_s = sqrt(trace / 3);
 
-
-      if (vn->ConstitutiveEquation == ROLIE_POLY_FE) {
-        k = ((3 - lambda_s * lambda_s / (lambda_max * lambda_max)) *
-             (1 - 1 / (lambda_max * lambda_max))) /
-            (1 -
-             lambda_s * lambda_s / (lambda_max * lambda_max) * (3 - 1 / (lambda_max * lambda_max)));
-      }
+        if (vn->ConstitutiveEquation == ROLIE_POLY_FE) {
+          k = ((3 - lambda_s * lambda_s / (lambda_max * lambda_max)) *
+               (1 - 1 / (lambda_max * lambda_max))) /
+              (1 - lambda_s * lambda_s / (lambda_max * lambda_max) *
+                       (3 - 1 / (lambda_max * lambda_max)));
+        }
       } break;
       default:
         break;
@@ -2314,13 +2324,105 @@ void ve_polymer_stress(double gamma[DIM][DIM],
     (void)stress_eqn_pointer(v_s);
     switch (vn->evssModel) {
     case LOG_CONF:
-    case LOG_CONF_GRADV:
+    case LOG_CONF_GRADV: {
+      dbl exp_s[DIM][DIM];
+      dbl d_exp_s_ds[DIM][DIM][DIM][DIM];
+
+      for (int mode = 0; mode < vn->modes; mode++) {
+        VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
+        VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
+        dbl mup = viscosity(ve[mode]->gn, gamma, d_mup);
+        dbl lambda = 0.0;
+        if (ve[mode]->time_constModel == CONSTANT) {
+          lambda = ve[mode]->time_const;
+        } else {
+          GOMA_EH(GOMA_ERROR, "Unknown polymer time constant model");
+        }
+        compute_d_exp_s_ds(fv->S[mode], exp_s, d_exp_s_ds);
+
+        for (int p = 0; p < VIM; p++) {
+          for (int q = 0; q < VIM; q++) {
+            for (int b = 0; b < VIM; b++) {
+              for (int c = 0; c < VIM; c++) {
+                int var = v_s[mode][b][c];
+                if (c >= b) {
+                  for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                    d_stress->S[p][q][mode][b][c][j] =
+                        mup / lambda * d_exp_s_ds[p][q][b][c] * bf[var]->phi[j];
+                  }
+                } else {
+                  for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                    d_stress->S[p][q][mode][b][c][j] = 0;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    } break;
     case LOG_CONF_TRANSIENT_GRADV:
     case LOG_CONF_TRANSIENT: {
+      for (int mode = 0; mode < vn->modes; mode++) {
+        for (int p = 0; p < VIM; p++) {
+          for (int q = 0; q < VIM; q++) {
+            for (int r = 0; r < VIM; r++) {
+              for (int c = 0; c < VIM; c++) {
+                int var = v_s[mode][r][c];
+                for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                  d_stress->S[p][q][mode][r][c][j] = 0;
+                }
+              }
+            }
+          }
+        }
+      }
 
     } break;
     case SQRT_CONF: {
+      for (int mode = 0; mode < vn->modes; mode++) {
+        dbl mup = viscosity(ve[mode]->gn, gamma, NULL);
+        dbl lambda = ve[mode]->time_const;
 
+        dbl b[DIM][DIM];
+        for (int ii = 0; ii < VIM; ii++) {
+          for (int jj = 0; jj < VIM; jj++) {
+            if (ii <= jj) {
+              b[ii][jj] = fv->S[mode][ii][jj];
+              b[jj][ii] = b[ii][jj];
+            }
+          }
+        }
+        for (int p = 0; p < VIM; p++) {
+          for (int q = 0; q < VIM; q++) {
+            for (int r = 0; r < VIM; r++) {
+              for (int c = 0; c < VIM; c++) {
+                int var = v_s[mode][r][c];
+                dbl db[DIM][DIM] = {{0.}};
+                db[r][c] = 1.0;
+                db[c][r] = 1.0;
+
+                dbl dbdotb[DIM][DIM];
+                dbl bdotdb[DIM][DIM];
+
+                tensor_dot(b, db, bdotdb, VIM);
+                tensor_dot(db, b, dbdotb, VIM);
+
+                dbl conf[DIM][DIM];
+                for (int ii = 0; ii < VIM; ii++) {
+                  for (int jj = 0; jj < VIM; jj++) {
+                    conf[ii][jj] = (mup / lambda) * (b[c][jj] * (double)delta(ii, r) +
+                                                     b[ii][r] * (double)delta(jj, c));
+                  }
+                }
+                for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                  d_stress->S[p][q][mode][r][c][j] = conf[p][q] * bf[var]->phi[j];
+                }
+              }
+            }
+          }
+        }
+      }
     } break;
     case CONF: {
       for (int mode = 0; mode < vn->modes; mode++) {
@@ -2396,11 +2498,6 @@ void ve_polymer_stress(double gamma[DIM][DIM],
     } break;
     default: // Regular stress formulations
     {
-      for (int i = 0; i < VIM; i++) {
-        for (int j = 0; j < VIM; j++) {
-          stress[i][j] = 0;
-        }
-      }
       for (int mode = 0; mode < vn->modes; mode++) {
         for (int i = 0; i < VIM; i++) {
           for (int j = 0; j < VIM; j++) {
@@ -2408,7 +2505,7 @@ void ve_polymer_stress(double gamma[DIM][DIM],
               for (int q = 0; q < VIM; q++) {
                 int var = v_s[mode][p][q];
                 for (int k = 0; k < ei[pg->imtrx]->dof[var]; k++) {
-                  d_stress->S[i][j][mode][p][q][k] += delta(i, p) * delta(j, q) * bf[var]->phi[k];
+                  d_stress->S[i][j][mode][p][q][k] = delta(i, p) * delta(j, q) * bf[var]->phi[k];
                 }
               }
             }
@@ -2417,6 +2514,23 @@ void ve_polymer_stress(double gamma[DIM][DIM],
       }
     } break;
     }
+  }
+}
+
+static bool is_evss_f_model(int model) {
+  switch (model) {
+  case EVSS_F:
+  case EVSS_GRADV:
+  case LOG_CONF:
+  case LOG_CONF_GRADV:
+  case LOG_CONF_TRANSIENT:
+  case LOG_CONF_TRANSIENT_GRADV:
+  case CONF:
+  case SQRT_CONF:
+    return true;
+
+  default:
+    return false;
   }
 }
 
@@ -2560,7 +2674,7 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
   }
 
   evss_f = 0;
-  if (pd->gv[POLYMER_STRESS11] && (vn->evssModel == EVSS_F || vn->evssModel == EVSS_GRADV)) {
+  if (pd->gv[POLYMER_STRESS11] && is_evss_f_model(vn->evssModel)) {
     evss_f = 1.0;
   }
 
@@ -2803,7 +2917,7 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
   STRESS_DEPENDENCE_STRUCT d_polymer_stress_struct;
   STRESS_DEPENDENCE_STRUCT *d_polymer_stress = NULL;
   if (pd->gv[POLYMER_STRESS11]) {
-    if (af->Assemble_Jacobian) {
+    if (d_Pi != NULL) {
       d_polymer_stress = &d_polymer_stress_struct;
       memset(d_polymer_stress, 0, sizeof(STRESS_DEPENDENCE_STRUCT));
     }

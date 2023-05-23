@@ -64,10 +64,10 @@
 #include "dpi.h"
 #include "exo_struct.h"
 
+#include "mm_fill_momentum.h"
 #include "mm_fill_species.h"
 #include "mm_fill_stress.h"
 #include "mm_fill_terms.h"
-#include "mm_fill_momentum.h"
 #include "mm_fill_util.h"
 #include "mm_flux.h"
 #include "mm_mp.h"

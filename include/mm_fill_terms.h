@@ -354,10 +354,6 @@ ls_modulate_heatcapacity(double, double, double, double, double, HEAT_CAPACITY_D
 EXTERN int
 ls_modulate_heatsource(double *, double, double, double, double, HEAT_SOURCE_DEPENDENCE_STRUCT *);
 
-EXTERN void fluid_stress_conf(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi);
-
-void fluid_stress_sqrt_conf(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi);
-
 EXTERN void heat_flux(double[DIM],                   /* q[DIM] */
                       HEAT_FLUX_DEPENDENCE_STRUCT *, /* dq     */
                       double);                       /* time   */
