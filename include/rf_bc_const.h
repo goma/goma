@@ -104,7 +104,7 @@
 /* #define MAX_NUM_SS_DUPLICATIONS 2000 */
 
 #ifndef MAX_SS_PER_NODE
-#define MAX_SS_PER_NODE 30
+#define MAX_SS_PER_NODE 50
 #endif
 
 #ifndef MAX_MAT_PER_SS
@@ -189,25 +189,27 @@
  *       these have been recently changed (10/31/96 RAC) to account for
  *       a wider variety of options in 3D
  */
-#define WEAK_INT_SURF     1
-#define WEAK_INT_EDGE     2
-#define WEAK_POINT        3
-#define WEAK_SHIFT        4
-#define DIRICHLET         5
-#define STRONG_INT_SURF   6
-#define STRONG_INT_EDGE   7
-#define COLLOCATE_SURF    8
-#define COLLOCATE_EDGE    9
-#define COLLOCATE_POINT   10
-#define COLLOCATE         11
-#define SPECIAL           12
-#define CONTACT_SURF      13
-#define EMBEDDED_SURF     14
-#define WEAK_SHELL_GRAD   15
-#define STRONG_SHELL_GRAD 16
-#define WEAK_SHARP_INT    17
-#define STRONG_SHARP_INT  18
-#define LS_SPECIAL        19
+#define WEAK_INT_SURF      1
+#define WEAK_INT_EDGE      2
+#define WEAK_POINT         3
+#define WEAK_SHIFT         4
+#define DIRICHLET          5
+#define STRONG_INT_SURF    6
+#define STRONG_INT_EDGE    7
+#define COLLOCATE_SURF     8
+#define COLLOCATE_EDGE     9
+#define COLLOCATE_POINT    10
+#define COLLOCATE          11
+#define SPECIAL            12
+#define CONTACT_SURF       13
+#define EMBEDDED_SURF      14
+#define WEAK_SHELL_GRAD    15
+#define STRONG_SHELL_GRAD  16
+#define WEAK_SHARP_INT     17
+#define STRONG_SHARP_INT   18
+#define LS_SPECIAL         19
+#define STRONG_INT_NEDELEC 20
+#define WEAK_INT_NEDELEC   21
 
 /* define some other catagories */
 #define STRESS 6 /* Six components in each mode */
@@ -625,8 +627,18 @@
 #define E_ER_2D_BC 1204
 #define E_EI_2D_BC 1205
 
+#define EM_MMS_SIDE_BC       1206
+#define EM_MMS_SIDE_IMAG_BC  1207
+#define EM_ABSORBING_REAL_BC 1208
+#define EM_ABSORBING_IMAG_BC 1209
+
 #define E_ER_FARFIELD_BC 1210
 #define E_EI_FARFIELD_BC 1211
+
+#define EM_ER_MMS_BC 1212
+
+#define EM_FARFIELD_REAL_NED_BC 1213
+#define EM_FARFIELD_IMAG_NED_BC 1214
 
 /* pressure */
 
@@ -794,6 +806,7 @@
 #define SM_PLANE_BC                961200000 /* Solid Model PLANE BC */
 #define MESH_CONSTRAINT_BC         961300000
 #define KINEMATIC_BC               962000000
+#define LUB_KINEMATIC_BC           962050000
 #define KIN_LEAK_BC                962100000
 #define KIN_ELECTRODEPOSITION_BC   962200000 /* RSL 5/24/02 */
 #define KINEMATIC_EDGE_BC          962400000
@@ -818,6 +831,7 @@
 #define FLOW_STRESSNOBC_BC         963700000
 #define FLOW_GRADV_BC              963800000
 #define FLOW_GRADV_SIC_BC          963800001
+#define FLOW_GRADV_T_BC            963800002
 #define SHEET_ENDSLOPE_BC          963900000
 #define CA_BC                      964000000
 #define CA_MOMENTUM_BC             964000008
@@ -1102,6 +1116,8 @@
 #define SHELL_OPEN_PRESS_2_BC    777000023
 #define LUB_STATIC_BC            777000024
 #define LUB_PRESS_HYDROSTATIC_BC 777000025
+#define GRAD_LUBP_NOBC_BC        777000026
+#define SHELL_LUB_WALL_BC        777000027
 
 #define SHELL_TFMP_PRES_BC           777000030
 #define SHELL_TFMP_SAT_BC            777000031

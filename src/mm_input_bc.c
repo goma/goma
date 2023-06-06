@@ -386,6 +386,10 @@ void rd_bc_specs(FILE *ifp, char *input) {
     case E_ER_2D_BC:
     case E_EI_2D_BC:
     case RESTIME_NOBC_BC:
+    case EM_MMS_SIDE_BC:
+    case EM_MMS_SIDE_IMAG_BC:
+    case EM_ABSORBING_REAL_BC:
+    case EM_ABSORBING_IMAG_BC:
 
       break;
 
@@ -414,6 +418,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
     case CURRENT_BC:
     case CURRENT_SIC_BC:
     case KINEMATIC_BC:
+    case LUB_KINEMATIC_BC:
     case KIN_LEAK_HEAT_BC:
     case KINEMATIC_PETROV_BC:
     case KINEMATIC_COLLOC_BC:
@@ -435,6 +440,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
     case FLOW_PRESSURE_VAR_BC:
     case FLOW_STRESSNOBC_BC:
     case FLOW_GRADV_BC:
+    case FLOW_GRADV_T_BC:
     case FLOW_GRADV_SIC_BC:
     case FILL_INLET_BC:
     case FILL_CA_BC:
@@ -471,6 +477,7 @@ void rd_bc_specs(FILE *ifp, char *input) {
     case SH_SDET_BC:
     case SH_MESH2_WEAK_BC:
     case RESTIME_GRADSIC_BC:
+    case GRAD_LUBP_NOBC_BC:
 
       if (fscanf(ifp, "%lf", &BC_Types[ibc].BC_Data_Float[0]) != 1) {
         sr = sprintf(err_msg, "%s: Expected 1 flt for %s.", yo, BC_Types[ibc].desc->name1);
@@ -479,7 +486,8 @@ void rd_bc_specs(FILE *ifp, char *input) {
       BC_Types[ibc].max_DFlt = 1;
 
       SPF(endofstring(echo_string), " %.4g", BC_Types[ibc].BC_Data_Float[0]);
-      if (BC_Types[ibc].BC_Name == GRAD_LUB_PRESS_BC) {
+      if (BC_Types[ibc].BC_Name == GRAD_LUB_PRESS_BC ||
+          BC_Types[ibc].BC_Name == GRAD_LUBP_NOBC_BC) {
         BC_Types[ibc].BC_Data_Float[1] = 0.;
         BC_Types[ibc].BC_Data_Float[2] = 1.;
         if (fscanf(ifp, "%lf %lf", &BC_Types[ibc].BC_Data_Float[1],
@@ -1428,6 +1436,8 @@ void rd_bc_specs(FILE *ifp, char *input) {
     case EM_HI_FARFIELD_DIRECT_BC:
     case E_ER_FARFIELD_BC:
     case E_EI_FARFIELD_BC:
+    case EM_FARFIELD_REAL_NED_BC:
+    case EM_FARFIELD_IMAG_NED_BC:
 
       if (fscanf(ifp, "%lf %lf %lf %lf %lf %lf %lf %lf", &BC_Types[ibc].BC_Data_Float[0],
                  &BC_Types[ibc].BC_Data_Float[1], &BC_Types[ibc].BC_Data_Float[2],
@@ -3444,6 +3454,8 @@ static int BC_consistency(struct Boundary_Condition *BC_Type) {
     case CONTACT_SURF:
     case EMBEDDED_SURF:
     case WEAK_SHARP_INT:
+    case WEAK_INT_NEDELEC:
+    case STRONG_INT_NEDELEC:
       break;
     case LS_SPECIAL:
       if (BC_Type->desc->BC_Name != LS_ADC_OLD_BC) {

@@ -78,6 +78,7 @@
 #define YZBETA_MIXED  3
 #define YZBETA_CUSTOM 4
 #define SC_DCDD       5
+#define SC_YZBETA     6
 
 /* Viscoelastic Constitutive equation formulation */
 #define EVSS_G     1               /* Rajagopalan's formulation */
@@ -92,6 +93,9 @@
                                    /* lagged (explicit) terms for eigen-decomp parts */
 #define LOG_CONF_TRANSIENT_GRADV 8 /* Log-conformation tensor formulation using */
                                    /* lagged (explicit) terms for eigen-decomp parts grad(v) form*/
+#define SQRT_CONF 9                /* Log-conformation tensor formulation using */
+                                   /* lagged (explicit) terms for eigen-decomp parts grad(v) form*/
+#define CONF 10                    /* Log-conformation tensor formulation using */
 /* Discontinuous Galerkin viscoelastic jacobian options */
 #define EXPLICIT_DG 1
 #define FULL_DG     2
@@ -140,6 +144,12 @@
 #define FSI_MESH_ONEWAY         7
 #define FSI_SHELL_ONLY_MESH     8
 #define FSI_SHELL_ONLY_UNDEF    9
+
+/* Lubrication Viscosity Integration Options */
+#define LUB_VISCINT_GAUSSIAN   25
+#define LUB_VISCINT_ANALYTICAL 26
+#define LUB_VISCINT_POWERLAW   27
+#define MAX_LUB_NGP            5
 
 /* Residence time kernel functions */
 #define LINEAR_TIMETEMP      1110

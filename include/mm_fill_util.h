@@ -210,4 +210,13 @@ extern void set_solid_inertia(void);
 
 extern int fill_variable_vector(int inode, int ivec_varType[], int ivec_matID[]);
 
+void vector_shape_function(Dpi *dpi,
+                           const struct Element_Indices *ei,
+                           const double xi[],
+                           const int Iquant,
+                           const int eshape,
+                           const int interpolation,
+                           const int ledof,
+                           double *phi_e,
+                           double *dphidxi_e);
 #endif /* GOMA_MM_FILL_UTIL_H */

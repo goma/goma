@@ -82,6 +82,7 @@ set(GOMA_COMPILER_OVERRIDE
       "allow goma to compile with different compilers than TPLs, use with caution"
 )
 
+if (${Trilinos_VERSION} LESS 14)
 # Trilinos required packages
 foreach(package Amesos AztecOO Epetra)
   list(FIND Trilinos_PACKAGE_LIST ${package} trilinos_package_index)
@@ -126,12 +127,34 @@ if(${stratimikos_package_index} GREATER_EQUAL 0)
     endif()
   endif()
 endif()
+else() # Trilinos > 13
+  option(ENABLE_STRATIMIKOS "ENABLE_STRATIMIKOS" ON)
+  option(ENABLE_TEKO "ENABLE_TEKO" ON)
+  if(ENABLE_STRATIMIKOS)
+    message(STATUS "Stratimikos enabled set with -DENABLE_STRATIMIKOS=ON/OFF")
+    list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_STRATIMIKOS)
+      option(ENABLE_TEKO "ENABLE_TEKO" ON)
+      if(ENABLE_TEKO)
+    message(STATUS "TEKO enabled set with -DENABLE_TEKO=ON/OFF")
+        list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_TEKO)
+      endif()
+  endif()
+endif()
 
 # Exodus
 find_package(SEACASExodus REQUIRED HINTS ${Trilinos_DIR}/../SEACASExodus)
 message(STATUS "SEACASExodus_DIR = ${SEACASExodus_DIR}")
-message(STATUS "PETSC_DIR = $ENV{PETSC_DIR}")
 
+option(ENABLE_APREPRO_LIB "ENABLE_APREPRO_LIB" ON)
+if(ENABLE_APREPRO_LIB)
+  find_package(SEACASAprepro HINTS ${SEACASExodus_DIR}/../SEACASAprepro)
+  if(SEACASAprepro_FOUND)
+    message(STATUS "Aprepro Library found, enabling")
+    message(STATUS "SEACASAprepro_DIR = ${SEACASAprepro_DIR}")
+  endif()
+endif()
+
+message(STATUS "PETSC_DIR = $ENV{PETSC_DIR}")
 option(ENABLE_PETSC "ENABLE_PETSC" ON)
 if(ENABLE_PETSC)
   # PETSC search set root of location to find PETSc configuration
@@ -145,6 +168,11 @@ if(ENABLE_PETSC)
 
     # Determine PETSc compilers
     if(PETSC_FOUND)
+      execute_process(
+        COMMAND ${PKG_CONFIG_EXECUTABLE} PETSc --variable=prefix
+        COMMAND tr -d '\n'
+        OUTPUT_VARIABLE PETSC_PREFIX)
+      message(STATUS "Using PETSc prefix ${PETSC_PREFIX}")
       execute_process(
         COMMAND ${PKG_CONFIG_EXECUTABLE} PETSc --variable=ccompiler
         COMMAND tr -d '\n'
@@ -211,6 +239,8 @@ if(ENABLE_PETSC)
       endif()
     endif()
 
+    # For some reason this causes a lot of issues
+    list(APPEND GOMA_COMPILE_DEFINITIONS PETSC_SKIP_ATTRIBUTE_MPI_TYPE_TAG)
   else()
     message(WARNING "pkg-config not found, not searching for PETSc")
   endif()
@@ -345,8 +375,13 @@ if(ARPACK_FOUND)
     option(EIGEN_PARALLEL "EIGEN_PARALLEL" OFF)
   endif()
   if(EIGEN_PARALLEL)
+    find_package(PARPACK)
+    set(GOMA_TPL_LIBRARIES ${GOMA_TPL_LIBRARIES} ${PARPACK_LIBRARIES} ${ARPACK_LIBRARIES})
     if(NOT ARPACK_FOUND)
       message(FATAL_ERROR "Cannot use EIGEN_PARALLEL without ARPACK Library")
+    endif()
+    if(NOT PARPACK_FOUND)
+      message(FATAL_ERROR "Cannot use EIGEN_PARALLEL without PARPACK Library")
     endif()
     list(APPEND GOMA_COMPILE_DEFINITIONS EIGEN_PARALLEL)
     if(EIGEN_SERIAL)
@@ -366,11 +401,15 @@ if(PRINT_STACK_TRACE_ON_EH)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -rdynamic")
 endif()
 
+if(ENABLE_APREPRO_LIB AND SEACASAprepro_FOUND)
+  list(APPEND GOMA_COMPILE_DEFINITIONS GOMA_ENABLE_APREPRO_LIB)
+endif()
+
 option_definition(DISABLE_COLOR_ERROR_PRINT OFF)
 option_definition(COMPILER_64BIT ON)
 option_definition(GOMA_ENABLE_AMESOS ON)
 option_definition(TRILINOS ON)
-option_definition(CHECK_FINITE ON)
+option_definition(CHECK_FINITE OFF)
 option_definition(NO_CHEBYSHEV_PLEASE ON)
 option_definition(PARALLEL ON)
 option_definition(FP_EXCEPT OFF)
@@ -378,6 +417,7 @@ option_definition(ANALEIG_PLEASE OFF)
 option_definition(DO_NO_UNROLL OFF)
 option_definition(USERMAT_INITIALIZATION OFF)
 option_definition(ENABLE_LOGGING OFF)
+option_definition(ENABLE_KOMPLEX OFF)
 set(MDE
     "27"
     CACHE STRING "set MDE")
@@ -473,6 +513,7 @@ set(GOMA_INCLUDES
     include/mm_mp.h
     include/mm_mp_structs.h
     include/mm_names.h
+    include/mm_em_bc.h
     include/mm_ns_bc.h
     include/mm_numjac.h
     include/mm_post_def.h
@@ -528,6 +569,7 @@ set(GOMA_INCLUDES
     include/sl_epetra_util.h
     include/sl_lu.h
     include/sl_petsc.h
+    include/sl_petsc_complex.h
     include/sl_matrix_util.h
     include/sl_stratimikos_interface.h
     include/sl_umf.h
@@ -619,6 +661,7 @@ set(GOMA_SOURCES
     src/mm_interface.c
     src/mm_matrl.c
     src/mm_more_utils.c
+    src/mm_em_bc.c
     src/mm_ns_bc.c
     src/mm_numjac.c
     src/mm_placid.c
@@ -677,6 +720,7 @@ set(GOMA_SOURCES
     src/sl_matrix_dump.c
     src/sl_petsc.c
     src/sl_petsc_pcd.c
+    src/sl_petsc_complex.c
     src/sl_matrix_util.c
     src/sl_squash.c
     src/sl_stratimikos_interface.cpp
@@ -714,9 +758,10 @@ set(GOMA_USER_SOURCES
     src/user_senkin.F)
 
 set(GOMA_UTIL_INCLUDES include/bc/rotate_util.h include/mm_eh.h
-                       include/util/goma_normal.h)
+                       include/util/goma_normal.h include/util/aprepro_helper.h)
 
-set(GOMA_UTIL_SOURCES src/bc/rotate_util.c src/util/goma_normal.c src/mm_eh.c)
+set(GOMA_UTIL_SOURCES src/bc/rotate_util.c src/util/goma_normal.c src/mm_eh.c
+                      src/util/aprepro_helper.cpp)
 
 set(GDS_INCLUDES include/gds/gds_vector.h)
 
@@ -903,12 +948,15 @@ set(GOMA_TPL_INCLUDES
     ${Sparse_INCLUDES}
     ${SEACASExodus_INCLUDE_DIRS}
     ${SEACASExodus_TPL_INCLUDE_DIRS}
+    ${SEACASAprepro_INCLUDE_DIRS}
+    ${SEACASAprepro_TPL_INCLUDE_DIRS}
     ${Trilinos_INCLUDE_DIRS}
     ${Trilinos_TPL_INCLUDE_DIRS}
     ${MPI_C_INCLUDE_PATH})
 
 set(GOMA_TPL_LIBRARY_DIRS
     ${SEACASExodus_LIBRARY_DIRS} ${SEACASExodus_TPL_LIBRARY_DIRS}
+    ${SEACASAprepro_LIBRARY_DIRS} ${SEACASAprepro_TPL_LIBRARY_DIRS}
     ${Trilinos_LIBRARY_DIRS} ${Trilinos_TPL_LIBRARY_DIRS})
 if(ENABLE_PETSC AND PETSC_FOUND)
   set(GOMA_TPL_LIBRARY_DIRS ${GOMA_TPL_LIBRARY_DIRS}
@@ -918,6 +966,8 @@ endif()
 set(GOMA_TPL_LIBRARIES
     ${SEACASExodus_LIBRARIES}
     ${SEACASExodus_TPL_LIBRARIES}
+    ${SEACASAprepro_LIBRARIES}
+    ${SEACASAprepro_TPL_LIBRARIES}
     ${GOMA_TPL_LIBRARIES}
     ${Trilinos_LIBRARIES}
     ${Trilinos_TPL_LIBRARIES}
@@ -944,7 +994,8 @@ if(ENABLE_WARNINGS)
     PRIVATE
       $<$<AND:$<C_COMPILER_ID:Clang>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
       -Wextra
-      -Wno-unused-parameter>
+      -Wno-unused-parameter
+      -Wno-unknown-warning-option>
       $<$<AND:$<C_COMPILER_ID:GNU>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
       -Wextra
       -Wno-unused-parameter
@@ -963,7 +1014,8 @@ if(ENABLE_WARNINGS)
     PRIVATE
       $<$<AND:$<C_COMPILER_ID:Clang>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
       -Wextra
-      -Wno-unused-parameter>
+      -Wno-unused-parameter
+      -Wno-unknown-warning-option>
       $<$<AND:$<C_COMPILER_ID:GNU>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
       -Wextra
       -Wno-unused-parameter
@@ -978,7 +1030,8 @@ if(ENABLE_WARNINGS)
     PRIVATE
       $<$<AND:$<C_COMPILER_ID:Clang>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
       -Wextra
-      -Wno-unused-parameter>
+      -Wno-unused-parameter
+      -Wno-unknown-warning-option>
       $<$<AND:$<C_COMPILER_ID:GNU>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
       -Wextra
       -Wno-unused-parameter
@@ -997,7 +1050,8 @@ if(ENABLE_WARNINGS)
     PRIVATE
       $<$<AND:$<C_COMPILER_ID:Clang>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
       -Wextra
-      -Wno-unused-parameter>
+      -Wno-unused-parameter
+      -Wno-unknown-warning-option>
       $<$<AND:$<C_COMPILER_ID:GNU>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
       -Wextra
       -Wno-unused-parameter
@@ -1017,7 +1071,8 @@ if(ENABLE_WARNINGS)
     PRIVATE
       $<$<AND:$<C_COMPILER_ID:Clang>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
       -Wextra
-      -Wno-unused-parameter>
+      -Wno-unused-parameter
+      -Wno-unknown-warning-option>
       $<$<AND:$<C_COMPILER_ID:GNU>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
       -Wextra
       -Wno-unused-parameter
@@ -1037,7 +1092,8 @@ if(ENABLE_WARNINGS)
     PRIVATE
       $<$<AND:$<C_COMPILER_ID:Clang>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
       -Wextra
-      -Wno-unused-parameter>
+      -Wno-unused-parameter
+      -Wno-unknown-warning-option>
       $<$<AND:$<C_COMPILER_ID:GNU>,$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>>:-Wall
       -Wextra
       -Wno-unused-parameter

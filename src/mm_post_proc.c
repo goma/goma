@@ -18,6 +18,7 @@
 
 /* Standard include files */
 
+#include "mm_fill_em.h"
 #include "rf_solve.h"
 #include <math.h>
 #include <stdio.h>
@@ -295,7 +296,7 @@ int PP_LAME_LAMBDA = -1;
 int VON_MISES_STRESS = -1;
 int VON_MISES_STRAIN = -1;
 int UNTRACKED_SPEC = -1;
-int LOG_CONF_MAP = -1;
+int CONF_MAP = -1;
 int RHO_DOT = -1;
 int MOMENT_SOURCES = -1;
 int YZBETA = -1;
@@ -323,6 +324,13 @@ int SPECIES_SOURCES = -1; /* continuous species sources*/
 int VISCOUS_STRESS = -1;
 int VISCOUS_STRESS_NORM = -1;
 int VISCOUS_VON_MISES_STRESS = -1;
+int EM_CONTOURS = -1;
+int TOTAL_EM_CONTOURS = -1;
+int SCATTERED_EM_CONTOURS = -1;
+int ORIENTATION_VECTORS = -1; /* orientation vectors*/
+int FIRST_STRAINRATE_INVAR = -1;
+int SEC_STRAINRATE_INVAR = -1;
+int THIRD_STRAINRATE_INVAR = -1;
 
 int len_u_post_proc = 0; /* size of dynamically allocated u_post_proc
                           * actually is */
@@ -1210,18 +1218,36 @@ static int calc_standard_fields(double **post_proc_vect,
     local_post[MOBILITY_PARAMETER] = alpha;
     local_lumped[MOBILITY_PARAMETER] = 1.;
   }
-  if (MEAN_SHEAR != -1 && pd->e[pg->imtrx][R_MOMENTUM1]) {
-    double gammadot, gamma[DIM][DIM];
-    for (a = 0; a < VIM; a++) {
-      for (b = 0; b < VIM; b++) {
-        gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+  if (MEAN_SHEAR != -1) {
+    if (pd->e[pg->imtrx][R_MOMENTUM1]) {
+      double gammadot, gamma[DIM][DIM];
+      for (a = 0; a < VIM; a++) {
+        for (b = 0; b < VIM; b++) {
+          gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+        }
       }
-    }
-    /* find second invariant of strain-rate */
-    calc_shearrate(&gammadot, gamma, NULL, NULL);
+      /* find second invariant of strain-rate */
+      calc_shearrate(&gammadot, gamma, NULL, NULL);
 
-    local_post[MEAN_SHEAR] = gammadot;
-    local_lumped[MEAN_SHEAR] = 1.;
+      local_post[MEAN_SHEAR] = gammadot;
+      local_lumped[MEAN_SHEAR] = 1.;
+    }
+    if (pd->e[pg->imtrx][R_LUBP] || pd->e[pg->imtrx][R_SHELL_FILMP] || pd->e[pg->imtrx][R_LUBP_2]) {
+      int *n_dof = NULL;
+      int dof_map[MDE];
+      n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
+      lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+      /* Calculate Shear-rate */
+      if (pd->e[pg->imtrx][R_LUBP]) {
+        calculate_lub_q_v(R_LUBP, time, delta_t, xi, exo);
+      } else if (pd->e[pg->imtrx][R_LUBP_2]) {
+        calculate_lub_q_v(R_LUBP_2, time, delta_t, xi, exo);
+      } else {
+        calculate_lub_q_v(R_SHELL_FILMP, time, delta_t, xi, exo);
+      }
+      local_post[PP_Viscosity] = LubAux->srate;
+      local_lumped[MEAN_SHEAR] = 1.;
+    }
   }
 
   if (MEAN_VORTICITY != -1 && pd->e[pg->imtrx][R_MOMENTUM1]) {
@@ -1317,6 +1343,95 @@ static int calc_standard_fields(double **post_proc_vect,
     for (w = 0; w < pd->Num_Species_Eqn; w++) {
       local_post[CONC_CONT + w] = fv->c[w];
       local_lumped[CONC_CONT + w] = 1.;
+    }
+  }
+
+  if (EM_CONTOURS != -1 && pd->v[pg->imtrx][EM_E1_REAL]) {
+    index = 0;
+    for (b = 0; b < DIM; b++) {
+
+      if (pd->v[pg->imtrx][EM_E1_REAL]) {
+        local_post[EM_CONTOURS + index] = fv->em_er[b];
+        local_lumped[EM_CONTOURS + index] = 1.;
+        index++;
+      }
+    }
+
+    for (b = 0; b < DIM; b++) {
+
+      if (pd->v[pg->imtrx][EM_E1_IMAG]) {
+        local_post[EM_CONTOURS + index] = fv->em_ei[b];
+        local_lumped[EM_CONTOURS + index] = 1.;
+        index++;
+      }
+    }
+  }
+
+  if (TOTAL_EM_CONTOURS != -1 && pd->v[pg->imtrx][EM_E1_REAL]) {
+    index = 0;
+    const double c0 = 1.0 / (sqrt(upd->Free_Space_Permittivity * upd->Free_Space_Permeability));
+    dbl x = fv->x[0];
+    dbl y = fv->x[1];
+    dbl z = fv->x[2];
+    dbl freq = upd->EM_Frequency;
+    dbl lambda0 = c0 / freq;
+    dbl k0 = 2 * M_PI / lambda0;
+    complex double wave[3] = {0};
+    complex double curl_wave[3];
+    if (mp->PermittivityModel != RADIAL_PML) {
+      incident_wave(x, y, z, k0, wave, curl_wave);
+    }
+
+    for (b = 0; b < DIM; b++) {
+
+      if (pd->v[pg->imtrx][EM_E1_REAL]) {
+        local_post[TOTAL_EM_CONTOURS + index] = creal(wave[b]);
+        local_lumped[TOTAL_EM_CONTOURS + index] = 1.;
+        index++;
+      }
+    }
+
+    for (b = 0; b < DIM; b++) {
+
+      if (pd->v[pg->imtrx][EM_E1_IMAG]) {
+        local_post[TOTAL_EM_CONTOURS + index] = cimag(wave[b]);
+        local_lumped[TOTAL_EM_CONTOURS + index] = 1.;
+        index++;
+      }
+    }
+  }
+
+  if (SCATTERED_EM_CONTOURS != -1 && pd->v[pg->imtrx][EM_E1_REAL]) {
+    index = 0;
+    const double c0 = 1.0 / (sqrt(upd->Free_Space_Permittivity * upd->Free_Space_Permeability));
+    dbl x = fv->x[0];
+    dbl y = fv->x[1];
+    dbl z = fv->x[2];
+    dbl freq = upd->EM_Frequency;
+    dbl lambda0 = c0 / freq;
+    dbl k0 = 2 * M_PI / lambda0;
+    complex double wave[3] = {0};
+    complex double curl_wave[3];
+    if (mp->PermittivityModel != RADIAL_PML) {
+      incident_wave(x, y, z, k0, wave, curl_wave);
+    }
+
+    for (b = 0; b < DIM; b++) {
+
+      if (pd->v[pg->imtrx][EM_E1_REAL]) {
+        local_post[SCATTERED_EM_CONTOURS + index] = fv->em_er[b] - creal(wave[b]);
+        local_lumped[SCATTERED_EM_CONTOURS + index] = 1.;
+        index++;
+      }
+    }
+
+    for (b = 0; b < DIM; b++) {
+
+      if (pd->v[pg->imtrx][EM_E1_IMAG]) {
+        local_post[SCATTERED_EM_CONTOURS + index] = fv->em_ei[b] - cimag(wave[b]);
+        local_lumped[SCATTERED_EM_CONTOURS + index] = 1.;
+        index++;
+      }
     }
   }
 
@@ -1458,6 +1573,27 @@ static int calc_standard_fields(double **post_proc_vect,
     /* this is actually the volume change - third invarient of the Deformation Gradient! */
     local_post[THIRD_INVAR_STRAIN] = fv->volume_change;
     local_lumped[THIRD_INVAR_STRAIN] = 1.;
+  }
+
+  if (FIRST_STRAINRATE_INVAR != -1 && pd->e[pg->imtrx][R_MESH1]) {
+    dbl INV, d_INV_dT[DIM][DIM];
+    INV = calc_tensor_invariant(fv_dot->strain, d_INV_dT, 1);
+    local_post[FIRST_STRAINRATE_INVAR] = INV;
+    local_lumped[FIRST_STRAINRATE_INVAR] = 1.;
+  }
+
+  if (SEC_STRAINRATE_INVAR != -1 && pd->e[pg->imtrx][R_MESH1]) {
+    dbl INV, d_INV_dT[DIM][DIM];
+    INV = calc_tensor_invariant(fv_dot->strain, d_INV_dT, 2);
+    local_post[SEC_STRAINRATE_INVAR] = INV;
+    local_lumped[SEC_STRAINRATE_INVAR] = 1.;
+  }
+
+  if (THIRD_STRAINRATE_INVAR != -1 && pd->e[pg->imtrx][R_MESH1]) {
+    dbl INV, d_INV_dT[DIM][DIM];
+    INV = calc_tensor_invariant(fv_dot->strain, d_INV_dT, 3);
+    local_post[THIRD_STRAINRATE_INVAR] = INV;
+    local_lumped[THIRD_STRAINRATE_INVAR] = 1.;
   }
 
   if (DIELECTROPHORETIC_FIELD != -1 && pd->e[pg->imtrx][R_ENORM]) {
@@ -1607,29 +1743,9 @@ static int calc_standard_fields(double **post_proc_vect,
       }
     } else if (cr->HeatFluxModel == CR_HF_USER) {
       double dq_gradT[DIM][DIM], dq_dX[DIM][DIM];
-#if defined SECOR_HEAT_FLUX
-      double *hpar, h, dh_dX[DIM];
-      double dq_dVb[DIM][DIM], dq_dVt[DIM][DIM], Vt[DIM], Vb[DIM];
-
-      hpar = &mp->u_thermal_conductivity[0];
-      h = hpar[0] + hpar[4] * fv->x[0] + (hpar[1] - hpar[5] * fv->x[0]) * (hpar[3] - fv->x[1]) +
-          0.5 * hpar[2] * SQUARE(hpar[3] - fv->x[1]);
-
-      dh_dX[0] = hpar[4] - hpar[5] * (hpar[3] - fv->x[1]);
-      dh_dX[1] = hpar[5] * fv->x[0] - hpar[1] - hpar[2] * (hpar[3] - fv->x[1]);
-
-      /*     velocities of bottom and top surfaces   */
-      Vb[0] = mp->u_heat_capacity[0];
-      Vb[1] = mp->u_heat_capacity[1];
-      Vt[0] = mp->u_heat_capacity[2];
-      Vt[1] = mp->u_heat_capacity[3];
-
-      usr_heat_flux(fv->grad_T, qc, dq_gradT, dq_dX, time, h, dh_dX, Vb, Vt, dq_dVb, dq_dVt);
-#else
       usr_heat_flux(fv->grad_T, qc, dq_gradT, dq_dX, time);
       printf("untested\n");
       exit(-1);
-#endif
     } else {
       for (a = 0; a < dim; a++) {
         qc[a] = 0.;
@@ -1641,6 +1757,50 @@ static int calc_standard_fields(double **post_proc_vect,
     }
   }
 
+  if (ORIENTATION_VECTORS != -1) {
+    /* parameters are sent through USER_POST input line for 3D printing orientation ...  */
+    if (pd->e[pg->imtrx][R_ENERGY] && USER_POST != -1 && len_u_post_proc > 2) {
+      double q_mag = 0., sign = 0.;
+      double radius = u_post_proc[1]; // overlap = u_post_proc[2];
+      int dir = 0;
+      if (cr->HeatFluxModel == CR_HF_FOURIER_0) {
+        if (mp->ConductivityModel == USER) {
+          err = usr_thermal_conductivity(mp->u_thermal_conductivity, time);
+        }
+        for (a = 0; a < dim; a++) {
+          qc[a] = -mp->thermal_conductivity * fv->grad_T[a];
+          q_mag += SQUARE(qc[a]);
+        }
+      } else {
+        for (a = 0; a < dim; a++) {
+          qc[a] = 0.;
+        }
+      }
+      if (fv->x0[2] <= radius) {
+        dir = 0;
+      } else {
+        // double tmp = modf((fv->x0[2] - radius) / (2 * radius - overlap), &sign);
+        sign += 1.;
+        dir = (int)sign % 2;
+      }
+      sign = 2 * (double)dir - 1.;
+      for (a = 0; a < dim; a++) {
+        local_post[ORIENTATION_VECTORS + a] = sign * qc[a] / sqrt(q_mag);
+        local_lumped[ORIENTATION_VECTORS + a] = 1.;
+      }
+    } else if (pd->e[pg->imtrx][R_MOMENTUM1]) {
+      double velo_sqrd = 0.;
+      for (a = 0; a < VIM; a++) {
+        velo_sqrd += SQUARE(fv->v[a]);
+      }
+      for (a = 0; a < VIM; a++) {
+        local_post[ORIENTATION_VECTORS + a] = fv->v[a] / sqrt(velo_sqrd);
+        local_lumped[ORIENTATION_VECTORS + a] = 1.;
+      }
+    } else {
+      GOMA_EH(GOMA_ERROR, "Orientation field not defined!");
+    }
+  }
   if (SHELL_NORMALS != -1 && (pd->e[pg->imtrx][R_SHELL_ANGLE1] || pd->e[pg->imtrx][R_LUBP])) {
     double sh_n[DIM];
     for (a = 0; a < DIM; a++) {
@@ -2267,11 +2427,8 @@ static int calc_standard_fields(double **post_proc_vect,
 
   /* calculate poynting vectors for EM calculations here !!  */
   if (POYNTING_VECTORS != -1 &&
-      ((Num_Var_In_Type[pg->imtrx][R_ACOUS_PREAL] || Num_Var_In_Type[pg->imtrx][R_ACOUS_PIMAG]) ||
-       (Num_Var_In_Type[pg->imtrx][R_EM_E1_REAL] || Num_Var_In_Type[pg->imtrx][R_EM_E2_REAL] ||
-        Num_Var_In_Type[pg->imtrx][R_EM_E3_REAL]))) {
+      ((Num_Var_In_Type[pg->imtrx][R_ACOUS_PREAL] || Num_Var_In_Type[pg->imtrx][R_ACOUS_PIMAG]))) {
     double poynt[DIM];
-    int c;
     memset(poynt, 0, sizeof(double) * DIM);
     /*  Acoustic analogy -- scalar version  */
     if (pd->e[pg->imtrx][R_ACOUS_PREAL] || pd->e[pg->imtrx][R_ACOUS_PIMAG]) {
@@ -2282,18 +2439,6 @@ static int calc_standard_fields(double **post_proc_vect,
 
       for (a = 0; a < DIM; a++) {
         poynt[a] += prefactor * (fv->api * fv->grad_apr[a] - fv->apr * fv->grad_api[a]);
-      }
-    }
-    /*  EM vector, E & H formulation   */
-    else if (pd->e[pg->imtrx][R_EM_E1_REAL] || pd->e[pg->imtrx][R_EM_E2_REAL] ||
-             pd->e[pg->imtrx][R_EM_E3_REAL]) {
-      for (a = 0; a < DIM; a++) {
-        for (b = 0; b < DIM; b++) {
-          for (c = 0; c < DIM; c++) {
-            poynt[a] += 0.5 * permute(b, c, a) *
-                        (fv->em_er[b] * fv->em_hr[c] + fv->em_ei[b] * fv->em_hi[c]);
-          }
-        }
       }
     }
     for (a = 0; a < dim; a++) {
@@ -3188,8 +3333,8 @@ static int calc_standard_fields(double **post_proc_vect,
     local_lumped[VON_MISES_STRESS] = 1.;
   }
 
-  if (LOG_CONF_MAP != -1 && pd->v[pg->imtrx][POLYMER_STRESS11] &&
-      (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV ||
+  if (CONF_MAP != -1 && pd->v[pg->imtrx][POLYMER_STRESS11] &&
+      (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV || vn->evssModel == CONF ||
        vn->evssModel == LOG_CONF_TRANSIENT || vn->evssModel == LOG_CONF_TRANSIENT_GRADV)) {
     index = 0;
     VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
@@ -3200,11 +3345,20 @@ static int calc_standard_fields(double **post_proc_vect,
     double eig_values[DIM];
     dbl exp_s[DIM][DIM];
     for (mode = 0; mode < vn->modes; mode++) {
+      if (vn->evssModel == CONF) {
+
+        for (a = 0; a < VIM; a++) {
+          for (b = 0; b < VIM; b++) {
+            exp_s[a][b] = fv->S[mode][a][b];
+          }
+        }
+      } else {
 #ifdef ANALEIG_PLEASE
-      analytical_exp_s(fv->S[mode], exp_s, eig_values, R1, NULL);
+        analytical_exp_s(fv->S[mode], exp_s, eig_values, R1, NULL);
 #else
-      compute_exp_s(fv->S[mode], exp_s, eig_values, R1);
+        compute_exp_s(fv->S[mode], exp_s, eig_values, R1);
 #endif
+      }
       mup = viscosity(ve[mode]->gn, gamma, d_mup);
       // Polymer time constant
       lambda = 0.0;
@@ -3231,8 +3385,8 @@ static int calc_standard_fields(double **post_proc_vect,
                only assemble the upper half */
             if (a <= b) {
               if (pd->v[pg->imtrx][v_s[mode][a][b]]) {
-                local_post[LOG_CONF_MAP + index] = (mup / lambda) * (exp_s[a][b] - delta(a, b));
-                local_lumped[LOG_CONF_MAP + index] = 1.;
+                local_post[CONF_MAP + index] = (mup / lambda) * (exp_s[a][b] - delta(a, b));
+                local_lumped[CONF_MAP + index] = 1.;
                 index++;
               }
             }
@@ -3242,6 +3396,62 @@ static int calc_standard_fields(double **post_proc_vect,
     } // Loop over modes
   }
 
+  if (CONF_MAP != -1 && pd->v[pg->imtrx][POLYMER_STRESS11] && (vn->evssModel == SQRT_CONF)) {
+    index = 0;
+    VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
+    VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
+    d_mup = NULL;
+    double lambda;
+    for (mode = 0; mode < vn->modes; mode++) {
+      mup = viscosity(ve[mode]->gn, gamma, d_mup);
+
+      dbl b_dot_b[DIM][DIM];
+      dbl cb[DIM][DIM];
+      for (int ii = 0; ii < VIM; ii++) {
+        for (int jj = 0; jj < VIM; jj++) {
+          if (ii <= jj) {
+            cb[ii][jj] = fv->S[mode][ii][jj];
+            cb[jj][ii] = cb[ii][jj];
+          }
+        }
+      }
+
+      tensor_dot(cb, cb, b_dot_b, VIM);
+      // Polymer time constant
+      lambda = 0.0;
+      if (ve[mode]->time_constModel == CONSTANT) {
+        lambda = ve[mode]->time_const;
+      }
+      /* Looks like these models are not working right now
+       *else if(ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW)
+       * {
+       *   lambda = mup/ve[mode]->time_const;
+       * }
+       */
+      if (lambda == 0.0) {
+        GOMA_EH(GOMA_ERROR, "The conformation tensor needs a non-zero polymer time constant.");
+      }
+      if (mup == 0.0) {
+        GOMA_EH(GOMA_ERROR, "The conformation tensor needs a non-zero polymer viscosity.");
+      }
+
+      if (pd->v[pg->imtrx][v_s[mode][0][0]]) {
+        for (a = 0; a < VIM; a++) {
+          for (b = 0; b < VIM; b++) {
+            /* since the stress tensor is symmetric,
+               only assemble the upper half */
+            if (a <= b) {
+              if (pd->v[pg->imtrx][v_s[mode][a][b]]) {
+                local_post[CONF_MAP + index] = -(mup / lambda) * (delta(a, b) - b_dot_b[a][b]);
+                local_lumped[CONF_MAP + index] = 1.;
+                index++;
+              }
+            }
+          } // for b
+        }   // for a
+      }
+    } // Loop over modes
+  }
   /*if (cr->MassFluxModel == DM_SUSPENSION_BALANCE ) {
     index = 0;
     int w = 0;
@@ -3344,7 +3554,6 @@ static int calc_standard_fields(double **post_proc_vect,
     /* calculate a user-specified post-processing variable */
 
     err = get_continuous_species_terms(&s_terms, time, theta, delta_t, hs);
-
     local_post[USER_POST] = user_post(u_post_proc);
     local_lumped[USER_POST] = 1.;
   }
@@ -3407,7 +3616,9 @@ static int calc_standard_fields(double **post_proc_vect,
      *  check to make sure that unknowns are defined at this node,
      *  otherwise don't add anything to this node
      */
-    ldof = ei[upd->matrix_index[pd->ProjectionVar]]->ln_to_dof[eqn][i];
+    ldof = bf[pd->ProjectionVar]->interpolation == I_N1
+               ? i
+               : ei[upd->matrix_index[pd->ProjectionVar]]->ln_to_dof[eqn][i];
     if (ldof >= 0) {
       phi_i = bf[eqn]->phi[ldof];
       for (var = 0; var < rd->TotalNVPostOutput; var++) {
@@ -3540,6 +3751,8 @@ void post_process_average(double x[],            /* Solution vector for the curr
 
       err = load_bf_grad();
       GOMA_EH(err, "load_bf_grad");
+
+      err = load_fv_vector();
 
       if (ei[pg->imtrx]->deforming_mesh &&
           (pd->e[pg->imtrx][R_MESH1] || pd->v[pg->imtrx][R_MESH1])) {
@@ -3682,6 +3895,248 @@ void sum_average_nodal(double **avg_count, double **avg_sum, int global_node, do
                        NULL, NULL);
 
         avg_sum[i][global_node] += gammadot;
+      } break;
+      case AVG_EMR_X: {
+        avg_sum[i][global_node] += fv->em_er[0];
+      } break;
+      case AVG_EMR_Y: {
+        avg_sum[i][global_node] += fv->em_er[1];
+      } break;
+      case AVG_EMR_Z: {
+        avg_sum[i][global_node] += fv->em_er[2];
+      } break;
+      case AVG_EMI_X: {
+        avg_sum[i][global_node] += fv->em_ei[0];
+      } break;
+      case AVG_EMI_Y: {
+        avg_sum[i][global_node] += fv->em_ei[1];
+      } break;
+      case AVG_EMI_Z: {
+        avg_sum[i][global_node] += fv->em_ei[2];
+      } break;
+      case AVG_EM_INC_MAG: {
+        const double c0 = 1.0 / (sqrt(upd->Free_Space_Permittivity * upd->Free_Space_Permeability));
+        dbl x = fv->x[0];
+        dbl y = fv->x[1];
+        dbl z = fv->x[2];
+        dbl freq = upd->EM_Frequency;
+        dbl lambda0 = c0 / freq;
+        dbl k0 = 2 * M_PI / lambda0;
+        complex double wave[3] = {0};
+        complex double curl_wave[3];
+        if (mp->PermittivityModel != RADIAL_PML) {
+          incident_wave(x, y, z, k0, wave, curl_wave);
+        }
+        avg_sum[i][global_node] +=
+            sqrt(creal(wave[0]) * creal(wave[0]) + creal(wave[1]) * creal(wave[1]) +
+                 creal(wave[2]) * creal(wave[2]) + cimag(wave[0]) * cimag(wave[0]) +
+                 cimag(wave[1]) * cimag(wave[1]) + cimag(wave[2]) * cimag(wave[2]));
+      } break;
+      case AVG_EM_SCAT_MAG: {
+        const double c0 = 1.0 / (sqrt(upd->Free_Space_Permittivity * upd->Free_Space_Permeability));
+        dbl x = fv->x[0];
+        dbl y = fv->x[1];
+        dbl z = fv->x[2];
+        dbl freq = upd->EM_Frequency;
+        dbl lambda0 = c0 / freq;
+        dbl k0 = 2 * M_PI / lambda0;
+        complex double wave[3] = {0};
+        complex double curl_wave[3];
+        if (mp->PermittivityModel != RADIAL_PML) {
+          incident_wave(x, y, z, k0, wave, curl_wave);
+        }
+        avg_sum[i][global_node] +=
+            sqrt((fv->em_er[0] - creal(wave[0])) * (fv->em_er[0] - creal(wave[0])) +
+                 (fv->em_er[1] - creal(wave[1])) * (fv->em_er[1] - creal(wave[1])) +
+                 (fv->em_er[2] - creal(wave[2])) * (fv->em_er[2] - creal(wave[2])) +
+                 (fv->em_ei[0] - cimag(wave[0])) * (fv->em_ei[0] - cimag(wave[0])) +
+                 (fv->em_ei[1] - cimag(wave[1])) * (fv->em_ei[1] - cimag(wave[1])) +
+                 (fv->em_ei[2] - cimag(wave[2])) * (fv->em_ei[2] - cimag(wave[2])));
+      } break;
+      case AVG_EM_MAG: {
+        avg_sum[i][global_node] += sqrt(fv->em_er[0] * fv->em_er[0] + fv->em_er[1] * fv->em_er[1] +
+                                        fv->em_er[2] * fv->em_er[2] + fv->em_ei[0] * fv->em_ei[0] +
+                                        fv->em_ei[1] * fv->em_ei[1] + fv->em_ei[2] * fv->em_ei[2]);
+      } break;
+      case AVG_EMSCATR_X: {
+        const double c0 = 1.0 / (sqrt(upd->Free_Space_Permittivity * upd->Free_Space_Permeability));
+        dbl x = fv->x[0];
+        dbl y = fv->x[1];
+        dbl z = fv->x[2];
+        dbl freq = upd->EM_Frequency;
+        dbl lambda0 = c0 / freq;
+        dbl k0 = 2 * M_PI / lambda0;
+        complex double wave[3] = {0};
+        complex double curl_wave[3];
+        if (mp->PermittivityModel != RADIAL_PML) {
+          incident_wave(x, y, z, k0, wave, curl_wave);
+        }
+        avg_sum[i][global_node] += fv->em_er[0] - creal(wave[0]);
+      } break;
+      case AVG_EMSCATR_Y: {
+        const double c0 = 1.0 / (sqrt(upd->Free_Space_Permittivity * upd->Free_Space_Permeability));
+        dbl x = fv->x[0];
+        dbl y = fv->x[1];
+        dbl z = fv->x[2];
+        dbl freq = upd->EM_Frequency;
+        dbl lambda0 = c0 / freq;
+        dbl k0 = 2 * M_PI / lambda0;
+        complex double wave[3] = {0};
+        complex double curl_wave[3];
+        if (mp->PermittivityModel != RADIAL_PML) {
+          incident_wave(x, y, z, k0, wave, curl_wave);
+        }
+        avg_sum[i][global_node] += fv->em_er[1] - creal(wave[1]);
+      } break;
+      case AVG_EMSCATR_Z: {
+        const double c0 = 1.0 / (sqrt(upd->Free_Space_Permittivity * upd->Free_Space_Permeability));
+        dbl x = fv->x[0];
+        dbl y = fv->x[1];
+        dbl z = fv->x[2];
+        dbl freq = upd->EM_Frequency;
+        dbl lambda0 = c0 / freq;
+        dbl k0 = 2 * M_PI / lambda0;
+        complex double wave[3] = {0};
+        complex double curl_wave[3];
+        if (mp->PermittivityModel != RADIAL_PML) {
+          incident_wave(x, y, z, k0, wave, curl_wave);
+        }
+        avg_sum[i][global_node] += fv->em_er[2] - creal(wave[2]);
+      } break;
+      case AVG_EMSCATI_X: {
+        const double c0 = 1.0 / (sqrt(upd->Free_Space_Permittivity * upd->Free_Space_Permeability));
+        dbl x = fv->x[0];
+        dbl y = fv->x[1];
+        dbl z = fv->x[2];
+        dbl freq = upd->EM_Frequency;
+        dbl lambda0 = c0 / freq;
+        dbl k0 = 2 * M_PI / lambda0;
+        complex double wave[3] = {0};
+        complex double curl_wave[3];
+        if (mp->PermittivityModel != RADIAL_PML) {
+          incident_wave(x, y, z, k0, wave, curl_wave);
+        }
+        avg_sum[i][global_node] += fv->em_ei[0] - cimag(wave[0]);
+      } break;
+      case AVG_EMSCATI_Y: {
+        const double c0 = 1.0 / (sqrt(upd->Free_Space_Permittivity * upd->Free_Space_Permeability));
+        dbl x = fv->x[0];
+        dbl y = fv->x[1];
+        dbl z = fv->x[2];
+        dbl freq = upd->EM_Frequency;
+        dbl lambda0 = c0 / freq;
+        dbl k0 = 2 * M_PI / lambda0;
+        complex double wave[3] = {0};
+        complex double curl_wave[3];
+        if (mp->PermittivityModel != RADIAL_PML) {
+          incident_wave(x, y, z, k0, wave, curl_wave);
+        }
+        avg_sum[i][global_node] += fv->em_ei[1] - creal(wave[1]);
+      } break;
+      case AVG_EMSCATI_Z: {
+        const double c0 = 1.0 / (sqrt(upd->Free_Space_Permittivity * upd->Free_Space_Permeability));
+        dbl x = fv->x[0];
+        dbl y = fv->x[1];
+        dbl z = fv->x[2];
+        dbl freq = upd->EM_Frequency;
+        dbl lambda0 = c0 / freq;
+        dbl k0 = 2 * M_PI / lambda0;
+        complex double wave[3] = {0};
+        complex double curl_wave[3];
+        if (mp->PermittivityModel != RADIAL_PML) {
+          incident_wave(x, y, z, k0, wave, curl_wave);
+        }
+        avg_sum[i][global_node] += fv->em_ei[2] - cimag(wave[2]);
+      } break;
+      case AVG_EMINCR_X: {
+        const double c0 = 1.0 / (sqrt(upd->Free_Space_Permittivity * upd->Free_Space_Permeability));
+        dbl x = fv->x[0];
+        dbl y = fv->x[1];
+        dbl z = fv->x[2];
+        dbl freq = upd->EM_Frequency;
+        dbl lambda0 = c0 / freq;
+        dbl k0 = 2 * M_PI / lambda0;
+        complex double wave[3] = {0};
+        complex double curl_wave[3];
+        if (mp->PermittivityModel != RADIAL_PML) {
+          incident_wave(x, y, z, k0, wave, curl_wave);
+        }
+        avg_sum[i][global_node] += creal(wave[0]);
+      } break;
+      case AVG_EMINCR_Y: {
+        const double c0 = 1.0 / (sqrt(upd->Free_Space_Permittivity * upd->Free_Space_Permeability));
+        dbl x = fv->x[0];
+        dbl y = fv->x[1];
+        dbl z = fv->x[2];
+        dbl freq = upd->EM_Frequency;
+        dbl lambda0 = c0 / freq;
+        dbl k0 = 2 * M_PI / lambda0;
+        complex double wave[3] = {0};
+        complex double curl_wave[3];
+        if (mp->PermittivityModel != RADIAL_PML) {
+          incident_wave(x, y, z, k0, wave, curl_wave);
+        }
+        avg_sum[i][global_node] += creal(wave[1]);
+      } break;
+      case AVG_EMINCR_Z: {
+        const double c0 = 1.0 / (sqrt(upd->Free_Space_Permittivity * upd->Free_Space_Permeability));
+        dbl x = fv->x[0];
+        dbl y = fv->x[1];
+        dbl z = fv->x[2];
+        dbl freq = upd->EM_Frequency;
+        dbl lambda0 = c0 / freq;
+        dbl k0 = 2 * M_PI / lambda0;
+        complex double wave[3] = {0};
+        complex double curl_wave[3];
+        if (mp->PermittivityModel != RADIAL_PML) {
+          incident_wave(x, y, z, k0, wave, curl_wave);
+        }
+        avg_sum[i][global_node] += creal(wave[2]);
+      } break;
+      case AVG_EMINCI_X: {
+        const double c0 = 1.0 / (sqrt(upd->Free_Space_Permittivity * upd->Free_Space_Permeability));
+        dbl x = fv->x[0];
+        dbl y = fv->x[1];
+        dbl z = fv->x[2];
+        dbl freq = upd->EM_Frequency;
+        dbl lambda0 = c0 / freq;
+        dbl k0 = 2 * M_PI / lambda0;
+        complex double wave[3] = {0};
+        complex double curl_wave[3];
+        if (mp->PermittivityModel != RADIAL_PML) {
+          incident_wave(x, y, z, k0, wave, curl_wave);
+        }
+        avg_sum[i][global_node] += cimag(wave[0]);
+      } break;
+      case AVG_EMINCI_Y: {
+        const double c0 = 1.0 / (sqrt(upd->Free_Space_Permittivity * upd->Free_Space_Permeability));
+        dbl x = fv->x[0];
+        dbl y = fv->x[1];
+        dbl z = fv->x[2];
+        dbl freq = upd->EM_Frequency;
+        dbl lambda0 = c0 / freq;
+        dbl k0 = 2 * M_PI / lambda0;
+        complex double wave[3] = {0};
+        complex double curl_wave[3];
+        if (mp->PermittivityModel != RADIAL_PML) {
+          incident_wave(x, y, z, k0, wave, curl_wave);
+        }
+        avg_sum[i][global_node] += creal(wave[1]);
+      } break;
+      case AVG_EMINCI_Z: {
+        const double c0 = 1.0 / (sqrt(upd->Free_Space_Permittivity * upd->Free_Space_Permeability));
+        dbl x = fv->x[0];
+        dbl y = fv->x[1];
+        dbl z = fv->x[2];
+        dbl freq = upd->EM_Frequency;
+        dbl lambda0 = c0 / freq;
+        dbl k0 = 2 * M_PI / lambda0;
+        complex double wave[3] = {0};
+        complex double curl_wave[3];
+        if (mp->PermittivityModel != RADIAL_PML) {
+          incident_wave(x, y, z, k0, wave, curl_wave);
+        }
+        avg_sum[i][global_node] += cimag(wave[2]);
       } break;
       default:
         GOMA_EH(GOMA_ERROR, "Unknown nodal average non-variable type");
@@ -4184,6 +4639,8 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
         err = load_bf_grad();
         GOMA_EH(err, "load_bf_grad");
 
+        err = load_fv_vector();
+
         /*
          * Load up physical space gradients of field variables at this
          * Gauss point.
@@ -4335,6 +4792,8 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
           err = load_bf_grad();
           GOMA_EH(err, "load_bf_grad");
 
+          err = load_fv_vector();
+
           err = load_bf_mesh_derivs();
           GOMA_EH(err, "load_bf_mesh_derivs");
 
@@ -4346,7 +4805,7 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
            * mesh displacement derivatives
            */
 
-          if (ielem_dim != 3) {
+          if (ielem_dim != 3 && ielem_dim == pd->Num_Dim) {
             calc_surf_tangent(ei[pg->imtrx]->ielem, iconnect_ptr, num_local_nodes, ielem_dim - 1,
                               num_nodes_on_side, id_local_elem_coord);
           }
@@ -4452,9 +4911,11 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
   /******************************************************************************/
 
 #ifdef GOMA_ENABLE_PETSC
+#if !(PETSC_USE_COMPLEX)
   if (upd->petsc_solve_post_proc) {
     petsc_solve_post_proc(post_proc_vect, rd, dpi);
   } else {
+#endif
 #endif
     for (ii = 0; ii < rd->TotalNVPostOutput; ii++) {
       for (I = 0; I < num_universe_nodes; I++) {
@@ -4466,7 +4927,9 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
       }
     }
 #ifdef GOMA_ENABLE_PETSC
+#if !(PETSC_USE_COMPLEX)
   }
+#endif
 #endif
 
   for (ii = 0; ii < rd->TotalNVPostOutput; ii++) {
@@ -4773,6 +5236,9 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
   if (nn_average > 0) {
     post_process_average(x, x_old, xdot, xdot_old, resid_vector, exo, dpi, post_proc_vect,
                          *time_ptr);
+    for (int ii = 0; ii < nn_average; ii++) {
+      exchange_node(cx[0], dpi, post_proc_vect[pp_average[ii]->index_post]);
+    }
   }
 
   /*****************************************************************************/
@@ -4890,6 +5356,8 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
       err = load_bf_grad();
       GOMA_EH(err, "load_bf_grad");
 
+      err = load_fv_vector();
+
       err = load_fv_grads();
       GOMA_EH(err, "load_fv_grads");
 
@@ -4995,6 +5463,8 @@ void post_process_nodal(double x[],            /* Solution vector for the curren
 
           err = load_bf_grad();
           GOMA_EH(err, "load_bf_grad");
+
+          err = load_fv_vector();
 
           err = load_fv_grads();
           GOMA_EH(err, "load_fv_grads");
@@ -6185,6 +6655,8 @@ static int abs_error_at_elem(int i_elem,
     err = load_bf_grad();
     GOMA_EH(err, "load_bf_grad");
 
+    err = load_fv_vector();
+
     err = load_fv_grads();
     GOMA_EH(err, "load_fv_grads");
 
@@ -6447,6 +6919,8 @@ static int fill_lhs_lspatch(double *i_node_coords,
        call depends on it! - RRL 10/30/98 */
     err = load_bf_grad();
     GOMA_EH(err, "load_bf_grad");
+
+    err = load_fv_vector();
 
     err = load_fv_grads();
     GOMA_EH(err, "load_fv_grads");
@@ -7204,6 +7678,9 @@ void rd_post_process_specs(FILE *ifp, char *input) {
   iread = look_for_post_proc(ifp, "Fill contours", &FILL_CONT);
   iread = look_for_post_proc(ifp, "Concentration contours", &CONC_CONT);
   iread = look_for_post_proc(ifp, "Stress contours", &STRESS_CONT);
+  iread = look_for_post_proc(ifp, "EM contours", &EM_CONTOURS);
+  iread = look_for_post_proc(ifp, "Total EM", &TOTAL_EM_CONTOURS);
+  iread = look_for_post_proc(ifp, "Scattered EM", &SCATTERED_EM_CONTOURS);
   iread = look_for_post_proc(ifp, "First Invariant of Strain", &FIRST_INVAR_STRAIN);
   iread = look_for_post_proc(ifp, "Second Invariant of Strain", &SEC_INVAR_STRAIN);
   iread = look_for_post_proc(ifp, "Third Invariant of Strain", &THIRD_INVAR_STRAIN);
@@ -7245,7 +7722,8 @@ void rd_post_process_specs(FILE *ifp, char *input) {
   iread = look_for_post_proc(ifp, "Error ZZ velocity", &ERROR_ZZ_VEL);
   iread = look_for_post_proc(ifp, "Error ZZ heat flux", &ERROR_ZZ_Q);
   iread = look_for_post_proc(ifp, "Error ZZ pressure", &ERROR_ZZ_P);
-  iread = look_for_post_proc(ifp, "Map Log-Conf Stress", &LOG_CONF_MAP);
+  iread = look_for_post_proc(ifp, "Map Log-Conf Stress", &CONF_MAP);
+  iread = look_for_post_proc(ifp, "Map Conf Stress", &CONF_MAP);
   iread = look_for_post_proc(ifp, "Velocity Magnitude", &VELO_SPEED);
   iread = look_for_post_proc(ifp, "Giesekus Criterion", &GIES_CRIT);
   iread = look_for_post_proc(ifp, "Particle stress flux", &J_FLUX);
@@ -7257,7 +7735,6 @@ void rd_post_process_specs(FILE *ifp, char *input) {
   iread = look_for_post_proc(ifp, "Concentration gradient", &GRAD_Y);
   iread = look_for_post_proc(ifp, "Vorticity Vector", &CURL_V);
   iread = look_for_post_proc(ifp, "Helicity Value", &HELICITY);
-  iread = look_for_post_proc(ifp, "User-Defined Post Processing", &USER_POST);
   iread = look_for_post_proc(ifp, "Moment Sources", &MOMENT_SOURCES);
   iread = look_for_post_proc(ifp, "YZbeta Species", &YZBETA);
   iread = look_for_post_proc(ifp, "Heaviside", &HEAVISIDE);
@@ -7271,6 +7748,11 @@ void rd_post_process_specs(FILE *ifp, char *input) {
   iread = look_for_post_proc(ifp, "Viscous Stress", &VISCOUS_STRESS);
   iread = look_for_post_proc(ifp, "Viscous Stress Norm", &VISCOUS_STRESS_NORM);
   iread = look_for_post_proc(ifp, "Viscous Von Mises Stress", &VISCOUS_VON_MISES_STRESS);
+  iread = look_for_post_proc(ifp, "Orientation Vectors", &ORIENTATION_VECTORS);
+  iread = look_for_post_proc(ifp, "First StrainRate Invariant", &FIRST_STRAINRATE_INVAR);
+  iread = look_for_post_proc(ifp, "Second StrainRate Invariant", &SEC_STRAINRATE_INVAR);
+  iread = look_for_post_proc(ifp, "Third StrainRate Invariant", &THIRD_STRAINRATE_INVAR);
+  iread = look_for_post_proc(ifp, "User-Defined Post Processing", &USER_POST);
 
   /*
    * Initialize for surety before communication to other processors.
@@ -8507,8 +8989,11 @@ void rd_post_process_specs(FILE *ifp, char *input) {
       }
 
       for (k = 0; k < Num_Var_Names; k++) {
-        if (!strncasecmp(variable_name, Var_Name[k].name1, strlen(variable_name)) ||
-            !strncasecmp(variable_name, Var_Name[k].name2, strlen(variable_name))) {
+        int st1 = strlen(variable_name);
+        int st2 = strlen(Var_Name[k].name1);
+        int st3 = strlen(Var_Name[k].name2);
+        if ((st1 == st2 && !strncasecmp(variable_name, Var_Name[k].name1, strlen(variable_name))) ||
+            (st1 == st3 && !strncasecmp(variable_name, Var_Name[k].name2, strlen(variable_name)))) {
           pp_average[i]->type = Var_Name[k].Index;
           if (pp_average[i]->type == MASS_FRACTION) {
             int err = snprintf(pp_average[i]->type_name, MAX_VAR_NAME_LNGTH, "%s%d%s",
@@ -8541,6 +9026,132 @@ void rd_post_process_specs(FILE *ifp, char *input) {
           strcpy(pp_average[i]->type_name, "SHEARRATE_AVG");
           pp_average[i]->non_variable_type = 1;
           pp_average[i]->type = AVG_SHEAR;
+        } else if (!strncasecmp(variable_name, "EM_SCAT_MAG", strlen(variable_name))) {
+          strcpy(pp_average[i]->type_name, "EM_SCAT_MAG");
+          pp_average[i]->non_variable_type = 1;
+          pp_average[i]->type = AVG_EM_SCAT_MAG;
+        } else if (!strncasecmp(variable_name, "EM_MAG", strlen(variable_name))) {
+          strcpy(pp_average[i]->type_name, "EM_MAG");
+          pp_average[i]->non_variable_type = 1;
+          pp_average[i]->type = AVG_EM_MAG;
+        } else if (!strncasecmp(variable_name, "EM_INC_MAG", strlen(variable_name))) {
+          strcpy(pp_average[i]->type_name, "EM_INC_MAG");
+          pp_average[i]->non_variable_type = 1;
+          pp_average[i]->type = AVG_EM_INC_MAG;
+        } else if (!strncasecmp(variable_name, "EM", strlen(variable_name))) {
+          int new_items = 6 - 1;
+          pp_Average **pp_average_tmp = pp_average;
+          sz = sizeof(pp_Average *);
+          pp_average = (pp_Average **)array_alloc(1, nn_average + new_items, sz);
+          for (int k = 0; k < nn_average; k++) {
+            pp_average[k] = pp_average_tmp[k];
+          }
+          free(pp_average_tmp);
+          sz = sizeof(pp_Average);
+          for (int k = nn_average; k < (new_items + nn_average); k++) {
+            pp_average[k] = (pp_Average *)array_alloc(1, 1, sz);
+          }
+          nn_average += new_items;
+          strcpy(pp_average[i]->type_name, "PP_EMR_X");
+          pp_average[i]->non_variable_type = 1;
+          pp_average[i]->type = AVG_EMR_X;
+          pp_average[i]->species_index = 0;
+          i++;
+          strcpy(pp_average[i]->type_name, "PP_EMR_Y");
+          pp_average[i]->non_variable_type = 1;
+          pp_average[i]->type = AVG_EMR_Y;
+          i++;
+          strcpy(pp_average[i]->type_name, "PP_EMR_Z");
+          pp_average[i]->non_variable_type = 1;
+          pp_average[i]->type = AVG_EMR_Z;
+          i++;
+          strcpy(pp_average[i]->type_name, "PP_EMI_X");
+          pp_average[i]->non_variable_type = 1;
+          pp_average[i]->type = AVG_EMI_X;
+          i++;
+          strcpy(pp_average[i]->type_name, "PP_EMI_Y");
+          pp_average[i]->non_variable_type = 1;
+          pp_average[i]->type = AVG_EMI_Y;
+          i++;
+          strcpy(pp_average[i]->type_name, "PP_EMI_Z");
+          pp_average[i]->non_variable_type = 1;
+          pp_average[i]->type = AVG_EMI_Z;
+        } else if (!strncasecmp(variable_name, "EMSCAT", strlen(variable_name))) {
+          int new_items = 6 - 1;
+          pp_Average **pp_average_tmp = pp_average;
+          sz = sizeof(pp_Average *);
+          pp_average = (pp_Average **)array_alloc(1, nn_average + new_items, sz);
+          for (int k = 0; k < nn_average; k++) {
+            pp_average[k] = pp_average_tmp[k];
+          }
+          free(pp_average_tmp);
+          sz = sizeof(pp_Average);
+          for (int k = nn_average; k < (new_items + nn_average); k++) {
+            pp_average[k] = (pp_Average *)array_alloc(1, 1, sz);
+          }
+          nn_average += new_items;
+          strcpy(pp_average[i]->type_name, "PP_EMSCATR_X");
+          pp_average[i]->non_variable_type = 1;
+          pp_average[i]->type = AVG_EMSCATR_X;
+          pp_average[i]->species_index = 0;
+          i++;
+          strcpy(pp_average[i]->type_name, "PP_EMSCATR_Y");
+          pp_average[i]->non_variable_type = 1;
+          pp_average[i]->type = AVG_EMSCATR_Y;
+          i++;
+          strcpy(pp_average[i]->type_name, "PP_EMSCATR_Z");
+          pp_average[i]->non_variable_type = 1;
+          pp_average[i]->type = AVG_EMSCATR_Z;
+          i++;
+          strcpy(pp_average[i]->type_name, "PP_EMSCATI_X");
+          pp_average[i]->non_variable_type = 1;
+          pp_average[i]->type = AVG_EMSCATI_X;
+          i++;
+          strcpy(pp_average[i]->type_name, "PP_EMSCATI_Y");
+          pp_average[i]->non_variable_type = 1;
+          pp_average[i]->type = AVG_EMSCATI_Y;
+          i++;
+          strcpy(pp_average[i]->type_name, "PP_EMSCATI_Z");
+          pp_average[i]->non_variable_type = 1;
+          pp_average[i]->type = AVG_EMSCATI_Z;
+        } else if (!strncasecmp(variable_name, "EMINC", strlen(variable_name))) {
+          int new_items = 6 - 1;
+          pp_Average **pp_average_tmp = pp_average;
+          sz = sizeof(pp_Average *);
+          pp_average = (pp_Average **)array_alloc(1, nn_average + new_items, sz);
+          for (int k = 0; k < nn_average; k++) {
+            pp_average[k] = pp_average_tmp[k];
+          }
+          free(pp_average_tmp);
+          sz = sizeof(pp_Average);
+          for (int k = nn_average; k < (new_items + nn_average); k++) {
+            pp_average[k] = (pp_Average *)array_alloc(1, 1, sz);
+          }
+          nn_average += new_items;
+          strcpy(pp_average[i]->type_name, "PP_EMINCR_X");
+          pp_average[i]->non_variable_type = 1;
+          pp_average[i]->type = AVG_EMINCR_X;
+          pp_average[i]->species_index = 0;
+          i++;
+          strcpy(pp_average[i]->type_name, "PP_EMINCR_Y");
+          pp_average[i]->non_variable_type = 1;
+          pp_average[i]->type = AVG_EMINCR_Y;
+          i++;
+          strcpy(pp_average[i]->type_name, "PP_EMINCR_Z");
+          pp_average[i]->non_variable_type = 1;
+          pp_average[i]->type = AVG_EMINCR_Z;
+          i++;
+          strcpy(pp_average[i]->type_name, "PP_EMINCI_X");
+          pp_average[i]->non_variable_type = 1;
+          pp_average[i]->type = AVG_EMINCI_X;
+          i++;
+          strcpy(pp_average[i]->type_name, "PP_EMINCI_Y");
+          pp_average[i]->non_variable_type = 1;
+          pp_average[i]->type = AVG_EMINCI_Y;
+          i++;
+          strcpy(pp_average[i]->type_name, "PP_EMINCI_Z");
+          pp_average[i]->non_variable_type = 1;
+          pp_average[i]->type = AVG_EMINCI_Z;
         } else {
           fprintf(stderr, "Error reading unknown variable type: %s\n", variable_name);
           GOMA_EH(GOMA_ERROR, "Unknown variable type for post processing");
@@ -9186,6 +9797,157 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
     }
   }
 
+  if (EM_CONTOURS != -1 && Num_Var_In_Type[pg->imtrx][EM_E1_REAL]) {
+    EM_CONTOURS = index_post;
+    int dim = DIM;
+    if (pd->gv[EM_E1_REAL]) {
+      sprintf(species_name, "EM_REALX");
+      sprintf(species_desc, "EM X Vector");
+      set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]", species_desc, FALSE);
+      index++;
+      index_post++;
+
+      if (dim > 1) {
+        sprintf(species_name, "EM_REALY");
+        sprintf(species_desc, "EM Y Vector");
+        set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]", species_desc, FALSE);
+        index++;
+        index_post++;
+      }
+
+      if (dim > 2) {
+        sprintf(species_name, "EM_REALZ");
+        sprintf(species_desc, "EM Z Vector");
+        set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]", species_desc, FALSE);
+        index++;
+        index_post++;
+      }
+    }
+    if (pd->gv[EM_E1_IMAG]) {
+      sprintf(species_name, "EM_IMAGX");
+      sprintf(species_desc, "EM X Vector");
+      set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]", species_desc, FALSE);
+      index++;
+      index_post++;
+
+      if (dim > 1) {
+        sprintf(species_name, "EM_IMAGY");
+        sprintf(species_desc, "EM Y Vector");
+        set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]", species_desc, FALSE);
+        index++;
+        index_post++;
+      }
+
+      if (dim > 2) {
+        sprintf(species_name, "EM_IMAGZ");
+        sprintf(species_desc, "EM Z Vector");
+        set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]", species_desc, FALSE);
+        index++;
+        index_post++;
+      }
+    }
+  }
+  if (TOTAL_EM_CONTOURS != -1 && Num_Var_In_Type[pg->imtrx][EM_E1_REAL]) {
+    TOTAL_EM_CONTOURS = index_post;
+    int dim = DIM;
+    if (pd->gv[EM_E1_REAL]) {
+      sprintf(species_name, "EM_TOT_REALX");
+      sprintf(species_desc, "EM X Vector");
+      set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]", species_desc, FALSE);
+      index++;
+      index_post++;
+
+      if (dim > 1) {
+        sprintf(species_name, "EM_TOT_REALY");
+        sprintf(species_desc, "EM Y Vector");
+        set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]", species_desc, FALSE);
+        index++;
+        index_post++;
+      }
+
+      if (dim > 2) {
+        sprintf(species_name, "EM_TOT_REALZ");
+        sprintf(species_desc, "EM Z Vector");
+        set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]", species_desc, FALSE);
+        index++;
+        index_post++;
+      }
+    }
+    if (pd->gv[EM_E1_IMAG]) {
+      sprintf(species_name, "EM_TOT_IMAGX");
+      sprintf(species_desc, "EM X Vector");
+      set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]", species_desc, FALSE);
+      index++;
+      index_post++;
+
+      if (dim > 1) {
+        sprintf(species_name, "EM_TOT_IMAGY");
+        sprintf(species_desc, "EM Y Vector");
+        set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]", species_desc, FALSE);
+        index++;
+        index_post++;
+      }
+
+      if (dim > 2) {
+        sprintf(species_name, "EM_TOT_IMAGZ");
+        sprintf(species_desc, "EM Z Vector");
+        set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]", species_desc, FALSE);
+        index++;
+        index_post++;
+      }
+    }
+  }
+  if (SCATTERED_EM_CONTOURS != -1 && Num_Var_In_Type[pg->imtrx][EM_E1_REAL]) {
+    SCATTERED_EM_CONTOURS = index_post;
+    int dim = DIM;
+    if (pd->gv[EM_E1_REAL]) {
+      sprintf(species_name, "EM_SCA_REALX");
+      sprintf(species_desc, "EM X Vector");
+      set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]", species_desc, FALSE);
+      index++;
+      index_post++;
+
+      if (dim > 1) {
+        sprintf(species_name, "EM_SCA_REALY");
+        sprintf(species_desc, "EM Y Vector");
+        set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]", species_desc, FALSE);
+        index++;
+        index_post++;
+      }
+
+      if (dim > 2) {
+        sprintf(species_name, "EM_SCA_REALZ");
+        sprintf(species_desc, "EM Z Vector");
+        set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]", species_desc, FALSE);
+        index++;
+        index_post++;
+      }
+    }
+    if (pd->gv[EM_E1_IMAG]) {
+      sprintf(species_name, "EM_SCA_IMAGX");
+      sprintf(species_desc, "EM X Vector");
+      set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]", species_desc, FALSE);
+      index++;
+      index_post++;
+
+      if (dim > 1) {
+        sprintf(species_name, "EM_SCA_IMAGY");
+        sprintf(species_desc, "EM Y Vector");
+        set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]", species_desc, FALSE);
+        index++;
+        index_post++;
+      }
+
+      if (dim > 2) {
+        sprintf(species_name, "EM_SCA_IMAGZ");
+        sprintf(species_desc, "EM Z Vector");
+        set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]", species_desc, FALSE);
+        index++;
+        index_post++;
+      }
+    }
+  }
+
   if (MOMENT_SOURCES != -1 && Num_Var_In_Type[pg->imtrx][MOMENT0]) {
     MOMENT_SOURCES = index_post;
     for (int mom = 0; mom < MAX_MOMENTS; mom++) {
@@ -9240,6 +10002,39 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
       index_post_export++;
     }
     THIRD_INVAR_STRAIN = index_post;
+    index_post++;
+  }
+
+  if (FIRST_STRAINRATE_INVAR != -1 && Num_Var_In_Type[pg->imtrx][R_MESH1]) {
+    set_nv_tkud(rd, index, 0, 0, -2, "ISR", "[1]", "1st strain rate invariant", FALSE);
+    index++;
+    if (FIRST_STRAINRATE_INVAR == 2) {
+      Export_XP_ID[index_post_export] = index_post;
+      index_post_export++;
+    }
+    FIRST_STRAINRATE_INVAR = index_post;
+    index_post++;
+  }
+
+  if (SEC_STRAINRATE_INVAR != -1 && Num_Var_In_Type[pg->imtrx][R_MESH1]) {
+    set_nv_tkud(rd, index, 0, 0, -2, "IISR", "[1]", "2nd strain rate invariant", FALSE);
+    index++;
+    if (SEC_STRAINRATE_INVAR == 2) {
+      Export_XP_ID[index_post_export] = index_post;
+      index_post_export++;
+    }
+    SEC_STRAINRATE_INVAR = index_post;
+    index_post++;
+  }
+
+  if (THIRD_STRAINRATE_INVAR != -1 && Num_Var_In_Type[pg->imtrx][R_MESH1]) {
+    set_nv_tkud(rd, index, 0, 0, -2, "IIISR", "[1]", "3rd strain rate invariant", FALSE);
+    index++;
+    if (THIRD_STRAINRATE_INVAR == 2) {
+      Export_XP_ID[index_post_export] = index_post;
+      index_post_export++;
+    }
+    THIRD_STRAINRATE_INVAR = index_post;
     index_post++;
   }
 
@@ -9433,6 +10228,33 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
     if (Num_Dim > 2) {
       sprintf(nm, "POYNTZ");
       sprintf(ds, "Poynting in Z direction");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+    }
+  }
+
+  if (ORIENTATION_VECTORS != -1 && Num_Var_In_Type[pg->imtrx][R_ENERGY]) {
+    if (ORIENTATION_VECTORS == 2) {
+      GOMA_EH(GOMA_ERROR, "Post-processing vectors cannot be exported yet!");
+    }
+    ORIENTATION_VECTORS = index_post;
+    /* X Component */
+    sprintf(nm, "ORX");
+    sprintf(ds, "Orientation in X direction");
+    set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+    index++;
+    index_post++;
+    /* Y Component */
+    sprintf(nm, "ORY");
+    sprintf(ds, "Orientation in Y direction");
+    set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+    index++;
+    index_post++;
+    /* Z Component */
+    if (Num_Dim > 2) {
+      sprintf(nm, "ORZ");
+      sprintf(ds, "Orientation in Z direction");
       set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
       index++;
       index_post++;
@@ -9754,8 +10576,8 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
     }
   }
 
-  if (LOG_CONF_MAP != -1 && Num_Var_In_Type[pg->imtrx][POLYMER_STRESS11]) {
-    LOG_CONF_MAP = index_post;
+  if (CONF_MAP != -1 && Num_Var_In_Type[pg->imtrx][POLYMER_STRESS11]) {
+    CONF_MAP = index_post;
     // Loop over any additional viscoelastic modes
     for (mode = 0; mode < MAX_MODES; mode++) {
       for (a = 0; a < VIM; a++) {

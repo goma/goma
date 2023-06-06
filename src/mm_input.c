@@ -58,6 +58,13 @@
 #include "rf_solver_const.h"
 #include "sl_util.h"
 #include "std.h"
+#include "util/aprepro_helper.h"
+#ifdef GOMA_ENABLE_PETSC
+#include <petscsystypes.h>
+#ifdef I
+#undef I
+#endif
+#endif
 
 #define GOMA_MM_INPUT_C
 #include "mm_input.h"
@@ -1138,6 +1145,9 @@ void rd_genl_specs(FILE *ifp, char *input) {
     } else if (!strcmp(input, "TABLE")) {
       efv->i[Num_Var_External] = I_TABLE;
       num_ext_Tables++;
+    } else if (!strcmp(input, "N1")) {
+      efv->i[Num_Var_External] = I_N1;
+      num_ext_Tables++;
     } else {
       sprintf(err_msg, "??? interpolation \"%s\" for external field var", input);
       GOMA_EH(GOMA_ERROR, err_msg);
@@ -1352,6 +1362,36 @@ void rd_genl_specs(FILE *ifp, char *input) {
     }
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %g", "Acoustic Frequency",
              upd->Acoustic_Frequency);
+    ECHO(echo_string, echo_file);
+  }
+
+  upd->EM_Frequency = upd->Acoustic_Frequency; // Initialize for backwards compatibility
+  iread = look_for_optional(ifp, "EM Frequency", input, '=');
+  if (iread == 1) {
+    if (fscanf(ifp, "%lf", &upd->EM_Frequency) != 1) {
+      GOMA_EH(GOMA_ERROR, "error reading EM Frequency");
+    }
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %g", "EM Frequency", upd->EM_Frequency);
+    ECHO(echo_string, echo_file);
+  }
+
+  iread = look_for_optional(ifp, "EM Free Space Permittivity", input, '=');
+  if (iread == 1) {
+    if (fscanf(ifp, "%lf", &upd->Free_Space_Permittivity) != 1) {
+      GOMA_EH(GOMA_ERROR, "error reading EM Free Space Permittivity");
+    }
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %g", "EM Free Space Permittivity",
+             upd->Free_Space_Permittivity);
+    ECHO(echo_string, echo_file);
+  }
+
+  iread = look_for_optional(ifp, "EM Free Space Permeability", input, '=');
+  if (iread == 1) {
+    if (fscanf(ifp, "%lf", &upd->Free_Space_Permeability) != 1) {
+      GOMA_EH(GOMA_ERROR, "error reading EM Free Space Permeability");
+    }
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "%s = %g", "EM Free Space Permeability",
+             upd->Free_Space_Permeability);
     ECHO(echo_string, echo_file);
   }
 
@@ -4937,6 +4977,7 @@ void rd_ac_specs(FILE *ifp, char *input) {
     augc[iAC].VOLID = -99;
     augc[iAC].MFID = -99;
     augc[iAC].iread = 0;
+    augc[iAC].Aprepro_lib_string_len = 0;
     if (AC_rd_file == 1) {
       augc[iAC].iread = 1;
     }
@@ -5532,10 +5573,17 @@ void rd_ac_specs(FILE *ifp, char *input) {
     }
 
     /*  read parameter filename for Aprepro parameter cases  */
+#ifndef GOMA_ENABLE_APREPRO_LIB
+    if (augc[iAC].BCID == APREPRO_LIB_AC_BCID) {
+      GOMA_EH(GOMA_ERROR,
+              "Found Aprepro Library augmenting condition but GOMA_ENABLE_APREPRO_LIB=no");
+    }
+#endif
 
-    if ((augc[iAC].Type == AC_USERBC || augc[iAC].Type == AC_FLUX ||
-         augc[iAC].Type == AC_FLUX_MAT) &&
-        augc[iAC].BCID == APREPRO_AC_BCID) {
+    if (augc[iAC].BCID == APREPRO_LIB_AC_BCID ||
+        ((augc[iAC].Type == AC_USERBC || augc[iAC].Type == AC_FLUX ||
+          augc[iAC].Type == AC_FLUX_MAT) &&
+         augc[iAC].BCID == APREPRO_AC_BCID)) {
       if (fscanf(ifp, "%s", string) != 1) {
         GOMA_EH(GOMA_ERROR, "error reading Parameter File name");
       }
@@ -5546,6 +5594,21 @@ void rd_ac_specs(FILE *ifp, char *input) {
       strcpy(augc[iAC].AP_param, string);
 
       SPF(endofstring(echo_string), " %s %s", augc[iAC].Params_File, augc[iAC].AP_param);
+
+      // read in the file
+      if (augc[iAC].BCID == APREPRO_LIB_AC_BCID) {
+        FILE *fp = fopen(augc[iAC].Params_File, "rb");
+        fseek(fp, 0L, SEEK_END);
+        int sz = ftell(fp);
+        rewind(fp);
+        augc[iAC].Aprepro_lib_string_len = sz;
+        augc[iAC].Aprepro_lib_string = calloc(sz + 1, sizeof(char));
+        size_t retval = fread(augc[iAC].Aprepro_lib_string, sizeof(char), sz, fp);
+        if (retval != (size_t)sz) {
+          GOMA_EH(GOMA_ERROR, "Error reading APREPRO_LIB parameter file, %d != %lu", sz, retval);
+        }
+        fclose(fp);
+      }
     }
 
     /* add float list */
@@ -5758,6 +5821,16 @@ void rd_solver_specs(FILE *ifp, char *input) {
 #else
     GOMA_EH(GOMA_ERROR, "Goma not compiled with PETSc support");
 #endif
+  } else if (strcmp(Matrix_Solver, "petsc_complex") == 0) {
+#ifdef PETSC_USE_COMPLEX
+    Linear_Solver = PETSC_COMPLEX_SOLVER;
+    is_Solver_Serial = FALSE;
+#else
+    GOMA_EH(GOMA_ERROR, "Goma not compiled with a complex petsc");
+#endif
+#ifndef GOMA_ENABLE_PETSC
+    GOMA_EH(GOMA_ERROR, "Goma not compiled with PETSc support");
+#endif
   } else {
     Linear_Solver = AZTEC;
     is_Solver_Serial = FALSE;
@@ -5769,6 +5842,10 @@ void rd_solver_specs(FILE *ifp, char *input) {
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, search_string, Matrix_Format);
   } else if (strcmp(Matrix_Solver, "petsc") == 0) {
     strcpy(Matrix_Format, "petsc"); /* save string for aztec use */
+    strcpy(search_string, "Matrix storage format");
+    snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, search_string, Matrix_Format);
+  } else if (strcmp(Matrix_Solver, "petsc_complex") == 0) {
+    strcpy(Matrix_Format, "petsc_complex"); /* save string for aztec use */
     strcpy(search_string, "Matrix storage format");
     snprintf(echo_string, MAX_CHAR_ECHO_INPUT, eoformat, search_string, Matrix_Format);
   } else if (strcmp(Matrix_Solver, "front") != 0) {
@@ -7349,30 +7426,42 @@ void rd_matl_blk_specs(FILE *ifp, char *input) {
 
     if ((imp = fopen(MatFile, "r")) != NULL) {
       strcpy_rtn = strcpy(current_mat_file_name, MatFile);
-      if (run_aprepro == 1) {
+      if (run_aprepro) {
         fclose(imp);
-        /*
-         * Start fresh for each matl, build up command and temporary
-         * file name from available information...
-         */
-        System_Command[0] = '\0';
         TmpMatFile[0] = '\0';
         strcat(TmpMatFile, "tmp.");
         strcat(TmpMatFile, MatFile);
-        sprintf(System_Command, "%s %s %s", aprepro_command, MatFile, TmpMatFile);
+#ifdef GOMA_ENABLE_APREPRO_LIB
+        if (run_aprepro == 2) {
+          goma_error err = aprepro_parse_file(MatFile, TmpMatFile);
+          GOMA_EH(err, "Aprepro failed on %s", MatFile);
+        } else if (run_aprepro == 1) {
+#else
+        if (run_aprepro == 1) {
+#endif
+          /*
+           * Start fresh for each matl, build up command and temporary
+           * file name from available information...
+           */
+          System_Command[0] = '\0';
+          TmpMatFile[0] = '\0';
+          strcat(TmpMatFile, "tmp.");
+          strcat(TmpMatFile, MatFile);
+          sprintf(System_Command, "%s %s %s", aprepro_command, MatFile, TmpMatFile);
 #ifndef tflop
-        err = system(System_Command);
-        GOMA_EH(err, "system() choked on mat file.");
+          err = system(System_Command);
+          GOMA_EH(err, "system() choked on mat file.");
 
-        if (WEXITSTATUS(err) == 127) {
-          GOMA_EH(GOMA_ERROR, "System call failed, aprepro not found");
-        }
+          if (WEXITSTATUS(err) == 127) {
+            GOMA_EH(GOMA_ERROR, "System call failed, aprepro not found");
+          }
 
 #else
-        GOMA_EH(GOMA_ERROR, "aprepro the mat file prior to running goma.");
+          GOMA_EH(GOMA_ERROR, "aprepro the mat file prior to running goma.");
 #endif
-        if (Debug_Flag > 0) {
-          fprintf(stdout, "system: %s\n", System_Command);
+          if (Debug_Flag > 0) {
+            fprintf(stdout, "system: %s\n", System_Command);
+          }
         }
         imp = fopen(TmpMatFile, "r");
         if (imp == NULL) {
@@ -7565,6 +7654,8 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
       printf("%s:\t(T,c) = Q2\n", yo);
     }
     pd_ptr->IntegrationMap = I_Q2;
+  } else if (strcasecmp(input, "N1") == 0) {
+    pd_ptr->IntegrationMap = I_N1;
   } else if (strcasecmp(input, "SP") == 0) {
     if (Debug_Flag && ProcID == 0) {
       printf("%s:\t(T,c) = SP\n", yo);
@@ -7839,8 +7930,8 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
       read_string(ifp, input, '\n');
       strip(input);
       strcpy(Stratimikos_File[imtrx], input);
-      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "Stratimikos file = %s for matrix %d",
-               Stratimikos_File[imtrx], mtrx_index1);
+      snprintf(echo_string, MAX_CHAR_ECHO_INPUT, "Stratimikos file = %s for matrix %d", input,
+               mtrx_index1);
       ECHO(echo_string, echo_file);
     } else {
       // Set stratimikos.xml as defualt stratimikos file
@@ -8518,6 +8609,8 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
         pd_ptr->w[mtrx_index0][ce] = I_SP;
         GOMA_WH(-1,
                 "CAUTION WITH SUBPARAMETRIC: DON'T USE WITH LAGRANGIAN OR TOTAL_ALE MESH MOTIONS");
+      } else if (!strcasecmp(ts, "N1")) {
+        pd_ptr->w[mtrx_index0][ce] = I_N1;
       } else {
         fprintf(stderr, "%s:\tUnrecognized Galerkin weighting function.\n", yo);
         exit(-1);
@@ -9025,6 +9118,8 @@ void rd_eq_specs(FILE *ifp, char *input, const int mn) {
         upd->XFEM = TRUE;
       } else if (!strcasecmp(ts, "SP")) {
         pd_ptr->i[mtrx_index0][cv] = I_SP;
+      } else if (!strcasecmp(ts, "N1")) {
+        pd_ptr->i[mtrx_index0][cv] = I_N1;
       } else {
         fprintf(stderr, "%s:\tUnrecognized interpolation function for variable.\n", yo);
         exit(-1);
@@ -10445,6 +10540,14 @@ int look_for_modal_prop(FILE *imp,                 /* ptr to input stream (in)*/
       }
       *MaterialModel = DumModel;
       iread = 1;
+    } else if (!strcmp(model_name, "HERSCHEL_BULKLEY")) {
+      *MaterialModel = HERSCHEL_BULKLEY;
+      iread = 1;
+      printf("HERSCHEL_BULKLEY model used for %s\n", search_string);
+    } else if (!strcmp(model_name, "POWER_LAW")) {
+      *MaterialModel = POWER_LAW;
+      iread = 1;
+      printf("POWER_LAW model used for %s\n", search_string);
     } else {
       iread = -2;
     }
@@ -11097,7 +11200,11 @@ void translate_command_line(int argc, char *argv[], struct Command_line_command 
         (*nclc)++;
         istr++;
         clc[*nclc]->type = APREPRO;
+#ifdef GOMA_ENABLE_APREPRO_LIB
+        run_aprepro = 2;
+#else
         run_aprepro = 1;
+#endif
 
         /* check for aprepro options */
         sr = sprintf(command_line_ap, "aprepro ");
@@ -11110,8 +11217,10 @@ void translate_command_line(int argc, char *argv[], struct Command_line_command 
         while (istr < argc && (*argv[istr] != '-' || *(argv[istr] + 1) == '-')) {
           if (*(argv[istr] + 1) == '-') {
             strcat(command_line_ap, argv[istr++] + 1); /* remove first '-' */
+            run_aprepro = 1;
           } else {
             strcat(command_line_ap, argv[istr++]);
+            run_aprepro = 1;
           }
           strcat(command_line_ap, " ");
         }
@@ -11366,29 +11475,37 @@ void translate_command_line(int argc, char *argv[], struct Command_line_command 
   }
   /* Perform system calls to aprepro, fastq, etc */
 
-  if (run_aprepro == 1) {
+  if (run_aprepro) {
     strcpy(temp_file_inp, "tmp.");
     strcat(temp_file_inp, Input_File);
 
-    strcat(command_line_ap, Input_File);
-    strcat(command_line_ap, " ");
-    strcat(command_line_ap, temp_file_inp);
-    if (Debug_Flag > 0) {
-      fprintf(stdout, "system: %s\n", command_line_ap);
-    }
+#ifdef GOMA_ENABLE_APREPRO_LIB
+    if (run_aprepro == 2) {
+      goma_error err = aprepro_parse_file(Input_File, temp_file_inp);
+      GOMA_EH(err, "Issue with Aprepro parsing %s", Input_File);
+    } else if (run_aprepro == 1) {
+#else
+    if (run_aprepro == 1) {
+#endif
+      strcat(command_line_ap, Input_File);
+      strcat(command_line_ap, " ");
+      strcat(command_line_ap, temp_file_inp);
+      if (Debug_Flag > 0) {
+        fprintf(stdout, "system: %s\n", command_line_ap);
+      }
 
 #ifndef tflop
-    err = system(command_line_ap);
-    GOMA_EH(err, "system() choked on input file.");
+      err = system(command_line_ap);
+      GOMA_EH(err, "system() choked on input file.");
 
-    if (WEXITSTATUS(err) == 127) {
-      GOMA_EH(GOMA_ERROR, "System call failed, aprepro not found");
-      return;
-    }
+      if (WEXITSTATUS(err) == 127) {
+        GOMA_EH(GOMA_ERROR, "System call failed, aprepro not found");
+        return;
+      }
 #else
-    GOMA_EH(GOMA_ERROR, "aprepro the input file prior to running goma.");
+      GOMA_EH(GOMA_ERROR, "aprepro the input file prior to running goma.");
 #endif
-
+    }
     strcpy(Input_File, temp_file_inp);
     if (Debug_Flag > 0) {
       fprintf(stdout, "reading input from \"%s\"\n", Input_File);
@@ -12299,7 +12416,7 @@ FILE *fopen_aprepro(const char *filename, const char *format) {
   char Tmpfilename[MAX_FNL];
   static char System_Command[MAX_SYSTEM_COMMAND_LENGTH];
 
-  if (run_aprepro == 1) {
+  if (run_aprepro == 1 || run_aprepro == 2) { // 1 or 2 as aprepro lib isn't supported here
     System_Command[0] = '\0';
     Tmpfilename[0] = '\0';
     (void)strcat(Tmpfilename, "tmp.");
@@ -12576,6 +12693,13 @@ struct Data_Table *setup_table_MP(FILE *imp, struct Data_Table *table, char *sea
     } else if (strcmp(line, "FAUX_PLASTIC") == 0) {
       strcpy(table->t_name[i], "FAUX_PLASTIC");
       table->t_index[i] = FAUX_PLASTIC;
+      if (fscanf(imp, "%d", &table->species_eq) != 1) {
+        sprintf(err_msg, "%s:\tError reading species number on TABLE MP \n", yo);
+        GOMA_EH(GOMA_ERROR, err_msg);
+      }
+    } else if (strcmp(line, "WAVELENGTH") == 0) {
+      strcpy(table->t_name[i], "WAVELENGTH");
+      table->t_index[i] = WAVELENGTH;
       if (fscanf(imp, "%d", &table->species_eq) != 1) {
         sprintf(err_msg, "%s:\tError reading species number on TABLE MP \n", yo);
         GOMA_EH(GOMA_ERROR, err_msg);
@@ -13397,10 +13521,42 @@ void echo_compiler_settings(void) {
   fprintf(echo_file, "%-30s= %s\n", "GOMA_ENABLE_PETSC", "no");
 #endif
 
+#ifdef GOMA_ENABLE_PETSC
+#ifdef PETSC_USE_COMPLEX
+  fprintf(echo_file, "%-30s= %s\n", "PETSC_USE_COMPLEX", "yes");
+#else
+  fprintf(echo_file, "%-30s= %s\n", "PETSC_USE_COMPLEX", "no");
+#endif
+#endif
+
 #ifdef GOMA_ENABLE_OMEGA_H
   fprintf(echo_file, "%-30s= %s\n", "GOMA_ENABLE_OMEGA_H", "yes");
 #else
   fprintf(echo_file, "%-30s= %s\n", "GOMA_ENABLE_OMEGA_H", "no");
+#endif
+
+#ifdef GOMA_ENABLE_STRATIMIKOS
+  fprintf(echo_file, "%-30s= %s\n", "GOMA_ENABLE_STRATIMIKOS", "yes");
+#else
+  fprintf(echo_file, "%-30s= %s\n", "GOMA_ENABLE_STRATIMIKOS", "no");
+#endif
+
+#ifdef GOMA_ENABLE_TEKO
+  fprintf(echo_file, "%-30s= %s\n", "GOMA_ENABLE_TEKO", "yes");
+#else
+  fprintf(echo_file, "%-30s= %s\n", "GOMA_ENABLE_TEKO", "no");
+#endif
+
+#ifdef GOMA_ENABLE_METIS
+  fprintf(echo_file, "%-30s= %s\n", "GOMA_ENABLE_METIS", "yes");
+#else
+  fprintf(echo_file, "%-30s= %s\n", "GOMA_ENABLE_METIS", "no");
+#endif
+
+#ifdef GOMA_ENABLE_APREPRO_LIB
+  fprintf(echo_file, "%-30s= %s\n", "GOMA_ENABLE_APREPRO_LIB", "yes");
+#else
+  fprintf(echo_file, "%-30s= %s\n", "GOMA_ENABLE_APREPRO_LIB", "no");
 #endif
 
 #ifdef HAVE_PARPACK
@@ -13419,6 +13575,18 @@ void echo_compiler_settings(void) {
   fprintf(echo_file, "%-30s= %s\n", "TRILINOS", "yes");
 #else
   fprintf(echo_file, "%-30s= %s\n", "TRILINOS", "no");
+#endif
+
+#ifdef FP_EXCEPT
+  fprintf(echo_file, "%-30s= %s\n", "FP_EXCEPT", "yes");
+#else
+  fprintf(echo_file, "%-30s= %s\n", "FP_EXCEPT", "no");
+#endif
+
+#ifdef CHECK_FINITE
+  fprintf(echo_file, "%-30s= %s\n", "CHECK_FINITE", "yes");
+#else
+  fprintf(echo_file, "%-30s= %s\n", "CHECK_FINITE", "no");
 #endif
 
   fprintf(echo_file, "%-30s= %s\n", "Pressure Stabilization (PSPG)", (PSPG > 0 ? "yes" : "no"));

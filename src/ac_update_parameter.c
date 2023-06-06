@@ -1040,6 +1040,10 @@ void update_MT_parameter(double lambda, /* Parameter value */
     upd->Acoustic_Frequency = lambda;
     break;
 
+  case TAGC_EM_FREQ:
+    upd->EM_Frequency = lambda;
+    break;
+
   case TAGC_PROCESS_TEMP:
     upd->Process_Temperature = lambda;
     break;
@@ -1054,6 +1058,12 @@ void update_MT_parameter(double lambda, /* Parameter value */
       upd->Acoustic_Frequency = 2. * M_PIE * c_m / lambda;
     }
     break;
+
+  case TAGC_EM_WAVELENGTH:
+    upd->EM_Frequency =
+        (1.0 / (sqrt(upd->Free_Space_Permittivity * upd->Free_Space_Permeability))) / lambda;
+    break;
+
   case TAGC_TFMP_REL_PERM_0:
     mp_glob[mn]->tfmp_rel_perm_const[0] = lambda;
     break;

@@ -1,5 +1,5 @@
 ***************************
-**Electrical Permittivity**
+Electrical Permittivity
 ***************************
 
 ::
@@ -10,15 +10,23 @@
 **Description / Usage**
 -----------------------
 
-This required card is used to specify the model for electrical permittivity. There is
-currently one option, so {model_name} must be either **CONSTANT**. Definitions of the
-input parameters are as follows:
+This required card is used to specify the model for electrical permittivity.
+Definitions of the input parameters are as follows:
 
-+-----------------+------------------------------------------------------------------------------------------------------------+
-|**CONSTANT**     |Name of the model for constant electrical permittivity.                                                     |
-|                 |                                                                                                            |
-|                 | * <float> -the value of electrical permittivity.                                                           |
-+-----------------+------------------------------------------------------------------------------------------------------------+
+CONSTANT
+   Name of the model for constant electrical permittivity.                                                     |
+      * <float> -the value of electrical permittivity.                                                           |
+COMPLEX_CONSTANT
+   complex permittivity (for Time-Harmonic Maxwell with Nedelec elements)
+      * <float1> real part
+      * <float2> imaginary part
+REFRACTIVE_INDEX
+   Calculate permittivity using the refractive index and extinction index cards (for Time-Harmonic Maxwell with Nedelec elements)
+   .. math::
+
+      \epsilon_r = (n - ik)^2
+
+   Where :math:`n` is the refractive index and :math:`k` is the extinction index
 
 ------------
 **Examples**

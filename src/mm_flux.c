@@ -17,13 +17,15 @@
  */
 
 /* Standard include files */
-
+#include <complex.h>
+#undef I
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 /* GOMA include files */
+#define GOMA_MM_FLUX_C
 
 #include "mm_flux.h"
 
@@ -44,6 +46,7 @@
 #include "mm_eh.h"
 #include "mm_fill_aux.h"
 #include "mm_fill_common.h"
+#include "mm_fill_em.h"
 #include "mm_fill_fill.h"
 #include "mm_fill_ls.h"
 #include "mm_fill_porous.h"
@@ -76,8 +79,6 @@
 #include "std.h"
 #include "user_mp.h"
 #include "wr_side_data.h"
-
-#define GOMA_MM_FLUX_C
 
 static int load_fv_sens(void);
 
@@ -381,27 +382,64 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
               (quantity == POS_LS_FLUX || quantity == NEG_LS_FLUX || quantity == DELTA ||
                quantity == LS_DCA)) {
             if (ls->var != LS)
-              GOMA_WH(-1, "Level-set variable is not LS!");
-            switch (id_side) {
-            case 1:
-              ls_F[0] = *esp_old->F[0];
-              ls_F[1] = *esp_old->F[1];
-              ls_F[2] = *esp_old->F[4];
+              GOMA_WH(GOMA_ERROR, "Level-set variable is not LS!");
+            switch (ielem_type) {
+            case BIQUAD_QUAD:
+            case BIQUAD_SHELL:
+              switch (id_side) {
+              case 1:
+                ls_F[0] = *esp_old->F[0];
+                ls_F[1] = *esp_old->F[1];
+                ls_F[2] = *esp_old->F[4];
+                break;
+              case 2:
+                ls_F[0] = *esp_old->F[1];
+                ls_F[1] = *esp_old->F[2];
+                ls_F[2] = *esp_old->F[5];
+                break;
+              case 3:
+                ls_F[0] = *esp_old->F[3];
+                ls_F[1] = *esp_old->F[2];
+                ls_F[2] = *esp_old->F[6];
+                break;
+              case 4:
+                ls_F[0] = *esp_old->F[0];
+                ls_F[1] = *esp_old->F[3];
+                ls_F[2] = *esp_old->F[7];
+                break;
+              default:
+                break;
+              }
               break;
-            case 2:
-              ls_F[0] = *esp_old->F[1];
-              ls_F[1] = *esp_old->F[2];
-              ls_F[2] = *esp_old->F[5];
+            case BILINEAR_QUAD:
+            case BILINEAR_SHELL:
+              switch (id_side) {
+              case 1:
+                ls_F[0] = *esp_old->F[0];
+                ls_F[1] = *esp_old->F[1];
+                ls_F[2] = 0.5 * (*esp_old->F[0] + *esp_old->F[1]);
+                break;
+              case 2:
+                ls_F[0] = *esp_old->F[1];
+                ls_F[1] = *esp_old->F[2];
+                ls_F[2] = 0.5 * (*esp_old->F[1] + *esp_old->F[2]);
+                break;
+              case 3:
+                ls_F[0] = *esp_old->F[3];
+                ls_F[1] = *esp_old->F[2];
+                ls_F[2] = 0.5 * (*esp_old->F[3] + *esp_old->F[2]);
+                break;
+              case 4:
+                ls_F[0] = *esp_old->F[0];
+                ls_F[1] = *esp_old->F[3];
+                ls_F[2] = 0.5 * (*esp_old->F[0] + *esp_old->F[3]);
+                break;
+              default:
+                break;
+              }
               break;
-            case 3:
-              ls_F[0] = *esp_old->F[3];
-              ls_F[1] = *esp_old->F[2];
-              ls_F[2] = *esp_old->F[6];
-              break;
-            case 4:
-              ls_F[0] = *esp_old->F[0];
-              ls_F[1] = *esp_old->F[3];
-              ls_F[2] = *esp_old->F[7];
+            default:
+              GOMA_EH(GOMA_ERROR, "Element crossing not done for that element!");
               break;
             }
             if (species_id > 0) {
@@ -426,6 +464,8 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
                 ls_F[0] = *esp_old->pF[var][0];
                 ls_F[1] = *esp_old->pF[var][3];
                 ls_F[2] = *esp_old->pF[var][7];
+                break;
+              default:
                 break;
               }
             }
@@ -504,6 +544,9 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 
             err = load_bf_grad();
             GOMA_EH(err, "load_bf_grad");
+
+            err = load_fv_vector();
+            GOMA_EH(err, "load_fv_vector");
 
             err = load_bf_mesh_derivs();
             GOMA_EH(err, "load_bf_mesh_derivs");
@@ -725,6 +768,30 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
                     }
                   }
                 }
+              } else if (vn->evssModel == SQRT_CONF) {
+                for (ve_mode = 0; ve_mode < vn->modes; ve_mode++) {
+                  dbl bdotb[DIM][DIM];
+                  dbl b_tensor[DIM][DIM];
+                  for (int ii = 0; ii < VIM; ii++) {
+                    for (int jj = 0; jj < VIM; jj++) {
+                      if (ii <= jj) {
+                        b_tensor[ii][jj] = fv->S[ve_mode][ii][jj];
+                        b_tensor[jj][ii] = b_tensor[ii][jj];
+                      }
+                    }
+                  }
+
+                  tensor_dot(b_tensor, b_tensor, bdotb, VIM);
+                  mup = viscosity(ve[ve_mode]->gn, gamma, NULL);
+                  if (ve[ve_mode]->time_constModel == CONSTANT) {
+                    lambda = ve[ve_mode]->time_const;
+                  }
+                  for (a = 0; a < WIM; a++) {
+                    for (b = 0; b < WIM; b++) {
+                      ves[a][b] += mup / lambda * (bdotb[a][b] - (double)delta(a, b));
+                    }
+                  }
+                }
               } else {
                 for (a = 0; a < WIM; a++) {
                   for (b = 0; b < WIM; b++) {
@@ -889,41 +956,16 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
                   local_qconv += rho * Cp * fv->T * fv->snormal[a] * (fv->v[a] - x_dot[a]);
                 }
               } else if (cr->HeatFluxModel == CR_HF_USER) {
-                double delP = 0.;
-#if defined SECOR_HEAT_FLUX
-                double *hpar, h, dh_dX[DIM], Vb[DIM], Vt[DIM];
-                double dq_dVb[DIM][DIM], dq_dVt[DIM][DIM];
-
-                hpar = &mp->u_thermal_conductivity[0];
-                h = hpar[0] + hpar[4] * fv->x[0] +
-                    (hpar[1] - hpar[5] * fv->x[0]) * (hpar[3] - fv->x[1]) +
-                    0.5 * hpar[2] * SQUARE(hpar[3] - fv->x[1]);
-
-                dh_dX[0] = hpar[4] - hpar[5] * (hpar[3] - fv->x[1]);
-                dh_dX[1] = hpar[5] * fv->x[0] - hpar[1] - hpar[2] * (hpar[3] - fv->x[1]);
-
-                /*     velocities of bottom and top surfaces   */
-                Vb[0] = mp->u_heat_capacity[0];
-                Vb[1] = mp->u_heat_capacity[1];
-                Vt[0] = mp->u_heat_capacity[2];
-                Vt[1] = mp->u_heat_capacity[3];
-
-                usr_heat_flux(fv->grad_T, q, dq_gradT, dq_dX, time_value, h, dh_dX, Vb, Vt, dq_dVb,
-                              dq_dVt);
-#else
                 usr_heat_flux(fv->grad_T, q, dq_gradT, dq_dX, time_value);
                 printf("untested\n");
                 exit(-1);
-#endif
 
                 for (a = 0; a < VIM; a++) {
-                  delP += fv->snormal[a] * fv->grad_T[a];
                   local_q += fv->snormal[a] * q[a];
                   for (b = 0; b < VIM; b++) {
                     local_qconv += fv->snormal[a] * dq_gradT[a][b] * fv->snormal[b];
                   }
                 }
-                /*                                local_qconv *= delP/fv->T;  */
               }
               local_flux += weight * det * local_q;
               local_flux_conv += weight * det * local_qconv;
@@ -1853,6 +1895,61 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
                 GOMA_EH(GOMA_ERROR, "Torque cannot be calculated in this case.");
               }
               break;
+            case SCATTERING_CROSS_SECTION: {
+              const double c0 =
+                  1.0 / (sqrt(upd->Free_Space_Permittivity * upd->Free_Space_Permeability));
+              const double eps0 = upd->Free_Space_Permittivity;
+              const double mu0 = upd->Free_Space_Permeability;
+
+              dbl freq = upd->EM_Frequency;
+              dbl lambda0 = c0 / freq;
+              dbl k0 = 2 * M_PI / lambda0;
+              dbl omega = k0 / sqrt(eps0 * mu0);
+              dbl Z0 = sqrt(mu0 / eps0);
+              complex double wave[3];
+              complex double curl_wave[3];
+              dbl x = fv->x[0];
+              dbl y = fv->x[1];
+              dbl z = fv->x[2];
+              incident_wave(x, y, z, k0, wave, curl_wave);
+              complex double permittivity;
+              complex double permittivity_matrix[DIM];
+              bool permittivity_is_matrix =
+                  relative_permittivity_model(&permittivity, permittivity_matrix);
+              if (permittivity_is_matrix) {
+                GOMA_EH(GOMA_ERROR, "Trying to compute scattered cross section when permittivity "
+                                    "is a matrix, not supported");
+              }
+              complex double Z1 = Z0 / 1.0; // see EM_ABSORB volint csqrt(creal(permittivity1));
+              complex double S0 = 1 / (2 * Z1);
+
+              complex double j = _Complex_I;
+              complex double E_s[DIM] = {fv->em_er[0] + j * fv->em_ei[0] - wave[0],
+                                         fv->em_er[1] + j * fv->em_ei[1] - wave[1],
+                                         fv->em_er[2] + j * fv->em_ei[2] - wave[2]};
+              complex double curl_E_s[DIM] = {
+                  fv->curl_em_er[0] + j * fv->curl_em_ei[0] - curl_wave[0],
+                  fv->curl_em_er[1] + j * fv->curl_em_ei[1] - curl_wave[1],
+                  fv->curl_em_er[2] + j * fv->curl_em_ei[2] - curl_wave[2]};
+
+              complex double H_s[DIM] = {0.0, 0.0, 0.0};
+
+              for (int i = 0; i < DIM; i++) {
+                H_s[i] = conj(-1.0 / (j * mu0 * omega) * curl_E_s[i]);
+              }
+
+              complex double P[DIM] = {
+                  0.5 * (E_s[1] * H_s[2] - E_s[2] * H_s[1]),
+                  0.5 * (E_s[2] * H_s[0] - E_s[0] * H_s[2]),
+                  0.5 * (E_s[0] * H_s[1] - E_s[1] * H_s[0]),
+              };
+
+              for (a = 0; a < dim; a++) {
+                local_q += creal((1 / S0) * P[a]) * fv->snormal[a];
+              }
+
+              local_flux += weight * det * local_q;
+            } break;
 
             case N_DOT_X:
               /*
@@ -4001,6 +4098,7 @@ double evaluate_volume_integral(const Exo_DB *exo,  /* ptr to basic exodus ii me
 {
   int i, j;
   int eb, e_start, e_end, elem;
+  int is_shell = FALSE;
 
   int PorousShellOn = 0;
 
@@ -4193,10 +4291,14 @@ double evaluate_volume_integral(const Exo_DB *exo,  /* ptr to basic exodus ii me
           } else
             GOMA_WH(-1, "Only SURF 3D element is TRILINEAR_HEX.");
         } else {
-          if (ei[pg->imtrx]->ielem_type == BIQUAD_QUAD) {
+          if (ei[pg->imtrx]->ielem_type == BIQUAD_QUAD ||
+              ei[pg->imtrx]->ielem_type == BIQUAD_SHELL ||
+              ei[pg->imtrx]->ielem_type == BILINEAR_QUAD ||
+              ei[pg->imtrx]->ielem_type == BILINEAR_SHELL) {
             ierr = interface_crossing_2DQ(ls_F, xf2D, side_id, nint2D, ecrd);
           } else
-            GOMA_EH(GOMA_ERROR, "Only SURF 2D element is BIQUAD_QUAD.");
+            GOMA_EH(GOMA_ERROR,
+                    "Only SURF 2D element is BIQUAD_QUAD/SHELL or BILINEAR_QUAD/SHELL.");
         }
         if (ierr) {
           FILE *jfp;
@@ -4286,8 +4388,12 @@ double evaluate_volume_integral(const Exo_DB *exo,  /* ptr to basic exodus ii me
         if (subelement_surf_integration_active)
           bf[pd->ShapeVar]->detJ = 1.;
 
-        compute_volume_integrand(quantity, elem, species_id, params, num_params, &sum, J_AC,
-                                 adaptive_integration_active, time_value, delta_t, xi, exo);
+        if (ei[pg->imtrx]->ielem_type >= BILINEAR_SHELL && ei[pg->imtrx]->ielem_type <= P0_SHELL) {
+          is_shell = TRUE;
+        }
+
+        compute_volume_integrand(quantity, elem, is_shell, species_id, params, num_params, &sum,
+                                 J_AC, adaptive_integration_active, time_value, delta_t, xi, exo);
 #ifdef PARALLEL
         delta_sum = sum - sum0;
 
@@ -4359,6 +4465,7 @@ double evaluate_volume_integral(const Exo_DB *exo,  /* ptr to basic exodus ii me
 
 int compute_volume_integrand(const int quantity,
                              const int elem,
+                             const int is_shell,
                              const int species_no,
                              const double *params,
                              const int num_params,
@@ -4378,8 +4485,7 @@ int compute_volume_integrand(const int quantity,
  ******************************************************************************/
 {
   double weight = fv->wt;
-  double det = bf[pd->ShapeVar]->detJ * fv->h3;
-  double det_J = bf[pd->ShapeVar]->detJ;
+  double det, det_J = bf[pd->ShapeVar]->detJ;
   double h3 = fv->h3;
   int a, b, p, q, var, j, dim = pd->Num_Dim, gnn, matIndex, ledof, c;
   int *n_dof = NULL;
@@ -4391,6 +4497,14 @@ int compute_volume_integrand(const int quantity,
 
   if (upd->CoordinateSystem == CYLINDRICAL || upd->CoordinateSystem == SWIRLING) {
     weight *= 2. * M_PIE;
+  }
+
+  if (is_shell) {
+    n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
+    lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+    det = fv->sdet; // Different determinant since this is a shell
+  } else {
+    det = det_J * h3;
   }
 
   switch (quantity) {
@@ -4444,22 +4558,12 @@ int compute_volume_integrand(const int quantity,
 
   break;
   case I_LUB_LOAD: {
-    n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
-    lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
-
-    det = fv->sdet; // Different determinant since this is a shell
 
     *sum += fv->lubp * weight * det;
-
-    /* clean-up */
-    safe_free((void *)n_dof);
 
     break;
   }
   case I_SHELL_VOLUME: {
-    n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
-    lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
-    det = fv->sdet; // Different determinant since this is a shell
 
     dbl H, H_U, dH_U_dtime, H_L, dH_L_dtime;
     dbl dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
@@ -4467,9 +4571,6 @@ int compute_volume_integrand(const int quantity,
                               &dH_U_ddh, time, delta_t);
 
     *sum += H * weight * det;
-
-    /* clean-up */
-    safe_free((void *)n_dof);
 
     break;
   }
@@ -5329,41 +5430,25 @@ int compute_volume_integrand(const int quantity,
     break;
   case I_POROUS_LIQUID_INV: {
     if (pd->e[pg->imtrx][R_SHELL_SAT_OPEN]) {
-      n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
-      lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
-
-      det = fv->sdet; // Different determinant since this is a shell
       dbl height = porous_shell_closed_height_model();
 
-      /* clean-up */
-      safe_free((void *)n_dof);
       *sum += weight * det * pmv->bulk_density[0] * height;
     }
 
     if (pd->e[pg->imtrx][R_SHELL_SAT_1]) {
-      n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
-      lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
-
-      det = fv->sdet; // Different determinant since this is a shell
       dbl height = porous_shell_height_model(0);
       dbl porosity = porous_shell_porosity_model(0);
 
-      /* clean-up */
-      safe_free((void *)n_dof);
       *sum += weight * det * mp->density * height * porosity * fv->sh_sat_1;
     }
 
     if (pd->e[pg->imtrx][R_TFMP_MASS]) {
-      n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
-      lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
-      det = fv->sdet; // Different determinant since this is a shell
       dbl saturation, height;
       double H_U, dH_U_dtime, H_L, dH_L_dtime;
       double dH_U_dX[DIM], dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
       height = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX,
                                      &dH_U_dp, &dH_U_ddh, time, delta_t);
       saturation = fv->tfmp_sat;
-      safe_free((void *)n_dof);
       *sum += weight * det * saturation * height;
     }
 
@@ -5375,29 +5460,17 @@ int compute_volume_integrand(const int quantity,
   } break;
   case I_POROUS_LIQUID_INV_2: {
     if (pd->e[pg->imtrx][R_SHELL_SAT_2]) {
-      n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
-      lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
-
-      det = fv->sdet; // Different determinant since this is a shell
       dbl height = porous_shell_height_model(1);
       dbl porosity = porous_shell_porosity_model(1);
 
-      /* clean-up */
-      safe_free((void *)n_dof);
       *sum += weight * det * mp->density * height * porosity * fv->sh_sat_2;
     }
   } break;
   case I_POROUS_LIQUID_INV_3: {
     if (pd->e[pg->imtrx][R_SHELL_SAT_3]) {
-      n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
-      lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
-
-      det = fv->sdet; // Different determinant since this is a shell
       dbl height = porous_shell_height_model(2);
       dbl porosity = porous_shell_porosity_model(2);
 
-      /* clean-up */
-      safe_free((void *)n_dof);
       *sum += weight * det * mp->density * height * porosity * fv->sh_sat_3;
     }
   } break;
@@ -5428,9 +5501,6 @@ int compute_volume_integrand(const int quantity,
 
   case I_TFMP_FORCE:
     if (pd->e[pg->imtrx][R_TFMP_MASS]) {
-      n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
-      lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
-      det = fv->sdet; // Different determinant since this is a shell
       dbl pressure;
       pressure = fv->tfmp_pres;
       // atmospheric pressure, as defined at the boundary
@@ -5441,13 +5511,48 @@ int compute_volume_integrand(const int quantity,
       dbl surface_tension = ;//[cgs please]
        */
       *sum += weight * det * (pressure - Patm);
-      safe_free((void *)n_dof);
     }
     break;
+
+  case I_EM_ABSORB_CROSS_SECTION: {
+    const double c0 = 1.0 / (sqrt(upd->Free_Space_Permittivity * upd->Free_Space_Permeability));
+    const double eps0 = upd->Free_Space_Permittivity;
+    const double mu0 = upd->Free_Space_Permeability;
+    dbl x = fv->x[0];
+    dbl y = fv->x[1];
+    dbl z = fv->x[2];
+    dbl freq = upd->EM_Frequency;
+    dbl lambda0 = c0 / freq;
+    dbl k0 = 2 * M_PI / lambda0;
+    complex double permittivity;
+    complex double permittivity_matrix[DIM];
+    bool permittivity_is_matrix = relative_permittivity_model(&permittivity, permittivity_matrix);
+    if (permittivity_is_matrix) {
+      GOMA_EH(GOMA_ERROR, "Trying to compute Absorbtion cross section when permittivity "
+                          "is a matrix, not supported");
+    }
+    dbl Z0 = sqrt(mu0 / eps0);
+    complex double Z1 =
+        Z0 / 1.0; // this is of the surrounding phase set to 1 for now csqrt(creal(permittivity));
+    complex double S0 = 1 / (2 * Z1);
+    complex double invS0 = 1 / S0;
+    complex double wave[3];
+    complex double curl_wave[3];
+    incident_wave(x, y, z, k0, wave, curl_wave);
+    dbl E_mag = 0;
+    for (int i = 0; i < DIM; i++) {
+      E_mag += fv->em_er[i] * fv->em_er[i] + fv->em_ei[i] * fv->em_ei[i];
+    }
+    dbl omega = k0 / sqrt(eps0 * mu0);
+    *sum += creal(weight * det * invS0 * 0.5 * omega * eps0 * cimag(permittivity) * E_mag);
+  } break;
 
   default:
     break;
   }
+  /* clean-up */
+  if (is_shell)
+    safe_free((void *)n_dof);
 
   return (1);
 }
@@ -5755,15 +5860,6 @@ double evaluate_flux_sens(const Exo_DB *exo,       /* ptr to basic exodus ii mes
   double local_qconv;
   double local_area = 0.0;
 #ifdef PARALLEL
-  double local_flux0 = 0.0;      /* old flux sum */
-  double local_flux_conv0 = 0.0; /* old convective flux sum */
-  double local_area0 = 0.0;      /* old area sum */
-  double proc_flux = 0.0;        /* current flux sum on this proc */
-  double proc_flux_conv = 0.0;   /* current convective flux sum on this proc */
-  double proc_area = 0.0;        /* current area sum on this proc */
-  double delta_flux = 0.0;       /* increment of flux             */
-  double delta_flux_conv = 0.0;  /* increment of convective flux  */
-  double delta_area = 0.0;       /* increment of area */
   double global_flux = 0.0;      /* flux sum over all procs */
   double global_flux_conv = 0.0; /* convective flux sum over all procs */
   double global_area = 0.0;      /* area sum over all procs */
@@ -6346,31 +6442,9 @@ double evaluate_flux_sens(const Exo_DB *exo,       /* ptr to basic exodus ii mes
                 }
               } else if (cr->HeatFluxModel == CR_HF_USER) {
 
-#if defined SECOR_HEAT_FLUX
-                double *hpar, h, dh_dX[DIM], Vb[DIM], Vt[DIM];
-                double dq_dVb[DIM][DIM], dq_dVt[DIM][DIM];
-
-                hpar = &mp->u_thermal_conductivity[0];
-                h = hpar[0] + hpar[4] * fv->x[0] +
-                    (hpar[1] - hpar[5] * fv->x[0]) * (hpar[3] - fv->x[1]) +
-                    0.5 * hpar[2] * SQUARE(hpar[3] - fv->x[1]);
-
-                dh_dX[0] = hpar[4] - hpar[5] * (hpar[3] - fv->x[1]);
-                dh_dX[1] = hpar[5] * fv->x[0] - hpar[1] - hpar[2] * (hpar[3] - fv->x[1]);
-
-                /*     velocities of bottom and top surfaces   */
-                Vb[0] = mp->u_heat_capacity[0];
-                Vb[1] = mp->u_heat_capacity[1];
-                Vt[0] = mp->u_heat_capacity[2];
-                Vt[1] = mp->u_heat_capacity[3];
-
-                usr_heat_flux(fv->grad_T, q, dq_gradT, dq_dX, time_value, h, dh_dX, Vb, Vt, dq_dVb,
-                              dq_dVt);
-#else
                 usr_heat_flux(fv->grad_T, q, dq_gradT, dq_dX, time_value);
                 printf("untested\n");
                 exit(-1);
-#endif
                 for (j = 0; j < VIM; j++) {
                   for (a = 0; a < VIM; a++) {
                     local_q += fv->snormal[j] * dq_gradT[j][a] * fv_sens->grad_T[a];
@@ -6827,21 +6901,6 @@ double evaluate_flux_sens(const Exo_DB *exo,       /* ptr to basic exodus ii mes
             } /*  end of switch */
 
             local_area += weight * det;
-#ifdef PARALLEL
-            delta_flux = local_flux - local_flux0;
-            delta_flux_conv = local_flux_conv - local_flux_conv0;
-            delta_area = local_area - local_area0;
-
-            if (Num_Proc > 1 && dpi->elem_owner[elem_list[i]] == ProcID) {
-              proc_flux += delta_flux;
-              proc_flux_conv += delta_flux_conv;
-              proc_area += delta_area;
-            }
-
-            local_flux0 = local_flux;
-            local_flux_conv0 = local_flux_conv;
-            local_area0 = local_area;
-#endif
 
             if (profile_flag && print_flag) {
               FILE *jfp = 0;
@@ -7045,22 +7104,7 @@ double evaluate_flux_sens(const Exo_DB *exo,       /* ptr to basic exodus ii mes
                 GOMA_EH(GOMA_ERROR, "Illegal flux type");
                 break;
               } /*  end of switch */
-#ifdef PARALLEL
-              delta_flux = local_flux - local_flux0;
-              delta_flux_conv = local_flux_conv - local_flux_conv0;
-              delta_area = local_area - local_area0;
-
-              if (Num_Proc > 1 && dpi->elem_owner[elem_list[i]] == ProcID) {
-                proc_flux += delta_flux;
-                proc_flux_conv += delta_flux_conv;
-                proc_area += delta_area;
-              }
-
-              local_flux0 = local_flux;
-              local_flux_conv0 = local_flux_conv;
-              local_area0 = local_area;
-#endif
-            } /*  mat_id  */
+            }   /*  mat_id  */
           }
         } /*  ss_sides loop  */
         if (corner_elem == -1)
@@ -8486,10 +8530,6 @@ int adaptive_weight(double w[],
   int side_diff, side_ct;
   int return_val = 1;
   double ecrd[12][MAX_PDIM];
-
-#ifndef NO_CHEBYSHEV_PLEASE
-  int chev_order = 3;
-#endif
   double gauss_wt1D[3] = {5 / 9., 8 / 9., 5 / 9.};
   double gauss_wt2D[9] = {25 / 81., 40 / 81., 25 / 81., 40 / 81., 64 / 81.,
                           40 / 81., 25 / 81., 40 / 81., 25 / 81.};
@@ -8551,14 +8591,21 @@ int adaptive_weight(double w[],
 
   int dupl_side = 0, dupl_id = 0, side1 = -1, side2 = -1;
   double int_angle[8], xloc;
+#ifdef NO_CHEBYSHEV_PLEASE
+  GOMA_EH(GOMA_ERROR, "Turn off NO_CHEBYSHEV_PLEASE please.\n");
+#else
+  int chev_order;
+  if (ls->AdaptIntegration) {
+    chev_order = ls->Adaptive_Order;
+  } else {
+    chev_order = 3;
+  }
+#endif
 
-  if (elem_type != BIQUAD_QUAD) {
+  if (elem_type != BIQUAD_QUAD && elem_type != BIQUAD_SHELL && elem_type != BILINEAR_QUAD &&
+      elem_type != BILINEAR_SHELL) {
     GOMA_EH(GOMA_ERROR, "adaptive integration for 2D quads only!");
   }
-
-#ifndef NO_CHEBYSHEV_PLEASE
-  chev_order = ls->Adaptive_Order;
-#endif
 
   if (sharp_interface) {
 

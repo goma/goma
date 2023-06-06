@@ -49,9 +49,10 @@ function ok_check {
 
 function compiler_test {
     #First test for compilers
-    QUESTION="Do you want to use the Intel compiler? (not recommended)"
-    recommended="false"
-    ok_check
+    #QUESTION="Do you want to use the Intel compiler? (not recommended)"
+    #recommended="false"
+    #ok_check
+    isok="false"
     if [ "$isok" == "true" ]; then
         if icc --version &> /dev/null ; then
             echo "ICC detected. Installing with Intel compiler"
@@ -148,67 +149,20 @@ Want me to build openMPI from scratch? (recommended)"
 
 
 function mkl_test {
-    #Finally test for math kernel libraries
-    QUESTION="Do you want to use the Atlas math libraries with $1? (not recommended)"
-    recommended="false"
+    QUESTION="Do you want to use OpenBLAS with $1? (recommended)"
+    recommended="true"
     ok_check
     if [ "$isok" == "true" ]; then
-        MATH_LIBRARIES="atlas"
-        echo "Please enter where Atlas is installed"
-        read MATH_PATH
+        echo "Using OpenBLAS for BLAS and LAPACK"
+        MATH_LIBRARIES="openblas"
+        SYS_LIB="-lm -lz"
+    else
+        echo "Blas will be downloaded and built from Netlib"
+        MATH_LIBRARIES="netlib blas"
         SYS_LIB="-lm -lz"
         User_Flags="-O1"
-    else
-        QUESTION="Do you want to use the Intel MKL with $1? (not recommended)"
-        recommended="false"
-        ok_check
-        if [ -n "$MKLROOT" ]; then
-            echo "Intel Math Kernel Libraries found..."
-            if [ "$isok" == "true" ]; then
-                echo "They will be used for installation"
-                MATH_LIBRARIES="intel"
-                SYS_LIB="-lz"
-                if [ "$CC_NAME" == "intel" ]; then
-                    User_Flags="-O1 -mkl"
-                else
-                    # Link intel libraries with gcc manually. See
-                    # https://software.intel.com/en-us/articles/intel-mkl-103-getting-started
-                    User_Flags="-O1 -m64 -DMKL_ILP64 -I${MKLROOT}/include"
-                    SYS_LIB="-lm -ldl"
-                fi
-            else
-                echo "But they will be ignored."
-                echo
-                echo "Blas will be downloaded and built from Netlib"
-                MATH_LIBRARIES="netlib blas"
-                SYS_LIB="-lm -lz"
-                User_Flags="-O1"
-            fi
-        else
-            if [ "$isok" == "true" ]; then
-                echo "I was unable to find the intel MKLs."
-                echo "Please enter their root location manually"
-                read MKLROOT
-                export MKLROOT
-                export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${MKLROOT}/lib/intel64_lin
-                MATH_LIBRARIES="intel"
-                SYS_LIB="-lz"
-                if [ "$CC_NAME" == "intel" ]; then
-                    User_Flags="-O1 -mkl"
-                else
-                    # Link intel libraries with gcc manually. See
-                    # https://software.intel.com/en-us/articles/intel-mkl-103-getting-started
-                    User_Flags="-O1 -m64 -DMKL_ILP64 -I${MKLROOT}/include"
-                    SYS_LIB="-lm -ldl"
-                fi
-            else
-                echo "Blas will be downloaded and built from Netlib."
-                MATH_LIBRARIES="netlib blas"
-                SYS_LIB="-lm -lz"
-                User_Flags="-O1"
-            fi
-        fi
     fi
+    
 }
 
 function confirm {

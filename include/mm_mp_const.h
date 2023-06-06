@@ -52,6 +52,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define BILINEAR     6  /* Denotes option for table interpolation */
 #define CAP_PRES     7
 #define FAUX_PLASTIC 16
+#define WAVELENGTH   17
 
 /* Moment Property Models */
 // growth rate
@@ -154,6 +155,11 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define V_CONDUCTIVITY 0
 #define V_PERMITTIVITY 1
 
+// Electromagnetic
+#define COMPLEX_CONSTANT 2
+#define RADIAL_PML       3
+#define REFRACTIVE_INDEX 4
+
 /* Viscoelastic Constitutive equation parameters */
 
 #define NOPOLYMER         0
@@ -164,6 +170,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define SARAMITO_OLDROYDB 10
 #define SARAMITO_GIESEKUS 11
 #define SARAMITO_PTT      12
+#define MODIFIED_JEFFREYS 13
 #define MODIFIED_WLF      39
 
 // PTT forms
@@ -212,6 +219,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
  * vary.
  * -> appropriate for dilute transport
  */
+#define DENSITY_THERMEXP        13  /* Normal linear expansion for solids */
 #define DENSITY_SUSPENSION_PM   14  /* special model for this system */
 #define DENSITY_THERMAL_BATTERY 905 /* special density model for thermal bat work */
 #define DENSITY_FOAM_PBE        34
@@ -852,6 +860,8 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS]; /* number of variables to overwri
 #define TAGC_ACOUSTIC_FREQ       8010
 #define TAGC_PROCESS_TEMP        8011
 #define TAGC_ACOUSTIC_WAVELENGTH 8012
+#define TAGC_EM_FREQ             8013
+#define TAGC_EM_WAVELENGTH       8014
 /*
  * Thin film multiphase constants
  * */

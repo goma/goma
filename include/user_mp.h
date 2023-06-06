@@ -63,7 +63,8 @@ EXTERN int usr_lame_lambda(struct Elastic_Constitutive *,
 
 EXTERN int usr_expansion(dbl *, /* param - ptr to user-defined parm list     */
                          double *,
-                         double[MAX_VARIABLE_TYPES + MAX_CONC]);
+                         double[MAX_VARIABLE_TYPES + MAX_CONC],
+                         const int);
 
 EXTERN int usr_diffusivity(int,    /* species_no - of diffusivity etc. needed   */
                            dbl *); /* param - ptr to user-defined parm list     */
@@ -72,28 +73,20 @@ EXTERN int usr_FlowingLiquidViscosity(dbl *); /* param - ptr to user-defined par
 
 EXTERN int usr_solid_viscosity(dbl *, /* param - ptr to user-defined parm list     */
                                double *,
-                               double[MAX_VARIABLE_TYPES + MAX_CONC]);
+                               double[MAX_VARIABLE_TYPES + MAX_CONC],
+                               const int);
 
-#if defined SECOR_HEAT_FLUX
-EXTERN double usr_heat_flux(const double[],    /*   temperature gradient       */
-                            double[],          /*   heat flux vector       */
-                            double[][DIM],     /*   flux sens wrt gradT    */
-                            double[][DIM],     /*   flow sens  wrt coordinates */
-                            const double,      /* time */
-                            const double,      /* gap  */
-                            const double[DIM], /* dgap_dX */
-                            const double[DIM], /* Velocity bottom */
-                            const double[DIM], /* Velocity top  */
-                            double[][DIM],     /*  dq_dVb  */
-                            double[][DIM]);    /*  dq_dVt  */
-#else
+EXTERN int usr_solid_dil_viscosity(dbl *, /* param - ptr to user-defined parm list     */
+                                   double *,
+                                   double[MAX_VARIABLE_TYPES + MAX_CONC],
+                                   const int);
+
 EXTERN double usr_heat_flux(const double[],   /*   temperature gradient       */
                             double[],         /*   heat flux vector       */
                             double[DIM][DIM], /*   flux sens wrt gradT    */
                             double[DIM][DIM], /*   flow sens  wrt coordinates */
                             const double      /* time */
 );
-#endif
 
 EXTERN int usr_permeability(dbl *); /* param - ptr to user-defined parm list     */
 

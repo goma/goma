@@ -57,13 +57,7 @@ EXTERN int assemble_stress_fortin(dbl,        /* tt - parm to vary time integrat
                                   dbl,        /* dt - current time step size               */
                                   PG_DATA *); /* dvc_dnode                                 */
 
-EXTERN int assemble_stress_log_conf(dbl tt,
-                                    dbl dt,
-                                    dbl h[DIM],
-                                    dbl hh[DIM][DIM],
-                                    dbl dh_dxnode[DIM][MDE],
-                                    dbl vcent[DIM],
-                                    dbl dvc_dnode[DIM][MDE]);
+EXTERN int assemble_stress_log_conf(dbl tt, dbl dt, PG_DATA *pg_data);
 
 EXTERN int assemble_stress_log_conf_transient(dbl tt, dbl dt, PG_DATA *pg_data);
 
@@ -202,4 +196,22 @@ void compute_saramito_model_terms(
     const struct Generalized_Newtonian *,
     const int); // bounds S to [0,1] if TRUE. Only use this for postprocessing!
 
+int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
+                                       * explicit (tt = 1) to implicit (tt = 0) */
+                              dbl dt, /* current time step size */
+                              PG_DATA *pg_data);
+
+int assemble_stress_conf(dbl tt, /* parameter to vary time integration from
+                                  * explicit (tt = 1) to implicit (tt = 0) */
+                         dbl dt, /* current time step size */
+                         PG_DATA *pg_data);
+int sqrt_conf_source(int mode,
+                     dbl b[DIM][DIM],
+                     dbl source_term[DIM][DIM],
+                     dbl d_source_term_db[DIM][DIM][DIM][DIM]);
+void compute_a_dot_b(dbl b[DIM][DIM],
+                     dbl G[DIM][DIM],
+                     dbl a_dot_b[DIM][DIM],
+                     dbl d_a_dot_b_db[DIM][DIM][DIM][DIM],
+                     dbl d_a_dot_b_dG[DIM][DIM][DIM][DIM]);
 #endif /* GOMA_MM_FILL_STRESS_H */

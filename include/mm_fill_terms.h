@@ -165,6 +165,8 @@ EXTERN int load_fv /* mm_fill_terms.c                           */
 
 EXTERN int load_fv_all(void);
 
+EXTERN int load_fv_vector(void);
+
 EXTERN int load_fv_grads /* mm_fill_terms.c                           */
     (void);
 
@@ -366,6 +368,8 @@ EXTERN void fluid_stress(double[DIM][DIM],            /* Pi[DIM][DIM] */
                          STRESS_DEPENDENCE_STRUCT *); /* d_Pi         */
 
 EXTERN void fluid_stress_conf(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi);
+
+void fluid_stress_sqrt_conf(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi);
 
 EXTERN void heat_flux(double[DIM],                   /* q[DIM] */
                       HEAT_FLUX_DEPENDENCE_STRUCT *, /* dq     */

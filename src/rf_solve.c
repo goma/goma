@@ -80,6 +80,7 @@
 #include "sl_epetra_util.h"
 #include "sl_matrix_util.h"
 #include "sl_petsc.h"
+#include "sl_petsc_complex.h"
 #include "sl_util.h"
 #include "sl_util_structs.h"
 #include "std.h"
@@ -386,10 +387,6 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
   double eps;
 
   double time2 = 0.0;
-#ifdef RESET_TRANSIENT_RELAXATION_PLEASE
-  double damp_factor_org[2] = {damp_factor1, damp_factor2};
-  double toler_org[3] = {custom_tol1, custom_tol2, custom_tol3};
-#endif
   /*
    * Other local variables...
    */
@@ -435,12 +432,18 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 #ifdef LIBRARY_MODE
   int last_step = FALSE; /* Indicates final time step on this call */
 #endif
+  double damp_factor_org[2] = {damp_factor1, damp_factor2};
 #ifdef RELAX_ON_TRANSIENT_PLEASE
   int relax_bit = TRUE; /* Enables relaxation after a transient convergence failure*/
+  double toler_org[3] = {custom_tol1, custom_tol2, custom_tol3};
 #else
   int relax_bit = FALSE;
 #endif
-  int no_relax_retry = 8;
+  int no_relax_retry = ceil(2. - log(damp_factor_org[0]) / log(2.));
+  int nonconv_roll = 0;
+  int use_custom_damp =
+      ((damp_factor1 <= 1. && damp_factor1 >= 0.) && (damp_factor2 <= 1. && damp_factor2 >= 0.) &&
+       (damp_factor3 <= 1. && damp_factor3 >= 0.));
 
   static const char yo[] = "solve_problem"; /* So my name is in a string.        */
 
@@ -717,6 +720,17 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
         EpetraCreateRowMatrix(num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]);
     EpetraCreateGomaProblemGraph(ams[JAC], exo, dpi);
 #ifdef GOMA_ENABLE_PETSC
+#if PETSC_USE_COMPLEX
+  } else if (strcmp(Matrix_Format, "petsc_complex") == 0) {
+    err = check_compatible_solver();
+    GOMA_EH(err, "Incompatible matrix solver for petsc, solver must be petsc");
+    check_parallel_error("Matrix format / Solver incompatibility");
+    pg->imtrx = 0;
+    goma_error err = goma_setup_petsc_matrix_complex(
+        ams[JAC], exo, dpi, x, x_old, xdot, xdot_old, num_internal_dofs[pg->imtrx],
+        num_boundary_dofs[pg->imtrx], num_external_dofs[pg->imtrx], pg->imtrx);
+    GOMA_EH(err, "goma_setup_petsc_matrix_complex");
+#else
   } else if (strcmp(Matrix_Format, "petsc") == 0) {
     err = check_compatible_solver();
     GOMA_EH(err, "Incompatible matrix solver for petsc, solver must be petsc");
@@ -726,6 +740,7 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
         ams[JAC], exo, dpi, x, x_old, xdot, xdot_old, num_internal_dofs[pg->imtrx],
         num_boundary_dofs[pg->imtrx], num_external_dofs[pg->imtrx], pg->imtrx);
     GOMA_EH(err, "goma_setup_petsc_matrix");
+#endif
 #endif
   } else if (strcmp(Matrix_Format, "msr") == 0) {
     log_msg("alloc_MSR_sparse_arrays...");
@@ -781,9 +796,11 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
     GOMA_EH(GOMA_ERROR, "Attempted to allocate unknown sparse matrix format: %s", Matrix_Format);
   }
 #ifdef GOMA_ENABLE_PETSC
+#if !(PETSC_USE_COMPLEX)
   if (upd->petsc_solve_post_proc && rd->TotalNVPostOutput) {
     goma_setup_petsc_post_proc_matrix(exo, dpi, x, x_old, xdot, xdot_old);
   }
+#endif
 #endif
 
   /*
@@ -985,11 +1002,11 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
           DPRINTF(stdout, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID,
                   augc[iAC].VOLID, evol_local, x_AC[iAC]);
         } else if (augc[iAC].Type == AC_POSITION) {
-          DPRINTF(stdout, "\tNodeSet[%4d]_Pos = %10.6e F_bal = %10.6e VC[%4d] Param=%10.6e\n",
+          DPRINTF(stdout, "\tNodeSet[%4d]_Pos = %10.6e F_bal = %10.6e MT[%4d] Param=%10.6e\n",
                   augc[iAC].MTID, evol_local, augc[iAC].lm_resid, augc[iAC].VOLID, x_AC[iAC]);
         } else if (augc[iAC].Type == AC_ANGLE) {
           evol_local = augc[iAC].lm_resid + augc[iAC].CONSTV;
-          DPRINTF(stdout, "\tNodeSet[%4d]_Ang = %g F_bal = %6.3e VC[%4d] Param=%6.3e\n",
+          DPRINTF(stdout, "\tNodeSet[%4d]_Ang = %g F_bal = %6.3e MT[%4d] Param=%6.3e\n",
                   augc[iAC].MTID, evol_local, augc[iAC].lm_resid, augc[iAC].VOLID, x_AC[iAC]);
         } else if (augc[iAC].Type == AC_LS_VEL) {
           evol_local = augc[iAC].lsvol;
@@ -1799,17 +1816,10 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
       /* For transient, reset the Newton damping factors after a
        *   successful time step
        */
-      if (nt > 0) {
-        if (converged) {
-          damp_factor2 = -1.;
-          damp_factor1 = 1.0;
-        } else if (nt < no_relax_retry) {
-          damp_factor2 = damp_factor_org[1];
-          damp_factor1 = damp_factor_org[0];
-          custom_tol1 = toler_org[0];
-          custom_tol2 = toler_org[1];
-          custom_tol3 = toler_org[2];
-        }
+      if (nt > 0 && converged) {
+        damp_factor2 = -1.;
+        damp_factor1 = 1.0;
+        nonconv_roll = 0;
       }
 #endif
 #ifdef GOMA_ENABLE_OMEGA_H
@@ -2100,11 +2110,11 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
                 DPRINTF(stdout, "\tBC[%4d] DF[%4d]=%10.6e\n", augc[iAC].BCID, augc[iAC].DFID,
                         x_AC[iAC]);
               } else if (augc[iAC].Type == AC_POSITION) {
-                DPRINTF(stdout, "\tNodeSet[%4d]_Pos = %10.6e F_bal = %10.6e VC[%4d] Param=%10.6e\n",
+                DPRINTF(stdout, "\tNodeSet[%4d]_Pos = %10.6e F_bal = %10.6e MT[%4d] Param=%10.6e\n",
                         augc[iAC].MTID, evol_local, augc[iAC].lm_resid, augc[iAC].VOLID, x_AC[iAC]);
               } else if (augc[iAC].Type == AC_ANGLE) {
                 evol_local = augc[iAC].lm_resid + augc[iAC].CONSTV;
-                DPRINTF(stdout, "\tNodeSet[%4d]_Ang = %g F_bal = %6.3e VC[%4d] Param=%6.3e\n",
+                DPRINTF(stdout, "\tNodeSet[%4d]_Ang = %g F_bal = %6.3e MT[%4d] Param=%6.3e\n",
                         augc[iAC].MTID, evol_local, augc[iAC].lm_resid, augc[iAC].VOLID, x_AC[iAC]);
               }
             }
@@ -2392,14 +2402,22 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
 
       else /* not converged or unsuccessful time step */
       {
-        if (relax_bit && ((n - nt) < no_relax_retry)) {
+        if (relax_bit && (nonconv_roll < no_relax_retry)) {
           /*success_dt = TRUE;  */
+#ifdef RESET_TRANSIENT_RELAXATION_PLEASE
+          nonconv_roll++;
+          if (nonconv_roll == 1 && nt != 0) {
+            damp_factor1 = damp_factor_org[0];
+            damp_factor2 = damp_factor_org[1];
+            custom_tol1 = toler_org[0];
+            custom_tol2 = toler_org[1];
+            custom_tol3 = toler_org[2];
+          }
+#endif
           if (inewton == -1) {
-            DPRINTF(stdout,
-                    "\nHmm... trouble on first step \n  Let's try some more relaxation  \n");
-            if ((damp_factor1 <= 1. && damp_factor1 >= 0.) &&
-                (damp_factor2 <= 1. && damp_factor2 >= 0.) &&
-                (damp_factor3 <= 1. && damp_factor3 >= 0.)) {
+            DPRINTF(stdout, "\nHmm... trouble on this step \n  Let's try some more relaxation %d\n",
+                    no_relax_retry - nonconv_roll);
+            if (use_custom_damp) {
               custom_tol1 *= 0.01;
               custom_tol2 *= 0.01;
               custom_tol3 *= 0.01;
@@ -2411,30 +2429,34 @@ void solve_problem(Exo_DB *exo, /* ptr to the finite element mesh database  */
             }
           } else if (!converged) {
             DPRINTF(stdout,
-                    "\nHmm... could not converge on first step\n Let's try some more iterations\n");
+                    "\nHmm... could not converge on this step\nLet's try some more iterations %d\n",
+                    no_relax_retry - nonconv_roll);
             dcopy1(numProcUnknowns, x, x_old);
             if (nAC > 0) {
               dcopy1(nAC, x_AC, x_AC_old);
             }
-            if ((damp_factor1 <= 1. && damp_factor1 >= 0.) &&
-                (damp_factor2 <= 1. && damp_factor2 >= 0.) &&
-                (damp_factor3 <= 1. && damp_factor3 >= 0.)) {
-              custom_tol1 *= 100.;
-              custom_tol2 *= 100.;
-              custom_tol3 *= 100.;
-              DPRINTF(stdout, "  custom tolerances %g %g %g  \n", custom_tol1, custom_tol2,
-                      custom_tol3);
+            if (use_custom_damp) {
+              if (nonconv_roll > 1 || nt == 0) {
+                custom_tol1 *= 100.;
+                custom_tol2 *= 100.;
+                custom_tol3 *= 100.;
+                DPRINTF(stdout, "  custom tolerances %g %g %g  \n", custom_tol1, custom_tol2,
+                        custom_tol3);
+              }
             } else {
-              damp_factor1 *= 2.0;
-              damp_factor1 = MIN(damp_factor1, 1.0);
+              if (nonconv_roll > 1 || nt == 0) {
+                damp_factor1 *= 2.0;
+                damp_factor1 = MIN(damp_factor1, 1.0);
+              }
               DPRINTF(stdout, "  damping factor %g  \n", damp_factor1);
             }
           } else {
-            DPRINTF(stderr, "Not Looking Good..., Iter: %d Converged: %d Success_dt: %d \n",
-                    inewton, converged, success_dt);
+            /*DPRINTF(stderr, "Not Looking Good..., Iter: %d Converged: %d Success_dt: %d \n",
+                    inewton, converged, success_dt); */
             DPRINTF(stderr, "\n\tlast time step failed, dt *= %g for next try!\n",
                     tran->time_step_decelerator);
 
+            damp_factor1 = MAX(damp_factor1, 1.0);
             delta_t *= tran->time_step_decelerator;
             tran->delta_t = delta_t;
             tran->delta_t_avg = 0.25 * (delta_t + delta_t_old + delta_t_older + delta_t_oldest);

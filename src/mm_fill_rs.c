@@ -1853,6 +1853,8 @@ void f_kinematic_displacement_bc(double func[DIM],
   double origin[DIM] = {0, 0, 0};
   double roll_rad = 0, pt_rad;
   double dir_angle[DIM], t, axis_pt[DIM];
+  dbl dns_dX[DIM][DIM];
+  dbl dns_drs[DIM][DIM];
   int base_displ_model = TRUE;
 /***************************** EXECUTION BEGINS *******************************/
 #if 0
@@ -1884,12 +1886,20 @@ void f_kinematic_displacement_bc(double func[DIM],
       for (p = 0; p < pd->Num_Dim; p++)
         origin[p] = elc_rs_glob[mn]->u_v_mesh_sfs[p + 1];
       pt_rad = 0;
-      for (p = 0; p < pd->Num_Dim; p++)
+      for (p = 0; p < pd->Num_Dim; p++) {
         pt_rad += SQUARE(fv->x[p] - fv->d_rs[p] - origin[p]);
+      }
       pt_rad = sqrt(pt_rad);
 
-      for (p = 0; p < pd->Num_Dim; p++)
+      for (p = 0; p < pd->Num_Dim; p++) {
         dns[p] = origin[p] + roll_rad / pt_rad * (fv->x[p] - fv->d_rs[p] - origin[p]);
+        for (int r = 0; r < pd->Num_Dim; r++) {
+          dns_dX[p][r] = -roll_rad * (fv->x[r] - fv->d_rs[r] - origin[r]) /
+                         (pt_rad * pt_rad * pt_rad) * (fv->x[p] - fv->d_rs[p] - origin[p]);
+          dns_dX[p][r] += delta(p, r) * roll_rad / pt_rad;
+          dns_drs[p][r] = -dns_dX[p][r];
+        }
+      }
     } else if (elc_rs_glob[mn]->v_mesh_sfs_model == ROTATIONAL_3D) {
       for (p = 0; p < DIM; p++)
         origin[p] = elc_rs_glob[mn]->u_v_mesh_sfs[p + 1];
@@ -1925,6 +1935,17 @@ void f_kinematic_displacement_bc(double func[DIM],
       for (p = 0; p < pd->Num_Dim; p++)
         dns[p] += u_pars[p] * t;
 
+      for (p = 0; p < pd->Num_Dim; p++) {
+        for (int r = 0; r < pd->Num_Dim; r++) {
+          dns_dX[p][r] =
+              delta(p, r) + -u_pars[p] * u_pars[p] * delta(p, r) /
+                                (SQUARE(u_pars[0]) + SQUARE(u_pars[1]) + SQUARE(u_pars[2]));
+          dns_drs[p][r] =
+              -delta(p, r) + u_pars[p] * u_pars[p] * delta(p, r) /
+                                 (SQUARE(u_pars[0]) + SQUARE(u_pars[1]) + SQUARE(u_pars[2]));
+        }
+      }
+
     } else {
       GOMA_WH(-1, "Reverting to old base_displacement version.\n");
       base_displ_model = FALSE;
@@ -1953,16 +1974,18 @@ void f_kinematic_displacement_bc(double func[DIM],
             d_func[0][var][j] += ((fv->d[kdir] - base_displacement[kdir]) -
                                   (fv->d_rs[kdir] - base_displacement_rs[kdir])) *
                                      fv->dsnormal_dx[kdir][p][j] +
-                                 (delta(kdir, p) * phi_j) * fv->snormal[kdir];
+                                 (delta(kdir, p) - dns_dX[kdir][p]) * phi_j * fv->snormal[kdir];
           }
         }
       }
 
-      var = SOLID_DISPLACEMENT1 + kdir;
-      if (pd->v[pg->imtrx][var]) {
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-          phi_j = bf[var]->phi[j];
-          d_func[0][var][j] -= phi_j * fv->snormal[kdir];
+      for (p = 0; p < pd->Num_Dim; p++) {
+        var = SOLID_DISPLACEMENT1 + p;
+        if (pd->v[pg->imtrx][var]) {
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            phi_j = bf[var]->phi[j];
+            d_func[0][var][j] -= (delta(kdir, p) + dns_drs[kdir][p]) * phi_j * fv->snormal[kdir];
+          }
         }
       }
     }

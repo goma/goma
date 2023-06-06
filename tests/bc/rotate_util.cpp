@@ -1,4 +1,8 @@
-#include <catch2/catch.hpp>
+
+
+#include <catch2/catch_approx.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <cmath>
 #include <stddef.h>
 
@@ -9,7 +13,7 @@
 
 #define INV_SQRT_2 M_SQRT1_2
 
-static const auto zero_comp = Catch::Floating::WithinAbsMatcher(0.0, 1e-15);
+static const auto zero_comp = Catch::Matchers::WithinAbsMatcher(0.0, 1e-15);
 
 // TODO Unit Test Derivatives, need a good way to do this
 
@@ -106,7 +110,7 @@ TEST_CASE("goma_check_normals_within_critical_angle", "[bc][automatic_rotations]
   int n_normals = 3;
   helper_create_normals(&normals, n_normals);
 
-  REQUIRE(GOMA_ROTATIONS_CRITICAL_ANGLE == Approx(M_PI_4));
+  REQUIRE(GOMA_ROTATIONS_CRITICAL_ANGLE == Catch::Approx(M_PI_4));
 
   double n1[3] = {1.0, 0.0, 0.0};
   double n2[3] = {0.0, 1.0, 0.0};
@@ -227,49 +231,49 @@ TEST_CASE("goma_best_coordinate_system_3D 1 normal", "[bc][automatic_rotations]"
   error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
   REQUIRE(error != GOMA_ERROR);
 
-  REQUIRE(gds_vector_get(rotated_coord[0]->normal, 0) == Approx(1.0));
+  REQUIRE(gds_vector_get(rotated_coord[0]->normal, 0) == Catch::Approx(1.0));
   REQUIRE(zero_comp.match(gds_vector_get(rotated_coord[0]->normal, 1)));
   REQUIRE(zero_comp.match(gds_vector_get(rotated_coord[0]->normal, 2)));
 
   REQUIRE(zero_comp.match(gds_vector_get(rotated_coord[1]->normal, 0)));
-  REQUIRE(gds_vector_get(rotated_coord[1]->normal, 1) == Approx(1.0));
+  REQUIRE(gds_vector_get(rotated_coord[1]->normal, 1) == Catch::Approx(1.0));
   REQUIRE(zero_comp.match(gds_vector_get(rotated_coord[1]->normal, 2)));
 
   REQUIRE(zero_comp.match(gds_vector_get(rotated_coord[2]->normal, 0)));
   REQUIRE(zero_comp.match(gds_vector_get(rotated_coord[2]->normal, 1)));
-  REQUIRE(gds_vector_get(rotated_coord[2]->normal, 2) == Approx(1.0));
+  REQUIRE(gds_vector_get(rotated_coord[2]->normal, 2) == Catch::Approx(1.0));
 
   helper_set_normal_from_vector(normals[0], n2);
   error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
   REQUIRE(error != GOMA_ERROR);
 
-  REQUIRE(gds_vector_get(rotated_coord[0]->normal, 0) == Approx(1.0));
+  REQUIRE(gds_vector_get(rotated_coord[0]->normal, 0) == Catch::Approx(1.0));
   REQUIRE(zero_comp.match(gds_vector_get(rotated_coord[0]->normal, 1)));
   REQUIRE(zero_comp.match(gds_vector_get(rotated_coord[0]->normal, 2)));
 
   REQUIRE(zero_comp.match(gds_vector_get(rotated_coord[1]->normal, 0)));
-  REQUIRE(gds_vector_get(rotated_coord[1]->normal, 1) == Approx(1.0));
+  REQUIRE(gds_vector_get(rotated_coord[1]->normal, 1) == Catch::Approx(1.0));
   REQUIRE(zero_comp.match(gds_vector_get(rotated_coord[1]->normal, 2)));
 
   REQUIRE(zero_comp.match(gds_vector_get(rotated_coord[2]->normal, 0)));
   REQUIRE(zero_comp.match(gds_vector_get(rotated_coord[2]->normal, 1)));
-  REQUIRE(gds_vector_get(rotated_coord[2]->normal, 2) == Approx(1.0));
+  REQUIRE(gds_vector_get(rotated_coord[2]->normal, 2) == Catch::Approx(1.0));
 
   helper_set_normal_from_vector(normals[0], n3);
   error = goma_best_coordinate_system_3D(normals, n_normals, rotated_coord, &type);
   REQUIRE(error != GOMA_ERROR);
 
-  REQUIRE(gds_vector_get(rotated_coord[0]->normal, 0) == Approx(1.0));
+  REQUIRE(gds_vector_get(rotated_coord[0]->normal, 0) == Catch::Approx(1.0));
   REQUIRE(zero_comp.match(gds_vector_get(rotated_coord[0]->normal, 1)));
   REQUIRE(zero_comp.match(gds_vector_get(rotated_coord[0]->normal, 2)));
 
   REQUIRE(zero_comp.match(gds_vector_get(rotated_coord[1]->normal, 0)));
-  REQUIRE(gds_vector_get(rotated_coord[1]->normal, 1) == Approx(1.0));
+  REQUIRE(gds_vector_get(rotated_coord[1]->normal, 1) == Catch::Approx(1.0));
   REQUIRE(zero_comp.match(gds_vector_get(rotated_coord[1]->normal, 2)));
 
   REQUIRE(zero_comp.match(gds_vector_get(rotated_coord[2]->normal, 0)));
   REQUIRE(zero_comp.match(gds_vector_get(rotated_coord[2]->normal, 1)));
-  REQUIRE(gds_vector_get(rotated_coord[2]->normal, 2) == Approx(1.0));
+  REQUIRE(gds_vector_get(rotated_coord[2]->normal, 2) == Catch::Approx(1.0));
 
   // Try some different normals now
   double mn1[3] = {-1.0, 0.0, 0.0};

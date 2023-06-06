@@ -25,6 +25,13 @@ static char *cvs_solnonlin_id =
  -----------------------------------------------------------------------------
 */
 
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "loca_const.h"
+#include "loca_util_const.h"
+
 /*
  * The following automates switches between ARPACK and PARPACK calls.
  * Only compiler directives EIGEN_PARALLEL or EIGEN_SERIAL apply.
@@ -166,13 +173,6 @@ extern void cpdneupc_(MPI_Comm *comm,
                       int *select);
 extern void cpdmout_(MPI_Comm *comm, int *lout, int *m, int *n, double *A, int *lda, int *idigit);
 extern double second_(void);
-
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-
-#include "loca_const.h"
-#include "loca_util_const.h"
 
 #define SHIFTS   0
 #define MAX_ITRS 2

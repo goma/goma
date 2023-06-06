@@ -1,4 +1,8 @@
+#include <mpi.h>
+#include <stddef.h>
 #ifdef GOMA_ENABLE_PETSC
+#include <petscsystypes.h>
+#if !(PETSC_USE_COMPLEX)
 #include <petscksp.h>
 #include <petscmat.h>
 #include <petscsys.h>
@@ -822,19 +826,36 @@ static goma_error initialize_petsc_post_proc_matrix(Exo_DB *exo,
       GOMA_EH(err, "bf_mp_init");
 
       int eqn = pd->ProjectionVar;
-      for (int i = 0; i < ei[pg->imtrx]->num_local_nodes; i++) {
-        int gnn_i = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
-        int ldof_i = ei[upd->matrix_index[pd->ProjectionVar]]->ln_to_dof[eqn][i];
-        for (int j = 0; j < ei[pg->imtrx]->num_local_nodes; j++) {
-          int gnn_j = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + j];
-          int ldof_j = ei[upd->matrix_index[pd->ProjectionVar]]->ln_to_dof[eqn][j];
-          if (ldof_i >= 0 && ldof_j >= 0 &&
-              ((gnn_i < dpi->num_internal_nodes + dpi->num_boundary_nodes) || Num_Proc == 1)) {
+      if (bf[eqn]->interpolation == I_N1) {
+        for (int i = 0; i < ei[pg->imtrx]->num_local_nodes; i++) {
+          int gnn_i = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
+          for (int j = 0; j < ei[pg->imtrx]->num_local_nodes; j++) {
+            int gnn_j = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + j];
             if (gnn_i < num_rows) {
               if (gnn_j >= num_rows) {
                 o_nnz[gnn_i] += 1;
               } else {
                 d_nnz[gnn_i] += 1;
+              }
+            }
+          }
+        }
+
+      } else {
+        for (int i = 0; i < ei[pg->imtrx]->num_local_nodes; i++) {
+          int gnn_i = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
+          int ldof_i = ei[upd->matrix_index[pd->ProjectionVar]]->ln_to_dof[eqn][i];
+          for (int j = 0; j < ei[pg->imtrx]->num_local_nodes; j++) {
+            int gnn_j = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + j];
+            int ldof_j = ei[upd->matrix_index[pd->ProjectionVar]]->ln_to_dof[eqn][j];
+            if (ldof_i >= 0 && ldof_j >= 0 &&
+                ((gnn_i < dpi->num_internal_nodes + dpi->num_boundary_nodes) || Num_Proc == 1)) {
+              if (gnn_i < num_rows) {
+                if (gnn_j >= num_rows) {
+                  o_nnz[gnn_i] += 1;
+                } else {
+                  d_nnz[gnn_i] += 1;
+                }
               }
             }
           }
@@ -916,20 +937,36 @@ static goma_error initialize_petsc_post_proc_matrix(Exo_DB *exo,
         GOMA_EH(err, "load_bf_grad");
 
         int eqn = pd->ProjectionVar;
-        for (int i = 0; i < ei[pg->imtrx]->num_local_nodes; i++) {
-          int gnn_i = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
-          int ldof_i = ei[upd->matrix_index[pd->ProjectionVar]]->ln_to_dof[eqn][i];
-          for (int j = 0; j < ei[pg->imtrx]->num_local_nodes; j++) {
-            int gnn_j = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + j];
-            int ldof_j = ei[upd->matrix_index[pd->ProjectionVar]]->ln_to_dof[eqn][j];
-            if (ldof_i >= 0 && ldof_j >= 0 &&
-                ((gnn_i < dpi->num_internal_nodes + dpi->num_boundary_nodes) || Num_Proc == 1)) {
-              dbl mm_contrib = bf[eqn]->phi[ldof_i] * bf[eqn]->phi[ldof_j] * fv->wt * bf[eqn]->detJ;
+        if (bf[eqn]->interpolation == I_N1) {
+          for (int i = 0; i < ei[pg->imtrx]->num_local_nodes; i++) {
+            int gnn_i = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
+            for (int j = 0; j < ei[pg->imtrx]->num_local_nodes; j++) {
+              int gnn_j = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + j];
+              dbl mm_contrib = bf[eqn]->phi[i] * bf[eqn]->phi[j] * fv->wt * bf[eqn]->detJ;
               PetscInt global_row = matrix_data->local_to_global[gnn_i];
               PetscInt global_col = matrix_data->local_to_global[gnn_j];
               PetscErrorCode err =
                   MatSetValue(matrix_data->mat, global_row, global_col, mm_contrib, ADD_VALUES);
               CHKERRQ(err);
+            }
+          }
+        } else {
+          for (int i = 0; i < ei[pg->imtrx]->num_local_nodes; i++) {
+            int gnn_i = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
+            int ldof_i = ei[upd->matrix_index[pd->ProjectionVar]]->ln_to_dof[eqn][i];
+            for (int j = 0; j < ei[pg->imtrx]->num_local_nodes; j++) {
+              int gnn_j = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + j];
+              int ldof_j = ei[upd->matrix_index[pd->ProjectionVar]]->ln_to_dof[eqn][j];
+              if (ldof_i >= 0 && ldof_j >= 0 &&
+                  ((gnn_i < dpi->num_internal_nodes + dpi->num_boundary_nodes) || Num_Proc == 1)) {
+                dbl mm_contrib =
+                    bf[eqn]->phi[ldof_i] * bf[eqn]->phi[ldof_j] * fv->wt * bf[eqn]->detJ;
+                PetscInt global_row = matrix_data->local_to_global[gnn_i];
+                PetscInt global_col = matrix_data->local_to_global[gnn_j];
+                PetscErrorCode err =
+                    MatSetValue(matrix_data->mat, global_row, global_col, mm_contrib, ADD_VALUES);
+                CHKERRQ(err);
+              }
             }
           }
         }
@@ -1005,7 +1042,7 @@ goma_error goma_setup_petsc_post_proc_matrix(
   // find universe nodes
   PetscInt global_n_dof;
   PetscInt local_dof = dpi->num_internal_nodes + dpi->num_boundary_nodes;
-  MPI_Allreduce(&local_dof, &global_n_dof, 1, MPI_INT64_T, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(&local_dof, &global_n_dof, 1, MPIU_INT, MPI_SUM, MPI_COMM_WORLD);
 
   err = VecSetSizes(matrix_data->update, local_dof, global_n_dof);
   CHKERRQ(err);
@@ -1204,8 +1241,16 @@ static goma_error initialize_petsc_matrix(struct GomaLinearSolverData *ams,
   ams->npu = num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx];
   ams->npu_plus = num_universe_dofs[pg->imtrx];
 
-  DPRINTF(stdout, "\n%-30s= %d\n", "Number of unknowns", num_universe_dofs[pg->imtrx]);
-  DPRINTF(stdout, "\n%-30s= %ld\n", "Number of matrix nonzeroes", (long)nnz);
+  size_t local_dofs = num_universe_dofs[pg->imtrx];
+  size_t global_dofs = num_universe_dofs[pg->imtrx];
+  size_t local_nnz = nnz;
+  size_t global_nnz = nnz;
+
+  MPI_Allreduce(&local_dofs, &global_dofs, 1, MPI_UINT64_T, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(&local_nnz, &global_nnz, 1, MPI_UINT64_T, MPI_SUM, MPI_COMM_WORLD);
+
+  DPRINTF(stdout, "\n%-30s= %ld\n", "Number of unknowns", global_dofs);
+  DPRINTF(stdout, "\n%-30s= %ld\n", "Number of matrix nonzeroes", global_nnz);
 
   free(d_nnz);
   free(o_nnz);
@@ -1335,7 +1380,7 @@ goma_error goma_setup_petsc_matrix(struct GomaLinearSolverData *ams,
   // find universe dof
   PetscInt global_n_dof;
   PetscInt local_dof = internal_dof + boundary_dof;
-  MPI_Allreduce(&local_dof, &global_n_dof, 1, MPI_INT64_T, MPI_SUM, MPI_COMM_WORLD);
+  MPI_Allreduce(&local_dof, &global_n_dof, 1, MPIU_INT, MPI_SUM, MPI_COMM_WORLD);
 
   err = VecSetSizes(matrix_data->update, internal_dof + boundary_dof, global_n_dof);
   CHKERRQ(err);
@@ -1651,22 +1696,6 @@ goma_error petsc_scale_matrix(struct GomaLinearSolverData *ams, double *b_, doub
   return GOMA_SUCCESS;
 }
 
-goma_error goma_petsc_free_matrix(struct GomaLinearSolverData *ams) {
-  PetscMatrixData *matrix_data = (PetscMatrixData *)ams->PetscMatrixData;
-  PetscErrorCode err;
-
-  err = MatDestroy(&matrix_data->mat);
-  CHKERRQ(err);
-  err = VecDestroy(&matrix_data->residual);
-  CHKERRQ(err);
-  err = VecDestroy(&matrix_data->update);
-  CHKERRQ(err);
-  err = KSPDestroy(&matrix_data->ksp);
-  CHKERRQ(err);
-
-  return GOMA_SUCCESS;
-}
-
 // vim: expandtab sw=2 ts=8
 int petsc_solve(struct GomaLinearSolverData *ams, double *x_, double *b_, int *its) {
   PetscMatrixData *matrix_data = (PetscMatrixData *)ams->PetscMatrixData;
@@ -1736,6 +1765,7 @@ void petsc_solve_post_proc(double **post_proc_vect, RESULTS_DESCRIPTION_STRUCT *
   double start = MPI_Wtime();
   for (int pp = 0; pp < rd->TotalNVPostOutput; pp++) {
     double pp_start = MPI_Wtime();
+    exchange_node(cx[0], dpi, post_proc_vect[pp]);
     for (PetscInt i = 0; i < dpi->num_internal_nodes + dpi->num_boundary_nodes; i++) {
       VecSetValue(matrix_data->residual, matrix_data->local_to_global[i], post_proc_vect[pp][i],
                   INSERT_VALUES);
@@ -1759,4 +1789,20 @@ void petsc_solve_post_proc(double **post_proc_vect, RESULTS_DESCRIPTION_STRUCT *
   P0PRINTF("Post Proc Time = %4.4e s\n\n", end - start);
 }
 
+goma_error goma_petsc_free_matrix(struct GomaLinearSolverData *ams) {
+  PetscMatrixData *matrix_data = (PetscMatrixData *)ams->PetscMatrixData;
+  PetscErrorCode err;
+
+  err = MatDestroy(&matrix_data->mat);
+  CHKERRQ(err);
+  err = VecDestroy(&matrix_data->residual);
+  CHKERRQ(err);
+  err = VecDestroy(&matrix_data->update);
+  CHKERRQ(err);
+  err = KSPDestroy(&matrix_data->ksp);
+  CHKERRQ(err);
+
+  return GOMA_SUCCESS;
+}
+#endif
 #endif

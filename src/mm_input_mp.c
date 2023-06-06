@@ -36,10 +36,12 @@
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_eh.h"
+#include "mm_fill_em.h"
 #include "mm_input.h"
 #include "mm_mp.h"
 #include "mm_mp_const.h"
 #include "mm_mp_structs.h"
+#include "mm_post_def.h"
 #include "rf_allo.h"
 #include "rf_bc.h"
 #include "rf_bc_const.h"
@@ -504,6 +506,16 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     }
     mat_ptr->len_u_density = num_const;
     SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_density);
+  } else if (model_read == -1 && !strcmp(model_name, "THERMEXP")) {
+    mat_ptr->DensityModel = DENSITY_THERMEXP;
+    num_const = read_constants(imp, &(mat_ptr->u_density), 0);
+    if (num_const < 2) {
+      sprintf(err_msg, "Material %s - expected at least 2 constants for %s %s model.\n",
+              pd_glob[mn]->MaterialName, "Density", "THERMEXP");
+      GOMA_EH(GOMA_ERROR, err_msg);
+    }
+    mat_ptr->len_u_density = num_const;
+    SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_density);
   } else if (model_read == -1 && !strcmp(model_name, "LEVEL_SET")) {
     mat_ptr->DensityModel = DENSITY_LEVEL_SET;
     num_const = read_constants(imp, &(mat_ptr->u_density), 0);
@@ -955,10 +967,10 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   }
   ECHO(es, echo_file);
 
-  model_read = look_for_mat_prop(imp, "Solid Dilational Viscosity",
-                                 &(elc_glob[mn]->solid_dil_viscosity_model),
-                                 &(elc_glob[mn]->solid_dil_viscosity), NO_USER, NULL, model_name,
-                                 SCALAR_INPUT, &NO_SPECIES, es);
+  model_read = look_for_mat_prop(
+      imp, "Solid Dilational Viscosity", &(elc_glob[mn]->solid_dil_viscosity_model),
+      &(elc_glob[mn]->solid_dil_viscosity), &(elc_glob[mn]->u_solid_dil_viscosity),
+      &(elc_glob[mn]->len_u_solid_dil_viscosity), model_name, SCALAR_INPUT, &NO_SPECIES, es);
 
   if (model_read == -1) {
     elc_glob[mn]->solid_dil_viscosity_model = CONSTANT;
@@ -1789,11 +1801,18 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     ECHO(es, echo_file);
   }
 
-  if (ConstitutiveEquation == BINGHAM_MIXED) {
+  if (ConstitutiveEquation == BINGHAM_MIXED || ConstitutiveEquation == BINGHAM ||
+      ConstitutiveEquation == BINGHAM_WLF) {
     model_read = look_for_mat_prop(imp, "Epsilon Regularization", &(gn_glob[mn]->epsilonModel),
                                    &(gn_glob[mn]->epsilon), NO_USER, NULL, model_name, SCALAR_INPUT,
                                    &NO_SPECIES, es);
-    GOMA_EH(model_read, "Epsilon Regularization");
+    if ((ConstitutiveEquation == BINGHAM || ConstitutiveEquation == BINGHAM_WLF) &&
+        model_read == -1) {
+      gn_glob[mn]->epsilon = 0.0;
+      gn_glob[mn]->epsilonModel = CONSTANT;
+    } else {
+      GOMA_EH(model_read, "Epsilon Regularization");
+    }
     ECHO(es, echo_file);
   }
   /*
@@ -2148,6 +2167,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     vn_glob[mn]->ConstitutiveEquation = SARAMITO_GIESEKUS;
   } else if (!strcmp(model_name, "SARAMITO_PTT")) {
     vn_glob[mn]->ConstitutiveEquation = SARAMITO_PTT;
+  } else if (!strcmp(model_name, "MODIFIED_JEFFREYS")) {
+    vn_glob[mn]->ConstitutiveEquation = MODIFIED_JEFFREYS;
   } else if (!strcmp(model_name, "NOPOLYMER")) {
     vn_glob[mn]->ConstitutiveEquation = NOPOLYMER;
     /* set defaults if the next section is not entered */
@@ -2213,6 +2234,10 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       vn_glob[mn]->evssModel = EVSS_L;
     } else if (!strcmp(model_name, "LOG_CONF")) {
       vn_glob[mn]->evssModel = LOG_CONF;
+    } else if (!strcmp(model_name, "SQRT_CONF")) {
+      vn_glob[mn]->evssModel = SQRT_CONF;
+    } else if (!strcmp(model_name, "CONF")) {
+      vn_glob[mn]->evssModel = CONF;
     } else if (!strcmp(model_name, "LOG_CONF_TRANSIENT")) {
       vn_glob[mn]->evssModel = LOG_CONF_TRANSIENT;
     } else if (!strcmp(model_name, "LOG_CONF_TRANSIENT_GRADV")) {
@@ -2277,6 +2302,14 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         err = fscanf(imp, "%lg", &(vn_glob[mn]->shockcapture));
         if (err != 1) {
           GOMA_EH(GOMA_ERROR, "Expected to read one double for Polymer Shock Capturing = DCDD");
+        }
+        SPF(endofstring(es), " %.4g", vn_glob[mn]->shockcapture);
+      } else if (!strcmp(model_name, "YZBETA")) {
+        int err;
+        vn_glob[mn]->shockcaptureModel = SC_YZBETA;
+        err = fscanf(imp, "%lg", &(vn_glob[mn]->shockcapture));
+        if (err != 1) {
+          GOMA_EH(GOMA_ERROR, "Expected to read one double for Polymer Shock Capturing = YZBETA");
         }
         SPF(endofstring(es), " %.4g", vn_glob[mn]->shockcapture);
       } else {
@@ -2412,25 +2445,93 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       if (model_read == -1)
         SPF(err_msg, "%s card is missing.", search_string);
       if (model_read == -2)
-        SPF(err_msg, "Only CONSTANT %s mode model supported.", search_string);
+        SPF(err_msg, "Only CONSTANT, POWER LAW and HERSCHEL_BULKLEY %s mode model supported.",
+            search_string);
       fprintf(stderr, "%s\n", err_msg);
       exit(-1);
+    }
+
+    // in case of non-constant polymer viscosity, parse polymer viscosity parameters
+    // For now, these all assume a single node
+    const bool mupIsConstant = matl_model == CONSTANT;
+
+    int nExpModel = CONSTANT;
+    int aExpModel = CONSTANT;
+    int fExpModel = CONSTANT;
+    int mu0Model = CONSTANT;
+    int muInfModel = CONSTANT;
+    int lamModel = CONSTANT;
+    int tauyModel = CONSTANT;
+    dbl nExpVal = 0;
+    dbl aExpVal = 0;
+    dbl fExpVal = 0;
+    dbl mu0Val = 0;
+    dbl muInfVal = 0;
+    dbl lamVal = 0;
+    dbl tauyVal = 0;
+
+    if (!mupIsConstant) {
+      model_read = look_for_mat_prop(imp, "Polymer Low Rate Viscosity", &(mu0Model), &(mu0Val),
+                                     NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
+      printf("Polymer Low Rate Viscosity model %s\n", model_name);
+      printf("Polymer Low Rate Viscosity value %E\n", mu0Val);
+      ECHO(es, echo_file);
+
+      model_read = look_for_mat_prop(imp, "Polymer Power Law Exponent", &(nExpModel), &(nExpVal),
+                                     NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
+      printf("Polymer Power Law Exponent model %s\n", model_name);
+      printf("Polymer Power Law Exponent value %E\n", nExpVal);
+      ECHO(es, echo_file);
+
+      model_read = look_for_mat_prop(imp, "Polymer High Rate Viscosity", &(muInfModel), &(muInfVal),
+                                     NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
+      printf("Polymer High Rate Viscosity model %s\n", model_name);
+      printf("Polymer High Rate Viscosity value %E\n", muInfVal);
+      ECHO(es, echo_file);
+
+      model_read = look_for_mat_prop(imp, "Polymer Viscosity Time Constant", &(lamModel), &(lamVal),
+                                     NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
+      printf("Polymer Viscosity Time Constant model %s\n", model_name);
+      printf("Polymer Viscosity Time Constant value %E\n", lamVal);
+      ECHO(es, echo_file);
+
+      model_read = look_for_mat_prop(imp, "Polymer Aexp", &(aExpModel), &(aExpVal), NO_USER, NULL,
+                                     model_name, SCALAR_INPUT, &NO_SPECIES, es);
+      printf("Polymer Aexp model %s\n", model_name);
+      printf("Polymer Aexp value %E\n", aExpVal);
+      ECHO(es, echo_file);
+
+      model_read = look_for_mat_prop(imp, "Polymer Yield Stress", &(tauyModel), &(tauyVal), NO_USER,
+                                     NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
+      printf("Polymer Yield Stress model %s\n", model_name);
+      printf("Polymer Yield Stress value %E\n", tauyVal);
+      ECHO(es, echo_file);
+
+      model_read =
+          look_for_mat_prop(imp, "Polymer Viscosity Yield Exponent", &(fExpModel), &(fExpVal),
+                            NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
+      printf("Polymer Viscosity Yield Exponent model %s\n", model_name);
+      printf("Polymer Viscosity Yield Exponent value %E\n", fExpVal);
+      ECHO(es, echo_file);
     }
 
     ECHO(es, echo_file);
 
     for (mm = 0; mm < vn_glob[mn]->modes; mm++) {
       ve_glob[mn][mm]->gn->ConstitutiveEquation = matl_model;
-      ve_glob[mn][mm]->gn->mu0 = modal_data[mm];
-      ve_glob[mn][mm]->gn->mu0Model = matl_model;
-      ve_glob[mn][mm]->gn->muinf = 0.;
-      ve_glob[mn][mm]->gn->muinfModel = CONSTANT;
-      ve_glob[mn][mm]->gn->lam = 0.;
-      ve_glob[mn][mm]->gn->lamModel = CONSTANT;
-      ve_glob[mn][mm]->gn->aexp = 0.;
-      ve_glob[mn][mm]->gn->aexpModel = CONSTANT;
-      ve_glob[mn][mm]->gn->nexp = 0.;
-      ve_glob[mn][mm]->gn->nexpModel = CONSTANT;
+      ve_glob[mn][mm]->gn->mu0 = (mupIsConstant ? modal_data[mm] : mu0Val);
+      ve_glob[mn][mm]->gn->muinf = muInfVal;
+      ve_glob[mn][mm]->gn->muinfModel = muInfModel;
+      ve_glob[mn][mm]->gn->lam = lamVal;
+      ve_glob[mn][mm]->gn->lamModel = lamModel;
+      ve_glob[mn][mm]->gn->aexp = aExpVal;
+      ve_glob[mn][mm]->gn->aexpModel = aExpModel;
+      ve_glob[mn][mm]->gn->nexp = nExpVal;
+      ve_glob[mn][mm]->gn->nexpModel = nExpModel;
+      ve_glob[mn][mm]->gn->tau_yModel = tauyModel;
+      ve_glob[mn][mm]->gn->tau_y = tauyVal;
+      ve_glob[mn][mm]->gn->fexpModel = fExpModel;
+      ve_glob[mn][mm]->gn->fexp = fExpVal;
     }
 
     strcpy(search_string, "Positive Level Set Polymer Viscosity");
@@ -2504,6 +2605,29 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       SPF(err_msg, "Only CONSTANT %s mode model supported.", search_string);
       fprintf(stderr, "%s\n", err_msg);
       exit(-1);
+    }
+
+    if (vn_glob[mn]->ConstitutiveEquation == MODIFIED_JEFFREYS) {
+      strcpy(search_string, "Jeffreys Viscosity");
+
+      model_read =
+          look_for_modal_prop(imp, search_string, vn_glob[mn]->modes, &matl_model, modal_data, es);
+
+      if (model_read < 1) {
+        if (model_read == -1)
+          SPF(err_msg, "%s card is missing", search_string);
+        if (model_read == -2)
+          SPF(err_msg, "Only CONSTANT %s  mode model supported.", search_string);
+        fprintf(stderr, "%s\n", err_msg);
+        exit(-1);
+      }
+
+      ECHO(es, echo_file);
+
+      for (mm = 0; mm < vn_glob[mn]->modes; mm++) {
+        ve_glob[mn][mm]->muJeffreys = modal_data[mm];
+        ve_glob[mn][mm]->muJeffreysModel = matl_model;
+      }
     }
 
     if (vn_glob[mn]->ConstitutiveEquation == GIESEKUS ||
@@ -3332,7 +3456,23 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
                         &(mat_ptr->u_permittivity), &(mat_ptr->len_u_permittivity), model_name,
                         SCALAR_INPUT, &NO_SPECIES, es);
   if (model_read == -1) {
-    if (strncmp(model_name, " ", 1) != 0) {
+    if (strcmp(model_name, "COMPLEX_CONSTANT") == 0) {
+      mat_ptr->PermittivityModel = COMPLEX_CONSTANT;
+      if (fscanf(imp, "%lf %lf", &(mat_ptr->permittivity), &(mat_ptr->permittivity_imag)) != 2) {
+        GOMA_EH(GOMA_ERROR, "Expected 2 constants for %s = %s", search_string, model_name);
+      }
+    } else if (strcmp(model_name, "RADIAL_PML") == 0) {
+      mat_ptr->PermittivityModel = RADIAL_PML;
+      num_const = read_constants(imp, &(mat_ptr->u_permittivity), 0);
+      if (num_const != 5) {
+        GOMA_EH(GOMA_ERROR, "Expected 5 constants for %s = %s", search_string, model_name);
+      }
+      mat_ptr->len_u_permittivity = num_const;
+    } else if (strcmp(model_name, "REFRACTIVE_INDEX") == 0) {
+      mat_ptr->PermittivityModel = REFRACTIVE_INDEX;
+      mat_ptr->len_u_permittivity = 0;
+    } else if (strncmp(model_name, " ", 1) != 0) {
+
       SPF(err_msg, "Syntax error or invalid model for %s\n", search_string);
       GOMA_EH(GOMA_ERROR, err_msg);
     } else {
@@ -3353,7 +3493,19 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       &(mat_ptr->u_magnetic_permeability), &(mat_ptr->len_u_magnetic_permeability), model_name,
       SCALAR_INPUT, &NO_SPECIES, es);
   if (model_read == -1) {
-    if (strncmp(model_name, " ", 1) != 0) {
+    if (strcmp(model_name, "COMPLEX_CONSTANT") == 0) {
+      mat_ptr->PermeabilityModel = COMPLEX_CONSTANT;
+      if (fscanf(imp, "%lf %lf", &(mat_ptr->permeability), &(mat_ptr->permeability_imag)) != 2) {
+        GOMA_EH(GOMA_ERROR, "Expected 2 constants for %s = %s", search_string, model_name);
+      }
+    } else if (strcmp(model_name, "RADIAL_PML") == 0) {
+      mat_ptr->PermeabilityModel = RADIAL_PML;
+      num_const = read_constants(imp, &(mat_ptr->u_permeability), 0);
+      if (num_const != 5) {
+        GOMA_EH(GOMA_ERROR, "Expected 5 constants for %s = %s", search_string, model_name);
+      }
+      mat_ptr->len_u_permeability = num_const;
+    } else if (strncmp(model_name, " ", 1) != 0) {
       SPF(err_msg, "Syntax error or invalid model for %s\n", search_string);
       GOMA_EH(GOMA_ERROR, err_msg);
     } else {
@@ -3381,6 +3533,28 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   }
   ECHO(es, echo_file);
 
+  rewind(imp);
+  strcpy(search_string, "Electromagnetic Incident Wave");
+  model_read =
+      look_for_mat_prop(imp, search_string, &(mat_ptr->IncidentWaveModel),
+                        &(mat_ptr->incident_wave), &(mat_ptr->u_incident_wave),
+                        &(mat_ptr->len_u_incident_wave), model_name, SCALAR_INPUT, &NO_SPECIES, es);
+  if (model_read == -1) {
+    if (strcmp(model_name, "PLANE_Z_WAVE") == 0) {
+      mat_ptr->IncidentWaveModel = EM_INC_PLANE_Z_WAVE;
+      num_const = read_constants(imp, &mat_ptr->u_incident_wave, 0);
+      mat_ptr->len_u_incident_wave = num_const;
+      if (num_const != 1) {
+        GOMA_EH(GOMA_ERROR, "Expected 1 constants for %s = %s", search_string, model_name);
+      }
+    } else {
+      mat_ptr->IncidentWaveModel = CONSTANT;
+      mat_ptr->len_u_incident_wave = 0;
+      SPF(es, "\t(%s = %s %.4g)", search_string, "NONE", mat_ptr->incident_wave);
+    }
+  }
+
+  ECHO(es, echo_file);
   strcpy(search_string, "Shell User Parameter");
   model_read = look_for_mat_prop(imp, search_string, &(mat_ptr->Shell_User_ParModel),
                                  &(mat_ptr->shell_user_par), &(mat_ptr->u_shell_user_par),
@@ -9570,6 +9744,133 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     }
 
     ECHO(es, echo_file);
+    model_read =
+        look_for_mat_prop(imp, "Lubrication Integration Model", &(mat_ptr->LubIntegrationModel),
+                          &(a0), NO_USER, NULL, model_name, NO_INPUT, &NO_SPECIES, es);
+    if (model_read == -1) {
+      if (!strcmp(model_name, "GAUSSIAN")) {
+        mat_ptr->LubIntegrationModel = LUB_VISCINT_GAUSSIAN;
+        model_read = 1;
+      } else if (!strcmp(model_name, "ANALYTICAL")) {
+        mat_ptr->LubIntegrationModel = LUB_VISCINT_ANALYTICAL;
+        model_read = 1;
+      } else if (!strcmp(model_name, "POWER_LAW")) {
+        mat_ptr->LubIntegrationModel = LUB_VISCINT_POWERLAW;
+        model_read = 1;
+      }
+    }
+    if (model_read == 1) {
+      if (fscanf(imp, "%d", &(mat_ptr->LubInt_NGP)) != 1) {
+        sr = sprintf(err_msg, "Error reading Lubrication Gauss pts %s", model_name);
+        GOMA_EH(GOMA_ERROR, err_msg);
+      } else {
+        SPF(endofstring(es), " %d", mat_ptr->LubInt_NGP);
+      }
+      if (mat_ptr->LubIntegrationModel == LUB_VISCINT_GAUSSIAN ||
+          mat_ptr->LubIntegrationModel == LUB_VISCINT_ANALYTICAL) {
+        /* These are Gaussian integration constants shifted to the interval [0,1]
+           Source: Abramowitz & Stegun, Handbook of Mathematical Functions, 9th printing, 1972*/
+        if (mat_ptr->LubInt_NGP == 2) {
+          mat_ptr->Lub_wts[0] = 0.5;
+          mat_ptr->Lub_wts[1] = 0.5;
+          mat_ptr->Lub_gpts[0] = 0.5 * (1. - sqrt(1. / 3.));
+          mat_ptr->Lub_gpts[1] = 0.5 * (1. + sqrt(1. / 3.));
+        } else if (mat_ptr->LubInt_NGP == 3) {
+          mat_ptr->Lub_wts[0] = 5. / 18.;
+          mat_ptr->Lub_wts[1] = 4. / 9;
+          mat_ptr->Lub_wts[2] = 5. / 18.;
+          mat_ptr->Lub_gpts[0] = 0.5 * (1. - sqrt(0.6));
+          mat_ptr->Lub_gpts[1] = 0.5;
+          mat_ptr->Lub_gpts[2] = 0.5 * (1. + sqrt(0.6));
+        } else if (mat_ptr->LubInt_NGP == 4) {
+          mat_ptr->Lub_wts[0] = 0.5 * 0.347854845137454;
+          mat_ptr->Lub_wts[1] = 0.5 * 0.652145154862546;
+          mat_ptr->Lub_wts[2] = mat_ptr->Lub_wts[1];
+          mat_ptr->Lub_wts[3] = mat_ptr->Lub_wts[0];
+          mat_ptr->Lub_gpts[0] = 0.5 * (1. - 0.861136311594053);
+          mat_ptr->Lub_gpts[1] = 0.5 * (1. - 0.339981043584856);
+          mat_ptr->Lub_gpts[2] = 0.5 * (1. + 0.339981043584856);
+          mat_ptr->Lub_gpts[3] = 0.5 * (1. + 0.861136311594053);
+        } else if (mat_ptr->LubInt_NGP == 5) {
+          mat_ptr->Lub_wts[0] = 0.5 * 0.236926885056189;
+          mat_ptr->Lub_wts[1] = 0.5 * 0.478628670499366;
+          mat_ptr->Lub_wts[2] = 0.5 * 0.568888888888889;
+          mat_ptr->Lub_wts[3] = mat_ptr->Lub_wts[1];
+          mat_ptr->Lub_wts[4] = mat_ptr->Lub_wts[0];
+          mat_ptr->Lub_gpts[0] = 0.5 * (1. - 0.906179845938664);
+          mat_ptr->Lub_gpts[1] = 0.5 * (1. - 0.538469310105683);
+          mat_ptr->Lub_gpts[2] = 0.5;
+          mat_ptr->Lub_gpts[3] = 0.5 * (1. + 0.538469310105683);
+          mat_ptr->Lub_gpts[0] = 0.5 * (1. + 0.906179845938664);
+        } else {
+          GOMA_EH(GOMA_ERROR, "Those integration points not defined yet!");
+        }
+      } else if (mat_ptr->LubIntegrationModel == LUB_VISCINT_POWERLAW) {
+        double n = 0.5, beta0, beta1, beta2;
+        if (fscanf(imp, "%lf", &(mat_ptr->LubInt_PL)) != 1) {
+          sr = sprintf(err_msg, "Error reading POWER_LAW index %s", model_name);
+          GOMA_EH(GOMA_ERROR, err_msg);
+        } else {
+          n = mat_ptr->LubInt_PL;
+        }
+        SPF(endofstring(es), " %g", mat_ptr->LubInt_PL);
+        beta0 = 1. / (2. * n + 1);
+        beta1 = SQUARE(beta0) / (2. * n + 3.);
+        beta2 = beta0 + 2. * SQUARE(2. * n + 3) / (n + 1.) * beta1 -
+                2. * (2. * n * n + 7. * n + 7.) / (n + 1.) / SQUARE(2. * n + 1) +
+                SQUARE((2. * n + 3.) * (n + 2.) / ((n + 1.) * (2. * n + 1.))) / (2. * n + 5.);
+        if (mat_ptr->LubInt_NGP == 2 && DOUBLE_NONZERO(n)) {
+          double disc = sqrt((1. + n) / (2 * n + 3));
+          double fcn11, fcn12;
+          mat_ptr->Lub_gpts[0] = (n + 1. - disc) / (n + 2.);
+          mat_ptr->Lub_gpts[1] = (n + 1. + disc) / (n + 2.);
+          fcn11 = SQUARE(1. - (2. * n + 2) / (2. * n + 1) * mat_ptr->Lub_gpts[0]);
+          fcn12 = SQUARE(1. - (2. * n + 2) / (2. * n + 1) * mat_ptr->Lub_gpts[1]);
+          mat_ptr->Lub_wts[0] = (beta1 - beta0 * fcn12) / (fcn11 - fcn12);
+          mat_ptr->Lub_wts[1] = beta0 - mat_ptr->Lub_wts[0];
+        } else if (mat_ptr->LubInt_NGP == 3) { /* Trignometric Cubic Solution  */
+          double p, q, r, a, b, three_th, mag;
+          double f11, f12, f13, f21, f22, f23;
+
+          p = -3 * (2 * n + 3) / (2 * n + 6);
+          q = -p * (2 * n + 2) / (2 * n + 5);
+          r = -q * (2 * n + 1) / (2 * n + 4) / 3.;
+          a = (3 * q - SQUARE(p)) / 3.;
+          b = (2 * CUBE(p) - 9 * p * q + 27 * r) / 27.;
+          mag = 2 * sqrt(-a / 3.);
+          three_th = acos(3 * b / a / mag);
+
+          mat_ptr->Lub_gpts[0] = mag * cos(three_th / 3.) - p / 3.;
+          mat_ptr->Lub_gpts[1] = mag * cos(three_th / 3. + 2. / 3. * M_PIE) - p / 3.;
+          mat_ptr->Lub_gpts[2] = mag * cos(three_th / 3. + 4. / 3. * M_PIE) - p / 3.;
+          f11 = SQUARE(1. - (2. * n + 2) / (2. * n + 1) * mat_ptr->Lub_gpts[0]);
+          f12 = SQUARE(1. - (2. * n + 2) / (2. * n + 1) * mat_ptr->Lub_gpts[1]);
+          f13 = SQUARE(1. - (2. * n + 2) / (2. * n + 1) * mat_ptr->Lub_gpts[2]);
+          f21 =
+              SQUARE(1. - 2 * (2 * n + 3) / (2 * n + 1) * mat_ptr->Lub_gpts[0] +
+                     (2 * n + 3) / (2 * n + 1) * (n + 2) / (n + 1) * SQUARE(mat_ptr->Lub_gpts[0]));
+          f22 =
+              SQUARE(1. - 2 * (2 * n + 3) / (2 * n + 1) * mat_ptr->Lub_gpts[1] +
+                     (2 * n + 3) / (2 * n + 1) * (n + 2) / (n + 1) * SQUARE(mat_ptr->Lub_gpts[1]));
+          f23 =
+              SQUARE(1. - 2 * (2 * n + 3) / (2 * n + 1) * mat_ptr->Lub_gpts[2] +
+                     (2 * n + 3) / (2 * n + 1) * (n + 2) / (n + 1) * SQUARE(mat_ptr->Lub_gpts[2]));
+          mat_ptr->Lub_wts[2] =
+              (beta2 - f21 * beta0 - (f22 - f21) / (f12 - f11) * (beta1 - f11 * beta0)) /
+              (f23 - f21 - (f22 - f21) / (f12 - f11) * (f13 - f11));
+          mat_ptr->Lub_wts[1] =
+              (beta1 - f11 * beta0 - (f13 - f11) * mat_ptr->Lub_wts[2]) / (f12 - f11);
+          mat_ptr->Lub_wts[0] = beta0 - mat_ptr->Lub_wts[2] - mat_ptr->Lub_wts[1];
+        } else if (mat_ptr->LubInt_NGP == 4) {
+          GOMA_EH(GOMA_ERROR, "4-point POWER_LAW integration points not defined yet!");
+        } else {
+          GOMA_EH(GOMA_ERROR, "More than 4 POWER_LAW integration points not allowed yet!");
+        }
+      } else {
+        GOMA_EH(model_read, "This Integration Model is not valid!");
+      }
+      ECHO(es, echo_file);
+    }
   }
 
   /*

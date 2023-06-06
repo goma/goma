@@ -158,7 +158,7 @@
 
 struct elem_side_bc_struct;
 
-#ifdef KOMPLEX
+#ifdef ENABLE_KOMPLEX
 #include "azk_komplex.h"
 #endif
 
@@ -212,6 +212,7 @@ struct passdown_struct {
   AZ_MATRIX *mmat;
   int *gindex;
   int *gsize;
+  double *gv;
   double *gvec;
   double ***gvec_elem;
   double time_value;
@@ -290,6 +291,7 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
   double *resid_vector_sens = NULL; /* Newton residual sensitivity	*/
   double *scale = NULL;             /* Scale vector for solution		*/
   double *gvec = NULL;
+  double *gv; /* Global variable values */
   double ***gvec_elem = NULL;
   double timeValueRead = 0.0;
 
@@ -379,6 +381,8 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
       error = load_global_var_info(rd, 6 + i, name);
     }
   }
+
+  gv = alloc_dbl_1(rd->ngv, 0.0);
 
   /* load nodal types, kinds, names */
   error = load_nodal_tkn(rd, &tnv, &tnv_post);
@@ -628,8 +632,10 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
   dcopy1(numProcUnknowns, x, x_old);
   dcopy1(numProcUnknowns, x_old, x_older);
   dcopy1(numProcUnknowns, x_older, x_oldest);
-  if (nAC > 0)
+  if (nAC > 0) {
     dcopy1(nAC, x_AC, x_AC_old);
+    dcopy1(nAC, x_AC, &(gv[5]));
+  }
 
   /* Initialize linear solver */
   matrix_systems_mask = 1;
@@ -700,6 +706,7 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
   passdown.rd = rd;
   passdown.gindex = gindex;
   passdown.gsize = p_gsize;
+  passdown.gv = gv;
   passdown.gvec = gvec;
   passdown.gvec_elem = gvec_elem;
   passdown.time_value = lambda;
@@ -898,9 +905,9 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
     con.general_info.method = HOPF_CONTINUATION;
 
     /* Make sure Komplex library is compiled for Hopf tracking */
-#ifndef KOMPLEX
+#ifndef ENABLE_KOMPLEX
     GOMA_EH(GOMA_ERROR, "Hopf Tracking Algorithm Requires Komplex Library!\n"
-                        "Recompile with KOMPLEX flag set.\n");
+                        "Recompile with ENABLE_KOMPLEX flag set.\n");
 #endif
 
     /* Set variables in the con.hopf_info structure: */
@@ -1010,7 +1017,7 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
   /* Otherwise, now call continuation library and return */
 
   else
-    nstep = con_lib(&con);
+    nstep = con_lib(&con, exo, ams[0]);
 
   *con_par_ptr = con.general_info.param;
 
@@ -1038,14 +1045,14 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
     /* Write the null vector to this file */
     write_solution(loca_in->NV_exoII_outfile, passdown.resid_vector, con.private_info.x_tang,
                    passdown.x_sens_p, passdown.x_old, passdown.xdot, passdown.xdot_old,
-                   passdown.tev, passdown.tev_post, NULL, passdown.rd, passdown.gvec,
+                   passdown.tev, passdown.tev_post, passdown.gv, passdown.rd, passdown.gvec,
                    passdown.gvec_elem, passdown.nprint, 0.0, passdown.theta, 0.0, NULL,
                    passdown.exo, passdown.dpi);
     zero_base(exo);
   }
 
   /* Write null vector to files if requested (Hopf tracking case) */
-#ifdef KOMPLEX
+#ifdef ENABLE_KOMPLEX
   if (loca_in->NVSave && passdown.method == HOPF_CONTINUATION) {
 
     /* Open two new ExodusII files */
@@ -1053,18 +1060,18 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
       multiname(loca_in->NV_exoII_outfile, ProcID, Num_Proc);
       multiname(loca_in->NV_imag_outfile, ProcID, Num_Proc);
     }
-    one_base(exo);
+    one_base(exo, Num_Proc);
 
     /* First write real part (y_vec) to NV_exoII_outfile */
     wr_mesh_exo(exo, loca_in->NV_exoII_outfile, 0);
     wr_result_prelim_exo(rd, exo, loca_in->NV_exoII_outfile, NULL);
     if (Num_Proc > 1)
-      wr_dpi(dpi, loca_in->NV_exoII_outfile, 0);
+      wr_dpi(dpi, loca_in->NV_exoII_outfile);
     *passdown.nprint = 0;
 
     write_solution(loca_in->NV_exoII_outfile, passdown.resid_vector, con.hopf_info.y_vec,
                    passdown.x_sens_p, passdown.x_old, passdown.xdot, passdown.xdot_old,
-                   passdown.tev, passdown.tev_post, NULL, passdown.rd, passdown.gvec,
+                   passdown.tev, passdown.tev_post, passdown.gv, passdown.rd, passdown.gvec,
                    passdown.gvec_elem, passdown.nprint, 0.0, passdown.theta, 0.0, NULL,
                    passdown.exo, passdown.dpi);
 
@@ -1072,12 +1079,12 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
     wr_mesh_exo(exo, loca_in->NV_imag_outfile, 0);
     wr_result_prelim_exo(rd, exo, loca_in->NV_imag_outfile, NULL);
     if (Num_Proc > 1)
-      wr_dpi(dpi, loca_in->NV_imag_outfile, 0);
+      wr_dpi(dpi, loca_in->NV_imag_outfile);
     *passdown.nprint = 0;
 
     write_solution(loca_in->NV_imag_outfile, passdown.resid_vector, con.hopf_info.z_vec,
                    passdown.x_sens_p, passdown.x_old, passdown.xdot, passdown.xdot_old,
-                   passdown.tev, passdown.tev_post, NULL, passdown.rd, passdown.gvec,
+                   passdown.tev, passdown.tev_post, passdown.gv, passdown.rd, passdown.gvec,
                    passdown.gvec_elem, passdown.nprint, 0.0, passdown.theta, 0.0, NULL,
                    passdown.exo, passdown.dpi);
 
@@ -1116,6 +1123,7 @@ int do_loca(Comm_Ex *cx, /* array of communications structures */
     safer_free((void **)&(ams[i]));
   }
   safer_free((void **)&gvec);
+  safer_free((void **)&gv);
   safer_free((void **)&cpcc);
   if (tpcc != NULL)
     safer_free((void **)&tpcc);
@@ -1311,7 +1319,7 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num, double lamb
   err = solve_nonlinear_problem(
       ams, x, passdown.delta_t, passdown.theta, passdown.x_old, passdown.x_older, passdown.xdot,
       passdown.xdot_old, passdown.resid_vector, passdown.x_update, passdown.scale, &converged,
-      passdown.nprint, passdown.tev, passdown.tev_post, NULL, passdown.rd, passdown.gindex,
+      passdown.nprint, passdown.tev, passdown.tev_post, passdown.gv, passdown.rd, passdown.gindex,
       passdown.gsize, passdown.gvec, passdown.gvec_elem, lambda, passdown.exo, passdown.dpi,
       passdown.cx, 0, passdown.path_step_reform, passdown.is_steady_state, passdown.x_AC,
       passdown.x_AC_dot, lambda, passdown.resid_vector_sens, passdown.x_sens_temp,
@@ -1328,7 +1336,7 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num, double lamb
   if (converged) {
     if (Write_Intermediate_Solutions == 0 && Unlimited_Output) {
       write_solution(ExoFileOut, passdown.resid_vector, x, passdown.x_sens_p, passdown.x_old,
-                     passdown.xdot, passdown.xdot_old, passdown.tev, passdown.tev_post, NULL,
+                     passdown.xdot, passdown.xdot_old, passdown.tev, passdown.tev_post, passdown.gv,
                      passdown.rd, passdown.gvec, passdown.gvec_elem, passdown.nprint, delta_s,
                      passdown.theta, passdown.lambda, NULL, passdown.exo, passdown.dpi);
     }
@@ -1383,9 +1391,6 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num, double lamb
         }
       }
     }
-
-    /* Check element quality */
-    element_quality(passdown.exo, x, ams->proc_config);
 
     /* INTEGRATE FLUXES, FORCES */
 
@@ -1656,7 +1661,7 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-#ifndef KOMPLEX
+#ifndef ENABLE_KOMPLEX
 #define KOMPLEX_UNUSED UNUSED
 #else
 #define KOMPLEX_UNUSED
@@ -1686,10 +1691,10 @@ int komplex_linear_solver_conwrap(KOMPLEX_UNUSED double *c,
  *    Negative value means linear solver didn't converge.
  */
 {
-#ifdef KOMPLEX
+#ifdef ENABLE_KOMPLEX
 
   /* Declare Variables */
-  struct Aztec_Linear_Solver_System *ams = &(passdown.ams[JAC]);
+  struct GomaLinearSolverData *ams = &(passdown.ams[JAC]);
   int numUnks = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
   int i;
   int tmp_pre_calc;
@@ -2934,7 +2939,7 @@ void solution_output_conwrap(int num_soln_flag,
       DPRINTF(stdout, "%s:  error writing ASCII soln file\n", yo);
     if (Write_Intermediate_Solutions == 0 && Unlimited_Output) {
       write_solution(ExoFileOut, passdown.resid_vector, x, passdown.x_sens_p, passdown.x_old,
-                     passdown.xdot, passdown.xdot_old, passdown.tev, passdown.tev_post, NULL,
+                     passdown.xdot, passdown.xdot_old, passdown.tev, passdown.tev_post, passdown.gv,
                      passdown.rd, passdown.gvec, passdown.gvec_elem, &n_print, param1,
                      passdown.theta, param1, NULL, passdown.exo, passdown.dpi);
       n_print++;
@@ -3094,7 +3099,7 @@ void eigenvector_output_conwrap(int j,
 
   /* Write the real vector using the real eigenvalue part as the time stamp */
   write_solution(efile, passdown.resid_vector, xr, passdown.x_sens_p, passdown.x_old, passdown.xdot,
-                 passdown.xdot_old, passdown.tev, passdown.tev_post, NULL, passdown.rd,
+                 passdown.xdot_old, passdown.tev, passdown.tev_post, passdown.gv, passdown.rd,
                  passdown.gvec, passdown.gvec_elem, &nprint, 0.0, passdown.theta, evr, NULL,
                  passdown.exo, passdown.dpi);
 
@@ -3118,7 +3123,7 @@ void eigenvector_output_conwrap(int j,
       strcpy(efile, eigen->Eigen_Output_File);
       get_eigen_outfile_name(efile, j + 1, LSA_current_wave_number);
       write_solution(efile, passdown.resid_vector, xi, passdown.x_sens_p, passdown.x_old,
-                     passdown.xdot, passdown.xdot_old, passdown.tev, passdown.tev_post, NULL,
+                     passdown.xdot, passdown.xdot_old, passdown.tev, passdown.tev_post, passdown.gv,
                      passdown.rd, passdown.gvec, passdown.gvec_elem, &nprint, 0.0, passdown.theta,
                      evi, NULL, passdown.exo, passdown.dpi);
 

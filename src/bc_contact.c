@@ -1006,7 +1006,7 @@ void Lagrange_mult_equation(double func[DIM],
   int var, jvar; /* Degree of freedom counter                 */
 
   int DeformingMesh; /* Logical.                                  */
-  double A, phi_j;
+  double phi_j;
   double penalty = 1.0e+6;
   double jac = 0.0;
 
@@ -1018,11 +1018,11 @@ void Lagrange_mult_equation(double func[DIM],
 
   /* h_elem_avg = 0.03; */
   if (DeformingMesh) {
-    A = 0.;
-    for (a = 0; a < pd->Num_Dim; a++) {
-      /* A  += dt*(x_dot[a] - fluid_velocity[a])*(x_dot[a] - fluid_velocity[a])/(h_elem_avg); */
-      A += (x_dot[a] - fluid_velocity[a]) * (x_dot[a] - fluid_velocity[a]);
-    }
+    // dbl A = 0.;
+    // for (a = 0; a < pd->Num_Dim; a++) {
+    // /* A  += dt*(x_dot[a] - fluid_velocity[a])*(x_dot[a] - fluid_velocity[a])/(h_elem_avg); */
+    // A += (x_dot[a] - fluid_velocity[a]) * (x_dot[a] - fluid_velocity[a]);
+    // }
 
     /* Residuals */
     for (a = 0; a < pd->Num_Dim; a++) {

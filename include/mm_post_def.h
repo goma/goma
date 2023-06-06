@@ -32,108 +32,109 @@
  *  requests.
  */
 
-#define FORCE_NORMAL            0
-#define FORCE_TANGENT1          1
-#define FORCE_TANGENT2          2
-#define FORCE_X                 3
-#define FORCE_Y                 4
-#define FORCE_Z                 5
-#define VOLUME_FLUX             6
-#define SPECIES_FLUX            7
-#define HEAT_FLUX               8
-#define TORQUE                  9
-#define AVERAGE_CONC            10
-#define SURF_DISSIP             11
-#define AREA                    12
-#define VOL_REVOLUTION          13
-#define PORE_LIQ_FLUX           14
-#define CHARGED_SPECIES_FLUX    15
-#define CURRENT_FICKIAN         16
-#define CURRENT                 17
-#define NEG_LS_FLUX             18
-#define POS_LS_FLUX             19
-#define N_DOT_X                 20
-#define ELEC_FORCE_NORMAL       21
-#define ELEC_FORCE_TANGENT1     22
-#define ELEC_FORCE_TANGENT2     23
-#define ELEC_FORCE_X            24
-#define ELEC_FORCE_Y            25
-#define ELEC_FORCE_Z            26
-#define NET_SURF_CHARGE         27
-#define DELTA                   28
-#define ACOUSTIC_FLUX_NORMAL    29
-#define ACOUSTIC_FLUX_TANGENT1  301
-#define ACOUSTIC_FLUX_TANGENT2  311
-#define ACOUSTIC_FLUX_X         321
-#define ACOUSTIC_FLUX_Y         331
-#define ACOUSTIC_FLUX_Z         341
-#define ACOUSTIC_INTENSITY      351
-#define LS_DCA                  361
-#define SHELL_VOLUME_FLUX       30
-#define FORCE_X_POS             371
-#define FORCE_Y_POS             372
-#define FORCE_Z_POS             373
-#define FORCE_X_NEG             374
-#define FORCE_Y_NEG             375
-#define FORCE_Z_NEG             376
-#define SPECIES_FLUX_REVOLUTION 398
-#define REPULSIVE_FORCE         399
-#define POYNTING_X              400
-#define POYNTING_Y              401
-#define POYNTING_Z              402
+#define FORCE_NORMAL             0
+#define FORCE_TANGENT1           1
+#define FORCE_TANGENT2           2
+#define FORCE_X                  3
+#define FORCE_Y                  4
+#define FORCE_Z                  5
+#define VOLUME_FLUX              6
+#define SPECIES_FLUX             7
+#define HEAT_FLUX                8
+#define TORQUE                   9
+#define AVERAGE_CONC             10
+#define SURF_DISSIP              11
+#define AREA                     12
+#define VOL_REVOLUTION           13
+#define PORE_LIQ_FLUX            14
+#define CHARGED_SPECIES_FLUX     15
+#define CURRENT_FICKIAN          16
+#define CURRENT                  17
+#define NEG_LS_FLUX              18
+#define POS_LS_FLUX              19
+#define N_DOT_X                  20
+#define ELEC_FORCE_NORMAL        21
+#define ELEC_FORCE_TANGENT1      22
+#define ELEC_FORCE_TANGENT2      23
+#define ELEC_FORCE_X             24
+#define ELEC_FORCE_Y             25
+#define ELEC_FORCE_Z             26
+#define NET_SURF_CHARGE          27
+#define DELTA                    28
+#define ACOUSTIC_FLUX_NORMAL     29
+#define ACOUSTIC_FLUX_TANGENT1   301
+#define ACOUSTIC_FLUX_TANGENT2   311
+#define ACOUSTIC_FLUX_X          321
+#define ACOUSTIC_FLUX_Y          331
+#define ACOUSTIC_FLUX_Z          341
+#define ACOUSTIC_INTENSITY       351
+#define LS_DCA                   361
+#define SHELL_VOLUME_FLUX        30
+#define FORCE_X_POS              371
+#define FORCE_Y_POS              372
+#define FORCE_Z_POS              373
+#define FORCE_X_NEG              374
+#define FORCE_Y_NEG              375
+#define FORCE_Z_NEG              376
+#define SPECIES_FLUX_REVOLUTION  398
+#define REPULSIVE_FORCE          399
+#define POYNTING_X               400
+#define POYNTING_Y               401
+#define POYNTING_Z               402
+#define SCATTERING_CROSS_SECTION 403
 
-#define I_VOLUME              0
-#define I_DISSIP              1
-#define I_SPECIES_MASS        2
-#define I_HEAT_ENERGY         3
-#define I_MOMX                4
-#define I_MOMY                5
-#define I_MOMZ                6
-#define I_TRACE               7
-#define I_POS_FILL            8
-#define I_NEG_FILL            9
-#define I_NEG_VX              10
-#define I_NEG_VY              11
-#define I_NEG_VZ              12
-#define I_POS_VX              13
-#define I_POS_VY              14
-#define I_POS_VZ              15
-#define I_LS_ARC_LENGTH       16
-#define I_RATE_OF_DEF_II      17
-#define I_POROUS_LIQUID_INV   18
-#define I_SPEED               19
-#define I_MAG_GRAD_FILL_ERROR 20
-#define I_NEG_CENTER_X        21
-#define I_NEG_CENTER_Y        22
-#define I_NEG_CENTER_Z        23
-#define I_POS_CENTER_X        24
-#define I_POS_CENTER_Y        25
-#define I_POS_CENTER_Z        26
-#define I_SURF_SPECIES        27
-#define I_ELOADX              28
-#define I_ELOADY              29
-#define I_ELOADZ              30
-#define I_SURF_TEMP           31
-#define I_JOULE               32
-#define I_LUB_LOAD            33
-#define I_VOLUME_PLANE        34
-#define I_POS_VOLPLANE        35
-#define I_NEG_VOLPLANE        36
-#define I_SPECIES_SOURCE      37
-#define I_KINETIC_ENERGY      38
-#define I_SHELL_VOLUME        39
-#define I_TFMP_FORCE          40
-#define I_MASS                41
-#define I_MASS_NEGATIVE_FILL  42
-#define I_MASS_POSITIVE_FILL  43
-#define I_VORTICITY           44
-#define I_GIESEKUS            45
-#define I_LAMB_MAG            46
-#define I_HELICITY            47
-#define I_Q_FCN               48
-#define I_POROUS_LIQUID_INV_2 49
-#define I_POROUS_LIQUID_INV_3 50
-
+#define I_VOLUME                  0
+#define I_DISSIP                  1
+#define I_SPECIES_MASS            2
+#define I_HEAT_ENERGY             3
+#define I_MOMX                    4
+#define I_MOMY                    5
+#define I_MOMZ                    6
+#define I_TRACE                   7
+#define I_POS_FILL                8
+#define I_NEG_FILL                9
+#define I_NEG_VX                  10
+#define I_NEG_VY                  11
+#define I_NEG_VZ                  12
+#define I_POS_VX                  13
+#define I_POS_VY                  14
+#define I_POS_VZ                  15
+#define I_LS_ARC_LENGTH           16
+#define I_RATE_OF_DEF_II          17
+#define I_POROUS_LIQUID_INV       18
+#define I_SPEED                   19
+#define I_MAG_GRAD_FILL_ERROR     20
+#define I_NEG_CENTER_X            21
+#define I_NEG_CENTER_Y            22
+#define I_NEG_CENTER_Z            23
+#define I_POS_CENTER_X            24
+#define I_POS_CENTER_Y            25
+#define I_POS_CENTER_Z            26
+#define I_SURF_SPECIES            27
+#define I_ELOADX                  28
+#define I_ELOADY                  29
+#define I_ELOADZ                  30
+#define I_SURF_TEMP               31
+#define I_JOULE                   32
+#define I_LUB_LOAD                33
+#define I_VOLUME_PLANE            34
+#define I_POS_VOLPLANE            35
+#define I_NEG_VOLPLANE            36
+#define I_SPECIES_SOURCE          37
+#define I_KINETIC_ENERGY          38
+#define I_SHELL_VOLUME            39
+#define I_TFMP_FORCE              40
+#define I_MASS                    41
+#define I_MASS_NEGATIVE_FILL      42
+#define I_MASS_POSITIVE_FILL      43
+#define I_VORTICITY               44
+#define I_GIESEKUS                45
+#define I_LAMB_MAG                46
+#define I_HELICITY                47
+#define I_Q_FCN                   48
+#define I_POROUS_LIQUID_INV_2     49
+#define I_POROUS_LIQUID_INV_3     50
+#define I_EM_ABSORB_CROSS_SECTION 51
 #ifdef GOMA_MM_POST_PROC_C
 struct Post_Processing_Flux_Names {
   char *name; /* flux string */
@@ -145,7 +146,7 @@ typedef struct Post_Processing_Flux_Names FLUX_NAME_STRUCT;
 extern FLUX_NAME_STRUCT pp_flux_names[];
 extern int Num_Flux_Names;
 
-struct Post_Processing_Flux_Names pp_flux_names[49] = {
+struct Post_Processing_Flux_Names pp_flux_names[50] = {
     {"FORCE_NORMAL", FORCE_NORMAL},
     {"FORCE_TANGENT1", FORCE_TANGENT1},
     {"FORCE_TANGENT2", FORCE_TANGENT2},
@@ -195,6 +196,7 @@ struct Post_Processing_Flux_Names pp_flux_names[49] = {
     {"POYNTING_X", POYNTING_X},
     {"POYNTING_Y", POYNTING_Y},
     {"POYNTING_Z", POYNTING_Z},
+    {"SCATTERING_CROSS_SECTION", SCATTERING_CROSS_SECTION},
 };
 
 int Num_Flux_Names = sizeof(pp_flux_names) / sizeof(struct Post_Processing_Flux_Names);
@@ -258,7 +260,8 @@ VOL_NAME_STRUCT pp_vol_names[] = {{"VOLUME", I_VOLUME},
                                   {"GIESEKUS", I_GIESEKUS},
                                   {"LAMB_MAG", I_LAMB_MAG},
                                   {"HELICITY", I_HELICITY},
-                                  {"Q_FCN", I_Q_FCN}};
+                                  {"Q_FCN", I_Q_FCN},
+                                  {"ABSORPTION_CROSS_SECTION", I_EM_ABSORB_CROSS_SECTION}};
 
 int Num_Vol_Names = sizeof(pp_vol_names) / sizeof(VOL_NAME_STRUCT);
 
@@ -410,7 +413,33 @@ typedef struct Post_Processing_Averages {
   int non_variable_type;
 } pp_Average;
 
-enum AverageExtraTypes { AVG_DENSITY, AVG_HEAVISIDE, AVG_VISCOSITY, AVG_SHEAR };
+enum AverageExtraTypes {
+  AVG_DENSITY,
+  AVG_HEAVISIDE,
+  AVG_VISCOSITY,
+  AVG_SHEAR,
+  AVG_EMR_X,
+  AVG_EMR_Y,
+  AVG_EMR_Z,
+  AVG_EMI_X,
+  AVG_EMI_Y,
+  AVG_EMI_Z,
+  AVG_EMSCATR_X,
+  AVG_EMSCATR_Y,
+  AVG_EMSCATR_Z,
+  AVG_EMSCATI_X,
+  AVG_EMSCATI_Y,
+  AVG_EMSCATI_Z,
+  AVG_EMINCR_X,
+  AVG_EMINCR_Y,
+  AVG_EMINCR_Z,
+  AVG_EMINCI_X,
+  AVG_EMINCI_Y,
+  AVG_EMINCI_Z,
+  AVG_EM_MAG,
+  AVG_EM_INC_MAG,
+  AVG_EM_SCAT_MAG
+};
 
 /*
  * All of these variables are actually defined in mm_post_proc.c
@@ -619,12 +648,12 @@ extern int PP_LAME_MU;              /* Lame MU coefficient for solid/mesh */
 extern int PP_LAME_LAMBDA;          /* Lame LAMBDA coefficient for solid/mesh */
 extern int VON_MISES_STRAIN;
 extern int VON_MISES_STRESS;
-extern int LOG_CONF_MAP; /* Map log-conformation tensor to stress */
-extern int J_FLUX;       /* Particle stress flux                  */
-extern int EIG;          /* Eigenvalues of rate-of-strain tensor  */
-extern int EIG1;         /* Eigenvector of rate-of-strain tensor  */
-extern int EIG2;         /* Eigenvector of rate-of-strain tensor  */
-extern int EIG3;         /* Eigenvector of rate-of-strain tensor  */
+extern int CONF_MAP; /* Map log-conformation tensor to stress */
+extern int J_FLUX;   /* Particle stress flux                  */
+extern int EIG;      /* Eigenvalues of rate-of-strain tensor  */
+extern int EIG1;     /* Eigenvector of rate-of-strain tensor  */
+extern int EIG2;     /* Eigenvector of rate-of-strain tensor  */
+extern int EIG3;     /* Eigenvector of rate-of-strain tensor  */
 extern int HEAVISIDE;
 extern int RHO_DOT;
 extern int MOMENT_SOURCES;
@@ -650,6 +679,13 @@ extern int SPECIES_SOURCES; /* Species sources */
 extern int VISCOUS_STRESS;  /* Viscous stress */
 extern int VISCOUS_STRESS_NORM;
 extern int VISCOUS_VON_MISES_STRESS;
+extern int EM_CONTOURS;
+extern int TOTAL_EM_CONTOURS;
+extern int SCATTERED_EM_CONTOURS;
+extern int ORIENTATION_VECTORS;
+extern int FIRST_STRAINRATE_INVAR;
+extern int SEC_STRAINRATE_INVAR;
+extern int THIRD_STRAINRATE_INVAR;
 /*
  *  Post-processing Step 1: add a new variable flag to end of mm_post_proc.h
  *

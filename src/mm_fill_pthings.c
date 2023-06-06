@@ -233,7 +233,7 @@ int assemble_pmomentum(dbl time_value, /* current time for density model */
   dbl d_Pi_mesh[DIM][DIM][DIM][MDE];
   dbl d_Pi_C[DIM][DIM][MAX_CONC][MDE];
   dbl d_Pi_T[DIM][DIM][MDE];
-  dbl hold1, hold2;
+  dbl hold1;
 
   dbl wt;
 
@@ -282,8 +282,6 @@ int assemble_pmomentum(dbl time_value, /* current time for density model */
   const double mul2 = 1;
   const double mul3 = M_PIE * M_PIE / 4 - 1;
   const double mul4 = 0.5;
-
-  int node_number, wrt_node_number;
 
   memset(d_Pi_T, 0, sizeof(double) * DIM * DIM * MDE);
 
@@ -602,10 +600,6 @@ int assemble_pmomentum(dbl time_value, /* current time for density model */
         for (b = 0; b < WIM; b++)
           for (j = 0; j < ei[pg->imtrx]->dof[PVELOCITY1]; j++)
             d_gamma_dvbj[p][q][b][j] = grad_phi_e[j][b][p][q] + grad_phi_e[j][b][q][p];
-    hold2 = 0.0;
-    for (p = 0; p < VIM; p++)
-      for (q = 0; q < VIM; q++)
-        hold2 += gamma[p][q] * d_gamma_dvbj[q][p][b][j] + d_gamma_dvbj[p][q][b][j] * gamma[q][p];
     for (b = 0; b < WIM; b++)
       for (j = 0; j < ei[pg->imtrx]->dof[PVELOCITY1]; j++) {
         d_gamma_doubledot_dvbj[b][j] = 0.0;
@@ -697,10 +691,6 @@ int assemble_pmomentum(dbl time_value, /* current time for density model */
            *  ldof pertaining to the same variable type.
            */
           ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
-
-          node_number = ei[pg->imtrx]->gnn_list[PVELOCITY1][i];
-          node_number++;
-          node_number = -100;
 
           phi_i = bfm->phi[i];
 
@@ -984,12 +974,6 @@ int assemble_pmomentum(dbl time_value, /* current time for density model */
           var = MASS_FRACTION;
           if (pd->v[pg->imtrx][var]) {
             for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-              node_number = ei[pg->imtrx]->gnn_list[PVELOCITY1][i];
-              node_number++;
-              node_number = -100;
-
-              wrt_node_number = ei[pg->imtrx]->gnn_list[MASS_FRACTION][j];
-              wrt_node_number++;
 
               phi_j = bf[var]->phi[j];
 

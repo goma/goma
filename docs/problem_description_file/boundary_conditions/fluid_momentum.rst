@@ -65,6 +65,8 @@ weak form, finite-element strong form, and many other boundary condition types.
 
 .. include:: /problem_description_file/boundary_conditions/fluid_momentum/flow_gradv.rst
 
+.. include:: /problem_description_file/boundary_conditions/fluid_momentum/flow_gradv_t.rst
+
 .. include:: /problem_description_file/boundary_conditions/fluid_momentum/flow_press_user.rst
 
 .. include:: /problem_description_file/boundary_conditions/fluid_momentum/flow_hydrostatic.rst

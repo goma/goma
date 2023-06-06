@@ -96,10 +96,10 @@ void luf(const int N,
   static spREAL **element, *b;
 #ifdef MATRIX_STATISTICS
   spREAL norm;
-#endif
   static int call = 0;
 
   call++;
+#endif
 
   /* allocate rhs and copy */
 

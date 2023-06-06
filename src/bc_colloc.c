@@ -189,7 +189,7 @@ int apply_point_colloc_bc(double resid_vector[], /* Residual vector for the curr
           ielem, iconnect_ptr, num_local_nodes, ielem_dim - 1, (int)elem_side_bc->id_side,
           (int)elem_side_bc->num_nodes_on_side, (elem_side_bc->local_elem_node_id));
 
-      if (ielem_dim != 3) {
+      if (ielem_dim != 3 && ielem_dim == pd->Num_Dim) {
         calc_surf_tangent(ielem, iconnect_ptr, num_local_nodes, ielem_dim - 1,
                           (int)elem_side_bc->num_nodes_on_side, (elem_side_bc->local_elem_node_id));
       }
@@ -792,10 +792,14 @@ int apply_point_colloc_bc(double resid_vector[], /* Residual vector for the curr
                          *   over all dof for this variable in this element
                          */
                         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-                          phi_j = bf[var]->phi[j];
-                          lec->J[LEC_J_INDEX(ieqn, pvar, ldof_eqn, j)] +=
-                              penalty * d_func[var] * phi_j;
-                          lec->J[LEC_J_INDEX(ieqn, pvar, ldof_eqn, j)] *= f_time;
+                          // I'm not sure this phi_j is ever going to be non-zero with the Dolphin
+                          // check above check if we have a bf available before trying to use it
+                          if (bf[var]) {
+                            phi_j = bf[var]->phi[j];
+                            lec->J[LEC_J_INDEX(ieqn, pvar, ldof_eqn, j)] +=
+                                penalty * d_func[var] * phi_j;
+                            lec->J[LEC_J_INDEX(ieqn, pvar, ldof_eqn, j)] *= f_time;
+                          }
                         }
                       }
                     } else {

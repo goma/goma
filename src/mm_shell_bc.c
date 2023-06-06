@@ -74,6 +74,8 @@
  *
  *  shell_n_dot_pflux_bc                 void
  *
+ *  shell_n_dot_flow_wall                void
+ *
  *
  ******************************************************************************/
 
@@ -82,6 +84,8 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
                                   const double flowrate,  /* imposed flow rate */
                                   const double flow_gap,  /* imposed gap dependent flow */
                                   const double pwr_index, /* power-law for gap dependence */
+                                  const int ibc_flag,     /* NOBC flag from bc input  */
+                                  const int bc_id,        /* BC_Name */
                                   const double time,      /* current time */
                                   const double dt,        /* current time step size */
                                   double xi[DIM],         /* Local stu coordinates */
@@ -106,9 +110,6 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
  *  flowrate      = specified on the bc card as the first float
  *  flow_gap      = specified on the bc card as the second float (optional)
  *  pwr_index     = specified on the bc card as the third float (optional)
- *  grad LUB_P    = Lubrication pressure gradient
- *  U_top         = Velocity of the top wall
- *  U_bot         = Velocity of the bottom wall
  *  H             = Distance between top and bottom wall
  *
  * Output:
@@ -125,16 +126,24 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
  *
  ********************************************************************/
 {
-  int j, ii, jj, var;
+  int j, ii, jj, var, jk;
   int *n_dof = NULL;
   int dof_map[MDE];
-  double grad_phi_j[DIM], grad_II_phi_j[DIM];
-  double bound_normal[DIM];
+  double phi_j;
+  double grad_phi_j[DIM], grad_II_phi_j[DIM], d_grad_II_phi_j_dmesh[DIM][DIM][MDE];
+  double bound_normal[DIM], bound_dnormal_dx[DIM][DIM][MDE];
 
+  if (ei[pg->imtrx]->ielem_dim == 3)
+    return;
   /* Save the boundary normal vector */
 
   for (ii = 0; ii < pd->Num_Dim; ii++) {
     bound_normal[ii] = fv->snormal[ii];
+    for (jj = 0; jj < pd->Num_Dim; jj++) {
+      for (j = 0; j < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; j++) {
+        bound_dnormal_dx[ii][jj][j] = fv->dsnormal_dx[ii][jj][j];
+      }
+    }
   }
 
   /*
@@ -155,14 +164,14 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
     var = LUBP;
     if (pd->v[pg->imtrx][var]) {
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-        for (ii = 0; ii < pd->Num_Dim; ii++) {
-          grad_phi_j[ii] = bf[var]->grad_phi[j][ii];
-          grad_II_phi_j[ii] = 0.0;
-        }
+        /* Load basis functions (j) */
+        ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
+                n_dof[MESH_DISPLACEMENT1], dof_map);
 
         Inn(grad_phi_j, grad_II_phi_j);
 
         for (ii = 0; ii < pd->Num_Dim; ii++) {
+          d_func[0][var][j] += LubAux->dq_dp2[ii][j] * phi_j * bound_normal[ii];
           for (jj = 0; jj < pd->Num_Dim; jj++) {
             d_func[0][var][j] +=
                 LubAux->dq_dgradp[ii][jj][j] * grad_II_phi_j[jj] * bound_normal[ii];
@@ -170,12 +179,42 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
         }
       }
     }
+    /*
+     * J_lubp_DMX
+     */
+    var = MESH_DISPLACEMENT1;
+    if (pd->v[pg->imtrx][var] &&
+        (mp->FSIModel == FSI_MESH_CONTINUUM || mp->FSIModel == FSI_REALSOLID_CONTINUUM ||
+         mp->FSIModel == FSI_MESH_UNDEF || mp->FSIModel == FSI_SHELL_ONLY_MESH ||
+         mp->FSIModel == FSI_SHELL_ONLY_UNDEF)) {
 
+      /*** Loop over dimensions of mesh displacement ***/
+      for (jj = 0; jj < pd->Num_Dim; jj++) {
+        var = MESH_DISPLACEMENT1 + jj;
+
+        /*** Loop over DOFs (j) ***/
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          jk = dof_map[j];
+
+          /* Load basis functions (j) */
+          ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
+                  n_dof[MESH_DISPLACEMENT1], dof_map);
+
+          if (pd->e[pg->imtrx][var]) {
+            for (ii = 0; ii < pd->Num_Dim; ii++) {
+              d_func[0][var][j] += LubAux->dq_dx[ii][jj][j] * bound_normal[ii];
+              d_func[0][var][j] += LubAux->q[ii] * bound_dnormal_dx[ii][jj][jk];
+            }
+          }
+        }
+      }
+    }
   } /* end of if Assemble_Jacobian */
 
   /* Calculate the residual contribution        */
-
-  func[0] = -flowrate - flow_gap * pow(LubAux->H, 2 + 1. / pwr_index);
+  if (bc_id == GRAD_LUB_PRESS_BC) {
+    func[0] = -flowrate - flow_gap * pow(LubAux->H, 2 + 1. / pwr_index);
+  }
   for (ii = 0; ii < pd->Num_Dim; ii++) {
     func[0] += LubAux->q[ii] * bound_normal[ii];
   }
@@ -185,6 +224,142 @@ void shell_n_dot_flow_bc_confined(double func[DIM],
 
 } /* END of routine shell_n_dot_flow_bc_confined  */
 /*****************************************************************************/
+/*****************************************************************************/
+void shell_n_dot_flow_wall(double func[DIM],
+                           double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                           const double pwr_index, /* power-law for gap dependence */
+                           const double time,      /* current time */
+                           const double dt,        /* current time step size */
+                           double xi[DIM],         /* Local stu coordinates */
+                           const Exo_DB *exo)
+
+/***********************************************************************
+ *
+ * shell_n_dot_flow_wall():
+ *
+ *  Function which evaluates extra flow resistance due to a wall
+ *
+ *  The boundary condition SHELL_LUB_WALL_BC employs this function.
+ *
+ * Input:
+ *
+ *  pwr_index     = specified on the bc card as the third float (optional)
+ *
+ * Output:
+ *
+ *  func[0] = value of the function mentioned above
+ *  d_func[0][varType][lvardof] =
+ *              Derivate of func[0] wrt
+ *              the variable type, varType, and the local variable
+ *              degree of freedom, lvardof, corresponding to that
+ *              variable type.
+ *
+ *   Author: Robert B. Secor    (01/04/2023)
+ *
+ ********************************************************************/
+{
+  int j, ii, jj, var, jk;
+  int *n_dof = NULL;
+  int dof_map[MDE];
+  double phi_j, wall_factor = 0.;
+  double grad_phi_j[DIM], grad_II_phi_j[DIM], d_grad_II_phi_j_dmesh[DIM][DIM][MDE];
+  double bdy_tangent[DIM], bdy_dstangent_dx[DIM][DIM][MDE];
+
+  if (ei[pg->imtrx]->ielem_dim == 3)
+    return;
+  /* Save the boundary normal vector */
+
+  for (ii = 0; ii < pd->Num_Dim; ii++) {
+    bdy_tangent[ii] = fv->stangent[0][ii];
+    for (jj = 0; jj < pd->Num_Dim; jj++) {
+      for (j = 0; j < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; j++) {
+        bdy_dstangent_dx[ii][jj][j] = fv->dstangent_dx[0][ii][jj][j];
+      }
+    }
+  }
+  /* Wall factor for power-law liquids, i.e., (Qtube/2R)/(Qslot/W) */
+  wall_factor = M_PIE * (2. + 1. / pwr_index) / (3. + 1. / pwr_index) / pow(2., 2. + 1 / pwr_index);
+  /*
+   * Prepare geometry
+   */
+  n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
+  lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+
+  /* Calculate the flow rate and its sensitivties */
+
+  calculate_lub_q_v(R_LUBP, time, dt, xi, exo);
+
+  if (af->Assemble_LSA_Mass_Matrix) {
+    return;
+  }
+
+  if (af->Assemble_Jacobian) {
+    var = LUBP;
+    if (pd->v[pg->imtrx][var]) {
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+        /* Load basis functions (j) */
+        ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
+                n_dof[MESH_DISPLACEMENT1], dof_map);
+
+        Inn(grad_phi_j, grad_II_phi_j);
+
+        for (ii = 0; ii < pd->Num_Dim; ii++) {
+          d_func[0][var][j] +=
+              wall_factor * LubAux->dq_dp2[ii][j] * phi_j * bdy_tangent[ii] / fv->sdet;
+          for (jj = 0; jj < pd->Num_Dim; jj++) {
+            d_func[0][var][j] += wall_factor * LubAux->dq_dgradp[ii][jj][j] * grad_II_phi_j[jj] *
+                                 bdy_tangent[ii] / fv->sdet;
+          }
+        }
+      }
+    }
+    /*
+     * J_lubp_DMX
+     */
+    var = MESH_DISPLACEMENT1;
+    if (pd->v[pg->imtrx][var] &&
+        (mp->FSIModel == FSI_MESH_CONTINUUM || mp->FSIModel == FSI_REALSOLID_CONTINUUM ||
+         mp->FSIModel == FSI_MESH_UNDEF || mp->FSIModel == FSI_SHELL_ONLY_MESH ||
+         mp->FSIModel == FSI_SHELL_ONLY_UNDEF)) {
+
+      /*** Loop over dimensions of mesh displacement ***/
+      for (jj = 0; jj < pd->Num_Dim; jj++) {
+        var = MESH_DISPLACEMENT1 + jj;
+
+        /*** Loop over DOFs (j) ***/
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          jk = dof_map[j];
+
+          /* Load basis functions (j) */
+          ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh,
+                  n_dof[MESH_DISPLACEMENT1], dof_map);
+
+          if (pd->e[pg->imtrx][var]) {
+            for (ii = 0; ii < pd->Num_Dim; ii++) {
+              d_func[0][var][j] +=
+                  wall_factor * LubAux->dq_dx[ii][jj][j] * bdy_tangent[ii] / fv->sdet;
+              d_func[0][var][j] +=
+                  wall_factor * LubAux->q[ii] * bdy_dstangent_dx[ii][jj][jk] / fv->sdet;
+              d_func[0][var][j] += wall_factor * LubAux->q[ii] * bdy_tangent[ii] *
+                                   (-fv->dsurfdet_dx[jj][j] / SQUARE(fv->sdet));
+            }
+          }
+        }
+      }
+    }
+  } /* end of if Assemble_Jacobian */
+
+  /* Calculate the residual contribution        */
+  func[0] = 0.0;
+  for (ii = 0; ii < pd->Num_Dim; ii++) {
+    func[0] += LubAux->q[ii] * bdy_tangent[ii];
+  }
+  func[0] *= wall_factor / fv->sdet;
+
+  /* clean-up */
+  safe_free((void *)n_dof);
+
+} /* END of routine shell_n_dot_flow_wall  */
 /*****************************************************************************/
 /*****************************************************************************/
 
@@ -1515,17 +1690,8 @@ void shell_n_dot_liq_velo_bc_tfmp(double func[DIM],
   }
 
   /* Use the velocity function model */
-  double veloU[DIM], veloL[DIM], veloAVG[DIM];
+  double veloU[DIM], veloL[DIM];
   velocity_function_model(veloU, veloL, time, delta_t);
-
-  for (k = 0; k < DIM; k++) {
-    veloAVG[k] = (veloU[k] + veloL[k]) / 2.;
-  }
-  veloAVG[2] = 0.0;
-  double n_dot_v_avg = 0.0;
-  for (k = 0; k < DIM; k++) {
-    n_dot_v_avg += bound_normal[k] * veloAVG[k];
-  }
 
   //  rel perms
   double Krl, dKrl_dS, Krg, dKrg_dS;

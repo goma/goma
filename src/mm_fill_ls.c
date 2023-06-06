@@ -8963,6 +8963,11 @@ double Courant_Time_Step(double x[],
                 vnorm += (2.5 * fv->v[a] - 1.5 * fv_old->v[a]) * lsi->normal[a];
               }
             }
+            if (pd->gv[LUBP] && tran->Fill_Equation != FILL_EQN_EXT_V) {
+              for (a = 0; a < DIM; a++) {
+                vnorm += (2.5 * LubAux->v_avg[a] - 1.5 * LubAux_old->v_avg[a]) * lsi->normal[a];
+              }
+            }
             sumv += fv->wt * vnorm;
             sum += fv->wt;
           }
@@ -9392,6 +9397,8 @@ void build_integ_element(Integ_Elem *e,
   if (!e->is_conformal) {
     switch (ielem_type) {
     case BIQUAD_QUAD:
+    case BIQUAD_SHELL:
+    case BILINEAR_SHELL:
     case BILINEAR_QUAD: {
       int job = -1; /* job == -1: no subelements
                        job == 0: create 4 triangles
@@ -9451,7 +9458,7 @@ void build_integ_element(Integ_Elem *e,
         nodes[1][0] = e->xi[1][0];
         nodes[1][1] = e->xi[1][1];
         nodes[1][2] = 0.;
-        if (ielem_type == BIQUAD_QUAD) {
+        if (ielem_type == BIQUAD_QUAD || ielem_type == BIQUAD_SHELL) {
           nodes[2][0] = e->xi[8][0];
           nodes[2][1] = e->xi[8][1];
           nodes[2][2] = 0.;
@@ -9485,7 +9492,7 @@ void build_integ_element(Integ_Elem *e,
         nodes[1][0] = e->xi[2][0];
         nodes[1][1] = e->xi[2][1];
         nodes[1][2] = 0.;
-        if (ielem_type == BIQUAD_QUAD) {
+        if (ielem_type == BIQUAD_QUAD || ielem_type == BIQUAD_SHELL) {
           nodes[2][0] = e->xi[8][0];
           nodes[2][1] = e->xi[8][1];
           nodes[2][2] = 0.;
@@ -9519,7 +9526,7 @@ void build_integ_element(Integ_Elem *e,
         nodes[1][0] = e->xi[3][0];
         nodes[1][1] = e->xi[3][1];
         nodes[1][2] = 0.;
-        if (ielem_type == BIQUAD_QUAD) {
+        if (ielem_type == BIQUAD_QUAD || ielem_type == BIQUAD_SHELL) {
           nodes[2][0] = e->xi[8][0];
           nodes[2][1] = e->xi[8][1];
           nodes[2][2] = 0.;
@@ -9553,7 +9560,7 @@ void build_integ_element(Integ_Elem *e,
         nodes[1][0] = e->xi[0][0];
         nodes[1][1] = e->xi[0][1];
         nodes[1][2] = 0.;
-        if (ielem_type == BIQUAD_QUAD) {
+        if (ielem_type == BIQUAD_QUAD || ielem_type == BIQUAD_SHELL) {
           nodes[2][0] = e->xi[8][0];
           nodes[2][1] = e->xi[8][1];
           nodes[2][2] = 0.;
@@ -9641,7 +9648,7 @@ void build_integ_element(Integ_Elem *e,
 
         if (overlaps_interface) {
           /* determine size of subelement compared to interface thickness */
-          map_subelement_stu(center, e, yi);
+          map_subelement_stu(yi, e, center);
           detJ = subelement_detJ(e, yi, FALSE);
           length_scale = pow(detJ, 1.0 / ((double)pd->Num_Dim));
           if (length_scale > ls->Length_Scale / scale)

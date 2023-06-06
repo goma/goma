@@ -58,6 +58,7 @@
 #include "sl_util_structs.h"
 #include "std.h"
 #include "user_ac.h"
+#include "util/aprepro_helper.h"
 
 #define GOMA_MM_AUGC_UTIL_C
 
@@ -133,7 +134,7 @@ void load_extra_unknownsAC(int iAC,     /* ID NUMBER OF AC'S */
 
     /*  case for user defined parameter  */
 
-    if (ibc == APREPRO_AC_BCID) {
+    if (ibc == APREPRO_AC_BCID || ibc == APREPRO_LIB_AC_BCID) {
       xa[iAC] = augc[iAC].DataFlt[0];
     } else {
 
@@ -863,7 +864,15 @@ void update_parameterAC(
 
     /*  case for user defined parameter  */
 
+#ifdef GOMA_ENABLE_APREPRO_LIB
+    if (ibc == APREPRO_LIB_AC_BCID) {
+      goma_error err = aprepro_parse_goma_augc(&augc[iAC], lambda);
+      GOMA_EH(err, "Issue with aprepro augmenting condition parsing");
+      augc[iAC].DataFlt[0] = lambda;
+    } else if (ibc == APREPRO_AC_BCID) {
+#else
     if (ibc == APREPRO_AC_BCID) {
+#endif // GOMA_ENABLE_APREPRO_LIB
 #ifndef tflop
       int err;
       FILE *jfp = NULL;
@@ -3276,7 +3285,7 @@ int create_periodic_acs(Exo_DB *exo)
        * Now fill in data for each new AC constraint.
        */
       ac_count = nAC;
-      for (i = 0; i < count1; i++) {
+      for (i = 0; (i < count1) && (ac_count < new_nAC); i++) {
         augc[ac_count].Type = AC_PERIODIC;
         augc[ac_count].VAR = var;
         augc[ac_count].SSID = ssid1;
@@ -3403,15 +3412,21 @@ double getPositionAC(struct AC_Information *augc, double *cAC_iAC, double *x, Ex
     // Process a 1D idea of what we need from the position
     int coordDir = augc->VOLID;
     if (coordDir < 0 || coordDir > 2) {
-      GOMA_EH(-1, "shouldn't be here");
+      GOMA_EH(GOMA_ERROR, "shouldn't be here");
     }
 
     if (augc->COMPID == 1) {
       // Special section for buoyant cylinder
 
     } else {
-
+      // for some reason GCC 12 will throw a warning despite the if above,
+      // if that if (coorDir < 0 || coordDir > 2) is placed here in addition
+      // to the one above it will not throw a warning for some reason
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
       pos1D = posNode[coordDir];
+      // restore Warray-bounds
+#pragma GCC diagnostic pop
 
       // Figure out cAC -> there are cases where the position may be an unknown
       // in the problem.

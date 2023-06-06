@@ -98,6 +98,7 @@
 #include "sl_petsc.h"
 #endif
 #include "mm_fill_split.h"
+#include "sl_petsc_complex.h"
 #include "stdbool.h"
 #include "wr_side_data.h"
 
@@ -516,7 +517,7 @@ Revised:         Summer 1998, SY Tam (UNM)
    *
    */
 
-  if (Proc_NS_List_Length > 0 &&
+  if (exo->ns_node_len > 0 &&
       ((zeroCA == 1) || ((Linear_Solver != FRONT && ielem == exo->eb_ptr[0]) ||
                          (Linear_Solver == FRONT && ielem == exo->elem_order_map[0] - 1)))) {
     int nsp, nspk, count = -1;
@@ -534,11 +535,13 @@ Revised:         Summer 1998, SY Tam (UNM)
       case VELO_THETA_SHIK_BC: {
         nsp = match_nsid(BC_Types[j].BC_ID);
         if (nsp != -1) {
-          nspk = Proc_NS_List[Proc_NS_Pointers[nsp]];
-          int n_nodes = Proc_NS_Pointers[nsp + 1] - Proc_NS_Pointers[nsp];
-          if (n_nodes > 0 && Nodes[nspk]->Proc == ProcID) {
-            count++;
-            CA_proc[count] = ProcID;
+          int n_nodes = exo->ns_num_nodes[nsp];
+          if (n_nodes > 0) {
+            nspk = exo->ns_node_list[exo->ns_node_index[nsp]];
+            if (Nodes[nspk]->Proc == ProcID) {
+              count++;
+              CA_proc[count] = ProcID;
+            }
           }
         }
       } break;
@@ -1095,6 +1098,8 @@ Revised:         Summer 1998, SY Tam (UNM)
       err = load_bf_grad();
       GOMA_EH(err, "load_bf_grad");
 
+      err = load_fv_vector();
+      GOMA_EH(err, "load_fv_vector");
       /*
        * Finally, load the mesh derivatives of the gradients of the
        * basis functions with respect to physical space coordinates.
@@ -1356,6 +1361,9 @@ Revised:         Summer 1998, SY Tam (UNM)
     err = load_bf_grad();
     GOMA_EH(err, "load_bf_grad");
 
+    err = load_fv_vector();
+    GOMA_EH(err, "load_fv_vector");
+
     /*
      * Finally, load the mesh derivatives of the gradients of the
      * basis functions with respect to physical space coordinates.
@@ -1462,8 +1470,7 @@ Revised:         Summer 1998, SY Tam (UNM)
         return -1;
 #endif
     } else if (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV) {
-      err = assemble_stress_log_conf(theta, delta_t, pg_data.hsquared, pg_data.hhv,
-                                     pg_data.dhv_dxnode, pg_data.v_avg, pg_data.dv_dnode);
+      err = assemble_stress_log_conf(theta, delta_t, &pg_data);
 
       GOMA_EH(err, "assemble_stress_log_conf");
       if (err)
@@ -1472,6 +1479,32 @@ Revised:         Summer 1998, SY Tam (UNM)
       GOMA_EH(err, "assemble_stress_update");
 #ifdef CHECK_FINITE
       err = CHECKFINITE("assemble_stress_log_conf");
+      if (err)
+        return -1;
+#endif
+    } else if (vn->evssModel == SQRT_CONF) {
+      err = assemble_stress_sqrt_conf(theta, delta_t, &pg_data);
+
+      GOMA_EH(err, "assemble_stress_sqrt_conf");
+      if (err)
+        return -1;
+      err = segregate_stress_update(x_update);
+      GOMA_EH(err, "assemble_stress_update");
+#ifdef CHECK_FINITE
+      err = CHECKFINITE("assemble_stress_sqrt_conf");
+      if (err)
+        return -1;
+#endif
+    } else if (vn->evssModel == CONF) {
+      err = assemble_stress_conf(theta, delta_t, &pg_data);
+
+      GOMA_EH(err, "assemble_stress_conf");
+      if (err)
+        return -1;
+      err = segregate_stress_update(x_update);
+      GOMA_EH(err, "assemble_stress_update");
+#ifdef CHECK_FINITE
+      err = CHECKFINITE("assemble_stress_conf");
       if (err)
         return -1;
 #endif
@@ -1697,12 +1730,21 @@ Revised:         Summer 1998, SY Tam (UNM)
         return -1;
 #endif
     }
-    if ((pde[R_EM_E1_REAL] && !pde[R_EM_H1_REAL]) || (pde[R_EM_E2_REAL] && !pde[R_EM_H2_REAL]) ||
-        (pde[R_EM_E3_REAL] && !pde[R_EM_H3_REAL])) {
+    if (((pde[R_EM_E1_REAL] && !pde[R_EM_H1_REAL]) || (pde[R_EM_E2_REAL] && !pde[R_EM_H2_REAL]) ||
+         (pde[R_EM_E3_REAL] && !pde[R_EM_H3_REAL])) &&
+        bf[EM_E1_REAL]->interpolation != I_N1) {
       err = assemble_ewave_curlcurl(time_value, theta, delta_t, R_EM_E1_REAL, EM_E1_REAL);
       GOMA_EH(err, "assemble_ewave");
 #ifdef CHECK_FINITE
       err = CHECKFINITE("assemble_ewave");
+      if (err)
+        return -1;
+#endif
+    } else if (pde[R_EM_E1_REAL] && bf[EM_E1_REAL]->interpolation == I_N1) {
+      err = assemble_ewave_nedelec(time_value);
+      GOMA_EH(err, "assemble_ewave_nedelec");
+#ifdef CHECK_FINITE
+      err = CHECKFINITE("assemble_emwave");
       if (err)
         return -1;
 #endif
@@ -1716,6 +1758,7 @@ Revised:         Summer 1998, SY Tam (UNM)
         return -1;
 #endif
     }
+#if 0
     if (pde[R_EM_CONT_REAL]) {
       err = assemble_em_continuity();
       GOMA_EH(err, "assemble_em_continuity");
@@ -1732,10 +1775,10 @@ Revised:         Summer 1998, SY Tam (UNM)
       //        err = assemble_ewave_tensor_bf(time_value, theta, delta_t,
       //                                R_EM_E2_REAL, EM_E2_REAL);
       //        GOMA_EH( err, "assemble_ewave");
-      //#ifdef CHECK_FINITE
+      // #ifdef CHECK_FINITE
       //        err = CHECKFINITE("assemble_ewave");
       //        if (err) return -1;
-      //#endif
+      // #endif
     } else if (pde[R_EM_E2_REAL]) {
       err = assemble_emwave(time_value, theta, delta_t, &pg_data, R_EM_E2_REAL, EM_E2_REAL,
                             EM_E2_IMAG);
@@ -1751,10 +1794,10 @@ Revised:         Summer 1998, SY Tam (UNM)
       //        err = assemble_ewave_tensor_bf(time_value, theta, delta_t,
       //                                R_EM_E3_REAL, EM_E3_REAL);
       //        GOMA_EH( err, "assemble_ewave");
-      //#ifdef CHECK_FINITE
+      // #ifdef CHECK_FINITE
       //        err = CHECKFINITE("assemble_ewave");
       //        if (err) return -1;
-      //#endif
+      // #endif
     } else if (pde[R_EM_E3_REAL]) {
       err = assemble_emwave(time_value, theta, delta_t, &pg_data, R_EM_E3_REAL, EM_E3_REAL,
                             EM_E3_IMAG);
@@ -1770,10 +1813,10 @@ Revised:         Summer 1998, SY Tam (UNM)
       //        err = assemble_ewave_tensor_bf(time_value, theta, delta_t,
       //                                R_EM_E1_IMAG, EM_E1_IMAG);
       //        GOMA_EH( err, "assemble_ewave");
-      //#ifdef CHECK_FINITE
+      // #ifdef CHECK_FINITE
       //        err = CHECKFINITE("assemble_ewave");
       //        if (err) return -1;
-      //#endif
+      // #endif
     } else if (pde[R_EM_E1_IMAG]) {
       err = assemble_emwave(time_value, theta, delta_t, &pg_data, R_EM_E1_IMAG, EM_E1_IMAG,
                             EM_E1_REAL);
@@ -1789,10 +1832,10 @@ Revised:         Summer 1998, SY Tam (UNM)
       //        err = assemble_ewave_tensor_bf(time_value, theta, delta_t,
       //                                R_EM_E2_IMAG, EM_E2_IMAG);
       //        GOMA_EH( err, "assemble_ewave");
-      //#ifdef CHECK_FINITE
+      // #ifdef CHECK_FINITE
       //        err = CHECKFINITE("assemble_ewave");
       //        if (err) return -1;
-      //#endif
+      // #endif
     } else if (pde[R_EM_E2_IMAG]) {
       err = assemble_emwave(time_value, theta, delta_t, &pg_data, R_EM_E2_IMAG, EM_E2_IMAG,
                             EM_E2_REAL);
@@ -1808,10 +1851,10 @@ Revised:         Summer 1998, SY Tam (UNM)
       //        err = assemble_ewave_tensor_bf(time_value, theta, delta_t,
       //                                R_EM_E3_IMAG, EM_E3_IMAG);
       //        GOMA_EH( err, "assemble_ewave");
-      //#ifdef CHECK_FINITE
+      // #ifdef CHECK_FINITE
       //        err = CHECKFINITE("assemble_ewave");
       //        if (err) return -1;
-      //#endif
+      // #endif
     } else if (pde[R_EM_E3_IMAG]) {
       err = assemble_emwave(time_value, theta, delta_t, &pg_data, R_EM_E3_IMAG, EM_E3_IMAG,
                             EM_E3_REAL);
@@ -1888,7 +1931,7 @@ Revised:         Summer 1998, SY Tam (UNM)
         return -1;
 #endif
     }
-
+#endif
     if (pde[R_POR_SINK_MASS]) {
       err = assemble_pore_sink_mass(time_value, theta, delta_t);
       GOMA_EH(err, "assemble_pore_sink_mass");
@@ -2716,9 +2759,14 @@ Revised:         Summer 1998, SY Tam (UNM)
       call_shell_grad = 0;
       call_sharp_int = FALSE;
 
+      int call_nedelec = 0;
+
       for (ibc = 0; (bc_input_id = (int)elem_side_bc->BC_input_id[ibc]) != -1; ibc++) {
         if (BC_Types[bc_input_id].desc->method == WEAK_INT_SURF) {
           call_int = 1;
+        }
+        if (BC_Types[bc_input_id].desc->method == WEAK_INT_NEDELEC) {
+          call_nedelec = 1;
         }
         if ((BC_Types[bc_input_id].desc->method == WEAK_SHELL_GRAD ||
              BC_Types[bc_input_id].desc->method == STRONG_SHELL_GRAD) &&
@@ -2771,6 +2819,20 @@ Revised:         Summer 1998, SY Tam (UNM)
 #endif
       if (neg_elem_volume)
         return -1;
+      if (call_nedelec) {
+        err = apply_nedelec_bc(x, resid_vector, delta_t, theta, &pg_data, ielem, ielem_type,
+                               num_local_nodes, ielem_dim, iconnect_ptr, elem_side_bc,
+                               num_total_nodes, WEAK_INT_NEDELEC, time_value, element_search_grid,
+                               exo);
+        GOMA_EH(err, " apply_integrated_bc");
+#ifdef CHECK_FINITE
+        err = CHECKFINITE("apply_integrated_bc");
+        if (err)
+          return -1;
+#endif
+        if (neg_elem_volume)
+          return -1;
+      }
 
     } while ((elem_side_bc = elem_side_bc->next_side_bc) != NULL);
   } /* END if (First_Elem_Side_BC_Array[ielem] != NULL) */
@@ -3066,10 +3128,13 @@ Revised:         Summer 1998, SY Tam (UNM)
       call_int = 0;
       call_col = 0;
       call_contact = 0.;
+      int call_nedelec = 0.;
       for (ibc = 0; (bc_input_id = (int)elem_side_bc->BC_input_id[ibc]) != -1; ibc++) {
         bct = BC_Types[bc_input_id].desc->method;
         if (bct == STRONG_INT_SURF)
           call_int = 1;
+        if (bct == STRONG_INT_NEDELEC)
+          call_nedelec = 1;
         if (bct == COLLOCATE_SURF)
           call_col = 1;
         if (bct == CONTACT_SURF)
@@ -3184,6 +3249,28 @@ Revised:         Summer 1998, SY Tam (UNM)
           return -1;
 
         ls = ls_save;
+      }
+      if (call_nedelec) {
+        err = apply_nedelec_bc(x, resid_vector, delta_t, theta, &pg_data, ielem, ielem_type,
+                               num_local_nodes, ielem_dim, iconnect_ptr, elem_side_bc,
+                               num_total_nodes, STRONG_INT_NEDELEC, time_value, element_search_grid,
+                               exo);
+        GOMA_EH(err, " apply_integrated_bc");
+#ifdef CHECK_FINITE
+        err = CHECKFINITE("apply_integrated_bc");
+        if (err)
+          return -1;
+#endif
+        /*printf("Element: %d, ID_side: %d \n", ei[pg->imtrx]->ielem, elem_side_bc->id_side );
+          for(i3=0; i3< (int)  elem_side_bc->num_nodes_on_side; i3++)
+          {
+          id3 = (int) elem_side_bc->local_elem_node_id[i3]; I3 =  I = Proc_Elem_Connect[iconnect_ptr
+          + id3]; printf("\tI: %d, R[0][%d]: %7.4g, R[1][%d]: %7.4g\n", I3, id3, lec->R[0][id3],
+          id3,  lec->R[1][id3]);
+          }*/
+
+        if (neg_elem_volume)
+          return -1;
       }
       /****************************************************************************/
     } while ((elem_side_bc = elem_side_bc->next_side_bc) != NULL);
@@ -3441,8 +3528,9 @@ Revised:         Summer 1998, SY Tam (UNM)
     MMH_ip = -1;
   }
 
-  if ((Linear_Solver != FRONT && ielem == exo->eb_ptr[exo->num_elem_blocks] - 1) ||
-      (Linear_Solver == FRONT && ielem == exo->elem_order_map[exo->num_elem_blocks] - 1)) {
+  if (Proc_NS_List_Length > 0 &&
+      ((Linear_Solver != FRONT && ielem == exo->eb_ptr[exo->num_elem_blocks] - 1) ||
+       (Linear_Solver == FRONT && ielem == exo->elem_order_map[exo->num_elem_blocks] - 1))) {
     if (zeroCA == 0) {
       int count = 0, Num_CAs_done = 0;
       for (j = 0; j < MAX_CA; j++) {
@@ -3946,11 +4034,11 @@ int matrix_fill_stress(struct GomaLinearSolverData *ams,
     if (zero_detJ)
       return -1;
 
-    err = load_fv();
-    GOMA_EH(err, "load_fv");
-
     err = load_bf_grad();
     GOMA_EH(err, "load_bf_grad");
+
+    err = load_fv();
+    GOMA_EH(err, "load_fv");
 
     if (pde[R_MESH1] || pd->v[pg->imtrx][R_MESH1]) {
       err = load_bf_mesh_derivs();
@@ -3976,13 +4064,89 @@ int matrix_fill_stress(struct GomaLinearSolverData *ams,
      */
     do_LSA_mods(LSA_VOLUME);
 
+    if (pde[R_MOMENTUM1]) {
+      if (upd->SegregatedSolve) {
+        err = assemble_momentum_segregated(time_value, theta, delta_t, &pg_data);
+        GOMA_EH(err, "assemble_momentum");
+#ifdef CHECK_FINITE
+        CHECKFINITE("assemble_momentum");
+#endif
+      } else {
+        dbl h_elem_avg = pg_data.h_elem_avg;
+        err = assemble_momentum(time_value, theta, delta_t, h_elem_avg, &pg_data, xi, exo);
+        GOMA_EH(err, "assemble_momentum");
+#ifdef CHECK_FINITE
+        CHECKFINITE("assemble_momentum");
+#endif
+      }
+    }
+
+    if (pde[R_PRESSURE]) {
+      if (upd->SegregatedSolve) {
+        err = assemble_continuity_segregated(time_value, theta, delta_t, &pg_data);
+        GOMA_EH(err, "assemble_continuity");
+#ifdef CHECK_FINITE
+        CHECKFINITE("assemble_continuity");
+#endif
+        if (neg_elem_volume)
+          return -1;
+      } else {
+        err = assemble_continuity(time_value, theta, delta_t, &pg_data);
+        GOMA_EH(err, "assemble_continuity");
+#ifdef CHECK_FINITE
+        CHECKFINITE("assemble_continuity");
+#endif
+        if (neg_elem_volume)
+          return -1;
+      }
+    }
+
+    if (pde[R_GRADIENT11]) {
+      if (gn->ConstitutiveEquation == BINGHAM_MIXED) {
+        err = assemble_rate_of_strain(theta, delta_t);
+      } else {
+        err = assemble_gradient(theta, delta_t);
+      }
+      GOMA_EH(err, "assemble_gradient");
+#ifdef CHECK_FINITE
+      err = CHECKFINITE("assemble_gradient");
+      if (err)
+        return -1;
+#endif
+    }
+
     if (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV) {
-      err = assemble_stress_log_conf(theta, delta_t, pg_data.hsquared, pg_data.hhv,
-                                     pg_data.dhv_dxnode, pg_data.v_avg, pg_data.dv_dnode);
+      err = assemble_stress_log_conf(theta, delta_t, &pg_data);
       if (err)
         return -1;
       err = segregate_stress_update(x_update);
       GOMA_EH(err, "assemble_stress_log_conf");
+#ifdef CHECK_FINITE
+      err = CHECKFINITE("assemble_stress_log_conf");
+      if (err)
+        return -1;
+#endif
+    } else if (vn->evssModel == SQRT_CONF) {
+      err = assemble_stress_sqrt_conf(theta, delta_t, &pg_data);
+
+      GOMA_EH(err, "assemble_stress_sqrt_conf");
+      if (err)
+        return -1;
+      err = segregate_stress_update(x_update);
+      GOMA_EH(err, "assemble_stress_update");
+#ifdef CHECK_FINITE
+      err = CHECKFINITE("assemble_stress_log_conf");
+      if (err)
+        return -1;
+#endif
+    } else if (vn->evssModel == CONF) {
+      err = assemble_stress_conf(theta, delta_t, &pg_data);
+
+      GOMA_EH(err, "assemble_stress_sqrt_conf");
+      if (err)
+        return -1;
+      err = segregate_stress_update(x_update);
+      GOMA_EH(err, "assemble_stress_update");
 #ifdef CHECK_FINITE
       err = CHECKFINITE("assemble_stress_log_conf");
       if (err)
@@ -4858,9 +5022,15 @@ static void load_lec(Exo_DB *exo, /* ptr to EXODUS II finite element mesh db */
     EpetraLoadLec(ielem, ams, resid_vector);
   }
 #ifdef GOMA_ENABLE_PETSC
+#if PETSC_USE_COMPLEX
+  else if (strcmp(Matrix_Format, "petsc_complex") == 0) {
+    petsc_load_lec_complex(ielem, ams, resid_vector);
+  }
+#else
   else if (strcmp(Matrix_Format, "petsc") == 0) {
     petsc_load_lec(ielem, ams, resid_vector);
   }
+#endif
 #endif
   else {
     /* load up matrix in MSR format */

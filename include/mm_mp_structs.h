@@ -187,6 +187,7 @@ struct Material_Properties {
   int elec_cond_external_field;
 
   dbl permittivity;
+  dbl permittivity_imag;
   dbl d_permittivity[MAX_VARIABLE_TYPES + MAX_CONC];
   int len_u_permittivity;
   dbl *u_permittivity;
@@ -539,6 +540,7 @@ struct Material_Properties {
   dbl d_specific_heat[MAX_VARIABLE_TYPES + MAX_CONC + MAX_PMV];
 
   dbl permeability;
+  dbl permeability_imag;
   dbl perm_tensor[DIM][DIM];
   int PermeabilityModel;
   dbl d_permeability[MAX_VARIABLE_TYPES + MAX_CONC + MAX_PMV];
@@ -753,6 +755,11 @@ struct Material_Properties {
   int DcaLFunctionModel;
 
   int FSIModel;
+  int LubIntegrationModel;
+  int LubInt_NGP;
+  dbl Lub_gpts[MAX_LUB_NGP];
+  dbl Lub_wts[MAX_LUB_NGP];
+  dbl LubInt_PL;
 
   int TurbulentLubricationModel;
 
@@ -905,6 +912,12 @@ struct Material_Properties {
   int por_shell_cap_pres_ext_field_index[MAX_POR_SHELL];
   int por_shell_cap_pres_hyst_num_switch_ext_field_index[MAX_POR_SHELL];
   int por_shell_cap_pres_hyst_curve_type_ext_field_index[MAX_POR_SHELL];
+
+  // EM incident wave, mix between boundary condition / source / problem property
+  int IncidentWaveModel;
+  dbl incident_wave;
+  int len_u_incident_wave;
+  dbl *u_incident_wave;
 
   /*
    * Boundary conditions...(these quantities and the geometric surface
@@ -1143,6 +1156,8 @@ struct Viscoelastic_Constitutive {
   int epsModel;
 
   struct Positive_LS_Viscoelastic_Properties pos_ls;
+  dbl muJeffreys; /* 2nd viscosity used in modified Jeffreys model */
+  int muJeffreysModel;
 };
 typedef struct Viscoelastic_Constitutive VISC_CONST_STRUCT;
 
@@ -1248,6 +1263,8 @@ struct Elastic_Constitutive {
   dbl *u_solid_viscosity;
   dbl solid_dil_viscosity; /*  viscoelastic solid dilational viscosity   */
   int solid_dil_viscosity_model;
+  int len_u_solid_dil_viscosity;
+  dbl *u_solid_dil_viscosity;
 };
 
 typedef struct Elastic_Constitutive ELASTIC_CONST_STRUCT;

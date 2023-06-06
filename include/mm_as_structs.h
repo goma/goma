@@ -880,6 +880,9 @@ struct Uniform_Problem_Description {
                                   (conversion factor is to an exact standard atm) */
   int Max_Num_Porous_Eqn;      /* max number of porous media Equations */
   dbl Acoustic_Frequency;      /* Frequency for Acoustic Harmonic Eqns */
+  dbl EM_Frequency;            /* Frequency for Time-Harmonic Maxwell Eqns */
+  dbl Free_Space_Permittivity; /* Free space permittivity for Time-Harmonic Maxwell Eqns */
+  dbl Free_Space_Permeability; /* Free space permeability for Time-Harmonic Maxwell Eqns */
   dbl Light_Cosmu;             /* Inclination of Incident Light */
   dbl Process_Temperature;     /* Temperature for thermal property data */
                                /*   for isothermal problems */
@@ -1219,49 +1222,49 @@ struct Loca_Input {
    * Contains inputs for LOCA.
    */
 
-  int Cont_Alg;              /* Specific LOCA algorithm - see ac_con_const.h */
-  int Cont_Order;            /* Continuation order: presently 0, 1, or 2     */
-  double StepAggr;           /* Parameter for increasing step size           */
-  double perturb;            /* Perturbation size for bordering algorithms   */
-  int debug;                 /* LOCA print level:  higher = more output      */
-  double DpDs2;              /* Desired solution contribution to arc length  */
-  double DpDsHi;             /* High value of dp_ds at which to rescale      */
-  double Texp;               /* Exponent used to calculate tangent factor    */
-  double MaxTS;              /* Maximum step change in tangent factor        */
-  int TPupType;              /* Turning point parameter type (BC or MT)      */
-  int TPupBCID;              /* ID tag of BC type turning point parameter    */
-  int TPupDFID;              /* Float ID of BC type turning point parameter  */
-  int TPupMTID;              /* Matl ID of MT type turning point parameter   */
-  int TPupMPID;              /* Property ID of MT type turning point parameter */
-  int TPupMDID;              /* Subindex ID of MT type turning point parameter */
-  double TPGuess;            /* Initial guess of parameter value at turning point */
-  double TPFinal;            /* Final TP parameter value			   */
-  int NVRestart;             /* Restart flag: read previous null vector if true */
-  char NV_exoII_infile[85];  /* Exodus file name for null vector for starting*/
-                             /* TP or pitchfork tracking algorithm	   */
-  char NV_imag_infile[85];   /* Exodus file name for null vector (imag. part) */
-                             /* for starting Hopf tracking algorithm         */
-  int NVSave;                /* Flag to save current TP/PF null vector       */
-  char NV_exoII_outfile[85]; /* Exodus file name for saving final null vector*/
-                             /* from TP tracking algorithm		   */
-  char NV_imag_outfile[85];  /* Exodus file name for saving imaginary      */
-                             /* part of null vector from Hopf algorithm      */
-  int NV_time_index;         /* Time index to read Null vector from above file */
-  float **PF_Nod_Vals;       /* Temporary array for storing nodal values of null
-                                vector read in from PF_exoII_file for
-                                pitchfork tracking runs */
-  double *X_pitchfork;       /* Null vector for pitchfork tracking runs,
-                                dimensioned exactly like the solution vector x */
-  float **HP_Nod_Vals;       /* Temporary array for storing nodal values of
-                                complex part of eigenvector read in from
-                                PF_exoII_file for Hopf tracking runs */
-  double *X_hopf;            /* Eigenvector for Hopf tracking runs,
-                                dimensioned exactly like the solution vector x */
-  double omega;              /* Imaginary part of Eigenvalue for Hopf tracking
-                                problems */
-  int Mass_Derivatives;      /* Flag which determines whether to calculate
-                                Mass Matrix derivatives for Hopf tracking
-                                problems */
+  int Cont_Alg;                   /* Specific LOCA algorithm - see ac_con_const.h */
+  int Cont_Order;                 /* Continuation order: presently 0, 1, or 2     */
+  double StepAggr;                /* Parameter for increasing step size           */
+  double perturb;                 /* Perturbation size for bordering algorithms   */
+  int debug;                      /* LOCA print level:  higher = more output      */
+  double DpDs2;                   /* Desired solution contribution to arc length  */
+  double DpDsHi;                  /* High value of dp_ds at which to rescale      */
+  double Texp;                    /* Exponent used to calculate tangent factor    */
+  double MaxTS;                   /* Maximum step change in tangent factor        */
+  int TPupType;                   /* Turning point parameter type (BC or MT)      */
+  int TPupBCID;                   /* ID tag of BC type turning point parameter    */
+  int TPupDFID;                   /* Float ID of BC type turning point parameter  */
+  int TPupMTID;                   /* Matl ID of MT type turning point parameter   */
+  int TPupMPID;                   /* Property ID of MT type turning point parameter */
+  int TPupMDID;                   /* Subindex ID of MT type turning point parameter */
+  double TPGuess;                 /* Initial guess of parameter value at turning point */
+  double TPFinal;                 /* Final TP parameter value			   */
+  int NVRestart;                  /* Restart flag: read previous null vector if true */
+  char NV_exoII_infile[MAX_FNL];  /* Exodus file name for null vector for starting*/
+                                  /* TP or pitchfork tracking algorithm	   */
+  char NV_imag_infile[MAX_FNL];   /* Exodus file name for null vector (imag. part) */
+                                  /* for starting Hopf tracking algorithm         */
+  int NVSave;                     /* Flag to save current TP/PF null vector       */
+  char NV_exoII_outfile[MAX_FNL]; /* Exodus file name for saving final null vector*/
+                                  /* from TP tracking algorithm		   */
+  char NV_imag_outfile[MAX_FNL];  /* Exodus file name for saving imaginary      */
+                                  /* part of null vector from Hopf algorithm      */
+  int NV_time_index;              /* Time index to read Null vector from above file */
+  float **PF_Nod_Vals;            /* Temporary array for storing nodal values of null
+                                     vector read in from PF_exoII_file for
+                                     pitchfork tracking runs */
+  double *X_pitchfork;            /* Null vector for pitchfork tracking runs,
+                                     dimensioned exactly like the solution vector x */
+  float **HP_Nod_Vals;            /* Temporary array for storing nodal values of
+                                     complex part of eigenvector read in from
+                                     PF_exoII_file for Hopf tracking runs */
+  double *X_hopf;                 /* Eigenvector for Hopf tracking runs,
+                                     dimensioned exactly like the solution vector x */
+  double omega;                   /* Imaginary part of Eigenvalue for Hopf tracking
+                                     problems */
+  int Mass_Derivatives;           /* Flag which determines whether to calculate
+                                     Mass Matrix derivatives for Hopf tracking
+                                     problems */
 };
 
 //! Structure containing parameter information for a single augmenting
@@ -1377,6 +1380,8 @@ struct AC_Information {
   /*   file name and parameter name for aprepro parameters  */
   char Params_File[128];
   char AP_param[64];
+  char *Aprepro_lib_string;
+  int Aprepro_lib_string_len;
 };
 
 struct Continuation_Conditions {
@@ -1501,6 +1506,12 @@ struct Basis_Functions {
   dbl phi[MDE];          /* phi_i */
   dbl dphidxi[MDE][DIM]; /* d(phi_i)/d(xi_j) */
 
+  // Nedelec / vector Basis
+  dbl phi_e[MDE][DIM];     /* vector phi_i e_k */
+  dbl ref_phi_e[MDE][DIM]; /* vector phi_i e_k */
+  dbl curl_e[MDE][DIM];
+  dbl curl_phi[MDE][DIM];
+
   /*
    * beer_belly() fills in these elemental Jacobian things...
    */
@@ -1509,6 +1520,7 @@ struct Basis_Functions {
    *  determinant of the jacobian of the matrix transformation
    *  of the ShapeVar shape function.
    */
+  int shape_dof;
   dbl detJ;
   dbl B[DIM][DIM]; /* inverse Jacobian */
   dbl d_det_J_dm[DIM][MDE];
@@ -1806,6 +1818,7 @@ struct Field_Variables {
   dbl grad_S[MAX_MODES][DIM][DIM][DIM]; /* Gradient of polymer stress tensor( or most of it!) */
   dbl div_S[MAX_MODES][DIM];            /* Divergence of polymer stress tensor */
   dbl grad_G[DIM][DIM][DIM];            /* Gradient of velocity tensor ( or most of it!) */
+  dbl grad_Gt[DIM][DIM][DIM];           /* Gradient of the transpose of the velocity tensor */
   dbl div_G[DIM];                       /* Divergence of velocity gradient tensor */
   dbl div_Gt[DIM]; /* Divergence of the transpose of velocity gradient tensor */
 

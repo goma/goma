@@ -107,6 +107,7 @@ static int first_linear_solver_call = TRUE;
 #endif
 
 #include "az_aztec.h"
+#include "sl_petsc_complex.h"
 
 static int soln_sens                /* mm_sol_nonlinear.c                        */
     (double,                        /* lambda - parameter                        */
@@ -885,7 +886,8 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
 
       bool enable_numerical_jacobian = false;
       for (int mn = 0; mn < upd->Num_Mat; mn++) {
-        if (((vn_glob[mn]->evssModel == LOG_CONF || vn_glob[mn]->evssModel == LOG_CONF_GRADV) &&
+        if (((vn_glob[mn]->evssModel == LOG_CONF || vn_glob[mn]->evssModel == LOG_CONF_GRADV ||
+              vn_glob[mn]->evssModel == CONF) &&
              pd_glob[mn]->v[pg->imtrx][POLYMER_STRESS11]) ||
             ((pd_glob[mn]->v[pg->imtrx][EM_E1_REAL] && pd_glob[mn]->v[pg->imtrx][EM_H1_REAL]))) {
           enable_numerical_jacobian = true;
@@ -1377,6 +1379,23 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
       break;
 
 #ifdef GOMA_ENABLE_PETSC
+#if PETSC_USE_COMPLEX
+    case PETSC_COMPLEX_SOLVER:
+      if (strcmp(Matrix_Format, "petsc_complex") == 0) {
+        int its;
+        petsc_solve_complex(ams, delta_x, resid_vector, &its);
+        exchange_dof(cx, dpi, delta_x, pg->imtrx);
+        matrix_solved = 1;
+        char itsstring[10];
+        itsstring[9] = '\0';
+        snprintf(itsstring, 9, "%d", its);
+        strcpy(stringer, itsstring);
+      } else {
+        GOMA_EH(GOMA_ERROR, "Sorry, only petsc_complex matrix formats are currently supported with "
+                            "the petsc solver\n");
+      }
+      break;
+#else
     case PETSC_SOLVER:
       if (strcmp(Matrix_Format, "petsc") == 0) {
         int its;
@@ -1392,6 +1411,7 @@ int solve_nonlinear_problem(struct GomaLinearSolverData *ams,
                 "Sorry, only petsc matrix formats are currently supported with the petsc solver\n");
       }
       break;
+#endif
 #endif
     case STRATIMIKOS:
       if (strcmp(Matrix_Format, "epetra") == 0) {

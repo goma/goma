@@ -1,4 +1,6 @@
 #ifdef GOMA_ENABLE_PETSC
+#include <petscsystypes.h>
+#if !(PETSC_USE_COMPLEX)
 #include "sl_petsc.h"
 #include <petscksp.h>
 
@@ -243,4 +245,5 @@ PetscErrorCode petsc_PCD_setup(PC pc,
 
   return 0;
 }
+#endif
 #endif

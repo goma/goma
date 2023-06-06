@@ -1,3 +1,64 @@
+## Changes in version 7.4.5
+
+- Bugfix for CA conditions [goma#429](https://github.com/goma/goma/pull/429)
+
+## Changes in version 7.4.4
+
+- Bugfix for parallel decomposition [goma#427](https://github.com/goma/goma/pull/427)
+
+## Changes in version 7.4.3
+
+- Element quality exits consistently with LOCA continuation [goma#424](https://github.com/goma/goma/pull/424)
+- Various bugfixes/Cleanup [goma#424](https://github.com/goma/goma/pull/424)
+  [goma#421](https://github.com/goma/goma/pull/421)
+  [goma#420](https://github.com/goma/goma/pull/420)
+  [goma#419](https://github.com/goma/goma/pull/419)
+
+## Changes in version 7.4.2
+
+- Online documentation fix, broken with newer Sphinx [goma#415](https://github.com/goma/goma/pull/415)
+
+## Changes in version 7.4.1
+
+- Bugfix for Goma builds without PETSc [goma#414](https://github.com/goma/goma/pull/414)
+
+## Changes in version 7.4.0
+
+- Add Nedelec Hcurl first order Basis functions [goma#413](https://github.com/goma/goma/pull/413)
+- EM formulation based on Nedelec elements [goma#413](https://github.com/goma/goma/pull/413)
+- Absorbing boundary condition [goma#413](https://github.com/goma/goma/pull/413)
+- Post processing for EM equations [goma#413](https://github.com/goma/goma/pull/413)
+- PETSc complex solver support [goma#413](https://github.com/goma/goma/pull/413)
+- dpi fix for GCC 7 [goma#412](https://github.com/goma/goma/pull/412)
+- KIN_DISPLACEMENT Jacobian entries [goma#411](https://github.com/goma/goma/pull/411)
+- SUPG Jacobian entries [goma#410](https://github.com/goma/goma/pull/410)
+
+## Changes in version 7.3.0
+
+- Add SQRT form of Viscoelastic conformation tensor https://doi.org/10.1016/j.jnnfm.2011.02.008 for 2D, 3D, Axisymmetric OldroydB, PTT-EXPONENTIAL, PTT-LINEAR
+- Add KDR model from @jtmcconnell https://doi.org/10.1103/PhysRevLett.126.218002
+- Add `FLOW_GRADV_T` to impose $n\cdot\nabla v=0$ naturally (probably what `FLOW_GRADV` should've been)
+- Update `STRESS_DEVELOPED` to use new forms
+- Fix `LOG_CONF` numerical Jacobian
+- $YZ\beta$ shock capturing for `SQRT_CONF`
+
+
+## Changes in version 7.2.0
+
+- Add basic aprepro library support, so aprepro isn't needed on path for most tasks
+- Add Augmenting Condition on multple Boundary condition parameters using aprepro
+  see [https://github.com/goma/goma/pull/406](https://github.com/goma/goma/pull/406)
+
+## Changes in version 7.1.3
+
+- Komplex support now compiles, untested
+
+## Changes in version 7.1.2
+
+- bugfix for LOCA parallel
+- bugfix LOCA global variables exodus output
+- add `ENABLE_KOMPLEX` to CMakeLists.txt
+
 ## Changes in version 7.1.1
 
 - bugfix for linear PTT BC `STRESS_DEVELOPED`
@@ -19,7 +80,7 @@
 ## Changes in version 7.0.5
 
 - bugfix, fix anneal mesh not working
-- bugfix, add ENABLE_LOGGING and fix mm_eh.c includes when ENABLE_LOGGING
+- bugfix, add `ENABLE_LOGGING` and fix `mm_eh.c` includes when `ENABLE_LOGGING`
 
 ## Changes in version 7.0.4
 
@@ -75,7 +136,7 @@
     - Now compatible with SEACAS tools using elemental decomposition
     - epu from SEACAS replaces fix
     - brkfiles are no longer supported
-    - See SEACAS decomp / nem_slice, nem_spread for more controlled decomposition
+    - See SEACAS decomp / `nem_slice`, `nem_spread` for more controlled decomposition
     - Automatic fix is still included, Fix Frequency is still available though not recommended
     - New output format is compatible with Paraview without `fix`ing
     - Automatic basic decomposition is available when configured with METIS
@@ -83,7 +144,7 @@
         - Command line flags `-e`, `-external_decomp`, `-kway`, `-rcb`
         - Defaults to `rcb` when less than 8 processors and `kway` when 8 or more
 - Various bug fixes and feature updates, see merged Pull Requests
-- SUPG formulation for Viscoelastic EVSS_F/LOG_CONF and Species has been modified
+- SUPG formulation for Viscoelastic `EVSS_F`/`LOG_CONF` and Species has been modified
 - PSPG has an additional formulation `pspg_shakib`
 - Level set has additional SUPG formulations `SUPG_GP` and `SUPG_SHAKIB`
 

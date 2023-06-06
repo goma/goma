@@ -59,6 +59,7 @@
 #include "sl_epetra_util.h"
 #include "sl_matrix_util.h"
 #include "sl_petsc.h"
+#include "sl_petsc_complex.h"
 #include "sl_util.h"
 #include "sl_util_structs.h"
 #include "std.h"
@@ -562,6 +563,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
       EpetraCreateGomaProblemGraph(ams[pg->imtrx], exo, dpi);
     }
 #ifdef GOMA_ENABLE_PETSC
+#if !(PETSC_USE_COMPLEX)
   } else if (strcmp(Matrix_Format, "petsc") == 0) {
     err = check_compatible_solver();
     GOMA_EH(err, "Incompatible matrix solver for petsc, solver must be petsc");
@@ -573,6 +575,19 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
           num_external_dofs[pg->imtrx], pg->imtrx);
       GOMA_EH(err, "goma_setup_petsc_matrix");
     }
+#else
+  } else if (strcmp(Matrix_Format, "petsc_complex") == 0) {
+    err = check_compatible_solver();
+    GOMA_EH(err, "Incompatible matrix solver for petsc, solver must be petsc");
+    check_parallel_error("Matrix format / Solver incompatibility");
+    for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+      goma_error err = goma_setup_petsc_matrix_complex(
+          ams[pg->imtrx], exo, dpi, x[pg->imtrx], x_old[pg->imtrx], xdot[pg->imtrx],
+          xdot_old[pg->imtrx], num_internal_dofs[pg->imtrx], num_boundary_dofs[pg->imtrx],
+          num_external_dofs[pg->imtrx], pg->imtrx);
+      GOMA_EH(err, "goma_setup_petsc_matrix");
+    }
+#endif
 #endif
   } else if (strcmp(Matrix_Format, "msr") == 0) {
 
@@ -624,6 +639,8 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
     GOMA_EH(GOMA_ERROR, "Attempted to allocate unknown sparse matrix format: %s", Matrix_Format);
   }
 #ifdef GOMA_ENABLE_PETSC
+#if !(PETSC_USE_COMPLEX)
+
   if (upd->petsc_solve_post_proc) {
     int pp_set = 0;
     for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
@@ -641,6 +658,7 @@ void solve_problem_segregated(Exo_DB *exo, /* ptr to the finite element mesh dat
       }
     }
   }
+#endif
 #endif
 
   double *global_x_AC = NULL;
