@@ -3174,6 +3174,7 @@ typedef struct normal_energy_dependence NORMAL_ENERGY_DEPENDENCE_STRUCT;
 struct pspg_dependence {
   double v[DIM][DIM][MDE];      /* velocity dependence. */
   double T[DIM][MDE];           /* temperature dependence. */
+  double eddy_mu[DIM][MDE];
   double P[DIM][MDE];           /* pressure dependence. */
   double C[DIM][MAX_CONC][MDE]; /* conc dependence. */
   double X[DIM][DIM][MDE];      /* mesh dependence. */

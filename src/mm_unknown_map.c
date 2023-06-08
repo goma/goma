@@ -2492,7 +2492,11 @@ static void set_interaction_masks(Exo_DB *exo)
         v = DENSITY_EQN;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
+        v = EDDY_MU;
+        if (Num_Var_In_Type[imtrx][v])
+          eqn_var_mask[imtrx][e][v] = 1;
         break;
+
 
       case R_STRESS11:
       case R_STRESS12:

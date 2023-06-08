@@ -2238,7 +2238,7 @@ int assemble_momentum(dbl time,       /* current time */
   dbl wt_func;
 
   /* SUPG variables */
-  SUPG_momentum_terms supg_terms;
+  momentum_tau_terms supg_terms;
 
   // Continuity stabilization
   dbl continuity_stabilization;
@@ -2287,7 +2287,7 @@ int assemble_momentum(dbl time,       /* current time */
   rho = density(d_rho, time);
 
   if (supg != 0.) {
-    supg_tau_momentum_shakib(&supg_terms, dim, dt);
+    tau_momentum_shakib(&supg_terms, dim, dt, FALSE);
   }
   /* end Petrov-Galerkin addition */
 
@@ -2513,7 +2513,7 @@ int assemble_momentum(dbl time,       /* current time */
           /* add Petrov-Galerkin terms as necessary */
           if (supg != 0.) {
             for (p = 0; p < dim; p++) {
-              wt_func += supg * supg_terms.supg_tau * v[p] * bfm->grad_phi[i][p];
+              wt_func += supg * supg_terms.tau * v[p] * bfm->grad_phi[i][p];
             }
           }
           grad_phi_i_e_a = bfm->grad_phi_e[i][a];
@@ -2732,7 +2732,7 @@ int assemble_momentum(dbl time,       /* current time */
           /* add Petrov-Galerkin terms as necessary */
           if (supg != 0.) {
             for (p = 0; p < dim; p++) {
-              wt_func += supg * supg_terms.supg_tau * v[p] * bfm->grad_phi[i][p];
+              wt_func += supg * supg_terms.tau * v[p] * bfm->grad_phi[i][p];
             }
           }
 
@@ -2754,7 +2754,7 @@ int assemble_momentum(dbl time,       /* current time */
               if (supg != 0.) {
                 dbl d_wt_func = 0;
                 for (p = 0; p < dim; p++) {
-                  d_wt_func += supg * supg_terms.d_supg_tau_dT[j] * v[p] * bfm->grad_phi[i][p];
+                  d_wt_func += supg * supg_terms.d_tau_dT[j] * v[p] * bfm->grad_phi[i][p];
                 }
                 if (transient_run) {
                   if (mass_on) {
@@ -2994,7 +2994,7 @@ int assemble_momentum(dbl time,       /* current time */
               if (supg != 0.) {
                 dbl d_wt_func = 0;
                 for (p = 0; p < dim; p++) {
-                  d_wt_func += supg * supg_terms.d_supg_tau_dnn[j] * v[p] * bfm->grad_phi[i][p];
+                  d_wt_func += supg * supg_terms.d_tau_dnn[j] * v[p] * bfm->grad_phi[i][p];
                 }
                 if (transient_run) {
                   if (mass_on) {
@@ -3112,7 +3112,7 @@ int assemble_momentum(dbl time,       /* current time */
                 dbl d_wt_func = 0;
                 for (p = 0; p < dim; p++) {
                   d_wt_func +=
-                      supg * supg_terms.d_supg_tau_deddy_mu[j] * v[p] * bfm->grad_phi[i][p];
+                      supg * supg_terms.d_tau_deddy_mu[j] * v[p] * bfm->grad_phi[i][p];
                 }
                 if (transient_run) {
                   if (mass_on) {
@@ -3210,7 +3210,7 @@ int assemble_momentum(dbl time,       /* current time */
               if (supg != 0.) {
                 dbl d_wt_func = 0;
                 for (p = 0; p < dim; p++) {
-                  d_wt_func += supg * supg_terms.d_supg_tau_dF[j] * v[p] * bfm->grad_phi[i][p];
+                  d_wt_func += supg * supg_terms.d_tau_dF[j] * v[p] * bfm->grad_phi[i][p];
                 }
                 if (transient_run) {
                   if (mass_on) {
@@ -3395,10 +3395,10 @@ int assemble_momentum(dbl time,       /* current time */
                 phi_j = phi_j_vector[j];
                 double d_wt_func = 0;
                 if (supg != 0.) {
-                  d_wt_func = supg * supg_terms.supg_tau * phi_j * bfm->grad_phi[i][b];
+                  d_wt_func = supg * supg_terms.tau * phi_j * bfm->grad_phi[i][b];
 
                   for (p = 0; p < dim; p++) {
-                    d_wt_func += supg * supg_terms.d_supg_tau_dv[b][j] * v[p] * bfm->grad_phi[i][p];
+                    d_wt_func += supg * supg_terms.d_tau_dv[b][j] * v[p] * bfm->grad_phi[i][p];
                   }
                 }
 
@@ -4951,6 +4951,30 @@ int assemble_continuity(dbl time_value, /* current time */
                    pressure_stabilization, h_flux);
 #endif
           }
+        }
+      }
+
+      var = EDDY_MU;
+      if (PSPG && pd->v[pg->imtrx][var]) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          pvar = upd->vp[pg->imtrx][var];
+
+          phi_j = bf[var]->phi[j];
+
+          /* add Pressure-Stabilized Petrov-Galerkin term
+           * if desired.
+           */
+          pressure_stabilization = 0.;
+
+          for (a = 0; a < WIM; a++) {
+            meqn = R_MOMENTUM1 + a;
+            if (pd->e[pg->imtrx][meqn]) {
+              pressure_stabilization += grad_phi[i][a] * d_pspg->eddy_mu[a][j];
+            }
+          }
+          pressure_stabilization *= d_area * ls_disable_pspg;
+
+          lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += pressure_stabilization;
         }
       }
 
@@ -27653,6 +27677,17 @@ void fluid_stress(double Pi[DIM][DIM], STRESS_DEPENDENCE_STRUCT *d_Pi) {
               d_Pi->C[p][q][w][j] -= evss_f * (d_mu->C[w][j] - d_mus->C[w][j]) * gamma_cont[p][q];
             }
           }
+        }
+      }
+    }
+  }
+
+  var = EDDY_MU;
+  if (d_Pi != NULL && pd->v[pg->imtrx][var]) {
+    for (p = 0; p < VIM; p++) {
+      for (q = 0; q < VIM; q++) {
+        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+          d_Pi->eddy_mu[p][q][j] = d_mu->eddy_mu[j] * gamma[p][q];
         }
       }
     }

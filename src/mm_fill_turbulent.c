@@ -12,6 +12,7 @@
 * See LICENSE file.                                                       *
 \************************************************************************/
 
+#include "mm_fill_stabilization.h"
 #include <stdio.h>
 
 /* GOMA include files */
@@ -175,6 +176,11 @@ int assemble_spalart_allmaras(dbl time_value, /* current time */
   /* Get Eddy viscosity at Gauss point */
   double mu_e = fv->eddy_mu;
 
+  int negative_sa = false;
+  if (fv_old->eddy_mu < 0) {
+    negative_sa = true;
+  }
+
   /* Get fluid viscosity */
   // double mu;
   // VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;
@@ -190,17 +196,21 @@ int assemble_spalart_allmaras(dbl time_value, /* current time */
 
   /* Rate of rotation tensor  */
   double omega[DIM][DIM];
+  double omega_old[DIM][DIM];
   for (a = 0; a < VIM; a++) {
     for (b = 0; b < VIM; b++) {
       omega[a][b] = (fv->grad_v[a][b] - fv->grad_v[b][a]);
+      omega_old[a][b] = (fv_old->grad_v[a][b] - fv_old->grad_v[b][a]);
     }
   }
 
   /* Vorticity */
   double S = 0.0;
+  double S_old = 0;
   double dS_dvelo[DIM][MDE];
   double dS_dmesh[DIM][MDE];
   calc_sa_S(&S, omega, dS_dvelo, dS_dmesh);
+  calc_sa_S(&S_old, omega_old, NULL, NULL);
 
   /* Get distance from nearest wall - use external field for now */
   int i_d_wall = mp->dist_wall_ext_field_index;
@@ -212,9 +222,12 @@ int assemble_spalart_allmaras(dbl time_value, /* current time */
   double cb1 = 0.1355;
   double cb2 = 0.622;
   double cv1 = 7.1;
+  double cv2 = 0.7;
+  double cv3 = 0.9;
   double sigma = (2.0 / 3.0);
   double cw2 = 0.3;
   double cw3 = 2.0;
+  double cn1 = 16;
   double kappa = 0.41;
   double cw1 = (cb1 / kappa / kappa) + (1.0 + cb2) / sigma;
 
@@ -222,7 +235,20 @@ int assemble_spalart_allmaras(dbl time_value, /* current time */
   double chi = mu_e / mu_newt;
   double fv1 = pow(chi, 3) / (pow(chi, 3) + pow(cv1, 3));
   double fv2 = 1.0 - (chi) / (1.0 + chi * fv1);
-  double S_e = S + (mu_e * fv2) / (kappa * kappa * d * d);
+  double fn = 1.0;
+  if (negative_sa) {
+    fn = (cn1 + pow(chi, 3.0)) / (cn1 - pow(chi, 3));
+  }
+  double Sbar_old = (fv_old->eddy_mu * fv2) / (kappa * kappa * d * d);
+  double Sbar = (mu_e * fv2) / (kappa * kappa * d * d);
+  int negative_Se = false;
+  if (Sbar_old < -cv2 * S_old) {
+    negative_Se = true;
+  }
+  double S_e = S + Sbar;
+  if (negative_Se) {
+    S_e = S + S * (cv2 * cv2 * S + cv3 * Sbar) / ((cv3 - 2 * cv2) * S - Sbar);
+  }
   double r_max = 10.0;
   double r = 0.0;
   if (fabs(S_e) > 1.0e-6) {
@@ -230,7 +256,7 @@ int assemble_spalart_allmaras(dbl time_value, /* current time */
   } else {
     r = r_max;
   }
-  if (r > r_max) {
+  if (r >= r_max) {
     r = r_max;
   }
   double g = r + cw2 * (pow(r, 6) - r);
@@ -242,7 +268,16 @@ int assemble_spalart_allmaras(dbl time_value, /* current time */
   double dfv1_dchi = 3 * pow(cv1, 3) * pow(chi, 2) / (pow((pow(chi, 3) + pow(cv1, 3)), 2));
   double dfv1_dmu_e = dfv1_dchi * dchi_dmu_e;
   double dfv2_dmu_e = (chi * chi * dfv1_dmu_e - dchi_dmu_e) / (pow(1 + fv1 * chi, 2));
-  double dS_e_dmu_e = (fv2 + mu_e * dfv2_dmu_e) / (kappa * kappa * d * d);
+  double dfn_dmu_e = 0.0;
+  if (negative_sa) {
+    dfn_dmu_e = 6.0 * (cn1 * chi * chi * dchi_dmu_e) / (pow(cn1 - pow(chi, 3.0), 2.0));
+  }
+  double dSbar_dmu_e = (fv2 + mu_e * dfv2_dmu_e) / (kappa * kappa * d * d);
+  double dS_e_dmu_e = dSbar_dmu_e;
+  if (negative_Se) {
+    dS_e_dmu_e =
+        (pow(cv2 - cv3, 2.0) * S * S * dSbar_dmu_e) / (pow(2 * cv2 * S - cv3 * S + Sbar, 2.0));
+  }
   double dr_dmu_e = 0.0;
   if (r < r_max) {
     dr_dmu_e = 1.0 / (kappa * kappa * d * d * S_e) - (mu_e * kappa * kappa * d * d * dS_e_dmu_e) /
@@ -271,6 +306,12 @@ int assemble_spalart_allmaras(dbl time_value, /* current time */
     }
   }
 
+  dbl supg = 1.;
+  SUPG_terms supg_terms;
+  supg_tau_shakib(&supg_terms, pd->Num_Dim, dt, mu_newt, EDDY_MU);
+
+  dbl cd = 0;
+
   /*
    * Residuals_________________________________________________________________
    */
@@ -283,12 +324,21 @@ int assemble_spalart_allmaras(dbl time_value, /* current time */
     peqn = upd->ep[pg->imtrx][eqn];
 
     for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+      dbl wt_func = bf[eqn]->phi[i];
+
+      if (supg > 0) {
+        if (supg != 0.0) {
+          for (int p = 0; p < pd->Num_Dim; p++) {
+            wt_func += supg * supg_terms.supg_tau * fv->v[p] * bf[eqn]->grad_phi[i][p];
+          }
+        }
+      }
 
       /* Assemble mass term */
       mass = 0.0;
       if (pd->TimeIntegration != STEADY) {
         if (pd->e[pg->imtrx][eqn] & T_MASS) {
-          mass += fv_dot->eddy_mu * bf[eqn]->phi[i] * d_area;
+          mass += fv_dot->eddy_mu * wt_func * d_area;
           mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
         }
       }
@@ -298,22 +348,27 @@ int assemble_spalart_allmaras(dbl time_value, /* current time */
       for (int p = 0; p < VIM; p++) {
         adv += fv->v[p] * fv->grad_eddy_mu[p];
       }
-      adv *= bf[eqn]->phi[i] * d_area;
+      adv *= wt_func * d_area;
       adv *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+
+      double neg_c = 1.0;
+      if (negative_sa) {
+        neg_c = -1.0;
+      }
 
       /* Assemble source terms */
       src_1 = cb1 * S_e * mu_e;
-      src_2 = cw1 * fw * (mu_e * mu_e) / (d * d);
+      src_2 = neg_c * cw1 * fw * (mu_e * mu_e) / (d * d);
       src = -src_1 + src_2;
-      src *= bf[eqn]->phi[i] * d_area;
+      src *= wt_func * d_area;
       src *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
       /* Assemble diffusion terms */
       diff_1 = 0.0;
       diff_2 = 0.0;
       for (int p = 0; p < VIM; p++) {
-        diff_1 += bf[eqn]->grad_phi[i][p] * (mu_newt + mu_e) * fv->grad_eddy_mu[p];
-        diff_2 += bf[eqn]->phi[i] * cb2 * fv->grad_eddy_mu[p] * fv->grad_eddy_mu[p];
+        diff_1 += bf[eqn]->grad_phi[i][p] * (mu_newt + mu_e * fn + cd) * fv->grad_eddy_mu[p];
+        diff_2 += wt_func * cb2 * fv->grad_eddy_mu[p] * fv->grad_eddy_mu[p];
       }
       diff = (1.0 / sigma) * (diff_1 - diff_2);
       diff *= d_area;
@@ -333,6 +388,15 @@ int assemble_spalart_allmaras(dbl time_value, /* current time */
 
     for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
 
+      dbl wt_func = bf[eqn]->phi[i];
+
+      if (supg > 0) {
+        if (supg != 0.0) {
+          for (int p = 0; p < pd->Num_Dim; p++) {
+            wt_func += supg * supg_terms.supg_tau * fv->v[p] * bf[eqn]->grad_phi[i][p];
+          }
+        }
+      }
       /* Sensitivity w.r.t. eddy viscosity */
       var = EDDY_MU;
       if (pdv[var]) {
@@ -344,7 +408,7 @@ int assemble_spalart_allmaras(dbl time_value, /* current time */
           mass = 0.0;
           if (pd->TimeIntegration != STEADY) {
             if (pd->e[pg->imtrx][eqn] & T_MASS) {
-              mass += (1.0 + 2.0 * tt) / dt * bf[eqn]->phi[i] * d_area;
+              mass += (1.0 + 2.0 * tt) / dt * bf[eqn]->phi[j] * wt_func * d_area;
               mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
             }
           }
@@ -354,23 +418,27 @@ int assemble_spalart_allmaras(dbl time_value, /* current time */
           for (int p = 0; p < VIM; p++) {
             adv += fv->v[p] * bf[eqn]->grad_phi[j][p];
           }
-          adv *= bf[eqn]->phi[i] * d_area;
+          adv *= wt_func * d_area;
           adv *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 
+      double neg_c = 1.0;
+      if (negative_sa) {
+        neg_c = -1.0;
+      }
           /* Assemble source term */
           src_1 = cb1 * (dS_e_dmu_e * bf[eqn]->phi[j] * mu_e + S_e * bf[eqn]->phi[j]);
-          src_2 = (cw1 / d / d) * bf[var]->phi[j] * (dfw_dmu_e * mu_e * mu_e + fw * 2.0 * mu_e);
+          src_2 = neg_c * ((cw1 / d / d) * bf[var]->phi[j] * (dfw_dmu_e * mu_e * mu_e + fw * 2.0 * mu_e));
           src = -src_1 + src_2;
-          src *= bf[eqn]->phi[i] * d_area;
+          src *= wt_func * d_area;
           src *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
           /* Assemble diffusion terms */
           diff_1 = 0.0;
           diff_2 = 0.0;
           for (int p = 0; p < VIM; p++) {
-            diff_1 += bf[eqn]->grad_phi[i][p] * (bf[eqn]->phi[j] * fv->grad_eddy_mu[p] +
-                                                 (mu_newt + mu_e) * bf[eqn]->grad_phi[j][p]);
-            diff_2 += bf[eqn]->phi[i] * cb2 * 2.0 * fv->grad_eddy_mu[p] * bf[var]->grad_phi[j][p];
+            diff_1 += bf[eqn]->grad_phi[i][p] * ((fn + mu_e * dfn_dmu_e) * bf[eqn]->phi[j] * fv->grad_eddy_mu[p] +
+                                                 (mu_newt + mu_e * fn + cd) * bf[eqn]->grad_phi[j][p]);
+            diff_2 += wt_func * cb2 * 2.0 * fv->grad_eddy_mu[p] * bf[var]->grad_phi[j][p];
           }
           diff = (1.0 / sigma) * (diff_1 - diff_2);
           diff *= d_area;
@@ -390,14 +458,14 @@ int assemble_spalart_allmaras(dbl time_value, /* current time */
 
             /* Assemble advection term */
             adv = bf[var]->phi[j] * fv->grad_eddy_mu[b];
-            adv *= bf[eqn]->phi[i] * d_area;
+            adv *= wt_func * d_area;
             adv *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 
             /* Assemble source term */
             src_1 = cb1 * dS_dvelo[b][j] * mu_e;
             src_2 = cw1 * dfw_dvelo[b][j] * (mu_e / d) * (mu_e / d);
             src = -src_1 + src_2;
-            src *= bf[eqn]->phi[i] * d_area;
+            src *= wt_func * d_area;
             src *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
             lec->J[LEC_J_INDEX(peqn, pvar, i, j)] += adv + src;
