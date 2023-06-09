@@ -226,8 +226,9 @@ void tau_momentum_shakib(momentum_tau_terms *tau_terms, int dim, dbl dt, int psp
             diff_g_g_dx += 2 * coeff * dG[i][j][a][k] * G[i][j];
           }
         }
-        tau_terms->d_tau_dX[a][k] =
-            inv_rho * -0.5 * (v_d_gv_dx + diff_g_g_dx + d_mu->X[a][k] * d_diff_g_g_dmu) * supg_tau_cubed;
+        tau_terms->d_tau_dX[a][k] = inv_rho * -0.5 *
+                                    (v_d_gv_dx + diff_g_g_dx + d_mu->X[a][k] * d_diff_g_g_dmu) *
+                                    supg_tau_cubed;
       }
     }
   }
@@ -260,7 +261,8 @@ void tau_momentum_shakib(momentum_tau_terms *tau_terms, int dim, dbl dt, int psp
   if (pd->e[pg->imtrx][MASS_FRACTION]) {
     for (int w = 0; w < pd->Num_Species_Eqn; w++) {
       for (int k = 0; k < ei[pg->imtrx]->dof[MASS_FRACTION]; k++) {
-        tau_terms->d_tau_dC[w][k] = inv_rho * -0.5 * (d_mu->C[w][k] * d_diff_g_g_dmu) * supg_tau_cubed;
+        tau_terms->d_tau_dC[w][k] =
+            inv_rho * -0.5 * (d_mu->C[w][k] * d_diff_g_g_dmu) * supg_tau_cubed;
       }
     }
   }
@@ -907,7 +909,8 @@ int calc_pspg(dbl pspg[DIM],
         if (pd->v[pg->imtrx][var]) {
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             pspg_tau.d_tau_dv[b][j] = -tau_pspg / tau_pspg1;
-            pspg_tau.d_tau_dv[b][j] *= rho_avg * rho_avg / hh_siz * v_avg[b] * pg_data->dv_dnode[b][j];
+            pspg_tau.d_tau_dv[b][j] *=
+                rho_avg * rho_avg / hh_siz * v_avg[b] * pg_data->dv_dnode[b][j];
           }
         }
       }
@@ -1236,8 +1239,8 @@ int calc_pspg(dbl pspg[DIM],
             source -= df->X[a][b][j] * pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_SOURCE)];
           }
 
-          d_pspg->X[a][b][j] =
-              pspg_tau.tau * (advection + diffusion + source) + pspg_tau.d_tau_dX[b][j] * momentum[a];
+          d_pspg->X[a][b][j] = pspg_tau.tau * (advection + diffusion + source) +
+                               pspg_tau.d_tau_dX[b][j] * momentum[a];
         }
       }
     }
@@ -1283,8 +1286,8 @@ int calc_pspg(dbl pspg[DIM],
           porous = v[a] * (d_rho_t_dT * sc * speed / sqrt(per) + dvis_dT[j] / per);
           porous *= pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_POROUS_BRINK)];
         }
-        d_pspg->T[a][j] = pspg_tau.tau * (mass + advection + diffusion + source + porous)
-        + pspg_tau.d_tau_dT[j] * momentum[a];
+        d_pspg->T[a][j] = pspg_tau.tau * (mass + advection + diffusion + source + porous) +
+                          pspg_tau.d_tau_dT[j] * momentum[a];
       }
     }
 
@@ -1353,8 +1356,8 @@ int calc_pspg(dbl pspg[DIM],
             porous = v[a] * (d_rho_t_dC * sc * speed / sqrt(per));
             porous *= pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_POROUS_BRINK)];
           }
-          d_pspg->C[a][w][j] = pspg_tau.tau * (mass + advection + diffusion + source + porous)
-          + pspg_tau.d_tau_dC[w][j] * momentum[a];
+          d_pspg->C[a][w][j] = pspg_tau.tau * (mass + advection + diffusion + source + porous) +
+                               pspg_tau.d_tau_dC[w][j] * momentum[a];
         }
       }
     }

@@ -3111,8 +3111,7 @@ int assemble_momentum(dbl time,       /* current time */
               if (supg != 0.) {
                 dbl d_wt_func = 0;
                 for (p = 0; p < dim; p++) {
-                  d_wt_func +=
-                      supg * supg_terms.d_tau_deddy_mu[j] * v[p] * bfm->grad_phi[i][p];
+                  d_wt_func += supg * supg_terms.d_tau_deddy_mu[j] * v[p] * bfm->grad_phi[i][p];
                 }
                 if (transient_run) {
                   if (mass_on) {

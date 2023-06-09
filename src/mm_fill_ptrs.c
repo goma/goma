@@ -2751,10 +2751,11 @@ int load_elem_dofptr_all(const int ielem, const Exo_DB *exo) {
                                           esp_dot->cur_strain);
     }
 
-  eqn = R_EDDY_MU;
-  if (upd->ep[imtrx][eqn] >= 0) {
-    load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->eddy_mu, esp_old->eddy_mu, esp_dot->eddy_mu);
-  }
+    eqn = R_EDDY_MU;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->eddy_mu, esp_old->eddy_mu,
+                                          esp_dot->eddy_mu);
+    }
 
     eqn = R_STRESS11;
     if (upd->ep[imtrx][eqn] >= 0) {

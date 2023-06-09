@@ -421,13 +421,14 @@ int assemble_spalart_allmaras(dbl time_value, /* current time */
           adv *= wt_func * d_area;
           adv *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 
-      double neg_c = 1.0;
-      if (negative_sa) {
-        neg_c = -1.0;
-      }
+          double neg_c = 1.0;
+          if (negative_sa) {
+            neg_c = -1.0;
+          }
           /* Assemble source term */
           src_1 = cb1 * (dS_e_dmu_e * bf[eqn]->phi[j] * mu_e + S_e * bf[eqn]->phi[j]);
-          src_2 = neg_c * ((cw1 / d / d) * bf[var]->phi[j] * (dfw_dmu_e * mu_e * mu_e + fw * 2.0 * mu_e));
+          src_2 = neg_c *
+                  ((cw1 / d / d) * bf[var]->phi[j] * (dfw_dmu_e * mu_e * mu_e + fw * 2.0 * mu_e));
           src = -src_1 + src_2;
           src *= wt_func * d_area;
           src *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
@@ -436,8 +437,9 @@ int assemble_spalart_allmaras(dbl time_value, /* current time */
           diff_1 = 0.0;
           diff_2 = 0.0;
           for (int p = 0; p < VIM; p++) {
-            diff_1 += bf[eqn]->grad_phi[i][p] * ((fn + mu_e * dfn_dmu_e) * bf[eqn]->phi[j] * fv->grad_eddy_mu[p] +
-                                                 (mu_newt + mu_e * fn + cd) * bf[eqn]->grad_phi[j][p]);
+            diff_1 += bf[eqn]->grad_phi[i][p] *
+                      ((fn + mu_e * dfn_dmu_e) * bf[eqn]->phi[j] * fv->grad_eddy_mu[p] +
+                       (mu_newt + mu_e * fn + cd) * bf[eqn]->grad_phi[j][p]);
             diff_2 += wt_func * cb2 * 2.0 * fv->grad_eddy_mu[p] * bf[var]->grad_phi[j][p];
           }
           diff = (1.0 / sigma) * (diff_1 - diff_2);

@@ -2497,7 +2497,6 @@ static void set_interaction_masks(Exo_DB *exo)
           eqn_var_mask[imtrx][e][v] = 1;
         break;
 
-
       case R_STRESS11:
       case R_STRESS12:
       case R_STRESS13:
