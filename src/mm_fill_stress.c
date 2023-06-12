@@ -7398,6 +7398,12 @@ int sqrt_conf_source(int mode,
       Z = 1 + eps * (trace - (double)VIM);
       dZ_dtrace = eps;
     } else if (vn->ptt_type == PTT_EXPONENTIAL) {
+      const double exp_max = 700;
+      double inner = eps * (trace - (double)VIM);
+      if ((inner > exp_max) || (inner < -exp_max)) {
+        GOMA_WH_MANY(GOMA_ERROR, "Exponential overflow in PTT_EXPONENTIAL");
+        return GOMA_ERROR;
+      }
       Z = exp(eps * (trace - (double)VIM));
       dZ_dtrace = eps * Z;
     } else {
@@ -7772,7 +7778,10 @@ int assemble_stress_sqrt_conf(dbl tt, /* parameter to vary time integration from
 
     dbl source_term[DIM][DIM];
     dbl d_source_term_db[DIM][DIM][DIM][DIM];
-    sqrt_conf_source(mode, b, source_term, d_source_term_db);
+    goma_error err = sqrt_conf_source(mode, b, source_term, d_source_term_db);
+    if (err) {
+      return 1;
+    }
     /*
      * Residuals_________________________________________________________________
      */

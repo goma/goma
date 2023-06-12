@@ -101,6 +101,7 @@
 #define GOMA_MM_NAMES_H
 
 #include "rf_bc_const.h" /* just in case it has not yet been included */
+#include "rf_fem_const.h"
 
 /*   Here is a ruler for setting up sensitivity settings for the boundary
 condition.  Just copy the line of zeros below the first line of zeros and
@@ -7743,7 +7744,7 @@ struct Equation_Names Var_Name[] = {
     {"USTAR", "USX", USTAR},
     {"VSTAR", "USY", VSTAR},
     {"WSTAR", "USZ", WSTAR},
-    {"EDDY_MU", "EDDY_VISC", EDDY_MU},
+    {"EDDY_MU", "EDDY_MU", EDDY_MU},
 
     {"MESH_POSITION1", "X", MESH_POSITION1},
     {"MESH_POSITION2", "Y", MESH_POSITION2}, /* 206 */

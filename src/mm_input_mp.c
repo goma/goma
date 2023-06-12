@@ -1442,6 +1442,8 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     ConstitutiveEquation = FOAM_PMDI_10;
   } else if (!strcmp(model_name, "TURBULENT_SA")) {
     ConstitutiveEquation = TURBULENT_SA;
+  } else if (!strcmp(model_name, "TURBULENT_SA_DYNAMIC")) {
+    ConstitutiveEquation = TURBULENT_SA_DYNAMIC;
   } else {
     GOMA_EH(GOMA_ERROR, "Unrecognizable Constitutive Equation");
   }

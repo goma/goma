@@ -305,6 +305,14 @@ int assemble_spalart_allmaras(dbl time_value, /* current time */
       dfw_dvelo[b][j] = dfw_dg * dg_dvelo[b][j];
     }
   }
+  dbl dS_e_dvelo = 1.0;
+  if (negative_Se) {
+    S_e = S + S * (cv2 * cv2 * S + cv3 * Sbar) / ((cv3 - 2 * cv2) * S - Sbar);
+    dS_e_dvelo += (cv2 * cv2 * S) / ((cv3 - 2 * cv2) * S - Sbar) +
+                  (cv2 * cv2 * S + cv3 * Sbar) / ((cv3 - 2 * cv2) * S - Sbar) -
+                  (cv3 - 2 * cv2) * S * (cv2 * cv2 * S + cv3 * Sbar) /
+                      (pow(((cv3 - 2 * cv2) * S - Sbar), 2.0));
+  }
 
   dbl supg = 1.;
   SUPG_terms supg_terms;
@@ -463,9 +471,13 @@ int assemble_spalart_allmaras(dbl time_value, /* current time */
             adv *= wt_func * d_area;
             adv *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 
+            double neg_c = 1.0;
+            if (negative_sa) {
+              neg_c = -1.0;
+            }
             /* Assemble source term */
-            src_1 = cb1 * dS_dvelo[b][j] * mu_e;
-            src_2 = cw1 * dfw_dvelo[b][j] * (mu_e / d) * (mu_e / d);
+            src_1 = cb1 * dS_e_dvelo * dS_dvelo[b][j] * mu_e;
+            src_2 = neg_c * cw1 * dfw_dvelo[b][j] * (mu_e / d) * (mu_e / d);
             src = -src_1 + src_2;
             src *= wt_func * d_area;
             src *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];

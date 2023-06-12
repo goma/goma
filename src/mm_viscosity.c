@@ -128,7 +128,8 @@ double viscosity(struct Generalized_Newtonian *gn_local,
   /* this section is for all Newtonian models */
 
   if ((gn_local->ConstitutiveEquation == NEWTONIAN) ||
-      (gn_local->ConstitutiveEquation == TURBULENT_SA)) {
+      (gn_local->ConstitutiveEquation == TURBULENT_SA) ||
+      (gn_local->ConstitutiveEquation == TURBULENT_SA_DYNAMIC)) {
     if (mp->ViscosityModel == USER) {
       err = usr_viscosity(mp->u_viscosity);
       mu = mp->viscosity;
@@ -304,7 +305,14 @@ double viscosity(struct Generalized_Newtonian *gn_local,
     }
 
     /* Calculate contribution from turbulent viscosity */
-    if (gn_local->ConstitutiveEquation == TURBULENT_SA) {
+    if ((gn_local->ConstitutiveEquation == TURBULENT_SA) ||
+    (gn_local->ConstitutiveEquation == TURBULENT_SA_DYNAMIC)) {
+      dbl scale = 1.0;
+      DENSITY_DEPENDENCE_STRUCT d_rho;
+      if (TURBULENT_SA_DYNAMIC) {
+        scale = density(&d_rho, tran->time_value);
+
+      }
       int negative_mu_e = FALSE;
       if (fv_old->eddy_mu < 0) {
         negative_mu_e = TRUE;
@@ -320,7 +328,7 @@ double viscosity(struct Generalized_Newtonian *gn_local,
         double chi = mu_e / mu_newt;
         double fv1 = pow(chi, 3) / (pow(chi, 3) + pow(cv1, 3));
 
-        mu = mu_newt + (mu_e * fv1);
+        mu = scale * (mu_newt + (mu_e * fv1));
 
         double dchi_dmu_e = 1.0 / mu_newt;
         double dfv1_dchi = 3 * pow(cv1, 3) * pow(chi, 2) / (pow((pow(chi, 3) + pow(cv1, 3)), 2));
@@ -328,10 +336,11 @@ double viscosity(struct Generalized_Newtonian *gn_local,
 
         if (d_mu != NULL) {
           for (j = 0; j < ei[pg->imtrx]->dof[EDDY_MU]; j++) {
-            d_mu->eddy_mu[j] = bf[EDDY_MU]->phi[j] * (fv1 + mu_e * dfv1_dmu_e);
+            d_mu->eddy_mu[j] = scale * bf[EDDY_MU]->phi[j] * (fv1 + mu_e * dfv1_dmu_e);
           }
         }
       }
+
     }
 
   } /* end Newtonian section */
