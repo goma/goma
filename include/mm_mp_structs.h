@@ -296,6 +296,9 @@ struct Material_Properties {
   int Mwt_funcModel;
   dbl Mwt_func;
 
+  int SAwt_funcModel;
+  dbl SAwt_func;
+
   dbl surface_tension;
   int len_u_surface_tension;
   dbl *u_surface_tension;

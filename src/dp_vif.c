@@ -1489,6 +1489,7 @@ void noahs_ark(void) {
     ddd_add_member(n, &mp_glob[i]->Rst_diffusion, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->Rst_func_supg, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->Mwt_func, 1, MPI_DOUBLE);
+    ddd_add_member(n, &mp_glob[i]->SAwt_func, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->viscosity, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->dilationalViscosity, 1, MPI_DOUBLE);
     ddd_add_member(n, &mp_glob[i]->dilationalViscosityRatio, 1, MPI_DOUBLE);
@@ -1544,6 +1545,7 @@ void noahs_ark(void) {
     ddd_add_member(n, &mp_glob[i]->Energy_Div_Term, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->Rst_funcModel, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->Mwt_funcModel, 1, MPI_INT);
+    ddd_add_member(n, &mp_glob[i]->SAwt_funcModel, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->CurrentSourceModel, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->MomentSourceModel, 1, MPI_INT);
     ddd_add_member(n, &mp_glob[i]->HeightUFunctionModel, 1, MPI_INT);

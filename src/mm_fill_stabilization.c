@@ -252,10 +252,10 @@ void tau_momentum_shakib(momentum_tau_terms *tau_terms, int dim, dbl dt, int psp
       tau_terms->d_tau_dnn[k] = inv_rho * -0.5 * (d_mu->nn[k] * d_diff_g_g_dmu) * supg_tau_cubed;
     }
   }
-  if (pd->e[pg->imtrx][EDDY_MU]) {
-    for (int k = 0; k < ei[pg->imtrx]->dof[EDDY_MU]; k++) {
-      tau_terms->d_tau_deddy_mu[k] =
-          inv_rho * -0.5 * (d_mu->eddy_mu[k] * d_diff_g_g_dmu) * supg_tau_cubed;
+  if (pd->e[pg->imtrx][EDDY_NU]) {
+    for (int k = 0; k < ei[pg->imtrx]->dof[EDDY_NU]; k++) {
+      tau_terms->d_tau_dEDDY_NU[k] =
+          inv_rho * -0.5 * (d_mu->eddy_nu[k] * d_diff_g_g_dmu) * supg_tau_cubed;
     }
   }
   if (pd->e[pg->imtrx][MASS_FRACTION]) {
@@ -1304,10 +1304,10 @@ int calc_pspg(dbl pspg[DIM],
       }
     }
 
-    var = EDDY_MU;
+    var = EDDY_NU;
     if (d_pspg != NULL && pd->v[pg->imtrx][var]) {
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-        d_pspg->eddy_mu[a][j] = pspg_tau.d_tau_deddy_mu[j] * momentum[a];
+        d_pspg->eddy_nu[a][j] = pspg_tau.d_tau_dEDDY_NU[j] * momentum[a];
       }
     }
 

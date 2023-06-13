@@ -1108,9 +1108,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         if (num_const != 0) {
           GOMA_EH(GOMA_ERROR, "EXPANDED Shell Moment Tensor Model takes no other input parameters");
         }
-      } else
-
-          if (model_read == 1 && !strcmp(model_name, "SIMPLE")) {
+      } else if (model_read == 1 && !strcmp(model_name, "SIMPLE")) {
         model_read = 1;
         mat_ptr->shell_moment_tensor_model = SMT_SIMPLE;
         //	num_const = read_constants(imp, &(mat_ptr->shell_tangent_seed_vec),
@@ -1119,9 +1117,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         if (num_const != 0) {
           GOMA_EH(GOMA_ERROR, "SIMPLE Shell Moment Tensor Model takes no other input parameters");
         }
-      }
-
-      else {
+      } else {
         // default is simple
         mat_ptr->shell_tangent_model = SMT_SIMPLE;
         SPF(es, "%s = %s", search_string, "SIMPLE");
@@ -2906,6 +2902,35 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
       SPF(es, "\t(%s = %s %.4g)", search_string, "CONSTANT", mat_ptr->surface_tension);
     }
+  }
+
+  ECHO(es, echo_file);
+
+  strcpy(search_string, "Spalart Allmaras Weight Function");
+  model_read =
+      look_for_mat_prop(imp, search_string, &(mat_ptr->SAwt_funcModel), &(mat_ptr->SAwt_func),
+                        NO_USER, NULL, model_name, SCALAR_INPUT, &NO_SPECIES, es);
+  if (strncmp(model_name, " ", 1) != 0) {
+    if (!strcmp(model_name, "GALERKIN")) {
+      mat_ptr->SAwt_funcModel = GALERKIN;
+      mat_ptr->SAwt_func = 0.;
+    } else if (!strcmp(model_name, "SUPG")) {
+      int err;
+      mat_ptr->SAwt_funcModel = SUPG;
+      err = fscanf(imp, "%lg", &(mat_ptr->SAwt_func));
+      if (err != 1) {
+        GOMA_EH(GOMA_ERROR,
+                "Expected to read one double for Spalart Allmaras Weight Function SUPG");
+      }
+      SPF(endofstring(es), " %.4g", mat_ptr->SAwt_func);
+    } else {
+      SPF(err_msg, "Syntax error or invalid model for %s\n", search_string);
+      GOMA_EH(GOMA_ERROR, err_msg);
+    }
+  } else {
+    mat_ptr->SAwt_funcModel = GALERKIN;
+    mat_ptr->SAwt_func = 0.;
+    SPF(es, "\t(%s = %s)", search_string, "GALERKIN");
   }
 
   ECHO(es, echo_file);
@@ -10477,15 +10502,11 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         model_read = 1;
         mat_ptr->ehl_gap_model = GM_NDOTD;
 
-      } else
-
-          if (model_read == 1 && !strcmp(model_name, "RADIAL")) {
+      } else if (model_read == 1 && !strcmp(model_name, "RADIAL")) {
         model_read = 1;
         mat_ptr->ehl_gap_model = GM_RADIAL;
 
-      }
-
-      else {
+      } else {
         // default is simple
         mat_ptr->ehl_gap_model = GM_RADIAL;
         SPF(es, "%s = %s", search_string, "RADIAL");
@@ -10558,15 +10579,11 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         model_read = 1;
         mat_ptr->ehl_integration_kind = SIK_S;
 
-      } else
-
-          if (model_read == 1 && !strcmp(model_name, "XY")) {
+      } else if (model_read == 1 && !strcmp(model_name, "XY")) {
         model_read = 1;
         mat_ptr->ehl_integration_kind = SIK_XY;
 
-      }
-
-      else {
+      } else {
         // default is XY
         mat_ptr->ehl_integration_kind = SIK_XY;
         SPF(es, "%s = %s", search_string, "XY");

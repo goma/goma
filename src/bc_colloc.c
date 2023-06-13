@@ -2581,9 +2581,9 @@ int load_variable(double *x_var,       /* variable value */
     var = CUR_STRAIN;
     *d_x_var = 1.;
     break;
-  case EDDY_MU:
-    *x_var = fv->eddy_mu;
-    var = EDDY_MU;
+  case EDDY_NU:
+    *x_var = fv->eddy_nu;
+    var = EDDY_NU;
     *d_x_var = 1.;
     break;
   case LIGHT_INTP:

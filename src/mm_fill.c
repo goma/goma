@@ -2380,7 +2380,7 @@ Revised:         Summer 1998, SY Tam (UNM)
 #endif
     }
 
-    if (pde[R_EDDY_MU]) {
+    if (pde[R_EDDY_NU]) {
       err = assemble_spalart_allmaras(time_value, theta, delta_t, &pg_data);
       GOMA_EH(err, "assemble_spalart_allmaras");
 #ifdef CHECK_FINITE

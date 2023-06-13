@@ -518,7 +518,7 @@
 #define USTAR              211
 #define VSTAR              212
 #define WSTAR              213
-#define EDDY_MU            214
+#define EDDY_NU            214
 /*
  * define a variable to hold an external field which will be
  * held fixed in the problem but parametered by the basis functions
@@ -924,7 +924,7 @@
 #define R_USTAR        211
 #define R_VSTAR        212
 #define R_WSTAR        213
-#define R_EDDY_MU      214
+#define R_EDDY_NU      214
 #define V_LAST         215
 
 /* MMH

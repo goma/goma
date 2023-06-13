@@ -314,7 +314,7 @@ double viscosity(struct Generalized_Newtonian *gn_local,
 
       }
       int negative_mu_e = FALSE;
-      if (fv_old->eddy_mu < 0) {
+      if (fv_old->eddy_nu < 0) {
         negative_mu_e = TRUE;
       }
 
@@ -323,7 +323,7 @@ double viscosity(struct Generalized_Newtonian *gn_local,
         mu = mu_newt;
       } else {
 
-        double mu_e = fv->eddy_mu;
+        double mu_e = fv->eddy_nu;
         double cv1 = 7.1;
         double chi = mu_e / mu_newt;
         double fv1 = pow(chi, 3) / (pow(chi, 3) + pow(cv1, 3));
@@ -335,8 +335,8 @@ double viscosity(struct Generalized_Newtonian *gn_local,
         double dfv1_dmu_e = dfv1_dchi * dchi_dmu_e;
 
         if (d_mu != NULL) {
-          for (j = 0; j < ei[pg->imtrx]->dof[EDDY_MU]; j++) {
-            d_mu->eddy_mu[j] = scale * bf[EDDY_MU]->phi[j] * (fv1 + mu_e * dfv1_dmu_e);
+          for (j = 0; j < ei[pg->imtrx]->dof[EDDY_NU]; j++) {
+            d_mu->eddy_nu[j] = scale * bf[EDDY_NU]->phi[j] * (fv1 + mu_e * dfv1_dmu_e);
           }
         }
       }

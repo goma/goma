@@ -1584,7 +1584,7 @@ static void set_interaction_masks(Exo_DB *exo)
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
 
-        v = EDDY_MU;
+        v = EDDY_NU;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
 
@@ -2492,7 +2492,7 @@ static void set_interaction_masks(Exo_DB *exo)
         v = DENSITY_EQN;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
-        v = EDDY_MU;
+        v = EDDY_NU;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
         break;
@@ -3167,8 +3167,8 @@ static void set_interaction_masks(Exo_DB *exo)
           eqn_var_mask[imtrx][e][v] = 1;
         break;
 
-      case R_EDDY_MU:
-        v = EDDY_MU;
+      case R_EDDY_NU:
+        v = EDDY_NU;
         if (Num_Var_In_Type[imtrx][v])
           eqn_var_mask[imtrx][e][v] = 1;
 
