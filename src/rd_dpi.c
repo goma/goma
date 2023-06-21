@@ -85,6 +85,7 @@ int rd_dpi(Exo_DB *exo, Dpi *d, char *fn, bool parallel_call) {
   CHECK_EX_ERROR(ex_error, "ex_get_eb_info_global");
 
   // Nemesis Info
+  d->rank = ProcID;
   ex_error = ex_get_init_info(exoid, &d->num_proc, &d->num_proc_in_file, &d->ftype);
   CHECK_EX_ERROR(ex_error, "ex_get_init_info");
   if (d->num_proc != Num_Proc) {

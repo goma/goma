@@ -418,6 +418,7 @@ option_definition(DO_NO_UNROLL OFF)
 option_definition(USERMAT_INITIALIZATION OFF)
 option_definition(ENABLE_LOGGING OFF)
 option_definition(ENABLE_KOMPLEX OFF)
+option_definition(PHASE_COUPLED_FILL ON)
 set(MDE
     "27"
     CACHE STRING "set MDE")
@@ -758,10 +759,10 @@ set(GOMA_USER_SOURCES
     src/user_senkin.F)
 
 set(GOMA_UTIL_INCLUDES include/bc/rotate_util.h include/mm_eh.h
-                       include/util/goma_normal.h include/util/aprepro_helper.h)
+                       include/util/goma_normal.h include/util/aprepro_helper.h include/util/distance_helpers.h)
 
 set(GOMA_UTIL_SOURCES src/bc/rotate_util.c src/util/goma_normal.c src/mm_eh.c
-                      src/util/aprepro_helper.cpp)
+                      src/util/aprepro_helper.cpp src/util/distance_helpers.cpp)
 
 set(GDS_INCLUDES include/gds/gds_vector.h)
 
@@ -1039,7 +1040,7 @@ if(ENABLE_WARNINGS)
 endif()
 
 add_library(goma_util ${GOMA_UTIL_SOURCES} ${GOMA_UTIL_INCLUDES})
-target_include_directories(goma_util PUBLIC include)
+target_include_directories(goma_util PUBLIC include ${PROJECT_SOURCE_DIR}/tpls/nanoflann/include)
 target_include_directories(goma_util SYSTEM PRIVATE ${GOMA_TPL_INCLUDES})
 target_link_libraries(goma_util PUBLIC ${GOMA_TPL_LIBRARIES} gds)
 target_link_directories(goma_util PUBLIC ${GOMA_TPL_LIBRARY_DIRS})

@@ -139,6 +139,7 @@ int pd_alloc(void)
   upd = alloc_struct_1(struct Uniform_Problem_Description, 1);
   upd->Species_Var_Type = SPECIES_UNDEFINED_FORM;
 
+
   pd_glob = (struct Problem_Description **)alloc_ptr_1(MAX_NUMBER_MATLS);
   for (mn = 0; mn < MAX_NUMBER_MATLS; mn++) {
     pd_glob[mn] = alloc_struct_1(struct Problem_Description, 1);

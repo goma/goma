@@ -102,6 +102,7 @@ void noahs_raven(void) {
    *  -> Note, every item in this structure is of fixed length
    *     Therefore, just broadcast the structure.
    */
+  
   ddd_add_member2(upd, 1, sizeof(UPD_STRUCT));
   ddd_set_commit2();
 
@@ -192,6 +193,8 @@ void raven_landing(void) {
    * required size information has been communicated via the raven.
    */
 
+  upd->turbulent_info = calloc(1,sizeof(turbulent_information));
+
   /*
    * Instead of communicating all efv, just this bit, the remainder in
    * the ark.
@@ -206,6 +209,7 @@ void raven_landing(void) {
   for (i = 0; i < MAX_NUMBER_MATLS; i++) {
     pd_glob[i]->TimeIntegration = TimeIntegration;
   }
+
 
   if (Num_BC > 0) {
     BC_Types =
@@ -1009,6 +1013,11 @@ void noahs_ark(void) {
   ddd_add_member(n, pg->time_step_control_disabled, MAX_NUM_MATRICES, MPI_INT);
   ddd_add_member(n, pg->matrix_subcycle_count, MAX_NUM_MATRICES, MPI_INT);
   ddd_add_member(n, upd->matrix_index, MAX_EQNS, MPI_INT);
+
+  // turbulence information
+  ddd_add_member(n, &(upd->turbulent_info->use_internal_wall_distance), 1, MPI_INT);
+  ddd_add_member(n, &(upd->turbulent_info->num_node_sets), 1, MPI_INT);
+  ddd_add_member(n, &(upd->turbulent_info->num_side_sets), 1, MPI_INT);
 
   for (i = 0; i < upd->Num_Mat; i++) {
     int imtrx;
@@ -2601,6 +2610,7 @@ void noahs_ark(void) {
   ddd_add_member(n, &FIRST_STRAINRATE_INVAR, 1, MPI_INT);
   ddd_add_member(n, &SEC_STRAINRATE_INVAR, 1, MPI_INT);
   ddd_add_member(n, &THIRD_STRAINRATE_INVAR, 1, MPI_INT);
+  ddd_add_member(n, &WALL_DISTANCE, 1, MPI_INT);
   if (len_u_post_proc > 0) {
     ddd_add_member(n, u_post_proc, len_u_post_proc, MPI_DOUBLE);
   }
@@ -2724,6 +2734,16 @@ void ark_landing(void) {
 
   if (ProcID == 0)
     return;
+
+  // turbulence information
+  if (upd->turbulent_info->num_node_sets > 0) {
+    upd->turbulent_info->node_set_ids =
+        (int *)malloc(upd->turbulent_info->num_node_sets * sizeof(int));
+  }
+  if (upd->turbulent_info->num_side_sets > 0) {
+    upd->turbulent_info->side_set_ids =
+        (int *)malloc(upd->turbulent_info->num_side_sets * sizeof(int));
+  }
 
   /* Particle variable-lengthed output variable lists. */
   for (i = 0; i < Particle_Number_Sample_Types; i++) {
@@ -3420,6 +3440,15 @@ void noahs_dove(void) {
     for (j = 0; j < Num_Var_Init_Mat[i]; j++) {
       crdv(Var_init_mat[i][j].len_u_pars, Var_init_mat[i][j].u_pars);
     }
+  }
+
+  // turbulence info
+  if (upd->turbulent_info->num_node_sets > 0) {
+    ddd_add_member(n, upd->turbulent_info->node_set_ids, upd->turbulent_info->num_node_sets, MPI_INT);
+  }
+
+  if (upd->turbulent_info->num_side_sets > 0) {
+    ddd_add_member(n, upd->turbulent_info->side_set_ids, upd->turbulent_info->num_side_sets, MPI_INT);
   }
 
   for (i = 0; i < Num_BC; i++) {

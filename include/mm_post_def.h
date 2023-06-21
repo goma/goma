@@ -686,6 +686,7 @@ extern int ORIENTATION_VECTORS;
 extern int FIRST_STRAINRATE_INVAR;
 extern int SEC_STRAINRATE_INVAR;
 extern int THIRD_STRAINRATE_INVAR;
+extern int WALL_DISTANCE;
 /*
  *  Post-processing Step 1: add a new variable flag to end of mm_post_proc.h
  *

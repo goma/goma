@@ -1535,7 +1535,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     gn_glob[mn]->mu0 = mat_ptr->viscosity;
 
     /* If turbulent flow, read external field for distance from walls */
-    if (ConstitutiveEquation == TURBULENT_SA) {
+    if (ConstitutiveEquation == TURBULENT_SA && !upd->turbulent_info->use_internal_wall_distance) {
       mat_ptr->dist_wall_ext_field_index = -1;
       if (efv->ev) {
         for (i = 0; i < efv->Num_external_field; i++) {
@@ -1544,7 +1544,7 @@ void rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
           }
         }
       } else {
-        GOMA_EH(GOMA_ERROR, "You need an external field DIST to use TURBULENT_SA model ");
+        GOMA_EH(GOMA_ERROR, "You need an external field DIST to use TURBULENT_SA model without internal distance calculations");
       }
     }
 

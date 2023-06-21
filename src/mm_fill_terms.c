@@ -8683,6 +8683,19 @@ int load_fv(void)
     }
   }
 
+  // internal wall distance calculations
+  if (upd->turbulent_info->use_internal_wall_distance) {
+    fv->wall_distance = 0.;
+    if (pdgv[pd->ShapeVar]) {
+      dofs = ei[pg->imtrx]->dof[pd->ShapeVar];
+      for (i = 0; i < dofs; i++) {
+        fv->wall_distance +=
+            upd->turbulent_info->wall_distances[ei[pg->imtrx]->gnn_list[pd->ShapeVar][i]] *
+            bf[pd->ShapeVar]->phi[i];
+      }
+    }
+  }
+
   /*
    * External...
    */
@@ -8770,6 +8783,11 @@ int load_fv(void)
         fv_old->pF[0] = fv_old->external_field[w];
         fv_dot->pF[0] = fv_dot->external_field[w];
       }
+    }
+    if (!upd->turbulent_info->use_internal_wall_distance) {
+      int i_d_wall = mp->dist_wall_ext_field_index;
+      double d = fv->external_field[i_d_wall];
+      fv->wall_distance = d;
     }
   } else {
     for (w = 0; w < efv->Num_external_field; w++) {

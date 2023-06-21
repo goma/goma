@@ -331,6 +331,7 @@ int ORIENTATION_VECTORS = -1; /* orientation vectors*/
 int FIRST_STRAINRATE_INVAR = -1;
 int SEC_STRAINRATE_INVAR = -1;
 int THIRD_STRAINRATE_INVAR = -1;
+int WALL_DISTANCE = -1;
 
 int len_u_post_proc = 0; /* size of dynamically allocated u_post_proc
                           * actually is */
@@ -1594,6 +1595,11 @@ static int calc_standard_fields(double **post_proc_vect,
     INV = calc_tensor_invariant(fv_dot->strain, d_INV_dT, 3);
     local_post[THIRD_STRAINRATE_INVAR] = INV;
     local_lumped[THIRD_STRAINRATE_INVAR] = 1.;
+  }
+
+  if (WALL_DISTANCE != -1 && pd->e[pg->imtrx][VELOCITY1]) {
+    local_post[WALL_DISTANCE] = fv->wall_distance;
+    local_lumped[WALL_DISTANCE] = 1.;
   }
 
   if (DIELECTROPHORETIC_FIELD != -1 && pd->e[pg->imtrx][R_ENORM]) {
@@ -7752,6 +7758,7 @@ void rd_post_process_specs(FILE *ifp, char *input) {
   iread = look_for_post_proc(ifp, "First StrainRate Invariant", &FIRST_STRAINRATE_INVAR);
   iread = look_for_post_proc(ifp, "Second StrainRate Invariant", &SEC_STRAINRATE_INVAR);
   iread = look_for_post_proc(ifp, "Third StrainRate Invariant", &THIRD_STRAINRATE_INVAR);
+  iread = look_for_post_proc(ifp, "Wall Distance", &WALL_DISTANCE);
   iread = look_for_post_proc(ifp, "User-Defined Post Processing", &USER_POST);
 
   /*
@@ -10035,6 +10042,17 @@ int load_nodal_tkn(struct Results_Description *rd, int *tnv, int *tnv_post) {
       index_post_export++;
     }
     THIRD_STRAINRATE_INVAR = index_post;
+    index_post++;
+  }
+
+  if (WALL_DISTANCE != -1 && Num_Var_In_Type[pg->imtrx][VELOCITY1]) {
+    set_nv_tkud(rd, index, 0, 0, -2, "WALL_DISTANCE", "[1]", "Wall distance", FALSE);
+    index++;
+    if (WALL_DISTANCE == 2) {
+      Export_XP_ID[index_post_export] = index_post;
+      index_post_export++;
+    }
+    WALL_DISTANCE = index_post;
     index_post++;
   }
 

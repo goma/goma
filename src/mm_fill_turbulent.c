@@ -219,9 +219,8 @@ int assemble_spalart_allmaras(dbl time_value, /* current time */
   calc_sa_S(&S, omega, dS_dvelo, dS_dmesh);
   calc_sa_S(&S_old, omega_old, NULL, NULL);
 
-  /* Get distance from nearest wall - use external field for now */
-  int i_d_wall = mp->dist_wall_ext_field_index;
-  double d = fv->external_field[i_d_wall];
+  double d = fv->wall_distance;
+  /* Get distance from nearest wall */
   if (d < 1.0e-6)
     d = 1.0e-6;
 
@@ -261,7 +260,7 @@ int assemble_spalart_allmaras(dbl time_value, /* current time */
   }
   double r_max = 10.0;
   double r = 0.0;
-  if (fabs(S_e) > 1.0e-6) {
+  if (fabs(S_e) > 1.0e-12) {
     r = mu_e / (kappa * kappa * d * d * S_e);
   } else {
     r = r_max;
@@ -305,14 +304,14 @@ int assemble_spalart_allmaras(dbl time_value, /* current time */
   double dr_dS = 0;
   double dg_dS = 0;
   double dfw_dS = 0;
-  for (b = 0; b < VIM; b++) {
+  if (fabs(S_e) > 1.0e-12) {
     dr_dS = -(mu_e * kappa * kappa * d * d) / (kappa * kappa * d * d * S_e) /
             (kappa * kappa * d * d * S_e);
-    if (r == r_max)
-      dr_dS = 0.0;
-    dg_dS = dg_dr * dr_dS;
-    dfw_dS = dfw_dg * dg_dS;
   }
+  if (r == r_max)
+    dr_dS = 0.0;
+  dg_dS = dg_dr * dr_dS;
+  dfw_dS = dfw_dg * dg_dS;
   dbl dS_e_dS = 1.0;
   if (negative_Se) {
     S_e = S + S * (cv2 * cv2 * S + cv3 * Sbar) / ((cv3 - 2 * cv2) * S - Sbar);

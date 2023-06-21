@@ -807,6 +807,15 @@ struct Action_Flags {
    */
 };
 
+typedef struct turbulent_information {
+  double *wall_distances;
+  int *side_set_ids;
+  int *node_set_ids;
+  int num_side_sets;
+  int num_node_sets;
+  int use_internal_wall_distance;
+} turbulent_information;
+
 /*
  * This contains information that is uniformaly relevant
  * to all portions of the problem without regard to
@@ -894,6 +903,7 @@ struct Uniform_Problem_Description {
   int petsc_solve_post_proc;
   void *petsc_post_proc_data;
   int devss_traceless_gradient;
+  turbulent_information *turbulent_info;
 };
 typedef struct Uniform_Problem_Description UPD_STRUCT;
 /*____________________________________________________________________________*/
@@ -1718,6 +1728,7 @@ struct Field_Variables {
   dbl sh_sat_3;   /* Porous shell saturation layer 3 */
 
   dbl eddy_nu; /* Eddy viscosity for turbulent flow */
+  dbl wall_distance; /* Distance to nearest wall */
 
   /*
    * Grads of scalars...
